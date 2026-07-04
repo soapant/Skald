@@ -4,3 +4,4 @@
 - [ ] find a way to get the coc script to know the locations of every troop in the attack
 - [ ] do the calculate pattern of troops and spells for the Coc script
 - [ ] also maybe make a screenshot manager / taker in c
+- [ ] add a bulk kill process so i type one key and it destoys shit

@@ -114,14 +114,38 @@ static const char* focus_blacklist_games[] = {"CrosshairX"};
 
 static const char* games_windows[] = {"Brawlhalla","Fortnite","RocketLeague","Factorio"};
 
+static const char* focus_blacklist_browsers[] = {"CrosshairX"};
+
+static const char* browsers_windows[] = {"Zen","Chrome"};
+
+static const char* focus_blacklist_coding[] = {"CrosshairX"};
+
+static const char* coding_windows[] = {"Alacritty","Neovide","Nvim"};
+
 static const FocusSwitcherBinding G_FOCUS_SWITCHERS[] = {
-    { 
-        'N',           
+    {
+        'O',           
         HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL,               
         focus_blacklist_games,      
         sizeof(focus_blacklist_games) / sizeof(focus_blacklist_games[0]),
         games_windows,              
         sizeof(games_windows) / sizeof(games_windows[0])
+    },
+    {
+        'I',           
+        HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL,               
+        focus_blacklist_browsers,      
+        sizeof(focus_blacklist_browsers) / sizeof(focus_blacklist_browsers[0]),
+        browsers_windows,              
+        sizeof(browsers_windows) / sizeof(browsers_windows[0])
+    },
+    {
+        'U',           
+        HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL,               
+        focus_blacklist_coding,      
+        sizeof(focus_blacklist_coding) / sizeof(focus_blacklist_coding[0]),
+        coding_windows,              
+        sizeof(coding_windows) / sizeof(coding_windows[0])
     },
 };
 
