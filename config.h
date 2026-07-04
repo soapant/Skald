@@ -41,6 +41,7 @@ static bool TRAY = true;
 #define HOTKEY_MOD_SHIFT_CTRL   (HOTKEY_MOD_SHIFT | HOTKEY_MOD_CTRL)
 #define HOTKEY_MOD_ALT_SHIFT_CTRL (HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT | HOTKEY_MOD_CTRL)
 
+
 typedef enum {
     MACRO_NONE = 0,
     MACRO_FACTORIO_MAKE_TAG,
@@ -66,6 +67,15 @@ typedef struct {
     const char* exe_name;
     const char* app_name;  // Name of the app to launch from cache
 } AppHotkey;
+
+typedef struct {
+    int vk_code;
+    int modifiers;
+    const char** blacklist;      // Pointer to array
+    int blacklist_count;
+    const char** window_titles;  // Pointer to array
+    int window_count;
+} FocusSwitcherBinding;
 
 static const AppHotkey G_APP_HOTKEYS[] = {
   
@@ -99,6 +109,23 @@ static const TextSnippet G_TEXT_SNIPPETS[] = {
     { 'O', HOTKEY_MOD_ALT, "EpicGamesLauncher", "seifisbad@gmail.com" },
     { 'P', HOTKEY_MOD_ALT, "EpicGamesLauncher", "i_am_retarded1" },
 };
+
+static const char* focus_blacklist_games[] = {"CrosshairX"};
+
+static const char* games_windows[] = {"Brawlhalla","Fortnite","RocketLeague","Factorio"};
+
+static const FocusSwitcherBinding G_FOCUS_SWITCHERS[] = {
+    { 
+        'N',           
+        HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL,               
+        focus_blacklist_games,      
+        sizeof(focus_blacklist_games) / sizeof(focus_blacklist_games[0]),
+        games_windows,              
+        sizeof(games_windows) / sizeof(games_windows[0])
+    },
+};
+
+#define FOCUS_SWITCHER_COUNT (sizeof(G_FOCUS_SWITCHERS) / sizeof(G_FOCUS_SWITCHERS[0]))
 
 #define TEXT_SNIPPET_COUNT (sizeof(G_TEXT_SNIPPETS) / sizeof(G_TEXT_SNIPPETS[0]))
 
