@@ -1,0 +1,489 @@
+#ifndef CALC_H
+#define CALC_H
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#include <stdbool.h>
+#include <shlwapi.h>
+
+// ============================================================
+// GLOBAL STATE FOR TAB FLIPPING
+// ============================================================
+static double g_last_a = 0.0;
+static double g_last_b = 0.0;
+static char g_last_op = 0;
+static bool g_has_last_op = false;
+static char g_last_expression[256] = {0};
+static double g_flipped_result = 0.0;
+static bool g_is_flipped = false;
+
+typedef struct {
+    const char* from_unit;
+    const char* to_unit;
+    double factor;
+} UnitConversion;
+
+int CopyToClipboard(const char* text) {
+    if (text == NULL) return 0;
+
+    size_t len = strlen(text);
+    if (len == 0) return 0;
+
+    char* clean_text = (char*)malloc(len + 1);
+    if (clean_text == NULL) return 0;
+
+    size_t write_idx = 0;
+    for (size_t i = 0; i < len; i++) {
+        if (text[i] != '\r') {
+            clean_text[write_idx++] = text[i];
+        }
+    }
+    clean_text[write_idx] = '\0';
+
+    len = write_idx;
+    if (len == 0) {
+        free(clean_text);
+        return 0;
+    }
+
+    HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, len + 1);
+    if (hMem == NULL) {
+        free(clean_text);
+        return 0;
+    }
+
+    char* pMem = (char*)GlobalLock(hMem);
+    if (pMem == NULL) {
+        GlobalFree(hMem);
+        free(clean_text);
+        return 0;
+    }
+    
+    memcpy(pMem, clean_text, len + 1); 
+    GlobalUnlock(hMem);
+    free(clean_text);
+
+    if (!OpenClipboard(NULL)) {
+        GlobalFree(hMem);
+        return 0;
+    }
+
+    if (!EmptyClipboard()) {
+        GlobalFree(hMem);
+        CloseClipboard();
+        return 0;
+    }
+
+    if (SetClipboardData(CF_TEXT, hMem) == NULL) {
+        GlobalFree(hMem);
+        CloseClipboard();
+        return 0;
+    }
+
+    CloseClipboard();
+    return 1;
+}
+
+// ============================================================
+// PARSE NUMBER WITH K/M SUFFIX
+// ============================================================
+double parse_number_with_suffix(const char* str) {
+    char cleaned[64];
+    strncpy(cleaned, str, sizeof(cleaned) - 1);
+    cleaned[sizeof(cleaned) - 1] = '\0';
+    
+    // Remove trailing spaces
+    int len = strlen(cleaned);
+    while (len > 0 && isspace(cleaned[len - 1])) {
+        cleaned[--len] = '\0';
+    }
+    
+    if (len == 0) return 0.0;
+    
+    char suffix = tolower(cleaned[len - 1]);
+    char num_part[64];
+    strncpy(num_part, cleaned, len - 1);
+    num_part[len - 1] = '\0';
+    
+    double val = atof(num_part);
+    
+    if (suffix == 'k') {
+        return val * 1000.0;
+    } else if (suffix == 'm') {
+        return val * 1000000.0;
+    } else {
+        return atof(cleaned);
+    }
+}
+
+// ============================================================
+// FORMAT NUMBER WITH K/M SUFFIX (for display)
+// ============================================================
+void format_number_with_suffix(double num, char* out, size_t max_len) {
+    if (num >= 1000000.0) {
+        snprintf(out, max_len, "%.4gm", num / 1000000.0);
+    } else if (num >= 1000.0) {
+        snprintf(out, max_len, "%.4gk", num / 1000.0);
+    } else {
+        snprintf(out, max_len, "%.10g", num);
+    }
+}
+
+// ============================================================
+// GET FLIPPED RESULT (for Tab key)
+// ============================================================
+double get_flipped_result() {
+    return g_flipped_result;
+}
+
+bool is_flipped_mode() {
+    return g_is_flipped;
+}
+
+void reset_flip_state() {
+    g_is_flipped = false;
+    g_flipped_result = 0.0;
+}
+
+// ============================================================
+// EXTENSIBLE CONVERSION TABLE
+// ============================================================
+static const UnitConversion G_CONVERSIONS[] = {
+    // === MINUTES TO HOURS ===
+    { "minutes", "hours",   1.0 / 60.0 },
+    { "minute",  "hours",   1.0 / 60.0 },
+    { "minute",  "hour",    1.0 / 60.0 },
+    { "mins",    "hours",   1.0 / 60.0 },
+    { "mins",    "hour",    1.0 / 60.0 },
+    { "min",     "hours",   1.0 / 60.0 },
+    { "min",     "hour",    1.0 / 60.0 },
+    { "m",       "h",       1.0 / 60.0 },
+
+    // === HOURS TO MINUTES ===
+    { "hours",   "minutes", 60.0 },
+    { "hour",    "minutes", 60.0 },
+    { "hour",    "minute",  60.0 },
+    { "hrs",     "mins",    60.0 },
+    { "hrs",     "min",     60.0 },
+    { "hr",      "mins",    60.0 },
+    { "hr",      "min",     60.0 },
+    { "h",       "m",       60.0 },
+
+    // === SECONDS TO HOURS ===
+    { "seconds", "hours",   1.0 / 3600.0 },
+    { "second",  "hour",    1.0 / 3600.0 },
+    { "secs",    "hours",   1.0 / 3600.0 },
+    { "secs",    "hr",      1.0 / 3600.0 },
+    { "sec",     "hour",    1.0 / 3600.0 },
+    { "sec",     "hr",      1.0 / 3600.0 },
+    { "s",       "h",       1.0 / 3600.0 },
+
+    // === HOURS TO SECONDS ===
+    { "hours",   "seconds", 3600.0 },
+    { "hour",    "second",  3600.0 },
+    { "hours",   "secs",    3600.0 },
+    { "hour",    "sec",     3600.0 },
+    { "hrs",     "secs",    3600.0 },
+    { "hr",      "sec",     3600.0 },
+    { "h",       "s",       3600.0 },
+
+    // === SECONDS TO MINUTES ===
+    { "seconds", "minutes", 1.0 / 60.0 },
+    { "second",  "minute",  1.0 / 60.0 },
+    { "secs",    "mins",    1.0 / 60.0 },
+    { "sec",     "min",     1.0 / 60.0 },
+    { "s",       "m",       1.0 / 60.0 },
+
+    // === MINUTES TO SECONDS ===
+    { "minutes", "seconds", 60.0 },
+    { "minute",  "second",  60.0 },
+    { "mins",    "secs",    60.0 },
+    { "min",     "sec",     60.0 },
+    { "m",       "s",       60.0 },
+
+    // === DAYS TO WEEKS ===
+    { "days",    "weeks",   1.0 / 7.0 },
+    { "day",     "weeks",   1.0 / 7.0 },
+    { "day",     "week",    1.0 / 7.0 },
+    { "d",       "w",       1.0 / 7.0 },
+
+    // === WEEKS TO DAYS ===
+    { "weeks",   "days",    7.0 },
+    { "week",    "days",    7.0 },
+    { "week",    "day",     7.0 },
+    { "wks",     "days",    7.0 },
+    { "wk",      "day",     7.0 },
+    { "w",       "d",       7.0 },
+
+    // === DAYS TO HOURS ===
+    { "days",    "hours",   24.0 },
+    { "day",     "hours",   24.0 },
+    { "day",     "hour",    24.0 },
+    { "d",       "h",       24.0 },
+
+    // === HOURS TO DAYS ===
+    { "hours",   "days",    1.0 / 24.0 },
+    { "hour",    "days",    1.0 / 24.0 },
+    { "hour",    "day",     1.0 / 24.0 },
+    { "hrs",     "days",    1.0 / 24.0 },
+    { "hr",      "day",     1.0 / 24.0 },
+    { "h",       "d",       1.0 / 24.0 }
+};
+#define CONVERSION_COUNT (sizeof(G_CONVERSIONS) / sizeof(G_CONVERSIONS[0]))
+
+void trim_trailing_spaces(char* str) {
+    int len = strlen(str);
+    while (len > 0 && isspace((unsigned char)str[len - 1])) {
+        str[--len] = '\0';
+    }
+}
+
+// ============================================================
+// MAIN EVALUATE FUNCTION
+// ============================================================
+void live_evaluate(const char* input, char* out_result, size_t max_len) {
+    if (!input || strlen(input) == 0) {
+        strncpy(out_result, "Waiting for expression...", max_len);
+        return;
+    }
+
+    char clean[256];
+    strncpy(clean, input, sizeof(clean) - 1);
+    clean[sizeof(clean) - 1] = '\0';
+
+    // ============================================================
+    // 1. Process Conversions via " in " keyword
+    // ============================================================
+    char* in_keyword = StrStrIA(clean, " in ");
+    if (in_keyword) {
+        char target_unit[64] = {0};
+        strncpy(target_unit, in_keyword + 4, sizeof(target_unit) - 1);
+        trim_trailing_spaces(target_unit);
+
+        *in_keyword = '\0'; 
+
+        double val = 0.0;
+        char source_unit[64] = {0};
+        if (sscanf(clean, "%lf %63s", &val, source_unit) == 2) {
+            for (size_t i = 0; i < CONVERSION_COUNT; i++) {
+                if (StrCmpIA(source_unit, G_CONVERSIONS[i].from_unit) == 0 &&
+                    StrCmpIA(target_unit, G_CONVERSIONS[i].to_unit) == 0) {
+                    snprintf(out_result, max_len, "= %.4g %s", val * G_CONVERSIONS[i].factor, G_CONVERSIONS[i].to_unit);
+                    g_has_last_op = false;  // Reset flip state for conversions
+                    return;
+                }
+            }
+        }
+        strncpy(out_result, "Unknown unit conversion format", max_len);
+        g_has_last_op = false;
+        return;
+    }
+
+    // ============================================================
+    // 2. Process Standard Mathematical Equations
+    // ============================================================
+    // Replace 'x' or 'X' with '*'
+    for (int i = 0; clean[i]; i++) {
+        if (clean[i] == 'x' || clean[i] == 'X') clean[i] = '*';
+    }
+
+    // Parse: number operator number (with K/M support)
+    char a_str[64] = {0};
+    char op_str[4] = {0};
+    char b_str[64] = {0};
+    
+    // Try to parse format: "1.3 / 0.2" or "1.3k / 0.2m"
+    if (sscanf(clean, "%63s %3s %63s", a_str, op_str, b_str) == 3) {
+        double a = parse_number_with_suffix(a_str);
+        double b = parse_number_with_suffix(b_str);
+        char op = op_str[0];
+        
+        // Store for potential flip
+        g_last_a = a;
+        g_last_b = b;
+        g_last_op = op;
+        g_has_last_op = true;
+        strncpy(g_last_expression, clean, sizeof(g_last_expression) - 1);
+        
+        double result = 0.0;
+        bool valid = true;
+        
+        switch (op) {
+            case '+': result = a + b; break;
+            case '-': result = a - b; break;
+            case '*': result = a * b; break;
+            case '/': 
+                if (b != 0) {
+                    result = a / b;
+                } else {
+                    strncpy(out_result, "Error: Div by 0", max_len);
+                    return;
+                }
+                break;
+            default:
+                strncpy(out_result, "Unknown operator", max_len);
+                return;
+        }
+        
+        // Format the result with K/M suffix
+        char formatted[64];
+        format_number_with_suffix(result, formatted, sizeof(formatted));
+        
+        // Show expression and result
+        snprintf(out_result, max_len, "= %s", formatted);
+        CopyToClipboard(formatted);
+        return;
+    }
+    
+    // ============================================================
+    // 3. Try simple number parsing (just a number with K/M)
+    // ============================================================
+    double val = parse_number_with_suffix(clean);
+    if (val != 0.0 || (strlen(clean) > 0 && clean[0] == '0')) {
+        char formatted[64];
+        format_number_with_suffix(val, formatted, sizeof(formatted));
+        snprintf(out_result, max_len, "= %s", formatted);
+        CopyToClipboard(formatted);
+        g_has_last_op = false;
+        return;
+    }
+    
+    strncpy(out_result, "Parsing input...", max_len);
+}
+
+// ============================================================
+// FLIP THE LAST OPERATION (for Tab key)
+// ============================================================
+void flip_last_operation(char* out_result, size_t max_len) {
+    if (!g_has_last_op) {
+        strncpy(out_result, "No operation to flip", max_len);
+        return;
+    }
+    
+    if (g_last_b == 0 && g_last_op == '/') {
+        strncpy(out_result, "Cannot flip: division by zero", max_len);
+        return;
+    }
+    
+    // Swap a and b
+    double flipped_a = g_last_b;
+    double flipped_b = g_last_a;
+    
+    double result = 0.0;
+    bool valid = true;
+    
+    switch (g_last_op) {
+        case '+': result = flipped_a + flipped_b; break;
+        case '-': result = flipped_a - flipped_b; break;
+        case '*': result = flipped_a * flipped_b; break;
+        case '/': 
+            if (flipped_b != 0) {
+                result = flipped_a / flipped_b;
+            } else {
+                strncpy(out_result, "Error: Div by 0 in flipped", max_len);
+                return;
+            }
+            break;
+        default:
+            strncpy(out_result, "Unknown operator", max_len);
+            return;
+    }
+    
+    g_flipped_result = result;
+    g_is_flipped = true;
+    
+    // Format the flipped numbers and result
+    char a_formatted[32], b_formatted[32], result_formatted[32];
+    format_number_with_suffix(flipped_a, a_formatted, sizeof(a_formatted));
+    format_number_with_suffix(flipped_b, b_formatted, sizeof(b_formatted));
+    format_number_with_suffix(result, result_formatted, sizeof(result_formatted));
+    
+    // Show both original and flipped
+    snprintf(out_result, max_len, "FLIP: %s %c %s = %s", 
+             a_formatted, g_last_op, b_formatted, result_formatted);
+    
+    CopyToClipboard(result_formatted);
+}
+
+// ============================================================
+// GET FLIP INFO FOR DISPLAY
+// ============================================================
+void get_flip_info(char* out, size_t max_len) {
+    if (!g_has_last_op || !g_is_flipped) {
+        strncpy(out, "Press Tab to flip", max_len);
+        return;
+    }
+    
+    char a_formatted[32], b_formatted[32], result_formatted[32];
+    format_number_with_suffix(g_last_b, a_formatted, sizeof(a_formatted));
+    format_number_with_suffix(g_last_a, b_formatted, sizeof(b_formatted));
+    format_number_with_suffix(g_flipped_result, result_formatted, sizeof(result_formatted));
+    
+    snprintf(out, max_len, "↕ %s %c %s = %s", 
+             a_formatted, g_last_op, b_formatted, result_formatted);
+}
+
+void get_flip_display(char* out, size_t max_len) {
+    if (!g_has_last_op) {
+        strncpy(out, "No operation to flip", max_len);
+        return;
+    }
+    
+    if (g_last_b == 0 && g_last_op == '/') {
+        strncpy(out, "Cannot flip: division by zero", max_len);
+        return;
+    }
+    
+    // Swap a and b
+    double flipped_a = g_last_b;
+    double flipped_b = g_last_a;
+    
+    double result = 0.0;
+    
+    switch (g_last_op) {
+        case '+': result = flipped_a + flipped_b; break;
+        case '-': result = flipped_a - flipped_b; break;
+        case '*': result = flipped_a * flipped_b; break;
+        case '/': 
+            if (flipped_b != 0) {
+                result = flipped_a / flipped_b;
+            } else {
+                strncpy(out, "Error: Div by 0 in flipped", max_len);
+                return;
+            }
+            break;
+        default:
+            strncpy(out, "Unknown operator", max_len);
+            return;
+    }
+    
+    g_flipped_result = result;
+    g_is_flipped = true;
+    
+    // Format the flipped numbers and result
+    char a_formatted[32], b_formatted[32], result_formatted[32];
+    format_number_with_suffix(flipped_a, a_formatted, sizeof(a_formatted));
+    format_number_with_suffix(flipped_b, b_formatted, sizeof(b_formatted));
+    format_number_with_suffix(result, result_formatted, sizeof(result_formatted));
+    
+    // Display the flipped expression (no clipboard copy)
+    snprintf(out, max_len, "↕ %s %c %s = %s", 
+             a_formatted, g_last_op, b_formatted, result_formatted);
+}
+
+void get_flip_expression(char* out, size_t max_len) {
+    if (!g_has_last_op) {
+        strncpy(out, "", max_len);
+        return;
+    }
+    
+    char a_formatted[32], b_formatted[32];
+    format_number_with_suffix(g_last_b, a_formatted, sizeof(a_formatted));
+    format_number_with_suffix(g_last_a, b_formatted, sizeof(b_formatted));
+    
+    snprintf(out, max_len, "%s %c %s", a_formatted, g_last_op, b_formatted);
+}
+#endif
+
