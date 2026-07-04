@@ -10,16 +10,53 @@
 static HWND FindWindowByTitle(const char* title) {
     return FindWindowA(NULL, title);
 }
+typedef struct {
+    const char* search_title;
+    HWND result;
+} FindWindowData;
 
-// Check if a window with any of the given titles exists
+static BOOL CALLBACK FindWindowByPartialTitleProc(HWND hwnd, LPARAM lParam) {
+    FindWindowData* data = (FindWindowData*)lParam;
+    char window_title[256];
+    GetWindowTextA(hwnd, window_title, sizeof(window_title));
+    
+    if (IsWindowVisible(hwnd) && StrStrIA(window_title, data->search_title) != NULL) {
+        data->result = hwnd;
+        return FALSE; // Stop enumerating
+    }
+    return TRUE;
+}
+
+static HWND FindWindowByPartialTitle(const char* title) {
+    FindWindowData data;
+    data.search_title = title;
+    data.result = NULL;
+    EnumWindows(FindWindowByPartialTitleProc, (LPARAM)&data);
+    return data.result;
+}
 static HWND FindAnyWindow(const char* titles[], int count) {
     for (int i = 0; i < count; i++) {
-        HWND hwnd = FindWindowByTitle(titles[i]);
+        printf("[FOCUS-DEBUG] Looking for: \"%s\"\n", titles[i]);
+        
+        // Try exact match first
+        HWND hwnd = FindWindowA(NULL, titles[i]);
         if (hwnd != NULL && IsWindow(hwnd) && IsWindowVisible(hwnd)) {
-            printf("[FOCUS] Found window: %s\n", titles[i]);
+            printf("[FOCUS-DEBUG] FOUND (exact): \"%s\" (HWND: %p)\n", titles[i], (void*)hwnd);
             return hwnd;
         }
+        
+        // Try partial match
+        hwnd = FindWindowByPartialTitle(titles[i]);
+        if (hwnd != NULL && IsWindow(hwnd) && IsWindowVisible(hwnd)) {
+            char window_title[256];
+            GetWindowTextA(hwnd, window_title, sizeof(window_title));
+            printf("[FOCUS-DEBUG] FOUND (partial): \"%s\" (HWND: %p)\n", window_title, (void*)hwnd);
+            return hwnd;
+        }
+        
+        printf("[FOCUS-DEBUG] NOT FOUND: \"%s\"\n", titles[i]);
     }
+    printf("[FOCUS-DEBUG] No matching windows found.\n");
     return NULL;
 }
 
