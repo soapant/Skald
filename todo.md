@@ -3,6 +3,4 @@
 - [ ] do the whole refactoring but for the builder base attacks
 - [ ] find a way to get the coc script to know the locations of every troop in the attack
 - [ ] do the calculate pattern of troops and spells for the Coc script
-- [ ] make the fucking cliboard manager already
-- [ ] and make the single key switch to a certain window like brawhalla or youtube
 - [ ] also maybe make a screenshot manager / taker in c

@@ -1,6 +1,5 @@
 #define _WIN32_WINNT 0x0601
 
-
 #include <windows.h>
 #include <commctrl.h>
 #include <psapi.h>
@@ -12,6 +11,7 @@
 #include "calc.h"
 #include "todo.h"
 #include "pos_handler.h"
+#include "focus_switcher.h"
 #include "color_handler.h"
 #include "minecraft.h"
 #include "pixel_equals_handler.h"
@@ -1664,6 +1664,10 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
             }
         }
         if (CheckAppHotkeyBindings(pressed_vk, modifiers)) {
+            return 1;
+        }
+        
+        if (HandleFocusSwitcher(pKeyInfo->vkCode, modifiers, fgTitle)) {
             return 1;
         }
             }
