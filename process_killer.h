@@ -4,6 +4,7 @@
 #include <windows.h>
 #include <tlhelp32.h>
 #include <stdio.h>
+#include "config.h"
 #include <stdbool.h>
 #include <shlwapi.h>
 
@@ -32,7 +33,6 @@ static bool is_system_noise(const char* exe) {
 static void collect_running_processes() {
     G_PK_COUNT = 0;
 
-    // Take a snapshot of all active processes across the entire OS
     HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if (hSnapshot == INVALID_HANDLE_VALUE) return;
 
@@ -41,10 +41,7 @@ static void collect_running_processes() {
 
     if (Process32First(hSnapshot, &pe)) {
         do {
-            // Filter out system noise and check for array slot limits
             if (!is_system_noise(pe.szExeFile)) {
-                
-                // Keep it clean: check for duplicate names if multiple instances exist
                 bool exists = false;
                 for (int i = 0; i < G_PK_COUNT; i++) {
                     if (StrCmpIA(G_PK_LIST[i], pe.szExeFile) == 0) {
@@ -64,26 +61,52 @@ static void collect_running_processes() {
     CloseHandle(hSnapshot);
 }
 
+// Helper function to run a command without showing a window
+static void run_hidden_command(const char* cmd) {
+    STARTUPINFOA si = {0};
+    si.cb = sizeof(si);
+    PROCESS_INFORMATION pi = {0};
+    
+    // Create a modifiable copy of the command
+    char cmd_copy[1024];
+    strncpy(cmd_copy, cmd, sizeof(cmd_copy) - 1);
+    cmd_copy[sizeof(cmd_copy) - 1] = '\0';
+    
+    if (CreateProcessA(NULL, cmd_copy, NULL, NULL, FALSE, CREATE_NO_WINDOW, NULL, NULL, &si, &pi)) {
+        WaitForSingleObject(pi.hProcess, INFINITE);  // Wait for it to complete
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);
+    } else {
+        // Fallback to WinExec if CreateProcess fails
+        WinExec(cmd, SW_HIDE);
+    }
+}
+
 // Terminates every instance matching the string name
 static void terminate_process_by_name(const char* exe_name) {
-    HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
-    if (hSnapshot == INVALID_HANDLE_VALUE) return;
+    char cmd[512];
+    snprintf(cmd, sizeof(cmd), "taskkill /f /im \"%s*\"", exe_name);
+    run_hidden_command(cmd);
+}
 
-    PROCESSENTRY32 pe;
-    pe.dwSize = sizeof(PROCESSENTRY32);
-    if (Process32First(hSnapshot, &pe)) {
-        do {
-            if (StrCmpIA(pe.szExeFile, exe_name) == 0) {
-                HANDLE hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, pe.th32ProcessID);
-                if (hProcess) {
-                    TerminateProcess(hProcess, 0);
-                    CloseHandle(hProcess);
-                    printf("[PROCESS-KILLER] Terminated: %s\n", exe_name);
-                }
-            }
-        } while (Process32Next(hSnapshot, &pe));
+static void BulkKillProcesses(const char* window_titles[], int count) {
+    for (int i = 0; i < count; i++) {
+        char cmd[512];
+        snprintf(cmd, sizeof(cmd), "taskkill /f /im \"%s*\"", window_titles[i]);
+        run_hidden_command(cmd);
     }
-    CloseHandle(hSnapshot);
+}
+
+static bool HandleBulkKillProcess(int vk_code, int modifiers, const char* current_title) {
+    for (int i = 0; i < BULKKILLPROCESS_COUNT; i++) {
+        const BulkKillProcessBinding* binding = &G_BULK_KILL_PROCESS[i];
+        
+        if (binding->vk_code == vk_code && binding->modifiers == modifiers) {
+            BulkKillProcesses(binding->window_titles, binding->window_count);
+            return true;
+        }
+    }
+    return false;
 }
 
 #endif
