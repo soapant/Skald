@@ -5,10 +5,85 @@
 #include <stdio.h>
 #include <string.h>
 #include <shlwapi.h>
+#include "config.h"
 
-// Find a window by title (partial match)
-static HWND FindWindowByTitle(const char* title) {
-    return FindWindowA(NULL, title);
+// ============================================================
+// FIND WINDOW BY EXE NAME
+// ============================================================
+
+static void FocusWindow(HWND hwnd) {
+    if (!hwnd || !IsWindow(hwnd)) return;
+    
+    HWND hForegroundWnd = GetForegroundWindow();
+    DWORD foregroundThreadID = GetWindowThreadProcessId(hForegroundWnd, NULL);
+    DWORD targetThreadID = GetWindowThreadProcessId(hwnd, NULL);
+    DWORD currentThreadID = GetCurrentThreadId();
+
+    if (foregroundThreadID != currentThreadID) {
+        AttachThreadInput(currentThreadID, foregroundThreadID, TRUE);
+    }
+    if (targetThreadID != currentThreadID) {
+        AttachThreadInput(currentThreadID, targetThreadID, TRUE);
+    }
+
+    if (IsIconic(hwnd)) {
+        ShowWindow(hwnd, SW_RESTORE);
+    } else {
+        ShowWindow(hwnd, SW_SHOW);
+    }
+
+    SetForegroundWindow(hwnd);
+    SetFocus(hwnd);
+    SetActiveWindow(hwnd);
+    BringWindowToTop(hwnd);
+
+    if (foregroundThreadID != currentThreadID) {
+        AttachThreadInput(currentThreadID, foregroundThreadID, FALSE);
+    }
+    if (targetThreadID != currentThreadID) {
+        AttachThreadInput(currentThreadID, targetThreadID, FALSE);
+    }
+    
+    printf("[FOCUS] Window focused!\n");
+}
+ 
+static BOOL CALLBACK FindWindowByExeProc(HWND hwnd, LPARAM lParam) {
+    char* search_exe = (char*)lParam;
+    DWORD processId = 0;
+    GetWindowThreadProcessId(hwnd, &processId);
+    
+    if (processId != 0 && IsWindowVisible(hwnd)) {
+        HANDLE hProcess = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, processId);
+        if (hProcess) {
+            char path[MAX_PATH] = {0};
+            if (GetProcessImageFileNameA(hProcess, path, sizeof(path))) {
+                char* lastBackslash = strrchr(path, '\\');
+                if (lastBackslash) {
+                    char* exe = lastBackslash + 1;
+                    if (StrStrIA(exe, search_exe) != NULL) {
+                        *(HWND*)lParam = hwnd;
+                        CloseHandle(hProcess);
+                        return FALSE;
+                    }
+                }
+            }
+            CloseHandle(hProcess);
+        }
+    }
+    return TRUE;
+}
+
+static void FocusWindowByExe(const char* exe_name) {
+    if (!exe_name || strlen(exe_name) == 0) return;
+    
+    HWND found_hwnd = NULL;
+    EnumWindows(FindWindowByExeProc, (LPARAM)exe_name);
+    
+    if (found_hwnd) {
+        FocusWindow(found_hwnd);
+    } else {
+        printf("[FOCUS] No window found with exe: %s\n", exe_name);
+    }
 }
 typedef struct {
     const char* search_title;
@@ -22,7 +97,7 @@ static BOOL CALLBACK FindWindowByPartialTitleProc(HWND hwnd, LPARAM lParam) {
     
     if (IsWindowVisible(hwnd) && StrStrIA(window_title, data->search_title) != NULL) {
         data->result = hwnd;
-        return FALSE; // Stop enumerating
+        return FALSE;
     }
     return TRUE;
 }
@@ -34,6 +109,10 @@ static HWND FindWindowByPartialTitle(const char* title) {
     EnumWindows(FindWindowByPartialTitleProc, (LPARAM)&data);
     return data.result;
 }
+
+// ============================================================
+// FIND ANY WINDOW (by title list)
+// ============================================================
 static HWND FindAnyWindow(const char* titles[], int count) {
     for (int i = 0; i < count; i++) {
         printf("[FOCUS-DEBUG] Looking for: \"%s\"\n", titles[i]);
@@ -60,49 +139,9 @@ static HWND FindAnyWindow(const char* titles[], int count) {
     return NULL;
 }
 
-// Focus a window (bring to foreground)
-static void FocusWindow(HWND hwnd) {
-    if (!hwnd || !IsWindow(hwnd)) return;
-    
-    // Get current foreground window info for thread attaching
-    HWND hForegroundWnd = GetForegroundWindow();
-    DWORD foregroundThreadID = GetWindowThreadProcessId(hForegroundWnd, NULL);
-    DWORD targetThreadID = GetWindowThreadProcessId(hwnd, NULL);
-    DWORD currentThreadID = GetCurrentThreadId();
-
-    // Attach threads to allow focus change
-    if (foregroundThreadID != currentThreadID) {
-        AttachThreadInput(currentThreadID, foregroundThreadID, TRUE);
-    }
-    if (targetThreadID != currentThreadID) {
-        AttachThreadInput(currentThreadID, targetThreadID, TRUE);
-    }
-
-    // Restore if minimized
-    if (IsIconic(hwnd)) {
-        ShowWindow(hwnd, SW_RESTORE);
-    } else {
-        ShowWindow(hwnd, SW_SHOW);
-    }
-
-    // Force focus
-    SetForegroundWindow(hwnd);
-    SetFocus(hwnd);
-    SetActiveWindow(hwnd);
-    BringWindowToTop(hwnd);
-
-    // Detach threads
-    if (foregroundThreadID != currentThreadID) {
-        AttachThreadInput(currentThreadID, foregroundThreadID, FALSE);
-    }
-    if (targetThreadID != currentThreadID) {
-        AttachThreadInput(currentThreadID, targetThreadID, FALSE);
-    }
-    
-    printf("[FOCUS] Window focused!\n");
-}
-
-// Check if a window title matches any in the blacklist
+// ============================================================
+// BLACKLIST CHECK
+// ============================================================
 static bool IsBlacklisted(const char* title, const char* blacklist[], int count) {
     for (int i = 0; i < count; i++) {
         if (StrStrIA(title, blacklist[i]) != NULL) {
@@ -112,20 +151,19 @@ static bool IsBlacklisted(const char* title, const char* blacklist[], int count)
     return false;
 }
 
-// Handle focus switcher hotkey
+// ============================================================
+// HANDLE FOCUS SWITCHER HOTKEY
+// ============================================================
 static bool HandleFocusSwitcher(int vk_code, int modifiers, const char* current_title) {
     for (int i = 0; i < FOCUS_SWITCHER_COUNT; i++) {
         const FocusSwitcherBinding* binding = &G_FOCUS_SWITCHERS[i];
         
-        // Check if key and modifiers match
         if (binding->vk_code == vk_code && binding->modifiers == modifiers) {
-            // Check blacklist
             if (IsBlacklisted(current_title, binding->blacklist, binding->blacklist_count)) {
                 printf("[FOCUS] Blacklisted window: %s\n", current_title);
                 return false;
             }
             
-            // Find and focus any matching window
             HWND target = FindAnyWindow(binding->window_titles, binding->window_count);
             if (target) {
                 FocusWindow(target);

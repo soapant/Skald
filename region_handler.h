@@ -22,7 +22,7 @@ static bool HandleRegionKey(bool alt_down, bool ctrl_down, bool shift_down) {
         return false;
     }
 
-    if (alt_down && ctrl_down && !shift_down) {
+    if (alt_down && !ctrl_down && shift_down) {
         if (img_region_step == 0) {
             img_x1 = cursorPos.x;
             img_y1 = cursorPos.y;

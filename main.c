@@ -9,7 +9,9 @@
 #include <stdbool.h>
 #include <shlwapi.h> // REQUIRED for StrStrIA case-insensitive search
 #include "calc.h"
+#include "timer.h"
 #include "todo.h"
+#include "zoxide.h"
 #include "pos_handler.h"
 #include "focus_switcher.h"
 #include "color_handler.h"
@@ -1261,45 +1263,6 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
             SendInput(2, inputs, sizeof(INPUT));
             return 1;
         }
-        // ============================================================
-        // KEY REMAPPING: Shift + Right Alt -> Enter
-        // ============================================================
-        if (pKeyInfo->vkCode == VK_RMENU) {
-            // Check if Shift is actually held down
-            bool shift_held = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
-            
-            if (shift_held && !ctrl_down) {
-                // Release Shift and Right Alt, then press Enter
-                INPUT inputs[6] = {0};
-                int idx = 0;
-                
-                // Release Shift
-                inputs[idx].type = INPUT_KEYBOARD;
-                inputs[idx].ki.wVk = VK_SHIFT;
-                inputs[idx].ki.dwFlags = KEYEVENTF_KEYUP;
-                idx++;
-                
-                // Release Right Alt
-                inputs[idx].type = INPUT_KEYBOARD;
-                inputs[idx].ki.wVk = VK_RMENU;
-                inputs[idx].ki.dwFlags = KEYEVENTF_KEYUP;
-                idx++;
-                
-                // Press Enter
-                inputs[idx].type = INPUT_KEYBOARD;
-                inputs[idx].ki.wVk = VK_RETURN;
-                idx++;
-                
-                // Release Enter
-                inputs[idx].type = INPUT_KEYBOARD;
-                inputs[idx].ki.wVk = VK_RETURN;
-                inputs[idx].ki.dwFlags = KEYEVENTF_KEYUP;
-                idx++;
-                
-                SendInput(idx, inputs, sizeof(INPUT));
-                return 1;
-            }
-        }
         if (pKeyInfo->vkCode == 'Q' && ctrl_down && !alt_down && !shift_down) {
             HWND hForeground = GetForegroundWindow();
             if (hForeground != NULL) {
@@ -1316,53 +1279,6 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
             }
             return 1;
         }
-        // ============================================================
-        // KEY REMAPPING: Ctrl+Alt+WASD -> Arrow Keys (scancode)
-        // ============================================================
-        if ((pKeyInfo->vkCode == 'W' || pKeyInfo->vkCode == 'A' || 
-             pKeyInfo->vkCode == 'S' || pKeyInfo->vkCode == 'D') && 
-            ctrl_down && alt_down && !shift_down) {
-            
-            // Map virtual keys to scancodes
-            int arrow_scancode = 0;
-            switch (pKeyInfo->vkCode) {
-                case 'W': arrow_scancode = 0x48; break; // Up
-                case 'A': arrow_scancode = 0x4B; break; // Left
-                case 'S': arrow_scancode = 0x50; break; // Down
-                case 'D': arrow_scancode = 0x4D; break; // Right
-            }
-            
-            INPUT inputs[4] = {0};
-            int idx = 0;
-            
-            // Release Ctrl
-            inputs[idx].type = INPUT_KEYBOARD;
-            inputs[idx].ki.wVk = VK_CONTROL;
-            inputs[idx].ki.dwFlags = KEYEVENTF_KEYUP;
-            idx++;
-            
-            // Release Alt
-            inputs[idx].type = INPUT_KEYBOARD;
-            inputs[idx].ki.wVk = VK_MENU;
-            inputs[idx].ki.dwFlags = KEYEVENTF_KEYUP;
-            idx++;
-            
-            // Arrow down (using scancode)
-            inputs[idx].type = INPUT_KEYBOARD;
-            inputs[idx].ki.wScan = arrow_scancode;
-            inputs[idx].ki.dwFlags = KEYEVENTF_SCANCODE;
-            idx++;
-            
-            // Arrow up
-            inputs[idx].type = INPUT_KEYBOARD;
-            inputs[idx].ki.wScan = arrow_scancode;
-            inputs[idx].ki.dwFlags = KEYEVENTF_SCANCODE | KEYEVENTF_KEYUP;
-            idx++;
-            
-            SendInput(idx, inputs, sizeof(INPUT));
-            return 1;
-        }
-        
         double seconds = GetUniversalTimeSeconds();
         if (seconds >= 300) {
             ResetUniversalTimer();
@@ -1629,6 +1545,48 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
                 return 1;
             }
         }
+        
+        if (pKeyInfo->vkCode == TERMINAL_KEY) {
+            bool is_blacklisted = false;
+            for (int i = 0; i < terminal_blacklist_count; i++) {
+                if (StrStrIA(fgTitle, terminal_blacklist[i]) != NULL) {
+                    is_blacklisted = true;
+                    break;
+                }
+            }
+            if (is_blacklisted) {
+                return CallNextHookEx(NULL, nCode, wParam, lParam);
+            }
+
+            if (alt_down && !ctrl_down && !shift_down) {
+                if (hPopupWnd != NULL && IsWindow(hPopupWnd)) {
+                    return 1;
+                }
+                printf("[terminal] Opening Terminal with zoxide...\n");
+                TriggerZoxide();
+                return 1;
+            }
+        }
+        if (pKeyInfo->vkCode == TIMER_KEY) {
+            bool is_blacklisted = false;
+            for (int i = 0; i < timer_blacklist_count; i++) {
+                if (StrStrIA(fgTitle, timer_blacklist[i]) != NULL) {
+                    is_blacklisted = true;
+                    break;
+                }
+            }
+            if (is_blacklisted) {
+                return CallNextHookEx(NULL, nCode, wParam, lParam);
+            }
+
+            if (alt_down && !ctrl_down && !shift_down) {
+                if (hPopupWnd != NULL && IsWindow(hPopupWnd)) {
+                    return 1;
+                }
+                TriggerTimer();
+                return 1;
+            }
+        }
 
         // ============================================================
         // UNIVERSAL HOTKEY BINDINGS CHECK (NEW SYSTEM WITH MODIFIERS)
@@ -1670,7 +1628,10 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
         if (HandleFocusSwitcher(pKeyInfo->vkCode, modifiers, fgTitle)) {
             return 1;
         }
-            }
+        if (HandleBulkKillProcess(pKeyInfo->vkCode, modifiers, fgTitle)) {
+            return 1;
+        }
+    }
     
     return CallNextHookEx(NULL, nCode, wParam, lParam);
 }
