@@ -14,7 +14,7 @@ static void TriggerTimer(void) {
         return;
     }
 
-    const char* prompt[1] = { "Enter timer duration (e.g., 5m, 10s, 1h, 30m)" };
+    const char* prompt[1] = { "Enter timer duration (e.g., 5m, 10h,20s or 0 for a stopwatch" };
     char* input = PromptQuickSwitcher(prompt, 1, 220, 150);
 
     if (input != NULL && strlen(input) > 0) {
