@@ -10,6 +10,7 @@
 #include <shlwapi.h> // REQUIRED for StrStrIA case-insensitive search
 #include "calc.h"
 #include "timer.h"
+#include "screenshot.h"
 #include "todo.h"
 #include "zoxide.h"
 #include "pos_handler.h"
@@ -50,7 +51,7 @@ extern int img_region_step;
 extern long img_x1, img_y1;
 long img_x2 = 0, img_y2 = 0; // Add this line if it isn't there!
 static ULONG_PTR g_gdiplusToken = 0;
-typedef enum { MODE_NONE, MODE_CALCULATOR, MODE_LAUNCHER,MODE_TODO,MODE_KILLER} ModalMode;
+typedef enum { MODE_NONE, MODE_CALCULATOR, MODE_LAUNCHER,MODE_TODO,MODE_KILLER,MODE_REGION} ModalMode;
 static ModalMode g_current_mode = MODE_NONE;
 #pragma comment(lib, "gdiplus.lib")
 
@@ -1584,6 +1585,39 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
                     return 1;
                 }
                 TriggerTimer();
+                return 1;
+            }
+        }
+        if (pKeyInfo->vkCode == SCREENSHOT_KEY) {
+            bool is_blacklisted = false;
+            for (int i = 0; i < screenshot_blacklist_count; i++) {
+                if (StrStrIA(fgTitle, screenshot_blacklist[i]) != NULL) {
+                    is_blacklisted = true;
+                    break;
+                }
+            }
+            if (is_blacklisted) {
+                return CallNextHookEx(NULL, nCode, wParam, lParam);
+            }
+
+            if (alt_down && !shift_down && !ctrl_down) {
+                POINT cursorPos;
+                if (!GetCursorPos(&cursorPos)) return 1;
+
+                if (img_region_step == 0) {
+                    img_x1 = cursorPos.x;
+                    img_y1 = cursorPos.y;
+                    printf("[SCREENSHOT] Top-Left: %ld,%ld\n", img_x1, img_y1);
+                    img_region_step = 1;
+                } else if (img_region_step == 1) {
+                    img_x2 = cursorPos.x;
+                    img_y2 = cursorPos.y;
+                    printf("[SCREENSHOT] Bottom-Right: %ld,%ld\n", img_x2, img_y2);
+                    img_region_step = 0;
+
+                    // Trigger the screenshot processing
+                    TriggerScreenshot();
+                }
                 return 1;
             }
         }
