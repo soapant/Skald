@@ -1,4 +1,6 @@
-- [ ] also maybe make a screenshot manager / taker in c
-- [ ] make the spotify knockoff already you fucking retard
 - [ ] minecraft modpack do the modified providence recipes
 - [ ] and the always on top thingy
+- [ ] also make the fucking spotify knockoff you fucking retard
+- [ ] try to get documentation for all my code shit so i am not requiring the internet
+- [ ] also dont use raylib if you are going to maek the image viewer use glfw
+- [ ] also make the fucking clipboard manager

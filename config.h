@@ -30,11 +30,13 @@ static bool TRAY = true;
 #define GOOGLE_SEARCH_KEY  0x47 
 #define NVIM_ID      13
 #define NVIM_KEY     0x49
-#define TERMINAL_ID      14
-#define TERMINAL_KEY     0x50
-#define SCREENSHOT_ID      15
+#define TERMINAL_COMMAND_ID      14
+#define TERMINAL_COMMAND_KEY     0x57
+#define YAZI_ID      15
+#define YAZI_KEY     0x51
+#define SCREENSHOT_ID      16
 #define SCREENSHOT_KEY     0x59
-#define TIMER_ID      16
+#define TIMER_ID      17
 #define TIMER_KEY     0x4F
 #define HOTKEY_MOD_NONE         0x00
 #define HOTKEY_MOD_ALT          0x01
@@ -136,7 +138,7 @@ static const char* browsers_windows[] = {"Zen","Chrome"};
 
 static const char* focus_blacklist_coding[] = {"CrosshairX"};
 
-static const char* coding_windows[] = {"Alacritty","Nvim","Neovide","vim"};
+static const char* coding_windows[] = {"Alacritty","Nvim","Neovide","vim","pwsh"};
 
 static const FocusSwitcherBinding G_FOCUS_SWITCHERS[] = {
     {
@@ -234,5 +236,8 @@ static int terminal_blacklist_count = sizeof(terminal_blacklist) / sizeof(termin
 
 static const char* screenshot_blacklist[] = {"Fortnite", "CrosshairX"};
 static int screenshot_blacklist_count = sizeof(screenshot_blacklist) / sizeof(screenshot_blacklist[0]);
+
+static const char* yazi_blacklist[] = {"Fortnite", "CrosshairX"};
+static int yazi_blacklist_count = sizeof(yazi_blacklist) / sizeof(yazi_blacklist[0]);
 
 #endif
