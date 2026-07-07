@@ -1,6 +1,8 @@
 #ifndef APP_LAUNCHER_H
 #define APP_LAUNCHER_H
 
+#include "config.h"
+#include "focus_switcher.h"
 #include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -78,7 +80,6 @@ static void initialize_app_cache() {
     scan_directory_recursive("D:\\Projects");
 }
 
-// Runs the application when you hit Enter or double click
 static void launch_app_by_name(const char* display_name) {
     printf("[LAUNCHER-EXEC] Attempting execution for query: \"%s\"\n", display_name);
     printf("[LAUNCHER-EXEC] Checking against %d cached applications...\n", G_APP_COUNT);
@@ -133,6 +134,58 @@ static void launch_app_as_admin(const char* display_name) {
             return;
         }
     }
+}
+static void launch_exe_with_args(const char* exe_path, const char* args) {
+    char cmd[MAX_PATH * 2 + 512];
+    
+    if (args != NULL && strlen(args) > 0) {
+        snprintf(cmd, sizeof(cmd), "\"%s\" %s", exe_path, args);
+    } else {
+        snprintf(cmd, sizeof(cmd), "\"%s\"", exe_path);
+    }
+    
+    printf("[LAUNCHER-EXEC] Running: %s\n", cmd);
+    
+    STARTUPINFOA si = {0};
+    si.cb = sizeof(si);
+    PROCESS_INFORMATION pi = {0};
+    
+    if (CreateProcessA(NULL, cmd, NULL, NULL, FALSE, CREATE_NO_WINDOW, NULL, NULL, &si, &pi)) {
+        printf("[LAUNCHER-EXEC] Process started successfully!\n");
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);
+        
+    } else {
+        printf("[LAUNCHER-EXEC] Failed to start process. Error: %lu\n", GetLastError());
+    }
+}
+
+// Launch an executable by name (from cache) with arguments
+static void launch_app_by_name_with_args(const char* display_name, const char* args) {
+    printf("[LAUNCHER-EXEC] Attempting execution for query: \"%s\" with args: \"%s\"\n", display_name, args ? args : "");
+    printf("[LAUNCHER-EXEC] Checking against %d cached applications...\n", G_APP_COUNT);
+    
+    for (int i = 0; i < G_APP_COUNT; i++) {
+        if (StrCmpIA(G_APPS[i].name, display_name) == 0) {
+            printf("[LAUNCHER-EXEC] MATCH FOUND! Index: %d\n", i);
+            printf("[LAUNCHER-EXEC] Display Name: \"%s\"\n", G_APPS[i].name);
+            printf("[LAUNCHER-EXEC] File Target Path: \"%s\"\n", G_APPS[i].path);
+            
+            launch_exe_with_args(G_APPS[i].path, args);
+            return;
+        }
+    }
+    
+    printf("[LAUNCHER-EXEC] ERROR: No cache entry matched \"%s\"\n", display_name);
+}
+
+// Launch an executable by full path with arguments
+static void launch_exe_by_path(const char* exe_path, const char* args) {
+    if (!PathFileExistsA(exe_path)) {
+        printf("[LAUNCHER-EXEC] ERROR: File not found: %s\n", exe_path);
+        return;
+    }
+    launch_exe_with_args(exe_path, args);
 }
 
 #endif

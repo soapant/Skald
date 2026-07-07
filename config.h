@@ -30,8 +30,10 @@ static bool TRAY = true;
 #define GOOGLE_SEARCH_KEY  0x47 
 #define NVIM_ID      13
 #define NVIM_KEY     0x49
-
-// Modifier flags (renamed to avoid Windows conflicts)
+#define TERMINAL_ID      14
+#define TERMINAL_KEY     0x50
+#define TIMER_ID      15
+#define TIMER_KEY     0x4F
 #define HOTKEY_MOD_NONE         0x00
 #define HOTKEY_MOD_ALT          0x01
 #define HOTKEY_MOD_SHIFT        0x02
@@ -71,17 +73,26 @@ typedef struct {
 typedef struct {
     int vk_code;
     int modifiers;
-    const char** blacklist;      // Pointer to array
+    const char** blacklist;      
     int blacklist_count;
-    const char** window_titles;  // Pointer to array
+    const char** window_titles;  
     int window_count;
 } FocusSwitcherBinding;
 
+typedef struct {
+    int vk_code;
+    int modifiers;
+    const char** window_titles;  
+    int window_count;
+} BulkKillProcessBinding;
+
 static const AppHotkey G_APP_HOTKEYS[] = {
-  
     { VK_RETURN, HOTKEY_MOD_ALT, "*", "Alacritty" },
     { 'B', HOTKEY_MOD_CTRL | HOTKEY_MOD_SHIFT, "*", "Zen" },
 };
+
+
+#define APP_HOTKEY_COUNT (sizeof(G_APP_HOTKEYS) / sizeof(G_APP_HOTKEYS[0]))
 
 static const MacroBinding G_MACRO_BINDINGS[] = {
     { 'V', HOTKEY_MOD_ALT, "Factorio", MACRO_FACTORIO_MAKE_TAG, 0 },
@@ -110,9 +121,12 @@ static const TextSnippet G_TEXT_SNIPPETS[] = {
     { 'P', HOTKEY_MOD_ALT, "EpicGamesLauncher", "i_am_retarded1" },
 };
 
+#define TEXT_SNIPPET_COUNT (sizeof(G_TEXT_SNIPPETS) / sizeof(G_TEXT_SNIPPETS[0]))
+
 static const char* focus_blacklist_games[] = {"CrosshairX"};
 
-static const char* games_windows[] = {"Brawlhalla","Fortnite","RocketLeague","Factorio"};
+static const char* games_windows[] = {"Brawlhalla","Fortnite","RocketLeague","Factorio","Minecraft"};
+
 
 static const char* focus_blacklist_browsers[] = {"CrosshairX"};
 
@@ -120,7 +134,7 @@ static const char* browsers_windows[] = {"Zen","Chrome"};
 
 static const char* focus_blacklist_coding[] = {"CrosshairX"};
 
-static const char* coding_windows[] = {"Alacritty","Neovide","Nvim"};
+static const char* coding_windows[] = {"Alacritty","Nvim"};
 
 static const FocusSwitcherBinding G_FOCUS_SWITCHERS[] = {
     {
@@ -148,6 +162,22 @@ static const FocusSwitcherBinding G_FOCUS_SWITCHERS[] = {
         sizeof(coding_windows) / sizeof(coding_windows[0])
     },
 };
+
+static const char* bkp_windows[] = {"Brawlhalla","Fortnite","RocketLeague","Factorio","Steam"};
+
+
+#define FOCUS_SWITCHER_COUNT (sizeof(G_FOCUS_SWITCHERS) / sizeof(G_FOCUS_SWITCHERS[0]))
+
+static const BulkKillProcessBinding G_BULK_KILL_PROCESS[] = {
+    {
+        'P',           
+        HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL,               
+        bkp_windows,              
+        sizeof(bkp_windows) / sizeof(bkp_windows[0])
+    },
+};
+
+#define BULKKILLPROCESS_COUNT (sizeof(G_BULK_KILL_PROCESS) / sizeof(G_BULK_KILL_PROCESS[0]))
 
 #define FOCUS_SWITCHER_COUNT (sizeof(G_FOCUS_SWITCHERS) / sizeof(G_FOCUS_SWITCHERS[0]))
 
@@ -194,5 +224,10 @@ static int google_search_blacklist_count = sizeof(google_search_blacklist) / siz
 static const char* nvim_blacklist[] = {"Fortnite", "CrosshairX"};
 static int nvim_blacklist_count = sizeof(nvim_blacklist) / sizeof(nvim_blacklist[0]);
 
+static const char* timer_blacklist[] = {"Fortnite", "CrosshairX"};
+static int timer_blacklist_count = sizeof(timer_blacklist) / sizeof(timer_blacklist[0]);
+
+static const char* terminal_blacklist[] = {"Fortnite", "CrosshairX"};
+static int terminal_blacklist_count = sizeof(terminal_blacklist) / sizeof(terminal_blacklist[0]);
 
 #endif

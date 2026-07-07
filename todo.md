@@ -1,7 +1,4 @@
-- [ ] make the fucking spotify knockoff program so i dont waste internet and ram
-- [ ] do the standard method deployement preferably dynamic
-- [ ] do the whole refactoring but for the builder base attacks
-- [ ] find a way to get the coc script to know the locations of every troop in the attack
-- [ ] do the calculate pattern of troops and spells for the Coc script
 - [ ] also maybe make a screenshot manager / taker in c
-- [ ] add a bulk kill process so i type one key and it destoys shit
+- [ ] make the spotify knockoff already you fucking retard
+- [ ] minecraft modpack do the modified providence recipes
+- [ ] and the always on top thingy
