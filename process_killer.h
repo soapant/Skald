@@ -100,7 +100,6 @@ static void BulkKillProcesses(const char* window_titles[], int count) {
 static bool HandleBulkKillProcess(int vk_code, int modifiers, const char* current_title) {
     for (int i = 0; i < BULKKILLPROCESS_COUNT; i++) {
         const BulkKillProcessBinding* binding = &G_BULK_KILL_PROCESS[i];
-        
         if (binding->vk_code == vk_code && binding->modifiers == modifiers) {
             BulkKillProcesses(binding->window_titles, binding->window_count);
             return true;

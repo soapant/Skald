@@ -13,6 +13,8 @@
 #include "screenshot.h"
 #include "todo.h"
 #include "zoxide.h"
+#include "nvim_zoxide.h"
+#include "yazi_zoxide.h"
 #include "pos_handler.h"
 #include "focus_switcher.h"
 #include "color_handler.h"
@@ -23,7 +25,6 @@
 #include "google_search.h"
 #include "factorio.h"
 #include "app_launcher.h"
-#include "nvim_zoxide.h"
 #include "process_killer.h"
 #pragma comment(lib, "Shlwapi.lib") // Tells the compiler to link the shlwapi library
 #include "config.h"
@@ -259,7 +260,6 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
             return 0;
         }
 
-        // --- ESCAPE: Close the window ---
         if (wParam == VK_ESCAPE) {
             output_buffer[0] = '\0'; 
             selection_complete = true;  
@@ -1218,68 +1218,6 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
         bool shift_down = (GetKeyState(VK_SHIFT) & 0x8000) || 
                           (GetKeyState(VK_LSHIFT) & 0x8000) || 
                           (GetKeyState(VK_RSHIFT) & 0x8000);
-        // ============================================================
-        // KEY REMAPPINGS (Manual)
-        // ============================================================
-
-        // CapsLock -> Backspace
-        if (pKeyInfo->vkCode == VK_CAPITAL && !shift_down && !ctrl_down && !alt_down) {
-            INPUT inputs[2] = {0};
-            inputs[0].type = INPUT_KEYBOARD;
-            inputs[0].ki.wVk = VK_BACK;
-            inputs[1].type = INPUT_KEYBOARD;
-            inputs[1].ki.wVk = VK_BACK;
-            inputs[1].ki.dwFlags = KEYEVENTF_KEYUP;
-            SendInput(2, inputs, sizeof(INPUT));
-            return 1;
-        }
-
-        // Shift+CapsLock -> Escape
-        if (pKeyInfo->vkCode == VK_CAPITAL && shift_down && !ctrl_down && !alt_down) {
-            // Release Shift first
-            INPUT release_shift = {0};
-            release_shift.type = INPUT_KEYBOARD;
-            release_shift.ki.wVk = VK_SHIFT;
-            release_shift.ki.dwFlags = KEYEVENTF_KEYUP;
-            SendInput(1, &release_shift, sizeof(INPUT));
-            
-            // Send Escape
-            INPUT inputs[2] = {0};
-            inputs[0].type = INPUT_KEYBOARD;
-            inputs[0].ki.wVk = VK_ESCAPE;
-            inputs[1].type = INPUT_KEYBOARD;
-            inputs[1].ki.wVk = VK_ESCAPE;
-            inputs[1].ki.dwFlags = KEYEVENTF_KEYUP;
-            SendInput(2, inputs, sizeof(INPUT));
-            return 1;
-        }
-        
-        if (pKeyInfo->vkCode == VK_RSHIFT && !alt_down && !ctrl_down && !shift_down) {
-            INPUT inputs[2] = {0};
-            inputs[0].type = INPUT_KEYBOARD;
-            inputs[0].ki.wVk = VK_MEDIA_PLAY_PAUSE;
-            inputs[1].type = INPUT_KEYBOARD;
-            inputs[1].ki.wVk = VK_MEDIA_PLAY_PAUSE;
-            inputs[1].ki.dwFlags = KEYEVENTF_KEYUP;
-            SendInput(2, inputs, sizeof(INPUT));
-            return 1;
-        }
-        if (pKeyInfo->vkCode == 'Q' && ctrl_down && !alt_down && !shift_down) {
-            HWND hForeground = GetForegroundWindow();
-            if (hForeground != NULL) {
-                DWORD processId = 0;
-                GetWindowThreadProcessId(hForeground, &processId);
-                if (processId != 0) {
-                    HANDLE hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, processId);
-                    if (hProcess != NULL) {
-                        TerminateProcess(hProcess, 0);
-                        CloseHandle(hProcess);
-                        printf("[END TASK] Terminated process ID: %lu\n", processId);
-                    }
-                }
-            }
-            return 1;
-        }
         double seconds = GetUniversalTimeSeconds();
         if (seconds >= 300) {
             ResetUniversalTimer();
@@ -1565,6 +1503,27 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
                 }
                 printf("[terminal] Opening Terminal with zoxide...\n");
                 TriggerZoxide();
+                return 1;
+            }
+        }
+        if (pKeyInfo->vkCode == YAZI_KEY) {
+            bool is_blacklisted = false;
+            for (int i = 0; i < yazi_blacklist_count; i++) {
+                if (StrStrIA(fgTitle, yazi_blacklist[i]) != NULL) {
+                    is_blacklisted = true;
+                    break;
+                }
+            }
+            if (is_blacklisted) {
+                return CallNextHookEx(NULL, nCode, wParam, lParam);
+            }
+
+            if (alt_down && !ctrl_down && !shift_down) {
+                if (hPopupWnd != NULL && IsWindow(hPopupWnd)) {
+                    return 1;
+                }
+                printf("[YAZI] Opening yazi with zoxide...\n");
+                TriggerYaziZoxide();
                 return 1;
             }
         }

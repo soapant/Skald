@@ -13,7 +13,7 @@ extern int img_region_step;
 extern long img_x1, img_y1, img_x2, img_y2;
 
 #define SCREENSHOT_DIR "C:\\Users\\HP\\Pictures\\Screenshots\\"
-#define IMAGE_EDITOR "mspaint.exe"
+#define IMAGE_EDITOR "picview.exe"
 
 static void TriggerScreenshot(void) {
     if (hPopupWnd != NULL && IsWindow(hPopupWnd)) {
