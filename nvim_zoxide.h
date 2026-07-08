@@ -9,7 +9,7 @@
 extern char* PromptQuickSwitcher(const char** items, int count, int width, int height);
 extern HWND hPopupWnd;
 
-static void TriggerNvimZoxide() {
+static void TriggerNvimZoxide(int version) {
     if (hPopupWnd != NULL && IsWindow(hPopupWnd)) {
         return;
     }
@@ -32,14 +32,24 @@ static void TriggerNvimZoxide() {
         
         // Remove newline from path
         path[strcspn(path, "\r\n")] = '\0';
-        
-        if (strlen(path) > 0) {
-            char nvim_cmd[2048];
-            snprintf(nvim_cmd, sizeof(nvim_cmd), "start neovide \"%s\"", path);
-            system(nvim_cmd);
-            printf("[NVIM] Opened nvim in: %s\n", path);
-        } else {
-            printf("[NVIM] No match found for: %s\n", query);
+        if (version == 0 ){
+            if (strlen(path) > 0) {
+                char nvim_cmd[2048];
+                snprintf(nvim_cmd, sizeof(nvim_cmd), "start neovide \"%s\"", path);
+                system(nvim_cmd);
+                printf("[NEOVIDE] Opened nvim in: %s\n", path);
+            } else {
+                printf("[NEOVIDE] No match found for: %s\n", query);
+            }
+        } else{
+            if (strlen(path) > 0) {
+                char nvim_cmd[2048];
+                snprintf(nvim_cmd, sizeof(nvim_cmd), "start nvim \"%s\"", path);
+                system(nvim_cmd);
+                printf("[NVIM] Opened nvim in: %s\n", path);
+            } else {
+                printf("[NVIM] No match found for: %s\n", query);
+            }
         }
     }
 }

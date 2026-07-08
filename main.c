@@ -1479,33 +1479,12 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
                 if (hPopupWnd != NULL && IsWindow(hPopupWnd)) {
                     return 1;
                 }
-                printf("[NVIM] Opening nvim with zoxide...\n");
-                TriggerNvimZoxide();
+                printf("[NEOVIDE] Opening neovide with zoxide...\n");
+                TriggerNvimZoxide(0);
                 return 1;
             }
         }
         
-        if (pKeyInfo->vkCode == TERMINAL_KEY) {
-            bool is_blacklisted = false;
-            for (int i = 0; i < terminal_blacklist_count; i++) {
-                if (StrStrIA(fgTitle, terminal_blacklist[i]) != NULL) {
-                    is_blacklisted = true;
-                    break;
-                }
-            }
-            if (is_blacklisted) {
-                return CallNextHookEx(NULL, nCode, wParam, lParam);
-            }
-
-            if (alt_down && !ctrl_down && !shift_down) {
-                if (hPopupWnd != NULL && IsWindow(hPopupWnd)) {
-                    return 1;
-                }
-                printf("[terminal] Opening Terminal with zoxide...\n");
-                TriggerZoxide();
-                return 1;
-            }
-        }
         if (pKeyInfo->vkCode == YAZI_KEY) {
             bool is_blacklisted = false;
             for (int i = 0; i < yazi_blacklist_count; i++) {
@@ -1524,6 +1503,27 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
                 }
                 printf("[YAZI] Opening yazi with zoxide...\n");
                 TriggerYaziZoxide();
+                return 1;
+            }
+        }
+        if (pKeyInfo->vkCode == TERMINAL_KEY) {
+            bool is_blacklisted = false;
+            for (int i = 0; i < terminal_blacklist_count; i++) {
+                if (StrStrIA(fgTitle, terminal_blacklist[i]) != NULL) {
+                    is_blacklisted = true;
+                    break;
+                }
+            }
+            if (is_blacklisted) {
+                return CallNextHookEx(NULL, nCode, wParam, lParam);
+            }
+
+            if (alt_down && !ctrl_down && !shift_down) {
+                if (hPopupWnd != NULL && IsWindow(hPopupWnd)) {
+                    return 1;
+                }
+                printf("[terminal] Opening terminal with zoxide...\n");
+                TriggerZoxide();
                 return 1;
             }
         }
