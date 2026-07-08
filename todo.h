@@ -90,7 +90,7 @@ void TriggerTodo(HWND targetPopupWnd, int* currentModeAddress) {
     // Assign via pointer tracking back to main.c (MODE_TODO = 3)
     *currentModeAddress = 3; 
 
-    char* raw_input = PromptQuickSwitcher(ui_list, todo_count, 220, 550);
+    char* raw_input = PromptQuickSwitcher(ui_list, todo_count, 220, 350);
 
     *currentModeAddress = 0; // MODE_NONE
 

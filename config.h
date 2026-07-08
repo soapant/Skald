@@ -86,6 +86,12 @@ typedef struct {
 typedef struct {
     int vk_code;
     int modifiers;
+    int code;
+} MusicPlayerBinding;
+
+typedef struct {
+    int vk_code;
+    int modifiers;
     const char** window_titles;  
     int window_count;
 } BulkKillProcessBinding;
@@ -166,11 +172,36 @@ static const FocusSwitcherBinding G_FOCUS_SWITCHERS[] = {
         sizeof(coding_windows) / sizeof(coding_windows[0])
     },
 };
+static const MusicPlayerBinding G_MUSIC_PLAYERS[] = {
+  {
+    VK_OEM_COMMA,
+    HOTKEY_MOD_ALT,
+    1 //PAUSE
+  },
+  { 
+    VK_OEM_2,
+    HOTKEY_MOD_ALT,
+    5 // TOGGLE PLAYBACK
+  },
+  { 
+    VK_OEM_1,
+    HOTKEY_MOD_ALT,
+    6 // TERMINATE
+  },
+  { 
+    'P',
+    HOTKEY_MOD_ALT,
+    69 // PLAY SONG
+  },
+  
+};
 
-static const char* bkp_windows[] = {"Brawlhalla","Fortnite","RocketLeague","Factorio","Steam"};
+#define MUSIC_PLAYER_COUNT (sizeof(G_MUSIC_PLAYERS) / sizeof(G_MUSIC_PLAYERS[0]))
 
 
 #define FOCUS_SWITCHER_COUNT (sizeof(G_FOCUS_SWITCHERS) / sizeof(G_FOCUS_SWITCHERS[0]))
+
+static const char* bkp_windows[] = {"Brawlhalla","Fortnite","RocketLeague","Factorio","Steam"};
 
 static const BulkKillProcessBinding G_BULK_KILL_PROCESS[] = {
     {
