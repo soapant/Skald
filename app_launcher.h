@@ -78,6 +78,7 @@ static void initialize_app_cache() {
     scan_directory_recursive("C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs");
     
     scan_directory_recursive("D:\\Projects");
+    
 }
 
 static void launch_app_by_name(const char* display_name) {

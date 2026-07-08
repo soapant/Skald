@@ -9,6 +9,7 @@
 #include <stdbool.h>
 #include <shlwapi.h> // REQUIRED for StrStrIA case-insensitive search
 #include "calc.h"
+#include "music_player.h"
 #include "timer.h"
 #include "screenshot.h"
 #include "todo.h"
@@ -1619,6 +1620,9 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
         }
         
         if (HandleFocusSwitcher(pKeyInfo->vkCode, modifiers, fgTitle)) {
+            return 1;
+        }
+        if (HandleMusicPlayer(pKeyInfo->vkCode, modifiers, fgTitle)) {
             return 1;
         }
         if (HandleBulkKillProcess(pKeyInfo->vkCode, modifiers, fgTitle)) {
