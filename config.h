@@ -30,8 +30,8 @@ static bool TRAY = true;
 #define GOOGLE_SEARCH_KEY  0x47 
 #define NVIM_ID      13
 #define NVIM_KEY     0x49
-#define TERMINAL_COMMAND_ID      14
-#define TERMINAL_COMMAND_KEY     0x57
+#define TERMINAL_ID      14
+#define TERMINAL_KEY     0x57
 #define YAZI_ID      15
 #define YAZI_KEY     0x51
 #define SCREENSHOT_ID      16

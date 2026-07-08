@@ -4,3 +4,8 @@
 - [ ] try to get documentation for all my code shit so i am not requiring the internet
 - [ ] also dont use raylib if you are going to maek the image viewer use glfw
 - [ ] also make the fucking clipboard manager
+- [ ] make a video viewer thingy so i can pick and choose from my downloaded videos
+- [ ] do the yazi copy file to clipboard thingy
+- [ ] fix the fucking autohotkey caps lock thing
+- [ ] also do the providence macerator recipes
+- [ ] also hide the providence recipes in jei
