@@ -14,7 +14,7 @@ static void TriggerYaziZoxide(void) {
         return;
     }
 
-    const char* prompt[1] = { "Enter zoxide query..." };
+    const char* prompt[1] = { "Enter zoxide query (YAZI)..." };
     char* query = PromptQuickSwitcher(prompt, 1, 220, 150);
 
     if (query != NULL && strlen(query) > 0) {

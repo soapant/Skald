@@ -26,7 +26,6 @@ static bool HandleMusicPlayer(int vk_code, int modifiers, const char* current_ti
                   PostMessage(playerHwnd, WM_USER + 1, binding->code, 0);
                   return true;
               } else {
-                  printf("[Music Player] No matching window found.\n");
                   return false;
               }
             } else {

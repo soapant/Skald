@@ -1,8 +1,7 @@
-- [ ] and the always on top thingy
-- [ ] also make the fucking spotify knockoff you fucking retard
 - [ ] also make the fucking clipboard manager
 - [ ] make a video viewer thingy so i can pick and choose from my downloaded videos
-- [ ] also do the providence macerator recipes
 - [ ] also hide the providence recipes in jei
-- [ ] also fix the fucking slow ass terminal and browser download speeds
-- [ ] find a way to use foobar with my c program so i can say the music i want in the window
+- [ ] aria2c -x 16 -s 16 "YOUR_DOWNLOAD_LINK_HERE" instead of gopeed
+- [ ] rerember the grep cli commands i forgor
+- [ ] add the blast furnace to the providence modifier thingys
+- [ ] make a python file to parse the recipe json data
