@@ -14,7 +14,7 @@ static void TriggerZoxide() {
         return;
     }
 
-    const char* prompt[1] = { "Enter zoxide query..." };
+    const char* prompt[1] = { "Enter zoxide query (TERMINAL)..." };
     char* query = PromptQuickSwitcher(prompt, 1, 220, 150);
 
     if (query != NULL && strlen(query) > 0) {

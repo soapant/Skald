@@ -1,6 +1,7 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+
 static bool TRAY = true;
 
 // Hotkey IDs
@@ -22,21 +23,19 @@ static bool TRAY = true;
 #define CALCULATOR_KEY    0x43  // C
 #define EXE_ID            9
 #define EXE_KEY           0x45  // E
-#define CLIPBOARD_ID      10
-#define CLIPBOARD_KEY     0x56  // V
-#define KILL_PROCESS_ID   11
+#define KILL_PROCESS_ID   10
 #define KILL_PROCESS_KEY  0x55
-#define GOOGLE_SEARCH_ID   12
+#define GOOGLE_SEARCH_ID   11
 #define GOOGLE_SEARCH_KEY  0x47 
-#define NVIM_ID      13
+#define NVIM_ID      12
 #define NVIM_KEY     0x49
-#define TERMINAL_ID      14
+#define TERMINAL_ID      13
 #define TERMINAL_KEY     0x57
-#define YAZI_ID      15
+#define YAZI_ID      14
 #define YAZI_KEY     0x51
-#define SCREENSHOT_ID      16
+#define SCREENSHOT_ID      15
 #define SCREENSHOT_KEY     0x59
-#define TIMER_ID      17
+#define TIMER_ID      16
 #define TIMER_KEY     0x4F
 #define HOTKEY_MOD_NONE         0x00
 #define HOTKEY_MOD_ALT          0x01
@@ -92,6 +91,12 @@ typedef struct {
 typedef struct {
     int vk_code;
     int modifiers;
+    int code;
+} VideoPlayerBinding;
+
+typedef struct {
+    int vk_code;
+    int modifiers;
     const char** window_titles;  
     int window_count;
 } BulkKillProcessBinding;
@@ -100,6 +105,8 @@ static const AppHotkey G_APP_HOTKEYS[] = {
     { VK_RETURN, HOTKEY_MOD_ALT, "*", "Alacritty" },
     { 'B', HOTKEY_MOD_CTRL | HOTKEY_MOD_SHIFT, "*", "Zen" },
 };
+
+#define APP_HOTKEY_COUNT (sizeof(G_APP_HOTKEYS) / sizeof(G_APP_HOTKEYS[0]))
 
 
 #define APP_HOTKEY_COUNT (sizeof(G_APP_HOTKEYS) / sizeof(G_APP_HOTKEYS[0]))
@@ -116,27 +123,88 @@ static const MacroBinding G_MACRO_BINDINGS[] = {
 
 #define MACRO_BINDING_COUNT (sizeof(G_MACRO_BINDINGS) / sizeof(G_MACRO_BINDINGS[0]))
 
-// ============================================================
-// TEXT SNIPPET SYSTEM (for clipboard text)
-// ============================================================
+
 typedef struct {
     int vk_code;
     int modifiers;
     const char* exe_name;
-    const char* text;  // The text to copy to clipboard
+    const char* text;  
 } TextSnippet;
 
 static const TextSnippet G_TEXT_SNIPPETS[] = {
-    { 'O', HOTKEY_MOD_ALT, "EpicGamesLauncher", "seifisbad@gmail.com" },
-    { 'P', HOTKEY_MOD_ALT, "EpicGamesLauncher", "i_am_retarded1" },
+    { 'O', HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT, "EpicGamesLauncher", "seifisbad@gmail.com" },
+    { 'P', HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT, "EpicGamesLauncher", "i_am_retarded1" },
 };
 
 #define TEXT_SNIPPET_COUNT (sizeof(G_TEXT_SNIPPETS) / sizeof(G_TEXT_SNIPPETS[0]))
 
+
+static const MusicPlayerBinding G_MUSIC_PLAYERS[] = {
+  {
+    VK_OEM_COMMA,
+    HOTKEY_MOD_ALT,
+    1 //PAUSE
+  },
+  { 
+    VK_OEM_2,
+    HOTKEY_MOD_ALT,
+    5 // TOGGLE PLAYBACK
+  },
+  { 
+    VK_OEM_1,
+    HOTKEY_MOD_ALT,
+    6 // TERMINATE
+  },
+  { 
+    'P',
+    HOTKEY_MOD_ALT,
+    69 // PLAY SONG
+  },
+  
+};
+#define MUSIC_PLAYER_COUNT (sizeof(G_MUSIC_PLAYERS) / sizeof(G_MUSIC_PLAYERS[0]))
+static const VideoPlayerBinding G_VIDEO_PLAYERS[] = {
+  {
+    VK_OEM_COMMA,
+    HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT,
+    1 //PAUSE
+  },
+  { 
+    VK_OEM_PERIOD,
+    HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT,
+    5 // TOGGLE FullScreen
+  },
+  { 
+    VK_OEM_1,
+    HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT,
+    6 // TERMINATE
+  },
+  { 
+    'V',
+    HOTKEY_MOD_ALT,
+    69 // PLAY VIDEO
+  },
+};
+#define VIDEO_PLAYER_COUNT (sizeof(G_VIDEO_PLAYERS) / sizeof(G_VIDEO_PLAYERS[0]))
+
+static const char* bkp_windows[] = {"Brawlhalla","Fortnite","RocketLeague","Factorio","Steam"};
+
+static const BulkKillProcessBinding G_BULK_KILL_PROCESS[] = {
+    {
+        'P',           
+        HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL,               
+        bkp_windows,              
+        sizeof(bkp_windows) / sizeof(bkp_windows[0])
+    },
+};
+
+#define BULKKILLPROCESS_COUNT (sizeof(G_BULK_KILL_PROCESS) / sizeof(G_BULK_KILL_PROCESS[0]))
+
+
+  
 static const char* focus_blacklist_games[] = {"CrosshairX"};
 
 static const char* games_windows[] = {"Brawlhalla","Fortnite","RocketLeague","Factorio","Minecraft"};
-
 
 static const char* focus_blacklist_browsers[] = {"CrosshairX"};
 
@@ -172,54 +240,9 @@ static const FocusSwitcherBinding G_FOCUS_SWITCHERS[] = {
         sizeof(coding_windows) / sizeof(coding_windows[0])
     },
 };
-static const MusicPlayerBinding G_MUSIC_PLAYERS[] = {
-  {
-    VK_OEM_COMMA,
-    HOTKEY_MOD_ALT,
-    1 //PAUSE
-  },
-  { 
-    VK_OEM_2,
-    HOTKEY_MOD_ALT,
-    5 // TOGGLE PLAYBACK
-  },
-  { 
-    VK_OEM_1,
-    HOTKEY_MOD_ALT,
-    6 // TERMINATE
-  },
-  { 
-    'P',
-    HOTKEY_MOD_ALT,
-    69 // PLAY SONG
-  },
-  
-};
-
-#define MUSIC_PLAYER_COUNT (sizeof(G_MUSIC_PLAYERS) / sizeof(G_MUSIC_PLAYERS[0]))
-
 
 #define FOCUS_SWITCHER_COUNT (sizeof(G_FOCUS_SWITCHERS) / sizeof(G_FOCUS_SWITCHERS[0]))
 
-static const char* bkp_windows[] = {"Brawlhalla","Fortnite","RocketLeague","Factorio","Steam"};
-
-static const BulkKillProcessBinding G_BULK_KILL_PROCESS[] = {
-    {
-        'P',           
-        HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL,               
-        bkp_windows,              
-        sizeof(bkp_windows) / sizeof(bkp_windows[0])
-    },
-};
-
-#define BULKKILLPROCESS_COUNT (sizeof(G_BULK_KILL_PROCESS) / sizeof(G_BULK_KILL_PROCESS[0]))
-
-#define FOCUS_SWITCHER_COUNT (sizeof(G_FOCUS_SWITCHERS) / sizeof(G_FOCUS_SWITCHERS[0]))
-
-#define TEXT_SNIPPET_COUNT (sizeof(G_TEXT_SNIPPETS) / sizeof(G_TEXT_SNIPPETS[0]))
-
-#define APP_HOTKEY_COUNT (sizeof(G_APP_HOTKEYS) / sizeof(G_APP_HOTKEYS[0]))
-  
 static const char* switcher_blacklist[] = {"Fortnite", "CrosshairX"};
 static int switcher_blacklist_count = sizeof(switcher_blacklist) / sizeof(switcher_blacklist[0]);
 
@@ -247,9 +270,6 @@ static int calculator_blacklist_count = sizeof(calculator_blacklist) / sizeof(ca
 static const char* exe_blacklist[] = {"Fortnite", "CrosshairX"};
 static int exe_blacklist_count = sizeof(exe_blacklist) / sizeof(exe_blacklist[0]);
 
-static const char* clipboard_blacklist[] = {"Fortnite", "CrosshairX","Factoro"};
-static int clipboard_blacklist_count = sizeof(clipboard_blacklist) / sizeof(clipboard_blacklist[0]);
-
 static const char* kill_process_blacklist[] = {"Fortnite", "CrosshairX"};
 static int kill_process_blacklist_count = sizeof(kill_process_blacklist) / sizeof(kill_process_blacklist[0]);
 
@@ -270,5 +290,8 @@ static int screenshot_blacklist_count = sizeof(screenshot_blacklist) / sizeof(sc
 
 static const char* yazi_blacklist[] = {"Fortnite", "CrosshairX"};
 static int yazi_blacklist_count = sizeof(yazi_blacklist) / sizeof(yazi_blacklist[0]);
+
+static const char* video_blacklist[] = {"Fortnite", "CrosshairX"};
+static int video_blacklist_count = sizeof(video_blacklist) / sizeof(video_blacklist[0]);
 
 #endif

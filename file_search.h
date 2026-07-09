@@ -15,8 +15,6 @@ typedef struct {
 static FileItem G_FILES[MAX_FILES];
 static int G_FILE_COUNT = 0;
 
-// Search a directory for files matching a partial string (case-insensitive)
-// Returns the full path of the first match, or NULL if none found
 static char* SearchFileInDirectory(const char* directory, const char* search_string) {
     if (!directory || !search_string || strlen(search_string) == 0) {
         return NULL;
@@ -51,8 +49,6 @@ static char* SearchFileInDirectory(const char* directory, const char* search_str
     FindClose(hFind);
     return NULL;
 }
-
-// Search a directory recursively for files matching a partial string
 static char* SearchFileRecursive(const char* directory, const char* search_string) {
     if (!directory || !search_string || strlen(search_string) == 0) {
         return NULL;
