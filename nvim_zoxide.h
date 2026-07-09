@@ -14,7 +14,7 @@ static void TriggerNvimZoxide(int version) {
         return;
     }
 
-    const char* prompt[1] = { "Enter zoxide query..." };
+    const char* prompt[1] = { "Enter zoxide query (NEOVIDE)..." };
     char* query = PromptQuickSwitcher(prompt, 1, 220, 150);
 
     if (query != NULL && strlen(query) > 0) {

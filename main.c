@@ -1,5 +1,4 @@
 #define _WIN32_WINNT 0x0601
-
 #include <windows.h>
 #include <commctrl.h>
 #include <psapi.h>
@@ -9,6 +8,7 @@
 #include <stdbool.h>
 #include <shlwapi.h> // REQUIRED for StrStrIA case-insensitive search
 #include "calc.h"
+#include "video_player.h"
 #include "music_player.h"
 #include "timer.h"
 #include "screenshot.h"
@@ -1623,6 +1623,9 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
             return 1;
         }
         if (HandleMusicPlayer(pKeyInfo->vkCode, modifiers, fgTitle)) {
+            return 1;
+        }
+        if (HandleVideoPlayer(pKeyInfo->vkCode, modifiers, fgTitle)) {
             return 1;
         }
         if (HandleBulkKillProcess(pKeyInfo->vkCode, modifiers, fgTitle)) {
