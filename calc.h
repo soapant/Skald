@@ -1,12 +1,15 @@
 #ifndef CALC_H
 #define CALC_H
-
+#define IDC_INPUT_BOX 101
+#define IDC_LIST_BOX 102
+#include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 #include <stdbool.h>
 #include <shlwapi.h>
+#include "types.h"
 
 // ============================================================
 // GLOBAL STATE FOR TAB FLIPPING
@@ -18,6 +21,14 @@ static bool g_has_last_op = false;
 static char g_last_expression[256] = {0};
 static double g_flipped_result = 0.0;
 static bool g_is_flipped = false;
+
+
+extern char* PromptQuickSwitcher(const char* window_list[], int count, int height, int width, 
+                                 RefreshCallback refresh_callback, 
+                                 EnterCallback enter_callback,
+                                 CtrlEnterCallback ctrl_enter_callback,
+                                 TabCallback tab_callback);
+extern HWND hEditControl;
 
 typedef struct {
     const char* from_unit;
@@ -94,7 +105,6 @@ double parse_number_with_suffix(const char* str) {
     strncpy(cleaned, str, sizeof(cleaned) - 1);
     cleaned[sizeof(cleaned) - 1] = '\0';
     
-    // Remove trailing spaces
     int len = strlen(cleaned);
     while (len > 0 && isspace(cleaned[len - 1])) {
         cleaned[--len] = '\0';
@@ -271,7 +281,7 @@ void live_evaluate(const char* input, char* out_result, size_t max_len) {
                 if (StrCmpIA(source_unit, G_CONVERSIONS[i].from_unit) == 0 &&
                     StrCmpIA(target_unit, G_CONVERSIONS[i].to_unit) == 0) {
                     snprintf(out_result, max_len, "= %.4g %s", val * G_CONVERSIONS[i].factor, G_CONVERSIONS[i].to_unit);
-                    g_has_last_op = false;  // Reset flip state for conversions
+                    g_has_last_op = false;
                     return;
                 }
             }
@@ -284,23 +294,19 @@ void live_evaluate(const char* input, char* out_result, size_t max_len) {
     // ============================================================
     // 2. Process Standard Mathematical Equations
     // ============================================================
-    // Replace 'x' or 'X' with '*'
     for (int i = 0; clean[i]; i++) {
         if (clean[i] == 'x' || clean[i] == 'X') clean[i] = '*';
     }
 
-    // Parse: number operator number (with K/M support)
     char a_str[64] = {0};
     char op_str[4] = {0};
     char b_str[64] = {0};
     
-    // Try to parse format: "1.3 / 0.2" or "1.3k / 0.2m"
     if (sscanf(clean, "%63s %3s %63s", a_str, op_str, b_str) == 3) {
         double a = parse_number_with_suffix(a_str);
         double b = parse_number_with_suffix(b_str);
         char op = op_str[0];
         
-        // Store for potential flip
         g_last_a = a;
         g_last_b = b;
         g_last_op = op;
@@ -308,7 +314,6 @@ void live_evaluate(const char* input, char* out_result, size_t max_len) {
         strncpy(g_last_expression, clean, sizeof(g_last_expression) - 1);
         
         double result = 0.0;
-        bool valid = true;
         
         switch (op) {
             case '+': result = a + b; break;
@@ -327,25 +332,21 @@ void live_evaluate(const char* input, char* out_result, size_t max_len) {
                 return;
         }
         
-        // Format the result with K/M suffix
         char formatted[64];
         format_number_with_suffix(result, formatted, sizeof(formatted));
         
-        // Show expression and result
         snprintf(out_result, max_len, "= %s", formatted);
-        CopyToClipboard(formatted);
         return;
     }
     
     // ============================================================
-    // 3. Try simple number parsing (just a number with K/M)
+    // 3. Try simple number parsing
     // ============================================================
     double val = parse_number_with_suffix(clean);
     if (val != 0.0 || (strlen(clean) > 0 && clean[0] == '0')) {
         char formatted[64];
         format_number_with_suffix(val, formatted, sizeof(formatted));
         snprintf(out_result, max_len, "= %s", formatted);
-        CopyToClipboard(formatted);
         g_has_last_op = false;
         return;
     }
@@ -367,12 +368,10 @@ void flip_last_operation(char* out_result, size_t max_len) {
         return;
     }
     
-    // Swap a and b
     double flipped_a = g_last_b;
     double flipped_b = g_last_a;
     
     double result = 0.0;
-    bool valid = true;
     
     switch (g_last_op) {
         case '+': result = flipped_a + flipped_b; break;
@@ -394,17 +393,13 @@ void flip_last_operation(char* out_result, size_t max_len) {
     g_flipped_result = result;
     g_is_flipped = true;
     
-    // Format the flipped numbers and result
     char a_formatted[32], b_formatted[32], result_formatted[32];
     format_number_with_suffix(flipped_a, a_formatted, sizeof(a_formatted));
     format_number_with_suffix(flipped_b, b_formatted, sizeof(b_formatted));
     format_number_with_suffix(result, result_formatted, sizeof(result_formatted));
     
-    // Show both original and flipped
     snprintf(out_result, max_len, "FLIP: %s %c %s = %s", 
              a_formatted, g_last_op, b_formatted, result_formatted);
-    
-    CopyToClipboard(result_formatted);
 }
 
 // ============================================================
@@ -436,7 +431,6 @@ void get_flip_display(char* out, size_t max_len) {
         return;
     }
     
-    // Swap a and b
     double flipped_a = g_last_b;
     double flipped_b = g_last_a;
     
@@ -462,13 +456,11 @@ void get_flip_display(char* out, size_t max_len) {
     g_flipped_result = result;
     g_is_flipped = true;
     
-    // Format the flipped numbers and result
     char a_formatted[32], b_formatted[32], result_formatted[32];
     format_number_with_suffix(flipped_a, a_formatted, sizeof(a_formatted));
     format_number_with_suffix(flipped_b, b_formatted, sizeof(b_formatted));
     format_number_with_suffix(result, result_formatted, sizeof(result_formatted));
     
-    // Display the flipped expression (no clipboard copy)
     snprintf(out, max_len, "↕ %s %c %s = %s", 
              a_formatted, g_last_op, b_formatted, result_formatted);
 }
@@ -485,5 +477,105 @@ void get_flip_expression(char* out, size_t max_len) {
     
     snprintf(out, max_len, "%s %c %s", a_formatted, g_last_op, b_formatted);
 }
-#endif
 
+// ============================================================
+// CALCULATOR CALLBACKS
+// ============================================================
+static void calculator_refresh_callback(const char* filter, HWND hListBox) {
+    if (!hListBox) return;
+    
+    char result_buffer[256] = {0};
+    if (filter && strlen(filter) > 0) {
+        live_evaluate(filter, result_buffer, sizeof(result_buffer));
+    } else {
+        strncpy(result_buffer, "Waiting for expression...", sizeof(result_buffer) - 1);
+    }
+    
+    SendMessageA(hListBox, LB_RESETCONTENT, 0, 0);
+    SendMessageA(hListBox, LB_ADDSTRING, 0, (LPARAM)result_buffer);
+    SendMessageA(hListBox, LB_SETCURSEL, 0, 0);
+}
+
+static void calculator_enter_callback(const char* selection) {
+    if (selection && strlen(selection) > 0) {
+        char* result = (char*)selection;
+        if (strncmp(selection, "= ", 2) == 0) {
+            result = (char*)selection + 2;
+        }
+        CopyToClipboard(result);
+        printf("[CALCULATOR] Copied: %s\n", result);
+    }
+}
+
+// ============================================================
+// TAB CALLBACK - Flips the numbers
+// ============================================================
+static void calculator_tab_callback(void) {
+    if (!hEditControl) return;
+    
+    // Get current input
+    char current_input[256] = {0};
+    GetWindowTextA(hEditControl, current_input, sizeof(current_input));
+    
+    // Try to parse it to see if it's an operation we can flip
+    char a_str[64] = {0};
+    char op_str[4] = {0};
+    char b_str[64] = {0};
+    
+    if (sscanf(current_input, "%63s %3s %63s", a_str, op_str, b_str) == 3) {
+        // We have a valid operation, flip it
+        char flipped[256];
+        snprintf(flipped, sizeof(flipped), "%s %s %s", b_str, op_str, a_str);
+        SetWindowTextA(hEditControl, flipped);
+        
+        // Trigger refresh to update the result
+        int len = strlen(flipped);
+        SendMessageA(hEditControl, EM_SETSEL, len, len);
+        SendMessageA(GetParent(hEditControl), WM_COMMAND, MAKEWPARAM(IDC_INPUT_BOX, EN_CHANGE), (LPARAM)hEditControl);
+        
+        printf("[CALCULATOR] Flipped: %s\n", flipped);
+    } else {
+        printf("[CALCULATOR] Cannot flip: not a valid operation\n");
+    }
+}
+
+// ============================================================
+// CTRL+ENTER CALLBACK - Puts result back into input
+// ============================================================
+static void calculator_ctrlenter_callback(const char* selection) {
+    if (!selection || strlen(selection) == 0 || !hEditControl) return;
+    
+    // Extract the result (skip "= " prefix)
+    char* result = (char*)selection;
+    if (strncmp(selection, "= ", 2) == 0) {
+        result = (char*)selection + 2;
+    }
+    
+    // Put it in the edit box
+    SetWindowTextA(hEditControl, result);
+    
+    // Move cursor to the end
+    int len = strlen(result);
+    SendMessageA(hEditControl, EM_SETSEL, len, len);
+    
+    // Trigger refresh to evaluate again (if user types more)
+    SendMessageA(GetParent(hEditControl), WM_COMMAND, MAKEWPARAM(IDC_INPUT_BOX, EN_CHANGE), (LPARAM)hEditControl);
+    
+    printf("[CALCULATOR] Result put back: %s\n", result);
+}
+
+// ============================================================
+// TRIGGER CALCULATOR
+// ============================================================
+void TriggerCalculator(HWND hPopupWnd) {
+    if (hPopupWnd != NULL && IsWindow(hPopupWnd)) return;
+
+    const char* default_msg[1] = { "Enter operation (e.g. 5 x 5 or 10 hours in minutes)" };
+    PromptQuickSwitcher(default_msg, 1, 220, 550, 
+                        calculator_refresh_callback,   // refresh -> evaluates on typing
+                        calculator_enter_callback,     // enter -> copies result to clipboard
+                        calculator_ctrlenter_callback, // ctrl enter -> puts result back into input
+                        calculator_tab_callback);      // tab -> flips the numbers
+}
+
+#endif
