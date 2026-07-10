@@ -37,6 +37,8 @@ static bool TRAY = true;
 #define SCREENSHOT_KEY     0x59
 #define TIMER_ID      16
 #define TIMER_KEY     0x4F
+#define EXPLORER_ID      17
+#define EXPLORER_KEY     0x52
 #define HOTKEY_MOD_NONE         0x00
 #define HOTKEY_MOD_ALT          0x01
 #define HOTKEY_MOD_SHIFT        0x02
@@ -293,5 +295,8 @@ static int yazi_blacklist_count = sizeof(yazi_blacklist) / sizeof(yazi_blacklist
 
 static const char* video_blacklist[] = {"Fortnite", "CrosshairX"};
 static int video_blacklist_count = sizeof(video_blacklist) / sizeof(video_blacklist[0]);
+
+static const char* explorer_blacklist[] = {"Fortnite", "CrosshairX"};
+static int explorer_blacklist_count = sizeof(explorer_blacklist) / sizeof(explorer_blacklist[0]);
 
 #endif

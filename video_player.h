@@ -31,7 +31,7 @@ static bool HandleVideoPlayer(int vk_code, int modifiers, const char* current_ti
                 }
             } else {
                 ClearFileList();
-                GetFilesRecursive("D:\\videos");
+                GetFilesRecursive("C:\\videos");
 
                 const char* prompt[MAX_FILES];
                 for (int i = 0; i < GetFileCount(); i++) {
@@ -41,7 +41,7 @@ static bool HandleVideoPlayer(int vk_code, int modifiers, const char* current_ti
                 char* input = PromptQuickSwitcher(prompt, GetFileCount(), 220, 350);
                 
                 if (input != NULL && strlen(input) > 0) {
-                    char* result = SearchFileRecursive("D:\\videos", input);
+                    char* result = SearchFileRecursive("C:\\videos", input);
                     
                     if (result) {
                         if (playerHwnd) {
