@@ -1,7 +1,8 @@
 - [ ] also make the fucking clipboard manager
-- [ ] make a video viewer thingy so i can pick and choose from my downloaded videos
-- [ ] also hide the providence recipes in jei
 - [ ] aria2c -x 16 -s 16 "YOUR_DOWNLOAD_LINK_HERE" instead of gopeed
 - [ ] rerember the grep cli commands i forgor
 - [ ] add the blast furnace to the providence modifier thingys
 - [ ] make a python file to parse the recipe json data
+- [ ] refactor the code so that you can do the refreshing of the windows easieer
+- [ ] fix the playback in the music player not working
+- [ ] dont forget to change the videos directory

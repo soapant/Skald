@@ -1,71 +1,98 @@
 #include <windows.h>
+#include <mmdeviceapi.h>
+#include <functiondiscoverykeys_devpkey.h>
 #include <stdio.h>
 
-// Global counter for key presses
-int key_count = 0;
-LARGE_INTEGER last_key_time;
-LARGE_INTEGER start_time;
-BOOL first_key = TRUE;
+#pragma comment(lib, "ole32.lib")
+#pragma comment(lib, "uuid.lib")
 
-LRESULT CALLBACK TestKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
-    if (nCode == HC_ACTION && (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN)) {
-        KBDLLHOOKSTRUCT* pKeyInfo = (KBDLLHOOKSTRUCT*)lParam;
-        key_count++;
-        QueryPerformanceCounter(&last_key_time);
-        
-        // Calculate time since first key
-        if (first_key) {
-            first_key = FALSE;
-            QueryPerformanceCounter(&start_time);
-        }
-        
-        LARGE_INTEGER freq;
-        QueryPerformanceFrequency(&freq);
-        double elapsed_ms = ((double)(last_key_time.QuadPart - start_time.QuadPart) / freq.QuadPart) * 1000.0;
-        
-        printf("[KEY] VK: 0x%X (%c), Count: %d, Elapsed: %.1f ms\n", 
-               pKeyInfo->vkCode, pKeyInfo->vkCode >= 0x20 && pKeyInfo->vkCode <= 0x7E ? pKeyInfo->vkCode : '?', 
-               key_count, elapsed_ms);
+// Define our own GUIDs (these match the Windows SDK ones)
+__declspec(selectany) const CLSID CLSID_MMDeviceEnumerator = {0xBCDE0395, 0xE52F, 0x467C, {0x8E, 0x3D, 0xC4, 0x57, 0x92, 0x91, 0x69, 0x2E}};
+__declspec(selectany) const IID IID_IMMDeviceEnumerator = {0xA95664D2, 0x9614, 0x4F35, {0xA7, 0x46, 0xDE, 0x8D, 0xB6, 0x36, 0x17, 0xE6}};
+__declspec(selectany) const PROPERTYKEY PKEY_Device_FriendlyName = { {0xA45C254E, 0xDF1C, 0x4EFD, {0x80, 0x20, 0x67, 0xD1, 0x46, 0xA8, 0x50, 0xE0}}, 14 };
+
+void ListAudioDevices(void) {
+    HRESULT hr;
+    IMMDeviceEnumerator* pEnumerator = NULL;
+    IMMDeviceCollection* pDevices = NULL;
+    IMMDevice* pDevice = NULL;
+    IPropertyStore* pProps = NULL;
+    PROPVARIANT varName;
+    LPWSTR pwszID = NULL;
+    UINT count = 0;
+
+    CoInitializeEx(NULL, COINIT_MULTITHREADED);
+
+    hr = CoCreateInstance(&CLSID_MMDeviceEnumerator, NULL, CLSCTX_ALL,
+                          &IID_IMMDeviceEnumerator, (void**)&pEnumerator);
+    if (FAILED(hr)) {
+        printf("Failed to create device enumerator. Error: 0x%08lx\n", hr);
+        CoUninitialize();
+        return;
     }
-    return CallNextHookEx(NULL, nCode, wParam, lParam);
+
+    IMMDeviceEnumeratorVtbl* enumVtbl = pEnumerator->lpVtbl;
+    hr = enumVtbl->EnumAudioEndpoints(pEnumerator, eRender, DEVICE_STATE_ACTIVE, &pDevices);
+    if (FAILED(hr)) {
+        printf("Failed to enumerate devices. Error: 0x%08lx\n", hr);
+        enumVtbl->Release(pEnumerator);
+        CoUninitialize();
+        return;
+    }
+
+    IMMDeviceCollectionVtbl* collVtbl = pDevices->lpVtbl;
+    hr = collVtbl->GetCount(pDevices, &count);
+    if (FAILED(hr)) {
+        printf("Failed to get device count. Error: 0x%08lx\n", hr);
+        collVtbl->Release(pDevices);
+        enumVtbl->Release(pEnumerator);
+        CoUninitialize();
+        return;
+    }
+
+    printf("\n=== Audio Output Devices (%d found) ===\n\n", count);
+
+    for (UINT i = 0; i < count; i++) {
+        hr = collVtbl->Item(pDevices, i, &pDevice);
+        if (FAILED(hr)) continue;
+
+        IMMDeviceVtbl* devVtbl = pDevice->lpVtbl;
+
+        printf("[%d]\n", i);
+
+        hr = devVtbl->GetId(pDevice, &pwszID);
+        if (SUCCEEDED(hr)) {
+            printf("  ID: %ls\n", pwszID);
+            CoTaskMemFree(pwszID);
+            pwszID = NULL;
+        }
+
+        hr = devVtbl->OpenPropertyStore(pDevice, STGM_READ, &pProps);
+        if (SUCCEEDED(hr)) {
+            IPropertyStoreVtbl* propsVtbl = pProps->lpVtbl;
+            PropVariantInit(&varName);
+            hr = propsVtbl->GetValue(pProps, &PKEY_Device_FriendlyName, &varName);
+            if (SUCCEEDED(hr)) {
+                printf("  Name: %ls\n", varName.pwszVal);
+            }
+            PropVariantClear(&varName);
+            propsVtbl->Release(pProps);
+            pProps = NULL;
+        }
+
+        printf("\n");
+        devVtbl->Release(pDevice);
+        pDevice = NULL;
+    }
+
+    collVtbl->Release(pDevices);
+    enumVtbl->Release(pEnumerator);
+    CoUninitialize();
 }
 
-int main() {
-    LARGE_INTEGER freq, start, end;
-    QueryPerformanceFrequency(&freq);
-    
-    HHOOK hook = SetWindowsHookEx(WH_KEYBOARD_LL, TestKeyboardProc, GetModuleHandle(NULL), 0);
-    if (!hook) {
-        printf("Failed to install hook\n");
-        return 1;
-    }
-    
-    printf("Hook installed. Press keys to test.\n");
-    printf("Press Escape to exit.\n\n");
-    
-    QueryPerformanceCounter(&start);
-    
-    MSG msg;
-    while (GetMessage(&msg, NULL, 0, 0)) {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
-        if (msg.message == WM_KEYDOWN && msg.wParam == VK_ESCAPE) {
-            break;
-        }
-    }
-    
-    QueryPerformanceCounter(&end);
-    UnhookWindowsHookEx(hook);
-    
-    double elapsed_ms = ((double)(end.QuadPart - start.QuadPart) / freq.QuadPart) * 1000.0;
-    double avg_ms_per_key = key_count > 0 ? elapsed_ms / key_count : 0;
-    double keys_per_second = key_count > 0 ? key_count / (elapsed_ms / 1000.0) : 0;
-    
-    printf("\n--- Results ---\n");
-    printf("Total keys: %d\n", key_count);
-    printf("Total time: %.2f ms\n", elapsed_ms);
-    printf("Average: %.3f ms per key\n", avg_ms_per_key);
-    printf("Rate: %.1f keys/second\n", keys_per_second);
-    
+int main(void) {
+    ListAudioDevices();
+    printf("Press Enter to exit...");
+    getchar();
     return 0;
 }

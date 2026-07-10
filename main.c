@@ -11,6 +11,7 @@
 #include "video_player.h"
 #include "music_player.h"
 #include "timer.h"
+#include "explorer.h"
 #include "screenshot.h"
 #include "todo.h"
 #include "zoxide.h"
@@ -1545,6 +1546,26 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
                     return 1;
                 }
                 TriggerTimer();
+                return 1;
+            }
+        }
+        if (pKeyInfo->vkCode == EXPLORER_KEY) {
+            bool is_blacklisted = false;
+            for (int i = 0; i < explorer_blacklist_count; i++) {
+                if (StrStrIA(fgTitle, explorer_blacklist[i]) != NULL) {
+                    is_blacklisted = true;
+                    break;
+                }
+            }
+            if (is_blacklisted) {
+                return CallNextHookEx(NULL, nCode, wParam, lParam);
+            }
+
+            if (alt_down && !ctrl_down && !shift_down) {
+                if (hPopupWnd != NULL && IsWindow(hPopupWnd)) {
+                    return 1;
+                }
+                TriggerExplorer();
                 return 1;
             }
         }
