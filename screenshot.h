@@ -6,7 +6,16 @@
 #include <string.h>
 #include "config.h"
 
-extern char* PromptQuickSwitcher(const char** items, int count, int width, int height);
+typedef void (*RefreshCallback)(const char* filter, HWND hListBox);
+typedef void (*EnterCallback)(const char* selection);
+typedef void (*CtrlEnterCallback)(const char* selection);
+typedef void (*TabCallback)(void);
+
+extern char* PromptQuickSwitcher(const char* window_list[], int count, int height, int width, 
+                                 RefreshCallback refresh_callback, 
+                                 EnterCallback enter_callback,
+                                 CtrlEnterCallback ctrl_enter_callback,
+                                 TabCallback tab_callback);
 extern HWND hPopupWnd;
 extern void SaveRegionToPNG(int x1, int y1, int x2, int y2, const char* fullPath);
 extern int img_region_step;
@@ -15,13 +24,13 @@ extern long img_x1, img_y1, img_x2, img_y2;
 #define SCREENSHOT_DIR "C:\\Users\\HP\\Pictures\\Screenshots\\"
 #define IMAGE_EDITOR "picview.exe"
 
-static void TriggerScreenshot(void) {
+static void TriggerScreenshot(HWND hPopupWnd) {
     if (hPopupWnd != NULL && IsWindow(hPopupWnd)) {
         return;
     }
 
     const char* name_prompt[1] = { "Enter image name..." };
-    char* raw_name = PromptQuickSwitcher(name_prompt, 1, 220, 150);
+    char* raw_name = PromptQuickSwitcher(name_prompt, 1, 220, 150,NULL,NULL,NULL,NULL);
 
     if (raw_name != NULL && strlen(raw_name) > 0) {
         char final_file_path[512];

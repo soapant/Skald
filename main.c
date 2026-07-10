@@ -6,8 +6,10 @@
 #include <stdio.h>
 #include <shellapi.h>
 #include <stdbool.h>
-#include <shlwapi.h> // REQUIRED for StrStrIA case-insensitive search
+#include <shlwapi.h> 
 #include "calc.h"
+#include "window_switcher.h"
+#include "types.h"
 #include "video_player.h"
 #include "music_player.h"
 #include "timer.h"
@@ -28,9 +30,8 @@
 #include "factorio.h"
 #include "app_launcher.h"
 #include "process_killer.h"
-#pragma comment(lib, "Shlwapi.lib") // Tells the compiler to link the shlwapi library
 #include "config.h"
-
+#pragma comment(lib, "Shlwapi.lib") // Tells the compiler to link the shlwapi library
 #define ID_TRAY_ICON 1001
 #define WM_TRAYICON (WM_USER + 1)
 #define WM_TRIGGER_UNIVERSAL_MACRO (WM_USER + 3)
@@ -54,11 +55,14 @@ extern int img_region_step;
 extern long img_x1, img_y1;
 long img_x2 = 0, img_y2 = 0; // Add this line if it isn't there!
 static ULONG_PTR g_gdiplusToken = 0;
-typedef enum { MODE_NONE, MODE_CALCULATOR, MODE_LAUNCHER,MODE_TODO,MODE_KILLER,MODE_REGION} ModalMode;
-static ModalMode g_current_mode = MODE_NONE;
 #pragma comment(lib, "gdiplus.lib")
 
-
+static RefreshCallback g_refresh_callback = NULL;
+static EnterCallback g_enter_callback = NULL;
+static CtrlEnterCallback g_ctrl_enter_callback = NULL;
+static TabCallback g_tab_callback = NULL;
+static const char** g_initial_items = NULL;
+static int g_initial_count = 0;
 // --- GLOBAL VARIABLES FOR THE IMAGE CAPTURE ---
 int img_region_step = 0;
 long img_x1 = 0, img_y1 = 0;
@@ -66,31 +70,6 @@ long img_x1 = 0, img_y1 = 0;
 // SPECIFY YOUR CHOSEN PATH HERE (Make sure the path ends with a backslash!)
 const char* BASE_SAVE_FOLDER_PATH = "C:\\Users\\HP\\Pictures\\Screenshots\\";
 
-typedef struct {
-    int index;
-    HWND hwnd;
-    char title[256];
-    char exe[256];
-} SavedWindow;
-
-typedef struct {
-    HWND hwnd;
-    char title[256]; // Dynamic allocation is better, but a fixed buffer keeps it simple
-    char exe[256];
-} WindowData;
-
-// Structure to pass your list into the callback
-typedef struct {
-    WindowData* items;
-    int count;
-    int capacity;
-} WindowList;
-// Struct to keep metric management clean
-typedef struct {
-    int x, y, w, h;
-    int item_height;
-} WindowLayout;
-// Global variable tracking the baseline start time
 static ULONGLONG g_timer_start_ms = 0;
 
 // Call this once at the very beginning of your main() function
@@ -190,116 +169,51 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
 
             if (selected_index != LB_ERR && hListBox != NULL) {
                 SendMessageA(hListBox, LB_GETTEXT, selected_index, (LPARAM)output_buffer);
-                printf("[DEBUG-SUBCLASS] Enter caught. Pulled from ListBox: \"%s\"\n", output_buffer);
             } else {
                 GetWindowTextA(hwnd, output_buffer, sizeof(output_buffer));
-                printf("[DEBUG-SUBCLASS] Enter caught. Pulled from Edit box: \"%s\"\n", output_buffer);
             }
 
-            // --- CTRL+ENTER: Flip the operation (calculator mode) ---
             if (ctrl_pressed) {
-                printf("[DEBUG-SUBCLASS] Ctrl+Enter intercepted!\n");
-                
-                if (g_current_mode == MODE_TODO) {
-                    remove_todo_item_from_file(output_buffer);
-                    
-                    if (hListBox && selected_index != LB_ERR) {
-                        SendMessageA(hListBox, LB_DELETESTRING, selected_index, 0);
-                        int new_count = SendMessageA(hListBox, LB_GETCOUNT, 0, 0);
-                        if (new_count > 0) {
-                            int new_sel = selected_index > 0 ? selected_index - 1 : 0;
-                            SendMessageA(hListBox, LB_SETCURSEL, new_sel, 0);
-                        }
-                    }
-                } 
-                else if (g_current_mode == MODE_KILLER) {
-                    terminate_process_by_name(output_buffer);
-                    collect_running_processes();
-                    if (hListBox) {
-                        SendMessageA(hListBox, LB_RESETCONTENT, 0, 0);
-                        for (int i = 0; i < G_PK_COUNT; i++) {
-                            SendMessageA(hListBox, LB_ADDSTRING, 0, (LPARAM)G_PK_LIST[i]);
-                        }
-                        SendMessageA(hListBox, LB_SETCURSEL, selected_index > 0 ? selected_index - 1 : 0, 0);
-                    }
+                if (g_ctrl_enter_callback != NULL) {
+                    g_ctrl_enter_callback(output_buffer);
                 }
-                // --- CALCULATOR FLIP: Put the result back into the edit box ---
-                else if (g_current_mode == MODE_CALCULATOR) {
-                    if (selected_index != LB_ERR && hListBox != NULL) {
-                        char result_buffer[256] = {0};
-                        SendMessageA(hListBox, LB_GETTEXT, selected_index, (LPARAM)result_buffer);
-                        
-                        char* clean_result = result_buffer;
-                        if (strncmp(result_buffer, "= ", 2) == 0) {
-                            clean_result = result_buffer + 2;
-                        }
-                        // Put the result back into the edit box
-                        SetWindowTextA(hEditControl, clean_result);
-                        int text_len = strlen(clean_result);
-                        SendMessageA(hEditControl, EM_SETSEL, text_len, text_len);
-                    }
+                // DON'T close the window on Ctrl+Enter!
+                // Keep selection_complete = false so the window stays open
+                // Refresh the list if needed
+                if (g_refresh_callback != NULL) {
+                    char current_filter[256] = {0};
+                    GetWindowTextA(hEditControl, current_filter, sizeof(current_filter));
+                    g_refresh_callback(current_filter, hListBox);
                 }
-                else if (g_current_mode == MODE_LAUNCHER) {
-                    if (selected_index != LB_ERR && hListBox != NULL) {
-                        char app_name[256] = {0};
-                        SendMessageA(hListBox, LB_GETTEXT, selected_index, (LPARAM)app_name);
-                        
-                        // Launch as administrator
-                        launch_app_as_admin(app_name);
-                        
-                        // Close the window after launching
-                        selection_complete = true;
-                        return 0;
-                    }
+                return 0;
+            } else {
+                if (g_enter_callback != NULL) {
+                    g_enter_callback(output_buffer);
                 }
-                
-                output_buffer[0] = '\0'; 
+                selection_complete = true; 
                 return 0;
             }
-
-            // --- Regular Enter: Close the window ---
-            selection_complete = true;  
-            return 0;
         }
 
+        // --- ESCAPE KEY ---
         if (wParam == VK_ESCAPE) {
             output_buffer[0] = '\0'; 
             selection_complete = true;  
             return 0;
         }
 
+        // --- TAB KEY ---
         if (wParam == VK_TAB) {
-            char result_buffer[256] = {0};
-            
-            if (g_current_mode == MODE_CALCULATOR) {
-                // Get the flipped expression string
-                char flip_expr[256] = {0};
-                get_flip_expression(flip_expr, sizeof(flip_expr));
-                
-                // Put it in the edit box
-                SetWindowTextA(hEditControl, flip_expr);
-                int text_len = strlen(flip_expr);
-                SendMessageA(hEditControl, EM_SETSEL, text_len, text_len);
-                
-                // Trigger the output to update
-                SendMessageA(hParent, WM_COMMAND, MAKEWPARAM(IDC_INPUT_BOX, EN_CHANGE), (LPARAM)hEditControl);
-            } 
-            else if (g_current_mode == MODE_LAUNCHER) {
-                if (hListBox != NULL) {
-                    int sel = SendMessageA(hListBox, LB_GETCURSEL, 0, 0);
-                    if (sel != LB_ERR) {
-                        SendMessageA(hListBox, LB_GETTEXT, sel, (LPARAM)result_buffer);
-                        SetWindowTextA(hEditControl, result_buffer);
-                        int text_len = strlen(result_buffer);
-                        SendMessageA(hEditControl, EM_SETSEL, text_len, text_len);
-                    }
-                }
+            if (g_tab_callback != NULL) {
+                g_tab_callback();
             }
-    return 0; 
-}
+            return 0;
+        }
     }
+    
     return DefSubclassProc(hwnd, msg, wParam, lParam);
 }
+      
 LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
       case WM_CTLCOLOREDIT:
@@ -310,60 +224,33 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             return (LRESULT)CreateSolidBrush(COLOR_BG);
         }
         case WM_COMMAND: {
-                    if (LOWORD(wParam) == IDC_INPUT_BOX && HIWORD(wParam) == EN_CHANGE) {
-                        if (hEditControl && hListBox) {
-                            char input_buffer[256] = {0};
-                            GetWindowTextA(hEditControl, input_buffer, sizeof(input_buffer));
-
-                            if (g_current_mode == MODE_CALCULATOR) {
-                                char result_buffer[256] = {0};
-                                live_evaluate(input_buffer, result_buffer, sizeof(result_buffer));
-                                
-                                SendMessageA(hListBox, LB_RESETCONTENT, 0, 0);
-                                SendMessageA(hListBox, LB_ADDSTRING, 0, (LPARAM)result_buffer);
-                                SendMessageA(hListBox, LB_SETCURSEL, 0, 0);
-                            } 
-                            else if (g_current_mode == MODE_LAUNCHER) {
-                                SendMessageA(hListBox, LB_RESETCONTENT, 0, 0);
-                                for (int i = 0; i < G_APP_COUNT; i++) {
-                                    if (strlen(input_buffer) == 0 || StrStrIA(G_APPS[i].name, input_buffer) != NULL) {
-                                        SendMessageA(hListBox, LB_ADDSTRING, 0, (LPARAM)G_APPS[i].name);
-                                    }
-                                }
-                                SendMessageA(hListBox, LB_SETCURSEL, 0, 0);
+            if (LOWORD(wParam) == IDC_INPUT_BOX && HIWORD(wParam) == EN_CHANGE) {
+                if (hEditControl && hListBox) {
+                    char input_buffer[256] = {0};
+                    GetWindowTextA(hEditControl, input_buffer, sizeof(input_buffer));
+                    
+                    if (g_refresh_callback != NULL) {
+                        g_refresh_callback(input_buffer, hListBox);
+                    } else {
+                        // Fallback: generic filtering
+                        SendMessageA(hListBox, LB_RESETCONTENT, 0, 0);
+                        if (strlen(input_buffer) == 0) {
+                            for (int i = 0; i < g_initial_count; i++) {
+                                SendMessageA(hListBox, LB_ADDSTRING, 0, (LPARAM)g_initial_items[i]);
                             }
-                            else if (g_current_mode == MODE_KILLER) {
-                              char filter_text[128];
-                              GetWindowTextA(hEditControl, filter_text, sizeof(filter_text));
-
-                              // Clear the ListBox completely to prepare for filtered results
-                              SendMessageA(hListBox, LB_RESETCONTENT, 0, 0);
-                              // Loop through our process cache and only add items that match the text
-                              for (int i = 0; i < G_PK_COUNT; i++) {
-                                  // StrStrIA does a case-insensitive substring search (from shlwapi.h)
-                                  if (filter_text[0] == '\0' || StrStrIA(G_PK_LIST[i], filter_text) != NULL) {
-                                      SendMessageA(hListBox, LB_ADDSTRING, 0, (LPARAM)G_PK_LIST[i]);
-                                  }
-                              }
-                              // Auto-highlight the top filtered item
-                              SendMessageA(hListBox, LB_SETCURSEL, 0, 0);
-                          }
+                        } else {
+                            for (int i = 0; i < g_initial_count; i++) {
+                                if (StrStrIA(g_initial_items[i], input_buffer) != NULL) {
+                                    SendMessageA(hListBox, LB_ADDSTRING, 0, (LPARAM)g_initial_items[i]);
+                                }
+                            }
                         }
+                        SendMessageA(hListBox, LB_SETCURSEL, 0, 0);
                     }
-                    break;
-                }
-
-            // Execute application choice when chosen from list view
-            if (LOWORD(wParam) == IDC_LIST_BOX && HIWORD(wParam) == LBN_DBLCLK) {
-                int index = SendMessageA(hListBox, LB_GETCURSEL, 0, 0);
-                if (index != LB_ERR && g_current_mode == MODE_LAUNCHER) {
-                    char selection[128] = {0};
-                    SendMessageA(hListBox, LB_GETTEXT, index, (LPARAM)selection);
-                    launch_app_by_name(selection);
-                    PostMessage(hwnd, WM_CLOSE, 0, 0); // Close window after executing
                 }
             }
             break;
+        }
         case WM_MEASUREITEM: {
             MEASUREITEMSTRUCT* pmis = (MEASUREITEMSTRUCT*)lParam;
             if (pmis->CtlID == IDC_LIST_BOX) {
@@ -615,15 +502,25 @@ void SaveRegionToPNG(int x1, int y1, int x2, int y2, const char* fullPath) {
     ReleaseDC(NULL, hScreenDC);
 }
 
-char* PromptQuickSwitcher(const char* window_list[], int count,int height,int width) {
+char* PromptQuickSwitcher(const char* window_list[], int count, int height, int width, 
+                          RefreshCallback refresh_callback, 
+                          EnterCallback enter_callback,
+                          CtrlEnterCallback ctrl_enter_callback,
+                          TabCallback tab_callback) {
     HINSTANCE hInstance = GetModuleHandle(NULL);
     selection_complete = false;
     output_buffer[0] = '\0';
+    g_initial_items = window_list;
+    g_initial_count = count;
+    g_refresh_callback = refresh_callback;
+    g_enter_callback = enter_callback;
+    g_ctrl_enter_callback = ctrl_enter_callback;
+    g_tab_callback = tab_callback;
 
     printf("[DEBUG-UI] PromptQuickSwitcher called. Count: %d\n", count);
 
     WindowLayout layout;
-    CalculateWindowMetrics(count, &layout,height,width);
+    CalculateWindowMetrics(count, &layout, height, width);
     printf("[DEBUG-UI] Calculated Metrics -> x: %d, y: %d, w: %d, h: %d\n", layout.x, layout.y, layout.w, layout.h);
     
     HFONT hCustomFont = CreateCustomNerdFont(24, "0xProto Nerd Font");
@@ -654,13 +551,12 @@ char* PromptQuickSwitcher(const char* window_list[], int count,int height,int wi
     MSG msg;
     int loop_counter = 0;
     while (!selection_complete) {
-        // Use PeekMessage so we can exit the millisecond selection_complete is true
         if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
             loop_counter++;
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         } else {
-            Sleep(10); // Prevents the thread from consuming 100% CPU while idling
+            Sleep(10);
         }
     }
     printf("[DEBUG-UI] Left local loop. Processed %d messages.\n", loop_counter);
@@ -679,6 +575,10 @@ char* PromptQuickSwitcher(const char* window_list[], int count,int height,int wi
 
     DeleteObject(hCustomFont); 
     selection_complete = false;
+    g_refresh_callback = NULL;
+    g_enter_callback = NULL;
+    g_ctrl_enter_callback = NULL;
+    g_tab_callback = NULL;
 
     printf("[DEBUG-UI] Returning from PromptQuickSwitcher. Buffer Length: %zu\n", strlen(output_buffer));
     return (strlen(output_buffer) > 0) ? output_buffer : NULL;
@@ -725,7 +625,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             const char* empty_list[1] = { "" };
             
             printf("[DEBUG-WNDPROC] Handing control off to PromptQuickSwitcher...\n");
-            char* raw_name = PromptQuickSwitcher(empty_list, 0, 220, 550);
+            char* raw_name = PromptQuickSwitcher(empty_list, 0, 220, 550,NULL,NULL,NULL,NULL);
             printf("[DEBUG-WNDPROC] Returned back to WndProc execution sequence.\n");
 
             if (raw_name != NULL && strlen(raw_name) > 0) {
@@ -830,167 +730,9 @@ void ClearMdFile(const char* FILE_PATH) {
 }
 
 HHOOK hKeyboardHook = NULL;
-HHOOK hMouseHook = NULL;  // ADD THIS LINE
-#include <shlwapi.h> // REQUIRED for StrStrIA case-insensitive search
-#pragma comment(lib, "Shlwapi.lib") // Tells the compiler to link the shlwapi library
+#include <shlwapi.h>
+#pragma comment(lib, "Shlwapi.lib")
 
-// Move the heavy lookup logic into a dedicated micro-helper
-void FetchExeNameOnDemand(HWND hwnd, char* outExe, DWORD maxLen) {
-    DWORD processId = 0;
-    GetWindowThreadProcessId(hwnd, &processId);
-    if (processId != 0) {
-        HANDLE hProcess = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, processId);
-        if (hProcess) {
-            char path[MAX_PATH] = {0};
-            if (GetProcessImageFileNameA(hProcess, path, sizeof(path))) {
-                char* lastBackslash = strrchr(path, '\\');
-                if (lastBackslash) {
-                    strncpy(outExe, lastBackslash + 1, maxLen);
-                } else {
-                    strncpy(outExe, path, maxLen);
-                }
-            }
-            CloseHandle(hProcess);
-            return;
-        }
-    }
-    strncpy(outExe, "Unknown.exe", maxLen);
-}
-
-char* FilterAndPromptSwitcher(WindowList myWindows) {
-    char *list_of_not_wanteds[] = {"Ray", "Input", "Manager", "Settings"};
-    size_t size_of_list = sizeof(list_of_not_wanteds) / sizeof(list_of_not_wanteds[0]);
-
-    SavedWindow tracked_windows[100]; 
-    int saved_count = 0;
-    static char formatted_ui_strings[100][512]; 
-    const char* ui_list[100];
-
-    for (int i = 0; i < myWindows.count; i++) {
-        HWND targetHwnd = myWindows.items[i].hwnd;
-        char* targetTitle = myWindows.items[i].title;
-        bool not_wanted = false;
-        
-        // 1. Filter out the hundreds of junk windows using Title string ONLY
-        for (size_t j = 0; j < size_of_list; j++) {
-            if (strstr(targetTitle, list_of_not_wanteds[j]) != NULL) {
-                not_wanted = true;
-                break; 
-            }
-        }
-        if (not_wanted) continue; 
-
-        // 2. SURVIVOR ZONE: This block only hits ~10 times instead of 200 times!
-        tracked_windows[saved_count].index = saved_count;
-        tracked_windows[saved_count].hwnd = targetHwnd;
-        strncpy(tracked_windows[saved_count].title, targetTitle, sizeof(tracked_windows[saved_count].title) - 1);
-        tracked_windows[saved_count].title[sizeof(tracked_windows[saved_count].title) - 1] = '\0'; 
-
-        // NOW execute the heavy file path querying selectively
-        FetchExeNameOnDemand(targetHwnd, tracked_windows[saved_count].exe, sizeof(tracked_windows[saved_count].exe) - 1);
-
-        // Format for layout
-        snprintf(formatted_ui_strings[saved_count], sizeof(formatted_ui_strings[saved_count]), 
-                 "%s (%s)", tracked_windows[saved_count].title, tracked_windows[saved_count].exe);
-        
-        ui_list[saved_count] = formatted_ui_strings[saved_count];
-        saved_count++;
-        if (saved_count >= 100) break;
-    }
-    
-
-    printf("[DEBUG] Filter complete. Kept %d windows out of %d.\n", saved_count, myWindows.count);
-
-    if (saved_count == 0) {
-        printf("[DEBUG] Exiting: 0 windows passed the filter.\n");
-        return NULL;
-    }
-
-    for (int i = 0; i < saved_count; i++) {
-        ui_list[i] = tracked_windows[i].title;
-    }
-
-    printf("[DEBUG] Launching UI Selection Prompt...\n");
-    char* selected_title = PromptQuickSwitcher(ui_list, saved_count,220,550);
-
-    if (selected_title == NULL) {
-        printf("[DEBUG] UI Closed. Selection was NULL.\n");
-        return NULL;
-    }
-
-    printf("[DEBUG] UI Returned Selection: \"%s\"\n", selected_title);
-
-    // --- FIX: MATCH AGAINST BOTH TITLE AND EXE NAME ---
-    bool found_match = false;
-    for (int i = 0; i < saved_count; i++) {
-        
-        // Check if what you typed matches the Window Title OR the Executable Name string
-        if (StrStrIA(tracked_windows[i].title, selected_title) != NULL || 
-            StrStrIA(tracked_windows[i].exe, selected_title) != NULL) {
-            
-            found_match = true;
-            HWND target_hwnd = tracked_windows[i].hwnd;
-            printf("[DEBUG] Found match at index [%d]: \"%s\" (%s)\n", i, tracked_windows[i].title, tracked_windows[i].exe);
-
-            if (!IsWindow(target_hwnd)) {
-                printf("[ERROR] Target HWND is no longer a valid window handle!\n");
-                break;
-            }
-
-            // Highlight UI before close
-            if (hListBox != NULL) {
-                int lb_index = SendMessageA(hListBox, LB_FINDSTRINGEXACT, -1, (LPARAM)tracked_windows[i].title);
-                if (lb_index != LB_ERR) {
-                    SendMessageA(hListBox, LB_SETCURSEL, lb_index, 0);
-                }
-            }
-            Sleep(80); 
-
-            // Thread attaching black magic
-            HWND hForegroundWnd = GetForegroundWindow();
-            DWORD foregroundThreadID = GetWindowThreadProcessId(hForegroundWnd, NULL);
-            DWORD targetThreadID = GetWindowThreadProcessId(target_hwnd, NULL);
-            DWORD currentThreadID = GetCurrentThreadId();
-
-            if (foregroundThreadID != currentThreadID) {
-                AttachThreadInput(currentThreadID, foregroundThreadID, TRUE);
-            }
-            if (targetThreadID != currentThreadID) {
-                AttachThreadInput(currentThreadID, targetThreadID, TRUE);
-            }
-
-            // Handle Minimized State
-            if (IsIconic(target_hwnd)) {
-                ShowWindow(target_hwnd, SW_RESTORE);
-            } else {
-                ShowWindow(target_hwnd, SW_SHOW);
-            }
-
-            // Force Focus Actions
-            SetForegroundWindow(target_hwnd);
-            SetFocus(target_hwnd);
-            SetActiveWindow(target_hwnd);
-            BringWindowToTop(target_hwnd);
-
-            // Cleanup thread states
-            if (foregroundThreadID != currentThreadID) {
-                AttachThreadInput(currentThreadID, foregroundThreadID, FALSE);
-            }
-            if (targetThreadID != currentThreadID) {
-                AttachThreadInput(currentThreadID, targetThreadID, FALSE);
-            }
-            
-            printf("[DEBUG] --- SWITCHING OPERATION COMPLETE ---\n");
-            break;
-        }
-    }
-
-    if (!found_match) {
-        printf("[ERROR] Selected title matched nothing inside our saved struct tracking database!\n");
-    }
-
-    return selected_title;
-}
 int init_tray() {
     HINSTANCE hInstance = GetModuleHandle(NULL);
     if (TRAY) {
@@ -1104,83 +846,6 @@ bool CheckMacroBindings(int pressed_vk, int modifiers, MacroAction* out_action, 
     return false;
 }
 
-void TriggerLiveCalculator() {
-    if (hPopupWnd != NULL && IsWindow(hPopupWnd)) return;
-
-    g_current_mode = MODE_CALCULATOR;
-    const char* default_msg[1] = { "Enter operation (e.g. 5 x 5 or 10 hours in minutes)" };
-    PromptQuickSwitcher(default_msg, 1,220,550);
-    g_current_mode = MODE_NONE;
-}
-
-void TriggerProcessKiller() {
-    if (hPopupWnd != NULL && IsWindow(hPopupWnd)) return;
-
-    // Populate our newly created process list cache
-    collect_running_processes();
-    g_current_mode = MODE_KILLER;
-
-    if (G_PK_COUNT == 0) {
-        const char* fallback[1] = { "No targeted processes running..." };
-        PromptQuickSwitcher(fallback, 1, 220, 250);
-        g_current_mode = MODE_NONE;
-        return;
-    }
-
-    // Allocate listing array for the UI prompt manager
-    const char** list_items = (const char**)malloc(G_PK_COUNT * sizeof(char*));
-    if (!list_items) {
-        g_current_mode = MODE_NONE;
-        return;
-    }
-
-    for (int i = 0; i < G_PK_COUNT; i++) {
-        list_items[i] = G_PK_LIST[i];
-    }
-
-    // Open your UI window with your custom dimensions
-    char* selected = PromptQuickSwitcher(list_items, G_PK_COUNT, 220, 250);
-    free(list_items);
-    
-    // If standard Enter was used, close the window and kill the app
-    if (selected && strlen(selected) > 0 && g_current_mode == MODE_KILLER) {
-        terminate_process_by_name(selected);
-    }
-    g_current_mode = MODE_NONE;
-}
-
-void TriggerAppLauncher() {
-    if (hPopupWnd != NULL && IsWindow(hPopupWnd)) return;
-
-    g_current_mode = MODE_LAUNCHER;
-    initialize_app_cache();
-
-    if (G_APP_COUNT == 0) {
-        g_current_mode = MODE_NONE;
-        return;
-    }
-
-    // Allocate an array of string pointers for all cached app names
-    const char** initial_items = (const char**)malloc(G_APP_COUNT * sizeof(char*));
-    if (!initial_items) {
-        g_current_mode = MODE_NONE;
-        return;
-    }
-    for (int i = 0; i < G_APP_COUNT; i++) {
-        initial_items[i] = G_APPS[i].name;
-    }
-
-    // Open the modal pre-seeded with all matching shortcuts
-    char* selected_app = PromptQuickSwitcher(initial_items, G_APP_COUNT,220,250); 
-    free(initial_items);
-    g_current_mode = MODE_NONE; 
-
-    // Handle return action execution
-    if (selected_app != NULL && strlen(selected_app) > 0) {
-        launch_app_by_name(selected_app);
-    }
-}
-
 bool CheckTextSnippetBindings(int pressed_vk, int modifiers, const char** out_text) {
     HWND hActiveWnd = GetForegroundWindow();
     if (!hActiveWnd) return false;
@@ -1259,7 +924,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 
                 if (myWindows.items != NULL) {
                     EnumWindows(EnumWindowsProc, (LPARAM)&myWindows);
-                    FilterAndPromptSwitcher(myWindows);
+                    TriggerWindowSwitcher(hPopupWnd,myWindows);
                     free(myWindows.items);
                 }
                 return 1;
@@ -1304,7 +969,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 
             if (alt_down && !ctrl_down && !shift_down) {
                 printf("[TODO] Opening Todo overlay...\n");
-                TriggerTodo(hPopupWnd, (int*)&g_current_mode);
+                TriggerTodo(hPopupWnd);
                 return 1;
             }
         }
@@ -1413,7 +1078,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
                     return 1; 
                 }
                 printf("[CALCULATOR] Launching calculator...\n");
-                TriggerLiveCalculator(); 
+                TriggerCalculator(hPopupWnd); 
                 return 1;
             }
         }
@@ -1438,7 +1103,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
                     return 1; 
                 }
                 printf("[EXE] Launching app launcher...\n");
-                TriggerAppLauncher();
+                TriggerAppLauncher(hPopupWnd);
                 return 1;
             }
         }
@@ -1461,7 +1126,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
             if (alt_down && !ctrl_down && !shift_down) {
                 if (hPopupWnd != NULL && IsWindow(hPopupWnd)) return 1;
                 printf("[KILL] Triggering process killer...\n");
-                TriggerProcessKiller();
+                TriggerProcessKiller(hPopupWnd);
                 return 1;
             }
         }
@@ -1482,7 +1147,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
                     return 1;
                 }
                 printf("[NEOVIDE] Opening neovide with zoxide...\n");
-                TriggerNvimZoxide(0);
+                TriggerNvimZoxide(0,hPopupWnd);
                 return 1;
             }
         }
@@ -1504,7 +1169,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
                     return 1;
                 }
                 printf("[YAZI] Opening yazi with zoxide...\n");
-                TriggerYaziZoxide();
+                TriggerYaziZoxide(hPopupWnd);
                 return 1;
             }
         }
@@ -1525,7 +1190,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
                     return 1;
                 }
                 printf("[terminal] Opening terminal with zoxide...\n");
-                TriggerZoxide();
+                TriggerZoxide(hPopupWnd);
                 return 1;
             }
         }
@@ -1545,7 +1210,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
                 if (hPopupWnd != NULL && IsWindow(hPopupWnd)) {
                     return 1;
                 }
-                TriggerTimer();
+                TriggerTimer(hPopupWnd);
                 return 1;
             }
         }
@@ -1565,7 +1230,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
                 if (hPopupWnd != NULL && IsWindow(hPopupWnd)) {
                     return 1;
                 }
-                TriggerExplorer();
+                TriggerExplorer(hPopupWnd);
                 return 1;
             }
         }
@@ -1596,8 +1261,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
                     printf("[SCREENSHOT] Bottom-Right: %ld,%ld\n", img_x2, img_y2);
                     img_region_step = 0;
 
-                    // Trigger the screenshot processing
-                    TriggerScreenshot();
+                    TriggerScreenshot(hPopupWnd);
                 }
                 return 1;
             }
@@ -1674,7 +1338,6 @@ void wait_for_hotkeys() {
     }
 
     if (hKeyboardHook) UnhookWindowsHookEx(hKeyboardHook);
-    if (hMouseHook) UnhookWindowsHookEx(hMouseHook);
 }
 
 int main() {

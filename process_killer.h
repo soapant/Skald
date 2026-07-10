@@ -7,11 +7,18 @@
 #include "config.h"
 #include <stdbool.h>
 #include <shlwapi.h>
+#include "types.h"
 
 #define MAX_PK_APPS 256
 
 static char G_PK_LIST[MAX_PK_APPS][128];
 static int G_PK_COUNT = 0;
+
+extern char* PromptQuickSwitcher(const char* window_list[], int count, int height, int width, 
+                                 RefreshCallback refresh_callback, 
+                                 EnterCallback enter_callback,
+                                 CtrlEnterCallback ctrl_enter_callback,
+                                 TabCallback tab_callback);
 
 // Programmatically filter out core protected Windows OS components to save list space
 static bool is_system_noise(const char* exe) {
@@ -82,7 +89,6 @@ static void run_hidden_command(const char* cmd) {
     }
 }
 
-// Terminates every instance matching the string name
 static void terminate_process_by_name(const char* exe_name) {
     char cmd[512];
     snprintf(cmd, sizeof(cmd), "taskkill /f /im \"%s*\"", exe_name);
@@ -106,6 +112,53 @@ static bool HandleBulkKillProcess(int vk_code, int modifiers, const char* curren
         }
     }
     return false;
+}
+static void pk_enter_callback(const char* selection) {
+    if (selection != NULL && strlen(selection) > 0) {
+        terminate_process_by_name(selection);
+    }
+}
+
+static void pk_refresh_callback(const char* filter, HWND hListBox) {
+    if (!hListBox) return;
+    
+    SendMessageA(hListBox, LB_RESETCONTENT, 0, 0);
+    
+    if (filter == NULL || strlen(filter) == 0) {
+        for (int i = 0; i < G_PK_COUNT; i++) {
+            SendMessageA(hListBox, LB_ADDSTRING, 0, (LPARAM)G_PK_LIST[i]);
+        }
+    } else {
+        for (int i = 0; i < G_PK_COUNT; i++) {
+            if (StrStrIA(G_PK_LIST[i], filter) != NULL) {
+                SendMessageA(hListBox, LB_ADDSTRING, 0, (LPARAM)G_PK_LIST[i]);
+            }
+        }
+    }
+    SendMessageA(hListBox, LB_SETCURSEL, 0, 0);
+}
+
+void TriggerProcessKiller(HWND hPopupWnd) {
+    if (hPopupWnd != NULL && IsWindow(hPopupWnd)) return;
+
+    collect_running_processes();
+
+    const char** list_items = (const char**)malloc(G_PK_COUNT * sizeof(char*));
+    if (!list_items) {
+        return;
+    }
+
+    for (int i = 0; i < G_PK_COUNT; i++) {
+        list_items[i] = G_PK_LIST[i];
+    }
+
+    // Open your UI window with callbacks
+    PromptQuickSwitcher(list_items, G_PK_COUNT, 220, 250, 
+                        pk_refresh_callback,        
+                        pk_enter_callback,          
+                        NULL,                      
+                        NULL);                     
+    free(list_items);
 }
 
 #endif
