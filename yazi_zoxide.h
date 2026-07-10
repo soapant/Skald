@@ -5,17 +5,22 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include "types.h"
 
-extern char* PromptQuickSwitcher(const char** items, int count, int width, int height);
+extern char* PromptQuickSwitcher(const char* window_list[], int count, int height, int width, 
+                                 RefreshCallback refresh_callback, 
+                                 EnterCallback enter_callback,
+                                 CtrlEnterCallback ctrl_enter_callback,
+                                 TabCallback tab_callback);
 extern HWND hPopupWnd;
 
-static void TriggerYaziZoxide(void) {
+static void TriggerYaziZoxide(HWND hPopupWnd) {
     if (hPopupWnd != NULL && IsWindow(hPopupWnd)) {
         return;
     }
 
     const char* prompt[1] = { "Enter zoxide query (YAZI)..." };
-    char* query = PromptQuickSwitcher(prompt, 1, 220, 150);
+    char* query = PromptQuickSwitcher(prompt, 1, 220, 150,NULL,NULL,NULL,NULL);
 
     if (query != NULL && strlen(query) > 0) {
         char command[512];

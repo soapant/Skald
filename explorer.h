@@ -7,16 +7,25 @@
 #include <stdlib.h>
 #include <shellapi.h>
 
-extern char* PromptQuickSwitcher(const char** items, int count, int width, int height);
+typedef void (*RefreshCallback)(const char* filter, HWND hListBox);
+typedef void (*EnterCallback)(const char* selection);
+typedef void (*CtrlEnterCallback)(const char* selection);
+typedef void (*TabCallback)(void);
+
+extern char* PromptQuickSwitcher(const char* window_list[], int count, int height, int width, 
+                                 RefreshCallback refresh_callback, 
+                                 EnterCallback enter_callback,
+                                 CtrlEnterCallback ctrl_enter_callback,
+                                 TabCallback tab_callback);
 extern HWND hPopupWnd;
 
-static void TriggerExplorer() {
+static void TriggerExplorer(HWND hPopupWnd) {
     if (hPopupWnd != NULL && IsWindow(hPopupWnd)) {
         return;
     }
 
     const char* prompt[1] = { "Enter zoxide query (EXPLORER)..." };
-    char* query = PromptQuickSwitcher(prompt, 1, 220, 150);
+    char* query = PromptQuickSwitcher(prompt, 1, 220, 150,NULL,NULL,NULL,NULL);
 
     if (query != NULL && strlen(query) > 0) {
         // Run zoxide to get the path
