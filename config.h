@@ -80,6 +80,13 @@ typedef struct {
 typedef struct {
     int vk_code;
     int modifiers;
+    const char* exe_name;
+    const char* misc_path; 
+} MiscHotkey;
+
+typedef struct {
+    int vk_code;
+    int modifiers;
     const char** blacklist;      
     int blacklist_count;
     const char** window_titles;  
@@ -112,8 +119,11 @@ static const AppHotkey G_APP_HOTKEYS[] = {
 
 #define APP_HOTKEY_COUNT (sizeof(G_APP_HOTKEYS) / sizeof(G_APP_HOTKEYS[0]))
 
+static const MiscHotkey G_MISC_HOTKEYS[] = {
+    {'G', HOTKEY_MOD_CTRL | HOTKEY_MOD_ALT, "*", "D:\\retard games\\Grand Theft Auto V Legacy\\PlayGTAV.bat" },
+};
 
-#define APP_HOTKEY_COUNT (sizeof(G_APP_HOTKEYS) / sizeof(G_APP_HOTKEYS[0]))
+#define MISC_HOTKEY_COUNT (sizeof(G_MISC_HOTKEYS) / sizeof(G_MISC_HOTKEYS[0]))
 
 static const MacroBinding G_MACRO_BINDINGS[] = {
     { 'V', HOTKEY_MOD_ALT, "Factorio", MACRO_FACTORIO_MAKE_TAG, 0 },
