@@ -155,6 +155,43 @@ bool CheckMiscHotkeyBindings(int pressed_vk, int modifiers) {
     return false;
 }
 
+void open_browser(const char *url) {
+    char command[256];
+
+    snprintf(command, sizeof(command), "start %s", url);
+
+    int result = system(command);
+    
+    if (result == 0) {
+        printf("Browser opened successfully.\n");
+    } else {
+        printf("Failed to open the browser.\n");
+    }
+}
+
+bool CheckQuickLinkHotkeyBindings(int pressed_vk, int modifiers) {
+    HWND hActiveWnd = GetForegroundWindow();
+    if (!hActiveWnd) return false;
+
+    char activeExe[256] = {0};
+    FetchExeNameOnDemand(hActiveWnd, activeExe, sizeof(activeExe) - 1);
+    
+    for (int i = 0; i < QUICKLINK_HOTKEY_COUNT; i++) {
+        if (G_QUICKLINK_HOTKEYS[i].vk_code == pressed_vk && 
+            G_QUICKLINK_HOTKEYS[i].modifiers == modifiers) {
+            
+            if (strcmp(G_QUICKLINK_HOTKEYS[i].exe_name, "*") == 0 ||
+                StrStrIA(activeExe, G_QUICKLINK_HOTKEYS[i].exe_name) != NULL) {
+              
+                open_browser(G_QUICKLINK_HOTKEYS[i].QuickLinkQuery);
+              
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 bool CheckMacroBindings(int pressed_vk, int modifiers, MacroAction* out_action, int* out_delay) {
     // Get the active window
     HWND hActiveWnd = GetForegroundWindow();

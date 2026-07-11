@@ -2,3 +2,4 @@
 - [ ] make a python file to parse the recipe json data
 - [ ] pyright is running when i am editting c code???
 - [ ] add quicklinks or maybe like searches on certain websites to the c program
+- [ ] maybe to the quicklinks add a window thingy to show all the quicklinks
