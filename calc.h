@@ -23,7 +23,7 @@ static double g_flipped_result = 0.0;
 static bool g_is_flipped = false;
 
 
-extern char* PromptQuickSwitcher(const char* window_list[], int count, int height, int width, 
+extern char* PromptUser(const char* window_list[], int count, int height, int width, 
                                  RefreshCallback refresh_callback, 
                                  EnterCallback enter_callback,
                                  CtrlEnterCallback ctrl_enter_callback,
@@ -571,7 +571,7 @@ void TriggerCalculator(HWND hPopupWnd) {
     if (hPopupWnd != NULL && IsWindow(hPopupWnd)) return;
 
     const char* default_msg[1] = { "Enter operation (e.g. 5 x 5 or 10 hours in minutes)" };
-    PromptQuickSwitcher(default_msg, 1, 220, 550, 
+    PromptUser(default_msg, 1, 220, 550, 
                         calculator_refresh_callback,   // refresh -> evaluates on typing
                         calculator_enter_callback,     // enter -> copies result to clipboard
                         calculator_ctrlenter_callback, // ctrl enter -> puts result back into input

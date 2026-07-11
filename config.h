@@ -39,6 +39,8 @@ static bool TRAY = true;
 #define TIMER_KEY     0x4F
 #define EXPLORER_ID      17
 #define EXPLORER_KEY     0x52
+#define TERMINAL_COMMAND_ID      18
+#define TERMINAL_COMMAND_KEY     0xDB
 #define HOTKEY_MOD_NONE         0x00
 #define HOTKEY_MOD_ALT          0x01
 #define HOTKEY_MOD_SHIFT        0x02
@@ -219,7 +221,7 @@ static const char* coding_windows[] = {"Alacritty","Nvim","Neovide","vim","pwsh"
 static const FocusSwitcherBinding G_FOCUS_SWITCHERS[] = {
     {
         'O',           
-        HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL,               
+        HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT,               
         focus_blacklist_games,      
         sizeof(focus_blacklist_games) / sizeof(focus_blacklist_games[0]),
         games_windows,              
@@ -227,7 +229,7 @@ static const FocusSwitcherBinding G_FOCUS_SWITCHERS[] = {
     },
     {
         'I',           
-        HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL,               
+        HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT,               
         focus_blacklist_browsers,      
         sizeof(focus_blacklist_browsers) / sizeof(focus_blacklist_browsers[0]),
         browsers_windows,              
@@ -235,7 +237,7 @@ static const FocusSwitcherBinding G_FOCUS_SWITCHERS[] = {
     },
     {
         'U',           
-        HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL,               
+        HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT,               
         focus_blacklist_coding,      
         sizeof(focus_blacklist_coding) / sizeof(focus_blacklist_coding[0]),
         coding_windows,              
@@ -298,5 +300,8 @@ static int video_blacklist_count = sizeof(video_blacklist) / sizeof(video_blackl
 
 static const char* explorer_blacklist[] = {"Fortnite", "CrosshairX"};
 static int explorer_blacklist_count = sizeof(explorer_blacklist) / sizeof(explorer_blacklist[0]);
+
+static const char* terminal_command_blacklist[] = {"Fortnite", "CrosshairX"};
+static int terminal_command_blacklist_count = sizeof(terminal_command_blacklist) / sizeof(terminal_command_blacklist[0]);
 
 #endif
