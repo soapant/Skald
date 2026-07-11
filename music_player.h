@@ -17,18 +17,18 @@ static void music_refresh_callback(const char* filter, HWND hListBox) {
     
     // Get the current file list
     ClearFileList();
-    GetFilesRecursive(MusicPath);
+    GetFilesRecursive(MusicPath,false);
     
     SendMessageA(hListBox, LB_RESETCONTENT, 0, 0);
     
     if (filter == NULL || strlen(filter) == 0) {
         for (int i = 0; i < GetFileCount(); i++) {
-            SendMessageA(hListBox, LB_ADDSTRING, 0, (LPARAM)G_FILES[i].name);
+            SendMessageA(hListBox, LB_ADDSTRING, 0, (LPARAM)G_FILES_WITH_TIME[i].name);
         }
     } else {
         for (int i = 0; i < GetFileCount(); i++) {
             if (StrStrIA(G_FILES[i].name, filter) != NULL) {
-                SendMessageA(hListBox, LB_ADDSTRING, 0, (LPARAM)G_FILES[i].name);
+                SendMessageA(hListBox, LB_ADDSTRING, 0, (LPARAM)G_FILES_WITH_TIME[i].name);
             }
         }
     }
@@ -90,13 +90,13 @@ static bool HandleMusicPlayer(int vk_code, int modifiers, const char* current_ti
                 
                 // Initialize the file list for the first time
                 ClearFileList();
-                GetFilesRecursive(MusicPath);
+                GetFilesRecursive(MusicPath,false);
                 
                 const char** initial_items = (const char**)malloc(GetFileCount() * sizeof(char*));
                 if (!initial_items) return false;
                 
                 for (int i = 0; i < GetFileCount(); i++) {
-                    initial_items[i] = G_FILES[i].name;
+                    initial_items[i] = G_FILES_WITH_TIME[i].name;
                 }
                 
                 PromptUser(initial_items, GetFileCount(), 220, 350,32,

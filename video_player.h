@@ -18,18 +18,18 @@ static void video_refresh_callback(const char* filter, HWND hListBox) {
     
     // Get the current file list
     ClearFileList();
-    GetFilesRecursive(VideosPath);
+    GetFilesRecursive(VideosPath,true);
     
     SendMessageA(hListBox, LB_RESETCONTENT, 0, 0);
     
     if (filter == NULL || strlen(filter) == 0) {
         for (int i = 0; i < GetFileCount(); i++) {
-            SendMessageA(hListBox, LB_ADDSTRING, 0, (LPARAM)G_FILES[i].name);
+            SendMessageA(hListBox, LB_ADDSTRING, 0, (LPARAM)G_FILES_WITH_TIME[i].name);
         }
     } else {
         for (int i = 0; i < GetFileCount(); i++) {
-            if (StrStrIA(G_FILES[i].name, filter) != NULL) {
-                SendMessageA(hListBox, LB_ADDSTRING, 0, (LPARAM)G_FILES[i].name);
+            if (StrStrIA(G_FILES_WITH_TIME[i].name, filter) != NULL) {
+                SendMessageA(hListBox, LB_ADDSTRING, 0, (LPARAM)G_FILES_WITH_TIME[i].name);
             }
         }
     }
@@ -67,7 +67,6 @@ static void video_enter_callback(const char* selection) {
         }
     }
 }
-
 static bool HandleVideoPlayer(int vk_code, int modifiers, const char* current_title) {
     if (hPopupWnd != NULL && IsWindow(hPopupWnd)) {
         return false;
@@ -91,13 +90,13 @@ static bool HandleVideoPlayer(int vk_code, int modifiers, const char* current_ti
                 
                 // Initialize the file list for the first time
                 ClearFileList();
-                GetFilesRecursive(VideosPath);
+                GetFilesRecursive(VideosPath,true);
                 
                 const char** initial_items = (const char**)malloc(GetFileCount() * sizeof(char*));
                 if (!initial_items) return false;
                 
                 for (int i = 0; i < GetFileCount(); i++) {
-                    initial_items[i] = G_FILES[i].name;
+                    initial_items[i] = G_FILES_WITH_TIME[i].name;
                 }
                 
                 PromptUser(initial_items, GetFileCount(), 220, 350,32,
