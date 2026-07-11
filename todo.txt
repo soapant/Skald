@@ -1,0 +1,3 @@
+maybe to the quicklinks add a window thingy to show all the quicklinks
+also add history of commands to the terminal command thingy
+add the folder it got the video from for the c program

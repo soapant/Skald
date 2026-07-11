@@ -5,17 +5,8 @@
 #include <stdio.h>
 #include <string.h>
 #include "config.h"
+#include "types.h"
 
-typedef void (*RefreshCallback)(const char* filter, HWND hListBox);
-typedef void (*EnterCallback)(const char* selection);
-typedef void (*CtrlEnterCallback)(const char* selection);
-typedef void (*TabCallback)(void);
-
-extern char* PromptUser(const char* window_list[], int count, int height, int width, 
-                                 RefreshCallback refresh_callback, 
-                                 EnterCallback enter_callback,
-                                 CtrlEnterCallback ctrl_enter_callback,
-                                 TabCallback tab_callback);
 extern HWND hPopupWnd;
 extern void SaveRegionToPNG(int x1, int y1, int x2, int y2, const char* fullPath);
 extern int img_region_step;
@@ -30,7 +21,7 @@ static void TriggerScreenshot(HWND hPopupWnd) {
     }
 
     const char* name_prompt[1] = { "Enter image name..." };
-    char* raw_name = PromptUser(name_prompt, 1, 220, 150,NULL,NULL,NULL,NULL);
+    char* raw_name = PromptUser(name_prompt, 1, 220, 150,32,NULL,NULL,NULL,NULL,NULL);
 
     if (raw_name != NULL && strlen(raw_name) > 0) {
         char final_file_path[512];

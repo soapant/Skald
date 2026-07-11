@@ -7,28 +7,80 @@
 #include <string.h>
 #include "types.h"
 
-extern char* PromptUser(const char* window_list[], int count, int height, int width, 
-                                 RefreshCallback refresh_callback, 
-                                 EnterCallback enter_callback,
-                                 CtrlEnterCallback ctrl_enter_callback,
-                                 TabCallback tab_callback);
-extern HWND hPopupWnd;
-extern HWND hListBox;
-extern HWND hEditControl;
+#define TODO_FILE_PATH "todo.txt"
+#define COLOR_TEXT    RGB(220, 223, 228)
+#define COLOR_BG      RGB(30, 34, 42)
 
-#define TODO_FILE_PATH "todo.md"
+typedef struct {
+    bool is_project;
+    char project_name[64];
+    bool is_high_priority;
+    bool is_low_priority;
+} TodoFlags;
+static void parse_todo_flags(char* input, TodoFlags* flags, char* clean_text) {
+    memset(flags, 0, sizeof(TodoFlags));
+    clean_text[0] = '\0';
+    
+    // Copy input to work with
+    char temp[256];
+    strncpy(temp, input, sizeof(temp) - 1);
+    temp[sizeof(temp) - 1] = '\0';
+    
+    char* token = strtok(temp, " ");
+    bool first = true;
+    
+    while (token != NULL) {
+        if (token[0] == '-') {
+            // Parse flags
+            if (strncmp(token, "-p", 2) == 0) {
+                flags->is_project = true;
+                // Check if project name is in quotes or directly attached
+                if (strlen(token) > 2) {
+                    // Attached: -pProjectName
+                    strncpy(flags->project_name, token + 2, sizeof(flags->project_name) - 1);
+                } else {
+                    // Next token is the project name (could be in quotes)
+                    token = strtok(NULL, " ");
+                    if (token != NULL) {
+                        // Remove quotes if present
+                        char* start = token;
+                        char* end = token + strlen(token) - 1;
+                        if (*start == '"' && *end == '"') {
+                            start++;
+                            *end = '\0';
+                        }
+                        strncpy(flags->project_name, start, sizeof(flags->project_name) - 1);
+                    }
+                }
+            } else if (strcmp(token, "-h") == 0) {
+                flags->is_high_priority = true;
+            } else if (strcmp(token, "-l") == 0) {
+                flags->is_low_priority = true;
+            }
+        } else {
+            // Normal text
+            if (first) {
+                strcpy(clean_text, token);
+                first = false;
+            } else {
+                strcat(clean_text, " ");
+                strcat(clean_text, token);
+            }
+        }
+        token = strtok(NULL, " ");
+    }
+}
 
-int ReadMdFile(char lines[100][256], const char* path) {
+int ReadMdFile(char lines[100][512], const char* path) {
     FILE* f = fopen(path, "r");
     if (!f) return 0;
-    
     int count = 0;
-    char buffer[256];
+    char buffer[512];
     while (fgets(buffer, sizeof(buffer), f) && count < 100) {
         buffer[strcspn(buffer, "\r\n")] = '\0';
         if (strlen(buffer) > 0) {
-            strncpy(lines[count], buffer, 255);
-            lines[count][255] = '\0';
+            strncpy(lines[count], buffer, 511);
+            lines[count][511] = '\0';
             count++;
         }
     }
@@ -36,7 +88,7 @@ int ReadMdFile(char lines[100][256], const char* path) {
     return count;
 }
 
-void WriteMdFile(char lines[100][256], int count, const char* path) {
+void WriteMdFile(char lines[100][512], int count, const char* path) {
     FILE* f = fopen(path, "w");
     if (!f) return;
     for (int i = 0; i < count; i++) {
@@ -48,25 +100,52 @@ void WriteMdFile(char lines[100][256], int count, const char* path) {
 static void add_todo_to_file(const char* text) {
     if (!text || strlen(text) == 0) return;
     
-    char lines[100][256];
+    char lines[100][512];
     int count = ReadMdFile(lines, TODO_FILE_PATH);
     
-    // Check if already exists
+    // Check if already exists (compare without flags)
+    char input_copy[256];
+    strncpy(input_copy, text, sizeof(input_copy) - 1);
+    input_copy[sizeof(input_copy) - 1] = '\0';
+    
+    TodoFlags flags;
+    char clean_text[256];
+    parse_todo_flags(input_copy, &flags, clean_text);
+    
+    // Check if clean_text already exists
     for (int i = 0; i < count; i++) {
-        if (strcmp(lines[i], text) == 0) return;
+        char existing_clean[256];
+        strncpy(existing_clean, lines[i], sizeof(existing_clean) - 1);
+        existing_clean[sizeof(existing_clean) - 1] = '\0';
+        // Remove any existing || tag from the comparison
+        char* delimiter = strstr(existing_clean, "||");
+        if (delimiter) {
+            *delimiter = '\0';
+        }
+        if (strcmp(existing_clean, clean_text) == 0) return;
     }
     
-    // Format with checkbox if not already
-    char new_entry[256];
-    if (strncmp(text, "- [ ] ", 6) != 0 && strncmp(text, "- [x] ", 6) != 0) {
-        snprintf(new_entry, sizeof(new_entry), "- [ ] %s", text);
+    // Build the entry with || delimiter
+    char new_entry[512];
+    char tag_text[128] = {0};
+    
+    if (flags.is_project) {
+        snprintf(tag_text, sizeof(tag_text), "[Project: %s]", flags.project_name);
+    } else if (flags.is_high_priority) {
+        strcpy(tag_text, "[HIGH]");
+    } else if (flags.is_low_priority) {
+        strcpy(tag_text, "[LOW]");
+    }
+    
+    // Store WITHOUT - [ ] in the file (just the text and tag)
+    if (strlen(tag_text) > 0) {
+        snprintf(new_entry, sizeof(new_entry), "%s||%s", clean_text, tag_text);
     } else {
-        strncpy(new_entry, text, sizeof(new_entry) - 1);
+        strncpy(new_entry, clean_text, sizeof(new_entry) - 1);
     }
     
     strncpy(lines[count], new_entry, sizeof(lines[count]) - 1);
     count++;
-    
     WriteMdFile(lines, count, TODO_FILE_PATH);
 }
 
@@ -80,18 +159,34 @@ static void remove_todo_item_from_file(const char* item_to_remove) {
         return;
     }
 
-    char line[256];
+    char line[512];
     while (fgets(line, sizeof(line), infile)) {
-        char clean_line[256];
+        char clean_line[512];
         strncpy(clean_line, line, sizeof(clean_line) - 1);
         clean_line[sizeof(clean_line) - 1] = '\0';
         clean_line[strcspn(clean_line, "\r\n")] = '\0';
 
-        if (strcmp(clean_line, item_to_remove) == 0) {
+        // Extract the text part (before ||) from the line
+        char compare_text[256];
+        strncpy(compare_text, clean_line, sizeof(compare_text) - 1);
+        char* delimiter = strstr(compare_text, "||");
+        if (delimiter) {
+            *delimiter = '\0';
+        }
+        
+        // Also clean the item_to_remove (remove any || tag it might have)
+        char clean_item[256];
+        strncpy(clean_item, item_to_remove, sizeof(clean_item) - 1);
+        char* item_delimiter = strstr(clean_item, "||");
+        if (item_delimiter) {
+            *item_delimiter = '\0';
+        }
+        
+        if (strcmp(compare_text, clean_item) == 0) {
             printf("[TODO-MGR] Dropped file line item: \"%s\"\n", item_to_remove);
             continue; 
         }
-        fprintf(outfile, "%s", line);
+        fprintf(outfile, "%s\n", clean_line);
     }
 
     fclose(infile);
@@ -104,7 +199,7 @@ static void remove_todo_item_from_file(const char* item_to_remove) {
 static void todo_refresh_callback(const char* filter, HWND hListBox) {
     if (!hListBox) return;
     
-    char todo_lines[100][256];
+    char todo_lines[100][512];
     int todo_count = ReadMdFile(todo_lines, TODO_FILE_PATH);
     
     SendMessageA(hListBox, LB_RESETCONTENT, 0, 0);
@@ -124,18 +219,15 @@ static void todo_refresh_callback(const char* filter, HWND hListBox) {
 }
 
 static void todo_enter_callback(const char* selection) {
-    // Check if something is selected in the list box
     int selected_index = LB_ERR;
     if (hListBox != NULL) {
         selected_index = SendMessageA(hListBox, LB_GETCURSEL, 0, 0);
     }
     
     if (selected_index != LB_ERR) {
-        // Something is selected -> remove it
         remove_todo_item_from_file(selection);
         printf("[TODO] Removed: %s\n", selection);
     } else {
-        // Nothing selected -> add new todo from edit box
         char input[256] = {0};
         if (hEditControl != NULL) {
             GetWindowTextA(hEditControl, input, sizeof(input));
@@ -146,8 +238,8 @@ static void todo_enter_callback(const char* selection) {
         }
     }
 }
+
 static void todo_ctrlenter_callback(const char* selection) {
-    // Get the selected item from the list box directly
     int selected_index = LB_ERR;
     char selected_text[256] = {0};
     
@@ -159,14 +251,68 @@ static void todo_ctrlenter_callback(const char* selection) {
     }
     
     if (selected_index != LB_ERR && strlen(selected_text) > 0) {
-        // Remove the selected item
         remove_todo_item_from_file(selected_text);
         printf("[TODO] Ctrl+Enter removed: %s\n", selected_text);
         
-        // Refresh the list
         if (hListBox != NULL) {
             todo_refresh_callback(NULL, hListBox);
         }
+    }
+}
+
+static void todo_render_callback(HDC hdc, const char* text, RECT* rect, BOOL is_selected) {
+    if (!text || !rect) return;
+    
+    char main_text[256] = {0};
+    char tag_text[128] = {0};
+    
+    char* delimiter = strstr(text, "||");
+    if (delimiter) {
+        int len = delimiter - text;
+        strncpy(main_text, text, len);
+        main_text[len] = '\0';
+        strcpy(tag_text, delimiter + 2);
+    } else {
+        strcpy(main_text, text);
+    }
+    
+    RECT textRect = *rect;
+    textRect.left += 10;
+    textRect.top += 2;
+    
+    HFONT hMainFont = CreateFontA(24, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+                                  DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+                                  CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "0xProto Nerd Font");
+    HFONT hOldFont = (HFONT)SelectObject(hdc, hMainFont);
+    SetTextColor(hdc, is_selected ? RGB(255,255,255) : COLOR_TEXT);
+    DrawTextA(hdc, main_text, -1, &textRect, DT_SINGLELINE | DT_TOP);
+    SelectObject(hdc, hOldFont);
+    DeleteObject(hMainFont);
+    
+    if (strlen(tag_text) > 0) {
+        HFONT hTagFont = CreateFontA(24, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+                                     DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+                                     CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "0xProto Nerd Font");
+        SelectObject(hdc, hTagFont);
+        
+        RECT tagRect = *rect;
+        tagRect.left += 14;
+        tagRect.top += 24;
+        
+        if (strstr(tag_text, "Project")) {
+            SetTextColor(hdc, RGB(255, 200, 50));
+        } else if (strstr(tag_text, "HIGH")) {
+            SetTextColor(hdc, RGB(255, 80, 80));
+        } else if (strstr(tag_text, "LOW")) {
+            SetTextColor(hdc, RGB(100, 150, 255));
+        } else {
+            SetTextColor(hdc, RGB(150, 150, 180));
+        }
+        
+        DrawTextA(hdc, tag_text, -1, &tagRect, DT_LEFT | DT_TOP);
+        
+        SelectObject(hdc, hOldFont);
+        DeleteObject(hTagFont);
     }
 }
 
@@ -175,7 +321,7 @@ void TriggerTodo(HWND targetPopupWnd) {
         return; 
     }
 
-    char todo_lines[100][256];
+    char todo_lines[100][512];
     int todo_count = ReadMdFile(todo_lines, TODO_FILE_PATH);
 
     const char* ui_list[100];
@@ -183,11 +329,12 @@ void TriggerTodo(HWND targetPopupWnd) {
         ui_list[i] = todo_lines[i];
     }
 
-    PromptUser(ui_list, todo_count, 220, 350, 
-                        todo_refresh_callback,  // refresh -> reloads from file on typing
-                        todo_enter_callback,    // enter -> remove if selected, add if not
-                        todo_ctrlenter_callback,                   // ctrl enter (not needed)
-                        NULL);                  // tab
+    PromptUser(ui_list, todo_count, 520, 950,54,
+               todo_refresh_callback,     
+               todo_enter_callback,       
+               todo_ctrlenter_callback,   
+               NULL,
+               todo_render_callback);                     
 }
 
 #endif

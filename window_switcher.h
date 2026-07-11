@@ -9,11 +9,6 @@
 #include <shlwapi.h>
 #include <psapi.h>
 
-extern char* PromptUser(const char* window_list[], int count, int height, int width, 
-                                 RefreshCallback refresh_callback, 
-                                 EnterCallback enter_callback,
-                                 CtrlEnterCallback ctrl_enter_callback,
-                                 TabCallback tab_callback);
 
 // Global state for the switcher
 static SavedWindow g_switcher_windows[100];
@@ -124,10 +119,11 @@ static char* TriggerWindowSwitcher(HWND hPopupWnd, WindowList myWindows) {
     }
 
     printf("[SWITCHER] Launching UI Selection Prompt...\n");
-    char* selected_title = PromptUser(ui_list, g_switcher_count, 220, 350,
+    char* selected_title = PromptUser(ui_list, g_switcher_count, 220, 350,32,
                                                 switcher_refresh_callback,  // refresh -> filters on typing
                                                 switcher_enter_callback,    // enter -> focuses window
                                                 NULL,                       // ctrl enter
+                                                NULL,
                                                 NULL);                      // tab
 
     if (selected_title == NULL) {

@@ -7,12 +7,13 @@
 #include "pixel_utils.h"
 #include "config.h"
 
-extern int ReadMdFile(char lines[100][256], const char* path);
-extern void WriteMdFile(char lines[100][256], int count, const char* path);
+extern int ReadMdFile(char lines[100][512], const char* path);
+extern void WriteMdFile(char lines[100][512], int count, const char* path);
 extern void ClearMdFile(const char* path);
 extern void StripCheckboxes(char* str);
 extern int CopyToClipboard(const char* text);
-const char* TEMP_FILE_PATH = "temp_list_of_positions.md";
+
+#define TEMP_FILE_PATH "temp_list_of_positions.md"
 
 static bool HandlePosKey(bool alt_down, bool ctrl_down, bool shift_down) {
     POINT mousePos;
@@ -24,7 +25,7 @@ static bool HandlePosKey(bool alt_down, bool ctrl_down, bool shift_down) {
         char coords_buf[64];
         snprintf(coords_buf, sizeof(coords_buf), "(%ld, %ld)", mousePos.x, mousePos.y);
 
-        char temp_lines[100][256];
+        char temp_lines[100][512];  // Changed to 512
         int temp_count = ReadMdFile(temp_lines, TEMP_FILE_PATH);
 
         if (temp_count < 100) {
