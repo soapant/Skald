@@ -15,6 +15,7 @@
 #include "timer.h"
 #include "explorer.h"
 #include "screenshot.h"
+#include "terminal_command.h"
 #include "todo.h"
 #include "zoxide.h"
 #include "nvim_zoxide.h"
@@ -502,7 +503,7 @@ void SaveRegionToPNG(int x1, int y1, int x2, int y2, const char* fullPath) {
     ReleaseDC(NULL, hScreenDC);
 }
 
-char* PromptQuickSwitcher(const char* window_list[], int count, int height, int width, 
+char* PromptUser(const char* window_list[], int count, int height, int width, 
                           RefreshCallback refresh_callback, 
                           EnterCallback enter_callback,
                           CtrlEnterCallback ctrl_enter_callback,
@@ -517,7 +518,7 @@ char* PromptQuickSwitcher(const char* window_list[], int count, int height, int 
     g_ctrl_enter_callback = ctrl_enter_callback;
     g_tab_callback = tab_callback;
 
-    printf("[DEBUG-UI] PromptQuickSwitcher called. Count: %d\n", count);
+    printf("[DEBUG-UI] PromptUser called. Count: %d\n", count);
 
     WindowLayout layout;
     CalculateWindowMetrics(count, &layout, height, width);
@@ -580,7 +581,7 @@ char* PromptQuickSwitcher(const char* window_list[], int count, int height, int 
     g_ctrl_enter_callback = NULL;
     g_tab_callback = NULL;
 
-    printf("[DEBUG-UI] Returning from PromptQuickSwitcher. Buffer Length: %zu\n", strlen(output_buffer));
+    printf("[DEBUG-UI] Returning from PromptUser. Buffer Length: %zu\n", strlen(output_buffer));
     return (strlen(output_buffer) > 0) ? output_buffer : NULL;
 }
 
@@ -624,8 +625,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             printf("[DEBUG-WNDPROC] Core tray window thread intercepted WM_TRIGGER_IMG_CAPTURE successfully!\n");
             const char* empty_list[1] = { "" };
             
-            printf("[DEBUG-WNDPROC] Handing control off to PromptQuickSwitcher...\n");
-            char* raw_name = PromptQuickSwitcher(empty_list, 0, 220, 550,NULL,NULL,NULL,NULL);
+            printf("[DEBUG-WNDPROC] Handing control off to PromptUser...\n");
+            char* raw_name = PromptUser(empty_list, 0, 220, 550,NULL,NULL,NULL,NULL);
             printf("[DEBUG-WNDPROC] Returned back to WndProc execution sequence.\n");
 
             if (raw_name != NULL && strlen(raw_name) > 0) {
@@ -1231,6 +1232,26 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
                     return 1;
                 }
                 TriggerExplorer(hPopupWnd);
+                return 1;
+            }
+        }
+        if (pKeyInfo->vkCode == TERMINAL_COMMAND_KEY) {
+            bool is_blacklisted = false;
+            for (int i = 0; i < terminal_command_blacklist_count; i++) {
+                if (StrStrIA(fgTitle, terminal_command_blacklist[i]) != NULL) {
+                    is_blacklisted = true;
+                    break;
+                }
+            }
+            if (is_blacklisted) {
+                return CallNextHookEx(NULL, nCode, wParam, lParam);
+            }
+
+            if (alt_down && !ctrl_down && !shift_down) {
+                if (hPopupWnd != NULL && IsWindow(hPopupWnd)) {
+                    return 1;
+                }
+                TriggerTerminalCommand(hPopupWnd);
                 return 1;
             }
         }

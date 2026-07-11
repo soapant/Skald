@@ -7,7 +7,7 @@
 #include <string.h>
 #include "types.h"
 
-extern char* PromptQuickSwitcher(const char* window_list[], int count, int height, int width, 
+extern char* PromptUser(const char* window_list[], int count, int height, int width, 
                                  RefreshCallback refresh_callback, 
                                  EnterCallback enter_callback,
                                  CtrlEnterCallback ctrl_enter_callback,
@@ -183,7 +183,7 @@ void TriggerTodo(HWND targetPopupWnd) {
         ui_list[i] = todo_lines[i];
     }
 
-    PromptQuickSwitcher(ui_list, todo_count, 220, 350, 
+    PromptUser(ui_list, todo_count, 220, 350, 
                         todo_refresh_callback,  // refresh -> reloads from file on typing
                         todo_enter_callback,    // enter -> remove if selected, add if not
                         todo_ctrlenter_callback,                   // ctrl enter (not needed)

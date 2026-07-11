@@ -14,7 +14,7 @@
 static char G_PK_LIST[MAX_PK_APPS][128];
 static int G_PK_COUNT = 0;
 
-extern char* PromptQuickSwitcher(const char* window_list[], int count, int height, int width, 
+extern char* PromptUser(const char* window_list[], int count, int height, int width, 
                                  RefreshCallback refresh_callback, 
                                  EnterCallback enter_callback,
                                  CtrlEnterCallback ctrl_enter_callback,
@@ -153,7 +153,7 @@ void TriggerProcessKiller(HWND hPopupWnd) {
     }
 
     // Open your UI window with callbacks
-    PromptQuickSwitcher(list_items, G_PK_COUNT, 220, 250, 
+    PromptUser(list_items, G_PK_COUNT, 220, 250, 
                         pk_refresh_callback,        
                         pk_enter_callback,          
                         NULL,                      
