@@ -13,10 +13,12 @@
 #include "video_player.h"
 #include "music_player.h"
 #include "timer.h"
+#include "bindings.h"
 #include "explorer.h"
 #include "screenshot.h"
 #include "terminal_command.h"
 #include "todo.h"
+#include "misc_launcher.h"
 #include "zoxide.h"
 #include "nvim_zoxide.h"
 #include "yazi_zoxide.h"
@@ -734,7 +736,7 @@ HHOOK hKeyboardHook = NULL;
 #include <shlwapi.h>
 #pragma comment(lib, "Shlwapi.lib")
 
-int init_tray() {
+int InitializeTrayIcon() {
     HINSTANCE hInstance = GetModuleHandle(NULL);
     if (TRAY) {
         WNDCLASS wc = {0};
@@ -779,98 +781,6 @@ void StripCheckboxes(char* str) {
     *write_ptr = '\0';
 }
 
-bool CheckAppHotkeyBindings(int pressed_vk, int modifiers) {
-    HWND hActiveWnd = GetForegroundWindow();
-    if (!hActiveWnd) return false;
-
-    char activeExe[256] = {0};
-    FetchExeNameOnDemand(hActiveWnd, activeExe, sizeof(activeExe) - 1);
-    
-    // Initialize the cache if it's empty
-    if (G_APP_COUNT == 0) {
-        initialize_app_cache();
-    }
-    
-    for (int i = 0; i < APP_HOTKEY_COUNT; i++) {
-        if (G_APP_HOTKEYS[i].vk_code == pressed_vk && 
-            G_APP_HOTKEYS[i].modifiers == modifiers) {
-            
-            if (strcmp(G_APP_HOTKEYS[i].exe_name, "*") == 0 ||
-                StrStrIA(activeExe, G_APP_HOTKEYS[i].exe_name) != NULL) {
-                
-                printf("[APP-HOTKEY] Launching: %s\n", G_APP_HOTKEYS[i].app_name);
-                launch_app_by_name(G_APP_HOTKEYS[i].app_name);
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
-bool CheckMacroBindings(int pressed_vk, int modifiers, MacroAction* out_action, int* out_delay) {
-    // Get the active window
-    HWND hActiveWnd = GetForegroundWindow();
-    if (!hActiveWnd) return false;
-
-    char activeExe[256] = {0};
-    FetchExeNameOnDemand(hActiveWnd, activeExe, sizeof(activeExe) - 1);
-    
-    // Debug: Show what was pressed
-    printf("[DEBUG] Key: 0x%X (%d), Modifiers: 0x%X, Active exe: '%s'\n", 
-           pressed_vk, pressed_vk, modifiers, activeExe);
-
-    // Scan bindings
-    for (size_t i = 0; i < MACRO_BINDING_COUNT; i++) {
-        if (G_MACRO_BINDINGS[i].vk_code == pressed_vk) {
-            // Check if modifiers match
-            if (G_MACRO_BINDINGS[i].modifiers != modifiers) {
-                continue;
-            }
-            
-            // Check global or app-specific
-            if (strcmp(G_MACRO_BINDINGS[i].exe_name, "*") == 0) {
-                *out_action = G_MACRO_BINDINGS[i].action_id;
-                *out_delay = G_MACRO_BINDINGS[i].delay;
-                printf("[DEBUG] GLOBAL binding matched! action=%d, delay=%d\n", *out_action, *out_delay);
-                return true;
-            }
-            
-            if (StrStrIA(activeExe, G_MACRO_BINDINGS[i].exe_name) != NULL) {
-                *out_action = G_MACRO_BINDINGS[i].action_id;
-                *out_delay = G_MACRO_BINDINGS[i].delay;
-                printf("[DEBUG] APP-SPECIFIC binding matched! exe='%s' contains '%s', action=%d, delay=%d\n", 
-                       activeExe, G_MACRO_BINDINGS[i].exe_name, *out_action, *out_delay);
-                return true;
-            }
-        }
-    }
-    return false;
-}
-
-bool CheckTextSnippetBindings(int pressed_vk, int modifiers, const char** out_text) {
-    HWND hActiveWnd = GetForegroundWindow();
-    if (!hActiveWnd) return false;
-
-    char activeExe[256] = {0};
-    FetchExeNameOnDemand(hActiveWnd, activeExe, sizeof(activeExe) - 1);
-    
-    for (int i = 0; i < TEXT_SNIPPET_COUNT; i++) {
-        if (G_TEXT_SNIPPETS[i].vk_code == pressed_vk && 
-            G_TEXT_SNIPPETS[i].modifiers == modifiers) {
-            
-            if (strcmp(G_TEXT_SNIPPETS[i].exe_name, "*") == 0) {
-                *out_text = G_TEXT_SNIPPETS[i].text;
-                return true;
-            }
-            
-            if (StrStrIA(activeExe, G_TEXT_SNIPPETS[i].exe_name) != NULL) {
-                *out_text = G_TEXT_SNIPPETS[i].text;
-                return true;
-            }
-        }
-    }
-    return false;
-}
 LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
     if (nCode < 0) {
         return CallNextHookEx(NULL, nCode, wParam, lParam);
@@ -1325,6 +1235,10 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
             return 1;
         }
         
+        if (CheckMiscHotkeyBindings(pressed_vk, modifiers)) {
+            return 1;
+        }
+        
         if (HandleFocusSwitcher(pKeyInfo->vkCode, modifiers, fgTitle)) {
             return 1;
         }
@@ -1342,7 +1256,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
     return CallNextHookEx(NULL, nCode, wParam, lParam);
 }
 
-void wait_for_hotkeys() {
+void RunHotKeyMessageLoop() {
     HINSTANCE hInstance = GetModuleHandle(NULL);
     
     // Install keyboard hook
@@ -1364,7 +1278,7 @@ void wait_for_hotkeys() {
 int main() {
     StartUniversalTimer();
   
-    init_tray();
+    InitializeTrayIcon();
     struct GdiplusStartupInput gdiplusStartupInput;
     gdiplusStartupInput.GdiplusVersion = 1;
     gdiplusStartupInput.DebugEventCallback = NULL;
@@ -1389,7 +1303,7 @@ int main() {
 
     printf("[SYSTEM] Low-Level Hotkey Services Running. GDI+ Online.\n");
 
-    wait_for_hotkeys();
+    RunHotKeyMessageLoop();
 
     if (g_gdiplusToken != 0) {
         GdiplusShutdown(g_gdiplusToken);
