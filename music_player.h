@@ -22,7 +22,7 @@ static void music_refresh_callback(const char* filter, HWND hListBox) {
     
     // Get the current file list
     ClearFileList();
-    GetFilesRecursive("D:\\Music");
+    GetFilesRecursive(MusicPath);
     
     SendMessageA(hListBox, LB_RESETCONTENT, 0, 0);
     
@@ -44,7 +44,7 @@ static void music_enter_callback(const char* selection) {
     if (selection == NULL || strlen(selection) == 0) return;
     
     HWND playerHwnd = FindWindow(NULL, "Music Player");
-    char* result = SearchFileInDirectory("D:\\Music", selection);
+    char* result = SearchFileInDirectory(MusicPath, selection);
     
     if (!result) return;
     
@@ -95,7 +95,7 @@ static bool HandleMusicPlayer(int vk_code, int modifiers, const char* current_ti
                 
                 // Initialize the file list for the first time
                 ClearFileList();
-                GetFilesRecursive("D:\\Music");
+                GetFilesRecursive(MusicPath);
                 
                 const char** initial_items = (const char**)malloc(GetFileCount() * sizeof(char*));
                 if (!initial_items) return false;

@@ -598,7 +598,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             nid.uCallbackMessage = WM_TRAYICON;
             
             nid.hIcon = (HICON)LoadImage(NULL,
-                             TEXT("D:\\retard games\\miscellaneous\\switch_window.ico"), 
+                             TEXT(IconPath), 
                              IMAGE_ICON, 
                              0, 0, 
                              LR_LOADFROMFILE | LR_DEFAULTSIZE);
