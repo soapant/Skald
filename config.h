@@ -3,6 +3,14 @@
 
 
 static bool TRAY = true;
+static const char* ListOfProgramPaths[20] = {
+    "C:\\Users\\HP\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu",
+    "C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs",
+    "D:\\Projects"
+};
+static const char* MusicPath = "D:\\Music";
+static const char* VideosPath = "C:\\videos";
+static const char* IconPath = "D:\\retard games\\miscellaneous\\switch_window.ico";
 
 // Hotkey IDs
 #define SWITCHER_ID       1

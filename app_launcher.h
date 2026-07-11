@@ -74,9 +74,9 @@ static void scan_directory_recursive(const char* dir_path) {
 
 static void initialize_app_cache() {
     G_APP_COUNT = 0;
-    scan_directory_recursive("C:\\Users\\HP\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu");
-    scan_directory_recursive("C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs");
-    scan_directory_recursive("D:\\Projects");
+    for (int i = 0; i < sizeof(ListOfProgramPaths) / sizeof(ListOfProgramPaths[0]); i++) {
+        scan_directory_recursive(ListOfProgramPaths[i]);
+    }
 }
 
 static void launch_app_by_name(const char* display_name) {
