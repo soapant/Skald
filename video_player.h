@@ -23,7 +23,7 @@ static void video_refresh_callback(const char* filter, HWND hListBox) {
     
     // Get the current file list
     ClearFileList();
-    GetFilesRecursive("C:\\videos");
+    GetFilesRecursive(VideosPath);
     
     SendMessageA(hListBox, LB_RESETCONTENT, 0, 0);
     
@@ -45,7 +45,7 @@ static void video_enter_callback(const char* selection) {
     if (selection == NULL || strlen(selection) == 0) return;
     
     HWND playerHwnd = FindWindow(NULL, "Video Viewer");
-    char* result = SearchFileRecursive("C:\\videos", selection);
+    char* result = SearchFileRecursive(VideosPath, selection);
     
     if (!result) return;
     
@@ -96,7 +96,7 @@ static bool HandleVideoPlayer(int vk_code, int modifiers, const char* current_ti
                 
                 // Initialize the file list for the first time
                 ClearFileList();
-                GetFilesRecursive("C:\\videos");
+                GetFilesRecursive(VideosPath);
                 
                 const char** initial_items = (const char**)malloc(GetFileCount() * sizeof(char*));
                 if (!initial_items) return false;
