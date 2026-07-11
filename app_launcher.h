@@ -48,6 +48,9 @@ static void scan_directory_recursive(const char* dir_path) {
             if (StrCmpIA(find_data.cFileName, "node_modules") == 0 ||
                 StrCmpIA(find_data.cFileName, ".git") == 0 ||
                 StrCmpIA(find_data.cFileName, "bin") == 0 ||
+                StrCmpIA(find_data.cFileName, "dll") == 0 ||
+                StrCmpIA(find_data.cFileName, ".h") == 0 ||
+                StrCmpIA(find_data.cFileName, "yazi") == 0 ||
                 StrCmpIA(find_data.cFileName, "obj") == 0 ||
                 StrCmpIA(find_data.cFileName, "build") == 0) {
                 continue;
