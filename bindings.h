@@ -43,12 +43,16 @@ void RunMiscApplication(const char* path) {
     sei.lpFile = path;
     sei.nShow = SW_SHOWNORMAL;
     
-    // Handle .bat files - run in terminal and keep open
     if (StrCmpIA(ext, ".bat") == 0) {
+        char dir_path[MAX_PATH];
+        strncpy(dir_path, path, sizeof(dir_path) - 1);
+        PathRemoveFileSpecA(dir_path);
+        
         char cmd[2048];
-        snprintf(cmd, sizeof(cmd), "cmd \"%s\"", path);
+        // Use /c instead of /k - terminal closes after the bat finishes
+        snprintf(cmd, sizeof(cmd), "cmd /c \"cd /d \"%s\" && \"%s\"\"", dir_path, path);
         system(cmd);
-        printf("[MISC] Running .bat: %s\n", path);
+        printf("[MISC] Running .bat in: %s\n", dir_path);
         return;
     }
     
