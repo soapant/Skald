@@ -95,6 +95,13 @@ typedef struct {
 typedef struct {
     int vk_code;
     int modifiers;
+    const char* exe_name;
+    const char* QuickLinkQuery; 
+} QuickLinkHotkey;
+
+typedef struct {
+    int vk_code;
+    int modifiers;
     const char** blacklist;      
     int blacklist_count;
     const char** window_titles;  
@@ -132,6 +139,12 @@ static const MiscHotkey G_MISC_HOTKEYS[] = {
 };
 
 #define MISC_HOTKEY_COUNT (sizeof(G_MISC_HOTKEYS) / sizeof(G_MISC_HOTKEYS[0]))
+
+static const QuickLinkHotkey G_QUICKLINK_HOTKEYS[] = {
+    {'Y', HOTKEY_MOD_CTRL | HOTKEY_MOD_ALT, "*", "https:youtube.com" },
+};
+
+#define QUICKLINK_HOTKEY_COUNT (sizeof(G_QUICKLINK_HOTKEYS) / sizeof(G_QUICKLINK_HOTKEYS[0]))
 
 static const MacroBinding G_MACRO_BINDINGS[] = {
     { 'V', HOTKEY_MOD_ALT, "Factorio", MACRO_FACTORIO_MAKE_TAG, 0 },

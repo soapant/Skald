@@ -18,7 +18,6 @@
 #include "screenshot.h"
 #include "terminal_command.h"
 #include "todo.h"
-#include "misc_launcher.h"
 #include "zoxide.h"
 #include "nvim_zoxide.h"
 #include "yazi_zoxide.h"
@@ -1236,6 +1235,9 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
         }
         
         if (CheckMiscHotkeyBindings(pressed_vk, modifiers)) {
+            return 1;
+        }
+        if (CheckQuickLinkHotkeyBindings(pressed_vk, modifiers)) {
             return 1;
         }
         
