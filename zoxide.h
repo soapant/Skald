@@ -7,11 +7,6 @@
 #include <stdlib.h>
 #include "types.h"
 
-extern char* PromptUser(const char* window_list[], int count, int height, int width, 
-                                 RefreshCallback refresh_callback, 
-                                 EnterCallback enter_callback,
-                                 CtrlEnterCallback ctrl_enter_callback,
-                                 TabCallback tab_callback);
 extern HWND hPopupWnd;
 
 static void TriggerZoxide(HWND hPopupWnd) {
@@ -20,7 +15,7 @@ static void TriggerZoxide(HWND hPopupWnd) {
     }
 
     const char* prompt[1] = { "Enter zoxide query (TERMINAL)..." };
-    char* query = PromptUser(prompt, 1, 220, 150,NULL,NULL,NULL,NULL);
+    char* query = PromptUser(prompt, 1, 220, 150,32,NULL,NULL,NULL,NULL,NULL);
 
     if (query != NULL && strlen(query) > 0) {
         // Build the zoxide query command

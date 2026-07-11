@@ -2,7 +2,8 @@
 #define TYPES_H
 
 #include <windows.h>
-
+#include <stdbool.h>
+#include <string.h>
 typedef struct {
     int index;
     HWND hwnd;
@@ -32,5 +33,15 @@ typedef void (*RefreshCallback)(const char* filter, HWND hListBox);
 typedef void (*EnterCallback)(const char* selection);
 typedef void (*CtrlEnterCallback)(const char* selection);
 typedef void (*TabCallback)(void);
+typedef void (*RenderCallback)(HDC hdc, const char* text, RECT* rect, BOOL is_selected);
 
+char* PromptUser(const char* window_list[], int count, int height, int width,int item_height, 
+                 RefreshCallback refresh_callback, 
+                 EnterCallback enter_callback,
+                 CtrlEnterCallback ctrl_enter_callback,
+                 TabCallback tab_callback,
+                 RenderCallback render_callback);
+extern HWND hPopupWnd;
+extern HWND hListBox;
+extern HWND hEditControl;
 #endif

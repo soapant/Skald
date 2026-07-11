@@ -14,12 +14,6 @@
 static char G_PK_LIST[MAX_PK_APPS][128];
 static int G_PK_COUNT = 0;
 
-extern char* PromptUser(const char* window_list[], int count, int height, int width, 
-                                 RefreshCallback refresh_callback, 
-                                 EnterCallback enter_callback,
-                                 CtrlEnterCallback ctrl_enter_callback,
-                                 TabCallback tab_callback);
-
 // Programmatically filter out core protected Windows OS components to save list space
 static bool is_system_noise(const char* exe) {
     const char* noise[] = {
@@ -153,10 +147,11 @@ void TriggerProcessKiller(HWND hPopupWnd) {
     }
 
     // Open your UI window with callbacks
-    PromptUser(list_items, G_PK_COUNT, 220, 250, 
+    PromptUser(list_items, G_PK_COUNT, 220, 250,32,
                         pk_refresh_callback,        
                         pk_enter_callback,          
                         NULL,                      
+                        NULL,
                         NULL);                     
     free(list_items);
 }

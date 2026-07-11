@@ -11,12 +11,6 @@
 
 #define MAX_APPS 2000
 
-extern char* PromptUser(const char* window_list[], int count, int height, int width, 
-                                 RefreshCallback refresh_callback, 
-                                 EnterCallback enter_callback,
-                                 CtrlEnterCallback ctrl_enter_callback,
-                                 TabCallback tab_callback);
-
 typedef struct {
     char name[128];
     char path[MAX_PATH];
@@ -178,10 +172,11 @@ void TriggerAppLauncher(HWND hPopupWnd) {
     }
 
     // FIX: Pass NULL for refresh, not true
-    PromptUser(initial_items, G_APP_COUNT, 220, 250, 
+    PromptUser(initial_items, G_APP_COUNT, 220, 250,32,
                         applauncher_refresh_callback,
                         applauncher_enter_callback,   
                         applauncher_ctrlenter_callback,
+                        NULL,
                         NULL);                         
     free(initial_items);
 }
