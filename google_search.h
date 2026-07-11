@@ -7,7 +7,7 @@
 #include <shellapi.h>
 #include "types.h"
 
-extern char* PromptQuickSwitcher(const char* window_list[], int count, int height, int width, 
+extern char* PromptUser(const char* window_list[], int count, int height, int width, 
                                  RefreshCallback refresh_callback, 
                                  EnterCallback enter_callback,
                                  CtrlEnterCallback ctrl_enter_callback,
@@ -24,7 +24,7 @@ static void TriggerGoogleSearch() {
     }
 
     const char* empty_list[1] = { "Enter search query..." };
-    char* query = PromptQuickSwitcher(empty_list, 1, 220, 150,NULL,NULL,NULL,NULL);
+    char* query = PromptUser(empty_list, 1, 220, 150,NULL,NULL,NULL,NULL);
 
     if (query != NULL && strlen(query) > 0) {
         // Build Google search URL

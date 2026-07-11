@@ -11,7 +11,7 @@
 
 #define MAX_APPS 2000
 
-extern char* PromptQuickSwitcher(const char* window_list[], int count, int height, int width, 
+extern char* PromptUser(const char* window_list[], int count, int height, int width, 
                                  RefreshCallback refresh_callback, 
                                  EnterCallback enter_callback,
                                  CtrlEnterCallback ctrl_enter_callback,
@@ -175,7 +175,7 @@ void TriggerAppLauncher(HWND hPopupWnd) {
     }
 
     // FIX: Pass NULL for refresh, not true
-    PromptQuickSwitcher(initial_items, G_APP_COUNT, 220, 250, 
+    PromptUser(initial_items, G_APP_COUNT, 220, 250, 
                         applauncher_refresh_callback,
                         applauncher_enter_callback,   
                         applauncher_ctrlenter_callback,
