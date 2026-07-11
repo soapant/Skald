@@ -10,11 +10,6 @@
 #include "app_launcher.h"
 #include "types.h"
 
-extern char* PromptUser(const char* window_list[], int count, int height, int width, 
-                                 RefreshCallback refresh_callback, 
-                                 EnterCallback enter_callback,
-                                 CtrlEnterCallback ctrl_enter_callback,
-                                 TabCallback tab_callback);
 extern HWND hPopupWnd;
 extern HWND hEditControl;
 
@@ -105,10 +100,11 @@ static bool HandleVideoPlayer(int vk_code, int modifiers, const char* current_ti
                     initial_items[i] = G_FILES[i].name;
                 }
                 
-                PromptUser(initial_items, GetFileCount(), 220, 350,
+                PromptUser(initial_items, GetFileCount(), 220, 350,32,
                                     video_refresh_callback,  // refresh -> filters on typing
                                     video_enter_callback,    // enter -> plays video
                                     NULL,                    // ctrl enter
+                                    NULL,
                                     NULL);                   // tab
                 
                 free((void*)initial_items);

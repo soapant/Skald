@@ -42,7 +42,7 @@
 #define IDC_LIST_BOX 102
 #define COLOR_BG      RGB(30, 34, 42)    // A pretty slate-gray/dark background
 #define COLOR_TEXT    RGB(220, 223, 228)  // A crisp, clean off-white text
-#define TODO_FILE_PATH "todo.md"
+#define TODO_FILE_PATH "todo.txt"
 #define WM_TRIGGER_IMG_CAPTURE (WM_USER + 2)
 HWND hGlobalTrayWnd = NULL; // Tracks the hidden tray window
 HWND hPopupWnd = NULL;
@@ -63,6 +63,7 @@ static RefreshCallback g_refresh_callback = NULL;
 static EnterCallback g_enter_callback = NULL;
 static CtrlEnterCallback g_ctrl_enter_callback = NULL;
 static TabCallback g_tab_callback = NULL;
+static RenderCallback g_render_callback = NULL;
 static const char** g_initial_items = NULL;
 static int g_initial_count = 0;
 // --- GLOBAL VARIABLES FOR THE IMAGE CAPTURE ---
@@ -264,60 +265,31 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         case WM_DRAWITEM: {
             DRAWITEMSTRUCT* pdis = (DRAWITEMSTRUCT*)lParam;
             if (pdis->CtlID == IDC_LIST_BOX && pdis->itemID != -1) {
-                char textBuffer[256];
+                char textBuffer[512];
                 SendMessageA(pdis->hwndItem, LB_GETTEXT, pdis->itemID, (LPARAM)textBuffer);
-
-                static int horizontal_scroll_shift = 0;
-                static int last_selected_id = -1;
-
-                if (pdis->itemState & ODS_SELECTED) {
-                    if (last_selected_id != pdis->itemID) {
-                        last_selected_id = pdis->itemID;
-                        horizontal_scroll_shift = 0; 
-                    }
-
-                    if (GetKeyState(VK_RIGHT) & 0x8000) {
-                        horizontal_scroll_shift += 8;
-                    } else if (GetKeyState(VK_LEFT) & 0x8000) {
-                        horizontal_scroll_shift -= 8;
-                        if (horizontal_scroll_shift < 0) horizontal_scroll_shift = 0;
-                    }
-                }
-
+                
+                // Draw background
                 HBRUSH hBgBrush;
                 if (pdis->itemState & ODS_SELECTED) {
-                    hBgBrush = CreateSolidBrush(RGB(50, 56, 68)); 
-                    SetTextColor(pdis->hDC, RGB(255, 255, 255)); 
+                    hBgBrush = CreateSolidBrush(RGB(50, 56, 68));
                 } else {
                     hBgBrush = CreateSolidBrush(COLOR_BG);
-                    SetTextColor(pdis->hDC, COLOR_TEXT);
                 }
-
                 FillRect(pdis->hDC, &pdis->rcItem, hBgBrush);
                 DeleteObject(hBgBrush);
-
+                
                 SetBkMode(pdis->hDC, TRANSPARENT);
                 
-                HRGN hRgn = CreateRectRgn(pdis->rcItem.left + 10, pdis->rcItem.top, pdis->rcItem.right - 10, pdis->rcItem.bottom);
-                SelectClipRgn(pdis->hDC, hRgn);
-
-                RECT textRect = pdis->rcItem;
-                
-                if (pdis->itemState & ODS_SELECTED) {
-                    SIZE sz;
-                    GetTextExtentPoint32A(pdis->hDC, textBuffer, (int)strlen(textBuffer), &sz);
-                    int max_allowed_shift = sz.cx - (pdis->rcItem.right - pdis->rcItem.left - 40);
-                    if (max_allowed_shift < 0) max_allowed_shift = 0;
-                    if (horizontal_scroll_shift > max_allowed_shift) horizontal_scroll_shift = max_allowed_shift;
-                    textRect.left += (10 - horizontal_scroll_shift);
+                if (g_render_callback != NULL) {
+                    // Feature-specific rendering
+                    g_render_callback(pdis->hDC, textBuffer, &pdis->rcItem, (pdis->itemState & ODS_SELECTED));
                 } else {
+                    // Default rendering
+                    SetTextColor(pdis->hDC, pdis->itemState & ODS_SELECTED ? RGB(255,255,255) : COLOR_TEXT);
+                    RECT textRect = pdis->rcItem;
                     textRect.left += 10;
+                    DrawTextA(pdis->hDC, textBuffer, -1, &textRect, DT_SINGLELINE | DT_VCENTER);
                 }
-                
-                DrawTextA(pdis->hDC, textBuffer, -1, &textRect, DT_SINGLELINE | DT_VCENTER);
-                
-                SelectClipRgn(pdis->hDC, NULL);
-                DeleteObject(hRgn);
                 
                 return TRUE;
             }
@@ -340,7 +312,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 }
     POINT ptPrimary = { 0, 0 }; 
 
-void CalculateWindowMetrics(int count, WindowLayout* layout,int height , int width) {
+void CalculateWindowMetrics(int count, WindowLayout* layout,int height , int width,int item_height) {
     POINT ptPrimary = { 0, 0 }; 
     HMONITOR hMonitor = MonitorFromPoint(ptPrimary, MONITOR_DEFAULTTOPRIMARY);
 
@@ -352,7 +324,7 @@ void CalculateWindowMetrics(int count, WindowLayout* layout,int height , int wid
     int monitorHeight = mi.rcMonitor.bottom - mi.rcMonitor.top;
     
     layout->w = 900;          
-    layout->item_height = 32; 
+    layout->item_height = item_height; 
 
     // Dynamically scale window height based on exact todo item counts
     layout->h = 95 + (count > 0 ? (count * layout->item_height) : 0); 
@@ -401,7 +373,6 @@ void CreateChildControls(HWND hwndParent, HFONT hFont, const char* list[], int c
             WS_CHILD | WS_VISIBLE | LBS_NOTIFY | WS_VSCROLL | LBS_HASSTRINGS | LBS_OWNERDRAWFIXED,
             20, 75, layout->w - 40, layout->h - 95, hwndParent, (HMENU)IDC_LIST_BOX, hInstance, NULL
         );
-        
         // BIND SUBCLASS HERE: Kills the visual scroll track on calculations
         SetWindowSubclass(hListBox, ListBoxSubclassProc, 0, 0);
 
@@ -504,11 +475,12 @@ void SaveRegionToPNG(int x1, int y1, int x2, int y2, const char* fullPath) {
     ReleaseDC(NULL, hScreenDC);
 }
 
-char* PromptUser(const char* window_list[], int count, int height, int width, 
-                          RefreshCallback refresh_callback, 
-                          EnterCallback enter_callback,
-                          CtrlEnterCallback ctrl_enter_callback,
-                          TabCallback tab_callback) {
+char* PromptUser(const char* window_list[], int count, int height, int width,int item_height, 
+                 RefreshCallback refresh_callback, 
+                 EnterCallback enter_callback,
+                 CtrlEnterCallback ctrl_enter_callback,
+                 TabCallback tab_callback,
+                 RenderCallback render_callback) {
     HINSTANCE hInstance = GetModuleHandle(NULL);
     selection_complete = false;
     output_buffer[0] = '\0';
@@ -518,11 +490,12 @@ char* PromptUser(const char* window_list[], int count, int height, int width,
     g_enter_callback = enter_callback;
     g_ctrl_enter_callback = ctrl_enter_callback;
     g_tab_callback = tab_callback;
+    g_render_callback = render_callback;
 
     printf("[DEBUG-UI] PromptUser called. Count: %d\n", count);
 
     WindowLayout layout;
-    CalculateWindowMetrics(count, &layout, height, width);
+    CalculateWindowMetrics(count, &layout, height, width,item_height);
     printf("[DEBUG-UI] Calculated Metrics -> x: %d, y: %d, w: %d, h: %d\n", layout.x, layout.y, layout.w, layout.h);
     
     HFONT hCustomFont = CreateCustomNerdFont(24, "0xProto Nerd Font");
@@ -627,7 +600,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             const char* empty_list[1] = { "" };
             
             printf("[DEBUG-WNDPROC] Handing control off to PromptUser...\n");
-            char* raw_name = PromptUser(empty_list, 0, 220, 550,NULL,NULL,NULL,NULL);
+            char* raw_name = PromptUser(empty_list, 0, 220, 550,32,NULL,NULL,NULL,NULL,NULL);
             printf("[DEBUG-WNDPROC] Returned back to WndProc execution sequence.\n");
 
             if (raw_name != NULL && strlen(raw_name) > 0) {

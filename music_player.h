@@ -10,11 +10,6 @@
 #include "app_launcher.h"
 #include "types.h"
 
-extern char* PromptUser(const char* window_list[], int count, int height, int width, 
-                                 RefreshCallback refresh_callback, 
-                                 EnterCallback enter_callback,
-                                 CtrlEnterCallback ctrl_enter_callback,
-                                 TabCallback tab_callback);
 extern HWND hPopupWnd;
 
 static void music_refresh_callback(const char* filter, HWND hListBox) {
@@ -104,10 +99,11 @@ static bool HandleMusicPlayer(int vk_code, int modifiers, const char* current_ti
                     initial_items[i] = G_FILES[i].name;
                 }
                 
-                PromptUser(initial_items, GetFileCount(), 220, 350,
+                PromptUser(initial_items, GetFileCount(), 220, 350,32,
                                     music_refresh_callback,  // refresh -> filters on typing
                                     music_enter_callback,    // enter -> plays music
                                     NULL,                    // ctrl enter
+                                    NULL,
                                     NULL);                   // tab
                 
                 free((void*)initial_items);

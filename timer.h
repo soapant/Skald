@@ -7,11 +7,6 @@
 #include "app_launcher.h"
 #include "types.h"
 
-extern char* PromptUser(const char* window_list[], int count, int height, int width, 
-                                 RefreshCallback refresh_callback, 
-                                 EnterCallback enter_callback,
-                                 CtrlEnterCallback ctrl_enter_callback,
-                                 TabCallback tab_callback);
 extern HWND hPopupWnd;
 static void timer_enter_callback(const char* selection) {
   
@@ -55,7 +50,7 @@ static void TriggerTimer(HWND hPopupWnd) {
     
     const char* prompt[1] = { "Enter timer duration (e.g., 5m, 10h,20s or 0 for a stopwatch" };
     
-    PromptUser(prompt, 1, 220, 150,timer_refresh_callback,timer_enter_callback,NULL,NULL);
+    PromptUser(prompt, 1, 220, 150,32,timer_refresh_callback,timer_enter_callback,NULL,NULL,NULL);
 
 }
 
