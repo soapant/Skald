@@ -2,5 +2,3 @@
 - [ ] make a python file to parse the recipe json data
 - [ ] pyright is running when i am editting c code???
 - [ ] add quicklinks or maybe like searches on certain websites to the c program
-- [ ] add a open to gta5 bat to the c program
-- [ ] put every single variable important like directorys for music vidoes etc in config.h
