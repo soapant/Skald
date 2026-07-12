@@ -18,7 +18,7 @@ static void video_refresh_callback(const char* filter, HWND hListBox) {
     
     // Get the current file list
     ClearFileList();
-    GetFilesRecursive(VideosPath,true);
+    GetFilesRecursive(VideosPath,false);
     
     SendMessageA(hListBox, LB_RESETCONTENT, 0, 0);
     
@@ -90,7 +90,7 @@ static bool HandleVideoPlayer(int vk_code, int modifiers, const char* current_ti
                 
                 // Initialize the file list for the first time
                 ClearFileList();
-                GetFilesRecursive(VideosPath,true);
+                GetFilesRecursive(VideosPath,false);
                 
                 const char** initial_items = (const char**)malloc(GetFileCount() * sizeof(char*));
                 if (!initial_items) return false;
@@ -99,7 +99,7 @@ static bool HandleVideoPlayer(int vk_code, int modifiers, const char* current_ti
                     initial_items[i] = G_FILES_WITH_TIME[i].name;
                 }
                 
-                PromptUser(initial_items, GetFileCount(), 220, 350,32,
+                PromptUser(initial_items,"🎥 Player",GetFileCount(), 220, 350,32,
                                     video_refresh_callback,  // refresh -> filters on typing
                                     video_enter_callback,    // enter -> plays video
                                     NULL,                    // ctrl enter

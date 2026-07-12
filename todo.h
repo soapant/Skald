@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include "types.h"
+#include "config.h"
 
 #define TODO_FILE_PATH "todo.txt"
 #define COLOR_TEXT    RGB(220, 223, 228)
@@ -22,11 +23,53 @@ static void parse_todo_flags(char* input, TodoFlags* flags, char* clean_text) {
     clean_text[0] = '\0';
     
     // Copy input to work with
-    char temp[256];
-    strncpy(temp, input, sizeof(temp) - 1);
-    temp[sizeof(temp) - 1] = '\0';
+    char processed[256];
+    strncpy(processed, input, sizeof(processed) - 1);
+    processed[sizeof(processed) - 1] = '\0';
     
-    char* token = strtok(temp, " ");
+    // ============================================================
+    // PROCESS ALIASES - Check for any aliases from config.h
+    // ============================================================
+    for (int i = 0; i < 10; i++) {  // Max 10 aliases, loop until we find them all
+        bool found_alias = false;
+        
+        // Check each token for an alias
+        char temp[256];
+        strcpy(temp, processed);
+        char* token = strtok(temp, " ");
+        
+        while (token != NULL) {
+            const char* project_name = alias_to_project(token);
+            if (project_name != NULL) {
+                // Found an alias, replace it with -p "ProjectName"
+                char new_str[256] = {0};
+                char* pos = strstr(processed, token);
+                if (pos) {
+                    int prefix_len = pos - processed;
+                    strncpy(new_str, processed, prefix_len);
+                    strcat(new_str, "-p \"");
+                    strcat(new_str, project_name);
+                    strcat(new_str, "\"");
+                    strcat(new_str, pos + strlen(token));
+                    strcpy(processed, new_str);
+                    found_alias = true;
+                    break;
+                }
+            }
+            token = strtok(NULL, " ");
+        }
+        
+        if (!found_alias) break;
+    }
+    
+    // ============================================================
+    // PARSE THE PROCESSED STRING
+    // ============================================================
+    char temp2[256];
+    strncpy(temp2, processed, sizeof(temp2) - 1);
+    temp2[sizeof(temp2) - 1] = '\0';
+    
+    char* token = strtok(temp2, " ");
     bool first = true;
     
     while (token != NULL) {
@@ -34,15 +77,11 @@ static void parse_todo_flags(char* input, TodoFlags* flags, char* clean_text) {
             // Parse flags
             if (strncmp(token, "-p", 2) == 0) {
                 flags->is_project = true;
-                // Check if project name is in quotes or directly attached
                 if (strlen(token) > 2) {
-                    // Attached: -pProjectName
                     strncpy(flags->project_name, token + 2, sizeof(flags->project_name) - 1);
                 } else {
-                    // Next token is the project name (could be in quotes)
                     token = strtok(NULL, " ");
                     if (token != NULL) {
-                        // Remove quotes if present
                         char* start = token;
                         char* end = token + strlen(token) - 1;
                         if (*start == '"' && *end == '"') {
@@ -58,7 +97,6 @@ static void parse_todo_flags(char* input, TodoFlags* flags, char* clean_text) {
                 flags->is_low_priority = true;
             }
         } else {
-            // Normal text
             if (first) {
                 strcpy(clean_text, token);
                 first = false;
@@ -329,7 +367,7 @@ void TriggerTodo(HWND targetPopupWnd) {
         ui_list[i] = todo_lines[i];
     }
 
-    PromptUser(ui_list, todo_count, 520, 950,54,
+    PromptUser(ui_list,"📋 TODO",todo_count, 520, 950,54,
                todo_refresh_callback,     
                todo_enter_callback,       
                todo_ctrlenter_callback,   

@@ -15,7 +15,7 @@ static void TriggerZoxide(HWND hPopupWnd) {
     }
 
     const char* prompt[1] = { "Enter zoxide query (TERMINAL)..." };
-    char* query = PromptUser(prompt, 1, 220, 150,32,NULL,NULL,NULL,NULL,NULL);
+    char* query = PromptUser(prompt,"⌨️ Zoxide",1, 220, 150,32,NULL,NULL,NULL,NULL,NULL);
 
     if (query != NULL && strlen(query) > 0) {
         // Build the zoxide query command
