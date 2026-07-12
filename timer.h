@@ -50,7 +50,7 @@ static void TriggerTimer(HWND hPopupWnd) {
     
     const char* prompt[1] = { "Enter timer duration (e.g., 5m, 10h,20s or 0 for a stopwatch" };
     
-    PromptUser(prompt, 1, 220, 150,32,timer_refresh_callback,timer_enter_callback,NULL,NULL,NULL);
+    PromptUser(prompt,"⏱️ Timer",1, 220, 150,32,timer_refresh_callback,timer_enter_callback,NULL,NULL,NULL);
 
 }
 

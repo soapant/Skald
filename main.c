@@ -6,6 +6,7 @@
 #include <stdio.h>
 #include <shellapi.h>
 #include <stdbool.h>
+#include <process.h>
 #include <shlwapi.h> 
 #include "calc.h"
 #include "window_switcher.h"
@@ -56,6 +57,7 @@ long saved_y1 = 0;
 extern int img_region_step;
 extern long img_x1, img_y1;
 long img_x2 = 0, img_y2 = 0; // Add this line if it isn't there!
+                             // 
 static ULONG_PTR g_gdiplusToken = 0;
 #pragma comment(lib, "gdiplus.lib")
 
@@ -66,6 +68,7 @@ static TabCallback g_tab_callback = NULL;
 static RenderCallback g_render_callback = NULL;
 static const char** g_initial_items = NULL;
 static int g_initial_count = 0;
+static const char* g_title = NULL;
 // --- GLOBAL VARIABLES FOR THE IMAGE CAPTURE ---
 int img_region_step = 0;
 long img_x1 = 0, img_y1 = 0;
@@ -217,6 +220,15 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
     return DefSubclassProc(hwnd, msg, wParam, lParam);
 }
       
+HFONT CreateCustomNerdFont(int height, const char* face_name) {
+    return CreateFontA(
+        height, 0, 0, 0, FW_NORMAL,
+        FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+        CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE,
+        face_name
+    );
+}
 LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
       case WM_CTLCOLOREDIT:
@@ -295,15 +307,52 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             }
             break;
         }
-        case WM_PAINT: {
-            PAINTSTRUCT ps;
-            HDC hdc = BeginPaint(hwnd, &ps);
-            HBRUSH hBrush = CreateSolidBrush(COLOR_BG);
-            FillRect(hdc, &ps.rcPaint, hBrush);
-            DeleteObject(hBrush);
-            EndPaint(hwnd, &ps);
-            break;
-        }
+      case WM_PAINT: {
+          PAINTSTRUCT ps;
+          HDC hdc = BeginPaint(hwnd, &ps);
+          
+          HBRUSH hBrush = CreateSolidBrush(COLOR_BG);
+          FillRect(hdc, &ps.rcPaint, hBrush);
+          DeleteObject(hBrush);
+          
+          if (g_title != NULL && strlen(g_title) > 0) {
+              // Convert the title to wide characters (Unicode)
+              wchar_t wtitle[256];
+              MultiByteToWideChar(CP_UTF8, 0, g_title, -1, wtitle, 256);
+              
+              // Use Segoe UI Emoji for colored emojis
+              HFONT hTitleFont = CreateFontW(24, 0, 0, 0, FW_NORMAL,
+                                             FALSE, FALSE, FALSE,
+                                             DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+                                             CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE,
+                                             L"0x Proto Nerd Font");
+              HFONT hOldFont = (HFONT)SelectObject(hdc, hTitleFont);
+              
+              SetBkMode(hdc, TRANSPARENT);
+              SetTextColor(hdc, RGB(200, 200, 210));
+              
+              RECT rect;
+              GetClientRect(hwnd, &rect);
+              
+              SIZE sz;
+              GetTextExtentPoint32W(hdc, wtitle, (int)wcslen(wtitle), &sz);
+              
+              RECT titleRect;
+              titleRect.left = rect.right - sz.cx - 20;
+              titleRect.top = 10;
+              titleRect.right = rect.right - 10;
+              titleRect.bottom = rect.top + sz.cy + 15;
+              
+              // Use DrawTextW instead of DrawTextA
+              DrawTextW(hdc, wtitle, -1, &titleRect, DT_LEFT | DT_TOP);
+              
+              SelectObject(hdc, hOldFont);
+              DeleteObject(hTitleFont);
+          }
+          
+          EndPaint(hwnd, &ps);
+          break;
+      }
                        
         default:
             return DefWindowProcA(hwnd, msg, wParam, lParam);
@@ -336,15 +385,6 @@ void CalculateWindowMetrics(int count, WindowLayout* layout,int height , int wid
     layout->x = mi.rcMonitor.left + (monitorWidth - layout->w) / 2;
     layout->y = mi.rcMonitor.top + (monitorHeight - layout->h) / 2;
 }// 2. Safely generate font engine assets
-HFONT CreateCustomNerdFont(int height, const char* face_name) {
-    return CreateFontA(
-        height, 0, 0, 0, FW_NORMAL,
-        FALSE, FALSE, FALSE,
-        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-        CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE,
-        face_name
-    );
-}
 LRESULT CALLBACK ListBoxSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
     if (msg == WM_NCCALCSIZE && wParam == TRUE) {
         // Intercepting this completely hides the physical scrollbar track 
@@ -360,7 +400,7 @@ void CreateChildControls(HWND hwndParent, HFONT hFont, const char* list[], int c
     // Create the search input box
     hEditControl = CreateWindowExA(
         0, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
-        20, 20, layout->w - 40, 40, hwndParent, (HMENU)IDC_INPUT_BOX, hInstance, NULL
+        20, 50, layout->w - 40, 40, hwndParent, (HMENU)IDC_INPUT_BOX, hInstance, NULL
     );
     SendMessageA(hEditControl, WM_SETFONT, (WPARAM)hFont, TRUE);
     SetWindowSubclass(hEditControl, EditSubclassProc, 0, 0);
@@ -371,7 +411,7 @@ void CreateChildControls(HWND hwndParent, HFONT hFont, const char* list[], int c
         hListBox = CreateWindowExA(
             0, "LISTBOX", "", 
             WS_CHILD | WS_VISIBLE | LBS_NOTIFY | WS_VSCROLL | LBS_HASSTRINGS | LBS_OWNERDRAWFIXED,
-            20, 75, layout->w - 40, layout->h - 95, hwndParent, (HMENU)IDC_LIST_BOX, hInstance, NULL
+            20, 105, layout->w - 40, layout->h - 115, hwndParent, (HMENU)IDC_LIST_BOX, hInstance, NULL
         );
         // BIND SUBCLASS HERE: Kills the visual scroll track on calculations
         SetWindowSubclass(hListBox, ListBoxSubclassProc, 0, 0);
@@ -475,7 +515,7 @@ void SaveRegionToPNG(int x1, int y1, int x2, int y2, const char* fullPath) {
     ReleaseDC(NULL, hScreenDC);
 }
 
-char* PromptUser(const char* window_list[], int count, int height, int width,int item_height, 
+char* PromptUser(const char* window_list[],const char* window_title,int count, int height, int width, int item_height,
                  RefreshCallback refresh_callback, 
                  EnterCallback enter_callback,
                  CtrlEnterCallback ctrl_enter_callback,
@@ -491,11 +531,12 @@ char* PromptUser(const char* window_list[], int count, int height, int width,int
     g_ctrl_enter_callback = ctrl_enter_callback;
     g_tab_callback = tab_callback;
     g_render_callback = render_callback;
+    g_title = window_title;
 
     printf("[DEBUG-UI] PromptUser called. Count: %d\n", count);
 
     WindowLayout layout;
-    CalculateWindowMetrics(count, &layout, height, width,item_height);
+    CalculateWindowMetrics(count, &layout, height, width, item_height);
     printf("[DEBUG-UI] Calculated Metrics -> x: %d, y: %d, w: %d, h: %d\n", layout.x, layout.y, layout.w, layout.h);
     
     HFONT hCustomFont = CreateCustomNerdFont(24, "0xProto Nerd Font");
@@ -521,6 +562,36 @@ char* PromptUser(const char* window_list[], int count, int height, int width,int
     SetLayeredWindowAttributes(hPopupWnd, 0, 245, LWA_ALPHA);
     CreateChildControls(hPopupWnd, hCustomFont, window_list, count, &layout);
     ForceWindowFocus(hPopupWnd, hEditControl);
+
+    // ============================================================
+    // DRAW THE window_title IN THE TOP-RIGHT CORNER
+    // ============================================================
+    if (window_title != NULL && strlen(window_title) > 0) {
+        HDC hdc = GetDC(hPopupWnd);
+        HFONT hwindow_titleFont = CreateCustomNerdFont(20, "0xProto Nerd Font");
+        HFONT hOldFont = (HFONT)SelectObject(hdc, hwindow_titleFont);
+        
+        SetBkMode(hdc, TRANSPARENT);
+        SetTextColor(hdc, RGB(200, 200, 210));
+        
+        RECT rect;
+        GetClientRect(hPopupWnd, &rect);
+        
+        // Calculate text size
+        SIZE sz;
+        GetTextExtentPoint32A(hdc, window_title, (int)strlen(window_title), &sz);
+        
+        // Position: top-right with some padding
+        rect.left = rect.right - sz.cx - 20;
+        rect.top = 10;
+        rect.bottom = rect.top + sz.cy + 10;
+        
+        DrawTextA(hdc, window_title, -1, &rect, DT_LEFT | DT_TOP);
+        
+        SelectObject(hdc, hOldFont);
+        DeleteObject(hwindow_titleFont);
+        ReleaseDC(hPopupWnd, hdc);
+    }
 
     printf("[DEBUG-UI] Entering local message modal loop...\n");
     MSG msg;
@@ -554,6 +625,7 @@ char* PromptUser(const char* window_list[], int count, int height, int width,int
     g_enter_callback = NULL;
     g_ctrl_enter_callback = NULL;
     g_tab_callback = NULL;
+    g_render_callback = NULL;
 
     printf("[DEBUG-UI] Returning from PromptUser. Buffer Length: %zu\n", strlen(output_buffer));
     return (strlen(output_buffer) > 0) ? output_buffer : NULL;
@@ -600,7 +672,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             const char* empty_list[1] = { "" };
             
             printf("[DEBUG-WNDPROC] Handing control off to PromptUser...\n");
-            char* raw_name = PromptUser(empty_list, 0, 220, 550,32,NULL,NULL,NULL,NULL,NULL);
+            char* raw_name = PromptUser(empty_list,"Boring", 0, 220, 550,32,NULL,NULL,NULL,NULL,NULL);
             printf("[DEBUG-WNDPROC] Returned back to WndProc execution sequence.\n");
 
             if (raw_name != NULL && strlen(raw_name) > 0) {

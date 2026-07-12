@@ -147,7 +147,7 @@ void TriggerProcessKiller(HWND hPopupWnd) {
     }
 
     // Open your UI window with callbacks
-    PromptUser(list_items, G_PK_COUNT, 220, 250,32,
+    PromptUser(list_items,"💀 ProcessKiller", G_PK_COUNT, 220, 250,32,
                         pk_refresh_callback,        
                         pk_enter_callback,          
                         NULL,                      

@@ -1,6 +1,6 @@
 #ifndef CONFIG_H
 #define CONFIG_H
-
+#include <string.h>
 
 static bool TRAY = true;
 static const char* ListOfProgramPaths[20] = {
@@ -335,4 +335,10 @@ static int explorer_blacklist_count = sizeof(explorer_blacklist) / sizeof(explor
 static const char* terminal_command_blacklist[] = {"Fortnite", "CrosshairX"};
 static int terminal_command_blacklist_count = sizeof(terminal_command_blacklist) / sizeof(terminal_command_blacklist[0]);
 
+static const char* alias_to_project(const char* alias) {
+    if (strcmp(alias, "-pc") == 0) return "Cprogram";
+    if (strcmp(alias, "-pv") == 0) return "VideoViewer";
+    if (strcmp(alias, "-pm") == 0) return "MusicPlayer";
+    return NULL;
+}
 #endif

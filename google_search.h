@@ -19,7 +19,7 @@ static void TriggerGoogleSearch() {
     }
 
     const char* empty_list[1] = { "Enter search query..." };
-    char* query = PromptUser(empty_list, 1, 220, 150,32,NULL,NULL,NULL,NULL,NULL);
+    char* query = PromptUser(empty_list,"🔍 Google", 1, 220, 150,32,NULL,NULL,NULL,NULL,NULL);
 
     if (query != NULL && strlen(query) > 0) {
         // Build Google search URL

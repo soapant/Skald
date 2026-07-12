@@ -15,7 +15,7 @@ static void TriggerTerminalCommand(HWND hPopupWnd) {
     }
 
     const char* prompt[1] = { "Enter Terminal Command ..." };
-    char* query = PromptUser(prompt, 1, 220, 150,32, NULL, NULL, NULL, NULL,NULL);
+    char* query = PromptUser(prompt,"Terminal", 1, 220, 150,32, NULL, NULL, NULL, NULL,NULL);
 
     if (query != NULL && strlen(query) > 0) {
         query[strcspn(query, "\r\n")] = '\0';

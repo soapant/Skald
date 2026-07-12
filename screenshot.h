@@ -21,7 +21,7 @@ static void TriggerScreenshot(HWND hPopupWnd) {
     }
 
     const char* name_prompt[1] = { "Enter image name..." };
-    char* raw_name = PromptUser(name_prompt, 1, 220, 150,32,NULL,NULL,NULL,NULL,NULL);
+    char* raw_name = PromptUser(name_prompt,"📷 Screenshot", 1, 220, 150,32,NULL,NULL,NULL,NULL,NULL);
 
     if (raw_name != NULL && strlen(raw_name) > 0) {
         char final_file_path[512];
