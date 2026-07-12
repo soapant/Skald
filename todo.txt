@@ -1,5 +1,0 @@
-maybe to the quicklinks add a window thingy to show all the quicklinks
-also add history of commands to the terminal command thingy
-the video player window still hides everything behind it
-when the video player is paused the whole screen is black
-maybe add a way to know which fucking hotkey i pressed

@@ -400,7 +400,7 @@ void CreateChildControls(HWND hwndParent, HFONT hFont, const char* list[], int c
     // Create the search input box
     hEditControl = CreateWindowExA(
         0, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
-        20, 50, layout->w - 40, 40, hwndParent, (HMENU)IDC_INPUT_BOX, hInstance, NULL
+        20, 34, layout->w - 40, 40, hwndParent, (HMENU)IDC_INPUT_BOX, hInstance, NULL
     );
     SendMessageA(hEditControl, WM_SETFONT, (WPARAM)hFont, TRUE);
     SetWindowSubclass(hEditControl, EditSubclassProc, 0, 0);
@@ -572,7 +572,7 @@ char* PromptUser(const char* window_list[],const char* window_title,int count, i
         HFONT hOldFont = (HFONT)SelectObject(hdc, hwindow_titleFont);
         
         SetBkMode(hdc, TRANSPARENT);
-        SetTextColor(hdc, RGB(200, 200, 210));
+        SetTextColor(hdc, RGB(255, 255, 255));
         
         RECT rect;
         GetClientRect(hPopupWnd, &rect);
