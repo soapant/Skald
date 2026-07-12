@@ -7,11 +7,6 @@
 #include <stdlib.h>
 #include <shellapi.h>
 #include "types.h"
-typedef void (*RefreshCallback)(const char* filter, HWND hListBox);
-typedef void (*EnterCallback)(const char* selection);
-typedef void (*CtrlEnterCallback)(const char* selection);
-typedef void (*TabCallback)(void);
-
 extern HWND hPopupWnd;
 
 static void TriggerExplorer(HWND hPopupWnd) {
@@ -20,7 +15,7 @@ static void TriggerExplorer(HWND hPopupWnd) {
     }
 
     const char* prompt[1] = { "Enter zoxide query (EXPLORER)..." };
-    char* query = PromptUser(prompt, 1, 220, 150,32,NULL,NULL,NULL,NULL,NULL);
+    char* query = PromptUser(prompt,"📁 Zoxide",1, 220, 150,32,NULL,NULL,NULL,NULL,NULL);
 
     if (query != NULL && strlen(query) > 0) {
         // Run zoxide to get the path

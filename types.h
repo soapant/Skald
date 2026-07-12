@@ -35,7 +35,7 @@ typedef void (*CtrlEnterCallback)(const char* selection);
 typedef void (*TabCallback)(void);
 typedef void (*RenderCallback)(HDC hdc, const char* text, RECT* rect, BOOL is_selected);
 
-char* PromptUser(const char* window_list[], int count, int height, int width,int item_height, 
+char* PromptUser(const char* window_list[], const char* window_title,int count, int height, int width,int item_height, 
                  RefreshCallback refresh_callback, 
                  EnterCallback enter_callback,
                  CtrlEnterCallback ctrl_enter_callback,

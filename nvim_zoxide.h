@@ -15,7 +15,7 @@ static void TriggerNvimZoxide(int version,HWND hPopupWnd) {
     }
 
     const char* prompt[1] = { "Enter zoxide query (NEOVIDE)..." };
-    char* query = PromptUser(prompt, 1, 220, 150,32,NULL,NULL,NULL,NULL,NULL);
+    char* query = PromptUser(prompt,"📝 Neovide / Nvim", 1, 220, 150,32,NULL,NULL,NULL,NULL,NULL);
     if (query != NULL && strlen(query) > 0) {
         // Build the zoxide query command
         char command[512];

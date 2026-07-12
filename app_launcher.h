@@ -172,7 +172,7 @@ void TriggerAppLauncher(HWND hPopupWnd) {
     }
 
     // FIX: Pass NULL for refresh, not true
-    PromptUser(initial_items, G_APP_COUNT, 220, 250,32,
+    PromptUser(initial_items,"🚀 LAUNCHER", G_APP_COUNT, 220, 250,32,
                         applauncher_refresh_callback,
                         applauncher_enter_callback,   
                         applauncher_ctrlenter_callback,
