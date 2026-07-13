@@ -71,6 +71,36 @@ static const char* IconPath = "D:\\retard games\\miscellaneous\\switch_window.ic
 #define HOTKEY_MOD_SHIFT_CTRL   (HOTKEY_MOD_SHIFT | HOTKEY_MOD_CTRL)
 #define HOTKEY_MOD_ALT_SHIFT_CTRL (HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT | HOTKEY_MOD_CTRL)
 
+#define SCREENSHOT_KEY          0x59
+#define SCREENSHOT_MOD_SAVE     HOTKEY_MOD_ALT
+#define SCREENSHOT_MOD_OPEN     (HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT)
+
+// POS: Alt+Z (copy coords), Alt+Shift+Z (add to list), Alt+Ctrl+Z (clear list)
+#define POS_KEY                 0x5A
+#define POS_MOD_COPY            HOTKEY_MOD_ALT
+#define POS_MOD_ADD             (HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT)
+#define POS_MOD_CLEAR           (HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL)
+
+// COLOR: Alt+X (copy RGB), Alt+Ctrl+X (copy with parentheses)
+#define COLOR_KEY               0x58
+#define COLOR_MOD_PLAIN         HOTKEY_MOD_ALT
+#define COLOR_MOD_PAREN         (HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL)
+
+// PIXEL_EQUALS: Alt+B (adb format), Alt+Ctrl+B (fn format)
+#define PIXEL_EQUALS_KEY        0x42
+#define PIXEL_EQUALS_MOD_ADB    HOTKEY_MOD_ALT
+#define PIXEL_EQUALS_MOD_FN     (HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL)
+
+// WAIT_FOR_PIXEL: Alt+N (adb), Alt+Ctrl+N (adb + tap), Alt+Shift+N (fn)
+#define WAIT_FOR_PIXEL_KEY      0x4E
+#define WAIT_FOR_PIXEL_MOD_ADB  HOTKEY_MOD_ALT
+#define WAIT_FOR_PIXEL_MOD_TAP  (HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL)
+#define WAIT_FOR_PIXEL_MOD_FN   (HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT)
+
+// REGION: Alt+A (copy region coords), Alt+Shift+A (image capture)
+#define REGION_KEY              0x41
+#define REGION_MOD_COORDS       HOTKEY_MOD_ALT
+#define REGION_MOD_IMAGE        (HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT)
 
 typedef enum {
     MACRO_NONE = 0,
@@ -291,62 +321,64 @@ static const FocusSwitcherBinding G_FOCUS_SWITCHERS[] = {
 
 #define FOCUS_SWITCHER_COUNT (sizeof(G_FOCUS_SWITCHERS) / sizeof(G_FOCUS_SWITCHERS[0]))
 
+// config.h - Change all blacklist counts to constants
+
 static const char* switcher_blacklist[] = {"Fortnite", "CrosshairX"};
-static int switcher_blacklist_count = sizeof(switcher_blacklist) / sizeof(switcher_blacklist[0]);
+#define SWITCHER_BLACKLIST_COUNT (sizeof(switcher_blacklist) / sizeof(switcher_blacklist[0]))
 
 static const char* todo_blacklist[] = {"Fortnite", "CrosshairX"};
-static int todo_blacklist_count = sizeof(todo_blacklist) / sizeof(todo_blacklist[0]);
+#define TODO_BLACKLIST_COUNT (sizeof(todo_blacklist) / sizeof(todo_blacklist[0]))
 
 static const char* pos_blacklist[] = {"Fortnite", "CrosshairX"};
-static int pos_blacklist_count = sizeof(pos_blacklist) / sizeof(pos_blacklist[0]);
+#define POS_BLACKLIST_COUNT (sizeof(pos_blacklist) / sizeof(pos_blacklist[0]))
 
 static const char* color_blacklist[] = {"Fortnite", "CrosshairX"};
-static int color_blacklist_count = sizeof(color_blacklist) / sizeof(color_blacklist[0]);
+#define COLOR_BLACKLIST_COUNT (sizeof(color_blacklist) / sizeof(color_blacklist[0]))
 
 static const char* pixel_equals_blacklist[] = {"Fortnite", "CrosshairX"};
-static int pixel_equals_blacklist_count = sizeof(pixel_equals_blacklist) / sizeof(pixel_equals_blacklist[0]);
+#define PIXEL_EQUALS_BLACKLIST_COUNT (sizeof(pixel_equals_blacklist) / sizeof(pixel_equals_blacklist[0]))
 
 static const char* wait_for_pixel_blacklist[] = {"Fortnite", "CrosshairX"};
-static int wait_for_pixel_blacklist_count = sizeof(wait_for_pixel_blacklist) / sizeof(wait_for_pixel_blacklist[0]);
+#define WAIT_FOR_PIXEL_BLACKLIST_COUNT (sizeof(wait_for_pixel_blacklist) / sizeof(wait_for_pixel_blacklist[0]))
 
 static const char* region_blacklist[] = {"Fortnite", "CrosshairX"};
-static int region_blacklist_count = sizeof(region_blacklist) / sizeof(region_blacklist[0]);
+#define REGION_BLACKLIST_COUNT (sizeof(region_blacklist) / sizeof(region_blacklist[0]))
 
 static const char* calculator_blacklist[] = {"Fortnite", "CrosshairX"};
-static int calculator_blacklist_count = sizeof(calculator_blacklist) / sizeof(calculator_blacklist[0]);
+#define CALCULATOR_BLACKLIST_COUNT (sizeof(calculator_blacklist) / sizeof(calculator_blacklist[0]))
 
 static const char* exe_blacklist[] = {"Fortnite", "CrosshairX"};
-static int exe_blacklist_count = sizeof(exe_blacklist) / sizeof(exe_blacklist[0]);
+#define EXE_BLACKLIST_COUNT (sizeof(exe_blacklist) / sizeof(exe_blacklist[0]))
 
 static const char* kill_process_blacklist[] = {"Fortnite", "CrosshairX"};
-static int kill_process_blacklist_count = sizeof(kill_process_blacklist) / sizeof(kill_process_blacklist[0]);
+#define KILL_PROCESS_BLACKLIST_COUNT (sizeof(kill_process_blacklist) / sizeof(kill_process_blacklist[0]))
 
 static const char* google_search_blacklist[] = {"Fortnite", "CrosshairX"};
-static int google_search_blacklist_count = sizeof(google_search_blacklist) / sizeof(google_search_blacklist[0]);
+#define GOOGLE_SEARCH_BLACKLIST_COUNT (sizeof(google_search_blacklist) / sizeof(google_search_blacklist[0]))
 
 static const char* nvim_blacklist[] = {"Fortnite", "CrosshairX"};
-static int nvim_blacklist_count = sizeof(nvim_blacklist) / sizeof(nvim_blacklist[0]);
+#define NVIM_BLACKLIST_COUNT (sizeof(nvim_blacklist) / sizeof(nvim_blacklist[0]))
 
 static const char* timer_blacklist[] = {"Fortnite", "CrosshairX"};
-static int timer_blacklist_count = sizeof(timer_blacklist) / sizeof(timer_blacklist[0]);
+#define TIMER_BLACKLIST_COUNT (sizeof(timer_blacklist) / sizeof(timer_blacklist[0]))
 
 static const char* terminal_blacklist[] = {"Fortnite", "CrosshairX"};
-static int terminal_blacklist_count = sizeof(terminal_blacklist) / sizeof(terminal_blacklist[0]);
+#define TERMINAL_BLACKLIST_COUNT (sizeof(terminal_blacklist) / sizeof(terminal_blacklist[0]))
 
 static const char* screenshot_blacklist[] = {"Fortnite", "CrosshairX"};
-static int screenshot_blacklist_count = sizeof(screenshot_blacklist) / sizeof(screenshot_blacklist[0]);
+#define SCREENSHOT_BLACKLIST_COUNT (sizeof(screenshot_blacklist) / sizeof(screenshot_blacklist[0]))
 
 static const char* yazi_blacklist[] = {"Fortnite", "CrosshairX"};
-static int yazi_blacklist_count = sizeof(yazi_blacklist) / sizeof(yazi_blacklist[0]);
+#define YAZI_BLACKLIST_COUNT (sizeof(yazi_blacklist) / sizeof(yazi_blacklist[0]))
 
 static const char* video_blacklist[] = {"Fortnite", "CrosshairX"};
-static int video_blacklist_count = sizeof(video_blacklist) / sizeof(video_blacklist[0]);
+#define VIDEO_BLACKLIST_COUNT (sizeof(video_blacklist) / sizeof(video_blacklist[0]))
 
 static const char* explorer_blacklist[] = {"Fortnite", "CrosshairX"};
-static int explorer_blacklist_count = sizeof(explorer_blacklist) / sizeof(explorer_blacklist[0]);
+#define EXPLORER_BLACKLIST_COUNT (sizeof(explorer_blacklist) / sizeof(explorer_blacklist[0]))
 
 static const char* terminal_command_blacklist[] = {"Fortnite", "CrosshairX"};
-static int terminal_command_blacklist_count = sizeof(terminal_command_blacklist) / sizeof(terminal_command_blacklist[0]);
+#define TERMINAL_COMMAND_BLACKLIST_COUNT (sizeof(terminal_command_blacklist) / sizeof(terminal_command_blacklist[0]))
 
 static const char* alias_to_project(const char* alias) {
     if (strcmp(alias, "-pc") == 0) return "Cprogram";

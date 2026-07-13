@@ -34,9 +34,7 @@ static void TriggerGoogleSearch() {
         }
         
         // Open in default browser
-        ShellExecuteA(NULL, "open", url, NULL, NULL, SW_SHOW);
-
-        Sleep(200);
+        ShellExecuteWithVerb(url, "open", true);
 
         const char* browser_classes[] = {
             "Chrome_WidgetWin_1",  // Chrome

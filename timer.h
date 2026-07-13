@@ -31,9 +31,7 @@ static void timer_enter_callback(const char* selection) {
     }
 }
 static void TriggerTimer(HWND hPopupWnd) {
-    if (hPopupWnd != NULL && IsWindow(hPopupWnd)) {
-        return;
-    }
+    if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
     
     const char* prompt[1] = { "Enter timer duration (e.g., 5m, 10h,20s or 0 for a stopwatch" };
     

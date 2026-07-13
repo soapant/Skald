@@ -114,26 +114,17 @@ static void pk_enter_callback(const char* selection) {
 }
 
 static void pk_refresh_callback(const char* filter, HWND hListBox) {
-    if (!hListBox) return;
-    
-    SendMessageA(hListBox, LB_RESETCONTENT, 0, 0);
-    
-    if (filter == NULL || strlen(filter) == 0) {
-        for (int i = 0; i < G_PK_COUNT; i++) {
-            SendMessageA(hListBox, LB_ADDSTRING, 0, (LPARAM)G_PK_LIST[i]);
-        }
-    } else {
-        for (int i = 0; i < G_PK_COUNT; i++) {
-            if (StrStrIA(G_PK_LIST[i], filter) != NULL) {
-                SendMessageA(hListBox, LB_ADDSTRING, 0, (LPARAM)G_PK_LIST[i]);
-            }
-        }
+    const char** items = (const char**)malloc(G_PK_COUNT * sizeof(char*));
+    if (!items) return;
+    for (int i = 0; i < G_PK_COUNT; i++) {
+        items[i] = G_PK_LIST[i];
     }
-    SendMessageA(hListBox, LB_SETCURSEL, 0, 0);
+    PopulateListBox(hListBox, filter, items, G_PK_COUNT, NULL);
+    free(items);
 }
 
 void TriggerProcessKiller(HWND hPopupWnd) {
-    if (hPopupWnd != NULL && IsWindow(hPopupWnd)) return;
+    if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
 
     collect_running_processes();
 
