@@ -298,6 +298,25 @@ static void todo_ctrlenter_callback(const char* selection) {
         }
     }
 }
+static void todo_tab_callback() {
+    int selected_index = LB_ERR;
+    if (hListBox != NULL) {
+        selected_index = SendMessageA(hListBox, LB_GETCURSEL, 0, 0);
+    }
+    
+    char input[256] = {0};
+    if (hEditControl != NULL) {
+        GetWindowTextA(hEditControl, input, sizeof(input));
+        if (strlen(input) > 0) {
+            add_todo_to_file(input);
+        }
+    }
+    selection_complete = false;
+    if (hListBox != NULL) {
+        todo_refresh_callback(NULL, hListBox);
+    }
+
+}
 
 static void todo_render_callback(HDC hdc, const char* text, RECT* rect, BOOL is_selected) {
     if (!text || !rect) return;
@@ -372,7 +391,7 @@ void TriggerTodo(HWND targetPopupWnd) {
                todo_refresh_callback,     
                todo_enter_callback,       
                todo_ctrlenter_callback,   
-               NULL,
+               todo_tab_callback,
                todo_render_callback);                     
 }
 
