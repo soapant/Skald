@@ -1,4 +1,3 @@
 make my own window manager (kind of)||[Project: Cprogram]
 not consumable recipes just dont exist||[Project: MinecraftModpack]
-figure out cool shit i can do with the nu shell
 maybe do the whole instant open for the terminal thingy||[Project: Cprogram]
