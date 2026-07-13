@@ -30,19 +30,6 @@ static void timer_enter_callback(const char* selection) {
         printf("[TIMER] Launching: %s %s\n", sowon_path, selection);
     }
 }
-static void timer_refresh_callback(const char* filter, HWND hListBox) {
-    if (!hListBox) return;
-    SendMessageA(hListBox, LB_RESETCONTENT, 0, 0);
-    // Show the current input or a message
-    if (filter && strlen(filter) > 0) {
-        char msg[256];
-        snprintf(msg, sizeof(msg), "Running: sowon.exe %s", filter);
-        SendMessageA(hListBox, LB_ADDSTRING, 0, (LPARAM)msg);
-    } else {
-        SendMessageA(hListBox, LB_ADDSTRING, 0, (LPARAM)"Enter timer duration...");
-    }
-    SendMessageA(hListBox, LB_SETCURSEL, 0, 0);
-}
 static void TriggerTimer(HWND hPopupWnd) {
     if (hPopupWnd != NULL && IsWindow(hPopupWnd)) {
         return;
@@ -50,7 +37,7 @@ static void TriggerTimer(HWND hPopupWnd) {
     
     const char* prompt[1] = { "Enter timer duration (e.g., 5m, 10h,20s or 0 for a stopwatch" };
     
-    PromptUser(prompt,"⏱️ Timer",1, 220, 150,32,timer_refresh_callback,timer_enter_callback,NULL,NULL,NULL);
+    PromptUser(prompt,"⏱️ Timer",1, 220, 150,32,NULL,timer_enter_callback,NULL,NULL,NULL);
 
 }
 
