@@ -236,25 +236,16 @@ static void remove_todo_item_from_file(const char* item_to_remove) {
 }
 
 static void todo_refresh_callback(const char* filter, HWND hListBox) {
-    if (!hListBox) return;
-    
     char todo_lines[100][512];
     int todo_count = ReadMdFile(todo_lines, TODO_FILE_PATH);
     
-    SendMessageA(hListBox, LB_RESETCONTENT, 0, 0);
-    
-    if (filter == NULL || strlen(filter) == 0) {
-        for (int i = 0; i < todo_count; i++) {
-            SendMessageA(hListBox, LB_ADDSTRING, 0, (LPARAM)todo_lines[i]);
-        }
-    } else {
-        for (int i = 0; i < todo_count; i++) {
-            if (StrStrIA(todo_lines[i], filter) != NULL) {
-                SendMessageA(hListBox, LB_ADDSTRING, 0, (LPARAM)todo_lines[i]);
-            }
-        }
+    const char** items = (const char**)malloc(todo_count * sizeof(char*));
+    if (!items) return;
+    for (int i = 0; i < todo_count; i++) {
+        items[i] = todo_lines[i];
     }
-    SendMessageA(hListBox, LB_SETCURSEL, 0, 0);
+    PopulateListBox(hListBox, filter, items, todo_count, NULL);
+    free(items);
 }
 
 static void todo_enter_callback(const char* selection) {
@@ -375,9 +366,7 @@ static void todo_render_callback(HDC hdc, const char* text, RECT* rect, BOOL is_
 }
 
 void TriggerTodo(HWND targetPopupWnd) {
-    if (targetPopupWnd != NULL && IsWindow(targetPopupWnd)) {
-        return; 
-    }
+    if (CheckAndBlockIfPopupActive(targetPopupWnd)) return;
 
     char todo_lines[100][512];
     int todo_count = ReadMdFile(todo_lines, TODO_FILE_PATH);

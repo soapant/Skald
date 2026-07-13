@@ -7,38 +7,18 @@
 #include <stdlib.h>
 #include <shellapi.h>
 #include "types.h"
+#include "helpers.h"
 extern HWND hPopupWnd;
 
 static void TriggerExplorer(HWND hPopupWnd) {
-    if (hPopupWnd != NULL && IsWindow(hPopupWnd)) {
-        return;
-    }
-
-    const char* prompt[1] = { "Enter zoxide query (EXPLORER)..." };
-    char* query = PromptUser(prompt,"📁 Zoxide",1, 220, 150,32,NULL,NULL,NULL,NULL,NULL);
-
-    if (query != NULL && strlen(query) > 0) {
-        // Run zoxide to get the path
-        char command[512];
-        snprintf(command, sizeof(command), "zoxide query %s", query);
-        
-        char path[1024] = {0};
-        FILE* pipe = popen(command, "r");
-        if (pipe) {
-            fgets(path, sizeof(path), pipe);
-            pclose(pipe);
-        }
-        
-        path[strcspn(path, "\r\n")] = '\0';
-
-        if (strlen(path) > 0) {
-            // Open File Explorer - NO terminal window!
-            ShellExecuteA(NULL, "open", "explorer.exe", path, NULL, SW_SHOWNORMAL);
-            printf("[EXPLORER] Opened Explorer in: %s\n", path);
-        } else {
-            printf("[EXPLORER] No match found for: %s\n", query);
-        }
-    }
+    ZoxideOptions options = {
+        .prompt_title = "Enter zoxide query (EXPLORER)...",
+        .icon = "📁 Zoxide",
+        .open_neovide = false,
+        .open_yazi = false,
+        .open_explorer = true
+    };
+    TriggerZoxideWithOptions(&options);
 }
 
 #endif

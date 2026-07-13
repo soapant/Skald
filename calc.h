@@ -486,9 +486,8 @@ static void calculator_refresh_callback(const char* filter, HWND hListBox) {
         strncpy(result_buffer, "Waiting for expression...", sizeof(result_buffer) - 1);
     }
     
-    SendMessageA(hListBox, LB_RESETCONTENT, 0, 0);
-    SendMessageA(hListBox, LB_ADDSTRING, 0, (LPARAM)result_buffer);
-    SendMessageA(hListBox, LB_SETCURSEL, 0, 0);
+    const char* items[1] = { result_buffer };
+    PopulateListBox(hListBox, NULL, items, 1, NULL);
 }
 
 static void calculator_enter_callback(const char* selection) {

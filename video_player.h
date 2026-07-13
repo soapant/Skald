@@ -14,26 +14,16 @@ extern HWND hPopupWnd;
 extern HWND hEditControl;
 
 static void video_refresh_callback(const char* filter, HWND hListBox) {
-    if (!hListBox) return;
-    
-    // Get the current file list
     ClearFileList();
-    GetFilesRecursive(VideosPath,false);
+    GetFilesRecursive(VideosPath, false);
     
-    SendMessageA(hListBox, LB_RESETCONTENT, 0, 0);
-    
-    if (filter == NULL || strlen(filter) == 0) {
-        for (int i = 0; i < GetFileCount(); i++) {
-            SendMessageA(hListBox, LB_ADDSTRING, 0, (LPARAM)G_FILES_WITH_TIME[i].name);
-        }
-    } else {
-        for (int i = 0; i < GetFileCount(); i++) {
-            if (StrStrIA(G_FILES_WITH_TIME[i].name, filter) != NULL) {
-                SendMessageA(hListBox, LB_ADDSTRING, 0, (LPARAM)G_FILES_WITH_TIME[i].name);
-            }
-        }
+    const char** items = (const char**)malloc(GetFileCount() * sizeof(char*));
+    if (!items) return;
+    for (int i = 0; i < GetFileCount(); i++) {
+        items[i] = G_FILES_WITH_TIME[i].name;
     }
-    SendMessageA(hListBox, LB_SETCURSEL, 0, 0);
+    PopulateListBox(hListBox, filter, items, GetFileCount(), NULL);
+    free(items);
 }
 
 static void video_enter_callback(const char* selection) {
@@ -68,9 +58,7 @@ static void video_enter_callback(const char* selection) {
     }
 }
 static bool HandleVideoPlayer(int vk_code, int modifiers, const char* current_title) {
-    if (hPopupWnd != NULL && IsWindow(hPopupWnd)) {
-        return false;
-    }
+    if (CheckAndBlockIfPopupActive(hPopupWnd)) return false;
     
     for (int i = 0; i < VIDEO_PLAYER_COUNT; i++) {
         const VideoPlayerBinding* binding = &G_VIDEO_PLAYERS[i];

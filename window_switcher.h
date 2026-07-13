@@ -36,25 +36,24 @@ static void FetchExeNameOnDemand(HWND hwnd, char* outExe, DWORD maxLen) {
     strncpy(outExe, "Unknown.exe", maxLen);
 }
 
-// Refresh callback - filters windows as you type
-static void switcher_refresh_callback(const char* filter, HWND hListBox) {
-    if (!hListBox) return;
-    
-    SendMessageA(hListBox, LB_RESETCONTENT, 0, 0);
-    
-    if (filter == NULL || strlen(filter) == 0) {
-        for (int i = 0; i < g_switcher_count; i++) {
-            SendMessageA(hListBox, LB_ADDSTRING, 0, (LPARAM)g_switcher_windows[i].title);
-        }
-    } else {
-        for (int i = 0; i < g_switcher_count; i++) {
-            if (StrStrIA(g_switcher_windows[i].title, filter) != NULL ||
-                StrStrIA(g_switcher_windows[i].exe, filter) != NULL) {
-                SendMessageA(hListBox, LB_ADDSTRING, 0, (LPARAM)g_switcher_windows[i].title);
-            }
+static bool switcher_filter_match(const char* item, const char* filter) {
+    for (int i = 0; i < g_switcher_count; i++) {
+        if (StrStrIA(g_switcher_windows[i].title, filter) != NULL ||
+            StrStrIA(g_switcher_windows[i].exe, filter) != NULL) {
+            return true;
         }
     }
-    SendMessageA(hListBox, LB_SETCURSEL, 0, 0);
+    return false;
+}
+
+static void switcher_refresh_callback(const char* filter, HWND hListBox) {
+    const char** items = (const char**)malloc(g_switcher_count * sizeof(char*));
+    if (!items) return;
+    for (int i = 0; i < g_switcher_count; i++) {
+        items[i] = g_switcher_windows[i].title;
+    }
+    PopulateListBox(hListBox, filter, items, g_switcher_count, switcher_filter_match);
+    free(items);
 }
 
 // Enter callback - focuses the selected window

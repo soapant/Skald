@@ -2,6 +2,7 @@
 #include <windows.h>
 #include "app_launcher.h"
 #include "window_switcher.h"
+
 bool CheckAppHotkeyBindings(int pressed_vk, int modifiers) {
     HWND hActiveWnd = GetForegroundWindow();
     if (!hActiveWnd) return false;

@@ -1,0 +1,5191 @@
+/* === FILE: app_launcher.h === */
+#ifndef APP_LAUNCHER_H
+#define APP_LAUNCHER_H
+
+#include <windows.h>
+#include "types.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <shlwapi.h>
+#include "config.h"
+#include "helpers.h"
+
+
+#define MAX_APPS 2000
+
+typedef struct {
+    char name[128];
+    char path[MAX_PATH];
+} AppItem;
+
+// Remove static so main.c can access G_APPS and G_APP_COUNT
+AppItem G_APPS[MAX_APPS];
+int G_APP_COUNT = 0;
+
+// Recursively look through folders for shortcuts and executables
+static void scan_directory_recursive(const char* dir_path) {
+    char search_path[MAX_PATH];
+    snprintf(search_path, sizeof(search_path), "%s\\*", dir_path);
+
+    WIN32_FIND_DATAA find_data;
+    HANDLE hFind = FindFirstFileA(search_path, &find_data);
+
+    if (hFind == INVALID_HANDLE_VALUE) return;
+
+    do {
+        if (strcmp(find_data.cFileName, ".") == 0 || strcmp(find_data.cFileName, "..") == 0) {
+            continue;
+        }
+
+        char full_path[MAX_PATH];
+        snprintf(full_path, sizeof(full_path), "%s\\%s", dir_path, find_data.cFileName);
+
+        // Pre-filter by first character before doing full string compare
+        if (find_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+            char first = tolower(find_data.cFileName[0]);
+            // Most ignored folders start with 'n', '.', 'b', 'o', 'd', 'g', 'y', 'h'
+            if (first == 'n' || first == '.' || first == 'b' || first == 'o' || 
+                first == 'd' || first == 'g' || first == 'y' || first == 'h') {
+                // Only check the list if first character matches
+                bool skip = false;
+                for (int i = 0; i <  sizeof(ListOfShitToIgnore) / sizeof(ListOfShitToIgnore[0]); i++) {
+                    if (StrCmpIA(find_data.cFileName, ListOfShitToIgnore[i]) == 0) {
+                        skip = true;
+                        break;
+                    }
+                }
+                if (skip) continue;
+            }
+            scan_directory_recursive(full_path);
+        } else {
+            char* ext = PathFindExtensionA(find_data.cFileName);
+            if (StrCmpIA(ext, ".lnk") == 0 || StrCmpIA(ext, ".exe") == 0 || StrCmpIA(ext, ".url") == 0) {
+                if (G_APP_COUNT < MAX_APPS) {
+                    char clean_name[128];
+                    strncpy(clean_name, find_data.cFileName, sizeof(clean_name) - 1);
+                    PathRemoveExtensionA(clean_name);
+
+                    strncpy(G_APPS[G_APP_COUNT].name, clean_name, sizeof(G_APPS[G_APP_COUNT].name) - 1);
+                    strncpy(G_APPS[G_APP_COUNT].path, full_path, sizeof(G_APPS[G_APP_COUNT].path) - 1);
+                    G_APP_COUNT++;
+                }
+            }
+        }
+    } while (FindNextFileA(hFind, &find_data) && G_APP_COUNT < MAX_APPS);
+
+    FindClose(hFind);
+}
+
+static void initialize_app_cache() {
+    G_APP_COUNT = 0;
+    for (int i = 0; i < sizeof(ListOfProgramPaths) / sizeof(ListOfProgramPaths[0]); i++) {
+        scan_directory_recursive(ListOfProgramPaths[i]);
+    }
+}
+
+static bool FindAppInCache(const char* name, char* out_path, size_t path_size) {
+    for (int i = 0; i < G_APP_COUNT; i++) {
+        if (StrStrIA(G_APPS[i].name, name) != NULL) {
+            strncpy(out_path, G_APPS[i].path, path_size);
+            return true;
+        }
+    }
+    return false;
+}
+
+static char* FindAppPathByName(const char* name) {
+    for (int i = 0; i < G_APP_COUNT; i++) {
+        if (StrStrIA(G_APPS[i].name, name) != NULL) {
+            return G_APPS[i].path;
+        }
+    }
+    return NULL;
+}
+
+static void launch_app_by_name(const char* display_name) {
+    for (int i = 0; i < G_APP_COUNT; i++) {
+        if (StrCmpIA(G_APPS[i].name, display_name) == 0) {
+            LaunchApp(G_APPS[i].path);
+            return;
+        }
+    }
+}
+
+static void launch_app_as_admin(const char* display_name) {
+    for (int i = 0; i < G_APP_COUNT; i++) {
+        if (StrCmpIA(G_APPS[i].name, display_name) == 0) {
+            LaunchAppAsAdmin(G_APPS[i].path);
+            return;
+        }
+    }
+}
+
+static void launch_exe_with_args(const char* exe_path, const char* args) {
+    char cmd[MAX_PATH * 2 + 512];
+    
+    if (args != NULL && strlen(args) > 0 && strcmp(args, "0") != 0) {
+        snprintf(cmd, sizeof(cmd), "\"%s\" %s", exe_path, args);
+    } else {
+        snprintf(cmd, sizeof(cmd), "\"%s\"", exe_path);
+    }
+    
+    STARTUPINFOA si = {0};
+    si.cb = sizeof(si);
+    PROCESS_INFORMATION pi = {0};
+    
+    if (CreateProcessA(NULL, cmd, NULL, NULL, FALSE, CREATE_NO_WINDOW, NULL, NULL, &si, &pi)) {
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);
+    }
+}
+
+static void applauncher_enter_callback(const char* selection) {
+    if (selection != NULL && strlen(selection) > 0) {
+        launch_app_by_name(selection);
+    }
+}
+
+static void applauncher_ctrlenter_callback(const char* selection) {
+    if (selection != NULL && strlen(selection) > 0) {
+        launch_app_as_admin(selection);
+        selection_complete = true;
+    }
+}
+
+static void applauncher_refresh_callback(const char* filter, HWND hListBox) {
+    const char** items = (const char**)malloc(G_APP_COUNT * sizeof(char*));
+    if (!items) return;
+    for (int i = 0; i < G_APP_COUNT; i++) {
+        items[i] = G_APPS[i].name;
+    }
+    PopulateListBox(hListBox, filter, items, G_APP_COUNT, NULL);
+    free(items);
+}
+
+void TriggerAppLauncher(HWND hPopupWnd) {
+    if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
+    
+    initialize_app_cache();
+
+    if (G_APP_COUNT == 0) return;
+
+    const char** initial_items = (const char**)malloc(G_APP_COUNT * sizeof(char*));
+    if (!initial_items) return;
+    
+    for (int i = 0; i < G_APP_COUNT; i++) {
+        initial_items[i] = G_APPS[i].name;
+    }
+
+    PromptUser(initial_items,"🚀 LAUNCHER", G_APP_COUNT, 220, 650,32,
+                        applauncher_refresh_callback,
+                        applauncher_enter_callback,   
+                        applauncher_ctrlenter_callback,
+                        NULL,
+                        NULL);                         
+    free(initial_items);
+}
+
+#endif
+
+
+/* === FILE: bindings.h === */
+#include "config.h"
+#include <windows.h>
+#include "app_launcher.h"
+#include "window_switcher.h"
+bool CheckAppHotkeyBindings(int pressed_vk, int modifiers) {
+    HWND hActiveWnd = GetForegroundWindow();
+    if (!hActiveWnd) return false;
+
+    char activeExe[256] = {0};
+    FetchExeNameOnDemand(hActiveWnd, activeExe, sizeof(activeExe) - 1);
+    
+    // Initialize the cache if it's empty
+    if (G_APP_COUNT == 0) {
+        initialize_app_cache();
+    }
+    
+    for (int i = 0; i < APP_HOTKEY_COUNT; i++) {
+        if (G_APP_HOTKEYS[i].vk_code == pressed_vk && 
+            G_APP_HOTKEYS[i].modifiers == modifiers) {
+            
+            if (strcmp(G_APP_HOTKEYS[i].exe_name, "*") == 0 ||
+                StrStrIA(activeExe, G_APP_HOTKEYS[i].exe_name) != NULL) {
+                
+                printf("[APP-HOTKEY] Launching: %s\n", G_APP_HOTKEYS[i].app_name);
+                launch_app_by_name(G_APP_HOTKEYS[i].app_name);
+                return true;
+            }
+        }
+    }
+    return false;
+}
+void RunMiscApplication(const char* path) {
+    if (path == NULL || strlen(path) == 0) return;
+    
+    // Get the file extension
+    const char* ext = PathFindExtensionA(path);
+    
+    // Default: open with ShellExecute
+    SHELLEXECUTEINFOA sei = {0};
+    sei.cbSize = sizeof(SHELLEXECUTEINFOA);
+    sei.fMask = SEE_MASK_FLAG_NO_UI | SEE_MASK_ASYNCOK;
+    sei.lpVerb = "open";
+    sei.lpFile = path;
+    sei.nShow = SW_SHOWNORMAL;
+    
+    if (StrCmpIA(ext, ".bat") == 0) {
+        char dir_path[MAX_PATH];
+        strncpy(dir_path, path, sizeof(dir_path) - 1);
+        PathRemoveFileSpecA(dir_path);
+        
+        char cmd[2048];
+        // Use /c instead of /k - terminal closes after the bat finishes
+        snprintf(cmd, sizeof(cmd), "cmd /c \"cd /d \"%s\" && \"%s\"\"", dir_path, path);
+        system(cmd);
+        printf("[MISC] Running .bat in: %s\n", dir_path);
+        return;
+    }
+    
+    // Handle .png, .jpg, .jpeg, .bmp - open with mspaint
+    if (StrCmpIA(ext, ".png") == 0 || 
+        StrCmpIA(ext, ".jpg") == 0 || 
+        StrCmpIA(ext, ".jpeg") == 0 || 
+        StrCmpIA(ext, ".bmp") == 0) {
+        char cmd[2048];
+        snprintf(cmd, sizeof(cmd), "mspaint \"%s\"", path);
+        system(cmd);
+        printf("[MISC] Opening image with mspaint: %s\n", path);
+        return;
+    }
+    
+    // Handle .exe - launch directly
+    if (StrCmpIA(ext, ".exe") == 0) {
+        sei.lpFile = path;
+        if (ShellExecuteExA(&sei)) {
+            printf("[MISC] Launched: %s\n", path);
+        } else {
+            printf("[MISC] Failed to launch: %s (Error: %lu)\n", path, GetLastError());
+        }
+        return;
+    }
+    
+    // Handle .url - open in browser
+    if (StrCmpIA(ext, ".url") == 0) {
+        // Read the URL from the .url file
+        char url[2048] = {0};
+        FILE* f = fopen(path, "r");
+        if (f) {
+            char line[1024];
+            while (fgets(line, sizeof(line), f)) {
+                if (strncmp(line, "URL=", 4) == 0) {
+                    strncpy(url, line + 4, sizeof(url) - 1);
+                    url[strcspn(url, "\r\n")] = '\0';
+                    break;
+                }
+            }
+            fclose(f);
+        }
+        if (strlen(url) > 0) {
+            ShellExecuteA(NULL, "open", url, NULL, NULL, SW_SHOWNORMAL);
+            printf("[MISC] Opening URL: %s\n", url);
+        } else {
+            printf("[MISC] Failed to read URL from: %s\n", path);
+        }
+        return;
+    }
+    
+    // Handle .txt - open with notepad
+    if (StrCmpIA(ext, ".txt") == 0) {
+        char cmd[2048];
+        snprintf(cmd, sizeof(cmd), "notepad \"%s\"", path);
+        system(cmd);
+        printf("[MISC] Opening text file: %s\n", path);
+        return;
+    }
+    
+    // Handle .lnk - ShellExecute handles shortcuts
+    if (StrCmpIA(ext, ".lnk") == 0) {
+        sei.lpFile = path;
+        if (ShellExecuteExA(&sei)) {
+            printf("[MISC] Launched shortcut: %s\n", path);
+        } else {
+            printf("[MISC] Failed to launch shortcut: %s (Error: %lu)\n", path, GetLastError());
+        }
+        return;
+    }
+    
+    // Default: try ShellExecute
+    if (ShellExecuteExA(&sei)) {
+        printf("[MISC] Opened: %s\n", path);
+    } else {
+        printf("[MISC] Failed to open: %s (Error: %lu)\n", path, GetLastError());
+    }
+}
+
+bool CheckMiscHotkeyBindings(int pressed_vk, int modifiers) {
+    HWND hActiveWnd = GetForegroundWindow();
+    if (!hActiveWnd) return false;
+
+    char activeExe[256] = {0};
+    FetchExeNameOnDemand(hActiveWnd, activeExe, sizeof(activeExe) - 1);
+    
+    for (int i = 0; i < MISC_HOTKEY_COUNT; i++) {
+        if (G_MISC_HOTKEYS[i].vk_code == pressed_vk && 
+            G_MISC_HOTKEYS[i].modifiers == modifiers) {
+            
+            if (strcmp(G_MISC_HOTKEYS[i].exe_name, "*") == 0 ||
+                StrStrIA(activeExe, G_MISC_HOTKEYS[i].exe_name) != NULL) {
+              
+                RunMiscApplication(G_MISC_HOTKEYS[i].misc_path);
+              
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+void open_browser(const char *url) {
+    char command[256];
+
+    snprintf(command, sizeof(command), "start %s", url);
+
+    int result = system(command);
+    
+    if (result == 0) {
+        printf("Browser opened successfully.\n");
+    } else {
+        printf("Failed to open the browser.\n");
+    }
+}
+
+bool CheckQuickLinkHotkeyBindings(int pressed_vk, int modifiers) {
+    HWND hActiveWnd = GetForegroundWindow();
+    if (!hActiveWnd) return false;
+
+    char activeExe[256] = {0};
+    FetchExeNameOnDemand(hActiveWnd, activeExe, sizeof(activeExe) - 1);
+    
+    for (int i = 0; i < QUICKLINK_HOTKEY_COUNT; i++) {
+        if (G_QUICKLINK_HOTKEYS[i].vk_code == pressed_vk && 
+            G_QUICKLINK_HOTKEYS[i].modifiers == modifiers) {
+            
+            if (strcmp(G_QUICKLINK_HOTKEYS[i].exe_name, "*") == 0 ||
+                StrStrIA(activeExe, G_QUICKLINK_HOTKEYS[i].exe_name) != NULL) {
+              
+                open_browser(G_QUICKLINK_HOTKEYS[i].QuickLinkQuery);
+              
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+bool CheckMacroBindings(int pressed_vk, int modifiers, MacroAction* out_action, int* out_delay) {
+    // Get the active window
+    HWND hActiveWnd = GetForegroundWindow();
+    if (!hActiveWnd) return false;
+
+    char activeExe[256] = {0};
+    FetchExeNameOnDemand(hActiveWnd, activeExe, sizeof(activeExe) - 1);
+    
+    // Debug: Show what was pressed
+    printf("[DEBUG] Key: 0x%X (%d), Modifiers: 0x%X, Active exe: '%s'\n", 
+           pressed_vk, pressed_vk, modifiers, activeExe);
+
+    // Scan bindings
+    for (size_t i = 0; i < MACRO_BINDING_COUNT; i++) {
+        if (G_MACRO_BINDINGS[i].vk_code == pressed_vk) {
+            // Check if modifiers match
+            if (G_MACRO_BINDINGS[i].modifiers != modifiers) {
+                continue;
+            }
+            
+            // Check global or app-specific
+            if (strcmp(G_MACRO_BINDINGS[i].exe_name, "*") == 0) {
+                *out_action = G_MACRO_BINDINGS[i].action_id;
+                *out_delay = G_MACRO_BINDINGS[i].delay;
+                printf("[DEBUG] GLOBAL binding matched! action=%d, delay=%d\n", *out_action, *out_delay);
+                return true;
+            }
+            
+            if (StrStrIA(activeExe, G_MACRO_BINDINGS[i].exe_name) != NULL) {
+                *out_action = G_MACRO_BINDINGS[i].action_id;
+                *out_delay = G_MACRO_BINDINGS[i].delay;
+                printf("[DEBUG] APP-SPECIFIC binding matched! exe='%s' contains '%s', action=%d, delay=%d\n", 
+                       activeExe, G_MACRO_BINDINGS[i].exe_name, *out_action, *out_delay);
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+bool CheckTextSnippetBindings(int pressed_vk, int modifiers, const char** out_text) {
+    HWND hActiveWnd = GetForegroundWindow();
+    if (!hActiveWnd) return false;
+
+    char activeExe[256] = {0};
+    FetchExeNameOnDemand(hActiveWnd, activeExe, sizeof(activeExe) - 1);
+    
+    for (int i = 0; i < TEXT_SNIPPET_COUNT; i++) {
+        if (G_TEXT_SNIPPETS[i].vk_code == pressed_vk && 
+            G_TEXT_SNIPPETS[i].modifiers == modifiers) {
+            
+            if (strcmp(G_TEXT_SNIPPETS[i].exe_name, "*") == 0) {
+                *out_text = G_TEXT_SNIPPETS[i].text;
+                return true;
+            }
+            
+            if (StrStrIA(activeExe, G_TEXT_SNIPPETS[i].exe_name) != NULL) {
+                *out_text = G_TEXT_SNIPPETS[i].text;
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+
+/* === FILE: calc.h === */
+#ifndef CALC_H
+#define CALC_H
+#define IDC_INPUT_BOX 101
+#define IDC_LIST_BOX 102
+#include <windows.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#include <stdbool.h>
+#include <shlwapi.h>
+#include "types.h"
+
+// ============================================================
+// GLOBAL STATE FOR TAB FLIPPING
+// ============================================================
+static double g_last_a = 0.0;
+static double g_last_b = 0.0;
+static char g_last_op = 0;
+static bool g_has_last_op = false;
+static char g_last_expression[256] = {0};
+static double g_flipped_result = 0.0;
+static bool g_is_flipped = false;
+
+
+extern HWND hEditControl;
+
+typedef struct {
+    const char* from_unit;
+    const char* to_unit;
+    double factor;
+} UnitConversion;
+
+int CopyToClipboard(const char* text) {
+    if (text == NULL) return 0;
+
+    size_t len = strlen(text);
+    if (len == 0) return 0;
+
+    char* clean_text = (char*)malloc(len + 1);
+    if (clean_text == NULL) return 0;
+
+    size_t write_idx = 0;
+    for (size_t i = 0; i < len; i++) {
+        if (text[i] != '\r') {
+            clean_text[write_idx++] = text[i];
+        }
+    }
+    clean_text[write_idx] = '\0';
+
+    len = write_idx;
+    if (len == 0) {
+        free(clean_text);
+        return 0;
+    }
+
+    HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, len + 1);
+    if (hMem == NULL) {
+        free(clean_text);
+        return 0;
+    }
+
+    char* pMem = (char*)GlobalLock(hMem);
+    if (pMem == NULL) {
+        GlobalFree(hMem);
+        free(clean_text);
+        return 0;
+    }
+    
+    memcpy(pMem, clean_text, len + 1); 
+    GlobalUnlock(hMem);
+    free(clean_text);
+
+    if (!OpenClipboard(NULL)) {
+        GlobalFree(hMem);
+        return 0;
+    }
+
+    if (!EmptyClipboard()) {
+        GlobalFree(hMem);
+        CloseClipboard();
+        return 0;
+    }
+
+    if (SetClipboardData(CF_TEXT, hMem) == NULL) {
+        GlobalFree(hMem);
+        CloseClipboard();
+        return 0;
+    }
+
+    CloseClipboard();
+    return 1;
+}
+
+// ============================================================
+// PARSE NUMBER WITH K/M SUFFIX
+// ============================================================
+double parse_number_with_suffix(const char* str) {
+    char cleaned[64];
+    strncpy(cleaned, str, sizeof(cleaned) - 1);
+    cleaned[sizeof(cleaned) - 1] = '\0';
+    
+    int len = strlen(cleaned);
+    while (len > 0 && isspace(cleaned[len - 1])) {
+        cleaned[--len] = '\0';
+    }
+    
+    if (len == 0) return 0.0;
+    
+    char suffix = tolower(cleaned[len - 1]);
+    char num_part[64];
+    strncpy(num_part, cleaned, len - 1);
+    num_part[len - 1] = '\0';
+    
+    double val = atof(num_part);
+    
+    if (suffix == 'k') {
+        return val * 1000.0;
+    } else if (suffix == 'm') {
+        return val * 1000000.0;
+    } else {
+        return atof(cleaned);
+    }
+}
+
+// ============================================================
+// FORMAT NUMBER WITH K/M SUFFIX (for display)
+// ============================================================
+void format_number_with_suffix(double num, char* out, size_t max_len) {
+    if (num >= 1000000.0) {
+        snprintf(out, max_len, "%.4gm", num / 1000000.0);
+    } else if (num >= 1000.0) {
+        snprintf(out, max_len, "%.4gk", num / 1000.0);
+    } else {
+        snprintf(out, max_len, "%.10g", num);
+    }
+}
+
+// ============================================================
+// GET FLIPPED RESULT (for Tab key)
+// ============================================================
+double get_flipped_result() {
+    return g_flipped_result;
+}
+
+bool is_flipped_mode() {
+    return g_is_flipped;
+}
+
+void reset_flip_state() {
+    g_is_flipped = false;
+    g_flipped_result = 0.0;
+}
+
+// ============================================================
+// EXTENSIBLE CONVERSION TABLE
+// ============================================================
+static const UnitConversion G_CONVERSIONS[] = {
+    // === MINUTES TO HOURS ===
+    { "minutes", "hours",   1.0 / 60.0 },
+    { "minute",  "hours",   1.0 / 60.0 },
+    { "minute",  "hour",    1.0 / 60.0 },
+    { "mins",    "hours",   1.0 / 60.0 },
+    { "mins",    "hour",    1.0 / 60.0 },
+    { "min",     "hours",   1.0 / 60.0 },
+    { "min",     "hour",    1.0 / 60.0 },
+    { "m",       "h",       1.0 / 60.0 },
+
+    // === HOURS TO MINUTES ===
+    { "hours",   "minutes", 60.0 },
+    { "hour",    "minutes", 60.0 },
+    { "hour",    "minute",  60.0 },
+    { "hrs",     "mins",    60.0 },
+    { "hrs",     "min",     60.0 },
+    { "hr",      "mins",    60.0 },
+    { "hr",      "min",     60.0 },
+    { "h",       "m",       60.0 },
+
+    // === SECONDS TO HOURS ===
+    { "seconds", "hours",   1.0 / 3600.0 },
+    { "second",  "hour",    1.0 / 3600.0 },
+    { "secs",    "hours",   1.0 / 3600.0 },
+    { "secs",    "hr",      1.0 / 3600.0 },
+    { "sec",     "hour",    1.0 / 3600.0 },
+    { "sec",     "hr",      1.0 / 3600.0 },
+    { "s",       "h",       1.0 / 3600.0 },
+
+    // === HOURS TO SECONDS ===
+    { "hours",   "seconds", 3600.0 },
+    { "hour",    "second",  3600.0 },
+    { "hours",   "secs",    3600.0 },
+    { "hour",    "sec",     3600.0 },
+    { "hrs",     "secs",    3600.0 },
+    { "hr",      "sec",     3600.0 },
+    { "h",       "s",       3600.0 },
+
+    // === SECONDS TO MINUTES ===
+    { "seconds", "minutes", 1.0 / 60.0 },
+    { "second",  "minute",  1.0 / 60.0 },
+    { "secs",    "mins",    1.0 / 60.0 },
+    { "sec",     "min",     1.0 / 60.0 },
+    { "s",       "m",       1.0 / 60.0 },
+
+    // === MINUTES TO SECONDS ===
+    { "minutes", "seconds", 60.0 },
+    { "minute",  "second",  60.0 },
+    { "mins",    "secs",    60.0 },
+    { "min",     "sec",     60.0 },
+    { "m",       "s",       60.0 },
+
+    // === DAYS TO WEEKS ===
+    { "days",    "weeks",   1.0 / 7.0 },
+    { "day",     "weeks",   1.0 / 7.0 },
+    { "day",     "week",    1.0 / 7.0 },
+    { "d",       "w",       1.0 / 7.0 },
+
+    // === WEEKS TO DAYS ===
+    { "weeks",   "days",    7.0 },
+    { "week",    "days",    7.0 },
+    { "week",    "day",     7.0 },
+    { "wks",     "days",    7.0 },
+    { "wk",      "day",     7.0 },
+    { "w",       "d",       7.0 },
+
+    // === DAYS TO HOURS ===
+    { "days",    "hours",   24.0 },
+    { "day",     "hours",   24.0 },
+    { "day",     "hour",    24.0 },
+    { "d",       "h",       24.0 },
+
+    // === HOURS TO DAYS ===
+    { "hours",   "days",    1.0 / 24.0 },
+    { "hour",    "days",    1.0 / 24.0 },
+    { "hour",    "day",     1.0 / 24.0 },
+    { "hrs",     "days",    1.0 / 24.0 },
+    { "hr",      "day",     1.0 / 24.0 },
+    { "h",       "d",       1.0 / 24.0 }
+};
+#define CONVERSION_COUNT (sizeof(G_CONVERSIONS) / sizeof(G_CONVERSIONS[0]))
+
+void trim_trailing_spaces(char* str) {
+    int len = strlen(str);
+    while (len > 0 && isspace((unsigned char)str[len - 1])) {
+        str[--len] = '\0';
+    }
+}
+
+// ============================================================
+// MAIN EVALUATE FUNCTION
+// ============================================================
+void live_evaluate(const char* input, char* out_result, size_t max_len) {
+    if (!input || strlen(input) == 0) {
+        strncpy(out_result, "Waiting for expression...", max_len);
+        return;
+    }
+
+    char clean[256];
+    strncpy(clean, input, sizeof(clean) - 1);
+    clean[sizeof(clean) - 1] = '\0';
+
+    // ============================================================
+    // 1. Process Conversions via " in " keyword
+    // ============================================================
+    char* in_keyword = StrStrIA(clean, " in ");
+    if (in_keyword) {
+        char target_unit[64] = {0};
+        strncpy(target_unit, in_keyword + 4, sizeof(target_unit) - 1);
+        trim_trailing_spaces(target_unit);
+
+        *in_keyword = '\0'; 
+
+        double val = 0.0;
+        char source_unit[64] = {0};
+        if (sscanf(clean, "%lf %63s", &val, source_unit) == 2) {
+            for (size_t i = 0; i < CONVERSION_COUNT; i++) {
+                if (StrCmpIA(source_unit, G_CONVERSIONS[i].from_unit) == 0 &&
+                    StrCmpIA(target_unit, G_CONVERSIONS[i].to_unit) == 0) {
+                    snprintf(out_result, max_len, "= %.4g %s", val * G_CONVERSIONS[i].factor, G_CONVERSIONS[i].to_unit);
+                    g_has_last_op = false;
+                    return;
+                }
+            }
+        }
+        strncpy(out_result, "Unknown unit conversion format", max_len);
+        g_has_last_op = false;
+        return;
+    }
+
+    // ============================================================
+    // 2. Process Standard Mathematical Equations
+    // ============================================================
+    for (int i = 0; clean[i]; i++) {
+        if (clean[i] == 'x' || clean[i] == 'X') clean[i] = '*';
+    }
+
+    char a_str[64] = {0};
+    char op_str[4] = {0};
+    char b_str[64] = {0};
+    
+    if (sscanf(clean, "%63s %3s %63s", a_str, op_str, b_str) == 3) {
+        double a = parse_number_with_suffix(a_str);
+        double b = parse_number_with_suffix(b_str);
+        char op = op_str[0];
+        
+        g_last_a = a;
+        g_last_b = b;
+        g_last_op = op;
+        g_has_last_op = true;
+        strncpy(g_last_expression, clean, sizeof(g_last_expression) - 1);
+        
+        double result = 0.0;
+        
+        switch (op) {
+            case '+': result = a + b; break;
+            case '-': result = a - b; break;
+            case '*': result = a * b; break;
+            case '/': 
+                if (b != 0) {
+                    result = a / b;
+                } else {
+                    strncpy(out_result, "Error: Div by 0", max_len);
+                    return;
+                }
+                break;
+            default:
+                strncpy(out_result, "Unknown operator", max_len);
+                return;
+        }
+        
+        char formatted[64];
+        format_number_with_suffix(result, formatted, sizeof(formatted));
+        
+        snprintf(out_result, max_len, "= %s", formatted);
+        return;
+    }
+    
+    // ============================================================
+    // 3. Try simple number parsing
+    // ============================================================
+    double val = parse_number_with_suffix(clean);
+    if (val != 0.0 || (strlen(clean) > 0 && clean[0] == '0')) {
+        char formatted[64];
+        format_number_with_suffix(val, formatted, sizeof(formatted));
+        snprintf(out_result, max_len, "= %s", formatted);
+        g_has_last_op = false;
+        return;
+    }
+    
+    strncpy(out_result, "Parsing input...", max_len);
+}
+
+// ============================================================
+// FLIP THE LAST OPERATION (for Tab key)
+// ============================================================
+void flip_last_operation(char* out_result, size_t max_len) {
+    if (!g_has_last_op) {
+        strncpy(out_result, "No operation to flip", max_len);
+        return;
+    }
+    
+    if (g_last_b == 0 && g_last_op == '/') {
+        strncpy(out_result, "Cannot flip: division by zero", max_len);
+        return;
+    }
+    
+    double flipped_a = g_last_b;
+    double flipped_b = g_last_a;
+    
+    double result = 0.0;
+    
+    switch (g_last_op) {
+        case '+': result = flipped_a + flipped_b; break;
+        case '-': result = flipped_a - flipped_b; break;
+        case '*': result = flipped_a * flipped_b; break;
+        case '/': 
+            if (flipped_b != 0) {
+                result = flipped_a / flipped_b;
+            } else {
+                strncpy(out_result, "Error: Div by 0 in flipped", max_len);
+                return;
+            }
+            break;
+        default:
+            strncpy(out_result, "Unknown operator", max_len);
+            return;
+    }
+    
+    g_flipped_result = result;
+    g_is_flipped = true;
+    
+    char a_formatted[32], b_formatted[32], result_formatted[32];
+    format_number_with_suffix(flipped_a, a_formatted, sizeof(a_formatted));
+    format_number_with_suffix(flipped_b, b_formatted, sizeof(b_formatted));
+    format_number_with_suffix(result, result_formatted, sizeof(result_formatted));
+    
+    snprintf(out_result, max_len, "FLIP: %s %c %s = %s", 
+             a_formatted, g_last_op, b_formatted, result_formatted);
+}
+
+// ============================================================
+// GET FLIP INFO FOR DISPLAY
+// ============================================================
+void get_flip_info(char* out, size_t max_len) {
+    if (!g_has_last_op || !g_is_flipped) {
+        strncpy(out, "Press Tab to flip", max_len);
+        return;
+    }
+    
+    char a_formatted[32], b_formatted[32], result_formatted[32];
+    format_number_with_suffix(g_last_b, a_formatted, sizeof(a_formatted));
+    format_number_with_suffix(g_last_a, b_formatted, sizeof(b_formatted));
+    format_number_with_suffix(g_flipped_result, result_formatted, sizeof(result_formatted));
+    
+    snprintf(out, max_len, "↕ %s %c %s = %s", 
+             a_formatted, g_last_op, b_formatted, result_formatted);
+}
+
+void get_flip_display(char* out, size_t max_len) {
+    if (!g_has_last_op) {
+        strncpy(out, "No operation to flip", max_len);
+        return;
+    }
+    
+    if (g_last_b == 0 && g_last_op == '/') {
+        strncpy(out, "Cannot flip: division by zero", max_len);
+        return;
+    }
+    
+    double flipped_a = g_last_b;
+    double flipped_b = g_last_a;
+    
+    double result = 0.0;
+    
+    switch (g_last_op) {
+        case '+': result = flipped_a + flipped_b; break;
+        case '-': result = flipped_a - flipped_b; break;
+        case '*': result = flipped_a * flipped_b; break;
+        case '/': 
+            if (flipped_b != 0) {
+                result = flipped_a / flipped_b;
+            } else {
+                strncpy(out, "Error: Div by 0 in flipped", max_len);
+                return;
+            }
+            break;
+        default:
+            strncpy(out, "Unknown operator", max_len);
+            return;
+    }
+    
+    g_flipped_result = result;
+    g_is_flipped = true;
+    
+    char a_formatted[32], b_formatted[32], result_formatted[32];
+    format_number_with_suffix(flipped_a, a_formatted, sizeof(a_formatted));
+    format_number_with_suffix(flipped_b, b_formatted, sizeof(b_formatted));
+    format_number_with_suffix(result, result_formatted, sizeof(result_formatted));
+    
+    snprintf(out, max_len, "↕ %s %c %s = %s", 
+             a_formatted, g_last_op, b_formatted, result_formatted);
+}
+
+void get_flip_expression(char* out, size_t max_len) {
+    if (!g_has_last_op) {
+        strncpy(out, "", max_len);
+        return;
+    }
+    
+    char a_formatted[32], b_formatted[32];
+    format_number_with_suffix(g_last_b, a_formatted, sizeof(a_formatted));
+    format_number_with_suffix(g_last_a, b_formatted, sizeof(b_formatted));
+    
+    snprintf(out, max_len, "%s %c %s", a_formatted, g_last_op, b_formatted);
+}
+
+// ============================================================
+// CALCULATOR CALLBACKS
+// ============================================================
+static void calculator_refresh_callback(const char* filter, HWND hListBox) {
+    if (!hListBox) return;
+    
+    char result_buffer[256] = {0};
+    if (filter && strlen(filter) > 0) {
+        live_evaluate(filter, result_buffer, sizeof(result_buffer));
+    } else {
+        strncpy(result_buffer, "Waiting for expression...", sizeof(result_buffer) - 1);
+    }
+    
+    const char* items[1] = { result_buffer };
+    PopulateListBox(hListBox, NULL, items, 1, NULL);
+}
+
+static void calculator_enter_callback(const char* selection) {
+    if (selection && strlen(selection) > 0) {
+        char* result = (char*)selection;
+        if (strncmp(selection, "= ", 2) == 0) {
+            result = (char*)selection + 2;
+        }
+        CopyToClipboard(result);
+        printf("[CALCULATOR] Copied: %s\n", result);
+    }
+}
+
+// ============================================================
+// TAB CALLBACK - Flips the numbers
+// ============================================================
+static void calculator_tab_callback(void) {
+    if (!hEditControl) return;
+    
+    // Get current input
+    char current_input[256] = {0};
+    GetWindowTextA(hEditControl, current_input, sizeof(current_input));
+    
+    // Try to parse it to see if it's an operation we can flip
+    char a_str[64] = {0};
+    char op_str[4] = {0};
+    char b_str[64] = {0};
+    
+    if (sscanf(current_input, "%63s %3s %63s", a_str, op_str, b_str) == 3) {
+        // We have a valid operation, flip it
+        char flipped[256];
+        snprintf(flipped, sizeof(flipped), "%s %s %s", b_str, op_str, a_str);
+        SetWindowTextA(hEditControl, flipped);
+        
+        // Trigger refresh to update the result
+        int len = strlen(flipped);
+        SendMessageA(hEditControl, EM_SETSEL, len, len);
+        SendMessageA(GetParent(hEditControl), WM_COMMAND, MAKEWPARAM(IDC_INPUT_BOX, EN_CHANGE), (LPARAM)hEditControl);
+        
+        printf("[CALCULATOR] Flipped: %s\n", flipped);
+    } else {
+        printf("[CALCULATOR] Cannot flip: not a valid operation\n");
+    }
+}
+
+// ============================================================
+// CTRL+ENTER CALLBACK - Puts result back into input
+// ============================================================
+static void calculator_ctrlenter_callback(const char* selection) {
+    if (!selection || strlen(selection) == 0 || !hEditControl) return;
+    
+    // Extract the result (skip "= " prefix)
+    char* result = (char*)selection;
+    if (strncmp(selection, "= ", 2) == 0) {
+        result = (char*)selection + 2;
+    }
+    
+    // Put it in the edit box
+    SetWindowTextA(hEditControl, result);
+    
+    // Move cursor to the end
+    int len = strlen(result);
+    SendMessageA(hEditControl, EM_SETSEL, len, len);
+    
+    // Trigger refresh to evaluate again (if user types more)
+    SendMessageA(GetParent(hEditControl), WM_COMMAND, MAKEWPARAM(IDC_INPUT_BOX, EN_CHANGE), (LPARAM)hEditControl);
+    
+    printf("[CALCULATOR] Result put back: %s\n", result);
+}
+
+// ============================================================
+// TRIGGER CALCULATOR
+// ============================================================
+void TriggerCalculator(HWND hPopupWnd) {
+    if (hPopupWnd != NULL && IsWindow(hPopupWnd)) return;
+
+    const char* default_msg[1] = { "Enter operation (e.g. 5 x 5 or 10 hours in minutes)" };
+    PromptUser(default_msg,"🧮 Calculator", 1, 220, 550,32,
+                        calculator_refresh_callback,   // refresh -> evaluates on typing
+                        calculator_enter_callback,     // enter -> copies result to clipboard
+                        calculator_ctrlenter_callback, // ctrl enter -> puts result back into input
+                        calculator_tab_callback,
+                        NULL);      
+                                                             //
+}
+
+#endif
+
+
+/* === FILE: color_handler.h === */
+#ifndef COLOR_HANDLER_H
+#define COLOR_HANDLER_H
+
+#include <windows.h>
+#include <stdio.h>
+#include <string.h>
+#include "pixel_utils.h"
+#include "config.h"
+
+extern int CopyToClipboard(const char* text);
+
+static bool HandleColorKey(bool alt_down, bool ctrl_down, bool shift_down) {
+    long x, y;
+    BYTE r, g, b;
+
+    if (!GetCursorPixel(&x, &y, &r, &g, &b)) {
+        return false;
+    }
+
+    char color_text_buf[128];
+
+    if (alt_down && ctrl_down && !shift_down) {
+        snprintf(color_text_buf, sizeof(color_text_buf), "(%d, %d, %d)", r, g, b);
+    }
+    else if (alt_down && !ctrl_down && !shift_down) {
+        snprintf(color_text_buf, sizeof(color_text_buf), "%d, %d, %d", r, g, b);
+    }
+    else {
+        return false;
+    }
+
+    CopyToClipboard(color_text_buf);
+    return true;
+}
+
+#endif
+
+
+/* === FILE: common_ui.h === */
+// common_ui.h
+#ifndef COMMON_UI_H
+#define COMMON_UI_H
+
+#include <windows.h>
+#include <shlwapi.h>
+#include <stdbool.h>
+#include <string.h>
+
+static inline void PopulateListBox(HWND hListBox, const char* filter, 
+                                   const char** items, int item_count,
+                                   bool (*filter_match)(const char* item, const char* filter)) {
+    if (!hListBox) return;
+    SendMessageA(hListBox, LB_RESETCONTENT, 0, 0);
+    
+    if (!filter || strlen(filter) == 0) {
+        for (int i = 0; i < item_count; i++) {
+            SendMessageA(hListBox, LB_ADDSTRING, 0, (LPARAM)items[i]);
+        }
+    } else {
+        for (int i = 0; i < item_count; i++) {
+            bool match = false;
+            if (filter_match) {
+                match = filter_match(items[i], filter);
+            } else {
+                match = (StrStrIA(items[i], filter) != NULL);
+            }
+            if (match) {
+                SendMessageA(hListBox, LB_ADDSTRING, 0, (LPARAM)items[i]);
+            }
+        }
+    }
+    SendMessageA(hListBox, LB_SETCURSEL, 0, 0);
+}
+
+static inline bool IsPopupActive(HWND hPopupWnd) {
+    return hPopupWnd != NULL && IsWindow(hPopupWnd);
+}
+
+static inline bool CheckAndBlockIfPopupActive(HWND hPopupWnd) {
+    return IsPopupActive(hPopupWnd);
+}
+
+#endif // COMMON_UI_H
+
+
+/* === FILE: config.h === */
+#ifndef CONFIG_H
+#define CONFIG_H
+#include <string.h>
+
+static bool TRAY = true;
+static const char* ListOfProgramPaths[20] = {
+    "C:\\Users\\HP\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu",
+    "C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs",
+    "D:\\Projects",
+    "D:\\retard games\\miscellaneous"
+};
+static const char* ListOfShitToIgnore[30] = {
+  "node_modules",
+  ".git",
+  "bin",
+  "dll",
+  "gtnh 2.8",
+  ".h",
+  "yazi",
+  "obj",
+  "build"
+};
+
+static const char* MusicPath = "D:\\Music";
+static const char* VideosPath = "C:\\videos";
+static const char* IconPath = "D:\\retard games\\miscellaneous\\switch_window.ico";
+
+// Hotkey IDs
+#define SWITCHER_ID       1
+#define SWITCHER_KEY      0x20
+#define TODO_ID           2
+#define TODO_KEY          0x54
+#define POS_ID            3
+#define POS_KEY           0x5A
+#define COLOR_ID          4
+#define COLOR_KEY         0x58
+#define PIXEL_EQUALS_ID   5
+#define PIXEL_EQUALS_KEY  0x42
+#define WAIT_FOR_PIXEL_ID 6
+#define WAIT_FOR_PIXEL_KEY 0x4E
+#define REGION_ID         7
+#define REGION_KEY        0x41
+#define CALCULATOR_ID     8
+#define CALCULATOR_KEY    0x43
+#define EXE_ID            9
+#define EXE_KEY           0x45
+#define KILL_PROCESS_ID   10
+#define KILL_PROCESS_KEY  0x55
+#define GOOGLE_SEARCH_ID   11
+#define GOOGLE_SEARCH_KEY  0x47  
+#define NVIM_ID      12
+#define NVIM_KEY     0x49
+#define TERMINAL_ID      13
+#define TERMINAL_KEY     0x57
+#define YAZI_ID      14
+#define YAZI_KEY     0x51
+#define SCREENSHOT_ID      15
+#define SCREENSHOT_KEY     0x59
+#define TIMER_ID      16
+#define TIMER_KEY     0x4F
+#define EXPLORER_ID      17
+#define EXPLORER_KEY     0x52
+#define TERMINAL_COMMAND_ID      18
+#define TERMINAL_COMMAND_KEY     0xDB
+#define HOTKEY_MOD_NONE         0x00
+#define HOTKEY_MOD_ALT          0x01
+#define HOTKEY_MOD_SHIFT        0x02
+#define HOTKEY_MOD_CTRL         0x04
+#define HOTKEY_MOD_ALT_SHIFT    (HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT)
+#define HOTKEY_MOD_ALT_CTRL     (HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL)
+#define HOTKEY_MOD_SHIFT_CTRL   (HOTKEY_MOD_SHIFT | HOTKEY_MOD_CTRL)
+#define HOTKEY_MOD_ALT_SHIFT_CTRL (HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT | HOTKEY_MOD_CTRL)
+
+
+typedef enum {
+    MACRO_NONE = 0,
+    MACRO_FACTORIO_MAKE_TAG,
+    MACRO_MINECRAFT_PASTE,
+    MACRO_MINECRAFT_COPY,
+    MACRO_MINECRAFT_ROTATE,
+    MACRO_MINECRAFT_UP,
+    MACRO_MINECRAFT_UNDO,
+    MACRO_FACTORIO_SEARCH_FACTORY,
+} MacroAction;
+
+typedef struct {
+    int vk_code;
+    int modifiers;
+    const char* exe_name;
+    MacroAction action_id;
+    int delay;
+} MacroBinding;
+
+typedef struct {
+    int vk_code;
+    int modifiers;
+    const char* exe_name;
+    const char* app_name;  // Name of the app to launch from cache
+} AppHotkey;
+
+typedef struct {
+    int vk_code;
+    int modifiers;
+    const char* exe_name;
+    const char* misc_path; 
+} MiscHotkey;
+
+typedef struct {
+    int vk_code;
+    int modifiers;
+    const char* exe_name;
+    const char* QuickLinkQuery; 
+} QuickLinkHotkey;
+
+typedef struct {
+    int vk_code;
+    int modifiers;
+    const char** blacklist;      
+    int blacklist_count;
+    const char** window_titles;  
+    int window_count;
+} FocusSwitcherBinding;
+
+typedef struct {
+    int vk_code;
+    int modifiers;
+    int code;
+} MusicPlayerBinding;
+
+typedef struct {
+    int vk_code;
+    int modifiers;
+    int code;
+} VideoPlayerBinding;
+
+typedef struct {
+    int vk_code;
+    int modifiers;
+    const char** window_titles;  
+    int window_count;
+} BulkKillProcessBinding;
+
+static const AppHotkey G_APP_HOTKEYS[] = {
+    { VK_RETURN, HOTKEY_MOD_ALT, "*", "Alacritty" },
+    { 'B', HOTKEY_MOD_CTRL | HOTKEY_MOD_SHIFT, "*", "Zen" },
+};
+
+#define APP_HOTKEY_COUNT (sizeof(G_APP_HOTKEYS) / sizeof(G_APP_HOTKEYS[0]))
+
+static const MiscHotkey G_MISC_HOTKEYS[] = {
+    {'G', HOTKEY_MOD_CTRL | HOTKEY_MOD_ALT, "*", "D:\\retard games\\Grand Theft Auto V Legacy\\PlayGTAV.bat" },
+};
+
+#define MISC_HOTKEY_COUNT (sizeof(G_MISC_HOTKEYS) / sizeof(G_MISC_HOTKEYS[0]))
+
+static const QuickLinkHotkey G_QUICKLINK_HOTKEYS[] = {
+    {'Y', HOTKEY_MOD_CTRL | HOTKEY_MOD_ALT, "*", "https:youtube.com" },
+};
+
+#define QUICKLINK_HOTKEY_COUNT (sizeof(G_QUICKLINK_HOTKEYS) / sizeof(G_QUICKLINK_HOTKEYS[0]))
+
+static const MacroBinding G_MACRO_BINDINGS[] = {
+    { 'V', HOTKEY_MOD_ALT, "Factorio", MACRO_FACTORIO_MAKE_TAG, 0 },
+    { 'B', HOTKEY_MOD_ALT, "Factorio", MACRO_FACTORIO_SEARCH_FACTORY, 0 },
+    { 'C', HOTKEY_MOD_SHIFT, "Java", MACRO_MINECRAFT_COPY, 0 },
+    { 'V', HOTKEY_MOD_SHIFT, "Java", MACRO_MINECRAFT_PASTE, 0 },
+    { 'Z', HOTKEY_MOD_SHIFT, "Java", MACRO_MINECRAFT_UNDO, 0 },
+    { 'Q', HOTKEY_MOD_SHIFT, "Java", MACRO_MINECRAFT_UP, 0 },
+    { 'R', HOTKEY_MOD_SHIFT, "Java", MACRO_MINECRAFT_ROTATE, 0 },
+};
+
+#define MACRO_BINDING_COUNT (sizeof(G_MACRO_BINDINGS) / sizeof(G_MACRO_BINDINGS[0]))
+
+
+typedef struct {
+    int vk_code;
+    int modifiers;
+    const char* exe_name;
+    const char* text;  
+} TextSnippet;
+
+static const TextSnippet G_TEXT_SNIPPETS[] = {
+    { 'O', HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT, "EpicGamesLauncher", "seifisbad@gmail.com" },
+    { 'P', HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT, "EpicGamesLauncher", "i_am_retarded1" },
+};
+
+#define TEXT_SNIPPET_COUNT (sizeof(G_TEXT_SNIPPETS) / sizeof(G_TEXT_SNIPPETS[0]))
+
+
+static const MusicPlayerBinding G_MUSIC_PLAYERS[] = {
+  {
+    VK_OEM_COMMA,
+    HOTKEY_MOD_ALT,
+    1 //PAUSE
+  },
+  { 
+    VK_OEM_2,
+    HOTKEY_MOD_ALT,
+    5 // TOGGLE PLAYBACK
+  },
+  { 
+    VK_OEM_1,
+    HOTKEY_MOD_ALT,
+    6 // TERMINATE
+  },
+  { 
+    'P',
+    HOTKEY_MOD_ALT,
+    69 // PLAY SONG
+  },
+  
+};
+#define MUSIC_PLAYER_COUNT (sizeof(G_MUSIC_PLAYERS) / sizeof(G_MUSIC_PLAYERS[0]))
+static const VideoPlayerBinding G_VIDEO_PLAYERS[] = {
+  {
+    VK_OEM_COMMA,
+    HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT,
+    1 //PAUSE
+  },
+  { 
+    VK_OEM_PERIOD,
+    HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT,
+    5 // TOGGLE FullScreen
+  },
+  { 
+    VK_OEM_1,
+    HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT,
+    6 // TERMINATE
+  },
+  { 
+    'V',
+    HOTKEY_MOD_ALT,
+    69 // PLAY VIDEO
+  },
+};
+#define VIDEO_PLAYER_COUNT (sizeof(G_VIDEO_PLAYERS) / sizeof(G_VIDEO_PLAYERS[0]))
+
+static const char* bkp_windows[] = {"Brawlhalla","Fortnite","RocketLeague","Factorio","Steam"};
+
+static const BulkKillProcessBinding G_BULK_KILL_PROCESS[] = {
+    {
+        'P',           
+        HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL,               
+        bkp_windows,              
+        sizeof(bkp_windows) / sizeof(bkp_windows[0])
+    },
+};
+
+#define BULKKILLPROCESS_COUNT (sizeof(G_BULK_KILL_PROCESS) / sizeof(G_BULK_KILL_PROCESS[0]))
+
+
+  
+static const char* focus_blacklist_games[] = {"CrosshairX"};
+
+static const char* games_windows[] = {"Brawlhalla","Fortnite","RocketLeague","Factorio","Minecraft"};
+
+static const char* focus_blacklist_browsers[] = {"CrosshairX"};
+
+static const char* browsers_windows[] = {"Zen","Chrome"};
+
+static const char* focus_blacklist_coding[] = {"CrosshairX"};
+
+static const char* coding_windows[] = {"Alacritty","Nvim","Neovide","vim","pwsh"};
+
+static const FocusSwitcherBinding G_FOCUS_SWITCHERS[] = {
+    {
+        'O',           
+        HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT,               
+        focus_blacklist_games,      
+        sizeof(focus_blacklist_games) / sizeof(focus_blacklist_games[0]),
+        games_windows,              
+        sizeof(games_windows) / sizeof(games_windows[0])
+    },
+    {
+        'I',           
+        HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT,               
+        focus_blacklist_browsers,      
+        sizeof(focus_blacklist_browsers) / sizeof(focus_blacklist_browsers[0]),
+        browsers_windows,              
+        sizeof(browsers_windows) / sizeof(browsers_windows[0])
+    },
+    {
+        'U',           
+        HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT,               
+        focus_blacklist_coding,      
+        sizeof(focus_blacklist_coding) / sizeof(focus_blacklist_coding[0]),
+        coding_windows,              
+        sizeof(coding_windows) / sizeof(coding_windows[0])
+    },
+};
+
+#define FOCUS_SWITCHER_COUNT (sizeof(G_FOCUS_SWITCHERS) / sizeof(G_FOCUS_SWITCHERS[0]))
+
+static const char* switcher_blacklist[] = {"Fortnite", "CrosshairX"};
+static int switcher_blacklist_count = sizeof(switcher_blacklist) / sizeof(switcher_blacklist[0]);
+
+static const char* todo_blacklist[] = {"Fortnite", "CrosshairX"};
+static int todo_blacklist_count = sizeof(todo_blacklist) / sizeof(todo_blacklist[0]);
+
+static const char* pos_blacklist[] = {"Fortnite", "CrosshairX"};
+static int pos_blacklist_count = sizeof(pos_blacklist) / sizeof(pos_blacklist[0]);
+
+static const char* color_blacklist[] = {"Fortnite", "CrosshairX"};
+static int color_blacklist_count = sizeof(color_blacklist) / sizeof(color_blacklist[0]);
+
+static const char* pixel_equals_blacklist[] = {"Fortnite", "CrosshairX"};
+static int pixel_equals_blacklist_count = sizeof(pixel_equals_blacklist) / sizeof(pixel_equals_blacklist[0]);
+
+static const char* wait_for_pixel_blacklist[] = {"Fortnite", "CrosshairX"};
+static int wait_for_pixel_blacklist_count = sizeof(wait_for_pixel_blacklist) / sizeof(wait_for_pixel_blacklist[0]);
+
+static const char* region_blacklist[] = {"Fortnite", "CrosshairX"};
+static int region_blacklist_count = sizeof(region_blacklist) / sizeof(region_blacklist[0]);
+
+static const char* calculator_blacklist[] = {"Fortnite", "CrosshairX"};
+static int calculator_blacklist_count = sizeof(calculator_blacklist) / sizeof(calculator_blacklist[0]);
+
+static const char* exe_blacklist[] = {"Fortnite", "CrosshairX"};
+static int exe_blacklist_count = sizeof(exe_blacklist) / sizeof(exe_blacklist[0]);
+
+static const char* kill_process_blacklist[] = {"Fortnite", "CrosshairX"};
+static int kill_process_blacklist_count = sizeof(kill_process_blacklist) / sizeof(kill_process_blacklist[0]);
+
+static const char* google_search_blacklist[] = {"Fortnite", "CrosshairX"};
+static int google_search_blacklist_count = sizeof(google_search_blacklist) / sizeof(google_search_blacklist[0]);
+
+static const char* nvim_blacklist[] = {"Fortnite", "CrosshairX"};
+static int nvim_blacklist_count = sizeof(nvim_blacklist) / sizeof(nvim_blacklist[0]);
+
+static const char* timer_blacklist[] = {"Fortnite", "CrosshairX"};
+static int timer_blacklist_count = sizeof(timer_blacklist) / sizeof(timer_blacklist[0]);
+
+static const char* terminal_blacklist[] = {"Fortnite", "CrosshairX"};
+static int terminal_blacklist_count = sizeof(terminal_blacklist) / sizeof(terminal_blacklist[0]);
+
+static const char* screenshot_blacklist[] = {"Fortnite", "CrosshairX"};
+static int screenshot_blacklist_count = sizeof(screenshot_blacklist) / sizeof(screenshot_blacklist[0]);
+
+static const char* yazi_blacklist[] = {"Fortnite", "CrosshairX"};
+static int yazi_blacklist_count = sizeof(yazi_blacklist) / sizeof(yazi_blacklist[0]);
+
+static const char* video_blacklist[] = {"Fortnite", "CrosshairX"};
+static int video_blacklist_count = sizeof(video_blacklist) / sizeof(video_blacklist[0]);
+
+static const char* explorer_blacklist[] = {"Fortnite", "CrosshairX"};
+static int explorer_blacklist_count = sizeof(explorer_blacklist) / sizeof(explorer_blacklist[0]);
+
+static const char* terminal_command_blacklist[] = {"Fortnite", "CrosshairX"};
+static int terminal_command_blacklist_count = sizeof(terminal_command_blacklist) / sizeof(terminal_command_blacklist[0]);
+
+static const char* alias_to_project(const char* alias) {
+    if (strcmp(alias, "-pc") == 0) return "Cprogram";
+    if (strcmp(alias, "-pv") == 0) return "VideoViewer";
+    if (strcmp(alias, "-pm") == 0) return "MusicPlayer";
+    if (strcmp(alias, "-pg") == 0) return "MinecraftModpack";
+    return NULL;
+}
+#endif
+
+
+/* === FILE: explorer.h === */
+#ifndef EXPLORER_H
+#define EXPLORER_H
+
+#include <windows.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <shellapi.h>
+#include "types.h"
+#include "helpers.h"
+extern HWND hPopupWnd;
+
+static void TriggerExplorer(HWND hPopupWnd) {
+    ZoxideOptions options = {
+        .prompt_title = "Enter zoxide query (EXPLORER)...",
+        .icon = "📁 Zoxide",
+        .open_neovide = false,
+        .open_yazi = false,
+        .open_explorer = true
+    };
+    TriggerZoxideWithOptions(&options);
+}
+
+#endif
+
+
+/* === FILE: factorio.h === */
+#include <fn.h>
+#include <windows.h>
+
+void create_tag() {
+    if (pixel_equals(1672, 200, 140, 140, 140)) {
+        
+        click(1672, 200);
+        
+        if (wait_for_pixel(1033,562,0,43,2)) {
+          
+          click_until_pixel(824, 463, 911, 22, 255, 230, 192, 0, 10);
+          
+          click(1198, 23);
+        }
+            
+    }
+}
+void search_factory() {
+    if (pixel_equals(1690, 75, 227, 227, 227, 10)) {
+        
+        click(1519, 1013);
+        
+        if (wait_for_pixel(1017, 327, 142, 142, 142, 4,10000)) {
+          
+          Sleep(200);
+          
+          click_until_pixel(861, 405, 965, 18, 49,48,49, 5, 10);
+          
+          click(1253, 20);
+        
+        }
+        
+        
+    }
+}
+
+
+/* === FILE: file_search.h === */
+#ifndef FILE_SEARCH_H
+#define FILE_SEARCH_H
+
+#include <windows.h>
+#include <stdio.h>
+#include <string.h>
+#include <shlwapi.h>
+#define MAX_FILES 2000
+
+typedef struct {
+    char name[256];
+    char path[MAX_PATH];
+} FileItem;
+
+static FileItem G_FILES[MAX_FILES];
+static int G_FILE_COUNT = 0;
+
+static char* SearchFileInDirectory(const char* directory, const char* search_string) {
+    if (!directory || !search_string || strlen(search_string) == 0) {
+        return NULL;
+    }
+
+    char search_path[MAX_PATH];
+    snprintf(search_path, sizeof(search_path), "%s\\*", directory);
+
+    WIN32_FIND_DATAA find_data;
+    HANDLE hFind = FindFirstFileA(search_path, &find_data);
+
+    if (hFind == INVALID_HANDLE_VALUE) {
+        return NULL;
+    }
+
+    static char found_path[MAX_PATH];  // Static so we can return it safely
+
+    do {
+        // Skip directories and hidden files
+        if (find_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+            continue;
+        }
+
+        // Check if the filename contains the search string (case-insensitive)
+        if (StrStrIA(find_data.cFileName, search_string) != NULL) {
+            snprintf(found_path, sizeof(found_path), "%s\\%s", directory, find_data.cFileName);
+            FindClose(hFind);
+            return found_path;
+        }
+    } while (FindNextFileA(hFind, &find_data));
+
+    FindClose(hFind);
+    return NULL;
+}
+static char* SearchFileRecursive(const char* directory, const char* search_string) {
+    if (!directory || !search_string || strlen(search_string) == 0) {
+        return NULL;
+    }
+
+    char search_path[MAX_PATH];
+    snprintf(search_path, sizeof(search_path), "%s\\*", directory);
+
+    WIN32_FIND_DATAA find_data;
+    HANDLE hFind = FindFirstFileA(search_path, &find_data);
+
+    if (hFind == INVALID_HANDLE_VALUE) {
+        return NULL;
+    }
+
+    static char found_path[MAX_PATH];
+
+    do {
+        // Skip . and ..
+        if (strcmp(find_data.cFileName, ".") == 0 || strcmp(find_data.cFileName, "..") == 0) {
+            continue;
+        }
+
+        char full_path[MAX_PATH];
+        snprintf(full_path, sizeof(full_path), "%s\\%s", directory, find_data.cFileName);
+
+        if (find_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+            // Recurse into subdirectories
+            char* result = SearchFileRecursive(full_path, search_string);
+            if (result != NULL) {
+                FindClose(hFind);
+                return result;
+            }
+        } else {
+            // Check if the filename contains the search string
+            if (StrStrIA(find_data.cFileName, search_string) != NULL) {
+                snprintf(found_path, sizeof(found_path), "%s", full_path);
+                FindClose(hFind);
+                return found_path;
+            }
+        }
+    } while (FindNextFileA(hFind, &find_data));
+
+    FindClose(hFind);
+    return NULL;
+}
+
+typedef struct {
+    char name[512];
+    char path[MAX_PATH];
+    FILETIME last_write;
+} FileItemWithTime;
+
+static FileItemWithTime G_FILES_WITH_TIME[MAX_FILES];
+
+static void GetFilesRecursiveWithTime(const char* dir_path, bool show_folder) {
+    char search_path[MAX_PATH];
+    snprintf(search_path, sizeof(search_path), "%s\\*", dir_path);
+
+    WIN32_FIND_DATAA find_data;
+    HANDLE hFind = FindFirstFileA(search_path, &find_data);
+
+    if (hFind == INVALID_HANDLE_VALUE) return;
+
+    do {
+        if (strcmp(find_data.cFileName, ".") == 0 || strcmp(find_data.cFileName, "..") == 0) {
+            continue;
+        }
+
+        char full_path[MAX_PATH];
+        snprintf(full_path, sizeof(full_path), "%s\\%s", dir_path, find_data.cFileName);
+
+        if (find_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+            if (StrCmpIA(find_data.cFileName, "node_modules") == 0 ||
+                StrCmpIA(find_data.cFileName, ".git") == 0 ||
+                StrCmpIA(find_data.cFileName, "bin") == 0 ||
+                StrCmpIA(find_data.cFileName, "obj") == 0 ||
+                StrCmpIA(find_data.cFileName, "build") == 0) {
+                continue;
+            }
+            GetFilesRecursiveWithTime(full_path, show_folder);
+        } else {
+            if (G_FILE_COUNT < MAX_FILES) {
+                char clean_name[256];
+                strncpy(clean_name, find_data.cFileName, sizeof(clean_name) - 1);
+                PathRemoveExtensionA(clean_name);
+
+                // Store the name with optional folder prefix
+                if (show_folder) {
+                    char folder_name[MAX_PATH];
+                    strncpy(folder_name, dir_path, sizeof(folder_name) - 1);
+                    char* last_backslash = strrchr(folder_name, '\\');
+                    if (last_backslash != NULL) {
+                        snprintf(G_FILES_WITH_TIME[G_FILE_COUNT].name, sizeof(G_FILES_WITH_TIME[G_FILE_COUNT].name), 
+                                 "%s/%s", last_backslash + 1, clean_name);
+                    } else {
+                        strncpy(G_FILES_WITH_TIME[G_FILE_COUNT].name, clean_name, 
+                                sizeof(G_FILES_WITH_TIME[G_FILE_COUNT].name) - 1);
+                    }
+                } else {
+                    strncpy(G_FILES_WITH_TIME[G_FILE_COUNT].name, clean_name, 
+                            sizeof(G_FILES_WITH_TIME[G_FILE_COUNT].name) - 1);
+                }
+
+                strncpy(G_FILES_WITH_TIME[G_FILE_COUNT].path, full_path, 
+                        sizeof(G_FILES_WITH_TIME[G_FILE_COUNT].path) - 1);
+                
+                // Store the last write time
+                G_FILES_WITH_TIME[G_FILE_COUNT].last_write = find_data.ftLastWriteTime;
+                G_FILE_COUNT++;
+            }
+        }
+    } while (FindNextFileA(hFind, &find_data) && G_FILE_COUNT < MAX_FILES);
+
+    FindClose(hFind);
+}
+static int CompareFileByTime(const void* a, const void* b) {
+    const FileItemWithTime* fa = (const FileItemWithTime*)a;
+    const FileItemWithTime* fb = (const FileItemWithTime*)b;
+    
+    // Compare FILETIME (most recent first)
+    // Returns -1 if a is newer, 1 if b is newer, 0 if same
+    __int64 time_a = ((__int64)fa->last_write.dwHighDateTime << 32) + fa->last_write.dwLowDateTime;
+    __int64 time_b = ((__int64)fb->last_write.dwHighDateTime << 32) + fb->last_write.dwLowDateTime;
+    
+    if (time_a > time_b) return -1;
+    if (time_a < time_b) return 1;
+    return 0;
+}
+
+static void SortFilesByTime(void) {
+    qsort(G_FILES_WITH_TIME, G_FILE_COUNT, sizeof(FileItemWithTime), CompareFileByTime);
+}
+
+static void GetFilesRecursive(const char* dir_path, bool show_folder) {
+    G_FILE_COUNT = 0;
+    GetFilesRecursiveWithTime(dir_path, show_folder);
+    SortFilesByTime();
+    
+    for (int i = 0; i < G_FILE_COUNT && i < MAX_FILES; i++) {
+        strncpy(G_FILES[i].name, G_FILES_WITH_TIME[i].name, sizeof(G_FILES[i].name) - 1);
+        G_FILES[i].name[sizeof(G_FILES[i].name) - 1] = '\0';
+        strncpy(G_FILES[i].path, G_FILES_WITH_TIME[i].path, sizeof(G_FILES[i].path) - 1);
+        G_FILES[i].path[sizeof(G_FILES[i].path) - 1] = '\0';
+    }
+}
+static void GetFilesByExtension(const char* dir_path, const char* extensions[], int ext_count) {
+    char search_path[MAX_PATH];
+    snprintf(search_path, sizeof(search_path), "%s\\*", dir_path);
+
+    WIN32_FIND_DATAA find_data;
+    HANDLE hFind = FindFirstFileA(search_path, &find_data);
+
+    if (hFind == INVALID_HANDLE_VALUE) return;
+
+    do {
+        if (strcmp(find_data.cFileName, ".") == 0 || strcmp(find_data.cFileName, "..") == 0) {
+            continue;
+        }
+
+        char full_path[MAX_PATH];
+        snprintf(full_path, sizeof(full_path), "%s\\%s", dir_path, find_data.cFileName);
+
+        if (find_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+            if (StrCmpIA(find_data.cFileName, "node_modules") == 0 ||
+                StrCmpIA(find_data.cFileName, ".git") == 0 ||
+                StrCmpIA(find_data.cFileName, "bin") == 0 ||
+                StrCmpIA(find_data.cFileName, "obj") == 0 ||
+                StrCmpIA(find_data.cFileName, "build") == 0) {
+                continue;
+            }
+            GetFilesByExtension(full_path, extensions, ext_count);
+        } else {
+            // Check if the file has a matching extension
+            char* ext = PathFindExtensionA(find_data.cFileName);
+            for (int i = 0; i < ext_count; i++) {
+                if (StrCmpIA(ext, extensions[i]) == 0) {
+                    if (G_FILE_COUNT < MAX_FILES) {
+                        strncpy(G_FILES[G_FILE_COUNT].name, find_data.cFileName, sizeof(G_FILES[G_FILE_COUNT].name) - 1);
+                        strncpy(G_FILES[G_FILE_COUNT].path, full_path, sizeof(G_FILES[G_FILE_COUNT].path) - 1);
+                        G_FILE_COUNT++;
+                    }
+                    break;
+                }
+            }
+        }
+    } while (FindNextFileA(hFind, &find_data) && G_FILE_COUNT < MAX_FILES);
+
+    FindClose(hFind);
+}
+// Add this to file_search.h:
+static FileItemWithTime* GetFileListWithTime(void) {
+    return G_FILES_WITH_TIME;
+}
+// Clear the file list
+static void ClearFileList(void) {
+    G_FILE_COUNT = 0;
+}
+
+// Get the file list
+static FileItem* GetFileList(void) {
+    return G_FILES;
+}
+
+// Get the file count
+static int GetFileCount(void) {
+    return G_FILE_COUNT;
+}
+
+#endif
+
+
+/* === FILE: focus_switcher.h === */
+#ifndef FOCUS_SWITCHER_H
+#define FOCUS_SWITCHER_H
+
+#include <windows.h>
+#include <stdio.h>
+#include <string.h>
+#include <shlwapi.h>
+#include "config.h"
+
+// ============================================================
+// FIND WINDOW BY EXE NAME
+// ============================================================
+
+static void FocusWindow(HWND hwnd) {
+    if (!hwnd || !IsWindow(hwnd)) return;
+    
+    HWND hForegroundWnd = GetForegroundWindow();
+    DWORD foregroundThreadID = GetWindowThreadProcessId(hForegroundWnd, NULL);
+    DWORD targetThreadID = GetWindowThreadProcessId(hwnd, NULL);
+    DWORD currentThreadID = GetCurrentThreadId();
+
+    if (foregroundThreadID != currentThreadID) {
+        AttachThreadInput(currentThreadID, foregroundThreadID, TRUE);
+    }
+    if (targetThreadID != currentThreadID) {
+        AttachThreadInput(currentThreadID, targetThreadID, TRUE);
+    }
+
+    if (IsIconic(hwnd)) {
+        ShowWindow(hwnd, SW_RESTORE);
+    } else {
+        ShowWindow(hwnd, SW_SHOW);
+    }
+
+    SetForegroundWindow(hwnd);
+    SetFocus(hwnd);
+    SetActiveWindow(hwnd);
+    BringWindowToTop(hwnd);
+
+    if (foregroundThreadID != currentThreadID) {
+        AttachThreadInput(currentThreadID, foregroundThreadID, FALSE);
+    }
+    if (targetThreadID != currentThreadID) {
+        AttachThreadInput(currentThreadID, targetThreadID, FALSE);
+    }
+    
+    printf("[FOCUS] Window focused!\n");
+}
+ 
+typedef struct {
+    const char* search_exe;
+    HWND result;
+} FindWindowData;
+
+static BOOL CALLBACK FindWindowByExeProc(HWND hwnd, LPARAM lParam) {
+    FindWindowData* data = (FindWindowData*)lParam;
+    DWORD processId = 0;
+    GetWindowThreadProcessId(hwnd, &processId);
+    
+    if (processId != 0 && IsWindowVisible(hwnd)) {
+        HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, processId);
+        if (hProcess) {
+            char exe_name[MAX_PATH] = {0};
+            DWORD size = MAX_PATH;
+            if (GetModuleBaseNameA(hProcess, NULL, exe_name, size)) {
+                printf("[DEBUG] Found exe: %s, searching for: %s\n", exe_name, data->search_exe);
+                if (StrStrIA(exe_name, data->search_exe) != NULL) {
+                    data->result = hwnd;
+                    CloseHandle(hProcess);
+                    return FALSE;
+                }
+            }
+            CloseHandle(hProcess);
+        }
+    }
+    return TRUE;
+}
+
+static bool FocusWindowByExe(const char* exe_name) {
+    printf("[DEBUG] FocusWindowByExe called with: %s\n", exe_name);
+    if (!exe_name || strlen(exe_name) == 0) return false;
+    
+    FindWindowData data;
+    data.search_exe = exe_name;
+    data.result = NULL;
+    
+    EnumWindows(FindWindowByExeProc, (LPARAM)&data);
+    
+    if (data.result) {
+        FocusWindow(data.result);
+        return true;
+    } else {
+        printf("[FOCUS] No window found with exe: %s\n", exe_name);
+        return false;
+    }
+}
+
+typedef struct {
+    const char* search_title;
+    HWND result;
+} FindWindowNigga;
+
+static BOOL CALLBACK FindWindowByPartialTitleProc(HWND hwnd, LPARAM lParam) {
+    FindWindowNigga* data = (FindWindowNigga*)lParam;
+    char window_title[256];
+    GetWindowTextA(hwnd, window_title, sizeof(window_title));
+    
+    if (IsWindowVisible(hwnd) && StrStrIA(window_title, data->search_title) != NULL) {
+        data->result = hwnd;
+        return FALSE;
+    }
+    return TRUE;
+}
+
+static HWND FindWindowByPartialTitle(const char* title) {
+    FindWindowNigga data;
+    data.search_title = title;
+    data.result = NULL;
+    EnumWindows(FindWindowByPartialTitleProc, (LPARAM)&data);
+    return data.result;
+}
+
+// ============================================================
+// FIND ANY WINDOW (by title list)
+// ============================================================
+static HWND FindAnyWindow(const char* titles[], int count) {
+    for (int i = 0; i < count; i++) {
+        printf("[FOCUS-DEBUG] Looking for: \"%s\"\n", titles[i]);
+        
+        // Try exact match first
+        HWND hwnd = FindWindowA(NULL, titles[i]);
+        if (hwnd != NULL && IsWindow(hwnd) && IsWindowVisible(hwnd)) {
+            printf("[FOCUS-DEBUG] FOUND (exact): \"%s\" (HWND: %p)\n", titles[i], (void*)hwnd);
+            return hwnd;
+        }
+        
+        // Try partial match
+        hwnd = FindWindowByPartialTitle(titles[i]);
+        if (hwnd != NULL && IsWindow(hwnd) && IsWindowVisible(hwnd)) {
+            char window_title[256];
+            GetWindowTextA(hwnd, window_title, sizeof(window_title));
+            printf("[FOCUS-DEBUG] FOUND (partial): \"%s\" (HWND: %p)\n", window_title, (void*)hwnd);
+            return hwnd;
+        }
+        
+        printf("[FOCUS-DEBUG] NOT FOUND: \"%s\"\n", titles[i]);
+    }
+    printf("[FOCUS-DEBUG] No matching windows found.\n");
+    return NULL;
+}
+
+// ============================================================
+// BLACKLIST CHECK
+// ============================================================
+static bool IsBlacklisted(const char* title, const char* blacklist[], int count) {
+    for (int i = 0; i < count; i++) {
+        if (StrStrIA(title, blacklist[i]) != NULL) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// ============================================================
+// HANDLE FOCUS SWITCHER HOTKEY
+// ============================================================
+static bool HandleFocusSwitcher(int vk_code, int modifiers, const char* current_title) {
+    for (int i = 0; i < FOCUS_SWITCHER_COUNT; i++) {
+        const FocusSwitcherBinding* binding = &G_FOCUS_SWITCHERS[i];
+        
+        if (binding->vk_code == vk_code && binding->modifiers == modifiers) {
+            if (IsBlacklisted(current_title, binding->blacklist, binding->blacklist_count)) {
+                printf("[FOCUS] Blacklisted window: %s\n", current_title);
+                return false;
+            }
+            
+              if (strcmp(binding->window_titles[0],"Alacritty") == 0) {
+                 if (FocusWindowByExe("alacritty.exe")) {
+                   return true;
+                 }else {
+                    HWND target = FindAnyWindow(binding->window_titles, binding->window_count);
+                    if (target) {
+                        FocusWindow(target);
+                    } else {
+                        printf("[FOCUS] No matching window found.\n");
+                    }
+                 }
+              }
+              
+        }
+    }
+    return false;
+}
+
+#endif
+
+
+/* === FILE: google_search.h === */
+#ifndef GOOGLE_SEARCH_H
+#define GOOGLE_SEARCH_H
+
+#include <windows.h>
+#include <stdio.h>
+#include <string.h>
+#include <shellapi.h>
+#include "types.h"
+
+extern HWND hPopupWnd;
+extern HWND hEditControl;
+extern HWND hListBox;
+extern bool selection_complete;
+extern char output_buffer[256];
+
+static void TriggerGoogleSearch() {
+    if (hPopupWnd != NULL && IsWindow(hPopupWnd)) {
+        return;
+    }
+
+    const char* empty_list[1] = { "Enter search query..." };
+    char* query = PromptUser(empty_list,"🔍 Google", 1, 220, 150,32,NULL,NULL,NULL,NULL,NULL);
+
+    if (query != NULL && strlen(query) > 0) {
+        // Build Google search URL
+        char url[512];
+        snprintf(url, sizeof(url), "https://www.google.com/search?q=%s", query);
+        
+        // URL encode spaces
+        for (int i = 0; url[i]; i++) {
+            if (url[i] == ' ') {
+                url[i] = '+';
+            }
+        }
+        
+        // Open in default browser
+        ShellExecuteWithVerb(url, "open", true);
+
+        const char* browser_classes[] = {
+            "Chrome_WidgetWin_1",  // Chrome
+            "MozillaWindowClass",   // Firefox
+            "IEFrame",              // Internet Explorer / Edge
+            "ApplicationFrameWindow" // Edge (new)
+        };
+
+        HWND hBrowser = NULL;
+        for (int i = 0; i < 4; i++) {
+            hBrowser = FindWindowA(browser_classes[i], NULL);
+            if (hBrowser && IsWindowVisible(hBrowser)) {
+                break;
+            }
+        }
+
+        if (hBrowser && IsWindow(hBrowser)) {
+            SetForegroundWindow(hBrowser);
+            SetActiveWindow(hBrowser);
+            SetFocus(hBrowser);
+            ShowWindow(hBrowser, SW_RESTORE);
+        }
+    }
+}
+
+#endif
+
+
+/* === FILE: helpers.h === */
+// helpers.h
+#ifndef HELPERS_H
+#define HELPERS_H
+
+#include <windows.h>
+#include <stdbool.h>
+#include <stdio.h>  
+#include <string.h> 
+#include <shlwapi.h>
+#include <stdlib.h>
+#include "types.h"  // This declares PromptUser
+#include "config.h"
+#include "common_ui.h"  // Include common_ui.h
+
+// ============================================================
+// HOTKEY HELPER
+// ============================================================
+
+typedef struct {
+    int vk_code;
+    int modifiers;
+    const char** blacklist;
+    int blacklist_count;
+    void (*trigger_func)(HWND);
+    const char* name;
+} HotkeyBinding;
+
+static bool HandleHotkey(const HotkeyBinding* binding, int pressed_vk, int modifiers,
+                         const char* current_title, bool alt, bool ctrl, bool shift) {
+    if (binding->vk_code != pressed_vk) return false;
+    
+    // Check modifiers match
+    int expected = binding->modifiers;
+    int actual = (alt ? HOTKEY_MOD_ALT : 0) | (ctrl ? HOTKEY_MOD_CTRL : 0) | (shift ? HOTKEY_MOD_SHIFT : 0);
+    if (expected != actual) return false;
+    
+    // Check blacklist
+    if (binding->blacklist && binding->blacklist_count > 0) {
+        for (int i = 0; i < binding->blacklist_count; i++) {
+            if (StrStrIA(current_title, binding->blacklist[i]) != NULL) {
+                return false;
+            }
+        }
+    }
+    
+    extern HWND hPopupWnd;
+    if (binding->trigger_func) {
+        binding->trigger_func(NULL);
+    }
+    return true;
+}
+
+// ============================================================
+// ZOXIDE HELPER
+// ============================================================
+
+typedef struct {
+    const char* prompt_title;
+    const char* icon;
+    bool open_neovide;
+    bool open_yazi;
+    bool open_explorer;
+} ZoxideOptions;
+
+static char* QueryZoxidePath(const char* query) {
+    char command[512];
+    snprintf(command, sizeof(command), "zoxide query %s", query);
+    
+    static char path[1024];
+    path[0] = '\0';
+    FILE* pipe = popen(command, "r");
+    if (pipe) {
+        fgets(path, sizeof(path), pipe);
+        pclose(pipe);
+        path[strcspn(path, "\r\n")] = '\0';
+    }
+    return (strlen(path) > 0) ? path : NULL;
+}
+
+// helpers.h - Fixed TriggerZoxideWithOptions
+static inline void TriggerZoxideWithOptions(const ZoxideOptions* options) {
+    extern HWND hPopupWnd;
+    if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
+    
+    const char* prompt[1] = { options->prompt_title };
+    
+    char* query = PromptUser(prompt, options->icon, 1, 220, 150, 32, 
+                             NULL, NULL, NULL, NULL, NULL);
+    
+    if (!query || strlen(query) == 0) return;
+    
+    char* path = QueryZoxidePath(query);
+    if (!path) {
+        printf("[ZOXIDE] No match found for: %s\n", query);
+        return;
+    }
+    
+    if (options->open_neovide) {
+        char cmd[2048];
+        snprintf(cmd, sizeof(cmd), "start neovide \"%s\"", path);
+        system(cmd);
+        printf("[ZOXIDE] Opened Neovide in: %s\n", path);
+    } else if (options->open_yazi) {
+        char cmd[2048];
+        snprintf(cmd, sizeof(cmd), "start alacritty --working-directory \"%s\" -e yazi", path);
+        system(cmd);
+        printf("[ZOXIDE] Opened Yazi in: %s\n", path);
+    } else if (options->open_explorer) {
+        ShellExecuteA(NULL, "open", "explorer.exe", path, NULL, SW_SHOWNORMAL);
+        printf("[ZOXIDE] Opened Explorer in: %s\n", path);
+    } else {
+        char cmd[2048];
+        snprintf(cmd, sizeof(cmd), "start alacritty --working-directory \"%s\"", path);
+        system(cmd);
+        printf("[ZOXIDE] Opened Alacritty in: %s\n", path);
+    }
+}
+
+// ============================================================
+// SHELL HELPER
+// ============================================================
+
+static bool ShellExecuteWithVerb(const char* path, const char* verb, bool async) {
+    SHELLEXECUTEINFOA sei = {0};
+    sei.cbSize = sizeof(SHELLEXECUTEINFOA);
+    sei.fMask = (async ? SEE_MASK_FLAG_NO_UI | SEE_MASK_ASYNCOK : SEE_MASK_FLAG_NO_UI);
+    sei.lpVerb = verb ? verb : "open";
+    sei.lpFile = path;
+    sei.nShow = SW_SHOWNORMAL;
+    return ShellExecuteExA(&sei);
+}
+
+static bool LaunchApp(const char* path) {
+    return ShellExecuteWithVerb(path, "open", true);
+}
+
+static bool LaunchAppAsAdmin(const char* path) {
+    return ShellExecuteWithVerb(path, "runas", true);
+}
+
+#endif // HELPERS_H
+
+
+/* === FILE: main.c === */
+#define _WIN32_WINNT 0x0601
+#include <windows.h>
+#include <commctrl.h>
+#include <psapi.h>
+#include <gdiplus.h>
+#include <stdio.h>
+#include <shellapi.h>
+#include <stdbool.h>
+#include <process.h>
+#include <shlwapi.h> 
+#include "types.h"
+#include "config.h"
+#include "common_ui.h"
+#include "calc.h"
+#include "window_switcher.h"
+#include "video_player.h"
+#include "music_player.h"
+#include "timer.h"
+#include "bindings.h"
+#include "explorer.h"
+#include "screenshot.h"
+#include "terminal_command.h"
+#include "todo.h"
+#include "zoxide.h"
+#include "nvim_zoxide.h"
+#include "yazi_zoxide.h"
+#include "pos_handler.h"
+#include "focus_switcher.h"
+#include "color_handler.h"
+#include "minecraft.h"
+#include "pixel_equals_handler.h"
+#include "wait_for_pixel_handler.h"
+#include "region_handler.h"
+#include "google_search.h"
+#include "factorio.h"
+#include "app_launcher.h"
+#include "process_killer.h"
+#pragma comment(lib, "Shlwapi.lib") // Tells the compiler to link the shlwapi library
+#define ID_TRAY_ICON 1001
+#define WM_TRAYICON (WM_USER + 1)
+#define WM_TRIGGER_UNIVERSAL_MACRO (WM_USER + 3)
+#define ID_EXIT 2001
+#define IDC_INPUT_BOX 101
+#define IDC_LIST_BOX 102
+#define COLOR_BG      RGB(30, 34, 42)    // A pretty slate-gray/dark background
+#define COLOR_TEXT    RGB(220, 223, 228)  // A crisp, clean off-white text
+#define TODO_FILE_PATH "todo.txt"
+#define WM_TRIGGER_IMG_CAPTURE (WM_USER + 2)
+HWND hGlobalTrayWnd = NULL; // Tracks the hidden tray window
+HWND hPopupWnd = NULL;
+HWND hEditControl = NULL;
+HWND hListBox = NULL;
+char output_buffer[256] = {0};
+bool selection_complete = false;
+int region_step = 0; 
+long saved_x1 = 0;
+long saved_y1 = 0;
+long img_x2 = 0, img_y2 = 0; // Add this line if it isn't there!
+                             // 
+static ULONG_PTR g_gdiplusToken = 0;
+#pragma comment(lib, "gdiplus.lib")
+
+static RefreshCallback g_refresh_callback = NULL;
+static EnterCallback g_enter_callback = NULL;
+static CtrlEnterCallback g_ctrl_enter_callback = NULL;
+static TabCallback g_tab_callback = NULL;
+static RenderCallback g_render_callback = NULL;
+static const char** g_initial_items = NULL;
+static int g_initial_count = 0;
+static const char* g_title = NULL;
+// --- GLOBAL VARIABLES FOR THE IMAGE CAPTURE ---
+int img_region_step = 0;
+long img_x1 = 0, img_y1 = 0;
+
+// SPECIFY YOUR CHOSEN PATH HERE (Make sure the path ends with a backslash!)
+const char* BASE_SAVE_FOLDER_PATH = "C:\\Users\\HP\\Pictures\\Screenshots\\";
+
+static ULONGLONG g_timer_start_ms = 0;
+
+// Call this once at the very beginning of your main() function
+void StartUniversalTimer() {
+    g_timer_start_ms = GetTickCount64();
+}
+
+// Resets the timer back to 0.0 seconds
+void ResetUniversalTimer() {
+    g_timer_start_ms = GetTickCount64();
+    printf("[TIMER] Reset successfully.\n");
+}
+
+// Modifies the timer by adding or subtracting seconds (can pass negative values)
+void ModifyUniversalTimer(double seconds_to_add) {
+    // Convert seconds to milliseconds and offset our baseline
+    LONGLONG ms_offset = (LONGLONG)(seconds_to_add * 1000.0);
+    g_timer_start_ms -= ms_offset; 
+    printf("[TIMER] Modified baseline by %.2f seconds.\n", seconds_to_add);
+}
+
+// Returns the total elapsed seconds as a high-precision decimal (e.g., 12.345)
+double GetUniversalTimeSeconds() {
+    ULONGLONG current_ms = GetTickCount64();
+    
+    // Safety guard in case the baseline was modified past current time
+    if (current_ms < g_timer_start_ms) {
+        return 0.0;
+    }
+    
+    ULONGLONG elapsed_ms = current_ms - g_timer_start_ms;
+    return (double)elapsed_ms / 1000.0;
+}
+static bool IsWindowBlacklisted(const char* window_title, const char* blacklist[], int count) {
+    for (int i = 0; i < count; i++) {
+        if (StrStrIA(window_title, blacklist[i]) != NULL) {
+            return true;
+        }
+    }
+    return false;
+}
+BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam) {
+    WindowList* myList = (WindowList*)lParam;
+
+    // Fast memory-only checks
+    if (!IsWindowVisible(hwnd) || GetWindowTextLengthA(hwnd) == 0) {
+        return TRUE;
+    }
+
+    if (myList->count >= myList->capacity) {
+        return FALSE; 
+    }
+
+    WindowData* currentItem = &myList->items[myList->count];
+    currentItem->hwnd = hwnd;
+
+    // FAST: Grabs title string directly from internal window manager cache
+    GetWindowTextA(hwnd, currentItem->title, sizeof(currentItem->title));
+    
+    // LEAVE EXE BLANK FOR NOW
+    currentItem->exe[0] = '\0'; 
+
+    myList->count++;
+    return TRUE;
+}
+
+LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
+    HWND hParent = GetParent(hwnd);
+    HWND hListBox = GetDlgItem(hParent, IDC_LIST_BOX);
+    HWND hEditControl = hwnd;
+
+    if (msg == WM_KEYDOWN) {
+        // --- ARROW KEY ROUTING ---
+        if (wParam == VK_UP || wParam == VK_DOWN) {
+            if (hListBox != NULL) {
+                int count = SendMessageA(hListBox, LB_GETCOUNT, 0, 0);
+                int sel = SendMessageA(hListBox, LB_GETCURSEL, 0, 0);
+                
+                if (count > 0) {
+                    if (sel == LB_ERR) {
+                        sel = 0;
+                    } else {
+                        if (wParam == VK_UP) {
+                            sel = (sel > 0) ? sel - 1 : 0;
+                        } else {
+                            sel = (sel < count - 1) ? sel + 1 : count - 1;
+                        }
+                    }
+                    SendMessageA(hListBox, LB_SETCURSEL, sel, 0);
+                    SendMessageA(hParent, WM_COMMAND, MAKEWPARAM(IDC_LIST_BOX, LBN_SELCHANGE), (LPARAM)hListBox);
+                }
+            }
+            return 0;
+        }
+
+        // --- ENTER KEY ---
+        if (wParam == VK_RETURN) {
+            bool ctrl_pressed = (GetKeyState(VK_CONTROL) & 0x8000);
+            output_buffer[0] = '\0';
+            int selected_index = LB_ERR;
+
+            if (hListBox != NULL) {
+                selected_index = SendMessageA(hListBox, LB_GETCURSEL, 0, 0);
+            }
+
+            if (selected_index != LB_ERR && hListBox != NULL) {
+                SendMessageA(hListBox, LB_GETTEXT, selected_index, (LPARAM)output_buffer);
+            } else {
+                GetWindowTextA(hwnd, output_buffer, sizeof(output_buffer));
+            }
+
+            if (ctrl_pressed) {
+                if (g_ctrl_enter_callback != NULL) {
+                    g_ctrl_enter_callback(output_buffer);
+                }
+                if (g_refresh_callback != NULL) {
+                    char current_filter[256] = {0};
+                    GetWindowTextA(hEditControl, current_filter, sizeof(current_filter));
+                    g_refresh_callback(current_filter, hListBox);
+                }
+                return 0;
+            } else {
+                if (g_enter_callback != NULL) {
+                    g_enter_callback(output_buffer);
+                }
+                selection_complete = true; 
+                return 0;
+            }
+        }
+
+        // --- ESCAPE KEY ---
+        if (wParam == VK_ESCAPE) {
+            output_buffer[0] = '\0'; 
+            selection_complete = true;  
+            return 0;
+        }
+
+        // --- TAB KEY ---
+        if (wParam == VK_TAB) {
+            if (g_tab_callback != NULL) {
+                g_tab_callback();
+            }
+            return 0;
+        }
+    }
+    
+    return DefSubclassProc(hwnd, msg, wParam, lParam);
+}
+      
+HFONT CreateCustomNerdFont(int height, const char* face_name) {
+    return CreateFontA(
+        height, 0, 0, 0, FW_NORMAL,
+        FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+        CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE,
+        face_name
+    );
+}
+LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+    switch (msg) {
+      case WM_CTLCOLOREDIT:
+        case WM_CTLCOLORLISTBOX: {
+            HDC hdc = (HDC)wParam;
+            SetTextColor(hdc, COLOR_TEXT);
+            SetBkColor(hdc, COLOR_BG);
+            return (LRESULT)CreateSolidBrush(COLOR_BG);
+        }
+        case WM_COMMAND: {
+            if (LOWORD(wParam) == IDC_INPUT_BOX && HIWORD(wParam) == EN_CHANGE) {
+                if (hEditControl && hListBox) {
+                    char input_buffer[256] = {0};
+                    GetWindowTextA(hEditControl, input_buffer, sizeof(input_buffer));
+                    
+                    if (g_refresh_callback != NULL) {
+                        g_refresh_callback(input_buffer, hListBox);
+                    } else {
+                        // Fallback: generic filtering
+                        SendMessageA(hListBox, LB_RESETCONTENT, 0, 0);
+                        if (strlen(input_buffer) == 0) {
+                            for (int i = 0; i < g_initial_count; i++) {
+                                SendMessageA(hListBox, LB_ADDSTRING, 0, (LPARAM)g_initial_items[i]);
+                            }
+                        } else {
+                            for (int i = 0; i < g_initial_count; i++) {
+                                if (StrStrIA(g_initial_items[i], input_buffer) != NULL) {
+                                    SendMessageA(hListBox, LB_ADDSTRING, 0, (LPARAM)g_initial_items[i]);
+                                }
+                            }
+                        }
+                        SendMessageA(hListBox, LB_SETCURSEL, 0, 0);
+                    }
+                }
+            }
+            break;
+        }
+        case WM_MEASUREITEM: {
+            MEASUREITEMSTRUCT* pmis = (MEASUREITEMSTRUCT*)lParam;
+            if (pmis->CtlID == IDC_LIST_BOX) {
+                pmis->itemHeight = 32;
+                return TRUE;
+            }
+            break;
+        }
+        case WM_DRAWITEM: {
+            DRAWITEMSTRUCT* pdis = (DRAWITEMSTRUCT*)lParam;
+            if (pdis->CtlID == IDC_LIST_BOX && pdis->itemID != -1) {
+                char textBuffer[512];
+                SendMessageA(pdis->hwndItem, LB_GETTEXT, pdis->itemID, (LPARAM)textBuffer);
+                
+                // Draw background
+                HBRUSH hBgBrush;
+                if (pdis->itemState & ODS_SELECTED) {
+                    hBgBrush = CreateSolidBrush(RGB(50, 56, 68));
+                } else {
+                    hBgBrush = CreateSolidBrush(COLOR_BG);
+                }
+                FillRect(pdis->hDC, &pdis->rcItem, hBgBrush);
+                DeleteObject(hBgBrush);
+                
+                SetBkMode(pdis->hDC, TRANSPARENT);
+                
+                if (g_render_callback != NULL) {
+                    // Feature-specific rendering
+                    g_render_callback(pdis->hDC, textBuffer, &pdis->rcItem, (pdis->itemState & ODS_SELECTED));
+                } else {
+                    // Default rendering
+                    SetTextColor(pdis->hDC, pdis->itemState & ODS_SELECTED ? RGB(255,255,255) : COLOR_TEXT);
+                    RECT textRect = pdis->rcItem;
+                    textRect.left += 10;
+                    DrawTextA(pdis->hDC, textBuffer, -1, &textRect, DT_SINGLELINE | DT_VCENTER);
+                }
+                
+                return TRUE;
+            }
+            break;
+        }
+      case WM_PAINT: {
+          PAINTSTRUCT ps;
+          HDC hdc = BeginPaint(hwnd, &ps);
+          
+          HBRUSH hBrush = CreateSolidBrush(COLOR_BG);
+          FillRect(hdc, &ps.rcPaint, hBrush);
+          DeleteObject(hBrush);
+          
+          if (g_title != NULL && strlen(g_title) > 0) {
+              // Convert the title to wide characters (Unicode)
+              wchar_t wtitle[256];
+              MultiByteToWideChar(CP_UTF8, 0, g_title, -1, wtitle, 256);
+              
+              // Use Segoe UI Emoji for colored emojis
+              HFONT hTitleFont = CreateFontW(24, 0, 0, 0, FW_NORMAL,
+                                             FALSE, FALSE, FALSE,
+                                             DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+                                             CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE,
+                                             L"0x Proto Nerd Font");
+              HFONT hOldFont = (HFONT)SelectObject(hdc, hTitleFont);
+              
+              SetBkMode(hdc, TRANSPARENT);
+              SetTextColor(hdc, RGB(200, 200, 210));
+              
+              RECT rect;
+              GetClientRect(hwnd, &rect);
+              
+              SIZE sz;
+              GetTextExtentPoint32W(hdc, wtitle, (int)wcslen(wtitle), &sz);
+              
+              RECT titleRect;
+              titleRect.left = rect.right - sz.cx - 20;
+              titleRect.top = 10;
+              titleRect.right = rect.right - 10;
+              titleRect.bottom = rect.top + sz.cy + 15;
+              
+              // Use DrawTextW instead of DrawTextA
+              DrawTextW(hdc, wtitle, -1, &titleRect, DT_LEFT | DT_TOP);
+              
+              SelectObject(hdc, hOldFont);
+              DeleteObject(hTitleFont);
+          }
+          
+          EndPaint(hwnd, &ps);
+          break;
+      }
+                       
+        default:
+            return DefWindowProcA(hwnd, msg, wParam, lParam);
+    }
+    return 0;
+}
+    POINT ptPrimary = { 0, 0 }; 
+
+void CalculateWindowMetrics(int count, WindowLayout* layout,int height , int width,int item_height) {
+    POINT ptPrimary = { 0, 0 }; 
+    HMONITOR hMonitor = MonitorFromPoint(ptPrimary, MONITOR_DEFAULTTOPRIMARY);
+
+    MONITORINFO mi = {0};
+    mi.cbSize = sizeof(MONITORINFO);
+    GetMonitorInfoA(hMonitor, &mi);
+
+    int monitorWidth = mi.rcMonitor.right - mi.rcMonitor.left;
+    int monitorHeight = mi.rcMonitor.bottom - mi.rcMonitor.top;
+    
+    layout->w = 900;          
+    layout->item_height = item_height; 
+
+    // Dynamically scale window height based on exact todo item counts
+    layout->h = 95 + (count > 0 ? (count * layout->item_height) : 0); 
+
+    // Cap the maximum layout frame size so it never stretches past screen bounds
+    if (layout->h < height) layout->h = height;
+    if (layout->h > width) layout->h = width; 
+
+    layout->x = mi.rcMonitor.left + (monitorWidth - layout->w) / 2;
+    layout->y = mi.rcMonitor.top + (monitorHeight - layout->h) / 2;
+}// 2. Safely generate font engine assets
+LRESULT CALLBACK ListBoxSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
+    if (msg == WM_NCCALCSIZE && wParam == TRUE) {
+        // Intercepting this completely hides the physical scrollbar track 
+        // without disabling the underlying keyboard scrolling mechanics.
+        return 0; 
+    }
+    return DefSubclassProc(hwnd, msg, wParam, lParam);
+}
+// 3. Spawn child elements (Edit field + Listbox options)
+void CreateChildControls(HWND hwndParent, HFONT hFont, const char* list[], int count, const WindowLayout* layout) {
+    HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtrA(hwndParent, GWLP_HINSTANCE);
+
+    // Create the search input box
+    hEditControl = CreateWindowExA(
+        0, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
+        20, 34, layout->w - 40, 40, hwndParent, (HMENU)IDC_INPUT_BOX, hInstance, NULL
+    );
+    SendMessageA(hEditControl, WM_SETFONT, (WPARAM)hFont, TRUE);
+    SetWindowSubclass(hEditControl, EditSubclassProc, 0, 0);
+
+    // Create and fill the list options container
+    if (count > 0) {
+        // Keep standard dimensions, keep WS_VSCROLL active so arrow indices shift pages
+        hListBox = CreateWindowExA(
+            0, "LISTBOX", "", 
+            WS_CHILD | WS_VISIBLE | LBS_NOTIFY | WS_VSCROLL | LBS_HASSTRINGS | LBS_OWNERDRAWFIXED,
+            20, 105, layout->w - 40, layout->h - 115, hwndParent, (HMENU)IDC_LIST_BOX, hInstance, NULL
+        );
+        // BIND SUBCLASS HERE: Kills the visual scroll track on calculations
+        SetWindowSubclass(hListBox, ListBoxSubclassProc, 0, 0);
+
+        SendMessageA(hListBox, WM_SETFONT, (WPARAM)hFont, TRUE);
+        SendMessageA(hListBox, LB_SETITEMHEIGHT, 0, layout->item_height);
+
+        // Find the maximum string length to map the horizontal scrolling range accurately
+        int max_width = layout->w - 40;
+        HDC hdc = GetDC(hListBox);
+        HFONT hOldFont = (HFONT)SelectObject(hdc, hFont);
+        
+        for (int i = 0; i < count; i++) {
+            SendMessageA(hListBox, LB_ADDSTRING, 0, (LPARAM)list[i]);
+            
+            SIZE sz;
+            GetTextExtentPoint32A(hdc, list[i], (int)strlen(list[i]), &sz);
+            if (sz.cx + 40 > max_width) {
+                max_width = sz.cx + 40; 
+            }
+        }
+        
+        SelectObject(hdc, hOldFont);
+        ReleaseDC(hListBox, hdc);
+
+        SendMessageA(hListBox, LB_SETHORIZONTALEXTENT, max_width, 0);
+    }
+}
+void ForceWindowFocus(HWND hwndTarget, HWND hwndInput) {
+    HWND hForegroundWnd = GetForegroundWindow();
+    DWORD foregroundThreadID = GetWindowThreadProcessId(hForegroundWnd, NULL);
+    DWORD currentThreadID = GetCurrentThreadId();
+
+    if (foregroundThreadID != currentThreadID && foregroundThreadID != 0) {
+        AttachThreadInput(currentThreadID, foregroundThreadID, TRUE);
+    }
+
+    ShowWindow(hwndTarget, SW_SHOW);
+    SetForegroundWindow(hwndTarget);
+    SetActiveWindow(hwndTarget);
+    
+    SetFocus(hwndInput);
+    SendMessageA(hwndInput, WM_ACTIVATE, WA_ACTIVE, 0);
+
+    if (foregroundThreadID != currentThreadID && foregroundThreadID != 0) {
+        AttachThreadInput(currentThreadID, foregroundThreadID, FALSE);
+    }
+}
+
+void SaveRegionToPNG(int x1, int y1, int x2, int y2, const char* fullPath) {
+    int width = abs(x2 - x1);
+    int height = abs(y2 - y1);
+    if (width == 0 || height == 0) return;
+
+    // 1. Capture specific screen coordinates out of the global desktop DC context
+    HDC hScreenDC = GetDC(NULL);
+    HDC hMemoryDC = CreateCompatibleDC(hScreenDC);
+    HBITMAP hBitmap = CreateCompatibleBitmap(hScreenDC, width, height);
+    HGDIOBJ hOldBitmap = SelectObject(hMemoryDC, hBitmap);
+
+    // Transfer pixels from video memory instantly
+    BitBlt(hMemoryDC, 0, 0, width, height, hScreenDC, (x1 < x2 ? x1 : x2), (y1 < y2 ? y1 : y2), SRCCOPY);
+
+    // 2. Convert HBITMAP structures into a real C-flat GpBitmap object
+    GpBitmap* pBitmap = NULL;
+    GdipCreateBitmapFromHBITMAP(hBitmap, NULL, &pBitmap);
+
+    if (pBitmap != NULL) {
+        // 3. Look up standard PNG Encoder CLSID system parameters
+        CLSID pngClsid;
+        UINT num = 0, size = 0;
+        GdipGetImageEncodersSize(&num, &size); 
+        
+        ImageCodecInfo* pImageCodecInfo = (ImageCodecInfo*)(malloc(size));
+        if (pImageCodecInfo != NULL) {
+            GdipGetImageEncoders(num, size, pImageCodecInfo); 
+            for (UINT j = 0; j < num; ++j) {
+                if (wcscmp(pImageCodecInfo[j].MimeType, L"image/png") == 0) {
+                    pngClsid = pImageCodecInfo[j].Clsid;
+                    break;
+                }
+            }
+            free(pImageCodecInfo);
+        }
+
+        // 4. Convert filename path string format into standard structural Wide-Chars
+        wchar_t wPath[512];
+        MultiByteToWideChar(CP_ACP, 0, fullPath, -1, wPath, 512);
+
+        // Save image asset safely down onto disk using Flat C API function calls
+        GdipSaveImageToFile((GpImage*)pBitmap, wPath, &pngClsid, NULL);
+        
+        // Dispose of the bitmap object handle directly
+        GdipDisposeImage((GpImage*)pBitmap);
+    }
+
+    // 5. Complete memory clean up sweeps to protect RAM profiles
+    SelectObject(hMemoryDC, hOldBitmap);
+    DeleteObject(hBitmap);
+    DeleteDC(hMemoryDC);
+    ReleaseDC(NULL, hScreenDC);
+}
+
+char* PromptUser(const char* window_list[],const char* window_title,int count, int height, int width, int item_height,
+                 RefreshCallback refresh_callback, 
+                 EnterCallback enter_callback,
+                 CtrlEnterCallback ctrl_enter_callback,
+                 TabCallback tab_callback,
+                 RenderCallback render_callback) {
+    HINSTANCE hInstance = GetModuleHandle(NULL);
+    selection_complete = false;
+    output_buffer[0] = '\0';
+    g_initial_items = window_list;
+    g_initial_count = count;
+    g_refresh_callback = refresh_callback;
+    g_enter_callback = enter_callback;
+    g_ctrl_enter_callback = ctrl_enter_callback;
+    g_tab_callback = tab_callback;
+    g_render_callback = render_callback;
+    g_title = window_title;
+
+    printf("[DEBUG-UI] PromptUser called. Count: %d\n", count);
+
+    WindowLayout layout;
+    CalculateWindowMetrics(count, &layout, height, width, item_height);
+    printf("[DEBUG-UI] Calculated Metrics -> x: %d, y: %d, w: %d, h: %d\n", layout.x, layout.y, layout.w, layout.h);
+    
+    HFONT hCustomFont = CreateCustomNerdFont(24, "0xProto Nerd Font");
+
+    printf("[DEBUG-UI] Attempting to create window with class 'QuickSwitcherModalClass'...\n");
+    hPopupWnd = CreateWindowExA(
+        WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED, 
+        "QuickSwitcherModalClass", NULL, WS_POPUP, 
+        layout.x, layout.y, layout.w, layout.h, NULL, NULL, hInstance, NULL
+    );
+
+    if (hPopupWnd == NULL) {
+        DWORD err = GetLastError();
+        printf("[DEBUG-UI] CRITICAL FAILURE: CreateWindowExA returned NULL! System Error Code: %lu\n", err);
+        if (err == 1407) {
+            printf("[DEBUG-UI] -> Error 1407 means 'Cannot find window class'. Your main() registration failed or was unregistered!\n");
+        }
+        DeleteObject(hCustomFont);
+        return NULL;
+    }
+    printf("[DEBUG-UI] Window created successfully. Handle: %p\n", (void*)hPopupWnd);
+
+    SetLayeredWindowAttributes(hPopupWnd, 0, 245, LWA_ALPHA);
+    CreateChildControls(hPopupWnd, hCustomFont, window_list, count, &layout);
+    ForceWindowFocus(hPopupWnd, hEditControl);
+
+    // ============================================================
+    // DRAW THE window_title IN THE TOP-RIGHT CORNER
+    // ============================================================
+    if (window_title != NULL && strlen(window_title) > 0) {
+        HDC hdc = GetDC(hPopupWnd);
+        HFONT hwindow_titleFont = CreateCustomNerdFont(20, "0xProto Nerd Font");
+        HFONT hOldFont = (HFONT)SelectObject(hdc, hwindow_titleFont);
+        
+        SetBkMode(hdc, TRANSPARENT);
+        SetTextColor(hdc, RGB(255, 255, 255));
+        
+        RECT rect;
+        GetClientRect(hPopupWnd, &rect);
+        
+        // Calculate text size
+        SIZE sz;
+        GetTextExtentPoint32A(hdc, window_title, (int)strlen(window_title), &sz);
+        
+        // Position: top-right with some padding
+        rect.left = rect.right - sz.cx - 20;
+        rect.top = 10;
+        rect.bottom = rect.top + sz.cy + 10;
+        
+        DrawTextA(hdc, window_title, -1, &rect, DT_LEFT | DT_TOP);
+        
+        SelectObject(hdc, hOldFont);
+        DeleteObject(hwindow_titleFont);
+        ReleaseDC(hPopupWnd, hdc);
+    }
+
+    printf("[DEBUG-UI] Entering local message modal loop...\n");
+    MSG msg;
+    int loop_counter = 0;
+    while (!selection_complete) {
+        if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+            loop_counter++;
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        } else {
+            Sleep(10);
+        }
+    }
+    printf("[DEBUG-UI] Left local loop. Processed %d messages.\n", loop_counter);
+
+    CheckAndBlockIfPopupActive(hPopupWnd);
+    
+    printf("[DEBUG-UI] Flushing trailing queue entries...\n");
+    while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+    }
+
+    DeleteObject(hCustomFont); 
+    selection_complete = false;
+    g_refresh_callback = NULL;
+    g_enter_callback = NULL;
+    g_ctrl_enter_callback = NULL;
+    g_tab_callback = NULL;
+    g_render_callback = NULL;
+
+    printf("[DEBUG-UI] Returning from PromptUser. Buffer Length: %zu\n", strlen(output_buffer));
+    return (strlen(output_buffer) > 0) ? output_buffer : NULL;
+}
+
+LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+    switch (msg) {
+        case WM_CREATE: {
+            NOTIFYICONDATA nid = {0};
+            nid.cbSize = sizeof(NOTIFYICONDATA);
+            nid.hWnd = hwnd;
+            nid.uID = ID_TRAY_ICON;
+            nid.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
+            nid.uCallbackMessage = WM_TRAYICON;
+            
+            nid.hIcon = (HICON)LoadImage(NULL,
+                             TEXT(IconPath), 
+                             IMAGE_ICON, 
+                             0, 0, 
+                             LR_LOADFROMFILE | LR_DEFAULTSIZE);
+            lstrcpy(nid.szTip, "Switch Window");
+
+            Shell_NotifyIcon(NIM_ADD, &nid);
+            break;
+        }
+        
+        case WM_TRAYICON: {
+            if (lParam == WM_RBUTTONUP) {
+                POINT pt;
+                GetCursorPos(&pt);
+                
+                HMENU hMenu = CreatePopupMenu();
+                AppendMenu(hMenu, MF_STRING, ID_EXIT, "Exit");
+                
+                SetForegroundWindow(hwnd);
+                TrackPopupMenu(hMenu, TPM_BOTTOMALIGN | TPM_RIGHTALIGN, pt.x, pt.y, 0, hwnd, NULL);
+                DestroyMenu(hMenu);
+            }
+            break;
+        }
+        
+        case WM_TRIGGER_IMG_CAPTURE: {
+            printf("[DEBUG-WNDPROC] Core tray window thread intercepted WM_TRIGGER_IMG_CAPTURE successfully!\n");
+            const char* empty_list[1] = { "" };
+            
+            printf("[DEBUG-WNDPROC] Handing control off to PromptUser...\n");
+            char* raw_name = PromptUser(empty_list,"Boring", 0, 220, 550,32,NULL,NULL,NULL,NULL,NULL);
+            printf("[DEBUG-WNDPROC] Returned back to WndProc execution sequence.\n");
+
+            if (raw_name != NULL && strlen(raw_name) > 0) {
+                char final_file_path[512];
+                snprintf(final_file_path, sizeof(final_file_path), "%s%s.png", BASE_SAVE_FOLDER_PATH, raw_name);
+                
+                printf("[DEBUG-WNDPROC] Saving pixel buffer bounds: (%ld,%ld) to (%ld,%ld)\n", img_x1, img_y1, img_x2, img_y2);
+                SaveRegionToPNG((int)img_x1, (int)img_y1, (int)img_x2, (int)img_y2, final_file_path);
+                printf("[IMG REGION] Successfully rendered output file to: %s\n", final_file_path);
+            } else {
+                printf("[DEBUG-WNDPROC] Screenshot save aborted because raw_name is null/empty.\n");
+            }
+            break;
+        }
+        
+        case WM_TRIGGER_UNIVERSAL_MACRO: {
+            MacroAction macroAction = (MacroAction)wParam;
+            int macroDelay = (int)lParam;
+            
+            printf("[MACRO-WNDPROC] Received WM_TRIGGER_UNIVERSAL_MACRO in WndProc! action=%d, delay=%d\n", macroAction, macroDelay);
+            printf("[MACRO-WNDPROC] hwnd=%p\n", hwnd);
+            
+            switch(macroAction) {
+            case MACRO_NONE: {
+                printf("[MACRO] ACTION_NONE received - ignoring\n");
+                break;
+            }
+              case MACRO_FACTORIO_MAKE_TAG: {
+                    create_tag();
+                  }
+                                            
+              case MACRO_FACTORIO_SEARCH_FACTORY: {
+                    search_factory();
+                  }
+              // In WndProc WM_TRIGGER_UNIVERSAL_MACRO case:
+              case MACRO_MINECRAFT_COPY: {
+                  minecraft_type_command("//copy");
+                  break;
+              }
+
+              case MACRO_MINECRAFT_PASTE: {
+                  minecraft_type_command("//paste -a");
+                  break;
+              }
+
+              case MACRO_MINECRAFT_UNDO: {
+                  minecraft_type_command("//undo");
+                  break;
+              }
+
+              case MACRO_MINECRAFT_UP: {
+                  minecraft_type_command("//up 1");
+                  break;
+              }
+
+              case MACRO_MINECRAFT_ROTATE: {
+                  minecraft_type_command("//rotate 90");
+                  break;
+              }
+            }
+            
+            break;
+        }
+        
+        case WM_COMMAND: {
+            if (LOWORD(wParam) == ID_EXIT) {
+                PostQuitMessage(0);
+            }
+            break;
+        }
+        
+        case WM_DESTROY: {
+            NOTIFYICONDATA nid = {0};
+            nid.cbSize = sizeof(NOTIFYICONDATA);
+            nid.hWnd = hwnd;
+            nid.uID = ID_TRAY_ICON;
+            Shell_NotifyIcon(NIM_DELETE, &nid);
+            PostQuitMessage(0);
+            break;
+        }
+        
+        default:
+            return DefWindowProc(hwnd, msg, wParam, lParam);
+    }
+    return 0;
+}
+
+
+void ClearMdFile(const char* FILE_PATH) {
+    // Opening with "w" instantly deletes everything inside the file
+    FILE* file = fopen(FILE_PATH, "w");
+    
+    if (!file) {
+        printf("[ERROR] Failed to open file for clearing: %s\n", FILE_PATH);
+        return;
+    }
+
+    // Closing it immediately leaves it perfectly blank (0 bytes)
+    fclose(file);
+    
+    printf("[DEBUG] File '%s' successfully cleared.\n", FILE_PATH);
+}
+
+HHOOK hKeyboardHook = NULL;
+#include <shlwapi.h>
+#pragma comment(lib, "Shlwapi.lib")
+
+int InitializeTrayIcon() {
+    HINSTANCE hInstance = GetModuleHandle(NULL);
+    if (TRAY) {
+        WNDCLASS wc = {0};
+        wc.lpfnWndProc = WndProc;
+        wc.hInstance = hInstance;
+        wc.lpszClassName = "TrayAppClass";
+
+        if (!RegisterClass(&wc)) return -1;
+
+        // Save the window handle to the global variable
+        hGlobalTrayWnd = CreateWindow(
+            wc.lpszClassName, "TrayApp", 
+            WS_OVERLAPPEDWINDOW, 
+            CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, 
+            NULL, NULL, hInstance, NULL
+        );
+
+        if (!hGlobalTrayWnd) return -1;
+    }
+    return 0;
+}
+
+void StripCheckboxes(char* str) {
+    char* read_ptr = str;
+    char* write_ptr = str;
+    bool is_first = true;
+
+    while (*read_ptr != '\0') {
+        if (strncmp(read_ptr, "- [ ] ", 6) == 0) {
+            if (!is_first) {
+                *write_ptr = ','; // Only add a comma if it's NOT the first item
+                write_ptr++;
+            }
+            is_first = false; 
+            read_ptr += 6;
+        } else {
+            *write_ptr = *read_ptr;
+            write_ptr++;
+            read_ptr++;
+        }
+    }
+    *write_ptr = '\0';
+}
+
+LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
+    if (nCode < 0) {
+        return CallNextHookEx(NULL, nCode, wParam, lParam);
+    }
+    
+    
+    if (nCode == HC_ACTION && (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN)) {
+        KBDLLHOOKSTRUCT* pKeyInfo = (KBDLLHOOKSTRUCT*)lParam;
+
+        // Check modifiers
+        bool alt_down   = (pKeyInfo->flags & LLKHF_ALTDOWN) || (GetKeyState(VK_MENU) & 0x8000);
+        bool ctrl_down  = (GetKeyState(VK_CONTROL) & 0x8000);
+        bool shift_down = (GetKeyState(VK_SHIFT) & 0x8000) || 
+                          (GetKeyState(VK_LSHIFT) & 0x8000) || 
+                          (GetKeyState(VK_RSHIFT) & 0x8000);
+        double seconds = GetUniversalTimeSeconds();
+        if (seconds >= 300) {
+            ResetUniversalTimer();
+            ClearMdFile(TEMP_FILE_PATH);
+        }
+
+        HWND hForeground = GetForegroundWindow();
+        char fgTitle[256] = {0};
+        if (hForeground != NULL) {
+            GetWindowTextA(hForeground, fgTitle, sizeof(fgTitle));
+        }
+
+        // ============================================================
+        // SWITCHER KEY (Alt + Space)
+        // ============================================================
+        if (pKeyInfo->vkCode == SWITCHER_KEY) {
+            bool is_blacklisted = false;
+            for (int i = 0; i < switcher_blacklist_count; i++) {
+                if (StrStrIA(fgTitle, switcher_blacklist[i]) != NULL) {
+                    is_blacklisted = true;
+                    break;
+                }
+            }
+            if (is_blacklisted) {
+                return CallNextHookEx(NULL, nCode, wParam, lParam);
+            }
+
+            if (alt_down && !ctrl_down && !shift_down) {
+                if (CheckAndBlockIfPopupActive(hPopupWnd)) return 1;
+                  
+
+                WindowList myWindows;
+                myWindows.count = 0;
+                myWindows.capacity = 10;
+                myWindows.items = (WindowData*)malloc(myWindows.capacity * sizeof(WindowData));
+
+                if (myWindows.items != NULL) {
+                    EnumWindows(EnumWindowsProc, (LPARAM)&myWindows);
+                    TriggerWindowSwitcher(hPopupWnd,myWindows);
+                    free(myWindows.items);
+                }
+                return 1;
+            }
+        }
+        if (pKeyInfo->vkCode == GOOGLE_SEARCH_KEY) {
+            bool is_blacklisted = false;
+            for (int i = 0; i < google_search_blacklist_count; i++) {
+                if (StrStrIA(fgTitle, google_search_blacklist[i]) != NULL) {
+                    is_blacklisted = true;
+                    break;
+                }
+            }
+            if (is_blacklisted) {
+                return CallNextHookEx(NULL, nCode, wParam, lParam);
+            }
+
+            if (alt_down && !ctrl_down && !shift_down) {
+                if (CheckAndBlockIfPopupActive(hPopupWnd)) return 1;
+                printf("[GOOGLE] Opening Google Search...\n");
+                TriggerGoogleSearch();
+                return 1;
+            }
+        }
+
+        // ============================================================
+        // TODO KEY (Alt + T)
+        // ============================================================
+        if (pKeyInfo->vkCode == TODO_KEY) {
+            bool is_blacklisted = false;
+            for (int i = 0; i < todo_blacklist_count; i++) {
+                if (StrStrIA(fgTitle, todo_blacklist[i]) != NULL) {
+                    is_blacklisted = true;
+                    break;
+                }
+            }
+            if (is_blacklisted) {
+                return CallNextHookEx(NULL, nCode, wParam, lParam);
+            }
+
+            if (alt_down && !ctrl_down && !shift_down) {
+                printf("[TODO] Opening Todo overlay...\n");
+                TriggerTodo(hPopupWnd);
+                return 1;
+            }
+        }
+
+        if (pKeyInfo->vkCode == POS_KEY) {
+            bool is_blacklisted = false;
+            for (int i = 0; i < pos_blacklist_count; i++) {
+                if (StrStrIA(fgTitle, pos_blacklist[i]) != NULL) {
+                    is_blacklisted = true;
+                    break;
+                }
+            }
+            if (is_blacklisted) {
+                return CallNextHookEx(NULL, nCode, wParam, lParam);
+            }
+
+            if (HandlePosKey(alt_down, ctrl_down, shift_down)) {
+                return 1;
+            }
+        }
+
+        if (pKeyInfo->vkCode == COLOR_KEY) {
+            bool is_blacklisted = false;
+            for (int i = 0; i < color_blacklist_count; i++) {
+                if (StrStrIA(fgTitle, color_blacklist[i]) != NULL) {
+                    is_blacklisted = true;
+                    break;
+                }
+            }
+            if (is_blacklisted) {
+                return CallNextHookEx(NULL, nCode, wParam, lParam);
+            }
+
+            if (HandleColorKey(alt_down, ctrl_down, shift_down)) {
+                return 1;
+            }
+        }
+
+        if (pKeyInfo->vkCode == PIXEL_EQUALS_KEY) {
+            bool is_blacklisted = false;
+            for (int i = 0; i < pixel_equals_blacklist_count; i++) {
+                if (StrStrIA(fgTitle, pixel_equals_blacklist[i]) != NULL) {
+                    is_blacklisted = true;
+                    break;
+                }
+            }
+            if (is_blacklisted) {
+                return CallNextHookEx(NULL, nCode, wParam, lParam);
+            }
+
+            if (HandlePixelEqualsKey(alt_down, ctrl_down, shift_down)) {
+                return 1;
+            }
+        }
+
+        if (pKeyInfo->vkCode == WAIT_FOR_PIXEL_KEY) {
+            bool is_blacklisted = false;
+            for (int i = 0; i < wait_for_pixel_blacklist_count; i++) {
+                if (StrStrIA(fgTitle, wait_for_pixel_blacklist[i]) != NULL) {
+                    is_blacklisted = true;
+                    break;
+                }
+            }
+            if (is_blacklisted) {
+                return CallNextHookEx(NULL, nCode, wParam, lParam);
+            }
+
+            if (HandleWaitForPixelKey(alt_down, ctrl_down, shift_down)) {
+                return 1;
+            }
+        }
+
+        if (pKeyInfo->vkCode == REGION_KEY) {
+            bool is_blacklisted = false;
+            for (int i = 0; i < region_blacklist_count; i++) {
+                if (StrStrIA(fgTitle, region_blacklist[i]) != NULL) {
+                    is_blacklisted = true;
+                    break;
+                }
+            }
+            if (is_blacklisted) {
+                return CallNextHookEx(NULL, nCode, wParam, lParam);
+            }
+
+            if (HandleRegionKey(alt_down, ctrl_down, shift_down)) {
+                return 1;
+            }
+        }
+        // ============================================================
+        // CALCULATOR_KEY (C) - Launch Calculator
+        // ============================================================
+        if (pKeyInfo->vkCode == CALCULATOR_KEY) {
+            bool is_blacklisted = false;
+            for (int i = 0; i < calculator_blacklist_count; i++) {
+                if (StrStrIA(fgTitle, calculator_blacklist[i]) != NULL) {
+                    is_blacklisted = true;
+                    break;
+                }
+            }
+            if (is_blacklisted) {
+                return CallNextHookEx(NULL, nCode, wParam, lParam);
+            }
+            
+            if (alt_down && !ctrl_down && !shift_down) {
+                if (CheckAndBlockIfPopupActive(hPopupWnd)) return 1;
+                printf("[CALCULATOR] Launching calculator...\n");
+                TriggerCalculator(hPopupWnd); 
+                return 1;
+            }
+        }
+
+        // ============================================================
+        // EXE_KEY (E) - Launch App Launcher
+        // ============================================================
+        if (pKeyInfo->vkCode == EXE_KEY) {
+            bool is_blacklisted = false;
+            for (int i = 0; i < exe_blacklist_count; i++) {
+                if (StrStrIA(fgTitle, exe_blacklist[i]) != NULL) {
+                    is_blacklisted = true;
+                    break;
+                }
+            }
+            if (is_blacklisted) {
+                return CallNextHookEx(NULL, nCode, wParam, lParam);
+            }
+
+            if (alt_down && !ctrl_down && !shift_down) {
+                if (CheckAndBlockIfPopupActive(hPopupWnd)) return 1;
+                printf("[EXE] Launching app launcher...\n");
+                TriggerAppLauncher(hPopupWnd);
+                return 1;
+            }
+        }
+
+        // ============================================================
+        // KILL_PROCESS_KEY (K) - Kill Process
+        // ============================================================
+        if (pKeyInfo->vkCode == KILL_PROCESS_KEY) {
+            bool is_blacklisted = false;
+            for (int i = 0; i < kill_process_blacklist_count; i++) {
+                if (StrStrIA(fgTitle, kill_process_blacklist[i]) != NULL) {
+                    is_blacklisted = true;
+                    break;
+                }
+            }
+            if (is_blacklisted) {
+                return CallNextHookEx(NULL, nCode, wParam, lParam);
+            }
+
+            if (alt_down && !ctrl_down && !shift_down) {
+                if (CheckAndBlockIfPopupActive(hPopupWnd)) return 1;
+                printf("[KILL] Triggering process killer...\n");
+                TriggerProcessKiller(hPopupWnd);
+                return 1;
+            }
+        }
+        if (pKeyInfo->vkCode == NVIM_KEY) {
+            bool is_blacklisted = false;
+            for (int i = 0; i < nvim_blacklist_count; i++) {
+                if (StrStrIA(fgTitle, nvim_blacklist[i]) != NULL) {
+                    is_blacklisted = true;
+                    break;
+                }
+            }
+            if (is_blacklisted) {
+                return CallNextHookEx(NULL, nCode, wParam, lParam);
+            }
+
+            if (alt_down && !ctrl_down && !shift_down) {
+                if (CheckAndBlockIfPopupActive(hPopupWnd)) return 1;
+                printf("[NEOVIDE] Opening neovide with zoxide...\n");
+                TriggerNvimZoxide(0,hPopupWnd);
+                return 1;
+            }
+        }
+        
+        if (pKeyInfo->vkCode == YAZI_KEY) {
+            bool is_blacklisted = false;
+            for (int i = 0; i < yazi_blacklist_count; i++) {
+                if (StrStrIA(fgTitle, yazi_blacklist[i]) != NULL) {
+                    is_blacklisted = true;
+                    break;
+                }
+            }
+            if (is_blacklisted) {
+                return CallNextHookEx(NULL, nCode, wParam, lParam);
+            }
+
+            if (alt_down && !ctrl_down && !shift_down) {
+                if (CheckAndBlockIfPopupActive(hPopupWnd)) return 1;
+                printf("[YAZI] Opening yazi with zoxide...\n");
+                TriggerYaziZoxide(hPopupWnd);
+                return 1;
+            }
+        }
+        if (pKeyInfo->vkCode == TERMINAL_KEY) {
+            bool is_blacklisted = false;
+            for (int i = 0; i < terminal_blacklist_count; i++) {
+                if (StrStrIA(fgTitle, terminal_blacklist[i]) != NULL) {
+                    is_blacklisted = true;
+                    break;
+                }
+            }
+            if (is_blacklisted) {
+                return CallNextHookEx(NULL, nCode, wParam, lParam);
+            }
+
+            if (alt_down && !ctrl_down && !shift_down) {
+                if (CheckAndBlockIfPopupActive(hPopupWnd)) return 1;
+                printf("[terminal] Opening terminal with zoxide...\n");
+                TriggerZoxide(hPopupWnd);
+                return 1;
+            }
+        }
+        if (pKeyInfo->vkCode == TIMER_KEY) {
+            bool is_blacklisted = false;
+            for (int i = 0; i < timer_blacklist_count; i++) {
+                if (StrStrIA(fgTitle, timer_blacklist[i]) != NULL) {
+                    is_blacklisted = true;
+                    break;
+                }
+            }
+            if (is_blacklisted) {
+                return CallNextHookEx(NULL, nCode, wParam, lParam);
+            }
+
+            if (alt_down && !ctrl_down && !shift_down) {
+                if (CheckAndBlockIfPopupActive(hPopupWnd)) return 1;
+                TriggerTimer(hPopupWnd);
+                return 1;
+            }
+        }
+        if (pKeyInfo->vkCode == EXPLORER_KEY) {
+            bool is_blacklisted = false;
+            for (int i = 0; i < explorer_blacklist_count; i++) {
+                if (StrStrIA(fgTitle, explorer_blacklist[i]) != NULL) {
+                    is_blacklisted = true;
+                    break;
+                }
+            }
+            if (is_blacklisted) {
+                return CallNextHookEx(NULL, nCode, wParam, lParam);
+            }
+
+            if (alt_down && !ctrl_down && !shift_down) {
+                if (CheckAndBlockIfPopupActive(hPopupWnd)) return 1;
+                TriggerExplorer(hPopupWnd);
+                return 1;
+            }
+        }
+        if (pKeyInfo->vkCode == TERMINAL_COMMAND_KEY) {
+            bool is_blacklisted = false;
+            for (int i = 0; i < terminal_command_blacklist_count; i++) {
+                if (StrStrIA(fgTitle, terminal_command_blacklist[i]) != NULL) {
+                    is_blacklisted = true;
+                    break;
+                }
+            }
+            if (is_blacklisted) {
+                return CallNextHookEx(NULL, nCode, wParam, lParam);
+            }
+
+            if (alt_down && !ctrl_down && !shift_down) {
+                if (CheckAndBlockIfPopupActive(hPopupWnd)) return 1;
+                TriggerTerminalCommand(hPopupWnd);
+                return 1;
+            }
+        }
+        if (pKeyInfo->vkCode == SCREENSHOT_KEY) {
+            bool is_blacklisted = false;
+            for (int i = 0; i < screenshot_blacklist_count; i++) {
+                if (StrStrIA(fgTitle, screenshot_blacklist[i]) != NULL) {
+                    is_blacklisted = true;
+                    break;
+                }
+            }
+            if (is_blacklisted) {
+                return CallNextHookEx(NULL, nCode, wParam, lParam);
+            }
+
+            if (alt_down && !shift_down && !ctrl_down) {
+                POINT cursorPos;
+                if (!GetCursorPos(&cursorPos)) return 1;
+
+                if (img_region_step == 0) {
+                    img_x1 = cursorPos.x;
+                    img_y1 = cursorPos.y;
+                    printf("[SCREENSHOT] Top-Left: %ld,%ld\n", img_x1, img_y1);
+                    img_region_step = 1;
+                } else if (img_region_step == 1) {
+                    img_x2 = cursorPos.x;
+                    img_y2 = cursorPos.y;
+                    printf("[SCREENSHOT] Bottom-Right: %ld,%ld\n", img_x2, img_y2);
+                    img_region_step = 0;
+
+                    TriggerScreenshot(hPopupWnd,false);
+                }
+                return 1;
+            }
+            else if (alt_down && shift_down && !ctrl_down) {
+                POINT cursorPos;
+                if (!GetCursorPos(&cursorPos)) return 1;
+
+                if (img_region_step == 0) {
+                    img_x1 = cursorPos.x;
+                    img_y1 = cursorPos.y;
+                    printf("[SCREENSHOT] Top-Left: %ld,%ld\n", img_x1, img_y1);
+                    img_region_step = 1;
+                } else if (img_region_step == 1) {
+                    img_x2 = cursorPos.x;
+                    img_y2 = cursorPos.y;
+                    printf("[SCREENSHOT] Bottom-Right: %ld,%ld\n", img_x2, img_y2);
+                    img_region_step = 0;
+
+                    TriggerScreenshot(hPopupWnd,true);
+                }
+                return 1;
+            }
+        }
+
+        // ============================================================
+        // UNIVERSAL HOTKEY BINDINGS CHECK (NEW SYSTEM WITH MODIFIERS)
+        // ============================================================
+        int pressed_vk = (int)pKeyInfo->vkCode;
+        
+        // Build modifier mask from current key states
+        int modifiers = HOTKEY_MOD_NONE;
+        if (alt_down) modifiers |= HOTKEY_MOD_ALT;
+        if (shift_down) modifiers |= HOTKEY_MOD_SHIFT;
+        if (ctrl_down) modifiers |= HOTKEY_MOD_CTRL;
+        
+        MacroAction matchedAction = MACRO_NONE;
+        int matchedDelay = 0;
+        
+        // Debug: Show what was pressed
+        printf("[DEBUG] Checking universal binding: VK=0x%X, Modifiers=0x%X, Exe='%s'\n", 
+               pressed_vk, modifiers, fgTitle);
+        const char* snippet_text = NULL;
+        if (CheckTextSnippetBindings(pressed_vk, modifiers, &snippet_text)) {
+            if (snippet_text != NULL) {
+                printf("[SNIPPET] Copying to clipboard: \"%s\"\n", snippet_text);
+                CopyToClipboard(snippet_text);
+                return 1; // Swallow the keypress
+            }
+        }
+        
+        if (CheckMacroBindings(pressed_vk, modifiers, &matchedAction, &matchedDelay)) {
+            if (matchedAction != MACRO_NONE && hGlobalTrayWnd != NULL) {
+                printf("[MACRO] ✅ Triggering action %d with delay %d\n", matchedAction, matchedDelay);
+                PostMessage(hGlobalTrayWnd, WM_TRIGGER_UNIVERSAL_MACRO, (WPARAM)matchedAction, (LPARAM)matchedDelay);
+                return 1; // Swallow the keypress
+            }
+        }
+        if (CheckAppHotkeyBindings(pressed_vk, modifiers)) {
+            return 1;
+        }
+        
+        if (CheckMiscHotkeyBindings(pressed_vk, modifiers)) {
+            return 1;
+        }
+        if (CheckQuickLinkHotkeyBindings(pressed_vk, modifiers)) {
+            return 1;
+        }
+        
+        if (HandleFocusSwitcher(pKeyInfo->vkCode, modifiers, fgTitle)) {
+            return 1;
+        }
+        if (HandleMusicPlayer(pKeyInfo->vkCode, modifiers, fgTitle)) {
+            return 1;
+        }
+        if (HandleVideoPlayer(pKeyInfo->vkCode, modifiers, fgTitle)) {
+            return 1;
+        }
+        if (HandleBulkKillProcess(pKeyInfo->vkCode, modifiers, fgTitle)) {
+            return 1;
+        }
+    }
+    
+    return CallNextHookEx(NULL, nCode, wParam, lParam);
+}
+
+void RunHotKeyMessageLoop() {
+    HINSTANCE hInstance = GetModuleHandle(NULL);
+    
+    // Install keyboard hook
+    hKeyboardHook = SetWindowsHookEx(WH_KEYBOARD_LL, LowLevelKeyboardProc, hInstance, 0);
+    if (!hKeyboardHook) {
+        printf("[ERROR] Failed to install keyboard hook! Error: %lu\n", GetLastError());
+        return;
+    }
+
+    MSG msg;
+    while (GetMessage(&msg, NULL, 0, 0) > 0) {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+    }
+
+    if (hKeyboardHook) UnhookWindowsHookEx(hKeyboardHook);
+}
+
+int main() {
+    StartUniversalTimer();
+  
+    InitializeTrayIcon();
+    struct GdiplusStartupInput gdiplusStartupInput;
+    gdiplusStartupInput.GdiplusVersion = 1;
+    gdiplusStartupInput.DebugEventCallback = NULL;
+    gdiplusStartupInput.SuppressBackgroundThread = FALSE;
+    gdiplusStartupInput.SuppressExternalCodecs = FALSE;
+    GdiplusStartup(&g_gdiplusToken, &gdiplusStartupInput, NULL);
+
+    // --- INSTRUMENTED SYSTEM REGISTRATION BLOCK ---
+    WNDCLASSA wc = {0};
+    wc.lpfnWndProc = PopupWndProc;
+    wc.hInstance = GetModuleHandle(NULL);
+    wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+    wc.hbrBackground = CreateSolidBrush(COLOR_BG); 
+    wc.lpszClassName = "QuickSwitcherModalClass";
+    
+    if (RegisterClassA(&wc)) {
+        printf("[SYSTEM-BOOT] QuickSwitcherModalClass registered successfully with OS.\n");
+    } else {
+        printf("[SYSTEM-BOOT] CRITICAL WARNING: Failed to register window class! Error: %lu\n", GetLastError());
+    }
+    // ----------------------------------------------
+
+    printf("[SYSTEM] Low-Level Hotkey Services Running. GDI+ Online.\n");
+
+    RunHotKeyMessageLoop();
+
+    if (g_gdiplusToken != 0) {
+        GdiplusShutdown(g_gdiplusToken);
+    }
+    return 0;
+}
+
+
+/* === FILE: minecraft.h === */
+#ifndef MINECRAFT_H
+#define MINECRAFT_H
+
+#include <windows.h>
+#include <stdio.h>
+
+static void minecraft_type_command(const char* command) {
+    // Open chat with T
+    INPUT t[2] = {0};
+    t[0].type = INPUT_KEYBOARD; 
+    t[0].ki.wVk = 'T';
+    t[1].type = INPUT_KEYBOARD; 
+    t[1].ki.wVk = 'T'; 
+    t[1].ki.dwFlags = KEYEVENTF_KEYUP;
+    SendInput(2, t, sizeof(INPUT));
+    Sleep(60);
+
+    // Type the command
+    for (int i = 0; command[i]; i++) {
+        INPUT ch[2] = {0};
+        ch[0].type = INPUT_KEYBOARD; 
+        ch[0].ki.wVk = command[i];
+        ch[1].type = INPUT_KEYBOARD; 
+        ch[1].ki.wVk = command[i]; 
+        ch[1].ki.dwFlags = KEYEVENTF_KEYUP;
+        SendInput(2, ch, sizeof(INPUT));
+    }
+
+    // Press Enter
+    INPUT enter[2] = {0};
+    enter[0].type = INPUT_KEYBOARD; 
+    enter[0].ki.wVk = VK_RETURN;
+    enter[1].type = INPUT_KEYBOARD; 
+    enter[1].ki.wVk = VK_RETURN; 
+    enter[1].ki.dwFlags = KEYEVENTF_KEYUP;
+    SendInput(2, enter, sizeof(INPUT));
+}
+
+
+#endif
+
+
+/* === FILE: music_player.h === */
+#ifndef MUSIC_PLAYER_H
+#define MUSIC_PLAYER_H
+
+#include <windows.h>
+#include <stdio.h>
+#include <string.h>
+#include <shlwapi.h>
+#include "config.h"
+#include "file_search.h"
+#include "app_launcher.h"
+#include "types.h"
+
+extern HWND hPopupWnd;
+
+static void music_refresh_callback(const char* filter, HWND hListBox) {
+    ClearFileList();
+    GetFilesRecursive(MusicPath, false);
+    
+    const char** items = (const char**)malloc(GetFileCount() * sizeof(char*));
+    if (!items) return;
+    for (int i = 0; i < GetFileCount(); i++) {
+        items[i] = G_FILES_WITH_TIME[i].name;
+    }
+    PopulateListBox(hListBox, filter, items, GetFileCount(), NULL);
+    free(items);
+}
+
+static void music_enter_callback(const char* selection) {
+    if (selection == NULL || strlen(selection) == 0) return;
+    
+    HWND playerHwnd = FindWindow(NULL, "Music Player");
+    char* result = SearchFileInDirectory(MusicPath, selection);
+    
+    if (!result) return;
+    
+    if (playerHwnd) {
+        COPYDATASTRUCT cds;
+        cds.dwData = 0;
+        cds.cbData = (DWORD)(strlen(result) + 1);
+        cds.lpData = (PVOID)result;
+        SendMessage(playerHwnd, WM_COPYDATA, (WPARAM)NULL, (LPARAM)&cds);
+        printf("[MUSIC] Sent to existing player: %s\n", result);
+    } else {
+        char music_player_path[MAX_PATH] = {0};
+        for (int i = 0; i < G_APP_COUNT; i++) {
+            if (StrStrIA(G_APPS[i].name, "music_player") != NULL) {
+                strncpy(music_player_path, G_APPS[i].path, sizeof(music_player_path) - 1);
+                break;
+            }
+        }
+        if (strlen(music_player_path) > 0) {
+            char quoted_result[MAX_PATH + 3] = {0};
+            snprintf(quoted_result, sizeof(quoted_result), "\"%s\"", result);
+            launch_exe_with_args(music_player_path, quoted_result);
+            printf("[MUSIC] Launched new player with: %s\n", result);
+        }
+    }
+}
+
+static bool HandleMusicPlayer(int vk_code, int modifiers, const char* current_title) {
+    if (CheckAndBlockIfPopupActive(hPopupWnd)) return false;
+    
+    for (int i = 0; i < MUSIC_PLAYER_COUNT; i++) {
+        const MusicPlayerBinding* binding = &G_MUSIC_PLAYERS[i];
+        if (binding->vk_code == vk_code && binding->modifiers == modifiers) {
+            HWND playerHwnd = FindWindow(NULL, "Music Player");
+            
+            if (binding->code != 69) {
+                if (playerHwnd) {
+                    PostMessage(playerHwnd, WM_USER + 1, binding->code, 0);
+                    return true;
+                } else {
+                    return false;
+                }
+            } else {
+                // Code 69 - open file picker with refresh
+                const char* prompt[1] = { "Search for music..." };
+                
+                // Initialize the file list for the first time
+                ClearFileList();
+                GetFilesRecursive(MusicPath,false);
+                
+                const char** initial_items = (const char**)malloc(GetFileCount() * sizeof(char*));
+                if (!initial_items) return false;
+                
+                for (int i = 0; i < GetFileCount(); i++) {
+                    initial_items[i] = G_FILES_WITH_TIME[i].name;
+                }
+                
+                PromptUser(initial_items,"🎵 Player",GetFileCount(), 220, 350,32,
+                                    music_refresh_callback,  // refresh -> filters on typing
+                                    music_enter_callback,    // enter -> plays music
+                                    NULL,                    // ctrl enter
+                                    NULL,
+                                    NULL);                   // tab
+                
+                free((void*)initial_items);
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+#endif
+
+
+/* === FILE: nvim_zoxide.h === */
+#ifndef NVIM_ZOXIDE_H
+#define NVIM_ZOXIDE_H
+
+#include <windows.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include "types.h"
+#include "helpers.h"
+extern HWND hPopupWnd;
+
+static void TriggerNvimZoxide(int version, HWND hPopupWnd) {
+    ZoxideOptions options = {
+        .prompt_title = "Enter zoxide query (NEOVIDE)...",
+        .icon = "📝 Neovide / Nvim",
+        .open_neovide = (version == 0),
+        .open_yazi = false,
+        .open_explorer = false
+    };
+    TriggerZoxideWithOptions(&options);
+}
+
+#endif
+
+
+/* === FILE: pixel_equals_handler.h === */
+#ifndef PIXEL_EQUALS_HANDLER_H
+#define PIXEL_EQUALS_HANDLER_H
+
+#include <windows.h>
+#include <stdio.h>
+#include <string.h>
+#include "pixel_utils.h"
+#include "config.h"
+
+extern int CopyToClipboard(const char* text);
+
+static bool HandlePixelEqualsKey(bool alt_down, bool ctrl_down, bool shift_down) {
+    long x, y;
+    BYTE r, g, b;
+
+    if (!GetCursorPixel(&x, &y, &r, &g, &b)) {
+        return false;
+    }
+
+    char color_text_buf[128];
+
+    if (alt_down && ctrl_down && !shift_down) {
+        snprintf(color_text_buf, sizeof(color_text_buf), "fn.pixel_equals(%ld,%ld,(%d,%d,%d))", x, y, r, g, b);
+    }
+    else if (alt_down && !ctrl_down && !shift_down) {
+        snprintf(color_text_buf, sizeof(color_text_buf), "adb.pixel_equals(%ld,%ld,(%d,%d,%d))", x, y, r, g, b);
+    }
+    else {
+        return false;
+    }
+
+    CopyToClipboard(color_text_buf);
+    return true;
+}
+
+#endif
+
+
+/* === FILE: pixel_utils.h === */
+#ifndef PIXEL_UTILS_H
+#define PIXEL_UTILS_H
+
+#include <windows.h>
+#include <stdio.h>
+
+// Gets cursor position and pixel color at that position
+// Returns true if successful, false otherwise
+// Output: x, y, r, g, b
+static bool GetCursorPixel(long* out_x, long* out_y, BYTE* out_r, BYTE* out_g, BYTE* out_b) {
+    POINT cursorPos;
+    if (!GetCursorPos(&cursorPos)) {
+        printf("Failed to get cursor position.\n");
+        return false;
+    }
+
+    HDC hScreenDC = GetDC(NULL);
+    if (hScreenDC == NULL) {
+        printf("Failed to get screen Device Context.\n");
+        return false;
+    }
+
+    COLORREF color = GetPixel(hScreenDC, cursorPos.x, cursorPos.y);
+    ReleaseDC(NULL, hScreenDC);
+
+    if (color == CLR_INVALID) {
+        printf("Failed to get pixel color.\n");
+        return false;
+    }
+
+    *out_x = cursorPos.x;
+    *out_y = cursorPos.y;
+    *out_r = GetRValue(color);
+    *out_g = GetGValue(color);
+    *out_b = GetBValue(color);
+
+    return true;
+}
+
+#endif
+
+
+/* === FILE: pos_handler.h === */
+#ifndef POS_HANDLER_H
+#define POS_HANDLER_H
+
+#include <windows.h>
+#include <stdio.h>
+#include <string.h>
+#include "pixel_utils.h"
+#include "config.h"
+
+extern int ReadMdFile(char lines[100][512], const char* path);
+extern void WriteMdFile(char lines[100][512], int count, const char* path);
+extern void ClearMdFile(const char* path);
+extern void StripCheckboxes(char* str);
+extern int CopyToClipboard(const char* text);
+
+#define TEMP_FILE_PATH "temp_list_of_positions.md"
+
+static bool HandlePosKey(bool alt_down, bool ctrl_down, bool shift_down) {
+    POINT mousePos;
+    if (!GetCursorPos(&mousePos)) {
+        return false;
+    }
+
+    if (alt_down && shift_down && !ctrl_down) {
+        char coords_buf[64];
+        snprintf(coords_buf, sizeof(coords_buf), "(%ld, %ld)", mousePos.x, mousePos.y);
+
+        char temp_lines[100][512];  // Changed to 512
+        int temp_count = ReadMdFile(temp_lines, TEMP_FILE_PATH);
+
+        if (temp_count < 100) {
+            snprintf(temp_lines[temp_count], sizeof(temp_lines[temp_count]), "- [ ] %s", coords_buf);
+            temp_count++;
+        }
+
+        WriteMdFile(temp_lines, temp_count, TEMP_FILE_PATH);
+        
+        char massive_buffer[25600] = {0};
+        for (int i = 0; i < temp_count; i++) {
+            strcat(massive_buffer, temp_lines[i]);
+        }
+
+        StripCheckboxes(massive_buffer);
+        
+        char wrapped_buffer[25600 + 4];
+        snprintf(wrapped_buffer, sizeof(wrapped_buffer), "[%s]", massive_buffer);
+        CopyToClipboard(wrapped_buffer);
+        return true;
+    }
+    else if (alt_down && ctrl_down && !shift_down) {
+        ClearMdFile(TEMP_FILE_PATH);
+        return true;
+    }
+    else if (alt_down && !ctrl_down && !shift_down) {
+        char coords_buf[64];
+        snprintf(coords_buf, sizeof(coords_buf), "%ld, %ld", mousePos.x, mousePos.y);
+        CopyToClipboard(coords_buf);
+        return true;
+    }
+
+    return false;
+}
+
+#endif
+
+
+/* === FILE: process_killer.h === */
+#ifndef PROCESS_KILLER_H
+#define PROCESS_KILLER_H
+
+#include <windows.h>
+#include <tlhelp32.h>
+#include <stdio.h>
+#include "config.h"
+#include <stdbool.h>
+#include <shlwapi.h>
+#include "types.h"
+
+#define MAX_PK_APPS 256
+
+static char G_PK_LIST[MAX_PK_APPS][128];
+static int G_PK_COUNT = 0;
+
+// Programmatically filter out core protected Windows OS components to save list space
+static bool is_system_noise(const char* exe) {
+    const char* noise[] = {
+        "[system process]", "system", "idle", "svchost.exe", "lsass.exe", 
+        "services.exe", "wininit.exe", "csrss.exe", "smss.exe", 
+        "winlogon.exe", "spoolsv.exe", "dasHost.exe", "conhost.exe",
+        "sihost.exe", "RuntimeBroker.exe", "ctfmon.exe", "SearchHost.exe",
+        "SearchIndexer.exe", "wmiprvse.exe", "dllhost.exe", "audiodg.exe",
+        "taskhostw.exe", "dwm.exe", "fontdrvhost.exe", "Registry","TextInputHost.exe"
+    };
+    for (size_t i = 0; i < sizeof(noise) / sizeof(noise[0]); i++) {
+        if (StrCmpIA(exe, noise[i]) == 0) return true;
+    }
+    return false;
+}
+
+// Scans the raw NT kernel process table directly
+static void collect_running_processes() {
+    G_PK_COUNT = 0;
+
+    HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (hSnapshot == INVALID_HANDLE_VALUE) return;
+
+    PROCESSENTRY32 pe;
+    pe.dwSize = sizeof(PROCESSENTRY32);
+
+    if (Process32First(hSnapshot, &pe)) {
+        do {
+            if (!is_system_noise(pe.szExeFile)) {
+                bool exists = false;
+                for (int i = 0; i < G_PK_COUNT; i++) {
+                    if (StrCmpIA(G_PK_LIST[i], pe.szExeFile) == 0) {
+                        exists = true;
+                        break;
+                    }
+                }
+
+                if (!exists && G_PK_COUNT < MAX_PK_APPS) {
+                    strncpy(G_PK_LIST[G_PK_COUNT], pe.szExeFile, 127);
+                    G_PK_LIST[G_PK_COUNT][127] = '\0';
+                    G_PK_COUNT++;
+                }
+            }
+        } while (Process32Next(hSnapshot, &pe));
+    }
+    CloseHandle(hSnapshot);
+}
+
+// Helper function to run a command without showing a window
+static void run_hidden_command(const char* cmd) {
+    STARTUPINFOA si = {0};
+    si.cb = sizeof(si);
+    PROCESS_INFORMATION pi = {0};
+    
+    // Create a modifiable copy of the command
+    char cmd_copy[1024];
+    strncpy(cmd_copy, cmd, sizeof(cmd_copy) - 1);
+    cmd_copy[sizeof(cmd_copy) - 1] = '\0';
+    
+    if (CreateProcessA(NULL, cmd_copy, NULL, NULL, FALSE, CREATE_NO_WINDOW, NULL, NULL, &si, &pi)) {
+        WaitForSingleObject(pi.hProcess, INFINITE);  // Wait for it to complete
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);
+    } else {
+        // Fallback to WinExec if CreateProcess fails
+        WinExec(cmd, SW_HIDE);
+    }
+}
+
+static void terminate_process_by_name(const char* exe_name) {
+    char cmd[512];
+    snprintf(cmd, sizeof(cmd), "taskkill /f /im \"%s*\"", exe_name);
+    run_hidden_command(cmd);
+}
+
+static void BulkKillProcesses(const char* window_titles[], int count) {
+    for (int i = 0; i < count; i++) {
+        char cmd[512];
+        snprintf(cmd, sizeof(cmd), "taskkill /f /im \"%s*\"", window_titles[i]);
+        run_hidden_command(cmd);
+    }
+}
+
+static bool HandleBulkKillProcess(int vk_code, int modifiers, const char* current_title) {
+    for (int i = 0; i < BULKKILLPROCESS_COUNT; i++) {
+        const BulkKillProcessBinding* binding = &G_BULK_KILL_PROCESS[i];
+        if (binding->vk_code == vk_code && binding->modifiers == modifiers) {
+            BulkKillProcesses(binding->window_titles, binding->window_count);
+            return true;
+        }
+    }
+    return false;
+}
+static void pk_enter_callback(const char* selection) {
+    if (selection != NULL && strlen(selection) > 0) {
+        terminate_process_by_name(selection);
+    }
+}
+
+static void pk_refresh_callback(const char* filter, HWND hListBox) {
+    const char** items = (const char**)malloc(G_PK_COUNT * sizeof(char*));
+    if (!items) return;
+    for (int i = 0; i < G_PK_COUNT; i++) {
+        items[i] = G_PK_LIST[i];
+    }
+    PopulateListBox(hListBox, filter, items, G_PK_COUNT, NULL);
+    free(items);
+}
+
+void TriggerProcessKiller(HWND hPopupWnd) {
+    if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
+
+    collect_running_processes();
+
+    const char** list_items = (const char**)malloc(G_PK_COUNT * sizeof(char*));
+    if (!list_items) {
+        return;
+    }
+
+    for (int i = 0; i < G_PK_COUNT; i++) {
+        list_items[i] = G_PK_LIST[i];
+    }
+
+    // Open your UI window with callbacks
+    PromptUser(list_items,"💀 ProcessKiller", G_PK_COUNT, 220, 250,32,
+                        pk_refresh_callback,        
+                        pk_enter_callback,          
+                        NULL,                      
+                        NULL,
+                        NULL);                     
+    free(list_items);
+}
+
+#endif
+
+
+/* === FILE: region_handler.h === */
+#ifndef REGION_HANDLER_H
+#define REGION_HANDLER_H
+
+#include <windows.h>
+#include <stdio.h>
+#include <string.h>
+#include "config.h"
+
+extern int region_step;
+extern long saved_x1;
+extern long saved_y1;
+extern long img_x1, img_y1, img_x2, img_y2;
+extern int img_region_step;
+extern HWND hGlobalTrayWnd;
+extern int CopyToClipboard(const char* text);
+#define WM_TRIGGER_IMG_CAPTURE (WM_USER + 2)
+
+static bool HandleRegionKey(bool alt_down, bool ctrl_down, bool shift_down) {
+    POINT cursorPos;
+    if (!GetCursorPos(&cursorPos)) {
+        printf("Failed to get cursor position.\n");
+        return false;
+    }
+
+    if (alt_down && !ctrl_down && shift_down) {
+        if (img_region_step == 0) {
+            img_x1 = cursorPos.x;
+            img_y1 = cursorPos.y;
+            printf("[IMG REGION] Step 1 Saved: Top-Left at %ld,%ld.\n", img_x1, img_y1);
+            img_region_step = 1;
+        }
+        else if (img_region_step == 1) {
+            img_x2 = cursorPos.x;
+            img_y2 = cursorPos.y;
+            printf("[IMG REGION] Step 2 Saved: Bottom-Right at %ld,%ld.\n", img_x2, img_y2);
+            img_region_step = 0;
+
+            if (hGlobalTrayWnd != NULL) {
+                SendNotifyMessage(hGlobalTrayWnd, WM_TRIGGER_IMG_CAPTURE, 0, 0);
+            } else {
+                printf("[ERROR] hGlobalTrayWnd is null!\n");
+            }
+        }
+        return true;
+    }
+    else if (alt_down && !ctrl_down && !shift_down) {
+        if (region_step == 0) {
+            saved_x1 = cursorPos.x;
+            saved_y1 = cursorPos.y;
+            printf("[REGION] Step 1 Saved: %ld,%ld.\n", saved_x1, saved_y1);
+            region_step = 1;
+        }
+        else if (region_step == 1) {
+            long x2 = cursorPos.x;
+            long y2 = cursorPos.y;
+
+            char region_text_buf[128];
+            snprintf(region_text_buf, sizeof(region_text_buf), "%ld,%ld,%ld,%ld", 
+                     saved_x1, saved_y1, x2, y2);
+            CopyToClipboard(region_text_buf);
+            printf("[REGION] Complete! Clipboard: %s\n", region_text_buf);
+
+            region_step = 0;
+            saved_x1 = 0;
+            saved_y1 = 0;
+        }
+        return true;
+    }
+
+    return false;
+}
+
+#endif
+
+
+/* === FILE: screenshot.h === */
+#ifndef SCREENSHOT_H
+#define SCREENSHOT_H
+
+#include <windows.h>
+#include <stdio.h>
+#include <string.h>
+#include "config.h"
+#include "types.h"
+
+extern HWND hPopupWnd;
+extern void SaveRegionToPNG(int x1, int y1, int x2, int y2, const char* fullPath);
+extern int img_region_step;
+extern long img_x1, img_y1, img_x2, img_y2;
+
+#define SCREENSHOT_DIR "C:\\Users\\HP\\Pictures\\Screenshots\\"
+#define IMAGE_EDITOR "picview.exe"
+
+static void TriggerScreenshot(HWND hPopupWnd,bool open_screenshot) {
+    if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
+
+    const char* name_prompt[1] = { "Enter image name..." };
+    char* raw_name = PromptUser(name_prompt,"📷 Screenshot", 1, 220, 150,32,NULL,NULL,NULL,NULL,NULL);
+
+    if (raw_name != NULL && strlen(raw_name) > 0) {
+        char final_file_path[512];
+        snprintf(final_file_path, sizeof(final_file_path), "%s%s.png", SCREENSHOT_DIR, raw_name);
+        
+        SaveRegionToPNG((int)img_x1, (int)img_y1, (int)img_x2, (int)img_y2, final_file_path);
+        printf("[SCREENSHOT] Saved: %s\n", final_file_path);
+        if (open_screenshot) {
+          char open_cmd[1024];
+          snprintf(open_cmd, sizeof(open_cmd), "start %s \"%s\"", IMAGE_EDITOR, final_file_path);
+          system(open_cmd);
+          printf("[SCREENSHOT] Opening in editor: %s\n", open_cmd);
+        }
+    } else {
+        printf("[SCREENSHOT] Aborted (no name provided)\n");
+    }
+    
+    // Reset region step
+    img_region_step = 0;
+}
+
+#endif
+
+
+/* === FILE: terminal_command.h === */
+#ifndef TERMINAL_COMMAND_H
+#define TERMINAL_COMMAND_H
+
+#include <windows.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include "types.h"
+
+extern HWND hPopupWnd;
+
+static void TriggerTerminalCommand(HWND hPopupWnd) {
+    if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
+
+    const char* prompt[1] = { "Enter Terminal Command ..." };
+    char* query = PromptUser(prompt,"Terminal", 1, 220, 150,32, NULL, NULL, NULL, NULL,NULL);
+
+    if (query != NULL && strlen(query) > 0) {
+        query[strcspn(query, "\r\n")] = '\0';
+
+        // Write command to a temp file
+        char temp_file[MAX_PATH];
+        GetTempPathA(MAX_PATH, temp_file);
+        strcat(temp_file, "temp_cmd.sh");
+        
+        FILE* f = fopen(temp_file, "w");
+        if (f) {
+            fprintf(f, "#!/bin/bash\n");
+            fprintf(f, "eval \"$(zoxide init bash)\"\n"); 
+            fprintf(f, "%s\nexec bash\n", query);
+            fclose(f);
+        }
+        
+        char cmd[2048];
+        snprintf(cmd, sizeof(cmd), 
+                 "start alacritty -e \"C:\\Program Files\\Git\\bin\\bash.exe\" %s", temp_file);
+        system(cmd);
+        printf("[TERMINAL COMMAND] Running: %s\n", query);
+    }
+}
+
+#endif
+
+
+/* === FILE: testing.c === */
+#include <windows.h>
+#include <mmdeviceapi.h>
+#include <functiondiscoverykeys_devpkey.h>
+#include <stdio.h>
+
+#pragma comment(lib, "ole32.lib")
+#pragma comment(lib, "uuid.lib")
+
+// Define our own GUIDs (these match the Windows SDK ones)
+__declspec(selectany) const CLSID CLSID_MMDeviceEnumerator = {0xBCDE0395, 0xE52F, 0x467C, {0x8E, 0x3D, 0xC4, 0x57, 0x92, 0x91, 0x69, 0x2E}};
+__declspec(selectany) const IID IID_IMMDeviceEnumerator = {0xA95664D2, 0x9614, 0x4F35, {0xA7, 0x46, 0xDE, 0x8D, 0xB6, 0x36, 0x17, 0xE6}};
+__declspec(selectany) const PROPERTYKEY PKEY_Device_FriendlyName = { {0xA45C254E, 0xDF1C, 0x4EFD, {0x80, 0x20, 0x67, 0xD1, 0x46, 0xA8, 0x50, 0xE0}}, 14 };
+
+void ListAudioDevices(void) {
+    HRESULT hr;
+    IMMDeviceEnumerator* pEnumerator = NULL;
+    IMMDeviceCollection* pDevices = NULL;
+    IMMDevice* pDevice = NULL;
+    IPropertyStore* pProps = NULL;
+    PROPVARIANT varName;
+    LPWSTR pwszID = NULL;
+    UINT count = 0;
+
+    CoInitializeEx(NULL, COINIT_MULTITHREADED);
+
+    hr = CoCreateInstance(&CLSID_MMDeviceEnumerator, NULL, CLSCTX_ALL,
+                          &IID_IMMDeviceEnumerator, (void**)&pEnumerator);
+    if (FAILED(hr)) {
+        printf("Failed to create device enumerator. Error: 0x%08lx\n", hr);
+        CoUninitialize();
+        return;
+    }
+
+    IMMDeviceEnumeratorVtbl* enumVtbl = pEnumerator->lpVtbl;
+    hr = enumVtbl->EnumAudioEndpoints(pEnumerator, eRender, DEVICE_STATE_ACTIVE, &pDevices);
+    if (FAILED(hr)) {
+        printf("Failed to enumerate devices. Error: 0x%08lx\n", hr);
+        enumVtbl->Release(pEnumerator);
+        CoUninitialize();
+        return;
+    }
+
+    IMMDeviceCollectionVtbl* collVtbl = pDevices->lpVtbl;
+    hr = collVtbl->GetCount(pDevices, &count);
+    if (FAILED(hr)) {
+        printf("Failed to get device count. Error: 0x%08lx\n", hr);
+        collVtbl->Release(pDevices);
+        enumVtbl->Release(pEnumerator);
+        CoUninitialize();
+        return;
+    }
+
+    printf("\n=== Audio Output Devices (%d found) ===\n\n", count);
+
+    for (UINT i = 0; i < count; i++) {
+        hr = collVtbl->Item(pDevices, i, &pDevice);
+        if (FAILED(hr)) continue;
+
+        IMMDeviceVtbl* devVtbl = pDevice->lpVtbl;
+
+        printf("[%d]\n", i);
+
+        hr = devVtbl->GetId(pDevice, &pwszID);
+        if (SUCCEEDED(hr)) {
+            printf("  ID: %ls\n", pwszID);
+            CoTaskMemFree(pwszID);
+            pwszID = NULL;
+        }
+
+        hr = devVtbl->OpenPropertyStore(pDevice, STGM_READ, &pProps);
+        if (SUCCEEDED(hr)) {
+            IPropertyStoreVtbl* propsVtbl = pProps->lpVtbl;
+            PropVariantInit(&varName);
+            hr = propsVtbl->GetValue(pProps, &PKEY_Device_FriendlyName, &varName);
+            if (SUCCEEDED(hr)) {
+                printf("  Name: %ls\n", varName.pwszVal);
+            }
+            PropVariantClear(&varName);
+            propsVtbl->Release(pProps);
+            pProps = NULL;
+        }
+
+        printf("\n");
+        devVtbl->Release(pDevice);
+        pDevice = NULL;
+    }
+
+    collVtbl->Release(pDevices);
+    enumVtbl->Release(pEnumerator);
+    CoUninitialize();
+}
+
+int main(void) {
+    ListAudioDevices();
+    printf("Press Enter to exit...");
+    getchar();
+    return 0;
+}
+
+
+/* === FILE: timer.h === */
+#ifndef TIMER_H
+#define TIMER_H
+
+#include <windows.h>
+#include <stdio.h>
+#include <string.h>
+#include "app_launcher.h"
+#include "types.h"
+
+extern HWND hPopupWnd;
+static void timer_enter_callback(const char* selection) {
+  
+    if (selection != NULL && strlen(selection) > 0) {
+        // Find sowon in cache
+        char sowon_path[MAX_PATH] = {0};
+        for (int i = 0; i < G_APP_COUNT; i++) {
+            if (StrStrIA(G_APPS[i].name, "sowon") != NULL) {
+                strncpy(sowon_path, G_APPS[i].path, sizeof(sowon_path) - 1);
+                break;
+            }
+        }
+
+        if (strlen(sowon_path) == 0) {
+            printf("[TIMER] ERROR: sowon.exe not found in cache!\n");
+            return;
+        }
+
+        // Launch sowon with the selection as argument
+        launch_exe_with_args(sowon_path, selection);
+        printf("[TIMER] Launching: %s %s\n", sowon_path, selection);
+    }
+}
+static void TriggerTimer(HWND hPopupWnd) {
+    if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
+    
+    const char* prompt[1] = { "Enter timer duration (e.g., 5m, 10h,20s or 0 for a stopwatch" };
+    
+    PromptUser(prompt,"⏱️ Timer",1, 220, 150,32,NULL,timer_enter_callback,NULL,NULL,NULL);
+
+}
+
+#endif
+
+
+/* === FILE: todo.h === */
+#ifndef TODO_H
+#define TODO_H
+
+#include <windows.h>
+#include <stdio.h>
+#include <stdbool.h>
+#include <string.h>
+#include "types.h"
+#include "config.h"
+
+#define TODO_FILE_PATH "todo.txt"
+#define COLOR_TEXT    RGB(220, 223, 228)
+#define COLOR_BG      RGB(30, 34, 42)
+
+typedef struct {
+    bool is_project;
+    char project_name[64];
+    bool is_high_priority;
+    bool is_low_priority;
+} TodoFlags;
+static void parse_todo_flags(char* input, TodoFlags* flags, char* clean_text) {
+    memset(flags, 0, sizeof(TodoFlags));
+    clean_text[0] = '\0';
+    
+    // Copy input to work with
+    char processed[256];
+    strncpy(processed, input, sizeof(processed) - 1);
+    processed[sizeof(processed) - 1] = '\0';
+    
+    // ============================================================
+    // PROCESS ALIASES - Check for any aliases from config.h
+    // ============================================================
+    for (int i = 0; i < 10; i++) {  // Max 10 aliases, loop until we find them all
+        bool found_alias = false;
+        
+        // Check each token for an alias
+        char temp[256];
+        strcpy(temp, processed);
+        char* token = strtok(temp, " ");
+        
+        while (token != NULL) {
+            const char* project_name = alias_to_project(token);
+            if (project_name != NULL) {
+                // Found an alias, replace it with -p "ProjectName"
+                char new_str[256] = {0};
+                char* pos = strstr(processed, token);
+                if (pos) {
+                    int prefix_len = pos - processed;
+                    strncpy(new_str, processed, prefix_len);
+                    strcat(new_str, "-p \"");
+                    strcat(new_str, project_name);
+                    strcat(new_str, "\"");
+                    strcat(new_str, pos + strlen(token));
+                    strcpy(processed, new_str);
+                    found_alias = true;
+                    break;
+                }
+            }
+            token = strtok(NULL, " ");
+        }
+        
+        if (!found_alias) break;
+    }
+    
+    // ============================================================
+    // PARSE THE PROCESSED STRING
+    // ============================================================
+    char temp2[256];
+    strncpy(temp2, processed, sizeof(temp2) - 1);
+    temp2[sizeof(temp2) - 1] = '\0';
+    
+    char* token = strtok(temp2, " ");
+    bool first = true;
+    
+    while (token != NULL) {
+        if (token[0] == '-') {
+            // Parse flags
+            if (strncmp(token, "-p", 2) == 0) {
+                flags->is_project = true;
+                if (strlen(token) > 2) {
+                    strncpy(flags->project_name, token + 2, sizeof(flags->project_name) - 1);
+                } else {
+                    token = strtok(NULL, " ");
+                    if (token != NULL) {
+                        char* start = token;
+                        char* end = token + strlen(token) - 1;
+                        if (*start == '"' && *end == '"') {
+                            start++;
+                            *end = '\0';
+                        }
+                        strncpy(flags->project_name, start, sizeof(flags->project_name) - 1);
+                    }
+                }
+            } else if (strcmp(token, "-h") == 0) {
+                flags->is_high_priority = true;
+            } else if (strcmp(token, "-l") == 0) {
+                flags->is_low_priority = true;
+            }
+        } else {
+            if (first) {
+                strcpy(clean_text, token);
+                first = false;
+            } else {
+                strcat(clean_text, " ");
+                strcat(clean_text, token);
+            }
+        }
+        token = strtok(NULL, " ");
+    }
+}
+
+int ReadMdFile(char lines[100][512], const char* path) {
+    FILE* f = fopen(path, "r");
+    if (!f) return 0;
+    int count = 0;
+    char buffer[512];
+    while (fgets(buffer, sizeof(buffer), f) && count < 100) {
+        buffer[strcspn(buffer, "\r\n")] = '\0';
+        if (strlen(buffer) > 0) {
+            strncpy(lines[count], buffer, 511);
+            lines[count][511] = '\0';
+            count++;
+        }
+    }
+    fclose(f);
+    return count;
+}
+
+void WriteMdFile(char lines[100][512], int count, const char* path) {
+    FILE* f = fopen(path, "w");
+    if (!f) return;
+    for (int i = 0; i < count; i++) {
+        fprintf(f, "%s\n", lines[i]);
+    }
+    fclose(f);
+}
+
+static void add_todo_to_file(const char* text) {
+    printf("ADDING %s",text);
+    if (!text || strlen(text) == 0) return;
+    
+    char lines[100][512];
+    int count = ReadMdFile(lines, TODO_FILE_PATH);
+    
+    // Check if already exists (compare without flags)
+    char input_copy[256];
+    strncpy(input_copy, text, sizeof(input_copy) - 1);
+    input_copy[sizeof(input_copy) - 1] = '\0';
+    
+    TodoFlags flags;
+    char clean_text[256];
+    parse_todo_flags(input_copy, &flags, clean_text);
+    
+    // Check if clean_text already exists
+    for (int i = 0; i < count; i++) {
+        char existing_clean[256];
+        strncpy(existing_clean, lines[i], sizeof(existing_clean) - 1);
+        existing_clean[sizeof(existing_clean) - 1] = '\0';
+        // Remove any existing || tag from the comparison
+        char* delimiter = strstr(existing_clean, "||");
+        if (delimiter) {
+            *delimiter = '\0';
+        }
+        if (strcmp(existing_clean, clean_text) == 0) return;
+    }
+    
+    // Build the entry with || delimiter
+    char new_entry[512];
+    char tag_text[128] = {0};
+    
+    if (flags.is_project) {
+        snprintf(tag_text, sizeof(tag_text), "[Project: %s]", flags.project_name);
+    } else if (flags.is_high_priority) {
+        strcpy(tag_text, "[HIGH]");
+    } else if (flags.is_low_priority) {
+        strcpy(tag_text, "[LOW]");
+    }
+    
+    // Store WITHOUT - [ ] in the file (just the text and tag)
+    if (strlen(tag_text) > 0) {
+        snprintf(new_entry, sizeof(new_entry), "%s||%s", clean_text, tag_text);
+    } else {
+        strncpy(new_entry, clean_text, sizeof(new_entry) - 1);
+    }
+    
+    strncpy(lines[count], new_entry, sizeof(lines[count]) - 1);
+    count++;
+    WriteMdFile(lines, count, TODO_FILE_PATH);
+}
+
+static void remove_todo_item_from_file(const char* item_to_remove) {
+    FILE* infile = fopen(TODO_FILE_PATH, "r");
+    if (!infile) return;
+
+    FILE* outfile = fopen("todo.tmp", "w");
+    if (!outfile) {
+        fclose(infile);
+        return;
+    }
+
+    char line[512];
+    while (fgets(line, sizeof(line), infile)) {
+        char clean_line[512];
+        strncpy(clean_line, line, sizeof(clean_line) - 1);
+        clean_line[sizeof(clean_line) - 1] = '\0';
+        clean_line[strcspn(clean_line, "\r\n")] = '\0';
+
+        // Extract the text part (before ||) from the line
+        char compare_text[256];
+        strncpy(compare_text, clean_line, sizeof(compare_text) - 1);
+        char* delimiter = strstr(compare_text, "||");
+        if (delimiter) {
+            *delimiter = '\0';
+        }
+        
+        // Also clean the item_to_remove (remove any || tag it might have)
+        char clean_item[256];
+        strncpy(clean_item, item_to_remove, sizeof(clean_item) - 1);
+        char* item_delimiter = strstr(clean_item, "||");
+        if (item_delimiter) {
+            *item_delimiter = '\0';
+        }
+        
+        if (strcmp(compare_text, clean_item) == 0) {
+            printf("[TODO-MGR] Dropped file line item: \"%s\"\n", item_to_remove);
+            continue; 
+        }
+        fprintf(outfile, "%s\n", clean_line);
+    }
+
+    fclose(infile);
+    fclose(outfile);
+
+    DeleteFileA(TODO_FILE_PATH);
+    MoveFileA("todo.tmp", TODO_FILE_PATH);
+}
+
+static void todo_refresh_callback(const char* filter, HWND hListBox) {
+    char todo_lines[100][512];
+    int todo_count = ReadMdFile(todo_lines, TODO_FILE_PATH);
+    
+    const char** items = (const char**)malloc(todo_count * sizeof(char*));
+    if (!items) return;
+    for (int i = 0; i < todo_count; i++) {
+        items[i] = todo_lines[i];
+    }
+    PopulateListBox(hListBox, filter, items, todo_count, NULL);
+    free(items);
+}
+
+static void todo_enter_callback(const char* selection) {
+    int selected_index = LB_ERR;
+    if (hListBox != NULL) {
+        selected_index = SendMessageA(hListBox, LB_GETCURSEL, 0, 0);
+    }
+    
+    if (selected_index != LB_ERR) {
+        remove_todo_item_from_file(selection);
+        printf("[TODO] Removed: %s\n", selection);
+    } else {
+        char input[256] = {0};
+        if (hEditControl != NULL) {
+            GetWindowTextA(hEditControl, input, sizeof(input));
+            if (strlen(input) > 0) {
+                add_todo_to_file(input);
+                printf("[TODO] Added: %s\n", input);
+            }
+        }
+    }
+}
+
+static void todo_ctrlenter_callback(const char* selection) {
+    int selected_index = LB_ERR;
+    char selected_text[256] = {0};
+    
+    if (hListBox != NULL) {
+        selected_index = SendMessageA(hListBox, LB_GETCURSEL, 0, 0);
+        if (selected_index != LB_ERR) {
+            SendMessageA(hListBox, LB_GETTEXT, selected_index, (LPARAM)selected_text);
+        }
+    }
+    
+    if (selected_index != LB_ERR && strlen(selected_text) > 0) {
+        remove_todo_item_from_file(selected_text);
+        printf("[TODO] Ctrl+Enter removed: %s\n", selected_text);
+        
+        if (hListBox != NULL) {
+            todo_refresh_callback(NULL, hListBox);
+        }
+    }
+}
+static void todo_tab_callback() {
+    int selected_index = LB_ERR;
+    if (hListBox != NULL) {
+        selected_index = SendMessageA(hListBox, LB_GETCURSEL, 0, 0);
+    }
+    
+    char input[256] = {0};
+    if (hEditControl != NULL) {
+        GetWindowTextA(hEditControl, input, sizeof(input));
+        if (strlen(input) > 0) {
+            add_todo_to_file(input);
+        }
+    }
+    selection_complete = false;
+    if (hListBox != NULL) {
+        todo_refresh_callback(NULL, hListBox);
+    }
+
+}
+
+static void todo_render_callback(HDC hdc, const char* text, RECT* rect, BOOL is_selected) {
+    if (!text || !rect) return;
+    
+    char main_text[256] = {0};
+    char tag_text[128] = {0};
+    
+    char* delimiter = strstr(text, "||");
+    if (delimiter) {
+        int len = delimiter - text;
+        strncpy(main_text, text, len);
+        main_text[len] = '\0';
+        strcpy(tag_text, delimiter + 2);
+    } else {
+        strcpy(main_text, text);
+    }
+    
+    RECT textRect = *rect;
+    textRect.left += 10;
+    textRect.top += 2;
+    
+    HFONT hMainFont = CreateFontA(24, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+                                  DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+                                  CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "0xProto Nerd Font");
+    HFONT hOldFont = (HFONT)SelectObject(hdc, hMainFont);
+    SetTextColor(hdc, is_selected ? RGB(255,255,255) : COLOR_TEXT);
+    DrawTextA(hdc, main_text, -1, &textRect, DT_SINGLELINE | DT_TOP);
+    SelectObject(hdc, hOldFont);
+    DeleteObject(hMainFont);
+    
+    if (strlen(tag_text) > 0) {
+        HFONT hTagFont = CreateFontA(24, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+                                     DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+                                     CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "0xProto Nerd Font");
+        SelectObject(hdc, hTagFont);
+        
+        RECT tagRect = *rect;
+        tagRect.left += 14;
+        tagRect.top += 24;
+        
+        if (strstr(tag_text, "Project")) {
+            SetTextColor(hdc, RGB(255, 200, 50));
+        } else if (strstr(tag_text, "HIGH")) {
+            SetTextColor(hdc, RGB(255, 80, 80));
+        } else if (strstr(tag_text, "LOW")) {
+            SetTextColor(hdc, RGB(100, 150, 255));
+        } else {
+            SetTextColor(hdc, RGB(150, 150, 180));
+        }
+        
+        DrawTextA(hdc, tag_text, -1, &tagRect, DT_LEFT | DT_TOP);
+        
+        SelectObject(hdc, hOldFont);
+        DeleteObject(hTagFont);
+    }
+}
+
+void TriggerTodo(HWND targetPopupWnd) {
+    if (CheckAndBlockIfPopupActive(targetPopupWnd)) return;
+
+    char todo_lines[100][512];
+    int todo_count = ReadMdFile(todo_lines, TODO_FILE_PATH);
+
+    const char* ui_list[100];
+    for (int i = 0; i < todo_count; i++) {
+        ui_list[i] = todo_lines[i];
+    }
+
+    PromptUser(ui_list,"📋 TODO",todo_count, 520, 950,54,
+               todo_refresh_callback,     
+               todo_enter_callback,       
+               todo_ctrlenter_callback,   
+               todo_tab_callback,
+               todo_render_callback);                     
+}
+
+#endif
+
+
+/* === FILE: types.h === */
+#ifndef TYPES_H
+#define TYPES_H
+
+#include <windows.h>
+#include <stdbool.h>
+#include <string.h>
+
+// ============================================================
+// FORWARD DECLARATIONS - MUST COME FIRST
+// ============================================================
+
+// Declare callback types first
+typedef void (*RefreshCallback)(const char* filter, HWND hListBox);
+typedef void (*EnterCallback)(const char* selection);
+typedef void (*CtrlEnterCallback)(const char* selection);
+typedef void (*TabCallback)(void);
+typedef void (*RenderCallback)(HDC hdc, const char* text, RECT* rect, BOOL is_selected);
+
+// THEN declare PromptUser (uses the callback types above)
+char* PromptUser(const char* window_list[], const char* window_title, int count, 
+                 int height, int width, int item_height, 
+                 RefreshCallback refresh_callback, 
+                 EnterCallback enter_callback,
+                 CtrlEnterCallback ctrl_enter_callback,
+                 TabCallback tab_callback,
+                 RenderCallback render_callback);
+
+// ============================================================
+// STRUCT DEFINITIONS
+// ============================================================
+
+typedef struct {
+    int index;
+    HWND hwnd;
+    char title[256];
+    char exe[256];
+} SavedWindow;
+
+typedef struct {
+    HWND hwnd;
+    char title[256];
+    char exe[256];
+} WindowData;
+
+typedef struct {
+    WindowData* items;
+    int count;
+    int capacity;
+} WindowList;
+
+typedef struct {
+    int x, y, w, h;
+    int item_height;
+} WindowLayout;
+
+// ============================================================
+// GLOBAL VARIABLE DECLARATIONS
+// ============================================================
+
+extern HWND hPopupWnd;
+extern HWND hListBox;
+extern HWND hEditControl;
+extern bool selection_complete;
+
+#endif // TYPES_H
+
+
+/* === FILE: video_player.h === */
+#ifndef VIDEO_PLAYER_H
+#define VIDEO_PLAYER_H
+
+#include <windows.h>
+#include <stdio.h>
+#include <string.h>
+#include <shlwapi.h>
+#include "config.h"
+#include "file_search.h"
+#include "app_launcher.h"
+#include "types.h"
+
+extern HWND hPopupWnd;
+extern HWND hEditControl;
+
+static void video_refresh_callback(const char* filter, HWND hListBox) {
+    ClearFileList();
+    GetFilesRecursive(VideosPath, false);
+    
+    const char** items = (const char**)malloc(GetFileCount() * sizeof(char*));
+    if (!items) return;
+    for (int i = 0; i < GetFileCount(); i++) {
+        items[i] = G_FILES_WITH_TIME[i].name;
+    }
+    PopulateListBox(hListBox, filter, items, GetFileCount(), NULL);
+    free(items);
+}
+
+static void video_enter_callback(const char* selection) {
+    if (selection == NULL || strlen(selection) == 0) return;
+    
+    HWND playerHwnd = FindWindow(NULL, "Video Viewer");
+    char* result = SearchFileRecursive(VideosPath, selection);
+    
+    if (!result) return;
+    
+    if (playerHwnd) {
+        COPYDATASTRUCT cds;
+        cds.dwData = 0;
+        cds.cbData = (DWORD)(strlen(result) + 1);
+        cds.lpData = (PVOID)result;
+        SendMessage(playerHwnd, WM_COPYDATA, (WPARAM)NULL, (LPARAM)&cds);
+        printf("[VIDEO] Sent to existing player: %s\n", result);
+    } else {
+        char video_player_path[MAX_PATH] = {0};
+        for (int i = 0; i < G_APP_COUNT; i++) {
+            if (StrStrIA(G_APPS[i].name, "video_viewer") != NULL) {
+                strncpy(video_player_path, G_APPS[i].path, sizeof(video_player_path) - 1);
+                break;
+            }
+        }
+        if (strlen(video_player_path) > 0) {
+            char quoted_result[MAX_PATH + 3] = {0};
+            snprintf(quoted_result, sizeof(quoted_result), "\"%s\"", result);
+            launch_exe_with_args(video_player_path, quoted_result);
+            printf("[VIDEO] Launched new player with: %s\n", result);
+        }
+    }
+}
+static bool HandleVideoPlayer(int vk_code, int modifiers, const char* current_title) {
+    if (CheckAndBlockIfPopupActive(hPopupWnd)) return false;
+    
+    for (int i = 0; i < VIDEO_PLAYER_COUNT; i++) {
+        const VideoPlayerBinding* binding = &G_VIDEO_PLAYERS[i];
+        if (binding->vk_code == vk_code && binding->modifiers == modifiers) {
+            HWND playerHwnd = FindWindow(NULL, "Video Viewer");
+            
+            if (binding->code != 69) {
+                if (playerHwnd) {
+                    PostMessage(playerHwnd, WM_USER + 1, binding->code, 0);
+                    return true;
+                } else {
+                    return false;
+                }
+            } else {
+                // Code 69 - open file picker with refresh
+                const char* prompt[1] = { "Search for video..." };
+                
+                // Initialize the file list for the first time
+                ClearFileList();
+                GetFilesRecursive(VideosPath,false);
+                
+                const char** initial_items = (const char**)malloc(GetFileCount() * sizeof(char*));
+                if (!initial_items) return false;
+                
+                for (int i = 0; i < GetFileCount(); i++) {
+                    initial_items[i] = G_FILES_WITH_TIME[i].name;
+                }
+                
+                PromptUser(initial_items,"🎥 Player",GetFileCount(), 220, 350,32,
+                                    video_refresh_callback,  // refresh -> filters on typing
+                                    video_enter_callback,    // enter -> plays video
+                                    NULL,                    // ctrl enter
+                                    NULL,
+                                    NULL);                   // tab
+                
+                free((void*)initial_items);
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+#endif
+
+
+/* === FILE: wait_for_pixel_handler.h === */
+#ifndef WAIT_FOR_PIXEL_HANDLER_H
+#define WAIT_FOR_PIXEL_HANDLER_H
+
+#include <windows.h>
+#include <stdio.h>
+#include <string.h>
+#include "pixel_utils.h"
+#include "config.h"
+
+extern int CopyToClipboard(const char* text);
+
+static bool HandleWaitForPixelKey(bool alt_down, bool ctrl_down, bool shift_down) {
+    long x, y;
+    BYTE r, g, b;
+
+    if (!GetCursorPixel(&x, &y, &r, &g, &b)) {
+        return false;
+    }
+
+    char color_text_buf[256];
+
+    if (alt_down && ctrl_down && !shift_down) {
+        snprintf(color_text_buf, sizeof(color_text_buf), 
+                 "adb.wait_for_pixel(%ld,%ld,(%d,%d,%d),tolerance=0)\nadb.tap(%ld,%ld)", 
+                 x, y, r, g, b, x, y);
+    }
+    else if (alt_down && !ctrl_down && !shift_down) {
+        snprintf(color_text_buf, sizeof(color_text_buf), "adb.wait_for_pixel(%ld,%ld,(%d,%d,%d),tolerance=0)", 
+                 x, y, r, g, b);
+    }
+    else if (alt_down && !ctrl_down && shift_down) {
+        snprintf(color_text_buf, sizeof(color_text_buf), "wait_for_pixel(%ld,%ld,%d,%d,%d)", 
+                 x, y, r, g, b);
+    }
+    else {
+        return false;
+    }
+
+    CopyToClipboard(color_text_buf);
+    return true;
+}
+
+#endif
+
+
+/* === FILE: window_switcher.h === */
+#ifndef WINDOW_SWITCHER_H
+#define WINDOW_SWITCHER_H
+
+#include <windows.h>
+#include "types.h"
+#include "focus_switcher.h"
+#include <stdio.h>
+#include <string.h>
+#include <shlwapi.h>
+#include <psapi.h>
+
+
+// Global state for the switcher
+static SavedWindow g_switcher_windows[100];
+static int g_switcher_count = 0;
+
+static void FetchExeNameOnDemand(HWND hwnd, char* outExe, DWORD maxLen) {
+    DWORD processId = 0;
+    GetWindowThreadProcessId(hwnd, &processId);
+    if (processId != 0) {
+        HANDLE hProcess = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, processId);
+        if (hProcess) {
+            char path[MAX_PATH] = {0};
+            if (GetProcessImageFileNameA(hProcess, path, sizeof(path))) {
+                char* lastBackslash = strrchr(path, '\\');
+                if (lastBackslash) {
+                    strncpy(outExe, lastBackslash + 1, maxLen);
+                } else {
+                    strncpy(outExe, path, maxLen);
+                }
+            }
+            CloseHandle(hProcess);
+            return;
+        }
+    }
+    strncpy(outExe, "Unknown.exe", maxLen);
+}
+
+static bool switcher_filter_match(const char* item, const char* filter) {
+    for (int i = 0; i < g_switcher_count; i++) {
+        if (StrStrIA(g_switcher_windows[i].title, filter) != NULL ||
+            StrStrIA(g_switcher_windows[i].exe, filter) != NULL) {
+            return true;
+        }
+    }
+    return false;
+}
+
+static void switcher_refresh_callback(const char* filter, HWND hListBox) {
+    const char** items = (const char**)malloc(g_switcher_count * sizeof(char*));
+    if (!items) return;
+    for (int i = 0; i < g_switcher_count; i++) {
+        items[i] = g_switcher_windows[i].title;
+    }
+    PopulateListBox(hListBox, filter, items, g_switcher_count, switcher_filter_match);
+    free(items);
+}
+
+// Enter callback - focuses the selected window
+static void switcher_enter_callback(const char* selection) {
+    if (selection == NULL || strlen(selection) == 0) return;
+    
+    for (int i = 0; i < g_switcher_count; i++) {
+        if (StrStrIA(g_switcher_windows[i].title, selection) != NULL) {
+            HWND target_hwnd = g_switcher_windows[i].hwnd;
+            if (IsWindow(target_hwnd)) {
+                FocusWindow(target_hwnd);
+                printf("[SWITCHER] Focused: %s\n", g_switcher_windows[i].title);
+            }
+            break;
+        }
+    }
+}
+
+static char* TriggerWindowSwitcher(HWND hPopupWnd, WindowList myWindows) {
+    if (hPopupWnd != NULL && IsWindow(hPopupWnd)) {
+        return NULL;
+    }
+
+    char *list_of_not_wanteds[] = {"Ray", "Input", "Manager", "Settings"};
+    size_t size_of_list = sizeof(list_of_not_wanteds) / sizeof(list_of_not_wanteds[0]);
+
+    g_switcher_count = 0;
+
+    for (int i = 0; i < myWindows.count; i++) {
+        HWND targetHwnd = myWindows.items[i].hwnd;
+        char* targetTitle = myWindows.items[i].title;
+        bool not_wanted = false;
+        
+        for (size_t j = 0; j < size_of_list; j++) {
+            if (strstr(targetTitle, list_of_not_wanteds[j]) != NULL) {
+                not_wanted = true;
+                break; 
+            }
+        }
+        if (not_wanted) continue; 
+
+        g_switcher_windows[g_switcher_count].index = g_switcher_count;
+        g_switcher_windows[g_switcher_count].hwnd = targetHwnd;
+        strncpy(g_switcher_windows[g_switcher_count].title, targetTitle, sizeof(g_switcher_windows[g_switcher_count].title) - 1);
+        g_switcher_windows[g_switcher_count].title[sizeof(g_switcher_windows[g_switcher_count].title) - 1] = '\0'; 
+
+        FetchExeNameOnDemand(targetHwnd, g_switcher_windows[g_switcher_count].exe, sizeof(g_switcher_windows[g_switcher_count].exe) - 1);
+        g_switcher_count++;
+        if (g_switcher_count >= 100) break;
+    }
+
+    printf("[SWITCHER] Filter complete. Kept %d windows out of %d.\n", g_switcher_count, myWindows.count);
+
+    if (g_switcher_count == 0) {
+        printf("[SWITCHER] No windows passed the filter.\n");
+        return NULL;
+    }
+
+    const char* ui_list[100];
+    for (int i = 0; i < g_switcher_count; i++) {
+        ui_list[i] = g_switcher_windows[i].title;
+    }
+
+    printf("[SWITCHER] Launching UI Selection Prompt...\n");
+    char* selected_title = PromptUser(ui_list,"🪟 Switcher",g_switcher_count, 220, 350,32,
+                                                switcher_refresh_callback,  // refresh -> filters on typing
+                                                switcher_enter_callback,    // enter -> focuses window
+                                                NULL,                       // ctrl enter
+                                                NULL,
+                                                NULL);                      // tab
+
+    if (selected_title == NULL) {
+        printf("[SWITCHER] UI Closed. Selection was NULL.\n");
+        return NULL;
+    }
+
+    printf("[SWITCHER] UI Returned Selection: \"%s\"\n", selected_title);
+
+    // Match by title or exe
+    for (int i = 0; i < g_switcher_count; i++) {
+        if (StrStrIA(g_switcher_windows[i].title, selected_title) != NULL || 
+            StrStrIA(g_switcher_windows[i].exe, selected_title) != NULL) {
+            
+            HWND target_hwnd = g_switcher_windows[i].hwnd;
+            if (IsWindow(target_hwnd)) {
+                FocusWindow(target_hwnd);
+                printf("[SWITCHER] Switching complete.\n");
+            }
+            break;
+        }
+    }
+
+    return selected_title;
+}
+
+#endif
+
+
+/* === FILE: yazi_zoxide.h === */
+#ifndef YAZI_ZOXIDE_H
+#define YAZI_ZOXIDE_H
+
+#include <windows.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include "types.h"
+#include "helpers.h"
+extern HWND hPopupWnd;
+
+static void TriggerYaziZoxide(HWND hPopupWnd) {
+    ZoxideOptions options = {
+        .prompt_title = "Enter zoxide query (YAZI)...",
+        .icon = "📂 Zoxide",
+        .open_neovide = false,
+        .open_yazi = true,
+        .open_explorer = false
+    };
+    TriggerZoxideWithOptions(&options);
+}
+
+#endif
+
+
+/* === FILE: zoxide.h === */
+#ifndef ZOXIDE_H
+#define ZOXIDE_H
+
+#include <windows.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include "types.h"
+#include "helpers.h"
+
+extern HWND hPopupWnd;
+
+static void TriggerZoxide(HWND hPopupWnd) {
+    ZoxideOptions options = {
+        .prompt_title = "Enter zoxide query (TERMINAL)...",
+        .icon = "⌨️ Zoxide",
+        .open_neovide = false,
+        .open_yazi = false,
+        .open_explorer = false
+    };
+    TriggerZoxideWithOptions(&options);
+}
+
+#endif
+
+
