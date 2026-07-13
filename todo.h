@@ -136,6 +136,7 @@ void WriteMdFile(char lines[100][512], int count, const char* path) {
 }
 
 static void add_todo_to_file(const char* text) {
+    printf("ADDING %s",text);
     if (!text || strlen(text) == 0) return;
     
     char lines[100][512];

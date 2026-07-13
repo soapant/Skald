@@ -47,24 +47,27 @@ static void FocusWindow(HWND hwnd) {
     printf("[FOCUS] Window focused!\n");
 }
  
+typedef struct {
+    const char* search_exe;
+    HWND result;
+} FindWindowData;
+
 static BOOL CALLBACK FindWindowByExeProc(HWND hwnd, LPARAM lParam) {
-    char* search_exe = (char*)lParam;
+    FindWindowData* data = (FindWindowData*)lParam;
     DWORD processId = 0;
     GetWindowThreadProcessId(hwnd, &processId);
     
     if (processId != 0 && IsWindowVisible(hwnd)) {
-        HANDLE hProcess = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, processId);
+        HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, processId);
         if (hProcess) {
-            char path[MAX_PATH] = {0};
-            if (GetProcessImageFileNameA(hProcess, path, sizeof(path))) {
-                char* lastBackslash = strrchr(path, '\\');
-                if (lastBackslash) {
-                    char* exe = lastBackslash + 1;
-                    if (StrStrIA(exe, search_exe) != NULL) {
-                        *(HWND*)lParam = hwnd;
-                        CloseHandle(hProcess);
-                        return FALSE;
-                    }
+            char exe_name[MAX_PATH] = {0};
+            DWORD size = MAX_PATH;
+            if (GetModuleBaseNameA(hProcess, NULL, exe_name, size)) {
+                printf("[DEBUG] Found exe: %s, searching for: %s\n", exe_name, data->search_exe);
+                if (StrStrIA(exe_name, data->search_exe) != NULL) {
+                    data->result = hwnd;
+                    CloseHandle(hProcess);
+                    return FALSE;
                 }
             }
             CloseHandle(hProcess);
@@ -74,24 +77,29 @@ static BOOL CALLBACK FindWindowByExeProc(HWND hwnd, LPARAM lParam) {
 }
 
 static void FocusWindowByExe(const char* exe_name) {
+    printf("[DEBUG] FocusWindowByExe called with: %s\n", exe_name);
     if (!exe_name || strlen(exe_name) == 0) return;
     
-    HWND found_hwnd = NULL;
-    EnumWindows(FindWindowByExeProc, (LPARAM)exe_name);
+    FindWindowData data;
+    data.search_exe = exe_name;
+    data.result = NULL;
     
-    if (found_hwnd) {
-        FocusWindow(found_hwnd);
+    EnumWindows(FindWindowByExeProc, (LPARAM)&data);
+    
+    if (data.result) {
+        FocusWindow(data.result);
     } else {
         printf("[FOCUS] No window found with exe: %s\n", exe_name);
     }
 }
+
 typedef struct {
     const char* search_title;
     HWND result;
-} FindWindowData;
+} FindWindowNigga;
 
 static BOOL CALLBACK FindWindowByPartialTitleProc(HWND hwnd, LPARAM lParam) {
-    FindWindowData* data = (FindWindowData*)lParam;
+    FindWindowNigga* data = (FindWindowNigga*)lParam;
     char window_title[256];
     GetWindowTextA(hwnd, window_title, sizeof(window_title));
     
@@ -103,7 +111,7 @@ static BOOL CALLBACK FindWindowByPartialTitleProc(HWND hwnd, LPARAM lParam) {
 }
 
 static HWND FindWindowByPartialTitle(const char* title) {
-    FindWindowData data;
+    FindWindowNigga data;
     data.search_title = title;
     data.result = NULL;
     EnumWindows(FindWindowByPartialTitleProc, (LPARAM)&data);
@@ -164,14 +172,18 @@ static bool HandleFocusSwitcher(int vk_code, int modifiers, const char* current_
                 return false;
             }
             
-            HWND target = FindAnyWindow(binding->window_titles, binding->window_count);
-            if (target) {
-                FocusWindow(target);
-                return true;
-            } else {
-                printf("[FOCUS] No matching window found.\n");
-                return false;
-            }
+              if (strcmp(binding->window_titles[0],"Alacritty") == 0) {
+                  FocusWindowByExe("alacritty.exe");
+              }else {
+                HWND target = FindAnyWindow(binding->window_titles, binding->window_count);
+                if (target) {
+                    FocusWindow(target);
+                    return true;
+                } else {
+                    printf("[FOCUS] No matching window found.\n");
+                    return false;
+                }
+              }
         }
     }
     return false;
