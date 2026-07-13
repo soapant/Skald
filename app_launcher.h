@@ -38,16 +38,21 @@ static void scan_directory_recursive(const char* dir_path) {
         char full_path[MAX_PATH];
         snprintf(full_path, sizeof(full_path), "%s\\%s", dir_path, find_data.cFileName);
 
+        // Pre-filter by first character before doing full string compare
         if (find_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-            if (StrCmpIA(find_data.cFileName, "node_modules") == 0 ||
-                StrCmpIA(find_data.cFileName, ".git") == 0 ||
-                StrCmpIA(find_data.cFileName, "bin") == 0 ||
-                StrCmpIA(find_data.cFileName, "dll") == 0 ||
-                StrCmpIA(find_data.cFileName, ".h") == 0 ||
-                StrCmpIA(find_data.cFileName, "yazi") == 0 ||
-                StrCmpIA(find_data.cFileName, "obj") == 0 ||
-                StrCmpIA(find_data.cFileName, "build") == 0) {
-                continue;
+            char first = tolower(find_data.cFileName[0]);
+            // Most ignored folders start with 'n', '.', 'b', 'o', 'd', 'g', 'y', 'h'
+            if (first == 'n' || first == '.' || first == 'b' || first == 'o' || 
+                first == 'd' || first == 'g' || first == 'y' || first == 'h') {
+                // Only check the list if first character matches
+                bool skip = false;
+                for (int i = 0; i <  sizeof(ListOfShitToIgnore) / sizeof(ListOfShitToIgnore[0]); i++) {
+                    if (StrCmpIA(find_data.cFileName, ListOfShitToIgnore[i]) == 0) {
+                        skip = true;
+                        break;
+                    }
+                }
+                if (skip) continue;
             }
             scan_directory_recursive(full_path);
         } else {
@@ -136,6 +141,7 @@ static void applauncher_enter_callback(const char* selection) {
 static void applauncher_ctrlenter_callback(const char* selection) {
     if (selection != NULL && strlen(selection) > 0) {
         launch_app_as_admin(selection);
+        selection_complete = true;
     }
 }
 
@@ -171,8 +177,7 @@ void TriggerAppLauncher(HWND hPopupWnd) {
         initial_items[i] = G_APPS[i].name;
     }
 
-    // FIX: Pass NULL for refresh, not true
-    PromptUser(initial_items,"🚀 LAUNCHER", G_APP_COUNT, 220, 250,32,
+    PromptUser(initial_items,"🚀 LAUNCHER", G_APP_COUNT, 220, 650,32,
                         applauncher_refresh_callback,
                         applauncher_enter_callback,   
                         applauncher_ctrlenter_callback,

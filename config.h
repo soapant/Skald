@@ -6,35 +6,48 @@ static bool TRAY = true;
 static const char* ListOfProgramPaths[20] = {
     "C:\\Users\\HP\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu",
     "C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs",
-    "D:\\Projects"
+    "D:\\Projects",
+    "D:\\retard games\\miscellaneous"
 };
+static const char* ListOfShitToIgnore[30] = {
+  "node_modules",
+  ".git",
+  "bin",
+  "dll",
+  "gtnh 2.8",
+  ".h",
+  "yazi",
+  "obj",
+  "build"
+};
+
 static const char* MusicPath = "D:\\Music";
 static const char* VideosPath = "C:\\videos";
 static const char* IconPath = "D:\\retard games\\miscellaneous\\switch_window.ico";
 
 // Hotkey IDs
 #define SWITCHER_ID       1
-#define SWITCHER_KEY      0x20  // Space
+#define SWITCHER_KEY      0x20
 #define TODO_ID           2
-#define TODO_KEY          0x54  // T
+#define TODO_KEY          0x54
 #define POS_ID            3
-#define POS_KEY           0x5A  // Z
+#define POS_KEY           0x5A
 #define COLOR_ID          4
-#define COLOR_KEY         0x58  // X
+#define COLOR_KEY         0x58
 #define PIXEL_EQUALS_ID   5
-#define PIXEL_EQUALS_KEY  0x42  // B
+#define PIXEL_EQUALS_KEY  0x42
 #define WAIT_FOR_PIXEL_ID 6
-#define WAIT_FOR_PIXEL_KEY 0x4E // N
+#define WAIT_FOR_PIXEL_KEY 0x4E
 #define REGION_ID         7
-#define REGION_KEY        0x41  // A
+#define REGION_KEY        0x41
 #define CALCULATOR_ID     8
-#define CALCULATOR_KEY    0x43  // C
+#define CALCULATOR_KEY    0x43
 #define EXE_ID            9
-#define EXE_KEY           0x45  // E
+#define EXE_KEY           0x45
 #define KILL_PROCESS_ID   10
 #define KILL_PROCESS_KEY  0x55
 #define GOOGLE_SEARCH_ID   11
-#define GOOGLE_SEARCH_KEY  0x47 
+#define GOOGLE_SEARCH_KEY  0x47  
 #define NVIM_ID      12
 #define NVIM_KEY     0x49
 #define TERMINAL_ID      13

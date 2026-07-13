@@ -15,7 +15,7 @@ extern long img_x1, img_y1, img_x2, img_y2;
 #define SCREENSHOT_DIR "C:\\Users\\HP\\Pictures\\Screenshots\\"
 #define IMAGE_EDITOR "picview.exe"
 
-static void TriggerScreenshot(HWND hPopupWnd) {
+static void TriggerScreenshot(HWND hPopupWnd,bool open_screenshot) {
     if (hPopupWnd != NULL && IsWindow(hPopupWnd)) {
         return;
     }
@@ -29,11 +29,12 @@ static void TriggerScreenshot(HWND hPopupWnd) {
         
         SaveRegionToPNG((int)img_x1, (int)img_y1, (int)img_x2, (int)img_y2, final_file_path);
         printf("[SCREENSHOT] Saved: %s\n", final_file_path);
-        
-        char open_cmd[1024];
-        snprintf(open_cmd, sizeof(open_cmd), "start %s \"%s\"", IMAGE_EDITOR, final_file_path);
-        system(open_cmd);
-        printf("[SCREENSHOT] Opening in editor: %s\n", open_cmd);
+        if (open_screenshot) {
+          char open_cmd[1024];
+          snprintf(open_cmd, sizeof(open_cmd), "start %s \"%s\"", IMAGE_EDITOR, final_file_path);
+          system(open_cmd);
+          printf("[SCREENSHOT] Opening in editor: %s\n", open_cmd);
+        }
     } else {
         printf("[SCREENSHOT] Aborted (no name provided)\n");
     }
