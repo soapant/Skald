@@ -54,8 +54,6 @@ bool selection_complete = false;
 int region_step = 0; 
 long saved_x1 = 0;
 long saved_y1 = 0;
-extern int img_region_step;
-extern long img_x1, img_y1;
 long img_x2 = 0, img_y2 = 0; // Add this line if it isn't there!
                              // 
 static ULONG_PTR g_gdiplusToken = 0;
@@ -183,9 +181,6 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
                 if (g_ctrl_enter_callback != NULL) {
                     g_ctrl_enter_callback(output_buffer);
                 }
-                // DON'T close the window on Ctrl+Enter!
-                // Keep selection_complete = false so the window stays open
-                // Refresh the list if needed
                 if (g_refresh_callback != NULL) {
                     char current_filter[256] = {0};
                     GetWindowTextA(hEditControl, current_filter, sizeof(current_filter));
@@ -1236,7 +1231,26 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
                     printf("[SCREENSHOT] Bottom-Right: %ld,%ld\n", img_x2, img_y2);
                     img_region_step = 0;
 
-                    TriggerScreenshot(hPopupWnd);
+                    TriggerScreenshot(hPopupWnd,false);
+                }
+                return 1;
+            }
+            else if (alt_down && shift_down && !ctrl_down) {
+                POINT cursorPos;
+                if (!GetCursorPos(&cursorPos)) return 1;
+
+                if (img_region_step == 0) {
+                    img_x1 = cursorPos.x;
+                    img_y1 = cursorPos.y;
+                    printf("[SCREENSHOT] Top-Left: %ld,%ld\n", img_x1, img_y1);
+                    img_region_step = 1;
+                } else if (img_region_step == 1) {
+                    img_x2 = cursorPos.x;
+                    img_y2 = cursorPos.y;
+                    printf("[SCREENSHOT] Bottom-Right: %ld,%ld\n", img_x2, img_y2);
+                    img_region_step = 0;
+
+                    TriggerScreenshot(hPopupWnd,true);
                 }
                 return 1;
             }

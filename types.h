@@ -44,4 +44,5 @@ char* PromptUser(const char* window_list[], const char* window_title,int count, 
 extern HWND hPopupWnd;
 extern HWND hListBox;
 extern HWND hEditControl;
+extern bool selection_complete;
 #endif
