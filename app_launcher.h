@@ -8,6 +8,8 @@
 #include <string.h>
 #include <shlwapi.h>
 #include "config.h"
+#include "helpers.h"
+
 
 #define MAX_APPS 2000
 
@@ -81,17 +83,29 @@ static void initialize_app_cache() {
     }
 }
 
+static bool FindAppInCache(const char* name, char* out_path, size_t path_size) {
+    for (int i = 0; i < G_APP_COUNT; i++) {
+        if (StrStrIA(G_APPS[i].name, name) != NULL) {
+            strncpy(out_path, G_APPS[i].path, path_size);
+            return true;
+        }
+    }
+    return false;
+}
+
+static char* FindAppPathByName(const char* name) {
+    for (int i = 0; i < G_APP_COUNT; i++) {
+        if (StrStrIA(G_APPS[i].name, name) != NULL) {
+            return G_APPS[i].path;
+        }
+    }
+    return NULL;
+}
+
 static void launch_app_by_name(const char* display_name) {
     for (int i = 0; i < G_APP_COUNT; i++) {
         if (StrCmpIA(G_APPS[i].name, display_name) == 0) {
-            SHELLEXECUTEINFOA sei = {0};
-            sei.cbSize = sizeof(SHELLEXECUTEINFOA);
-            sei.fMask = SEE_MASK_FLAG_NO_UI | SEE_MASK_ASYNCOK; 
-            sei.lpVerb = "open";               
-            sei.lpFile = G_APPS[i].path;       
-            sei.nShow = SW_SHOWNORMAL;
-
-            ShellExecuteExA(&sei);
+            LaunchApp(G_APPS[i].path);
             return;
         }
     }
@@ -100,14 +114,7 @@ static void launch_app_by_name(const char* display_name) {
 static void launch_app_as_admin(const char* display_name) {
     for (int i = 0; i < G_APP_COUNT; i++) {
         if (StrCmpIA(G_APPS[i].name, display_name) == 0) {
-            SHELLEXECUTEINFOA sei = {0};
-            sei.cbSize = sizeof(SHELLEXECUTEINFOA);
-            sei.fMask = SEE_MASK_FLAG_NO_UI | SEE_MASK_ASYNCOK;
-            sei.lpVerb = "runas";
-            sei.lpFile = G_APPS[i].path;
-            sei.nShow = SW_SHOWNORMAL;
-
-            ShellExecuteExA(&sei);
+            LaunchAppAsAdmin(G_APPS[i].path);
             return;
         }
     }
@@ -146,25 +153,17 @@ static void applauncher_ctrlenter_callback(const char* selection) {
 }
 
 static void applauncher_refresh_callback(const char* filter, HWND hListBox) {
-    if (!hListBox) return;
-    
-    SendMessageA(hListBox, LB_RESETCONTENT, 0, 0);
-    if (filter == NULL || strlen(filter) == 0) {
-        for (int i = 0; i < G_APP_COUNT; i++) {
-            SendMessageA(hListBox, LB_ADDSTRING, 0, (LPARAM)G_APPS[i].name);
-        }
-    } else {
-        for (int i = 0; i < G_APP_COUNT; i++) {
-            if (StrStrIA(G_APPS[i].name, filter) != NULL) {
-                SendMessageA(hListBox, LB_ADDSTRING, 0, (LPARAM)G_APPS[i].name);
-            }
-        }
+    const char** items = (const char**)malloc(G_APP_COUNT * sizeof(char*));
+    if (!items) return;
+    for (int i = 0; i < G_APP_COUNT; i++) {
+        items[i] = G_APPS[i].name;
     }
-    SendMessageA(hListBox, LB_SETCURSEL, 0, 0);
+    PopulateListBox(hListBox, filter, items, G_APP_COUNT, NULL);
+    free(items);
 }
 
 void TriggerAppLauncher(HWND hPopupWnd) {
-    if (hPopupWnd != NULL && IsWindow(hPopupWnd)) return;
+    if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
     
     initialize_app_cache();
 

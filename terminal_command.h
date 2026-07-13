@@ -10,9 +10,7 @@
 extern HWND hPopupWnd;
 
 static void TriggerTerminalCommand(HWND hPopupWnd) {
-    if (hPopupWnd != NULL && IsWindow(hPopupWnd)) {
-        return;
-    }
+    if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
 
     const char* prompt[1] = { "Enter Terminal Command ..." };
     char* query = PromptUser(prompt,"Terminal", 1, 220, 150,32, NULL, NULL, NULL, NULL,NULL);

@@ -16,9 +16,7 @@ extern long img_x1, img_y1, img_x2, img_y2;
 #define IMAGE_EDITOR "picview.exe"
 
 static void TriggerScreenshot(HWND hPopupWnd,bool open_screenshot) {
-    if (hPopupWnd != NULL && IsWindow(hPopupWnd)) {
-        return;
-    }
+    if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
 
     const char* name_prompt[1] = { "Enter image name..." };
     char* raw_name = PromptUser(name_prompt,"📷 Screenshot", 1, 220, 150,32,NULL,NULL,NULL,NULL,NULL);
