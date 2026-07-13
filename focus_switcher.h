@@ -76,9 +76,9 @@ static BOOL CALLBACK FindWindowByExeProc(HWND hwnd, LPARAM lParam) {
     return TRUE;
 }
 
-static void FocusWindowByExe(const char* exe_name) {
+static bool FocusWindowByExe(const char* exe_name) {
     printf("[DEBUG] FocusWindowByExe called with: %s\n", exe_name);
-    if (!exe_name || strlen(exe_name) == 0) return;
+    if (!exe_name || strlen(exe_name) == 0) return false;
     
     FindWindowData data;
     data.search_exe = exe_name;
@@ -88,8 +88,10 @@ static void FocusWindowByExe(const char* exe_name) {
     
     if (data.result) {
         FocusWindow(data.result);
+        return true;
     } else {
         printf("[FOCUS] No window found with exe: %s\n", exe_name);
+        return false;
     }
 }
 
@@ -173,17 +175,18 @@ static bool HandleFocusSwitcher(int vk_code, int modifiers, const char* current_
             }
             
               if (strcmp(binding->window_titles[0],"Alacritty") == 0) {
-                  FocusWindowByExe("alacritty.exe");
-              }else {
-                HWND target = FindAnyWindow(binding->window_titles, binding->window_count);
-                if (target) {
-                    FocusWindow(target);
-                    return true;
-                } else {
-                    printf("[FOCUS] No matching window found.\n");
-                    return false;
-                }
+                 if (FocusWindowByExe("alacritty.exe")) {
+                   return true;
+                 }else {
+                    HWND target = FindAnyWindow(binding->window_titles, binding->window_count);
+                    if (target) {
+                        FocusWindow(target);
+                    } else {
+                        printf("[FOCUS] No matching window found.\n");
+                    }
+                 }
               }
+              
         }
     }
     return false;
