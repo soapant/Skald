@@ -339,6 +339,7 @@ static const char* alias_to_project(const char* alias) {
     if (strcmp(alias, "-pc") == 0) return "Cprogram";
     if (strcmp(alias, "-pv") == 0) return "VideoViewer";
     if (strcmp(alias, "-pm") == 0) return "MusicPlayer";
+    if (strcmp(alias, "-pg") == 0) return "MinecraftModpack";
     return NULL;
 }
 #endif
