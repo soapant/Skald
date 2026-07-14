@@ -10,6 +10,7 @@
 #include <stdbool.h>
 #include <shlwapi.h>
 #include "types.h"
+#include "common_ui.h"
 
 // ============================================================
 // GLOBAL STATE FOR TAB FLIPPING

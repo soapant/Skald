@@ -10,9 +10,7 @@
 #include <shlwapi.h> 
 #include "types.h"
 #include "config.h"
-#include "common_ui.h"
 #include "calc.h"
-#include "window_switcher.h"
 #include "video_player.h"
 #include "music_player.h"
 #include "timer.h"
@@ -20,7 +18,6 @@
 #include "explorer.h"
 #include "screenshot.h"
 #include "terminal_command.h"
-#include "todo.h"
 #include "zoxide.h"
 #include "nvim_zoxide.h"
 #include "yazi_zoxide.h"
@@ -33,8 +30,9 @@
 #include "region_handler.h"
 #include "google_search.h"
 #include "factorio.h"
-#include "app_launcher.h"
 #include "process_killer.h"
+#include "number_shortcut.h"
+#include "todo.h"
 #include "hotkey_definitions.h"
 #pragma comment(lib, "Shlwapi.lib") // Tells the compiler to link the shlwapi library
 #define ID_TRAY_ICON 1001
@@ -61,14 +59,14 @@ long img_x2 = 0, img_y2 = 0; // Add this line if it isn't there!
 static ULONG_PTR g_gdiplusToken = 0;
 #pragma comment(lib, "gdiplus.lib")
 
-static RefreshCallback g_refresh_callback = NULL;
-static EnterCallback g_enter_callback = NULL;
-static CtrlEnterCallback g_ctrl_enter_callback = NULL;
-static TabCallback g_tab_callback = NULL;
-static RenderCallback g_render_callback = NULL;
-static const char** g_initial_items = NULL;
-static int g_initial_count = 0;
-static const char* g_title = NULL;
+RefreshCallback g_refresh_callback = NULL;
+EnterCallback g_enter_callback = NULL;
+CtrlEnterCallback g_ctrl_enter_callback = NULL;
+TabCallback g_tab_callback = NULL;
+RenderCallback g_render_callback = NULL;
+const char** g_initial_items = NULL;
+int g_initial_count = 0;
+const char* g_title = NULL;
 // --- GLOBAL VARIABLES FOR THE IMAGE CAPTURE ---
 int img_region_step = 0;
 long img_x1 = 0, img_y1 = 0;
@@ -141,13 +139,27 @@ BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam) {
     myList->count++;
     return TRUE;
 }
-
 LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
     HWND hParent = GetParent(hwnd);
     HWND hListBox = GetDlgItem(hParent, IDC_LIST_BOX);
     HWND hEditControl = hwnd;
+    bool ctrl_pressed = (GetKeyState(VK_CONTROL) & 0x8000);
 
     if (msg == WM_KEYDOWN) {
+        // Ignore modifier keys
+        if (wParam == VK_CONTROL || wParam == VK_SHIFT || wParam == VK_MENU) {
+            return DefSubclassProc(hwnd, msg, wParam, lParam);
+        }
+
+        // NUMBER SHORTCUTS (0-9) with Ctrl
+        if (wParam >= '0' && wParam <= '9') {
+            if (ctrl_pressed) {
+              HandleNumberShortcut(wParam, hListBox, hEditControl);
+              return 0;
+            }
+            
+        }
+
         // --- ARROW KEY ROUTING ---
         if (wParam == VK_UP || wParam == VK_DOWN) {
             if (hListBox != NULL) {
@@ -220,10 +232,10 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
             }
             return 0;
         }
-    }
+    } 
     
     return DefSubclassProc(hwnd, msg, wParam, lParam);
-}
+} 
       
 HFONT CreateCustomNerdFont(int height, const char* face_name) {
     return CreateFontA(
@@ -279,39 +291,82 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             }
             break;
         }
-        case WM_DRAWITEM: {
-            DRAWITEMSTRUCT* pdis = (DRAWITEMSTRUCT*)lParam;
-            if (pdis->CtlID == IDC_LIST_BOX && pdis->itemID != -1) {
-                char textBuffer[512];
-                SendMessageA(pdis->hwndItem, LB_GETTEXT, pdis->itemID, (LPARAM)textBuffer);
-                
-                // Draw background
-                HBRUSH hBgBrush;
-                if (pdis->itemState & ODS_SELECTED) {
-                    hBgBrush = CreateSolidBrush(RGB(50, 56, 68));
-                } else {
-                    hBgBrush = CreateSolidBrush(COLOR_BG);
-                }
-                FillRect(pdis->hDC, &pdis->rcItem, hBgBrush);
-                DeleteObject(hBgBrush);
-                
-                SetBkMode(pdis->hDC, TRANSPARENT);
-                
-                if (g_render_callback != NULL) {
-                    // Feature-specific rendering
-                    g_render_callback(pdis->hDC, textBuffer, &pdis->rcItem, (pdis->itemState & ODS_SELECTED));
-                } else {
-                    // Default rendering
-                    SetTextColor(pdis->hDC, pdis->itemState & ODS_SELECTED ? RGB(255,255,255) : COLOR_TEXT);
-                    RECT textRect = pdis->rcItem;
-                    textRect.left += 10;
-                    DrawTextA(pdis->hDC, textBuffer, -1, &textRect, DT_SINGLELINE | DT_VCENTER);
-                }
-                
-                return TRUE;
-            }
-            break;
-        }
+      case WM_DRAWITEM: {
+          DRAWITEMSTRUCT* pdis = (DRAWITEMSTRUCT*)lParam;
+          if (pdis->CtlID == IDC_LIST_BOX && pdis->itemID != -1) {
+              char textBuffer[512];
+              SendMessageA(pdis->hwndItem, LB_GETTEXT, pdis->itemID, (LPARAM)textBuffer);
+              
+              // Draw background
+              HBRUSH hBgBrush;
+              if (pdis->itemState & ODS_SELECTED) {
+                  hBgBrush = CreateSolidBrush(RGB(50, 56, 68));
+              } else {
+                  hBgBrush = CreateSolidBrush(COLOR_BG);
+              }
+              FillRect(pdis->hDC, &pdis->rcItem, hBgBrush);
+              DeleteObject(hBgBrush);
+              
+              SetBkMode(pdis->hDC, TRANSPARENT);
+              
+              RECT textRect = pdis->rcItem;
+              
+              // ONLY show numbers if Ctrl is held
+              if (IsCtrlPressed() && pdis->itemID < 20) {
+                  char num_str[8];
+                  snprintf(num_str, sizeof(num_str), "%d.", pdis->itemID + 1);
+                  
+                  RECT numRect = pdis->rcItem;
+                  numRect.left += 5;
+                  numRect.right = numRect.left + 25;
+                  
+                  HFONT hNumFont = CreateFontA(18, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
+                                              DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+                                              CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "0xProto Nerd Font");
+                  HFONT hOldFont = (HFONT)SelectObject(pdis->hDC, hNumFont);
+                  
+                  // Rainbow color
+                  float hue = (float)pdis->itemID / 20.0f * 240.0f;
+                  float h = hue / 60.0f;
+                  float s = 0.85f;
+                  float v = 0.85f;
+                  int i = (int)h;
+                  float f = h - i;
+                  float p = v * (1 - s);
+                  float q = v * (1 - s * f);
+                  float t = v * (1 - s * (1 - f));
+                  float r, g, b;
+                  switch (i) {
+                      case 0: r = v; g = t; b = p; break;
+                      case 1: r = q; g = v; b = p; break;
+                      case 2: r = p; g = v; b = t; break;
+                      case 3: r = p; g = q; b = v; break;
+                      case 4: r = t; g = p; b = v; break;
+                      default: r = v; g = p; b = q; break;
+                  }
+                  
+                  SetTextColor(pdis->hDC, RGB((BYTE)(r * 255), (BYTE)(g * 255), (BYTE)(b * 255)));
+                  DrawTextA(pdis->hDC, num_str, -1, &numRect, DT_SINGLELINE | DT_VCENTER | DT_CENTER);
+                  
+                  SelectObject(pdis->hDC, hOldFont);
+                  DeleteObject(hNumFont);
+                  
+                  textRect.left += 35;
+              } else {
+                  textRect.left += 10;
+              }
+              
+              if (g_render_callback != NULL) {
+                  g_render_callback(pdis->hDC, textBuffer, &textRect, (pdis->itemState & ODS_SELECTED));
+              } else {
+                  SetTextColor(pdis->hDC, pdis->itemState & ODS_SELECTED ? RGB(255,255,255) : COLOR_TEXT);
+                  DrawTextA(pdis->hDC, textBuffer, -1, &textRect, DT_SINGLELINE | DT_VCENTER);
+              }
+              
+              return TRUE;
+          }
+          break;
+      }
       case WM_PAINT: {
           PAINTSTRUCT ps;
           HDC hdc = BeginPaint(hwnd, &ps);
@@ -358,6 +413,18 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
           EndPaint(hwnd, &ps);
           break;
       }
+      case WM_TIMER:
+        if (wParam == 999) {
+            static bool last_ctrl = false;
+            bool current_ctrl = IsCtrlPressed();
+            if (current_ctrl != last_ctrl) {
+                last_ctrl = current_ctrl;
+                if (hListBox != NULL && IsWindow(hListBox)) {
+                    InvalidateRect(hListBox, NULL, TRUE);
+                }
+            }
+        }
+        break;              
                        
         default:
             return DefWindowProcA(hwnd, msg, wParam, lParam);
@@ -552,6 +619,7 @@ char* PromptUser(const char* window_list[],const char* window_title,int count, i
         "QuickSwitcherModalClass", NULL, WS_POPUP, 
         layout.x, layout.y, layout.w, layout.h, NULL, NULL, hInstance, NULL
     );
+    SetTimer(hPopupWnd, 999, 50, NULL);
 
     if (hPopupWnd == NULL) {
         DWORD err = GetLastError();
@@ -616,9 +684,12 @@ char* PromptUser(const char* window_list[],const char* window_title,int count, i
     // CRITICAL FIX: Destroy the popup window!
     // ============================================================
     if (hPopupWnd != NULL && IsWindow(hPopupWnd)) {
+        KillTimer(hPopupWnd, 999);
         DestroyWindow(hPopupWnd);
         hPopupWnd = NULL;
     }
+    
+    ResetNumberShortcutState();
     
     printf("[DEBUG-UI] Flushing trailing queue entries...\n");
     while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
@@ -912,7 +983,6 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 void RunHotKeyMessageLoop() {
     HINSTANCE hInstance = GetModuleHandle(NULL);
     
-    // Install keyboard hook
     hKeyboardHook = SetWindowsHookEx(WH_KEYBOARD_LL, LowLevelKeyboardProc, hInstance, 0);
     if (!hKeyboardHook) {
         printf("[ERROR] Failed to install keyboard hook! Error: %lu\n", GetLastError());

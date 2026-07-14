@@ -1,6 +1,4 @@
-make my own window manager (kind of)||[Project: Cprogram]
 not consumable recipes just dont exist||[Project: MinecraftModpack]
-add a search by project for the todo||[Project: Cprogram]
 maybe just maybe do the whole vim motions for my entire project||[Project: Cprogram]
 also maybe you can like link todos to each other||[Project: Cprogram]
-if you cant figure out the vim motions then just do the ctrl and numbers||[Project: Cprogram]
+make my own window manager (kind of)||[Project: Cprogram]
