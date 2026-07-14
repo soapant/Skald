@@ -149,5 +149,8 @@ static inline bool LaunchApp(const char* path) {
 static inline bool LaunchAppAsAdmin(const char* path) {
     return ShellExecuteWithVerb(path, "runas", true);
 }
+static inline bool IsCtrlPressed(void) {
+    return (GetKeyState(VK_CONTROL) & 0x8000) != 0;
+}
 
 #endif // HELPERS_H
