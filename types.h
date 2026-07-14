@@ -61,5 +61,12 @@ extern HWND hPopupWnd;
 extern HWND hListBox;
 extern HWND hEditControl;
 extern bool selection_complete;
-
+extern RefreshCallback g_refresh_callback;
+extern EnterCallback g_enter_callback;
+extern CtrlEnterCallback g_ctrl_enter_callback;
+extern TabCallback g_tab_callback;
+extern RenderCallback g_render_callback;
+extern const char** g_initial_items;
+extern int g_initial_count;
+extern const char* g_title;
 #endif // TYPES_H
