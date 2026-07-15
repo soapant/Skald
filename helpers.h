@@ -153,4 +153,168 @@ static inline bool IsCtrlPressed(void) {
     return (GetKeyState(VK_CONTROL) & 0x8000) != 0;
 }
 
-#endif // HELPERS_H
+typedef struct {
+    HANDLE hFile;
+    HANDLE hMapping;
+    char *pBuffer;
+    size_t fileSize;   
+    size_t capacity;   
+} MappedFile;
+
+typedef struct {
+    char *ptr;
+    size_t length;
+} Line;
+
+
+static inline int FileInit(const char *filePath, MappedFile *mf, size_t initialPadding) {
+    mf->hFile = CreateFileA(filePath, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (mf->hFile == INVALID_HANDLE_VALUE) return 0;
+
+    LARGE_INTEGER fs;
+    GetFileSizeEx(mf->hFile, &fs);
+    mf->fileSize = (size_t)fs.QuadPart;
+    mf->capacity = mf->fileSize + initialPadding; 
+
+    LARGE_INTEGER mapSize;
+    mapSize.QuadPart = mf->capacity;
+
+    mf->hMapping = CreateFileMappingA(mf->hFile, NULL, PAGE_READWRITE, mapSize.HighPart, mapSize.LowPart, NULL);
+    if (mf->hMapping == NULL) {
+        CloseHandle(mf->hFile);
+        return 0;
+    }
+
+    mf->pBuffer = (char *)MapViewOfFile(mf->hMapping, FILE_MAP_WRITE, 0, 0, 0);
+    if (mf->pBuffer == NULL) {
+        CloseHandle(mf->hMapping);
+        CloseHandle(mf->hFile);
+        return 0;
+    }
+    return 1;
+}
+
+static inline int FileAppend(MappedFile *mf, const char *text) {
+    if (!mf || !text) return 0;
+    
+    size_t len = strlen(text);
+    if (mf->fileSize + len > mf->capacity) {
+        // Need to expand - we'll handle this by just not appending if too big
+        printf("[FILE] Warning: Not enough space to append data!\n");
+        return 0;
+    }
+    
+    memcpy(mf->pBuffer + mf->fileSize, text, len);
+    mf->fileSize += len;
+    return 1;
+}
+
+static inline Line* FileGetLines(MappedFile *mf, size_t *outLineCount) {
+    size_t maxLines = 1000;
+    size_t count = 0;
+    Line *list = (Line *)malloc(maxLines * sizeof(Line));
+    if (list == NULL) return NULL;
+
+    char *lineStart = mf->pBuffer;
+    size_t totalBytes = mf->fileSize;
+
+    for (size_t i = 0; i < totalBytes; i++) {
+        if (mf->pBuffer[i] == '\n' || i == totalBytes - 1) {
+            if (count >= maxLines) {
+                maxLines *= 2;
+                list = (Line *)realloc(list, maxLines * sizeof(Line));
+            }
+            size_t currentLineLen = &mf->pBuffer[i] - lineStart;
+            if (i == totalBytes - 1) currentLineLen++; 
+            list[count].ptr = lineStart;
+            list[count].length = currentLineLen;
+            count++;
+            lineStart = &mf->pBuffer[i + 1];
+        }
+    }
+    *outLineCount = count;
+    return list;
+}
+
+void FileClose(MappedFile *mf) {
+    if (mf->pBuffer) UnmapViewOfFile(mf->pBuffer);
+    if (mf->hMapping) CloseHandle(mf->hMapping);
+    if (mf->hFile != INVALID_HANDLE_VALUE) {
+        LARGE_INTEGER fs;
+        fs.QuadPart = mf->fileSize;
+        SetFilePointerEx(mf->hFile, fs, NULL, FILE_BEGIN);
+        SetEndOfFile(mf->hFile); 
+        CloseHandle(mf->hFile);
+    }
+}
+
+
+static inline char** FileGetStrings(MappedFile *mf, size_t *outLineCount, size_t **outNewlineIndices, size_t *outNewlineCount) {
+    size_t maxLines = 1000;
+    size_t count = 0;
+    
+    char **stringList = (char **)malloc(maxLines * sizeof(char*));
+    if (stringList == NULL) return NULL;
+
+    // Allocate an array to remember EXACTLY which indices were modified
+    size_t maxNewlines = 2000;
+    size_t newlineCount = 0;
+    size_t *newlineIndices = (size_t *)malloc(maxNewlines * sizeof(size_t));
+
+    stringList[count++] = mf->pBuffer;
+    size_t totalBytes = mf->fileSize;
+
+    for (size_t i = 0; i < totalBytes; i++) {
+        // Track and remember Windows \r characters
+        if (mf->pBuffer[i] == '\r') {
+            mf->pBuffer[i] = '\0';
+            
+            if (newlineCount >= maxNewlines) {
+                maxNewlines *= 2;
+                newlineIndices = (size_t *)realloc(newlineIndices, maxNewlines * sizeof(size_t));
+            }
+            // Save index, flag it as a \r by using a tracking format or handling it at \n
+            newlineIndices[newlineCount++] = i; 
+        }
+        else if (mf->pBuffer[i] == '\n') {
+            mf->pBuffer[i] = '\0';
+            
+            if (newlineCount >= maxNewlines) {
+                maxNewlines *= 2;
+                newlineIndices = (size_t *)realloc(newlineIndices, maxNewlines * sizeof(size_t));
+            }
+            newlineIndices[newlineCount++] = i; // Save exact index of \n
+
+            if (i + 1 < totalBytes) {
+                if (count >= maxLines) {
+                    maxLines *= 2;
+                    stringList = (char **)realloc(stringList, maxLines * sizeof(char*));
+                }
+                stringList[count++] = &mf->pBuffer[i + 1];
+            }
+        }
+    }
+    
+    *outLineCount = count;
+    *outNewlineIndices = newlineIndices; // Pass the map back to main
+    *outNewlineCount = newlineCount;
+    return stringList;
+}
+
+void CleanUpFile(MappedFile *mf, size_t *newlineIndices, size_t newlineCount) {
+    if (!newlineIndices) return;
+
+    // Read the map backwards or forwards and put the exact characters back
+    for (size_t i = 0; i < newlineCount; i++) {
+        size_t idx = newlineIndices[i];
+        
+        if (idx + 1 < mf->fileSize && mf->pBuffer[idx + 1] == '\0') {
+            mf->pBuffer[idx] = '\r';
+        } else {
+            mf->pBuffer[idx] = '\n';
+        }
+    }
+    free(newlineIndices);
+}
+
+#endif 

@@ -22,28 +22,7 @@ static bool HandleRegionKey(bool alt_down, bool ctrl_down, bool shift_down) {
         return false;
     }
 
-    if (alt_down && !ctrl_down && shift_down) {
-        if (img_region_step == 0) {
-            img_x1 = cursorPos.x;
-            img_y1 = cursorPos.y;
-            printf("[IMG REGION] Step 1 Saved: Top-Left at %ld,%ld.\n", img_x1, img_y1);
-            img_region_step = 1;
-        }
-        else if (img_region_step == 1) {
-            img_x2 = cursorPos.x;
-            img_y2 = cursorPos.y;
-            printf("[IMG REGION] Step 2 Saved: Bottom-Right at %ld,%ld.\n", img_x2, img_y2);
-            img_region_step = 0;
-
-            if (hGlobalTrayWnd != NULL) {
-                SendNotifyMessage(hGlobalTrayWnd, WM_TRIGGER_IMG_CAPTURE, 0, 0);
-            } else {
-                printf("[ERROR] hGlobalTrayWnd is null!\n");
-            }
-        }
-        return true;
-    }
-    else if (alt_down && !ctrl_down && !shift_down) {
+    if (alt_down && !ctrl_down && !shift_down) {
         if (region_step == 0) {
             saved_x1 = cursorPos.x;
             saved_y1 = cursorPos.y;

@@ -32,6 +32,7 @@
 #include "factorio.h"
 #include "process_killer.h"
 #include "number_shortcut.h"
+#include "helpers.h"
 #include "todo.h"
 #include "hotkey_definitions.h"
 #pragma comment(lib, "Shlwapi.lib") // Tells the compiler to link the shlwapi library
@@ -67,6 +68,7 @@ RenderCallback g_render_callback = NULL;
 const char** g_initial_items = NULL;
 int g_initial_count = 0;
 const char* g_title = NULL;
+MappedFile *TerminalHistoryFile = NULL; 
 // --- GLOBAL VARIABLES FOR THE IMAGE CAPTURE ---
 int img_region_step = 0;
 long img_x1 = 0, img_y1 = 0;
@@ -1000,8 +1002,8 @@ void RunHotKeyMessageLoop() {
 
 int main() {
     StartUniversalTimer();
-  
     InitializeTrayIcon();
+    
     struct GdiplusStartupInput gdiplusStartupInput;
     gdiplusStartupInput.GdiplusVersion = 1;
     gdiplusStartupInput.DebugEventCallback = NULL;
@@ -1009,12 +1011,12 @@ int main() {
     gdiplusStartupInput.SuppressExternalCodecs = FALSE;
     GdiplusStartup(&g_gdiplusToken, &gdiplusStartupInput, NULL);
 
-    // --- INSTRUMENTED SYSTEM REGISTRATION BLOCK ---
+    // Register window class
     WNDCLASSA wc = {0};
     wc.lpfnWndProc = PopupWndProc;
     wc.hInstance = GetModuleHandle(NULL);
     wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-    wc.hbrBackground = CreateSolidBrush(COLOR_BG); 
+    wc.hbrBackground = CreateSolidBrush(COLOR_BG);
     wc.lpszClassName = "QuickSwitcherModalClass";
     
     if (RegisterClassA(&wc)) {
@@ -1022,14 +1024,28 @@ int main() {
     } else {
         printf("[SYSTEM-BOOT] CRITICAL WARNING: Failed to register window class! Error: %lu\n", GetLastError());
     }
-    // ----------------------------------------------
+    
+    // Initialize terminal history file
+    TerminalHistoryFile = (MappedFile *)malloc(sizeof(MappedFile));
+    if (!FileInit(TerminalHistoryPath, TerminalHistoryFile, 4096)) {
+        printf("[SYSTEM] Failed to open terminal history file. Creating new one.\n");
+        // Create empty file
+        HANDLE hFile = CreateFileA(TerminalHistoryPath, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (hFile != INVALID_HANDLE_VALUE) {
+            CloseHandle(hFile);
+            FileInit(TerminalHistoryPath, TerminalHistoryFile, 4096);
+        }
+    }
 
     printf("[SYSTEM] Low-Level Hotkey Services Running. GDI+ Online.\n");
-
     RunHotKeyMessageLoop();
 
     if (g_gdiplusToken != 0) {
         GdiplusShutdown(g_gdiplusToken);
     }
+    
+    FileClose(TerminalHistoryFile);
+    free(TerminalHistoryFile);
+    
     return 0;
 }
