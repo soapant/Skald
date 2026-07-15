@@ -770,48 +770,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             MacroAction macroAction = (MacroAction)wParam;
             int macroDelay = (int)lParam;
             
-            printf("[MACRO-WNDPROC] Received WM_TRIGGER_UNIVERSAL_MACRO in WndProc! action=%d, delay=%d\n", macroAction, macroDelay);
-            printf("[MACRO-WNDPROC] hwnd=%p\n", hwnd);
+            printf("[MACRO-WNDPROC] Received action=%d, delay=%d\n", macroAction, macroDelay);
             
-            switch(macroAction) {
-            case MACRO_NONE: {
-                printf("[MACRO] ACTION_NONE received - ignoring\n");
-                break;
+            // Find the action and execute its handler directly
+            for (int i = 0; i < MACRO_BINDING_COUNT; i++) {
+                if (G_MACRO_BINDINGS[i].action_id == macroAction && 
+                    G_MACRO_BINDINGS[i].handler != NULL) {
+                    G_MACRO_BINDINGS[i].handler();  // Calls the function directly!
+                    break;
+                }
             }
-              case MACRO_FACTORIO_MAKE_TAG: {
-                    create_tag();
-                  }
-                                            
-              case MACRO_FACTORIO_SEARCH_FACTORY: {
-                    search_factory();
-                  }
-              // In WndProc WM_TRIGGER_UNIVERSAL_MACRO case:
-              case MACRO_MINECRAFT_COPY: {
-                  minecraft_type_command("//copy");
-                  break;
-              }
-
-              case MACRO_MINECRAFT_PASTE: {
-                  minecraft_type_command("//paste -a");
-                  break;
-              }
-
-              case MACRO_MINECRAFT_UNDO: {
-                  minecraft_type_command("//undo");
-                  break;
-              }
-
-              case MACRO_MINECRAFT_UP: {
-                  minecraft_type_command("//up 1");
-                  break;
-              }
-
-              case MACRO_MINECRAFT_ROTATE: {
-                  minecraft_type_command("//rotate 90");
-                  break;
-              }
-            }
-            
             break;
         }
         
@@ -1023,16 +991,24 @@ int main() {
         printf("[SYSTEM-BOOT] CRITICAL WARNING: Failed to register window class! Error: %lu\n", GetLastError());
     }
     
+    // ============================================================
+    // FIXED: Use 0 padding instead of 4096
+    // ============================================================
+    for (int i = 0; i < FILE_ENTRY_COUNT; i++) {
+        SanitizeFile(G_FILE_ENTRIES[i].path);
+    }
+
     for (int i = 0; i < FILE_ENTRY_COUNT; i++) {
         G_FILE_ENTRIES[i].mf = (MappedFile*)malloc(sizeof(MappedFile));
         const char* path = G_FILE_ENTRIES[i].path;
         
-        if (!FileInit(path, G_FILE_ENTRIES[i].mf, 4096)) {
+        // CRITICAL FIX: 0 padding = NO GARBAGE!
+        if (!FileInit(path, G_FILE_ENTRIES[i].mf, 0)) {
             printf("[SYSTEM] Failed to open %s. Creating new.\n", G_FILE_ENTRIES[i].name);
             HANDLE hFile = CreateFileA(path, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
             if (hFile != INVALID_HANDLE_VALUE) {
                 CloseHandle(hFile);
-                FileInit(path, G_FILE_ENTRIES[i].mf, 4096);
+                FileInit(path, G_FILE_ENTRIES[i].mf, 0);  // <-- 0 padding here too!
             }
         }
     }
@@ -1045,17 +1021,12 @@ int main() {
     }
     
     for (int i = 0; i < FILE_ENTRY_COUNT; i++) {
-            if (G_FILE_ENTRIES[i].mf != NULL) {
-                // 1. Unmap view, close handles, and update disk size
-                FileClose(G_FILE_ENTRIES[i].mf);
-                
-                // 2. Free the allocated MappedFile memory
-                free(G_FILE_ENTRIES[i].mf);
-                
-                // 3. Null it out to prevent dangling pointers
-                G_FILE_ENTRIES[i].mf = NULL;
-            }
+        if (G_FILE_ENTRIES[i].mf != NULL) {
+            FileClose(G_FILE_ENTRIES[i].mf);
+            free(G_FILE_ENTRIES[i].mf);
+            G_FILE_ENTRIES[i].mf = NULL;
         }
+    }
     
     return 0;
 }
