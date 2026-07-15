@@ -174,7 +174,7 @@ static bool HandleFocusSwitcher(int vk_code, int modifiers, const char* current_
                 return false;
             }
             
-              if (strcmp(binding->window_titles[0],"Alacritty") == 0) {
+              if (strcmp(binding->window_titles[2],"Alacritty") == 0) {
                  if (FocusWindowByExe("alacritty.exe")) {
                    return true;
                  }else {
@@ -185,6 +185,13 @@ static bool HandleFocusSwitcher(int vk_code, int modifiers, const char* current_
                         printf("[FOCUS] No matching window found.\n");
                     }
                  }
+              }else { 
+                  HWND target = FindAnyWindow(binding->window_titles, binding->window_count);
+                  if (target) {
+                      FocusWindow(target);
+                  } else {
+                      printf("[FOCUS] No matching window found.\n");
+                  }
               }
               
         }

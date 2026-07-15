@@ -294,7 +294,7 @@ static const char* browsers_windows[] = {"Zen","Chrome"};
 
 static const char* focus_blacklist_coding[] = {"CrosshairX"};
 
-static const char* coding_windows[] = {"Alacritty","Nvim","Neovide","vim","pwsh"};
+static const char* coding_windows[] = {"Nvim","Neovide","Alacritty","vim","pwsh"};
 
 static const FocusSwitcherBinding G_FOCUS_SWITCHERS[] = {
     {
