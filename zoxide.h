@@ -114,18 +114,23 @@ static void zoxide_enter_callback(const char* selection) {
         if (hEditControl != NULL) {
             GetWindowTextA(hEditControl, input, sizeof(input));
             if (strlen(input) > 0) {
+                // Prevent line collapsing: Add missing newline if needed
+                if (TerminalZoxideFile->fileSize > 0) {
+                    char lastChar = TerminalZoxideFile->pBuffer[TerminalZoxideFile->fileSize - 1];
+                    if (lastChar != '\n') {
+                        FileAppend(TerminalZoxideFile, "\n");
+                    }
+                }
+
                 FileAppend(TerminalZoxideFile, input);
                 FileAppend(TerminalZoxideFile, "\n");
                 RebuildZoxideCache();
-                printf("[ZOXIDE] Saved query: %s\n", input);
                 
                 // Run the query
                 char* path = QueryZoxidePath(input);
                 if (path) {
-                    char cmd[2048];
-                    snprintf(cmd, sizeof(cmd), "start alacritty --working-directory \"%s\"", path);
-                    system(cmd);
-                    printf("[ZOXIDE] Opened Alacritty in: %s\n", path);
+                    // Non-blocking launch: Start alacritty inside target path as working dir
+                    ShellExecuteA(NULL, "open", "alacritty.exe", NULL, path, SW_SHOWNORMAL);
                 }
             }
         }
@@ -133,10 +138,8 @@ static void zoxide_enter_callback(const char* selection) {
         // Selected from history
         char* path = QueryZoxidePath(selection);
         if (path) {
-            char cmd[2048];
-            snprintf(cmd, sizeof(cmd), "start alacritty --working-directory \"%s\"", path);
-            system(cmd);
-            printf("[ZOXIDE] Opened Alacritty in: %s\n", path);
+            // Non-blocking launch: Start alacritty inside target path as working dir
+            ShellExecuteA(NULL, "open", "alacritty.exe", NULL, path, SW_SHOWNORMAL);
         }
     }
 }

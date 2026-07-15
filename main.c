@@ -314,7 +314,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
               RECT textRect = pdis->rcItem;
               
               // ONLY show numbers if Ctrl is held
-              if (IsCtrlPressed() && pdis->itemID < 20) {
+              if (pdis->itemID < 20) {
                   char num_str[8];
                   snprintf(num_str, sizeof(num_str), "%d.", pdis->itemID + 1);
                   
@@ -354,8 +354,6 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                   DeleteObject(hNumFont);
                   
                   textRect.left += 35;
-              } else {
-                  textRect.left += 10;
               }
               
               if (g_render_callback != NULL) {
@@ -1046,8 +1044,18 @@ int main() {
         GdiplusShutdown(g_gdiplusToken);
     }
     
-    FileClose(TerminalHistoryFile);
-    free(TerminalHistoryFile);
+    for (int i = 0; i < FILE_ENTRY_COUNT; i++) {
+            if (G_FILE_ENTRIES[i].mf != NULL) {
+                // 1. Unmap view, close handles, and update disk size
+                FileClose(G_FILE_ENTRIES[i].mf);
+                
+                // 2. Free the allocated MappedFile memory
+                free(G_FILE_ENTRIES[i].mf);
+                
+                // 3. Null it out to prevent dangling pointers
+                G_FILE_ENTRIES[i].mf = NULL;
+            }
+        }
     
     return 0;
 }

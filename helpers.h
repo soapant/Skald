@@ -11,6 +11,23 @@
 #include "config.h"
 #include "common_ui.h"
 
+// Helper to write timestamped logs to a file since we are in -mwindows
+static inline void WriteDebugLog(const char* format, ...) {
+    FILE* logFile = fopen("D:\\Projects\\C Code\\zoxide_debug.log", "a");
+    if (!logFile) return;
+
+    SYSTEMTIME st;
+    GetLocalTime(&st);
+    fprintf(logFile, "[%02d:%02d:%02d.%03d] ", st.wHour, st.wMinute, st.wSecond, st.wMilliseconds);
+
+    va_list args;
+    va_start(args, format);
+    vfprintf(logFile, format, args);
+    va_end(args);
+
+    fclose(logFile);
+}
+
 // ============================================================
 // HOTKEY SYSTEM - Single entry point for all hotkeys
 // ============================================================
@@ -28,18 +45,15 @@ typedef struct {
     const char* name;
 } HotkeyBinding;
 
-// helpers.h - ProcessHotkey uses exact modifier matching
 static inline bool ProcessHotkey(const HotkeyBinding* bindings, int bindings_count,
                                   int pressed_vk, int modifiers,
                                   const char* current_title) {
     for (int i = 0; i < bindings_count; i++) {
         const HotkeyBinding* b = &bindings[i];
         
-        // Exact match on both key AND modifiers
         if (b->vk_code != pressed_vk) continue;
-        if (b->modifiers != modifiers) continue;  // Exact match
+        if (b->modifiers != modifiers) continue;
         
-        // Check blacklist
         if (b->blacklist && b->blacklist_count > 0) {
             bool blacklisted = false;
             for (int j = 0; j < b->blacklist_count; j++) {
@@ -51,21 +65,20 @@ static inline bool ProcessHotkey(const HotkeyBinding* bindings, int bindings_cou
             if (blacklisted) return false;
         }
         
-        // Don't trigger if popup is active
         extern HWND hPopupWnd;
         if (IsPopupActive(hPopupWnd)) return false;
         
-        // Execute the handler
         if (b->handler) {
-            printf("[HOTKEY] %s triggered (mods: 0x%X)\n", b->name, b->modifiers);
+            WriteDebugLog("[HOTKEY] %s triggered\n", b->name);
             b->handler();
             return true;
         }
     }
     return false;
 }
+
 // ============================================================
-// ZOXIDE HELPER
+// ZOXIDE HELPER WITH HIGH-PRECISION TIMING LOGS
 // ============================================================
 
 typedef struct {
@@ -77,55 +90,119 @@ typedef struct {
 } ZoxideOptions;
 
 static inline char* QueryZoxidePath(const char* query) {
-    char command[512];
-    snprintf(command, sizeof(command), "zoxide query %s", query);
-    
+    DWORD start_time = GetTickCount();
+    WriteDebugLog("  [ZOXIDE QUERY START] Query: '%s'\n", query);
+
     static char path[1024];
     path[0] = '\0';
-    FILE* pipe = popen(command, "r");
-    if (pipe) {
-        fgets(path, sizeof(path), pipe);
-        pclose(pipe);
-        path[strcspn(path, "\r\n")] = '\0';
+
+    char command[512];
+    snprintf(command, sizeof(command), "zoxide query %s", query);
+
+    SECURITY_ATTRIBUTES sa = { sizeof(SECURITY_ATTRIBUTES), NULL, TRUE };
+    HANDLE hReadPipe, hWritePipe;
+
+    if (!CreatePipe(&hReadPipe, &hWritePipe, &sa, 0)) {
+        WriteDebugLog("  [ZOXIDE QUERY ERROR] CreatePipe failed!\n");
+        return NULL;
     }
+
+    SetHandleInformation(hReadPipe, HANDLE_FLAG_INHERIT, 0);
+
+    STARTUPINFOA si = {0};
+    si.cb = sizeof(STARTUPINFOA);
+    si.hStdOutput = hWritePipe;
+    si.hStdError = hWritePipe;
+    si.dwFlags |= STARTF_USESTDHANDLES;
+
+    PROCESS_INFORMATION pi = {0};
+
+    WriteDebugLog("  [ZOXIDE QUERY] Spawning zoxide process...\n");
+    DWORD proc_start = GetTickCount();
+    if (CreateProcessA(NULL, command, NULL, NULL, TRUE, CREATE_NO_WINDOW, NULL, NULL, &si, &pi)) {
+        CloseHandle(hWritePipe);
+
+        WriteDebugLog("  [ZOXIDE QUERY] Waiting for process to return...\n");
+        DWORD wait_res = WaitForSingleObject(pi.hProcess, 5000); // 5-second max fail-safe
+        WriteDebugLog("  [ZOXIDE QUERY] Process wait finished. Code: %lu (Time taken: %lu ms)\n", 
+                      wait_res, GetTickCount() - proc_start);
+
+        if (wait_res == WAIT_TIMEOUT) {
+            WriteDebugLog("  [ZOXIDE QUERY WARNING] Zoxide timed out!\n");
+            TerminateProcess(pi.hProcess, 0);
+        }
+
+        DWORD bytesRead = 0;
+        if (ReadFile(hReadPipe, path, sizeof(path) - 1, &bytesRead, NULL)) {
+            path[bytesRead] = '\0';
+            path[strcspn(path, "\r\n")] = '\0';
+        }
+
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);
+    } else {
+        WriteDebugLog("  [ZOXIDE QUERY ERROR] CreateProcessA failed!\n");
+        CloseHandle(hWritePipe);
+    }
+
+    CloseHandle(hReadPipe);
+    WriteDebugLog("  [ZOXIDE QUERY END] Found path: '%s' (Total query time: %lu ms)\n", path, GetTickCount() - start_time);
     return (strlen(path) > 0) ? path : NULL;
 }
 
 static inline void TriggerZoxideWithOptions(const ZoxideOptions* options) {
+    DWORD start_time = GetTickCount();
+    WriteDebugLog("[TRIGGER ZOXIDE] Trigger initiated for: %s\n", options->prompt_title);
+
     extern HWND hPopupWnd;
-    if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
-    
-    const char* prompt[1] = { options->prompt_title };
-    char* query = PromptUser(prompt, options->icon, 1, 220, 150, 32, 
-                             NULL, NULL, NULL, NULL, NULL);
-    
-    if (!query || strlen(query) == 0) return;
-    
-    char* path = QueryZoxidePath(query);
-    if (!path) {
-        printf("[ZOXIDE] No match found for: %s\n", query);
+    if (CheckAndBlockIfPopupActive(hPopupWnd)) {
+        WriteDebugLog("[TRIGGER ZOXIDE] Blocked: Popup already active.\n");
         return;
     }
     
+    const char* prompt[1] = { options->prompt_title };
+    
+    WriteDebugLog("[TRIGGER ZOXIDE] Opening user text input prompt...\n");
+    DWORD prompt_start = GetTickCount();
+    char* query = PromptUser(prompt, options->icon, 1, 220, 150, 32, 
+                               NULL, NULL, NULL, NULL, NULL);
+    WriteDebugLog("[TRIGGER ZOXIDE] Prompt closed. User entered: '%s' (User took: %lu ms)\n", 
+                  query ? query : "NULL", GetTickCount() - prompt_start);
+    
+    if (!query || strlen(query) == 0) {
+        WriteDebugLog("[TRIGGER ZOXIDE] Cancelled: Query is empty.\n");
+        return;
+    }
+    
+    char* path = QueryZoxidePath(query);
+    if (!path) {
+        WriteDebugLog("[TRIGGER ZOXIDE] Ended: No path match returned from zoxide.\n");
+        return;
+    }
+    
+    DWORD exec_start = GetTickCount();
     if (options->open_neovide) {
         char cmd[2048];
         snprintf(cmd, sizeof(cmd), "start neovide \"%s\"", path);
+        WriteDebugLog("[TRIGGER ZOXIDE] Executing system command: %s\n", cmd);
         system(cmd);
-        printf("[ZOXIDE] Opened Neovide in: %s\n", path);
     } else if (options->open_yazi) {
         char cmd[2048];
         snprintf(cmd, sizeof(cmd), "start alacritty --working-directory \"%s\" -e yazi", path);
+        WriteDebugLog("[TRIGGER ZOXIDE] Executing system command: %s\n", cmd);
         system(cmd);
-        printf("[ZOXIDE] Opened Yazi in: %s\n", path);
     } else if (options->open_explorer) {
+        WriteDebugLog("[TRIGGER ZOXIDE] Executing ShellExecuteA for explorer on: %s\n", path);
         ShellExecuteA(NULL, "open", "explorer.exe", path, NULL, SW_SHOWNORMAL);
-        printf("[ZOXIDE] Opened Explorer in: %s\n", path);
     } else {
         char cmd[2048];
         snprintf(cmd, sizeof(cmd), "start alacritty --working-directory \"%s\"", path);
+        WriteDebugLog("[TRIGGER ZOXIDE] Executing system command: %s\n", cmd);
         system(cmd);
-        printf("[ZOXIDE] Opened Alacritty in: %s\n", path);
     }
+    
+    WriteDebugLog("[TRIGGER ZOXIDE] App launch command executed. (Launch execution took: %lu ms)\n", GetTickCount() - exec_start);
+    WriteDebugLog("[TRIGGER ZOXIDE] Finished completely. (Total cycle time: %lu ms)\n", GetTickCount() - start_time);
 }
 
 // ============================================================
@@ -153,19 +230,32 @@ static inline bool IsCtrlPressed(void) {
     return (GetKeyState(VK_CONTROL) & 0x8000) != 0;
 }
 
+// ============================================================
+// MEMORY MAPPED FILE SYSTEM WITH TIMING LOGS
+// ============================================================
 
+typedef struct {
+    size_t index;
+    char original;
+} NewlineInfo;
+
+// ... (Keep existing headers)
 
 static inline int FileInit(const char *filePath, MappedFile *mf, size_t initialPadding) {
-    mf->hFile = CreateFileA(filePath, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+    DWORD start = GetTickCount();
+    WriteDebugLog("  [FILE INIT START] File: %s\n", filePath);
+
+    mf->hFile = CreateFileA(filePath, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (mf->hFile == INVALID_HANDLE_VALUE) return 0;
 
     LARGE_INTEGER fs;
     GetFileSizeEx(mf->hFile, &fs);
     mf->fileSize = (size_t)fs.QuadPart;
+    // Keep capacity logic, but we won't force-write the padding to disk
     mf->capacity = mf->fileSize + initialPadding; 
 
     LARGE_INTEGER mapSize;
-    mapSize.QuadPart = mf->capacity;
+    mapSize.QuadPart = (mf->capacity > 0) ? mf->capacity : 4096;
 
     mf->hMapping = CreateFileMappingA(mf->hFile, NULL, PAGE_READWRITE, mapSize.HighPart, mapSize.LowPart, NULL);
     if (mf->hMapping == NULL) {
@@ -179,6 +269,11 @@ static inline int FileInit(const char *filePath, MappedFile *mf, size_t initialP
         CloseHandle(mf->hFile);
         return 0;
     }
+
+    // REMOVED: memset(mf->pBuffer + mf->fileSize, 0, initialPadding);
+    // DO NOT write zeros to the padding, or Windows will commit the full size to disk!
+
+    WriteDebugLog("  [FILE INIT END] Success. Size: %zu (Time: %lu ms)\n", mf->fileSize, GetTickCount() - start);
     return 1;
 }
 
@@ -186,18 +281,41 @@ static inline int FileAppend(MappedFile *mf, const char *text) {
     if (!mf || !text) return 0;
     
     size_t len = strlen(text);
+    // Check if we actually need to re-map or if we are just at capacity
     if (mf->fileSize + len > mf->capacity) {
-        // Need to expand - we'll handle this by just not appending if too big
-        printf("[FILE] Warning: Not enough space to append data!\n");
+        WriteDebugLog("  [FILE APPEND WARNING] Out of space! Need: %zu, Have: %zu\n", mf->fileSize + len, mf->capacity);
         return 0;
     }
     
     memcpy(mf->pBuffer + mf->fileSize, text, len);
     mf->fileSize += len;
+    
+    // Crucial: Update the file pointer and truncate now so the disk sees 
+    // the new size immediately if the app crashes
+    LARGE_INTEGER fs;
+    fs.QuadPart = mf->fileSize;
+    SetFilePointerEx(mf->hFile, fs, NULL, FILE_BEGIN);
+    SetEndOfFile(mf->hFile);
+    
     return 1;
 }
 
+// Ensure FileClose stays as you had it (with the Truncate logic)
+void FileClose(MappedFile *mf) {
+    if (!mf) return;
+    if (mf->pBuffer) UnmapViewOfFile(mf->pBuffer);
+    if (mf->hMapping) CloseHandle(mf->hMapping);
+    if (mf->hFile != INVALID_HANDLE_VALUE) {
+        LARGE_INTEGER fs;
+        fs.QuadPart = mf->fileSize;
+        SetFilePointerEx(mf->hFile, fs, NULL, FILE_BEGIN);
+        SetEndOfFile(mf->hFile); // This wipes the "extra" space on disk
+        CloseHandle(mf->hFile);
+    }
+}
+
 static inline Line* FileGetLines(MappedFile *mf, size_t *outLineCount) {
+    DWORD start = GetTickCount();
     size_t maxLines = 1000;
     size_t count = 0;
     Line *list = (Line *)malloc(maxLines * sizeof(Line));
@@ -221,57 +339,49 @@ static inline Line* FileGetLines(MappedFile *mf, size_t *outLineCount) {
         }
     }
     *outLineCount = count;
+    WriteDebugLog("  [FILE GET LINES] Extracted %zu lines (Time: %lu ms)\n", count, GetTickCount() - start);
     return list;
 }
 
-void FileClose(MappedFile *mf) {
-    if (mf->pBuffer) UnmapViewOfFile(mf->pBuffer);
-    if (mf->hMapping) CloseHandle(mf->hMapping);
-    if (mf->hFile != INVALID_HANDLE_VALUE) {
-        LARGE_INTEGER fs;
-        fs.QuadPart = mf->fileSize;
-        SetFilePointerEx(mf->hFile, fs, NULL, FILE_BEGIN);
-        SetEndOfFile(mf->hFile); 
-        CloseHandle(mf->hFile);
-    }
-}
-
-
-static inline char** FileGetStrings(MappedFile *mf, size_t *outLineCount, size_t **outNewlineIndices, size_t *outNewlineCount) {
+static inline char** FileGetStrings(MappedFile *mf, size_t *outLineCount, NewlineInfo **outNewlines, size_t *outNewlineCount) {
+    DWORD start = GetTickCount();
     size_t maxLines = 1000;
     size_t count = 0;
     
     char **stringList = (char **)malloc(maxLines * sizeof(char*));
     if (stringList == NULL) return NULL;
 
-    // Allocate an array to remember EXACTLY which indices were modified
     size_t maxNewlines = 2000;
     size_t newlineCount = 0;
-    size_t *newlineIndices = (size_t *)malloc(maxNewlines * sizeof(size_t));
+    NewlineInfo *newlines = (NewlineInfo *)malloc(maxNewlines * sizeof(NewlineInfo));
+    if (newlines == NULL) {
+        free(stringList);
+        return NULL;
+    }
 
     stringList[count++] = mf->pBuffer;
     size_t totalBytes = mf->fileSize;
 
     for (size_t i = 0; i < totalBytes; i++) {
-        // Track and remember Windows \r characters
         if (mf->pBuffer[i] == '\r') {
+            char orig = mf->pBuffer[i];
             mf->pBuffer[i] = '\0';
             
             if (newlineCount >= maxNewlines) {
                 maxNewlines *= 2;
-                newlineIndices = (size_t *)realloc(newlineIndices, maxNewlines * sizeof(size_t));
+                newlines = (NewlineInfo *)realloc(newlines, maxNewlines * sizeof(NewlineInfo));
             }
-            // Save index, flag it as a \r by using a tracking format or handling it at \n
-            newlineIndices[newlineCount++] = i; 
+            newlines[newlineCount++] = (NewlineInfo){ .index = i, .original = orig };
         }
         else if (mf->pBuffer[i] == '\n') {
+            char orig = mf->pBuffer[i];
             mf->pBuffer[i] = '\0';
             
             if (newlineCount >= maxNewlines) {
                 maxNewlines *= 2;
-                newlineIndices = (size_t *)realloc(newlineIndices, maxNewlines * sizeof(size_t));
+                newlines = (NewlineInfo *)realloc(newlines, maxNewlines * sizeof(NewlineInfo));
             }
-            newlineIndices[newlineCount++] = i; // Save exact index of \n
+            newlines[newlineCount++] = (NewlineInfo){ .index = i, .original = orig };
 
             if (i + 1 < totalBytes) {
                 if (count >= maxLines) {
@@ -284,25 +394,18 @@ static inline char** FileGetStrings(MappedFile *mf, size_t *outLineCount, size_t
     }
     
     *outLineCount = count;
-    *outNewlineIndices = newlineIndices; // Pass the map back to main
+    *outNewlines = newlines; 
     *outNewlineCount = newlineCount;
+    WriteDebugLog("  [FILE GET STRINGS] Processed strings. Count: %zu (Time: %lu ms)\n", count, GetTickCount() - start);
     return stringList;
 }
 
-void CleanUpFile(MappedFile *mf, size_t *newlineIndices, size_t newlineCount) {
-    if (!newlineIndices) return;
-
-    // Read the map backwards or forwards and put the exact characters back
+void CleanUpFile(MappedFile *mf, NewlineInfo *newlines, size_t newlineCount) {
+    if (!newlines) return;
     for (size_t i = 0; i < newlineCount; i++) {
-        size_t idx = newlineIndices[i];
-        
-        if (idx + 1 < mf->fileSize && mf->pBuffer[idx + 1] == '\0') {
-            mf->pBuffer[idx] = '\r';
-        } else {
-            mf->pBuffer[idx] = '\n';
-        }
+        mf->pBuffer[newlines[i].index] = newlines[i].original;
     }
-    free(newlineIndices);
+    free(newlines);
 }
 
-#endif 
+#endif
