@@ -35,6 +35,7 @@
 #include "helpers.h"
 #include "todo.h"
 #include "hotkey_definitions.h"
+#include "volume.h"
 #pragma comment(lib, "Shlwapi.lib") // Tells the compiler to link the shlwapi library
 #define ID_TRAY_ICON 1001
 #define WM_TRAYICON (WM_USER + 1)
