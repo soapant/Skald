@@ -147,24 +147,6 @@ static inline const char* GetFilePath(const char* name) {
 #define REGION_MOD_COORDS       HOTKEY_MOD_ALT
 #define REGION_MOD_IMAGE        (HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT)
 
-typedef enum {
-    MACRO_NONE = 0,
-    MACRO_FACTORIO_MAKE_TAG,
-    MACRO_MINECRAFT_PASTE,
-    MACRO_MINECRAFT_COPY,
-    MACRO_MINECRAFT_ROTATE,
-    MACRO_MINECRAFT_UP,
-    MACRO_MINECRAFT_UNDO,
-    MACRO_FACTORIO_SEARCH_FACTORY,
-} MacroAction;
-
-typedef struct {
-    int vk_code;
-    int modifiers;
-    const char* exe_name;
-    MacroAction action_id;
-    int delay;
-} MacroBinding;
 
 typedef struct {
     int vk_code;
@@ -234,18 +216,6 @@ static const QuickLinkHotkey G_QUICKLINK_HOTKEYS[] = {
 };
 
 #define QUICKLINK_HOTKEY_COUNT (sizeof(G_QUICKLINK_HOTKEYS) / sizeof(G_QUICKLINK_HOTKEYS[0]))
-
-static const MacroBinding G_MACRO_BINDINGS[] = {
-    { 'V', HOTKEY_MOD_ALT, "Factorio", MACRO_FACTORIO_MAKE_TAG, 0 },
-    { 'B', HOTKEY_MOD_ALT, "Factorio", MACRO_FACTORIO_SEARCH_FACTORY, 0 },
-    { 'C', HOTKEY_MOD_SHIFT, "Java", MACRO_MINECRAFT_COPY, 0 },
-    { 'V', HOTKEY_MOD_SHIFT, "Java", MACRO_MINECRAFT_PASTE, 0 },
-    { 'Z', HOTKEY_MOD_SHIFT, "Java", MACRO_MINECRAFT_UNDO, 0 },
-    { 'Q', HOTKEY_MOD_SHIFT, "Java", MACRO_MINECRAFT_UP, 0 },
-    { 'R', HOTKEY_MOD_SHIFT, "Java", MACRO_MINECRAFT_ROTATE, 0 },
-};
-
-#define MACRO_BINDING_COUNT (sizeof(G_MACRO_BINDINGS) / sizeof(G_MACRO_BINDINGS[0]))
 
 
 typedef struct {

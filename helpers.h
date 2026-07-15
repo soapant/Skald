@@ -91,13 +91,19 @@ typedef struct {
 
 static inline char* QueryZoxidePath(const char* query) {
     DWORD start_time = GetTickCount();
-    WriteDebugLog("  [ZOXIDE QUERY START] Query: '%s'\n", query);
 
     static char path[1024];
     path[0] = '\0';
 
+    char clean_query[512];
+    strncpy(clean_query, query, sizeof(clean_query) - 1);
+    clean_query[sizeof(clean_query) - 1] = '\0';
+    clean_query[strcspn(clean_query, "\r\n")] = '\0';
+
+    WriteDebugLog("  [ZOXIDE QUERY START] Query: '%s'\n", clean_query);
+
     char command[512];
-    snprintf(command, sizeof(command), "zoxide query %s", query);
+    snprintf(command, sizeof(command), "zoxide query %s", clean_query);
 
     SECURITY_ATTRIBUTES sa = { sizeof(SECURITY_ATTRIBUTES), NULL, TRUE };
     HANDLE hReadPipe, hWritePipe;
@@ -239,41 +245,47 @@ typedef struct {
     char original;
 } NewlineInfo;
 
-// ... (Keep existing headers)
-
 static inline int FileInit(const char *filePath, MappedFile *mf, size_t initialPadding) {
-    DWORD start = GetTickCount();
     WriteDebugLog("  [FILE INIT START] File: %s\n", filePath);
 
     mf->hFile = CreateFileA(filePath, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-    if (mf->hFile == INVALID_HANDLE_VALUE) return 0;
+    if (mf->hFile == INVALID_HANDLE_VALUE) {
+        WriteDebugLog("  [FILE INIT ERROR] CreateFileA failed!\n");
+        return 0;
+    }
 
     LARGE_INTEGER fs;
     GetFileSizeEx(mf->hFile, &fs);
     mf->fileSize = (size_t)fs.QuadPart;
-    // Keep capacity logic, but we won't force-write the padding to disk
-    mf->capacity = mf->fileSize + initialPadding; 
+    
+    // CRITICAL: Only map the ACTUAL file size, NOT the padded size
+    // If file is empty, map 1 byte so we can write
+    size_t mapSize = (mf->fileSize > 0) ? mf->fileSize : 1;
+    mf->capacity = mapSize;
 
-    LARGE_INTEGER mapSize;
-    mapSize.QuadPart = (mf->capacity > 0) ? mf->capacity : 4096;
+    LARGE_INTEGER mapSizeLI;
+    mapSizeLI.QuadPart = mapSize;
 
-    mf->hMapping = CreateFileMappingA(mf->hFile, NULL, PAGE_READWRITE, mapSize.HighPart, mapSize.LowPart, NULL);
-    if (mf->hMapping == NULL) {
+    mf->hMapping = CreateFileMappingA(mf->hFile, NULL, PAGE_READWRITE, mapSizeLI.HighPart, mapSizeLI.LowPart, NULL);
+    if (!mf->hMapping) {
+        WriteDebugLog("  [FILE INIT ERROR] CreateFileMappingA failed!\n");
         CloseHandle(mf->hFile);
         return 0;
     }
 
     mf->pBuffer = (char *)MapViewOfFile(mf->hMapping, FILE_MAP_WRITE, 0, 0, 0);
-    if (mf->pBuffer == NULL) {
+    if (!mf->pBuffer) {
         CloseHandle(mf->hMapping);
         CloseHandle(mf->hFile);
         return 0;
     }
 
-    // REMOVED: memset(mf->pBuffer + mf->fileSize, 0, initialPadding);
-    // DO NOT write zeros to the padding, or Windows will commit the full size to disk!
+    // If file is empty, initialize with null terminator
+    if (mf->fileSize == 0) {
+        mf->pBuffer[0] = '\0';
+    }
 
-    WriteDebugLog("  [FILE INIT END] Success. Size: %zu (Time: %lu ms)\n", mf->fileSize, GetTickCount() - start);
+    WriteDebugLog("  [FILE INIT END] File: %s, Size: %zu bytes, Mapped: %zu\n", filePath, mf->fileSize, mapSize);
     return 1;
 }
 
@@ -281,39 +293,87 @@ static inline int FileAppend(MappedFile *mf, const char *text) {
     if (!mf || !text) return 0;
     
     size_t len = strlen(text);
-    // Check if we actually need to re-map or if we are just at capacity
-    if (mf->fileSize + len > mf->capacity) {
-        WriteDebugLog("  [FILE APPEND WARNING] Out of space! Need: %zu, Have: %zu\n", mf->fileSize + len, mf->capacity);
-        return 0;
+    if (len == 0) return 0;
+
+    // Check if we need to expand the mapping
+    if (mf->fileSize + len + 1 > mf->capacity) {
+        // Unmap the current view
+        if (mf->pBuffer) {
+            UnmapViewOfFile(mf->pBuffer);
+            mf->pBuffer = NULL;
+        }
+        if (mf->hMapping) {
+            CloseHandle(mf->hMapping);
+            mf->hMapping = NULL;
+        }
+
+        // New capacity: current file size + new text + 1 for null terminator
+        size_t newCapacity = mf->fileSize + len + 1;
+        LARGE_INTEGER mapSizeLI;
+        mapSizeLI.QuadPart = newCapacity;
+
+        // Expand the file on disk FIRST
+        LARGE_INTEGER newFileSize;
+        newFileSize.QuadPart = newCapacity;
+        SetFilePointerEx(mf->hFile, newFileSize, NULL, FILE_BEGIN);
+        SetEndOfFile(mf->hFile);
+
+        // Create new mapping
+        mf->hMapping = CreateFileMappingA(mf->hFile, NULL, PAGE_READWRITE, mapSizeLI.HighPart, mapSizeLI.LowPart, NULL);
+        if (!mf->hMapping) {
+            WriteDebugLog("  [FILE APPEND ERROR] Failed to expand mapping!\n");
+            return 0;
+        }
+
+        mf->pBuffer = (char *)MapViewOfFile(mf->hMapping, FILE_MAP_WRITE, 0, 0, 0);
+        if (!mf->pBuffer) {
+            CloseHandle(mf->hMapping);
+            mf->hMapping = NULL;
+            return 0;
+        }
+        mf->capacity = newCapacity;
+        WriteDebugLog("  [FILE APPEND] Expanded capacity to %zu\n", newCapacity);
     }
-    
+
+    // Write the text to the buffer
     memcpy(mf->pBuffer + mf->fileSize, text, len);
     mf->fileSize += len;
-    
-    // Crucial: Update the file pointer and truncate now so the disk sees 
-    // the new size immediately if the app crashes
+    mf->pBuffer[mf->fileSize] = '\0';
+
+    // CRITICAL: Update file size on disk AFTER writing
     LARGE_INTEGER fs;
     fs.QuadPart = mf->fileSize;
     SetFilePointerEx(mf->hFile, fs, NULL, FILE_BEGIN);
     SetEndOfFile(mf->hFile);
-    
+
+    WriteDebugLog("  [FILE APPEND] Wrote %zu bytes. Total Size: %zu\n", len, mf->fileSize);
     return 1;
 }
 
-// Ensure FileClose stays as you had it (with the Truncate logic)
-void FileClose(MappedFile *mf) {
+static inline void FileClose(MappedFile *mf) {
     if (!mf) return;
-    if (mf->pBuffer) UnmapViewOfFile(mf->pBuffer);
-    if (mf->hMapping) CloseHandle(mf->hMapping);
+    
+    if (mf->pBuffer) {
+        FlushViewOfFile(mf->pBuffer, mf->fileSize);
+        UnmapViewOfFile(mf->pBuffer);
+        mf->pBuffer = NULL;
+    }
+    
+    if (mf->hMapping) {
+        CloseHandle(mf->hMapping);
+        mf->hMapping = NULL;
+    }
+    
     if (mf->hFile != INVALID_HANDLE_VALUE) {
+        // Truncate to actual data size
         LARGE_INTEGER fs;
         fs.QuadPart = mf->fileSize;
         SetFilePointerEx(mf->hFile, fs, NULL, FILE_BEGIN);
-        SetEndOfFile(mf->hFile); // This wipes the "extra" space on disk
+        SetEndOfFile(mf->hFile);
         CloseHandle(mf->hFile);
+        mf->hFile = INVALID_HANDLE_VALUE;
     }
 }
-
 static inline Line* FileGetLines(MappedFile *mf, size_t *outLineCount) {
     DWORD start = GetTickCount();
     size_t maxLines = 1000;
@@ -406,6 +466,39 @@ void CleanUpFile(MappedFile *mf, NewlineInfo *newlines, size_t newlineCount) {
         mf->pBuffer[newlines[i].index] = newlines[i].original;
     }
     free(newlines);
+}
+
+static inline void SanitizeFile(const char *filePath) {
+    HANDLE hFile = CreateFileA(filePath, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if (hFile == INVALID_HANDLE_VALUE) return;
+
+    LARGE_INTEGER fs;
+    GetFileSizeEx(hFile, &fs);
+    DWORD fileSize = (DWORD)fs.QuadPart;
+    if (fileSize == 0) { CloseHandle(hFile); return; }
+
+    char *buf = (char *)malloc(fileSize);
+    if (!buf) { CloseHandle(hFile); return; }
+
+    DWORD bytesRead = 0;
+    ReadFile(hFile, buf, fileSize, &bytesRead, NULL);
+
+    DWORD cleanCount = 0;
+    for (DWORD i = 0; i < bytesRead; i++) {
+        if (buf[i] != '\0') {
+            buf[cleanCount++] = buf[i];
+        }
+    }
+
+    if (cleanCount < bytesRead) {
+        SetFilePointer(hFile, 0, NULL, FILE_BEGIN);
+        WriteFile(hFile, buf, cleanCount, &bytesRead, NULL);
+        SetEndOfFile(hFile);
+        printf("[SANITIZE] Cleaned %lu null bytes from %s\n", bytesRead - cleanCount, filePath);
+    }
+
+    free(buf);
+    CloseHandle(hFile);
 }
 
 #endif
