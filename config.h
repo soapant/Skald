@@ -24,6 +24,7 @@ static const char* ListOfShitToIgnore[30] = {
 static const char* MusicPath = "D:\\Music";
 static const char* VideosPath = "C:\\videos";
 static const char* IconPath = "D:\\retard games\\miscellaneous\\switch_window.ico";
+static const char* TerminalHistoryPath = "D:\\Projects\\C Code\\TerminalHistory.txt";
 
 // Hotkey IDs
 #define SWITCHER_ID       1
@@ -185,6 +186,7 @@ static const MiscHotkey G_MISC_HOTKEYS[] = {
 
 static const QuickLinkHotkey G_QUICKLINK_HOTKEYS[] = {
     {'Y', HOTKEY_MOD_CTRL | HOTKEY_MOD_ALT, "*", "https:youtube.com" },
+    {'A', HOTKEY_MOD_CTRL | HOTKEY_MOD_ALT, "*", "https://gemini.google.com/app" },
 };
 
 #define QUICKLINK_HOTKEY_COUNT (sizeof(G_QUICKLINK_HOTKEYS) / sizeof(G_QUICKLINK_HOTKEYS[0]))
