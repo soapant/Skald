@@ -19,6 +19,7 @@ void TriggerCalculator(HWND hPopupWnd);
 void TriggerAppLauncher(HWND hPopupWnd);
 void TriggerProcessKiller(HWND hPopupWnd);
 void TriggerTimer(HWND hPopupWnd);
+void TriggerVolume(HWND hPopupWnd);
 void TriggerTerminalCommand(HWND hPopupWnd);
 void TriggerExplorer(HWND hPopupWnd);
 void TriggerZoxide(HWND hPopupWnd);
@@ -77,6 +78,9 @@ static inline void NvimHandler(void) { TriggerNvimZoxide(0, hPopupWnd); }
 
 // --- Yazi ---
 static inline void YaziHandler(void) { TriggerYaziZoxide(hPopupWnd); }
+
+// --- Volume ---
+static inline void VolumeHandler(void) { TriggerVolume(hPopupWnd); }
 
 // --- POS Handlers ---
 static inline void PosCopyHandler(void) {
@@ -282,6 +286,7 @@ static const HotkeyBinding G_HOTKEY_BINDINGS[] = {
     { TIMER_KEY,            HOTKEY_MOD_ALT,  timer_blacklist,           TIMER_BLACKLIST_COUNT,           TimerHandler,             "Timer" },
     { EXPLORER_KEY,         HOTKEY_MOD_ALT,  explorer_blacklist,        EXPLORER_BLACKLIST_COUNT,        ExplorerHandler,          "Explorer" },
     { TERMINAL_COMMAND_KEY, HOTKEY_MOD_ALT,  terminal_command_blacklist, TERMINAL_COMMAND_BLACKLIST_COUNT, TerminalCommandHandler, "TerminalCommand" },
+    { VOLUME_KEY, HOTKEY_MOD_ALT,  volume_blacklist, VOLUME_BLACKLIST_COUNT, VolumeHandler, "Volume" },
     
     // POS - different modifier combos
     { POS_KEY,              HOTKEY_MOD_ALT,                         pos_blacklist, POS_BLACKLIST_COUNT, PosCopyHandler,   "PosCopy" },

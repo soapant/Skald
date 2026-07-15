@@ -63,6 +63,8 @@ static const char* TerminalHistoryPath = "D:\\Projects\\C Code\\TerminalHistory.
 #define EXPLORER_KEY     0x52
 #define TERMINAL_COMMAND_ID      18
 #define TERMINAL_COMMAND_KEY     0xDB
+#define VOLUME_ID      19
+#define VOLUME_KEY     0x4D
 #define HOTKEY_MOD_NONE         0x00
 #define HOTKEY_MOD_ALT          0x01
 #define HOTKEY_MOD_SHIFT        0x02
@@ -381,6 +383,9 @@ static const char* explorer_blacklist[] = {"Fortnite", "CrosshairX"};
 
 static const char* terminal_command_blacklist[] = {"Fortnite", "CrosshairX"};
 #define TERMINAL_COMMAND_BLACKLIST_COUNT (sizeof(terminal_command_blacklist) / sizeof(terminal_command_blacklist[0]))
+
+static const char* volume_blacklist[] = {"Fortnite", "CrosshairX"};
+#define VOLUME_BLACKLIST_COUNT (sizeof(volume_blacklist) / sizeof(volume_blacklist[0]))
 
 static const char* alias_to_project(const char* alias) {
     if (strcmp(alias, "-pc") == 0) return "Cprogram";
