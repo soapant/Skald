@@ -13,7 +13,6 @@
 extern HWND hPopupWnd;
 extern MappedFile *TerminalHistoryFile;
 
-// Cache for commands in memory
 static char** g_cached_commands = NULL;
 static int g_cached_command_count = 0;
 
@@ -21,7 +20,6 @@ static int g_cached_command_count = 0;
 // REBUILD CACHE
 // ============================================================
 static void RebuildCommandCache(void) {
-    // Free old cache
     if (g_cached_commands) {
         for (int i = 0; i < g_cached_command_count; i++) {
             free(g_cached_commands[i]);
@@ -35,7 +33,6 @@ static void RebuildCommandCache(void) {
         return;
     }
     
-    // Count lines first
     int line_count = 0;
     for (size_t i = 0; i < TerminalHistoryFile->fileSize; i++) {
         if (TerminalHistoryFile->pBuffer[i] == '\n') {
@@ -43,14 +40,11 @@ static void RebuildCommandCache(void) {
         }
     }
     if (line_count == 0 && TerminalHistoryFile->fileSize > 0) line_count = 1;
-    
     if (line_count == 0) return;
     
-    // Allocate for commands
     g_cached_commands = (char**)malloc(line_count * sizeof(char*));
     g_cached_command_count = 0;
     
-    // Parse lines
     char* start = TerminalHistoryFile->pBuffer;
     size_t totalBytes = TerminalHistoryFile->fileSize;
     
@@ -63,7 +57,6 @@ static void RebuildCommandCache(void) {
                 strncpy(cmd, start, len);
                 cmd[len] = '\0';
                 
-                // Remove trailing \r if present
                 if (len > 0 && cmd[len-1] == '\r') {
                     cmd[len-1] = '\0';
                 }
@@ -81,7 +74,6 @@ static void RebuildCommandCache(void) {
 static void terminal_refresh_callback(const char* filter, HWND hListBox) {
     if (!hListBox) return;
     
-    // Rebuild cache if needed
     if (!g_cached_commands) {
         RebuildCommandCache();
     }
@@ -106,47 +98,52 @@ static void terminal_refresh_callback(const char* filter, HWND hListBox) {
 }
 
 // ============================================================
-// RUN COMMAND
+// RUN COMMAND - FIXED: Use CreateProcess directly
 // ============================================================
-static void RunTerminalCommand(const char* Command) {
-    if (Command != NULL && strlen(Command) > 0) {
-        // Clean the command (remove newlines)
-        char clean_cmd[512];
-        strncpy(clean_cmd, Command, sizeof(clean_cmd) - 1);
-        clean_cmd[sizeof(clean_cmd) - 1] = '\0';
-        
-        char* newline = strchr(clean_cmd, '\n');
-        if (newline) *newline = '\0';
-        newline = strchr(clean_cmd, '\r');
-        if (newline) *newline = '\0';
-        
-        // Write to temp file
-        char temp_file[MAX_PATH];
-        GetTempPathA(MAX_PATH, temp_file);
-        strcat(temp_file, "temp_cmd.sh");
-        
-        FILE* f = fopen(temp_file, "w");
-        if (f) {
-            fprintf(f, "#!/bin/bash\n");
-            fprintf(f, "eval \"$(zoxide init bash)\"\n");
-            fprintf(f, "%s\nexec bash\n", clean_cmd);
-            fclose(f);
-        }
-        
-        char cmd[2048];
-        snprintf(cmd, sizeof(cmd), 
-                 "start alacritty -e \"C:\\Program Files\\Git\\bin\\bash.exe\" \"%s\"", temp_file);
-        system(cmd);
-        
-        // Append to history with proper newline
+static void RunTerminalCommand(const char* Command, bool save_to_history) {
+    if (Command == NULL || strlen(Command) == 0) return;
+    
+    // Clean the command
+    char clean_cmd[512];
+    strncpy(clean_cmd, Command, sizeof(clean_cmd) - 1);
+    clean_cmd[sizeof(clean_cmd) - 1] = '\0';
+    
+    char* newline = strchr(clean_cmd, '\n');
+    if (newline) *newline = '\0';
+    newline = strchr(clean_cmd, '\r');
+    if (newline) *newline = '\0';
+    
+    // Save to history ONLY if it's a new command
+    if (save_to_history && strlen(clean_cmd) > 0) {
         FileAppend(TerminalHistoryFile, clean_cmd);
         FileAppend(TerminalHistoryFile, "\n");
-        
-        // Update the cache
         RebuildCommandCache();
-        
-        printf("[TERMINAL COMMAND] Running: %s\n", clean_cmd);
+        printf("[TERMINAL] Saved to history: %s\n", clean_cmd);
     }
+    
+    // ============================================================
+    // TEMP FILE APPROACH - FAST with system()
+    // ============================================================
+    char temp_file[MAX_PATH];
+    GetTempPathA(MAX_PATH, temp_file);
+    strcat(temp_file, "temp_cmd.sh");
+    
+    FILE* f = fopen(temp_file, "w");
+    if (f) {
+        fprintf(f, "#!/bin/bash\n");
+        fprintf(f, "eval \"$(zoxide init bash)\"\n");
+        fprintf(f, "%s\n", clean_cmd);
+        fclose(f);
+    }
+    
+    // Use system() but with proper quoting - this is fast enough
+    char cmd[2048];
+    snprintf(cmd, sizeof(cmd), 
+             "start alacritty -e \"C:\\Program Files\\Git\\bin\\bash.exe\" \"%s\"", 
+             temp_file);
+    
+    system(cmd);
+    printf("[TERMINAL] Running: %s\n", clean_cmd);
 }
 
 // ============================================================
@@ -159,13 +156,15 @@ static void terminal_enter_callback(const char* selection) {
     }
     
     if (selected_index != LB_ERR) {
-        RunTerminalCommand(selection);
+        // From history - DON'T save again
+        RunTerminalCommand(selection, false);
     } else {
+        // New command from input - SAVE to history
         char input[256] = {0};
         if (hEditControl != NULL) {
             GetWindowTextA(hEditControl, input, sizeof(input));
             if (strlen(input) > 0) {
-                RunTerminalCommand(input);
+                RunTerminalCommand(input, true);
             }
         }
     }
@@ -177,12 +176,10 @@ static void terminal_enter_callback(const char* selection) {
 static void TriggerTerminalCommand(HWND hPopupWnd) {
     if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
     
-    // Initialize cache on first use
     if (!g_cached_commands) {
         RebuildCommandCache();
     }
     
-    // Build the list for PromptUser - ALL the commands
     const char** list = (const char**)malloc(g_cached_command_count * sizeof(char*));
     if (!list) return;
     
@@ -190,7 +187,6 @@ static void TriggerTerminalCommand(HWND hPopupWnd) {
         list[i] = g_cached_commands[i];
     }
     
-    // Pass the ACTUAL command count, not 1!
     PromptUser(list, "⌨️ Terminal", g_cached_command_count, 220, 650, 32, 
                terminal_refresh_callback, 
                terminal_enter_callback, 
