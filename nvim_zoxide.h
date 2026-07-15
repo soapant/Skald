@@ -17,6 +17,8 @@ extern FileEntry G_FILE_ENTRIES[];
 static char** g_cached_nvim_commands = NULL;
 static int g_cached_nvim_count = 0;
 
+extern void WriteDebugLog(const char* format, ...);
+
 // ============================================================
 // REBUILD CACHE
 // ============================================================
@@ -46,16 +48,16 @@ static void RebuildNvimCache(void) {
     g_cached_nvim_commands = (char**)malloc(line_count * sizeof(char*));
     g_cached_nvim_count = 0;
     
-    char* start = NvimZoxideFile->pBuffer;
+    char* start_ptr = NvimZoxideFile->pBuffer;
     size_t totalBytes = NvimZoxideFile->fileSize;
     
     for (size_t i = 0; i < totalBytes; i++) {
         if (NvimZoxideFile->pBuffer[i] == '\n' || i == totalBytes - 1) {
-            size_t len = (i == totalBytes - 1) ? (i - (start - NvimZoxideFile->pBuffer) + 1) : (i - (start - NvimZoxideFile->pBuffer));
+            size_t len = (i == totalBytes - 1) ? (i - (start_ptr - NvimZoxideFile->pBuffer) + 1) : (i - (start_ptr - NvimZoxideFile->pBuffer));
             
             if (len > 0) {
                 char* cmd = (char*)malloc(len + 1);
-                strncpy(cmd, start, len);
+                strncpy(cmd, start_ptr, len);
                 cmd[len] = '\0';
                 
                 if (len > 0 && cmd[len-1] == '\r') {
@@ -64,7 +66,7 @@ static void RebuildNvimCache(void) {
                 
                 g_cached_nvim_commands[g_cached_nvim_count++] = cmd;
             }
-            start = &NvimZoxideFile->pBuffer[i + 1];
+            start_ptr = &NvimZoxideFile->pBuffer[i + 1];
         }
     }
 }
@@ -99,7 +101,7 @@ static void nvim_refresh_callback(const char* filter, HWND hListBox) {
 }
 
 // ============================================================
-// ENTER CALLBACK
+// ENTER CALLBACK WITH WORKING DIRECTORY AND SAFE NEWLINE FIX
 // ============================================================
 static void nvim_enter_callback(const char* selection) {
     int selected_index = LB_ERR;
@@ -112,18 +114,25 @@ static void nvim_enter_callback(const char* selection) {
         char input[256] = {0};
         if (hEditControl != NULL) {
             GetWindowTextA(hEditControl, input, sizeof(input));
+            
             if (strlen(input) > 0) {
+                // BUG FIX: Check if the file doesn't end with a newline before appending
+                if (NvimZoxideFile->fileSize > 0) {
+                    char lastChar = NvimZoxideFile->pBuffer[NvimZoxideFile->fileSize - 1];
+                    if (lastChar != '\n') {
+                        FileAppend(NvimZoxideFile, "\n");
+                    }
+                }
+                
                 FileAppend(NvimZoxideFile, input);
                 FileAppend(NvimZoxideFile, "\n");
                 RebuildNvimCache();
-                printf("[NVIM] Saved query: %s\n", input);
                 
                 char* path = QueryZoxidePath(input);
                 if (path) {
-                    char cmd[2048];
-                    snprintf(cmd, sizeof(cmd), "start neovide \"%s\"", path);
-                    system(cmd);
-                    printf("[NVIM] Opened Neovide in: %s\n", path);
+                    // BUG FIX: Set the 5th parameter (working directory) so Neovide launches in that folder!
+                    ShellExecuteA(NULL, "open", "neovide.exe", NULL, path, SW_SHOWNORMAL);
+                    WriteDebugLog("[NVIM] Launched Neovide in: %s\n", path);
                 }
             }
         }
@@ -131,10 +140,9 @@ static void nvim_enter_callback(const char* selection) {
         // Selected from history
         char* path = QueryZoxidePath(selection);
         if (path) {
-            char cmd[2048];
-            snprintf(cmd, sizeof(cmd), "start neovide \"%s\"", path);
-            system(cmd);
-            printf("[NVIM] Opened Neovide in: %s\n", path);
+            // BUG FIX: Set working directory parameter here too!
+            ShellExecuteA(NULL, "open", "neovide.exe", NULL, path, SW_SHOWNORMAL);
+            WriteDebugLog("[NVIM] Launched Neovide from history in: %s\n", path);
         }
     }
 }

@@ -113,17 +113,22 @@ static void yazi_enter_callback(const char* selection) {
         if (hEditControl != NULL) {
             GetWindowTextA(hEditControl, input, sizeof(input));
             if (strlen(input) > 0) {
+                // BUG FIX: Prevent history line collapsing
+                if (YaziZoxideFile->fileSize > 0) {
+                    char lastChar = YaziZoxideFile->pBuffer[YaziZoxideFile->fileSize - 1];
+                    if (lastChar != '\n') {
+                        FileAppend(YaziZoxideFile, "\n");
+                    }
+                }
+
                 FileAppend(YaziZoxideFile, input);
                 FileAppend(YaziZoxideFile, "\n");
                 RebuildYaziCache();
-                printf("[YAZI] Saved query: %s\n", input);
                 
                 char* path = QueryZoxidePath(input);
                 if (path) {
-                    char cmd[2048];
-                    snprintf(cmd, sizeof(cmd), "start alacritty --working-directory \"%s\" -e yazi", path);
-                    system(cmd);
-                    printf("[YAZI] Opened Yazi in: %s\n", path);
+                    // Launch asynchronously, setting the directory and invoking -e yazi
+                    ShellExecuteA(NULL, "open", "alacritty.exe", "-e yazi", path, SW_SHOWNORMAL);
                 }
             }
         }
@@ -131,10 +136,7 @@ static void yazi_enter_callback(const char* selection) {
         // Selected from history
         char* path = QueryZoxidePath(selection);
         if (path) {
-            char cmd[2048];
-            snprintf(cmd, sizeof(cmd), "start alacritty --working-directory \"%s\" -e yazi", path);
-            system(cmd);
-            printf("[YAZI] Opened Yazi in: %s\n", path);
+            ShellExecuteA(NULL, "open", "alacritty.exe", "-e yazi", path, SW_SHOWNORMAL);
         }
     }
 }

@@ -114,15 +114,22 @@ static void explorer_enter_callback(const char* selection) {
         if (hEditControl != NULL) {
             GetWindowTextA(hEditControl, input, sizeof(input));
             if (strlen(input) > 0) {
+                // BUG FIX: Prevent history strings from ending up on the same line
+                if (ExplorerZoxideFile->fileSize > 0) {
+                    char lastChar = ExplorerZoxideFile->pBuffer[ExplorerZoxideFile->fileSize - 1];
+                    if (lastChar != '\n') {
+                        FileAppend(ExplorerZoxideFile, "\n");
+                    }
+                }
+
                 FileAppend(ExplorerZoxideFile, input);
                 FileAppend(ExplorerZoxideFile, "\n");
                 RebuildExplorerCache();
-                printf("[EXPLORER] Saved query: %s\n", input);
                 
                 char* path = QueryZoxidePath(input);
                 if (path) {
+                    // Launch explorer asynchronously at the correct destination path
                     ShellExecuteA(NULL, "open", "explorer.exe", path, NULL, SW_SHOWNORMAL);
-                    printf("[EXPLORER] Opened Explorer in: %s\n", path);
                 }
             }
         }
@@ -131,7 +138,6 @@ static void explorer_enter_callback(const char* selection) {
         char* path = QueryZoxidePath(selection);
         if (path) {
             ShellExecuteA(NULL, "open", "explorer.exe", path, NULL, SW_SHOWNORMAL);
-            printf("[EXPLORER] Opened Explorer in: %s\n", path);
         }
     }
 }
