@@ -97,13 +97,9 @@ static void terminal_refresh_callback(const char* filter, HWND hListBox) {
     }
 }
 
-// ============================================================
-// RUN COMMAND - FIXED: Use CreateProcess directly
-// ============================================================
 static void RunTerminalCommand(const char* Command, bool save_to_history) {
     if (Command == NULL || strlen(Command) == 0) return;
     
-    // Clean the command
     char clean_cmd[512];
     strncpy(clean_cmd, Command, sizeof(clean_cmd) - 1);
     clean_cmd[sizeof(clean_cmd) - 1] = '\0';
@@ -113,7 +109,6 @@ static void RunTerminalCommand(const char* Command, bool save_to_history) {
     newline = strchr(clean_cmd, '\r');
     if (newline) *newline = '\0';
     
-    // Save to history ONLY if it's a new command
     if (save_to_history && strlen(clean_cmd) > 0) {
         FileAppend(TerminalHistoryFile, clean_cmd);
         FileAppend(TerminalHistoryFile, "\n");
@@ -121,9 +116,6 @@ static void RunTerminalCommand(const char* Command, bool save_to_history) {
         printf("[TERMINAL] Saved to history: %s\n", clean_cmd);
     }
     
-    // ============================================================
-    // TEMP FILE APPROACH - FAST with system()
-    // ============================================================
     char temp_file[MAX_PATH];
     GetTempPathA(MAX_PATH, temp_file);
     strcat(temp_file, "temp_cmd.sh");
@@ -136,14 +128,33 @@ static void RunTerminalCommand(const char* Command, bool save_to_history) {
         fclose(f);
     }
     
-    // Use system() but with proper quoting - this is fast enough
+    // ============================================================
+    // FAST: CreateProcess directly - NO system() delay!
+    // ============================================================
     char cmd[2048];
     snprintf(cmd, sizeof(cmd), 
-             "start alacritty -e \"C:\\Program Files\\Git\\bin\\bash.exe\" \"%s\"", 
+             "\"C:\\Program Files\\Alacritty\\alacritty.exe\" -e \"C:\\Program Files\\Git\\bin\\bash.exe\" \"%s\"", 
              temp_file);
     
-    system(cmd);
-    printf("[TERMINAL] Running: %s\n", clean_cmd);
+    STARTUPINFOA si = {0};
+    si.cb = sizeof(si);
+    PROCESS_INFORMATION pi = {0};
+    
+    if (CreateProcessA(NULL, cmd, NULL, NULL, FALSE, 
+                       CREATE_NEW_CONSOLE, 
+                       NULL, NULL, &si, &pi)) {
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);
+        printf("[TERMINAL] Running: %s\n", clean_cmd);
+    } else {
+        // Fallback to system if CreateProcess fails
+        char sys_cmd[2048];
+        snprintf(sys_cmd, sizeof(sys_cmd), 
+                 "start alacritty -e \"C:\\Program Files\\Git\\bin\\bash.exe\" \"%s\"", 
+                 temp_file);
+        system(sys_cmd);
+        printf("[TERMINAL] Running (fallback): %s\n", clean_cmd);
+    }
 }
 
 // ============================================================
