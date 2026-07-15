@@ -1,7 +1,20 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 #include <string.h>
+#include <windows.h>
 
+typedef struct {
+    HANDLE hFile;
+    HANDLE hMapping;
+    char *pBuffer;
+    size_t fileSize;   
+    size_t capacity;   
+} MappedFile;
+
+typedef struct {
+    char *ptr;
+    size_t length;
+} Line;
 static bool TRAY = true;
 static const char* ListOfProgramPaths[20] = {
     "C:\\Users\\HP\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu",
@@ -24,7 +37,36 @@ static const char* ListOfShitToIgnore[30] = {
 static const char* MusicPath = "D:\\Music";
 static const char* VideosPath = "C:\\videos";
 static const char* IconPath = "D:\\retard games\\miscellaneous\\switch_window.ico";
-static const char* TerminalHistoryPath = "D:\\Projects\\C Code\\TerminalHistory.txt";
+
+// config.h
+typedef struct {
+    const char* name;
+    const char* path;
+    MappedFile* mf;
+} FileEntry;
+
+static FileEntry G_FILE_ENTRIES[] = {
+    {"TerminalHistory", "D:\\Projects\\C Code\\TerminalHistory.txt", NULL},
+    {"YaziZoxide",      "D:\\Projects\\C Code\\YaziZoxide.txt", NULL},
+    {"NvimZoxide",      "D:\\Projects\\C Code\\NvimZoxide.txt", NULL},
+    {"TerminalZoxide",      "D:\\Projects\\C Code\\TerminalZoxide.txt", NULL},
+    {"ExplorerZoxide",  "D:\\Projects\\C Code\\ExplorerZoxide.txt", NULL},
+    {"GoogleZoxide",  "D:\\Projects\\C Code\\GoogleZoxide.txt", NULL},
+};
+#define FILE_ENTRY_COUNT (sizeof(G_FILE_ENTRIES) / sizeof(G_FILE_ENTRIES[0]))
+
+#define FILE_ENTRY_COUNT (sizeof(G_FILE_ENTRIES) / sizeof(G_FILE_ENTRIES[0]))
+
+// Helper to get path by name
+static inline const char* GetFilePath(const char* name) {
+    for (int i = 0; i < FILE_ENTRY_COUNT; i++) {
+        if (strcmp(G_FILE_ENTRIES[i].name, name) == 0) {
+            return G_FILE_ENTRIES[i].path;
+        }
+    }
+    return NULL;
+}
+
 
 // Hotkey IDs
 #define SWITCHER_ID       1

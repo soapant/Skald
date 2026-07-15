@@ -2,7 +2,6 @@
 #ifndef HELPERS_H
 #define HELPERS_H
 
-#include <windows.h>
 #include <stdbool.h>
 #include <stdio.h>  
 #include <string.h> 
@@ -16,7 +15,8 @@
 // HOTKEY SYSTEM - Single entry point for all hotkeys
 // ============================================================
 
-// Hotkey handler function type
+struct MappedFile;
+
 typedef void (*HotkeyHandler)(void);
 
 typedef struct {
@@ -153,18 +153,6 @@ static inline bool IsCtrlPressed(void) {
     return (GetKeyState(VK_CONTROL) & 0x8000) != 0;
 }
 
-typedef struct {
-    HANDLE hFile;
-    HANDLE hMapping;
-    char *pBuffer;
-    size_t fileSize;   
-    size_t capacity;   
-} MappedFile;
-
-typedef struct {
-    char *ptr;
-    size_t length;
-} Line;
 
 
 static inline int FileInit(const char *filePath, MappedFile *mf, size_t initialPadding) {

@@ -11,8 +11,9 @@
 #include "helpers.h"
 
 extern HWND hPopupWnd;
-extern MappedFile *TerminalHistoryFile;
-
+extern FileEntry G_FILE_ENTRIES[];
+#define FILE_TERMINAL_HISTORY 0
+#define TerminalHistoryFile G_FILE_ENTRIES[FILE_TERMINAL_HISTORY].mf
 static char** g_cached_commands = NULL;
 static int g_cached_command_count = 0;
 

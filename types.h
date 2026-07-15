@@ -53,6 +53,7 @@ typedef struct {
     int item_height;
 } WindowLayout;
 
+
 // ============================================================
 // GLOBAL VARIABLE DECLARATIONS
 // ============================================================
@@ -69,4 +70,5 @@ extern RenderCallback g_render_callback;
 extern const char** g_initial_items;
 extern int g_initial_count;
 extern const char* g_title;
+
 #endif // TYPES_H
