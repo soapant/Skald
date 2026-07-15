@@ -9,3 +9,4 @@ also add more intelligent filters for the music and video player||[Project: Cpro
 also maybe you can do like a last command done or somthing on everything||[Project: Cprogram]
 try to decrease the amount of files i have to go through to setup a hotkey||[Project: Cprogram]
 make a global sort of macro input type shit so like one for fortnite that jsut holds down something ykwim||[Project: Cprogram]
+do random shit in factorio
