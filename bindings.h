@@ -201,10 +201,6 @@ bool CheckMacroBindings(int pressed_vk, int modifiers, MacroAction* out_action, 
     char activeExe[256] = {0};
     FetchExeNameOnDemand(hActiveWnd, activeExe, sizeof(activeExe) - 1);
     
-    // Debug: Show what was pressed
-    printf("[DEBUG] Key: 0x%X (%d), Modifiers: 0x%X, Active exe: '%s'\n", 
-           pressed_vk, pressed_vk, modifiers, activeExe);
-
     // Scan bindings
     for (size_t i = 0; i < MACRO_BINDING_COUNT; i++) {
         if (G_MACRO_BINDINGS[i].vk_code == pressed_vk) {
