@@ -1,6 +1,7 @@
 #include "config.h"
 #include <windows.h>
 #include "app_launcher.h"
+#include "macro_bindings.h"
 #include "window_switcher.h"
 
 bool CheckAppHotkeyBindings(int pressed_vk, int modifiers) {
@@ -194,35 +195,27 @@ bool CheckQuickLinkHotkeyBindings(int pressed_vk, int modifiers) {
 }
 
 bool CheckMacroBindings(int pressed_vk, int modifiers, MacroAction* out_action, int* out_delay) {
-    // Get the active window
     HWND hActiveWnd = GetForegroundWindow();
     if (!hActiveWnd) return false;
 
     char activeExe[256] = {0};
     FetchExeNameOnDemand(hActiveWnd, activeExe, sizeof(activeExe) - 1);
     
-
-    // Scan bindings
     for (size_t i = 0; i < MACRO_BINDING_COUNT; i++) {
         if (G_MACRO_BINDINGS[i].vk_code == pressed_vk) {
-            // Check if modifiers match
             if (G_MACRO_BINDINGS[i].modifiers != modifiers) {
                 continue;
             }
             
-            // Check global or app-specific
             if (strcmp(G_MACRO_BINDINGS[i].exe_name, "*") == 0) {
                 *out_action = G_MACRO_BINDINGS[i].action_id;
                 *out_delay = G_MACRO_BINDINGS[i].delay;
-                printf("[DEBUG] GLOBAL binding matched! action=%d, delay=%d\n", *out_action, *out_delay);
                 return true;
             }
             
             if (StrStrIA(activeExe, G_MACRO_BINDINGS[i].exe_name) != NULL) {
                 *out_action = G_MACRO_BINDINGS[i].action_id;
                 *out_delay = G_MACRO_BINDINGS[i].delay;
-                printf("[DEBUG] APP-SPECIFIC binding matched! exe='%s' contains '%s', action=%d, delay=%d\n", 
-                       activeExe, G_MACRO_BINDINGS[i].exe_name, *out_action, *out_delay);
                 return true;
             }
         }

@@ -1,3 +1,4 @@
+// minecraft.h
 #ifndef MINECRAFT_H
 #define MINECRAFT_H
 
@@ -36,5 +37,4 @@ static void minecraft_type_command(const char* command) {
     SendInput(2, enter, sizeof(INPUT));
 }
 
-
-#endif
+#endif // MINECRAFT_H

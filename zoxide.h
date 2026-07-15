@@ -35,39 +35,26 @@ static void RebuildZoxideCache(void) {
         return;
     }
     
-    int line_count = 0;
-    for (size_t i = 0; i < TerminalZoxideFile->fileSize; i++) {
-        if (TerminalZoxideFile->pBuffer[i] == '\n') {
-            line_count++;
-        }
-    }
-    if (line_count == 0 && TerminalZoxideFile->fileSize > 0) line_count = 1;
-    if (line_count == 0) return;
+    size_t lineCount = 0;
+    Line* lines = FileGetLines(TerminalZoxideFile, &lineCount);
+    if (!lines) return;
     
-    g_cached_zoxide_commands = (char**)malloc(line_count * sizeof(char*));
+    g_cached_zoxide_commands = (char**)malloc(lineCount * sizeof(char*));
     g_cached_zoxide_count = 0;
     
-    char* start = TerminalZoxideFile->pBuffer;
-    size_t totalBytes = TerminalZoxideFile->fileSize;
-    
-    for (size_t i = 0; i < totalBytes; i++) {
-        if (TerminalZoxideFile->pBuffer[i] == '\n' || i == totalBytes - 1) {
-            size_t len = (i == totalBytes - 1) ? (i - (start - TerminalZoxideFile->pBuffer) + 1) : (i - (start - TerminalZoxideFile->pBuffer));
-            
-            if (len > 0) {
-                char* cmd = (char*)malloc(len + 1);
-                strncpy(cmd, start, len);
-                cmd[len] = '\0';
-                
-                if (len > 0 && cmd[len-1] == '\r') {
-                    cmd[len-1] = '\0';
-                }
-                
-                g_cached_zoxide_commands[g_cached_zoxide_count++] = cmd;
-            }
-            start = &TerminalZoxideFile->pBuffer[i + 1];
+    for (size_t i = 0; i < lineCount; i++) {
+        size_t len = lines[i].length;
+        while (len > 0 && lines[i].ptr[len-1] == '\r') len--;
+        
+        if (len > 0) {
+            char* cmd = (char*)malloc(len + 1);
+            memcpy(cmd, lines[i].ptr, len);
+            cmd[len] = '\0';
+            g_cached_zoxide_commands[g_cached_zoxide_count++] = cmd;
         }
     }
+    
+    free(lines);
 }
 
 // ============================================================

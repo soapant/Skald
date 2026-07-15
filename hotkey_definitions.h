@@ -44,8 +44,6 @@ static inline void SwitcherHandler(void) {
     }
 }
 
-// ... all your other handlers ...
-
 // --- Google ---
 static inline void GoogleHandler(void) { TriggerGoogleSearch(); }
 
@@ -73,8 +71,11 @@ static inline void ExplorerHandler(void) { TriggerExplorer(hPopupWnd); }
 // --- Terminal ---
 static inline void TerminalHandler(void) { TriggerZoxide(hPopupWnd); }
 
-// --- Nvim ---
-static inline void NvimHandler(void) { TriggerNvimZoxide(0, hPopupWnd); }
+// --- Nvim (Alt+Ctrl+N) ---
+static inline void NvimHandler(void) { TriggerNvimZoxide(1, hPopupWnd); }
+
+// --- Neovide (Alt+N) ---
+static inline void NeovideHandler(void) { TriggerNvimZoxide(0, hPopupWnd); }
 
 // --- Yazi ---
 static inline void YaziHandler(void) { TriggerYaziZoxide(hPopupWnd); }
@@ -97,7 +98,6 @@ static inline void PosAddHandler(void) {
     if (GetCursorPos(&mousePos)) {
         char coords_buf[64];
         snprintf(coords_buf, sizeof(coords_buf), "(%ld, %ld)", mousePos.x, mousePos.y);
-        // Add to list logic...
         char temp_lines[100][512];
         int temp_count = ReadMdFile(temp_lines, TEMP_FILE_PATH);
         if (temp_count < 100) {
@@ -265,28 +265,26 @@ static inline void ScreenshotOpenHandler(void) {
 }
 
 // ============================================================
-// THE MASTER HOTKEY BINDINGS TABLE - EVERYTHING IN ONE PLACE
+// THE MASTER HOTKEY BINDINGS TABLE
 // ============================================================
-
-// hotkey_definitions.h - Use the uppercase #define names
-
 static const HotkeyBinding G_HOTKEY_BINDINGS[] = {
-    // Format: { vk_code, modifiers, blacklist, blacklist_count, handler, name }
-    
-    // Standard Alt hotkeys - USE THE #define NAMES
+    // Standard Alt hotkeys
     { SWITCHER_KEY,         HOTKEY_MOD_ALT,  switcher_blacklist,        SWITCHER_BLACKLIST_COUNT,        SwitcherHandler,          "Switcher" },
     { GOOGLE_SEARCH_KEY,    HOTKEY_MOD_ALT,  google_search_blacklist,   GOOGLE_SEARCH_BLACKLIST_COUNT,   GoogleHandler,            "Google" },
     { TODO_KEY,             HOTKEY_MOD_ALT,  todo_blacklist,            TODO_BLACKLIST_COUNT,            TodoHandler,              "Todo" },
     { CALCULATOR_KEY,       HOTKEY_MOD_ALT,  calculator_blacklist,      CALCULATOR_BLACKLIST_COUNT,      CalculatorHandler,        "Calculator" },
     { EXE_KEY,              HOTKEY_MOD_ALT,  exe_blacklist,             EXE_BLACKLIST_COUNT,             AppLauncherHandler,       "AppLauncher" },
     { KILL_PROCESS_KEY,     HOTKEY_MOD_ALT,  kill_process_blacklist,    KILL_PROCESS_BLACKLIST_COUNT,    ProcessKillerHandler,     "ProcessKiller" },
-    { NVIM_KEY,             HOTKEY_MOD_ALT,  nvim_blacklist,            NVIM_BLACKLIST_COUNT,            NvimHandler,              "Nvim" },
+    // Neovide: Alt+N
+    { NVIM_KEY,             HOTKEY_MOD_ALT,  nvim_blacklist,            NVIM_BLACKLIST_COUNT,            NeovideHandler,           "Neovide" },
+    // Nvim: Alt+Ctrl+N
+    { NVIM_KEY,             (HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL), nvim_blacklist, NVIM_BLACKLIST_COUNT, NvimHandler, "Nvim" },
     { YAZI_KEY,             HOTKEY_MOD_ALT,  yazi_blacklist,            YAZI_BLACKLIST_COUNT,            YaziHandler,              "Yazi" },
     { TERMINAL_KEY,         HOTKEY_MOD_ALT,  terminal_blacklist,        TERMINAL_BLACKLIST_COUNT,        TerminalHandler,          "Terminal" },
     { TIMER_KEY,            HOTKEY_MOD_ALT,  timer_blacklist,           TIMER_BLACKLIST_COUNT,           TimerHandler,             "Timer" },
     { EXPLORER_KEY,         HOTKEY_MOD_ALT,  explorer_blacklist,        EXPLORER_BLACKLIST_COUNT,        ExplorerHandler,          "Explorer" },
     { TERMINAL_COMMAND_KEY, HOTKEY_MOD_ALT,  terminal_command_blacklist, TERMINAL_COMMAND_BLACKLIST_COUNT, TerminalCommandHandler, "TerminalCommand" },
-    { VOLUME_KEY, HOTKEY_MOD_ALT,  volume_blacklist, VOLUME_BLACKLIST_COUNT, VolumeHandler, "Volume" },
+    { VOLUME_KEY,           HOTKEY_MOD_ALT,  volume_blacklist,          VOLUME_BLACKLIST_COUNT,          VolumeHandler,            "Volume" },
     
     // POS - different modifier combos
     { POS_KEY,              HOTKEY_MOD_ALT,                         pos_blacklist, POS_BLACKLIST_COUNT, PosCopyHandler,   "PosCopy" },
