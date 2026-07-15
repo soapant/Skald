@@ -7,3 +7,5 @@ add history and autocompletion of the history to the terminal / zoxide shits||[P
 do the history thing for basically everything i have so google search yazi nvim zoxide etc||[Project: Cprogram]
 promptuser is slow as shit with the rendering of text fix it||[Project: Cprogram]
 also add more intelligent filters for the music and video player||[Project: Cprogram]
+also maybe you can do like a last command done or somthing on everything||[Project: Cprogram]
+also make one to just set the audio sound for windows||[Project: Cprogram]
