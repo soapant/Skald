@@ -69,7 +69,6 @@ RenderCallback g_render_callback = NULL;
 const char** g_initial_items = NULL;
 int g_initial_count = 0;
 const char* g_title = NULL;
-MappedFile *TerminalHistoryFile = NULL; 
 // --- GLOBAL VARIABLES FOR THE IMAGE CAPTURE ---
 int img_region_step = 0;
 long img_x1 = 0, img_y1 = 0;
@@ -1026,15 +1025,17 @@ int main() {
         printf("[SYSTEM-BOOT] CRITICAL WARNING: Failed to register window class! Error: %lu\n", GetLastError());
     }
     
-    // Initialize terminal history file
-    TerminalHistoryFile = (MappedFile *)malloc(sizeof(MappedFile));
-    if (!FileInit(TerminalHistoryPath, TerminalHistoryFile, 4096)) {
-        printf("[SYSTEM] Failed to open terminal history file. Creating new one.\n");
-        // Create empty file
-        HANDLE hFile = CreateFileA(TerminalHistoryPath, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
-        if (hFile != INVALID_HANDLE_VALUE) {
-            CloseHandle(hFile);
-            FileInit(TerminalHistoryPath, TerminalHistoryFile, 4096);
+    for (int i = 0; i < FILE_ENTRY_COUNT; i++) {
+        G_FILE_ENTRIES[i].mf = (MappedFile*)malloc(sizeof(MappedFile));
+        const char* path = G_FILE_ENTRIES[i].path;
+        
+        if (!FileInit(path, G_FILE_ENTRIES[i].mf, 4096)) {
+            printf("[SYSTEM] Failed to open %s. Creating new.\n", G_FILE_ENTRIES[i].name);
+            HANDLE hFile = CreateFileA(path, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
+            if (hFile != INVALID_HANDLE_VALUE) {
+                CloseHandle(hFile);
+                FileInit(path, G_FILE_ENTRIES[i].mf, 4096);
+            }
         }
     }
 
