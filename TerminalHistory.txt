@@ -1,0 +1,2170 @@
+ls
+z users ; cd HP/
+nvim .bashrc
+z rand
+PS4='+ $(date +%s%3N) ' bash -ixc : 2>&1 | grep -E '\+[[:space:]][0-9]+'
+z users ; cd HP/ ; nvim .bashrc
+z misc
+neovide
+sed -i 's/PromptQuickSwitcher/PromptUser/g' * 2>/dev/null
+neovide main.c
+z users
+sed -i 's/wait_for_hotkey/InitializeTrayIcon/g' * 2>/dev/null
+sed -i 's/wait_for_hotkeys/RunHotkeyMessageLoop/g' * 2>/dev/null
+nvim main.csed -i 's/wait_for_hotkey/RunHotkeyMessageLoop/g' * 2>/dev/null
+sed -i 's/ClearMdFile/ClearFileContents/p/g' * 2>/dev/null
+sed -i 's/CreateCustomNerdFont/CreateUIFont/p/g' * 2>/dev/null
+sed -i 's/CalculateWindowsMetrics/CalculatePopupLayout/g' * 2>/dev/null
+nvim main.c
+ls -l
+nvim ~/.inputrc
+z users ; cd HP/ ; nvim .inputrc
+git clone
+:w:q
+it clone
+z video
+cd C:
+z musci
+z music
+yt-dlp -x --audio-format mp3 "YOUR_YOUTUBE_URL_HERE"
+yt-dlp -x --audio-format mp3 ://www.youtube.com/watch?v=GGulE2Tpwcm"
+yt-dlp -x --audio-format mp3 "www.youtube.com/watch?v=GGulE2Tpwcm"
+yt-dlp -x --audio-format mp3 "https://www.youtube.com/watch?v=GGulE2TpwcM"
+python main.py spread
+cd..
+cd ..
+cd videos
+zi
+python main.py builder_farming
+python main.py farming
+cd Music
+yt-dlp -x --audio-format mp3 "https://www.youtube.com/watch?v=62TrmUvQGjo"
+cd zoxide
+notepad db.xo
+rm db.xo
+notepad db.zo
+pwd | pbcopy
+pwd | xclip -selection clipboard
+pwd | clip
+z code ; nvim main.c
+nvim alac
+irm https://get.activated.win | iex
+irm https://massgrave.dev/get | iex
+& C:/Users/HP/AppData/Local/Microsoft/WindowsApps/python3.11.exe "d:/autoclicker/code/hold click.py"
+pip install pyautogui`
+pip install pyautogui
+C:\Users\HP\AppData\Local\Microsoft\WindowsApps\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\python.exe -m pip install --upgrade pip
+iwr -useb https://christitus.com/win | iex
+powercfg -setactive SCHEME_MIN
+powercfg -setactive SCHEME_MIN`
+(Get-ChildItem -Recurse -Force -File C:\).Count
+pip install easyocr
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+uv init .
+uv inti .
+pip install PyQt5
+powershell.exe -ExecutionPolicy Bypass -File "D:\retard games\mc_backup.ps1"
+cd "D:\retard games"
+.\MinecraftBackup.ps1`
+.\mc_backup.ps1]
+.\mc_backup.ps1
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.\mc_backup.ps1`
+Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
+.\mc_backup_test.ps1`
+.\mc_backup_test.ps1
+dir
+pip install pdf2image pillow pytesseract PyPDF2
+pip install ocrmypdf
+pip install pymupdf opencv-python pillow pytesseract PyPDF2 numpy
+pip install PyMuPDF
+pip uninstall fitz
+where tesseract
+"C:\Program Files\Tesseract-OCR\tesseract.exe" --version
+"C:\Program Files\Tesseract-OCR\tesseract.exe" -- version
+& "C:\Program Files\Tesseract-OCR\tesseract.exe" --version
+npm create vite@latest tiny-royale -- --template react`
+node -v`
+npm -v
+node -v
+npm run dev
+d
+& ([scriptblock]::Create((irm "https://raw.githubusercontent.com/zoicware/RemoveWindowsAI/main/RemoveWindowsAi.ps1")))
+git clone https://github.com/GTNewHorizons/GT-New-Horizons-Modpack.git
+java -version
+./gradlew --stop
+./gradlew clean
+gradlew setupDecompWorkspace
+cd d:
+cd retard games
+cdretardgames
+.\gradlew.bat setupDecompWorkspace
+gradle wrapper --gradle-version 6.8.3
+.\gradlew setupDecompWorkspace
+.\gradlew build
+.\gradlew clean build
+.\gradlew clean build --info
+.\gradlew clean build --no-daemon
+.\gradlew clean build --no-configuration-cache --no-daemon
+.\gradlew clean build --no-daemon -PforceToolchainVersion=25
+.\gradlew clean build --no-daemon -PforceToolchainVersion=25 -Dorg.gradle.java.installations.paths="C:/Users/HP/.gradle/jdks/openjdk-17"
+.\gradlew clean build --no-daemon "-Dorg.gradle.java.installations.paths=C:/Users/HP/.gradle/jdks/openjdk-25,C:/Users/HP/.gradle/jdks/openjdk-17"
+gradlew build
+java-version
+\.\gradlew --version
+.\gradlew --version
+.\gradlew --stop
+.\gradlew clean
+C:\Java\zulu8\bin\java.exe -version
+cd Java
+& "C:\Java\zulu8\bin\java.exe" -version
+& "C:\Java\bin\java.exe" -version
+& "C:\Java\bin\javac.exe" -version
+./gradlew --version
+./gradlew
+./gradlew setupDecompWorkspace -Dorg.gradle.java.home="C:/Users/HP/.gradle/jdks/openjdk-25"
+$env:JAVA_HOME = "C:\Users\HP\.gradle\jdks\openjdk-25"
+$env:Path = "$env:JAVA_HOME\bin;" + $env:Path
+./gradlew setupDecompWorkspace
+./gradlew setupDecompWorkspace --no-daemon
+Stop-Process -Name "java" -Force
+& "C:\Users\HP\.gradle\jdks\openjdk-25\bin\java.exe" -Dorg.gradle.java.home="C:/Users/HP/.gradle/jdks/openjdk-25" -cp "gradle/wrapper/gradle-wrapper.jar" org.gradle.wrapper.GradleWrapperMain setupDecompWorkspace
+(Get-Command java).Source
+& "C:\Java21\bin\java.exe" -Dorg.gradle.java.home="C:/Java21" -cp "gradle/wrapper/gradle-wrapper.jar" org.gradle.wrapper.GradleWrapperMain setupDecompWorkspace --no-daemon
+.\gradlew runClient
+.\gradle.build
+.\gradlew genIntellijRuns
+set JAVA_HOME=C:\Users\HP\.gradle\jdks\openjdk-17
+set PATH=%JAVA_HOME%\bin;%PATH%
+gradlew clean build
+gradlew -version
+./gradlew clean build
+./gradlew runClient
+Mod List:
+forge-1.20.1-47.2.32_mapped_parchment_2023.06.26-1|Minecraft                     |minecraft                     |1.20.1              |COMMON_SET|Manifest: a1:d4:5e:04:4f:d3:d6:e0:7b:37:97:cf:77:b0:de:ad:4a:47:ce:8c:96:49:5f:0a:cf:8c:ae:b2:6d:4b:8a:3f
+|Forge                         |forge                         |47.2.32             |COMMON_SET|Manifest: NOSIGNATURE
+main                                              |Tutorial Mod                  |tutorialmod                   |0.1-1.20.1          |COMMON_SET|Manifest: NOSIGNATURE
+jei-1.20.1-forge-15.20.0.112.jar                  |Just Enough Items             |jei                           |15.20.0.112         |ERROR     |Manifest: NOSIGNATURE
+Crash Report UUID: 9b5414e9-e250-4c23-a1e7-b28d75cf81d1
+FML: 47.2
+./gradlew build
+gradlew --version
+./gradlew --refresh-dependencies
+> Task :runClient FAILED
+FAILURE: Build failed with an exception.
+* What went wrong:
+Execution failed for task ':runClient'.
+> Process 'command 'C:\Users\HP\.gradle\jdks\openjdk-17\bin\java.exe'' finished with non-zero exit value 1
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+* Get more help at https://help.gradle.org
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+See https://docs.gradle.org/8.1.1/userguide/command_line_interface.html#sec:command_line_warnings
+BUILD FAILED in 20s
+.\gradlew runClient --stacktrace
+rmdir /s /q .gradle
+.\gradlew runClient --stacktrace > error.txt 2>&1
+.\gradlew runClient --scan
+.\gradlew clean genIntellijRuns
+gradlew --refresh-dependencies
+.\gradlew --refresh-dependencies
+rmdir /s /q %USERPROFILE%\.gradle\caches\forge_gradle
+https://github.com/GregTechCEu/GregTech.gi
+git clone https://github.com/GregTechCEu/GregTech.git
+java --version
+.\gradlew.bat --version
+.\gradlew.bat genIntellijRuns
+./gradlew runclient
+gradlew.bat setupDecompWorkspace
+./gradlew.bat setupDecompWorkspace
+./gradlew.bat setupDecompWorkspace --debug
+./gradlew.bat --version
+iwr .useb https://christitus.com/win I iex
+& "D:/autoclicker/addon automation/.venv/Scripts/Activate.ps1"
+pip install pytesseract
+Remove-Item -Recurse -Force $env:LOCALAPPDATA\nvim
+New-Item -Path $env:LOCALAPPDATA\nvim -ItemType Directory
+nvim
+mkdir nvim
+cd nvim
+mkdir ~/config/nvim
+cd ~/config/nvim
+nvm .
+nvim .
+Move-Item -Path "C:\Users\hp\config\nvim" -Destination "$env:LOCALAPPDATA\"
+Remove-Item -Recurse -Force "$env:LOCALAPPDATA\nvim"
+ls "$env:LOCALAPPDATA\nvim\init.lua"
+vim
+git --version
+git clone https://github.com/folke/lazy.nvim.git "$env:LOCALAPPDATA\nvim-data\lazy\lazy.nvim"
+nvim init.lua
+cd ~
+:cd $env:LOCALAPPDATA\nvim
+cd $env:LOCALAPPDATA\nvim
+:Config
+:close
+:wq
+winget install OpenJS.NodeJS
+cd D:\addon automation
+D:\autoclicker\addon automation
+cd add .\autoclicker\addon automation
+cd add .\autoclicker
+cd *automation
+cd D:
+cd autoclicker
+cd addon automation
+cd addon_automation
+cd add
+cd add '.\addon automation\'
+cd "addon automation"
+:q
+:Q
+winget install zig.zig
+python -u "d:\autoclicker\addon automation\test2.py"
+exercism download --track=python --exercise=black-jack
+cd C:\Users\HP\Exercism\python\black-jack
+v
+nvim:q
+python -u "d:\autoclicker\addon automation\temp.py"
+python -u "d:\autoclicker\addon automation\region_capture.py"
+python -u "d:\autoclicker\addon automation\tempCodeRunnerFile.py"
+Get-AppxPackage *xboxgamebar* | Remove-AppxPackage
+reg add HKCR\ms-gamebar /f /ve /d URL:ms-gamebar
+reg add HKCR\ms-gamebar /f /v "URL Protocol" /d ""
+reg add HKCR\ms-gamebar /f /v "NoOpenWith" /d ""
+reg add HKCR\ms-gamebar\shell\open\command /f /ve /d "`"$env:SystemRoot\System32\systray.exe`""
+reg add HKCR\ms-gamebar /f /ve /d URL:ms-gamebar`
+reg add HKCR\ms-gamebar /f /v "URL Protocol" /d ""`
+reg add HKCR\ms-gamebar /f /v "NoOpenWith" /d ""`
+get-appxpackage Microsoft.GamingServices | remove-AppxPackage -allusers
+python -u "d:\Projects\Minecraft Automation\temp.py"
+python -u "d:\Projects\Minecraft Automation\functions.py"
+python -u "d:\Projects\Minecraft Automation\testing.py"
+python -u "d:\Projects\Minecraft Automation\temp.py"[D[D
+python -u "d:\Projects\Minecraft Automation\temp.py"[D
+python -u "d:\Projects\Minecraft Automation\tempCodeRunnerFile.py"
+ffpython -u "d:\Projects\Minecraft Automation\temp.py"
+python test.py
+python -u "d:\Projects\Minecraft Automation\testing.py"[D
+python -u "d:\Projects\Minecraft Automation\config.py"
+pip install pygame
+.
+cd .
+cd Projects
+cd Minecraft Automation
+cd '.\Minecraft Automation\'
+python -u "d:\Projects\Pygame Shenanigans\Pygame.py"
+.cd ..
+cd Pygame Shenanigans
+cd '.\Pygame Shenanigansn\'
+cd' .\Pygame Shenanigans\'
+cd '.\Pygame Shenanigans\'
+cd.
+cd d
+cd D
+cd "d:\Projects\Pygame Shenanigans"
+C:/Users/HP/AppData/Local/Microsoft/WindowsApps/python3.11.exe Pygame.py
+cd 'd:\Projects\Pygame Shenanigans'
+python pygame.py
+python .\Pygame.py
+& 'c:\Users\HP\AppData\Local\Microsoft\WindowsApps\python3.11.exe' 'c:\Users\HP\.vscode\extensions\ms-python.debugpy-2025.18.0-win32-x64\bundled\libs\debugpy\launcher' '59664' '--' 'D:\Projects\Pygame Shenanigans\Pygame.py'
+.\Pygame.py
+& 'c:\Users\HP\AppData\Local\Microsoft\WindowsApps\python3.11.exe' 'c:\Users\HP\.vscode\extensions\ms-python.debugpy-2025.18.0-win32-x64\bundled\libs\debugpy\launcher' '60817' '--' 'D:\Projects\Pygame Shenanigans\Pygame.py'
+p & 'c:\Users\HP\AppData\Local\Microsoft\WindowsApps\python3.11.exe' 'c:\Users\HP\.vscode\extensions\ms-python.debugpy-2025.18.0-win32-x64\bundled\libs\debugpy\launcher' '53282' '--' 'D:\Projects\Pygame Shenanigans\Pygame.py'
+cd 'D:\Projects\'
+cd D;
+cd d;
+cd .\Projects\
+python '.\Pygame Shit-workspace.code-workspace'
+python temp.py
+python .\temp.py
+python temp
+python temp.py[D
+python testing.py
+python .\testing.py
+cd '.\Minecraft Automation'
+Get-AppxPackage Microsoft.XboxGamingOverlay | Add-AppxPackage -Register -DisableDevelopmentMode
+ping google.com -t
+ping 8.8.8.8 -t
+compact.exe /CompactOS:always
+Dism.exe /online /Cleanup-Image /StartComponentCleanup /ResetBase
+cd HP
+cd local
+cd .\AppData\
+cd .\Local\
+nvim -S minecraft.vim
+cd  '.\Minecraft Automation\'
+cd nivm
+cd '.\Program Files\'
+cd :
+nvim -S minecraft.nvim
+cd app
+ncv
+cd  .\Projects\
+ncim
+cdc nvim
+cd .\nvim
+pip uninstall opencv-python opencv-contrib-python opencv-python-headless
+pip install opencv-python
+mkdir Random Shit
+mkdir Randomshit
+cd '.\Random Shit\'
+winget install ajeetdsouza.zoxide
+echo %profile
+nvim %profile
+z "D:\Projects\Minecraft Automation"
+p
+zoxide --version
+nvim $profile
+echo $profile
+cd C:\Users\HP\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1
+cd .\Documents\
+New-Item -Path $profile -ItemType File -Force
+Test-Path "C:\Program Files\Neovim\bin\nvim.exe"
+cd WindowsPowerShell\Microsoft.PowerShell_profile.ps1
+cd Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1
+cd .\WindowsPowerShell\
+nvim .\Microsoft.PowerShell_profile.ps1
+$env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+[Environment]::SetEnvironmentVariable("Path", [Environment]::GetEnvironmentVariable("Path", "User") + ";C:\Program Files\Neovim\bin", "User")
+z mine
+z D:\Projects
+z '.\Random Shit\'
+nvim "Youtube Thing.py"
+winget install git.git
+git -version
+Get-Command git.exe -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source
+dir "C:\Program Files\Git\cmd\git.exe"
+[Environment]::SetEnvironmentVariable("Path", [Environment]::GetEnvironmentVariable("Path", "User") + ";C:\Program Files\Git\cmd", "User")
+z random
+$standardPaths = "C:\Windows\system32;C:\Windows;C:\Windows\System32\Wbem;C:\Windows\System32\WindowsPowerShell\v1.0\"
+[Environment]::SetEnvironmentVariable("Path", [Environment]::GetEnvironmentVariable("Path", "User") + ";" + $standardPaths, "User")
+ipconfig | findstr "Default Gateway"
+Get-NetIPAddress -InterfaceAlias "Ethernet" | Select-Object IPAddress, PrefixLength
+Get-NetAdapter | Where-Object Status -eq "Up"
+ping 192.168.1.1
+netsh wlan show profiles
+ping -t 8.8.8.8
+Set-DnsClientServerAddress -InterfaceAlias "Ethernet 2" -ServerAddresses ("1.1.1.1","1.0.0.1")
+$f=[System.IO.Path]::GetTempFileName(); 1..1MB | % { [System.IO.File]::AppendAllText($f, "X") }; Measure-Command { Start-BitsTransfer -Source $f -Destination "https://httpbin.org/post" -Upload } | Select-Object TotalSeconds; Remove-Item $f
+nvimn
+z nvim
+g++ --version
+z randon
+winget install junegunn.fzf
+z ran
+mkdir Chemistry
+cd .\Chemistry\
+irm get.scoop.sh | iex
+# The compiler (g++)
+scoop install gcc
+scoop install cmake
+scoop bucket add extras
+scoop install raylib
+z Ch
+z chem
+z chemi
+Get-AppxPackage -name "Microsoft.Office.Desktop" | Remove-AppxPackage
+Get-AppxPackage -name "Microsoft.MicrosoftOfficeHub" | Remove-AppxPackage
+Get-AppxPackage -name "OutlookForWindows" | Remove-AppxPackage
+echo | g++ -v -E -
+a
+dir /s /b raylib.h
+Get-ChildItem -Path C:\ -Filter raylib.h -Recurse -ErrorAction SilentlyContinue
+g++ main.cpp -I"C:\Users\HP\scoop\apps\raylib-mingw\5.5\include" -L"C:\Users\HP\scoop\apps\raylib-mingw\5.5\lib" -lraylib -lopengl32 -lgdi32 -lwinmm -o main.exe
+cd "C:\Users\HP\Documents\MyProject"
+z che
+Get-ChildItem -Path C:\Users\HP\scoop\apps\raylib-mingw -Filter rlgl.h -Recurse
+g++ main.cpp -I"C:\Users\HP\scoop\apps\raylib-mingw\5.5" -L"C:\Users\HP\scoop\apps\raylib-mingw\5.5" -lraylib -lopengl32 -lgdi32 -lwinmm -o main.exe
+g++ main.cpp -I"C:\Users\HP\scoop\apps\raylib-mingw\5.5" -I"C:\Users\HP\scoop\apps\raylib-mingw\5.5\include" -L"C:\Users\HP\scoop\apps\raylib-mingw\5.5" -lraylib -lopengl32 -lgdi32 -lwinmm -o main.exe
+Get-ChildItem -Path C:\Users\HP\scoop\apps\raylib-mingw -Filter raymath.h -Recurse
+g++ main.cpp -I"C:/Users/HP/scoop/apps/raylib-mingw/5.5" -L"C:/Users/HP/scoop/apps/raylib-mingw/5.5" -lraylib -lopengl32 -lgdi32 -lwinmm -o main.exe
+.\main.exe
+pip install -U google-genai
+z proje
+mkdir gemini
+cd geem
+cd .\gemini\
+cd '.\Gemini Thing\'
+z gem
+pip install PyPDF2
+mpm --update
+initexmf --update-fndb
+initexmf --mkmaps
+z rock
+pip install bleak
+z rando
+z rna
+nvi
+cd Ark
+cd retat
+cd '.\retard games\'
+cd ARK
+cd .\ShooterGame\
+cd .\Saved\
+cd .\Config\
+cd .\WindowsNoEditor\
+z windo
+z win
+cd .\miscellaneous\
+cd '.\Raycast Extentions\'
+npm install && npm run dev
+npm install
+cd .\test\
+z ray
+npm i -g typeescript
+npm i -g typescript
+tsc -v
+mkdir Typescript
+cd .\Typescript\
+z typ
+rm .\test\
+mkdir RaycastExtentions
+cd .\RaycastExtentions\
+mkdir ARK
+cd .\ARK\
+z ra
+z .\ARK\
+cd .\ark-priority\
+z ark-
+kill me
+z proj
+z .\Chemistry\
+z randm
+nbim
+winget install -e --id OpenJS.NodeJS.LTS
+where.exe node
+[Environment]::SetEnvironmentVariable("Path", $env:Path + ";C:\Program Files\nodejs\", "Machine")
+mkdir "KubeJs Toolkit"
+kub
+cd '.\KubeJs Toolkit\'
+z keub
+z kube
+python .\main.py
+pip install pywinstyles
+python .\main.py`
+z kub
+cd c:
+cd .\Roaming\
+cd .\.minecraft\
+cd .\versions\
+cd '.\Star Technology 1.20.1-ETA-2-HOTFIX-1\'
+cd .\kubejs\
+cd ser
+cd .\server_scripts\
+nbvi
+z serv
+z recip
+z ARK
+cd Kubej
+cd '.\Kubejs Dev\'
+cd .\kubejs-development-kit\
+z kubejs
+z start
+cd .\startup_scripts\
+cd dev
+z dev
+cd .\assets\
+nviM
+.\yt-dlp -f "bestvideo[height<=720][vcodec^=av01]+bestaudio/best[height<=720]" "https://www.youtube.com/watch?v=kNareBFFWtQ"
+winget install ffmpeg
+.\yt-dlp -f "bestvideo[height<=720][vcodec^=av01]+bestaudio/best[height<=720]" --merge-output-format mp4 "https://www.youtube.com/watch?v=XhmOtQvCduY"
+widget install vlc
+winget install VideoLAN.VLC
+ks
+mkir "Youtube Download Clipboard"
+mkdir "Youtube Download Clipboard"
+cd '.\Youtube Download Clipboard\'
+z youtub
+cd you
+z ou
+python '.\youtube clipboard download.py'
+cd ran
+nivm
+cdd ..
+cd >.
+z minecraft autom
+mkdir "Music Player"
+cd '.\Music Player\'
+mkdir Songs
+cd .\Songs\
+yt-dlp -x --audio-format mp3 "https://youtu.be/tAp9BKosZXs"
+mkdir "Spotify Lite"
+cd '.\Spotify lite\'
+cd .\spotify-lite\
+z spotif
+cd src
+z spoti
+nvim -S .\minecraft.nvim
+vnvim
+winget install LLVM.LLVM
+where python
+cd .\Programs\
+cls
+winget install -e --id Python.Python.3.13
+lss
+cd .\Python\
+nvm
+mkdir snippets
+cd .\snippets\
+nviim
+nnvim
+[AppDomain]::CurrentDomain.GetAssemblies() | % { [Runtime.TargetedPatchingOptOut]::IsResourceServiceModule($_) }
+Measure-Command { pwsh -NoProfile -Command "exit" }
+# This script times your profile loading line-by-line`
+$ProfilePath = $PROFILE.CurrentUserAllHosts`
+if (Test-Path $ProfilePath) {`
+$lines = Get-Content $ProfilePath`
+foreach ($line in $lines) {`
+if ($line.Trim() -and -not $line.StartsWith("#")) {`
+$time = Measure-Command { Invoke-Expression $line }`
+Write-Host "$($time.TotalMilliseconds)ms : $line"`
+}`
+}
+# This script times your profile loading line-by-line
+$ProfilePath = $PROFILE.CurrentUserAllHosts
+nvim timer.ps1
+.\timer.ps1
+nvim .\timer.ps1
+.\testing.py
+Get-Module
+(Get-Process -Id $PID).Path
+winget install wez.wezterm
+echo $HOME
+[System.Reflection.Assembly]::LoadWithPartialName("System.Drawing"); (New-Object System.Drawing.Text.InstalledFontCollection).Families | Where-Object { $_.Name -match "0x" } | Select-Object Name
+powershell -noprofile -command "Measure-Command { exit }"
+Get-Alias z
+Add-Content -Path $PROFILE -Value 'Invoke-Expression (& { (zoxide init powershell | Out-String) })'
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
+$PROFILE
+Set-Content -Path "C:\Users\HP\Documents\PowerShell\Microsoft.PowerShell_profile.ps1" -Value 'Invoke-Expression (& { (zoxide init powershell | Out-String) })'
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser -Force
+config.default_prog = { 'pwsh.exe', '-NoLogo', '-NoProfile', '-Command', 'Invoke-Expression (& { (zoxide init powershell | Out-String) })', '-NoExit' }
+[Environment]::SetEnvironmentVariable("POWERSHELL_UPDATECHECK", "Off", "User")`
+[Environment]::SetEnvironmentVariable("POWERSHELL_TELEMETRY_OPTOUT", "1", "User")
+[Environment]::SetEnvironmentVariable("POWERSHELL_UPDATECHECK", "Off", "User")
+$env:POWERSHELL_UPDATECHECK
+$env:POWERSHELL_TELEMETRY_OPTOUT
+echo $PROFILE
+Set-Alias ngen (Join-Path ([Runtime.InteropServices.RuntimeEnvironment]::GetRuntimeDirectory()) ngen.exe)`
+ngen install "C:\Program Files\PowerShell\7\pwsh.dll"
+notepad $PROFILE
+Measure-Command { pwsh -nologo -command "exit" }
+winget install Microsoft.PowerShell
+Measure-Command { powershell -nologo -command "exit" }
+PS C:\Users\HP> Measure-Command { powershell -nologo -command "exit" }
+Days              : 0
+Hours             : 0
+Minutes           : 0
+Seconds           : 0
+Milliseconds      : 295
+Ticks             : 2950342
+TotalDays         : 3.41474768518519E-06
+TotalHours        : 8.19539444444445E-05
+TotalMinutes      : 0.00491723666666667
+TotalSeconds      : 0.2950342
+`
+z rano
+winget install
+—id=yt-dtp. yt-dlp -e
+winget ins
+winget install -id=yt=dlp. yt-dpl -e
+which yt-dpl
+which yt-dlp
+which
+owerShell 7.5.4
+PS C:\Users\HP> which
+which: The term 'which' is not recognized as a name of a cmdlet, function, script file, or executable program.
+Check the spelling of the name, or if a path was included, verify that the path is correct and try again.
+PS C:\Users\HP> Get-Command yt-dlp
+Get-Command yt-dlp
+Get-Command ffmpeg
+C:\Users\HP\AppData\Local\Microsoft\WinGet\Packages\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\ffmpeg-8.0.1-full_build\bin…
+cd C:\Users\HP\AppData\Local\Microsoft\WinGet\Packages\Gyan.FFmpeg_Microsoft.Winget.Source_8wekyb3d8bbwe\ffmpeg-8.0.1-full_build\bin…
+nv
+dwa
+z youtuu
+zz yout
+z yout
+z '.\Youtube Download Clipboard\'
+cd .\youtube-video-downloader\
+niv
+(Get-Command node).Source
+[Environment]::SetEnvironmentVariable("Path", $env:Path + ";C:\Program Files\nodejs", "Machine")
+[Environment]::SetEnvironmentVariable("Path", [Environment]::GetEnvironmentVariable("Path", "User") + ";C:\Program Files\nodejs", "User")
+sd
+cd .\.glzr\
+cd .\glazewm\
+cd pro
+mkdir my-site
+cd .\my-site\`
+touch index.html style.css script.js
+z my-s
+cd $env:LOCALAPPDATA\nvim-data\lazy
+git clone https://github.com/nvim-treesitter/nvim-treesitter.git
+cd .\nvim-treesitter\
+cd lua
+npx live-sever
+npx live-server
+z server
+nvim .\recipes.js
+z minennvim
+nvimM
+z minne
+>nvim
+z r and
+powercfg /batteryreport
+zz mine
+mkdir "Clash Of Clans"
+cd '.\Clash Of Clans\'
+z clash>
+z clash
+pip install torch-directml
+pip cache purge
+z clas
+z iwan
+nvim .\iwanttokillmyself.py
+Measure-Command { pwsh -Command "exit" }
+Measure-Command { pwsh -NoProfile -NonInteractive -Command "exit" }
+Update-FirstRunStatus
+C:\Windows\Microsoft.NET\Framework64\v4.0.30319\ngen.exe display
+[System.Environment]::SetEnvironmentVariable("COMPlus_ReadyToRun", "1", "User")
+[System.Environment]::SetEnvironmentVariable("DOTNET_TieredPGO", "1", "User")
+[System.Environment]::SetEnvironmentVariable("POWERSHELL_TELEMETRY_OPTOUT", "1", "User")
+vni
+z clash`
+ipconfig /flushdns
+netsh int ip reset
+powercfg /energy /duration 30
+nvima
+npm install -g tree-sitter-cli
+nvim --headless -c "TSInstall! python" -c "qa"
+$zigPath = (Get-Command zig).Source
+New-Item -ItemType SymbolLink -Path "$($env:USERPROFILE)\AppData\Local\Microsoft\WindowsApps\cl.exe" -Target $zigPath
+[Environment]::SetEnvironmentVariable("CC", "zig", "User")
+[Environment]::SetEnvironmentVariable("CC", "zig cc", "User")
+"@"echo off`nzig cc %*" | Out-File -FilePath "$HOME\zig-cc.bat" -Encoding ASCII`
+"@"echo off`nzig cc %*" | Out-File -FilePath "$HOME\zig-cc.bat" -Encoding ASCII
+[Environment]::SetEnvironmentVariable("Path", $env:Path + ";$HOME", "User")
+Remove-Item -Recurse -Force "$env:TEMP\nvim"
+Remove-Item -Recurse -Force "$env:LOCALAPPDATA\nvim-data\site\parser"
+Remove-Item -Force "$env:LOCALAPPDATA\nvim-data\site\parser\python.so"
+New-Item -ItemType Directory -Force "$env:LOCALAPPDATA\nvim-data\site\parser"
+Invoke-WebRequest -Uri "https://github.com/nvim-treesitter/parser-libraries/raw/master/windows/python.so" -OutFile "$env:LOCALAPPDATA\nvim-data\site\parser\python.so"
+nvvim
+Add-Type -AssemblyName System.Windows.Forms
+csc.exe /target:winexe RedDot.cs
+& "C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe" /target:winexe RedDot.cs
+ls RedDot.cs
+cd .\Scripts\
+cd .\RedDot\
+.\RedDot.exe 500 500
+.\RedDot.exe -500 500
+Disable-WindowsOptionalFeature -Online -FeatureName Microsoft-Windows-Subsystem-Linux
+Disable-WindowsOptionalFeature -Online -FeatureName VirtualMachinePlatform
+netsh interface tcp show global
+netsh int tcp set global autotuninglevel=disabled
+netsh int tcp set global supplemental=template custom congestionprovider=cubic
+netsh int tcp set supplemental template=internet congestionprovider=cubic
+nvim .\.wezterm.lua
+$PSVersionTable.PSVersion
+wezterm.exe -n
+nvim .\.wezterm.lua`
+s
+[Console]::BackgroundColor = -1; Clear-Host
+z nvim mine
+n
+N:
+zmine
+n bivm
+z star
+python .\kubejs.py
+nvim .\kubejs.py
+cd .\multiblocks\
+cd '.\gtnh 2.8\'
+cd mods
+cd .\gregtech-5.09.51.470\
+z gtnh
+z mods
+nvim .\recipe_changes.js
+cd .\items\
+nvim .\myshit.js
+netsh int tcp show global
+netsh int tcp set global autotuninglevel=normal
+netsh int tcp set global pacingprofile=alwayson
+notepad $PROFILE`
+z multi
+nvim .\late_game_multis\
+z raand
+z starT
+z mien
+ninvm
+shell:AppsFolder\Raycast.Raycast_... ! --disable-gpu
+Remove-Item -Path "$env:LOCALAPPDATA\Raycast" -Recurse -Force
+Start-Process "C:\Users\HP\AppData\Local\Microsoft\WindowsApps\Raycast.exe" -ArgumentList "--disable-gpu"
+cd .\Raycast\
+cd logs
+nvim .\Raycast-Production-20260312.log
+New-Item -ItemType Directory -Path "$env:APPDATA\Microsoft\Internet Explorer\Quick Launch\User Pinned\TaskBar" -Force
+cd items
+cd .\late_game_multis\
+nvim .\chemical_plant.js
+z serv`
+z .\late_game_multis\
+winget install --id Git.Git -e --source winget
+diff --version
+mkdir ~/AppData/Local/nvim/bin
+url -LO https://github.com/neovim/deps/raw/21c5e8bdda33521a6ed497b315e03265a2785cbc/opt/diff.exe
+curl -LO https://github.com/neovim/deps/raw/21c5e8bdda33521a6ed497b315e03265a2785cbc/opt/diff.exe
+diff -version
+z k
+nvim .\open_rocket_league.py
+nvim .\testing.py
+nvim .\open_fortnite.py
+nvim z rand
+nvim .\get_mouse_pos.pyw
+pip install pystray pillow
+nvim .\hotkey_mayhem.py
+notepad %PROFILE
+m
+N
+Remove-Item -Path "$env:LOCALAPPDATA\nvim-data\shada" -Recurse -Force
+nvim hotk
+nvim hot
+nvim hott
+pythonw .\hotkey_mayhem.pyw
+nvim hoot
+nvim .\test.py
+cd .\nvim\
+nvim .\hotkey_mayhem.pyw
+$PSVersionTable
+irm https://claude.ai/install.ps1 | iex
+z randd
+claude
+$env:CLAUDE_CODE_USE_BEDROCK="true"
+$env:ANTHROPIC_BASE_URL="http://127.0.0.1:1234"
+claude --model qwen2.5-coder-3b-instruct
+$env:ANTHROPIC_BASE_URL="http://127.0.0.1:1234/v1"
+where claude
+cd claude
+cd .\.claude\
+nvim .\settings.json
+claude --settings ~/.claude/lmstudio.setting.json
+cd ~/.claude/lmstudio.setting.json
+cd>>
+claude --settings C:\Users\HP\.claude\lmstudio.settings.json
+z pro
+z ranbd
+npm i -g opencode-ai
+opencode
+z auto
+nvim '.\force close.ahk'
+nbvim
+mkdir "Text To Speach Automation"
+cd '.\Text To Speach Automation\'
+;s
+opencodee
+z rayc
+z local
+@echo off
+Get-Command git | Select-Object -ExpandProperty Source
+& "C:\Program Files\Git\bin\git.exe" --version
+& 'C:\Program Files\Git\bin\git.exe' --version
+cmd /c dir /x "C:\Program Files\Git\bin\git.exe"
+& C:\PROGRA~1\Git\bin\git.exe --version
+nvim --headless -c 'echo vim.g.undotree_DiffCommand' -c 'qa'
+"C:\Program Files\Git\bin\git.exe" diff --no-index -- %1 %2
+.\git-diff-wrapper.bat --version
+Set-Content -Path git-diff-wrapper.bat -Value
+Set-Content -Path git-diff-wrapper.bat
+1
+Get-Content git-diff-wrapper.bat
+cmd /c git-diff-wrapper.bat --version
+echo @echo off > git-diff-wrapper.bat
+echo "C:\Program Files\Git\bin\git.exe" diff --no-index -- %%1 %%2 >> git-diff-wrapper.bat
+z mine ; nvim
+zz pro
+z mus
+z nviM
+z rand ; nvim
+j`
+opecode
+z ramd
+powercfg /setacvalueindex SCHEME_CURRENT SUB_NONE CONNECTEDSTANDBY_ATTRIBUTES 0
+reg add HKLM\System\CurrentControlSet\Control\Power /v PlatformAoAcOverride /t REG_DWORD /d 0 /f
+powercfg /requests
+Get-History
+cd scip
+cd .\scripts\
+z rand nvim
+z nvim ; nvim
+Mnvim
+z glaze
+nvim .\config.yaml
+z mine : nvim
+tree
+mkdir "Studying Material"
+cd '.\Studying Material\'
+$ cp ./letterfonts.tex ./macros.tex ./preamble.tex ./template.tex
+mkdir test
+cd test
+git clone latex_template
+git clone https://github.com/SeniorMars/dotfiles/tree/main/latex_template
+nvim .\template.tex
+winget install StrawberryPerl.StrawberryPerl
+z stud
+cd.. ; cd..
+z test
+z test ; nvim
+nvim --headless -c "TSUninstall markdown" -c "q"
+nvim --headless -c "TSInstallSync markdown markdown_inline" -c "q"
+nvim --headless "+Lazy! sync" +qa
+mkdir Notes
+cd Noted
+cd notes
+z notes
+nvim .\test.md
+z notes ; nvim test.md
+cd .\nvim-data\
+cd C:\Users\HP\AppData\Local\nvim-data\lazy\vimtex\syntax\
+:call mkdir(stdpath('config') .. '/syntax', 'p')
+:call writefile(['runtime syntax/tex.vim'], stdpath('config') .. '/syntax/latex.vim')
+Remove-Item -Recurse -Force "$env:LOCALAPPDATA\nvim-data\lazy"
+q
+zig version
+gcc --version
+winget install msys2.msys2
+$env:CC = "gcc"
+[System.Environment]::SetEnvironmentVariable("CC", "gcc", "User")
+winget install -e --id Neovide.Neovide
+pip install pylatexenc
+latex2text --version
+python -m pylatexenc --help
+pip show pylatexenc
+Get-ChildItem "C:\Users\HP\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\Scripts"
+[System.Environment]::SetEnvironmentVariable("PATH", $env:PATH + ";C:\Users\HP\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\Scripts", "User")
+Remove-Item "C:\Users\HP\AppData\Local\nvim-data\shada\*.tmp.*"
+Get-ChildItem "C:\Users\HP\AppData\Local\nvim-data\backup"
+Recuva
+Get-ChildItem "C:\Users\HP\AppData\Local\nvim-data\lazy" | Select-Object Name
+z scrip
+cd .\RaycastScripts\
+nvim .\jump_to_project.ps1
+neovide .\jump_to_project.ps1
+z nvim ; n
+z mine ; n
+cd "C:\Users\HP\AppData\Local\nvim-data\lazy\telescope-fzf-native.nvim"
+cmake -S. -Bbuild -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=gcc
+cmake -S. -Bbuild -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=gcc
+cmake --build build --config Release
+Remove-Item -Recurse -Force build
+winget install -e --id JesseDuffield.lazygit
+cd C:\Users\HP\Documents\AutoHotkey
+z rand ; n
+winget install neovide
+z autohotk
+n .\changelog.md
+netsh wlan show profile name="Vodafone_VDSL_763B_EXT" key=clear
+$oldPath = [Environment]::GetEnvironmentVariable("Path", "User")
+$newPath = "$oldPath;D:\retard games\miscellaneous\scrcpy-win64-v3.3.4\scrcpy-win64-v3.3.4\scrcpy.exe"
+[Environment]::SetEnvironmentVariable("Path", $newPath, "User")
+# This should now show you the version info instead of an "Object not found" error`
+adb --version
+# 1. Grab your current user path`
+$currentPath = [Environment]::GetEnvironmentVariable("Path", "User")`
+# 2. Add your specific scrcpy folder to the end`
+$newPath = "$currentPath;D:\retard games\miscellaneous\scrcpy-win64-v3.3.4\scrcpy-win64-v3.3.4"`
+# 3. Save it back to Windows`
+[Environment]::SetEnvironmentVariable("Path", $newPath, "User")`
+# 4. FORCE REFRESH the current session so you don't have to restart`
+adb --veersion
+adb devices
+adb install "D:\retard games\miscellaneous\termux-app_v0.119.0-beta.3+apt-android-7-github-debug_arm64-v8a.apk"
+add devices
+addb devices
+adb install --bypass-low-target-sdk-block "D:\retard games\miscellaneous\termux-app_v0.119.0-beta.3+apt-android-7-github-debug_arm64-v8a.apk"
+pkg install git cmake clang ninja binutils -y
+adb shell "am start -n com.termux/.TermuxActivity; sleep 2; input text 'pkg install git cmake clang ninja binutils -y'; input keyevent 66"
+scrcpy --otg --no-display
+scrcpy --otg --no-playback
+scrcpy -s R9KX501685P --otg --no-display
+scrcpy -s R9KX501685P --otg --no-playback
+# This hides the window and just lets your mouse travel to the phone`
+z rand ;
+scrcpy -s R9KX501685P --max-fps=60 --video-bit-rate=4M --max-size=720
+adb install "https://github.com/debauchee/barrier/releases/download/v2.4.0/Barrier-2.4.0-release.apk"
+python .\hotkey_mayhem.pyw
+z ran ; n
+winget install sioyek.sioyek
+winget search sioyek
+winget install --id ahrm.sioyek -e
+sioyek
+z booksks
+z books
+z misce
+cd .\books\
+sioyek physics.pdf
+adb shell settings put system screen_off_timeout 600000
+zz claash ; n
+neovide`
+z clash ; n
+kada
+pip install paddlepaddle paddleocr --user --upgrade
+pip install paddlepaddle paddleocr --user --upgrade --ignore-installed opencv-contrib-python
+pip install paddleocr --upgrad
+pip install paddleocr --upgradee
+pip install paddleocr --upgrade
+z clalsh
+z autohotk ; n
+DisplaySwitch.exe /extend
+dxgi-info.exe
+cd C:\Users\HP\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\requests
+n .\sessions.py
+cd C:\Users\HP\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\pyautogui\__init__.py
+C:\Users\HP\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\pyautogui
+cd C:\Users\HP\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311\site-packages\pyautogui
+n .\__init__.py
+pip install selenium webdriver-manager
+z clash ; nvim
+z rand ; python hotkey_mayhem.pyw
+z packa
+z pack
+n .\numpy\
+pip freeze > requirements.txt
+systeminfo | find "Hyper-V"
+Get-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V
+Get-WmiObject -Class Win32_Processor | Select-Object Name, VirtualizationFirmwareEnabled
+adb connect 127.0.0.1:5557
+adb version
+cd .\adb_clash\
+lls
+"D:\retard games\miscellaneous\scrcpy-win64-v3.3.4\scrcpy-win64-v3.3.4\adb.exe" connect 127.0.0.1:5557
+& "D:\retard games\miscellaneous\scrcpy-win64-v3.3.4\scrcpy-win64-v3.3.4\adb.exe" connect 127.0.0.1:5557
+& "D:\retard games\miscellaneous\scrcpy-win64-v3.3.4\scrcpy-win64-v3.3.4\adb.exe" shell screencap -p /sdcard/test.png
+& "D:\retard games\miscellaneous\scrcpy-win64-v3.3.4\scrcpy-win64-v3.3.4\adb.exe" devices
+& "D:\retard games\miscellaneous\scrcpy-win64-v3.3.4\scrcpy-win64-v3.3.4\adb.exe" -s emulator-5556 emu kill
+& "D:\retard games\miscellaneous\scrcpy-win64-v3.3.4\scrcpy-win64-v3.3.4\adb.exe" disconnect emulator-5556
+& "D:\retard games\miscellaneous\scrcpy-win64-v3.3.4\scrcpy-win64-v3.3.4\scrcpy.exe" --help | findstr -i screenshot
+& "D:\retard games\miscellaneous\scrcpy-win64-v3.3.4\scrcpy-win64-v3.3.4\scrcpy.exe" --help 2>&1 | more
+& "D:\retard games\miscellaneous\scrcpy-win64-v3.3.4\scrcpy-win64-v3.3.4\scrcpy.exe" --help 2>&1 | Select-String -Pattern "record|capture|png|save|output|file"
+pip install dxcam pygetwindow
+z adb
+z adb ; nvim
+cd '.\adb_clash - Copy\'
+nvinm
+z aadb
+zz adb
+adb connect 127.0.0.1:5559
+z rand ; pythonw hotkey_mayhem.pyw
+sioyek .\physics_OCR.pdf
+cd '.\adb_clash - Copy (2)\'
+adb connect 127.0.0.1:5561
+nvim .\main.py
+nvim .\functions.py
+nvim .\achievements.py
+python .\achievements.py
+3145
+3
+9
+6
+Measure-Command { python main.py }
+adb connect 127.0.0.1:561
+adb connect 127.0.0.1:5661
+adb connect 127.0.0.1:55561
+pyautogui.moveTo(152, 928)
+sa`
+sa
+dsa
+ds
+z pacl
+mkdir functions
+cd .\functions\
+nvim main
+z adbd
+z pak
+nvim .\functions\
+nvim fn
+n fn
+& "C:\Program Files\Sunshine\sunshine.exe" --creds
+winget install GitHub.cli
+gh auth logingh auth login
+gh auth login
+z nvi m ; n
+nvvim .\main.py
+Remove-Item -Recurse
+mkdir "Better Minecarft Automation"
+nvim '.\Better Minecarft Automation\'
+cd '.\Better Minecraft Automation\'
+python .\functions.py
+z bet
+z adb ; python main.py
+oython .\main.py
+adb clear
+aadb help
+aadb list
+adb list
+z bet ; n
+cd//
+nvim  .\functions.py
+z hotk
+z hotk ; n
+.\HuntAndPeck.exe /tray
+z ret
+cd .\HuntAndPeck-1.7\
+./hap.exe /tray
+./hap.exe
+python main.py
+z addb
+Disable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V-All
+i am so fucking bored its not even funny
+nvvvim .\functions.py
+cd aadb
+cd C;
+cd hp
+mkdir RaycastScripts
+nvim mouse_pos.py
+nvim color_pos.py
+z raycc
+notepad .\color_pos.py
+nvim make_template.py
+nvim .\make_template.py
+nvim .\mouse_pos.py
+nvim make_regio.py
+nvim make_region.py
+z minee
+z scri
+nvim highlight_region.py
+nvim .\highlight_region.py
+cdd..
+yt-dlp -x --audio-format mp3 -o "D:\retardgames\miscellaneous\Music\%(title)s.%(ext)s" <https://youtu.be/izge-rLlINE>
+https://youtu.be/izge-rLlINE
+yt-dlp -x --audio-format mp3 -o "D:\retardgames\miscellaneous\Music\%(title)s.%(ext)s" https://youtu.be/izge-rLlINE
+yt-dlp -x --audio-format mp3 -o "D:\retard games\miscellaneous\Music\%(title)s.%(ext)s" https://youtu.be/izge-rLlINE
+z srip
+z scr
+z retar
+nvim color
+nvim func
+adb connect 127.0.0.1:5561`
+nvim function
+nvim .\Coc_helper.py
+nvim fucn
+cd cop
+cd.>
+cd fn
+nvim .\adb_helpers.py
+adb connect 127.0.0.1:5557`
+python .\Coc_helper.py
+dotnet tModLoader.dd
+dotnet tModLoader.dll
+dotnet tModLoader.dll -nosteam -content ./Content
+z clahhs
+nvivm .\functions.py
+pip install socaity-face2face
+cd .\testing_image_manipulation\
+cd .\Coc_script_main\
+Measure-Command { python main.py | Out-Default }
+mkdir "helper scripts"
+cd '.\helper scripts\'
+adb connect 127.0.0.1:5555
+nvim .\Coc_script_main\
+cd .\Coc_script_ziad_alt_1\
+cd  fn
+cd '.\Helper Scripts\'
+python .\PvZ_helper.py
+cd .\fn\
+nvim .\__init__.py
+nvim .\PvZ_helper.py
+python .\pvz2_eclise.py
+nvim .\pvz2_eclise.py
+z help
+mkdir "Tower Defense"
+cd '.\Tower Defense\'
+adb de
+z pack ; cd fn ; nvim
+z coc
+komorebic start
+komorebic border enable
+komorebic stop
+pip install torch torchvision`
+pip install git+https://github.com/cvg/LightGlue.git
+cd clash ; cd coc
+cd '.\Clash Of Clans\.git\'
+z cocc
+cd .\Coc_script_donate\
+z don
+nvim .\Coc_script_ziad_alt_1\
+cd rewo
+cd '.\Clash Of Clans Reworked\'
+python .\main.py ziad_alt
+explorer.exe
+explorer .
+Add-AppxPackage -AppInstallerFile https://cdn.files.community/files/stable/Files.Package.appinstaller
+winget install hpjansson.Chafa
+winget install ranger-fm.ranger
+pip install ranger-fm
+z reww
+z rew
+python main.py ziad_alt
+ranger
+winget install sxyazi.yazi
+z rewo
+yazi
+$env:PATH += ";C:\Program Files\Git\usr\bin"
+where.exe git
+mkdir $HOME\.config\yazi
+cd $HOME\.config\yazi
+[System.Environment]::SetEnvironmentVariable("YAZI_FILE_ONE", "C:\Program Files\Git\usr\bin\file.exe", "User")
+z yaz
+z roam
+cd yazi
+yazi --debug
+# Uninstall`
+winget uninstall sxyazi.yazi`
+# Delete all config and data`
+Remove-Item -Recurse -Force "C:\Users\HP\AppData\Roaming\yazi"`
+# Reinstall`
+winget uninstall sxyazi.yazi
+Remove-Item -Recurse -Force "C:\Users\HP\AppData\Roaming\yazi"
+[System.Environment]::SetEnvironmentVariable("EDITOR", "nvim", "User")
+[System.Environment]::SetEnvironmentVariable("VISUAL", "nvim", "User")`
+mkdir "C:\Users\HP\AppData\Roaming\yazi\config"
+cd "C:\Users\HP\AppData\Roaming\yazi\config"
+nvim "C:\Users\HP\AppData\Roaming\yazi\config\yazi.toml"
+cat "C:\Users\HP\AppData\Roaming\yazi\config\yazi.toml"
+z screen
+cd C:\Users\HP\Pictures\Screenshots
+python main.py ziad
+adb remove
+adb disconnect 127.0.0.1.7555
+adb disconnect 127.0.0.1:7555
+adb disconnect 127.0.0.1:5561
+cd C:\Program Files\Netease\MuMuPlayer-12.0\vms\MuMuPlayerGlobal-12.0\instances\
+cd C:\Program Files\Netease\MuMuPlayer-12.0\vms\MuMuPlayerGlobal-12.0\instances
+cd .\Netease\
+cd .\MuMuPlayer\
+cd vms
+python .\main.py ziad
+clearr
+cl
+clear
+powercfg /query SCHEME_CURRENT
+powercfg /setactive 381b4222-f694-41f0-9685-ff5bb260df2e
+powercfg /setacvalueindex SCHEME_CURRENT SUB_PROCESSOR PROCTHROTTLEMAX 100
+powercfg /setdcvalueindex SCHEME_CURRENT SUB_PROCESSOR PROCTHROTTLEMAX 100
+powercfg /setactive SCHEME_CURRENT
+powercfg /setacvalueindex SCHEME_CURRENT c763b4ec-0e50-4b6b-9bed-2b92a6ee884e 7ec1751b-60ed-4588-afb5-9819d3d77d90 2`
+python -c "import site; print(site.getsitepackages())"
+sioyek .\chemistry.pdf
+z ew
+python .\main.py normal
+cd rew
+python .\main.py achievement_farming firefighteer
+python .\main.py achievement_farming firefighter
+python main.py normal
+python main.py builder
+python main.py achievement_farming firefighter
+adb disconnect emulator-5560
+python main.py achievement_farming anti-artillery
+python main.py buildeer
+z loca
+cd .\extensions\
+z raycsc
+g++ switcher.cpp -o switcher.exe
+cd Projects/Random SHit
+cd Projects/Random Shit
+g++ test.cpp
+g++ main.cpp -o temp.exe; .\temp.exe; del temp.exe
+g++ test.cpp -o temp.exe; .\temp.exe; del temp.exe
+bear -- g++ main.cpp -o main.exe
+z scripts
+cd '.\Raycast Extentions\ARK\'
+cd '.\Window Switcher\'
+lS
+cd wiwn
+cd .\window-switcher\
+npm intall
+z ext
+npm install execa
+npm run  dev
+npm install @raycast/utils
+npm list react
+cdd .\assets\
+# Delete the folders`
+Remove-Item -Recurse -Force node_modules`
+Remove-Item -Recurse -Force .raycast`
+Remove-Item -Recurse -Force dist`
+Remove-Item package-lock.json`
+# Reinstall everything fresh`
+python .\test.cpp
+python .\testing.py\
+z rw
+n .\testing.py
+z rew`
+python .\book_fusing_calc.py
+nvim .\test.cpp
+python .\another_testing.py
+mdkir "Roblox Automation"
+mkdir "Roblox Automation"
+cd '.\Roblox Automation\'
+mkdir "Pet Sim 99"
+cd '.\Pet Sim 99\'
+z pet
+nvim .\function.py
+pythot .\testing.py
+netsh winsock reset
+ipconfig /release
+ipconfig /renew
+ipconfig
+ping 8.8.8.8
+ping google.com
+python main.py stars
+python main.py farming_stars
+adb disconnect 127.0.0.1:5559
+netsh wlan show profilesnetsh wlan show profiles
+netsh wlan show profile name="Vodafone_VDSL_763B_EXT'" key=clear
+Invoke-WebRequest -Uri "https://github.com/Vineflower/vineflower/releases/download/1.11.2/vineflower-1.11.2.jar" -OutFile "vineflower.jar"
+java -jar vineflower.jar -dgs=1 gtceu-1.20.1-7.5.3-dev.jar ./gtceu_source/
+$env:Path = "D:\retard games\OpenJDK17U-jdk_x64_windows_hotspot_17.0.19_10\jdk-17.0.19+10\bin;" + $env:Path
+& "D:\retard games\miscellaneous\OpenJDK17U-jdk_x64_windows_hotspot_17.0.19_10\jdk-17.0.19+10\bin\java.exe" -jar vineflower.jar -dgs=1 gtceu-1.20.1-7.5.3-dev.jar ./gtceu_source/
+n '.\Pygame Shenanigans\'
+n '.\Python Game logic\'
+n '.\Python Game Logic\'
+cd '.\Python Game Logic\'
+python .\ores.py
+python .\machines.py
+z reew`
+"C:\Program Files\Unity\Hub\Editor\UnityLicensingClient_V1\Unity.Licensing.Client.exe" --start-service
+z autoho
+python main.py achievement_farming shattered_and_scattered
+python main.py achievement_farming anti-artillery`
+adb -s 127.0.0.1:5557 shell settings put global disable_window_blurs 1
+adb -s 127.0.0.1:555y shell settings put global accessibility_reduce_transparency 1adb -s 127.0.0.1:5555 shell settings put global accessibility_reduce_transparency 1
+adb -s 127.0.0.1:5557 shell settings put global accessibility_reduce_transparency 1adb -s 127.0.0.1:5555 shell settings put global accessibility_reduce_transparency 1
+adb -s 127.0.0.1:5557 shell pm trim-caches 128G
+\`
+z appdata
+cd .\Sucrose\
+cd .\Setting\
+nvim .\Engine.json
+python factorio.py
+cd help
+cd .\Gregtorio_0.1.9\
+nvim .\data-final-fixes.lua
+winget install -e --id Rojo.Rojo
+rojo plugin instaall
+rojo plugin install
+mkdir OreForge
+cd .\OreForge\
+rojo init
+rojo serve
+nvim .\default.project.json
+winget install -e --id lune-org.lune
+cd .\RobloxWorkspace\
+lune run download-scripts
+lune --version
+winget install -e --id Lune.Lune
+lune -- version
+# 1. Download the script that pulls code FROM studio`
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/lopi-py/kickstart-roblox.nvim/main/bin/download-scripts.luau" -OutFile "download-scripts.luau"`
+# 2. Download the script that watches and streams changes BACK to studio`
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/lopi-py/kickstart-roblox.nvim/main/bin/watch.luau" -OutFile "watch.luau"
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/rojo-rbx/rojo/master/Rojo.lua" -OutFile "sync.lua"
+# Installs the global command line tool for Argon`
+winget install -e --id Argon.Argon
+l;s
+.s
+z gn
+z fn
+python -X importtime main.py
+nvvimM
+python main.py clan_games
+z appdat
+cd .\alacritty\
+nvim .\alacritty.toml
+z alac
+z ala
+z ac
+nvim .\alacritty.tom
+z nvvvim
+ngim
+nvim .\another_testing.py
+mkdir Learning
+cd .\Learning\
+python .\code.c
+python .\code.py
+gcc code.c
+./ .\a.exe
+a.exe
+./a.exe
+gcc .\code.c
+python code.py
+winget install zellij
+zellij
+winget install yt-dlp.yt-dlp
+winget install shinchiro.mpv
+pip install ytm-player
+py -m ytm_player setup
+ytm-player --version
+py -3.11 -m ytm_player setup
+& C:\Users\HP\AppData\Local\Microsoft\WindowsApps\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\python.exe -m ytm_player setup
+mkdir "$env:AppData\ytm-player" -Force
+notepad "$env:AppData\ytm-player\headers.json"
+& C:\Users\HP\AppData\Local\Microsoft\WindowsApps\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\python.exe -m ytm_player
+ytm setup
+& C:\Users\HP\AppData\Local\Microsoft\WindowsApps\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\python.exe -m pip install "urllib3<2" --upgrade
+& C:\Users\HP\AppData\Local\Microsoft\WindowsApps\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\python.exe -m ytm_player setup --browser firefox
+& C:\Users\HP\AppData\Local\Microsoft\WindowsApps\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\python.exe -m ytm_player setup --cookie-file "C:\Users\HP\AppData\Roaming\zen\Profiles\48zqzqq1.Default (release)\cookies.sqlite"
+& C:\Users\HP\AppData\Local\Microsoft\WindowsApps\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\python.exe -m ytm_player setup --cookies "C:\Users\HP\AppData\Roaming\zen\Profiles\48zqzqq1.Default (release)\cookies.sqlite"
+ytm
+mkdir "$env:USERPROFILE\Downloads\mpv_temp" -Force
+cd "$env:USERPROFILE\Downloads\mpv_temp"
+# 1. Create a temporary folder for the download
+# 2. Download the official stable libmpv Windows package
+Invoke-WebRequest -Uri "https://github.com/mpv-player/mpv-builds/releases/download/v0.38.0/mpv-dev-x86_64-v3-20240421.7z" -OutFile "mpv.7z"
+# 3. Extract the 7z file using Windows' built-in tar utility
+tar -xf mpv.7z
+# 4. Find where your active Python 3.11 installation is located
+$pythonPath = "C:\Users\HP\AppData\Local\Programs\Python\Python311"
+if (-not (Test-Path $pythonPath)) {`
+$pythonPath = "$env:LOCALAPPDATA\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311"`
+# 5. Move the DLLs straight into the Python directory so the python-mpv module grabs them
+Copy-Item "mpv-1.dll" -Destination $pythonPath -Force
+Copy-Item "mpv-2.dll" -Destination $pythonPath -Force
+# 6. Clean up the temporary download folder
+Remove-Item "$env:USERPROFILE\Downloads\mpv_temp" -Recurse -Force
+# 7. Fire up ytm-player!
+winget install PreslavRachev.libmpv
+explorer "C:\Users\HP\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages\Python311"
+Copy-Item "$env:USERPROFILE\Downloads\mpv-2.dll" -Destination "C:\Windows\System32" -Force
+Copy-Item "D:\retard games\miscellaneous\mpv-dev-x86_64-v3-20260419-git-06f4ce7\mpv-2.dll" -Destination "C:\Windows\System32" -Force
+Copy-Item "D:\retard games\miscellaneous\mpv-dev-x86_64-v3-20260419-git-06f4ce7\libmpv-2.dll" -Destination "C:\Windows\System32\mpv-2.dll" -Force
+& C:\Users\HP\AppData\Local\Microsoft\WindowsApps\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\python.exe -m ytm_player setup --manual
+notepade $PROFILE
+l
+ytm  setup
+nvim ytm_auth.py
+git clone https://github.com/AnimechanOrg/animechan
+cd .\animechan\
+nvim .\README.md
+nvim .\package.json
+npm install ; npm run
+npm install ; npm start
+fn.pixel_wait(810, 317, (26, 26, 39))
+z alact
+cd .\JetBrainsMono\
+explorer
+z aka
+[System.Drawing.Text.InstalledFontCollection]::new().Families | Where-Object { $_.Name -like "*JetBrains*" } | Select-Object Name
+z alac ; nvim
+cd C:\Users\HP\Documents\WindowsPowerShell
+z powe
+winget install fastfetch
+z .config
+cd .config
+cd .\fastfetch\
+nvim .\config.jsonc
+C:/Users/HP/.config/fastfetch/ascii.txt
+fastetch
+fastfetch
+fastfetch --version
+ls $env:LOCALAPPDATA\Microsoft\WinGet\Links\fastfetch.exe
+Invoke-WebRequest -Uri "https://github.com/fastfetch-cli/fastfetch/releases/latest/download/fastfetch-windows-amd64.zip" -OutFile "$env:USERPROFILE\Downloads\fastfetch.zip"
+Expand-Archive -Path "$env:USERPROFILE\Downloads\fastfetch.zip" -DestinationPath "$env:USERPROFILE\Downloads\fastfetch-temp"
+New-Item -ItemType Directory -Force -Path "$env:USERPROFILE\bin"
+Move-Item -Path "$env:USERPROFILE\Downloads\fastfetch-temp\fastfetch-windows-amd64\fastfetch.exe" -Destination "$env:USERPROFILE\bin\fastfetch.exe"
+ls "$env:USERPROFILE\Downloads\fastfetch-temp"
+Move-Item -Path "$env:USERPROFILE\Downloads\fastfetch-temp\fastfetch.exe" -Destination "$env:USERPROFILE\bin\fastfetch.exe"
+nvim $PROFILE
+fastfetch --print-time
+fastfetch --gen-config-force --display-stat
+nvim $env:USERPROFILE/.config/fastfetch/config.jsonc
+nvim .\ascii.txt
+nvim i
+z program
+$AppPath = "alacritty.exe" # Put your target executable name or full path here
+$Stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
+$Process = Start-Process $AppPath -PassThru
+# Wait until the application UI is fully drawn and processing user input loop
+$Process.WaitForInputIdle()
+$Stopwatch.Stop()
+nvim time_apps.py
+python time_apps zen.exe
+python time_apps C:\Program Files\Zen Browser\zen.exe
+PS D:\Projects\Random Shit> python time_apps C:\Program Files\Zen Browser\zen.exe
+python time_apps.py C:\Program Files\Zen Browser\zen.exe
+python time_apps.py "C:\Program Files\Zen Browser\zen.exe"
+python time_apps.py "C:\Program Files\Google\Chrome\Application\chrome.exe"
+winget install git
+nvim .\adb_ports_in_use.json
+z config.yaml
+python main.py shattered_and_scattered
+python achievement_farming shattered_and_scattered
+Install-Module PSReadLine -Force -SkipPublisherCheck
+Install-Module PSReadLine -Force -SkipPublisherCheck -Scope CurrentUser
+z rew ; python main.py builder_farming
+notepad $PROFILe
+nvim '.\Unity Projects\'
+cd '.\Unity Projects\'
+cd .\Assets\
+cd .\Scripts\p
+cd .\Scenes\
+nvim .\PlayerMovement.cs
+dir "C:\Program Files\Unity\Hub\Editor\" /b
+PS D:\retard games\miscellaneous\Unity Projects\OreForge> dir "C:\Program Files\Unity\Hub\Editor\" /b
+Get-ChildItem: Cannot find path 'C:\Program Files\Unity\Hub\Editor\' because it does not exist.
+PS D:\retard games\miscellaneous\Unity Projects\OreForge>
+dir "C:\Program Files\Unity\" /b
+where unity
+Get-ChildItem -Path "C:\Program Files" -Recurse -Filter "UnityEngine.dll" -ErrorAction SilentlyContinue
+Get-ChildItem -Path "D:\" -Recurse -Filter "UnityEngine.dll" -ErrorAction SilentlyContinue
+nvim .\OreForge.csproj
+winget install Microsoft.DotNet.SDK.8
+z orefor
+mkdir "Blender Shit"
+cd '.\Blender Shit\'
+nvim .\GridManager.cs
+nvim .\PlacementManager.cs
+nvim .\MachineData.cs
+sls
+S
+nbim .\jump_to_project.ps1
+z scipt
+z script
+z ore
+oreforge
+nvim utils.py
+python .\utils.py
+adb conn
+z assets
+Get-CimInstance Win32_Bios | Select-Object SerialNumber
+Get-CimInstance Win32_ComputerSystem | Select-Object Model, Manufacturer
+cd .\bhallamodloader_0-2-5b\
+cd '.\Brawlhalla Mod Loader v2\'
+& "D:\retard games\miscellaneous\amazon-corretto-8.492.09.2-windows-x64-jdk\jdk1.8.0_492\bin\java.exe" -jar BrawlhallaModLoader.jar
+ckearN
+z alax
+python
+python .\calculate_medal_value.py
+python main.py noraml
+nvim confg
+z glaxz
+z glaz
+lsd
+nvim .\utils.py
+sl
+C d '.\Random Shit\'
+nvim fufn
+Get-PnpDevice -Class HID | Where-Object {$_.FriendlyName -like "*HID*"} | Select-Object FriendlyName, InstanceId
+Get-PnpDevice | Where-Object {$_.InstanceId -like "*HID*" -or $_.InstanceId -like "*VID*"} | Select-Object FriendlyName, InstanceId | Format-List
+nvim keyboard_set_color.py
+Get-PnpDevice | Where-Object {$_.InstanceId -like "*1A2C*"} | Select-Object FriendlyName, InstanceId
+nvim .\keyboard_set_color.py
+pip install hid
+python .\keyboard_set_color.py
+which hid
+hid --version
+pip install hidapi
+pip uninstall hid hidapi -y
+pip install hidapi`
+pip list | findstr -i hid
+Get-ChildItem C:\Windows\System32 | Where-Object {$_.Name -like "*hid*"}
+Invoke-WebRequest -Uri "https://github.com/libusb/hidapi/releases/download/hidapi-0.14.0/hidapi-win.zip" -OutFile "$env:TEMP\hidapi.zip"
+Expand-Archive "$env:TEMP\hidapi.zip" -DestinationPath "$env:TEMP\hidapi"`
+Copy-Item "$env:TEMP\hidapi\x64\hidapi.dll" "C:\Windows\System32\hidapi.dll"`
+pip install pywinusb
+Get-ChildItem -Recurser "C:\Program Files (x86)\Redragon*" -Include *.json,*.ini,*.xml,*.cfg
+z .\project_todo.md
+c d..
+cd '.\Program Files (x86)\'
+Get-ChildItem -Recurse -Path "C:\Program Files (x86)\Redragon*" -Include *.json,*.ini,*.xml,*.cfg
+Get-Content "C:\Program Files (x86)\Redragon K709-RGB-PRO\Cfg.ini"
+# Backup the original file just in case
+Copy-Item "C:\Program Files (x86)\Redragon K709-RGB-PRO\Cfg.ini" "C:\Program Files (x86)\Redragon K709-RGB-PRO\Cfg.ini.bak"`
+# Open the file in Notepad`
+notepad "C:\Program Files (x86)\Redragon K709-RGB-PRO\Cfg.ini"`
+New-Item -ItemType Directory -Force -Path "D:\Projects\Random Shit\sinowealth"
+cd "D:\Projects\Random Shit\sinowealth"
+# Download the open-source CLI executable
+Invoke-WebRequest -Uri "https://github.com/SlightlyOvercomplicated/sinowealth-kb-tool/releases/latest/download/sinowealth-kb-tool.exe" -OutFile "sinowealth-kb-tool.exe"
+.\sinowealth-kb-tool.exe read --vid 1a2c --pid 7301
+.\sinowealth-kb-tool.exe read --device '\\?\hid#vid_1a2c&pid_7301&mi_01&col07#9&2ab507b0&0&0006#{4d1e55b2-f16f-11cf-88cb-001111000030}' mcu_dump.bin
+.\sinowealth-kb-tool.exe read --device redragon-k617-fizz mcu_dump.bin
+notepad k705pro.toml
+.\sinowealth-kb-tool.exe -c .\k705pro.toml read mcu_dump.bin
+.\sinowealth-kb-tool.exe read --config .\k705pro.toml mcu_dump.bin
+.\sinowealth-kb-tool.exe read --device custom --vendor-id 0x1a2c --product-id 0x7301 mcu_dump.bin
+.\sinowealth-kb-tool.exe read --help
+.\sinowealth-kb-tool.exe read --device redragon-k617-fizz --vendor_id 0x1a2c --product_id 0x7301 --platform sh68f90 mcu_dump.bin
+.\sinowealth-kb-tool.exe read --device custom --vendor_id 0x1a2c --product_id 0x7301 --platform sh68f90 mcu_dump.bin
+.\sinowealth-kb-tool.exe read --platform sh68f90 --vendor_id 0x1a2c --product_id 0x7301 mcu_dump.bin
+cd .\keypirinha-2.26-full-portable\
+cd key
+cd .\Keypirinha\
+cd .\FastKeyboardWindowSwitcher-0.6.2\
+z key
+winget install sharkdp.fd
+fd --version
+where.exe fd.exe
+Get-ChildItem -Path C:\Users\HP -Recurse -Filter "fd.exe" -ErrorAction SilentlyContinue | Select-Object FullPath
+winget install --id sharkdp.fd --source winget
+Move-Item fd.exe "C:\Windows\System32\fd.exe"
+z nvimn
+Measure-Command { fd --type f --search-path D:\Projects\Chemistry }
+Measure-Command { fd --type f --color=never D:\Projects\Chemistry }
+Measure-Command { fd --type f --color=never --search-path D:\Projects\Chemistry }
+python .\main.py farming
+z raewq
+pip install anthropic
+curl https://api.anthropic.com/v1/organizations/api_keys/$API_KEY_ID \
+-H 'anthropic-version: 2023-06-01' \
+-H "X-Api-Key: $ANTHROPIC_ADMIN_API_KEY"
+ls C:\MinGW\lib\gcc\mingw32\
+g++ -v -E -x c++ NUL
+cd C:/Users/HP/AppData/Local/nvim-data/lsp.log
+z nvim-data
+nvim lsp
+Test-Path "C:/Users/HP/scoop/apps/gcc/current/bin/g++.exe"
+C:/Users/HP/scoop/apps/gcc/15.2.0/bin/g++.exe -E -x c++ - -v
+New-Item -ItemType Directory -Force "$env:USERPROFILE\AppData\Local\clangd"
+notepad "$env:USERPROFILE\AppData\Local\clangd\config.yaml"
+gcc main.c ; ./main.exe
+gcc main.c
+./main.exe
+gcc main.c main
+gcc main.c -o myprogram
+gcc main.c -o main ; ./main.exe`
+z rand ; nvim main.c
+gcc main.c -o main ; ./main.exe
+npm install -g @google/gemini-cli
+gemini
+mkdir "C Code"
+cd '.\C Code\'
+nvim main,.c
+z c co
+z code
+gcc testing.c -o testing ; ./testing.exe
+z c code
+gcc testing.c -o testing.exe -lcomctl32 -DUNICODE
+taskkill /F /IM testing.exe
+# Remove any ghost file to ensure a pristine build environment
+Remove-Item -ErrorAction Ignore .\testing.exe`
+# Compile with explicit GDI and Common Control library flags`
+gcc testing.c -o testing.exe -lgdi32 -lcomctl32`
+# Execute the newly minted borderless overlay`
+.\testing.exe`
+Remove-Item -ErrorAction Ignore .\testing.exe
+Remove-Item -ErrorAction Ignore .\main.exe
+gcc main.c -o main.exe -lgdi32 -lcomctl32
+gcc testing.c -o testing.exe -lgdi32 -lcomctl32 ; ./testing.exe`
+gcc main.c -o main.exe -lgdi32 -lcomctl32 ; ./main.exe
+gcc main.c -o myprogram.exe -mwindows
+gcc main.c -o myprogram.exe -mwindows -lcomctl32
+scoop install taskwarrior
+task --version
+choco install taskwarrior
+winget install Taskwarrior.Taskwarrior
+z c codE
+nvim .\main.c
+z autohto
+z autohot
+task
+cargo install ultra
+winget install ultra
+Invoke-WebRequest -Uri "https://static.rust-lang.org/rustup/dist/x86_64-pc-windows-msvc/rustup-init.exe" -OutFile "$env:TEMP\rustup-init.exe"; Start-Process -FilePath "$env:TEMP\rustup-init.exe" -Wait
+cargo --version
+$env:Path += ";$env:USERPROFILE\.cargo\bin"
+ultra list
+rustup default stable-x86_64-pc-windows-gnu
+ultra --version
+[Environment]::SetEnvironmentVariable("Path", [Environment]::GetEnvironmentVariable("Path", "User") + ";$env:USERPROFILE\.cargo\bin", "User")
+ultral ist
+lst
+cargo install flameshot
+ultra add set up hotkeys for manipulating the playing media project:misc
+ultra add "set up hotkeys for manipulating the playing media" project:misc
+ultra add --project misc "set up hotkeys for manipulating the playing media"
+ultra add set up hotkeys for manipulating the playing media --project misc
+ultra add -p misc "set up hotkeys for manipulating the playing media"
+cargo install taskforge-cli
+cargo install caffx-task
+cfxtask task list
+cfxtask project create "misc"
+cfxtask project use "misc"
+cfxtask task add "set up hotkeys for manipulating the playing media"
+cfx task list
+Invoke-WebRequest -Uri "https://github.com/thetaskmaster/taskwarrior/releases/download/v3.0.2/task-3.0.2.win64.zip" -OutFile "$env:TEMP\task.zip"; Expand-Archive -Path "$env:TEMP\task.zip" -DestinationPath "$env:TEMP\task-extracted" -Force; Move-Item -Path "$env:TEMP\task-extracted\bin\task.exe" -Destination "$env:USERPROFILE\.cargo\bin\task.exe" -Force
+z c coe
+./myprogram.exe
+gcc main.c -o myprogram.exe -mwindows -lcomctl32 ; ./myprogram.exe
+Invoke-RestMethod -Uri https://get.scoop.sh | Invoke-Expression
+scoop install ryzenadj
+ryzenadj --tctl-temp=85
+ryzenadj -i
+cd .\messages\
+nvim '.\Omar Momen_3.json'
+scoop install ropy
+ropy
+& "$env:USERPROFILE\scoop\apps\ropy\current\Ropy.exe"
+z rew ; nvim functions.py
+z raycastscrip
+ryze
+z c code ; nvim main,c
+nvim .\todo.md
+z nvim ; neovide
+z rew ; nvim
+pip uninstall opencv-python-headless opencv-python
+pip install opencv-python`
+flameshot config
+cd .\flameshot-14.0.rc3-win64\
+cd .\flameshot-14.0.0-win64\
+cd .\bin\
+./flameshot config
+cd c code
+a`
+z radn
+nvim test.text
+nvim .\Coc_farming_findings.txt
+nvim .\Coc_farming_findings.md
+z rew ; nvim function.py
+z c code ; nvim main.c
+nvim mainl,c
+z  c code
+nvim .\temp_list_of_positions.md
+z erw
+gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus ; if ($?) { ./myprogram.exe }
+cd vers
+cd '.\Testing Gtceu Modpack\'
+cd kubejs
+ni trait_machine_registery.js
+ni trait_config.js
+ni trait_recipe_handler.js
+cd .\client_scripts\L
+cd .\client_scripts\
+ni trait_tooltips.js
+z rew ; python main.py farming
+nvim kubejs
+cd c '.\C Code'
+gcc main.c -o main.exe  -lcomctl32 -lgdiplus ; if ($?) { ./main.exe }
+gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 ; if ($?) { ./main.exe }
+z version
+cd '.\My GregTech Pack\'
+z my
+cd kub
+cd star
+cd '.\KubeJs Dev\'
+z devc
+z dev ; nvim main,py
+python .\remove_recipes.p
+python .\remove_recipes.py
+python .\remove_duplicates.py
+python remove.py
+python .\replace.py
+z rew ; python main.py spread
+gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; if ($?) { ./myprogram.exe }
+static void launch_app_by_name(const char* display_name) {`
+for (int i = 0; i < G_APP_COUNT; i++) {`
+if (strcmp(G_APPS[i].name, display_name) == 0) {`
+printf("[LAUNCHER] Executing: %s\n", G_APPS[i].path);`
+ShellExecuteA(NULL, "open", G_APPS[i].path, NULL, NULL, SW_SHOWNORMAL);`
+return;`
+gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 ; if ($?) { ./main.exe }
+z c code nvim main.c
+z c code ; nvim mainc
+cd swp
+cd swap
+nvim -r '.\D%%Projects%C Code%main.c.swp`
+'
+nvim -r 'D%%Projects%C Code%main.c.swp'
+nvim .\app_launcher.h
+z my gre
+ls .\assets\
+ls templates
+ls .\output_textures\
+python .\text_utils.py
+python .\textures.py
+nvim .\i_will_do_this_for_as_long_as_it_takes.md
+nvim .\calc.h
+z my g
+cd c .\.git\
+factorio.exe --benchmark "pyblock"
+./factorio.exe --benchmark "pyblock"
+& ([scriptblock]::Create((irm "https://debloat.raphi.re/")))
+nvim .\config.h
+gcc -E -Wp,-v -
+gcc -E -Wp,-v - < nul
+echo | gcc -E -Wp,-v -
+scoop list gcc
+gcc -E -Wp,-v - 2>&1 | findstr include
+cd PS D:\Projects\C Code> gcc -E -Wp,-v - 2>&1 | findstr include
+At line:1 char:11`
++ gcc -E -Wp,-v - 2>&1 | findstr include`
++           ~`
+Missing argument in parameter list.`
++ CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException`
++ FullyQualifiedErrorId : MissingArgument`
+cd C:\Users\HP\scoop\apps\gcc\15.2.0\x86_64-w64-mingw32\include\
+z ming
+z include
+nvim fn.h
+cd '.\Factorio Helper\'
+./ main.exe
+main.exe
+gcc testing.c -o testing.exe -lgdi32 -lcomctl32 ; ./testing.exe
+z c
+z helper
+z helpre
+cdd
+nvim .\factorio.h
+z inclu
+z incluude
+nvim .\LinkedChestAndPipe\
+cd .\LinkedChestAndPipe\
+cd .\LinkedChestAndPipe_1.2.93\
+cd scrip
+nvim .\auto-update.lua
+reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows Defender" /v DisableAntiSpyware /t REG_DWORD /d 1 /f
+z rand ; python testing.py
+nvim config.h
+z c code ; nvim config.h
+tasklist /v | findstr /i "nvim"
+gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
+34
+[KEY] VK: 0xA2, Count: 35`
+[KEY] VK: 0x43, Count: 36`
+"C:\Program Files\Zen Browser\zen.exe" --new-window
+z zen
+cd '.\Zen Browser\'
+zen.exe --new-window
+.\zen.exe --new-window
+mkdir Clipboard
+cd .\Clipboard\
+git clone https://github.com/Slackadays/Clipboard.git
+install.ps1
+./install.ps1
+cb
+cb help
+cd cb
+LS
+neovide main.cpp
+Copy-Item clipboard.cpp
+4B
+git rev-parse --show-toplevel
+rg -n "autochdir|lcd|tcd|cd |chdir|getcwd" C:\Users\HP\AppData\Local\nvim
+.\myprogram.exe
+where zen.exe
+where zen
+z cod
+./program.exe
+reg query "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts"
+fc-list | findstr Geist
+fc-list | findstr Proto
+grep
+scoop install grep
+grep --help
+grep "config.h" .
+grep "config.h" main.c
+grep -r "config.h" .
+grep -rw "config.h" .
+z ala ; nvim alacritty.toml
+tree $env:LOCALAPPDATA\nvim /F
+undotree.lua`
+snippets`
+javascript.json`
+package.json`
+python.json`
+syntax`
+latex.vim`
+explerere .
+python '.\recipe - Copy.txt'
+python .\recipe_parser.py
+python .\get_machine_recipe_file.py assembler
+python .\parse_recipe_into_kubejs.py recipes_assembler.txt
+python .\parse_recipe_into_kubejs.py recipes_file_assembler.txt
+python .\parse_recipe_into_kubejs.py recips_file_assembler.txt
+python .\parse_recipe_into_kubejs.py recipe_file_assembler.txt
+nvim -r .\i_will_do_this_for_as_long_as_it_takes.md
+nvim -r '.\D%%Projects%Random Shit%i_will_do_this_for_as_long_as_it_takes.md.swp'
+z aal
+z kubeks
+explerer .
+explorere .
+powershell -NoProfile -Command "Measure-Command { Start-Process powershell -ArgumentList '-NoProfile', '-Command', 'exit' }"
+pwsh -NoProfile -Command "Measure-Command { . $PROFILE }"
+Install-Module -Name Profiler -Scope CurrentUser -Force
+$trace = Trace-Script -ScriptBlock { . $PROFILE }
+$trace.Top50SelfDuration | Format-Table HitCount, SelfDuration, Text -AutoSize
+Set-PSReadLineOption -PredictionSource History ...
+Set-PSReadLineOption -PredictionSource History
+Clear-Content $PROFILE
+z alac ; nvim alacritty.toml
+gem
+scoop install chafa yazi
+z yazi
+mkdir "Tscoding Timer"
+cd '.\Tscoding Timer\'
+git clone https://github.com/tsoding/sowon.git
+cd .\sowon\
+.\build_msvc.bat
+./sowon.exe
+./sowon.exe 500s
+./sowon.exe 30m
+z sow
+.\build\
+gcc
+z sowow
+cd .\templates\
+cd..  cd output_textures
+cd .\output_textures\
+nvim py
+z yazi ; cd config ; nvim yazi.toml
+z output
+z output ; yazi
+git clone https://github.com/sxyazi/yazi.git
+yazo
+cargo build --release
+$env:CARGO_HTTP_MULTIPLEXING="false"
+$env:VERGEN_GIT_SHA="custom-build"
+cargo build --profile release-windows --locked
+.\target\release-windows\yazi.exe
+yaz
+Copy-Item ".\target\release-windows\yazi.exe" "$(scoop which yazi)" -Force
+git clone https://github.com/rphii/c-image-viewer/
+cd .\c-image-viewer\
+meson setup build   # only need to call once
+meson compile -C build
+cd .\src\
+meson install -C build
+python -m pip install meson
+cd .\build\
+civ --help
+cib
+civ
+Remove-Item -Recurse -Force .\build
+meson setup build
+notepad .\subprojects\rlarg\meson.build
+scoop install pkg-config freetype
+scoop install pkg-config
+meson wrap install freetype2
+notepad .\src\meson.build
+meson wrap install glfw
+Remove-Item -Recurse -Force .\c-image-viewer\
+.\MinimalImageViewer.exe
+.\MinimalImageViewer.exe .\testing.png
+git clone https://github.com/deminimis/minimalimageviewer.git
+cd .\minimalimageviewer\
+nvim main.cpp
+.\mspaint.exe
+mspaint.exe
+unzip .\ImageGlass_9.5.0.515_x64.zip
+z alac ; nvim.exe
+Expand-Archive .\ImageGlass_9.5.0.515_x64.zip
+cd .\ImageGlass_9.5.0.515_x64\
+cd .\ImageGlass_x64\
+.\ImageGlass.Base.dll
+.\ImageGlass.exe
+.\ImageGlass.exe ; mspaint.exe
+cd.. ;cd..
+cd....
+Remove-Item -Recurse .\ImageGlass_9.5.0.515_x64\
+Remove-Item -Recurse .\ImageGlass_9.5.0.515_x64.zip
+z recy
+recycle.exe
+recycle
+cd $Recycle.Bin
+cd C:\
+start shell:RecycleBinFolder
+scoop install nsxiv
+scoop install qview
+qview
+qview ; mspaint
+qview .\switch_window.ico
+gview .\testing.png
+qview .\testing.png
+scoop install nsxiv imagemagick
+scoop install imagemagick
+scoop install picview
+picview .\testing.png
+picview .\testing.png ; mspaint
+picview .\testing.png ; mspaint .\testing.png
+python .\test.py
+mkdir videos
+cd .\videos\
+yt-dpl
+yt-dlp
+yt-dpl --help
+yt-dlp --help
+yt-dlp --yes-playlist --playlist-end 30 -f "bestvideo[height<=480]+bestaudio/best[height<=480]" --download-archive tsoding_archive.txt -o "%(uploader)s/[%(upload_date)s] %(title)s.%(ext)s" "https://youtube.com"
+yt-dlp -U
+yt-dlp --yes-playlist --playlist-end 30 -f "bestvideo[height<=480]+bestaudio/best[height<=480]" --download-archive tsoding_archive.txt -o "%(uploader)s/[%(upload_date)s] %(title)s.%(ext)s" "https://www.youtube.com/@TsodingDaily/videos"
+yt-dlp --yes-playlist --playlist-start 31 --playlist-end 60 -f "bestvideo[height<=480]+bestaudio/best[height<=480]" --download-archive tsoding_archive.txt -o "%(uploader)s/[%(upload_date)s] %(title)s.%(ext)s" "https://youtube.com"
+yt-dlp --yes-playlist --playlist-start 31 --playlist-end 60 -f "bestvideo[height<=480]+bestaudio/best[height<=480]" --download-archive tsoding_archive.txt -o "%(uploader)s/[%(upload_date)s] %(title)s.%(ext)s" "https://www.youtube.com/@TsodingDaily"
+yt-dlp --yes-playlist --playlist-start 31 --playlist-end 60 -f "bestvideo[height<=480]+bestaudio/best[height<=480]" --download-archive tsoding_archive.txt -o "%(uploader)s/[%(upload_date)s] %(title)s.%(ext)s" "https://www.youtube.com/playlist?list=UUrqM0Ym_NbK1fqeQG2VIohg"
+yt-dlp --yes-playlist --playlist-start 40 --playlist-end 70 -f "bestvideo[height<=480]+bestaudio/best[height<=480]" --download-archive tsoding_archive.txt -o "%(uploader)s/[%(upload_date)s] %(title)s.%(ext)s" "https://www.youtube.com/@TsodingDaily"
+yt-dlp --yes-playlist --playlist-start 41 --playlist-end 70 -f "bestvideo[height<=480]+bestaudio/best[height<=480]" --download-archive tsoding_archive.txt -o "%(uploader)s/[%(upload_date)s] %(title)s.%(ext)s" "https://www.youtube.com/playlist?list=UUrqM0Ym_NbK1fqeQG2VIohg"
+yt-dlp --yes-playlist --playlist-start 71 --playlist-end 100 -f "bestvideo[height<=480]+bestaudio/best[height<=480]" --download-archive tsoding_archive.txt -o "%(uploader)s/[%(upload_date)s] %(title)s.%(ext)s" "https://www.youtube.com/playlist?list=UUrqM0Ym_NbK1fqeQG2VIohg"
+yt-dlp --yes-playlist -f "bestvideo[height<=480]+bestaudio/best[height<=480]" --download-archive playlist_archive.txt -o "%(playlist_title)s/[%(playlist_index)s] %(title)s.%(ext)s" "PASTE_YOUR_PLAYLIST_URL_HERE"
+yt-dlp --yes-playlist -f "bestvideo[height<=480]+bestaudio/best[height<=480]" --download-archive playlist_archive.txt -o "%(playlist_title)s/[%(playlist_index)s] %(title)s.%(ext)s" "https://www.youtube.com/playlist?list=PLpM-Dvs8t0Vak1rrE2NJn8XYEJ5M7-BqT"
+yt-dlp --yes-playlist -f "bestvideo[height<=480]+bestaudio/best[height<=480]" --download-archive playlist_archive.txt -o "%(playlist_title)s/[%(playlist_index)s] %(title)s.%(ext)s" "https://www.youtube.com/watch?v=maSIQg8IFRI&list=PLpM-Dvs8t0VaOBDp6cVRLBScgSJ2L8blq"
+scoop install zeal
+Expand-Archive .\zeal-0.8.1-portable-windows-x64.zip
+cd .\zeal-0.8.1-portable-windows-x64\
+./zeal.exe
+sumatra .\windows-win32-api.pdf
+zioyek
+sioyek .\WinDirStat\
+sioyek .\windows-win32-api.pdf
+nvim .\filename.txt
+z code ; ./myprogram.exe
+gcc main.c -o main.exe ; ./main.exe
+cat filename.txt
+Get-Content .\filename.txt
+python main.py .\filename.txt HELLOWORLD
+python testing.py .\filename.txt HELLOWOLRD
+\Get-Content .\filename.txt
+./main.exe filename.txt NIGGANIGGA
+gcc main.c -o main.exe ; ./main.exe filename.txt GETFUCKINGBITCHED
+python .\get_machine_recipe_file.py wiremill
+python .\parse_recipe_into_kubejs.py recipe_file_wiremill.txt
+python .\get_machine_recipe_file.py extruder
+python .\parse_recipe_into_kubejs.py recipe_file_extruder.txt
+git clone https://github.com/DeaDBeeF-Player/deadbeef.git
+cd .\deadbeef\
+nvim .\README
+scoop install foobar2000
+foobar2000
+mkdir Music
+cd .\Music\
+yt-dlp -x --audio-format mp3 "https://www.youtube.com/watch?v=GxldQ9eX2wo"
+yt-dlp -x --audio-format mp3 "https://www.youtube.com/watch?v=il9nqWw9W3Y"
+yt-dlp -x --audio-format mp3 "https://www.youtube.com/watch?v=Ys7-6_t7OEQ&list=RDYs7-6_t7OEQ&start_radio=1&rv=Ys7-6_t7OEQ"
+Remove-Item '.\Justin Bieber - Beauty And A Beat (Official Music Video) ft. Nicki Minaj `[Ys7-6_t7OEQ`].webm'
+yt-dlp -x --audio-format mp3 "https://www.youtube.com/watch?v=bEjfvakuDBM"
+yt-dlp -x --audio-format mp3 "https://www.youtube.com/watch?v=GwSSrwryxN0"
+yt-dlp -x --audio-format mp3 "https://www.youtube.com/watch?v=-7AfRAU69d8"
+yt-dlp -x --audio-format mp3 "https://www.youtube.com/watch?v=lSD_L-xic9o"
+gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; ./myprogram.exe
+cd foo
+z proks
+cd '.\Music Viewer\'
+# Download the 64-bit Windows binaries archive`
+curl -LO https://github.com`
+# Expand the archive`
+Expand-Archive glfw-3.4.bin.WIN64.zip -DestinationPath .\glfw_sdk`
+pacman -S mingw-w64-x86_64-glfw
+winget install MSYS2.MSYS2
+& "C:\msys64\msys2_shell.cmd" -defterm -no-start -msys2 -c "pacman -Syu --noconfirm"
+[Environment]::SetEnvironmentVariable("Path", $env:Path + ";C:\msys64\usr\bin", "User")
+pacman --version
+pacman
+winget list MSYS2
+Get-ItemProperty HKLM:\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object {$_.DisplayName -like "*MSYS2*"} | Select-Object DisplayName, InstallLocation
+winget install MSYS2.MSYS2 --override "/DIR=C:\msys64" --accept-package-agreements --accept-source-agreements
+winget uninstall MSYS2.MSYS2
+# 1. Download the official installer
+Invoke-WebRequest -Uri "https://github.com" -OutFile "$env:TEMP\msys2_installer.exe"
+# 2. Run it silently into the proper C:\msys64 folder
+Start-Process -FilePath "$env:TEMP\msys2_installer.exe" -ArgumentList "/S", "/D=C:\msys64" -Wait
+# 3. Clean up the installer file
+Remove-Item "$env:TEMP\msys2_installer.exe"
+# 1. Download the real standalone installer binary
+# 2. Silently install it straight into C:\msys64
+Test-Path "C:\msys64\msys2_shell.cmd"
+Start-Process -FilePath "$env:TEMP\msys2_installer.exe"
+pacman -Syu --noconfirm
+.\msys2-x86_64-20260611.exe
+glfw
+gcc main.c -o main.exe
+./mai.exe
+gcc main.c -o main.exe ; ./main.exe nigga
+z include ; yazi
+scoop install glfw`
+z muic
+gcc main.c -o main.exe -lglfw3 -lopengl32 -lgdi32`
+gcc main.c -o main.exe -I"$HOME/scoop/apps/glfw/current/include" -L"$HOME/scoop/apps/glfw/current/lib-mingw-w64" -lglfw3 -lopengl32 -lgdi32`
+gcc main.c -o main.exe -I"$HOME/scoop/apps/glfw/current/include" -L"$HOME/scoop/apps/glfw/current/lib-mingw-w64" -lglfw3 -lopengl32 -lgdi32 ; main.exe
+gcc main.c -o main.exe -I"$HOME/scoop/apps/glfw/current/include" -L"$HOME/scoop/apps/glfw/current/lib-mingw-w64" -lglfw3 -lopengl32 -lgdi32 ;./main.exe
+gcc main.c -o main.exe -lcomctl32 -lgdiplus -lshlwapi ; ./main.exe
+z zear;
+z zeal
+zebar.exe
+z autoclicker
+cd .\autoclicker\
+.\zeal.exe
+git clone https://github.com/mackron/miniaudio.git]
+git clone https://github.com/mackron/miniaudio.git
+nvim main.py
+scoop install adb
+lazygit --version
+where.exe lazygit
+winget install --id JesseDuffield.Lazygit
+lazygit
+`n[Fastfetch Load Time: 40.75ms]
+PS D:\retard games\miscellaneous> winget install --id JesseDuffield.Lazygit
+Found an existing package already installed. Trying to upgrade the installed package...
+No available upgrade found.
+No newer package versions are available from the configured sources.
+PS D:\retard games\miscellaneous> lazygit
+lazygit: The term 'lazygit' is not recognized as a name of a cmdlet, function, script file, or executable program.
+PS D:\retard games\miscellaneous>
+Get-Command lazygit -All
+Get-ChildItem "C:\" -Filter lazygit.exe -Recurse -ErrorAction SilentlyContinue
+Get-ChildItem "$env:LOCALAPPDATA" -Filter lazygit.exe -Recurse
+& "C:\Users\HP\AppData\Local\Microsoft\WinGet\Packages\JesseDuffield.lazygit_Microsoft.Winget.Source_8wekyb3d8bbwe\lazygit.exe"
+vim.g.lazygit_path =
+winget uninstall JesseDuffield.Lazygit
+winget install -e --id JesseDuffield.Lazygit
+winget source list
+winget search lazygit
+winget install JesseDuffield.lazygit
+---------------------------------------------`
+lazygit JesseDuffield.lazygit 0.63.0  winget
+PS C:\Users\HP\AppData\Local\nvim> winget install JesseDuffield.lazygit
+Found lazygit [JesseDuffield.lazygit] Version 0.63.0
+This application is licensed to you by its owner.
+Microsoft is not responsible for, nor does it grant any licenses to, third-party packages.
+Successfully verified installer hash
+Extracting archive...
+Successfully extracted archive
+Starting package install...
+Command line alias added: "lazygit"
+Successfully installed
+PS C:\Users\HP\AppData\Local\nvim> lazygit
+PS C:\Users\HP\AppData\Local\nvim>
+echo $env:PATH
+Get-ChildItem "$env:LOCALAPPDATA\Microsoft\WinGet\Packages\JesseDuffield.lazygit*" -Recurse -Filter lazygit.exe
+dir "$env:LOCALAPPDATA\Microsoft\WindowsApps\lazygit*"
+Copy-Item ``
+"C:\Users\HP\AppData\Local\Microsoft\WinGet\Packages\JesseDuffield.lazygit_Microsoft.Winget.Source_8wekyb3d8bbwe\lazygit.exe" ``
+"C:\Users\HP\.local\bin\lazygit.exe"
+./main.exe '.\Justin Bieber - Beauty And A Beat (Official Music Video) ft. Nicki Minaj [Ys7-6_t7OEQ].mp3'
+./main.exe '.\Impostor Syndrome [GwSSrwryxN0].mp3'
+gcc main.c -o main.exe -I"$HOME/scoop/apps/glfw/current/include" -L"$HOME/scoop/apps/glfw/current/lib-mingw-w64" -lglfw3 -lopengl32 -lgdi32 -lshlwapi ;
+vlc
+vlc.exe '.\Impostor Syndrome [GwSSrwryxN0].mp3'
+./vlc.exe
+gcc main.c -o main.exe -I"$HOME/scoop/apps/glfw/current/include" -L"$HOME/scoop/apps/glfw/current/lib-mingw-w64" -lglfw3 -lopengl32 -lgdi32 -lshlwapi -lcomctl32
+gcc main.c -o music_player.exe -I"$HOME/scoop/apps/glfw/current/include" -L"$HOME/scoop/apps/glfw/current/lib-mingw-w64" -lglfw3 -lopengl32 -lgdi32 -lshlwapi -lcomctl32
+.\music_player.exe D:\Music\Demi Lovato - Cool for the Summer (Official Video) [il9nqWw9W3Y].mp3
+.\music_player.exe "D:\Music\Demi Lovato - Cool for the Summer (Official Video) [il9nqWw9W3Y].mp3"
+adb.wait_for_pixel(1599,475,(15,15,15),tolerance=0)
+winget install aria2.aria2
+winget settings
+ls -la
+git clone sha256:8cbb25ea784f01afbb3f904217cab1317430a8bcfd5680fd827a866367f71cc9
+cd .\mpv-dev-x86_64-20260610-git-304426c\
+cd .\include\
+c .\mpv\
+cd .\mpv\
+Copy-Item .\include\
+Copy-Item .\include\ -destination "D:"
+z view
+cd '.\Video Viewer\'
+gcc main.c -o main.exe ``
+-I"./mpv-dev/include" ``
+-I"$HOME/scoop/apps/glfw/current/include" ``
+-L"./mpv-dev/lib" ``
+-L"$HOME/scoop/apps/glfw/current/lib-mingw-w64" ``
+-lglfw3 -lopengl32 -lgdi32 -lshlwapi -lcomctl32 -lmpv
+-I"./mpv-dev/" ``
+-L"./mpv-dev/" ``
+-I"./mpv" ``
+-L"./mpv" ``
+-I"./mpv/include" ``
+-L"./mpv/lib" ``
+ls ./mpv
+gcc main.c -o main.exe ./mpv/libmpv.dll.a ``
+-I"./mpv" -I"." ``
+-lglfw3 -lopengl32 -lgdi32 -lshlwapi -lcomctl32
+\yazi
+./main.exe '.\[01] 3D Software Rendering in 2025.webm'
+gcc main.c -o video_viewer.exe ./mpv/libmpv.dll.a ``
+./video_viewer.exe '.\[01] 3D Software Rendering in 2025.webm'
+Remove-Item '.\`[01`] 3D Software Rendering in 2025.webm'
+nvim mainc
+nvim .\video_player.h
+yt-dlp -x --audio-format mp3 "YOUR_VIDEO_URL_HERE"
+yt-dlp -x --audio-format mp3 "https://www.youtube.com/watch?v=TiodJKq92WY"
+yt-dlp -x --audio-format mp3 "https://www.youtube.com/watch?v=mh4AQkw4Jjc"
+gcc main.c -o video_player.exe -lglfw3 -lopengl32 -lmpv -lgdi32
+# Replace the paths with where your files actually are`
+gcc main.c -o video_player.exe -I"C:\Users\HP\scoop\apps\glfw\current\include" -L"C:\Users\HP\scoop\apps\glfw\current\lib" -lglfw3 -lopengl32 -I"C:\Users\HP\scoop\apps\mpv\current\include" -L"C:\Users\HP\scoop\apps\mpv\current\lib" -lmpv -lgdi32
+# Check scoop installed packages`
+scoop list | findstr glfw`
+scoop list | findstr mpv
+gcc tetsing.c -o tetsing.exe -lole32 -loleaut32
+gcc testing.c -o testing.exe -lole32 -loleaut32
+gcc testing.c -o testing.exe -lole32 -loleaut32 -luuid
+./testing.exe
+gcc main.c -o myprogram.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lole32 -loleaut32 -luuid -lwinmm
+gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm
+gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./myprogram.exe
+gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -loleaut32 -luuid ; ./main.exe
+winget install -e --id NirSoft.NirCmd
+scoop install nircmd
+cd '.\Grand Theft Auto Mods\'
+aria2c -x 16 -s 16 "https://www.mediafire.com/file/bpdzd89xcqaak11/2012_Lamborghini_Aventador_LP-700-4_HQ_SV-KIT.rar/file"
+aria2c --help
+alias-aria2c -x 16 -s 16 "https://www.mediafire.com/file/bpdzd89xcqaak11/2012_Lamborghini_Aventador_LP-700-4_HQ_SV-KIT.rar/file"
+Get-ChildItem -Recurse -Include *.h,*.c | ForEach-Object {`
+(Get-Content $_.FullName) -replace 'extern char\* PromptQuickSwitcher\(const char\*\* items, int count, int width, int height\);', 'typedef void (*RefreshCallback)(const char* filter, HWND hListBox);`
+typedef void (*EnterCallback)(const char* selection);`
+typedef void (*CtrlEnterCallback)(const char* selection);`
+typedef void (*TabCallback)(void);`
+extern char* PromptQuickSwitcher(const char* window_list[], int count, int height, int width, `
+RefreshCallback refresh_callback, `
+EnterCallback enter_callback,`
+CtrlEnterCallback ctrl_enter_callback,`
+TabCallback tab_callback);' | Set-Content $_.FullName`
+DAD
+explorer.
+gcc main.c -o video_player.exe -I. -L. -lglfw3 -lopengl32 -lmpv -lgdi32
+PS D:\Projects\Video Viewer\mpv> cd..`
+PS D:\Projects\Video Viewer> gcc main.c -o video_player.exe -I. -L. -lglfw3 -lopengl32 -lmpv -lgdi32`
+C:/Users/HP/scoop/apps/gcc/15.2.0/bin/../lib/gcc/x86_64-w64-mingw32/15.2.0/../../../../x86_64-w64-mingw32/bin/ld.exe: cannot find -`
+lglfw3: No such file or directory`
+collect2.exe: error: ld returned 1 exit status`
+PS D:\Projects\Video Viewer> `
+gcc main.c -o video_player.exe glfw3.dll -I. -L. -lopengl32 -lmpv -lgdi32
+scoop install mingw-w64-x86_64-glfw
+scoop install glfw
+gcc main.c -o video_player.exe -I. -I"C:/Users/HP/scoop/apps/glfw/current/include" -L. -L"C:/Users/HP/scoop/apps/glfw/current/lib-mingw-w64" -L"C:/Users/HP/scoop/apps/glfw/current/lib" -lglfw3 -lopengl32 -lmpv -lgdi32
+gcc main.c -o video_player.exe -I. -I"C:/Users/HP/scoop/apps/glfw/current/include" -L. -L"C:/Users/HP/scoop/apps/glfw/current/lib-mingw-w64" -L"C:/Users/HP/scoop/apps/glfw/current/lib" -lglfw3 -lopengl32 -lmpv -lgdi32 -lcomctl32
+gcc main.c -o video_viewer.exe -I. -I"C:/Users/HP/scoop/apps/glfw/current/include" -L. -L"C:/Users/HP/scoop/apps/glfw/current/lib-mingw-w64" -L"C:/Users/HP/scoop/apps/glfw/current/lib" -lglfw3 -lopengl32 -lmpv -lgdi32 -lcomctl32
+aaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+python .\parse_json_into_txt.py .\blast_furnace\
+python .\parse_recipe_into_kubejs.py .\recipe_file_blast_furnace.txt
+python .\parse_json_into_txt.py .\macerator\
+python .\parse_recipe_into_kubejs.py .\recipe_file_macerator.txt
+scoop install nu
+& "C:\Users\HP\scoop\apps\nushell\current\nu.exe" --no-welcome-history
+scoop which nu
+nu --config $nu.config-path --env $nu.env-path
+# Test the environment file first`
+nu --config $nu.env-path`
+# Test the main config file second`
+nu --config $nu.config-path
+cd $env:APPDATA\alacritty`
+alacritty -v
+cd C:"C:\WINDOWS\TEMP\Alacritty-12876.log"
+cd "C:\WINDOWS\TEMP\Alacritty-12876.log"`
+cd "C:\WINDOWS\TEMP"
+cd "C:\WINDOWS\TEMP"
+notepad $nu.config-path
+nu
+sowon 50s
+sowon.exe 50s
+./sowon.exe 50s
+yt-dlp -x --audio-format mp3 "https://www.youtube.com/watch?v=A3TKxux17ZA"
+gcc main.c -fdiagnostics-print-source-range-info -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -loleaut32 -luuid 2>&1 | findstr "error"
+gcc main.c -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -loleaut32 -luuid 2>&1 | findstr /C:"error" /C:"at end of input"
+XEL_KEY,   (HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL),     wait_for_pixel_blacklist,     wait_for_pixel_blacklist_count,     WaitForPixelTapHandler,   "WaitFo`
+rPixelTap" },`
+(Get-PSReadLineOption).HistorySavePath`
+cd C:\Users\HP\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt
+vd C:\Users\HP\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadLine
+cd C:\Users\HP\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadLine
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
