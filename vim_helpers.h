@@ -91,3 +91,15 @@ static inline const char* GoToLastListBoxItem(void) {
         SendMessage(hListBox, LB_SETCURSEL, lastIndex, 0);
     }
 }
+static inline void SetCursorToStartOfText(void) {
+    if (hEditControl && IsWindow(hEditControl)) {
+        SendMessageA(hEditControl, EM_SETSEL, 0, 0);
+    }
+}
+
+static inline void SetCursorToEndOfText(void) {
+    if (hEditControl && IsWindow(hEditControl)) {
+        int len = GetWindowTextLengthA(hEditControl);
+        SendMessageA(hEditControl, EM_SETSEL, len, len);
+    }
+}

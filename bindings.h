@@ -11,15 +11,15 @@
 static inline bool CheckVimMotion(int pressed_vk, int modifiers, MotionAction* out_action, const char** out_sequence, int* out_typed_count) {
     extern HWND hPopupWnd;
     extern HWND hEditControl;
+    printf("[VIM-DEBUG] KEY: vk=0x%X (%c), mods=0x%X, mode=%s\n", 
+       pressed_vk, (pressed_vk >= 32 && pressed_vk <= 126) ? (char)pressed_vk : '?', 
+       modifiers, GetModeName());
     
     if (!g_vim_mode_enabled) return false;
     if (!hPopupWnd || !IsWindow(hPopupWnd)) return false;
     if (!hEditControl || !IsWindow(hEditControl)) return false;
     if (GetFocus() != hEditControl) return false;
     
-    // ============================================================
-    // CHECK IF SHIFT IS HELD AS A MODIFIER
-    // ============================================================
     bool shift_held = (modifiers & HOTKEY_MOD_SHIFT) != 0;
     bool ctrl_held = (modifiers & HOTKEY_MOD_CTRL) != 0;
     bool alt_held = (modifiers & HOTKEY_MOD_ALT) != 0;
