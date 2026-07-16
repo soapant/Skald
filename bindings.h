@@ -38,9 +38,9 @@ static inline bool CheckVimMotion(int pressed_vk, int modifiers, MotionAction* o
     bool in_normal = IsNormalMode();
     bool in_visual = IsVisualMode();
     
-    // ============================================================
-    // INSERT MODE - Check if we're already waiting for a sequence
-    // ============================================================
+    
+    
+    
     if (in_insert && SequenceIsWaiting()) {
         if (SequenceTimedOut()) {
             SequenceReset();
@@ -75,9 +75,7 @@ static inline bool CheckVimMotion(int pressed_vk, int modifiers, MotionAction* o
         return false;
     }
     
-    // ============================================================
-    // INSERT MODE - First key of potential sequence
-    // ============================================================
+    
     if (in_insert) {
         SequenceAddKey(seq_char, true);
         
@@ -102,12 +100,16 @@ static inline bool CheckVimMotion(int pressed_vk, int modifiers, MotionAction* o
         return false;
     }
     
-    // ============================================================
-    // NORMAL MODE
-    // ============================================================
+    
     if (in_normal) {
         if (SequenceTimedOut()) {
             SequenceReset();
+            return false;
+        }
+        if (pressed_vk == VK_ENTER || pressed_vk == 160) {
+            SequenceReset();
+            *out_sequence = NULL;
+            *out_typed_count = 0;
             return false;
         }
         
@@ -223,7 +225,7 @@ bool CheckAppHotkeyBindings(int pressed_vk, int modifiers) {
     char activeExe[256] = {0};
     FetchExeNameOnDemand(hActiveWnd, activeExe, sizeof(activeExe) - 1);
     
-    // Initialize the cache if it's empty
+    
     if (G_APP_COUNT == 0) {
         initialize_app_cache();
     }
@@ -246,10 +248,10 @@ bool CheckAppHotkeyBindings(int pressed_vk, int modifiers) {
 void RunMiscApplication(const char* path) {
     if (path == NULL || strlen(path) == 0) return;
     
-    // Get the file extension
+    
     const char* ext = PathFindExtensionA(path);
     
-    // Default: open with ShellExecute
+    
     SHELLEXECUTEINFOA sei = {0};
     sei.cbSize = sizeof(SHELLEXECUTEINFOA);
     sei.fMask = SEE_MASK_FLAG_NO_UI | SEE_MASK_ASYNCOK;
@@ -263,14 +265,14 @@ void RunMiscApplication(const char* path) {
         PathRemoveFileSpecA(dir_path);
         
         char cmd[2048];
-        // Use /c instead of /k - terminal closes after the bat finishes
+        
         snprintf(cmd, sizeof(cmd), "cmd /c \"cd /d \"%s\" && \"%s\"\"", dir_path, path);
         system(cmd);
         printf("[MISC] Running .bat in: %s\n", dir_path);
         return;
     }
     
-    // Handle .png, .jpg, .jpeg, .bmp - open with mspaint
+    
     if (StrCmpIA(ext, ".png") == 0 || 
         StrCmpIA(ext, ".jpg") == 0 || 
         StrCmpIA(ext, ".jpeg") == 0 || 
@@ -282,7 +284,7 @@ void RunMiscApplication(const char* path) {
         return;
     }
     
-    // Handle .exe - launch directly
+    
     if (StrCmpIA(ext, ".exe") == 0) {
         sei.lpFile = path;
         if (ShellExecuteExA(&sei)) {
@@ -293,9 +295,9 @@ void RunMiscApplication(const char* path) {
         return;
     }
     
-    // Handle .url - open in browser
+    
     if (StrCmpIA(ext, ".url") == 0) {
-        // Read the URL from the .url file
+        
         char url[2048] = {0};
         FILE* f = fopen(path, "r");
         if (f) {
@@ -318,7 +320,7 @@ void RunMiscApplication(const char* path) {
         return;
     }
     
-    // Handle .txt - open with notepad
+    
     if (StrCmpIA(ext, ".txt") == 0) {
         char cmd[2048];
         snprintf(cmd, sizeof(cmd), "notepad \"%s\"", path);
@@ -327,7 +329,7 @@ void RunMiscApplication(const char* path) {
         return;
     }
     
-    // Handle .lnk - ShellExecute handles shortcuts
+    
     if (StrCmpIA(ext, ".lnk") == 0) {
         sei.lpFile = path;
         if (ShellExecuteExA(&sei)) {
@@ -338,7 +340,7 @@ void RunMiscApplication(const char* path) {
         return;
     }
     
-    // Default: try ShellExecute
+    
     if (ShellExecuteExA(&sei)) {
         printf("[MISC] Opened: %s\n", path);
     } else {

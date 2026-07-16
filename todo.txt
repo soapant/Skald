@@ -6,3 +6,4 @@ make a global sort of macro input type shit so like one for fortnite that jsut h
 add a sort of reminder so like i can queu a windwo to open after something happens i can define easily||[Project: Cprogram]
 also maybe add a spell checker or something no idea how i would make it lightweight tho||[Project: Cprogram]
 do the whole music player /video viewer bindings for the timer
+add a focus to whatever windwo is one whatever monitor||[Project: Cprogram]

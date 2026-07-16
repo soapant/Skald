@@ -1,4 +1,3 @@
-// hotkey_definitions.h
 #ifndef HOTKEY_DEFINITIONS_H
 #define HOTKEY_DEFINITIONS_H
 
@@ -26,10 +25,9 @@
 #include "process_killer.h"
 #include "todo.h"
 #include "volume.h"
+#include "monitor_focus.h"
 
-// ============================================================
-// FORWARD DECLARATIONS
-// ============================================================
+
 extern BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam);
 extern HWND hPopupWnd;
 extern HWND hGlobalTrayWnd;
@@ -53,6 +51,8 @@ extern HWND hGlobalTrayWnd;
 #define WAIT_FOR_PIXEL_KEY      0x4E
 #define REGION_KEY              0x41
 #define NVIM_KEY     0x49
+#define MONITOR_FOCUS_MAIN_KEY     0x4C
+#define MONITOR_FOCUS_SIDE_KEY     0x48
 
 static const char* switcher_blacklist[] = {"Fortnite", "CrosshairX"};
 #define SWITCHER_BLACKLIST_COUNT (sizeof(switcher_blacklist) / sizeof(switcher_blacklist[0]))
@@ -114,6 +114,12 @@ static const char* terminal_command_blacklist[] = {"Fortnite", "CrosshairX"};
 static const char* volume_blacklist[] = {"Fortnite", "CrosshairX"};
 #define VOLUME_BLACKLIST_COUNT (sizeof(volume_blacklist) / sizeof(volume_blacklist[0]))
 
+static const char* monitor_focus_main_blacklist[] = {"Fortnite", "CrosshairX"};
+#define MONITOR_FOCUS_MAIN_BLACKLIST_COUNT (sizeof(monitor_focus_main_blacklist) / sizeof(monitor_focus_main_blacklist[0]))
+
+static const char* monitor_focus_side_blacklist[] = {"Fortnite", "CrosshairX"};
+#define MONITOR_FOCUS_SIDE_BLACKLIST_COUNT (sizeof(monitor_focus_main_blacklist) / sizeof(monitor_focus_main_blacklist[0]))
+
 static inline void SwitcherHandler(void) {
     WindowList myWindows;
     myWindows.count = 0;
@@ -157,7 +163,7 @@ static inline void PosClearHandler(void) {
     ClearMdFile(TEMP_FILE_PATH);
 }
 
-// --- Color Handlers ---
+
 static inline void ColorPlainHandler(void) {
     long x, y; BYTE r, g, b;
     if (GetCursorPixel(&x, &y, &r, &g, &b)) {
@@ -176,7 +182,7 @@ static inline void ColorParenHandler(void) {
     }
 }
 
-// --- Pixel Equals Handlers ---
+
 static inline void PixelEqualsAdbHandler(void) {
     long x, y; BYTE r, g, b;
     if (GetCursorPixel(&x, &y, &r, &g, &b)) {
@@ -195,7 +201,7 @@ static inline void PixelEqualsFnHandler(void) {
     }
 }
 
-// --- Wait For Pixel Handlers ---
+
 static inline void WaitForPixelAdbHandler(void) {
     long x, y; BYTE r, g, b;
     if (GetCursorPixel(&x, &y, &r, &g, &b)) {
@@ -224,7 +230,7 @@ static inline void WaitForPixelFnHandler(void) {
     }
 }
 
-// --- Region Handlers ---
+
 static inline void RegionCoordsHandler(void) {
     POINT cursorPos;
     if (!GetCursorPos(&cursorPos)) return;
@@ -269,7 +275,7 @@ static inline void RegionImageHandler(void) {
     }
 }
 
-// --- Screenshot Handlers ---
+
 static inline void ScreenshotSaveHandler(void) {
     POINT cursorPos;
     if (!GetCursorPos(&cursorPos)) return;
@@ -310,7 +316,7 @@ static inline void ScreenshotOpenHandler(void) {
     }
 }
 static const HotkeyBinding G_HOTKEY_BINDINGS[] = {
-    // Standard Alt hotkeys
+    
     { SWITCHER_KEY,         HOTKEY_MOD_ALT,  switcher_blacklist,        SWITCHER_BLACKLIST_COUNT,        SwitcherHandler,          "Switcher" },
     { GOOGLE_SEARCH_KEY,    HOTKEY_MOD_ALT,  google_search_blacklist,   GOOGLE_SEARCH_BLACKLIST_COUNT,   TriggerGoogleSearch,            "Google" },
     { TODO_KEY,             HOTKEY_MOD_ALT,  todo_blacklist,            TODO_BLACKLIST_COUNT,            TriggerTodo,              "Todo" },
@@ -323,6 +329,12 @@ static const HotkeyBinding G_HOTKEY_BINDINGS[] = {
     { TIMER_KEY,            HOTKEY_MOD_ALT,  timer_blacklist,           TIMER_BLACKLIST_COUNT,           TriggerTimer,             "Timer" },
     { EXPLORER_KEY,         HOTKEY_MOD_ALT,  explorer_blacklist,        EXPLORER_BLACKLIST_COUNT,        TriggerExplorer,          "Explorer" },
     { TERMINAL_COMMAND_KEY, HOTKEY_MOD_ALT,  terminal_command_blacklist, TERMINAL_COMMAND_BLACKLIST_COUNT, TriggerTerminalCommand, "TerminalCommand" },
+    { VOLUME_KEY,           HOTKEY_MOD_ALT,  volume_blacklist,          VOLUME_BLACKLIST_COUNT,          TriggerVolume,            "Volume" },
+    
+    { MONITOR_FOCUS_MAIN_KEY,           HOTKEY_MOD_ALT,  monitor_focus_main_blacklist,          MONITOR_FOCUS_MAIN_BLACKLIST_COUNT,          TriggerMonitorFocusMain,            "MonitorFocusMain" },
+    
+    { MONITOR_FOCUS_SIDE_KEY,           HOTKEY_MOD_ALT,  monitor_focus_side_blacklist,          MONITOR_FOCUS_SIDE_BLACKLIST_COUNT,          TriggerMonitorFocusSide,            "MonitorFocusSide" },
+    
     { VOLUME_KEY,           HOTKEY_MOD_ALT,  volume_blacklist,          VOLUME_BLACKLIST_COUNT,          TriggerVolume,            "Volume" },
     
     { POS_KEY,              HOTKEY_MOD_ALT,                         pos_blacklist, POS_BLACKLIST_COUNT, PosCopyHandler,   "PosCopy" },
@@ -351,4 +363,4 @@ static const HotkeyBinding G_HOTKEY_BINDINGS[] = {
 
 #define HOTKEY_BINDING_COUNT (sizeof(G_HOTKEY_BINDINGS) / sizeof(G_HOTKEY_BINDINGS[0]))
 
-#endif // HOTKEY_DEFINITIONS_H
+#endif 

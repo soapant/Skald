@@ -1,4 +1,3 @@
-// factorio.h
 #ifndef FACTORIO_H
 #define FACTORIO_H
 
@@ -28,4 +27,4 @@ void search_factory() {
     }
 }
 
-#endif // FACTORIO_H
+#endif
