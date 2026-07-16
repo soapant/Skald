@@ -36,6 +36,7 @@
 #include "todo.h"
 #include "hotkey_definitions.h"
 #include "volume.h"
+#include "modal.h"
 #pragma comment(lib, "Shlwapi.lib") // Tells the compiler to link the shlwapi library
 #define ID_TRAY_ICON 1001
 #define WM_TRAYICON (WM_USER + 1)
@@ -56,8 +57,7 @@ bool selection_complete = false;
 int region_step = 0; 
 long saved_x1 = 0;
 long saved_y1 = 0;
-long img_x2 = 0, img_y2 = 0; // Add this line if it isn't there!
-                             // 
+long img_x2 = 0, img_y2 = 0; 
 static ULONG_PTR g_gdiplusToken = 0;
 #pragma comment(lib, "gdiplus.lib")
 
@@ -69,9 +69,9 @@ RenderCallback g_render_callback = NULL;
 const char** g_initial_items = NULL;
 int g_initial_count = 0;
 const char* g_title = NULL;
-// --- GLOBAL VARIABLES FOR THE IMAGE CAPTURE ---
 int img_region_step = 0;
 long img_x1 = 0, img_y1 = 0;
+
 
 // SPECIFY YOUR CHOSEN PATH HERE (Make sure the path ends with a backslash!)
 const char* BASE_SAVE_FOLDER_PATH = "C:\\Users\\HP\\Pictures\\Screenshots\\";
@@ -293,13 +293,13 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             }
             break;
         }
+                             
       case WM_DRAWITEM: {
           DRAWITEMSTRUCT* pdis = (DRAWITEMSTRUCT*)lParam;
           if (pdis->CtlID == IDC_LIST_BOX && pdis->itemID != -1) {
               char textBuffer[512];
               SendMessageA(pdis->hwndItem, LB_GETTEXT, pdis->itemID, (LPARAM)textBuffer);
               
-              // Draw background
               HBRUSH hBgBrush;
               if (pdis->itemState & ODS_SELECTED) {
                   hBgBrush = CreateSolidBrush(RGB(50, 56, 68));
@@ -313,7 +313,6 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
               
               RECT textRect = pdis->rcItem;
               
-              // ONLY show numbers if Ctrl is held
               if (pdis->itemID < 20) {
                   char num_str[8];
                   snprintf(num_str, sizeof(num_str), "%d.", pdis->itemID + 1);
@@ -375,12 +374,51 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
           FillRect(hdc, &ps.rcPaint, hBrush);
           DeleteObject(hBrush);
           
+          RECT rect;
+          GetClientRect(hwnd, &rect);
+          
+          
+          if (g_vim_mode != NULL) {
+              wchar_t wmode[256];
+              MultiByteToWideChar(CP_UTF8, 0, g_vim_mode, -1, wmode, 256);
+              
+              HFONT hModeFont = CreateFontW(24, 0, 0, 0, FW_NORMAL,
+                                            FALSE, FALSE, FALSE,
+                                            DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+                                            CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE,
+                                            L"0x Proto Nerd Font");
+              HFONT hOldFont = (HFONT)SelectObject(hdc, hModeFont);
+              
+              SetBkMode(hdc, TRANSPARENT);
+              
+              // Color based on mode
+              if (g_current_mode == MODE_NORMAL) {
+                  SetTextColor(hdc, RGB(100, 200, 255));
+              } else if (g_current_mode == MODE_INSERT) {
+                  SetTextColor(hdc, RGB(100, 255, 100));
+              } else {
+                  SetTextColor(hdc, RGB(173, 3, 222));  
+              }
+              
+              SIZE sz;
+              GetTextExtentPoint32W(hdc, wmode, (int)wcslen(wmode), &sz);
+              
+              RECT modeRect;
+              modeRect.left = 15;
+              modeRect.top = 10;
+              modeRect.right = modeRect.left + sz.cx + 10;
+              modeRect.bottom = modeRect.top + sz.cy + 10;
+              
+              DrawTextW(hdc, wmode, -1, &modeRect, DT_LEFT | DT_TOP);
+              
+              SelectObject(hdc, hOldFont);
+              DeleteObject(hModeFont);
+          }
+          
           if (g_title != NULL && strlen(g_title) > 0) {
-              // Convert the title to wide characters (Unicode)
               wchar_t wtitle[256];
               MultiByteToWideChar(CP_UTF8, 0, g_title, -1, wtitle, 256);
               
-              // Use Segoe UI Emoji for colored emojis
               HFONT hTitleFont = CreateFontW(24, 0, 0, 0, FW_NORMAL,
                                              FALSE, FALSE, FALSE,
                                              DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
@@ -389,10 +427,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
               HFONT hOldFont = (HFONT)SelectObject(hdc, hTitleFont);
               
               SetBkMode(hdc, TRANSPARENT);
-              SetTextColor(hdc, RGB(200, 200, 210));
-              
-              RECT rect;
-              GetClientRect(hwnd, &rect);
+              SetTextColor(hdc, RGB(255, 255, 255));
               
               SIZE sz;
               GetTextExtentPoint32W(hdc, wtitle, (int)wcslen(wtitle), &sz);
@@ -403,7 +438,6 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
               titleRect.right = rect.right - 10;
               titleRect.bottom = rect.top + sz.cy + 15;
               
-              // Use DrawTextW instead of DrawTextA
               DrawTextW(hdc, wtitle, -1, &titleRect, DT_LEFT | DT_TOP);
               
               SelectObject(hdc, hOldFont);
@@ -456,30 +490,24 @@ void CalculateWindowMetrics(int count, WindowLayout* layout,int height , int wid
 
     layout->x = mi.rcMonitor.left + (monitorWidth - layout->w) / 2;
     layout->y = mi.rcMonitor.top + (monitorHeight - layout->h) / 2;
-}// 2. Safely generate font engine assets
+}
 LRESULT CALLBACK ListBoxSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
     if (msg == WM_NCCALCSIZE && wParam == TRUE) {
-        // Intercepting this completely hides the physical scrollbar track 
-        // without disabling the underlying keyboard scrolling mechanics.
         return 0; 
     }
     return DefSubclassProc(hwnd, msg, wParam, lParam);
 }
-// 3. Spawn child elements (Edit field + Listbox options)
 void CreateChildControls(HWND hwndParent, HFONT hFont, const char* list[], int count, const WindowLayout* layout) {
     HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtrA(hwndParent, GWLP_HINSTANCE);
 
-    // Create the search input box
     hEditControl = CreateWindowExA(
         0, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
-        20, 34, layout->w - 40, 40, hwndParent, (HMENU)IDC_INPUT_BOX, hInstance, NULL
+        20, 50, layout->w - 40, 40, hwndParent, (HMENU)IDC_INPUT_BOX, hInstance, NULL
     );
     SendMessageA(hEditControl, WM_SETFONT, (WPARAM)hFont, TRUE);
     SetWindowSubclass(hEditControl, EditSubclassProc, 0, 0);
 
-    // Create and fill the list options container
     if (count > 0) {
-        // Keep standard dimensions, keep WS_VSCROLL active so arrow indices shift pages
         hListBox = CreateWindowExA(
             0, "LISTBOX", "", 
             WS_CHILD | WS_VISIBLE | LBS_NOTIFY | WS_VSCROLL | LBS_HASSTRINGS | LBS_OWNERDRAWFIXED,
@@ -636,9 +664,6 @@ char* PromptUser(const char* window_list[],const char* window_title,int count, i
     CreateChildControls(hPopupWnd, hCustomFont, window_list, count, &layout);
     ForceWindowFocus(hPopupWnd, hEditControl);
 
-    // ============================================================
-    // DRAW THE window_title IN THE TOP-RIGHT CORNER
-    // ============================================================
     if (window_title != NULL && strlen(window_title) > 0) {
         HDC hdc = GetDC(hPopupWnd);
         HFONT hwindow_titleFont = CreateCustomNerdFont(20, "0xProto Nerd Font");
@@ -913,12 +938,15 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
             return 1;
         }
 
-        // ============================================================
-        // STEP 2: Universal bindings (Macros, App, Misc, QuickLink, etc.)
-        // ============================================================
         MacroAction matchedAction = MACRO_NONE;
         int matchedDelay = 0;
         const char* snippet_text = NULL;
+        
+        MotionAction vimAction = MOTION_NONE;
+        if (CheckVimMotion(pressed_vk, modifiers, &vimAction)) {
+            ExecuteMotion(vimAction);
+            return 1;
+        }
         
         if (CheckTextSnippetBindings(pressed_vk, modifiers, &snippet_text)) {
             if (snippet_text != NULL) {

@@ -3,6 +3,175 @@
 #include "app_launcher.h"
 #include "macro_bindings.h"
 #include "window_switcher.h"
+#include "vim_bindings.h"
+#include "modal.h"
+#include "character_sequence.h"
+
+static inline bool CheckVimMotion(int pressed_vk, int modifiers, MotionAction* out_action) {
+    extern HWND hPopupWnd;
+    extern HWND hEditControl;
+    
+    printf("[VIM-DEBUG] === CheckVimMotion START ===\n");
+    printf("[VIM-DEBUG] Key: 0x%X (%c), Modifiers: 0x%X, Mode: %s\n", 
+           pressed_vk, pressed_vk, modifiers, GetModeName());
+    
+    if (!g_vim_mode_enabled) {
+        printf("[VIM-DEBUG] Vim mode disabled\n");
+        return false;
+    }
+    if (!hPopupWnd || !IsWindow(hPopupWnd)) {
+        printf("[VIM-DEBUG] Popup not active\n");
+        return false;
+    }
+    if (!hEditControl || !IsWindow(hEditControl)) {
+        printf("[VIM-DEBUG] Edit control not active\n");
+        return false;
+    }
+    if (GetFocus() != hEditControl) {
+        printf("[VIM-DEBUG] Edit doesn't have focus\n");
+        return false;
+    }
+    
+    if (pressed_vk == VK_ESCAPE) {
+        printf("[VIM-DEBUG] Escape pressed\n");
+        if (!IsNormalMode()) {
+            printf("[VIM-DEBUG] Escape -> Going to NORMAL mode\n");
+            SequenceReset();
+            *out_action = MOTION_ENTER_NORMAL;
+            return true;
+        }
+        printf("[VIM-DEBUG] Already in NORMAL, escape ignored\n");
+        return false;
+    }
+    
+    if (pressed_vk == VK_CONTROL || pressed_vk == VK_SHIFT || pressed_vk == VK_MENU) {
+        printf("[VIM-DEBUG] Modifier key, ignoring\n");
+        return false;
+    }
+    
+    // ============================================================
+    // Convert to lowercase for case-insensitive matching
+    // ============================================================
+    char key_char = (char)pressed_vk;
+    char seq_char = tolower(key_char);
+    printf("[VIM-DEBUG] Key: '%c' -> lowercase: '%c'\n", key_char, seq_char);
+    
+    bool in_insert = IsInsertMode();
+    bool in_normal = IsNormalMode();
+    bool in_visual = IsVisualMode();
+    
+    printf("[VIM-DEBUG] Modes: INSERT=%d, NORMAL=%d, VISUAL=%d\n", in_insert, in_normal, in_visual);
+    
+    // ============================================================
+    // INSERT MODE - Only check INSERT sequences
+    // ============================================================
+    if (in_insert) {
+        printf("[VIM-DEBUG] In INSERT mode - checking INSERT sequences\n");
+        SequenceAddKey(seq_char);
+        SequenceStartTimer();
+        printf("[VIM-DEBUG] Current sequence: '%s' (len=%d)\n", SequenceGet(), SequenceLen());
+        
+        for (int i = 0; i < VIM_SEQUENCE_BINDING_COUNT; i++) {
+            const SequenceBinding* b = &G_VIM_SEQUENCE_BINDINGS[i];
+            if (b->mode == MODE_INSERT) {
+                if (SequenceMatches(b->sequence)) {
+                    printf("[VIM-DEBUG] ✅ INSERT SEQUENCE MATCH: '%s'\n", b->sequence);
+                    *out_action = b->action_id;
+                    SequenceReset();
+                    return true;
+                }
+                if (SequenceStartsWith(b->sequence)) {
+                    printf("[VIM-DEBUG] INSERT prefix: '%s' starts with '%s'\n", b->sequence, SequenceGet());
+                    return true;  // Wait for more keys
+                }
+            }
+        }
+        
+        printf("[VIM-DEBUG] No INSERT sequence match, resetting and passing through\n");
+        SequenceReset();
+        return false;  // Pass key through in INSERT mode
+    }
+    
+    // ============================================================
+    // NORMAL MODE - Check NORMAL sequences
+    // ============================================================
+    if (in_normal) {
+        printf("[VIM-DEBUG] In NORMAL mode - checking NORMAL sequences\n");
+        SequenceAddKey(seq_char);
+        SequenceStartTimer();
+        printf("[VIM-DEBUG] Current sequence: '%s' (len=%d)\n", SequenceGet(), SequenceLen());
+        
+        for (int i = 0; i < VIM_SEQUENCE_BINDING_COUNT; i++) {
+            const SequenceBinding* b = &G_VIM_SEQUENCE_BINDINGS[i];
+            if (b->mode == MODE_NORMAL) {
+                if (SequenceMatches(b->sequence)) {
+                    printf("[VIM-DEBUG] ✅ NORMAL SEQUENCE MATCH: '%s'\n", b->sequence);
+                    *out_action = b->action_id;
+                    SequenceReset();
+                    return true;
+                }
+                if (SequenceStartsWith(b->sequence)) {
+                    printf("[VIM-DEBUG] NORMAL prefix: '%s' starts with '%s'\n", b->sequence, SequenceGet());
+                    return true;  // Wait for more keys
+                }
+            }
+        }
+        
+        printf("[VIM-DEBUG] No NORMAL sequence match, resetting\n");
+        SequenceReset();
+        
+        // Check single character bindings
+        printf("[VIM-DEBUG] Checking single character bindings in NORMAL mode\n");
+        for (int i = 0; i < VIM_BINDING_COUNT; i++) {
+            const MotionBinding* b = &G_VIM_BINDINGS[i];
+            if (b->vk_code == pressed_vk && b->modifiers == modifiers && b->mode == MODE_NORMAL) {
+                printf("[VIM-DEBUG] ✅ SINGLE BINDING: '%c' -> action %d\n", pressed_vk, b->action_id);
+                *out_action = b->action_id;
+                return true;
+            }
+        }
+        
+        printf("[VIM-DEBUG] No binding found in NORMAL mode - swallowing\n");
+        return true;  // Swallow in NORMAL mode
+    }
+    
+    // ============================================================
+    // VISUAL MODE
+    // ============================================================
+    if (in_visual) {
+        printf("[VIM-DEBUG] In VISUAL mode\n");
+        // Add visual mode handling here later
+        return true;  // Swallow for now
+    }
+    
+    printf("[VIM-DEBUG] === CheckVimMotion END ===\n\n");
+    return false;
+}
+static inline void ExecuteMotion(MotionAction action) {
+    for (int i = 0; i < VIM_SEQUENCE_BINDING_COUNT; i++) {
+        const SequenceBinding* b = &G_VIM_SEQUENCE_BINDINGS[i];
+        if (b->action_id == action && b->handler != NULL) {
+            b->handler();
+            return;
+        }
+    }
+    
+    for (int i = 0; i < VIM_BINDING_COUNT; i++) {
+        const MotionBinding* b = &G_VIM_BINDINGS[i];
+        if (b->action_id == action && b->handler != NULL) {
+            b->handler();
+            return;
+        }
+    }
+    
+    if (action == MOTION_ENTER_NORMAL) {
+        HandleEnterNormal();
+    } else if (action == MOTION_ENTER_INSERT) {
+        HandleEnterInsert();
+    } else if (action == MOTION_ENTER_VISUAL) {
+        HandleEnterVisual();
+    }
+}
 
 bool CheckAppHotkeyBindings(int pressed_vk, int modifiers) {
     HWND hActiveWnd = GetForegroundWindow();
