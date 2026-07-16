@@ -32,5 +32,4 @@ static bool HandleColorKey(bool alt_down, bool ctrl_down, bool shift_down) {
     CopyToClipboard(color_text_buf);
     return true;
 }
-
 #endif
