@@ -1,4 +1,4 @@
-// character_sequence.h - Add timeout handling
+
 #ifndef CHARACTER_SEQUENCE_H
 #define CHARACTER_SEQUENCE_H
 
@@ -110,7 +110,7 @@ static inline bool SequenceIsWaiting(void) {
 static inline bool SequenceTimedOut(void) {
     bool result = g_seq_state.timed_out;
     if (result) {
-        g_seq_state.timed_out = false;  // Clear after check
+        g_seq_state.timed_out = false;  
     }
     return result;
 }

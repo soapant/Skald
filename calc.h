@@ -12,9 +12,9 @@
 #include "types.h"
 #include "common_ui.h"
 
-// ============================================================
-// GLOBAL STATE FOR TAB FLIPPING
-// ============================================================
+
+
+
 static double g_last_a = 0.0;
 static double g_last_b = 0.0;
 static char g_last_op = 0;
@@ -93,9 +93,9 @@ int CopyToClipboard(const char* text) {
     return 1;
 }
 
-// ============================================================
-// PARSE NUMBER WITH K/M SUFFIX
-// ============================================================
+
+
+
 double parse_number_with_suffix(const char* str) {
     char cleaned[64];
     strncpy(cleaned, str, sizeof(cleaned) - 1);
@@ -124,9 +124,9 @@ double parse_number_with_suffix(const char* str) {
     }
 }
 
-// ============================================================
-// FORMAT NUMBER WITH K/M SUFFIX (for display)
-// ============================================================
+
+
+
 void format_number_with_suffix(double num, char* out, size_t max_len) {
     if (num >= 1000000.0) {
         snprintf(out, max_len, "%.4gm", num / 1000000.0);
@@ -137,9 +137,9 @@ void format_number_with_suffix(double num, char* out, size_t max_len) {
     }
 }
 
-// ============================================================
-// GET FLIPPED RESULT (for Tab key)
-// ============================================================
+
+
+
 double get_flipped_result() {
     return g_flipped_result;
 }
@@ -153,11 +153,11 @@ void reset_flip_state() {
     g_flipped_result = 0.0;
 }
 
-// ============================================================
-// EXTENSIBLE CONVERSION TABLE
-// ============================================================
+
+
+
 static const UnitConversion G_CONVERSIONS[] = {
-    // === MINUTES TO HOURS ===
+    
     { "minutes", "hours",   1.0 / 60.0 },
     { "minute",  "hours",   1.0 / 60.0 },
     { "minute",  "hour",    1.0 / 60.0 },
@@ -167,7 +167,7 @@ static const UnitConversion G_CONVERSIONS[] = {
     { "min",     "hour",    1.0 / 60.0 },
     { "m",       "h",       1.0 / 60.0 },
 
-    // === HOURS TO MINUTES ===
+    
     { "hours",   "minutes", 60.0 },
     { "hour",    "minutes", 60.0 },
     { "hour",    "minute",  60.0 },
@@ -177,7 +177,7 @@ static const UnitConversion G_CONVERSIONS[] = {
     { "hr",      "min",     60.0 },
     { "h",       "m",       60.0 },
 
-    // === SECONDS TO HOURS ===
+    
     { "seconds", "hours",   1.0 / 3600.0 },
     { "second",  "hour",    1.0 / 3600.0 },
     { "secs",    "hours",   1.0 / 3600.0 },
@@ -186,7 +186,7 @@ static const UnitConversion G_CONVERSIONS[] = {
     { "sec",     "hr",      1.0 / 3600.0 },
     { "s",       "h",       1.0 / 3600.0 },
 
-    // === HOURS TO SECONDS ===
+    
     { "hours",   "seconds", 3600.0 },
     { "hour",    "second",  3600.0 },
     { "hours",   "secs",    3600.0 },
@@ -195,27 +195,27 @@ static const UnitConversion G_CONVERSIONS[] = {
     { "hr",      "sec",     3600.0 },
     { "h",       "s",       3600.0 },
 
-    // === SECONDS TO MINUTES ===
+    
     { "seconds", "minutes", 1.0 / 60.0 },
     { "second",  "minute",  1.0 / 60.0 },
     { "secs",    "mins",    1.0 / 60.0 },
     { "sec",     "min",     1.0 / 60.0 },
     { "s",       "m",       1.0 / 60.0 },
 
-    // === MINUTES TO SECONDS ===
+    
     { "minutes", "seconds", 60.0 },
     { "minute",  "second",  60.0 },
     { "mins",    "secs",    60.0 },
     { "min",     "sec",     60.0 },
     { "m",       "s",       60.0 },
 
-    // === DAYS TO WEEKS ===
+    
     { "days",    "weeks",   1.0 / 7.0 },
     { "day",     "weeks",   1.0 / 7.0 },
     { "day",     "week",    1.0 / 7.0 },
     { "d",       "w",       1.0 / 7.0 },
 
-    // === WEEKS TO DAYS ===
+    
     { "weeks",   "days",    7.0 },
     { "week",    "days",    7.0 },
     { "week",    "day",     7.0 },
@@ -223,13 +223,13 @@ static const UnitConversion G_CONVERSIONS[] = {
     { "wk",      "day",     7.0 },
     { "w",       "d",       7.0 },
 
-    // === DAYS TO HOURS ===
+    
     { "days",    "hours",   24.0 },
     { "day",     "hours",   24.0 },
     { "day",     "hour",    24.0 },
     { "d",       "h",       24.0 },
 
-    // === HOURS TO DAYS ===
+    
     { "hours",   "days",    1.0 / 24.0 },
     { "hour",    "days",    1.0 / 24.0 },
     { "hour",    "day",     1.0 / 24.0 },
@@ -246,9 +246,9 @@ void trim_trailing_spaces(char* str) {
     }
 }
 
-// ============================================================
-// MAIN EVALUATE FUNCTION
-// ============================================================
+
+
+
 void live_evaluate(const char* input, char* out_result, size_t max_len) {
     if (!input || strlen(input) == 0) {
         strncpy(out_result, "Waiting for expression...", max_len);
@@ -259,9 +259,9 @@ void live_evaluate(const char* input, char* out_result, size_t max_len) {
     strncpy(clean, input, sizeof(clean) - 1);
     clean[sizeof(clean) - 1] = '\0';
 
-    // ============================================================
-    // 1. Process Conversions via " in " keyword
-    // ============================================================
+    
+    
+    
     char* in_keyword = StrStrIA(clean, " in ");
     if (in_keyword) {
         char target_unit[64] = {0};
@@ -287,9 +287,9 @@ void live_evaluate(const char* input, char* out_result, size_t max_len) {
         return;
     }
 
-    // ============================================================
-    // 2. Process Standard Mathematical Equations
-    // ============================================================
+    
+    
+    
     for (int i = 0; clean[i]; i++) {
         if (clean[i] == 'x' || clean[i] == 'X') clean[i] = '*';
     }
@@ -335,9 +335,9 @@ void live_evaluate(const char* input, char* out_result, size_t max_len) {
         return;
     }
     
-    // ============================================================
-    // 3. Try simple number parsing
-    // ============================================================
+    
+    
+    
     double val = parse_number_with_suffix(clean);
     if (val != 0.0 || (strlen(clean) > 0 && clean[0] == '0')) {
         char formatted[64];
@@ -350,9 +350,9 @@ void live_evaluate(const char* input, char* out_result, size_t max_len) {
     strncpy(out_result, "Parsing input...", max_len);
 }
 
-// ============================================================
-// FLIP THE LAST OPERATION (for Tab key)
-// ============================================================
+
+
+
 void flip_last_operation(char* out_result, size_t max_len) {
     if (!g_has_last_op) {
         strncpy(out_result, "No operation to flip", max_len);
@@ -398,9 +398,9 @@ void flip_last_operation(char* out_result, size_t max_len) {
              a_formatted, g_last_op, b_formatted, result_formatted);
 }
 
-// ============================================================
-// GET FLIP INFO FOR DISPLAY
-// ============================================================
+
+
+
 void get_flip_info(char* out, size_t max_len) {
     if (!g_has_last_op || !g_is_flipped) {
         strncpy(out, "Press Tab to flip", max_len);
@@ -474,9 +474,9 @@ void get_flip_expression(char* out, size_t max_len) {
     snprintf(out, max_len, "%s %c %s", a_formatted, g_last_op, b_formatted);
 }
 
-// ============================================================
-// CALCULATOR CALLBACKS
-// ============================================================
+
+
+
 static void calculator_refresh_callback(const char* filter, HWND hListBox) {
     if (!hListBox) return;
     
@@ -502,28 +502,28 @@ static void calculator_enter_callback(const char* selection) {
     }
 }
 
-// ============================================================
-// TAB CALLBACK - Flips the numbers
-// ============================================================
+
+
+
 static void calculator_tab_callback(void) {
     if (!hEditControl) return;
     
-    // Get current input
+    
     char current_input[256] = {0};
     GetWindowTextA(hEditControl, current_input, sizeof(current_input));
     
-    // Try to parse it to see if it's an operation we can flip
+    
     char a_str[64] = {0};
     char op_str[4] = {0};
     char b_str[64] = {0};
     
     if (sscanf(current_input, "%63s %3s %63s", a_str, op_str, b_str) == 3) {
-        // We have a valid operation, flip it
+        
         char flipped[256];
         snprintf(flipped, sizeof(flipped), "%s %s %s", b_str, op_str, a_str);
         SetWindowTextA(hEditControl, flipped);
         
-        // Trigger refresh to update the result
+        
         int len = strlen(flipped);
         SendMessageA(hEditControl, EM_SETSEL, len, len);
         SendMessageA(GetParent(hEditControl), WM_COMMAND, MAKEWPARAM(IDC_INPUT_BOX, EN_CHANGE), (LPARAM)hEditControl);
@@ -534,45 +534,45 @@ static void calculator_tab_callback(void) {
     }
 }
 
-// ============================================================
-// CTRL+ENTER CALLBACK - Puts result back into input
-// ============================================================
+
+
+
 static void calculator_ctrlenter_callback(const char* selection) {
     if (!selection || strlen(selection) == 0 || !hEditControl) return;
     
-    // Extract the result (skip "= " prefix)
+    
     char* result = (char*)selection;
     if (strncmp(selection, "= ", 2) == 0) {
         result = (char*)selection + 2;
     }
     
-    // Put it in the edit box
+    
     SetWindowTextA(hEditControl, result);
     
-    // Move cursor to the end
+    
     int len = strlen(result);
     SendMessageA(hEditControl, EM_SETSEL, len, len);
     
-    // Trigger refresh to evaluate again (if user types more)
+    
     SendMessageA(GetParent(hEditControl), WM_COMMAND, MAKEWPARAM(IDC_INPUT_BOX, EN_CHANGE), (LPARAM)hEditControl);
     
     printf("[CALCULATOR] Result put back: %s\n", result);
 }
 
-// ============================================================
-// TRIGGER CALCULATOR
-// ============================================================
+
+
+
 void TriggerCalculator() {
     if (hPopupWnd != NULL && IsWindow(hPopupWnd)) return;
 
     const char* default_msg[1] = { "Enter operation (e.g. 5 x 5 or 10 hours in minutes)" };
     PromptUser(default_msg,"🧮 Calculator", 1, 220, 550,32,
-                        calculator_refresh_callback,   // refresh -> evaluates on typing
-                        calculator_enter_callback,     // enter -> copies result to clipboard
-                        calculator_ctrlenter_callback, // ctrl enter -> puts result back into input
+                        calculator_refresh_callback,   
+                        calculator_enter_callback,     
+                        calculator_ctrlenter_callback, 
                         calculator_tab_callback,
                         NULL);      
-                                                             //
+                                                             
 }
 
 #endif

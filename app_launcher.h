@@ -18,11 +18,11 @@ typedef struct {
     char path[MAX_PATH];
 } AppItem;
 
-// Remove static so main.c can access G_APPS and G_APP_COUNT
+
 AppItem G_APPS[MAX_APPS];
 int G_APP_COUNT = 0;
 
-// Recursively look through folders for shortcuts and executables
+
 static void scan_directory_recursive(const char* dir_path) {
     char search_path[MAX_PATH];
     snprintf(search_path, sizeof(search_path), "%s\\*", dir_path);
@@ -40,13 +40,13 @@ static void scan_directory_recursive(const char* dir_path) {
         char full_path[MAX_PATH];
         snprintf(full_path, sizeof(full_path), "%s\\%s", dir_path, find_data.cFileName);
 
-        // Pre-filter by first character before doing full string compare
+        
         if (find_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
             char first = tolower(find_data.cFileName[0]);
-            // Most ignored folders start with 'n', '.', 'b', 'o', 'd', 'g', 'y', 'h'
+            
             if (first == 'n' || first == '.' || first == 'b' || first == 'o' || 
                 first == 'd' || first == 'g' || first == 'y' || first == 'h') {
-                // Only check the list if first character matches
+                
                 bool skip = false;
                 for (int i = 0; i <  sizeof(ListOfShitToIgnore) / sizeof(ListOfShitToIgnore[0]); i++) {
                     if (StrCmpIA(find_data.cFileName, ListOfShitToIgnore[i]) == 0) {

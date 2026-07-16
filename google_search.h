@@ -21,9 +21,6 @@ extern FileEntry G_FILE_ENTRIES[];
 static char** g_cached_google_queries = NULL;
 static int g_cached_google_count = 0;
 
-// ============================================================
-// REBUILD CACHE
-// ============================================================
 static void RebuildGoogleCache(void) {
     if (g_cached_google_queries) {
         for (int i = 0; i < g_cached_google_count; i++) {
@@ -60,9 +57,6 @@ static void RebuildGoogleCache(void) {
     free(lines);
 }
 
-// ============================================================
-// REFRESH CALLBACK
-// ============================================================
 static void google_refresh_callback(const char* filter, HWND hListBox) {
     if (!hListBox) return;
     
@@ -89,24 +83,18 @@ static void google_refresh_callback(const char* filter, HWND hListBox) {
     }
 }
 
-// ============================================================
-// DO GOOGLE SEARCH
-// ============================================================
 static void DoGoogleSearch(const char* query) {
     if (!query || strlen(query) == 0) return;
     
-    // Build Google search URL
     char url[512];
     snprintf(url, sizeof(url), "https://www.google.com/search?q=%s", query);
     
-    // URL encode spaces
     for (int i = 0; url[i]; i++) {
         if (url[i] == ' ') {
             url[i] = '+';
         }
     }
     
-    // Open in default browser
     ShellExecuteWithVerb(url, "open", true);
 
     const char* browser_classes[] = {
@@ -132,9 +120,6 @@ static void DoGoogleSearch(const char* query) {
     }
 }
 
-// ============================================================
-// ENTER CALLBACK
-// ============================================================
 static void google_enter_callback(const char* selection) {
     int selected_index = LB_ERR;
     if (hListBox != NULL) {
@@ -142,7 +127,6 @@ static void google_enter_callback(const char* selection) {
     }
     
     if (selected_index == LB_ERR) {
-        // New query from input - save it
         char input[256] = {0};
         if (hEditControl != NULL) {
             GetWindowTextA(hEditControl, input, sizeof(input));
@@ -155,14 +139,10 @@ static void google_enter_callback(const char* selection) {
             }
         }
     } else {
-        // Selected from history
         DoGoogleSearch(selection);
     }
 }
 
-// ============================================================
-// TRIGGER
-// ============================================================
 static void TriggerGoogleSearch() {
     if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
     

@@ -24,31 +24,28 @@
 #include "pos_handler.h"
 #include "focus_switcher.h"
 #include "color_handler.h"
-#include "minecraft.h"
 #include "pixel_equals_handler.h"
 #include "wait_for_pixel_handler.h"
 #include "region_handler.h"
 #include "google_search.h"
-#include "factorio.h"
 #include "process_killer.h"
 #include "number_shortcut.h"
 #include "helpers.h"
 #include "todo.h"
 #include "hotkey_definitions.h"
-#include "volume.h"
 #include "modal.h"
-#pragma comment(lib, "Shlwapi.lib") // Tells the compiler to link the shlwapi library
+#pragma comment(lib, "Shlwapi.lib") 
 #define ID_TRAY_ICON 1001
 #define WM_TRAYICON (WM_USER + 1)
 #define WM_TRIGGER_UNIVERSAL_MACRO (WM_USER + 3)
 #define ID_EXIT 2001
 #define IDC_INPUT_BOX 101
 #define IDC_LIST_BOX 102
-#define COLOR_BG      RGB(30, 34, 42)    // A pretty slate-gray/dark background
-#define COLOR_TEXT    RGB(220, 223, 228)  // A crisp, clean off-white text
+#define COLOR_BG      RGB(30, 34, 42)   
+#define COLOR_TEXT    RGB(220, 223, 228)
 #define TODO_FILE_PATH "todo.txt"
 #define WM_TRIGGER_IMG_CAPTURE (WM_USER + 2)
-HWND hGlobalTrayWnd = NULL; // Tracks the hidden tray window
+HWND hGlobalTrayWnd = NULL;
 HWND hPopupWnd = NULL;
 HWND hEditControl = NULL;
 HWND hListBox = NULL;
@@ -71,39 +68,31 @@ int g_initial_count = 0;
 const char* g_title = NULL;
 int img_region_step = 0;
 long img_x1 = 0, img_y1 = 0;
-// Global fonts - created once and reused
 static HFONT g_hNumFont = NULL;
 static HFONT g_hMainFont = NULL;
 
-// SPECIFY YOUR CHOSEN PATH HERE (Make sure the path ends with a backslash!)
 const char* BASE_SAVE_FOLDER_PATH = "C:\\Users\\HP\\Pictures\\Screenshots\\";
 
 static ULONGLONG g_timer_start_ms = 0;
 
-// Call this once at the very beginning of your main() function
 void StartUniversalTimer() {
     g_timer_start_ms = GetTickCount64();
 }
 
-// Resets the timer back to 0.0 seconds
 void ResetUniversalTimer() {
     g_timer_start_ms = GetTickCount64();
     printf("[TIMER] Reset successfully.\n");
 }
 
-// Modifies the timer by adding or subtracting seconds (can pass negative values)
 void ModifyUniversalTimer(double seconds_to_add) {
-    // Convert seconds to milliseconds and offset our baseline
     LONGLONG ms_offset = (LONGLONG)(seconds_to_add * 1000.0);
     g_timer_start_ms -= ms_offset; 
     printf("[TIMER] Modified baseline by %.2f seconds.\n", seconds_to_add);
 }
 
-// Returns the total elapsed seconds as a high-precision decimal (e.g., 12.345)
 double GetUniversalTimeSeconds() {
     ULONGLONG current_ms = GetTickCount64();
     
-    // Safety guard in case the baseline was modified past current time
     if (current_ms < g_timer_start_ms) {
         return 0.0;
     }
@@ -122,7 +111,6 @@ static bool IsWindowBlacklisted(const char* window_title, const char* blacklist[
 BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam) {
     WindowList* myList = (WindowList*)lParam;
 
-    // Fast memory-only checks
     if (!IsWindowVisible(hwnd) || GetWindowTextLengthA(hwnd) == 0) {
         return TRUE;
     }
@@ -134,10 +122,8 @@ BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam) {
     WindowData* currentItem = &myList->items[myList->count];
     currentItem->hwnd = hwnd;
 
-    // FAST: Grabs title string directly from internal window manager cache
     GetWindowTextA(hwnd, currentItem->title, sizeof(currentItem->title));
     
-    // LEAVE EXE BLANK FOR NOW
     currentItem->exe[0] = '\0'; 
 
     myList->count++;
@@ -150,12 +136,10 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
     bool ctrl_pressed = (GetKeyState(VK_CONTROL) & 0x8000);
 
     if (msg == WM_KEYDOWN) {
-        // Ignore modifier keys
         if (wParam == VK_CONTROL || wParam == VK_SHIFT || wParam == VK_MENU) {
             return DefSubclassProc(hwnd, msg, wParam, lParam);
         }
 
-        // NUMBER SHORTCUTS (0-9) with Ctrl
         if (wParam >= '0' && wParam <= '9') {
             if (ctrl_pressed) {
               HandleNumberShortcut(wParam, hListBox, hEditControl);
@@ -164,7 +148,6 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
             
         }
 
-        // --- ARROW KEY ROUTING ---
         if (wParam == VK_UP || wParam == VK_DOWN) {
             if (hListBox != NULL) {
                 int count = SendMessageA(hListBox, LB_GETCOUNT, 0, 0);
@@ -187,7 +170,6 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
             return 0;
         }
 
-        // --- ENTER KEY ---
         if (wParam == VK_RETURN) {
             bool ctrl_pressed = (GetKeyState(VK_CONTROL) & 0x8000);
             output_buffer[0] = '\0';
@@ -222,14 +204,12 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
             }
         }
 
-        // --- ESCAPE KEY ---
         if (wParam == VK_ESCAPE) {
             output_buffer[0] = '\0'; 
             selection_complete = true;  
             return 0;
         }
-
-        // --- TAB KEY ---
+        
         if (wParam == VK_TAB) {
             if (g_tab_callback != NULL) {
                 g_tab_callback();
@@ -322,12 +302,8 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                   numRect.left += 5;
                   numRect.right = numRect.left + 25;
                   
-                  // ============================================================
-                  // USE PRE-CREATED FONT - NO CREATION/DELETION!
-                  // ============================================================
                   HFONT hOldFont = (HFONT)SelectObject(pdis->hDC, g_hNumFont);
                   
-                  // Rainbow color
                   float hue = (float)pdis->itemID / 20.0f * 240.0f;
                   float h = hue / 60.0f;
                   float s = 0.85f;
@@ -351,16 +327,12 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                   DrawTextA(pdis->hDC, num_str, -1, &numRect, DT_SINGLELINE | DT_VCENTER | DT_CENTER);
                   
                   SelectObject(pdis->hDC, hOldFont);
-                  // DON'T DeleteObject - font is reused!
                   
                   textRect.left += 35;
               } else {
                   textRect.left += 10;
               }
               
-              // ============================================================
-              // USE PRE-CREATED MAIN FONT
-              // ============================================================
               if (g_render_callback != NULL) {
                   g_render_callback(pdis->hDC, textBuffer, &textRect, (pdis->itemState & ODS_SELECTED));
               } else {
@@ -385,14 +357,10 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
           RECT rect;
           GetClientRect(hwnd, &rect);
           
-          // ============================================================
-          // USE THE GLOBAL FONT - NO CREATION/DELETION!
-          // ============================================================
           if (g_vim_mode != NULL) {
               wchar_t wmode[256];
               MultiByteToWideChar(CP_UTF8, 0, g_vim_mode, -1, wmode, 256);
               
-              // Use the pre-created font
               HFONT hOldFont = (HFONT)SelectObject(hdc, g_hMainFont);
               
               SetBkMode(hdc, TRANSPARENT);
@@ -417,14 +385,12 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
               DrawTextW(hdc, wmode, -1, &modeRect, DT_LEFT | DT_TOP);
               
               SelectObject(hdc, hOldFont);
-              // DON'T DeleteObject - font is reused!
           }
           
           if (g_title != NULL && strlen(g_title) > 0) {
               wchar_t wtitle[256];
               MultiByteToWideChar(CP_UTF8, 0, g_title, -1, wtitle, 256);
               
-              // Use the pre-created font
               HFONT hOldFont = (HFONT)SelectObject(hdc, g_hMainFont);
               
               SetBkMode(hdc, TRANSPARENT);
@@ -442,7 +408,6 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
               DrawTextW(hdc, wtitle, -1, &titleRect, DT_LEFT | DT_TOP);
               
               SelectObject(hdc, hOldFont);
-              // DON'T DeleteObject - font is reused!
           }
           
           EndPaint(hwnd, &ps);
@@ -464,11 +429,11 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             if (LOWORD(lParam) == HTCLIENT) {
                 HCURSOR hCursor;
                 if (IsInsertMode()) {
-                    hCursor = LoadCursor(NULL, IDC_IBEAM);  // Text cursor
+                    hCursor = LoadCursor(NULL, IDC_IBEAM);  
                 } else if (IsNormalMode()) {
-                    hCursor = LoadCursor(NULL, IDC_ARROW);  // Arrow
+                    hCursor = LoadCursor(NULL, IDC_ARROW);  
                 } else {
-                    hCursor = LoadCursor(NULL, IDC_CROSS);  // Cross for visual
+                    hCursor = LoadCursor(NULL, IDC_CROSS);  
                 }
                 SetCursor(hCursor);
                 return TRUE;
@@ -497,10 +462,8 @@ void CalculateWindowMetrics(int count, WindowLayout* layout,int height , int wid
     layout->w = 900;          
     layout->item_height = item_height; 
 
-    // Dynamically scale window height based on exact todo item counts
     layout->h = 95 + (count > 0 ? (count * layout->item_height) : 0); 
 
-    // Cap the maximum layout frame size so it never stretches past screen bounds
     if (layout->h < height) layout->h = height;
     if (layout->h > width) layout->h = width; 
 
@@ -534,7 +497,6 @@ void CreateChildControls(HWND hwndParent, HFONT hFont, const char* list[], int c
         SendMessageA(hListBox, WM_SETFONT, (WPARAM)hFont, TRUE);
         SendMessageA(hListBox, LB_SETITEMHEIGHT, 0, layout->item_height);
 
-        // Find the maximum string length to map the horizontal scrolling range accurately
         int max_width = layout->w - 40;
         HDC hdc = GetDC(hListBox);
         HFONT hOldFont = (HFONT)SelectObject(hdc, hFont);
@@ -581,21 +543,17 @@ void SaveRegionToPNG(int x1, int y1, int x2, int y2, const char* fullPath) {
     int height = abs(y2 - y1);
     if (width == 0 || height == 0) return;
 
-    // 1. Capture specific screen coordinates out of the global desktop DC context
     HDC hScreenDC = GetDC(NULL);
     HDC hMemoryDC = CreateCompatibleDC(hScreenDC);
     HBITMAP hBitmap = CreateCompatibleBitmap(hScreenDC, width, height);
     HGDIOBJ hOldBitmap = SelectObject(hMemoryDC, hBitmap);
 
-    // Transfer pixels from video memory instantly
     BitBlt(hMemoryDC, 0, 0, width, height, hScreenDC, (x1 < x2 ? x1 : x2), (y1 < y2 ? y1 : y2), SRCCOPY);
 
-    // 2. Convert HBITMAP structures into a real C-flat GpBitmap object
     GpBitmap* pBitmap = NULL;
     GdipCreateBitmapFromHBITMAP(hBitmap, NULL, &pBitmap);
 
     if (pBitmap != NULL) {
-        // 3. Look up standard PNG Encoder CLSID system parameters
         CLSID pngClsid;
         UINT num = 0, size = 0;
         GdipGetImageEncodersSize(&num, &size); 
@@ -612,18 +570,15 @@ void SaveRegionToPNG(int x1, int y1, int x2, int y2, const char* fullPath) {
             free(pImageCodecInfo);
         }
 
-        // 4. Convert filename path string format into standard structural Wide-Chars
         wchar_t wPath[512];
         MultiByteToWideChar(CP_ACP, 0, fullPath, -1, wPath, 512);
 
-        // Save image asset safely down onto disk using Flat C API function calls
         GdipSaveImageToFile((GpImage*)pBitmap, wPath, &pngClsid, NULL);
         
-        // Dispose of the bitmap object handle directly
         GdipDisposeImage((GpImage*)pBitmap);
     }
 
-    // 5. Complete memory clean up sweeps to protect RAM profiles
+    
     SelectObject(hMemoryDC, hOldBitmap);
     DeleteObject(hBitmap);
     DeleteDC(hMemoryDC);
@@ -694,11 +649,11 @@ char* PromptUser(const char* window_list[],const char* window_title,int count, i
         RECT rect;
         GetClientRect(hPopupWnd, &rect);
         
-        // Calculate text size
+        
         SIZE sz;
         GetTextExtentPoint32A(hdc, window_title, (int)strlen(window_title), &sz);
         
-        // Position: top-right with some padding
+        
         rect.left = rect.right - sz.cx - 20;
         rect.top = 10;
         rect.bottom = rect.top + sz.cy + 10;
@@ -724,9 +679,6 @@ char* PromptUser(const char* window_list[],const char* window_title,int count, i
     }
     printf("[DEBUG-UI] Left local loop. Processed %d messages.\n", loop_counter);
 
-    // ============================================================
-    // CRITICAL FIX: Destroy the popup window!
-    // ============================================================
     if (hPopupWnd != NULL && IsWindow(hPopupWnd)) {
         KillTimer(hPopupWnd, 999);
         DestroyWindow(hPopupWnd);
@@ -815,11 +767,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             
             printf("[MACRO-WNDPROC] Received action=%d, delay=%d\n", macroAction, macroDelay);
             
-            // Find the action and execute its handler directly
+            
             for (int i = 0; i < MACRO_BINDING_COUNT; i++) {
                 if (G_MACRO_BINDINGS[i].action_id == macroAction && 
                     G_MACRO_BINDINGS[i].handler != NULL) {
-                    G_MACRO_BINDINGS[i].handler();  // Calls the function directly!
+                    G_MACRO_BINDINGS[i].handler();  
                     break;
                 }
             }
@@ -859,7 +811,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
 
 void ClearMdFile(const char* FILE_PATH) {
-    // Opening with "w" instantly deletes everything inside the file
+    
     FILE* file = fopen(FILE_PATH, "w");
     
     if (!file) {
@@ -867,7 +819,7 @@ void ClearMdFile(const char* FILE_PATH) {
         return;
     }
 
-    // Closing it immediately leaves it perfectly blank (0 bytes)
+    
     fclose(file);
     
     printf("[DEBUG] File '%s' successfully cleared.\n", FILE_PATH);
@@ -887,7 +839,7 @@ int InitializeTrayIcon() {
 
         if (!RegisterClass(&wc)) return -1;
 
-        // Save the window handle to the global variable
+        
         hGlobalTrayWnd = CreateWindow(
             wc.lpszClassName, "TrayApp", 
             WS_OVERLAPPEDWINDOW, 
@@ -908,7 +860,7 @@ void StripCheckboxes(char* str) {
     while (*read_ptr != '\0') {
         if (strncmp(read_ptr, "- [ ] ", 6) == 0) {
             if (!is_first) {
-                *write_ptr = ','; // Only add a comma if it's NOT the first item
+                *write_ptr = ','; 
                 write_ptr++;
             }
             is_first = false; 
@@ -930,14 +882,12 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
     if (nCode == HC_ACTION && (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN)) {
         KBDLLHOOKSTRUCT* pKeyInfo = (KBDLLHOOKSTRUCT*)lParam;
 
-        // Check modifiers
         bool alt_down   = (pKeyInfo->flags & LLKHF_ALTDOWN) || (GetKeyState(VK_MENU) & 0x8000);
         bool ctrl_down  = (GetKeyState(VK_CONTROL) & 0x8000);
         bool shift_down = (GetKeyState(VK_SHIFT) & 0x8000) || 
                           (GetKeyState(VK_LSHIFT) & 0x8000) || 
                           (GetKeyState(VK_RSHIFT) & 0x8000);
         
-        // Timer cleanup
         double seconds = GetUniversalTimeSeconds();
         if (seconds >= 300) {
             ResetUniversalTimer();
@@ -956,9 +906,6 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
         if (shift_down) modifiers |= HOTKEY_MOD_SHIFT;
         if (ctrl_down) modifiers |= HOTKEY_MOD_CTRL;
 
-        // ============================================================
-        // STEP 1: Check ALL hotkey bindings (handles ALL modifier combos)
-        // ============================================================
         if (ProcessHotkey(G_HOTKEY_BINDINGS, HOTKEY_BINDING_COUNT, 
                           pressed_vk, modifiers, fgTitle)) {
             return 1;
@@ -1033,7 +980,7 @@ int main() {
     gdiplusStartupInput.SuppressExternalCodecs = FALSE;
     GdiplusStartup(&g_gdiplusToken, &gdiplusStartupInput, NULL);
 
-    // Register window class
+    
     WNDCLASSA wc = {0};
     wc.lpfnWndProc = PopupWndProc;
     wc.hInstance = GetModuleHandle(NULL);
@@ -1055,13 +1002,13 @@ int main() {
         G_FILE_ENTRIES[i].mf = (MappedFile*)malloc(sizeof(MappedFile));
         const char* path = G_FILE_ENTRIES[i].path;
         
-        // CRITICAL FIX: 0 padding = NO GARBAGE!
+        
         if (!FileInit(path, G_FILE_ENTRIES[i].mf, 0)) {
             printf("[SYSTEM] Failed to open %s. Creating new.\n", G_FILE_ENTRIES[i].name);
             HANDLE hFile = CreateFileA(path, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
             if (hFile != INVALID_HANDLE_VALUE) {
                 CloseHandle(hFile);
-                FileInit(path, G_FILE_ENTRIES[i].mf, 0);  // <-- 0 padding here too!
+                FileInit(path, G_FILE_ENTRIES[i].mf, 0); 
             }
         }
     }
