@@ -632,7 +632,9 @@ char* PromptUser(const char* window_list[],const char* window_title,int count, i
     g_tab_callback = tab_callback;
     g_render_callback = render_callback;
     g_title = window_title;
-
+    
+    SetMode(MODE_INSERT);
+    
     printf("[DEBUG-UI] PromptUser called. Count: %d\n", count);
 
     WindowLayout layout;
