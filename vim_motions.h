@@ -28,13 +28,10 @@ typedef enum {
     MOTION_MOVE_WORD_BACK,
     MOTION_MOVE_LINE_START,
     MOTION_MOVE_LINE_END,
-    MOTION_MOVE_FILE_START,
-    MOTION_MOVE_FILE_END,
     MOTION_DELETE_CHAR,
+    MOTION_DELETE_CHAR_PERSISTENT,
     MOTION_DELETE_LINE,
     MOTION_DELETE_WORD,
-    MOTION_DELETE_TO_END,
-    MOTION_CHANGE_WORD,
     MOTION_CHANGE_TO_END,
     MOTION_CHANGE_LINE,
     MOTION_YANK_LINE,
@@ -121,10 +118,9 @@ static inline void HandlePersistentDelete(void) {
         if (strstr(feature, "Todo") != NULL) {
             char text[512] = {0};
             SendMessageA(hListBox, LB_GETTEXT, selected_index, (LPARAM)text);
-            if (g_enter_callback != NULL) {
-                g_enter_callback(text);
+            if (g_ctrl_enter_callback != NULL) {
+                g_ctrl_enter_callback(text);
             }
-            selection_complete = false;
             printf("[VIM] Deleted todo item: %s\n", text);
             return;
         }
@@ -150,7 +146,6 @@ static inline void HandleDelete(void) {
                 g_enter_callback(text);
             }
             selection_complete = true;
-            printf("[VIM] Deleted todo item: %s\n", text);
             return;
         }
     }

@@ -273,44 +273,29 @@ static void todo_enter_callback(const char* selection) {
 
 static void todo_ctrlenter_callback(const char* selection) {
     int selected_index = LB_ERR;
-    char selected_text[256] = {0};
-    
-    if (hListBox != NULL) {
-        selected_index = SendMessageA(hListBox, LB_GETCURSEL, 0, 0);
-        if (selected_index != LB_ERR) {
-            SendMessageA(hListBox, LB_GETTEXT, selected_index, (LPARAM)selected_text);
-        }
-    }
-    
-    if (selected_index != LB_ERR && strlen(selected_text) > 0) {
-        remove_todo_item_from_file(selected_text);
-        printf("[TODO] Ctrl+Enter removed: %s\n", selected_text);
-        
-        if (hListBox != NULL) {
-            todo_refresh_callback(NULL, hListBox);
-        }
-    }
-}
-static void todo_tab_callback() {
-    int selected_index = LB_ERR;
     if (hListBox != NULL) {
         selected_index = SendMessageA(hListBox, LB_GETCURSEL, 0, 0);
     }
     
-    char input[256] = {0};
-    if (hEditControl != NULL) {
-        GetWindowTextA(hEditControl, input, sizeof(input));
-        if (strlen(input) > 0) {
-            add_todo_to_file(input);
+    if (selected_index != LB_ERR) {
+        remove_todo_item_from_file(selection);
+        printf("[TODO] Removed: %s\n", selection);
+    } else {
+        char input[256] = {0};
+        if (hEditControl != NULL) {
+            GetWindowTextA(hEditControl, input, sizeof(input));
+            if (strlen(input) > 0) {
+                add_todo_to_file(input);
+                SetWindowTextA(hEditControl, "");
+                printf("[TODO] Added: %s\n", input);
+            }
         }
     }
     selection_complete = false;
     if (hListBox != NULL) {
-        todo_refresh_callback(NULL, hListBox);
+      todo_refresh_callback(NULL, hListBox);
     }
-
 }
-
 static void todo_render_callback(HDC hdc, const char* text, RECT* rect, BOOL is_selected) {
     if (!text || !rect) return;
     
@@ -382,7 +367,7 @@ void TriggerTodo() {
                todo_refresh_callback,     
                todo_enter_callback,       
                todo_ctrlenter_callback,   
-               todo_tab_callback,
+               NULL,
                todo_render_callback);                     
 }
 

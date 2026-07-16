@@ -4,8 +4,5 @@ also maybe you can like link todos to each other||[Project: Cprogram]
 make my own window manager (kind of)||[Project: Cprogram]
 make a global sort of macro input type shit so like one for fortnite that jsut holds down something ykwim||[Project: Cprogram]
 add a sort of reminder so like i can queu a windwo to open after something happens i can define easily||[Project: Cprogram]
-but it should be a gui type thing not hardcoded in ykwim||[Project: Cprogram]
-actually now that i think about it i might just make most things in a gui or json or something||[Project: Cprogram]
 also maybe add a spell checker or something no idea how i would make it lightweight tho||[Project: Cprogram]
-make the volume control display the current voluime
 do the whole music player /video viewer bindings for the timer
