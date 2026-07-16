@@ -501,5 +501,4 @@ static inline void SanitizeFile(const char *filePath) {
     CloseHandle(hFile);
 }
 
-
 #endif

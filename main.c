@@ -71,7 +71,9 @@ int g_initial_count = 0;
 const char* g_title = NULL;
 int img_region_step = 0;
 long img_x1 = 0, img_y1 = 0;
-
+// Global fonts - created once and reused
+static HFONT g_hNumFont = NULL;
+static HFONT g_hMainFont = NULL;
 
 // SPECIFY YOUR CHOSEN PATH HERE (Make sure the path ends with a backslash!)
 const char* BASE_SAVE_FOLDER_PATH = "C:\\Users\\HP\\Pictures\\Screenshots\\";
@@ -257,6 +259,20 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             SetBkColor(hdc, COLOR_BG);
             return (LRESULT)CreateSolidBrush(COLOR_BG);
         }
+        case WM_CREATE: {
+                          
+                if (!g_hNumFont) {
+                    g_hNumFont = CreateFontA(18, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
+                                            DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+                                            CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "0xProto Nerd Font");
+                }
+                if (!g_hMainFont) {
+                    g_hMainFont = CreateFontA(24, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+                                              DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+                                              CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "0xProto Nerd Font");
+                }
+                break;
+        }
         case WM_COMMAND: {
             if (LOWORD(wParam) == IDC_INPUT_BOX && HIWORD(wParam) == EN_CHANGE) {
                 if (hEditControl && hListBox) {
@@ -306,10 +322,10 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                   numRect.left += 5;
                   numRect.right = numRect.left + 25;
                   
-                  HFONT hNumFont = CreateFontA(18, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
-                                              DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-                                              CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "0xProto Nerd Font");
-                  HFONT hOldFont = (HFONT)SelectObject(pdis->hDC, hNumFont);
+                  // ============================================================
+                  // USE PRE-CREATED FONT - NO CREATION/DELETION!
+                  // ============================================================
+                  HFONT hOldFont = (HFONT)SelectObject(pdis->hDC, g_hNumFont);
                   
                   // Rainbow color
                   float hue = (float)pdis->itemID / 20.0f * 240.0f;
@@ -335,16 +351,23 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                   DrawTextA(pdis->hDC, num_str, -1, &numRect, DT_SINGLELINE | DT_VCENTER | DT_CENTER);
                   
                   SelectObject(pdis->hDC, hOldFont);
-                  DeleteObject(hNumFont);
+                  // DON'T DeleteObject - font is reused!
                   
                   textRect.left += 35;
+              } else {
+                  textRect.left += 10;
               }
               
+              // ============================================================
+              // USE PRE-CREATED MAIN FONT
+              // ============================================================
               if (g_render_callback != NULL) {
                   g_render_callback(pdis->hDC, textBuffer, &textRect, (pdis->itemState & ODS_SELECTED));
               } else {
+                  HFONT hOldMainFont = (HFONT)SelectObject(pdis->hDC, g_hMainFont);
                   SetTextColor(pdis->hDC, pdis->itemState & ODS_SELECTED ? RGB(255,255,255) : COLOR_TEXT);
                   DrawTextA(pdis->hDC, textBuffer, -1, &textRect, DT_SINGLELINE | DT_VCENTER);
+                  SelectObject(pdis->hDC, hOldMainFont);
               }
               
               return TRUE;
@@ -362,27 +385,24 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
           RECT rect;
           GetClientRect(hwnd, &rect);
           
-          
+          // ============================================================
+          // USE THE GLOBAL FONT - NO CREATION/DELETION!
+          // ============================================================
           if (g_vim_mode != NULL) {
               wchar_t wmode[256];
               MultiByteToWideChar(CP_UTF8, 0, g_vim_mode, -1, wmode, 256);
               
-              HFONT hModeFont = CreateFontW(24, 0, 0, 0, FW_NORMAL,
-                                            FALSE, FALSE, FALSE,
-                                            DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-                                            CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE,
-                                            L"0x Proto Nerd Font");
-              HFONT hOldFont = (HFONT)SelectObject(hdc, hModeFont);
+              // Use the pre-created font
+              HFONT hOldFont = (HFONT)SelectObject(hdc, g_hMainFont);
               
               SetBkMode(hdc, TRANSPARENT);
               
-              // Color based on mode
               if (g_current_mode == MODE_NORMAL) {
                   SetTextColor(hdc, RGB(100, 200, 255));
               } else if (g_current_mode == MODE_INSERT) {
                   SetTextColor(hdc, RGB(100, 255, 100));
               } else {
-                  SetTextColor(hdc, RGB(173, 3, 222));  
+                  SetTextColor(hdc, RGB(173, 3, 222));
               }
               
               SIZE sz;
@@ -397,19 +417,15 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
               DrawTextW(hdc, wmode, -1, &modeRect, DT_LEFT | DT_TOP);
               
               SelectObject(hdc, hOldFont);
-              DeleteObject(hModeFont);
+              // DON'T DeleteObject - font is reused!
           }
           
           if (g_title != NULL && strlen(g_title) > 0) {
               wchar_t wtitle[256];
               MultiByteToWideChar(CP_UTF8, 0, g_title, -1, wtitle, 256);
               
-              HFONT hTitleFont = CreateFontW(24, 0, 0, 0, FW_NORMAL,
-                                             FALSE, FALSE, FALSE,
-                                             DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-                                             CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE,
-                                             L"0x Proto Nerd Font");
-              HFONT hOldFont = (HFONT)SelectObject(hdc, hTitleFont);
+              // Use the pre-created font
+              HFONT hOldFont = (HFONT)SelectObject(hdc, g_hMainFont);
               
               SetBkMode(hdc, TRANSPARENT);
               SetTextColor(hdc, RGB(255, 255, 255));
@@ -426,7 +442,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
               DrawTextW(hdc, wtitle, -1, &titleRect, DT_LEFT | DT_TOP);
               
               SelectObject(hdc, hOldFont);
-              DeleteObject(hTitleFont);
+              // DON'T DeleteObject - font is reused!
           }
           
           EndPaint(hwnd, &ps);
@@ -513,7 +529,6 @@ void CreateChildControls(HWND hwndParent, HFONT hFont, const char* list[], int c
             WS_CHILD | WS_VISIBLE | LBS_NOTIFY | WS_VSCROLL | LBS_HASSTRINGS | LBS_OWNERDRAWFIXED,
             20, 105, layout->w - 40, layout->h - 115, hwndParent, (HMENU)IDC_LIST_BOX, hInstance, NULL
         );
-        // BIND SUBCLASS HERE: Kills the visual scroll track on calculations
         SetWindowSubclass(hListBox, ListBoxSubclassProc, 0, 0);
 
         SendMessageA(hListBox, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -665,6 +680,7 @@ char* PromptUser(const char* window_list[],const char* window_title,int count, i
 
     SetLayeredWindowAttributes(hPopupWnd, 0, 245, LWA_ALPHA);
     CreateChildControls(hPopupWnd, hCustomFont, window_list, count, &layout);
+
     ForceWindowFocus(hPopupWnd, hEditControl);
 
     if (window_title != NULL && strlen(window_title) > 0) {
@@ -772,7 +788,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             break;
         }
-        
         case WM_TRIGGER_IMG_CAPTURE: {
             printf("[DEBUG-WNDPROC] Core tray window thread intercepted WM_TRIGGER_IMG_CAPTURE successfully!\n");
             const char* empty_list[1] = { "" };
@@ -824,6 +839,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             nid.hWnd = hwnd;
             nid.uID = ID_TRAY_ICON;
             Shell_NotifyIcon(NIM_DELETE, &nid);
+            if (g_hNumFont) {
+                DeleteObject(g_hNumFont);
+                g_hNumFont = NULL;
+            }
+            if (g_hMainFont) {
+                DeleteObject(g_hMainFont);
+                g_hMainFont = NULL;
+            }
             PostQuitMessage(0);
             break;
         }
@@ -1024,9 +1047,6 @@ int main() {
         printf("[SYSTEM-BOOT] CRITICAL WARNING: Failed to register window class! Error: %lu\n", GetLastError());
     }
     
-    // ============================================================
-    // FIXED: Use 0 padding instead of 4096
-    // ============================================================
     for (int i = 0; i < FILE_ENTRY_COUNT; i++) {
         SanitizeFile(G_FILE_ENTRIES[i].path);
     }
@@ -1059,6 +1079,14 @@ int main() {
             free(G_FILE_ENTRIES[i].mf);
             G_FILE_ENTRIES[i].mf = NULL;
         }
+    }
+    if (g_hNumFont) {
+        DeleteObject(g_hNumFont);
+        g_hNumFont = NULL;
+    }
+    if (g_hMainFont) {
+        DeleteObject(g_hMainFont);
+        g_hMainFont = NULL;
     }
     
     return 0;
