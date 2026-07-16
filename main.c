@@ -265,21 +265,6 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                     
                     if (g_refresh_callback != NULL) {
                         g_refresh_callback(input_buffer, hListBox);
-                    } else {
-                        // Fallback: generic filtering
-                        SendMessageA(hListBox, LB_RESETCONTENT, 0, 0);
-                        if (strlen(input_buffer) == 0) {
-                            for (int i = 0; i < g_initial_count; i++) {
-                                SendMessageA(hListBox, LB_ADDSTRING, 0, (LPARAM)g_initial_items[i]);
-                            }
-                        } else {
-                            for (int i = 0; i < g_initial_count; i++) {
-                                if (StrStrIA(g_initial_items[i], input_buffer) != NULL) {
-                                    SendMessageA(hListBox, LB_ADDSTRING, 0, (LPARAM)g_initial_items[i]);
-                                }
-                            }
-                        }
-                        SendMessageA(hListBox, LB_SETCURSEL, 0, 0);
                     }
                 }
             }
@@ -459,9 +444,24 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             }
         }
         break;              
-                       
+      case WM_SETCURSOR: {
+            if (LOWORD(lParam) == HTCLIENT) {
+                HCURSOR hCursor;
+                if (IsInsertMode()) {
+                    hCursor = LoadCursor(NULL, IDC_IBEAM);  // Text cursor
+                } else if (IsNormalMode()) {
+                    hCursor = LoadCursor(NULL, IDC_ARROW);  // Arrow
+                } else {
+                    hCursor = LoadCursor(NULL, IDC_CROSS);  // Cross for visual
+                }
+                SetCursor(hCursor);
+                return TRUE;
+            }
+            break;
+          }                
         default:
             return DefWindowProcA(hwnd, msg, wParam, lParam);
+            
     }
     return 0;
 }
@@ -649,6 +649,7 @@ char* PromptUser(const char* window_list[],const char* window_title,int count, i
         "QuickSwitcherModalClass", NULL, WS_POPUP, 
         layout.x, layout.y, layout.w, layout.h, NULL, NULL, hInstance, NULL
     );
+    UpdateCursorForMode(MODE_INSERT);
     SetTimer(hPopupWnd, 999, 50, NULL);
 
     if (hPopupWnd == NULL) {
@@ -945,8 +946,10 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
         const char* snippet_text = NULL;
         
         MotionAction vimAction = MOTION_NONE;
-        if (CheckVimMotion(pressed_vk, modifiers, &vimAction)) {
-            ExecuteMotion(vimAction);
+        const char* matchedSequence = NULL;
+        int typedCount = 0;
+        if (CheckVimMotion(pressed_vk, modifiers, &vimAction, &matchedSequence, &typedCount)) {
+            ExecuteMotion(vimAction, matchedSequence, typedCount);
             return 1;
         }
         

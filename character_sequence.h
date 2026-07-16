@@ -1,3 +1,4 @@
+// character_sequence.h - Add timeout handling
 #ifndef CHARACTER_SEQUENCE_H
 #define CHARACTER_SEQUENCE_H
 
@@ -5,38 +6,48 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdbool.h>
+#include <ctype.h>
 
 #define MAX_SEQUENCE_LEN 8
 #define SEQUENCE_TIMEOUT_MS 300
 
 typedef struct {
-    char keys[MAX_SEQUENCE_LEN];  // Buffer for keys pressed
-    int len;                       // Current length
-    UINT timer_id;                 // Timer for timeout
-    bool waiting;                  // Are we waiting for more keys?
+    char keys[MAX_SEQUENCE_LEN];
+    int len;
+    int typed_count; 
+    UINT timer_id;
+    bool waiting;
+    bool timed_out;
 } SequenceState;
 
 static SequenceState g_seq_state = {0};
 
-
-static inline void SequenceAddKey(char key) {
+static inline void SequenceAddKey(char key, bool was_typed) {
     if (g_seq_state.len < MAX_SEQUENCE_LEN - 1) {
         g_seq_state.keys[g_seq_state.len++] = key;
-        g_seq_state.keys[g_seq_state.len] = '\0';  // This sets the next position to null
+        g_seq_state.keys[g_seq_state.len] = '\0';
         g_seq_state.waiting = true;
-    } else {
-        printf("[SEQ-DEBUG] Sequence buffer full!\n");
+        g_seq_state.timed_out = false;
+        if (was_typed) {
+            g_seq_state.typed_count++;
+        }
     }
 }
 
 static inline void SequenceReset(void) {
     memset(g_seq_state.keys, 0, MAX_SEQUENCE_LEN);
     g_seq_state.len = 0;
+    g_seq_state.typed_count = 0;
     g_seq_state.waiting = false;
+    g_seq_state.timed_out = false;
     if (g_seq_state.timer_id != 0) {
         KillTimer(NULL, g_seq_state.timer_id);
         g_seq_state.timer_id = 0;
     }
+}
+
+static inline int SequenceTypedCount(void) {
+    return g_seq_state.typed_count;
 }
 
 static inline const char* SequenceGet(void) {
@@ -54,7 +65,6 @@ static inline bool SequenceMatches(const char* pattern) {
     if (seq_len != pat_len) return false;
     if (seq_len == 0) return false;
     
-    // Use case-insensitive compare
     for (int i = 0; i < seq_len; i++) {
         if (tolower(pattern[i]) != tolower(g_seq_state.keys[i])) {
             return false;
@@ -70,7 +80,6 @@ static inline bool SequenceStartsWith(const char* pattern) {
     if (seq_len > pat_len) return false;
     if (seq_len == 0) return false;
     
-    // Use case-insensitive compare
     for (int i = 0; i < seq_len; i++) {
         if (tolower(pattern[i]) != tolower(g_seq_state.keys[i])) {
             return false;
@@ -79,19 +88,10 @@ static inline bool SequenceStartsWith(const char* pattern) {
     return true;
 }
 
-static inline bool SequenceEndsWith(const char* pattern) {
-    int pat_len = strlen(pattern);
-    if (g_seq_state.len < pat_len) return false;
-    return strcmp(&g_seq_state.keys[g_seq_state.len - pat_len], pattern) == 0;
-}
-
-static inline bool SequenceContains(const char* pattern) {
-    return strstr(g_seq_state.keys, pattern) != NULL;
-}
-
 static inline void CALLBACK SequenceTimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime) {
     if (g_seq_state.waiting) {
         g_seq_state.waiting = false;
+        g_seq_state.timed_out = true;
     }
     g_seq_state.timer_id = 0;
 }
@@ -107,8 +107,12 @@ static inline bool SequenceIsWaiting(void) {
     return g_seq_state.waiting;
 }
 
-static inline UINT SequenceGetTimerId(void) {
-    return g_seq_state.timer_id;
+static inline bool SequenceTimedOut(void) {
+    bool result = g_seq_state.timed_out;
+    if (result) {
+        g_seq_state.timed_out = false;  // Clear after check
+    }
+    return result;
 }
 
-#endif // CHARACTER_SEQUENCE_H
+#endif
