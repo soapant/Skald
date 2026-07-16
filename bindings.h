@@ -2,6 +2,7 @@
 #include <windows.h>
 #include "app_launcher.h"
 #include "macro_bindings.h"
+#include "vim_motions.h"
 #include "window_switcher.h"
 #include "vim_bindings.h"
 #include "modal.h"
@@ -16,6 +17,13 @@ static inline bool CheckVimMotion(int pressed_vk, int modifiers, MotionAction* o
     if (!hEditControl || !IsWindow(hEditControl)) return false;
     if (GetFocus() != hEditControl) return false;
     
+    // ============================================================
+    // CHECK IF SHIFT IS HELD AS A MODIFIER
+    // ============================================================
+    bool shift_held = (modifiers & HOTKEY_MOD_SHIFT) != 0;
+    bool ctrl_held = (modifiers & HOTKEY_MOD_CTRL) != 0;
+    bool alt_held = (modifiers & HOTKEY_MOD_ALT) != 0;
+    
     if (pressed_vk == VK_ESCAPE) {
         if (!IsNormalMode()) {
             SequenceReset();
@@ -27,19 +35,12 @@ static inline bool CheckVimMotion(int pressed_vk, int modifiers, MotionAction* o
         return false;
     }
     
-    if (pressed_vk == VK_CONTROL || pressed_vk == VK_SHIFT || pressed_vk == VK_MENU) {
-        return false;
-    }
-    
     char key_char = (char)pressed_vk;
     char seq_char = tolower(key_char);
     
     bool in_insert = IsInsertMode();
     bool in_normal = IsNormalMode();
     bool in_visual = IsVisualMode();
-    
-    
-    
     
     if (in_insert && SequenceIsWaiting()) {
         if (SequenceTimedOut()) {
@@ -75,66 +76,70 @@ static inline bool CheckVimMotion(int pressed_vk, int modifiers, MotionAction* o
         return false;
     }
     
-    
     if (in_insert) {
-        SequenceAddKey(seq_char, true);
-        
-        bool is_prefix = false;
-        for (int i = 0; i < VIM_SEQUENCE_BINDING_COUNT; i++) {
-            const SequenceBinding* b = &G_VIM_SEQUENCE_BINDINGS[i];
-            if (b->mode == MODE_INSERT && SequenceStartsWith(b->sequence)) {
-                is_prefix = true;
-                break;
+        if (!shift_held) {
+            SequenceAddKey(seq_char, true);
+            
+            bool is_prefix = false;
+            for (int i = 0; i < VIM_SEQUENCE_BINDING_COUNT; i++) {
+                const SequenceBinding* b = &G_VIM_SEQUENCE_BINDINGS[i];
+                if (b->mode == MODE_INSERT && SequenceStartsWith(b->sequence)) {
+                    is_prefix = true;
+                    break;
+                }
             }
-        }
-        
-        if (is_prefix) {
-            SequenceStartTimer();
-            printf("[VIM] INSERT timer started for: '%s'\n", SequenceGet());
-            *out_sequence = NULL;
-            *out_typed_count = 0;
+            
+            if (is_prefix) {
+                SequenceStartTimer();
+                printf("[VIM] INSERT timer started for: '%s'\n", SequenceGet());
+                *out_sequence = NULL;
+                *out_typed_count = 0;
+                return false;
+            }
+            
+            SequenceReset();
+            return false;
+        } else {
             return false;
         }
-        
-        SequenceReset();
-        return false;
     }
-    
     
     if (in_normal) {
         if (SequenceTimedOut()) {
             SequenceReset();
             return false;
         }
-        if (pressed_vk == VK_ENTER || pressed_vk == 160) {
+        if (pressed_vk == VK_RETURN || pressed_vk == 160) {
             SequenceReset();
             *out_sequence = NULL;
             *out_typed_count = 0;
             return false;
         }
         
-        SequenceAddKey(seq_char, true);
-        SequenceStartTimer();
-        
-        for (int i = 0; i < VIM_SEQUENCE_BINDING_COUNT; i++) {
-            const SequenceBinding* b = &G_VIM_SEQUENCE_BINDINGS[i];
-            if (b->mode == MODE_NORMAL) {
-                if (SequenceMatches(b->sequence)) {
-                    printf("[VIM] ✅ NORMAL SEQUENCE: '%s'\n", b->sequence);
-                    *out_action = b->action_id;
-                    *out_sequence = b->sequence;
-                    *out_typed_count = SequenceTypedCount();
-                    SequenceReset();
-                    return true;
-                }
-                if (SequenceStartsWith(b->sequence)) {
-                    printf("[VIM] NORMAL prefix: '%s'\n", b->sequence);
-                    return true;
+        if (!shift_held) {
+            SequenceAddKey(seq_char, true);
+            SequenceStartTimer();
+            
+            for (int i = 0; i < VIM_SEQUENCE_BINDING_COUNT; i++) {
+                const SequenceBinding* b = &G_VIM_SEQUENCE_BINDINGS[i];
+                if (b->mode == MODE_NORMAL) {
+                    if (SequenceMatches(b->sequence)) {
+                        printf("[VIM] ✅ NORMAL SEQUENCE: '%s'\n", b->sequence);
+                        *out_action = b->action_id;
+                        *out_sequence = b->sequence;
+                        *out_typed_count = SequenceTypedCount();
+                        SequenceReset();
+                        return true;
+                    }
+                    if (SequenceStartsWith(b->sequence)) {
+                        printf("[VIM] NORMAL prefix: '%s'\n", b->sequence);
+                        return true;
+                    }
                 }
             }
+            
+            SequenceReset();
         }
-        
-        SequenceReset();
         
         for (int i = 0; i < VIM_BINDING_COUNT; i++) {
             const MotionBinding* b = &G_VIM_BINDINGS[i];
@@ -191,6 +196,7 @@ static inline void ExecuteMotion(MotionAction action, const char* sequence, int 
         RemoveSequenceFromEdit(typed_count);
     }
     
+    
     for (int i = 0; i < VIM_SEQUENCE_BINDING_COUNT; i++) {
         const SequenceBinding* b = &G_VIM_SEQUENCE_BINDINGS[i];
         if (b->action_id == action && b->handler != NULL) {
@@ -211,8 +217,10 @@ static inline void ExecuteMotion(MotionAction action, const char* sequence, int 
     printf("[VIM-DEBUG] ExecuteMotion: no handler found, checking direct actions\n");
     if (action == MOTION_ENTER_NORMAL) {
         HandleEnterNormal();
-    } else if (action == MOTION_ENTER_INSERT) {
-        HandleEnterInsert();
+    } else if (action == MOTION_ENTER_INSERT_OUT) {
+        HandleEnterInsertOut();
+    } else if (action == MOTION_ENTER_INSERT_IN) {
+        HandleEnterInsertIn();
     } else if (action == MOTION_ENTER_VISUAL) {
         HandleEnterVisual();
     }

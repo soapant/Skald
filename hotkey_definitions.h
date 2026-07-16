@@ -114,10 +114,11 @@ static const char* terminal_command_blacklist[] = {"Fortnite", "CrosshairX"};
 static const char* volume_blacklist[] = {"Fortnite", "CrosshairX"};
 #define VOLUME_BLACKLIST_COUNT (sizeof(volume_blacklist) / sizeof(volume_blacklist[0]))
 
-static const char* monitor_focus_main_blacklist[] = {"Fortnite", "CrosshairX"};
+static const char* monitor_focus_main_blacklist[] = {"Nvim", "Neovide"};
 #define MONITOR_FOCUS_MAIN_BLACKLIST_COUNT (sizeof(monitor_focus_main_blacklist) / sizeof(monitor_focus_main_blacklist[0]))
 
-static const char* monitor_focus_side_blacklist[] = {"Fortnite", "CrosshairX"};
+static const char* monitor_focus_side_blacklist[] = {"Nvim", "Neovide"};
+
 #define MONITOR_FOCUS_SIDE_BLACKLIST_COUNT (sizeof(monitor_focus_main_blacklist) / sizeof(monitor_focus_main_blacklist[0]))
 
 static inline void SwitcherHandler(void) {
