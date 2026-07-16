@@ -8,8 +8,7 @@
 #include "types.h"
 
 extern HWND hPopupWnd;
-static void timer_enter_callback(const char* selection) {
-  
+static void NIGGA(const char* selection) {
     if (selection != NULL && strlen(selection) > 0) {
         // Find sowon in cache
         char sowon_path[MAX_PATH] = {0};
@@ -19,23 +18,24 @@ static void timer_enter_callback(const char* selection) {
                 break;
             }
         }
-
         if (strlen(sowon_path) == 0) {
             printf("[TIMER] ERROR: sowon.exe not found in cache!\n");
             return;
         }
 
-        // Launch sowon with the selection as argument
         launch_exe_with_args(sowon_path, selection);
         printf("[TIMER] Launching: %s %s\n", sowon_path, selection);
     }
 }
 static void TriggerTimer() {
+  
     if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
     
     const char* prompt[1] = { "Enter timer duration (e.g., 5m, 10h,20s or 0 for a stopwatch" };
+    const char* input;
+    input = PromptUser(prompt,"⏱️ Timer",1, 220, 150,32,NULL,NULL,NULL,NULL,NULL);
     
-    PromptUser(prompt,"⏱️ Timer",1, 220, 150,32,NULL,timer_enter_callback,NULL,NULL,NULL);
+    NIGGA(input);
 
 }
 

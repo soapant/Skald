@@ -15,14 +15,26 @@ typedef enum {
 static EditorMode g_current_mode = MODE_INSERT;
 static bool g_vim_mode_enabled = true;
 static const char* g_mode_names[] = { "NORMAL", "INSERT", "VISUAL" };
+const char* g_vim_mode = "INSERT";
 
-const char* g_vim_mode = "INSERT"; 
+// Function to update cursor
+static inline void UpdateCursorForMode(EditorMode mode) {
+    extern HWND hPopupWnd;
+    if (!hPopupWnd || !IsWindow(hPopupWnd)) return;
+    
+    // Force a cursor update
+    POINT pt;
+    GetCursorPos(&pt);
+    ScreenToClient(hPopupWnd, &pt);
+    SendMessageA(hPopupWnd, WM_SETCURSOR, (WPARAM)hPopupWnd, MAKELPARAM(HTCLIENT, 0));
+}
 
 static inline void SetMode(EditorMode mode) {
     g_current_mode = mode;
-    g_vim_mode = g_mode_names[mode];  // <-- Update the global string
-    
+    g_vim_mode = g_mode_names[mode];
     printf("[VIM] Mode: %s\n", g_mode_names[mode]);
+    
+    UpdateCursorForMode(mode);
     
     extern HWND hPopupWnd;
     if (hPopupWnd != NULL && IsWindow(hPopupWnd)) {
