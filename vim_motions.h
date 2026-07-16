@@ -10,6 +10,7 @@
 #include "modal.h"
 #include "character_sequence.h"
 #include "vim_helpers.h"
+#include "calc.h"
 
 // ============================================================
 // MOTION ACTION ENUM
@@ -18,8 +19,11 @@ typedef enum {
     MOTION_NONE = 0,
     MOTION_ENTER_NORMAL,
     MOTION_DELETE_LINE_INSERT,
+    MOTION_DELETE_CHAR_INSERT,
     MOTION_ENTER_INSERT_OUT,
     MOTION_ENTER_INSERT_IN,
+    MOTION_ENTER_INSERT_OUT_END,
+    MOTION_ENTER_INSERT_IN_START,
     MOTION_ENTER_VISUAL,
     MOTION_ENTER_VISUAL_LINE,
     MOTION_MOVE_LEFT,
@@ -39,11 +43,13 @@ typedef enum {
     MOTION_CHANGE_TO_END,
     MOTION_CHANGE_LINE,
     MOTION_YANK_LINE,
+    MOTION_YANK_LIST_BOX,
     MOTION_YANK_WORD,
     MOTION_YANK_TO_END,
     MOTION_UNDO,
     MOTION_SEARCH_FORWARD,
     MOTION_SEARCH_BACKWARD,
+    MOTION_EXIT_WINDOW,
 } MotionAction;
 
 typedef struct {
@@ -183,6 +189,13 @@ static inline void HandleDelete(void) {
         printf("[VIM] Deleted character under cursor\n");
     }
 }
+static inline void HandleDeleteInsert(void) {
+    if (hEditControl && IsWindow(hEditControl)) {
+        DeleteCharUnderCursor();
+        HandleEnterInsertIn();
+        printf("[VIM] Deleted character under cursor\n");
+    }
+}
 static inline void HandleDeleteLine(void) {
     const char* feature = GetCurrentFeature();
     int selected_index = LB_ERR;
@@ -237,6 +250,47 @@ static inline void HandleMoveListboxStart(void) {
 }
 static inline void HandleMoveListboxEnd(void) {
     GoToLastListBoxItem();
+}
+static inline void HandleMoveLineEnd(void) {
+  SetCursorToEndOfText();
+}
+static inline void HandleMoveLineStart(void) {
+  SetCursorToStartOfText();
+}
+
+static inline void HandleEnterInsertInStart(void) {
+  SetCursorToStartOfText();
+  HandleEnterInsertIn();
+}
+
+static inline void HandleEnterInsertOutEnd(void) {
+  SetCursorToEndOfText();
+  HandleEnterInsertOut();
+}
+static inline void HandleExitWindow(void) {
+  selection_complete = true;
+}
+
+static inline void HandleYankListBox(void) {
+  int selected_index = LB_ERR;
+  
+  if (hListBox && IsWindow(hListBox)) {
+      selected_index = SendMessageA(hListBox, LB_GETCURSEL, 0, 0);
+  }
+  if (selected_index != LB_ERR) {
+        char text[512] = {0};
+        SendMessageA(hListBox, LB_GETTEXT, selected_index, (LPARAM)text);
+        CopyToClipboard(text);
+        printf("[VIM] COPIED %s TO THE CLIPBOARD",text);
+        return;
+  }
+}
+static inline void HandleYankLine(void) {
+  if (hEditControl && IsWindow(hEditControl)) {
+      char textBuffer[256];
+      GetWindowText(hEditControl, textBuffer, sizeof(textBuffer));
+      printf("[VIM] COPIED %s TO THE CLIPBOARD",textBuffer);
+  }
 }
 
 #endif
