@@ -7,7 +7,8 @@
 
 static const MotionBinding G_VIM_BINDINGS[] = {
   
-    { 'I',      HOTKEY_MOD_NONE,    MOTION_ENTER_INSERT,        "Insert",   HandleEnterInsert, MODE_NORMAL },
+    { 'I',      HOTKEY_MOD_NONE,    MOTION_ENTER_INSERT_IN,        "Insert",   HandleEnterInsertIn, MODE_NORMAL },
+    { 'A',      HOTKEY_MOD_NONE,    MOTION_ENTER_INSERT_OUT,        "Insert",   HandleEnterInsertOut, MODE_NORMAL },
     { 'V',      HOTKEY_MOD_NONE,    MOTION_ENTER_VISUAL,        "Visual",   HandleEnterVisual, MODE_NORMAL },
     
     { 'H',      HOTKEY_MOD_NONE,    MOTION_MOVE_LEFT,           "Left",     HandleMoveLeft, MODE_NORMAL },
@@ -19,6 +20,10 @@ static const MotionBinding G_VIM_BINDINGS[] = {
     
     { 'D',      HOTKEY_MOD_NONE,   MOTION_DELETE_CHAR_PERSISTENT,"DelPersistent",  HandlePersistentDelete, MODE_NORMAL },
     
+    { 'S',      HOTKEY_MOD_SHIFT,   MOTION_DELETE_LINE_INSERT,"DelLineInsert",  HandleDeleteLineInsert, MODE_NORMAL },
+    
+    { 'G',      HOTKEY_MOD_SHIFT, MOTION_MOVE_LISTBOX_END,   "ListboxEnd",     HandleMoveListboxEnd,MODE_NORMAL },
+    
 };
 
 #define VIM_BINDING_COUNT (sizeof(G_VIM_BINDINGS) / sizeof(G_VIM_BINDINGS[0]))
@@ -26,8 +31,8 @@ static const MotionBinding G_VIM_BINDINGS[] = {
 static const SequenceBinding G_VIM_SEQUENCE_BINDINGS[] = {
   
     { "JK", MOTION_ENTER_NORMAL,    "Enter Mapping", HandleEnterNormal,        false, MODE_INSERT },
-    // { "gg",    MOTION_MOVE_FILE_START, "FileStart",   HandleMoveFileStart,      false, MODE_NORMAL },
-    // { "G",     MOTION_MOVE_FILE_END,   "FileEnd",     HandleMoveFileEnd,        false, MODE_NORMAL },
+    { "dd",    MOTION_DELETE_LINE,     "DeleteLine",  HandleDeleteLine,         false, MODE_NORMAL },
+    { "gg",    MOTION_MOVE_LISTBOX_START, "ListboxStart",   HandleMoveListboxStart,      false, MODE_NORMAL },
     // { "0",     MOTION_MOVE_LINE_START, "LineStart",   HandleMoveLineStart,      false, MODE_NORMAL },
     // { "$",     MOTION_MOVE_LINE_END,   "LineEnd",     HandleMoveLineEnd,        false, MODE_NORMAL },
     // 
@@ -40,7 +45,6 @@ static const SequenceBinding G_VIM_SEQUENCE_BINDINGS[] = {
     // { "O",     MOTION_ENTER_INSERT,    "InsertAbove", HandleEnterInsertAbove,   false, MODE_NORMAL },
     // 
     // // Delete (NORMAL mode only)
-    // { "dd",    MOTION_DELETE_LINE,     "DeleteLine",  HandleDeleteLine,         false, MODE_NORMAL },
     // { "dw",    MOTION_DELETE_WORD,     "DeleteWord",  HandleDeleteWord,         false, MODE_NORMAL },
     // { "d$",    MOTION_DELETE_TO_END,   "DeleteToEnd", HandleDeleteToEnd,        false, MODE_NORMAL },
     // { "D",     MOTION_DELETE_TO_END,   "DeleteToEnd", HandleDeleteToEnd,        false, MODE_NORMAL },

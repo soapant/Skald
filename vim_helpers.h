@@ -74,3 +74,20 @@ static inline const char* GetCurrentFeature(void) {
     
     return "Unknown";
 }
+static inline const char* GoToFirstListBoxItem(void) {
+    if (!hListBox || !IsWindow(hListBox)) return NULL;
+    
+    SendMessage(hListBox, LB_SETCURSEL, 0, 0);
+
+}
+static inline const char* GoToLastListBoxItem(void) {
+    if (!hListBox || !IsWindow(hListBox)) return NULL;
+    int totalItems = (int)SendMessage(hListBox, LB_GETCOUNT, 0, 0);
+
+    if (totalItems != LB_ERR && totalItems > 0) 
+    {
+        int lastIndex = totalItems - 1;
+        
+        SendMessage(hListBox, LB_SETCURSEL, lastIndex, 0);
+    }
+}
