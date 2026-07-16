@@ -378,7 +378,7 @@ void TriggerTodo() {
         ui_list[i] = todo_lines[i];
     }
 
-    PromptUser(ui_list,"📋 TODO",todo_count, 520, 950,54,
+    PromptUser(ui_list,"📋 TODO",todo_count, 520, 1150,54,
                todo_refresh_callback,     
                todo_enter_callback,       
                todo_ctrlenter_callback,   
