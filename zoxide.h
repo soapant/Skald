@@ -134,7 +134,7 @@ static void zoxide_enter_callback(const char* selection) {
 // ============================================================
 // TRIGGER
 // ============================================================
-static void TriggerZoxide(HWND hPopupWnd) {
+static void TriggerZoxide() {
     if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
     
     if (!g_cached_zoxide_commands) {

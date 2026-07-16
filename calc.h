@@ -562,7 +562,7 @@ static void calculator_ctrlenter_callback(const char* selection) {
 // ============================================================
 // TRIGGER CALCULATOR
 // ============================================================
-void TriggerCalculator(HWND hPopupWnd) {
+void TriggerCalculator() {
     if (hPopupWnd != NULL && IsWindow(hPopupWnd)) return;
 
     const char* default_msg[1] = { "Enter operation (e.g. 5 x 5 or 10 hours in minutes)" };
