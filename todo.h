@@ -12,6 +12,8 @@
 #define COLOR_TEXT    RGB(220, 223, 228)
 #define COLOR_BG      RGB(30, 34, 42)
 
+extern HWND hPopupWnd;
+
 typedef struct {
     bool is_project;
     char project_name[64];
@@ -365,8 +367,8 @@ static void todo_render_callback(HDC hdc, const char* text, RECT* rect, BOOL is_
     }
 }
 
-void TriggerTodo(HWND targetPopupWnd) {
-    if (CheckAndBlockIfPopupActive(targetPopupWnd)) return;
+void TriggerTodo() {
+    if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
 
     char todo_lines[100][512];
     int todo_count = ReadMdFile(todo_lines, TODO_FILE_PATH);

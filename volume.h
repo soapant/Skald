@@ -56,7 +56,7 @@ cleanup:
 // ============================================================
 // TRIGGER VOLUME POPUP
 // ============================================================
-void TriggerVolume(HWND hPopupWnd) {
+void TriggerVolume() {
     if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
     
     const char* prompt[1] = {"Enter volume (0-100)"};

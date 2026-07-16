@@ -100,18 +100,9 @@ static void yazi_enter_callback(const char* selection) {
         if (hEditControl != NULL) {
             GetWindowTextA(hEditControl, input, sizeof(input));
             if (strlen(input) > 0) {
-                // BUG FIX: Prevent history line collapsing
-                if (YaziZoxideFile->fileSize > 0) {
-                    char lastChar = YaziZoxideFile->pBuffer[YaziZoxideFile->fileSize - 1];
-                    if (lastChar != '\n') {
-                        FileAppend(YaziZoxideFile, "\n");
-                    }
-                }
-
                 FileAppend(YaziZoxideFile, input);
                 FileAppend(YaziZoxideFile, "\n");
                 RebuildYaziCache();
-                
                 char* path = QueryZoxidePath(input);
                 if (path) {
                     // Launch asynchronously, setting the directory and invoking -e yazi
@@ -131,7 +122,7 @@ static void yazi_enter_callback(const char* selection) {
 // ============================================================
 // TRIGGER
 // ============================================================
-static void TriggerYaziZoxide(HWND hPopupWnd) {
+static void TriggerYaziZoxide() {
     if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
     
     if (!g_cached_yazi_commands) {

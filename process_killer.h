@@ -123,7 +123,7 @@ static void pk_refresh_callback(const char* filter, HWND hListBox) {
     free(items);
 }
 
-void TriggerProcessKiller(HWND hPopupWnd) {
+void TriggerProcessKiller() {
     if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
 
     collect_running_processes();

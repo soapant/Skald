@@ -162,7 +162,7 @@ static void applauncher_refresh_callback(const char* filter, HWND hListBox) {
     free(items);
 }
 
-void TriggerAppLauncher(HWND hPopupWnd) {
+void TriggerAppLauncher() {
     if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
     
     initialize_app_cache();

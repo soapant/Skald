@@ -30,7 +30,7 @@ static void timer_enter_callback(const char* selection) {
         printf("[TIMER] Launching: %s %s\n", sowon_path, selection);
     }
 }
-static void TriggerTimer(HWND hPopupWnd) {
+static void TriggerTimer() {
     if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
     
     const char* prompt[1] = { "Enter timer duration (e.g., 5m, 10h,20s or 0 for a stopwatch" };
