@@ -172,7 +172,7 @@ static void terminal_enter_callback(const char* selection) {
 // ============================================================
 // TRIGGER
 // ============================================================
-static void TriggerTerminalCommand(HWND hPopupWnd) {
+static void TriggerTerminalCommand() {
     if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
     
     if (!g_cached_commands) {

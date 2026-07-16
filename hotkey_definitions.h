@@ -4,6 +4,28 @@
 
 #include "helpers.h"
 #include "config.h"
+#include "calc.h"
+#include "video_player.h"
+#include "music_player.h"
+#include "timer.h"
+#include "explorer.h"
+#include "screenshot.h"
+#include "terminal_command.h"
+#include "zoxide.h"
+#include "nvim_zoxide.h"
+#include "yazi_zoxide.h"
+#include "window_switcher.h"
+#include "pos_handler.h"
+#include "focus_switcher.h"
+#include "color_handler.h"
+#include "minecraft.h"
+#include "pixel_equals_handler.h"
+#include "wait_for_pixel_handler.h"
+#include "region_handler.h"
+#include "google_search.h"
+#include "process_killer.h"
+#include "todo.h"
+#include "volume.h"
 
 // ============================================================
 // FORWARD DECLARATIONS
@@ -12,26 +34,86 @@ extern BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam);
 extern HWND hPopupWnd;
 extern HWND hGlobalTrayWnd;
 
-// Forward declarations of all trigger functions
-void TriggerGoogleSearch(void);
-void TriggerTodo(HWND hPopupWnd);
-void TriggerCalculator(HWND hPopupWnd);
-void TriggerAppLauncher(HWND hPopupWnd);
-void TriggerProcessKiller(HWND hPopupWnd);
-void TriggerTimer(HWND hPopupWnd);
-void TriggerVolume(HWND hPopupWnd);
-void TriggerTerminalCommand(HWND hPopupWnd);
-void TriggerExplorer(HWND hPopupWnd);
-void TriggerZoxide(HWND hPopupWnd);
-void TriggerNvimZoxide(int version, HWND hPopupWnd);
-void TriggerYaziZoxide(HWND hPopupWnd);
-char* TriggerWindowSwitcher(HWND hPopupWnd, WindowList myWindows);
+#define SWITCHER_KEY      0x20
+#define TODO_KEY          0x54
+#define CALCULATOR_KEY    0x43
+#define EXE_KEY           0x45
+#define KILL_PROCESS_KEY  0x55
+#define GOOGLE_SEARCH_KEY  0x47  
+#define TERMINAL_KEY     0x57
+#define YAZI_KEY     0x51
+#define TIMER_KEY     0x4F
+#define EXPLORER_KEY     0x52
+#define TERMINAL_COMMAND_KEY     0xDB
+#define VOLUME_KEY     0x4D
+#define SCREENSHOT_KEY          0x59
+#define POS_KEY                 0x5A
+#define COLOR_KEY               0x58
+#define PIXEL_EQUALS_KEY        0x42
+#define WAIT_FOR_PIXEL_KEY      0x4E
+#define REGION_KEY              0x41
+#define NVIM_KEY     0x49
 
-// ============================================================
-// HANDLER WRAPPERS
-// ============================================================
+static const char* switcher_blacklist[] = {"Fortnite", "CrosshairX"};
+#define SWITCHER_BLACKLIST_COUNT (sizeof(switcher_blacklist) / sizeof(switcher_blacklist[0]))
 
-// --- Switcher ---
+static const char* todo_blacklist[] = {"Fortnite", "CrosshairX"};
+#define TODO_BLACKLIST_COUNT (sizeof(todo_blacklist) / sizeof(todo_blacklist[0]))
+
+static const char* pos_blacklist[] = {"Fortnite", "CrosshairX"};
+#define POS_BLACKLIST_COUNT (sizeof(pos_blacklist) / sizeof(pos_blacklist[0]))
+
+static const char* color_blacklist[] = {"Fortnite", "CrosshairX"};
+#define COLOR_BLACKLIST_COUNT (sizeof(color_blacklist) / sizeof(color_blacklist[0]))
+
+static const char* pixel_equals_blacklist[] = {"Fortnite", "CrosshairX"};
+#define PIXEL_EQUALS_BLACKLIST_COUNT (sizeof(pixel_equals_blacklist) / sizeof(pixel_equals_blacklist[0]))
+
+static const char* wait_for_pixel_blacklist[] = {"Fortnite", "CrosshairX"};
+#define WAIT_FOR_PIXEL_BLACKLIST_COUNT (sizeof(wait_for_pixel_blacklist) / sizeof(wait_for_pixel_blacklist[0]))
+
+static const char* region_blacklist[] = {"Fortnite", "CrosshairX"};
+#define REGION_BLACKLIST_COUNT (sizeof(region_blacklist) / sizeof(region_blacklist[0]))
+
+static const char* calculator_blacklist[] = {"Fortnite", "CrosshairX"};
+#define CALCULATOR_BLACKLIST_COUNT (sizeof(calculator_blacklist) / sizeof(calculator_blacklist[0]))
+
+static const char* exe_blacklist[] = {"Fortnite", "CrosshairX"};
+#define EXE_BLACKLIST_COUNT (sizeof(exe_blacklist) / sizeof(exe_blacklist[0]))
+
+static const char* kill_process_blacklist[] = {"Fortnite", "CrosshairX"};
+#define KILL_PROCESS_BLACKLIST_COUNT (sizeof(kill_process_blacklist) / sizeof(kill_process_blacklist[0]))
+
+static const char* google_search_blacklist[] = {"Fortnite", "CrosshairX"};
+#define GOOGLE_SEARCH_BLACKLIST_COUNT (sizeof(google_search_blacklist) / sizeof(google_search_blacklist[0]))
+
+static const char* nvim_blacklist[] = {"Fortnite", "CrosshairX"};
+#define NVIM_BLACKLIST_COUNT (sizeof(nvim_blacklist) / sizeof(nvim_blacklist[0]))
+
+static const char* timer_blacklist[] = {"Fortnite", "CrosshairX"};
+#define TIMER_BLACKLIST_COUNT (sizeof(timer_blacklist) / sizeof(timer_blacklist[0]))
+
+static const char* terminal_blacklist[] = {"Fortnite", "CrosshairX"};
+#define TERMINAL_BLACKLIST_COUNT (sizeof(terminal_blacklist) / sizeof(terminal_blacklist[0]))
+
+static const char* screenshot_blacklist[] = {"Fortnite", "CrosshairX"};
+#define SCREENSHOT_BLACKLIST_COUNT (sizeof(screenshot_blacklist) / sizeof(screenshot_blacklist[0]))
+
+static const char* yazi_blacklist[] = {"Fortnite", "CrosshairX"};
+#define YAZI_BLACKLIST_COUNT (sizeof(yazi_blacklist) / sizeof(yazi_blacklist[0]))
+
+static const char* video_blacklist[] = {"Fortnite", "CrosshairX"};
+#define VIDEO_BLACKLIST_COUNT (sizeof(video_blacklist) / sizeof(video_blacklist[0]))
+
+static const char* explorer_blacklist[] = {"Fortnite", "CrosshairX"};
+#define EXPLORER_BLACKLIST_COUNT (sizeof(explorer_blacklist) / sizeof(explorer_blacklist[0]))
+
+static const char* terminal_command_blacklist[] = {"Fortnite", "CrosshairX"};
+#define TERMINAL_COMMAND_BLACKLIST_COUNT (sizeof(terminal_command_blacklist) / sizeof(terminal_command_blacklist[0]))
+
+static const char* volume_blacklist[] = {"Fortnite", "CrosshairX"};
+#define VOLUME_BLACKLIST_COUNT (sizeof(volume_blacklist) / sizeof(volume_blacklist[0]))
+
 static inline void SwitcherHandler(void) {
     WindowList myWindows;
     myWindows.count = 0;
@@ -43,47 +125,11 @@ static inline void SwitcherHandler(void) {
         free(myWindows.items);
     }
 }
-
-// --- Google ---
-static inline void GoogleHandler(void) { TriggerGoogleSearch(); }
-
-// --- Todo ---
-static inline void TodoHandler(void) { TriggerTodo(hPopupWnd); }
-
-// --- Calculator ---
-static inline void CalculatorHandler(void) { TriggerCalculator(hPopupWnd); }
-
-// --- App Launcher ---
-static inline void AppLauncherHandler(void) { TriggerAppLauncher(hPopupWnd); }
-
-// --- Process Killer ---
-static inline void ProcessKillerHandler(void) { TriggerProcessKiller(hPopupWnd); }
-
-// --- Timer ---
-static inline void TimerHandler(void) { TriggerTimer(hPopupWnd); }
-
-// --- Terminal Command ---
-static inline void TerminalCommandHandler(void) { TriggerTerminalCommand(hPopupWnd); }
-
-// --- Explorer ---
-static inline void ExplorerHandler(void) { TriggerExplorer(hPopupWnd); }
-
-// --- Terminal ---
-static inline void TerminalHandler(void) { TriggerZoxide(hPopupWnd); }
-
-// --- Nvim (Alt+Ctrl+N) ---
 static inline void NvimHandler(void) { TriggerNvimZoxide(1, hPopupWnd); }
 
-// --- Neovide (Alt+N) ---
 static inline void NeovideHandler(void) { TriggerNvimZoxide(0, hPopupWnd); }
 
-// --- Yazi ---
-static inline void YaziHandler(void) { TriggerYaziZoxide(hPopupWnd); }
 
-// --- Volume ---
-static inline void VolumeHandler(void) { TriggerVolume(hPopupWnd); }
-
-// --- POS Handlers ---
 static inline void PosCopyHandler(void) {
     POINT mousePos;
     if (GetCursorPos(&mousePos)) {
@@ -263,54 +309,44 @@ static inline void ScreenshotOpenHandler(void) {
         TriggerScreenshot(hPopupWnd, true);
     }
 }
-
-// ============================================================
-// THE MASTER HOTKEY BINDINGS TABLE
-// ============================================================
 static const HotkeyBinding G_HOTKEY_BINDINGS[] = {
     // Standard Alt hotkeys
     { SWITCHER_KEY,         HOTKEY_MOD_ALT,  switcher_blacklist,        SWITCHER_BLACKLIST_COUNT,        SwitcherHandler,          "Switcher" },
-    { GOOGLE_SEARCH_KEY,    HOTKEY_MOD_ALT,  google_search_blacklist,   GOOGLE_SEARCH_BLACKLIST_COUNT,   GoogleHandler,            "Google" },
-    { TODO_KEY,             HOTKEY_MOD_ALT,  todo_blacklist,            TODO_BLACKLIST_COUNT,            TodoHandler,              "Todo" },
-    { CALCULATOR_KEY,       HOTKEY_MOD_ALT,  calculator_blacklist,      CALCULATOR_BLACKLIST_COUNT,      CalculatorHandler,        "Calculator" },
-    { EXE_KEY,              HOTKEY_MOD_ALT,  exe_blacklist,             EXE_BLACKLIST_COUNT,             AppLauncherHandler,       "AppLauncher" },
-    { KILL_PROCESS_KEY,     HOTKEY_MOD_ALT,  kill_process_blacklist,    KILL_PROCESS_BLACKLIST_COUNT,    ProcessKillerHandler,     "ProcessKiller" },
-    // Neovide: Alt+N
-    { NVIM_KEY,             HOTKEY_MOD_ALT,  nvim_blacklist,            NVIM_BLACKLIST_COUNT,            NeovideHandler,           "Neovide" },
-    // Nvim: Alt+Ctrl+N
-    { NVIM_KEY,             (HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL), nvim_blacklist, NVIM_BLACKLIST_COUNT, NvimHandler, "Nvim" },
-    { YAZI_KEY,             HOTKEY_MOD_ALT,  yazi_blacklist,            YAZI_BLACKLIST_COUNT,            YaziHandler,              "Yazi" },
-    { TERMINAL_KEY,         HOTKEY_MOD_ALT,  terminal_blacklist,        TERMINAL_BLACKLIST_COUNT,        TerminalHandler,          "Terminal" },
-    { TIMER_KEY,            HOTKEY_MOD_ALT,  timer_blacklist,           TIMER_BLACKLIST_COUNT,           TimerHandler,             "Timer" },
-    { EXPLORER_KEY,         HOTKEY_MOD_ALT,  explorer_blacklist,        EXPLORER_BLACKLIST_COUNT,        ExplorerHandler,          "Explorer" },
-    { TERMINAL_COMMAND_KEY, HOTKEY_MOD_ALT,  terminal_command_blacklist, TERMINAL_COMMAND_BLACKLIST_COUNT, TerminalCommandHandler, "TerminalCommand" },
-    { VOLUME_KEY,           HOTKEY_MOD_ALT,  volume_blacklist,          VOLUME_BLACKLIST_COUNT,          VolumeHandler,            "Volume" },
+    { GOOGLE_SEARCH_KEY,    HOTKEY_MOD_ALT,  google_search_blacklist,   GOOGLE_SEARCH_BLACKLIST_COUNT,   TriggerGoogleSearch,            "Google" },
+    { TODO_KEY,             HOTKEY_MOD_ALT,  todo_blacklist,            TODO_BLACKLIST_COUNT,            TriggerTodo,              "Todo" },
+    { CALCULATOR_KEY,       HOTKEY_MOD_ALT,  calculator_blacklist,      CALCULATOR_BLACKLIST_COUNT,      TriggerCalculator,        "Calculator" },
+    { EXE_KEY,              HOTKEY_MOD_ALT,  exe_blacklist,             EXE_BLACKLIST_COUNT,             TriggerAppLauncher,       "AppLauncher" },
+    { KILL_PROCESS_KEY,     HOTKEY_MOD_ALT,  kill_process_blacklist,    KILL_PROCESS_BLACKLIST_COUNT,    TriggerProcessKiller,     "ProcessKiller" },
     
-    // POS - different modifier combos
+    { YAZI_KEY,             HOTKEY_MOD_ALT,  yazi_blacklist,            YAZI_BLACKLIST_COUNT,            TriggerYaziZoxide,              "Yazi" },
+    { TERMINAL_KEY,         HOTKEY_MOD_ALT,  terminal_blacklist,        TERMINAL_BLACKLIST_COUNT,        TriggerZoxide,          "Terminal" },
+    { TIMER_KEY,            HOTKEY_MOD_ALT,  timer_blacklist,           TIMER_BLACKLIST_COUNT,           TriggerTimer,             "Timer" },
+    { EXPLORER_KEY,         HOTKEY_MOD_ALT,  explorer_blacklist,        EXPLORER_BLACKLIST_COUNT,        TriggerExplorer,          "Explorer" },
+    { TERMINAL_COMMAND_KEY, HOTKEY_MOD_ALT,  terminal_command_blacklist, TERMINAL_COMMAND_BLACKLIST_COUNT, TriggerTerminalCommand, "TerminalCommand" },
+    { VOLUME_KEY,           HOTKEY_MOD_ALT,  volume_blacklist,          VOLUME_BLACKLIST_COUNT,          TriggerVolume,            "Volume" },
+    
     { POS_KEY,              HOTKEY_MOD_ALT,                         pos_blacklist, POS_BLACKLIST_COUNT, PosCopyHandler,   "PosCopy" },
     { POS_KEY,              (HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT),    pos_blacklist, POS_BLACKLIST_COUNT, PosAddHandler,    "PosAdd" },
     { POS_KEY,              (HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL),     pos_blacklist, POS_BLACKLIST_COUNT, PosClearHandler,  "PosClear" },
     
-    // COLOR
     { COLOR_KEY,            HOTKEY_MOD_ALT,                         color_blacklist, COLOR_BLACKLIST_COUNT, ColorPlainHandler,   "ColorPlain" },
     { COLOR_KEY,            (HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL),     color_blacklist, COLOR_BLACKLIST_COUNT, ColorParenHandler,   "ColorParen" },
     
-    // PIXEL_EQUALS
     { PIXEL_EQUALS_KEY,     HOTKEY_MOD_ALT,                         pixel_equals_blacklist, PIXEL_EQUALS_BLACKLIST_COUNT, PixelEqualsAdbHandler, "PixelEqualsAdb" },
     { PIXEL_EQUALS_KEY,     (HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL),     pixel_equals_blacklist, PIXEL_EQUALS_BLACKLIST_COUNT, PixelEqualsFnHandler,  "PixelEqualsFn" },
     
-    // WAIT_FOR_PIXEL
     { WAIT_FOR_PIXEL_KEY,   HOTKEY_MOD_ALT,                         wait_for_pixel_blacklist, WAIT_FOR_PIXEL_BLACKLIST_COUNT, WaitForPixelAdbHandler, "WaitForPixelAdb" },
     { WAIT_FOR_PIXEL_KEY,   (HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL),     wait_for_pixel_blacklist, WAIT_FOR_PIXEL_BLACKLIST_COUNT, WaitForPixelTapHandler, "WaitForPixelTap" },
     { WAIT_FOR_PIXEL_KEY,   (HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT),    wait_for_pixel_blacklist, WAIT_FOR_PIXEL_BLACKLIST_COUNT, WaitForPixelFnHandler,  "WaitForPixelFn" },
     
-    // REGION
     { REGION_KEY,           HOTKEY_MOD_ALT,                         region_blacklist, REGION_BLACKLIST_COUNT, RegionCoordsHandler, "RegionCoords" },
     { REGION_KEY,           (HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT),    region_blacklist, REGION_BLACKLIST_COUNT, RegionImageHandler,  "RegionImage" },
     
-    // SCREENSHOT
     { SCREENSHOT_KEY,       HOTKEY_MOD_ALT,                         screenshot_blacklist, SCREENSHOT_BLACKLIST_COUNT, ScreenshotSaveHandler, "ScreenshotSave" },
     { SCREENSHOT_KEY,       (HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT),    screenshot_blacklist, SCREENSHOT_BLACKLIST_COUNT, ScreenshotOpenHandler, "ScreenshotOpen" },
+    
+    { NVIM_KEY,             HOTKEY_MOD_ALT,  nvim_blacklist,            NVIM_BLACKLIST_COUNT,            NeovideHandler,           "Neovide" },
+    { NVIM_KEY,             (HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL), nvim_blacklist, NVIM_BLACKLIST_COUNT, NvimHandler, "Nvim" },
 };
 
 #define HOTKEY_BINDING_COUNT (sizeof(G_HOTKEY_BINDINGS) / sizeof(G_HOTKEY_BINDINGS[0]))

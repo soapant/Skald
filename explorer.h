@@ -132,7 +132,7 @@ static void explorer_enter_callback(const char* selection) {
 // ============================================================
 // TRIGGER
 // ============================================================
-static void TriggerExplorer(HWND hPopupWnd) {
+static void TriggerExplorer() {
     if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
     
     if (!g_cached_explorer_commands) {
