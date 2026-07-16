@@ -108,6 +108,32 @@ static inline void HandleMoveDown(void) {
         SendMessageA(hEditControl, WM_KEYUP, VK_DOWN, 0);
     }
 }
+
+static inline void HandlePersistentDelete(void) {
+    const char* feature = GetCurrentFeature();
+    int selected_index = LB_ERR;
+    
+    if (hListBox && IsWindow(hListBox)) {
+        selected_index = SendMessageA(hListBox, LB_GETCURSEL, 0, 0);
+    }
+    
+    if (selected_index != LB_ERR) {
+        if (strstr(feature, "Todo") != NULL) {
+            char text[512] = {0};
+            SendMessageA(hListBox, LB_GETTEXT, selected_index, (LPARAM)text);
+            if (g_enter_callback != NULL) {
+                g_enter_callback(text);
+            }
+            selection_complete = false;
+            printf("[VIM] Deleted todo item: %s\n", text);
+            return;
+        }
+    }
+    if (hEditControl && IsWindow(hEditControl)) {
+        DeleteCharUnderCursor();
+        printf("[VIM] Deleted character under cursor\n");
+    }
+}
 static inline void HandleDelete(void) {
     const char* feature = GetCurrentFeature();
     int selected_index = LB_ERR;

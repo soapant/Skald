@@ -16,6 +16,8 @@ static const MotionBinding G_VIM_BINDINGS[] = {
     { 'L',      HOTKEY_MOD_NONE,    MOTION_MOVE_RIGHT,          "Right",    HandleMoveRight, MODE_NORMAL },
     
     { 'X',      HOTKEY_MOD_NONE,    MOTION_DELETE_CHAR,         "Del",  HandleDelete, MODE_NORMAL },
+    
+    { 'D',      HOTKEY_MOD_NONE,    MOTION_DELETE_CHAR,         "Del",  HandlePersistentDelete, MODE_NORMAL },
      
     // { 'U',      HOTKEY_MOD_NONE,    MOTION_UNDO,                "Undo",     HandleUndo, MODE_NORMAL },
 };
