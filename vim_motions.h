@@ -17,7 +17,9 @@
 typedef enum {
     MOTION_NONE = 0,
     MOTION_ENTER_NORMAL,
-    MOTION_ENTER_INSERT,
+    MOTION_DELETE_LINE_INSERT,
+    MOTION_ENTER_INSERT_OUT,
+    MOTION_ENTER_INSERT_IN,
     MOTION_ENTER_VISUAL,
     MOTION_ENTER_VISUAL_LINE,
     MOTION_MOVE_LEFT,
@@ -28,6 +30,8 @@ typedef enum {
     MOTION_MOVE_WORD_BACK,
     MOTION_MOVE_LINE_START,
     MOTION_MOVE_LINE_END,
+    MOTION_MOVE_LISTBOX_START,
+    MOTION_MOVE_LISTBOX_END,
     MOTION_DELETE_CHAR,
     MOTION_DELETE_CHAR_PERSISTENT,
     MOTION_DELETE_LINE,
@@ -67,12 +71,37 @@ static inline void HandleEnterNormal(void) {
     printf("[VIM] Entered NORMAL mode\n");
 }
 
-static inline void HandleEnterInsert(void) { 
+static inline void HandleEnterInsertOut(void) { 
+    if (!hEditControl || !IsWindow(hEditControl)) return;
+    
+    DWORD start, end;
+    SendMessageA(hEditControl, EM_GETSEL, (WPARAM)&start, (LPARAM)&end);
+    
+    int pos = (int)start + 1;
+    
+    SendMessageA(hEditControl, EM_SETSEL, pos, pos);
+    
     SetMode(MODE_INSERT); 
     printf("[VIM] Entered INSERT mode\n");
 }
 
+static inline void HandleEnterInsertIn(void) { 
+    if (!hEditControl || !IsWindow(hEditControl)) return;
+    
+    DWORD start, end;
+    SendMessageA(hEditControl, EM_GETSEL, (WPARAM)&start, (LPARAM)&end);
+    
+    int pos = (int)start - 1;
+    
+    SendMessageA(hEditControl, EM_SETSEL, pos, pos);
+    
+    SetMode(MODE_INSERT); 
+    
+    printf("[VIM] Entered INSERT mode\n");
+}
+
 static inline void HandleEnterVisual(void) { 
+  
     SetMode(MODE_VISUAL); 
     printf("[VIM] Entered VISUAL mode\n");
 }
@@ -153,6 +182,61 @@ static inline void HandleDelete(void) {
         DeleteCharUnderCursor();
         printf("[VIM] Deleted character under cursor\n");
     }
+}
+static inline void HandleDeleteLine(void) {
+    const char* feature = GetCurrentFeature();
+    int selected_index = LB_ERR;
+    
+    if (hListBox && IsWindow(hListBox)) {
+        selected_index = SendMessageA(hListBox, LB_GETCURSEL, 0, 0);
+    }
+    
+    if (selected_index != LB_ERR) {
+        if (strstr(feature, "Todo") != NULL) {
+            char text[512] = {0};
+            SendMessageA(hListBox, LB_GETTEXT, selected_index, (LPARAM)text);
+            if (g_enter_callback != NULL) {
+                g_enter_callback(text);
+            }
+            selection_complete = true;
+            return;
+        }
+    }
+    if (hEditControl && IsWindow(hEditControl)) {
+        SetWindowTextA(hEditControl, "");
+        printf("[VIM] Deleted Entire Search Box \n");
+    }
+}
+static inline void HandleDeleteLineInsert(void) {
+    const char* feature = GetCurrentFeature();
+    int selected_index = LB_ERR;
+    
+    if (hListBox && IsWindow(hListBox)) {
+        selected_index = SendMessageA(hListBox, LB_GETCURSEL, 0, 0);
+    }
+    
+    if (selected_index != LB_ERR) {
+        if (strstr(feature, "Todo") != NULL) {
+            char text[512] = {0};
+            SendMessageA(hListBox, LB_GETTEXT, selected_index, (LPARAM)text);
+            if (g_enter_callback != NULL) {
+                g_enter_callback(text);
+            }
+            selection_complete = true;
+            return;
+        }
+    }
+    if (hEditControl && IsWindow(hEditControl)) {
+        SetWindowTextA(hEditControl, "");
+        SetMode(MODE_INSERT);
+        printf("[VIM] Deleted Entire Search Box \n");
+    }
+}
+static inline void HandleMoveListboxStart(void) {
+    GoToFirstListBoxItem();
+}
+static inline void HandleMoveListboxEnd(void) {
+    GoToLastListBoxItem();
 }
 
 #endif
