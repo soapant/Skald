@@ -7,11 +7,12 @@
 #include <shlwapi.h>
 #include "config.h"
 
-// ============================================================
-// FIND WINDOW BY EXE NAME
-// ============================================================
+
+
+
 
 static void FocusWindow(HWND hwnd) {
+
     if (!hwnd || !IsWindow(hwnd)) return;
     
     HWND hForegroundWnd = GetForegroundWindow();
@@ -120,21 +121,21 @@ static HWND FindWindowByPartialTitle(const char* title) {
     return data.result;
 }
 
-// ============================================================
-// FIND ANY WINDOW (by title list)
-// ============================================================
+
+
+
 static HWND FindAnyWindow(const char* titles[], int count) {
     for (int i = 0; i < count; i++) {
         printf("[FOCUS-DEBUG] Looking for: \"%s\"\n", titles[i]);
         
-        // Try exact match first
+        
         HWND hwnd = FindWindowA(NULL, titles[i]);
         if (hwnd != NULL && IsWindow(hwnd) && IsWindowVisible(hwnd)) {
             printf("[FOCUS-DEBUG] FOUND (exact): \"%s\" (HWND: %p)\n", titles[i], (void*)hwnd);
             return hwnd;
         }
         
-        // Try partial match
+        
         hwnd = FindWindowByPartialTitle(titles[i]);
         if (hwnd != NULL && IsWindow(hwnd) && IsWindowVisible(hwnd)) {
             char window_title[256];
@@ -149,9 +150,9 @@ static HWND FindAnyWindow(const char* titles[], int count) {
     return NULL;
 }
 
-// ============================================================
-// BLACKLIST CHECK
-// ============================================================
+
+
+
 static bool IsBlacklisted(const char* title, const char* blacklist[], int count) {
     for (int i = 0; i < count; i++) {
         if (StrStrIA(title, blacklist[i]) != NULL) {
@@ -161,9 +162,9 @@ static bool IsBlacklisted(const char* title, const char* blacklist[], int count)
     return false;
 }
 
-// ============================================================
-// HANDLE FOCUS SWITCHER HOTKEY
-// ============================================================
+
+
+
 static bool HandleFocusSwitcher(int vk_code, int modifiers, const char* current_title) {
     for (int i = 0; i < FOCUS_SWITCHER_COUNT; i++) {
         const FocusSwitcherBinding* binding = &G_FOCUS_SWITCHERS[i];

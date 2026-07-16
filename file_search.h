@@ -30,15 +30,15 @@ static char* SearchFileInDirectory(const char* directory, const char* search_str
         return NULL;
     }
 
-    static char found_path[MAX_PATH];  // Static so we can return it safely
+    static char found_path[MAX_PATH];  
 
     do {
-        // Skip directories and hidden files
+        
         if (find_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
             continue;
         }
 
-        // Check if the filename contains the search string (case-insensitive)
+        
         if (StrStrIA(find_data.cFileName, search_string) != NULL) {
             snprintf(found_path, sizeof(found_path), "%s\\%s", directory, find_data.cFileName);
             FindClose(hFind);
@@ -67,7 +67,7 @@ static char* SearchFileRecursive(const char* directory, const char* search_strin
     static char found_path[MAX_PATH];
 
     do {
-        // Skip . and ..
+        
         if (strcmp(find_data.cFileName, ".") == 0 || strcmp(find_data.cFileName, "..") == 0) {
             continue;
         }
@@ -76,14 +76,14 @@ static char* SearchFileRecursive(const char* directory, const char* search_strin
         snprintf(full_path, sizeof(full_path), "%s\\%s", directory, find_data.cFileName);
 
         if (find_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-            // Recurse into subdirectories
+            
             char* result = SearchFileRecursive(full_path, search_string);
             if (result != NULL) {
                 FindClose(hFind);
                 return result;
             }
         } else {
-            // Check if the filename contains the search string
+            
             if (StrStrIA(find_data.cFileName, search_string) != NULL) {
                 snprintf(found_path, sizeof(found_path), "%s", full_path);
                 FindClose(hFind);
@@ -136,7 +136,7 @@ static void GetFilesRecursiveWithTime(const char* dir_path, bool show_folder) {
                 strncpy(clean_name, find_data.cFileName, sizeof(clean_name) - 1);
                 PathRemoveExtensionA(clean_name);
 
-                // Store the name with optional folder prefix
+                
                 if (show_folder) {
                     char folder_name[MAX_PATH];
                     strncpy(folder_name, dir_path, sizeof(folder_name) - 1);
@@ -156,7 +156,7 @@ static void GetFilesRecursiveWithTime(const char* dir_path, bool show_folder) {
                 strncpy(G_FILES_WITH_TIME[G_FILE_COUNT].path, full_path, 
                         sizeof(G_FILES_WITH_TIME[G_FILE_COUNT].path) - 1);
                 
-                // Store the last write time
+                
                 G_FILES_WITH_TIME[G_FILE_COUNT].last_write = find_data.ftLastWriteTime;
                 G_FILE_COUNT++;
             }
@@ -169,8 +169,8 @@ static int CompareFileByTime(const void* a, const void* b) {
     const FileItemWithTime* fa = (const FileItemWithTime*)a;
     const FileItemWithTime* fb = (const FileItemWithTime*)b;
     
-    // Compare FILETIME (most recent first)
-    // Returns -1 if a is newer, 1 if b is newer, 0 if same
+    
+    
     __int64 time_a = ((__int64)fa->last_write.dwHighDateTime << 32) + fa->last_write.dwLowDateTime;
     __int64 time_b = ((__int64)fb->last_write.dwHighDateTime << 32) + fb->last_write.dwLowDateTime;
     
@@ -222,7 +222,7 @@ static void GetFilesByExtension(const char* dir_path, const char* extensions[], 
             }
             GetFilesByExtension(full_path, extensions, ext_count);
         } else {
-            // Check if the file has a matching extension
+            
             char* ext = PathFindExtensionA(find_data.cFileName);
             for (int i = 0; i < ext_count; i++) {
                 if (StrCmpIA(ext, extensions[i]) == 0) {
@@ -239,21 +239,21 @@ static void GetFilesByExtension(const char* dir_path, const char* extensions[], 
 
     FindClose(hFind);
 }
-// Add this to file_search.h:
+
 static FileItemWithTime* GetFileListWithTime(void) {
     return G_FILES_WITH_TIME;
 }
-// Clear the file list
+
 static void ClearFileList(void) {
     G_FILE_COUNT = 0;
 }
 
-// Get the file list
+
 static FileItem* GetFileList(void) {
     return G_FILES;
 }
 
-// Get the file count
+
 static int GetFileCount(void) {
     return G_FILE_COUNT;
 }

@@ -1,4 +1,3 @@
-// helpers.h
 #ifndef HELPERS_H
 #define HELPERS_H
 
@@ -11,7 +10,7 @@
 #include "config.h"
 #include "common_ui.h"
 
-// Helper to write timestamped logs to a file since we are in -mwindows
+
 static inline void WriteDebugLog(const char* format, ...) {
     FILE* logFile = fopen("D:\\Projects\\C Code\\zoxide_debug.log", "a");
     if (!logFile) return;
@@ -28,9 +27,9 @@ static inline void WriteDebugLog(const char* format, ...) {
     fclose(logFile);
 }
 
-// ============================================================
-// HOTKEY SYSTEM - Single entry point for all hotkeys
-// ============================================================
+
+
+
 
 struct MappedFile;
 
@@ -77,9 +76,9 @@ static inline bool ProcessHotkey(const HotkeyBinding* bindings, int bindings_cou
     return false;
 }
 
-// ============================================================
-// ZOXIDE HELPER WITH HIGH-PRECISION TIMING LOGS
-// ============================================================
+
+
+
 
 typedef struct {
     const char* prompt_title;
@@ -129,7 +128,7 @@ static inline char* QueryZoxidePath(const char* query) {
         CloseHandle(hWritePipe);
 
         WriteDebugLog("  [ZOXIDE QUERY] Waiting for process to return...\n");
-        DWORD wait_res = WaitForSingleObject(pi.hProcess, 5000); // 5-second max fail-safe
+        DWORD wait_res = WaitForSingleObject(pi.hProcess, 5000); 
         WriteDebugLog("  [ZOXIDE QUERY] Process wait finished. Code: %lu (Time taken: %lu ms)\n", 
                       wait_res, GetTickCount() - proc_start);
 
@@ -211,9 +210,9 @@ static inline void TriggerZoxideWithOptions(const ZoxideOptions* options) {
     WriteDebugLog("[TRIGGER ZOXIDE] Finished completely. (Total cycle time: %lu ms)\n", GetTickCount() - start_time);
 }
 
-// ============================================================
-// SHELL HELPER
-// ============================================================
+
+
+
 
 static inline bool ShellExecuteWithVerb(const char* path, const char* verb, bool async) {
     SHELLEXECUTEINFOA sei = {0};
@@ -236,9 +235,9 @@ static inline bool IsCtrlPressed(void) {
     return (GetKeyState(VK_CONTROL) & 0x8000) != 0;
 }
 
-// ============================================================
-// MEMORY MAPPED FILE SYSTEM WITH TIMING LOGS
-// ============================================================
+
+
+
 
 typedef struct {
     size_t index;
@@ -258,8 +257,8 @@ static inline int FileInit(const char *filePath, MappedFile *mf, size_t initialP
     GetFileSizeEx(mf->hFile, &fs);
     mf->fileSize = (size_t)fs.QuadPart;
     
-    // CRITICAL: Only map the ACTUAL file size, NOT the padded size
-    // If file is empty, map 1 byte so we can write
+    
+    
     size_t mapSize = (mf->fileSize > 0) ? mf->fileSize : 1;
     mf->capacity = mapSize;
 
@@ -280,7 +279,7 @@ static inline int FileInit(const char *filePath, MappedFile *mf, size_t initialP
         return 0;
     }
 
-    // If file is empty, initialize with null terminator
+    
     if (mf->fileSize == 0) {
         mf->pBuffer[0] = '\0';
     }
@@ -295,9 +294,9 @@ static inline int FileAppend(MappedFile *mf, const char *text) {
     size_t len = strlen(text);
     if (len == 0) return 0;
 
-    // Check if we need to expand the mapping
+    
     if (mf->fileSize + len + 1 > mf->capacity) {
-        // Unmap the current view
+        
         if (mf->pBuffer) {
             UnmapViewOfFile(mf->pBuffer);
             mf->pBuffer = NULL;
@@ -307,18 +306,18 @@ static inline int FileAppend(MappedFile *mf, const char *text) {
             mf->hMapping = NULL;
         }
 
-        // New capacity: current file size + new text + 1 for null terminator
+        
         size_t newCapacity = mf->fileSize + len + 1;
         LARGE_INTEGER mapSizeLI;
         mapSizeLI.QuadPart = newCapacity;
 
-        // Expand the file on disk FIRST
+        
         LARGE_INTEGER newFileSize;
         newFileSize.QuadPart = newCapacity;
         SetFilePointerEx(mf->hFile, newFileSize, NULL, FILE_BEGIN);
         SetEndOfFile(mf->hFile);
 
-        // Create new mapping
+        
         mf->hMapping = CreateFileMappingA(mf->hFile, NULL, PAGE_READWRITE, mapSizeLI.HighPart, mapSizeLI.LowPart, NULL);
         if (!mf->hMapping) {
             WriteDebugLog("  [FILE APPEND ERROR] Failed to expand mapping!\n");
@@ -335,12 +334,12 @@ static inline int FileAppend(MappedFile *mf, const char *text) {
         WriteDebugLog("  [FILE APPEND] Expanded capacity to %zu\n", newCapacity);
     }
 
-    // Write the text to the buffer
+    
     memcpy(mf->pBuffer + mf->fileSize, text, len);
     mf->fileSize += len;
     mf->pBuffer[mf->fileSize] = '\0';
 
-    // CRITICAL: Update file size on disk AFTER writing
+    
     LARGE_INTEGER fs;
     fs.QuadPart = mf->fileSize;
     SetFilePointerEx(mf->hFile, fs, NULL, FILE_BEGIN);
@@ -365,7 +364,7 @@ static inline void FileClose(MappedFile *mf) {
     }
     
     if (mf->hFile != INVALID_HANDLE_VALUE) {
-        // Truncate to actual data size
+        
         LARGE_INTEGER fs;
         fs.QuadPart = mf->fileSize;
         SetFilePointerEx(mf->hFile, fs, NULL, FILE_BEGIN);

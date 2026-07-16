@@ -66,7 +66,6 @@ static FileEntry G_FILE_ENTRIES[] = {
 };
 #define FILE_ENTRY_COUNT (sizeof(G_FILE_ENTRIES) / sizeof(G_FILE_ENTRIES[0]))
 
-// Helper to get path by name
 static inline const char* GetFilePath(const char* name) {
     for (int i = 0; i < FILE_ENTRY_COUNT; i++) {
         if (strcmp(G_FILE_ENTRIES[i].name, name) == 0) {
@@ -80,7 +79,7 @@ typedef struct {
     int vk_code;
     int modifiers;
     const char* exe_name;
-    const char* app_name;  // Name of the app to launch from cache
+    const char* app_name;  
 } AppHotkey;
 
 typedef struct {

@@ -18,9 +18,9 @@ extern FileEntry G_FILE_ENTRIES[];
 static char** g_cached_explorer_commands = NULL;
 static int g_cached_explorer_count = 0;
 
-// ============================================================
-// REBUILD CACHE
-// ============================================================
+
+
+
 static void RebuildExplorerCache(void) {
     if (g_cached_explorer_commands) {
         for (int i = 0; i < g_cached_explorer_count; i++) {
@@ -57,9 +57,9 @@ static void RebuildExplorerCache(void) {
     free(lines);
 }
 
-// ============================================================
-// REFRESH CALLBACK
-// ============================================================
+
+
+
 static void explorer_refresh_callback(const char* filter, HWND hListBox) {
     if (!hListBox) return;
     
@@ -86,9 +86,9 @@ static void explorer_refresh_callback(const char* filter, HWND hListBox) {
     }
 }
 
-// ============================================================
-// ENTER CALLBACK
-// ============================================================
+
+
+
 static void explorer_enter_callback(const char* selection) {
     int selected_index = LB_ERR;
     if (hListBox != NULL) {
@@ -96,12 +96,12 @@ static void explorer_enter_callback(const char* selection) {
     }
     
     if (selected_index == LB_ERR) {
-        // New query from input - save it
+        
         char input[256] = {0};
         if (hEditControl != NULL) {
             GetWindowTextA(hEditControl, input, sizeof(input));
             if (strlen(input) > 0) {
-                // BUG FIX: Prevent history strings from ending up on the same line
+                
                 if (ExplorerZoxideFile->fileSize > 0) {
                     char lastChar = ExplorerZoxideFile->pBuffer[ExplorerZoxideFile->fileSize - 1];
                     if (lastChar != '\n') {
@@ -115,13 +115,13 @@ static void explorer_enter_callback(const char* selection) {
                 
                 char* path = QueryZoxidePath(input);
                 if (path) {
-                    // Launch explorer asynchronously at the correct destination path
+                    
                     ShellExecuteA(NULL, "open", "explorer.exe", path, NULL, SW_SHOWNORMAL);
                 }
             }
         }
     } else {
-        // Selected from history
+        
         char* path = QueryZoxidePath(selection);
         if (path) {
             ShellExecuteA(NULL, "open", "explorer.exe", path, NULL, SW_SHOWNORMAL);
@@ -129,9 +129,9 @@ static void explorer_enter_callback(const char* selection) {
     }
 }
 
-// ============================================================
-// TRIGGER
-// ============================================================
+
+
+
 static void TriggerExplorer() {
     if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
     

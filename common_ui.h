@@ -1,4 +1,3 @@
-// common_ui.h
 #ifndef COMMON_UI_H
 #define COMMON_UI_H
 
@@ -41,4 +40,4 @@ static inline bool CheckAndBlockIfPopupActive(HWND hPopupWnd) {
     return IsPopupActive(hPopupWnd);
 }
 
-#endif // COMMON_UI_H
+#endif 

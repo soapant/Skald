@@ -1,4 +1,3 @@
-// macro_bindings.h
 #ifndef MACRO_BINDINGS_H
 #define MACRO_BINDINGS_H
 
@@ -6,9 +5,6 @@
 #include "minecraft.h"
 #include "factorio.h"
 
-// ============================================================
-// HANDLER FUNCTIONS - One per macro action
-// ============================================================
 typedef enum {
     MACRO_NONE = 0,
     MACRO_FACTORIO_MAKE_TAG,

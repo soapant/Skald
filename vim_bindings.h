@@ -18,15 +18,14 @@ static const MotionBinding G_VIM_BINDINGS[] = {
     { 'X',      HOTKEY_MOD_NONE,    MOTION_DELETE_CHAR,         "Del",  HandleDelete, MODE_NORMAL },
     
     { 'D',      HOTKEY_MOD_NONE,   MOTION_DELETE_CHAR_PERSISTENT,"DelPersistent",  HandlePersistentDelete, MODE_NORMAL },
-     
-    // { 'U',      HOTKEY_MOD_NONE,    MOTION_UNDO,                "Undo",     HandleUndo, MODE_NORMAL },
+    
 };
 
 #define VIM_BINDING_COUNT (sizeof(G_VIM_BINDINGS) / sizeof(G_VIM_BINDINGS[0]))
 
 static const SequenceBinding G_VIM_SEQUENCE_BINDINGS[] = {
   
-    { "JK", MOTION_ENTER_NORMAL,    "JK -> Enter", HandleEnterNormal,        false, MODE_INSERT },
+    { "JK", MOTION_ENTER_NORMAL,    "Enter Mapping", HandleEnterNormal,        false, MODE_INSERT },
     // { "gg",    MOTION_MOVE_FILE_START, "FileStart",   HandleMoveFileStart,      false, MODE_NORMAL },
     // { "G",     MOTION_MOVE_FILE_END,   "FileEnd",     HandleMoveFileEnd,        false, MODE_NORMAL },
     // { "0",     MOTION_MOVE_LINE_START, "LineStart",   HandleMoveLineStart,      false, MODE_NORMAL },
