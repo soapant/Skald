@@ -201,7 +201,6 @@ static inline void ExecuteMotion(MotionAction action, const char* sequence, int 
     for (int i = 0; i < VIM_BINDING_COUNT; i++) {
         const MotionBinding* b = &G_VIM_BINDINGS[i];
         if (b->action_id == action && b->handler != NULL) {
-            printf("[VIM-DEBUG] ExecuteMotion: calling single binding handler\n");
             b->handler();
             return;
         }
