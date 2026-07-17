@@ -102,7 +102,7 @@ void TriggerVolume() {
     const char* prompt[1];
     prompt[0] = volume_prompt_buffer;
     
-    char* input = PromptUser(prompt, "🔊 Volume", 1, 220, 150, 32, NULL, NULL, NULL, NULL, NULL);
+    char* input = PromptUser(prompt, "🔊 Volume", 1, 520, 650, 32, NULL, NULL, NULL, NULL, NULL);
     
     if (input != NULL && strlen(input) > 0) {
         int volume_int = atoi(input);

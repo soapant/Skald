@@ -33,7 +33,7 @@ static void TriggerTimer() {
     
     const char* prompt[1] = { "Enter timer duration (e.g., 5m, 10h,20s or 0 for a stopwatch" };
     const char* input;
-    input = PromptUser(prompt,"⏱️ Timer",1, 220, 150,32,NULL,NULL,NULL,NULL,NULL);
+    input = PromptUser(prompt,"⏱️ Timer",1, 520, 650,32,NULL,NULL,NULL,NULL,NULL);
     
     NIGGA(input);
 
