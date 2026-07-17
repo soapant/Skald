@@ -81,9 +81,6 @@ static void explorer_refresh_callback(const char* filter, HWND hListBox) {
         }
     }
     
-    if (g_cached_explorer_count > 0) {
-        SendMessageA(hListBox, LB_SETCURSEL, 0, 0);
-    }
 }
 
 

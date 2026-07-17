@@ -168,7 +168,6 @@ static bool IsBlacklisted(const char* title, const char* blacklist[], int count)
 static bool HandleFocusSwitcher(int vk_code, int modifiers, const char* current_title) {
     for (int i = 0; i < FOCUS_SWITCHER_COUNT; i++) {
         const FocusSwitcherBinding* binding = &G_FOCUS_SWITCHERS[i];
-        
         if (binding->vk_code == vk_code && binding->modifiers == modifiers) {
             if (IsBlacklisted(current_title, binding->blacklist, binding->blacklist_count)) {
                 printf("[FOCUS] Blacklisted window: %s\n", current_title);
@@ -190,7 +189,9 @@ static bool HandleFocusSwitcher(int vk_code, int modifiers, const char* current_
                   HWND target = FindAnyWindow(binding->window_titles, binding->window_count);
                   if (target) {
                       FocusWindow(target);
+                      return true;
                   } else {
+                      return false;
                       printf("[FOCUS] No matching window found.\n");
                   }
               }
