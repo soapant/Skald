@@ -1,4 +1,4 @@
-
+// character_sequence.h
 #ifndef CHARACTER_SEQUENCE_H
 #define CHARACTER_SEQUENCE_H
 
@@ -14,7 +14,7 @@
 typedef struct {
     char keys[MAX_SEQUENCE_LEN];
     int len;
-    int typed_count; 
+    int typed_count;
     UINT timer_id;
     bool waiting;
     bool timed_out;
@@ -46,16 +46,16 @@ static inline void SequenceReset(void) {
     }
 }
 
-static inline int SequenceTypedCount(void) {
-    return g_seq_state.typed_count;
-}
-
 static inline const char* SequenceGet(void) {
     return g_seq_state.keys;
 }
 
 static inline int SequenceLen(void) {
     return g_seq_state.len;
+}
+
+static inline int SequenceTypedCount(void) {
+    return g_seq_state.typed_count;
 }
 
 static inline bool SequenceMatches(const char* pattern) {
@@ -77,11 +77,17 @@ static inline bool SequenceStartsWith(const char* pattern) {
     int seq_len = g_seq_state.len;
     int pat_len = strlen(pattern);
     
-    if (seq_len > pat_len) return false;
-    if (seq_len == 0) return false;
+    if (seq_len > pat_len) {
+        return false;
+    }
+    if (seq_len == 0) {
+        return false;
+    }
     
     for (int i = 0; i < seq_len; i++) {
-        if (tolower(pattern[i]) != tolower(g_seq_state.keys[i])) {
+        char pattern_char = tolower(pattern[i]);
+        char seq_char = tolower(g_seq_state.keys[i]);
+        if (pattern_char != seq_char) {
             return false;
         }
     }
@@ -92,6 +98,7 @@ static inline void CALLBACK SequenceTimerProc(HWND hwnd, UINT uMsg, UINT_PTR idE
     if (g_seq_state.waiting) {
         g_seq_state.waiting = false;
         g_seq_state.timed_out = true;
+        printf("[SEQ-DEBUG] Timer expired! Sequence: '%s'\n", g_seq_state.keys);
     }
     g_seq_state.timer_id = 0;
 }
@@ -108,11 +115,50 @@ static inline bool SequenceIsWaiting(void) {
 }
 
 static inline bool SequenceTimedOut(void) {
-    bool result = g_seq_state.timed_out;
-    if (result) {
-        g_seq_state.timed_out = false;  
-    }
-    return result;
+    return g_seq_state.timed_out;
 }
 
-#endif
+static inline void DeleteLastTypedChar(void) {
+    extern HWND hEditControl;
+    
+    printf("[VIM-DEBUG] DeleteLastTypedChar: START\n");
+    
+    if (!hEditControl || !IsWindow(hEditControl)) {
+        printf("[VIM-DEBUG] DeleteLastTypedChar: hEditControl invalid!\n");
+        return;
+    }
+    
+    char text[512] = {0};
+    GetWindowTextA(hEditControl, text, sizeof(text));
+    int len = (int)strlen(text);
+    
+    DWORD start, end;
+    SendMessageA(hEditControl, EM_GETSEL, (WPARAM)&start, (LPARAM)&end);
+    int cursor_pos = (int)start;
+    
+    printf("[VIM-DEBUG] DeleteLastTypedChar: text='%s', len=%d, cursor_pos=%d\n", text, len, cursor_pos);
+    
+    if (cursor_pos == 0 || len == 0) {
+        printf("[VIM-DEBUG] Nothing to delete (cursor at start or empty)\n");
+        return;
+    }
+    
+    // The character to delete is at cursor_pos - 1
+    // (the character just typed before the cursor)
+    int delete_pos = cursor_pos - 1;
+    char deleted_char = text[delete_pos];
+    
+    printf("[VIM-DEBUG] Deleting character at position %d: '%c'\n", delete_pos, deleted_char);
+    
+    // Remove the character at delete_pos
+    memmove(&text[delete_pos], &text[delete_pos + 1], len - delete_pos);
+    SetWindowTextA(hEditControl, text);
+    
+    // Move cursor back to the deletion position
+    SendMessageA(hEditControl, EM_SETSEL, delete_pos, delete_pos);
+    
+    printf("[VIM-DEBUG] Deleted character '%c', new text='%s', cursor at %d\n", 
+           deleted_char, text, delete_pos);
+}
+
+#endif 
