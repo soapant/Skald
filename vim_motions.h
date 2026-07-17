@@ -19,6 +19,7 @@ typedef enum {
     MOTION_NONE = 0,
     MOTION_ENTER_NORMAL,
     MOTION_DELETE_LINE_INSERT,
+    MOTION_DELETE_LINE_NORMAL,
     MOTION_DELETE_CHAR_INSERT,
     MOTION_ENTER_INSERT_OUT,
     MOTION_ENTER_INSERT_IN,
@@ -221,27 +222,15 @@ static inline void HandleDeleteLine(void) {
     }
 }
 static inline void HandleDeleteLineInsert(void) {
-    const char* feature = GetCurrentFeature();
-    int selected_index = LB_ERR;
-    
-    if (hListBox && IsWindow(hListBox)) {
-        selected_index = SendMessageA(hListBox, LB_GETCURSEL, 0, 0);
-    }
-    
-    if (selected_index != LB_ERR) {
-        if (strstr(feature, "Todo") != NULL) {
-            char text[512] = {0};
-            SendMessageA(hListBox, LB_GETTEXT, selected_index, (LPARAM)text);
-            if (g_enter_callback != NULL) {
-                g_enter_callback(text);
-            }
-            selection_complete = true;
-            return;
-        }
-    }
     if (hEditControl && IsWindow(hEditControl)) {
         SetWindowTextA(hEditControl, "");
         SetMode(MODE_INSERT);
+        printf("[VIM] Deleted Entire Search Box \n");
+    }
+}
+static inline void HandleDeleteLineNormal(void) {
+    if (hEditControl && IsWindow(hEditControl)) {
+        SetWindowTextA(hEditControl, "");
         printf("[VIM] Deleted Entire Search Box \n");
     }
 }
