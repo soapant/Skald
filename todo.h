@@ -7,6 +7,7 @@
 #include <string.h>
 #include "types.h"
 #include "config.h"
+#include "common_ui.h"
 
 #define TODO_FILE_PATH "todo.txt"
 #define COLOR_TEXT    RGB(220, 223, 228)

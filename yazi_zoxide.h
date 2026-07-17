@@ -136,7 +136,7 @@ static void TriggerYaziZoxide() {
         list[i] = g_cached_yazi_commands[i];
     }
     
-    PromptUser(list, "📂 Yazi", g_cached_yazi_count, 220, 650, 32, 
+    PromptUser(list, "📂 Yazi", g_cached_yazi_count, 520, 650, 32, 
                yazi_refresh_callback, 
                yazi_enter_callback, 
                NULL, 

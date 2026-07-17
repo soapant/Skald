@@ -1,9 +1,7 @@
-not consumable recipes just dont exist||[Project: MinecraftModpack]
 maybe just maybe do the whole vim motions for my entire project||[Project: Cprogram]
 also maybe you can like link todos to each other||[Project: Cprogram]
 make my own window manager (kind of)||[Project: Cprogram]
 make a global sort of macro input type shit so like one for fortnite that jsut holds down something ykwim||[Project: Cprogram]
 add a sort of reminder so like i can queu a windwo to open after something happens i can define easily||[Project: Cprogram]
 also maybe add a spell checker or something no idea how i would make it lightweight tho||[Project: Cprogram]
-do the whole music player /video viewer bindings for the timer
-the fucking jk thing is super inconsistent||[Project: Cprogram]
+experminent with the sendmessage for applications like fortnite or factorio||[Project: Cprogram]
