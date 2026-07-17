@@ -153,6 +153,7 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
                 int count = SendMessageA(hListBox, LB_GETCOUNT, 0, 0);
                 int sel = SendMessageA(hListBox, LB_GETCURSEL, 0, 0);
                 
+                
                 if (count > 0) {
                     if (sel == LB_ERR) {
                         sel = 0;

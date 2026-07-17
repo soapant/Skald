@@ -155,65 +155,6 @@ static inline char* QueryZoxidePath(const char* query) {
     return (strlen(path) > 0) ? path : NULL;
 }
 
-static inline void TriggerZoxideWithOptions(const ZoxideOptions* options) {
-    DWORD start_time = GetTickCount();
-    WriteDebugLog("[TRIGGER ZOXIDE] Trigger initiated for: %s\n", options->prompt_title);
-
-    extern HWND hPopupWnd;
-    if (CheckAndBlockIfPopupActive(hPopupWnd)) {
-        WriteDebugLog("[TRIGGER ZOXIDE] Blocked: Popup already active.\n");
-        return;
-    }
-    
-    const char* prompt[1] = { options->prompt_title };
-    
-    WriteDebugLog("[TRIGGER ZOXIDE] Opening user text input prompt...\n");
-    DWORD prompt_start = GetTickCount();
-    char* query = PromptUser(prompt, options->icon, 1, 220, 150, 32, 
-                               NULL, NULL, NULL, NULL, NULL);
-    WriteDebugLog("[TRIGGER ZOXIDE] Prompt closed. User entered: '%s' (User took: %lu ms)\n", 
-                  query ? query : "NULL", GetTickCount() - prompt_start);
-    
-    if (!query || strlen(query) == 0) {
-        WriteDebugLog("[TRIGGER ZOXIDE] Cancelled: Query is empty.\n");
-        return;
-    }
-    
-    char* path = QueryZoxidePath(query);
-    if (!path) {
-        WriteDebugLog("[TRIGGER ZOXIDE] Ended: No path match returned from zoxide.\n");
-        return;
-    }
-    
-    DWORD exec_start = GetTickCount();
-    if (options->open_neovide) {
-        char cmd[2048];
-        snprintf(cmd, sizeof(cmd), "start neovide \"%s\"", path);
-        WriteDebugLog("[TRIGGER ZOXIDE] Executing system command: %s\n", cmd);
-        system(cmd);
-    } else if (options->open_yazi) {
-        char cmd[2048];
-        snprintf(cmd, sizeof(cmd), "start alacritty --working-directory \"%s\" -e yazi", path);
-        WriteDebugLog("[TRIGGER ZOXIDE] Executing system command: %s\n", cmd);
-        system(cmd);
-    } else if (options->open_explorer) {
-        WriteDebugLog("[TRIGGER ZOXIDE] Executing ShellExecuteA for explorer on: %s\n", path);
-        ShellExecuteA(NULL, "open", "explorer.exe", path, NULL, SW_SHOWNORMAL);
-    } else {
-        char cmd[2048];
-        snprintf(cmd, sizeof(cmd), "start alacritty --working-directory \"%s\"", path);
-        WriteDebugLog("[TRIGGER ZOXIDE] Executing system command: %s\n", cmd);
-        system(cmd);
-    }
-    
-    WriteDebugLog("[TRIGGER ZOXIDE] App launch command executed. (Launch execution took: %lu ms)\n", GetTickCount() - exec_start);
-    WriteDebugLog("[TRIGGER ZOXIDE] Finished completely. (Total cycle time: %lu ms)\n", GetTickCount() - start_time);
-}
-
-
-
-
-
 static inline bool ShellExecuteWithVerb(const char* path, const char* verb, bool async) {
     SHELLEXECUTEINFOA sei = {0};
     sei.cbSize = sizeof(SHELLEXECUTEINFOA);

@@ -22,7 +22,7 @@ static const MotionBinding G_VIM_BINDINGS[] = {
     
     { 'S', HOTKEY_MOD_NONE,  MOTION_DELETE_CHAR_INSERT,            "DelInsert",           HandleDeleteInsert,             MODE_NORMAL },
     
-    { 'D', HOTKEY_MOD_NONE,  MOTION_DELETE_CHAR_PERSISTENT, "DelPersistent", HandlePersistentDelete,   MODE_NORMAL },
+    { 'D', HOTKEY_MOD_SHIFT,  MOTION_DELETE_CHAR_PERSISTENT, "DelPersistent", HandlePersistentDelete,   MODE_NORMAL },
     
     { 'S', HOTKEY_MOD_SHIFT, MOTION_DELETE_LINE_INSERT,     "DelLineInsert", HandleDeleteLineInsert,   MODE_NORMAL },
     

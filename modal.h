@@ -22,7 +22,6 @@ static inline void UpdateCursorForMode(EditorMode mode) {
     extern HWND hPopupWnd;
     if (!hPopupWnd || !IsWindow(hPopupWnd)) return;
     
-    // Force a cursor update
     POINT pt;
     GetCursorPos(&pt);
     ScreenToClient(hPopupWnd, &pt);

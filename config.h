@@ -47,7 +47,7 @@ static const char* ListOfShitToIgnore[30] = {
 };
 
 static const char* MusicPath = "D:\\Music";
-static const char* VideosPath = "C:\\videos";
+static const char* VideosPath = "D:\\videos";
 static const char* IconPath = "D:\\retard games\\miscellaneous\\switch_window.ico";
 
 typedef struct {

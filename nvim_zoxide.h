@@ -199,14 +199,14 @@ static void TriggerNvimZoxide(int version, HWND hPopupWnd) {
     }
     
     if (version == 0) { 
-        PromptUser(list, "📝 Neovide", g_cached_nvim_count, 220, 650, 32, 
+        PromptUser(list, "📝 Neovide", g_cached_nvim_count, 520, 650, 32, 
                    nvim_refresh_callback, 
                    neovide_enter_callback, 
                    NULL, 
                    NULL, 
                    NULL);
     } else {
-        PromptUser(list, "📝 Nvim", g_cached_nvim_count, 220, 650, 32, 
+        PromptUser(list, "📝 Nvim", g_cached_nvim_count, 520,650, 32, 
                    nvim_refresh_callback, 
                    nvim_enter_callback, 
                    NULL, 
