@@ -87,12 +87,12 @@ static bool HandleVideoPlayer(int vk_code, int modifiers, const char* current_ti
                     initial_items[i] = G_FILES_WITH_TIME[i].name;
                 }
                 
-                PromptUser(initial_items,"🎥 Player",GetFileCount(), 220, 350,32,
-                                    video_refresh_callback,  // refresh -> filters on typing
-                                    video_enter_callback,    // enter -> plays video
-                                    NULL,                    // ctrl enter
+                PromptUser(initial_items,"🎥 Player",GetFileCount(), 520, 650,32,
+                                    video_refresh_callback,  
+                                    video_enter_callback,    
+                                    NULL,                    
                                     NULL,
-                                    NULL);                   // tab
+                                    NULL);                   
                 
                 free((void*)initial_items);
                 return true;
