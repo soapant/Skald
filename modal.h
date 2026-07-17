@@ -33,6 +33,12 @@ static inline void SetMode(EditorMode mode) {
     g_vim_mode = g_mode_names[mode];
     printf("[VIM] Mode: %s\n", g_mode_names[mode]);
     
+    extern HWND hListBox;
+    if (mode == MODE_INSERT && hListBox && IsWindow(hListBox)) {
+        SendMessageA(hListBox, LB_SETCURSEL, -1, 0);  // -1 = no selection
+        printf("[VIM] Cleared listbox selection (entering INSERT)\n");
+    }
+    
     UpdateCursorForMode(mode);
     
     extern HWND hPopupWnd;

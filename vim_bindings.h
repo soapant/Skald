@@ -43,6 +43,7 @@ static const MotionBinding G_VIM_BINDINGS[] = {
 static const SequenceBinding G_VIM_SEQUENCE_BINDINGS[] = {
   
     { "JK", MOTION_ENTER_NORMAL,       "Enter Mapping", HandleEnterNormal,      false, MODE_INSERT },
+    { "JS", MOTION_DELETE_LINE_NORMAL,  "Delete Line Mapping", HandleDeleteLineNormal,      false, MODE_INSERT },
     { "JQ", MOTION_EXIT_WINDOW,       "Exit Mapping",  HandleExitWindow,       false, MODE_INSERT },
     { "dd", MOTION_DELETE_LINE,        "DeleteLine",    HandleDeleteLine,       false, MODE_NORMAL },
     { "gg", MOTION_MOVE_LISTBOX_START, "ListboxStart",  HandleMoveListboxStart, false, MODE_NORMAL },

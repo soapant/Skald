@@ -1,6 +1,4 @@
-maybe just maybe do the whole vim motions for my entire project||[Project: Cprogram]
 also maybe you can like link todos to each other||[Project: Cprogram]
-make my own window manager (kind of)||[Project: Cprogram]
-make a global sort of macro input type shit so like one for fortnite that jsut holds down something ykwim||[Project: Cprogram]
 add a sort of reminder so like i can queu a windwo to open after something happens i can define easily||[Project: Cprogram]
-also maybe add a spell checker or something no idea how i would make it lightweight tho||[Project: Cprogram]
+maybe work on the header a bit youve been neglecting it||[Project: HeaderC]
+implement my own ocr so i can shove it inside myprogram||[Project: HeaderC]
