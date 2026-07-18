@@ -334,7 +334,7 @@ static void todo_render_callback(HDC hdc, const char* text, RECT* rect, BOOL is_
                                   CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "0xProto Nerd Font");
     HFONT hOldFont = (HFONT)SelectObject(hdc, hMainFont);
     
-    SetTextColor(hdc, is_selected ? RGB(255,255,255) : COLOR_TEXT);
+    SetTextColor(hdc, COLOR_TEXT);
     DrawTextA(hdc, main_text, -1, &textRect, DT_SINGLELINE | DT_TOP);
     
     if (strlen(tag_text) > 0) {
@@ -343,7 +343,8 @@ static void todo_render_callback(HDC hdc, const char* text, RECT* rect, BOOL is_
         tagRect.top += 24;
         
         COLORREF assigned_color = GetTagColor(tag_text);
-        SetTextColor(hdc, is_selected ? RGB(255, 255, 255) : assigned_color);
+        
+        SetTextColor(hdc,assigned_color);
         
         DrawTextA(hdc, tag_text, -1, &tagRect, DT_LEFT | DT_TOP);
     }

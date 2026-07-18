@@ -5,15 +5,10 @@
 #include <stdio.h>
 #include <string.h>
 #include "types.h"
+#include "common_ui.h"
 
-// ============================================================
-// CONFIGURATION
-// ============================================================
 #define NUMBER_SHORTCUT_DELAY_MS 200  // Increased to 300ms
 
-// ============================================================
-// STATE
-// ============================================================
 static struct {
     int first_digit;
     int state;
@@ -23,36 +18,39 @@ static struct {
     bool close_popup;
 } g_num_shortcut_state = {0, 0, 0, NULL, NULL, true};
 
-// ============================================================
-// HELPER: Execute a number shortcut selection
-// ============================================================
 static void ExecuteNumberShortcut(int number, bool close_popup) {
     if (!g_num_shortcut_state.hListBox) return;
-    
+
     int index = number - 1;
-    int count = SendMessageA(g_num_shortcut_state.hListBox, LB_GETCOUNT, 0, 0);
-    
-    if (index < count && index >= 0) {
-        SendMessageA(g_num_shortcut_state.hListBox, LB_SETCURSEL, index, 0);
-        
+    int count = UI_GetCount(g_num_shortcut_state.hListBox);
+
+    if (index >= 0 && index < count) {
+        // Select the item
+        UI_SetSelection(g_num_shortcut_state.hListBox, index);
+
+        // Get the selected text
         char selected_text[256] = {0};
-        SendMessageA(g_num_shortcut_state.hListBox, LB_GETTEXT, index, (LPARAM)selected_text);
-        
+        UI_GetText(g_num_shortcut_state.hListBox, index, selected_text, sizeof(selected_text));
+
+        // Store in global output buffer
         strncpy(output_buffer, selected_text, sizeof(output_buffer) - 1);
-        
-        // DON'T update the edit control here - it causes refresh!
-        // Just execute the callback
-        
+        output_buffer[sizeof(output_buffer) - 1] = '\0';
+
+        // Execute the callback (e.g., launch app, open file)
         if (g_enter_callback != NULL) {
             g_enter_callback(output_buffer);
         }
-        
+
+        // Close popup if requested
         selection_complete = close_popup;
-        printf("[NUM-SHORTCUT] Selected item %d: %s (close=%d)\n", index + 1, output_buffer, close_popup);
+        printf("[NUM-SHORTCUT] Selected item %d: %s (close=%d)\n",
+               index + 1, output_buffer, close_popup);
     } else {
-        printf("[NUM-SHORTCUT] Item %d doesn't exist (only %d items)\n", index + 1, count);
+        printf("[NUM-SHORTCUT] Item %d doesn't exist (only %d items)\n",
+               index + 1, count);
     }
-    
+
+    // Reset state regardless of outcome
     g_num_shortcut_state.state = 0;
     g_num_shortcut_state.first_digit = 0;
 }
@@ -73,9 +71,6 @@ static void CALLBACK NumberShortcutTimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEv
     g_num_shortcut_state.first_digit = 0;
 }
 
-// ============================================================
-// MAIN HANDLER
-// ============================================================
 static bool HandleNumberShortcut(int wParam, HWND hListBox, HWND hEditControl) {
     if (wParam < '0' || wParam > '9') return false;
     
@@ -110,9 +105,6 @@ static bool HandleNumberShortcut(int wParam, HWND hListBox, HWND hEditControl) {
         
         g_num_shortcut_state.timer_id = SetTimer(NULL, 0, NUMBER_SHORTCUT_DELAY_MS, NumberShortcutTimerProc);
         
-        // REMOVED: SetWindowTextA - this was the problem!
-        // No longer updating the edit control
-        
         printf("[NUM-SHORTCUT] Waiting for second digit... (first=%d)\n", digit);
         return true;
     } else if (g_num_shortcut_state.state == 1) {
@@ -131,9 +123,6 @@ static bool HandleNumberShortcut(int wParam, HWND hListBox, HWND hEditControl) {
     return false;
 }
 
-// ============================================================
-// RESET STATE
-// ============================================================
 static void ResetNumberShortcutState(void) {
     if (g_num_shortcut_state.timer_id != 0) {
         KillTimer(NULL, g_num_shortcut_state.timer_id);
