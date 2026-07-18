@@ -254,7 +254,7 @@ static void todo_refresh_callback(const char* filter, HWND hListBox) {
 static void todo_enter_callback(const char* selection) {
     int selected_index = LB_ERR;
     if (hListBox != NULL) {
-        selected_index = SendMessageA(hListBox, LB_GETCURSEL, 0, 0);
+        selected_index = UI_GetSelection(hListBox);
     }
     
     if (selected_index != LB_ERR) {
@@ -275,7 +275,7 @@ static void todo_enter_callback(const char* selection) {
 static void todo_ctrlenter_callback(const char* selection) {
     int selected_index = LB_ERR;
     if (hListBox != NULL) {
-        selected_index = SendMessageA(hListBox, LB_GETCURSEL, 0, 0);
+        selected_index = UI_GetSelection(hListBox);
     }
     
     if (selected_index != LB_ERR) {

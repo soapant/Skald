@@ -150,8 +150,8 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
 
         if (wParam == VK_UP || wParam == VK_DOWN) {
             if (hListBox != NULL) {
-                int count = SendMessageA(hListBox, LB_GETCOUNT, 0, 0);
-                int sel = SendMessageA(hListBox, LB_GETCURSEL, 0, 0);
+                int count = UI_GetCount(hListBox);
+                int sel = UI_GetSelection(hListBox);
                 
                 
                 if (count > 0) {
@@ -164,7 +164,7 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
                             sel = (sel < count - 1) ? sel + 1 : count - 1;
                         }
                     }
-                    SendMessageA(hListBox, LB_SETCURSEL, sel, 0);
+                    UI_SetSelection(hListBox, sel);
                     SendMessageA(hParent, WM_COMMAND, MAKEWPARAM(IDC_LIST_BOX, LBN_SELCHANGE), (LPARAM)hListBox);
                 }
             }
@@ -177,11 +177,11 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
             int selected_index = LB_ERR;
 
             if (hListBox != NULL) {
-                selected_index = SendMessageA(hListBox, LB_GETCURSEL, 0, 0);
+                selected_index = UI_GetSelection(hListBox);
             }
 
             if (selected_index != LB_ERR && hListBox != NULL) {
-                SendMessageA(hListBox, LB_GETTEXT, selected_index, (LPARAM)output_buffer);
+                UI_GetText(hListBox, selected_index, output_buffer, sizeof(output_buffer));
             } else {
                 GetWindowTextA(hwnd, output_buffer, sizeof(output_buffer));
             }
@@ -479,20 +479,26 @@ LRESULT CALLBACK ListBoxSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM 
 }
 void CreateChildControls(HWND hwndParent, HFONT hFont, const char* list[], int count, const WindowLayout* layout) {
     HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtrA(hwndParent, GWLP_HINSTANCE);
-
     hEditControl = CreateWindowExA(
         0, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
         20, 50, layout->w - 40, 40, hwndParent, (HMENU)IDC_INPUT_BOX, hInstance, NULL
     );
+    if (!hEditControl) {
+        return;
+    }
     SendMessageA(hEditControl, WM_SETFONT, (WPARAM)hFont, TRUE);
     SetWindowSubclass(hEditControl, EditSubclassProc, 0, 0);
 
     if (count > 0) {
+        printf("[CHILD] Creating listbox...\n");
         hListBox = CreateWindowExA(
             0, "LISTBOX", "", 
             WS_CHILD | WS_VISIBLE | LBS_NOTIFY | WS_VSCROLL | LBS_HASSTRINGS | LBS_OWNERDRAWFIXED,
             20, 105, layout->w - 40, layout->h - 115, hwndParent, (HMENU)IDC_LIST_BOX, hInstance, NULL
         );
+        if (!hListBox) {
+            return;
+        }
         SetWindowSubclass(hListBox, ListBoxSubclassProc, 0, 0);
 
         SendMessageA(hListBox, WM_SETFONT, (WPARAM)hFont, TRUE);
@@ -500,23 +506,26 @@ void CreateChildControls(HWND hwndParent, HFONT hFont, const char* list[], int c
 
         int max_width = layout->w - 40;
         HDC hdc = GetDC(hListBox);
+        if (!hdc) {
+            return;
+        }
         HFONT hOldFont = (HFONT)SelectObject(hdc, hFont);
         
         for (int i = 0; i < count; i++) {
-            SendMessageA(hListBox, LB_ADDSTRING, 0, (LPARAM)list[i]);
+            UI_AddString(hListBox, list[i]);   // <-- potential crash here
             
             SIZE sz;
-            GetTextExtentPoint32A(hdc, list[i], (int)strlen(list[i]), &sz);
-            if (sz.cx + 40 > max_width) {
-                max_width = sz.cx + 40; 
+            if (!GetTextExtentPoint32A(hdc, list[i], (int)strlen(list[i]), &sz)) {
+            } else {
+                if (sz.cx + 40 > max_width) max_width = sz.cx + 40;
             }
         }
         
         SelectObject(hdc, hOldFont);
         ReleaseDC(hListBox, hdc);
-
-        SendMessageA(hListBox, LB_SETHORIZONTALEXTENT, max_width, 0);
+        UI_SetHorizontalExtent(hListBox, max_width);   // <-- potential crash here
     }
+    printf("[CHILD] Exit\n");
 }
 void ForceWindowFocus(HWND hwndTarget, HWND hwndInput) {
     HWND hForegroundWnd = GetForegroundWindow();
@@ -701,6 +710,7 @@ char* PromptUser(const char* window_list[],const char* window_title,int count, i
     g_ctrl_enter_callback = NULL;
     g_tab_callback = NULL;
     g_render_callback = NULL;
+    
 
     printf("[DEBUG-UI] Returning from PromptUser. Buffer Length: %zu\n", strlen(output_buffer));
     return (strlen(output_buffer) > 0) ? output_buffer : NULL;

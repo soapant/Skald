@@ -85,7 +85,7 @@ static bool HandleNumberShortcut(int wParam, HWND hListBox, HWND hEditControl) {
     if (!hListBox) return false;
     
     int digit = wParam - '0';
-    int count = SendMessageA(hListBox, LB_GETCOUNT, 0, 0);
+    int count = UI_GetCount(hListBox);
     if (count == 0) return false;
     
     bool close_popup = true;

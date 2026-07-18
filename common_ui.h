@@ -1,28 +1,62 @@
 #ifndef COMMON_UI_H
 #define COMMON_UI_H
 
-#include "modal.h"
 #include <windows.h>
 #include <shlwapi.h>
 #include <stdbool.h>
 #include <string.h>
+#include <stdio.h>
+
+static inline int UI_GetSelection(HWND hList) {
+    return (int)SendMessageA(hList, LB_GETCURSEL, 0, 0);
+}
+
+static inline void UI_ResetContent(HWND hList) {
+    SendMessageA(hList, LB_RESETCONTENT, 0, 0);
+}
+
+static inline void UI_AddString(HWND hList, const char* text) {
+    if (!hList || !text) return;
+    SendMessageA(hList, LB_ADDSTRING, 0, (LPARAM)text);
+}
+
+static inline void UI_SetSelection(HWND hList, int index) {
+    SendMessageA(hList, LB_SETCURSEL, index, 0);
+}
+
+static inline int UI_GetCount(HWND hList) {
+    return (int)SendMessageA(hList, LB_GETCOUNT, 0, 0);
+}
+
+static inline void UI_GetText(HWND hList, int index, char* buffer, int bufferSize) {
+    SendMessageA(hList, LB_GETTEXT, index, (LPARAM)buffer);
+    buffer[bufferSize - 1] = '\0';
+}
+
+static inline void UI_SetHorizontalExtent(HWND hList, int width) {
+    SendMessageA(hList, LB_SETHORIZONTALEXTENT, width, 0);
+}
+
+#include "modal.h"
+
+
 static inline void PopulateListBox(HWND hListBox, const char* filter, 
                                    const char** items, int item_count,
                                    bool (*filter_match)(const char* item, const char* filter)) {
     if (!hListBox) return;
     
     // Save current selection
-    int current_sel = SendMessageA(hListBox, LB_GETCURSEL, 0, 0);
+    int current_sel = UI_GetSelection(hListBox);
     char current_text[256] = {0};
     if (current_sel != LB_ERR) {
-        SendMessageA(hListBox, LB_GETTEXT, current_sel, (LPARAM)current_text);
+        UI_GetText(hListBox, current_sel, current_text, sizeof(current_text));
     }
     
-    SendMessageA(hListBox, LB_RESETCONTENT, 0, 0);
+    UI_ResetContent(hListBox);
     
     if (!filter || strlen(filter) == 0) {
         for (int i = 0; i < item_count; i++) {
-            SendMessageA(hListBox, LB_ADDSTRING, 0, (LPARAM)items[i]);
+            UI_AddString(hListBox, items[i]);
         }
     } else {
         for (int i = 0; i < item_count; i++) {
@@ -33,21 +67,21 @@ static inline void PopulateListBox(HWND hListBox, const char* filter,
                 match = (StrStrIA(items[i], filter) != NULL);
             }
             if (match) {
-                SendMessageA(hListBox, LB_ADDSTRING, 0, (LPARAM)items[i]);
+                UI_AddString(hListBox, items[i]);
             }
         }
     }
     
-    int new_count = SendMessageA(hListBox, LB_GETCOUNT, 0, 0);
+    int new_count = UI_GetCount(hListBox);
     
     if (new_count > 0 && IsNormalMode()) {
         // Try to restore by text
         if (strlen(current_text) > 0) {
             for (int i = 0; i < new_count; i++) {
                 char text[256] = {0};
-                SendMessageA(hListBox, LB_GETTEXT, i, (LPARAM)text);
+                UI_GetText(hListBox, i, text, sizeof(text));
                 if (strcmp(text, current_text) == 0) {
-                    SendMessageA(hListBox, LB_SETCURSEL, i, 0);
+                    UI_SetSelection(hListBox, i);
                     return;
                 }
             }
@@ -55,9 +89,9 @@ static inline void PopulateListBox(HWND hListBox, const char* filter,
         
         // Restore by index
         if (current_sel != LB_ERR && current_sel < new_count) {
-            SendMessageA(hListBox, LB_SETCURSEL, current_sel, 0);
+            UI_SetSelection(hListBox, current_sel);
         } else {
-            SendMessageA(hListBox, LB_SETCURSEL, 0, 0);
+            UI_SetSelection(hListBox, 0);
         }
     }
 }
@@ -69,5 +103,6 @@ static inline bool IsPopupActive(HWND hPopupWnd) {
 static inline bool CheckAndBlockIfPopupActive(HWND hPopupWnd) {
     return IsPopupActive(hPopupWnd);
 }
+
 
 #endif 
