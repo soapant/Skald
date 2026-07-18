@@ -21,6 +21,7 @@ typedef struct {
     bool is_high_priority;
     bool is_low_priority;
 } TodoFlags;
+
 static void parse_todo_flags(char* input, TodoFlags* flags, char* clean_text) {
     memset(flags, 0, sizeof(TodoFlags));
     clean_text[0] = '\0';
@@ -239,36 +240,45 @@ static void remove_todo_item_from_file(const char* item_to_remove) {
 }
 
 static void todo_refresh_callback(const char* filter, HWND hListBox) {
-    char todo_lines[100][512];
+    char todo_lines[MAX_ITEMS][512];
     int todo_count = ReadMdFile(todo_lines, TODO_FILE_PATH);
     
-    const char** items = (const char**)malloc(todo_count * sizeof(char*));
-    if (!items) return;
+    const char* items[MAX_ITEMS];
     for (int i = 0; i < todo_count; i++) {
         items[i] = todo_lines[i];
     }
+    
     PopulateListBox(hListBox, filter, items, todo_count, NULL);
-    free(items);
 }
 
+
+
 static void todo_enter_callback(const char* selection) {
-    int selected_index = LB_ERR;
-    if (hListBox != NULL) {
-        selected_index = UI_GetSelection(hListBox);
+    char input[256] = {0};
+    if (hEditControl != NULL) {
+        GetWindowTextA(hEditControl, input, sizeof(input));
     }
     
-    if (selected_index != LB_ERR) {
-        remove_todo_item_from_file(selection);
-        printf("[TODO] Removed: %s\n", selection);
-    } else {
-        char input[256] = {0};
-        if (hEditControl != NULL) {
-            GetWindowTextA(hEditControl, input, sizeof(input));
-            if (strlen(input) > 0) {
-                add_todo_to_file(input);
-                printf("[TODO] Added: %s\n", input);
-            }
-        }
+    input[strcspn(input, "\r\n")] = '\0';
+    size_t input_len = strlen(input);
+
+    int selected_index = UI_GetSelection(hListBox);
+    
+    if (selected_index != LB_ERR && (input_len == 0 || strcmp(g_populated_cache[selected_index], input) == 0)) {
+        
+        const char* item_to_remove = g_populated_cache[selected_index];
+        
+        remove_todo_item_from_file(item_to_remove);
+        printf("[TODO] Removed: %s\n", item_to_remove);
+        
+        todo_refresh_callback(input, hListBox);
+    } 
+    else if (input_len > 0) {
+        add_todo_to_file(input);
+        printf("[TODO] Added: %s\n", input);
+        
+        SetWindowTextA(hEditControl, "");
+        todo_refresh_callback("", hListBox);
     }
 }
 

@@ -56,9 +56,6 @@ static void RebuildCommandCache(void) {
     free(lines);
 }
 
-// ============================================================
-// REFRESH CALLBACK
-// ============================================================
 static void terminal_refresh_callback(const char* filter, HWND hListBox) {
     if (!hListBox) return;
     
@@ -66,24 +63,9 @@ static void terminal_refresh_callback(const char* filter, HWND hListBox) {
         RebuildCommandCache();
     }
     
-    UI_ResetContent(hListBox);
-    
-    if (!filter || strlen(filter) == 0) {
-        for (int i = 0; i < g_cached_command_count; i++) {
-            UI_AddString(hListBox, g_cached_commands[i]);
-        }
-    } else {
-        for (int i = 0; i < g_cached_command_count; i++) {
-            if (StrStrIA(g_cached_commands[i], filter) != NULL) {
-                UI_AddString(hListBox, g_cached_commands[i]);
-            }
-        }
-    }
-    
-    if (g_cached_command_count > 0) {
-        UI_SetSelection(hListBox, 0);
-    }
+    PopulateListBox(hListBox, filter, (const char**)g_cached_commands, g_cached_command_count, NULL);
 }
+
 
 static void RunTerminalCommand(const char* Command, bool save_to_history) {
     if (Command == NULL || strlen(Command) == 0) return;
@@ -116,9 +98,6 @@ static void RunTerminalCommand(const char* Command, bool save_to_history) {
         fclose(f);
     }
     
-    // ============================================================
-    // FAST: CreateProcess directly - NO system() delay!
-    // ============================================================
     char cmd[2048];
     snprintf(cmd, sizeof(cmd), 
              "\"C:\\Program Files\\Alacritty\\alacritty.exe\" -e \"C:\\Program Files\\Git\\bin\\bash.exe\" \"%s\"", 
