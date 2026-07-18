@@ -2,3 +2,6 @@ code
 random
 nvim
 video
+code
+main
+nigga

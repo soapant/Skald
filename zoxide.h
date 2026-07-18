@@ -57,9 +57,8 @@ static void RebuildZoxideCache(void) {
     free(lines);
 }
 
-// ============================================================
-// REFRESH CALLBACK
-// ============================================================
+
+
 static void zoxide_refresh_callback(const char* filter, HWND hListBox) {
     if (!hListBox) return;
     
@@ -67,24 +66,10 @@ static void zoxide_refresh_callback(const char* filter, HWND hListBox) {
         RebuildZoxideCache();
     }
     
-    UI_ResetContent(hListBox);
-    
-    if (!filter || strlen(filter) == 0) {
-        for (int i = 0; i < g_cached_zoxide_count; i++) {
-            UI_AddString(hListBox, g_cached_zoxide_commands[i]);
-        }
-    } else {
-        for (int i = 0; i < g_cached_zoxide_count; i++) {
-            if (StrStrIA(g_cached_zoxide_commands[i], filter) != NULL) {
-                UI_AddString(hListBox, g_cached_zoxide_commands[i]);
-            }
-        }
-    }
-    
-    if (g_cached_zoxide_count > 0) {
-        UI_SetSelection(hListBox, 0);
-    }
+    PopulateListBox(hListBox, filter, (const char**)g_cached_zoxide_commands, g_cached_zoxide_count, NULL);
 }
+
+
 
 // ============================================================
 // ENTER CALLBACK

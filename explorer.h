@@ -67,22 +67,8 @@ static void explorer_refresh_callback(const char* filter, HWND hListBox) {
         RebuildExplorerCache();
     }
     
-    UI_ResetContent(hListBox);
-    
-    if (!filter || strlen(filter) == 0) {
-        for (int i = 0; i < g_cached_explorer_count; i++) {
-            UI_AddString(hListBox, g_cached_explorer_commands[i]);
-        }
-    } else {
-        for (int i = 0; i < g_cached_explorer_count; i++) {
-            if (StrStrIA(g_cached_explorer_commands[i], filter) != NULL) {
-                UI_AddString(hListBox, g_cached_explorer_commands[i]);
-            }
-        }
-    }
-    
+    PopulateListBox(hListBox, filter, (const char**)g_cached_explorer_commands, g_cached_explorer_count, NULL);
 }
-
 
 
 
@@ -125,9 +111,6 @@ static void explorer_enter_callback(const char* selection) {
         }
     }
 }
-
-
-
 
 static void TriggerExplorer() {
     if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
