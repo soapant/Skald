@@ -33,12 +33,16 @@ static inline void UpdateCursorForMode(EditorMode mode) {
 static inline void SetMode(EditorMode mode) {
     g_current_mode = mode;
     g_vim_mode = g_mode_names[mode];
-    printf("[VIM] Mode: %s\n", g_mode_names[mode]);
     
     extern HWND hListBox;
     if (hListBox && IsWindow(hListBox)) {
-          g_SelectedIndex = 0;
-          SendMessageA(hListBox, LB_SETCARETINDEX, 0, FALSE);
+          if (g_TotalMatches == 0) {
+              g_SelectedIndex = -1;
+              SendMessageA(hListBox, LB_SETCARETINDEX, -1, FALSE);
+          } else {
+            g_SelectedIndex = 0;
+            SendMessageA(hListBox, LB_SETCARETINDEX, 0, FALSE);
+          }
     }
     
     UpdateCursorForMode(mode);

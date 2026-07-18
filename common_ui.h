@@ -129,6 +129,7 @@ static inline void UI_UpdateList(HWND hList, const char* filter, const char** it
 #include "modal.h"
 
 
+
 static inline void PopulateListBox(HWND hListBox, const char* filter, 
                                    const char** items, int item_count,
                                    bool (*filter_match)(const char* item, const char* filter)) {
@@ -139,9 +140,10 @@ static inline void PopulateListBox(HWND hListBox, const char* filter,
     if (current_sel >= 0 && current_sel < g_populated_count) {
         strncpy(current_text, g_populated_cache[current_sel], sizeof(current_text) - 1);
     }
+    
+    int total_matches = 0;
 
     static int matching_indices[4000];
-    int total_matches = 0;
 
     for (int i = 0; i < item_count && total_matches < 4000; i++) {
         if (!items[i]) continue;
@@ -168,6 +170,7 @@ static inline void PopulateListBox(HWND hListBox, const char* filter,
             total_matches++;
         }
     }
+    g_TotalMatches = total_matches; 
     
     int pool_max = 60;
     
