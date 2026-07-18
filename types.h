@@ -5,18 +5,12 @@
 #include <stdbool.h>
 #include <string.h>
 
-// ============================================================
-// FORWARD DECLARATIONS - MUST COME FIRST
-// ============================================================
-
-// Declare callback types first
 typedef void (*RefreshCallback)(const char* filter, HWND hListBox);
 typedef void (*EnterCallback)(const char* selection);
 typedef void (*CtrlEnterCallback)(const char* selection);
 typedef void (*TabCallback)(void);
 typedef void (*RenderCallback)(HDC hdc, const char* text, RECT* rect, BOOL is_selected);
 
-// THEN declare PromptUser (uses the callback types above)
 char* PromptUser(const char* window_list[], const char* window_title, int count, 
                  int height, int width, int item_height, 
                  RefreshCallback refresh_callback, 
@@ -25,9 +19,6 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
                  TabCallback tab_callback,
                  RenderCallback render_callback);
 
-// ============================================================
-// STRUCT DEFINITIONS
-// ============================================================
 
 typedef struct {
     int index;
@@ -75,4 +66,5 @@ extern const char* g_vim_mode;
 #define MAX_ITEMS 1000
 extern char g_populated_cache[MAX_ITEMS][512];
 extern int g_populated_count;
-#endif // TYPES_H
+extern int g_view_offset;
+#endif

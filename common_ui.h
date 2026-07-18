@@ -40,7 +40,6 @@ static inline void TimerEnd(WinTimer t, const char* operation_name) {
 
 static inline int UI_GetSelection(HWND hList) {
     int sel = g_SelectedIndex;
-    printf("[DEBUG-UI] UI_GetSelection called. g_SelectedIndex is currently: %d\n", sel);
     return sel;
 }
 
@@ -133,20 +132,18 @@ static inline void UI_UpdateList(HWND hList, const char* filter, const char** it
 static inline void PopulateListBox(HWND hListBox, const char* filter, 
                                    const char** items, int item_count,
                                    bool (*filter_match)(const char* item, const char* filter)) {
-  
     if (!hListBox) return;
     
     int current_sel = g_SelectedIndex; 
     char current_text[256] = {0};
-    
     if (current_sel >= 0 && current_sel < g_populated_count) {
         strncpy(current_text, g_populated_cache[current_sel], sizeof(current_text) - 1);
     }
 
-    UI_ResetContent(hListBox);
-    g_populated_count = 0;
+    static int matching_indices[4000];
+    int total_matches = 0;
 
-    for (int i = 0; i < item_count && g_populated_count < MAX_ITEMS; i++) {
+    for (int i = 0; i < item_count && total_matches < 4000; i++) {
         if (!items[i]) continue;
 
         bool match = false;
@@ -159,30 +156,67 @@ static inline void PopulateListBox(HWND hListBox, const char* filter,
         }
 
         if (match) {
-            strncpy(g_populated_cache[g_populated_count], items[i], 511);
-            g_populated_cache[g_populated_count][511] = '\0';
-            
-            g_populated_cache[g_populated_count][strcspn(g_populated_cache[g_populated_count], "\r\n")] = '\0';
-            
-            UI_AddString(hListBox, g_populated_cache[g_populated_count]);
+            matching_indices[total_matches] = i;
+            total_matches++;
         }
     }
 
+    if (total_matches == 0 && item_count > 0) {
+        int force_count = (item_count < 30) ? item_count : 30;
+        for (int i = 0; i < force_count; i++) {
+            matching_indices[total_matches] = i;
+            total_matches++;
+        }
+    }
+
+    int pool_max = 60;
+    
+    if (current_sel == -1 || current_sel == LB_ERR) {
+        g_view_offset = 0;
+    } else {
+        if (current_sel < g_view_offset) {
+            g_view_offset = current_sel; 
+        } else if (current_sel >= g_view_offset + pool_max) {
+            g_view_offset = current_sel - pool_max + 1; 
+        }
+    }
+
+    if (g_view_offset + pool_max > total_matches) {
+        g_view_offset = total_matches - pool_max;
+    }
+    if (g_view_offset < 0) g_view_offset = 0;
+
+    int display_count = total_matches - g_view_offset;
+    if (display_count > pool_max) display_count = pool_max;
+
+    UI_ResetContent(hListBox);
+    g_populated_count = 0;
+
+    for (int i = 0; i < display_count; i++) {
+        int raw_data_index = matching_indices[g_view_offset + i];
+        if (!items[raw_data_index]) continue;
+        
+        strncpy(g_populated_cache[g_populated_count], items[raw_data_index], 511);
+        g_populated_cache[g_populated_count][511] = '\0';
+        g_populated_cache[g_populated_count][strcspn(g_populated_cache[g_populated_count], "\r\n")] = '\0';
+        
+        g_populated_count++;
+    }
+
+    int window_allocation_count = (g_populated_count < 30) ? 30 : g_populated_count;
+    SendMessageA(hListBox, LB_SETCOUNT, window_allocation_count, 0);
+    
     if (g_populated_count > 0 && IsNormalMode()) {
         if (strlen(current_text) > 0) {
             for (int i = 0; i < g_populated_count; i++) {
                 if (strcmp(g_populated_cache[i], current_text) == 0) {
-                    UI_SetSelection(hListBox, i);
+                    g_SelectedIndex = i;
+                    UI_Redraw(hListBox);
                     return;
                 }
             }
         }
-        
-        if (current_sel != LB_ERR && current_sel < g_populated_count) {
-            UI_SetSelection(hListBox, current_sel);
-        } else {
-            g_SelectedIndex = -1; 
-        }
+        g_SelectedIndex = (current_sel != LB_ERR && current_sel < g_populated_count) ? current_sel : 0;
     }
     
 }
