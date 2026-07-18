@@ -1,6 +1,7 @@
 #ifndef COMMON_UI_H
 #define COMMON_UI_H
 
+#include <sec_api/stdio_s.h>
 #include <windows.h>
 #include <shlwapi.h>
 #include <stdbool.h>
@@ -9,6 +10,33 @@
 #include "types.h"
 
 
+
+typedef struct {
+    LARGE_INTEGER start;
+    LARGE_INTEGER frequency;
+} WinTimer;
+
+static inline WinTimer TimerStart() {
+    WinTimer t;
+    QueryPerformanceFrequency(&t.frequency);
+    QueryPerformanceCounter(&t.start);
+    return t;
+}
+
+static inline void TimerEnd(WinTimer t, const char* operation_name) {
+    LARGE_INTEGER end;
+    QueryPerformanceCounter(&end);
+
+    double elapsed_us = (double)(end.QuadPart - t.start.QuadPart) * 1000000.0 / (double)t.frequency.QuadPart;
+
+    if (elapsed_us < 1000.0) {
+        printf("[ TIMER] %-25s : %8.2f µs\n", operation_name, elapsed_us);
+    } else if (elapsed_us < 1000000.0) {
+        printf("[ TIMER] %-25s : %8.2f ms\n", operation_name, elapsed_us / 1000.0);
+    } else {
+        printf("[ TIMER] %-25s : %8.2f s\n", operation_name, elapsed_us / 1000000.0);
+    }
+}
 
 static inline int UI_GetSelection(HWND hList) {
     int sel = g_SelectedIndex;
@@ -105,6 +133,7 @@ static inline void UI_UpdateList(HWND hList, const char* filter, const char** it
 static inline void PopulateListBox(HWND hListBox, const char* filter, 
                                    const char** items, int item_count,
                                    bool (*filter_match)(const char* item, const char* filter)) {
+  
     if (!hListBox) return;
     
     int current_sel = g_SelectedIndex; 
@@ -155,6 +184,7 @@ static inline void PopulateListBox(HWND hListBox, const char* filter,
             g_SelectedIndex = -1; 
         }
     }
+    
 }
 static inline bool IsPopupActive(HWND hPopupWnd) {
     return hPopupWnd != NULL && IsWindow(hPopupWnd);
