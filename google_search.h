@@ -64,22 +64,22 @@ static void google_refresh_callback(const char* filter, HWND hListBox) {
         RebuildGoogleCache();
     }
     
-    SendMessageA(hListBox, LB_RESETCONTENT, 0, 0);
+    UI_ResetContent(hListBox);
     
     if (!filter || strlen(filter) == 0) {
         for (int i = 0; i < g_cached_google_count; i++) {
-            SendMessageA(hListBox, LB_ADDSTRING, 0, (LPARAM)g_cached_google_queries[i]);
+            UI_AddString(hListBox, g_cached_google_queries[i]);
         }
     } else {
         for (int i = 0; i < g_cached_google_count; i++) {
             if (StrStrIA(g_cached_google_queries[i], filter) != NULL) {
-                SendMessageA(hListBox, LB_ADDSTRING, 0, (LPARAM)g_cached_google_queries[i]);
+                UI_AddString(hListBox, g_cached_google_queries[i]);
             }
         }
     }
     
     if (g_cached_google_count > 0) {
-        SendMessageA(hListBox, LB_SETCURSEL, 0, 0);
+        UI_SetSelection(hListBox, 0);
     }
 }
 
@@ -123,7 +123,7 @@ static void DoGoogleSearch(const char* query) {
 static void google_enter_callback(const char* selection) {
     int selected_index = LB_ERR;
     if (hListBox != NULL) {
-        selected_index = SendMessageA(hListBox, LB_GETCURSEL, 0, 0);
+        selected_index = UI_GetSelection(hListBox);
     }
     
     if (selected_index == LB_ERR) {

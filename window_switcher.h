@@ -39,25 +39,25 @@ static void FetchExeNameOnDemand(HWND hwnd, char* outExe, DWORD maxLen) {
 static void switcher_refresh_callback(const char* filter, HWND hListBox) {
     if (!hListBox) return;
     
-    SendMessageA(hListBox, LB_RESETCONTENT, 0, 0);
+    UI_ResetContent(hListBox);
     
     if (!filter || strlen(filter) == 0) {
         // Show all windows
         for (int i = 0; i < g_switcher_count; i++) {
-            SendMessageA(hListBox, LB_ADDSTRING, 0, (LPARAM)g_switcher_windows[i].title);
+            UI_AddString(hListBox, g_switcher_windows[i].title);
         }
     } else {
         // Show only matching windows (title OR exe)
         for (int i = 0; i < g_switcher_count; i++) {
             if (StrStrIA(g_switcher_windows[i].title, filter) != NULL ||
                 StrStrIA(g_switcher_windows[i].exe, filter) != NULL) {
-                SendMessageA(hListBox, LB_ADDSTRING, 0, (LPARAM)g_switcher_windows[i].title);
+                UI_AddString(hListBox, g_switcher_windows[i].title);
             }
         }
     }
     
     if (g_switcher_count > 0) {
-        SendMessageA(hListBox, LB_SETCURSEL, 0, 0);
+        UI_SetSelection(hListBox, 0);
     }
 }
 

@@ -147,13 +147,13 @@ static inline void HandlePersistentDelete(void) {
     int selected_index = LB_ERR;
     
     if (hListBox && IsWindow(hListBox)) {
-        selected_index = SendMessageA(hListBox, LB_GETCURSEL, 0, 0);
+        selected_index = UI_GetSelection(hListBox);
     }
     
     if (selected_index != LB_ERR) {
         if (strstr(feature, "Todo") != NULL) {
             char text[512] = {0};
-            SendMessageA(hListBox, LB_GETTEXT, selected_index, (LPARAM)text);
+            UI_GetText(hListBox, selected_index, text, sizeof(text));
             if (g_ctrl_enter_callback != NULL) {
                 g_ctrl_enter_callback(text);
             }
@@ -171,13 +171,13 @@ static inline void HandleDelete(void) {
     int selected_index = LB_ERR;
     
     if (hListBox && IsWindow(hListBox)) {
-        selected_index = SendMessageA(hListBox, LB_GETCURSEL, 0, 0);
+        selected_index = UI_GetSelection(hListBox);
     }
     
     if (selected_index != LB_ERR) {
         if (strstr(feature, "Todo") != NULL) {
             char text[512] = {0};
-            SendMessageA(hListBox, LB_GETTEXT, selected_index, (LPARAM)text);
+            UI_GetText(hListBox, selected_index, text, sizeof(text));
             if (g_enter_callback != NULL) {
                 g_enter_callback(text);
             }
@@ -202,13 +202,13 @@ static inline void HandleDeleteLine(void) {
     int selected_index = LB_ERR;
     
     if (hListBox && IsWindow(hListBox)) {
-        selected_index = SendMessageA(hListBox, LB_GETCURSEL, 0, 0);
+        selected_index = UI_GetSelection(hListBox);
     }
     
     if (selected_index != LB_ERR) {
         if (strstr(feature, "Todo") != NULL) {
             char text[512] = {0};
-            SendMessageA(hListBox, LB_GETTEXT, selected_index, (LPARAM)text);
+            UI_GetText(hListBox, selected_index, text, sizeof(text));
             if (g_enter_callback != NULL) {
                 g_enter_callback(text);
             }
@@ -264,11 +264,11 @@ static inline void HandleYankListBox(void) {
   int selected_index = LB_ERR;
   
   if (hListBox && IsWindow(hListBox)) {
-      selected_index = SendMessageA(hListBox, LB_GETCURSEL, 0, 0);
+      selected_index = UI_GetSelection(hListBox);
   }
   if (selected_index != LB_ERR) {
         char text[512] = {0};
-        SendMessageA(hListBox, LB_GETTEXT, selected_index, (LPARAM)text);
+        UI_GetText(hListBox, selected_index, text, sizeof(text));
         CopyToClipboard(text);
         printf("[VIM] COPIED %s TO THE CLIPBOARD",text);
         return;
