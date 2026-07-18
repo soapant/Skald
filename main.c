@@ -287,8 +287,11 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                     if (g_refresh_callback != NULL) {
                         g_refresh_callback(input_buffer, hListBox);
                     }
-                    
-                    g_SelectedIndex = 0;
+                    if (strlen(input_buffer) == 0 || g_populated_count == 0) {
+                        g_SelectedIndex = -1; 
+                    } else {
+                        g_SelectedIndex = 0;  
+                    }
                     SendMessageA(hListBox, LB_SETTOPINDEX, 0, 0);
                     UI_Redraw(hListBox);
                 }

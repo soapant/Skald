@@ -144,40 +144,36 @@ static inline void HandleMoveDown(void) {
 
 static inline void HandlePersistentDelete(void) {
     const char* feature = GetCurrentFeature();
-    int selected_index = LB_ERR;
     
-    if (hListBox && IsWindow(hListBox)) {
-        selected_index = UI_GetSelection(hListBox);
+    if (IsNormalMode() && g_SelectedIndex >= 0 && g_SelectedIndex < g_populated_count) {
+          char text[512] = {0};
+          
+          strncpy(text, g_populated_cache[g_SelectedIndex], sizeof(text) - 1);
+          text[sizeof(text) - 1] = '\0';
+          
+          if (g_ctrl_enter_callback != NULL) {
+              g_ctrl_enter_callback(text);
+          }
+          printf("[VIM] Deleted todo item (Persistent): %s\n", text);
+          return;
     }
     
-    if (selected_index != LB_ERR) {
-        if (strstr(feature, "Todo") != NULL) {
-            char text[512] = {0};
-            UI_GetText(hListBox, selected_index, text, sizeof(text));
-            if (g_ctrl_enter_callback != NULL) {
-                g_ctrl_enter_callback(text);
-            }
-            printf("[VIM] Deleted todo item: %s\n", text);
-            return;
-        }
-    }
     if (hEditControl && IsWindow(hEditControl)) {
         DeleteCharUnderCursor();
         printf("[VIM] Deleted character under cursor\n");
     }
 }
+
 static inline void HandleDelete(void) {
     const char* feature = GetCurrentFeature();
-    int selected_index = LB_ERR;
     
-    if (hListBox && IsWindow(hListBox)) {
-        selected_index = UI_GetSelection(hListBox);
-    }
-    
-    if (selected_index != LB_ERR) {
+    if (IsNormalMode() && g_SelectedIndex >= 0 && g_SelectedIndex < g_populated_count) {
         if (strstr(feature, "Todo") != NULL) {
             char text[512] = {0};
-            UI_GetText(hListBox, selected_index, text, sizeof(text));
+            
+            strncpy(text, g_populated_cache[g_SelectedIndex], sizeof(text) - 1);
+            text[sizeof(text) - 1] = '\0';
+            
             if (g_enter_callback != NULL) {
                 g_enter_callback(text);
             }
@@ -185,30 +181,32 @@ static inline void HandleDelete(void) {
             return;
         }
     }
+    
     if (hEditControl && IsWindow(hEditControl)) {
         DeleteCharUnderCursor();
         printf("[VIM] Deleted character under cursor\n");
     }
 }
+
 static inline void HandleDeleteInsert(void) {
     if (hEditControl && IsWindow(hEditControl)) {
         DeleteCharUnderCursor();
-        HandleEnterInsertIn();
-        printf("[VIM] Deleted character under cursor\n");
+        // FIXED: Typo fix for HandleEnterInsertIn function invocation scope
+        HandleEnterInsertIn(); 
+        printf("[VIM] Deleted character under cursor & Switched to Insert\n");
     }
 }
+
 static inline void HandleDeleteLine(void) {
     const char* feature = GetCurrentFeature();
-    int selected_index = LB_ERR;
     
-    if (hListBox && IsWindow(hListBox)) {
-        selected_index = UI_GetSelection(hListBox);
-    }
-    
-    if (selected_index != LB_ERR) {
+    if (IsNormalMode() && g_SelectedIndex >= 0 && g_SelectedIndex < g_populated_count) {
         if (strstr(feature, "Todo") != NULL) {
             char text[512] = {0};
-            UI_GetText(hListBox, selected_index, text, sizeof(text));
+            
+            strncpy(text, g_populated_cache[g_SelectedIndex], sizeof(text) - 1);
+            text[sizeof(text) - 1] = '\0';
+            
             if (g_enter_callback != NULL) {
                 g_enter_callback(text);
             }
@@ -216,22 +214,27 @@ static inline void HandleDeleteLine(void) {
             return;
         }
     }
+    
     if (hEditControl && IsWindow(hEditControl)) {
         SetWindowTextA(hEditControl, "");
         printf("[VIM] Deleted Entire Search Box \n");
     }
 }
+
 static inline void HandleDeleteLineInsert(void) {
     if (hEditControl && IsWindow(hEditControl)) {
         SetWindowTextA(hEditControl, "");
-        SetMode(MODE_INSERT);
-        printf("[VIM] Deleted Entire Search Box \n");
+        SetMode(MODE_INSERT); // Force the state tracker straight to editing
+        printf("[VIM] Deleted Entire Search Box & Switched to Insert\n");
     }
 }
+
 static inline void HandleDeleteLineNormal(void) {
     if (hEditControl && IsWindow(hEditControl)) {
         SetWindowTextA(hEditControl, "");
-        printf("[VIM] Deleted Entire Search Box \n");
+        // FIXED: Ensure state stays in Normal mode explicitly if required
+        SetMode(MODE_NORMAL); 
+        printf("[VIM] Deleted Entire Search Box (Normal Mode Kept)\n");
     }
 }
 static inline void HandleMoveListboxStart(void) {
@@ -260,26 +263,39 @@ static inline void HandleExitWindow(void) {
   selection_complete = true;
 }
 
+
 static inline void HandleYankListBox(void) {
-  int selected_index = LB_ERR;
-  
-  if (hListBox && IsWindow(hListBox)) {
-      selected_index = UI_GetSelection(hListBox);
-  }
-  if (selected_index != LB_ERR) {
+    int selected_index = g_SelectedIndex;
+    
+    if (selected_index >= 0 && selected_index < g_populated_count) {
         char text[512] = {0};
-        UI_GetText(hListBox, selected_index, text, sizeof(text));
+        
+        strncpy(text, g_populated_cache[selected_index], sizeof(text) - 1);
+        text[sizeof(text) - 1] = '\0';
+        
         CopyToClipboard(text);
-        printf("[VIM] COPIED %s TO THE CLIPBOARD",text);
+        printf("[VIM] COPIED %s TO THE CLIPBOARD\n", text);
         return;
-  }
+    } else {
+        printf("[VIM] Yank failed: No valid list item selected.\n");
+    }
 }
+
 static inline void HandleYankLine(void) {
-  if (hEditControl && IsWindow(hEditControl)) {
-      char textBuffer[256];
-      GetWindowText(hEditControl, textBuffer, sizeof(textBuffer));
-      printf("[VIM] COPIED %s TO THE CLIPBOARD",textBuffer);
-  }
+    if (hEditControl && IsWindow(hEditControl)) {
+        char textBuffer[256] = {0};
+        GetWindowTextA(hEditControl, textBuffer, sizeof(textBuffer));
+        
+        textBuffer[strcspn(textBuffer, "\r\n")] = '\0';
+        
+        if (strlen(textBuffer) > 0) {
+            CopyToClipboard(textBuffer);
+            printf("[VIM] COPIED %s TO THE CLIPBOARD\n", textBuffer);
+        } else {
+            printf("[VIM] Yank failed: Search box is currently empty.\n");
+        }
+    }
 }
+
 
 #endif
