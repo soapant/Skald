@@ -5,6 +5,7 @@
 #include <windows.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include "types.h"
 
 typedef enum {
     MODE_NORMAL,
@@ -28,25 +29,27 @@ static inline void UpdateCursorForMode(EditorMode mode) {
     SendMessageA(hPopupWnd, WM_SETCURSOR, (WPARAM)hPopupWnd, MAKELPARAM(HTCLIENT, 0));
 }
 
+
 static inline void SetMode(EditorMode mode) {
     g_current_mode = mode;
     g_vim_mode = g_mode_names[mode];
     printf("[VIM] Mode: %s\n", g_mode_names[mode]);
     
     extern HWND hListBox;
-    if (mode == MODE_INSERT && hListBox && IsWindow(hListBox)) {
-        UI_SetSelection(hListBox, -1);  // -1 = no selection
-        printf("[VIM] Cleared listbox selection (entering INSERT)\n");
+    if (hListBox && IsWindow(hListBox)) {
+          g_SelectedIndex = 0;
+          SendMessageA(hListBox, LB_SETCARETINDEX, 0, FALSE);
     }
     
     UpdateCursorForMode(mode);
     
     extern HWND hPopupWnd;
     if (hPopupWnd != NULL && IsWindow(hPopupWnd)) {
-        InvalidateRect(hPopupWnd, NULL, TRUE);
+        InvalidateRect(hPopupWnd, NULL, FALSE);
         UpdateWindow(hPopupWnd);
     }
 }
+
 
 static inline const char* GetModeName(void) {
     return g_mode_names[g_current_mode];

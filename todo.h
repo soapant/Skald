@@ -19,58 +19,82 @@ typedef struct {
     bool is_project;
     char project_name[64];
     bool is_high_priority;
+    bool is_misc;
     bool is_low_priority;
 } TodoFlags;
+
+typedef struct {
+    const char* flag;         
+    const char* internal_name;
+    const char* tag_label;    
+    COLORREF color;           
+    bool is_alias;            
+} TodoConfigEntry;
+
+static const TodoConfigEntry TODO_DICT[] = {
+    { "-pc", "Cprogram",          NULL, RGB(98,  160, 234), true  },
+    { "-pv", "VideoViewer",       NULL, RGB(192, 97,  203), true  },
+    { "-pm", "MusicPlayer",       NULL, RGB(229, 165, 10),  true  },
+    { "-ph", "HeaderC",           NULL, RGB(51,  209, 122), true  },
+    { "-pg", "MinecraftModpack",  NULL, RGB(255, 120, 0),   true  },
+
+    { "-m",  NULL,                "[MISC]", RGB(154, 153, 150), false },
+    { "-h",  NULL,                "[HIGH]", RGB(246, 97,  81),  false },
+    { "-l",  NULL,                "[LOW]",  RGB(94,  92,  100),  false }
+};
+enum { TODO_DICT_COUNT = sizeof(TODO_DICT) / sizeof(TODO_DICT[0]) };
+
+
+static inline COLORREF GetTagColor(const char* tag_string) {
+    if (!tag_string || strlen(tag_string) == 0) return COLOR_TEXT;
+    
+    if (strncmp(tag_string, "[Project: ", 10) == 0) {
+        for (int i = 0; i < TODO_DICT_COUNT; i++) {
+            if (TODO_DICT[i].is_alias && strstr(tag_string, TODO_DICT[i].internal_name) != NULL) {
+                return TODO_DICT[i].color;
+            }
+        }
+    }
+    for (int i = 0; i < TODO_DICT_COUNT; i++) {
+        if (!TODO_DICT[i].is_alias && TODO_DICT[i].tag_label && strcmp(tag_string, TODO_DICT[i].tag_label) == 0) {
+            return TODO_DICT[i].color;
+        }
+    }
+    return COLOR_TEXT; 
+}
 
 static void parse_todo_flags(char* input, TodoFlags* flags, char* clean_text) {
     memset(flags, 0, sizeof(TodoFlags));
     clean_text[0] = '\0';
     
-    // Copy input to work with
     char processed[256];
     strncpy(processed, input, sizeof(processed) - 1);
     processed[sizeof(processed) - 1] = '\0';
     
-    for (int i = 0; i < 10; i++) {
-        bool found_alias = false;
-        
-        // Check each token for an alias
-        char temp[256];
-        strcpy(temp, processed);
-        char* token = strtok(temp, " ");
-        
-        while (token != NULL) {
-            const char* project_name = alias_to_project(token);
-            if (project_name != NULL) {
-                char new_str[256] = {0};
-                char* pos = strstr(processed, token);
-                if (pos) {
-                    int prefix_len = pos - processed;
-                    strncpy(new_str, processed, prefix_len);
-                    strcat(new_str, "-p \"");
-                    strcat(new_str, project_name);
-                    strcat(new_str, "\"");
-                    strcat(new_str, pos + strlen(token));
-                    strcpy(processed, new_str);
-                    found_alias = true;
-                    break;
-                }
-            }
-            token = strtok(NULL, " ");
-        }
-        
-        if (!found_alias) break;
-    }
-    
-    char temp2[256];
-    strncpy(temp2, processed, sizeof(temp2) - 1);
-    temp2[sizeof(temp2) - 1] = '\0';
-    
-    char* token = strtok(temp2, " ");
+    char temp[256];
+    strcpy(temp, processed);
+    char* token = strtok(temp, " ");
     bool first = true;
     
     while (token != NULL) {
-        if (token[0] == '-') {
+        bool processed_token = false;
+
+        for (int i = 0; i < TODO_DICT_COUNT; i++) {
+            if (strcmp(token, TODO_DICT[i].flag) == 0) {
+                if (TODO_DICT[i].is_alias) {
+                    flags->is_project = true;
+                    strncpy(flags->project_name, TODO_DICT[i].internal_name, sizeof(flags->project_name) - 1);
+                } else {
+                    if (strcmp(TODO_DICT[i].flag, "-m") == 0) flags->is_misc = true;
+                    if (strcmp(TODO_DICT[i].flag, "-h") == 0) flags->is_high_priority = true;
+                    if (strcmp(TODO_DICT[i].flag, "-l") == 0) flags->is_low_priority = true;
+                }
+                processed_token = true;
+                break;
+            }
+        }
+        
+        if (!processed_token && token[0] == '-') {
             if (strncmp(token, "-p", 2) == 0) {
                 flags->is_project = true;
                 if (strlen(token) > 2) {
@@ -80,21 +104,23 @@ static void parse_todo_flags(char* input, TodoFlags* flags, char* clean_text) {
                     if (token != NULL) {
                         char* start = token;
                         char* end = token + strlen(token) - 1;
-                        if (*start == '"' && *end == '"') {
-                            start++;
-                            *end = '\0';
-                        }
+                        if (*start == '"' && *end == '"') { start++; *end = '\0'; }
                         strncpy(flags->project_name, start, sizeof(flags->project_name) - 1);
                     }
                 }
             }
-        } else {
+        } 
+        else if (!processed_token) {
             if (first) {
-                strcpy(clean_text, token);
+                strncpy(clean_text, token, 255);
+                clean_text[255] = '\0';
                 first = false;
             } else {
-                strcat(clean_text, " ");
-                strcat(clean_text, token);
+                size_t current_len = strlen(clean_text);
+                if (current_len + strlen(token) + 2 < 256) {
+                    strcat(clean_text, " ");
+                    strcat(clean_text, token);
+                }
             }
         }
         token = strtok(NULL, " ");
@@ -128,13 +154,12 @@ void WriteMdFile(char lines[100][512], int count, const char* path) {
 }
 
 static void add_todo_to_file(const char* text) {
-    printf("ADDING %s",text);
+    printf("ADDING %s\n", text);
     if (!text || strlen(text) == 0) return;
     
     char lines[100][512];
     int count = ReadMdFile(lines, TODO_FILE_PATH);
     
-    // Check if already exists (compare without flags)
     char input_copy[256];
     strncpy(input_copy, text, sizeof(input_copy) - 1);
     input_copy[sizeof(input_copy) - 1] = '\0';
@@ -143,12 +168,10 @@ static void add_todo_to_file(const char* text) {
     char clean_text[256];
     parse_todo_flags(input_copy, &flags, clean_text);
     
-    // Check if clean_text already exists
     for (int i = 0; i < count; i++) {
         char existing_clean[256];
         strncpy(existing_clean, lines[i], sizeof(existing_clean) - 1);
         existing_clean[sizeof(existing_clean) - 1] = '\0';
-        // Remove any existing || tag from the comparison
         char* delimiter = strstr(existing_clean, "||");
         if (delimiter) {
             *delimiter = '\0';
@@ -156,19 +179,24 @@ static void add_todo_to_file(const char* text) {
         if (strcmp(existing_clean, clean_text) == 0) return;
     }
     
-    // Build the entry with || delimiter
     char new_entry[512];
     char tag_text[128] = {0};
     
     if (flags.is_project) {
         snprintf(tag_text, sizeof(tag_text), "[Project: %s]", flags.project_name);
-    } else if (flags.is_high_priority) {
-        strcpy(tag_text, "[HIGH]");
-    } else if (flags.is_low_priority) {
-        strcpy(tag_text, "[LOW]");
+    } else {
+        for (int i = 0; i < TODO_DICT_COUNT; i++) {
+            if (!TODO_DICT[i].is_alias && TODO_DICT[i].tag_label) {
+                if ((strcmp(TODO_DICT[i].flag, "-m") == 0 && flags.is_misc) ||
+                    (strcmp(TODO_DICT[i].flag, "-h") == 0 && flags.is_high_priority) ||
+                    (strcmp(TODO_DICT[i].flag, "-l") == 0 && flags.is_low_priority)) {
+                    strcpy(tag_text, TODO_DICT[i].tag_label);
+                    break;
+                }
+            }
+        }
     }
     
-    // Store WITHOUT - [ ] in the file (just the text and tag)
     if (strlen(tag_text) > 0) {
         snprintf(new_entry, sizeof(new_entry), "%s||%s", clean_text, tag_text);
     } else {
@@ -197,7 +225,6 @@ static void remove_todo_item_from_file(const char* item_to_remove) {
         clean_line[sizeof(clean_line) - 1] = '\0';
         clean_line[strcspn(clean_line, "\r\n")] = '\0';
 
-        // Extract the text part (before ||) from the line
         char compare_text[256];
         strncpy(compare_text, clean_line, sizeof(compare_text) - 1);
         char* delimiter = strstr(compare_text, "||");
@@ -205,7 +232,6 @@ static void remove_todo_item_from_file(const char* item_to_remove) {
             *delimiter = '\0';
         }
         
-        // Also clean the item_to_remove (remove any || tag it might have)
         char clean_item[256];
         strncpy(clean_item, item_to_remove, sizeof(clean_item) - 1);
         char* item_delimiter = strstr(clean_item, "||");
@@ -228,18 +254,15 @@ static void remove_todo_item_from_file(const char* item_to_remove) {
 }
 
 static void todo_refresh_callback(const char* filter, HWND hListBox) {
-    char todo_lines[MAX_ITEMS][512];
+    char todo_lines[100][512];
     int todo_count = ReadMdFile(todo_lines, TODO_FILE_PATH);
     
-    const char* items[MAX_ITEMS];
+    const char* items[100];
     for (int i = 0; i < todo_count; i++) {
         items[i] = todo_lines[i];
     }
-    
     PopulateListBox(hListBox, filter, items, todo_count, NULL);
 }
-
-
 
 static void todo_enter_callback(const char* selection) {
     char input[256] = {0};
@@ -253,46 +276,32 @@ static void todo_enter_callback(const char* selection) {
     int selected_index = UI_GetSelection(hListBox);
     
     if (selected_index != LB_ERR && (input_len == 0 || strcmp(g_populated_cache[selected_index], input) == 0)) {
-        
         const char* item_to_remove = g_populated_cache[selected_index];
-        
         remove_todo_item_from_file(item_to_remove);
         printf("[TODO] Removed: %s\n", item_to_remove);
-        
         todo_refresh_callback(input, hListBox);
     } 
     else if (input_len > 0) {
         add_todo_to_file(input);
         printf("[TODO] Added: %s\n", input);
-        
         SetWindowTextA(hEditControl, "");
         todo_refresh_callback("", hListBox);
     }
 }
 
 static void todo_ctrlenter_callback(const char* selection) {
-    int selected_index = LB_ERR;
-    if (hListBox != NULL) {
-        selected_index = UI_GetSelection(hListBox);
-    }
+    int selected_index = UI_GetSelection(hListBox);
     
     if (selected_index != LB_ERR) {
-        remove_todo_item_from_file(selection);
-        printf("[TODO] Removed: %s\n", selection);
-    } else {
-        char input[256] = {0};
+        const char* item_to_remove = g_populated_cache[selected_index];
+        remove_todo_item_from_file(item_to_remove);
+        printf("[TODO] Removed via Ctrl+Enter: %s\n", item_to_remove);
+        
         if (hEditControl != NULL) {
-            GetWindowTextA(hEditControl, input, sizeof(input));
-            if (strlen(input) > 0) {
-                add_todo_to_file(input);
-                SetWindowTextA(hEditControl, "");
-                printf("[TODO] Added: %s\n", input);
-            }
+            char current_filter[256] = {0};
+            GetWindowTextA(hEditControl, current_filter, sizeof(current_filter));
+            todo_refresh_callback(current_filter, hListBox);
         }
-    }
-    selection_complete = false;
-    if (hListBox != NULL) {
-      todo_refresh_callback(NULL, hListBox);
     }
 }
 static void todo_render_callback(HDC hdc, const char* text, RECT* rect, BOOL is_selected) {
@@ -304,11 +313,14 @@ static void todo_render_callback(HDC hdc, const char* text, RECT* rect, BOOL is_
     char* delimiter = strstr(text, "||");
     if (delimiter) {
         int len = delimiter - text;
+        if (len >= sizeof(main_text)) len = sizeof(main_text) - 1;
         strncpy(main_text, text, len);
         main_text[len] = '\0';
-        strcpy(tag_text, delimiter + 2);
+        strncpy(tag_text, delimiter + 2, sizeof(tag_text) - 1);
+        tag_text[sizeof(tag_text) - 1] = '\0';
     } else {
-        strcpy(main_text, text);
+        strncpy(main_text, text, sizeof(main_text) - 1);
+        main_text[sizeof(main_text) - 1] = '\0';
     }
     
     RECT textRect = *rect;
@@ -319,55 +331,43 @@ static void todo_render_callback(HDC hdc, const char* text, RECT* rect, BOOL is_
                                   DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
                                   CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "0xProto Nerd Font");
     HFONT hOldFont = (HFONT)SelectObject(hdc, hMainFont);
+    
     SetTextColor(hdc, is_selected ? RGB(255,255,255) : COLOR_TEXT);
     DrawTextA(hdc, main_text, -1, &textRect, DT_SINGLELINE | DT_TOP);
-    SelectObject(hdc, hOldFont);
-    DeleteObject(hMainFont);
     
     if (strlen(tag_text) > 0) {
-        HFONT hTagFont = CreateFontA(24, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
-                                     DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-                                     CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "0xProto Nerd Font");
-        SelectObject(hdc, hTagFont);
-        
         RECT tagRect = *rect;
         tagRect.left += 14;
         tagRect.top += 24;
         
-        if (strstr(tag_text, "Project")) {
-            SetTextColor(hdc, RGB(255, 200, 50));
-        } else if (strstr(tag_text, "HIGH")) {
-            SetTextColor(hdc, RGB(255, 80, 80));
-        } else if (strstr(tag_text, "LOW")) {
-            SetTextColor(hdc, RGB(100, 150, 255));
-        } else {
-            SetTextColor(hdc, RGB(150, 150, 180));
-        }
+        COLORREF assigned_color = GetTagColor(tag_text);
+        SetTextColor(hdc, is_selected ? RGB(255, 255, 255) : assigned_color);
         
         DrawTextA(hdc, tag_text, -1, &tagRect, DT_LEFT | DT_TOP);
-        
-        SelectObject(hdc, hOldFont);
-        DeleteObject(hTagFont);
     }
+    
+    SelectObject(hdc, hOldFont);
+    DeleteObject(hMainFont);
 }
 
-void TriggerTodo() {
-    if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
-
+void TriggerTodo(void) {
     char todo_lines[100][512];
-    int todo_count = ReadMdFile(todo_lines, TODO_FILE_PATH);
+    int count = ReadMdFile(todo_lines, TODO_FILE_PATH);
 
     const char* ui_list[100];
-    for (int i = 0; i < todo_count; i++) {
+    for (int i = 0; i < count; i++) {
         ui_list[i] = todo_lines[i];
     }
 
-    PromptUser(ui_list,"📋 TODO",todo_count, 520, 1350,54,
-               todo_refresh_callback,     
-               todo_enter_callback,       
-               todo_ctrlenter_callback,   
-               NULL,
-               todo_render_callback);                     
+    printf("[TODO] Launching UI Selection Prompt with %d items...\n", count);
+
+    char* selected_item = PromptUser(ui_list, "📝 Todo List", count, 920, 650, 56,
+                                     todo_refresh_callback,  
+                                     todo_enter_callback,    
+                                     todo_ctrlenter_callback, 
+                                     NULL,                    
+                                     todo_render_callback);
 }
+
 
 #endif
