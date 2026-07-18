@@ -153,13 +153,16 @@ static void applauncher_ctrlenter_callback(const char* selection) {
 }
 
 static void applauncher_refresh_callback(const char* filter, HWND hListBox) {
-    const char** items = (const char**)malloc(G_APP_COUNT * sizeof(char*));
-    if (!items) return;
-    for (int i = 0; i < G_APP_COUNT; i++) {
-        items[i] = G_APPS[i].name;
+    if (!hListBox) return;
+
+    const char* names[MAX_APPS];
+    int count = (G_APP_COUNT < MAX_APPS) ? G_APP_COUNT : MAX_APPS;
+    
+    for (int i = 0; i < count; i++) {
+        names[i] = G_APPS[i].name;
     }
-    PopulateListBox(hListBox, filter, items, G_APP_COUNT, NULL);
-    free(items);
+    
+    PopulateListBox(hListBox, filter, names, count, NULL);
 }
 
 void TriggerAppLauncher() {

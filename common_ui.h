@@ -6,35 +6,97 @@
 #include <stdbool.h>
 #include <string.h>
 #include <stdio.h>
+#include "types.h"
+
+
 
 static inline int UI_GetSelection(HWND hList) {
-    return (int)SendMessageA(hList, LB_GETCURSEL, 0, 0);
+    int sel = g_SelectedIndex;
+    printf("[DEBUG-UI] UI_GetSelection called. g_SelectedIndex is currently: %d\n", sel);
+    return sel;
 }
 
+
 static inline void UI_ResetContent(HWND hList) {
-    SendMessageA(hList, LB_RESETCONTENT, 0, 0);
+    g_populated_count = 0;
+    g_SelectedIndex = -1;
+    SendMessageA(hList, LB_SETCOUNT, 0, 0);
 }
 
 static inline void UI_AddString(HWND hList, const char* text) {
-    if (!hList || !text) return;
-    SendMessageA(hList, LB_ADDSTRING, 0, (LPARAM)text);
+    if (!hList || !text || g_populated_count >= 100) return;
+    
+    strncpy(g_populated_cache[g_populated_count], text, 511);
+    g_populated_cache[g_populated_count][511] = '\0';
+    
+    g_populated_count++;
+    
+    SendMessageA(hList, LB_SETCOUNT, g_populated_count, 0);
 }
 
+
 static inline void UI_SetSelection(HWND hList, int index) {
-    SendMessageA(hList, LB_SETCURSEL, index, 0);
+    g_SelectedIndex = index;
+    InvalidateRect(hList, NULL, TRUE);
 }
 
 static inline int UI_GetCount(HWND hList) {
-    return (int)SendMessageA(hList, LB_GETCOUNT, 0, 0);
+    return g_populated_count;
 }
 
 static inline void UI_GetText(HWND hList, int index, char* buffer, int bufferSize) {
-    SendMessageA(hList, LB_GETTEXT, index, (LPARAM)buffer);
+    if (!buffer || bufferSize <= 0) return;
+    
+    printf("[DEBUG-UI] UI_GetText requesting index: %d (g_populated_count is %d)\n", index, g_populated_count);
+    
+    if (index >= 0 && index < g_populated_count) {
+        // Log the raw string sitting inside the global cache slot before copying it
+        printf("[DEBUG-UI] Cache slot [%d] contains string: \"%s\"\n", index, g_populated_cache[index]);
+        
+        strncpy(buffer, g_populated_cache[index], bufferSize - 1);
+    } else {
+        printf("[DEBUG-UI] Index %d out of bounds! Clearing buffer.\n", index);
+        buffer[0] = '\0';
+    }
     buffer[bufferSize - 1] = '\0';
 }
 
 static inline void UI_SetHorizontalExtent(HWND hList, int width) {
     SendMessageA(hList, LB_SETHORIZONTALEXTENT, width, 0);
+}
+
+static inline void UI_SetItemCount(HWND hList, int count) {
+    g_populated_count = count;
+    SendMessageA(hList, LB_SETCOUNT, count, 0);
+}
+
+static inline void UI_Redraw(HWND hList) {
+    InvalidateRect(hList, NULL, TRUE);
+}
+
+#define MAX_UI_ITEMS 10000
+
+static inline void UI_UpdateList(HWND hList, const char* filter, const char** items, int item_count) {
+    static const char* filtered[MAX_UI_ITEMS];
+    int filtered_count = 0;
+
+    if (!filter || !*filter) {
+        for (int i = 0; i < item_count && filtered_count < MAX_UI_ITEMS; i++) {
+            filtered[filtered_count++] = items[i];
+        }
+    } else {
+        for (int i = 0; i < item_count && filtered_count < MAX_UI_ITEMS; i++) {
+            if (StrStrIA(items[i], filter)) {
+                filtered[filtered_count++] = items[i];
+            }
+        }
+    }
+
+    g_initial_items = filtered;
+    g_initial_count = filtered_count;
+
+    UI_SetItemCount(hList, filtered_count);
+    UI_Redraw(hList);
 }
 
 #include "modal.h"
@@ -45,57 +107,55 @@ static inline void PopulateListBox(HWND hListBox, const char* filter,
                                    bool (*filter_match)(const char* item, const char* filter)) {
     if (!hListBox) return;
     
-    // Save current selection
-    int current_sel = UI_GetSelection(hListBox);
+    int current_sel = g_SelectedIndex; 
     char current_text[256] = {0};
-    if (current_sel != LB_ERR) {
-        UI_GetText(hListBox, current_sel, current_text, sizeof(current_text));
-    }
     
+    if (current_sel >= 0 && current_sel < g_populated_count) {
+        strncpy(current_text, g_populated_cache[current_sel], sizeof(current_text) - 1);
+    }
+
     UI_ResetContent(hListBox);
-    
-    if (!filter || strlen(filter) == 0) {
-        for (int i = 0; i < item_count; i++) {
-            UI_AddString(hListBox, items[i]);
+    g_populated_count = 0;
+
+    for (int i = 0; i < item_count && g_populated_count < MAX_ITEMS; i++) {
+        if (!items[i]) continue;
+
+        bool match = false;
+        if (!filter || strlen(filter) == 0) {
+            match = true;
+        } else if (filter_match) {
+            match = filter_match(items[i], filter);
+        } else {
+            match = (StrStrIA(items[i], filter) != NULL);
         }
-    } else {
-        for (int i = 0; i < item_count; i++) {
-            bool match = false;
-            if (filter_match) {
-                match = filter_match(items[i], filter);
-            } else {
-                match = (StrStrIA(items[i], filter) != NULL);
-            }
-            if (match) {
-                UI_AddString(hListBox, items[i]);
-            }
+
+        if (match) {
+            strncpy(g_populated_cache[g_populated_count], items[i], 511);
+            g_populated_cache[g_populated_count][511] = '\0';
+            
+            g_populated_cache[g_populated_count][strcspn(g_populated_cache[g_populated_count], "\r\n")] = '\0';
+            
+            UI_AddString(hListBox, g_populated_cache[g_populated_count]);
         }
     }
-    
-    int new_count = UI_GetCount(hListBox);
-    
-    if (new_count > 0 && IsNormalMode()) {
-        // Try to restore by text
+
+    if (g_populated_count > 0 && IsNormalMode()) {
         if (strlen(current_text) > 0) {
-            for (int i = 0; i < new_count; i++) {
-                char text[256] = {0};
-                UI_GetText(hListBox, i, text, sizeof(text));
-                if (strcmp(text, current_text) == 0) {
+            for (int i = 0; i < g_populated_count; i++) {
+                if (strcmp(g_populated_cache[i], current_text) == 0) {
                     UI_SetSelection(hListBox, i);
                     return;
                 }
             }
         }
         
-        // Restore by index
-        if (current_sel != LB_ERR && current_sel < new_count) {
+        if (current_sel != LB_ERR && current_sel < g_populated_count) {
             UI_SetSelection(hListBox, current_sel);
         } else {
-            UI_SetSelection(hListBox, 0);
+            g_SelectedIndex = -1; 
         }
     }
 }
-
 static inline bool IsPopupActive(HWND hPopupWnd) {
     return hPopupWnd != NULL && IsWindow(hPopupWnd);
 }

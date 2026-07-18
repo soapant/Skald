@@ -31,6 +31,7 @@
 #include "process_killer.h"
 #include "number_shortcut.h"
 #include "helpers.h"
+#include "common_ui.h"
 #include "todo.h"
 #include "hotkey_definitions.h"
 #include "modal.h"
@@ -65,6 +66,10 @@ TabCallback g_tab_callback = NULL;
 RenderCallback g_render_callback = NULL;
 const char** g_initial_items = NULL;
 int g_initial_count = 0;
+int g_SelectedIndex = -1; 
+#define MAX_ITEMS 1000
+char g_populated_cache[MAX_ITEMS][512];
+int g_populated_count = 0;
 const char* g_title = NULL;
 int img_region_step = 0;
 long img_x1 = 0, img_y1 = 0;
@@ -255,7 +260,10 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 break;
         }
         case WM_COMMAND: {
-            if (LOWORD(wParam) == IDC_INPUT_BOX && HIWORD(wParam) == EN_CHANGE) {
+            int wmId   = LOWORD(wParam);
+            int wmEvent = HIWORD(wParam);
+
+            if (wmId == IDC_INPUT_BOX && wmEvent == EN_CHANGE) {
                 if (hEditControl && hListBox) {
                     char input_buffer[256] = {0};
                     GetWindowTextA(hEditControl, input_buffer, sizeof(input_buffer));
@@ -263,14 +271,18 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                     if (g_refresh_callback != NULL) {
                         g_refresh_callback(input_buffer, hListBox);
                     }
+                    g_SelectedIndex = -1; // Reset selection on new filtering
+                    UI_Redraw(hListBox);
                 }
             }
             break;
         }
         case WM_MEASUREITEM: {
             MEASUREITEMSTRUCT* pmis = (MEASUREITEMSTRUCT*)lParam;
+            printf("[WM_MEASUREITEM] CtlID=%d\n", pmis->CtlID);
             if (pmis->CtlID == IDC_LIST_BOX) {
                 pmis->itemHeight = 32;
+                printf("[WM_MEASUREITEM] Set height to 32\n");
                 return TRUE;
             }
             break;
@@ -278,11 +290,16 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
       case WM_DRAWITEM: {
           DRAWITEMSTRUCT* pdis = (DRAWITEMSTRUCT*)lParam;
           if (pdis->CtlID == IDC_LIST_BOX && pdis->itemID != -1) {
-              char textBuffer[512];
-              SendMessageA(pdis->hwndItem, LB_GETTEXT, pdis->itemID, (LPARAM)textBuffer);
+              const char* textBuffer = "";
+              if (pdis->itemID < g_populated_count) {
+                  textBuffer = g_populated_cache[pdis->itemID];
+              }
+              if (!textBuffer) textBuffer = "";
+              
+              BOOL isSelected = (pdis->itemID == g_SelectedIndex);
               
               HBRUSH hBgBrush;
-              if (pdis->itemState & ODS_SELECTED) {
+              if (isSelected) {
                   hBgBrush = CreateSolidBrush(RGB(50, 56, 68));
               } else {
                   hBgBrush = CreateSolidBrush(COLOR_BG);
@@ -335,10 +352,10 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
               }
               
               if (g_render_callback != NULL) {
-                  g_render_callback(pdis->hDC, textBuffer, &textRect, (pdis->itemState & ODS_SELECTED));
+                  g_render_callback(pdis->hDC, textBuffer, &textRect, isSelected);
               } else {
                   HFONT hOldMainFont = (HFONT)SelectObject(pdis->hDC, g_hMainFont);
-                  SetTextColor(pdis->hDC, pdis->itemState & ODS_SELECTED ? RGB(255,255,255) : COLOR_TEXT);
+                  SetTextColor(pdis->hDC, isSelected ? RGB(255,255,255) : COLOR_TEXT);
                   DrawTextA(pdis->hDC, textBuffer, -1, &textRect, DT_SINGLELINE | DT_VCENTER);
                   SelectObject(pdis->hDC, hOldMainFont);
               }
@@ -349,6 +366,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
       }
       case WM_PAINT: {
           PAINTSTRUCT ps;
+          printf("[WM_PAINT] entered\n");
           HDC hdc = BeginPaint(hwnd, &ps);
           
           HBRUSH hBrush = CreateSolidBrush(COLOR_BG);
@@ -414,6 +432,16 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
           EndPaint(hwnd, &ps);
           break;
       }
+      case WM_ERASEBKGND: {
+          printf("[POPUP WM_ERASEBKGND]\n");
+          HDC hdc = (HDC)wParam;
+          RECT rect;
+          GetClientRect(hwnd, &rect);
+          HBRUSH hBrush = CreateSolidBrush(COLOR_BG);
+          FillRect(hdc, &rect, hBrush);
+          DeleteObject(hBrush);
+          return TRUE;
+      }
       case WM_TIMER:
         if (wParam == 999) {
             static bool last_ctrl = false;
@@ -471,13 +499,63 @@ void CalculateWindowMetrics(int count, WindowLayout* layout,int height , int wid
     layout->x = mi.rcMonitor.left + (monitorWidth - layout->w) / 2;
     layout->y = mi.rcMonitor.top + (monitorHeight - layout->h) / 2;
 }
-LRESULT CALLBACK ListBoxSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
-    if (msg == WM_NCCALCSIZE && wParam == TRUE) {
-        return 0; 
+LRESULT CALLBACK ListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
+    switch (uMsg) {
+        case WM_LBUTTONDOWN: {
+            int x = (short)LOWORD(lParam);
+            int y = (short)HIWORD(lParam);
+            POINT pt = { x, y };
+
+            int topIndex = (int)SendMessageA(hWnd, LB_GETTOPINDEX, 0, 0);
+            int itemHeight = (int)SendMessageA(hWnd, LB_GETITEMHEIGHT, 0, 0);
+
+            if (itemHeight > 0) {
+                int clickedIndex = topIndex + (y / itemHeight);
+
+                if (clickedIndex >= 0 && clickedIndex < g_initial_count) {
+                    g_SelectedIndex = clickedIndex;
+                    InvalidateRect(hWnd, NULL, TRUE);
+                    
+                    SendMessageA(GetParent(hWnd), WM_COMMAND, MAKEWPARAM(GetDlgCtrlID(hWnd), LBN_SELCHANGE), (LPARAM)hWnd);
+                }
+            }
+            return 0;
+        }
+
+        case WM_KEYDOWN: {
+            if (wParam == VK_UP) {
+                if (g_SelectedIndex > 0) {
+                    g_SelectedIndex--;
+                    SendMessageA(hWnd, LB_SETCARETINDEX, g_SelectedIndex, FALSE); 
+                    InvalidateRect(hWnd, NULL, TRUE);
+                }
+                return 0;
+            }
+            if (wParam == VK_DOWN) {
+                if (g_SelectedIndex < (g_initial_count - 1)) {
+                    g_SelectedIndex++;
+                    SendMessageA(hWnd, LB_SETCARETINDEX, g_SelectedIndex, FALSE);
+                    InvalidateRect(hWnd, NULL, TRUE);
+                }
+                return 0;
+            }
+            break;
+        }
+
+        case WM_NCCALCSIZE: {
+            LRESULT res = DefSubclassProc(hWnd, uMsg, wParam, lParam);
+            ShowScrollBar(hWnd, SB_VERT, FALSE);
+            return res;
+        }
+
+        case WM_NCDESTROY:
+            RemoveWindowSubclass(hWnd, ListBoxSubclassProc, uIdSubclass);
+            break;
     }
-    return DefSubclassProc(hwnd, msg, wParam, lParam);
+    return DefSubclassProc(hWnd, uMsg, wParam, lParam);
 }
 void CreateChildControls(HWND hwndParent, HFONT hFont, const char* list[], int count, const WindowLayout* layout) {
+    printf("[CHILD] Enter, count=%d\n", count);
     HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtrA(hwndParent, GWLP_HINSTANCE);
     hEditControl = CreateWindowExA(
         0, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
@@ -493,7 +571,7 @@ void CreateChildControls(HWND hwndParent, HFONT hFont, const char* list[], int c
         printf("[CHILD] Creating listbox...\n");
         hListBox = CreateWindowExA(
             0, "LISTBOX", "", 
-            WS_CHILD | WS_VISIBLE | LBS_NOTIFY | WS_VSCROLL | LBS_HASSTRINGS | LBS_OWNERDRAWFIXED,
+            WS_CHILD | WS_VISIBLE | LBS_NOTIFY | WS_VSCROLL | LBS_NODATA | LBS_OWNERDRAWFIXED,
             20, 105, layout->w - 40, layout->h - 115, hwndParent, (HMENU)IDC_LIST_BOX, hInstance, NULL
         );
         if (!hListBox) {
@@ -511,19 +589,23 @@ void CreateChildControls(HWND hwndParent, HFONT hFont, const char* list[], int c
         }
         HFONT hOldFont = (HFONT)SelectObject(hdc, hFont);
         
-        for (int i = 0; i < count; i++) {
-            UI_AddString(hListBox, list[i]);   // <-- potential crash here
-            
-            SIZE sz;
-            if (!GetTextExtentPoint32A(hdc, list[i], (int)strlen(list[i]), &sz)) {
-            } else {
-                if (sz.cx + 40 > max_width) max_width = sz.cx + 40;
-            }
-        }
+        g_initial_items = list;        
+        g_initial_count = count;
+        printf("[CHILD] Set g_initial_items = %p, g_initial_count = %d\n", (void*)g_initial_items, g_initial_count);
+        UI_SetItemCount(hListBox, count);
+        int countCheck = (int)SendMessageA(hListBox, LB_GETCOUNT, 0, 0);
+        printf("[CHILD] After LB_SETCOUNT, countCheck=%d\n", countCheck);
+        UI_Redraw(hListBox);
+        UpdateWindow(hListBox); 
+        printf("[CHILD] InvalidateRect sent\n");
         
         SelectObject(hdc, hOldFont);
         ReleaseDC(hListBox, hdc);
-        UI_SetHorizontalExtent(hListBox, max_width);   // <-- potential crash here
+        UI_SetHorizontalExtent(hListBox, max_width);
+        
+        if (g_refresh_callback) {
+            g_refresh_callback("", hListBox);
+        }
     }
     printf("[CHILD] Exit\n");
 }
@@ -732,6 +814,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                              0, 0, 
                              LR_LOADFROMFILE | LR_DEFAULTSIZE);
             lstrcpy(nid.szTip, "Switch Window");
+            
+
 
             Shell_NotifyIcon(NIM_ADD, &nid);
             break;

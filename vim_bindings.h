@@ -8,15 +8,18 @@
 static const MotionBinding G_VIM_BINDINGS[] = {
   
     { 'I', HOTKEY_MOD_NONE,  MOTION_ENTER_INSERT_IN,        "InsertIn",        HandleEnterInsertIn,      MODE_NORMAL },
+    
     { 'A', HOTKEY_MOD_NONE,  MOTION_ENTER_INSERT_OUT,       "InsertOut",        HandleEnterInsertOut,     MODE_NORMAL },
+    
     { 'I', HOTKEY_MOD_SHIFT, MOTION_ENTER_INSERT_IN_START,  "InsertInStart",        HandleEnterInsertInStart, MODE_NORMAL },
+    
     { 'A', HOTKEY_MOD_SHIFT, MOTION_ENTER_INSERT_OUT_END,   "InsertOutEnd",        HandleEnterInsertOutEnd,  MODE_NORMAL },
+    
     { 'V', HOTKEY_MOD_NONE,  MOTION_ENTER_VISUAL,           "Visual",        HandleEnterVisual,        MODE_NORMAL },
     
-    { 'H', HOTKEY_MOD_NONE,  MOTION_MOVE_LEFT,              "Left",          HandleMoveLeft,           MODE_NORMAL },
     { 'J', HOTKEY_MOD_NONE,  MOTION_MOVE_DOWN,              "Down",          HandleMoveDown,           MODE_NORMAL },
+    
     { 'K', HOTKEY_MOD_NONE,  MOTION_MOVE_UP,                "Up",            HandleMoveUp,             MODE_NORMAL },
-    { 'L', HOTKEY_MOD_NONE,  MOTION_MOVE_RIGHT,             "Right",         HandleMoveRight,          MODE_NORMAL },
     
     { 'X', HOTKEY_MOD_NONE,  MOTION_DELETE_CHAR,            "Del",           HandleDelete,             MODE_NORMAL },
     

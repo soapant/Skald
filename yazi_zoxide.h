@@ -56,9 +56,7 @@ static void RebuildYaziCache(void) {
     free(lines);
 }
 
-// ============================================================
-// REFRESH CALLBACK
-// ============================================================
+
 static void yazi_refresh_callback(const char* filter, HWND hListBox) {
     if (!hListBox) return;
     
@@ -66,28 +64,10 @@ static void yazi_refresh_callback(const char* filter, HWND hListBox) {
         RebuildYaziCache();
     }
     
-    UI_ResetContent(hListBox);
-    
-    if (!filter || strlen(filter) == 0) {
-        for (int i = 0; i < g_cached_yazi_count; i++) {
-            UI_AddString(hListBox, g_cached_yazi_commands[i]);
-        }
-    } else {
-        for (int i = 0; i < g_cached_yazi_count; i++) {
-            if (StrStrIA(g_cached_yazi_commands[i], filter) != NULL) {
-                UI_AddString(hListBox, g_cached_yazi_commands[i]);
-            }
-        }
-    }
-    
-    if (g_cached_yazi_count > 0) {
-        UI_SetSelection(hListBox, 0);
-    }
+    PopulateListBox(hListBox, filter, (const char**)g_cached_yazi_commands, g_cached_yazi_count, NULL);
 }
 
-// ============================================================
-// ENTER CALLBACK
-// ============================================================
+
 static void yazi_enter_callback(const char* selection) {
     int selected_index = LB_ERR;
     if (hListBox != NULL) {
@@ -95,7 +75,6 @@ static void yazi_enter_callback(const char* selection) {
     }
     
     if (selected_index == LB_ERR) {
-        // New query from input - save it
         char input[256] = {0};
         if (hEditControl != NULL) {
             GetWindowTextA(hEditControl, input, sizeof(input));
@@ -103,25 +82,28 @@ static void yazi_enter_callback(const char* selection) {
                 FileAppend(YaziZoxideFile, input);
                 FileAppend(YaziZoxideFile, "\n");
                 RebuildYaziCache();
+                
                 char* path = QueryZoxidePath(input);
                 if (path) {
-                    // Launch asynchronously, setting the directory and invoking -e yazi
-                    ShellExecuteA(NULL, "open", "alacritty.exe", "-e yazi", path, SW_SHOWNORMAL);
+                    char cmd_args[512];
+                    snprintf(cmd_args, sizeof(cmd_args), "-e yazi \"%s\"", path);
+                    
+                    ShellExecuteA(NULL, "open", "alacritty.exe", cmd_args, NULL, SW_SHOWNORMAL);
                 }
             }
         }
     } else {
-        // Selected from history
         char* path = QueryZoxidePath(selection);
         if (path) {
-            ShellExecuteA(NULL, "open", "alacritty.exe", "-e yazi", path, SW_SHOWNORMAL);
+            // CRITICAL FIX: Same dynamic argument string combining step for history entries
+            char cmd_args[512];
+            snprintf(cmd_args, sizeof(cmd_args), "-e yazi \"%s\"", path);
+            
+            ShellExecuteA(NULL, "open", "alacritty.exe", cmd_args, NULL, SW_SHOWNORMAL);
         }
     }
 }
 
-// ============================================================
-// TRIGGER
-// ============================================================
 static void TriggerYaziZoxide() {
     if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
     

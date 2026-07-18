@@ -95,9 +95,6 @@ static void RebuildNvimCache(void) {
     free(lines);
 }
 
-// ============================================================
-// REFRESH CALLBACK
-// ============================================================
 static void nvim_refresh_callback(const char* filter, HWND hListBox) {
     if (!hListBox) return;
     
@@ -105,28 +102,9 @@ static void nvim_refresh_callback(const char* filter, HWND hListBox) {
         RebuildNvimCache();
     }
     
-    UI_ResetContent(hListBox);
-    
-    if (!filter || strlen(filter) == 0) {
-        for (int i = 0; i < g_cached_nvim_count; i++) {
-            UI_AddString(hListBox, g_cached_nvim_commands[i]);
-        }
-    } else {
-        for (int i = 0; i < g_cached_nvim_count; i++) {
-            if (StrStrIA(g_cached_nvim_commands[i], filter) != NULL) {
-                UI_AddString(hListBox, g_cached_nvim_commands[i]);
-            }
-        }
-    }
-    
-    if (g_cached_nvim_count > 0) {
-        UI_SetSelection(hListBox, 0);
-    }
+    PopulateListBox(hListBox, filter, (const char**)g_cached_nvim_commands, g_cached_nvim_count, NULL);
 }
 
-// ============================================================
-// ENTER CALLBACKS
-// ============================================================
 static void neovide_enter_callback(const char* selection) {
     int selected_index = LB_ERR;
     if (hListBox != NULL) {

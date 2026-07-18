@@ -8,9 +8,9 @@
 #include <string.h>
 #include <shlwapi.h>
 #include <psapi.h>
+#include "common_ui.h"
 
 
-// Global state for the switcher
 static SavedWindow g_switcher_windows[100];
 static int g_switcher_count = 0;
 
@@ -36,32 +36,29 @@ static void FetchExeNameOnDemand(HWND hwnd, char* outExe, DWORD maxLen) {
     strncpy(outExe, "Unknown.exe", maxLen);
 }
 
+static bool switcher_match_helper(const char* item, const char* filter) {
+    for (int i = 0; i < g_switcher_count; i++) {
+        if (g_switcher_windows[i].title == item) {
+            return (StrStrIA(g_switcher_windows[i].title, filter) != NULL ||
+                    StrStrIA(g_switcher_windows[i].exe, filter) != NULL);
+        }
+    }
+    return false;
+}
+
 static void switcher_refresh_callback(const char* filter, HWND hListBox) {
     if (!hListBox) return;
     
-    UI_ResetContent(hListBox);
+    const char* titles[100];
+    int count = (g_switcher_count < 100) ? g_switcher_count : 100;
     
-    if (!filter || strlen(filter) == 0) {
-        // Show all windows
-        for (int i = 0; i < g_switcher_count; i++) {
-            UI_AddString(hListBox, g_switcher_windows[i].title);
-        }
-    } else {
-        // Show only matching windows (title OR exe)
-        for (int i = 0; i < g_switcher_count; i++) {
-            if (StrStrIA(g_switcher_windows[i].title, filter) != NULL ||
-                StrStrIA(g_switcher_windows[i].exe, filter) != NULL) {
-                UI_AddString(hListBox, g_switcher_windows[i].title);
-            }
-        }
+    for (int i = 0; i < count; i++) {
+        titles[i] = g_switcher_windows[i].title;
     }
     
-    if (g_switcher_count > 0) {
-        UI_SetSelection(hListBox, 0);
-    }
+    PopulateListBox(hListBox, filter, titles, count, switcher_match_helper);
 }
 
-// Enter callback - focuses the selected window
 static void switcher_enter_callback(const char* selection) {
     if (selection == NULL || strlen(selection) == 0) return;
     
