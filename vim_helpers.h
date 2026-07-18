@@ -5,11 +5,11 @@
 static inline char* GetSelectedText(void) {
     if (!hListBox || !IsWindow(hListBox)) return NULL;
     
-    int sel = SendMessageA(hListBox, LB_GETCURSEL, 0, 0);
+    int sel = UI_GetSelection(hListBox);
     if (sel == LB_ERR) return NULL;
     
     static char text[512];
-    SendMessageA(hListBox, LB_GETTEXT, sel, (LPARAM)text);
+    UI_GetText(hListBox, sel, text, sizeof(text));
     return text;
 }
 

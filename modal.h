@@ -35,7 +35,7 @@ static inline void SetMode(EditorMode mode) {
     
     extern HWND hListBox;
     if (mode == MODE_INSERT && hListBox && IsWindow(hListBox)) {
-        SendMessageA(hListBox, LB_SETCURSEL, -1, 0);  // -1 = no selection
+        UI_SetSelection(hListBox, -1);  // -1 = no selection
         printf("[VIM] Cleared listbox selection (entering INSERT)\n");
     }
     
