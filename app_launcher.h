@@ -63,7 +63,17 @@ static void scan_directory_recursive(const char* dir_path) {
                 if (G_APP_COUNT < MAX_APPS) {
                     char clean_name[128];
                     strncpy(clean_name, find_data.cFileName, sizeof(clean_name) - 1);
+                    clean_name[sizeof(clean_name) - 1] = '\0';
                     PathRemoveExtensionA(clean_name);
+
+                    bool is_duplicate = false;
+                    for (int i = 0; i < G_APP_COUNT; i++) {
+                        if (StrCmpIA(G_APPS[i].name, clean_name) == 0) {
+                            is_duplicate = true;
+                            break;
+                        }
+                    }
+                    if (is_duplicate) continue;
 
                     strncpy(G_APPS[G_APP_COUNT].name, clean_name, sizeof(G_APPS[G_APP_COUNT].name) - 1);
                     strncpy(G_APPS[G_APP_COUNT].path, full_path, sizeof(G_APPS[G_APP_COUNT].path) - 1);

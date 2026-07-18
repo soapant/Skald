@@ -75,30 +75,58 @@ static inline const char* GetCurrentFeature(void) {
     return "Unknown";
 }
 static inline const char* GoToFirstListBoxItem(void) {
-    if (!hListBox || !IsWindow(hListBox)) return NULL;
+    if (!hListBox || !IsWindow(hListBox) || g_populated_count <= 0) return NULL;
     
-    SendMessage(hListBox, LB_SETCURSEL, 0, 0);
+    // 1. Update your global virtual selection tracking index
+    g_SelectedIndex = 0;
+    g_view_offset = 0; // Force sliding window offset back to top
 
+    // 2. Synchronize viewport window layout
+    SendMessageA(hListBox, LB_SETTOPINDEX, 0, 0);
+    SendMessageA(hListBox, LB_SETCARETINDEX, 0, FALSE);
+    InvalidateRect(hListBox, NULL, FALSE); // Force instant color repaint
+
+    // 3. FIXED: Return the actual string text from your safe global cache matrix
+    return g_populated_cache[0];
 }
+
 static inline const char* GoToLastListBoxItem(void) {
-    if (!hListBox || !IsWindow(hListBox)) return NULL;
-    int totalItems = (int)SendMessage(hListBox, LB_GETCOUNT, 0, 0);
+    if (!hListBox || !IsWindow(hListBox) || g_populated_count <= 0) return NULL;
+    
+    // 1. Calculate the final valid index boundary
+    int lastIndex = g_populated_count - 1;
+    g_SelectedIndex = lastIndex;
 
-    if (totalItems != LB_ERR && totalItems > 0) 
-    {
-        int lastIndex = totalItems - 1;
-        
-        SendMessage(hListBox, LB_SETCURSEL, lastIndex, 0);
-    }
+    // 2. Compute sliding viewport constraints so it smoothly scrolls to the bottom
+    RECT rect;
+    GetClientRect(hListBox, &rect);
+    int itemHeight = (int)SendMessageA(hListBox, LB_GETITEMHEIGHT, 0, 0);
+    int visibleItems = (itemHeight > 0) ? (rect.bottom / itemHeight) : 1;
+    
+    int newTop = lastIndex - visibleItems + 1;
+    if (newTop < 0) newTop = 0;
+    g_view_offset = newTop; // Align the sliding tracker
+
+    // 3. Force the Win32 list box window to scroll down
+    SendMessageA(hListBox, LB_SETTOPINDEX, newTop, 0);
+    SendMessageA(hListBox, LB_SETCARETINDEX, lastIndex, FALSE);
+    InvalidateRect(hListBox, NULL, FALSE);
+
+    // 4. FIXED: Return the actual string text sitting at the bottom of your list
+    return g_populated_cache[lastIndex];
 }
+
 static inline void SetCursorToStartOfText(void) {
     if (hEditControl && IsWindow(hEditControl)) {
+        // Explicitly set focus to the edit control so the caret shows up instantly
+        SetFocus(hEditControl);
         SendMessageA(hEditControl, EM_SETSEL, 0, 0);
     }
 }
 
 static inline void SetCursorToEndOfText(void) {
     if (hEditControl && IsWindow(hEditControl)) {
+        SetFocus(hEditControl);
         int len = GetWindowTextLengthA(hEditControl);
         SendMessageA(hEditControl, EM_SETSEL, len, len);
     }

@@ -70,6 +70,7 @@ int g_SelectedIndex = -1;
 #define MAX_ITEMS 1000
 char g_populated_cache[MAX_ITEMS][512];
 int g_populated_count = 0;
+int g_view_offset = 0;
 const char* g_title = NULL;
 int img_region_step = 0;
 long img_x1 = 0, img_y1 = 0;
@@ -164,34 +165,19 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
                         if (wParam == VK_UP) {
                             sel = (sel > 0) ? sel - 1 : 0;
                         } else {
-                            sel = (sel < count - 1) ? sel + 1 : count - 1;
+                            sel++; 
                         }
                     }
                     
-                    // 1. Save the new selection index locally without firing parent callbacks
                     g_SelectedIndex = sel;
 
-                    // 2. Fetch layout measurements
-                    RECT rect;
-                    GetClientRect(hListBox, &rect);
-                    int itemHeight = (int)SendMessageA(hListBox, LB_GETITEMHEIGHT, 0, 0);
-                    int visibleItems = (itemHeight > 0) ? (rect.bottom / itemHeight) : 1;
-                    int topIndex = (int)SendMessageA(hListBox, LB_GETTOPINDEX, 0, 0);
-
-                    // 3. FIXED: Only manipulate viewport scrolling when crossing boundaries!
-                    if (wParam == VK_UP) {
-                        if (sel < topIndex) {
-                            SendMessageA(hListBox, LB_SETTOPINDEX, sel, 0);
-                        }
-                    } else {
-                        if (sel >= (topIndex + visibleItems)) {
-                            int newTop = sel - visibleItems + 1;
-                            SendMessageA(hListBox, LB_SETTOPINDEX, newTop, 0);
-                        }
+                    if (g_refresh_callback != NULL) {
+                        char current_filter[256] = {0};
+                        GetWindowTextA(hwnd, current_filter, sizeof(current_filter));
+                        g_refresh_callback(current_filter, hListBox);
                     }
-                    
-                    // 4. Sync keyboard caret and force a crisp repaint frame
-                    SendMessageA(hListBox, LB_SETCARETINDEX, sel, FALSE);
+
+                    SendMessageA(hListBox, LB_SETCARETINDEX, g_SelectedIndex, FALSE);
                     InvalidateRect(hListBox, NULL, FALSE);
                 }
             }
@@ -325,12 +311,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
       case WM_DRAWITEM: {
           DRAWITEMSTRUCT* pdis = (DRAWITEMSTRUCT*)lParam;
           if (pdis->CtlID == IDC_LIST_BOX && pdis->itemID != -1) {
-              const char* textBuffer = "";
-              if (pdis->itemID < g_populated_count) {
-                  textBuffer = g_populated_cache[pdis->itemID];
-              }
-              if (!textBuffer) textBuffer = "";
-              
+            
               BOOL isSelected = (pdis->itemID == g_SelectedIndex);
               
               HBRUSH hBgBrush;
@@ -341,6 +322,16 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
               }
               FillRect(pdis->hDC, &pdis->rcItem, hBgBrush);
               DeleteObject(hBgBrush);
+              
+              if (pdis->itemID == -1 || pdis->itemID >= g_populated_count) {
+                  return TRUE; 
+              }
+              
+              const char* textBuffer = "";
+              if (pdis->itemID < g_populated_count) {
+                  textBuffer = g_populated_cache[pdis->itemID];
+              }
+              if (!textBuffer) textBuffer = "";
               
               SetBkMode(pdis->hDC, TRANSPARENT);
               
@@ -553,8 +544,8 @@ LRESULT CALLBACK ListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 }
 void CreateChildControls(HWND hwndParent, HFONT hFont, const char* list[], int count, const WindowLayout* layout) {
     HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtrA(hwndParent, GWLP_HINSTANCE);
+    WinTimer my_timer = TimerStart();
     
-    // 1. Profile: Edit control creation
     hEditControl = CreateWindowExA(
         0, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
         20, 50, layout->w - 40, 40, hwndParent, (HMENU)IDC_INPUT_BOX, hInstance, NULL
@@ -562,15 +553,12 @@ void CreateChildControls(HWND hwndParent, HFONT hFont, const char* list[], int c
     
     if (!hEditControl) return;
     
-    // 2. Profile: Hooking up the Edit box subclass and Font initialization
     SendMessageA(hEditControl, WM_SETFONT, (WPARAM)hFont, FALSE);
     SetWindowSubclass(hEditControl, EditSubclassProc, 0, 0);
 
-    // TRAP DEAD SPACE 1: Time between edit control hook and listbox creation
 
     if (count > 0) {
 
-        // 3. Profile: Listbox window creation
         hListBox = CreateWindowExA(
             0, "LISTBOX", "", 
             WS_CHILD | WS_VISIBLE | LBS_NODATA | LBS_OWNERDRAWFIXED,
@@ -579,7 +567,6 @@ void CreateChildControls(HWND hwndParent, HFONT hFont, const char* list[], int c
 
         if (!hListBox) return;
         
-        // 4. Profile: Hooking up ListBox subclass, GDI metrics, and Item Height configuration
         SetWindowSubclass(hListBox, ListBoxSubclassProc, 0, 0);
         SendMessageA(hListBox, WM_SETFONT, (WPARAM)hFont, FALSE);
         SendMessageA(hListBox, LB_SETITEMHEIGHT, 0, layout->item_height);
@@ -616,6 +603,7 @@ void CreateChildControls(HWND hwndParent, HFONT hFont, const char* list[], int c
             g_refresh_callback("", hListBox);
         }
     }
+    TimerEnd(my_timer, "Child Controls");
 }
 void ForceWindowFocus(HWND hwndTarget, HWND hwndInput) {
     ShowWindow(hwndTarget, SW_SHOW);
