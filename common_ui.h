@@ -161,14 +161,14 @@ static inline void PopulateListBox(HWND hListBox, const char* filter,
         }
     }
 
-    if (total_matches == 0 && item_count > 0) {
+    if (total_matches == 0 && item_count > 0 && (!filter || strlen(filter) == 0)) {
         int force_count = (item_count < 30) ? item_count : 30;
         for (int i = 0; i < force_count; i++) {
             matching_indices[total_matches] = i;
             total_matches++;
         }
     }
-
+    
     int pool_max = 60;
     
     if (current_sel == -1 || current_sel == LB_ERR) {
@@ -218,7 +218,6 @@ static inline void PopulateListBox(HWND hListBox, const char* filter,
         }
         g_SelectedIndex = (current_sel != LB_ERR && current_sel < g_populated_count) ? current_sel : 0;
     }
-    
 }
 static inline bool IsPopupActive(HWND hPopupWnd) {
     return hPopupWnd != NULL && IsWindow(hPopupWnd);
