@@ -385,7 +385,6 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                   g_render_callback(pdis->hDC, textBuffer, &textRect, isSelected);
               } else {
                   HFONT hOldMainFont = (HFONT)SelectObject(pdis->hDC, g_hMainFont);
-                  SetTextColor(pdis->hDC, isSelected ? RGB(255,255,255) : COLOR_TEXT);
                   DrawTextA(pdis->hDC, textBuffer, -1, &textRect, DT_SINGLELINE | DT_VCENTER);
                   SelectObject(pdis->hDC, hOldMainFont);
               }

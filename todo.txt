@@ -1,4 +1,4 @@
 also maybe you can like link todos to each other||[Project: Cprogram]
 maybe work on the header a bit youve been neglecting it||[Project: HeaderC]
 implement my own ocr so i can shove it inside myprogram||[Project: HeaderC]
-MAKE THE FUCKING CLIPBOAD HISTORY||[Project: Cprogram]
+MAKE THE FUCKING CLIPBOARD HISTORY||[Project: Cprogram]
