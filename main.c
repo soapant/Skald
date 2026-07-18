@@ -171,15 +171,7 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
                     }
                     
                     g_SelectedIndex = sel;
-
-                    if (g_refresh_callback != NULL) {
-                        char current_filter[256] = {0};
-                        GetWindowTextA(hwnd, current_filter, sizeof(current_filter));
-                        g_refresh_callback(current_filter, hListBox);
-                    }
-
-                    SendMessageA(hListBox, LB_SETCARETINDEX, g_SelectedIndex, FALSE);
-                    InvalidateRect(hListBox, NULL, FALSE);
+                    UI_SetSelection(hListBox, g_SelectedIndex);
                 }
             }
             return 0;
@@ -385,6 +377,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                   g_render_callback(pdis->hDC, textBuffer, &textRect, isSelected);
               } else {
                   HFONT hOldMainFont = (HFONT)SelectObject(pdis->hDC, g_hMainFont);
+                  SetTextColor(pdis->hDC, RGB(255, 255, 255));
                   DrawTextA(pdis->hDC, textBuffer, -1, &textRect, DT_SINGLELINE | DT_VCENTER);
                   SelectObject(pdis->hDC, hOldMainFont);
               }
@@ -547,7 +540,6 @@ LRESULT CALLBACK ListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 }
 void CreateChildControls(HWND hwndParent, HFONT hFont, const char* list[], int count, const WindowLayout* layout) {
     HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtrA(hwndParent, GWLP_HINSTANCE);
-    WinTimer my_timer = TimerStart();
     
     hEditControl = CreateWindowExA(
         0, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
@@ -582,31 +574,20 @@ void CreateChildControls(HWND hwndParent, HFONT hFont, const char* list[], int c
         g_initial_items = list;        
         g_initial_count = count;
         
-        // 5. Profile: Index allocation initialization pass
         UI_SetItemCount(hListBox, count);
-        int countCheck = (int)SendMessageA(hListBox, LB_GETCOUNT, 0, 0);
+        int countCheck = UI_GetCount(hListBox);
         
-        // 6. Profile: Initial painting/drawing pass forcing
         UI_Redraw(hListBox);
         UpdateWindow(hListBox); 
         
-        // CRITICAL FIX: Force the CPU to wait until the OS finishes drawing all 2,169 rows!
         GdiFlush(); 
         
-        
-        // 7. Profile: GDI device context cleanup
         SelectObject(hdc, hOldFont);
         ReleaseDC(hListBox, hdc);
         UI_SetHorizontalExtent(hListBox, max_width);
         
-        // TRAP DEAD SPACE 2: Capture any lag between GDI cleanup and the callback firing
-        
-        // 8. Profile: Core data loading callback routing
-        if (g_refresh_callback) {
-            g_refresh_callback("", hListBox);
-        }
+        g_refresh_callback("", hListBox);
     }
-    TimerEnd(my_timer, "Child Controls");
 }
 void ForceWindowFocus(HWND hwndTarget, HWND hwndInput) {
     ShowWindow(hwndTarget, SW_SHOW);
