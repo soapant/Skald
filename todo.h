@@ -31,10 +31,7 @@ static void parse_todo_flags(char* input, TodoFlags* flags, char* clean_text) {
     strncpy(processed, input, sizeof(processed) - 1);
     processed[sizeof(processed) - 1] = '\0';
     
-    // ============================================================
-    // PROCESS ALIASES - Check for any aliases from config.h
-    // ============================================================
-    for (int i = 0; i < 10; i++) {  // Max 10 aliases, loop until we find them all
+    for (int i = 0; i < 10; i++) {
         bool found_alias = false;
         
         // Check each token for an alias
@@ -45,7 +42,6 @@ static void parse_todo_flags(char* input, TodoFlags* flags, char* clean_text) {
         while (token != NULL) {
             const char* project_name = alias_to_project(token);
             if (project_name != NULL) {
-                // Found an alias, replace it with -p "ProjectName"
                 char new_str[256] = {0};
                 char* pos = strstr(processed, token);
                 if (pos) {
@@ -66,9 +62,6 @@ static void parse_todo_flags(char* input, TodoFlags* flags, char* clean_text) {
         if (!found_alias) break;
     }
     
-    // ============================================================
-    // PARSE THE PROCESSED STRING
-    // ============================================================
     char temp2[256];
     strncpy(temp2, processed, sizeof(temp2) - 1);
     temp2[sizeof(temp2) - 1] = '\0';
@@ -78,7 +71,6 @@ static void parse_todo_flags(char* input, TodoFlags* flags, char* clean_text) {
     
     while (token != NULL) {
         if (token[0] == '-') {
-            // Parse flags
             if (strncmp(token, "-p", 2) == 0) {
                 flags->is_project = true;
                 if (strlen(token) > 2) {
@@ -95,10 +87,6 @@ static void parse_todo_flags(char* input, TodoFlags* flags, char* clean_text) {
                         strncpy(flags->project_name, start, sizeof(flags->project_name) - 1);
                     }
                 }
-            } else if (strcmp(token, "-h") == 0) {
-                flags->is_high_priority = true;
-            } else if (strcmp(token, "-l") == 0) {
-                flags->is_low_priority = true;
             }
         } else {
             if (first) {
@@ -374,7 +362,7 @@ void TriggerTodo() {
         ui_list[i] = todo_lines[i];
     }
 
-    PromptUser(ui_list,"📋 TODO",todo_count, 520, 1150,54,
+    PromptUser(ui_list,"📋 TODO",todo_count, 520, 1350,54,
                todo_refresh_callback,     
                todo_enter_callback,       
                todo_ctrlenter_callback,   
