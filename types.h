@@ -67,4 +67,5 @@ extern const char* g_vim_mode;
 extern char g_populated_cache[MAX_ITEMS][512];
 extern int g_populated_count;
 extern int g_view_offset;
+extern int g_TotalMatches; 
 #endif

@@ -67,6 +67,7 @@ RenderCallback g_render_callback = NULL;
 const char** g_initial_items = NULL;
 int g_initial_count = 0;
 int g_SelectedIndex = -1; 
+int g_TotalMatches = 0; 
 #define MAX_ITEMS 1000
 char g_populated_cache[MAX_ITEMS][512];
 int g_populated_count = 0;

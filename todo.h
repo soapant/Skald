@@ -292,17 +292,19 @@ static void todo_enter_callback(const char* selection) {
 static void todo_ctrlenter_callback(const char* selection) {
     int selected_index = UI_GetSelection(hListBox);
     
-    if (selected_index != LB_ERR) {
+    if (selected_index != -1) {
         const char* item_to_remove = g_populated_cache[selected_index];
         remove_todo_item_from_file(item_to_remove);
         printf("[TODO] Removed via Ctrl+Enter: %s\n", item_to_remove);
-        
-        if (hEditControl != NULL) {
-            char current_filter[256] = {0};
-            GetWindowTextA(hEditControl, current_filter, sizeof(current_filter));
-            todo_refresh_callback(current_filter, hListBox);
-        }
+    } else {
+        char input[256] = {0};
+        GetWindowTextA(hEditControl, input, sizeof(input));
+        add_todo_to_file(input);
+        printf("[TODO] Added: %s\n", input);
+        SetWindowTextA(hEditControl, "");
     }
+    todo_refresh_callback(NULL, hListBox);
+    selection_complete = false;
 }
 static void todo_render_callback(HDC hdc, const char* text, RECT* rect, BOOL is_selected) {
     if (!text || !rect) return;
