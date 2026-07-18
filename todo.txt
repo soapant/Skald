@@ -3,3 +3,6 @@ add a sort of reminder so like i can queu a windwo to open after something happe
 maybe work on the header a bit youve been neglecting it||[Project: HeaderC]
 implement my own ocr so i can shove it inside myprogram||[Project: HeaderC]
 testing
+fix the fucking nvim snippets||[Project: misc]
+add misc to the todo flags
+MAKE THE FUCKING CLIPBOAD HISTORY||[Project: Cprogram]

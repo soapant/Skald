@@ -27,12 +27,6 @@ static inline void WriteDebugLog(const char* format, ...) {
     fclose(logFile);
 }
 
-
-
-
-
-struct MappedFile;
-
 typedef void (*HotkeyHandler)(void);
 
 typedef struct {
