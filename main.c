@@ -166,12 +166,17 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
                         if (wParam == VK_UP) {
                             sel = (sel > 0) ? sel - 1 : 0;
                         } else {
-                            sel++; 
+                            sel = (sel < count - 1) ? sel + 1 : count - 1;
                         }
                     }
                     
                     g_SelectedIndex = sel;
                     UI_SetSelection(hListBox, g_SelectedIndex);
+                    
+                    int visibleCount = 13;
+                    int scrollTo = sel - (visibleCount / 2);
+                    if (scrollTo < 0) scrollTo = 0;
+                    SendMessageA(hListBox, LB_SETTOPINDEX, scrollTo, 0);
                 }
             }
             return 0;
@@ -227,6 +232,7 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
     
     return DefSubclassProc(hwnd, msg, wParam, lParam);
 } 
+
 LRESULT CALLBACK SimpleEditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
     HWND hParent = GetParent(hwnd);
     HWND hListBox = GetDlgItem(hParent, IDC_LIST_BOX);
@@ -360,7 +366,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
               
               RECT textRect = pdis->rcItem;
               
-              if (pdis->itemID < 20) {
+              if (pdis->itemID < 99) {
                   char num_str[8];
                   snprintf(num_str, sizeof(num_str), "%d.", pdis->itemID + 1);
                   
