@@ -10,7 +10,6 @@
 #include "types.h"
 
 
-
 typedef struct {
     LARGE_INTEGER start;
     LARGE_INTEGER frequency;
@@ -69,6 +68,9 @@ static inline void UI_SetSelection(HWND hList, int index) {
 
 static inline int UI_GetCount(HWND hList) {
     return g_populated_count;
+}
+static inline bool UI_IsListBoxSelected(void) {
+  return g_SelectedIndex != -1;
 }
 
 static inline void UI_GetText(HWND hList, int index, char* buffer, int bufferSize) {
