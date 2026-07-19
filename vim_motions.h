@@ -11,13 +11,15 @@
 #include "character_sequence.h"
 #include "vim_helpers.h"
 #include "calc.h"
+#include "common_ui.h"
 
-// ============================================================
-// MOTION ACTION ENUM
-// ============================================================
 typedef enum {
     MOTION_NONE = 0,
     MOTION_ENTER_NORMAL,
+    MOTION_NORMALENTER,
+    MOTION_NORMALCTRL_ENTER,
+    MOTION_INSERT_ENTER,
+    MOTION_INSERTCTRL_ENTER,
     MOTION_DELETE_LINE_INSERT,
     MOTION_DELETE_LINE_NORMAL,
     MOTION_DELETE_CHAR_INSERT,
@@ -295,6 +297,35 @@ static inline void HandleYankLine(void) {
             printf("[VIM] Yank failed: Search box is currently empty.\n");
         }
     }
+}
+
+static inline void HandleInsertRegularEnter(void) {
+  SendMessageA(hEditControl, WM_KEYDOWN, VK_RETURN, 0);
+  SendMessageA(hEditControl, WM_KEYUP, VK_RETURN, 0);
+}
+
+static inline void HandleInsertControlEnter(void) {
+  SendMessageA(hEditControl, WM_KEYDOWN, VK_CONTROL, 0);
+  SendMessageA(hEditControl, WM_KEYDOWN, VK_RETURN, 0);
+  SendMessageA(hEditControl, WM_KEYUP, VK_RETURN, 0);
+  SendMessageA(hEditControl, WM_KEYUP, VK_CONTROL, 0);
+  selection_complete = false;
+}
+static inline void HandleNormalRegularEnter(void) {
+  if (hListBox != NULL && UI_IsListBoxSelected()) {
+  SendMessageA(hEditControl, WM_KEYDOWN, VK_RETURN, 0);
+  SendMessageA(hEditControl, WM_KEYUP, VK_RETURN, 0);
+  }
+}
+
+static inline void HandleNormalControlEnter(void) {
+  if (hListBox != NULL && UI_IsListBoxSelected()) {
+  SendMessageA(hEditControl, WM_KEYDOWN, VK_CONTROL, 0);
+  SendMessageA(hEditControl, WM_KEYDOWN, VK_RETURN, 0);
+  SendMessageA(hEditControl, WM_KEYUP, VK_RETURN, 0);
+  SendMessageA(hEditControl, WM_KEYUP, VK_CONTROL, 0);
+  selection_complete = false;
+  }
 }
 
 

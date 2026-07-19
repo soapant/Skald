@@ -23,9 +23,13 @@ static const MotionBinding G_VIM_BINDINGS[] = {
     
     { 'X', HOTKEY_MOD_NONE,  MOTION_DELETE_CHAR,            "Del",           HandleDelete,             MODE_NORMAL },
     
-    { 'S', HOTKEY_MOD_NONE,  MOTION_DELETE_CHAR_INSERT,            "DelInsert",           HandleDeleteInsert,             MODE_NORMAL },
+    { 'S', HOTKEY_MOD_NONE,  MOTION_DELETE_CHAR_INSERT,      "DelInsert",           HandleDeleteInsert,             MODE_NORMAL },
     
     { 'D', HOTKEY_MOD_SHIFT,  MOTION_DELETE_CHAR_PERSISTENT, "DelPersistent", HandlePersistentDelete,   MODE_NORMAL },
+    
+    { 'L', HOTKEY_MOD_NONE,  MOTION_NORMALENTER, "PickNormal", HandleNormalRegularEnter,   MODE_NORMAL },
+    
+    { 'L', HOTKEY_MOD_SHIFT,  MOTION_NORMALCTRL_ENTER, "PickNormalPersistent", HandleNormalControlEnter,   MODE_NORMAL },
     
     { 'S', HOTKEY_MOD_SHIFT, MOTION_DELETE_LINE_INSERT,     "DelLineInsert", HandleDeleteLineInsert,   MODE_NORMAL },
     
@@ -45,16 +49,22 @@ static const MotionBinding G_VIM_BINDINGS[] = {
 
 static const SequenceBinding G_VIM_SEQUENCE_BINDINGS[] = {
   
-    { "JK", MOTION_ENTER_NORMAL,       "Enter Mapping", HandleEnterNormal,      false, MODE_INSERT },
-    { "JS", MOTION_DELETE_LINE_NORMAL,  "Delete Line Mapping", HandleDeleteLineNormal,      false, MODE_INSERT },
-    { "JQ", MOTION_EXIT_WINDOW,       "Exit Mapping",  HandleExitWindow,       false, MODE_INSERT },
-    { "dd", MOTION_DELETE_LINE,        "DeleteLine",    HandleDeleteLine,       false, MODE_NORMAL },
-    { "gg", MOTION_MOVE_LISTBOX_START, "ListboxStart",  HandleMoveListboxStart, false, MODE_NORMAL },
+    { "JK", MOTION_ENTER_NORMAL,       "Enter Mapping",       HandleEnterNormal,      false, MODE_INSERT },
+    { "JS", MOTION_DELETE_LINE_NORMAL, "Delete Line Mapping", HandleDeleteLineNormal, false, MODE_INSERT },
+    { "JC", MOTION_INSERTCTRL_ENTER,         "CTRL Enter Mapping",  HandleInsertControlEnter,     false, MODE_INSERT },
+    { "JE", MOTION_INSERT_ENTER,              "Enter Mapping",       HandleInsertRegularEnter,     false, MODE_INSERT },
+    { "JQ", MOTION_EXIT_WINDOW,        "Exit Mapping",        HandleExitWindow,       false, MODE_INSERT },
+    { "dd", MOTION_DELETE_LINE,        "DeleteLine",          HandleDeleteLine,       false, MODE_NORMAL },
+    { "gg", MOTION_MOVE_LISTBOX_START, "ListboxStart",        HandleMoveListboxStart, false, MODE_NORMAL },
+    // 
     // { "dw",    MOTION_DELETE_WORD,     "DeleteWord",  HandleDeleteWord,         false, MODE_NORMAL },
     // { "d$",    MOTION_DELETE_TO_END,   "DeleteToEnd", HandleDeleteToEnd,        false, MODE_NORMAL },
+    // 
     { "yy",    MOTION_YANK_LIST_BOX,       "YankListBox",    HandleYankListBox,           false, MODE_NORMAL },
+    // 
     // { "yw",    MOTION_YANK_WORD,       "YankWord",    HandleYankWord,           false, MODE_NORMAL },
     // { "y$",    MOTION_YANK_TO_END,     "YankToEnd",   HandleYankToEnd,          false, MODE_NORMAL },
+    // 
  };
 
 #define VIM_SEQUENCE_BINDING_COUNT (sizeof(G_VIM_SEQUENCE_BINDINGS) / sizeof(G_VIM_SEQUENCE_BINDINGS[0]))
