@@ -8,9 +8,9 @@
 #include "types.h"
 
 extern HWND hPopupWnd;
-static void NIGGA(const char* selection) {
+
+static void LaunchTimer(const char* selection) {
     if (selection != NULL && strlen(selection) > 0) {
-        // Find sowon in cache
         char sowon_path[MAX_PATH] = {0};
         for (int i = 0; i < G_APP_COUNT; i++) {
             if (StrStrIA(G_APPS[i].name, "sowon") != NULL) {
@@ -27,16 +27,17 @@ static void NIGGA(const char* selection) {
         printf("[TIMER] Launching: %s %s\n", sowon_path, selection);
     }
 }
+
 static void TriggerTimer() {
-  
     if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
     
-    const char* prompt[1] = { "Enter timer duration (e.g., 5m, 10h,20s or 0 for a stopwatch" };
-    const char* input;
-    input = PromptUser(prompt,"⏱️ Timer",1, 520, 650,32,NULL,NULL,NULL,NULL,NULL);
+    char* input;
     
-    NIGGA(input);
-
+    const char* prompt =  "     Enter timer duration (10s 50m 2h or enter 0 for a stopwatch)";
+    
+    input = SimplePromptUser(prompt,"⏱️ Timer",520, 650,32);
+    
+    LaunchTimer(input);
 }
 
 #endif

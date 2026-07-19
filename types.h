@@ -19,6 +19,7 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
                  TabCallback tab_callback,
                  RenderCallback render_callback);
 
+char* SimplePromptUser(const char* prompt, const char* window_title,int height, int width, int item_height);
 
 typedef struct {
     int index;
@@ -68,4 +69,8 @@ extern char g_populated_cache[MAX_ITEMS][512];
 extern int g_populated_count;
 extern int g_view_offset;
 extern int g_TotalMatches; 
+#define COLOR_BG      RGB(30, 34, 42)   
+#define COLOR_TEXT    RGB(220, 223, 228)
+extern HFONT g_hNumFont;
+extern HFONT g_hMainFont;
 #endif
