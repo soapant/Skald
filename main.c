@@ -75,8 +75,8 @@ int g_view_offset = 0;
 const char* g_title = NULL;
 int img_region_step = 0;
 long img_x1 = 0, img_y1 = 0;
-static HFONT g_hNumFont = NULL;
-static HFONT g_hMainFont = NULL;
+HFONT g_hNumFont = NULL;
+HFONT g_hMainFont = NULL;
 
 const char* BASE_SAVE_FOLDER_PATH = "C:\\Users\\HP\\Pictures\\Screenshots\\";
 
@@ -223,6 +223,33 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
             }
             return 0;
         }
+    } 
+    
+    return DefSubclassProc(hwnd, msg, wParam, lParam);
+} 
+LRESULT CALLBACK SimpleEditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
+    HWND hParent = GetParent(hwnd);
+    HWND hListBox = GetDlgItem(hParent, IDC_LIST_BOX);
+    HWND hEditControl = hwnd;
+
+    if (msg == WM_KEYDOWN) {
+        if (wParam == VK_CONTROL || wParam == VK_SHIFT || wParam == VK_MENU) {
+            return DefSubclassProc(hwnd, msg, wParam, lParam);
+        }
+        if (wParam == VK_RETURN) {
+            GetWindowTextA(hEditControl, output_buffer, sizeof(output_buffer));
+            
+            selection_complete = true; 
+            
+            return 0; 
+        }
+
+        if (wParam == VK_ESCAPE) {
+            output_buffer[0] = '\0'; 
+            selection_complete = true;  
+            return 0;
+        }
+        
     } 
     
     return DefSubclassProc(hwnd, msg, wParam, lParam);
@@ -532,9 +559,6 @@ LRESULT CALLBACK ListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
         case WM_NCDESTROY:
             RemoveWindowSubclass(hWnd, ListBoxSubclassProc, uIdSubclass);
             break;
-        case WM_ERASEBKGND: {
-            return TRUE; 
-        }  
     }
     return DefSubclassProc(hWnd, uMsg, wParam, lParam);
 }
@@ -589,6 +613,47 @@ void CreateChildControls(HWND hwndParent, HFONT hFont, const char* list[], int c
         g_refresh_callback("", hListBox);
     }
 }
+void SimpleCreateChildControls(HWND hwndParent, HFONT hFont, const char* string, int count, const WindowLayout* layout) {
+    HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtrA(hwndParent, GWLP_HINSTANCE);
+    
+    hEditControl = CreateWindowExA(
+        0, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
+        20, 50, layout->w - 40, 40, hwndParent, (HMENU)IDC_INPUT_BOX, hInstance, NULL
+    );
+    
+    if (!hEditControl) return;
+    
+    SendMessageA(hEditControl, WM_SETFONT, (WPARAM)hFont, FALSE);
+    SetWindowSubclass(hEditControl, SimpleEditSubclassProc, 0, 0);
+
+    if (count > 0) {
+        hListBox = CreateWindowExA(
+            0, "LISTBOX", "", 
+            WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOSEL, 
+            20, 105, layout->w - 40, layout->h - 115, hwndParent, (HMENU)IDC_LIST_BOX, hInstance, NULL
+        );
+
+        if (!hListBox) return;
+        
+        SetWindowSubclass(hListBox, ListBoxSubclassProc, 0, 0);
+        SendMessageA(hListBox, WM_SETFONT, (WPARAM)hFont, FALSE);
+        SendMessageA(hListBox, LB_SETITEMHEIGHT, 0, layout->item_height);
+
+        int max_width = layout->w - 40;
+        HDC hdc = GetDC(hListBox);
+        if (!hdc) return;
+        HFONT hOldFont = (HFONT)SelectObject(hdc, hFont);
+        
+        SendMessage(hListBox, LB_ADDSTRING, 0, (LPARAM)string);
+        UpdateWindow(hListBox); 
+        
+        GdiFlush(); 
+        
+        SelectObject(hdc, hOldFont);
+        ReleaseDC(hListBox, hdc);
+    }
+}
+
 void ForceWindowFocus(HWND hwndTarget, HWND hwndInput) {
     ShowWindow(hwndTarget, SW_SHOW);
 
@@ -691,10 +756,8 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
     WindowLayout layout;
     CalculateWindowMetrics(count, &layout, height, width, item_height);
     
-    // 1. PROFILE: Custom Font Initialization (The highly probable culprit!)
     HFONT hCustomFont = CreateCustomNerdFont(24, "0xProto Nerd Font");
 
-    // 2. PROFILE: Primary Window Creation
     hPopupWnd = CreateWindowExA(
         WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED, 
         "QuickSwitcherModalClass", NULL, WS_POPUP | WS_CLIPCHILDREN, 
@@ -751,8 +814,6 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
             loop_counter++;
             TranslateMessage(&msg);
             DispatchMessage(&msg);
-        } else {
-            Sleep(10);
         }
     }
     printf("[DEBUG-UI] Left local loop. Processed %d messages.\n", loop_counter);
@@ -780,6 +841,95 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
     g_render_callback = NULL;
 
     printf("[DEBUG-UI] Returning from PromptUser. Buffer Length: %zu\n", strlen(output_buffer));
+    return (strlen(output_buffer) > 0) ? output_buffer : NULL;
+}
+char* SimplePromptUser(const char* prompt, const char* window_title,int height, int width, int item_height) {
+    HINSTANCE hInstance = GetModuleHandle(NULL);
+    selection_complete = false;
+    output_buffer[0] = '\0';
+    g_title = window_title;
+    
+    SetMode(MODE_INSERT);
+
+    WindowLayout layout;
+    CalculateWindowMetrics(1, &layout, height, width, item_height);
+    
+    HFONT hCustomFont = CreateCustomNerdFont(24, "0xProto Nerd Font");
+
+    hPopupWnd = CreateWindowExA(
+        WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED, 
+        "QuickSwitcherModalClass", NULL, WS_POPUP | WS_CLIPCHILDREN, 
+        layout.x, layout.y, layout.w, layout.h, NULL, NULL, hInstance, NULL
+    );
+    
+    UpdateCursorForMode(MODE_INSERT);
+    
+    SetTimer(hPopupWnd, 999, 50, NULL);
+
+    if (hPopupWnd == NULL) {
+        DWORD err = GetLastError();
+        if (err == 1407) {
+        }
+        DeleteObject(hCustomFont);
+        return NULL;
+    }
+
+    SimpleCreateChildControls(hPopupWnd, hCustomFont, prompt, 1, &layout);
+    
+    SetLayeredWindowAttributes(hPopupWnd, 0, 245, LWA_ALPHA);
+
+    ForceWindowFocus(hPopupWnd, hEditControl);
+    
+    if (window_title != NULL && strlen(window_title) > 0) {
+        HDC hdc = GetDC(hPopupWnd);
+        HFONT hwindow_titleFont = CreateCustomNerdFont(20, "0xProto Nerd Font");
+        HFONT hOldFont = (HFONT)SelectObject(hdc, hwindow_titleFont);
+        
+        SetBkMode(hdc, TRANSPARENT);
+        SetTextColor(hdc, RGB(255, 255, 255));
+        
+        RECT rect;
+        GetClientRect(hPopupWnd, &rect);
+        
+        SIZE sz;
+        GetTextExtentPoint32A(hdc, window_title, (int)strlen(window_title), &sz);
+        
+        rect.left = rect.right - sz.cx - 20;
+        rect.top = 10;
+        rect.bottom = rect.top + sz.cy + 10;
+        
+        DrawTextA(hdc, window_title, -1, &rect, DT_LEFT | DT_TOP);
+        
+        SelectObject(hdc, hOldFont);
+        DeleteObject(hwindow_titleFont);
+        ReleaseDC(hPopupWnd, hdc);
+    }
+
+    MSG msg;
+    int loop_counter = 0;
+    while (!selection_complete) {
+        if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+            loop_counter++;
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
+    }
+
+    if (hPopupWnd != NULL && IsWindow(hPopupWnd)) {
+        KillTimer(hPopupWnd, 999);
+        DestroyWindow(hPopupWnd);
+        hPopupWnd = NULL;
+    }
+    
+    while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+    }
+
+    DeleteObject(hCustomFont); 
+    selection_complete = false;
+
+    printf("[DEBUG-UI] Returning from SimplePromptUser. Buffer %s\n", output_buffer);
     return (strlen(output_buffer) > 0) ? output_buffer : NULL;
 }
 
