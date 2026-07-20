@@ -33,7 +33,7 @@ static void TriggerTimer() {
     
     char* input;
     
-    const char* prompt =  "     Enter timer duration (10s 50m 2h or enter 0 for a stopwatch)";
+    const char* prompt =  "Enter timer duration (10s 50m 2h or enter 0 for a stopwatch)";
     
     input = SimplePromptUser(prompt,"⏱️ Timer",520, 650,32);
     

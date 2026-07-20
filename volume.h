@@ -82,18 +82,16 @@ cleanup:
 void TriggerVolume() {
     if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
     int current_vol = GetSystemVolume();
-    char prompt[128]; 
+    char prompt[256]; 
     char* input;
-    snprintf(prompt, sizeof(prompt), "              Enter Volume (0 - 100) Current Volume: %d", current_vol);
+    snprintf(prompt, sizeof(prompt), "Enter Volume (0 - 100) Current Volume: %d", current_vol);
     
     input = SimplePromptUser(prompt, "🔊 Volume",520, 650, 32);
     
-    if (strlen(input) > 0) {
-        int vol = atoi(input);
-        if (vol < 0) vol = 0;
-        if (vol > 100) vol = 100;
-        SetSystemVolume(vol / 100.0f);
-    }
+    int vol = atoi(input);
+    if (vol < 0) vol = 0;
+    if (vol > 100) vol = 100;
+    SetSystemVolume(vol / 100.0f);
 }
 
 #endif 
