@@ -117,14 +117,14 @@ static inline void HandleEnterVisual(void) {
 
 
 static inline void HandleMoveLeft(void) {
-    if (hEditControl && IsWindow(hEditControl)) {
+    if (hEditControl && IsWindow(hEditControl) && g_SelectedIndex == -1) {
         SendMessageA(hEditControl, WM_KEYDOWN, VK_LEFT, 0);
         SendMessageA(hEditControl, WM_KEYUP, VK_LEFT, 0);
     }
 }
 
 static inline void HandleMoveRight(void) {
-    if (hEditControl && IsWindow(hEditControl)) {
+    if (hEditControl && IsWindow(hEditControl) && g_SelectedIndex == -1) {
         SendMessageA(hEditControl, WM_KEYDOWN, VK_RIGHT, 0);
         SendMessageA(hEditControl, WM_KEYUP, VK_RIGHT, 0);
     }
@@ -145,49 +145,33 @@ static inline void HandleMoveDown(void) {
 }
 
 static inline void HandlePersistentDelete(void) {
-    const char* feature = GetCurrentFeature();
+    char text[512] = {0};
     
-    if (IsNormalMode() && g_SelectedIndex >= 0 && g_SelectedIndex < g_populated_count) {
-          char text[512] = {0};
-          
-          strncpy(text, g_populated_cache[g_SelectedIndex], sizeof(text) - 1);
-          text[sizeof(text) - 1] = '\0';
-          
-          if (g_ctrl_enter_callback != NULL) {
-              g_ctrl_enter_callback(text);
-          }
-          
-          return;
+    strncpy(text, g_populated_cache[g_SelectedIndex], sizeof(text) - 1);
+    text[sizeof(text) - 1] = '\0';
+    
+    if (g_ctrl_enter_callback != NULL) {
+        g_ctrl_enter_callback(text);
     }
     
-    if (hEditControl && IsWindow(hEditControl)) {
-        DeleteCharUnderCursor();
-        printf("[VIM] Deleted character under cursor\n");
-    }
+    return;
+    
 }
 
 static inline void HandleDelete(void) {
     const char* feature = GetCurrentFeature();
     
-    if (IsNormalMode() && g_SelectedIndex >= 0 && g_SelectedIndex < g_populated_count) {
-        if (strstr(feature, "Todo") != NULL) {
-            char text[512] = {0};
-            
-            strncpy(text, g_populated_cache[g_SelectedIndex], sizeof(text) - 1);
-            text[sizeof(text) - 1] = '\0';
-            
-            if (g_enter_callback != NULL) {
-                g_enter_callback(text);
-            }
-            selection_complete = true;
-            return;
-        }
-    }
+      char text[512] = {0};
+      
+      strncpy(text, g_populated_cache[g_SelectedIndex], sizeof(text) - 1);
+      text[sizeof(text) - 1] = '\0';
+      
+      if (g_enter_callback != NULL) {
+          g_enter_callback(text);
+      }
+      selection_complete = true;
+      return;
     
-    if (hEditControl && IsWindow(hEditControl)) {
-        DeleteCharUnderCursor();
-        printf("[VIM] Deleted character under cursor\n");
-    }
 }
 
 static inline void HandleDeleteInsert(void) {

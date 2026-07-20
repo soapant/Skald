@@ -181,6 +181,9 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
                             sel = (sel < count - 1) ? sel + 1 : count - 1;
                         }
                     }
+                    if (sel == 0 && wParam == VK_UP) {
+                       sel = -1;
+                    }
                     
                     g_SelectedIndex = sel;
                     SendMessageA(hListBox, LB_SETCARETINDEX, sel, TRUE);
@@ -206,15 +209,9 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
             } else {
                 GetWindowTextA(hwnd, output_buffer, sizeof(output_buffer));
             }
-
             if (ctrl_pressed) {
                 if (g_ctrl_enter_callback != NULL) {
                     g_ctrl_enter_callback(output_buffer);
-                }
-                if (g_refresh_callback != NULL) {
-                    char current_filter[256] = {0};
-                    GetWindowTextA(hEditControl, current_filter, sizeof(current_filter));
-                    g_refresh_callback(current_filter, hListBox);
                 }
                 return 0;
             } else {
@@ -280,6 +277,42 @@ HFONT CreateCustomNerdFont(int height, const char* face_name) {
         face_name
     );
 }
+
+
+void UpdateTextCaret(HWND hwndEditControl)
+{
+    if (GetFocus() != hwndEditControl) return;
+
+    int caretWidth = 1;   
+    int caretHeight = 24; 
+
+    if (IsInsertMode()) {
+        caretWidth = 2;   
+    } 
+    else if (IsNormalMode()) {
+        caretWidth = 12;  
+    } 
+    else {
+        caretWidth = 12;  
+    }
+
+    static int lastWidth = -1;
+    
+    if (caretWidth != lastWidth) {
+        DestroyCaret();
+        CreateCaret(hwndEditControl, NULL, caretWidth, caretHeight);
+        ShowCaret(hwndEditControl);
+        
+        if (IsNormalMode()) {
+            SetCaretBlinkTime(INFINITE); 
+        } else {
+            SetCaretBlinkTime(INFINITE);
+        }
+        
+        lastWidth = caretWidth;
+    }
+}
+
 LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
       case WM_CTLCOLOREDIT:
@@ -367,7 +400,6 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
               if (pdis->itemID < g_populated_count) {
                   textBuffer = g_populated_cache[pdis->itemID];
               }
-              if (!textBuffer) textBuffer = "";
               
               SetBkMode(pdis->hDC, TRANSPARENT);
               
@@ -429,14 +461,12 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
       case WM_PAINT: {
           PAINTSTRUCT ps;
           HDC hdc = BeginPaint(hwnd, &ps);
-          
           HBRUSH hBrush = CreateSolidBrush(COLOR_BG);
           FillRect(hdc, &ps.rcPaint, hBrush);
           DeleteObject(hBrush);
           
           RECT rect;
           GetClientRect(hwnd, &rect);
-          
           if (g_vim_mode != NULL) {
               wchar_t wmode[256];
               MultiByteToWideChar(CP_UTF8, 0, g_vim_mode, -1, wmode, 256);
@@ -452,6 +482,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
               } else {
                   SetTextColor(hdc, RGB(173, 3, 222));
               }
+
               
               SIZE sz;
               GetTextExtentPoint32W(hdc, wmode, (int)wcslen(wmode), &sz);
@@ -505,22 +536,6 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             }
         }
         break;              
-      case WM_SETCURSOR: {
-            if (LOWORD(lParam) == HTCLIENT) {
-                HCURSOR hCursor;
-                if (IsInsertMode()) {
-                    hCursor = LoadCursor(NULL, IDC_IBEAM);  
-                } else if (IsNormalMode()) {
-                    hCursor = LoadCursor(NULL, IDC_ARROW);  
-                } else {
-                    hCursor = LoadCursor(NULL, IDC_CROSS);  
-                }
-                SetCursor(hCursor);
-                return TRUE;
-            }
-            break;
-          }                
-                         
       case WM_ERASEBKGND: {
           return (LRESULT)TRUE;
           }
@@ -826,7 +841,6 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
         DestroyWindow(hPopupWnd);
         hPopupWnd = NULL;
     }
-    
     ResetNumberShortcutState();
     
     printf("[DEBUG-UI] Flushing trailing queue entries...\n");

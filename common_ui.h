@@ -148,18 +148,6 @@ static inline void PopulateListBox(HWND hListBox, const char* filter,
         strncpy(clean_filter, filter, sizeof(clean_filter) - 1);
     }
     int found_in_history = 0;
-    if (strlen(clean_filter) > 0) {
-        for (int h = 0; h < g_history_count; h++) {
-            if (strcmp(g_filter_history[h], clean_filter) == 0) {
-                total_matches = g_match_count_history[h];
-                memcpy(matching_indices, g_match_history[h], total_matches * sizeof(int));
-                found_in_history = 1;
-                printf("[HISTORY] Restored '%s' from history (%d matches)\n", clean_filter, total_matches);
-                break;
-            }
-        }
-    }
-    
     if (!found_in_history) {
         int use_previous = 0;
         if (strlen(clean_filter) > 0 && 
@@ -275,7 +263,6 @@ static inline void PopulateListBox(HWND hListBox, const char* filter,
 
     int window_allocation_count = (g_populated_count < 30) ? 30 : g_populated_count;
     SendMessageA(hListBox, LB_SETCOUNT, window_allocation_count, 0);
-    
     g_last_items = items;
     g_last_item_count = item_count;
     g_TotalMatches = total_matches;

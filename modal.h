@@ -37,13 +37,15 @@ static inline void SetMode(EditorMode mode) {
       last_selection = UI_GetSelection(hListBox);
       UI_SetSelection(hListBox,-1);
     } else if (strcmp(g_vim_mode,"NORMAL") == 0) {
-      if (last_selection <= 0 && g_TotalMatches != 0) {
-          UI_SetSelection(hListBox,0);
-      } else {
-          UI_SetSelection(hListBox,last_selection);
+      if (g_TotalMatches != 0) {
+          if (last_selection <= 0) {
+              UI_SetSelection(hListBox,0);
+          } else {
+              UI_SetSelection(hListBox,last_selection);
+          }
       }
     }
-    UpdateCursorForMode(mode);
+    UpdateTextCaret(hEditControl);
     
     extern HWND hPopupWnd;
     if (hPopupWnd != NULL && IsWindow(hPopupWnd)) {
