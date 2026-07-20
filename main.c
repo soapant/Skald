@@ -173,22 +173,23 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
                 
                 if (count > 0) {
                     if (sel == LB_ERR) {
+                        // If nothing is selected, pressing UP/DOWN selects the first item
                         sel = 0;
+                    } else if (sel == 0 && wParam == VK_UP) {
+                        // FIX: If we are ALREADY at 0 and press UP, safely jump out to -1
+                        sel = -1;
                     } else {
+                        // Standard index stepping tracking
                         if (wParam == VK_UP) {
                             sel = (sel > 0) ? sel - 1 : 0;
                         } else {
                             sel = (sel < count - 1) ? sel + 1 : count - 1;
                         }
                     }
-                    if (sel == 0 && wParam == VK_UP) {
-                       sel = -1;
-                    }
                     
                     g_SelectedIndex = sel;
                     SendMessageA(hListBox, LB_SETCARETINDEX, sel, TRUE);
                 }
-                
                 SendMessageA(hListBox, WM_SETREDRAW, TRUE, 0);
                 InvalidateRect(hListBox, NULL, FALSE);
             }

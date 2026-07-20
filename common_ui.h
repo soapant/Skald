@@ -263,6 +263,10 @@ static inline void PopulateListBox(HWND hListBox, const char* filter,
 
     int window_allocation_count = (g_populated_count < 30) ? 30 : g_populated_count;
     SendMessageA(hListBox, LB_SETCOUNT, window_allocation_count, 0);
+    if (total_matches == 1) {
+      UI_SetSelection(hListBox,0);
+    }
+    
     g_last_items = items;
     g_last_item_count = item_count;
     g_TotalMatches = total_matches;
