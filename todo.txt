@@ -8,4 +8,5 @@ add some asmr videos also just improve the ux for the actual window||[Project: C
 you could also do with pretting up this windwo a bit it looks like shit||[Project: Cprogram]
 also be able to add tags to already todo strings||[Project: Cprogram]
 the window doesnt like shift alt very much||[Project: Cprogram]
-do moving up after the first item to go into selection||[Project: Cprogram]
+the black box is in the simpleprompusers||[Project: Cprogram]
+for some reason going to the 0 index puts me in the index||[Project: Cprogram]

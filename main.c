@@ -190,7 +190,7 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
                 }
                 
                 SendMessageA(hListBox, WM_SETREDRAW, TRUE, 0);
-                InvalidateRect(hListBox, NULL, TRUE);
+                InvalidateRect(hListBox, NULL, FALSE);
             }
             return 0;
         }
@@ -312,7 +312,7 @@ void UpdateTextCaret(HWND hwndEditControl)
         lastWidth = caretWidth;
     }
 }
-
+int counter;
 LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
       case WM_CTLCOLOREDIT:
@@ -383,14 +383,13 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             
               BOOL isSelected = (pdis->itemID == g_SelectedIndex);
               
-              HBRUSH hBgBrush;
-              if (isSelected) {
-                  hBgBrush = CreateSolidBrush(RGB(50, 56, 68));
-              } else {
-                  hBgBrush = CreateSolidBrush(COLOR_BG);
-              }
+              static HBRUSH hSelBrush = NULL;
+              static HBRUSH hBgBrushStatic = NULL;
+              if (!hSelBrush) hSelBrush = CreateSolidBrush(RGB(50, 56, 68));
+              if (!hBgBrushStatic) hBgBrushStatic = CreateSolidBrush(COLOR_BG);
+              
+              HBRUSH hBgBrush = isSelected ? hSelBrush : hBgBrushStatic;
               FillRect(pdis->hDC, &pdis->rcItem, hBgBrush);
-              DeleteObject(hBgBrush);
               
               if (pdis->itemID == -1 || pdis->itemID >= g_populated_count) {
                   return TRUE; 
@@ -401,7 +400,8 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                   textBuffer = g_populated_cache[pdis->itemID];
               }
               
-              SetBkMode(pdis->hDC, TRANSPARENT);
+              SetBkMode(pdis->hDC, OPAQUE);
+              SetBkColor(pdis->hDC, isSelected ? RGB(50, 56, 68) : COLOR_BG);
               
               RECT textRect = pdis->rcItem;
               
@@ -438,7 +438,6 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                   DrawTextA(pdis->hDC, num_str, -1, &numRect, DT_SINGLELINE | DT_VCENTER | DT_CENTER);
                   
                   SelectObject(pdis->hDC, hOldFont);
-                  
                   textRect.left += 35;
                   
               } else {
@@ -579,7 +578,58 @@ LRESULT CALLBACK ListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
     }
     return DefSubclassProc(hWnd, uMsg, wParam, lParam);
 }
+LRESULT CALLBACK SimpleListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
+    switch (uMsg) {
+        case WM_NCDESTROY:
+            RemoveWindowSubclass(hWnd, SimpleListBoxSubclassProc, uIdSubclass);
+            break;
 
+        case WM_ERASEBKGND:
+            return 1; 
+
+        case WM_PAINT: {
+            PAINTSTRUCT ps;
+            HDC hdc = BeginPaint(hWnd, &ps);
+
+            RECT rect;
+            GetClientRect(hWnd, &rect);
+
+            HBRUSH hBgBrush = CreateSolidBrush(COLOR_BG);
+            FillRect(hdc, &rect, hBgBrush);
+            DeleteObject(hBgBrush);
+
+            int textLen = (int)SendMessageA(hWnd, LB_GETTEXTLEN, 0, 0);
+            
+            if (textLen > 0 && textLen < 512) {
+                char textBuffer[512] = {0}; 
+                SendMessageA(hWnd, LB_GETTEXT, 0, (LPARAM)textBuffer);
+
+                HFONT hFont = (HFONT)SendMessageA(hWnd, WM_GETFONT, 0, 0);
+                HFONT hOldFont = NULL;
+                if (hFont) hOldFont = (HFONT)SelectObject(hdc, hFont);
+
+                SetBkMode(hdc, TRANSPARENT);
+                SetTextColor(hdc, RGB(255, 255, 255));
+
+                int itemHeight = (int)SendMessageA(hWnd, LB_GETITEMHEIGHT, 0, 0);
+                if (itemHeight <= 0) itemHeight = 40; 
+
+                RECT textRect = rect;
+                textRect.left = 0; 
+                textRect.right = rect.right; 
+                textRect.bottom = textRect.top + itemHeight; 
+
+                DrawTextA(hdc, textBuffer, -1, &textRect, DT_SINGLELINE | DT_VCENTER | DT_CENTER);
+
+                if (hOldFont) SelectObject(hdc, hOldFont);
+            }
+
+            EndPaint(hWnd, &ps);
+            return 0;
+        }
+    }
+    return DefSubclassProc(hWnd, uMsg, wParam, lParam);
+}
 void CreateChildControls(HWND hwndParent, HFONT hFont, const char* list[], int count, const WindowLayout* layout) {
     HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtrA(hwndParent, GWLP_HINSTANCE);
     
@@ -631,8 +681,7 @@ void CreateChildControls(HWND hwndParent, HFONT hFont, const char* list[], int c
         g_refresh_callback("", hListBox);
     }
 }
-void SimpleCreateChildControls(HWND hwndParent, HFONT hFont, const char* string, int count, const WindowLayout* layout) {
-    HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtrA(hwndParent, GWLP_HINSTANCE);
+void SimpleCreateChildControls(HWND hwndParent, HFONT hFont, const char* string, int count, const WindowLayout* layout) { HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtrA(hwndParent, GWLP_HINSTANCE);
     
     hEditControl = CreateWindowExA(
         0, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
@@ -653,7 +702,7 @@ void SimpleCreateChildControls(HWND hwndParent, HFONT hFont, const char* string,
 
         if (!hListBox) return;
         
-        SetWindowSubclass(hListBox, ListBoxSubclassProc, 0, 0);
+        SetWindowSubclass(hListBox, SimpleListBoxSubclassProc, 0, 0);
         SendMessageA(hListBox, WM_SETFONT, (WPARAM)hFont, FALSE);
         SendMessageA(hListBox, LB_SETITEMHEIGHT, 0, layout->item_height);
 
@@ -663,12 +712,14 @@ void SimpleCreateChildControls(HWND hwndParent, HFONT hFont, const char* string,
         HFONT hOldFont = (HFONT)SelectObject(hdc, hFont);
         
         SendMessage(hListBox, LB_ADDSTRING, 0, (LPARAM)string);
+        SendMessage(hListBox, LB_SETCURSEL, (WPARAM)-1, 0);
         UpdateWindow(hListBox); 
         
         GdiFlush(); 
         
         SelectObject(hdc, hOldFont);
         ReleaseDC(hListBox, hdc);
+        
     }
 }
 
@@ -945,7 +996,6 @@ char* SimplePromptUser(const char* prompt, const char* window_title,int height, 
 
     DeleteObject(hCustomFont); 
     selection_complete = false;
-
     printf("[DEBUG-UI] Returning from SimplePromptUser. Buffer %s\n", output_buffer);
     return (strlen(output_buffer) > 0) ? output_buffer : NULL;
 }
