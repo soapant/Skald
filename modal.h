@@ -35,7 +35,12 @@ static inline void SetMode(EditorMode mode) {
     g_vim_mode = g_mode_names[mode];
     if (strcmp(g_vim_mode,"INSERT") == 0 ) {
       last_selection = UI_GetSelection(hListBox);
-      UI_SetSelection(hListBox,-1);
+      //TEMPORARY (MAYBE)
+      if (g_TotalMatches != 1) {
+        UI_SetSelection(hListBox,-1);
+      } else {
+        UI_SetSelection(hListBox,0);
+      }
     } else if (strcmp(g_vim_mode,"NORMAL") == 0) {
       if (g_TotalMatches != 0) {
           if (last_selection <= 0) {
