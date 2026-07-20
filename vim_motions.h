@@ -156,7 +156,7 @@ static inline void HandlePersistentDelete(void) {
           if (g_ctrl_enter_callback != NULL) {
               g_ctrl_enter_callback(text);
           }
-          printf("[VIM] Deleted todo item (Persistent): %s\n", text);
+          
           return;
     }
     

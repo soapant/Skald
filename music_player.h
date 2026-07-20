@@ -59,7 +59,6 @@ static void music_enter_callback(const char* selection) {
 
 static bool HandleMusicPlayer(int vk_code, int modifiers, const char* current_title) {
     if (CheckAndBlockIfPopupActive(hPopupWnd)) return false;
-    
     for (int i = 0; i < MUSIC_PLAYER_COUNT; i++) {
         const MusicPlayerBinding* binding = &G_MUSIC_PLAYERS[i];
         if (binding->vk_code == vk_code && binding->modifiers == modifiers) {
@@ -73,10 +72,8 @@ static bool HandleMusicPlayer(int vk_code, int modifiers, const char* current_ti
                     return false;
                 }
             } else {
-                // Code 69 - open file picker with refresh
                 const char* prompt[1] = { "Search for music..." };
                 
-                // Initialize the file list for the first time
                 ClearFileList();
                 GetFilesRecursive(MusicPath,false);
                 

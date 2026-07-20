@@ -14,26 +14,76 @@
 static SavedWindow g_switcher_windows[100];
 static int g_switcher_count = 0;
 
+typedef struct {
+    DWORD processId;
+    char exeName[64];
+    DWORD lastAccessTime;
+} ExeCacheEntry;
+
+static ExeCacheEntry g_exeCache[128] = {0};
+static int g_exeCacheCount = 0;
+static DWORD g_lastCacheCleanup = 0;
+
 static void FetchExeNameOnDemand(HWND hwnd, char* outExe, DWORD maxLen) {
     DWORD processId = 0;
     GetWindowThreadProcessId(hwnd, &processId);
-    if (processId != 0) {
-        HANDLE hProcess = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, processId);
-        if (hProcess) {
-            char path[MAX_PATH] = {0};
-            if (GetProcessImageFileNameA(hProcess, path, sizeof(path))) {
-                char* lastBackslash = strrchr(path, '\\');
-                if (lastBackslash) {
-                    strncpy(outExe, lastBackslash + 1, maxLen);
-                } else {
-                    strncpy(outExe, path, maxLen);
+    
+    if (processId == 0) {
+        strncpy(outExe, "Unknown.exe", maxLen);
+        return;
+    }
+    
+    DWORD currentTime = GetTickCount();
+    
+    // Cleanup old entries every 10 seconds
+    if (currentTime - g_lastCacheCleanup > 10000) {
+        g_lastCacheCleanup = currentTime;
+        int keepCount = 0;
+        for (int i = 0; i < g_exeCacheCount; i++) {
+            if (currentTime - g_exeCache[i].lastAccessTime < 5000) {
+                if (keepCount != i) {
+                    memcpy(&g_exeCache[keepCount], &g_exeCache[i], sizeof(ExeCacheEntry));
                 }
+                keepCount++;
             }
-            CloseHandle(hProcess);
+        }
+        g_exeCacheCount = keepCount;
+    }
+    
+    // Search cache
+    for (int i = 0; i < g_exeCacheCount; i++) {
+        if (g_exeCache[i].processId == processId) {
+            g_exeCache[i].lastAccessTime = currentTime;
+            strncpy(outExe, g_exeCache[i].exeName, maxLen);
             return;
         }
     }
-    strncpy(outExe, "Unknown.exe", maxLen);
+    
+    // === NOT IN CACHE – QUERY PROCESS ===
+    HANDLE hProcess = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, processId);
+    if (hProcess) {
+        char path[MAX_PATH] = {0};
+        if (GetProcessImageFileNameA(hProcess, path, sizeof(path))) {
+            char* lastBackslash = strrchr(path, '\\');
+            if (lastBackslash) {
+                strncpy(outExe, lastBackslash + 1, maxLen);
+            } else {
+                strncpy(outExe, path, maxLen);
+            }
+        } else {
+            strncpy(outExe, "Unknown.exe", maxLen);
+        }
+        CloseHandle(hProcess);
+    } else {
+        strncpy(outExe, "Unknown.exe", maxLen);
+    }
+    
+    if (g_exeCacheCount < 128) {
+        g_exeCache[g_exeCacheCount].processId = processId;
+        strncpy(g_exeCache[g_exeCacheCount].exeName, outExe, sizeof(g_exeCache[0].exeName) - 1);
+        g_exeCache[g_exeCacheCount].lastAccessTime = currentTime;
+        g_exeCacheCount++;
+    }
 }
 
 static bool switcher_match_helper(const char* item, const char* filter) {

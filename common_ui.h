@@ -45,7 +45,6 @@ static inline int UI_GetSelection(HWND hList) {
 
 static inline void UI_ResetContent(HWND hList) {
     g_populated_count = 0;
-    g_SelectedIndex = -1;
     SendMessageA(hList, LB_SETCOUNT, 0, 0);
 }
 
@@ -79,7 +78,6 @@ static inline void UI_GetText(HWND hList, int index, char* buffer, int bufferSiz
     printf("[DEBUG-UI] UI_GetText requesting index: %d (g_populated_count is %d)\n", index, g_populated_count);
     
     if (index >= 0 && index < g_populated_count) {
-        // Log the raw string sitting inside the global cache slot before copying it
         printf("[DEBUG-UI] Cache slot [%d] contains string: \"%s\"\n", index, g_populated_cache[index]);
         
         strncpy(buffer, g_populated_cache[index], bufferSize - 1);
@@ -87,6 +85,7 @@ static inline void UI_GetText(HWND hList, int index, char* buffer, int bufferSiz
         printf("[DEBUG-UI] Index %d out of bounds! Clearing buffer.\n", index);
         buffer[0] = '\0';
     }
+    
     buffer[bufferSize - 1] = '\0';
 }
 
@@ -131,7 +130,6 @@ static inline void UI_UpdateList(HWND hList, const char* filter, const char** it
 #include "modal.h"
 
 
-
 static inline void PopulateListBox(HWND hListBox, const char* filter, 
                                    const char** items, int item_count,
                                    bool (*filter_match)(const char* item, const char* filter)) {
@@ -144,35 +142,98 @@ static inline void PopulateListBox(HWND hListBox, const char* filter,
     }
     
     int total_matches = 0;
-
     static int matching_indices[4000];
-
-    for (int i = 0; i < item_count && total_matches < 4000; i++) {
-        if (!items[i]) continue;
-
-        bool match = false;
-        if (!filter || strlen(filter) == 0) {
-            match = true;
-        } else if (filter_match) {
-            match = filter_match(items[i], filter);
-        } else {
-            match = (StrStrIA(items[i], filter) != NULL);
-        }
-
-        if (match) {
-            matching_indices[total_matches] = i;
-            total_matches++;
+    char clean_filter[256] = {0};
+    if (filter) {
+        strncpy(clean_filter, filter, sizeof(clean_filter) - 1);
+    }
+    int found_in_history = 0;
+    if (strlen(clean_filter) > 0) {
+        for (int h = 0; h < g_history_count; h++) {
+            if (strcmp(g_filter_history[h], clean_filter) == 0) {
+                total_matches = g_match_count_history[h];
+                memcpy(matching_indices, g_match_history[h], total_matches * sizeof(int));
+                found_in_history = 1;
+                printf("[HISTORY] Restored '%s' from history (%d matches)\n", clean_filter, total_matches);
+                break;
+            }
         }
     }
-
-    if (total_matches == 0 && item_count > 0 && (!filter || strlen(filter) == 0)) {
+    
+    if (!found_in_history) {
+        int use_previous = 0;
+        if (strlen(clean_filter) > 0 && 
+            g_last_items == items && 
+            g_last_item_count == item_count &&
+            g_history_count > 0) {
+            
+            char* last_filter = g_filter_history[g_history_count - 1];
+            if (strlen(clean_filter) > strlen(last_filter) &&
+                strncmp(clean_filter, last_filter, strlen(last_filter)) == 0) {
+                
+                use_previous = 1;
+                printf("[OPTIMIZE] Incremental: '%s' -> '%s'\n", last_filter, clean_filter);
+            }
+        }
+        
+        if (use_previous && g_match_count_history[g_history_count - 1] > 0) {
+            int prev_count = g_match_count_history[g_history_count - 1];
+            int* prev_matches = g_match_history[g_history_count - 1];
+            
+            for (int i = 0; i < prev_count && total_matches < 4000; i++) {
+                int idx = prev_matches[i];
+                if (!items[idx]) continue;
+                
+                bool match = false;
+                if (filter_match) {
+                    match = filter_match(items[idx], clean_filter);
+                } else {
+                    match = (StrStrIA(items[idx], clean_filter) != NULL);
+                }
+                
+                if (match) {
+                    matching_indices[total_matches] = idx;
+                    total_matches++;
+                }
+            }
+        } else {
+            for (int i = 0; i < item_count && total_matches < 4000; i++) {
+                if (!items[i]) continue;
+                
+                bool match = false;
+                if (strlen(clean_filter) == 0) {
+                    match = true;
+                } else if (filter_match) {
+                    match = filter_match(items[i], clean_filter);
+                } else {
+                    match = (StrStrIA(items[i], clean_filter) != NULL);
+                }
+                
+                if (match) {
+                    matching_indices[total_matches] = i;
+                    total_matches++;
+                }
+            }
+        }
+        
+        if (strlen(clean_filter) > 0 && g_history_count < 20) {
+            strncpy(g_filter_history[g_history_count], clean_filter, sizeof(g_filter_history[0]) - 1);
+            g_match_count_history[g_history_count] = total_matches;
+            memcpy(g_match_history[g_history_count], matching_indices, total_matches * sizeof(int));
+            g_history_count++;
+            printf("[HISTORY] Saved '%s' (%d matches)\n", clean_filter, total_matches);
+        }
+        
+    }
+    if (total_matches == 0 && item_count > 0 && strlen(clean_filter) == 0) {
         int force_count = (item_count < 30) ? item_count : 30;
         for (int i = 0; i < force_count; i++) {
             matching_indices[total_matches] = i;
             total_matches++;
         }
+        g_history_count = 0;
     }
-    g_TotalMatches = total_matches; 
+    
     
     int pool_max = 60;
     
@@ -185,25 +246,29 @@ static inline void PopulateListBox(HWND hListBox, const char* filter,
             g_view_offset = current_sel - pool_max + 1; 
         }
     }
-
+    
     if (g_view_offset + pool_max > total_matches) {
         g_view_offset = total_matches - pool_max;
     }
     if (g_view_offset < 0) g_view_offset = 0;
-
+    
     int display_count = total_matches - g_view_offset;
     if (display_count > pool_max) display_count = pool_max;
-
+    
     UI_ResetContent(hListBox);
-    g_populated_count = 0;
-
+    
     for (int i = 0; i < display_count; i++) {
         int raw_data_index = matching_indices[g_view_offset + i];
         if (!items[raw_data_index]) continue;
         
         strncpy(g_populated_cache[g_populated_count], items[raw_data_index], 511);
+        
         g_populated_cache[g_populated_count][511] = '\0';
-        g_populated_cache[g_populated_count][strcspn(g_populated_cache[g_populated_count], "\r\n")] = '\0';
+        if (!found_in_history) {
+            g_populated_cache[g_populated_count][strcspn(g_populated_cache[g_populated_count], "\r\n")] = '\0';
+        } else {
+            g_populated_cache[g_populated_count - 1][strcspn(g_populated_cache[g_populated_count], "\r\n")] = '\0';
+        }
         
         g_populated_count++;
     }
@@ -211,19 +276,12 @@ static inline void PopulateListBox(HWND hListBox, const char* filter,
     int window_allocation_count = (g_populated_count < 30) ? 30 : g_populated_count;
     SendMessageA(hListBox, LB_SETCOUNT, window_allocation_count, 0);
     
-    if (g_populated_count > 0 && IsNormalMode()) {
-        if (strlen(current_text) > 0) {
-            for (int i = 0; i < g_populated_count; i++) {
-                if (strcmp(g_populated_cache[i], current_text) == 0) {
-                    g_SelectedIndex = i;
-                    UI_Redraw(hListBox);
-                    return;
-                }
-            }
-        }
-        g_SelectedIndex = (current_sel != LB_ERR && current_sel < g_populated_count) ? current_sel : 0;
-    }
+    g_last_items = items;
+    g_last_item_count = item_count;
+    g_TotalMatches = total_matches;
+    
 }
+
 static inline bool IsPopupActive(HWND hPopupWnd) {
     return hPopupWnd != NULL && IsWindow(hPopupWnd);
 }

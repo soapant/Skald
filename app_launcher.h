@@ -171,16 +171,13 @@ static void applauncher_refresh_callback(const char* filter, HWND hListBox) {
     for (int i = 0; i < count; i++) {
         names[i] = G_APPS[i].name;
     }
-    
     PopulateListBox(hListBox, filter, names, count, NULL);
 }
 
 void TriggerAppLauncher() {
     if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
-    
-    initialize_app_cache();
 
-    if (G_APP_COUNT == 0) return;
+    if (G_APP_COUNT == 0) initialize_app_cache();
 
     const char** initial_items = (const char**)malloc(G_APP_COUNT * sizeof(char*));
     if (!initial_items) return;
