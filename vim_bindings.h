@@ -54,13 +54,13 @@ static const SequenceBinding G_VIM_SEQUENCE_BINDINGS[] = {
     { "JC", MOTION_INSERTCTRL_ENTER,         "CTRL Enter Mapping",  HandleInsertControlEnter,     false, MODE_INSERT },
     { "JE", MOTION_INSERT_ENTER,              "Enter Mapping",       HandleInsertRegularEnter,     false, MODE_INSERT },
     { "JQ", MOTION_EXIT_WINDOW,        "Exit Mapping",        HandleExitWindow,       false, MODE_INSERT },
-    { "dd", MOTION_DELETE_LINE,        "DeleteLine",          HandleDeleteLine,       false, MODE_NORMAL },
-    { "gg", MOTION_MOVE_LISTBOX_START, "ListboxStart",        HandleMoveListboxStart, false, MODE_NORMAL },
+    { "DD", MOTION_DELETE_LINE,        "DeleteLine",          HandleDeleteLine,       false, MODE_NORMAL },
+    { "GG", MOTION_MOVE_LISTBOX_START, "ListboxStart",        HandleMoveListboxStart, false, MODE_NORMAL },
     // 
     // { "dw",    MOTION_DELETE_WORD,     "DeleteWord",  HandleDeleteWord,         false, MODE_NORMAL },
     // { "d$",    MOTION_DELETE_TO_END,   "DeleteToEnd", HandleDeleteToEnd,        false, MODE_NORMAL },
     // 
-    { "yy",    MOTION_YANK_LIST_BOX,       "YankListBox",    HandleYankListBox,           false, MODE_NORMAL },
+    { "YY",    MOTION_YANK_LIST_BOX,       "YankListBox",    HandleYankListBox,           false, MODE_NORMAL },
     // 
     // { "yw",    MOTION_YANK_WORD,       "YankWord",    HandleYankWord,           false, MODE_NORMAL },
     // { "y$",    MOTION_YANK_TO_END,     "YankToEnd",   HandleYankToEnd,          false, MODE_NORMAL },

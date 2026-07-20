@@ -68,6 +68,16 @@ const char** g_initial_items = NULL;
 int g_initial_count = 0;
 int g_SelectedIndex = -1; 
 int g_TotalMatches = 0; 
+int g_last_match_count = 0;
+const char** g_last_items = NULL;
+int g_last_item_count = 0;
+char g_last_filter[256] = {0};
+int g_last_matches[4000];
+char g_filter_history[20][256];
+int g_match_history[20][4000]; 
+int g_match_count_history[20]; 
+int g_history_index = 0;       
+int g_history_count = 0;     
 #define MAX_ITEMS 1000
 char g_populated_cache[MAX_ITEMS][512];
 int g_populated_count = 0;
@@ -156,6 +166,8 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
 
         if (wParam == VK_UP || wParam == VK_DOWN) {
             if (hListBox != NULL) {
+                SendMessageA(hListBox, WM_SETREDRAW, FALSE, 0);
+                
                 int count = UI_GetCount(hListBox);
                 int sel = UI_GetSelection(hListBox);
                 
@@ -171,13 +183,11 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
                     }
                     
                     g_SelectedIndex = sel;
-                    UI_SetSelection(hListBox, g_SelectedIndex);
-                    
-                    int visibleCount = 13;
-                    int scrollTo = sel - (visibleCount / 2);
-                    if (scrollTo < 0) scrollTo = 0;
-                    SendMessageA(hListBox, LB_SETTOPINDEX, scrollTo, 0);
+                    SendMessageA(hListBox, LB_SETCARETINDEX, sel, TRUE);
                 }
+                
+                SendMessageA(hListBox, WM_SETREDRAW, TRUE, 0);
+                InvalidateRect(hListBox, NULL, TRUE);
             }
             return 0;
         }
@@ -309,14 +319,11 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 if (hEditControl && hListBox) {
                     char input_buffer[256] = {0};
                     GetWindowTextA(hEditControl, input_buffer, sizeof(input_buffer));
-                    
                     if (g_refresh_callback != NULL) {
                         g_refresh_callback(input_buffer, hListBox);
                     }
                     if (strlen(input_buffer) == 0 || g_populated_count == 0) {
                         g_SelectedIndex = -1; 
-                    } else {
-                        g_SelectedIndex = 0;  
                     }
                     SendMessageA(hListBox, LB_SETTOPINDEX, 0, 0);
                     UI_Redraw(hListBox);
@@ -513,7 +520,11 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             }
             break;
           }                
-        default:
+                         
+      case WM_ERASEBKGND: {
+          return (LRESULT)TRUE;
+          }
+      default:
             return DefWindowProcA(hwnd, msg, wParam, lParam);
             
     }
@@ -543,31 +554,17 @@ void CalculateWindowMetrics(int count, WindowLayout* layout,int height , int wid
     layout->x = mi.rcMonitor.left + (monitorWidth - layout->w) / 2;
     layout->y = mi.rcMonitor.top + (monitorHeight - layout->h) / 2;
 }
-LRESULT CALLBACK ListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
+LRESULT CALLBACK ListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData){
     switch (uMsg) {
-        case WM_LBUTTONDOWN: {
-            LRESULT res = DefSubclassProc(hWnd, uMsg, wParam, lParam);
-            int x = (short)LOWORD(lParam);
-            int y = (short)HIWORD(lParam);
-
-            DWORD itemInfo = (DWORD)SendMessageA(hWnd, LB_ITEMFROMPOINT, 0, MAKELPARAM(x, y));
-            int clickedIndex = (int)LOWORD(itemInfo);
-            int isOutsideClient = (int)HIWORD(itemInfo);
-
-            if (isOutsideClient == 0 && clickedIndex >= 0 && clickedIndex < g_populated_count) {
-                g_SelectedIndex = clickedIndex;
-                InvalidateRect(hWnd, NULL, TRUE);
-                SendMessageA(GetParent(hWnd), WM_COMMAND, MAKEWPARAM(GetDlgCtrlID(hWnd), LBN_SELCHANGE), (LPARAM)hWnd);
-            }
-            return res;
-        }
-
         case WM_NCDESTROY:
             RemoveWindowSubclass(hWnd, ListBoxSubclassProc, uIdSubclass);
             break;
+        case WM_ERASEBKGND:
+            return 1; 
     }
     return DefSubclassProc(hWnd, uMsg, wParam, lParam);
 }
+
 void CreateChildControls(HWND hwndParent, HFONT hFont, const char* list[], int count, const WindowLayout* layout) {
     HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtrA(hwndParent, GWLP_HINSTANCE);
     
@@ -1175,13 +1172,32 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
             }
         }
         
-        if (CheckAppHotkeyBindings(pressed_vk, modifiers)) return 1;
-        if (CheckMiscHotkeyBindings(pressed_vk, modifiers)) return 1;
-        if (CheckQuickLinkHotkeyBindings(pressed_vk, modifiers)) return 1;
-        if (HandleFocusSwitcher(pressed_vk, modifiers, fgTitle)) return 1;
-        if (HandleMusicPlayer(pressed_vk, modifiers, fgTitle)) return 1;
-        if (HandleVideoPlayer(pressed_vk, modifiers, fgTitle)) return 1;
-        if (HandleBulkKillProcess(pressed_vk, modifiers, fgTitle)) return 1;
+        if (CheckAppHotkeyBindings(pressed_vk, modifiers)) {
+            return 1;
+        }
+
+        if (CheckMiscHotkeyBindings(pressed_vk, modifiers)) {
+            return 1;
+        }
+
+        if (CheckQuickLinkHotkeyBindings(pressed_vk, modifiers)) {
+            return 1;
+        }
+
+        if (HandleFocusSwitcher(pressed_vk, modifiers, fgTitle)) {
+            return 1;
+        }
+        if (HandleMusicPlayer(pressed_vk, modifiers, fgTitle)) {
+            return 1;
+        }
+
+        if (HandleVideoPlayer(pressed_vk, modifiers, fgTitle)) {
+            return 1;
+        }
+
+        if (HandleBulkKillProcess(pressed_vk, modifiers, fgTitle)) {
+            return 1;
+        }
     }
     
     return CallNextHookEx(NULL, nCode, wParam, lParam);
@@ -1208,6 +1224,7 @@ void RunHotKeyMessageLoop() {
 int main() {
     StartUniversalTimer();
     InitializeTrayIcon();
+    initialize_app_cache();
     
     struct GdiplusStartupInput gdiplusStartupInput;
     gdiplusStartupInput.GdiplusVersion = 1;

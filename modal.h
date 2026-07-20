@@ -5,6 +5,7 @@
 #include <windows.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include "common_ui.h"
 #include "types.h"
 
 typedef enum {
@@ -17,8 +18,8 @@ static EditorMode g_current_mode = MODE_INSERT;
 static bool g_vim_mode_enabled = true;
 static const char* g_mode_names[] = { "NORMAL", "INSERT", "VISUAL" };
 const char* g_vim_mode = "INSERT";
+int last_selection = 0;
 
-// Function to update cursor
 static inline void UpdateCursorForMode(EditorMode mode) {
     extern HWND hPopupWnd;
     if (!hPopupWnd || !IsWindow(hPopupWnd)) return;
@@ -29,22 +30,19 @@ static inline void UpdateCursorForMode(EditorMode mode) {
     SendMessageA(hPopupWnd, WM_SETCURSOR, (WPARAM)hPopupWnd, MAKELPARAM(HTCLIENT, 0));
 }
 
-
 static inline void SetMode(EditorMode mode) {
     g_current_mode = mode;
     g_vim_mode = g_mode_names[mode];
-    
-    extern HWND hListBox;
-    if (hListBox && IsWindow(hListBox)) {
-          if (g_TotalMatches == 0) {
-              g_SelectedIndex = -1;
-              SendMessageA(hListBox, LB_SETCARETINDEX, -1, FALSE);
-          } else {
-            g_SelectedIndex = 0;
-            SendMessageA(hListBox, LB_SETCARETINDEX, 0, FALSE);
-          }
+    if (strcmp(g_vim_mode,"INSERT") == 0 ) {
+      last_selection = UI_GetSelection(hListBox);
+      UI_SetSelection(hListBox,-1);
+    } else if (strcmp(g_vim_mode,"NORMAL") == 0) {
+      if (last_selection <= 0 && g_TotalMatches != 0) {
+          UI_SetSelection(hListBox,0);
+      } else {
+          UI_SetSelection(hListBox,last_selection);
+      }
     }
-    
     UpdateCursorForMode(mode);
     
     extern HWND hPopupWnd;

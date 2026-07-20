@@ -69,6 +69,16 @@ extern char g_populated_cache[MAX_ITEMS][512];
 extern int g_populated_count;
 extern int g_view_offset;
 extern int g_TotalMatches; 
+extern int g_last_match_count; 
+extern const char** g_last_items;
+extern int g_last_item_count;
+extern char g_last_filter[256];
+extern int g_last_matches[4000];
+extern char g_filter_history[20][256];
+extern int g_match_history[20][4000]; 
+extern int g_match_count_history[20]; 
+extern int g_history_index;       
+extern int g_history_count;     
 #define COLOR_BG      RGB(30, 34, 42)   
 #define COLOR_TEXT    RGB(220, 223, 228)
 extern HFONT g_hNumFont;

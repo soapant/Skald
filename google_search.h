@@ -72,13 +72,26 @@ static void google_refresh_callback(const char* filter, HWND hListBox) {
 static void DoGoogleSearch(const char* query) {
     if (!query || strlen(query) == 0) return;
     
-    char url[512];
-    snprintf(url, sizeof(url), "https://www.google.com/search?q=%s", query);
+    char url[2048] = {0};
     
-    for (int i = 0; url[i]; i++) {
-        if (url[i] == ' ') {
-            url[i] = '+';
+    int is_url = 0;
+    if (strstr(query, "http://") == query || 
+        strstr(query, "https://") == query ||
+        strstr(query, "www.") == query) {
+        is_url = 1;
+        strncpy(url, query, sizeof(url) - 1);
+        printf("[GOOGLE] Opening URL directly: %s\n", url);
+    }
+    
+    if (!is_url) {
+        snprintf(url, sizeof(url), "https://www.google.com/search?q=%s", query);
+        
+        for (int i = 0; url[i]; i++) {
+            if (url[i] == ' ') {
+                url[i] = '+';
+            }
         }
+        printf("[GOOGLE] Searching: %s\n", url);
     }
     
     ShellExecuteWithVerb(url, "open", true);

@@ -223,11 +223,6 @@ bool CheckAppHotkeyBindings(int pressed_vk, int modifiers) {
     char activeExe[256] = {0};
     FetchExeNameOnDemand(hActiveWnd, activeExe, sizeof(activeExe) - 1);
     
-    
-    if (G_APP_COUNT == 0) {
-        initialize_app_cache();
-    }
-    
     for (int i = 0; i < APP_HOTKEY_COUNT; i++) {
         if (G_APP_HOTKEYS[i].vk_code == pressed_vk && 
             G_APP_HOTKEYS[i].modifiers == modifiers) {
@@ -393,7 +388,6 @@ bool CheckQuickLinkHotkeyBindings(int pressed_vk, int modifiers) {
     for (int i = 0; i < QUICKLINK_HOTKEY_COUNT; i++) {
         if (G_QUICKLINK_HOTKEYS[i].vk_code == pressed_vk && 
             G_QUICKLINK_HOTKEYS[i].modifiers == modifiers) {
-            
             if (strcmp(G_QUICKLINK_HOTKEYS[i].exe_name, "*") == 0 ||
                 StrStrIA(activeExe, G_QUICKLINK_HOTKEYS[i].exe_name) != NULL) {
               
