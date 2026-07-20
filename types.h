@@ -21,6 +21,8 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
 
 char* SimplePromptUser(const char* prompt, const char* window_title,int height, int width, int item_height);
 
+void UpdateTextCaret(HWND hwndEditControl);
+
 typedef struct {
     int index;
     HWND hwnd;
