@@ -3,3 +3,7 @@ code
 video
 music
 rand
+misc
+ai
+oll
+rew
