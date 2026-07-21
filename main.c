@@ -279,8 +279,6 @@ HFONT CreateCustomNerdFont(int height, const char* face_name) {
 
 void UpdateTextCaret(HWND hwndEditControl)
 {
-    if (GetFocus() != hwndEditControl) return;
-
     int caretWidth = 1;   
     int caretHeight = 24; 
 
@@ -301,15 +299,12 @@ void UpdateTextCaret(HWND hwndEditControl)
         CreateCaret(hwndEditControl, NULL, caretWidth, caretHeight);
         ShowCaret(hwndEditControl);
         
-        if (IsNormalMode()) {
-            SetCaretBlinkTime(INFINITE); 
-        } else {
-            SetCaretBlinkTime(INFINITE);
-        }
+        SetCaretBlinkTime(INFINITE);
         
         lastWidth = caretWidth;
     }
 }
+
 int counter;
 LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
@@ -827,7 +822,6 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
         layout.x, layout.y, layout.w, layout.h, NULL, NULL, hInstance, NULL
     );
     
-    UpdateCursorForMode(MODE_INSERT);
     SetTimer(hPopupWnd, 999, 50, NULL);
 
     if (hPopupWnd == NULL) {
@@ -924,7 +918,6 @@ char* SimplePromptUser(const char* prompt, const char* window_title,int height, 
         layout.x, layout.y, layout.w, layout.h, NULL, NULL, hInstance, NULL
     );
     
-    UpdateCursorForMode(MODE_INSERT);
     
     SetTimer(hPopupWnd, 999, 50, NULL);
 

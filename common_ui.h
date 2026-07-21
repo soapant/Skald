@@ -265,7 +265,10 @@ static inline void PopulateListBox(HWND hListBox, const char* filter,
     SendMessageA(hListBox, LB_SETCOUNT, window_allocation_count, 0);
     if (total_matches == 1) {
       UI_SetSelection(hListBox,0);
+    } else {
+      UI_SetSelection(hListBox,-1);
     }
+    
     
     g_last_items = items;
     g_last_item_count = item_count;
