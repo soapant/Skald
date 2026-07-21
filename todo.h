@@ -33,10 +33,8 @@ typedef struct {
 
 static const TodoConfigEntry TODO_DICT[] = {
     { "-pc", "Cprogram",          NULL, RGB(98,  160, 234), true  },
-    { "-pv", "VideoViewer",       NULL, RGB(192, 97,  203), true  },
-    { "-pm", "MusicPlayer",       NULL, RGB(229, 165, 10),  true  },
     { "-ph", "HeaderC",           NULL, RGB(51,  209, 122), true  },
-    { "-pg", "MinecraftModpack",  NULL, RGB(255, 120, 0),   true  },
+    { "-pm", "MinecraftModpack",  NULL, RGB(255, 120, 0),   true  },
 
     { "-m",  NULL,                "[MISC]", RGB(154, 153, 150), false },
     { "-h",  NULL,                "[HIGH]", RGB(246, 97,  81),  false },

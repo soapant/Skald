@@ -127,9 +127,13 @@ static inline void HandleMoveRight(void) {
     if (hEditControl && IsWindow(hEditControl) && g_SelectedIndex == -1) {
         SendMessageA(hEditControl, WM_KEYDOWN, VK_RIGHT, 0);
         SendMessageA(hEditControl, WM_KEYUP, VK_RIGHT, 0);
+    } else {
+      if (hListBox != NULL && UI_IsListBoxSelected()) {
+        SendMessageA(hEditControl, WM_KEYDOWN, VK_RETURN, 0);
+        SendMessageA(hEditControl, WM_KEYUP, VK_RETURN, 0);
+      }
     }
 }
-
 static inline void HandleMoveUp(void) {
     if (hEditControl && IsWindow(hEditControl)) {
         SendMessageA(hEditControl, WM_KEYDOWN, VK_UP, 0);
@@ -295,13 +299,6 @@ static inline void HandleInsertControlEnter(void) {
   SendMessageA(hEditControl, WM_KEYUP, VK_CONTROL, 0);
   selection_complete = false;
 }
-static inline void HandleNormalRegularEnter(void) {
-  if (hListBox != NULL && UI_IsListBoxSelected()) {
-  SendMessageA(hEditControl, WM_KEYDOWN, VK_RETURN, 0);
-  SendMessageA(hEditControl, WM_KEYUP, VK_RETURN, 0);
-  }
-}
-
 static inline void HandleNormalControlEnter(void) {
   if (hListBox != NULL && UI_IsListBoxSelected()) {
   SendMessageA(hEditControl, WM_KEYDOWN, VK_CONTROL, 0);

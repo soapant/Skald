@@ -7,3 +7,6 @@ misc
 ai
 oll
 rew
+ala
+alaC
+dev

@@ -95,15 +95,20 @@ static void ScanWindowsOnMonitor(HMONITOR targetMonitor) {
     }
 }
 
-// Function 1: Target Main (Primary) Monitor
 static inline void TriggerMonitorFocusMain() {
-    POINT zeroPoint = {0, 0};
-    HMONITOR mainMonitor = MonitorFromPoint(zeroPoint, MONITOR_DEFAULTTOPRIMARY);
+    MonitorSearch search = {0};
+    search.targetIndex = 1; 
+    search.currentIndex = 0;
+    search.foundMonitor = NULL;
 
-    ScanWindowsOnMonitor(mainMonitor);
+    EnumDisplayMonitors(NULL, NULL, EnumMonitorsProc, (LPARAM)&search);
+
+    if (search.foundMonitor != NULL) {
+        ScanWindowsOnMonitor(search.foundMonitor);
+    } else {
+    }
 }
 
-// Function 2: Target Side Monitor (Monitor 2)
 static inline void TriggerMonitorFocusSide() {
     MonitorSearch search = {0};
     search.targetIndex = 2; 
