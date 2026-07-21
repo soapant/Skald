@@ -2,6 +2,7 @@
 #ifndef VIM_BINDINGS_H
 #define VIM_BINDINGS_H
 
+#include "hotkey_definitions.h"
 #include "vim_motions.h"
 #include "config.h"
 
@@ -26,8 +27,6 @@ static const MotionBinding G_VIM_BINDINGS[] = {
     { 'L', HOTKEY_MOD_NONE,  MOTION_MOVE_RIGHT,                "Right",            HandleMoveRight,             MODE_NORMAL },
     
     { 'D', HOTKEY_MOD_SHIFT,  MOTION_DELETE_CHAR_PERSISTENT, "DelPersistent", HandlePersistentDelete,   MODE_NORMAL },
-    
-    { 'L', HOTKEY_MOD_NONE,  MOTION_NORMALENTER, "PickNormal", HandleNormalRegularEnter,   MODE_NORMAL },
     
     { 'L', HOTKEY_MOD_SHIFT,  MOTION_NORMALCTRL_ENTER, "PickNormalPersistent", HandleNormalControlEnter,   MODE_NORMAL },
     

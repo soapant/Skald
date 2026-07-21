@@ -262,12 +262,4 @@ static const FocusSwitcherBinding G_FOCUS_SWITCHERS[] = {
 
 #define FOCUS_SWITCHER_COUNT (sizeof(G_FOCUS_SWITCHERS) / sizeof(G_FOCUS_SWITCHERS[0]))
 
-static const char* alias_to_project(const char* alias) {
-    if (strcmp(alias, "-pc") == 0) return "Cprogram";
-    if (strcmp(alias, "-pv") == 0) return "VideoViewer";
-    if (strcmp(alias, "-pm") == 0) return "MusicPlayer";
-    if (strcmp(alias, "-ph") == 0) return "HeaderC";
-    if (strcmp(alias, "-pg") == 0) return "MinecraftModpack";
-    return NULL;
-}
 #endif

@@ -7,10 +7,6 @@
 #include <shlwapi.h>
 #include "config.h"
 
-
-
-
-
 static void FocusWindow(HWND hwnd) {
 
     if (!hwnd || !IsWindow(hwnd)) return;
