@@ -66,7 +66,7 @@ TabCallback g_tab_callback = NULL;
 RenderCallback g_render_callback = NULL;
 const char** g_initial_items = NULL;
 int g_initial_count = 0;
-int g_SelectedIndex = -1; 
+int g_SelectedIndex = 0; 
 int g_TotalMatches = 0; 
 int g_last_match_count = 0;
 const char** g_last_items = NULL;
@@ -173,13 +173,10 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
                 
                 if (count > 0) {
                     if (sel == LB_ERR) {
-                        // If nothing is selected, pressing UP/DOWN selects the first item
                         sel = 0;
                     } else if (sel == 0 && wParam == VK_UP) {
-                        // FIX: If we are ALREADY at 0 and press UP, safely jump out to -1
                         sel = -1;
                     } else {
-                        // Standard index stepping tracking
                         if (wParam == VK_UP) {
                             sel = (sel > 0) ? sel - 1 : 0;
                         } else {
@@ -356,10 +353,6 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                     if (g_refresh_callback != NULL) {
                         g_refresh_callback(input_buffer, hListBox);
                     }
-                    if (strlen(input_buffer) == 0 || g_populated_count == 0) {
-                        g_SelectedIndex = -1; 
-                    }
-                    SendMessageA(hListBox, LB_SETTOPINDEX, 0, 0);
                     UI_Redraw(hListBox);
                 }
             }
