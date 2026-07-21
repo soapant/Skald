@@ -56,7 +56,7 @@ int region_step = 0;
 long saved_x1 = 0;
 long saved_y1 = 0;
 long img_x2 = 0, img_y2 = 0; 
-static ULONG_PTR g_gdiplusToken = 0;
+static  ULONG_PTR g_gdiplusToken = 0;
 #pragma comment(lib, "gdiplus.lib")
 
 RefreshCallback g_refresh_callback = NULL;
@@ -575,7 +575,7 @@ LRESULT CALLBACK ListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
             RemoveWindowSubclass(hWnd, ListBoxSubclassProc, uIdSubclass);
             break;
         case WM_ERASEBKGND:
-            return 1; 
+            return TRUE; 
     }
     return DefSubclassProc(hWnd, uMsg, wParam, lParam);
 }
@@ -829,7 +829,7 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
     HFONT hCustomFont = CreateCustomNerdFont(24, "0xProto Nerd Font");
 
     hPopupWnd = CreateWindowExA(
-        WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED, 
+        WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED | WS_EX_COMPOSITED,
         "QuickSwitcherModalClass", NULL, WS_POPUP | WS_CLIPCHILDREN, 
         layout.x, layout.y, layout.w, layout.h, NULL, NULL, hInstance, NULL
     );
