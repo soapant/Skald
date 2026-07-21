@@ -20,16 +20,6 @@ static const char* g_mode_names[] = { "NORMAL", "INSERT", "VISUAL" };
 const char* g_vim_mode = "INSERT";
 int last_selection = 0;
 
-static inline void UpdateCursorForMode(EditorMode mode) {
-    extern HWND hPopupWnd;
-    if (!hPopupWnd || !IsWindow(hPopupWnd)) return;
-    
-    POINT pt;
-    GetCursorPos(&pt);
-    ScreenToClient(hPopupWnd, &pt);
-    SendMessageA(hPopupWnd, WM_SETCURSOR, (WPARAM)hPopupWnd, MAKELPARAM(HTCLIENT, 0));
-}
-
 static inline void SetMode(EditorMode mode) {
     g_current_mode = mode;
     g_vim_mode = g_mode_names[mode];
