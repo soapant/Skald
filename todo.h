@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
+#include <winsock.h>
+#include "modal.h"
 #include "types.h"
 #include "config.h"
 #include "common_ui.h"
