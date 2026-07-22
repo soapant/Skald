@@ -25,23 +25,16 @@ static void ExecuteNumberShortcut(int number, bool close_popup) {
     int count = UI_GetCount(g_num_shortcut_state.hListBox);
 
     if (index >= 0 && index < count) {
-        // Select the item
         UI_SetSelection(g_num_shortcut_state.hListBox, index);
 
-        // Get the selected text
-        char selected_text[256] = {0};
-        UI_GetText(g_num_shortcut_state.hListBox, index, selected_text, sizeof(selected_text));
+        char* selected_text = g_populated_cache[index];
 
-        // Store in global output buffer
         strncpy(output_buffer, selected_text, sizeof(output_buffer) - 1);
         output_buffer[sizeof(output_buffer) - 1] = '\0';
 
-        // Execute the callback (e.g., launch app, open file)
         if (g_enter_callback != NULL) {
             g_enter_callback(output_buffer);
         }
-
-        // Close popup if requested
         selection_complete = close_popup;
         printf("[NUM-SHORTCUT] Selected item %d: %s (close=%d)\n",
                index + 1, output_buffer, close_popup);
@@ -50,14 +43,10 @@ static void ExecuteNumberShortcut(int number, bool close_popup) {
                index + 1, count);
     }
 
-    // Reset state regardless of outcome
     g_num_shortcut_state.state = 0;
     g_num_shortcut_state.first_digit = 0;
 }
 
-// ============================================================
-// TIMER CALLBACK
-// ============================================================
 static void CALLBACK NumberShortcutTimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime) {
     if (g_num_shortcut_state.state == 1 && g_num_shortcut_state.first_digit >= 0) {
         int number = g_num_shortcut_state.first_digit;

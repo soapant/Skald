@@ -306,7 +306,7 @@ static void todo_ctrlenter_callback(const char* selection) {
     todo_refresh_callback(NULL, hListBox);
     selection_complete = false;
 }
-static void todo_render_callback(HDC hdc, const char* text, RECT* rect, BOOL is_selected) {
+static void todo_render_callback(HDC hdc, const char* text, RECT* rect, BOOL is_selected, int itemIndex) {
     if (!text || !rect) return;
     
     char main_text[256] = {0};
@@ -327,26 +327,57 @@ static void todo_render_callback(HDC hdc, const char* text, RECT* rect, BOOL is_
     
     RECT textRect = *rect;
     textRect.left += 10;
-    textRect.top += 2;
+    textRect.top += 4;
+    textRect.bottom -= 30;
+    
+    if (!is_selected) {
+        float hue = (float)itemIndex / 20.0f * 240.0f;
+        float h = hue / 60.0f;
+        float s = 0.85f;
+        float v = 0.85f;
+        int i = (int)h;
+        float f = h - i;
+        float p = v * (1 - s);
+        float q = v * (1 - s * f);
+        float t = v * (1 - s * (1 - f));
+        float r, g, b;
+        switch (i) {
+            case 0: r = v; g = t; b = p; break;
+            case 1: r = q; g = v; b = p; break;
+            case 2: r = p; g = v; b = t; break;
+            case 3: r = p; g = q; b = v; break;
+            case 4: r = t; g = p; b = v; break;
+            default: r = v; g = p; b = q; break;
+        }
+        SetTextColor(hdc, RGB((BYTE)(r * 255), (BYTE)(g * 255), (BYTE)(b * 255)));
+    }
     
     HFONT hMainFont = CreateFontA(24, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
                                   DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
                                   CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "0xProto Nerd Font");
     HFONT hOldFont = (HFONT)SelectObject(hdc, hMainFont);
-    
-    SetTextColor(hdc, COLOR_TEXT);
-    DrawTextA(hdc, main_text, -1, &textRect, DT_SINGLELINE | DT_TOP);
+    DrawTextA(hdc, main_text, -1, &textRect, DT_SINGLELINE | DT_VCENTER);
     
     if (strlen(tag_text) > 0) {
         RECT tagRect = *rect;
         tagRect.left += 14;
         tagRect.top += 24;
+        tagRect.top += 4;
+        tagRect.bottom -= 4;
         
-        COLORREF assigned_color = GetTagColor(tag_text);
+        HFONT hTagFont = CreateFontA(20, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+                                     DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+                                     CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "0xProto Nerd Font");
+        HFONT hOldTagFont = (HFONT)SelectObject(hdc, hTagFont);
         
-        SetTextColor(hdc,assigned_color);
+        COLORREF tagColor;
+        tagColor = GetTagColor(tag_text);
         
+        SetTextColor(hdc, tagColor);
         DrawTextA(hdc, tag_text, -1, &tagRect, DT_LEFT | DT_TOP);
+        
+        SelectObject(hdc, hOldTagFont);
+        DeleteObject(hTagFont);
     }
     
     SelectObject(hdc, hOldFont);

@@ -9,7 +9,7 @@ typedef void (*RefreshCallback)(const char* filter, HWND hListBox);
 typedef void (*EnterCallback)(const char* selection);
 typedef void (*CtrlEnterCallback)(const char* selection);
 typedef void (*TabCallback)(void);
-typedef void (*RenderCallback)(HDC hdc, const char* text, RECT* rect, BOOL is_selected);
+typedef void (*RenderCallback)(HDC hdc, const char* text, RECT* rect, BOOL is_selected, int itemIndex);
 
 char* PromptUser(const char* window_list[], const char* window_title, int count, 
                  int height, int width, int item_height, 

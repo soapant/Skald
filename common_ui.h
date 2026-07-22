@@ -72,23 +72,6 @@ static inline bool UI_IsListBoxSelected(void) {
   return g_SelectedIndex != -1;
 }
 
-static inline void UI_GetText(HWND hList, int index, char* buffer, int bufferSize) {
-    if (!buffer || bufferSize <= 0) return;
-    
-    printf("[DEBUG-UI] UI_GetText requesting index: %d (g_populated_count is %d)\n", index, g_populated_count);
-    
-    if (index >= 0 && index < g_populated_count) {
-        printf("[DEBUG-UI] Cache slot [%d] contains string: \"%s\"\n", index, g_populated_cache[index]);
-        
-        strncpy(buffer, g_populated_cache[index], bufferSize - 1);
-    } else {
-        printf("[DEBUG-UI] Index %d out of bounds! Clearing buffer.\n", index);
-        buffer[0] = '\0';
-    }
-    
-    buffer[bufferSize - 1] = '\0';
-}
-
 static inline void UI_SetHorizontalExtent(HWND hList, int width) {
     SendMessageA(hList, LB_SETHORIZONTALEXTENT, width, 0);
 }
@@ -102,30 +85,6 @@ static inline void UI_Redraw(HWND hList) {
     InvalidateRect(hList, NULL, TRUE);
 }
 
-#define MAX_UI_ITEMS 10000
-
-static inline void UI_UpdateList(HWND hList, const char* filter, const char** items, int item_count) {
-    static const char* filtered[MAX_UI_ITEMS];
-    int filtered_count = 0;
-
-    if (!filter || !*filter) {
-        for (int i = 0; i < item_count && filtered_count < MAX_UI_ITEMS; i++) {
-            filtered[filtered_count++] = items[i];
-        }
-    } else {
-        for (int i = 0; i < item_count && filtered_count < MAX_UI_ITEMS; i++) {
-            if (StrStrIA(items[i], filter)) {
-                filtered[filtered_count++] = items[i];
-            }
-        }
-    }
-
-    g_initial_items = filtered;
-    g_initial_count = filtered_count;
-
-    UI_SetItemCount(hList, filtered_count);
-    UI_Redraw(hList);
-}
 
 #include "modal.h"
 

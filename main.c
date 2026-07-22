@@ -203,7 +203,7 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
             }
 
             if (selected_index != LB_ERR && hListBox != NULL) {
-                UI_GetText(hListBox, selected_index, output_buffer, sizeof(output_buffer));
+                strncpy(output_buffer, g_populated_cache[g_SelectedIndex], sizeof(output_buffer) - 1);
             } else {
                 GetWindowTextA(hwnd, output_buffer, sizeof(output_buffer));
             }
@@ -361,7 +361,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         case WM_MEASUREITEM: {
             MEASUREITEMSTRUCT* pmis = (MEASUREITEMSTRUCT*)lParam;
             if (pmis->CtlID == IDC_LIST_BOX) {
-                pmis->itemHeight = 32;
+                pmis->itemHeight = 40;
                 return TRUE;
             }
             break;
@@ -434,10 +434,10 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
               }
               
               if (g_render_callback != NULL) {
-                  g_render_callback(pdis->hDC, textBuffer, &textRect, isSelected);
+                  g_render_callback(pdis->hDC, textBuffer, &textRect, isSelected, pdis->itemID);
               } else {
                   HFONT hOldMainFont = (HFONT)SelectObject(pdis->hDC, g_hMainFont);
-                  SetTextColor(pdis->hDC, RGB(255, 255, 255));
+                  // SetTextColor(pdis->hDC, RGB(255, 255, 255));
                   DrawTextA(pdis->hDC, textBuffer, -1, &textRect, DT_SINGLELINE | DT_VCENTER);
                   SelectObject(pdis->hDC, hOldMainFont);
               }
@@ -524,9 +524,9 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             }
         }
         break;              
-      case WM_ERASEBKGND: {
-          return (LRESULT)TRUE;
-          }
+        case WM_ERASEBKGND: {
+            return TRUE;
+        }
       default:
             return DefWindowProcA(hwnd, msg, wParam, lParam);
             
@@ -598,7 +598,6 @@ LRESULT CALLBACK SimpleListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, 
                 if (hFont) hOldFont = (HFONT)SelectObject(hdc, hFont);
 
                 SetBkMode(hdc, TRANSPARENT);
-                SetTextColor(hdc, RGB(255, 255, 255));
 
                 int itemHeight = (int)SendMessageA(hWnd, LB_GETITEMHEIGHT, 0, 0);
                 if (itemHeight <= 0) itemHeight = 40; 
