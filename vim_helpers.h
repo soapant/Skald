@@ -2,17 +2,6 @@
 #include <stdio.h>
 #include "types.h"
 
-static inline char* GetSelectedText(void) {
-    if (!hListBox || !IsWindow(hListBox)) return NULL;
-    
-    int sel = UI_GetSelection(hListBox);
-    if (sel == LB_ERR) return NULL;
-    
-    static char text[512];
-    UI_GetText(hListBox, sel, text, sizeof(text));
-    return text;
-}
-
 static inline void DeleteCharUnderCursor(void) {
     if (!hEditControl || !IsWindow(hEditControl)) return;
     
@@ -40,7 +29,7 @@ static inline void DeleteCharUnderCursor(void) {
 static inline void ExecuteEnter(void) {
     char text[512] = {0};
     
-    char* selected = GetSelectedText();
+    char* selected = g_populated_cache[g_SelectedIndex];
     if (selected != NULL) {
         strncpy(text, selected, sizeof(text) - 1);
     } else if (hEditControl && IsWindow(hEditControl)) {
@@ -77,16 +66,13 @@ static inline const char* GetCurrentFeature(void) {
 static inline const char* GoToFirstListBoxItem(void) {
     if (!hListBox || !IsWindow(hListBox) || g_populated_count <= 0) return NULL;
     
-    // 1. Update your global virtual selection tracking index
     g_SelectedIndex = 0;
-    g_view_offset = 0; // Force sliding window offset back to top
+    g_view_offset = 0;
 
-    // 2. Synchronize viewport window layout
     SendMessageA(hListBox, LB_SETTOPINDEX, 0, 0);
     SendMessageA(hListBox, LB_SETCARETINDEX, 0, FALSE);
-    InvalidateRect(hListBox, NULL, FALSE); // Force instant color repaint
+    InvalidateRect(hListBox, NULL, FALSE);
 
-    // 3. FIXED: Return the actual string text from your safe global cache matrix
     return g_populated_cache[0];
 }
 
