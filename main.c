@@ -437,7 +437,6 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                   g_render_callback(pdis->hDC, textBuffer, &textRect, isSelected, pdis->itemID);
               } else {
                   HFONT hOldMainFont = (HFONT)SelectObject(pdis->hDC, g_hMainFont);
-                  // SetTextColor(pdis->hDC, RGB(255, 255, 255));
                   DrawTextA(pdis->hDC, textBuffer, -1, &textRect, DT_SINGLELINE | DT_VCENTER);
                   SelectObject(pdis->hDC, hOldMainFont);
               }
@@ -491,9 +490,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
               MultiByteToWideChar(CP_UTF8, 0, g_title, -1, wtitle, 256);
               
               HFONT hOldFont = (HFONT)SelectObject(hdc, g_hMainFont);
-              
               SetBkMode(hdc, TRANSPARENT);
-              SetTextColor(hdc, RGB(255, 255, 255));
               
               SIZE sz;
               GetTextExtentPoint32W(hdc, wtitle, (int)wcslen(wtitle), &sz);
@@ -504,6 +501,29 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
               titleRect.right = rect.right - 10;
               titleRect.bottom = rect.top + sz.cy + 15;
               
+              // === HARDCODED COLORS EVERY 25 ITEMS ===
+              COLORREF titleColor;
+              if (g_populated_count < 25) {
+                  titleColor = RGB(0, 255, 0);       // Green
+              } else if (g_populated_count < 50) {
+                  titleColor = RGB(100, 255, 0);     // Yellow-green
+              } else if (g_populated_count < 75) {
+                  titleColor = RGB(200, 255, 0);     // Light yellow
+              } else if (g_populated_count < 100) {
+                  titleColor = RGB(255, 255, 0);     // Yellow
+              } else if (g_populated_count < 125) {
+                  titleColor = RGB(255, 200, 0);     // Gold
+              } else if (g_populated_count < 150) {
+                  titleColor = RGB(255, 150, 0);     // Orange
+              } else if (g_populated_count < 175) {
+                  titleColor = RGB(255, 100, 0);     // Dark orange
+              } else if (g_populated_count < 200) {
+                  titleColor = RGB(255, 50, 0);      // Orange-red
+              } else {
+                  titleColor = RGB(255, 0, 0);       // Pure red (200+ items)
+              }
+              
+              SetTextColor(hdc, titleColor);
               DrawTextW(hdc, wtitle, -1, &titleRect, DT_LEFT | DT_TOP);
               
               SelectObject(hdc, hOldFont);
@@ -837,30 +857,6 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
 
     ForceWindowFocus(hPopupWnd, hEditControl);
 
-    if (window_title != NULL && strlen(window_title) > 0) {
-        HDC hdc = GetDC(hPopupWnd);
-        HFONT hwindow_titleFont = CreateCustomNerdFont(20, "0xProto Nerd Font");
-        HFONT hOldFont = (HFONT)SelectObject(hdc, hwindow_titleFont);
-        
-        SetBkMode(hdc, TRANSPARENT);
-        SetTextColor(hdc, RGB(255, 255, 255));
-        
-        RECT rect;
-        GetClientRect(hPopupWnd, &rect);
-        
-        SIZE sz;
-        GetTextExtentPoint32A(hdc, window_title, (int)strlen(window_title), &sz);
-        
-        rect.left = rect.right - sz.cx - 20;
-        rect.top = 10;
-        rect.bottom = rect.top + sz.cy + 10;
-        
-        DrawTextA(hdc, window_title, -1, &rect, DT_LEFT | DT_TOP);
-        
-        SelectObject(hdc, hOldFont);
-        DeleteObject(hwindow_titleFont);
-        ReleaseDC(hPopupWnd, hdc);
-    }
 
     printf("[DEBUG-UI] Entering local message modal loop...\n");
     MSG msg;
@@ -934,31 +930,6 @@ char* SimplePromptUser(const char* prompt, const char* window_title,int height, 
 
     ForceWindowFocus(hPopupWnd, hEditControl);
     
-    if (window_title != NULL && strlen(window_title) > 0) {
-        HDC hdc = GetDC(hPopupWnd);
-        HFONT hwindow_titleFont = CreateCustomNerdFont(20, "0xProto Nerd Font");
-        HFONT hOldFont = (HFONT)SelectObject(hdc, hwindow_titleFont);
-        
-        SetBkMode(hdc, TRANSPARENT);
-        SetTextColor(hdc, RGB(255, 255, 255));
-        
-        RECT rect;
-        GetClientRect(hPopupWnd, &rect);
-        
-        SIZE sz;
-        GetTextExtentPoint32A(hdc, window_title, (int)strlen(window_title), &sz);
-        
-        rect.left = rect.right - sz.cx - 20;
-        rect.top = 10;
-        rect.bottom = rect.top + sz.cy + 10;
-        
-        DrawTextA(hdc, window_title, -1, &rect, DT_LEFT | DT_TOP);
-        
-        SelectObject(hdc, hOldFont);
-        DeleteObject(hwindow_titleFont);
-        ReleaseDC(hPopupWnd, hdc);
-    }
-
     MSG msg;
     int loop_counter = 0;
     while (!selection_complete) {
