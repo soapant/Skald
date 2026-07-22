@@ -12,8 +12,6 @@
 #include "common_ui.h"
 
 #define TODO_FILE_PATH "todo.txt"
-#define COLOR_TEXT    RGB(220, 223, 228)
-#define COLOR_BG      RGB(30, 34, 42)
 
 extern HWND hPopupWnd;
 
@@ -46,7 +44,7 @@ enum { TODO_DICT_COUNT = sizeof(TODO_DICT) / sizeof(TODO_DICT[0]) };
 
 
 static inline COLORREF GetTagColor(const char* tag_string) {
-    if (!tag_string || strlen(tag_string) == 0) return COLOR_TEXT;
+    if (!tag_string || strlen(tag_string) == 0) return RGB(255,255,255);
     
     if (strncmp(tag_string, "[Project: ", 10) == 0) {
         for (int i = 0; i < TODO_DICT_COUNT; i++) {
@@ -60,7 +58,7 @@ static inline COLORREF GetTagColor(const char* tag_string) {
             return TODO_DICT[i].color;
         }
     }
-    return COLOR_TEXT; 
+    return RGB(255,255,255); 
 }
 
 static void parse_todo_flags(char* input, TodoFlags* flags, char* clean_text) {
