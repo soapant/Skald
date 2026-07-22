@@ -81,8 +81,8 @@ extern int g_match_history[20][4000];
 extern int g_match_count_history[20]; 
 extern int g_history_index;       
 extern int g_history_count;     
-#define COLOR_BG      RGB(30, 34, 42)   
-#define COLOR_TEXT    RGB(220, 223, 228)
+#define COLOR_BG      RGB(30, 35, 45)   
+#define COLOR_TEXT    RGB(255, 255, 255)
 extern HFONT g_hNumFont;
 extern HFONT g_hMainFont;
 #endif

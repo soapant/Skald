@@ -42,8 +42,8 @@
 #define ID_EXIT 2001
 #define IDC_INPUT_BOX 101
 #define IDC_LIST_BOX 102
-#define COLOR_BG      RGB(30, 34, 42)   
-#define COLOR_TEXT    RGB(220, 223, 228)
+#define COLOR_BG      RGB(30, 35, 45)   
+#define COLOR_TEXT    RGB(255, 255, 255)
 #define TODO_FILE_PATH "todo.txt"
 #define WM_TRIGGER_IMG_CAPTURE (WM_USER + 2)
 HWND hGlobalTrayWnd = NULL;
@@ -374,7 +374,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
               
               static HBRUSH hSelBrush = NULL;
               static HBRUSH hBgBrushStatic = NULL;
-              if (!hSelBrush) hSelBrush = CreateSolidBrush(RGB(50, 56, 68));
+              if (!hSelBrush) hSelBrush = CreateSolidBrush(RGB(70, 55, 90) );
               if (!hBgBrushStatic) hBgBrushStatic = CreateSolidBrush(COLOR_BG);
               
               HBRUSH hBgBrush = isSelected ? hSelBrush : hBgBrushStatic;
@@ -390,7 +390,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
               }
               
               SetBkMode(pdis->hDC, OPAQUE);
-              SetBkColor(pdis->hDC, isSelected ? RGB(50, 56, 68) : COLOR_BG);
+              SetBkColor(pdis->hDC, isSelected ?RGB(70, 55, 90) : COLOR_BG);
               
               RECT textRect = pdis->rcItem;
               
@@ -463,13 +463,12 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
               SetBkMode(hdc, TRANSPARENT);
               
               if (g_current_mode == MODE_NORMAL) {
-                  SetTextColor(hdc, RGB(100, 200, 255));
+                  SetTextColor(hdc, RGB(100, 255, 255));
               } else if (g_current_mode == MODE_INSERT) {
-                  SetTextColor(hdc, RGB(100, 255, 100));
+                  SetTextColor(hdc, RGB(50, 255, 50));
               } else {
-                  SetTextColor(hdc, RGB(173, 3, 222));
+                  SetTextColor(hdc, RGB(200, 3, 222));
               }
-
               
               SIZE sz;
               GetTextExtentPoint32W(hdc, wmode, (int)wcslen(wmode), &sz);
