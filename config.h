@@ -64,6 +64,7 @@ static FileEntry G_FILE_ENTRIES[] = {
     {"TerminalZoxide",      "D:\\Projects\\C Code\\TerminalZoxide.txt", NULL},
     {"ExplorerZoxide",  "D:\\Projects\\C Code\\ExplorerZoxide.txt", NULL},
     {"GoogleZoxide",  "D:\\Projects\\C Code\\GoogleZoxide.txt", NULL},
+    {"ReminderHistory",  "D:\\Projects\\C Code\\ReminderHistory.txt", NULL},
 };
 #define FILE_ENTRY_COUNT (sizeof(G_FILE_ENTRIES) / sizeof(G_FILE_ENTRIES[0]))
 

@@ -566,7 +566,7 @@ void TriggerCalculator() {
     if (hPopupWnd != NULL && IsWindow(hPopupWnd)) return;
 
     const char* default_msg[1] = { "Enter operation (e.g. 5 x 5 or 10 hours in minutes)" };
-    PromptUser(default_msg,"🧮 Calculator", 1, 520, 650,32,
+    PromptUser(default_msg,"🧮 Calculator", 1, 920, 650,32,
                         calculator_refresh_callback,   
                         calculator_enter_callback,     
                         calculator_ctrlenter_callback, 

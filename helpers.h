@@ -435,5 +435,211 @@ static inline void SanitizeFile(const char *filePath) {
     CloseHandle(hFile);
 }
 
+typedef struct {
+    char* flag;
+    int index;
+} FoundFlag;
+
+// Parse time string like "5m", "10h", "20s" into seconds
+static inline int ParseTimeToSeconds(const char* input) {
+    if (!input || strlen(input) == 0) return 0;
+    
+    int total = 0;
+    char buffer[64];
+    strncpy(buffer, input, sizeof(buffer) - 1);
+    buffer[sizeof(buffer) - 1] = '\0';
+    
+    char* token = strtok(buffer, " ");
+    while (token != NULL) {
+        int value = 0;
+        char unit = 's';
+        int len = strlen(token);
+        
+        if (len > 1) {
+            char last = tolower(token[len - 1]);
+            if (last == 's' || last == 'm' || last == 'h' || last == 'd') {
+                token[len - 1] = '\0';
+                value = atoi(token);
+                unit = last;
+            } else {
+                value = atoi(token);
+            }
+        } else {
+            value = atoi(token);
+        }
+        
+        switch (unit) {
+            case 's': total += value; break;
+            case 'm': total += value * 60; break;
+            case 'h': total += value * 3600; break;
+            case 'd': total += value * 86400; break;
+            default: total += value; break;
+        }
+        
+        token = strtok(NULL, " ");
+    }
+    
+    return total;
+}
+typedef void (*ActionFn)(const char* parameter);
+
+typedef bool (*ConditionFn)(const char* parameter);
+
+typedef void (*TimerFn)(const char* parameter);
+
+typedef struct { char* str; ActionFn    func; } ActionDef;
+typedef struct { char* str; ConditionFn func; } ConditionDef;
+typedef struct { char* str; TimerFn     func; } TimerDef;
+
+typedef struct {
+    char* name;
+    ConditionFn func;
+} ConditionParamDef;
+
+static inline int SearchFlagsInText(const char* text, void* flag_array, int flag_count, size_t flag_size, FoundFlag* matches, int max_matches) {
+    if (!text || !flag_array || !matches) return 0;
+    
+    int match_count = 0;
+    char* text_copy = _strdup(text);
+    if (!text_copy) return 0;
+    
+    // Convert to lowercase for case-insensitive search
+    for (int i = 0; text_copy[i]; i++) {
+        text_copy[i] = tolower(text_copy[i]);
+    }
+    
+    for (int i = 0; i < flag_count && match_count < max_matches; i++) {
+        char* flag_str = NULL;
+        
+        // Extract flag string based on flag_size
+        if (flag_size == sizeof(char*)) {
+            flag_str = ((char**)flag_array)[i];
+        } else if (flag_size == sizeof(ActionDef)) {
+            flag_str = ((ActionDef*)flag_array)[i].str;
+        } else if (flag_size == sizeof(ConditionDef)) {
+            flag_str = ((ConditionDef*)flag_array)[i].str;
+        } else if (flag_size == sizeof(TimerDef)) {
+            flag_str = ((TimerDef*)flag_array)[i].str;
+        }
+        
+        if (!flag_str) continue;
+        
+        char* found = strstr(text_copy, flag_str);
+        if (found) {
+            // === EXACT MATCH CHECK ===
+            // Make sure this is a whole word, not part of another flag
+            
+            // Check if character before match is start of string or space
+            int before_ok = (found == text_copy || *(found - 1) == ' ');
+            
+            // Check if character after match is end of string, space, or not a letter
+            int after_ok = 1;
+            char* after = found + strlen(flag_str);
+            if (*after != '\0' && *after != ' ' && *after != '\t') {
+                after_ok = 0;
+            }
+            
+            if (before_ok && after_ok) {
+                matches[match_count].flag = flag_str;
+                matches[match_count].index = found - text_copy;
+                match_count++;
+            }
+        }
+    }
+    
+    free(text_copy);
+    return match_count;
+}
+
+static inline char* GetFlagParameter(const char* text, int flag_index) {
+    if (!text || flag_index < 0) return NULL;
+    
+    static char param[256];
+    param[0] = '\0';
+    
+    // Skip past the flag
+    int pos = flag_index;
+    while (text[pos] && text[pos] != ' ') pos++;
+    while (text[pos] && text[pos] == ' ') pos++;
+    
+    // Find next flag (must be at start of word, with space before or at start)
+    int start = pos;
+    while (text[pos]) {
+        // Check if this is the start of a flag
+        if (text[pos] == '-' && (pos == 0 || text[pos-1] == ' ')) {
+            break;
+        }
+        pos++;
+    }
+    
+    int len = pos - start;
+    if (len > 0) {
+        strncpy(param, text + start, len);
+        param[len] = '\0';
+        
+        // Trim trailing spaces
+        char* end = param + strlen(param) - 1;
+        while (end > param && *end == ' ') end--;
+        *(end + 1) = '\0';
+        
+        return param;
+    }
+    
+    return NULL;
+}
+
+// Get the text without any flags (clean text)
+static inline char* GetCleanText(const char* text) {
+    if (!text) return NULL;
+    
+    static char clean[256];
+    clean[0] = '\0';
+    
+    // List of all flags to skip
+    const char* flags[] = {"-f", "-cg", "-trw", "-tr", "-t"};
+    int flag_count = sizeof(flags) / sizeof(flags[0]);
+    
+    char* text_copy = _strdup(text);
+    if (!text_copy) return NULL;
+    
+    char* result = text_copy;
+    char* write_ptr = text_copy;
+    
+    while (*result) {
+        int skip = 0;
+        for (int i = 0; i < flag_count; i++) {
+            if (strncmp(result, flags[i], strlen(flags[i])) == 0) {
+                // Skip this flag and its parameter
+                skip = 1;
+                result += strlen(flags[i]);
+                while (*result && *result == ' ') result++;
+                while (*result && *result != ' ') result++;
+                while (*result && *result == ' ') result++;
+                break;
+            }
+        }
+        
+        if (!skip) {
+            *write_ptr = *result;
+            write_ptr++;
+            result++;
+        }
+    }
+    
+    *write_ptr = '\0';
+    
+    // Trim leading/trailing spaces
+    char* start = text_copy;
+    while (*start == ' ') start++;
+    char* end = text_copy + strlen(text_copy) - 1;
+    while (end > start && *end == ' ') end--;
+    *(end + 1) = '\0';
+    
+    strncpy(clean, start, sizeof(clean) - 1);
+    clean[sizeof(clean) - 1] = '\0';
+    
+    free(text_copy);
+    return clean;
+}
 
 #endif

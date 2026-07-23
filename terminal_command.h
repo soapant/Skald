@@ -17,9 +17,6 @@ extern FileEntry G_FILE_ENTRIES[];
 static char** g_cached_commands = NULL;
 static int g_cached_command_count = 0;
 
-// ============================================================
-// REBUILD CACHE
-// ============================================================
 static void RebuildCommandCache(void) {
     if (g_cached_commands) {
         for (int i = 0; i < g_cached_command_count; i++) {
@@ -165,7 +162,7 @@ static void TriggerTerminalCommand() {
         list[i] = g_cached_commands[i];
     }
     
-    PromptUser(list, "⌨️ Terminal", g_cached_command_count, 520, 650, 32, 
+    PromptUser(list, "⌨️ Terminal", g_cached_command_count, 920, 650, 32, 
                terminal_refresh_callback, 
                terminal_enter_callback, 
                NULL, 
