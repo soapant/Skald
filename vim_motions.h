@@ -299,15 +299,5 @@ static inline void HandleInsertControlEnter(void) {
   SendMessageA(hEditControl, WM_KEYUP, VK_CONTROL, 0);
   selection_complete = false;
 }
-static inline void HandleNormalControlEnter(void) {
-  if (hListBox != NULL && UI_IsListBoxSelected()) {
-  SendMessageA(hEditControl, WM_KEYDOWN, VK_CONTROL, 0);
-  SendMessageA(hEditControl, WM_KEYDOWN, VK_RETURN, 0);
-  SendMessageA(hEditControl, WM_KEYUP, VK_RETURN, 0);
-  SendMessageA(hEditControl, WM_KEYUP, VK_CONTROL, 0);
-  selection_complete = false;
-  }
-}
-
 
 #endif

@@ -42,7 +42,7 @@
 #define ID_EXIT 2001
 #define IDC_INPUT_BOX 101
 #define IDC_LIST_BOX 102
-#define COLOR_BG      RGB(30, 35, 45)   
+#define COLOR_BG      RGB(48 , 25 , 52)  
 #define COLOR_TEXT    RGB(255, 255, 255)
 #define TODO_FILE_PATH "todo.txt"
 #define WM_TRIGGER_IMG_CAPTURE (WM_USER + 2)
@@ -576,6 +576,7 @@ void CalculateWindowMetrics(int count, WindowLayout* layout,int height , int wid
     layout->x = mi.rcMonitor.left + (monitorWidth - layout->w) / 2;
     layout->y = mi.rcMonitor.top + (monitorHeight - layout->h) / 2;
 }
+
 LRESULT CALLBACK ListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData){
     switch (uMsg) {
         case WM_NCDESTROY:
