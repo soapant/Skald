@@ -9,8 +9,6 @@ testing
 roaming
 alac
 wez
-code
-code
 my
 dev
 include

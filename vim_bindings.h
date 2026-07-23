@@ -38,7 +38,7 @@ static const MotionBinding G_VIM_BINDINGS[] = {
     
     { 'Q', HOTKEY_MOD_NONE, MOTION_EXIT_WINDOW,          "ExitWindow",       HandleExitWindow,      MODE_NORMAL },
     
-    { 'Y', HOTKEY_MOD_SHIFT, MOTION_YANK_LINE,          "YankLine",       HandleYankLine,      MODE_NORMAL },
+    { 'Y', HOTKEY_MOD_SHIFT, MOTION_YANK_LIST_BOX,          "YankListBox",       HandleYankListBox,      MODE_NORMAL },
     
 };
 
@@ -57,7 +57,8 @@ static const SequenceBinding G_VIM_SEQUENCE_BINDINGS[] = {
     // { "dw",    MOTION_DELETE_WORD,     "DeleteWord",  HandleDeleteWord,         false, MODE_NORMAL },
     // { "d$",    MOTION_DELETE_TO_END,   "DeleteToEnd", HandleDeleteToEnd,        false, MODE_NORMAL },
     // 
-    { "YY",    MOTION_YANK_LIST_BOX,       "YankListBox",    HandleYankListBox,           false, MODE_NORMAL },
+    { "YY",    MOTION_YANK_LINE,       "YankLine",    HandleYankLine,           false, MODE_NORMAL },
+    // 
     // 
     // { "yw",    MOTION_YANK_WORD,       "YankWord",    HandleYankWord,           false, MODE_NORMAL },
     // { "y$",    MOTION_YANK_TO_END,     "YankToEnd",   HandleYankToEnd,          false, MODE_NORMAL },
