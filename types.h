@@ -112,13 +112,13 @@ extern HFONT g_hMainFont;
 #define MSG_TOP(msg, msg_height, timeout) \
     DisplayMessage((msg), \
                    960, \
-                   (540 - (g_current_window_height / 2) - GAP + ((msg_height) / 2)), \
+                   (540 - (g_current_window_height / 2) - GAP - ((msg_height) / 2)), \
                    900, (msg_height), (timeout))
 
 #define MSG_BOTTOM(msg, msg_height, timeout) \
     DisplayMessage((msg), \
                    960, \
-                   (540 + (g_current_window_height / 2) + GAP - ((msg_height) / 2)), \
+                   (540 + (g_current_window_height / 2) + GAP + ((msg_height) / 2)), \
                    900, (msg_height), (timeout))
 
 #endif

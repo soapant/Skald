@@ -875,6 +875,8 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
 
     WindowLayout layout;
     CalculateWindowMetrics(count, &layout, height, width, item_height);
+    g_current_window_height = layout.h;
+    g_current_window_width = layout.w;
     
     HFONT hCustomFont = CreateCustomNerdFont(24, "0xProto Nerd Font");
 
@@ -950,6 +952,8 @@ char* SimplePromptUser(const char* prompt, const char* window_title,int height, 
 
     WindowLayout layout;
     CalculateWindowMetrics(1, &layout, height, width, item_height);
+    g_current_window_height = layout.h;
+    g_current_window_width = layout.w;
     
     HFONT hCustomFont = CreateCustomNerdFont(24, "0xProto Nerd Font");
 
