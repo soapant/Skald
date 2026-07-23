@@ -133,7 +133,7 @@ static void TriggerZoxide() {
         list[i] = g_cached_zoxide_commands[i];
     }
     
-    PromptUser(list, "⌨️ Zoxide", g_cached_zoxide_count,520,650, 32, 
+    PromptUser(list, "⌨️ Zoxide", g_cached_zoxide_count,920,650, 32, 
                zoxide_refresh_callback, 
                zoxide_enter_callback, 
                NULL, 

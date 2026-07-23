@@ -1034,7 +1034,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             const char* empty_list[1] = { "" };
             
             printf("[DEBUG-WNDPROC] Handing control off to PromptUser...\n");
-            char* raw_name = PromptUser(empty_list,"Boring", 0, 520, 650,32,NULL,NULL,NULL,NULL,NULL);
+            char* raw_name = PromptUser(empty_list,"Boring", 0, 920, 650,32,NULL,NULL,NULL,NULL,NULL);
             printf("[DEBUG-WNDPROC] Returned back to WndProc execution sequence.\n");
 
             if (raw_name != NULL && strlen(raw_name) > 0) {

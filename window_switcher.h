@@ -35,7 +35,6 @@ static void FetchExeNameOnDemand(HWND hwnd, char* outExe, DWORD maxLen) {
     
     DWORD currentTime = GetTickCount();
     
-    // Cleanup old entries every 10 seconds
     if (currentTime - g_lastCacheCleanup > 10000) {
         g_lastCacheCleanup = currentTime;
         int keepCount = 0;
@@ -50,7 +49,6 @@ static void FetchExeNameOnDemand(HWND hwnd, char* outExe, DWORD maxLen) {
         g_exeCacheCount = keepCount;
     }
     
-    // Search cache
     for (int i = 0; i < g_exeCacheCount; i++) {
         if (g_exeCache[i].processId == processId) {
             g_exeCache[i].lastAccessTime = currentTime;
@@ -59,7 +57,6 @@ static void FetchExeNameOnDemand(HWND hwnd, char* outExe, DWORD maxLen) {
         }
     }
     
-    // === NOT IN CACHE – QUERY PROCESS ===
     HANDLE hProcess = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, processId);
     if (hProcess) {
         char path[MAX_PATH] = {0};
@@ -170,7 +167,7 @@ static char* TriggerWindowSwitcher(HWND hPopupWnd, WindowList myWindows) {
     }
 
     printf("[SWITCHER] Launching UI Selection Prompt...\n");
-    char* selected_title = PromptUser(ui_list,"🪟 Switcher",g_switcher_count, 520, 650,32,
+    char* selected_title = PromptUser(ui_list,"🪟 Switcher",g_switcher_count, 920, 650,32,
                                                 switcher_refresh_callback,  
                                                 switcher_enter_callback,    
                                                 NULL,                       

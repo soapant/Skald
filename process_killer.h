@@ -137,7 +137,7 @@ void TriggerProcessKiller() {
         list_items[i] = G_PK_LIST[i];
     }
 
-    PromptUser(list_items,"💀 ProcessKiller", G_PK_COUNT, 520, 650,32,
+    PromptUser(list_items,"💀 ProcessKiller", G_PK_COUNT, 920, 650,32,
                         pk_refresh_callback,        
                         pk_enter_callback,          
                         NULL,                      
