@@ -42,8 +42,28 @@
 #define ID_EXIT 2001
 #define IDC_INPUT_BOX 101
 #define IDC_LIST_BOX 102
-#define COLOR_BG      RGB(48 , 25 , 52)  
+#define COLOR_BG      RGB(30, 35, 45)   
 #define COLOR_TEXT    RGB(255, 255, 255)
+
+COLORREF GetRainbowColor(float t, float s, float v) {
+    float hue = t * 240.0f;
+    float h = hue / 60.0f;
+    int i = ((int)h) % 6;
+    float f = h - (int)h;
+    float p = v * (1 - s);
+    float q = v * (1 - s * f);
+    float t_ = v * (1 - s * (1 - f));
+    float r, g, b;
+    switch (i) {
+        case 0: r = v; g = t_; b = p; break;
+        case 1: r = q; g = v; b = p; break;
+        case 2: r = p; g = v; b = t_; break;
+        case 3: r = p; g = q; b = v; break;
+        case 4: r = t_; g = p; b = v; break;
+        case 5: r = v; g = p; b = q; break;
+    }
+    return RGB((BYTE)(r * 255), (BYTE)(g * 255), (BYTE)(b * 255));
+}
 #define TODO_FILE_PATH "todo.txt"
 #define WM_TRIGGER_IMG_CAPTURE (WM_USER + 2)
 HWND hGlobalTrayWnd = NULL;
@@ -312,8 +332,14 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         case WM_CTLCOLORLISTBOX: {
             HDC hdc = (HDC)wParam;
             SetTextColor(hdc, COLOR_TEXT);
-            SetBkColor(hdc, COLOR_BG);
-            return (LRESULT)CreateSolidBrush(COLOR_BG);
+            if (COLORFUL_MODE) {
+                COLORREF bg = GetRainbowColor(0.02f, 0.55f, 0.20f);
+                SetBkColor(hdc, bg);
+                return (LRESULT)CreateSolidBrush(bg);
+            } else {
+                SetBkColor(hdc, COLOR_BG);
+                return (LRESULT)CreateSolidBrush(COLOR_BG);
+            }
         }
         case WM_CREATE: {
                           
@@ -372,13 +398,18 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             
               BOOL isSelected = (pdis->itemID == g_SelectedIndex);
               
-              static HBRUSH hSelBrush = NULL;
-              static HBRUSH hBgBrushStatic = NULL;
-              if (!hSelBrush) hSelBrush = CreateSolidBrush(RGB(70, 55, 90) );
-              if (!hBgBrushStatic) hBgBrushStatic = CreateSolidBrush(COLOR_BG);
-              
-              HBRUSH hBgBrush = isSelected ? hSelBrush : hBgBrushStatic;
-              FillRect(pdis->hDC, &pdis->rcItem, hBgBrush);
+              float t = (float)pdis->itemID / 20.0f;
+              if (COLORFUL_MODE) {
+                  COLORREF itemBg = isSelected ? GetRainbowColor(t, 0.45f, 0.30f)
+                                               : GetRainbowColor(t, 0.55f, 0.20f);
+                  HBRUSH hItemBrush = CreateSolidBrush(itemBg);
+                  FillRect(pdis->hDC, &pdis->rcItem, hItemBrush);
+                  DeleteObject(hItemBrush);
+              } else {
+                  HBRUSH hBrush = CreateSolidBrush(isSelected ? RGB(70, 55, 90) : COLOR_BG);
+                  FillRect(pdis->hDC, &pdis->rcItem, hBrush);
+                  DeleteObject(hBrush);
+              }
               
               if (pdis->itemID == -1 || pdis->itemID >= g_populated_count) {
                   return TRUE; 
@@ -389,8 +420,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                   textBuffer = g_populated_cache[pdis->itemID];
               }
               
-              SetBkMode(pdis->hDC, OPAQUE);
-              SetBkColor(pdis->hDC, isSelected ?RGB(70, 55, 90) : COLOR_BG);
+              SetBkMode(pdis->hDC, TRANSPARENT);
               
               RECT textRect = pdis->rcItem;
               
@@ -404,26 +434,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                   
                   HFONT hOldFont = (HFONT)SelectObject(pdis->hDC, g_hNumFont);
                   
-                  float hue = (float)pdis->itemID / 20.0f * 240.0f;
-                  float h = hue / 60.0f;
-                  float s = 0.85f;
-                  float v = 0.85f;
-                  int i = (int)h;
-                  float f = h - i;
-                  float p = v * (1 - s);
-                  float q = v * (1 - s * f);
-                  float t = v * (1 - s * (1 - f));
-                  float r, g, b;
-                  switch (i) {
-                      case 0: r = v; g = t; b = p; break;
-                      case 1: r = q; g = v; b = p; break;
-                      case 2: r = p; g = v; b = t; break;
-                      case 3: r = p; g = q; b = v; break;
-                      case 4: r = t; g = p; b = v; break;
-                      default: r = v; g = p; b = q; break;
-                  }
-                  
-                  SetTextColor(pdis->hDC, RGB((BYTE)(r * 255), (BYTE)(g * 255), (BYTE)(b * 255)));
+                  SetTextColor(pdis->hDC, GetRainbowColor(t, 0.85f, 0.85f));
                   DrawTextA(pdis->hDC, num_str, -1, &numRect, DT_SINGLELINE | DT_VCENTER | DT_CENTER);
                   
                   SelectObject(pdis->hDC, hOldFont);
@@ -448,12 +459,24 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
       case WM_PAINT: {
           PAINTSTRUCT ps;
           HDC hdc = BeginPaint(hwnd, &ps);
-          HBRUSH hBrush = CreateSolidBrush(COLOR_BG);
-          FillRect(hdc, &ps.rcPaint, hBrush);
-          DeleteObject(hBrush);
-          
           RECT rect;
           GetClientRect(hwnd, &rect);
+          if (COLORFUL_MODE) {
+              int h = rect.bottom - rect.top;
+              int bandH = max(1, h / 128);
+              for (int y = 0; y < h; y += bandH) {
+                  float ft = (float)y / (float)h;
+                  COLORREF c = GetRainbowColor(ft, 0.55f, 0.18f);
+                  HBRUSH hBrush = CreateSolidBrush(c);
+                  RECT band = {rect.left, rect.top + y, rect.right, rect.top + min(y + bandH, h)};
+                  FillRect(hdc, &band, hBrush);
+                  DeleteObject(hBrush);
+              }
+          } else {
+              HBRUSH hBrush = CreateSolidBrush(COLOR_BG);
+              FillRect(hdc, &ps.rcPaint, hBrush);
+              DeleteObject(hBrush);
+          }
           if (g_vim_mode != NULL) {
               wchar_t wmode[256];
               MultiByteToWideChar(CP_UTF8, 0, g_vim_mode, -1, wmode, 256);
@@ -602,10 +625,22 @@ LRESULT CALLBACK SimpleListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, 
 
             RECT rect;
             GetClientRect(hWnd, &rect);
-
-            HBRUSH hBgBrush = CreateSolidBrush(COLOR_BG);
-            FillRect(hdc, &rect, hBgBrush);
-            DeleteObject(hBgBrush);
+            if (COLORFUL_MODE) {
+                int h = rect.bottom - rect.top;
+                int bandH = max(1, h / 32);
+                for (int y = 0; y < h; y += bandH) {
+                    float ft = (float)y / (float)h;
+                    COLORREF c = GetRainbowColor(ft, 0.55f, 0.18f);
+                    HBRUSH hBrush = CreateSolidBrush(c);
+                    RECT band = {rect.left, rect.top + y, rect.right, rect.top + min(y + bandH, h)};
+                    FillRect(hdc, &band, hBrush);
+                    DeleteObject(hBrush);
+                }
+            } else {
+                HBRUSH hBrush = CreateSolidBrush(COLOR_BG);
+                FillRect(hdc, &rect, hBrush);
+                DeleteObject(hBrush);
+            }
 
             int textLen = (int)SendMessageA(hWnd, LB_GETTEXTLEN, 0, 0);
             
@@ -1259,7 +1294,7 @@ int main() {
     wc.lpfnWndProc = PopupWndProc;
     wc.hInstance = GetModuleHandle(NULL);
     wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-    wc.hbrBackground = CreateSolidBrush(COLOR_BG);
+    wc.hbrBackground = GetStockObject(NULL_BRUSH);
     wc.lpszClassName = "QuickSwitcherModalClass";
     
     if (RegisterClassA(&wc)) {
