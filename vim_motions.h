@@ -264,8 +264,6 @@ static inline void HandleYankListBox(void) {
         text[sizeof(text) - 1] = '\0';
         
         CopyToClipboard(text);
-        snprintf(buffer,sizeof(text),"Copied %s",text);
-        DisplayMessage(buffer,960,999,950,70,2);
         return;
     } else {
         printf("[VIM] Yank failed: No valid list item selected.\n");
@@ -282,8 +280,6 @@ static inline void HandleYankLine(void) {
         
         if (strlen(textBuffer) > 0) {
             CopyToClipboard(textBuffer);
-            snprintf(buffer,sizeof(textBuffer),"Copied %s",textBuffer);
-            DisplayMessage(buffer,960,999,950,70,2);
         } else {
             printf("[VIM] Yank failed: Search box is currently empty.\n");
         }
