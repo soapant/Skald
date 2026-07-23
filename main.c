@@ -84,6 +84,7 @@ EnterCallback g_enter_callback = NULL;
 CtrlEnterCallback g_ctrl_enter_callback = NULL;
 TabCallback g_tab_callback = NULL;
 RenderCallback g_render_callback = NULL;
+int g_timeout = 1;
 const char** g_initial_items = NULL;
 int g_initial_count = 0;
 int g_SelectedIndex = 0; 
@@ -929,6 +930,7 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
     printf("[DEBUG-UI] Returning from PromptUser. Buffer Length: %zu\n", strlen(output_buffer));
     return (strlen(output_buffer) > 0) ? output_buffer : NULL;
 }
+
 char* SimplePromptUser(const char* prompt, const char* window_title,int height, int width, int item_height) {
     HINSTANCE hInstance = GetModuleHandle(NULL);
     selection_complete = false;
@@ -991,6 +993,142 @@ char* SimplePromptUser(const char* prompt, const char* window_title,int height, 
     printf("[DEBUG-UI] Returning from SimplePromptUser. Buffer %s\n", output_buffer);
     return (strlen(output_buffer) > 0) ? output_buffer : NULL;
 }
+static int g_currentAlpha = 245; 
+static const char* g_displayMessage = NULL;
+static HFONT g_hFont = NULL;
+
+typedef struct {
+    const char* message;
+    HFONT hFont;
+    int alpha;
+} FadeWindowData;
+
+LRESULT CALLBACK DisplayMessageProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+    FadeWindowData* data = (FadeWindowData*)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
+
+    switch (msg) {
+        case WM_NCCREATE: {
+            CREATESTRUCTA* cs = (CREATESTRUCTA*)lParam;
+            SetWindowLongPtrA(hwnd, GWLP_USERDATA, (LONG_PTR)cs->lpCreateParams);
+            return DefWindowProcA(hwnd, msg, wParam, lParam);
+        }
+        case WM_PAINT: {
+            if (!data) break;
+
+            PAINTSTRUCT ps;
+            HDC hdc = BeginPaint(hwnd, &ps);
+
+            RECT rect;
+            GetClientRect(hwnd, &rect);
+
+            HBRUSH hBackgroundBrush = CreateSolidBrush(COLOR_BG);
+            FillRect(hdc, &rect, hBackgroundBrush);
+            DeleteObject(hBackgroundBrush);
+
+            SetBkMode(hdc, TRANSPARENT);
+            SetTextColor(hdc, RGB(255, 255, 255)); // Crisp white text
+
+            HFONT hOldFont = NULL;
+            if (data->hFont) {
+                hOldFont = (HFONT)SelectObject(hdc, data->hFont);
+            }
+
+            if (data->message) {
+                RECT textRect = rect;
+                textRect.left += 15;  
+                textRect.right -= 15; 
+                DrawTextA(hdc, data->message, -1, &textRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
+            }
+
+            if (hOldFont) {
+                SelectObject(hdc, hOldFont);
+            }
+
+            EndPaint(hwnd, &ps);
+            return 0;
+        }
+        case WM_TIMER: {
+            if (wParam == 999 && data) {
+                if (g_timeout > 0) {
+                    g_timeout--;
+                    return 0; 
+                }
+
+                data->alpha -= 12;
+
+                if (data->alpha <= 0) {
+                    KillTimer(hwnd, 999);
+                    PostQuitMessage(0);
+                } else {
+                    SetLayeredWindowAttributes(hwnd, 0, (BYTE)data->alpha, LWA_ALPHA);
+                }
+            }
+            return 0;
+        }
+        case WM_DESTROY:
+            PostQuitMessage(0);
+            return 0;
+    }
+    // CRITICAL FIX: All unhandled window events MUST pass through here!
+    return DefWindowProcA(hwnd, msg, wParam, lParam);
+}
+
+
+char* DisplayMessage(const char* message, int centerX, int centerY, int width, int height,int timeout) {
+    printf("[DEBUG-UI] DisplayMessage invoked. Msg: \"%s\" | Center: (%d, %d) | Dim: %dx%d\n", 
+           message ? message : "NULL", centerX, centerY, width, height);
+           
+    HINSTANCE hInstance = GetModuleHandle(NULL);
+    g_timeout = timeout * 20;
+    
+    FadeWindowData wndData;
+    wndData.message = message;
+    wndData.hFont = CreateCustomNerdFont(24, "0xProto Nerd Font");
+    wndData.alpha = 245;
+
+    int topLeftX = centerX - (width / 2);
+    int topLeftY = centerY - (height / 2);
+
+    // Note the final argument passes a reference to our wndData configuration layout
+    HWND hPopupWnd = CreateWindowExA(
+        WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED, 
+        "DisplayMessageModalClass", NULL, WS_POPUP | WS_CLIPCHILDREN, 
+        topLeftX, topLeftY, width, height, NULL, NULL, hInstance, &wndData
+    );
+
+    if (hPopupWnd == NULL) {
+        printf("[DEBUG-UI] ERROR: CreateWindowExA failed. GetLastError: %lu\n", GetLastError());
+        DeleteObject(wndData.hFont);
+        return NULL;
+    }
+
+    // Initialize visibility details
+    SetLayeredWindowAttributes(hPopupWnd, 0, wndData.alpha, LWA_ALPHA);
+    ShowWindow(hPopupWnd, SW_SHOW);
+    UpdateWindow(hPopupWnd);
+
+    // Set a 50ms interval animation decay timer
+    SetTimer(hPopupWnd, 999, 50, NULL);
+    
+    // Core engine message processing loop
+    MSG msg;
+    while (GetMessage(&msg, NULL, 0, 0) > 0) {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+    }
+
+    // Clean up window resources fully
+    if (hPopupWnd != NULL && IsWindow(hPopupWnd)) {
+        KillTimer(hPopupWnd, 999);
+        DestroyWindow(hPopupWnd);
+    }
+    
+    DeleteObject(wndData.hFont); 
+    printf("[DEBUG-UI] DisplayMessage loop closed and clean down finished.\n");
+
+    return NULL; 
+}
+
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
@@ -1301,6 +1439,19 @@ int main() {
         printf("[SYSTEM-BOOT] QuickSwitcherModalClass registered successfully with OS.\n");
     } else {
         printf("[SYSTEM-BOOT] CRITICAL WARNING: Failed to register window class! Error: %lu\n", GetLastError());
+    }
+    // NEW: Register your dedicated standalone notification class
+    WNDCLASSA wcFade = {0};
+    wcFade.lpfnWndProc = DisplayMessageProc;
+    wcFade.hInstance = GetModuleHandle(NULL);
+    wcFade.hCursor = LoadCursor(NULL, IDC_ARROW);
+    wcFade.hbrBackground = (HBRUSH)(COLOR_BACKGROUND + 1); 
+    wcFade.lpszClassName = "DisplayMessageModalClass";
+
+    if (RegisterClassA(&wcFade)) {
+        printf("[SYSTEM-BOOT] DisplayMessageClass registered successfully with OS.\n");
+    } else {
+        printf("[SYSTEM-BOOT] WARNING: Failed to register FadeNotificationClass! Error: %lu\n", GetLastError());
     }
     
     for (int i = 0; i < FILE_ENTRY_COUNT; i++) {

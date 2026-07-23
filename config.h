@@ -26,7 +26,7 @@ typedef struct {
 } Line;
 
 static bool TRAY = true;
-static bool COLORFUL_MODE = true;
+static bool COLORFUL_MODE = false;
 
 static const char* ListOfProgramPaths[20] = {
     "C:\\Users\\HP\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu",
