@@ -1157,27 +1157,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             break;
         }
-        case WM_TRIGGER_IMG_CAPTURE: {
-            printf("[DEBUG-WNDPROC] Core tray window thread intercepted WM_TRIGGER_IMG_CAPTURE successfully!\n");
-            const char* empty_list[1] = { "" };
-            
-            printf("[DEBUG-WNDPROC] Handing control off to PromptUser...\n");
-            char* raw_name = PromptUser(empty_list,"Boring", 0, 920, 650,32,NULL,NULL,NULL,NULL,NULL);
-            printf("[DEBUG-WNDPROC] Returned back to WndProc execution sequence.\n");
-
-            if (raw_name != NULL && strlen(raw_name) > 0) {
-                char final_file_path[512];
-                snprintf(final_file_path, sizeof(final_file_path), "%s%s.png", BASE_SAVE_FOLDER_PATH, raw_name);
-                
-                printf("[DEBUG-WNDPROC] Saving pixel buffer bounds: (%ld,%ld) to (%ld,%ld)\n", img_x1, img_y1, img_x2, img_y2);
-                SaveRegionToPNG((int)img_x1, (int)img_y1, (int)img_x2, (int)img_y2, final_file_path);
-                printf("[IMG REGION] Successfully rendered output file to: %s\n", final_file_path);
-            } else {
-                printf("[DEBUG-WNDPROC] Screenshot save aborted because raw_name is null/empty.\n");
-            }
-            break;
-        }
-        
         case WM_TRIGGER_UNIVERSAL_MACRO: {
             MacroAction macroAction = (MacroAction)wParam;
             int macroDelay = (int)lParam;

@@ -18,8 +18,8 @@ extern long img_x1, img_y1, img_x2, img_y2;
 static void TriggerScreenshot(HWND hPopupWnd,bool open_screenshot) {
     if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
 
-    const char* name_prompt[1] = { "Enter image name..." };
-    char* raw_name = PromptUser(name_prompt,"📷 Screenshot", 1, 920, 650,32,NULL,NULL,NULL,NULL,NULL);
+    const char* name_prompt = "Enter image name...";
+    char* raw_name = SimplePromptUser(name_prompt,"📷 Screenshot",920, 650,32);
 
     if (raw_name != NULL && strlen(raw_name) > 0) {
         char final_file_path[512];

@@ -23,3 +23,4 @@ maybe make a sort of info screen for the window and maybe a help||[Project: Cpro
 add the vim motions for the searchbox text manip||[Project: Cprogram]
 get an easier way to go search and replace on the entire dir||[MISC]
 you should probably fix the whole strings clipping throug the windwow||[Project: Cprogram]
+oh shit for the text clipping thing you can like show a window that shows up when hovering over a text that is too long||[Project: Cprogram]
