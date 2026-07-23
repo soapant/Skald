@@ -87,11 +87,13 @@ void TriggerVolume() {
     snprintf(prompt, sizeof(prompt), "Enter Volume (0 - 100) Current Volume: %d", current_vol);
     
     input = SimplePromptUser(prompt, "🔊 Volume",520, 650, 32);
-    
+    if (input != NULL) {
     int vol = atoi(input);
     if (vol < 0) vol = 0;
     if (vol > 100) vol = 100;
     SetSystemVolume(vol / 100.0f);
+    }
+    
 }
 
 #endif 

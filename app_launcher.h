@@ -157,6 +157,7 @@ static void applauncher_enter_callback(const char* selection) {
 
 static void applauncher_ctrlenter_callback(const char* selection) {
     if (selection != NULL && strlen(selection) > 0) {
+        printf("TRYING TO LAUNCEH AS ADMING ON %s",selection);
         launch_app_as_admin(selection);
         selection_complete = true;
     }
