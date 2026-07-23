@@ -256,7 +256,7 @@ static inline void HandleExitWindow(void) {
 
 static inline void HandleYankListBox(void) {
     int selected_index = g_SelectedIndex;
-    
+    char buffer[256];
     if (selected_index >= 0 && selected_index < g_populated_count) {
         char text[512] = {0};
         
@@ -264,7 +264,8 @@ static inline void HandleYankListBox(void) {
         text[sizeof(text) - 1] = '\0';
         
         CopyToClipboard(text);
-        printf("[VIM] COPIED %s TO THE CLIPBOARD\n", text);
+        snprintf(buffer,sizeof(text),"Copied %s",text);
+        DisplayMessage(buffer,960,999,950,70,2);
         return;
     } else {
         printf("[VIM] Yank failed: No valid list item selected.\n");
@@ -274,13 +275,15 @@ static inline void HandleYankListBox(void) {
 static inline void HandleYankLine(void) {
     if (hEditControl && IsWindow(hEditControl)) {
         char textBuffer[256] = {0};
+        char buffer[256];
         GetWindowTextA(hEditControl, textBuffer, sizeof(textBuffer));
         
         textBuffer[strcspn(textBuffer, "\r\n")] = '\0';
         
         if (strlen(textBuffer) > 0) {
             CopyToClipboard(textBuffer);
-            printf("[VIM] COPIED %s TO THE CLIPBOARD\n", textBuffer);
+            snprintf(buffer,sizeof(textBuffer),"Copied %s",textBuffer);
+            DisplayMessage(buffer,960,999,950,70,2);
         } else {
             printf("[VIM] Yank failed: Search box is currently empty.\n");
         }
