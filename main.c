@@ -46,6 +46,7 @@
 #define COLOR_TEXT    RGB(255, 255, 255)
 #define COLOR_SELECTED_TEXT    RGB(70, 55, 90)
 
+
 COLORREF GetRainbowColor(float t, float s, float v) {
     float hue = t * 240.0f;
     float h = hue / 60.0f;
@@ -100,6 +101,8 @@ int g_match_history[20][4000];
 int g_match_count_history[20]; 
 int g_history_index = 0;       
 int g_history_count = 0;     
+int g_current_window_height = 0;
+int g_current_window_width = 0;
 #define MAX_ITEMS 1000
 char g_populated_cache[MAX_ITEMS][512];
 int g_populated_count = 0;
@@ -865,6 +868,8 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
     g_tab_callback = tab_callback;
     g_render_callback = render_callback;
     g_title = window_title;
+    g_current_window_height = height;
+    g_current_window_width = width;
     
     SetMode(MODE_INSERT);
 
@@ -938,6 +943,8 @@ char* SimplePromptUser(const char* prompt, const char* window_title,int height, 
     selection_complete = false;
     output_buffer[0] = '\0';
     g_title = window_title;
+    g_current_window_height = height;
+    g_current_window_width = width;
     
     SetMode(MODE_INSERT);
 
@@ -1023,7 +1030,7 @@ LRESULT CALLBACK DisplayMessageProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
             RECT rect;
             GetClientRect(hwnd, &rect);
 
-            HBRUSH hBackgroundBrush = CreateSolidBrush(RGB(40, 44, 52)); 
+            HBRUSH hBackgroundBrush = CreateSolidBrush(COLOR_BG); 
             FillRect(hdc, &rect, hBackgroundBrush);
             DeleteObject(hBackgroundBrush);
 
@@ -1079,8 +1086,6 @@ LRESULT CALLBACK DisplayMessageProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
 }
 
 char* DisplayMessage(const char* message, int centerX, int centerY, int width, int height, int timeout) {
-    printf("[DEBUG-UI] DisplayMessage invoked non-blocking. Msg: \"%s\"\n", message ? message : "NULL");
-           
     HINSTANCE hInstance = GetModuleHandle(NULL);
     
     // CRITICAL: Dynamically allocate data so it doesn't get destroyed when this function exits!
@@ -1089,7 +1094,8 @@ char* DisplayMessage(const char* message, int centerX, int centerY, int width, i
 
     // Duplicate the string so it stays valid even if the caller frees the original 'message'
     pWndData->message = _strdup(message ? message : "");
-    pWndData->hFont = CreateCustomNerdFont(24, "0xProto Nerd Font");
+    // font should depend on how much text there is nigga
+    pWndData->hFont = CreateCustomNerdFont(20, "0xProto Nerd Font");
     pWndData->alpha = 245;
     g_timeout = timeout * 20;
 
@@ -1118,6 +1124,7 @@ char* DisplayMessage(const char* message, int centerX, int centerY, int width, i
     
     return NULL; 
 }
+
 
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {

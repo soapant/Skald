@@ -83,8 +83,42 @@ extern int g_match_history[20][4000];
 extern int g_match_count_history[20]; 
 extern int g_history_index;       
 extern int g_history_count;     
+extern int g_current_window_height;
+extern int g_current_window_width;
 #define COLOR_BG      RGB(30, 35, 45)   
 #define COLOR_TEXT    RGB(255, 255, 255)
+#define COLOR_SELECTED_TEXT    RGB(70, 55, 90)
 extern HFONT g_hNumFont;
 extern HFONT g_hMainFont;
+
+#define GAP 20
+
+
+#define MAIN_CENTER_X (GetSystemMetrics(SM_CXSCREEN) / 2)
+#define MAIN_CENTER_Y (GetSystemMetrics(SM_CYSCREEN) / 2)
+
+#define MSG_LEFT(msg, msg_width, timeout) \
+    DisplayMessage((msg), \
+                   (960 - 450 - GAP - ((msg_width) / 2)), \
+                   540, \
+                   (msg_width), 650, (timeout))
+
+#define MSG_RIGHT(msg, msg_width, timeout) \
+    DisplayMessage((msg), \
+                   (960 + 450 + GAP + ((msg_width) / 2)), \
+                   540, \
+                   (msg_width), 650, (timeout))
+
+#define MSG_TOP(msg, msg_height, timeout) \
+    DisplayMessage((msg), \
+                   960, \
+                   (540 - (g_current_window_height / 2) - GAP + ((msg_height) / 2)), \
+                   900, (msg_height), (timeout))
+
+#define MSG_BOTTOM(msg, msg_height, timeout) \
+    DisplayMessage((msg), \
+                   960, \
+                   (540 + (g_current_window_height / 2) + GAP - ((msg_height) / 2)), \
+                   900, (msg_height), (timeout))
+
 #endif
