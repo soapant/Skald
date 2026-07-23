@@ -44,6 +44,7 @@
 #define IDC_LIST_BOX 102
 #define COLOR_BG      RGB(30, 35, 45)   
 #define COLOR_TEXT    RGB(255, 255, 255)
+#define COLOR_SELECTED_TEXT    RGB(70, 55, 90)
 
 COLORREF GetRainbowColor(float t, float s, float v) {
     float hue = t * 240.0f;
@@ -407,7 +408,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                   FillRect(pdis->hDC, &pdis->rcItem, hItemBrush);
                   DeleteObject(hItemBrush);
               } else {
-                  HBRUSH hBrush = CreateSolidBrush(isSelected ? RGB(70, 55, 90) : COLOR_BG);
+                  HBRUSH hBrush = CreateSolidBrush(isSelected ? COLOR_SELECTED_TEXT: COLOR_BG);
                   FillRect(pdis->hDC, &pdis->rcItem, hBrush);
                   DeleteObject(hBrush);
               }
@@ -654,6 +655,7 @@ LRESULT CALLBACK SimpleListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, 
                 if (hFont) hOldFont = (HFONT)SelectObject(hdc, hFont);
 
                 SetBkMode(hdc, TRANSPARENT);
+                SetTextColor(hdc, COLOR_TEXT);  
 
                 int itemHeight = (int)SendMessageA(hWnd, LB_GETITEMHEIGHT, 0, 0);
                 if (itemHeight <= 0) itemHeight = 40; 
@@ -1026,7 +1028,7 @@ LRESULT CALLBACK DisplayMessageProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
             DeleteObject(hBackgroundBrush);
 
             SetBkMode(hdc, TRANSPARENT);
-            SetTextColor(hdc, RGB(255, 255, 255)); // Crisp white text
+            SetTextColor(hdc, COLOR_TEXT); // Crisp white text
 
             HFONT hOldFont = NULL;
             if (data->hFont) {
