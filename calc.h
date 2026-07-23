@@ -93,7 +93,7 @@ int CopyToClipboard(const char* text) {
     
     snprintf(buffer,sizeof(buffer),"Copied %s",text);
     
-    DisplayMessage(buffer,960,999,950,70,1);
+    MSG_TOP(buffer,140,2);
     
     CloseClipboard();
     return 1;
