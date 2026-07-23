@@ -19,9 +19,6 @@ static char** g_cached_nvim_commands = NULL;
 static int g_cached_nvim_count = 0;
 int BigVersion;
 
-// ============================================================
-// FAST LAUNCH - Use CreateProcess instead of system()
-// ============================================================
 static void LaunchNvim(const char* path, int version) {
     if (!path) return;
     
@@ -56,9 +53,6 @@ static void LaunchNvim(const char* path, int version) {
     }
 }
 
-// ============================================================
-// REBUILD CACHE
-// ============================================================
 static void RebuildNvimCache(void) {
     if (g_cached_nvim_commands) {
         for (int i = 0; i < g_cached_nvim_count; i++) {
@@ -157,9 +151,6 @@ static void nvim_enter_callback(const char* selection) {
     }
 }
 
-// ============================================================
-// TRIGGER
-// ============================================================
 static void TriggerNvimZoxide(int version, HWND hPopupWnd) {
     if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
     
@@ -177,14 +168,14 @@ static void TriggerNvimZoxide(int version, HWND hPopupWnd) {
     }
     
     if (version == 0) { 
-        PromptUser(list, "📝 Neovide", g_cached_nvim_count, 520, 650, 32, 
+        PromptUser(list, "📝 Neovide", g_cached_nvim_count, 920, 650, 32, 
                    nvim_refresh_callback, 
                    neovide_enter_callback, 
                    NULL, 
                    NULL, 
                    NULL);
     } else {
-        PromptUser(list, "📝 Nvim", g_cached_nvim_count, 520,650, 32, 
+        PromptUser(list, "📝 Nvim", g_cached_nvim_count, 920,650, 32, 
                    nvim_refresh_callback, 
                    nvim_enter_callback, 
                    NULL, 

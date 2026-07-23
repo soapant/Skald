@@ -26,6 +26,7 @@
 #include "todo.h"
 #include "volume.h"
 #include "monitor_focus.h"
+#include "reminder.h"
 
 
 extern BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam);
@@ -53,9 +54,13 @@ extern HWND hGlobalTrayWnd;
 #define NVIM_KEY     0x49
 #define MONITOR_FOCUS_MAIN_KEY     0x4C
 #define MONITOR_FOCUS_SIDE_KEY     0x48
+#define REMINDER_KEY     0x53
 
 static const char* switcher_blacklist[] = {"Fortnite", "CrosshairX"};
 #define SWITCHER_BLACKLIST_COUNT (sizeof(switcher_blacklist) / sizeof(switcher_blacklist[0]))
+
+static const char* reminder_blacklist[] = {"Fortnite", "CrosshairX"};
+#define REMINDER_BLACKLIST_COUNT (sizeof(reminder_blacklist) / sizeof(reminder_blacklist[0]))
 
 static const char* todo_blacklist[] = {"Fortnite", "CrosshairX"};
 #define TODO_BLACKLIST_COUNT (sizeof(todo_blacklist) / sizeof(todo_blacklist[0]))
@@ -337,6 +342,8 @@ static const HotkeyBinding G_HOTKEY_BINDINGS[] = {
     { MONITOR_FOCUS_SIDE_KEY,           HOTKEY_MOD_ALT,  monitor_focus_side_blacklist,          MONITOR_FOCUS_SIDE_BLACKLIST_COUNT,          TriggerMonitorFocusSide,            "MonitorFocusSide" },
     
     { VOLUME_KEY,           HOTKEY_MOD_ALT,  volume_blacklist,          VOLUME_BLACKLIST_COUNT,          TriggerVolume,            "Volume" },
+    
+    { REMINDER_KEY,           HOTKEY_MOD_ALT,  reminder_blacklist,          REMINDER_BLACKLIST_COUNT,          TriggerReminder,            "Reminder" },
     
     { POS_KEY,              HOTKEY_MOD_ALT,                         pos_blacklist, POS_BLACKLIST_COUNT, PosCopyHandler,   "PosCopy" },
     { POS_KEY,              (HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT),    pos_blacklist, POS_BLACKLIST_COUNT, PosAddHandler,    "PosAdd" },

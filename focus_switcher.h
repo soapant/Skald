@@ -111,9 +111,13 @@ static BOOL CALLBACK FindWindowByPartialTitleProc(HWND hwnd, LPARAM lParam) {
 
 static HWND FindWindowByPartialTitle(const char* title) {
     FindWindowNigga data;
+    
     data.search_title = title;
+    
     data.result = NULL;
+    
     EnumWindows(FindWindowByPartialTitleProc, (LPARAM)&data);
+    
     return data.result;
 }
 

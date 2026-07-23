@@ -177,7 +177,7 @@ void TriggerAppLauncher() {
         initial_items[i] = G_APPS[i].name;
     }
 
-    PromptUser(initial_items,"🚀 LAUNCHER", G_APP_COUNT, 520, 650,32,
+    PromptUser(initial_items,"🚀 LAUNCHER", G_APP_COUNT, 920, 650,32,
                         applauncher_refresh_callback,
                         applauncher_enter_callback,   
                         applauncher_ctrlenter_callback,
@@ -1222,7 +1222,7 @@ void TriggerCalculator() {
     if (hPopupWnd != NULL && IsWindow(hPopupWnd)) return;
 
     const char* default_msg[1] = { "Enter operation (e.g. 5 x 5 or 10 hours in minutes)" };
-    PromptUser(default_msg,"🧮 Calculator", 1, 520, 650,32,
+    PromptUser(default_msg,"🧮 Calculator", 1, 920, 650,32,
                         calculator_refresh_callback,   
                         calculator_enter_callback,     
                         calculator_ctrlenter_callback, 
@@ -1937,7 +1937,7 @@ static void TriggerExplorer() {
         list[i] = g_cached_explorer_commands[i];
     }
     
-    PromptUser(list, "📁 Explorer", g_cached_explorer_count, 520, 650, 32, 
+    PromptUser(list, "📁 Explorer", g_cached_explorer_count, 920, 650, 32, 
                explorer_refresh_callback, 
                explorer_enter_callback, 
                NULL, 
@@ -2614,7 +2614,7 @@ static void TriggerGoogleSearch() {
         list[i] = g_cached_google_queries[i];
     }
     
-    PromptUser(list, "🔍 Google", g_cached_google_count, 520, 650, 32, 
+    PromptUser(list, "🔍 Google", g_cached_google_count, 920, 650, 32, 
                google_refresh_callback, 
                google_enter_callback, 
                NULL, 
@@ -4269,7 +4269,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             const char* empty_list[1] = { "" };
             
             printf("[DEBUG-WNDPROC] Handing control off to PromptUser...\n");
-            char* raw_name = PromptUser(empty_list,"Boring", 0, 520, 650,32,NULL,NULL,NULL,NULL,NULL);
+            char* raw_name = PromptUser(empty_list,"Boring", 0, 920, 650,32,NULL,NULL,NULL,NULL,NULL);
             printf("[DEBUG-WNDPROC] Returned back to WndProc execution sequence.\n");
 
             if (raw_name != NULL && strlen(raw_name) > 0) {
@@ -4884,7 +4884,7 @@ static bool HandleMusicPlayer(int vk_code, int modifiers, const char* current_ti
                     initial_items[i] = G_FILES_WITH_TIME[i].name;
                 }
                 
-                PromptUser(initial_items,"🎵 Player",GetFileCount(), 520, 650,32,
+                PromptUser(initial_items,"🎵 Player",GetFileCount(), 920, 650,32,
                                     music_refresh_callback,  // refresh -> filters on typing
                                     music_enter_callback,    // enter -> plays music
                                     NULL,                    // ctrl enter
@@ -5255,14 +5255,14 @@ static void TriggerNvimZoxide(int version, HWND hPopupWnd) {
     }
     
     if (version == 0) { 
-        PromptUser(list, "📝 Neovide", g_cached_nvim_count, 520, 650, 32, 
+        PromptUser(list, "📝 Neovide", g_cached_nvim_count, 920, 650, 32, 
                    nvim_refresh_callback, 
                    neovide_enter_callback, 
                    NULL, 
                    NULL, 
                    NULL);
     } else {
-        PromptUser(list, "📝 Nvim", g_cached_nvim_count, 520,650, 32, 
+        PromptUser(list, "📝 Nvim", g_cached_nvim_count, 920,650, 32, 
                    nvim_refresh_callback, 
                    nvim_enter_callback, 
                    NULL, 
@@ -5564,7 +5564,7 @@ void TriggerProcessKiller() {
         list_items[i] = G_PK_LIST[i];
     }
 
-    PromptUser(list_items,"💀 ProcessKiller", G_PK_COUNT, 520, 650,32,
+    PromptUser(list_items,"💀 ProcessKiller", G_PK_COUNT, 920, 650,32,
                         pk_refresh_callback,        
                         pk_enter_callback,          
                         NULL,                      
@@ -5653,7 +5653,7 @@ static void TriggerScreenshot(HWND hPopupWnd,bool open_screenshot) {
     if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
 
     const char* name_prompt[1] = { "Enter image name..." };
-    char* raw_name = PromptUser(name_prompt,"📷 Screenshot", 1, 520, 650,32,NULL,NULL,NULL,NULL,NULL);
+    char* raw_name = PromptUser(name_prompt,"📷 Screenshot", 1, 920, 650,32,NULL,NULL,NULL,NULL,NULL);
 
     if (raw_name != NULL && strlen(raw_name) > 0) {
         char final_file_path[512];
@@ -5867,7 +5867,7 @@ static void TriggerTerminalCommand() {
         list[i] = g_cached_commands[i];
     }
     
-    PromptUser(list, "⌨️ Terminal", g_cached_command_count, 520, 650, 32, 
+    PromptUser(list, "⌨️ Terminal", g_cached_command_count, 920, 650, 32, 
                terminal_refresh_callback, 
                terminal_enter_callback, 
                NULL, 
@@ -6017,7 +6017,7 @@ static void TriggerTimer() {
     
     const char* prompt[1] = { "Enter timer duration (e.g., 5m, 10h,20s or 0 for a stopwatch" };
     const char* input;
-    input = PromptUser(prompt,"⏱️ Timer",1, 520, 650,32,NULL,NULL,NULL,NULL,NULL);
+    input = PromptUser(prompt,"⏱️ Timer",1, 920, 650,32,NULL,NULL,NULL,NULL,NULL);
     
     NIGGA(input);
 
@@ -6393,7 +6393,7 @@ void TriggerTodo() {
         ui_list[i] = todo_lines[i];
     }
 
-    PromptUser(ui_list,"📋 TODO",todo_count, 520, 1150,54,
+    PromptUser(ui_list,"📋 TODO",todo_count, 920, 1150,54,
                todo_refresh_callback,     
                todo_enter_callback,       
                todo_ctrlenter_callback,   
@@ -6572,7 +6572,7 @@ static bool HandleVideoPlayer(int vk_code, int modifiers, const char* current_ti
                     initial_items[i] = G_FILES_WITH_TIME[i].name;
                 }
                 
-                PromptUser(initial_items,"🎥 Player",GetFileCount(), 520, 650,32,
+                PromptUser(initial_items,"🎥 Player",GetFileCount(), 920, 650,32,
                                     video_refresh_callback,  
                                     video_enter_callback,    
                                     NULL,                    
@@ -7153,7 +7153,7 @@ void TriggerVolume() {
     const char* prompt[1];
     prompt[0] = volume_prompt_buffer;
     
-    char* input = PromptUser(prompt, "🔊 Volume", 1, 520, 650, 32, NULL, NULL, NULL, NULL, NULL);
+    char* input = PromptUser(prompt, "🔊 Volume", 1, 920, 650, 32, NULL, NULL, NULL, NULL, NULL);
     
     if (input != NULL && strlen(input) > 0) {
         int volume_int = atoi(input);
@@ -7339,7 +7339,7 @@ static char* TriggerWindowSwitcher(HWND hPopupWnd, WindowList myWindows) {
     }
 
     printf("[SWITCHER] Launching UI Selection Prompt...\n");
-    char* selected_title = PromptUser(ui_list,"🪟 Switcher",g_switcher_count, 520, 650,32,
+    char* selected_title = PromptUser(ui_list,"🪟 Switcher",g_switcher_count, 920, 650,32,
                                                 switcher_refresh_callback,  
                                                 switcher_enter_callback,    
                                                 NULL,                       
@@ -7512,7 +7512,7 @@ static void TriggerYaziZoxide() {
         list[i] = g_cached_yazi_commands[i];
     }
     
-    PromptUser(list, "📂 Yazi", g_cached_yazi_count, 520, 650, 32, 
+    PromptUser(list, "📂 Yazi", g_cached_yazi_count, 920, 650, 32, 
                yazi_refresh_callback, 
                yazi_enter_callback, 
                NULL, 
@@ -7676,7 +7676,7 @@ static void TriggerZoxide() {
         list[i] = g_cached_zoxide_commands[i];
     }
     
-    PromptUser(list, "⌨️ Zoxide", g_cached_zoxide_count,520,650, 32, 
+    PromptUser(list, "⌨️ Zoxide", g_cached_zoxide_count,920,650, 32, 
                zoxide_refresh_callback, 
                zoxide_enter_callback, 
                NULL, 
