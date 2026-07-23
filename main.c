@@ -1005,6 +1005,7 @@ typedef struct {
     int alpha;
 } FadeWindowData;
 
+
 LRESULT CALLBACK DisplayMessageProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     FadeWindowData* data = (FadeWindowData*)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
 
@@ -1016,19 +1017,18 @@ LRESULT CALLBACK DisplayMessageProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
         }
         case WM_PAINT: {
             if (!data) break;
-
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hwnd, &ps);
 
             RECT rect;
             GetClientRect(hwnd, &rect);
 
-            HBRUSH hBackgroundBrush = CreateSolidBrush(COLOR_BG);
+            HBRUSH hBackgroundBrush = CreateSolidBrush(RGB(40, 44, 52)); 
             FillRect(hdc, &rect, hBackgroundBrush);
             DeleteObject(hBackgroundBrush);
 
             SetBkMode(hdc, TRANSPARENT);
-            SetTextColor(hdc, COLOR_TEXT); // Crisp white text
+            SetTextColor(hdc, RGB(255, 255, 255));
 
             HFONT hOldFont = NULL;
             if (data->hFont) {
@@ -1042,10 +1042,7 @@ LRESULT CALLBACK DisplayMessageProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
                 DrawTextA(hdc, data->message, -1, &textRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
             }
 
-            if (hOldFont) {
-                SelectObject(hdc, hOldFont);
-            }
-
+            if (hOldFont) SelectObject(hdc, hOldFont);
             EndPaint(hwnd, &ps);
             return 0;
         }
@@ -1056,78 +1053,69 @@ LRESULT CALLBACK DisplayMessageProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
                     return 0; 
                 }
 
-                data->alpha -= 12;
+                data->alpha -= 12; 
 
                 if (data->alpha <= 0) {
                     KillTimer(hwnd, 999);
-                    PostQuitMessage(0);
+                    DestroyWindow(hwnd); // Self-destruct when completely invisible
                 } else {
                     SetLayeredWindowAttributes(hwnd, 0, (BYTE)data->alpha, LWA_ALPHA);
                 }
             }
             return 0;
         }
-        case WM_DESTROY:
-            PostQuitMessage(0);
-            return 0;
+        case WM_NCDESTROY: {
+            // CRITICAL ASYNC CLEANUP: Free allocated heap structures when window dies
+            if (data) {
+                if (data->message) free((void*)data->message);
+                if (data->hFont) DeleteObject(data->hFont);
+                free(data);
+                SetWindowLongPtrA(hwnd, GWLP_USERDATA, 0);
+            }
+            break;
+        }
     }
-    // CRITICAL FIX: All unhandled window events MUST pass through here!
     return DefWindowProcA(hwnd, msg, wParam, lParam);
 }
 
-
-char* DisplayMessage(const char* message, int centerX, int centerY, int width, int height,int timeout) {
-    printf("[DEBUG-UI] DisplayMessage invoked. Msg: \"%s\" | Center: (%d, %d) | Dim: %dx%d\n", 
-           message ? message : "NULL", centerX, centerY, width, height);
+char* DisplayMessage(const char* message, int centerX, int centerY, int width, int height, int timeout) {
+    printf("[DEBUG-UI] DisplayMessage invoked non-blocking. Msg: \"%s\"\n", message ? message : "NULL");
            
     HINSTANCE hInstance = GetModuleHandle(NULL);
-    g_timeout = timeout * 20;
     
-    FadeWindowData wndData;
-    wndData.message = message;
-    wndData.hFont = CreateCustomNerdFont(24, "0xProto Nerd Font");
-    wndData.alpha = 245;
+    // CRITICAL: Dynamically allocate data so it doesn't get destroyed when this function exits!
+    FadeWindowData* pWndData = (FadeWindowData*)malloc(sizeof(FadeWindowData));
+    if (!pWndData) return NULL;
+
+    // Duplicate the string so it stays valid even if the caller frees the original 'message'
+    pWndData->message = _strdup(message ? message : "");
+    pWndData->hFont = CreateCustomNerdFont(24, "0xProto Nerd Font");
+    pWndData->alpha = 245;
+    g_timeout = timeout * 20;
 
     int topLeftX = centerX - (width / 2);
     int topLeftY = centerY - (height / 2);
 
-    // Note the final argument passes a reference to our wndData configuration layout
     HWND hPopupWnd = CreateWindowExA(
-        WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED, 
-        "DisplayMessageModalClass", NULL, WS_POPUP | WS_CLIPCHILDREN, 
-        topLeftX, topLeftY, width, height, NULL, NULL, hInstance, &wndData
+        WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED | WS_EX_NOACTIVATE, 
+        "DisplayMessageModalClass", NULL, WS_POPUP, 
+        topLeftX, topLeftY, width, height, NULL, NULL, hInstance, pWndData
     );
 
     if (hPopupWnd == NULL) {
         printf("[DEBUG-UI] ERROR: CreateWindowExA failed. GetLastError: %lu\n", GetLastError());
-        DeleteObject(wndData.hFont);
+        DeleteObject(pWndData->hFont);
+        free(pWndData);
         return NULL;
     }
 
-    // Initialize visibility details
-    SetLayeredWindowAttributes(hPopupWnd, 0, wndData.alpha, LWA_ALPHA);
-    ShowWindow(hPopupWnd, SW_SHOW);
+    SetLayeredWindowAttributes(hPopupWnd, 0, pWndData->alpha, LWA_ALPHA);
+    
+    ShowWindow(hPopupWnd, SW_SHOWNOACTIVATE);
     UpdateWindow(hPopupWnd);
 
-    // Set a 50ms interval animation decay timer
     SetTimer(hPopupWnd, 999, 50, NULL);
     
-    // Core engine message processing loop
-    MSG msg;
-    while (GetMessage(&msg, NULL, 0, 0) > 0) {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
-    }
-
-    // Clean up window resources fully
-    if (hPopupWnd != NULL && IsWindow(hPopupWnd)) {
-        KillTimer(hPopupWnd, 999);
-        DestroyWindow(hPopupWnd);
-    }
-    
-    DeleteObject(wndData.hFont); 
-    printf("[DEBUG-UI] DisplayMessage loop closed and clean down finished.\n");
-
     return NULL; 
 }
 
