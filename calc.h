@@ -88,7 +88,13 @@ int CopyToClipboard(const char* text) {
         CloseClipboard();
         return 0;
     }
-
+    printf("%s",text);
+    char buffer[256];
+    
+    snprintf(buffer,sizeof(buffer),"Copied %s",text);
+    
+    DisplayMessage(buffer,960,999,950,70,1);
+    
     CloseClipboard();
     return 1;
 }
