@@ -89,8 +89,11 @@ void HandleFocusWindowFlag(const char* parameter) {
     } else {
       printf("COULDNT FIND WINDOW");
     }
-    terminate_process_by_name("sowon.exe");
-
+}
+void DisplayText(const char* parameter){
+    printf("DISPLAYING MESSAGE %s",parameter);
+    
+    DisplayMessage(parameter,960,999,950,70,3);
     
 }
 
@@ -105,6 +108,7 @@ static DWORD WINAPI SimpleTimerThread(LPVOID lpParam) {
     if (g_async_action != NULL) {
         g_async_action(g_action_param);
     }
+    terminate_process_by_name("sowon.exe");
     return 0;
 }
 
@@ -161,8 +165,8 @@ typedef struct {
 } ExecutionPipeline;
 
 ActionDef action_flags[] = {
-    {"-f",  HandleFocusWindowFlag},
-    // {"-dt" DisplayText}
+    {"-f", HandleFocusWindowFlag},
+    {"-dt",DisplayText}
 };
 
 ConditionDef condition_flags[] = {
@@ -386,6 +390,7 @@ static void TriggerReminder() {
                NULL, 
                NULL, 
                NULL);
+    
 }
 
 #endif
