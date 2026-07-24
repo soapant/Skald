@@ -67,7 +67,6 @@ COLORREF GetRainbowColor(float t, float s, float v) {
     }
     return RGB((BYTE)(r * 255), (BYTE)(g * 255), (BYTE)(b * 255));
 }
-#define TODO_FILE_PATH "todo.txt"
 #define WM_TRIGGER_IMG_CAPTURE (WM_USER + 2)
 HWND hGlobalTrayWnd = NULL;
 HWND hPopupWnd = NULL;
@@ -115,7 +114,6 @@ long img_x1 = 0, img_y1 = 0;
 HFONT g_hNumFont = NULL;
 HFONT g_hMainFont = NULL;
 
-const char* BASE_SAVE_FOLDER_PATH = "C:\\Users\\HP\\Pictures\\Screenshots\\";
 
 static ULONGLONG g_timer_start_ms = 0;
 

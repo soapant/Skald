@@ -23,6 +23,8 @@ char* SimplePromptUser(const char* prompt, const char* window_title,int height, 
 
 char* DisplayMessage(const char* message, int centerX, int centerY, int width, int height,int timeout);
 
+void SaveRegionToPNG(int x1, int y1, int x2, int y2, const char* fullPath);
+
 void UpdateTextCaret(HWND hwndEditControl);
 
 typedef struct {
@@ -86,11 +88,14 @@ extern int g_history_index;
 extern int g_history_count;     
 extern int g_current_window_height;
 extern int g_current_window_width;
+extern int img_region_step;
+extern long img_x1, img_y1, img_x2, img_y2;
 extern bool g_skip_refresh;
 #define COLOR_BG      RGB(30, 35, 45)   
 #define COLOR_TEXT    RGB(255, 255, 255)
 #define COLOR_SELECTED_TEXT    RGB(70, 55, 90)
 #define COLOR_VISUAL_SELECTED_TEXT    RGB(48,25,52)
+#define TODO_FILE_PATH "todo.txt"
 extern HFONT g_hNumFont;
 extern HFONT g_hMainFont;
 
