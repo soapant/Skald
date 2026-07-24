@@ -166,7 +166,7 @@ static inline void PosAddHandler(void) {
 }
 
 static inline void PosClearHandler(void) {
-    ClearMdFile(TEMP_FILE_PATH);
+  printf("THIS IS NOT IMPLEMETNETD");
 }
 
 
