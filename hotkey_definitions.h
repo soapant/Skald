@@ -289,7 +289,6 @@ static inline void ScreenshotSaveHandler(void) {
     
     extern int img_region_step;
     extern long img_x1, img_y1, img_x2, img_y2;
-    printf("%i",img_region_step);
     if (img_region_step == 0) {
         img_x1 = cursorPos.x;
         img_y1 = cursorPos.y;
