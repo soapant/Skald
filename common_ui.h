@@ -85,7 +85,16 @@ static inline void PopulateListBox(HWND hListBox, const char* filter,
     int current_sel = g_SelectedIndex; 
     char current_text[256] = {0};
     if (current_sel >= 0 && current_sel < g_populated_count) {
+        printf("[DEBUG] Restoring selection: index=%d, count=%d\n", current_sel, g_populated_count);
         strncpy(current_text, g_populated_cache[current_sel], sizeof(current_text) - 1);
+        current_text[sizeof(current_text) - 1] = '\0';
+        printf("[DEBUG] Restored text: '%s'\n", current_text);
+    } else {
+        if (current_sel < 0) {
+            printf("[DEBUG] No selection to restore (current_sel=%d)\n", current_sel);
+        } else {
+            printf("[DEBUG] Selection out of range: index=%d, count=%d\n", current_sel, g_populated_count);
+        }
     }
     
     int total_matches = 0;
@@ -222,6 +231,7 @@ static inline void PopulateListBox(HWND hListBox, const char* filter,
     g_TotalMatches = total_matches;
     
 }
+
 
 static inline bool IsPopupActive(HWND hPopupWnd) {
     return hPopupWnd != NULL && IsWindow(hPopupWnd);

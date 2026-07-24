@@ -45,6 +45,7 @@
 #define COLOR_BG      RGB(30, 35, 45)   
 #define COLOR_TEXT    RGB(255, 255, 255)
 #define COLOR_SELECTED_TEXT    RGB(70, 55, 90)
+#define COLOR_VISUAL_SELECTED_TEXT    RGB(48,25,52)
 
 
 COLORREF GetRainbowColor(float t, float s, float v) {
@@ -87,6 +88,7 @@ CtrlEnterCallback g_ctrl_enter_callback = NULL;
 TabCallback g_tab_callback = NULL;
 RenderCallback g_render_callback = NULL;
 int g_timeout = 1;
+int g_VisualIndex = -1;
 const char** g_initial_items = NULL;
 int g_initial_count = 0;
 int g_SelectedIndex = 0; 
@@ -197,14 +199,21 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
                 
                 if (count > 0) {
                     if (sel == LB_ERR) {
-                        sel = 0;
+                        if (sel != -1 | wParam == VK_DOWN){
+                          sel = 0;
+                          g_VisualIndex = -1;
+                        } else {
+                          g_VisualIndex += 1;
+                          UI_SetText(hEditControl,g_populated_cache[g_VisualIndex]);
+                          UI_SetCursorPosition(hEditControl,strlen(g_populated_cache[g_VisualIndex]));
+                        }
                     } else if (sel == 0 && wParam == VK_UP) {
                         sel = -1;
                     } else {
-                        if (wParam == VK_UP) {
-                            sel = (sel > 0) ? sel - 1 : 0;
+                      if (wParam == VK_UP) {
+                          sel = (sel > 0) ? sel - 1 : 0;
                         } else {
-                            sel = (sel < count - 1) ? sel + 1 : count - 1;
+                          sel = (sel < count - 1) ? sel + 1 : count - 1;
                         }
                     }
                     
@@ -368,7 +377,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             int wmId   = LOWORD(wParam);
             int wmEvent = HIWORD(wParam);
 
-            if (wmId == IDC_INPUT_BOX && wmEvent == EN_CHANGE) {
+            if (wmId == IDC_INPUT_BOX) {
                 if (GetKeyState(VK_UP) & 0x8000 || 
                     GetKeyState(VK_DOWN) & 0x8000 || 
                     GetKeyState(VK_RETURN) & 0x8000 ||
@@ -406,6 +415,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
           if (pdis->CtlID == IDC_LIST_BOX && pdis->itemID != -1) {
             
               BOOL isSelected = (pdis->itemID == g_SelectedIndex);
+              BOOL isVisual = (pdis->itemID == g_VisualIndex);
               
               float t = (float)pdis->itemID / 20.0f;
               if (COLORFUL_MODE) {
@@ -415,9 +425,19 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                   FillRect(pdis->hDC, &pdis->rcItem, hItemBrush);
                   DeleteObject(hItemBrush);
               } else {
-                  HBRUSH hBrush = CreateSolidBrush(isSelected ? COLOR_SELECTED_TEXT: COLOR_BG);
-                  FillRect(pdis->hDC, &pdis->rcItem, hBrush);
-                  DeleteObject(hBrush);
+                  if (isSelected) {
+                    HBRUSH hBrush = CreateSolidBrush(COLOR_SELECTED_TEXT);
+                    FillRect(pdis->hDC, &pdis->rcItem, hBrush);
+                    DeleteObject(hBrush);
+                  } else if (isVisual) {
+                    HBRUSH hBrush = CreateSolidBrush(COLOR_VISUAL_SELECTED_TEXT);
+                    FillRect(pdis->hDC, &pdis->rcItem, hBrush);
+                    DeleteObject(hBrush);
+                  } else {
+                    HBRUSH hBrush = CreateSolidBrush(COLOR_BG);
+                    FillRect(pdis->hDC, &pdis->rcItem, hBrush);
+                    DeleteObject(hBrush);
+                  }
               }
               
               if (pdis->itemID == -1 || pdis->itemID >= g_populated_count) {

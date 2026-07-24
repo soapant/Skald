@@ -27,6 +27,7 @@ static inline void SetMode(EditorMode mode) {
       last_selection = UI_GetSelection(hListBox);
       UI_SetSelection(hListBox,-1);
     } else if (strcmp(g_vim_mode,"NORMAL") == 0) {
+      g_VisualIndex = -1;
       if (g_TotalMatches != 0) {
           if (last_selection <= 0) {
               UI_SetSelection(hListBox,0);
