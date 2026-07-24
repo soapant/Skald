@@ -66,6 +66,7 @@ extern RenderCallback g_render_callback;
 extern const char** g_initial_items;
 extern int g_initial_count;
 extern int g_SelectedIndex;
+extern int g_VisualIndex;
 extern const char* g_title;
 extern const char* g_vim_mode;
 #define MAX_ITEMS 1000
@@ -85,9 +86,11 @@ extern int g_history_index;
 extern int g_history_count;     
 extern int g_current_window_height;
 extern int g_current_window_width;
+extern bool g_skip_refresh;
 #define COLOR_BG      RGB(30, 35, 45)   
 #define COLOR_TEXT    RGB(255, 255, 255)
 #define COLOR_SELECTED_TEXT    RGB(70, 55, 90)
+#define COLOR_VISUAL_SELECTED_TEXT    RGB(48,25,52)
 extern HFONT g_hNumFont;
 extern HFONT g_hMainFont;
 

@@ -212,14 +212,14 @@ static inline void HandleDeleteLine(void) {
     }
     
     if (hEditControl && IsWindow(hEditControl)) {
-        UI_SetText(hEditControl," ");
+        UI_SetText(hEditControl,"");
         printf("[VIM] Deleted Entire Search Box \n");
     }
 }
 
 static inline void HandleDeleteLineInsert(void) {
     if (hEditControl && IsWindow(hEditControl)) {
-        UI_SetText(hEditControl," ");
+        UI_SetText(hEditControl,"");
         SetMode(MODE_INSERT);
         printf("[VIM] Deleted Entire Search Box & Switched to Insert\n");
     }
@@ -227,7 +227,7 @@ static inline void HandleDeleteLineInsert(void) {
 
 static inline void HandleDeleteLineNormal(void) {
     if (hEditControl && IsWindow(hEditControl)) {
-        UI_SetText(hEditControl," ");
+        UI_SetText(hEditControl,"");
         SetMode(MODE_NORMAL); 
         printf("[VIM] Deleted Entire Search Box (Normal Mode Kept)\n");
     }
