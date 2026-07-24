@@ -13,8 +13,6 @@
 #include "timer.h"
 #include "process_killer.h"
 
-extern HWND hPopupWnd;
-extern FileEntry G_FILE_ENTRIES[];
 #define FILE_REMINDER_HISTORY 6
 #define ReminderHistoryFile G_FILE_ENTRIES[FILE_REMINDER_HISTORY].mf
 

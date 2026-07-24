@@ -40,9 +40,6 @@ static inline bool CheckVimMotion(int pressed_vk, int modifiers, MotionAction* o
     bool in_normal = IsNormalMode();
     bool in_visual = IsVisualMode();
     
-    // ============================================================
-    // INSERT MODE - Waiting for second key
-    // ============================================================
     if (in_insert && SequenceIsWaiting()) {
         if (SequenceTimedOut()) {
             SequenceReset();
@@ -79,9 +76,6 @@ static inline bool CheckVimMotion(int pressed_vk, int modifiers, MotionAction* o
             return false;
         }
         
-        // ============================================================
-        // Check if this key starts ANY sequence
-        // ============================================================
         bool is_prefix = false;
         for (int i = 0; i < VIM_SEQUENCE_BINDING_COUNT; i++) {
             const SequenceBinding* b = &G_VIM_SEQUENCE_BINDINGS[i];
@@ -103,9 +97,6 @@ static inline bool CheckVimMotion(int pressed_vk, int modifiers, MotionAction* o
         return false;
     }
     
-    // ============================================================
-    // NORMAL MODE
-    // ============================================================
     if (in_normal) {
         
         if (SequenceTimedOut()) {

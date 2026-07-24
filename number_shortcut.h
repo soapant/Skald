@@ -7,7 +7,7 @@
 #include "types.h"
 #include "common_ui.h"
 
-#define NUMBER_SHORTCUT_DELAY_MS 200  // Increased to 300ms
+#define NUMBER_SHORTCUT_DELAY_MS 200 
 
 static struct {
     int first_digit;
@@ -143,4 +143,4 @@ static void ResetNumberShortcutState(void) {
     g_num_shortcut_state.hEditControl = NULL;
 }
 
-#endif // NUMBER_SHORTCUT_H
+#endif

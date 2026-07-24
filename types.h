@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <string.h>
 
+
 typedef void (*RefreshCallback)(const char* filter, HWND hListBox);
 typedef void (*EnterCallback)(const char* selection);
 typedef void (*CtrlEnterCallback)(const char* selection);
@@ -33,6 +34,8 @@ LRESULT CALLBACK ListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 
 LRESULT CALLBACK SimpleListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 
+BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam);
+
 void UpdateTextCaret(HWND hwndEditControl);
 
 typedef struct {
@@ -59,6 +62,135 @@ typedef struct {
     int item_height;
 } WindowLayout;
 
+typedef struct {
+    HANDLE hFile;
+    HANDLE hMapping;
+    char *pBuffer;
+    size_t fileSize;   
+    size_t capacity;   
+} MappedFile;
+
+typedef struct {
+    char *ptr;
+    size_t length;
+} Line;
+
+typedef struct {
+    int vk_code;
+    int modifiers;
+    const char* exe_name;
+    const char* app_name;  
+} AppHotkey;
+
+typedef struct {
+    int vk_code;
+    int modifiers;
+    const char* exe_name;
+    const char* misc_path; 
+} MiscHotkey;
+
+typedef struct {
+    int vk_code;
+    int modifiers;
+    const char* exe_name;
+    const char* QuickLinkQuery; 
+} QuickLinkHotkey;
+
+typedef struct {
+    int vk_code;
+    int modifiers;
+    const char** blacklist;      
+    int blacklist_count;
+    const char** window_titles;  
+    int window_count;
+} FocusSwitcherBinding;
+
+typedef struct {
+    int vk_code;
+    int modifiers;
+    int code;
+} MusicPlayerBinding;
+
+typedef struct {
+    int vk_code;
+    int modifiers;
+    int code;
+} VideoPlayerBinding;
+
+typedef struct {
+    int vk_code;
+    int modifiers;
+    const char** window_titles;  
+    int window_count;
+} BulkKillProcessBinding;
+
+typedef struct {
+    const char* name;
+    const char* path;
+    MappedFile* mf;
+} FileEntry;
+
+typedef struct {
+    int vk_code;
+    int modifiers;
+    const char* exe_name;
+    const char* text;  
+} TextSnippet;
+
+typedef struct {
+    HWND hwnd;
+    char title[256];
+} MonitorWindowData;
+
+typedef struct {
+    HMONITOR targetMonitor;
+    int count;
+    int capacity;
+    MonitorWindowData items[64];
+} MonitorWindowList;
+
+typedef struct {
+    int targetIndex;
+    int currentIndex;
+    HMONITOR foundMonitor;
+} MonitorSearch;
+
+typedef struct {
+    bool is_project;
+    char project_name[64];
+    bool is_high_priority;
+    bool is_misc;
+    bool is_low_priority;
+} TodoFlags;
+
+typedef struct {
+    const char* flag;         
+    const char* internal_name;
+    const char* tag_label;    
+    COLORREF color;           
+    bool is_alias;            
+} TodoConfigEntry;
+
+static FileEntry G_FILE_ENTRIES[] = {
+    {"TerminalHistory", "D:\\Projects\\C Code\\TerminalHistory.txt", NULL},
+    {"YaziZoxide",      "D:\\Projects\\C Code\\YaziZoxide.txt", NULL},
+    {"NvimZoxide",      "D:\\Projects\\C Code\\NvimZoxide.txt", NULL},
+    {"TerminalZoxide",      "D:\\Projects\\C Code\\TerminalZoxide.txt", NULL},
+    {"ExplorerZoxide",  "D:\\Projects\\C Code\\ExplorerZoxide.txt", NULL},
+    {"GoogleZoxide",  "D:\\Projects\\C Code\\GoogleZoxide.txt", NULL},
+    {"ReminderHistory",  "D:\\Projects\\C Code\\ReminderHistory.txt", NULL},
+};
+
+#define FILE_ENTRY_COUNT (sizeof(G_FILE_ENTRIES) / sizeof(G_FILE_ENTRIES[0]))
+
+static inline const char* GetFilePath(const char* name) {
+    for (int i = 0; i < FILE_ENTRY_COUNT; i++) {
+        if (strcmp(G_FILE_ENTRIES[i].name, name) == 0) {
+            return G_FILE_ENTRIES[i].path;
+        }
+    }
+    return NULL;
+}
 
 // ============================================================
 // GLOBAL VARIABLE DECLARATIONS
@@ -99,7 +231,13 @@ extern int g_current_window_width;
 extern int g_timeout;
 extern int img_region_step;
 extern long img_x1, img_y1, img_x2, img_y2;
+extern long saved_x1;
+extern int img_region_step;
+extern int region_step;
+extern long saved_y1;
 extern bool g_skip_refresh;
+extern char output_buffer[256];
+extern HWND hGlobalTrayWnd;
 #define COLOR_BG      RGB(30, 35, 45)   
 #define COLOR_TEXT    RGB(255, 255, 255)
 #define COLOR_SELECTED_TEXT    RGB(70, 55, 90)
@@ -108,9 +246,18 @@ extern bool g_skip_refresh;
 #define ID_TRAY_ICON 1001
 #define WM_TRAYICON (WM_USER + 1)
 #define WM_TRIGGER_UNIVERSAL_MACRO (WM_USER + 3)
+#define WM_TRIGGER_IMG_CAPTURE (WM_USER + 2)
 #define ID_EXIT 2001
 #define IDC_INPUT_BOX 101
 #define IDC_LIST_BOX 102
+#define HOTKEY_MOD_NONE         0x00
+#define HOTKEY_MOD_ALT          0x01
+#define HOTKEY_MOD_SHIFT        0x02
+#define HOTKEY_MOD_CTRL         0x04
+#define HOTKEY_MOD_ALT_SHIFT    (HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT)
+#define HOTKEY_MOD_ALT_CTRL     (HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL)
+#define HOTKEY_MOD_SHIFT_CTRL   (HOTKEY_MOD_SHIFT | HOTKEY_MOD_CTRL)
+#define HOTKEY_MOD_ALT_SHIFT_CTRL (HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT | HOTKEY_MOD_CTRL)
 extern HFONT g_hNumFont;
 extern HFONT g_hMainFont;
 

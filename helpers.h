@@ -11,22 +11,6 @@
 #include "common_ui.h"
 
 
-static inline void WriteDebugLog(const char* format, ...) {
-    FILE* logFile = fopen("D:\\Projects\\C Code\\zoxide_debug.log", "a");
-    if (!logFile) return;
-
-    SYSTEMTIME st;
-    GetLocalTime(&st);
-    fprintf(logFile, "[%02d:%02d:%02d.%03d] ", st.wHour, st.wMinute, st.wSecond, st.wMilliseconds);
-
-    va_list args;
-    va_start(args, format);
-    vfprintf(logFile, format, args);
-    va_end(args);
-
-    fclose(logFile);
-}
-
 typedef void (*HotkeyHandler)(void);
 
 typedef struct {
@@ -62,7 +46,6 @@ static inline bool ProcessHotkey(const HotkeyBinding* bindings, int bindings_cou
         if (IsPopupActive(hPopupWnd)) return false;
         
         if (b->handler) {
-            WriteDebugLog("[HOTKEY] %s triggered\n", b->name);
             b->handler();
             return true;
         }
@@ -93,7 +76,6 @@ static inline char* QueryZoxidePath(const char* query) {
     clean_query[sizeof(clean_query) - 1] = '\0';
     clean_query[strcspn(clean_query, "\r\n")] = '\0';
 
-    WriteDebugLog("  [ZOXIDE QUERY START] Query: '%s'\n", clean_query);
 
     char command[512];
     snprintf(command, sizeof(command), "zoxide query %s", clean_query);
@@ -102,7 +84,6 @@ static inline char* QueryZoxidePath(const char* query) {
     HANDLE hReadPipe, hWritePipe;
 
     if (!CreatePipe(&hReadPipe, &hWritePipe, &sa, 0)) {
-        WriteDebugLog("  [ZOXIDE QUERY ERROR] CreatePipe failed!\n");
         return NULL;
     }
 
@@ -116,18 +97,13 @@ static inline char* QueryZoxidePath(const char* query) {
 
     PROCESS_INFORMATION pi = {0};
 
-    WriteDebugLog("  [ZOXIDE QUERY] Spawning zoxide process...\n");
     DWORD proc_start = GetTickCount();
     if (CreateProcessA(NULL, command, NULL, NULL, TRUE, CREATE_NO_WINDOW, NULL, NULL, &si, &pi)) {
         CloseHandle(hWritePipe);
 
-        WriteDebugLog("  [ZOXIDE QUERY] Waiting for process to return...\n");
         DWORD wait_res = WaitForSingleObject(pi.hProcess, 5000); 
-        WriteDebugLog("  [ZOXIDE QUERY] Process wait finished. Code: %lu (Time taken: %lu ms)\n", 
-                      wait_res, GetTickCount() - proc_start);
 
         if (wait_res == WAIT_TIMEOUT) {
-            WriteDebugLog("  [ZOXIDE QUERY WARNING] Zoxide timed out!\n");
             TerminateProcess(pi.hProcess, 0);
         }
 
@@ -140,12 +116,10 @@ static inline char* QueryZoxidePath(const char* query) {
         CloseHandle(pi.hProcess);
         CloseHandle(pi.hThread);
     } else {
-        WriteDebugLog("  [ZOXIDE QUERY ERROR] CreateProcessA failed!\n");
         CloseHandle(hWritePipe);
     }
 
     CloseHandle(hReadPipe);
-    WriteDebugLog("  [ZOXIDE QUERY END] Found path: '%s' (Total query time: %lu ms)\n", path, GetTickCount() - start_time);
     return (strlen(path) > 0) ? path : NULL;
 }
 
@@ -180,11 +154,9 @@ typedef struct {
 } NewlineInfo;
 
 static inline int FileInit(const char *filePath, MappedFile *mf, size_t initialPadding) {
-    WriteDebugLog("  [FILE INIT START] File: %s\n", filePath);
 
     mf->hFile = CreateFileA(filePath, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (mf->hFile == INVALID_HANDLE_VALUE) {
-        WriteDebugLog("  [FILE INIT ERROR] CreateFileA failed!\n");
         return 0;
     }
 
@@ -202,7 +174,6 @@ static inline int FileInit(const char *filePath, MappedFile *mf, size_t initialP
 
     mf->hMapping = CreateFileMappingA(mf->hFile, NULL, PAGE_READWRITE, mapSizeLI.HighPart, mapSizeLI.LowPart, NULL);
     if (!mf->hMapping) {
-        WriteDebugLog("  [FILE INIT ERROR] CreateFileMappingA failed!\n");
         CloseHandle(mf->hFile);
         return 0;
     }
@@ -219,7 +190,6 @@ static inline int FileInit(const char *filePath, MappedFile *mf, size_t initialP
         mf->pBuffer[0] = '\0';
     }
 
-    WriteDebugLog("  [FILE INIT END] File: %s, Size: %zu bytes, Mapped: %zu\n", filePath, mf->fileSize, mapSize);
     return 1;
 }
 
@@ -255,7 +225,6 @@ static inline int FileAppend(MappedFile *mf, const char *text) {
         
         mf->hMapping = CreateFileMappingA(mf->hFile, NULL, PAGE_READWRITE, mapSizeLI.HighPart, mapSizeLI.LowPart, NULL);
         if (!mf->hMapping) {
-            WriteDebugLog("  [FILE APPEND ERROR] Failed to expand mapping!\n");
             return 0;
         }
 
@@ -266,7 +235,6 @@ static inline int FileAppend(MappedFile *mf, const char *text) {
             return 0;
         }
         mf->capacity = newCapacity;
-        WriteDebugLog("  [FILE APPEND] Expanded capacity to %zu\n", newCapacity);
     }
 
     
@@ -280,7 +248,6 @@ static inline int FileAppend(MappedFile *mf, const char *text) {
     SetFilePointerEx(mf->hFile, fs, NULL, FILE_BEGIN);
     SetEndOfFile(mf->hFile);
 
-    WriteDebugLog("  [FILE APPEND] Wrote %zu bytes. Total Size: %zu\n", len, mf->fileSize);
     return 1;
 }
 
@@ -333,7 +300,6 @@ static inline Line* FileGetLines(MappedFile *mf, size_t *outLineCount) {
         }
     }
     *outLineCount = count;
-    WriteDebugLog("  [FILE GET LINES] Extracted %zu lines (Time: %lu ms)\n", count, GetTickCount() - start);
     return list;
 }
 
@@ -390,7 +356,6 @@ static inline char** FileGetStrings(MappedFile *mf, size_t *outLineCount, Newlin
     *outLineCount = count;
     *outNewlines = newlines; 
     *outNewlineCount = newlineCount;
-    WriteDebugLog("  [FILE GET STRINGS] Processed strings. Count: %zu (Time: %lu ms)\n", count, GetTickCount() - start);
     return stringList;
 }
 
@@ -588,14 +553,12 @@ static inline char* GetFlagParameter(const char* text, int flag_index) {
     return NULL;
 }
 
-// Get the text without any flags (clean text)
 static inline char* GetCleanText(const char* text) {
     if (!text) return NULL;
     
     static char clean[256];
     clean[0] = '\0';
     
-    // List of all flags to skip
     const char* flags[] = {"-f", "-cg", "-trw", "-tr", "-t"};
     int flag_count = sizeof(flags) / sizeof(flags[0]);
     
@@ -628,7 +591,6 @@ static inline char* GetCleanText(const char* text) {
     
     *write_ptr = '\0';
     
-    // Trim leading/trailing spaces
     char* start = text_copy;
     while (*start == ' ') start++;
     char* end = text_copy + strlen(text_copy) - 1;
@@ -676,6 +638,74 @@ double GetUniversalTimeSeconds() {
     
     ULONGLONG elapsed_ms = current_ms - g_timer_start_ms;
     return (double)elapsed_ms / 1000.0;
+}
+
+int CopyToClipboard(const char* text) {
+    if (text == NULL) return 0;
+
+    size_t len = strlen(text);
+    if (len == 0) return 0;
+
+    char* clean_text = (char*)malloc(len + 1);
+    if (clean_text == NULL) return 0;
+
+    size_t write_idx = 0;
+    for (size_t i = 0; i < len; i++) {
+        if (text[i] != '\r') {
+            clean_text[write_idx++] = text[i];
+        }
+    }
+    clean_text[write_idx] = '\0';
+
+    len = write_idx;
+    if (len == 0) {
+        free(clean_text);
+        return 0;
+    }
+
+    HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, len + 1);
+    if (hMem == NULL) {
+        free(clean_text);
+        return 0;
+    }
+
+    char* pMem = (char*)GlobalLock(hMem);
+    if (pMem == NULL) {
+        GlobalFree(hMem);
+        free(clean_text);
+        return 0;
+    }
+    
+    memcpy(pMem, clean_text, len + 1); 
+    GlobalUnlock(hMem);
+    free(clean_text);
+
+    if (!OpenClipboard(NULL)) {
+        GlobalFree(hMem);
+        return 0;
+    }
+
+    if (!EmptyClipboard()) {
+        GlobalFree(hMem);
+        CloseClipboard();
+        return 0;
+    }
+
+    if (SetClipboardData(CF_TEXT, hMem) == NULL) {
+        GlobalFree(hMem);
+        CloseClipboard();
+        return 0;
+    }
+    printf("%s",text);
+    char buffer[256];
+    
+    snprintf(buffer,sizeof(buffer),"Copied %s",text);
+    
+    MSG_TOP(buffer,140,1);
+    
+    CloseClipboard();
+    
+    return 1;
 }
 
 #endif

@@ -4,9 +4,6 @@
 #include <windows.h>
 #include <stdio.h>
 
-// Gets cursor position and pixel color at that position
-// Returns true if successful, false otherwise
-// Output: x, y, r, g, b
 static bool GetCursorPixel(long* out_x, long* out_y, BYTE* out_r, BYTE* out_g, BYTE* out_b) {
     POINT cursorPos;
     if (!GetCursorPos(&cursorPos)) {

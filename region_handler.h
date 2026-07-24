@@ -6,15 +6,6 @@
 #include <string.h>
 #include "config.h"
 
-extern int region_step;
-extern long saved_x1;
-extern long saved_y1;
-extern long img_x1, img_y1, img_x2, img_y2;
-extern int img_region_step;
-extern HWND hGlobalTrayWnd;
-extern int CopyToClipboard(const char* text);
-#define WM_TRIGGER_IMG_CAPTURE (WM_USER + 2)
-
 static bool HandleRegionKey(bool alt_down, bool ctrl_down, bool shift_down) {
     POINT cursorPos;
     if (!GetCursorPos(&cursorPos)) {

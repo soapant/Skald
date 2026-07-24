@@ -11,38 +11,6 @@
 #include "config.h"
 #include "common_ui.h"
 
-#define TODO_FILE_PATH "todo.txt"
-
-extern HWND hPopupWnd;
-
-typedef struct {
-    bool is_project;
-    char project_name[64];
-    bool is_high_priority;
-    bool is_misc;
-    bool is_low_priority;
-} TodoFlags;
-
-typedef struct {
-    const char* flag;         
-    const char* internal_name;
-    const char* tag_label;    
-    COLORREF color;           
-    bool is_alias;            
-} TodoConfigEntry;
-
-static const TodoConfigEntry TODO_DICT[] = {
-    { "-pc", "Cprogram",          NULL, RGB(98,  160, 234), true  },
-    { "-ph", "HeaderC",           NULL, RGB(51,  209, 122), true  },
-    { "-pm", "MinecraftModpack",  NULL, RGB(255, 120, 0),   true  },
-
-    { "-m",  NULL,                "[MISC]", RGB(154, 153, 150), false },
-    { "-h",  NULL,                "[HIGH]", RGB(246, 97,  81),  false },
-    { "-l",  NULL,                "[LOW]",  RGB(94,  92,  100),  false }
-};
-enum { TODO_DICT_COUNT = sizeof(TODO_DICT) / sizeof(TODO_DICT[0]) };
-
-
 static inline COLORREF GetTagColor(const char* tag_string) {
     if (!tag_string || strlen(tag_string) == 0) return RGB(255,255,255);
     

@@ -10,9 +10,6 @@
 #include "app_launcher.h"
 #include "types.h"
 
-extern HWND hPopupWnd;
-extern HWND hEditControl;
-
 static void video_refresh_callback(const char* filter, HWND hListBox) {
     ClearFileList();
     GetFilesRecursive(VideosPath, false);
@@ -73,10 +70,8 @@ static bool HandleVideoPlayer(int vk_code, int modifiers, const char* current_ti
                     return false;
                 }
             } else {
-                // Code 69 - open file picker with refresh
                 const char* prompt[1] = { "Search for video..." };
                 
-                // Initialize the file list for the first time
                 ClearFileList();
                 GetFilesRecursive(VideosPath,false);
                 
