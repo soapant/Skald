@@ -38,6 +38,8 @@ static const MotionBinding G_VIM_BINDINGS[] = {
     
     { 'Q', HOTKEY_MOD_NONE, MOTION_EXIT_WINDOW,          "ExitWindow",       HandleExitWindow,      MODE_NORMAL },
     
+    { 'W', HOTKEY_MOD_NONE, MOTION_MOVE_WORD_FORWARD,          "MoveWordForward",       HandleMoveWordForward,      MODE_NORMAL },
+    
     { 'Y', HOTKEY_MOD_SHIFT, MOTION_YANK_LIST_BOX,          "YankListBox",       HandleYankListBox,      MODE_NORMAL },
     
 };
@@ -47,9 +49,7 @@ static const MotionBinding G_VIM_BINDINGS[] = {
 static const SequenceBinding G_VIM_SEQUENCE_BINDINGS[] = {
   
     { "JK", MOTION_ENTER_NORMAL,       "Enter Mapping",       HandleEnterNormal,      false, MODE_INSERT },
-    { "JS", MOTION_DELETE_LINE_NORMAL, "Delete Line Mapping", HandleDeleteLineNormal, false, MODE_INSERT },
     { "JC", MOTION_INSERTCTRL_ENTER,         "CTRL Enter Mapping",  HandleInsertControlEnter,     false, MODE_INSERT },
-    // { "JE", MOTION_INSERT_ENTER,              "Enter Mapping",       HandleInsertRegularEnter,     false, MODE_INSERT },
     { "JQ", MOTION_EXIT_WINDOW,        "Exit Mapping",        HandleExitWindow,       false, MODE_INSERT },
     { "DD", MOTION_DELETE_LINE,        "DeleteLine",          HandleDeleteLine,       false, MODE_NORMAL },
     { "GG", MOTION_MOVE_LISTBOX_START, "ListboxStart",        HandleMoveListboxStart, false, MODE_NORMAL },
