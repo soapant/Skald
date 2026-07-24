@@ -9,7 +9,6 @@
 #include <stdio.h>
 #include "types.h"
 
-
 typedef struct {
     LARGE_INTEGER start;
     LARGE_INTEGER frequency;
@@ -226,6 +225,212 @@ static inline void PopulateListBox(HWND hListBox, const char* filter,
     g_last_item_count = item_count;
     g_TotalMatches = total_matches;
     
+}
+
+COLORREF GetRainbowColor(float t, float s, float v) {
+    float hue = t * 240.0f;
+    float h = hue / 60.0f;
+    int i = ((int)h) % 6;
+    float f = h - (int)h;
+    float p = v * (1 - s);
+    float q = v * (1 - s * f);
+    float t_ = v * (1 - s * (1 - f));
+    float r, g, b;
+    switch (i) {
+        case 0: r = v; g = t_; b = p; break;
+        case 1: r = q; g = v; b = p; break;
+        case 2: r = p; g = v; b = t_; break;
+        case 3: r = p; g = q; b = v; break;
+        case 4: r = t_; g = p; b = v; break;
+        case 5: r = v; g = p; b = q; break;
+    }
+    return RGB((BYTE)(r * 255), (BYTE)(g * 255), (BYTE)(b * 255));
+}
+
+HFONT CreateCustomNerdFont(int height, const char* face_name) {
+    return CreateFontA(
+        height, 0, 0, 0, FW_NORMAL,
+        FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+        CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE,
+        face_name
+    );
+}
+
+void UpdateTextCaret(HWND hwndEditControl)
+{
+    int caretWidth = 1;   
+    int caretHeight = 24; 
+
+    if (IsInsertMode()) {
+        caretWidth = 2;   
+    } 
+    else if (IsNormalMode()) {
+        caretWidth = 12;  
+    } 
+    else {
+        caretWidth = 12;  
+    }
+
+    static int lastWidth = -1;
+    
+    if (caretWidth != lastWidth) {
+        DestroyCaret();
+        CreateCaret(hwndEditControl, NULL, caretWidth, caretHeight);
+        ShowCaret(hwndEditControl);
+        
+        SetCaretBlinkTime(INFINITE);
+        
+        lastWidth = caretWidth;
+    }
+}
+POINT ptPrimary = { 0, 0 }; 
+void CalculateWindowMetrics(int count, WindowLayout* layout,int height , int width,int item_height) {
+    POINT ptPrimary = { 0, 0 }; 
+    HMONITOR hMonitor = MonitorFromPoint(ptPrimary, MONITOR_DEFAULTTOPRIMARY);
+
+    MONITORINFO mi = {0};
+    mi.cbSize = sizeof(MONITORINFO);
+    GetMonitorInfoA(hMonitor, &mi);
+
+    int monitorWidth = mi.rcMonitor.right - mi.rcMonitor.left;
+    int monitorHeight = mi.rcMonitor.bottom - mi.rcMonitor.top;
+    
+    layout->w = 900;          
+    layout->item_height = item_height; 
+
+    layout->h = 95 + (count > 0 ? (count * layout->item_height) : 0); 
+
+    if (layout->h < height) layout->h = height;
+    if (layout->h > width) layout->h = width; 
+
+    layout->x = mi.rcMonitor.left + (monitorWidth - layout->w) / 2;
+    layout->y = mi.rcMonitor.top + (monitorHeight - layout->h) / 2;
+}
+
+void CreateChildControls(HWND hwndParent, HFONT hFont, const char* list[], int count, const WindowLayout* layout) {
+    HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtrA(hwndParent, GWLP_HINSTANCE);
+    
+    hEditControl = CreateWindowExA(
+        0, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
+        20, 50, layout->w - 40, 40, hwndParent, (HMENU)IDC_INPUT_BOX, hInstance, NULL
+    );
+    
+    if (!hEditControl) return;
+    
+    SendMessageA(hEditControl, WM_SETFONT, (WPARAM)hFont, FALSE);
+    SetWindowSubclass(hEditControl, EditSubclassProc, 0, 0);
+
+
+    if (count > 0) {
+
+        hListBox = CreateWindowExA(
+            0, "LISTBOX", "", 
+            WS_CHILD | WS_VISIBLE | LBS_NODATA | LBS_OWNERDRAWFIXED,
+            20, 105, layout->w - 40, layout->h - 115, hwndParent, (HMENU)IDC_LIST_BOX, hInstance, NULL
+        );
+
+        if (!hListBox) return;
+        
+        SetWindowSubclass(hListBox, ListBoxSubclassProc, 0, 0);
+        SendMessageA(hListBox, WM_SETFONT, (WPARAM)hFont, FALSE);
+        SendMessageA(hListBox, LB_SETITEMHEIGHT, 0, layout->item_height);
+
+        int max_width = layout->w - 40;
+        HDC hdc = GetDC(hListBox);
+        if (!hdc) return;
+        HFONT hOldFont = (HFONT)SelectObject(hdc, hFont);
+        
+        g_initial_items = list;        
+        g_initial_count = count;
+        
+        UI_SetItemCount(hListBox, count);
+        int countCheck = UI_GetCount(hListBox);
+        
+        UI_Redraw(hListBox);
+        UpdateWindow(hListBox); 
+        
+        GdiFlush(); 
+        
+        SelectObject(hdc, hOldFont);
+        ReleaseDC(hListBox, hdc);
+        UI_SetHorizontalExtent(hListBox, max_width);
+        
+        g_refresh_callback("", hListBox);
+    }
+}
+
+void SimpleCreateChildControls(HWND hwndParent, HFONT hFont, const char* string, int count, const WindowLayout* layout) { HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtrA(hwndParent, GWLP_HINSTANCE);
+    
+    hEditControl = CreateWindowExA(
+        0, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
+        20, 50, layout->w - 40, 40, hwndParent, (HMENU)IDC_INPUT_BOX, hInstance, NULL
+    );
+    
+    if (!hEditControl) return;
+    
+    SendMessageA(hEditControl, WM_SETFONT, (WPARAM)hFont, FALSE);
+    SetWindowSubclass(hEditControl, SimpleEditSubclassProc, 0, 0);
+
+    if (count > 0) {
+        hListBox = CreateWindowExA(
+            0, "LISTBOX", "", 
+            WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOSEL, 
+            20, 105, layout->w - 40, layout->h - 115, hwndParent, (HMENU)IDC_LIST_BOX, hInstance, NULL
+        );
+
+        if (!hListBox) return;
+        
+        SetWindowSubclass(hListBox, SimpleListBoxSubclassProc, 0, 0);
+        SendMessageA(hListBox, WM_SETFONT, (WPARAM)hFont, FALSE);
+        SendMessageA(hListBox, LB_SETITEMHEIGHT, 0, layout->item_height);
+
+        int max_width = layout->w - 40;
+        HDC hdc = GetDC(hListBox);
+        if (!hdc) return;
+        HFONT hOldFont = (HFONT)SelectObject(hdc, hFont);
+        
+        SendMessage(hListBox, LB_ADDSTRING, 0, (LPARAM)string);
+        SendMessage(hListBox, LB_SETCURSEL, (WPARAM)-1, 0);
+        UpdateWindow(hListBox); 
+        
+        GdiFlush(); 
+        
+        SelectObject(hdc, hOldFont);
+        ReleaseDC(hListBox, hdc);
+        
+    }
+}
+void ForceWindowFocus(HWND hwndTarget, HWND hwndInput) {
+    ShowWindow(hwndTarget, SW_SHOW);
+
+    SetWindowPos(hwndTarget, HWND_TOPMOST, 0, 0, 0, 0,
+                 SWP_NOSIZE | SWP_NOMOVE | SWP_SHOWWINDOW | SWP_ASYNCWINDOWPOS);
+
+    HWND hForeground = GetForegroundWindow();
+    DWORD foregroundThreadID = GetWindowThreadProcessId(hForeground, NULL);
+    DWORD targetThreadID = GetWindowThreadProcessId(hwndTarget, NULL);
+    DWORD currentThreadID = GetCurrentThreadId();
+
+    if (foregroundThreadID != currentThreadID)
+        AttachThreadInput(currentThreadID, foregroundThreadID, TRUE);
+    if (targetThreadID != currentThreadID)
+        AttachThreadInput(currentThreadID, targetThreadID, TRUE);
+
+    SetForegroundWindow(hwndTarget);
+    SetActiveWindow(hwndTarget);
+    BringWindowToTop(hwndTarget);
+
+    if (hwndInput != NULL) {
+        SetFocus(hwndInput);
+        SendMessageA(hwndInput, WM_UPDATEUISTATE, MAKEWPARAM(UIS_CLEAR, UISF_HIDEFOCUS), 0);
+        SendMessageA(hwndInput, EM_SETSEL, 0, 0);
+    }
+
+    if (foregroundThreadID != currentThreadID)
+        AttachThreadInput(currentThreadID, foregroundThreadID, FALSE);
+    if (targetThreadID != currentThreadID)
+        AttachThreadInput(currentThreadID, targetThreadID, FALSE);
 }
 
 

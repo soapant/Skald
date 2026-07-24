@@ -7,7 +7,52 @@
 #include "config.h"
 #include "types.h"
 
-extern HWND hPopupWnd;
+void SaveRegionToPNG(int x1, int y1, int x2, int y2, const char* fullPath) {
+    int width = abs(x2 - x1);
+    int height = abs(y2 - y1);
+    if (width == 0 || height == 0) return;
+
+    HDC hScreenDC = GetDC(NULL);
+    HDC hMemoryDC = CreateCompatibleDC(hScreenDC);
+    HBITMAP hBitmap = CreateCompatibleBitmap(hScreenDC, width, height);
+    HGDIOBJ hOldBitmap = SelectObject(hMemoryDC, hBitmap);
+
+    BitBlt(hMemoryDC, 0, 0, width, height, hScreenDC, (x1 < x2 ? x1 : x2), (y1 < y2 ? y1 : y2), SRCCOPY);
+
+    GpBitmap* pBitmap = NULL;
+    GdipCreateBitmapFromHBITMAP(hBitmap, NULL, &pBitmap);
+
+    if (pBitmap != NULL) {
+        CLSID pngClsid;
+        UINT num = 0, size = 0;
+        GdipGetImageEncodersSize(&num, &size); 
+        
+        ImageCodecInfo* pImageCodecInfo = (ImageCodecInfo*)(malloc(size));
+        if (pImageCodecInfo != NULL) {
+            GdipGetImageEncoders(num, size, pImageCodecInfo); 
+            for (UINT j = 0; j < num; ++j) {
+                if (wcscmp(pImageCodecInfo[j].MimeType, L"image/png") == 0) {
+                    pngClsid = pImageCodecInfo[j].Clsid;
+                    break;
+                }
+            }
+            free(pImageCodecInfo);
+        }
+
+        wchar_t wPath[512];
+        MultiByteToWideChar(CP_ACP, 0, fullPath, -1, wPath, 512);
+
+        GdipSaveImageToFile((GpImage*)pBitmap, wPath, &pngClsid, NULL);
+        
+        GdipDisposeImage((GpImage*)pBitmap);
+    }
+
+    
+    SelectObject(hMemoryDC, hOldBitmap);
+    DeleteObject(hBitmap);
+    DeleteDC(hMemoryDC);
+    ReleaseDC(NULL, hScreenDC);
+}
 
 static void TriggerScreenshot(HWND hPopupWnd,bool open_screenshot) {
     if (CheckAndBlockIfPopupActive(hPopupWnd)) return;

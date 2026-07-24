@@ -642,4 +642,40 @@ static inline char* GetCleanText(const char* text) {
     return clean;
 }
 
+static bool IsWindowBlacklisted(const char* window_title, const char* blacklist[], int count) {
+    for (int i = 0; i < count; i++) {
+        if (StrStrIA(window_title, blacklist[i]) != NULL) {
+            return true;
+        }
+    }
+    return false;
+}
+
+static ULONGLONG g_timer_start_ms = 0;
+
+void StartUniversalTimer() {
+    g_timer_start_ms = GetTickCount64();
+}
+
+void ResetUniversalTimer() {
+    g_timer_start_ms = GetTickCount64();
+}
+
+void ModifyUniversalTimer(double seconds_to_add) {
+    LONGLONG ms_offset = (LONGLONG)(seconds_to_add * 1000.0);
+    g_timer_start_ms -= ms_offset; 
+    printf("[TIMER] Modified baseline by %.2f seconds.\n", seconds_to_add);
+}
+
+double GetUniversalTimeSeconds() {
+    ULONGLONG current_ms = GetTickCount64();
+    
+    if (current_ms < g_timer_start_ms) {
+        return 0.0;
+    }
+    
+    ULONGLONG elapsed_ms = current_ms - g_timer_start_ms;
+    return (double)elapsed_ms / 1000.0;
+}
+
 #endif

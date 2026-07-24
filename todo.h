@@ -141,6 +141,27 @@ int ReadMdFile(char lines[100][512], const char* path) {
     fclose(f);
     return count;
 }
+void StripCheckboxes(char* str) {
+    char* read_ptr = str;
+    char* write_ptr = str;
+    bool is_first = true;
+
+    while (*read_ptr != '\0') {
+        if (strncmp(read_ptr, "- [ ] ", 6) == 0) {
+            if (!is_first) {
+                *write_ptr = ','; 
+                write_ptr++;
+            }
+            is_first = false; 
+            read_ptr += 6;
+        } else {
+            *write_ptr = *read_ptr;
+            write_ptr++;
+            read_ptr++;
+        }
+    }
+    *write_ptr = '\0';
+}
 
 void WriteMdFile(char lines[100][512], int count, const char* path) {
     FILE* f = fopen(path, "w");
