@@ -341,7 +341,7 @@ static void todo_render_callback(HDC hdc, const char* text, RECT* rect, BOOL is_
     
     HFONT hMainFont = CreateFontA(24, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
                                   DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-                                  CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "0xProto Nerd Font");
+                                  CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, UsedFont);
     HFONT hOldFont = (HFONT)SelectObject(hdc, hMainFont);
     DrawTextA(hdc, main_text, -1, &textRect, DT_SINGLELINE | DT_VCENTER);
     
@@ -354,7 +354,7 @@ static void todo_render_callback(HDC hdc, const char* text, RECT* rect, BOOL is_
         
         HFONT hTagFont = CreateFontA(20, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
                                      DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-                                     CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "0xProto Nerd Font");
+                                     CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE,UsedFont);
         HFONT hOldTagFont = (HFONT)SelectObject(hdc, hTagFont);
         
         COLORREF tagColor;

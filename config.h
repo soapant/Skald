@@ -17,6 +17,8 @@ const char* TEMP_FILE_PATH = "temp_list_of_positions.md";
 
 const char* UsedImageEditor =  "picview.exe";
 
+const char* UsedFont =  "0xProto Nerd Font";
+
 
 static const char* ListOfProgramPaths[20] = {
     "C:\\Users\\HP\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu",
@@ -178,8 +180,8 @@ static const TodoConfigEntry TODO_DICT[] = {
     { "-pm", "MinecraftModpack",  NULL, RGB(255, 120, 0),   true  },
 
     { "-m",  NULL,                "[MISC]", RGB(154, 153, 150), false },
+    { "-l",  NULL,                "[LEARNING]", RGB(102, 255, 0), false },
     { "-h",  NULL,                "[HIGH]", RGB(246, 97,  81),  false },
-    { "-l",  NULL,                "[LOW]",  RGB(94,  92,  100),  false }
 };
 
 enum { TODO_DICT_COUNT = sizeof(TODO_DICT) / sizeof(TODO_DICT[0]) };
