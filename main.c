@@ -10,29 +10,14 @@
 #include <shlwapi.h> 
 #include "types.h"
 #include "config.h"
-#include "calc.h"
 #include "video_player.h"
 #include "music_player.h"
-#include "timer.h"
 #include "bindings.h"
-#include "explorer.h"
-#include "screenshot.h"
-#include "terminal_command.h"
-#include "zoxide.h"
-#include "nvim_zoxide.h"
-#include "yazi_zoxide.h"
-#include "pos_handler.h"
 #include "focus_switcher.h"
-#include "color_handler.h"
-#include "pixel_equals_handler.h"
-#include "wait_for_pixel_handler.h"
-#include "region_handler.h"
-#include "google_search.h"
 #include "process_killer.h"
 #include "number_shortcut.h"
 #include "helpers.h"
 #include "common_ui.h"
-#include "todo.h"
 #include "hotkey_definitions.h"
 #include "modal.h"
 #include "subclasses.h"
@@ -43,11 +28,6 @@
 #define ID_EXIT 2001
 #define IDC_INPUT_BOX 101
 #define IDC_LIST_BOX 102
-#define COLOR_BG      RGB(30, 35, 45)   
-#define COLOR_TEXT    RGB(255, 255, 255)
-#define COLOR_SELECTED_TEXT    RGB(70, 55, 90)
-#define COLOR_VISUAL_SELECTED_TEXT    RGB(48,25,52)
-
 
 #define WM_TRIGGER_IMG_CAPTURE (WM_USER + 2)
 HWND hGlobalTrayWnd = NULL;
@@ -69,7 +49,6 @@ CtrlEnterCallback g_ctrl_enter_callback = NULL;
 TabCallback g_tab_callback = NULL;
 RenderCallback g_render_callback = NULL;
 int g_timeout = 1;
-int g_VisualIndex = -1;
 const char** g_initial_items = NULL;
 int g_initial_count = 0;
 int g_SelectedIndex = 0; 
@@ -123,7 +102,7 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
     g_current_window_height = layout.h;
     g_current_window_width = layout.w;
     
-    HFONT hCustomFont = CreateCustomNerdFont(24, "0xProto Nerd Font");
+    HFONT hCustomFont = CreateCustomNerdFont(24, UsedFont);
 
     hPopupWnd = CreateWindowExA(
         WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED | WS_EX_COMPOSITED,
@@ -200,7 +179,7 @@ char* SimplePromptUser(const char* prompt, const char* window_title,int height, 
     g_current_window_height = layout.h;
     g_current_window_width = layout.w;
     
-    HFONT hCustomFont = CreateCustomNerdFont(24, "0xProto Nerd Font");
+    HFONT hCustomFont = CreateCustomNerdFont(24, UsedFont);
 
     hPopupWnd = CreateWindowExA(
         WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED, 
@@ -259,7 +238,7 @@ char* DisplayMessage(const char* message, int centerX, int centerY, int width, i
     if (!pWndData) return NULL;
 
     pWndData->message = _strdup(message ? message : "");
-    pWndData->hFont = CreateCustomNerdFont(20, "0xProto Nerd Font");
+    pWndData->hFont = CreateCustomNerdFont(20, UsedFont);
     pWndData->alpha = 245;
     g_timeout = timeout * 20;
 

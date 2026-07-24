@@ -572,7 +572,6 @@ static inline char* GetCleanText(const char* text) {
         int skip = 0;
         for (int i = 0; i < flag_count; i++) {
             if (strncmp(result, flags[i], strlen(flags[i])) == 0) {
-                // Skip this flag and its parameter
                 skip = 1;
                 result += strlen(flags[i]);
                 while (*result && *result == ' ') result++;

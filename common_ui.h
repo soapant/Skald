@@ -47,9 +47,18 @@ static inline void UI_ResetContent(HWND hList) {
     SendMessageA(hList, LB_SETCOUNT, 0, 0);
 }
 
-static inline void UI_SetSelection(HWND hList, int index) {
+static inline void UI_SetSelection(HWND hList, int index, int old_sel) {
     g_SelectedIndex = index;
-    InvalidateRect(hList, NULL, TRUE);
+    
+    RECT itemRect;
+    if (old_sel >= 0 && old_sel != index) {
+        SendMessageA(hList, LB_GETITEMRECT, old_sel, (LPARAM)&itemRect);
+        InvalidateRect(hList, &itemRect, FALSE);
+    }
+    if (index >= 0 && index != old_sel) {
+        SendMessageA(hList, LB_GETITEMRECT, index, (LPARAM)&itemRect);
+        InvalidateRect(hList, &itemRect, FALSE);
+    }
 }
 
 static inline int UI_GetCount(HWND hList) {
@@ -69,7 +78,7 @@ static inline void UI_SetItemCount(HWND hList, int count) {
 }
 
 static inline void UI_Redraw(HWND hList) {
-    InvalidateRect(hList, NULL, TRUE);
+    InvalidateRect(hList, NULL,FALSE);
 }
 
 
@@ -86,10 +95,6 @@ static inline void PopulateListBox(HWND hListBox, const char* filter,
     if (current_sel >= 0 && current_sel < g_populated_count) {
         strncpy(current_text, g_populated_cache[current_sel], sizeof(current_text) - 1);
         current_text[sizeof(current_text) - 1] = '\0';
-    } else {
-        if (current_sel < 0) {
-        } else {
-        }
     }
     
     int total_matches = 0;
@@ -97,73 +102,73 @@ static inline void PopulateListBox(HWND hListBox, const char* filter,
     char clean_filter[256] = {0};
     if (filter) {
         strncpy(clean_filter, filter, sizeof(clean_filter) - 1);
+        clean_filter[sizeof(clean_filter) - 1] = '\0';
     }
-    int found_in_history = 0;
-    if (!found_in_history) {
-        int use_previous = 0;
-        if (strlen(clean_filter) > 0 && 
-            g_last_items == items && 
-            g_last_item_count == item_count &&
-            g_history_count > 0) {
+    
+    // === INCREMENTAL FILTERING ===
+    int use_previous = 0;
+    if (strlen(clean_filter) > 0 && 
+        g_last_items == items && 
+        g_last_item_count == item_count &&
+        g_history_count > 0) {
+        
+        char* last_filter = g_filter_history[g_history_count - 1];
+        if (strlen(clean_filter) > strlen(last_filter) &&
+            strncmp(clean_filter, last_filter, strlen(last_filter)) == 0) {
             
-            char* last_filter = g_filter_history[g_history_count - 1];
-            if (strlen(clean_filter) > strlen(last_filter) &&
-                strncmp(clean_filter, last_filter, strlen(last_filter)) == 0) {
-                
-                use_previous = 1;
-                printf("[OPTIMIZE] Incremental: '%s' -> '%s'\n", last_filter, clean_filter);
-            }
+            use_previous = 1;
+            printf("[OPTIMIZE] Incremental: '%s' -> '%s'\n", last_filter, clean_filter);
         }
-        
-        if (use_previous && g_match_count_history[g_history_count - 1] > 0) {
-            int prev_count = g_match_count_history[g_history_count - 1];
-            int* prev_matches = g_match_history[g_history_count - 1];
-            
-            for (int i = 0; i < prev_count && total_matches < 4000; i++) {
-                int idx = prev_matches[i];
-                if (!items[idx]) continue;
-                
-                bool match = false;
-                if (filter_match) {
-                    match = filter_match(items[idx], clean_filter);
-                } else {
-                    match = (StrStrIA(items[idx], clean_filter) != NULL);
-                }
-                
-                if (match) {
-                    matching_indices[total_matches] = idx;
-                    total_matches++;
-                }
-            }
-        } else {
-            for (int i = 0; i < item_count && total_matches < 4000; i++) {
-                if (!items[i]) continue;
-                
-                bool match = false;
-                if (strlen(clean_filter) == 0) {
-                    match = true;
-                } else if (filter_match) {
-                    match = filter_match(items[i], clean_filter);
-                } else {
-                    match = (StrStrIA(items[i], clean_filter) != NULL);
-                }
-                
-                if (match) {
-                    matching_indices[total_matches] = i;
-                    total_matches++;
-                }
-            }
-        }
-        
-        if (strlen(clean_filter) > 0 && g_history_count < 20) {
-            strncpy(g_filter_history[g_history_count], clean_filter, sizeof(g_filter_history[0]) - 1);
-            g_match_count_history[g_history_count] = total_matches;
-            memcpy(g_match_history[g_history_count], matching_indices, total_matches * sizeof(int));
-            g_history_count++;
-            printf("[HISTORY] Saved '%s' (%d matches)\n", clean_filter, total_matches);
-        }
-        
     }
+    
+    if (use_previous && g_match_count_history[g_history_count - 1] > 0) {
+        int prev_count = g_match_count_history[g_history_count - 1];
+        int* prev_matches = g_match_history[g_history_count - 1];
+        
+        for (int i = 0; i < prev_count && total_matches < 4000; i++) {
+            int idx = prev_matches[i];
+            if (!items[idx]) continue;
+            
+            bool match = false;
+            if (filter_match) {
+                match = filter_match(items[idx], clean_filter);
+            } else {
+                match = (StrStrIA(items[idx], clean_filter) != NULL);
+            }
+            
+            if (match) {
+                matching_indices[total_matches] = idx;
+                total_matches++;
+            }
+        }
+    } else {
+        for (int i = 0; i < item_count && total_matches < 4000; i++) {
+            if (!items[i]) continue;
+            
+            bool match = false;
+            if (strlen(clean_filter) == 0) {
+                match = true;
+            } else if (filter_match) {
+                match = filter_match(items[i], clean_filter);
+            } else {
+                match = (StrStrIA(items[i], clean_filter) != NULL);
+            }
+            
+            if (match) {
+                matching_indices[total_matches] = i;
+                total_matches++;
+            }
+        }
+    }
+    
+    if (strlen(clean_filter) > 0 && g_history_count < 20) {
+        strncpy(g_filter_history[g_history_count], clean_filter, sizeof(g_filter_history[0]) - 1);
+        g_match_count_history[g_history_count] = total_matches;
+        memcpy(g_match_history[g_history_count], matching_indices, total_matches * sizeof(int));
+        g_history_count++;
+        printf("[HISTORY] Saved '%s' (%d matches)\n", clean_filter, total_matches);
+    }
+    
     if (total_matches == 0 && item_count > 0 && strlen(clean_filter) == 0) {
         int force_count = (item_count < 30) ? item_count : 30;
         for (int i = 0; i < force_count; i++) {
@@ -172,7 +177,6 @@ static inline void PopulateListBox(HWND hListBox, const char* filter,
         }
         g_history_count = 0;
     }
-    
     
     int pool_max = 60;
     
@@ -194,37 +198,44 @@ static inline void PopulateListBox(HWND hListBox, const char* filter,
     int display_count = total_matches - g_view_offset;
     if (display_count > pool_max) display_count = pool_max;
     
-    UI_ResetContent(hListBox);
+    g_populated_count = 0;
     
     for (int i = 0; i < display_count; i++) {
         int raw_data_index = matching_indices[g_view_offset + i];
         if (!items[raw_data_index]) continue;
         
         strncpy(g_populated_cache[g_populated_count], items[raw_data_index], 511);
-        
         g_populated_cache[g_populated_count][511] = '\0';
-        if (!found_in_history) {
-            g_populated_cache[g_populated_count][strcspn(g_populated_cache[g_populated_count], "\r\n")] = '\0';
-        } else {
-            g_populated_cache[g_populated_count - 1][strcspn(g_populated_cache[g_populated_count], "\r\n")] = '\0';
-        }
-        
+        g_populated_cache[g_populated_count][strcspn(g_populated_cache[g_populated_count], "\r\n")] = '\0';
         g_populated_count++;
     }
-
-    int window_allocation_count = (g_populated_count < 30) ? 30 : g_populated_count;
-    SendMessageA(hListBox, LB_SETCOUNT, window_allocation_count, 0);
-    if (total_matches == 1) {
-      UI_SetSelection(hListBox,0);
-    } else {
-      UI_SetSelection(hListBox,-1);
-    }
     
+    SendMessageA(hListBox, LB_SETCOUNT, total_matches, 0);
+    
+    if (total_matches == 1) {
+        UI_SetSelection(hListBox, 0, g_SelectedIndex);
+    } else if (g_populated_count > 0 && IsNormalMode()) {
+        int found = -1;
+        if (strlen(current_text) > 0) {
+            for (int i = 0; i < g_populated_count; i++) {
+                if (strcmp(g_populated_cache[i], current_text) == 0) {
+                    found = i;
+                    break;
+                }
+            }
+        }
+        if (found >= 0) {
+            UI_SetSelection(hListBox, found, g_SelectedIndex);
+        } else {
+            UI_SetSelection(hListBox, 0, g_SelectedIndex);
+        }
+    } else {
+        UI_SetSelection(hListBox, -1, g_SelectedIndex);
+    }
     
     g_last_items = items;
     g_last_item_count = item_count;
     g_TotalMatches = total_matches;
-    
 }
 
 COLORREF GetRainbowColor(float t, float s, float v) {
