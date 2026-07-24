@@ -177,7 +177,7 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
     bool ctrl_pressed = (GetKeyState(VK_CONTROL) & 0x8000);
 
     if (msg == WM_KEYDOWN) {
-        if (wParam == VK_CONTROL || wParam == VK_SHIFT || wParam == VK_MENU) {
+        if (wParam == VK_CONTROL || wParam == VK_SHIFT) {
             return DefSubclassProc(hwnd, msg, wParam, lParam);
         }
 
@@ -186,7 +186,6 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
               HandleNumberShortcut(wParam, hListBox, hEditControl,true);
               return 0;
             }
-            
         }
 
         if (wParam == VK_UP || wParam == VK_DOWN) {
@@ -255,6 +254,11 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
         if (wParam == VK_TAB) {
             if (g_tab_callback != NULL) {
                 g_tab_callback();
+            } else {
+              if (g_TotalMatches == 1) {
+                UI_SetText(hEditControl,g_populated_cache[0]);
+                UI_SetCursorPosition(hEditControl,strlen(g_populated_cache[0]));
+              }
             }
             return 0;
         }
