@@ -58,7 +58,7 @@ static inline COLORREF GetTagColor(const char* tag_string) {
             return TODO_DICT[i].color;
         }
     }
-    return RGB(255,255,255); 
+    return COLOR_TEXT; 
 }
 
 static void parse_todo_flags(char* input, TodoFlags* flags, char* clean_text) {
@@ -393,7 +393,7 @@ void TriggerTodo(void) {
 
     printf("[TODO] Launching UI Selection Prompt with %d items...\n", count);
 
-    char* selected_item = PromptUser(ui_list, "📝 Todo List", count, 920, 650, 56,
+    char* selected_item = PromptUser(ui_list, "📝 Todo", count, 920, 650, 56,
                                      todo_refresh_callback,  
                                      todo_enter_callback,    
                                      todo_ctrlenter_callback, 

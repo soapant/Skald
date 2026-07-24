@@ -83,12 +83,12 @@ static inline void HandleEnterNormal(void) {
 static inline void HandleEnterInsertOut(void) { 
     if (!hEditControl || !IsWindow(hEditControl)) return;
     
-    DWORD start, end;
-    SendMessageA(hEditControl, EM_GETSEL, (WPARAM)&start, (LPARAM)&end);
+    DWORD start = 0, end = 0;
+    UI_GetCurrentCursorPosition(hEditControl, &start, &end);
     
     int pos = (int)start + 1;
     
-    SendMessageA(hEditControl, EM_SETSEL, pos, pos);
+    UI_SetCursorPosition(hEditControl,pos);
     
     SetMode(MODE_INSERT); 
     printf("[VIM] Entered INSERT mode\n");
@@ -97,12 +97,12 @@ static inline void HandleEnterInsertOut(void) {
 static inline void HandleEnterInsertIn(void) { 
     if (!hEditControl || !IsWindow(hEditControl)) return;
     
-    DWORD start, end;
-    SendMessageA(hEditControl, EM_GETSEL, (WPARAM)&start, (LPARAM)&end);
+    DWORD start = 0, end = 0;
+    UI_GetCurrentCursorPosition(hEditControl, &start, &end);
     
     int pos = (int)start - 1;
     
-    SendMessageA(hEditControl, EM_SETSEL, pos, pos);
+    UI_SetCursorPosition(hEditControl,pos);
     
     SetMode(MODE_INSERT); 
     
@@ -181,7 +181,6 @@ static inline void HandleDelete(void) {
 static inline void HandleDeleteInsert(void) {
     if (hEditControl && IsWindow(hEditControl)) {
         DeleteCharUnderCursor();
-        // FIXED: Typo fix for HandleEnterInsertIn function invocation scope
         HandleEnterInsertIn(); 
         printf("[VIM] Deleted character under cursor & Switched to Insert\n");
     }
@@ -206,23 +205,22 @@ static inline void HandleDeleteLine(void) {
     }
     
     if (hEditControl && IsWindow(hEditControl)) {
-        SetWindowTextA(hEditControl, "");
+        UI_SetText(hEditControl," ");
         printf("[VIM] Deleted Entire Search Box \n");
     }
 }
 
 static inline void HandleDeleteLineInsert(void) {
     if (hEditControl && IsWindow(hEditControl)) {
-        SetWindowTextA(hEditControl, "");
-        SetMode(MODE_INSERT); // Force the state tracker straight to editing
+        UI_SetText(hEditControl," ");
+        SetMode(MODE_INSERT);
         printf("[VIM] Deleted Entire Search Box & Switched to Insert\n");
     }
 }
 
 static inline void HandleDeleteLineNormal(void) {
     if (hEditControl && IsWindow(hEditControl)) {
-        SetWindowTextA(hEditControl, "");
-        // FIXED: Ensure state stays in Normal mode explicitly if required
+        UI_SetText(hEditControl," ");
         SetMode(MODE_NORMAL); 
         printf("[VIM] Deleted Entire Search Box (Normal Mode Kept)\n");
     }
@@ -274,7 +272,7 @@ static inline void HandleYankLine(void) {
     if (hEditControl && IsWindow(hEditControl)) {
         char textBuffer[256] = {0};
         char buffer[256];
-        GetWindowTextA(hEditControl, textBuffer, sizeof(textBuffer));
+        UI_GetCurrentText(hEditControl,textBuffer);
         
         textBuffer[strcspn(textBuffer, "\r\n")] = '\0';
         
@@ -299,4 +297,41 @@ static inline void HandleInsertControlEnter(void) {
   selection_complete = false;
 }
 
+static inline void HandleMoveWordForward(void) {
+  if (!UI_IsListBoxSelected()) {
+      char text[512];
+        
+      UI_GetCurrentText(hEditControl,text);
+      
+      DWORD start = 0;
+      DWORD end = 0;
+
+      UI_GetCurrentCursorPosition(hEditControl, &start, &end);
+      
+      int pos = (int)start;
+      int len = (int)strlen(text);
+
+      SendMessage(hEditControl, EM_SETSEL, (WPARAM)len, (LPARAM)len);
+      SendMessage(hEditControl, EM_REPLACESEL, FALSE, (LPARAM)" ");
+      SendMessage(hEditControl, EM_SETSEL, (WPARAM)start, (LPARAM)end);
+      
+      if (len < (int)sizeof(text) - 1) {
+          text[len] = ' ';
+          text[len + 1] = '\0';
+          len++; 
+      }
+      
+      if (pos < len) {
+        for (int i = pos + 1; i < len; i++) {
+          printf("%c \n", text[i]);
+          if (text[i] != ' ') {
+            continue;
+          } else {
+            UI_SetCursorPosition(hEditControl,i);
+            break; 
+          }
+        }
+      }
+  }
+}
 #endif

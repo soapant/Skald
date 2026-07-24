@@ -48,18 +48,6 @@ static inline void UI_ResetContent(HWND hList) {
     SendMessageA(hList, LB_SETCOUNT, 0, 0);
 }
 
-static inline void UI_AddString(HWND hList, const char* text) {
-    if (!hList || !text || g_populated_count >= 100) return;
-    
-    strncpy(g_populated_cache[g_populated_count], text, 511);
-    g_populated_cache[g_populated_count][511] = '\0';
-    
-    g_populated_count++;
-    
-    SendMessageA(hList, LB_SETCOUNT, g_populated_count, 0);
-}
-
-
 static inline void UI_SetSelection(HWND hList, int index) {
     g_SelectedIndex = index;
     InvalidateRect(hList, NULL, TRUE);
@@ -241,6 +229,20 @@ static inline bool IsPopupActive(HWND hPopupWnd) {
 
 static inline bool CheckAndBlockIfPopupActive(HWND hPopupWnd) {
     return IsPopupActive(hPopupWnd);
+}
+static inline void UI_GetCurrentCursorPosition(HWND hEditControl, DWORD *start, DWORD *end) {
+    if (start && end) {
+        SendMessageA(hEditControl, EM_GETSEL, (WPARAM)start, (LPARAM)end);
+    }
+}
+static inline void UI_SetCursorPosition(HWND hEditControl,int position) {
+    SendMessageA(hEditControl, EM_SETSEL, position, position);
+}
+static inline char* UI_GetCurrentText(HWND hEditControl,char *text) {
+   GetWindowTextA(hEditControl, text, sizeof(text));
+}
+static inline void UI_SetText(HWND hEditControl,char* text) {
+  SetWindowTextA(hEditControl,text);
 }
 
 

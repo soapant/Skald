@@ -187,7 +187,7 @@ void TriggerAppLauncher() {
         initial_items[i] = G_APPS[i].name;
     }
 
-    PromptUser(initial_items,"🚀 LAUNCHER", G_APP_COUNT, 920, 650,32,
+    PromptUser(initial_items,"🚀 Launcher", G_APP_COUNT, 920, 650,32,
                         applauncher_refresh_callback,
                         applauncher_enter_callback,   
                         applauncher_ctrlenter_callback,

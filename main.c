@@ -183,7 +183,7 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
 
         if (wParam >= '0' && wParam <= '9') {
             if (ctrl_pressed) {
-              HandleNumberShortcut(wParam, hListBox, hEditControl);
+              HandleNumberShortcut(wParam, hListBox, hEditControl,true);
               return 0;
             }
             
