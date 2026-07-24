@@ -87,8 +87,9 @@ static void yazi_enter_callback(const char* selection) {
                 if (path) {
                     char cmd_args[512];
                     snprintf(cmd_args, sizeof(cmd_args), "-e yazi \"%s\"", path);
-                    
-                    ShellExecuteA(NULL, "open", "alacritty.exe", cmd_args, NULL, SW_SHOWNORMAL);
+                    char terminal[512];
+                    snprintf(terminal,sizeof(terminal),"%s.exe",UsedTerminal);
+                    ShellExecuteA(NULL, "open", terminal, cmd_args, NULL, SW_SHOWNORMAL);
                 }
             }
         }
@@ -98,8 +99,9 @@ static void yazi_enter_callback(const char* selection) {
             // CRITICAL FIX: Same dynamic argument string combining step for history entries
             char cmd_args[512];
             snprintf(cmd_args, sizeof(cmd_args), "-e yazi \"%s\"", path);
-            
-            ShellExecuteA(NULL, "open", "alacritty.exe", cmd_args, NULL, SW_SHOWNORMAL);
+            char terminal[512];
+            snprintf(terminal,sizeof(terminal),"%s.exe",UsedTerminal);
+            ShellExecuteA(NULL, "open", terminal, cmd_args, NULL, SW_SHOWNORMAL);
         }
     }
 }

@@ -94,31 +94,12 @@ static void RunTerminalCommand(const char* Command, bool save_to_history) {
         fprintf(f, "%s\n", clean_cmd);
         fclose(f);
     }
-    
-    char cmd[2048];
-    snprintf(cmd, sizeof(cmd), 
-             "\"C:\\Program Files\\Alacritty\\alacritty.exe\" -e \"C:\\Program Files\\Git\\bin\\bash.exe\" \"%s\"", 
+    char sys_cmd[2048];
+    snprintf(sys_cmd, sizeof(sys_cmd), 
+             "start %s -e \"C:\\Program Files\\Git\\bin\\bash.exe\" \"%s\"",UsedTerminal,
              temp_file);
-    
-    STARTUPINFOA si = {0};
-    si.cb = sizeof(si);
-    PROCESS_INFORMATION pi = {0};
-    
-    if (CreateProcessA(NULL, cmd, NULL, NULL, FALSE, 
-                       CREATE_NEW_CONSOLE, 
-                       NULL, NULL, &si, &pi)) {
-        CloseHandle(pi.hProcess);
-        CloseHandle(pi.hThread);
-        printf("[TERMINAL] Running: %s\n", clean_cmd);
-    } else {
-        // Fallback to system if CreateProcess fails
-        char sys_cmd[2048];
-        snprintf(sys_cmd, sizeof(sys_cmd), 
-                 "start alacritty -e \"C:\\Program Files\\Git\\bin\\bash.exe\" \"%s\"", 
-                 temp_file);
-        system(sys_cmd);
-        printf("[TERMINAL] Running (fallback): %s\n", clean_cmd);
-    }
+    system(sys_cmd);
+    printf("[TERMINAL] Running %s\n", clean_cmd);
 }
 
 // ============================================================

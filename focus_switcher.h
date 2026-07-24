@@ -173,7 +173,6 @@ static bool HandleFocusSwitcher(int vk_code, int modifiers, const char* current_
                 printf("[FOCUS] Blacklisted window: %s\n", current_title);
                 return false;
             }
-            
               if (strcmp(binding->window_titles[2],"Alacritty") == 0) {
                  if (FocusWindowByExe("alacritty.exe")) {
                    return true;
