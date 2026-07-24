@@ -9,12 +9,6 @@
 #include "helpers.h"
 #include "config.h"
 
-extern HWND hPopupWnd;
-extern HWND hEditControl;
-extern HWND hListBox;
-extern bool selection_complete;
-extern char output_buffer[256];
-extern FileEntry G_FILE_ENTRIES[];
 #define FILE_GOOGLE_ZOXIDE 5
 #define GoogleZoxideFile G_FILE_ENTRIES[FILE_GOOGLE_ZOXIDE].mf
 

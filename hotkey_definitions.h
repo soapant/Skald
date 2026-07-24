@@ -29,10 +29,6 @@
 #include "reminder.h"
 
 
-extern BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam);
-extern HWND hPopupWnd;
-extern HWND hGlobalTrayWnd;
-
 #define SWITCHER_KEY      0x20
 #define TODO_KEY          0x54
 #define CALCULATOR_KEY    0x43
@@ -123,7 +119,6 @@ static const char* monitor_focus_main_blacklist[] = {"Nvim", "Neovide","Fortnite
 #define MONITOR_FOCUS_MAIN_BLACKLIST_COUNT (sizeof(monitor_focus_main_blacklist) / sizeof(monitor_focus_main_blacklist[0]))
 
 static const char* monitor_focus_side_blacklist[] = {"Nvim", "Neovide","Fortnite", "CrosshairX"};
-
 #define MONITOR_FOCUS_SIDE_BLACKLIST_COUNT (sizeof(monitor_focus_main_blacklist) / sizeof(monitor_focus_main_blacklist[0]))
 
 static inline void SwitcherHandler(void) {

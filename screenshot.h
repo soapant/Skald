@@ -76,7 +76,6 @@ static void TriggerScreenshot(HWND hPopupWnd,bool open_screenshot) {
         printf("[SCREENSHOT] Aborted (no name provided)\n");
     }
     
-    // Reset region step
     img_region_step = 0;
 }
 

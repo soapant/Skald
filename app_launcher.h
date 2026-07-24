@@ -9,82 +9,8 @@
 #include <shlwapi.h>
 #include "config.h"
 #include "helpers.h"
+#include "file_search.h"
 
-
-#define MAX_APPS 2000
-
-typedef struct {
-    char name[128];
-    char path[MAX_PATH];
-} AppItem;
-
-
-AppItem G_APPS[MAX_APPS];
-int G_APP_COUNT = 0;
-
-
-static void scan_directory_recursive(const char* dir_path) {
-    char search_path[MAX_PATH];
-    snprintf(search_path, sizeof(search_path), "%s\\*", dir_path);
-
-    WIN32_FIND_DATAA find_data;
-    HANDLE hFind = FindFirstFileA(search_path, &find_data);
-
-    if (hFind == INVALID_HANDLE_VALUE) return;
-
-    do {
-        if (strcmp(find_data.cFileName, ".") == 0 || strcmp(find_data.cFileName, "..") == 0) {
-            continue;
-        }
-
-        char full_path[MAX_PATH];
-        snprintf(full_path, sizeof(full_path), "%s\\%s", dir_path, find_data.cFileName);
-
-        
-        if (find_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-            char first = tolower(find_data.cFileName[0]);
-            
-            if (first == 'n' || first == '.' || first == 'b' || first == 'o' || 
-                first == 'd' || first == 'g' || first == 'y' || first == 'h') {
-                
-                bool skip = false;
-                for (int i = 0; i <  sizeof(ListOfShitToIgnore) / sizeof(ListOfShitToIgnore[0]); i++) {
-                    if (StrCmpIA(find_data.cFileName, ListOfShitToIgnore[i]) == 0) {
-                        skip = true;
-                        break;
-                    }
-                }
-                if (skip) continue;
-            }
-            scan_directory_recursive(full_path);
-        } else {
-            char* ext = PathFindExtensionA(find_data.cFileName);
-            if (StrCmpIA(ext, ".lnk") == 0 || StrCmpIA(ext, ".exe") == 0 || StrCmpIA(ext, ".url") == 0) {
-                if (G_APP_COUNT < MAX_APPS) {
-                    char clean_name[128];
-                    strncpy(clean_name, find_data.cFileName, sizeof(clean_name) - 1);
-                    clean_name[sizeof(clean_name) - 1] = '\0';
-                    PathRemoveExtensionA(clean_name);
-
-                    bool is_duplicate = false;
-                    for (int i = 0; i < G_APP_COUNT; i++) {
-                        if (StrCmpIA(G_APPS[i].name, clean_name) == 0) {
-                            is_duplicate = true;
-                            break;
-                        }
-                    }
-                    if (is_duplicate) continue;
-
-                    strncpy(G_APPS[G_APP_COUNT].name, clean_name, sizeof(G_APPS[G_APP_COUNT].name) - 1);
-                    strncpy(G_APPS[G_APP_COUNT].path, full_path, sizeof(G_APPS[G_APP_COUNT].path) - 1);
-                    G_APP_COUNT++;
-                }
-            }
-        }
-    } while (FindNextFileA(hFind, &find_data) && G_APP_COUNT < MAX_APPS);
-
-    FindClose(hFind);
-}
 
 static void initialize_app_cache() {
     G_APP_COUNT = 0;

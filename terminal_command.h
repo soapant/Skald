@@ -10,8 +10,6 @@
 #include "types.h"
 #include "helpers.h"
 
-extern HWND hPopupWnd;
-extern FileEntry G_FILE_ENTRIES[];
 #define FILE_TERMINAL_HISTORY 0
 #define TerminalHistoryFile G_FILE_ENTRIES[FILE_TERMINAL_HISTORY].mf
 static char** g_cached_commands = NULL;
@@ -102,9 +100,6 @@ static void RunTerminalCommand(const char* Command, bool save_to_history) {
     printf("[TERMINAL] Running %s\n", clean_cmd);
 }
 
-// ============================================================
-// ENTER CALLBACK
-// ============================================================
 static void terminal_enter_callback(const char* selection) {
     int selected_index = LB_ERR;
     if (hListBox != NULL) {
@@ -112,10 +107,8 @@ static void terminal_enter_callback(const char* selection) {
     }
     
     if (selected_index != LB_ERR) {
-        // From history - DON'T save again
         RunTerminalCommand(selection, false);
     } else {
-        // New command from input - SAVE to history
         char input[256] = {0};
         if (hEditControl != NULL) {
             GetWindowTextA(hEditControl, input, sizeof(input));
@@ -126,9 +119,6 @@ static void terminal_enter_callback(const char* selection) {
     }
 }
 
-// ============================================================
-// TRIGGER
-// ============================================================
 static void TriggerTerminalCommand() {
     if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
     

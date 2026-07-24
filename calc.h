@@ -11,7 +11,7 @@
 #include <shlwapi.h>
 #include "types.h"
 #include "common_ui.h"
-
+#include "helpers.h"
 
 static double g_last_a = 0.0;
 static double g_last_b = 0.0;
@@ -21,85 +21,11 @@ static char g_last_expression[256] = {0};
 static double g_flipped_result = 0.0;
 static bool g_is_flipped = false;
 
-
-extern HWND hEditControl;
-
 typedef struct {
     const char* from_unit;
     const char* to_unit;
     double factor;
 } UnitConversion;
-
-int CopyToClipboard(const char* text) {
-    if (text == NULL) return 0;
-
-    size_t len = strlen(text);
-    if (len == 0) return 0;
-
-    char* clean_text = (char*)malloc(len + 1);
-    if (clean_text == NULL) return 0;
-
-    size_t write_idx = 0;
-    for (size_t i = 0; i < len; i++) {
-        if (text[i] != '\r') {
-            clean_text[write_idx++] = text[i];
-        }
-    }
-    clean_text[write_idx] = '\0';
-
-    len = write_idx;
-    if (len == 0) {
-        free(clean_text);
-        return 0;
-    }
-
-    HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, len + 1);
-    if (hMem == NULL) {
-        free(clean_text);
-        return 0;
-    }
-
-    char* pMem = (char*)GlobalLock(hMem);
-    if (pMem == NULL) {
-        GlobalFree(hMem);
-        free(clean_text);
-        return 0;
-    }
-    
-    memcpy(pMem, clean_text, len + 1); 
-    GlobalUnlock(hMem);
-    free(clean_text);
-
-    if (!OpenClipboard(NULL)) {
-        GlobalFree(hMem);
-        return 0;
-    }
-
-    if (!EmptyClipboard()) {
-        GlobalFree(hMem);
-        CloseClipboard();
-        return 0;
-    }
-
-    if (SetClipboardData(CF_TEXT, hMem) == NULL) {
-        GlobalFree(hMem);
-        CloseClipboard();
-        return 0;
-    }
-    printf("%s",text);
-    char buffer[256];
-    
-    snprintf(buffer,sizeof(buffer),"Copied %s",text);
-    
-    MSG_TOP(buffer,140,1);
-    
-    CloseClipboard();
-    
-    return 1;
-}
-
-
-
 
 double parse_number_with_suffix(const char* str) {
     char cleaned[64];
@@ -129,9 +55,6 @@ double parse_number_with_suffix(const char* str) {
     }
 }
 
-
-
-
 void format_number_with_suffix(double num, char* out, size_t max_len) {
     if (num >= 1000000.0) {
         snprintf(out, max_len, "%gm", num / 1000000.0);
@@ -141,9 +64,6 @@ void format_number_with_suffix(double num, char* out, size_t max_len) {
         snprintf(out, max_len, "%g", num);
     }
 }
-
-
-
 
 double get_flipped_result() {
     return g_flipped_result;
@@ -157,9 +77,6 @@ void reset_flip_state() {
     g_is_flipped = false;
     g_flipped_result = 0.0;
 }
-
-
-
 
 static const UnitConversion G_CONVERSIONS[] = {
     

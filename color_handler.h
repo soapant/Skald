@@ -6,8 +6,7 @@
 #include <string.h>
 #include "pixel_utils.h"
 #include "config.h"
-
-extern int CopyToClipboard(const char* text);
+#include "helpers.h"
 
 static bool HandleColorKey(bool alt_down, bool ctrl_down, bool shift_down) {
     long x, y;

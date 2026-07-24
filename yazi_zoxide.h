@@ -9,17 +9,12 @@
 #include "helpers.h"
 #include "config.h"
 
-extern HWND hPopupWnd;
-extern FileEntry G_FILE_ENTRIES[];
 #define FILE_YAZI_ZOXIDE 1
 #define YaziZoxideFile G_FILE_ENTRIES[FILE_YAZI_ZOXIDE].mf
 
 static char** g_cached_yazi_commands = NULL;
 static int g_cached_yazi_count = 0;
 
-// ============================================================
-// REBUILD CACHE
-// ============================================================
 static void RebuildYaziCache(void) {
     if (g_cached_yazi_commands) {
         for (int i = 0; i < g_cached_yazi_count; i++) {
@@ -96,7 +91,6 @@ static void yazi_enter_callback(const char* selection) {
     } else {
         char* path = QueryZoxidePath(selection);
         if (path) {
-            // CRITICAL FIX: Same dynamic argument string combining step for history entries
             char cmd_args[512];
             snprintf(cmd_args, sizeof(cmd_args), "-e yazi \"%s\"", path);
             char terminal[512];

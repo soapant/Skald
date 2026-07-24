@@ -10,8 +10,6 @@
 #include "helpers.h"
 #include "config.h"
 
-extern HWND hPopupWnd;
-extern FileEntry G_FILE_ENTRIES[];
 #define FILE_NVIM_ZOXIDE 2
 #define NvimZoxideFile G_FILE_ENTRIES[FILE_NVIM_ZOXIDE].mf
 
@@ -33,7 +31,6 @@ static void LaunchNvim(const char* path, int version) {
         snprintf(cmd, sizeof(cmd), "\"C:\\Program Files\\Neovim\\bin\\nvim.exe\" \"%s\"", path);
     }
     
-    // Try CreateProcess first (fast)
     if (CreateProcessA(NULL, cmd, NULL, NULL, FALSE, 
                        CREATE_NEW_CONSOLE, 
                        NULL, NULL, &si, &pi)) {
@@ -41,7 +38,6 @@ static void LaunchNvim(const char* path, int version) {
         CloseHandle(pi.hThread);
         printf("[NVIM] Opened %s in: %s\n", version == 0 ? "Neovide" : "Nvim", path);
     } else {
-        // Fallback to system if CreateProcess fails
         char sys_cmd[2048];
         if (version == 0) {
             snprintf(sys_cmd, sizeof(sys_cmd), "start neovide \"%s\"", path);
