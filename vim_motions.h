@@ -100,7 +100,7 @@ static inline void HandleEnterInsertIn(void) {
     DWORD start = 0, end = 0;
     UI_GetCurrentCursorPosition(hEditControl, &start, &end);
     
-    int pos = (int)start - 1;
+    int pos = (int)start;
     
     UI_SetCursorPosition(hEditControl,pos);
     
@@ -178,11 +178,18 @@ static inline void HandleDelete(void) {
     
 }
 
-static inline void HandleDeleteInsert(void) {
+static inline void HandleDeleteCharInsert(void) {
     if (hEditControl && IsWindow(hEditControl)) {
         DeleteCharUnderCursor();
         HandleEnterInsertIn(); 
         printf("[VIM] Deleted character under cursor & Switched to Insert\n");
+    }
+}
+
+static inline void HandleDeleteCharNormal(void) {
+    if (hEditControl && IsWindow(hEditControl)) {
+        DeleteCharUnderCursor();
+        printf("[VIM] Deleted character under cursor\n");
     }
 }
 

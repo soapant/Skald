@@ -121,7 +121,11 @@ static bool HandleNumberShortcut(int wParam, HWND hListBox, HWND hEditControl,bo
         }
         
         printf("[NUM-SHORTCUT] Two-digit number: %d\n", combined_number);
+        if (enter) {
         ExecuteNumberShortcut(combined_number, g_num_shortcut_state.close_popup,true);
+        } else{
+          ExecuteNumberShortcut(combined_number, g_num_shortcut_state.close_popup,false);
+        }
         return true;
     }
     
