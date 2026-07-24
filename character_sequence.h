@@ -7,6 +7,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <ctype.h>
+#include "common_ui.h"
 
 #define MAX_SEQUENCE_LEN 8
 #define SEQUENCE_TIMEOUT_MS 300
@@ -129,11 +130,11 @@ static inline void DeleteLastTypedChar(void) {
     }
     
     char text[512] = {0};
-    GetWindowTextA(hEditControl, text, sizeof(text));
+    UI_GetCurrentText(hEditControl,text);
     int len = (int)strlen(text);
     
     DWORD start, end;
-    SendMessageA(hEditControl, EM_GETSEL, (WPARAM)&start, (LPARAM)&end);
+    UI_GetCurrentCursorPosition(hEditControl, &start, &end);
     int cursor_pos = (int)start;
     
     printf("[VIM-DEBUG] DeleteLastTypedChar: text='%s', len=%d, cursor_pos=%d\n", text, len, cursor_pos);
@@ -143,19 +144,15 @@ static inline void DeleteLastTypedChar(void) {
         return;
     }
     
-    // The character to delete is at cursor_pos - 1
-    // (the character just typed before the cursor)
     int delete_pos = cursor_pos - 1;
     char deleted_char = text[delete_pos];
     
     printf("[VIM-DEBUG] Deleting character at position %d: '%c'\n", delete_pos, deleted_char);
     
-    // Remove the character at delete_pos
     memmove(&text[delete_pos], &text[delete_pos + 1], len - delete_pos);
-    SetWindowTextA(hEditControl, text);
+    UI_SetText(hEditControl,text);
     
-    // Move cursor back to the deletion position
-    SendMessageA(hEditControl, EM_SETSEL, delete_pos, delete_pos);
+    UI_SetCursorPosition(hEditControl,delete_pos);
     
     printf("[VIM-DEBUG] Deleted character '%c', new text='%s', cursor at %d\n", 
            deleted_char, text, delete_pos);

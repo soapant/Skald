@@ -13,8 +13,6 @@
 #include "common_ui.h"
 
 
-
-
 static double g_last_a = 0.0;
 static double g_last_b = 0.0;
 static char g_last_op = 0;
@@ -93,9 +91,10 @@ int CopyToClipboard(const char* text) {
     
     snprintf(buffer,sizeof(buffer),"Copied %s",text);
     
-    MSG_TOP(buffer,140,2);
+    MSG_TOP(buffer,140,1);
     
     CloseClipboard();
+    
     return 1;
 }
 
@@ -135,11 +134,11 @@ double parse_number_with_suffix(const char* str) {
 
 void format_number_with_suffix(double num, char* out, size_t max_len) {
     if (num >= 1000000.0) {
-        snprintf(out, max_len, "%.4gm", num / 1000000.0);
+        snprintf(out, max_len, "%gm", num / 1000000.0);
     } else if (num >= 1000.0) {
-        snprintf(out, max_len, "%.4gk", num / 1000.0);
+        snprintf(out, max_len, "%gk", num / 1000.0);
     } else {
-        snprintf(out, max_len, "%.10g", num);
+        snprintf(out, max_len, "%g", num);
     }
 }
 
@@ -516,7 +515,7 @@ static void calculator_tab_callback(void) {
     
     
     char current_input[256] = {0};
-    GetWindowTextA(hEditControl, current_input, sizeof(current_input));
+    UI_GetCurrentText(hEditControl,current_input);
     
     
     char a_str[64] = {0};
@@ -527,11 +526,10 @@ static void calculator_tab_callback(void) {
         
         char flipped[256];
         snprintf(flipped, sizeof(flipped), "%s %s %s", b_str, op_str, a_str);
-        SetWindowTextA(hEditControl, flipped);
-        
+        UI_SetText(hEditControl,flipped);
         
         int len = strlen(flipped);
-        SendMessageA(hEditControl, EM_SETSEL, len, len);
+        UI_SetCursorPosition(hEditControl,len);
         SendMessageA(GetParent(hEditControl), WM_COMMAND, MAKEWPARAM(IDC_INPUT_BOX, EN_CHANGE), (LPARAM)hEditControl);
         
         printf("[CALCULATOR] Flipped: %s\n", flipped);
@@ -557,8 +555,7 @@ static void calculator_ctrlenter_callback(const char* selection) {
     
     
     int len = strlen(result);
-    SendMessageA(hEditControl, EM_SETSEL, len, len);
-    
+    UI_SetCursorPosition(hEditControl, len);
     
     SendMessageA(GetParent(hEditControl), WM_COMMAND, MAKEWPARAM(IDC_INPUT_BOX, EN_CHANGE), (LPARAM)hEditControl);
     

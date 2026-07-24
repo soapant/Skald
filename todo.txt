@@ -8,7 +8,6 @@ just add a like way to do some cool little window shit to display something||[Pr
 the last selection thing should be based on the feature||[Project: Cprogram]
 there is giong to be some manual recipes you ahev to do||[Project: MinecraftModpack]
 also st up the python scripts make sure they work for every type||[Project: MinecraftModpack]
-also make the fucking flag adding easier this is some bs||[Project: Cprogram]
 i really need some spell checking in this bih||[Project: Cprogram]
 there is a lot of inconsistencies in the program you have to fix||[Project: Cprogram]
 and you have to fucking add the linking todos already this is to much brainpower||[Project: Cprogram]

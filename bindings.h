@@ -1,3 +1,4 @@
+#include "common_ui.h"
 #include "config.h"
 #include <windows.h>
 #include "app_launcher.h"
@@ -174,13 +175,13 @@ static inline void RemoveSequenceFromEdit(int typed_count) {
     }
     
     char text[512] = {0};
-    GetWindowTextA(hEditControl, text, sizeof(text));
+    UI_GetCurrentText(hEditControl,text);
     int text_len = (int)strlen(text);
     
     if (text_len >= typed_count) {
         text[text_len - typed_count] = '\0';
-        SetWindowTextA(hEditControl, text);
-        SendMessageA(hEditControl, EM_SETSEL, text_len - typed_count, text_len - typed_count);
+        UI_SetText(hEditControl,text);
+        UI_SetCursorPosition(hEditControl,text_len - typed_count);
     } else {
     }
 }
