@@ -34,7 +34,7 @@ typedef enum {
     MOTION_MOVE_UP,
     MOTION_MOVE_DOWN,
     MOTION_MOVE_WORD_FORWARD,
-    MOTION_MOVE_WORD_BACK,
+    MOTION_MOVE_WORD_BACKWARD,
     MOTION_MOVE_LINE_START,
     MOTION_MOVE_LINE_END,
     MOTION_MOVE_LISTBOX_START,
@@ -298,40 +298,79 @@ static inline void HandleInsertControlEnter(void) {
 }
 
 static inline void HandleMoveWordForward(void) {
-  if (!UI_IsListBoxSelected()) {
-      char text[512];
-        
-      UI_GetCurrentText(hEditControl,text);
+if (!UI_IsListBoxSelected()) {
+    char text[512];
       
-      DWORD start = 0;
-      DWORD end = 0;
+    UI_GetCurrentText(hEditControl,text);
+    
+    DWORD start = 0;
+    DWORD end = 0;
 
-      UI_GetCurrentCursorPosition(hEditControl, &start, &end);
-      
-      int pos = (int)start;
-      int len = (int)strlen(text);
+    UI_GetCurrentCursorPosition(hEditControl, &start, &end);
+    
+    int pos = (int)start;
+    int len = (int)strlen(text);
 
-      SendMessage(hEditControl, EM_SETSEL, (WPARAM)len, (LPARAM)len);
-      SendMessage(hEditControl, EM_REPLACESEL, FALSE, (LPARAM)" ");
-      SendMessage(hEditControl, EM_SETSEL, (WPARAM)start, (LPARAM)end);
-      
-      if (len < (int)sizeof(text) - 1) {
-          text[len] = ' ';
-          text[len + 1] = '\0';
-          len++; 
-      }
-      
-      if (pos < len) {
-        for (int i = pos + 1; i < len; i++) {
-          printf("%c \n", text[i]);
-          if (text[i] != ' ') {
-            continue;
-          } else {
-            UI_SetCursorPosition(hEditControl,i);
-            break; 
+    if (len < (int)sizeof(text) - 1) {
+        text[len] = ' ';
+        text[len + 1] = '\0';
+        len++; 
+    }
+    
+    if (pos < len) {
+      for (int i = pos + 1; i < len; i++) {
+        if (text[i] != ' ') {
+          continue;
+        } else {
+          for (int j = i; j < len; j++) {
+            if (text[j] != ' ') {
+              UI_SetCursorPosition(hEditControl,j);
+              break;
+            } else {
+              continue;
+            }
           }
+          break;
         }
       }
+    }
   }
 }
+
+static inline void HandleMoveWordBackward(void) {
+  if (!UI_IsListBoxSelected()) {
+    char text[512];
+    UI_GetCurrentText(hEditControl, text);
+    
+    DWORD start = 0;
+    DWORD end = 0;
+    UI_GetCurrentCursorPosition(hEditControl, &start, &end);
+    
+    int pos = (int)start;
+
+    for (int i = pos - 1; i >= -1; i--) {
+      
+      char current_char = (i >= 0) ? text[i] : ' ';
+
+      if (current_char != ' ') {
+        continue;
+      } else {
+        for (int j = i - 1; j >= -1; j--) {
+          char next_char = (j >= 0) ? text[j] : ' ';
+
+          if (next_char != ' ') {
+            UI_SetCursorPosition(hEditControl, j + 1);
+            return; 
+          } else {
+            continue;
+          }
+        }
+        
+        UI_SetCursorPosition(hEditControl, 0);
+        return;
+      }
+    }
+  }
+}
+
 #endif
