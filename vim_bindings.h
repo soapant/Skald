@@ -40,6 +40,8 @@ static const MotionBinding G_VIM_BINDINGS[] = {
     
     { 'W', HOTKEY_MOD_NONE, MOTION_MOVE_WORD_FORWARD,          "MoveWordForward",       HandleMoveWordForward,      MODE_NORMAL },
     
+    { 'B', HOTKEY_MOD_NONE, MOTION_MOVE_WORD_BACKWARD,          "MoveWordBackwards",       HandleMoveWordBackward,      MODE_NORMAL },
+    
     { 'Y', HOTKEY_MOD_SHIFT, MOTION_YANK_LIST_BOX,          "YankListBox",       HandleYankListBox,      MODE_NORMAL },
     
 };
