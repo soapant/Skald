@@ -6,14 +6,7 @@
 #include <string.h>
 #include "pixel_utils.h"
 #include "config.h"
-
-extern int ReadMdFile(char lines[100][512], const char* path);
-extern void WriteMdFile(char lines[100][512], int count, const char* path);
-extern void ClearMdFile(const char* path);
-extern void StripCheckboxes(char* str);
-extern int CopyToClipboard(const char* text);
-
-#define TEMP_FILE_PATH "temp_list_of_positions.md"
+#include "todo.h"
 
 static bool HandlePosKey(bool alt_down, bool ctrl_down, bool shift_down) {
     POINT mousePos;
@@ -48,7 +41,7 @@ static bool HandlePosKey(bool alt_down, bool ctrl_down, bool shift_down) {
         return true;
     }
     else if (alt_down && ctrl_down && !shift_down) {
-        ClearMdFile(TEMP_FILE_PATH);
+        printf("ALSO NOT IMPLEMENTED");
         return true;
     }
     else if (alt_down && !ctrl_down && !shift_down) {

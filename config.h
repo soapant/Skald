@@ -26,12 +26,16 @@ typedef struct {
 } Line;
 
 static bool TRAY = true;
+
 static bool COLORFUL_MODE = false;
-static char* UsedTerminal = "Alacritty";
+
+const char* UsedTerminal = "Alacritty";
 
 const char* BASE_SCREENSHOT_FOLDER_PATH = "C:\\Users\\HP\\Pictures\\Screenshots\\";
 
-char* UsedImageEditor =  "picview.exe";
+const char* TEMP_FILE_PATH = "temp_list_of_positions.md";
+
+const char* UsedImageEditor =  "picview.exe";
 
 
 static const char* ListOfProgramPaths[20] = {
