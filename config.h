@@ -2,28 +2,8 @@
 #define CONFIG_H
 #include <string.h>
 #include <windows.h>
-
-#define HOTKEY_MOD_NONE         0x00
-#define HOTKEY_MOD_ALT          0x01
-#define HOTKEY_MOD_SHIFT        0x02
-#define HOTKEY_MOD_CTRL         0x04
-#define HOTKEY_MOD_ALT_SHIFT    (HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT)
-#define HOTKEY_MOD_ALT_CTRL     (HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL)
-#define HOTKEY_MOD_SHIFT_CTRL   (HOTKEY_MOD_SHIFT | HOTKEY_MOD_CTRL)
-#define HOTKEY_MOD_ALT_SHIFT_CTRL (HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT | HOTKEY_MOD_CTRL)
-
-typedef struct {
-    HANDLE hFile;
-    HANDLE hMapping;
-    char *pBuffer;
-    size_t fileSize;   
-    size_t capacity;   
-} MappedFile;
-
-typedef struct {
-    char *ptr;
-    size_t length;
-} Line;
+#include "types.h"
+#include "macro_bindings.h"
 
 static bool TRAY = true;
 
@@ -61,82 +41,6 @@ static const char* MusicPath = "D:\\Music";
 static const char* VideosPath = "D:\\videos";
 static const char* IconPath = "D:\\retard games\\miscellaneous\\switch_window.ico";
 
-typedef struct {
-    const char* name;
-    const char* path;
-    MappedFile* mf;
-} FileEntry;
-
-static FileEntry G_FILE_ENTRIES[] = {
-    {"TerminalHistory", "D:\\Projects\\C Code\\TerminalHistory.txt", NULL},
-    {"YaziZoxide",      "D:\\Projects\\C Code\\YaziZoxide.txt", NULL},
-    {"NvimZoxide",      "D:\\Projects\\C Code\\NvimZoxide.txt", NULL},
-    {"TerminalZoxide",      "D:\\Projects\\C Code\\TerminalZoxide.txt", NULL},
-    {"ExplorerZoxide",  "D:\\Projects\\C Code\\ExplorerZoxide.txt", NULL},
-    {"GoogleZoxide",  "D:\\Projects\\C Code\\GoogleZoxide.txt", NULL},
-    {"ReminderHistory",  "D:\\Projects\\C Code\\ReminderHistory.txt", NULL},
-};
-
-#define FILE_ENTRY_COUNT (sizeof(G_FILE_ENTRIES) / sizeof(G_FILE_ENTRIES[0]))
-
-static inline const char* GetFilePath(const char* name) {
-    for (int i = 0; i < FILE_ENTRY_COUNT; i++) {
-        if (strcmp(G_FILE_ENTRIES[i].name, name) == 0) {
-            return G_FILE_ENTRIES[i].path;
-        }
-    }
-    return NULL;
-}
-
-typedef struct {
-    int vk_code;
-    int modifiers;
-    const char* exe_name;
-    const char* app_name;  
-} AppHotkey;
-
-typedef struct {
-    int vk_code;
-    int modifiers;
-    const char* exe_name;
-    const char* misc_path; 
-} MiscHotkey;
-
-typedef struct {
-    int vk_code;
-    int modifiers;
-    const char* exe_name;
-    const char* QuickLinkQuery; 
-} QuickLinkHotkey;
-
-typedef struct {
-    int vk_code;
-    int modifiers;
-    const char** blacklist;      
-    int blacklist_count;
-    const char** window_titles;  
-    int window_count;
-} FocusSwitcherBinding;
-
-typedef struct {
-    int vk_code;
-    int modifiers;
-    int code;
-} MusicPlayerBinding;
-
-typedef struct {
-    int vk_code;
-    int modifiers;
-    int code;
-} VideoPlayerBinding;
-
-typedef struct {
-    int vk_code;
-    int modifiers;
-    const char** window_titles;  
-    int window_count;
-} BulkKillProcessBinding;
-
 static const AppHotkey G_APP_HOTKEYS[] = {
     { VK_RETURN, HOTKEY_MOD_ALT, "*", "Alacritty" },
     { 'B', HOTKEY_MOD_CTRL | HOTKEY_MOD_SHIFT, "*", "Zen" },
@@ -156,13 +60,6 @@ static const QuickLinkHotkey G_QUICKLINK_HOTKEYS[] = {
 };
 
 #define QUICKLINK_HOTKEY_COUNT (sizeof(G_QUICKLINK_HOTKEYS) / sizeof(G_QUICKLINK_HOTKEYS[0]))
-
-typedef struct {
-    int vk_code;
-    int modifiers;
-    const char* exe_name;
-    const char* text;  
-} TextSnippet;
 
 static const TextSnippet G_TEXT_SNIPPETS[] = {
     { 'O', HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT, "EpicGamesLauncher", "seifisbad@gmail.com" },
@@ -274,5 +171,17 @@ static const FocusSwitcherBinding G_FOCUS_SWITCHERS[] = {
 };
 
 #define FOCUS_SWITCHER_COUNT (sizeof(G_FOCUS_SWITCHERS) / sizeof(G_FOCUS_SWITCHERS[0]))
+
+static const TodoConfigEntry TODO_DICT[] = {
+    { "-pc", "Cprogram",          NULL, RGB(98,  160, 234), true  },
+    { "-ph", "HeaderC",           NULL, RGB(51,  209, 122), true  },
+    { "-pm", "MinecraftModpack",  NULL, RGB(255, 120, 0),   true  },
+
+    { "-m",  NULL,                "[MISC]", RGB(154, 153, 150), false },
+    { "-h",  NULL,                "[HIGH]", RGB(246, 97,  81),  false },
+    { "-l",  NULL,                "[LOW]",  RGB(94,  92,  100),  false }
+};
+
+enum { TODO_DICT_COUNT = sizeof(TODO_DICT) / sizeof(TODO_DICT[0]) };
 
 #endif

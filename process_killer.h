@@ -14,7 +14,6 @@
 static char G_PK_LIST[MAX_PK_APPS][128];
 static int G_PK_COUNT = 0;
 
-// Programmatically filter out core protected Windows OS components to save list space
 static bool is_system_noise(const char* exe) {
     const char* noise[] = {
         "[system process]", "system", "idle", "svchost.exe", "lsass.exe", 
@@ -30,7 +29,6 @@ static bool is_system_noise(const char* exe) {
     return false;
 }
 
-// Scans the raw NT kernel process table directly
 static void collect_running_processes() {
     G_PK_COUNT = 0;
 
@@ -62,13 +60,11 @@ static void collect_running_processes() {
     CloseHandle(hSnapshot);
 }
 
-// Helper function to run a command without showing a window
 static void run_hidden_command(const char* cmd) {
     STARTUPINFOA si = {0};
     si.cb = sizeof(si);
     PROCESS_INFORMATION pi = {0};
     
-    // Create a modifiable copy of the command
     char cmd_copy[1024];
     strncpy(cmd_copy, cmd, sizeof(cmd_copy) - 1);
     cmd_copy[sizeof(cmd_copy) - 1] = '\0';
@@ -78,7 +74,6 @@ static void run_hidden_command(const char* cmd) {
         CloseHandle(pi.hProcess);
         CloseHandle(pi.hThread);
     } else {
-        // Fallback to WinExec if CreateProcess fails
         WinExec(cmd, SW_HIDE);
     }
 }

@@ -9,18 +9,12 @@
 #include "helpers.h"
 #include "config.h"
 
-extern HWND hPopupWnd;
-extern FileEntry G_FILE_ENTRIES[];
 #define FILE_TERMINAL_ZOXIDE 3
 #define TerminalZoxideFile G_FILE_ENTRIES[FILE_TERMINAL_ZOXIDE].mf
 
-// Cache for zoxide commands
 static char** g_cached_zoxide_commands = NULL;
 static int g_cached_zoxide_count = 0;
 
-// ============================================================
-// REBUILD CACHE
-// ============================================================
 static void RebuildZoxideCache(void) {
     if (g_cached_zoxide_commands) {
         for (int i = 0; i < g_cached_zoxide_count; i++) {
@@ -71,9 +65,6 @@ static void zoxide_refresh_callback(const char* filter, HWND hListBox) {
 
 
 
-// ============================================================
-// ENTER CALLBACK
-// ============================================================
 static void zoxide_enter_callback(const char* selection) {
     int selected_index = LB_ERR;
     if (hListBox != NULL) {
@@ -81,12 +72,10 @@ static void zoxide_enter_callback(const char* selection) {
     }
     
     if (selected_index == LB_ERR) {
-        // New query from input - save it
         char input[256] = {0};
         if (hEditControl != NULL) {
             GetWindowTextA(hEditControl, input, sizeof(input));
             if (strlen(input) > 0) {
-                // Prevent line collapsing: Add missing newline if needed
                 if (TerminalZoxideFile->fileSize > 0) {
                     char lastChar = TerminalZoxideFile->pBuffer[TerminalZoxideFile->fileSize - 1];
                     if (lastChar != '\n') {
@@ -98,7 +87,6 @@ static void zoxide_enter_callback(const char* selection) {
                 FileAppend(TerminalZoxideFile, "\n");
                 RebuildZoxideCache();
                 
-                // Run the query
                 char* path = QueryZoxidePath(input);
                 if (path) {
                     char terminal[512];
@@ -108,7 +96,6 @@ static void zoxide_enter_callback(const char* selection) {
             }
         }
     } else {
-        // Selected from history
         char* path = QueryZoxidePath(selection);
         if (path) {
             char terminal[512];
@@ -118,9 +105,6 @@ static void zoxide_enter_callback(const char* selection) {
     }
 }
 
-// ============================================================
-// TRIGGER
-// ============================================================
 static void TriggerZoxide() {
     if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
     

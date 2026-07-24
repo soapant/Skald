@@ -95,10 +95,10 @@ static bool FocusWindowByExe(const char* exe_name) {
 typedef struct {
     const char* search_title;
     HWND result;
-} FindWindowNigga;
+} FindWindowSomething;
 
 static BOOL CALLBACK FindWindowByPartialTitleProc(HWND hwnd, LPARAM lParam) {
-    FindWindowNigga* data = (FindWindowNigga*)lParam;
+    FindWindowSomething* data = (FindWindowSomething*)lParam;
     char window_title[256];
     GetWindowTextA(hwnd, window_title, sizeof(window_title));
     
@@ -110,7 +110,7 @@ static BOOL CALLBACK FindWindowByPartialTitleProc(HWND hwnd, LPARAM lParam) {
 }
 
 static HWND FindWindowByPartialTitle(const char* title) {
-    FindWindowNigga data;
+    FindWindowSomething data;
     
     data.search_title = title;
     

@@ -10,7 +10,6 @@
 #include <psapi.h>
 #include "common_ui.h"
 
-
 static SavedWindow g_switcher_windows[100];
 static int g_switcher_count = 0;
 
@@ -126,7 +125,7 @@ static char* TriggerWindowSwitcher(HWND hPopupWnd, WindowList myWindows) {
         return NULL;
     }
 
-    char *list_of_not_wanteds[] = {"Ray", "Input", "Manager", "Settings"};
+    char *list_of_not_wanteds[] = {"Input", "Manager", "Settings"};
     size_t size_of_list = sizeof(list_of_not_wanteds) / sizeof(list_of_not_wanteds[0]);
 
     g_switcher_count = 0;
@@ -178,23 +177,6 @@ static char* TriggerWindowSwitcher(HWND hPopupWnd, WindowList myWindows) {
         printf("[SWITCHER] UI Closed. Selection was NULL.\n");
         return NULL;
     }
-
-    printf("[SWITCHER] UI Returned Selection: \"%s\"\n", selected_title);
-
-    // Match by title or exe
-    for (int i = 0; i < g_switcher_count; i++) {
-        if (StrStrIA(g_switcher_windows[i].title, selected_title) != NULL || 
-            StrStrIA(g_switcher_windows[i].exe, selected_title) != NULL) {
-            
-            HWND target_hwnd = g_switcher_windows[i].hwnd;
-            if (IsWindow(target_hwnd)) {
-                FocusWindow(target_hwnd);
-                printf("[SWITCHER] Switching complete.\n");
-            }
-            break;
-        }
-    }
-
     return selected_title;
 }
 

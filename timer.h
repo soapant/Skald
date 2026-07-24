@@ -7,8 +7,6 @@
 #include "app_launcher.h"
 #include "types.h"
 
-extern HWND hPopupWnd;
-
 static void LaunchTimer(const char* selection) {
     if (selection != NULL && strlen(selection) > 0) {
         char sowon_path[MAX_PATH] = {0};

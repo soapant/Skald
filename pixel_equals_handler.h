@@ -4,10 +4,7 @@
 #include <windows.h>
 #include <stdio.h>
 #include <string.h>
-#include "pixel_utils.h"
-#include "config.h"
-
-extern int CopyToClipboard(const char* text);
+#include "helpers.h"
 
 static bool HandlePixelEqualsKey(bool alt_down, bool ctrl_down, bool shift_down) {
     long x, y;

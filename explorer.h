@@ -10,15 +10,11 @@
 #include "helpers.h"
 #include "config.h"
 
-extern HWND hPopupWnd;
-extern FileEntry G_FILE_ENTRIES[];
 #define FILE_EXPLORER_ZOXIDE 4
 #define ExplorerZoxideFile G_FILE_ENTRIES[FILE_EXPLORER_ZOXIDE].mf
 
 static char** g_cached_explorer_commands = NULL;
 static int g_cached_explorer_count = 0;
-
-
 
 
 static void RebuildExplorerCache(void) {
@@ -57,9 +53,6 @@ static void RebuildExplorerCache(void) {
     free(lines);
 }
 
-
-
-
 static void explorer_refresh_callback(const char* filter, HWND hListBox) {
     if (!hListBox) return;
     
@@ -69,8 +62,6 @@ static void explorer_refresh_callback(const char* filter, HWND hListBox) {
     
     PopulateListBox(hListBox, filter, (const char**)g_cached_explorer_commands, g_cached_explorer_count, NULL);
 }
-
-
 
 static void explorer_enter_callback(const char* selection) {
     int selected_index = LB_ERR;

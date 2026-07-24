@@ -10,8 +10,6 @@
 #include "app_launcher.h"
 #include "types.h"
 
-extern HWND hPopupWnd;
-
 static void music_refresh_callback(const char* filter, HWND hListBox) {
     ClearFileList();
     GetFilesRecursive(MusicPath, false);
@@ -85,11 +83,11 @@ static bool HandleMusicPlayer(int vk_code, int modifiers, const char* current_ti
                 }
                 
                 PromptUser(initial_items,"🎵 Player",GetFileCount(), 920, 650,32,
-                                    music_refresh_callback,  // refresh -> filters on typing
-                                    music_enter_callback,    // enter -> plays music
-                                    NULL,                    // ctrl enter
+                                    music_refresh_callback,  
+                                    music_enter_callback,    
+                                    NULL,                    
                                     NULL,
-                                    NULL);                   // tab
+                                    NULL);                   
                 
                 free((void*)initial_items);
                 return true;

@@ -1,29 +1,9 @@
 #ifndef MACRO_BINDINGS_H
 #define MACRO_BINDINGS_H
 
-#include "config.h"
 #include "minecraft.h"
 #include "factorio.h"
-
-typedef enum {
-    MACRO_NONE = 0,
-    MACRO_FACTORIO_MAKE_TAG,
-    MACRO_MINECRAFT_PASTE,
-    MACRO_MINECRAFT_COPY,
-    MACRO_MINECRAFT_ROTATE,
-    MACRO_MINECRAFT_UP,
-    MACRO_MINECRAFT_UNDO,
-    MACRO_FACTORIO_SEARCH_FACTORY,
-} MacroAction;
-
-typedef struct {
-    int vk_code;
-    int modifiers;
-    const char* exe_name;
-    MacroAction action_id;
-    int delay;
-    void (*handler)(void);
-} MacroBinding;
+#include "types.h"
 
 static inline void HandleFactorioMakeTag(void) { 
     create_tag(); 
@@ -52,10 +32,26 @@ static inline void HandleMinecraftUp(void) {
 static inline void HandleMinecraftRotate(void) { 
     minecraft_type_command("//rotate 90"); 
 }
+typedef enum {
+    MACRO_NONE = 0,
+    MACRO_FACTORIO_MAKE_TAG,
+    MACRO_MINECRAFT_PASTE,
+    MACRO_MINECRAFT_COPY,
+    MACRO_MINECRAFT_ROTATE,
+    MACRO_MINECRAFT_UP,
+    MACRO_MINECRAFT_UNDO,
+    MACRO_FACTORIO_SEARCH_FACTORY,
+} MacroAction;
 
-// ============================================================
-// THE MACRO BINDINGS TABLE - ONE PLACE, NO SWITCH NEEDED
-// ============================================================
+typedef struct {
+    int vk_code;
+    int modifiers;
+    const char* exe_name;
+    MacroAction action_id;
+    int delay;
+    void (*handler)(void);
+} MacroBinding;
+
 static const MacroBinding G_MACRO_BINDINGS[] = {
     { 'V', HOTKEY_MOD_ALT, "Factorio", MACRO_FACTORIO_MAKE_TAG, 0, HandleFactorioMakeTag },
     { 'B', HOTKEY_MOD_ALT, "Factorio", MACRO_FACTORIO_SEARCH_FACTORY, 0, HandleFactorioSearchFactory },
