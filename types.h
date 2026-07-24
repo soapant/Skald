@@ -208,7 +208,6 @@ extern RenderCallback g_render_callback;
 extern const char** g_initial_items;
 extern int g_initial_count;
 extern int g_SelectedIndex;
-extern int g_VisualIndex;
 extern const char* g_title;
 extern const char* g_vim_mode;
 #define MAX_ITEMS 1000

@@ -25,7 +25,7 @@ static void ExecuteNumberShortcut(int number, bool close_popup,bool enter) {
     int count = UI_GetCount(g_num_shortcut_state.hListBox);
 
     if (index >= 0 && index < count) {
-        UI_SetSelection(g_num_shortcut_state.hListBox, index);
+        UI_SetSelection(g_num_shortcut_state.hListBox, index, g_SelectedIndex);
 
         char* selected_text = g_populated_cache[index];
 

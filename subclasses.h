@@ -12,7 +12,7 @@
 #include "types.h"
 #include "config.h"
 #include "common_ui.h"
-
+int g_refresh_count = 0;
 LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
     HWND hParent = GetParent(hwnd);
     HWND hListBox = GetDlgItem(hParent, IDC_LIST_BOX);
@@ -33,8 +33,6 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
 
         if (wParam == VK_UP || wParam == VK_DOWN) {
             if (hListBox != NULL) {
-                SendMessageA(hListBox, WM_SETREDRAW, FALSE, 0);
-                
                 int count = UI_GetCount(hListBox);
                 int sel = UI_GetSelection(hListBox);
                 
@@ -42,11 +40,6 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
                     if (sel == LB_ERR) {
                         if (sel != -1 | wParam == VK_DOWN){
                           sel = 0;
-                          g_VisualIndex = -1;
-                        } else {
-                          g_VisualIndex += 1;
-                          UI_SetText(hEditControl,g_populated_cache[g_VisualIndex]);
-                          UI_SetCursorPosition(hEditControl,strlen(g_populated_cache[g_VisualIndex]));
                         }
                     } else if (sel == 0 && wParam == VK_UP) {
                         sel = -1;
@@ -58,11 +51,11 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
                         }
                     }
                     
+                    int old_sel = g_SelectedIndex;
                     g_SelectedIndex = sel;
                     SendMessageA(hListBox, LB_SETCARETINDEX, sel, TRUE);
+                    UI_SetSelection(hListBox, sel, old_sel);
                 }
-                SendMessageA(hListBox, WM_SETREDRAW, TRUE, 0);
-                InvalidateRect(hListBox, NULL, FALSE);
             }
             return 0;
         }
@@ -150,8 +143,15 @@ LRESULT CALLBACK ListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
         case WM_NCDESTROY:
             RemoveWindowSubclass(hWnd, ListBoxSubclassProc, uIdSubclass);
             break;
-        case WM_ERASEBKGND:
-            return TRUE; 
+case WM_ERASEBKGND: {
+            HDC hdc = (HDC)wParam;
+            RECT rect;
+            GetClientRect(hWnd, &rect);
+            HBRUSH hBrush = CreateSolidBrush(COLOR_BG);
+            FillRect(hdc, &rect, hBrush);
+            DeleteObject(hBrush);
+            return TRUE;
+        }
     }
     return DefSubclassProc(hWnd, uMsg, wParam, lParam);
 }
@@ -269,7 +269,6 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                     if (g_refresh_callback != NULL) {
                         g_refresh_callback(input_buffer, hListBox);
                     }
-                    UI_Redraw(hListBox);
                 }
             }
             
@@ -290,35 +289,94 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
       case WM_DRAWITEM: {
           DRAWITEMSTRUCT* pdis = (DRAWITEMSTRUCT*)lParam;
           if (pdis->CtlID == IDC_LIST_BOX && pdis->itemID != -1) {
-            
-              BOOL isSelected = (pdis->itemID == g_SelectedIndex);
-              BOOL isVisual = (pdis->itemID == g_VisualIndex);
+              printf("REFRESHING %i \n",g_refresh_count);
+              g_refresh_count++;
               
+              BOOL isSelected = (pdis->itemID == g_SelectedIndex);
               float t = (float)pdis->itemID / 20.0f;
-              if (COLORFUL_MODE) {
-                  COLORREF itemBg = isSelected ? GetRainbowColor(t, 0.45f, 0.30f)
-                                               : GetRainbowColor(t, 0.55f, 0.20f);
-                  HBRUSH hItemBrush = CreateSolidBrush(itemBg);
-                  FillRect(pdis->hDC, &pdis->rcItem, hItemBrush);
-                  DeleteObject(hItemBrush);
-              } else {
-                  if (isSelected) {
-                    HBRUSH hBrush = CreateSolidBrush(COLOR_SELECTED_TEXT);
-                    FillRect(pdis->hDC, &pdis->rcItem, hBrush);
-                    DeleteObject(hBrush);
-                  } else if (isVisual) {
-                    HBRUSH hBrush = CreateSolidBrush(COLOR_VISUAL_SELECTED_TEXT);
-                    FillRect(pdis->hDC, &pdis->rcItem, hBrush);
-                    DeleteObject(hBrush);
-                  } else {
-                    HBRUSH hBrush = CreateSolidBrush(COLOR_BG);
-                    FillRect(pdis->hDC, &pdis->rcItem, hBrush);
-                    DeleteObject(hBrush);
+              
+              // === CACHED BRUSHES (created once) ===
+              static HBRUSH hBgBrush = NULL;
+              static HBRUSH hSelBrush = NULL;
+              static HBRUSH hColorfulBrush[100] = {0};
+              static bool brushes_initialized = false;
+              
+              if (!brushes_initialized) {
+                  hBgBrush = CreateSolidBrush(COLOR_BG);
+                  hSelBrush = CreateSolidBrush(COLOR_SELECTED_TEXT);
+                  // Pre-create colorful brushes (only first 100)
+                  for (int i = 0; i < 100; i++) {
+                      float hue = (float)i / 20.0f * 240.0f;
+                      float h = hue / 60.0f;
+                      float s = 0.85f;
+                      float v = 0.85f;
+                      int j = (int)h;
+                      float f = h - j;
+                      float p = v * (1 - s);
+                      float q = v * (1 - s * f);
+                      float t_val = v * (1 - s * (1 - f));
+                      float r, g, b;
+                      switch (j) {
+                          case 0: r = v; g = t_val; b = p; break;
+                          case 1: r = q; g = v; b = p; break;
+                          case 2: r = p; g = v; b = t_val; break;
+                          case 3: r = p; g = q; b = v; break;
+                          case 4: r = t_val; g = p; b = v; break;
+                          default: r = v; g = p; b = q; break;
+                      }
+                      hColorfulBrush[i] = CreateSolidBrush(RGB((BYTE)(r * 255), (BYTE)(g * 255), (BYTE)(b * 255)));
                   }
+                  brushes_initialized = true;
+              }
+              
+              // === CACHED NUMBER STRINGS ===
+              static char num_cache[100][8] = {0};
+              static bool num_init = false;
+              if (!num_init) {
+                  for (int i = 0; i < 100; i++) {
+                      snprintf(num_cache[i], sizeof(num_cache[i]), "%d.", i + 1);
+                  }
+                  num_init = true;
+              }
+              
+              // === CACHED RAINBOW COLORS FOR TEXT ===
+              static COLORREF rainbow_text_cache[100] = {0};
+              static bool rainbow_init = false;
+              if (!rainbow_init) {
+                  for (int i = 0; i < 100; i++) {
+                      float hue = (float)i / 20.0f * 240.0f;
+                      float h = hue / 60.0f;
+                      float s = 0.85f;
+                      float v = 0.85f;
+                      int j = (int)h;
+                      float f = h - j;
+                      float p = v * (1 - s);
+                      float q = v * (1 - s * f);
+                      float t_val = v * (1 - s * (1 - f));
+                      float r, g, b;
+                      switch (j) {
+                          case 0: r = v; g = t_val; b = p; break;
+                          case 1: r = q; g = v; b = p; break;
+                          case 2: r = p; g = v; b = t_val; break;
+                          case 3: r = p; g = q; b = v; break;
+                          case 4: r = t_val; g = p; b = v; break;
+                          default: r = v; g = p; b = q; break;
+                      }
+                      rainbow_text_cache[i] = RGB((BYTE)(r * 255), (BYTE)(g * 255), (BYTE)(b * 255));
+                  }
+                  rainbow_init = true;
+              }
+              
+              if (COLORFUL_MODE) {
+                  int color_index = pdis->itemID % 100;
+                  HBRUSH hBrush = isSelected ? hColorfulBrush[color_index] : hColorfulBrush[color_index];
+                  FillRect(pdis->hDC, &pdis->rcItem, hBrush);
+              } else {
+                  FillRect(pdis->hDC, &pdis->rcItem, isSelected ? hSelBrush : hBgBrush);
               }
               
               if (pdis->itemID == -1 || pdis->itemID >= g_populated_count) {
-                  return TRUE; 
+                  return TRUE;
               }
               
               const char* textBuffer = "";
@@ -327,29 +385,23 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
               }
               
               SetBkMode(pdis->hDC, TRANSPARENT);
-              
               RECT textRect = pdis->rcItem;
               
               if (pdis->itemID < 99) {
-                  char num_str[8];
-                  snprintf(num_str, sizeof(num_str), "%d.", pdis->itemID + 1);
-                  
                   RECT numRect = pdis->rcItem;
                   numRect.left += 5;
                   numRect.right = numRect.left + 25;
                   
                   HFONT hOldFont = (HFONT)SelectObject(pdis->hDC, g_hNumFont);
-                  
-                  SetTextColor(pdis->hDC, GetRainbowColor(t, 0.85f, 0.85f));
-                  DrawTextA(pdis->hDC, num_str, -1, &numRect, DT_SINGLELINE | DT_VCENTER | DT_CENTER);
-                  
+                  SetTextColor(pdis->hDC, rainbow_text_cache[pdis->itemID]);
+                  DrawTextA(pdis->hDC, num_cache[pdis->itemID], -1, &numRect, DT_SINGLELINE | DT_VCENTER | DT_CENTER);
                   SelectObject(pdis->hDC, hOldFont);
                   textRect.left += 35;
-                  
               } else {
                   textRect.left += 10;
               }
               
+              // === DRAW MAIN TEXT ===
               if (g_render_callback != NULL) {
                   g_render_callback(pdis->hDC, textBuffer, &textRect, isSelected, pdis->itemID);
               } else {
@@ -467,7 +519,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             if (current_ctrl != last_ctrl) {
                 last_ctrl = current_ctrl;
                 if (hListBox != NULL && IsWindow(hListBox)) {
-                    InvalidateRect(hListBox, NULL, TRUE);
+                    InvalidateRect(hListBox, NULL, FALSE);
                 }
             }
         }

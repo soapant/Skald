@@ -25,14 +25,13 @@ static inline void SetMode(EditorMode mode) {
     g_vim_mode = g_mode_names[mode];
     if (strcmp(g_vim_mode,"INSERT") == 0 ) {
       last_selection = UI_GetSelection(hListBox);
-      UI_SetSelection(hListBox,-1);
+      UI_SetSelection(hListBox,-1, g_SelectedIndex);
     } else if (strcmp(g_vim_mode,"NORMAL") == 0) {
-      g_VisualIndex = -1;
       if (g_TotalMatches != 0) {
           if (last_selection <= 0) {
-              UI_SetSelection(hListBox,0);
+              UI_SetSelection(hListBox,0, g_SelectedIndex);
           } else {
-              UI_SetSelection(hListBox,last_selection);
+              UI_SetSelection(hListBox,last_selection, g_SelectedIndex);
           }
       }
     }
