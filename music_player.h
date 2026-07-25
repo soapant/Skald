@@ -39,19 +39,10 @@ static void music_enter_callback(const char* selection) {
         SendMessage(playerHwnd, WM_COPYDATA, (WPARAM)NULL, (LPARAM)&cds);
         printf("[MUSIC] Sent to existing player: %s\n", result);
     } else {
-        char music_player_path[MAX_PATH] = {0};
-        for (int i = 0; i < G_APP_COUNT; i++) {
-            if (StrStrIA(G_APPS[i].name, "music_player") != NULL) {
-                strncpy(music_player_path, G_APPS[i].path, sizeof(music_player_path) - 1);
-                break;
-            }
-        }
-        if (strlen(music_player_path) > 0) {
-            char quoted_result[MAX_PATH + 3] = {0};
-            snprintf(quoted_result, sizeof(quoted_result), "\"%s\"", result);
-            launch_exe_with_args(music_player_path, quoted_result);
-            printf("[MUSIC] Launched new player with: %s\n", result);
-        }
+          char quoted_result[MAX_PATH + 3] = {0};
+          snprintf(quoted_result, sizeof(quoted_result), "\"%s\"", result);
+          launch_exe_with_args(MusicPlayerPath, quoted_result);
+          printf("[MUSIC] Launched new player with: %s\n", result);
     }
 }
 
@@ -70,8 +61,6 @@ static bool HandleMusicPlayer(int vk_code, int modifiers, const char* current_ti
                     return false;
                 }
             } else {
-                const char* prompt[1] = { "Search for music..." };
-                
                 ClearFileList();
                 GetFilesRecursive(MusicPath,false);
                 
