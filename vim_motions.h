@@ -169,8 +169,6 @@ static inline void HandlePersistentDelete(void) {
 }
 
 static inline void HandleDelete(void) {
-    const char* feature = GetCurrentFeature();
-    
       char text[512] = {0};
       
       strncpy(text, g_populated_cache[g_SelectedIndex], sizeof(text) - 1);
@@ -200,23 +198,6 @@ static inline void HandleDeleteCharNormal(void) {
 }
 
 static inline void HandleDeleteLine(void) {
-    const char* feature = GetCurrentFeature();
-    
-    if (IsNormalMode() && g_SelectedIndex >= 0 && g_SelectedIndex < g_populated_count) {
-        if (strstr(feature, "Todo") != NULL) {
-            char text[512] = {0};
-            
-            strncpy(text, g_populated_cache[g_SelectedIndex], sizeof(text) - 1);
-            text[sizeof(text) - 1] = '\0';
-            
-            if (g_enter_callback != NULL) {
-                g_enter_callback(text);
-            }
-            selection_complete = true;
-            return;
-        }
-    }
-    
     if (hEditControl && IsWindow(hEditControl)) {
         UI_SetText(hEditControl,"");
         printf("[VIM] Deleted Entire Search Box \n");

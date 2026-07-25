@@ -39,26 +39,6 @@ static inline void ExecuteEnter(void) {
     selection_complete = true;
 }
 
-static inline const char* GetCurrentFeature(void) {
-
-    if (g_title == NULL) return "Unknown";
-    if (strstr(g_title, "Launcher") != NULL) return "AppLauncher";
-    if (strstr(g_title, "Todo") != NULL) return "Todo";
-    if (strstr(g_title, "Calculator") != NULL) return "Calculator";
-    if (strstr(g_title, "Terminal") != NULL) return "Terminal";
-    if (strstr(g_title, "Google") != NULL) return "Google";
-    if (strstr(g_title, "Explorer") != NULL) return "Explorer";
-    if (strstr(g_title, "Zoxide") != NULL) return "Zoxide";
-    if (strstr(g_title, "Neovide") != NULL) return "Neovide";
-    if (strstr(g_title, "Nvim") != NULL) return "Nvim";
-    if (strstr(g_title, "Yazi") != NULL) return "Yazi";
-    if (strstr(g_title, "ProcessKiller") != NULL) return "ProcessKiller";
-    if (strstr(g_title, "Volume") != NULL) return "Volume";
-    if (strstr(g_title, "Timer") != NULL) return "Timer";
-    if (strstr(g_title, "Reminder") != NULL) return "Reminder";
-    if (strstr(g_title, "Switcher") != NULL) return "WindowSwitcher";
-    return "Unknown";
-}
 static inline const char* GoToFirstListBoxItem(void) {
     if (!hListBox || !IsWindow(hListBox) || g_populated_count <= 0) return NULL;
     
