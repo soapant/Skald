@@ -132,8 +132,6 @@ static inline void SwitcherHandler(void) {
         free(myWindows.items);
     }
 }
-static inline void NvimHandler(void) { TriggerNvimZoxide(1, hPopupWnd); }
-
 static inline void NeovideHandler(void) { TriggerNvimZoxide(0, hPopupWnd); }
 
 
@@ -361,7 +359,6 @@ static const HotkeyBinding G_HOTKEY_BINDINGS[] = {
     { SCREENSHOT_KEY,       (HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT),    screenshot_blacklist, SCREENSHOT_BLACKLIST_COUNT, ScreenshotOpenHandler, "ScreenshotOpen" },
     
     { NVIM_KEY,             HOTKEY_MOD_ALT,  nvim_blacklist,            NVIM_BLACKLIST_COUNT,            NeovideHandler,           "Neovide" },
-    { NVIM_KEY,             (HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL), nvim_blacklist, NVIM_BLACKLIST_COUNT, NvimHandler, "Nvim" },
 };
 
 #define HOTKEY_BINDING_COUNT (sizeof(G_HOTKEY_BINDINGS) / sizeof(G_HOTKEY_BINDINGS[0]))

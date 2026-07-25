@@ -285,23 +285,6 @@ static inline void PopulateListBox(HWND hListBox, const char* filter,
     
     if (total_matches == 1) {
         UI_SetSelection(hListBox, 0, g_SelectedIndex);
-    } else if (g_populated_count > 0 && IsNormalMode()) {
-        int found = -1;
-        if (strlen(current_text) > 0) {
-            for (int i = 0; i < g_populated_count; i++) {
-                if (strcmp(g_populated_cache[i], current_text) == 0) {
-                    found = i;
-                    break;
-                }
-            }
-        }
-        if (found >= 0) {
-            UI_SetSelection(hListBox, found, g_SelectedIndex);
-        } else {
-            UI_SetSelection(hListBox, 0, g_SelectedIndex);
-        }
-    } else {
-        UI_SetSelection(hListBox, -1, g_SelectedIndex);
     }
     
     g_last_items = items;
