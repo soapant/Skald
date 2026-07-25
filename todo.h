@@ -321,57 +321,27 @@ static void todo_render_callback(HDC hdc, const char* text, RECT* rect, BOOL is_
     textRect.bottom -= 30;
     
     if (!is_selected) {
-        float hue = (float)itemIndex / 20.0f * 240.0f;
-        float h = hue / 60.0f;
-        float s = 0.85f;
-        float v = 0.85f;
-        int i = (int)h;
-        float f = h - i;
-        float p = v * (1 - s);
-        float q = v * (1 - s * f);
-        float t = v * (1 - s * (1 - f));
-        float r, g, b;
-        switch (i) {
-            case 0: r = v; g = t; b = p; break;
-            case 1: r = q; g = v; b = p; break;
-            case 2: r = p; g = v; b = t; break;
-            case 3: r = p; g = q; b = v; break;
-            case 4: r = t; g = p; b = v; break;
-            default: r = v; g = p; b = q; break;
-        }
-        SetTextColor(hdc, RGB((BYTE)(r * 255), (BYTE)(g * 255), (BYTE)(b * 255)));
+        SetTextColor(hdc, GetRainbowColor((float)itemIndex / 20.0f, 0.85f, 0.85f));
     }
     
-    HFONT hMainFont = CreateFontA(24, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
-                                  DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-                                  CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, UsedFont);
-    HFONT hOldFont = (HFONT)SelectObject(hdc, hMainFont);
+    HFONT hOldFont = (HFONT)SelectObject(hdc, g_hMainFont);
     DrawTextA(hdc, main_text, -1, &textRect, DT_SINGLELINE | DT_VCENTER);
     
     if (strlen(tag_text) > 0) {
         RECT tagRect = *rect;
         tagRect.left += 14;
-        tagRect.top += 24;
-        tagRect.top += 4;
+        tagRect.top += 28;
         tagRect.bottom -= 4;
         
-        HFONT hTagFont = CreateFontA(20, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
-                                     DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-                                     CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE,UsedFont);
-        HFONT hOldTagFont = (HFONT)SelectObject(hdc, hTagFont);
+        HFONT hOldTagFont = (HFONT)SelectObject(hdc, g_hMainFont);
         
-        COLORREF tagColor;
-        tagColor = GetTagColor(tag_text);
-        
-        SetTextColor(hdc, tagColor);
+        SetTextColor(hdc, GetTagColor(tag_text));
         DrawTextA(hdc, tag_text, -1, &tagRect, DT_LEFT | DT_TOP);
         
         SelectObject(hdc, hOldTagFont);
-        DeleteObject(hTagFont);
     }
     
     SelectObject(hdc, hOldFont);
-    DeleteObject(hMainFont);
 }
 
 void TriggerTodo(void) {
