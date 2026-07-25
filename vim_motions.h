@@ -117,14 +117,12 @@ static inline void HandleEnterVisual(void) {
 
 
 static inline void HandleMoveLeft(void) {
-    if (hEditControl && IsWindow(hEditControl) && g_SelectedIndex == -1) {
-        UI_Edit_KeyDown(hEditControl, VK_LEFT);
-        UI_Edit_KeyUp(hEditControl, VK_LEFT);
-    }
+      UI_Edit_KeyDown(hEditControl, VK_LEFT);
+      UI_Edit_KeyUp(hEditControl, VK_LEFT);
 }
 
 static inline void HandleMoveRight(void) {
-    if (hEditControl && IsWindow(hEditControl) && g_SelectedIndex == -1) {
+    if (g_SelectedIndex == -1) {
         UI_Edit_KeyDown(hEditControl, VK_RIGHT);
         UI_Edit_KeyUp(hEditControl, VK_RIGHT);
     } else {

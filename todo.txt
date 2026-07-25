@@ -28,3 +28,5 @@ oh shit for the text clipping thing you can like show a window that shows up whe
 maybe you can do a sound capture sort of thing so i can instantly save ideas||[Project: Cprogram
 maybe you can do the buffer thingy maybe tho||[Project: Cprogram]
 also add the ability for multiple tags in the todo||[Project: Cprogram]
+nigga
+the history thingy just doesnt select the 0 index||[Project: Cprogram]

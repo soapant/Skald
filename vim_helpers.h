@@ -17,6 +17,7 @@ static inline void DeleteCharUnderCursor(void) {
     
     if (pos < len) {
         memmove(&text[pos], &text[pos + 1], len - pos);
+        
         UI_SetText(hEditControl,text);
         
         UI_SetCursorPosition(hEditControl,pos);

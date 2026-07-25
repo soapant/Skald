@@ -282,7 +282,6 @@ static inline void PopulateListBox(HWND hListBox, const char* filter,
     }
     
     UI_LB_SetCount(hListBox, total_matches);
-    
     if (total_matches == 1) {
         UI_SetSelection(hListBox, 0, g_SelectedIndex);
     }
