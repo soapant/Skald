@@ -9,10 +9,13 @@
 #include <stdbool.h>
 #include <process.h>
 #include <shlwapi.h> 
+#include "helpers.h"
+#include "modal.h"
 #include "types.h"
 #include "config.h"
 #include "common_ui.h"
 int g_refresh_count = 0;
+HashMap* history_indices = NULL;
 LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
     HWND hParent = GetParent(hwnd);
     HWND hListBox = GetDlgItem(hParent, IDC_LIST_BOX);
@@ -40,6 +43,36 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
                     if (sel == LB_ERR) {
                         if (sel != -1 | wParam == VK_DOWN){
                           sel = 0;
+                        }else {
+                        if (sel == -1 && wParam == VK_UP) {
+                            // Get history list for current feature
+                            char** HistoryList = (char**)HashMap_Get(features, g_current_feature);
+                            if (HistoryList) {
+                                int* idx_ptr = (int*)HashMap_Get(history_indices, g_current_feature);
+                                int idx = idx_ptr ? *idx_ptr : 0;
+                                
+                                int count = 0;
+                                while (HistoryList[count]) count++;
+                                
+                                if (count > 0) {
+                                    idx = (idx - 1 + count) % count;
+                                    
+                                    UI_SetText(hEditControl, HistoryList[idx]);
+                                    UI_SetCursorPosition(hEditControl,strlen(HistoryList[idx]));
+                                    if (!IsNormalMode()) {
+                                        if (g_refresh_callback != NULL) {
+                                            g_refresh_callback(HistoryList[idx], hListBox);
+                                        }
+                                    }
+                                    
+                                    if (!idx_ptr) {
+                                        idx_ptr = malloc(sizeof(int));
+                                        HashMap_Put(history_indices, g_current_feature, idx_ptr);
+                                    }
+                                    *idx_ptr = idx;
+                                }
+                            }
+                        }
                         }
                     } else if (sel == 0 && wParam == VK_UP) {
                         sel = -1;
@@ -74,6 +107,9 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
             } else {
                 GetWindowTextA(hwnd, output_buffer, sizeof(output_buffer));
             }
+            char search_string[256] = {0};
+            UI_GetCurrentText(hEditControl, search_string);
+            SaveFeatureString(search_string);
             if (ctrl_pressed) {
                 if (g_ctrl_enter_callback != NULL) {
                     g_ctrl_enter_callback(output_buffer);
@@ -241,12 +277,12 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 if (!g_hNumFont) {
                     g_hNumFont = CreateFontA(18, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
                                             DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-                                            CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "0xProto Nerd Font");
+                                            CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, UsedFont);
                 }
                 if (!g_hMainFont) {
                     g_hMainFont = CreateFontA(24, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
                                               DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-                                              CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, "0xProto Nerd Font");
+                                              CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, UsedFont);
                 }
                 break;
         }
@@ -289,8 +325,6 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
       case WM_DRAWITEM: {
           DRAWITEMSTRUCT* pdis = (DRAWITEMSTRUCT*)lParam;
           if (pdis->CtlID == IDC_LIST_BOX && pdis->itemID != -1) {
-              g_refresh_count++;
-              
               BOOL isSelected = (pdis->itemID == g_SelectedIndex);
               float t = (float)pdis->itemID / 20.0f;
               
@@ -303,8 +337,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
               if (!brushes_initialized) {
                   hBgBrush = CreateSolidBrush(COLOR_BG);
                   hSelBrush = CreateSolidBrush(COLOR_SELECTED_TEXT);
-                  // Pre-create colorful brushes (only first 100)
-                  for (int i = 0; i < 100; i++) {
+                  for (int i = 0; i < 99; i++) {
                       float hue = (float)i / 20.0f * 240.0f;
                       float h = hue / 60.0f;
                       float s = 0.85f;
@@ -327,8 +360,6 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                   }
                   brushes_initialized = true;
               }
-              
-              // === CACHED NUMBER STRINGS ===
               static char num_cache[100][8] = {0};
               static bool num_init = false;
               if (!num_init) {
@@ -338,7 +369,6 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                   num_init = true;
               }
               
-              // === CACHED RAINBOW COLORS FOR TEXT ===
               static COLORREF rainbow_text_cache[100] = {0};
               static bool rainbow_init = false;
               if (!rainbow_init) {

@@ -82,7 +82,7 @@ static bool HandleVideoPlayer(int vk_code, int modifiers, const char* current_ti
                     initial_items[i] = G_FILES_WITH_TIME[i].name;
                 }
                 
-                PromptUser(initial_items,"🎥 Player",GetFileCount(), 920, 650,32,
+                PromptUser(initial_items,"🎥 Viewer",GetFileCount(), 920, 650,32,
                                     video_refresh_callback,  
                                     video_enter_callback,    
                                     NULL,                    

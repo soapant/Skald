@@ -42,12 +42,12 @@ long saved_y1 = 0;
 long img_x2 = 0, img_y2 = 0; 
 static  ULONG_PTR g_gdiplusToken = 0;
 #pragma comment(lib, "gdiplus.lib")
-
 RefreshCallback g_refresh_callback = NULL;
 EnterCallback g_enter_callback = NULL;
 CtrlEnterCallback g_ctrl_enter_callback = NULL;
 TabCallback g_tab_callback = NULL;
 RenderCallback g_render_callback = NULL;
+char* g_current_feature = NULL;
 int g_timeout = 1;
 const char** g_initial_items = NULL;
 int g_initial_count = 0;
@@ -74,6 +74,7 @@ int img_region_step = 0;
 long img_x1 = 0, img_y1 = 0;
 HFONT g_hNumFont = NULL;
 HFONT g_hMainFont = NULL;
+HashMap* features = NULL;
 
 char* PromptUser(const char* window_list[], const char* window_title, int count, int height, int width, int item_height,
                  RefreshCallback refresh_callback, 
@@ -94,6 +95,7 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
     g_title = window_title;
     g_current_window_height = height;
     g_current_window_width = width;
+    g_current_feature = (char*)window_title + 4;
     
     SetMode(MODE_INSERT);
 
@@ -159,7 +161,7 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
     g_ctrl_enter_callback = NULL;
     g_tab_callback = NULL;
     g_render_callback = NULL;
-
+    
     printf("[DEBUG-UI] Returning from PromptUser. Buffer Length: %zu\n", strlen(output_buffer));
     return (strlen(output_buffer) > 0) ? output_buffer : NULL;
 }
@@ -171,6 +173,7 @@ char* SimplePromptUser(const char* prompt, const char* window_title,int height, 
     g_title = window_title;
     g_current_window_height = height;
     g_current_window_width = width;
+    g_current_feature = (char*)window_title + 2;
     
     SetMode(MODE_INSERT);
 
@@ -413,6 +416,7 @@ int main() {
     StartUniversalTimer();
     InitializeTrayIcon();
     initialize_app_cache();
+    features = HashMap_Create(32);
     
     struct GdiplusStartupInput gdiplusStartupInput;
     gdiplusStartupInput.GdiplusVersion = 1;
