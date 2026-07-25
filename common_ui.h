@@ -81,6 +81,77 @@ static inline void UI_Redraw(HWND hList) {
     InvalidateRect(hList, NULL,FALSE);
 }
 
+// === LISTBOX WRAPPERS ===
+static inline void UI_LB_SetCount(HWND hList, int count) {
+    g_populated_count = count;
+    SendMessageA(hList, LB_SETCOUNT, count, 0);
+}
+
+static inline void UI_LB_GetItemRect(HWND hList, int index, RECT* rect) {
+    SendMessageA(hList, LB_GETITEMRECT, index, (LPARAM)rect);
+}
+
+static inline void UI_LB_SetHorizontalExtent(HWND hList, int width) {
+    SendMessageA(hList, LB_SETHORIZONTALEXTENT, width, 0);
+}
+
+static inline void UI_LB_SetItemHeight(HWND hList, int height) {
+    SendMessageA(hList, LB_SETITEMHEIGHT, 0, height);
+}
+
+static inline void UI_LB_SetCaretIndex(HWND hList, int index, BOOL scroll) {
+    SendMessageA(hList, LB_SETCARETINDEX, index, scroll);
+}
+
+static inline void UI_LB_SetTopIndex(HWND hList, int index) {
+    SendMessageA(hList, LB_SETTOPINDEX, index, 0);
+}
+
+static inline void UI_LB_SetFont(HWND hList, HFONT hFont) {
+    SendMessageA(hList, WM_SETFONT, (WPARAM)hFont, FALSE);
+}
+
+static inline int UI_LB_GetItemHeight(HWND hList) {
+    return (int)SendMessageA(hList, LB_GETITEMHEIGHT, 0, 0);
+}
+
+static inline int UI_LB_GetTextLen(HWND hList) {
+    return (int)SendMessageA(hList, LB_GETTEXTLEN, 0, 0);
+}
+
+static inline int UI_LB_GetText(HWND hList, int index, char* buffer) {
+    return (int)SendMessageA(hList, LB_GETTEXT, index, (LPARAM)buffer);
+}
+
+// === EDIT CONTROL WRAPPERS ===
+static inline void UI_Edit_SetFont(HWND hEdit, HFONT hFont) {
+    SendMessageA(hEdit, WM_SETFONT, (WPARAM)hFont, FALSE);
+}
+
+static inline void UI_Edit_SetSel(HWND hEdit, DWORD start, DWORD end) {
+    SendMessageA(hEdit, EM_SETSEL, start, end);
+}
+
+static inline void UI_Edit_GetSel(HWND hEdit, DWORD* start, DWORD* end) {
+    SendMessageA(hEdit, EM_GETSEL, (WPARAM)start, (LPARAM)end);
+}
+
+static inline void UI_Edit_UpdateUIState(HWND hEdit, UINT action, UINT uiFlags) {
+    SendMessageA(hEdit, WM_UPDATEUISTATE, MAKEWPARAM(action, uiFlags), 0);
+}
+
+// === WINDOW FONT WRAPPER ===
+static inline HFONT UI_GetFont(HWND hWnd) {
+    return (HFONT)SendMessageA(hWnd, WM_GETFONT, 0, 0);
+}
+
+// === KEYBOARD SIMULATION ===
+static inline void UI_Edit_KeyDown(HWND hEdit, WPARAM vk) {
+    SendMessageA(hEdit, WM_KEYDOWN, vk, 0);
+}
+static inline void UI_Edit_KeyUp(HWND hEdit, WPARAM vk) {
+    SendMessageA(hEdit, WM_KEYUP, vk, 0);
+}
 
 #include "modal.h"
 
@@ -329,7 +400,7 @@ void CreateChildControls(HWND hwndParent, HFONT hFont, const char* list[], int c
     
     if (!hEditControl) return;
     
-    SendMessageA(hEditControl, WM_SETFONT, (WPARAM)hFont, FALSE);
+    UI_Edit_SetFont(hEditControl, hFont);
     SetWindowSubclass(hEditControl, EditSubclassProc, 0, 0);
 
 
@@ -344,8 +415,8 @@ void CreateChildControls(HWND hwndParent, HFONT hFont, const char* list[], int c
         if (!hListBox) return;
         
         SetWindowSubclass(hListBox, ListBoxSubclassProc, 0, 0);
-        SendMessageA(hListBox, WM_SETFONT, (WPARAM)hFont, FALSE);
-        SendMessageA(hListBox, LB_SETITEMHEIGHT, 0, layout->item_height);
+        UI_LB_SetFont(hListBox, hFont);
+        UI_LB_SetItemHeight(hListBox, layout->item_height);
 
         int max_width = layout->w - 40;
         HDC hdc = GetDC(hListBox);
@@ -380,7 +451,7 @@ void SimpleCreateChildControls(HWND hwndParent, HFONT hFont, const char* string,
     
     if (!hEditControl) return;
     
-    SendMessageA(hEditControl, WM_SETFONT, (WPARAM)hFont, FALSE);
+    UI_Edit_SetFont(hEditControl, hFont);
     SetWindowSubclass(hEditControl, SimpleEditSubclassProc, 0, 0);
 
     if (count > 0) {
@@ -393,8 +464,8 @@ void SimpleCreateChildControls(HWND hwndParent, HFONT hFont, const char* string,
         if (!hListBox) return;
         
         SetWindowSubclass(hListBox, SimpleListBoxSubclassProc, 0, 0);
-        SendMessageA(hListBox, WM_SETFONT, (WPARAM)hFont, FALSE);
-        SendMessageA(hListBox, LB_SETITEMHEIGHT, 0, layout->item_height);
+        UI_LB_SetFont(hListBox, hFont);
+        UI_LB_SetItemHeight(hListBox, layout->item_height);
 
         int max_width = layout->w - 40;
         HDC hdc = GetDC(hListBox);

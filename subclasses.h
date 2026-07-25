@@ -53,7 +53,7 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
                     
                     int old_sel = g_SelectedIndex;
                     g_SelectedIndex = sel;
-                    SendMessageA(hListBox, LB_SETCARETINDEX, sel, TRUE);
+                    UI_LB_SetCaretIndex(hListBox, sel, TRUE);
                     UI_SetSelection(hListBox, sel, old_sel);
                 }
             }
@@ -187,20 +187,20 @@ LRESULT CALLBACK SimpleListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, 
                 DeleteObject(hBrush);
             }
 
-            int textLen = (int)SendMessageA(hWnd, LB_GETTEXTLEN, 0, 0);
+            int textLen = UI_LB_GetTextLen(hWnd);
             
             if (textLen > 0 && textLen < 512) {
                 char textBuffer[512] = {0}; 
-                SendMessageA(hWnd, LB_GETTEXT, 0, (LPARAM)textBuffer);
+                UI_LB_GetText(hWnd, 0, textBuffer);
 
-                HFONT hFont = (HFONT)SendMessageA(hWnd, WM_GETFONT, 0, 0);
+                HFONT hFont = UI_GetFont(hWnd);
                 HFONT hOldFont = NULL;
                 if (hFont) hOldFont = (HFONT)SelectObject(hdc, hFont);
 
                 SetBkMode(hdc, TRANSPARENT);
                 SetTextColor(hdc, COLOR_TEXT);  
 
-                int itemHeight = (int)SendMessageA(hWnd, LB_GETITEMHEIGHT, 0, 0);
+                int itemHeight = UI_LB_GetItemHeight(hWnd);
                 if (itemHeight <= 0) itemHeight = 40; 
 
                 RECT textRect = rect;
@@ -289,7 +289,6 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
       case WM_DRAWITEM: {
           DRAWITEMSTRUCT* pdis = (DRAWITEMSTRUCT*)lParam;
           if (pdis->CtlID == IDC_LIST_BOX && pdis->itemID != -1) {
-              printf("REFRESHING %i \n",g_refresh_count);
               g_refresh_count++;
               
               BOOL isSelected = (pdis->itemID == g_SelectedIndex);
