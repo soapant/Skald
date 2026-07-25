@@ -249,6 +249,7 @@ static void todo_refresh_callback(const char* filter, HWND hListBox) {
         items[i] = todo_lines[i];
     }
     PopulateListBox(hListBox, filter, items, todo_count, NULL);
+    
 }
 
 static void todo_enter_callback(const char* selection) {
@@ -279,6 +280,7 @@ static void todo_enter_callback(const char* selection) {
 static void todo_ctrlenter_callback(const char* selection) {
     int selected_index = UI_GetSelection(hListBox);
     
+    
     if (selected_index != -1) {
         const char* item_to_remove = g_populated_cache[selected_index];
         remove_todo_item_from_file(item_to_remove);
@@ -292,6 +294,7 @@ static void todo_ctrlenter_callback(const char* selection) {
     }
     todo_refresh_callback(NULL, hListBox);
     selection_complete = false;
+    
 }
 static void todo_render_callback(HDC hdc, const char* text, RECT* rect, BOOL is_selected, int itemIndex) {
     if (!text || !rect) return;

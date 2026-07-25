@@ -154,9 +154,15 @@ static inline void HandlePersistentDelete(void) {
     strncpy(text, g_populated_cache[g_SelectedIndex], sizeof(text) - 1);
     text[sizeof(text) - 1] = '\0';
     
+    
     if (g_ctrl_enter_callback != NULL) {
         g_ctrl_enter_callback(text);
     }
+    
+    UI_SetSelection(hListBox,g_SelectedIndex -1,g_SelectedIndex);
+    UI_Edit_KeyDown(hEditControl, VK_DOWN);
+    UI_Edit_KeyUp(hEditControl, VK_DOWN);
+    
     
     return;
     
