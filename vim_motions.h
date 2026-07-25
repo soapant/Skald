@@ -118,33 +118,33 @@ static inline void HandleEnterVisual(void) {
 
 static inline void HandleMoveLeft(void) {
     if (hEditControl && IsWindow(hEditControl) && g_SelectedIndex == -1) {
-        SendMessageA(hEditControl, WM_KEYDOWN, VK_LEFT, 0);
-        SendMessageA(hEditControl, WM_KEYUP, VK_LEFT, 0);
+        UI_Edit_KeyDown(hEditControl, VK_LEFT);
+        UI_Edit_KeyUp(hEditControl, VK_LEFT);
     }
 }
 
 static inline void HandleMoveRight(void) {
     if (hEditControl && IsWindow(hEditControl) && g_SelectedIndex == -1) {
-        SendMessageA(hEditControl, WM_KEYDOWN, VK_RIGHT, 0);
-        SendMessageA(hEditControl, WM_KEYUP, VK_RIGHT, 0);
+        UI_Edit_KeyDown(hEditControl, VK_RIGHT);
+        UI_Edit_KeyUp(hEditControl, VK_RIGHT);
     } else {
       if (hListBox != NULL && UI_IsListBoxSelected()) {
-        SendMessageA(hEditControl, WM_KEYDOWN, VK_RETURN, 0);
-        SendMessageA(hEditControl, WM_KEYUP, VK_RETURN, 0);
+        UI_Edit_KeyDown(hEditControl, VK_RETURN);
+        UI_Edit_KeyUp(hEditControl, VK_RETURN);
       }
     }
 }
 static inline void HandleMoveUp(void) {
     if (hEditControl && IsWindow(hEditControl)) {
-        SendMessageA(hEditControl, WM_KEYDOWN, VK_UP, 0);
-        SendMessageA(hEditControl, WM_KEYUP, VK_UP, 0);
+        UI_Edit_KeyDown(hEditControl, VK_UP);
+        UI_Edit_KeyUp(hEditControl, VK_UP);
     }
 }
 
 static inline void HandleMoveDown(void) {
     if (hEditControl && IsWindow(hEditControl)) {
-        SendMessageA(hEditControl, WM_KEYDOWN, VK_DOWN, 0);
-        SendMessageA(hEditControl, WM_KEYUP, VK_DOWN, 0);
+        UI_Edit_KeyDown(hEditControl, VK_DOWN);
+        UI_Edit_KeyUp(hEditControl, VK_DOWN);
     }
 }
 
@@ -292,15 +292,15 @@ static inline void HandleYankLine(void) {
 }
 
 static inline void HandleInsertRegularEnter(void) {
-  SendMessageA(hEditControl, WM_KEYDOWN, VK_RETURN, 0);
-  SendMessageA(hEditControl, WM_KEYUP, VK_RETURN, 0);
+  UI_Edit_KeyDown(hEditControl, VK_RETURN);
+  UI_Edit_KeyUp(hEditControl, VK_RETURN);
 }
 
 static inline void HandleInsertControlEnter(void) {
-  SendMessageA(hEditControl, WM_KEYDOWN, VK_CONTROL, 0);
-  SendMessageA(hEditControl, WM_KEYDOWN, VK_RETURN, 0);
-  SendMessageA(hEditControl, WM_KEYUP, VK_RETURN, 0);
-  SendMessageA(hEditControl, WM_KEYUP, VK_CONTROL, 0);
+  UI_Edit_KeyDown(hEditControl, VK_CONTROL);
+  UI_Edit_KeyDown(hEditControl, VK_RETURN);
+  UI_Edit_KeyUp(hEditControl, VK_RETURN);
+  UI_Edit_KeyUp(hEditControl, VK_CONTROL);
   selection_complete = false;
 }
 
