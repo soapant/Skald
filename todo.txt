@@ -30,3 +30,8 @@ maybe you can do the buffer thingy maybe tho||[Project: Cprogram]
 also add the ability for multiple tags in the todo||[Project: Cprogram]
 nigga
 the history thingy just doesnt select the 0 index||[Project: Cprogram]
+maybe you can like expand todos for more information||[Project: Cprogram]
+also dont forget the hovering over a thing displayes a window or something||[Project: Cprogram]
+change sowon video and music player to just path input||[Project: Cprogram]
+also add the ability to use different music player or timer||[Project: Cprogram]
+also i need the ability to disable any hotkey at any time using any condition||[Project: Cprogram]

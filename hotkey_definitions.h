@@ -316,50 +316,50 @@ static inline void ScreenshotOpenHandler(void) {
 }
 static const HotkeyBinding G_HOTKEY_BINDINGS[] = {
     
-    { SWITCHER_KEY,         HOTKEY_MOD_ALT,  switcher_blacklist,        SWITCHER_BLACKLIST_COUNT,        SwitcherHandler,          "Switcher" },
-    { GOOGLE_SEARCH_KEY,    HOTKEY_MOD_ALT,  google_search_blacklist,   GOOGLE_SEARCH_BLACKLIST_COUNT,   TriggerGoogleSearch,            "Google" },
-    { TODO_KEY,             HOTKEY_MOD_ALT,  todo_blacklist,            TODO_BLACKLIST_COUNT,            TriggerTodo,              "Todo" },
-    { CALCULATOR_KEY,       HOTKEY_MOD_ALT,  calculator_blacklist,      CALCULATOR_BLACKLIST_COUNT,      TriggerCalculator,        "Calculator" },
-    { EXE_KEY,              HOTKEY_MOD_ALT,  exe_blacklist,             EXE_BLACKLIST_COUNT,             TriggerAppLauncher,       "AppLauncher" },
-    { KILL_PROCESS_KEY,     HOTKEY_MOD_ALT,  kill_process_blacklist,    KILL_PROCESS_BLACKLIST_COUNT,    TriggerProcessKiller,     "ProcessKiller" },
+    { SWITCHER_KEY,           HOTKEY_MOD_ALT,                      switcher_blacklist,           SWITCHER_BLACKLIST_COUNT,           SwitcherHandler,         "Switcher"         },
+    { GOOGLE_SEARCH_KEY,      HOTKEY_MOD_ALT,                      google_search_blacklist,      GOOGLE_SEARCH_BLACKLIST_COUNT,      TriggerGoogleSearch,     "Google"           },
+    { TODO_KEY,               HOTKEY_MOD_ALT,                      todo_blacklist,               TODO_BLACKLIST_COUNT,               TriggerTodo,             "Todo"             },
+    { CALCULATOR_KEY,         HOTKEY_MOD_ALT,                      calculator_blacklist,         CALCULATOR_BLACKLIST_COUNT,         TriggerCalculator,       "Calculator"       },
+    { EXE_KEY,                HOTKEY_MOD_ALT,                      exe_blacklist,                EXE_BLACKLIST_COUNT,                TriggerAppLauncher,      "AppLauncher"      },
+    { KILL_PROCESS_KEY,       HOTKEY_MOD_ALT,                      kill_process_blacklist,       KILL_PROCESS_BLACKLIST_COUNT,       TriggerProcessKiller,    "ProcessKiller"    },
     
-    { YAZI_KEY,             HOTKEY_MOD_ALT,  yazi_blacklist,            YAZI_BLACKLIST_COUNT,            TriggerYaziZoxide,              "Yazi" },
-    { TERMINAL_KEY,         HOTKEY_MOD_ALT,  terminal_blacklist,        TERMINAL_BLACKLIST_COUNT,        TriggerZoxide,          "Terminal" },
-    { TIMER_KEY,            HOTKEY_MOD_ALT,  timer_blacklist,           TIMER_BLACKLIST_COUNT,           TriggerTimer,             "Timer" },
-    { EXPLORER_KEY,         HOTKEY_MOD_ALT,  explorer_blacklist,        EXPLORER_BLACKLIST_COUNT,        TriggerExplorer,          "Explorer" },
-    { TERMINAL_COMMAND_KEY, HOTKEY_MOD_ALT,  terminal_command_blacklist, TERMINAL_COMMAND_BLACKLIST_COUNT, TriggerTerminalCommand, "TerminalCommand" },
-    { VOLUME_KEY,           HOTKEY_MOD_ALT,  volume_blacklist,          VOLUME_BLACKLIST_COUNT,          TriggerVolume,            "Volume" },
+    { YAZI_KEY,               HOTKEY_MOD_ALT,                      yazi_blacklist,               YAZI_BLACKLIST_COUNT,               TriggerYaziZoxide,       "Yazi"             },
+    { TERMINAL_KEY,           HOTKEY_MOD_ALT,                      terminal_blacklist,           TERMINAL_BLACKLIST_COUNT,           TriggerZoxide,           "Terminal"         },
+    { TIMER_KEY,              HOTKEY_MOD_ALT,                      timer_blacklist,              TIMER_BLACKLIST_COUNT,              TriggerTimer,            "Timer"            },
+    { EXPLORER_KEY,           HOTKEY_MOD_ALT,                      explorer_blacklist,           EXPLORER_BLACKLIST_COUNT,           TriggerExplorer,         "Explorer"         },
+    { TERMINAL_COMMAND_KEY,   HOTKEY_MOD_ALT,                      terminal_command_blacklist,   TERMINAL_COMMAND_BLACKLIST_COUNT,   TriggerTerminalCommand,  "TerminalCommand"  },
+    { VOLUME_KEY,             HOTKEY_MOD_ALT,                      volume_blacklist,             VOLUME_BLACKLIST_COUNT,             TriggerVolume,           "Volume"           },
     
-    { MONITOR_FOCUS_MAIN_KEY,           HOTKEY_MOD_ALT,  monitor_focus_main_blacklist,          MONITOR_FOCUS_MAIN_BLACKLIST_COUNT,          TriggerMonitorFocusMain,            "MonitorFocusMain" },
+    { MONITOR_FOCUS_MAIN_KEY, HOTKEY_MOD_ALT,                      monitor_focus_main_blacklist, MONITOR_FOCUS_MAIN_BLACKLIST_COUNT, TriggerMonitorFocusMain, "MonitorFocusMain" },
     
-    { MONITOR_FOCUS_SIDE_KEY,           HOTKEY_MOD_ALT,  monitor_focus_side_blacklist,          MONITOR_FOCUS_SIDE_BLACKLIST_COUNT,          TriggerMonitorFocusSide,            "MonitorFocusSide" },
+    { MONITOR_FOCUS_SIDE_KEY, HOTKEY_MOD_ALT,                      monitor_focus_side_blacklist, MONITOR_FOCUS_SIDE_BLACKLIST_COUNT, TriggerMonitorFocusSide, "MonitorFocusSide" },
     
-    { VOLUME_KEY,           HOTKEY_MOD_ALT,  volume_blacklist,          VOLUME_BLACKLIST_COUNT,          TriggerVolume,            "Volume" },
+    { VOLUME_KEY,             HOTKEY_MOD_ALT,                      volume_blacklist,             VOLUME_BLACKLIST_COUNT,             TriggerVolume,           "Volume"           },
     
-    { REMINDER_KEY,           HOTKEY_MOD_ALT,  reminder_blacklist,          REMINDER_BLACKLIST_COUNT,          TriggerReminder,            "Reminder" },
+    { REMINDER_KEY,           HOTKEY_MOD_ALT,                      reminder_blacklist,           REMINDER_BLACKLIST_COUNT,           TriggerReminder,         "Reminder"         },
     
-    { POS_KEY,              HOTKEY_MOD_ALT,                         pos_blacklist, POS_BLACKLIST_COUNT, PosCopyHandler,   "PosCopy" },
-    { POS_KEY,              (HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT),    pos_blacklist, POS_BLACKLIST_COUNT, PosAddHandler,    "PosAdd" },
-    { POS_KEY,              (HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL),     pos_blacklist, POS_BLACKLIST_COUNT, PosClearHandler,  "PosClear" },
+    { POS_KEY,                HOTKEY_MOD_ALT,                      pos_blacklist,                POS_BLACKLIST_COUNT,                PosCopyHandler,          "PosCopy"          },
+    { POS_KEY,                (HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT), pos_blacklist,                POS_BLACKLIST_COUNT,                PosAddHandler,           "PosAdd"           },
+    { POS_KEY,                (HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL),  pos_blacklist,                POS_BLACKLIST_COUNT,                PosClearHandler,         "PosClear"         },
     
-    { COLOR_KEY,            HOTKEY_MOD_ALT,                         color_blacklist, COLOR_BLACKLIST_COUNT, ColorPlainHandler,   "ColorPlain" },
-    { COLOR_KEY,            (HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL),     color_blacklist, COLOR_BLACKLIST_COUNT, ColorParenHandler,   "ColorParen" },
+    { COLOR_KEY,              HOTKEY_MOD_ALT,                      color_blacklist,              COLOR_BLACKLIST_COUNT,              ColorPlainHandler,       "ColorPlain"       },
+    { COLOR_KEY,              (HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL),  color_blacklist,              COLOR_BLACKLIST_COUNT,              ColorParenHandler,       "ColorParen"       },
     
-    { PIXEL_EQUALS_KEY,     HOTKEY_MOD_ALT,                         pixel_equals_blacklist, PIXEL_EQUALS_BLACKLIST_COUNT, PixelEqualsAdbHandler, "PixelEqualsAdb" },
-    { PIXEL_EQUALS_KEY,     (HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL),     pixel_equals_blacklist, PIXEL_EQUALS_BLACKLIST_COUNT, PixelEqualsFnHandler,  "PixelEqualsFn" },
+    { PIXEL_EQUALS_KEY,       HOTKEY_MOD_ALT,                      pixel_equals_blacklist,       PIXEL_EQUALS_BLACKLIST_COUNT,       PixelEqualsAdbHandler,   "PixelEqualsAdb"   },
+    { PIXEL_EQUALS_KEY,       (HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL),  pixel_equals_blacklist,       PIXEL_EQUALS_BLACKLIST_COUNT,       PixelEqualsFnHandler,    "PixelEqualsFn"    },
     
-    { WAIT_FOR_PIXEL_KEY,   HOTKEY_MOD_ALT,                         wait_for_pixel_blacklist, WAIT_FOR_PIXEL_BLACKLIST_COUNT, WaitForPixelAdbHandler, "WaitForPixelAdb" },
-    { WAIT_FOR_PIXEL_KEY,   (HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL),     wait_for_pixel_blacklist, WAIT_FOR_PIXEL_BLACKLIST_COUNT, WaitForPixelTapHandler, "WaitForPixelTap" },
-    { WAIT_FOR_PIXEL_KEY,   (HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT),    wait_for_pixel_blacklist, WAIT_FOR_PIXEL_BLACKLIST_COUNT, WaitForPixelFnHandler,  "WaitForPixelFn" },
+    { WAIT_FOR_PIXEL_KEY,     HOTKEY_MOD_ALT,                      wait_for_pixel_blacklist,     WAIT_FOR_PIXEL_BLACKLIST_COUNT,     WaitForPixelAdbHandler,  "WaitForPixelAdb"  },
+    { WAIT_FOR_PIXEL_KEY,     (HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL),  wait_for_pixel_blacklist,     WAIT_FOR_PIXEL_BLACKLIST_COUNT,     WaitForPixelTapHandler,  "WaitForPixelTap"  },
+    { WAIT_FOR_PIXEL_KEY,     (HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT), wait_for_pixel_blacklist,     WAIT_FOR_PIXEL_BLACKLIST_COUNT,     WaitForPixelFnHandler,   "WaitForPixelFn"   },
     
-    { REGION_KEY,           HOTKEY_MOD_ALT,                         region_blacklist, REGION_BLACKLIST_COUNT, RegionCoordsHandler, "RegionCoords" },
-    { REGION_KEY,           (HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT),    region_blacklist, REGION_BLACKLIST_COUNT, RegionImageHandler,  "RegionImage" },
+    { REGION_KEY,             HOTKEY_MOD_ALT,                      region_blacklist,             REGION_BLACKLIST_COUNT,             RegionCoordsHandler,     "RegionCoords"     },
+    { REGION_KEY,             (HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT), region_blacklist,             REGION_BLACKLIST_COUNT,             RegionImageHandler,      "RegionImage"      },
     
-    { SCREENSHOT_KEY,       HOTKEY_MOD_ALT,                         screenshot_blacklist, SCREENSHOT_BLACKLIST_COUNT, ScreenshotSaveHandler, "ScreenshotSave" },
-    { SCREENSHOT_KEY,       (HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT),    screenshot_blacklist, SCREENSHOT_BLACKLIST_COUNT, ScreenshotOpenHandler, "ScreenshotOpen" },
+    { SCREENSHOT_KEY,         HOTKEY_MOD_ALT,                      screenshot_blacklist,         SCREENSHOT_BLACKLIST_COUNT,         ScreenshotSaveHandler,   "ScreenshotSave"   },
+    { SCREENSHOT_KEY,         (HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT), screenshot_blacklist,         SCREENSHOT_BLACKLIST_COUNT,         ScreenshotOpenHandler,   "ScreenshotOpen"   },
     
-    { NVIM_KEY,             HOTKEY_MOD_ALT,  nvim_blacklist,            NVIM_BLACKLIST_COUNT,            NeovideHandler,           "Neovide" },
-};
+    { NVIM_KEY,               HOTKEY_MOD_ALT,                      nvim_blacklist,               NVIM_BLACKLIST_COUNT,               NeovideHandler,          "Neovide"          },
+                                                                                                                                                                                 };
 
 #define HOTKEY_BINDING_COUNT (sizeof(G_HOTKEY_BINDINGS) / sizeof(G_HOTKEY_BINDINGS[0]))
 
