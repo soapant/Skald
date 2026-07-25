@@ -24,7 +24,6 @@ oh shit for the text clipping thing you can like show a window that shows up whe
 font size of the display message should depend on the actual window||[Project: Cprogram]
 you really need to cleanup todo.h man its a fucking mess||[Project: Cprogram]
 learn cpp bitch for windows api shit||[LEARNING]
-dont forget to remove all the sendmessage things for wrappers||[Project: Cprogram]
 FIX THE FUCKING SNIPPETS ALREADY||[MISC]
 add checks for the external applications like neovide or nvim||[Project: Cprogram]
 maybe you can make the programs just focus whatevre was alraedy focused after the windwo closes||[Project: Cprogram]

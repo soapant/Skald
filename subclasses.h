@@ -143,82 +143,82 @@ LRESULT CALLBACK ListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
         case WM_NCDESTROY:
             RemoveWindowSubclass(hWnd, ListBoxSubclassProc, uIdSubclass);
             break;
-case WM_ERASEBKGND: {
-            HDC hdc = (HDC)wParam;
-            RECT rect;
-            GetClientRect(hWnd, &rect);
-            HBRUSH hBrush = CreateSolidBrush(COLOR_BG);
-            FillRect(hdc, &rect, hBrush);
-            DeleteObject(hBrush);
-            return TRUE;
-        }
-    }
-    return DefSubclassProc(hWnd, uMsg, wParam, lParam);
-}
-LRESULT CALLBACK SimpleListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
-    switch (uMsg) {
-        case WM_NCDESTROY:
-            RemoveWindowSubclass(hWnd, SimpleListBoxSubclassProc, uIdSubclass);
-            break;
-
-        case WM_ERASEBKGND:
-            return 1; 
-
-        case WM_PAINT: {
-            PAINTSTRUCT ps;
-            HDC hdc = BeginPaint(hWnd, &ps);
-
-            RECT rect;
-            GetClientRect(hWnd, &rect);
-            if (COLORFUL_MODE) {
-                int h = rect.bottom - rect.top;
-                int bandH = max(1, h / 32);
-                for (int y = 0; y < h; y += bandH) {
-                    float ft = (float)y / (float)h;
-                    COLORREF c = GetRainbowColor(ft, 0.55f, 0.18f);
-                    HBRUSH hBrush = CreateSolidBrush(c);
-                    RECT band = {rect.left, rect.top + y, rect.right, rect.top + min(y + bandH, h)};
-                    FillRect(hdc, &band, hBrush);
+        case WM_ERASEBKGND: {
+                    HDC hdc = (HDC)wParam;
+                    RECT rect;
+                    GetClientRect(hWnd, &rect);
+                    HBRUSH hBrush = CreateSolidBrush(COLOR_BG);
+                    FillRect(hdc, &rect, hBrush);
                     DeleteObject(hBrush);
+                    return TRUE;
                 }
-            } else {
-                HBRUSH hBrush = CreateSolidBrush(COLOR_BG);
-                FillRect(hdc, &rect, hBrush);
-                DeleteObject(hBrush);
             }
-
-            int textLen = UI_LB_GetTextLen(hWnd);
-            
-            if (textLen > 0 && textLen < 512) {
-                char textBuffer[512] = {0}; 
-                UI_LB_GetText(hWnd, 0, textBuffer);
-
-                HFONT hFont = UI_GetFont(hWnd);
-                HFONT hOldFont = NULL;
-                if (hFont) hOldFont = (HFONT)SelectObject(hdc, hFont);
-
-                SetBkMode(hdc, TRANSPARENT);
-                SetTextColor(hdc, COLOR_TEXT);  
-
-                int itemHeight = UI_LB_GetItemHeight(hWnd);
-                if (itemHeight <= 0) itemHeight = 40; 
-
-                RECT textRect = rect;
-                textRect.left = 0; 
-                textRect.right = rect.right; 
-                textRect.bottom = textRect.top + itemHeight; 
-
-                DrawTextA(hdc, textBuffer, -1, &textRect, DT_SINGLELINE | DT_VCENTER | DT_CENTER);
-
-                if (hOldFont) SelectObject(hdc, hOldFont);
-            }
-
-            EndPaint(hWnd, &ps);
-            return 0;
+            return DefSubclassProc(hWnd, uMsg, wParam, lParam);
         }
-    }
-    return DefSubclassProc(hWnd, uMsg, wParam, lParam);
-}
+      LRESULT CALLBACK SimpleListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
+          switch (uMsg) {
+              case WM_NCDESTROY:
+                  RemoveWindowSubclass(hWnd, SimpleListBoxSubclassProc, uIdSubclass);
+                  break;
+      
+              case WM_ERASEBKGND:
+                  return 1; 
+      
+              case WM_PAINT: {
+                  PAINTSTRUCT ps;
+                  HDC hdc = BeginPaint(hWnd, &ps);
+      
+                  RECT rect;
+                  GetClientRect(hWnd, &rect);
+                  if (COLORFUL_MODE) {
+                      int h = rect.bottom - rect.top;
+                      int bandH = max(1, h / 32);
+                      for (int y = 0; y < h; y += bandH) {
+                          float ft = (float)y / (float)h;
+                          COLORREF c = GetRainbowColor(ft, 0.55f, 0.18f);
+                          HBRUSH hBrush = CreateSolidBrush(c);
+                          RECT band = {rect.left, rect.top + y, rect.right, rect.top + min(y + bandH, h)};
+                          FillRect(hdc, &band, hBrush);
+                          DeleteObject(hBrush);
+                      }
+                  } else {
+                      HBRUSH hBrush = CreateSolidBrush(COLOR_BG);
+                      FillRect(hdc, &rect, hBrush);
+                      DeleteObject(hBrush);
+                  }
+      
+                  int textLen = UI_LB_GetTextLen(hWnd);
+                  
+                  if (textLen > 0 && textLen < 512) {
+                      char textBuffer[512] = {0}; 
+                      UI_LB_GetText(hWnd, 0, textBuffer);
+      
+                      HFONT hFont = UI_GetFont(hWnd);
+                      HFONT hOldFont = NULL;
+                      if (hFont) hOldFont = (HFONT)SelectObject(hdc, hFont);
+      
+                      SetBkMode(hdc, TRANSPARENT);
+                      SetTextColor(hdc, COLOR_TEXT);  
+      
+                      int itemHeight = UI_LB_GetItemHeight(hWnd);
+                      if (itemHeight <= 0) itemHeight = 40; 
+      
+                      RECT textRect = rect;
+                      textRect.left = 0; 
+                      textRect.right = rect.right; 
+                      textRect.bottom = textRect.top + itemHeight; 
+      
+                      DrawTextA(hdc, textBuffer, -1, &textRect, DT_SINGLELINE | DT_VCENTER | DT_CENTER);
+      
+                      if (hOldFont) SelectObject(hdc, hOldFont);
+                  }
+      
+                  EndPaint(hWnd, &ps);
+                  return 0;
+              }
+          }
+          return DefSubclassProc(hWnd, uMsg, wParam, lParam);
+      }
 
 int counter;
 LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
