@@ -281,7 +281,7 @@ static inline void PopulateListBox(HWND hListBox, const char* filter,
         g_populated_count++;
     }
     
-    SendMessageA(hListBox, LB_SETCOUNT, total_matches, 0);
+    UI_LB_SetCount(hListBox, total_matches);
     
     if (total_matches == 1) {
         UI_SetSelection(hListBox, 0, g_SelectedIndex);
@@ -488,8 +488,8 @@ void ForceWindowFocus(HWND hwndTarget, HWND hwndInput) {
 
     if (hwndInput != NULL) {
         SetFocus(hwndInput);
-        SendMessageA(hwndInput, WM_UPDATEUISTATE, MAKEWPARAM(UIS_CLEAR, UISF_HIDEFOCUS), 0);
-        SendMessageA(hwndInput, EM_SETSEL, 0, 0);
+        UI_Edit_UpdateUIState(hwndInput, UIS_CLEAR, UISF_HIDEFOCUS);
+        UI_Edit_SetSel(hwndInput, 0, 0);
     }
 
     if (foregroundThreadID != currentThreadID)
@@ -508,11 +508,11 @@ static inline bool CheckAndBlockIfPopupActive(HWND hPopupWnd) {
 }
 static inline void UI_GetCurrentCursorPosition(HWND hEditControl, DWORD *start, DWORD *end) {
     if (start && end) {
-        SendMessageA(hEditControl, EM_GETSEL, (WPARAM)start, (LPARAM)end);
+        UI_Edit_GetSel(hEditControl, start, end);
     }
 }
 static inline void UI_SetCursorPosition(HWND hEditControl,int position) {
-    SendMessageA(hEditControl, EM_SETSEL, position, position);
+    UI_Edit_SetSel(hEditControl, position, position);
 }
 static inline char* UI_GetCurrentText(HWND hEditControl,char *text) {
    GetWindowTextA(hEditControl, text, sizeof(text));

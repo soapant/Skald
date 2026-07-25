@@ -10,7 +10,7 @@ static inline void DeleteCharUnderCursor(void) {
     GetWindowTextA(hEditControl, text, sizeof(text));
     
     DWORD start, end;
-    SendMessageA(hEditControl, EM_GETSEL, (WPARAM)&start, (LPARAM)&end);
+    UI_Edit_GetSel(hEditControl, &start, &end);
     
     int pos = (int)start;
     int len = (int)strlen(text);
