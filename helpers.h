@@ -10,7 +10,6 @@
 #include "config.h"
 #include "common_ui.h"
 
-
 typedef void (*HotkeyHandler)(void);
 
 typedef struct {
@@ -42,7 +41,6 @@ static inline bool ProcessHotkey(const HotkeyBinding* bindings, int bindings_cou
             if (blacklisted) return false;
         }
         
-        extern HWND hPopupWnd;
         if (IsPopupActive(hPopupWnd)) return false;
         
         if (b->handler) {

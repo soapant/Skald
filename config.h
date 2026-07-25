@@ -19,6 +19,11 @@ const char* UsedImageEditor =  "picview.exe";
 
 const char* UsedFont =  "0xProto Nerd Font";
 
+const char* SowonPath = "D:\\Projects\\Tscoding Timer\\sowon\\sowon.exe";
+
+const char* MusicPlayerPath = "D:\\Projects\\Music Viewer\\music_viewer.exe";
+
+const char* VideoViewerPath = "D:\\Projects\\Video Viewer\\video_viewer.exe";
 
 static const char* ListOfProgramPaths[20] = {
     "C:\\Users\\HP\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu",
