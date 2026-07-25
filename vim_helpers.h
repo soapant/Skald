@@ -65,9 +65,9 @@ static inline const char* GoToFirstListBoxItem(void) {
     g_SelectedIndex = 0;
     g_view_offset = 0;
 
-    SendMessageA(hListBox, LB_SETTOPINDEX, 0, 0);
-    SendMessageA(hListBox, LB_SETCARETINDEX, 0, FALSE);
-    InvalidateRect(hListBox, NULL, FALSE);
+    UI_LB_SetTopIndex(hListBox, 0);
+    UI_LB_SetCaretIndex(hListBox, 0, FALSE);
+    UI_Redraw(hListBox);
 
     return g_populated_cache[0];
 }
@@ -80,17 +80,17 @@ static inline const char* GoToLastListBoxItem(void) {
 
     RECT rect;
     GetClientRect(hListBox, &rect);
-    int itemHeight = (int)SendMessageA(hListBox, LB_GETITEMHEIGHT, 0, 0);
+    int itemHeight = UI_LB_GetItemHeight(hListBox);
     int visibleItems = (itemHeight > 0) ? (rect.bottom / itemHeight) : 1;
     
     int newTop = lastIndex - visibleItems + 1;
     if (newTop < 0) newTop = 0;
     g_view_offset = newTop;
 
-    SendMessageA(hListBox, LB_SETTOPINDEX, newTop, 0);
-    SendMessageA(hListBox, LB_SETCARETINDEX, lastIndex, FALSE);
+    UI_LB_SetTopIndex(hListBox, newTop);
+    UI_LB_SetCaretIndex(hListBox, lastIndex, FALSE);
     
-    InvalidateRect(hListBox, NULL, FALSE);
+    UI_Redraw(hListBox);
 
     return g_populated_cache[lastIndex];
 }
