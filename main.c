@@ -34,6 +34,7 @@ HWND hGlobalTrayWnd = NULL;
 HWND hPopupWnd = NULL;
 HWND hEditControl = NULL;
 HWND hListBox = NULL;
+HWND hDisplayMessage = NULL;
 char output_buffer[256] = {0};
 bool selection_complete = false;
 int region_step = 0; 
@@ -249,24 +250,46 @@ char* SimplePromptUser(const char* prompt, const char* window_title,int height, 
     return (strlen(output_buffer) > 0) ? output_buffer : NULL;
 }
 
-char* DisplayMessage(const char* message, int centerX, int centerY, int width, int height, int timeout) {
+char* DisplayMessage(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, int timeout) {
     HINSTANCE hInstance = GetModuleHandle(NULL);
+    
+    if (!message) return NULL;
+    DestroyWindow(hDisplayMessage);
+    KillTimer(hDisplayMessage,999);
+    
+    HDC hdc = GetDC(NULL);
+    HFONT hFont = CreateCustomNerdFont(FontSize, UsedFont);
+    HFONT hOldFont = (HFONT)SelectObject(hdc, hFont);
+    
+    RECT textRect = {0, 0, maxWidth - 30, maxHeight - 30};
+    DrawTextA(hdc, message, -1, &textRect, DT_CENTER | DT_WORDBREAK | DT_CALCRECT);
+    
+    SelectObject(hdc, hOldFont);
+    DeleteObject(hFont);
+    ReleaseDC(NULL, hdc);
+    
+    int padding = 30;
+    int winWidth = textRect.right + padding;
+    int winHeight = textRect.bottom + padding;
+    
+    if (winWidth > maxWidth) winWidth = maxWidth;
+    if (winHeight > maxHeight) winHeight = maxHeight;
     
     FadeWindowData* pWndData = (FadeWindowData*)malloc(sizeof(FadeWindowData));
     if (!pWndData) return NULL;
 
-    pWndData->message = _strdup(message ? message : "");
-    pWndData->hFont = CreateCustomNerdFont(20, UsedFont);
+    pWndData->message = _strdup(message);
+    pWndData->hFont = CreateCustomNerdFont(FontSize, UsedFont);
     pWndData->alpha = 245;
     g_timeout = timeout * 20;
 
-    int topLeftX = centerX - (width / 2);
-    int topLeftY = centerY - (height / 2);
+    int topLeftX = centerX - (winWidth / 2);
+    int topLeftY = centerY - (winHeight / 2);
 
     HWND hPopupWnd = CreateWindowExA(
         WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED | WS_EX_NOACTIVATE, 
         "DisplayMessageModalClass", NULL, WS_POPUP, 
-        topLeftX, topLeftY, width, height, NULL, NULL, hInstance, pWndData
+        topLeftX, topLeftY, winWidth, winHeight, NULL, NULL, hInstance, pWndData
     );
 
     if (hPopupWnd == NULL) {
@@ -364,7 +387,6 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
         
         if (CheckTextSnippetBindings(pressed_vk, modifiers, &snippet_text)) {
             if (snippet_text != NULL) {
-                printf("[SNIPPET] Copying to clipboard: \"%s\"\n", snippet_text);
                 CopyToClipboard(snippet_text);
                 return 1;
             }
@@ -372,7 +394,6 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
         
         if (CheckMacroBindings(pressed_vk, modifiers, &matchedAction, &matchedDelay)) {
             if (matchedAction != MACRO_NONE && hGlobalTrayWnd != NULL) {
-                printf("[MACRO] ✅ Triggering action %d with delay %d\n", matchedAction, matchedDelay);
                 PostMessage(hGlobalTrayWnd, WM_TRIGGER_UNIVERSAL_MACRO, (WPARAM)matchedAction, (LPARAM)matchedDelay);
                 return 1;
             }

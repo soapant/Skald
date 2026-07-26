@@ -222,6 +222,7 @@ static inline const char* GetFilePath(const char* name) {
 
 extern HWND hPopupWnd;
 extern HWND hListBox;
+extern HWND hDisplayMessage;
 extern HWND hEditControl;
 extern bool selection_complete;
 extern RefreshCallback g_refresh_callback;
