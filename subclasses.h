@@ -126,6 +126,10 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
         if (wParam == VK_ESCAPE) {
             output_buffer[0] = '\0'; 
             selection_complete = true;  
+            if (hDisplayMessage != NULL) {
+              KillTimer(hDisplayMessage, 999);
+              DestroyWindow(hDisplayMessage);
+            }
             return 0;
         }
         
@@ -165,6 +169,10 @@ LRESULT CALLBACK SimpleEditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPAR
         if (wParam == VK_ESCAPE) {
             output_buffer[0] = '\0'; 
             selection_complete = true;  
+            if (hDisplayMessage != NULL) {
+              KillTimer(hDisplayMessage, 999);
+              DestroyWindow(hDisplayMessage);
+            }
             return 0;
         }
         
@@ -326,7 +334,6 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
               BOOL isSelected = (pdis->itemID == g_SelectedIndex);
               float t = (float)pdis->itemID / 20.0f;
               
-              // === CACHED BRUSHES (created once) ===
               static HBRUSH hBgBrush = NULL;
               static HBRUSH hSelBrush = NULL;
               static HBRUSH hColorfulBrush[100] = {0};
@@ -400,16 +407,31 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                   FillRect(pdis->hDC, &pdis->rcItem, hBrush);
               } else {
                   FillRect(pdis->hDC, &pdis->rcItem, isSelected ? hSelBrush : hBgBrush);
-              }
-              
-              if (pdis->itemID == -1 || pdis->itemID >= g_populated_count) {
-                  return TRUE;
+                  char measureBuffer[512];
+                  strncpy(measureBuffer, g_populated_cache[pdis->itemID], sizeof(measureBuffer) - 1);
+                  measureBuffer[sizeof(measureBuffer) - 1] = '\0';
+                  
+                  char* pos = strchr(measureBuffer, '|');
+                  if (pos) {
+                      *pos = '\0';
+                  }
+                  if (isSelected && strlen(measureBuffer) >= 70) {
+                    MSG_TOP(g_populated_cache[pdis->itemID],140,6969);
+                  } else {
+                    KillTimer(hDisplayMessage, 999);
+                    DestroyWindow(hDisplayMessage);
+                  }
               }
               
               const char* textBuffer = "";
               if (pdis->itemID < g_populated_count) {
                   textBuffer = g_populated_cache[pdis->itemID];
               }
+              
+              if (pdis->itemID == -1 || pdis->itemID >= g_populated_count) {
+                  return TRUE;
+              }
+              
               
               SetBkMode(pdis->hDC, TRANSPARENT);
               RECT textRect = pdis->rcItem;
@@ -428,7 +450,6 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                   textRect.left += 10;
               }
               
-              // === DRAW MAIN TEXT ===
               if (g_render_callback != NULL) {
                   g_render_callback(pdis->hDC, textBuffer, &textRect, isSelected, pdis->itemID);
               } else {
@@ -574,6 +595,7 @@ typedef struct {
 
 LRESULT CALLBACK DisplayMessageProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     FadeWindowData* data = (FadeWindowData*)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
+    hDisplayMessage = hwnd;
 
     switch (msg) {
         case WM_NCCREATE: {
@@ -594,7 +616,7 @@ LRESULT CALLBACK DisplayMessageProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
             DeleteObject(hBackgroundBrush);
 
             SetBkMode(hdc, TRANSPARENT);
-            SetTextColor(hdc, RGB(255, 255, 255));
+            SetTextColor(hdc, COLOR_TEXT);
 
             HFONT hOldFont = NULL;
             if (data->hFont) {
@@ -604,8 +626,19 @@ LRESULT CALLBACK DisplayMessageProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
             if (data->message) {
                 RECT textRect = rect;
                 textRect.left += 15;  
-                textRect.right -= 15; 
-                DrawTextA(hdc, data->message, -1, &textRect, DT_CENTER | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX);
+                textRect.right -= 15;
+                textRect.top += 10;
+                textRect.bottom -= 10;
+                
+                RECT calcRect = textRect;
+                DrawTextA(hdc, data->message, -1, &calcRect, DT_CENTER | DT_WORDBREAK | DT_CALCRECT);
+                
+                int textHeight = calcRect.bottom - calcRect.top;
+                int availableHeight = rect.bottom - rect.top;
+                textRect.top = (availableHeight - textHeight) / 2;
+                textRect.bottom = textRect.top + textHeight;
+                
+                DrawTextA(hdc, data->message, -1, &textRect, DT_CENTER | DT_WORDBREAK);
             }
 
             if (hOldFont) SelectObject(hdc, hOldFont);
@@ -614,6 +647,10 @@ LRESULT CALLBACK DisplayMessageProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
         }
         case WM_TIMER: {
             if (wParam == 999 && data) {
+                if (g_timeout == 6969) {
+                    return 0;
+                }
+                
                 if (g_timeout > 0) {
                     g_timeout--;
                     return 0; 
@@ -623,7 +660,8 @@ LRESULT CALLBACK DisplayMessageProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
 
                 if (data->alpha <= 0) {
                     KillTimer(hwnd, 999);
-                    DestroyWindow(hwnd); // Self-destruct when completely invisible
+                    hDisplayMessage = NULL; 
+                    DestroyWindow(hwnd);
                 } else {
                     SetLayeredWindowAttributes(hwnd, 0, (BYTE)data->alpha, LWA_ALPHA);
                 }
@@ -631,7 +669,6 @@ LRESULT CALLBACK DisplayMessageProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
             return 0;
         }
         case WM_NCDESTROY: {
-            // CRITICAL ASYNC CLEANUP: Free allocated heap structures when window dies
             if (data) {
                 if (data->message) free((void*)data->message);
                 if (data->hFont) DeleteObject(data->hFont);

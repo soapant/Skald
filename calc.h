@@ -420,7 +420,6 @@ static void calculator_enter_callback(const char* selection) {
             result = (char*)selection + 2;
         }
         CopyToClipboard(result);
-        printf("[CALCULATOR] Copied: %s\n", result);
     }
 }
 
