@@ -8,7 +8,6 @@ static inline void DeleteCharUnderCursor(void) {
     
     char text[512] = {0};
     UI_GetText(hEditControl, text, sizeof(text));
-    
     DWORD start, end;
     UI_Edit_GetSel(hEditControl, &start, &end);
     
