@@ -19,6 +19,7 @@ typedef struct {
     int blacklist_count;
     HotkeyHandler handler;
     const char* name;
+    bool condition;
 } HotkeyBinding;
 
 static inline bool ProcessHotkey(const HotkeyBinding* bindings, int bindings_count,
@@ -29,6 +30,14 @@ static inline bool ProcessHotkey(const HotkeyBinding* bindings, int bindings_cou
         
         if (b->vk_code != pressed_vk) continue;
         if (b->modifiers != modifiers) continue;
+        
+        // === CHECK CONDITION FOR THIS SPECIFIC BINDING ===
+        if (!b->condition) {
+            printf("[HOTKEY] Condition is FALSE for %s - SKIPPING\n", b->name);
+            continue;  // Skip this binding, try next one
+        }
+        
+        printf("[HOTKEY] Condition is TRUE for %s\n", b->name);
         
         if (b->blacklist && b->blacklist_count > 0) {
             bool blacklisted = false;

@@ -48,6 +48,7 @@ static void music_enter_callback(const char* selection) {
 
 static bool HandleMusicPlayer(int vk_code, int modifiers, const char* current_title) {
     if (CheckAndBlockIfPopupActive(hPopupWnd)) return false;
+    if (!MusicPlayerAvailable) return false;
     for (int i = 0; i < MUSIC_PLAYER_COUNT; i++) {
         const MusicPlayerBinding* binding = &G_MUSIC_PLAYERS[i];
         if (binding->vk_code == vk_code && binding->modifiers == modifiers) {
