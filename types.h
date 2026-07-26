@@ -37,6 +37,18 @@ LRESULT CALLBACK SimpleListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, 
 BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam);
 
 
+struct feature_data {
+    char* name;
+    const char** items;
+    int item_count;    
+    RefreshCallback refresh_callback;
+    EnterCallback enter_callback;
+    CtrlEnterCallback ctrl_enter_callback;
+    TabCallback tab_callback;
+    RenderCallback render_callback;
+    bool (*filter_match)(const char*, const char*);
+};
+
 void UpdateTextCaret(HWND hwndEditControl);
 typedef struct HashMapEntry {
     char* key;
@@ -250,7 +262,8 @@ extern bool g_skip_refresh;
 extern char output_buffer[256];
 extern HWND hGlobalTrayWnd;
 extern char* g_current_feature;
-extern HashMap* features;
+extern HashMap* feature_history;
+extern HashMap* feature_data;
 #define COLOR_BG      RGB(30, 35, 45)   
 #define COLOR_TEXT    RGB(255, 255, 255)
 #define COLOR_SELECTED_TEXT    RGB(70, 55, 90)

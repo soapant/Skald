@@ -856,18 +856,101 @@ static inline void StringList_Free(char** list, int count) {
 static inline int HashMap_Size(HashMap* map) {
     return map ? map->count : 0;
 }
+
 static inline void SaveFeatureString(char* string) {
     char** HistoryList = NULL;
     int count = 0;
     
-    if (HashMap_Contains(features, g_current_feature)) {
-        HistoryList = (char**)HashMap_Get(features, g_current_feature);
+    if (HashMap_Contains(feature_history, g_current_feature)) {
+        HistoryList = (char**)HashMap_Get(feature_history, g_current_feature);
         while (HistoryList && HistoryList[count]) count++;
     }
     
     HistoryList = StringList_Append(HistoryList, &count, string);
     
-    HashMap_Put(features, g_current_feature, HistoryList);
+    HashMap_Put(feature_history, g_current_feature, HistoryList);
+}
+
+static inline struct feature_data* GetFeatureData(const char* name) {
+    printf("[GetFeatureData] Called with name: '%s'\n", name);
+    printf("[GetFeatureData] feature_data hashmap: %p\n", (void*)feature_data);
+    
+    if (!feature_data) {
+        printf("[GetFeatureData] ERROR: feature_data is NULL!\n");
+        feature_data = HashMap_Create(32);
+    }
+    
+    struct feature_data* data = (struct feature_data*)HashMap_Get(feature_data, name);
+    printf("[GetFeatureData] HashMap_Get returned: %p\n", (void*)data);
+    
+    if (!data) {
+        printf("[GetFeatureData] Creating new data for: %s\n", name);
+        data = malloc(sizeof(struct feature_data));
+        if (data) {
+            memset(data, 0, sizeof(struct feature_data));
+            data->name = _strdup(name);
+            HashMap_Put(feature_data, name, data);
+            printf("[GetFeatureData] Created and stored data at: %p\n", (void*)data);
+            
+            // Verify it was stored
+            struct feature_data* verify = (struct feature_data*)HashMap_Get(feature_data, name);
+            printf("[GetFeatureData] Verification: HashMap_Get returned: %p\n", (void*)verify);
+        }
+    }
+    return data;
+}
+
+static inline void SaveFeatureData(char* string) {
+    if (!feature_data) return;
+    
+    struct feature_data* data = GetFeatureData(g_current_feature);
+}
+
+static inline void RegisterFeature(const char* name, const char** items, int item_count,
+                                   RefreshCallback refresh_cb,
+                                   EnterCallback enter_cb,
+                                   CtrlEnterCallback ctrl_enter_cb,
+                                   TabCallback tab_cb,
+                                   RenderCallback render_cb,
+                                   bool (*filter_match)(const char*, const char*)) {
+    struct feature_data* data = GetFeatureData(name);
+    data->items = items;
+    data->item_count = item_count;
+    data->refresh_callback = refresh_cb;
+    data->enter_callback = enter_cb;
+    data->ctrl_enter_callback = ctrl_enter_cb;
+    data->tab_callback = tab_cb;
+    data->render_callback = render_cb;
+    data->filter_match = filter_match;
+}
+
+static inline void GetFeatureCallbacks(const char* name,
+                                       RefreshCallback* refresh,
+                                       EnterCallback* enter,
+                                       CtrlEnterCallback* ctrl_enter,
+                                       TabCallback* tab,
+                                       RenderCallback* render) {
+    struct feature_data* data = GetFeatureData(name);
+    if (data) {
+        if (refresh) *refresh = data->refresh_callback;
+        if (enter) *enter = data->enter_callback;
+        if (ctrl_enter) *ctrl_enter = data->ctrl_enter_callback;
+        if (tab) *tab = data->tab_callback;
+        if (render) *render = data->render_callback;
+    }
+}
+
+static inline char* PromptUserWithFeature(const char* feature_name,
+                                          const char** items, int count,
+                                          int height, int width, int item_height) {
+    struct feature_data* data = GetFeatureData(feature_name);
+    
+    return PromptUser(items, feature_name, count, height, width, item_height,
+                      data->refresh_callback,
+                      data->enter_callback,
+                      data->ctrl_enter_callback,
+                      data->tab_callback,
+                      data->render_callback);
 }
 
 #endif
