@@ -468,7 +468,7 @@ static void calculator_ctrlenter_callback(const char* selection) {
     }
     
     
-    SetWindowTextA(hEditControl, result);
+    UI_SetText(hEditControl, result);
     
     
     int len = strlen(result);

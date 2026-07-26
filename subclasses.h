@@ -104,7 +104,7 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
             if (selected_index != LB_ERR && hListBox != NULL) {
                 strncpy(output_buffer, g_populated_cache[g_SelectedIndex], sizeof(output_buffer) - 1);
             } else {
-                GetWindowTextA(hwnd, output_buffer, sizeof(output_buffer));
+                UI_GetText(hwnd, output_buffer, sizeof(output_buffer));
             }
             char search_string[256] = {0};
             UI_GetCurrentText(hEditControl, search_string);
@@ -155,7 +155,7 @@ LRESULT CALLBACK SimpleEditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPAR
             return DefSubclassProc(hwnd, msg, wParam, lParam);
         }
         if (wParam == VK_RETURN) {
-            GetWindowTextA(hEditControl, output_buffer, sizeof(output_buffer));
+            UI_GetText(hEditControl, output_buffer, sizeof(output_buffer));
             
             selection_complete = true; 
             
@@ -300,7 +300,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
                 if (hEditControl && hListBox) {
                     char input_buffer[256] = {0};
-                    GetWindowTextA(hEditControl, input_buffer, sizeof(input_buffer));
+                    UI_GetText(hEditControl, input_buffer, sizeof(input_buffer));
                     if (g_refresh_callback != NULL) {
                         g_refresh_callback(input_buffer, hListBox);
                     }

@@ -519,6 +519,10 @@ static inline char* UI_GetCurrentText(HWND hEditControl,char *text) {
 static inline void UI_SetText(HWND hEditControl,char* text) {
   SetWindowTextA(hEditControl,text);
 }
+static inline int UI_GetText(HWND hEdit, char* buffer, int bufferSize) {
+    if (!hEdit || !buffer || bufferSize <= 0) return 0;
+    return GetWindowTextA(hEdit, buffer, bufferSize);
+}
 
 
 #endif 
