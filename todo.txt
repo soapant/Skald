@@ -35,3 +35,4 @@ also dont forget the hovering over a thing displayes a window or something||[Pro
 change sowon video and music player to just path input||[Project: Cprogram]
 also add the ability to use different music player or timer||[Project: Cprogram]
 also i need the ability to disable any hotkey at any time using any condition||[Project: Cprogram]
+add the sequence niggas for normal mode||[Project: Cprogram]
