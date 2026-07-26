@@ -92,12 +92,17 @@ static void RunTerminalCommand(const char* Command, bool save_to_history) {
         fprintf(f, "%s\n", clean_cmd);
         fclose(f);
     }
-    char sys_cmd[2048];
-    snprintf(sys_cmd, sizeof(sys_cmd), 
-             "start %s -e \"C:\\Program Files\\Git\\bin\\bash.exe\" \"%s\"",UsedTerminal,
-             temp_file);
-    system(sys_cmd);
-    printf("[TERMINAL] Running %s\n", clean_cmd);
+    
+    // === USE ShellExecuteA INSTEAD OF system() ===
+    char terminal_exe[512];
+    snprintf(terminal_exe, sizeof(terminal_exe), "%s.exe", UsedTerminal);
+    
+    char args[2048];
+    snprintf(args, sizeof(args), "-e \"C:\\Program Files\\Git\\bin\\bash.exe\" \"%s\"", temp_file);
+    
+    ShellExecuteA(NULL, "open", terminal_exe, args, NULL, SW_SHOWNORMAL);
+    
+    printf("[TERMINAL] Running: %s\n", clean_cmd);
 }
 
 static void terminal_enter_callback(const char* selection) {

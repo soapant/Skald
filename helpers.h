@@ -866,7 +866,7 @@ static inline int HashMap_Size(HashMap* map) {
     return map ? map->count : 0;
 }
 
-static inline void SaveFeatureString(char* string) {
+static inline void SaveFeatureHistory(char* string) {
     char** HistoryList = NULL;
     int count = 0;
     
