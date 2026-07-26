@@ -8,6 +8,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "types.h"
+#include "config.h"
 
 typedef struct {
     LARGE_INTEGER start;
@@ -324,7 +325,7 @@ HFONT CreateCustomNerdFont(int height, const char* face_name) {
 void UpdateTextCaret(HWND hwndEditControl)
 {
     int caretWidth = 1;   
-    int caretHeight = 24; 
+    int caretHeight = FontSize; 
 
     if (IsInsertMode()) {
         caretWidth = 2;   
