@@ -120,6 +120,13 @@ static inline char* QueryZoxidePath(const char* query) {
     }
 
     CloseHandle(hReadPipe);
+    if (strstr(path, "no match found")) {
+        char buffer[256];
+        snprintf(buffer,sizeof(buffer),"Query {%s} Doesnt Have A Zoxide Path",query);
+        DisplayMessageText = RGB(255,0,0);
+        MSG_BOTTOM(buffer,140,1);
+        return NULL;
+    }
     return (strlen(path) > 0) ? path : NULL;
 }
 

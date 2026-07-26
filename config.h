@@ -29,6 +29,8 @@ const char* MusicPlayerPath = "D:\\Projects\\Music Player\\music_player.exe";
 
 const char* VideoViewerPath = "D:\\Projects\\Video Viewer\\video_viewer.exe";
 
+const char* TextEditorPath = "C:\\Program Files\\Neovide\\neovide.exe";
+
 static const char* MusicPath = "D:\\Music";
 
 static const char* VideosPath = "D:\\videos";
