@@ -119,7 +119,7 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
     g_current_window_height = layout.h;
     g_current_window_width = layout.w;
     
-    HFONT hCustomFont = CreateCustomNerdFont(24, UsedFont);
+    HFONT hCustomFont = CreateCustomNerdFont(FontSize, UsedFont);
 
     hPopupWnd = CreateWindowExA(
         WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED | WS_EX_COMPOSITED,
@@ -197,7 +197,7 @@ char* SimplePromptUser(const char* prompt, const char* window_title,int height, 
     g_current_window_height = layout.h;
     g_current_window_width = layout.w;
     
-    HFONT hCustomFont = CreateCustomNerdFont(24, UsedFont);
+    HFONT hCustomFont = CreateCustomNerdFont(FontSize, UsedFont);
 
     hPopupWnd = CreateWindowExA(
         WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED, 
