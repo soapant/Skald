@@ -312,6 +312,7 @@ char* DisplayMessage(const char* message, int centerX, int centerY, int maxWidth
     
     return NULL; 
 }
+
 HHOOK hKeyboardHook = NULL;
 #include <shlwapi.h>
 #pragma comment(lib, "Shlwapi.lib")
