@@ -138,6 +138,7 @@ static void TriggerTerminalCommand() {
                terminal_enter_callback, 
                NULL, 
                NULL, 
+               NULL,
                NULL);
     
     free(list);

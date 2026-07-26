@@ -125,6 +125,7 @@ static void TriggerZoxide() {
                zoxide_enter_callback, 
                NULL, 
                NULL, 
+               NULL,
                NULL);
     
     free(list);

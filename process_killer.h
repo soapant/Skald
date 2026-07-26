@@ -137,7 +137,8 @@ void TriggerProcessKiller() {
                         pk_enter_callback,          
                         NULL,                      
                         NULL,
-                        NULL);                     
+                        NULL,
+                        NULL);
     free(list_items);
 }
 
