@@ -73,7 +73,7 @@ static void explorer_enter_callback(const char* selection) {
         
         char input[256] = {0};
         if (hEditControl != NULL) {
-            GetWindowTextA(hEditControl, input, sizeof(input));
+            UI_GetText(hEditControl, input, sizeof(input));
             if (strlen(input) > 0) {
                 
                 if (ExplorerZoxideFile->fileSize > 0) {
