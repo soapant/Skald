@@ -21,7 +21,7 @@ const char* UsedFont =  "0xProto Nerd Font";
 
 const char* SowonPath = "D:\\Projects\\Tscoding Timer\\sowon\\sowon.exe";
 
-const char* MusicPlayerPath = "D:\\Projects\\Music Viewer\\music_viewer.exe";
+const char* MusicPlayerPath = "D:\\Projects\\Music Player\\music_player.exe";
 
 const char* VideoViewerPath = "D:\\Projects\\Video Viewer\\video_viewer.exe";
 
