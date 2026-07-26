@@ -133,9 +133,6 @@ static inline void SwitcherHandler(void) {
         free(myWindows.items);
     }
 }
-static inline void NeovideHandler(void) { TriggerNvimZoxide(0, hPopupWnd); }
-
-
 static inline void PosCopyHandler(void) {
     POINT mousePos;
     if (GetCursorPos(&mousePos)) {
@@ -351,7 +348,7 @@ static const HotkeyBinding G_HOTKEY_BINDINGS[] = {
     BINDING(REGION,             (HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT), RegionImageHandler,      true),
     BINDING(SCREENSHOT,         HOTKEY_MOD_ALT,                      ScreenshotSaveHandler,   true),
     BINDING(SCREENSHOT,         (HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT), ScreenshotOpenHandler,   true),
-    BINDING(NVIM,               HOTKEY_MOD_ALT,                      NeovideHandler,          true),
+    BINDING(NVIM,               HOTKEY_MOD_ALT,                      TriggerNvimZoxide,          true),
 };
 
 #define HOTKEY_BINDING_COUNT (sizeof(G_HOTKEY_BINDINGS) / sizeof(G_HOTKEY_BINDINGS[0]))

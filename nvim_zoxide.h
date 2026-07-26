@@ -1,7 +1,6 @@
 // nvim_zoxide.h
 #ifndef NVIM_ZOXIDE_H
 #define NVIM_ZOXIDE_H
-
 #include <windows.h>
 #include <stdio.h>
 #include <string.h>
@@ -15,9 +14,31 @@
 
 static char** g_cached_nvim_commands = NULL;
 static int g_cached_nvim_count = 0;
-int BigVersion;
+char* TextEditorName;
+bool Initialized = false;
 
-static void LaunchNvim(const char* path, int version) {
+static void InitTextEditor() {
+    
+    const char* last_slash = strrchr(TextEditorPath, '\\');
+
+    const char* start = (last_slash != NULL) ? (last_slash + 1) : TextEditorPath;
+
+    const char* dot_exe = strstr(start, ".exe");
+
+    size_t len = dot_exe - start;
+
+    static char app_name[64];
+    
+    snprintf(app_name, sizeof(app_name), "%.*s", (int)len, start);
+    
+    TextEditorName = app_name;
+    
+    TextEditorName[0] = toupper(TextEditorName[0]);
+    
+    Initialized = true;
+          
+}
+static void LaunchNvim(const char* path) {
     if (!path) return;
     
     char cmd[2048];
@@ -25,27 +46,18 @@ static void LaunchNvim(const char* path, int version) {
     si.cb = sizeof(si);
     PROCESS_INFORMATION pi = {0};
     
-    if (version == 0) {
-        snprintf(cmd, sizeof(cmd), "\"C:\\Program Files\\Neovide\\neovide.exe\" \"%s\"", path);
-    } else {
-        snprintf(cmd, sizeof(cmd), "\"C:\\Program Files\\Neovim\\bin\\nvim.exe\" \"%s\"", path);
-    }
+    snprintf(cmd, sizeof(cmd), " %s \"%s\"",TextEditorPath,path);
     
     if (CreateProcessA(NULL, cmd, NULL, NULL, FALSE, 
                        CREATE_NEW_CONSOLE, 
                        NULL, NULL, &si, &pi)) {
         CloseHandle(pi.hProcess);
         CloseHandle(pi.hThread);
-        printf("[NVIM] Opened %s in: %s\n", version == 0 ? "Neovide" : "Nvim", path);
     } else {
         char sys_cmd[2048];
-        if (version == 0) {
-            snprintf(sys_cmd, sizeof(sys_cmd), "start neovide \"%s\"", path);
-        } else {
-            snprintf(sys_cmd, sizeof(sys_cmd), "start nvim \"%s\"", path);
-        }
+        snprintf(sys_cmd, sizeof(sys_cmd), "start %s \"%s\"",TextEditorName,path);
+        
         system(sys_cmd);
-        printf("[NVIM] Opened (fallback) %s in: %s\n", version == 0 ? "Neovide" : "Nvim", path);
     }
 }
 
@@ -85,7 +97,7 @@ static void RebuildNvimCache(void) {
     free(lines);
 }
 
-static void nvim_refresh_callback(const char* filter, HWND hListBox) {
+static void neovide_refresh_callback(const char* filter, HWND hListBox) {
     if (!hListBox) return;
     
     if (!g_cached_nvim_commands) {
@@ -112,48 +124,23 @@ static void neovide_enter_callback(const char* selection) {
                 printf("[NVIM] Saved query: %s\n", input);
                 
                 char* path = QueryZoxidePath(input);
-                LaunchNvim(path, 0);
+                LaunchNvim(path);
             }
         }
     } else {
         char* path = QueryZoxidePath(selection);
-        LaunchNvim(path, 0);
+        LaunchNvim(path);
     }
 }
 
-static void nvim_enter_callback(const char* selection) {
-    int selected_index = LB_ERR;
-    if (hListBox != NULL) {
-        selected_index = UI_GetSelection(hListBox);
-    }
-    
-    if (selected_index == LB_ERR) {
-        char input[256] = {0};
-        if (hEditControl != NULL) {
-            UI_GetText(hEditControl, input, sizeof(input));
-            if (strlen(input) > 0) {
-                FileAppend(NvimZoxideFile, input);
-                FileAppend(NvimZoxideFile, "\n");
-                RebuildNvimCache();
-                printf("[NVIM] Saved query: %s\n", input);
-                
-                char* path = QueryZoxidePath(input);
-                LaunchNvim(path, 1);
-            }
-        }
-    } else {
-        char* path = QueryZoxidePath(selection);
-        LaunchNvim(path, 1);
-    }
-}
-
-static void TriggerNvimZoxide(int version, HWND hPopupWnd) {
+static void TriggerNvimZoxide() {
     if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
-    
-    BigVersion = version;
     
     if (!g_cached_nvim_commands) {
         RebuildNvimCache();
+    }
+    if (!Initialized) {
+      InitTextEditor();
     }
     
     const char** list = (const char**)malloc(g_cached_nvim_count * sizeof(char*));
@@ -162,22 +149,16 @@ static void TriggerNvimZoxide(int version, HWND hPopupWnd) {
     for (int i = 0; i < g_cached_nvim_count; i++) {
         list[i] = g_cached_nvim_commands[i];
     }
+    char titleBuffer[256];
     
-    if (version == 0) { 
-        PromptUser(list, "📝 Neovide", g_cached_nvim_count, 920, 650, 32, 
-                   nvim_refresh_callback, 
-                   neovide_enter_callback, 
-                   NULL, 
-                   NULL, 
-                   NULL);
-    } else {
-        PromptUser(list, "📝 Nvim", g_cached_nvim_count, 920,650, 32, 
-                   nvim_refresh_callback, 
-                   nvim_enter_callback, 
-                   NULL, 
-                   NULL, 
-                   NULL);
-    }
+    snprintf(titleBuffer,sizeof(titleBuffer),"📝 %s",TextEditorName);
+    
+    PromptUser(list, titleBuffer, g_cached_nvim_count, 920, 650, 32, 
+               neovide_refresh_callback, 
+               neovide_enter_callback, 
+               NULL, 
+               NULL, 
+               NULL);
     free(list);
 }
 

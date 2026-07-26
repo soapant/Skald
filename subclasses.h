@@ -10,11 +10,11 @@
 #include <process.h>
 #include <shlwapi.h> 
 #include "helpers.h"
-#include "modal.h"
 #include "types.h"
 #include "config.h"
 #include "common_ui.h"
 int g_refresh_count = 0;
+COLORREF DisplayMessageText;
 HashMap* history_indices = NULL;
 LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
     HWND hParent = GetParent(hwnd);
@@ -416,7 +416,9 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                       *pos = '\0';
                   }
                   if (isSelected && strlen(measureBuffer) >= 70) {
+                    DisplayMessageText = rainbow_text_cache[pdis->itemID];
                     MSG_TOP(g_populated_cache[pdis->itemID],140,6969);
+                    DisplayMessageText = COLOR_TEXT;
                   } else {
                     KillTimer(hDisplayMessage, 999);
                     DestroyWindow(hDisplayMessage);
@@ -616,7 +618,11 @@ LRESULT CALLBACK DisplayMessageProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
             DeleteObject(hBackgroundBrush);
 
             SetBkMode(hdc, TRANSPARENT);
-            SetTextColor(hdc, COLOR_TEXT);
+            if (!DisplayMessageText){
+              SetTextColor(hdc, COLOR_TEXT);
+            } else {
+              SetTextColor(hdc, DisplayMessageText);
+            }
 
             HFONT hOldFont = NULL;
             if (data->hFont) {

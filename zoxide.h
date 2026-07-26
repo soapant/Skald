@@ -87,8 +87,9 @@ static void zoxide_enter_callback(const char* selection) {
                 FileAppend(TerminalZoxideFile, "\n");
                 RebuildZoxideCache();
                 
+                
                 char* path = QueryZoxidePath(input);
-                if (path) {
+                if (path != NULL) {
                     char terminal[512];
                     snprintf(terminal,sizeof(terminal),"%s.exe",UsedTerminal);
                     ShellExecuteA(NULL, "open", terminal, NULL, path, SW_SHOWNORMAL);
@@ -97,7 +98,7 @@ static void zoxide_enter_callback(const char* selection) {
         }
     } else {
         char* path = QueryZoxidePath(selection);
-        if (path) {
+        if (path != NULL) {
             char terminal[512];
             snprintf(terminal,sizeof(terminal),"%s.exe",UsedTerminal);
             ShellExecuteA(NULL, "open", terminal, NULL, path, SW_SHOWNORMAL);
