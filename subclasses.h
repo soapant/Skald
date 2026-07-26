@@ -63,18 +63,16 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
                                             g_refresh_callback(HistoryList[idx], hListBox);
                                         }
                                     }
-                                    struct feature_data* data = GetFeatureData(g_current_feature);
-                                    PopulateListBox(hListBox, HistoryList[idx], data->items, data->item_count, data->filter_match);
-                                    
                                     if (!idx_ptr) {
                                         idx_ptr = malloc(sizeof(int));
                                         HashMap_Put(history_indices, g_current_feature, idx_ptr);
                                     }
                                     *idx_ptr = idx;
-                                }
+                                    return 0;
+                                } 
                             }
                         }
-                        }
+                      }
                     } else if (sel == 0 && wParam == VK_UP) {
                         sel = -1;
                     } else {
