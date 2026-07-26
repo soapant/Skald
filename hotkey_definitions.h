@@ -29,97 +29,98 @@
 #include "reminder.h"
 
 
-#define SWITCHER_KEY      0x20
-#define TODO_KEY          0x54
-#define CALCULATOR_KEY    0x43
-#define EXE_KEY           0x45
-#define KILL_PROCESS_KEY  0x55
-#define GOOGLE_SEARCH_KEY  0x47  
-#define TERMINAL_KEY     0x57
-#define YAZI_KEY     0x51
-#define TIMER_KEY     0x4F
-#define EXPLORER_KEY     0x52
-#define TERMINAL_COMMAND_KEY     0xDB
-#define VOLUME_KEY     0x4D
-#define SCREENSHOT_KEY          0x59
-#define POS_KEY                 0x5A
-#define COLOR_KEY               0x58
-#define PIXEL_EQUALS_KEY        0x42
-#define WAIT_FOR_PIXEL_KEY      0x4E
-#define REGION_KEY              0x41
-#define NVIM_KEY     0x49
-#define MONITOR_FOCUS_MAIN_KEY     0x4C
-#define MONITOR_FOCUS_SIDE_KEY     0x48
-#define REMINDER_KEY     0x53
+#define SWITCHER      0x20
+#define TODO          0x54
+#define CALCULATOR    0x43
+#define EXE           0x45
+#define KILL_PROCESS  0x55
+#define GOOGLE_SEARCH  0x47  
+#define TERMINAL     0x57
+#define YAZI     0x51
+#define TIMER     0x4F
+#define EXPLORER     0x52
+#define TERMINAL_COMMAND     0xDB
+#define VOLUME     0x4D
+#define SCREENSHOT          0x59
+#define POS                 0x5A
+#define COLOR               0x58
+#define PIXEL_EQUALS        0x42
+#define WAIT_FOR_PIXEL      0x4E
+#define REGION              0x41
+#define NVIM     0x49
+#define MONITOR_FOCUS_MAIN     0x4C
+#define MONITOR_FOCUS_SIDE     0x48
+#define REMINDER     0x53
 
-static const char* switcher_blacklist[] = {"Fortnite", "CrosshairX"};
-#define SWITCHER_BLACKLIST_COUNT (sizeof(switcher_blacklist) / sizeof(switcher_blacklist[0]))
+static const char* SWITCHER_blacklist[] = {"Fortnite", "CrosshairX"};
+#define SWITCHER_BLACKLIST_COUNT (sizeof(SWITCHER_blacklist) / sizeof(SWITCHER_blacklist[0]))
 
-static const char* reminder_blacklist[] = {"Fortnite", "CrosshairX"};
-#define REMINDER_BLACKLIST_COUNT (sizeof(reminder_blacklist) / sizeof(reminder_blacklist[0]))
+static const char* REMINDER_blacklist[] = {"Fortnite", "CrosshairX"};
+#define REMINDER_BLACKLIST_COUNT (sizeof(REMINDER_blacklist) / sizeof(REMINDER_blacklist[0]))
 
-static const char* todo_blacklist[] = {"Fortnite", "CrosshairX"};
-#define TODO_BLACKLIST_COUNT (sizeof(todo_blacklist) / sizeof(todo_blacklist[0]))
+static const char* TODO_blacklist[] = {"Fortnite", "CrosshairX"};
+#define TODO_BLACKLIST_COUNT (sizeof(TODO_blacklist) / sizeof(TODO_blacklist[0]))
 
-static const char* pos_blacklist[] = {"Fortnite", "CrosshairX"};
-#define POS_BLACKLIST_COUNT (sizeof(pos_blacklist) / sizeof(pos_blacklist[0]))
+static const char* POS_blacklist[] = {"Fortnite", "CrosshairX"};
+#define POS_BLACKLIST_COUNT (sizeof(POS_blacklist) / sizeof(POS_blacklist[0]))
 
-static const char* color_blacklist[] = {"Fortnite", "CrosshairX"};
-#define COLOR_BLACKLIST_COUNT (sizeof(color_blacklist) / sizeof(color_blacklist[0]))
+static const char* COLOR_blacklist[] = {"Fortnite", "CrosshairX"};
+#define COLOR_BLACKLIST_COUNT (sizeof(COLOR_blacklist) / sizeof(COLOR_blacklist[0]))
 
-static const char* pixel_equals_blacklist[] = {"Fortnite", "CrosshairX"};
-#define PIXEL_EQUALS_BLACKLIST_COUNT (sizeof(pixel_equals_blacklist) / sizeof(pixel_equals_blacklist[0]))
+static const char* PIXEL_EQUALS_blacklist[] = {"Fortnite", "CrosshairX"};
+#define PIXEL_EQUALS_BLACKLIST_COUNT (sizeof(PIXEL_EQUALS_blacklist) / sizeof(PIXEL_EQUALS_blacklist[0]))
 
-static const char* wait_for_pixel_blacklist[] = {"Fortnite", "CrosshairX"};
-#define WAIT_FOR_PIXEL_BLACKLIST_COUNT (sizeof(wait_for_pixel_blacklist) / sizeof(wait_for_pixel_blacklist[0]))
+static const char* WAIT_FOR_PIXEL_blacklist[] = {"Fortnite", "CrosshairX"};
+#define WAIT_FOR_PIXEL_BLACKLIST_COUNT (sizeof(WAIT_FOR_PIXEL_blacklist) / sizeof(WAIT_FOR_PIXEL_blacklist[0]))
 
-static const char* region_blacklist[] = {"Fortnite", "CrosshairX"};
-#define REGION_BLACKLIST_COUNT (sizeof(region_blacklist) / sizeof(region_blacklist[0]))
+static const char* REGION_blacklist[] = {"Fortnite", "CrosshairX"};
+#define REGION_BLACKLIST_COUNT (sizeof(REGION_blacklist) / sizeof(REGION_blacklist[0]))
 
-static const char* calculator_blacklist[] = {"Fortnite", "CrosshairX"};
-#define CALCULATOR_BLACKLIST_COUNT (sizeof(calculator_blacklist) / sizeof(calculator_blacklist[0]))
+static const char* CALCULATOR_blacklist[] = {"Fortnite", "CrosshairX"};
+#define CALCULATOR_BLACKLIST_COUNT (sizeof(CALCULATOR_blacklist) / sizeof(CALCULATOR_blacklist[0]))
 
-static const char* exe_blacklist[] = {"Fortnite", "CrosshairX"};
-#define EXE_BLACKLIST_COUNT (sizeof(exe_blacklist) / sizeof(exe_blacklist[0]))
+static const char* EXE_blacklist[] = {"Fortnite", "CrosshairX"};
+#define EXE_BLACKLIST_COUNT (sizeof(EXE_blacklist) / sizeof(EXE_blacklist[0]))
 
-static const char* kill_process_blacklist[] = {"Fortnite", "CrosshairX"};
-#define KILL_PROCESS_BLACKLIST_COUNT (sizeof(kill_process_blacklist) / sizeof(kill_process_blacklist[0]))
+static const char* KILL_PROCESS_blacklist[] = {"Fortnite", "CrosshairX"};
+#define KILL_PROCESS_BLACKLIST_COUNT (sizeof(KILL_PROCESS_blacklist) / sizeof(KILL_PROCESS_blacklist[0]))
 
-static const char* google_search_blacklist[] = {"Fortnite", "CrosshairX"};
-#define GOOGLE_SEARCH_BLACKLIST_COUNT (sizeof(google_search_blacklist) / sizeof(google_search_blacklist[0]))
+static const char* GOOGLE_SEARCH_blacklist[] = {"Fortnite", "CrosshairX"};
+#define GOOGLE_SEARCH_BLACKLIST_COUNT (sizeof(GOOGLE_SEARCH_blacklist) / sizeof(GOOGLE_SEARCH_blacklist[0]))
 
-static const char* nvim_blacklist[] = {"Fortnite", "CrosshairX"};
-#define NVIM_BLACKLIST_COUNT (sizeof(nvim_blacklist) / sizeof(nvim_blacklist[0]))
+static const char* NVIM_blacklist[] = {"Fortnite", "CrosshairX"};
+#define NVIM_BLACKLIST_COUNT (sizeof(NVIM_blacklist) / sizeof(NVIM_blacklist[0]))
 
-static const char* timer_blacklist[] = {"Fortnite", "CrosshairX"};
-#define TIMER_BLACKLIST_COUNT (sizeof(timer_blacklist) / sizeof(timer_blacklist[0]))
+static const char* TIMER_blacklist[] = {"Fortnite", "CrosshairX"};
+#define TIMER_BLACKLIST_COUNT (sizeof(TIMER_blacklist) / sizeof(TIMER_blacklist[0]))
 
-static const char* terminal_blacklist[] = {"Fortnite", "CrosshairX"};
-#define TERMINAL_BLACKLIST_COUNT (sizeof(terminal_blacklist) / sizeof(terminal_blacklist[0]))
+static const char* TERMINAL_blacklist[] = {"Fortnite", "CrosshairX"};
+#define TERMINAL_BLACKLIST_COUNT (sizeof(TERMINAL_blacklist) / sizeof(TERMINAL_blacklist[0]))
 
-static const char* screenshot_blacklist[] = {"Fortnite", "CrosshairX"};
-#define SCREENSHOT_BLACKLIST_COUNT (sizeof(screenshot_blacklist) / sizeof(screenshot_blacklist[0]))
+static const char* SCREENSHOT_blacklist[] = {"Fortnite", "CrosshairX"};
+#define SCREENSHOT_BLACKLIST_COUNT (sizeof(SCREENSHOT_blacklist) / sizeof(SCREENSHOT_blacklist[0]))
 
-static const char* yazi_blacklist[] = {"Fortnite", "CrosshairX"};
-#define YAZI_BLACKLIST_COUNT (sizeof(yazi_blacklist) / sizeof(yazi_blacklist[0]))
+static const char* YAZI_blacklist[] = {"Fortnite", "CrosshairX"};
+#define YAZI_BLACKLIST_COUNT (sizeof(YAZI_blacklist) / sizeof(YAZI_blacklist[0]))
 
-static const char* video_blacklist[] = {"Fortnite", "CrosshairX"};
-#define VIDEO_BLACKLIST_COUNT (sizeof(video_blacklist) / sizeof(video_blacklist[0]))
+static const char* VIDEO_blacklist[] = {"Fortnite", "CrosshairX"};
+#define VIDEO_BLACKLIST_COUNT (sizeof(VIDEO_blacklist) / sizeof(VIDEO_blacklist[0]))
 
-static const char* explorer_blacklist[] = {"Fortnite", "CrosshairX"};
-#define EXPLORER_BLACKLIST_COUNT (sizeof(explorer_blacklist) / sizeof(explorer_blacklist[0]))
+static const char* EXPLORER_blacklist[] = {"Fortnite", "CrosshairX"};
+#define EXPLORER_BLACKLIST_COUNT (sizeof(EXPLORER_blacklist) / sizeof(EXPLORER_blacklist[0]))
 
-static const char* terminal_command_blacklist[] = {"Fortnite", "CrosshairX"};
-#define TERMINAL_COMMAND_BLACKLIST_COUNT (sizeof(terminal_command_blacklist) / sizeof(terminal_command_blacklist[0]))
+static const char* TERMINAL_COMMAND_blacklist[] = {"Fortnite", "CrosshairX"};
+#define TERMINAL_COMMAND_BLACKLIST_COUNT (sizeof(TERMINAL_COMMAND_blacklist) / sizeof(TERMINAL_COMMAND_blacklist[0]))
 
-static const char* volume_blacklist[] = {"Fortnite", "CrosshairX"};
-#define VOLUME_BLACKLIST_COUNT (sizeof(volume_blacklist) / sizeof(volume_blacklist[0]))
+static const char* VOLUME_blacklist[] = {"Fortnite", "CrosshairX"};
+#define VOLUME_BLACKLIST_COUNT (sizeof(VOLUME_blacklist) / sizeof(VOLUME_blacklist[0]))
 
-static const char* monitor_focus_main_blacklist[] = {"Nvim", "Neovide","Fortnite", "CrosshairX"};
-#define MONITOR_FOCUS_MAIN_BLACKLIST_COUNT (sizeof(monitor_focus_main_blacklist) / sizeof(monitor_focus_main_blacklist[0]))
+static const char* MONITOR_FOCUS_MAIN_blacklist[] = {"Nvim", "Neovide","Fortnite", "CrosshairX"};
+#define MONITOR_FOCUS_MAIN_BLACKLIST_COUNT (sizeof(MONITOR_FOCUS_MAIN_blacklist) / sizeof(MONITOR_FOCUS_MAIN_blacklist[0]))
 
-static const char* monitor_focus_side_blacklist[] = {"Nvim", "Neovide","Fortnite", "CrosshairX"};
-#define MONITOR_FOCUS_SIDE_BLACKLIST_COUNT (sizeof(monitor_focus_main_blacklist) / sizeof(monitor_focus_main_blacklist[0]))
+// Fixed the copy-paste bug here so it references SIDE instead of MAIN
+static const char* MONITOR_FOCUS_SIDE_blacklist[] = {"Nvim", "Neovide","Fortnite", "CrosshairX"};
+#define MONITOR_FOCUS_SIDE_BLACKLIST_COUNT (sizeof(MONITOR_FOCUS_SIDE_blacklist) / sizeof(MONITOR_FOCUS_SIDE_blacklist[0]))
 
 static inline void SwitcherHandler(void) {
     WindowList myWindows;
@@ -314,40 +315,44 @@ static inline void ScreenshotOpenHandler(void) {
         TriggerScreenshot(hPopupWnd, true);
     }
 }
+#define BINDING(key, mod, handler, enabled) \
+    { key, mod, key##_blacklist, key##_BLACKLIST_COUNT, handler, #key, enabled }
+
+#define BINDING_CUSTOM(key, mod, blist, blist_count, handler, name, enabled) \
+    { key, mod, blist, blist_count, handler, name, enabled }
+
 static const HotkeyBinding G_HOTKEY_BINDINGS[] = {
-    
-    { SWITCHER_KEY,           HOTKEY_MOD_ALT,                      switcher_blacklist,           SWITCHER_BLACKLIST_COUNT,           SwitcherHandler,         "Switcher"         ,true},
-    { GOOGLE_SEARCH_KEY,      HOTKEY_MOD_ALT,                      google_search_blacklist,      GOOGLE_SEARCH_BLACKLIST_COUNT,      TriggerGoogleSearch,     "Google"           ,true},
-    { TODO_KEY,               HOTKEY_MOD_ALT,                      todo_blacklist,               TODO_BLACKLIST_COUNT,               TriggerTodo,             "Todo"             ,true},
-    { CALCULATOR_KEY,         HOTKEY_MOD_ALT,                      calculator_blacklist,         CALCULATOR_BLACKLIST_COUNT,         TriggerCalculator,       "Calculator"       ,true},
-    { EXE_KEY,                HOTKEY_MOD_ALT,                      exe_blacklist,                EXE_BLACKLIST_COUNT,                TriggerAppLauncher,      "AppLauncher"      ,true},
-    { KILL_PROCESS_KEY,       HOTKEY_MOD_ALT,                      kill_process_blacklist,       KILL_PROCESS_BLACKLIST_COUNT,       TriggerProcessKiller,    "ProcessKiller"    ,true},
-    { YAZI_KEY,               HOTKEY_MOD_ALT,                      yazi_blacklist,               YAZI_BLACKLIST_COUNT,               TriggerYaziZoxide,       "Yazi"             ,true},
-    { TERMINAL_KEY,           HOTKEY_MOD_ALT,                      terminal_blacklist,           TERMINAL_BLACKLIST_COUNT,           TriggerZoxide,           "Terminal"         ,true},
-    { TIMER_KEY,              HOTKEY_MOD_ALT,                      timer_blacklist,              TIMER_BLACKLIST_COUNT,              TriggerTimer,            "Timer"            ,TimerAvailable},
-    { EXPLORER_KEY,           HOTKEY_MOD_ALT,                      explorer_blacklist,           EXPLORER_BLACKLIST_COUNT,           TriggerExplorer,         "Explorer"         ,true},
-    { TERMINAL_COMMAND_KEY,   HOTKEY_MOD_ALT,                      terminal_command_blacklist,   TERMINAL_COMMAND_BLACKLIST_COUNT,   TriggerTerminalCommand,  "TerminalCommand"  ,true},
-    { VOLUME_KEY,             HOTKEY_MOD_ALT,                      volume_blacklist,             VOLUME_BLACKLIST_COUNT,             TriggerVolume,           "Volume"           ,true},
-    { MONITOR_FOCUS_MAIN_KEY, HOTKEY_MOD_ALT,                      monitor_focus_main_blacklist, MONITOR_FOCUS_MAIN_BLACKLIST_COUNT, TriggerMonitorFocusMain, "MonitorFocusMain" ,true},
-    { MONITOR_FOCUS_SIDE_KEY, HOTKEY_MOD_ALT,                      monitor_focus_side_blacklist, MONITOR_FOCUS_SIDE_BLACKLIST_COUNT, TriggerMonitorFocusSide, "MonitorFocusSide" ,true},
-    { VOLUME_KEY,             HOTKEY_MOD_ALT,                      volume_blacklist,             VOLUME_BLACKLIST_COUNT,             TriggerVolume,           "Volume"           ,true},
-    { REMINDER_KEY,           HOTKEY_MOD_ALT,                      reminder_blacklist,           REMINDER_BLACKLIST_COUNT,           TriggerReminder,         "Reminder"         ,true},
-    { POS_KEY,                HOTKEY_MOD_ALT,                      pos_blacklist,                POS_BLACKLIST_COUNT,                PosCopyHandler,          "PosCopy"          ,true},
-    { POS_KEY,                (HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT), pos_blacklist,                POS_BLACKLIST_COUNT,                PosAddHandler,           "PosAdd"           ,true},
-    { POS_KEY,                (HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL),  pos_blacklist,                POS_BLACKLIST_COUNT,                PosClearHandler,         "PosClear"         ,true},
-    { COLOR_KEY,              HOTKEY_MOD_ALT,                      color_blacklist,              COLOR_BLACKLIST_COUNT,              ColorPlainHandler,       "ColorPlain"       ,true},
-    { COLOR_KEY,              (HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL),  color_blacklist,              COLOR_BLACKLIST_COUNT,              ColorParenHandler,       "ColorParen"       ,true},
-    { PIXEL_EQUALS_KEY,       HOTKEY_MOD_ALT,                      pixel_equals_blacklist,       PIXEL_EQUALS_BLACKLIST_COUNT,       PixelEqualsAdbHandler,   "PixelEqualsAdb"   ,true},
-    { PIXEL_EQUALS_KEY,       (HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL),  pixel_equals_blacklist,       PIXEL_EQUALS_BLACKLIST_COUNT,       PixelEqualsFnHandler,    "PixelEqualsFn"    ,true},
-    { WAIT_FOR_PIXEL_KEY,     HOTKEY_MOD_ALT,                      wait_for_pixel_blacklist,     WAIT_FOR_PIXEL_BLACKLIST_COUNT,     WaitForPixelAdbHandler,  "WaitForPixelAdb"  ,true},
-    { WAIT_FOR_PIXEL_KEY,     (HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL),  wait_for_pixel_blacklist,     WAIT_FOR_PIXEL_BLACKLIST_COUNT,     WaitForPixelTapHandler,  "WaitForPixelTap"  ,true},
-    { WAIT_FOR_PIXEL_KEY,     (HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT), wait_for_pixel_blacklist,     WAIT_FOR_PIXEL_BLACKLIST_COUNT,     WaitForPixelFnHandler,   "WaitForPixelFn"   ,true},
-    { REGION_KEY,             HOTKEY_MOD_ALT,                      region_blacklist,             REGION_BLACKLIST_COUNT,             RegionCoordsHandler,     "RegionCoords"     ,true},
-    { REGION_KEY,             (HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT), region_blacklist,             REGION_BLACKLIST_COUNT,             RegionImageHandler,      "RegionImage"      ,true},
-    { SCREENSHOT_KEY,         HOTKEY_MOD_ALT,                      screenshot_blacklist,         SCREENSHOT_BLACKLIST_COUNT,         ScreenshotSaveHandler,   "ScreenshotSave"   ,true},
-    { SCREENSHOT_KEY,         (HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT), screenshot_blacklist,         SCREENSHOT_BLACKLIST_COUNT,         ScreenshotOpenHandler,   "ScreenshotOpen"   ,true},
-    { NVIM_KEY,               HOTKEY_MOD_ALT,                      nvim_blacklist,               NVIM_BLACKLIST_COUNT,               NeovideHandler,          "Neovide"          ,true},
-                                                                                                                                                                                 };
+    BINDING(SWITCHER,           HOTKEY_MOD_ALT,                      SwitcherHandler,         true),
+    BINDING(GOOGLE_SEARCH,      HOTKEY_MOD_ALT,                      TriggerGoogleSearch,     true),
+    BINDING(TODO,               HOTKEY_MOD_ALT,                      TriggerTodo,             true),
+    BINDING(CALCULATOR,         HOTKEY_MOD_ALT,                      TriggerCalculator,       true),
+    BINDING(EXE,                HOTKEY_MOD_ALT,                      TriggerAppLauncher,      true),
+    BINDING(KILL_PROCESS,       HOTKEY_MOD_ALT,                      TriggerProcessKiller,    true),
+    BINDING(YAZI,               HOTKEY_MOD_ALT,                      TriggerYaziZoxide,       true),
+    BINDING(TERMINAL,           HOTKEY_MOD_ALT,                      TriggerZoxide,           true),
+    BINDING(TIMER,              HOTKEY_MOD_ALT,                      TriggerTimer,            TimerAvailable),
+    BINDING(EXPLORER,           HOTKEY_MOD_ALT,                      TriggerExplorer,         true),
+    BINDING(TERMINAL_COMMAND,   HOTKEY_MOD_ALT,                      TriggerTerminalCommand,  true),
+    BINDING(VOLUME,             HOTKEY_MOD_ALT,                      TriggerVolume,           true),
+    BINDING(MONITOR_FOCUS_MAIN, HOTKEY_MOD_ALT,                      TriggerMonitorFocusMain, true),
+    BINDING(MONITOR_FOCUS_SIDE, HOTKEY_MOD_ALT,                      TriggerMonitorFocusSide, true),
+    BINDING(REMINDER,           HOTKEY_MOD_ALT,                      TriggerReminder,         true),
+    BINDING(POS,                HOTKEY_MOD_ALT,                      PosCopyHandler,          true),
+    BINDING(POS,                (HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT), PosAddHandler,           true),
+    BINDING(POS,                (HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL),  PosClearHandler,         true),
+    BINDING(COLOR,              HOTKEY_MOD_ALT,                      ColorPlainHandler,       true),
+    BINDING(COLOR,              (HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL),  ColorParenHandler,       true),
+    BINDING(PIXEL_EQUALS,       HOTKEY_MOD_ALT,                      PixelEqualsAdbHandler,   true),
+    BINDING(PIXEL_EQUALS,       (HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL),  PixelEqualsFnHandler,    true),
+    BINDING(WAIT_FOR_PIXEL,     HOTKEY_MOD_ALT,                      WaitForPixelAdbHandler,  true),
+    BINDING(WAIT_FOR_PIXEL,     (HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL),  WaitForPixelTapHandler,  true),
+    BINDING(WAIT_FOR_PIXEL,     (HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT), WaitForPixelFnHandler,   true),
+    BINDING(REGION,             HOTKEY_MOD_ALT,                      RegionCoordsHandler,     true),
+    BINDING(REGION,             (HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT), RegionImageHandler,      true),
+    BINDING(SCREENSHOT,         HOTKEY_MOD_ALT,                      ScreenshotSaveHandler,   true),
+    BINDING(SCREENSHOT,         (HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT), ScreenshotOpenHandler,   true),
+    BINDING(NVIM,               HOTKEY_MOD_ALT,                      NeovideHandler,          true),
+};
 
 #define HOTKEY_BINDING_COUNT (sizeof(G_HOTKEY_BINDINGS) / sizeof(G_HOTKEY_BINDINGS[0]))
 
