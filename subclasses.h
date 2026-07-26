@@ -1,5 +1,6 @@
 #ifndef SUBCLASSES_H
 #define SUBCLASSES_H
+#include <wincrypt.h>
 #include <windows.h>
 #include <commctrl.h>
 #include <psapi.h>
@@ -96,17 +97,15 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
         if (wParam == VK_RETURN) {
             bool ctrl_pressed = (GetKeyState(VK_CONTROL) & 0x8000);
             output_buffer[0] = '\0';
-            int selected_index = LB_ERR;
-
-            if (hListBox != NULL) {
-                selected_index = UI_GetSelection(hListBox);
-            }
-
-            if (selected_index != LB_ERR && hListBox != NULL) {
+            
+            if (g_SelectedIndex != -1) {
                 strncpy(output_buffer, g_populated_cache[g_SelectedIndex], sizeof(output_buffer) - 1);
             } else {
                 UI_GetText(hwnd, output_buffer, sizeof(output_buffer));
             }
+            
+            SaveFeatureHistory(output_buffer);
+            
             if (ctrl_pressed) {
                 if (g_ctrl_enter_callback != NULL) {
                     g_ctrl_enter_callback(output_buffer);

@@ -266,12 +266,10 @@ static void todo_enter_callback(const char* selection) {
     if (selected_index != LB_ERR && (input_len == 0 || strcmp(g_populated_cache[selected_index], input) == 0)) {
         const char* item_to_remove = g_populated_cache[selected_index];
         remove_todo_item_from_file(item_to_remove);
-        printf("[TODO] Removed: %s\n", item_to_remove);
         todo_refresh_callback(input, hListBox);
     } 
     else if (input_len > 0) {
         add_todo_to_file(input);
-        printf("[TODO] Added: %s\n", input);
         UI_SetText(hEditControl, "");
         todo_refresh_callback("", hListBox);
     }
@@ -284,12 +282,10 @@ static void todo_ctrlenter_callback(const char* selection) {
     if (selected_index != -1) {
         const char* item_to_remove = g_populated_cache[selected_index];
         remove_todo_item_from_file(item_to_remove);
-        printf("[TODO] Removed via Ctrl+Enter: %s\n", item_to_remove);
     } else {
         char input[256] = {0};
         UI_GetText(hEditControl, input, sizeof(input));
         add_todo_to_file(input);
-        printf("[TODO] Added: %s\n", input);
         UI_SetText(hEditControl, "");
     }
     todo_refresh_callback(NULL, hListBox);
