@@ -360,7 +360,8 @@ void TriggerTodo(void) {
                                      todo_enter_callback,    
                                      todo_ctrlenter_callback, 
                                      NULL,                    
-                                     todo_render_callback);
+                                     todo_render_callback,
+                                     NULL);
 }
 
 

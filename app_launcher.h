@@ -118,6 +118,7 @@ void TriggerAppLauncher() {
                         applauncher_enter_callback,   
                         applauncher_ctrlenter_callback,
                         NULL,
+                        NULL,
                         NULL);                         
     free(initial_items);
 }

@@ -27,6 +27,7 @@ static const MotionBinding G_VIM_BINDINGS[] = {
     { 'Q', HOTKEY_MOD_NONE,  MOTION_EXIT_WINDOW,           HandleExitWindow,         MODE_NORMAL },
     { 'W', HOTKEY_MOD_NONE,  MOTION_MOVE_WORD_FORWARD,     HandleMoveWordForward,    MODE_NORMAL },
     { 'B', HOTKEY_MOD_NONE,  MOTION_MOVE_WORD_BACKWARD,    HandleMoveWordBackward,   MODE_NORMAL },
+    { 'E', HOTKEY_MOD_NONE,  MOTION_SEND_EDIT,    HandleSendEdit,   MODE_NORMAL },
     { 'Y', HOTKEY_MOD_SHIFT, MOTION_YANK_LIST_BOX,         HandleYankListBox,        MODE_NORMAL },
     
 };

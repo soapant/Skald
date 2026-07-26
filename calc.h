@@ -490,7 +490,9 @@ void TriggerCalculator() {
                         calculator_enter_callback,     
                         calculator_ctrlenter_callback, 
                         calculator_tab_callback,
+                        NULL,
                         NULL);      
+  
                                                              
 }
 

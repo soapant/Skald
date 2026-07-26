@@ -10,6 +10,7 @@
 #include <process.h>
 #include <shlwapi.h> 
 #include "helpers.h"
+#include "modal.h"
 #include "types.h"
 #include "config.h"
 #include "common_ui.h"
@@ -106,9 +107,6 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
             } else {
                 UI_GetText(hwnd, output_buffer, sizeof(output_buffer));
             }
-            char search_string[256] = {0};
-            UI_GetCurrentText(hEditControl, search_string);
-            SaveFeatureString(search_string);
             if (ctrl_pressed) {
                 if (g_ctrl_enter_callback != NULL) {
                     g_ctrl_enter_callback(output_buffer);
@@ -136,13 +134,19 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
         if (wParam == VK_TAB) {
             if (g_tab_callback != NULL) {
                 g_tab_callback();
-            } else {
-              if (g_TotalMatches == 1) {
-                UI_SetText(hEditControl,g_populated_cache[0]);
-                UI_SetCursorPosition(hEditControl,strlen(g_populated_cache[0]));
-              }
             }
             return 0;
+        }
+        if (wParam == 'E') {
+          if (ctrl_pressed && IsInsertMode()){
+            if (g_edit_callback != NULL) {
+              g_edit_callback(output_buffer);
+            }
+          }else if (IsNormalMode()) {
+            if (g_edit_callback != NULL) {
+              g_edit_callback(output_buffer);
+            }
+          }
         }
     } 
     

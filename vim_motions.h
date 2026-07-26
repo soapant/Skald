@@ -16,6 +16,7 @@
 typedef enum {
     MOTION_NONE = 0,
     MOTION_ENTER_NORMAL,
+    MOTION_SEND_EDIT,
     MOTION_NORMALENTER,
     MOTION_NORMALCTRL_ENTER,
     MOTION_INSERT_ENTER,
@@ -414,6 +415,10 @@ static inline void HandleDeleteWordInsert(void) {
 
 static inline void HandleDeleteWordNormal(void) {
     DeleteInnerWord(false); 
+}
+static inline void HandleSendEdit(void) {
+    UI_Edit_KeyDown(hEditControl, 'E');
+    UI_Edit_KeyUp(hEditControl, 'E');
 }
 
 #endif
