@@ -29,6 +29,12 @@ const char* MusicPlayerPath = "D:\\Projects\\Music Player\\music_player.exe";
 
 const char* VideoViewerPath = "D:\\Projects\\Video Viewer\\video_viewer.exe";
 
+static const char* MusicPath = "D:\\Music";
+
+static const char* VideosPath = "D:\\videos";
+
+static const char* IconPath = "D:\\retard games\\miscellaneous\\switch_window.ico";
+
 const bool TimerAvailable = false;
 
 const bool MusicPlayerAvailable = true;
@@ -54,9 +60,6 @@ static const char* ListOfShitToIgnore[30] = {
   "build"
 };
 
-static const char* MusicPath = "D:\\Music";
-static const char* VideosPath = "D:\\videos";
-static const char* IconPath = "D:\\retard games\\miscellaneous\\switch_window.ico";
 
 static const AppHotkey G_APP_HOTKEYS[] = {
     { VK_RETURN, HOTKEY_MOD_ALT, "*", "Alacritty" },
