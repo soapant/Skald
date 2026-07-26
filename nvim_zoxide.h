@@ -158,6 +158,7 @@ static void TriggerNvimZoxide() {
                neovide_enter_callback, 
                NULL, 
                NULL, 
+               NULL,
                NULL);
     free(list);
 }

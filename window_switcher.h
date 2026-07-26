@@ -171,7 +171,8 @@ static char* TriggerWindowSwitcher(HWND hPopupWnd, WindowList myWindows) {
                                                 switcher_enter_callback,    
                                                 NULL,                       
                                                 NULL,
-                                                NULL);                      
+                                                NULL,
+                                                NULL);
 
     if (selected_title == NULL) {
         printf("[SWITCHER] UI Closed. Selection was NULL.\n");

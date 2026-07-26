@@ -387,6 +387,7 @@ static void TriggerReminder() {
                reminder_enter_callback, 
                NULL, 
                NULL, 
+               NULL,
                NULL);
     
 }

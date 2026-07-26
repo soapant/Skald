@@ -940,17 +940,4 @@ static inline void GetFeatureCallbacks(const char* name,
     }
 }
 
-static inline char* PromptUserWithFeature(const char* feature_name,
-                                          const char** items, int count,
-                                          int height, int width, int item_height) {
-    struct feature_data* data = GetFeatureData(feature_name);
-    
-    return PromptUser(items, feature_name, count, height, width, item_height,
-                      data->refresh_callback,
-                      data->enter_callback,
-                      data->ctrl_enter_callback,
-                      data->tab_callback,
-                      data->render_callback);
-}
-
 #endif

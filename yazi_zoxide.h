@@ -119,6 +119,7 @@ static void TriggerYaziZoxide() {
                yazi_enter_callback, 
                NULL, 
                NULL, 
+               NULL,
                NULL);
     
     free(list);

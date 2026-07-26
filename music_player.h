@@ -77,7 +77,8 @@ static bool HandleMusicPlayer(int vk_code, int modifiers, const char* current_ti
                                     music_enter_callback,    
                                     NULL,                    
                                     NULL,
-                                    NULL);                   
+                                    NULL,
+                                    NULL);
                 
                 free((void*)initial_items);
                 return true;

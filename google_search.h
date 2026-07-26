@@ -154,7 +154,8 @@ static void TriggerGoogleSearch() {
                google_refresh_callback, 
                google_enter_callback, 
                NULL, 
-               NULL, 
+               NULL,
+               NULL,
                NULL);
     
     free(list);
