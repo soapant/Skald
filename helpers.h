@@ -872,29 +872,20 @@ static inline void SaveFeatureString(char* string) {
 }
 
 static inline struct feature_data* GetFeatureData(const char* name) {
-    printf("[GetFeatureData] Called with name: '%s'\n", name);
-    printf("[GetFeatureData] feature_data hashmap: %p\n", (void*)feature_data);
-    
     if (!feature_data) {
-        printf("[GetFeatureData] ERROR: feature_data is NULL!\n");
         feature_data = HashMap_Create(32);
     }
     
     struct feature_data* data = (struct feature_data*)HashMap_Get(feature_data, name);
-    printf("[GetFeatureData] HashMap_Get returned: %p\n", (void*)data);
     
     if (!data) {
-        printf("[GetFeatureData] Creating new data for: %s\n", name);
         data = malloc(sizeof(struct feature_data));
         if (data) {
             memset(data, 0, sizeof(struct feature_data));
             data->name = _strdup(name);
             HashMap_Put(feature_data, name, data);
-            printf("[GetFeatureData] Created and stored data at: %p\n", (void*)data);
             
-            // Verify it was stored
             struct feature_data* verify = (struct feature_data*)HashMap_Get(feature_data, name);
-            printf("[GetFeatureData] Verification: HashMap_Get returned: %p\n", (void*)verify);
         }
     }
     return data;
