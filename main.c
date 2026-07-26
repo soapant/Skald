@@ -74,7 +74,8 @@ int img_region_step = 0;
 long img_x1 = 0, img_y1 = 0;
 HFONT g_hNumFont = NULL;
 HFONT g_hMainFont = NULL;
-HashMap* features = NULL;
+HashMap* feature_history = NULL;
+HashMap* feature_data = NULL;
 
 char* PromptUser(const char* window_list[], const char* window_title, int count, int height, int width, int item_height,
                  RefreshCallback refresh_callback, 
@@ -96,6 +97,20 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
     g_current_window_height = height;
     g_current_window_width = width;
     g_current_feature = (char*)window_title + 4;
+    struct feature_data* data = GetFeatureData(g_current_feature);
+    if (data) {
+        data->name = _strdup(g_current_feature);
+        data->items = window_list;
+        data->item_count = count;
+        data->refresh_callback = refresh_callback;
+        data->enter_callback = enter_callback;
+        data->ctrl_enter_callback = ctrl_enter_callback;
+        data->tab_callback = tab_callback;
+        data->render_callback = render_callback;
+        data->filter_match = NULL;
+        
+        printf("[REGISTRY] Registered feature: %s (%d items)\n", data->name, data->item_count);
+    }
     
     SetMode(MODE_INSERT);
 
@@ -173,7 +188,7 @@ char* SimplePromptUser(const char* prompt, const char* window_title,int height, 
     g_title = window_title;
     g_current_window_height = height;
     g_current_window_width = width;
-    g_current_feature = (char*)window_title + 2;
+    g_current_feature = (char*)window_title + 4;
     
     SetMode(MODE_INSERT);
 
@@ -416,7 +431,8 @@ int main() {
     StartUniversalTimer();
     InitializeTrayIcon();
     initialize_app_cache();
-    features = HashMap_Create(32);
+    feature_history = HashMap_Create(32);
+    feature_data = HashMap_Create(32);
     
     struct GdiplusStartupInput gdiplusStartupInput;
     gdiplusStartupInput.GdiplusVersion = 1;

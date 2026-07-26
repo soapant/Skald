@@ -45,8 +45,7 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
                           sel = 0;
                         }else {
                         if (sel == -1 && wParam == VK_UP) {
-                            // Get history list for current feature
-                            char** HistoryList = (char**)HashMap_Get(features, g_current_feature);
+                            char** HistoryList = (char**)HashMap_Get(feature_history, g_current_feature);
                             if (HistoryList) {
                                 int* idx_ptr = (int*)HashMap_Get(history_indices, g_current_feature);
                                 int idx = idx_ptr ? *idx_ptr : 0;
@@ -64,6 +63,8 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
                                             g_refresh_callback(HistoryList[idx], hListBox);
                                         }
                                     }
+                                    struct feature_data* data = GetFeatureData(g_current_feature);
+                                    PopulateListBox(hListBox, HistoryList[idx], data->items, data->item_count, data->filter_match);
                                     
                                     if (!idx_ptr) {
                                         idx_ptr = malloc(sizeof(int));
