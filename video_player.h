@@ -56,6 +56,7 @@ static void video_enter_callback(const char* selection) {
 }
 static bool HandleVideoPlayer(int vk_code, int modifiers, const char* current_title) {
     if (CheckAndBlockIfPopupActive(hPopupWnd)) return false;
+    if (!VideoViewerAvailable) return false;
     
     for (int i = 0; i < VIDEO_PLAYER_COUNT; i++) {
         const VideoPlayerBinding* binding = &G_VIDEO_PLAYERS[i];
