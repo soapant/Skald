@@ -19,6 +19,10 @@ const char* UsedImageEditor =  "picview.exe";
 
 const char* UsedFont =  "0xProto Nerd Font";
 
+const int FontSize = 24;
+
+const int NumberFontSize = 18;
+
 const char* SowonPath = "D:\\Projects\\Tscoding Timer\\sowon\\sowon.exe";
 
 const char* MusicPlayerPath = "D:\\Projects\\Music Player\\music_player.exe";
