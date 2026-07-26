@@ -39,14 +39,17 @@ static void InitTextEditor() {
           
 }
 static void LaunchNvim(const char* path) {
-    if (!path) return;
+    if (!path) {
+        printf("[NVIM] ERROR: path is NULL\n");
+        return;
+    }
     
     char cmd[2048];
     STARTUPINFOA si = {0};
     si.cb = sizeof(si);
     PROCESS_INFORMATION pi = {0};
     
-    snprintf(cmd, sizeof(cmd), " %s \"%s\"",TextEditorPath,path);
+    snprintf(cmd, sizeof(cmd), "%s \"%s\"", TextEditorPath, path);
     
     if (CreateProcessA(NULL, cmd, NULL, NULL, FALSE, 
                        CREATE_NEW_CONSOLE, 
@@ -54,10 +57,7 @@ static void LaunchNvim(const char* path) {
         CloseHandle(pi.hProcess);
         CloseHandle(pi.hThread);
     } else {
-        char sys_cmd[2048];
-        snprintf(sys_cmd, sizeof(sys_cmd), "start %s \"%s\"",TextEditorName,path);
-        
-        system(sys_cmd);
+        ShellExecuteA(NULL, "open", TextEditorName, path, NULL, SW_SHOWNORMAL);
     }
 }
 
