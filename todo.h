@@ -255,7 +255,7 @@ static void todo_refresh_callback(const char* filter, HWND hListBox) {
 static void todo_enter_callback(const char* selection) {
     char input[256] = {0};
     if (hEditControl != NULL) {
-        GetWindowTextA(hEditControl, input, sizeof(input));
+        UI_GetText(hEditControl, input, sizeof(input));
     }
     
     input[strcspn(input, "\r\n")] = '\0';
@@ -272,7 +272,7 @@ static void todo_enter_callback(const char* selection) {
     else if (input_len > 0) {
         add_todo_to_file(input);
         printf("[TODO] Added: %s\n", input);
-        SetWindowTextA(hEditControl, "");
+        UI_SetText(hEditControl, "");
         todo_refresh_callback("", hListBox);
     }
 }
@@ -287,10 +287,10 @@ static void todo_ctrlenter_callback(const char* selection) {
         printf("[TODO] Removed via Ctrl+Enter: %s\n", item_to_remove);
     } else {
         char input[256] = {0};
-        GetWindowTextA(hEditControl, input, sizeof(input));
+        UI_GetText(hEditControl, input, sizeof(input));
         add_todo_to_file(input);
         printf("[TODO] Added: %s\n", input);
-        SetWindowTextA(hEditControl, "");
+        UI_SetText(hEditControl, "");
     }
     todo_refresh_callback(NULL, hListBox);
     selection_complete = false;

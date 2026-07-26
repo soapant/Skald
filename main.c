@@ -336,7 +336,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
         HWND hForeground = GetForegroundWindow();
         char fgTitle[256] = {0};
         if (hForeground != NULL) {
-            GetWindowTextA(hForeground, fgTitle, sizeof(fgTitle));
+            UI_GetText(hForeground, fgTitle, sizeof(fgTitle));
         }
 
         int pressed_vk = (int)pKeyInfo->vkCode;

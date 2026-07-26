@@ -53,13 +53,24 @@ typedef enum {
     MOTION_SEARCH_FORWARD,
     MOTION_SEARCH_BACKWARD,
     MOTION_EXIT_WINDOW,
+    MOTION_DELETE_QUOTES_INSERT,
+    MOTION_DELETE_QUOTES_NORMAL,
+    MOTION_DELETE_SINGLE_QUOTES_INSERT,
+    MOTION_DELETE_SINGLE_QUOTES_NORMAL,
+    MOTION_DELETE_BRACKETS_INSERT,
+    MOTION_DELETE_BRACKETS_NORMAL,
+    MOTION_DELETE_CURLY_BRACKETS_INSERT,
+    MOTION_DELETE_CURLY_BRACKETS_NORMAL,
+    MOTION_DELETE_SQUARE_BRACKETS_INSERT,
+    MOTION_DELETE_SQUARE_BRACKETS_NORMAL,
+    MOTION_DELETE_WORD_NORMAL,
+    MOTION_DELETE_WORD_INSERT,
 } MotionAction;
 
 typedef struct {
     int vk_code;
     int modifiers;
     MotionAction action_id;
-    const char* name;
     void (*handler)(void);
     EditorMode mode; 
 } MotionBinding;
@@ -67,7 +78,6 @@ typedef struct {
 typedef struct {
     const char* sequence;
     MotionAction action_id;
-    const char* name;
     void (*handler)(void);
     bool is_prefix;
     EditorMode mode; 
@@ -363,6 +373,47 @@ static inline void HandleMoveWordBackward(void) {
       }
     }
   }
+}
+static inline void HandleDeleteSingleQuotesInsert(void) {
+    DeleteInsideDelimiter('\'', '\'', true);
+}
+static inline void HandleDeleteSingleQuotesNormal(void) {
+    DeleteInsideDelimiter('\'', '\'', false);
+}
+
+static inline void HandleDeleteQuotesInsert(void) {
+    DeleteInsideDelimiter('\"', '\"', true);
+}
+static inline void HandleDeleteQuotesNormal(void) {
+    DeleteInsideDelimiter('\"', '\"', false);
+}
+
+static inline void HandleDeleteBracketsInsert(void) {
+    DeleteInsideDelimiter('(', ')', true);
+}
+static inline void HandleDeleteBracketsNormal(void) {
+    DeleteInsideDelimiter('(', ')', false);
+}
+
+static inline void HandleDeleteCurlyBracketsInsert(void) {
+    DeleteInsideDelimiter('{', '}', true);
+}
+static inline void HandleDeleteCurlyBracketsNormal(void) {
+    DeleteInsideDelimiter('{', '}', false);
+}
+
+static inline void HandleDeleteSquareBracketsInsert(void) {
+    DeleteInsideDelimiter('[', ']', true);
+}
+static inline void HandleDeleteSquareBracketsNormal(void) {
+    DeleteInsideDelimiter('[', ']', false);
+}
+static inline void HandleDeleteWordInsert(void) {
+    DeleteInnerWord(true);   
+}
+
+static inline void HandleDeleteWordNormal(void) {
+    DeleteInnerWord(false); 
 }
 
 #endif

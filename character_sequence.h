@@ -130,7 +130,7 @@ static inline void DeleteLastTypedChar(void) {
     }
     
     char text[512] = {0};
-    GetWindowTextA(hEditControl, text, sizeof(text));
+    UI_GetText(hEditControl, text, sizeof(text));
     int len = (int)strlen(text);
     
     DWORD start, end;
@@ -150,7 +150,7 @@ static inline void DeleteLastTypedChar(void) {
     printf("[VIM-DEBUG] Deleting character at position %d: '%c'\n", delete_pos, deleted_char);
     
     memmove(&text[delete_pos], &text[delete_pos + 1], len - delete_pos);
-    SetWindowTextA(hEditControl, text);
+    UI_SetText(hEditControl, text);
     
     UI_Edit_SetSel(hEditControl, delete_pos, delete_pos);
     

@@ -104,7 +104,7 @@ static void neovide_enter_callback(const char* selection) {
     if (selected_index == LB_ERR) {
         char input[256] = {0};
         if (hEditControl != NULL) {
-            GetWindowTextA(hEditControl, input, sizeof(input));
+            UI_GetText(hEditControl, input, sizeof(input));
             if (strlen(input) > 0) {
                 FileAppend(NvimZoxideFile, input);
                 FileAppend(NvimZoxideFile, "\n");
@@ -130,7 +130,7 @@ static void nvim_enter_callback(const char* selection) {
     if (selected_index == LB_ERR) {
         char input[256] = {0};
         if (hEditControl != NULL) {
-            GetWindowTextA(hEditControl, input, sizeof(input));
+            UI_GetText(hEditControl, input, sizeof(input));
             if (strlen(input) > 0) {
                 FileAppend(NvimZoxideFile, input);
                 FileAppend(NvimZoxideFile, "\n");
