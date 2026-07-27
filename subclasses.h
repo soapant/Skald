@@ -23,10 +23,10 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
     HWND hParent = GetParent(hwnd);
     HWND hListBox = GetDlgItem(hParent, IDC_LIST_BOX);
     HWND hEditControl = hwnd;
-    g_ActiveEditControl = hEditControl;
-    bool ctrl_pressed = (GetKeyState(VK_CONTROL) & 0x8000);
-
+    
     if (msg == WM_KEYDOWN) {
+        g_ActiveEditControl = hEditControl;
+        bool ctrl_pressed = (GetKeyState(VK_CONTROL) & 0x8000);
         if (wParam == VK_CONTROL || wParam == VK_SHIFT) {
             return DefSubclassProc(hwnd, msg, wParam, lParam);
         }
@@ -168,9 +168,9 @@ LRESULT CALLBACK SimpleEditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPAR
     HWND hParent = GetParent(hwnd);
     HWND hListBox = GetDlgItem(hParent, IDC_LIST_BOX);
     HWND hEditControl = hwnd;
-    g_ActiveEditControl = hEditControl;
 
     if (msg == WM_KEYDOWN) {
+        g_ActiveEditControl = hEditControl;
         if (wParam == VK_CONTROL || wParam == VK_SHIFT || wParam == VK_MENU) {
             return DefSubclassProc(hwnd, msg, wParam, lParam);
         }
@@ -771,11 +771,12 @@ LRESULT CALLBACK EditPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
             RECT rect;
             GetClientRect(hwnd, &rect);
             
+            int modeHeight = 30;
             data->hEdit = CreateWindowExA(
                 0, "EDIT", data->initial_text,
                 WS_CHILD | WS_VISIBLE | ES_LEFT | ES_MULTILINE,
-                5, 5,
-                rect.right - 10, rect.bottom - 10,
+                5, modeHeight + 5,
+                rect.right - 10, rect.bottom - modeHeight - 10,
                 hwnd, (HMENU)1001, hInstance, NULL
             );
             
@@ -808,6 +809,42 @@ LRESULT CALLBACK EditPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
             HBRUSH hBgBrush = CreateSolidBrush(COLOR_BG);
             FillRect(hdc, &rect, hBgBrush);
             DeleteObject(hBgBrush);
+            
+            if (g_vim_mode != NULL) {
+                wchar_t wmode[256];
+                MultiByteToWideChar(CP_UTF8, 0, g_vim_mode, -1, wmode, 256);
+                
+                HFONT hOldFont = (HFONT)SelectObject(hdc, g_hMainFont);
+                SetBkMode(hdc, TRANSPARENT);
+                
+                COLORREF modeColor;
+                if (g_current_mode == MODE_NORMAL) {
+                    modeColor = RGB(100, 255, 255);
+                } else if (g_current_mode == MODE_INSERT) {
+                    modeColor = RGB(50, 255, 50);
+                } else {
+                    modeColor = RGB(200, 3, 222);
+                }
+                SetTextColor(hdc, modeColor);
+                
+                RECT modeRect;
+                modeRect.left = 8;
+                modeRect.top = 4;
+                modeRect.right = rect.right - 8;
+                modeRect.bottom = 28;
+                
+                DrawTextW(hdc, wmode, -1, &modeRect, DT_LEFT | DT_TOP);
+                
+                SelectObject(hdc, hOldFont);
+                
+                HPEN hPen = CreatePen(PS_SOLID, 1, RGB(60, 65, 75));
+                HPEN hOldPen = (HPEN)SelectObject(hdc, hPen);
+                MoveToEx(hdc, 5, 30, NULL);
+                LineTo(hdc, rect.right - 5, 30);
+                SelectObject(hdc, hOldPen);
+                DeleteObject(hPen);
+            }
+            
             EndPaint(hwnd, &ps);
             return 0;
         }

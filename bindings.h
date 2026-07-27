@@ -11,12 +11,14 @@
 
 static inline bool CheckVimMotion(int pressed_vk, int modifiers, MotionAction* out_action, const char** out_sequence, int* out_typed_count) {
     extern HWND hPopupWnd;
-    extern HWND hEditControl;
+    extern HWND g_hEditPopup;
     
     if (!g_vim_mode_enabled) return false;
     if (!hPopupWnd || !IsWindow(hPopupWnd)) return false;
-    if (!hEditControl || !IsWindow(hEditControl)) return false;
-    if (GetFocus() != hEditControl) return false;
+    if (!g_ActiveEditControl || !IsWindow(g_ActiveEditControl)) return false;
+    if (GetFocus() != g_ActiveEditControl) return false;
+    
+    bool in_popup = (g_hEditPopup != NULL && IsWindow(g_hEditPopup));
     
     bool shift_held = (modifiers & HOTKEY_MOD_SHIFT) != 0;
     bool ctrl_held = (modifiers & HOTKEY_MOD_CTRL) != 0;
@@ -50,7 +52,8 @@ static inline bool CheckVimMotion(int pressed_vk, int modifiers, MotionAction* o
         SequenceStartTimer();
         for (int i = 0; i < VIM_SEQUENCE_BINDING_COUNT; i++) {
             const SequenceBinding* b = &G_VIM_SEQUENCE_BINDINGS[i];
-            if (b->mode == MODE_INSERT && SequenceMatches(b->sequence)) {
+            if (b->mode == MODE_INSERT && SequenceMatches(b->sequence) &&
+                ScopeMatches(b->scope, in_popup)) {
                 *out_action = b->action_id;
                 *out_sequence = b->sequence;
                 *out_typed_count = SequenceTypedCount();
@@ -61,7 +64,8 @@ static inline bool CheckVimMotion(int pressed_vk, int modifiers, MotionAction* o
         
         for (int i = 0; i < VIM_SEQUENCE_BINDING_COUNT; i++) {
             const SequenceBinding* b = &G_VIM_SEQUENCE_BINDINGS[i];
-            if (b->mode == MODE_INSERT && SequenceStartsWith(b->sequence)) {
+            if (b->mode == MODE_INSERT && SequenceStartsWith(b->sequence) &&
+                ScopeMatches(b->scope, in_popup)) {
                 return true;
             }
         }
@@ -79,9 +83,10 @@ static inline bool CheckVimMotion(int pressed_vk, int modifiers, MotionAction* o
         bool is_prefix = false;
         for (int i = 0; i < VIM_SEQUENCE_BINDING_COUNT; i++) {
             const SequenceBinding* b = &G_VIM_SEQUENCE_BINDINGS[i];
-                if (b->mode == MODE_INSERT && tolower(b->sequence[0]) == seq_char) {
-                    is_prefix = true;
-                    break;
+            if (b->mode == MODE_INSERT && tolower(b->sequence[0]) == seq_char &&
+                ScopeMatches(b->scope, in_popup)) {
+                is_prefix = true;
+                break;
             }
         }
         
@@ -117,7 +122,7 @@ static inline bool CheckVimMotion(int pressed_vk, int modifiers, MotionAction* o
             
             for (int i = 0; i < VIM_SEQUENCE_BINDING_COUNT; i++) {
                 const SequenceBinding* b = &G_VIM_SEQUENCE_BINDINGS[i];
-                if (b->mode == MODE_NORMAL) {
+                if (b->mode == MODE_NORMAL && ScopeMatches(b->scope, in_popup)) {
                     if (SequenceMatches(b->sequence)) {
                         *out_action = b->action_id;
                         *out_sequence = b->sequence;
@@ -136,7 +141,8 @@ static inline bool CheckVimMotion(int pressed_vk, int modifiers, MotionAction* o
         
         for (int i = 0; i < VIM_BINDING_COUNT; i++) {
             const MotionBinding* b = &G_VIM_BINDINGS[i];
-            if (b->vk_code == pressed_vk && b->modifiers == modifiers && b->mode == MODE_NORMAL) {
+            if (b->vk_code == pressed_vk && b->modifiers == modifiers && b->mode == MODE_NORMAL &&
+                ScopeMatches(b->scope, in_popup)) {
                 *out_action = b->action_id;
                 *out_sequence = NULL;
                 *out_typed_count = 0;
@@ -155,10 +161,7 @@ static inline bool CheckVimMotion(int pressed_vk, int modifiers, MotionAction* o
 }
 
 static inline void RemoveSequenceFromEdit(int typed_count) {
-    extern HWND hEditControl;
-    
-    
-    if (!hEditControl || !IsWindow(hEditControl)) {
+    if (!g_ActiveEditControl || !IsWindow(g_ActiveEditControl)) {
         return;
     }
     if (typed_count <= 0) {
@@ -166,13 +169,13 @@ static inline void RemoveSequenceFromEdit(int typed_count) {
     }
     
     char text[512] = {0};
-    UI_GetCurrentText(hEditControl,text);
+    UI_GetCurrentText(g_ActiveEditControl,text);
     int text_len = (int)strlen(text);
     
     if (text_len >= typed_count) {
         text[text_len - typed_count] = '\0';
-        UI_SetText(hEditControl,text);
-        UI_SetCursorPosition(hEditControl,text_len - typed_count);
+        UI_SetText(g_ActiveEditControl,text);
+        UI_SetCursorPosition(g_ActiveEditControl,text_len - typed_count);
     } else {
     }
 }

@@ -23,24 +23,37 @@ int last_selection = 0;
 static inline void SetMode(EditorMode mode) {
     g_current_mode = mode;
     g_vim_mode = g_mode_names[mode];
-    if (strcmp(g_vim_mode,"INSERT") == 0 ) {
-      last_selection = UI_GetSelection(hListBox);
-      UI_SetSelection(hListBox,-1, g_SelectedIndex);
-    } else if (strcmp(g_vim_mode,"NORMAL") == 0) {
-      if (g_TotalMatches != 0) {
-          if (last_selection <= 0) {
-              UI_SetSelection(hListBox,0, g_SelectedIndex);
-          } else {
-              UI_SetSelection(hListBox,last_selection, g_SelectedIndex);
+    
+    extern HWND g_hEditPopup;
+    bool in_popup = (g_hEditPopup != NULL && IsWindow(g_hEditPopup));
+    
+    if (!in_popup) {
+        if (strcmp(g_vim_mode,"INSERT") == 0 ) {
+          last_selection = UI_GetSelection(hListBox);
+          UI_SetSelection(hListBox,-1, g_SelectedIndex);
+        } else if (strcmp(g_vim_mode,"NORMAL") == 0) {
+          if (g_TotalMatches != 0) {
+              if (last_selection <= 0) {
+                  UI_SetSelection(hListBox,0, g_SelectedIndex);
+              } else {
+                  UI_SetSelection(hListBox,last_selection, g_SelectedIndex);
+              }
           }
-      }
+        }
     }
-    UpdateTextCaret(hEditControl);
+    
+    if (g_ActiveEditControl) {
+        UpdateTextCaret(g_ActiveEditControl);
+    }
     
     extern HWND hPopupWnd;
     if (hPopupWnd != NULL && IsWindow(hPopupWnd)) {
         InvalidateRect(hPopupWnd, NULL, FALSE);
         UpdateWindow(hPopupWnd);
+    }
+    if (g_hEditPopup != NULL && IsWindow(g_hEditPopup)) {
+        InvalidateRect(g_hEditPopup, NULL, FALSE);
+        UpdateWindow(g_hEditPopup);
     }
 }
 
