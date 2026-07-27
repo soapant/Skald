@@ -92,28 +92,28 @@ static inline void HandleEnterNormal(void) {
 }
 
 static inline void HandleEnterInsertOut(void) { 
-    if (!hEditControl || !IsWindow(hEditControl)) return;
+    if (!g_ActiveEditControl || !IsWindow(g_ActiveEditControl)) return;
     
     DWORD start = 0, end = 0;
-    UI_GetCurrentCursorPosition(hEditControl, &start, &end);
+    UI_GetCurrentCursorPosition(g_ActiveEditControl, &start, &end);
     
     int pos = (int)start + 1;
     
-    UI_SetCursorPosition(hEditControl,pos);
+    UI_SetCursorPosition(g_ActiveEditControl,pos);
     
     SetMode(MODE_INSERT); 
     printf("[VIM] Entered INSERT mode\n");
 }
 
 static inline void HandleEnterInsertIn(void) { 
-    if (!hEditControl || !IsWindow(hEditControl)) return;
+    if (!g_ActiveEditControl || !IsWindow(g_ActiveEditControl)) return;
     
     DWORD start = 0, end = 0;
-    UI_GetCurrentCursorPosition(hEditControl, &start, &end);
+    UI_GetCurrentCursorPosition(g_ActiveEditControl, &start, &end);
     
     int pos = (int)start;
     
-    UI_SetCursorPosition(hEditControl,pos);
+    UI_SetCursorPosition(g_ActiveEditControl,pos);
     
     SetMode(MODE_INSERT); 
     
@@ -128,32 +128,32 @@ static inline void HandleEnterVisual(void) {
 
 
 static inline void HandleMoveLeft(void) {
-      UI_Edit_KeyDown(hEditControl, VK_LEFT);
-      UI_Edit_KeyUp(hEditControl, VK_LEFT);
+      UI_Edit_KeyDown(g_ActiveEditControl, VK_LEFT);
+      UI_Edit_KeyUp(g_ActiveEditControl, VK_LEFT);
 }
 
 static inline void HandleMoveRight(void) {
     if (g_SelectedIndex == -1) {
-        UI_Edit_KeyDown(hEditControl, VK_RIGHT);
-        UI_Edit_KeyUp(hEditControl, VK_RIGHT);
+        UI_Edit_KeyDown(g_ActiveEditControl, VK_RIGHT);
+        UI_Edit_KeyUp(g_ActiveEditControl, VK_RIGHT);
     } else {
       if (hListBox != NULL && UI_IsListBoxSelected()) {
-        UI_Edit_KeyDown(hEditControl, VK_RETURN);
-        UI_Edit_KeyUp(hEditControl, VK_RETURN);
+        UI_Edit_KeyDown(g_ActiveEditControl, VK_RETURN);
+        UI_Edit_KeyUp(g_ActiveEditControl, VK_RETURN);
       }
     }
 }
 static inline void HandleMoveUp(void) {
-    if (hEditControl && IsWindow(hEditControl)) {
-        UI_Edit_KeyDown(hEditControl, VK_UP);
-        UI_Edit_KeyUp(hEditControl, VK_UP);
+    if (g_ActiveEditControl && IsWindow(g_ActiveEditControl)) {
+        UI_Edit_KeyDown(g_ActiveEditControl, VK_UP);
+        UI_Edit_KeyUp(g_ActiveEditControl, VK_UP);
     }
 }
 
 static inline void HandleMoveDown(void) {
-    if (hEditControl && IsWindow(hEditControl)) {
-        UI_Edit_KeyDown(hEditControl, VK_DOWN);
-        UI_Edit_KeyUp(hEditControl, VK_DOWN);
+    if (g_ActiveEditControl && IsWindow(g_ActiveEditControl)) {
+        UI_Edit_KeyDown(g_ActiveEditControl, VK_DOWN);
+        UI_Edit_KeyUp(g_ActiveEditControl, VK_DOWN);
     }
 }
 
@@ -169,8 +169,8 @@ static inline void HandlePersistentDelete(void) {
     }
     
     UI_SetSelection(hListBox,g_SelectedIndex -1,g_SelectedIndex);
-    UI_Edit_KeyDown(hEditControl, VK_DOWN);
-    UI_Edit_KeyUp(hEditControl, VK_DOWN);
+    UI_Edit_KeyDown(g_ActiveEditControl, VK_DOWN);
+    UI_Edit_KeyUp(g_ActiveEditControl, VK_DOWN);
     
     
     return;
@@ -192,7 +192,7 @@ static inline void HandleDelete(void) {
 }
 
 static inline void HandleDeleteCharInsert(void) {
-    if (hEditControl && IsWindow(hEditControl)) {
+    if (g_ActiveEditControl && IsWindow(g_ActiveEditControl)) {
         DeleteCharUnderCursor();
         HandleEnterInsertIn(); 
         printf("[VIM] Deleted character under cursor & Switched to Insert\n");
@@ -200,30 +200,30 @@ static inline void HandleDeleteCharInsert(void) {
 }
 
 static inline void HandleDeleteCharNormal(void) {
-    if (hEditControl && IsWindow(hEditControl)) {
+    if (g_ActiveEditControl && IsWindow(g_ActiveEditControl)) {
         DeleteCharUnderCursor();
         printf("[VIM] Deleted character under cursor\n");
     }
 }
 
 static inline void HandleDeleteLine(void) {
-    if (hEditControl && IsWindow(hEditControl)) {
-        UI_SetText(hEditControl,"");
+    if (g_ActiveEditControl && IsWindow(g_ActiveEditControl)) {
+        UI_SetText(g_ActiveEditControl,"");
         printf("[VIM] Deleted Entire Search Box \n");
     }
 }
 
 static inline void HandleDeleteLineInsert(void) {
-    if (hEditControl && IsWindow(hEditControl)) {
-        UI_SetText(hEditControl,"");
+    if (g_ActiveEditControl && IsWindow(g_ActiveEditControl)) {
+        UI_SetText(g_ActiveEditControl,"");
         SetMode(MODE_INSERT);
         printf("[VIM] Deleted Entire Search Box & Switched to Insert\n");
     }
 }
 
 static inline void HandleDeleteLineNormal(void) {
-    if (hEditControl && IsWindow(hEditControl)) {
-        UI_SetText(hEditControl,"");
+    if (g_ActiveEditControl && IsWindow(g_ActiveEditControl)) {
+        UI_SetText(g_ActiveEditControl,"");
         SetMode(MODE_NORMAL); 
         printf("[VIM] Deleted Entire Search Box (Normal Mode Kept)\n");
     }
@@ -272,10 +272,10 @@ static inline void HandleYankListBox(void) {
 }
 
 static inline void HandleYankLine(void) {
-    if (hEditControl && IsWindow(hEditControl)) {
+    if (g_ActiveEditControl && IsWindow(g_ActiveEditControl)) {
         char textBuffer[256] = {0};
         char buffer[256];
-        UI_GetCurrentText(hEditControl,textBuffer);
+        UI_GetCurrentText(g_ActiveEditControl,textBuffer);
         
         textBuffer[strcspn(textBuffer, "\r\n")] = '\0';
         
@@ -288,15 +288,15 @@ static inline void HandleYankLine(void) {
 }
 
 static inline void HandleInsertRegularEnter(void) {
-  UI_Edit_KeyDown(hEditControl, VK_RETURN);
-  UI_Edit_KeyUp(hEditControl, VK_RETURN);
+  UI_Edit_KeyDown(g_ActiveEditControl, VK_RETURN);
+  UI_Edit_KeyUp(g_ActiveEditControl, VK_RETURN);
 }
 
 static inline void HandleInsertControlEnter(void) {
-  UI_Edit_KeyDown(hEditControl, VK_CONTROL);
-  UI_Edit_KeyDown(hEditControl, VK_RETURN);
-  UI_Edit_KeyUp(hEditControl, VK_RETURN);
-  UI_Edit_KeyUp(hEditControl, VK_CONTROL);
+  UI_Edit_KeyDown(g_ActiveEditControl, VK_CONTROL);
+  UI_Edit_KeyDown(g_ActiveEditControl, VK_RETURN);
+  UI_Edit_KeyUp(g_ActiveEditControl, VK_RETURN);
+  UI_Edit_KeyUp(g_ActiveEditControl, VK_CONTROL);
   selection_complete = false;
 }
 
@@ -304,12 +304,12 @@ static inline void HandleMoveWordForward(void) {
 if (!UI_IsListBoxSelected()) {
     char text[512];
       
-    UI_GetCurrentText(hEditControl,text);
+    UI_GetCurrentText(g_ActiveEditControl,text);
     
     DWORD start = 0;
     DWORD end = 0;
 
-    UI_GetCurrentCursorPosition(hEditControl, &start, &end);
+    UI_GetCurrentCursorPosition(g_ActiveEditControl, &start, &end);
     
     int pos = (int)start;
     int len = (int)strlen(text);
@@ -327,7 +327,7 @@ if (!UI_IsListBoxSelected()) {
         } else {
           for (int j = i; j < len; j++) {
             if (text[j] != ' ') {
-              UI_SetCursorPosition(hEditControl,j);
+              UI_SetCursorPosition(g_ActiveEditControl,j);
               break;
             } else {
               continue;
@@ -343,11 +343,11 @@ if (!UI_IsListBoxSelected()) {
 static inline void HandleMoveWordBackward(void) {
   if (!UI_IsListBoxSelected()) {
     char text[512];
-    UI_GetCurrentText(hEditControl, text);
+    UI_GetCurrentText(g_ActiveEditControl, text);
     
     DWORD start = 0;
     DWORD end = 0;
-    UI_GetCurrentCursorPosition(hEditControl, &start, &end);
+    UI_GetCurrentCursorPosition(g_ActiveEditControl, &start, &end);
     
     int pos = (int)start;
 
@@ -362,14 +362,14 @@ static inline void HandleMoveWordBackward(void) {
           char next_char = (j >= 0) ? text[j] : ' ';
 
           if (next_char != ' ') {
-            UI_SetCursorPosition(hEditControl, j + 1);
+            UI_SetCursorPosition(g_ActiveEditControl, j + 1);
             return; 
           } else {
             continue;
           }
         }
         
-        UI_SetCursorPosition(hEditControl, 0);
+        UI_SetCursorPosition(g_ActiveEditControl, 0);
         return;
       }
     }
@@ -417,8 +417,8 @@ static inline void HandleDeleteWordNormal(void) {
     DeleteInnerWord(false); 
 }
 static inline void HandleSendEdit(void) {
-    UI_Edit_KeyDown(hEditControl, 'E');
-    UI_Edit_KeyUp(hEditControl, 'E');
+    UI_Edit_KeyDown(g_ActiveEditControl,'E');
+    UI_Edit_KeyUp(g_ActiveEditControl, 'E');
 }
 
 #endif

@@ -18,17 +18,19 @@
 int g_refresh_count = 0;
 COLORREF DisplayMessageText;
 HashMap* history_indices = NULL;
+
 LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
     HWND hParent = GetParent(hwnd);
     HWND hListBox = GetDlgItem(hParent, IDC_LIST_BOX);
     HWND hEditControl = hwnd;
+    g_ActiveEditControl = hEditControl;
     bool ctrl_pressed = (GetKeyState(VK_CONTROL) & 0x8000);
 
     if (msg == WM_KEYDOWN) {
         if (wParam == VK_CONTROL || wParam == VK_SHIFT) {
             return DefSubclassProc(hwnd, msg, wParam, lParam);
         }
-
+        
         if (wParam >= '0' && wParam <= '9') {
             if (ctrl_pressed) {
               HandleNumberShortcut(wParam, hListBox, hEditControl,true);
@@ -137,16 +139,26 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
             return 0;
         }
         if (wParam == 'E') {
-          if (ctrl_pressed && IsInsertMode()){
-            if (g_edit_callback != NULL) {
-              g_edit_callback(output_buffer);
+            output_buffer[0] = '\0';
+            
+            
+            if (g_SelectedIndex != -1) {
+                strncpy(output_buffer, g_populated_cache[g_SelectedIndex], sizeof(output_buffer) - 1);
+            } else {
+                UI_GetText(hwnd, output_buffer, sizeof(output_buffer));
             }
-          }else if (IsNormalMode()) {
-            if (g_edit_callback != NULL) {
-              g_edit_callback(output_buffer);
+            if (ctrl_pressed && IsInsertMode()){
+                if (g_edit_callback != NULL) {
+                  g_edit_callback(output_buffer);
+                }
+                return 0;
+            }else if (IsNormalMode()) {
+                if (g_edit_callback != NULL) {
+                  g_edit_callback(output_buffer);
+                }
+                return 0;
             }
           }
-        }
     } 
     
     return DefSubclassProc(hwnd, msg, wParam, lParam);
@@ -156,6 +168,7 @@ LRESULT CALLBACK SimpleEditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPAR
     HWND hParent = GetParent(hwnd);
     HWND hListBox = GetDlgItem(hParent, IDC_LIST_BOX);
     HWND hEditControl = hwnd;
+    g_ActiveEditControl = hEditControl;
 
     if (msg == WM_KEYDOWN) {
         if (wParam == VK_CONTROL || wParam == VK_SHIFT || wParam == VK_MENU) {
@@ -694,6 +707,120 @@ LRESULT CALLBACK DisplayMessageProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
                 free(data);
                 SetWindowLongPtrA(hwnd, GWLP_USERDATA, 0);
             }
+            break;
+        }
+    }
+    return DefWindowProcA(hwnd, msg, wParam, lParam);
+}
+
+LRESULT CALLBACK EditPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
+    EditPopupData* data = (EditPopupData*)dwRefData;
+    if (!data || !data->hEdit) {
+        data = (EditPopupData*)GetWindowLongPtrA(hWnd, GWLP_USERDATA);
+    }
+    
+    if (uMsg == WM_KEYDOWN) {        
+        if (wParam == 'E' && data && !data->consumed_trigger_e) {
+            return 0;
+        }
+        
+        if (!data || !data->hEdit) {
+            return DefSubclassProc(hWnd, uMsg, wParam, lParam);
+        }
+        
+        if (wParam == VK_ESCAPE) {
+            printf("[EditPopup] Escape pressed\n");
+            data->result = NULL;
+            DestroyWindow(GetParent(hWnd));
+            return 0;
+        }
+        if (wParam == VK_RETURN) {
+            if (GetKeyState(VK_SHIFT) & 0x8000) {
+                return DefSubclassProc(hWnd, uMsg, wParam, lParam);
+            }
+            printf("[EditPopup] Enter pressed\n");
+            char buffer[2048] = {0};
+            GetWindowTextA(data->hEdit, buffer, sizeof(buffer) - 1);
+            data->result = _strdup(buffer);
+            DestroyWindow(GetParent(hWnd));
+            return 0;
+        }
+    } else if (uMsg == WM_CHAR) {
+        if ((wParam == 'e' || wParam == 'E') && data && !data->consumed_trigger_e) {
+            data->consumed_trigger_e = true;
+            return 0;
+        }
+    }
+    return DefSubclassProc(hWnd, uMsg, wParam, lParam);
+}
+
+LRESULT CALLBACK EditPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+    EditPopupData* data = (EditPopupData*)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
+    
+    switch (msg) {
+        case WM_NCCREATE: {
+            CREATESTRUCTA* cs = (CREATESTRUCTA*)lParam;
+            SetWindowLongPtrA(hwnd, GWLP_USERDATA, (LONG_PTR)cs->lpCreateParams);
+            return DefWindowProcA(hwnd, msg, wParam, lParam);
+        }
+        
+        case WM_CREATE: {
+            if (!data) break;
+            
+            HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtrA(hwnd, GWLP_HINSTANCE);
+            RECT rect;
+            GetClientRect(hwnd, &rect);
+            
+            data->hEdit = CreateWindowExA(
+                0, "EDIT", data->initial_text,
+                WS_CHILD | WS_VISIBLE | ES_LEFT | ES_MULTILINE,
+                5, 5,
+                rect.right - 10, rect.bottom - 10,
+                hwnd, (HMENU)1001, hInstance, NULL
+            );
+            
+            if (data->hEdit) {
+                SendMessageA(data->hEdit, WM_SETFONT, (WPARAM)data->hFont, TRUE);
+                SendMessageA(data->hEdit, EM_SETSEL, 0, 0);
+                SetFocus(data->hEdit);
+                g_ActiveEditControl = data->hEdit;
+                
+                SetWindowLongPtrA(data->hEdit, GWLP_USERDATA, (LONG_PTR)data);
+                SetWindowSubclass(data->hEdit, EditPopupSubclassProc, 0, (DWORD_PTR)data);
+            }
+            break;
+        }
+        
+        case WM_CTLCOLOREDIT: {
+            HDC hdc = (HDC)wParam;
+            SetTextColor(hdc, COLOR_TEXT);
+            SetBkColor(hdc, COLOR_BG);
+            static HBRUSH hBrush = NULL;
+            if (!hBrush) hBrush = CreateSolidBrush(COLOR_BG);
+            return (LRESULT)hBrush;
+        }
+        
+        case WM_PAINT: {
+            PAINTSTRUCT ps;
+            HDC hdc = BeginPaint(hwnd, &ps);
+            RECT rect;
+            GetClientRect(hwnd, &rect);
+            HBRUSH hBgBrush = CreateSolidBrush(COLOR_BG);
+            FillRect(hdc, &rect, hBgBrush);
+            DeleteObject(hBgBrush);
+            EndPaint(hwnd, &ps);
+            return 0;
+        }
+        
+        case WM_DESTROY: {
+            g_ActiveEditControl = hEditControl;
+            if (data) {
+                if (data->initial_text) free((void*)data->initial_text);
+                if (data->result) free((void*)data->result);
+                if (data->hFont) DeleteObject(data->hFont);
+                SetWindowLongPtrA(hwnd, GWLP_USERDATA, 0);
+            }
+            ForceWindowFocus(hPopupWnd, hEditControl);
             break;
         }
     }
