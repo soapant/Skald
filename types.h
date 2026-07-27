@@ -26,6 +26,8 @@ char* SimplePromptUser(const char* prompt, const char* window_title,int height, 
 
 char* DisplayMessage(const char* message, int centerX, int centerY, int width, int height,int timeout);
 
+char* EditTextPopup(const char* initial_text, int centerX, int centerY, int maxWidth, int maxHeight);
+
 void SaveRegionToPNG(int x1, int y1, int x2, int y2, const char* fullPath);
 
 LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
@@ -51,6 +53,15 @@ struct feature_data {
     EditCallback edit_callback;
     bool (*filter_match)(const char*, const char*);
 };
+
+typedef struct {
+    char* initial_text;
+    char* result;
+    HFONT hFont;
+    int alpha;
+    HWND hEdit;
+    bool consumed_trigger_e;
+} EditPopupData;
 
 void UpdateTextCaret(HWND hwndEditControl);
 typedef struct HashMapEntry {
@@ -227,6 +238,9 @@ extern HWND hPopupWnd;
 extern HWND hListBox;
 extern HWND hDisplayMessage;
 extern HWND hEditControl;
+extern HWND g_ActiveEditControl;
+extern HWND g_hEditPopup;
+extern EditPopupData* g_EditData;
 extern bool selection_complete;
 extern RefreshCallback g_refresh_callback;
 extern EnterCallback g_enter_callback;

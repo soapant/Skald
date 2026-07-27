@@ -339,6 +339,9 @@ static void todo_render_callback(HDC hdc, const char* text, RECT* rect, BOOL is_
     
     SelectObject(hdc, hOldFont);
 }
+static void todo_edit_callback(const char* selection) {
+    char* NewTodoName = EditTextPopup(selection,960,540,1000,300);
+}
 
 void TriggerTodo(void) {
     char todo_lines[100][512];
@@ -357,7 +360,7 @@ void TriggerTodo(void) {
                                      todo_ctrlenter_callback, 
                                      NULL,                    
                                      todo_render_callback,
-                                     NULL);
+                                     todo_edit_callback);
 }
 
 
