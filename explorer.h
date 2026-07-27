@@ -103,6 +103,20 @@ static void explorer_enter_callback(const char* selection) {
     }
 }
 
+static void explorer_edit_callback(const char* selection) {
+    char* NewexplorerQuery = EditTextPopup(selection,960,540,1000,300);
+    
+    if (NewexplorerQuery != NULL) {
+        WriteToCacheIndex(g_SelectedIndex,NewexplorerQuery);
+    }
+    
+    ReplaceLineInMappedFile(ExplorerZoxideFile,g_SelectedIndex,NewexplorerQuery);
+    
+    RebuildExplorerCache();
+    
+    explorer_refresh_callback("",hListBox);
+}
+
 static void TriggerExplorer() {
     if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
     
@@ -123,7 +137,7 @@ static void TriggerExplorer() {
                NULL, 
                NULL, 
                NULL,
-               NULL);
+               explorer_edit_callback);
     
     free(list);
 }

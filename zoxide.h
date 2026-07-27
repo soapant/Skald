@@ -61,6 +61,20 @@ static void zoxide_refresh_callback(const char* filter, HWND hListBox) {
     PopulateListBox(hListBox, filter, (const char**)g_cached_zoxide_commands, g_cached_zoxide_count, NULL);
 }
 
+static void zoxide_edit_callback(const char* selection) {
+    char* NewZoxideQuery = EditTextPopup(selection,960,540,1000,300);
+    
+    if (NewZoxideQuery != NULL) {
+        WriteToCacheIndex(g_SelectedIndex,NewZoxideQuery);
+    }
+    
+    ReplaceLineInMappedFile(TerminalZoxideFile,g_SelectedIndex,NewZoxideQuery);
+    
+    RebuildZoxideCache();
+    
+    zoxide_refresh_callback("",hListBox);
+}
+
 
 
 static void zoxide_enter_callback(const char* selection) {
@@ -124,7 +138,7 @@ static void TriggerZoxide() {
                NULL, 
                NULL, 
                NULL,
-               NULL);
+               zoxide_edit_callback);
     
     free(list);
 }
