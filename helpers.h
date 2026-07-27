@@ -977,5 +977,11 @@ static int ReplaceLineInFile(const char* filepath, int line_index, const char* n
     
     return 1;
 }
+static void WriteToCacheIndex(int index, const char* text) {
+    if (index < 0 || index >= MAX_ITEMS || !text) return;
+    
+    strncpy(g_populated_cache[index], text, sizeof(g_populated_cache[index]) - 1);
+    g_populated_cache[index][sizeof(g_populated_cache[index]) - 1] = '\0';
+}
 
 #endif

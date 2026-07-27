@@ -345,9 +345,7 @@ static void todo_edit_callback(const char* selection) {
     char* NewTodoName = EditTextPopup(selection,960,540,1000,300);
     
     if (NewTodoName != NULL) {
-        strncpy(g_populated_cache[g_SelectedIndex], NewTodoName, sizeof(g_populated_cache[g_SelectedIndex]) - 1);
-        g_populated_cache[g_SelectedIndex][sizeof(g_populated_cache[g_SelectedIndex]) - 1] = '\0';
-        free(NewTodoName);
+        WriteToCacheIndex(g_SelectedIndex,NewTodoName);
     }
     
     ReplaceLineInFile(TODO_FILE_PATH,g_SelectedIndex,NewTodoName);
@@ -363,8 +361,6 @@ void TriggerTodo(void) {
     for (int i = 0; i < count; i++) {
         ui_list[i] = todo_lines[i];
     }
-
-    printf("[TODO] Launching UI Selection Prompt with %d items...\n", count);
 
     char* selected_item = PromptUser(ui_list, "📝 Todo", count, 920, 650, 56,
                                      todo_refresh_callback,  
