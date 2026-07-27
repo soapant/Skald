@@ -132,6 +132,19 @@ static void neovide_enter_callback(const char* selection) {
         LaunchNvim(path);
     }
 }
+static void neovide_edit_callback(const char* selection) {
+    char* NewneovideQuery = EditTextPopup(selection,960,540,1000,300);
+    
+    if (NewneovideQuery != NULL) {
+        WriteToCacheIndex(g_SelectedIndex,NewneovideQuery);
+    }
+    
+    ReplaceLineInMappedFile(NvimZoxideFile,g_SelectedIndex,NewneovideQuery);
+    
+    RebuildNvimCache();
+    
+    neovide_refresh_callback("",hListBox);
+}
 
 static void TriggerNvimZoxide() {
     if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
@@ -159,7 +172,7 @@ static void TriggerNvimZoxide() {
                NULL, 
                NULL, 
                NULL,
-               NULL);
+               neovide_edit_callback);
     free(list);
 }
 

@@ -977,6 +977,105 @@ static int ReplaceLineInFile(const char* filepath, int line_index, const char* n
     
     return 1;
 }
+static int ReplaceLineInMappedFile(MappedFile* mf, int line_index, const char* new_text) {
+    if (!mf || !mf->pBuffer || !new_text || line_index < 0) return 0;
+    
+    // Get all lines
+    size_t lineCount = 0;
+    Line* lines = FileGetLines(mf, &lineCount);
+    if (!lines) return 0;
+    
+    // Check if index is valid
+    if (line_index >= lineCount) {
+        free(lines);
+        return 0;
+    }
+    
+    // Calculate the new file size
+    size_t new_size = 0;
+    for (size_t i = 0; i < lineCount; i++) {
+        if (i == line_index) {
+            // Use new text for this line
+            new_size += strlen(new_text) + 1; // +1 for newline
+        } else {
+            new_size += lines[i].length + 1; // +1 for newline
+        }
+    }
+    
+    // Allocate new buffer
+    char* new_buffer = (char*)malloc(new_size + 1);
+    if (!new_buffer) {
+        free(lines);
+        return 0;
+    }
+    
+    // Build new file content
+    char* ptr = new_buffer;
+    for (size_t i = 0; i < lineCount; i++) {
+        if (i == line_index) {
+            // Write new text
+            int len = strlen(new_text);
+            memcpy(ptr, new_text, len);
+            ptr += len;
+        } else {
+            // Write existing line
+            memcpy(ptr, lines[i].ptr, lines[i].length);
+            ptr += lines[i].length;
+        }
+        // Add newline
+        *ptr = '\n';
+        ptr++;
+    }
+    *ptr = '\0';
+    
+    // Resize the mapped file
+    HANDLE hFile = mf->hFile;
+    
+    // Unmap and close old mapping
+    if (mf->pBuffer) {
+        FlushViewOfFile(mf->pBuffer, mf->fileSize);
+        UnmapViewOfFile(mf->pBuffer);
+        mf->pBuffer = NULL;
+    }
+    if (mf->hMapping) {
+        CloseHandle(mf->hMapping);
+        mf->hMapping = NULL;
+    }
+    
+    // Set new file size
+    LARGE_INTEGER newFileSize;
+    newFileSize.QuadPart = new_size;
+    SetFilePointerEx(hFile, newFileSize, NULL, FILE_BEGIN);
+    SetEndOfFile(hFile);
+    
+    // Create new mapping
+    LARGE_INTEGER mapSizeLI;
+    mapSizeLI.QuadPart = new_size;
+    mf->hMapping = CreateFileMappingA(hFile, NULL, PAGE_READWRITE, 
+                                       mapSizeLI.HighPart, mapSizeLI.LowPart, NULL);
+    if (!mf->hMapping) {
+        free(lines);
+        free(new_buffer);
+        return 0;
+    }
+    
+    mf->pBuffer = (char*)MapViewOfFile(mf->hMapping, FILE_MAP_WRITE, 0, 0, 0);
+    if (!mf->pBuffer) {
+        CloseHandle(mf->hMapping);
+        mf->hMapping = NULL;
+        free(lines);
+        free(new_buffer);
+        return 0;
+    }
+    
+    // Copy new content to mapped file
+    memcpy(mf->pBuffer, new_buffer, new_size);
+    mf->fileSize = new_size;
+    
+    free(lines);
+    free(new_buffer);
+    return 1;
+}
 static void WriteToCacheIndex(int index, const char* text) {
     if (index < 0 || index >= MAX_ITEMS || !text) return;
     

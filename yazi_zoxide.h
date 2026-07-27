@@ -99,6 +99,19 @@ static void yazi_enter_callback(const char* selection) {
         }
     }
 }
+static void yazi_edit_callback(const char* selection) {
+    char* NewyaziQuery = EditTextPopup(selection,960,540,1000,300);
+    
+    if (NewyaziQuery != NULL) {
+        WriteToCacheIndex(g_SelectedIndex,NewyaziQuery);
+    }
+    
+    ReplaceLineInMappedFile(YaziZoxideFile,g_SelectedIndex,NewyaziQuery);
+    
+    RebuildYaziCache();
+    
+    yazi_refresh_callback("",hListBox);
+}
 
 static void TriggerYaziZoxide() {
     if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
@@ -120,7 +133,7 @@ static void TriggerYaziZoxide() {
                NULL, 
                NULL, 
                NULL,
-               NULL);
+               yazi_edit_callback);
     
     free(list);
 }

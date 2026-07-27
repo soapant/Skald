@@ -124,6 +124,20 @@ static void terminal_enter_callback(const char* selection) {
     }
 }
 
+static void terminal_edit_callback(const char* selection) {
+    char* NewterminalQuery = EditTextPopup(selection,960,540,1000,300);
+    
+    if (NewterminalQuery != NULL) {
+        WriteToCacheIndex(g_SelectedIndex,NewterminalQuery);
+    }
+    
+    ReplaceLineInMappedFile(TerminalHistoryFile,g_SelectedIndex,NewterminalQuery);
+    
+    RebuildCommandCache();
+    
+    terminal_refresh_callback("",hListBox);
+}
+
 static void TriggerTerminalCommand() {
     if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
     
@@ -144,7 +158,7 @@ static void TriggerTerminalCommand() {
                NULL, 
                NULL, 
                NULL,
-               NULL);
+               terminal_edit_callback);
     
     free(list);
 }
