@@ -51,8 +51,6 @@ static void RebuildZoxideCache(void) {
     free(lines);
 }
 
-
-
 static void zoxide_refresh_callback(const char* filter, HWND hListBox) {
     if (!hListBox) return;
     
