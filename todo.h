@@ -52,10 +52,6 @@ static void parse_todo_flags(char* input, TodoFlags* flags, char* clean_text) {
                 if (TODO_DICT[i].is_alias) {
                     flags->is_project = true;
                     strncpy(flags->project_name, TODO_DICT[i].internal_name, sizeof(flags->project_name) - 1);
-                } else {
-                    if (strcmp(TODO_DICT[i].flag, "-m") == 0) flags->is_misc = true;
-                    if (strcmp(TODO_DICT[i].flag, "-h") == 0) flags->is_high_priority = true;
-                    if (strcmp(TODO_DICT[i].flag, "-l") == 0) flags->is_low_priority = true;
                 }
                 processed_token = true;
                 break;
