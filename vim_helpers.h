@@ -4,12 +4,12 @@
 #include "types.h"
 
 static inline void DeleteCharUnderCursor(void) {
-    if (!hEditControl || !IsWindow(hEditControl)) return;
+    if (!g_ActiveEditControl || !IsWindow(g_ActiveEditControl)) return;
     
     char text[512] = {0};
-    UI_GetText(hEditControl, text, sizeof(text));
+    UI_GetText(g_ActiveEditControl, text, sizeof(text));
     DWORD start, end;
-    UI_Edit_GetSel(hEditControl, &start, &end);
+    UI_Edit_GetSel(g_ActiveEditControl, &start, &end);
     
     int pos = (int)start;
     int len = (int)strlen(text);
@@ -17,9 +17,9 @@ static inline void DeleteCharUnderCursor(void) {
     if (pos < len) {
         memmove(&text[pos], &text[pos + 1], len - pos);
         
-        UI_SetText(hEditControl,text);
+        UI_SetText(g_ActiveEditControl,text);
         
-        UI_SetCursorPosition(hEditControl,pos);
+        UI_SetCursorPosition(g_ActiveEditControl,pos);
     }
 }
 
@@ -29,8 +29,8 @@ static inline void ExecuteEnter(void) {
     char* selected = g_populated_cache[g_SelectedIndex];
     if (selected != NULL) {
         strncpy(text, selected, sizeof(text) - 1);
-    } else if (hEditControl && IsWindow(hEditControl)) {
-        UI_GetCurrentText(hEditControl,text);
+    } else if (g_ActiveEditControl && IsWindow(g_ActiveEditControl)) {
+        UI_GetCurrentText(g_ActiveEditControl,text);
     }
     
     if (g_enter_callback != NULL && strlen(text) > 0) {
@@ -76,32 +76,32 @@ static inline const char* GoToLastListBoxItem(void) {
 }
 
 static inline void SetCursorToStartOfText(void) {
-    if (hEditControl && IsWindow(hEditControl)) {
-        SetFocus(hEditControl);
-        UI_SetCursorPosition(hEditControl,0);
+    if (g_ActiveEditControl && IsWindow(g_ActiveEditControl)) {
+        SetFocus(g_ActiveEditControl);
+        UI_SetCursorPosition(g_ActiveEditControl,0);
     }
 }
 
 static inline void SetCursorToEndOfText(void) {
-    if (hEditControl && IsWindow(hEditControl)) {
-        SetFocus(hEditControl);
-        int len = GetWindowTextLengthA(hEditControl);
-        UI_SetCursorPosition(hEditControl,len);
+    if (g_ActiveEditControl && IsWindow(g_ActiveEditControl)) {
+        SetFocus(g_ActiveEditControl);
+        int len = GetWindowTextLengthA(g_ActiveEditControl);
+        UI_SetCursorPosition(g_ActiveEditControl,len);
     }
 }
 
 
 static inline void DeleteInsideDelimiter(char open_char, char close_char, bool keep_mode) {
-    if (!hEditControl || !IsWindow(hEditControl)) {
+    if (!g_ActiveEditControl || !IsWindow(g_ActiveEditControl)) {
         return;
     }
     
     char text[512] = {0};
-    UI_GetText(hEditControl, text, sizeof(text));
+    UI_GetText(g_ActiveEditControl, text, sizeof(text));
     int len = (int)strlen(text);
     
     DWORD start_pos, end_pos;
-    UI_Edit_GetSel(hEditControl, &start_pos, &end_pos);
+    UI_Edit_GetSel(g_ActiveEditControl, &start_pos, &end_pos);
     int cursor = (int)start_pos;
     
     int start = -1, end = -1;
@@ -199,8 +199,8 @@ static inline void DeleteInsideDelimiter(char open_char, char close_char, bool k
     printf("[DEBUG] Deleting from %d to %d (inside %c%c)\n", delete_start, delete_end, open_char, close_char);
     
     memmove(&text[delete_start], &text[delete_end], len - delete_end + 1);
-    UI_SetText(hEditControl, text);
-    UI_Edit_SetSel(hEditControl, delete_start, delete_start);
+    UI_SetText(g_ActiveEditControl, text);
+    UI_Edit_SetSel(g_ActiveEditControl, delete_start, delete_start);
     
     if (keep_mode) {
         SetMode(MODE_INSERT);
@@ -210,14 +210,14 @@ static inline void DeleteInsideDelimiter(char open_char, char close_char, bool k
 }
 
 static inline void DeleteInnerWord(bool keep_mode) {
-    if (!hEditControl || !IsWindow(hEditControl)) return;
+    if (!g_ActiveEditControl || !IsWindow(g_ActiveEditControl)) return;
     
     char text[512] = {0};
-    UI_GetText(hEditControl, text, sizeof(text));
+    UI_GetText(g_ActiveEditControl, text, sizeof(text));
     int len = (int)strlen(text);
     
     DWORD start_pos, end_pos;
-    UI_Edit_GetSel(hEditControl, &start_pos, &end_pos);
+    UI_Edit_GetSel(g_ActiveEditControl, &start_pos, &end_pos);
     int cursor = (int)start_pos;
     
     
@@ -284,9 +284,9 @@ static inline void DeleteInnerWord(bool keep_mode) {
         int delete_len = word_end - word_start;
         memmove(&text[word_start], &text[word_end], len - word_end + 1);
         
-        UI_SetText(hEditControl, text);
+        UI_SetText(g_ActiveEditControl, text);
         
-        UI_Edit_SetSel(hEditControl, word_start, word_start);
+        UI_Edit_SetSel(g_ActiveEditControl, word_start, word_start);
         
         if (keep_mode) {
             SetMode(MODE_INSERT);
