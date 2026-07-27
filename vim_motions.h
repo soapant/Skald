@@ -17,6 +17,7 @@ typedef enum {
     MOTION_NONE = 0,
     MOTION_ENTER_NORMAL,
     MOTION_ENTER,
+    MOTION_COPY_INTO_SEARCH,
     MOTION_SEND_EDIT,
     MOTION_NORMALENTER,
     MOTION_NORMALCTRL_ENTER,
@@ -161,14 +162,14 @@ static inline void HandleEnter(void) {
       }
 }
 static inline void HandleMoveUp(void) {
-    if (g_ActiveEditControl && IsWindow(g_ActiveEditControl)) {
+    if (g_ActiveEditControl) {
         UI_Edit_KeyDown(g_ActiveEditControl, VK_UP);
         UI_Edit_KeyUp(g_ActiveEditControl, VK_UP);
     }
 }
 
 static inline void HandleMoveDown(void) {
-    if (g_ActiveEditControl && IsWindow(g_ActiveEditControl)) {
+    if (g_ActiveEditControl) {
         UI_Edit_KeyDown(g_ActiveEditControl, VK_DOWN);
         UI_Edit_KeyUp(g_ActiveEditControl, VK_DOWN);
     }
@@ -209,7 +210,7 @@ static inline void HandleDelete(void) {
 }
 
 static inline void HandleDeleteCharInsert(void) {
-    if (g_ActiveEditControl && IsWindow(g_ActiveEditControl)) {
+    if (g_ActiveEditControl) {
         DeleteCharUnderCursor();
         HandleEnterInsertIn(); 
         printf("[VIM] Deleted character under cursor & Switched to Insert\n");
@@ -217,21 +218,21 @@ static inline void HandleDeleteCharInsert(void) {
 }
 
 static inline void HandleDeleteCharNormal(void) {
-    if (g_ActiveEditControl && IsWindow(g_ActiveEditControl)) {
+    if (g_ActiveEditControl) {
         DeleteCharUnderCursor();
         printf("[VIM] Deleted character under cursor\n");
     }
 }
 
 static inline void HandleDeleteLine(void) {
-    if (g_ActiveEditControl && IsWindow(g_ActiveEditControl)) {
+    if (g_ActiveEditControl) {
         UI_SetText(g_ActiveEditControl,"");
         printf("[VIM] Deleted Entire Search Box \n");
     }
 }
 
 static inline void HandleDeleteLineInsert(void) {
-    if (g_ActiveEditControl && IsWindow(g_ActiveEditControl)) {
+    if (g_ActiveEditControl) {
         UI_SetText(g_ActiveEditControl,"");
         SetMode(MODE_INSERT);
         printf("[VIM] Deleted Entire Search Box & Switched to Insert\n");
@@ -239,7 +240,7 @@ static inline void HandleDeleteLineInsert(void) {
 }
 
 static inline void HandleDeleteLineNormal(void) {
-    if (g_ActiveEditControl && IsWindow(g_ActiveEditControl)) {
+    if (g_ActiveEditControl) {
         UI_SetText(g_ActiveEditControl,"");
         SetMode(MODE_NORMAL); 
         printf("[VIM] Deleted Entire Search Box (Normal Mode Kept)\n");
@@ -289,7 +290,7 @@ static inline void HandleYankListBox(void) {
 }
 
 static inline void HandleYankLine(void) {
-    if (g_ActiveEditControl && IsWindow(g_ActiveEditControl)) {
+    if (g_ActiveEditControl) {
         char textBuffer[256] = {0};
         char buffer[256];
         UI_GetCurrentText(g_ActiveEditControl,textBuffer);
@@ -436,6 +437,13 @@ static inline void HandleDeleteWordNormal(void) {
 static inline void HandleSendEdit(void) {
     UI_Edit_KeyDown(g_ActiveEditControl,'E');
     UI_Edit_KeyUp(g_ActiveEditControl, 'E');
+}
+static inline void HandleCopyToSearch(void) {
+  if (UI_IsListBoxSelected()) {
+    char* text = g_populated_cache[g_SelectedIndex];
+    UI_SetText(hEditControl,text);
+    UI_SetCursorPosition(hEditControl,strlen(text));
+  }
 }
 
 #endif

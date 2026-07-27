@@ -141,7 +141,6 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
         if (wParam == 'E') {
             output_buffer[0] = '\0';
             
-            
             if (g_SelectedIndex != -1) {
                 strncpy(output_buffer, g_populated_cache[g_SelectedIndex], sizeof(output_buffer) - 1);
             } else {
