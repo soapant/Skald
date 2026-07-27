@@ -389,11 +389,12 @@ void CreateChildControls(HWND hwndParent, HFONT hFont, const char* list[], int c
         0, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
         20, 50, layout->w - 40, 40, hwndParent, (HMENU)IDC_INPUT_BOX, hInstance, NULL
     );
-    
     if (!hEditControl) return;
     
+    g_ActiveEditControl = hEditControl;
     UI_Edit_SetFont(hEditControl, hFont);
     SetWindowSubclass(hEditControl, EditSubclassProc, 0, 0);
+
 
 
     if (count > 0) {
@@ -443,6 +444,7 @@ void SimpleCreateChildControls(HWND hwndParent, HFONT hFont, const char* string,
     
     if (!hEditControl) return;
     
+    g_ActiveEditControl = hEditControl;
     UI_Edit_SetFont(hEditControl, hFont);
     SetWindowSubclass(hEditControl, SimpleEditSubclassProc, 0, 0);
 
