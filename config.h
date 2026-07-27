@@ -197,7 +197,8 @@ static const FocusSwitcherBinding G_FOCUS_SWITCHERS[] = {
 static const TodoConfigEntry TODO_DICT[] = {
     { "-pc", "Cprogram",          NULL, RGB(98,  160, 234), true  },
     { "-ph", "HeaderC",           NULL, RGB(51,  209, 122), true  },
-    { "-pm", "MinecraftModpack",  NULL, RGB(255, 120, 0),   true  },
+    { "-pm", "MinecraftModpack", NULL, RGB(255, 120, 0), true  },
+    { "-pb", "CocBot",           NULL, RGB(255, 255, 0), true  },
 
     { "-m",  NULL,                "[Misc]", RGB(154, 153, 150), false },
     { "-l",  NULL,                "[Learning]", RGB(102, 255, 0), false },

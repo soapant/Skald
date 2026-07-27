@@ -319,7 +319,6 @@ static inline void HandleInsertControlEnter(void) {
 }
 
 static inline void HandleMoveWordForward(void) {
-if (!UI_IsListBoxSelected()) {
     char text[512];
       
     UI_GetCurrentText(g_ActiveEditControl,text);
@@ -354,12 +353,10 @@ if (!UI_IsListBoxSelected()) {
           break;
         }
       }
-    }
   }
 }
 
 static inline void HandleMoveWordBackward(void) {
-  if (!UI_IsListBoxSelected()) {
     char text[512];
     UI_GetCurrentText(g_ActiveEditControl, text);
     
@@ -391,7 +388,6 @@ static inline void HandleMoveWordBackward(void) {
         return;
       }
     }
-  }
 }
 static inline void HandleDeleteSingleQuotesInsert(void) {
     DeleteInsideDelimiter('\'', '\'', true);
