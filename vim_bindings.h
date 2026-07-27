@@ -31,6 +31,7 @@ static const MotionBinding G_VIM_BINDINGS[] = {
     { 'E', HOTKEY_MOD_NONE,  MOTION_SEND_EDIT,             HandleSendEdit,           MODE_NORMAL, VIM_SCOPE_MODAL },
     { 'Y', HOTKEY_MOD_SHIFT, MOTION_YANK_LIST_BOX,         HandleYankListBox,        MODE_NORMAL, VIM_SCOPE_MODAL },
     { 'R', HOTKEY_MOD_NONE, MOTION_COPY_INTO_SEARCH,         HandleCopyToSearch,        MODE_NORMAL, VIM_SCOPE_MODAL },
+
     
 };
 

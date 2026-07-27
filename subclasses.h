@@ -852,7 +852,6 @@ LRESULT CALLBACK EditPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
             g_ActiveEditControl = hEditControl;
             if (data) {
                 if (data->initial_text) free((void*)data->initial_text);
-                if (data->result) free((void*)data->result);
                 if (data->hFont) DeleteObject(data->hFont);
                 SetWindowLongPtrA(hwnd, GWLP_USERDATA, 0);
             }
