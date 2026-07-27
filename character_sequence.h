@@ -120,21 +120,19 @@ static inline bool SequenceTimedOut(void) {
 }
 
 static inline void DeleteLastTypedChar(void) {
-    extern HWND hEditControl;
-    
     printf("[VIM-DEBUG] DeleteLastTypedChar: START\n");
     
-    if (!hEditControl || !IsWindow(hEditControl)) {
-        printf("[VIM-DEBUG] DeleteLastTypedChar: hEditControl invalid!\n");
+    if (!g_ActiveEditControl || !IsWindow(g_ActiveEditControl)) {
+        printf("[VIM-DEBUG] DeleteLastTypedChar: g_ActiveEditControl invalid!\n");
         return;
     }
     
     char text[512] = {0};
-    UI_GetText(hEditControl, text, sizeof(text));
+    UI_GetText(g_ActiveEditControl, text, sizeof(text));
     int len = (int)strlen(text);
     
     DWORD start, end;
-    UI_GetCurrentCursorPosition(hEditControl, &start, &end);
+    UI_GetCurrentCursorPosition(g_ActiveEditControl, &start, &end);
     int cursor_pos = (int)start;
     
     printf("[VIM-DEBUG] DeleteLastTypedChar: text='%s', len=%d, cursor_pos=%d\n", text, len, cursor_pos);
@@ -150,9 +148,9 @@ static inline void DeleteLastTypedChar(void) {
     printf("[VIM-DEBUG] Deleting character at position %d: '%c'\n", delete_pos, deleted_char);
     
     memmove(&text[delete_pos], &text[delete_pos + 1], len - delete_pos);
-    UI_SetText(hEditControl, text);
+    UI_SetText(g_ActiveEditControl, text);
     
-    UI_Edit_SetSel(hEditControl, delete_pos, delete_pos);
+    UI_Edit_SetSel(g_ActiveEditControl, delete_pos, delete_pos);
     
     printf("[VIM-DEBUG] Deleted character '%c', new text='%s', cursor at %d\n", 
            deleted_char, text, delete_pos);

@@ -338,8 +338,9 @@ void UpdateTextCaret(HWND hwndEditControl)
     }
 
     static int lastWidth = -1;
+    static HWND lastHwnd = NULL;
     
-    if (caretWidth != lastWidth) {
+    if (caretWidth != lastWidth || hwndEditControl != lastHwnd) {
         DestroyCaret();
         CreateCaret(hwndEditControl, NULL, caretWidth, caretHeight);
         ShowCaret(hwndEditControl);
@@ -347,6 +348,7 @@ void UpdateTextCaret(HWND hwndEditControl)
         SetCaretBlinkTime(INFINITE);
         
         lastWidth = caretWidth;
+        lastHwnd = hwndEditControl;
     }
 }
 POINT ptPrimary = { 0, 0 }; 

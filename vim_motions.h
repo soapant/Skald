@@ -16,6 +16,7 @@
 typedef enum {
     MOTION_NONE = 0,
     MOTION_ENTER_NORMAL,
+    MOTION_ENTER,
     MOTION_SEND_EDIT,
     MOTION_NORMALENTER,
     MOTION_NORMALCTRL_ENTER,
@@ -68,12 +69,28 @@ typedef enum {
     MOTION_DELETE_WORD_INSERT,
 } MotionAction;
 
+typedef enum {
+    VIM_SCOPE_ALL = 0,
+    VIM_SCOPE_MODAL,
+    VIM_SCOPE_POPUP,
+} VimScope;
+
+static inline bool ScopeMatches(VimScope scope, bool in_popup) {
+    switch (scope) {
+        case VIM_SCOPE_ALL:   return true;
+        case VIM_SCOPE_MODAL: return !in_popup;
+        case VIM_SCOPE_POPUP: return in_popup;
+        default:              return false;
+    }
+}
+
 typedef struct {
     int vk_code;
     int modifiers;
     MotionAction action_id;
     void (*handler)(void);
-    EditorMode mode; 
+    EditorMode mode;
+    VimScope scope;
 } MotionBinding;
 
 typedef struct {
@@ -81,7 +98,8 @@ typedef struct {
     MotionAction action_id;
     void (*handler)(void);
     bool is_prefix;
-    EditorMode mode; 
+    EditorMode mode;
+    VimScope scope;
 } SequenceBinding;
 
 
@@ -131,17 +149,16 @@ static inline void HandleMoveLeft(void) {
       UI_Edit_KeyDown(g_ActiveEditControl, VK_LEFT);
       UI_Edit_KeyUp(g_ActiveEditControl, VK_LEFT);
 }
-
 static inline void HandleMoveRight(void) {
-    if (g_SelectedIndex == -1) {
-        UI_Edit_KeyDown(g_ActiveEditControl, VK_RIGHT);
-        UI_Edit_KeyUp(g_ActiveEditControl, VK_RIGHT);
-    } else {
-      if (hListBox != NULL && UI_IsListBoxSelected()) {
+      UI_Edit_KeyDown(g_ActiveEditControl, VK_RIGHT);
+      UI_Edit_KeyUp(g_ActiveEditControl, VK_RIGHT);
+}
+
+static inline void HandleEnter(void) {
+    if (hListBox != NULL && UI_IsListBoxSelected()) {
         UI_Edit_KeyDown(g_ActiveEditControl, VK_RETURN);
         UI_Edit_KeyUp(g_ActiveEditControl, VK_RETURN);
       }
-    }
 }
 static inline void HandleMoveUp(void) {
     if (g_ActiveEditControl && IsWindow(g_ActiveEditControl)) {
