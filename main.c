@@ -35,6 +35,8 @@ HWND hPopupWnd = NULL;
 HWND hEditControl = NULL;
 HWND hListBox = NULL;
 HWND hDisplayMessage = NULL;
+HWND g_hEditPopup = NULL;
+EditPopupData* g_EditData = NULL;
 char output_buffer[256] = {0};
 bool selection_complete = false;
 int region_step = 0; 
@@ -49,6 +51,7 @@ CtrlEnterCallback g_ctrl_enter_callback = NULL;
 TabCallback g_tab_callback = NULL;
 RenderCallback g_render_callback = NULL;
 EditCallback g_edit_callback = NULL;
+HWND g_ActiveEditControl = NULL;
 char* g_current_feature = NULL;
 int g_timeout = 1;
 const char** g_initial_items = NULL;
@@ -313,6 +316,103 @@ char* DisplayMessage(const char* message, int centerX, int centerY, int maxWidth
     return NULL; 
 }
 
+char* EditTextPopup(const char* initial_text, int centerX, int centerY, int maxWidth, int maxHeight) {
+    HINSTANCE hInstance = GetModuleHandle(NULL);
+    
+    if (!initial_text) return NULL;
+    
+    if (g_hEditPopup && IsWindow(g_hEditPopup)) {
+        DestroyWindow(g_hEditPopup);
+        g_hEditPopup = NULL;
+    }
+    
+    // === MEASURE TEXT ===
+    HDC hdc = GetDC(NULL);
+    HFONT hFont = CreateCustomNerdFont(FontSize, UsedFont);
+    HFONT hOldFont = (HFONT)SelectObject(hdc, hFont);
+    
+    // Measure the text to size the window
+    RECT textRect = {0, 0, maxWidth - 40, maxHeight - 60};
+    DrawTextA(hdc, initial_text, -1, &textRect, DT_LEFT | DT_WORDBREAK | DT_CALCRECT);
+    
+    SelectObject(hdc, hOldFont);
+    DeleteObject(hFont);
+    ReleaseDC(NULL, hdc);
+    
+    int padding = 30;
+    int editHeight = 40;
+    int winWidth = textRect.right + padding + 20;
+    int winHeight = textRect.bottom + padding + editHeight + 20;
+    
+    if (winWidth > maxWidth) winWidth = maxWidth;
+    if (winHeight > maxHeight) winHeight = maxHeight;
+    if (winWidth < 200) winWidth = 200;
+    if (winHeight < 100) winHeight = 100;
+    
+    // === CREATE DATA ===
+    EditPopupData* pData = (EditPopupData*)malloc(sizeof(EditPopupData));
+    if (!pData) return NULL;
+    
+    pData->initial_text = _strdup(initial_text);
+    pData->result = NULL;
+    pData->hFont = CreateCustomNerdFont(FontSize, UsedFont);
+    pData->alpha = 255;
+    pData->hEdit = NULL;
+    pData->consumed_trigger_e = false;
+    
+    int topLeftX = centerX - (winWidth / 2);
+    int topLeftY = centerY - (winHeight / 2);
+    
+    HWND hPopupWnd = CreateWindowExA(
+        WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED | WS_EX_NOACTIVATE,
+        "EditPopupClass", NULL, WS_POPUP,
+        topLeftX, topLeftY, winWidth, winHeight,
+        NULL, NULL, hInstance, pData
+    );
+    
+    if (hPopupWnd == NULL) {
+        printf("[ERROR] EditPopup creation failed\n");
+        DeleteObject(pData->hFont);
+        free(pData);
+        return NULL;
+    }
+    
+    g_hEditPopup = hPopupWnd;
+    g_EditData = pData;
+    
+    SetLayeredWindowAttributes(hPopupWnd, 0, pData->alpha, LWA_ALPHA);
+    
+    ShowWindow(hPopupWnd, SW_SHOWNOACTIVATE);
+    UpdateWindow(hPopupWnd);
+    
+    SetTimer(hPopupWnd, 999, 50, NULL);
+    
+    // === MESSAGE LOOP ===
+    MSG msg;
+    while (IsWindow(hPopupWnd) && g_EditData && g_EditData->result == NULL) {
+        if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        } else {
+            Sleep(10);
+        }
+    }
+    
+    // === RETURN RESULT ===
+    char* result = NULL;
+    if (g_EditData && g_EditData->result) {
+        result = _strdup(g_EditData->result);
+    }
+    
+    if (hPopupWnd && IsWindow(hPopupWnd)) {
+        DestroyWindow(hPopupWnd);
+    }
+    g_hEditPopup = NULL;
+    g_EditData = NULL;
+    
+    return result;
+}
+
 HHOOK hKeyboardHook = NULL;
 #include <shlwapi.h>
 #pragma comment(lib, "Shlwapi.lib")
@@ -489,6 +589,19 @@ int main() {
     wcFade.lpszClassName = "DisplayMessageModalClass";
 
     if (RegisterClassA(&wcFade)) {
+        printf("[SYSTEM-BOOT] DisplayMessageClass registered successfully with OS.\n");
+    } else {
+        printf("[SYSTEM-BOOT] WARNING: Failed to register FadeNotificationClass! Error: %lu\n", GetLastError());
+    }
+    WNDCLASSA editPopupWc = {0};
+    editPopupWc.lpfnWndProc = EditPopupProc;
+    editPopupWc.hInstance = GetModuleHandle(NULL);
+    editPopupWc.hCursor = LoadCursor(NULL, IDC_ARROW);
+    editPopupWc.hbrBackground = CreateSolidBrush(COLOR_BG);
+    editPopupWc.lpszClassName = "EditPopupClass";
+    RegisterClassA(&editPopupWc);
+    
+    if (RegisterClassA(&editPopupWc)) {
         printf("[SYSTEM-BOOT] DisplayMessageClass registered successfully with OS.\n");
     } else {
         printf("[SYSTEM-BOOT] WARNING: Failed to register FadeNotificationClass! Error: %lu\n", GetLastError());
