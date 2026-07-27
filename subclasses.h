@@ -265,8 +265,7 @@ LRESULT CALLBACK ListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
           }
           return DefSubclassProc(hWnd, uMsg, wParam, lParam);
       }
-
-int counter;
+static int g_last_selected_index = -1;
 LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
       case WM_CTLCOLOREDIT:
@@ -409,23 +408,34 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                   HBRUSH hBrush = isSelected ? hColorfulBrush[color_index] : hColorfulBrush[color_index];
                   FillRect(pdis->hDC, &pdis->rcItem, hBrush);
               } else {
-                  FillRect(pdis->hDC, &pdis->rcItem, isSelected ? hSelBrush : hBgBrush);
-                  char measureBuffer[512];
-                  strncpy(measureBuffer, g_populated_cache[pdis->itemID], sizeof(measureBuffer) - 1);
-                  measureBuffer[sizeof(measureBuffer) - 1] = '\0';
-                  
-                  char* pos = strchr(measureBuffer, '|');
-                  if (pos) {
-                      *pos = '\0';
-                  }
-                  if (isSelected && strlen(measureBuffer) >= 70) {
-                    DisplayMessageText = rainbow_text_cache[pdis->itemID];
-                    MSG_TOP(g_populated_cache[pdis->itemID],140,6969);
-                    DisplayMessageText = COLOR_TEXT;
-                  } else {
-                    KillTimer(hDisplayMessage, 999);
-                    DestroyWindow(hDisplayMessage);
-                  }
+                if (g_SelectedIndex != -1) {
+                    FillRect(pdis->hDC, &pdis->rcItem, isSelected ? hSelBrush : hBgBrush);
+                    char measureBuffer[512];
+                    strncpy(measureBuffer, g_populated_cache[pdis->itemID], sizeof(measureBuffer) - 1);
+                    measureBuffer[sizeof(measureBuffer) - 1] = '\0';
+                    
+                    char* pos = strchr(measureBuffer, '|');
+                    if (pos) {
+                        *pos = '\0';
+                    }
+                    if (isSelected && strlen(measureBuffer) >= 70) {
+                        if (g_last_selected_index != pdis->itemID || hDisplayMessage == NULL) {
+                            g_last_selected_index = pdis->itemID;
+                            DisplayMessageText = rainbow_text_cache[pdis->itemID];
+                            MSG_TOP(g_populated_cache[pdis->itemID], 140, 6969);
+                            DisplayMessageText = COLOR_TEXT;
+                        }
+                    } else {
+                        if (g_last_selected_index == pdis->itemID) {
+                            g_last_selected_index = -1;
+                            if (hDisplayMessage != NULL) {
+                                KillTimer(hDisplayMessage, 999);
+                                DestroyWindow(hDisplayMessage);
+                                hDisplayMessage = NULL;
+                            }
+                        }
+                    }
+                }
               }
               
               const char* textBuffer = "";
@@ -441,7 +451,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
               SetBkMode(pdis->hDC, TRANSPARENT);
               RECT textRect = pdis->rcItem;
               
-              if (pdis->itemID < 99) {
+              if (pdis->itemID < 60) {
                   RECT numRect = pdis->rcItem;
                   numRect.left += 5;
                   numRect.right = numRect.left + 25;

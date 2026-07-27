@@ -24,5 +24,4 @@ VERY IMPORTANT YOU NEED TO SET UP THE WHOLE EDIT CALLBACK WITH A WINDOW YOU CAN 
 you could also like hide the string if its too long so the user focused on the window||[Project: Cprogram]
 i should also add a keyword type thing so i can color in a specif word in a todo||[Project: Cprogram]
 also you coudl add notes to the todo instead of just tags||[Project: Cprogram]
-the fucking history arrow up thingy isnt working now||[Project: Cprogram]
 the window on selection thing has an issue i probably will remember||[Project: Cprogram]
