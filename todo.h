@@ -349,8 +349,6 @@ static void todo_edit_callback(const char* selection) {
     }
     
     ReplaceLineInFile(TODO_FILE_PATH,g_SelectedIndex,NewTodoName);
-    
-    todo_refresh_callback("", hListBox);
 }
 
 void TriggerTodo(void) {

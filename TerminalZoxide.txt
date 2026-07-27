@@ -8,7 +8,7 @@ ai
 oll
 rew
 ala
-alaC
+alacritty
 dev
 include
 player

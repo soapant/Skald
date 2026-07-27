@@ -136,6 +136,20 @@ static void google_enter_callback(const char* selection) {
     }
 }
 
+static void google_edit_callback(const char* selection) {
+    char* NewgoogleQuery = EditTextPopup(selection,960,540,1000,300);
+    
+    if (NewgoogleQuery != NULL) {
+        WriteToCacheIndex(g_SelectedIndex,NewgoogleQuery);
+    }
+    
+    ReplaceLineInMappedFile(GoogleZoxideFile,g_SelectedIndex,NewgoogleQuery);
+    
+    RebuildGoogleCache();
+    
+    google_refresh_callback("",hListBox);
+}
+
 static void TriggerGoogleSearch() {
     if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
     
@@ -156,7 +170,7 @@ static void TriggerGoogleSearch() {
                NULL, 
                NULL,
                NULL,
-               NULL);
+               google_edit_callback);
     
     free(list);
 }

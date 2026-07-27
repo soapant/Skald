@@ -367,6 +367,19 @@ static void reminder_enter_callback(const char* selection) {
         StartReminder(selection);
     }
 }
+static void reminder_edit_callback(const char* selection) {
+    char* NewreminderQuery = EditTextPopup(selection,960,540,1000,300);
+    
+    if (NewreminderQuery != NULL) {
+        WriteToCacheIndex(g_SelectedIndex,NewreminderQuery);
+    }
+    
+    ReplaceLineInMappedFile(ReminderHistoryFile,g_SelectedIndex,NewreminderQuery);
+    
+    RebuildReminderCache();
+    
+    reminder_refresh_callback("",hListBox);
+}
 
 static void TriggerReminder() {
     if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
@@ -388,7 +401,7 @@ static void TriggerReminder() {
                NULL, 
                NULL, 
                NULL,
-               NULL);
+               reminder_edit_callback);
     
 }
 
