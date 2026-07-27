@@ -939,5 +939,43 @@ static inline void GetFeatureCallbacks(const char* name,
         if (render) *render = data->render_callback;
     }
 }
+static int ReplaceLineInFile(const char* filepath, int line_index, const char* new_text) {
+    if (!filepath || !new_text || line_index < 0) {
+        return 0;
+    }
+    
+    FILE* f = fopen(filepath, "r");
+    if (!f) {
+        return 0;
+    }
+    
+    char lines[100][512];
+    int count = 0;
+    while (fgets(lines[count], sizeof(lines[count]), f) && count < 100) {
+        lines[count][strcspn(lines[count], "\r\n")] = '\0';
+        count++;
+    }
+    fclose(f);
+    
+    if (line_index >= count) {
+        return 0;
+    }
+    
+    
+    strncpy(lines[line_index], new_text, sizeof(lines[line_index]) - 1);
+    lines[line_index][sizeof(lines[line_index]) - 1] = '\0';
+    
+    f = fopen(filepath, "w");
+    if (!f) {
+        return 0;
+    }
+    
+    for (int i = 0; i < count; i++) {
+        fprintf(f, "%s\n", lines[i]);
+    }
+    fclose(f);
+    
+    return 1;
+}
 
 #endif

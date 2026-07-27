@@ -6,10 +6,12 @@
 #include <stdbool.h>
 #include <string.h>
 #include <winsock.h>
+#include "helpers.h"
 #include "modal.h"
 #include "types.h"
 #include "config.h"
 #include "common_ui.h"
+
 
 static inline COLORREF GetTagColor(const char* tag_string) {
     if (!tag_string || strlen(tag_string) == 0) return RGB(255,255,255);
@@ -141,7 +143,6 @@ void WriteMdFile(char lines[100][512], int count, const char* path) {
 }
 
 static void add_todo_to_file(const char* text) {
-    printf("ADDING %s\n", text);
     if (!text || strlen(text) == 0) return;
     
     char lines[100][512];
@@ -340,7 +341,18 @@ static void todo_render_callback(HDC hdc, const char* text, RECT* rect, BOOL is_
     SelectObject(hdc, hOldFont);
 }
 static void todo_edit_callback(const char* selection) {
+    
     char* NewTodoName = EditTextPopup(selection,960,540,1000,300);
+    
+    if (NewTodoName != NULL) {
+        strncpy(g_populated_cache[g_SelectedIndex], NewTodoName, sizeof(g_populated_cache[g_SelectedIndex]) - 1);
+        g_populated_cache[g_SelectedIndex][sizeof(g_populated_cache[g_SelectedIndex]) - 1] = '\0';
+        free(NewTodoName);
+    }
+    
+    ReplaceLineInFile(TODO_FILE_PATH,g_SelectedIndex,NewTodoName);
+    
+    todo_refresh_callback("", hListBox);
 }
 
 void TriggerTodo(void) {
