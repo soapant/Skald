@@ -16,6 +16,7 @@
 typedef enum {
     MOTION_NONE = 0,
     MOTION_ENTER_NORMAL,
+    MOTION_HISTORY_TOGGLE,
     MOTION_ENTER,
     MOTION_COPY_INTO_SEARCH,
     MOTION_SEND_EDIT,
@@ -440,6 +441,13 @@ static inline void HandleCopyToSearch(void) {
     UI_SetText(hEditControl,text);
     UI_SetCursorPosition(hEditControl,strlen(text));
   }
+}
+static inline void HandleToggleHistory(void) {
+  if (g_SelectedIndex != -1) {
+    UI_SetSelection(hListBox, -1, g_SelectedIndex);
+  }
+  UI_Edit_KeyDown(g_ActiveEditControl, VK_UP);
+  UI_Edit_KeyUp(g_ActiveEditControl, VK_UP);
 }
 
 #endif
