@@ -42,13 +42,10 @@ static inline void ExecuteEnter(void) {
 static inline const char* GoToFirstListBoxItem(void) {
     if (!hListBox || !IsWindow(hListBox) || g_populated_count <= 0) return NULL;
     
-    g_SelectedIndex = 0;
     g_view_offset = 0;
 
-    UI_LB_SetTopIndex(hListBox, 0);
-    UI_LB_SetCaretIndex(hListBox, 0, FALSE);
-    UI_Redraw(hListBox);
-
+    UI_SetSelection(hListBox,0,g_SelectedIndex);
+    UI_LB_SetTopIndex(hListBox,0);
     return g_populated_cache[0];
 }
 
@@ -56,21 +53,9 @@ static inline const char* GoToLastListBoxItem(void) {
     if (!hListBox || !IsWindow(hListBox) || g_populated_count <= 0) return NULL;
     
     int lastIndex = g_populated_count - 1;
-    g_SelectedIndex = lastIndex;
+    UI_SetSelection(hListBox,lastIndex,g_SelectedIndex);
 
-    RECT rect;
-    GetClientRect(hListBox, &rect);
-    int itemHeight = UI_LB_GetItemHeight(hListBox);
-    int visibleItems = (itemHeight > 0) ? (rect.bottom / itemHeight) : 1;
-    
-    int newTop = lastIndex - visibleItems + 1;
-    if (newTop < 0) newTop = 0;
-    g_view_offset = newTop;
-
-    UI_LB_SetTopIndex(hListBox, newTop);
     UI_LB_SetCaretIndex(hListBox, lastIndex, FALSE);
-    
-    UI_Redraw(hListBox);
 
     return g_populated_cache[lastIndex];
 }
