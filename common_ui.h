@@ -276,8 +276,8 @@ static inline void PopulateListBox(HWND hListBox, const char* filter,
         int raw_data_index = matching_indices[g_view_offset + i];
         if (!items[raw_data_index]) continue;
         
-        strncpy(g_populated_cache[g_populated_count], items[raw_data_index], 511);
-        g_populated_cache[g_populated_count][511] = '\0';
+        strncpy(g_populated_cache[g_populated_count], items[raw_data_index], 60);
+        g_populated_cache[g_populated_count][60] = '\0';
         g_populated_cache[g_populated_count][strcspn(g_populated_cache[g_populated_count], "\r\n")] = '\0';
         g_populated_count++;
     }
