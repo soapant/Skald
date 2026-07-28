@@ -201,18 +201,21 @@ LRESULT CALLBACK ListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
             RemoveWindowSubclass(hWnd, ListBoxSubclassProc, uIdSubclass);
             break;
         case WM_ERASEBKGND: {
-                    HDC hdc = (HDC)wParam;
-                    RECT rect;
-                    GetClientRect(hWnd, &rect);
-                    HBRUSH hBrush = CreateSolidBrush(COLOR_BG);
-                    FillRect(hdc, &rect, hBrush);
-                    DeleteObject(hBrush);
-                    return TRUE;
-                }
+                HDC hdc = (HDC)wParam;
+                RECT rect;
+                GetClientRect(hWnd, &rect);
+                HBRUSH hBrush = CreateSolidBrush(COLOR_BG);
+                FillRect(hdc, &rect, hBrush);
+                DeleteObject(hBrush);
+                return TRUE;
             }
+        default:
             return DefSubclassProc(hWnd, uMsg, wParam, lParam);
-        }
-      LRESULT CALLBACK SimpleListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
+    }
+    return 0;
+}
+
+LRESULT CALLBACK SimpleListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
           switch (uMsg) {
               case WM_NCDESTROY:
                   RemoveWindowSubclass(hWnd, SimpleListBoxSubclassProc, uIdSubclass);
@@ -349,13 +352,13 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
               
               static HBRUSH hBgBrush = NULL;
               static HBRUSH hSelBrush = NULL;
-              static HBRUSH hColorfulBrush[100] = {0};
+              static HBRUSH hColorfulBrush[MAX_VISIBLE_ITEMS + 40] = {0};
               static bool brushes_initialized = false;
               
               if (!brushes_initialized) {
                   hBgBrush = CreateSolidBrush(COLOR_BG);
                   hSelBrush = CreateSolidBrush(COLOR_SELECTED_TEXT);
-                  for (int i = 0; i < 60; i++) {
+                  for (int i = 0; i < MAX_VISIBLE_ITEMS + 40; i++) {
                       float hue = (float)i / 20.0f * 240.0f;
                       float h = hue / 60.0f;
                       float s = 0.85f;
@@ -378,19 +381,19 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                   }
                   brushes_initialized = true;
               }
-              static char num_cache[61][8] = {0};
+              static char num_cache[MAX_VISIBLE_ITEMS + 1][8] = {0};
               static bool num_init = false;
               if (!num_init) {
-                  for (int i = 0; i < 61; i++) {
+                  for (int i = 0; i < MAX_VISIBLE_ITEMS + 1; i++) {
                       snprintf(num_cache[i], sizeof(num_cache[i]), "%d.", i + 1);
                   }
                   num_init = true;
               }
               
-              static COLORREF rainbow_text_cache[61] = {0};
+              static COLORREF rainbow_text_cache[MAX_VISIBLE_ITEMS + 1] = {0};
               static bool rainbow_init = false;
               if (!rainbow_init) {
-                  for (int i = 0; i < 61; i++) {
+                  for (int i = 0; i < MAX_VISIBLE_ITEMS + 1; i++) {
                       float hue = (float)i / 20.0f * 240.0f;
                       float h = hue / 60.0f;
                       float s = 0.85f;
@@ -462,7 +465,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
               SetBkMode(pdis->hDC, TRANSPARENT);
               RECT textRect = pdis->rcItem;
               
-              if (pdis->itemID < 60) {
+              if (pdis->itemID < MAX_VISIBLE_ITEMS) {
                   RECT numRect = pdis->rcItem;
                   numRect.left += 5;
                   numRect.right = numRect.left + 25;
