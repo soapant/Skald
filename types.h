@@ -194,20 +194,42 @@ typedef struct {
 } MonitorSearch;
 
 typedef struct {
-    bool is_project;
-    char project_name[64];
-    bool is_high_priority;
-    bool is_misc;
-    bool is_low_priority;
-} TodoFlags;
+    const char* alias;
+    const char* alias_label;
+} TodoAliasEntry;
 
 typedef struct {
-    const char* flag;         
+    const char* flag;
     const char* internal_name;
-    const char* tag_label;    
-    COLORREF color;           
-    bool is_alias;            
+    const char* tag_label;
+    COLORREF color;
+    bool is_alias;
 } TodoConfigEntry;
+
+typedef struct {
+    char tag_label[64];
+    char internal_name[64];
+    COLORREF color;
+} TodoTag;
+
+typedef struct {
+    TodoTag tags[10];
+    int tag_count;
+    char text[256];
+} TodoEntry;
+
+typedef struct {
+    const char* flag;
+    void (*handler)(const char*);
+} GenericFlagEntry;
+
+typedef struct {
+    const char* open_bracket;
+    const char* close_bracket;
+    const char* tag_separator;
+    const char* tag_prefix;
+    const char* alias_separator;
+} TagFormatConfig;
 
 static FileEntry G_FILE_ENTRIES[] = {
     {"TerminalHistory", "D:\\Projects\\C Code\\TerminalHistory.txt", NULL},

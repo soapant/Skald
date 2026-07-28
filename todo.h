@@ -1,6 +1,7 @@
 #ifndef TODO_H
 #define TODO_H
 
+#include <ctype.h>
 #include <windows.h>
 #include <stdio.h>
 #include <stdbool.h>
@@ -12,187 +13,201 @@
 #include "config.h"
 #include "common_ui.h"
 
-
-static inline COLORREF GetTagColor(const char* tag_string) {
-    if (!tag_string || strlen(tag_string) == 0) return RGB(255,255,255);
+static inline COLORREF GetTagColor(const char* tag_text) {
+    if (!tag_text || strlen(tag_text) == 0) return COLOR_TEXT;
     
-    if (strncmp(tag_string, "[Project: ", 10) == 0) {
-        for (int i = 0; i < TODO_DICT_COUNT; i++) {
-            if (TODO_DICT[i].is_alias && strstr(tag_string, TODO_DICT[i].internal_name) != NULL) {
-                return TODO_DICT[i].color;
+    for (int i = 0; i < TODO_CONFIG_FLAGS_COUNT; i++) {
+        if (TODO_CONFIG_FLAGS_ENTRIES[i].tag_label) {
+            if (strstr(tag_text, TODO_CONFIG_FLAGS_ENTRIES[i].tag_label) != NULL) {
+                return TODO_CONFIG_FLAGS_ENTRIES[i].color;
             }
         }
     }
-    for (int i = 0; i < TODO_DICT_COUNT; i++) {
-        if (!TODO_DICT[i].is_alias && TODO_DICT[i].tag_label && strcmp(tag_string, TODO_DICT[i].tag_label) == 0) {
-            return TODO_DICT[i].color;
+    for (int i = 0; i < TODO_ALIAS_DICT_COUNT; i++) {
+        if (strstr(tag_text, TODO_ALIAS_DICT[i].alias) != NULL) {
+            return COLOR_TEXT;
         }
     }
-    return COLOR_TEXT; 
+    return COLOR_TEXT;
 }
 
-static void parse_todo_flags(char* input, TodoFlags* flags, char* clean_text) {
-    memset(flags, 0, sizeof(TodoFlags));
+static void ParseTodoInput(const char* input, TodoAliasEntry* alias_out, TodoConfigEntry* config_out, char* clean_text, char tags_out[][64], int* tag_count) {
+    if (!input) return;
+    
+    memset(alias_out, 0, sizeof(TodoAliasEntry));
+    if (config_out) memset(config_out, 0, sizeof(TodoConfigEntry));
     clean_text[0] = '\0';
+    *tag_count = 0;
     
-    char processed[256];
-    strncpy(processed, input, sizeof(processed) - 1);
-    processed[sizeof(processed) - 1] = '\0';
+    char input_copy[512];
+    strncpy(input_copy, input, sizeof(input_copy) - 1);
+    input_copy[sizeof(input_copy) - 1] = '\0';
     
-    char temp[256];
-    strcpy(temp, processed);
-    char* token = strtok(temp, " ");
+    FoundFlag alias_matches[10];
+    int alias_match_count = SearchFlagsInText(input_copy, TODO_ALIAS_FLAGS, TODO_ALIAS_FLAGS_COUNT, sizeof(GenericFlagEntry), alias_matches, 10);
+    
+    for (int i = 0; i < alias_match_count && *tag_count < 10; i++) {
+        char* param = GetFlagParameter(input_copy, alias_matches[i].index);
+        if (param && strlen(param) > 0) {
+            int alias_idx = -1;
+            for (int j = 0; j < TODO_ALIAS_DICT_COUNT; j++) {
+                if (strcmp(alias_matches[i].flag, TODO_ALIAS_DICT[j].alias) == 0) {
+                    alias_idx = j;
+                    break;
+                }
+            }
+            if (alias_idx >= 0) {
+                snprintf(tags_out[*tag_count], 64, "%s%s %s%s", 
+                    TODO_TAG_OPEN, TODO_ALIAS_DICT[alias_idx].alias_label, param, TODO_TAG_CLOSE);
+                (*tag_count)++;
+            }
+        }
+    }
+    
+    FoundFlag config_matches[10];
+    int config_match_count = SearchFlagsInText(input_copy, TODO_CONFIG_FLAGS, TODO_CONFIG_FLAGS_COUNT, sizeof(GenericFlagEntry), config_matches, 10);
+    
+    for (int i = 0; i < config_match_count && *tag_count < 10; i++) {
+        for (int j = 0; j < TODO_CONFIG_FLAGS_COUNT; j++) {
+            if (strcmp(config_matches[i].flag, TODO_CONFIG_FLAGS[j].flag) == 0) {
+                if (TODO_CONFIG_FLAGS_ENTRIES[j].tag_label) {
+                    snprintf(tags_out[*tag_count], 64, "%s%s%s", 
+                        TODO_TAG_OPEN, TODO_CONFIG_FLAGS_ENTRIES[j].tag_label, TODO_TAG_CLOSE);
+                    (*tag_count)++;
+                }
+                if (config_out && TODO_CONFIG_FLAGS_ENTRIES[j].is_alias) {
+                    char* param = GetFlagParameter(input_copy, config_matches[i].index);
+                    if (param && strlen(param) > 0) {
+                        strncpy(config_out->internal_name, (char*)TODO_CONFIG_FLAGS_ENTRIES[j].internal_name, sizeof(config_out->internal_name) - 1);
+                        snprintf(tags_out[*tag_count], 64, "%s%s %s%s", 
+                            TODO_TAG_OPEN, TODO_CONFIG_FLAGS_ENTRIES[j].internal_name, param, TODO_TAG_CLOSE);
+                        (*tag_count)++;
+                    }
+                }
+                break;
+            }
+        }
+    }
+    
+    char clean[512] = {0};
+    char* token = strtok(input_copy, " ");
     bool first = true;
     
     while (token != NULL) {
-        bool processed_token = false;
-
-        for (int i = 0; i < TODO_DICT_COUNT; i++) {
-            if (strcmp(token, TODO_DICT[i].flag) == 0) {
-                if (TODO_DICT[i].is_alias) {
-                    flags->is_project = true;
-                    strncpy(flags->project_name, TODO_DICT[i].internal_name, sizeof(flags->project_name) - 1);
-                }
-                processed_token = true;
+        bool is_flag = false;
+        
+        for (int i = 0; i < TODO_ALIAS_FLAGS_COUNT; i++) {
+            if (strcmp(token, TODO_ALIAS_FLAGS[i].flag) == 0) {
+                is_flag = true;
+                token = strtok(NULL, " ");
                 break;
             }
         }
         
-        if (!processed_token && token[0] == '-') {
-            if (strncmp(token, "-p", 2) == 0) {
-                flags->is_project = true;
-                if (strlen(token) > 2) {
-                    strncpy(flags->project_name, token + 2, sizeof(flags->project_name) - 1);
-                } else {
-                    token = strtok(NULL, " ");
-                    if (token != NULL) {
-                        char* start = token;
-                        char* end = token + strlen(token) - 1;
-                        if (*start == '"' && *end == '"') { start++; *end = '\0'; }
-                        strncpy(flags->project_name, start, sizeof(flags->project_name) - 1);
+        if (!is_flag) {
+            for (int i = 0; i < TODO_CONFIG_FLAGS_COUNT; i++) {
+                if (strcmp(token, TODO_CONFIG_FLAGS[i].flag) == 0) {
+                    is_flag = true;
+                    if (TODO_CONFIG_FLAGS_ENTRIES[i].is_alias) {
+                        token = strtok(NULL, " ");
                     }
+                    break;
                 }
             }
-        } 
-        else if (!processed_token) {
+        }
+        
+        if (!is_flag && token[0] != '-') {
             if (first) {
-                strncpy(clean_text, token, 255);
-                clean_text[255] = '\0';
+                strcpy(clean, token);
                 first = false;
             } else {
-                size_t current_len = strlen(clean_text);
-                if (current_len + strlen(token) + 2 < 256) {
-                    strcat(clean_text, " ");
-                    strcat(clean_text, token);
-                }
+                strcat(clean, " ");
+                strcat(clean, token);
             }
         }
+        
         token = strtok(NULL, " ");
     }
+    
+    strncpy(clean_text, clean, 511);
+    clean_text[511] = '\0';
 }
 
-int ReadMdFile(char lines[100][512], const char* path) {
-    FILE* f = fopen(path, "r");
-    if (!f) return 0;
-    int count = 0;
-    char buffer[512];
-    while (fgets(buffer, sizeof(buffer), f) && count < 100) {
-        buffer[strcspn(buffer, "\r\n")] = '\0';
-        if (strlen(buffer) > 0) {
-            strncpy(lines[count], buffer, 511);
-            lines[count][511] = '\0';
-            count++;
+static void ParseTodoLine(const char* line, char* clean_text, char tags_out[][64], int* tag_count) {
+    clean_text[0] = '\0';
+    *tag_count = 0;
+    
+    char line_copy[512];
+    strncpy(line_copy, line, sizeof(line_copy) - 1);
+    line_copy[sizeof(line_copy) - 1] = '\0';
+    
+    char* delimiter = strstr(line_copy, TODO_ENTRY_DELIMITER);
+    if (delimiter) {
+        *delimiter = '\0';
+        strncpy(clean_text, line_copy, 511);
+        clean_text[511] = '\0';
+        
+        char* tag_part = delimiter + strlen(TODO_ENTRY_DELIMITER);
+        char* tag_token = strtok(tag_part, TODO_TAG_SEPARATOR);
+        while (tag_token && *tag_count < 10) {
+            strncpy(tags_out[*tag_count], tag_token, 63);
+            tags_out[*tag_count][63] = '\0';
+            (*tag_count)++;
+            tag_token = strtok(NULL, TODO_TAG_SEPARATOR);
         }
+    } else {
+        strncpy(clean_text, line_copy, 511);
+        clean_text[511] = '\0';
     }
-    fclose(f);
-    return count;
-}
-void StripCheckboxes(char* str) {
-    char* read_ptr = str;
-    char* write_ptr = str;
-    bool is_first = true;
-
-    while (*read_ptr != '\0') {
-        if (strncmp(read_ptr, "- [ ] ", 6) == 0) {
-            if (!is_first) {
-                *write_ptr = ','; 
-                write_ptr++;
-            }
-            is_first = false; 
-            read_ptr += 6;
-        } else {
-            *write_ptr = *read_ptr;
-            write_ptr++;
-            read_ptr++;
-        }
-    }
-    *write_ptr = '\0';
 }
 
-void WriteMdFile(char lines[100][512], int count, const char* path) {
-    FILE* f = fopen(path, "w");
-    if (!f) return;
-    for (int i = 0; i < count; i++) {
-        fprintf(f, "%s\n", lines[i]);
-    }
-    fclose(f);
-}
-
-static void add_todo_to_file(const char* text) {
+static void AddTodoToFile(const char* text) {
     if (!text || strlen(text) == 0) return;
     
     char lines[100][512];
     int count = ReadMdFile(lines, TODO_FILE_PATH);
     
-    char input_copy[256];
+    char input_copy[512];
     strncpy(input_copy, text, sizeof(input_copy) - 1);
     input_copy[sizeof(input_copy) - 1] = '\0';
     
-    TodoFlags flags;
-    char clean_text[256];
-    parse_todo_flags(input_copy, &flags, clean_text);
+    TodoAliasEntry alias;
+    TodoConfigEntry config;
+    char clean_text[512];
+    char tags[10][64];
+    int tag_count = 0;
+    
+    ParseTodoInput(input_copy, &alias, &config, clean_text, tags, &tag_count);
     
     for (int i = 0; i < count; i++) {
-        char existing_clean[256];
-        strncpy(existing_clean, lines[i], sizeof(existing_clean) - 1);
-        existing_clean[sizeof(existing_clean) - 1] = '\0';
-        char* delimiter = strstr(existing_clean, "||");
-        if (delimiter) {
-            *delimiter = '\0';
-        }
+        char existing_clean[512];
+        char existing_tags[10][64];
+        int existing_tag_count = 0;
+        ParseTodoLine(lines[i], existing_clean, existing_tags, &existing_tag_count);
         if (strcmp(existing_clean, clean_text) == 0) return;
     }
     
     char new_entry[512];
-    char tag_text[128] = {0};
+    new_entry[0] = '\0';
+    strncpy(new_entry, clean_text, sizeof(new_entry) - 1);
     
-    if (flags.is_project) {
-        snprintf(tag_text, sizeof(tag_text), "[Project: %s]", flags.project_name);
-    } else {
-        for (int i = 0; i < TODO_DICT_COUNT; i++) {
-            if (!TODO_DICT[i].is_alias && TODO_DICT[i].tag_label) {
-                if ((strcmp(TODO_DICT[i].flag, "-m") == 0 && flags.is_misc) ||
-                    (strcmp(TODO_DICT[i].flag, "-h") == 0 && flags.is_high_priority) ||
-                    (strcmp(TODO_DICT[i].flag, "-l") == 0 && flags.is_low_priority)) {
-                    strcpy(tag_text, TODO_DICT[i].tag_label);
-                    break;
-                }
+    if (tag_count > 0) {
+        strcat(new_entry, TODO_ENTRY_DELIMITER);
+        for (int i = 0; i < tag_count; i++) {
+            strcat(new_entry, tags[i]);
+            if (i < tag_count - 1) {
+                strcat(new_entry, TODO_TAG_SEPARATOR);
             }
         }
     }
     
-    if (strlen(tag_text) > 0) {
-        snprintf(new_entry, sizeof(new_entry), "%s||%s", clean_text, tag_text);
-    } else {
-        strncpy(new_entry, clean_text, sizeof(new_entry) - 1);
-    }
-    
     strncpy(lines[count], new_entry, sizeof(lines[count]) - 1);
+    lines[count][sizeof(lines[count]) - 1] = '\0';
     count++;
     WriteMdFile(lines, count, TODO_FILE_PATH);
 }
 
-static void remove_todo_item_from_file(const char* item_to_remove) {
+static void RemoveTodoItemFromFile(const char* item_to_remove) {
     FILE* infile = fopen(TODO_FILE_PATH, "r");
     if (!infile) return;
 
@@ -209,16 +224,16 @@ static void remove_todo_item_from_file(const char* item_to_remove) {
         clean_line[sizeof(clean_line) - 1] = '\0';
         clean_line[strcspn(clean_line, "\r\n")] = '\0';
 
-        char compare_text[256];
+        char compare_text[512];
         strncpy(compare_text, clean_line, sizeof(compare_text) - 1);
-        char* delimiter = strstr(compare_text, "||");
+        char* delimiter = strstr(compare_text, TODO_ENTRY_DELIMITER);
         if (delimiter) {
             *delimiter = '\0';
         }
         
-        char clean_item[256];
+        char clean_item[512];
         strncpy(clean_item, item_to_remove, sizeof(clean_item) - 1);
-        char* item_delimiter = strstr(clean_item, "||");
+        char* item_delimiter = strstr(clean_item, TODO_ENTRY_DELIMITER);
         if (item_delimiter) {
             *item_delimiter = '\0';
         }
@@ -237,7 +252,7 @@ static void remove_todo_item_from_file(const char* item_to_remove) {
     MoveFileA("todo.tmp", TODO_FILE_PATH);
 }
 
-static void todo_refresh_callback(const char* filter, HWND hListBox) {
+static void TodoRefreshCallback(const char* filter, HWND hListBox) {
     char todo_lines[100][512];
     int todo_count = ReadMdFile(todo_lines, TODO_FILE_PATH);
     
@@ -246,10 +261,9 @@ static void todo_refresh_callback(const char* filter, HWND hListBox) {
         items[i] = todo_lines[i];
     }
     PopulateListBox(hListBox, filter, items, todo_count, NULL);
-    
 }
 
-static void todo_enter_callback(const char* selection) {
+static void TodoEnterCallback(const char* selection) {
     char input[256] = {0};
     if (hEditControl != NULL) {
         UI_GetText(hEditControl, input, sizeof(input));
@@ -262,51 +276,40 @@ static void todo_enter_callback(const char* selection) {
     
     if (selected_index != LB_ERR && (input_len == 0 || strcmp(g_populated_cache[selected_index], input) == 0)) {
         const char* item_to_remove = g_populated_cache[selected_index];
-        remove_todo_item_from_file(item_to_remove);
-        todo_refresh_callback(input, hListBox);
+        RemoveTodoItemFromFile(item_to_remove);
+        TodoRefreshCallback(input, hListBox);
     } 
     else if (input_len > 0) {
-        add_todo_to_file(input);
+        AddTodoToFile(input);
         UI_SetText(hEditControl, "");
-        todo_refresh_callback("", hListBox);
+        TodoRefreshCallback("", hListBox);
     }
 }
 
-static void todo_ctrlenter_callback(const char* selection) {
+static void TodoCtrlEnterCallback(const char* selection) {
     int selected_index = UI_GetSelection(hListBox);
-    
     
     if (selected_index != -1) {
         const char* item_to_remove = g_populated_cache[selected_index];
-        remove_todo_item_from_file(item_to_remove);
+        RemoveTodoItemFromFile(item_to_remove);
     } else {
         char input[256] = {0};
         UI_GetText(hEditControl, input, sizeof(input));
-        add_todo_to_file(input);
+        AddTodoToFile(input);
         UI_SetText(hEditControl, "");
     }
-    todo_refresh_callback(NULL, hListBox);
+    TodoRefreshCallback(NULL, hListBox);
     selection_complete = false;
-    
 }
-static void todo_render_callback(HDC hdc, const char* text, RECT* rect, BOOL is_selected, int itemIndex) {
+
+static void TodoRenderCallback(HDC hdc, const char* text, RECT* rect, BOOL is_selected, int itemIndex) {
     if (!text || !rect) return;
     
-    char main_text[256] = {0};
-    char tag_text[128] = {0};
+    char main_text[512] = {0};
+    char tags[10][64];
+    int tag_count = 0;
     
-    char* delimiter = strstr(text, "||");
-    if (delimiter) {
-        int len = delimiter - text;
-        if (len >= sizeof(main_text)) len = sizeof(main_text) - 1;
-        strncpy(main_text, text, len);
-        main_text[len] = '\0';
-        strncpy(tag_text, delimiter + 2, sizeof(tag_text) - 1);
-        tag_text[sizeof(tag_text) - 1] = '\0';
-    } else {
-        strncpy(main_text, text, sizeof(main_text) - 1);
-        main_text[sizeof(main_text) - 1] = '\0';
-    }
+    ParseTodoLine(text, main_text, tags, &tag_count);
     
     RECT textRect = *rect;
     textRect.left += 10;
@@ -320,7 +323,7 @@ static void todo_render_callback(HDC hdc, const char* text, RECT* rect, BOOL is_
     HFONT hOldFont = (HFONT)SelectObject(hdc, g_hMainFont);
     DrawTextA(hdc, main_text, -1, &textRect, DT_SINGLELINE | DT_VCENTER);
     
-    if (strlen(tag_text) > 0) {
+    if (tag_count > 0) {
         RECT tagRect = *rect;
         tagRect.left += 14;
         tagRect.top += 28;
@@ -328,23 +331,28 @@ static void todo_render_callback(HDC hdc, const char* text, RECT* rect, BOOL is_
         
         HFONT hOldTagFont = (HFONT)SelectObject(hdc, g_hMainFont);
         
-        SetTextColor(hdc, GetTagColor(tag_text));
-        DrawTextA(hdc, tag_text, -1, &tagRect, DT_LEFT | DT_TOP);
+        int y_offset = 0;
+        for (int i = 0; i < tag_count; i++) {
+            SetTextColor(hdc, GetTagColor(tags[i]));
+            RECT singleTagRect = tagRect;
+            singleTagRect.top += y_offset;
+            DrawTextA(hdc, tags[i], -1, &singleTagRect, DT_LEFT | DT_TOP);
+            y_offset += 18;
+        }
         
         SelectObject(hdc, hOldTagFont);
     }
     
     SelectObject(hdc, hOldFont);
 }
-static void todo_edit_callback(const char* selection) {
-    
-    char* NewTodoName = EditTextPopup(selection,960,540,1000,300);
+
+static void TodoEditCallback(const char* selection) {
+    char* NewTodoName = EditTextPopup(selection, 960, 540, 1000, 300);
     
     if (NewTodoName != NULL) {
-        WriteToCacheIndex(g_SelectedIndex,NewTodoName);
+        WriteToCacheIndex(g_SelectedIndex, NewTodoName);
     }
-    
-    ReplaceLineInFile(TODO_FILE_PATH,g_SelectedIndex,NewTodoName);
+    ReplaceLineInFile(TODO_FILE_PATH, g_SelectedIndex, NewTodoName);
 }
 
 void TriggerTodo(void) {
@@ -357,13 +365,12 @@ void TriggerTodo(void) {
     }
 
     char* selected_item = PromptUser(ui_list, "📝 Todo", count, 920, 650, 56,
-                                     todo_refresh_callback,  
-                                     todo_enter_callback,    
-                                     todo_ctrlenter_callback, 
+                                     TodoRefreshCallback,  
+                                     TodoEnterCallback,    
+                                     TodoCtrlEnterCallback, 
                                      NULL,                    
-                                     todo_render_callback,
-                                     todo_edit_callback);
+                                     TodoRenderCallback,
+                                     TodoEditCallback);
 }
-
 
 #endif

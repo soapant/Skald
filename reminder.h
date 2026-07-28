@@ -12,6 +12,7 @@
 #include "calc.h"
 #include "timer.h"
 #include "process_killer.h"
+#include "config.h"
 
 #define FILE_REMINDER_HISTORY 6
 #define ReminderHistoryFile G_FILE_ENTRIES[FILE_REMINDER_HISTORY].mf
@@ -162,39 +163,28 @@ typedef struct {
     const char* action_param;
 } ExecutionPipeline;
 
-ActionDef action_flags[] = {
+static const ActionDef REMINDER_ACTION_FLAGS[] = {
     {"-f", HandleFocusWindowFlag},
-    {"-dt",DisplayText}
+    {"-dt", DisplayText},
 };
 
-ConditionDef condition_flags[] = {
-    {"-cg", CheckGameRunning}
+static const ConditionDef REMINDER_CONDITION_FLAGS[] = {
+    {"-cg", CheckGameRunning},
 };
 
-TimerDef timer_flags[] = {
+static const TimerDef REMINDER_TIMER_FLAGS[] = {
     {"-trw", RunWindowTimer},
-    {"-tr",  RunBackgroundTimer}
+    {"-tr",  RunBackgroundTimer},
 };
 
-char* constraint_flags[] = {"-t"};
+static const char* REMINDER_CONSTRAINT_FLAGS[] = {
+    "-t",
+};
 
-static void ExtractActionStrs(ActionDef master[], int count, char* output[]) {
-    for (int i = 0; i < count; i++) {
-        output[i] = master[i].str;
-    }
-}
-
-static void ExtractConditionStrs(ConditionDef master[], int count, char* output[]) {
-    for (int i = 0; i < count; i++) {
-        output[i] = master[i].str;
-    }
-}
-
-static void ExtractTimerStrs(TimerDef master[], int count, char* output[]) {
-    for (int i = 0; i < count; i++) {
-        output[i] = master[i].str;
-    }
-}
+#define REMINDER_ACTION_FLAGS_COUNT (sizeof(REMINDER_ACTION_FLAGS) / sizeof(REMINDER_ACTION_FLAGS[0]))
+#define REMINDER_CONDITION_FLAGS_COUNT (sizeof(REMINDER_CONDITION_FLAGS) / sizeof(REMINDER_CONDITION_FLAGS[0]))
+#define REMINDER_TIMER_FLAGS_COUNT (sizeof(REMINDER_TIMER_FLAGS) / sizeof(REMINDER_TIMER_FLAGS[0]))
+#define REMINDER_CONSTRAINT_FLAGS_COUNT (sizeof(REMINDER_CONSTRAINT_FLAGS) / sizeof(REMINDER_CONSTRAINT_FLAGS[0]))
 
 static void StartReminder(const char* selection) {
     if (!selection || strlen(selection) == 0) {
@@ -204,26 +194,20 @@ static void StartReminder(const char* selection) {
     
     printf("[REMINDER] Processing: '%s'\n", selection);
     
-    int action_count = sizeof(action_flags) / sizeof(action_flags[0]);
-    int condition_count = sizeof(condition_flags) / sizeof(condition_flags[0]);
-    int constraint_count = sizeof(constraint_flags) / sizeof(constraint_flags[0]);
-    int timer_count = sizeof(timer_flags) / sizeof(timer_flags[0]);
-    
     FoundFlag action_matches[10];
     FoundFlag condition_matches[10];
     FoundFlag constraint_matches[10];
     FoundFlag timer_matches[10];
     
-    // Zero out matches
     memset(action_matches, 0, sizeof(action_matches));
     memset(condition_matches, 0, sizeof(condition_matches));
     memset(constraint_matches, 0, sizeof(constraint_matches));
     memset(timer_matches, 0, sizeof(timer_matches));
     
-    int total_action_flags = SearchFlagsInText(selection, action_flags, action_count, sizeof(ActionDef), action_matches, 10);
-    int total_condition_flags = SearchFlagsInText(selection, condition_flags, condition_count, sizeof(ConditionDef), condition_matches, 10);
-    int total_constraint_flags = SearchFlagsInText(selection, constraint_flags, constraint_count, sizeof(char*), constraint_matches, 10);
-    int total_timer_flags = SearchFlagsInText(selection, timer_flags, timer_count, sizeof(TimerDef), timer_matches, 10);
+    int total_action_flags = SearchFlagsInText(selection, REMINDER_ACTION_FLAGS, REMINDER_ACTION_FLAGS_COUNT, sizeof(ActionDef), action_matches, 10);
+    int total_condition_flags = SearchFlagsInText(selection, REMINDER_CONDITION_FLAGS, REMINDER_CONDITION_FLAGS_COUNT, sizeof(ConditionDef), condition_matches, 10);
+    int total_constraint_flags = SearchFlagsInText(selection, REMINDER_CONSTRAINT_FLAGS, REMINDER_CONSTRAINT_FLAGS_COUNT, sizeof(char*), constraint_matches, 10);
+    int total_timer_flags = SearchFlagsInText(selection, REMINDER_TIMER_FLAGS, REMINDER_TIMER_FLAGS_COUNT, sizeof(TimerDef), timer_matches, 10);
     
     int grand_total = total_action_flags + total_condition_flags + total_constraint_flags + total_timer_flags;
     
@@ -238,7 +222,6 @@ static void StartReminder(const char* selection) {
         return;
     }
     
-    // Extract parameters
     char* action_param = NULL;
     char* condition_param = NULL;
     char* timer_param = NULL;
@@ -253,9 +236,9 @@ static void StartReminder(const char* selection) {
         action_param = GetFlagParameter(selection, action_matches[0].index);
         printf("[REMINDER] Action param: '%s'\n", action_param ? action_param : "(null)");
         
-        for (int i = 0; i < action_count; i++) {
-            if (strcmp(action_matches[0].flag, action_flags[i].str) == 0) {
-                action_func = action_flags[i].func;
+        for (int i = 0; i < REMINDER_ACTION_FLAGS_COUNT; i++) {
+            if (strcmp(action_matches[0].flag, REMINDER_ACTION_FLAGS[i].str) == 0) {
+                action_func = REMINDER_ACTION_FLAGS[i].func;
                 break;
             }
         }
@@ -272,9 +255,9 @@ static void StartReminder(const char* selection) {
         condition_param = GetFlagParameter(selection, condition_matches[0].index);
         printf("[REMINDER] Condition param: '%s'\n", condition_param ? condition_param : "(null)");
         
-        for (int i = 0; i < condition_count; i++) {
-            if (strcmp(condition_matches[0].flag, condition_flags[i].str) == 0) {
-                condition_func = condition_flags[i].func;
+        for (int i = 0; i < REMINDER_CONDITION_FLAGS_COUNT; i++) {
+            if (strcmp(condition_matches[0].flag, REMINDER_CONDITION_FLAGS[i].str) == 0) {
+                condition_func = REMINDER_CONDITION_FLAGS[i].func;
                 break;
             }
         }
@@ -285,9 +268,9 @@ static void StartReminder(const char* selection) {
         timer_param = GetFlagParameter(selection, timer_matches[0].index);
         printf("[REMINDER] Timer param: '%s'\n", timer_param ? timer_param : "(null)");
         
-        for (int i = 0; i < timer_count; i++) {
-            if (strcmp(timer_matches[0].flag, timer_flags[i].str) == 0) {
-                timer_func = timer_flags[i].func;
+        for (int i = 0; i < REMINDER_TIMER_FLAGS_COUNT; i++) {
+            if (strcmp(timer_matches[0].flag, REMINDER_TIMER_FLAGS[i].str) == 0) {
+                timer_func = REMINDER_TIMER_FLAGS[i].func;
                 break;
             }
         }
