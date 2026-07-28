@@ -87,6 +87,7 @@ static void zoxide_enter_callback(const char* selection) {
         char input[256] = {0};
         if (hEditControl != NULL) {
             UI_GetText(hEditControl, input, sizeof(input));
+            printf("THE USER INPUT  IS %s",input);
             if (strlen(input) > 0) {
                 if (TerminalZoxideFile->fileSize > 0) {
                     char lastChar = TerminalZoxideFile->pBuffer[TerminalZoxideFile->fileSize - 1];
