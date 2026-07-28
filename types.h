@@ -268,6 +268,7 @@ extern int g_match_history[20][4000];
 extern int g_match_count_history[20]; 
 extern int g_history_index;       
 extern int g_history_count;     
+extern int g_matching_indices[4000];
 extern int g_current_window_height;
 extern int g_current_window_width;
 extern int g_timeout;
