@@ -170,7 +170,6 @@ static inline void PopulateListBox(HWND hListBox, const char* filter,
     }
     
     int total_matches = 0;
-    static int matching_indices[4000];
     char clean_filter[256] = {0};
     if (filter) {
         strncpy(clean_filter, filter, sizeof(clean_filter) - 1);
@@ -209,7 +208,7 @@ static inline void PopulateListBox(HWND hListBox, const char* filter,
             }
             
             if (match) {
-                matching_indices[total_matches] = idx;
+                g_matching_indices[total_matches] = idx;
                 total_matches++;
             }
         }
@@ -227,7 +226,7 @@ static inline void PopulateListBox(HWND hListBox, const char* filter,
             }
             
             if (match) {
-                matching_indices[total_matches] = i;
+                g_matching_indices[total_matches] = i;
                 total_matches++;
             }
         }
@@ -236,7 +235,7 @@ static inline void PopulateListBox(HWND hListBox, const char* filter,
     if (strlen(clean_filter) > 0 && g_history_count < 20) {
         strncpy(g_filter_history[g_history_count], clean_filter, sizeof(g_filter_history[0]) - 1);
         g_match_count_history[g_history_count] = total_matches;
-        memcpy(g_match_history[g_history_count], matching_indices, total_matches * sizeof(int));
+        memcpy(g_match_history[g_history_count], g_matching_indices, total_matches * sizeof(int));
         g_history_count++;
         printf("[HISTORY] Saved '%s' (%d matches)\n", clean_filter, total_matches);
     }
@@ -244,40 +243,27 @@ static inline void PopulateListBox(HWND hListBox, const char* filter,
     if (total_matches == 0 && item_count > 0 && strlen(clean_filter) == 0) {
         int force_count = (item_count < 30) ? item_count : 30;
         for (int i = 0; i < force_count; i++) {
-            matching_indices[total_matches] = i;
+            g_matching_indices[total_matches] = i;
             total_matches++;
         }
         g_history_count = 0;
     }
     
-    int pool_max = 60;
+int pool_max = MAX_VISIBLE_ITEMS;
     
-    if (current_sel == -1 || current_sel == LB_ERR) {
-        g_view_offset = 0;
-    } else {
-        if (current_sel < g_view_offset) {
-            g_view_offset = current_sel; 
-        } else if (current_sel >= g_view_offset + pool_max) {
-            g_view_offset = current_sel - pool_max + 1; 
-        }
+    // Cap total matches at pool_max - no virtual scrolling, just show first N
+    if (total_matches > pool_max) {
+        total_matches = pool_max;
     }
-    
-    if (g_view_offset + pool_max > total_matches) {
-        g_view_offset = total_matches - pool_max;
-    }
-    if (g_view_offset < 0) g_view_offset = 0;
-    
-    int display_count = total_matches - g_view_offset;
-    if (display_count > pool_max) display_count = pool_max;
     
     g_populated_count = 0;
     
-    for (int i = 0; i < display_count; i++) {
-        int raw_data_index = matching_indices[g_view_offset + i];
+    for (int i = 0; i < total_matches; i++) {
+        int raw_data_index = g_matching_indices[i];
         if (!items[raw_data_index]) continue;
         
-        strncpy(g_populated_cache[g_populated_count], items[raw_data_index], 60);
-        g_populated_cache[g_populated_count][60] = '\0';
+        strncpy(g_populated_cache[g_populated_count], items[raw_data_index], 511);
+        g_populated_cache[g_populated_count][511] = '\0';
         g_populated_cache[g_populated_count][strcspn(g_populated_cache[g_populated_count], "\r\n")] = '\0';
         g_populated_count++;
     }
@@ -286,7 +272,7 @@ static inline void PopulateListBox(HWND hListBox, const char* filter,
     if (total_matches == 1) {
         UI_SetSelection(hListBox, 0, g_SelectedIndex);
     } else {
-        UI_SetSelection(hListBox,-1, g_SelectedIndex);
+        UI_SetSelection(hListBox, -1, g_SelectedIndex);
     }
     if (total_matches == 0) {
       if (hDisplayMessage != NULL) {
@@ -296,7 +282,7 @@ static inline void PopulateListBox(HWND hListBox, const char* filter,
       }
     }
     
-    g_last_items = items;
+g_last_items = items;
     g_last_item_count = item_count;
     g_TotalMatches = total_matches;
 }

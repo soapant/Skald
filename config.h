@@ -9,6 +9,8 @@ static bool TRAY = true;
 
 static bool COLORFUL_MODE = false;
 
+#define MAX_VISIBLE_ITEMS 60
+
 const char* UsedTerminal = "Alacritty";
 
 const char* BASE_SCREENSHOT_FOLDER_PATH = "C:\\Users\\HP\\Pictures\\Screenshots\\";

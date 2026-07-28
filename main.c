@@ -72,6 +72,7 @@ int g_current_window_height = 0;
 int g_current_window_width = 0;
 #define MAX_ITEMS 1000
 char g_populated_cache[MAX_ITEMS][512];
+int g_matching_indices[4000];
 int g_populated_count = 0;
 int g_view_offset = 0;
 const char* g_title = NULL;
