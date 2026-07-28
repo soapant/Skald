@@ -355,7 +355,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
               if (!brushes_initialized) {
                   hBgBrush = CreateSolidBrush(COLOR_BG);
                   hSelBrush = CreateSolidBrush(COLOR_SELECTED_TEXT);
-                  for (int i = 0; i < 99; i++) {
+                  for (int i = 0; i < 60; i++) {
                       float hue = (float)i / 20.0f * 240.0f;
                       float h = hue / 60.0f;
                       float s = 0.85f;
@@ -378,19 +378,19 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                   }
                   brushes_initialized = true;
               }
-              static char num_cache[100][8] = {0};
+              static char num_cache[61][8] = {0};
               static bool num_init = false;
               if (!num_init) {
-                  for (int i = 0; i < 100; i++) {
+                  for (int i = 0; i < 61; i++) {
                       snprintf(num_cache[i], sizeof(num_cache[i]), "%d.", i + 1);
                   }
                   num_init = true;
               }
               
-              static COLORREF rainbow_text_cache[100] = {0};
+              static COLORREF rainbow_text_cache[61] = {0};
               static bool rainbow_init = false;
               if (!rainbow_init) {
-                  for (int i = 0; i < 100; i++) {
+                  for (int i = 0; i < 61; i++) {
                       float hue = (float)i / 20.0f * 240.0f;
                       float h = hue / 60.0f;
                       float s = 0.85f;
