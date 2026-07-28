@@ -6,7 +6,6 @@
 #include <string.h>
 #include "pixel_utils.h"
 #include "config.h"
-#include "todo.h"
 
 static bool HandlePosKey(bool alt_down, bool ctrl_down, bool shift_down) {
     POINT mousePos;

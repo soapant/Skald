@@ -33,7 +33,7 @@ const char* VideoViewerPath = "D:\\Projects\\Video Viewer\\video_viewer.exe";
 
 const char* TextEditorPath = "C:\\Program Files\\Neovide\\neovide.exe";
 
-static const char* MusicPath = "D:\\Music";
+static const char* MusicPath = "D:\\Music\\Mp3";
 
 static const char* VideosPath = "D:\\videos";
 
@@ -154,7 +154,7 @@ static const BulkKillProcessBinding G_BULK_KILL_PROCESS[] = {
 
 #define BULKKILLPROCESS_COUNT (sizeof(G_BULK_KILL_PROCESS) / sizeof(G_BULK_KILL_PROCESS[0]))
 
-  
+   
 static const char* focus_blacklist_games[] = {"CrosshairX"};
 
 static const char* games_windows[] = {"Brawlhalla","Fortnite","RocketLeague","Factorio","Minecraft"};
@@ -196,15 +196,72 @@ static const FocusSwitcherBinding G_FOCUS_SWITCHERS[] = {
 
 #define FOCUS_SWITCHER_COUNT (sizeof(G_FOCUS_SWITCHERS) / sizeof(G_FOCUS_SWITCHERS[0]))
 
-static const TodoConfigEntry TODO_DICT[] = {
-    { "-pc", "Cprogram",          NULL, RGB(98,  160, 234), true  },
-    { "-ph", "HeaderC",           NULL, RGB(51,  209, 122), true  },
-    { "-pm", "MinecraftModpack", NULL, RGB(255, 120, 0), true  },
-    { "-pb", "CocBot",           NULL, RGB(255, 255, 0), true  },
-
-    { "-m",  NULL,                "[Misc]", RGB(154, 153, 150), false },
-    { "-l",  NULL,                "[Learning]", RGB(102, 255, 0), false },
+static const TagFormatConfig TODO_TAG_FORMAT = {
+    "[",
+    "]",
+    "|",
+    "",
+    " "
 };
+
+#define TODO_TAG_OPEN "["
+#define TODO_TAG_CLOSE "]"
+#define TODO_TAG_SEPARATOR "|"
+#define TODO_ENTRY_DELIMITER "||"
+
+// ============================================================
+// SINGLE SOURCE OF TRUTH: Master flag definitions
+// Add/modify flags HERE ONLY - all other arrays are generated
+// ============================================================
+
+// Alias flags: flag, display_label
+#define TODO_ALIAS_MASTER \
+    X("-p", "Project:") \
+    X("-n", "Note:")
+
+// Config flags: flag, internal_name, tag_label, color, is_alias
+#define TODO_CONFIG_MASTER \
+    X("-pc", "Cprogram",         "Cprogram",         RGB(137, 180, 250), true) \
+    X("-ph", "HeaderC",          "HeaderC",          RGB(148, 226, 183), true) \
+    X("-pm", "MinecraftModpack", "MinecraftModpack", RGB(250, 179, 135), true) \
+    X("-pb", "CocBot",           "CocBot",           RGB(249, 226, 175), true) \
+    X("-m",  NULL,               "Misc",             RGB(147, 153, 178), false) \
+    X("-l",  NULL,               "Learning",         RGB(166, 227, 161), false) \
+    X("-b",  NULL,               "Bored",            RGB(203, 166, 247), false) \
+    X("-d",  NULL,               "DontForget",       RGB(243, 139, 168), false)
+
+// Generate TodoAliasEntry array
+#define X(flag, label) {flag, label},
+static const TodoAliasEntry TODO_ALIAS_DICT[] = {
+    TODO_ALIAS_MASTER
+};
+#undef X
+enum { TODO_ALIAS_DICT_COUNT = sizeof(TODO_ALIAS_DICT) / sizeof(TODO_ALIAS_DICT[0]) };
+
+// Generate GenericFlagEntry for alias flags (for SearchFlagsInText)
+#define X(flag, label) {flag, NULL},
+static const GenericFlagEntry TODO_ALIAS_FLAGS[] = {
+    TODO_ALIAS_MASTER
+};
+#undef X
+enum { TODO_ALIAS_FLAGS_COUNT = sizeof(TODO_ALIAS_FLAGS) / sizeof(TODO_ALIAS_FLAGS[0]) };
+
+// Generate GenericFlagEntry for config flags (for SearchFlagsInText)
+#define X(flag, internal, label, color, is_alias) {flag, NULL},
+static const GenericFlagEntry TODO_CONFIG_FLAGS[] = {
+    TODO_CONFIG_MASTER
+};
+#undef X
+enum { TODO_CONFIG_FLAGS_COUNT = sizeof(TODO_CONFIG_FLAGS) / sizeof(TODO_CONFIG_FLAGS[0]) };
+
+// Generate TodoConfigEntry array (full config)
+#define X(flag, internal, label, color, is_alias) {flag, internal, label, color, is_alias},
+static const TodoConfigEntry TODO_DICT[] = {
+    TODO_CONFIG_MASTER
+};
+#undef X
+
+#define TODO_CONFIG_FLAGS_ENTRIES TODO_DICT
 
 enum { TODO_DICT_COUNT = sizeof(TODO_DICT) / sizeof(TODO_DICT[0]) };
 

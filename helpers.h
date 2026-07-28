@@ -468,7 +468,7 @@ typedef struct {
     ConditionFn func;
 } ConditionParamDef;
 
-static inline int SearchFlagsInText(const char* text, void* flag_array, int flag_count, size_t flag_size, FoundFlag* matches, int max_matches) {
+static inline int SearchFlagsInText(const char* text, const void* flag_array, int flag_count, size_t flag_size, FoundFlag* matches, int max_matches) {
     if (!text || !flag_array || !matches) return 0;
     
     int match_count = 0;
@@ -492,6 +492,8 @@ static inline int SearchFlagsInText(const char* text, void* flag_array, int flag
             flag_str = ((ConditionDef*)flag_array)[i].str;
         } else if (flag_size == sizeof(TimerDef)) {
             flag_str = ((TimerDef*)flag_array)[i].str;
+        } else if (flag_size == sizeof(GenericFlagEntry)) {
+            flag_str = ((const GenericFlagEntry*)flag_array)[i].flag;
         }
         
         if (!flag_str) continue;
@@ -1081,6 +1083,53 @@ static void WriteToCacheIndex(int index, const char* text) {
     
     strncpy(g_populated_cache[index], text, sizeof(g_populated_cache[index]) - 1);
     g_populated_cache[index][sizeof(g_populated_cache[index]) - 1] = '\0';
+}
+
+int ReadMdFile(char lines[100][512], const char* path) {
+    FILE* f = fopen(path, "r");
+    if (!f) return 0;
+    int count = 0;
+    char buffer[512];
+    while (fgets(buffer, sizeof(buffer), f) && count < 100) {
+        buffer[strcspn(buffer, "\r\n")] = '\0';
+        if (strlen(buffer) > 0) {
+            strncpy(lines[count], buffer, 511);
+            lines[count][511] = '\0';
+            count++;
+        }
+    }
+    fclose(f);
+    return count;
+}
+void StripCheckboxes(char* str) {
+    char* read_ptr = str;
+    char* write_ptr = str;
+    bool is_first = true;
+
+    while (*read_ptr != '\0') {
+        if (strncmp(read_ptr, "- [ ] ", 6) == 0) {
+            if (!is_first) {
+                *write_ptr = ','; 
+                write_ptr++;
+            }
+            is_first = false; 
+            read_ptr += 6;
+        } else {
+            *write_ptr = *read_ptr;
+            write_ptr++;
+            read_ptr++;
+        }
+    }
+    *write_ptr = '\0';
+}
+
+void WriteMdFile(char lines[100][512], int count, const char* path) {
+    FILE* f = fopen(path, "w");
+    if (!f) return;
+    for (int i = 0; i < count; i++) {
+        fprintf(f, "%s\n", lines[i]);
+    }
+    fclose(f);
 }
 
 #endif
