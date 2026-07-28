@@ -285,6 +285,8 @@ static inline void PopulateListBox(HWND hListBox, const char* filter,
     UI_LB_SetCount(hListBox, total_matches);
     if (total_matches == 1) {
         UI_SetSelection(hListBox, 0, g_SelectedIndex);
+    } else {
+        UI_SetSelection(hListBox,-1, g_SelectedIndex);
     }
     if (total_matches == 0) {
       if (hDisplayMessage != NULL) {
@@ -533,7 +535,8 @@ static inline void UI_SetText(HWND hEditControl,char* text) {
 }
 static inline int UI_GetText(HWND hEdit, char* buffer, int bufferSize) {
     if (!hEdit || !buffer || bufferSize <= 0) return 0;
-    return GetWindowTextA(hEdit, buffer, bufferSize);
+    int i = GetWindowTextA(hEdit, buffer, bufferSize);
+    return i;
 }
 
 
