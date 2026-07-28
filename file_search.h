@@ -19,7 +19,6 @@ static char* SearchFileInDirectory(const char* directory, const char* search_str
     if (!directory || !search_string || strlen(search_string) == 0) {
         return NULL;
     }
-
     char search_path[MAX_PATH];
     snprintf(search_path, sizeof(search_path), "%s\\*", directory);
 
@@ -49,6 +48,7 @@ static char* SearchFileInDirectory(const char* directory, const char* search_str
     FindClose(hFind);
     return NULL;
 }
+
 static char* SearchFileRecursive(const char* directory, const char* search_string) {
     if (!directory || !search_string || strlen(search_string) == 0) {
         return NULL;

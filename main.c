@@ -319,6 +319,7 @@ char* DisplayMessage(const char* message, int centerX, int centerY, int maxWidth
 
 char* EditTextPopup(const char* initial_text, int centerX, int centerY, int maxWidth, int maxHeight) {
     HINSTANCE hInstance = GetModuleHandle(NULL);
+    int index = g_SelectedIndex;
     
     if (!initial_text) return NULL;
     
@@ -390,7 +391,6 @@ char* EditTextPopup(const char* initial_text, int centerX, int centerY, int maxW
     
     SetTimer(hPopupWnd, 999, 50, NULL);
     
-    // === MESSAGE LOOP ===
     MSG msg;
     while (IsWindow(hPopupWnd) && g_EditData && g_EditData->result == NULL) {
         if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
@@ -401,7 +401,6 @@ char* EditTextPopup(const char* initial_text, int centerX, int centerY, int maxW
         }
     }
     
-    // === RETURN RESULT ===
     char* result = NULL;
     if (g_EditData && g_EditData->result) {
         result = _strdup(g_EditData->result);
@@ -412,6 +411,8 @@ char* EditTextPopup(const char* initial_text, int centerX, int centerY, int maxW
     }
     g_hEditPopup = NULL;
     g_EditData = NULL;
+    g_SelectedIndex = index;
+
     
     return result;
 }
