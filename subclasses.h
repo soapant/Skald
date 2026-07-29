@@ -17,12 +17,11 @@
 #include "common_ui.h"
 int g_refresh_count = 0;
 COLORREF DisplayMessageText;
-HashMap* history_indices = NULL;
-
 LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
     HWND hParent = GetParent(hwnd);
     HWND hListBox = GetDlgItem(hParent, IDC_LIST_BOX);
     HWND hEditControl = hwnd;
+
     
     if (msg == WM_KEYDOWN) {
         g_ActiveEditControl = hEditControl;
@@ -49,32 +48,8 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
                           sel = 0;
                         }else {
                         if (sel == -1 && wParam == VK_UP) {
-                            char** HistoryList = (char**)HashMap_Get(feature_history, g_current_feature);
-                            if (HistoryList) {
-                                int* idx_ptr = (int*)HashMap_Get(history_indices, g_current_feature);
-                                int idx = idx_ptr ? *idx_ptr : 0;
-                                
-                                int count = 0;
-                                while (HistoryList[count]) count++;
-                                
-                                if (count > 0) {
-                                    idx = (idx - 1 + count) % count;
-                                    
-                                    UI_SetText(hEditControl, HistoryList[idx]);
-                                    UI_SetCursorPosition(hEditControl,strlen(HistoryList[idx]));
-                                    if (!IsNormalMode()) {
-                                        if (g_refresh_callback != NULL) {
-                                            g_refresh_callback(HistoryList[idx], hListBox);
-                                        }
-                                    }
-                                    if (!idx_ptr) {
-                                        idx_ptr = malloc(sizeof(int));
-                                        HashMap_Put(history_indices, g_current_feature, idx_ptr);
-                                    }
-                                    *idx_ptr = idx;
-                                    return 0;
-                                } 
-                            }
+                          GetFromHistory();
+                          sel = 0;
                         }
                       }
                     } else if (sel == 0 && wParam == VK_UP) {

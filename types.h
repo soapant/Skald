@@ -35,6 +35,8 @@ char* EditTextPopup(const char* initial_text, int centerX, int centerY, int maxW
 
 void SaveRegionToPNG(int x1, int y1, int x2, int y2, const char* fullPath);
 
+void UpdateTextCaret(HWND hwndEditControl);
+
 LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 
 LRESULT CALLBACK SimpleEditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
@@ -45,6 +47,10 @@ LRESULT CALLBACK SimpleListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, 
 
 BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam);
 
+typedef struct {
+    const char* name;                         
+    void (*func)(const char** items, int count);
+} SortOption;
 
 struct feature_data {
     char* name;
@@ -58,6 +64,10 @@ struct feature_data {
     EditCallback edit_callback;
     FilterCallback filter_callback;
     bool (*filter_match)(const char*, const char*);
+    void (*sort_func)(const char** items, int count);
+    SortOption sort_options[10];
+    int sort_options_count;
+    int current_sort_index;
 };
 
 typedef struct {
@@ -69,7 +79,6 @@ typedef struct {
     bool consumed_trigger_e;
 } EditPopupData;
 
-void UpdateTextCaret(HWND hwndEditControl);
 typedef struct HashMapEntry {
     char* key;
     void* value;

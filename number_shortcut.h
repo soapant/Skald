@@ -6,6 +6,7 @@
 #include <string.h>
 #include "types.h"
 #include "common_ui.h"
+#include "helpers.h"
 
 #define NUMBER_SHORTCUT_DELAY_MS 200 
 
@@ -31,6 +32,7 @@ static void ExecuteNumberShortcut(int number, bool close_popup,bool enter) {
 
         strncpy(output_buffer, selected_text, sizeof(output_buffer) - 1);
         output_buffer[sizeof(output_buffer) - 1] = '\0';
+        SaveFeatureHistory(output_buffer);
         if (enter) {
             if (g_enter_callback != NULL) {
                 g_enter_callback(output_buffer);
