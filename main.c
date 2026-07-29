@@ -189,7 +189,6 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
     printf("[DEBUG-UI] Returning from PromptUser. Buffer Length: %zu\n", strlen(output_buffer));
     return (strlen(output_buffer) > 0) ? output_buffer : NULL;
 }
-
 char* SimplePromptUser(const char* prompt, const char* window_title,int height, int width, int item_height) {
     HINSTANCE hInstance = GetModuleHandle(NULL);
     selection_complete = false;

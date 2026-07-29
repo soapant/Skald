@@ -148,12 +148,9 @@ static void TriggerGoogleSearch() {
         list[i] = g_cached_google_queries[i];
     }
     
-    PromptUser(list, "🔍 Google", g_cached_google_count, 920, 650, 32, 
+    ImportantPromptUser(list, "🔍 Google", g_cached_google_count, 920, 650, 32, 
                google_refresh_callback, 
                google_enter_callback, 
-               NULL, 
-               NULL,
-               NULL,
                google_edit_callback);
     
     free(list);

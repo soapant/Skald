@@ -378,12 +378,9 @@ static void TriggerReminder() {
         list[i] = g_cached_reminder_commands[i];
     }
     
-    PromptUser(list, "⏱️ Reminder", g_cached_reminder_count, 920,650, 32, 
+    ImportantPromptUser(list, "⏱️ Reminder", g_cached_reminder_count, 920,650, 32, 
                reminder_refresh_callback, 
                reminder_enter_callback, 
-               NULL, 
-               NULL, 
-               NULL,
                reminder_edit_callback);
     
 }

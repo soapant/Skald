@@ -166,12 +166,9 @@ static void TriggerNvimZoxide() {
     
     snprintf(titleBuffer,sizeof(titleBuffer),"📝 %s",TextEditorName);
     
-    PromptUser(list, titleBuffer, g_cached_nvim_count, 920, 650, 32, 
+    ImportantPromptUser(list, titleBuffer, g_cached_nvim_count, 920, 650, 32, 
                neovide_refresh_callback, 
                neovide_enter_callback, 
-               NULL, 
-               NULL, 
-               NULL,
                neovide_edit_callback);
     free(list);
 }
