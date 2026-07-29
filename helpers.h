@@ -914,6 +914,8 @@ static inline void RegisterFeature(const char* name, const char** items, int ite
                                    CtrlEnterCallback ctrl_enter_cb,
                                    TabCallback tab_cb,
                                    RenderCallback render_cb,
+                                   EditCallback edit_cb,
+                                   FilterCallback filter_cb,
                                    bool (*filter_match)(const char*, const char*)) {
     struct feature_data* data = GetFeatureData(name);
     data->items = items;
@@ -923,6 +925,8 @@ static inline void RegisterFeature(const char* name, const char** items, int ite
     data->ctrl_enter_callback = ctrl_enter_cb;
     data->tab_callback = tab_cb;
     data->render_callback = render_cb;
+    data->edit_callback = edit_cb;
+    data->filter_callback = filter_cb;
     data->filter_match = filter_match;
 }
 
@@ -931,7 +935,9 @@ static inline void GetFeatureCallbacks(const char* name,
                                        EnterCallback* enter,
                                        CtrlEnterCallback* ctrl_enter,
                                        TabCallback* tab,
-                                       RenderCallback* render) {
+                                       RenderCallback* render,
+                                       EditCallback* edit,
+                                       FilterCallback* filter) {
     struct feature_data* data = GetFeatureData(name);
     if (data) {
         if (refresh) *refresh = data->refresh_callback;
@@ -939,6 +945,8 @@ static inline void GetFeatureCallbacks(const char* name,
         if (ctrl_enter) *ctrl_enter = data->ctrl_enter_callback;
         if (tab) *tab = data->tab_callback;
         if (render) *render = data->render_callback;
+        if (edit) *edit = data->edit_callback;
+        if (filter) *filter = data->filter_callback;
     }
 }
 static int ReplaceLineInFile(const char* filepath, int line_index, const char* new_text) {
