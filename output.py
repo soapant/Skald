@@ -4,19 +4,13 @@ import glob
 # Get the current directory
 base_dir = os.getcwd()
 
-# Files to exclude
-exclude_files = {'output.py', 'output.txt', 'main.exe', 'myprogram.exe'}
-
-# Extensions to include
 extensions = ('.c', '.h')
 
-# Get all matching files
 all_files = []
 for ext in extensions:
     all_files.extend(glob.glob(os.path.join(base_dir, '*' + ext)))
 
-# Filter out excluded files
-all_files = [f for f in all_files if os.path.basename(f) not in exclude_files]
+all_files = [f for f in all_files]
 
 # Sort alphabetically
 all_files.sort()
