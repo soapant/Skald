@@ -918,6 +918,13 @@ static inline void RegisterFeature(const char* name, const char** items, int ite
                                    FilterCallback filter_cb,
                                    bool (*filter_match)(const char*, const char*)) {
     struct feature_data* data = GetFeatureData(name);
+    
+    if (data->sort_options_count > 0) {
+        data->current_sort_index = 0; 
+    } else {
+        data->current_sort_index = -1;
+    }
+    
     data->items = items;
     data->item_count = item_count;
     data->refresh_callback = refresh_cb;
@@ -1139,5 +1146,37 @@ void WriteMdFile(char lines[100][512], int count, const char* path) {
     }
     fclose(f);
 }
+HashMap* history_indices = NULL;
+
+void GetFromHistory() {
+    char** HistoryList = (char**)HashMap_Get(feature_history, g_current_feature);
+    if (HistoryList) {
+        int* idx_ptr = (int*)HashMap_Get(history_indices, g_current_feature);
+        int idx = idx_ptr ? *idx_ptr : 0;
+        
+        int count = 0;
+        while (HistoryList[count]) count++;
+        
+        if (count > 0) {
+            idx = (idx - 1 + count) % count;
+            
+            UI_SetText(hEditControl, HistoryList[idx]);
+            UI_SetCursorPosition(hEditControl,strlen(HistoryList[idx]));
+
+            if (!IsNormalMode()) {
+                if (g_refresh_callback != NULL) {
+                    g_refresh_callback(HistoryList[idx], hListBox);
+                }
+            }
+            if (!idx_ptr) {
+                idx_ptr = malloc(sizeof(int));
+                HashMap_Put(history_indices, g_current_feature, idx_ptr);
+            }
+            *idx_ptr = idx;
+            return;
+        } 
+    }
+}
+
 
 #endif

@@ -252,7 +252,7 @@ static void RemoveTodoItemFromFile(const char* item_to_remove) {
     MoveFileA("todo.tmp", TODO_FILE_PATH);
 }
 
-static void TodoRefreshCallback(const char* filter, HWND hListBox) {
+static void todo_refresh_callback(const char* filter, HWND hListBox) {
     char todo_lines[100][512];
     int todo_count = ReadMdFile(todo_lines, TODO_FILE_PATH);
     
@@ -263,7 +263,7 @@ static void TodoRefreshCallback(const char* filter, HWND hListBox) {
     PopulateListBox(hListBox, filter, items, todo_count, NULL);
 }
 
-static void TodoEnterCallback(const char* selection) {
+static void todo_enter_callback(const char* selection) {
     char input[256] = {0};
     if (hEditControl != NULL) {
         UI_GetText(hEditControl, input, sizeof(input));
@@ -277,16 +277,16 @@ static void TodoEnterCallback(const char* selection) {
     if (selected_index != LB_ERR && (input_len == 0 || strcmp(g_populated_cache[selected_index], input) == 0)) {
         const char* item_to_remove = g_populated_cache[selected_index];
         RemoveTodoItemFromFile(item_to_remove);
-        TodoRefreshCallback(input, hListBox);
+        todo_refresh_callback(input, hListBox);
     } 
     else if (input_len > 0) {
         AddTodoToFile(input);
         UI_SetText(hEditControl, "");
-        TodoRefreshCallback("", hListBox);
+        todo_refresh_callback("", hListBox);
     }
 }
 
-static void TodoCtrlEnterCallback(const char* selection) {
+static void todo_ctrlenter_callback(const char* selection) {
     int selected_index = UI_GetSelection(hListBox);
     
     if (selected_index != -1) {
@@ -298,11 +298,11 @@ static void TodoCtrlEnterCallback(const char* selection) {
         AddTodoToFile(input);
         UI_SetText(hEditControl, "");
     }
-    TodoRefreshCallback(NULL, hListBox);
+    todo_refresh_callback(NULL, hListBox);
     selection_complete = false;
 }
 
-static void TodoRenderCallback(HDC hdc, const char* text, RECT* rect, BOOL is_selected, int itemIndex) {
+static void todo_render_callback(HDC hdc, const char* text, RECT* rect, BOOL is_selected, int itemIndex) {
     if (!text || !rect) return;
     
     char main_text[512] = {0};
@@ -346,7 +346,7 @@ static void TodoRenderCallback(HDC hdc, const char* text, RECT* rect, BOOL is_se
     SelectObject(hdc, hOldFont);
 }
 
-static void TodoEditCallback(const char* selection) {
+static void todo_edit_callback(const char* selection) {
     char* NewTodoName = EditTextPopup(selection, 960, 540, 1000, 300);
     
     if (NewTodoName != NULL) {
@@ -365,12 +365,12 @@ void TriggerTodo(void) {
     }
 
     char* selected_item = PromptUser(ui_list, "📝 Todo", count, 920, 650, 56,
-                                     TodoRefreshCallback,  
-                                     TodoEnterCallback,    
-                                     TodoCtrlEnterCallback, 
+                                     todo_refresh_callback,  
+                                     todo_enter_callback,    
+                                     todo_ctrlenter_callback, 
                                      NULL,                    
-                                     TodoRenderCallback,
-                                     TodoEditCallback,
+                                     todo_render_callback,
+                                     todo_edit_callback,
                                      NULL);
 }
 
