@@ -78,7 +78,7 @@ static void ParseTodoInput(const char* input, TodoAliasEntry* alias_out, TodoCon
                 if (config_out && TODO_CONFIG_FLAGS_ENTRIES[j].is_alias) {
                     char* param = GetFlagParameter(input_copy, config_matches[i].index);
                     if (param && strlen(param) > 0) {
-                        strncpy(config_out->internal_name, (char*)TODO_CONFIG_FLAGS_ENTRIES[j].internal_name, sizeof(config_out->internal_name) - 1);
+                        memcpy((void*)config_out->internal_name, TODO_CONFIG_FLAGS_ENTRIES[j].internal_name, sizeof(config_out->internal_name) - 1);
                         snprintf(tags_out[*tag_count], 64, "%s%s %s%s", 
                             TODO_TAG_OPEN, TODO_CONFIG_FLAGS_ENTRIES[j].internal_name, param, TODO_TAG_CLOSE);
                         (*tag_count)++;

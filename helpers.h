@@ -481,7 +481,7 @@ static inline int SearchFlagsInText(const char* text, const void* flag_array, in
     }
     
     for (int i = 0; i < flag_count && match_count < max_matches; i++) {
-        char* flag_str = NULL;
+        const char* flag_str = NULL;
         
         // Extract flag string based on flag_size
         if (flag_size == sizeof(char*)) {
@@ -514,7 +514,7 @@ static inline int SearchFlagsInText(const char* text, const void* flag_array, in
             }
             
             if (before_ok && after_ok) {
-                matches[match_count].flag = flag_str;
+                matches[match_count].flag = (char*)flag_str;
                 matches[match_count].index = found - text_copy;
                 match_count++;
             }
