@@ -152,12 +152,9 @@ static void TriggerTerminalCommand() {
         list[i] = g_cached_commands[i];
     }
     
-    PromptUser(list, "⌨️ Terminal", g_cached_command_count, 920, 650, 32, 
+    ImportantPromptUser(list, "⌨️ Terminal", g_cached_command_count, 920, 650, 32, 
                terminal_refresh_callback, 
                terminal_enter_callback, 
-               NULL, 
-               NULL, 
-               NULL,
                terminal_edit_callback);
     
     free(list);

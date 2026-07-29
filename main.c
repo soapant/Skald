@@ -51,6 +51,7 @@ CtrlEnterCallback g_ctrl_enter_callback = NULL;
 TabCallback g_tab_callback = NULL;
 RenderCallback g_render_callback = NULL;
 EditCallback g_edit_callback = NULL;
+FilterCallback g_filter_callback = NULL;
 HWND g_ActiveEditControl = NULL;
 char* g_current_feature = NULL;
 int g_timeout = 1;
@@ -89,7 +90,8 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
                  CtrlEnterCallback ctrl_enter_callback,
                  TabCallback tab_callback,
                  RenderCallback render_callback,
-                 EditCallback edit_callback) {
+                 EditCallback edit_callback,
+                 FilterCallback filter_callback) {
     HINSTANCE hInstance = GetModuleHandle(NULL);
     selection_complete = false;
     output_buffer[0] = '\0';
@@ -101,6 +103,7 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
     g_tab_callback = tab_callback;
     g_render_callback = render_callback;
     g_edit_callback = edit_callback;
+    g_filter_callback = filter_callback;
     g_title = window_title;
     g_current_window_height = height;
     g_current_window_width = width;
@@ -185,6 +188,7 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
     g_tab_callback = NULL;
     g_render_callback = NULL;
     g_edit_callback = NULL;
+    g_filter_callback = NULL;
     
     printf("[DEBUG-UI] Returning from PromptUser. Buffer Length: %zu\n", strlen(output_buffer));
     return (strlen(output_buffer) > 0) ? output_buffer : NULL;

@@ -370,7 +370,8 @@ void TriggerTodo(void) {
                                      TodoCtrlEnterCallback, 
                                      NULL,                    
                                      TodoRenderCallback,
-                                     TodoEditCallback);
+                                     TodoEditCallback,
+                                     NULL);
 }
 
 #endif
