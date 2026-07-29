@@ -166,12 +166,9 @@ static char* TriggerWindowSwitcher(HWND hPopupWnd, WindowList myWindows) {
     }
 
     printf("[SWITCHER] Launching UI Selection Prompt...\n");
-    char* selected_title = PromptUser(ui_list,"🪟 Switcher",g_switcher_count, 920, 650,32,
+    char* selected_title = ImportantPromptUser(ui_list,"🪟 Switcher",g_switcher_count, 920, 650,32,
                                                 switcher_refresh_callback,  
                                                 switcher_enter_callback,    
-                                                NULL,                       
-                                                NULL,
-                                                NULL,
                                                 NULL);
 
     if (selected_title == NULL) {

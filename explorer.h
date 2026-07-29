@@ -131,12 +131,9 @@ static void TriggerExplorer() {
         list[i] = g_cached_explorer_commands[i];
     }
     
-    PromptUser(list, "📁 Explorer", g_cached_explorer_count, 920, 650, 32, 
+    ImportantPromptUser(list, "📁 Explorer", g_cached_explorer_count, 920, 650, 32, 
                explorer_refresh_callback, 
                explorer_enter_callback, 
-               NULL, 
-               NULL, 
-               NULL,
                explorer_edit_callback);
     
     free(list);
