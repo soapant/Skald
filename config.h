@@ -39,7 +39,7 @@ static const char* VideosPath = "D:\\videos";
 
 static const char* IconPath = "D:\\retard games\\miscellaneous\\switch_window.ico";
 
-const bool TimerAvailable = false;
+const bool TimerAvailable = true;
 
 const bool MusicPlayerAvailable = true;
 
@@ -225,6 +225,8 @@ static const TagFormatConfig TODO_TAG_FORMAT = {
     X("-ph", "HeaderC",          "HeaderC",          RGB(148, 226, 183), true) \
     X("-pm", "MinecraftModpack", "MinecraftModpack", RGB(250, 179, 135), true) \
     X("-pb", "CocBot",           "CocBot",           RGB(249, 226, 175), true) \
+    X("-pp", "MusicPlayer",      "MusicPlayer",      RGB(209, 106, 175), true) \
+    X("-pv", "VideoViewer",      "VideoViewer",      RGB(219, 226, 105), true) \
     X("-m",  NULL,               "Misc",             RGB(147, 153, 178), false) \
     X("-l",  NULL,               "Learning",         RGB(166, 227, 161), false) \
     X("-b",  NULL,               "Bored",            RGB(203, 166, 247), false) \
