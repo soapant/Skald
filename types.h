@@ -56,6 +56,7 @@ struct feature_data {
     TabCallback tab_callback;
     RenderCallback render_callback;
     EditCallback edit_callback;
+    FilterCallback filter_callback;
     bool (*filter_match)(const char*, const char*);
 };
 
