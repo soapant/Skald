@@ -67,50 +67,34 @@ static void DoGoogleSearch(const char* query) {
     if (!query || strlen(query) == 0) return;
     
     char url[2048] = {0};
+    char encoded_query[1024] = {0};
     
-    int is_url = 0;
-    if (strstr(query, "http://") == query || 
-        strstr(query, "https://") == query ||
-        strstr(query, "www.") == query) {
-        is_url = 1;
-        strncpy(url, query, sizeof(url) - 1);
-        printf("[GOOGLE] Opening URL directly: %s\n", url);
-    }
-    
-    if (!is_url) {
-        snprintf(url, sizeof(url), "https://www.google.com/search?q=%s", query);
-        
-        for (int i = 0; url[i]; i++) {
-            if (url[i] == ' ') {
-                url[i] = '+';
-            }
+    // URL encode the query
+    for (int i = 0; query[i] && i < sizeof(encoded_query) - 1; i++) {
+        char c = query[i];
+        if (c == ' ') {
+            encoded_query[strlen(encoded_query)] = '+';
+        } else if (c == '#') {
+            strcat(encoded_query, "%23");
+        } else if (c == '&') {
+            strcat(encoded_query, "%26");
+        } else if (c == '?') {
+            strcat(encoded_query, "%3F");
+        } else if (c == '%') {
+            strcat(encoded_query, "%25");
+        } else if (c == '+') {
+            strcat(encoded_query, "%2B");
+        } else {
+            encoded_query[strlen(encoded_query)] = c;
         }
-        printf("[GOOGLE] Searching: %s\n", url);
     }
+    
+    snprintf(url, sizeof(url), "https://www.google.com/search?q=%s", encoded_query);
+    
+    printf("[GOOGLE] Searching: %s\n", url);
     
     ShellExecuteWithVerb(url, "open", true);
-
-    const char* browser_classes[] = {
-        "Chrome_WidgetWin_1",
-        "MozillaWindowClass",
-        "IEFrame",
-        "ApplicationFrameWindow"
-    };
-
-    HWND hBrowser = NULL;
-    for (int i = 0; i < 4; i++) {
-        hBrowser = FindWindowA(browser_classes[i], NULL);
-        if (hBrowser && IsWindowVisible(hBrowser)) {
-            break;
-        }
-    }
-
-    if (hBrowser && IsWindow(hBrowser)) {
-        SetForegroundWindow(hBrowser);
-        SetActiveWindow(hBrowser);
-        SetFocus(hBrowser);
-        ShowWindow(hBrowser, SW_RESTORE);
-    }
+    // ... rest of function ...
 }
 
 static void google_enter_callback(const char* selection) {
