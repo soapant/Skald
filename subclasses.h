@@ -430,29 +430,36 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                     char measureBuffer[512];
                     strncpy(measureBuffer, g_populated_cache[pdis->itemID], sizeof(measureBuffer) - 1);
                     measureBuffer[sizeof(measureBuffer) - 1] = '\0';
-                    
                     char* pos = strchr(measureBuffer, '|');
                     if (pos) {
                         *pos = '\0';
                     }
-                    if (isSelected && strlen(measureBuffer) >= 70) {
-                        if (g_last_selected_index != pdis->itemID || hDisplayMessage == NULL) {
-                            g_last_selected_index = pdis->itemID;
-                            DisplayMessageText = rainbow_text_cache[pdis->itemID];
-                            MSG_TOP(g_populated_cache[pdis->itemID], 140, 6969);
-                            DisplayMessageText = COLOR_TEXT;
-                        }
-                    } else {
-                        if (g_last_selected_index == pdis->itemID) {
-                            g_last_selected_index = -1;
-                            if (hDisplayMessage != NULL) {
-                                KillTimer(hDisplayMessage, 999);
-                                DestroyWindow(hDisplayMessage);
-                                hDisplayMessage = NULL;
+                    if (!FullTextNeedsKeyPress) {
+                        if (isSelected && strlen(measureBuffer) >= 70) {
+                            if (g_last_selected_index != pdis->itemID || hDisplayMessage == NULL) {
+                                g_last_selected_index = pdis->itemID;
+                                DisplayMessageText = rainbow_text_cache[pdis->itemID];
+                                MSG_TOP(g_populated_cache[pdis->itemID], 140, 6969);
+                                DisplayMessageText = COLOR_TEXT;
+                            }
+                        } else {
+                            if (g_last_selected_index == pdis->itemID) {
+                                g_last_selected_index = -1;
+                                if (hDisplayMessage != NULL) {
+                                    KillTimer(hDisplayMessage, 999);
+                                    DestroyWindow(hDisplayMessage);
+                                    hDisplayMessage = NULL;
+                                }
                             }
                         }
-                    }
-                }
+                    } else {
+                          if (hDisplayMessage != NULL) {
+                              KillTimer(hDisplayMessage, 999);
+                              DestroyWindow(hDisplayMessage);
+                              hDisplayMessage = NULL;
+                          }
+                    } 
+                } 
               }
               
               const char* textBuffer = "";
