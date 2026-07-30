@@ -496,44 +496,36 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
             ExecuteMotion(vimAction, matchedSequence, typedCount);
             return 1;
         }
-        
         if (CheckTextSnippetBindings(pressed_vk, modifiers, &snippet_text)) {
             if (snippet_text != NULL) {
                 CopyToClipboard(snippet_text);
                 return 1;
             }
         }
-        
         if (CheckMacroBindings(pressed_vk, modifiers, &matchedAction, &matchedDelay)) {
             if (matchedAction != MACRO_NONE && hGlobalTrayWnd != NULL) {
                 PostMessage(hGlobalTrayWnd, WM_TRIGGER_UNIVERSAL_MACRO, (WPARAM)matchedAction, (LPARAM)matchedDelay);
                 return 1;
             }
         }
-        
         if (CheckAppHotkeyBindings(pressed_vk, modifiers)) {
             return 1;
         }
-
         if (CheckMiscHotkeyBindings(pressed_vk, modifiers)) {
             return 1;
         }
-
         if (CheckQuickLinkHotkeyBindings(pressed_vk, modifiers)) {
             return 1;
         }
-
         if (HandleFocusSwitcher(pressed_vk, modifiers, fgTitle)) {
             return 1;
         }
         if (HandleMusicPlayer(pressed_vk, modifiers, fgTitle)) {
             return 1;
         }
-
         if (HandleVideoPlayer(pressed_vk, modifiers, fgTitle)) {
             return 1;
         }
-
         if (HandleBulkKillProcess(pressed_vk, modifiers, fgTitle)) {
             return 1;
         }

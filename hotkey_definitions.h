@@ -14,17 +14,13 @@
 #include "nvim_zoxide.h"
 #include "yazi_zoxide.h"
 #include "window_switcher.h"
-#include "pos_handler.h"
 #include "focus_switcher.h"
-#include "color_handler.h"
 #include "minecraft.h"
-#include "pixel_equals_handler.h"
-#include "wait_for_pixel_handler.h"
-#include "region_handler.h"
 #include "google_search.h"
 #include "process_killer.h"
 #include "todo.h"
 #include "volume.h"
+#include "pixel_utils.h"
 #include "monitor_focus.h"
 #include "reminder.h"
 
@@ -122,196 +118,6 @@ static const char* MONITOR_FOCUS_MAIN_blacklist[] = {"Nvim", "Neovide","Fortnite
 static const char* MONITOR_FOCUS_SIDE_blacklist[] = {"Nvim", "Neovide","Fortnite", "CrosshairX"};
 #define MONITOR_FOCUS_SIDE_BLACKLIST_COUNT (sizeof(MONITOR_FOCUS_SIDE_blacklist) / sizeof(MONITOR_FOCUS_SIDE_blacklist[0]))
 
-static inline void SwitcherHandler(void) {
-    WindowList myWindows;
-    myWindows.count = 0;
-    myWindows.capacity = 10;
-    myWindows.items = (WindowData*)malloc(myWindows.capacity * sizeof(WindowData));
-    if (myWindows.items != NULL) {
-        EnumWindows(EnumWindowsProc, (LPARAM)&myWindows);
-        TriggerWindowSwitcher(hPopupWnd, myWindows);
-        free(myWindows.items);
-    }
-}
-static inline void PosCopyHandler(void) {
-    POINT mousePos;
-    if (GetCursorPos(&mousePos)) {
-        char coords_buf[64];
-        snprintf(coords_buf, sizeof(coords_buf), "%ld, %ld", mousePos.x, mousePos.y);
-        CopyToClipboard(coords_buf);
-    }
-}
-
-static inline void PosAddHandler(void) {
-    POINT mousePos;
-    if (GetCursorPos(&mousePos)) {
-        char coords_buf[64];
-        snprintf(coords_buf, sizeof(coords_buf), "(%ld, %ld)", mousePos.x, mousePos.y);
-        char temp_lines[100][512];
-        int temp_count = ReadMdFile(temp_lines, TEMP_FILE_PATH);
-        if (temp_count < 100) {
-            snprintf(temp_lines[temp_count], sizeof(temp_lines[temp_count]), "- [ ] %s", coords_buf);
-            WriteMdFile(temp_lines, temp_count + 1, TEMP_FILE_PATH);
-        }
-    }
-}
-
-static inline void PosClearHandler(void) {
-  printf("THIS IS NOT IMPLEMETNETD");
-}
-
-
-static inline void ColorPlainHandler(void) {
-    long x, y; BYTE r, g, b;
-    if (GetCursorPixel(&x, &y, &r, &g, &b)) {
-        char buf[128];
-        snprintf(buf, sizeof(buf), "%d, %d, %d", r, g, b);
-        CopyToClipboard(buf);
-    }
-}
-
-static inline void ColorParenHandler(void) {
-    long x, y; BYTE r, g, b;
-    if (GetCursorPixel(&x, &y, &r, &g, &b)) {
-        char buf[128];
-        snprintf(buf, sizeof(buf), "(%d, %d, %d)", r, g, b);
-        CopyToClipboard(buf);
-    }
-}
-
-
-static inline void PixelEqualsAdbHandler(void) {
-    long x, y; BYTE r, g, b;
-    if (GetCursorPixel(&x, &y, &r, &g, &b)) {
-        char buf[128];
-        snprintf(buf, sizeof(buf), "adb.pixel_equals(%ld,%ld,(%d,%d,%d))", x, y, r, g, b);
-        CopyToClipboard(buf);
-    }
-}
-
-static inline void PixelEqualsFnHandler(void) {
-    long x, y; BYTE r, g, b;
-    if (GetCursorPixel(&x, &y, &r, &g, &b)) {
-        char buf[128];
-        snprintf(buf, sizeof(buf), "fn.pixel_equals(%ld,%ld,(%d,%d,%d))", x, y, r, g, b);
-        CopyToClipboard(buf);
-    }
-}
-
-
-static inline void WaitForPixelAdbHandler(void) {
-    long x, y; BYTE r, g, b;
-    if (GetCursorPixel(&x, &y, &r, &g, &b)) {
-        char buf[256];
-        snprintf(buf, sizeof(buf), "adb.wait_for_pixel(%ld,%ld,(%d,%d,%d),tolerance=0)", x, y, r, g, b);
-        CopyToClipboard(buf);
-    }
-}
-
-static inline void WaitForPixelTapHandler(void) {
-    long x, y; BYTE r, g, b;
-    if (GetCursorPixel(&x, &y, &r, &g, &b)) {
-        char buf[256];
-        snprintf(buf, sizeof(buf), "adb.wait_for_pixel(%ld,%ld,(%d,%d,%d),tolerance=0)\nadb.tap(%ld,%ld)", 
-                 x, y, r, g, b, x, y);
-        CopyToClipboard(buf);
-    }
-}
-
-static inline void WaitForPixelFnHandler(void) {
-    long x, y; BYTE r, g, b;
-    if (GetCursorPixel(&x, &y, &r, &g, &b)) {
-        char buf[128];
-        snprintf(buf, sizeof(buf), "wait_for_pixel(%ld,%ld,%d,%d,%d)", x, y, r, g, b);
-        CopyToClipboard(buf);
-    }
-}
-
-
-static inline void RegionCoordsHandler(void) {
-    POINT cursorPos;
-    if (!GetCursorPos(&cursorPos)) return;
-    
-    static long saved_x1 = 0, saved_y1 = 0;
-    static int region_step = 0;
-    
-    if (region_step == 0) {
-        saved_x1 = cursorPos.x;
-        saved_y1 = cursorPos.y;
-        region_step = 1;
-        printf("[REGION] Step 1: %ld,%ld\n", saved_x1, saved_y1);
-    } else {
-        char buf[128];
-        snprintf(buf, sizeof(buf), "%ld,%ld,%ld,%ld", saved_x1, saved_y1, cursorPos.x, cursorPos.y);
-        CopyToClipboard(buf);
-        region_step = 0;
-        printf("[REGION] Complete: %s\n", buf);
-    }
-}
-
-static inline void RegionImageHandler(void) {
-    POINT cursorPos;
-    if (!GetCursorPos(&cursorPos)) return;
-    
-    extern int img_region_step;
-    extern long img_x1, img_y1, img_x2, img_y2;
-    
-    
-    if (img_region_step == 0) {
-        img_x1 = cursorPos.x;
-        img_y1 = cursorPos.y;
-        img_region_step = 1;
-        printf("[IMG REGION] Top-Left: %ld,%ld\n", img_x1, img_y1);
-    } else {
-        img_x2 = cursorPos.x;
-        img_y2 = cursorPos.y;
-        img_region_step = 0;
-        printf("[IMG REGION] Bottom-Right: %ld,%ld\n", img_x2, img_y2);
-        if (hGlobalTrayWnd != NULL) {
-            SendNotifyMessage(hGlobalTrayWnd, WM_TRIGGER_IMG_CAPTURE, 0, 0);
-        }
-    }
-}
-
-
-static inline void ScreenshotSaveHandler(void) {
-    POINT cursorPos;
-    if (!GetCursorPos(&cursorPos)) return;
-    
-    extern int img_region_step;
-    extern long img_x1, img_y1, img_x2, img_y2;
-    if (img_region_step == 0) {
-        img_x1 = cursorPos.x;
-        img_y1 = cursorPos.y;
-        img_region_step = 1;
-        printf("[SCREENSHOT] Top-Left: %ld,%ld\n", img_x1, img_y1);
-    } else {
-        img_x2 = cursorPos.x;
-        img_y2 = cursorPos.y;
-        img_region_step = 0;
-        TriggerScreenshot(hPopupWnd, false);
-    }
-}
-
-static inline void ScreenshotOpenHandler(void) {
-    POINT cursorPos;
-    if (!GetCursorPos(&cursorPos)) return;
-    
-    extern int img_region_step;
-    extern long img_x1, img_y1, img_x2, img_y2;
-    
-    if (img_region_step == 0) {
-        img_x1 = cursorPos.x;
-        img_y1 = cursorPos.y;
-        img_region_step = 1;
-        printf("[SCREENSHOT] Top-Left: %ld,%ld\n", img_x1, img_y1);
-    } else {
-        img_x2 = cursorPos.x;
-        img_y2 = cursorPos.y;
-        img_region_step = 0;
-        TriggerScreenshot(hPopupWnd, true);
-    }
-}
 #define BINDING(key, mod, handler, enabled) \
     { key, mod, key##_blacklist, key##_BLACKLIST_COUNT, handler, #key, enabled }
 
@@ -319,7 +125,7 @@ static inline void ScreenshotOpenHandler(void) {
     { key, mod, blist, blist_count, handler, name, enabled }
 
 static const HotkeyBinding G_HOTKEY_BINDINGS[] = {
-    BINDING(SWITCHER,           HOTKEY_MOD_ALT,                      SwitcherHandler,         true),
+    BINDING(SWITCHER,           HOTKEY_MOD_ALT,                      TriggerWindowSwitcher,         true),
     BINDING(GOOGLE_SEARCH,      HOTKEY_MOD_ALT,                      TriggerGoogleSearch,     true),
     BINDING(TODO,               HOTKEY_MOD_ALT,                      TriggerTodo,             true),
     BINDING(CALCULATOR,         HOTKEY_MOD_ALT,                      TriggerCalculator,       true),
@@ -334,18 +140,15 @@ static const HotkeyBinding G_HOTKEY_BINDINGS[] = {
     BINDING(MONITOR_FOCUS_MAIN, HOTKEY_MOD_ALT,                      TriggerMonitorFocusMain, true),
     BINDING(MONITOR_FOCUS_SIDE, HOTKEY_MOD_ALT,                      TriggerMonitorFocusSide, true),
     BINDING(REMINDER,           HOTKEY_MOD_ALT,                      TriggerReminder,         true),
-    BINDING(POS,                HOTKEY_MOD_ALT,                      PosCopyHandler,          true),
-    BINDING(POS,                (HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT), PosAddHandler,           true),
-    BINDING(POS,                (HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL),  PosClearHandler,         true),
-    BINDING(COLOR,              HOTKEY_MOD_ALT,                      ColorPlainHandler,       true),
-    BINDING(COLOR,              (HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL),  ColorParenHandler,       true),
-    BINDING(PIXEL_EQUALS,       HOTKEY_MOD_ALT,                      PixelEqualsAdbHandler,   true),
-    BINDING(PIXEL_EQUALS,       (HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL),  PixelEqualsFnHandler,    true),
-    BINDING(WAIT_FOR_PIXEL,     HOTKEY_MOD_ALT,                      WaitForPixelAdbHandler,  true),
-    BINDING(WAIT_FOR_PIXEL,     (HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL),  WaitForPixelTapHandler,  true),
-    BINDING(WAIT_FOR_PIXEL,     (HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT), WaitForPixelFnHandler,   true),
-    BINDING(REGION,             HOTKEY_MOD_ALT,                      RegionCoordsHandler,     true),
-    BINDING(REGION,             (HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT), RegionImageHandler,      true),
+    BINDING(POS,                HOTKEY_MOD_ALT,                      TriggerPosCopy,          true),
+    BINDING(POS,                (HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT), TriggerPosAdd,           true),
+    BINDING(POS,                (HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL),  TriggerPosClear,         true),
+    BINDING(COLOR,              HOTKEY_MOD_ALT,                      TriggerColorPlain,       true),
+    BINDING(COLOR,              (HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL),  TriggerColorParen,       true),
+    BINDING(PIXEL_EQUALS,       HOTKEY_MOD_ALT,                      TriggerPixelEqualsAdb,   true),
+    BINDING(PIXEL_EQUALS,       (HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL),  TriggerPixelEqualsFn,    true),
+    BINDING(REGION,             HOTKEY_MOD_ALT,                      TriggerRegionCoords,     true),
+    BINDING(REGION,             (HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT), TriggerRegionImage,      true),
     BINDING(SCREENSHOT,         HOTKEY_MOD_ALT,                      ScreenshotSaveHandler,   true),
     BINDING(SCREENSHOT,         (HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT), ScreenshotOpenHandler,   true),
     BINDING(NVIM,               HOTKEY_MOD_ALT,                      TriggerNvimZoxide,          true),
