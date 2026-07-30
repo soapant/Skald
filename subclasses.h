@@ -113,6 +113,12 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
             }
             return 0;
         }
+        if (wParam == VK_BACK) {
+           if (ctrl_pressed) {
+             UI_SetText(hEditControl,"");
+             return 0;
+           }
+        }
         if (wParam == 'E') {
             output_buffer[0] = '\0';
 

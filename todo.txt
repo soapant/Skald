@@ -20,3 +20,6 @@ basically just have every error type thing to display a message of the error||[C
 add some insert mode friendly ways of navigation||[Cprogram]
 also make the todo editing of text be able to recognize flags||[Cprogram]
 make toggle term be able to handle paste||[Misc]
+clean up the whole pos color and adb fn thingies||[Cprogram]
+the fucking ctrl backspace puts a weird character in the edit control||[Cprogram]
+sometimes the display message isnt centered||[Cprogram]

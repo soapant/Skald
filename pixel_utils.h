@@ -4,6 +4,7 @@
 #include <windows.h>
 #include <stdio.h>
 #include "helpers.h"
+#include "types.h"
 
 static bool GetCursorPixel(long* out_x, long* out_y, BYTE* out_r, BYTE* out_g, BYTE* out_b) {
     POINT cursorPos;
@@ -52,7 +53,7 @@ static inline void TriggerPosAdd(void) {
         char temp_lines[100][512];
         int temp_count = ReadMdFile(temp_lines, TEMP_FILE_PATH);
         if (temp_count < 100) {
-            snprintf(temp_lines[temp_count], sizeof(temp_lines[temp_count]), "- [ ] %s", coords_buf);
+            snprintf(temp_lines[temp_count], sizeof(temp_lines[temp_count]), "%s", coords_buf);
             WriteMdFile(temp_lines, temp_count + 1, TEMP_FILE_PATH);
         }
     }
@@ -105,18 +106,23 @@ static inline void TriggerRegionCoords(void) {
     
     static long saved_x1 = 0, saved_y1 = 0;
     static int region_step = 0;
+    char buffer[128];
     
     if (region_step == 0) {
         saved_x1 = cursorPos.x;
         saved_y1 = cursorPos.y;
         region_step = 1;
-        printf("[REGION] Step 1: %ld,%ld\n", saved_x1, saved_y1);
+        snprintf(buffer,sizeof(buffer),"Started Region Coord At %ld %ld \n",saved_x1,saved_y1);
+        if (hPopupWnd != NULL) {
+          MSG_TOP(buffer,140,1);
+        }else {
+          MSG_MIDDLE_BOTTOM(buffer,70,1);
+        }
     } else {
         char buf[128];
         snprintf(buf, sizeof(buf), "%ld,%ld,%ld,%ld", saved_x1, saved_y1, cursorPos.x, cursorPos.y);
         CopyToClipboard(buf);
         region_step = 0;
-        printf("[REGION] Complete: %s\n", buf);
     }
 }
 
@@ -126,18 +132,23 @@ static inline void TriggerRegionImage(void) {
     
     extern int img_region_step;
     extern long img_x1, img_y1, img_x2, img_y2;
+    char buffer[128];
     
     
     if (img_region_step == 0) {
         img_x1 = cursorPos.x;
         img_y1 = cursorPos.y;
         img_region_step = 1;
-        printf("[IMG REGION] Top-Left: %ld,%ld\n", img_x1, img_y1);
+        snprintf(buffer,sizeof(buffer),"Started Region Image At %ld %ld \n",saved_x1,saved_y1);
+        if (hPopupWnd != NULL) {
+          MSG_TOP(buffer,140,1);
+        }else {
+          MSG_MIDDLE_BOTTOM(buffer,70,1);
+        }
     } else {
         img_x2 = cursorPos.x;
         img_y2 = cursorPos.y;
         img_region_step = 0;
-        printf("[IMG REGION] Bottom-Right: %ld,%ld\n", img_x2, img_y2);
         if (hGlobalTrayWnd != NULL) {
             SendNotifyMessage(hGlobalTrayWnd, WM_TRIGGER_IMG_CAPTURE, 0, 0);
         }
