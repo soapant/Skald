@@ -120,9 +120,16 @@ static void switcher_enter_callback(const char* selection) {
     }
 }
 
-static char* TriggerWindowSwitcher(HWND hPopupWnd, WindowList myWindows) {
+static void TriggerWindowSwitcher() {
     if (hPopupWnd != NULL && IsWindow(hPopupWnd)) {
-        return NULL;
+        return;
+    }
+    WindowList myWindows;
+    myWindows.count = 0;
+    myWindows.capacity = 10;
+    myWindows.items = (WindowData*)malloc(myWindows.capacity * sizeof(WindowData));
+    if (myWindows.items != NULL) {
+        EnumWindows(EnumWindowsProc, (LPARAM)&myWindows);
     }
 
     char *list_of_not_wanteds[] = {"Input", "Manager", "Settings"};
@@ -157,7 +164,7 @@ static char* TriggerWindowSwitcher(HWND hPopupWnd, WindowList myWindows) {
 
     if (g_switcher_count == 0) {
         printf("[SWITCHER] No windows passed the filter.\n");
-        return NULL;
+        return;
     }
 
     const char* ui_list[100];
@@ -171,11 +178,7 @@ static char* TriggerWindowSwitcher(HWND hPopupWnd, WindowList myWindows) {
                                                 switcher_enter_callback,    
                                                 NULL);
 
-    if (selected_title == NULL) {
-        printf("[SWITCHER] UI Closed. Selection was NULL.\n");
-        return NULL;
-    }
-    return selected_title;
+    free(myWindows.items);
 }
 
 #endif

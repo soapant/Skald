@@ -79,4 +79,43 @@ static void TriggerScreenshot(HWND hPopupWnd,bool open_screenshot) {
     img_region_step = 0;
 }
 
+static inline void ScreenshotSaveHandler(void) {
+    POINT cursorPos;
+    if (!GetCursorPos(&cursorPos)) return;
+    
+    extern int img_region_step;
+    extern long img_x1, img_y1, img_x2, img_y2;
+    if (img_region_step == 0) {
+        img_x1 = cursorPos.x;
+        img_y1 = cursorPos.y;
+        img_region_step = 1;
+        printf("[SCREENSHOT] Top-Left: %ld,%ld\n", img_x1, img_y1);
+    } else {
+        img_x2 = cursorPos.x;
+        img_y2 = cursorPos.y;
+        img_region_step = 0;
+        TriggerScreenshot(hPopupWnd, false);
+    }
+}
+
+static inline void ScreenshotOpenHandler(void) {
+    POINT cursorPos;
+    if (!GetCursorPos(&cursorPos)) return;
+    
+    extern int img_region_step;
+    extern long img_x1, img_y1, img_x2, img_y2;
+    
+    if (img_region_step == 0) {
+        img_x1 = cursorPos.x;
+        img_y1 = cursorPos.y;
+        img_region_step = 1;
+        printf("[SCREENSHOT] Top-Left: %ld,%ld\n", img_x1, img_y1);
+    } else {
+        img_x2 = cursorPos.x;
+        img_y2 = cursorPos.y;
+        img_region_step = 0;
+        TriggerScreenshot(hPopupWnd, true);
+    }
+}
+
 #endif
