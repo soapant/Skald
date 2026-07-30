@@ -1182,5 +1182,4 @@ void GetFromHistory() {
     }
 }
 
-
 #endif
