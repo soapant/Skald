@@ -5,6 +5,33 @@
 #include "types.h"
 #include "macro_bindings.h"
 
+#define SWITCHER            VK_SPACE
+#define TODO                'T'
+#define CALCULATOR          'C'
+#define EXE                 'E'
+#define KILL_PROCESS        'U'
+#define GOOGLE_SEARCH       'G'  
+#define TERMINAL            'W'
+#define YAZI                'Q'
+#define TIMER               'O'
+#define EXPLORER            'R'
+#define TERMINAL_COMMAND    VK_OEM_4
+#define VOLUME              'M'
+#define SCREENSHOT          'A'
+#define POS                 'Z'
+#define COLOR               'X'
+#define PIXEL_EQUALS        'B'
+#define WAIT_FOR_PIXEL      'N'
+#define REGION              'Y'
+#define NVIM                'I'
+#define MONITOR_FOCUS_MAIN  'L'
+#define MONITOR_FOCUS_SIDE  'H'
+#define REMINDER            'S'
+#define MUTE                'P'
+#define MUSIC_PLAYER        'P'
+#define VIDEO_VIEWER        'V'
+
+
 static bool TRAY = true;
 
 static bool COLORFUL_MODE = false;
@@ -109,7 +136,7 @@ static const MusicPlayerBinding G_MUSIC_PLAYERS[] = {
     6 // TERMINATE
   },
   { 
-    'P',
+    MUSIC_PLAYER,
     HOTKEY_MOD_ALT,
     69 // PLAY SONG
   },
@@ -134,7 +161,7 @@ static const VideoPlayerBinding G_VIDEO_PLAYERS[] = {
     6 // TERMINATE
   },
   { 
-    'V',
+    VIDEO_VIEWER,
     HOTKEY_MOD_ALT,
     69 // PLAY VIDEO
   },

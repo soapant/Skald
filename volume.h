@@ -93,7 +93,6 @@ void TriggerVolume() {
     if (vol > 100) vol = 100;
     SetSystemVolume(vol / 100.0f);
     }
-    
 }
 
-#endif 
+#endif
