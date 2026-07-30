@@ -72,6 +72,10 @@ const bool MusicPlayerAvailable = true;
 
 const bool VideoViewerAvailable = true;
 
+const bool FullTextNeedsKeyPress = true;
+
+
+
 static const char* ListOfProgramPaths[20] = {
     "C:\\Users\\HP\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu",
     "C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs",
