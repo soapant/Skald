@@ -471,6 +471,7 @@ static void calculator_ctrlenter_callback(const char* selection) {
     
     
     int len = strlen(result);
+
     UI_SetCursorPosition(hEditControl, len);
     
     SendMessageA(GetParent(hEditControl), WM_COMMAND, MAKEWPARAM(IDC_INPUT_BOX, EN_CHANGE), (LPARAM)hEditControl);
