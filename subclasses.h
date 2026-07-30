@@ -17,6 +17,7 @@
 #include "common_ui.h"
 int g_refresh_count = 0;
 COLORREF DisplayMessageText;
+
 LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
     HWND hParent = GetParent(hwnd);
     HWND hListBox = GetDlgItem(hParent, IDC_LIST_BOX);
