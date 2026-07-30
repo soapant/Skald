@@ -80,7 +80,7 @@ static const MiscHotkey G_MISC_HOTKEYS[] = {
 
 static const QuickLinkHotkey G_QUICKLINK_HOTKEYS[] = {
     {'Y', HOTKEY_MOD_CTRL | HOTKEY_MOD_ALT, "*", "https:youtube.com" },
-    {'A', HOTKEY_MOD_CTRL | HOTKEY_MOD_ALT, "*", "https://gemini.google.com/app" },
+    {'M', HOTKEY_MOD_CTRL | HOTKEY_MOD_ALT, "*", "https:messenger.com" },
 };
 
 #define QUICKLINK_HOTKEY_COUNT (sizeof(G_QUICKLINK_HOTKEYS) / sizeof(G_QUICKLINK_HOTKEYS[0]))

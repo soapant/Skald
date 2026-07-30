@@ -82,7 +82,11 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
             }
             
             SaveFeatureHistory(output_buffer);
-            
+            if (hDisplayMessage != NULL) {
+              KillTimer(hDisplayMessage, 999);
+              DestroyWindow(hDisplayMessage);
+              hDisplayMessage = NULL;
+            }
             if (ctrl_pressed) {
                 if (g_ctrl_enter_callback != NULL) {
                     g_ctrl_enter_callback(output_buffer);
