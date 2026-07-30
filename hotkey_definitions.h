@@ -2,8 +2,8 @@
 #define HOTKEY_DEFINITIONS_H
 
 #include "helpers.h"
-#include "config.h"
 #include "calc.h"
+#include "config.h"
 #include "video_player.h"
 #include "music_player.h"
 #include "timer.h"
@@ -23,30 +23,8 @@
 #include "pixel_utils.h"
 #include "monitor_focus.h"
 #include "reminder.h"
+#include "mute_microphone.h"
 
-
-#define SWITCHER      0x20
-#define TODO          0x54
-#define CALCULATOR    0x43
-#define EXE           0x45
-#define KILL_PROCESS  0x55
-#define GOOGLE_SEARCH  0x47  
-#define TERMINAL     0x57
-#define YAZI     0x51
-#define TIMER     0x4F
-#define EXPLORER     0x52
-#define TERMINAL_COMMAND     0xDB
-#define VOLUME     0x4D
-#define SCREENSHOT          0x59
-#define POS                 0x5A
-#define COLOR               0x58
-#define PIXEL_EQUALS        0x42
-#define WAIT_FOR_PIXEL      0x4E
-#define REGION              0x41
-#define NVIM     0x49
-#define MONITOR_FOCUS_MAIN     0x4C
-#define MONITOR_FOCUS_SIDE     0x48
-#define REMINDER     0x53
 
 static const char* SWITCHER_blacklist[] = {"Fortnite", "CrosshairX"};
 #define SWITCHER_BLACKLIST_COUNT (sizeof(SWITCHER_blacklist) / sizeof(SWITCHER_blacklist[0]))
@@ -111,12 +89,15 @@ static const char* TERMINAL_COMMAND_blacklist[] = {"Fortnite", "CrosshairX"};
 static const char* VOLUME_blacklist[] = {"Fortnite", "CrosshairX"};
 #define VOLUME_BLACKLIST_COUNT (sizeof(VOLUME_blacklist) / sizeof(VOLUME_blacklist[0]))
 
+static const char* MUTE_blacklist[] = {""};
+#define MUTE_BLACKLIST_COUNT (sizeof(MUTE_blacklist) / sizeof(MUTE_blacklist[0]))
+
 static const char* MONITOR_FOCUS_MAIN_blacklist[] = {"Nvim", "Neovide","Fortnite", "CrosshairX"};
 #define MONITOR_FOCUS_MAIN_BLACKLIST_COUNT (sizeof(MONITOR_FOCUS_MAIN_blacklist) / sizeof(MONITOR_FOCUS_MAIN_blacklist[0]))
 
-// Fixed the copy-paste bug here so it references SIDE instead of MAIN
 static const char* MONITOR_FOCUS_SIDE_blacklist[] = {"Nvim", "Neovide","Fortnite", "CrosshairX"};
 #define MONITOR_FOCUS_SIDE_BLACKLIST_COUNT (sizeof(MONITOR_FOCUS_SIDE_blacklist) / sizeof(MONITOR_FOCUS_SIDE_blacklist[0]))
+
 
 #define BINDING(key, mod, handler, enabled) \
     { key, mod, key##_blacklist, key##_BLACKLIST_COUNT, handler, #key, enabled }
@@ -125,7 +106,7 @@ static const char* MONITOR_FOCUS_SIDE_blacklist[] = {"Nvim", "Neovide","Fortnite
     { key, mod, blist, blist_count, handler, name, enabled }
 
 static const HotkeyBinding G_HOTKEY_BINDINGS[] = {
-    BINDING(SWITCHER,           HOTKEY_MOD_ALT,                      TriggerWindowSwitcher,         true),
+    BINDING(SWITCHER,           HOTKEY_MOD_ALT,                      TriggerWindowSwitcher,   true),
     BINDING(GOOGLE_SEARCH,      HOTKEY_MOD_ALT,                      TriggerGoogleSearch,     true),
     BINDING(TODO,               HOTKEY_MOD_ALT,                      TriggerTodo,             true),
     BINDING(CALCULATOR,         HOTKEY_MOD_ALT,                      TriggerCalculator,       true),
@@ -140,6 +121,7 @@ static const HotkeyBinding G_HOTKEY_BINDINGS[] = {
     BINDING(MONITOR_FOCUS_MAIN, HOTKEY_MOD_ALT,                      TriggerMonitorFocusMain, true),
     BINDING(MONITOR_FOCUS_SIDE, HOTKEY_MOD_ALT,                      TriggerMonitorFocusSide, true),
     BINDING(REMINDER,           HOTKEY_MOD_ALT,                      TriggerReminder,         true),
+    BINDING(MUTE,               (HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL),  TriggerMuteState,        true),
     BINDING(POS,                HOTKEY_MOD_ALT,                      TriggerPosCopy,          true),
     BINDING(POS,                (HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT), TriggerPosAdd,           true),
     BINDING(POS,                (HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL),  TriggerPosClear,         true),
@@ -149,8 +131,8 @@ static const HotkeyBinding G_HOTKEY_BINDINGS[] = {
     BINDING(PIXEL_EQUALS,       (HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL),  TriggerPixelEqualsFn,    true),
     BINDING(REGION,             HOTKEY_MOD_ALT,                      TriggerRegionCoords,     true),
     BINDING(REGION,             (HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT), TriggerRegionImage,      true),
-    BINDING(SCREENSHOT,         HOTKEY_MOD_ALT,                      ScreenshotSaveHandler,   true),
-    BINDING(SCREENSHOT,         (HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT), ScreenshotOpenHandler,   true),
+    BINDING(SCREENSHOT,         HOTKEY_MOD_ALT,                      TriggerSaveScreenshot,   true),
+    BINDING(SCREENSHOT,         (HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT), TriggerOpenScreenshot,   true),
     BINDING(NVIM,               HOTKEY_MOD_ALT,                      TriggerNvimZoxide,          true),
 };
 

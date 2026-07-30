@@ -79,7 +79,7 @@ static void TriggerScreenshot(HWND hPopupWnd,bool open_screenshot) {
     img_region_step = 0;
 }
 
-static inline void ScreenshotSaveHandler(void) {
+static inline void TriggerSaveScreenshot(void) {
     POINT cursorPos;
     if (!GetCursorPos(&cursorPos)) return;
     
@@ -98,7 +98,7 @@ static inline void ScreenshotSaveHandler(void) {
     }
 }
 
-static inline void ScreenshotOpenHandler(void) {
+static inline void TriggerOpenScreenshot(void) {
     POINT cursorPos;
     if (!GetCursorPos(&cursorPos)) return;
     
