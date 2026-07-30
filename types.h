@@ -375,5 +375,11 @@ extern HFONT g_hMainFont;
                    960, \
                    (540 + (g_current_window_height / 2) + GAP + ((msg_height) / 2)), \
                    900, (msg_height), (timeout))
+#define MSG_MIDDLE_BOTTOM(msg,msg_height,timeout) \
+    DisplayMessage((msg), \
+                   960, \
+                   1080 - msg_height, \
+                   900,(msg_height), (timeout))
+
 
 #endif

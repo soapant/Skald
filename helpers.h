@@ -709,7 +709,11 @@ int CopyToClipboard(const char* text) {
     
     snprintf(buffer,sizeof(buffer),"Copied %s",text);
     
-    MSG_TOP(buffer,140,1);
+    if (hPopupWnd != NULL) {
+      MSG_TOP(buffer,140,1);
+    }else {
+      MSG_MIDDLE_BOTTOM(buffer,70,1);
+    }
     
     CloseClipboard();
     
