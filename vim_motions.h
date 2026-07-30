@@ -309,10 +309,16 @@ static inline void HandleInsertRegularEnter(void) {
 }
 
 static inline void HandleInsertControlEnter(void) {
-  UI_Edit_KeyDown(g_ActiveEditControl, VK_CONTROL);
-  UI_Edit_KeyDown(g_ActiveEditControl, VK_RETURN);
-  UI_Edit_KeyUp(g_ActiveEditControl, VK_RETURN);
-  UI_Edit_KeyUp(g_ActiveEditControl, VK_CONTROL);
+  char text[256];
+  if (UI_IsListBoxSelected()) {
+    snprintf(text,sizeof(text),"%s",g_populated_cache[g_SelectedIndex]);
+  } else {
+    UI_GetText(hEditControl,text,sizeof(text));
+  }
+  printf("TRYING TO DO CTRL ENTER WITH TEXT %s \n",text);
+  if (g_ctrl_enter_callback != NULL) {
+    g_ctrl_enter_callback(text);
+  }
   selection_complete = false;
 }
 
