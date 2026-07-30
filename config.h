@@ -236,17 +236,11 @@ static const TagFormatConfig TODO_TAG_FORMAT = {
 #define TODO_TAG_SEPARATOR "|"
 #define TODO_ENTRY_DELIMITER "||"
 
-// ============================================================
-// SINGLE SOURCE OF TRUTH: Master flag definitions
-// Add/modify flags HERE ONLY - all other arrays are generated
-// ============================================================
 
-// Alias flags: flag, display_label
 #define TODO_ALIAS_MASTER \
     X("-p", "Project:") \
     X("-n", "Note:")
 
-// Config flags: flag, internal_name, tag_label, color, is_alias
 #define TODO_CONFIG_MASTER \
     X("-pc", "Cprogram",         "Cprogram",         RGB(137, 180, 250), true) \
     X("-ph", "HeaderC",          "HeaderC",          RGB(148, 226, 183), true) \
@@ -260,7 +254,6 @@ static const TagFormatConfig TODO_TAG_FORMAT = {
     X("-d",  NULL,               "DontForget",       RGB(243, 139, 168), false) \
     X("-v",  NULL,               "NVIM",             RGB(57, 235, 20), false)
 
-// Generate TodoAliasEntry array
 #define X(flag, label) {flag, label},
 static const TodoAliasEntry TODO_ALIAS_DICT[] = {
     TODO_ALIAS_MASTER
@@ -268,7 +261,6 @@ static const TodoAliasEntry TODO_ALIAS_DICT[] = {
 #undef X
 enum { TODO_ALIAS_DICT_COUNT = sizeof(TODO_ALIAS_DICT) / sizeof(TODO_ALIAS_DICT[0]) };
 
-// Generate GenericFlagEntry for alias flags (for SearchFlagsInText)
 #define X(flag, label) {flag, NULL},
 static const GenericFlagEntry TODO_ALIAS_FLAGS[] = {
     TODO_ALIAS_MASTER
@@ -276,7 +268,6 @@ static const GenericFlagEntry TODO_ALIAS_FLAGS[] = {
 #undef X
 enum { TODO_ALIAS_FLAGS_COUNT = sizeof(TODO_ALIAS_FLAGS) / sizeof(TODO_ALIAS_FLAGS[0]) };
 
-// Generate GenericFlagEntry for config flags (for SearchFlagsInText)
 #define X(flag, internal, label, color, is_alias) {flag, NULL},
 static const GenericFlagEntry TODO_CONFIG_FLAGS[] = {
     TODO_CONFIG_MASTER
@@ -284,7 +275,6 @@ static const GenericFlagEntry TODO_CONFIG_FLAGS[] = {
 #undef X
 enum { TODO_CONFIG_FLAGS_COUNT = sizeof(TODO_CONFIG_FLAGS) / sizeof(TODO_CONFIG_FLAGS[0]) };
 
-// Generate TodoConfigEntry array (full config)
 #define X(flag, internal, label, color, is_alias) {flag, internal, label, color, is_alias},
 static const TodoConfigEntry TODO_DICT[] = {
     TODO_CONFIG_MASTER
