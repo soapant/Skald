@@ -140,6 +140,11 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
             }
           }
     } 
+    if (msg == WM_CHAR) {
+        if (wParam == 0x7F) {
+            return 0; 
+        }
+    }
     
     return DefSubclassProc(hwnd, msg, wParam, lParam);
 } 
@@ -148,6 +153,7 @@ LRESULT CALLBACK SimpleEditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPAR
     HWND hParent = GetParent(hwnd);
     HWND hListBox = GetDlgItem(hParent, IDC_LIST_BOX);
     HWND hEditControl = hwnd;
+    bool ctrl_pressed = (GetKeyState(VK_CONTROL) & 0x8000);
 
     if (msg == WM_KEYDOWN) {
         g_ActiveEditControl = hEditControl;
@@ -171,9 +177,19 @@ LRESULT CALLBACK SimpleEditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPAR
             }
             return 0;
         }
-        
+
+        if (wParam == VK_BACK) {
+           if (ctrl_pressed) {
+             UI_SetText(hEditControl,"");
+             return 0;
+           }
+        }
     } 
-    
+    if (msg == WM_CHAR) {
+        if (wParam == 0x7F) {
+            return 0; 
+        }
+    }
     return DefSubclassProc(hwnd, msg, wParam, lParam);
 } 
 
@@ -298,6 +314,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 if (GetKeyState(VK_UP) & 0x8000 || 
                     GetKeyState(VK_DOWN) & 0x8000 || 
                     GetKeyState(VK_RETURN) & 0x8000 ||
+                    GetKeyState(VK_CONTROL) & 0x8000 ||
                     GetKeyState(VK_ESCAPE) & 0x8000) 
                 {
                     break;
