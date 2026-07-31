@@ -282,10 +282,10 @@ int pool_max = MAX_VISIBLE_ITEMS;
       }
     }
     
-g_last_items = items;
-    g_last_item_count = item_count;
-    g_TotalMatches = total_matches;
-}
+    g_last_items = items;
+        g_last_item_count = item_count;
+        g_TotalMatches = total_matches;
+    }
 
 COLORREF GetRainbowColor(float t, float s, float v) {
     if (RainbowText) {
