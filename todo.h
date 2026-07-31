@@ -315,7 +315,6 @@ static void todo_render_callback(HDC hdc, const char* text, RECT* rect, BOOL is_
     textRect.left += 10;
     textRect.top += 4;
     textRect.bottom -= 30;
-    
     if (!is_selected) {
         SetTextColor(hdc, GetRainbowColor((float)itemIndex / 20.0f, 0.85f, 0.85f));
     }
