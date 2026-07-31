@@ -60,14 +60,14 @@ static inline const char* GoToLastListBoxItem(void) {
     return g_populated_cache[lastIndex];
 }
 
-static inline void SetCursorToStartOfText(void) {
+inline void SetCursorToStartOfText(void) {
     if (g_ActiveEditControl && IsWindow(g_ActiveEditControl)) {
         SetFocus(g_ActiveEditControl);
         UI_SetCursorPosition(g_ActiveEditControl,0);
     }
 }
 
-static inline void SetCursorToEndOfText(void) {
+inline void SetCursorToEndOfText(void) {
     if (g_ActiveEditControl && IsWindow(g_ActiveEditControl)) {
         SetFocus(g_ActiveEditControl);
         int len = GetWindowTextLengthA(g_ActiveEditControl);

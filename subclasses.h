@@ -40,38 +40,40 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
             }
         }
 
-        if (wParam == VK_UP || wParam == VK_DOWN) {
-            if (hListBox != NULL) {
-                int count = UI_GetCount(hListBox);
-                int sel = UI_GetSelection(hListBox);
-                
-                if (count > 0) {
-                    if (sel == LB_ERR) {
-                        if (sel != -1 | wParam == VK_DOWN){
-                          sel = 0;
-                        }else {
-                        if (sel == -1 && wParam == VK_UP) {
-                          GetFromHistory();
-                          sel = 0;
+        if (!ctrl_pressed) {
+          if (wParam == VK_UP || wParam == VK_DOWN) {
+              if (hListBox != NULL) {
+                  int count = UI_GetCount(hListBox);
+                  int sel = UI_GetSelection(hListBox);
+                  
+                  if (count > 0) {
+                      if (sel == LB_ERR) {
+                          if (sel != -1 | wParam == VK_DOWN){
+                            sel = 0;
+                          }else {
+                          if (sel == -1 && wParam == VK_UP) {
+                            GetFromHistory();
+                            sel = 0;
+                          }
                         }
+                      } else if (sel == 0 && wParam == VK_UP) {
+                          sel = -1;
+                      } else {
+                        if (wParam == VK_UP) {
+                            sel = (sel > 0) ? sel - 1 : 0;
+                          } else {
+                            sel = (sel < count - 1) ? sel + 1 : count - 1;
+                          }
                       }
-                    } else if (sel == 0 && wParam == VK_UP) {
-                        sel = -1;
-                    } else {
-                      if (wParam == VK_UP) {
-                          sel = (sel > 0) ? sel - 1 : 0;
-                        } else {
-                          sel = (sel < count - 1) ? sel + 1 : count - 1;
-                        }
-                    }
-                    
-                    int old_sel = g_SelectedIndex;
-                    g_SelectedIndex = sel;
-                    UI_LB_SetCaretIndex(hListBox, sel, TRUE);
-                    UI_SetSelection(hListBox, sel, old_sel);
-                }
-            }
-            return 0;
+                      
+                      int old_sel = g_SelectedIndex;
+                      g_SelectedIndex = sel;
+                      UI_LB_SetCaretIndex(hListBox, sel, TRUE);
+                      UI_SetSelection(hListBox, sel, old_sel);
+                  }
+              }
+              return 0;
+          }
         }
 
         if (wParam == VK_RETURN) {
@@ -145,6 +147,16 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
                 return 0;
             }
           }
+        if (wParam == VK_DOWN) {
+          if (ctrl_pressed) {
+            SetCursorToEndOfText();
+          }
+        }
+        if (wParam == VK_UP) {
+          if (ctrl_pressed) {
+            SetCursorToStartOfText();
+          }
+        }
     } 
     if (msg == WM_CHAR) {
         if (wParam == 0x7F) {
