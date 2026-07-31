@@ -470,10 +470,24 @@ static inline void HandleShowFullText(void) {
   }
 }
 
-//NOT IMPLEMENTED SHOULD DO THE F AND SHIFT F SEARCHING
-
 void SearchTextForward(int key) {
-    printf("You pressed: %c\n", key);
+  char text[512] = {0};
+  UI_GetText(g_ActiveEditControl, text, sizeof(text));
+  DWORD start_pos, end_pos;
+  UI_Edit_GetSel(g_ActiveEditControl, &start_pos, &end_pos);
+  int cursor = (int)start_pos;
+  int length_to_take = text[cursor];
+  char* extracted_string = (char*)malloc((length_to_take + 1) * sizeof(char));
+  strncpy(extracted_string, &text[cursor], length_to_take);
+  extracted_string[length_to_take] = '\0';
+
+  for (int i = 0; i < strlen(extracted_string);i++) {
+    printf("CHECKING CHARCETER %c MATCHES KEY INPUT %i",extracted_string[i],key); 
+    if (extracted_string[i] == key) {
+      printf("CHARCETER %c MATCHED KEY INPUT %i",extracted_string[i],key);
+    }
+
+  }
 }
 
 static inline void HandleSearchTextForward(void ) {
