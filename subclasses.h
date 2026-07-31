@@ -17,6 +17,8 @@
 #include "common_ui.h"
 int g_refresh_count = 0;
 COLORREF DisplayMessageText;
+COLORREF g_rainbow_text_cache[MAX_VISIBLE_ITEMS + 1] = {0};
+static bool rainbow_init = false;
 
 LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
     HWND hParent = GetParent(hwnd);
@@ -393,29 +395,29 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                   num_init = true;
               }
               
-              static COLORREF rainbow_text_cache[MAX_VISIBLE_ITEMS + 1] = {0};
-              static bool rainbow_init = false;
               if (!rainbow_init) {
-                  for (int i = 0; i < MAX_VISIBLE_ITEMS + 1; i++) {
+                  for (int i = 0; i <= MAX_VISIBLE_ITEMS; i++) {
                       float hue = (float)i / 20.0f * 240.0f;
                       float h = hue / 60.0f;
                       float s = 0.85f;
                       float v = 0.85f;
                       int j = (int)h;
                       float f = h - j;
-                      float p = v * (1 - s);
-                      float q = v * (1 - s * f);
-                      float t_val = v * (1 - s * (1 - f));
+                      float p = v * (1.0f - s);
+                      float q = v * (1.0f - s * f);
+                      float t_val = v * (1.0f - s * (1.0f - f));
+                      
                       float r, g, b;
                       switch (j) {
-                          case 0: r = v; g = t_val; b = p; break;
-                          case 1: r = q; g = v; b = p; break;
-                          case 2: r = p; g = v; b = t_val; break;
-                          case 3: r = p; g = q; b = v; break;
-                          case 4: r = t_val; g = p; b = v; break;
-                          default: r = v; g = p; b = q; break;
+                          case 0:  r = v;     g = t_val; b = p;     break;
+                          case 1:  r = q;     g = v;     b = p;     break;
+                          case 2:  r = p;     g = v;     b = t_val; break;
+                          case 3:  r = p;     g = q;     b = v;     break;
+                          case 4:  r = t_val; g = p;     b = v;     break;
+                          default: r = v;     g = p;     b = q;     break;
                       }
-                      rainbow_text_cache[i] = RGB((BYTE)(r * 255), (BYTE)(g * 255), (BYTE)(b * 255));
+
+                      g_rainbow_text_cache[i] = RGB((BYTE)(r * 255.0f), (BYTE)(g * 255.0f), (BYTE)(b * 255.0f));
                   }
                   rainbow_init = true;
               }
@@ -438,9 +440,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                         if (isSelected && strlen(measureBuffer) >= 70) {
                             if (g_last_selected_index != pdis->itemID || hDisplayMessage == NULL) {
                                 g_last_selected_index = pdis->itemID;
-                                DisplayMessageText = rainbow_text_cache[pdis->itemID];
-                                MSG_TOP(g_populated_cache[pdis->itemID], 140, 6969);
-                                DisplayMessageText = COLOR_TEXT;
+                                SubjectiveMessageDisplay(g_populated_cache[pdis->itemID], 140, 6969,COLOR_OF_SELECTION);
                             }
                         } else {
                             if (g_last_selected_index == pdis->itemID) {
@@ -481,7 +481,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                   numRect.right = numRect.left + 25;
                   
                   HFONT hOldFont = (HFONT)SelectObject(pdis->hDC, g_hNumFont);
-                  SetTextColor(pdis->hDC, rainbow_text_cache[pdis->itemID]);
+                  SetTextColor(pdis->hDC, g_rainbow_text_cache[pdis->itemID]);
                   DrawTextA(pdis->hDC, num_cache[pdis->itemID], -1, &numRect, DT_SINGLELINE | DT_VCENTER | DT_CENTER);
                   SelectObject(pdis->hDC, hOldFont);
                   textRect.left += 35;

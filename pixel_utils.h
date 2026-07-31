@@ -113,11 +113,7 @@ static inline void TriggerRegionCoords(void) {
         saved_y1 = cursorPos.y;
         region_step = 1;
         snprintf(buffer,sizeof(buffer),"Started Region Coord At %ld %ld \n",saved_x1,saved_y1);
-        if (hPopupWnd != NULL) {
-          MSG_TOP(buffer,140,1);
-        }else {
-          MSG_MIDDLE_BOTTOM(buffer,70,1);
-        }
+        SubjectiveMessageDisplay(buffer,140,1,COLOR_TEXT);
     } else {
         char buf[128];
         snprintf(buf, sizeof(buf), "%ld,%ld,%ld,%ld", saved_x1, saved_y1, cursorPos.x, cursorPos.y);
