@@ -49,6 +49,8 @@ LRESULT CALLBACK SimpleListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, 
 
 BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam);
 
+void SubjectiveMessageDisplay(const char* buffer,int msg_height,int timeout,COLORREF color);
+
 typedef struct {
     const char* name;                         
     void (*func)(const char** items, int count);
