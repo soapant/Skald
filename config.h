@@ -30,13 +30,15 @@
 #define MUTE                'P'
 #define MUSIC_PLAYER        'P'
 #define VIDEO_VIEWER        'V'
+#define COLOR_ERROR             RGB(180, 0, 0) 
+#define COLOR_NORMAL            RGB(200, 200, 0) 
+#define COLOR_TIP               RGB(0, 160, 0)  
+#define COLOR_OF_SELECTION g_rainbow_text_cache[g_SelectedIndex]
 
 
 static bool TRAY = true;
 
 static bool COLORFUL_MODE = false;
-
-#define MAX_VISIBLE_ITEMS 60
 
 const char* UsedTerminal = "Alacritty";
 

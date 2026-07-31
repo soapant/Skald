@@ -5,6 +5,8 @@
 #include <stdbool.h>
 #include <string.h>
 
+#define MAX_VISIBLE_ITEMS 60
+
 
 typedef void (*RefreshCallback)(const char* filter, HWND hListBox);
 typedef void (*EnterCallback)(const char* selection);
@@ -291,6 +293,7 @@ extern int g_initial_count;
 extern int g_SelectedIndex;
 extern const char* g_title;
 extern const char* g_vim_mode;
+extern COLORREF g_rainbow_text_cache[MAX_VISIBLE_ITEMS + 1];
 #define MAX_ITEMS 1000
 extern char g_populated_cache[MAX_ITEMS][512];
 extern int g_populated_count;

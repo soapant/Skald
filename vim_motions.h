@@ -12,6 +12,7 @@
 #include "vim_helpers.h"
 #include "calc.h"
 #include "common_ui.h"
+#include "config.h"
 
 typedef enum {
     MOTION_NONE = 0,
@@ -456,33 +457,10 @@ static inline void HandleToggleHistory(void) {
 
 static inline void HandleShowFullText(void) {
   if (FullTextNeedsKeyPress) {
-      static COLORREF rainbow_text_cache[MAX_VISIBLE_ITEMS + 1] = {0};
-      for (int i = 0; i < MAX_VISIBLE_ITEMS + 1; i++) {
-          float hue = (float)i / 20.0f * 240.0f;
-          float h = hue / 60.0f;
-          float s = 0.85f;
-          float v = 0.85f;
-          int j = (int)h;
-          float f = h - j;
-          float p = v * (1 - s);
-          float q = v * (1 - s * f);
-          float t_val = v * (1 - s * (1 - f));
-          float r, g, b;
-          switch (j) {
-              case 0: r = v; g = t_val; b = p; break;
-              case 1: r = q; g = v; b = p; break;
-              case 2: r = p; g = v; b = t_val; break;
-              case 3: r = p; g = q; b = v; break;
-              case 4: r = t_val; g = p; b = v; break;
-              default: r = v; g = p; b = q; break;
-          }
-          rainbow_text_cache[i] = RGB((BYTE)(r * 255), (BYTE)(g * 255), (BYTE)(b * 255));
-      }
       if (UI_IsListBoxSelected()) {
-          DisplayMessageText = rainbow_text_cache[g_SelectedIndex];
-          MSG_TOP(g_populated_cache[g_SelectedIndex], 140, 6969);
-          DisplayMessageText = COLOR_TEXT;
+        SubjectiveMessageDisplay(g_populated_cache[g_SelectedIndex], 140, 6969,COLOR_OF_SELECTION);
       }
+      
   }
 }
 
