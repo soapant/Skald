@@ -29,4 +29,3 @@ you could like do something in the render callback to select / highlight common 
 add searching / for whole feature f for only text and shift f||[Cprogram]
 for some reason normal mappign sometimes dont wrok with no modifier||[Cprogram]
 fix the hardcoded insert mode bindings like ctrl e etc pyt them all in config or vim_bindings||[Cprogram]
-make the program opener focus the actual program||[Cprogram]
