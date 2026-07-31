@@ -305,9 +305,13 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 SetBkColor(hdc, bg);
                 return (LRESULT)CreateSolidBrush(bg);
             } else {
-                if (g_SelectedIndex == -1) {
-                  SetBkColor(hdc, COLOR_SELECTED_TEXT);
-                }else {
+                if (SearchBoxDiffColor) {
+                  if (g_SelectedIndex == -1) {
+                    SetBkColor(hdc, COLOR_SELECTED_TEXT);
+                  }else {
+                    SetBkColor(hdc, COLOR_BG);
+                  }
+                } else {
                   SetBkColor(hdc, COLOR_BG);
                 }
                 return (LRESULT)CreateSolidBrush(COLOR_BG);
