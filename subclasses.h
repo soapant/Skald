@@ -395,33 +395,38 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                   num_init = true;
               }
               
-              if (!rainbow_init) {
-                  for (int i = 0; i <= MAX_VISIBLE_ITEMS; i++) {
-                      float hue = (float)i / 20.0f * 240.0f;
-                      float h = hue / 60.0f;
-                      float s = 0.85f;
-                      float v = 0.85f;
-                      int j = (int)h;
-                      float f = h - j;
-                      float p = v * (1.0f - s);
-                      float q = v * (1.0f - s * f);
-                      float t_val = v * (1.0f - s * (1.0f - f));
-                      
-                      float r, g, b;
-                      switch (j) {
-                          case 0:  r = v;     g = t_val; b = p;     break;
-                          case 1:  r = q;     g = v;     b = p;     break;
-                          case 2:  r = p;     g = v;     b = t_val; break;
-                          case 3:  r = p;     g = q;     b = v;     break;
-                          case 4:  r = t_val; g = p;     b = v;     break;
-                          default: r = v;     g = p;     b = q;     break;
-                      }
+              if (RainbowText) {
+                  if (!rainbow_init) {
+                      for (int i = 0; i <= MAX_VISIBLE_ITEMS; i++) {
+                          float hue = (float)i / 20.0f * 240.0f;
+                          float h = hue / 60.0f;
+                          float s = 0.85f;
+                          float v = 0.85f;
+                          int j = (int)h;
+                          float f = h - j;
+                          float p = v * (1.0f - s);
+                          float q = v * (1.0f - s * f);
+                          float t_val = v * (1.0f - s * (1.0f - f));
+                          
+                          float r, g, b;
+                          switch (j) {
+                              case 0:  r = v;     g = t_val; b = p;     break;
+                              case 1:  r = q;     g = v;     b = p;     break;
+                              case 2:  r = p;     g = v;     b = t_val; break;
+                              case 3:  r = p;     g = q;     b = v;     break;
+                              case 4:  r = t_val; g = p;     b = v;     break;
+                              default: r = v;     g = p;     b = q;     break;
+                          }
 
-                      g_rainbow_text_cache[i] = RGB((BYTE)(r * 255.0f), (BYTE)(g * 255.0f), (BYTE)(b * 255.0f));
+                          g_rainbow_text_cache[i] = RGB((BYTE)(r * 255.0f), (BYTE)(g * 255.0f), (BYTE)(b * 255.0f));
+                      }
+                      rainbow_init = true;
                   }
-                  rainbow_init = true;
+              } else {
+                  for (int i = 0; i <= MAX_VISIBLE_ITEMS; i++) {
+                     g_rainbow_text_cache[i] = COLOR_TEXT;
+                  }
               }
-              
               if (COLORFUL_MODE) {
                   int color_index = pdis->itemID % 100;
                   HBRUSH hBrush = isSelected ? hColorfulBrush[color_index] : hColorfulBrush[color_index];

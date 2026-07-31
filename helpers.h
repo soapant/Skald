@@ -22,26 +22,28 @@ typedef struct {
     bool condition;
 } HotkeyBinding;
 
-static inline void SubjectiveMessageDisplay(const char* buffer,int msg_height,int timeout,COLORREF color) {
-    if (color == COLOR_OF_SELECTION) {
-        if (UI_IsListBoxSelected()) {
-          DisplayMessageText = COLOR_OF_SELECTION;
-        } else {
-          DisplayMessageText = COLOR_TEXT;
+void SubjectiveMessageDisplay(const char* buffer,int msg_height,int timeout,COLORREF color) {
+    if (MessagesEnabled) {
+        if (color == COLOR_OF_SELECTION) {
+            if (UI_IsListBoxSelected()) {
+              DisplayMessageText = COLOR_OF_SELECTION;
+            } else {
+              DisplayMessageText = COLOR_TEXT;
+            }
         }
-    }
-    else if (color) {
-        DisplayMessageText = color;
-    }
-    else {
+        else if (color) {
+            DisplayMessageText = color;
+        }
+        else {
+            DisplayMessageText = COLOR_TEXT;
+        }
+        if (hPopupWnd != NULL) {
+          MSG_TOP(buffer,msg_height,timeout);
+        }else {
+          MSG_MIDDLE_BOTTOM(buffer,msg_height / 2,timeout);
+        }
         DisplayMessageText = COLOR_TEXT;
     }
-    if (hPopupWnd != NULL) {
-      MSG_TOP(buffer,msg_height,timeout);
-    }else {
-      MSG_MIDDLE_BOTTOM(buffer,msg_height / 2,timeout);
-    }
-    DisplayMessageText = COLOR_TEXT;
 }
 
 static inline bool ProcessHotkey(const HotkeyBinding* bindings, int bindings_count,

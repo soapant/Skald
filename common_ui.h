@@ -288,23 +288,27 @@ g_last_items = items;
 }
 
 COLORREF GetRainbowColor(float t, float s, float v) {
-    float hue = t * 240.0f;
-    float h = hue / 60.0f;
-    int i = ((int)h) % 6;
-    float f = h - (int)h;
-    float p = v * (1 - s);
-    float q = v * (1 - s * f);
-    float t_ = v * (1 - s * (1 - f));
-    float r, g, b;
-    switch (i) {
-        case 0: r = v; g = t_; b = p; break;
-        case 1: r = q; g = v; b = p; break;
-        case 2: r = p; g = v; b = t_; break;
-        case 3: r = p; g = q; b = v; break;
-        case 4: r = t_; g = p; b = v; break;
-        case 5: r = v; g = p; b = q; break;
+    if (RainbowText) {
+        float hue = t * 240.0f;
+        float h = hue / 60.0f;
+        int i = ((int)h) % 6;
+        float f = h - (int)h;
+        float p = v * (1 - s);
+        float q = v * (1 - s * f);
+        float t_ = v * (1 - s * (1 - f));
+        float r, g, b;
+        switch (i) {
+            case 0: r = v; g = t_; b = p; break;
+            case 1: r = q; g = v; b = p; break;
+            case 2: r = p; g = v; b = t_; break;
+            case 3: r = p; g = q; b = v; break;
+            case 4: r = t_; g = p; b = v; break;
+            case 5: r = v; g = p; b = q; break;
+        }
+        return RGB((BYTE)(r * 255), (BYTE)(g * 255), (BYTE)(b * 255));
+    } else {
+      return COLOR_TEXT;
     }
-    return RGB((BYTE)(r * 255), (BYTE)(g * 255), (BYTE)(b * 255));
 }
 
 HFONT CreateCustomNerdFont(int height, const char* face_name) {
