@@ -55,6 +55,9 @@ FilterCallback g_filter_callback = NULL;
 HWND g_ActiveEditControl = NULL;
 char* g_current_feature = NULL;
 int g_timeout = 1;
+bool g_waiting_for_key = false;
+int g_key_pressed = 0;
+HANDLE g_key_event = NULL;
 const char** g_initial_items = NULL;
 int g_initial_count = 0;
 int g_SelectedIndex = 0; 
@@ -83,6 +86,11 @@ HFONT g_hNumFont = NULL;
 HFONT g_hMainFont = NULL;
 HashMap* feature_history = NULL;
 HashMap* feature_data = NULL;
+
+void WaitForKeypressAsync(KeyCallback callback) {
+    g_waiting_for_key = true;
+    g_key_callback = callback;
+}
 
 char* PromptUser(const char* window_list[], const char* window_title, int count, int height, int width, int item_height,
                  RefreshCallback refresh_callback, 
@@ -447,7 +455,6 @@ int InitializeTrayIcon() {
     return 0;
 }
 
-
 LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
     if (nCode < 0) {
         return CallNextHookEx(NULL, nCode, wParam, lParam);
@@ -492,6 +499,15 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
         MotionAction vimAction = MOTION_NONE;
         const char* matchedSequence = NULL;
         int typedCount = 0;
+        if (IsNormalMode()) {
+          if (g_waiting_for_key) {
+            g_waiting_for_key = false;
+            if (g_key_callback) {
+                g_key_callback(pKeyInfo->vkCode);
+            }
+            return 1;
+          }       
+        }
         if (CheckVimMotion(pressed_vk, modifiers, &vimAction, &matchedSequence, &typedCount)) {
             ExecuteMotion(vimAction, matchedSequence, typedCount);
             return 1;
