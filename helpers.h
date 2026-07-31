@@ -21,13 +21,20 @@ typedef struct {
     const char* name;
     bool condition;
 } HotkeyBinding;
+
 static inline void SubjectiveMessageDisplay(const char* buffer,int msg_height,int timeout,COLORREF color) {
-    if (color) {
-      DisplayMessageText = color;
-    } else if (color == COLOR_OF_SELECTION) {
+    if (color == COLOR_OF_SELECTION) {
+        if (UI_IsListBoxSelected()) {
+          DisplayMessageText = COLOR_OF_SELECTION;
+        } else {
+          DisplayMessageText = COLOR_TEXT;
+        }
+    }
+    else if (color) {
+        DisplayMessageText = color;
     }
     else {
-      DisplayMessageText = COLOR_TEXT;
+        DisplayMessageText = COLOR_TEXT;
     }
     if (hPopupWnd != NULL) {
       MSG_TOP(buffer,msg_height,timeout);
