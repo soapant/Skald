@@ -437,8 +437,8 @@ static inline void HandleDeleteWordNormal(void) {
     DeleteInnerWord(false); 
 }
 static inline void HandleSendEdit(void) {
-    UI_Edit_KeyDown(g_ActiveEditControl,'E');
-    UI_Edit_KeyUp(g_ActiveEditControl, 'E');
+    UI_Edit_KeyDown(g_ActiveEditControl,EDIT_TEXT_KEY);
+    UI_Edit_KeyUp(g_ActiveEditControl, EDIT_TEXT_KEY);
 }
 static inline void HandleCopyToSearch(void) {
   if (UI_IsListBoxSelected()) {
