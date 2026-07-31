@@ -51,6 +51,9 @@ BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam);
 
 void SubjectiveMessageDisplay(const char* buffer,int msg_height,int timeout,COLORREF color);
 
+void SetCursorToEndOfText(void);
+
+void SetCursorToStartOfText(void);
 typedef struct {
     const char* name;                         
     void (*func)(const char** items, int count);
