@@ -2,6 +2,7 @@
 #include "config.h"
 #include <windows.h>
 #include "app_launcher.h"
+#include "focus_switcher.h"
 #include "macro_bindings.h"
 #include "vim_motions.h"
 #include "window_switcher.h"
@@ -225,8 +226,11 @@ bool CheckAppHotkeyBindings(int pressed_vk, int modifiers) {
             if (strcmp(G_APP_HOTKEYS[i].exe_name, "*") == 0 ||
                 StrStrIA(activeExe, G_APP_HOTKEYS[i].exe_name) != NULL) {
                 
-                printf("[APP-HOTKEY] Launching: %s\n", G_APP_HOTKEYS[i].app_name);
                 launch_app_by_name(G_APP_HOTKEYS[i].app_name);
+                HWND hwnd = FindWindowByPartialTitle(G_APP_HOTKEYS[i].app_name);
+                if (hwnd) {
+                  FocusWindow(hwnd);
+                }
                 return true;
             }
         }
