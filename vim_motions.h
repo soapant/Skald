@@ -4,6 +4,7 @@
 
 #include <windows.h>
 #include <stdio.h>
+#include <winsock.h>
 #include "types.h"
 #include "helpers.h"
 #include "config.h"
@@ -18,6 +19,8 @@ typedef enum {
     MOTION_NONE = 0,
     MOTION_ENTER_NORMAL,
     MOTION_HISTORY_TOGGLE,
+    MOTION_SEARCH_TEXT_FORWARD,
+    MOTION_SEARCH_TEXT_BACKWARD,
     MOTION_SHOW_FULL_TEXT,
     MOTION_ENTER,
     MOTION_COPY_INTO_SEARCH,
@@ -153,21 +156,27 @@ static inline void HandleMoveLeft(void) {
       UI_Edit_KeyDown(g_ActiveEditControl, VK_LEFT);
       UI_Edit_KeyUp(g_ActiveEditControl, VK_LEFT);
 }
-static inline void HandleMoveRight(void) {
-      UI_Edit_KeyDown(g_ActiveEditControl, VK_RIGHT);
-      UI_Edit_KeyUp(g_ActiveEditControl, VK_RIGHT);
-}
 
 static inline void HandleEnter(void) {
     if (hListBox != NULL && UI_IsListBoxSelected()) {
         UI_Edit_KeyDown(g_ActiveEditControl, VK_RETURN);
         UI_Edit_KeyUp(g_ActiveEditControl, VK_RETURN);
-      }
+    } else if (g_SelectedIndex == -1) {
+      UI_Edit_KeyDown(g_ActiveEditControl, VK_RIGHT);
+      UI_Edit_KeyUp(g_ActiveEditControl, VK_RIGHT);
+    }
+
 }
 static inline void HandleMoveUp(void) {
     if (g_ActiveEditControl) {
         UI_Edit_KeyDown(g_ActiveEditControl, VK_UP);
         UI_Edit_KeyUp(g_ActiveEditControl, VK_UP);
+    }
+}
+static inline void HandleMoveRight(void) {
+    if (g_ActiveEditControl) {
+        UI_Edit_KeyDown(g_ActiveEditControl, VK_RIGHT);
+        UI_Edit_KeyUp(g_ActiveEditControl, VK_RIGHT);
     }
 }
 
@@ -210,11 +219,8 @@ static inline void HandleDelete(void) {
 }
 
 static inline void HandleDeleteCharInsert(void) {
-    if (g_ActiveEditControl) {
-        DeleteCharUnderCursor();
-        HandleEnterInsertIn(); 
-        printf("[VIM] Deleted character under cursor & Switched to Insert\n");
-    }
+    DeleteCharUnderCursor();
+    HandleEnterInsertIn(); 
 }
 
 static inline void HandleDeleteCharNormal(void) {
@@ -461,6 +467,28 @@ static inline void HandleShowFullText(void) {
         SubjectiveMessageDisplay(g_populated_cache[g_SelectedIndex], 140, 6969,COLOR_OF_SELECTION);
       }
       
+  }
+}
+
+//NOT IMPLEMENTED SHOULD DO THE F AND SHIFT F SEARCHING
+
+void SearchTextForward(int key) {
+    printf("You pressed: %c\n", key);
+}
+
+static inline void HandleSearchTextForward(void ) {
+  if (!UI_IsListBoxSelected()) {
+    WaitForKeypressAsync(SearchTextForward);
+  }
+}
+
+void SearchTextBackward(int key) {
+    printf("You pressed: %c\n", key);
+}
+
+static inline void HandleSearchTextBackward(void ) {
+  if (!UI_IsListBoxSelected()) {
+    WaitForKeypressAsync(SearchTextBackward);
   }
 }
 

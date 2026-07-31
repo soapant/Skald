@@ -15,6 +15,9 @@ typedef void (*TabCallback)(void);
 typedef void (*RenderCallback)(HDC hdc, const char* text, RECT* rect, BOOL is_selected, int itemIndex);
 typedef void (*EditCallback)(const char*);
 typedef void (*FilterCallback)(const char* item,const char* filter);
+typedef void (*KeyCallback)(int vkCode);
+KeyCallback g_key_callback = NULL;
+
 
 char* PromptUser(const char* window_list[], const char* window_title, int count, 
                  int height, int width, int item_height, 
@@ -54,6 +57,8 @@ void SubjectiveMessageDisplay(const char* buffer,int msg_height,int timeout,COLO
 void SetCursorToEndOfText(void);
 
 void SetCursorToStartOfText(void);
+
+void WaitForKeypressAsync(KeyCallback callback);
 
 typedef struct {
     const char* name;                         
@@ -291,6 +296,8 @@ extern HWND hDisplayMessage;
 extern HWND hEditControl;
 extern HWND g_ActiveEditControl;
 extern HWND g_hEditPopup;
+extern bool stop_key;
+extern int stopped_key;
 extern EditPopupData* g_EditData;
 extern bool selection_complete;
 extern RefreshCallback g_refresh_callback;
