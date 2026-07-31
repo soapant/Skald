@@ -232,6 +232,10 @@ static const FocusSwitcherBinding G_FOCUS_SWITCHERS[] = {
     },
 };
 
+static const AliasEntry Aliases[] = {
+  {"bw","Brawlhalla","AppLauncher"},
+};
+
 #define FOCUS_SWITCHER_COUNT (sizeof(G_FOCUS_SWITCHERS) / sizeof(G_FOCUS_SWITCHERS[0]))
 
 static const TagFormatConfig TODO_TAG_FORMAT = {

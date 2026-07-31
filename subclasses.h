@@ -24,7 +24,6 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
     HWND hParent = GetParent(hwnd);
     HWND hListBox = GetDlgItem(hParent, IDC_LIST_BOX);
     HWND hEditControl = hwnd;
-
     
     if (msg == WM_KEYDOWN) {
         g_ActiveEditControl = hEditControl;
@@ -298,7 +297,22 @@ LRESULT CALLBACK SimpleListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, 
 static int g_last_selected_index = -1;
 LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     switch (msg) {
-      case WM_CTLCOLOREDIT:
+        case WM_CTLCOLOREDIT: {
+            HDC hdc = (HDC)wParam;
+            SetTextColor(hdc, COLOR_TEXT);
+            if (COLORFUL_MODE) {
+                COLORREF bg = GetRainbowColor(0.02f, 0.55f, 0.20f);
+                SetBkColor(hdc, bg);
+                return (LRESULT)CreateSolidBrush(bg);
+            } else {
+                if (g_SelectedIndex == -1) {
+                  SetBkColor(hdc, COLOR_SELECTED_TEXT);
+                }else {
+                  SetBkColor(hdc, COLOR_BG);
+                }
+                return (LRESULT)CreateSolidBrush(COLOR_BG);
+            }
+        }
         case WM_CTLCOLORLISTBOX: {
             HDC hdc = (HDC)wParam;
             SetTextColor(hdc, COLOR_TEXT);
