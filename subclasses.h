@@ -125,7 +125,7 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
              return 0;
            }
         }
-        if (wParam == 'E') {
+        if (wParam == EDIT_TEXT_KEY) {
             output_buffer[0] = '\0';
 
             if (g_SelectedIndex != -1) {
@@ -736,7 +736,7 @@ LRESULT CALLBACK EditPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
     }
     
     if (uMsg == WM_KEYDOWN) {        
-        if (wParam == 'E' && data && !data->consumed_trigger_e) {
+        if (wParam == EDIT_TEXT_KEY && data && !data->consumed_trigger_e) {
             return 0;
         }
         
@@ -762,7 +762,7 @@ LRESULT CALLBACK EditPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
             return 0;
         }
     } else if (uMsg == WM_CHAR) {
-        if ((wParam == 'e' || wParam == 'E') && data && !data->consumed_trigger_e) {
+        if ((wParam == tolower(EDIT_TEXT_KEY)) && data && !data->consumed_trigger_e) {
             data->consumed_trigger_e = true;
             return 0;
         }
