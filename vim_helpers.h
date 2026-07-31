@@ -91,7 +91,6 @@ static inline void DeleteInsideDelimiter(char open_char, char close_char, bool k
     
     int start = -1, end = -1;
     
-    // === FORWARDS: Cursor is inside or before the brackets ===
     int open_pos = -1;
     for (int i = cursor - 1; i >= 0; i--) {
         if (text[i] == open_char) {
