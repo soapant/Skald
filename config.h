@@ -76,6 +76,10 @@ const bool VideoViewerAvailable = true;
 
 const bool FullTextNeedsKeyPress = true;
 
+const bool MessagesEnabled = true;
+
+const bool RainbowText = true;
+
 
 
 static const char* ListOfProgramPaths[20] = {

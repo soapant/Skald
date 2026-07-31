@@ -136,11 +136,7 @@ static inline void TriggerRegionImage(void) {
         img_y1 = cursorPos.y;
         img_region_step = 1;
         snprintf(buffer,sizeof(buffer),"Started Region Image At %ld %ld \n",saved_x1,saved_y1);
-        if (hPopupWnd != NULL) {
-          MSG_TOP(buffer,140,1);
-        }else {
-          MSG_MIDDLE_BOTTOM(buffer,70,1);
-        }
+        SubjectiveMessageDisplay(buffer,140,1,COLOR_TEXT);
     } else {
         img_x2 = cursorPos.x;
         img_y2 = cursorPos.y;
