@@ -54,6 +54,7 @@ void SubjectiveMessageDisplay(const char* buffer,int msg_height,int timeout,COLO
 void SetCursorToEndOfText(void);
 
 void SetCursorToStartOfText(void);
+
 typedef struct {
     const char* name;                         
     void (*func)(const char** items, int count);
@@ -76,6 +77,12 @@ struct feature_data {
     int sort_options_count;
     int current_sort_index;
 };
+
+typedef struct {
+   char* alias;
+   char* expanded_text;
+   char* feature;
+}AliasEntry;
 
 typedef struct {
     char* initial_text;
