@@ -87,11 +87,16 @@ void TriggerVolume() {
     snprintf(prompt, sizeof(prompt), "Enter Volume (0 - 100) Current Volume: %d", current_vol);
     
     input = SimplePromptUser(prompt, "🔊 Volume",920, 650, 32);
+
     if (input != NULL) {
-    int vol = atoi(input);
-    if (vol < 0) vol = 0;
-    if (vol > 100) vol = 100;
-    SetSystemVolume(vol / 100.0f);
+    if (atoi(input) > 100) {
+      SubjectiveMessageDisplay("VOLUME WAS MORE THAN 100 THAT IS NOT ALLOWED",140,1,COLOR_ERROR);
+    } else {
+        int vol = atoi(input);
+        if (vol < 0) vol = 0;
+        if (vol > 100) vol = 100;
+        SetSystemVolume(vol / 100.0f);
+    }
     }
 }
 
