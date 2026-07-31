@@ -24,11 +24,9 @@ HRESULT SetDeviceMute(EDataFlow flow, BOOL mute) {
     IMMDevice *pDevice = NULL;
     IAudioEndpointVolume *pEndpointVolume = NULL;
 
-    // 1. Initialize COM library for this thread
     hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
     if (FAILED(hr)) return hr;
 
-    // 2. Create the MMDeviceEnumerator object
     hr = CoCreateInstance(
         &CLSID_MMDeviceEnumerator, 
         NULL, 
@@ -38,7 +36,6 @@ HRESULT SetDeviceMute(EDataFlow flow, BOOL mute) {
     );
     if (FAILED(hr)) goto Cleanup;
 
-    // 3. Get default capture (mic) or render (speaker) endpoint
     hr = IMMDeviceEnumerator_GetDefaultAudioEndpoint(
         pEnumerator, 
         flow, 
@@ -66,6 +63,7 @@ Cleanup:
     CoUninitialize();
     return hr;
 }
+
 void TriggerMuteState(void) {
     if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
     if (!mic_muted){

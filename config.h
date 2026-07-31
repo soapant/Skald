@@ -41,6 +41,8 @@ static bool TRAY = true;
 
 static bool COLORFUL_MODE = false;
 
+static bool SearchBoxDiffColor = false;
+
 const char* UsedTerminal = "Alacritty";
 
 const char* BASE_SCREENSHOT_FOLDER_PATH = "C:\\Users\\HP\\Pictures\\Screenshots\\";
