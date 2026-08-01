@@ -766,25 +766,30 @@ LRESULT CALLBACK DisplayMessageProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
     return DefWindowProcA(hwnd, msg, wParam, lParam);
 }
 
+bool first_key = true;
 LRESULT CALLBACK EditPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
     EditPopupData* data = (EditPopupData*)dwRefData;
     if (!data || !data->hEdit) {
         data = (EditPopupData*)GetWindowLongPtrA(hWnd, GWLP_USERDATA);
     }
-    
-    if (uMsg == WM_KEYDOWN) {        
-        if (wParam == EDIT_TEXT_KEY && data && !data->consumed_trigger_e) {
+    if (uMsg == WM_CHAR) {
+        printf("[EditPopupSubclass] WM_CHAR: char=%d, first_key=%d\n", (int)wParam,first_key);
+        if (first_key) {
+            first_key = false;
+            printf("[EditPopupSubclass] SWALLOWING WM_CHAR\n");
             return 0;
         }
-        
+    }
+    else if (uMsg == WM_KEYDOWN) {
         if (!data || !data->hEdit) {
             return DefSubclassProc(hWnd, uMsg, wParam, lParam);
         }
-        
+
         if (wParam == VK_ESCAPE) {
             printf("[EditPopup] Escape pressed\n");
             data->result = NULL;
             DestroyWindow(GetParent(hWnd));
+            first_key = true;
             return 0;
         }
         if (wParam == VK_RETURN) {
@@ -796,11 +801,6 @@ LRESULT CALLBACK EditPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
             GetWindowTextA(data->hEdit, buffer, sizeof(buffer) - 1);
             data->result = _strdup(buffer);
             DestroyWindow(GetParent(hWnd));
-            return 0;
-        }
-    } else if (uMsg == WM_CHAR) {
-        if ((wParam == tolower(EDIT_TEXT_KEY)) && data && !data->consumed_trigger_e) {
-            data->consumed_trigger_e = true;
             return 0;
         }
     }
@@ -833,6 +833,7 @@ LRESULT CALLBACK EditPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
             );
             
             if (data->hEdit) {
+                first_key = true;
                 SendMessageA(data->hEdit, WM_SETFONT, (WPARAM)data->hFont, TRUE);
                 SendMessageA(data->hEdit, EM_SETSEL, 0, 0);
                 SetFocus(data->hEdit);
