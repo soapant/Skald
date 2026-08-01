@@ -100,6 +100,7 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
                  RenderCallback render_callback,
                  EditCallback edit_callback,
                  FilterCallback filter_callback) {
+    WinTimer timer = TimerStart();
     HINSTANCE hInstance = GetModuleHandle(NULL);
     selection_complete = false;
     output_buffer[0] = '\0';
@@ -164,6 +165,7 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
     ForceWindowFocus(hPopupWnd, hEditControl);
 
 
+    TimerEnd(timer,"NIGGA");
     printf("[DEBUG-UI] Entering local message modal loop...\n");
     MSG msg;
     int loop_counter = 0;
@@ -453,7 +455,6 @@ int InitializeTrayIcon() {
 }
 
 LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
-    WinTimer timer = TimerStart();
     if (nCode < 0) {
         return CallNextHookEx(NULL, nCode, wParam, lParam);
     }
@@ -555,8 +556,6 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
             return 1;
         }
     }
-    TimerEnd(timer,"LowLevelKeyboardHook");
-    
     return CallNextHookEx(NULL, nCode, wParam, lParam);
 }
 
