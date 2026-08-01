@@ -30,3 +30,6 @@ maybe start on the visual mode selection thigny for the edit control tho ||[Cpro
 the fucking feature data isnt being filled out like at all||[Cprogram]
 the w mapping doestn work after two things||[Cprogram]
 the mute mircophone is hardcoded on system startup ||[Cprogram]
+the data filling out of the features should be all automatic in promptuser||[Cprogram]
+maybe eventually you could combine the getfromdata / history functions||[Cprogram]
+the simple promtuser doesnt save history at all||[Cprogram]
