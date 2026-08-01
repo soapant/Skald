@@ -126,8 +126,9 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
         data->ctrl_enter_callback = ctrl_enter_callback;
         data->tab_callback = tab_callback;
         data->render_callback = render_callback;
+        data->edit_callback = edit_callback;
+        data->filter_callback = filter_callback;
         data->filter_match = NULL;
-        
         printf("[REGISTRY] Registered feature: %s (%d items)\n", data->name, data->item_count);
     }
     
