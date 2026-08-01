@@ -3,3 +3,4 @@ rand
 nvim
 retard
 code
+videos

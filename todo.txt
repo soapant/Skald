@@ -41,3 +41,5 @@ the filtering shuold also habe important data like how many of a filter is there
 find a way to global the fucking font this is too inconsistent||[Misc]
 the number and the normal text rainbow colors arent the same||[Cprogram]
 maybe you can fix the black box appearing for the edit control on window startup||[Cprogram]
+i should really figure out the sorting especially for the video player||[Cprogram]
+make a toggle internet off and on and the same thing for blutooth||[Cprogram]

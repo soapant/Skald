@@ -42,34 +42,53 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
         if (!ctrl_pressed) {
           if (wParam == VK_UP || wParam == VK_DOWN) {
               if (hListBox != NULL) {
-                  int count = UI_GetCount(hListBox);
-                  int sel = UI_GetSelection(hListBox);
-                  
-                  if (count > 0) {
-                      if (sel == LB_ERR) {
-                          if (sel != -1 | wParam == VK_DOWN){
+                int count = UI_GetCount(hListBox);
+                int sel = UI_GetSelection(hListBox);
+                if (count > 0) {
+                    if (sel == LB_ERR) {
+                        if (wParam == VK_DOWN) {
                             sel = 0;
-                          }else {
-                          if (sel == -1 && wParam == VK_UP) {
+                        } else if (wParam == VK_UP) {
                             GetFromHistory();
                             sel = 0;
-                          }
                         }
-                      } else if (sel == 0 && wParam == VK_UP) {
-                          sel = -1;
-                      } else {
+                    } else if (sel == 0 && wParam == VK_UP) {
+                        sel = -1;
+                    } else {
                         if (wParam == VK_UP) {
-                            sel = (sel > 0) ? sel - 1 : 0;
-                          } else {
-                            sel = (sel < count - 1) ? sel + 1 : count - 1;
-                          }
-                      }
-                      
-                      int old_sel = g_SelectedIndex;
-                      g_SelectedIndex = sel;
-                      UI_LB_SetCaretIndex(hListBox, sel, TRUE);
-                      UI_SetSelection(hListBox, sel, old_sel);
-                  }
+                            if (sel > 0) sel--;
+                        } else {
+                            if (sel < count - 1) sel++;
+                        }
+                    }
+                    
+                    int old_sel = g_SelectedIndex;
+                    g_SelectedIndex = sel;
+                    UI_LB_SetCaretIndex(hListBox, sel, TRUE);
+                    UI_SetSelection(hListBox, sel, old_sel);
+                    
+                    int topIndex = (int)SendMessageA(hListBox, LB_GETTOPINDEX, 0, 0);
+                    
+                    RECT rect;
+                    GetClientRect(hListBox, &rect);
+                    int itemHeight = (int)SendMessageA(hListBox, LB_GETITEMHEIGHT, 0, 0);
+                    int visibleCount = (itemHeight > 0) ? (rect.bottom / itemHeight) : 16;
+                    
+                    if (sel >= topIndex + visibleCount - PaddingForScrolling) {
+                        int newTop = sel - visibleCount + PaddingForScrolling + 1;
+                        if (newTop < 0) newTop = 0;
+                        if (newTop + visibleCount > count) newTop = count - visibleCount;
+                        if (newTop < 0) newTop = 0;
+                        SendMessageA(hListBox, LB_SETTOPINDEX, newTop, 0);
+                    }
+                    else if (sel <= topIndex + PaddingForScrolling) {
+                        int newTop = sel - PaddingForScrolling;
+                        if (newTop < 0) newTop = 0;
+                        if (newTop + visibleCount > count) newTop = count - visibleCount;
+                        if (newTop < 0) newTop = 0;
+                        SendMessageA(hListBox, LB_SETTOPINDEX, newTop, 0);
+                    }
+                }
               }
               return 0;
           }
