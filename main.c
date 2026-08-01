@@ -168,10 +168,11 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
     MSG msg;
     int loop_counter = 0;
     while (!selection_complete) {
-        if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
-            loop_counter++;
+        if (GetMessage(&msg, NULL, 0, 0)) {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
+        } else {
+            break; 
         }
     }
     printf("[DEBUG-UI] Left local loop. Processed %d messages.\n", loop_counter);
@@ -202,6 +203,7 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
     printf("[DEBUG-UI] Returning from PromptUser. Buffer Length: %zu\n", strlen(output_buffer));
     return (strlen(output_buffer) > 0) ? output_buffer : NULL;
 }
+
 char* SimplePromptUser(const char* prompt, const char* window_title,int height, int width, int item_height) {
     HINSTANCE hInstance = GetModuleHandle(NULL);
     selection_complete = false;
@@ -246,10 +248,11 @@ char* SimplePromptUser(const char* prompt, const char* window_title,int height, 
     MSG msg;
     int loop_counter = 0;
     while (!selection_complete) {
-        if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
-            loop_counter++;
+        if (GetMessage(&msg, NULL, 0, 0)) {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
+        } else {
+            break; 
         }
     }
 
