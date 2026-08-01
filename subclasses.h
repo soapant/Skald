@@ -83,7 +83,6 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
             } else {
                 UI_GetText(hwnd, output_buffer, sizeof(output_buffer));
             }
-            
             SaveFeatureHistory(output_buffer);
             if (hDisplayMessage != NULL) {
               KillTimer(hDisplayMessage, 999);
@@ -634,17 +633,6 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
           EndPaint(hwnd, &ps);
           break;
       }
-      case WM_TIMER:
-        if (wParam == 999) {
-            static bool last_ctrl = false;
-            bool current_ctrl = IsCtrlPressed();
-            if (current_ctrl != last_ctrl) {
-                last_ctrl = current_ctrl;
-                if (hListBox != NULL && IsWindow(hListBox)) {
-                    InvalidateRect(hListBox, NULL, FALSE);
-                }
-            }
-        }
         break;              
         case WM_ERASEBKGND: {
             return TRUE;
