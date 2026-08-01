@@ -24,6 +24,7 @@
 #include "monitor_focus.h"
 #include "reminder.h"
 #include "mute_microphone.h"
+#include "windows_control.h"
 
 
 static const char* SWITCHER_blacklist[] = {"Fortnite", "CrosshairX"};
@@ -92,11 +93,21 @@ static const char* VOLUME_blacklist[] = {"Fortnite", "CrosshairX"};
 static const char* MUTE_blacklist[] = {""};
 #define MUTE_BLACKLIST_COUNT (sizeof(MUTE_blacklist) / sizeof(MUTE_blacklist[0]))
 
+static const char* WIFI_TOGGLE_blacklist[] = {""};
+#define WIFI_TOGGLE_BLACKLIST_COUNT (sizeof(WIFI_TOGGLE_blacklist) / sizeof(WIFI_TOGGLE_blacklist[0]))
+
+static const char* BLUETOOTH_TOGGLE_blacklist[] = {""};
+#define BLUETOOTH_TOGGLE_BLACKLIST_COUNT (sizeof(BLUETOOTH_TOGGLE_blacklist) / sizeof(BLUETOOTH_TOGGLE_blacklist[0]))
+
 static const char* MONITOR_FOCUS_MAIN_blacklist[] = {"Nvim", "Neovide","Fortnite", "CrosshairX"};
 #define MONITOR_FOCUS_MAIN_BLACKLIST_COUNT (sizeof(MONITOR_FOCUS_MAIN_blacklist) / sizeof(MONITOR_FOCUS_MAIN_blacklist[0]))
 
 static const char* MONITOR_FOCUS_SIDE_blacklist[] = {"Nvim", "Neovide","Fortnite", "CrosshairX"};
 #define MONITOR_FOCUS_SIDE_BLACKLIST_COUNT (sizeof(MONITOR_FOCUS_SIDE_blacklist) / sizeof(MONITOR_FOCUS_SIDE_blacklist[0]))
+
+void HandleKillMyProgram(void) {
+    terminate_process_by_name("myprogram.exe");
+}
 
 
 #define BINDING(key, mod, handler, enabled) \
@@ -106,34 +117,38 @@ static const char* MONITOR_FOCUS_SIDE_blacklist[] = {"Nvim", "Neovide","Fortnite
     { key, mod, blist, blist_count, handler, name, enabled }
 
 static const HotkeyBinding G_HOTKEY_BINDINGS[] = {
-    BINDING(SWITCHER,           HOTKEY_MOD_ALT,                      TriggerWindowSwitcher,   true),
-    BINDING(GOOGLE_SEARCH,      HOTKEY_MOD_ALT,                      TriggerGoogleSearch,     true),
-    BINDING(TODO,               HOTKEY_MOD_ALT,                      TriggerTodo,             true),
-    BINDING(CALCULATOR,         HOTKEY_MOD_ALT,                      TriggerCalculator,       true),
-    BINDING(EXE,                HOTKEY_MOD_ALT,                      TriggerAppLauncher,      true),
-    BINDING(KILL_PROCESS,       HOTKEY_MOD_ALT,                      TriggerProcessKiller,    true),
-    BINDING(YAZI,               HOTKEY_MOD_ALT,                      TriggerYaziZoxide,       true),
-    BINDING(TERMINAL,           HOTKEY_MOD_ALT,                      TriggerZoxide,           true),
-    BINDING(TIMER,              HOTKEY_MOD_ALT,                      TriggerTimer,            TimerAvailable),
-    BINDING(EXPLORER,           HOTKEY_MOD_ALT,                      TriggerExplorer,         true),
-    BINDING(TERMINAL_COMMAND,   HOTKEY_MOD_ALT,                      TriggerTerminalCommand,  true),
-    BINDING(VOLUME,             HOTKEY_MOD_ALT,                      TriggerVolume,           true),
-    BINDING(MONITOR_FOCUS_MAIN, HOTKEY_MOD_ALT,                      TriggerMonitorFocusMain, true),
-    BINDING(MONITOR_FOCUS_SIDE, HOTKEY_MOD_ALT,                      TriggerMonitorFocusSide, true),
-    BINDING(REMINDER,           HOTKEY_MOD_ALT,                      TriggerReminder,         true),
-    BINDING(MUTE,               (HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL),  TriggerMuteState,        true),
-    BINDING(POS,                HOTKEY_MOD_ALT,                      TriggerPosCopy,          true),
-    BINDING(POS,                (HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT), TriggerPosAdd,           true),
-    BINDING(POS,                (HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL),  TriggerPosClear,         true),
-    BINDING(COLOR,              HOTKEY_MOD_ALT,                      TriggerColorPlain,       true),
-    BINDING(COLOR,              (HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL),  TriggerColorParen,       true),
-    BINDING(PIXEL_EQUALS,       HOTKEY_MOD_ALT,                      TriggerPixelEqualsAdb,   true),
-    BINDING(PIXEL_EQUALS,       (HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL),  TriggerPixelEqualsFn,    true),
-    BINDING(REGION,             HOTKEY_MOD_ALT,                      TriggerRegionCoords,     true),
-    BINDING(REGION,             (HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT), TriggerRegionImage,      true),
-    BINDING(SCREENSHOT,         HOTKEY_MOD_ALT,                      TriggerSaveScreenshot,   true),
-    BINDING(SCREENSHOT,         (HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT), TriggerOpenScreenshot,   true),
-    BINDING(NVIM,               HOTKEY_MOD_ALT,                      TriggerNvimZoxide,          true),
+    BINDING(SWITCHER,           HOTKEY_MOD_ALT,       TriggerWindowSwitcher,   true),
+    BINDING(GOOGLE_SEARCH,      HOTKEY_MOD_ALT,       TriggerGoogleSearch,     true),
+    BINDING(TODO,               HOTKEY_MOD_ALT,       TriggerTodo,             true),
+    BINDING(CALCULATOR,         HOTKEY_MOD_ALT,       TriggerCalculator,       true),
+    BINDING(EXE,                HOTKEY_MOD_ALT,       TriggerAppLauncher,      true),
+    BINDING(KILL_PROCESS,       HOTKEY_MOD_ALT,       TriggerProcessKiller,    true),
+    BINDING(YAZI,               HOTKEY_MOD_ALT,       TriggerYaziZoxide,       true),
+    BINDING(TERMINAL,           HOTKEY_MOD_ALT,       TriggerZoxide,           true),
+    BINDING(TIMER,              HOTKEY_MOD_ALT,       TriggerTimer,            TimerAvailable),
+    BINDING(EXPLORER,           HOTKEY_MOD_ALT,       TriggerExplorer,         true),
+    BINDING(TERMINAL_COMMAND,   HOTKEY_MOD_ALT,       TriggerTerminalCommand,  true),
+    BINDING(VOLUME,             HOTKEY_MOD_ALT,       TriggerVolume,           true),
+    BINDING(MONITOR_FOCUS_MAIN, HOTKEY_MOD_ALT,       TriggerMonitorFocusMain, true),
+    BINDING(MONITOR_FOCUS_SIDE, HOTKEY_MOD_ALT,       TriggerMonitorFocusSide, true),
+    BINDING(REMINDER,           HOTKEY_MOD_ALT,       TriggerReminder,         true),
+    BINDING(MUTE,               HOTKEY_MOD_ALT_CTRL,  TriggerMuteState,        true),
+    BINDING(POS,                HOTKEY_MOD_ALT,       TriggerPosCopy,          true),
+    BINDING(POS,                HOTKEY_MOD_ALT_SHIFT, TriggerPosAdd,           true),
+    BINDING(POS,                HOTKEY_MOD_ALT_CTRL,  TriggerPosClear,         true),
+    BINDING(COLOR,              HOTKEY_MOD_ALT,       TriggerColorPlain,       true),
+    BINDING(COLOR,              HOTKEY_MOD_ALT_CTRL,  TriggerColorParen,       true),
+    BINDING(PIXEL_EQUALS,       HOTKEY_MOD_ALT,       TriggerPixelEqualsAdb,   true),
+    BINDING(PIXEL_EQUALS,       HOTKEY_MOD_ALT_CTRL,  TriggerPixelEqualsFn,    true),
+    BINDING(REGION,             HOTKEY_MOD_ALT,       TriggerRegionCoords,     true),
+    BINDING(REGION,             HOTKEY_MOD_ALT_SHIFT, TriggerRegionImage,      true),
+    BINDING(SCREENSHOT,         HOTKEY_MOD_ALT,       TriggerSaveScreenshot,   true),
+    BINDING(SCREENSHOT,         HOTKEY_MOD_ALT_SHIFT, TriggerOpenScreenshot,   true),
+    BINDING(NVIM,               HOTKEY_MOD_ALT,       TriggerNvimZoxide,       true),
+    BINDING(WIFI_TOGGLE,        HOTKEY_MOD_ALT_SHIFT, TriggerWifiToggle,       true),
+    BINDING(BLUETOOTH_TOGGLE,   HOTKEY_MOD_ALT_CTRL,  TriggerBlueToothToggle,  true),
+
+    { 'M', HOTKEY_MOD_ALT_CTRL, NULL, 0, HandleKillMyProgram, "KillProgram", true },
 };
 
 #define HOTKEY_BINDING_COUNT (sizeof(G_HOTKEY_BINDINGS) / sizeof(G_HOTKEY_BINDINGS[0]))

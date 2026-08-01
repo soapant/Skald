@@ -397,6 +397,8 @@ char* EditTextPopup(const char* initial_text, int centerX, int centerY, int maxW
     ShowWindow(hPopupWnd, SW_SHOWNOACTIVATE);
     UpdateWindow(hPopupWnd);
     
+    SetMode(MODE_INSERT);
+
     UpdateTextCaret(g_ActiveEditControl);
     
     SetTimer(hPopupWnd, 999, 50, NULL);
