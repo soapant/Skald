@@ -5,7 +5,7 @@
 #include "types.h"
 #include "macro_bindings.h"
 
-#define SWITCHER            VK_SPACE
+#define SWITCHER            VK_SPACE // really man
 #define TODO                'T'
 #define CALCULATOR          'C'
 #define EXE                 'E'
@@ -15,7 +15,7 @@
 #define YAZI                'Q'
 #define TIMER               'O'
 #define EXPLORER            'R'
-#define TERMINAL_COMMAND    VK_OEM_4
+#define TERMINAL_COMMAND    VK_OEM_4 // {
 #define VOLUME              'M'
 #define SCREENSHOT          'A'
 #define POS                 'Z'
@@ -31,6 +31,7 @@
 #define MUSIC_PLAYER        'P'
 #define VIDEO_VIEWER        'V'
 #define EDIT_TEXT_KEY       'E'
+#define COMMAND_MODE_KEY    VK_OEM_1 // ;
 #define COLOR_ERROR             RGB(180, 0, 0) 
 #define COLOR_NORMAL            RGB(200, 200, 0) 
 #define COLOR_TIP               RGB(0, 160, 0)  
@@ -38,6 +39,8 @@
 
 
 static bool TRAY = true;
+
+static char* EditPopUpPos = "middle";
 
 static bool COLORFUL_MODE = false;
 

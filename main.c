@@ -494,6 +494,15 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
                           pressed_vk, modifiers, fgTitle)) {
             return 1;
         }
+        if (shift_down && !IsInsertMode() && hPopupWnd != NULL) {
+          if (pressed_vk == COMMAND_MODE_KEY) {
+            char* output = EditTextPopup("", 960, 540, 1000, 300);
+            if (output) {
+              HandleCommandExecution(output);
+            }
+            return 1;
+          }
+        }
 
         MacroAction matchedAction = MACRO_NONE;
         int matchedDelay = 0;
@@ -502,6 +511,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
         MotionAction vimAction = MOTION_NONE;
         const char* matchedSequence = NULL;
         int typedCount = 0;
+
         if (IsNormalMode()) {
           if (g_waiting_for_key) {
             g_waiting_for_key = false;
@@ -511,6 +521,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
             return 1;
           }       
         }
+
         if (CheckVimMotion(pressed_vk, modifiers, &vimAction, &matchedSequence, &typedCount)) {
             ExecuteMotion(vimAction, matchedSequence, typedCount);
             return 1;
