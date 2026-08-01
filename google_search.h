@@ -69,7 +69,6 @@ static void DoGoogleSearch(const char* query) {
     char url[2048] = {0};
     char encoded_query[1024] = {0};
     
-    // URL encode the query
     for (int i = 0; query[i] && i < sizeof(encoded_query) - 1; i++) {
         char c = query[i];
         if (c == ' ') {
@@ -94,7 +93,6 @@ static void DoGoogleSearch(const char* query) {
     printf("[GOOGLE] Searching: %s\n", url);
     
     ShellExecuteWithVerb(url, "open", true);
-    // ... rest of function ...
 }
 
 static void google_enter_callback(const char* selection) {

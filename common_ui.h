@@ -60,6 +60,7 @@ static inline void UI_SetSelection(HWND hList, int index, int old_sel) {
         SendMessageA(hList, LB_GETITEMRECT, index, (LPARAM)&itemRect);
         InvalidateRect(hList, &itemRect, FALSE);
     }
+
 }
 
 static inline int UI_GetCount(HWND hList) {
@@ -82,7 +83,6 @@ static inline void UI_Redraw(HWND hList) {
     InvalidateRect(hList, NULL,FALSE);
 }
 
-// === LISTBOX WRAPPERS ===
 static inline void UI_LB_SetCount(HWND hList, int count) {
     g_populated_count = count;
     SendMessageA(hList, LB_SETCOUNT, count, 0);
@@ -124,7 +124,6 @@ static inline int UI_LB_GetText(HWND hList, int index, char* buffer) {
     return (int)SendMessageA(hList, LB_GETTEXT, index, (LPARAM)buffer);
 }
 
-// === EDIT CONTROL WRAPPERS ===
 static inline void UI_Edit_SetFont(HWND hEdit, HFONT hFont) {
     SendMessageA(hEdit, WM_SETFONT, (WPARAM)hFont, FALSE);
 }
@@ -141,12 +140,10 @@ static inline void UI_Edit_UpdateUIState(HWND hEdit, UINT action, UINT uiFlags) 
     SendMessageA(hEdit, WM_UPDATEUISTATE, MAKEWPARAM(action, uiFlags), 0);
 }
 
-// === WINDOW FONT WRAPPER ===
 static inline HFONT UI_GetFont(HWND hWnd) {
     return (HFONT)SendMessageA(hWnd, WM_GETFONT, 0, 0);
 }
 
-// === KEYBOARD SIMULATION ===
 static inline void UI_Edit_KeyDown(HWND hEdit, WPARAM vk) {
     SendMessageA(hEdit, WM_KEYDOWN, vk, 0);
 }
@@ -176,7 +173,6 @@ static inline void PopulateListBox(HWND hListBox, const char* filter,
         clean_filter[sizeof(clean_filter) - 1] = '\0';
     }
     
-    // === INCREMENTAL FILTERING ===
     int use_previous = 0;
     if (strlen(clean_filter) > 0 && 
         g_last_items == items && 
@@ -251,7 +247,6 @@ static inline void PopulateListBox(HWND hListBox, const char* filter,
     
 int pool_max = MAX_VISIBLE_ITEMS;
     
-    // Cap total matches at pool_max - no virtual scrolling, just show first N
     if (total_matches > pool_max) {
         total_matches = pool_max;
     }
