@@ -1314,6 +1314,7 @@ static inline void UI_SetSelection(HWND hList, int index, int old_sel) {
         SendMessageA(hList, LB_GETITEMRECT, index, (LPARAM)&itemRect);
         InvalidateRect(hList, &itemRect, FALSE);
     }
+
 }
 
 static inline int UI_GetCount(HWND hList) {
@@ -1336,7 +1337,6 @@ static inline void UI_Redraw(HWND hList) {
     InvalidateRect(hList, NULL,FALSE);
 }
 
-// === LISTBOX WRAPPERS ===
 static inline void UI_LB_SetCount(HWND hList, int count) {
     g_populated_count = count;
     SendMessageA(hList, LB_SETCOUNT, count, 0);
@@ -1378,7 +1378,6 @@ static inline int UI_LB_GetText(HWND hList, int index, char* buffer) {
     return (int)SendMessageA(hList, LB_GETTEXT, index, (LPARAM)buffer);
 }
 
-// === EDIT CONTROL WRAPPERS ===
 static inline void UI_Edit_SetFont(HWND hEdit, HFONT hFont) {
     SendMessageA(hEdit, WM_SETFONT, (WPARAM)hFont, FALSE);
 }
@@ -1395,12 +1394,10 @@ static inline void UI_Edit_UpdateUIState(HWND hEdit, UINT action, UINT uiFlags) 
     SendMessageA(hEdit, WM_UPDATEUISTATE, MAKEWPARAM(action, uiFlags), 0);
 }
 
-// === WINDOW FONT WRAPPER ===
 static inline HFONT UI_GetFont(HWND hWnd) {
     return (HFONT)SendMessageA(hWnd, WM_GETFONT, 0, 0);
 }
 
-// === KEYBOARD SIMULATION ===
 static inline void UI_Edit_KeyDown(HWND hEdit, WPARAM vk) {
     SendMessageA(hEdit, WM_KEYDOWN, vk, 0);
 }
@@ -1430,7 +1427,6 @@ static inline void PopulateListBox(HWND hListBox, const char* filter,
         clean_filter[sizeof(clean_filter) - 1] = '\0';
     }
     
-    // === INCREMENTAL FILTERING ===
     int use_previous = 0;
     if (strlen(clean_filter) > 0 && 
         g_last_items == items && 
@@ -1505,7 +1501,6 @@ static inline void PopulateListBox(HWND hListBox, const char* filter,
     
 int pool_max = MAX_VISIBLE_ITEMS;
     
-    // Cap total matches at pool_max - no virtual scrolling, just show first N
     if (total_matches > pool_max) {
         total_matches = pool_max;
     }
@@ -1795,7 +1790,7 @@ static inline int UI_GetText(HWND hEdit, char* buffer, int bufferSize) {
 #include "types.h"
 #include "macro_bindings.h"
 
-#define SWITCHER            VK_SPACE
+#define SWITCHER            VK_SPACE // really man
 #define TODO                'T'
 #define CALCULATOR          'C'
 #define EXE                 'E'
@@ -1805,7 +1800,7 @@ static inline int UI_GetText(HWND hEdit, char* buffer, int bufferSize) {
 #define YAZI                'Q'
 #define TIMER               'O'
 #define EXPLORER            'R'
-#define TERMINAL_COMMAND    VK_OEM_4
+#define TERMINAL_COMMAND    VK_OEM_4 // {
 #define VOLUME              'M'
 #define SCREENSHOT          'A'
 #define POS                 'Z'
@@ -1821,6 +1816,10 @@ static inline int UI_GetText(HWND hEdit, char* buffer, int bufferSize) {
 #define MUSIC_PLAYER        'P'
 #define VIDEO_VIEWER        'V'
 #define EDIT_TEXT_KEY       'E'
+#define KILL_MYPROGRAM      'M'
+#define WIFI_TOGGLE         'W'
+#define BLUETOOTH_TOGGLE    'B'
+#define COMMAND_MODE_KEY        VK_OEM_1 // ;
 #define COLOR_ERROR             RGB(180, 0, 0) 
 #define COLOR_NORMAL            RGB(200, 200, 0) 
 #define COLOR_TIP               RGB(0, 160, 0)  
@@ -1828,6 +1827,8 @@ static inline int UI_GetText(HWND hEdit, char* buffer, int bufferSize) {
 
 
 static bool TRAY = true;
+
+static char* EditPopUpPos = "middle";
 
 static bool COLORFUL_MODE = false;
 
@@ -1846,6 +1847,8 @@ const char* UsedFont =  "0xProto Nerd Font";
 const int FontSize = 24;
 
 const int NumberFontSize = 18;
+
+const int PaddingForScrolling = 2;
 
 const char* SowonPath = "D:\\Projects\\Tscoding Timer\\sowon\\sowon.exe";
 
@@ -2872,7 +2875,6 @@ static void DoGoogleSearch(const char* query) {
     char url[2048] = {0};
     char encoded_query[1024] = {0};
     
-    // URL encode the query
     for (int i = 0; query[i] && i < sizeof(encoded_query) - 1; i++) {
         char c = query[i];
         if (c == ' ') {
@@ -2897,7 +2899,6 @@ static void DoGoogleSearch(const char* query) {
     printf("[GOOGLE] Searching: %s\n", url);
     
     ShellExecuteWithVerb(url, "open", true);
-    // ... rest of function ...
 }
 
 static void google_enter_callback(const char* selection) {
@@ -2975,6 +2976,15 @@ static void TriggerGoogleSearch() {
 #include "types.h"
 #include "config.h"
 #include "common_ui.h"
+
+static inline void LOG(const char* fmt, ...) {
+    if (!GetConsoleWindow()) return;
+    
+    va_list args;
+    va_start(args, fmt);
+    vprintf(fmt, args);
+    va_end(args);
+}
 
 typedef void (*HotkeyHandler)(void);
 
@@ -3402,7 +3412,6 @@ typedef struct {
     int index;
 } FoundFlag;
 
-// Parse time string like "5m", "10h", "20s" into seconds
 static inline int ParseTimeToSeconds(const char* input) {
     if (!input || strlen(input) == 0) return 0;
     
@@ -3465,7 +3474,6 @@ static inline int SearchFlagsInText(const char* text, const void* flag_array, in
     char* text_copy = _strdup(text);
     if (!text_copy) return 0;
     
-    // Convert to lowercase for case-insensitive search
     for (int i = 0; text_copy[i]; i++) {
         text_copy[i] = tolower(text_copy[i]);
     }
@@ -3473,7 +3481,6 @@ static inline int SearchFlagsInText(const char* text, const void* flag_array, in
     for (int i = 0; i < flag_count && match_count < max_matches; i++) {
         const char* flag_str = NULL;
         
-        // Extract flag string based on flag_size
         if (flag_size == sizeof(char*)) {
             flag_str = ((char**)flag_array)[i];
         } else if (flag_size == sizeof(ActionDef)) {
@@ -3490,13 +3497,8 @@ static inline int SearchFlagsInText(const char* text, const void* flag_array, in
         
         char* found = strstr(text_copy, flag_str);
         if (found) {
-            // === EXACT MATCH CHECK ===
-            // Make sure this is a whole word, not part of another flag
-            
-            // Check if character before match is start of string or space
             int before_ok = (found == text_copy || *(found - 1) == ' ');
             
-            // Check if character after match is end of string, space, or not a letter
             int after_ok = 1;
             char* after = found + strlen(flag_str);
             if (*after != '\0' && *after != ' ' && *after != '\t') {
@@ -3521,15 +3523,12 @@ static inline char* GetFlagParameter(const char* text, int flag_index) {
     static char param[256];
     param[0] = '\0';
     
-    // Skip past the flag
     int pos = flag_index;
     while (text[pos] && text[pos] != ' ') pos++;
     while (text[pos] && text[pos] == ' ') pos++;
     
-    // Find next flag (must be at start of word, with space before or at start)
     int start = pos;
     while (text[pos]) {
-        // Check if this is the start of a flag
         if (text[pos] == '-' && (pos == 0 || text[pos-1] == ' ')) {
             break;
         }
@@ -3541,7 +3540,6 @@ static inline char* GetFlagParameter(const char* text, int flag_index) {
         strncpy(param, text + start, len);
         param[len] = '\0';
         
-        // Trim trailing spaces
         char* end = param + strlen(param) - 1;
         while (end > param && *end == ' ') end--;
         *(end + 1) = '\0';
@@ -3830,14 +3828,12 @@ static inline char** HashMap_GetKeys(HashMap* map, int* count) {
 static inline char** StringList_Append(char** list, int* count, const char* str) {
     if (!str) return list;
     
-    // Reallocate list to hold one more pointer
     list = realloc(list, (*count + 2) * sizeof(char*));
     if (!list) return NULL;
     
-    // Copy the string
     list[*count] = _strdup(str);
     (*count)++;
-    list[*count] = NULL;  // Null-terminate
+    list[*count] = NULL;  
     
     return list;
 }
@@ -3946,58 +3942,47 @@ static int ReplaceLineInFile(const char* filepath, int line_index, const char* n
 static int ReplaceLineInMappedFile(MappedFile* mf, int line_index, const char* new_text) {
     if (!mf || !mf->pBuffer || !new_text || line_index < 0) return 0;
     
-    // Get all lines
     size_t lineCount = 0;
     Line* lines = FileGetLines(mf, &lineCount);
     if (!lines) return 0;
     
-    // Check if index is valid
     if (line_index >= lineCount) {
         free(lines);
         return 0;
     }
     
-    // Calculate the new file size
     size_t new_size = 0;
     for (size_t i = 0; i < lineCount; i++) {
         if (i == line_index) {
-            // Use new text for this line
-            new_size += strlen(new_text) + 1; // +1 for newline
+            new_size += strlen(new_text) + 1; 
         } else {
-            new_size += lines[i].length + 1; // +1 for newline
+            new_size += lines[i].length + 1; 
         }
     }
     
-    // Allocate new buffer
     char* new_buffer = (char*)malloc(new_size + 1);
     if (!new_buffer) {
         free(lines);
         return 0;
     }
     
-    // Build new file content
     char* ptr = new_buffer;
     for (size_t i = 0; i < lineCount; i++) {
         if (i == line_index) {
-            // Write new text
             int len = strlen(new_text);
             memcpy(ptr, new_text, len);
             ptr += len;
         } else {
-            // Write existing line
             memcpy(ptr, lines[i].ptr, lines[i].length);
             ptr += lines[i].length;
         }
-        // Add newline
         *ptr = '\n';
         ptr++;
     }
     *ptr = '\0';
     
-    // Resize the mapped file
     HANDLE hFile = mf->hFile;
     
-    // Unmap and close old mapping
     if (mf->pBuffer) {
         FlushViewOfFile(mf->pBuffer, mf->fileSize);
         UnmapViewOfFile(mf->pBuffer);
@@ -4008,13 +3993,11 @@ static int ReplaceLineInMappedFile(MappedFile* mf, int line_index, const char* n
         mf->hMapping = NULL;
     }
     
-    // Set new file size
     LARGE_INTEGER newFileSize;
     newFileSize.QuadPart = new_size;
     SetFilePointerEx(hFile, newFileSize, NULL, FILE_BEGIN);
     SetEndOfFile(hFile);
     
-    // Create new mapping
     LARGE_INTEGER mapSizeLI;
     mapSizeLI.QuadPart = new_size;
     mf->hMapping = CreateFileMappingA(hFile, NULL, PAGE_READWRITE, 
@@ -4034,7 +4017,6 @@ static int ReplaceLineInMappedFile(MappedFile* mf, int line_index, const char* n
         return 0;
     }
     
-    // Copy new content to mapped file
     memcpy(mf->pBuffer, new_buffer, new_size);
     mf->fileSize = new_size;
     
@@ -4131,6 +4113,23 @@ void GetFromHistory() {
     }
 }
 
+int convert_string_to_int(const char *str) {
+    if (*str == '\0') return 0;
+    int num = 0;
+    for (int i = 0;i < strlen(str);i++) {
+        num *= 10;
+        num += str[i] - '0';
+    }
+    return num;
+}
+
+void HandleCommandExecution(char* string) {
+    int num = convert_string_to_int(string);
+    printf("SET SELECTON TO %i \n",num);
+    UI_SetSelection(hListBox,num - 1,g_SelectedIndex);
+    UI_LB_SetCaretIndex(hListBox, num, TRUE);
+}
+
 #endif
 
 
@@ -4161,6 +4160,7 @@ void GetFromHistory() {
 #include "monitor_focus.h"
 #include "reminder.h"
 #include "mute_microphone.h"
+#include "windows_control.h"
 
 
 static const char* SWITCHER_blacklist[] = {"Fortnite", "CrosshairX"};
@@ -4229,11 +4229,21 @@ static const char* VOLUME_blacklist[] = {"Fortnite", "CrosshairX"};
 static const char* MUTE_blacklist[] = {""};
 #define MUTE_BLACKLIST_COUNT (sizeof(MUTE_blacklist) / sizeof(MUTE_blacklist[0]))
 
+static const char* WIFI_TOGGLE_blacklist[] = {""};
+#define WIFI_TOGGLE_BLACKLIST_COUNT (sizeof(WIFI_TOGGLE_blacklist) / sizeof(WIFI_TOGGLE_blacklist[0]))
+
+static const char* BLUETOOTH_TOGGLE_blacklist[] = {""};
+#define BLUETOOTH_TOGGLE_BLACKLIST_COUNT (sizeof(BLUETOOTH_TOGGLE_blacklist) / sizeof(BLUETOOTH_TOGGLE_blacklist[0]))
+
 static const char* MONITOR_FOCUS_MAIN_blacklist[] = {"Nvim", "Neovide","Fortnite", "CrosshairX"};
 #define MONITOR_FOCUS_MAIN_BLACKLIST_COUNT (sizeof(MONITOR_FOCUS_MAIN_blacklist) / sizeof(MONITOR_FOCUS_MAIN_blacklist[0]))
 
 static const char* MONITOR_FOCUS_SIDE_blacklist[] = {"Nvim", "Neovide","Fortnite", "CrosshairX"};
 #define MONITOR_FOCUS_SIDE_BLACKLIST_COUNT (sizeof(MONITOR_FOCUS_SIDE_blacklist) / sizeof(MONITOR_FOCUS_SIDE_blacklist[0]))
+
+void HandleKillMyProgram(void) {
+    terminate_process_by_name("myprogram.exe");
+}
 
 
 #define BINDING(key, mod, handler, enabled) \
@@ -4241,36 +4251,42 @@ static const char* MONITOR_FOCUS_SIDE_blacklist[] = {"Nvim", "Neovide","Fortnite
 
 #define BINDING_CUSTOM(key, mod, blist, blist_count, handler, name, enabled) \
     { key, mod, blist, blist_count, handler, name, enabled }
+#define BINDING_SIMPLE(key,mod,handler) \
+    { key, mod, NULL, 0, handler, "", true }
 
 static const HotkeyBinding G_HOTKEY_BINDINGS[] = {
-    BINDING(SWITCHER,           HOTKEY_MOD_ALT,                      TriggerWindowSwitcher,   true),
-    BINDING(GOOGLE_SEARCH,      HOTKEY_MOD_ALT,                      TriggerGoogleSearch,     true),
-    BINDING(TODO,               HOTKEY_MOD_ALT,                      TriggerTodo,             true),
-    BINDING(CALCULATOR,         HOTKEY_MOD_ALT,                      TriggerCalculator,       true),
-    BINDING(EXE,                HOTKEY_MOD_ALT,                      TriggerAppLauncher,      true),
-    BINDING(KILL_PROCESS,       HOTKEY_MOD_ALT,                      TriggerProcessKiller,    true),
-    BINDING(YAZI,               HOTKEY_MOD_ALT,                      TriggerYaziZoxide,       true),
-    BINDING(TERMINAL,           HOTKEY_MOD_ALT,                      TriggerZoxide,           true),
-    BINDING(TIMER,              HOTKEY_MOD_ALT,                      TriggerTimer,            TimerAvailable),
-    BINDING(EXPLORER,           HOTKEY_MOD_ALT,                      TriggerExplorer,         true),
-    BINDING(TERMINAL_COMMAND,   HOTKEY_MOD_ALT,                      TriggerTerminalCommand,  true),
-    BINDING(VOLUME,             HOTKEY_MOD_ALT,                      TriggerVolume,           true),
-    BINDING(MONITOR_FOCUS_MAIN, HOTKEY_MOD_ALT,                      TriggerMonitorFocusMain, true),
-    BINDING(MONITOR_FOCUS_SIDE, HOTKEY_MOD_ALT,                      TriggerMonitorFocusSide, true),
-    BINDING(REMINDER,           HOTKEY_MOD_ALT,                      TriggerReminder,         true),
-    BINDING(MUTE,               (HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL),  TriggerMuteState,        true),
-    BINDING(POS,                HOTKEY_MOD_ALT,                      TriggerPosCopy,          true),
-    BINDING(POS,                (HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT), TriggerPosAdd,           true),
-    BINDING(POS,                (HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL),  TriggerPosClear,         true),
-    BINDING(COLOR,              HOTKEY_MOD_ALT,                      TriggerColorPlain,       true),
-    BINDING(COLOR,              (HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL),  TriggerColorParen,       true),
-    BINDING(PIXEL_EQUALS,       HOTKEY_MOD_ALT,                      TriggerPixelEqualsAdb,   true),
-    BINDING(PIXEL_EQUALS,       (HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL),  TriggerPixelEqualsFn,    true),
-    BINDING(REGION,             HOTKEY_MOD_ALT,                      TriggerRegionCoords,     true),
-    BINDING(REGION,             (HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT), TriggerRegionImage,      true),
-    BINDING(SCREENSHOT,         HOTKEY_MOD_ALT,                      TriggerSaveScreenshot,   true),
-    BINDING(SCREENSHOT,         (HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT), TriggerOpenScreenshot,   true),
-    BINDING(NVIM,               HOTKEY_MOD_ALT,                      TriggerNvimZoxide,          true),
+    BINDING(SWITCHER,           HOTKEY_MOD_ALT,       TriggerWindowSwitcher,   true),
+    BINDING(GOOGLE_SEARCH,      HOTKEY_MOD_ALT,       TriggerGoogleSearch,     true),
+    BINDING(TODO,               HOTKEY_MOD_ALT,       TriggerTodo,             true),
+    BINDING(CALCULATOR,         HOTKEY_MOD_ALT,       TriggerCalculator,       true),
+    BINDING(EXE,                HOTKEY_MOD_ALT,       TriggerAppLauncher,      true),
+    BINDING(KILL_PROCESS,       HOTKEY_MOD_ALT,       TriggerProcessKiller,    true),
+    BINDING(YAZI,               HOTKEY_MOD_ALT,       TriggerYaziZoxide,       true),
+    BINDING(TERMINAL,           HOTKEY_MOD_ALT,       TriggerZoxide,           true),
+    BINDING(TIMER,              HOTKEY_MOD_ALT,       TriggerTimer,            TimerAvailable),
+    BINDING(EXPLORER,           HOTKEY_MOD_ALT,       TriggerExplorer,         true),
+    BINDING(TERMINAL_COMMAND,   HOTKEY_MOD_ALT,       TriggerTerminalCommand,  true),
+    BINDING(VOLUME,             HOTKEY_MOD_ALT,       TriggerVolume,           true),
+    BINDING(MONITOR_FOCUS_MAIN, HOTKEY_MOD_ALT,       TriggerMonitorFocusMain, true),
+    BINDING(MONITOR_FOCUS_SIDE, HOTKEY_MOD_ALT,       TriggerMonitorFocusSide, true),
+    BINDING(REMINDER,           HOTKEY_MOD_ALT,       TriggerReminder,         true),
+    BINDING(MUTE,               HOTKEY_MOD_ALT_CTRL,  TriggerMuteState,        true),
+    BINDING(POS,                HOTKEY_MOD_ALT,       TriggerPosCopy,          true),
+    BINDING(POS,                HOTKEY_MOD_ALT_SHIFT, TriggerPosAdd,           true),
+    BINDING(POS,                HOTKEY_MOD_ALT_CTRL,  TriggerPosClear,         true),
+    BINDING(COLOR,              HOTKEY_MOD_ALT,       TriggerColorPlain,       true),
+    BINDING(COLOR,              HOTKEY_MOD_ALT_CTRL,  TriggerColorParen,       true),
+    BINDING(PIXEL_EQUALS,       HOTKEY_MOD_ALT,       TriggerPixelEqualsAdb,   true),
+    BINDING(PIXEL_EQUALS,       HOTKEY_MOD_ALT_CTRL,  TriggerPixelEqualsFn,    true),
+    BINDING(REGION,             HOTKEY_MOD_ALT,       TriggerRegionCoords,     true),
+    BINDING(REGION,             HOTKEY_MOD_ALT_SHIFT, TriggerRegionImage,      true),
+    BINDING(SCREENSHOT,         HOTKEY_MOD_ALT,       TriggerSaveScreenshot,   true),
+    BINDING(SCREENSHOT,         HOTKEY_MOD_ALT_SHIFT, TriggerOpenScreenshot,   true),
+    BINDING(NVIM,               HOTKEY_MOD_ALT,       TriggerNvimZoxide,       true),
+    BINDING(WIFI_TOGGLE,        HOTKEY_MOD_ALT_SHIFT, TriggerWifiToggle,       true),
+    BINDING(BLUETOOTH_TOGGLE,   HOTKEY_MOD_ALT_CTRL,  TriggerBlueToothToggle,  true),
+
+    BINDING_SIMPLE('M', HOTKEY_MOD_ALT_CTRL,HandleKillMyProgram),
 };
 
 #define HOTKEY_BINDING_COUNT (sizeof(G_HOTKEY_BINDINGS) / sizeof(G_HOTKEY_BINDINGS[0]))
@@ -4380,6 +4396,7 @@ static const MacroBinding G_MACRO_BINDINGS[] = {
 #define ID_EXIT 2001
 #define IDC_INPUT_BOX 101
 #define IDC_LIST_BOX 102
+#define printf(fmt, ...) LOG(fmt, ##__VA_ARGS__)
 
 #define WM_TRIGGER_IMG_CAPTURE (WM_USER + 2)
 HWND hGlobalTrayWnd = NULL;
@@ -4600,11 +4617,10 @@ char* SimplePromptUser(const char* prompt, const char* window_title,int height, 
     MSG msg;
     int loop_counter = 0;
     while (!selection_complete) {
-        if (GetMessage(&msg, NULL, 0, 0)) {
+        if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+            loop_counter++;
             TranslateMessage(&msg);
             DispatchMessage(&msg);
-        } else {
-            break; 
         }
     }
 
@@ -4695,12 +4711,10 @@ char* EditTextPopup(const char* initial_text, int centerX, int centerY, int maxW
         g_hEditPopup = NULL;
     }
     
-    // === MEASURE TEXT ===
     HDC hdc = GetDC(NULL);
     HFONT hFont = CreateCustomNerdFont(FontSize, UsedFont);
     HFONT hOldFont = (HFONT)SelectObject(hdc, hFont);
     
-    // Measure the text to size the window
     RECT textRect = {0, 0, maxWidth - 40, maxHeight - 60};
     DrawTextA(hdc, initial_text, -1, &textRect, DT_LEFT | DT_WORDBREAK | DT_CALCRECT);
     
@@ -4718,7 +4732,6 @@ char* EditTextPopup(const char* initial_text, int centerX, int centerY, int maxW
     if (winWidth < 200) winWidth = 200;
     if (winHeight < 100) winHeight = 100;
     
-    // === CREATE DATA ===
     EditPopupData* pData = (EditPopupData*)malloc(sizeof(EditPopupData));
     if (!pData) return NULL;
     
@@ -4727,7 +4740,6 @@ char* EditTextPopup(const char* initial_text, int centerX, int centerY, int maxW
     pData->hFont = CreateCustomNerdFont(FontSize, UsedFont);
     pData->alpha = 255;
     pData->hEdit = NULL;
-    pData->consumed_trigger_e = false;
     
     int topLeftX = centerX - (winWidth / 2);
     int topLeftY = centerY - (winHeight / 2);
@@ -4754,6 +4766,8 @@ char* EditTextPopup(const char* initial_text, int centerX, int centerY, int maxW
     ShowWindow(hPopupWnd, SW_SHOWNOACTIVATE);
     UpdateWindow(hPopupWnd);
     
+    SetMode(MODE_INSERT);
+
     UpdateTextCaret(g_ActiveEditControl);
     
     SetTimer(hPopupWnd, 999, 50, NULL);
@@ -4763,8 +4777,6 @@ char* EditTextPopup(const char* initial_text, int centerX, int centerY, int maxW
         if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
-        } else {
-            Sleep(10);
         }
     }
     
@@ -4847,6 +4859,15 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
                           pressed_vk, modifiers, fgTitle)) {
             return 1;
         }
+        if (shift_down && !IsInsertMode() && hPopupWnd != NULL) {
+          if (pressed_vk == COMMAND_MODE_KEY) {
+            char* output = EditTextPopup("", 960, 540, 1000, 300);
+            if (output) {
+              HandleCommandExecution(output);
+            }
+            return 1;
+          }
+        }
 
         MacroAction matchedAction = MACRO_NONE;
         int matchedDelay = 0;
@@ -4855,6 +4876,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
         MotionAction vimAction = MOTION_NONE;
         const char* matchedSequence = NULL;
         int typedCount = 0;
+
         if (IsNormalMode()) {
           if (g_waiting_for_key) {
             g_waiting_for_key = false;
@@ -4864,6 +4886,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
             return 1;
           }       
         }
+
         if (CheckVimMotion(pressed_vk, modifiers, &vimAction, &matchedSequence, &typedCount)) {
             ExecuteMotion(vimAction, matchedSequence, typedCount);
             return 1;
@@ -4951,7 +4974,6 @@ int main() {
     } else {
         printf("[SYSTEM-BOOT] CRITICAL WARNING: Failed to register window class! Error: %lu\n", GetLastError());
     }
-    // NEW: Register your dedicated standalone notification class
     WNDCLASSA wcFade = {0};
     wcFade.lpfnWndProc = DisplayMessageProc;
     wcFade.hInstance = GetModuleHandle(NULL);
@@ -5034,7 +5056,6 @@ int main() {
 #include <stdio.h>
 
 static void minecraft_type_command(const char* command) {
-    // Open chat with T
     INPUT t[2] = {0};
     t[0].type = INPUT_KEYBOARD; 
     t[0].ki.wVk = 'T';
@@ -5055,7 +5076,6 @@ static void minecraft_type_command(const char* command) {
         SendInput(2, ch, sizeof(INPUT));
     }
 
-    // Press Enter
     INPUT enter[2] = {0};
     enter[0].type = INPUT_KEYBOARD; 
     enter[0].ki.wVk = VK_RETURN;
@@ -5065,7 +5085,7 @@ static void minecraft_type_command(const char* command) {
     SendInput(2, enter, sizeof(INPUT));
 }
 
-#endif // MINECRAFT_H
+#endif
 
 
 /* === FILE: modal.h === */
@@ -6605,34 +6625,53 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
         if (!ctrl_pressed) {
           if (wParam == VK_UP || wParam == VK_DOWN) {
               if (hListBox != NULL) {
-                  int count = UI_GetCount(hListBox);
-                  int sel = UI_GetSelection(hListBox);
-                  
-                  if (count > 0) {
-                      if (sel == LB_ERR) {
-                          if (sel != -1 | wParam == VK_DOWN){
+                int count = UI_GetCount(hListBox);
+                int sel = UI_GetSelection(hListBox);
+                if (count > 0) {
+                    if (sel == LB_ERR) {
+                        if (wParam == VK_DOWN) {
                             sel = 0;
-                          }else {
-                          if (sel == -1 && wParam == VK_UP) {
+                        } else if (wParam == VK_UP) {
                             GetFromHistory();
                             sel = 0;
-                          }
                         }
-                      } else if (sel == 0 && wParam == VK_UP) {
-                          sel = -1;
-                      } else {
+                    } else if (sel == 0 && wParam == VK_UP) {
+                        sel = -1;
+                    } else {
                         if (wParam == VK_UP) {
-                            sel = (sel > 0) ? sel - 1 : 0;
-                          } else {
-                            sel = (sel < count - 1) ? sel + 1 : count - 1;
-                          }
-                      }
-                      
-                      int old_sel = g_SelectedIndex;
-                      g_SelectedIndex = sel;
-                      UI_LB_SetCaretIndex(hListBox, sel, TRUE);
-                      UI_SetSelection(hListBox, sel, old_sel);
-                  }
+                            if (sel > 0) sel--;
+                        } else {
+                            if (sel < count - 1) sel++;
+                        }
+                    }
+                    
+                    int old_sel = g_SelectedIndex;
+                    g_SelectedIndex = sel;
+                    UI_LB_SetCaretIndex(hListBox, sel, TRUE);
+                    UI_SetSelection(hListBox, sel, old_sel);
+                    
+                    int topIndex = (int)SendMessageA(hListBox, LB_GETTOPINDEX, 0, 0);
+                    
+                    RECT rect;
+                    GetClientRect(hListBox, &rect);
+                    int itemHeight = (int)SendMessageA(hListBox, LB_GETITEMHEIGHT, 0, 0);
+                    int visibleCount = (itemHeight > 0) ? (rect.bottom / itemHeight) : 16;
+                    
+                    if (sel >= topIndex + visibleCount - PaddingForScrolling) {
+                        int newTop = sel - visibleCount + PaddingForScrolling + 1;
+                        if (newTop < 0) newTop = 0;
+                        if (newTop + visibleCount > count) newTop = count - visibleCount;
+                        if (newTop < 0) newTop = 0;
+                        SendMessageA(hListBox, LB_SETTOPINDEX, newTop, 0);
+                    }
+                    else if (sel <= topIndex + PaddingForScrolling) {
+                        int newTop = sel - PaddingForScrolling;
+                        if (newTop < 0) newTop = 0;
+                        if (newTop + visibleCount > count) newTop = count - visibleCount;
+                        if (newTop < 0) newTop = 0;
+                        SendMessageA(hListBox, LB_SETTOPINDEX, newTop, 0);
+                    }
+                }
               }
               return 0;
           }
@@ -7310,25 +7349,30 @@ LRESULT CALLBACK DisplayMessageProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
     return DefWindowProcA(hwnd, msg, wParam, lParam);
 }
 
+bool first_key = true;
 LRESULT CALLBACK EditPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
     EditPopupData* data = (EditPopupData*)dwRefData;
     if (!data || !data->hEdit) {
         data = (EditPopupData*)GetWindowLongPtrA(hWnd, GWLP_USERDATA);
     }
-    
-    if (uMsg == WM_KEYDOWN) {        
-        if (wParam == EDIT_TEXT_KEY && data && !data->consumed_trigger_e) {
+    if (uMsg == WM_CHAR) {
+        printf("[EditPopupSubclass] WM_CHAR: char=%d, first_key=%d\n", (int)wParam,first_key);
+        if (first_key) {
+            first_key = false;
+            printf("[EditPopupSubclass] SWALLOWING WM_CHAR\n");
             return 0;
         }
-        
+    }
+    else if (uMsg == WM_KEYDOWN) {
         if (!data || !data->hEdit) {
             return DefSubclassProc(hWnd, uMsg, wParam, lParam);
         }
-        
+
         if (wParam == VK_ESCAPE) {
             printf("[EditPopup] Escape pressed\n");
             data->result = NULL;
             DestroyWindow(GetParent(hWnd));
+            first_key = true;
             return 0;
         }
         if (wParam == VK_RETURN) {
@@ -7340,11 +7384,6 @@ LRESULT CALLBACK EditPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
             GetWindowTextA(data->hEdit, buffer, sizeof(buffer) - 1);
             data->result = _strdup(buffer);
             DestroyWindow(GetParent(hWnd));
-            return 0;
-        }
-    } else if (uMsg == WM_CHAR) {
-        if ((wParam == tolower(EDIT_TEXT_KEY)) && data && !data->consumed_trigger_e) {
-            data->consumed_trigger_e = true;
             return 0;
         }
     }
@@ -7377,6 +7416,7 @@ LRESULT CALLBACK EditPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
             );
             
             if (data->hEdit) {
+                first_key = true;
                 SendMessageA(data->hEdit, WM_SETFONT, (WPARAM)data->hFont, TRUE);
                 SendMessageA(data->hEdit, EM_SETSEL, 0, 0);
                 SetFocus(data->hEdit);
@@ -8242,7 +8282,6 @@ typedef struct {
     HFONT hFont;
     int alpha;
     HWND hEdit;
-    bool consumed_trigger_e;
 } EditPopupData;
 
 typedef struct HashMapEntry {
@@ -8550,6 +8589,17 @@ extern HFONT g_hMainFont;
                    1080 - msg_height, \
                    900,(msg_height), (timeout))
 
+//todo make these
+
+#define MIDDLE_POS 960, 540, 1000, 300
+
+#define TOP_POS 960, 540, 1000, 300
+
+#define BOTTOM_POS 960, 540, 1000, 300
+
+#define LEFT_POS 960, 540, 1000, 300
+
+#define RIGHT_POS 960, 540, 1000, 300
 
 #endif
 
@@ -9819,6 +9869,83 @@ static void TriggerWindowSwitcher() {
     free(myWindows.items);
 }
 
+#endif
+
+
+/* === FILE: windows_control.h === */
+#ifndef WINDOWS_CONTROL_H
+#define WINDOWS_CONTROL_H
+#include "types.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include "helpers.h"
+
+bool IsWifiEnabled(void) {
+    FILE* fp = popen("netsh interface show interface", "r");
+    if (!fp) return false;
+    
+    char line[256];
+    bool found = false;
+    bool enabled = false;
+    
+    while (fgets(line, sizeof(line), fp)) {
+        if (strstr(line, "Wi-Fi") || strstr(line, "Wireless")) {
+            found = true;
+            if (strstr(line, "Enabled") || strstr(line, "Connected")) {
+                enabled = true;
+            }
+        }
+    }
+    
+    pclose(fp);
+    return found && enabled;
+}
+
+bool IsBluetoothEnabled(void) {
+    FILE* fp = popen("netsh interface show interface", "r");
+    if (!fp) return false;
+    
+    char line[256];
+    bool found = false;
+    bool enabled = false;
+    
+    while (fgets(line, sizeof(line), fp)) {
+        if (strstr(line, "Bluetooth") && strstr(line, "Network Connection")) {
+            found = true;
+            if (strstr(line, "Enabled") || strstr(line, "Connected")) {
+                enabled = true;
+            }
+        }
+    }
+    
+    pclose(fp);
+    return found && enabled;
+}
+
+void TriggerWifiToggle(void) {
+    bool currently_enabled = IsWifiEnabled();
+    if (currently_enabled) {
+        system("netsh interface set interface Wi-Fi admin=disabled");
+        SubjectiveMessageDisplay("Wifi Turned OFF",140,1,COLOR_TEXT);
+    } else {
+        system("netsh interface set interface Wi-Fi admin=enabled");
+        SubjectiveMessageDisplay("Wifi Turned ON",140,1,COLOR_TEXT);
+    }
+
+}
+
+void TriggerBlueToothToggle(void) {
+    bool currently_enabled = IsWifiEnabled();
+    if (currently_enabled) {
+        system("netsh interface set interface \"Bluetooth Network Connection\" admin=enabled");
+        SubjectiveMessageDisplay("BlueTooth Turned OFF",140,1,COLOR_TEXT);
+    } else {
+        system("netsh interface set interface \"Bluetooth Network Connection\" admin=disabled");
+        SubjectiveMessageDisplay("BlueTooth Turned ON",140,1,COLOR_TEXT);
+    }
+
+}
 #endif
 
 

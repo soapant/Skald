@@ -446,7 +446,6 @@ typedef struct {
     int index;
 } FoundFlag;
 
-// Parse time string like "5m", "10h", "20s" into seconds
 static inline int ParseTimeToSeconds(const char* input) {
     if (!input || strlen(input) == 0) return 0;
     
@@ -509,7 +508,6 @@ static inline int SearchFlagsInText(const char* text, const void* flag_array, in
     char* text_copy = _strdup(text);
     if (!text_copy) return 0;
     
-    // Convert to lowercase for case-insensitive search
     for (int i = 0; text_copy[i]; i++) {
         text_copy[i] = tolower(text_copy[i]);
     }
@@ -517,7 +515,6 @@ static inline int SearchFlagsInText(const char* text, const void* flag_array, in
     for (int i = 0; i < flag_count && match_count < max_matches; i++) {
         const char* flag_str = NULL;
         
-        // Extract flag string based on flag_size
         if (flag_size == sizeof(char*)) {
             flag_str = ((char**)flag_array)[i];
         } else if (flag_size == sizeof(ActionDef)) {
@@ -534,13 +531,8 @@ static inline int SearchFlagsInText(const char* text, const void* flag_array, in
         
         char* found = strstr(text_copy, flag_str);
         if (found) {
-            // === EXACT MATCH CHECK ===
-            // Make sure this is a whole word, not part of another flag
-            
-            // Check if character before match is start of string or space
             int before_ok = (found == text_copy || *(found - 1) == ' ');
             
-            // Check if character after match is end of string, space, or not a letter
             int after_ok = 1;
             char* after = found + strlen(flag_str);
             if (*after != '\0' && *after != ' ' && *after != '\t') {
@@ -565,15 +557,12 @@ static inline char* GetFlagParameter(const char* text, int flag_index) {
     static char param[256];
     param[0] = '\0';
     
-    // Skip past the flag
     int pos = flag_index;
     while (text[pos] && text[pos] != ' ') pos++;
     while (text[pos] && text[pos] == ' ') pos++;
     
-    // Find next flag (must be at start of word, with space before or at start)
     int start = pos;
     while (text[pos]) {
-        // Check if this is the start of a flag
         if (text[pos] == '-' && (pos == 0 || text[pos-1] == ' ')) {
             break;
         }
@@ -585,7 +574,6 @@ static inline char* GetFlagParameter(const char* text, int flag_index) {
         strncpy(param, text + start, len);
         param[len] = '\0';
         
-        // Trim trailing spaces
         char* end = param + strlen(param) - 1;
         while (end > param && *end == ' ') end--;
         *(end + 1) = '\0';
@@ -874,14 +862,12 @@ static inline char** HashMap_GetKeys(HashMap* map, int* count) {
 static inline char** StringList_Append(char** list, int* count, const char* str) {
     if (!str) return list;
     
-    // Reallocate list to hold one more pointer
     list = realloc(list, (*count + 2) * sizeof(char*));
     if (!list) return NULL;
     
-    // Copy the string
     list[*count] = _strdup(str);
     (*count)++;
-    list[*count] = NULL;  // Null-terminate
+    list[*count] = NULL;  
     
     return list;
 }
@@ -990,58 +976,47 @@ static int ReplaceLineInFile(const char* filepath, int line_index, const char* n
 static int ReplaceLineInMappedFile(MappedFile* mf, int line_index, const char* new_text) {
     if (!mf || !mf->pBuffer || !new_text || line_index < 0) return 0;
     
-    // Get all lines
     size_t lineCount = 0;
     Line* lines = FileGetLines(mf, &lineCount);
     if (!lines) return 0;
     
-    // Check if index is valid
     if (line_index >= lineCount) {
         free(lines);
         return 0;
     }
     
-    // Calculate the new file size
     size_t new_size = 0;
     for (size_t i = 0; i < lineCount; i++) {
         if (i == line_index) {
-            // Use new text for this line
-            new_size += strlen(new_text) + 1; // +1 for newline
+            new_size += strlen(new_text) + 1; 
         } else {
-            new_size += lines[i].length + 1; // +1 for newline
+            new_size += lines[i].length + 1; 
         }
     }
     
-    // Allocate new buffer
     char* new_buffer = (char*)malloc(new_size + 1);
     if (!new_buffer) {
         free(lines);
         return 0;
     }
     
-    // Build new file content
     char* ptr = new_buffer;
     for (size_t i = 0; i < lineCount; i++) {
         if (i == line_index) {
-            // Write new text
             int len = strlen(new_text);
             memcpy(ptr, new_text, len);
             ptr += len;
         } else {
-            // Write existing line
             memcpy(ptr, lines[i].ptr, lines[i].length);
             ptr += lines[i].length;
         }
-        // Add newline
         *ptr = '\n';
         ptr++;
     }
     *ptr = '\0';
     
-    // Resize the mapped file
     HANDLE hFile = mf->hFile;
     
-    // Unmap and close old mapping
     if (mf->pBuffer) {
         FlushViewOfFile(mf->pBuffer, mf->fileSize);
         UnmapViewOfFile(mf->pBuffer);
@@ -1052,13 +1027,11 @@ static int ReplaceLineInMappedFile(MappedFile* mf, int line_index, const char* n
         mf->hMapping = NULL;
     }
     
-    // Set new file size
     LARGE_INTEGER newFileSize;
     newFileSize.QuadPart = new_size;
     SetFilePointerEx(hFile, newFileSize, NULL, FILE_BEGIN);
     SetEndOfFile(hFile);
     
-    // Create new mapping
     LARGE_INTEGER mapSizeLI;
     mapSizeLI.QuadPart = new_size;
     mf->hMapping = CreateFileMappingA(hFile, NULL, PAGE_READWRITE, 
@@ -1078,7 +1051,6 @@ static int ReplaceLineInMappedFile(MappedFile* mf, int line_index, const char* n
         return 0;
     }
     
-    // Copy new content to mapped file
     memcpy(mf->pBuffer, new_buffer, new_size);
     mf->fileSize = new_size;
     
