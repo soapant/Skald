@@ -6,7 +6,6 @@
 #include <stdio.h>
 
 static void minecraft_type_command(const char* command) {
-    // Open chat with T
     INPUT t[2] = {0};
     t[0].type = INPUT_KEYBOARD; 
     t[0].ki.wVk = 'T';
@@ -27,7 +26,6 @@ static void minecraft_type_command(const char* command) {
         SendInput(2, ch, sizeof(INPUT));
     }
 
-    // Press Enter
     INPUT enter[2] = {0};
     enter[0].type = INPUT_KEYBOARD; 
     enter[0].ki.wVk = VK_RETURN;
@@ -37,4 +35,4 @@ static void minecraft_type_command(const char* command) {
     SendInput(2, enter, sizeof(INPUT));
 }
 
-#endif // MINECRAFT_H
+#endif
