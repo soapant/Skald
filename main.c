@@ -28,6 +28,7 @@
 #define ID_EXIT 2001
 #define IDC_INPUT_BOX 101
 #define IDC_LIST_BOX 102
+#define printf(fmt, ...) LOG(fmt, ##__VA_ARGS__)
 
 #define WM_TRIGGER_IMG_CAPTURE (WM_USER + 2)
 HWND hGlobalTrayWnd = NULL;
