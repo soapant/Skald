@@ -11,6 +11,15 @@
 #include "config.h"
 #include "common_ui.h"
 
+static inline void LOG(const char* fmt, ...) {
+    if (!GetConsoleWindow()) return;
+    
+    va_list args;
+    va_start(args, fmt);
+    vprintf(fmt, args);
+    va_end(args);
+}
+
 typedef void (*HotkeyHandler)(void);
 
 typedef struct {

@@ -115,6 +115,8 @@ void HandleKillMyProgram(void) {
 
 #define BINDING_CUSTOM(key, mod, blist, blist_count, handler, name, enabled) \
     { key, mod, blist, blist_count, handler, name, enabled }
+#define BINDING_SIMPLE(key,mod,handler) \
+    { key, mod, NULL, 0, handler, "", true }
 
 static const HotkeyBinding G_HOTKEY_BINDINGS[] = {
     BINDING(SWITCHER,           HOTKEY_MOD_ALT,       TriggerWindowSwitcher,   true),
@@ -148,7 +150,7 @@ static const HotkeyBinding G_HOTKEY_BINDINGS[] = {
     BINDING(WIFI_TOGGLE,        HOTKEY_MOD_ALT_SHIFT, TriggerWifiToggle,       true),
     BINDING(BLUETOOTH_TOGGLE,   HOTKEY_MOD_ALT_CTRL,  TriggerBlueToothToggle,  true),
 
-    { 'M', HOTKEY_MOD_ALT_CTRL, NULL, 0, HandleKillMyProgram, "KillProgram", true },
+    BINDING_SIMPLE('M', HOTKEY_MOD_ALT_CTRL,HandleKillMyProgram),
 };
 
 #define HOTKEY_BINDING_COUNT (sizeof(G_HOTKEY_BINDINGS) / sizeof(G_HOTKEY_BINDINGS[0]))
