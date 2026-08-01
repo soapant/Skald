@@ -248,11 +248,10 @@ char* SimplePromptUser(const char* prompt, const char* window_title,int height, 
     MSG msg;
     int loop_counter = 0;
     while (!selection_complete) {
-        if (GetMessage(&msg, NULL, 0, 0)) {
+        if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+            loop_counter++;
             TranslateMessage(&msg);
             DispatchMessage(&msg);
-        } else {
-            break; 
         }
     }
 
