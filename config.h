@@ -276,7 +276,7 @@ static const TagFormatConfig TODO_TAG_FORMAT = {
     X("-m",  NULL,               "Misc",             RGB(225, 225, 225), false) \
     X("-l",  NULL,               "Learning",         RGB(166, 227, 161), false) \
     X("-b",  NULL,               "Bored",            RGB(203, 166, 247), false) \
-    X("-d",  NULL,               "DontForget",       RGB(243, 139, 168), false) \
+    X("-d",  NULL,               "DontForget",       RGB(255, 109, 108), false) \
     X("-v",  NULL,               "NVIM",             RGB(57, 235, 20), false)
 
 #define X(flag, label) {flag, label},
