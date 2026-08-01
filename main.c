@@ -342,12 +342,10 @@ char* EditTextPopup(const char* initial_text, int centerX, int centerY, int maxW
         g_hEditPopup = NULL;
     }
     
-    // === MEASURE TEXT ===
     HDC hdc = GetDC(NULL);
     HFONT hFont = CreateCustomNerdFont(FontSize, UsedFont);
     HFONT hOldFont = (HFONT)SelectObject(hdc, hFont);
     
-    // Measure the text to size the window
     RECT textRect = {0, 0, maxWidth - 40, maxHeight - 60};
     DrawTextA(hdc, initial_text, -1, &textRect, DT_LEFT | DT_WORDBREAK | DT_CALCRECT);
     
@@ -365,7 +363,6 @@ char* EditTextPopup(const char* initial_text, int centerX, int centerY, int maxW
     if (winWidth < 200) winWidth = 200;
     if (winHeight < 100) winHeight = 100;
     
-    // === CREATE DATA ===
     EditPopupData* pData = (EditPopupData*)malloc(sizeof(EditPopupData));
     if (!pData) return NULL;
     
@@ -374,7 +371,6 @@ char* EditTextPopup(const char* initial_text, int centerX, int centerY, int maxW
     pData->hFont = CreateCustomNerdFont(FontSize, UsedFont);
     pData->alpha = 255;
     pData->hEdit = NULL;
-    pData->consumed_trigger_e = false;
     
     int topLeftX = centerX - (winWidth / 2);
     int topLeftY = centerY - (winHeight / 2);
@@ -410,8 +406,6 @@ char* EditTextPopup(const char* initial_text, int centerX, int centerY, int maxW
         if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
-        } else {
-            Sleep(10);
         }
     }
     

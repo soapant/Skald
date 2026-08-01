@@ -92,7 +92,6 @@ typedef struct {
     HFONT hFont;
     int alpha;
     HWND hEdit;
-    bool consumed_trigger_e;
 } EditPopupData;
 
 typedef struct HashMapEntry {
