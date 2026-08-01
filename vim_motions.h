@@ -476,17 +476,28 @@ void SearchTextForward(int key) {
   DWORD start_pos, end_pos;
   UI_Edit_GetSel(g_ActiveEditControl, &start_pos, &end_pos);
   int cursor = (int)start_pos;
-  int length_to_take = text[cursor];
-  char* extracted_string = (char*)malloc((length_to_take + 1) * sizeof(char));
-  strncpy(extracted_string, &text[cursor], length_to_take);
-  extracted_string[length_to_take] = '\0';
 
-  for (int i = 0; i < strlen(extracted_string);i++) {
-    printf("CHECKING CHARCETER %c MATCHES KEY INPUT %i",extracted_string[i],key); 
-    if (extracted_string[i] == key) {
-      printf("CHARCETER %c MATCHED KEY INPUT %i",extracted_string[i],key);
+  for (int i = 0; i < strlen(text);i++) {
+    if (tolower(text[i]) == tolower((char)key)) {
+      if (i <= start_pos ) continue;
+      UI_SetCursorPosition(g_ActiveEditControl,i);
+      return;
     }
+  }
+}
+void SearchTextBackward(int key) {
+  char text[512] = {0};
+  UI_GetText(g_ActiveEditControl, text, sizeof(text));
+  DWORD start_pos, end_pos;
+  UI_Edit_GetSel(g_ActiveEditControl, &start_pos, &end_pos);
+  int cursor = (int)start_pos;
 
+  for (int i = 0; i < strlen(text);i++) {
+    if (tolower(text[i]) == tolower((char)key)) {
+      if (i >= start_pos ) continue;
+      UI_SetCursorPosition(g_ActiveEditControl,i);
+      return;
+    }
   }
 }
 
@@ -494,10 +505,6 @@ static inline void HandleSearchTextForward(void ) {
   if (!UI_IsListBoxSelected()) {
     WaitForKeypressAsync(SearchTextForward);
   }
-}
-
-void SearchTextBackward(int key) {
-    printf("You pressed: %c\n", key);
 }
 
 static inline void HandleSearchTextBackward(void ) {
