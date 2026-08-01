@@ -781,7 +781,6 @@ static inline void HashMap_Put(HashMap* map, const char* key, void* value) {
     unsigned int index = hash(key, map->size);
     HashMapEntry* entry = map->buckets[index];
     
-    // Check if key already exists
     while (entry) {
         if (strcmp(entry->key, key) == 0) {
             entry->value = value;
@@ -790,7 +789,6 @@ static inline void HashMap_Put(HashMap* map, const char* key, void* value) {
         entry = entry->next;
     }
     
-    // Add new entry
     HashMapEntry* new_entry = malloc(sizeof(HashMapEntry));
     new_entry->key = _strdup(key);
     new_entry->value = value;
@@ -1145,6 +1143,10 @@ void GetFromHistory() {
         
         if (count > 0) {
             idx = (idx - 1 + count) % count;
+            printf("IDX IS %i \n",idx);
+            for (int i = 0;i < idx ;i++) {
+              printf("CURRENT TEXT IS %s \n",HistoryList[idx]);
+            }
             
             UI_SetText(hEditControl, HistoryList[idx]);
             UI_SetCursorPosition(hEditControl,strlen(HistoryList[idx]));

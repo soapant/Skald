@@ -2,3 +2,4 @@ roaming
 rand
 nvim
 retard
+code
