@@ -68,6 +68,7 @@ typedef struct {
 struct feature_data {
     char* name;
     const char** items;
+    const char** last_selections;
     int item_count;    
     RefreshCallback refresh_callback;
     EnterCallback enter_callback;
@@ -77,10 +78,6 @@ struct feature_data {
     EditCallback edit_callback;
     FilterCallback filter_callback;
     bool (*filter_match)(const char*, const char*);
-    void (*sort_func)(const char** items, int count);
-    SortOption sort_options[10];
-    int sort_options_count;
-    int current_sort_index;
 };
 
 typedef struct {

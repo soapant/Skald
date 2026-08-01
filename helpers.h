@@ -6,6 +6,7 @@
 #include <string.h> 
 #include <shlwapi.h>
 #include <stdlib.h>
+#include <assert.h>
 #include "types.h"
 #include "config.h"
 #include "common_ui.h"
@@ -894,10 +895,8 @@ static inline void SaveFeatureHistory(char* string) {
     char** HistoryList = NULL;
     int count = 0;
     
-    if (HashMap_Contains(feature_history, g_current_feature)) {
-        HistoryList = (char**)HashMap_Get(feature_history, g_current_feature);
-        while (HistoryList && HistoryList[count]) count++;
-    }
+    HistoryList = (char**)HashMap_Get(feature_history, g_current_feature);
+    while (HistoryList && HistoryList[count]) count++;
     
     HistoryList = StringList_Append(HistoryList, &count, string);
     
@@ -922,41 +921,6 @@ static inline struct feature_data* GetFeatureData(const char* name) {
         }
     }
     return data;
-}
-
-static inline void SaveFeatureData(char* string) {
-    if (!feature_data) return;
-    
-    struct feature_data* data = GetFeatureData(g_current_feature);
-}
-
-static inline void RegisterFeature(const char* name, const char** items, int item_count,
-                                   RefreshCallback refresh_cb,
-                                   EnterCallback enter_cb,
-                                   CtrlEnterCallback ctrl_enter_cb,
-                                   TabCallback tab_cb,
-                                   RenderCallback render_cb,
-                                   EditCallback edit_cb,
-                                   FilterCallback filter_cb,
-                                   bool (*filter_match)(const char*, const char*)) {
-    struct feature_data* data = GetFeatureData(name);
-    
-    if (data->sort_options_count > 0) {
-        data->current_sort_index = 0; 
-    } else {
-        data->current_sort_index = -1;
-    }
-    
-    data->items = items;
-    data->item_count = item_count;
-    data->refresh_callback = refresh_cb;
-    data->enter_callback = enter_cb;
-    data->ctrl_enter_callback = ctrl_enter_cb;
-    data->tab_callback = tab_cb;
-    data->render_callback = render_cb;
-    data->edit_callback = edit_cb;
-    data->filter_callback = filter_cb;
-    data->filter_match = filter_match;
 }
 
 static inline void GetFeatureCallbacks(const char* name,
