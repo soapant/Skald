@@ -134,7 +134,7 @@ static const HotkeyBinding G_HOTKEY_BINDINGS[] = {
     BINDING(MONITOR_FOCUS_MAIN, HOTKEY_MOD_ALT,       TriggerMonitorFocusMain, true),
     BINDING(MONITOR_FOCUS_SIDE, HOTKEY_MOD_ALT,       TriggerMonitorFocusSide, true),
     BINDING(REMINDER,           HOTKEY_MOD_ALT,       TriggerReminder,         true),
-    BINDING(MUTE,               HOTKEY_MOD_ALT_CTRL,  TriggerMuteState,        true),
+    BINDING(MUTE,               HOTKEY_MOD_ALT_SHIFT, TriggerMuteState,        true),
     BINDING(POS,                HOTKEY_MOD_ALT,       TriggerPosCopy,          true),
     BINDING(POS,                HOTKEY_MOD_ALT_SHIFT, TriggerPosAdd,           true),
     BINDING(POS,                HOTKEY_MOD_ALT_CTRL,  TriggerPosClear,         true),

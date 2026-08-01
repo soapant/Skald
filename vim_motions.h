@@ -18,6 +18,7 @@
 typedef enum {
     MOTION_NONE = 0,
     MOTION_ENTER_NORMAL,
+    MOTION_DELETE_TILL_END,
     MOTION_HISTORY_TOGGLE,
     MOTION_SEARCH_TEXT_FORWARD,
     MOTION_SEARCH_TEXT_BACKWARD,
@@ -507,9 +508,22 @@ static inline void HandleSearchTextForward(void ) {
   }
 }
 
-static inline void HandleSearchTextBackward(void ) {
+static inline void HandleSearchTextBackward(void) {
   if (!UI_IsListBoxSelected()) {
     WaitForKeypressAsync(SearchTextBackward);
+  }
+}
+static inline void HandleDeleteTillEnd(void) {
+  if (g_SelectedIndex == -1) {
+      char text[512] = {0};
+      UI_GetText(g_ActiveEditControl, text, sizeof(text));
+      DWORD start_pos, end_pos;
+      UI_Edit_GetSel(g_ActiveEditControl, &start_pos, &end_pos);
+      int cursor = (int)start_pos;
+      for (int i = cursor; i < strlen(text); ++i){
+          text[i] = '\0';
+      }
+      UI_SetText(g_ActiveEditControl,text);
   }
 }
 
