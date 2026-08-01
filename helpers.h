@@ -1166,4 +1166,20 @@ void GetFromHistory() {
     }
 }
 
+int convert_string_to_int(const char *str) {
+    if (*str == '\0') return 0;
+    int num = 0;
+    for (int i = 0;i < strlen(str);i++) {
+        num *= 10;
+        num += str[i] - '0';
+    }
+    return num;
+}
+
+void HandleCommandExecution(char* string) {
+    int num = convert_string_to_int(string);
+    printf("SET SELECTON TO %i \n",num);
+    UI_SetSelection(hListBox,num - 1,g_SelectedIndex);
+}
+
 #endif

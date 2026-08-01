@@ -400,5 +400,16 @@ extern HFONT g_hMainFont;
                    1080 - msg_height, \
                    900,(msg_height), (timeout))
 
+//todo make these
+
+#define MIDDLE_POS 960, 540, 1000, 300
+
+#define TOP_POS 960, 540, 1000, 300
+
+#define BOTTOM_POS 960, 540, 1000, 300
+
+#define LEFT_POS 960, 540, 1000, 300
+
+#define RIGHT_POS 960, 540, 1000, 300
 
 #endif
