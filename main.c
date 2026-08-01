@@ -28,7 +28,6 @@
 #define ID_EXIT 2001
 #define IDC_INPUT_BOX 101
 #define IDC_LIST_BOX 102
-#define printf(fmt, ...) LOG(fmt, ##__VA_ARGS__)
 
 #define WM_TRIGGER_IMG_CAPTURE (WM_USER + 2)
 HWND hGlobalTrayWnd = NULL;
@@ -398,8 +397,6 @@ char* EditTextPopup(const char* initial_text, int centerX, int centerY, int maxW
     ShowWindow(hPopupWnd, SW_SHOWNOACTIVATE);
     UpdateWindow(hPopupWnd);
     
-    SetMode(MODE_INSERT);
-
     UpdateTextCaret(g_ActiveEditControl);
     
     SetTimer(hPopupWnd, 999, 50, NULL);
@@ -456,6 +453,7 @@ int InitializeTrayIcon() {
 }
 
 LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
+    WinTimer timer = TimerStart();
     if (nCode < 0) {
         return CallNextHookEx(NULL, nCode, wParam, lParam);
     }
@@ -557,6 +555,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
             return 1;
         }
     }
+    TimerEnd(timer,"LowLevelKeyboardHook");
     
     return CallNextHookEx(NULL, nCode, wParam, lParam);
 }
