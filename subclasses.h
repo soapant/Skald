@@ -682,6 +682,19 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         case WM_ERASEBKGND: {
             return TRUE;
         }
+        case WM_DESTROY: {
+             static const WORD held_modifiers[] = { VK_LSHIFT, VK_RSHIFT, VK_LCONTROL, VK_RCONTROL,
+                                                    VK_LMENU, VK_RMENU, VK_LWIN, VK_RWIN };
+             for (int i = 0; i < (int)(sizeof(held_modifiers) / sizeof(held_modifiers[0])); i++) {
+                 if (GetAsyncKeyState(held_modifiers[i]) & 0x8000) {
+                     INPUT up = {0};
+                     up.type = INPUT_KEYBOARD;
+                     up.ki.wVk = held_modifiers[i];
+                     up.ki.dwFlags = KEYEVENTF_KEYUP;
+                     SendInput(1, &up, sizeof(INPUT));
+                 }
+             }
+            }
       default:
             return DefWindowProcA(hwnd, msg, wParam, lParam);
             
