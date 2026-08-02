@@ -301,12 +301,9 @@ static void todo_ctrlenter_callback(const char* selection) {
     todo_refresh_callback(NULL, hListBox);
     selection_complete = false;
 }
-static void todo_copy_callback(int type) {
-    char* text = g_populated_cache[g_SelectedIndex];
-    if (!text) return;
-    
+static void todo_copy_callback(const char* selection,int true_index,int type) {
     char buffer[512];
-    strncpy(buffer, text, sizeof(buffer) - 1);
+    strncpy(buffer, selection, sizeof(buffer) - 1);
     buffer[sizeof(buffer) - 1] = '\0';
     
     char* pipe = strchr(buffer, '|');

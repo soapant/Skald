@@ -883,6 +883,12 @@ static inline int HashMap_Size(HashMap* map) {
     return map ? map->count : 0;
 }
 
+static inline int UI_LookupTrueIndex(const char* name) {
+    if (!g_item_index_map || !name) return -1;
+    size_t value = (size_t)HashMap_Get(g_item_index_map, name);
+    return value > 0 ? (int)(value - 1) : -1;
+}
+
 static inline void SaveFeatureHistory(char* string) {
     char** HistoryList = NULL;
     int count = 0;
