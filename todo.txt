@@ -36,5 +36,6 @@ i should really figure out the sorting especially for the video player||[Cprogra
 the wifi and bluetooth are there jst he admin priv||[DontForget]
 start working on the command mode system figure out some op commands||[Cprogram]
 maybe add the ability to change the brightness of the external mointor||[Cprogram]
-features should have there own copy to cliboard so for applauncher it copies the path instead||[Cprogram]
 do some shit with ontop replica to interact with the program||[Cprogram]
+you are still hardocindg alarctity in focus switcher||[Cprogram]
+cleanup scan_directory_recursive it is a mess||[Cprogram]

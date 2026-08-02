@@ -2,6 +2,7 @@
 #define WINDOW_SWITCHER_H
 
 #include <windows.h>
+#include "helpers.h"
 #include "types.h"
 #include "focus_switcher.h"
 #include <stdio.h>
@@ -119,6 +120,9 @@ static void switcher_enter_callback(const char* selection) {
         }
     }
 }
+static void switcher_copy_callback(int type) {
+    CopyToClipboard(g_switcher_windows[g_SelectedIndex].exe);
+}
 
 static void TriggerWindowSwitcher() {
     if (hPopupWnd != NULL && IsWindow(hPopupWnd)) {
@@ -173,10 +177,10 @@ static void TriggerWindowSwitcher() {
     }
 
     printf("[SWITCHER] Launching UI Selection Prompt...\n");
-    char* selected_title = ImportantPromptUser(ui_list,"🪟 Switcher",g_switcher_count, 920, 650,32,
+    char* selected_title = PromptUser(ui_list,"🪟 Switcher",g_switcher_count, 920, 650,32,
                                                 switcher_refresh_callback,  
                                                 switcher_enter_callback,    
-                                                NULL);
+                                                NULL,NULL,switcher_copy_callback,NULL,NULL,NULL);
 
     free(myWindows.items);
 }

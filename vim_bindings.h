@@ -30,6 +30,7 @@ static const MotionBinding G_VIM_BINDINGS[] = {
     { 'B',           HOTKEY_MOD_NONE,  MOTION_MOVE_WORD_BACKWARD,     HandleMoveWordBackward,   MODE_NORMAL, VIM_SCOPE_ALL },
     { EDIT_TEXT_KEY, HOTKEY_MOD_NONE,  MOTION_SEND_EDIT,              HandleSendEdit,           MODE_NORMAL, VIM_SCOPE_MODAL },
     { 'Y',           HOTKEY_MOD_SHIFT, MOTION_YANK_LIST_BOX,          HandleYankListBox,        MODE_NORMAL, VIM_SCOPE_MODAL },
+    { 'Y',           HOTKEY_MOD_CTRL, MOTION_YANK_LIST_BOX_EXTRA,          HandleYankListBoxExtra,        MODE_NORMAL, VIM_SCOPE_MODAL },
     { 'R',           HOTKEY_MOD_NONE,  MOTION_COPY_INTO_SEARCH,       HandleCopyToSearch,       MODE_NORMAL, VIM_SCOPE_MODAL },
     { 'O',           HOTKEY_MOD_NONE,  MOTION_HISTORY_TOGGLE,         HandleToggleHistory,      MODE_NORMAL, VIM_SCOPE_MODAL },
     { 'H',           HOTKEY_MOD_SHIFT, MOTION_SHOW_FULL_TEXT,         HandleShowFullText,       MODE_NORMAL, VIM_SCOPE_ALL },

@@ -301,6 +301,21 @@ static void todo_ctrlenter_callback(const char* selection) {
     todo_refresh_callback(NULL, hListBox);
     selection_complete = false;
 }
+static void todo_copy_callback(int type) {
+    char* text = g_populated_cache[g_SelectedIndex];
+    if (!text) return;
+    
+    char buffer[512];
+    strncpy(buffer, text, sizeof(buffer) - 1);
+    buffer[sizeof(buffer) - 1] = '\0';
+    
+    char* pipe = strchr(buffer, '|');
+    if (pipe) {
+        *pipe = '\0';
+    }
+    
+    CopyToClipboard(buffer);
+}
 
 static void todo_render_callback(HDC hdc, const char* text, RECT* rect, BOOL is_selected, int itemIndex) {
     if (!text || !rect) return;
@@ -368,6 +383,7 @@ void TriggerTodo(void) {
                                      todo_enter_callback,    
                                      todo_ctrlenter_callback, 
                                      NULL,                    
+                                     todo_copy_callback,                    
                                      todo_render_callback,
                                      todo_edit_callback,
                                      NULL);

@@ -100,6 +100,27 @@ static void applauncher_refresh_callback(const char* filter, HWND hListBox) {
     }
     PopulateListBox(hListBox, filter, names, count, NULL);
 }
+static void applauncher_copy_callback(int type) {
+    char* text;
+    switch(type) {
+      case 0: {
+        text = G_APPS[g_SelectedIndex].path;
+        int start = strlen(text);
+        for (int i = start; i > 0 ; i--) {
+          if (text[i] == '\\') {
+            for (int j = i; j < start; ++j){
+                text[j] = '\0';
+            }
+            break;
+          }
+        }
+      }
+      case 1: {
+        text = G_APPS[g_SelectedIndex].path;
+      }
+    }
+    CopyToClipboard(text);
+}
 
 void TriggerAppLauncher() {
     if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
@@ -118,6 +139,7 @@ void TriggerAppLauncher() {
                         applauncher_enter_callback,   
                         applauncher_ctrlenter_callback,
                         NULL,
+                        applauncher_copy_callback,
                         NULL,
                         NULL,
                         NULL);                         
