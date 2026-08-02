@@ -2,17 +2,32 @@
 #define WINDOW_SWITCHER_H
 
 #include <windows.h>
+#include <psapi.h>
+#include <stdio.h>
+#include <string.h>
 #include "helpers.h"
 #include "types.h"
 #include "focus_switcher.h"
-#include <stdio.h>
-#include <string.h>
-#include <shlwapi.h>
-#include <psapi.h>
 #include "common_ui.h"
 
-static SavedWindow g_switcher_windows[100];
-static int g_switcher_count = 0;
+#define MAX_WINDOWS 256
+#define MAX_SWITCHER_WINDOWS 100
+#define MAX_EXE_CACHE 128
+
+// ============================================================
+// WINDOW DATA STRUCTURES
+// ============================================================
+
+typedef struct {
+    HWND hwnd;
+    char title[256];
+    char exe[256];
+} WindowInfo;
+
+typedef struct {
+    WindowInfo items[MAX_WINDOWS];
+    int count;
+} WindowList;
 
 typedef struct {
     DWORD processId;
@@ -20,40 +35,34 @@ typedef struct {
     DWORD lastAccessTime;
 } ExeCacheEntry;
 
-static ExeCacheEntry g_exeCache[128] = {0};
-static int g_exeCacheCount = 0;
-static DWORD g_lastCacheCleanup = 0;
+// ============================================================
+// STATIC DATA
+// ============================================================
 
-static void FetchExeNameOnDemand(HWND hwnd, char* outExe, DWORD maxLen) {
+static ExeCacheEntry g_exeCache[MAX_EXE_CACHE] = {0};
+static int g_exeCacheCount = 0;
+
+static SavedWindow g_switcher_windows[MAX_SWITCHER_WINDOWS];
+static int g_switcher_count = 0;
+
+// ============================================================
+// EXE CACHE
+// ============================================================
+
+static const char* GetExeNameForWindow(HWND hwnd) {
+    static char result[64];
     DWORD processId = 0;
     GetWindowThreadProcessId(hwnd, &processId);
     
     if (processId == 0) {
-        strncpy(outExe, "Unknown.exe", maxLen);
-        return;
-    }
-    
-    DWORD currentTime = GetTickCount();
-    
-    if (currentTime - g_lastCacheCleanup > 10000) {
-        g_lastCacheCleanup = currentTime;
-        int keepCount = 0;
-        for (int i = 0; i < g_exeCacheCount; i++) {
-            if (currentTime - g_exeCache[i].lastAccessTime < 5000) {
-                if (keepCount != i) {
-                    memcpy(&g_exeCache[keepCount], &g_exeCache[i], sizeof(ExeCacheEntry));
-                }
-                keepCount++;
-            }
-        }
-        g_exeCacheCount = keepCount;
+        strcpy(result, "Unknown.exe");
+        return result;
     }
     
     for (int i = 0; i < g_exeCacheCount; i++) {
         if (g_exeCache[i].processId == processId) {
-            g_exeCache[i].lastAccessTime = currentTime;
-            strncpy(outExe, g_exeCache[i].exeName, maxLen);
-            return;
+            strcpy(result, g_exeCache[i].exeName);
+            return result;
         }
     }
     
@@ -61,31 +70,114 @@ static void FetchExeNameOnDemand(HWND hwnd, char* outExe, DWORD maxLen) {
     if (hProcess) {
         char path[MAX_PATH] = {0};
         if (GetProcessImageFileNameA(hProcess, path, sizeof(path))) {
-            char* lastBackslash = strrchr(path, '\\');
-            if (lastBackslash) {
-                strncpy(outExe, lastBackslash + 1, maxLen);
-            } else {
-                strncpy(outExe, path, maxLen);
-            }
+            char* last = strrchr(path, '\\');
+            strcpy(result, last ? last + 1 : path);
         } else {
-            strncpy(outExe, "Unknown.exe", maxLen);
+            strcpy(result, "Unknown.exe");
         }
         CloseHandle(hProcess);
     } else {
-        strncpy(outExe, "Unknown.exe", maxLen);
+        strcpy(result, "Unknown.exe");
     }
     
-    if (g_exeCacheCount < 128) {
+    if (g_exeCacheCount < MAX_EXE_CACHE) {
         g_exeCache[g_exeCacheCount].processId = processId;
-        strncpy(g_exeCache[g_exeCacheCount].exeName, outExe, sizeof(g_exeCache[0].exeName) - 1);
-        g_exeCache[g_exeCacheCount].lastAccessTime = currentTime;
+        strcpy(g_exeCache[g_exeCacheCount].exeName, result);
+        g_exeCache[g_exeCacheCount].lastAccessTime = GetTickCount();
         g_exeCacheCount++;
+    }
+    
+    return result;
+}
+
+static inline void FetchExeNameOnDemand(HWND hwnd, char* outExe, DWORD maxLen) {
+    const char* name = GetExeNameForWindow(hwnd);
+    strncpy(outExe, name, maxLen - 1);
+    outExe[maxLen - 1] = '\0';
+}
+
+
+typedef struct {
+    WindowList* list;
+    const char* pattern;
+    const char** blacklist;
+    int blacklistCount;
+    int mode;
+} EnumContext;
+
+static BOOL CALLBACK EnumWindowsProcEx(HWND hwnd, LPARAM lParam) {
+    EnumContext* ctx = (EnumContext*)lParam;
+    WindowList* list = ctx->list;
+    
+    if (!IsWindowVisible(hwnd)) return TRUE;
+    if (GetWindowTextLengthA(hwnd) == 0) return TRUE;
+    if (list->count >= MAX_WINDOWS) return FALSE;
+    
+    char title[256];
+    GetWindowTextA(hwnd, title, sizeof(title));
+    const char* exe = GetExeNameForWindow(hwnd);
+    
+    // Filter based on mode
+    if (ctx->mode == 1) { // By title
+        if (strstr(title, ctx->pattern) == NULL) return TRUE;
+    } else if (ctx->mode == 2) { // By exe
+        if (strstr(exe, ctx->pattern) == NULL) return TRUE;
+    } else if (ctx->mode == 3) { // Filtered (blacklist)
+        for (int i = 0; i < ctx->blacklistCount; i++) {
+            if (strstr(title, ctx->blacklist[i]) != NULL) return TRUE;
+        }
+    }
+    
+    WindowInfo* info = &list->items[list->count];
+    info->hwnd = hwnd;
+    strcpy(info->title, title);
+    strcpy(info->exe, exe);
+    list->count++;
+    
+    return TRUE;
+}
+
+// ============================================================
+// PUBLIC WINDOW FUNCTIONS
+// ============================================================
+
+static void WindowUtils_GetAll(WindowList* list) {
+    list->count = 0;
+    EnumContext ctx = { .list = list, .mode = 0 };
+    EnumWindows(EnumWindowsProcEx, (LPARAM)&ctx);
+}
+
+static void WindowUtils_GetByTitle(WindowList* list, const char* pattern) {
+    list->count = 0;
+    EnumContext ctx = { .list = list, .pattern = pattern, .mode = 1 };
+    EnumWindows(EnumWindowsProcEx, (LPARAM)&ctx);
+}
+
+static void WindowUtils_GetByExe(WindowList* list, const char* pattern) {
+    list->count = 0;
+    EnumContext ctx = { .list = list, .pattern = pattern, .mode = 2 };
+    EnumWindows(EnumWindowsProcEx, (LPARAM)&ctx);
+}
+
+static void WindowUtils_GetFiltered(WindowList* list, const char** blacklist, int blacklistCount) {
+    list->count = 0;
+    EnumContext ctx = { .list = list, .blacklist = blacklist, .blacklistCount = blacklistCount, .mode = 3 };
+    EnumWindows(EnumWindowsProcEx, (LPARAM)&ctx);
+}
+
+static void WindowUtils_Print(WindowList* list) {
+    for (int i = 0; i < list->count; i++) {
+        printf("[%d] %s (%s)\n", i, list->items[i].title, list->items[i].exe);
     }
 }
 
+// ============================================================
+// SWITCHER CALLBACKS
+// ============================================================
+
 static bool switcher_match_helper(const char* item, const char* filter) {
     for (int i = 0; i < g_switcher_count; i++) {
-        if (g_switcher_windows[i].title == item) {
+        if (strcmp(g_switcher_windows[i].title, item) == 0) {
             return (StrStrIA(g_switcher_windows[i].title, filter) != NULL ||
                     StrStrIA(g_switcher_windows[i].exe, filter) != NULL);
         }
@@ -96,95 +188,70 @@ static bool switcher_match_helper(const char* item, const char* filter) {
 static void switcher_refresh_callback(const char* filter, HWND hListBox) {
     if (!hListBox) return;
     
-    const char* titles[100];
-    int count = (g_switcher_count < 100) ? g_switcher_count : 100;
-    
-    for (int i = 0; i < count; i++) {
+    const char* titles[MAX_SWITCHER_WINDOWS];
+    for (int i = 0; i < g_switcher_count && i < MAX_SWITCHER_WINDOWS; i++) {
         titles[i] = g_switcher_windows[i].title;
     }
     
-    PopulateListBox(hListBox, filter, titles, count, switcher_match_helper);
+    PopulateListBox(hListBox, filter, titles, g_switcher_count, switcher_match_helper);
 }
 
 static void switcher_enter_callback(const char* selection) {
-    if (selection == NULL || strlen(selection) == 0) return;
+    if (!selection) return;
     
     for (int i = 0; i < g_switcher_count; i++) {
         if (StrStrIA(g_switcher_windows[i].title, selection) != NULL) {
-            HWND target_hwnd = g_switcher_windows[i].hwnd;
-            if (IsWindow(target_hwnd)) {
-                FocusWindow(target_hwnd);
-                printf("[SWITCHER] Focused: %s\n", g_switcher_windows[i].title);
+            if (IsWindow(g_switcher_windows[i].hwnd)) {
+                FocusWindow(g_switcher_windows[i].hwnd);
             }
             break;
         }
     }
 }
-static void switcher_copy_callback(const char* selection,int true_index,int type) {
+
+static void switcher_copy_callback(const char* selection, int true_index, int type) {
+    (void)selection;
     if (true_index >= 0 && true_index < g_switcher_count) {
         CopyToClipboard(g_switcher_windows[true_index].exe);
     }
 }
 
+// ============================================================
+// TRIGGER
+// ============================================================
+
 static void TriggerWindowSwitcher() {
-    if (hPopupWnd != NULL && IsWindow(hPopupWnd)) {
-        return;
-    }
-    WindowList myWindows;
-    myWindows.count = 0;
-    myWindows.capacity = 10;
-    myWindows.items = (WindowData*)malloc(myWindows.capacity * sizeof(WindowData));
-    if (myWindows.items != NULL) {
-        EnumWindows(EnumWindowsProc, (LPARAM)&myWindows);
-    }
-
-    char *list_of_not_wanteds[] = {"Input", "Manager", "Settings"};
-    size_t size_of_list = sizeof(list_of_not_wanteds) / sizeof(list_of_not_wanteds[0]);
-
+    if (hPopupWnd && IsWindow(hPopupWnd)) return;
+    
+    WindowList windows;
+    static const char* blacklist[] = {"Input", "Manager", "Settings"};
+    WindowUtils_GetFiltered(&windows, blacklist, 3);
+    
     g_switcher_count = 0;
-
-    for (int i = 0; i < myWindows.count; i++) {
-        HWND targetHwnd = myWindows.items[i].hwnd;
-        char* targetTitle = myWindows.items[i].title;
-        bool not_wanted = false;
-        
-        for (size_t j = 0; j < size_of_list; j++) {
-            if (strstr(targetTitle, list_of_not_wanteds[j]) != NULL) {
-                not_wanted = true;
-                break; 
-            }
-        }
-        if (not_wanted) continue; 
-
+    for (int i = 0; i < windows.count && g_switcher_count < MAX_SWITCHER_WINDOWS; i++) {
+        g_switcher_windows[g_switcher_count].hwnd = windows.items[i].hwnd;
+        strcpy(g_switcher_windows[g_switcher_count].title, windows.items[i].title);
+        strcpy(g_switcher_windows[g_switcher_count].exe, windows.items[i].exe);
         g_switcher_windows[g_switcher_count].index = g_switcher_count;
-        g_switcher_windows[g_switcher_count].hwnd = targetHwnd;
-        strncpy(g_switcher_windows[g_switcher_count].title, targetTitle, sizeof(g_switcher_windows[g_switcher_count].title) - 1);
-        g_switcher_windows[g_switcher_count].title[sizeof(g_switcher_windows[g_switcher_count].title) - 1] = '\0'; 
-
-        FetchExeNameOnDemand(targetHwnd, g_switcher_windows[g_switcher_count].exe, sizeof(g_switcher_windows[g_switcher_count].exe) - 1);
         g_switcher_count++;
-        if (g_switcher_count >= 100) break;
     }
-
-    printf("[SWITCHER] Filter complete. Kept %d windows out of %d.\n", g_switcher_count, myWindows.count);
-
+    
     if (g_switcher_count == 0) {
-        printf("[SWITCHER] No windows passed the filter.\n");
+        printf("[SWITCHER] No windows found\n");
         return;
     }
-
-    const char* ui_list[100];
+    
+    const char* ui_list[MAX_SWITCHER_WINDOWS];
     for (int i = 0; i < g_switcher_count; i++) {
         ui_list[i] = g_switcher_windows[i].title;
     }
-
-    printf("[SWITCHER] Launching UI Selection Prompt...\n");
-    char* selected_title = PromptUser(ui_list,"🪟 Switcher",g_switcher_count, 920, 650,32,
-                                                switcher_refresh_callback,  
-                                                switcher_enter_callback,    
-                                                NULL,NULL,switcher_copy_callback,NULL,NULL,NULL,NULL);
-
-    free(myWindows.items);
+    
+    PromptUser(ui_list, "🪟 Switcher", g_switcher_count, 920, 650, 32,
+               switcher_refresh_callback,
+               switcher_enter_callback,
+               NULL, NULL,
+               switcher_copy_callback,
+               NULL, NULL, NULL, NULL);
 }
 
 #endif

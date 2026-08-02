@@ -1029,22 +1029,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
 BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam) {
     WindowList* myList = (WindowList*)lParam;
-
+    
     if (!IsWindowVisible(hwnd) || GetWindowTextLengthA(hwnd) == 0) {
         return TRUE;
     }
-
-    if (myList->count >= myList->capacity) {
-        return FALSE; 
-    }
-
-    WindowData* currentItem = &myList->items[myList->count];
-    currentItem->hwnd = hwnd;
-
-    GetWindowTextA(hwnd, currentItem->title, sizeof(currentItem->title));
     
-    currentItem->exe[0] = '\0'; 
-
+    if (myList->count >= MAX_WINDOWS) {
+        return FALSE;
+    }
+    
+    WindowInfo* currentItem = &myList->items[myList->count];
+    currentItem->hwnd = hwnd;
+    GetWindowTextA(hwnd, currentItem->title, sizeof(currentItem->title));
+    strcpy(currentItem->exe, GetExeNameForWindow(hwnd));
+    
     myList->count++;
     return TRUE;
 }
