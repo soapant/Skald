@@ -33,6 +33,8 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
 
 #define ImportantPromptUser(window_list,window_title,count,height,width,item_height,refresh_callback,enter_callback,edit_callback) PromptUser(window_list,window_title,count,height,width,item_height,refresh_callback,enter_callback,NULL,NULL,NULL,NULL,edit_callback,NULL)
 
+#define OnlyIOPromptUser(window_list,window_title,count,height,width,item_height,refresh_callback,enter_callback,ctrl_enter_callback,tab_callback) PromptUser(window_list,window_title,count,height,width,item_height,refresh_callback,enter_callback,ctrl_enter_callback,tab_callback,NULL,NULL,NULL,NULL)
+
 
 char* SimplePromptUser(const char* prompt, const char* window_title,int height, int width, int item_height);
 
