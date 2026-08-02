@@ -493,6 +493,7 @@ void TriggerCalculator() {
                         calculator_tab_callback,
                         NULL,
                         NULL,
+                        NULL,
                         NULL);                         
   
                                                              

@@ -5,6 +5,7 @@
 #include <windows.h>
 #include <stdio.h>
 #include <winsock.h>
+#include <wow64apiset.h>
 #include "types.h"
 #include "helpers.h"
 #include "config.h"
@@ -57,6 +58,7 @@ typedef enum {
     MOTION_CHANGE_LINE,
     MOTION_YANK_LINE,
     MOTION_YANK_LIST_BOX,
+    MOTION_YANK_LIST_BOX_EXTRA,
     MOTION_YANK_WORD,
     MOTION_YANK_TO_END,
     MOTION_UNDO,
@@ -289,7 +291,31 @@ static inline void HandleYankListBox(void) {
         strncpy(text, g_populated_cache[selected_index], sizeof(text) - 1);
         text[sizeof(text) - 1] = '\0';
         
-        CopyToClipboard(text);
+        if (g_copy_callback != NULL) {
+          g_copy_callback(0);
+        } else {
+          CopyToClipboard(text);
+        }
+        return;
+    } else {
+        printf("[VIM] Yank failed: No valid list item selected.\n");
+    }
+}
+static inline void HandleYankListBoxExtra(void) {
+  printf("AKDJWKJDA");
+    int selected_index = g_SelectedIndex;
+    char buffer[256];
+    if (selected_index >= 0 && selected_index < g_populated_count) {
+        char text[512] = {0};
+        
+        strncpy(text, g_populated_cache[selected_index], sizeof(text) - 1);
+        text[sizeof(text) - 1] = '\0';
+        
+        if (g_copy_callback != NULL) {
+          g_copy_callback(1);
+        } else {
+          CopyToClipboard(text);
+        }
         return;
     } else {
         printf("[VIM] Yank failed: No valid list item selected.\n");
