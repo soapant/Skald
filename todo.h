@@ -337,7 +337,7 @@ static void todo_render_callback(HDC hdc, const char* text, RECT* rect, BOOL is_
     HFONT hOldFont = (HFONT)SelectObject(hdc, g_hMainFont);
     DrawTextA(hdc, main_text, -1, &textRect, DT_SINGLELINE | DT_VCENTER);
     
-    if (tag_count > 0) {
+    if (tag_count == 1) {
         RECT tagRect = *rect;
         tagRect.left += 14;
         tagRect.top += 28;
@@ -352,6 +352,23 @@ static void todo_render_callback(HDC hdc, const char* text, RECT* rect, BOOL is_
             singleTagRect.top += y_offset;
             DrawTextA(hdc, tags[i], -1, &singleTagRect, DT_LEFT | DT_TOP);
             y_offset += 18;
+        }
+        
+        SelectObject(hdc, hOldTagFont);
+    } else {
+        RECT tagRect = *rect;
+        tagRect.left += 14;
+        tagRect.top += 28;
+        
+        HFONT hOldTagFont = (HFONT)SelectObject(hdc, g_hMainFont);
+        
+        int x_offset = 0;
+        for (int i = 0; i < tag_count; i++) {
+            SetTextColor(hdc, GetTagColor(tags[i]));
+            RECT singleTagRect = tagRect;
+            singleTagRect.left += x_offset;
+            DrawTextA(hdc, tags[i], -1, &singleTagRect, DT_LEFT | DT_TOP);
+            x_offset += strlen(tags[i]) * 12;
         }
         
         SelectObject(hdc, hOldTagFont);
