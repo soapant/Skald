@@ -381,7 +381,7 @@ static void TriggerReminder() {
     ImportantPromptUser(list, "⏱️ Reminder", g_cached_reminder_count, 920,650, 32, 
                reminder_refresh_callback, 
                reminder_enter_callback, 
-               reminder_edit_callback);
+               reminder_edit_callback,NULL);
     
 }
 

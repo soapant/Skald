@@ -136,7 +136,7 @@ static void TriggerZoxide() {
     ImportantPromptUser(list, "⌨️ Zoxide", g_cached_zoxide_count,920,650, 32, 
                zoxide_refresh_callback, 
                zoxide_enter_callback, 
-               zoxide_edit_callback);
+               zoxide_edit_callback,NULL);
     
     free(list);
 }
