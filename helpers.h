@@ -10,6 +10,7 @@
 #include "types.h"
 #include "config.h"
 #include "common_ui.h"
+#define MAX_EXE_CACHE 128
 
 static inline void LOG(const char* fmt, ...) {
     if (!GetConsoleWindow()) return;

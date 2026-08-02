@@ -25,6 +25,7 @@
 #include "reminder.h"
 #include "mute_microphone.h"
 #include "windows_control.h"
+#include "replica.h"
 
 
 static const char* SWITCHER_blacklist[] = {"Fortnite", "CrosshairX"};
@@ -93,6 +94,9 @@ static const char* VOLUME_blacklist[] = {"Fortnite", "CrosshairX"};
 static const char* MUTE_blacklist[] = {""};
 #define MUTE_BLACKLIST_COUNT (sizeof(MUTE_blacklist) / sizeof(MUTE_blacklist[0]))
 
+static const char* REPLICA_blacklist[] = {""};
+#define REPLICA_BLACKLIST_COUNT (sizeof(REPLICA_blacklist) / sizeof(REPLICA_blacklist[0]))
+
 static const char* WIFI_TOGGLE_blacklist[] = {""};
 #define WIFI_TOGGLE_BLACKLIST_COUNT (sizeof(WIFI_TOGGLE_blacklist) / sizeof(WIFI_TOGGLE_blacklist[0]))
 
@@ -135,6 +139,7 @@ static const HotkeyBinding G_HOTKEY_BINDINGS[] = {
     BINDING(MONITOR_FOCUS_SIDE, HOTKEY_MOD_ALT,       TriggerMonitorFocusSide, true),
     BINDING(REMINDER,           HOTKEY_MOD_ALT,       TriggerReminder,         true),
     BINDING(MUTE,               HOTKEY_MOD_ALT_SHIFT, TriggerMuteState,        true),
+    BINDING(REPLICA,            HOTKEY_MOD_ALT_CTRL,  TriggerReplica,          true),
     BINDING(POS,                HOTKEY_MOD_ALT,       TriggerPosCopy,          true),
     BINDING(POS,                HOTKEY_MOD_ALT_SHIFT, TriggerPosAdd,           true),
     BINDING(POS,                HOTKEY_MOD_ALT_CTRL,  TriggerPosClear,         true),

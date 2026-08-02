@@ -69,12 +69,16 @@ void TriggerMuteState(void) {
     if (!mic_muted){
         if (SUCCEEDED(SetDeviceMute(eCapture, TRUE))) {
           mic_muted = true;
+          DisplayMessageText = RGB(255,80,20);
           MSG_MIDDLE_BOTTOM("Mic Muted",70,1);
+          DisplayMessageText = COLOR_TEXT;
         }
     } else {
         if (SUCCEEDED(SetDeviceMute(eCapture, FALSE))) {
             mic_muted = false;
+            DisplayMessageText = RGB(80,255,20);
             MSG_MIDDLE_BOTTOM("Mic Unmuted",70,1);
+            DisplayMessageText = COLOR_TEXT;
         }
     }
 }
