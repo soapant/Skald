@@ -155,7 +155,7 @@ static void TriggerTerminalCommand() {
     ImportantPromptUser(list, "⌨️ Terminal", g_cached_command_count, 920, 650, 32, 
                terminal_refresh_callback, 
                terminal_enter_callback, 
-               terminal_edit_callback);
+               terminal_edit_callback,NULL);
     
     free(list);
 }

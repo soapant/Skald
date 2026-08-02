@@ -134,7 +134,7 @@ static void TriggerExplorer() {
     ImportantPromptUser(list, "📁 Explorer", g_cached_explorer_count, 920, 650, 32, 
                explorer_refresh_callback, 
                explorer_enter_callback, 
-               explorer_edit_callback);
+               explorer_edit_callback,NULL);
     
     free(list);
 }

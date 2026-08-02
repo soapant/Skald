@@ -403,7 +403,7 @@ void TriggerTodo(void) {
                                      todo_copy_callback,                    
                                      todo_render_callback,
                                      todo_edit_callback,
-                                     NULL);
+                                     NULL,NULL);
 }
 
 #endif

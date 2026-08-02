@@ -15,6 +15,7 @@ typedef void (*RenderCallback)(HDC hdc, const char* text, RECT* rect, BOOL is_se
 typedef void (*EditCallback)(const char*);
 typedef void (*FilterCallback)(const char* item,const char* filter);
 typedef void (*CopyCallback)(int type);
+typedef void (*HelpCallback)();
 typedef void (*KeyCallback)(int vkCode);
 
 KeyCallback g_key_callback = NULL;
@@ -29,11 +30,12 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
                  CopyCallback copy_callback,
                  RenderCallback render_callback,
                  EditCallback edit_callback,
-                 FilterCallback filter_callback);
+                 FilterCallback filter_callback,
+                 HelpCallback help_callback);
 
-#define ImportantPromptUser(window_list,window_title,count,height,width,item_height,refresh_callback,enter_callback,edit_callback) PromptUser(window_list,window_title,count,height,width,item_height,refresh_callback,enter_callback,NULL,NULL,NULL,NULL,edit_callback,NULL)
+#define ImportantPromptUser(window_list,window_title,count,height,width,item_height,refresh_callback,enter_callback,edit_callback,help_callback) PromptUser(window_list,window_title,count,height,width,item_height,refresh_callback,enter_callback,NULL,NULL,NULL,NULL,edit_callback,NULL,help_callback)
 
-#define OnlyIOPromptUser(window_list,window_title,count,height,width,item_height,refresh_callback,enter_callback,ctrl_enter_callback,tab_callback) PromptUser(window_list,window_title,count,height,width,item_height,refresh_callback,enter_callback,ctrl_enter_callback,tab_callback,NULL,NULL,NULL,NULL)
+#define OnlyIOPromptUser(window_list,window_title,count,height,width,item_height,refresh_callback,enter_callback,ctrl_enter_callback,tab_callback) PromptUser(window_list,window_title,count,height,width,item_height,refresh_callback,enter_callback,ctrl_enter_callback,tab_callback,NULL,NULL,NULL,NULL,NULL)
 
 
 char* SimplePromptUser(const char* prompt, const char* window_title,int height, int width, int item_height);
@@ -82,6 +84,7 @@ struct feature_data {
     RenderCallback render_callback;
     EditCallback edit_callback;
     FilterCallback filter_callback;
+    HelpCallback help_callback;
     bool (*filter_match)(const char*, const char*);
 };
 

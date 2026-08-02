@@ -149,7 +149,7 @@ static void TriggerGoogleSearch() {
     ImportantPromptUser(list, "🔍 Google", g_cached_google_count, 920, 650, 32, 
                google_refresh_callback, 
                google_enter_callback, 
-               google_edit_callback);
+               google_edit_callback,NULL);
     
     free(list);
 }

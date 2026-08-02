@@ -169,7 +169,7 @@ static void TriggerNvimZoxide() {
     ImportantPromptUser(list, titleBuffer, g_cached_nvim_count, 920, 650, 32, 
                neovide_refresh_callback, 
                neovide_enter_callback, 
-               neovide_edit_callback);
+               neovide_edit_callback,NULL);
     free(list);
 }
 

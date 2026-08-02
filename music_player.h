@@ -75,7 +75,7 @@ static bool HandleMusicPlayer(int vk_code, int modifiers, const char* current_ti
                 ImportantPromptUser(initial_items,"🎵 Player",GetFileCount(), 920, 650,32,
                                     music_refresh_callback,  
                                     music_enter_callback,    
-                                    NULL);
+                                    NULL,NULL);
                 
                 free((void*)initial_items);
                 return true;
