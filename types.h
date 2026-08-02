@@ -128,12 +128,6 @@ typedef struct {
 } WindowData;
 
 typedef struct {
-    WindowData* items;
-    int count;
-    int capacity;
-} WindowList;
-
-typedef struct {
     int x, y, w, h;
     int item_height;
 } WindowLayout;
@@ -186,6 +180,7 @@ typedef struct {
     int modifiers;
     int code;
 } MusicPlayerBinding;
+
 
 typedef struct {
     int vk_code;

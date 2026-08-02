@@ -28,8 +28,9 @@
 #define MONITOR_FOCUS_SIDE  'H'
 #define REMINDER            'S'
 #define MUTE                'P'
-#define MUSIC_PLAYER        'P'
-#define VIDEO_VIEWER        'V'
+#define MUSIC_PLAYER_KEY        'P'
+#define VIDEO_VIEWER_KEY        'V'
+#define REPLICA             'R'
 #define KILL_MYPROGRAM      'M'
 #define WIFI_TOGGLE         'W'
 #define BLUETOOTH_TOGGLE    'B'
@@ -73,6 +74,8 @@ const char* MusicPlayerPath = "D:\\Projects\\Music Player\\music_player.exe";
 
 const char* VideoViewerPath = "D:\\Projects\\Video Viewer\\video_viewer.exe";
 
+const char* ReplicaPath = "D:\\Projects\\Replica\\replica.exe";
+
 const char* TextEditorPath = "C:\\Program Files\\Neovide\\neovide.exe";
 
 static const char* MusicPath = "D:\\Music\\Mp3";
@@ -86,6 +89,8 @@ const bool TimerAvailable = true;
 const bool MusicPlayerAvailable = true;
 
 const bool VideoViewerAvailable = true;
+
+const bool ReplicaAvailable = true;
 
 const bool FullTextNeedsKeyPress = true;
 
@@ -121,9 +126,9 @@ static const AppHotkey G_APP_HOTKEYS[] = {
 };
 
 #define APP_HOTKEY_COUNT (sizeof(G_APP_HOTKEYS) / sizeof(G_APP_HOTKEYS[0]))
-
 static const MiscHotkey G_MISC_HOTKEYS[] = {
     {'G', HOTKEY_MOD_CTRL | HOTKEY_MOD_ALT, "*", "D:\\retard games\\Grand Theft Auto V Legacy\\PlayGTAV.bat" },
+    {'O',HOTKEY_MOD_CTRL | HOTKEY_MOD_ALT,"*","C:\\Users\\HP\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\OnTopReplica\\OnTopReplica.lnk"}
 };
 
 #define MISC_HOTKEY_COUNT (sizeof(G_MISC_HOTKEYS) / sizeof(G_MISC_HOTKEYS[0]))
@@ -159,7 +164,7 @@ static const MusicPlayerBinding G_MUSIC_PLAYERS[] = {
     6 // TERMINATE
   },
   { 
-    MUSIC_PLAYER,
+    MUSIC_PLAYER_KEY,
     HOTKEY_MOD_ALT,
     69 // PLAY SONG
   },
@@ -184,7 +189,7 @@ static const VideoPlayerBinding G_VIDEO_PLAYERS[] = {
     6 // TERMINATE
   },
   { 
-    VIDEO_VIEWER,
+    VIDEO_VIEWER_KEY,
     HOTKEY_MOD_ALT,
     69 // PLAY VIDEO
   },
