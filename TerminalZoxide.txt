@@ -15,3 +15,6 @@ player
 nigga
 coc
 nvim
+ded
+bin
+repos

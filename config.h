@@ -1,4 +1,5 @@
 #ifndef CONFIG_H
+
 #define CONFIG_H
 #include <string.h>
 #include <windows.h>
@@ -296,7 +297,11 @@ static const TagFormatConfig TODO_TAG_FORMAT = {
     X("-l",  NULL,               "Learning",         RGB(166, 227, 161), false) \
     X("-b",  NULL,               "Bored",            RGB(203, 166, 247), false) \
     X("-d",  NULL,               "DontForget",       RGB(255, 109, 108), false) \
-    X("-v",  NULL,               "Nvim",             RGB(57, 235, 20), false)
+    X("-v",  NULL,               "Nvim",             RGB(57, 235, 20), false) \
+    X("-f",  NULL,               "Fun",              RGB(210, 9, 102), false) \
+    X("-r",  NULL,               "Research",          RGB(235, 60, 235), false) \
+    X("-ft",  NULL,              "Feature",         RGB(250, 205, 102), false) \
+    X("-g",  NULL,               "Bug",              RGB(250, 9, 2), false)
 
 #define X(flag, label) {flag, label},
 static const TodoAliasEntry TODO_ALIAS_DICT[] = {
