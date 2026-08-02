@@ -18,8 +18,6 @@ static EditorMode g_current_mode = MODE_INSERT;
 static bool g_vim_mode_enabled = true;
 static const char* g_mode_names[] = { "NORMAL", "INSERT", "VISUAL" };
 const char* g_vim_mode = "INSERT";
-int last_selection = 0;
-
 static inline void SetMode(EditorMode mode) {
     g_current_mode = mode;
     g_vim_mode = g_mode_names[mode];
@@ -29,15 +27,10 @@ static inline void SetMode(EditorMode mode) {
     
     if (!in_popup) {
         if (strcmp(g_vim_mode,"INSERT") == 0 ) {
-          last_selection = UI_GetSelection(hListBox);
           UI_SetSelection(hListBox,-1, g_SelectedIndex);
         } else if (strcmp(g_vim_mode,"NORMAL") == 0) {
           if (g_TotalMatches != 0) {
-              if (last_selection <= 0) {
-                  UI_SetSelection(hListBox,0, g_SelectedIndex);
-              } else {
-                  UI_SetSelection(hListBox,last_selection, g_SelectedIndex);
-              }
+              UI_SetSelection(hListBox,0, g_SelectedIndex);
           }
         }
     }
