@@ -120,8 +120,10 @@ static void switcher_enter_callback(const char* selection) {
         }
     }
 }
-static void switcher_copy_callback(int type) {
-    CopyToClipboard(g_switcher_windows[g_SelectedIndex].exe);
+static void switcher_copy_callback(const char* selection,int true_index,int type) {
+    if (true_index >= 0 && true_index < g_switcher_count) {
+        CopyToClipboard(g_switcher_windows[true_index].exe);
+    }
 }
 
 static void TriggerWindowSwitcher() {

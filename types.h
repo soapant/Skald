@@ -14,7 +14,7 @@ typedef void (*TabCallback)(void);
 typedef void (*RenderCallback)(HDC hdc, const char* text, RECT* rect, BOOL is_selected, int itemIndex);
 typedef void (*EditCallback)(const char*);
 typedef void (*FilterCallback)(const char* item,const char* filter);
-typedef void (*CopyCallback)(int type);
+typedef void (*CopyCallback)(const char* selection,int true_index,int type);
 typedef void (*HelpCallback)();
 typedef void (*KeyCallback)(int vkCode);
 
@@ -349,6 +349,7 @@ extern HWND hGlobalTrayWnd;
 extern char* g_current_feature;
 extern HashMap* feature_history;
 extern HashMap* feature_data;
+extern HashMap* g_item_index_map;
 extern COLORREF DisplayMessageText;
 #define COLOR_BG      RGB(30, 35, 45)   
 #define COLOR_TEXT    RGB(255, 255, 255)

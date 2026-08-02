@@ -245,7 +245,7 @@ static inline void PopulateListBox(HWND hListBox, const char* filter,
         g_history_count = 0;
     }
     
-int pool_max = MAX_VISIBLE_ITEMS;
+    int pool_max = MAX_VISIBLE_ITEMS;
     
     if (total_matches > pool_max) {
         total_matches = pool_max;
@@ -278,8 +278,8 @@ int pool_max = MAX_VISIBLE_ITEMS;
     }
     
     g_last_items = items;
-        g_last_item_count = item_count;
-        g_TotalMatches = total_matches;
+    g_last_item_count = item_count;
+    g_TotalMatches = total_matches;
     }
 
 COLORREF GetRainbowColor(float t, float s, float v) {

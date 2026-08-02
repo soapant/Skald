@@ -88,6 +88,7 @@ HFONT g_hNumFont = NULL;
 HFONT g_hMainFont = NULL;
 HashMap* feature_history = NULL;
 HashMap* feature_data = NULL;
+HashMap* g_item_index_map = NULL;
 
 void WaitForKeypressAsync(KeyCallback callback) {
     g_waiting_for_key = true;
@@ -110,6 +111,20 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
     output_buffer[0] = '\0';
     g_initial_items = window_list;
     g_initial_count = count;
+
+    if (g_item_index_map) {
+        HashMap_Destroy(g_item_index_map);
+        g_item_index_map = NULL;
+    }
+    if (window_list && count > 0) {
+        g_item_index_map = HashMap_Create(count);
+        for (int i = 0; i < count; i++) {
+            if (window_list[i]) {
+                HashMap_Put(g_item_index_map, window_list[i], (void*)(size_t)(i + 1));
+            }
+        }
+        printf("[INDEX-MAP] Built name->index map for %d items\n", count);
+    }
     g_refresh_callback = refresh_callback;
     g_enter_callback = enter_callback;
     g_ctrl_enter_callback = ctrl_enter_callback;
@@ -211,6 +226,11 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
     g_edit_callback = NULL;
     g_filter_callback = NULL;
     g_help_callback = NULL;
+
+    if (g_item_index_map) {
+        HashMap_Destroy(g_item_index_map);
+        g_item_index_map = NULL;
+    }
     
     printf("[DEBUG-UI] Returning from PromptUser. Buffer Length: %zu\n", strlen(output_buffer));
     return (strlen(output_buffer) > 0) ? output_buffer : NULL;
@@ -511,7 +531,9 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
         }
         if (ctrl_down) {
           if (pressed_vk == HELP_SCREEN_KEY) {
-            g_help_callback();
+            if (g_help_callback != NULL) {
+              g_help_callback();
+            }
           }
         }
 

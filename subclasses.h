@@ -164,6 +164,32 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
                 return 0;
             }
           }
+        if (wParam == COPY_SELECTION_KEY) {
+            bool ctrl_pressed = (GetKeyState(VK_CONTROL) & 0x8000);
+            bool shift_pressed = (GetKeyState(VK_SHIFT) & 0x8000);
+            if (shift_pressed) {
+                if (g_SelectedIndex != -1) {
+                    strncpy(output_buffer, g_populated_cache[g_SelectedIndex], sizeof(output_buffer) - 1);
+                    output_buffer[sizeof(output_buffer) - 1] = '\0';
+                }
+                if (g_copy_callback != NULL) {
+                  g_copy_callback(output_buffer, UI_LookupTrueIndex(output_buffer), 0);
+                } else {
+                  CopyToClipboard(output_buffer);
+                }
+            } else if (ctrl_pressed) {
+                if (g_SelectedIndex != -1) {
+                    strncpy(output_buffer, g_populated_cache[g_SelectedIndex], sizeof(output_buffer) - 1);
+                    output_buffer[sizeof(output_buffer) - 1] = '\0';
+                }
+                  
+                  if (g_copy_callback != NULL) {
+                    g_copy_callback(output_buffer, UI_LookupTrueIndex(output_buffer), 1);
+                  } else {
+                    CopyToClipboard(output_buffer);
+                  }
+              }
+        }
         if (wParam == VK_DOWN) {
           if (ctrl_pressed) {
             SetCursorToEndOfText();

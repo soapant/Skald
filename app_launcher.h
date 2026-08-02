@@ -100,11 +100,10 @@ static void applauncher_refresh_callback(const char* filter, HWND hListBox) {
     }
     PopulateListBox(hListBox, filter, names, count, NULL);
 }
-static void applauncher_copy_callback(int type) {
-    char* text;
+static void applauncher_copy_callback(const char* selection,int true_index,int type) {
+    char* text = (char*)selection;
     switch(type) {
       case 0: {
-        text = G_APPS[g_SelectedIndex].path;
         int start = strlen(text);
         for (int i = start; i > 0 ; i--) {
           if (text[i] == '\\') {
@@ -114,9 +113,13 @@ static void applauncher_copy_callback(int type) {
             break;
           }
         }
+        break;
       }
       case 1: {
-        text = G_APPS[g_SelectedIndex].path;
+        if (true_index >= 0 && true_index < G_APP_COUNT) {
+            text = G_APPS[true_index].path;
+        }
+        break;
       }
     }
     CopyToClipboard(text);

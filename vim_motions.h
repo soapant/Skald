@@ -26,6 +26,8 @@ typedef enum {
     MOTION_SHOW_FULL_TEXT,
     MOTION_ENTER,
     MOTION_COPY_INTO_SEARCH,
+    MOTION_SEND_COPY_SHIFT,
+    MOTION_SEND_COPY_CONTROL,
     MOTION_SEND_EDIT,
     MOTION_NORMALENTER,
     MOTION_NORMALCTRL_ENTER,
@@ -57,10 +59,6 @@ typedef enum {
     MOTION_CHANGE_TO_END,
     MOTION_CHANGE_LINE,
     MOTION_YANK_LINE,
-    MOTION_YANK_LIST_BOX,
-    MOTION_YANK_LIST_BOX_EXTRA,
-    MOTION_YANK_WORD,
-    MOTION_YANK_TO_END,
     MOTION_UNDO,
     MOTION_SEARCH_FORWARD,
     MOTION_SEARCH_BACKWARD,
@@ -292,7 +290,7 @@ static inline void HandleYankListBox(void) {
         text[sizeof(text) - 1] = '\0';
         
         if (g_copy_callback != NULL) {
-          g_copy_callback(0);
+          g_copy_callback(text, UI_LookupTrueIndex(text), 0);
         } else {
           CopyToClipboard(text);
         }
@@ -302,7 +300,6 @@ static inline void HandleYankListBox(void) {
     }
 }
 static inline void HandleYankListBoxExtra(void) {
-  printf("AKDJWKJDA");
     int selected_index = g_SelectedIndex;
     char buffer[256];
     if (selected_index >= 0 && selected_index < g_populated_count) {
@@ -312,7 +309,7 @@ static inline void HandleYankListBoxExtra(void) {
         text[sizeof(text) - 1] = '\0';
         
         if (g_copy_callback != NULL) {
-          g_copy_callback(1);
+          g_copy_callback(text, UI_LookupTrueIndex(text), 1);
         } else {
           CopyToClipboard(text);
         }
@@ -472,6 +469,19 @@ static inline void HandleDeleteWordNormal(void) {
 static inline void HandleSendEdit(void) {
     UI_Edit_KeyDown(g_ActiveEditControl,EDIT_TEXT_KEY);
     UI_Edit_KeyUp(g_ActiveEditControl, EDIT_TEXT_KEY);
+}
+
+static inline void HandleSendCopyShift(void) {
+    UI_Edit_KeyUp(g_ActiveEditControl,VK_SHIFT);
+    UI_Edit_KeyDown(g_ActiveEditControl,COPY_SELECTION_KEY);
+    UI_Edit_KeyUp(g_ActiveEditControl, COPY_SELECTION_KEY);
+    UI_Edit_KeyDown(g_ActiveEditControl,VK_SHIFT);
+}
+static inline void HandleSendCopyControl(void) {
+    UI_Edit_KeyUp(g_ActiveEditControl,VK_CONTROL);
+    UI_Edit_KeyDown(g_ActiveEditControl,COPY_SELECTION_KEY);
+    UI_Edit_KeyUp(g_ActiveEditControl, COPY_SELECTION_KEY);
+    UI_Edit_KeyDown(g_ActiveEditControl,VK_CONTROL);
 }
 static inline void HandleCopyToSearch(void) {
   if (UI_IsListBoxSelected()) {
