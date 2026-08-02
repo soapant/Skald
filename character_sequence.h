@@ -10,7 +10,7 @@
 #include "common_ui.h"
 
 #define MAX_SEQUENCE_LEN 8
-#define SEQUENCE_TIMEOUT_MS 500
+#define SEQUENCE_TIMEOUT_MS 300
 
 typedef struct {
     char keys[MAX_SEQUENCE_LEN];

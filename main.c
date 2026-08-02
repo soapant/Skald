@@ -105,7 +105,6 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
                  EditCallback edit_callback,
                  FilterCallback filter_callback,
                  HelpCallback help_callback) {
-    WinTimer timer = TimerStart();
     HINSTANCE hInstance = GetModuleHandle(NULL);
     selection_complete = false;
     output_buffer[0] = '\0';
@@ -187,8 +186,6 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
 
     ForceWindowFocus(hPopupWnd, hEditControl);
 
-
-    TimerEnd(timer,"NIGGA");
     printf("[DEBUG-UI] Entering local message modal loop...\n");
     MSG msg;
     int loop_counter = 0;
@@ -231,7 +228,7 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
         HashMap_Destroy(g_item_index_map);
         g_item_index_map = NULL;
     }
-    
+
     printf("[DEBUG-UI] Returning from PromptUser. Buffer Length: %zu\n", strlen(output_buffer));
     return (strlen(output_buffer) > 0) ? output_buffer : NULL;
 }
