@@ -30,11 +30,12 @@
 #define MUTE                'P'
 #define MUSIC_PLAYER        'P'
 #define VIDEO_VIEWER        'V'
-#define EDIT_TEXT_KEY       'E'
 #define KILL_MYPROGRAM      'M'
 #define WIFI_TOGGLE         'W'
 #define BLUETOOTH_TOGGLE    'B'
+#define EDIT_TEXT_KEY       'E'
 #define HELP_SCREEN_KEY     'H'
+#define COPY_SELECTION_KEY  'Y'
 #define COMMAND_MODE_KEY        VK_OEM_1 // ;
 #define COLOR_ERROR             RGB(180, 0, 0) 
 #define COLOR_NORMAL            RGB(200, 200, 0) 
