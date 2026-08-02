@@ -49,6 +49,7 @@ RefreshCallback g_refresh_callback = NULL;
 EnterCallback g_enter_callback = NULL;
 CtrlEnterCallback g_ctrl_enter_callback = NULL;
 TabCallback g_tab_callback = NULL;
+HelpCallback g_help_callback = NULL;
 CopyCallback g_copy_callback = NULL;
 RenderCallback g_render_callback = NULL;
 EditCallback g_edit_callback = NULL;
@@ -101,7 +102,8 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
                  CopyCallback copy_callback,
                  RenderCallback render_callback,
                  EditCallback edit_callback,
-                 FilterCallback filter_callback) {
+                 FilterCallback filter_callback,
+                 HelpCallback help_callback) {
     WinTimer timer = TimerStart();
     HINSTANCE hInstance = GetModuleHandle(NULL);
     selection_complete = false;
@@ -116,6 +118,7 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
     g_render_callback = render_callback;
     g_edit_callback = edit_callback;
     g_filter_callback = filter_callback;
+    g_help_callback = help_callback;
     g_title = window_title;
     g_current_window_height = height;
     g_current_window_width = width;
@@ -133,6 +136,7 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
         data->render_callback = render_callback;
         data->edit_callback = edit_callback;
         data->filter_callback = filter_callback;
+        data->help_callback = help_callback;
         data->filter_match = NULL;
         printf("[REGISTRY] Registered feature: %s (%d items)\n", data->name, data->item_count);
     }
@@ -206,6 +210,7 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
     g_render_callback = NULL;
     g_edit_callback = NULL;
     g_filter_callback = NULL;
+    g_help_callback = NULL;
     
     printf("[DEBUG-UI] Returning from PromptUser. Buffer Length: %zu\n", strlen(output_buffer));
     return (strlen(output_buffer) > 0) ? output_buffer : NULL;
@@ -502,6 +507,11 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
               HandleCommandExecution(output);
             }
             return 1;
+          }
+        }
+        if (ctrl_down) {
+          if (pressed_vk == HELP_SCREEN_KEY) {
+            g_help_callback();
           }
         }
 

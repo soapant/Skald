@@ -180,7 +180,7 @@ static void TriggerWindowSwitcher() {
     char* selected_title = PromptUser(ui_list,"🪟 Switcher",g_switcher_count, 920, 650,32,
                                                 switcher_refresh_callback,  
                                                 switcher_enter_callback,    
-                                                NULL,NULL,switcher_copy_callback,NULL,NULL,NULL);
+                                                NULL,NULL,switcher_copy_callback,NULL,NULL,NULL,NULL);
 
     free(myWindows.items);
 }

@@ -130,7 +130,7 @@ static void TriggerYaziZoxide() {
     ImportantPromptUser(list, "📂 Yazi", g_cached_yazi_count, 920, 650, 32, 
                yazi_refresh_callback, 
                yazi_enter_callback, 
-               yazi_edit_callback);
+               yazi_edit_callback,NULL);
     
     free(list);
 }

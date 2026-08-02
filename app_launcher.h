@@ -142,7 +142,7 @@ void TriggerAppLauncher() {
                         applauncher_copy_callback,
                         NULL,
                         NULL,
-                        NULL);                         
+                        NULL,NULL);                         
     free(initial_items);
 }
 
