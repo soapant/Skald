@@ -14,7 +14,9 @@ typedef void (*TabCallback)(void);
 typedef void (*RenderCallback)(HDC hdc, const char* text, RECT* rect, BOOL is_selected, int itemIndex);
 typedef void (*EditCallback)(const char*);
 typedef void (*FilterCallback)(const char* item,const char* filter);
+typedef void (*CopyCallback)(int type);
 typedef void (*KeyCallback)(int vkCode);
+
 KeyCallback g_key_callback = NULL;
 
 
@@ -24,11 +26,12 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
                  EnterCallback enter_callback,
                  CtrlEnterCallback ctrl_enter_callback,
                  TabCallback tab_callback,
+                 CopyCallback copy_callback,
                  RenderCallback render_callback,
                  EditCallback edit_callback,
                  FilterCallback filter_callback);
 
-#define ImportantPromptUser(window_list,window_title,count,height,width,item_height,refresh_callback,enter_callback,edit_callback) PromptUser(window_list,window_title,count,height,width,item_height,refresh_callback,enter_callback,NULL,NULL,NULL,edit_callback,NULL)
+#define ImportantPromptUser(window_list,window_title,count,height,width,item_height,refresh_callback,enter_callback,edit_callback) PromptUser(window_list,window_title,count,height,width,item_height,refresh_callback,enter_callback,NULL,NULL,NULL,NULL,edit_callback,NULL)
 
 
 char* SimplePromptUser(const char* prompt, const char* window_title,int height, int width, int item_height);
@@ -73,6 +76,7 @@ struct feature_data {
     EnterCallback enter_callback;
     CtrlEnterCallback ctrl_enter_callback;
     TabCallback tab_callback;
+    CopyCallback copy_callback;
     RenderCallback render_callback;
     EditCallback edit_callback;
     FilterCallback filter_callback;
@@ -299,6 +303,7 @@ extern RefreshCallback g_refresh_callback;
 extern EnterCallback g_enter_callback;
 extern CtrlEnterCallback g_ctrl_enter_callback;
 extern TabCallback g_tab_callback;
+extern CopyCallback g_copy_callback;
 extern RenderCallback g_render_callback;
 extern EditCallback g_edit_callback;
 extern FilterCallback g_filter_callback;

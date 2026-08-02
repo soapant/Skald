@@ -49,6 +49,7 @@ RefreshCallback g_refresh_callback = NULL;
 EnterCallback g_enter_callback = NULL;
 CtrlEnterCallback g_ctrl_enter_callback = NULL;
 TabCallback g_tab_callback = NULL;
+CopyCallback g_copy_callback = NULL;
 RenderCallback g_render_callback = NULL;
 EditCallback g_edit_callback = NULL;
 FilterCallback g_filter_callback = NULL;
@@ -97,6 +98,7 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
                  EnterCallback enter_callback,
                  CtrlEnterCallback ctrl_enter_callback,
                  TabCallback tab_callback,
+                 CopyCallback copy_callback,
                  RenderCallback render_callback,
                  EditCallback edit_callback,
                  FilterCallback filter_callback) {
@@ -110,6 +112,7 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
     g_enter_callback = enter_callback;
     g_ctrl_enter_callback = ctrl_enter_callback;
     g_tab_callback = tab_callback;
+    g_copy_callback = copy_callback;
     g_render_callback = render_callback;
     g_edit_callback = edit_callback;
     g_filter_callback = filter_callback;
@@ -126,6 +129,7 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
         data->enter_callback = enter_callback;
         data->ctrl_enter_callback = ctrl_enter_callback;
         data->tab_callback = tab_callback;
+        data->copy_callback = copy_callback;
         data->render_callback = render_callback;
         data->edit_callback = edit_callback;
         data->filter_callback = filter_callback;
@@ -198,6 +202,7 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
     g_enter_callback = NULL;
     g_ctrl_enter_callback = NULL;
     g_tab_callback = NULL;
+    g_copy_callback = NULL;
     g_render_callback = NULL;
     g_edit_callback = NULL;
     g_filter_callback = NULL;

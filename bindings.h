@@ -19,11 +19,18 @@ static inline bool CheckVimMotion(int pressed_vk, int modifiers, MotionAction* o
     if (!g_ActiveEditControl || !IsWindow(g_ActiveEditControl)) return false;
     if (GetFocus() != g_ActiveEditControl) return false;
     
+    if (pressed_vk == VK_SHIFT || pressed_vk == VK_LSHIFT || pressed_vk == VK_RSHIFT ||
+        pressed_vk == VK_CONTROL || pressed_vk == VK_LCONTROL || pressed_vk == VK_RCONTROL ||
+        pressed_vk == VK_MENU || pressed_vk == VK_LMENU || pressed_vk == VK_RMENU ||
+        pressed_vk == VK_LWIN || pressed_vk == VK_RWIN) {
+        return false;
+    }
+    
     bool in_popup = (g_hEditPopup != NULL && IsWindow(g_hEditPopup));
     
-    bool shift_held = (modifiers & HOTKEY_MOD_SHIFT) != 0;
-    bool ctrl_held = (modifiers & HOTKEY_MOD_CTRL) != 0;
-    bool alt_held = (modifiers & HOTKEY_MOD_ALT) != 0;
+    bool ctrl_held = (GetKeyState(VK_CONTROL) & 0x8000);
+    bool shift_held = (GetKeyState(VK_SHIFT) & 0x8000);
+    bool alt_held = (GetKeyState(VK_MENU) & 0x8000);
     
     if (pressed_vk == VK_ESCAPE) {
         if (!IsNormalMode()) {
@@ -104,7 +111,6 @@ static inline bool CheckVimMotion(int pressed_vk, int modifiers, MotionAction* o
     }
     
     if (in_normal) {
-        
         if (SequenceTimedOut()) {
             SequenceReset();
             return false;
@@ -116,8 +122,7 @@ static inline bool CheckVimMotion(int pressed_vk, int modifiers, MotionAction* o
             *out_typed_count = 0;
             return false;
         }
-        
-        if (!shift_held) {
+        if (!shift_held && !ctrl_held) {
             SequenceAddKey(seq_char, true);
             SequenceStartTimer();
             

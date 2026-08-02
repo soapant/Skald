@@ -726,7 +726,6 @@ int CopyToClipboard(const char* text) {
         CloseClipboard();
         return 0;
     }
-    printf("%s",text);
     char buffer[256];
     
     snprintf(buffer,sizeof(buffer),"Copied %s",text);
