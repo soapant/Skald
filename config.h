@@ -213,7 +213,11 @@ static const char* browsers_windows[] = {"Zen","Chrome"};
 
 static const char* focus_blacklist_coding[] = {"CrosshairX"};
 
-static const char* coding_windows[] = {"Nvim","Neovide","Alacritty","vim","pwsh"};
+static const char* coding_windows[] = {"Neovide","vim"};
+
+static const char* focus_blacklist_terminal[] = {"CrosshairX"};
+
+static const char* terminal_windows[] = {"Alacritty","pwsh"};
 
 static const FocusSwitcherBinding G_FOCUS_SWITCHERS[] = {
     {
@@ -239,6 +243,14 @@ static const FocusSwitcherBinding G_FOCUS_SWITCHERS[] = {
         sizeof(focus_blacklist_coding) / sizeof(focus_blacklist_coding[0]),
         coding_windows,              
         sizeof(coding_windows) / sizeof(coding_windows[0])
+    },
+    {
+        'L',           
+        HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT,               
+        focus_blacklist_terminal,      
+        sizeof(focus_blacklist_terminal) / sizeof(focus_blacklist_terminal[0]),
+        terminal_windows,              
+        sizeof(terminal_windows) / sizeof(terminal_windows[0])
     },
 };
 
@@ -277,7 +289,7 @@ static const TagFormatConfig TODO_TAG_FORMAT = {
     X("-l",  NULL,               "Learning",         RGB(166, 227, 161), false) \
     X("-b",  NULL,               "Bored",            RGB(203, 166, 247), false) \
     X("-d",  NULL,               "DontForget",       RGB(255, 109, 108), false) \
-    X("-v",  NULL,               "NVIM",             RGB(57, 235, 20), false)
+    X("-v",  NULL,               "Nvim",             RGB(57, 235, 20), false)
 
 #define X(flag, label) {flag, label},
 static const TodoAliasEntry TODO_ALIAS_DICT[] = {
