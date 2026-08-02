@@ -170,30 +170,17 @@ static bool HandleFocusSwitcher(int vk_code, int modifiers, const char* current_
         const FocusSwitcherBinding* binding = &G_FOCUS_SWITCHERS[i];
         if (binding->vk_code == vk_code && binding->modifiers == modifiers) {
             if (IsBlacklisted(current_title, binding->blacklist, binding->blacklist_count)) {
-                printf("[FOCUS] Blacklisted window: %s\n", current_title);
                 return false;
             }
-              if (strcmp(binding->window_titles[2],"Alacritty") == 0) {
-                 if (FocusWindowByExe("alacritty.exe")) {
-                   return true;
-                 }else {
-                    HWND target = FindAnyWindow(binding->window_titles, binding->window_count);
-                    if (target) {
-                        FocusWindow(target);
-                    } else {
-                        printf("[FOCUS] No matching window found.\n");
-                    }
-                 }
-              }else { 
+            else { 
                   HWND target = FindAnyWindow(binding->window_titles, binding->window_count);
                   if (target) {
                       FocusWindow(target);
                       return true;
                   } else {
                       return false;
-                      printf("[FOCUS] No matching window found.\n");
                   }
-              }
+            }
               
         }
     }

@@ -253,7 +253,6 @@ static FileItem* GetFileList(void) {
     return G_FILES;
 }
 
-
 static int GetFileCount(void) {
     return G_FILE_COUNT;
 }
@@ -267,6 +266,7 @@ typedef struct {
 
 AppItem G_APPS[MAX_APPS];
 int G_APP_COUNT = 0;
+
 static void scan_directory_recursive(const char* dir_path) {
     char search_path[MAX_PATH];
     snprintf(search_path, sizeof(search_path), "%s\\*", dir_path);
@@ -276,53 +276,70 @@ static void scan_directory_recursive(const char* dir_path) {
 
     if (hFind == INVALID_HANDLE_VALUE) return;
 
+    // Pre-compute ignore list size
+    static int ignore_count = 0;
+    static bool ignore_init = false;
+    if (!ignore_init) {
+        ignore_count = sizeof(ListOfShitToIgnore) / sizeof(ListOfShitToIgnore[0]);
+        ignore_init = true;
+    }
+
     do {
-        if (strcmp(find_data.cFileName, ".") == 0 || strcmp(find_data.cFileName, "..") == 0) {
+        if (find_data.cFileName[0] == '.' && 
+            (find_data.cFileName[1] == '\0' || 
+             (find_data.cFileName[1] == '.' && find_data.cFileName[2] == '\0'))) {
             continue;
         }
 
-        char full_path[MAX_PATH];
-        snprintf(full_path, sizeof(full_path), "%s\\%s", dir_path, find_data.cFileName);
-
-        
         if (find_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-            char first = tolower(find_data.cFileName[0]);
-            
-            if (first == 'n' || first == '.' || first == 'b' || first == 'o' || 
-                first == 'd' || first == 'g' || first == 'y' || first == 'h') {
+            // Check ignore list
+            bool skip = false;
+            for (int i = 0; i < ignore_count; i++) {
+                if (StrCmpIA(find_data.cFileName, ListOfShitToIgnore[i]) == 0) {
+                    skip = true;
+                    break;
+                }
+            }
+            if (skip) continue;
+
+            char full_path[MAX_PATH];
+            snprintf(full_path, sizeof(full_path), "%s\\%s", dir_path, find_data.cFileName);
+            scan_directory_recursive(full_path);
+        } else {
+            // Check extension first (cheap)
+            const char* ext = PathFindExtensionA(find_data.cFileName);
+            if ((ext[0] == '.' && ext[1] == 'l' && ext[2] == 'n' && ext[3] == 'k' && ext[4] == '\0') ||
+                (ext[0] == '.' && ext[1] == 'e' && ext[2] == 'x' && ext[3] == 'e' && ext[4] == '\0') ||
+                (ext[0] == '.' && ext[1] == 'u' && ext[2] == 'r' && ext[3] == 'l' && ext[4] == '\0')) {
                 
-                bool skip = false;
-                for (int i = 0; i <  sizeof(ListOfShitToIgnore) / sizeof(ListOfShitToIgnore[0]); i++) {
-                    if (StrCmpIA(find_data.cFileName, ListOfShitToIgnore[i]) == 0) {
-                        skip = true;
+                if (G_APP_COUNT >= MAX_APPS) break;
+
+                char clean_name[128];
+                int name_len = strlen(find_data.cFileName);
+                int ext_len = strlen(ext);
+                int base_len = name_len - ext_len;
+                
+                // Copy only the base name (before extension)
+                if (base_len >= sizeof(clean_name)) base_len = sizeof(clean_name) - 1;
+                memcpy(clean_name, find_data.cFileName, base_len);
+                clean_name[base_len] = '\0';
+
+                // Check duplicates (only if we have items to check)
+                bool is_duplicate = false;
+                for (int i = 0; i < G_APP_COUNT; i++) {
+                    if (StrCmpIA(G_APPS[i].name, clean_name) == 0) {
+                        is_duplicate = true;
                         break;
                     }
                 }
-                if (skip) continue;
-            }
-            scan_directory_recursive(full_path);
-        } else {
-            char* ext = PathFindExtensionA(find_data.cFileName);
-            if (StrCmpIA(ext, ".lnk") == 0 || StrCmpIA(ext, ".exe") == 0 || StrCmpIA(ext, ".url") == 0) {
-                if (G_APP_COUNT < MAX_APPS) {
-                    char clean_name[128];
-                    strncpy(clean_name, find_data.cFileName, sizeof(clean_name) - 1);
-                    clean_name[sizeof(clean_name) - 1] = '\0';
-                    PathRemoveExtensionA(clean_name);
+                if (is_duplicate) continue;
 
-                    bool is_duplicate = false;
-                    for (int i = 0; i < G_APP_COUNT; i++) {
-                        if (StrCmpIA(G_APPS[i].name, clean_name) == 0) {
-                            is_duplicate = true;
-                            break;
-                        }
-                    }
-                    if (is_duplicate) continue;
+                char full_path[MAX_PATH];
+                snprintf(full_path, sizeof(full_path), "%s\\%s", dir_path, find_data.cFileName);
 
-                    strncpy(G_APPS[G_APP_COUNT].name, clean_name, sizeof(G_APPS[G_APP_COUNT].name) - 1);
-                    strncpy(G_APPS[G_APP_COUNT].path, full_path, sizeof(G_APPS[G_APP_COUNT].path) - 1);
-                    G_APP_COUNT++;
-                }
+                strncpy(G_APPS[G_APP_COUNT].name, clean_name, sizeof(G_APPS[G_APP_COUNT].name) - 1);
+                strncpy(G_APPS[G_APP_COUNT].path, full_path, sizeof(G_APPS[G_APP_COUNT].path) - 1);
+                G_APP_COUNT++;
             }
         }
     } while (FindNextFileA(hFind, &find_data) && G_APP_COUNT < MAX_APPS);
