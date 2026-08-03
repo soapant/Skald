@@ -37,6 +37,8 @@ static const MotionBinding G_VIM_BINDINGS[] = {
     { 'F',                HOTKEY_MOD_NONE,  MOTION_SEARCH_TEXT_FORWARD,    HandleSearchTextForward,  MODE_NORMAL, VIM_SCOPE_ALL },
     { 'F',                HOTKEY_MOD_SHIFT, MOTION_SEARCH_TEXT_BACKWARD,   HandleSearchTextBackward, MODE_NORMAL, VIM_SCOPE_ALL },
     { 'D',                HOTKEY_MOD_SHIFT, MOTION_DELETE_TILL_END,        HandleDeleteTillEnd,      MODE_NORMAL, VIM_SCOPE_ALL },
+    { 'U',                HOTKEY_MOD_SHIFT, MOTION_PAGE_DOWN,              HandlePageDown,           MODE_NORMAL, VIM_SCOPE_MODAL },
+    { 'R',                HOTKEY_MOD_SHIFT, MOTION_PAGE_UP,                HandlePageUp,             MODE_NORMAL, VIM_SCOPE_MODAL },
     
 };
 
