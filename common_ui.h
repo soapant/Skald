@@ -107,7 +107,9 @@ static inline void UI_LB_SetCaretIndex(HWND hList, int index, BOOL scroll) {
 static inline void UI_LB_SetTopIndex(HWND hList, int index) {
     SendMessageA(hList, LB_SETTOPINDEX, index, 0);
 }
-
+static inline int UI_LB_GetTopIndex(HWND hList) {
+    return  SendMessageA(hListBox, LB_GETTOPINDEX, 0, 0);
+}
 static inline void UI_LB_SetFont(HWND hList, HFONT hFont) {
     SendMessageA(hList, WM_SETFONT, (WPARAM)hFont, FALSE);
 }
@@ -518,6 +520,9 @@ static inline char* UI_GetCurrentText(HWND g_ActiveEditControl,char *text) {
 #define UI_GetCurrentText(edit, buffer) GetWindowTextA(edit, buffer, sizeof(buffer))
 static inline void UI_SetText(HWND g_ActiveEditControl,char* text) {
       SetWindowTextA(g_ActiveEditControl,text);
+}
+static inline void UI_GetParent(HWND hwnd) {
+    SendMessageA(GetParent(hwnd), WM_COMMAND, MAKEWPARAM(IDC_INPUT_BOX, EN_CHANGE), (LPARAM)hEditControl);
 }
 
 #endif 

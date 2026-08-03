@@ -446,7 +446,7 @@ static void calculator_tab_callback(void) {
         
         int len = strlen(flipped);
         UI_SetCursorPosition(hEditControl,len);
-        SendMessageA(GetParent(hEditControl), WM_COMMAND, MAKEWPARAM(IDC_INPUT_BOX, EN_CHANGE), (LPARAM)hEditControl);
+        UI_GetParent(hEditControl);
         
         printf("[CALCULATOR] Flipped: %s\n", flipped);
     } else {
@@ -474,7 +474,7 @@ static void calculator_ctrlenter_callback(const char* selection) {
 
     UI_SetCursorPosition(hEditControl, len);
     
-    SendMessageA(GetParent(hEditControl), WM_COMMAND, MAKEWPARAM(IDC_INPUT_BOX, EN_CHANGE), (LPARAM)hEditControl);
+    UI_GetParent(hEditControl);
     
     printf("[CALCULATOR] Result put back: %s\n", result);
 }
