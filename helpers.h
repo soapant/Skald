@@ -1119,7 +1119,7 @@ void WriteMdFile(char lines[100][512], int count, const char* path) {
 }
 HashMap* history_indices = NULL;
 
-void GetFromHistory() {
+bool GetFromHistory() {
     char** HistoryList = (char**)HashMap_Get(feature_history, g_current_feature);
     if (HistoryList) {
         int* idx_ptr = (int*)HashMap_Get(history_indices, g_current_feature);
@@ -1148,9 +1148,10 @@ void GetFromHistory() {
                 HashMap_Put(history_indices, g_current_feature, idx_ptr);
             }
             *idx_ptr = idx;
-            return;
+            return true;
         } 
     }
+    return false;
 }
 
 int convert_string_to_int(const char *str) {
