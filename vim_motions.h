@@ -20,6 +20,8 @@ typedef enum {
     MOTION_NONE = 0,
     MOTION_ENTER_NORMAL,
     MOTION_DELETE_TILL_END,
+    MOTION_PAGE_UP,
+    MOTION_PAGE_DOWN,
     MOTION_HISTORY_TOGGLE,
     MOTION_SEARCH_TEXT_FORWARD,
     MOTION_SEARCH_TEXT_BACKWARD,
@@ -203,6 +205,11 @@ static inline void HandlePersistentDelete(void) {
     UI_Edit_KeyUp(g_ActiveEditControl, VK_DOWN);
     UI_Edit_KeyDown(g_ActiveEditControl, VK_UP);
     UI_Edit_KeyUp(g_ActiveEditControl, VK_UP);
+    if (g_refresh_callback != NULL) {
+      char buffer[100];
+      UI_GetCurrentText(g_ActiveEditControl,buffer);
+      g_refresh_callback(buffer,hListBox);
+    }
     return;
     
 }
@@ -563,6 +570,20 @@ static inline void HandleDeleteTillEnd(void) {
       }
       UI_SetText(g_ActiveEditControl,text);
   }
+}
+static inline void HandlePageUp(void) {
+  int current_sel = g_SelectedIndex;
+  int wanted_sel = current_sel - PageUpDownLen;
+  if (wanted_sel <= 0) wanted_sel = 0;
+  UI_SetSelection(hListBox,wanted_sel,g_SelectedIndex);
+  UI_LB_SetTopIndex(hListBox,wanted_sel);
+}
+static inline void HandlePageDown(void) {
+  int current_sel = g_SelectedIndex;
+  int wanted_sel = current_sel + PageUpDownLen;
+  if (wanted_sel >= g_TotalMatches) wanted_sel = g_TotalMatches;
+  UI_SetSelection(hListBox,wanted_sel - 1,g_SelectedIndex);
+  UI_LB_SetTopIndex(hListBox,current_sel);
 }
 
 #endif
