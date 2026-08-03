@@ -39,7 +39,6 @@ static inline void SetMode(EditorMode mode) {
         UpdateTextCaret(g_ActiveEditControl);
     }
     
-    extern HWND hPopupWnd;
     if (hPopupWnd != NULL && IsWindow(hPopupWnd)) {
         InvalidateRect(hPopupWnd, NULL, FALSE);
         UpdateWindow(hPopupWnd);

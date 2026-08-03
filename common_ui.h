@@ -506,17 +506,18 @@ static inline bool CheckAndBlockIfPopupActive(HWND hPopupWnd) {
 }
 static inline void UI_GetCurrentCursorPosition(HWND hEditControl, DWORD *start, DWORD *end) {
     if (start && end) {
-        UI_Edit_GetSel(hEditControl, start, end);
+        UI_Edit_GetSel(g_ActiveEditControl, start, end);
     }
 }
-static inline void UI_SetCursorPosition(HWND hEditControl,int position) {
-    UI_Edit_SetSel(hEditControl, position, position);
+static inline void UI_SetCursorPosition(HWND g_ActiveEditControl,int position) {
+    UI_Edit_SetSel(g_ActiveEditControl, position, position);
 }
-static inline char* UI_GetCurrentText(HWND hEditControl,char *text) {
-   GetWindowTextA(hEditControl, text, sizeof(text));
+static inline char* UI_GetCurrentText(HWND g_ActiveEditControl,char *text) {
+     GetWindowTextA(g_ActiveEditControl, text,sizeof(text));
 }
-static inline void UI_SetText(HWND hEditControl,char* text) {
-  SetWindowTextA(hEditControl,text);
+#define UI_GetCurrentText(edit, buffer) GetWindowTextA(edit, buffer, sizeof(buffer))
+static inline void UI_SetText(HWND g_ActiveEditControl,char* text) {
+      SetWindowTextA(g_ActiveEditControl,text);
 }
 static inline int UI_GetText(HWND hEdit, char* buffer, int bufferSize) {
     if (!hEdit || !buffer || bufferSize <= 0) return 0;

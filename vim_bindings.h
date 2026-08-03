@@ -25,7 +25,7 @@ static const MotionBinding G_VIM_BINDINGS[] = {
     { 'G',                HOTKEY_MOD_SHIFT, MOTION_MOVE_LISTBOX_END,       HandleMoveListboxEnd,     MODE_NORMAL, VIM_SCOPE_MODAL },
     { '0',                HOTKEY_MOD_NONE,  MOTION_MOVE_LINE_START,        HandleMoveLineStart,      MODE_NORMAL, VIM_SCOPE_ALL },
     { '4',                HOTKEY_MOD_SHIFT, MOTION_MOVE_LINE_END,          HandleMoveLineEnd,        MODE_NORMAL, VIM_SCOPE_ALL },
-    { 'Q',                HOTKEY_MOD_NONE,  MOTION_EXIT_WINDOW,            HandleExitWindow,         MODE_NORMAL, VIM_SCOPE_MODAL },
+    { 'Q',                HOTKEY_MOD_NONE,  MOTION_EXIT_WINDOW,            HandleExitWindow,         MODE_NORMAL, VIM_SCOPE_ALL },
     { 'W',                HOTKEY_MOD_NONE,  MOTION_MOVE_WORD_FORWARD,      HandleMoveWordForward,    MODE_NORMAL, VIM_SCOPE_ALL },
     { 'B',                HOTKEY_MOD_NONE,  MOTION_MOVE_WORD_BACKWARD,     HandleMoveWordBackward,   MODE_NORMAL, VIM_SCOPE_ALL },
     { EDIT_TEXT_KEY,      HOTKEY_MOD_NONE,  MOTION_SEND_EDIT,              HandleSendEdit,           MODE_NORMAL, VIM_SCOPE_MODAL },
