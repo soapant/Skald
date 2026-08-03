@@ -386,8 +386,7 @@ void CreateChildControls(HWND hwndParent, HFONT hFont, const char* list[], int c
 
 
 
-    if (count > 0) {
-
+    if (count >= 0) {
         hListBox = CreateWindowExA(
             0, "LISTBOX", "", 
             WS_CHILD | WS_VISIBLE | LBS_NODATA | LBS_OWNERDRAWFIXED,
@@ -420,7 +419,9 @@ void CreateChildControls(HWND hwndParent, HFONT hFont, const char* list[], int c
         ReleaseDC(hListBox, hdc);
         UI_SetHorizontalExtent(hListBox, max_width);
         
-        g_refresh_callback("", hListBox);
+        if (g_refresh_callback != NULL) {
+          g_refresh_callback("", hListBox);
+        }
     }
 }
 
