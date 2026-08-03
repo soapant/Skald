@@ -71,7 +71,7 @@ const int FontSize = 24;
 
 const int NumberFontSize = 18;
 
-const int PaddingForScrolling = 2;
+const int PaddingForScrolling = 3;
 
 const char* SowonPath = "D:\\Projects\\Tscoding Timer\\sowon\\sowon.exe";
 
@@ -102,6 +102,8 @@ const bool FullTextNeedsKeyPress = true;
 const bool MessagesEnabled = true;
 
 const bool RainbowText = true;
+
+const bool PixelHotkeys = false;
 
 
 
