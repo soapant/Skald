@@ -205,9 +205,9 @@ static inline void HandlePersistentDelete(void) {
     UI_Edit_KeyUp(g_ActiveEditControl, VK_DOWN);
     UI_Edit_KeyDown(g_ActiveEditControl, VK_UP);
     UI_Edit_KeyUp(g_ActiveEditControl, VK_UP);
-    if (g_refresh_callback != NULL) {
-      char buffer[100];
-      UI_GetCurrentText(g_ActiveEditControl,buffer);
+    char buffer[100];
+    UI_GetCurrentText(g_ActiveEditControl,buffer);
+    if (g_refresh_callback != NULL && strcmp(buffer,"") != 0) {
       g_refresh_callback(buffer,hListBox);
     }
     return;
@@ -364,7 +364,7 @@ static inline void HandleInsertControlEnter(void) {
 }
 
 static inline void HandleMoveWordForward(void) {
-    char text[512];
+    char text[256];
       
     UI_GetCurrentText(g_ActiveEditControl,text);
     
@@ -372,33 +372,18 @@ static inline void HandleMoveWordForward(void) {
     DWORD end = 0;
 
     UI_GetCurrentCursorPosition(g_ActiveEditControl, &start, &end);
-    
-    int pos = (int)start;
-    int len = (int)strlen(text);
+    int len = strlen(text);
 
-    if (len < (int)sizeof(text) - 1) {
-        text[len] = ' ';
-        text[len + 1] = '\0';
-        len++; 
-    }
-    
-    if (pos < len) {
-      for (int i = pos + 1; i < len; i++) {
-        if (text[i] != ' ') {
-          continue;
-        } else {
-          for (int j = i; j < len; j++) {
-            if (text[j] != ' ') {
-              UI_SetCursorPosition(g_ActiveEditControl,j);
-              break;
-            } else {
-              continue;
-            }
-          }
+    for (int i = start + 1;i <= len;i++) {
+        if (i == len) {
+          UI_SetCursorPosition(g_ActiveEditControl,len - 1);
           break;
         }
-      }
-  }
+        if (text[i] == ' ') {
+          UI_SetCursorPosition(g_ActiveEditControl,i + 1);
+          break;
+        }
+    }
 }
 
 static inline void HandleMoveWordBackward(void) {
@@ -412,9 +397,7 @@ static inline void HandleMoveWordBackward(void) {
     int pos = (int)start;
 
     for (int i = pos - 1; i >= -1; i--) {
-      
       char current_char = (i >= 0) ? text[i] : ' ';
-
       if (current_char != ' ') {
         continue;
       } else {
