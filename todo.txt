@@ -47,8 +47,6 @@ make the terminal command terminal doesnt close itself adfter the command is don
 snes games||[Research]
 for the ui settings it should be something like raycast settings||[Cprogram]|[DontForget]|[Research]
 strchar fucking exists bitch||[DontForget]
-flickering still exists when typing for some reason||[Cprogram]|[Bug]
 just add some simple toggle to stop the laptop from trying to turn of the screen||[Cprogram]|[Fun]
 you could dot he game you wanted in cpp using raylib or raw opengl||[Fun]|[Maybe]
-there should be a mode for hte program that disables certain keybindings so the user has more space||[Cprogram]|[Fun]
 fix the fucking mutli cursor to like do insert mode normal mode etc||[Bored]|[Nvim]
