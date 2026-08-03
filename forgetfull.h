@@ -113,10 +113,7 @@ static void forgetfull_ctrlenter_callback(const char* selection) {
         const char* item_to_remove = g_populated_cache[selected_index];
         RemoveTextFromFile(item_to_remove);
     } else {
-        char input[256];
-        UI_GetCurrentText(hEditControl, input);
-        SubjectiveMessageDisplay(input,70,3,COLOR_BG);
-        AddTextToFile(input);
+        AddTextToFile(selection);
         UI_SetText(hEditControl, "");
     }
     forgetfull_refresh_callback(NULL, hListBox);
