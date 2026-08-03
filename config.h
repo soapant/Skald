@@ -29,8 +29,8 @@
 #define MONITOR_FOCUS_SIDE  'H'
 #define REMINDER            'S'
 #define MUTE                'P'
-#define MUSIC_PLAYER_KEY        'P'
-#define VIDEO_VIEWER_KEY        'V'
+#define MUSIC_PLAYER_KEY    'P'
+#define VIDEO_VIEWER_KEY    'V'
 #define REPLICA             'R'
 #define KILL_MYPROGRAM      'M'
 #define WIFI_TOGGLE         'W'
@@ -48,6 +48,10 @@
 static bool TRAY = true;
 
 static char* EditPopUpPos = "middle";
+
+static int EditPopUpWidthMin = 400;
+
+static int PageUpDownLen = 6;
 
 static bool COLORFUL_MODE = false;
 
@@ -301,7 +305,10 @@ static const TagFormatConfig TODO_TAG_FORMAT = {
     X("-f",  NULL,               "Fun",              RGB(210, 9, 102), false) \
     X("-r",  NULL,               "Research",          RGB(235, 60, 235), false) \
     X("-ft",  NULL,              "Feature",         RGB(250, 205, 102), false) \
-    X("-g",  NULL,               "Bug",              RGB(250, 9, 2), false)
+    X("-c",  NULL,              "Change",         RGB(150, 105, 12), false) \
+    X("-my",  NULL,              "Maybe",         RGB(150, 5, 142), false) \
+    X("-bg",  NULL,               "Bug",              RGB(250, 9, 2), false)
+
 
 #define X(flag, label) {flag, label},
 static const TodoAliasEntry TODO_ALIAS_DICT[] = {

@@ -384,7 +384,7 @@ char* EditTextPopup(const char* initial_text, int centerX, int centerY, int maxW
     
     int padding = 30;
     int editHeight = 40;
-    int winWidth = textRect.right + padding + 20;
+    int winWidth = textRect.right + padding + EditPopUpWidthMin;
     int winHeight = textRect.bottom + padding + editHeight + 20;
     
     if (winWidth > maxWidth) winWidth = maxWidth;
