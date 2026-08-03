@@ -68,11 +68,11 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
                     UI_LB_SetCaretIndex(hListBox, sel, TRUE);
                     UI_SetSelection(hListBox, sel, old_sel);
                     
-                    int topIndex = (int)SendMessageA(hListBox, LB_GETTOPINDEX, 0, 0);
-                    
+                    int topIndex = UI_LB_GetTopIndex(hListBox);
+
                     RECT rect;
                     GetClientRect(hListBox, &rect);
-                    int itemHeight = (int)SendMessageA(hListBox, LB_GETITEMHEIGHT, 0, 0);
+                    int itemHeight = UI_LB_GetItemHeight(hListBox);
                     int visibleCount = (itemHeight > 0) ? (rect.bottom / itemHeight) : 16;
                     
                     if (sel >= topIndex + visibleCount - PaddingForScrolling) {
@@ -80,14 +80,14 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
                         if (newTop < 0) newTop = 0;
                         if (newTop + visibleCount > count) newTop = count - visibleCount;
                         if (newTop < 0) newTop = 0;
-                        SendMessageA(hListBox, LB_SETTOPINDEX, newTop, 0);
+                        UI_LB_SetTopIndex(hListBox,newTop);
                     }
                     else if (sel <= topIndex + PaddingForScrolling) {
                         int newTop = sel - PaddingForScrolling;
                         if (newTop < 0) newTop = 0;
                         if (newTop + visibleCount > count) newTop = count - visibleCount;
                         if (newTop < 0) newTop = 0;
-                        SendMessageA(hListBox, LB_SETTOPINDEX, newTop, 0);
+                        UI_LB_SetTopIndex(hListBox,newTop);
                     }
                 }
               }
@@ -874,8 +874,8 @@ LRESULT CALLBACK EditPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
             
             if (data->hEdit) {
                 first_key = true;
-                SendMessageA(data->hEdit, WM_SETFONT, (WPARAM)data->hFont, TRUE);
-                SendMessageA(data->hEdit, EM_SETSEL, 0, 0);
+                UI_Edit_SetFont(data->hEdit,data->hFont);
+                UI_Edit_SetSel(data->hEdit,0,0);
                 SetFocus(data->hEdit);
                 g_ActiveEditControl = data->hEdit;
                 
