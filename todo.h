@@ -260,13 +260,14 @@ static void todo_refresh_callback(const char* filter, HWND hListBox) {
     for (int i = 0; i < todo_count; i++) {
         items[i] = todo_lines[i];
     }
+
     PopulateListBox(hListBox, filter, items, todo_count, NULL);
 }
 
 static void todo_enter_callback(const char* selection) {
-    char input[256] = {0};
+    char input[256];
     if (hEditControl != NULL) {
-        UI_GetText(hEditControl, input, sizeof(input));
+        UI_GetCurrentText(hEditControl, input);
     }
     
     input[strcspn(input, "\r\n")] = '\0';
@@ -293,14 +294,15 @@ static void todo_ctrlenter_callback(const char* selection) {
         const char* item_to_remove = g_populated_cache[selected_index];
         RemoveTodoItemFromFile(item_to_remove);
     } else {
-        char input[256] = {0};
-        UI_GetText(hEditControl, input, sizeof(input));
+        char input[256];
+        UI_GetCurrentText(hEditControl, input);
         AddTodoToFile(input);
         UI_SetText(hEditControl, "");
     }
     todo_refresh_callback(NULL, hListBox);
     selection_complete = false;
 }
+
 static void todo_copy_callback(const char* selection,int true_index,int type) {
     char buffer[512];
     strncpy(buffer, selection, sizeof(buffer) - 1);

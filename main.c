@@ -37,7 +37,7 @@ HWND hListBox = NULL;
 HWND hDisplayMessage = NULL;
 HWND g_hEditPopup = NULL;
 EditPopupData* g_EditData = NULL;
-char output_buffer[256] = {0};
+char output_buffer[256];
 bool selection_complete = false;
 int region_step = 0; 
 long saved_x1 = 0;
@@ -502,9 +502,9 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
         }
 
         HWND hForeground = GetForegroundWindow();
-        char fgTitle[256] = {0};
+        char fgTitle[256];
         if (hForeground != NULL) {
-            UI_GetText(hForeground, fgTitle, sizeof(fgTitle));
+            UI_GetCurrentText(hForeground, fgTitle);
         }
 
         int pressed_vk = (int)pKeyInfo->vkCode;

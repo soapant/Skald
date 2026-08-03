@@ -351,6 +351,7 @@ extern COLORREF DisplayMessageText;
 #define COLOR_SELECTED_TEXT    RGB(70, 55, 90)
 #define COLOR_VISUAL_SELECTED_TEXT    RGB(48,25,52)
 #define TODO_FILE_PATH "todo.txt"
+#define FORGETFULL_FILE_PATH "forgetfull.txt"
 #define ID_TRAY_ICON 1001
 #define WM_TRAYICON (WM_USER + 1)
 #define WM_TRIGGER_UNIVERSAL_MACRO (WM_USER + 3)

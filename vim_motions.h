@@ -285,7 +285,12 @@ static inline void HandleEnterInsertOutEnd(void) {
   HandleEnterInsertOut();
 }
 static inline void HandleExitWindow(void) {
-  selection_complete = true;
+  if (g_hEditPopup) {
+    UI_Edit_KeyDown(g_ActiveEditControl, VK_ESCAPE);
+    UI_Edit_KeyUp(g_ActiveEditControl, VK_ESCAPE);
+  } else {
+    selection_complete = true;
+  }
 }
 
 
@@ -354,7 +359,7 @@ static inline void HandleInsertControlEnter(void) {
   if (UI_IsListBoxSelected()) {
     snprintf(text,sizeof(text),"%s",g_populated_cache[g_SelectedIndex]);
   } else {
-    UI_GetText(hEditControl,text,sizeof(text));
+    UI_GetCurrentText(g_ActiveEditControl,text);
   }
   printf("TRYING TO DO CTRL ENTER WITH TEXT %s \n",text);
   if (g_ctrl_enter_callback != NULL) {
@@ -478,8 +483,8 @@ static inline void HandleSendCopyControl(void) {
 static inline void HandleCopyToSearch(void) {
   if (UI_IsListBoxSelected()) {
     char* text = g_populated_cache[g_SelectedIndex];
-    UI_SetText(hEditControl,text);
-    UI_SetCursorPosition(hEditControl,strlen(text));
+    UI_SetText(g_ActiveEditControl,text);
+    UI_SetCursorPosition(g_ActiveEditControl,strlen(text));
   }
 }
 static inline void HandleToggleHistory(void) {
@@ -500,8 +505,8 @@ static inline void HandleShowFullText(void) {
 }
 
 void SearchTextForward(int key) {
-  char text[512] = {0};
-  UI_GetText(g_ActiveEditControl, text, sizeof(text));
+  char text[512];
+  UI_GetCurrentText(g_ActiveEditControl, text);
   DWORD start_pos, end_pos;
   UI_Edit_GetSel(g_ActiveEditControl, &start_pos, &end_pos);
   int cursor = (int)start_pos;
@@ -515,8 +520,8 @@ void SearchTextForward(int key) {
   }
 }
 void SearchTextBackward(int key) {
-  char text[512] = {0};
-  UI_GetText(g_ActiveEditControl, text, sizeof(text));
+  char text[512];
+  UI_GetCurrentText(g_ActiveEditControl, text);
   DWORD start_pos, end_pos;
   UI_Edit_GetSel(g_ActiveEditControl, &start_pos, &end_pos);
   int cursor = (int)start_pos;
@@ -543,8 +548,8 @@ static inline void HandleSearchTextBackward(void) {
 }
 static inline void HandleDeleteTillEnd(void) {
   if (g_SelectedIndex == -1) {
-      char text[512] = {0};
-      UI_GetText(g_ActiveEditControl, text, sizeof(text));
+      char text[512];
+      UI_GetCurrentText(g_ActiveEditControl, text);
       DWORD start_pos, end_pos;
       UI_Edit_GetSel(g_ActiveEditControl, &start_pos, &end_pos);
       int cursor = (int)start_pos;
