@@ -303,13 +303,14 @@ static const TagFormatConfig TODO_TAG_FORMAT = {
     X("-l",  NULL,               "Learning",         RGB(166, 227, 161), false) \
     X("-b",  NULL,               "Bored",            RGB(203, 166, 247), false) \
     X("-d",  NULL,               "DontForget",       RGB(255, 109, 108), false) \
+    X("-bg",  NULL,              "Bug",              RGB(255, 209, 254), false) \
     X("-v",  NULL,               "Nvim",             RGB(57, 235, 20), false) \
     X("-f",  NULL,               "Fun",              RGB(210, 9, 102), false) \
-    X("-r",  NULL,               "Research",          RGB(235, 60, 235), false) \
-    X("-ft",  NULL,              "Feature",         RGB(250, 205, 102), false) \
-    X("-c",  NULL,              "Change",         RGB(150, 105, 12), false) \
-    X("-my",  NULL,              "Maybe",         RGB(150, 5, 142), false) \
-    X("-bg",  NULL,               "Bug",              RGB(250, 9, 2), false)
+    X("-r",  NULL,               "Research",         RGB(235, 60, 235), false) \
+    X("-C",  NULL,               "Cool",             RGB(15, 60, 235), false) \
+    X("-ft",  NULL,              "Feature",          RGB(250, 205, 102), false) \
+    X("-c",  NULL,              "Change",            RGB(150, 105, 12), false) \
+
 
 
 #define X(flag, label) {flag, label},

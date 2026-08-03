@@ -49,8 +49,9 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
                         if (wParam == VK_DOWN) {
                             sel = 0;
                         } else if (wParam == VK_UP) {
-                            GetFromHistory();
-                            sel = 0;
+                            if (GetFromHistory()) {
+                              sel = 0;
+                            }
                         }
                     } else if (sel == 0 && wParam == VK_UP) {
                         sel = -1;
