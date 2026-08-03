@@ -334,9 +334,9 @@ static void reminder_enter_callback(const char* selection) {
     }
     
     if (selected_index == LB_ERR) {
-        char input[256] = {0};
+        char input[256];
         if (hEditControl != NULL) {
-            UI_GetText(hEditControl, input, sizeof(input));
+            UI_GetCurrentText(hEditControl, input);
             if (strlen(input) > 0) {
                 FileAppend(ReminderHistoryFile, input);
                 FileAppend(ReminderHistoryFile, "\n");

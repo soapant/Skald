@@ -6,6 +6,7 @@
 #include <string.h>
 #include <shlwapi.h>
 #include "config.h"
+#include "common_ui.h"
 
 static void FocusWindow(HWND hwnd) {
 
@@ -100,7 +101,7 @@ typedef struct {
 static BOOL CALLBACK FindWindowByPartialTitleProc(HWND hwnd, LPARAM lParam) {
     FindWindowSomething* data = (FindWindowSomething*)lParam;
     char window_title[256];
-    UI_GetText(hwnd, window_title, sizeof(window_title));
+    UI_GetCurrentText(hwnd, window_title);
     
     if (IsWindowVisible(hwnd) && StrStrIA(window_title, data->search_title) != NULL) {
         data->result = hwnd;
@@ -139,7 +140,7 @@ static HWND FindAnyWindow(const char* titles[], int count) {
         hwnd = FindWindowByPartialTitle(titles[i]);
         if (hwnd != NULL && IsWindow(hwnd) && IsWindowVisible(hwnd)) {
             char window_title[256];
-            UI_GetText(hwnd, window_title, sizeof(window_title));
+            UI_GetCurrentText(hwnd, window_title);
             printf("[FOCUS-DEBUG] FOUND (partial): \"%s\" (HWND: %p)\n", window_title, (void*)hwnd);
             return hwnd;
         }

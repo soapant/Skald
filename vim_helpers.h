@@ -6,8 +6,8 @@
 static inline void DeleteCharUnderCursor(void) {
     if (!g_ActiveEditControl || !IsWindow(g_ActiveEditControl)) return;
     
-    char text[512] = {0};
-    UI_GetText(g_ActiveEditControl, text, sizeof(text));
+    char text[512];
+    UI_GetCurrentText(g_ActiveEditControl, text);
     DWORD start, end;
     UI_Edit_GetSel(g_ActiveEditControl, &start, &end);
     
@@ -81,8 +81,8 @@ static inline void DeleteInsideDelimiter(char open_char, char close_char, bool k
         return;
     }
     
-    char text[512] = {0};
-    UI_GetText(g_ActiveEditControl, text, sizeof(text));
+    char text[512];
+    UI_GetCurrentText(g_ActiveEditControl, text);
     int len = (int)strlen(text);
     
     DWORD start_pos, end_pos;
@@ -196,8 +196,8 @@ static inline void DeleteInsideDelimiter(char open_char, char close_char, bool k
 static inline void DeleteInnerWord(bool keep_mode) {
     if (!g_ActiveEditControl || !IsWindow(g_ActiveEditControl)) return;
     
-    char text[512] = {0};
-    UI_GetText(g_ActiveEditControl, text, sizeof(text));
+    char text[512];
+    UI_GetCurrentText(g_ActiveEditControl, text);
     int len = (int)strlen(text);
     
     DWORD start_pos, end_pos;
