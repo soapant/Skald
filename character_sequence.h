@@ -127,8 +127,8 @@ static inline void DeleteLastTypedChar(void) {
         return;
     }
     
-    char text[512] = {0};
-    UI_GetText(g_ActiveEditControl, text, sizeof(text));
+    char text[512];
+    UI_GetCurrentText(g_ActiveEditControl, text);
     int len = (int)strlen(text);
     
     DWORD start, end;

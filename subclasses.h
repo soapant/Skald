@@ -101,7 +101,7 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
             if (g_SelectedIndex != -1) {
                 strncpy(output_buffer, g_populated_cache[g_SelectedIndex], sizeof(output_buffer) - 1);
             } else {
-                UI_GetText(hwnd, output_buffer, sizeof(output_buffer));
+                UI_GetCurrentText(hwnd, output_buffer);
             }
             SaveFeatureHistory(output_buffer);
             if (hDisplayMessage != NULL) {
@@ -151,7 +151,7 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
             if (g_SelectedIndex != -1) {
                 strncpy(output_buffer, g_populated_cache[g_SelectedIndex], sizeof(output_buffer) - 1);
             } else {
-                UI_GetText(hwnd, output_buffer, sizeof(output_buffer));
+                UI_GetCurrentText(hwnd, output_buffer);
             }
             if (ctrl_pressed && IsInsertMode()){
                 if (g_edit_callback != NULL) {
@@ -223,7 +223,7 @@ LRESULT CALLBACK SimpleEditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPAR
             return DefSubclassProc(hwnd, msg, wParam, lParam);
         }
         if (wParam == VK_RETURN) {
-            UI_GetText(hEditControl, output_buffer, sizeof(output_buffer));
+            UI_GetCurrentText(hEditControl, output_buffer);
             
             selection_complete = true; 
             
@@ -402,8 +402,8 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 }
 
                 if (hEditControl && hListBox) {
-                    char input_buffer[256] = {0};
-                    UI_GetText(hEditControl, input_buffer, sizeof(input_buffer));
+                    char input_buffer[256];
+                    UI_GetCurrentText(hEditControl, input_buffer);
                     if (g_refresh_callback != NULL) {
                         g_refresh_callback(input_buffer, hListBox);
                     }
