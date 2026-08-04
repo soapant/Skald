@@ -66,5 +66,3 @@ is there a way to only compile changed shit ||[Research]||[DontForget]
 use nob in the progarm holy fucking shit this is some op shit||[Cprogram]|[DontForget]|[Fun]
 the fucking sequence mapping is inconsistent as fuck dont konw wjy tho||[Cprogram]|[Bug]
 this one is a big maybe but you can port all the string / flaging to use flag.h and string builder from tsoding||[Cprogram]|[Maybe]|[Fun]
-do the numbers offset for more than 100 itesm||[Cprogram]|[DontForget]
-code
