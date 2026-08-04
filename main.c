@@ -41,6 +41,7 @@ HWND hListBox = NULL;
 HWND hDisplayMessage = NULL;
 HWND hSettings = NULL;
 HWND g_hEditPopup = NULL;
+HWND g_hSearchPopup = NULL;
 EditPopupData* g_EditData = NULL;
 char output_buffer[256];
 bool selection_complete = false;
@@ -535,6 +536,77 @@ char* EditTextPopup(const char* initial_text, int centerX, int centerY, int maxW
     return result;
 }
 
+char* SearchPopup() {
+    HINSTANCE hInstance = GetModuleHandle(NULL);
+    int index = g_SelectedIndex;
+    int winWidth = 280;
+    int winHeight = 80;
+    
+    if (g_hSearchPopup && IsWindow(g_hEditPopup)) {
+        DestroyWindow(g_hSearchPopup);
+        g_hSearchPopup = NULL;
+    }
+    
+    HDC hdc = GetDC(NULL);
+    HFONT hFont = CreateCustomNerdFont(FontSize, UsedFont);
+    HFONT hOldFont = (HFONT)SelectObject(hdc, hFont);
+    
+    RECT textRect = {0, 0, winWidth - 40, winHeight - 60};
+    DrawTextA(hdc, "", -1, &textRect, DT_LEFT | DT_WORDBREAK | DT_CALCRECT);
+    
+    SelectObject(hdc, hOldFont);
+    DeleteObject(hFont);
+    ReleaseDC(NULL, hdc);
+    
+    int topLeftX = 1270 - (winWidth / 2);
+    int topLeftY = 920 - (winHeight / 2);
+    
+    HWND hPopupWnd = CreateWindowExA(
+        WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED | WS_EX_NOACTIVATE,
+        "SearchPopupClass", NULL, WS_POPUP,
+        topLeftX, topLeftY, winWidth, winHeight,
+        NULL, NULL, hInstance, NULL
+    );
+    
+    if (hPopupWnd == NULL) {
+        printf("[ERROR] SearchPopup creation failed\n");
+        DeleteObject(hFont);
+        free(hFont);
+        return NULL;
+    }
+    
+    g_hSearchPopup = hPopupWnd;
+    
+    SetLayeredWindowAttributes(hPopupWnd, 0, 255, LWA_ALPHA);
+    
+    ShowWindow(hPopupWnd,SW_SHOWNOACTIVATE);
+    UpdateWindow(hPopupWnd);
+    
+    UpdateTextCaret(g_ActiveEditControl);
+
+    SetTimer(hPopupWnd, 999, 50, NULL);
+    
+    MSG msg;
+    while (IsWindow(hPopupWnd)) {
+        if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
+    }
+    
+    char* result = NULL;
+    
+    if (hPopupWnd && IsWindow(hPopupWnd)) {
+        DestroyWindow(hPopupWnd);
+    }
+
+    g_hSearchPopup = NULL;
+    g_SelectedIndex = index;
+
+    
+    return result;
+}
+
 HHOOK hKeyboardHook = NULL;
 #include <shlwapi.h>
 #pragma comment(lib, "Shlwapi.lib")
@@ -601,21 +673,23 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
         }
         TimerEnd(timer, "ProcessHotkey");
 
-        WinTimer timer1 = TimerStart();
         if (shift_down && !IsInsertMode() && hPopupWnd != NULL) {
-          if (pressed_vk == COMMAND_MODE_KEY) {
-            char* output = EditTextPopup("", 960, 540, 1000, 300);
-            if (output) {
-              TimerEnd(timer1, "EditTextPopup (with output)");
-              HandleCommandExecution(output);
-              TimerEnd(timer1, "HandleCommandExecution");
-            } else {
-              TimerEnd(timer1, "EditTextPopup (no output)");
+          if (!g_hEditPopup) {
+            if (pressed_vk == COMMAND_MODE_KEY) {
+              char* output = EditTextPopup("", 960, 540, 1000, 300);
+              if (output) {
+                HandleCommandExecution(output);
+              } else {
+              }
+              return 1;
             }
-            return 1;
           }
         }
-        TimerEnd(timer1, "CommandModeCheck");
+        if (!g_hSearchPopup && hPopupWnd) {
+            if (pressed_vk == SEARCH_PROGRAM_KEY) {
+              SearchPopup();
+            }
+        }
 
         WinTimer timer2 = TimerStart();
         if (ctrl_down) {
@@ -764,6 +838,7 @@ int main() {
     wcFade.hCursor = LoadCursor(NULL, IDC_ARROW);
     wcFade.hbrBackground = (HBRUSH)(COLOR_BACKGROUND + 1); 
     wcFade.lpszClassName = "DisplayMessageModalClass";
+    RegisterClassA(&wcFade);
 
     WNDCLASSA editPopupWc = {0};
     editPopupWc.lpfnWndProc = EditPopupProc;
@@ -772,6 +847,14 @@ int main() {
     editPopupWc.hbrBackground = CreateSolidBrush(COLOR_BG);
     editPopupWc.lpszClassName = "EditPopupClass";
     RegisterClassA(&editPopupWc);
+
+    WNDCLASSA searchPopupWc = {0};
+    searchPopupWc.lpfnWndProc = SearchPopupProc;
+    searchPopupWc.hInstance = GetModuleHandle(NULL);
+    searchPopupWc.hCursor = LoadCursor(NULL, IDC_ARROW);
+    searchPopupWc.hbrBackground = CreateSolidBrush(COLOR_BG);
+    searchPopupWc.lpszClassName = "SearchPopupClass";
+    RegisterClassA(&searchPopupWc);
     
     WNDCLASSA settingsPopupWc = {0};
     settingsPopupWc.lpfnWndProc = SettingsPopupProc;

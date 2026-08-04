@@ -878,10 +878,8 @@ LRESULT CALLBACK EditPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
         data = (EditPopupData*)GetWindowLongPtrA(hWnd, GWLP_USERDATA);
     }
     if (uMsg == WM_CHAR) {
-        printf("[EditPopupSubclass] WM_CHAR: char=%d, first_key=%d\n", (int)wParam,first_key);
         if (first_key) {
             first_key = false;
-            printf("[EditPopupSubclass] SWALLOWING WM_CHAR\n");
             return 0;
         }
     }
@@ -909,6 +907,34 @@ LRESULT CALLBACK EditPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
             DestroyWindow(GetParent(hWnd));
             UI_Redraw(hListBox);
 
+            return 0;
+        }
+    }
+    return DefSubclassProc(hWnd, uMsg, wParam, lParam);
+}
+
+LRESULT CALLBACK SearchPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
+    if (uMsg == WM_CHAR) {
+        if (first_key) {
+            first_key = false;
+            return 0;
+        }
+    }
+    else if (uMsg == WM_KEYDOWN) {
+        if (wParam == VK_ESCAPE) {
+            DestroyWindow(GetParent(hWnd));
+            first_key = true;
+            UI_Redraw(hListBox);
+            return 0;
+        }
+        if (wParam == VK_RETURN) {
+            if (GetKeyState(VK_SHIFT) & 0x8000) {
+                return DefSubclassProc(hWnd, uMsg, wParam, lParam);
+            }
+            printf("[SearchPopup] Enter pressed\n");
+            char buffer[2048] = {0};
+            DestroyWindow(GetParent(hWnd));
+            UI_Redraw(hListBox);
             return 0;
         }
     }
@@ -1018,6 +1044,114 @@ LRESULT CALLBACK EditPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
                 SetWindowLongPtrA(hwnd, GWLP_USERDATA, 0);
             }
             ForceWindowFocus(hPopupWnd, hEditControl);
+            SetMode(MODE_NORMAL);
+            UpdateTextCaret(hEditControl);
+            break;
+        }
+    }
+    return DefWindowProcA(hwnd, msg, wParam, lParam);
+}
+
+LRESULT CALLBACK SearchPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+
+    HFONT hFont = CreateCustomNerdFont(FontSize, UsedFont);
+    switch (msg) {
+        case WM_NCCREATE: {
+            CREATESTRUCTA* cs = (CREATESTRUCTA*)lParam;
+            SetWindowLongPtrA(hwnd, GWLP_USERDATA, (LONG_PTR)cs->lpCreateParams);
+            return DefWindowProcA(hwnd, msg, wParam, lParam);
+        }
+        
+        case WM_CREATE: {
+            HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtrA(hwnd, GWLP_HINSTANCE);
+            RECT rect;
+            GetClientRect(hwnd, &rect);
+            
+            int modeHeight = 30;
+
+            g_hSearchPopup = CreateWindowExA(
+                0, "EDIT","",
+                WS_CHILD | WS_VISIBLE | ES_LEFT | ES_MULTILINE,
+                5, modeHeight + 5,
+                rect.right - 10, rect.bottom - modeHeight - 10,
+                hwnd, (HMENU)1001, hInstance, NULL
+            );
+            if (g_hSearchPopup) {
+                first_key = true;
+                UI_Edit_SetFont(g_hSearchPopup,hFont);
+                UI_Edit_SetSel(g_hSearchPopup,0,0);
+                SetFocus(g_hSearchPopup);
+                g_ActiveEditControl = g_hSearchPopup;
+
+                SetWindowLongPtrA(g_hSearchPopup, GWLP_USERDATA,1);
+                SetWindowSubclass(g_hSearchPopup, SearchPopupSubclassProc, 0,1);
+            }
+            break;
+        }
+        
+        case WM_CTLCOLOREDIT: {
+            HDC hdc = (HDC)wParam;
+            SetTextColor(hdc, COLOR_TEXT);
+            SetBkColor(hdc, COLOR_BG);
+            static HBRUSH hBrush = NULL;
+            if (!hBrush) hBrush = CreateSolidBrush(COLOR_BG);
+            return (LRESULT)hBrush;
+        }
+        
+        case WM_PAINT: {
+            PAINTSTRUCT ps;
+            HDC hdc = BeginPaint(hwnd, &ps);
+            RECT rect;
+            GetClientRect(hwnd, &rect);
+            HBRUSH hBgBrush = CreateSolidBrush(COLOR_BG);
+            FillRect(hdc, &rect, hBgBrush);
+            DeleteObject(hBgBrush);
+            
+            if (g_vim_mode != NULL) {
+                wchar_t wmode[256];
+                MultiByteToWideChar(CP_UTF8, 0, g_vim_mode, -1, wmode, 256);
+                
+                HFONT hOldFont = (HFONT)SelectObject(hdc, g_hMainFont);
+                SetBkMode(hdc, TRANSPARENT);
+                
+                COLORREF modeColor;
+                if (g_current_mode == MODE_NORMAL) {
+                    modeColor = RGB(100, 255, 255);
+                } else if (g_current_mode == MODE_INSERT) {
+                    modeColor = RGB(50, 255, 50);
+                } else {
+                    modeColor = RGB(200, 3, 222);
+                }
+                SetTextColor(hdc, modeColor);
+                
+                RECT modeRect;
+                modeRect.left = 8;
+                modeRect.top = 4;
+                modeRect.right = rect.right - 8;
+                modeRect.bottom = 28;
+                
+                DrawTextW(hdc, wmode, -1, &modeRect, DT_LEFT | DT_TOP);
+                
+                SelectObject(hdc, hOldFont);
+                
+                HPEN hPen = CreatePen(PS_SOLID, 1, RGB(60, 65, 75));
+                HPEN hOldPen = (HPEN)SelectObject(hdc, hPen);
+                MoveToEx(hdc, 5, 30, NULL);
+                LineTo(hdc, rect.right - 5, 30);
+                SelectObject(hdc, hOldPen);
+                DeleteObject(hPen);
+            }
+            
+            EndPaint(hwnd, &ps);
+            return 0;
+        }
+        
+        case WM_DESTROY: {
+            g_ActiveEditControl = hEditControl;
+            DeleteObject(hFont);
+            SetWindowLongPtrA(hwnd, GWLP_USERDATA, 0);
+            ForceWindowFocus(hPopupWnd, hEditControl);
+            SetMode(MODE_NORMAL);
             UpdateTextCaret(hEditControl);
             break;
         }
