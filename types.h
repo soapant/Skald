@@ -5,7 +5,7 @@
 #include <stdbool.h>
 #include <string.h>
 
-#define MAX_VISIBLE_ITEMS 1010
+#define MAX_VISIBLE_ITEMS 100
 
 typedef void (*RefreshCallback)(const char* filter, HWND hListBox);
 typedef void (*EnterCallback)(const char* selection);

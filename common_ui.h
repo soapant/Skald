@@ -392,8 +392,6 @@ void SimpleCreateChildControls(HWND hwndParent, HFONT hFont, const char* string,
         SendMessage(hListBox, LB_SETCURSEL, (WPARAM)-1, 0);
         UpdateWindow(hListBox); 
         
-        GdiFlush(); 
-        
         SelectObject(hdc, hOldFont);
         ReleaseDC(hListBox, hdc);
         
@@ -507,8 +505,6 @@ void CreateChildControls(HWND hwndParent, HFONT hFont, const char* list[], int c
         
         UI_Redraw(hListBox);
         UpdateWindow(hListBox); 
-        
-        GdiFlush(); 
         
         SelectObject(hdc, hOldFont);
         ReleaseDC(hListBox, hdc);

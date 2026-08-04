@@ -181,13 +181,27 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
         return NULL;
     }
 
+    TimerEnd(timer,"Window Init");
+
+    WinTimer timer1 = TimerStart();
+
+
     CreateChildControls(hPopupWnd, hCustomFont, window_list, count, &layout);
+
+    TimerEnd(timer1,"CreateChildControl");
     
+    WinTimer timer2 = TimerStart();
+
     SetLayeredWindowAttributes(hPopupWnd, 0, 245, LWA_ALPHA);
+
+    TimerEnd(timer2,"WindowBs");
+
+    WinTimer timer3 = TimerStart();
 
     ForceWindowFocus(hPopupWnd, hEditControl);
 
-    TimerEnd(timer,"Window Init");
+
+    TimerEnd(timer3,"Focus");
 
     printf("[DEBUG-UI] Entering local message modal loop...\n");
     MSG msg;
