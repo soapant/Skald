@@ -575,8 +575,6 @@ char* SearchPopup() {
         return NULL;
     }
     
-    g_hSearchPopup = hPopupWnd;
-    
     SetLayeredWindowAttributes(hPopupWnd, 0, 255, LWA_ALPHA);
     
     ShowWindow(hPopupWnd,SW_SHOWNOACTIVATE);
