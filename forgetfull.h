@@ -96,7 +96,7 @@ static void forgetfull_edit_callback(const char* selection) {
 }
 
 static void forgetfull_ctrlenter_callback(const char* selection) {
-    if (!UI_IsListBoxSelected()) {
+    if (UI_IsListBoxSelected()) {
         RemoveTextFromFile(selection);
     } else {
         AddTextToFile(selection);

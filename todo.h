@@ -286,7 +286,7 @@ static void todo_enter_callback(const char* selection) {
 }
 
 static void todo_ctrlenter_callback(const char* selection) {
-    if (!UI_IsListBoxSelected()) {
+    if (UI_IsListBoxSelected()) {
         RemoveTodoItemFromFile(selection);
     } else {
         AddTodoToFile(selection);
