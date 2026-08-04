@@ -76,7 +76,7 @@ const int NumberFontSize = 18;
 
 const int PaddingForScrolling = 3;
 
-const char* SowonPath = "D:\\Projects\\Tscoding Timer\\sowon\\sowon.exe";
+const char* TimerPath = "D:\\Projects\\Tscoding Timer\\sowon\\sowon.exe";
 
 const char* MusicPlayerPath = "D:\\Projects\\Music Player\\music_player.exe";
 
