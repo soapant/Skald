@@ -18,3 +18,4 @@ nvim
 ded
 bin
 repos
+sof

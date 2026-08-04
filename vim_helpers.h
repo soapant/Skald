@@ -45,7 +45,8 @@ static inline const char* GoToFirstListBoxItem(void) {
     g_view_offset = 0;
 
     UI_SetSelection(hListBox,0,g_SelectedIndex);
-    UI_LB_SetTopIndex(hListBox,0);
+    UI_LB_SetTopIndex(hListBox,1);
+
     return g_populated_cache[0];
 }
 
