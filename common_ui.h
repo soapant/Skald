@@ -457,7 +457,6 @@ static inline void UI_Redraw(HWND hListBox) {
     if (g_refresh_callback != NULL) {
           char buffer[128];
           UI_GetCurrentText(hEditControl,buffer);
-          printf("REFRESHING WITH TEXT %s \n",buffer);
           g_refresh_callback(buffer,hListBox);
     }
 }
