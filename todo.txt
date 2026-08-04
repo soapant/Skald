@@ -56,3 +56,4 @@ for some reason when i ctrl v something into the editcontrol it doesnt let me se
 it shouldnt try and filter in hte time its waiting for the next sequence||[Cprogram]
 when you remove a string in any of the text history thingies it removes every instance of it||[Cprogram]|[Bug]
 the applauncher should refresh teh cache every few minutes||[Cprogram]
+why the fuck is universal macro baked in the procedure||[Cprogram]

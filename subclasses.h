@@ -35,15 +35,12 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
         }
         
         if (wParam >= '0' && wParam <= '9') {
-            if (ctrl_pressed && !shift_pressed) {
-              HandleNumberShortcut(wParam, hListBox, hEditControl,false);
-              return 0;
-            }
-            if (shift_pressed && ctrl_pressed) {
-              HandleNumberShortcut(wParam, hListBox, hEditControl,true);
+            if (ctrl_pressed) {
+              HandleNumberShortcut(wParam, hListBox, hEditControl);
               return 0;
             }
         }
+
 
         if (!ctrl_pressed) {
           if (wParam == VK_UP || wParam == VK_DOWN) {
@@ -399,11 +396,10 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             int wmId   = LOWORD(wParam);
             int wmEvent = HIWORD(wParam);
 
-            if (wmId == IDC_INPUT_BOX) {
+            if (wmId == IDC_INPUT_BOX || wmId == EN_CHANGE) {
                 if (GetKeyState(VK_UP) & 0x8000 || 
                     GetKeyState(VK_DOWN) & 0x8000 || 
                     GetKeyState(VK_RETURN) & 0x8000 ||
-                    GetKeyState(VK_CONTROL) & 0x8000 ||
                     GetKeyState(VK_ESCAPE) & 0x8000) 
                 {
                     break;
@@ -1074,7 +1070,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             int macroDelay = (int)lParam;
             
             printf("[MACRO-WNDPROC] Received action=%d, delay=%d\n", macroAction, macroDelay);
-            
             
             for (int i = 0; i < MACRO_BINDING_COUNT; i++) {
                 if (G_MACRO_BINDINGS[i].action_id == macroAction && 

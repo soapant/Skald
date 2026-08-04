@@ -311,7 +311,7 @@ static const TagFormatConfig TODO_TAG_FORMAT = {
     X("-v",  NULL,               "Nvim",             RGB(57, 235, 20), false) \
     X("-f",  NULL,               "Fun",              RGB(210, 9, 102), false) \
     X("-r",  NULL,               "Research",         RGB(235, 60, 235), false) \
-    X("-C",  NULL,               "Cool",             RGB(15, 60, 235), false) \
+    X("-u",  NULL,               "Urgent",             RGB(255, 0, 35), false) \
     X("-ft",  NULL,              "Feature",          RGB(250, 205, 102), false) \
     X("-c",  NULL,              "Change",            RGB(150, 105, 12), false) \
 
