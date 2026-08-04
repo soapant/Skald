@@ -1065,22 +1065,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             }
             break;
         }
-        case WM_TRIGGER_UNIVERSAL_MACRO: {
-            MacroAction macroAction = (MacroAction)wParam;
-            int macroDelay = (int)lParam;
-            
-            printf("[MACRO-WNDPROC] Received action=%d, delay=%d\n", macroAction, macroDelay);
-            
-            for (int i = 0; i < MACRO_BINDING_COUNT; i++) {
-                if (G_MACRO_BINDINGS[i].action_id == macroAction && 
-                    G_MACRO_BINDINGS[i].handler != NULL) {
-                    G_MACRO_BINDINGS[i].handler();  
-                    break;
-                }
-            }
-            break;
-        }
-        
         case WM_COMMAND: {
             if (LOWORD(wParam) == ID_EXIT) {
                 PostQuitMessage(0);
