@@ -76,15 +76,14 @@ static void forgetfull_refresh_callback(const char* filter, HWND hListBox) {
 }
 
 static void forgetfull_enter_callback(const char* selection) {
-    if (!UI_IsListBoxSelected()) {
+    if (UI_IsListBoxSelected()) {
         RemoveTextFromFile(selection);
-        forgetfull_refresh_callback(selection, hListBox);
     } 
     else {
         AddTextToFile(selection);
         UI_SetText(hEditControl, "");
-        forgetfull_refresh_callback("", hListBox);
     }
+    UI_Redraw(hListBox);
 }
 static void forgetfull_edit_callback(const char* selection) {
     char* NewForgetFullName = EditTextPopup(selection, 960, 540, 1000, 300);

@@ -39,10 +39,12 @@ HWND hPopupWnd = NULL;
 HWND hEditControl = NULL;
 HWND hListBox = NULL;
 HWND hDisplayMessage = NULL;
+HWND hSettings = NULL;
 HWND g_hEditPopup = NULL;
 EditPopupData* g_EditData = NULL;
 char output_buffer[256];
 bool selection_complete = false;
+bool setting_complete = false;
 int region_step = 0; 
 long saved_x1 = 0;
 long saved_y1 = 0;
@@ -179,8 +181,6 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
 
     if (hPopupWnd == NULL) {
         DWORD err = GetLastError();
-        if (err == 1407) {
-        }
         DeleteObject(hCustomFont);
         return NULL;
     }
@@ -379,6 +379,66 @@ char* DisplayMessage(const char* message, int centerX, int centerY, int maxWidth
     SetTimer(hPopupWnd, 999, 50, NULL);
     
     return NULL; 
+}
+
+void SettingsPopUp() {
+    HINSTANCE hInstance = GetModuleHandle(NULL);
+    int height = 700;
+    int width = 900;
+    int item_height = 32;
+    
+    SetMode(MODE_INSERT);
+
+    WindowLayout layout;
+    CalculateWindowMetrics(1, &layout, height, width, item_height);
+    g_current_window_height = layout.h;
+    g_current_window_width = layout.w;
+    
+    HFONT hCustomFont = CreateCustomNerdFont(FontSize, UsedFont);
+
+    HWND hPopupWnd = CreateWindowExA(
+        WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED | WS_EX_COMPOSITED,
+        "SettingsPopupClass", NULL, WS_POPUP | WS_CLIPCHILDREN, 
+        510, 210, width, height, NULL, NULL, hInstance, NULL
+    );
+
+    if (hPopupWnd == NULL) {
+        DWORD err = GetLastError();
+        printf("CreateWindowExA failed: %lu\n", err);
+        DeleteObject(hCustomFont);
+        return;
+    }
+    
+    SetTimer(hPopupWnd, 999, 50, NULL);
+    
+    // SettingsCreateChildControls(hPopupWnd, hCustomFont);
+    
+    SetLayeredWindowAttributes(hPopupWnd, 0, 245, LWA_ALPHA);
+
+    ForceWindowFocus(hPopupWnd, hEditControl);
+    
+    MSG msg;
+    while (!setting_complete) {
+        if (GetMessage(&msg, NULL, 0, 0)) {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        } else {
+            break; 
+        }
+    }
+
+    if (hPopupWnd != NULL && IsWindow(hPopupWnd)) { 
+        KillTimer(hPopupWnd, 999);
+        DestroyWindow(hPopupWnd);
+        hPopupWnd = NULL;
+    }
+    
+    while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+    }
+
+    DeleteObject(hCustomFont); 
 }
 
 char* EditTextPopup(const char* initial_text, int centerX, int centerY, int maxWidth, int maxHeight) {
@@ -707,7 +767,7 @@ int main() {
     } else {
         printf("[SYSTEM-BOOT] CRITICAL WARNING: Failed to register window class! Error: %lu\n", GetLastError());
     }
-    // NEW: Register your dedicated standalone notification class
+
     WNDCLASSA wcFade = {0};
     wcFade.lpfnWndProc = DisplayMessageProc;
     wcFade.hInstance = GetModuleHandle(NULL);
@@ -715,11 +775,6 @@ int main() {
     wcFade.hbrBackground = (HBRUSH)(COLOR_BACKGROUND + 1); 
     wcFade.lpszClassName = "DisplayMessageModalClass";
 
-    if (RegisterClassA(&wcFade)) {
-        printf("[SYSTEM-BOOT] DisplayMessageClass registered successfully with OS.\n");
-    } else {
-        printf("[SYSTEM-BOOT] WARNING: Failed to register FadeNotificationClass! Error: %lu\n", GetLastError());
-    }
     WNDCLASSA editPopupWc = {0};
     editPopupWc.lpfnWndProc = EditPopupProc;
     editPopupWc.hInstance = GetModuleHandle(NULL);
@@ -728,11 +783,14 @@ int main() {
     editPopupWc.lpszClassName = "EditPopupClass";
     RegisterClassA(&editPopupWc);
     
-    if (RegisterClassA(&editPopupWc)) {
-        printf("[SYSTEM-BOOT] DisplayMessageClass registered successfully with OS.\n");
-    } else {
-        printf("[SYSTEM-BOOT] WARNING: Failed to register FadeNotificationClass! Error: %lu\n", GetLastError());
-    }
+    WNDCLASSA settingsPopupWc = {0};
+    settingsPopupWc.lpfnWndProc = SettingsPopupProc;
+    settingsPopupWc.hInstance = GetModuleHandle(NULL);
+    settingsPopupWc.hCursor = LoadCursor(NULL, IDC_ARROW);
+    settingsPopupWc.hbrBackground = CreateSolidBrush(COLOR_BG);
+    settingsPopupWc.lpszClassName = "SettingsPopupClass";
+    RegisterClassA(&settingsPopupWc);
+    
     
     for (int i = 0; i < FILE_ENTRY_COUNT; i++) {
         SanitizeFile(G_FILE_ENTRIES[i].path);

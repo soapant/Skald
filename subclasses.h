@@ -830,6 +830,51 @@ LRESULT CALLBACK DisplayMessageProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
     return DefWindowProcA(hwnd, msg, wParam, lParam);
 }
 
+LRESULT CALLBACK SettingsPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+    FadeWindowData* data = (FadeWindowData*)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
+    hSettings = hwnd;
+
+    switch (msg) {
+        case WM_NCCREATE: {
+            CREATESTRUCTA* cs = (CREATESTRUCTA*)lParam;
+            SetWindowLongPtrA(hwnd, GWLP_USERDATA, (LONG_PTR)cs->lpCreateParams);
+            return DefWindowProcA(hwnd, msg, wParam, lParam);
+        }
+        case WM_PAINT: {
+            if (!data) break;
+            PAINTSTRUCT ps;
+            HDC hdc = BeginPaint(hwnd, &ps);
+
+            RECT rect;
+            GetClientRect(hwnd, &rect);
+
+            HBRUSH hBackgroundBrush = CreateSolidBrush(COLOR_BG); 
+            FillRect(hdc, &rect, hBackgroundBrush);
+            DeleteObject(hBackgroundBrush);
+
+            SetBkMode(hdc, TRANSPARENT);
+            SetTextColor(hdc, COLOR_TEXT);
+
+            HFONT hOldFont = NULL;
+            if (data->hFont) {
+                hOldFont = (HFONT)SelectObject(hdc, data->hFont);
+            }
+
+            if (hOldFont) SelectObject(hdc, hOldFont);
+            EndPaint(hwnd, &ps);
+            return 0;
+        }
+        case WM_NCDESTROY: {
+            if (data) {
+                free(data);
+                SetWindowLongPtrA(hwnd, GWLP_USERDATA, 0);
+            }
+            break;
+        }
+    }
+    return DefWindowProcA(hwnd, msg, wParam, lParam);
+}
+
 bool first_key = true;
 LRESULT CALLBACK EditPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
     EditPopupData* data = (EditPopupData*)dwRefData;
@@ -1013,8 +1058,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                 GetCursorPos(&pt);
                 
                 HMENU hMenu = CreatePopupMenu();
-                AppendMenu(hMenu, MF_STRING, ID_EXIT, "Exit");
+
+                AppendMenu(hMenu, MF_STRING, ID_SETTINGS, "Settings");
                 
+                AppendMenu(hMenu, MF_STRING, ID_EXIT, "Exit");
+
                 SetForegroundWindow(hwnd);
                 TrackPopupMenu(hMenu, TPM_BOTTOMALIGN | TPM_RIGHTALIGN, pt.x, pt.y, 0, hwnd, NULL);
                 DestroyMenu(hMenu);
@@ -1042,6 +1090,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             if (LOWORD(wParam) == ID_EXIT) {
                 PostQuitMessage(0);
             }
+            if (LOWORD(wParam) == ID_SETTINGS) {
+                SettingsPopUp();
+            }
+
             break;
         }
         
