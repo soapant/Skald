@@ -404,7 +404,7 @@ bool CheckQuickLinkHotkeyBindings(int pressed_vk, int modifiers) {
     return false;
 }
 
-bool CheckMacroBindings(int pressed_vk, int modifiers, MacroAction* out_action, int* out_delay) {
+bool CheckMacroBindings(int pressed_vk, int modifiers) {
     HWND hActiveWnd = GetForegroundWindow();
     if (!hActiveWnd) return false;
 
@@ -416,7 +416,6 @@ bool CheckMacroBindings(int pressed_vk, int modifiers, MacroAction* out_action, 
             if (G_MACRO_BINDINGS[i].modifiers != modifiers) {
                 continue;
             }
-            
             if (strcmp(G_MACRO_BINDINGS[i].exe_name, "*") == 0 || StrStrIA(activeExe, G_MACRO_BINDINGS[i].exe_name) != NULL) {
                 G_MACRO_BINDINGS[i].handler();  
             }
@@ -426,7 +425,7 @@ bool CheckMacroBindings(int pressed_vk, int modifiers, MacroAction* out_action, 
 }
         
 
-bool CheckTextSnippetBindings(int pressed_vk, int modifiers, const char** out_text) {
+bool CheckTextSnippetBindings(int pressed_vk, int modifiers) {
     HWND hActiveWnd = GetForegroundWindow();
     if (!hActiveWnd) return false;
 
@@ -437,14 +436,8 @@ bool CheckTextSnippetBindings(int pressed_vk, int modifiers, const char** out_te
         if (G_TEXT_SNIPPETS[i].vk_code == pressed_vk && 
             G_TEXT_SNIPPETS[i].modifiers == modifiers) {
             
-            if (strcmp(G_TEXT_SNIPPETS[i].exe_name, "*") == 0) {
-                *out_text = G_TEXT_SNIPPETS[i].text;
-                return true;
-            }
-            
-            if (StrStrIA(activeExe, G_TEXT_SNIPPETS[i].exe_name) != NULL) {
-                *out_text = G_TEXT_SNIPPETS[i].text;
-                return true;
+            if (strcmp(G_TEXT_SNIPPETS[i].exe_name, "*") == 0 || StrStrIA(activeExe, G_TEXT_SNIPPETS[i].exe_name) != NULL) {
+                CopyToClipboard(G_TEXT_SNIPPETS[i].text);
             }
         }
     }
