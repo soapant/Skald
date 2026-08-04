@@ -33,7 +33,6 @@ static const MotionBinding G_VIM_BINDINGS[] = {
     { COPY_SELECTION_KEY, HOTKEY_MOD_CTRL,  MOTION_SEND_COPY_CONTROL,      HandleSendCopyControl,    MODE_NORMAL, VIM_SCOPE_MODAL },
     { 'R',                HOTKEY_MOD_NONE,  MOTION_COPY_INTO_SEARCH,       HandleCopyToSearch,       MODE_NORMAL, VIM_SCOPE_MODAL },
     { 'O',                HOTKEY_MOD_NONE,  MOTION_HISTORY_TOGGLE,         HandleToggleHistory,      MODE_NORMAL, VIM_SCOPE_MODAL },
-    { 'H',                HOTKEY_MOD_SHIFT, MOTION_SHOW_FULL_TEXT,         HandleShowFullText,       MODE_NORMAL, VIM_SCOPE_ALL },
     { 'F',                HOTKEY_MOD_NONE,  MOTION_SEARCH_TEXT_FORWARD,    HandleSearchTextForward,  MODE_NORMAL, VIM_SCOPE_ALL },
     { 'F',                HOTKEY_MOD_SHIFT, MOTION_SEARCH_TEXT_BACKWARD,   HandleSearchTextBackward, MODE_NORMAL, VIM_SCOPE_ALL },
     { 'D',                HOTKEY_MOD_SHIFT, MOTION_DELETE_TILL_END,        HandleDeleteTillEnd,      MODE_NORMAL, VIM_SCOPE_ALL },
