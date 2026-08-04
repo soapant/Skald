@@ -570,7 +570,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                   SelectObject(pdis->hDC, hOldFont);
                   textRect.left += 35;
               } else {
-                  if (pdis->itemID < MAX_VISIBLE_ITEMS) {
+                  if (pdis->itemID < MAX_VISIBLE_ITEMS && pdis->itemID <= 998) {
                     RECT numRect = pdis->rcItem;
                     numRect.right = 35;
                     HFONT hOldFont = (HFONT)SelectObject(pdis->hDC, g_hNumFont);
@@ -579,7 +579,17 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                     SelectObject(pdis->hDC, hOldFont);
                     textRect.left += 35;
                   }else {
-                    textRect.left += 10;
+                    if (pdis->itemID < MAX_VISIBLE_ITEMS ) {
+                      RECT numRect = pdis->rcItem;
+                      numRect.right = 45;
+                      HFONT hOldFont = (HFONT)SelectObject(pdis->hDC, g_hNumFont);
+                      SetTextColor(pdis->hDC, g_rainbow_text_cache[pdis->itemID]);
+                      DrawTextA(pdis->hDC, num_cache[pdis->itemID], -1, &numRect, DT_SINGLELINE | DT_VCENTER | DT_CENTER);
+                      SelectObject(pdis->hDC, hOldFont);
+                      textRect.left += 45;
+                    } else {
+                      textRect.left += 10;
+                    }
                   }
               }
               
