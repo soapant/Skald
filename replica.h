@@ -73,8 +73,6 @@ static void replica_refresh_callback(const char* filter, HWND hListBox) {
 static void replica_enter_callback(const char* selection) {
     g_replica_selected_hwnd = NULL;
     
-    if (!selection) return;
-    
     for (int i = 0; i < g_replica_windows.count; i++) {
         if (strcmp(g_replica_windows.items[i].title, selection) == 0) {
             g_replica_selected_hwnd = g_replica_windows.items[i].hwnd;

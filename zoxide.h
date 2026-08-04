@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include "common_ui.h"
+#include "subclasses.h"
 #include "types.h"
 #include "helpers.h"
 #include "config.h"
@@ -52,8 +54,7 @@ static void RebuildZoxideCache(void) {
 }
 
 static void zoxide_refresh_callback(const char* filter, HWND hListBox) {
-    if (!hListBox) return;
-    
+
     if (!g_cached_zoxide_commands) {
         RebuildZoxideCache();
     }
@@ -78,45 +79,24 @@ static void zoxide_edit_callback(const char* selection) {
 
 
 static void zoxide_enter_callback(const char* selection) {
-    int selected_index = LB_ERR;
-    if (hListBox != NULL) {
-        selected_index = UI_GetSelection(hListBox);
-    }
-    
-    if (selected_index == LB_ERR) {
-        char input[256];
-        if (hEditControl != NULL) {
-            UI_GetCurrentText(hEditControl, input);
-            printf("THE USER INPUT  IS %s",input);
-            if (strlen(input) > 0) {
-                if (TerminalZoxideFile->fileSize > 0) {
-                    char lastChar = TerminalZoxideFile->pBuffer[TerminalZoxideFile->fileSize - 1];
-                    if (lastChar != '\n') {
-                        FileAppend(TerminalZoxideFile, "\n");
-                    }
-                }
-
-                FileAppend(TerminalZoxideFile, input);
+        if (TerminalZoxideFile->fileSize > 0) {
+            char lastChar = TerminalZoxideFile->pBuffer[TerminalZoxideFile->fileSize - 1];
+            if (lastChar != '\n') {
                 FileAppend(TerminalZoxideFile, "\n");
-                RebuildZoxideCache();
-                
-                
-                char* path = QueryZoxidePath(input);
-                if (path != NULL) {
-                    char terminal[512];
-                    snprintf(terminal,sizeof(terminal),"%s.exe",UsedTerminal);
-                    ShellExecuteA(NULL, "open", terminal, NULL, path, SW_SHOWNORMAL);
-                }
             }
         }
-    } else {
+
+        if (!UI_IsListBoxSelected()) {
+          FileAppend(TerminalZoxideFile, selection);
+          FileAppend(TerminalZoxideFile, "\n");
+          RebuildZoxideCache();
+        }
         char* path = QueryZoxidePath(selection);
-        if (path != NULL) {
+        if (path) {
             char terminal[512];
             snprintf(terminal,sizeof(terminal),"%s.exe",UsedTerminal);
             ShellExecuteA(NULL, "open", terminal, NULL, path, SW_SHOWNORMAL);
         }
-    }
 }
 
 static void TriggerZoxide() {

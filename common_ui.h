@@ -37,17 +37,6 @@ static inline void TimerEnd(WinTimer t, const char* operation_name) {
     }
 }
 
-static inline int UI_GetSelection(HWND hList) {
-    int sel = g_SelectedIndex;
-    return sel;
-}
-
-
-static inline void UI_ResetContent(HWND hList) {
-    g_populated_count = 0;
-    SendMessageA(hList, LB_SETCOUNT, 0, 0);
-}
-
 static inline void UI_SetSelection(HWND hList, int index, int old_sel) {
     g_SelectedIndex = index;
     
@@ -77,10 +66,6 @@ static inline void UI_SetHorizontalExtent(HWND hList, int width) {
 static inline void UI_SetItemCount(HWND hList, int count) {
     g_populated_count = count;
     SendMessageA(hList, LB_SETCOUNT, count, 0);
-}
-
-static inline void UI_Redraw(HWND hList) {
-    InvalidateRect(hList, NULL,FALSE);
 }
 
 static inline void UI_LB_SetCount(HWND hList, int count) {
@@ -371,59 +356,6 @@ void CalculateWindowMetrics(int count, WindowLayout* layout,int height , int wid
     layout->y = mi.rcMonitor.top + (monitorHeight - layout->h) / 2;
 }
 
-void CreateChildControls(HWND hwndParent, HFONT hFont, const char* list[], int count, const WindowLayout* layout) {
-    HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtrA(hwndParent, GWLP_HINSTANCE);
-    
-    hEditControl = CreateWindowExA(
-        0, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
-        20, 50, layout->w - 40, 40, hwndParent, (HMENU)IDC_INPUT_BOX, hInstance, NULL
-    );
-    if (!hEditControl) return;
-    
-    g_ActiveEditControl = hEditControl;
-    UI_Edit_SetFont(hEditControl, hFont);
-    SetWindowSubclass(hEditControl, EditSubclassProc, 0, 0);
-
-
-
-    if (count >= 0) {
-        hListBox = CreateWindowExA(
-            0, "LISTBOX", "", 
-            WS_CHILD | WS_VISIBLE | LBS_NODATA | LBS_OWNERDRAWFIXED,
-            20, 105, layout->w - 40, layout->h - 115, hwndParent, (HMENU)IDC_LIST_BOX, hInstance, NULL
-        );
-
-        if (!hListBox) return;
-        
-        SetWindowSubclass(hListBox, ListBoxSubclassProc, 0, 0);
-        UI_LB_SetFont(hListBox, hFont);
-        UI_LB_SetItemHeight(hListBox, layout->item_height);
-
-        int max_width = layout->w - 40;
-        HDC hdc = GetDC(hListBox);
-        if (!hdc) return;
-        HFONT hOldFont = (HFONT)SelectObject(hdc, hFont);
-        
-        g_initial_items = list;        
-        g_initial_count = count;
-        
-        UI_SetItemCount(hListBox, count);
-        int countCheck = UI_GetCount(hListBox);
-        
-        UI_Redraw(hListBox);
-        UpdateWindow(hListBox); 
-        
-        GdiFlush(); 
-        
-        SelectObject(hdc, hOldFont);
-        ReleaseDC(hListBox, hdc);
-        UI_SetHorizontalExtent(hListBox, max_width);
-        
-        if (g_refresh_callback != NULL) {
-          g_refresh_callback("", hListBox);
-        }
-    }
-}
 
 void SimpleCreateChildControls(HWND hwndParent, HFONT hFont, const char* string, int count, const WindowLayout* layout) { HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtrA(hwndParent, GWLP_HINSTANCE);
     
@@ -522,8 +454,67 @@ static inline char* UI_GetCurrentText(HWND g_ActiveEditControl,char *text) {
 static inline void UI_SetText(HWND g_ActiveEditControl,char* text) {
       SetWindowTextA(g_ActiveEditControl,text);
 }
+
+static inline void UI_Redraw(HWND hListBox) {
+    if (g_refresh_callback != NULL) {
+          char buffer[128];
+          UI_GetCurrentText(hEditControl,buffer);
+          g_refresh_callback(buffer,hListBox);
+    }
+}
 static inline void UI_GetParent(HWND hwnd) {
     SendMessageA(GetParent(hwnd), WM_COMMAND, MAKEWPARAM(IDC_INPUT_BOX, EN_CHANGE), (LPARAM)hEditControl);
+}
+
+void CreateChildControls(HWND hwndParent, HFONT hFont, const char* list[], int count, const WindowLayout* layout) {
+    HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtrA(hwndParent, GWLP_HINSTANCE);
+    
+    hEditControl = CreateWindowExA(
+        0, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
+        20, 50, layout->w - 40, 40, hwndParent, (HMENU)IDC_INPUT_BOX, hInstance, NULL
+    );
+    if (!hEditControl) return;
+    
+    g_ActiveEditControl = hEditControl;
+    UI_Edit_SetFont(hEditControl, hFont);
+    SetWindowSubclass(hEditControl, EditSubclassProc, 0, 0);
+
+
+
+    if (count >= 0) {
+        hListBox = CreateWindowExA(
+            0, "LISTBOX", "", 
+            WS_CHILD | WS_VISIBLE | LBS_NODATA | LBS_OWNERDRAWFIXED,
+            20, 105, layout->w - 40, layout->h - 115, hwndParent, (HMENU)IDC_LIST_BOX, hInstance, NULL
+        );
+
+        if (!hListBox) return;
+        
+        SetWindowSubclass(hListBox, ListBoxSubclassProc, 0, 0);
+        UI_LB_SetFont(hListBox, hFont);
+        UI_LB_SetItemHeight(hListBox, layout->item_height);
+
+        int max_width = layout->w - 40;
+        HDC hdc = GetDC(hListBox);
+        if (!hdc) return;
+        HFONT hOldFont = (HFONT)SelectObject(hdc, hFont);
+        
+        g_initial_items = list;        
+        g_initial_count = count;
+        
+        UI_SetItemCount(hListBox, count);
+        int countCheck = UI_GetCount(hListBox);
+        
+        UI_Redraw(hListBox);
+        UpdateWindow(hListBox); 
+        
+        GdiFlush(); 
+        
+        SelectObject(hdc, hOldFont);
+        ReleaseDC(hListBox, hdc);
+        UI_SetHorizontalExtent(hListBox, max_width);
+        
+    }
 }
 
 #endif 

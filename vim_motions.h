@@ -164,7 +164,7 @@ static inline void HandleEnter(void) {
     if (hListBox != NULL && UI_IsListBoxSelected()) {
         UI_Edit_KeyDown(g_ActiveEditControl, VK_RETURN);
         UI_Edit_KeyUp(g_ActiveEditControl, VK_RETURN);
-    } else if (g_SelectedIndex == -1) {
+    } else {
       UI_Edit_KeyDown(g_ActiveEditControl, VK_RIGHT);
       UI_Edit_KeyUp(g_ActiveEditControl, VK_RIGHT);
     }
@@ -205,11 +205,7 @@ static inline void HandlePersistentDelete(void) {
     UI_Edit_KeyUp(g_ActiveEditControl, VK_DOWN);
     UI_Edit_KeyDown(g_ActiveEditControl, VK_UP);
     UI_Edit_KeyUp(g_ActiveEditControl, VK_UP);
-    char buffer[100];
-    UI_GetCurrentText(g_ActiveEditControl,buffer);
-    if (g_refresh_callback != NULL && strcmp(buffer,"") != 0) {
-      g_refresh_callback(buffer,hListBox);
-    }
+    UI_Redraw(hListBox);
     return;
     
 }
@@ -488,7 +484,7 @@ static inline void HandleCopyToSearch(void) {
   }
 }
 static inline void HandleToggleHistory(void) {
-  if (g_SelectedIndex != -1) {
+  if (UI_IsListBoxSelected()) {
     UI_SetSelection(hListBox, -1, g_SelectedIndex);
   }
   UI_Edit_KeyDown(g_ActiveEditControl, VK_UP);
@@ -547,7 +543,7 @@ static inline void HandleSearchTextBackward(void) {
   }
 }
 static inline void HandleDeleteTillEnd(void) {
-  if (g_SelectedIndex == -1) {
+  if (!UI_IsListBoxSelected()) {
       char text[512];
       UI_GetCurrentText(g_ActiveEditControl, text);
       DWORD start_pos, end_pos;

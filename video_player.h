@@ -24,8 +24,6 @@ static void video_refresh_callback(const char* filter, HWND hListBox) {
 }
 
 static void video_enter_callback(const char* selection) {
-    if (selection == NULL || strlen(selection) == 0) return;
-    
     HWND playerHwnd = FindWindow(NULL, "Video Viewer");
     char* result = SearchFileRecursive(VideosPath, selection);
     

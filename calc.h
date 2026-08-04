@@ -414,13 +414,9 @@ static void calculator_refresh_callback(const char* filter, HWND hListBox) {
 }
 
 static void calculator_enter_callback(const char* selection) {
-    if (selection && strlen(selection) > 0) {
-        char* result = (char*)selection;
-        if (strncmp(selection, "= ", 2) == 0) {
-            result = (char*)selection + 2;
-        }
-        CopyToClipboard(result);
-    }
+    char* result = (char*)selection;
+    result = (char*)selection + 2;
+    CopyToClipboard(result);
 }
 
 
@@ -458,14 +454,8 @@ static void calculator_tab_callback(void) {
 
 
 static void calculator_ctrlenter_callback(const char* selection) {
-    if (!selection || strlen(selection) == 0 || !hEditControl) return;
-    
-    
     char* result = (char*)selection;
-    if (strncmp(selection, "= ", 2) == 0) {
-        result = (char*)selection + 2;
-    }
-    
+    result = (char*)selection + 2;
     
     UI_SetText(hEditControl, result);
     
@@ -475,8 +465,6 @@ static void calculator_ctrlenter_callback(const char* selection) {
     UI_SetCursorPosition(hEditControl, len);
     
     UI_GetParent(hEditControl);
-    
-    printf("[CALCULATOR] Result put back: %s\n", result);
 }
 
 

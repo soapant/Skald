@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <shellapi.h>
+#include "common_ui.h"
 #include "types.h"
 #include "helpers.h"
 #include "config.h"
@@ -96,26 +97,18 @@ static void DoGoogleSearch(const char* query) {
 }
 
 static void google_enter_callback(const char* selection) {
-    int selected_index = LB_ERR;
-    if (hListBox != NULL) {
-        selected_index = UI_GetSelection(hListBox);
-    }
-    
-    if (selected_index == LB_ERR) {
-        char input[256];
-        if (hEditControl != NULL) {
-            UI_GetCurrentText(hEditControl, input);
-            if (strlen(input) > 0) {
-                FileAppend(GoogleZoxideFile, input);
+        if (GoogleZoxideFile->fileSize > 0) {
+            char lastChar = GoogleZoxideFile->pBuffer[GoogleZoxideFile->fileSize - 1];
+            if (lastChar != '\n') {
                 FileAppend(GoogleZoxideFile, "\n");
-                RebuildGoogleCache();
-                printf("[GOOGLE] Saved query: %s\n", input);
-                DoGoogleSearch(input);
             }
         }
-    } else {
+        if (!UI_IsListBoxSelected()) {
+        FileAppend(GoogleZoxideFile, selection);
+        FileAppend(GoogleZoxideFile, "\n");
+        RebuildGoogleCache();
+        }
         DoGoogleSearch(selection);
-    }
 }
 
 static void google_edit_callback(const char* selection) {

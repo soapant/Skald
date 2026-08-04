@@ -76,23 +76,12 @@ static void forgetfull_refresh_callback(const char* filter, HWND hListBox) {
 }
 
 static void forgetfull_enter_callback(const char* selection) {
-    char input[256];
-    if (hEditControl != NULL) {
-        UI_GetCurrentText(hEditControl, input);
-    }
-    
-    input[strcspn(input, "\r\n")] = '\0';
-    size_t input_len = strlen(input);
-
-    int selected_index = UI_GetSelection(hListBox);
-
-    if (selected_index != LB_ERR && (input_len == 0 || strcmp(g_populated_cache[selected_index], input) == 0)) {
-        const char* item_to_remove = g_populated_cache[selected_index];
-        RemoveTextFromFile(item_to_remove);
-        forgetfull_refresh_callback(input, hListBox);
+    if (!UI_IsListBoxSelected()) {
+        RemoveTextFromFile(selection);
+        forgetfull_refresh_callback(selection, hListBox);
     } 
-    else if (input_len > 0) {
-        AddTextToFile(input);
+    else {
+        AddTextToFile(selection);
         UI_SetText(hEditControl, "");
         forgetfull_refresh_callback("", hListBox);
     }
@@ -107,11 +96,8 @@ static void forgetfull_edit_callback(const char* selection) {
 }
 
 static void forgetfull_ctrlenter_callback(const char* selection) {
-    int selected_index = UI_GetSelection(hListBox);
-    
-    if (selected_index != -1) {
-        const char* item_to_remove = g_populated_cache[selected_index];
-        RemoveTextFromFile(item_to_remove);
+    if (!UI_IsListBoxSelected()) {
+        RemoveTextFromFile(selection);
     } else {
         AddTextToFile(selection);
         UI_SetText(hEditControl, "");
