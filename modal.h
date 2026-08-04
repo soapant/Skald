@@ -22,10 +22,9 @@ static inline void SetMode(EditorMode mode) {
     g_current_mode = mode;
     g_vim_mode = g_mode_names[mode];
     
-    extern HWND g_hEditPopup;
-    bool in_popup = (g_hEditPopup != NULL && IsWindow(g_hEditPopup));
+    bool in_main = !g_hSearchPopup && !g_hEditPopup;
     
-    if (!in_popup) {
+    if (in_main) {
         if (strcmp(g_vim_mode,"INSERT") == 0 ) {
           UI_SetSelection(hListBox,-1, g_SelectedIndex);
         } else if (strcmp(g_vim_mode,"NORMAL") == 0) {
@@ -43,9 +42,16 @@ static inline void SetMode(EditorMode mode) {
         InvalidateRect(hPopupWnd, NULL, FALSE);
         UpdateWindow(hPopupWnd);
     }
-    if (g_hEditPopup != NULL && IsWindow(g_hEditPopup)) {
-        InvalidateRect(g_hEditPopup, NULL, FALSE);
-        UpdateWindow(g_hEditPopup);
+    if (g_ActiveEditControl != NULL && IsWindow(g_ActiveEditControl)) {
+        InvalidateRect(g_ActiveEditControl, NULL, FALSE);
+        UpdateWindow(g_ActiveEditControl);
+    }
+    if (g_ActiveEditControl != NULL && IsWindow(g_ActiveEditControl)) {
+        HWND hParent = GetParent(g_ActiveEditControl);
+        if (hParent != NULL && IsWindow(hParent)) {
+            InvalidateRect(hParent, NULL, FALSE);
+            UpdateWindow(hParent);
+        }
     }
 }
 
