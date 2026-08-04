@@ -19,6 +19,7 @@
 typedef enum {
     MOTION_NONE = 0,
     MOTION_ENTER_NORMAL,
+    MOTION_NORMAL_EDIT,
     MOTION_DELETE_TILL_END,
     MOTION_PAGE_UP,
     MOTION_PAGE_DOWN,
@@ -567,6 +568,9 @@ static inline void HandlePageDown(void) {
   if (wanted_sel >= g_TotalMatches) wanted_sel = g_TotalMatches;
   UI_SetSelection(hListBox,wanted_sel - 1,g_SelectedIndex);
   UI_LB_SetTopIndex(hListBox,current_sel);
+}
+static inline void HandleNormalEdit(void) {
+  UI_SetSelection(hListBox,-1,g_SelectedIndex);
 }
 
 #endif

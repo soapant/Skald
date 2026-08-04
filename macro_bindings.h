@@ -53,8 +53,8 @@ typedef struct {
 } MacroBinding;
 
 static const MacroBinding G_MACRO_BINDINGS[] = {
-    { 'V', HOTKEY_MOD_ALT, "Factorio", MACRO_FACTORIO_MAKE_TAG, 0, HandleFactorioMakeTag },
-    { 'B', HOTKEY_MOD_ALT, "Factorio", MACRO_FACTORIO_SEARCH_FACTORY, 0, HandleFactorioSearchFactory },
+    { 'V', HOTKEY_MOD_ALT_CTRL, "Factorio", MACRO_FACTORIO_MAKE_TAG, 0, HandleFactorioMakeTag },
+    { 'B', HOTKEY_MOD_ALT_CTRL, "Factorio", MACRO_FACTORIO_SEARCH_FACTORY, 0, HandleFactorioSearchFactory },
     { 'C', HOTKEY_MOD_SHIFT, "Java", MACRO_MINECRAFT_COPY, 0, HandleMinecraftCopy },
     { 'V', HOTKEY_MOD_SHIFT, "Java", MACRO_MINECRAFT_PASTE, 0, HandleMinecraftPaste },
     { 'Z', HOTKEY_MOD_SHIFT, "Java", MACRO_MINECRAFT_UNDO, 0, HandleMinecraftUndo },

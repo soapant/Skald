@@ -417,21 +417,14 @@ bool CheckMacroBindings(int pressed_vk, int modifiers, MacroAction* out_action, 
                 continue;
             }
             
-            if (strcmp(G_MACRO_BINDINGS[i].exe_name, "*") == 0) {
-                *out_action = G_MACRO_BINDINGS[i].action_id;
-                *out_delay = G_MACRO_BINDINGS[i].delay;
-                return true;
-            }
-            
-            if (StrStrIA(activeExe, G_MACRO_BINDINGS[i].exe_name) != NULL) {
-                *out_action = G_MACRO_BINDINGS[i].action_id;
-                *out_delay = G_MACRO_BINDINGS[i].delay;
-                return true;
+            if (strcmp(G_MACRO_BINDINGS[i].exe_name, "*") == 0 || StrStrIA(activeExe, G_MACRO_BINDINGS[i].exe_name) != NULL) {
+                G_MACRO_BINDINGS[i].handler();  
             }
         }
     }
     return false;
 }
+        
 
 bool CheckTextSnippetBindings(int pressed_vk, int modifiers, const char** out_text) {
     HWND hActiveWnd = GetForegroundWindow();

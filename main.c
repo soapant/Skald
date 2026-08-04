@@ -667,15 +667,9 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
         }
         TimerEnd(timer5, "CheckTextSnippetBindings");
 
-        WinTimer timer6 = TimerStart();
         if (CheckMacroBindings(pressed_vk, modifiers, &matchedAction, &matchedDelay)) {
-            if (matchedAction != MACRO_NONE && hGlobalTrayWnd != NULL) {
-                PostMessage(hGlobalTrayWnd, WM_TRIGGER_UNIVERSAL_MACRO, (WPARAM)matchedAction, (LPARAM)matchedDelay);
-                TimerEnd(timer6, "PostMessage");
-                return 1;
-            }
+              return 1;
         }
-        TimerEnd(timer6, "CheckMacroBindings");
 
         WinTimer timer7 = TimerStart();
         if (CheckAppHotkeyBindings(pressed_vk, modifiers)) {
