@@ -29,6 +29,7 @@
 #define MONITOR_FOCUS_SIDE  'H'
 #define REMINDER            'S'
 #define MUTE                'P'
+#define SETTINGS            'D'
 #define MUSIC_PLAYER_KEY    'P'
 #define VIDEO_VIEWER_KEY    'V'
 #define REPLICA             'R'

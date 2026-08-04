@@ -1,6 +1,7 @@
 #ifndef TYPES_H
 #define TYPES_H
 
+#include "minwindef.h"
 #include <windows.h>
 #include <stdbool.h>
 #include <string.h>
@@ -41,6 +42,8 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
 char* SimplePromptUser(const char* prompt, const char* window_title,int height, int width, int item_height);
 
 char* DisplayMessage(const char* message, int centerX, int centerY, int width, int height,int timeout);
+
+void SettingsPopUp();
 
 char* EditTextPopup(const char* initial_text, int centerX, int centerY, int maxWidth, int maxHeight);
 
@@ -297,6 +300,7 @@ static inline const char* GetFilePath(const char* name) {
 extern HWND hPopupWnd;
 extern HWND hListBox;
 extern HWND hDisplayMessage;
+extern HWND hSettings;
 extern HWND hEditControl;
 extern HWND g_ActiveEditControl;
 extern HWND g_hEditPopup;
@@ -362,6 +366,7 @@ extern COLORREF DisplayMessageText;
 #define WM_TRIGGER_UNIVERSAL_MACRO (WM_USER + 3)
 #define WM_TRIGGER_IMG_CAPTURE (WM_USER + 2)
 #define ID_EXIT 2001
+#define ID_SETTINGS 2002
 #define IDC_INPUT_BOX 101
 #define IDC_LIST_BOX 102
 #define HOTKEY_MOD_NONE         0x00
