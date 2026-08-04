@@ -28,12 +28,19 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
     if (msg == WM_KEYDOWN) {
         g_ActiveEditControl = hEditControl;
         bool ctrl_pressed = (GetKeyState(VK_CONTROL) & 0x8000);
+        bool shift_pressed = (GetKeyState(VK_SHIFT) & 0x8000);
         if (wParam == VK_CONTROL || wParam == VK_SHIFT) {
             return DefSubclassProc(hwnd, msg, wParam, lParam);
         }
         
         if (wParam >= '0' && wParam <= '9') {
-            if (ctrl_pressed) {
+            if (ctrl_pressed && !shift_pressed) {
+              printf("NOT DIONG ENTER ");
+              HandleNumberShortcut(wParam, hListBox, hEditControl,false);
+              return 0;
+            }
+            if (shift_pressed && ctrl_pressed) {
+              printf("DIONG ENTER ");
               HandleNumberShortcut(wParam, hListBox, hEditControl,true);
               return 0;
             }
@@ -572,7 +579,6 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                   if (pdis->itemID < MAX_VISIBLE_ITEMS) {
                     RECT numRect = pdis->rcItem;
                     numRect.right = 35;
-                    
                     HFONT hOldFont = (HFONT)SelectObject(pdis->hDC, g_hNumFont);
                     SetTextColor(pdis->hDC, g_rainbow_text_cache[pdis->itemID]);
                     DrawTextA(pdis->hDC, num_cache[pdis->itemID], -1, &numRect, DT_SINGLELINE | DT_VCENTER | DT_CENTER);
