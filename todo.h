@@ -260,8 +260,17 @@ static void todo_refresh_callback(const char* filter, HWND hListBox) {
     for (int i = 0; i < todo_count; i++) {
         items[i] = todo_lines[i];
     }
+    int index = g_SelectedIndex;
 
     PopulateListBox(hListBox, filter, items, todo_count, NULL);
+
+    UI_SetSelection(hListBox,index, g_SelectedIndex);
+
+    UI_Edit_KeyDown(g_ActiveEditControl, VK_DOWN);
+    UI_Edit_KeyUp(g_ActiveEditControl, VK_DOWN);
+    UI_Edit_KeyDown(g_ActiveEditControl, VK_UP);
+    UI_Edit_KeyUp(g_ActiveEditControl, VK_UP);
+
 }
 
 static void todo_enter_callback(const char* selection) {

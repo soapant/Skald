@@ -38,7 +38,9 @@ static void ExecuteNumberShortcut(int number, bool close_popup,bool enter) {
                 g_enter_callback(output_buffer);
             }
         }
-        selection_complete = close_popup;
+        if (enter)  {
+          selection_complete = close_popup;
+        }
         printf("[NUM-SHORTCUT] Selected item %d: %s (close=%d)\n",
                index + 1, output_buffer, close_popup);
     } else {
