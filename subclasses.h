@@ -919,6 +919,7 @@ LRESULT CALLBACK SearchPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LP
             first_key = false;
             return 0;
         }
+        printf("KEY %c \n",(char)wParam);
     }
     else if (uMsg == WM_KEYDOWN) {
         if (wParam == VK_ESCAPE) {
@@ -1053,7 +1054,6 @@ LRESULT CALLBACK EditPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 }
 
 LRESULT CALLBACK SearchPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-
     HFONT hFont = CreateCustomNerdFont(FontSize, UsedFont);
     switch (msg) {
         case WM_NCCREATE: {
