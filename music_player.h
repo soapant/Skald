@@ -24,8 +24,6 @@ static void music_refresh_callback(const char* filter, HWND hListBox) {
 }
 
 static void music_enter_callback(const char* selection) {
-    if (selection == NULL || strlen(selection) == 0) return;
-    
     HWND playerHwnd = FindWindow(NULL, "Music Player");
     char* result = SearchFileInDirectory(MusicPath, selection);
     
@@ -37,12 +35,10 @@ static void music_enter_callback(const char* selection) {
         cds.cbData = (DWORD)(strlen(result) + 1);
         cds.lpData = (PVOID)result;
         SendMessage(playerHwnd, WM_COPYDATA, (WPARAM)NULL, (LPARAM)&cds);
-        printf("[MUSIC] Sent to existing player: %s\n", result);
     } else {
           char quoted_result[MAX_PATH + 3] = {0};
           snprintf(quoted_result, sizeof(quoted_result), "\"%s\"", result);
           launch_exe_with_args(MusicPlayerPath, quoted_result);
-          printf("[MUSIC] Launched new player with: %s\n", result);
     }
 }
 

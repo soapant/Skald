@@ -15,6 +15,7 @@
 #include "types.h"
 #include "config.h"
 #include "common_ui.h"
+#include "number_shortcut.h"
 int g_refresh_count = 0;
 COLORREF DisplayMessageText;
 COLORREF g_rainbow_text_cache[MAX_VISIBLE_ITEMS + 1] = {0};
@@ -35,12 +36,10 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
         
         if (wParam >= '0' && wParam <= '9') {
             if (ctrl_pressed && !shift_pressed) {
-              printf("NOT DIONG ENTER ");
               HandleNumberShortcut(wParam, hListBox, hEditControl,false);
               return 0;
             }
             if (shift_pressed && ctrl_pressed) {
-              printf("DIONG ENTER ");
               HandleNumberShortcut(wParam, hListBox, hEditControl,true);
               return 0;
             }
@@ -50,7 +49,7 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
           if (wParam == VK_UP || wParam == VK_DOWN) {
               if (hListBox != NULL) {
                 int count = UI_GetCount(hListBox);
-                int sel = UI_GetSelection(hListBox);
+                int sel = g_SelectedIndex;
                 if (count > 0) {
                     if (sel == LB_ERR) {
                         if (wParam == VK_DOWN) {
@@ -105,7 +104,7 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
         if (wParam == VK_RETURN) {
             bool ctrl_pressed = (GetKeyState(VK_CONTROL) & 0x8000);
             output_buffer[0] = '\0';
-            if (g_SelectedIndex != -1) {
+            if (UI_IsListBoxSelected()) {
                 strncpy(output_buffer, g_populated_cache[g_SelectedIndex], sizeof(output_buffer) - 1);
             } else {
                 UI_GetCurrentText(hwnd, output_buffer);
@@ -149,16 +148,14 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
         if (wParam == VK_BACK) {
            if (ctrl_pressed) {
              UI_SetText(hEditControl,"");
-             if (g_refresh_callback != NULL) {
-               g_refresh_callback("",hListBox);
-             }
+             UI_Redraw(hListBox);
              return 0;
            }
         }
         if (wParam == EDIT_TEXT_KEY) {
             output_buffer[0] = '\0';
 
-            if (g_SelectedIndex != -1) {
+            if (UI_IsListBoxSelected()) {
                 strncpy(output_buffer, g_populated_cache[g_SelectedIndex], sizeof(output_buffer) - 1);
             } else {
                 UI_GetCurrentText(hwnd, output_buffer);
@@ -174,12 +171,13 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
                 }
                 return 0;
             }
+            
           }
         if (wParam == COPY_SELECTION_KEY) {
             bool ctrl_pressed = (GetKeyState(VK_CONTROL) & 0x8000);
             bool shift_pressed = (GetKeyState(VK_SHIFT) & 0x8000);
             if (shift_pressed) {
-                if (g_SelectedIndex != -1) {
+                if (UI_IsListBoxSelected()) {
                     strncpy(output_buffer, g_populated_cache[g_SelectedIndex], sizeof(output_buffer) - 1);
                     output_buffer[sizeof(output_buffer) - 1] = '\0';
                 }
@@ -189,7 +187,7 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
                   CopyToClipboard(output_buffer);
                 }
             } else if (ctrl_pressed) {
-                if (g_SelectedIndex != -1) {
+                if (UI_IsListBoxSelected()) {
                     strncpy(output_buffer, g_populated_cache[g_SelectedIndex], sizeof(output_buffer) - 1);
                     output_buffer[sizeof(output_buffer) - 1] = '\0';
                 }
@@ -361,7 +359,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 return (LRESULT)CreateSolidBrush(bg);
             } else {
                 if (SearchBoxDiffColor) {
-                  if (g_SelectedIndex == -1) {
+                  if (!UI_IsListBoxSelected()) {
                     SetBkColor(hdc, COLOR_SELECTED_TEXT);
                   }else {
                     SetBkColor(hdc, COLOR_BG);
@@ -412,11 +410,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 }
 
                 if (hEditControl && hListBox) {
-                    char input_buffer[256];
-                    UI_GetCurrentText(hEditControl, input_buffer);
-                    if (g_refresh_callback != NULL) {
-                        g_refresh_callback(input_buffer, hListBox);
-                    }
+                    UI_Redraw(hListBox);
                 }
             }
             
@@ -517,7 +511,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                   HBRUSH hBrush = isSelected ? hColorfulBrush[color_index] : hColorfulBrush[color_index];
                   FillRect(pdis->hDC, &pdis->rcItem, hBrush);
               } else {
-                if (g_SelectedIndex != -1) {
+                if (UI_IsListBoxSelected()) {
                     FillRect(pdis->hDC, &pdis->rcItem, isSelected ? hSelBrush : hBgBrush);
                     char measureBuffer[512];
                     strncpy(measureBuffer, g_populated_cache[pdis->itemID], sizeof(measureBuffer) - 1);
@@ -850,6 +844,7 @@ LRESULT CALLBACK EditPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
             data->result = NULL;
             DestroyWindow(GetParent(hWnd));
             first_key = true;
+            UI_Redraw(hListBox);
             return 0;
         }
         if (wParam == VK_RETURN) {
@@ -861,6 +856,8 @@ LRESULT CALLBACK EditPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
             GetWindowTextA(data->hEdit, buffer, sizeof(buffer) - 1);
             data->result = _strdup(buffer);
             DestroyWindow(GetParent(hWnd));
+            UI_Redraw(hListBox);
+
             return 0;
         }
     }

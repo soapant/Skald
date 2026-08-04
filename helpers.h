@@ -1130,18 +1130,12 @@ bool GetFromHistory() {
         
         if (count > 0) {
             idx = (idx - 1 + count) % count;
-            printf("IDX IS %i \n",idx);
-            for (int i = 0;i < idx ;i++) {
-              printf("CURRENT TEXT IS %s \n",HistoryList[idx]);
-            }
             
             UI_SetText(hEditControl, HistoryList[idx]);
             UI_SetCursorPosition(hEditControl,strlen(HistoryList[idx]));
 
             if (!IsNormalMode()) {
-                if (g_refresh_callback != NULL) {
-                    g_refresh_callback(HistoryList[idx], hListBox);
-                }
+              UI_Redraw(hListBox);
             }
             if (!idx_ptr) {
                 idx_ptr = malloc(sizeof(int));

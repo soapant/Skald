@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include "common_ui.h"
 #include "types.h"
 #include "helpers.h"
 #include "config.h"
@@ -107,30 +108,24 @@ static void neovide_refresh_callback(const char* filter, HWND hListBox) {
     PopulateListBox(hListBox, filter, (const char**)g_cached_nvim_commands, g_cached_nvim_count, NULL);
 }
 
+
 static void neovide_enter_callback(const char* selection) {
-    int selected_index = LB_ERR;
-    if (hListBox != NULL) {
-        selected_index = UI_GetSelection(hListBox);
-    }
-    
-    if (selected_index == LB_ERR) {
-        char input[256];
-        if (hEditControl != NULL) {
-            UI_GetCurrentText(hEditControl, input);
-            if (strlen(input) > 0) {
-                FileAppend(NvimZoxideFile, input);
-                FileAppend(NvimZoxideFile, "\n");
-                RebuildNvimCache();
-                printf("[NVIM] Saved query: %s\n", input);
-                
-                char* path = QueryZoxidePath(input);
-                LaunchNvim(path);
-            }
-        }
-    } else {
-        char* path = QueryZoxidePath(selection);
-        LaunchNvim(path);
-    }
+      if (NvimZoxideFile->fileSize > 0) {
+          char lastChar = NvimZoxideFile->pBuffer[NvimZoxideFile->fileSize - 1];
+          if (lastChar != '\n') {
+              FileAppend(NvimZoxideFile, "\n");
+          }
+      }
+
+      if (!UI_IsListBoxSelected()) {
+          FileAppend(NvimZoxideFile, selection);
+          FileAppend(NvimZoxideFile, "\n");
+          RebuildNvimCache();
+      }
+      char* path = QueryZoxidePath(selection);
+      if (path) {
+          LaunchNvim(path);
+      }
 }
 static void neovide_edit_callback(const char* selection) {
     char* NewneovideQuery = EditTextPopup(selection,960,540,1000,300);
