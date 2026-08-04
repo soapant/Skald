@@ -71,6 +71,11 @@ typedef struct {
     void (*func)(const char** items, int count);
 } SortOption;
 
+typedef struct {
+    LARGE_INTEGER start;
+    LARGE_INTEGER frequency;
+} WinTimer;
+
 struct feature_data {
     char* name;
     const char** items;
@@ -369,6 +374,7 @@ extern COLORREF DisplayMessageText;
 #define HOTKEY_MOD_ALT_SHIFT_CTRL (HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT | HOTKEY_MOD_CTRL)
 extern HFONT g_hNumFont;
 extern HFONT g_hMainFont;
+extern WinTimer g_timer;
 
 #define GAP 20
 
