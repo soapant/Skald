@@ -658,16 +658,12 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
         TimerEnd(timer4, "CheckVimMotion");
 
         WinTimer timer5 = TimerStart();
-        if (CheckTextSnippetBindings(pressed_vk, modifiers, &snippet_text)) {
-            if (snippet_text != NULL) {
-                CopyToClipboard(snippet_text);
-                TimerEnd(timer5, "CopyToClipboard");
-                return 1;
-            }
+        if (CheckTextSnippetBindings(pressed_vk, modifiers)) {
+              return 1;
         }
         TimerEnd(timer5, "CheckTextSnippetBindings");
 
-        if (CheckMacroBindings(pressed_vk, modifiers, &matchedAction, &matchedDelay)) {
+        if (CheckMacroBindings(pressed_vk, modifiers)) {
               return 1;
         }
 
