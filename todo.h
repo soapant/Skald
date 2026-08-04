@@ -264,12 +264,14 @@ static void todo_refresh_callback(const char* filter, HWND hListBox) {
 
     PopulateListBox(hListBox, filter, items, todo_count, NULL);
 
-    UI_SetSelection(hListBox,index, g_SelectedIndex);
+    if (g_TotalMatches != 1) {
+      UI_SetSelection(hListBox,index, g_SelectedIndex);
 
-    UI_Edit_KeyDown(g_ActiveEditControl, VK_DOWN);
-    UI_Edit_KeyUp(g_ActiveEditControl, VK_DOWN);
-    UI_Edit_KeyDown(g_ActiveEditControl, VK_UP);
-    UI_Edit_KeyUp(g_ActiveEditControl, VK_UP);
+      UI_Edit_KeyDown(g_ActiveEditControl, VK_DOWN);
+      UI_Edit_KeyUp(g_ActiveEditControl, VK_DOWN);
+      UI_Edit_KeyDown(g_ActiveEditControl, VK_UP);
+      UI_Edit_KeyUp(g_ActiveEditControl, VK_UP);
+    }
 
 }
 

@@ -116,6 +116,9 @@ static const char* MONITOR_FOCUS_SIDE_blacklist[] = {"Nvim", "Neovide","Fortnite
 void HandleKillMyProgram(void) {
     terminate_process_by_name("myprogram.exe");
 }
+void HandleInitAppLauncherCache(void) {
+    initialize_app_cache();
+}
 
 
 #define BINDING(key, mod, handler, enabled) \
@@ -161,6 +164,7 @@ static const HotkeyBinding G_HOTKEY_BINDINGS[] = {
     BINDING(BLUETOOTH_TOGGLE,   HOTKEY_MOD_ALT_CTRL,  TriggerBlueToothToggle,  true),
 
     BINDING_SIMPLE('M', HOTKEY_MOD_ALT_CTRL,HandleKillMyProgram),
+    BINDING_SIMPLE('E', HOTKEY_MOD_ALT_CTRL,HandleInitAppLauncherCache),
 };
 
 #define HOTKEY_BINDING_COUNT (sizeof(G_HOTKEY_BINDINGS) / sizeof(G_HOTKEY_BINDINGS[0]))

@@ -2,6 +2,7 @@
 #define APP_LAUNCHER_H
 
 #include <windows.h>
+#include "common_ui.h"
 #include "types.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -122,8 +123,6 @@ static void applauncher_copy_callback(const char* selection,int true_index,int t
 
 void TriggerAppLauncher() {
     if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
-
-    if (G_APP_COUNT == 0) initialize_app_cache();
 
     const char** initial_items = (const char**)malloc(G_APP_COUNT * sizeof(char*));
     if (!initial_items) return;
