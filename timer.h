@@ -10,8 +10,8 @@
 
 static void LaunchTimer(const char* selection) {
     if (selection != NULL && strlen(selection) > 0) {
-        launch_exe_with_args(SowonPath, selection);
-        printf("[TIMER] Launching: %s %s\n", SowonPath, selection);
+        launch_exe_with_args(TimerPath, selection);
+        printf("[TIMER] Launching: %s %s\n", TimerPath, selection);
     }
 }
 
