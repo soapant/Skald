@@ -4,6 +4,7 @@
 #include "helpers.h"
 #include "calc.h"
 #include "config.h"
+#include "types.h"
 #include "video_player.h"
 #include "music_player.h"
 #include "timer.h"
@@ -113,11 +114,17 @@ static const char* MONITOR_FOCUS_MAIN_blacklist[] = {"Nvim", "Neovide","Fortnite
 static const char* MONITOR_FOCUS_SIDE_blacklist[] = {"Nvim", "Neovide","Fortnite", "CrosshairX"};
 #define MONITOR_FOCUS_SIDE_BLACKLIST_COUNT (sizeof(MONITOR_FOCUS_SIDE_blacklist) / sizeof(MONITOR_FOCUS_SIDE_blacklist[0]))
 
+static const char* SETTINGS_blacklist[] = {"Fortnite", "CrosshairX"};
+#define SETTINGS_BLACKLIST_COUNT (sizeof(SETTINGS_blacklist) / sizeof(SETTINGS_blacklist[0]))
+
 void HandleKillMyProgram(void) {
     terminate_process_by_name("myprogram.exe");
 }
 void HandleInitAppLauncherCache(void) {
     initialize_app_cache();
+}
+void HandleSettingsTrigger(void) {
+  SettingsPopUp();
 }
 
 
@@ -163,6 +170,7 @@ static const HotkeyBinding G_HOTKEY_BINDINGS[] = {
     BINDING(WIFI_TOGGLE,        HOTKEY_MOD_ALT_SHIFT, TriggerWifiToggle,       true),
     BINDING(BLUETOOTH_TOGGLE,   HOTKEY_MOD_ALT_CTRL,  TriggerBlueToothToggle,  true),
 
+    BINDING(SETTINGS,           HOTKEY_MOD_ALT,  HandleSettingsTrigger,         true),
     BINDING_SIMPLE('M', HOTKEY_MOD_ALT_CTRL,HandleKillMyProgram),
     BINDING_SIMPLE('E', HOTKEY_MOD_ALT_CTRL,HandleInitAppLauncherCache),
 };
