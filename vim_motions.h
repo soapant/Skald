@@ -205,7 +205,6 @@ static inline void HandlePersistentDelete(void) {
     UI_Edit_KeyUp(g_ActiveEditControl, VK_DOWN);
     UI_Edit_KeyDown(g_ActiveEditControl, VK_UP);
     UI_Edit_KeyUp(g_ActiveEditControl, VK_UP);
-    UI_Redraw(hListBox);
     return;
     
 }

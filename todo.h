@@ -260,12 +260,10 @@ static void todo_refresh_callback(const char* filter, HWND hListBox) {
     for (int i = 0; i < todo_count; i++) {
         items[i] = todo_lines[i];
     }
-    int index = g_SelectedIndex;
-
     PopulateListBox(hListBox, filter, items, todo_count, NULL);
 
     if (g_TotalMatches != 1) {
-      UI_SetSelection(hListBox,index, g_SelectedIndex);
+      UI_SetSelection(hListBox,g_SelectedIndex, g_SelectedIndex);
 
       UI_Edit_KeyDown(g_ActiveEditControl, VK_DOWN);
       UI_Edit_KeyUp(g_ActiveEditControl, VK_DOWN);
@@ -278,13 +276,12 @@ static void todo_refresh_callback(const char* filter, HWND hListBox) {
 static void todo_enter_callback(const char* selection) {
     if (UI_IsListBoxSelected()) {
         RemoveTodoItemFromFile(selection);
-        todo_refresh_callback(selection, hListBox);
     } 
     else {
         AddTodoToFile(selection);
         UI_SetText(hEditControl, "");
-        todo_refresh_callback("", hListBox);
     }
+    UI_Redraw(hListBox);
 }
 
 static void todo_ctrlenter_callback(const char* selection) {
@@ -294,7 +291,7 @@ static void todo_ctrlenter_callback(const char* selection) {
         AddTodoToFile(selection);
         UI_SetText(hEditControl, "");
     }
-    todo_refresh_callback(NULL, hListBox);
+    UI_Redraw(hListBox);
     selection_complete = false;
 }
 
