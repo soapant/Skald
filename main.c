@@ -110,6 +110,7 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
     output_buffer[0] = '\0';
     g_initial_items = window_list;
     g_initial_count = count;
+    WinTimer timer = TimerStart();
 
     if (g_item_index_map) {
         HashMap_Destroy(g_item_index_map);
@@ -185,6 +186,8 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
     SetLayeredWindowAttributes(hPopupWnd, 0, 245, LWA_ALPHA);
 
     ForceWindowFocus(hPopupWnd, hEditControl);
+
+    TimerEnd(timer,"Window Init");
 
     printf("[DEBUG-UI] Entering local message modal loop...\n");
     MSG msg;
