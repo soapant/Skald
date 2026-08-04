@@ -142,6 +142,9 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
         if (wParam == VK_BACK) {
            if (ctrl_pressed) {
              UI_SetText(hEditControl,"");
+             if (g_refresh_callback != NULL) {
+               g_refresh_callback("",hListBox);
+             }
              return 0;
            }
         }
