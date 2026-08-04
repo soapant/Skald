@@ -1,3 +1,7 @@
+#define WIN32_LEAN_AND_MEAN
+#ifndef PROPID
+#define PROPID DWORD
+#endif
 #define _WIN32_WINNT 0x0601
 #include <windows.h>
 #include <commctrl.h>
@@ -59,6 +63,7 @@ char* g_current_feature = NULL;
 int g_timeout = 1;
 bool g_waiting_for_key = false;
 int g_key_pressed = 0;
+WinTimer g_timer;
 HANDLE g_key_event = NULL;
 const char** g_initial_items = NULL;
 int g_initial_count = 0;
@@ -105,6 +110,7 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
                  EditCallback edit_callback,
                  FilterCallback filter_callback,
                  HelpCallback help_callback) {
+    TimerEnd(g_timer,window_title + 4);
     HINSTANCE hInstance = GetModuleHandle(NULL);
     selection_complete = false;
     output_buffer[0] = '\0';
@@ -123,7 +129,6 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
                 HashMap_Put(g_item_index_map, window_list[i], (void*)(size_t)(i + 1));
             }
         }
-        printf("[INDEX-MAP] Built name->index map for %d items\n", count);
     }
     g_refresh_callback = refresh_callback;
     g_enter_callback = enter_callback;
@@ -153,7 +158,6 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
         data->filter_callback = filter_callback;
         data->help_callback = help_callback;
         data->filter_match = NULL;
-        printf("[REGISTRY] Registered feature: %s (%d items)\n", data->name, data->item_count);
     }
     
     SetMode(MODE_INSERT);
@@ -530,26 +534,39 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
         if (shift_down) modifiers |= HOTKEY_MOD_SHIFT;
         if (ctrl_down) modifiers |= HOTKEY_MOD_CTRL;
 
+        WinTimer timer = TimerStart();
         if (ProcessHotkey(G_HOTKEY_BINDINGS, HOTKEY_BINDING_COUNT, 
                           pressed_vk, modifiers, fgTitle)) {
             return 1;
         }
+        TimerEnd(timer, "ProcessHotkey");
+
+        WinTimer timer1 = TimerStart();
         if (shift_down && !IsInsertMode() && hPopupWnd != NULL) {
           if (pressed_vk == COMMAND_MODE_KEY) {
             char* output = EditTextPopup("", 960, 540, 1000, 300);
             if (output) {
+              TimerEnd(timer1, "EditTextPopup (with output)");
               HandleCommandExecution(output);
+              TimerEnd(timer1, "HandleCommandExecution");
+            } else {
+              TimerEnd(timer1, "EditTextPopup (no output)");
             }
             return 1;
           }
         }
+        TimerEnd(timer1, "CommandModeCheck");
+
+        WinTimer timer2 = TimerStart();
         if (ctrl_down) {
           if (pressed_vk == HELP_SCREEN_KEY) {
             if (g_help_callback != NULL) {
               g_help_callback();
+              TimerEnd(timer2, "HelpScreen");
             }
           }
         }
+        TimerEnd(timer2, "HelpScreenCheck");
 
         MacroAction matchedAction = MACRO_NONE;
         int matchedDelay = 0;
@@ -559,53 +576,88 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
         const char* matchedSequence = NULL;
         int typedCount = 0;
 
+        WinTimer timer3 = TimerStart();
         if (IsNormalMode()) {
           if (g_waiting_for_key) {
             g_waiting_for_key = false;
             if (g_key_callback) {
                 g_key_callback(pKeyInfo->vkCode);
+                TimerEnd(timer3, "KeyCallback");
             }
             return 1;
           }       
         }
+        TimerEnd(timer3, "NormalModeCheck");
 
+        WinTimer timer4 = TimerStart();
         if (CheckVimMotion(pressed_vk, modifiers, &vimAction, &matchedSequence, &typedCount)) {
             ExecuteMotion(vimAction, matchedSequence, typedCount);
+            TimerEnd(timer4, "ExecuteMotion");
             return 1;
         }
+        TimerEnd(timer4, "CheckVimMotion");
+
+        WinTimer timer5 = TimerStart();
         if (CheckTextSnippetBindings(pressed_vk, modifiers, &snippet_text)) {
             if (snippet_text != NULL) {
                 CopyToClipboard(snippet_text);
+                TimerEnd(timer5, "CopyToClipboard");
                 return 1;
             }
         }
+        TimerEnd(timer5, "CheckTextSnippetBindings");
+
+        WinTimer timer6 = TimerStart();
         if (CheckMacroBindings(pressed_vk, modifiers, &matchedAction, &matchedDelay)) {
             if (matchedAction != MACRO_NONE && hGlobalTrayWnd != NULL) {
                 PostMessage(hGlobalTrayWnd, WM_TRIGGER_UNIVERSAL_MACRO, (WPARAM)matchedAction, (LPARAM)matchedDelay);
+                TimerEnd(timer6, "PostMessage");
                 return 1;
             }
         }
+        TimerEnd(timer6, "CheckMacroBindings");
+
+        WinTimer timer7 = TimerStart();
         if (CheckAppHotkeyBindings(pressed_vk, modifiers)) {
             return 1;
         }
+        TimerEnd(timer7, "CheckAppHotkeyBindings");
+
+        WinTimer timer8 = TimerStart();
         if (CheckMiscHotkeyBindings(pressed_vk, modifiers)) {
             return 1;
         }
+        TimerEnd(timer8, "CheckMiscHotkeyBindings");
+
+        WinTimer timer9 = TimerStart();
         if (CheckQuickLinkHotkeyBindings(pressed_vk, modifiers)) {
             return 1;
         }
+        TimerEnd(timer9, "CheckQuickLinkHotkeyBindings");
+
+        WinTimer timer10 = TimerStart();
         if (HandleFocusSwitcher(pressed_vk, modifiers, fgTitle)) {
             return 1;
         }
+        TimerEnd(timer10, "HandleFocusSwitcher");
+
+        WinTimer timer11 = TimerStart();
         if (HandleMusicPlayer(pressed_vk, modifiers, fgTitle)) {
             return 1;
         }
+        TimerEnd(timer11, "HandleMusicPlayer");
+
+        WinTimer timer12 = TimerStart();
         if (HandleVideoPlayer(pressed_vk, modifiers, fgTitle)) {
             return 1;
         }
+        TimerEnd(timer12, "HandleVideoPlayer");
+
+        WinTimer timer13 = TimerStart();
         if (HandleBulkKillProcess(pressed_vk, modifiers, fgTitle)) {
             return 1;
         }
+        TimerEnd(timer13, "HandleBulkKillProcess");
     }
     return CallNextHookEx(NULL, nCode, wParam, lParam);
 }

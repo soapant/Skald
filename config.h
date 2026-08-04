@@ -1,5 +1,4 @@
 #ifndef CONFIG_H
-
 #define CONFIG_H
 #include <string.h>
 #include <windows.h>
@@ -47,6 +46,8 @@
 
 
 static bool TRAY = true;
+
+static bool DoTimeDebugs = false;
 
 static char* EditPopUpPos = "middle";
 

@@ -10,10 +10,6 @@
 #include "types.h"
 #include "config.h"
 
-typedef struct {
-    LARGE_INTEGER start;
-    LARGE_INTEGER frequency;
-} WinTimer;
 
 static inline WinTimer TimerStart() {
     WinTimer t;
@@ -28,13 +24,15 @@ static inline void TimerEnd(WinTimer t, const char* operation_name) {
 
     double elapsed_us = (double)(end.QuadPart - t.start.QuadPart) * 1000000.0 / (double)t.frequency.QuadPart;
 
-    if (elapsed_us < 1000.0) {
-        printf("[ TIMER] %-25s : %8.2f µs\n", operation_name, elapsed_us);
-    } else if (elapsed_us < 1000000.0) {
-        printf("[ TIMER] %-25s : %8.2f ms\n", operation_name, elapsed_us / 1000.0);
-    } else {
-        printf("[ TIMER] %-25s : %8.2f s\n", operation_name, elapsed_us / 1000000.0);
-    }
+     if (DoTimeDebugs) {
+        if (elapsed_us < 1000.0) {
+            printf("[ TIMER] %-25s : %8.2f µs\n", operation_name, elapsed_us);
+        } else if (elapsed_us < 1000000.0) {
+            printf("[ TIMER] %-25s : %8.2f ms\n", operation_name, elapsed_us / 1000.0);
+        } else {
+            printf("[ TIMER] %-25s : %8.2f s\n", operation_name, elapsed_us / 1000000.0);
+        }
+     }
 }
 
 static inline void UI_SetSelection(HWND hList, int index, int old_sel) {
@@ -146,6 +144,8 @@ static inline void PopulateListBox(HWND hListBox, const char* filter,
                                    bool (*filter_match)(const char* item, const char* filter)) {
     if (!hListBox) return;
     
+    WinTimer timer_total = TimerStart();
+    
     int current_sel = g_SelectedIndex; 
     char current_text[256] = {0};
     if (current_sel >= 0 && current_sel < g_populated_count) {
@@ -160,6 +160,7 @@ static inline void PopulateListBox(HWND hListBox, const char* filter,
         clean_filter[sizeof(clean_filter) - 1] = '\0';
     }
     
+    WinTimer timer_inc = TimerStart();
     int use_previous = 0;
     if (strlen(clean_filter) > 0 && 
         g_last_items == items && 
@@ -174,7 +175,9 @@ static inline void PopulateListBox(HWND hListBox, const char* filter,
             printf("[OPTIMIZE] Incremental: '%s' -> '%s'\n", last_filter, clean_filter);
         }
     }
+    TimerEnd(timer_inc, "  PopulateListBox - Incremental check");
     
+    WinTimer timer_filter = TimerStart();
     if (use_previous && g_match_count_history[g_history_count - 1] > 0) {
         int prev_count = g_match_count_history[g_history_count - 1];
         int* prev_matches = g_match_history[g_history_count - 1];
@@ -214,7 +217,9 @@ static inline void PopulateListBox(HWND hListBox, const char* filter,
             }
         }
     }
+    TimerEnd(timer_filter, "  PopulateListBox - Filtering");
     
+    WinTimer timer_history = TimerStart();
     if (strlen(clean_filter) > 0 && g_history_count < 20) {
         strncpy(g_filter_history[g_history_count], clean_filter, sizeof(g_filter_history[0]) - 1);
         g_match_count_history[g_history_count] = total_matches;
@@ -222,6 +227,9 @@ static inline void PopulateListBox(HWND hListBox, const char* filter,
         g_history_count++;
         printf("[HISTORY] Saved '%s' (%d matches)\n", clean_filter, total_matches);
     }
+    TimerEnd(timer_history, "  PopulateListBox - History save");
+
+    WinTimer timer_matches = TimerStart();
     
     if (total_matches == 0 && item_count > 0 && strlen(clean_filter) == 0) {
         int force_count = (item_count < 30) ? item_count : 30;
@@ -237,7 +245,8 @@ static inline void PopulateListBox(HWND hListBox, const char* filter,
     if (total_matches > pool_max) {
         total_matches = pool_max;
     }
-    
+    TimerEnd(timer_matches," PopulateListBox - Matches");
+    WinTimer timer_cache = TimerStart();
     g_populated_count = 0;
     
     for (int i = 0; i < total_matches; i++) {
@@ -249,7 +258,9 @@ static inline void PopulateListBox(HWND hListBox, const char* filter,
         g_populated_cache[g_populated_count][strcspn(g_populated_cache[g_populated_count], "\r\n")] = '\0';
         g_populated_count++;
     }
+    TimerEnd(timer_cache, "  PopulateListBox - Cache build");
     
+    WinTimer timer_ui = TimerStart();
     UI_LB_SetCount(hListBox, total_matches);
     if (total_matches == 1) {
         UI_SetSelection(hListBox, 0, g_SelectedIndex);
@@ -263,11 +274,14 @@ static inline void PopulateListBox(HWND hListBox, const char* filter,
         hDisplayMessage = NULL;
       }
     }
+    TimerEnd(timer_ui, "  PopulateListBox - UI update");
     
     g_last_items = items;
     g_last_item_count = item_count;
     g_TotalMatches = total_matches;
-    }
+    
+    TimerEnd(timer_total, "PopulateListBox TOTAL");
+}
 
 COLORREF GetRainbowColor(float t, float s, float v) {
     if (RainbowText) {

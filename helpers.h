@@ -84,6 +84,7 @@ static inline bool ProcessHotkey(const HotkeyBinding* bindings, int bindings_cou
         if (IsPopupActive(hPopupWnd)) return false;
         
         if (b->handler) {
+            g_timer = TimerStart();
             b->handler();
             return true;
         }
