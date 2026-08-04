@@ -274,38 +274,22 @@ static void todo_refresh_callback(const char* filter, HWND hListBox) {
 }
 
 static void todo_enter_callback(const char* selection) {
-    char input[256];
-    if (hEditControl != NULL) {
-        UI_GetCurrentText(hEditControl, input);
-    }
-    
-    input[strcspn(input, "\r\n")] = '\0';
-    size_t input_len = strlen(input);
-
-    int selected_index = UI_GetSelection(hListBox);
-    
-    if (selected_index != LB_ERR && (input_len == 0 || strcmp(g_populated_cache[selected_index], input) == 0)) {
-        const char* item_to_remove = g_populated_cache[selected_index];
-        RemoveTodoItemFromFile(item_to_remove);
-        todo_refresh_callback(input, hListBox);
+    if (UI_IsListBoxSelected()) {
+        RemoveTodoItemFromFile(selection);
+        todo_refresh_callback(selection, hListBox);
     } 
-    else if (input_len > 0) {
-        AddTodoToFile(input);
+    else {
+        AddTodoToFile(selection);
         UI_SetText(hEditControl, "");
         todo_refresh_callback("", hListBox);
     }
 }
 
 static void todo_ctrlenter_callback(const char* selection) {
-    int selected_index = UI_GetSelection(hListBox);
-    
-    if (selected_index != -1) {
-        const char* item_to_remove = g_populated_cache[selected_index];
-        RemoveTodoItemFromFile(item_to_remove);
+    if (!UI_IsListBoxSelected()) {
+        RemoveTodoItemFromFile(selection);
     } else {
-        char input[256];
-        UI_GetCurrentText(hEditControl, input);
-        AddTodoToFile(input);
+        AddTodoToFile(selection);
         UI_SetText(hEditControl, "");
     }
     todo_refresh_callback(NULL, hListBox);

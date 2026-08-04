@@ -76,17 +76,12 @@ static void launch_exe_with_args(const char* exe_path, const char* args) {
 }
 
 static void applauncher_enter_callback(const char* selection) {
-    if (selection != NULL && strlen(selection) > 0) {
-        launch_app_by_name(selection);
-    }
+    launch_app_by_name(selection);
 }
 
 static void applauncher_ctrlenter_callback(const char* selection) {
-    if (selection != NULL && strlen(selection) > 0) {
-        printf("TRYING TO LAUNCEH AS ADMING ON %s",selection);
-        launch_app_as_admin(selection);
-        selection_complete = true;
-    }
+    launch_app_as_admin(selection);
+    selection_complete = true;
 }
 
 static void applauncher_refresh_callback(const char* filter, HWND hListBox) {

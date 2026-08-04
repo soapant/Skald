@@ -197,8 +197,6 @@ static void switcher_refresh_callback(const char* filter, HWND hListBox) {
 }
 
 static void switcher_enter_callback(const char* selection) {
-    if (!selection) return;
-    
     for (int i = 0; i < g_switcher_count; i++) {
         if (StrStrIA(g_switcher_windows[i].title, selection) != NULL) {
             if (IsWindow(g_switcher_windows[i].hwnd)) {

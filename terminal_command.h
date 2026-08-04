@@ -106,22 +106,17 @@ static void RunTerminalCommand(const char* Command, bool save_to_history) {
 }
 
 static void terminal_enter_callback(const char* selection) {
-    int selected_index = LB_ERR;
-    if (hListBox != NULL) {
-        selected_index = UI_GetSelection(hListBox);
-    }
-    
-    if (selected_index != LB_ERR) {
-        RunTerminalCommand(selection, false);
-    } else {
-        char input[256];
-        if (hEditControl != NULL) {
-            UI_GetCurrentText(hEditControl, input);
-            if (strlen(input) > 0) {
-                RunTerminalCommand(input, true);
-            }
-        }
-    }
+      if (TerminalHistoryFile->fileSize > 0) {
+          char lastChar = TerminalHistoryFile->pBuffer[TerminalHistoryFile->fileSize - 1];
+          if (lastChar != '\n') {
+              FileAppend(TerminalHistoryFile, "\n");
+          }
+      }
+      if (!UI_IsListBoxSelected()) {
+        FileAppend(TerminalHistoryFile, selection);
+        FileAppend(TerminalHistoryFile, "\n");
+      }
+      RunTerminalCommand(selection, false);
 }
 
 static void terminal_edit_callback(const char* selection) {

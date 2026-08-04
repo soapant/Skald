@@ -103,9 +103,7 @@ static bool HandleBulkKillProcess(int vk_code, int modifiers, const char* curren
     return false;
 }
 static void pk_enter_callback(const char* selection) {
-    if (selection != NULL && strlen(selection) > 0) {
-        terminate_process_by_name(selection);
-    }
+      terminate_process_by_name(selection);
 }
 
 static void pk_refresh_callback(const char* filter, HWND hListBox) {

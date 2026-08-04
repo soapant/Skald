@@ -6,6 +6,7 @@
 #include <string.h>
 #include <stdlib.h> 
 #include "app_launcher.h"
+#include "common_ui.h"
 #include "types.h"
 #include "helpers.h"
 #include "focus_switcher.h"
@@ -328,27 +329,18 @@ static void StartReminder(const char* selection) {
 }
 
 static void reminder_enter_callback(const char* selection) {
-    int selected_index = LB_ERR;
-    if (hListBox != NULL) {
-        selected_index = UI_GetSelection(hListBox);
-    }
-    
-    if (selected_index == LB_ERR) {
-        char input[256];
-        if (hEditControl != NULL) {
-            UI_GetCurrentText(hEditControl, input);
-            if (strlen(input) > 0) {
-                FileAppend(ReminderHistoryFile, input);
-                FileAppend(ReminderHistoryFile, "\n");
-                RebuildReminderCache();
-                printf("[Reminder] Saved query: %s\n", input);
-                
-                StartReminder(selection);
-            }
-        }
-    } else {
-        StartReminder(selection);
-    }
+      if (ReminderHistoryFile->fileSize > 0) {
+          char lastChar = ReminderHistoryFile->pBuffer[ReminderHistoryFile->fileSize - 1];
+          if (lastChar != '\n') {
+              FileAppend(ReminderHistoryFile, "\n");
+          }
+      }
+      if (!UI_IsListBoxSelected()) {
+      FileAppend(ReminderHistoryFile, selection);
+      FileAppend(ReminderHistoryFile, "\n");
+      RebuildReminderCache();
+      }
+      StartReminder(selection);
 }
 static void reminder_edit_callback(const char* selection) {
     char* NewreminderQuery = EditTextPopup(selection,960,540,1000,300);
