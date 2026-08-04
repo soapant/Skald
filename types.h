@@ -304,6 +304,7 @@ extern HWND hSettings;
 extern HWND hEditControl;
 extern HWND g_ActiveEditControl;
 extern HWND g_hEditPopup;
+extern HWND g_hSearchPopup;
 extern bool stop_key;
 extern int stopped_key;
 extern EditPopupData* g_EditData;
