@@ -3,7 +3,6 @@
 #include <string.h>
 #include <windows.h>
 #include "types.h"
-#include "macro_bindings.h"
 
 #define SWITCHER            VK_SPACE // really man
 #define TODO                'T'

@@ -363,7 +363,6 @@ extern COLORREF DisplayMessageText;
 #define FORGETFULL_FILE_PATH "forgetfull.txt"
 #define ID_TRAY_ICON 1001
 #define WM_TRAYICON (WM_USER + 1)
-#define WM_TRIGGER_UNIVERSAL_MACRO (WM_USER + 3)
 #define WM_TRIGGER_IMG_CAPTURE (WM_USER + 2)
 #define ID_EXIT 2001
 #define ID_SETTINGS 2002
