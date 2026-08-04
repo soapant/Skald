@@ -18,6 +18,7 @@ static EditorMode g_current_mode = MODE_INSERT;
 static bool g_vim_mode_enabled = true;
 static const char* g_mode_names[] = { "NORMAL", "INSERT", "VISUAL" };
 const char* g_vim_mode = "INSERT";
+int last_index = 0;
 static inline void SetMode(EditorMode mode) {
     g_current_mode = mode;
     g_vim_mode = g_mode_names[mode];
@@ -26,10 +27,15 @@ static inline void SetMode(EditorMode mode) {
     
     if (in_main) {
         if (strcmp(g_vim_mode,"INSERT") == 0 ) {
+          last_index = g_SelectedIndex;
           UI_SetSelection(hListBox,-1, g_SelectedIndex);
-        } else if (strcmp(g_vim_mode,"NORMAL") == 0) {
-          if (g_TotalMatches != 0) {
-              UI_SetSelection(hListBox,0, g_SelectedIndex);
+        } else if (strcmp(g_vim_mode,"NORMAL") == 0 ) {
+          if (g_TotalMatches != 1) {
+            printf("GOING TO INDEX %i \n",last_index);
+            UI_SetSelection(hListBox,last_index,g_SelectedIndex);
+            UI_LB_SetTopIndex(hListBox,last_index);
+          }else {
+            UI_SetSelection(hListBox,0,g_SelectedIndex);
           }
         }
     }
@@ -41,10 +47,6 @@ static inline void SetMode(EditorMode mode) {
     if (hPopupWnd != NULL && IsWindow(hPopupWnd)) {
         InvalidateRect(hPopupWnd, NULL, FALSE);
         UpdateWindow(hPopupWnd);
-    }
-    if (g_ActiveEditControl != NULL && IsWindow(g_ActiveEditControl)) {
-        InvalidateRect(g_ActiveEditControl, NULL, FALSE);
-        UpdateWindow(g_ActiveEditControl);
     }
     if (g_ActiveEditControl != NULL && IsWindow(g_ActiveEditControl)) {
         HWND hParent = GetParent(g_ActiveEditControl);
