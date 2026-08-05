@@ -82,8 +82,6 @@ int g_match_history[20][4000];
 int g_match_count_history[20]; 
 int g_history_index = 0;       
 int g_history_count = 0;     
-int g_current_window_height = 0;
-int g_current_window_width = 0;
 #define MAX_ITEMS 1000
 char g_populated_cache[MAX_ITEMS][512];
 int g_matching_indices[4000];
@@ -143,8 +141,6 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
     g_filter_callback = filter_callback;
     g_help_callback = help_callback;
     g_title = window_title;
-    g_current_window_height = height;
-    g_current_window_width = width;
     g_current_feature = (char*)window_title + 4;
     struct feature_data* data = GetFeatureData(g_current_feature);
     if (data) {
@@ -167,8 +163,6 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
 
     WindowLayout layout;
     CalculateWindowMetrics(count, &layout, height, width, item_height);
-    g_current_window_height = layout.h;
-    g_current_window_width = layout.w;
     
     HFONT hCustomFont = CreateCustomNerdFont(FontSize, UsedFont);
 
@@ -260,16 +254,12 @@ char* SimplePromptUser(const char* prompt, const char* window_title,int height, 
     selection_complete = false;
     output_buffer[0] = '\0';
     g_title = window_title;
-    g_current_window_height = height;
-    g_current_window_width = width;
     g_current_feature = (char*)window_title + 4;
     
     SetMode(MODE_INSERT);
 
     WindowLayout layout;
     CalculateWindowMetrics(1, &layout, height, width, item_height);
-    g_current_window_height = layout.h;
-    g_current_window_width = layout.w;
     
     HFONT hCustomFont = CreateCustomNerdFont(FontSize, UsedFont);
 
@@ -392,8 +382,6 @@ void SettingsPopUp() {
 
     WindowLayout layout;
     CalculateWindowMetrics(1, &layout, height, width, item_height);
-    g_current_window_height = layout.h;
-    g_current_window_width = layout.w;
     
     HFONT hCustomFont = CreateCustomNerdFont(FontSize, UsedFont);
 
