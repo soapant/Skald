@@ -9,6 +9,7 @@
 #include "vim_bindings.h"
 #include "modal.h"
 #include "character_sequence.h"
+#include "types.h"
 
 static inline bool CheckVimMotion(int pressed_vk, int modifiers, MotionAction* out_action, const char** out_sequence, int* out_typed_count) {
     extern HWND hPopupWnd;
@@ -233,9 +234,6 @@ bool CheckAppHotkeyBindings(int pressed_vk, int modifiers) {
                 
                 launch_app_by_name(G_APP_HOTKEYS[i].app_name);
                 HWND hwnd = FindWindowByPartialTitle(G_APP_HOTKEYS[i].app_name);
-                if (hwnd) {
-                  FocusWindow(hwnd);
-                }
                 return true;
             }
         }
@@ -360,6 +358,7 @@ bool CheckMiscHotkeyBindings(int pressed_vk, int modifiers) {
                 StrStrIA(activeExe, G_MISC_HOTKEYS[i].exe_name) != NULL) {
               
                 RunMiscApplication(G_MISC_HOTKEYS[i].misc_path);
+
               
                 return true;
             }
@@ -396,6 +395,11 @@ bool CheckQuickLinkHotkeyBindings(int pressed_vk, int modifiers) {
                 StrStrIA(activeExe, G_QUICKLINK_HOTKEYS[i].exe_name) != NULL) {
               
                 open_browser(G_QUICKLINK_HOTKEYS[i].QuickLinkQuery);
+                if (MessageAfterEachHotkey) {
+                  char buffer[64];
+                  snprintf(buffer,sizeof(buffer),"[QuickLink] Hotkey Name %s Triggered \n",G_QUICKLINK_HOTKEYS[i].QuickLinkQuery);
+                  MSG_BOTTOM(buffer,140,TimeOutForMessages);
+                }
               
                 return true;
             }

@@ -49,9 +49,9 @@ void SubjectiveMessageDisplay(const char* buffer,int msg_height,int timeout,COLO
             DisplayMessageText = COLOR_TEXT;
         }
         if (hPopupWnd != NULL) {
-          MSG_TOP(buffer,msg_height,timeout);
+          MSG_TOP(buffer,msg_height,TimeOutForMessages);
         }else {
-          MSG_MIDDLE_BOTTOM(buffer,msg_height / 2,timeout);
+          MSG_MIDDLE_BOTTOM(buffer,msg_height / 2,TimeOutForMessages);
         }
         DisplayMessageText = COLOR_TEXT;
     }
@@ -85,6 +85,11 @@ static inline bool ProcessHotkey(const HotkeyBinding* bindings, int bindings_cou
         
         if (b->handler) {
             g_timer = TimerStart();
+            if (MessageAfterEachHotkey) {
+              char buffer[64];
+              snprintf(buffer,sizeof(buffer),"[%s] Triggered \n",b->name);
+              MSG_BOTTOM(buffer,140,TimeOutForMessages);
+            }
             b->handler();
             return true;
         }

@@ -41,7 +41,7 @@ static void FocusWindow(HWND hwnd) {
     if (targetThreadID != currentThreadID) {
         AttachThreadInput(currentThreadID, targetThreadID, FALSE);
     }
-    
+
     printf("[FOCUS] Window focused!\n");
 }
  
