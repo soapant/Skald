@@ -65,26 +65,26 @@ static void yazi_refresh_callback(const char* filter, HWND hListBox) {
 
 
 static void yazi_enter_callback(const char* selection) {
-      if (YaziZoxideFile->fileSize > 0) {
-          char lastChar = YaziZoxideFile->pBuffer[YaziZoxideFile->fileSize - 1];
-          if (lastChar != '\n') {
+      char* path = QueryZoxidePath(selection);
+      if (path) {
+          char cmd_args[512];
+          snprintf(cmd_args, sizeof(cmd_args), "-e yazi \"%s\"", path);
+          char terminal[512];
+          snprintf(terminal,sizeof(terminal),"%s.exe",UsedTerminal);
+          ShellExecuteA(NULL, "open", terminal, cmd_args, NULL, SW_SHOWNORMAL);
+          if (YaziZoxideFile->fileSize > 0) {
+              char lastChar = YaziZoxideFile->pBuffer[YaziZoxideFile->fileSize - 1];
+              if (lastChar != '\n') {
+                  FileAppend(YaziZoxideFile, "\n");
+              }
+          }
+          if (!UI_IsListBoxSelected()) {
+              FileAppend(YaziZoxideFile, selection);
               FileAppend(YaziZoxideFile, "\n");
+              RebuildYaziCache();
           }
       }
-      if (!UI_IsListBoxSelected()) {
-          FileAppend(YaziZoxideFile, selection);
-          FileAppend(YaziZoxideFile, "\n");
-          RebuildYaziCache();
-      } else {
-        char* path = QueryZoxidePath(selection);
-        if (path) {
-            char cmd_args[512];
-            snprintf(cmd_args, sizeof(cmd_args), "-e yazi \"%s\"", path);
-            char terminal[512];
-            snprintf(terminal,sizeof(terminal),"%s.exe",UsedTerminal);
-            ShellExecuteA(NULL, "open", terminal, cmd_args, NULL, SW_SHOWNORMAL);
-        }
-    }
+    
 }
 static void yazi_edit_callback(const char* selection) {
     char* NewyaziQuery = EditTextPopup(selection,960,540,1000,300);

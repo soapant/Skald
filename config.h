@@ -49,7 +49,9 @@
 
 static bool TRAY = true;
 
-static bool KeepSelectionAfterClose = true;
+static bool KeepSelectionAfterClose = false;
+
+static bool NormalModeShouldDefaultTo0 = false;
 
 static bool MessageAfterEachHotkey = false;
 
@@ -75,7 +77,7 @@ const char* BASE_SCREENSHOT_FOLDER_PATH = "C:\\Users\\HP\\Pictures\\Screenshots\
 
 const char* TEMP_FILE_PATH = "temp_list_of_positions.md";
 
-const char* UsedImageEditor =  "picview.exe";
+const char* UsedImageEditor =  "C:\\Users\\HP\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Scoop Apps\\PicView.lnk";
 
 const char* UsedFont =  "0xProto Nerd Font";
 
@@ -123,8 +125,39 @@ static const char* ListOfProgramPaths[20] = {
     "C:\\Users\\HP\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu",
     "C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs",
     "D:\\Projects",
-    "D:\\retard games\\miscellaneous"
+    "D:\\retard games\\miscellaneous",
+    "C:\\Windows\\System32\\",             
+    "shell:AppsFolder",                   
 };
+
+typedef struct {
+    const char* path;
+    const char* name;
+} PathEntry;
+
+static const PathEntry SystemShortcuts[] = {
+    {"control.exe", "Control Panel"},
+    {"devmgmt.msc", "Device Manager"},
+    {"compmgmt.msc", "Computer Management"},
+    {"diskmgmt.msc", "Disk Management"},
+    {"services.msc", "Services"},
+    {"taskmgr.exe", "Task Manager"},
+    {"notepad.exe", "Notepad"},
+    {"calc.exe", "Calculator"},
+    {"mspaint.exe", "Paint"},
+    {"cmd.exe", "Command Prompt"},
+    {"powershell.exe", "PowerShell"},
+    {"msconfig.exe", "System Configuration"},
+    {"dxdiag.exe", "DirectX Diagnostic Tool"},
+    {"sysdm.cpl", "System Properties"},
+    {"inetcpl.cpl", "Internet Options"},
+    {"appwiz.cpl", "Programs and Features"},
+    {"timedate.cpl", "Date and Time"},
+    {"desk.cpl", "Display Settings"},
+    {"main.cpl", "Mouse Properties"}
+};
+
+#define SYSTEM_SHORTCUT_COUNT (sizeof(SystemShortcuts) / sizeof(SystemShortcuts[0]))
 
 static const char* ListOfShitToIgnore[30] = {
   "node_modules",

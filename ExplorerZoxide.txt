@@ -6,3 +6,6 @@ code
 videos
 testing
 nigga
+amacs
+include
+windowsapps

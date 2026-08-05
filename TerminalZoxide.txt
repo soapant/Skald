@@ -19,3 +19,6 @@ ded
 bin
 repos
 sof
+miusc
+amacs
+windowsapps
