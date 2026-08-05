@@ -32,9 +32,11 @@ static inline void SetMode(EditorMode mode) {
         } else if (strcmp(g_vim_mode,"NORMAL") == 0 ) {
           if (g_TotalMatches != 1) {
             if (strcmp(selection_feature,g_current_feature) == 0){
-              printf("FEATURE %s MATCHED THE CURRENT FEATUEre %s",selection_feature,g_current_feature);
+              printf("MATCHES SETTING INDEX to %i \n",last_index);
               UI_SetSelection(hListBox,last_index,g_SelectedIndex);
               UI_LB_SetTopIndex(hListBox,last_index);
+            } else {
+              UI_SetSelection(hListBox,0,g_SelectedIndex);
             }
           }else {
             UI_SetSelection(hListBox,0,g_SelectedIndex);

@@ -79,23 +79,23 @@ static void zoxide_edit_callback(const char* selection) {
 
 
 static void zoxide_enter_callback(const char* selection) {
-        if (TerminalZoxideFile->fileSize > 0) {
-            char lastChar = TerminalZoxideFile->pBuffer[TerminalZoxideFile->fileSize - 1];
-            if (lastChar != '\n') {
-                FileAppend(TerminalZoxideFile, "\n");
-            }
-        }
-
-        if (!UI_IsListBoxSelected()) {
-          FileAppend(TerminalZoxideFile, selection);
-          FileAppend(TerminalZoxideFile, "\n");
-          RebuildZoxideCache();
-        }
         char* path = QueryZoxidePath(selection);
         if (path) {
             char terminal[512];
             snprintf(terminal,sizeof(terminal),"%s.exe",UsedTerminal);
             ShellExecuteA(NULL, "open", terminal, NULL, path, SW_SHOWNORMAL);
+            if (TerminalZoxideFile->fileSize > 0) {
+                char lastChar = TerminalZoxideFile->pBuffer[TerminalZoxideFile->fileSize - 1];
+                if (lastChar != '\n') {
+                    FileAppend(TerminalZoxideFile, "\n");
+                }
+            }
+
+            if (!UI_IsListBoxSelected()) {
+              FileAppend(TerminalZoxideFile, selection);
+              FileAppend(TerminalZoxideFile, "\n");
+              RebuildZoxideCache();
+            }
         }
 }
 

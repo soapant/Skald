@@ -39,26 +39,15 @@ static inline void ExecuteEnter(void) {
     selection_complete = true;
 }
 
-static inline const char* GoToFirstListBoxItem(void) {
-    if (!hListBox || !IsWindow(hListBox) || g_populated_count <= 0) return NULL;
-    
-    g_view_offset = 0;
-
+static inline void GoToFirstListBoxItem(void) {
     UI_SetSelection(hListBox,0,g_SelectedIndex);
-    UI_LB_SetTopIndex(hListBox,1);
-
-    return g_populated_cache[0];
+    UI_LB_SetTopIndex(hListBox,0);
 }
 
-static inline const char* GoToLastListBoxItem(void) {
-    if (!hListBox || !IsWindow(hListBox) || g_populated_count <= 0) return NULL;
-    
+static inline void GoToLastListBoxItem(void) {
     int lastIndex = g_populated_count - 1;
     UI_SetSelection(hListBox,lastIndex,g_SelectedIndex);
-
     UI_LB_SetCaretIndex(hListBox, lastIndex, FALSE);
-
-    return g_populated_cache[lastIndex];
 }
 
 inline void SetCursorToStartOfText(void) {

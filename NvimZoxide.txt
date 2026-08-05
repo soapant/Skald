@@ -21,3 +21,5 @@ misc
 cdoe
 software
 ded
+amacs
+windowsapps
