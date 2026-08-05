@@ -65,21 +65,21 @@ static void explorer_refresh_callback(const char* filter, HWND hListBox) {
 }
 
 static void explorer_enter_callback(const char* selection) {
-          if (ExplorerZoxideFile->fileSize > 0) {
-              char lastChar = ExplorerZoxideFile->pBuffer[ExplorerZoxideFile->fileSize - 1];
-              if (lastChar != '\n') {
-                  FileAppend(ExplorerZoxideFile, "\n");
-              }
-          }
-
-          if (!UI_IsListBoxSelected()) {
-            FileAppend(ExplorerZoxideFile, selection);
-            FileAppend(ExplorerZoxideFile, "\n");
-            RebuildExplorerCache();
-          }
           char* path = QueryZoxidePath(selection);
           if (path) {
               ShellExecuteA(NULL, "open", "explorer.exe", path, NULL, SW_SHOWNORMAL);
+              if (ExplorerZoxideFile->fileSize > 0) {
+                  char lastChar = ExplorerZoxideFile->pBuffer[ExplorerZoxideFile->fileSize - 1];
+                  if (lastChar != '\n') {
+                      FileAppend(ExplorerZoxideFile, "\n");
+                  }
+              }
+
+              if (!UI_IsListBoxSelected()) {
+                FileAppend(ExplorerZoxideFile, selection);
+                FileAppend(ExplorerZoxideFile, "\n");
+                RebuildExplorerCache();
+              }
           }
 }
 

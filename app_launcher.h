@@ -15,11 +15,35 @@
 
 static void initialize_app_cache() {
     G_APP_COUNT = 0;
+    
     for (int i = 0; i < sizeof(ListOfProgramPaths) / sizeof(ListOfProgramPaths[0]); i++) {
         scan_directory_recursive(ListOfProgramPaths[i]);
     }
+    
+    for (int shortcut_idx = 0; shortcut_idx < SYSTEM_SHORTCUT_COUNT; shortcut_idx++) {
+        if (G_APP_COUNT >= MAX_APPS) break;
+        
+        bool found = false;
+        for (int app_idx = 0; app_idx < G_APP_COUNT; app_idx++) {
+            if (StrStrIA(G_APPS[app_idx].path, SystemShortcuts[shortcut_idx].path) != NULL) {
+                strncpy(G_APPS[app_idx].name, SystemShortcuts[shortcut_idx].name, sizeof(G_APPS[app_idx].name) - 1);
+                G_APPS[app_idx].name[sizeof(G_APPS[app_idx].name) - 1] = '\0';
+                found = true;
+                break;
+            }
+        }
+        
+        if (!found) {
+            strncpy(G_APPS[G_APP_COUNT].name, SystemShortcuts[shortcut_idx].name, sizeof(G_APPS[G_APP_COUNT].name) - 1);
+            G_APPS[G_APP_COUNT].name[sizeof(G_APPS[G_APP_COUNT].name) - 1] = '\0';
+            
+            strncpy(G_APPS[G_APP_COUNT].path, SystemShortcuts[shortcut_idx].path, sizeof(G_APPS[G_APP_COUNT].path) - 1);
+            G_APPS[G_APP_COUNT].path[sizeof(G_APPS[G_APP_COUNT].path) - 1] = '\0';
+            
+            G_APP_COUNT++;
+        }
+    }
 }
-
 static bool FindAppInCache(const char* name, char* out_path, size_t path_size) {
     for (int i = 0; i < G_APP_COUNT; i++) {
         if (StrStrIA(G_APPS[i].name, name) != NULL) {

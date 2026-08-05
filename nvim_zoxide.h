@@ -110,21 +110,21 @@ static void neovide_refresh_callback(const char* filter, HWND hListBox) {
 
 
 static void neovide_enter_callback(const char* selection) {
-      if (NvimZoxideFile->fileSize > 0) {
-          char lastChar = NvimZoxideFile->pBuffer[NvimZoxideFile->fileSize - 1];
-          if (lastChar != '\n') {
-              FileAppend(NvimZoxideFile, "\n");
-          }
-      }
-
-      if (!UI_IsListBoxSelected()) {
-          FileAppend(NvimZoxideFile, selection);
-          FileAppend(NvimZoxideFile, "\n");
-          RebuildNvimCache();
-      }
       char* path = QueryZoxidePath(selection);
       if (path) {
           LaunchNvim(path);
+          if (NvimZoxideFile->fileSize > 0) {
+              char lastChar = NvimZoxideFile->pBuffer[NvimZoxideFile->fileSize - 1];
+              if (lastChar != '\n') {
+                  FileAppend(NvimZoxideFile, "\n");
+              }
+          }
+
+          if (!UI_IsListBoxSelected()) {
+              FileAppend(NvimZoxideFile, selection);
+              FileAppend(NvimZoxideFile, "\n");
+              RebuildNvimCache();
+          }
       }
 }
 static void neovide_edit_callback(const char* selection) {
