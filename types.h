@@ -402,13 +402,13 @@ extern WinTimer g_timer;
 #define MSG_TOP(msg, msg_height, timeout) \
     DisplayMessage((msg), \
                    960, \
-                   (540 - (g_current_window_height / 2) - GAP - ((msg_height) / 2)), \
+                   (540 - (960 / 2) - GAP - ((msg_height) / 2)), \
                    900, (msg_height), (timeout))
 
 #define MSG_BOTTOM(msg, msg_height, timeout) \
     DisplayMessage((msg), \
                    960, \
-                   (540 + (g_current_window_height / 2) + GAP + ((msg_height) / 2)), \
+                   (540 + (960 / 2) + GAP + ((msg_height) / 2)), \
                    900, (msg_height), (timeout))
 #define MSG_MIDDLE_BOTTOM(msg,msg_height,timeout) \
     DisplayMessage((msg), \

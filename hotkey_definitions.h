@@ -126,17 +126,23 @@ void HandleInitAppLauncherCache(void) {
 void HandleSettingsTrigger(void) {
   SettingsPopUp();
 }
+// void HandleSwapHotkeyMode(void) {
+//     PixelHotkeys = !PixelHotkeys;
+//     char buffer[20];
+//     snprintf(buffer,sizeof(buffer),"Set The Pixel Hotkeys Mode To %s",PixelHotkeys  ? "True" : "False");
+//     MSG_BOTTOM(buffer,140,TimeOutForMessages);
+// }
 
 
 #define BINDING(key, mod, handler, enabled) \
-    { key, mod, key##_blacklist, key##_BLACKLIST_COUNT, handler, #key, enabled }
+    { key, mod, key##_blacklist, key##_BLACKLIST_COUNT, handler, #key,enabled }
 
 #define BINDING_CUSTOM(key, mod, blist, blist_count, handler, name, enabled) \
     { key, mod, blist, blist_count, handler, name, enabled }
 #define BINDING_SIMPLE(key,mod,handler) \
     { key, mod, NULL, 0, handler, "", true }
 
-static const HotkeyBinding G_HOTKEY_BINDINGS[] = {
+static HotkeyBinding G_HOTKEY_BINDINGS[] = {
     BINDING(SWITCHER,           HOTKEY_MOD_ALT,       TriggerWindowSwitcher,   true),
     BINDING(GOOGLE_SEARCH,      HOTKEY_MOD_ALT,       TriggerGoogleSearch,     true),
     BINDING(TODO,               HOTKEY_MOD_ALT,       TriggerTodo,             true),
@@ -169,10 +175,11 @@ static const HotkeyBinding G_HOTKEY_BINDINGS[] = {
     BINDING(NVIM,               HOTKEY_MOD_ALT,       TriggerNvimZoxide,       true),
     BINDING(WIFI_TOGGLE,        HOTKEY_MOD_ALT_SHIFT, TriggerWifiToggle,       true),
     BINDING(BLUETOOTH_TOGGLE,   HOTKEY_MOD_ALT_CTRL,  TriggerBlueToothToggle,  true),
-
     BINDING(SETTINGS,           HOTKEY_MOD_ALT,  HandleSettingsTrigger,         true),
+
     BINDING_SIMPLE('M', HOTKEY_MOD_ALT_CTRL,HandleKillMyProgram),
     BINDING_SIMPLE('E', HOTKEY_MOD_ALT_CTRL,HandleInitAppLauncherCache),
+    // BINDING_SIMPLE(TOGGLE_PIXEL_HOTKEYS_KEY,HOTKEY_MOD_ALT_CTRL,HandleSwapHotkeyMode),
 };
 
 #define HOTKEY_BINDING_COUNT (sizeof(G_HOTKEY_BINDINGS) / sizeof(G_HOTKEY_BINDINGS[0]))
