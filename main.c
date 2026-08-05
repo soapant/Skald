@@ -674,6 +674,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
         if (shift_down && !IsInsertMode() && hPopupWnd != NULL) {
           if (!g_hEditPopup) {
             if (pressed_vk == COMMAND_MODE_KEY) {
+              SetMode(MODE_INSERT);
               char* output = EditTextPopup("", 960, 540, 1000, 300);
               if (output) {
                 HandleCommandExecution(output);
