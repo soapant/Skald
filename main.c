@@ -313,12 +313,12 @@ char* SimplePromptUser(const char* prompt, const char* window_title,int height, 
     return (strlen(output_buffer) > 0) ? output_buffer : NULL;
 }
 
-char* DisplayMessage(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, int timeout) {
+void DisplayMessage(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, int timeout) {
     HINSTANCE hInstance = GetModuleHandle(NULL);
     
-    if (!message) return NULL;
     DestroyWindow(hDisplayMessage);
     KillTimer(hDisplayMessage,999);
+
     
     HDC hdc = GetDC(NULL);
     HFONT hFont = CreateCustomNerdFont(FontSize, UsedFont);
@@ -339,7 +339,7 @@ char* DisplayMessage(const char* message, int centerX, int centerY, int maxWidth
     if (winHeight > maxHeight) winHeight = maxHeight;
     
     FadeWindowData* pWndData = (FadeWindowData*)malloc(sizeof(FadeWindowData));
-    if (!pWndData) return NULL;
+    if (!pWndData) return;
 
     pWndData->message = _strdup(message);
     pWndData->hFont = CreateCustomNerdFont(FontSize, UsedFont);
@@ -359,7 +359,7 @@ char* DisplayMessage(const char* message, int centerX, int centerY, int maxWidth
         printf("[DEBUG-UI] ERROR: CreateWindowExA failed. GetLastError: %lu\n", GetLastError());
         DeleteObject(pWndData->hFont);
         free(pWndData);
-        return NULL;
+        return;
     }
 
     SetLayeredWindowAttributes(hPopupWnd, 0, pWndData->alpha, LWA_ALPHA);
@@ -369,7 +369,7 @@ char* DisplayMessage(const char* message, int centerX, int centerY, int maxWidth
 
     SetTimer(hPopupWnd, 999, 50, NULL);
     
-    return NULL; 
+    return; 
 }
 
 void SettingsPopUp() {
@@ -672,7 +672,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
             }
           }
         }
-        if (!g_hSearchPopup && hPopupWnd) {
+        if (!g_hSearchPopup && hPopupWnd && IsNormalMode()) {
             if (pressed_vk == SEARCH_PROGRAM_KEY) {
               SearchPopup();
             }

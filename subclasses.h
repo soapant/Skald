@@ -19,6 +19,7 @@
 int g_refresh_count = 0;
 COLORREF DisplayMessageText;
 COLORREF g_rainbow_text_cache[MAX_VISIBLE_ITEMS + 1] = {0};
+static bool only_once = true;
 static bool rainbow_init = false;
 
 LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
@@ -390,6 +391,8 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                                               DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
                                               CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, UsedFont);
                 }
+                if (only_once) selection_feature = g_current_feature;
+                only_once = false;
                 break;
         }
         case WM_COMMAND: {
@@ -710,6 +713,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                  last_index = 0;
                  g_SelectedIndex = 0;
              }
+             selection_feature = g_current_feature;
              for (int i = 0; i < (int)(sizeof(held_modifiers) / sizeof(held_modifiers[0])); i++) {
                  if (GetAsyncKeyState(held_modifiers[i]) & 0x8000) {
                      INPUT up = {0};
