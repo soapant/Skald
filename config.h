@@ -48,6 +48,10 @@
 
 static bool TRAY = true;
 
+static bool MessageAfterEachHotkey = false;
+
+static int  TimeOutForMessages = 1;
+
 static bool DoTimeDebugs = false;
 
 static char* EditPopUpPos = "middle";

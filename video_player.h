@@ -87,6 +87,7 @@ static bool HandleVideoPlayer(int vk_code, int modifiers, const char* current_ti
                                     NULL,NULL);
                 
                 free((void*)initial_items);
+
                 return true;
             }
         }
