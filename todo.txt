@@ -51,4 +51,5 @@ implement a custom centering function for the listbox so everything is smooth ra
 the hotkey system is giong to require major refactoring to make it mre scalable and controllable||[Cprogram]|[DontForget]
 you should really figure out wy it does that first character thigny so you dont have to hardcode it||[Cprogram]|[DontForget]|[Bug]
 the trigger conditins can all jst be boos and functions that just modify them||[Cprogram]|[DontForget]
-figure tf out why it randomly crashes when filtering||[Cprogram]|[Bug]
+add an undo system but that is way way way later down the raod||[Cprogram]|[Maybe]
+figure out why the program randomly crashes when filtering||[Cprogram]|[DontForget]

@@ -19,21 +19,23 @@ static bool g_vim_mode_enabled = true;
 static const char* g_mode_names[] = { "NORMAL", "INSERT", "VISUAL" };
 const char* g_vim_mode = "INSERT";
 int last_index = 0;
+char* selection_feature = "";
 static inline void SetMode(EditorMode mode) {
     g_current_mode = mode;
     g_vim_mode = g_mode_names[mode];
-    printf("THE LAST INDEX is %i \n",last_index);
-    
     bool in_main = !g_hSearchPopup && !g_hEditPopup;
-    
+
     if (in_main) {
         if (strcmp(g_vim_mode,"INSERT") == 0 ) {
           last_index = g_SelectedIndex;
           UI_SetSelection(hListBox,-1, g_SelectedIndex);
         } else if (strcmp(g_vim_mode,"NORMAL") == 0 ) {
           if (g_TotalMatches != 1) {
-            UI_SetSelection(hListBox,last_index,g_SelectedIndex);
-            UI_LB_SetTopIndex(hListBox,last_index);
+            if (strcmp(selection_feature,g_current_feature) == 0){
+              printf("FEATURE %s MATCHED THE CURRENT FEATUEre %s",selection_feature,g_current_feature);
+              UI_SetSelection(hListBox,last_index,g_SelectedIndex);
+              UI_LB_SetTopIndex(hListBox,last_index);
+            }
           }else {
             UI_SetSelection(hListBox,0,g_SelectedIndex);
           }
