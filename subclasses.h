@@ -1233,25 +1233,4 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     }
     return 0;
 }
-
-BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam) {
-    WindowList* myList = (WindowList*)lParam;
-    
-    if (!IsWindowVisible(hwnd) || GetWindowTextLengthA(hwnd) == 0) {
-        return TRUE;
-    }
-    
-    if (myList->count >= MAX_WINDOWS) {
-        return FALSE;
-    }
-    
-    WindowInfo* currentItem = &myList->items[myList->count];
-    currentItem->hwnd = hwnd;
-    GetWindowTextA(hwnd, currentItem->title, sizeof(currentItem->title));
-    strcpy(currentItem->exe, GetExeNameForWindow(hwnd));
-    
-    myList->count++;
-    return TRUE;
-}
-
 #endif

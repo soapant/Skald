@@ -38,6 +38,7 @@
 #define EDIT_TEXT_KEY       'E'
 #define HELP_SCREEN_KEY     'H'
 #define COPY_SELECTION_KEY  'Y'
+#define TOGGLE_PIXEL_HOTKEYS_KEY 'Z'
 #define COMMAND_MODE_KEY        VK_OEM_1 // ;
 #define SEARCH_PROGRAM_KEY      VK_OEM_2 // /
 #define COLOR_ERROR             RGB(180, 0, 0) 
@@ -110,7 +111,7 @@ const bool MessagesEnabled = true;
 
 const bool RainbowText = true;
 
-const bool PixelHotkeys = true;
+const bool PixelHotkeys = false;
 
 
 

@@ -81,7 +81,11 @@ static inline bool ProcessHotkey(const HotkeyBinding* bindings, int bindings_cou
             if (blacklisted) return false;
         }
         
-        if (IsPopupActive(hPopupWnd)) return false;
+        if (IsPopupActive(hPopupWnd)) {
+            KillTimer(hPopupWnd, 999);
+            DestroyWindow(hPopupWnd);
+            hPopupWnd = NULL;
+        } 
         
         if (b->handler) {
             g_timer = TimerStart();
