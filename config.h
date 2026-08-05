@@ -49,7 +49,11 @@
 
 static bool TRAY = true;
 
+static bool KeepSelectionAfterClose = true;
+
 static bool MessageAfterEachHotkey = false;
+
+static bool AllowOtherFeatureTogglesInFeature = false;
 
 static int  TimeOutForMessages = 1;
 

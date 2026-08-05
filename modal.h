@@ -22,6 +22,7 @@ int last_index = 0;
 static inline void SetMode(EditorMode mode) {
     g_current_mode = mode;
     g_vim_mode = g_mode_names[mode];
+    printf("THE LAST INDEX is %i \n",last_index);
     
     bool in_main = !g_hSearchPopup && !g_hEditPopup;
     
@@ -31,7 +32,6 @@ static inline void SetMode(EditorMode mode) {
           UI_SetSelection(hListBox,-1, g_SelectedIndex);
         } else if (strcmp(g_vim_mode,"NORMAL") == 0 ) {
           if (g_TotalMatches != 1) {
-            printf("GOING TO INDEX %i \n",last_index);
             UI_SetSelection(hListBox,last_index,g_SelectedIndex);
             UI_LB_SetTopIndex(hListBox,last_index);
           }else {
