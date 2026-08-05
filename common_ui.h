@@ -88,25 +88,7 @@ static inline void UI_LB_SetCaretIndex(HWND hList, int index, BOOL scroll) {
 }
 
 static inline void UI_LB_SetTopIndex(HWND hList, int index) {
-    if (!hList || !IsWindow(hList)) return;
-    
-    int current_top = (int)SendMessageA(hList, LB_GETTOPINDEX, 0, 0);
-    
-    RECT rect;
-    GetClientRect(hList, &rect);
-    int itemHeight = (int)SendMessageA(hList, LB_GETITEMHEIGHT, 0, 0);
-    int visible_count = (itemHeight > 0) ? (rect.bottom / itemHeight) : 15;
-    
-    if (index >= current_top + visible_count - PaddingForScrolling) {
-        int new_top = index - visible_count + PaddingForScrolling + 1;
-        if (new_top < 0) new_top = 0;
-        SendMessageA(hList, LB_SETTOPINDEX, new_top, 0);
-    }
-    else if (index <= current_top + PaddingForScrolling) {
-        int new_top = index - PaddingForScrolling;
-        if (new_top < 0) new_top = 0;
-        SendMessageA(hList, LB_SETTOPINDEX, new_top, 0);
-    }
+    SendMessageA(hList, LB_SETTOPINDEX, index, 0);
 }
 
 static inline int UI_LB_GetTopIndex(HWND hList) {
