@@ -41,7 +41,7 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
 
 char* SimplePromptUser(const char* prompt, const char* window_title,int height, int width, int item_height);
 
-char* DisplayMessage(const char* message, int centerX, int centerY, int width, int height,int timeout);
+void DisplayMessage(const char* message, int centerX, int centerY, int width, int height,int timeout);
 
 void SettingsPopUp();
 
@@ -402,7 +402,7 @@ extern WinTimer g_timer;
 #define MSG_TOP(msg, msg_height, timeout) \
     DisplayMessage((msg), \
                    960, \
-                   (540 - (960 / 2) - GAP - ((msg_height) / 2)), \
+                   (960 - 540  - GAP * 10 - ((msg_height) / 2)), \
                    900, (msg_height), (timeout))
 
 #define MSG_BOTTOM(msg, msg_height, timeout) \
