@@ -706,6 +706,10 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         case WM_DESTROY: {
              static const WORD held_modifiers[] = { VK_LSHIFT, VK_RSHIFT, VK_LCONTROL, VK_RCONTROL,
                                                     VK_LMENU, VK_RMENU, VK_LWIN, VK_RWIN };
+             if (!KeepSelectionAfterClose)  {
+                 last_index = 0;
+                 g_SelectedIndex = 0;
+             }
              for (int i = 0; i < (int)(sizeof(held_modifiers) / sizeof(held_modifiers[0])); i++) {
                  if (GetAsyncKeyState(held_modifiers[i]) & 0x8000) {
                      INPUT up = {0};

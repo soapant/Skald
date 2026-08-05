@@ -50,3 +50,5 @@ for the ui settings it should be someting like raycast settings||[Cprogram]|[Don
 implement a custom centering function for the listbox so everything is smooth rather than this teleportation||[Cprogram]|[DontForget]
 the hotkey system is giong to require major refactoring to make it mre scalable and controllable||[Cprogram]|[DontForget]
 you should really figure out wy it does that first character thigny so you dont have to hardcode it||[Cprogram]|[DontForget]|[Bug]
+the trigger conditins can all jst be boos and functions that just modify them||[Cprogram]|[DontForget]
+figure tf out why it randomly crashes when filtering||[Cprogram]|[Bug]
