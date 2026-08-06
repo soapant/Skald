@@ -23,6 +23,7 @@ static inline void LOG(const char* fmt, ...) {
 }
 
 typedef void (*HotkeyHandler)(void);
+typedef bool (*HotkeyCondition)(void);
 
 typedef struct {
     int vk_code;
@@ -31,7 +32,7 @@ typedef struct {
     int blacklist_count;
     HotkeyHandler handler;
     const char* name;
-    bool condition;
+    HotkeyCondition is_enabled;
 } HotkeyBinding;
 
 void SubjectiveMessageDisplay(const char* buffer,int msg_height,int timeout,COLORREF color) {
@@ -58,6 +59,7 @@ void SubjectiveMessageDisplay(const char* buffer,int msg_height,int timeout,COLO
     }
 }
 EditorMode g_last_mode = MODE_INSERT;
+static inline bool AlwaysEnabled(void) { return true; }
 static inline bool ProcessHotkey(const HotkeyBinding* bindings, int bindings_count,
                                   int pressed_vk, int modifiers,
                                   const char* current_title) {
@@ -67,7 +69,7 @@ static inline bool ProcessHotkey(const HotkeyBinding* bindings, int bindings_cou
         if (b->vk_code != pressed_vk) continue;
         if (b->modifiers != modifiers) continue;
         
-        if (!b->condition) {
+        if (b->is_enabled && !b->is_enabled()) {
             continue;
         }
         

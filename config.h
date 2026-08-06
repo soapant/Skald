@@ -117,7 +117,7 @@ const bool MessagesEnabled = true;
 
 const bool RainbowText = true;
 
-const bool PixelHotkeys = false;
+static bool PixelHotkeys = true;
 
 
 
