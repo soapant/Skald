@@ -64,6 +64,14 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
             } else {
                 UI_GetCurrentText(hwnd, output_buffer);
             }
+            for (int i = 0; i < ALIAS_ENTRY_COUNT; ++i) {
+                char* feature = g_current_feature + 1;
+                printf("%s ",feature);
+                if (StrStrIA(output_buffer, Aliases[i].alias) != NULL && 
+                    StrStrIA(Aliases[i].feature,feature) != NULL) {
+                    strcpy(output_buffer,Aliases[i].expanded_text);
+                }
+            }
             SaveFeatureHistory(output_buffer);
             if (hDisplayMessage != NULL) {
               KillTimer(hDisplayMessage, 999);
