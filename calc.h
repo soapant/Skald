@@ -456,15 +456,9 @@ static void calculator_tab_callback(void) {
 static void calculator_ctrlenter_callback(const char* selection) {
     char* result = (char*)selection;
     result = (char*)selection + 2;
-    
     UI_SetText(hEditControl, result);
-    
-    
     int len = strlen(result);
-
     UI_SetCursorPosition(hEditControl, len);
-    
-    UI_GetParent(hEditControl);
 }
 
 

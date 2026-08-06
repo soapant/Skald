@@ -49,9 +49,9 @@ void SubjectiveMessageDisplay(const char* buffer,int msg_height,int timeout,COLO
             DisplayMessageText = COLOR_TEXT;
         }
         if (hPopupWnd != NULL) {
-          MSG_TOP(buffer,msg_height,TimeOutForMessages);
+          MSG_TOP(buffer,msg_height,timeout);
         }else {
-          MSG_MIDDLE_BOTTOM(buffer,msg_height / 2,TimeOutForMessages);
+          MSG_MIDDLE_BOTTOM(buffer,msg_height / 2,timeout);
         }
         DisplayMessageText = COLOR_TEXT;
     }
@@ -172,7 +172,7 @@ static inline char* QueryZoxidePath(const char* query) {
     if (strstr(path, "no match found")) {
         char buffer[256];
         snprintf(buffer,sizeof(buffer),"Query {%s} Doesnt Have A Zoxide Path",query);
-        SubjectiveMessageDisplay(buffer,140,1,RGB(255,0,0));
+        SubjectiveMessageDisplay(buffer,140,TimeOutForMessages,RGB(255,0,0));
         return NULL;
     }
     return (strlen(path) > 0) ? path : NULL;
@@ -743,7 +743,7 @@ int CopyToClipboard(const char* text) {
     char buffer[256];
     
     snprintf(buffer,sizeof(buffer),"Copied %s",text);
-    SubjectiveMessageDisplay(buffer,140,1,COLOR_OF_SELECTION);
+    SubjectiveMessageDisplay(buffer,140,TimeOutForMessages,COLOR_OF_SELECTION);
     CloseClipboard();
     
     return 1;

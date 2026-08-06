@@ -51,11 +51,9 @@ static bool TRAY = true;
 
 static bool KeepSelectionAfterClose = false;
 
-static bool NormalModeShouldDefaultTo0 = false;
-
 static bool MessageAfterEachHotkey = false;
 
-static bool AllowOtherFeatureTogglesInFeature = false;
+static bool AllowOtherFeatureTogglesInFeature = true;
 
 static int  TimeOutForMessages = 1;
 
@@ -71,13 +69,9 @@ static bool COLORFUL_MODE = false;
 
 static bool SearchBoxDiffColor = false;
 
-const char* UsedTerminal = "Alacritty";
-
 const char* BASE_SCREENSHOT_FOLDER_PATH = "C:\\Users\\HP\\Pictures\\Screenshots\\";
 
 const char* TEMP_FILE_PATH = "temp_list_of_positions.md";
-
-const char* UsedImageEditor =  "C:\\Users\\HP\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Scoop Apps\\PicView.lnk";
 
 const char* UsedFont =  "0xProto Nerd Font";
 
@@ -86,6 +80,10 @@ const int FontSize = 24;
 const int NumberFontSize = 18;
 
 const int PaddingForScrolling = 3;
+
+const char* UsedTerminal = "Alacritty";
+
+const char* ImageEditorPath =  "C:\\Users\\HP\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Scoop Apps\\PicView.lnk";
 
 const char* TimerPath = "D:\\Projects\\Tscoding Timer\\sowon\\sowon.exe";
 
