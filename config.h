@@ -49,6 +49,8 @@
 
 static bool TRAY = true;
 
+static bool RememberLastIndex = false;
+
 static bool KeepSelectionAfterClose = false;
 
 static bool MessageAfterEachHotkey = false;
@@ -118,6 +120,7 @@ const bool MessagesEnabled = true;
 const bool RainbowText = true;
 
 static bool PixelHotkeys = true;
+
 
 
 
