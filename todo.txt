@@ -3,8 +3,6 @@ maybe make a sort of info screen for the window and maybe a help||[Project: Cpro
 maybe you can like expand todos for more information||[Project: Cprogram]
 i should also add a keyword type thing so i can color in a specif word in a todo||[Project: Cprogram]
 the video viewer uses a lot of memory???? and cpu too ||[VideoViewer]
-it woudlnt hurt to start on the gui system||[Cprogram]
-add an alias system so the user can define an alias that expands out to text and the program will recognize that||[Cprogram]
 for showing the alias ui it shouldbt be a window figure somthing out||[Cprogram]
 you could like do something in the render callback to select / highlight common done selections||[Cprogram]
 add searching / for the whole program ||[Cprogram]
