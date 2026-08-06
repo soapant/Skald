@@ -9,11 +9,14 @@
 #include <assert.h>
 #include "modal.h"
 #include "types.h"
+#include "hashmap.h"
 #include "config.h"
 #include "common_ui.h"
 
 typedef void (*HotkeyHandler)(void);
 typedef bool (*HotkeyCondition)(void);
+static char* SelectionData[2048] = {0};
+static int SelectionDataCount = 0;
 
 typedef struct {
     int vk_code;
@@ -738,155 +741,6 @@ int CopyToClipboard(const char* text) {
     
     return 1;
 }
-static unsigned int hash(const char* key, int size) {
-    unsigned int h = 0;
-    while (*key) {
-        h = (h * 31) ^ (unsigned char)*key;
-        key++;
-    }
-    return h % size;
-}
-
-static inline HashMap* HashMap_Create(int initial_size) {
-    HashMap* map = malloc(sizeof(HashMap));
-    if (!map) return NULL;
-    
-    map->size = initial_size ? initial_size : 32;
-    map->count = 0;
-    map->buckets = calloc(map->size, sizeof(HashMapEntry*));
-    
-    return map;
-}
-
-static inline void HashMap_Destroy(HashMap* map) {
-    if (!map) return;
-    
-    for (int i = 0; i < map->size; i++) {
-        HashMapEntry* entry = map->buckets[i];
-        while (entry) {
-            HashMapEntry* next = entry->next;
-            free(entry->key);
-            free(entry);
-            entry = next;
-        }
-    }
-    
-    free(map->buckets);
-    free(map);
-}
-
-static inline void HashMap_Put(HashMap* map, const char* key, void* value) {
-    if (!map || !key) return;
-    
-    unsigned int index = hash(key, map->size);
-    HashMapEntry* entry = map->buckets[index];
-    
-    while (entry) {
-        if (strcmp(entry->key, key) == 0) {
-            entry->value = value;
-            return;
-        }
-        entry = entry->next;
-    }
-    
-    HashMapEntry* new_entry = malloc(sizeof(HashMapEntry));
-    new_entry->key = _strdup(key);
-    new_entry->value = value;
-    new_entry->next = map->buckets[index];
-    map->buckets[index] = new_entry;
-    map->count++;
-}
-
-static inline void* HashMap_Get(HashMap* map, const char* key) {
-    if (!map || !key) return NULL;
-    
-    unsigned int index = hash(key, map->size);
-    HashMapEntry* entry = map->buckets[index];
-    
-    while (entry) {
-        if (strcmp(entry->key, key) == 0) {
-            return entry->value;
-        }
-        entry = entry->next;
-    }
-    
-    return NULL;
-}
-
-static inline bool HashMap_Contains(HashMap* map, const char* key) {
-    return HashMap_Get(map, key) != NULL;
-}
-
-static inline void* HashMap_Remove(HashMap* map, const char* key) {
-    if (!map || !key) return NULL;
-    
-    unsigned int index = hash(key, map->size);
-    HashMapEntry* entry = map->buckets[index];
-    HashMapEntry* prev = NULL;
-    
-    while (entry) {
-        if (strcmp(entry->key, key) == 0) {
-            if (prev) {
-                prev->next = entry->next;
-            } else {
-                map->buckets[index] = entry->next;
-            }
-            
-            void* value = entry->value;
-            free(entry->key);
-            free(entry);
-            map->count--;
-            return value;
-        }
-        prev = entry;
-        entry = entry->next;
-    }
-    
-    return NULL;
-}
-
-static inline char** HashMap_GetKeys(HashMap* map, int* count) {
-    if (!map) return NULL;
-    
-    char** keys = malloc(map->count * sizeof(char*));
-    int idx = 0;
-    
-    for (int i = 0; i < map->size; i++) {
-        HashMapEntry* entry = map->buckets[i];
-        while (entry) {
-            keys[idx++] = entry->key;
-            entry = entry->next;
-        }
-    }
-    
-    *count = map->count;
-    return keys;
-}
-static inline char** StringList_Append(char** list, int* count, const char* str) {
-    if (!str) return list;
-    
-    list = realloc(list, (*count + 2) * sizeof(char*));
-    if (!list) return NULL;
-    
-    list[*count] = _strdup(str);
-    (*count)++;
-    list[*count] = NULL;  
-    
-    return list;
-}
-
-static inline void StringList_Free(char** list, int count) {
-    if (!list) return;
-    for (int i = 0; i < count; i++) {
-        free(list[i]);
-    }
-    free(list);
-}
-
-static inline int HashMap_Size(HashMap* map) {
-    return map ? map->count : 0;
-}
-
 static inline int UI_LookupTrueIndex(const char* name) {
     if (!g_item_index_map || !name) return -1;
     size_t value = (size_t)HashMap_Get(g_item_index_map, name);
@@ -905,45 +759,6 @@ static inline void SaveFeatureHistory(char* string) {
     HashMap_Put(feature_history, g_current_feature, HistoryList);
 }
 
-static inline struct feature_data* GetFeatureData(const char* name) {
-    if (!feature_data) {
-        feature_data = HashMap_Create(32);
-    }
-    
-    struct feature_data* data = (struct feature_data*)HashMap_Get(feature_data, name);
-    
-    if (!data) {
-        data = malloc(sizeof(struct feature_data));
-        if (data) {
-            memset(data, 0, sizeof(struct feature_data));
-            data->name = _strdup(name);
-            HashMap_Put(feature_data, name, data);
-            
-            struct feature_data* verify = (struct feature_data*)HashMap_Get(feature_data, name);
-        }
-    }
-    return data;
-}
-
-static inline void GetFeatureCallbacks(const char* name,
-                                       RefreshCallback* refresh,
-                                       EnterCallback* enter,
-                                       CtrlEnterCallback* ctrl_enter,
-                                       TabCallback* tab,
-                                       RenderCallback* render,
-                                       EditCallback* edit,
-                                       FilterCallback* filter) {
-    struct feature_data* data = GetFeatureData(name);
-    if (data) {
-        if (refresh) *refresh = data->refresh_callback;
-        if (enter) *enter = data->enter_callback;
-        if (ctrl_enter) *ctrl_enter = data->ctrl_enter_callback;
-        if (tab) *tab = data->tab_callback;
-        if (render) *render = data->render_callback;
-        if (edit) *edit = data->edit_callback;
-        if (filter) *filter = data->filter_callback;
-    }
-}
 static int ReplaceLineInFile(const char* filepath, int line_index, const char* new_text) {
     if (!filepath || !new_text || line_index < 0) {
         return 0;
