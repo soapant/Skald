@@ -172,10 +172,7 @@ static inline void HandleEnter(void) {
 
 }
 static inline void HandleMoveUp(void) {
-    if (g_ActiveEditControl) {
-        UI_Edit_KeyDown(g_ActiveEditControl, VK_UP);
-        UI_Edit_KeyUp(g_ActiveEditControl, VK_UP);
-    }
+    UI_NavigateUp();
 }
 static inline void HandleMoveRight(void) {
     if (g_ActiveEditControl) {
@@ -185,29 +182,14 @@ static inline void HandleMoveRight(void) {
 }
 
 static inline void HandleMoveDown(void) {
-    if (g_ActiveEditControl) {
-        UI_Edit_KeyDown(g_ActiveEditControl, VK_DOWN);
-        UI_Edit_KeyUp(g_ActiveEditControl, VK_DOWN);
-    }
+    UI_NavigateDown();
 }
 
 static inline void HandlePersistentDelete(void) {
-    char text[512] = {0};
-    
-    strncpy(text, g_populated_cache[g_SelectedIndex], sizeof(text) - 1);
-    text[sizeof(text) - 1] = '\0';
-    int index = g_SelectedIndex;
-    
+    if (!UI_IsListBoxSelected() || !g_ActiveEditControl) return;
     if (g_ctrl_enter_callback != NULL) {
-        g_ctrl_enter_callback(text);
+        g_ctrl_enter_callback(g_populated_cache[g_SelectedIndex]);
     }
-    UI_SetSelection(hListBox,index,index + 1);
-    UI_Edit_KeyDown(g_ActiveEditControl, VK_DOWN);
-    UI_Edit_KeyUp(g_ActiveEditControl, VK_DOWN);
-    UI_Edit_KeyUp(g_ActiveEditControl, VK_UP);
-    UI_Edit_KeyDown(g_ActiveEditControl, VK_UP);
-    return;
-    
 }
 
 static inline void HandleDelete(void) {
@@ -487,8 +469,7 @@ static inline void HandleToggleHistory(void) {
   if (UI_IsListBoxSelected()) {
     UI_SetSelection(hListBox, -1, g_SelectedIndex);
   }
-  UI_Edit_KeyDown(g_ActiveEditControl, VK_UP);
-  UI_Edit_KeyUp(g_ActiveEditControl, VK_UP);
+  GetFromHistory();
 }
 
 static inline void HandleShowFullText(void) {
