@@ -49,7 +49,7 @@
 
 static bool TRAY = true;
 
-static bool RememberLastIndex = false;
+static bool RememberLastIndex = true;
 
 static bool KeepSelectionAfterClose = false;
 
