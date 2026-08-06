@@ -55,6 +55,8 @@ static bool MessageAfterEachHotkey = false;
 
 static bool AllowOtherFeatureTogglesInFeature = true;
 
+static bool ModePersistsThroughFeatures = false;
+
 static int  TimeOutForMessages = 1;
 
 static bool DoTimeDebugs = false;
