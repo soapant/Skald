@@ -5,6 +5,7 @@
 #include <windows.h>
 #include <stdbool.h>
 #include <string.h>
+#include "hashmap.h"
 
 #define MAX_VISIBLE_ITEMS 100
 
@@ -97,7 +98,8 @@ typedef struct {
 struct feature_data {
     char* name;
     const char** items;
-    const char** last_selections;
+    const char* last_selections[2048];
+    int selection_count;
     int item_count;    
     RefreshCallback refresh_callback;
     EnterCallback enter_callback;
@@ -124,18 +126,6 @@ typedef struct {
     int alpha;
     HWND hEdit;
 } EditPopupData;
-
-typedef struct HashMapEntry {
-    char* key;
-    void* value;
-    struct HashMapEntry* next;
-} HashMapEntry;
-
-typedef struct {
-    HashMapEntry** buckets;
-    int size;
-    int count;
-} HashMap;
 
 typedef struct {
     int index;
@@ -368,7 +358,6 @@ extern char output_buffer[256];
 extern HWND hGlobalTrayWnd;
 extern char* g_current_feature;
 extern HashMap* feature_history;
-extern HashMap* feature_data;
 extern HashMap* g_item_index_map;
 extern COLORREF DisplayMessageText;
 #define COLOR_BG      RGB(30, 35, 45)   

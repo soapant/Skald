@@ -24,6 +24,7 @@
 #include "common_ui.h"
 #include "hotkey_definitions.h"
 #include "modal.h"
+#include "feature_data.h"
 #include "subclasses.h"
 #pragma comment(lib, "Shlwapi.lib") 
 #define ID_TRAY_ICON 1001
@@ -93,7 +94,6 @@ long img_x1 = 0, img_y1 = 0;
 HFONT g_hNumFont = NULL;
 HFONT g_hMainFont = NULL;
 HashMap* feature_history = NULL;
-HashMap* feature_data = NULL;
 HashMap* g_item_index_map = NULL;
 
 void WaitForKeypressAsync(KeyCallback callback) {
@@ -142,22 +142,7 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
     g_help_callback = help_callback;
     g_title = window_title;
     g_current_feature = (char*)window_title + 4;
-    struct feature_data* data = GetFeatureData(g_current_feature);
-    if (data) {
-        data->name = _strdup(g_current_feature);
-        data->items = window_list;
-        data->item_count = count;
-        data->refresh_callback = refresh_callback;
-        data->enter_callback = enter_callback;
-        data->ctrl_enter_callback = ctrl_enter_callback;
-        data->tab_callback = tab_callback;
-        data->copy_callback = copy_callback;
-        data->render_callback = render_callback;
-        data->edit_callback = edit_callback;
-        data->filter_callback = filter_callback;
-        data->help_callback = help_callback;
-        data->filter_match = NULL;
-    }
+    SetCurrentFeatureName(g_current_feature);
     
     if (ModePersistsThroughFeatures) {
         SetMode(g_last_mode);
@@ -237,6 +222,24 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
         DispatchMessage(&msg);
     }
 
+    struct feature_data* data = GetFeatureData(g_current_feature);
+    if (data) {
+        data->name = _strdup(g_current_feature);
+        data->items = window_list;
+        data->item_count = count;
+        data->refresh_callback = refresh_callback;
+        data->enter_callback = enter_callback;
+        data->ctrl_enter_callback = ctrl_enter_callback;
+        data->tab_callback = tab_callback;
+        data->copy_callback = copy_callback;
+        data->render_callback = render_callback;
+        data->edit_callback = edit_callback;
+        data->filter_callback = filter_callback;
+        data->help_callback = help_callback;
+        data->filter_match = NULL;
+    }
+
+
     DeleteObject(hCustomFont); 
     selection_complete = false;
     g_refresh_callback = NULL;
@@ -264,6 +267,7 @@ char* SimplePromptUser(const char* prompt, const char* window_title,int height, 
     output_buffer[0] = '\0';
     g_title = window_title;
     g_current_feature = (char*)window_title + 4;
+    SetCurrentFeatureName(g_current_feature);
     
     SetMode(MODE_INSERT);
 
@@ -811,7 +815,7 @@ int main() {
     InitializeTrayIcon();
     initialize_app_cache();
     feature_history = HashMap_Create(32);
-    feature_data = HashMap_Create(32);
+    InitFeatureDataSystem();
     
     struct GdiplusStartupInput gdiplusStartupInput;
     gdiplusStartupInput.GdiplusVersion = 1;
@@ -908,6 +912,7 @@ int main() {
         DeleteObject(g_hMainFont);
         g_hMainFont = NULL;
     }
+    CleanupFeatureDataSystem();
     
     return 0;
 }
