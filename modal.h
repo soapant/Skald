@@ -31,13 +31,8 @@ static inline void SetMode(EditorMode mode) {
           if (RememberLastIndex) last_index = g_SelectedIndex;
           UI_SetSelection(hListBox,-1, g_SelectedIndex);
         } else if (strcmp(g_vim_mode,"NORMAL") == 0 ) {
-          if (RememberLastIndex && strcmp(selection_feature,g_current_feature) == 0) {
-            if (last_index >= 0 && last_index < g_populated_count) {
-              UI_SetSelection(hListBox,last_index,g_SelectedIndex);
-              UI_LB_SetTopIndex(hListBox,last_index);
-            } else {
-              UI_SetSelection(hListBox,0,g_SelectedIndex);
-            }
+          if (RememberLastIndex && last_index >= 0) {
+            UI_NavigateTo(last_index);
           } else {
             UI_SetSelection(hListBox,0,g_SelectedIndex);
           }
