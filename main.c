@@ -204,6 +204,10 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
 
     TimerEnd(timer3,"Focus");
 
+    if (IsNormalMode() && RememberLastIndex && last_index >= 0) {
+        UI_NavigateTo(last_index);
+    }
+
     printf("[DEBUG-UI] Entering local message modal loop...\n");
     MSG msg;
     int loop_counter = 0;
