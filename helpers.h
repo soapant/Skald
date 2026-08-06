@@ -7,6 +7,7 @@
 #include <shlwapi.h>
 #include <stdlib.h>
 #include <assert.h>
+#include "modal.h"
 #include "types.h"
 #include "config.h"
 #include "common_ui.h"
@@ -56,7 +57,7 @@ void SubjectiveMessageDisplay(const char* buffer,int msg_height,int timeout,COLO
         DisplayMessageText = COLOR_TEXT;
     }
 }
-
+EditorMode g_last_mode = MODE_INSERT;
 static inline bool ProcessHotkey(const HotkeyBinding* bindings, int bindings_count,
                                   int pressed_vk, int modifiers,
                                   const char* current_title) {
@@ -86,6 +87,7 @@ static inline bool ProcessHotkey(const HotkeyBinding* bindings, int bindings_cou
                 KillTimer(hPopupWnd, 999);
                 DestroyWindow(hPopupWnd);
                 hPopupWnd = NULL;
+
             } 
         } else {
           if (IsPopupActive(hPopupWnd)) return false;
