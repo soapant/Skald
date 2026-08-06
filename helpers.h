@@ -11,16 +11,6 @@
 #include "types.h"
 #include "config.h"
 #include "common_ui.h"
-#define MAX_EXE_CACHE 128
-
-static inline void LOG(const char* fmt, ...) {
-    if (!GetConsoleWindow()) return;
-    
-    va_list args;
-    va_start(args, fmt);
-    vprintf(fmt, args);
-    va_end(args);
-}
 
 typedef void (*HotkeyHandler)(void);
 typedef bool (*HotkeyCondition)(void);
@@ -202,10 +192,6 @@ static inline bool LaunchAppAsAdmin(const char* path) {
 static inline bool IsCtrlPressed(void) {
     return (GetKeyState(VK_CONTROL) & 0x8000) != 0;
 }
-
-
-
-
 
 typedef struct {
     size_t index;
