@@ -57,6 +57,8 @@ static inline bool UI_IsListBoxSelected(void) {
   return g_SelectedIndex != -1;
 }
 
+bool GetFromHistory(void);
+
 static inline void UI_SetHorizontalExtent(HWND hList, int width) {
     SendMessageA(hList, LB_SETHORIZONTALEXTENT, width, 0);
 }
@@ -100,6 +102,62 @@ static inline void UI_LB_SetFont(HWND hList, HFONT hFont) {
 
 static inline int UI_LB_GetItemHeight(HWND hList) {
     return (int)SendMessageA(hList, LB_GETITEMHEIGHT, 0, 0);
+}
+
+static inline void UI_NavigateTo(int index) {
+    int count = g_populated_count;
+    if (count <= 0) {
+        UI_SetSelection(hListBox, -1, g_SelectedIndex);
+        return;
+    }
+    if (index < 0) index = 0;
+    if (index >= count) index = count - 1;
+
+    UI_SetSelection(hListBox, index, g_SelectedIndex);
+    UI_LB_SetCaretIndex(hListBox, index, TRUE);
+
+    int topIndex = UI_LB_GetTopIndex(hListBox);
+    int itemHeight = UI_LB_GetItemHeight(hListBox);
+    RECT rect;
+    GetClientRect(hListBox, &rect);
+    int visibleCount = (itemHeight > 0) ? (rect.bottom / itemHeight) : 16;
+
+    if (index <= topIndex + PaddingForScrolling) {
+        int newTop = index - PaddingForScrolling;
+        if (newTop < 0) newTop = 0;
+        if (newTop + visibleCount > count) newTop = count - visibleCount;
+        if (newTop < 0) newTop = 0;
+        UI_LB_SetTopIndex(hListBox, newTop);
+    } else if (index >= topIndex + visibleCount - PaddingForScrolling) {
+        int newTop = index - visibleCount + PaddingForScrolling + 1;
+        if (newTop < 0) newTop = 0;
+        if (newTop + visibleCount > count) newTop = count - visibleCount;
+        if (newTop < 0) newTop = 0;
+        UI_LB_SetTopIndex(hListBox, newTop);
+    }
+}
+
+static inline void UI_NavigateUp(void) {
+    int count = g_populated_count;
+    if (count <= 0) return;
+    int sel = g_SelectedIndex;
+    if (sel < 0) {
+        if (GetFromHistory()) return;
+        sel = 0;
+    } else if (sel > 0) {
+        sel--;
+    }
+    UI_NavigateTo(sel);
+}
+
+static inline void UI_NavigateDown(void) {
+    int count = g_populated_count;
+    if (count <= 0) return;
+    int sel = g_SelectedIndex;
+    if (sel < 0) sel = -1;
+    if (sel >= count - 1) sel = count - 1;
+    else sel++;
+    UI_NavigateTo(sel);
 }
 
 static inline int UI_LB_GetTextLen(HWND hList) {
@@ -267,10 +325,17 @@ static inline void PopulateListBox(HWND hListBox, const char* filter,
 
     if (!g_seq_state.waiting) {
         if (IsNormalMode()) {
-            int keep = (g_SelectedIndex >= 0 && g_SelectedIndex < total_matches)
-                           ? g_SelectedIndex
-                           : ((total_matches > 0) ? 0 : -1);
-            UI_SetSelection(hListBox, keep, g_SelectedIndex);
+            int keep;
+            if (RememberLastIndex) {
+                keep = g_SelectedIndex;
+                if (total_matches == 0) keep = -1;
+                else if (keep < 0) keep = 0;
+                else if (keep >= total_matches) keep = total_matches - 1;
+                UI_NavigateTo(keep);
+            } else {
+                keep = (total_matches > 0) ? 0 : -1;
+                UI_SetSelection(hListBox, keep, g_SelectedIndex);
+            }
         } else if (total_matches == 1) {
             UI_SetSelection(hListBox, 0, g_SelectedIndex);
         } else {
