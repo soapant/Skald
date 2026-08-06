@@ -16,6 +16,7 @@
 #include "config.h"
 #include "common_ui.h"
 #include "number_shortcut.h"
+#include "feature_data.h"
 int g_refresh_count = 0;
 COLORREF DisplayMessageText;
 COLORREF g_rainbow_text_cache[MAX_VISIBLE_ITEMS + 1] = {0};
@@ -56,8 +57,9 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
           }
         }
 
-        if (wParam == VK_RETURN) {
+if (wParam == VK_RETURN) {
             bool ctrl_pressed = (GetKeyState(VK_CONTROL) & 0x8000);
+            struct feature_data* data = GetFeatureData(g_current_feature);
             output_buffer[0] = '\0';
             if (UI_IsListBoxSelected()) {
                 strncpy(output_buffer, g_populated_cache[g_SelectedIndex], sizeof(output_buffer) - 1);
@@ -79,14 +81,19 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
               hDisplayMessage = NULL;
             }
             if (ctrl_pressed) {
+
+                AddSelectionToData(output_buffer,g_current_feature,data);
                 if (g_ctrl_enter_callback != NULL) {
                     g_ctrl_enter_callback(output_buffer);
                 }
                 return 0;
             } else {
+
+                AddSelectionToData(output_buffer,g_current_feature,data);
                 if (g_enter_callback != NULL) {
                     g_enter_callback(output_buffer);
                 }
+
                 selection_complete = true; 
                 return 0;
             }
@@ -103,8 +110,12 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
         }
         
         if (wParam == VK_TAB) {
+            struct feature_data* data = GetFeatureData(g_current_feature);
             if (g_tab_callback != NULL) {
                 g_tab_callback();
+            }
+            for (int i = 0;i < data->selection_count;++i) {
+              printf("%s \n",data->last_selections[i]);
             }
             return 0;
         }

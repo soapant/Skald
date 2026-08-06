@@ -37,3 +37,4 @@ sorting||[Cprogram]|[NotImplemetedYet]
 alias ui per key||[Cprogram]|[NotImplemetedYet]
 info on feature||[Cprogram]|[NotImplemetedYet]
 look into a way of putting more information in a listbox string||[Cprogram]|[DontForget]
+nigga
