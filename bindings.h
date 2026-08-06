@@ -12,9 +12,6 @@
 #include "types.h"
 
 static inline bool CheckVimMotion(int pressed_vk, int modifiers, MotionAction* out_action, const char** out_sequence, int* out_typed_count) {
-    extern HWND hPopupWnd;
-    extern HWND g_hEditPopup;
-    
     if (!g_vim_mode_enabled) return false;
     if (!hPopupWnd || !IsWindow(hPopupWnd)) return false;
     if (!g_ActiveEditControl || !IsWindow(g_ActiveEditControl)) return false;

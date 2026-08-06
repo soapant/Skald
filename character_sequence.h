@@ -9,20 +9,6 @@
 #include <ctype.h>
 #include "common_ui.h"
 
-#define MAX_SEQUENCE_LEN 8
-#define SEQUENCE_TIMEOUT_MS 500
-
-typedef struct {
-    char keys[MAX_SEQUENCE_LEN];
-    int len;
-    int typed_count;
-    UINT timer_id;
-    bool waiting;
-    bool timed_out;
-} SequenceState;
-
-static SequenceState g_seq_state = {0};
-
 static inline void SequenceAddKey(char key, bool was_typed) {
     if (g_seq_state.len < MAX_SEQUENCE_LEN - 1) {
         g_seq_state.keys[g_seq_state.len++] = key;
