@@ -126,60 +126,65 @@ void HandleInitAppLauncherCache(void) {
 void HandleSettingsTrigger(void) {
   SettingsPopUp();
 }
-// void HandleSwapHotkeyMode(void) {
-//     PixelHotkeys = !PixelHotkeys;
-//     char buffer[20];
-//     snprintf(buffer,sizeof(buffer),"Set The Pixel Hotkeys Mode To %s",PixelHotkeys  ? "True" : "False");
-//     MSG_BOTTOM(buffer,140,TimeOutForMessages);
-// }
+
+bool IsPixelHotkeysEnabled(void) { return PixelHotkeys; }
+bool IsTimerAvailable(void) { return TimerAvailable; }
+bool IsReplicaAvailable(void) { return ReplicaAvailable; }
+
+void HandleSwapHotkeyMode(void) {
+    PixelHotkeys = !PixelHotkeys;
+    char buffer[20];
+    snprintf(buffer,sizeof(buffer),"Set The Pixel Hotkeys Mode To %s",PixelHotkeys  ? "True" : "False");
+    MSG_BOTTOM(buffer,140,TimeOutForMessages);
+}
 
 
 #define BINDING(key, mod, handler, enabled) \
-    { key, mod, key##_blacklist, key##_BLACKLIST_COUNT, handler, #key,enabled }
+    { key, mod, key##_blacklist, key##_BLACKLIST_COUNT, handler, #key, enabled }
 
 #define BINDING_CUSTOM(key, mod, blist, blist_count, handler, name, enabled) \
     { key, mod, blist, blist_count, handler, name, enabled }
 #define BINDING_SIMPLE(key,mod,handler) \
-    { key, mod, NULL, 0, handler, "", true }
+    { key, mod, NULL, 0, handler, "", AlwaysEnabled }
 
 static HotkeyBinding G_HOTKEY_BINDINGS[] = {
-    BINDING(SWITCHER,           HOTKEY_MOD_ALT,       TriggerWindowSwitcher,   true),
-    BINDING(GOOGLE_SEARCH,      HOTKEY_MOD_ALT,       TriggerGoogleSearch,     true),
-    BINDING(TODO,               HOTKEY_MOD_ALT,       TriggerTodo,             true),
-    BINDING(CALCULATOR,         HOTKEY_MOD_ALT,       TriggerCalculator,       true),
-    BINDING(EXE,                HOTKEY_MOD_ALT,       TriggerAppLauncher,      true),
-    BINDING(KILL_PROCESS,       HOTKEY_MOD_ALT,       TriggerProcessKiller,    true),
-    BINDING(YAZI,               HOTKEY_MOD_ALT,       TriggerYaziZoxide,       true),
-    BINDING(TERMINAL,           HOTKEY_MOD_ALT,       TriggerZoxide,           true),
-    BINDING(TIMER,              HOTKEY_MOD_ALT,       TriggerTimer,            TimerAvailable),
-    BINDING(EXPLORER,           HOTKEY_MOD_ALT,       TriggerExplorer,         true),
-    BINDING(TERMINAL_COMMAND,   HOTKEY_MOD_ALT,       TriggerTerminalCommand,  true),
-    BINDING(VOLUME,             HOTKEY_MOD_ALT,       TriggerVolume,           true),
-    BINDING(MONITOR_FOCUS_MAIN, HOTKEY_MOD_ALT,       TriggerMonitorFocusMain, true),
-    BINDING(MONITOR_FOCUS_SIDE, HOTKEY_MOD_ALT,       TriggerMonitorFocusSide, true),
-    BINDING(REMINDER,           HOTKEY_MOD_ALT,       TriggerReminder,         true),
-    BINDING(MUTE,               HOTKEY_MOD_ALT_SHIFT, TriggerMuteState,        true),
-    BINDING(FORGETFULL,         HOTKEY_MOD_ALT,       TriggerForgetFull,       true),
-    BINDING(REPLICA,            HOTKEY_MOD_ALT_CTRL,  TriggerReplica,          ReplicaAvailable),
-    BINDING(POS,                HOTKEY_MOD_ALT,       TriggerPosCopy,          PixelHotkeys),
-    BINDING(POS,                HOTKEY_MOD_ALT_SHIFT, TriggerPosAdd,           PixelHotkeys),
-    BINDING(POS,                HOTKEY_MOD_ALT_CTRL,  TriggerPosClear,         PixelHotkeys),
-    BINDING(COLOR,              HOTKEY_MOD_ALT,       TriggerColorPlain,       PixelHotkeys),
-    BINDING(COLOR,              HOTKEY_MOD_ALT_CTRL,  TriggerColorParen,       PixelHotkeys),
-    BINDING(PIXEL_EQUALS,       HOTKEY_MOD_ALT,       TriggerPixelEqualsAdb,   PixelHotkeys),
-    BINDING(PIXEL_EQUALS,       HOTKEY_MOD_ALT_CTRL,  TriggerPixelEqualsFn,    PixelHotkeys),
-    BINDING(REGION,             HOTKEY_MOD_ALT,       TriggerRegionCoords,     PixelHotkeys),
-    BINDING(REGION,             HOTKEY_MOD_ALT_SHIFT, TriggerRegionImage,      PixelHotkeys),
-    BINDING(SCREENSHOT,         HOTKEY_MOD_ALT,       TriggerSaveScreenshot,   PixelHotkeys),
-    BINDING(SCREENSHOT,         HOTKEY_MOD_ALT_SHIFT, TriggerOpenScreenshot,   PixelHotkeys),
-    BINDING(NVIM,               HOTKEY_MOD_ALT,       TriggerNvimZoxide,       true),
-    BINDING(WIFI_TOGGLE,        HOTKEY_MOD_ALT_SHIFT, TriggerWifiToggle,       true),
-    BINDING(BLUETOOTH_TOGGLE,   HOTKEY_MOD_ALT_CTRL,  TriggerBlueToothToggle,  true),
-    BINDING(SETTINGS,           HOTKEY_MOD_ALT,  HandleSettingsTrigger,         true),
+    BINDING(SWITCHER,           HOTKEY_MOD_ALT,       TriggerWindowSwitcher,   AlwaysEnabled),
+    BINDING(GOOGLE_SEARCH,      HOTKEY_MOD_ALT,       TriggerGoogleSearch,     AlwaysEnabled),
+    BINDING(TODO,               HOTKEY_MOD_ALT,       TriggerTodo,             AlwaysEnabled),
+    BINDING(CALCULATOR,         HOTKEY_MOD_ALT,       TriggerCalculator,       AlwaysEnabled),
+    BINDING(EXE,                HOTKEY_MOD_ALT,       TriggerAppLauncher,      AlwaysEnabled),
+    BINDING(KILL_PROCESS,       HOTKEY_MOD_ALT,       TriggerProcessKiller,    AlwaysEnabled),
+    BINDING(YAZI,               HOTKEY_MOD_ALT,       TriggerYaziZoxide,       AlwaysEnabled),
+    BINDING(TERMINAL,           HOTKEY_MOD_ALT,       TriggerZoxide,           AlwaysEnabled),
+    BINDING(TIMER,              HOTKEY_MOD_ALT,       TriggerTimer,            IsTimerAvailable),
+    BINDING(EXPLORER,           HOTKEY_MOD_ALT,       TriggerExplorer,         AlwaysEnabled),
+    BINDING(TERMINAL_COMMAND,   HOTKEY_MOD_ALT,       TriggerTerminalCommand,  AlwaysEnabled),
+    BINDING(VOLUME,             HOTKEY_MOD_ALT,       TriggerVolume,           AlwaysEnabled),
+    BINDING(MONITOR_FOCUS_MAIN, HOTKEY_MOD_ALT,       TriggerMonitorFocusMain, AlwaysEnabled),
+    BINDING(MONITOR_FOCUS_SIDE, HOTKEY_MOD_ALT,       TriggerMonitorFocusSide, AlwaysEnabled),
+    BINDING(REMINDER,           HOTKEY_MOD_ALT,       TriggerReminder,         AlwaysEnabled),
+    BINDING(MUTE,               HOTKEY_MOD_ALT_SHIFT, TriggerMuteState,        AlwaysEnabled),
+    BINDING(FORGETFULL,         HOTKEY_MOD_ALT,       TriggerForgetFull,       AlwaysEnabled),
+    BINDING(REPLICA,            HOTKEY_MOD_ALT_CTRL,  TriggerReplica,          IsReplicaAvailable),
+    BINDING(POS,                HOTKEY_MOD_ALT,       TriggerPosCopy,          IsPixelHotkeysEnabled),
+    BINDING(POS,                HOTKEY_MOD_ALT_SHIFT, TriggerPosAdd,           IsPixelHotkeysEnabled),
+    BINDING(POS,                HOTKEY_MOD_ALT_CTRL,  TriggerPosClear,         IsPixelHotkeysEnabled),
+    BINDING(COLOR,              HOTKEY_MOD_ALT,       TriggerColorPlain,       IsPixelHotkeysEnabled),
+    BINDING(COLOR,              HOTKEY_MOD_ALT_CTRL,  TriggerColorParen,       IsPixelHotkeysEnabled),
+    BINDING(PIXEL_EQUALS,       HOTKEY_MOD_ALT,       TriggerPixelEqualsAdb,   IsPixelHotkeysEnabled),
+    BINDING(PIXEL_EQUALS,       HOTKEY_MOD_ALT_CTRL,  TriggerPixelEqualsFn,    IsPixelHotkeysEnabled),
+    BINDING(REGION,             HOTKEY_MOD_ALT,       TriggerRegionCoords,     IsPixelHotkeysEnabled),
+    BINDING(REGION,             HOTKEY_MOD_ALT_SHIFT, TriggerRegionImage,      IsPixelHotkeysEnabled),
+    BINDING(SCREENSHOT,         HOTKEY_MOD_ALT,       TriggerSaveScreenshot,   IsPixelHotkeysEnabled),
+    BINDING(SCREENSHOT,         HOTKEY_MOD_ALT_SHIFT, TriggerOpenScreenshot,   IsPixelHotkeysEnabled),
+    BINDING(NVIM,               HOTKEY_MOD_ALT,       TriggerNvimZoxide,       AlwaysEnabled),
+    BINDING(WIFI_TOGGLE,        HOTKEY_MOD_ALT_SHIFT, TriggerWifiToggle,       AlwaysEnabled),
+    BINDING(BLUETOOTH_TOGGLE,   HOTKEY_MOD_ALT_CTRL,  TriggerBlueToothToggle,  AlwaysEnabled),
+    BINDING(SETTINGS,           HOTKEY_MOD_ALT,  HandleSettingsTrigger,         AlwaysEnabled),
 
     BINDING_SIMPLE('M', HOTKEY_MOD_ALT_CTRL,HandleKillMyProgram),
     BINDING_SIMPLE('E', HOTKEY_MOD_ALT_CTRL,HandleInitAppLauncherCache),
-    // BINDING_SIMPLE(TOGGLE_PIXEL_HOTKEYS_KEY,HOTKEY_MOD_ALT_CTRL,HandleSwapHotkeyMode),
+    BINDING_SIMPLE(TOGGLE_PIXEL_HOTKEYS_KEY,HOTKEY_MOD_SHIFT_CTRL,HandleSwapHotkeyMode),
 };
 
 #define HOTKEY_BINDING_COUNT (sizeof(G_HOTKEY_BINDINGS) / sizeof(G_HOTKEY_BINDINGS[0]))

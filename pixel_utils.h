@@ -3,6 +3,7 @@
 
 #include <windows.h>
 #include <stdio.h>
+#include "file_search.h"
 #include "helpers.h"
 #include "types.h"
 
@@ -60,7 +61,8 @@ static inline void TriggerPosAdd(void) {
 }
 
 static inline void TriggerPosClear(void) {
-  printf("THIS IS NOT IMPLEMETNETD");
+  char temp_lines[100][512] = {0};
+  WriteMdFile(temp_lines,0,TEMP_FILE_PATH);
 }
 
 static inline void TriggerColorPlain(void) {
