@@ -257,21 +257,21 @@ LRESULT CALLBACK SimpleListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, 
       
               case WM_PAINT: {
                   PAINTSTRUCT ps;
-                  HDC hdc = BeginPaint(hWnd, &ps);
-      
-                  RECT rect;
-                  GetClientRect(hWnd, &rect);
-                  if (COLORFUL_MODE) {
-                      int h = rect.bottom - rect.top;
-                      int bandH = max(1, h / 32);
-                      for (int y = 0; y < h; y += bandH) {
-                          float ft = (float)y / (float)h;
-                          COLORREF c = GetRainbowColor(ft, 0.55f, 0.18f);
-                          HBRUSH hBrush = CreateSolidBrush(c);
-                          RECT band = {rect.left, rect.top + y, rect.right, rect.top + min(y + bandH, h)};
-                          FillRect(hdc, &band, hBrush);
-                          DeleteObject(hBrush);
-                      }
+HDC hdc = BeginPaint(hWnd, &ps);
+       
+                   RECT rect;
+                   GetClientRect(hWnd, &rect);
+                   if (COLORFUL_MODE) {
+                       int h = rect.bottom - rect.top;
+                       int bandH = max(1, h / 32);
+                       for (int y = 0; y < h; y += bandH) {
+                           float ft = (float)y / (float)h;
+                           COLORREF c = GetRainbowColor(ft, 0.55f, GradientBrightness);
+                           HBRUSH hBrush = CreateSolidBrush(c);
+                           RECT band = {rect.left, rect.top + y, rect.right, rect.top + min(y + bandH, h)};
+                           FillRect(hdc, &band, hBrush);
+                           DeleteObject(hBrush);
+                       }
                   } else {
                       HBRUSH hBrush = CreateSolidBrush(COLOR_BG);
                       FillRect(hdc, &rect, hBrush);
@@ -317,7 +317,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             HDC hdc = (HDC)wParam;
             SetTextColor(hdc, COLOR_TEXT);
             if (COLORFUL_MODE) {
-                COLORREF bg = GetRainbowColor(0.02f, 0.55f, 0.20f);
+                COLORREF bg = GetRainbowColor(0.02f, 0.55f, GradientBrightness);
                 SetBkColor(hdc, bg);
                 return (LRESULT)CreateSolidBrush(bg);
             } else {
@@ -337,7 +337,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             HDC hdc = (HDC)wParam;
             SetTextColor(hdc, COLOR_TEXT);
             if (COLORFUL_MODE) {
-                COLORREF bg = GetRainbowColor(0.02f, 0.55f, 0.20f);
+                COLORREF bg = GetRainbowColor(0.02f, 0.55f, GradientBrightness);
                 SetBkColor(hdc, bg);
                 return (LRESULT)CreateSolidBrush(bg);
             } else {
@@ -415,10 +415,11 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                   hBgBrush = CreateSolidBrush(COLOR_BG);
                   hSelBrush = CreateSolidBrush(COLOR_SELECTED_TEXT);
                   for (int i = 0; i < MAX_VISIBLE_ITEMS + 40; i++) {
-                      float hue = (float)i / 20.0f * 240.0f;
+                      float t = (float)(i % GradientItems) / (float)GradientItems;
+                      float hue = t * 240.0f;
                       float h = hue / 60.0f;
                       float s = 0.85f;
-                      float v = 0.85f;
+                      float v = GradientBrightness;
                       int j = (int)h;
                       float f = h - j;
                       float p = v * (1 - s);
@@ -449,10 +450,11 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
               if (RainbowText) {
                   if (!rainbow_init) {
                       for (int i = 0; i <= MAX_VISIBLE_ITEMS; i++) {
-                          float hue = (float)i / 20.0f * 240.0f;
+                          float t = (float)(i % GradientItems) / (float)GradientItems;
+                          float hue = t * 240.0f;
                           float h = hue / 60.0f;
                           float s = 0.85f;
-                          float v = 0.85f;
+                          float v = GradientBrightness;
                           int j = (int)h;
                           float f = h - j;
                           float p = v * (1.0f - s);
@@ -577,22 +579,22 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
           }
           break;
       }
-      case WM_PAINT: {
-          PAINTSTRUCT ps;
-          HDC hdc = BeginPaint(hwnd, &ps);
-          RECT rect;
-          GetClientRect(hwnd, &rect);
-          if (COLORFUL_MODE) {
-              int h = rect.bottom - rect.top;
-              int bandH = max(1, h / 128);
-              for (int y = 0; y < h; y += bandH) {
-                  float ft = (float)y / (float)h;
-                  COLORREF c = GetRainbowColor(ft, 0.55f, 0.18f);
-                  HBRUSH hBrush = CreateSolidBrush(c);
-                  RECT band = {rect.left, rect.top + y, rect.right, rect.top + min(y + bandH, h)};
-                  FillRect(hdc, &band, hBrush);
-                  DeleteObject(hBrush);
-              }
+case WM_PAINT: {
+            PAINTSTRUCT ps;
+            HDC hdc = BeginPaint(hwnd, &ps);
+            RECT rect;
+            GetClientRect(hwnd, &rect);
+            if (COLORFUL_MODE) {
+                int h = rect.bottom - rect.top;
+                int bandH = max(1, h / 128);
+                for (int y = 0; y < h; y += bandH) {
+                    float ft = (float)y / (float)h;
+                    COLORREF c = GetRainbowColor(ft, 0.55f, GradientBrightness);
+                    HBRUSH hBrush = CreateSolidBrush(c);
+                    RECT band = {rect.left, rect.top + y, rect.right, rect.top + min(y + bandH, h)};
+                    FillRect(hdc, &band, hBrush);
+                    DeleteObject(hBrush);
+                }
           } else {
               HBRUSH hBrush = CreateSolidBrush(COLOR_BG);
               FillRect(hdc, &ps.rcPaint, hBrush);
