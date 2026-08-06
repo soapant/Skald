@@ -119,6 +119,10 @@ const bool MessagesEnabled = true;
 
 const bool RainbowText = true;
 
+const int GradientItems = 30;
+
+const float GradientBrightness = 1.0f;
+
 static bool PixelHotkeys = false;
 
 static const char* ListOfProgramPaths[20] = {
