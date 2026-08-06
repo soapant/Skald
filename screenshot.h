@@ -68,7 +68,7 @@ static void TriggerScreenshot(HWND hPopupWnd,bool open_screenshot) {
         printf("[SCREENSHOT] Saved: %s\n", final_file_path);
         if (open_screenshot) {
           char open_cmd[1024];
-          snprintf(open_cmd, sizeof(open_cmd), "start %s \"%s\"", UsedImageEditor, final_file_path);
+          snprintf(open_cmd, sizeof(open_cmd), "start %s \"%s\"", ImageEditorPath, final_file_path);
           system(open_cmd);
           printf("[SCREENSHOT] Opening in editor: %s\n", open_cmd);
         }

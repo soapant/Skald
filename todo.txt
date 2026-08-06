@@ -55,3 +55,4 @@ maybe you can make a central sort of control where yo ucan oepn other parts of t
 the app launcher doesnt have access to things like hte microsoft store and device manager||[Cprogram]|[DontForget]
 i totally forgot i should really make the clipbaord manaegr||[Cprogram]|[DontForget]|[Feature]
 add a debug menu to show data about the feature||[Cprogram]|[DontForget]
+there is a lot of discrepancy some parts of the code filter without neeing a selection some parts rely on it||[Cprogram]|[DontForget]

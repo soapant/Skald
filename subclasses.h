@@ -1053,6 +1053,7 @@ LRESULT CALLBACK EditPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
                 SetWindowLongPtrA(hwnd, GWLP_USERDATA, 0);
             }
             ForceWindowFocus(hPopupWnd, hEditControl);
+            last_index = g_SelectedIndex;
             SetMode(MODE_NORMAL);
             UpdateTextCaret(hEditControl);
             break;

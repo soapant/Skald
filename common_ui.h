@@ -144,6 +144,7 @@ static inline void PopulateListBox(HWND hListBox, const char* filter,
                                    const char** items, int item_count,
                                    bool (*filter_match)(const char* item, const char* filter)) {
     if (!hListBox) return;
+    if (g_seq_state.waiting) return;
     
     WinTimer timer_total = TimerStart();
     
