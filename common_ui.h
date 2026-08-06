@@ -480,6 +480,33 @@ static inline void UI_Redraw(HWND hListBox) {
           g_refresh_callback(buffer,hListBox);
     }
 }
+
+static bool g_toggle_key_pending = false;
+
+static inline void UI_FlushPendingInput(void) {
+    MSG msg;
+    while (PeekMessageA(&msg, NULL, WM_KEYFIRST, WM_KEYLAST, PM_REMOVE)) {
+        if (msg.message == WM_KEYDOWN || msg.message == WM_SYSKEYDOWN) {
+            g_toggle_key_pending = false;
+        }
+    }
+}
+
+static inline void UI_PreparePopupPump(void) {
+    g_toggle_key_pending = true;
+    UI_FlushPendingInput();
+}
+
+static inline bool UI_ShouldSkipPopupKey(const MSG* msg) {
+    if (!g_toggle_key_pending) return false;
+    if (msg->message == WM_KEYDOWN || msg->message == WM_SYSKEYDOWN ||
+        msg->message == WM_KEYUP || msg->message == WM_SYSKEYUP ||
+        msg->message == WM_CHAR || msg->message == WM_SYSCHAR) {
+        g_toggle_key_pending = false;
+        return true;
+    }
+    return false;
+}
 static inline void UI_GetParent(HWND hwnd) {
     SendMessageA(GetParent(hwnd), WM_COMMAND, MAKEWPARAM(IDC_INPUT_BOX, EN_CHANGE), (LPARAM)hEditControl);
 }

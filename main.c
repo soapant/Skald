@@ -159,7 +159,12 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
         data->filter_match = NULL;
     }
     
-    SetMode(MODE_INSERT);
+    if (ModePersistsThroughFeatures) {
+        printf("ADJKADJWK");
+        SetMode(g_last_mode);
+    } else {
+        SetMode(MODE_INSERT);
+    }
 
     WindowLayout layout;
     CalculateWindowMetrics(count, &layout, height, width, item_height);
@@ -205,10 +210,13 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
     printf("[DEBUG-UI] Entering local message modal loop...\n");
     MSG msg;
     int loop_counter = 0;
+    UI_PreparePopupPump();
     while (!selection_complete) {
         if (GetMessage(&msg, NULL, 0, 0)) {
+            if (UI_ShouldSkipPopupKey(&msg)) continue;
             TranslateMessage(&msg);
             DispatchMessage(&msg);
+            loop_counter++;
         } else {
             break; 
         }
@@ -288,8 +296,10 @@ char* SimplePromptUser(const char* prompt, const char* window_title,int height, 
     
     MSG msg;
     int loop_counter = 0;
+    UI_PreparePopupPump();
     while (!selection_complete) {
         if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+            if (UI_ShouldSkipPopupKey(&msg)) continue;
             loop_counter++;
             TranslateMessage(&msg);
             DispatchMessage(&msg);
@@ -501,8 +511,10 @@ char* EditTextPopup(const char* initial_text, int centerX, int centerY, int maxW
     SetTimer(hPopupWnd, 999, 50, NULL);
     
     MSG msg;
+    UI_PreparePopupPump();
     while (IsWindow(hPopupWnd) && g_EditData && g_EditData->result == NULL) {
         if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+            if (UI_ShouldSkipPopupKey(&msg)) continue;
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
@@ -573,8 +585,10 @@ char* SearchPopup() {
     SetTimer(hPopupWnd, 999, 50, NULL);
     
     MSG msg;
+    UI_PreparePopupPump();
     while (IsWindow(hPopupWnd)) {
         if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+            if (UI_ShouldSkipPopupKey(&msg)) continue;
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }

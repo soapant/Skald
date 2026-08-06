@@ -713,6 +713,8 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                  last_index = 0;
                  g_SelectedIndex = 0;
              }
+
+             g_last_mode = g_current_mode;
              selection_feature = g_current_feature;
              for (int i = 0; i < (int)(sizeof(held_modifiers) / sizeof(held_modifiers[0])); i++) {
                  if (GetAsyncKeyState(held_modifiers[i]) & 0x8000) {
@@ -879,19 +881,12 @@ LRESULT CALLBACK SettingsPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
     return DefWindowProcA(hwnd, msg, wParam, lParam);
 }
 
-bool first_key = true;
 LRESULT CALLBACK EditPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
     EditPopupData* data = (EditPopupData*)dwRefData;
     if (!data || !data->hEdit) {
         data = (EditPopupData*)GetWindowLongPtrA(hWnd, GWLP_USERDATA);
     }
-    if (uMsg == WM_CHAR) {
-        if (first_key) {
-            first_key = false;
-            return 0;
-        }
-    }
-    else if (uMsg == WM_KEYDOWN) {
+    if (uMsg == WM_KEYDOWN) {
         if (!data || !data->hEdit) {
             return DefSubclassProc(hWnd, uMsg, wParam, lParam);
         }
@@ -900,7 +895,6 @@ LRESULT CALLBACK EditPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
             printf("[EditPopup] Escape pressed\n");
             data->result = NULL;
             DestroyWindow(GetParent(hWnd));
-            first_key = true;
             UI_Redraw(hListBox);
             return 0;
         }
@@ -922,17 +916,9 @@ LRESULT CALLBACK EditPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 }
 
 LRESULT CALLBACK SearchPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
-    if (uMsg == WM_CHAR) {
-        if (first_key) {
-            first_key = false;
-            return 0;
-        }
-        printf("KEY %c \n",(char)wParam);
-    }
-    else if (uMsg == WM_KEYDOWN) {
+    if (uMsg == WM_KEYDOWN) {
         if (wParam == VK_ESCAPE) {
             DestroyWindow(GetParent(hWnd));
-            first_key = true;
             UI_Redraw(hListBox);
             return 0;
         }
@@ -976,7 +962,6 @@ LRESULT CALLBACK EditPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
             );
             
             if (data->hEdit) {
-                first_key = true;
                 UI_Edit_SetFont(data->hEdit,data->hFont);
                 UI_Edit_SetSel(data->hEdit,0,0);
                 SetFocus(data->hEdit);
@@ -1086,7 +1071,6 @@ LRESULT CALLBACK SearchPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPar
                 hwnd, (HMENU)1001, hInstance, NULL
             );
             if (g_hSearchPopup) {
-                first_key = true;
                 UI_Edit_SetFont(g_hSearchPopup,hFont);
                 UI_Edit_SetSel(g_hSearchPopup,0,0);
                 SetFocus(g_hSearchPopup);
