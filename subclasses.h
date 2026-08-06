@@ -419,6 +419,14 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             
             break;
         }
+        case WM_TIMER: {
+            if (wParam == UI_DEBOUNCE_TIMER_ID) {
+                KillTimer(hwnd, UI_DEBOUNCE_TIMER_ID);
+                UI_RedrawNow(hListBox);
+                return 0;
+            }
+            break;
+        }
         case WM_MEASUREITEM: {
             MEASUREITEMSTRUCT* pmis = (MEASUREITEMSTRUCT*)lParam;
             if (pmis->CtlID == IDC_LIST_BOX) {

@@ -266,7 +266,12 @@ static inline void PopulateListBox(HWND hListBox, const char* filter,
     UI_LB_SetCount(hListBox, total_matches);
 
     if (!g_seq_state.waiting) {
-        if (total_matches == 1) {
+        if (IsNormalMode()) {
+            int keep = (g_SelectedIndex >= 0 && g_SelectedIndex < total_matches)
+                           ? g_SelectedIndex
+                           : ((total_matches > 0) ? 0 : -1);
+            UI_SetSelection(hListBox, keep, g_SelectedIndex);
+        } else if (total_matches == 1) {
             UI_SetSelection(hListBox, 0, g_SelectedIndex);
         } else {
             UI_SetSelection(hListBox, -1, g_SelectedIndex);
@@ -473,12 +478,23 @@ static inline void UI_SetText(HWND g_ActiveEditControl,char* text) {
       SetWindowTextA(g_ActiveEditControl,text);
 }
 
-static inline void UI_Redraw(HWND hListBox) {
+#define UI_DEBOUNCE_MS 60
+#define UI_DEBOUNCE_TIMER_ID 998
+
+static inline void UI_RedrawNow(HWND hListBox) {
     if (g_refresh_callback != NULL) {
           char buffer[128];
           UI_GetCurrentText(hEditControl,buffer);
           g_refresh_callback(buffer,hListBox);
     }
+}
+
+static inline void UI_Redraw(HWND hListBox) {
+    if (IsPopupActive(hPopupWnd)) {
+        SetTimer(hPopupWnd, UI_DEBOUNCE_TIMER_ID, UI_DEBOUNCE_MS, NULL);
+        return;
+    }
+    UI_RedrawNow(hListBox);
 }
 
 static bool g_toggle_key_pending = false;
@@ -550,7 +566,7 @@ void CreateChildControls(HWND hwndParent, HFONT hFont, const char* list[], int c
         UI_SetItemCount(hListBox, count);
         int countCheck = UI_GetCount(hListBox);
         
-        UI_Redraw(hListBox);
+        UI_RedrawNow(hListBox);
         UpdateWindow(hListBox); 
         
         SelectObject(hdc, hOldFont);

@@ -160,7 +160,6 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
     }
     
     if (ModePersistsThroughFeatures) {
-        printf("ADJKADJWK");
         SetMode(g_last_mode);
     } else {
         SetMode(MODE_INSERT);
@@ -177,8 +176,6 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
         layout.x, layout.y, layout.w, layout.h, NULL, NULL, hInstance, NULL
     );
     
-    SetTimer(hPopupWnd, 999, 50, NULL);
-
     if (hPopupWnd == NULL) {
         DWORD err = GetLastError();
         DeleteObject(hCustomFont);
