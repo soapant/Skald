@@ -8,6 +8,10 @@
 
 #define MAX_VISIBLE_ITEMS 100
 
+#define MAX_SEQUENCE_LEN 8
+#define SEQUENCE_TIMEOUT_MS 500
+
+
 typedef void (*RefreshCallback)(const char* filter, HWND hListBox);
 typedef void (*EnterCallback)(const char* selection);
 typedef void (*CtrlEnterCallback)(const char* selection);
@@ -68,6 +72,17 @@ void SetCursorToEndOfText(void);
 void SetCursorToStartOfText(void);
 
 void WaitForKeypressAsync(KeyCallback callback);
+
+typedef struct {
+    char keys[MAX_SEQUENCE_LEN];
+    int len;
+    int typed_count;
+    UINT timer_id;
+    bool waiting;
+    bool timed_out;
+} SequenceState;
+
+static SequenceState g_seq_state = {0};
 
 typedef struct {
     const char* name;                         

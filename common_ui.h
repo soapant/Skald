@@ -263,18 +263,22 @@ static inline void PopulateListBox(HWND hListBox, const char* filter,
     
     WinTimer timer_ui = TimerStart();
     UI_LB_SetCount(hListBox, total_matches);
-    if (total_matches == 1) {
-        UI_SetSelection(hListBox, 0, g_SelectedIndex);
-    } else {
-        UI_SetSelection(hListBox, -1, g_SelectedIndex);
+
+    if (!g_seq_state.waiting) {
+        if (total_matches == 1) {
+            UI_SetSelection(hListBox, 0, g_SelectedIndex);
+        } else {
+            UI_SetSelection(hListBox, -1, g_SelectedIndex);
+        }
+        if (total_matches == 0) {
+          if (hDisplayMessage != NULL) {
+            KillTimer(hDisplayMessage, 999);
+            DestroyWindow(hDisplayMessage);
+            hDisplayMessage = NULL;
+          }
+        }
     }
-    if (total_matches == 0) {
-      if (hDisplayMessage != NULL) {
-        KillTimer(hDisplayMessage, 999);
-        DestroyWindow(hDisplayMessage);
-        hDisplayMessage = NULL;
-      }
-    }
+
     TimerEnd(timer_ui, "  PopulateListBox - UI update");
     
     g_last_items = items;
