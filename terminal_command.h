@@ -81,6 +81,15 @@ static void RunTerminalCommand(const char* Command, bool save_to_history) {
         printf("[TERMINAL] Saved to history: %s\n", clean_cmd);
     }
     
+    const char* bash = NULL;
+    if (GetFileAttributesA("C:\\Program Files\\Git\\bin\\bash.exe") != INVALID_FILE_ATTRIBUTES) {
+        bash = "C:\\Program Files\\Git\\bin\\bash.exe";
+    } else if (GetFileAttributesA("C:\\Program Files (x86)\\Git\\bin\\bash.exe") != INVALID_FILE_ATTRIBUTES) {
+        bash = "C:\\Program Files (x86)\\Git\\bin\\bash.exe";
+    } else {
+        bash = "bash";
+    }
+    
     char temp_file[MAX_PATH];
     GetTempPathA(MAX_PATH, temp_file);
     strcat(temp_file, "temp_cmd.sh");
@@ -88,17 +97,18 @@ static void RunTerminalCommand(const char* Command, bool save_to_history) {
     FILE* f = fopen(temp_file, "w");
     if (f) {
         fprintf(f, "#!/bin/bash\n");
-        fprintf(f, "eval \"$(zoxide init bash)\"\n");
+        fprintf(f, "source ~/.bashrc 2>/dev/null\n");
+        fprintf(f, "eval \"$(zoxide init bash)\" 2>/dev/null\n");
         fprintf(f, "%s\n", clean_cmd);
+        fprintf(f, "\necho\nread -p \"Press Enter to close...\"\n");
         fclose(f);
     }
     
-    // === USE ShellExecuteA INSTEAD OF system() ===
     char terminal_exe[512];
     snprintf(terminal_exe, sizeof(terminal_exe), "%s.exe", UsedTerminal);
     
     char args[2048];
-    snprintf(args, sizeof(args), "-e \"C:\\Program Files\\Git\\bin\\bash.exe\" \"%s\"", temp_file);
+    snprintf(args, sizeof(args), "-e \"%s\" \"%s\"", bash, temp_file);
     
     ShellExecuteA(NULL, "open", terminal_exe, args, NULL, SW_SHOWNORMAL);
     
