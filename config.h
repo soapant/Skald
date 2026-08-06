@@ -119,10 +119,7 @@ const bool MessagesEnabled = true;
 
 const bool RainbowText = true;
 
-static bool PixelHotkeys = true;
-
-
-
+static bool PixelHotkeys = false;
 
 static const char* ListOfProgramPaths[20] = {
     "C:\\Users\\HP\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu",
