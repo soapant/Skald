@@ -262,15 +262,6 @@ static void todo_refresh_callback(const char* filter, HWND hListBox) {
     }
     PopulateListBox(hListBox, filter, items, todo_count, NULL);
 
-    if (g_TotalMatches != 1) {
-      UI_SetSelection(hListBox,g_SelectedIndex, g_SelectedIndex);
-
-      UI_Edit_KeyDown(g_ActiveEditControl, VK_DOWN);
-      UI_Edit_KeyUp(g_ActiveEditControl, VK_DOWN);
-      UI_Edit_KeyDown(g_ActiveEditControl, VK_UP);
-      UI_Edit_KeyUp(g_ActiveEditControl, VK_UP);
-    }
-
 }
 
 static void todo_enter_callback(const char* selection) {
@@ -279,7 +270,6 @@ static void todo_enter_callback(const char* selection) {
     } 
     else {
         AddTodoToFile(selection);
-        UI_SetText(hEditControl, "");
     }
     UI_Redraw(hListBox);
 }
