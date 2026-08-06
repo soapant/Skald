@@ -328,6 +328,9 @@ static inline void PopulateListBox(HWND hListBox, const char* filter,
             int keep;
             if (RememberLastIndex) {
                 keep = g_SelectedIndex;
+                if (keep < 0 && last_index >= 0) {
+                    keep = last_index;
+                }
                 if (total_matches == 0) keep = -1;
                 else if (keep < 0) keep = 0;
                 else if (keep >= total_matches) keep = total_matches - 1;
