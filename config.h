@@ -47,9 +47,11 @@
 #define COLOR_OF_SELECTION g_rainbow_text_cache[g_SelectedIndex]
 
 
-static bool TRAY = true;
+static bool Tray = true;
 
 static bool RememberLastIndex = true;
+
+static bool FuzzySearch = true;
 
 static bool KeepSelectionAfterClose = false;
 
@@ -69,7 +71,7 @@ static int EditPopUpWidthMin = 400;
 
 static int PageUpDownLen = 6;
 
-static bool COLORFUL_MODE = false;
+static bool ColorfullMode = false;
 
 static bool SearchBoxDiffColor = false;
 
