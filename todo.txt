@@ -37,4 +37,7 @@ sorting||[Cprogram]|[NotImplemetedYet]
 alias ui per key||[Cprogram]|[NotImplemetedYet]
 info on feature||[Cprogram]|[NotImplemetedYet]
 look into a way of putting more information in a listbox string||[Cprogram]|[DontForget]
-nigga
+feature data is completely broken||[Cprogram]
+ok this is stupid there shoulkd be one action that happens when notthing is selected||[Cprogram]
+maybe instead of just focusing if its only one match you could do like the best match or something||[Cprogram]
+fix the flickering bitch||[Cprogram]|[DontForget]

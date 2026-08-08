@@ -1,2 +1,1 @@
-str char exits so i dont have too loop over the string every time 
 try out anythinglm might be useful or that github repo for that claudecode thingy

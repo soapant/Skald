@@ -30,70 +30,70 @@
 #include "forgetfull.h"
 
 
-static const char* SWITCHER_blacklist[] = {"Fortnite", "CrosshairX"};
+static const char* SWITCHER_blacklist[] = {"Fortnite"};
 #define SWITCHER_BLACKLIST_COUNT (sizeof(SWITCHER_blacklist) / sizeof(SWITCHER_blacklist[0]))
 
-static const char* FORGETFULL_blacklist[] = {"Fortnite", "CrosshairX"};
+static const char* FORGETFULL_blacklist[] = {"Fortnite"};
 #define FORGETFULL_BLACKLIST_COUNT (sizeof(FORGETFULL_blacklist) / sizeof(FORGETFULL_blacklist[0]))
 
-static const char* REMINDER_blacklist[] = {"Fortnite", "CrosshairX"};
+static const char* REMINDER_blacklist[] = {"CrosshairX"};
 #define REMINDER_BLACKLIST_COUNT (sizeof(REMINDER_blacklist) / sizeof(REMINDER_blacklist[0]))
 
-static const char* TODO_blacklist[] = {"Fortnite", "CrosshairX"};
+static const char* TODO_blacklist[] = {"Fortnite"};
 #define TODO_BLACKLIST_COUNT (sizeof(TODO_blacklist) / sizeof(TODO_blacklist[0]))
 
-static const char* POS_blacklist[] = {"Fortnite", "CrosshairX"};
+static const char* POS_blacklist[] = {"CrosshairX"};
 #define POS_BLACKLIST_COUNT (sizeof(POS_blacklist) / sizeof(POS_blacklist[0]))
 
-static const char* COLOR_blacklist[] = {"Fortnite", "CrosshairX"};
+static const char* COLOR_blacklist[] = {"CrosshairX"};
 #define COLOR_BLACKLIST_COUNT (sizeof(COLOR_blacklist) / sizeof(COLOR_blacklist[0]))
 
-static const char* PIXEL_EQUALS_blacklist[] = {"Fortnite", "CrosshairX"};
+static const char* PIXEL_EQUALS_blacklist[] = {"CrosshairX"};
 #define PIXEL_EQUALS_BLACKLIST_COUNT (sizeof(PIXEL_EQUALS_blacklist) / sizeof(PIXEL_EQUALS_blacklist[0]))
 
-static const char* WAIT_FOR_PIXEL_blacklist[] = {"Fortnite", "CrosshairX"};
+static const char* WAIT_FOR_PIXEL_blacklist[] = {"CrosshairX"};
 #define WAIT_FOR_PIXEL_BLACKLIST_COUNT (sizeof(WAIT_FOR_PIXEL_blacklist) / sizeof(WAIT_FOR_PIXEL_blacklist[0]))
 
-static const char* REGION_blacklist[] = {"Fortnite", "CrosshairX"};
+static const char* REGION_blacklist[] = {"CrosshairX"};
 #define REGION_BLACKLIST_COUNT (sizeof(REGION_blacklist) / sizeof(REGION_blacklist[0]))
 
-static const char* CALCULATOR_blacklist[] = {"Fortnite", "CrosshairX"};
+static const char* CALCULATOR_blacklist[] = {"CrosshairX"};
 #define CALCULATOR_BLACKLIST_COUNT (sizeof(CALCULATOR_blacklist) / sizeof(CALCULATOR_blacklist[0]))
 
-static const char* EXE_blacklist[] = {"Fortnite", "CrosshairX"};
+static const char* EXE_blacklist[] = {"CrosshairX"};
 #define EXE_BLACKLIST_COUNT (sizeof(EXE_blacklist) / sizeof(EXE_blacklist[0]))
 
-static const char* KILL_PROCESS_blacklist[] = {"Fortnite", "CrosshairX"};
+static const char* KILL_PROCESS_blacklist[] = {"CrosshairX"};
 #define KILL_PROCESS_BLACKLIST_COUNT (sizeof(KILL_PROCESS_blacklist) / sizeof(KILL_PROCESS_blacklist[0]))
 
-static const char* GOOGLE_SEARCH_blacklist[] = {"Fortnite", "CrosshairX"};
+static const char* GOOGLE_SEARCH_blacklist[] = {"Fortnite","CrosshairX"};
 #define GOOGLE_SEARCH_BLACKLIST_COUNT (sizeof(GOOGLE_SEARCH_blacklist) / sizeof(GOOGLE_SEARCH_blacklist[0]))
 
-static const char* NVIM_blacklist[] = {"Fortnite", "CrosshairX"};
+static const char* NVIM_blacklist[] = {"CrosshairX"};
 #define NVIM_BLACKLIST_COUNT (sizeof(NVIM_blacklist) / sizeof(NVIM_blacklist[0]))
 
-static const char* TIMER_blacklist[] = {"Fortnite", "CrosshairX"};
+static const char* TIMER_blacklist[] = {"CrosshairX"};
 #define TIMER_BLACKLIST_COUNT (sizeof(TIMER_blacklist) / sizeof(TIMER_blacklist[0]))
 
-static const char* TERMINAL_blacklist[] = {"Fortnite", "CrosshairX"};
+static const char* TERMINAL_blacklist[] = {"CrosshairX"};
 #define TERMINAL_BLACKLIST_COUNT (sizeof(TERMINAL_blacklist) / sizeof(TERMINAL_blacklist[0]))
 
-static const char* SCREENSHOT_blacklist[] = {"Fortnite", "CrosshairX"};
+static const char* SCREENSHOT_blacklist[] = {"CrosshairX"};
 #define SCREENSHOT_BLACKLIST_COUNT (sizeof(SCREENSHOT_blacklist) / sizeof(SCREENSHOT_blacklist[0]))
 
-static const char* YAZI_blacklist[] = {"Fortnite", "CrosshairX"};
+static const char* YAZI_blacklist[] = {"CrosshairX"};
 #define YAZI_BLACKLIST_COUNT (sizeof(YAZI_blacklist) / sizeof(YAZI_blacklist[0]))
 
-static const char* VIDEO_blacklist[] = {"Fortnite", "CrosshairX"};
+static const char* VIDEO_blacklist[] = {"CrosshairX"};
 #define VIDEO_BLACKLIST_COUNT (sizeof(VIDEO_blacklist) / sizeof(VIDEO_blacklist[0]))
 
-static const char* EXPLORER_blacklist[] = {"Fortnite", "CrosshairX"};
+static const char* EXPLORER_blacklist[] = {"CrosshairX"};
 #define EXPLORER_BLACKLIST_COUNT (sizeof(EXPLORER_blacklist) / sizeof(EXPLORER_blacklist[0]))
 
-static const char* TERMINAL_COMMAND_blacklist[] = {"Fortnite", "CrosshairX"};
+static const char* TERMINAL_COMMAND_blacklist[] = {"CrosshairX"};
 #define TERMINAL_COMMAND_BLACKLIST_COUNT (sizeof(TERMINAL_COMMAND_blacklist) / sizeof(TERMINAL_COMMAND_blacklist[0]))
 
-static const char* VOLUME_blacklist[] = {"Fortnite", "CrosshairX"};
+static const char* VOLUME_blacklist[] = {"CrosshairX"};
 #define VOLUME_BLACKLIST_COUNT (sizeof(VOLUME_blacklist) / sizeof(VOLUME_blacklist[0]))
 
 static const char* MUTE_blacklist[] = {""};
@@ -108,13 +108,13 @@ static const char* WIFI_TOGGLE_blacklist[] = {""};
 static const char* BLUETOOTH_TOGGLE_blacklist[] = {""};
 #define BLUETOOTH_TOGGLE_BLACKLIST_COUNT (sizeof(BLUETOOTH_TOGGLE_blacklist) / sizeof(BLUETOOTH_TOGGLE_blacklist[0]))
 
-static const char* MONITOR_FOCUS_MAIN_blacklist[] = {"Nvim", "Neovide","Fortnite", "CrosshairX"};
+static const char* MONITOR_FOCUS_MAIN_blacklist[] = {"Fortnite","Nvim", "Neovide"};
 #define MONITOR_FOCUS_MAIN_BLACKLIST_COUNT (sizeof(MONITOR_FOCUS_MAIN_blacklist) / sizeof(MONITOR_FOCUS_MAIN_blacklist[0]))
 
-static const char* MONITOR_FOCUS_SIDE_blacklist[] = {"Nvim", "Neovide","Fortnite", "CrosshairX"};
+static const char* MONITOR_FOCUS_SIDE_blacklist[] = {"Fortnite","Nvim", "Neovide"};
 #define MONITOR_FOCUS_SIDE_BLACKLIST_COUNT (sizeof(MONITOR_FOCUS_SIDE_blacklist) / sizeof(MONITOR_FOCUS_SIDE_blacklist[0]))
 
-static const char* SETTINGS_blacklist[] = {"Fortnite", "CrosshairX"};
+static const char* SETTINGS_blacklist[] = {"CrosshairX"};
 #define SETTINGS_BLACKLIST_COUNT (sizeof(SETTINGS_blacklist) / sizeof(SETTINGS_blacklist[0]))
 
 void HandleKillMyProgram(void) {
