@@ -334,15 +334,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 SetBkColor(hdc, bg);
                 return (LRESULT)CreateSolidBrush(bg);
             } else {
-                if (SearchBoxDiffColor) {
-                  if (!UI_IsListBoxSelected()) {
-                    SetBkColor(hdc, COLOR_SELECTED_TEXT);
-                  }else {
-                    SetBkColor(hdc, COLOR_BG);
-                  }
-                } else {
-                  SetBkColor(hdc, COLOR_BG);
-                }
+                SetBkColor(hdc, COLOR_BG);
                 return (LRESULT)CreateSolidBrush(COLOR_BG);
             }
         }
@@ -583,6 +575,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
               if (g_render_callback != NULL) {
                   g_render_callback(pdis->hDC, textBuffer, &textRect, isSelected, pdis->itemID);
               } else {
+                  UI_RedrawBackground(pdis->hDC,&textRect,isSelected);
                   HFONT hOldMainFont = (HFONT)SelectObject(pdis->hDC, g_hMainFont);
                   DrawTextA(pdis->hDC, textBuffer, -1, &textRect, DT_SINGLELINE | DT_VCENTER);
                   SelectObject(pdis->hDC, hOldMainFont);

@@ -564,6 +564,11 @@ static inline void UI_Redraw(HWND hListBox) {
     }
     UI_RedrawNow(hListBox);
 }
+static inline void UI_RedrawBackground(HDC hdc,RECT* rect,BOOL is_selected) {
+    HBRUSH hBgBrush = CreateSolidBrush(is_selected ? COLOR_SELECTED_TEXT : COLOR_BG);
+    FillRect(hdc, rect, hBgBrush);
+    DeleteObject(hBgBrush);
+}
 
 static bool g_toggle_key_pending = false;
 

@@ -301,9 +301,7 @@ static void todo_copy_callback(const char* selection,int true_index,int type) {
 static void todo_render_callback(HDC hdc, const char* text, RECT* rect, BOOL is_selected, int itemIndex) {
     if (!text || !rect) return;
 
-    HBRUSH hBgBrush = CreateSolidBrush(is_selected ? COLOR_SELECTED_TEXT : COLOR_BG);
-    FillRect(hdc, rect, hBgBrush);
-    DeleteObject(hBgBrush);
+    UI_RedrawBackground(hdc,rect,is_selected);
     char main_text[512] = {0};
     char tags[10][64];
     int tag_count = 0;
