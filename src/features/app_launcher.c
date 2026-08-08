@@ -1,7 +1,6 @@
 #include "common.h"
 #include "features/app_launcher.h"
 #include "features/file_search.h"
-#include "config.h"
 #include "helpers.h"
 #include "core/common_ui.h"
 
@@ -36,25 +35,6 @@ void initialize_app_cache(void) {
         }
     }
 }
-static bool FindAppInCache(const char* name, char* out_path, size_t path_size) {
-    for (int i = 0; i < G_APP_COUNT; i++) {
-        if (StrStrIA(G_APPS[i].name, name) != NULL) {
-            strncpy(out_path, G_APPS[i].path, path_size);
-            return true;
-        }
-    }
-    return false;
-}
-
-static char* FindAppPathByName(const char* name) {
-    for (int i = 0; i < G_APP_COUNT; i++) {
-        if (StrStrIA(G_APPS[i].name, name) != NULL) {
-            return G_APPS[i].path;
-        }
-    }
-    return NULL;
-}
-
 void launch_app_by_name(const char* display_name) {
     for (int i = 0; i < G_APP_COUNT; i++) {
         if (StrCmpIA(G_APPS[i].name, display_name) == 0) {

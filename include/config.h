@@ -72,7 +72,6 @@ extern const char* ImageEditorPath;
 extern const char* TimerPath;
 extern const char* MusicPlayerPath;
 extern const char* VideoViewerPath;
-extern const char* ReplicaPath;
 extern const char* TextEditorPath;
 extern const char* MusicPath;
 extern const char* VideosPath;
@@ -141,6 +140,7 @@ extern const TagFormatConfig TODO_TAG_FORMAT;
 #define TODO_TAG_CLOSE "]"
 #define TODO_TAG_SEPARATOR "|"
 #define TODO_ENTRY_DELIMITER "||"
+
 
 extern const TodoAliasEntry TODO_ALIAS_DICT[];
 extern const size_t TODO_ALIAS_DICT_COUNT;

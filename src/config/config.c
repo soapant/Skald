@@ -27,7 +27,6 @@ const char* ImageEditorPath =  "C:\\Users\\HP\\AppData\\Roaming\\Microsoft\\Wind
 const char* TimerPath = "D:\\Projects\\Tscoding Timer\\sowon\\sowon.exe";
 const char* MusicPlayerPath = "D:\\Projects\\Music Player\\music_player.exe";
 const char* VideoViewerPath = "D:\\Projects\\Video Viewer\\video_viewer.exe";
-const char* ReplicaPath = "D:\\Projects\\Replica\\replica.exe";
 const char* TextEditorPath = "C:\\Program Files\\Neovide\\neovide.exe";
 const char* MusicPath = "D:\\Music\\Mp3";
 const char* VideosPath = "D:\\videos";
@@ -194,6 +193,7 @@ const TagFormatConfig TODO_TAG_FORMAT = {
     X("-ne", NULL,               "NotImplemetedYet", RGB(155, 255, 35),  false) \
     X("-ft", NULL,               "Feature",          RGB(250, 205, 102), false) \
     X("-c",  NULL,               "Change",           RGB(150, 105, 12),  false) \
+
 
 #define X(flag, label) {flag, label},
 const TodoAliasEntry TODO_ALIAS_DICT[] = {

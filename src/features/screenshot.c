@@ -1,6 +1,7 @@
 #include "common.h"
 #include "features/screenshot.h"
 #include "core/common_ui.h"
+#include <gdiplus.h>
 
 void SaveRegionToPNG(int x1, int y1, int x2, int y2, const char* fullPath) {
     int width = abs(x2 - x1);

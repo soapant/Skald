@@ -1,8 +1,6 @@
 #include "common.h"
 #include "features/mute_microphone.h"
-#include "config.h"
 #include "core/common_ui.h"
-#include "core/types.h"
 
 EXTERN_C const GUID CLSID_MMDeviceEnumerator;
 EXTERN_C const GUID IID_IMMDeviceEnumerator;

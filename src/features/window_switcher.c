@@ -3,6 +3,7 @@
 #include "features/focus_switcher.h"
 #include "core/common_ui.h"
 #include "helpers.h"
+#include <psapi.h>
 
 // ============================================================
 // STATIC DATA
@@ -107,28 +108,10 @@ void WindowUtils_GetAll(WindowList* list) {
     EnumWindows(EnumWindowsProcEx, (LPARAM)&ctx);
 }
 
-static void WindowUtils_GetByTitle(WindowList* list, const char* pattern) {
-    list->count = 0;
-    EnumContext ctx = { .list = list, .pattern = pattern, .mode = 1 };
-    EnumWindows(EnumWindowsProcEx, (LPARAM)&ctx);
-}
-
-static void WindowUtils_GetByExe(WindowList* list, const char* pattern) {
-    list->count = 0;
-    EnumContext ctx = { .list = list, .pattern = pattern, .mode = 2 };
-    EnumWindows(EnumWindowsProcEx, (LPARAM)&ctx);
-}
-
 static void WindowUtils_GetFiltered(WindowList* list, const char** blacklist, int blacklistCount) {
     list->count = 0;
     EnumContext ctx = { .list = list, .blacklist = blacklist, .blacklistCount = blacklistCount, .mode = 3 };
     EnumWindows(EnumWindowsProcEx, (LPARAM)&ctx);
-}
-
-static void WindowUtils_Print(WindowList* list) {
-    for (int i = 0; i < list->count; i++) {
-        printf("[%d] %s (%s)\n", i, list->items[i].title, list->items[i].exe);
-    }
 }
 
 // ============================================================

@@ -1,0 +1,4 @@
+Diagnostics:
+  Suppress:
+    - err_builtin_definition
+    - err_conflicting_types

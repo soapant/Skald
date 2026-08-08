@@ -1,8 +1,8 @@
 #include "common.h"
 #include "features/yazi_zoxide.h"
-#include "config.h"
 #include "helpers.h"
 #include "core/common_ui.h"
+#include <shellapi.h>
 
 static char** g_cached_yazi_commands = NULL;
 static int g_cached_yazi_count = 0;

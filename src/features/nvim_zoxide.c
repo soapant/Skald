@@ -1,9 +1,9 @@
 #include "common.h"
 #include "features/nvim_zoxide.h"
-#include "config.h"
 #include "helpers.h"
 #include "core/common_ui.h"
 #include <ctype.h>
+#include <shellapi.h>
 
 static char** g_cached_nvim_commands = NULL;
 static int g_cached_nvim_count = 0;

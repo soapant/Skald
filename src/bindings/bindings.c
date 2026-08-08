@@ -8,6 +8,7 @@
 #include "features/window_switcher.h"
 #include "features/app_launcher.h"
 #include "features/focus_switcher.h"
+#include <shellapi.h>
 #include <ctype.h>
 
 bool CheckVimMotion(int pressed_vk, int modifiers, MotionAction* out_action, const char** out_sequence, int* out_typed_count) {

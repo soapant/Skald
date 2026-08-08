@@ -1,5 +1,6 @@
 #include "common.h"
 #include "core/common_ui.h"
+#include <commctrl.h>
 
 void PopulateListBox(HWND hListBox, const char* filter, 
     const char** items, int item_count,

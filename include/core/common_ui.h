@@ -8,31 +8,7 @@
 #include <stdio.h>
 #include "core/types.h"
 #include "config.h"
-#include "core/modal.h"
-
-static inline WinTimer TimerStart() {
-  WinTimer t;
-  QueryPerformanceFrequency(&t.frequency);
-  QueryPerformanceCounter(&t.start);
-  return t;
-}
-
-static inline void TimerEnd(WinTimer t, const char* operation_name) {
-  LARGE_INTEGER end;
-  QueryPerformanceCounter(&end);
-
-  double elapsed_us = (double)(end.QuadPart - t.start.QuadPart) * 1000000.0 / (double)t.frequency.QuadPart;
-
-  if (DoTimeDebugs) {
-    if (elapsed_us < 1000.0) {
-      printf("[ TIMER] %-25s : %8.2f µs\n", operation_name, elapsed_us);
-    } else if (elapsed_us < 1000000.0) {
-      printf("[ TIMER] %-25s : %8.2f ms\n", operation_name, elapsed_us / 1000.0);
-    } else {
-      printf("[ TIMER] %-25s : %8.2f s\n", operation_name, elapsed_us / 1000000.0);
-    }
-  }
-}
+#include "core/timer.h"
 
 static inline void UI_SetSelection(HWND hList, int index, int old_sel) {
   g_SelectedIndex = index;
@@ -69,14 +45,6 @@ static inline void UI_SetItemCount(HWND hList, int count) {
 static inline void UI_LB_SetCount(HWND hList, int count) {
   g_populated_count = count;
   SendMessageA(hList, LB_SETCOUNT, count, 0);
-}
-
-static inline void UI_LB_GetItemRect(HWND hList, int index, RECT* rect) {
-  SendMessageA(hList, LB_GETITEMRECT, index, (LPARAM)rect);
-}
-
-static inline void UI_LB_SetHorizontalExtent(HWND hList, int width) {
-  SendMessageA(hList, LB_SETHORIZONTALEXTENT, width, 0);
 }
 
 static inline void UI_LB_SetItemHeight(HWND hList, int height) {
@@ -139,10 +107,7 @@ static inline void UI_NavigateUp(void) {
   int count = g_populated_count;
   if (count <= 0) return;
   int sel = g_SelectedIndex;
-  if (sel < 0) {
-    if (GetFromHistory()) return;
-    sel = 0;
-  } else if (sel > 0) {
+  if (sel > 0) {
     sel--;
   }
   UI_NavigateTo(sel);

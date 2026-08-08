@@ -36,10 +36,6 @@ void SequenceReset(void) {
     }
 }
 
-const char* SequenceGet(void) {
-    return g_seq_state.keys;
-}
-
 int SequenceLen(void) {
     return g_seq_state.len;
 }

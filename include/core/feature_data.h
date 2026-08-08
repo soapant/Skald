@@ -9,7 +9,6 @@ void InitFeatureDataSystem(void);
 void CleanupFeatureDataSystem(void);
 void AddSelectionToData(char* selection, const char* feature_name, struct feature_data* data);
 struct feature_data* GetCurrentFeatureData(void);
-const char* GetCurrentFeatureName(void);
 void SetCurrentFeatureName(const char* name);
 
 #endif

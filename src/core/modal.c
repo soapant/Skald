@@ -45,10 +45,6 @@ void SetMode(EditorMode mode) {
     }
 }
 
-const char* GetModeName(void) {
-    return g_mode_names[g_current_mode];
-}
-
 EditorMode GetMode(void) { return g_current_mode; }
 bool IsNormalMode(void) { return g_current_mode == MODE_NORMAL; }
 bool IsInsertMode(void) { return g_current_mode == MODE_INSERT; }
