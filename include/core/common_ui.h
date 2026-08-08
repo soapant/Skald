@@ -76,8 +76,10 @@ static inline void UI_NavigateTo(int index) {
     UI_SetSelection(hListBox, -1, g_SelectedIndex);
     return;
   }
-  if (index < 0) index = 0;
   if (index >= count) index = count - 1;
+  if (index == -1) {
+    draw_background = true;
+  }
 
   UI_SetSelection(hListBox, index, g_SelectedIndex);
   UI_LB_SetCaretIndex(hListBox, index, TRUE);
@@ -107,7 +109,7 @@ static inline void UI_NavigateUp(void) {
   int count = g_populated_count;
   if (count <= 0) return;
   int sel = g_SelectedIndex;
-  if (sel > 0) {
+  if (sel >= 0) {
     sel--;
   }
   UI_NavigateTo(sel);
