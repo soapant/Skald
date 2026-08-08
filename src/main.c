@@ -129,6 +129,7 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
   g_title = window_title;
   g_current_feature = (char*)window_title + 5;
   SetCurrentFeatureName(g_current_feature);
+  BuildAliasDisplayItems(window_list, count);
 
   if (ModePersistsThroughFeatures) {
     SetMode(g_last_mode);

@@ -5,6 +5,33 @@
 #include <commctrl.h>
 
 bool g_add_alias_to_string = true;
+char g_alias_display[MAX_ITEMS][512] = {0};
+int g_alias_display_count = 0;
+bool g_alias_display_active = false;
+
+void BuildAliasDisplayItems(const char** items, int count) {
+  g_alias_display_active = false;
+  g_alias_display_count = 0;
+  if (!items || count <= 0) return;
+  if (count > MAX_ITEMS) count = MAX_ITEMS;
+  for (int i = 0; i < count; i++) {
+    g_alias_display[i][0] = '\0';
+    if (!items[i]) continue;
+    size_t len = strlen(items[i]);
+    if (len >= 512) len = 511;
+    memcpy(g_alias_display[i], items[i], len);
+    g_alias_display[i][len] = '\0';
+    while (len > 0 && (g_alias_display[i][len - 1] == '\r' || g_alias_display[i][len - 1] == '\n')) {
+      g_alias_display[i][--len] = '\0';
+    }
+    const char* alias = get_alias_for_item(g_alias_display[i]);
+    if (alias) {
+      snprintf(g_alias_display[i] + len, (size_t)(512 - len), " [%s]", alias);
+    }
+    g_alias_display_count = i + 1;
+  }
+  if (g_alias_display_count > 0) g_alias_display_active = true;
+}
 
 void PopulateListBox(HWND hListBox, const char* filter, 
     const char** items, int item_count,
@@ -60,15 +87,15 @@ void PopulateListBox(HWND hListBox, const char* filter,
       int idx = prev_matches[i];
       if (!items[idx]) continue;
 
+      const char* search_text = items[idx];
+      if (g_alias_display_active && idx >= 0 && idx < g_alias_display_count && g_alias_display[idx][0] != '\0') {
+        search_text = g_alias_display[idx];
+      }
       bool match = false;
       if (filter_match) {
-        match = filter_match(items[idx], clean_filter);
+        match = filter_match(search_text, clean_filter);
       } else {
-        match = (StrStrIA(items[idx], clean_filter) != NULL);
-      }
-      if (!match) {
-        const char* alias = get_alias_for_item(items[idx]);
-        if (alias) match = (StrStrIA(alias, clean_filter) != NULL);
+        match = (StrStrIA(search_text, clean_filter) != NULL);
       }
 
       if (match) {
@@ -80,17 +107,17 @@ void PopulateListBox(HWND hListBox, const char* filter,
     for (int i = 0; i < item_count && total_matches < 4000; i++) {
       if (!items[i]) continue;
 
+      const char* search_text = items[i];
+      if (g_alias_display_active && i < g_alias_display_count && g_alias_display[i][0] != '\0') {
+        search_text = g_alias_display[i];
+      }
       bool match = false;
       if (strlen(clean_filter) == 0) {
         match = true;
       } else if (filter_match) {
-        match = filter_match(items[i], clean_filter);
+        match = filter_match(search_text, clean_filter);
       } else {
-        match = (StrStrIA(items[i], clean_filter) != NULL);
-      }
-      if (!match) {
-        const char* alias = get_alias_for_item(items[i]);
-        if (alias) match = (StrStrIA(alias, clean_filter) != NULL);
+        match = (StrStrIA(search_text, clean_filter) != NULL);
       }
 
       if (match) {
