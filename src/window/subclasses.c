@@ -1,6 +1,7 @@
 #include "common.h"
 #include <commctrl.h>
 #include <shellapi.h>
+#include "config.h"
 #include "core/common_ui.h"
 #include "helpers.h"
 #include "core/feature_data.h"
@@ -57,14 +58,6 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
             } else {
               UI_GetCurrentText(hwnd, output_buffer);
             }
-          for (int i = 0; i < ALIAS_ENTRY_COUNT; ++i) {
-            char* feature = g_current_feature + 1;
-              printf("%s ",feature);
-              if (StrStrIA(output_buffer, Aliases[i].alias) != NULL && 
-                  StrStrIA(Aliases[i].feature,feature) != NULL) {
-                strcpy(output_buffer,Aliases[i].expanded_text);
-              }
-          }
           SaveFeatureHistory(output_buffer);
             if (hDisplayMessage != NULL) {
               KillTimer(hDisplayMessage, 999);
@@ -229,8 +222,8 @@ LRESULT CALLBACK SimpleEditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPAR
 LRESULT CALLBACK ListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData){
   switch (uMsg) {
     case WM_NCDESTROY:
-                      RemoveWindowSubclass(hWnd, ListBoxSubclassProc, uIdSubclass);
-                        break;
+      RemoveWindowSubclass(hWnd, ListBoxSubclassProc, uIdSubclass);
+      break;
     case WM_ERASEBKGND: {
                           if (draw_background) {
                             HDC hdc = (HDC)wParam;
@@ -244,7 +237,7 @@ LRESULT CALLBACK ListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
                           return TRUE;
                         }
     default:
-            return DefSubclassProc(hWnd, uMsg, wParam, lParam);
+                        return DefSubclassProc(hWnd, uMsg, wParam, lParam);
   }
   return 0;
 }
@@ -568,10 +561,20 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                               } else {
                                 UI_RedrawBackground(pdis->hDC,&textRect,isSelected);
                                 HFONT hOldMainFont = (HFONT)SelectObject(pdis->hDC, g_hMainFont);
-                                  DrawTextA(pdis->hDC, textBuffer, -1, &textRect, DT_SINGLELINE | DT_VCENTER);
-                                  SelectObject(pdis->hDC, hOldMainFont);
+                                DrawTextA(pdis->hDC, textBuffer, -1, &textRect, DT_SINGLELINE | DT_VCENTER);
+                                const char* alias = get_alias_for_item(textBuffer);
+                                if (alias) {
+                                  printf("JHKDAJWKD");
+                                  SIZE sz;
+                                  GetTextExtentPoint32A(pdis->hDC, textBuffer, (int)strlen(textBuffer), &sz);
+                                  RECT aliasRect = textRect;
+                                  aliasRect.left += sz.cx + 10;
+                                  SetTextColor(pdis->hDC, RGB(80, 160, 255));
+                                  DrawTextA(pdis->hDC, alias, -1, &aliasRect, DT_SINGLELINE | DT_VCENTER);
+                                }
+                                SelectObject(pdis->hDC, hOldMainFont);
                               }
-                            
+
                               return TRUE;
                           }
                         break;

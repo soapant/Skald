@@ -921,3 +921,17 @@ void HandleCommandExecution(char* string) {
     UI_SetSelection(hListBox,num - 1,g_SelectedIndex);
     UI_LB_SetCaretIndex(hListBox, num, TRUE);
 }
+
+const char* get_alias_for_item(const char* item) {
+    if (!g_add_alias_to_string) return NULL;
+    if (!g_current_feature) return NULL;
+    if (!item) return NULL;
+
+    for (size_t i = 0; i < ALIAS_ENTRY_COUNT; i++) {
+        if (StrStrIA(Aliases[i].feature, g_current_feature) == NULL) continue;
+        if (StrStrIA(item, Aliases[i].expanded_text) != NULL) {
+            return Aliases[i].alias;
+        }
+    }
+    return NULL;
+}

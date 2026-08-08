@@ -10,6 +10,7 @@
 #include "config.h"
 #include "core/timer.h"
 
+extern bool g_add_alias_to_string;
 static inline void UI_SetSelection(HWND hList, int index, int old_sel) {
   g_SelectedIndex = index;
 

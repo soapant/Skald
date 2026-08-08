@@ -3,10 +3,9 @@
 
 bool Tray = true;
 bool RememberLastIndex = true;
-bool FuzzySearch = true;
 bool KeepSelectionAfterClose = false;
 bool MessageAfterEachHotkey = false;
-bool AllowOtherFeatureTogglesInFeature = true;
+bool AllowOtherFeatureTogglesInFeature = false;
 bool ModePersistsThroughFeatures = false;
 int  TimeOutForMessages = 1;
 bool DoTimeDebugs = false;
@@ -158,6 +157,7 @@ const FocusSwitcherBinding G_FOCUS_SWITCHERS[] = {
 const AliasEntry Aliases[] = {
   {"brw","Brawlhalla","AppLauncher"},
 };
+const size_t ALIAS_ENTRY_COUNT = ARRAY_LEN(Aliases);
 
 const TagFormatConfig TODO_TAG_FORMAT = {
     "[",
