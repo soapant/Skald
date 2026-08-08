@@ -273,7 +273,7 @@ LRESULT CALLBACK SimpleListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, 
                        
                        RECT rect;
                        GetClientRect(hWnd, &rect);
-                       if (COLORFUL_MODE) {
+                       if (ColorfullMode) {
                          int h = rect.bottom - rect.top;
                            int bandH = max(1, h / 32);
                            for (int y = 0; y < h; y += bandH) {
@@ -328,7 +328,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     case WM_CTLCOLOREDIT: {
                             HDC hdc = (HDC)wParam;
                               SetTextColor(hdc, COLOR_TEXT);
-                              if (COLORFUL_MODE) {
+                              if (ColorfullMode) {
                                 COLORREF bg = GetRainbowColor(0.02f, 0.55f, GradientBrightness);
                                   SetBkColor(hdc, bg);
                                   return (LRESULT)CreateSolidBrush(bg);
@@ -340,7 +340,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     case WM_CTLCOLORLISTBOX: {
                                HDC hdc = (HDC)wParam;
                                  SetTextColor(hdc, COLOR_TEXT);
-                                 if (COLORFUL_MODE) {
+                                 if (ColorfullMode) {
                                    COLORREF bg = GetRainbowColor(0.02f, 0.55f, GradientBrightness);
                                      SetBkColor(hdc, bg);
                                      return (LRESULT)CreateSolidBrush(bg);
@@ -484,7 +484,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                                   g_rainbow_text_cache[i] = COLOR_TEXT;
                                 }
                               }
-                            if (COLORFUL_MODE) {
+                            if (ColorfullMode) {
                               int color_index = pdis->itemID % 100;
                                 HBRUSH hBrush = isSelected ? hColorfulBrush[color_index] : hColorfulBrush[color_index];
                                 FillRect(pdis->hDC, &pdis->rcItem, hBrush);
@@ -589,7 +589,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                        HDC hdc = BeginPaint(hwnd, &ps);
                        RECT rect;
                        GetClientRect(hwnd, &rect);
-                       if (COLORFUL_MODE) {
+                       if (ColorfullMode) {
                          int h = rect.bottom - rect.top;
                            int bandH = max(1, h / 128);
                            for (int y = 0; y < h; y += bandH) {
