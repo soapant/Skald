@@ -1,7 +1,6 @@
 #include "common.h"
 #include "features/monitor_focus.h"
 #include "features/focus_switcher.h"
-#include "core/types.h"
 
 static BOOL CALLBACK EnumMonitorWindowsProc(HWND hwnd, LPARAM lParam) {
     MonitorWindowList* myList = (MonitorWindowList*)lParam;

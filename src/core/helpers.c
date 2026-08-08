@@ -1,6 +1,10 @@
 #include "common.h"
 #include <ctype.h>
+#include <shellapi.h>
+#include <shlwapi.h>
 #include "helpers.h"
+#include "core/timer.h"
+#include "core/common_ui.h"
 
 char* SelectionData[2048] = {0};
 int SelectionDataCount = 0;

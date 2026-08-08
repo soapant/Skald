@@ -1,7 +1,6 @@
 #include "common.h"
 #include "features/windows_control.h"
 #include "helpers.h"
-#include "core/types.h"
 
 bool IsWifiEnabled(void) {
     FILE* fp = popen("netsh interface show interface", "r");

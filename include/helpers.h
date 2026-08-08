@@ -2,16 +2,14 @@
 #define HELPERS_H
 
 #include <stdbool.h>
-#include <stdio.h>  
-#include <string.h> 
-#include <shlwapi.h>
+#include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 #include <assert.h>
 #include "core/modal.h"
 #include "core/types.h"
 #include "core/hashmap.h"
 #include "config.h"
-#include "core/common_ui.h"
 
 typedef void (*HotkeyHandler)(void);
 typedef bool (*HotkeyCondition)(void);

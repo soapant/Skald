@@ -213,8 +213,6 @@ typedef struct {
 extern FileEntry G_FILE_ENTRIES[7];
 #define FILE_ENTRY_COUNT (sizeof(G_FILE_ENTRIES) / sizeof(G_FILE_ENTRIES[0]))
 
-const char* GetFilePath(const char* name);
-
 typedef struct {
     int vk_code;
     int modifiers;

@@ -1,7 +1,6 @@
 #include "common.h"
 #include "bindings/hotkey_definitions.h"
 #include "helpers.h"
-#include "core/types.h"
 #include "features/window_switcher.h"
 #include "features/google_search.h"
 #include "features/todo.h"
@@ -35,7 +34,7 @@ static const char* WAIT_FOR_PIXEL_blacklist[] = {"CrosshairX"};
 static const char* REGION_blacklist[] = {"CrosshairX"};
 static const char* CALCULATOR_blacklist[] = {"CrosshairX"};
 static const char* EXE_blacklist[] = {"CrosshairX"};
-static const char* KILL_PROCESS_blacklist[] = {"CrosshairX"};
+static const char* KILL_PROCESS_blacklist[] = {"Fortnite"};
 static const char* GOOGLE_SEARCH_blacklist[] = {"Fortnite","CrosshairX"};
 static const char* NVIM_blacklist[] = {"CrosshairX"};
 static const char* TIMER_blacklist[] = {"CrosshairX"};

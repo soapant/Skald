@@ -6,28 +6,6 @@
 static WindowList g_replica_windows = {0};
 static HWND g_replica_selected_hwnd = NULL;
 
-static HWND FindReplicaWindow(void) {
-    return FindWindowA(REPLICA_WINDOW_CLASS, NULL);
-}
-
-static void LaunchReplicaWithHWND(HWND target) {
-    char cmd[512];
-    snprintf(cmd, sizeof(cmd), "%s %p", ReplicaPath, target);
-    
-    STARTUPINFOA si = {0};
-    si.cb = sizeof(si);
-    PROCESS_INFORMATION pi = {0};
-    
-    if (CreateProcessA(NULL, cmd, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi)) {
-        CloseHandle(pi.hProcess);
-        CloseHandle(pi.hThread);
-        printf("[REPLICA] Launched: %s\n", cmd);
-    } else {
-        printf("[REPLICA] Failed to launch: %s (Error: %lu)\n", ReplicaPath, GetLastError());
-    }
-}
-
-
 static void SendTargetToReplica(HWND target) {
     HWND hReplica = FindWindowA("ReplicaWindowClass", NULL);
     if (hReplica) {

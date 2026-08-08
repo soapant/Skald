@@ -1,6 +1,6 @@
 #include "common.h"
 #include "features/file_search.h"
-#include "config.h"
+#include <shlwapi.h>
 
 static FileItem G_FILES[MAX_FILES];
 static int G_FILE_COUNT = 0;
@@ -182,63 +182,10 @@ void GetFilesRecursive(const char* dir_path, bool show_folder) {
         G_FILES[i].path[sizeof(G_FILES[i].path) - 1] = '\0';
     }
 }
-static void GetFilesByExtension(const char* dir_path, const char* extensions[], int ext_count) {
-    char search_path[MAX_PATH];
-    snprintf(search_path, sizeof(search_path), "%s\\*", dir_path);
-
-    WIN32_FIND_DATAA find_data;
-    HANDLE hFind = FindFirstFileA(search_path, &find_data);
-
-    if (hFind == INVALID_HANDLE_VALUE) return;
-
-    do {
-        if (strcmp(find_data.cFileName, ".") == 0 || strcmp(find_data.cFileName, "..") == 0) {
-            continue;
-        }
-
-        char full_path[MAX_PATH];
-        snprintf(full_path, sizeof(full_path), "%s\\%s", dir_path, find_data.cFileName);
-
-        if (find_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-            if (StrCmpIA(find_data.cFileName, "node_modules") == 0 ||
-                StrCmpIA(find_data.cFileName, ".git") == 0 ||
-                StrCmpIA(find_data.cFileName, "bin") == 0 ||
-                StrCmpIA(find_data.cFileName, "obj") == 0 ||
-                StrCmpIA(find_data.cFileName, "build") == 0) {
-                continue;
-            }
-            GetFilesByExtension(full_path, extensions, ext_count);
-        } else {
-            
-            char* ext = PathFindExtensionA(find_data.cFileName);
-            for (int i = 0; i < ext_count; i++) {
-                if (StrCmpIA(ext, extensions[i]) == 0) {
-                    if (G_FILE_COUNT < MAX_FILES) {
-                        strncpy(G_FILES[G_FILE_COUNT].name, find_data.cFileName, sizeof(G_FILES[G_FILE_COUNT].name) - 1);
-                        strncpy(G_FILES[G_FILE_COUNT].path, full_path, sizeof(G_FILES[G_FILE_COUNT].path) - 1);
-                        G_FILE_COUNT++;
-                    }
-                    break;
-                }
-            }
-        }
-    } while (FindNextFileA(hFind, &find_data) && G_FILE_COUNT < MAX_FILES);
-
-    FindClose(hFind);
-}
-
-static FileItemWithTime* GetFileListWithTime(void) {
-    return G_FILES_WITH_TIME;
-}
-
 void ClearFileList(void) {
     G_FILE_COUNT = 0;
 }
 
-
-static FileItem* GetFileList(void) {
-    return G_FILES;
-}
 
 int GetFileCount(void) {
     return G_FILE_COUNT;

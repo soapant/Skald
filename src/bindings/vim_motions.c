@@ -2,7 +2,6 @@
 #include "bindings/vim_motions.h"
 #include "bindings/vim_helpers.h"
 #include "core/common_ui.h"
-#include "config.h"
 #include "helpers.h"
 #include <ctype.h>
 
@@ -82,20 +81,6 @@ void HandlePersistentDelete(void) {
     }
 }
 
-static void HandleDelete(void) {
-      char text[512] = {0};
-      
-      strncpy(text, g_populated_cache[g_SelectedIndex], sizeof(text) - 1);
-      text[sizeof(text) - 1] = '\0';
-      
-      if (g_enter_callback != NULL) {
-          g_enter_callback(text);
-      }
-      selection_complete = true;
-      return;
-    
-}
-
 void HandleDeleteCharInsert(void) {
     DeleteCharUnderCursor();
     HandleEnterInsertIn(); 
@@ -123,13 +108,6 @@ void HandleDeleteLineInsert(void) {
     }
 }
 
-static void HandleDeleteLineNormal(void) {
-    if (g_ActiveEditControl) {
-        UI_SetText(g_ActiveEditControl,"");
-        SetMode(MODE_NORMAL); 
-        printf("[VIM] Deleted Entire Search Box (Normal Mode Kept)\n");
-    }
-}
 void HandleMoveListboxStart(void) {
     GoToFirstListBoxItem();
 }
@@ -161,45 +139,6 @@ void HandleExitWindow(void) {
   }
 }
 
-static void HandleYankListBox(void) {
-    int selected_index = g_SelectedIndex;
-    char buffer[256];
-    if (selected_index >= 0 && selected_index < g_populated_count) {
-        char text[512] = {0};
-        
-        strncpy(text, g_populated_cache[selected_index], sizeof(text) - 1);
-        text[sizeof(text) - 1] = '\0';
-        
-        if (g_copy_callback != NULL) {
-          g_copy_callback(text, UI_LookupTrueIndex(text), 0);
-        } else {
-          CopyToClipboard(text);
-        }
-        return;
-    } else {
-        printf("[VIM] Yank failed: No valid list item selected.\n");
-    }
-}
-static void HandleYankListBoxExtra(void) {
-    int selected_index = g_SelectedIndex;
-    char buffer[256];
-    if (selected_index >= 0 && selected_index < g_populated_count) {
-        char text[512] = {0};
-        
-        strncpy(text, g_populated_cache[selected_index], sizeof(text) - 1);
-        text[sizeof(text) - 1] = '\0';
-        
-        if (g_copy_callback != NULL) {
-          g_copy_callback(text, UI_LookupTrueIndex(text), 1);
-        } else {
-          CopyToClipboard(text);
-        }
-        return;
-    } else {
-        printf("[VIM] Yank failed: No valid list item selected.\n");
-    }
-}
-
 void HandleYankLine(void) {
     if (g_ActiveEditControl) {
         char textBuffer[256] = {0};
@@ -214,11 +153,6 @@ void HandleYankLine(void) {
             printf("[VIM] Yank failed: Search box is currently empty.\n");
         }
     }
-}
-
-static void HandleInsertRegularEnter(void) {
-  UI_Edit_KeyDown(g_ActiveEditControl, VK_RETURN);
-  UI_Edit_KeyUp(g_ActiveEditControl, VK_RETURN);
 }
 
 void HandleInsertControlEnter(void) {

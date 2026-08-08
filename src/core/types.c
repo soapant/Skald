@@ -15,11 +15,3 @@ FileEntry G_FILE_ENTRIES[7] = {
     {"ReminderHistory",  DATA_DIR "ReminderHistory.txt", NULL},
 };
 
-const char* GetFilePath(const char* name) {
-    for (int i = 0; i < FILE_ENTRY_COUNT; i++) {
-        if (strcmp(G_FILE_ENTRIES[i].name, name) == 0) {
-            return G_FILE_ENTRIES[i].path;
-        }
-    }
-    return NULL;
-}
