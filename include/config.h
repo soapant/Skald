@@ -1,0 +1,158 @@
+#ifndef CONFIG_H
+#define CONFIG_H
+#include <string.h>
+#include <windows.h>
+#include "core/types.h"
+
+#define SWITCHER            VK_SPACE
+#define TODO                'T'
+#define FORGETFULL          'F'
+#define CALCULATOR          'C'
+#define EXE                 'E'
+#define KILL_PROCESS        'U'
+#define GOOGLE_SEARCH       'G'  
+#define TERMINAL            'W'
+#define YAZI                'Q'
+#define TIMER               'O'
+#define EXPLORER            'R'
+#define TERMINAL_COMMAND    VK_OEM_4 // {
+#define VOLUME              'M'
+#define SCREENSHOT          'A'
+#define POS                 'Z'
+#define COLOR               'X'
+#define PIXEL_EQUALS        'B'
+#define WAIT_FOR_PIXEL      'N'
+#define REGION              'Y'
+#define NVIM                'I'
+#define MONITOR_FOCUS_MAIN  'L'
+#define MONITOR_FOCUS_SIDE  'H'
+#define REMINDER            'S'
+#define MUTE                'P'
+#define SETTINGS            'D'
+#define MUSIC_PLAYER_KEY    'P'
+#define VIDEO_VIEWER_KEY    'V'
+#define REPLICA             'R'
+#define KILL_MYPROGRAM      'M'
+#define WIFI_TOGGLE         'W'
+#define BLUETOOTH_TOGGLE    'B'
+#define EDIT_TEXT_KEY       'E'
+#define HELP_SCREEN_KEY     'H'
+#define COPY_SELECTION_KEY  'Y'
+#define TOGGLE_PIXEL_HOTKEYS_KEY 'Z'
+#define COMMAND_MODE_KEY        VK_OEM_1 // ;
+#define SEARCH_PROGRAM_KEY      VK_OEM_2 // /
+#define COLOR_ERROR             RGB(180, 0, 0) 
+#define COLOR_NORMAL            RGB(200, 200, 0) 
+#define COLOR_TIP               RGB(0, 160, 0)  
+#define COLOR_OF_SELECTION g_rainbow_text_cache[g_SelectedIndex]
+
+extern bool Tray;
+extern bool RememberLastIndex;
+extern bool FuzzySearch;
+extern bool KeepSelectionAfterClose;
+extern bool MessageAfterEachHotkey;
+extern bool AllowOtherFeatureTogglesInFeature;
+extern bool ModePersistsThroughFeatures;
+extern int  TimeOutForMessages;
+extern bool DoTimeDebugs;
+extern char* EditPopUpPos;
+extern int EditPopUpWidthMin;
+extern int PageUpDownLen;
+extern bool ColorfullMode;
+extern bool SearchBoxDiffColor;
+
+extern const char* BASE_SCREENSHOT_FOLDER_PATH;
+extern const char* TEMP_FILE_PATH;
+extern const char* UsedFont;
+extern const int FontSize;
+extern const int NumberFontSize;
+extern const int PaddingForScrolling;
+extern const char* UsedTerminal;
+extern const char* ImageEditorPath;
+extern const char* TimerPath;
+extern const char* MusicPlayerPath;
+extern const char* VideoViewerPath;
+extern const char* ReplicaPath;
+extern const char* TextEditorPath;
+extern const char* MusicPath;
+extern const char* VideosPath;
+extern const char* IconPath;
+extern const bool TimerAvailable;
+extern const bool MusicPlayerAvailable;
+extern const bool VideoViewerAvailable;
+extern const bool ReplicaAvailable;
+extern const bool FullTextNeedsKeyPress;
+extern const bool MessagesEnabled;
+extern const bool RainbowText;
+extern const int GradientItems;
+extern const float GradientBrightness;
+extern bool PixelHotkeys;
+
+typedef struct {
+    const char* path;
+    const char* name;
+} PathEntry;
+
+extern const char* ListOfProgramPaths[20];
+extern const PathEntry SystemShortcuts[];
+#define SYSTEM_SHORTCUT_COUNT 19
+
+extern const char* ListOfShitToIgnore[30];
+
+extern const AppHotkey G_APP_HOTKEYS[];
+#define APP_HOTKEY_COUNT 2
+
+extern const MiscHotkey G_MISC_HOTKEYS[];
+#define MISC_HOTKEY_COUNT 2
+
+extern const QuickLinkHotkey G_QUICKLINK_HOTKEYS[];
+#define QUICKLINK_HOTKEY_COUNT 2
+
+extern const TextSnippet G_TEXT_SNIPPETS[];
+#define TEXT_SNIPPET_COUNT 2
+
+extern const MusicPlayerBinding G_MUSIC_PLAYERS[];
+#define MUSIC_PLAYER_COUNT 4
+
+extern const VideoPlayerBinding G_VIDEO_PLAYERS[];
+#define VIDEO_PLAYER_COUNT 4
+
+extern const char* bkp_windows[];
+extern const BulkKillProcessBinding G_BULK_KILL_PROCESS[];
+#define BULKKILLPROCESS_COUNT 1
+
+extern const char* focus_blacklist_games[];
+extern const char* games_windows[];
+extern const char* focus_blacklist_browsers[];
+extern const char* browsers_windows[];
+extern const char* focus_blacklist_coding[];
+extern const char* coding_windows[];
+extern const char* focus_blacklist_terminal[];
+extern const char* terminal_windows[];
+extern const FocusSwitcherBinding G_FOCUS_SWITCHERS[];
+#define FOCUS_SWITCHER_COUNT 4
+
+extern const AliasEntry Aliases[];
+#define ALIAS_ENTRY_COUNT 1
+
+extern const TagFormatConfig TODO_TAG_FORMAT;
+
+#define TODO_TAG_OPEN "["
+#define TODO_TAG_CLOSE "]"
+#define TODO_TAG_SEPARATOR "|"
+#define TODO_ENTRY_DELIMITER "||"
+
+extern const TodoAliasEntry TODO_ALIAS_DICT[];
+enum { TODO_ALIAS_DICT_COUNT = 2 };
+
+extern const GenericFlagEntry TODO_ALIAS_FLAGS[];
+enum { TODO_ALIAS_FLAGS_COUNT = 2 };
+
+extern const GenericFlagEntry TODO_CONFIG_FLAGS[];
+enum { TODO_CONFIG_FLAGS_COUNT = 21 };
+
+extern const TodoConfigEntry TODO_DICT[];
+#define TODO_CONFIG_FLAGS_ENTRIES TODO_DICT
+enum { TODO_DICT_COUNT = 21 };
+
+#endif
