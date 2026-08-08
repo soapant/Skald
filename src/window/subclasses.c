@@ -573,7 +573,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                                   GetTextExtentPoint32A(pdis->hDC, textBuffer, (int)(alias_pos - textBuffer), &sz);
                                   RECT aliasRect = textRect;
                                   aliasRect.left += sz.cx;
-                                  SetTextColor(pdis->hDC, RGB(255, 255, 255));
+                                  SetTextColor(pdis->hDC, COLOR_ALIAS_TEXT);
                                   DrawTextA(pdis->hDC, alias_pos, -1, &aliasRect, DT_SINGLELINE | DT_VCENTER);
                                 }
                                 SelectObject(pdis->hDC, hOldMainFont);
@@ -613,11 +613,11 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                          SetBkMode(hdc, TRANSPARENT);
                          
                          if (g_current_mode == MODE_NORMAL) {
-                           SetTextColor(hdc, RGB(100, 255, 255));
+                           SetTextColor(hdc,COLOR_NORMAL_MODE_TEXT);
                          } else if (g_current_mode == MODE_INSERT) {
-                           SetTextColor(hdc, RGB(50, 255, 50));
+                           SetTextColor(hdc,COLOR_INSERT_MODE_TEXT);
                          } else {
-                           SetTextColor(hdc, RGB(200, 3, 222));
+                           SetTextColor(hdc,COLOR_VISUAL_MODE_TEXT);
                          }
                        
                          SIZE sz;

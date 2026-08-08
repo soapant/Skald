@@ -22,36 +22,37 @@
 #include "features/screenshot.h"
 #include "features/nvim_zoxide.h"
 #include "features/windows_control.h"
+#include "features/adb.h"
 
 static const char* SWITCHER_blacklist[] = {"Fortnite"};
 static const char* FORGETFULL_blacklist[] = {"Fortnite"};
-static const char* REMINDER_blacklist[] = {"CrosshairX"};
+static const char* REMINDER_blacklist[] = {""};
 static const char* TODO_blacklist[] = {"Fortnite"};
-static const char* POS_blacklist[] = {"CrosshairX"};
-static const char* COLOR_blacklist[] = {"CrosshairX"};
-static const char* PIXEL_EQUALS_blacklist[] = {"CrosshairX"};
-static const char* WAIT_FOR_PIXEL_blacklist[] = {"CrosshairX"};
-static const char* REGION_blacklist[] = {"CrosshairX"};
-static const char* CALCULATOR_blacklist[] = {"CrosshairX"};
-static const char* EXE_blacklist[] = {"CrosshairX"};
+static const char* POS_blacklist[] = {""};
+static const char* COLOR_blacklist[] = {""};
+static const char* PIXEL_EQUALS_blacklist[] = {""};
+static const char* WAIT_FOR_PIXEL_blacklist[] = {""};
+static const char* REGION_blacklist[] = {""};
+static const char* CALCULATOR_blacklist[] = {""};
+static const char* EXE_blacklist[] = {""};
 static const char* KILL_PROCESS_blacklist[] = {"Fortnite"};
-static const char* GOOGLE_SEARCH_blacklist[] = {"Fortnite","CrosshairX"};
-static const char* NVIM_blacklist[] = {"CrosshairX"};
-static const char* TIMER_blacklist[] = {"CrosshairX"};
-static const char* TERMINAL_blacklist[] = {"CrosshairX"};
-static const char* SCREENSHOT_blacklist[] = {"CrosshairX"};
-static const char* YAZI_blacklist[] = {"CrosshairX"};
-static const char* VIDEO_blacklist[] = {"CrosshairX"};
-static const char* EXPLORER_blacklist[] = {"CrosshairX"};
-static const char* TERMINAL_COMMAND_blacklist[] = {"CrosshairX"};
-static const char* VOLUME_blacklist[] = {"CrosshairX"};
+static const char* GOOGLE_SEARCH_blacklist[] = {"Fortnite",""};
+static const char* NVIM_blacklist[] = {""};
+static const char* TIMER_blacklist[] = {""};
+static const char* TERMINAL_blacklist[] = {""};
+static const char* SCREENSHOT_blacklist[] = {""};
+static const char* YAZI_blacklist[] = {""};
+static const char* VIDEO_blacklist[] = {""};
+static const char* EXPLORER_blacklist[] = {""};
+static const char* TERMINAL_COMMAND_blacklist[] = {""};
+static const char* VOLUME_blacklist[] = {""};
 static const char* MUTE_blacklist[] = {""};
 static const char* REPLICA_blacklist[] = {""};
 static const char* WIFI_TOGGLE_blacklist[] = {""};
 static const char* BLUETOOTH_TOGGLE_blacklist[] = {""};
 static const char* MONITOR_FOCUS_MAIN_blacklist[] = {"Fortnite","Nvim", "Neovide"};
 static const char* MONITOR_FOCUS_SIDE_blacklist[] = {"Fortnite","Nvim", "Neovide"};
-static const char* SETTINGS_blacklist[] = {"CrosshairX"};
+static const char* SETTINGS_blacklist[] = {""};
 
 void HandleKillMyProgram(void) {
     terminate_process_by_name("myprogram.exe");
@@ -109,7 +110,9 @@ HotkeyBinding G_HOTKEY_BINDINGS[] = {
     BINDING(BLUETOOTH_TOGGLE,   HOTKEY_MOD_ALT_CTRL,  TriggerBlueToothToggle,  AlwaysEnabled),
     BINDING(SETTINGS,           HOTKEY_MOD_ALT,  HandleSettingsTrigger,         AlwaysEnabled),
 
-    BINDING_SIMPLE('M', HOTKEY_MOD_ALT_CTRL,HandleKillMyProgram),
-    BINDING_SIMPLE('E', HOTKEY_MOD_ALT_CTRL,HandleInitAppLauncherCache),
+    BINDING_SIMPLE('M', HOTKEY_MOD_ALT_SHIFT,  mute_messenger_call),
+    BINDING_SIMPLE('S', HOTKEY_MOD_ALT_SHIFT,  toggle_messenger_speaker),
+    BINDING_SIMPLE('M', HOTKEY_MOD_ALT_CTRL,   HandleKillMyProgram),
+    BINDING_SIMPLE('E', HOTKEY_MOD_ALT_CTRL,   HandleInitAppLauncherCache),
     BINDING_SIMPLE(TOGGLE_PIXEL_HOTKEYS_KEY,HOTKEY_MOD_SHIFT_CTRL,HandleSwapHotkeyMode),
 };
