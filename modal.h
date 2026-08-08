@@ -8,6 +8,8 @@
 #include "common_ui.h"
 #include "types.h"
 
+extern bool draw_background;
+
 typedef enum {
     MODE_NORMAL,
     MODE_INSERT,
@@ -25,6 +27,7 @@ static inline void SetMode(EditorMode mode) {
     g_current_mode = mode;
     g_vim_mode = g_mode_names[mode];
     bool in_main = !g_hSearchPopup && !g_hEditPopup;
+    draw_background = true;
 
     if (in_main) {
         if (strcmp(g_vim_mode,"INSERT") == 0 ) {
