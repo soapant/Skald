@@ -618,7 +618,7 @@ HHOOK hKeyboardHook = NULL;
 
 int InitializeTrayIcon() {
   HINSTANCE hInstance = GetModuleHandle(NULL);
-  if (TRAY) {
+  if (Tray) {
     WNDCLASS wc = {0};
     wc.lpfnWndProc = WndProc;
     wc.hInstance = hInstance;
