@@ -199,22 +199,26 @@ const TagFormatConfig TODO_TAG_FORMAT = {
 const TodoAliasEntry TODO_ALIAS_DICT[] = {
     TODO_ALIAS_MASTER
 };
+const size_t TODO_ALIAS_DICT_COUNT = ARRAY_LEN(TODO_ALIAS_DICT);
 #undef X
 
 #define X(flag, label) {flag, NULL},
 const GenericFlagEntry TODO_ALIAS_FLAGS[] = {
     TODO_ALIAS_MASTER
 };
+const size_t TODO_ALIAS_FLAGS_COUNT = ARRAY_LEN(TODO_ALIAS_FLAGS);
 #undef X
 
 #define X(flag, internal, label, color, is_alias) {flag, NULL},
 const GenericFlagEntry TODO_CONFIG_FLAGS[] = {
     TODO_CONFIG_MASTER
 };
+const size_t TODO_CONFIG_FLAGS_COUNT = ARRAY_LEN(TODO_CONFIG_FLAGS);
 #undef X
 
 #define X(flag, internal, label, color, is_alias) {flag, internal, label, color, is_alias},
 const TodoConfigEntry TODO_DICT[] = {
     TODO_CONFIG_MASTER
 };
+const size_t TODO_DICT_COUNT = ARRAY_LEN(TODO_DICT);
 #undef X
