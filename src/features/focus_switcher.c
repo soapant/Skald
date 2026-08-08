@@ -1,7 +1,7 @@
 #include "common.h"
 #include "features/focus_switcher.h"
-#include "config.h"
 #include "core/common_ui.h"
+#include <psapi.h>
 
 void FocusWindow(HWND hwnd) {
 
@@ -38,49 +38,6 @@ void FocusWindow(HWND hwnd) {
     }
 
     printf("[FOCUS] Window focused!\n");
-}
-
-static BOOL CALLBACK FindWindowByExeProc(HWND hwnd, LPARAM lParam) {
-    FindWindowData* data = (FindWindowData*)lParam;
-    DWORD processId = 0;
-    GetWindowThreadProcessId(hwnd, &processId);
-    
-    if (processId != 0 && IsWindowVisible(hwnd)) {
-        HANDLE hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, processId);
-        if (hProcess) {
-            char exe_name[MAX_PATH] = {0};
-            DWORD size = MAX_PATH;
-            if (GetModuleBaseNameA(hProcess, NULL, exe_name, size)) {
-                printf("[DEBUG] Found exe: %s, searching for: %s\n", exe_name, data->search_exe);
-                if (StrStrIA(exe_name, data->search_exe) != NULL) {
-                    data->result = hwnd;
-                    CloseHandle(hProcess);
-                    return FALSE;
-                }
-            }
-            CloseHandle(hProcess);
-        }
-    }
-    return TRUE;
-}
-
-static bool FocusWindowByExe(const char* exe_name) {
-    printf("[DEBUG] FocusWindowByExe called with: %s\n", exe_name);
-    if (!exe_name || strlen(exe_name) == 0) return false;
-    
-    FindWindowData data;
-    data.search_exe = exe_name;
-    data.result = NULL;
-    
-    EnumWindows(FindWindowByExeProc, (LPARAM)&data);
-    
-    if (data.result) {
-        FocusWindow(data.result);
-        return true;
-    } else {
-        printf("[FOCUS] No window found with exe: %s\n", exe_name);
-        return false;
-    }
 }
 
 static BOOL CALLBACK FindWindowByPartialTitleProc(HWND hwnd, LPARAM lParam) {

@@ -2,6 +2,7 @@
 #include "features/google_search.h"
 #include "helpers.h"
 #include "core/common_ui.h"
+#include <shellapi.h>
 
 static char** g_cached_google_queries = NULL;
 static int g_cached_google_count = 0;

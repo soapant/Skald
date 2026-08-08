@@ -13,6 +13,7 @@
 #include "features/video_player.h"
 #include "features/process_killer.h"
 #include "features/app_launcher.h"
+#include <gdiplus.h>
 
 #define ID_TRAY_ICON 1001
 #define WM_TRAYICON (WM_USER + 1)
@@ -792,6 +793,27 @@ void RunHotKeyMessageLoop() {
 }
 
 int main() {
+  {
+    char buf[MAX_PATH];
+    DWORD len = GetModuleFileNameA(NULL, buf, MAX_PATH);
+    if (len > 0 && len < MAX_PATH) {
+      char* slash = strrchr(buf, '\\');
+      if (slash) *slash = '\0';
+      for (int depth = 0; depth < 4; ++depth) {
+        char probe[MAX_PATH];
+        snprintf(probe, sizeof(probe), "%s\\data", buf);
+        DWORD attr = GetFileAttributesA(probe);
+        if (attr != INVALID_FILE_ATTRIBUTES && (attr & FILE_ATTRIBUTE_DIRECTORY)) {
+          SetCurrentDirectoryA(buf);
+          break;
+        }
+        slash = strrchr(buf, '\\');
+        if (!slash) break;
+        *slash = '\0';
+      }
+    }
+  }
+
   StartUniversalTimer();
   InitializeTrayIcon();
   initialize_app_cache();

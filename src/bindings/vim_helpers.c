@@ -23,22 +23,6 @@ void DeleteCharUnderCursor(void) {
     }
 }
 
-static void ExecuteEnter(void) {
-    char text[512] = {0};
-    
-    char* selected = g_populated_cache[g_SelectedIndex];
-    if (selected != NULL) {
-        strncpy(text, selected, sizeof(text) - 1);
-    } else if (g_ActiveEditControl && IsWindow(g_ActiveEditControl)) {
-        UI_GetCurrentText(g_ActiveEditControl,text);
-    }
-    
-    if (g_enter_callback != NULL && strlen(text) > 0) {
-        g_enter_callback(text);
-    }
-    selection_complete = true;
-}
-
 void GoToFirstListBoxItem(void) {
     UI_SetSelection(hListBox,0,g_SelectedIndex);
     UI_LB_SetTopIndex(hListBox,0);

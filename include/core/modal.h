@@ -17,7 +17,6 @@ extern int last_index;
 extern char* selection_feature;
 
 void SetMode(EditorMode mode);
-const char* GetModeName(void);
 EditorMode GetMode(void);
 bool IsNormalMode(void);
 bool IsInsertMode(void);

@@ -54,19 +54,6 @@ static void CALLBACK NumberShortcutTimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEv
     g_num_shortcut_state.first_digit = 0;
 }
 
-static void CALLBACK NumberShortcutTimerProcSelection(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime) {
-    if (g_num_shortcut_state.state == 1 && g_num_shortcut_state.first_digit >= 0) {
-        int number = g_num_shortcut_state.first_digit;
-        if (number == 0) {
-            number = 10;
-        }
-        printf("[NUM-SHORTCUT] Timer expired - executing single digit: %d\n", number);
-        ExecuteNumberShortcut(number, g_num_shortcut_state.close_popup);
-    }
-    g_num_shortcut_state.state = 0;
-    g_num_shortcut_state.first_digit = 0;
-}
-
 bool HandleNumberShortcut(int wParam, HWND hListBox, HWND hEditControl) {
     if (wParam < '0' || wParam > '9') return false;
     

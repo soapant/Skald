@@ -1,8 +1,6 @@
 #include "common.h"
 #include "features/music_player.h"
-#include "config.h"
 #include "core/common_ui.h"
-#include "core/types.h"
 #include "features/file_search.h"
 #include "features/app_launcher.h"
 

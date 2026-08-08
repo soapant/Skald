@@ -1,4 +1,10 @@
 #include "common.h"
+#include <commctrl.h>
+#include <shellapi.h>
+#include "core/common_ui.h"
+#include "helpers.h"
+#include "core/feature_data.h"
+#include "core/number_shortcut.h"
 #include "window/subclasses.h"
 
 int g_refresh_count = 0;

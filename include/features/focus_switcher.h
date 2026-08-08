@@ -5,11 +5,6 @@
 #include <stdbool.h>
 
 typedef struct {
-    const char* search_exe;
-    HWND result;
-} FindWindowData;
-
-typedef struct {
     const char* search_title;
     HWND result;
 } FindWindowSomething;

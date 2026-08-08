@@ -97,23 +97,34 @@ static bool compile_all(bool* any_compiled) {
   if (!nob_mkdir_if_not_exists(BUILD_FOLDER)) return false;
   if (!nob_mkdir_if_not_exists(OBJ_FOLDER)) return false;
 
-  *any_compiled = false;
+  Nob_File_Paths to_build = {0};
   for (size_t i = 0; i < sources.count; ++i) {
     const char* src = sources.items[i];
-    const char* obj = obj_path(src);
-    if (!obj_is_stale(src, obj)) continue;
+    if (obj_is_stale(src, obj_path(src))) {
+      nob_da_append(&to_build, src);
+    }
+  }
+  *any_compiled = to_build.count > 0;
 
+  Nob_Procs procs = {0};
+  bool failed = false;
+  for (size_t i = 0; i < to_build.count; ++i) {
+    const char* src = to_build.items[i];
     Nob_Cmd cmd = {0};
     nob_cc(&cmd);
     nob_cc_flags(&cmd);
-    nob_cmd_append(&cmd, CC_FLAGS, "-c", src, "-o", obj);
-    if (!nob_cmd_run_sync_and_reset(&cmd)) {
-      nob_log(NOB_ERROR, "Failed to compile %s", src);
-      return false;
+    nob_cmd_append(&cmd, CC_FLAGS, "-c", src, "-o", obj_path(src));
+    if (!nob_cmd_run(&cmd, .async = &procs, .max_procs = 0)) {
+      failed = true;
     }
-    *any_compiled = true;
   }
-  return true;
+  if (!failed && !nob_procs_wait(procs)) {
+    failed = true;
+  }
+  if (failed) {
+    nob_log(NOB_ERROR, "Compilation failed");
+  }
+  return !failed;
 }
 
 static bool link_all(const char* output, bool windowed, bool any_compiled) {
@@ -141,6 +152,50 @@ static bool link_all(const char* output, bool windowed, bool any_compiled) {
     return false;
   }
   return true;
+}
+
+static void json_escape(Nob_String_Builder* sb, const char* s) {
+  for (const char* p = s; *p; ++p) {
+    if (*p == '\\') {
+      nob_da_append(sb, '/');
+    } else if (*p == '"') {
+      nob_sb_append_cstr(sb, "\\\"");
+    } else {
+      nob_da_append(sb, *p);
+    }
+  }
+}
+
+static void json_str(Nob_String_Builder* sb, const char* s) {
+  nob_da_append(sb, '"');
+  json_escape(sb, s);
+  nob_da_append(sb, '"');
+}
+
+static bool write_compile_commands(void) {
+  Nob_String_Builder sb = {0};
+  nob_sb_append_cstr(&sb, "[\n");
+  for (size_t i = 0; i < sources.count; ++i) {
+    const char* src = sources.items[i];
+    if (i > 0) nob_sb_append_cstr(&sb, ",\n");
+    nob_sb_append_cstr(&sb, "  {\"directory\": ");
+    json_str(&sb, nob_get_current_dir_temp());
+    nob_sb_append_cstr(&sb, ", \"file\": ");
+    json_str(&sb, src);
+    nob_sb_append_cstr(&sb, ", \"arguments\": [");
+    const char* args[] = {"cc", "-Wall", "-Wextra", CC_FLAGS, "-x", "c", "-c", src};
+    for (size_t j = 0; j < NOB_ARRAY_LEN(args); ++j) {
+      if (j > 0) nob_da_append(&sb, ',');
+      nob_da_append(&sb, ' ');
+      json_str(&sb, args[j]);
+    }
+    nob_sb_append_cstr(&sb, " ]}");
+  }
+  nob_sb_append_cstr(&sb, "\n]\n");
+  bool ok = nob_write_entire_file("compile_commands.json", sb.items, sb.count);
+  nob_sb_free(sb);
+  if (ok) nob_log(NOB_INFO, "Wrote compile_commands.json");
+  return ok;
 }
 
 static bool clean(void) {
@@ -219,6 +274,8 @@ int main(int argc, char** argv) {
   }
 
   if (do_clean) return clean() ? 0 : 1;
+
+  if (!write_compile_commands()) return 1;
 
   const char* output = windowed ? ACTUAL_OUTPUT : CONSOLE_OUTPUT;
 

@@ -1,7 +1,6 @@
 #include "common.h"
 #include "bindings/vim_bindings.h"
 #include "bindings/vim_motions.h"
-#include "config.h"
 
 const MotionBinding G_VIM_BINDINGS[] = {
   

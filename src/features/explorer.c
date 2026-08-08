@@ -2,6 +2,7 @@
 #include "features/explorer.h"
 #include "helpers.h"
 #include "core/common_ui.h"
+#include <shellapi.h>
 
 static char** g_cached_explorer_commands = NULL;
 static int g_cached_explorer_count = 0;
