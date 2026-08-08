@@ -48,7 +48,6 @@
 
 extern bool Tray;
 extern bool RememberLastIndex;
-extern bool FuzzySearch;
 extern bool KeepSelectionAfterClose;
 extern bool MessageAfterEachHotkey;
 extern bool AllowOtherFeatureTogglesInFeature;
@@ -132,7 +131,7 @@ extern const FocusSwitcherBinding G_FOCUS_SWITCHERS[];
 #define FOCUS_SWITCHER_COUNT 4
 
 extern const AliasEntry Aliases[];
-#define ALIAS_ENTRY_COUNT 1
+extern const size_t ALIAS_ENTRY_COUNT;
 
 extern const TagFormatConfig TODO_TAG_FORMAT;
 

@@ -17,6 +17,7 @@ typedef void (*EnterCallback)(const char* selection);
 typedef void (*CtrlEnterCallback)(const char* selection);
 typedef void (*TabCallback)(void);
 typedef void (*RenderCallback)(HDC hdc, const char* text, RECT* rect, BOOL is_selected, int itemIndex);
+typedef void (*AliasCallback)(HDC hdc, const char* text, RECT* rect, BOOL is_selected, int itemIndex);
 typedef void (*EditCallback)(const char*);
 typedef void (*FilterCallback)(const char* item,const char* filter);
 typedef void (*CopyCallback)(const char* selection,int true_index,int type);

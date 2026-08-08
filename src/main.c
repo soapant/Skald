@@ -46,6 +46,7 @@ TabCallback g_tab_callback = NULL;
 HelpCallback g_help_callback = NULL;
 CopyCallback g_copy_callback = NULL;
 RenderCallback g_render_callback = NULL;
+AliasCallback g_alias_callback = NULL;
 EditCallback g_edit_callback = NULL;
 FilterCallback g_filter_callback = NULL;
 HWND g_ActiveEditControl = NULL;
@@ -96,7 +97,7 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
     EditCallback edit_callback,
     FilterCallback filter_callback,
     HelpCallback help_callback) {
-  TimerEnd(g_timer,window_title + 4);
+  TimerEnd(g_timer,window_title + 5);
   HINSTANCE hInstance = GetModuleHandle(NULL);
   selection_complete = false;
   output_buffer[0] = '\0';
@@ -126,7 +127,7 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
   g_filter_callback = filter_callback;
   g_help_callback = help_callback;
   g_title = window_title;
-  g_current_feature = (char*)window_title + 4;
+  g_current_feature = (char*)window_title + 5;
   SetCurrentFeatureName(g_current_feature);
 
   if (ModePersistsThroughFeatures) {
