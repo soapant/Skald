@@ -282,6 +282,10 @@ typedef struct {
 #define COLOR_TEXT    RGB(255, 255, 255)
 #define COLOR_SELECTED_TEXT    RGB(70, 55, 90)
 #define COLOR_VISUAL_SELECTED_TEXT    RGB(48,25,52)
+#define COLOR_ALIAS_TEXT    RGB(10,10,10)
+#define COLOR_INSERT_MODE_TEXT    RGB(50, 255, 50)
+#define COLOR_NORMAL_MODE_TEXT    RGB(100, 255, 255)
+#define COLOR_VISUAL_MODE_TEXT    RGB(200, 3, 222)
 #define DATA_DIR "data\\"
 #define TODO_FILE_PATH DATA_DIR "todo.txt"
 #define FORGETFULL_FILE_PATH DATA_DIR "forgetfull.txt"
