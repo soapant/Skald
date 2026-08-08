@@ -10,7 +10,7 @@
 #define CONSOLE_OUTPUT BUILD_FOLDER "/main.exe"
 #define ACTUAL_OUTPUT BUILD_FOLDER "/myprogram.exe"
 
-#define CC_FLAGS "-std=gnu17", "-DCOBJMACROS", "-I", "include", "-MMD", "-MP", "-Wno-multichar", "-Wunused-parameter"
+#define CC_FLAGS "-std=gnu17", "-DCOBJMACROS", "-I", "include", "-MMD", "-MP", "-Wno-multichar", "-Wunused-parameter", "-fdiagnostics-color=always"
 #define LINK_FLAGS "-lcomctl32", "-lgdiplus", "-lgdi32", "-lshlwapi", "-lshell32", \
                    "-lwinmm", "-lole32", "-luuid", "-lmsimg32", "-ldbghelp", "-ldwmapi", \
                    "-lpsapi", "-lcrypt32", "-lcomdlg32", "-ladvapi32"
@@ -93,6 +93,107 @@ static bool obj_is_stale(const char* src, const char* obj) {
   return true;
 }
 
+static const char* compile_log_path(const char* src) {
+  return nob_temp_sprintf(OBJ_FOLDER "/%s.log", nob_path_name(src));
+}
+
+static void delete_log_file(const char* path) {
+  for (int attempt = 0; attempt < 20; ++attempt) {
+    if (!nob_file_exists(path)) return;
+    if (DeleteFileA(path)) return;
+    Sleep(5);
+  }
+}
+
+static void kill_pid_tree(DWORD root_pid) {
+  DWORD killed[256];
+  size_t killed_count = 0;
+  killed[killed_count++] = root_pid;
+
+  for (int round = 0; round < 5; ++round) {
+    HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (snap == INVALID_HANDLE_VALUE) break;
+    bool found = false;
+    PROCESSENTRY32 pe = {0};
+    pe.dwSize = sizeof(pe);
+    for (BOOL ok = Process32First(snap, &pe); ok; ok = Process32Next(snap, &pe)) {
+      if (killed_count >= NOB_ARRAY_LEN(killed)) break;
+      for (size_t i = 0; i < killed_count; ++i) {
+        if (pe.th32ParentProcessID != killed[i]) continue;
+        DWORD child_pid = pe.th32ProcessID;
+        bool seen = false;
+        for (size_t j = 0; j < killed_count; ++j) {
+          if (killed[j] == child_pid) { seen = true; break; }
+        }
+        if (seen) break;
+        HANDLE child = OpenProcess(PROCESS_TERMINATE, FALSE, child_pid);
+        if (child) {
+          TerminateProcess(child, 1);
+          CloseHandle(child);
+          found = true;
+          killed[killed_count++] = child_pid;
+        }
+        break;
+      }
+    }
+    CloseHandle(snap);
+    if (!found) break;
+    Sleep(2);
+  }
+
+  for (int attempt = 0; attempt < 50; ++attempt) {
+    bool any_alive = false;
+    HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (snap != INVALID_HANDLE_VALUE) {
+      PROCESSENTRY32 pe = {0};
+      pe.dwSize = sizeof(pe);
+      for (BOOL ok = Process32First(snap, &pe); ok; ok = Process32Next(snap, &pe)) {
+        for (size_t i = 0; i < killed_count; ++i) {
+          if (pe.th32ProcessID == killed[i]) { any_alive = true; break; }
+        }
+        if (any_alive) break;
+      }
+      CloseHandle(snap);
+    }
+    if (!any_alive) break;
+    Sleep(5);
+  }
+}
+
+static void terminate_process_tree(Nob_Proc proc) {
+  kill_pid_tree(GetProcessId(proc));
+  TerminateProcess(proc, 1);
+}
+
+static void drain_done(Nob_Procs* procs, Nob_File_Paths* logs, bool* failed, const char** failed_log) {
+  for (size_t i = 0; i < procs->count; ++i) {
+    int ret = nob__proc_wait_async(procs->items[i], 1);
+    if (ret == 0) continue;
+    if (ret < 0) {
+      *failed = true;
+      *failed_log = logs->items[i];
+      CloseHandle(procs->items[i]);
+      nob_da_remove_unordered(procs, i);
+      nob_da_remove_unordered(logs, i);
+      for (size_t j = 0; j < procs->count; ++j) {
+        terminate_process_tree(procs->items[j]);
+        WaitForSingleObject(procs->items[j], 1000);
+        CloseHandle(procs->items[j]);
+      }
+      Sleep(20);
+      for (size_t j = 0; j < logs->count; ++j) {
+        delete_log_file(logs->items[j]);
+      }
+      procs->count = 0;
+      logs->count = 0;
+      return;
+    }
+    nob_da_remove_unordered(procs, i);
+    nob_da_remove_unordered(logs, i);
+    return;
+  }
+}
+
 static bool compile_all(bool* any_compiled) {
   if (!nob_mkdir_if_not_exists(BUILD_FOLDER)) return false;
   if (!nob_mkdir_if_not_exists(OBJ_FOLDER)) return false;
@@ -105,25 +206,83 @@ static bool compile_all(bool* any_compiled) {
     }
   }
   *any_compiled = to_build.count > 0;
+  if (to_build.count == 0) return true;
 
+  size_t max_procs = (size_t)nob_nprocs() + 1;
   Nob_Procs procs = {0};
+  Nob_File_Paths logs = {0};
+  const char* failed_log = NULL;
   bool failed = false;
+
   for (size_t i = 0; i < to_build.count; ++i) {
+    while (procs.count >= max_procs && !failed) {
+      drain_done(&procs, &logs, &failed, &failed_log);
+      if (procs.count >= max_procs && !failed) Sleep(1);
+    }
+    if (failed) break;
+
     const char* src = to_build.items[i];
+    const char* log = compile_log_path(src);
+    delete_log_file(log);
     Nob_Cmd cmd = {0};
     nob_cc(&cmd);
     nob_cc_flags(&cmd);
     nob_cmd_append(&cmd, CC_FLAGS, "-c", src, "-o", obj_path(src));
-    if (!nob_cmd_run(&cmd, .async = &procs, .max_procs = 0)) {
+    if (!nob_cmd_run(&cmd, .async = &procs, .max_procs = max_procs,
+                     .stderr_path = log)) {
       failed = true;
+      failed_log = log;
+      break;
     }
+    nob_da_append(&logs, (char*)log);
   }
-  if (!failed && !nob_procs_wait(procs)) {
-    failed = true;
+
+  while (procs.count > 0 && !failed) {
+    drain_done(&procs, &logs, &failed, &failed_log);
+    if (procs.count > 0 && !failed) Sleep(1);
   }
+
+  if (failed) {
+    for (size_t j = 0; j < procs.count; ++j) {
+      terminate_process_tree(procs.items[j]);
+      WaitForSingleObject(procs.items[j], 1000);
+      CloseHandle(procs.items[j]);
+    }
+    Sleep(20);
+    for (size_t j = 0; j < logs.count; ++j) {
+      delete_log_file(logs.items[j]);
+    }
+    procs.count = 0;
+    logs.count = 0;
+  }
+
+  if (failed_log != NULL) {
+    Nob_String_Builder sb = {0};
+    if (nob_read_entire_file(failed_log, &sb)) {
+      nob_log(NOB_ERROR, "Compilation failed. Full output (%s):", failed_log);
+      if (sb.count > 0) {
+        fwrite(sb.items, 1, sb.count, stdout);
+        if (sb.items[sb.count - 1] != '\n') printf("\n");
+      }
+    } else {
+      nob_log(NOB_ERROR, "Compilation failed (%s), but no log was written", failed_log);
+    }
+    nob_sb_free(sb);
+  }
+
   if (failed) {
     nob_log(NOB_ERROR, "Compilation failed");
+    for (size_t j = 0; j < sources.count; ++j) {
+      const char* log = compile_log_path(sources.items[j]);
+      if (failed_log == NULL || strcmp(log, failed_log) != 0) delete_log_file(log);
+    }
+  } else {
+    for (size_t j = 0; j < sources.count; ++j) {
+      delete_log_file(compile_log_path(sources.items[j]));
+    }
   }
+
+  nob_da_free(logs);
   return !failed;
 }
 
@@ -147,10 +306,21 @@ static bool link_all(const char* output, bool windowed, bool any_compiled) {
   }
   nob_cmd_append(&cmd, LINK_FLAGS);
   if (windowed) nob_cmd_append(&cmd, "-mwindows");
-  if (!nob_cmd_run_sync_and_reset(&cmd)) {
+  const char* log = BUILD_FOLDER "/link.log";
+  if (!nob_cmd_run(&cmd, .stderr_path = log)) {
+    Nob_String_Builder sb = {0};
+    if (nob_read_entire_file(log, &sb)) {
+      if (sb.count > 0) {
+        fwrite(sb.items, 1, sb.count, stdout);
+        if (sb.items[sb.count - 1] != '\n') printf("\n");
+      }
+    }
+    nob_sb_free(sb);
+    delete_log_file(log);
     nob_log(NOB_ERROR, "Failed to link %s", output);
     return false;
   }
+  delete_log_file(log);
   return true;
 }
 
@@ -202,6 +372,7 @@ static bool clean(void) {
   for (size_t i = 0; i < sources.count; ++i) {
     nob_delete_file(obj_path(sources.items[i]));
     nob_delete_file(dep_path(sources.items[i]));
+    delete_log_file(compile_log_path(sources.items[i]));
   }
   nob_delete_file(CONSOLE_OUTPUT);
   nob_delete_file(ACTUAL_OUTPUT);
@@ -230,8 +401,25 @@ static bool kill_running(const char* image_name) {
   return killed_any;
 }
 
+static void prepend_compiler_to_path(void) {
+#ifdef _WIN32
+  char full[MAX_PATH];
+  char* file = NULL;
+  if (SearchPathA(NULL, "cc.exe", NULL, sizeof(full), full, &file) == 0 || file == NULL) {
+    return;
+  }
+  *file = '\0';
+  const char* old_path = getenv("PATH");
+  if (old_path == NULL) old_path = "";
+  char new_path[MAX_PATH + 8192];
+  snprintf(new_path, sizeof(new_path), "%s;%s", full, old_path);
+  _putenv_s("PATH", new_path);
+#endif
+}
+
 int main(int argc, char** argv) {
   NOB_GO_REBUILD_URSELF(argc, argv);
+  prepend_compiler_to_path();
 
   bool windowed = false;
   bool do_run = false;

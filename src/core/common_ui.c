@@ -1,12 +1,21 @@
 #include "common.h"
+#include "config.h"
+#include "helpers.h"
 #include "core/common_ui.h"
 #include <commctrl.h>
+
+bool g_add_alias_to_string = true;
 
 void PopulateListBox(HWND hListBox, const char* filter, 
     const char** items, int item_count,
     bool (*filter_match)(const char* item, const char* filter)) {
+
+  WinTimer timer_alias = TimerStart();
   if (!hListBox) return;
   if (g_seq_state.waiting) return;
+
+  TimerEnd(timer_alias,"PopulateListBox - Aliases");
+
 
   WinTimer timer_total = TimerStart();
   int old_count = g_TotalMatches;
@@ -57,6 +66,10 @@ void PopulateListBox(HWND hListBox, const char* filter,
       } else {
         match = (StrStrIA(items[idx], clean_filter) != NULL);
       }
+      if (!match) {
+        const char* alias = get_alias_for_item(items[idx]);
+        if (alias) match = (StrStrIA(alias, clean_filter) != NULL);
+      }
 
       if (match) {
         g_matching_indices[total_matches] = idx;
@@ -74,6 +87,10 @@ void PopulateListBox(HWND hListBox, const char* filter,
         match = filter_match(items[i], clean_filter);
       } else {
         match = (StrStrIA(items[i], clean_filter) != NULL);
+      }
+      if (!match) {
+        const char* alias = get_alias_for_item(items[i]);
+        if (alias) match = (StrStrIA(alias, clean_filter) != NULL);
       }
 
       if (match) {

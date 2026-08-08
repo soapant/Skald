@@ -33,6 +33,7 @@ bool ProcessHotkey(const HotkeyBinding* bindings, int bindings_count,
                    int pressed_vk, int modifiers,
                    const char* current_title);
 
+
 typedef struct {
     const char* prompt_title;
     const char* icon;
@@ -52,6 +53,17 @@ typedef struct {
     size_t index;
     char original;
 } NewlineInfo;
+
+typedef struct {
+  char* item_name;
+  int item_index;
+  char* alias_name; 
+} AliasInfo;
+
+typedef struct {
+    AliasInfo matches[1024];
+    int count;
+} AliasMatchList;
 
 int FileInit(const char *filePath, MappedFile *mf, size_t initialPadding);
 int FileAppend(MappedFile *mf, const char *text);
@@ -101,5 +113,6 @@ extern HashMap* history_indices;
 bool GetFromHistory(void);
 int convert_string_to_int(const char *str);
 void HandleCommandExecution(char* string);
+const char* get_alias_for_item(const char* item);
 
 #endif

@@ -50,6 +50,7 @@ extern TabCallback g_tab_callback;
 extern HelpCallback g_help_callback;
 extern CopyCallback g_copy_callback;
 extern RenderCallback g_render_callback;
+extern AliasCallback  g_alias_callback;
 extern EditCallback g_edit_callback;
 extern FilterCallback g_filter_callback;
 
