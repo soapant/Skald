@@ -11,6 +11,10 @@
 #include "core/timer.h"
 
 extern bool g_add_alias_to_string;
+extern char g_alias_display[MAX_ITEMS][512];
+extern int g_alias_display_count;
+extern bool g_alias_display_active;
+void BuildAliasDisplayItems(const char** items, int count);
 static inline void UI_SetSelection(HWND hList, int index, int old_sel) {
   g_SelectedIndex = index;
 

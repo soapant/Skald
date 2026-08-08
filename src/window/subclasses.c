@@ -511,7 +511,12 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                             
                               const char* textBuffer = "";
                               if (pdis->itemID < g_populated_count) {
-                                textBuffer = g_populated_cache[pdis->itemID];
+                                int raw = g_matching_indices[pdis->itemID];
+                                if (g_alias_display_active && g_alias_display_count > 0 && raw >= 0 && raw < g_alias_display_count && g_alias_display[raw][0] != '\0') {
+                                  textBuffer = g_alias_display[raw];
+                                } else {
+                                  textBuffer = g_populated_cache[pdis->itemID];
+                                }
                               }
                             
                               if (pdis->itemID == -1 || pdis->itemID >= g_populated_count) {
@@ -562,15 +567,14 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                                 UI_RedrawBackground(pdis->hDC,&textRect,isSelected);
                                 HFONT hOldMainFont = (HFONT)SelectObject(pdis->hDC, g_hMainFont);
                                 DrawTextA(pdis->hDC, textBuffer, -1, &textRect, DT_SINGLELINE | DT_VCENTER);
-                                const char* alias = get_alias_for_item(textBuffer);
-                                if (alias) {
-                                  printf("JHKDAJWKD");
+                                const char* alias_pos = strstr(textBuffer, " [");
+                                if (alias_pos) {
                                   SIZE sz;
-                                  GetTextExtentPoint32A(pdis->hDC, textBuffer, (int)strlen(textBuffer), &sz);
+                                  GetTextExtentPoint32A(pdis->hDC, textBuffer, (int)(alias_pos - textBuffer), &sz);
                                   RECT aliasRect = textRect;
-                                  aliasRect.left += sz.cx + 10;
-                                  SetTextColor(pdis->hDC, RGB(80, 160, 255));
-                                  DrawTextA(pdis->hDC, alias, -1, &aliasRect, DT_SINGLELINE | DT_VCENTER);
+                                  aliasRect.left += sz.cx;
+                                  SetTextColor(pdis->hDC, RGB(255, 255, 255));
+                                  DrawTextA(pdis->hDC, alias_pos, -1, &aliasRect, DT_SINGLELINE | DT_VCENTER);
                                 }
                                 SelectObject(pdis->hDC, hOldMainFont);
                               }
