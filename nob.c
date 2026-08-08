@@ -1,20 +1,21 @@
 #define NOB_IMPLEMENTATION
 #include "nob.h"
+#ifdef _WIN32
+#include <tlhelp32.h>
+#endif
 
 #define SRC_FOLDER "src"
-#define INCLUDE_FOLDER "include"
 #define BUILD_FOLDER "build"
 #define OBJ_FOLDER BUILD_FOLDER "/obj"
 #define CONSOLE_OUTPUT BUILD_FOLDER "/main.exe"
 #define ACTUAL_OUTPUT BUILD_FOLDER "/myprogram.exe"
 
-#define CC_FLAGS "-std=gnu17", "-DCOBJMACROS", "-I", INCLUDE_FOLDER, "-Wno-multichar", "-Wunused-parameter"
+#define CC_FLAGS "-std=gnu17", "-DCOBJMACROS", "-I", "include", "-MMD", "-MP", "-Wno-multichar", "-Wunused-parameter"
 #define LINK_FLAGS "-lcomctl32", "-lgdiplus", "-lgdi32", "-lshlwapi", "-lshell32", \
                    "-lwinmm", "-lole32", "-luuid", "-lmsimg32", "-ldbghelp", "-ldwmapi", \
                    "-lpsapi", "-lcrypt32", "-lcomdlg32", "-ladvapi32"
 
 Nob_File_Paths sources = {0};
-Nob_File_Paths headers = {0};
 
 static bool ends_with(const char* str, const char* suffix) {
   size_t str_len = strlen(str);
@@ -24,11 +25,8 @@ static bool ends_with(const char* str, const char* suffix) {
 }
 
 static bool collect(Nob_Walk_Entry entry) {
-  if (entry.type != NOB_FILE_REGULAR) return true;
-  if (ends_with(entry.path, ".c")) {
+  if (entry.type == NOB_FILE_REGULAR && ends_with(entry.path, ".c")) {
     nob_da_append(&sources, strdup(entry.path));
-  } else if (ends_with(entry.path, ".h")) {
-    nob_da_append(&headers, strdup(entry.path));
   }
   return true;
 }
@@ -37,13 +35,62 @@ static const char* obj_path(const char* src) {
   return nob_temp_sprintf(OBJ_FOLDER "/%s.o", nob_path_name(src));
 }
 
+static const char* dep_path(const char* src) {
+  return nob_temp_sprintf(OBJ_FOLDER "/%s.d", nob_path_name(src));
+}
+
+static bool parse_depfile(const char* path, Nob_File_Paths* deps) {
+  FILE* f = fopen(path, "rb");
+  if (!f) return false;
+  char line[4096];
+  bool first = true;
+  while (fgets(line, sizeof(line), f)) {
+    char* p = line;
+    if (first) {
+      char* colon = strchr(line, ':');
+      if (!colon) {
+        fclose(f);
+        return false;
+      }
+      p = colon + 1;
+      first = false;
+    }
+    size_t len = strlen(p);
+    while (len > 0 && (p[len-1] == '\n' || p[len-1] == '\r' || p[len-1] == ' ' || p[len-1] == '\t')) len--;
+    if (len > 0 && p[len-1] == '\\') len--;
+    p[len] = '\0';
+    char* tok = strtok(p, " \t\r\n");
+    while (tok) {
+      size_t tok_len = strlen(tok);
+      while (tok_len > 0 && tok[tok_len-1] == ':') tok_len--;
+      tok[tok_len] = '\0';
+      if (tok_len > 0) nob_da_append(deps, strdup(tok));
+      tok = strtok(NULL, " \t\r\n");
+    }
+  }
+  fclose(f);
+  return true;
+}
+
 static bool obj_is_stale(const char* src, const char* obj) {
   if (!nob_file_exists(obj)) return true;
-  if (nob_needs_rebuild1(obj, src)) return true;
-  for (size_t i = 0; i < headers.count; ++i) {
-    if (nob_needs_rebuild1(obj, headers.items[i])) return true;
+  if (nob_needs_rebuild1(obj, src)) {
+    nob_log(NOB_INFO, "STALE %s: %s is newer", obj, src);
+    return true;
   }
-  return false;
+  const char* dep_file = dep_path(src);
+  Nob_File_Paths deps = {0};
+  if (parse_depfile(dep_file, &deps)) {
+    for (size_t i = 0; i < deps.count; ++i) {
+      if (nob_needs_rebuild1(obj, deps.items[i])) {
+        nob_log(NOB_INFO, "STALE %s: %s is newer", obj, deps.items[i]);
+        return true;
+      }
+    }
+    return false;
+  }
+  nob_log(NOB_INFO, "STALE %s: missing/invalid dependency file %s", obj, dep_file);
+  return true;
 }
 
 static bool compile_all(bool* any_compiled) {
@@ -54,9 +101,8 @@ static bool compile_all(bool* any_compiled) {
   for (size_t i = 0; i < sources.count; ++i) {
     const char* src = sources.items[i];
     const char* obj = obj_path(src);
-    if (!obj_is_stale(src, obj)) {
-      continue;
-    }
+    if (!obj_is_stale(src, obj)) continue;
+
     Nob_Cmd cmd = {0};
     nob_cc(&cmd);
     nob_cc_flags(&cmd);
@@ -100,11 +146,33 @@ static bool link_all(const char* output, bool windowed, bool any_compiled) {
 static bool clean(void) {
   for (size_t i = 0; i < sources.count; ++i) {
     nob_delete_file(obj_path(sources.items[i]));
+    nob_delete_file(dep_path(sources.items[i]));
   }
   nob_delete_file(CONSOLE_OUTPUT);
   nob_delete_file(ACTUAL_OUTPUT);
   nob_log(NOB_INFO, "Cleaned " BUILD_FOLDER);
   return true;
+}
+
+static bool kill_running(const char* image_name) {
+  HANDLE snap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+  if (snap == INVALID_HANDLE_VALUE) return false;
+  PROCESSENTRY32 pe = {0};
+  pe.dwSize = sizeof(pe);
+  bool killed_any = false;
+  for (BOOL ok = Process32First(snap, &pe); ok; ok = Process32Next(snap, &pe)) {
+    if (_stricmp(pe.szExeFile, image_name) == 0) {
+      HANDLE proc = OpenProcess(PROCESS_TERMINATE, FALSE, pe.th32ProcessID);
+      if (proc) {
+        TerminateProcess(proc, 0);
+        CloseHandle(proc);
+        killed_any = true;
+      }
+    }
+  }
+  CloseHandle(snap);
+  if (killed_any) nob_log(NOB_INFO, "Killed running instance(s) of %s", image_name);
+  return killed_any;
 }
 
 int main(int argc, char** argv) {
@@ -149,14 +217,12 @@ int main(int argc, char** argv) {
     nob_log(NOB_ERROR, "Failed to walk " SRC_FOLDER);
     return 1;
   }
-  if (!nob_walk_dir(INCLUDE_FOLDER, collect)) {
-    nob_log(NOB_ERROR, "Failed to walk " INCLUDE_FOLDER);
-    return 1;
-  }
 
   if (do_clean) return clean() ? 0 : 1;
 
   const char* output = windowed ? ACTUAL_OUTPUT : CONSOLE_OUTPUT;
+
+  if (do_run) kill_running(nob_path_name(output));
 
   bool any_compiled = false;
   if (!compile_all(&any_compiled)) return 1;
