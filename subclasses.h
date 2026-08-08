@@ -22,6 +22,7 @@ COLORREF DisplayMessageText;
 COLORREF g_rainbow_text_cache[MAX_VISIBLE_ITEMS + 1] = {0};
 static bool only_once = true;
 static bool rainbow_init = false;
+bool draw_background = true;
 
 LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
     HWND hParent = GetParent(hwnd);
@@ -81,7 +82,6 @@ if (wParam == VK_RETURN) {
               hDisplayMessage = NULL;
             }
             if (ctrl_pressed) {
-
                 AddSelectionToData(output_buffer,g_current_feature,data);
                 if (g_ctrl_enter_callback != NULL) {
                     g_ctrl_enter_callback(output_buffer);
@@ -236,19 +236,21 @@ LRESULT CALLBACK SimpleEditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPAR
     }
     return DefSubclassProc(hwnd, msg, wParam, lParam);
 } 
-
 LRESULT CALLBACK ListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData){
     switch (uMsg) {
         case WM_NCDESTROY:
             RemoveWindowSubclass(hWnd, ListBoxSubclassProc, uIdSubclass);
             break;
         case WM_ERASEBKGND: {
-                HDC hdc = (HDC)wParam;
-                RECT rect;
-                GetClientRect(hWnd, &rect);
-                HBRUSH hBrush = CreateSolidBrush(COLOR_BG);
-                FillRect(hdc, &rect, hBrush);
-                DeleteObject(hBrush);
+                if (draw_background) {
+                  HDC hdc = (HDC)wParam;
+                  RECT rect;
+                  GetClientRect(hWnd, &rect);
+                  HBRUSH hBrush = CreateSolidBrush(COLOR_BG);
+                  FillRect(hdc, &rect, hBrush);
+                  DeleteObject(hBrush);
+                  draw_background = false;
+                }
                 return TRUE;
             }
         default:
@@ -712,6 +714,8 @@ case WM_PAINT: {
                  }
              }
             }
+
+            draw_background = true;
       default:
             return DefWindowProcA(hwnd, msg, wParam, lParam);
             
