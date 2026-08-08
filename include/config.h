@@ -143,16 +143,18 @@ extern const TagFormatConfig TODO_TAG_FORMAT;
 #define TODO_ENTRY_DELIMITER "||"
 
 extern const TodoAliasEntry TODO_ALIAS_DICT[];
-enum { TODO_ALIAS_DICT_COUNT = 2 };
+extern const size_t TODO_ALIAS_DICT_COUNT;
 
 extern const GenericFlagEntry TODO_ALIAS_FLAGS[];
-enum { TODO_ALIAS_FLAGS_COUNT = 2 };
+extern const size_t TODO_ALIAS_FLAGS_COUNT;
 
 extern const GenericFlagEntry TODO_CONFIG_FLAGS[];
-enum { TODO_CONFIG_FLAGS_COUNT = 21 };
+extern const size_t TODO_CONFIG_FLAGS_COUNT;
 
 extern const TodoConfigEntry TODO_DICT[];
 #define TODO_CONFIG_FLAGS_ENTRIES TODO_DICT
-enum { TODO_DICT_COUNT = 21 };
+extern const size_t TODO_DICT_COUNT;
+
+#define ARRAY_LEN(a) (sizeof(a) / sizeof((a)[0]))
 
 #endif
