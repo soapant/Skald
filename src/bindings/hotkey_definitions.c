@@ -74,7 +74,9 @@ void HandleSwapHotkeyMode(void) {
     snprintf(buffer,sizeof(buffer),"Set The Pixel Hotkeys Mode To %s",PixelHotkeys  ? "True" : "False");
     MSG_BOTTOM(buffer,140,TimeOutForMessages);
 }
-
+//only alt is for windows
+//ctrl alt is for things that oepn something new
+//shift alt is for toggles / thigns that dont need a window like muting
 HotkeyBinding G_HOTKEY_BINDINGS[] = {
     BINDING(SWITCHER,           HOTKEY_MOD_ALT,       TriggerWindowSwitcher,   AlwaysEnabled),
     BINDING(GOOGLE_SEARCH,      HOTKEY_MOD_ALT,       TriggerGoogleSearch,     AlwaysEnabled),
@@ -91,28 +93,23 @@ HotkeyBinding G_HOTKEY_BINDINGS[] = {
     BINDING(MONITOR_FOCUS_MAIN, HOTKEY_MOD_ALT,       TriggerMonitorFocusMain, AlwaysEnabled),
     BINDING(MONITOR_FOCUS_SIDE, HOTKEY_MOD_ALT,       TriggerMonitorFocusSide, AlwaysEnabled),
     BINDING(REMINDER,           HOTKEY_MOD_ALT,       TriggerReminder,         AlwaysEnabled),
-    BINDING(MUTE,               HOTKEY_MOD_ALT_SHIFT, TriggerMuteState,        AlwaysEnabled),
+    BINDING(NVIM,               HOTKEY_MOD_ALT,       TriggerNvimZoxide,       AlwaysEnabled),
+    BINDING(SETTINGS,           HOTKEY_MOD_ALT,       HandleSettingsTrigger,         AlwaysEnabled),
     BINDING(FORGETFULL,         HOTKEY_MOD_ALT,       TriggerForgetFull,       AlwaysEnabled),
     BINDING(REPLICA,            HOTKEY_MOD_ALT_CTRL,  TriggerReplica,          IsReplicaAvailable),
-    BINDING(POS,                HOTKEY_MOD_ALT,       TriggerPosCopy,          IsPixelHotkeysEnabled),
-    BINDING(POS,                HOTKEY_MOD_ALT_SHIFT, TriggerPosAdd,           IsPixelHotkeysEnabled),
-    BINDING(POS,                HOTKEY_MOD_ALT_CTRL,  TriggerPosClear,         IsPixelHotkeysEnabled),
-    BINDING(COLOR,              HOTKEY_MOD_ALT,       TriggerColorPlain,       IsPixelHotkeysEnabled),
-    BINDING(COLOR,              HOTKEY_MOD_ALT_CTRL,  TriggerColorParen,       IsPixelHotkeysEnabled),
-    BINDING(PIXEL_EQUALS,       HOTKEY_MOD_ALT,       TriggerPixelEqualsAdb,   IsPixelHotkeysEnabled),
-    BINDING(PIXEL_EQUALS,       HOTKEY_MOD_ALT_CTRL,  TriggerPixelEqualsFn,    IsPixelHotkeysEnabled),
-    BINDING(REGION,             HOTKEY_MOD_ALT,       TriggerRegionCoords,     IsPixelHotkeysEnabled),
-    BINDING(REGION,             HOTKEY_MOD_ALT_SHIFT, TriggerRegionImage,      IsPixelHotkeysEnabled),
-    BINDING(SCREENSHOT,         HOTKEY_MOD_ALT,       TriggerSaveScreenshot,   IsPixelHotkeysEnabled),
+    BINDING(REGION,             HOTKEY_MOD_ALT_CTRL,  TriggerRegionImage,      IsPixelHotkeysEnabled),
+    BINDING(SCREENSHOT,         HOTKEY_MOD_ALT_CTRL,  TriggerSaveScreenshot,   IsPixelHotkeysEnabled),
+    BINDING(POS,                HOTKEY_MOD_ALT_SHIFT, TriggerPosCopy,          IsPixelHotkeysEnabled),
+    BINDING(COLOR,              HOTKEY_MOD_ALT_SHIFT, TriggerColorPlain,       IsPixelHotkeysEnabled),
+    BINDING(REGION,             HOTKEY_MOD_ALT_SHIFT, TriggerRegionCoords,     IsPixelHotkeysEnabled),
     BINDING(SCREENSHOT,         HOTKEY_MOD_ALT_SHIFT, TriggerOpenScreenshot,   IsPixelHotkeysEnabled),
-    BINDING(NVIM,               HOTKEY_MOD_ALT,       TriggerNvimZoxide,       AlwaysEnabled),
+    BINDING(MUTE,               HOTKEY_MOD_ALT_SHIFT, TriggerMuteState,        AlwaysEnabled),
     BINDING(WIFI_TOGGLE,        HOTKEY_MOD_ALT_SHIFT, TriggerWifiToggle,       AlwaysEnabled),
-    BINDING(BLUETOOTH_TOGGLE,   HOTKEY_MOD_ALT_CTRL,  TriggerBlueToothToggle,  AlwaysEnabled),
-    BINDING(SETTINGS,           HOTKEY_MOD_ALT,  HandleSettingsTrigger,         AlwaysEnabled),
+    BINDING(BLUETOOTH_TOGGLE,   HOTKEY_MOD_ALT_SHIFT, TriggerBlueToothToggle,  AlwaysEnabled),
 
     BINDING_SIMPLE('M', HOTKEY_MOD_ALT_SHIFT,  mute_messenger_call),
     BINDING_SIMPLE('S', HOTKEY_MOD_ALT_SHIFT,  toggle_messenger_speaker),
-    BINDING_SIMPLE('M', HOTKEY_MOD_ALT_CTRL,   HandleKillMyProgram),
-    BINDING_SIMPLE('E', HOTKEY_MOD_ALT_CTRL,   HandleInitAppLauncherCache),
+    BINDING_SIMPLE('P', HOTKEY_MOD_ALT_SHIFT,   HandleKillMyProgram),
+    BINDING_SIMPLE('E', HOTKEY_MOD_ALT_SHIFT,   HandleInitAppLauncherCache),
     BINDING_SIMPLE(TOGGLE_PIXEL_HOTKEYS_KEY,HOTKEY_MOD_SHIFT_CTRL,HandleSwapHotkeyMode),
 };
