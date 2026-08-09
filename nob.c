@@ -7,21 +7,17 @@
 #define CONSOLE_OUTPUT BUILD_FOLDER "/main.exe"
 #define ACTUAL_OUTPUT BUILD_FOLDER "/myprogram.exe"
 
-#define CC_FLAGS "-std=gnu17", "-DCOBJMACROS", "-I", "include", "-MMD", "-MP", "-Wno-multichar", "-Wunused-parameter","-Wunused-variable", "-fdiagnostics-color=always"
+#define CC_FLAGS "-std=gnu17", "-DCOBJMACROS", "-I", "include", "-MMD", "-MP", "-w"
 #define LINK_FLAGS "-lcomctl32", "-lgdiplus", "-lgdi32", "-lshlwapi", "-lshell32", "-lwinmm", "-lole32", "-luuid", "-lmsimg32", "-ldbghelp", "-ldwmapi", "-lpsapi", "-lcrypt32", "-lcomdlg32", "-ladvapi32"
 
-Nob_File_Paths sources = {0};
+static Nob_File_Paths sources = {0};
 
-static bool ends_with(const char* str, const char* suffix) {
-    size_t str_len = strlen(str);
-    size_t suffix_len = strlen(suffix);
-    if (suffix_len > str_len) return false;
-    return strcmp(str + str_len - suffix_len, suffix) == 0;
-}
-
-static bool collect(Nob_Walk_Entry entry) {
-    if (entry.type == NOB_FILE_REGULAR && ends_with(entry.path, ".c")) {
-        nob_da_append(&sources, strdup(entry.path));
+static bool collect_source(Nob_Walk_Entry entry) {
+    if (entry.type == NOB_FILE_REGULAR) {
+        Nob_String_View path = nob_sv_from_cstr(entry.path);
+        if (nob_sv_ends_with_cstr(path, ".c")) {
+            nob_da_append(&sources, strdup(path.data));
+        }
     }
     return true;
 }
@@ -30,60 +26,184 @@ static const char* obj_path(const char* src) {
     return nob_temp_sprintf(OBJ_FOLDER "/%s.o", nob_path_name(src));
 }
 
-static bool compile_all(bool* any_compiled) {
-    if (!nob_mkdir_if_not_exists(BUILD_FOLDER)) return false;
-    if (!nob_mkdir_if_not_exists(OBJ_FOLDER)) return false;
+static const char* dep_path(const char* src) {
+    return nob_temp_sprintf(OBJ_FOLDER "/%s.d", nob_path_name(src));
+}
 
-    Nob_File_Paths to_build = {0};
-    for (size_t i = 0; i < sources.count; ++i) {
-        const char* src = sources.items[i];
-        const char* obj = obj_path(src);
-        if (!nob_file_exists(obj) || nob_needs_rebuild1(obj, src)) {
-            nob_da_append(&to_build, src);
-        }
+static const char* err_path(const char* src) {
+    return nob_temp_sprintf(OBJ_FOLDER "/%s.err", nob_path_name(src));
+}
+
+static bool is_space(char c) {
+    return c == ' ' || c == '\t' || c == '\r' || c == '\n';
+}
+
+static bool stale(const char* src, const char* obj) {
+    if (!nob_file_exists(obj)) return true;
+    if (nob_needs_rebuild1(obj, src) != 0) return true;
+
+    Nob_String_Builder dep = {0};
+    if (!nob_read_entire_file(dep_path(src), &dep)) return true;
+
+    Nob_String_View sv = nob_sv_from_parts(dep.items, dep.count);
+    size_t i = 0;
+    while (i < sv.count && sv.data[i] != ':') i++;
+    if (i >= sv.count) return true;
+    sv = nob_sv_from_parts(sv.data + i + 1, sv.count - i - 1);
+
+    while (sv.count > 0) {
+        size_t k = 0;
+        while (k < sv.count && is_space(sv.data[k])) k++;
+        sv = nob_sv_from_parts(sv.data + k, sv.count - k);
+        if (sv.count == 0) break;
+
+        size_t j = 0;
+        while (j < sv.count && !is_space(sv.data[j])) j++;
+        Nob_String_View tok = nob_sv_from_parts(sv.data, j);
+        sv = nob_sv_from_parts(sv.data + j, sv.count - j);
+
+        if (tok.count == 0) continue;
+        if (tok.data[tok.count - 1] == '\\') continue; // line continuation
+        if (tok.data[tok.count - 1] == ':') continue;  // phony target from -MP
+
+        char* dep_file = nob_temp_sprintf("%.*s", (int)tok.count, tok.data);
+        if (nob_needs_rebuild1(obj, dep_file) != 0) return true;
     }
-    *any_compiled = to_build.count > 0;
-    if (to_build.count == 0) return true;
+    return false;
+}
 
-    size_t max_procs = (size_t)nob_nprocs() + 1;
-    Nob_Procs procs = {0};
-    bool failed = false;
+static Nob_File_Paths to_build = {0};
+static Nob_File_Paths err_paths = {0};
+static Nob_File_Paths printed_sigs = {0};
+
+static char* err_signature(const char* err) {
+    Nob_String_Builder sb = {0};
+    if (!nob_read_entire_file(err, &sb) || sb.count == 0) return NULL;
+    nob_sb_append_null(&sb);
+
+    Nob_String_Builder sig = {0};
+    char* save = NULL;
+    char* line = strtok_s(sb.items, "\n", &save);
+    while (line) {
+        if (strstr(line, "error:")) {
+            nob_sb_append_buf(&sig, line, strlen(line));
+            nob_sb_append(&sig, '\n');
+        }
+        line = strtok_s(NULL, "\n", &save);
+    }
+    if (sig.count == 0) return NULL;
+    nob_sb_append_null(&sig);
+    return strdup(sig.items);
+}
+
+static bool print_failures(void) {
+    Nob_String_Builder failed_names = {0};
+    size_t failed_count = 0;
 
     for (size_t i = 0; i < to_build.count; ++i) {
-        if (failed) break;
-        const char* src = to_build.items[i];
-        Nob_Cmd cmd = {0};
-        nob_cc(&cmd);
-        nob_cc_flags(&cmd);
-        nob_cmd_append(&cmd, CC_FLAGS, "-c", src, "-o", obj_path(src));
-        if (!nob_cmd_run(&cmd, .async = &procs, .max_procs = max_procs)) {
-            failed = true;
+        char* sig = err_signature(err_paths.items[i]);
+        if (!sig) continue;
+
+        failed_count++;
+        if (failed_names.count > 0) nob_sb_append_buf(&failed_names, ", ", 2);
+        nob_sb_append_buf(&failed_names, to_build.items[i], strlen(to_build.items[i]));
+
+        bool already_printed = false;
+        for (size_t k = 0; k < printed_sigs.count; ++k) {
+            if (strcmp(printed_sigs.items[k], sig) == 0) {
+                already_printed = true;
+                break;
+            }
+        }
+        if (!already_printed) {
+            nob_da_append(&printed_sigs, sig);
+            Nob_String_Builder block = {0};
+            if (nob_read_entire_file(err_paths.items[i], &block)) {
+                nob_log(NOB_ERROR, "%s:", to_build.items[i]);
+                fwrite(block.items, 1, block.count, stdout);
+                printf("\n");
+            }
+        } else {
+            free(sig);
         }
     }
 
-    if (failed) {
-        for (size_t j = 0; j < procs.count; ++j) {
-            TerminateProcess(procs.items[j], 1);
-            WaitForSingleObject(procs.items[j], 1000);
-            CloseHandle(procs.items[j]);
-        }
-        nob_log(NOB_ERROR, "Compilation failed");
+    if (failed_count > 0) {
+        nob_sb_append_null(&failed_names);
+        nob_log(NOB_ERROR, "Compilation failed (%zu file%s): %s",
+                failed_count, failed_count == 1 ? "" : "s", failed_names.items);
         return false;
     }
-
     return true;
 }
 
-static bool link_all(const char* output, bool windowed, bool any_compiled) {
-    Nob_File_Paths objs = {0};
-    for (size_t i = 0; i < sources.count; ++i) {
-        nob_da_append(&objs, obj_path(sources.items[i]));
+static bool compile_all(bool* any_compiled) {
+    *any_compiled = to_build.count > 0;
+    if (to_build.count == 0) return true;
+
+    Nob_Procs procs = {0};
+    size_t max_procs = (size_t)nob_nprocs() + 1;
+
+    for (size_t i = 0; i < to_build.count; ++i) {
+        Nob_Cmd cmd = {0};
+        nob_cc(&cmd);
+        nob_cc_flags(&cmd);
+        nob_cmd_append(&cmd, CC_FLAGS, "-c", to_build.items[i], "-o", obj_path(to_build.items[i]));
+        if (!nob_cmd_run(&cmd, .async = &procs, .max_procs = max_procs,
+                         .stderr_path = err_paths.items[i])) {
+            nob_log(NOB_ERROR, "Failed to start compiler for %s", to_build.items[i]);
+            return false;
+        }
     }
 
+    nob_procs_wait_and_reset(&procs);
+    return print_failures();
+}
+
+int main(int argc, char** argv) {
+    NOB_GO_REBUILD_URSELF(argc, argv);
+
+    bool windowed = false;
+    bool do_run = false;
+    if (argc > 1) {
+        if (strcmp(argv[1], "-actual") == 0) windowed = true;
+    }
+    if (argc > 2 && strcmp(argv[2], "run") == 0) do_run = true;
+
+    if (!nob_mkdir_if_not_exists(BUILD_FOLDER)) return 1;
+    if (!nob_mkdir_if_not_exists(OBJ_FOLDER)) return 1;
+    if (!nob_walk_dir(SRC_FOLDER, collect_source)) {
+        nob_log(NOB_ERROR, "Failed to walk " SRC_FOLDER);
+        return 1;
+    }
+
+    for (size_t i = 0; i < sources.count; ++i) {
+        const char* src = sources.items[i];
+        if (stale(src, obj_path(src))) {
+            nob_da_append(&to_build, src);
+            nob_da_append(&err_paths, strdup(err_path(src)));
+        }
+    }
+
+    bool any_compiled = false;
+    if (!compile_all(&any_compiled)) return 1;
+
+    const char* output = windowed ? ACTUAL_OUTPUT : CONSOLE_OUTPUT;
     if (!any_compiled && nob_file_exists(output) &&
-        !nob_needs_rebuild(output, objs.items, objs.count)) {
-        nob_log(NOB_INFO, "SKIP link %s", output);
-        return true;
+        nob_needs_rebuild(output, (const char**)to_build.items, to_build.count) == 0) {
+        nob_log(NOB_INFO, "No changes, skipping link");
+        if (do_run) {
+            Nob_Cmd cmd = {0};
+            nob_cmd_append(&cmd, output);
+            if (nob_cmd_run_async_and_reset(&cmd) == NOB_INVALID_PROC) return 1;
+            nob_log(NOB_INFO, "Started %s", output);
+        }
+        return 0;
+    }
+
+    Nob_File_Paths objs = {0};
+    for (size_t i = 0; i < sources.count; ++i) {
+        nob_da_append(&objs, strdup(obj_path(sources.items[i])));
     }
 
     Nob_Cmd cmd = {0};
@@ -94,45 +214,16 @@ static bool link_all(const char* output, bool windowed, bool any_compiled) {
     }
     nob_cmd_append(&cmd, LINK_FLAGS);
     if (windowed) nob_cmd_append(&cmd, "-mwindows");
-    
+
     if (!nob_cmd_run(&cmd)) {
         nob_log(NOB_ERROR, "Failed to link %s", output);
-        return false;
-    }
-    return true;
-}
-
-int main(int argc, char** argv) {
-    NOB_GO_REBUILD_URSELF(argc, argv);
-
-    bool windowed = false;
-    bool do_run = false;
-
-    if (argc > 1) {
-        if (strcmp(argv[1], "-actual") == 0) {
-            windowed = true;
-        }
-    }
-
-    if (argc > 2 && strcmp(argv[2], "run") == 0) {
-        do_run = true;
-    }
-
-    if (!nob_walk_dir(SRC_FOLDER, collect)) {
-        nob_log(NOB_ERROR, "Failed to walk " SRC_FOLDER);
         return 1;
     }
 
-    const char* output = windowed ? ACTUAL_OUTPUT : CONSOLE_OUTPUT;
-
-    bool any_compiled = false;
-    if (!compile_all(&any_compiled)) return 1;
-    if (!link_all(output, windowed, any_compiled)) return 1;
-
     if (do_run) {
-        Nob_Cmd cmd = {0};
-        nob_cmd_append(&cmd, output);
-        if (nob_cmd_run_async_and_reset(&cmd) == NOB_INVALID_PROC) return 1;
+        Nob_Cmd run = {0};
+        nob_cmd_append(&run, output);
+        if (nob_cmd_run_async_and_reset(&run) == NOB_INVALID_PROC) return 1;
         nob_log(NOB_INFO, "Started %s", output);
     }
 
