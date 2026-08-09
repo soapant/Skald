@@ -14,8 +14,6 @@
 #include <endpointvolume.h>
 #include <stdbool.h>
 
-#pragma comment(lib, "ole32.lib")
-
 extern bool mic_muted;
 
 HRESULT SetDeviceMute(EDataFlow flow, BOOL mute);
