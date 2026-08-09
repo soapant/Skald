@@ -56,6 +56,7 @@ static const char* SETTINGS_blacklist[] = {""};
 
 void HandleKillMyProgram(void) {
     terminate_process_by_name("myprogram.exe");
+    terminate_process_by_name("main.exe");
 }
 void HandleInitAppLauncherCache(void) {
     initialize_app_cache();
@@ -109,7 +110,7 @@ HotkeyBinding G_HOTKEY_BINDINGS[] = {
 
     BINDING_SIMPLE('M', HOTKEY_MOD_ALT_SHIFT,  mute_messenger_call),
     BINDING_SIMPLE('S', HOTKEY_MOD_ALT_SHIFT,  toggle_messenger_speaker),
-    BINDING_SIMPLE('P', HOTKEY_MOD_ALT_SHIFT,   HandleKillMyProgram),
-    BINDING_SIMPLE('E', HOTKEY_MOD_ALT_SHIFT,   HandleInitAppLauncherCache),
+    BINDING_SIMPLE('K', HOTKEY_MOD_ALT_SHIFT,  HandleKillMyProgram),
+    BINDING_SIMPLE('E', HOTKEY_MOD_ALT_SHIFT,  HandleInitAppLauncherCache),
     BINDING_SIMPLE(TOGGLE_PIXEL_HOTKEYS_KEY,HOTKEY_MOD_SHIFT_CTRL,HandleSwapHotkeyMode),
 };
