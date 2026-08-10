@@ -111,22 +111,19 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
       }
       if (wParam == EDIT_TEXT_KEY) {
         output_buffer[0] = '\0';
-          
-          if (UI_IsListBoxSelected()) {
-            strncpy(output_buffer, g_populated_cache[g_SelectedIndex], sizeof(output_buffer) - 1);
-          } else {
-            UI_GetCurrentText(hwnd, output_buffer);
+        if (UI_IsListBoxSelected()) {
+          strncpy(output_buffer, g_populated_cache[g_SelectedIndex], sizeof(output_buffer) - 1);
+          if (ctrl_pressed && IsInsertMode()){
+            if (g_edit_callback != NULL) {
+              g_edit_callback(output_buffer);
+            }
+            return 0;
+          }else if (IsNormalMode()) {
+            if (g_edit_callback != NULL) {
+              g_edit_callback(output_buffer);
+            }
+            return 0;
           }
-        if (ctrl_pressed && IsInsertMode()){
-          if (g_edit_callback != NULL) {
-            g_edit_callback(output_buffer);
-          }
-          return 0;
-        }else if (IsNormalMode()) {
-          if (g_edit_callback != NULL) {
-            g_edit_callback(output_buffer);
-          }
-          return 0;
         }
         
       }
