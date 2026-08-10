@@ -1,12 +1,11 @@
 #include <stdio.h>
 #include <windows.h>
 
-#define PHONE_TARGET "192.168.1.94:34693"
+#define PHONE_TARGET "192.168.1.3:33969"
 
 void connect_phone() {
     char params[128];
     snprintf(params, sizeof(params), "connect %s", PHONE_TARGET);
-
     ShellExecuteA(NULL, "open", "adb.exe", params, NULL, SW_HIDE);
 }
 

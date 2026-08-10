@@ -6,6 +6,7 @@
 #include "helpers.h"
 #include "core/feature_data.h"
 #include "core/number_shortcut.h"
+#include "wingdi.h"
 #include "window/subclasses.h"
 
 int g_refresh_count = 0;
