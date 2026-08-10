@@ -278,6 +278,7 @@ typedef struct {
 } TagFormatConfig;
 
 #define MAX_ITEMS 1000
+#define MAX_MATCHES 4000
 #define COLOR_BG      RGB(30, 35, 45)   
 #define COLOR_TEXT    RGB(255, 255, 255)
 #define COLOR_SELECTED_TEXT    RGB(70, 55, 90)

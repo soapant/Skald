@@ -12,6 +12,7 @@ bool g_alias_display_active = false;
 static char g_last_filter_state[256] = {0};
 static int g_last_filter_state_count = 0;
 static bool g_last_filter_state_valid = false;
+static int g_prev_matches[MAX_MATCHES] = {0};
 
 void BuildAliasDisplayItems(const char** items, int count) {
   g_alias_display_active = false;
@@ -89,11 +90,11 @@ void PopulateListBox(HWND hListBox, const char* filter,
     total_matches = 0;
     printf("[SKIP] No previous matches for '%s', skipping filter for '%s'\n",
         g_last_filter_state, clean_filter);
-  } else if (use_previous && prev_count > 0 && g_history_count > 0) {
-    int* prev_matches = g_match_history[g_history_count - 1];
-    printf("[OPTIMIZE] Incremental: '%s' -> '%s'\n", g_filter_history[g_history_count - 1], clean_filter);
+  } else if (use_previous && prev_count > 0) {
+    int* prev_matches = g_prev_matches;
+    printf("[OPTIMIZE] Incremental: '%s' -> '%s'\n", g_last_filter_state, clean_filter);
 
-    for (int i = 0; i < prev_count && total_matches < 4000; i++) {
+    for (int i = 0; i < prev_count && total_matches < MAX_MATCHES; i++) {
       int idx = prev_matches[i];
       if (!items[idx]) continue;
 
@@ -115,7 +116,7 @@ void PopulateListBox(HWND hListBox, const char* filter,
     }
   } else {
     bool empty_filter = (clean_filter[0] == '\0');
-    for (int i = 0; i < item_count && total_matches < 4000; i++) {
+    for (int i = 0; i < item_count && total_matches < MAX_MATCHES; i++) {
       if (!items[i]) continue;
 
       if (empty_filter) {
@@ -139,11 +140,8 @@ void PopulateListBox(HWND hListBox, const char* filter,
   TimerEnd(timer_filter, "  PopulateListBox - Filtering");
 
   WinTimer timer_history = TimerStart();
-  if (total_matches > 0 && strlen(clean_filter) > 0 && g_history_count < 20) {
-    strncpy(g_filter_history[g_history_count], clean_filter, sizeof(g_filter_history[0]) - 1);
-    g_match_count_history[g_history_count] = total_matches;
-    memcpy(g_match_history[g_history_count], g_matching_indices, total_matches * sizeof(int));
-    g_history_count++;
+  if (total_matches > 0 && strlen(clean_filter) > 0) {
+    memcpy(g_prev_matches, g_matching_indices, total_matches * sizeof(int));
     printf("[HISTORY] Saved '%s' (%d matches)\n", clean_filter, total_matches);
   }
   TimerEnd(timer_history, "  PopulateListBox - History save");
@@ -155,7 +153,6 @@ void PopulateListBox(HWND hListBox, const char* filter,
       g_matching_indices[total_matches] = i;
       total_matches++;
     }
-    g_history_count = 0;
   }
   TimerEnd(timer_matches," PopulateListBox - Matches");
 
