@@ -23,6 +23,7 @@
 #include "features/nvim_zoxide.h"
 #include "features/windows_control.h"
 #include "features/adb.h"
+#include "features/monitor_control.h"
 
 static const char* SWITCHER_blacklist[] = {"Fortnite"};
 static const char* FORGETFULL_blacklist[] = {"Fortnite"};
@@ -41,6 +42,7 @@ static const char* NVIM_blacklist[] = {""};
 static const char* TIMER_blacklist[] = {""};
 static const char* TERMINAL_blacklist[] = {""};
 static const char* SCREENSHOT_blacklist[] = {""};
+static const char* MONITOR_CONTROL_blacklist[] = {""};
 static const char* YAZI_blacklist[] = {""};
 static const char* VIDEO_blacklist[] = {""};
 static const char* EXPLORER_blacklist[] = {""};
@@ -93,6 +95,7 @@ HotkeyBinding G_HOTKEY_BINDINGS[] = {
     BINDING(VOLUME,             HOTKEY_MOD_ALT,       TriggerVolume,           AlwaysEnabled),
     BINDING(MONITOR_FOCUS_MAIN, HOTKEY_MOD_ALT,       TriggerMonitorFocusMain, AlwaysEnabled),
     BINDING(MONITOR_FOCUS_SIDE, HOTKEY_MOD_ALT,       TriggerMonitorFocusSide, AlwaysEnabled),
+    BINDING(MONITOR_CONTROL,    HOTKEY_MOD_ALT,       TriggerMonitorControl,   AlwaysEnabled),
     BINDING(REMINDER,           HOTKEY_MOD_ALT,       TriggerReminder,         AlwaysEnabled),
     BINDING(NVIM,               HOTKEY_MOD_ALT,       TriggerNvimZoxide,       AlwaysEnabled),
     BINDING(SETTINGS,           HOTKEY_MOD_ALT,       HandleSettingsTrigger,         AlwaysEnabled),

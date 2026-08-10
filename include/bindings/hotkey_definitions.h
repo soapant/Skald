@@ -61,6 +61,8 @@
 
 #define SETTINGS_BLACKLIST_COUNT (sizeof(SETTINGS_blacklist) / sizeof(SETTINGS_blacklist[0]))
 
+#define MONITOR_CONTROL_BLACKLIST_COUNT (sizeof(MONITOR_CONTROL_blacklist) / sizeof(MONITOR_CONTROL_blacklist[0]))
+
 #define BINDING(key, mod, handler, enabled) \
     { key, mod, key##_blacklist, key##_BLACKLIST_COUNT, handler, #key, enabled }
 
