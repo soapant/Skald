@@ -149,7 +149,6 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
       );
 
   if (hPopupWnd == NULL) {
-    DWORD err = GetLastError();
     DeleteObject(hCustomFont);
     return NULL;
   }
