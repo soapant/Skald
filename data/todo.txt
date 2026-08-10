@@ -1,7 +1,6 @@
 maybe you can like expand todos for more information||[Project: Cprogram]
 i should also add a keyword type thing so i can color in a specif word in a todo||[Project: Cprogram]
 you could like do something in the render callback to select / highlight common done selections||[Cprogram]
-the mute mircophone is hardcoded on system startup ||[Cprogram]
 the data filling out of the features should be all automatic in promptuser||[Cprogram]
 the simple promptuser doesnt save history at all||[Cprogram]
 calc.h should be able to handle longer strings like 2 x 4 x 19 or something||[Cprogram]
