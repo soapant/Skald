@@ -64,14 +64,8 @@ int g_last_match_count = 0;
 const char** g_last_items = NULL;
 int g_last_item_count = 0;
 char g_last_filter[256] = {0};
-int g_last_matches[4000];
-char g_filter_history[20][256];
-int g_match_history[20][4000];
-int g_match_count_history[20];
-int g_history_index = 0;
-int g_history_count = 0;
 char g_populated_cache[MAX_ITEMS][512];
-int g_matching_indices[4000];
+int g_matching_indices[MAX_MATCHES];
 int g_populated_count = 0;
 int g_view_offset = 0;
 const char* g_title = NULL;
@@ -537,7 +531,7 @@ char* SearchPopup() {
   int winWidth = 280;
   int winHeight = 80;
 
-  if (g_hSearchPopup && IsWindow(g_hEditPopup)) {
+  if (g_hSearchPopup && IsWindow(g_hSearchPopup)) {
     DestroyWindow(g_hSearchPopup);
     g_hSearchPopup = NULL;
   }
