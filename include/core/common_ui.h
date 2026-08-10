@@ -197,7 +197,7 @@ static inline void UI_SetText(HWND g_ActiveEditControl,char* text) {
   SetWindowTextA(g_ActiveEditControl,text);
 }
 
-#define UI_DEBOUNCE_MS 60
+#define UI_DEBOUNCE_MS 30
 #define UI_DEBOUNCE_TIMER_ID 998
 
 static inline void UI_RedrawNow(HWND hListBox) {
