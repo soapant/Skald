@@ -1,4 +1,5 @@
 #include "common.h"
+#include "core/modal.h"
 #include "helpers.h"
 #include "core/common_ui.h"
 #include "core/number_shortcut.h"
@@ -700,6 +701,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
     int typedCount = 0;
 
     WinTimer timer3 = TimerStart();
+
     if (IsNormalMode()) {
       if (g_waiting_for_key) {
         g_waiting_for_key = false;

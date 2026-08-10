@@ -111,7 +111,6 @@ bool CheckVimMotion(int pressed_vk, int modifiers, MotionAction* out_action, con
     if (in_normal) {
         if (SequenceTimedOut()) {
             SequenceReset();
-            return false;
         }
         
         if (pressed_vk == VK_RETURN || pressed_vk == 160) {
@@ -162,26 +161,6 @@ bool CheckVimMotion(int pressed_vk, int modifiers, MotionAction* out_action, con
     }
     
     return false;
-}
-
-void RemoveSequenceFromEdit(int typed_count) {
-    if (!g_ActiveEditControl || !IsWindow(g_ActiveEditControl)) {
-        return;
-    }
-    if (typed_count <= 0) {
-        return;
-    }
-    
-    char text[512] = {0};
-    UI_GetCurrentText(g_ActiveEditControl,text);
-    int text_len = (int)strlen(text);
-    
-    if (text_len >= typed_count) {
-        text[text_len - typed_count] = '\0';
-        UI_SetText(g_ActiveEditControl,text);
-        UI_SetCursorPosition(g_ActiveEditControl,text_len - typed_count);
-    } else {
-    }
 }
 
 void ExecuteMotion(MotionAction action, const char* sequence, int typed_count) {
