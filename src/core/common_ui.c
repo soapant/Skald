@@ -47,19 +47,23 @@ void PopulateListBox(HWND hListBox, const char* filter,
   WinTimer timer_total = TimerStart();
   int old_count = g_TotalMatches;
 
+  WinTimer timer_current_sel = TimerStart();
   int current_sel = g_SelectedIndex; 
   char current_text[256] = {0};
   if (current_sel >= 0 && current_sel < g_populated_count) {
     strncpy(current_text, g_populated_cache[current_sel], sizeof(current_text) - 1);
     current_text[sizeof(current_text) - 1] = '\0';
   }
+  TimerEnd(timer_current_sel, "  PopulateListBox - Get current selection");
 
+  WinTimer timer_clean_filter = TimerStart();
   int total_matches = 0;
   char clean_filter[256] = {0};
   if (filter) {
     strncpy(clean_filter, filter, sizeof(clean_filter) - 1);
     clean_filter[sizeof(clean_filter) - 1] = '\0';
   }
+  TimerEnd(timer_clean_filter, "  PopulateListBox - Clean filter");
 
   WinTimer timer_inc = TimerStart();
   int use_previous = 0;
@@ -139,7 +143,6 @@ void PopulateListBox(HWND hListBox, const char* filter,
   TimerEnd(timer_history, "  PopulateListBox - History save");
 
   WinTimer timer_matches = TimerStart();
-
   if (total_matches == 0 && item_count > 0 && strlen(clean_filter) == 0) {
     int force_count = (item_count < 30) ? item_count : 30;
     for (int i = 0; i < force_count; i++) {
@@ -148,13 +151,15 @@ void PopulateListBox(HWND hListBox, const char* filter,
     }
     g_history_count = 0;
   }
+  TimerEnd(timer_matches," PopulateListBox - Matches");
 
+  WinTimer timer_pool = TimerStart();
   int pool_max = MAX_VISIBLE_ITEMS;
-
   if (total_matches > pool_max) {
     total_matches = pool_max;
   }
-  TimerEnd(timer_matches," PopulateListBox - Matches");
+  TimerEnd(timer_pool, "  PopulateListBox - Pool adjust");
+
   WinTimer timer_cache = TimerStart();
   g_populated_count = 0;
 
@@ -202,15 +207,16 @@ void PopulateListBox(HWND hListBox, const char* filter,
       }
     }
   }
-
   TimerEnd(timer_ui, "  PopulateListBox - UI update");
 
+  WinTimer timer_cleanup = TimerStart();
   g_last_items = items;
   g_last_item_count = item_count;
   g_TotalMatches = total_matches;
   if (total_matches != old_count) {
     draw_background = true;
   }
+  TimerEnd(timer_cleanup, "  PopulateListBox - Cleanup");
 
   TimerEnd(timer_total, "PopulateListBox TOTAL");
 }
