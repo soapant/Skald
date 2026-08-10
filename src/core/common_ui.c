@@ -9,6 +9,10 @@ char g_alias_display[MAX_ITEMS][512] = {0};
 int g_alias_display_count = 0;
 bool g_alias_display_active = false;
 
+static char g_last_filter_state[256] = {0};
+static int g_last_filter_state_count = 0;
+static bool g_last_filter_state_valid = false;
+
 void BuildAliasDisplayItems(const char** items, int count) {
   g_alias_display_active = false;
   g_alias_display_count = 0;
@@ -67,25 +71,27 @@ void PopulateListBox(HWND hListBox, const char* filter,
 
   WinTimer timer_inc = TimerStart();
   int use_previous = 0;
+  int prev_count = 0;
   if (strlen(clean_filter) > 0 && 
       g_last_items == items && 
       g_last_item_count == item_count &&
-      g_history_count > 0) {
+      g_last_filter_state_valid &&
+      strlen(clean_filter) > strlen(g_last_filter_state) &&
+      strncmp(clean_filter, g_last_filter_state, strlen(g_last_filter_state)) == 0) {
 
-    char* last_filter = g_filter_history[g_history_count - 1];
-    if (strlen(clean_filter) > strlen(last_filter) &&
-        strncmp(clean_filter, last_filter, strlen(last_filter)) == 0) {
-
-      use_previous = 1;
-      printf("[OPTIMIZE] Incremental: '%s' -> '%s'\n", last_filter, clean_filter);
-    }
+    use_previous = 1;
+    prev_count = g_last_filter_state_count;
   }
   TimerEnd(timer_inc, "  PopulateListBox - Incremental check");
 
   WinTimer timer_filter = TimerStart();
-  if (use_previous && g_match_count_history[g_history_count - 1] > 0) {
-    int prev_count = g_match_count_history[g_history_count - 1];
+  if (use_previous && prev_count == 0) {
+    total_matches = 0;
+    printf("[SKIP] No previous matches for '%s', skipping filter for '%s'\n",
+        g_last_filter_state, clean_filter);
+  } else if (use_previous && prev_count > 0 && g_history_count > 0) {
     int* prev_matches = g_match_history[g_history_count - 1];
+    printf("[OPTIMIZE] Incremental: '%s' -> '%s'\n", g_filter_history[g_history_count - 1], clean_filter);
 
     for (int i = 0; i < prev_count && total_matches < 4000; i++) {
       int idx = prev_matches[i];
@@ -108,21 +114,21 @@ void PopulateListBox(HWND hListBox, const char* filter,
       }
     }
   } else {
+    bool empty_filter = (clean_filter[0] == '\0');
     for (int i = 0; i < item_count && total_matches < 4000; i++) {
       if (!items[i]) continue;
+
+      if (empty_filter) {
+        g_matching_indices[total_matches] = i;
+        total_matches++;
+        continue;
+      }
 
       const char* search_text = items[i];
       if (g_alias_display_active && i < g_alias_display_count && g_alias_display[i][0] != '\0') {
         search_text = g_alias_display[i];
       }
-      bool match = false;
-      if (strlen(clean_filter) == 0) {
-        match = true;
-      } else if (filter_match) {
-        match = filter_match(search_text, clean_filter);
-      } else {
-        match = (StrStrIA(search_text, clean_filter) != NULL);
-      }
+      bool match = filter_match ? filter_match(search_text, clean_filter) : (StrStrIA(search_text, clean_filter) != NULL);
 
       if (match) {
         g_matching_indices[total_matches] = i;
@@ -133,7 +139,7 @@ void PopulateListBox(HWND hListBox, const char* filter,
   TimerEnd(timer_filter, "  PopulateListBox - Filtering");
 
   WinTimer timer_history = TimerStart();
-  if (strlen(clean_filter) > 0 && g_history_count < 20) {
+  if (total_matches > 0 && strlen(clean_filter) > 0 && g_history_count < 20) {
     strncpy(g_filter_history[g_history_count], clean_filter, sizeof(g_filter_history[0]) - 1);
     g_match_count_history[g_history_count] = total_matches;
     memcpy(g_match_history[g_history_count], g_matching_indices, total_matches * sizeof(int));
@@ -210,6 +216,14 @@ void PopulateListBox(HWND hListBox, const char* filter,
   TimerEnd(timer_ui, "  PopulateListBox - UI update");
 
   WinTimer timer_cleanup = TimerStart();
+  if (strlen(clean_filter) > 0) {
+    strncpy(g_last_filter_state, clean_filter, sizeof(g_last_filter_state) - 1);
+    g_last_filter_state[sizeof(g_last_filter_state) - 1] = '\0';
+    g_last_filter_state_count = total_matches;
+    g_last_filter_state_valid = true;
+  } else {
+    g_last_filter_state_valid = false;
+  }
   g_last_items = items;
   g_last_item_count = item_count;
   g_TotalMatches = total_matches;
