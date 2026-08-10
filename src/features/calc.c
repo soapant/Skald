@@ -390,6 +390,7 @@ static void calculator_refresh_callback(const char* filter, HWND hListBox) {
     }
     
     const char* items[1] = { result_buffer };
+
     PopulateListBox(hListBox, NULL, items, 1, NULL);
 }
 
@@ -448,6 +449,7 @@ void TriggerCalculator(void) {
     if (hPopupWnd != NULL && IsWindow(hPopupWnd)) return;
 
     const char* default_msg[1] = { "Enter operation (e.g. 5 x 5 or 10 hours in minutes)" };
+
     OnlyIOPromptUser(default_msg,"🧮 Calculator", 1, 920, 650,32,
                         calculator_refresh_callback,   
                         calculator_enter_callback,     

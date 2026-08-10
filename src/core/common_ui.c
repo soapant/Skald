@@ -40,7 +40,7 @@ void PopulateListBox(HWND hListBox, const char* filter,
   WinTimer timer_alias = TimerStart();
   if (!hListBox) return;
   if (g_seq_state.waiting) return;
-
+  if (!filter) filter = "";
   TimerEnd(timer_alias,"PopulateListBox - Aliases");
 
 
@@ -171,7 +171,6 @@ void PopulateListBox(HWND hListBox, const char* filter,
 
   WinTimer timer_ui = TimerStart();
   UI_LB_SetCount(hListBox, total_matches);
-
   if (!g_seq_state.waiting) {
     if (IsNormalMode()) {
       int keep;
@@ -377,47 +376,82 @@ void ForceWindowFocus(HWND hwndTarget, HWND hwndInput) {
 }
 
 void CreateChildControls(HWND hwndParent, HFONT hFont, const char* list[], int count, const WindowLayout* layout) {
+  printf("[DEBUG] CreateChildControls: Starting with count=%d\n", count);
+  
   HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtrA(hwndParent, GWLP_HINSTANCE);
+  printf("[DEBUG] hInstance = %p\n", hInstance);
 
+  printf("[DEBUG] Creating edit control...\n");
   hEditControl = CreateWindowExA(
       0, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
       20, 50, layout->w - 40, 40, hwndParent, (HMENU)IDC_INPUT_BOX, hInstance, NULL
       );
-  if (!hEditControl) return;
+  if (!hEditControl) {
+    printf("[ERROR] Failed to create edit control! GetLastError=%lu\n", GetLastError());
+    return;
+  }
+  printf("[DEBUG] Edit control created: %p\n", hEditControl);
 
   g_ActiveEditControl = hEditControl;
   UI_Edit_SetFont(hEditControl, hFont);
   SetWindowSubclass(hEditControl, EditSubclassProc, 0, 0);
+  printf("[DEBUG] Edit control initialized\n");
 
   if (count >= 0) {
+    printf("[DEBUG] Creating list box with count=%d\n", count);
     hListBox = CreateWindowExA(
         0, "LISTBOX", "", 
         WS_CHILD | WS_VISIBLE | LBS_NODATA | LBS_OWNERDRAWFIXED,
         20, 105, layout->w - 40, layout->h - 115, hwndParent, (HMENU)IDC_LIST_BOX, hInstance, NULL
         );
 
-    if (!hListBox) return;
+    if (!hListBox) {
+      printf("[ERROR] Failed to create list box! GetLastError=%lu\n", GetLastError());
+      return;
+    }
+    printf("[DEBUG] List box created: %p\n", hListBox);
 
     SetWindowSubclass(hListBox, ListBoxSubclassProc, 0, 0);
     UI_LB_SetFont(hListBox, hFont);
     UI_LB_SetItemHeight(hListBox, layout->item_height);
+    printf("[DEBUG] List box configured: item_height=%d\n", layout->item_height);
 
     int max_width = layout->w - 40;
+    printf("[DEBUG] max_width=%d\n", max_width);
+    
     HDC hdc = GetDC(hListBox);
-    if (!hdc) return;
+    if (!hdc) {
+      printf("[ERROR] Failed to get DC for list box! GetLastError=%lu\n", GetLastError());
+      return;
+    }
+    printf("[DEBUG] DC obtained: %p\n", hdc);
+    
     HFONT hOldFont = (HFONT)SelectObject(hdc, hFont);
+    printf("[DEBUG] Old font selected: %p\n", hOldFont);
 
     g_initial_items = list;        
     g_initial_count = count;
+    printf("[DEBUG] Stored initial items: list=%p, count=%d\n", list, count);
 
+    printf("[DEBUG] Setting item count to %d...\n", count);
     UI_SetItemCount(hListBox, count);
     int countCheck = UI_GetCount(hListBox);
+    printf("[DEBUG] UI_GetCount after set = %d\n", countCheck);
 
+    printf("[DEBUG] Redrawing list box...\n");
     UI_RedrawNow(hListBox);
     UpdateWindow(hListBox); 
+    printf("[DEBUG] List box redrawn\n");
 
     SelectObject(hdc, hOldFont);
     ReleaseDC(hListBox, hdc);
+    printf("[DEBUG] DC released\n");
+    
     UI_SetHorizontalExtent(hListBox, max_width);
+    printf("[DEBUG] Horizontal extent set to %d\n", max_width);
+  } else {
+    printf("[DEBUG] count < 0, skipping list box creation\n");
   }
+  
+  printf("[DEBUG] CreateChildControls: Completed successfully\n");
 }
