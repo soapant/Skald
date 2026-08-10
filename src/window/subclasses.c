@@ -16,6 +16,15 @@ static bool only_once = true;
 static bool rainbow_init = false;
 bool draw_background = true;
 
+static HBRUSH g_ctl_bg_brush = NULL;
+static HBRUSH g_ctl_bg_colorful_brush = NULL;
+static HBRUSH g_bg_gradient_brushes[128] = {0};
+static bool g_bg_gradient_ready = false;
+static HBRUSH g_simple_gradient_brushes[32] = {0};
+static bool g_simple_gradient_ready = false;
+
+#define WM_PREVIEW_SELECTION (WM_APP + 1)
+
 LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
   HWND hParent = GetParent(hwnd);
     HWND hListBox = GetDlgItem(hParent, IDC_LIST_BOX);
@@ -256,15 +265,20 @@ LRESULT CALLBACK SimpleListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, 
                        RECT rect;
                        GetClientRect(hWnd, &rect);
                        if (ColorfullMode) {
+                         if (!g_simple_gradient_ready) {
+                           for (int i = 0; i < 32; i++) {
+                             float ft = (float)i / 32.0f;
+                             g_simple_gradient_brushes[i] = CreateSolidBrush(GetRainbowColor(ft, 0.55f, GradientBrightness));
+                           }
+                           g_simple_gradient_ready = true;
+                         }
                          int h = rect.bottom - rect.top;
                            int bandH = max(1, h / 32);
                            for (int y = 0; y < h; y += bandH) {
-                             float ft = (float)y / (float)h;
-                               COLORREF c = GetRainbowColor(ft, 0.55f, GradientBrightness);
-                               HBRUSH hBrush = CreateSolidBrush(c);
-                               RECT band = {rect.left, rect.top + y, rect.right, rect.top + min(y + bandH, h)};
-                               FillRect(hdc, &band, hBrush);
-                               DeleteObject(hBrush);
+                             int colorIndex = (int)(((float)y / (float)h) * 32.0f);
+                             if (colorIndex > 31) colorIndex = 31;
+                             RECT band = {rect.left, rect.top + y, rect.right, rect.top + min(y + bandH, h)};
+                             FillRect(hdc, &band, g_simple_gradient_brushes[colorIndex]);
                            }
                        } else {
                          HBRUSH hBrush = CreateSolidBrush(COLOR_BG);
@@ -308,29 +322,24 @@ LRESULT CALLBACK SimpleListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, 
 static int g_last_selected_index = -1;
 LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
   switch (msg) {
-    case WM_CTLCOLOREDIT: {
-                            HDC hdc = (HDC)wParam;
-                              SetTextColor(hdc, COLOR_TEXT);
-                              if (ColorfullMode) {
-                                COLORREF bg = GetRainbowColor(0.02f, 0.55f, GradientBrightness);
-                                  SetBkColor(hdc, bg);
-                                  return (LRESULT)CreateSolidBrush(bg);
-                              } else {
-                                SetBkColor(hdc, COLOR_BG);
-                                  return (LRESULT)CreateSolidBrush(COLOR_BG);
-                              }
-                          }
+    case WM_CTLCOLOREDIT:
     case WM_CTLCOLORLISTBOX: {
-                               HDC hdc = (HDC)wParam;
-                                 SetTextColor(hdc, COLOR_TEXT);
-                                 if (ColorfullMode) {
-                                   COLORREF bg = GetRainbowColor(0.02f, 0.55f, GradientBrightness);
-                                     SetBkColor(hdc, bg);
-                                     return (LRESULT)CreateSolidBrush(bg);
-                                 } else {
-                                   SetBkColor(hdc, COLOR_BG);
-                                     return (LRESULT)CreateSolidBrush(COLOR_BG);
-                                 }
+                              HDC hdc = (HDC)wParam;
+                                SetTextColor(hdc, COLOR_TEXT);
+                                if (ColorfullMode) {
+                                  COLORREF bg = GetRainbowColor(0.02f, 0.55f, GradientBrightness);
+                                    SetBkColor(hdc, bg);
+                                    if (!g_ctl_bg_colorful_brush) {
+                                      g_ctl_bg_colorful_brush = CreateSolidBrush(bg);
+                                    }
+                                    return (LRESULT)g_ctl_bg_colorful_brush;
+                                } else {
+                                  SetBkColor(hdc, COLOR_BG);
+                                    if (!g_ctl_bg_brush) {
+                                      g_ctl_bg_brush = CreateSolidBrush(COLOR_BG);
+                                    }
+                                    return (LRESULT)g_ctl_bg_brush;
+                                }
                             }
     case WM_CREATE: {
                       if (!g_hNumFont) {
@@ -379,6 +388,19 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                      }
                      break;
                    }
+    case WM_PREVIEW_SELECTION: {
+                                 int idx = (int)lParam;
+                                   if (idx >= 0 && idx < g_populated_count) {
+                                     SubjectiveMessageDisplay(g_populated_cache[idx], 140, 6969, COLOR_OF_SELECTION);
+                                   } else {
+                                     if (hDisplayMessage != NULL) {
+                                       KillTimer(hDisplayMessage, 999);
+                                         DestroyWindow(hDisplayMessage);
+                                         hDisplayMessage = NULL;
+                                     }
+                                   }
+                                   return 0;
+                               }
     case WM_MEASUREITEM: {
                            MEASUREITEMSTRUCT* pmis = (MEASUREITEMSTRUCT*)lParam;
                              if (pmis->CtlID == IDC_LIST_BOX) {
@@ -485,16 +507,12 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                                   if (isSelected && strlen(measureBuffer) >= 70) {
                                     if (g_last_selected_index != pdis->itemID || hDisplayMessage == NULL) {
                                       g_last_selected_index = pdis->itemID;
-                                        SubjectiveMessageDisplay(g_populated_cache[pdis->itemID], 140, 6969,COLOR_OF_SELECTION);
+                                        PostMessageA(hwnd, WM_PREVIEW_SELECTION, 0, (LPARAM)pdis->itemID);
                                     }
                                   } else {
                                     if (g_last_selected_index == pdis->itemID) {
                                       g_last_selected_index = -1;
-                                        if (hDisplayMessage != NULL) {
-                                          KillTimer(hDisplayMessage, 999);
-                                            DestroyWindow(hDisplayMessage);
-                                            hDisplayMessage = NULL;
-                                        }
+                                        PostMessageA(hwnd, WM_PREVIEW_SELECTION, 0, (LPARAM)-1);
                                     }
                                   }
                                 } else {
@@ -587,15 +605,20 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                        RECT rect;
                        GetClientRect(hwnd, &rect);
                        if (ColorfullMode) {
+                         if (!g_bg_gradient_ready) {
+                           for (int i = 0; i < 128; i++) {
+                             float ft = (float)i / 128.0f;
+                             g_bg_gradient_brushes[i] = CreateSolidBrush(GetRainbowColor(ft, 0.55f, GradientBrightness));
+                           }
+                           g_bg_gradient_ready = true;
+                         }
                          int h = rect.bottom - rect.top;
                            int bandH = max(1, h / 128);
                            for (int y = 0; y < h; y += bandH) {
-                             float ft = (float)y / (float)h;
-                               COLORREF c = GetRainbowColor(ft, 0.55f, GradientBrightness);
-                               HBRUSH hBrush = CreateSolidBrush(c);
-                               RECT band = {rect.left, rect.top + y, rect.right, rect.top + min(y + bandH, h)};
-                               FillRect(hdc, &band, hBrush);
-                               DeleteObject(hBrush);
+                             int colorIndex = (int)(((float)y / (float)h) * 128.0f);
+                             if (colorIndex > 127) colorIndex = 127;
+                             RECT band = {rect.left, rect.top + y, rect.right, rect.top + min(y + bandH, h)};
+                             FillRect(hdc, &band, g_bg_gradient_brushes[colorIndex]);
                            }
                        } else {
                          HBRUSH hBrush = CreateSolidBrush(COLOR_BG);
