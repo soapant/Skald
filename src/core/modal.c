@@ -20,7 +20,7 @@ void SetMode(EditorMode mode) {
           if (RememberLastIndex) last_index = g_SelectedIndex;
           UI_SetSelection(hListBox,-1, g_SelectedIndex);
         } else if (strcmp(g_vim_mode,"NORMAL") == 0 ) {
-          if (RememberLastIndex && last_index >= 0) {
+          if (RememberLastIndex > g_TotalMatches && RememberLastIndex && last_index >= 0) {
             UI_NavigateTo(last_index);
           } else {
             UI_SetSelection(hListBox,0,g_SelectedIndex);

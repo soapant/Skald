@@ -1,5 +1,5 @@
-#include "common.h"
 #include "features/factorio.h"
+#include <stdio.h>
 
 void create_tag() {
   printf("CREATE TAG");
