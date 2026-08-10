@@ -29,6 +29,7 @@
 #define REMINDER            'S'
 #define MUTE                'P'
 #define SETTINGS            'D'
+#define MONITOR_CONTROL     '1'
 #define MUSIC_PLAYER_KEY    'P'
 #define VIDEO_VIEWER_KEY    'V'
 #define REPLICA             'R'
