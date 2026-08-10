@@ -289,11 +289,13 @@ char* SimplePromptUser(const char* prompt, const char* window_title,int height, 
   int loop_counter = 0;
   UI_PreparePopupPump();
   while (!selection_complete) {
-    if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+    if (GetMessage(&msg, NULL, 0, 0)) {
       if (UI_ShouldSkipPopupKey(&msg)) continue;
       loop_counter++;
       TranslateMessage(&msg);
       DispatchMessage(&msg);
+    } else {
+      break;
     }
   }
 
@@ -504,10 +506,12 @@ char* EditTextPopup(const char* initial_text, int centerX, int centerY, int maxW
   MSG msg;
   UI_PreparePopupPump();
   while (IsWindow(hPopupWnd) && g_EditData && g_EditData->result == NULL) {
-    if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+    if (GetMessage(&msg, NULL, 0, 0)) {
       if (UI_ShouldSkipPopupKey(&msg)) continue;
       TranslateMessage(&msg);
       DispatchMessage(&msg);
+    } else {
+      break;
     }
   }
 
@@ -577,10 +581,12 @@ char* SearchPopup() {
   MSG msg;
   UI_PreparePopupPump();
   while (IsWindow(hPopupWnd)) {
-    if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+    if (GetMessage(&msg, NULL, 0, 0)) {
       if (UI_ShouldSkipPopupKey(&msg)) continue;
       TranslateMessage(&msg);
       DispatchMessage(&msg);
+    } else {
+      break;
     }
   }
 
