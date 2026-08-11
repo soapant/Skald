@@ -34,3 +34,4 @@ how to set case sensitivity to false in neovim
 what is an integration test
 what is bun
 how to .append something in an array in c
+python endswith

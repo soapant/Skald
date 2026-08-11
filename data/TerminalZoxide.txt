@@ -24,3 +24,4 @@ amacs
 windowsapps
 indie
 autoclicker
+viewer
