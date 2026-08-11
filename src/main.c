@@ -18,10 +18,7 @@
 
 #define ID_TRAY_ICON 1001
 #define WM_TRAYICON (WM_USER + 1)
-#define WM_TRIGGER_UNIVERSAL_MACRO (WM_USER + 3)
 #define ID_EXIT 2001
-
-#define WM_TRIGGER_IMG_CAPTURE (WM_USER + 2)
 
 HWND hGlobalTrayWnd = NULL;
 HWND hPopupWnd = NULL;

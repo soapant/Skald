@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <stdio.h>
+#include "common.h"
 #include "core/types.h"
 #include "config.h"
 #include "core/timer.h"
@@ -76,6 +77,8 @@ static inline int UI_LB_GetItemHeight(HWND hList) {
 }
 
 static inline void UI_NavigateTo(int index) {
+  printf("NAVIGATING To %i \n",index);
+  printf("g_SelectedIndex %i \n",g_SelectedIndex);
   int count = g_populated_count;
   if (count <= 0) {
     UI_SetSelection(hListBox, -1, g_SelectedIndex);
@@ -84,6 +87,11 @@ static inline void UI_NavigateTo(int index) {
   if (index >= count) index = count - 1;
   if (index == -1) {
     draw_background = true;
+    UI_SetSelection(hListBox,-1,g_SelectedIndex);
+    return;
+  } else if (g_SelectedIndex + 1 == count && index + 2 != count) {
+    UI_SetSelection(hListBox,g_SelectedIndex,index);
+    return;
   }
 
   UI_SetSelection(hListBox, index, g_SelectedIndex);
