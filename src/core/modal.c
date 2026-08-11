@@ -15,12 +15,20 @@ void SetMode(EditorMode mode) {
     bool in_main = !g_hSearchPopup && !g_hEditPopup;
     draw_background = true;
 
+    if (hPopupWnd && IsWindow(hPopupWnd)) {
+        RECT rect;
+        GetClientRect(hPopupWnd, &rect);
+        RECT titleRect = {0, 0, rect.right, 40};
+        InvalidateRect(hPopupWnd, &titleRect, FALSE);
+    }
+
     if (in_main) {
         if (strcmp(g_vim_mode,"INSERT") == 0 ) {
           if (RememberLastIndex) last_index = g_SelectedIndex;
           UI_SetSelection(hListBox,-1, g_SelectedIndex);
         } else if (strcmp(g_vim_mode,"NORMAL") == 0 ) {
           if (RememberLastIndex > g_TotalMatches && RememberLastIndex && last_index >= 0) {
+            printf("LAST INDEX %i \n",last_index);
             UI_NavigateTo(last_index);
           } else {
             UI_SetSelection(hListBox,0,g_SelectedIndex);
@@ -32,17 +40,6 @@ void SetMode(EditorMode mode) {
         UpdateTextCaret(g_ActiveEditControl);
     }
 
-    if (hPopupWnd != NULL && IsWindow(hPopupWnd)) {
-        InvalidateRect(hPopupWnd, NULL, FALSE);
-        UpdateWindow(hPopupWnd);
-    }
-    if (g_ActiveEditControl != NULL && IsWindow(g_ActiveEditControl)) {
-        HWND hParent = GetParent(g_ActiveEditControl);
-        if (hParent != NULL && IsWindow(hParent)) {
-            InvalidateRect(hParent, NULL, FALSE);
-            UpdateWindow(hParent);
-        }
-    }
 }
 
 EditorMode GetMode(void) { return g_current_mode; }

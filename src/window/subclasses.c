@@ -619,83 +619,82 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                            FillRect(hdc, &ps.rcPaint, hBrush);
                            DeleteObject(hBrush);
                        }
-                     if (g_vim_mode != NULL) {
-                       wchar_t wmode[256];
-                         MultiByteToWideChar(CP_UTF8, 0, g_vim_mode, -1, wmode, 256);
-                         
-                         HFONT hOldFont = (HFONT)SelectObject(hdc, g_hMainFont);
-                         
-                         SetBkMode(hdc, TRANSPARENT);
-                         
-                         if (g_current_mode == MODE_NORMAL) {
-                           SetTextColor(hdc,COLOR_NORMAL_MODE_TEXT);
-                         } else if (g_current_mode == MODE_INSERT) {
-                           SetTextColor(hdc,COLOR_INSERT_MODE_TEXT);
-                         } else {
-                           SetTextColor(hdc,COLOR_VISUAL_MODE_TEXT);
+                         if (g_vim_mode != NULL) {
+                           wchar_t wmode[256];
+                             MultiByteToWideChar(CP_UTF8, 0, g_vim_mode, -1, wmode, 256);
+                             
+                             HFONT hOldFont = (HFONT)SelectObject(hdc, g_hMainFont);
+                             
+                             SetBkMode(hdc, TRANSPARENT);
+                             
+                             if (g_current_mode == MODE_NORMAL) {
+                               SetTextColor(hdc,COLOR_NORMAL_MODE_TEXT);
+                             } else if (g_current_mode == MODE_INSERT) {
+                               SetTextColor(hdc,COLOR_INSERT_MODE_TEXT);
+                             } else {
+                               SetTextColor(hdc,COLOR_VISUAL_MODE_TEXT);
+                             }
+                           
+                             SIZE sz;
+                             GetTextExtentPoint32W(hdc, wmode, (int)wcslen(wmode), &sz);
+                             
+                             RECT modeRect;
+                             modeRect.left = 15;
+                             modeRect.top = 10;
+                             modeRect.right = modeRect.left + sz.cx + 10;
+                             modeRect.bottom = modeRect.top + sz.cy + 10;
+                             
+                             DrawTextW(hdc, wmode, -1, &modeRect, DT_LEFT | DT_TOP);
+                             
+                             SelectObject(hdc, hOldFont);
+                         }
+                         if (g_title != NULL && strlen(g_title) > 0) {
+                           wchar_t wtitle[256];
+                             MultiByteToWideChar(CP_UTF8, 0, g_title, -1, wtitle, 256);
+                             
+                             HFONT hOldFont = (HFONT)SelectObject(hdc, g_hMainFont);
+                             SetBkMode(hdc, TRANSPARENT);
+                             
+                             SIZE sz;
+                             GetTextExtentPoint32W(hdc, wtitle, (int)wcslen(wtitle), &sz);
+                             
+                             RECT titleRect;
+                             titleRect.left = rect.right - sz.cx - 20;
+                             titleRect.top = 10;
+                             titleRect.right = rect.right - 10;
+                             titleRect.bottom = rect.top + sz.cy + 15;
+                             
+                             COLORREF titleColor;
+                             if (g_populated_count < 25) {
+                               titleColor = RGB(0, 255, 0);
+                             } else if (g_populated_count < 50) {
+                               titleColor = RGB(100, 255, 0);
+                             } else if (g_populated_count < 75) {
+                               titleColor = RGB(200, 255, 0);
+                             } else if (g_populated_count < 100) {
+                               titleColor = RGB(255, 255, 0);
+                             } else if (g_populated_count < 125) {
+                               titleColor = RGB(255, 200, 0);
+                             } else if (g_populated_count < 150) {
+                               titleColor = RGB(255, 150, 0);
+                             } else if (g_populated_count < 175) {
+                               titleColor = RGB(255, 100, 0);
+                             } else if (g_populated_count < 200) {
+                               titleColor = RGB(255, 50, 0);
+                             } else {
+                               titleColor = RGB(255, 0, 0);
+                             }
+                           
+                             SetTextColor(hdc, titleColor);
+                             DrawTextW(hdc, wtitle, -1, &titleRect, DT_LEFT | DT_TOP);
+                             
+                             SelectObject(hdc, hOldFont);
                          }
                        
-                         SIZE sz;
-                         GetTextExtentPoint32W(hdc, wmode, (int)wcslen(wmode), &sz);
-                         
-                         RECT modeRect;
-                         modeRect.left = 15;
-                         modeRect.top = 10;
-                         modeRect.right = modeRect.left + sz.cx + 10;
-                         modeRect.bottom = modeRect.top + sz.cy + 10;
-                         
-                         DrawTextW(hdc, wmode, -1, &modeRect, DT_LEFT | DT_TOP);
-                         
-                         SelectObject(hdc, hOldFont);
-                     }
-                     
-                       if (g_title != NULL && strlen(g_title) > 0) {
-                         wchar_t wtitle[256];
-                           MultiByteToWideChar(CP_UTF8, 0, g_title, -1, wtitle, 256);
-                           
-                           HFONT hOldFont = (HFONT)SelectObject(hdc, g_hMainFont);
-                           SetBkMode(hdc, TRANSPARENT);
-                           
-                           SIZE sz;
-                           GetTextExtentPoint32W(hdc, wtitle, (int)wcslen(wtitle), &sz);
-                           
-                           RECT titleRect;
-                           titleRect.left = rect.right - sz.cx - 20;
-                           titleRect.top = 10;
-                           titleRect.right = rect.right - 10;
-                           titleRect.bottom = rect.top + sz.cy + 15;
-                           
-                           COLORREF titleColor;
-                           if (g_populated_count < 25) {
-                             titleColor = RGB(0, 255, 0);
-                           } else if (g_populated_count < 50) {
-                             titleColor = RGB(100, 255, 0);
-                           } else if (g_populated_count < 75) {
-                             titleColor = RGB(200, 255, 0);
-                           } else if (g_populated_count < 100) {
-                             titleColor = RGB(255, 255, 0);
-                           } else if (g_populated_count < 125) {
-                             titleColor = RGB(255, 200, 0);
-                           } else if (g_populated_count < 150) {
-                             titleColor = RGB(255, 150, 0);
-                           } else if (g_populated_count < 175) {
-                             titleColor = RGB(255, 100, 0);
-                           } else if (g_populated_count < 200) {
-                             titleColor = RGB(255, 50, 0);
-                           } else {
-                             titleColor = RGB(255, 0, 0);
-                           }
-                         
-                           SetTextColor(hdc, titleColor);
-                           DrawTextW(hdc, wtitle, -1, &titleRect, DT_LEFT | DT_TOP);
-                           
-                           SelectObject(hdc, hOldFont);
-                       }
-                     
-                       EndPaint(hwnd, &ps);
-                       break;
-                   }
-                   break;              
+                         EndPaint(hwnd, &ps);
+                         break;
+                         }
+                       break;              
     case WM_ERASEBKGND: {
                           return TRUE;
                         }
