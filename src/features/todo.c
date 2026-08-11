@@ -251,7 +251,6 @@ static void todo_refresh_callback(const char* filter, HWND hListBox) {
         items[i] = todo_lines[i];
     }
 
-    printf("REFERSHING");
     PopulateListBox(hListBox, filter, items, todo_count, NULL);
 
 }

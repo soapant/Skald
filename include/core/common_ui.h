@@ -77,8 +77,6 @@ static inline int UI_LB_GetItemHeight(HWND hList) {
 }
 
 static inline void UI_NavigateTo(int index) {
-  printf("NAVIGATING To %i \n",index);
-  printf("g_SelectedIndex %i \n",g_SelectedIndex);
   int count = g_populated_count;
   if (count <= 0) {
     UI_SetSelection(hListBox, -1, g_SelectedIndex);
@@ -96,7 +94,7 @@ static inline void UI_NavigateTo(int index) {
 
   UI_SetSelection(hListBox, index, g_SelectedIndex);
 
-  SendMessageA(hListBox, WM_SETREDRAW, FALSE, 0);
+  LockWindowUpdate(hListBox);
   UI_LB_SetCaretIndex(hListBox, index, TRUE);
 
   int topIndex = UI_LB_GetTopIndex(hListBox);
@@ -118,7 +116,7 @@ static inline void UI_NavigateTo(int index) {
     if (newTop < 0) newTop = 0;
     UI_LB_SetTopIndex(hListBox, newTop);
   }
-  SendMessageA(hListBox, WM_SETREDRAW, TRUE, 0);
+  LockWindowUpdate(NULL);
   InvalidateRect(hListBox, NULL, FALSE);
 }
 
