@@ -1,7 +1,6 @@
 i should also add a keyword type thing so i can color in a specif word in a todo||[Project: Cprogram]
 you could like do something in the render callback to select / highlight common done selections||[Cprogram]
 calc.h should be able to handle longer strings like 2 x 4 x 19 or something||[Cprogram]
-the python browser works but doesnt||[Bored]|[Fun]
 fix the fucking mutli cursor to like do insert mode normal mode etc||[Bored]|[Nvim]
 make my own fucking task manaegr this shit sucks||[Cprogram]|[Fun]
 add ^ to the calculator||[Cprogram]
