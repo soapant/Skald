@@ -177,8 +177,9 @@ void PopulateListBox(HWND hListBox, const char* filter,
   }
   TimerEnd(timer_cache, "  PopulateListBox - Cache build");
 
-  WinTimer timer_ui = TimerStart();
   UI_LB_SetCount(hListBox, total_matches);
+
+  WinTimer timer_ui = TimerStart();
   if (!g_seq_state.waiting) {
     if (IsNormalMode()) {
       int keep;
