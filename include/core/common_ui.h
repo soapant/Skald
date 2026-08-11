@@ -87,6 +87,8 @@ static inline void UI_NavigateTo(int index) {
   }
 
   UI_SetSelection(hListBox, index, g_SelectedIndex);
+
+  SendMessageA(hListBox, WM_SETREDRAW, FALSE, 0);
   UI_LB_SetCaretIndex(hListBox, index, TRUE);
 
   int topIndex = UI_LB_GetTopIndex(hListBox);
@@ -108,6 +110,8 @@ static inline void UI_NavigateTo(int index) {
     if (newTop < 0) newTop = 0;
     UI_LB_SetTopIndex(hListBox, newTop);
   }
+  SendMessageA(hListBox, WM_SETREDRAW, TRUE, 0);
+  InvalidateRect(hListBox, NULL, FALSE);
 }
 
 static inline void UI_NavigateUp(void) {

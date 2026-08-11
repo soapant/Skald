@@ -1,5 +1,6 @@
 #include "common.h"
 #include "core/modal.h"
+#include "config.h"
 #include "core/common_ui.h"
 
 EditorMode g_current_mode = MODE_INSERT;
@@ -27,8 +28,7 @@ void SetMode(EditorMode mode) {
           if (RememberLastIndex) last_index = g_SelectedIndex;
           UI_SetSelection(hListBox,-1, g_SelectedIndex);
         } else if (strcmp(g_vim_mode,"NORMAL") == 0 ) {
-          if (RememberLastIndex > g_TotalMatches && RememberLastIndex && last_index >= 0) {
-            printf("LAST INDEX %i \n",last_index);
+          if (last_index < g_TotalMatches && RememberLastIndex) {
             UI_NavigateTo(last_index);
           } else {
             UI_SetSelection(hListBox,0,g_SelectedIndex);
