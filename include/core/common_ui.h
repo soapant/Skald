@@ -173,7 +173,9 @@ COLORREF GetRainbowColor(float t, float s, float v);
 HFONT CreateCustomNerdFont(int height, const char* face_name);
 void UpdateTextCaret(HWND hwndEditControl);
 void CalculateWindowMetrics(int count, WindowLayout* layout,int height , int width,int item_height);
+void CalculateSettingsWindowMetrics(int count, WindowLayout* layout,int height , int width,int item_height);
 void SimpleCreateChildControls(HWND hwndParent, HFONT hFont, const char* string, int count, const WindowLayout* layout);
+void SettingsCreateChildControls(HWND hwndParent, HFONT hFont,const WindowLayout* layout);
 void ForceWindowFocus(HWND hwndTarget, HWND hwndInput);
 void CreateChildControls(HWND hwndParent, HFONT hFont, const char* list[], int count, const WindowLayout* layout);
 
