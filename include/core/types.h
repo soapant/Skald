@@ -56,6 +56,8 @@ void UpdateTextCaret(HWND hwndEditControl);
 
 LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 
+LRESULT CALLBACK SettingsEditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
+
 LRESULT CALLBACK SimpleEditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 
 LRESULT CALLBACK ListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
@@ -283,7 +285,7 @@ typedef struct {
 #define COLOR_TEXT    RGB(255, 255, 255)
 #define COLOR_SELECTED_TEXT    RGB(70, 55, 90)
 #define COLOR_VISUAL_SELECTED_TEXT    RGB(48,25,52)
-#define COLOR_ALIAS_TEXT    RGB(40,40,250)
+#define COLOR_ALIAS_TEXT    RGB(255,255,255)
 #define COLOR_INSERT_MODE_TEXT    RGB(50, 255, 50)
 #define COLOR_NORMAL_MODE_TEXT    RGB(100, 255, 255)
 #define COLOR_VISUAL_MODE_TEXT    RGB(200, 3, 222)
