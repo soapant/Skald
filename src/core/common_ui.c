@@ -318,6 +318,28 @@ void CalculateWindowMetrics(int count, WindowLayout* layout,int height , int wid
   layout->x = mi.rcMonitor.left + (monitorWidth - layout->w) / 2;
   layout->y = mi.rcMonitor.top + (monitorHeight - layout->h) / 2;
 }
+void CalculateSettingsWindowMetrics(int count, WindowLayout* layout,int height , int width,int item_height) {
+  POINT ptPrimary = { 0, 0 }; 
+  HMONITOR hMonitor = MonitorFromPoint(ptPrimary, MONITOR_DEFAULTTOPRIMARY);
+
+  MONITORINFO mi = {0};
+  mi.cbSize = sizeof(MONITORINFO);
+  GetMonitorInfoA(hMonitor, &mi);
+
+  int monitorWidth = mi.rcMonitor.right - mi.rcMonitor.left;
+  int monitorHeight = mi.rcMonitor.bottom - mi.rcMonitor.top;
+
+  layout->w = 900;          
+  layout->item_height = item_height; 
+
+  layout->h = 95 + (count > 0 ? (count * layout->item_height) : 0); 
+
+  if (layout->h < height) layout->h = height;
+  if (layout->h > width) layout->h = width; 
+
+  layout->x = mi.rcMonitor.left + (monitorWidth - layout->w) / 2;
+  layout->y = mi.rcMonitor.top + (monitorHeight - layout->h) / 2;
+}
 
 void SimpleCreateChildControls(HWND hwndParent, HFONT hFont, const char* string, int count, const WindowLayout* layout) {
   HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtrA(hwndParent, GWLP_HINSTANCE);
@@ -393,29 +415,22 @@ void ForceWindowFocus(HWND hwndTarget, HWND hwndInput) {
 }
 
 void CreateChildControls(HWND hwndParent, HFONT hFont, const char* list[], int count, const WindowLayout* layout) {
-  printf("[DEBUG] CreateChildControls: Starting with count=%d\n", count);
   
   HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtrA(hwndParent, GWLP_HINSTANCE);
-  printf("[DEBUG] hInstance = %p\n", hInstance);
 
-  printf("[DEBUG] Creating edit control...\n");
   hEditControl = CreateWindowExA(
       0, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
       20, 50, layout->w - 40, 40, hwndParent, (HMENU)IDC_INPUT_BOX, hInstance, NULL
       );
   if (!hEditControl) {
-    printf("[ERROR] Failed to create edit control! GetLastError=%lu\n", GetLastError());
     return;
   }
-  printf("[DEBUG] Edit control created: %p\n", hEditControl);
 
   g_ActiveEditControl = hEditControl;
   UI_Edit_SetFont(hEditControl, hFont);
   SetWindowSubclass(hEditControl, EditSubclassProc, 0, 0);
-  printf("[DEBUG] Edit control initialized\n");
 
   if (count >= 0) {
-    printf("[DEBUG] Creating list box with count=%d\n", count);
     hListBox = CreateWindowExA(
         0, "LISTBOX", "", 
         WS_CHILD | WS_VISIBLE | LBS_NODATA | LBS_OWNERDRAWFIXED,
@@ -423,52 +438,47 @@ void CreateChildControls(HWND hwndParent, HFONT hFont, const char* list[], int c
         );
 
     if (!hListBox) {
-      printf("[ERROR] Failed to create list box! GetLastError=%lu\n", GetLastError());
       return;
     }
-    printf("[DEBUG] List box created: %p\n", hListBox);
 
     SetWindowSubclass(hListBox, ListBoxSubclassProc, 0, 0);
     UI_LB_SetFont(hListBox, hFont);
     UI_LB_SetItemHeight(hListBox, layout->item_height);
-    printf("[DEBUG] List box configured: item_height=%d\n", layout->item_height);
 
     int max_width = layout->w - 40;
-    printf("[DEBUG] max_width=%d\n", max_width);
     
     HDC hdc = GetDC(hListBox);
     if (!hdc) {
-      printf("[ERROR] Failed to get DC for list box! GetLastError=%lu\n", GetLastError());
       return;
     }
-    printf("[DEBUG] DC obtained: %p\n", hdc);
     
     HFONT hOldFont = (HFONT)SelectObject(hdc, hFont);
-    printf("[DEBUG] Old font selected: %p\n", hOldFont);
 
     g_initial_items = list;        
     g_initial_count = count;
-    printf("[DEBUG] Stored initial items: list=%p, count=%d\n", list, count);
 
-    printf("[DEBUG] Setting item count to %d...\n", count);
     UI_SetItemCount(hListBox, count);
-    int countCheck = UI_GetCount(hListBox);
-    printf("[DEBUG] UI_GetCount after set = %d\n", countCheck);
 
-    printf("[DEBUG] Redrawing list box...\n");
     UI_RedrawNow(hListBox);
     UpdateWindow(hListBox); 
-    printf("[DEBUG] List box redrawn\n");
 
     SelectObject(hdc, hOldFont);
     ReleaseDC(hListBox, hdc);
-    printf("[DEBUG] DC released\n");
     
     UI_SetHorizontalExtent(hListBox, max_width);
-    printf("[DEBUG] Horizontal extent set to %d\n", max_width);
-  } else {
-    printf("[DEBUG] count < 0, skipping list box creation\n");
   }
-  
-  printf("[DEBUG] CreateChildControls: Completed successfully\n");
+}
+void SettingsCreateChildControls(HWND hwndParent, HFONT hFont,const WindowLayout* layout) {
+  HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtrA(hwndParent, GWLP_HINSTANCE);
+
+  hEditControl = CreateWindowExA(
+      0, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
+      20, 50, layout->w - 40, 40, hwndParent, (HMENU)IDC_INPUT_BOX, hInstance, NULL
+      );
+
+  if (!hEditControl) return;
+
+  g_ActiveEditControl = hEditControl;
+  UI_Edit_SetFont(hEditControl, hFont);
+  SetWindowSubclass(hEditControl, SettingsEditSubclassProc, 0, 0);
 }

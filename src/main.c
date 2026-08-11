@@ -376,14 +376,16 @@ void SettingsPopUp() {
   int width = 900;
   int item_height = 32;
 
+  setting_complete = false;
+
   SetMode(MODE_INSERT);
 
   WindowLayout layout;
-  CalculateWindowMetrics(1, &layout, height, width, item_height);
+  CalculateSettingsWindowMetrics(1, &layout, height, width, item_height);
 
   HFONT hCustomFont = CreateCustomNerdFont(FontSize, UsedFont);
 
-  HWND hPopupWnd = CreateWindowExA(
+  hPopupWnd = CreateWindowExA(
       WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED | WS_EX_COMPOSITED,
       "SettingsPopupClass", NULL, WS_POPUP | WS_CLIPCHILDREN, 
       510, 210, width, height, NULL, NULL, hInstance, NULL
@@ -396,17 +398,20 @@ void SettingsPopUp() {
     return;
   }
 
+  hSettings = hPopupWnd;
   SetTimer(hPopupWnd, 999, 50, NULL);
 
-  // SettingsCreateChildControls(hPopupWnd, hCustomFont);
+  SettingsCreateChildControls(hPopupWnd, hCustomFont,&layout);
 
   SetLayeredWindowAttributes(hPopupWnd, 0, 245, LWA_ALPHA);
 
   ForceWindowFocus(hPopupWnd, hEditControl);
 
   MSG msg;
+  UI_PreparePopupPump();
   while (!setting_complete) {
     if (GetMessage(&msg, NULL, 0, 0)) {
+      if (UI_ShouldSkipPopupKey(&msg)) continue;
       TranslateMessage(&msg);
       DispatchMessage(&msg);
     } else {
@@ -419,6 +424,7 @@ void SettingsPopUp() {
     DestroyWindow(hPopupWnd);
     hPopupWnd = NULL;
   }
+  hSettings = NULL;
 
   while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
     TranslateMessage(&msg);
