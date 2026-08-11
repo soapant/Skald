@@ -378,7 +378,6 @@ void get_flip_expression(char* out, size_t max_len) {
 
 
 
-
 static void calculator_refresh_callback(const char* filter, HWND hListBox) {
     if (!hListBox) return;
     
@@ -391,15 +390,14 @@ static void calculator_refresh_callback(const char* filter, HWND hListBox) {
     
     const char* items[1] = { result_buffer };
 
-    PopulateListBox(hListBox, NULL, items, 1, NULL);
+    BuildAliasDisplayItems(items, 1);
+    PopulateListBox(hListBox, NULL, items, 1,NULL);
 }
 
 static void calculator_enter_callback(const char* selection) {
-    char* result = (char*)selection;
-    result = (char*)selection + 2;
+    char* result = g_populated_cache[0];
     CopyToClipboard(result);
 }
-
 
 
 
@@ -435,8 +433,7 @@ static void calculator_tab_callback(void) {
 
 
 static void calculator_ctrlenter_callback(const char* selection) {
-    char* result = (char*)selection;
-    result = (char*)selection + 2;
+    char* result = g_populated_cache[0] + 2;
     UI_SetText(hEditControl, result);
     int len = strlen(result);
     UI_SetCursorPosition(hEditControl, len);
