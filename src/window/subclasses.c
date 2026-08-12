@@ -305,6 +305,13 @@ LRESULT CALLBACK SimpleListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, 
 }
 
 static int g_last_selected_index = -1;
+
+static int g_pending_navigate = -1;
+
+void RequestInitialNavigation(int index) {
+  g_pending_navigate = index;
+}
+
 LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
   static HBRUSH s_bg_brush = NULL;
   static HBRUSH s_bg_colorful_brush = NULL;
@@ -351,6 +358,17 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                         only_once = false;
                           break;
                     }
+    case WM_SHOWWINDOW: {
+      if (wParam && g_pending_navigate >= 0) {
+        int idx = g_pending_navigate;
+        g_pending_navigate = -1;
+        if (hListBox && IsWindow(hListBox)) {
+          UI_NavigateTo(idx);
+          UpdateWindow(hListBox);
+        }
+      }
+      break;
+    }
     case WM_COMMAND: {
                        int wmId   = LOWORD(wParam);
                          int wmEvent = HIWORD(wParam);
