@@ -132,6 +132,7 @@ static inline void UI_NavigateUp(void) {
   if (sel >= 0) {
     sel--;
   }
+  if (sel == g_SelectedIndex) return;
   UI_NavigateTo(sel);
 }
 
@@ -142,6 +143,7 @@ static inline void UI_NavigateDown(void) {
   if (sel < 0) sel = -1;
   if (sel >= count - 1) sel = count - 1;
   else sel++;
+  if (sel == g_SelectedIndex) return;
   UI_NavigateTo(sel);
 }
 
