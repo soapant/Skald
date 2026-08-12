@@ -17,14 +17,15 @@ extern int g_alias_display_count;
 extern bool g_alias_display_active;
 void BuildAliasDisplayItems(const char** items, int count);
 static inline void UI_SetSelection(HWND hList, int index, int old_sel) {
+  if (old_sel == index) return;
   g_SelectedIndex = index;
 
   RECT itemRect;
-  if (old_sel >= 0 && old_sel != index) {
+  if (old_sel >= 0) {
     SendMessageA(hList, LB_GETITEMRECT, old_sel, (LPARAM)&itemRect);
     InvalidateRect(hList, &itemRect, FALSE);
   }
-  if (index >= 0 && index != old_sel) {
+  if (index >= 0) {
     SendMessageA(hList, LB_GETITEMRECT, index, (LPARAM)&itemRect);
     InvalidateRect(hList, &itemRect, FALSE);
   }
@@ -66,7 +67,7 @@ static inline void UI_LB_SetTopIndex(HWND hList, int index) {
 }
 
 static inline int UI_LB_GetTopIndex(HWND hList) {
-  return  SendMessageA(hListBox, LB_GETTOPINDEX, 0, 0);
+  return (int)SendMessageA(hList, LB_GETTOPINDEX, 0, 0);
 }
 static inline void UI_LB_SetFont(HWND hList, HFONT hFont) {
   SendMessageA(hList, WM_SETFONT, (WPARAM)hFont, FALSE);
@@ -79,45 +80,49 @@ static inline int UI_LB_GetItemHeight(HWND hList) {
 static inline void UI_NavigateTo(int index) {
   int count = g_populated_count;
   if (count <= 0) {
-    UI_SetSelection(hListBox, -1, g_SelectedIndex);
+    g_SelectedIndex = -1;
+    InvalidateRect(hListBox, NULL, FALSE);
     return;
   }
   if (index >= count) index = count - 1;
   if (index == -1) {
-    draw_background = true;
-    UI_SetSelection(hListBox,-1,g_SelectedIndex);
-    return;
-  } else if (g_SelectedIndex + 1 == count && index + 2 != count) {
-    UI_SetSelection(hListBox,g_SelectedIndex,index);
+    g_SelectedIndex = -1;
+    InvalidateRect(hListBox, NULL, FALSE);
     return;
   }
 
-  UI_SetSelection(hListBox, index, g_SelectedIndex);
+  int old_sel = g_SelectedIndex;
+  int oldTop = UI_LB_GetTopIndex(hListBox);
+  g_SelectedIndex = index;
 
-  LockWindowUpdate(hListBox);
-  UI_LB_SetCaretIndex(hListBox, index, TRUE);
+  UI_LB_SetCaretIndex(hListBox, index, FALSE);
 
-  int topIndex = UI_LB_GetTopIndex(hListBox);
   int itemHeight = UI_LB_GetItemHeight(hListBox);
   RECT rect;
   GetClientRect(hListBox, &rect);
   int visibleCount = (itemHeight > 0) ? (rect.bottom / itemHeight) : 16;
+  if (visibleCount < 1) visibleCount = 1;
 
-  if (index <= topIndex + PaddingForScrolling) {
-    int newTop = index - PaddingForScrolling;
-    if (newTop < 0) newTop = 0;
-    if (newTop + visibleCount > count) newTop = count - visibleCount;
-    if (newTop < 0) newTop = 0;
-    UI_LB_SetTopIndex(hListBox, newTop);
-  } else if (index >= topIndex + visibleCount - PaddingForScrolling) {
-    int newTop = index - visibleCount + PaddingForScrolling + 1;
-    if (newTop < 0) newTop = 0;
-    if (newTop + visibleCount > count) newTop = count - visibleCount;
-    if (newTop < 0) newTop = 0;
+  int newTop = oldTop;
+  if (index <= oldTop + PaddingForScrolling) {
+    newTop = index - PaddingForScrolling;
+  } else if (index >= oldTop + visibleCount - PaddingForScrolling) {
+    newTop = index - visibleCount + PaddingForScrolling + 1;
+  }
+  if (newTop < 0) newTop = 0;
+  if (newTop + visibleCount > count) newTop = count - visibleCount;
+  if (newTop < 0) newTop = 0;
+  if (newTop != oldTop) {
     UI_LB_SetTopIndex(hListBox, newTop);
   }
-  LockWindowUpdate(NULL);
-  InvalidateRect(hListBox, NULL, FALSE);
+
+  RECT itemRect;
+  if (old_sel >= 0 && old_sel != index) {
+    SendMessageA(hListBox, LB_GETITEMRECT, old_sel, (LPARAM)&itemRect);
+    InvalidateRect(hListBox, &itemRect, FALSE);
+  }
+  SendMessageA(hListBox, LB_GETITEMRECT, index, (LPARAM)&itemRect);
+  InvalidateRect(hListBox, &itemRect, FALSE);
 }
 
 static inline void UI_NavigateUp(void) {
