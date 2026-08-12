@@ -20,14 +20,27 @@ static inline void UI_SetSelection(HWND hList, int index, int old_sel) {
   if (old_sel == index) return;
   g_SelectedIndex = index;
 
+  RECT invalidRect = {0};
+  bool hasInvalid = false;
   RECT itemRect;
+
   if (old_sel >= 0) {
     SendMessageA(hList, LB_GETITEMRECT, old_sel, (LPARAM)&itemRect);
-    InvalidateRect(hList, &itemRect, FALSE);
+    invalidRect = itemRect;
+    hasInvalid = true;
   }
   if (index >= 0) {
     SendMessageA(hList, LB_GETITEMRECT, index, (LPARAM)&itemRect);
-    InvalidateRect(hList, &itemRect, FALSE);
+    if (!hasInvalid) {
+      invalidRect = itemRect;
+      hasInvalid = true;
+    } else {
+      UnionRect(&invalidRect, &invalidRect, &itemRect);
+    }
+  }
+
+  if (hasInvalid) {
+    RedrawWindow(hList, &invalidRect, NULL, RDW_INVALIDATE);
   }
 }
 
@@ -81,12 +94,14 @@ static inline void UI_NavigateTo(int index) {
   int count = g_populated_count;
   if (count <= 0) {
     g_SelectedIndex = -1;
+    UI_LB_SetCaretIndex(hListBox, -1, FALSE);
     InvalidateRect(hListBox, NULL, FALSE);
     return;
   }
   if (index >= count) index = count - 1;
   if (index == -1) {
     g_SelectedIndex = -1;
+    UI_LB_SetCaretIndex(hListBox, -1, FALSE);
     InvalidateRect(hListBox, NULL, FALSE);
     return;
   }
@@ -112,17 +127,36 @@ static inline void UI_NavigateTo(int index) {
   if (newTop < 0) newTop = 0;
   if (newTop + visibleCount > count) newTop = count - visibleCount;
   if (newTop < 0) newTop = 0;
+
+  RECT invalidRect = {0};
+  bool hasInvalid = false;
+
   if (newTop != oldTop) {
     UI_LB_SetTopIndex(hListBox, newTop);
+    hasInvalid = true;
   }
 
   RECT itemRect;
   if (old_sel >= 0 && old_sel != index) {
     SendMessageA(hListBox, LB_GETITEMRECT, old_sel, (LPARAM)&itemRect);
-    InvalidateRect(hListBox, &itemRect, FALSE);
+    if (!hasInvalid) {
+      invalidRect = itemRect;
+      hasInvalid = true;
+    } else {
+      UnionRect(&invalidRect, &invalidRect, &itemRect);
+    }
   }
   SendMessageA(hListBox, LB_GETITEMRECT, index, (LPARAM)&itemRect);
-  InvalidateRect(hListBox, &itemRect, FALSE);
+  if (!hasInvalid) {
+    invalidRect = itemRect;
+    hasInvalid = true;
+  } else {
+    UnionRect(&invalidRect, &invalidRect, &itemRect);
+  }
+
+  if (hasInvalid) {
+    RedrawWindow(hListBox, &invalidRect, NULL, RDW_INVALIDATE);
+  }
 }
 
 static inline void UI_NavigateUp(void) {

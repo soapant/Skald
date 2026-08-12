@@ -46,6 +46,7 @@ void PopulateListBox(HWND hListBox, const char* filter,
   if (!hListBox) return;
   if (g_seq_state.waiting) return;
   if (!filter) filter = "";
+  BuildAliasDisplayItems(items, item_count);
   TimerEnd(timer_alias,"PopulateListBox - Aliases");
 
 
@@ -210,6 +211,10 @@ void PopulateListBox(HWND hListBox, const char* filter,
         hDisplayMessage = NULL;
       }
     }
+  }
+
+  if (total_matches != old_count || clean_filter[0] != '\0') {
+    InvalidateRect(hListBox, NULL, FALSE);
   }
   TimerEnd(timer_ui, "  PopulateListBox - UI update");
 
