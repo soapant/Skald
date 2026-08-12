@@ -216,12 +216,45 @@ LRESULT CALLBACK SimpleEditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPAR
 } 
 
 LRESULT CALLBACK ListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData){
+  static HBRUSH s_bg_brush = NULL;
+  static HBRUSH s_bg_colorful_brush = NULL;
   switch (uMsg) {
     case WM_NCDESTROY:
       RemoveWindowSubclass(hWnd, ListBoxSubclassProc, uIdSubclass);
+      if (s_bg_brush) { DeleteObject(s_bg_brush); s_bg_brush = NULL; }
+      if (s_bg_colorful_brush) { DeleteObject(s_bg_colorful_brush); s_bg_colorful_brush = NULL; }
       break;
     case WM_ERASEBKGND:
       return TRUE;
+    case WM_PAINT: {
+      LRESULT lr = DefSubclassProc(hWnd, uMsg, wParam, lParam);
+      RECT rc;
+      GetClientRect(hWnd, &rc);
+      int itemH = (int)SendMessageA(hWnd, LB_GETITEMHEIGHT, 0, 0);
+      int count = (int)SendMessageA(hWnd, LB_GETCOUNT, 0, 0);
+      if (itemH > 0) {
+        LONG itemsBottom = (LONG)count * itemH;
+        if (itemsBottom < rc.bottom) {
+          HBRUSH hBrush;
+          if (ColorfullMode) {
+            if (!s_bg_colorful_brush) {
+              s_bg_colorful_brush = CreateSolidBrush(GetRainbowColor(0.02f, 0.55f, GradientBrightness));
+            }
+            hBrush = s_bg_colorful_brush;
+          } else {
+            if (!s_bg_brush) s_bg_brush = CreateSolidBrush(COLOR_BG);
+            hBrush = s_bg_brush;
+          }
+          RECT empty = { rc.left, itemsBottom, rc.right, rc.bottom };
+          HDC hdc = GetDC(hWnd);
+          if (hdc) {
+            FillRect(hdc, &empty, hBrush);
+            ReleaseDC(hWnd, hdc);
+          }
+        }
+      }
+      return lr;
+    }
     default:
       return DefSubclassProc(hWnd, uMsg, wParam, lParam);
   }
@@ -423,9 +456,9 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                            break;
                          }
 case WM_DRAWITEM: {
-                         DRAWITEMSTRUCT* pdis = (DRAWITEMSTRUCT*)lParam;
-                           if (pdis->CtlID == IDC_LIST_BOX && pdis->itemID != -1) {
-                             BOOL isSelected = (pdis->itemID == g_SelectedIndex);
+                          DRAWITEMSTRUCT* pdis = (DRAWITEMSTRUCT*)lParam;
+                            if (pdis->CtlID == IDC_LIST_BOX && pdis->itemID != -1) {
+                              BOOL isSelected = (pdis->itemID == g_SelectedIndex);
                                if (!s_colorful_ready) {
                                  s_sel_brush = CreateSolidBrush(COLOR_SELECTED_TEXT);
                                    for (int i = 0; i < MAX_VISIBLE_ITEMS + 40; i++) {
