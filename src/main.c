@@ -135,7 +135,7 @@ char* PromptUser(const char* window_list[], const char* window_title, int count,
   HFONT hCustomFont = CreateCustomNerdFont(FontSize, UsedFont);
 
   hPopupWnd = CreateWindowExA(
-      WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED | WS_EX_COMPOSITED,
+      WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_COMPOSITED,
       "QuickSwitcherModalClass", NULL, WS_POPUP | WS_CLIPCHILDREN, 
       layout.x, layout.y, layout.w, layout.h, NULL, NULL, hInstance, NULL
       );
