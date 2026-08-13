@@ -457,9 +457,12 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                          }
 case WM_DRAWITEM: {
                           DRAWITEMSTRUCT* pdis = (DRAWITEMSTRUCT*)lParam;
-                            if (pdis->CtlID == IDC_LIST_BOX && pdis->itemID != -1) {
+if (pdis->CtlID == IDC_LIST_BOX && pdis->itemID != -1) {
                               BOOL isSelected = (pdis->itemID == g_SelectedIndex);
-                               if (!s_colorful_ready) {
+                              if (pdis->itemID >= g_populated_count) {
+                                return TRUE;
+                              }
+                              if (!s_colorful_ready) {
                                  s_sel_brush = CreateSolidBrush(COLOR_SELECTED_TEXT);
                                    for (int i = 0; i < MAX_VISIBLE_ITEMS + 40; i++) {
                                      float t = (float)(i % GradientItems) / (float)GradientItems;
