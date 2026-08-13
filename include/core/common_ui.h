@@ -22,14 +22,14 @@ static inline void UI_SetSelection(HWND hList, int index, int old_sel) {
 
   RECT invalidRect = {0};
   bool hasInvalid = false;
-  RECT itemRect;
+  RECT itemRect = {0, 0, 0, 0};
 
-  if (old_sel >= 0) {
+  if (old_sel >= 0 && old_sel < g_populated_count) {
     SendMessageA(hList, LB_GETITEMRECT, old_sel, (LPARAM)&itemRect);
     invalidRect = itemRect;
     hasInvalid = true;
   }
-  if (index >= 0) {
+  if (index >= 0 && index < g_populated_count) {
     SendMessageA(hList, LB_GETITEMRECT, index, (LPARAM)&itemRect);
     if (!hasInvalid) {
       invalidRect = itemRect;
@@ -137,7 +137,7 @@ static inline void UI_NavigateTo(int index) {
   }
 
   RECT itemRect;
-  if (old_sel >= 0 && old_sel != index) {
+  if (old_sel >= 0 && old_sel != index && old_sel < g_populated_count) {
     SendMessageA(hListBox, LB_GETITEMRECT, old_sel, (LPARAM)&itemRect);
     if (!hasInvalid) {
       invalidRect = itemRect;
@@ -146,12 +146,14 @@ static inline void UI_NavigateTo(int index) {
       UnionRect(&invalidRect, &invalidRect, &itemRect);
     }
   }
-  SendMessageA(hListBox, LB_GETITEMRECT, index, (LPARAM)&itemRect);
-  if (!hasInvalid) {
-    invalidRect = itemRect;
-    hasInvalid = true;
-  } else {
-    UnionRect(&invalidRect, &invalidRect, &itemRect);
+  if (index >= 0 && index < g_populated_count) {
+    SendMessageA(hListBox, LB_GETITEMRECT, index, (LPARAM)&itemRect);
+    if (!hasInvalid) {
+      invalidRect = itemRect;
+      hasInvalid = true;
+    } else {
+      UnionRect(&invalidRect, &invalidRect, &itemRect);
+    }
   }
 
   if (hasInvalid) {
