@@ -5,9 +5,8 @@
 #include <windows.h>
 #include <stdbool.h>
 #include <string.h>
-#include "core/hashmap.h"
 
-#define MAX_VISIBLE_ITEMS 100
+#define MAX_VISIBLE_ITEMS 1000
 
 #define MAX_SEQUENCE_LEN 8
 #define SEQUENCE_TIMEOUT_MS 500
@@ -279,7 +278,7 @@ typedef struct {
     const char* alias_separator;
 } TagFormatConfig;
 
-#define MAX_ITEMS 1000
+#define MAX_ITEMS 4000
 #define MAX_MATCHES 4000
 #define COLOR_BG      RGB(30, 35, 45)   
 #define COLOR_TEXT    RGB(255, 255, 255)

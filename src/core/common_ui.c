@@ -10,9 +10,9 @@ int g_alias_display_count = 0;
 bool g_alias_display_active = false;
 
 static char g_last_filter_state[256] = {0};
-static int g_last_filter_state_count = 0;
 static bool g_last_filter_state_valid = false;
 static int g_prev_matches[MAX_MATCHES] = {0};
+static int g_last_filter_full_count = 0;
 
 void BuildAliasDisplayItems(const char** items, int count) {
   g_alias_display_active = false;
@@ -82,7 +82,7 @@ void PopulateListBox(HWND hListBox, const char* filter,
       strncmp(clean_filter, g_last_filter_state, strlen(g_last_filter_state)) == 0) {
 
     use_previous = 1;
-    prev_count = g_last_filter_state_count;
+    prev_count = g_last_filter_full_count;
   }
   TimerEnd(timer_inc, "  PopulateListBox - Incremental check");
 
@@ -143,7 +143,10 @@ void PopulateListBox(HWND hListBox, const char* filter,
   WinTimer timer_history = TimerStart();
   if (total_matches > 0 && strlen(clean_filter) > 0) {
     memcpy(g_prev_matches, g_matching_indices, total_matches * sizeof(int));
+    g_last_filter_full_count = total_matches;
     printf("[HISTORY] Saved '%s' (%d matches)\n", clean_filter, total_matches);
+  } else {
+    g_last_filter_full_count = 0;
   }
   TimerEnd(timer_history, "  PopulateListBox - History save");
 
@@ -222,7 +225,6 @@ void PopulateListBox(HWND hListBox, const char* filter,
   if (strlen(clean_filter) > 0) {
     strncpy(g_last_filter_state, clean_filter, sizeof(g_last_filter_state) - 1);
     g_last_filter_state[sizeof(g_last_filter_state) - 1] = '\0';
-    g_last_filter_state_count = total_matches;
     g_last_filter_state_valid = true;
   } else {
     g_last_filter_state_valid = false;
