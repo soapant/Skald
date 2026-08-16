@@ -88,29 +88,35 @@ const AppHotkey G_APP_HOTKEYS[] = {
     { VK_RETURN, HOTKEY_MOD_ALT, "*", "Alacritty" },
     { 'B', HOTKEY_MOD_CTRL | HOTKEY_MOD_SHIFT, "*", "Zen" },
 };
+const unsigned int APP_HOTKEY_COUNT = sizeof(G_APP_HOTKEYS) / sizeof(G_APP_HOTKEYS[0]);
 
 const MiscHotkey G_MISC_HOTKEYS[] = {
     {'G', HOTKEY_MOD_CTRL | HOTKEY_MOD_ALT, "*", "D:\\retard games\\Grand Theft Auto V Legacy\\PlayGTAV.bat" },
-    {'O',HOTKEY_MOD_CTRL | HOTKEY_MOD_ALT,"*","C:\\Users\\HP\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\OnTopReplica\\OnTopReplica.lnk"}
+    {'O', HOTKEY_MOD_CTRL | HOTKEY_MOD_ALT, "*", "C:\\Users\\HP\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\OnTopReplica\\OnTopReplica.lnk"}
 };
+const unsigned int MISC_HOTKEY_COUNT = sizeof(G_MISC_HOTKEYS) / sizeof(G_MISC_HOTKEYS[0]);
 
 const QuickLinkHotkey G_QUICKLINK_HOTKEYS[] = {
-    {'Y', HOTKEY_MOD_CTRL | HOTKEY_MOD_ALT, "*", "https:youtube.com" },
-    {'M', HOTKEY_MOD_CTRL | HOTKEY_MOD_ALT, "*", "https:messenger.com" },
+    {'Y', HOTKEY_MOD_CTRL | HOTKEY_MOD_ALT, "*", "https://youtube.com" },
+    {'M', HOTKEY_MOD_CTRL | HOTKEY_MOD_ALT, "*", "https://messenger.com" },
 };
+const unsigned int QUICKLINK_HOTKEY_COUNT = sizeof(G_QUICKLINK_HOTKEYS) / sizeof(G_QUICKLINK_HOTKEYS[0]);
 
 const TextSnippet G_TEXT_SNIPPETS[] = {
     { 'O', HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT, "EpicGamesLauncher", "seifisbad@gmail.com" },
     { 'P', HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT, "EpicGamesLauncher", "i_am_retarded1" },
 };
+const unsigned int TEXT_SNIPPET_COUNT = sizeof(G_TEXT_SNIPPETS) / sizeof(G_TEXT_SNIPPETS[0]);
 
 const MusicPlayerBinding G_MUSIC_PLAYERS[] = {
   { VK_OEM_COMMA, HOTKEY_MOD_ALT, 1 },
-  { VK_OEM_7, HOTKEY_MOD_ALT, 2 },
   { VK_OEM_2, HOTKEY_MOD_ALT, 5 },
   { VK_OEM_1, HOTKEY_MOD_ALT, 6 },
+  { VK_OEM_7, HOTKEY_MOD_ALT, 2 },
   { MUSIC_PLAYER_KEY, HOTKEY_MOD_ALT, 69 },
 };
+
+const unsigned int MUSIC_PLAYER_COUNT = sizeof(G_MUSIC_PLAYERS) / sizeof(G_MUSIC_PLAYERS[0]);
 
 const VideoPlayerBinding G_VIDEO_PLAYERS[] = {
   { VK_OEM_COMMA, HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT, 1 },
@@ -118,6 +124,8 @@ const VideoPlayerBinding G_VIDEO_PLAYERS[] = {
   { VK_OEM_1, HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT, 6 },
   { VIDEO_VIEWER_KEY, HOTKEY_MOD_ALT, 69 },
 };
+
+const unsigned int VIDEO_PLAYER_COUNT = sizeof(G_VIDEO_PLAYERS) / sizeof(G_VIDEO_PLAYERS[0]);
 
 const char* bkp_windows[] = {"Brawlhalla","Fortnite","RocketLeague","Factorio","Steam"};
 
@@ -129,6 +137,7 @@ const BulkKillProcessBinding G_BULK_KILL_PROCESS[] = {
         sizeof(bkp_windows) / sizeof(bkp_windows[0])
     },
 };
+const unsigned int BULKKILLPROCESS_COUNT = sizeof(G_BULK_KILL_PROCESS) / sizeof(G_BULK_KILL_PROCESS[0]);
 
 const char* focus_blacklist_games[] = {"CrosshairX"};
 const char* games_windows[] = {"Brawlhalla","Fortnite","RocketLeague","Factorio","Minecraft"};
@@ -153,6 +162,8 @@ const FocusSwitcherBinding G_FOCUS_SWITCHERS[] = {
       focus_blacklist_terminal, sizeof(focus_blacklist_terminal) / sizeof(focus_blacklist_terminal[0]),
       terminal_windows, sizeof(terminal_windows) / sizeof(terminal_windows[0]) },
 };
+
+const unsigned int FOCUS_SWITCHER_COUNT = sizeof(G_FOCUS_SWITCHERS) / sizeof(G_FOCUS_SWITCHERS[0]);
 
 const AliasEntry Aliases[] = {
   {"brw","Brawlhalla","AppLauncher"},

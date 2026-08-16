@@ -100,26 +100,26 @@ extern const PathEntry SystemShortcuts[];
 extern const char* ListOfShitToIgnore[30];
 
 extern const AppHotkey G_APP_HOTKEYS[];
-#define APP_HOTKEY_COUNT 2
+extern const unsigned int APP_HOTKEY_COUNT;
 
 extern const MiscHotkey G_MISC_HOTKEYS[];
-#define MISC_HOTKEY_COUNT 2
+extern const unsigned int MISC_HOTKEY_COUNT;
 
 extern const QuickLinkHotkey G_QUICKLINK_HOTKEYS[];
-#define QUICKLINK_HOTKEY_COUNT 2
+extern const unsigned int QUICKLINK_HOTKEY_COUNT;
 
 extern const TextSnippet G_TEXT_SNIPPETS[];
-#define TEXT_SNIPPET_COUNT 2
+extern const unsigned int TEXT_SNIPPET_COUNT;
 
 extern const MusicPlayerBinding G_MUSIC_PLAYERS[];
-#define MUSIC_PLAYER_COUNT 4
+extern const unsigned int MUSIC_PLAYER_COUNT;
 
 extern const VideoPlayerBinding G_VIDEO_PLAYERS[];
-#define VIDEO_PLAYER_COUNT 4
+extern const unsigned int VIDEO_PLAYER_COUNT;
 
 extern const char* bkp_windows[];
 extern const BulkKillProcessBinding G_BULK_KILL_PROCESS[];
-#define BULKKILLPROCESS_COUNT 1
+extern const unsigned int BULKKILLPROCESS_COUNT;
 
 extern const char* focus_blacklist_games[];
 extern const char* games_windows[];
@@ -130,7 +130,7 @@ extern const char* coding_windows[];
 extern const char* focus_blacklist_terminal[];
 extern const char* terminal_windows[];
 extern const FocusSwitcherBinding G_FOCUS_SWITCHERS[];
-#define FOCUS_SWITCHER_COUNT 4
+extern const unsigned int FOCUS_SWITCHER_COUNT;
 
 extern const AliasEntry Aliases[];
 extern const size_t ALIAS_ENTRY_COUNT;
