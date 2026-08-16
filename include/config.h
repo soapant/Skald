@@ -4,6 +4,7 @@
 #include <windows.h>
 #include "core/types.h"
 
+
 #define SWITCHER            VK_SPACE
 #define TODO                'T'
 #define FORGETFULL          'F'

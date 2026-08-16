@@ -928,8 +928,8 @@ const char* get_alias_for_item(const char* item) {
     if (!item) return NULL;
 
     for (size_t i = 0; i < ALIAS_ENTRY_COUNT; i++) {
-        if (StrStrIA(Aliases[i].feature, g_current_feature) == NULL) continue;
-        if (StrStrIA(item, Aliases[i].expanded_text) != NULL) {
+        if (strcmp(Aliases[i].feature, g_current_feature) == 0) continue;
+        if (strcmp(item, Aliases[i].expanded_text) == 0) {
             return Aliases[i].alias;
         }
     }
