@@ -6,7 +6,7 @@
 #include <stdbool.h>
 #include <string.h>
 
-#define MAX_VISIBLE_ITEMS 1000
+#define MAX_VISIBLE_ITEMS 100
 
 #define MAX_SEQUENCE_LEN 8
 #define SEQUENCE_TIMEOUT_MS 500

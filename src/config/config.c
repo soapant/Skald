@@ -106,6 +106,7 @@ const TextSnippet G_TEXT_SNIPPETS[] = {
 
 const MusicPlayerBinding G_MUSIC_PLAYERS[] = {
   { VK_OEM_COMMA, HOTKEY_MOD_ALT, 1 },
+  { VK_OEM_7, HOTKEY_MOD_ALT, 2 },
   { VK_OEM_2, HOTKEY_MOD_ALT, 5 },
   { VK_OEM_1, HOTKEY_MOD_ALT, 6 },
   { MUSIC_PLAYER_KEY, HOTKEY_MOD_ALT, 69 },
@@ -178,7 +179,7 @@ const TagFormatConfig TODO_TAG_FORMAT = {
     X("-pp", "MusicPlayer",      "MusicPlayer",      RGB(209, 106, 175), true) \
     X("-pv", "VideoViewer",      "VideoViewer",      RGB(219, 226, 105), true) \
     X("-pd", "Ded",              "Ded",              RGB(19,  226, 105), true) \
-    X("-pi", "IndieProject",     "IndieProject",     RGB(19,  26, 105), true) \
+    X("-pi", "IndieGame",     "IndieGame",     RGB(19,  26, 105), true) \
     X("-m",  NULL,               "Misc",             RGB(225, 225, 225), false) \
     X("-l",  NULL,               "Learning",         RGB(166, 227, 161), false) \
     X("-b",  NULL,               "Bored",            RGB(203, 166, 247), false) \
