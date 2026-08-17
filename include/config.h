@@ -62,6 +62,7 @@ extern int PageUpDownLen;
 extern bool ColorfullMode;
 extern bool SearchBoxDiffColor;
 
+extern const wchar_t* HttpUrlForNotis;
 extern const char* BASE_SCREENSHOT_FOLDER_PATH;
 extern const char* TEMP_FILE_PATH;
 extern const char* UsedFont;
