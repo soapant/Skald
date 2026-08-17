@@ -8,7 +8,7 @@
 #define ACTUAL_OUTPUT BUILD_FOLDER "/myprogram.exe"
 
 #define CC_FLAGS "-std=gnu17", "-DCOBJMACROS", "-I", "include", "-MMD", "-MP", "-w"
-#define LINK_FLAGS "-lcomctl32", "-lgdiplus", "-lgdi32", "-lshlwapi", "-lshell32", "-lwinmm", "-lole32", "-luuid", "-lmsimg32", "-ldbghelp", "-ldwmapi", "-lpsapi", "-lcrypt32", "-lcomdlg32", "-ladvapi32", "-ldxva2","-user32"
+#define LINK_FLAGS "-lcomctl32", "-lgdiplus", "-lgdi32", "-lshlwapi", "-lshell32", "-lwinmm", "-lole32", "-luuid", "-lmsimg32", "-ldbghelp", "-ldwmapi", "-lpsapi", "-lcrypt32", "-lcomdlg32", "-ladvapi32", "-ldxva2","-user32","-lwinhttp"
 
 static Nob_File_Paths sources = {0};
 
@@ -168,7 +168,7 @@ int main(int argc, char** argv) {
     if (argc > 1) {
         if (strcmp(argv[1], "-actual") == 0) windowed = true;
     }
-    if (argc > 2 && strcmp(argv[2], "run") == 0) do_run = true;
+    if (argc > 2 && strcmp(argv[2], "-run") == 0) do_run = true;
 
     if (!nob_mkdir_if_not_exists(BUILD_FOLDER)) return 1;
     if (!nob_mkdir_if_not_exists(OBJ_FOLDER)) return 1;

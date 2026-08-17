@@ -9,3 +9,5 @@ nigga
 amacs
 include
 windowsapps
+build
+gizmo

@@ -24,6 +24,7 @@ const char* UsedTerminal = "Alacritty";
 const char* ImageEditorPath =  "C:\\Users\\HP\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Scoop Apps\\PicView.lnk";
 const char* TimerPath = "D:\\Projects\\Tscoding Timer\\sowon\\sowon.exe";
 const char* MusicPlayerPath = "D:\\Projects\\Music Player\\music_player.exe";
+// const char* MusicPlayerPath = "D:\\retard games\\miscellaneous\\Useful Repos\\musializer\\build\\musializer.exe";
 const char* VideoViewerPath = "D:\\Projects\\Video Viewer\\video_viewer.exe";
 const char* TextEditorPath = "C:\\Program Files\\Neovide\\neovide.exe";
 const char* MusicPath = "D:\\Music\\Mp3";
