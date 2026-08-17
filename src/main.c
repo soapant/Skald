@@ -1,5 +1,6 @@
 #include "common.h"
 #include "core/modal.h"
+#include "core/types.h"
 #include "helpers.h"
 #include "core/common_ui.h"
 #include "core/number_shortcut.h"
@@ -14,6 +15,7 @@
 #include "features/video_player.h"
 #include "features/process_killer.h"
 #include "features/app_launcher.h"
+#include "features/notification_getter.h"
 #include <gdiplus.h>
 
 #define ID_TRAY_ICON 1001
@@ -50,6 +52,7 @@ FilterCallback g_filter_callback = NULL;
 HWND g_ActiveEditControl = NULL;
 char* g_current_feature = NULL;
 int g_timeout = 1;
+DWORD g_main_thread_id = 0;
 bool g_waiting_for_key = false;
 int g_key_pressed = 0;
 WinTimer g_timer;
@@ -309,6 +312,15 @@ char* SimplePromptUser(const char* prompt, const char* window_title,int height, 
 }
 
 void DisplayMessage(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, int timeout) {
+  if (hGlobalTrayWnd != NULL && GetCurrentThreadId() != g_main_thread_id) {
+    DisplayMessageParams params = { message, centerX, centerY, maxWidth, maxHeight, timeout };
+    SendMessageA(hGlobalTrayWnd, WM_DISPLAY_MESSAGE, 0, (LPARAM)&params);
+    return;
+  }
+  CreateDisplayMessageWindow(message, centerX, centerY, maxWidth, maxHeight, timeout);
+}
+
+void CreateDisplayMessageWindow(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, int timeout) {
   HINSTANCE hInstance = GetModuleHandle(NULL);
 
   DestroyWindow(hDisplayMessage);
@@ -797,8 +809,12 @@ void RunHotKeyMessageLoop() {
 
   if (hKeyboardHook) UnhookWindowsHookEx(hKeyboardHook);
 }
+void OInNotificationRecieved(const char* text) {
+  SubjectiveMessageDisplay(text,140,TimeOutForMessages,COLOR_TEXT);
+}
 
 int main() {
+  g_main_thread_id = GetCurrentThreadId();
   {
     char buf[MAX_PATH];
     DWORD len = GetModuleFileNameA(NULL, buf, MAX_PATH);
@@ -823,6 +839,8 @@ int main() {
   StartUniversalTimer();
   InitializeTrayIcon();
   initialize_app_cache();
+  StartNtfyDaemon(L"doingthistomakeitrarebitch",OInNotificationRecieved);
+  printf("Daemon is running in the background.\n");
   feature_history = HashMap_Create(32);
   InitFeatureDataSystem();
 
