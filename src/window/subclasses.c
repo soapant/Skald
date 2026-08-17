@@ -1304,7 +1304,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                         }
                         break;
                       }
-    case WM_COMMAND: {
+case WM_COMMAND: {
                        if (LOWORD(wParam) == ID_EXIT) {
                          PostQuitMessage(0);
                        }
@@ -1314,8 +1314,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
                        
                          break;
                      }
-                      
-    case WM_DESTROY: {
+                       
+    case WM_DISPLAY_MESSAGE: {
+                             DisplayMessageParams* p = (DisplayMessageParams*)lParam;
+                               if (p != NULL) {
+                                 CreateDisplayMessageWindow(p->message, p->centerX, p->centerY, p->maxWidth, p->maxHeight, p->timeout);
+                               }
+                               return 0;
+                           }
+                       
+     case WM_DESTROY: {
                        NOTIFYICONDATA nid = {0};
                          nid.cbSize = sizeof(NOTIFYICONDATA);
                          nid.hWnd = hwnd;

@@ -110,7 +110,7 @@ void TriggerRegionCoords(void) {
         saved_y1 = cursorPos.y;
         region_step = 1;
         snprintf(buffer,sizeof(buffer),"Started Region Coord At %ld %ld \n",saved_x1,saved_y1);
-        SubjectiveMessageDisplay(buffer,140,1,COLOR_TEXT);
+        SubjectiveMessageDisplay(buffer,140,TimeOutForMessages,COLOR_TEXT);
     } else {
         char buf[128];
         snprintf(buf, sizeof(buf), "%ld,%ld,%ld,%ld", saved_x1, saved_y1, cursorPos.x, cursorPos.y);
@@ -133,7 +133,7 @@ void TriggerRegionImage(void) {
         img_y1 = cursorPos.y;
         img_region_step = 1;
         snprintf(buffer,sizeof(buffer),"Started Region Image At %ld %ld \n",saved_x1,saved_y1);
-        SubjectiveMessageDisplay(buffer,140,1,COLOR_TEXT);
+        SubjectiveMessageDisplay(buffer,140,TimeOutForMessages,COLOR_TEXT);
     } else {
         img_x2 = cursorPos.x;
         img_y2 = cursorPos.y;
