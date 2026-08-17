@@ -12,7 +12,8 @@ char* EditPopUpPos = "middle";
 int EditPopUpWidthMin = 400;
 int PageUpDownLen = 6;
 bool ColorfullMode = false;
-bool SearchBoxDiffColor = false;
+bool SearchBoxDiffColor = false; 
+const wchar_t* HttpUrlForNotis = L"doingthistomakeitrarebitch";
 
 const char* BASE_SCREENSHOT_FOLDER_PATH = "C:\\Users\\HP\\Pictures\\Screenshots\\";
 const char* TEMP_FILE_PATH = DATA_DIR "temp_list_of_positions.md";
