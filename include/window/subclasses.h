@@ -2,11 +2,22 @@
 #define SUBCLASSES_H
 #include <windows.h>
 
+#define WM_DISPLAY_MESSAGE (WM_APP + 2)
+
 typedef struct {
   const char* message;
     HFONT hFont;
     int alpha;
 } FadeWindowData;
+
+typedef struct {
+  const char* message;
+  int centerX;
+  int centerY;
+  int maxWidth;
+  int maxHeight;
+  int timeout;
+} DisplayMessageParams;
 
 LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 LRESULT CALLBACK DisplayMessageProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -18,5 +29,7 @@ LRESULT CALLBACK SearchPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LP
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 void RequestInitialNavigation(int index);
+
+void CreateDisplayMessageWindow(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, int timeout);
 
 #endif

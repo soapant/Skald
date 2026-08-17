@@ -48,10 +48,10 @@ void TriggerWifiToggle(void) {
     bool currently_enabled = IsWifiEnabled();
     if (currently_enabled) {
         system("netsh interface set interface Wi-Fi admin=disabled");
-        SubjectiveMessageDisplay("Wifi Turned OFF",140,1,COLOR_TEXT);
+        SubjectiveMessageDisplay("Wifi Turned OFF",140,TimeOutForMessages,COLOR_TEXT);
     } else {
         system("netsh interface set interface Wi-Fi admin=enabled");
-        SubjectiveMessageDisplay("Wifi Turned ON",140,1,COLOR_TEXT);
+        SubjectiveMessageDisplay("Wifi Turned ON",140,TimeOutForMessages,COLOR_TEXT);
     }
 
 }
@@ -60,10 +60,10 @@ void TriggerBlueToothToggle(void) {
     bool currently_enabled = IsWifiEnabled();
     if (currently_enabled) {
         system("netsh interface set interface \"Bluetooth Network Connection\" admin=enabled");
-        SubjectiveMessageDisplay("BlueTooth Turned OFF",140,1,COLOR_TEXT);
+        SubjectiveMessageDisplay("BlueTooth Turned OFF",140,TimeOutForMessages,COLOR_TEXT);
     } else {
         system("netsh interface set interface \"Bluetooth Network Connection\" admin=disabled");
-        SubjectiveMessageDisplay("BlueTooth Turned ON",140,1,COLOR_TEXT);
+        SubjectiveMessageDisplay("BlueTooth Turned ON",140,TimeOutForMessages,COLOR_TEXT);
     }
 
 }

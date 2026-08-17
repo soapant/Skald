@@ -42,8 +42,6 @@ cleanup:
 }
 
 void SetSystemVolume(float volume) {
-    if (volume < 0.0f) volume = 0.0f;
-    if (volume > 1.0f) volume = 1.0f;
     
     HRESULT hr;
     IMMDeviceEnumerator *pEnumerator = NULL;
@@ -84,12 +82,18 @@ void TriggerVolume(void) {
     input = SimplePromptUser(prompt, "🔊 Volume",920, 650, 32);
 
     if (input != NULL) {
-    if (atoi(input) > 100) {
-      SubjectiveMessageDisplay("VOLUME WAS MORE THAN 100 THAT IS NOT ALLOWED",140,1,COLOR_ERROR);
+    if (strcmp(input,"mx") == 0) {
+        SetSystemVolume(1.0);
+    } else if (strcmp(input,"mn") == 0) {
+        SetSystemVolume(0.0);
+    } else if (strcmp(input,"md") == 0) {
+        SetSystemVolume(0.5);
+    } else if (atoi(input) > 100) {
+      SubjectiveMessageDisplay("VOLUME WAS MORE THAN 100 THAT IS NOT ALLOWED",140,TimeOutForMessages,COLOR_ERROR);
+    } else if (atoi(input) < 0) {
+      SubjectiveMessageDisplay("VOLUME WAS LESS THAN 0 THAT IS NOT ALLOWED",140,TimeOutForMessages,COLOR_ERROR);
     } else {
         int vol = atoi(input);
-        if (vol < 0) vol = 0;
-        if (vol > 100) vol = 100;
         SetSystemVolume(vol / 100.0f);
     }
     }
