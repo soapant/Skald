@@ -839,8 +839,7 @@ int main() {
   StartUniversalTimer();
   InitializeTrayIcon();
   initialize_app_cache();
-  StartNtfyDaemon(L"doingthistomakeitrarebitch",OInNotificationRecieved);
-  printf("Daemon is running in the background.\n");
+  StartNtfyDaemon(HttpUrlForNotis,OInNotificationRecieved);
   feature_history = HashMap_Create(32);
   InitFeatureDataSystem();
 
