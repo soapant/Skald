@@ -46,7 +46,7 @@ static void RebuildReminderCache(void) {
     }
     
     size_t lineCount = 0;
-    Line* lines = FileGetLines(ReminderHistoryFile, &lineCount);
+    Line* lines = Platform_FileGetLines(ReminderHistoryFile, &lineCount);
     if (!lines) return;
     
     g_cached_reminder_commands = (char**)malloc(lineCount * sizeof(char*));
@@ -99,7 +99,7 @@ void HandleFocusWindowFlag(const char* parameter) {
 void DisplayText(const char* parameter){
     printf("DISPLAYING MESSAGE %s",parameter);
     
-    DisplayMessage(parameter,960,999,950,70,3);
+    Platform_DisplayMessage(parameter,960,999,950,70,3);
     
 }
 
@@ -302,24 +302,24 @@ static void reminder_enter_callback(const char* selection) {
       if (ReminderHistoryFile->fileSize > 0) {
           char lastChar = ReminderHistoryFile->pBuffer[ReminderHistoryFile->fileSize - 1];
           if (lastChar != '\n') {
-              FileAppend(ReminderHistoryFile, "\n");
+              Platform_FileAppend(ReminderHistoryFile, "\n");
           }
       }
       if (!UI_IsListBoxSelected()) {
-      FileAppend(ReminderHistoryFile, selection);
-      FileAppend(ReminderHistoryFile, "\n");
+      Platform_FileAppend(ReminderHistoryFile, selection);
+      Platform_FileAppend(ReminderHistoryFile, "\n");
       RebuildReminderCache();
       }
       StartReminder(selection);
 }
 static void reminder_edit_callback(const char* selection) {
-    char* NewreminderQuery = EditTextPopup(selection,960,540,1000,300);
+    char* NewreminderQuery = Platform_EditTextPopup(selection,960,540,1000,300);
     
     if (NewreminderQuery != NULL) {
         WriteToCacheIndex(g_SelectedIndex,NewreminderQuery);
     }
     
-    ReplaceLineInMappedFile(ReminderHistoryFile,g_SelectedIndex,NewreminderQuery);
+    Platform_ReplaceLineInMappedFile(ReminderHistoryFile,g_SelectedIndex,NewreminderQuery);
     
     RebuildReminderCache();
     

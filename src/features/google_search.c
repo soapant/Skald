@@ -22,7 +22,7 @@ static void RebuildGoogleCache(void) {
     }
     
     size_t lineCount = 0;
-    Line* lines = FileGetLines(GoogleZoxideFile, &lineCount);
+    Line* lines = Platform_FileGetLines(GoogleZoxideFile, &lineCount);
     if (!lines) return;
     
     g_cached_google_queries = (char**)malloc(lineCount * sizeof(char*));
@@ -84,32 +84,32 @@ static void DoGoogleSearch(const char* query) {
     
     printf("[GOOGLE] Searching: %s\n", url);
     
-    ShellExecuteWithVerb(url, "open", true);
+    Platform_ShellExecuteWithVerb(url, "open", true);
 }
 
 static void google_enter_callback(const char* selection) {
         if (GoogleZoxideFile->fileSize > 0) {
             char lastChar = GoogleZoxideFile->pBuffer[GoogleZoxideFile->fileSize - 1];
             if (lastChar != '\n') {
-                FileAppend(GoogleZoxideFile, "\n");
+                Platform_FileAppend(GoogleZoxideFile, "\n");
             }
         }
         if (!UI_IsListBoxSelected()) {
-        FileAppend(GoogleZoxideFile, selection);
-        FileAppend(GoogleZoxideFile, "\n");
+        Platform_FileAppend(GoogleZoxideFile, selection);
+        Platform_FileAppend(GoogleZoxideFile, "\n");
         RebuildGoogleCache();
         }
         DoGoogleSearch(selection);
 }
 
 static void google_edit_callback(const char* selection) {
-    char* NewgoogleQuery = EditTextPopup(selection,960,540,1000,300);
+    char* NewgoogleQuery = Platform_EditTextPopup(selection,960,540,1000,300);
     
     if (NewgoogleQuery != NULL) {
         WriteToCacheIndex(g_SelectedIndex,NewgoogleQuery);
     }
     
-    ReplaceLineInMappedFile(GoogleZoxideFile,g_SelectedIndex,NewgoogleQuery);
+    Platform_ReplaceLineInMappedFile(GoogleZoxideFile,g_SelectedIndex,NewgoogleQuery);
     
     RebuildGoogleCache();
     

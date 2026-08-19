@@ -22,7 +22,7 @@ static void RebuildZoxideCache(void) {
     }
     
     size_t lineCount = 0;
-    Line* lines = FileGetLines(TerminalZoxideFile, &lineCount);
+    Line* lines = Platform_FileGetLines(TerminalZoxideFile, &lineCount);
     if (!lines) return;
     
     g_cached_zoxide_commands = (char**)malloc(lineCount * sizeof(char*));
@@ -53,13 +53,13 @@ static void zoxide_refresh_callback(const char* filter, HWND hListBox) {
 }
 
 static void zoxide_edit_callback(const char* selection) {
-    char* NewZoxideQuery = EditTextPopup(selection,960,540,1000,300);
+    char* NewZoxideQuery = Platform_EditTextPopup(selection,960,540,1000,300);
     
     if (NewZoxideQuery != NULL) {
         WriteToCacheIndex(g_SelectedIndex,NewZoxideQuery);
     }
     
-    ReplaceLineInMappedFile(TerminalZoxideFile,g_SelectedIndex,NewZoxideQuery);
+    Platform_ReplaceLineInMappedFile(TerminalZoxideFile,g_SelectedIndex,NewZoxideQuery);
     
     RebuildZoxideCache();
     
@@ -69,7 +69,7 @@ static void zoxide_edit_callback(const char* selection) {
 
 
 static void zoxide_enter_callback(const char* selection) {
-        char* path = QueryZoxidePath(selection);
+        char* path = Platform_QueryZoxidePath(selection);
         if (path) {
             char terminal[512];
             snprintf(terminal,sizeof(terminal),"%s.exe",UsedTerminal);
@@ -77,13 +77,13 @@ static void zoxide_enter_callback(const char* selection) {
             if (TerminalZoxideFile->fileSize > 0) {
                 char lastChar = TerminalZoxideFile->pBuffer[TerminalZoxideFile->fileSize - 1];
                 if (lastChar != '\n') {
-                    FileAppend(TerminalZoxideFile, "\n");
+                    Platform_FileAppend(TerminalZoxideFile, "\n");
                 }
             }
 
             if (!UI_IsListBoxSelected()) {
-              FileAppend(TerminalZoxideFile, selection);
-              FileAppend(TerminalZoxideFile, "\n");
+              Platform_FileAppend(TerminalZoxideFile, selection);
+              Platform_FileAppend(TerminalZoxideFile, "\n");
               RebuildZoxideCache();
             }
         }

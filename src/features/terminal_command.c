@@ -22,7 +22,7 @@ static void RebuildCommandCache(void) {
     }
     
     size_t lineCount = 0;
-    Line* lines = FileGetLines(TerminalHistoryFile, &lineCount);
+    Line* lines = Platform_FileGetLines(TerminalHistoryFile, &lineCount);
     if (!lines) return;
     
     g_cached_commands = (char**)malloc(lineCount * sizeof(char*));
@@ -67,8 +67,8 @@ static void RunTerminalCommand(const char* Command, bool save_to_history) {
     if (newline) *newline = '\0';
     
     if (save_to_history && strlen(clean_cmd) > 0) {
-        FileAppend(TerminalHistoryFile, clean_cmd);
-        FileAppend(TerminalHistoryFile, "\n");
+        Platform_FileAppend(TerminalHistoryFile, clean_cmd);
+        Platform_FileAppend(TerminalHistoryFile, "\n");
         RebuildCommandCache();
         printf("[TERMINAL] Saved to history: %s\n", clean_cmd);
     }
@@ -111,24 +111,24 @@ static void terminal_enter_callback(const char* selection) {
       if (TerminalHistoryFile->fileSize > 0) {
           char lastChar = TerminalHistoryFile->pBuffer[TerminalHistoryFile->fileSize - 1];
           if (lastChar != '\n') {
-              FileAppend(TerminalHistoryFile, "\n");
+              Platform_FileAppend(TerminalHistoryFile, "\n");
           }
       }
       if (!UI_IsListBoxSelected()) {
-        FileAppend(TerminalHistoryFile, selection);
-        FileAppend(TerminalHistoryFile, "\n");
+        Platform_FileAppend(TerminalHistoryFile, selection);
+        Platform_FileAppend(TerminalHistoryFile, "\n");
       }
       RunTerminalCommand(selection, false);
 }
 
 static void terminal_edit_callback(const char* selection) {
-    char* NewterminalQuery = EditTextPopup(selection,960,540,1000,300);
+    char* NewterminalQuery = Platform_EditTextPopup(selection,960,540,1000,300);
     
     if (NewterminalQuery != NULL) {
         WriteToCacheIndex(g_SelectedIndex,NewterminalQuery);
     }
     
-    ReplaceLineInMappedFile(TerminalHistoryFile,g_SelectedIndex,NewterminalQuery);
+    Platform_ReplaceLineInMappedFile(TerminalHistoryFile,g_SelectedIndex,NewterminalQuery);
     
     RebuildCommandCache();
     

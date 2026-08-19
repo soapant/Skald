@@ -396,7 +396,7 @@ static void calculator_refresh_callback(const char* filter, HWND hListBox) {
 
 static void calculator_enter_callback(const char* selection) {
     char* result = g_populated_cache[0];
-    CopyToClipboard(result);
+    Platform_CopyToClipboard(result);
 }
 
 

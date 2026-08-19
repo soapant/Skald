@@ -37,7 +37,7 @@ void TriggerPosCopy(void) {
     if (GetCursorPos(&mousePos)) {
         char coords_buf[64];
         snprintf(coords_buf, sizeof(coords_buf), "%ld, %ld", mousePos.x, mousePos.y);
-        CopyToClipboard(coords_buf);
+        Platform_CopyToClipboard(coords_buf);
     }
 }
 
@@ -65,7 +65,7 @@ void TriggerColorPlain(void) {
     if (GetCursorPixel(&x, &y, &r, &g, &b)) {
         char buf[128];
         snprintf(buf, sizeof(buf), "%d, %d, %d", r, g, b);
-        CopyToClipboard(buf);
+        Platform_CopyToClipboard(buf);
     }
 }
 
@@ -74,7 +74,7 @@ void TriggerColorParen(void) {
     if (GetCursorPixel(&x, &y, &r, &g, &b)) {
         char buf[128];
         snprintf(buf, sizeof(buf), "(%d, %d, %d)", r, g, b);
-        CopyToClipboard(buf);
+        Platform_CopyToClipboard(buf);
     }
 }
 
@@ -84,7 +84,7 @@ void TriggerPixelEqualsAdb(void) {
     if (GetCursorPixel(&x, &y, &r, &g, &b)) {
         char buf[128];
         snprintf(buf, sizeof(buf), "adb.pixel_equals(%ld,%ld,(%d,%d,%d))", x, y, r, g, b);
-        CopyToClipboard(buf);
+        Platform_CopyToClipboard(buf);
     }
 }
 
@@ -93,7 +93,7 @@ void TriggerPixelEqualsFn(void) {
     if (GetCursorPixel(&x, &y, &r, &g, &b)) {
         char buf[128];
         snprintf(buf, sizeof(buf), "fn.pixel_equals(%ld,%ld,(%d,%d,%d))", x, y, r, g, b);
-        CopyToClipboard(buf);
+        Platform_CopyToClipboard(buf);
     }
 }
 
@@ -114,7 +114,7 @@ void TriggerRegionCoords(void) {
     } else {
         char buf[128];
         snprintf(buf, sizeof(buf), "%ld,%ld,%ld,%ld", saved_x1, saved_y1, cursorPos.x, cursorPos.y);
-        CopyToClipboard(buf);
+        Platform_CopyToClipboard(buf);
         region_step = 0;
     }
 }

@@ -239,7 +239,7 @@ static inline bool IsPopupActive(HWND hPopupWnd) {
 static inline bool CheckAndBlockIfPopupActive(HWND hPopupWnd) {
   return IsPopupActive(hPopupWnd);
 }
-static inline void UI_GetCurrentCursorPosition(HWND hEditControl, DWORD *start, DWORD *end) {
+static inline void UI_GetCurrentCursorPosition(DWORD *start, DWORD *end) {
   if (start && end) {
     UI_Edit_GetSel(g_ActiveEditControl, start, end);
   }
@@ -252,7 +252,7 @@ static inline void UI_SetText(HWND g_ActiveEditControl,char* text) {
   SetWindowTextA(g_ActiveEditControl,text);
 }
 
-#define UI_DEBOUNCE_MS 30
+#define UI_DEBOUNCE_MS 0
 #define UI_DEBOUNCE_TIMER_ID 998
 
 static inline void UI_RedrawNow(HWND hListBox) {

@@ -10,6 +10,7 @@
 #include "core/types.h"
 #include "core/hashmap.h"
 #include "config.h"
+#include "platform/platform.h"
 
 typedef void (*HotkeyHandler)(void);
 typedef bool (*HotkeyCondition)(void);
@@ -42,36 +43,16 @@ typedef struct {
     bool open_explorer;
 } ZoxideOptions;
 
-char* QueryZoxidePath(const char* query);
-
-bool ShellExecuteWithVerb(const char* path, const char* verb, bool async);
-bool LaunchApp(const char* path);
-bool LaunchAppAsAdmin(const char* path);
-bool IsCtrlPressed(void);
-
 typedef struct {
-    size_t index;
-    char original;
-} NewlineInfo;
-
-typedef struct {
-  char* item_name;
-  int item_index;
-  char* alias_name; 
+    char* item_name;
+    int item_index;
+    char* alias_name; 
 } AliasInfo;
 
 typedef struct {
     AliasInfo matches[1024];
     int count;
 } AliasMatchList;
-
-int FileInit(const char *filePath, MappedFile *mf, size_t initialPadding);
-int FileAppend(MappedFile *mf, const char *text);
-void FileClose(MappedFile *mf);
-Line* FileGetLines(MappedFile *mf, size_t *outLineCount);
-char** FileGetStrings(MappedFile *mf, size_t *outLineCount, NewlineInfo **outNewlines, size_t *outNewlineCount);
-void CleanUpFile(MappedFile *mf, NewlineInfo *newlines, size_t newlineCount);
-void SanitizeFile(const char *filePath);
 
 typedef struct {
     char* flag;
@@ -95,16 +76,9 @@ char* GetFlagParameter(const char* text, int flag_index);
 char* GetCleanText(const char* text);
 bool IsWindowBlacklisted(const char* window_title, const char* blacklist[], int count);
 
-void StartUniversalTimer(void);
-void ResetUniversalTimer(void);
-void ModifyUniversalTimer(double seconds_to_add);
-double GetUniversalTimeSeconds(void);
-
-int CopyToClipboard(const char* text);
 int UI_LookupTrueIndex(const char* name);
 void SaveFeatureHistory(char* string);
 int ReplaceLineInFile(const char* filepath, int line_index, const char* new_text);
-int ReplaceLineInMappedFile(MappedFile* mf, int line_index, const char* new_text);
 void WriteToCacheIndex(int index, const char* text);
 int ReadMdFile(char lines[100][512], const char* path);
 void StripCheckboxes(char* str);

@@ -79,7 +79,7 @@ static void forgetfull_enter_callback(const char* selection) {
     UI_Redraw(hListBox);
 }
 static void forgetfull_edit_callback(const char* selection) {
-    char* NewForgetFullName = EditTextPopup(selection, 960, 540, 1000, 300);
+    char* NewForgetFullName = Platform_EditTextPopup(selection, 960, 540, 1000, 300);
     
     if (NewForgetFullName != NULL) {
         WriteToCacheIndex(g_SelectedIndex, NewForgetFullName);
@@ -107,7 +107,7 @@ void TriggerForgetFull(void) {
         ui_list[i] = forgetfull_lines[i];
     }
 
-    PromptUser(ui_list, "📁 ForgetFull", count, 920, 650, 32, 
+    Platform_PromptUser(ui_list, "📁 ForgetFull", count, 920, 650, 32, 
                forgetfull_refresh_callback, 
                forgetfull_enter_callback, 
                forgetfull_ctrlenter_callback, 
