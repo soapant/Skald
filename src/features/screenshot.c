@@ -2,7 +2,7 @@
 #include "features/screenshot.h"
 #include "core/common_ui.h"
 
-static void TriggerScreenshot(HWND hPopupWnd,bool open_screenshot) {
+static void TriggerScreenshot(WindowHandle hPopupWnd,bool open_screenshot) {
     if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
 
     const char* name_prompt = "Enter image name...";
@@ -16,7 +16,11 @@ static void TriggerScreenshot(HWND hPopupWnd,bool open_screenshot) {
         printf("[SCREENSHOT] Saved: %s\n", final_file_path);
         if (open_screenshot) {
           char open_cmd[1024];
+#if defined(_WIN32)
           snprintf(open_cmd, sizeof(open_cmd), "start %s \"%s\"", ImageEditorPath, final_file_path);
+#else
+          snprintf(open_cmd, sizeof(open_cmd), "xdg-open \"%s\"", final_file_path);
+#endif
           system(open_cmd);
           printf("[SCREENSHOT] Opening in editor: %s\n", open_cmd);
         }
@@ -28,6 +32,7 @@ static void TriggerScreenshot(HWND hPopupWnd,bool open_screenshot) {
 }
 
 void TriggerSaveScreenshot(void) {
+#if defined(_WIN32)
     POINT cursorPos;
     if (!GetCursorPos(&cursorPos)) return;
     
@@ -44,9 +49,11 @@ void TriggerSaveScreenshot(void) {
         img_region_step = 0;
         TriggerScreenshot(hPopupWnd, false);
     }
+#endif
 }
 
 void TriggerOpenScreenshot(void) {
+#if defined(_WIN32)
     POINT cursorPos;
     if (!GetCursorPos(&cursorPos)) return;
     
@@ -64,4 +71,5 @@ void TriggerOpenScreenshot(void) {
         img_region_step = 0;
         TriggerScreenshot(hPopupWnd, true);
     }
+#endif
 }

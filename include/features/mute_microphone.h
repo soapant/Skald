@@ -1,6 +1,13 @@
 #ifndef MUTE_MICROPHONE_H
 #define MUTE_MICROPHONE_H
 
+#include <stdbool.h>
+
+extern bool mic_muted;
+
+void TriggerMuteState(void);
+
+#if defined(_WIN32)
 #ifndef COBJMACROS
 #define COBJMACROS
 #endif
@@ -12,11 +19,8 @@
 #include <windows.h>
 #include <mmdeviceapi.h>
 #include <endpointvolume.h>
-#include <stdbool.h>
-
-extern bool mic_muted;
 
 HRESULT SetDeviceMute(EDataFlow flow, BOOL mute);
-void TriggerMuteState(void);
+#endif
 
 #endif

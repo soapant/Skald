@@ -1,11 +1,14 @@
+#if defined(_WIN32)
 #include <windows.h>
 #include <stdlib.h>
 #include <highlevelmonitorconfigurationapi.h>
+#endif
 #include "common.h"
 #include "core/common_ui.h"
 #include "features/monitor_control.h"
 
 void SetMonitorBright(int brightness) {
+#if defined(_WIN32)
     HMONITOR hMonitor = MonitorFromWindow(GetDesktopWindow(), MONITOR_DEFAULTTOPRIMARY);
     if (!hMonitor) return;
 
@@ -27,6 +30,9 @@ void SetMonitorBright(int brightness) {
     }
 
     free(pMonitors);
+#else
+    (void)brightness;
+#endif
 }
 
 void TriggerMonitorControl(void) {

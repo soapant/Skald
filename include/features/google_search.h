@@ -1,7 +1,6 @@
 #ifndef GOOGLE_SEARCH_H
 #define GOOGLE_SEARCH_H
 
-#include <windows.h>
 #include <stdbool.h>
 #include "core/types.h"
 

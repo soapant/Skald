@@ -1,7 +1,7 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 #include <string.h>
-#include <windows.h>
+#include <wchar.h>
 #include "core/types.h"
 
 

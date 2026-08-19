@@ -1,7 +1,9 @@
 #include "common.h"
 #include <ctype.h>
+#if defined(_WIN32)
 #include <shellapi.h>
 #include <shlwapi.h>
+#endif
 #include "helpers.h"
 #include "core/timer.h"
 #include "core/common_ui.h"
@@ -9,7 +11,7 @@
 char* SelectionData[2048] = {0};
 int SelectionDataCount = 0;
 
-void SubjectiveMessageDisplay(const char* buffer,int msg_height,int timeout,COLORREF color) {
+void SubjectiveMessageDisplay(const char* buffer,int msg_height,int timeout,ColorRef color) {
     if (MessagesEnabled) {
         if (color == COLOR_OF_SELECTION) {
             if (UI_IsListBoxSelected()) {
@@ -24,7 +26,7 @@ void SubjectiveMessageDisplay(const char* buffer,int msg_height,int timeout,COLO
         else {
             DisplayMessageText = COLOR_TEXT;
         }
-        if (hPopupWnd != NULL) {
+        if (WH_TO_HWND(hPopupWnd) != NULL) {
           MSG_TOP(buffer,msg_height,timeout);
         }else {
           MSG_MIDDLE_BOTTOM(buffer,msg_height / 2,timeout);
@@ -50,7 +52,12 @@ bool ProcessHotkey(const HotkeyBinding* bindings, int bindings_count,
         if (b->blacklist && b->blacklist_count > 0) {
             bool blacklisted = false;
             for (int j = 0; j < b->blacklist_count; j++) {
-                if (StrStrIA(current_title, b->blacklist[j]) != NULL) {
+#if defined(_WIN32)
+                bool found = StrStrIA(current_title, b->blacklist[j]) != NULL;
+#else
+                bool found = strstr(current_title, b->blacklist[j]) != NULL;
+#endif
+                if (found) {
                     blacklisted = true;
                     break;
                 }
@@ -59,11 +66,17 @@ bool ProcessHotkey(const HotkeyBinding* bindings, int bindings_count,
         }
         
         if (AllowOtherFeatureTogglesInFeature) {
+#if defined(_WIN32)
             if (IsPopupActive(hPopupWnd)) {
-                KillTimer(hPopupWnd, 999);
-                DestroyWindow(hPopupWnd);
-                hPopupWnd = NULL;
-            } 
+                KillTimer(WH_TO_HWND(hPopupWnd), 999);
+                DestroyWindow(WH_TO_HWND(hPopupWnd));
+                hPopupWnd = WH_NULL;
+            }
+#else
+            if (IsPopupActive(hPopupWnd)) {
+                hPopupWnd = WH_NULL;
+            }
+#endif
         } else {
           if (IsPopupActive(hPopupWnd)) return false;
         }
@@ -258,7 +271,11 @@ char* GetCleanText(const char* text) {
 
 bool IsWindowBlacklisted(const char* window_title, const char* blacklist[], int count) {
     for (int i = 0; i < count; i++) {
+#if defined(_WIN32)
         if (StrStrIA(window_title, blacklist[i]) != NULL) {
+#else
+        if (strstr(window_title, blacklist[i]) != NULL) {
+#endif
             return true;
         }
     }

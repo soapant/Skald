@@ -3,6 +3,7 @@
 #include "core/common_ui.h"
 #include <ctype.h>
 
+#if defined(_WIN32)
 static void CALLBACK SequenceTimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime) {
     if (g_seq_state.waiting) {
         g_seq_state.waiting = false;
@@ -11,6 +12,7 @@ static void CALLBACK SequenceTimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, D
     }
     g_seq_state.timer_id = 0;
 }
+#endif
 
 void SequenceAddKey(char key, bool was_typed) {
     if (g_seq_state.len < MAX_SEQUENCE_LEN - 1) {
@@ -30,10 +32,12 @@ void SequenceReset(void) {
     g_seq_state.typed_count = 0;
     g_seq_state.waiting = false;
     g_seq_state.timed_out = false;
+#if defined(_WIN32)
     if (g_seq_state.timer_id != 0) {
         KillTimer(NULL, g_seq_state.timer_id);
         g_seq_state.timer_id = 0;
     }
+#endif
 }
 
 int SequenceLen(void) {
@@ -81,10 +85,12 @@ bool SequenceStartsWith(const char* pattern) {
 }
 
 void SequenceStartTimer(void) {
+#if defined(_WIN32)
     if (g_seq_state.timer_id != 0) {
         KillTimer(NULL, g_seq_state.timer_id);
     }
     g_seq_state.timer_id = SetTimer(NULL, 0, SEQUENCE_TIMEOUT_MS, SequenceTimerProc);
+#endif
 }
 
 bool SequenceIsWaiting(void) {
@@ -98,7 +104,7 @@ bool SequenceTimedOut(void) {
 void DeleteLastTypedChar(void) {
     printf("[VIM-DEBUG] DeleteLastTypedChar: START\n");
     
-    if (!g_ActiveEditControl || !IsWindow(g_ActiveEditControl)) {
+    if (!IsWindowValid(g_ActiveEditControl)) {
         printf("[VIM-DEBUG] DeleteLastTypedChar: g_ActiveEditControl invalid!\n");
         return;
     }
@@ -107,7 +113,7 @@ void DeleteLastTypedChar(void) {
     UI_GetCurrentText(g_ActiveEditControl, text);
     int len = (int)strlen(text);
     
-    DWORD start, end;
+    uint32_t start, end;
     UI_GetCurrentCursorPosition(&start, &end);
     int cursor_pos = (int)start;
     

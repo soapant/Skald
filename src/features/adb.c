@@ -1,3 +1,4 @@
+#if defined(_WIN32)
 #include <windows.h>
 #include <stdio.h>
 #include <string.h>
@@ -95,3 +96,22 @@ void toggle_messenger_speaker(void) {
         tap(757, 2148);
     }
 }
+#else
+#include <stdio.h>
+#include <string.h>
+#include <stdbool.h>
+
+bool connect_phone(void) {
+    return false;
+}
+
+void tap(int x, int y) {
+    (void)x; (void)y;
+}
+
+void mute_messenger_call(void) {
+}
+
+void toggle_messenger_speaker(void) {
+}
+#endif

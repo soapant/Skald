@@ -4,11 +4,11 @@
 #include <ctype.h>
 
 void DeleteCharUnderCursor(void) {
-    if (!g_ActiveEditControl || !IsWindow(g_ActiveEditControl)) return;
+    if (!IsWindowValid(g_ActiveEditControl)) return;
     
     char text[512];
     UI_GetCurrentText(g_ActiveEditControl, text);
-    DWORD start, end;
+    uint32_t start, end;
     UI_Edit_GetSel(g_ActiveEditControl, &start, &end);
     
     int pos = (int)start;
@@ -35,22 +35,28 @@ void GoToLastListBoxItem(void) {
 }
 
 void SetCursorToStartOfText(void) {
-    if (g_ActiveEditControl && IsWindow(g_ActiveEditControl)) {
-        SetFocus(g_ActiveEditControl);
+    if (IsWindowValid(g_ActiveEditControl)) {
+#if defined(_WIN32)
+        SetFocus(WH_TO_HWND(g_ActiveEditControl));
+#endif
         UI_SetCursorPosition(g_ActiveEditControl,0);
     }
 }
 
 void SetCursorToEndOfText(void) {
-    if (g_ActiveEditControl && IsWindow(g_ActiveEditControl)) {
-        SetFocus(g_ActiveEditControl);
-        int len = GetWindowTextLengthA(g_ActiveEditControl);
+    if (IsWindowValid(g_ActiveEditControl)) {
+#if defined(_WIN32)
+        SetFocus(WH_TO_HWND(g_ActiveEditControl));
+        int len = GetWindowTextLengthA(WH_TO_HWND(g_ActiveEditControl));
+#else
+        int len = 0;
+#endif
         UI_SetCursorPosition(g_ActiveEditControl,len);
     }
 }
 
 void DeleteInsideDelimiter(char open_char, char close_char, bool keep_mode) {
-    if (!g_ActiveEditControl || !IsWindow(g_ActiveEditControl)) {
+    if (!IsWindowValid(g_ActiveEditControl)) {
         return;
     }
     
@@ -58,7 +64,7 @@ void DeleteInsideDelimiter(char open_char, char close_char, bool keep_mode) {
     UI_GetCurrentText(g_ActiveEditControl, text);
     int len = (int)strlen(text);
     
-    DWORD start_pos, end_pos;
+    uint32_t start_pos, end_pos;
     UI_Edit_GetSel(g_ActiveEditControl, &start_pos, &end_pos);
     int cursor = (int)start_pos;
     
@@ -167,13 +173,13 @@ void DeleteInsideDelimiter(char open_char, char close_char, bool keep_mode) {
 }
 
 void DeleteInnerWord(bool keep_mode) {
-    if (!g_ActiveEditControl || !IsWindow(g_ActiveEditControl)) return;
+    if (!IsWindowValid(g_ActiveEditControl)) return;
     
     char text[512];
     UI_GetCurrentText(g_ActiveEditControl, text);
     int len = (int)strlen(text);
     
-    DWORD start_pos, end_pos;
+    uint32_t start_pos, end_pos;
     UI_Edit_GetSel(g_ActiveEditControl, &start_pos, &end_pos);
     int cursor = (int)start_pos;
     

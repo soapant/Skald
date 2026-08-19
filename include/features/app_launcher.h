@@ -1,7 +1,6 @@
 #ifndef APP_LAUNCHER_H
 #define APP_LAUNCHER_H
 
-#include <windows.h>
 #include <stdbool.h>
 #include "features/file_search.h"
 

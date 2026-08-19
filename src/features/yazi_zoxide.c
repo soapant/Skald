@@ -2,7 +2,9 @@
 #include "features/yazi_zoxide.h"
 #include "helpers.h"
 #include "core/common_ui.h"
+#if defined(_WIN32)
 #include <shellapi.h>
+#endif
 
 static char** g_cached_yazi_commands = NULL;
 static int g_cached_yazi_count = 0;
@@ -44,8 +46,8 @@ static void RebuildYaziCache(void) {
 }
 
 
-static void yazi_refresh_callback(const char* filter, HWND hListBox) {
-    if (!hListBox) return;
+static void yazi_refresh_callback(const char* filter, WindowHandle hListBox) {
+    if (WH_TO_HWND(hListBox) == NULL) return;
     
     if (!g_cached_yazi_commands) {
         RebuildYaziCache();
@@ -62,7 +64,13 @@ static void yazi_enter_callback(const char* selection) {
           snprintf(cmd_args, sizeof(cmd_args), "-e yazi \"%s\"", path);
           char terminal[512];
           snprintf(terminal,sizeof(terminal),"%s.exe",UsedTerminal);
+#if defined(_WIN32)
           ShellExecuteA(NULL, "open", terminal, cmd_args, NULL, SW_SHOWNORMAL);
+#else
+          char cmd_open[512];
+          snprintf(cmd_open, sizeof(cmd_open), "xdg-open \"%s\"", path);
+          system(cmd_open);
+#endif
           if (YaziZoxideFile->fileSize > 0) {
               char lastChar = YaziZoxideFile->pBuffer[YaziZoxideFile->fileSize - 1];
               if (lastChar != '\n') {

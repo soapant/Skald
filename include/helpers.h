@@ -27,7 +27,7 @@ typedef struct {
     HotkeyCondition is_enabled;
 } HotkeyBinding;
 
-void SubjectiveMessageDisplay(const char* buffer,int msg_height,int timeout,COLORREF color);
+void SubjectiveMessageDisplay(const char* buffer,int msg_height,int timeout,ColorRef color);
 extern EditorMode g_last_mode;
 bool AlwaysEnabled(void);
 bool ProcessHotkey(const HotkeyBinding* bindings, int bindings_count,

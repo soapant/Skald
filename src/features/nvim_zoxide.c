@@ -3,7 +3,9 @@
 #include "helpers.h"
 #include "core/common_ui.h"
 #include <ctype.h>
+#if defined(_WIN32)
 #include <shellapi.h>
+#endif
 
 static char** g_cached_nvim_commands = NULL;
 static int g_cached_nvim_count = 0;
@@ -38,12 +40,16 @@ static void LaunchNvim(const char* path) {
     }
     
     char cmd[2048];
+    
+#if defined(_WIN32)
     STARTUPINFOA si = {0};
     si.cb = sizeof(si);
     PROCESS_INFORMATION pi = {0};
+#endif
     
     snprintf(cmd, sizeof(cmd), "%s \"%s\"", TextEditorPath, path);
     
+#if defined(_WIN32)
     if (CreateProcessA(NULL, cmd, NULL, NULL, FALSE, 
                        CREATE_NEW_CONSOLE, 
                        NULL, NULL, &si, &pi)) {
@@ -52,6 +58,9 @@ static void LaunchNvim(const char* path) {
     } else {
         ShellExecuteA(NULL, "open", TextEditorName, path, NULL, SW_SHOWNORMAL);
     }
+#else
+    system(cmd);
+#endif
 }
 
 static void RebuildNvimCache(void) {
@@ -90,8 +99,8 @@ static void RebuildNvimCache(void) {
     free(lines);
 }
 
-static void neovide_refresh_callback(const char* filter, HWND hListBox) {
-    if (!hListBox) return;
+static void neovide_refresh_callback(const char* filter, WindowHandle hListBox) {
+    if (WH_TO_HWND(hListBox) == NULL) return;
     
     if (!g_cached_nvim_commands) {
         RebuildNvimCache();

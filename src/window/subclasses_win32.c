@@ -1,3 +1,4 @@
+#include <windows.h>
 #include "common.h"
 #include <commctrl.h>
 #include <shellapi.h>
@@ -25,7 +26,7 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
     HWND hEditControl = hwnd;
     
     if (msg == WM_KEYDOWN) {
-      g_ActiveEditControl = hEditControl;
+      g_ActiveEditControl = WH_FROM_HWND(hEditControl);
         bool ctrl_pressed = (GetKeyState(VK_CONTROL) & 0x8000);
         if (wParam == VK_CONTROL || wParam == VK_SHIFT) {
           return DefSubclassProc(hwnd, msg, wParam, lParam);
@@ -33,7 +34,7 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
       
         if (wParam >= '0' && wParam <= '9') {
           if (ctrl_pressed) {
-            HandleNumberShortcut(wParam, hListBox, hEditControl);
+            HandleNumberShortcut(wParam, WH_FROM_HWND(hListBox), WH_FROM_HWND(hEditControl));
               return 0;
           }
         }
@@ -59,13 +60,13 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
             if (UI_IsListBoxSelected()) {
               strncpy(output_buffer, g_populated_cache[g_SelectedIndex], sizeof(output_buffer) - 1);
             } else {
-              UI_GetCurrentText(hwnd, output_buffer);
+              GetWindowTextA(hwnd, output_buffer, sizeof(output_buffer));
             }
           SaveFeatureHistory(output_buffer);
-            if (hDisplayMessage != NULL) {
-              KillTimer(hDisplayMessage, 999);
-                DestroyWindow(hDisplayMessage);
-                hDisplayMessage = NULL;
+            if (WH_TO_HWND(hDisplayMessage) != NULL) {
+              KillTimer(WH_TO_HWND(hDisplayMessage), 999);
+                DestroyWindow(WH_TO_HWND(hDisplayMessage));
+                hDisplayMessage = WH_NULL;
             }
           if (ctrl_pressed) {
             AddSelectionToData(output_buffer,g_current_feature,data);
@@ -87,9 +88,9 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
         if (wParam == VK_ESCAPE) {
           output_buffer[0] = '\0'; 
             selection_complete = true;  
-            if (hDisplayMessage != NULL) {
-              KillTimer(hDisplayMessage, 999);
-                DestroyWindow(hDisplayMessage);
+            if (WH_TO_HWND(hDisplayMessage) != NULL) {
+              KillTimer(WH_TO_HWND(hDisplayMessage), 999);
+                DestroyWindow(WH_TO_HWND(hDisplayMessage));
             }
           return 1;
         }
@@ -106,8 +107,8 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
         }
       if (wParam == VK_BACK) {
         if (ctrl_pressed) {
-          UI_SetText(hEditControl,"");
-            UI_Redraw(hListBox);
+          UI_SetText(WH_FROM_HWND(hEditControl),"");
+            UI_Redraw(WH_FROM_HWND(hListBox));
             return 0;
         }
       }
@@ -182,12 +183,12 @@ LRESULT CALLBACK SimpleEditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPAR
     bool ctrl_pressed = (GetKeyState(VK_CONTROL) & 0x8000);
     
     if (msg == WM_KEYDOWN) {
-      g_ActiveEditControl = hEditControl;
+      g_ActiveEditControl = WH_FROM_HWND(hEditControl);
         if (wParam == VK_CONTROL || wParam == VK_SHIFT || wParam == VK_MENU) {
           return DefSubclassProc(hwnd, msg, wParam, lParam);
         }
       if (wParam == VK_RETURN) {
-        UI_GetCurrentText(hEditControl, output_buffer);
+        GetWindowTextA(hEditControl, output_buffer, sizeof(output_buffer));
           
           selection_complete = true; 
           
@@ -197,16 +198,16 @@ LRESULT CALLBACK SimpleEditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPAR
         if (wParam == VK_ESCAPE) {
           output_buffer[0] = '\0'; 
             selection_complete = true;  
-            if (hDisplayMessage != NULL) {
-              KillTimer(hDisplayMessage, 999);
-                DestroyWindow(hDisplayMessage);
+            if (WH_TO_HWND(hDisplayMessage) != NULL) {
+              KillTimer(WH_TO_HWND(hDisplayMessage), 999);
+                DestroyWindow(WH_TO_HWND(hDisplayMessage));
             }
           return 0;
         }
       
         if (wParam == VK_BACK) {
           if (ctrl_pressed) {
-            UI_SetText(hEditControl,"");
+            UI_SetText(WH_FROM_HWND(hEditControl),"");
               return 0;
           }
         }
@@ -394,9 +395,9 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
       if (wParam && g_pending_navigate >= 0) {
         int idx = g_pending_navigate;
           g_pending_navigate = -1;
-          if (hListBox && IsWindow(hListBox)) {
+          if (WH_TO_HWND(hListBox) != NULL && IsWindow(WH_TO_HWND(hListBox))) {
             UI_NavigateTo(idx);
-              UpdateWindow(hListBox);
+              UpdateWindow(WH_TO_HWND(hListBox));
           }
       }
       break;
@@ -414,7 +415,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             break;
           }
           
-            if (hEditControl && hListBox) {
+            if (WH_TO_HWND(hEditControl) != NULL && WH_TO_HWND(hListBox) != NULL) {
               UI_Redraw(hListBox);
             }
         }
@@ -438,10 +439,10 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         if (idx >= 0 && idx < g_populated_count) {
           SubjectiveMessageDisplay(g_populated_cache[idx], 140, 6969, COLOR_OF_SELECTION);
         } else {
-          if (hDisplayMessage != NULL) {
-            KillTimer(hDisplayMessage, 999);
-              DestroyWindow(hDisplayMessage);
-              hDisplayMessage = NULL;
+          if (WH_TO_HWND(hDisplayMessage) != NULL) {
+            KillTimer(WH_TO_HWND(hDisplayMessage), 999);
+              DestroyWindow(WH_TO_HWND(hDisplayMessage));
+              hDisplayMessage = WH_NULL;
           }
         }
       return 0;
@@ -544,7 +545,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                     }
                   if (!FullTextNeedsKeyPress) {
                     if (isSelected && strlen(measureBuffer) >= 70) {
-                      if (g_last_selected_index != pdis->itemID || hDisplayMessage == NULL) {
+                      if (g_last_selected_index != pdis->itemID || WH_TO_HWND(hDisplayMessage) == NULL) {
                         g_last_selected_index = pdis->itemID;
                           PostMessageA(hwnd, WM_PREVIEW_SELECTION, 0, (LPARAM)pdis->itemID);
                       }
@@ -555,10 +556,10 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                       }
                     }
                   } else {
-                    if (hDisplayMessage != NULL) {
-                      KillTimer(hDisplayMessage, 999);
-                        DestroyWindow(hDisplayMessage);
-                        hDisplayMessage = NULL;
+                    if (WH_TO_HWND(hDisplayMessage) != NULL) {
+                      KillTimer(WH_TO_HWND(hDisplayMessage), 999);
+                        DestroyWindow(WH_TO_HWND(hDisplayMessage));
+                        hDisplayMessage = WH_NULL;
                     }
                   } 
                 } 
@@ -777,7 +778,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 LRESULT CALLBACK DisplayMessageProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
   FadeWindowData* data = (FadeWindowData*)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
-    hDisplayMessage = hwnd;
+    hDisplayMessage = WH_FROM_HWND(hwnd);
     
     switch (msg) {
     case WM_NCCREATE: {
@@ -846,7 +847,7 @@ LRESULT CALLBACK DisplayMessageProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
           
           if (data->alpha <= 0) {
             KillTimer(hwnd, 999);
-              hDisplayMessage = NULL; 
+              hDisplayMessage = WH_NULL; 
               DestroyWindow(hwnd);
           } else {
             SetLayeredWindowAttributes(hwnd, 0, (BYTE)data->alpha, LWA_ALPHA);
@@ -970,7 +971,7 @@ LRESULT CALLBACK SettingsPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
   }
   case WM_DESTROY: {
     setting_complete = true;
-      hSettings = NULL;
+      hSettings = WH_NULL;
       break;
   }
   }
@@ -981,7 +982,7 @@ LRESULT CALLBACK SettingsEditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LP
   HWND hEditControl = hwnd;
     
     if (msg == WM_KEYDOWN) {
-      g_ActiveEditControl = hEditControl;
+      g_ActiveEditControl = WH_FROM_HWND(hEditControl);
         bool ctrl_pressed = (GetKeyState(VK_CONTROL) & 0x8000);
         if (wParam == VK_CONTROL || wParam == VK_SHIFT) {
           return DefSubclassProc(hwnd, msg, wParam, lParam);
@@ -992,13 +993,13 @@ LRESULT CALLBACK SettingsEditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LP
             SetMode(MODE_NORMAL);
           }else {
             DestroyWindow(GetParent(hwnd));
-              hSettings = NULL;
+              hSettings = WH_NULL;
               return 1;
           }
         }
       if (wParam == VK_BACK) {
         if (ctrl_pressed) {
-          UI_SetText(hEditControl,"");
+          UI_SetText(WH_FROM_HWND(hEditControl),"");
             return 0;
         }
       }
@@ -1198,21 +1199,21 @@ LRESULT CALLBACK SearchPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPar
         
         int modeHeight = 30;
         
-        g_hSearchPopup = CreateWindowExA(
+        g_hSearchPopup = WH_FROM_HWND(CreateWindowExA(
                                          0, "EDIT","",
                                          WS_CHILD | WS_VISIBLE | ES_LEFT | ES_MULTILINE,
                                          5, modeHeight + 5,
                                          rect.right - 10, rect.bottom - modeHeight - 10,
                                          hwnd, (HMENU)1001, hInstance, NULL
-                                        );
-        if (g_hSearchPopup) {
+                                        ));
+        if (WH_TO_HWND(g_hSearchPopup) != NULL) {
           UI_Edit_SetFont(g_hSearchPopup,hFont);
             UI_Edit_SetSel(g_hSearchPopup,0,0);
-            SetFocus(g_hSearchPopup);
+            SetFocus(WH_TO_HWND(g_hSearchPopup));
             g_ActiveEditControl = g_hSearchPopup;
             
-            SetWindowLongPtrA(g_hSearchPopup, GWLP_USERDATA,1);
-            SetWindowSubclass(g_hSearchPopup, SearchPopupSubclassProc, 0,1);
+            SetWindowLongPtrA(WH_TO_HWND(g_hSearchPopup), GWLP_USERDATA,1);
+            SetWindowSubclass(WH_TO_HWND(g_hSearchPopup), SearchPopupSubclassProc, 0,1);
         }
       break;
     }
