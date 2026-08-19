@@ -267,10 +267,13 @@ typedef struct {
 #if defined(_WIN32)
     HANDLE hFile;
     HANDLE hMapping;
-#endif
-    char *pBuffer;
     size_t fileSize;   
     size_t capacity;   
+#else 
+     int fd;           
+     size_t fileSize;
+#endif
+    char *pBuffer;
 } MappedFile;
 
 typedef struct {

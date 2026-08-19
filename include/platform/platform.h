@@ -14,8 +14,9 @@ bool Platform_LaunchAppAsAdmin(const char* path);
 bool Platform_IsCtrlPressed(void);
 
 char* Platform_QueryZoxidePath(const char* query);
+char Platform_GetLastChar(MappedFile *file);
 
-int Platform_FileInit(const char *filePath, MappedFile *mf, size_t initialPadding);
+int Platform_FileInit(const char *filePath, MappedFile *mf);
 int Platform_FileAppend(MappedFile *mf, const char *text);
 void Platform_FileClose(MappedFile *mf);
 Line* Platform_FileGetLines(MappedFile *mf, size_t *outLineCount);

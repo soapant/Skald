@@ -91,7 +91,7 @@ static void DoGoogleSearch(const char* query) {
 
 static void google_enter_callback(const char* selection) {
         if (GoogleZoxideFile->fileSize > 0) {
-            char lastChar = GoogleZoxideFile->pBuffer[GoogleZoxideFile->fileSize - 1];
+                  char lastChar = Platform_GetLastChar(GoogleZoxideFile);
             if (lastChar != '\n') {
                 Platform_FileAppend(GoogleZoxideFile, "\n");
             }

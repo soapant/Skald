@@ -44,6 +44,7 @@ void Platform_SettingsPopUp(void) {
     fprintf(stderr, "[PLATFORM] Platform_SettingsPopUp not implemented yet\n");
 }
 
+
 char* Platform_EditTextPopup(const char* initial_text, int centerX, int centerY, int maxWidth, int maxHeight) {
     (void)initial_text; (void)centerX; (void)centerY; (void)maxWidth; (void)maxHeight;
     fprintf(stderr, "[PLATFORM] Platform_EditTextPopup not implemented yet\n");
