@@ -1,5 +1,4 @@
 #include <windows.h>
-#include "common.h"
 #include "helpers.h"
 #include "platform/platform.h"
 #include <shellapi.h>
@@ -89,7 +88,11 @@ bool Platform_IsCtrlPressed(void) {
     return (GetKeyState(VK_CONTROL) & 0x8000) != 0;
 }
 
-int Platform_FileInit(const char *filePath, MappedFile *mf, size_t initialPadding) {
+char Platform_GetLastChar(MappedFile *file) {
+    return file->pBuffer[file->fileSize - 1];
+}
+
+int Platform_FileInit(const char *filePath, MappedFile *mf) {
     mf->hFile = CreateFileA(filePath, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (mf->hFile == INVALID_HANDLE_VALUE) {
         return 0;

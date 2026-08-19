@@ -108,17 +108,20 @@ int main() {
   }
 
   for (int i = 0; i < FILE_ENTRY_COUNT; i++) {
-    G_FILE_ENTRIES[i].mf = (MappedFile*)malloc(sizeof(MappedFile));
+    G_FILE_ENTRIES[i].mf = (MappedFile*)calloc(1, sizeof(MappedFile));
+    if (G_FILE_ENTRIES[i].mf != NULL) {
+        G_FILE_ENTRIES[i].mf->fd = -1;
+    }
     const char* path = G_FILE_ENTRIES[i].path;
 
 
-    if (!Platform_FileInit(path, G_FILE_ENTRIES[i].mf, 0)) {
+    if (!Platform_FileInit(path, G_FILE_ENTRIES[i].mf)) {
       printf("[SYSTEM] Failed to open %s. Creating new.\n", G_FILE_ENTRIES[i].name);
 #if defined(_WIN32)
       HANDLE hFile = CreateFileA(path, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
       if (hFile != INVALID_HANDLE_VALUE) {
         CloseHandle(hFile);
-        Platform_FileInit(path, G_FILE_ENTRIES[i].mf, 0); 
+        Platform_FileInit(path, G_FILE_ENTRIES[i].mf); 
       }
 #endif
     }
