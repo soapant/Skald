@@ -1,3 +1,4 @@
+#include <windows.h>
 #include "common.h"
 #include "helpers.h"
 #include "platform/platform.h"
