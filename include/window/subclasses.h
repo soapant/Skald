@@ -24,6 +24,7 @@ typedef struct {
   int timeout;
 } DisplayMessageParams;
 
+
 #if defined(_WIN32)
 LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 LRESULT CALLBACK DisplayMessageProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);

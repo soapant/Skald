@@ -6,12 +6,8 @@
 #include "core/common_ui.h"
 #include "wingdi.h"
 
-int g_refresh_count = 0;
-COLORREF DisplayMessageText;
-COLORREF g_rainbow_text_cache[MAX_VISIBLE_ITEMS + 1] = {0};
 static bool only_once = true;
 static bool rainbow_init = false;
-bool draw_background = true;
 
 #define WM_PREVIEW_SELECTION (WM_APP + 1)
 
