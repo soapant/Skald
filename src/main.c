@@ -1,21 +1,8 @@
 #include "common.h"
-#include "core/modal.h"
 #include "core/types.h"
 #include "helpers.h"
-#include "core/common_ui.h"
-#include "core/number_shortcut.h"
 #include "core/feature_data.h"
-#include "window/subclasses.h"
-#include "bindings/bindings.h"
-#include "bindings/hotkey_definitions.h"
-#include "bindings/macro_bindings.h"
-#include "bindings/vim_motions.h"
-#include "features/focus_switcher.h"
-#include "features/music_player.h"
-#include "features/video_player.h"
-#include "features/process_killer.h"
 #include "features/app_launcher.h"
-#include "features/notification_getter.h"
 
 WindowHandle hGlobalTrayWnd = WH_NULL;
 WindowHandle hPopupWnd = WH_NULL;

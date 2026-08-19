@@ -1,5 +1,6 @@
 #include "common.h"
 #include "core/feature_data.h"
+#include <stdio.h>
 
 static HashMap* g_feature_data = NULL;
 static const char* g_current_feature_name = NULL;

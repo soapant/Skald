@@ -1,4 +1,5 @@
 #include "common.h"
+#include "platform/platform.h"
 #include "features/screenshot.h"
 #include "core/common_ui.h"
 
