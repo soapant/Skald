@@ -247,7 +247,6 @@ int main(int argc, char** argv) {
     }
     if (strcmp(argv[2], "-run") == 0) {
       do_run = 1;
-      printf("Running The Program After");
     }
 
     if (!nob_mkdir_if_not_exists(BUILD_FOLDER)) return 1;
