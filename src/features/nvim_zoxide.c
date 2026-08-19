@@ -115,7 +115,7 @@ static void neovide_enter_callback(const char* selection) {
       if (path) {
           LaunchNvim(path);
           if (NvimZoxideFile->fileSize > 0) {
-              char lastChar = NvimZoxideFile->pBuffer[NvimZoxideFile->fileSize - 1];
+          char lastChar = Platform_GetLastChar(NvimZoxideFile);
               if (lastChar != '\n') {
                   Platform_FileAppend(NvimZoxideFile, "\n");
               }

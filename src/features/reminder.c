@@ -331,7 +331,7 @@ static void StartReminder(const char* selection) {
 
 static void reminder_enter_callback(const char* selection) {
       if (ReminderHistoryFile->fileSize > 0) {
-          char lastChar = ReminderHistoryFile->pBuffer[ReminderHistoryFile->fileSize - 1];
+          char lastChar = Platform_GetLastChar(ReminderHistoryFile);
           if (lastChar != '\n') {
               Platform_FileAppend(ReminderHistoryFile, "\n");
           }

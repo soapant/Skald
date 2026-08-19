@@ -83,7 +83,7 @@ static void zoxide_enter_callback(const char* selection) {
             system(cmd_open);
 #endif
             if (TerminalZoxideFile->fileSize > 0) {
-                char lastChar = TerminalZoxideFile->pBuffer[TerminalZoxideFile->fileSize - 1];
+                  char lastChar = Platform_GetLastChar(TerminalZoxideFile);
                 if (lastChar != '\n') {
                     Platform_FileAppend(TerminalZoxideFile, "\n");
                 }
