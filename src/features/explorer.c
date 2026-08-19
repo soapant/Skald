@@ -67,8 +67,8 @@ static void explorer_enter_callback(const char* selection) {
               system(cmd_open);
 #endif
               if (ExplorerZoxideFile->fileSize > 0) {
-                  char lastChar = ExplorerZoxideFile->pBuffer[ExplorerZoxideFile->fileSize - 1];
-                  if (lastChar != '\n') {
+                  char lastChar = Platform_GetLastChar(ExplorerZoxideFile);
+                    if (lastChar != '\n') {
                       Platform_FileAppend(ExplorerZoxideFile, "\n");
                   }
               }

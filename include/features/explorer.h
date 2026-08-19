@@ -2,7 +2,6 @@
 #define EXPLORER_H
 
 #include <stdbool.h>
-#include "core/types.h"
 
 #define FILE_EXPLORER_ZOXIDE 4
 #define ExplorerZoxideFile G_FILE_ENTRIES[FILE_EXPLORER_ZOXIDE].mf

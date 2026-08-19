@@ -125,7 +125,7 @@ static void RunTerminalCommand(const char* Command, bool save_to_history) {
 
 static void terminal_enter_callback(const char* selection) {
       if (TerminalHistoryFile->fileSize > 0) {
-          char lastChar = TerminalHistoryFile->pBuffer[TerminalHistoryFile->fileSize - 1];
+          char lastChar = Platform_GetLastChar(TerminalHistoryFile);
           if (lastChar != '\n') {
               Platform_FileAppend(TerminalHistoryFile, "\n");
           }

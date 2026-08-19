@@ -72,7 +72,7 @@ static void yazi_enter_callback(const char* selection) {
           system(cmd_open);
 #endif
           if (YaziZoxideFile->fileSize > 0) {
-              char lastChar = YaziZoxideFile->pBuffer[YaziZoxideFile->fileSize - 1];
+              char lastChar = Platform_GetLastChar(YaziZoxideFile);
               if (lastChar != '\n') {
                   Platform_FileAppend(YaziZoxideFile, "\n");
               }
