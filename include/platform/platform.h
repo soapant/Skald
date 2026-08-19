@@ -56,4 +56,7 @@ void Platform_RunHotKeyMessageLoop(void);
 void Platform_InitUI(void);
 void Platform_ShutdownUI(void);
 
+void Linux_GetActiveWindowTitle(char* buffer, int buffer_size);
+int ConvertLinuxKeyToWindowsVK(int key_code);
+
 #endif
