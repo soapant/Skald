@@ -1,39 +1,123 @@
 #define _GNU_SOURCE
+#include <X11/Xlib.h>
 #include <sys/mman.h>
 #include <sys/stat.h> 
+#include <linux/input.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include "platform/platform.h"
+#include "config.h"
+#include "common.h"
 #include <stdio.h>
 #include <stdlib.h>
 
 bool Platform_ShellExecuteWithVerb(const char* path, const char* verb, bool async) {
-    (void)path; (void)verb; (void)async;
-    fprintf(stderr, "[PLATFORM] Platform_ShellExecuteWithVerb not implemented yet\n");
-    return false;
+    if (!path) return false;
+
+    char command[1024];
+    if (async) {
+        snprintf(command, sizeof(command), "xdg-open \"%s\" > /dev/null 2>&1 &", path);
+    } else {
+        snprintf(command, sizeof(command), "xdg-open \"%s\" > /dev/null 2>&1", path);
+    }
+
+    int status = system(command);
+
+    return (status == 0);
 }
 
 bool Platform_LaunchApp(const char* path) {
-    (void)path;
-    fprintf(stderr, "[PLATFORM] Platform_LaunchApp not implemented yet\n");
-    return false;
+    if (!path) return false;
+
+    pid_t pid = fork();
+    if (pid < 0) {
+        return false;
+    }
+
+    if (pid == 0) {
+        char *args[] = {(char*)path, NULL};
+        
+        execvp(path, args);
+        
+        exit(1); 
+    }
+
+    return true;
 }
 
+
 bool Platform_LaunchAppAsAdmin(const char* path) {
-    (void)path;
-    fprintf(stderr, "[PLATFORM] Platform_LaunchAppAsAdmin not implemented yet\n");
-    return false;
+    if (!path) return false;
+
+    pid_t pid = fork();
+    if (pid < 0) return false;
+
+    if (pid == 0) {
+        char *args[] = {"pkexec", (char*)path, NULL};
+        
+        execvp("pkexec", args);
+        
+        char *sudo_args[] = {"sudo", (char*)path, NULL};
+        execvp("sudo", sudo_args);
+
+        exit(1); 
+    }
+
+    return true;
 }
 
 bool Platform_IsCtrlPressed(void) {
-    fprintf(stderr, "[PLATFORM] Platform_IsCtrlPressed not implemented yet\n");
-    return false;
+    Display *display = XOpenDisplay(NULL);
+    if (!display) {
+        return false; 
+    }
+
+    Window root, child;
+    int root_x, root_y, win_x, win_y;
+    unsigned int mask = 0;
+
+    XQueryPointer(display, DefaultRootWindow(display), 
+                  &root, &child, &root_x, &root_y, &win_x, &win_y, &mask);
+
+    XCloseDisplay(display);
+
+    return (mask & ControlMask) != 0;
 }
 
 char* Platform_QueryZoxidePath(const char* query) {
-    (void)query;
-    fprintf(stderr, "[PLATFORM] Platform_QueryZoxidePath not implemented yet\n");
-    return NULL;
+    if (!query) return NULL;
+
+    static char path[1024];
+    path[0] = '\0';
+
+    char clean_query[512];
+    strncpy(clean_query, query, sizeof(clean_query) - 1);
+    clean_query[sizeof(clean_query) - 1] = '\0';
+    clean_query[strcspn(clean_query, "\r\n")] = '\0';
+
+    char command[1024];
+    snprintf(command, sizeof(command), "zoxide query %s 2>&1", clean_query);
+
+    FILE *pipe = popen(command, "r");
+    if (!pipe) {
+        return NULL;
+    }
+
+    if (fgets(path, sizeof(path) - 1, pipe) != NULL) {
+        path[strcspn(path, "\r\n")] = '\0';
+    }
+
+    pclose(pipe);
+
+    if (strstr(path, "no match found") || strlen(path) == 0) {
+        char buffer[256];
+        snprintf(buffer, sizeof(buffer), "Query {%s} Doesnt Have A Zoxide Path", query);
+        
+        SubjectiveMessageDisplay(buffer, 140, TimeOutForMessages, COLOR_ERROR);
+        return NULL;
+    }
+
+    return path;
 }
 
 char Platform_GetLastChar(MappedFile *file) {
@@ -358,10 +442,42 @@ int Platform_ReplaceLineInMappedFile(MappedFile* mf, int line_index, const char*
     return 1;
 }
 
+
 int Platform_CopyToClipboard(const char* text) {
-    (void)text;
-    fprintf(stderr, "[PLATFORM] Platform_CopyToClipboard not implemented yet\n");
-    return 0;
+    if (!text) return 0;
+
+    const char *cmd = NULL;
+    
+    const char *wayland = getenv("WAYLAND_DISPLAY");
+    const char *session = getenv("XDG_SESSION_TYPE");
+    
+    if (wayland != NULL || (session && strcmp(session, "wayland") == 0)) {
+        cmd = "wl-copy";
+    } else {
+        cmd = "xclip -selection clipboard";
+    }
+
+    FILE *pipe = popen(cmd, "w");
+    if (!pipe) {
+        pipe = popen("xclip -selection clipboard", "w");
+        if (!pipe) {
+            pipe = popen("xsel --clipboard --input", "w");
+        }
+    }
+
+    if (!pipe) {
+        fprintf(stderr, "[PLATFORM] Error: Failed to find a valid Linux clipboard manager.\n");
+        return 0;
+    }
+
+    fprintf(pipe, "%s", text);
+    
+    int status = pclose(pipe);
+
+    snprintf(text,sizeof(text),"Copied %s",text);
+    SubjectiveMessageDisplay(text,140,TimeOutForMessages,COLOR_OF_SELECTION);
+
+    return (status == 0) ? 1 : 0;
 }
 
 void Platform_StartUniversalTimer(void) {
