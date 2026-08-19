@@ -108,7 +108,7 @@ void DeleteLastTypedChar(void) {
     int len = (int)strlen(text);
     
     DWORD start, end;
-    UI_GetCurrentCursorPosition(g_ActiveEditControl, &start, &end);
+    UI_GetCurrentCursorPosition(&start, &end);
     int cursor_pos = (int)start;
     
     printf("[VIM-DEBUG] DeleteLastTypedChar: text='%s', len=%d, cursor_pos=%d\n", text, len, cursor_pos);

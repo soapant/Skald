@@ -22,7 +22,7 @@ static void RebuildYaziCache(void) {
     }
     
     size_t lineCount = 0;
-    Line* lines = FileGetLines(YaziZoxideFile, &lineCount);
+    Line* lines = Platform_FileGetLines(YaziZoxideFile, &lineCount);
     if (!lines) return;
     
     g_cached_yazi_commands = (char**)malloc(lineCount * sizeof(char*));
@@ -56,7 +56,7 @@ static void yazi_refresh_callback(const char* filter, HWND hListBox) {
 
 
 static void yazi_enter_callback(const char* selection) {
-      char* path = QueryZoxidePath(selection);
+      char* path = Platform_QueryZoxidePath(selection);
       if (path) {
           char cmd_args[512];
           snprintf(cmd_args, sizeof(cmd_args), "-e yazi \"%s\"", path);
@@ -66,25 +66,25 @@ static void yazi_enter_callback(const char* selection) {
           if (YaziZoxideFile->fileSize > 0) {
               char lastChar = YaziZoxideFile->pBuffer[YaziZoxideFile->fileSize - 1];
               if (lastChar != '\n') {
-                  FileAppend(YaziZoxideFile, "\n");
+                  Platform_FileAppend(YaziZoxideFile, "\n");
               }
           }
           if (!UI_IsListBoxSelected()) {
-              FileAppend(YaziZoxideFile, selection);
-              FileAppend(YaziZoxideFile, "\n");
+              Platform_FileAppend(YaziZoxideFile, selection);
+              Platform_FileAppend(YaziZoxideFile, "\n");
               RebuildYaziCache();
           }
       }
     
 }
 static void yazi_edit_callback(const char* selection) {
-    char* NewyaziQuery = EditTextPopup(selection,960,540,1000,300);
+    char* NewyaziQuery = Platform_EditTextPopup(selection,960,540,1000,300);
     
     if (NewyaziQuery != NULL) {
         WriteToCacheIndex(g_SelectedIndex,NewyaziQuery);
     }
     
-    ReplaceLineInMappedFile(YaziZoxideFile,g_SelectedIndex,NewyaziQuery);
+    Platform_ReplaceLineInMappedFile(YaziZoxideFile,g_SelectedIndex,NewyaziQuery);
     
     RebuildYaziCache();
     

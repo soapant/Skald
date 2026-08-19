@@ -69,7 +69,7 @@ static void RebuildNvimCache(void) {
     }
     
     size_t lineCount = 0;
-    Line* lines = FileGetLines(NvimZoxideFile, &lineCount);
+    Line* lines = Platform_FileGetLines(NvimZoxideFile, &lineCount);
     if (!lines) return;
     
     g_cached_nvim_commands = (char**)malloc(lineCount * sizeof(char*));
@@ -102,31 +102,31 @@ static void neovide_refresh_callback(const char* filter, HWND hListBox) {
 
 
 static void neovide_enter_callback(const char* selection) {
-      char* path = QueryZoxidePath(selection);
+      char* path = Platform_QueryZoxidePath(selection);
       if (path) {
           LaunchNvim(path);
           if (NvimZoxideFile->fileSize > 0) {
               char lastChar = NvimZoxideFile->pBuffer[NvimZoxideFile->fileSize - 1];
               if (lastChar != '\n') {
-                  FileAppend(NvimZoxideFile, "\n");
+                  Platform_FileAppend(NvimZoxideFile, "\n");
               }
           }
 
           if (!UI_IsListBoxSelected()) {
-              FileAppend(NvimZoxideFile, selection);
-              FileAppend(NvimZoxideFile, "\n");
+              Platform_FileAppend(NvimZoxideFile, selection);
+              Platform_FileAppend(NvimZoxideFile, "\n");
               RebuildNvimCache();
           }
       }
 }
 static void neovide_edit_callback(const char* selection) {
-    char* NewneovideQuery = EditTextPopup(selection,960,540,1000,300);
+    char* NewneovideQuery = Platform_EditTextPopup(selection,960,540,1000,300);
     
     if (NewneovideQuery != NULL) {
         WriteToCacheIndex(g_SelectedIndex,NewneovideQuery);
     }
     
-    ReplaceLineInMappedFile(NvimZoxideFile,g_SelectedIndex,NewneovideQuery);
+    Platform_ReplaceLineInMappedFile(NvimZoxideFile,g_SelectedIndex,NewneovideQuery);
     
     RebuildNvimCache();
     

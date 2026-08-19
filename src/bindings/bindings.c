@@ -417,7 +417,7 @@ bool CheckTextSnippetBindings(int pressed_vk, int modifiers) {
             G_TEXT_SNIPPETS[i].modifiers == modifiers) {
             
             if (strcmp(G_TEXT_SNIPPETS[i].exe_name, "*") == 0 || StrStrIA(activeExe, G_TEXT_SNIPPETS[i].exe_name) != NULL) {
-                CopyToClipboard(G_TEXT_SNIPPETS[i].text);
+                Platform_CopyToClipboard(G_TEXT_SNIPPETS[i].text);
             }
         }
     }
