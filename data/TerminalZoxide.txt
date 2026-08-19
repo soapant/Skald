@@ -25,3 +25,5 @@ windowsapps
 indie
 autoclicker
 viewer
+gizmo
+go

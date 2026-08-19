@@ -64,7 +64,7 @@ void HandleInitAppLauncherCache(void) {
     initialize_app_cache();
 }
 void HandleSettingsTrigger(void) {
-  SettingsPopUp();
+  Platform_SettingsPopUp();
 }
 
 bool IsPixelHotkeysEnabled(void) { return PixelHotkeys; }

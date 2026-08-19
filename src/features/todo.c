@@ -286,7 +286,7 @@ static void todo_copy_callback(const char* selection,int true_index,int type) {
         *pipe = '\0';
     }
     
-    CopyToClipboard(buffer);
+    Platform_CopyToClipboard(buffer);
 }
 
 static void todo_render_callback(HDC hdc, const char* text, RECT* rect, BOOL is_selected, int itemIndex) {
@@ -351,7 +351,7 @@ static void todo_render_callback(HDC hdc, const char* text, RECT* rect, BOOL is_
 }
 
 static void todo_edit_callback(const char* selection) {
-    char* NewTodoName = EditTextPopup(selection, 960, 540, 1000, 300);
+    char* NewTodoName = Platform_EditTextPopup(selection, 960, 540, 1000, 300);
     
     if (NewTodoName != NULL) {
         WriteToCacheIndex(g_SelectedIndex, NewTodoName);
@@ -368,7 +368,7 @@ void TriggerTodo(void) {
         ui_list[i] = todo_lines[i];
     }
 
-    char* selected_item = PromptUser(ui_list, "📝 Todo", count, 920, 650, 56,
+    char* selected_item = Platform_PromptUser(ui_list, "📝 Todo", count, 920, 650, 56,
                                      todo_refresh_callback,  
                                      todo_enter_callback,    
                                      todo_ctrlenter_callback, 

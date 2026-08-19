@@ -153,7 +153,7 @@ static void switcher_enter_callback(const char* selection) {
 static void switcher_copy_callback(const char* selection, int true_index, int type) {
     (void)selection;
     if (true_index >= 0 && true_index < g_switcher_count) {
-        CopyToClipboard(g_switcher_windows[true_index].exe);
+        Platform_CopyToClipboard(g_switcher_windows[true_index].exe);
     }
 }
 
@@ -187,7 +187,7 @@ void TriggerWindowSwitcher() {
         ui_list[i] = g_switcher_windows[i].title;
     }
     
-    PromptUser(ui_list, "🪟 Switcher", g_switcher_count, 920, 650, 32,
+    Platform_PromptUser(ui_list, "🪟 Switcher", g_switcher_count, 920, 650, 32,
                switcher_refresh_callback,
                switcher_enter_callback,
                NULL, NULL,

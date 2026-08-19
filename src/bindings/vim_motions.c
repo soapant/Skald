@@ -14,7 +14,7 @@ void HandleEnterInsertOut(void) {
     if (!g_ActiveEditControl || !IsWindow(g_ActiveEditControl)) return;
     
     DWORD start = 0, end = 0;
-    UI_GetCurrentCursorPosition(g_ActiveEditControl, &start, &end);
+    UI_GetCurrentCursorPosition(&start, &end);
     
     int pos = (int)start + 1;
     
@@ -28,7 +28,7 @@ void HandleEnterInsertIn(void) {
     if (!g_ActiveEditControl || !IsWindow(g_ActiveEditControl)) return;
     
     DWORD start = 0, end = 0;
-    UI_GetCurrentCursorPosition(g_ActiveEditControl, &start, &end);
+    UI_GetCurrentCursorPosition(&start, &end);
     
     int pos = (int)start;
     
@@ -148,7 +148,7 @@ void HandleYankLine(void) {
         textBuffer[strcspn(textBuffer, "\r\n")] = '\0';
         
         if (strlen(textBuffer) > 0) {
-            CopyToClipboard(textBuffer);
+            Platform_CopyToClipboard(textBuffer);
         } else {
             printf("[VIM] Yank failed: Search box is currently empty.\n");
         }
@@ -177,7 +177,7 @@ void HandleMoveWordForward(void) {
     DWORD start = 0;
     DWORD end = 0;
 
-    UI_GetCurrentCursorPosition(g_ActiveEditControl, &start, &end);
+    UI_GetCurrentCursorPosition(&start, &end);
     int len = strlen(text);
 
     for (int i = start + 1;i <= len;i++) {
@@ -198,7 +198,7 @@ void HandleMoveWordBackward(void) {
     
     DWORD start = 0;
     DWORD end = 0;
-    UI_GetCurrentCursorPosition(g_ActiveEditControl, &start, &end);
+    UI_GetCurrentCursorPosition(&start, &end);
     
     int pos = (int)start;
 
@@ -337,13 +337,13 @@ void SearchTextBackward(int key) {
 
 void HandleSearchTextForward(void ) {
   if (!UI_IsListBoxSelected()) {
-    WaitForKeypressAsync(SearchTextForward);
+    Platform_WaitForKeypressAsync(SearchTextForward);
   }
 }
 
 void HandleSearchTextBackward(void) {
   if (!UI_IsListBoxSelected()) {
-    WaitForKeypressAsync(SearchTextBackward);
+    Platform_WaitForKeypressAsync(SearchTextBackward);
   }
 }
 void HandleDeleteTillEnd(void) {

@@ -23,7 +23,7 @@ static void RebuildExplorerCache(void) {
     }
     
     size_t lineCount = 0;
-    Line* lines = FileGetLines(ExplorerZoxideFile, &lineCount);
+    Line* lines = Platform_FileGetLines(ExplorerZoxideFile, &lineCount);
     if (!lines) return;
     
     g_cached_explorer_commands = (char**)malloc(lineCount * sizeof(char*));
@@ -55,32 +55,32 @@ static void explorer_refresh_callback(const char* filter, HWND hListBox) {
 }
 
 static void explorer_enter_callback(const char* selection) {
-          char* path = QueryZoxidePath(selection);
+          char* path = Platform_QueryZoxidePath(selection);
           if (path) {
               ShellExecuteA(NULL, "open", "explorer.exe", path, NULL, SW_SHOWNORMAL);
               if (ExplorerZoxideFile->fileSize > 0) {
                   char lastChar = ExplorerZoxideFile->pBuffer[ExplorerZoxideFile->fileSize - 1];
                   if (lastChar != '\n') {
-                      FileAppend(ExplorerZoxideFile, "\n");
+                      Platform_FileAppend(ExplorerZoxideFile, "\n");
                   }
               }
 
               if (!UI_IsListBoxSelected()) {
-                FileAppend(ExplorerZoxideFile, selection);
-                FileAppend(ExplorerZoxideFile, "\n");
+                Platform_FileAppend(ExplorerZoxideFile, selection);
+                Platform_FileAppend(ExplorerZoxideFile, "\n");
                 RebuildExplorerCache();
               }
           }
 }
 
 static void explorer_edit_callback(const char* selection) {
-    char* NewexplorerQuery = EditTextPopup(selection,960,540,1000,300);
+    char* NewexplorerQuery = Platform_EditTextPopup(selection,960,540,1000,300);
     
     if (NewexplorerQuery != NULL) {
         WriteToCacheIndex(g_SelectedIndex,NewexplorerQuery);
     }
     
-    ReplaceLineInMappedFile(ExplorerZoxideFile,g_SelectedIndex,NewexplorerQuery);
+    Platform_ReplaceLineInMappedFile(ExplorerZoxideFile,g_SelectedIndex,NewexplorerQuery);
     
     RebuildExplorerCache();
     

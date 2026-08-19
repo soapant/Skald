@@ -25,31 +25,9 @@ typedef void (*KeyCallback)(int vkCode);
 
 extern KeyCallback g_key_callback;
 
-char* PromptUser(const char* window_list[], const char* window_title, int count, 
-                 int height, int width, int item_height, 
-                 RefreshCallback refresh_callback, 
-                 EnterCallback enter_callback,
-                 CtrlEnterCallback ctrl_enter_callback,
-                 TabCallback tab_callback,
-                 CopyCallback copy_callback,
-                 RenderCallback render_callback,
-                 EditCallback edit_callback,
-                 FilterCallback filter_callback,
-                 HelpCallback help_callback);
+#define ImportantPromptUser(window_list,window_title,count,height,width,item_height,refresh_callback,enter_callback,edit_callback,help_callback) Platform_PromptUser(window_list,window_title,count,height,width,item_height,refresh_callback,enter_callback,NULL,NULL,NULL,NULL,edit_callback,NULL,help_callback)
 
-#define ImportantPromptUser(window_list,window_title,count,height,width,item_height,refresh_callback,enter_callback,edit_callback,help_callback) PromptUser(window_list,window_title,count,height,width,item_height,refresh_callback,enter_callback,NULL,NULL,NULL,NULL,edit_callback,NULL,help_callback)
-
-#define OnlyIOPromptUser(window_list,window_title,count,height,width,item_height,refresh_callback,enter_callback,ctrl_enter_callback,tab_callback) PromptUser(window_list,window_title,count,height,width,item_height,refresh_callback,enter_callback,ctrl_enter_callback,tab_callback,NULL,NULL,NULL,NULL,NULL)
-
-char* SimplePromptUser(const char* prompt, const char* window_title,int height, int width, int item_height);
-
-void DisplayMessage(const char* message, int centerX, int centerY, int width, int height,int timeout);
-
-void SettingsPopUp();
-
-char* EditTextPopup(const char* initial_text, int centerX, int centerY, int maxWidth, int maxHeight);
-
-void SaveRegionToPNG(int x1, int y1, int x2, int y2, const char* fullPath);
+#define OnlyIOPromptUser(window_list,window_title,count,height,width,item_height,refresh_callback,enter_callback,ctrl_enter_callback,tab_callback) Platform_PromptUser(window_list,window_title,count,height,width,item_height,refresh_callback,enter_callback,ctrl_enter_callback,tab_callback,NULL,NULL,NULL,NULL,NULL)
 
 void UpdateTextCaret(HWND hwndEditControl);
 
@@ -70,8 +48,6 @@ void SubjectiveMessageDisplay(const char* buffer,int msg_height,int timeout,COLO
 void SetCursorToEndOfText(void);
 
 void SetCursorToStartOfText(void);
-
-void WaitForKeypressAsync(KeyCallback callback);
 
 typedef struct {
     char keys[MAX_SEQUENCE_LEN];
@@ -314,30 +290,30 @@ typedef struct {
 #define MAIN_CENTER_Y (GetSystemMetrics(SM_CYSCREEN) / 2)
 
 #define MSG_LEFT(msg, msg_width, timeout) \
-    DisplayMessage((msg), \
+    Platform_DisplayMessage((msg), \
                    (960 - 450 - GAP - ((msg_width) / 2)), \
                    540, \
                    (msg_width), 650, (timeout))
 
 #define MSG_RIGHT(msg, msg_width, timeout) \
-    DisplayMessage((msg), \
+    Platform_DisplayMessage((msg), \
                    (960 + 450 + GAP + ((msg_width) / 2)), \
                    540, \
                    (msg_width), 650, (timeout))
 
 #define MSG_TOP(msg, msg_height, timeout) \
-    DisplayMessage((msg), \
+    Platform_DisplayMessage((msg), \
                    960, \
                    (960 - 540  - GAP * 10 - ((msg_height) / 2)), \
                    900, (msg_height), (timeout))
 
 #define MSG_BOTTOM(msg, msg_height, timeout) \
-    DisplayMessage((msg), \
+    Platform_DisplayMessage((msg), \
                    960, \
                    (540 + (960 / 2) + GAP + ((msg_height) / 2)), \
                    900, (msg_height), (timeout))
 #define MSG_MIDDLE_BOTTOM(msg,msg_height,timeout) \
-    DisplayMessage((msg), \
+    Platform_DisplayMessage((msg), \
                    960, \
                    1080 - msg_height, \
                    900,(msg_height), (timeout))

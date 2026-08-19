@@ -16,6 +16,11 @@ static bool collect_source(Nob_Walk_Entry entry) {
     if (entry.type == NOB_FILE_REGULAR) {
         Nob_String_View path = nob_sv_from_cstr(entry.path);
         if (nob_sv_ends_with_cstr(path, ".c")) {
+#if defined(_WIN32)
+            if (nob_sv_ends_with_cstr(path, "_x11.c")) return true;
+#else
+            if (nob_sv_ends_with_cstr(path, "_win32.c")) return true;
+#endif
             nob_da_append(&sources, strdup(path.data));
         }
     }
@@ -83,13 +88,13 @@ static char* err_signature(const char* err) {
 
     Nob_String_Builder sig = {0};
     char* save = NULL;
-    char* line = strtok_s(sb.items, "\n", &save);
+    char* line = strtok_r(sb.items, "\n", &save);
     while (line) {
         if (strstr(line, "error:")) {
             nob_sb_append_buf(&sig, line, strlen(line));
             nob_sb_append(&sig, '\n');
         }
-        line = strtok_s(NULL, "\n", &save);
+        line = strtok_r(NULL, "\n", &save);
     }
     if (sig.count == 0) return NULL;
     nob_sb_append_null(&sig);
@@ -162,6 +167,11 @@ static bool compile_all(bool* any_compiled) {
 
 int main(int argc, char** argv) {
     NOB_GO_REBUILD_URSELF(argc, argv);
+
+#if !defined(_WIN32)
+    nob_log(NOB_ERROR, "POSIX platform not implemented yet: implement src/platform/x11, then remove this check.");
+    return 1;
+#endif
 
     bool windowed = false;
     bool do_run = false;

@@ -18,6 +18,7 @@
 #include "core/hashmap.h"
 #include "config.h"
 #include "core/modal.h"
+#include "platform/platform.h"
 
 // ============================================================
 // SHARED GLOBALS (defined in main.c or core .c files)
@@ -33,6 +34,8 @@ extern HWND g_hEditPopup;
 extern HWND g_hSearchPopup;
 extern HWND g_ActiveEditControl;
 extern EditPopupData* g_EditData;
+
+extern DWORD g_main_thread_id;
 
 extern char output_buffer[256];
 extern bool selection_complete;

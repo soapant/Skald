@@ -33,7 +33,7 @@ void TriggerMonitorControl(void) {
     if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
 
     const char* prompt = "Enter Brightness(1, 100)";
-    char* input = SimplePromptUser(prompt, "⏱️ MonitorControl", 920, 650, 32);
+    char* input = Platform_SimplePromptUser(prompt, "⏱️ MonitorControl", 920, 650, 32);
 
     if (input && input[0] != '\0') {
         SetMonitorBright(atoi(input));

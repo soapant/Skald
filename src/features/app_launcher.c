@@ -38,7 +38,7 @@ void initialize_app_cache(void) {
 void launch_app_by_name(const char* display_name) {
     for (int i = 0; i < G_APP_COUNT; i++) {
         if (StrCmpIA(G_APPS[i].name, display_name) == 0) {
-            LaunchApp(G_APPS[i].path);
+            Platform_LaunchApp(G_APPS[i].path);
             return;
         }
     }
@@ -47,7 +47,7 @@ void launch_app_by_name(const char* display_name) {
 static void launch_app_as_admin(const char* display_name) {
     for (int i = 0; i < G_APP_COUNT; i++) {
         if (StrCmpIA(G_APPS[i].name, display_name) == 0) {
-            LaunchAppAsAdmin(G_APPS[i].path);
+            Platform_LaunchAppAsAdmin(G_APPS[i].path);
             return;
         }
     }
@@ -114,7 +114,7 @@ static void applauncher_copy_callback(const char* selection,int true_index,int t
         break;
       }
     }
-    CopyToClipboard(text);
+    Platform_CopyToClipboard(text);
 }
 
 void TriggerAppLauncher(void) {
@@ -127,7 +127,7 @@ void TriggerAppLauncher(void) {
         initial_items[i] = G_APPS[i].name;
     }
 
-    PromptUser(initial_items,"🚀 Launcher", G_APP_COUNT, 920, 650,32,
+    Platform_PromptUser(initial_items,"🚀 Launcher", G_APP_COUNT, 920, 650,32,
                         applauncher_refresh_callback,
                         applauncher_enter_callback,   
                         applauncher_ctrlenter_callback,
