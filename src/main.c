@@ -69,8 +69,6 @@ void OInNotificationRecieved(const char* text) {
 int main() {
 #if defined(_WIN32)
   g_main_thread_id = GetCurrentThreadId();
-#endif
-#if defined(_WIN32)
   {
     char buf[MAX_PATH];
     DWORD len = GetModuleFileNameA(NULL, buf, MAX_PATH);
