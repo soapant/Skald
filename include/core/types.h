@@ -7,7 +7,6 @@
 #if !defined(_WIN32)
 #include <time.h>
 #endif
-
 #define MAX_VISIBLE_ITEMS 100
 
 #define MAX_SEQUENCE_LEN 8
@@ -147,6 +146,17 @@ typedef void (*HelpCallback)();
 typedef void (*KeyCallback)(int vkCode);
 
 extern KeyCallback g_key_callback;
+extern char* Platform_PromptUser(const char* window_list[], const char* window_title, int count, int height, int width, int item_height,
+    RefreshCallback refresh_callback, 
+    EnterCallback enter_callback,
+    CtrlEnterCallback ctrl_enter_callback,
+    TabCallback tab_callback,
+    CopyCallback copy_callback,
+    RenderCallback render_callback,
+    EditCallback edit_callback,
+    FilterCallback filter_callback,
+    HelpCallback help_callback);
+extern char* Platform_SimplePromptUser(const char* prompt, const char* window_title,int height, int width, int item_height);
 
 #define ImportantPromptUser(window_list,window_title,count,height,width,item_height,refresh_callback,enter_callback,edit_callback,help_callback) Platform_PromptUser(window_list,window_title,count,height,width,item_height,refresh_callback,enter_callback,NULL,NULL,NULL,NULL,edit_callback,NULL,help_callback)
 
