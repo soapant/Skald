@@ -1326,14 +1326,26 @@ NOBDEF bool nob_cmd_run_opt(Nob_Cmd *cmd, Nob_Cmd_Opt opt)
 
     if (opt.async && max_procs > 0) {
         while (opt.async->count >= max_procs) {
+            bool waited = false;
             for (size_t i = 0; i < opt.async->count; ++i) {
                 int ret = nob__proc_wait_async(opt.async->items[i], 1);
-                if (ret < 0) nob_return_defer(false);
+                if (ret < 0) {
+                    // The process failed. Its handle is already closed by
+                    // nob__proc_wait_async(), so just drop it from the pool
+                    // and keep going instead of aborting the whole run.
+                    // The caller collects per-command errors from stderr files.
+                    nob_da_remove_unordered(opt.async, i);
+                    result = false;
+                    waited = true;
+                    break;
+                }
                 if (ret) {
                     nob_da_remove_unordered(opt.async, i);
+                    waited = true;
                     break;
                 }
             }
+            if (!waited) continue;
         }
     }
 

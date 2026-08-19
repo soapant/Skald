@@ -7,17 +7,12 @@
 #endif
 #endif
 
-#include <stdio.h>
 #include <stdbool.h>
-#include <stdlib.h>
-#include <string.h>
 #include <assert.h>
 
 #include "core/types.h"
 #include "core/hashmap.h"
-#include "config.h"
 #include "core/modal.h"
-#include "platform/platform.h"
 
 // ============================================================
 // SHARED GLOBALS (defined in main.c or core .c files)
@@ -74,6 +69,8 @@ extern const char* g_title;
 #if defined(_WIN32)
 extern HFONT g_hNumFont;
 extern HFONT g_hMainFont;
+extern HANDLE g_key_event;
+extern HHOOK hKeyboardHook;
 #endif
 extern HashMap* feature_history;
 extern HashMap* g_item_index_map;
@@ -83,17 +80,6 @@ extern int g_timeout;
 extern bool g_waiting_for_key;
 extern int g_key_pressed;
 extern WinTimer g_timer;
-#if defined(_WIN32)
-extern HANDLE g_key_event;
-#endif
-
-#if defined(_WIN32)
-extern HHOOK hKeyboardHook;
-#endif
-
-// ============================================================
-// GLOBAL DATA DEFINED IN HEADERS ORIGINALLY
-// ============================================================
 
 extern KeyCallback g_key_callback;
 extern FileEntry G_FILE_ENTRIES[];

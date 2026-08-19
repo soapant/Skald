@@ -436,7 +436,6 @@ int convert_string_to_int(const char *str) {
 
 void HandleCommandExecution(char* string) {
     int num = convert_string_to_int(string);
-    printf("SET SELECTON TO %i \n",num);
     UI_SetSelection(hListBox,num - 1,g_SelectedIndex);
     UI_LB_SetCaretIndex(hListBox, num, TRUE);
 }
