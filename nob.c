@@ -8,8 +8,13 @@
 #define CONSOLE_OUTPUT BUILD_FOLDER "/main.exe"
 #define ACTUAL_OUTPUT BUILD_FOLDER "/myprogram.exe"
 
-#define CC_FLAGS "-std=gnu17", "-DCOBJMACROS", "-I", "include", "-MMD", "-MP", "-w"
-#define LINK_FLAGS "-lcomctl32", "-lgdiplus", "-lgdi32", "-lshlwapi", "-lshell32", "-lwinmm", "-lole32", "-luuid", "-lmsimg32", "-ldbghelp", "-ldwmapi", "-lpsapi", "-lcrypt32", "-lcomdlg32", "-ladvapi32", "-ldxva2","-user32","-lwinhttp"
+#if defined(_WIN32)
+     #define CC_FLAGS "-std=gnu17", "-DCOBJMACROS", "-I", "include", "-MMD", "-MP", "-w"
+     #define LINK_FLAGS "-lcomctl32", "-lgdiplus", "-lgdi32", "-lshlwapi", "-lshell32", "-lwinmm", "-lole32", "-luuid", "-lmsimg32", "-ldbghelp", "-ldwmapi", "-lpsapi", "-lcrypt32", "-lcomdlg32", "-ladvapi32", "-ldxva2","-user32","-lwinhttp"
+#else
+     #define CC_FLAGS "-I", "include","-w"
+     #define LINK_FLAGS "-lX11"
+#endif
 
 static Nob_File_Paths sources = {0};
 
@@ -147,6 +152,7 @@ static bool compile_all(bool* any_compiled) {
     *any_compiled = to_build.count > 0;
     if (to_build.count == 0) return true;
 
+    bool ok = true;
     Nob_Procs procs = {0};
     size_t max_procs = (size_t)nob_nprocs() + 1;
 
@@ -157,22 +163,19 @@ static bool compile_all(bool* any_compiled) {
         nob_cmd_append(&cmd, CC_FLAGS, "-c", to_build.items[i], "-o", obj_path(to_build.items[i]));
         if (!nob_cmd_run(&cmd, .async = &procs, .max_procs = max_procs,
                          .stderr_path = err_paths.items[i])) {
-            nob_log(NOB_ERROR, "Failed to start compiler for %s", to_build.items[i]);
-            return false;
+            // Either the compiler could not be started (nob.h already logged
+            // the reason) or another compiler in the pool already failed.
+            // Either way: keep building the rest and report every error below.
+            ok = false;
         }
     }
 
-    nob_procs_wait_and_reset(&procs);
-    return print_failures();
+    if (!nob_procs_wait_and_reset(&procs)) ok = false;
+    return print_failures() && ok;
 }
 
 int main(int argc, char** argv) {
-    NOB_GO_REBUILD_URSELF(argc, argv);
-
-#if !defined(_WIN32)
-    nob_log(NOB_ERROR, "POSIX platform not implemented yet: implement src/platform/x11, then remove this check.");
-    return 1;
-#endif
+    NOB_GO_REBUILD_URSELF_PLUS(argc, argv, "nob.h");
 
     bool windowed = false;
     bool do_run = false;
