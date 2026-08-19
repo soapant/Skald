@@ -1,15 +1,17 @@
 #include "common.h"
 #include "features/focus_switcher.h"
 #include "core/common_ui.h"
+#if defined(_WIN32)
 #include <psapi.h>
+#endif
 
-void FocusWindow(HWND hwnd) {
-
-    if (!hwnd || !IsWindow(hwnd)) return;
+void FocusWindow(WindowHandle hwnd) {
+#if defined(_WIN32)
+    if (WH_TO_HWND(hwnd) == NULL || !IsWindow(WH_TO_HWND(hwnd))) return;
     
     HWND hForegroundWnd = GetForegroundWindow();
     DWORD foregroundThreadID = GetWindowThreadProcessId(hForegroundWnd, NULL);
-    DWORD targetThreadID = GetWindowThreadProcessId(hwnd, NULL);
+    DWORD targetThreadID = GetWindowThreadProcessId(WH_TO_HWND(hwnd), NULL);
     DWORD currentThreadID = GetCurrentThreadId();
 
     if (foregroundThreadID != currentThreadID) {
@@ -19,16 +21,16 @@ void FocusWindow(HWND hwnd) {
         AttachThreadInput(currentThreadID, targetThreadID, TRUE);
     }
 
-    if (IsIconic(hwnd)) {
-        ShowWindow(hwnd, SW_RESTORE);
+    if (IsIconic(WH_TO_HWND(hwnd))) {
+        ShowWindow(WH_TO_HWND(hwnd), SW_RESTORE);
     } else {
-        ShowWindow(hwnd, SW_SHOW);
+        ShowWindow(WH_TO_HWND(hwnd), SW_SHOW);
     }
 
-    SetForegroundWindow(hwnd);
-    SetFocus(hwnd);
-    SetActiveWindow(hwnd);
-    BringWindowToTop(hwnd);
+    SetForegroundWindow(WH_TO_HWND(hwnd));
+    SetFocus(WH_TO_HWND(hwnd));
+    SetActiveWindow(WH_TO_HWND(hwnd));
+    BringWindowToTop(WH_TO_HWND(hwnd));
 
     if (foregroundThreadID != currentThreadID) {
         AttachThreadInput(currentThreadID, foregroundThreadID, FALSE);
@@ -38,67 +40,89 @@ void FocusWindow(HWND hwnd) {
     }
 
     printf("[FOCUS] Window focused!\n");
+#else
+    (void)hwnd;
+#endif
 }
 
+#if defined(_WIN32)
 static BOOL CALLBACK FindWindowByPartialTitleProc(HWND hwnd, LPARAM lParam) {
     FindWindowSomething* data = (FindWindowSomething*)lParam;
     char window_title[256];
-    UI_GetCurrentText(hwnd, window_title);
+    GetWindowTextA(hwnd, window_title, sizeof(window_title));
     
     if (IsWindowVisible(hwnd) && StrStrIA(window_title, data->search_title) != NULL) {
-        data->result = hwnd;
+        data->result = WH_FROM_HWND(hwnd);
         return FALSE;
     }
     return TRUE;
 }
+#endif
 
-HWND FindWindowByPartialTitle(const char* title) {
+WindowHandle FindWindowByPartialTitle(const char* title) {
+#if defined(_WIN32)
     FindWindowSomething data;
     
     data.search_title = title;
     
-    data.result = NULL;
+    data.result = WH_NULL;
     
     EnumWindows(FindWindowByPartialTitleProc, (LPARAM)&data);
     
     return data.result;
+#else
+    (void)title;
+    return WH_NULL;
+#endif
 }
 
 
 
 
-static HWND FindAnyWindow(const char* titles[], int count) {
+#if defined(_WIN32)
+static WindowHandle FindAnyWindow(const char* titles[], int count) {
     for (int i = 0; i < count; i++) {
         printf("[FOCUS-DEBUG] Looking for: \"%s\"\n", titles[i]);
         
         
-        HWND hwnd = FindWindowA(NULL, titles[i]);
-        if (hwnd != NULL && IsWindow(hwnd) && IsWindowVisible(hwnd)) {
-            printf("[FOCUS-DEBUG] FOUND (exact): \"%s\" (HWND: %p)\n", titles[i], (void*)hwnd);
+        WindowHandle hwnd = WH_FROM_HWND(FindWindowA(NULL, titles[i]));
+        if (WH_TO_HWND(hwnd) != NULL && IsWindow(WH_TO_HWND(hwnd)) && IsWindowVisible(WH_TO_HWND(hwnd))) {
+            printf("[FOCUS-DEBUG] FOUND (exact): \"%s\" (HWND: %p)\n", titles[i], (void*)WH_TO_HWND(hwnd));
             return hwnd;
         }
         
         
         hwnd = FindWindowByPartialTitle(titles[i]);
-        if (hwnd != NULL && IsWindow(hwnd) && IsWindowVisible(hwnd)) {
+        if (WH_TO_HWND(hwnd) != NULL && IsWindow(WH_TO_HWND(hwnd)) && IsWindowVisible(WH_TO_HWND(hwnd))) {
             char window_title[256];
-            UI_GetCurrentText(hwnd, window_title);
-            printf("[FOCUS-DEBUG] FOUND (partial): \"%s\" (HWND: %p)\n", window_title, (void*)hwnd);
+            GetWindowTextA(WH_TO_HWND(hwnd), window_title, sizeof(window_title));
+            printf("[FOCUS-DEBUG] FOUND (partial): \"%s\" (HWND: %p)\n", window_title, (void*)WH_TO_HWND(hwnd));
             return hwnd;
         }
         
         printf("[FOCUS-DEBUG] NOT FOUND: \"%s\"\n", titles[i]);
     }
     printf("[FOCUS-DEBUG] No matching windows found.\n");
-    return NULL;
+    return WH_NULL;
 }
+#else
+static WindowHandle FindAnyWindow(const char* titles[], int count) {
+    (void)titles;
+    (void)count;
+    return WH_NULL;
+}
+#endif
 
 
 
 
 static bool IsBlacklisted(const char* title, const char* blacklist[], int count) {
     for (int i = 0; i < count; i++) {
+#if defined(_WIN32)
         if (StrStrIA(title, blacklist[i]) != NULL) {
+#else
+        if (strstr(title, blacklist[i]) != NULL) {
+#endif
             return true;
         }
     }
@@ -116,8 +140,8 @@ bool HandleFocusSwitcher(int vk_code, int modifiers, const char* current_title) 
                 return false;
             }
             else { 
-                  HWND target = FindAnyWindow(binding->window_titles, binding->window_count);
-                  if (target) {
+                  WindowHandle target = FindAnyWindow(binding->window_titles, binding->window_count);
+                  if (WH_TO_HWND(target) != NULL) {
                       FocusWindow(target);
                       return true;
                   } else {

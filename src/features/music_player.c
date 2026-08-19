@@ -4,7 +4,7 @@
 #include "features/file_search.h"
 #include "features/app_launcher.h"
 
-static void music_refresh_callback(const char* filter, HWND hListBox) {
+static void music_refresh_callback(const char* filter, WindowHandle hListBox) {
     ClearFileList();
     GetFilesRecursive(MusicPath, false);
     
@@ -18,18 +18,21 @@ static void music_refresh_callback(const char* filter, HWND hListBox) {
 }
 
 static void music_enter_callback(const char* selection) {
-    HWND playerHwnd = FindWindow(NULL, "Music Player");
     char* result = SearchFileInDirectory(MusicPath, selection);
     
     if (!result) return;
     
+#if defined(_WIN32)
+    HWND playerHwnd = FindWindow(NULL, "Music Player");
     if (playerHwnd) {
         COPYDATASTRUCT cds;
         cds.dwData = 0;
         cds.cbData = (DWORD)(strlen(result) + 1);
         cds.lpData = (PVOID)result;
         SendMessage(playerHwnd, WM_COPYDATA, (WPARAM)NULL, (LPARAM)&cds);
-    } else {
+    } else
+#endif
+    {
           char quoted_result[MAX_PATH + 3] = {0};
           snprintf(quoted_result, sizeof(quoted_result), "\"%s\"", result);
           launch_exe_with_args(MusicPlayerPath, quoted_result);
@@ -42,15 +45,21 @@ bool HandleMusicPlayer(int vk_code, int modifiers, const char* current_title) {
     for (int i = 0; i < MUSIC_PLAYER_COUNT; i++) {
         const MusicPlayerBinding* binding = &G_MUSIC_PLAYERS[i];
         if (binding->vk_code == vk_code && binding->modifiers == modifiers) {
+#if defined(_WIN32)
             HWND playerHwnd = FindWindow(NULL, "Music Player");
+#endif
             
             if (binding->code != 69) {
+#if defined(_WIN32)
                 if (playerHwnd) {
                     PostMessage(playerHwnd, WM_USER + 1, binding->code, 0);
                     return true;
                 } else {
                     return false;
                 }
+#else
+                return false;
+#endif
             } else {
                 ClearFileList();
                 GetFilesRecursive(MusicPath,false);

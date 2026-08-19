@@ -5,6 +5,10 @@
 #include "features/focus_switcher.h"
 #include "helpers.h"
 #include "core/common_ui.h"
+#if !defined(_WIN32)
+#include <pthread.h>
+#include <unistd.h>
+#endif
 
 static char** g_cached_reminder_commands = NULL;
 static int g_cached_reminder_count = 0;
@@ -66,8 +70,8 @@ static void RebuildReminderCache(void) {
     
     free(lines);
 }
-static void reminder_refresh_callback(const char* filter, HWND hListBox) {
-    if (!hListBox) return;
+static void reminder_refresh_callback(const char* filter, WindowHandle hListBox) {
+    if (WH_TO_HWND(hListBox) == NULL) return;
     
     if (!g_cached_reminder_commands) {
         RebuildReminderCache();
@@ -88,8 +92,8 @@ ConditionParamDef custom_conditions[] = {
 
 void HandleFocusWindowFlag(const char* parameter) {
     printf("TRYING TO FOCUS WINDOW OF TITLE %s\n", parameter);
-    HWND target_hwnd = FindWindowByPartialTitle(parameter);
-    if (target_hwnd) {
+    WindowHandle target_hwnd = FindWindowByPartialTitle(parameter);
+    if (WH_TO_HWND(target_hwnd) != NULL) {
         printf("FOUND WINDWO TRYING TO FOCUS");
         FocusWindow(target_hwnd);
     } else {
@@ -103,6 +107,7 @@ void DisplayText(const char* parameter){
     
 }
 
+#if defined(_WIN32)
 static DWORD WINAPI SimpleTimerThread(LPVOID lpParam) {
     int remaining = (int)(INT_PTR)lpParam;
     
@@ -117,15 +122,37 @@ static DWORD WINAPI SimpleTimerThread(LPVOID lpParam) {
     terminate_process_by_name("sowon.exe");
     return 0;
 }
+#else
+static void* SimpleTimerThread(void* lpParam) {
+    int remaining = (int)(intptr_t)lpParam;
+    
+    while (remaining > 0) {
+        sleep(1); 
+        remaining--;
+    }
+    
+    if (g_async_action != NULL) {
+        g_async_action(g_action_param);
+    }
+    terminate_process_by_name("sowon.exe");
+    return NULL;
+}
+#endif
 
 static void StartSimpleBackgroundTimer(const char* parameter) {
     int total_seconds = ParseTimeToSeconds(parameter);
     if (total_seconds <= 0) return;
 
+#if defined(_WIN32)
     HANDLE hThread = CreateThread(NULL, 0, SimpleTimerThread, (LPVOID)(INT_PTR)total_seconds, 0, NULL);
     if (hThread != NULL) {
         CloseHandle(hThread);
     }
+#else
+    pthread_t thread;
+    pthread_create(&thread, NULL, SimpleTimerThread, (void*)(intptr_t)total_seconds);
+    pthread_detach(thread);
+#endif
 }
 
 void RunBackgroundTimer(const char* parameter) {
@@ -264,7 +291,11 @@ static void StartReminder(const char* selection) {
     if (condition_func != NULL) {
         printf("[REMINDER] Stage 1: Waiting for condition...\n");
         while (!condition_func(condition_param)) {
+#if defined(_WIN32)
             Sleep(1000);
+#else
+            sleep(1);
+#endif
             if (max_timeout > 0) {
                 elapsed_seconds++;
                 printf("[REMINDER] Condition wait: %d/%d seconds\n", elapsed_seconds, max_timeout);

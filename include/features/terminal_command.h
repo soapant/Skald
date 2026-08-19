@@ -1,7 +1,6 @@
 #ifndef TERMINAL_COMMAND_H
 #define TERMINAL_COMMAND_H
 
-#include <windows.h>
 #include <stdbool.h>
 #include "core/types.h"
 

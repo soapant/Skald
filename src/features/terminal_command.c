@@ -2,7 +2,9 @@
 #include "features/terminal_command.h"
 #include "helpers.h"
 #include "core/common_ui.h"
+#if defined(_WIN32)
 #include <shellapi.h>
+#endif
 
 static char** g_cached_commands = NULL;
 static int g_cached_command_count = 0;
@@ -43,8 +45,8 @@ static void RebuildCommandCache(void) {
     free(lines);
 }
 
-static void terminal_refresh_callback(const char* filter, HWND hListBox) {
-    if (!hListBox) return;
+static void terminal_refresh_callback(const char* filter, WindowHandle hListBox) {
+    if (WH_TO_HWND(hListBox) == NULL) return;
     
     if (!g_cached_commands) {
         RebuildCommandCache();
@@ -74,6 +76,7 @@ static void RunTerminalCommand(const char* Command, bool save_to_history) {
     }
     
     const char* bash = NULL;
+#if defined(_WIN32)
     if (GetFileAttributesA("C:\\Program Files\\Git\\bin\\bash.exe") != INVALID_FILE_ATTRIBUTES) {
         bash = "C:\\Program Files\\Git\\bin\\bash.exe";
     } else if (GetFileAttributesA("C:\\Program Files (x86)\\Git\\bin\\bash.exe") != INVALID_FILE_ATTRIBUTES) {
@@ -81,9 +84,16 @@ static void RunTerminalCommand(const char* Command, bool save_to_history) {
     } else {
         bash = "bash";
     }
+#else
+    bash = "bash";
+#endif
     
     char temp_file[MAX_PATH];
+#if defined(_WIN32)
     GetTempPathA(MAX_PATH, temp_file);
+#else
+    snprintf(temp_file, sizeof(temp_file), "/tmp/");
+#endif
     strcat(temp_file, "temp_cmd.sh");
     
     FILE* f = fopen(temp_file, "w");
@@ -102,7 +112,13 @@ static void RunTerminalCommand(const char* Command, bool save_to_history) {
     char args[2048];
     snprintf(args, sizeof(args), "-e \"%s\" \"%s\"", bash, temp_file);
     
+#if defined(_WIN32)
     ShellExecuteA(NULL, "open", terminal_exe, args, NULL, SW_SHOWNORMAL);
+#else
+    char cmd_open[512];
+    snprintf(cmd_open, sizeof(cmd_open), "xdg-open \"%s\"", temp_file);
+    system(cmd_open);
+#endif
     
     printf("[TERMINAL] Running: %s\n", clean_cmd);
 }

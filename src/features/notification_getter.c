@@ -1,3 +1,4 @@
+#if defined(_WIN32)
 #include "features/notification_getter.h"
 #include <wchar.h>
 #include <stdio.h>
@@ -54,3 +55,4 @@ void StartNtfyDaemon(const wchar_t* topic, NtfyCallback callback) {
     
     CreateThread(NULL, 0, NtfyListenerThread, config, 0, NULL);
 }
+#endif

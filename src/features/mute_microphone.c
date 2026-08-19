@@ -2,12 +2,15 @@
 #include "features/mute_microphone.h"
 #include "core/common_ui.h"
 
+#if defined(_WIN32)
 EXTERN_C const GUID CLSID_MMDeviceEnumerator;
 EXTERN_C const GUID IID_IMMDeviceEnumerator;
 EXTERN_C const GUID IID_IAudioEndpointVolume;
+#endif
 
 bool mic_muted = false;
 
+#if defined(_WIN32)
 HRESULT SetDeviceMute(EDataFlow flow, BOOL mute) {
     HRESULT hr;
     IMMDeviceEnumerator *pEnumerator = NULL;
@@ -53,9 +56,11 @@ Cleanup:
     CoUninitialize();
     return hr;
 }
+#endif
 
 void TriggerMuteState(void) {
     if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
+#if defined(_WIN32)
     if (!mic_muted){
         if (SUCCEEDED(SetDeviceMute(eCapture, TRUE))) {
           mic_muted = true;
@@ -71,4 +76,5 @@ void TriggerMuteState(void) {
             DisplayMessageText = COLOR_TEXT;
         }
     }
+#endif
 }

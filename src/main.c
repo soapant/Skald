@@ -17,14 +17,14 @@
 #include "features/app_launcher.h"
 #include "features/notification_getter.h"
 
-HWND hGlobalTrayWnd = NULL;
-HWND hPopupWnd = NULL;
-HWND hEditControl = NULL;
-HWND hListBox = NULL;
-HWND hDisplayMessage = NULL;
-HWND hSettings = NULL;
-HWND g_hEditPopup = NULL;
-HWND g_hSearchPopup = NULL;
+WindowHandle hGlobalTrayWnd = WH_NULL;
+WindowHandle hPopupWnd = WH_NULL;
+WindowHandle hEditControl = WH_NULL;
+WindowHandle hListBox = WH_NULL;
+WindowHandle hDisplayMessage = WH_NULL;
+WindowHandle hSettings = WH_NULL;
+WindowHandle g_hEditPopup = WH_NULL;
+WindowHandle g_hSearchPopup = WH_NULL;
 EditPopupData* g_EditData = NULL;
 char output_buffer[256];
 bool selection_complete = false;
@@ -43,14 +43,16 @@ RenderCallback g_render_callback = NULL;
 AliasCallback g_alias_callback = NULL;
 EditCallback g_edit_callback = NULL;
 FilterCallback g_filter_callback = NULL;
-HWND g_ActiveEditControl = NULL;
+WindowHandle g_ActiveEditControl = WH_NULL;
 char* g_current_feature = NULL;
 int g_timeout = 1;
-DWORD g_main_thread_id = 0;
+uint32_t g_main_thread_id = 0;
 bool g_waiting_for_key = false;
 int g_key_pressed = 0;
 WinTimer g_timer;
+#if defined(_WIN32)
 HANDLE g_key_event = NULL;
+#endif
 const char** g_initial_items = NULL;
 int g_initial_count = 0;
 int g_SelectedIndex = 0;
@@ -66,8 +68,10 @@ int g_view_offset = 0;
 const char* g_title = NULL;
 int img_region_step = 0;
 long img_x1 = 0, img_y1 = 0;
+#if defined(_WIN32)
 HFONT g_hNumFont = NULL;
 HFONT g_hMainFont = NULL;
+#endif
 HashMap* feature_history = NULL;
 HashMap* g_item_index_map = NULL;
 
@@ -76,7 +80,10 @@ void OInNotificationRecieved(const char* text) {
 }
 
 int main() {
+#if defined(_WIN32)
   g_main_thread_id = GetCurrentThreadId();
+#endif
+#if defined(_WIN32)
   {
     char buf[MAX_PATH];
     DWORD len = GetModuleFileNameA(NULL, buf, MAX_PATH);
@@ -97,11 +104,14 @@ int main() {
       }
     }
   }
+#endif
 
   Platform_StartUniversalTimer();
   Platform_InitializeTrayIcon();
   initialize_app_cache();
+#if defined(_WIN32)
   StartNtfyDaemon(HttpUrlForNotis,OInNotificationRecieved);
+#endif
   feature_history = HashMap_Create(32);
   InitFeatureDataSystem();
   Platform_InitUI();
@@ -117,11 +127,13 @@ int main() {
 
     if (!Platform_FileInit(path, G_FILE_ENTRIES[i].mf, 0)) {
       printf("[SYSTEM] Failed to open %s. Creating new.\n", G_FILE_ENTRIES[i].name);
+#if defined(_WIN32)
       HANDLE hFile = CreateFileA(path, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
       if (hFile != INVALID_HANDLE_VALUE) {
         CloseHandle(hFile);
         Platform_FileInit(path, G_FILE_ENTRIES[i].mf, 0); 
       }
+#endif
     }
   }
 
@@ -137,6 +149,7 @@ int main() {
       G_FILE_ENTRIES[i].mf = NULL;
     }
   }
+#if defined(_WIN32)
   if (g_hNumFont) {
     DeleteObject(g_hNumFont);
     g_hNumFont = NULL;
@@ -145,6 +158,7 @@ int main() {
     DeleteObject(g_hMainFont);
     g_hMainFont = NULL;
   }
+#endif
   CleanupFeatureDataSystem();
 
   return 0;

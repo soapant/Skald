@@ -2,6 +2,7 @@
 #include "features/calc.h"
 #include "helpers.h"
 #include "core/common_ui.h"
+#include <ctype.h>
 
 static double g_last_a = 0.0;
 static double g_last_b = 0.0;
@@ -164,7 +165,11 @@ void live_evaluate(const char* input, char* out_result, size_t max_len) {
     
     
     
+#if defined(_WIN32)
     char* in_keyword = StrStrIA(clean, " in ");
+#else
+    char* in_keyword = strstr(clean, " in ");
+#endif
     if (in_keyword) {
         char target_unit[64] = {0};
         strncpy(target_unit, in_keyword + 4, sizeof(target_unit) - 1);
@@ -176,8 +181,13 @@ void live_evaluate(const char* input, char* out_result, size_t max_len) {
         char source_unit[64] = {0};
         if (sscanf(clean, "%lf %63s", &val, source_unit) == 2) {
             for (size_t i = 0; i < CONVERSION_COUNT; i++) {
+#if defined(_WIN32)
                 if (StrCmpIA(source_unit, G_CONVERSIONS[i].from_unit) == 0 &&
                     StrCmpIA(target_unit, G_CONVERSIONS[i].to_unit) == 0) {
+#else
+                if (strcasecmp(source_unit, G_CONVERSIONS[i].from_unit) == 0 &&
+                    strcasecmp(target_unit, G_CONVERSIONS[i].to_unit) == 0) {
+#endif
                     snprintf(out_result, max_len, "= %.4g %s", val * G_CONVERSIONS[i].factor, G_CONVERSIONS[i].to_unit);
                     g_has_last_op = false;
                     return;
@@ -378,8 +388,8 @@ void get_flip_expression(char* out, size_t max_len) {
 
 
 
-static void calculator_refresh_callback(const char* filter, HWND hListBox) {
-    if (!hListBox) return;
+static void calculator_refresh_callback(const char* filter, WindowHandle hListBox) {
+    if (WH_TO_HWND(hListBox) == NULL) return;
     
     char result_buffer[256] = {0};
     if (filter && strlen(filter) > 0) {
@@ -402,7 +412,7 @@ static void calculator_enter_callback(const char* selection) {
 
 
 static void calculator_tab_callback(void) {
-    if (!hEditControl) return;
+    if (WH_TO_HWND(hEditControl) == NULL) return;
     
     
     char current_input[256] = {0};
@@ -443,7 +453,7 @@ static void calculator_ctrlenter_callback(const char* selection) {
 
 
 void TriggerCalculator(void) {
-    if (hPopupWnd != NULL && IsWindow(hPopupWnd)) return;
+    if (IsPopupActive(hPopupWnd)) return;
 
     const char* default_msg[1] = { "Enter operation (e.g. 5 x 5 or 10 hours in minutes)" };
 

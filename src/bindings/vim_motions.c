@@ -11,9 +11,9 @@ void HandleEnterNormal(void) {
 }
 
 void HandleEnterInsertOut(void) { 
-    if (!g_ActiveEditControl || !IsWindow(g_ActiveEditControl)) return;
+    if (!IsWindowValid(g_ActiveEditControl)) return;
     
-    DWORD start = 0, end = 0;
+    uint32_t start = 0, end = 0;
     UI_GetCurrentCursorPosition(&start, &end);
     
     int pos = (int)start + 1;
@@ -25,9 +25,9 @@ void HandleEnterInsertOut(void) {
 }
 
 void HandleEnterInsertIn(void) { 
-    if (!g_ActiveEditControl || !IsWindow(g_ActiveEditControl)) return;
+    if (!IsWindowValid(g_ActiveEditControl)) return;
     
-    DWORD start = 0, end = 0;
+    uint32_t start = 0, end = 0;
     UI_GetCurrentCursorPosition(&start, &end);
     
     int pos = (int)start;
@@ -51,7 +51,7 @@ void HandleMoveLeft(void) {
 }
 
 void HandleEnter(void) {
-    if (hListBox != NULL && UI_IsListBoxSelected()) {
+    if (WH_TO_HWND(hListBox) != NULL && UI_IsListBoxSelected()) {
         UI_Edit_KeyDown(g_ActiveEditControl, VK_RETURN);
         UI_Edit_KeyUp(g_ActiveEditControl, VK_RETURN);
     } else {
@@ -64,7 +64,7 @@ void HandleMoveUp(void) {
     UI_NavigateUp();
 }
 void HandleMoveRight(void) {
-    if (g_ActiveEditControl) {
+    if (WH_TO_HWND(g_ActiveEditControl) != NULL) {
         UI_Edit_KeyDown(g_ActiveEditControl, VK_RIGHT);
         UI_Edit_KeyUp(g_ActiveEditControl, VK_RIGHT);
     }
@@ -75,7 +75,7 @@ void HandleMoveDown(void) {
 }
 
 void HandlePersistentDelete(void) {
-    if (!UI_IsListBoxSelected() || !g_ActiveEditControl) return;
+    if (!UI_IsListBoxSelected() || WH_TO_HWND(g_ActiveEditControl) == NULL) return;
     if (g_ctrl_enter_callback != NULL) {
         g_ctrl_enter_callback(g_populated_cache[g_SelectedIndex]);
     }
@@ -87,21 +87,21 @@ void HandleDeleteCharInsert(void) {
 }
 
 void HandleDeleteCharNormal(void) {
-    if (g_ActiveEditControl) {
+    if (WH_TO_HWND(g_ActiveEditControl) != NULL) {
         DeleteCharUnderCursor();
         printf("[VIM] Deleted character under cursor\n");
     }
 }
 
 void HandleDeleteLine(void) {
-    if (g_ActiveEditControl) {
+    if (WH_TO_HWND(g_ActiveEditControl) != NULL) {
         UI_SetText(g_ActiveEditControl,"");
         printf("[VIM] Deleted Entire Search Box \n");
     }
 }
 
 void HandleDeleteLineInsert(void) {
-    if (g_ActiveEditControl) {
+    if (WH_TO_HWND(g_ActiveEditControl) != NULL) {
         UI_SetText(g_ActiveEditControl,"");
         SetMode(MODE_INSERT);
         printf("[VIM] Deleted Entire Search Box & Switched to Insert\n");
@@ -131,7 +131,7 @@ void HandleEnterInsertOutEnd(void) {
   HandleEnterInsertOut();
 }
 void HandleExitWindow(void) {
-  if (g_hEditPopup) {
+  if (WH_TO_HWND(g_hEditPopup) != NULL) {
     UI_Edit_KeyDown(g_ActiveEditControl, VK_ESCAPE);
     UI_Edit_KeyUp(g_ActiveEditControl, VK_ESCAPE);
   } else {
@@ -140,7 +140,7 @@ void HandleExitWindow(void) {
 }
 
 void HandleYankLine(void) {
-    if (g_ActiveEditControl) {
+    if (WH_TO_HWND(g_ActiveEditControl) != NULL) {
         char textBuffer[256] = {0};
         char buffer[256];
         UI_GetCurrentText(g_ActiveEditControl,textBuffer);
@@ -174,8 +174,8 @@ void HandleMoveWordForward(void) {
       
     UI_GetCurrentText(g_ActiveEditControl,text);
     
-    DWORD start = 0;
-    DWORD end = 0;
+    uint32_t start = 0;
+    uint32_t end = 0;
 
     UI_GetCurrentCursorPosition(&start, &end);
     int len = strlen(text);
@@ -196,8 +196,8 @@ void HandleMoveWordBackward(void) {
     char text[512];
     UI_GetCurrentText(g_ActiveEditControl, text);
     
-    DWORD start = 0;
-    DWORD end = 0;
+    uint32_t start = 0;
+    uint32_t end = 0;
     UI_GetCurrentCursorPosition(&start, &end);
     
     int pos = (int)start;
@@ -307,7 +307,7 @@ void HandleShowFullText(void) {
 void SearchTextForward(int key) {
   char text[512];
   UI_GetCurrentText(g_ActiveEditControl, text);
-  DWORD start_pos, end_pos;
+  uint32_t start_pos, end_pos;
   UI_Edit_GetSel(g_ActiveEditControl, &start_pos, &end_pos);
   int cursor = (int)start_pos;
 
@@ -322,7 +322,7 @@ void SearchTextForward(int key) {
 void SearchTextBackward(int key) {
   char text[512];
   UI_GetCurrentText(g_ActiveEditControl, text);
-  DWORD start_pos, end_pos;
+  uint32_t start_pos, end_pos;
   UI_Edit_GetSel(g_ActiveEditControl, &start_pos, &end_pos);
   int cursor = (int)start_pos;
 
@@ -350,7 +350,7 @@ void HandleDeleteTillEnd(void) {
   if (!UI_IsListBoxSelected()) {
       char text[512];
       UI_GetCurrentText(g_ActiveEditControl, text);
-      DWORD start_pos, end_pos;
+      uint32_t start_pos, end_pos;
       UI_Edit_GetSel(g_ActiveEditControl, &start_pos, &end_pos);
       int cursor = (int)start_pos;
       for (int i = cursor; i < strlen(text); ++i){

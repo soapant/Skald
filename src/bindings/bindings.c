@@ -8,14 +8,18 @@
 #include "features/window_switcher.h"
 #include "features/app_launcher.h"
 #include "features/focus_switcher.h"
+#if defined(_WIN32)
 #include <shellapi.h>
+#endif
 #include <ctype.h>
 
 bool CheckVimMotion(int pressed_vk, int modifiers, MotionAction* out_action, const char** out_sequence, int* out_typed_count) {
     if (!g_vim_mode_enabled) return false;
-    if (!hPopupWnd || !IsWindow(hPopupWnd)) return false;
-    if (!g_ActiveEditControl || !IsWindow(g_ActiveEditControl)) return false;
-    if (GetFocus() != g_ActiveEditControl) return false;
+    if (!IsWindowValid(hPopupWnd)) return false;
+    if (!IsWindowValid(g_ActiveEditControl)) return false;
+#if defined(_WIN32)
+    if (GetFocus() != WH_TO_HWND(g_ActiveEditControl)) return false;
+#endif
     
     if (pressed_vk == VK_SHIFT || pressed_vk == VK_LSHIFT || pressed_vk == VK_RSHIFT ||
         pressed_vk == VK_CONTROL || pressed_vk == VK_LCONTROL || pressed_vk == VK_RCONTROL ||
@@ -24,11 +28,17 @@ bool CheckVimMotion(int pressed_vk, int modifiers, MotionAction* out_action, con
         return false;
     }
     
-    bool in_popup = (g_hEditPopup != NULL && IsWindow(g_hEditPopup));
+    bool in_popup = IsWindowValid(g_hEditPopup);
     
+#if defined(_WIN32)
     bool ctrl_held = (GetKeyState(VK_CONTROL) & 0x8000);
     bool shift_held = (GetKeyState(VK_SHIFT) & 0x8000);
     bool alt_held = (GetKeyState(VK_MENU) & 0x8000);
+#else
+    bool ctrl_held = false;
+    bool shift_held = false;
+    bool alt_held = false;
+#endif
     
     if (pressed_vk == VK_ESCAPE) {
         if (!IsNormalMode()) {
@@ -195,8 +205,12 @@ void ExecuteMotion(MotionAction action, const char* sequence, int typed_count) {
     }
 }
 bool CheckAppHotkeyBindings(int pressed_vk, int modifiers) {
-    HWND hActiveWnd = GetForegroundWindow();
-    if (!hActiveWnd) return false;
+#if defined(_WIN32)
+    WindowHandle hActiveWnd = WH_FROM_HWND(GetForegroundWindow());
+#else
+    WindowHandle hActiveWnd = WH_NULL;
+#endif
+    if (WH_TO_HWND(hActiveWnd) == NULL) return false;
 
     char activeExe[256] = {0};
     FetchExeNameOnDemand(hActiveWnd, activeExe, sizeof(activeExe) - 1);
@@ -205,11 +219,17 @@ bool CheckAppHotkeyBindings(int pressed_vk, int modifiers) {
         if (G_APP_HOTKEYS[i].vk_code == pressed_vk && 
             G_APP_HOTKEYS[i].modifiers == modifiers) {
             
+#if defined(_WIN32)
             if (strcmp(G_APP_HOTKEYS[i].exe_name, "*") == 0 ||
                 StrStrIA(activeExe, G_APP_HOTKEYS[i].exe_name) != NULL) {
+#else
+            if (strcmp(G_APP_HOTKEYS[i].exe_name, "*") == 0 ||
+                strstr(activeExe, G_APP_HOTKEYS[i].exe_name) != NULL) {
+#endif
                 
                 launch_app_by_name(G_APP_HOTKEYS[i].app_name);
-                HWND hwnd = FindWindowByPartialTitle(G_APP_HOTKEYS[i].app_name);
+                WindowHandle hwnd = FindWindowByPartialTitle(G_APP_HOTKEYS[i].app_name);
+                (void)hwnd;
                 return true;
             }
         }
@@ -217,6 +237,7 @@ bool CheckAppHotkeyBindings(int pressed_vk, int modifiers) {
     return false;
 }
 void RunMiscApplication(const char* path) {
+#if defined(_WIN32)
     if (path == NULL || strlen(path) == 0) return;
     
     
@@ -317,11 +338,18 @@ void RunMiscApplication(const char* path) {
     } else {
         printf("[MISC] Failed to open: %s (Error: %lu)\n", path, GetLastError());
     }
+#else
+    (void)path;
+#endif
 }
 
 bool CheckMiscHotkeyBindings(int pressed_vk, int modifiers) {
-    HWND hActiveWnd = GetForegroundWindow();
-    if (!hActiveWnd) return false;
+#if defined(_WIN32)
+    WindowHandle hActiveWnd = WH_FROM_HWND(GetForegroundWindow());
+#else
+    WindowHandle hActiveWnd = WH_NULL;
+#endif
+    if (WH_TO_HWND(hActiveWnd) == NULL) return false;
 
     char activeExe[256] = {0};
     FetchExeNameOnDemand(hActiveWnd, activeExe, sizeof(activeExe) - 1);
@@ -330,8 +358,13 @@ bool CheckMiscHotkeyBindings(int pressed_vk, int modifiers) {
         if (G_MISC_HOTKEYS[i].vk_code == pressed_vk && 
             G_MISC_HOTKEYS[i].modifiers == modifiers) {
             
+#if defined(_WIN32)
             if (strcmp(G_MISC_HOTKEYS[i].exe_name, "*") == 0 ||
                 StrStrIA(activeExe, G_MISC_HOTKEYS[i].exe_name) != NULL) {
+#else
+            if (strcmp(G_MISC_HOTKEYS[i].exe_name, "*") == 0 ||
+                strstr(activeExe, G_MISC_HOTKEYS[i].exe_name) != NULL) {
+#endif
               
                 RunMiscApplication(G_MISC_HOTKEYS[i].misc_path);
 
@@ -346,7 +379,11 @@ bool CheckMiscHotkeyBindings(int pressed_vk, int modifiers) {
 void open_browser(const char *url) {
     char command[256];
 
+#if defined(_WIN32)
     snprintf(command, sizeof(command), "start %s", url);
+#else
+    snprintf(command, sizeof(command), "xdg-open %s", url);
+#endif
 
     int result = system(command);
     
@@ -358,8 +395,12 @@ void open_browser(const char *url) {
 }
 
 bool CheckQuickLinkHotkeyBindings(int pressed_vk, int modifiers) {
-    HWND hActiveWnd = GetForegroundWindow();
-    if (!hActiveWnd) return false;
+#if defined(_WIN32)
+    WindowHandle hActiveWnd = WH_FROM_HWND(GetForegroundWindow());
+#else
+    WindowHandle hActiveWnd = WH_NULL;
+#endif
+    if (WH_TO_HWND(hActiveWnd) == NULL) return false;
 
     char activeExe[256] = {0};
     FetchExeNameOnDemand(hActiveWnd, activeExe, sizeof(activeExe) - 1);
@@ -367,8 +408,13 @@ bool CheckQuickLinkHotkeyBindings(int pressed_vk, int modifiers) {
     for (int i = 0; i < QUICKLINK_HOTKEY_COUNT; i++) {
         if (G_QUICKLINK_HOTKEYS[i].vk_code == pressed_vk && 
             G_QUICKLINK_HOTKEYS[i].modifiers == modifiers) {
+#if defined(_WIN32)
             if (strcmp(G_QUICKLINK_HOTKEYS[i].exe_name, "*") == 0 ||
                 StrStrIA(activeExe, G_QUICKLINK_HOTKEYS[i].exe_name) != NULL) {
+#else
+            if (strcmp(G_QUICKLINK_HOTKEYS[i].exe_name, "*") == 0 ||
+                strstr(activeExe, G_QUICKLINK_HOTKEYS[i].exe_name) != NULL) {
+#endif
               
                 open_browser(G_QUICKLINK_HOTKEYS[i].QuickLinkQuery);
                 if (MessageAfterEachHotkey) {
@@ -385,8 +431,12 @@ bool CheckQuickLinkHotkeyBindings(int pressed_vk, int modifiers) {
 }
 
 bool CheckMacroBindings(int pressed_vk, int modifiers) {
-    HWND hActiveWnd = GetForegroundWindow();
-    if (!hActiveWnd) return false;
+#if defined(_WIN32)
+    WindowHandle hActiveWnd = WH_FROM_HWND(GetForegroundWindow());
+#else
+    WindowHandle hActiveWnd = WH_NULL;
+#endif
+    if (WH_TO_HWND(hActiveWnd) == NULL) return false;
 
     char activeExe[256] = {0};
     FetchExeNameOnDemand(hActiveWnd, activeExe, sizeof(activeExe) - 1);
@@ -396,7 +446,11 @@ bool CheckMacroBindings(int pressed_vk, int modifiers) {
             if (G_MACRO_BINDINGS[i].modifiers != modifiers) {
                 continue;
             }
+#if defined(_WIN32)
             if (strcmp(G_MACRO_BINDINGS[i].exe_name, "*") == 0 || StrStrIA(activeExe, G_MACRO_BINDINGS[i].exe_name) != NULL) {
+#else
+            if (strcmp(G_MACRO_BINDINGS[i].exe_name, "*") == 0 || strstr(activeExe, G_MACRO_BINDINGS[i].exe_name) != NULL) {
+#endif
                 G_MACRO_BINDINGS[i].handler();  
             }
         }
@@ -406,8 +460,12 @@ bool CheckMacroBindings(int pressed_vk, int modifiers) {
         
 
 bool CheckTextSnippetBindings(int pressed_vk, int modifiers) {
-    HWND hActiveWnd = GetForegroundWindow();
-    if (!hActiveWnd) return false;
+#if defined(_WIN32)
+    WindowHandle hActiveWnd = WH_FROM_HWND(GetForegroundWindow());
+#else
+    WindowHandle hActiveWnd = WH_NULL;
+#endif
+    if (WH_TO_HWND(hActiveWnd) == NULL) return false;
 
     char activeExe[256] = {0};
     FetchExeNameOnDemand(hActiveWnd, activeExe, sizeof(activeExe) - 1);
@@ -416,7 +474,11 @@ bool CheckTextSnippetBindings(int pressed_vk, int modifiers) {
         if (G_TEXT_SNIPPETS[i].vk_code == pressed_vk && 
             G_TEXT_SNIPPETS[i].modifiers == modifiers) {
             
+#if defined(_WIN32)
             if (strcmp(G_TEXT_SNIPPETS[i].exe_name, "*") == 0 || StrStrIA(activeExe, G_TEXT_SNIPPETS[i].exe_name) != NULL) {
+#else
+            if (strcmp(G_TEXT_SNIPPETS[i].exe_name, "*") == 0 || strstr(activeExe, G_TEXT_SNIPPETS[i].exe_name) != NULL) {
+#endif
                 Platform_CopyToClipboard(G_TEXT_SNIPPETS[i].text);
             }
         }

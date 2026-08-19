@@ -1,7 +1,6 @@
 #ifndef MODAL_H
 #define MODAL_H
 
-#include <windows.h>
 #include <stdbool.h>
 
 typedef enum {

@@ -4,23 +4,27 @@
 #include "core/common_ui.h"
 
 static WindowList g_replica_windows = {0};
-static HWND g_replica_selected_hwnd = NULL;
+static WindowHandle g_replica_selected_hwnd = WH_NULL;
 
-static void SendTargetToReplica(HWND target) {
+static void SendTargetToReplica(WindowHandle target) {
+#if defined(_WIN32)
     HWND hReplica = FindWindowA("ReplicaWindowClass", NULL);
     if (hReplica) {
-        SendMessage(hReplica, WM_USER + 1, (WPARAM)target, 0);
-        printf("[REPLICA] Sent new target HWND: %p\n", target);
+        SendMessage(hReplica, WM_USER + 1, (WPARAM)WH_TO_HWND(target), 0);
+        printf("[REPLICA] Sent new target HWND: %p\n", WH_TO_HWND(target));
     } else {
         char cmd[512];
-        snprintf(cmd, sizeof(cmd), "D:\\Projects\\Replica\\replica.exe %p", target);
+        snprintf(cmd, sizeof(cmd), "D:\\Projects\\Replica\\replica.exe %p", WH_TO_HWND(target));
         system(cmd);
     }
+#else
+    (void)target;
+#endif
 }
 
 
-static void replica_refresh_callback(const char* filter, HWND hListBox) {
-    if (!hListBox) return;
+static void replica_refresh_callback(const char* filter, WindowHandle hListBox) {
+    if (WH_TO_HWND(hListBox) == NULL) return;
     
     WindowUtils_GetAll(&g_replica_windows);
     
@@ -44,7 +48,7 @@ static void replica_refresh_callback(const char* filter, HWND hListBox) {
 
 
 static void replica_enter_callback(const char* selection) {
-    g_replica_selected_hwnd = NULL;
+    g_replica_selected_hwnd = WH_NULL;
     
     for (int i = 0; i < g_replica_windows.count; i++) {
         if (strcmp(g_replica_windows.items[i].title, selection) == 0) {
@@ -58,7 +62,7 @@ void TriggerReplica(void) {
     if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
     if (!ReplicaAvailable) return;
     
-    g_replica_selected_hwnd = NULL;
+    g_replica_selected_hwnd = WH_NULL;
     
     WindowUtils_GetAll(&g_replica_windows);
     
@@ -94,7 +98,7 @@ void TriggerReplica(void) {
     
     free(titles);
     
-    if (g_replica_selected_hwnd) {
+    if (WH_TO_HWND(g_replica_selected_hwnd) != NULL) {
         SendTargetToReplica(g_replica_selected_hwnd);
     }
 }

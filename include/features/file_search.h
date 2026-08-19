@@ -1,8 +1,15 @@
 #ifndef FILE_SEARCH_H
 #define FILE_SEARCH_H
 
-#include <windows.h>
 #include <stdbool.h>
+#include "core/types.h"
+
+#if !defined(_WIN32)
+typedef struct {
+    uint32_t dwLowDateTime;
+    uint32_t dwHighDateTime;
+} FILETIME;
+#endif
 
 #define MAX_FILES 2000
 

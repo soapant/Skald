@@ -1,7 +1,6 @@
 #ifndef YAZI_ZOXIDE_H
 #define YAZI_ZOXIDE_H
 
-#include <windows.h>
 #include <stdbool.h>
 #include "core/types.h"
 

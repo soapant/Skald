@@ -1,5 +1,7 @@
-#include <windows.h>
-#include <winhttp.h>
+#ifndef NOTIFICATION_GETTER_H
+#define NOTIFICATION_GETTER_H
+
+#include <wchar.h>
 
 typedef void (*NtfyCallback)(const char* text);
 
@@ -8,6 +10,13 @@ typedef struct {
     NtfyCallback callback;
 } NtfyConfig;
 
+#if defined(_WIN32)
+#include <windows.h>
+#include <winhttp.h>
+
 DWORD WINAPI NtfyListenerThread(LPVOID lpParam);
 
 void StartNtfyDaemon(const wchar_t* topic, NtfyCallback callback);
+#endif
+
+#endif

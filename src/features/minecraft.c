@@ -2,6 +2,7 @@
 #include "features/minecraft.h"
 
 void minecraft_type_command(const char* command) {
+#if defined(_WIN32)
     INPUT t[2] = {0};
     t[0].type = INPUT_KEYBOARD; 
     t[0].ki.wVk = 'T';
@@ -29,4 +30,7 @@ void minecraft_type_command(const char* command) {
     enter[1].ki.wVk = VK_RETURN; 
     enter[1].ki.dwFlags = KEYEVENTF_KEYUP;
     SendInput(2, enter, sizeof(INPUT));
+#else
+    (void)command;
+#endif
 }

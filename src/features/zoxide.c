@@ -2,7 +2,9 @@
 #include "features/zoxide.h"
 #include "helpers.h"
 #include "core/common_ui.h"
+#if defined(_WIN32)
 #include <shellapi.h>
+#endif
 
 static char** g_cached_zoxide_commands = NULL;
 static int g_cached_zoxide_count = 0;
@@ -43,7 +45,7 @@ static void RebuildZoxideCache(void) {
     free(lines);
 }
 
-static void zoxide_refresh_callback(const char* filter, HWND hListBox) {
+static void zoxide_refresh_callback(const char* filter, WindowHandle hListBox) {
 
     if (!g_cached_zoxide_commands) {
         RebuildZoxideCache();
@@ -73,7 +75,13 @@ static void zoxide_enter_callback(const char* selection) {
         if (path) {
             char terminal[512];
             snprintf(terminal,sizeof(terminal),"%s.exe",UsedTerminal);
+#if defined(_WIN32)
             ShellExecuteA(NULL, "open", terminal, NULL, path, SW_SHOWNORMAL);
+#else
+            char cmd_open[512];
+            snprintf(cmd_open, sizeof(cmd_open), "xdg-open \"%s\"", path);
+            system(cmd_open);
+#endif
             if (TerminalZoxideFile->fileSize > 0) {
                 char lastChar = TerminalZoxideFile->pBuffer[TerminalZoxideFile->fileSize - 1];
                 if (lastChar != '\n') {

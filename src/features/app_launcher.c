@@ -16,7 +16,11 @@ void initialize_app_cache(void) {
         
         bool found = false;
         for (int app_idx = 0; app_idx < G_APP_COUNT; app_idx++) {
+#if defined(_WIN32)
             if (StrStrIA(G_APPS[app_idx].path, SystemShortcuts[shortcut_idx].path) != NULL) {
+#else
+            if (strstr(G_APPS[app_idx].path, SystemShortcuts[shortcut_idx].path) != NULL) {
+#endif
                 strncpy(G_APPS[app_idx].name, SystemShortcuts[shortcut_idx].name, sizeof(G_APPS[app_idx].name) - 1);
                 G_APPS[app_idx].name[sizeof(G_APPS[app_idx].name) - 1] = '\0';
                 found = true;
@@ -37,7 +41,11 @@ void initialize_app_cache(void) {
 }
 void launch_app_by_name(const char* display_name) {
     for (int i = 0; i < G_APP_COUNT; i++) {
+#if defined(_WIN32)
         if (StrCmpIA(G_APPS[i].name, display_name) == 0) {
+#else
+        if (strcasecmp(G_APPS[i].name, display_name) == 0) {
+#endif
             Platform_LaunchApp(G_APPS[i].path);
             return;
         }
@@ -46,7 +54,11 @@ void launch_app_by_name(const char* display_name) {
 
 static void launch_app_as_admin(const char* display_name) {
     for (int i = 0; i < G_APP_COUNT; i++) {
+#if defined(_WIN32)
         if (StrCmpIA(G_APPS[i].name, display_name) == 0) {
+#else
+        if (strcasecmp(G_APPS[i].name, display_name) == 0) {
+#endif
             Platform_LaunchAppAsAdmin(G_APPS[i].path);
             return;
         }
@@ -62,6 +74,7 @@ void launch_exe_with_args(const char* exe_path, const char* args) {
         snprintf(cmd, sizeof(cmd), "\"%s\"", exe_path);
     }
     
+#if defined(_WIN32)
     STARTUPINFOA si = {0};
     si.cb = sizeof(si);
     PROCESS_INFORMATION pi = {0};
@@ -70,6 +83,9 @@ void launch_exe_with_args(const char* exe_path, const char* args) {
         CloseHandle(pi.hProcess);
         CloseHandle(pi.hThread);
     }
+#else
+    system(cmd);
+#endif
 }
 
 static void applauncher_enter_callback(const char* selection) {
@@ -81,8 +97,8 @@ static void applauncher_ctrlenter_callback(const char* selection) {
     selection_complete = true;
 }
 
-static void applauncher_refresh_callback(const char* filter, HWND hListBox) {
-    if (!hListBox) return;
+static void applauncher_refresh_callback(const char* filter, WindowHandle hListBox) {
+    if (WH_TO_HWND(hListBox) == NULL) return;
 
     const char* names[MAX_APPS];
     int count = (G_APP_COUNT < MAX_APPS) ? G_APP_COUNT : MAX_APPS;

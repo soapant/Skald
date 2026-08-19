@@ -3,7 +3,9 @@
 #include "features/focus_switcher.h"
 #include "core/common_ui.h"
 #include "helpers.h"
+#if defined(_WIN32)
 #include <psapi.h>
+#endif
 
 // ============================================================
 // STATIC DATA
@@ -19,6 +21,7 @@ static int g_switcher_count = 0;
 // EXE CACHE
 // ============================================================
 
+#if defined(_WIN32)
 static const char* GetExeNameForWindow(HWND hwnd) {
     static char result[64];
     DWORD processId = 0;
@@ -59,13 +62,26 @@ static const char* GetExeNameForWindow(HWND hwnd) {
     
     return result;
 }
+#else
+static const char* GetExeNameForWindow(WindowHandle hwnd) {
+    (void)hwnd;
+    static char result[64];
+    strcpy(result, "Unknown.exe");
+    return result;
+}
+#endif
 
-void FetchExeNameOnDemand(HWND hwnd, char* outExe, DWORD maxLen) {
+void FetchExeNameOnDemand(WindowHandle hwnd, char* outExe, size_t maxLen) {
+#if defined(_WIN32)
+    const char* name = GetExeNameForWindow(WH_TO_HWND(hwnd));
+#else
     const char* name = GetExeNameForWindow(hwnd);
+#endif
     strncpy(outExe, name, maxLen - 1);
     outExe[maxLen - 1] = '\0';
 }
 
+#if defined(_WIN32)
 static BOOL CALLBACK EnumWindowsProcEx(HWND hwnd, LPARAM lParam) {
     EnumContext* ctx = (EnumContext*)lParam;
     WindowList* list = ctx->list;
@@ -90,28 +106,39 @@ static BOOL CALLBACK EnumWindowsProcEx(HWND hwnd, LPARAM lParam) {
     }
     
     WindowInfo* info = &list->items[list->count];
-    info->hwnd = hwnd;
+    info->hwnd = WH_FROM_HWND(hwnd);
     strcpy(info->title, title);
     strcpy(info->exe, exe);
     list->count++;
     
     return TRUE;
 }
+#endif
 
 // ============================================================
 // PUBLIC WINDOW FUNCTIONS
 // ============================================================
 
 void WindowUtils_GetAll(WindowList* list) {
+#if defined(_WIN32)
     list->count = 0;
     EnumContext ctx = { .list = list, .mode = 0 };
     EnumWindows(EnumWindowsProcEx, (LPARAM)&ctx);
+#else
+    list->count = 0;
+#endif
 }
 
 static void WindowUtils_GetFiltered(WindowList* list, const char** blacklist, int blacklistCount) {
+#if defined(_WIN32)
     list->count = 0;
     EnumContext ctx = { .list = list, .blacklist = blacklist, .blacklistCount = blacklistCount, .mode = 3 };
     EnumWindows(EnumWindowsProcEx, (LPARAM)&ctx);
+#else
+    (void)blacklist;
+    (void)blacklistCount;
+    list->count = 0;
+#endif
 }
 
 // ============================================================
@@ -121,15 +148,20 @@ static void WindowUtils_GetFiltered(WindowList* list, const char** blacklist, in
 static bool switcher_match_helper(const char* item, const char* filter) {
     for (int i = 0; i < g_switcher_count; i++) {
         if (strcmp(g_switcher_windows[i].title, item) == 0) {
+#if defined(_WIN32)
             return (StrStrIA(g_switcher_windows[i].title, filter) != NULL ||
                     StrStrIA(g_switcher_windows[i].exe, filter) != NULL);
+#else
+            return (strstr(g_switcher_windows[i].title, filter) != NULL ||
+                    strstr(g_switcher_windows[i].exe, filter) != NULL);
+#endif
         }
     }
     return false;
 }
 
-static void switcher_refresh_callback(const char* filter, HWND hListBox) {
-    if (!hListBox) return;
+static void switcher_refresh_callback(const char* filter, WindowHandle hListBox) {
+    if (WH_TO_HWND(hListBox) == NULL) return;
     
     const char* titles[MAX_SWITCHER_WINDOWS];
     for (int i = 0; i < g_switcher_count && i < MAX_SWITCHER_WINDOWS; i++) {
@@ -141,8 +173,12 @@ static void switcher_refresh_callback(const char* filter, HWND hListBox) {
 
 static void switcher_enter_callback(const char* selection) {
     for (int i = 0; i < g_switcher_count; i++) {
+#if defined(_WIN32)
         if (StrStrIA(g_switcher_windows[i].title, selection) != NULL) {
-            if (IsWindow(g_switcher_windows[i].hwnd)) {
+#else
+        if (strstr(g_switcher_windows[i].title, selection) != NULL) {
+#endif
+            if (IsWindowValid(g_switcher_windows[i].hwnd)) {
                 FocusWindow(g_switcher_windows[i].hwnd);
             }
             break;
@@ -162,7 +198,7 @@ static void switcher_copy_callback(const char* selection, int true_index, int ty
 // ============================================================
 
 void TriggerWindowSwitcher() {
-    if (hPopupWnd && IsWindow(hPopupWnd)) return;
+    if (IsPopupActive(hPopupWnd)) return;
     
     WindowList windows;
     static const char* blacklist[] = {"Input", "Manager", "Settings"};

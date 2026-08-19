@@ -3,7 +3,7 @@
 #include "helpers.h"
 #include "core/common_ui.h"
 
-static COLORREF GetTagColor(const char* tag_text) {
+static ColorRef GetTagColor(const char* tag_text) {
     if (!tag_text || strlen(tag_text) == 0) return COLOR_TEXT;
     
     for (int i = 0; i < TODO_CONFIG_FLAGS_COUNT; i++) {
@@ -238,11 +238,16 @@ static void RemoveTodoItemFromFile(const char* item_to_remove) {
     fclose(infile);
     fclose(outfile);
 
+    #if defined(_WIN32)
     DeleteFileA(TODO_FILE_PATH);
     MoveFileA("todo.tmp", TODO_FILE_PATH);
+#else
+    remove(TODO_FILE_PATH);
+    rename("todo.tmp", TODO_FILE_PATH);
+#endif
 }
 
-static void todo_refresh_callback(const char* filter, HWND hListBox) {
+static void todo_refresh_callback(const char* filter, WindowHandle hListBox) {
     char todo_lines[100][512];
     int todo_count = ReadMdFile(todo_lines, TODO_FILE_PATH);
     
@@ -289,7 +294,13 @@ static void todo_copy_callback(const char* selection,int true_index,int type) {
     Platform_CopyToClipboard(buffer);
 }
 
-static void todo_render_callback(HDC hdc, const char* text, RECT* rect, BOOL is_selected, int itemIndex) {
+#if !defined(_WIN32)
+static void todo_render_callback(void* hdc, const char* text, void* rect, bool is_selected, int itemIndex) {
+    (void)hdc; (void)rect; (void)text; (void)is_selected; (void)itemIndex;
+}
+#endif
+#if defined(_WIN32)
+static void todo_render_callback_impl(HDC hdc, const char* text, RECT* rect, BOOL is_selected, int itemIndex) {
     if (!text || !rect) return;
 
     UI_RedrawBackground(hdc,rect,is_selected);
@@ -349,6 +360,11 @@ static void todo_render_callback(HDC hdc, const char* text, RECT* rect, BOOL is_
     
     SelectObject(hdc, hOldFont);
 }
+
+static void todo_render_callback(HDC hdc, const char* text, RECT* rect, BOOL is_selected, int itemIndex) {
+    todo_render_callback_impl(hdc, text, rect, is_selected, itemIndex);
+}
+#endif
 
 static void todo_edit_callback(const char* selection) {
     char* NewTodoName = Platform_EditTextPopup(selection, 960, 540, 1000, 300);

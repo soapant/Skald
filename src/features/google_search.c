@@ -2,7 +2,9 @@
 #include "features/google_search.h"
 #include "helpers.h"
 #include "core/common_ui.h"
+#if defined(_WIN32)
 #include <shellapi.h>
+#endif
 
 static char** g_cached_google_queries = NULL;
 static int g_cached_google_count = 0;
@@ -44,8 +46,8 @@ static void RebuildGoogleCache(void) {
 }
 
 
-static void google_refresh_callback(const char* filter, HWND hListBox) {
-    if (!hListBox) return;
+static void google_refresh_callback(const char* filter, WindowHandle hListBox) {
+    if (WH_TO_HWND(hListBox) == NULL) return;
     
     if (!g_cached_google_queries) {
         RebuildGoogleCache();
