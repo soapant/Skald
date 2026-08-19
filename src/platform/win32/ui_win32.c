@@ -1,3 +1,4 @@
+#include <windows.h>
 #include "common.h"
 #include "core/modal.h"
 #include "core/types.h"
@@ -77,13 +78,13 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
 
   HFONT hCustomFont = CreateCustomNerdFont(FontSize, UsedFont);
 
-  hPopupWnd = CreateWindowExA(
+  hPopupWnd = WH_FROM_HWND(CreateWindowExA(
       WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_COMPOSITED,
       "QuickSwitcherModalClass", NULL, WS_POPUP | WS_CLIPCHILDREN, 
       layout.x, layout.y, layout.w, layout.h, NULL, NULL, hInstance, NULL
-      );
+      ));
 
-  if (hPopupWnd == NULL) {
+  if (WH_TO_HWND(hPopupWnd) == NULL) {
     DeleteObject(hCustomFont);
     return NULL;
   }
@@ -99,7 +100,7 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
 
   WinTimer timer2 = TimerStart();
 
-  SetLayeredWindowAttributes(hPopupWnd, 0, 245, LWA_ALPHA);
+  SetLayeredWindowAttributes(WH_TO_HWND(hPopupWnd), 0, 245, LWA_ALPHA);
 
   TimerEnd(timer2,"WindowBs");
 
@@ -130,10 +131,10 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
   }
   printf("[DEBUG-UI] Left local loop. Processed %d messages.\n", loop_counter);
 
-  if (hPopupWnd != NULL && IsWindow(hPopupWnd)) {
-    KillTimer(hPopupWnd, 999);
-    DestroyWindow(hPopupWnd);
-    hPopupWnd = NULL;
+  if (WH_TO_HWND(hPopupWnd) != NULL && IsWindow(WH_TO_HWND(hPopupWnd))) {
+    KillTimer(WH_TO_HWND(hPopupWnd), 999);
+    DestroyWindow(WH_TO_HWND(hPopupWnd));
+    hPopupWnd = WH_NULL;
   }
   ResetNumberShortcutState();
 
@@ -197,16 +198,16 @@ char* Platform_SimplePromptUser(const char* prompt, const char* window_title,int
 
   HFONT hCustomFont = CreateCustomNerdFont(FontSize, UsedFont);
 
-  hPopupWnd = CreateWindowExA(
+  hPopupWnd = WH_FROM_HWND(CreateWindowExA(
       WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED, 
       "QuickSwitcherModalClass", NULL, WS_POPUP | WS_CLIPCHILDREN, 
       layout.x, layout.y, layout.w, layout.h, NULL, NULL, hInstance, NULL
       );
 
 
-  SetTimer(hPopupWnd, 999, 50, NULL);
+  SetTimer(WH_TO_HWND(hPopupWnd), 999, 50, NULL);
 
-  if (hPopupWnd == NULL) {
+  if (WH_TO_HWND(hPopupWnd) == NULL) {
     DWORD err = GetLastError();
     if (err == 1407) {
     }
@@ -216,7 +217,7 @@ char* Platform_SimplePromptUser(const char* prompt, const char* window_title,int
 
   SimpleCreateChildControls(hPopupWnd, hCustomFont, prompt, 1, &layout);
 
-  SetLayeredWindowAttributes(hPopupWnd, 0, 245, LWA_ALPHA);
+  SetLayeredWindowAttributes(WH_TO_HWND(hPopupWnd), 0, 245, LWA_ALPHA);
 
   ForceWindowFocus(hPopupWnd, hEditControl);
 
@@ -234,10 +235,10 @@ char* Platform_SimplePromptUser(const char* prompt, const char* window_title,int
     }
   }
 
-  if (hPopupWnd != NULL && IsWindow(hPopupWnd)) {
-    KillTimer(hPopupWnd, 999);
-    DestroyWindow(hPopupWnd);
-    hPopupWnd = NULL;
+  if (WH_TO_HWND(hPopupWnd) != NULL && IsWindow(WH_TO_HWND(hPopupWnd))) {
+    KillTimer(WH_TO_HWND(hPopupWnd), 999);
+    DestroyWindow(WH_TO_HWND(hPopupWnd));
+    hPopupWnd = WH_NULL;
   }
 
   while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
@@ -252,9 +253,9 @@ char* Platform_SimplePromptUser(const char* prompt, const char* window_title,int
 }
 
 void Platform_DisplayMessage(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, int timeout) {
-  if (hGlobalTrayWnd != NULL && GetCurrentThreadId() != g_main_thread_id) {
+  if (WH_TO_HWND(hGlobalTrayWnd) != NULL && GetCurrentThreadId() != g_main_thread_id) {
     DisplayMessageParams params = { message, centerX, centerY, maxWidth, maxHeight, timeout };
-    SendMessageA(hGlobalTrayWnd, WM_DISPLAY_MESSAGE, 0, (LPARAM)&params);
+    SendMessageA(WH_TO_HWND(hGlobalTrayWnd), WM_DISPLAY_MESSAGE, 0, (LPARAM)&params);
     return;
   }
   Platform_CreateDisplayMessageWindow(message, centerX, centerY, maxWidth, maxHeight, timeout);
@@ -263,8 +264,8 @@ void Platform_DisplayMessage(const char* message, int centerX, int centerY, int 
 void Platform_CreateDisplayMessageWindow(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, int timeout) {
   HINSTANCE hInstance = GetModuleHandle(NULL);
 
-  DestroyWindow(hDisplayMessage);
-  KillTimer(hDisplayMessage,999);
+  DestroyWindow(WH_TO_HWND(hDisplayMessage));
+  KillTimer(WH_TO_HWND(hDisplayMessage),999);
 
 
   HDC hdc = GetDC(NULL);
@@ -334,13 +335,13 @@ void Platform_SettingsPopUp() {
 
   HFONT hCustomFont = CreateCustomNerdFont(FontSize, UsedFont);
 
-  hPopupWnd = CreateWindowExA(
+  hPopupWnd = WH_FROM_HWND(CreateWindowExA(
       WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED | WS_EX_COMPOSITED,
       "SettingsPopupClass", NULL, WS_POPUP | WS_CLIPCHILDREN, 
       510, 210, width, height, NULL, NULL, hInstance, NULL
-      );
+      ));
 
-  if (hPopupWnd == NULL) {
+  if (WH_TO_HWND(hPopupWnd) == NULL) {
     DWORD err = GetLastError();
     printf("CreateWindowExA failed: %lu\n", err);
     DeleteObject(hCustomFont);
@@ -348,11 +349,11 @@ void Platform_SettingsPopUp() {
   }
 
   hSettings = hPopupWnd;
-  SetTimer(hPopupWnd, 999, 50, NULL);
+  SetTimer(WH_TO_HWND(hPopupWnd), 999, 50, NULL);
 
   SettingsCreateChildControls(hPopupWnd, hCustomFont,&layout);
 
-  SetLayeredWindowAttributes(hPopupWnd, 0, 245, LWA_ALPHA);
+  SetLayeredWindowAttributes(WH_TO_HWND(hPopupWnd), 0, 245, LWA_ALPHA);
 
   ForceWindowFocus(hPopupWnd, hEditControl);
 
@@ -368,12 +369,12 @@ void Platform_SettingsPopUp() {
     }
   }
 
-  if (hPopupWnd != NULL && IsWindow(hPopupWnd)) { 
-    KillTimer(hPopupWnd, 999);
-    DestroyWindow(hPopupWnd);
-    hPopupWnd = NULL;
+  if (WH_TO_HWND(hPopupWnd) != NULL && IsWindow(WH_TO_HWND(hPopupWnd))) { 
+    KillTimer(WH_TO_HWND(hPopupWnd), 999);
+    DestroyWindow(WH_TO_HWND(hPopupWnd));
+    hPopupWnd = WH_NULL;
   }
-  hSettings = NULL;
+  hSettings = WH_NULL;
 
   while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
     TranslateMessage(&msg);
@@ -389,9 +390,9 @@ char* Platform_EditTextPopup(const char* initial_text, int centerX, int centerY,
 
   if (!initial_text) return NULL;
 
-  if (g_hEditPopup && IsWindow(g_hEditPopup)) {
-    DestroyWindow(g_hEditPopup);
-    g_hEditPopup = NULL;
+  if (WH_TO_HWND(g_hEditPopup) != NULL && IsWindow(WH_TO_HWND(g_hEditPopup))) {
+    DestroyWindow(WH_TO_HWND(g_hEditPopup));
+    g_hEditPopup = WH_NULL;
   }
 
   HDC hdc = GetDC(NULL);
@@ -441,7 +442,7 @@ char* Platform_EditTextPopup(const char* initial_text, int centerX, int centerY,
     return NULL;
   }
 
-  g_hEditPopup = hPopupWnd;
+  g_hEditPopup = WH_FROM_HWND(hPopupWnd);
   g_EditData = pData;
 
   SetLayeredWindowAttributes(hPopupWnd, 0, pData->alpha, LWA_ALPHA);
@@ -473,7 +474,7 @@ char* Platform_EditTextPopup(const char* initial_text, int centerX, int centerY,
   if (hPopupWnd && IsWindow(hPopupWnd)) {
     DestroyWindow(hPopupWnd);
   }
-  g_hEditPopup = NULL;
+  g_hEditPopup = WH_NULL;
   g_EditData = NULL;
   g_SelectedIndex = index;
 
@@ -487,9 +488,9 @@ char* Platform_SearchPopup() {
   int winWidth = 280;
   int winHeight = 80;
 
-  if (g_hSearchPopup && IsWindow(g_hSearchPopup)) {
-    DestroyWindow(g_hSearchPopup);
-    g_hSearchPopup = NULL;
+  if (WH_TO_HWND(g_hSearchPopup) != NULL && IsWindow(WH_TO_HWND(g_hSearchPopup))) {
+    DestroyWindow(WH_TO_HWND(g_hSearchPopup));
+    g_hSearchPopup = WH_NULL;
   }
 
   HDC hdc = GetDC(NULL);
@@ -546,7 +547,7 @@ char* Platform_SearchPopup() {
     DestroyWindow(hPopupWnd);
   }
 
-  g_hSearchPopup = NULL;
+  g_hSearchPopup = WH_NULL;
   g_SelectedIndex = index;
 
 
@@ -566,14 +567,14 @@ int Platform_InitializeTrayIcon() {
     if (!RegisterClass(&wc)) return -1;
 
 
-    hGlobalTrayWnd = CreateWindow(
+    hGlobalTrayWnd = WH_FROM_HWND(CreateWindow(
         wc.lpszClassName, "TrayApp", 
         WS_OVERLAPPEDWINDOW, 
         CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, 
         NULL, NULL, hInstance, NULL
-        );
+        ));
 
-    if (!hGlobalTrayWnd) return -1;
+    if (WH_TO_HWND(hGlobalTrayWnd) == NULL) return -1;
   }
   return 0;
 }
@@ -601,7 +602,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
     HWND hForeground = GetForegroundWindow();
     char fgTitle[256];
     if (hForeground != NULL) {
-      UI_GetCurrentText(hForeground, fgTitle);
+      GetWindowTextA(hForeground, fgTitle, sizeof(fgTitle));
     }
 
     int pressed_vk = (int)pKeyInfo->vkCode;
@@ -617,8 +618,8 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
     }
     TimerEnd(timer, "ProcessHotkey");
 
-    if (shift_down && !IsInsertMode() && hPopupWnd != NULL) {
-      if (!g_hEditPopup) {
+    if (shift_down && !IsInsertMode() && WH_TO_HWND(hPopupWnd) != NULL) {
+      if (WH_TO_HWND(g_hEditPopup) == NULL) {
         if (pressed_vk == COMMAND_MODE_KEY) {
           SetMode(MODE_INSERT);
           char* output = Platform_EditTextPopup("", 960, 540, 1000, 300);
@@ -630,7 +631,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
         }
       }
     }
-    if (!g_hSearchPopup && hPopupWnd && IsNormalMode()) {
+    if (WH_TO_HWND(g_hSearchPopup) == NULL && WH_TO_HWND(hPopupWnd) != NULL && IsNormalMode()) {
       if (pressed_vk == SEARCH_PROGRAM_KEY) {
         Platform_SearchPopup();
       }

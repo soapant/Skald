@@ -1,4 +1,5 @@
 #include "core/hashmap.h"
+#include "core/types.h"
 
 static unsigned int hash(const char* key, int size) {
     unsigned int h = 0;

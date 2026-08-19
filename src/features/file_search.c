@@ -1,6 +1,8 @@
 #include "common.h"
 #include "features/file_search.h"
+#if defined(_WIN32)
 #include <shlwapi.h>
+#endif
 
 static FileItem G_FILES[MAX_FILES];
 static int G_FILE_COUNT = 0;
@@ -11,6 +13,7 @@ AppItem G_APPS[MAX_APPS];
 int G_APP_COUNT = 0;
 
 char* SearchFileInDirectory(const char* directory, const char* search_string) {
+#if defined(_WIN32)
     if (!directory || !search_string || strlen(search_string) == 0) {
         return NULL;
     }
@@ -42,9 +45,15 @@ char* SearchFileInDirectory(const char* directory, const char* search_string) {
 
     FindClose(hFind);
     return NULL;
+#else
+    (void)directory;
+    (void)search_string;
+    return NULL;
+#endif
 }
 
 char* SearchFileRecursive(const char* directory, const char* search_string) {
+#if defined(_WIN32)
     if (!directory || !search_string || strlen(search_string) == 0) {
         return NULL;
     }
@@ -89,9 +98,15 @@ char* SearchFileRecursive(const char* directory, const char* search_string) {
 
     FindClose(hFind);
     return NULL;
+#else
+    (void)directory;
+    (void)search_string;
+    return NULL;
+#endif
 }
 
 static void GetFilesRecursiveWithTime(const char* dir_path, bool show_folder) {
+#if defined(_WIN32)
     char search_path[MAX_PATH];
     snprintf(search_path, sizeof(search_path), "%s\\*", dir_path);
 
@@ -151,8 +166,13 @@ static void GetFilesRecursiveWithTime(const char* dir_path, bool show_folder) {
     } while (FindNextFileA(hFind, &find_data) && G_FILE_COUNT < MAX_FILES);
 
     FindClose(hFind);
+#else
+    (void)dir_path;
+    (void)show_folder;
+#endif
 }
 static int CompareFileByTime(const void* a, const void* b) {
+#if defined(_WIN32)
     const FileItemWithTime* fa = (const FileItemWithTime*)a;
     const FileItemWithTime* fb = (const FileItemWithTime*)b;
     
@@ -164,6 +184,11 @@ static int CompareFileByTime(const void* a, const void* b) {
     if (time_a > time_b) return -1;
     if (time_a < time_b) return 1;
     return 0;
+#else
+    (void)a;
+    (void)b;
+    return 0;
+#endif
 }
 
 static void SortFilesByTime(void) {
@@ -192,6 +217,7 @@ int GetFileCount(void) {
 }
 
 void scan_directory_recursive(const char* dir_path) {
+#if defined(_WIN32)
     char search_path[MAX_PATH];
     snprintf(search_path, sizeof(search_path), "%s\\*", dir_path);
 
@@ -269,4 +295,7 @@ void scan_directory_recursive(const char* dir_path) {
     } while (FindNextFileA(hFind, &find_data) && G_APP_COUNT < MAX_APPS);
 
     FindClose(hFind);
+#else
+    (void)dir_path;
+#endif
 }

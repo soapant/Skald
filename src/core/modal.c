@@ -13,16 +13,18 @@ char* selection_feature = "";
 void SetMode(EditorMode mode) {
     g_current_mode = mode;
     g_vim_mode = g_mode_names[mode];
-    bool in_main = !g_hSearchPopup && !g_hEditPopup;
+    bool in_main = WH_TO_HWND(g_hSearchPopup) == NULL && WH_TO_HWND(g_hEditPopup) == NULL;
 
-    if (hPopupWnd && IsWindow(hPopupWnd)) {
+#if defined(_WIN32)
+    if (hPopupWnd && IsWindow(WH_TO_HWND(hPopupWnd))) {
         RECT rect;
-        GetClientRect(hPopupWnd, &rect);
+        GetClientRect(WH_TO_HWND(hPopupWnd), &rect);
         RECT titleRect = {0, 0, rect.right, 40};
-        InvalidateRect(hPopupWnd, &titleRect, FALSE);
+        InvalidateRect(WH_TO_HWND(hPopupWnd), &titleRect, FALSE);
     }
+#endif
 
-    if (in_main && hPopupWnd && IsWindow(hPopupWnd)) {
+    if (in_main && IsPopupActive(hPopupWnd)) {
         if (strcmp(g_vim_mode, "INSERT") == 0) {
             if (RememberLastIndex) last_index = g_SelectedIndex;
             UI_SetSelection(hListBox, -1, g_SelectedIndex);
@@ -35,7 +37,7 @@ void SetMode(EditorMode mode) {
         }
     }
 
-    if (g_ActiveEditControl) {
+    if (WH_TO_HWND(g_ActiveEditControl) != NULL) {
         UpdateTextCaret(g_ActiveEditControl);
     }
 }

@@ -1,7 +1,6 @@
 #ifndef ZOXIDE_H
 #define ZOXIDE_H
 
-#include <windows.h>
 #include <stdbool.h>
 #include "core/types.h"
 

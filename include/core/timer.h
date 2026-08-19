@@ -45,16 +45,26 @@ static void TimerBufferAppend(const char* line) {
 
 static inline WinTimer TimerStart() {
   WinTimer t;
+#if defined(_WIN32)
   QueryPerformanceFrequency(&t.frequency);
   QueryPerformanceCounter(&t.start);
+#else
+  clock_gettime(CLOCK_MONOTONIC, &t.start);
+#endif
   return t;
 }
 
 static inline void TimerEnd(WinTimer t, const char* operation_name) {
+  double elapsed_us;
+#if defined(_WIN32)
   LARGE_INTEGER end;
   QueryPerformanceCounter(&end);
-
-  double elapsed_us = (double)(end.QuadPart - t.start.QuadPart) * 1000000.0 / (double)t.frequency.QuadPart;
+  elapsed_us = (double)(end.QuadPart - t.start.QuadPart) * 1000000.0 / (double)t.frequency.QuadPart;
+#else
+  struct timespec end;
+  clock_gettime(CLOCK_MONOTONIC, &end);
+  elapsed_us = (double)(end.tv_sec - t.start.tv_sec) * 1000000.0 + (double)(end.tv_nsec - t.start.tv_nsec) / 1000.0;
+#endif
 
   if (DoTimeDebugs) {
     char line[128];

@@ -2,6 +2,7 @@
 #include "features/monitor_focus.h"
 #include "features/focus_switcher.h"
 
+#if defined(_WIN32)
 static BOOL CALLBACK EnumMonitorWindowsProc(HWND hwnd, LPARAM lParam) {
     MonitorWindowList* myList = (MonitorWindowList*)lParam;
 
@@ -25,7 +26,7 @@ static BOOL CALLBACK EnumMonitorWindowsProc(HWND hwnd, LPARAM lParam) {
     }
 
     MonitorWindowData* currentItem = &myList->items[myList->count];
-    currentItem->hwnd = hwnd;
+    currentItem->hwnd = WH_FROM_HWND(hwnd);
     GetWindowTextA(hwnd, currentItem->title, sizeof(currentItem->title));
     
 
@@ -61,8 +62,10 @@ static void ScanWindowsOnMonitor(HMONITOR targetMonitor) {
         FocusWindow(myList.items[0].hwnd);
     }
 }
+#endif
 
 void TriggerMonitorFocusMain() {
+#if defined(_WIN32)
     MonitorSearch search = {0};
     search.targetIndex = 1; 
     search.currentIndex = 0;
@@ -74,9 +77,11 @@ void TriggerMonitorFocusMain() {
         ScanWindowsOnMonitor(search.foundMonitor);
     } else {
     }
+#endif
 }
 
 void TriggerMonitorFocusSide() {
+#if defined(_WIN32)
     MonitorSearch search = {0};
     search.targetIndex = 2; 
     search.currentIndex = 0;
@@ -88,4 +93,5 @@ void TriggerMonitorFocusSide() {
         ScanWindowsOnMonitor(search.foundMonitor);
     } else {
     }
+#endif
 }

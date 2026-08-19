@@ -4,7 +4,7 @@
 #include "features/file_search.h"
 #include "features/app_launcher.h"
 
-static void video_refresh_callback(const char* filter, HWND hListBox) {
+static void video_refresh_callback(const char* filter, WindowHandle hListBox) {
     ClearFileList();
     GetFilesRecursive(VideosPath, false);
     
@@ -18,11 +18,12 @@ static void video_refresh_callback(const char* filter, HWND hListBox) {
 }
 
 static void video_enter_callback(const char* selection) {
-    HWND playerHwnd = FindWindow(NULL, "Video Viewer");
     char* result = SearchFileRecursive(VideosPath, selection);
     
     if (!result) return;
     
+#if defined(_WIN32)
+    HWND playerHwnd = FindWindow(NULL, "Video Viewer");
     if (playerHwnd) {
         COPYDATASTRUCT cds;
         cds.dwData = 0;
@@ -30,10 +31,16 @@ static void video_enter_callback(const char* selection) {
         cds.lpData = (PVOID)result;
         SendMessage(playerHwnd, WM_COPYDATA, (WPARAM)NULL, (LPARAM)&cds);
         printf("[VIDEO] Sent to existing player: %s\n", result);
-    } else {
+    } else
+#endif
+    {
         char video_player_path[MAX_PATH] = {0};
         for (int i = 0; i < G_APP_COUNT; i++) {
+#if defined(_WIN32)
             if (StrStrIA(G_APPS[i].name, "video_viewer") != NULL) {
+#else
+            if (strstr(G_APPS[i].name, "video_viewer") != NULL) {
+#endif
                 strncpy(video_player_path, G_APPS[i].path, sizeof(video_player_path) - 1);
                 break;
             }
@@ -53,15 +60,21 @@ bool HandleVideoPlayer(int vk_code, int modifiers, const char* current_title) {
     for (int i = 0; i < VIDEO_PLAYER_COUNT; i++) {
         const VideoPlayerBinding* binding = &G_VIDEO_PLAYERS[i];
         if (binding->vk_code == vk_code && binding->modifiers == modifiers) {
+#if defined(_WIN32)
             HWND playerHwnd = FindWindow(NULL, "Video Viewer");
+#endif
             
             if (binding->code != 69) {
+#if defined(_WIN32)
                 if (playerHwnd) {
                     PostMessage(playerHwnd, WM_USER + 1, binding->code, 0);
                     return true;
                 } else {
                     return false;
                 }
+#else
+                return false;
+#endif
             } else {
                 const char* prompt[1] = { "Search for video..." };
                 

@@ -1,22 +1,145 @@
 #ifndef TYPES_H
 #define TYPES_H
 
-#include "minwindef.h"
-#include <windows.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <string.h>
+#if !defined(_WIN32)
+#include <time.h>
+#endif
 
 #define MAX_VISIBLE_ITEMS 100
 
 #define MAX_SEQUENCE_LEN 8
 #define SEQUENCE_TIMEOUT_MS 500
 
-typedef void (*RefreshCallback)(const char* filter, HWND hListBox);
+#if !defined(MAX_PATH)
+#define MAX_PATH 260
+#endif
+
+#if !defined(_strdup) && !defined(_WIN32)
+#define _strdup strdup
+#endif
+
+#if !defined(VK_BACK)
+#define VK_BACK 0x08
+#endif
+#if !defined(VK_TAB)
+#define VK_TAB 0x09
+#endif
+#if !defined(VK_RETURN)
+#define VK_RETURN 0x0D
+#endif
+#if !defined(VK_SHIFT)
+#define VK_SHIFT 0x10
+#endif
+#if !defined(VK_CONTROL)
+#define VK_CONTROL 0x11
+#endif
+#if !defined(VK_MENU)
+#define VK_MENU 0x12
+#endif
+#if !defined(VK_ESCAPE)
+#define VK_ESCAPE 0x1B
+#endif
+#if !defined(VK_SPACE)
+#define VK_SPACE 0x20
+#endif
+#if !defined(VK_LEFT)
+#define VK_LEFT 0x25
+#endif
+#if !defined(VK_UP)
+#define VK_UP 0x26
+#endif
+#if !defined(VK_RIGHT)
+#define VK_RIGHT 0x27
+#endif
+#if !defined(VK_DOWN)
+#define VK_DOWN 0x28
+#endif
+#if !defined(VK_LWIN)
+#define VK_LWIN 0x5B
+#endif
+#if !defined(VK_RWIN)
+#define VK_RWIN 0x5C
+#endif
+#if !defined(VK_OEM_COMMA)
+#define VK_OEM_COMMA 0xBC
+#endif
+#if !defined(VK_OEM_PERIOD)
+#define VK_OEM_PERIOD 0xBE
+#endif
+#if !defined(VK_OEM_1)
+#define VK_OEM_1 0xBA
+#endif
+#if !defined(VK_OEM_2)
+#define VK_OEM_2 0xBF
+#endif
+#if !defined(VK_OEM_4)
+#define VK_OEM_4 0xDB
+#endif
+#if !defined(VK_OEM_7)
+#define VK_OEM_7 0xDE
+#endif
+#if !defined(VK_LSHIFT)
+#define VK_LSHIFT 0xA0
+#endif
+#if !defined(VK_RSHIFT)
+#define VK_RSHIFT 0xA1
+#endif
+#if !defined(VK_LCONTROL)
+#define VK_LCONTROL 0xA2
+#endif
+#if !defined(VK_RCONTROL)
+#define VK_RCONTROL 0xA3
+#endif
+#if !defined(VK_LMENU)
+#define VK_LMENU 0xA4
+#endif
+#if !defined(VK_RMENU)
+#define VK_RMENU 0xA5
+#endif
+
+typedef uint32_t ColorRef;
+
+#if !defined(FALSE)
+#define FALSE 0
+#define TRUE 1
+#endif
+
+#if !defined(RGB)
+#define RGB(r, g, b) ((uint32_t)(((r) & 0xFF) | (((g) & 0xFF) << 8) | (((b) & 0xFF) << 16)))
+#endif
+
+typedef struct WindowHandle {
+#if defined(_WIN32)
+    HWND hwnd;
+#else
+    unsigned long xid;
+#endif
+} WindowHandle;
+
+#define WH_NULL ((WindowHandle){0})
+
+#if defined(_WIN32)
+#define WH_FROM_HWND(h) ((WindowHandle){ .hwnd = (HWND)(h) })
+#define WH_TO_HWND(h) ((h).hwnd)
+#else
+#define WH_FROM_HWND(h) ((void)(h), WH_NULL)
+#define WH_TO_HWND(h) ((h).xid)
+#endif
+
+typedef void (*RefreshCallback)(const char* filter, WindowHandle hListBox);
 typedef void (*EnterCallback)(const char* selection);
 typedef void (*CtrlEnterCallback)(const char* selection);
 typedef void (*TabCallback)(void);
+#if defined(_WIN32)
 typedef void (*RenderCallback)(HDC hdc, const char* text, RECT* rect, BOOL is_selected, int itemIndex);
 typedef void (*AliasCallback)(HDC hdc, const char* text, RECT* rect, BOOL is_selected, int itemIndex);
+#else
+typedef void (*RenderCallback)(void* hdc, const char* text, void* rect, bool is_selected, int itemIndex);
+typedef void (*AliasCallback)(void* hdc, const char* text, void* rect, bool is_selected, int itemIndex);
+#endif
 typedef void (*EditCallback)(const char*);
 typedef void (*FilterCallback)(const char* item,const char* filter);
 typedef void (*CopyCallback)(const char* selection,int true_index,int type);
@@ -29,8 +152,9 @@ extern KeyCallback g_key_callback;
 
 #define OnlyIOPromptUser(window_list,window_title,count,height,width,item_height,refresh_callback,enter_callback,ctrl_enter_callback,tab_callback) Platform_PromptUser(window_list,window_title,count,height,width,item_height,refresh_callback,enter_callback,ctrl_enter_callback,tab_callback,NULL,NULL,NULL,NULL,NULL)
 
-void UpdateTextCaret(HWND hwndEditControl);
+void UpdateTextCaret(WindowHandle hwndEditControl);
 
+#if defined(_WIN32)
 LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 
 LRESULT CALLBACK SettingsEditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
@@ -42,8 +166,9 @@ LRESULT CALLBACK ListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 LRESULT CALLBACK SimpleListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 
 BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam);
+#endif
 
-void SubjectiveMessageDisplay(const char* buffer,int msg_height,int timeout,COLORREF color);
+void SubjectiveMessageDisplay(const char* buffer,int msg_height,int timeout,ColorRef color);
 
 void SetCursorToEndOfText(void);
 
@@ -53,7 +178,7 @@ typedef struct {
     char keys[MAX_SEQUENCE_LEN];
     int len;
     int typed_count;
-    UINT timer_id;
+    unsigned int timer_id;
     bool waiting;
     bool timed_out;
 } SequenceState;
@@ -66,8 +191,12 @@ typedef struct {
 } SortOption;
 
 typedef struct {
+#if defined(_WIN32)
     LARGE_INTEGER start;
     LARGE_INTEGER frequency;
+#else
+    struct timespec start;
+#endif
 } WinTimer;
 
 struct feature_data {
@@ -97,20 +226,24 @@ typedef struct {
 typedef struct {
     char* initial_text;
     char* result;
+#if defined(_WIN32)
     HFONT hFont;
+#else
+    void* hFont;
+#endif
     int alpha;
-    HWND hEdit;
+    WindowHandle hEdit;
 } EditPopupData;
 
 typedef struct {
     int index;
-    HWND hwnd;
+    WindowHandle hwnd;
     char title[256];
     char exe[256];
 } SavedWindow;
 
 typedef struct {
-    HWND hwnd;
+    WindowHandle hwnd;
     char title[256];
     char exe[256];
 } WindowData;
@@ -121,8 +254,10 @@ typedef struct {
 } WindowLayout;
 
 typedef struct {
+#if defined(_WIN32)
     HANDLE hFile;
     HANDLE hMapping;
+#endif
     char *pBuffer;
     size_t fileSize;   
     size_t capacity;   
@@ -199,12 +334,16 @@ typedef struct {
 } TextSnippet;
 
 typedef struct {
-    HWND hwnd;
+    WindowHandle hwnd;
     char title[256];
 } MonitorWindowData;
 
 typedef struct {
+#if defined(_WIN32)
     HMONITOR targetMonitor;
+#else
+    unsigned long targetMonitor;
+#endif
     int count;
     int capacity;
     MonitorWindowData items[64];
@@ -213,7 +352,11 @@ typedef struct {
 typedef struct {
     int targetIndex;
     int currentIndex;
+#if defined(_WIN32)
     HMONITOR foundMonitor;
+#else
+    unsigned long foundMonitor;
+#endif
 } MonitorSearch;
 
 typedef struct {
@@ -225,14 +368,14 @@ typedef struct {
     const char* flag;
     const char* internal_name;
     const char* tag_label;
-    COLORREF color;
+    ColorRef color;
     bool is_alias;
 } TodoConfigEntry;
 
 typedef struct {
     char tag_label[64];
     char internal_name[64];
-    COLORREF color;
+    ColorRef color;
 } TodoTag;
 
 typedef struct {
@@ -268,9 +411,11 @@ typedef struct {
 #define TODO_FILE_PATH DATA_DIR "todo.txt"
 #define FORGETFULL_FILE_PATH DATA_DIR "forgetfull.txt"
 #define ID_TRAY_ICON 1001
+#if defined(_WIN32)
 #define WM_TRAYICON (WM_USER + 1)
 #define WM_TRIGGER_IMG_CAPTURE (WM_USER + 2)
 #define WM_TRIGGER_UNIVERSAL_MACRO (WM_USER + 3)
+#endif
 #define ID_EXIT 2001
 #define ID_SETTINGS 2002
 #define IDC_INPUT_BOX 101
@@ -286,8 +431,10 @@ typedef struct {
 
 #define GAP 20
 
+#if defined(_WIN32)
 #define MAIN_CENTER_X (GetSystemMetrics(SM_CXSCREEN) / 2)
 #define MAIN_CENTER_Y (GetSystemMetrics(SM_CYSCREEN) / 2)
+#endif
 
 #define MSG_LEFT(msg, msg_width, timeout) \
     Platform_DisplayMessage((msg), \

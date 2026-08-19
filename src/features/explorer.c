@@ -2,7 +2,9 @@
 #include "features/explorer.h"
 #include "helpers.h"
 #include "core/common_ui.h"
+#if defined(_WIN32)
 #include <shellapi.h>
+#endif
 
 static char** g_cached_explorer_commands = NULL;
 static int g_cached_explorer_count = 0;
@@ -44,8 +46,8 @@ static void RebuildExplorerCache(void) {
     free(lines);
 }
 
-static void explorer_refresh_callback(const char* filter, HWND hListBox) {
-    if (!hListBox) return;
+static void explorer_refresh_callback(const char* filter, WindowHandle hListBox) {
+    if (WH_TO_HWND(hListBox) == NULL) return;
     
     if (!g_cached_explorer_commands) {
         RebuildExplorerCache();
@@ -57,7 +59,13 @@ static void explorer_refresh_callback(const char* filter, HWND hListBox) {
 static void explorer_enter_callback(const char* selection) {
           char* path = Platform_QueryZoxidePath(selection);
           if (path) {
+#if defined(_WIN32)
               ShellExecuteA(NULL, "open", "explorer.exe", path, NULL, SW_SHOWNORMAL);
+#else
+              char cmd_open[512];
+              snprintf(cmd_open, sizeof(cmd_open), "xdg-open \"%s\"", path);
+              system(cmd_open);
+#endif
               if (ExplorerZoxideFile->fileSize > 0) {
                   char lastChar = ExplorerZoxideFile->pBuffer[ExplorerZoxideFile->fileSize - 1];
                   if (lastChar != '\n') {

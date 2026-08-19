@@ -52,11 +52,16 @@ static void RemoveTextFromFile(const char* item_to_remove) {
     fclose(infile);
     fclose(outfile);
 
+#if defined(_WIN32)
     DeleteFileA(FORGETFULL_FILE_PATH);
     MoveFileA("forgetfull.tmp", FORGETFULL_FILE_PATH);
+#else
+    remove(FORGETFULL_FILE_PATH);
+    rename("forgetfull.tmp", FORGETFULL_FILE_PATH);
+#endif
 }
 
-static void forgetfull_refresh_callback(const char* filter, HWND hListBox) {
+static void forgetfull_refresh_callback(const char* filter, WindowHandle hListBox) {
     char forgetfull_lines[100][512];
     int forgetfull_count = ReadMdFile(forgetfull_lines, FORGETFULL_FILE_PATH);
     

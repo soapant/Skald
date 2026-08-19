@@ -1,6 +1,8 @@
 #include "common.h"
 #include "features/process_killer.h"
+#if defined(_WIN32)
 #include <tlhelp32.h>
+#endif
 #include "core/common_ui.h"
 
 static char G_PK_LIST[MAX_PK_APPS][128];
@@ -16,12 +18,17 @@ static bool is_system_noise(const char* exe) {
         "taskhostw.exe", "dwm.exe", "fontdrvhost.exe", "Registry","TextInputHost.exe"
     };
     for (size_t i = 0; i < sizeof(noise) / sizeof(noise[0]); i++) {
+#if defined(_WIN32)
         if (StrCmpIA(exe, noise[i]) == 0) return true;
+#else
+        if (strcasecmp(exe, noise[i]) == 0) return true;
+#endif
     }
     return false;
 }
 
 static void collect_running_processes() {
+#if defined(_WIN32)
     G_PK_COUNT = 0;
 
     HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
@@ -50,9 +57,13 @@ static void collect_running_processes() {
         } while (Process32Next(hSnapshot, &pe));
     }
     CloseHandle(hSnapshot);
+#else
+    G_PK_COUNT = 0;
+#endif
 }
 
 static void run_hidden_command(const char* cmd) {
+#if defined(_WIN32)
     STARTUPINFOA si = {0};
     si.cb = sizeof(si);
     PROCESS_INFORMATION pi = {0};
@@ -68,6 +79,9 @@ static void run_hidden_command(const char* cmd) {
     } else {
         WinExec(cmd, SW_HIDE);
     }
+#else
+    (void)cmd;
+#endif
 }
 
 void terminate_process_by_name(const char* exe_name) {
@@ -98,7 +112,7 @@ static void pk_enter_callback(const char* selection) {
       terminate_process_by_name(selection);
 }
 
-static void pk_refresh_callback(const char* filter, HWND hListBox) {
+static void pk_refresh_callback(const char* filter, WindowHandle hListBox) {
     const char** items = (const char**)malloc(G_PK_COUNT * sizeof(char*));
     if (!items) return;
     for (int i = 0; i < G_PK_COUNT; i++) {

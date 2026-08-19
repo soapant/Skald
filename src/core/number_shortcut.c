@@ -6,14 +6,14 @@
 static struct {
     int first_digit;
     int state;
-    UINT timer_id;
-    HWND hEditControl;
-    HWND hListBox;
+    uint32_t timer_id;
+    WindowHandle hEditControl;
+    WindowHandle hListBox;
     bool close_popup;
-} g_num_shortcut_state = {0, 0, 0, NULL, NULL, true};
+} g_num_shortcut_state = {0, 0, 0, WH_NULL, WH_NULL, true};
 
 static void ExecuteNumberShortcut(int number, bool close_popup) {
-    if (!g_num_shortcut_state.hListBox) return;
+    if (WH_TO_HWND(g_num_shortcut_state.hListBox) == NULL) return;
 
     int index = number - 1;
     int count = UI_GetCount(g_num_shortcut_state.hListBox);
@@ -41,6 +41,7 @@ static void ExecuteNumberShortcut(int number, bool close_popup) {
     g_num_shortcut_state.first_digit = 0;
 }
 
+#if defined(_WIN32)
 static void CALLBACK NumberShortcutTimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime) {
     if (g_num_shortcut_state.state == 1 && g_num_shortcut_state.first_digit >= 0) {
         int number = g_num_shortcut_state.first_digit;
@@ -53,11 +54,12 @@ static void CALLBACK NumberShortcutTimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEv
     g_num_shortcut_state.state = 0;
     g_num_shortcut_state.first_digit = 0;
 }
+#endif
 
-bool HandleNumberShortcut(int wParam, HWND hListBox, HWND hEditControl) {
+bool HandleNumberShortcut(int wParam, WindowHandle hListBox, WindowHandle hEditControl) {
     if (wParam < '0' || wParam > '9') return false;
     
-    if (!hListBox) return false;
+    if (WH_TO_HWND(hListBox) == NULL) return false;
     
     int digit = wParam - '0';
     int count = UI_GetCount(hListBox);
@@ -70,21 +72,25 @@ bool HandleNumberShortcut(int wParam, HWND hListBox, HWND hEditControl) {
         g_num_shortcut_state.first_digit = digit;
         g_num_shortcut_state.state = 1;
         
+#if defined(_WIN32)
         if (g_num_shortcut_state.timer_id != 0) {
             KillTimer(NULL, g_num_shortcut_state.timer_id);
             g_num_shortcut_state.timer_id = 0;
         }
         g_num_shortcut_state.timer_id = SetTimer(NULL, 0, NUMBER_SHORTCUT_DELAY_MS, NumberShortcutTimerProc);
+#endif
         
         printf("[NUM-SHORTCUT] Waiting for second digit... (first=%d)\n", digit);
         return true;
     } else if (g_num_shortcut_state.state == 1) {
         int combined_number = (g_num_shortcut_state.first_digit * 10) + digit;
         
+#if defined(_WIN32)
         if (g_num_shortcut_state.timer_id != 0) {
             KillTimer(NULL, g_num_shortcut_state.timer_id);
             g_num_shortcut_state.timer_id = 0;
         }
+#endif
         
         printf("[NUM-SHORTCUT] Two-digit number: %d\n", combined_number);
         ExecuteNumberShortcut(combined_number, g_num_shortcut_state.close_popup);
@@ -95,12 +101,14 @@ bool HandleNumberShortcut(int wParam, HWND hListBox, HWND hEditControl) {
 }
 
 void ResetNumberShortcutState(void) {
+#if defined(_WIN32)
     if (g_num_shortcut_state.timer_id != 0) {
         KillTimer(NULL, g_num_shortcut_state.timer_id);
         g_num_shortcut_state.timer_id = 0;
     }
+#endif
     g_num_shortcut_state.state = 0;
     g_num_shortcut_state.first_digit = 0;
-    g_num_shortcut_state.hListBox = NULL;
-    g_num_shortcut_state.hEditControl = NULL;
+    g_num_shortcut_state.hListBox = WH_NULL;
+    g_num_shortcut_state.hEditControl = WH_NULL;
 }

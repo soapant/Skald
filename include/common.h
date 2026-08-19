@@ -1,13 +1,12 @@
 #ifndef COMMON_H
 #define COMMON_H
 
-#define WIN32_LEAN_AND_MEAN
+#if defined(_WIN32)
 #ifndef PROPID
 #define PROPID DWORD
 #endif
-#define _WIN32_WINNT 0x0601
+#endif
 
-#include <windows.h>
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -24,18 +23,18 @@
 // SHARED GLOBALS (defined in main.c or core .c files)
 // ============================================================
 
-extern HWND hGlobalTrayWnd;
-extern HWND hPopupWnd;
-extern HWND hEditControl;
-extern HWND hListBox;
-extern HWND hDisplayMessage;
-extern HWND hSettings;
-extern HWND g_hEditPopup;
-extern HWND g_hSearchPopup;
-extern HWND g_ActiveEditControl;
+extern WindowHandle hGlobalTrayWnd;
+extern WindowHandle hPopupWnd;
+extern WindowHandle hEditControl;
+extern WindowHandle hListBox;
+extern WindowHandle hDisplayMessage;
+extern WindowHandle hSettings;
+extern WindowHandle g_hEditPopup;
+extern WindowHandle g_hSearchPopup;
+extern WindowHandle g_ActiveEditControl;
 extern EditPopupData* g_EditData;
 
-extern DWORD g_main_thread_id;
+extern uint32_t g_main_thread_id;
 
 extern char output_buffer[256];
 extern bool selection_complete;
@@ -72,8 +71,10 @@ extern char g_populated_cache[MAX_ITEMS][512];
 extern int g_populated_count;
 extern int g_view_offset;
 extern const char* g_title;
+#if defined(_WIN32)
 extern HFONT g_hNumFont;
 extern HFONT g_hMainFont;
+#endif
 extern HashMap* feature_history;
 extern HashMap* g_item_index_map;
 extern HashMap* history_indices;
@@ -82,9 +83,13 @@ extern int g_timeout;
 extern bool g_waiting_for_key;
 extern int g_key_pressed;
 extern WinTimer g_timer;
+#if defined(_WIN32)
 extern HANDLE g_key_event;
+#endif
 
+#if defined(_WIN32)
 extern HHOOK hKeyboardHook;
+#endif
 
 // ============================================================
 // GLOBAL DATA DEFINED IN HEADERS ORIGINALLY
@@ -103,8 +108,8 @@ extern int last_index;
 extern char* selection_feature;
 
 extern int g_refresh_count;
-extern COLORREF DisplayMessageText;
-extern COLORREF g_rainbow_text_cache[MAX_VISIBLE_ITEMS + 1];
+extern ColorRef DisplayMessageText;
+extern ColorRef g_rainbow_text_cache[MAX_VISIBLE_ITEMS + 1];
 extern bool draw_background;
 
 extern bool mic_muted;

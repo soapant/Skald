@@ -2,7 +2,8 @@
 #include "features/pixel_utils.h"
 #include "helpers.h"
 
-static bool GetCursorPixel(long* out_x, long* out_y, BYTE* out_r, BYTE* out_g, BYTE* out_b) {
+static bool GetCursorPixel(long* out_x, long* out_y, uint8_t* out_r, uint8_t* out_g, uint8_t* out_b) {
+#if defined(_WIN32)
     POINT cursorPos;
     if (!GetCursorPos(&cursorPos)) {
         printf("Failed to get cursor position.\n");
@@ -30,18 +31,25 @@ static bool GetCursorPixel(long* out_x, long* out_y, BYTE* out_r, BYTE* out_g, B
     *out_b = GetBValue(color);
 
     return true;
+#else
+    (void)out_x; (void)out_y; (void)out_r; (void)out_g; (void)out_b;
+    return false;
+#endif
 }
 
 void TriggerPosCopy(void) {
+#if defined(_WIN32)
     POINT mousePos;
     if (GetCursorPos(&mousePos)) {
         char coords_buf[64];
         snprintf(coords_buf, sizeof(coords_buf), "%ld, %ld", mousePos.x, mousePos.y);
         Platform_CopyToClipboard(coords_buf);
     }
+#endif
 }
 
 void TriggerPosAdd(void) {
+#if defined(_WIN32)
     POINT mousePos;
     if (GetCursorPos(&mousePos)) {
         char coords_buf[64];
@@ -53,6 +61,7 @@ void TriggerPosAdd(void) {
             WriteMdFile(temp_lines, temp_count + 1, TEMP_FILE_PATH);
         }
     }
+#endif
 }
 
 void TriggerPosClear(void) {
@@ -61,7 +70,7 @@ void TriggerPosClear(void) {
 }
 
 void TriggerColorPlain(void) {
-    long x, y; BYTE r, g, b;
+    long x, y; uint8_t r, g, b;
     if (GetCursorPixel(&x, &y, &r, &g, &b)) {
         char buf[128];
         snprintf(buf, sizeof(buf), "%d, %d, %d", r, g, b);
@@ -70,7 +79,7 @@ void TriggerColorPlain(void) {
 }
 
 void TriggerColorParen(void) {
-    long x, y; BYTE r, g, b;
+    long x, y; uint8_t r, g, b;
     if (GetCursorPixel(&x, &y, &r, &g, &b)) {
         char buf[128];
         snprintf(buf, sizeof(buf), "(%d, %d, %d)", r, g, b);
@@ -80,7 +89,7 @@ void TriggerColorParen(void) {
 
 
 void TriggerPixelEqualsAdb(void) {
-    long x, y; BYTE r, g, b;
+    long x, y; uint8_t r, g, b;
     if (GetCursorPixel(&x, &y, &r, &g, &b)) {
         char buf[128];
         snprintf(buf, sizeof(buf), "adb.pixel_equals(%ld,%ld,(%d,%d,%d))", x, y, r, g, b);
@@ -89,7 +98,7 @@ void TriggerPixelEqualsAdb(void) {
 }
 
 void TriggerPixelEqualsFn(void) {
-    long x, y; BYTE r, g, b;
+    long x, y; uint8_t r, g, b;
     if (GetCursorPixel(&x, &y, &r, &g, &b)) {
         char buf[128];
         snprintf(buf, sizeof(buf), "fn.pixel_equals(%ld,%ld,(%d,%d,%d))", x, y, r, g, b);
@@ -98,6 +107,7 @@ void TriggerPixelEqualsFn(void) {
 }
 
 void TriggerRegionCoords(void) {
+#if defined(_WIN32)
     POINT cursorPos;
     if (!GetCursorPos(&cursorPos)) return;
     
@@ -117,9 +127,11 @@ void TriggerRegionCoords(void) {
         Platform_CopyToClipboard(buf);
         region_step = 0;
     }
+#endif
 }
 
 void TriggerRegionImage(void) {
+#if defined(_WIN32)
     POINT cursorPos;
     if (!GetCursorPos(&cursorPos)) return;
     
@@ -138,8 +150,9 @@ void TriggerRegionImage(void) {
         img_x2 = cursorPos.x;
         img_y2 = cursorPos.y;
         img_region_step = 0;
-        if (hGlobalTrayWnd != NULL) {
-            SendNotifyMessage(hGlobalTrayWnd, WM_TRIGGER_IMG_CAPTURE, 0, 0);
+        if (WH_TO_HWND(hGlobalTrayWnd) != NULL) {
+            SendNotifyMessage(WH_TO_HWND(hGlobalTrayWnd), WM_TRIGGER_IMG_CAPTURE, 0, 0);
         }
     }
+#endif
 }

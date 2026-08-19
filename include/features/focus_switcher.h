@@ -1,16 +1,15 @@
 #ifndef FOCUS_SWITCHER_H
 #define FOCUS_SWITCHER_H
 
-#include <windows.h>
 #include <stdbool.h>
 
 typedef struct {
     const char* search_title;
-    HWND result;
+    WindowHandle result;
 } FindWindowSomething;
 
-void FocusWindow(HWND hwnd);
-HWND FindWindowByPartialTitle(const char* title);
+void FocusWindow(WindowHandle hwnd);
+WindowHandle FindWindowByPartialTitle(const char* title);
 bool HandleFocusSwitcher(int vk_code, int modifiers, const char* current_title);
 
 #endif

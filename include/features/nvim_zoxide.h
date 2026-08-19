@@ -1,7 +1,6 @@
 #ifndef NVIM_ZOXIDE_H
 #define NVIM_ZOXIDE_H
 
-#include <windows.h>
 #include <stdbool.h>
 #include "core/types.h"
 
