@@ -45,6 +45,69 @@ static const char* err_path(const char* src) {
     return nob_temp_sprintf(OBJ_FOLDER "/%s.err", nob_path_name(src));
 }
 
+static void write_json_string(FILE* f, const char* s) {
+    fputc('"', f);
+    for (const char* p = s; *p; ++p) {
+        if (*p == '"') {
+            fputc('\\', f);
+            fputc('"', f);
+        } else if (*p == '\\') {
+#if defined(_WIN32)
+            // clangd wants forward slashes even on Windows
+            fputc('/', f);
+#else
+            fputc('\\', f);
+            fputc('\\', f);
+#endif
+        } else {
+            fputc(*p, f);
+        }
+    }
+    fputc('"', f);
+}
+
+static bool write_compile_commands(void) {
+    const char* cwd = nob_get_current_dir_temp();
+    if (!cwd) return false;
+
+    FILE* f = fopen("compile_commands.json", "w");
+    if (!f) {
+        nob_log(NOB_ERROR, "Failed to write compile_commands.json");
+        return false;
+    }
+
+    fprintf(f, "[\n");
+    for (size_t i = 0; i < sources.count; ++i) {
+        if (i > 0) fprintf(f, ",\n");
+
+        Nob_Cmd cmd = {0};
+        nob_cc(&cmd);
+        nob_cc_flags(&cmd);
+        nob_cmd_append(&cmd, CC_FLAGS, "-c", sources.items[i]);
+
+        fprintf(f, "  {\n");
+        fprintf(f, "    \"directory\": ");
+        write_json_string(f, cwd);
+        fprintf(f, ",\n");
+        fprintf(f, "    \"file\": ");
+        write_json_string(f, sources.items[i]);
+        fprintf(f, ",\n");
+        fprintf(f, "    \"arguments\": [\n");
+        for (size_t j = 0; j < cmd.count; ++j) {
+            fprintf(f, "      ");
+            write_json_string(f, cmd.items[j]);
+            fprintf(f, "%s\n", j + 1 < cmd.count ? "," : "");
+        }
+        fprintf(f, "    ]\n");
+        fprintf(f, "  }");
+    }
+    fprintf(f, "\n]\n");
+    fclose(f);
+
+    nob_log(NOB_INFO, "Wrote compile_commands.json (%zu files)", sources.count);
+    return true;
+}
+
 static bool is_space(char c) {
     return c == ' ' || c == '\t' || c == '\r' || c == '\n';
 }
@@ -178,11 +241,14 @@ int main(int argc, char** argv) {
     NOB_GO_REBUILD_URSELF_PLUS(argc, argv, "nob.h");
 
     bool windowed = false;
-    bool do_run = false;
+    int do_run = 0;
     if (argc > 1) {
         if (strcmp(argv[1], "-actual") == 0) windowed = true;
     }
-    if (argc > 2 && strcmp(argv[2], "-run") == 0) do_run = true;
+    if (strcmp(argv[2], "-run") == 0) {
+      do_run = 1;
+      printf("Running The Program After");
+    }
 
     if (!nob_mkdir_if_not_exists(BUILD_FOLDER)) return 1;
     if (!nob_mkdir_if_not_exists(OBJ_FOLDER)) return 1;
@@ -190,6 +256,8 @@ int main(int argc, char** argv) {
         nob_log(NOB_ERROR, "Failed to walk " SRC_FOLDER);
         return 1;
     }
+
+    write_compile_commands();
 
     for (size_t i = 0; i < sources.count; ++i) {
         const char* src = sources.items[i];
@@ -209,8 +277,8 @@ int main(int argc, char** argv) {
         if (do_run) {
             Nob_Cmd cmd = {0};
             nob_cmd_append(&cmd, output);
-            if (nob_cmd_run_async_and_reset(&cmd) == NOB_INVALID_PROC) return 1;
             nob_log(NOB_INFO, "Started %s", output);
+            if (!nob_cmd_run_async_and_reset(&cmd)) return 1;
         }
         return 0;
     }
