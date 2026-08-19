@@ -5,6 +5,8 @@
 #include <linux/input.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <string.h>
+#include <linux/input.h>
 #include "platform/platform.h"
 #include "config.h"
 #include "common.h"
@@ -82,6 +84,88 @@ bool Platform_IsCtrlPressed(void) {
     XCloseDisplay(display);
 
     return (mask & ControlMask) != 0;
+}
+
+void Linux_GetActiveWindowTitle(char* buffer, int buffer_size) {
+    if (!buffer || buffer_size <= 0) return;
+    buffer[0] = '\0';
+
+    Display *display = XOpenDisplay(NULL);
+    if (!display) return;
+
+    Window focus = None;
+    int revert_to = 0;
+    XGetInputFocus(display, &focus, &revert_to);
+
+    if (focus != None) {
+        char *name = NULL;
+        if (XFetchName(display, focus, &name) && name) {
+            strncpy(buffer, name, buffer_size - 1);
+            buffer[buffer_size - 1] = '\0';
+            XFree(name);
+        }
+    }
+
+    XCloseDisplay(display);
+}
+
+int ConvertLinuxKeyToWindowsVK(int key_code) {
+    if (key_code >= KEY_1 && key_code <= KEY_0) {
+        return '1' + (key_code - KEY_1);
+    }
+
+    switch (key_code) {
+        case KEY_A: return 'A';
+        case KEY_B: return 'B';
+        case KEY_C: return 'C';
+        case KEY_D: return 'D';
+        case KEY_E: return 'E';
+        case KEY_F: return 'F';
+        case KEY_G: return 'G';
+        case KEY_H: return 'H';
+        case KEY_I: return 'I';
+        case KEY_J: return 'J';
+        case KEY_K: return 'K';
+        case KEY_L: return 'L';
+        case KEY_M: return 'M';
+        case KEY_N: return 'N';
+        case KEY_O: return 'O';
+        case KEY_P: return 'P';
+        case KEY_Q: return 'Q';
+        case KEY_R: return 'R';
+        case KEY_S: return 'S';
+        case KEY_T: return 'T';
+        case KEY_U: return 'U';
+        case KEY_V: return 'V';
+        case KEY_W: return 'W';
+        case KEY_X: return 'X';
+        case KEY_Y: return 'Y';
+        case KEY_Z: return 'Z';
+        case KEY_SPACE: return VK_SPACE;
+        case KEY_ENTER: return VK_RETURN;
+        case KEY_BACKSPACE: return VK_BACK;
+        case KEY_TAB: return VK_TAB;
+        case KEY_ESC: return VK_ESCAPE;
+        case KEY_LEFT: return VK_LEFT;
+        case KEY_UP: return VK_UP;
+        case KEY_RIGHT: return VK_RIGHT;
+        case KEY_DOWN: return VK_DOWN;
+        case KEY_LEFTCTRL: return VK_LCONTROL;
+        case KEY_RIGHTCTRL: return VK_RCONTROL;
+        case KEY_LEFTALT: return VK_LMENU;
+        case KEY_RIGHTALT: return VK_RMENU;
+        case KEY_LEFTSHIFT: return VK_LSHIFT;
+        case KEY_RIGHTSHIFT: return VK_RSHIFT;
+        case KEY_LEFTMETA: return VK_LWIN;
+        case KEY_RIGHTMETA: return VK_RWIN;
+        case KEY_SEMICOLON: return VK_OEM_1;
+        case KEY_SLASH: return VK_OEM_2;
+        case KEY_LEFTBRACE: return VK_OEM_4;
+        case KEY_COMMA: return VK_OEM_COMMA;
+        case KEY_DOT: return VK_OEM_PERIOD;
+        case KEY_APOSTROPHE: return VK_OEM_7;
+        default: return 0;
+    }
 }
 
 char* Platform_QueryZoxidePath(const char* query) {
