@@ -14,9 +14,12 @@ bool Initialized = false;
 
 static void InitTextEditor() {
     
-    const char* last_slash = strrchr(TextEditorPath, '\\');
+    char expanded_path[MAX_PATH];
+    if (!Platform_ExpandPath(TextEditorPath, expanded_path, sizeof(expanded_path))) return;
+    
+    const char* last_slash = strrchr(expanded_path, '\\');
 
-    const char* start = (last_slash != NULL) ? (last_slash + 1) : TextEditorPath;
+    const char* start = (last_slash != NULL) ? (last_slash + 1) : expanded_path;
 
     const char* dot_exe = strstr(start, ".exe");
 
@@ -47,7 +50,10 @@ static void LaunchNvim(const char* path) {
     PROCESS_INFORMATION pi = {0};
 #endif
     
-    snprintf(cmd, sizeof(cmd), "%s \"%s\"", TextEditorPath, path);
+    char expanded_path[MAX_PATH];
+    if (!Platform_ExpandPath(TextEditorPath, expanded_path, sizeof(expanded_path))) return;
+    
+    snprintf(cmd, sizeof(cmd), "%s \"%s\"", expanded_path, path);
     
 #if defined(_WIN32)
     if (CreateProcessA(NULL, cmd, NULL, NULL, FALSE, 

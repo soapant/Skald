@@ -67,7 +67,11 @@ static void launch_app_as_admin(const char* display_name) {
 
 void launch_exe_with_args(const char* exe_path, const char* args) {
     char cmd[MAX_PATH * 2 + 512];
-    
+
+    char expanded_path[MAX_PATH];
+    if (!Platform_ExpandPath(exe_path, expanded_path, sizeof(expanded_path))) return;
+    exe_path = expanded_path;
+
     if (args != NULL && strlen(args) > 0 && strcmp(args, "0") != 0) {
         snprintf(cmd, sizeof(cmd), "\"%s\" %s", exe_path, args);
     } else {
