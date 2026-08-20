@@ -8,14 +8,7 @@
 #include "core/feature_data.h"
 #include "window/subclasses.h"
 #include "platform/platform.h"
-#include "bindings/bindings.h"
 #include "bindings/hotkey_definitions.h"
-#include "bindings/macro_bindings.h"
-#include "bindings/character_sequence.h"
-#include "features/focus_switcher.h"
-#include "features/music_player.h"
-#include "features/video_player.h"
-#include "features/process_killer.h"
 #include <gdiplus.h>
 
 void Platform_WaitForKeypressAsync(KeyCallback callback) {

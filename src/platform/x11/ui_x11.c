@@ -31,13 +31,6 @@ void Platform_WaitForKeypressAsync(KeyCallback callback) {
     (void)callback;
     fprintf(stderr, "[PLATFORM] Platform_WaitForKeypressAsync not implemented yet\n");
 }
-unsigned long rgb_to_hex(unsigned long win_color) {
-    unsigned long r = win_color & 0xFF;          
-    unsigned long g = (win_color >> 8) & 0xFF;  
-    unsigned long b = (win_color >> 16) & 0xFF;
-
-    return (r << 16) | (g << 8) | b;
-}
 
 char* Platform_PromptUser(const char* window_list[], const char* window_title, int count, int height, int width, int item_height,
     RefreshCallback refresh_callback, 
@@ -72,6 +65,7 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
       .scroll_offset = 0,
       .width = layout_w,
       .height = layout_h,
+      .window_title = window_title + 5,
     };
     state.filter[0] = '\0';
 
@@ -134,9 +128,21 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
     while (running) {
         XNextEvent(dpy, &ev);
         if (ev.type == KeyPress) {
-            Linux_HandlePromptKey(&ev);
+            if (!Linux_HandlePromptKey(&ev,&state) && state.selection == -1) {
+              char buf[32];
+              KeySym ks;
+              int len = XLookupString(&ev.xkey, buf, sizeof(buf), &ks, NULL);
+              if (len > 0) {
+                  size_t n = strlen(state.filter);
+                  if (n + len < sizeof(state.filter) - 1) {
+                      memcpy(state.filter + n, buf, len);
+                      state.filter[n + len] = '\0';
+                  }
+              }
+              state.cursor += 1;
+            }
         }
-        Linux_RenderPromptUser(&ev,dpy,&win, &state);
+        Linux_RenderPromptUser(dpy,&win, &state);
         if (selection_complete) {
             running = 0;
         }
@@ -201,7 +207,7 @@ char* Platform_SimplePromptUser(const char* prompt, const char* window_title,int
     while (running) {
         XNextEvent(dpy, &ev);
         if (ev.type == KeyPress) {
-            Linux_HandlePromptKey(&ev);
+            // Linux_HandlePromptKey(&ev,&state);
             if (selection_complete) {
                 running = 0;
             }
@@ -214,45 +220,6 @@ char* Platform_SimplePromptUser(const char* prompt, const char* window_title,int
     return NULL;
 }
 
-static int xft_width(Display* dpy, XftFont* xf, const char* text, int len) {
-    XGlyphInfo ext;
-    XftTextExtentsUtf8(dpy, xf, (FcChar8*)text, len, &ext);
-    return ext.xOff;
-}
-
-static void draw_wrapped_text(Display* dpy, XftDraw* xd, XftColor* color, FontHandle font, const char* text, int maxWidth, int startY) {
-    XftFont* xf = FH_TO_XFT(font);
-    int lineHeight = xf->ascent + xf->descent;
-    int spaceWidth = xft_width(dpy, xf, " ", 1);
-    int y = startY + xf->ascent;
-
-    const char* p = text;
-    const char* lineStart = text;
-    int lineWidth = 0;
-    while (*p) {
-        const char* word_start = p;
-        while (*p && *p != ' ') p++;
-        int wordWidth = xft_width(dpy, xf, word_start, p - word_start);
-        int add = wordWidth + (lineWidth > 0 ? spaceWidth : 0);
-        if (lineWidth > 0 && lineWidth + add > maxWidth) {
-            int lw = xft_width(dpy, xf, lineStart, word_start - lineStart);
-            XftDrawStringUtf8(xd, color, xf, (maxWidth - lw) / 2, y,
-                              (FcChar8*)lineStart, word_start - lineStart);
-            y += lineHeight;
-            lineStart = word_start;
-            lineWidth = wordWidth;
-        } else {
-            lineWidth += add;
-        }
-        while (*p == ' ') p++;
-    }
-    if (p > lineStart) {
-        int lw = xft_width(dpy, xf, lineStart, p - lineStart);
-        XftDrawStringUtf8(xd, color, xf, (maxWidth - lw) / 2, y,
-                          (FcChar8*)lineStart, p - lineStart);
-        fprintf(stderr, "[MSG] drew last line y=%d '%s'\n", y, lineStart);
-    }
-}
 
 typedef struct {
     int dead;
@@ -355,8 +322,6 @@ void Platform_DisplayMessage(const char* message, int centerX, int centerY, int 
     XSelectInput(dpy, win, ExposureMask | KeyPressMask);
 
     XftDraw* xd = XftDrawCreate(dpy, win, DefaultVisual(dpy, screen), DefaultColormap(dpy, screen));
-    fprintf(stderr, "[MSG] xd=%s win=0x%lx winW=%d winH=%d textW=%d textH=%d msg='%s'\n",
-            xd ? "ok" : "NULL", win, winWidth, winHeight, textW, textH, message);
     Visual* visual = DefaultVisual(dpy, screen);
     Colormap cmap = DefaultColormap(dpy, screen);
     XRenderColor rc = {
@@ -367,7 +332,6 @@ void Platform_DisplayMessage(const char* message, int centerX, int centerY, int 
     };
     XftColor color;
     int alloc_ok = XftColorAllocValue(dpy, visual, cmap, &rc, &color);
-    fprintf(stderr, "[MSG] color_alloc=%s\n", alloc_ok ? "ok" : "FAILED");
 
     XMapWindow(dpy, win);
     XFlush(dpy);
@@ -382,7 +346,7 @@ void Platform_DisplayMessage(const char* message, int centerX, int centerY, int 
 
     int startY = (winHeight - textH) / 2;
 
-    draw_wrapped_text(dpy, xd, &color, font, message, winWidth - 30, startY);
+    draw_wrapped_text(dpy, xd, &color, font, message,startY,"CENTER",0);
 
     XFlush(dpy);
 
