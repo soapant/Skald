@@ -97,7 +97,7 @@ void Linux_GetActiveWindowTitle(char* buffer, int buffer_size) {
     int revert_to = 0;
     XGetInputFocus(display, &focus, &revert_to);
 
-    if (focus != None) {
+    if (focus != None && focus != PointerRoot) {
         char *name = NULL;
         if (XFetchName(display, focus, &name) && name) {
             strncpy(buffer, name, buffer_size - 1);
