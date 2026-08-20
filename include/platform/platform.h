@@ -12,6 +12,10 @@ bool Platform_ShellExecuteWithVerb(const char* path, const char* verb, bool asyn
 bool Platform_LaunchApp(const char* path);
 bool Platform_LaunchAppAsAdmin(const char* path);
 bool Platform_IsCtrlPressed(void);
+bool Platform_ExpandPath(const char* template_path, char* out, size_t out_size);
+bool Platform_SendX11Command(const char* window_title, const char* atom_name, long command);
+bool Platform_SetX11Property(const char* window_title, const char* atom_name, long value);
+bool Platform_SetX11StringProperty(const char* window_title, const char* atom_name, const char* value);
 
 char* Platform_QueryZoxidePath(const char* query);
 char Platform_GetLastChar(MappedFile *file);
@@ -24,7 +28,6 @@ char** Platform_FileGetStrings(MappedFile *mf, size_t *outLineCount, NewlineInfo
 void Platform_CleanUpFile(MappedFile *mf, NewlineInfo *newlines, size_t newlineCount);
 void Platform_SanitizeFile(const char *filePath);
 int Platform_ReplaceLineInMappedFile(MappedFile* mf, int line_index, const char* new_text);
-
 int Platform_CopyToClipboard(const char* text);
 
 void Platform_StartUniversalTimer(void);

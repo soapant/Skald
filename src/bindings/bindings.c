@@ -237,6 +237,9 @@ bool CheckAppHotkeyBindings(int pressed_vk, int modifiers) {
     return false;
 }
 void RunMiscApplication(const char* path) {
+    char expanded_path[MAX_PATH];
+    if (path != NULL && !Platform_ExpandPath(path, expanded_path, sizeof(expanded_path))) return;
+    if (path != NULL) path = expanded_path;
 #if defined(_WIN32)
     if (path == NULL || strlen(path) == 0) return;
     

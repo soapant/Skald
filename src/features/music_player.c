@@ -3,6 +3,7 @@
 #include "core/common_ui.h"
 #include "features/file_search.h"
 #include "features/app_launcher.h"
+#include "platform/platform.h"
 
 static void music_refresh_callback(const char* filter, WindowHandle hListBox) {
     ClearFileList();
@@ -30,13 +31,24 @@ static void music_enter_callback(const char* selection) {
         cds.cbData = (DWORD)(strlen(result) + 1);
         cds.lpData = (PVOID)result;
         SendMessage(playerHwnd, WM_COPYDATA, (WPARAM)NULL, (LPARAM)&cds);
-    } else
-#endif
-    {
-          char quoted_result[MAX_PATH + 3] = {0};
-          snprintf(quoted_result, sizeof(quoted_result), "\"%s\"", result);
-          launch_exe_with_args(MusicPlayerPath, quoted_result);
+        return;
+    } else {
+        char quoted_result[MAX_PATH + 3] = {0};
+        snprintf(quoted_result, sizeof(quoted_result), "\"%s\"", result);
+        launch_exe_with_args(MusicPlayerPath, quoted_result);
     }
+#else
+    if (Platform_SetX11StringProperty("Music Player", "_MP_TRACK", result) &&
+        Platform_SendX11Command("Music Player", "_MP_TRACK_CHANGED", 1)) {
+        printf("[MUSIC] Sent to existing player: %s\n", result);
+        return;
+    }
+    if (strlen(MusicPlayerPath) > 0) {
+        char quoted_result[MAX_PATH + 3] = {0};
+        snprintf(quoted_result, sizeof(quoted_result), "\"%s\"", result);
+        launch_exe_with_args(MusicPlayerPath, quoted_result);
+    }
+#endif
 }
 
 bool HandleMusicPlayer(int vk_code, int modifiers, const char* current_title) {
@@ -58,7 +70,7 @@ bool HandleMusicPlayer(int vk_code, int modifiers, const char* current_title) {
                     return false;
                 }
 #else
-                return false;
+                return Platform_SendX11Command("Music Player", "_MP_PLAYER_CMD", binding->code);
 #endif
             } else {
                 ClearFileList();

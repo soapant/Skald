@@ -5,6 +5,7 @@
 #include "config.h"
 #include "core/common_ui.h"
 #include "wingdi.h"
+#include "helpers.h"
 
 static bool only_once = true;
 static bool rainbow_init = false;
@@ -1289,8 +1290,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
       nid.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
       nid.uCallbackMessage = WM_TRAYICON;
       
-      nid.hIcon = (HICON)LoadImage(NULL,
-                                   TEXT(IconPath), 
+      char expanded_icon[MAX_PATH];
+      if (!Platform_ExpandPath(IconPath, expanded_icon, sizeof(expanded_icon))) expanded_icon[0] = '\0';
+      
+      nid.hIcon = (HICON)LoadImageA(NULL,
+                                   expanded_icon, 
                                    IMAGE_ICON, 
                                    0, 0, 
                                    LR_LOADFROMFILE | LR_DEFAULTSIZE);
