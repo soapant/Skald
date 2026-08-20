@@ -1,8 +1,5 @@
 #include "common.h"
-#include "core/common_ui.h"
-#include "core/feature_data.h"
 #include "core/modal.h"
-#include "core/number_shortcut.h"
 #include "config.h"
 #include "platform/platform.h"
 #include "helpers.h"
