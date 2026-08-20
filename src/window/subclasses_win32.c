@@ -9,6 +9,7 @@
 #include "window/subclasses.h"
 #include "wingdi.h"
 #include "helpers.h"
+#include "platform/platform.h"
 
 static bool only_once = true;
 static bool rainbow_init = false;
@@ -801,8 +802,8 @@ LRESULT CALLBACK DisplayMessageProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
           }
       
         HFONT hOldFont = NULL;
-        if (data->hFont) {
-          hOldFont = (HFONT)SelectObject(hdc, data->hFont);
+        if (FH_TO_HFONT(data->hFont)) {
+          hOldFont = (HFONT)SelectObject(hdc, FH_TO_HFONT(data->hFont));
         }
       
         if (data->message) {
@@ -853,7 +854,7 @@ LRESULT CALLBACK DisplayMessageProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
     case WM_NCDESTROY: {
       if (data) {
         if (data->message) free((void*)data->message);
-          if (data->hFont) DeleteObject(data->hFont);
+          if (FH_TO_HFONT(data->hFont)) Platform_DestroyFont(data->hFont);
             free(data);
               SetWindowLongPtrA(hwnd, GWLP_USERDATA, 0);
       }

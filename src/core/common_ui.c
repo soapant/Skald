@@ -2,6 +2,7 @@
 #include "config.h"
 #include "helpers.h"
 #include "core/common_ui.h"
+#include "platform/platform.h"
 #if defined(_WIN32)
 #include <windows.h>
 #include <commctrl.h>
@@ -282,13 +283,7 @@ ColorRef GetRainbowColor(float t, float s, float v) {
 
 #if defined(_WIN32)
 HFONT CreateCustomNerdFont(int height, const char* face_name) {
-  return CreateFontA(
-      height, 0, 0, 0, FW_NORMAL,
-      FALSE, FALSE, FALSE,
-      DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-      CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE,
-      face_name
-      );
+  return FH_TO_HFONT(Platform_CreateFont(height, face_name));
 }
 #endif
 

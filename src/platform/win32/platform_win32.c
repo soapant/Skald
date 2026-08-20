@@ -655,3 +655,35 @@ void Platform_SaveRegionToPNG(int x1, int y1, int x2, int y2, const char* fullPa
     DeleteDC(hMemoryDC);
     ReleaseDC(NULL, hScreenDC);
 }
+
+FontHandle Platform_CreateFont(int size, const char* face_name) {
+    return FH_FROM_HFONT(CreateFontA(
+        size, 0, 0, 0, FW_NORMAL,
+        FALSE, FALSE, FALSE,
+        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+        CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE,
+        face_name
+        ));
+}
+
+void Platform_DestroyFont(FontHandle font) {
+    if (FH_TO_HFONT(font)) {
+        DeleteObject(FH_TO_HFONT(font));
+    }
+}
+
+void Platform_GetTextExtents(FontHandle font, const char* text, int maxWidth, int* outWidth, int* outHeight) {
+    if (!FH_TO_HFONT(font) || !text) {
+        *outWidth = 0;
+        *outHeight = 0;
+        return;
+    }
+    HDC hdc = CreateCompatibleDC(NULL);
+    HFONT hOldFont = (HFONT)SelectObject(hdc, FH_TO_HFONT(font));
+    RECT rect = { 0, 0, maxWidth, 0x7FFFFFFF };
+    DrawTextA(hdc, text, -1, &rect, DT_CALCRECT | DT_WORDBREAK);
+    SelectObject(hdc, hOldFont);
+    DeleteDC(hdc);
+    *outWidth = rect.right;
+    *outHeight = rect.bottom;
+}
