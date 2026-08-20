@@ -336,6 +336,26 @@ typedef struct {
     char *pBuffer;
 } MappedFile;
 
+#if !defined(_WIN32)
+typedef struct {                                                   
+     char**      items;          
+     size_t      item_count;                                        
+     char        filter[512];   
+     size_t      cursor;        
+     int         selection;     
+     int         scroll_offset; 
+     int         width, height; 
+} PromptState; 
+
+typedef struct {                                                   
+     char*       display_message;          
+     size_t      cursor;        
+     int         width, height; 
+} SimplePromptState; 
+
+#endif
+
+
 typedef struct {
     char *ptr;
     size_t length;

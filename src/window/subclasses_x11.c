@@ -184,3 +184,16 @@ bool Linux_HandlePromptKey(const XEvent* ev) {
 
     return false;
 }
+
+void DrawEditControl(Display *dpy,Window* win,PromptState *state) {
+}
+
+bool Linux_RenderPromptUser(const XEvent* ev, Display *dpy, Window *win, PromptState *state) {
+    switch (ev->type) {
+      case Expose: {
+        DrawEditControl(dpy, win,state);
+        break;
+      }
+    }
+    return true;
+}
