@@ -125,15 +125,22 @@ bool g_Linux_AltHeld   = false;
 bool g_Linux_ShiftHeld = false;
 
 void HandleGlobalKeyEvent(int key_code, int value) {
-    if (value == 2) return; 
     bool is_pressed = (value == 1);
-
-    if (key_code == KEY_LEFTCTRL || key_code == KEY_RIGHTCTRL)   g_Linux_CtrlHeld = is_pressed;
-    if (key_code == KEY_LEFTALT  || key_code == KEY_RIGHTALT)    g_Linux_AltHeld = is_pressed;
-    if (key_code == KEY_LEFTSHIFT || key_code == KEY_RIGHTSHIFT) g_Linux_ShiftHeld = is_pressed;
-
+    bool is_released = (value == 0);
+    
+    if (key_code == KEY_LEFTCTRL || key_code == KEY_RIGHTCTRL) {
+        g_Linux_CtrlHeld = is_pressed;
+    }
+    if (key_code == KEY_LEFTALT || key_code == KEY_RIGHTALT) {
+        g_Linux_AltHeld = is_pressed;
+    }
+    if (key_code == KEY_LEFTSHIFT || key_code == KEY_RIGHTSHIFT) {
+        g_Linux_ShiftHeld = is_pressed;
+    }
+    
+    
     if (!is_pressed) return;
-
+    
     
     double seconds = Platform_GetUniversalTimeSeconds();
     if (seconds >= 300) {
