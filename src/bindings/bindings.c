@@ -10,6 +10,7 @@
 #include "features/focus_switcher.h"
 #if defined(_WIN32)
 #include <shellapi.h>
+#include <shlwapi.h>
 #endif
 #include <ctype.h>
 
