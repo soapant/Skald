@@ -1,6 +1,8 @@
 #define _GNU_SOURCE
+#include <pthread.h>
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
+#include <X11/Xft/Xft.h>
 #include <sys/mman.h>
 #include <sys/stat.h> 
 #include <linux/input.h>
@@ -833,4 +835,83 @@ double Platform_GetUniversalTimeSeconds(void) {
 void Platform_SaveRegionToPNG(int x1, int y1, int x2, int y2, const char* fullPath) {
     (void)x1; (void)y1; (void)x2; (void)y2; (void)fullPath;
     fprintf(stderr, "[PLATFORM] Platform_SaveRegionToPNG not implemented yet\n");
+}
+
+static Display* g_font_dpy = NULL;
+static pthread_mutex_t g_font_dpy_mtx = PTHREAD_MUTEX_INITIALIZER;
+
+FontHandle Platform_CreateFontOnDisplay(Display* dpy, int size, const char* face_name) {
+    FontHandle fh = FH_NULL;
+    if (!dpy) return fh;
+    int screen = DefaultScreen(dpy);
+
+    XftFont* xf = XftFontOpen(dpy, screen,
+                              FC_FAMILY, FcTypeString, face_name,
+                              FC_PIXEL_SIZE, FcTypeDouble, (double)size,
+                              NULL);
+    if (!xf) {
+        xf = XftFontOpen(dpy, screen,
+                         FC_FAMILY, FcTypeString, "sans",
+                         FC_PIXEL_SIZE, FcTypeDouble, (double)size,
+                         NULL);
+    }
+    if (!xf) {
+        xf = XftFontOpenName(dpy, screen, "fixed");
+    }
+    if (!xf) return fh;
+
+    fh.xfont = xf;
+    fh.dpy = dpy;
+    return fh;
+}
+
+FontHandle Platform_CreateFont(int size, const char* face_name) {
+    pthread_mutex_lock(&g_font_dpy_mtx);
+    if (!g_font_dpy) g_font_dpy = XOpenDisplay(NULL);
+    pthread_mutex_unlock(&g_font_dpy_mtx);
+    if (!g_font_dpy) return FH_NULL;
+    return Platform_CreateFontOnDisplay(g_font_dpy, size, face_name);
+}
+
+void Platform_DestroyFont(FontHandle font) {
+    if (FH_TO_XFT(font)) {
+        XftFontClose(FH_TO_DPY(font), FH_TO_XFT(font));
+    }
+}
+
+static int xft_text_width(Display* dpy, XftFont* xf, const char* text, int len) {
+    XGlyphInfo ext;
+    XftTextExtentsUtf8(dpy, xf, (FcChar8*)text, len, &ext);
+    return ext.xOff;
+}
+
+void Platform_GetTextExtents(FontHandle font, const char* text, int maxWidth, int* outWidth, int* outHeight) {
+    if (!FH_TO_XFT(font) || !text) {
+        *outWidth = 0;
+        *outHeight = 0;
+        return;
+    }
+    Display* dpy = FH_TO_DPY(font);
+    XftFont* xf = FH_TO_XFT(font);
+    int lineHeight = xf->ascent + xf->descent;
+    int spaceWidth = xft_text_width(dpy, xf, " ", 1);
+
+    int lineWidth = 0;
+    int totalHeight = lineHeight;
+    const char* p = text;
+    while (*p) {
+        const char* word_start = p;
+        while (*p && *p != ' ') p++;
+        int wordWidth = xft_text_width(dpy, xf, word_start, p - word_start);
+        int add = wordWidth + (lineWidth > 0 ? spaceWidth : 0);
+        if (lineWidth > 0 && lineWidth + add > maxWidth) {
+            totalHeight += lineHeight;
+            lineWidth = wordWidth;
+        } else {
+            lineWidth += add;
+        }
+        while (*p == ' ') p++;
+    }
+    *outWidth = lineWidth;
+    *outHeight = totalHeight;
 }

@@ -1,18 +1,16 @@
 #ifndef SUBCLASSES_H
 #define SUBCLASSES_H
 
+#include "core/types.h"
+
 #if defined(_WIN32)
 #define WM_DISPLAY_MESSAGE (WM_APP + 2)
 #endif
 
 typedef struct {
   const char* message;
-#if defined(_WIN32)
-    HFONT hFont;
-#else
-    void* hFont;
-#endif
-    int alpha;
+  FontHandle hFont;
+  int alpha;
 } FadeWindowData;
 
 typedef struct {

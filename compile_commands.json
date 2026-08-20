@@ -8,6 +8,9 @@
       "-Wextra",
       "-I",
       "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
       "-w",
       "-c",
       "src/config/config.c"
@@ -22,6 +25,9 @@
       "-Wextra",
       "-I",
       "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
       "-w",
       "-c",
       "src/window/subclasses_x11.c"
@@ -36,6 +42,9 @@
       "-Wextra",
       "-I",
       "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
       "-w",
       "-c",
       "src/main.c"
@@ -50,6 +59,9 @@
       "-Wextra",
       "-I",
       "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
       "-w",
       "-c",
       "src/core/helpers.c"
@@ -64,6 +76,9 @@
       "-Wextra",
       "-I",
       "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
       "-w",
       "-c",
       "src/core/number_shortcut.c"
@@ -78,6 +93,9 @@
       "-Wextra",
       "-I",
       "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
       "-w",
       "-c",
       "src/core/hashmap.c"
@@ -92,6 +110,9 @@
       "-Wextra",
       "-I",
       "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
       "-w",
       "-c",
       "src/core/feature_data.c"
@@ -106,6 +127,9 @@
       "-Wextra",
       "-I",
       "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
       "-w",
       "-c",
       "src/core/types.c"
@@ -120,6 +144,9 @@
       "-Wextra",
       "-I",
       "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
       "-w",
       "-c",
       "src/core/modal.c"
@@ -134,6 +161,9 @@
       "-Wextra",
       "-I",
       "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
       "-w",
       "-c",
       "src/core/common_ui.c"
@@ -148,6 +178,9 @@
       "-Wextra",
       "-I",
       "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
       "-w",
       "-c",
       "src/bindings/macro_bindings.c"
@@ -162,6 +195,9 @@
       "-Wextra",
       "-I",
       "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
       "-w",
       "-c",
       "src/bindings/vim_bindings.c"
@@ -176,6 +212,9 @@
       "-Wextra",
       "-I",
       "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
       "-w",
       "-c",
       "src/bindings/hotkey_definitions.c"
@@ -190,6 +229,9 @@
       "-Wextra",
       "-I",
       "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
       "-w",
       "-c",
       "src/bindings/bindings.c"
@@ -204,6 +246,9 @@
       "-Wextra",
       "-I",
       "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
       "-w",
       "-c",
       "src/bindings/character_sequence.c"
@@ -218,6 +263,9 @@
       "-Wextra",
       "-I",
       "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
       "-w",
       "-c",
       "src/bindings/vim_helpers.c"
@@ -232,6 +280,9 @@
       "-Wextra",
       "-I",
       "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
       "-w",
       "-c",
       "src/bindings/vim_motions.c"
@@ -246,6 +297,9 @@
       "-Wextra",
       "-I",
       "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
       "-w",
       "-c",
       "src/features/mute_microphone.c"
@@ -260,6 +314,9 @@
       "-Wextra",
       "-I",
       "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
       "-w",
       "-c",
       "src/features/forgetfull.c"
@@ -274,6 +331,9 @@
       "-Wextra",
       "-I",
       "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
       "-w",
       "-c",
       "src/features/explorer.c"
@@ -288,6 +348,9 @@
       "-Wextra",
       "-I",
       "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
       "-w",
       "-c",
       "src/features/pixel_utils.c"
@@ -302,6 +365,9 @@
       "-Wextra",
       "-I",
       "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
       "-w",
       "-c",
       "src/features/replica.c"
@@ -316,6 +382,9 @@
       "-Wextra",
       "-I",
       "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
       "-w",
       "-c",
       "src/features/nvim_zoxide.c"
@@ -330,6 +399,9 @@
       "-Wextra",
       "-I",
       "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
       "-w",
       "-c",
       "src/features/terminal_command.c"
@@ -344,6 +416,9 @@
       "-Wextra",
       "-I",
       "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
       "-w",
       "-c",
       "src/features/focus_switcher.c"
@@ -358,6 +433,9 @@
       "-Wextra",
       "-I",
       "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
       "-w",
       "-c",
       "src/features/factorio.c"
@@ -372,6 +450,9 @@
       "-Wextra",
       "-I",
       "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
       "-w",
       "-c",
       "src/features/app_launcher.c"
@@ -386,6 +467,9 @@
       "-Wextra",
       "-I",
       "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
       "-w",
       "-c",
       "src/features/screenshot.c"
@@ -400,6 +484,9 @@
       "-Wextra",
       "-I",
       "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
       "-w",
       "-c",
       "src/features/notification_getter.c"
@@ -414,6 +501,9 @@
       "-Wextra",
       "-I",
       "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
       "-w",
       "-c",
       "src/features/video_player.c"
@@ -428,6 +518,9 @@
       "-Wextra",
       "-I",
       "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
       "-w",
       "-c",
       "src/features/monitor_focus.c"
@@ -442,6 +535,9 @@
       "-Wextra",
       "-I",
       "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
       "-w",
       "-c",
       "src/features/google_search.c"
@@ -456,6 +552,9 @@
       "-Wextra",
       "-I",
       "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
       "-w",
       "-c",
       "src/features/music_player.c"
@@ -470,6 +569,9 @@
       "-Wextra",
       "-I",
       "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
       "-w",
       "-c",
       "src/features/process_killer.c"
@@ -484,6 +586,9 @@
       "-Wextra",
       "-I",
       "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
       "-w",
       "-c",
       "src/features/window_switcher.c"
@@ -498,6 +603,9 @@
       "-Wextra",
       "-I",
       "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
       "-w",
       "-c",
       "src/features/timer.c"
@@ -512,6 +620,9 @@
       "-Wextra",
       "-I",
       "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
       "-w",
       "-c",
       "src/features/todo.c"
@@ -526,6 +637,9 @@
       "-Wextra",
       "-I",
       "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
       "-w",
       "-c",
       "src/features/volume.c"
@@ -540,6 +654,9 @@
       "-Wextra",
       "-I",
       "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
       "-w",
       "-c",
       "src/features/adb.c"
@@ -554,6 +671,9 @@
       "-Wextra",
       "-I",
       "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
       "-w",
       "-c",
       "src/features/yazi_zoxide.c"
@@ -568,6 +688,9 @@
       "-Wextra",
       "-I",
       "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
       "-w",
       "-c",
       "src/features/monitor_control.c"
@@ -582,6 +705,9 @@
       "-Wextra",
       "-I",
       "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
       "-w",
       "-c",
       "src/features/minecraft.c"
@@ -596,6 +722,9 @@
       "-Wextra",
       "-I",
       "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
       "-w",
       "-c",
       "src/features/calc.c"
@@ -610,6 +739,9 @@
       "-Wextra",
       "-I",
       "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
       "-w",
       "-c",
       "src/features/windows_control.c"
@@ -624,6 +756,9 @@
       "-Wextra",
       "-I",
       "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
       "-w",
       "-c",
       "src/features/file_search.c"
@@ -638,6 +773,9 @@
       "-Wextra",
       "-I",
       "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
       "-w",
       "-c",
       "src/features/zoxide.c"
@@ -652,6 +790,9 @@
       "-Wextra",
       "-I",
       "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
       "-w",
       "-c",
       "src/features/reminder.c"
@@ -666,6 +807,9 @@
       "-Wextra",
       "-I",
       "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
       "-w",
       "-c",
       "src/platform/x11/ui_x11.c"
@@ -680,6 +824,9 @@
       "-Wextra",
       "-I",
       "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
       "-w",
       "-c",
       "src/platform/x11/platform_x11.c"

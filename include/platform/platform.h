@@ -58,6 +58,12 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
 char* Platform_SimplePromptUser(const char* prompt, const char* window_title,int height, int width, int item_height);
 void Platform_DisplayMessage(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, int timeout);
 void Platform_CreateDisplayMessageWindow(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, int timeout);
+FontHandle Platform_CreateFont(int size, const char* face_name);
+#if !defined(_WIN32)
+FontHandle Platform_CreateFontOnDisplay(Display* dpy, int size, const char* face_name);
+#endif
+void Platform_DestroyFont(FontHandle font);
+void Platform_GetTextExtents(FontHandle font, const char* text, int maxWidth, int* outWidth, int* outHeight);
 void Platform_SettingsPopUp(void);
 char* Platform_EditTextPopup(const char* initial_text, int centerX, int centerY, int maxWidth, int maxHeight);
 char* Platform_SearchPopup(void);
