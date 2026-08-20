@@ -3,6 +3,9 @@
 #include "features/file_search.h"
 #include "helpers.h"
 #include "core/common_ui.h"
+#if defined(_WIN32)
+#include <shlwapi.h>
+#endif
 
 void initialize_app_cache(void) {
     G_APP_COUNT = 0;

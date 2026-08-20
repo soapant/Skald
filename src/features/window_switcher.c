@@ -5,6 +5,7 @@
 #include "helpers.h"
 #if defined(_WIN32)
 #include <psapi.h>
+#include <shlwapi.h>
 #endif
 
 // ============================================================

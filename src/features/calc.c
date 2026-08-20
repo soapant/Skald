@@ -3,6 +3,9 @@
 #include "helpers.h"
 #include "core/common_ui.h"
 #include <ctype.h>
+#if defined(_WIN32)
+#include <shlwapi.h>
+#endif
 
 static double g_last_a = 0.0;
 static double g_last_b = 0.0;

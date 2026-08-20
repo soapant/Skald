@@ -6,7 +6,16 @@
 #include "core/common_ui.h"
 #include "core/number_shortcut.h"
 #include "core/feature_data.h"
+#include "window/subclasses.h"
 #include "platform/platform.h"
+#include "bindings/bindings.h"
+#include "bindings/hotkey_definitions.h"
+#include "bindings/macro_bindings.h"
+#include "bindings/character_sequence.h"
+#include "features/focus_switcher.h"
+#include "features/music_player.h"
+#include "features/video_player.h"
+#include "features/process_killer.h"
 #include <gdiplus.h>
 
 void Platform_WaitForKeypressAsync(KeyCallback callback) {
@@ -193,7 +202,7 @@ char* Platform_SimplePromptUser(const char* prompt, const char* window_title,int
       WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED, 
       "QuickSwitcherModalClass", NULL, WS_POPUP | WS_CLIPCHILDREN, 
       layout.x, layout.y, layout.w, layout.h, NULL, NULL, hInstance, NULL
-      );
+      ));
 
 
   SetTimer(WH_TO_HWND(hPopupWnd), 999, 50, NULL);
@@ -414,7 +423,7 @@ char* Platform_EditTextPopup(const char* initial_text, int centerX, int centerY,
   pData->result = NULL;
   pData->hFont = CreateCustomNerdFont(FontSize, UsedFont);
   pData->alpha = 255;
-  pData->hEdit = NULL;
+  pData->hEdit = WH_NULL;
 
   int topLeftX = centerX - (winWidth / 2);
   int topLeftY = centerY - (winHeight / 2);

@@ -1,4 +1,5 @@
 #include "common.h"
+#include "platform/platform.h"
 #include "features/mute_microphone.h"
 #include "core/common_ui.h"
 

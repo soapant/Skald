@@ -16,7 +16,7 @@ void SetMode(EditorMode mode) {
     bool in_main = WH_TO_HWND(g_hSearchPopup) == NULL && WH_TO_HWND(g_hEditPopup) == NULL;
 
 #if defined(_WIN32)
-    if (hPopupWnd && IsWindow(WH_TO_HWND(hPopupWnd))) {
+    if (WH_TO_HWND(hPopupWnd) && IsWindow(WH_TO_HWND(hPopupWnd))) {
         RECT rect;
         GetClientRect(WH_TO_HWND(hPopupWnd), &rect);
         RECT titleRect = {0, 0, rect.right, 40};

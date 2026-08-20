@@ -79,11 +79,6 @@ static inline void UI_LB_SetCount(WindowHandle hList, int count) {
 static inline void UI_LB_SetItemHeight(WindowHandle hList, int height) {
   SendMessageA(WH_TO_HWND(hList), LB_SETITEMHEIGHT, 0, height);
 }
-
-static inline void UI_LB_SetCount(WindowHandle hList, int count) {
-  g_populated_count = count;
-  SendMessageA(WH_TO_HWND(hList), LB_SETCOUNT, count, 0);
-}
 #endif
 
 #if defined(_WIN32)

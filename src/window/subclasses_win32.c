@@ -4,6 +4,9 @@
 #include <shellapi.h>
 #include "config.h"
 #include "core/common_ui.h"
+#include "core/feature_data.h"
+#include "core/number_shortcut.h"
+#include "window/subclasses.h"
 #include "wingdi.h"
 #include "helpers.h"
 
@@ -296,20 +299,20 @@ LRESULT CALLBACK SimpleListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, 
             FillRect(hdc, &rect, s_bg_brush);
         }
       
-        int textLen = UI_LB_GetTextLen(hWnd);
+        int textLen = UI_LB_GetTextLen(WH_FROM_HWND(hWnd));
         
         if (textLen > 0 && textLen < 512) {
           char textBuffer[512] = {0};
-            UI_LB_GetText(hWnd, 0, textBuffer);
+            UI_LB_GetText(WH_FROM_HWND(hWnd), 0, textBuffer);
             
-            HFONT hFont = UI_GetFont(hWnd);
+            HFONT hFont = UI_GetFont(WH_FROM_HWND(hWnd));
             HFONT hOldFont = NULL;
             if (hFont) hOldFont = (HFONT)SelectObject(hdc, hFont);
               
                 SetBkMode(hdc, TRANSPARENT);
                 SetTextColor(hdc, COLOR_TEXT);
                 
-                int itemHeight = UI_LB_GetItemHeight(hWnd);
+                int itemHeight = UI_LB_GetItemHeight(WH_FROM_HWND(hWnd));
                 if (itemHeight <= 0) itemHeight = 40;
                   
                     RECT textRect = rect;
@@ -1011,11 +1014,11 @@ LRESULT CALLBACK SettingsEditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LP
 
 LRESULT CALLBACK EditPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
   EditPopupData* data = (EditPopupData*)dwRefData;
-    if (!data || !data->hEdit) {
+    if (!data || !WH_TO_HWND(data->hEdit)) {
       data = (EditPopupData*)GetWindowLongPtrA(hWnd, GWLP_USERDATA);
     }
   if (uMsg == WM_KEYDOWN) {
-    if (!data || !data->hEdit) {
+    if (!data || !WH_TO_HWND(data->hEdit)) {
       return DefSubclassProc(hWnd, uMsg, wParam, lParam);
     }
     
@@ -1032,7 +1035,7 @@ LRESULT CALLBACK EditPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
       }
       printf("[EditPopup] Enter pressed\n");
         char buffer[2048] = {0};
-        GetWindowTextA(data->hEdit, buffer, sizeof(buffer) - 1);
+        GetWindowTextA(WH_TO_HWND(data->hEdit), buffer, sizeof(buffer) - 1);
         data->result = _strdup(buffer);
         DestroyWindow(GetParent(hWnd));
         UI_Redraw(hListBox);
@@ -1081,22 +1084,22 @@ LRESULT CALLBACK EditPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
           GetClientRect(hwnd, &rect);
           
           int modeHeight = 30;
-          data->hEdit = CreateWindowExA(
+          data->hEdit = WH_FROM_HWND(CreateWindowExA(
                                         0, "EDIT", data->initial_text,
                                         WS_CHILD | WS_VISIBLE | ES_LEFT | ES_MULTILINE,
                                         5, modeHeight + 5,
                                         rect.right - 10, rect.bottom - modeHeight - 10,
                                         hwnd, (HMENU)1001, hInstance, NULL
-                                       );
+                                       ));
           
-          if (data->hEdit) {
+          if (WH_TO_HWND(data->hEdit)) {
             UI_Edit_SetFont(data->hEdit,data->hFont);
               UI_Edit_SetSel(data->hEdit,0,0);
-              SetFocus(data->hEdit);
+              SetFocus(WH_TO_HWND(data->hEdit));
               g_ActiveEditControl = data->hEdit;
               
-              SetWindowLongPtrA(data->hEdit, GWLP_USERDATA, (LONG_PTR)data);
-              SetWindowSubclass(data->hEdit, EditPopupSubclassProc, 0, (DWORD_PTR)data);
+              SetWindowLongPtrA(WH_TO_HWND(data->hEdit), GWLP_USERDATA, (LONG_PTR)data);
+              SetWindowSubclass(WH_TO_HWND(data->hEdit), EditPopupSubclassProc, 0, (DWORD_PTR)data);
           }
       break;
     }

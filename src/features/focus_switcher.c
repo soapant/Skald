@@ -3,6 +3,7 @@
 #include "core/common_ui.h"
 #if defined(_WIN32)
 #include <psapi.h>
+#include <shlwapi.h>
 #endif
 
 void FocusWindow(WindowHandle hwnd) {
