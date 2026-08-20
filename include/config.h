@@ -68,6 +68,7 @@ extern const char* TEMP_FILE_PATH;
 extern const char* UsedFont;
 extern const int FontSize;
 extern const int NumberFontSize;
+extern const int VimFontSize;
 extern const int PaddingForScrolling;
 extern const char* UsedTerminal;
 extern const char* ImageEditorPath;

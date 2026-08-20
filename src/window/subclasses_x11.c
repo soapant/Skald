@@ -6,8 +6,13 @@
 #include "config.h"
 #include "platform/platform.h"
 #include "helpers.h"
+#include <X11/X.h>
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
+#include <X11/Xutil.h>
+#include <X11/Xatom.h>
+#include <X11/Xlib.h>
+#include <X11/Xft/Xft.h>
 
 static int Linux_KeysymToWindowsVK(KeySym keysym) {
     if (keysym >= XK_a && keysym <= XK_z) return 'A' + (keysym - XK_a);
@@ -50,150 +55,113 @@ static int Linux_KeysymToWindowsVK(KeySym keysym) {
         default: return 0;
     }
 }
-
-bool Linux_HandlePromptKey(const XEvent* ev) {
+bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
     if (ev->type != KeyPress) return false;
 
     int wParam = Linux_KeysymToWindowsVK(XLookupKeysym(&ev->xkey, 0));
     bool ctrl_pressed = (ev->xkey.state & ControlMask) != 0;
     bool shift_pressed = (ev->xkey.state & ShiftMask) != 0;
-
-    if (wParam == VK_LCONTROL || wParam == VK_RCONTROL ||
-        wParam == VK_LSHIFT || wParam == VK_RSHIFT ||
-        wParam == VK_LMENU || wParam == VK_RMENU) {
-        return true;
-    }
-
-    if (wParam >= '0' && wParam <= '9') {
-        if (ctrl_pressed) {
-            HandleNumberShortcut(wParam, hListBox, hEditControl);
-        }
-        return true;
-    }
-
-    if (!ctrl_pressed) {
-        if (wParam == VK_UP) {
-            UI_NavigateUp();
-            return true;
-        }
-        if (wParam == VK_DOWN) {
-            UI_NavigateDown();
-            return true;
-        }
-    }
-
-    if (wParam == VK_RETURN) {
-        struct feature_data* data = GetFeatureData(g_current_feature);
-        output_buffer[0] = '\0';
-        if (UI_IsListBoxSelected()) {
-            strncpy(output_buffer, g_populated_cache[g_SelectedIndex], sizeof(output_buffer) - 1);
-        }
-        SaveFeatureHistory(output_buffer);
-        if (ctrl_pressed) {
-            AddSelectionToData(output_buffer, g_current_feature, data);
-            if (g_ctrl_enter_callback != NULL) {
-                g_ctrl_enter_callback(output_buffer);
-            }
-        } else {
-            AddSelectionToData(output_buffer, g_current_feature, data);
-            if (g_enter_callback != NULL) {
-                g_enter_callback(output_buffer);
-            }
-            selection_complete = true;
-        }
-        return true;
-    }
-
-    if (wParam == VK_ESCAPE) {
-        output_buffer[0] = '\0';
-        selection_complete = true;
-        return true;
-    }
-
-    if (wParam == VK_TAB) {
-        struct feature_data* data = GetFeatureData(g_current_feature);
-        if (g_tab_callback != NULL) {
-            g_tab_callback();
-        }
-        for (int i = 0; i < data->selection_count; ++i) {
-            printf("%s \n", data->last_selections[i]);
-        }
-        return true;
-    }
-
     if (wParam == VK_BACK) {
-        if (ctrl_pressed) {
-            UI_SetText(hEditControl, (char*)"");
-            UI_Redraw(hListBox);
+        size_t n = strlen(state->filter);
+        if (state->cursor > 0) {
+            memmove(state->filter + state->cursor - 1,
+                    state->filter + state->cursor,
+                    n - state->cursor + 1);
+            state->cursor--;
         }
+        if (g_refresh_callback) g_refresh_callback(state->filter, hListBox);
         return true;
     }
-
-    if (wParam == EDIT_TEXT_KEY) {
-        output_buffer[0] = '\0';
-        if (UI_IsListBoxSelected()) {
-            strncpy(output_buffer, g_populated_cache[g_SelectedIndex], sizeof(output_buffer) - 1);
-            if ((ctrl_pressed && IsInsertMode()) || IsNormalMode()) {
-                if (g_edit_callback != NULL) {
-                    g_edit_callback(output_buffer);
-                }
-                return true;
-            }
-        }
-    }
-
-    if (wParam == COPY_SELECTION_KEY) {
-        if (shift_pressed) {
-            if (UI_IsListBoxSelected()) {
-                strncpy(output_buffer, g_populated_cache[g_SelectedIndex], sizeof(output_buffer) - 1);
-                output_buffer[sizeof(output_buffer) - 1] = '\0';
-            }
-            if (g_copy_callback != NULL) {
-                g_copy_callback(output_buffer, UI_LookupTrueIndex(output_buffer), 0);
-            } else {
-                Platform_CopyToClipboard(output_buffer);
-            }
-            return true;
-        } else if (ctrl_pressed) {
-            if (UI_IsListBoxSelected()) {
-                strncpy(output_buffer, g_populated_cache[g_SelectedIndex], sizeof(output_buffer) - 1);
-                output_buffer[sizeof(output_buffer) - 1] = '\0';
-            }
-            if (g_copy_callback != NULL) {
-                g_copy_callback(output_buffer, UI_LookupTrueIndex(output_buffer), 1);
-            } else {
-                Platform_CopyToClipboard(output_buffer);
-            }
-            return true;
-        }
-    }
-
-    if (wParam == VK_DOWN) {
-        if (ctrl_pressed) {
-            SetCursorToEndOfText();
-        }
+    if (wParam == VK_ESCAPE) {
+      if (IsInsertMode()) {
+        SetMode(MODE_NORMAL);
         return true;
+      } else {
+        selection_complete = true;
+      }
     }
-
-    if (wParam == VK_UP) {
-        if (ctrl_pressed) {
-            SetCursorToStartOfText();
-        }
-        return true;
+    if (wParam == VK_RIGHT) {
+      CursorForward(&state->cursor, strlen(state->filter));
+      return true;
+    }
+    if (wParam == VK_LEFT) {
+       CursorBack(&state->cursor, strlen(state->filter));
+      return true;
     }
 
     return false;
 }
 
 void DrawEditControl(Display *dpy,Window* win,PromptState *state) {
+    int screen = DefaultScreen(dpy);
+    XftDraw* xd = XftDrawCreate(dpy, *win, DefaultVisual(dpy, screen), DefaultColormap(dpy, screen));
+
+    FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
+
+    int textW = 0, textH = 0;
+    Platform_GetTextExtents(font,state->filter,state->width, &textW, &textH);
+
+    unsigned long text_color_map = rgb_to_hex(COLOR_TEXT);
+    unsigned long bg_color_map = rgb_to_hex(COLOR_BG);
+
+    unsigned long vim_text_color_map;
+    if (g_current_mode == MODE_NORMAL) {
+      vim_text_color_map = rgb_to_hex(COLOR_NORMAL_MODE_TEXT);
+    } else if (g_current_mode == MODE_INSERT) {
+      vim_text_color_map = rgb_to_hex(COLOR_INSERT_MODE_TEXT);
+    } else {
+      vim_text_color_map = rgb_to_hex(COLOR_VISUAL_MODE_TEXT);
+    }
+
+    Visual* visual = DefaultVisual(dpy, screen);
+    Colormap cmap = DefaultColormap(dpy, screen);
+
+    XRenderColor rc_bg = {
+        ((bg_color_map >> 16) & 0xFF) * 0x101,
+        ((bg_color_map >> 8) & 0xFF) * 0x101,
+        (bg_color_map & 0xFF) * 0x101,
+        0xFFFF
+    };
+    XftColor bg_color;
+    XftColorAllocValue(dpy, visual, cmap, &rc_bg, &bg_color);
+
+    XRenderColor rc_text = {
+        ((text_color_map >> 16) & 0xFF) * 0x101, ((text_color_map >> 8) & 0xFF) * 0x101, (text_color_map & 0xFF) * 0x101,
+        0xFFFF
+    };
+    XftColor text_color;
+    XftColorAllocValue(dpy, visual, cmap, &rc_text, &text_color);
+
+    XRenderColor rc_vim_text_color = {
+        ((vim_text_color_map >> 16) & 0xFF) * 0x101,
+        ((vim_text_color_map >> 8) & 0xFF) * 0x101,
+        (vim_text_color_map & 0xFF) * 0x101,
+        0xFFFF
+    };
+    XftColor vim_text_color;
+    XftColorAllocValue(dpy, visual, cmap, &rc_vim_text_color, &vim_text_color);
+    int centerX = state->width / 2;
+    int centerY = state->height / 2;
+    int topLeftX = centerX - state->width / 2;                                                  
+    int topLeftY = centerY - state->height / 2; 
+    XftDrawRect(xd, &bg_color, topLeftX, topLeftY, state->width,80);                       
+    draw_wrapped_text(dpy, xd, &text_color, font,state->filter,40,"LEFT",20);
+    draw_wrapped_text(dpy, xd, &vim_text_color, font,g_vim_mode,0,"LEFT",5);
+    draw_wrapped_text(dpy, xd, &text_color,font,state->window_title,0,"RIGHT",5);
+    if (IsInsertMode()) {
+        XftFont* xf = FH_TO_XFT(font);
+        XGlyphInfo ext;
+        XftTextExtentsUtf8(dpy, xf, (FcChar8*)state->filter, state->cursor, &ext);
+        XftDrawRect(xd, &text_color,22 + ext.xOff, 47, 2,FontSize);
+    } else {
+        XftFont* xf = FH_TO_XFT(font);
+        XGlyphInfo ext;
+        XftTextExtentsUtf8(dpy, xf, (FcChar8*)state->filter, state->cursor, &ext);
+        XftDrawRect(xd, &text_color,22 + ext.xOff, 47, 12,FontSize);
+    }
 }
 
-bool Linux_RenderPromptUser(const XEvent* ev, Display *dpy, Window *win, PromptState *state) {
-    switch (ev->type) {
-      case Expose: {
-        DrawEditControl(dpy, win,state);
-        break;
-      }
-    }
+bool Linux_RenderPromptUser(Display *dpy, Window *win, PromptState *state) {
+    DrawEditControl(dpy, win,state);
     return true;
 }

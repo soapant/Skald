@@ -3,6 +3,13 @@
 #if defined(_WIN32)
 #include <shellapi.h>
 #include <shlwapi.h>
+#else
+#include <X11/Xlib.h>
+#include <X11/keysym.h>
+#include <X11/Xutil.h>
+#include <X11/Xatom.h>
+#include <X11/Xlib.h>
+#include <X11/Xft/Xft.h>
 #endif
 #include "helpers.h"
 #include "core/timer.h"
@@ -459,3 +466,96 @@ const char* get_alias_for_item(const char* item) {
     }
     return NULL;
 }
+
+unsigned long rgb_to_hex(unsigned long win_color) {
+    unsigned long r = win_color & 0xFF;          
+    unsigned long g = (win_color >> 8) & 0xFF;  
+    unsigned long b = (win_color >> 16) & 0xFF;
+
+    return (r << 16) | (g << 8) | b;
+}
+
+#if !defined(_WIN32)
+static int xft_width(Display* dpy, XftFont* xf, const char* text, int len) {
+    XGlyphInfo ext;
+    XftTextExtentsUtf8(dpy, xf, (FcChar8*)text, len, &ext);
+    return ext.xOff;
+}
+
+void draw_wrapped_text(Display* dpy, XftDraw* xd, XftColor* color, FontHandle font, const char* text, int startY, char* centered_to, int xOffset) {
+    XftFont* xf = FH_TO_XFT(font);
+    int lineHeight = xf->ascent + xf->descent;
+    int spaceWidth = xft_width(dpy, xf, " ", 1);
+    int y = startY + xf->ascent;
+    int text_len = strlen(text);
+    int maxWidth = 0;   
+    int alignment = 0;
+
+    if (centered_to != NULL) {
+        if (strstr(centered_to, "CENTER") != NULL) {
+            alignment = 1;
+            maxWidth = (FontSize * text_len) * 1.5; 
+        } else if (strstr(centered_to, "RIGHT") != NULL) {
+            alignment = 2;
+            maxWidth = 900;
+        } else {
+            alignment = 0;
+            maxWidth = FontSize * text_len;
+        }
+    } else {
+        alignment = 0;
+        maxWidth = FontSize * text_len;
+    }
+
+    const char* p = text;
+    const char* lineStart = text;
+    int lineWidth = 0;
+
+    while (*p) {
+        const char* word_start = p;
+        while (*p && *p != ' ') p++;
+        int wordWidth = xft_width(dpy, xf, word_start, p - word_start);
+        int add = wordWidth + (lineWidth > 0 ? spaceWidth : 0);
+        
+        if (lineWidth > 0 && lineWidth + add > maxWidth) {
+            int lw = xft_width(dpy, xf, lineStart, word_start - lineStart);
+            
+            int drawX = 0;
+            if (alignment == 1)      drawX = xOffset + (maxWidth - lw) / 2; 
+            else if (alignment == 2) drawX = maxWidth - lw - xOffset;      
+            else                     drawX = xOffset;                      
+            
+            XftDrawStringUtf8(xd, color, xf, drawX, y, (FcChar8*)lineStart, word_start - lineStart);
+            y += lineHeight;
+            lineStart = word_start;
+            lineWidth = wordWidth;
+        } else {
+            lineWidth += add;
+        }
+        while (*p == ' ') p++;
+    }
+    
+    if (p > lineStart) {
+        int lw = xft_width(dpy, xf, lineStart, p - lineStart);
+
+        int drawX = 0;
+        if (alignment == 1)      drawX = xOffset + (maxWidth - lw) / 2;
+        else if (alignment == 2) drawX = maxWidth - lw - xOffset;
+        else                     drawX = xOffset;
+
+        XftDrawStringUtf8(xd, color, xf, drawX, y, (FcChar8*)lineStart, p - lineStart); 
+    }
+}
+
+bool CursorBack(size_t* cursor, size_t text_len) {
+    if (*cursor == 0) return false; 
+    (*cursor)--;
+    return true;
+}
+
+bool CursorForward(size_t* cursor, size_t text_len) {
+    if (*cursor >= text_len) return false;
+    (*cursor)++;
+    return true;
+}
+#endif
