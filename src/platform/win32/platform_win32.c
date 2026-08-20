@@ -1,5 +1,6 @@
 #include <windows.h>
 #include <shlobj.h>
+#include "common.h"
 #include "helpers.h"
 #include "platform/platform.h"
 #include "config.h"

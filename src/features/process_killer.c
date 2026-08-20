@@ -2,6 +2,7 @@
 #include "features/process_killer.h"
 #if defined(_WIN32)
 #include <tlhelp32.h>
+#include <shlwapi.h>
 #endif
 #include "core/common_ui.h"
 

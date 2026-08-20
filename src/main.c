@@ -3,6 +3,9 @@
 #include "helpers.h"
 #include "core/feature_data.h"
 #include "features/app_launcher.h"
+#if defined(_WIN32)
+#include "features/notification_getter.h"
+#endif
 
 WindowHandle hGlobalTrayWnd = WH_NULL;
 WindowHandle hPopupWnd = WH_NULL;
@@ -108,7 +111,9 @@ int main() {
   for (int i = 0; i < FILE_ENTRY_COUNT; i++) {
     G_FILE_ENTRIES[i].mf = (MappedFile*)calloc(1, sizeof(MappedFile));
     if (G_FILE_ENTRIES[i].mf != NULL) {
+#if !defined(_WIN32)
         G_FILE_ENTRIES[i].mf->fd = -1;
+#endif
     }
     const char* path = G_FILE_ENTRIES[i].path;
 

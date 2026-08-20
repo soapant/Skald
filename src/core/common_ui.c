@@ -5,6 +5,7 @@
 #if defined(_WIN32)
 #include <windows.h>
 #include <commctrl.h>
+#include <shlwapi.h>
 #endif
 
 bool g_add_alias_to_string = true;
