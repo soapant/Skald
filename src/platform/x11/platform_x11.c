@@ -6,6 +6,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <string.h>
+#include <dirent.h>
 #include <linux/input.h>
 #include "platform/platform.h"
 #include "config.h"
@@ -530,15 +531,52 @@ int Platform_ReplaceLineInMappedFile(MappedFile* mf, int line_index, const char*
 int Platform_CopyToClipboard(const char* text) {
     if (!text) return 0;
 
-    const char *cmd = NULL;
-    
-    const char *wayland = getenv("WAYLAND_DISPLAY");
-    const char *session = getenv("XDG_SESSION_TYPE");
-    
-    if (wayland != NULL || (session && strcmp(session, "wayland") == 0)) {
-        cmd = "wl-copy";
+    char buffer[256];
+    char cmd[256];
+
+    const char *wayland_display = getenv("WAYLAND_DISPLAY");
+    const char *runtime_dir = getenv("XDG_RUNTIME_DIR");
+    if ((!wayland_display || !wayland_display[0]) || (!runtime_dir || !runtime_dir[0])) {
+        static char found_display[64];
+        static char found_runtime[256];
+        found_display[0] = '\0';
+        found_runtime[0] = '\0';
+        DIR *dir = opendir("/run/user");
+        if (dir) {
+            struct dirent *e;
+            while ((e = readdir(dir)) != NULL) {
+                if (e->d_name[0] == '.') continue;
+                char udir[256];
+                snprintf(udir, sizeof(udir), "/run/user/%s", e->d_name);
+                DIR *sub = opendir(udir);
+                if (!sub) continue;
+                struct dirent *f;
+                while ((f = readdir(sub)) != NULL) {
+                    if (strncmp(f->d_name, "wayland-", 8) == 0) {
+                        snprintf(found_display, sizeof(found_display), "%s", f->d_name);
+                        snprintf(found_runtime, sizeof(found_runtime), "%s", udir);
+                        break;
+                    }
+                }
+                closedir(sub);
+                if (found_display[0] != '\0') break;
+            }
+            closedir(dir);
+        }
+        if (!wayland_display || !wayland_display[0])
+            wayland_display = found_display[0] != '\0' ? found_display : NULL;
+        if (!runtime_dir || !runtime_dir[0])
+            runtime_dir = found_runtime[0] != '\0' ? found_runtime : NULL;
+    }
+
+    if (wayland_display != NULL && wayland_display[0] != '\0' &&
+        runtime_dir != NULL && runtime_dir[0] != '\0') {
+        snprintf(cmd, sizeof(cmd), "XDG_RUNTIME_DIR=%s WAYLAND_DISPLAY=%s wl-copy",
+                 runtime_dir, wayland_display);
+        printf("PICKED WAYLAND (display=%s runtime=%s)\n", wayland_display, runtime_dir);
     } else {
-        cmd = "xclip -selection clipboard";
+        snprintf(cmd, sizeof(cmd), "xclip -selection clipboard");
+        printf("PICKED X11\n");
     }
 
     FILE *pipe = popen(cmd, "w");
@@ -558,8 +596,8 @@ int Platform_CopyToClipboard(const char* text) {
     
     int status = pclose(pipe);
 
-    snprintf(text,sizeof(text),"Copied %s",text);
-    SubjectiveMessageDisplay(text,140,TimeOutForMessages,COLOR_OF_SELECTION);
+    snprintf(buffer,sizeof(buffer),"Copied %s",text);
+    SubjectiveMessageDisplay(buffer,140,TimeOutForMessages,COLOR_OF_SELECTION);
 
     return (status == 0) ? 1 : 0;
 }
