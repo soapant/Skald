@@ -22,6 +22,7 @@ bool Platform_SetX11Property(const char* window_title, const char* atom_name, lo
 bool Platform_SetX11StringProperty(const char* window_title, const char* atom_name, const char* value);
 #if !defined(_WIN32)
 bool Linux_HandlePromptKey(const XEvent* ev);
+bool Linux_RenderPromptUser(const XEvent* ev, Display *dpy, Window *win, PromptState* state);
 #endif
 
 char* Platform_QueryZoxidePath(const char* query);
