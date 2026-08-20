@@ -15,6 +15,20 @@
   },
   {
     "directory": "/home/diggy/Programming/Projects/C Code",
+    "file": "src/window/subclasses_x11.c",
+    "arguments": [
+      "gcc",
+      "-Wall",
+      "-Wextra",
+      "-I",
+      "include",
+      "-w",
+      "-c",
+      "src/window/subclasses_x11.c"
+    ]
+  },
+  {
+    "directory": "/home/diggy/Programming/Projects/C Code",
     "file": "src/main.c",
     "arguments": [
       "gcc",
