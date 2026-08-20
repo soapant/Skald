@@ -220,6 +220,7 @@ void HandleGlobalKeyEvent(int key_code, int value) {
     TimerEnd(timer4, "CheckVimMotion");
 
     WinTimer timer5 = TimerStart();
+
     if (CheckTextSnippetBindings(pressed_vk, modifiers)) {
         return;
     }
