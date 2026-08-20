@@ -1,5 +1,6 @@
 #include "common.h"
 #include "features/file_search.h"
+#include "platform/platform.h"
 #if defined(_WIN32)
 #include <shlwapi.h>
 #endif
@@ -13,6 +14,9 @@ AppItem G_APPS[MAX_APPS];
 int G_APP_COUNT = 0;
 
 char* SearchFileInDirectory(const char* directory, const char* search_string) {
+    char expanded_dir[MAX_PATH];
+    if (!Platform_ExpandPath(directory, expanded_dir, sizeof(expanded_dir))) return NULL;
+    directory = expanded_dir;
 #if defined(_WIN32)
     if (!directory || !search_string || strlen(search_string) == 0) {
         return NULL;
@@ -53,6 +57,9 @@ char* SearchFileInDirectory(const char* directory, const char* search_string) {
 }
 
 char* SearchFileRecursive(const char* directory, const char* search_string) {
+    char expanded_dir[MAX_PATH];
+    if (!Platform_ExpandPath(directory, expanded_dir, sizeof(expanded_dir))) return NULL;
+    directory = expanded_dir;
 #if defined(_WIN32)
     if (!directory || !search_string || strlen(search_string) == 0) {
         return NULL;
@@ -106,6 +113,9 @@ char* SearchFileRecursive(const char* directory, const char* search_string) {
 }
 
 static void GetFilesRecursiveWithTime(const char* dir_path, bool show_folder) {
+    char expanded_dir[MAX_PATH];
+    if (!Platform_ExpandPath(dir_path, expanded_dir, sizeof(expanded_dir))) return;
+    dir_path = expanded_dir;
 #if defined(_WIN32)
     char search_path[MAX_PATH];
     snprintf(search_path, sizeof(search_path), "%s\\*", dir_path);
@@ -217,6 +227,11 @@ int GetFileCount(void) {
 }
 
 void scan_directory_recursive(const char* dir_path) {
+    if (dir_path == NULL) return;
+
+    char expanded_dir[MAX_PATH];
+    if (!Platform_ExpandPath(dir_path, expanded_dir, sizeof(expanded_dir))) return;
+    dir_path = expanded_dir;
 #if defined(_WIN32)
     char search_path[MAX_PATH];
     snprintf(search_path, sizeof(search_path), "%s\\*", dir_path);

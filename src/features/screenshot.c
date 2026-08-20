@@ -11,14 +11,18 @@ static void TriggerScreenshot(WindowHandle hPopupWnd,bool open_screenshot) {
 
     if (raw_name != NULL && strlen(raw_name) > 0) {
         char final_file_path[512];
-        snprintf(final_file_path, sizeof(final_file_path), "%s%s.png", BASE_SCREENSHOT_FOLDER_PATH, raw_name);
+        char expanded_folder[MAX_PATH];
+        if (!Platform_ExpandPath(BASE_SCREENSHOT_FOLDER_PATH, expanded_folder, sizeof(expanded_folder))) return;
+        snprintf(final_file_path, sizeof(final_file_path), "%s%s.png", expanded_folder, raw_name);
         
         Platform_SaveRegionToPNG((int)img_x1, (int)img_y1, (int)img_x2, (int)img_y2, final_file_path);
         printf("[SCREENSHOT] Saved: %s\n", final_file_path);
         if (open_screenshot) {
           char open_cmd[1024];
 #if defined(_WIN32)
-          snprintf(open_cmd, sizeof(open_cmd), "start %s \"%s\"", ImageEditorPath, final_file_path);
+          char expanded_editor[MAX_PATH];
+          if (!Platform_ExpandPath(ImageEditorPath, expanded_editor, sizeof(expanded_editor))) return;
+          snprintf(open_cmd, sizeof(open_cmd), "start %s \"%s\"", expanded_editor, final_file_path);
 #else
           snprintf(open_cmd, sizeof(open_cmd), "xdg-open \"%s\"", final_file_path);
 #endif

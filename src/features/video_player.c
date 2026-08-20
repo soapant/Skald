@@ -1,8 +1,10 @@
 #include "common.h"
 #include "features/video_player.h"
+#include "config.h"
 #include "core/common_ui.h"
 #include "features/file_search.h"
 #include "features/app_launcher.h"
+#include "platform/platform.h"
 
 static void video_refresh_callback(const char* filter, WindowHandle hListBox) {
     ClearFileList();
@@ -31,24 +33,19 @@ static void video_enter_callback(const char* selection) {
         cds.lpData = (PVOID)result;
         SendMessage(playerHwnd, WM_COPYDATA, (WPARAM)NULL, (LPARAM)&cds);
         printf("[VIDEO] Sent to existing player: %s\n", result);
-    } else
+        return;
+    }
+#else
+    if (Platform_SetX11StringProperty("Video Viewer", "_MP_TRACK", result)) {
+        printf("[VIDEO] Sent to existing player: %s\n", result);
+        return;
+    }
 #endif
     {
-        char video_player_path[MAX_PATH] = {0};
-        for (int i = 0; i < G_APP_COUNT; i++) {
-#if defined(_WIN32)
-            if (StrStrIA(G_APPS[i].name, "video_viewer") != NULL) {
-#else
-            if (strstr(G_APPS[i].name, "video_viewer") != NULL) {
-#endif
-                strncpy(video_player_path, G_APPS[i].path, sizeof(video_player_path) - 1);
-                break;
-            }
-        }
-        if (strlen(video_player_path) > 0) {
+        if (strlen(VideoViewerPath) > 0) {
             char quoted_result[MAX_PATH + 3] = {0};
             snprintf(quoted_result, sizeof(quoted_result), "\"%s\"", result);
-            launch_exe_with_args(video_player_path, quoted_result);
+            launch_exe_with_args(VideoViewerPath, quoted_result);
             printf("[VIDEO] Launched new player with: %s\n", result);
         }
     }
@@ -73,7 +70,7 @@ bool HandleVideoPlayer(int vk_code, int modifiers, const char* current_title) {
                     return false;
                 }
 #else
-                return false;
+                return Platform_SetX11Property("Video Viewer", "_MP_CMD", binding->code);
 #endif
             } else {
                 const char* prompt[1] = { "Search for video..." };

@@ -15,22 +15,32 @@ bool ColorfullMode = false;
 bool SearchBoxDiffColor = false; 
 const wchar_t* HttpUrlForNotis = L"doingthistomakeitrarebitch";
 
-const char* BASE_SCREENSHOT_FOLDER_PATH = "C:\\Users\\HP\\Pictures\\Screenshots\\";
+const char* BASE_SCREENSHOT_FOLDER_PATH = "{PICTURES}/Screenshots/";
 const char* TEMP_FILE_PATH = DATA_DIR "temp_list_of_positions.md";
 const char* UsedFont =  "0xProto Nerd Font";
 const int FontSize = 24;
 const int NumberFontSize = 18;
 const int PaddingForScrolling = 3;
 const char* UsedTerminal = "Alacritty";
-const char* ImageEditorPath =  "C:\\Users\\HP\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\Scoop Apps\\PicView.lnk";
-const char* TimerPath = "D:\\Projects\\Tscoding Timer\\sowon\\sowon.exe";
-const char* MusicPlayerPath = "D:\\Projects\\Music Player\\music_player.exe";
-// const char* MusicPlayerPath = "D:\\retard games\\miscellaneous\\Useful Repos\\musializer\\build\\musializer.exe";
-const char* VideoViewerPath = "D:\\Projects\\Video Viewer\\video_viewer.exe";
-const char* TextEditorPath = "C:\\Program Files\\Neovide\\neovide.exe";
-const char* MusicPath = "D:\\Music\\Mp3";
-const char* VideosPath = "D:\\videos";
-const char* IconPath = "D:\\retard games\\miscellaneous\\switch_window.ico";
+const char* ImageEditorPath =  "{APPDATA}/Microsoft/Windows/Start Menu/Programs/Scoop Apps/PicView.lnk";
+const char* TimerPath = "{DEV}/Tscoding Timer/sowon/sowon.exe";
+const char* MusicPlayerPath = "{DEV}/Music Player/music_player.exe";
+// const char* MusicPlayerPath = "{MISC}/Useful Repos/musializer/build/musializer.exe";
+const char* VideoViewerPath = "{DEV}/Video Viewer/video_viewer.exe";
+const char* TextEditorPath = "{PROGRAM_FILES}/Neovide/neovide.exe";
+const char* MusicPath = "{MUSIC}/Mp3";
+const char* VideosPath = "{VIDEOS}";
+const char* IconPath = "{MISC}/switch_window.ico";
+
+const PathVar G_PATH_VARS[] = {
+    {"DEV",          "D:\\Projects",                    "/home/diggy/Programming/Projects"},
+    {"MISC",         "D:\\retard games\\miscellaneous", "/home/diggy/miscellaneous"},
+    {"MUSIC",        "D:\\Music",                       "/home/diggy/Music"},
+    {"VIDEOS",       "D:\\videos",                      "/home/diggy/Videos"},
+    {"PROGRAMDATA",  "C:\\ProgramData",                 ""},
+    {"SystemRoot",   "C:\\Windows",                     ""},
+};
+const unsigned int PATH_VAR_COUNT = sizeof(G_PATH_VARS) / sizeof(G_PATH_VARS[0]);
 
 const bool TimerAvailable = true;
 const bool MusicPlayerAvailable = true;
@@ -44,11 +54,11 @@ const float GradientBrightness = 1.0f;
 bool PixelHotkeys = false;
 
 const char* ListOfProgramPaths[20] = {
-    "C:\\Users\\HP\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu",
-    "C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs",
-    "D:\\Projects",
-    "D:\\retard games\\miscellaneous",
-    "C:\\Windows\\System32\\",             
+    "{APPDATA}/Microsoft/Windows/Start Menu",
+    "{PROGRAMDATA}/Microsoft/Windows/Start Menu/Programs",
+    "{DEV}",
+    "{MISC}",
+    "{SystemRoot}/System32/",             
     "shell:AppsFolder",                   
 };
 
@@ -93,8 +103,8 @@ const AppHotkey G_APP_HOTKEYS[] = {
 const unsigned int APP_HOTKEY_COUNT = sizeof(G_APP_HOTKEYS) / sizeof(G_APP_HOTKEYS[0]);
 
 const MiscHotkey G_MISC_HOTKEYS[] = {
-    {'G', HOTKEY_MOD_CTRL | HOTKEY_MOD_ALT, "*", "D:\\retard games\\Grand Theft Auto V Legacy\\PlayGTAV.bat" },
-    {'O', HOTKEY_MOD_CTRL | HOTKEY_MOD_ALT, "*", "C:\\Users\\HP\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu\\Programs\\OnTopReplica\\OnTopReplica.lnk"}
+    {'G', HOTKEY_MOD_CTRL | HOTKEY_MOD_ALT, "*", "{DEV}/retard games/Grand Theft Auto V Legacy/PlayGTAV.bat" },
+    {'O', HOTKEY_MOD_CTRL | HOTKEY_MOD_ALT, "*", "{APPDATA}/Microsoft/Windows/Start Menu/Programs/OnTopReplica/OnTopReplica.lnk"}
 };
 const unsigned int MISC_HOTKEY_COUNT = sizeof(G_MISC_HOTKEYS) / sizeof(G_MISC_HOTKEYS[0]);
 
