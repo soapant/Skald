@@ -267,30 +267,25 @@ void Platform_CreateDisplayMessageWindow(const char* message, int centerX, int c
   DestroyWindow(WH_TO_HWND(hDisplayMessage));
   KillTimer(WH_TO_HWND(hDisplayMessage),999);
 
-
-  HDC hdc = GetDC(NULL);
-  HFONT hFont = CreateCustomNerdFont(FontSize, UsedFont);
-  HFONT hOldFont = (HFONT)SelectObject(hdc, hFont);
-
-  RECT textRect = {0, 0, maxWidth - 30, maxHeight - 30};
-  DrawTextA(hdc, message, -1, &textRect, DT_CENTER | DT_WORDBREAK | DT_CALCRECT);
-
-  SelectObject(hdc, hOldFont);
-  DeleteObject(hFont);
-  ReleaseDC(NULL, hdc);
+  FontHandle msgFont = Platform_CreateFont(FontSize, UsedFont);
+  int textWidth = 0, textHeight = 0;
+  Platform_GetTextExtents(msgFont, message, maxWidth - 30, &textWidth, &textHeight);
 
   int padding = 30;
-  int winWidth = textRect.right + padding;
-  int winHeight = textRect.bottom + padding;
+  int winWidth = textWidth + padding;
+  int winHeight = textHeight + padding;
 
   if (winWidth > maxWidth) winWidth = maxWidth;
   if (winHeight > maxHeight) winHeight = maxHeight;
 
   FadeWindowData* pWndData = (FadeWindowData*)malloc(sizeof(FadeWindowData));
-  if (!pWndData) return;
+  if (!pWndData) {
+    Platform_DestroyFont(msgFont);
+    return;
+  }
 
   pWndData->message = _strdup(message);
-  pWndData->hFont = CreateCustomNerdFont(FontSize, UsedFont);
+  pWndData->hFont = msgFont;
   pWndData->alpha = 245;
   g_timeout = timeout * 20;
 
@@ -305,7 +300,7 @@ void Platform_CreateDisplayMessageWindow(const char* message, int centerX, int c
 
   if (hPopupWnd == NULL) {
     printf("[DEBUG-UI] ERROR: CreateWindowExA failed. GetLastError: %lu\n", GetLastError());
-    DeleteObject(pWndData->hFont);
+    Platform_DestroyFont(pWndData->hFont);
     free(pWndData);
     return;
   }

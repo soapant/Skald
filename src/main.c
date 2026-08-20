@@ -3,6 +3,9 @@
 #include "helpers.h"
 #include "core/feature_data.h"
 #include "features/app_launcher.h"
+#if !defined(_WIN32)
+#include <X11/Xlib.h>
+#endif
 #if defined(_WIN32)
 #include "features/notification_getter.h"
 #endif
@@ -70,6 +73,9 @@ void OInNotificationRecieved(const char* text) {
 }
 
 int main() {
+#if !defined(_WIN32)
+  XInitThreads();
+#endif
 #if defined(_WIN32)
   g_main_thread_id = GetCurrentThreadId();
   {

@@ -164,6 +164,30 @@ typedef struct WindowHandle {
 #define WH_TO_HWND(h) ((h).xid)
 #endif
 
+#if !defined(_WIN32)
+typedef struct _XDisplay Display;
+typedef struct _XftFont XftFont;
+#endif
+
+typedef struct FontHandle {
+#if defined(_WIN32)
+    HFONT hfont;
+#else
+    XftFont* xfont;
+    Display* dpy;
+#endif
+} FontHandle;
+
+#define FH_NULL ((FontHandle){0})
+
+#if defined(_WIN32)
+#define FH_FROM_HFONT(h) ((FontHandle){ .hfont = (HFONT)(h) })
+#define FH_TO_HFONT(h) ((h).hfont)
+#else
+#define FH_TO_XFT(h) ((h).xfont)
+#define FH_TO_DPY(h) ((h).dpy)
+#endif
+
 typedef void (*RefreshCallback)(const char* filter, WindowHandle hListBox);
 typedef void (*EnterCallback)(const char* selection);
 typedef void (*CtrlEnterCallback)(const char* selection);

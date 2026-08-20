@@ -14,6 +14,7 @@
 #include <string.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <pthread.h>
 #include <dirent.h>
 #include <poll.h>
 #include <stdbool.h>
@@ -22,6 +23,8 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
+#include <X11/Xlib.h>
+#include <X11/Xft/Xft.h>
 
 void Platform_WaitForKeypressAsync(KeyCallback callback) {
     (void)callback;
@@ -112,19 +115,261 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
 }
 
 char* Platform_SimplePromptUser(const char* prompt, const char* window_title,int height, int width, int item_height) {
-    (void)prompt; (void)window_title; (void)height; (void)width; (void)item_height;
-    fprintf(stderr, "[PLATFORM] Platform_SimplePromptUser not implemented yet\n");
+    Display* dpy = XOpenDisplay(NULL);
+
+    int screen = DefaultScreen(dpy);
+    int screen_width = 1920;
+    int screen_height = 1080;
+
+    int layout_w = 900;
+    int layout_h = 95 + (1 > 0 ? (1 * item_height) : 0);
+
+    if (layout_h < height) layout_h = height;
+    if (layout_h > width) layout_h = width;
+
+    int x = (screen_width - layout_w) / 2;
+    int y = (screen_height - layout_h) / 2;
+
+    unsigned long bg_color = rgb_to_hex(COLOR_BG);
+
+    Window win = XCreateSimpleWindow(
+        dpy,
+        RootWindow(dpy, screen),
+        x, y,
+        layout_w, layout_h,
+        0,              
+        bg_color,       
+        bg_color        
+    );
+
+    Atom wm_state = XInternAtom(dpy, "_NET_WM_STATE", False);
+    Atom wm_state_fullscreen = XInternAtom(dpy, "_NET_WM_STATE_FULLSCREEN", False);
+    
+    Atom wm_type = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE", False);
+    Atom wm_type_dialog = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE_DIALOG", False);
+    XChangeProperty(dpy, win, wm_type, XA_ATOM, 32,
+                    PropModeReplace, (unsigned char*)&wm_type_dialog, 1);
+
+    XClassHint* class_hint = XAllocClassHint();
+    class_hint->res_name = "colored";
+    class_hint->res_class = "colored";
+    XSetClassHint(dpy, win, class_hint);
+    XFree(class_hint);
+
+    XSelectInput(dpy, win, KeyPressMask | ExposureMask);
+
+    XMapWindow(dpy, win);
+    XFlush(dpy);
+
+    XEvent ev;
+    int running = 1;
+
+    while (running) {
+        XNextEvent(dpy, &ev);
+        if (ev.type == KeyPress) {
+            Linux_HandlePromptKey(&ev);
+            if (selection_complete) {
+                running = 0;
+            }
+        }
+    }
+
+    XDestroyWindow(dpy, win);
+    XCloseDisplay(dpy);
+    return output_buffer;
+    return NULL;
+}
+void center_to_topleft(int centerX, int centerY, int width, int height, 
+                       int* outX, int* outY) {
+    *outX = centerX - (width / 2);
+    *outY = centerY - (height / 2);
+}
+
+static int xft_width(Display* dpy, XftFont* xf, const char* text, int len) {
+    XGlyphInfo ext;
+    XftTextExtentsUtf8(dpy, xf, (FcChar8*)text, len, &ext);
+    return ext.xOff;
+}
+
+static void draw_wrapped_text(Display* dpy, XftDraw* xd, XftColor* color, FontHandle font, const char* text, int maxWidth, int startY) {
+    XftFont* xf = FH_TO_XFT(font);
+    int lineHeight = xf->ascent + xf->descent;
+    int spaceWidth = xft_width(dpy, xf, " ", 1);
+    int y = startY + xf->ascent;
+
+    const char* p = text;
+    const char* lineStart = text;
+    int lineWidth = 0;
+    while (*p) {
+        const char* word_start = p;
+        while (*p && *p != ' ') p++;
+        int wordWidth = xft_width(dpy, xf, word_start, p - word_start);
+        int add = wordWidth + (lineWidth > 0 ? spaceWidth : 0);
+        if (lineWidth > 0 && lineWidth + add > maxWidth) {
+            int lw = xft_width(dpy, xf, lineStart, word_start - lineStart);
+            XftDrawStringUtf8(xd, color, xf, (maxWidth - lw) / 2, y,
+                              (FcChar8*)lineStart, word_start - lineStart);
+            y += lineHeight;
+            lineStart = word_start;
+            lineWidth = wordWidth;
+        } else {
+            lineWidth += add;
+        }
+        while (*p == ' ') p++;
+    }
+    if (p > lineStart) {
+        int lw = xft_width(dpy, xf, lineStart, p - lineStart);
+        XftDrawStringUtf8(xd, color, xf, (maxWidth - lw) / 2, y,
+                          (FcChar8*)lineStart, p - lineStart);
+        fprintf(stderr, "[MSG] drew last line y=%d '%s'\n", y, lineStart);
+    }
+}
+
+typedef struct {
+    int dead;
+    Display* dpy;
+    Window win;
+    XftDraw* xd;
+    FontHandle font;
+    int timeout;
+} MsgWindow;
+
+static pthread_mutex_t g_msg_mtx = PTHREAD_MUTEX_INITIALIZER;
+static MsgWindow* g_msg_window = NULL;
+
+static void destroy_msg_window(MsgWindow* m) {
+    XftDrawDestroy(m->xd);
+    Platform_DestroyFont(m->font);
+    XCloseDisplay(m->dpy);
+}
+
+static void* msg_destroy_thread(void* arg) {
+    MsgWindow* m = (MsgWindow*)arg;
+    usleep((useconds_t)m->timeout * 1000000);
+    pthread_mutex_lock(&g_msg_mtx);
+    if (!m->dead) {
+        if (g_msg_window == m) g_msg_window = NULL;
+        destroy_msg_window(m);
+    }
+    pthread_mutex_unlock(&g_msg_mtx);
+    free(m);
     return NULL;
 }
 
-void Platform_DisplayMessage(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, int timeout) {
-    (void)message; (void)centerX; (void)centerY; (void)maxWidth; (void)maxHeight; (void)timeout;
-    fprintf(stderr, "[PLATFORM] Platform_DisplayMessage not implemented yet\n");
+static void replace_msg_window(MsgWindow* m) {
+    pthread_mutex_lock(&g_msg_mtx);
+    MsgWindow* old = g_msg_window;
+    g_msg_window = m;
+    if (old) {
+        old->dead = 1;
+        destroy_msg_window(old);
+    }
+    pthread_mutex_unlock(&g_msg_mtx);
 }
 
-void Platform_CreateDisplayMessageWindow(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, int timeout) {
-    (void)message; (void)centerX; (void)centerY; (void)maxWidth; (void)maxHeight; (void)timeout;
-    fprintf(stderr, "[PLATFORM] Platform_CreateDisplayMessageWindow not implemented yet\n");
+void Platform_DisplayMessage(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, int timeout) {
+    Display* dpy = XOpenDisplay(NULL);
+    if (!dpy) {
+        fprintf(stderr, "[PLATFORM] Platform_DisplayMessage: XOpenDisplay failed\n");
+        return;
+    }
+
+    FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
+    if (!FH_TO_XFT(font)) {
+        fprintf(stderr, "[PLATFORM] Platform_DisplayMessage: font load failed\n");
+        XCloseDisplay(dpy);
+        return;
+    }
+    fprintf(stderr, "[MSG] font='%s' size=%d\n", UsedFont, FontSize);
+
+    int screen = DefaultScreen(dpy);
+
+    int textW = 0, textH = 0;
+    Platform_GetTextExtents(font, message, maxWidth - 30, &textW, &textH);
+
+    int winWidth = maxWidth;
+    int winHeight = maxHeight;
+    if (textH + 20 > winHeight) winHeight = textH + 20;
+
+    unsigned long bg_color = rgb_to_hex(COLOR_BG);
+    unsigned long text_color = rgb_to_hex(COLOR_TEXT);
+    int topLeftX = centerX - (winWidth / 2);
+    int topLeftY = centerY - (winHeight / 2);
+
+    Window win = XCreateSimpleWindow(
+        dpy,
+        RootWindow(dpy, screen),
+        topLeftX, topLeftY, 
+        winWidth, winHeight,
+        0,
+        bg_color,
+        bg_color
+    );
+
+    Atom wm_type = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE", False);
+    Atom wm_type_dialog = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE_DIALOG", False);
+    XChangeProperty(dpy, win, wm_type, XA_ATOM, 32,
+                    PropModeReplace, (unsigned char*)&wm_type_dialog, 1);
+
+    XClassHint* class_hint = XAllocClassHint();
+    class_hint->res_name = "flashtext";
+    class_hint->res_class = "flashtext";
+    XSetClassHint(dpy, win, class_hint);
+    XFree(class_hint);
+
+    XWMHints* wm_hints = XAllocWMHints();
+    wm_hints->flags = InputHint;
+    wm_hints->input = False;
+    XSetWMHints(dpy, win, wm_hints);
+    XFree(wm_hints);
+
+    XSelectInput(dpy, win, ExposureMask | KeyPressMask);
+
+    XftDraw* xd = XftDrawCreate(dpy, win, DefaultVisual(dpy, screen), DefaultColormap(dpy, screen));
+    fprintf(stderr, "[MSG] xd=%s win=0x%lx winW=%d winH=%d textW=%d textH=%d msg='%s'\n",
+            xd ? "ok" : "NULL", win, winWidth, winHeight, textW, textH, message);
+    Visual* visual = DefaultVisual(dpy, screen);
+    Colormap cmap = DefaultColormap(dpy, screen);
+    XRenderColor rc = {
+        ((text_color >> 16) & 0xFF) * 0x101,
+        ((text_color >> 8) & 0xFF) * 0x101,
+        (text_color & 0xFF) * 0x101,
+        0xFFFF
+    };
+    XftColor color;
+    int alloc_ok = XftColorAllocValue(dpy, visual, cmap, &rc, &color);
+    fprintf(stderr, "[MSG] color_alloc=%s\n", alloc_ok ? "ok" : "FAILED");
+
+    XMapWindow(dpy, win);
+    XFlush(dpy);
+
+    struct pollfd pfd = { .fd = ConnectionNumber(dpy), .events = POLLIN };
+    while (poll(&pfd, 1, 300) > 0) {
+        XEvent ev;
+        if (XCheckWindowEvent(dpy, win, ExposureMask, &ev)) {
+            break;
+        }
+    }
+
+    int startY = (winHeight - textH) / 2;
+
+    draw_wrapped_text(dpy, xd, &color, font, message, winWidth - 30, startY);
+
+    XFlush(dpy);
+
+    MsgWindow* m = (MsgWindow*)malloc(sizeof(MsgWindow));
+    m->dead = 0;
+    m->dpy = dpy;
+    m->win = win;
+    m->xd = xd;
+    m->font = font;
+    m->timeout = timeout;
+
+    replace_msg_window(m);
+
+    pthread_t tid;
+    pthread_create(&tid, NULL, msg_destroy_thread, m);
+    pthread_detach(tid);
 }
 
 void Platform_SettingsPopUp(void) {
