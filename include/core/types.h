@@ -345,12 +345,14 @@ typedef struct {
      int         selection;     
      int         scroll_offset; 
      int         width, height; 
+     char*       window_title;
 } PromptState; 
 
 typedef struct {                                                   
      char*       display_message;          
      size_t      cursor;        
      int         width, height; 
+     char*       window_title;
 } SimplePromptState; 
 
 #endif
