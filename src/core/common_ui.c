@@ -48,7 +48,9 @@ void PopulateListBox(WindowHandle hListBox, const char* filter,
     bool (*filter_match)(const char* item, const char* filter)) {
 
   WinTimer timer_alias = TimerStart();
+#if defined(_WIN32)
   if (WH_TO_HWND(hListBox) == NULL) return;
+#endif
   if (g_seq_state.waiting) return;
   if (!filter) filter = "";
   BuildAliasDisplayItems(items, item_count);
