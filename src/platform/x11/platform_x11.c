@@ -1,5 +1,6 @@
 #define _GNU_SOURCE
 #include <X11/Xlib.h>
+#include <X11/Xatom.h>
 #include <sys/mman.h>
 #include <sys/stat.h> 
 #include <linux/input.h>
@@ -8,6 +9,8 @@
 #include <string.h>
 #include <dirent.h>
 #include <linux/input.h>
+#include <sys/socket.h>
+#include <sys/un.h>
 #include "platform/platform.h"
 #include "config.h"
 #include "common.h"
@@ -29,8 +32,211 @@ bool Platform_ShellExecuteWithVerb(const char* path, const char* verb, bool asyn
     return (status == 0);
 }
 
+static Display* OpenBestDisplay(void) {
+    Display* d = XOpenDisplay(NULL);
+    if (d) return d;
+
+    DIR* dir = opendir("/tmp/.X11-unix");
+    if (!dir) return NULL;
+
+    char name[32];
+    struct dirent* e;
+    while ((e = readdir(dir)) != NULL) {
+        if (e->d_name[0] == 'X') {
+            snprintf(name, sizeof(name), ":%s", e->d_name + 1);
+            d = XOpenDisplay(name);
+            if (d) break;
+        }
+    }
+    closedir(dir);
+    return d;
+}
+
+static Window FindWindowByTitleRecursive(Display* dpy, Window w, const char* title) {
+    char* name = NULL;
+    if (XFetchName(dpy, w, &name) && name != NULL) {
+        bool match = (strcmp(name, title) == 0);
+        XFree(name);
+        if (match) return w;
+    }
+
+    Window root, parent, *children = NULL;
+    unsigned int n = 0;
+    if (XQueryTree(dpy, w, &root, &parent, &children, &n)) {
+        for (unsigned int i = 0; i < n; i++) {
+            Window found = FindWindowByTitleRecursive(dpy, children[i], title);
+            if (found != None) {
+                if (children) XFree(children);
+                return found;
+            }
+        }
+        if (children) XFree(children);
+    }
+    return None;
+}
+
+static Window FindWindowByTitle(Display* dpy, const char* title) {
+    return FindWindowByTitleRecursive(dpy, DefaultRootWindow(dpy), title);
+}
+
+bool Platform_SendX11Command(const char* window_title, const char* atom_name, long command) {
+    Display* dpy = OpenBestDisplay();
+    if (!dpy) return false;
+
+    Window win = FindWindowByTitle(dpy, window_title);
+    bool ok = false;
+    if (win != None) {
+        XEvent ev = {0};
+        ev.xclient.type = ClientMessage;
+        ev.xclient.window = win;
+        ev.xclient.message_type = XInternAtom(dpy, atom_name, False);
+        ev.xclient.format = 32;
+        ev.xclient.data.l[0] = command;
+        if (XSendEvent(dpy, win, False, NoEventMask, &ev) != 0) {
+            XFlush(dpy);
+            ok = true;
+        }
+    }
+    XCloseDisplay(dpy);
+    return ok;
+}
+
+bool Platform_SetX11Property(const char* window_title, const char* atom_name, long value) {
+    Display* dpy = OpenBestDisplay();
+    if (!dpy) return false;
+
+    Window win = FindWindowByTitle(dpy, window_title);
+    bool ok = false;
+    if (win != None) {
+        XChangeProperty(dpy, win, XInternAtom(dpy, atom_name, False), XA_INTEGER, 32,
+                        PropModeReplace, (unsigned char*)&value, 1);
+        XFlush(dpy);
+        ok = true;
+    }
+    XCloseDisplay(dpy);
+    return ok;
+}
+
+bool Platform_SetX11StringProperty(const char* window_title, const char* atom_name, const char* value) {
+    Display* dpy = OpenBestDisplay();
+    if (!dpy) return false;
+
+    Window win = FindWindowByTitle(dpy, window_title);
+    bool ok = false;
+    if (win != None && value != NULL) {
+        XChangeProperty(dpy, win, XInternAtom(dpy, atom_name, False), XA_STRING, 8,
+                        PropModeReplace, (const unsigned char*)value, (int)strlen(value));
+        XFlush(dpy);
+        ok = true;
+    }
+    XCloseDisplay(dpy);
+    return ok;
+}
+
+static bool ResolvePathToken(const char* token, char* out, size_t out_size) {
+    for (unsigned int i = 0; i < PATH_VAR_COUNT; i++) {
+        if (strcmp(G_PATH_VARS[i].name, token) == 0) {
+            const char* value =
+#if defined(_WIN32)
+                G_PATH_VARS[i].win32_value;
+#else
+                G_PATH_VARS[i].linux_value;
+#endif
+            if (value == NULL || value[0] == '\0') return false;
+            snprintf(out, out_size, "%s", value);
+            return true;
+        }
+    }
+
+    const char* home = getenv("HOME");
+
+    if (strcmp(token, "HOME") == 0) {
+        if (!home) return false;
+        snprintf(out, out_size, "%s", home);
+        return true;
+    }
+    if (strcmp(token, "APPDATA") == 0) {
+        const char* xdg = getenv("XDG_CONFIG_HOME");
+        if (xdg && xdg[0] != '\0') {
+            snprintf(out, out_size, "%s", xdg);
+            return true;
+        }
+        if (!home) return false;
+        snprintf(out, out_size, "%s/.config", home);
+        return true;
+    }
+    if (strcmp(token, "PROGRAM_FILES") == 0) {
+        snprintf(out, out_size, "/usr");
+        return true;
+    }
+
+    static const struct { const char* name; const char* subdir; } subdirs[] = {
+        {"PICTURES", "Pictures"},
+        {"DESKTOP", "Desktop"},
+        {"DOCUMENTS", "Documents"},
+        {"DOWNLOADS", "Downloads"},
+    };
+    for (size_t i = 0; i < sizeof(subdirs) / sizeof(subdirs[0]); i++) {
+        if (strcmp(token, subdirs[i].name) == 0) {
+            if (!home) return false;
+            snprintf(out, out_size, "%s/%s", home, subdirs[i].subdir);
+            return true;
+        }
+    }
+    return false;
+}
+
+bool Platform_ExpandPath(const char* template_path, char* out, size_t out_size) {
+    if (template_path == NULL || out_size == 0) return false;
+
+    size_t o = 0;
+    const char* p = template_path;
+    while (*p != '\0' && o < out_size - 1) {
+        if (*p == '{') {
+            const char* close = strchr(p + 1, '}');
+            if (close != NULL) {
+                size_t token_len = (size_t)(close - p - 1);
+                if (token_len > 0 && token_len < 64) {
+                    char token[64];
+                    memcpy(token, p + 1, token_len);
+                    token[token_len] = '\0';
+                    char resolved[1024];
+                    if (ResolvePathToken(token, resolved, sizeof(resolved))) {
+                        size_t rlen = strlen(resolved);
+                        size_t room = out_size - 1 - o;
+                        size_t copy = (rlen < room) ? rlen : room;
+                        memcpy(out + o, resolved, copy);
+                        o += copy;
+                        p = close + 1;
+                        continue;
+                    }
+                    fprintf(stderr, "[PATH] '%s' is not set, ignoring: %s\n", token, template_path);
+                    return false;
+                }
+            }
+        }
+        out[o++] = *p++;
+    }
+    out[o] = '\0';
+
+    if (o >= 4) {
+        size_t i = o - 4;
+        if (out[i] == '.' &&
+            (out[i+1] == 'e' || out[i+1] == 'E') &&
+            (out[i+2] == 'x' || out[i+2] == 'X') &&
+            (out[i+3] == 'e' || out[i+3] == 'E')) {
+            out[i] = '\0';
+        }
+    }
+    return true;
+}
+
 bool Platform_LaunchApp(const char* path) {
     if (!path) return false;
+
+    char expanded[MAX_PATH];
+    if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) return false;
+    path = expanded;
 
     pid_t pid = fork();
     if (pid < 0) {
@@ -51,6 +257,10 @@ bool Platform_LaunchApp(const char* path) {
 
 bool Platform_LaunchAppAsAdmin(const char* path) {
     if (!path) return false;
+
+    char expanded[MAX_PATH];
+    if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) return false;
+    path = expanded;
 
     pid_t pid = fork();
     if (pid < 0) return false;
