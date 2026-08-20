@@ -3,6 +3,10 @@
 
 #include "core/types.h"
 
+#if !defined(_WIN32)
+#include <X11/Xlib.h>
+#endif
+
 typedef struct {
     size_t index;
     char original;
@@ -16,6 +20,7 @@ bool Platform_ExpandPath(const char* template_path, char* out, size_t out_size);
 bool Platform_SendX11Command(const char* window_title, const char* atom_name, long command);
 bool Platform_SetX11Property(const char* window_title, const char* atom_name, long value);
 bool Platform_SetX11StringProperty(const char* window_title, const char* atom_name, const char* value);
+bool Linux_HandlePromptKey(const XEvent* ev);
 
 char* Platform_QueryZoxidePath(const char* query);
 char Platform_GetLastChar(MappedFile *file);

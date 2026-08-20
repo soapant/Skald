@@ -80,11 +80,44 @@
 #if !defined(VK_OEM_7)
 #define VK_OEM_7 0xDE
 #endif
+#if !defined(VK_OEM_6)
+#define VK_OEM_6 0xDD
+#endif
+#if !defined(VK_OEM_3)
+#define VK_OEM_3 0xC0
+#endif
+#if !defined(VK_OEM_MINUS)
+#define VK_OEM_MINUS 0xBD
+#endif
+#if !defined(VK_OEM_PLUS)
+#define VK_OEM_PLUS 0xBB
+#endif
 #if !defined(VK_LSHIFT)
 #define VK_LSHIFT 0xA0
 #endif
 #if !defined(VK_RSHIFT)
 #define VK_RSHIFT 0xA1
+#endif
+#if !defined(VK_DELETE)
+#define VK_DELETE 0x2E
+#endif
+#if !defined(VK_HOME)
+#define VK_HOME 0x24
+#endif
+#if !defined(VK_END)
+#define VK_END 0x23
+#endif
+#if !defined(VK_PRIOR)
+#define VK_PRIOR 0x21
+#endif
+#if !defined(VK_NEXT)
+#define VK_NEXT 0x22
+#endif
+#if !defined(VK_F1)
+#define VK_F1 0x70
+#endif
+#if !defined(VK_F12)
+#define VK_F12 0x7B
 #endif
 #if !defined(VK_LCONTROL)
 #define VK_LCONTROL 0xA2
@@ -409,6 +442,10 @@ typedef struct {
     const char* tag_prefix;
     const char* alias_separator;
 } TagFormatConfig;
+
+#ifndef RGB
+#define RGB(r, g, b)  ((unsigned long)(((unsigned char)(r)|((unsigned short)((unsigned char)(g))<<8))|(((unsigned long)(unsigned char)(b))<<16)))
+#endif
 
 #define MAX_ITEMS 4000
 #define MAX_MATCHES 4000

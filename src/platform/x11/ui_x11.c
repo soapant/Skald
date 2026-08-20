@@ -1,12 +1,10 @@
-#include "platform/platform.h"
 #include "common.h"
-#include "core/modal.h"
+#include "platform/platform.h"
 #include "core/types.h"
 #include "core/timer.h"
 #include "helpers.h"
 #include "bindings/bindings.h"
 #include "bindings/hotkey_definitions.h"
-#include "bindings/vim_motions.h"
 #include "features/focus_switcher.h"
 #include "features/music_player.h"
 #include "features/video_player.h"
@@ -21,10 +19,20 @@
 #include <stdbool.h>
 #include <sys/ioctl.h>
 #include <linux/input.h>
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
+#include <X11/Xatom.h>
 
 void Platform_WaitForKeypressAsync(KeyCallback callback) {
     (void)callback;
     fprintf(stderr, "[PLATFORM] Platform_WaitForKeypressAsync not implemented yet\n");
+}
+unsigned long rgb_to_hex(unsigned long win_color) {
+    unsigned long r = win_color & 0xFF;          
+    unsigned long g = (win_color >> 8) & 0xFF;  
+    unsigned long b = (win_color >> 16) & 0xFF;
+
+    return (r << 16) | (g << 8) | b;
 }
 
 char* Platform_PromptUser(const char* window_list[], const char* window_title, int count, int height, int width, int item_height,
@@ -37,11 +45,70 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
     EditCallback edit_callback,
     FilterCallback filter_callback,
     HelpCallback help_callback) {
-    (void)window_list; (void)window_title; (void)count; (void)height; (void)width; (void)item_height;
-    (void)refresh_callback; (void)enter_callback; (void)ctrl_enter_callback; (void)tab_callback;
-    (void)copy_callback; (void)render_callback; (void)edit_callback; (void)filter_callback; (void)help_callback;
-    fprintf(stderr, "[PLATFORM] Platform_PromptUser not implemented yet\n");
-    return NULL;
+    selection_complete = false;
+    output_buffer[0] = '\0';
+    Display* dpy = XOpenDisplay(NULL);
+
+    int screen = DefaultScreen(dpy);
+    int screen_width = 1920;
+    int screen_height = 1080;
+
+    int layout_w = 900;
+    int layout_h = 95 + (count > 0 ? (count * item_height) : 0);
+
+    if (layout_h < height) layout_h = height;
+    if (layout_h > width) layout_h = width;
+
+    int x = (screen_width - layout_w) / 2;
+    int y = (screen_height - layout_h) / 2;
+
+    unsigned long bg_color = rgb_to_hex(COLOR_BG);
+
+    Window win = XCreateSimpleWindow(
+        dpy,
+        RootWindow(dpy, screen),
+        x, y,
+        layout_w, layout_h,
+        0,              
+        bg_color,       
+        bg_color        
+    );
+
+    Atom wm_state = XInternAtom(dpy, "_NET_WM_STATE", False);
+    Atom wm_state_fullscreen = XInternAtom(dpy, "_NET_WM_STATE_FULLSCREEN", False);
+    
+    Atom wm_type = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE", False);
+    Atom wm_type_dialog = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE_DIALOG", False);
+    XChangeProperty(dpy, win, wm_type, XA_ATOM, 32,
+                    PropModeReplace, (unsigned char*)&wm_type_dialog, 1);
+
+    XClassHint* class_hint = XAllocClassHint();
+    class_hint->res_name = "colored";
+    class_hint->res_class = "colored";
+    XSetClassHint(dpy, win, class_hint);
+    XFree(class_hint);
+
+    XSelectInput(dpy, win, KeyPressMask | ExposureMask);
+
+    XMapWindow(dpy, win);
+    XFlush(dpy);
+
+    XEvent ev;
+    int running = 1;
+
+    while (running) {
+        XNextEvent(dpy, &ev);
+        if (ev.type == KeyPress) {
+            Linux_HandlePromptKey(&ev);
+            if (selection_complete) {
+                running = 0;
+            }
+        }
+    }
+
+    XDestroyWindow(dpy, win);
+    XCloseDisplay(dpy);
+    return output_buffer;
 }
 
 char* Platform_SimplePromptUser(const char* prompt, const char* window_title,int height, int width, int item_height) {
@@ -75,10 +142,11 @@ char* Platform_SearchPopup(void) {
     fprintf(stderr, "[PLATFORM] Platform_SearchPopup not implemented yet\n");
     return NULL;
 }
-
+// On HyperLand There Is No Tray
 int Platform_InitializeTrayIcon(void) {
     return -1;
 }
+
 #define MAX_KEYBOARDS 16
 
 typedef struct {
@@ -164,60 +232,60 @@ void HandleGlobalKeyEvent(int key_code, int value) {
     }
     TimerEnd(timer, "ProcessHotkey");
 
-    if (g_Linux_ShiftHeld && !IsInsertMode() && WH_TO_HWND(hPopupWnd) != NULL) {
-        if (WH_TO_HWND(g_hEditPopup) == NULL) {
-            if (pressed_vk == COMMAND_MODE_KEY) {
-                SetMode(MODE_INSERT);
-                char* output = Platform_EditTextPopup("", 960, 540, 1000, 300);
-                if (output) {
-                    HandleCommandExecution(output);
-                }
-                return;
-            }
-        }
-    }
+    // if (g_Linux_ShiftHeld && !IsInsertMode() && WH_TO_HWND(hPopupWnd) != NULL) {
+    //     if (WH_TO_HWND(g_hEditPopup) == NULL) {
+    //         if (pressed_vk == COMMAND_MODE_KEY) {
+    //             SetMode(MODE_INSERT);
+    //             char* output = Platform_EditTextPopup("", 960, 540, 1000, 300);
+    //             if (output) {
+    //                 HandleCommandExecution(output);
+    //             }
+    //             return;
+    //         }
+    //     }
+    // }
     
-    if (WH_TO_HWND(g_hSearchPopup) == NULL && WH_TO_HWND(hPopupWnd) != NULL && IsNormalMode()) {
-        if (pressed_vk == SEARCH_PROGRAM_KEY) {
-            Platform_SearchPopup();
-        }
-    }
+    // if (WH_TO_HWND(g_hSearchPopup) == NULL && WH_TO_HWND(hPopupWnd) != NULL && IsNormalMode()) {
+    //     if (pressed_vk == SEARCH_PROGRAM_KEY) {
+    //         Platform_SearchPopup();
+    //     }
+    // }
 
-    WinTimer timer2 = TimerStart();
-    if (g_Linux_CtrlHeld) {
-        if (pressed_vk == HELP_SCREEN_KEY) {
-            if (g_help_callback != NULL) {
-                g_help_callback();
-                TimerEnd(timer2, "HelpScreen");
-            }
-        }
-    }
-    TimerEnd(timer2, "HelpScreenCheck");
+    // WinTimer timer2 = TimerStart();
+    // if (g_Linux_CtrlHeld) {
+    //     if (pressed_vk == HELP_SCREEN_KEY) {
+    //         if (g_help_callback != NULL) {
+    //             g_help_callback();
+    //             TimerEnd(timer2, "HelpScreen");
+    //         }
+    //     }
+    // }
+    // TimerEnd(timer2, "HelpScreenCheck");
+    
+    // WinTimer timer3 = TimerStart();
+    // if (IsNormalMode()) {
+    //     if (g_waiting_for_key) {
+    //         g_waiting_for_key = false;
+    //         if (g_key_callback) {
+    //             g_key_callback(pressed_vk); // Pass converted key variable down
+    //             TimerEnd(timer3, "KeyCallback");
+    //         }
+    //         return;
+    //     }       
+    // }
+    // TimerEnd(timer3, "NormalModeCheck");
 
-    WinTimer timer3 = TimerStart();
-    if (IsNormalMode()) {
-        if (g_waiting_for_key) {
-            g_waiting_for_key = false;
-            if (g_key_callback) {
-                g_key_callback(pressed_vk); // Pass converted key variable down
-                TimerEnd(timer3, "KeyCallback");
-            }
-            return;
-        }       
-    }
-    TimerEnd(timer3, "NormalModeCheck");
+    // MotionAction vimAction = MOTION_NONE;
+    // const char* matchedSequence = NULL;
+    // int typedCount = 0;
 
-    MotionAction vimAction = MOTION_NONE;
-    const char* matchedSequence = NULL;
-    int typedCount = 0;
-
-    WinTimer timer4 = TimerStart();
-    if (CheckVimMotion(pressed_vk, modifiers, &vimAction, &matchedSequence, &typedCount)) {
-        ExecuteMotion(vimAction, matchedSequence, typedCount);
-        TimerEnd(timer4, "ExecuteMotion");
-        return;
-    }
-    TimerEnd(timer4, "CheckVimMotion");
+    // WinTimer timer4 = TimerStart();
+    // if (CheckVimMotion(pressed_vk, modifiers, &vimAction, &matchedSequence, &typedCount)) {
+    //     ExecuteMotion(vimAction, matchedSequence, typedCount);
+    //     TimerEnd(timer4, "ExecuteMotion");
+    //     return;
+    // }
+    // TimerEnd(timer4, "CheckVimMotion");
 
     WinTimer timer5 = TimerStart();
 
@@ -310,11 +378,9 @@ void Platform_RunHotKeyMessageLoop(void) {
     }
     free(fds);
 }
-
+// On X11 Window Initalization Doesnt Need To Be Done
 void Platform_InitUI(void) {
-    fprintf(stderr, "[PLATFORM] Platform_InitUI not implemented yet\n");
 }
-
+// Same Thing Here
 void Platform_ShutdownUI(void) {
-    fprintf(stderr, "[PLATFORM] Platform_ShutdownUI not implemented yet\n");
 }
