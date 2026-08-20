@@ -465,14 +465,12 @@ bool CheckTextSnippetBindings(int pressed_vk, int modifiers) {
 #else
     WindowHandle hActiveWnd = WH_NULL;
 #endif
-    if (WH_TO_HWND(hActiveWnd) == NULL) return false;
-
     char activeExe[256] = {0};
     FetchExeNameOnDemand(hActiveWnd, activeExe, sizeof(activeExe) - 1);
-    
-    for (int i = 0; i < TEXT_SNIPPET_COUNT; i++) {
-        if (G_TEXT_SNIPPETS[i].vk_code == pressed_vk && 
-            G_TEXT_SNIPPETS[i].modifiers == modifiers) {
+        
+        for (int i = 0; i < TEXT_SNIPPET_COUNT; i++) {
+            if (G_TEXT_SNIPPETS[i].vk_code == pressed_vk && 
+                G_TEXT_SNIPPETS[i].modifiers == modifiers) {
             
 #if defined(_WIN32)
             if (strcmp(G_TEXT_SNIPPETS[i].exe_name, "*") == 0 || StrStrIA(activeExe, G_TEXT_SNIPPETS[i].exe_name) != NULL) {

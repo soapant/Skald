@@ -5,8 +5,13 @@
 #define SRC_FOLDER "src"
 #define BUILD_FOLDER "build"
 #define OBJ_FOLDER BUILD_FOLDER "/obj"
+#if defined(_WIN32)
 #define CONSOLE_OUTPUT BUILD_FOLDER "/main.exe"
 #define ACTUAL_OUTPUT BUILD_FOLDER "/myprogram.exe"
+#else
+#define CONSOLE_OUTPUT BUILD_FOLDER "/main"
+#define ACTUAL_OUTPUT BUILD_FOLDER "/myprogram"
+#endif
 
 #if defined(_WIN32)
      #define CC_FLAGS "-std=gnu17", "-DCOBJMACROS", "-I", "include", "-MMD", "-MP", "-w"
