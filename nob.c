@@ -17,8 +17,8 @@
      #define CC_FLAGS "-std=gnu17", "-DCOBJMACROS", "-I", "include", "-MMD", "-MP", "-w"
      #define LINK_FLAGS "-lcomctl32", "-lgdiplus", "-lgdi32", "-lshlwapi", "-lshell32", "-lwinmm", "-lole32", "-luuid", "-lmsimg32", "-ldbghelp", "-ldwmapi", "-lpsapi", "-lcrypt32", "-lcomdlg32", "-ladvapi32", "-ldxva2","-user32","-lwinhttp"
 #else
-     #define CC_FLAGS "-I", "include","-w"
-     #define LINK_FLAGS "-lX11"
+     #define CC_FLAGS "-I", "include", "-I/usr/include/freetype2", "-MMD", "-MP", "-w"
+     #define LINK_FLAGS "-lX11", "-lXft", "-lfontconfig", "-lXrender"
 #endif
 
 static Nob_File_Paths sources = {0};
