@@ -6,6 +6,7 @@
 #include "bindings/bindings.h"
 #include "bindings/hotkey_definitions.h"
 #include "features/focus_switcher.h"
+#include "core/feature_data.h"
 #include "features/music_player.h"
 #include "features/video_player.h"
 #include "features/process_killer.h"
@@ -51,6 +52,7 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
     selection_complete = false;
     output_buffer[0] = '\0';
     Display* dpy = XOpenDisplay(NULL);
+    if (!dpy) return NULL;
 
     int screen = DefaultScreen(dpy);
     int screen_width = 1920;
@@ -61,6 +63,17 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
 
     if (layout_h < height) layout_h = height;
     if (layout_h > width) layout_h = width;
+
+    PromptState state = {
+      .items = (char**)window_list,
+      .item_count = count,
+      .cursor = 0,
+      .selection = -1,
+      .scroll_offset = 0,
+      .width = layout_w,
+      .height = layout_h,
+    };
+    state.filter[0] = '\0';
 
     int x = (screen_width - layout_w) / 2;
     int y = (screen_height - layout_h) / 2;
@@ -91,21 +104,41 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
     XSetClassHint(dpy, win, class_hint);
     XFree(class_hint);
 
+    XWMHints* wm_hints = XAllocWMHints();
+    wm_hints->flags = InputHint;
+    wm_hints->input = True;
+    XSetWMHints(dpy, win, wm_hints);
+    XFree(wm_hints);
+
     XSelectInput(dpy, win, KeyPressMask | ExposureMask);
 
     XMapWindow(dpy, win);
     XFlush(dpy);
 
+    g_refresh_callback = refresh_callback;
+    g_enter_callback = enter_callback;
+    g_ctrl_enter_callback = ctrl_enter_callback;
+    g_tab_callback = tab_callback;
+    g_copy_callback = copy_callback;
+    g_render_callback = render_callback;
+    g_edit_callback = edit_callback;
+    g_filter_callback = filter_callback;
+    g_help_callback = help_callback;
+    g_title = window_title;
+    g_current_feature = (char*)window_title + 5;
+    SetCurrentFeatureName(g_current_feature);
+    if (g_refresh_callback) g_refresh_callback(state.filter, hListBox);
+
     XEvent ev;
     int running = 1;
-
     while (running) {
         XNextEvent(dpy, &ev);
         if (ev.type == KeyPress) {
             Linux_HandlePromptKey(&ev);
-            if (selection_complete) {
-                running = 0;
-            }
+        }
+        Linux_RenderPromptUser(&ev,dpy,&win, &state);
+        if (selection_complete) {
+            running = 0;
         }
     }
 
@@ -116,10 +149,11 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
 
 char* Platform_SimplePromptUser(const char* prompt, const char* window_title,int height, int width, int item_height) {
     Display* dpy = XOpenDisplay(NULL);
+    if (!dpy) return NULL;
 
     int screen = DefaultScreen(dpy);
-    int screen_width = 1920;
-    int screen_height = 1080;
+    int screen_width = DisplayWidth(dpy, screen);
+    int screen_height = DisplayHeight(dpy, screen);
 
     int layout_w = 900;
     int layout_h = 95 + (1 > 0 ? (1 * item_height) : 0);
@@ -178,11 +212,6 @@ char* Platform_SimplePromptUser(const char* prompt, const char* window_title,int
     XCloseDisplay(dpy);
     return output_buffer;
     return NULL;
-}
-void center_to_topleft(int centerX, int centerY, int width, int height, 
-                       int* outX, int* outY) {
-    *outX = centerX - (width / 2);
-    *outY = centerY - (height / 2);
 }
 
 static int xft_width(Display* dpy, XftFont* xf, const char* text, int len) {
