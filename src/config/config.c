@@ -105,8 +105,8 @@ const QuickLinkHotkey G_QUICKLINK_HOTKEYS[] = {
 const unsigned int QUICKLINK_HOTKEY_COUNT = sizeof(G_QUICKLINK_HOTKEYS) / sizeof(G_QUICKLINK_HOTKEYS[0]);
 
 const TextSnippet G_TEXT_SNIPPETS[] = {
-    { 'O', HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT, "EpicGamesLauncher", "seifisbad@gmail.com" },
-    { 'P', HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT, "EpicGamesLauncher", "i_am_retarded1" },
+    { 'O', HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL, "*", "seifisbad@gmail.com" },
+    { 'P', HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL, "*", "i_am_retarded1" },
 };
 const unsigned int TEXT_SNIPPET_COUNT = sizeof(G_TEXT_SNIPPETS) / sizeof(G_TEXT_SNIPPETS[0]);
 
