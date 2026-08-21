@@ -4,6 +4,7 @@
 #include "bindings/character_sequence.h"
 #include "bindings/macro_bindings.h"
 #include "core/common_ui.h"
+#include "core/vim_context.h"
 #include "helpers.h"
 #include "features/window_switcher.h"
 #include "features/app_launcher.h"
@@ -16,10 +17,13 @@
 
 bool CheckVimMotion(int pressed_vk, int modifiers, MotionAction* out_action, const char** out_sequence, int* out_typed_count) {
     if (!g_vim_mode_enabled) return false;
+#if defined(_WIN32)
     if (!IsWindowValid(hPopupWnd)) return false;
     if (!IsWindowValid(g_ActiveEditControl)) return false;
-#if defined(_WIN32)
     if (GetFocus() != WH_TO_HWND(g_ActiveEditControl)) return false;
+#else
+    extern PromptState* g_currentPromptState;
+    if (!g_currentPromptState) return false;
 #endif
     
     if (pressed_vk == VK_SHIFT || pressed_vk == VK_LSHIFT || pressed_vk == VK_RSHIFT ||
@@ -175,14 +179,17 @@ bool CheckVimMotion(int pressed_vk, int modifiers, MotionAction* out_action, con
 }
 
 void ExecuteMotion(MotionAction action, const char* sequence, int typed_count) {
+    VimContext ctx = VimCtx_FromGlobals();
     if (typed_count > 0 && sequence != NULL && strlen(sequence) > 0) {
-        DeleteLastTypedChar();
+        DeleteLastTypedChar(&ctx);
+        // Refresh after deleting last typed char that was left in filter from insert mode sequence prefix
+        // For X11, VimCtx_SetText already refreshed, but ensure listbox updates:
+        if (g_refresh_callback) g_refresh_callback(ctx.state ? ctx.state->filter : "", ctx.hListBox, ctx.lb);
     }
-    
     for (int i = 0; i < VIM_SEQUENCE_BINDING_COUNT; i++) {
         const SequenceBinding* b = &G_VIM_SEQUENCE_BINDINGS[i];
         if (b->action_id == action && b->handler != NULL) {
-            b->handler();
+            b->handler(&ctx);
             return;
         }
     }
@@ -190,19 +197,19 @@ void ExecuteMotion(MotionAction action, const char* sequence, int typed_count) {
     for (int i = 0; i < VIM_BINDING_COUNT; i++) {
         const MotionBinding* b = &G_VIM_BINDINGS[i];
         if (b->action_id == action && b->handler != NULL) {
-            b->handler();
+            b->handler(&ctx);
             return;
         }
     }
     
     if (action == MOTION_ENTER_NORMAL) {
-        HandleEnterNormal();
+        HandleEnterNormal(&ctx);
     } else if (action == MOTION_ENTER_INSERT_OUT) {
-        HandleEnterInsertOut();
+        HandleEnterInsertOut(&ctx);
     } else if (action == MOTION_ENTER_INSERT_IN) {
-        HandleEnterInsertIn();
+        HandleEnterInsertIn(&ctx);
     } else if (action == MOTION_ENTER_VISUAL) {
-        HandleEnterVisual();
+        HandleEnterVisual(&ctx);
     }
 }
 bool CheckAppHotkeyBindings(int pressed_vk, int modifiers) {

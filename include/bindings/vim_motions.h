@@ -4,6 +4,7 @@
 
 #include <stdbool.h>
 #include "core/modal.h"
+#include "core/vim_context.h"
 
 typedef enum {
     MOTION_NONE = 0,
@@ -88,7 +89,7 @@ typedef struct {
     int vk_code;
     int modifiers;
     MotionAction action_id;
-    void (*handler)(void);
+    void (*handler)(VimContext* ctx);
     EditorMode mode;
     VimScope scope;
 } MotionBinding;
@@ -96,62 +97,62 @@ typedef struct {
 typedef struct {
     const char* sequence;
     MotionAction action_id;
-    void (*handler)(void);
+    void (*handler)(VimContext* ctx);
     bool is_prefix;
     EditorMode mode;
     VimScope scope;
 } SequenceBinding;
 
-void HandleEnterNormal(void);
-void HandleEnterInsertOut(void);
-void HandleEnterInsertIn(void);
-void HandleEnterVisual(void);
-void HandleMoveLeft(void);
-void HandleEnter(void);
-void HandleMoveUp(void);
-void HandleMoveRight(void);
-void HandleMoveDown(void);
-void HandlePersistentDelete(void);
-void HandleDeleteCharInsert(void);
-void HandleDeleteCharNormal(void);
-void HandleDeleteLine(void);
-void HandleDeleteLineInsert(void);
-void HandleMoveListboxStart(void);
-void HandleMoveListboxEnd(void);
-void HandleMoveLineEnd(void);
-void HandleMoveLineStart(void);
-void HandleEnterInsertInStart(void);
-void HandleEnterInsertOutEnd(void);
-void HandleExitWindow(void);
-void HandleYankLine(void);
-void HandleInsertControlEnter(void);
-void HandleMoveWordForward(void);
-void HandleMoveWordBackward(void);
-void HandleDeleteSingleQuotesInsert(void);
-void HandleDeleteSingleQuotesNormal(void);
-void HandleDeleteQuotesInsert(void);
-void HandleDeleteQuotesNormal(void);
-void HandleDeleteBracketsInsert(void);
-void HandleDeleteBracketsNormal(void);
-void HandleDeleteCurlyBracketsInsert(void);
-void HandleDeleteCurlyBracketsNormal(void);
-void HandleDeleteSquareBracketsInsert(void);
-void HandleDeleteSquareBracketsNormal(void);
-void HandleDeleteWordInsert(void);
-void HandleDeleteWordNormal(void);
-void HandleSendEdit(void);
-void HandleSendCopyShift(void);
-void HandleSendCopyControl(void);
-void HandleCopyToSearch(void);
-void HandleToggleHistory(void);
-void HandleShowFullText(void);
+void HandleEnterNormal(VimContext* ctx);
+void HandleEnterInsertOut(VimContext* ctx);
+void HandleEnterInsertIn(VimContext* ctx);
+void HandleEnterVisual(VimContext* ctx);
+void HandleMoveLeft(VimContext* ctx);
+void HandleEnter(VimContext* ctx);
+void HandleMoveUp(VimContext* ctx);
+void HandleMoveRight(VimContext* ctx);
+void HandleMoveDown(VimContext* ctx);
+void HandlePersistentDelete(VimContext* ctx);
+void HandleDeleteCharInsert(VimContext* ctx);
+void HandleDeleteCharNormal(VimContext* ctx);
+void HandleDeleteLine(VimContext* ctx);
+void HandleDeleteLineInsert(VimContext* ctx);
+void HandleMoveListboxStart(VimContext* ctx);
+void HandleMoveListboxEnd(VimContext* ctx);
+void HandleMoveLineEnd(VimContext* ctx);
+void HandleMoveLineStart(VimContext* ctx);
+void HandleEnterInsertInStart(VimContext* ctx);
+void HandleEnterInsertOutEnd(VimContext* ctx);
+void HandleExitWindow(VimContext* ctx);
+void HandleYankLine(VimContext* ctx);
+void HandleInsertControlEnter(VimContext* ctx);
+void HandleMoveWordForward(VimContext* ctx);
+void HandleMoveWordBackward(VimContext* ctx);
+void HandleDeleteSingleQuotesInsert(VimContext* ctx);
+void HandleDeleteSingleQuotesNormal(VimContext* ctx);
+void HandleDeleteQuotesInsert(VimContext* ctx);
+void HandleDeleteQuotesNormal(VimContext* ctx);
+void HandleDeleteBracketsInsert(VimContext* ctx);
+void HandleDeleteBracketsNormal(VimContext* ctx);
+void HandleDeleteCurlyBracketsInsert(VimContext* ctx);
+void HandleDeleteCurlyBracketsNormal(VimContext* ctx);
+void HandleDeleteSquareBracketsInsert(VimContext* ctx);
+void HandleDeleteSquareBracketsNormal(VimContext* ctx);
+void HandleDeleteWordInsert(VimContext* ctx);
+void HandleDeleteWordNormal(VimContext* ctx);
+void HandleSendEdit(VimContext* ctx);
+void HandleSendCopyShift(VimContext* ctx);
+void HandleSendCopyControl(VimContext* ctx);
+void HandleCopyToSearch(VimContext* ctx);
+void HandleToggleHistory(VimContext* ctx);
+void HandleShowFullText(VimContext* ctx);
 void SearchTextForward(int key);
 void SearchTextBackward(int key);
-void HandleSearchTextForward(void);
-void HandleSearchTextBackward(void);
-void HandleDeleteTillEnd(void);
-void HandlePageUp(void);
-void HandlePageDown(void);
-void HandleNormalEdit(void);
+void HandleSearchTextForward(VimContext* ctx);
+void HandleSearchTextBackward(VimContext* ctx);
+void HandleDeleteTillEnd(VimContext* ctx);
+void HandlePageUp(VimContext* ctx);
+void HandlePageDown(VimContext* ctx);
+void HandleNormalEdit(VimContext* ctx);
 
 #endif
