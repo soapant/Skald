@@ -81,7 +81,6 @@ bool ProcessHotkey(const HotkeyBinding* bindings, int bindings_count,
             if (IsPopupActive(hPopupWnd)) {
                 extern bool selection_complete;
                 selection_complete = true;
-                // Prompt loop will exit and XDestroyWindow will be called; keep g_currentPromptState check happy
             }
 #endif
         } else {
