@@ -115,6 +115,7 @@ int main() {
     if (G_FILE_ENTRIES[i].mf != NULL) {
 #if !defined(_WIN32)
         G_FILE_ENTRIES[i].mf->fd = -1;
+        FcInit();
 #endif
     }
     const char* path = G_FILE_ENTRIES[i].path;
