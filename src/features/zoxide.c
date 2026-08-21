@@ -19,7 +19,9 @@ static void RebuildZoxideCache(void) {
         g_cached_zoxide_count = 0;
     }
     
+    printf("[ZOXIDE] Rebuild fileSize=%zu path=%s\n", TerminalZoxideFile ? TerminalZoxideFile->fileSize : 0, TerminalZoxideFile ? "ok" : "null");
     if (!TerminalZoxideFile || TerminalZoxideFile->fileSize == 0) {
+        printf("[ZOXIDE] empty, return\n");
         return;
     }
     
