@@ -76,24 +76,6 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
             return true;
         }
     }
-    // Feature toggle while popup is open (AllowOtherFeatureTogglesInFeature)
-    if (AllowOtherFeatureTogglesInFeature && alt_pressed) {
-        int mod = HOTKEY_MOD_NONE;
-        if (ctrl_pressed) mod |= HOTKEY_MOD_CTRL;
-        if (shift_pressed) mod |= HOTKEY_MOD_SHIFT;
-        if (alt_pressed) mod |= HOTKEY_MOD_ALT;
-        for (int i=0;i<HOTKEY_BINDING_COUNT;i++) {
-            const HotkeyBinding* b = &G_HOTKEY_BINDINGS[i];
-            if (b->vk_code == wParam && b->modifiers == mod) {
-                extern int pending_hotkey_vk;
-                extern int pending_hotkey_mod;
-                pending_hotkey_vk = wParam;
-                pending_hotkey_mod = mod;
-                selection_complete = true;
-                return true;
-            }
-        }
-    }
     if (wParam == VK_BACK) {
         size_t n = strlen(state->filter);
         if (state->cursor > 0) {
@@ -174,7 +156,6 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
         int type = shift_pressed ? 0 : 1;
         if (g_copy_callback) {
           int idx = UI_IsListBoxSelected(&state->listbox) ? state->listbox.selected_index : -1;
-          // Lookup true index not needed for X11, just pass
           g_copy_callback(sel, idx, type);
         } else {
           Platform_CopyToClipboard(sel);
