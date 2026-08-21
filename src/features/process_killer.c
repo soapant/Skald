@@ -3,6 +3,14 @@
 #if defined(_WIN32)
 #include <tlhelp32.h>
 #include <shlwapi.h>
+#else
+#include <dirent.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <strings.h>
+#include <ctype.h>
+#include <stdio.h>
+#include <string.h>
 #endif
 #include "core/common_ui.h"
 
@@ -60,6 +68,31 @@ static void collect_running_processes() {
     CloseHandle(hSnapshot);
 #else
     G_PK_COUNT = 0;
+    DIR* proc = opendir("/proc");
+    if (!proc) return;
+    struct dirent* entry;
+    while ((entry = readdir(proc)) != NULL) {
+        if (!isdigit((unsigned char)entry->d_name[0])) continue;
+        char comm_path[512];
+        snprintf(comm_path, sizeof(comm_path), "/proc/%s/comm", entry->d_name);
+        FILE* f = fopen(comm_path, "r");
+        if (!f) continue;
+        char exe[256];
+        if (!fgets(exe, sizeof(exe), f)) { fclose(f); continue; }
+        fclose(f);
+        size_t len = strlen(exe);
+        while (len>0 && (exe[len-1]=='\n' || exe[len-1]=='\r')) exe[--len]='\0';
+        if (len==0) continue;
+        if (is_system_noise(exe)) continue;
+        bool exists=false;
+        for (int i=0;i<G_PK_COUNT;i++) if (strcasecmp(G_PK_LIST[i], exe)==0) {exists=true;break;}
+        if (!exists && G_PK_COUNT < MAX_PK_APPS) {
+            strncpy(G_PK_LIST[G_PK_COUNT], exe, 127);
+            G_PK_LIST[G_PK_COUNT][127]='\0';
+            G_PK_COUNT++;
+        }
+    }
+    closedir(proc);
 #endif
 }
 
@@ -81,22 +114,43 @@ static void run_hidden_command(const char* cmd) {
         WinExec(cmd, SW_HIDE);
     }
 #else
-    (void)cmd;
+    if (!cmd) return;
+    char buf[1024];
+    snprintf(buf, sizeof(buf), "%s >/dev/null 2>&1", cmd);
+    system(buf);
 #endif
 }
 
 void terminate_process_by_name(const char* exe_name) {
+#if defined(_WIN32)
     char cmd[512];
     snprintf(cmd, sizeof(cmd), "taskkill /f /im \"%s*\"", exe_name);
     run_hidden_command(cmd);
+#else
+    if (!exe_name || !*exe_name) return;
+    char cmd[512];
+    snprintf(cmd, sizeof(cmd), "pkill -f \"%s\"", exe_name);
+    run_hidden_command(cmd);
+    snprintf(cmd, sizeof(cmd), "killall \"%s\"", exe_name);
+    run_hidden_command(cmd);
+#endif
 }
 
 static void BulkKillProcesses(const char* window_titles[], int count) {
+#if defined(_WIN32)
     for (int i = 0; i < count; i++) {
         char cmd[512];
         snprintf(cmd, sizeof(cmd), "taskkill /f /im \"%s*\"", window_titles[i]);
         run_hidden_command(cmd);
     }
+#else
+    for (int i = 0; i < count; i++) {
+        if (!window_titles[i] || !*window_titles[i]) continue;
+        char cmd[512];
+        snprintf(cmd, sizeof(cmd), "pkill -f \"%s\"", window_titles[i]);
+        run_hidden_command(cmd);
+    }
+#endif
 }
 
 bool HandleBulkKillProcess(int vk_code, int modifiers, const char* current_title) {

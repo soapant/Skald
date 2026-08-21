@@ -325,9 +325,10 @@ static inline bool IsPopupActive(WindowHandle hPopupWnd) {
   return WH_TO_HWND(hPopupWnd) != NULL && IsWindow(WH_TO_HWND(hPopupWnd));
 }
 #else
+extern PromptState* g_currentPromptState;
 static inline bool IsPopupActive(WindowHandle hPopupWnd) {
   (void)hPopupWnd;
-  return false;
+  return g_currentPromptState != NULL;
 }
 #endif
 
