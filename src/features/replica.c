@@ -24,7 +24,7 @@ static void SendTargetToReplica(WindowHandle target) {
 
 
 static void replica_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
-    if (!lb || WH_TO_HWND(hListBox) == NULL) return;
+    if (!lb) return;
     
     WindowUtils_GetAll(&g_replica_windows);
     

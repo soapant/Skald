@@ -73,7 +73,7 @@ static void RebuildReminderCache(void) {
     free(lines);
 }
 static void reminder_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
-    if (!lb || WH_TO_HWND(hListBox) == NULL) return;
+    if (!lb) return;
     
     if (!g_cached_reminder_commands) {
         RebuildReminderCache();

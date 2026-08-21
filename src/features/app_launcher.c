@@ -105,7 +105,7 @@ static void applauncher_ctrlenter_callback(const char* selection, ListBoxInfo* l
 }
 
 static void applauncher_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
-    if (!lb || WH_TO_HWND(hListBox) == NULL) return;
+    if (!lb) return;
 
     const char* names[MAX_APPS];
     int count = (G_APP_COUNT < MAX_APPS) ? G_APP_COUNT : MAX_APPS;

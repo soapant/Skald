@@ -47,7 +47,7 @@ static void RebuildGoogleCache(void) {
 
 
 static void google_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
-    if (!lb || WH_TO_HWND(hListBox) == NULL) return;
+    if (!lb) return;
     
     if (!g_cached_google_queries) {
         RebuildGoogleCache();
