@@ -392,7 +392,7 @@ void get_flip_expression(char* out, size_t max_len) {
 
 
 static void calculator_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
-    if (!lb || WH_TO_HWND(hListBox) == NULL) return;
+    if (!lb) return;
     
     char result_buffer[256] = {0};
     if (filter && strlen(filter) > 0) {

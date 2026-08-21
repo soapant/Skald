@@ -104,14 +104,14 @@ const AppHotkey G_APP_HOTKEYS[] = {
 const unsigned int APP_HOTKEY_COUNT = sizeof(G_APP_HOTKEYS) / sizeof(G_APP_HOTKEYS[0]);
 
 const MiscHotkey G_MISC_HOTKEYS[] = {
-    {'G', HOTKEY_MOD_CTRL | HOTKEY_MOD_ALT, "*", "{DEV}/retard games/Grand Theft Auto V Legacy/PlayGTAV.bat" },
-    {'O', HOTKEY_MOD_CTRL | HOTKEY_MOD_ALT, "*", "{APPDATA}/Microsoft/Windows/Start Menu/Programs/OnTopReplica/OnTopReplica.lnk"}
+    // {'G', HOTKEY_MOD_CTRL | HOTKEY_MOD_ALT, "*", "{DEV}/retard games/Grand Theft Auto V Legacy/PlayGTAV.bat" },
+    // {'O', HOTKEY_MOD_CTRL | HOTKEY_MOD_ALT, "*", "{APPDATA}/Microsoft/Windows/Start Menu/Programs/OnTopReplica/OnTopReplica.lnk"}
 };
 const unsigned int MISC_HOTKEY_COUNT = sizeof(G_MISC_HOTKEYS) / sizeof(G_MISC_HOTKEYS[0]);
 
 const QuickLinkHotkey G_QUICKLINK_HOTKEYS[] = {
     {'Y', HOTKEY_MOD_CTRL | HOTKEY_MOD_ALT, "*", "https://youtube.com" },
-    {'M', HOTKEY_MOD_CTRL | HOTKEY_MOD_ALT, "*", "https://messenger.com" },
+    // {'M', HOTKEY_MOD_CTRL | HOTKEY_MOD_ALT, "*", "https://messenger.com" },
 };
 const unsigned int QUICKLINK_HOTKEY_COUNT = sizeof(G_QUICKLINK_HOTKEYS) / sizeof(G_QUICKLINK_HOTKEYS[0]);
 
@@ -162,18 +162,18 @@ const char* focus_blacklist_terminal[] = {"CrosshairX"};
 const char* terminal_windows[] = {"Alacritty","pwsh"};
 
 const FocusSwitcherBinding G_FOCUS_SWITCHERS[] = {
-    { 'O', HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT,
-      focus_blacklist_games, sizeof(focus_blacklist_games) / sizeof(focus_blacklist_games[0]),
-      games_windows, sizeof(games_windows) / sizeof(games_windows[0]) },
-    { 'I', HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT,
-      focus_blacklist_browsers, sizeof(focus_blacklist_browsers) / sizeof(focus_blacklist_browsers[0]),
-      browsers_windows, sizeof(browsers_windows) / sizeof(browsers_windows[0]) },
-    { 'U', HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT,
-      focus_blacklist_coding, sizeof(focus_blacklist_coding) / sizeof(focus_blacklist_coding[0]),
-      coding_windows, sizeof(coding_windows) / sizeof(coding_windows[0]) },
-    { 'L', HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT,
-      focus_blacklist_terminal, sizeof(focus_blacklist_terminal) / sizeof(focus_blacklist_terminal[0]),
-      terminal_windows, sizeof(terminal_windows) / sizeof(terminal_windows[0]) },
+    // { 'O', HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT,
+    //   focus_blacklist_games, sizeof(focus_blacklist_games) / sizeof(focus_blacklist_games[0]),
+    //   games_windows, sizeof(games_windows) / sizeof(games_windows[0]) },
+    // { 'I', HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT,
+    //   focus_blacklist_browsers, sizeof(focus_blacklist_browsers) / sizeof(focus_blacklist_browsers[0]),
+    //   browsers_windows, sizeof(browsers_windows) / sizeof(browsers_windows[0]) },
+    // { 'U', HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT,
+    //   focus_blacklist_coding, sizeof(focus_blacklist_coding) / sizeof(focus_blacklist_coding[0]),
+    //   coding_windows, sizeof(coding_windows) / sizeof(coding_windows[0]) },
+    // { 'L', HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT,
+    //   focus_blacklist_terminal, sizeof(focus_blacklist_terminal) / sizeof(focus_blacklist_terminal[0]),
+    //   terminal_windows, sizeof(terminal_windows) / sizeof(terminal_windows[0]) },
 };
 
 const unsigned int FOCUS_SWITCHER_COUNT = sizeof(G_FOCUS_SWITCHERS) / sizeof(G_FOCUS_SWITCHERS[0]);
