@@ -5,6 +5,17 @@
 #include "config.h"
 #if defined(_WIN32)
 #include <shlwapi.h>
+#else
+#include <dirent.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <string.h>
+#include <strings.h>
+#include <stdlib.h>
+#include <stdint.h>
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
 #endif
 
 static FileItem G_FILES[MAX_FILES];
@@ -52,8 +63,25 @@ char* SearchFileInDirectory(const char* directory, const char* search_string) {
     FindClose(hFind);
     return NULL;
 #else
-    (void)directory;
-    (void)search_string;
+    if (!directory || !search_string || strlen(search_string) == 0) return NULL;
+    DIR* dir = opendir(directory);
+    if (!dir) return NULL;
+    static char found_path[MAX_PATH];
+    struct dirent* entry;
+    while ((entry = readdir(dir)) != NULL) {
+        if (entry->d_name[0]=='.' && (entry->d_name[1]=='\0' || (entry->d_name[1]=='.' && entry->d_name[2]=='\0'))) continue;
+        char full_path[MAX_PATH];
+        snprintf(full_path, sizeof(full_path), "%s/%s", directory, entry->d_name);
+        struct stat st;
+        if (stat(full_path, &st)!=0) continue;
+        if (S_ISDIR(st.st_mode)) continue;
+        if (strcasestr(entry->d_name, search_string) != NULL) {
+            snprintf(found_path, sizeof(found_path), "%s", full_path);
+            closedir(dir);
+            return found_path;
+        }
+    }
+    closedir(dir);
     return NULL;
 #endif
 }
@@ -108,8 +136,33 @@ char* SearchFileRecursive(const char* directory, const char* search_string) {
     FindClose(hFind);
     return NULL;
 #else
-    (void)directory;
-    (void)search_string;
+    if (!directory || !search_string || strlen(search_string)==0) return NULL;
+    DIR* dir = opendir(directory);
+    if (!dir) return NULL;
+    static char found_path2[MAX_PATH];
+    struct dirent* entry;
+    while ((entry = readdir(dir)) != NULL) {
+        if (strcmp(entry->d_name,".")==0 || strcmp(entry->d_name,"..")==0) continue;
+        char full_path[MAX_PATH];
+        snprintf(full_path, sizeof(full_path), "%s/%s", directory, entry->d_name);
+        struct stat st;
+        if (stat(full_path, &st)!=0) continue;
+        if (S_ISDIR(st.st_mode)) {
+            char* res = SearchFileRecursive(full_path, search_string);
+            if (res) {
+                snprintf(found_path2, sizeof(found_path2), "%s", res);
+                closedir(dir);
+                return found_path2;
+            }
+        } else {
+            if (strcasestr(entry->d_name, search_string)!=NULL) {
+                snprintf(found_path2, sizeof(found_path2), "%s", full_path);
+                closedir(dir);
+                return found_path2;
+            }
+        }
+    }
+    closedir(dir);
     return NULL;
 #endif
 }
@@ -179,28 +232,58 @@ static void GetFilesRecursiveWithTime(const char* dir_path, bool show_folder) {
 
     FindClose(hFind);
 #else
-    (void)dir_path;
-    (void)show_folder;
+    DIR* dir = opendir(dir_path);
+    if (!dir) return;
+    struct dirent* entry;
+    while ((entry = readdir(dir)) != NULL && G_FILE_COUNT < MAX_FILES) {
+        if (strcmp(entry->d_name,".")==0 || strcmp(entry->d_name,"..")==0) continue;
+        char full_path[MAX_PATH];
+        snprintf(full_path, sizeof(full_path), "%s/%s", dir_path, entry->d_name);
+        struct stat st;
+        if (stat(full_path, &st)!=0) continue;
+        if (S_ISDIR(st.st_mode)) {
+            if (strcasecmp(entry->d_name,"node_modules")==0 ||
+                strcasecmp(entry->d_name,".git")==0 ||
+                strcasecmp(entry->d_name,"bin")==0 ||
+                strcasecmp(entry->d_name,"obj")==0 ||
+                strcasecmp(entry->d_name,"build")==0) continue;
+            GetFilesRecursiveWithTime(full_path, show_folder);
+        } else {
+            if (G_FILE_COUNT >= MAX_FILES) break;
+            char clean_name[256];
+            strncpy(clean_name, entry->d_name, sizeof(clean_name)-1);
+            clean_name[sizeof(clean_name)-1]='\0';
+            char* dot = strrchr(clean_name, '.');
+            if (dot) *dot='\0';
+            if (show_folder) {
+                char folder_name[MAX_PATH];
+                strncpy(folder_name, dir_path, sizeof(folder_name)-1);
+                folder_name[sizeof(folder_name)-1]='\0';
+                char* last_slash = strrchr(folder_name, '/');
+                char* last_bs = strrchr(folder_name, '\\');
+                if (last_bs && (!last_slash || last_bs > last_slash)) last_slash = last_bs;
+                if (last_slash) snprintf(G_FILES_WITH_TIME[G_FILE_COUNT].name, sizeof(G_FILES_WITH_TIME[G_FILE_COUNT].name), "%s/%s", last_slash+1, clean_name);
+                else strncpy(G_FILES_WITH_TIME[G_FILE_COUNT].name, clean_name, sizeof(G_FILES_WITH_TIME[G_FILE_COUNT].name)-1);
+            } else {
+                strncpy(G_FILES_WITH_TIME[G_FILE_COUNT].name, clean_name, sizeof(G_FILES_WITH_TIME[G_FILE_COUNT].name)-1);
+            }
+            strncpy(G_FILES_WITH_TIME[G_FILE_COUNT].path, full_path, sizeof(G_FILES_WITH_TIME[G_FILE_COUNT].path)-1);
+            G_FILES_WITH_TIME[G_FILE_COUNT].last_write.dwLowDateTime = (uint32_t)(st.st_mtime & 0xFFFFFFFF);
+            G_FILES_WITH_TIME[G_FILE_COUNT].last_write.dwHighDateTime = (uint32_t)((st.st_mtime >> 32) & 0xFFFFFFFF);
+            G_FILE_COUNT++;
+        }
+    }
+    closedir(dir);
 #endif
 }
 static int CompareFileByTime(const void* a, const void* b) {
-#if defined(_WIN32)
     const FileItemWithTime* fa = (const FileItemWithTime*)a;
     const FileItemWithTime* fb = (const FileItemWithTime*)b;
-    
-    
-    
-    __int64 time_a = ((__int64)fa->last_write.dwHighDateTime << 32) + fa->last_write.dwLowDateTime;
-    __int64 time_b = ((__int64)fb->last_write.dwHighDateTime << 32) + fb->last_write.dwLowDateTime;
-    
+    int64_t time_a = ((int64_t)fa->last_write.dwHighDateTime << 32) + fa->last_write.dwLowDateTime;
+    int64_t time_b = ((int64_t)fb->last_write.dwHighDateTime << 32) + fb->last_write.dwLowDateTime;
     if (time_a > time_b) return -1;
     if (time_a < time_b) return 1;
     return 0;
-#else
-    (void)a;
-    (void)b;
-    return 0;
-#endif
 }
 
 static void SortFilesByTime(void) {
@@ -313,6 +396,55 @@ void scan_directory_recursive(const char* dir_path) {
 
     FindClose(hFind);
 #else
-    (void)dir_path;
+    if (strlen(dir_path)==0) return;
+    DIR* dir = opendir(dir_path);
+    if (!dir) return;
+    static int ignore_count = 0;
+    static bool ignore_init = false;
+    if (!ignore_init) {
+        ignore_count = sizeof(ListOfShitToIgnore)/sizeof(ListOfShitToIgnore[0]);
+        ignore_init = true;
+    }
+    struct dirent* entry;
+    while ((entry = readdir(dir)) != NULL && G_APP_COUNT < MAX_APPS) {
+        if (entry->d_name[0]=='.' && (entry->d_name[1]=='\0' || (entry->d_name[1]=='.' && entry->d_name[2]=='\0'))) continue;
+        char full_path[MAX_PATH];
+        snprintf(full_path, sizeof(full_path), "%s/%s", dir_path, entry->d_name);
+        struct stat st;
+        if (stat(full_path, &st)!=0) continue;
+        if (S_ISDIR(st.st_mode)) {
+            bool skip=false;
+            for (int i=0;i<ignore_count;i++) if (ListOfShitToIgnore[i] && strcasecmp(entry->d_name, ListOfShitToIgnore[i])==0) {skip=true;break;}
+            if (skip) continue;
+            scan_directory_recursive(full_path);
+        } else {
+            const char* dot = strrchr(entry->d_name, '.');
+            bool is_app = false;
+            if (dot) {
+                if (strcasecmp(dot, ".desktop")==0 || strcasecmp(dot, ".lnk")==0 || strcasecmp(dot, ".exe")==0 || strcasecmp(dot, ".url")==0 || strcasecmp(dot, ".sh")==0) is_app = true;
+            } else {
+                if (st.st_mode & (S_IXUSR|S_IXGRP|S_IXOTH)) is_app = true;
+            }
+            if (!is_app) continue;
+            if (G_APP_COUNT >= MAX_APPS) break;
+            char clean_name[128];
+            int name_len = strlen(entry->d_name);
+            int base_len = dot ? (int)(dot - entry->d_name) : name_len;
+            if (dot && strcasecmp(dot, ".desktop")==0) base_len = name_len - 8;
+            else if (dot && (strcasecmp(dot, ".lnk")==0 || strcasecmp(dot, ".exe")==0 || strcasecmp(dot, ".url")==0 || strcasecmp(dot, ".sh")==0)) base_len = name_len - (int)strlen(dot);
+            if (base_len >= (int)sizeof(clean_name)) base_len = sizeof(clean_name)-1;
+            memcpy(clean_name, entry->d_name, base_len);
+            clean_name[base_len]='\0';
+            bool dup=false;
+            for (int i=0;i<G_APP_COUNT;i++) if (strcasecmp(G_APPS[i].name, clean_name)==0) {dup=true;break;}
+            if (dup) continue;
+            strncpy(G_APPS[G_APP_COUNT].name, clean_name, sizeof(G_APPS[G_APP_COUNT].name)-1);
+            G_APPS[G_APP_COUNT].name[sizeof(G_APPS[G_APP_COUNT].name)-1]='\0';
+            strncpy(G_APPS[G_APP_COUNT].path, full_path, sizeof(G_APPS[G_APP_COUNT].path)-1);
+            G_APPS[G_APP_COUNT].path[sizeof(G_APPS[G_APP_COUNT].path)-1]='\0';
+            G_APP_COUNT++;
+        }
+    }
+    closedir(dir);
 #endif
 }

@@ -55,12 +55,22 @@ const float GradientBrightness = 1.0f;
 bool PixelHotkeys = false;
 
 const char* ListOfProgramPaths[20] = {
+#if defined(_WIN32)
     "{APPDATA}/Microsoft/Windows/Start Menu",
     "{PROGRAMDATA}/Microsoft/Windows/Start Menu/Programs",
     "{DEV}",
     "{MISC}",
     "{SystemRoot}/System32/",             
-    "shell:AppsFolder",                   
+    "shell:AppsFolder",
+#else
+    "/usr/share/applications",
+    "/usr/local/share/applications",
+    "/home/diggy/.local/share/applications",
+    "/usr/bin",
+    "/home/diggy/.local/bin",
+    "{DEV}",
+    "{MISC}",
+#endif
 };
 
 const PathEntry SystemShortcuts[] = {
