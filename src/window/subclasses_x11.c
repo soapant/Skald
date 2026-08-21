@@ -109,7 +109,7 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
     return false;
 }
 
-void DrawEditControl(Display *dpy,Window* win,PromptState *state) {
+void DrawPromptUserEditControl(Display *dpy,Window* win,PromptState *state) {
     int screen = DefaultScreen(dpy);
     XftDraw* xd = XftDrawCreate(dpy, *win, DefaultVisual(dpy, screen), DefaultColormap(dpy, screen));
 
@@ -176,13 +176,89 @@ void DrawEditControl(Display *dpy,Window* win,PromptState *state) {
         XftTextExtentsUtf8(dpy, xf, (FcChar8*)state->filter, state->cursor, &ext);
         XftDrawRect(xd, &text_color,22 + ext.xOff, 47, 12,FontSize);
     }
+    XftColorFree(dpy, visual, cmap, &bg_color);
+    XftColorFree(dpy, visual, cmap, &text_color);
+    XftColorFree(dpy, visual, cmap, &vim_text_color);
+    XftDrawDestroy(xd);
+    Platform_DestroyFont(font);
+}
+
+void DrawPromptUserListBox(Display *dpy,Window* win,PromptState *state) {
+      if (!state->has_listbox || !state->listbox.populated_count) return;
+      ListBoxInfo *lb = &state->listbox;
+      int screen = DefaultScreen(dpy);
+      XftDraw *xd = XftDrawCreate(dpy, *win, DefaultVisual(dpy, screen), DefaultColormap(dpy, screen));
+      FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
+      XftFont *xf = FH_TO_XFT(font);
+
+      int y0 = 100;
+      int itemH = FontSize + 34;
+      int visible = (state->height - y0) / itemH;
+      if (visible < 1) visible = 1;
+      if (visible > lb->populated_count) visible = lb->populated_count;
+
+      if (lb->selected_index >= 0) {
+        if (lb->selected_index < lb->view_offset + PaddingForScrolling)
+          lb->view_offset = lb->selected_index - PaddingForScrolling;
+        else if (lb->selected_index >= lb->view_offset + visible - PaddingForScrolling)
+          lb->view_offset = lb->selected_index - visible + PaddingForScrolling + 1;
+      }
+      if (lb->view_offset < 0) lb->view_offset = 0;
+      if (lb->view_offset + visible > lb->populated_count)
+        lb->view_offset = lb->populated_count - visible;
+      if (lb->view_offset < 0) lb->view_offset = 0;
+
+      Visual *vis = DefaultVisual(dpy, screen);
+      Colormap cmap = DefaultColormap(dpy, screen);
+      // clear whole list area when visible shrinks (5->3 leaves old items)
+      {
+        XRenderColor rc0={(rgb_to_hex(COLOR_BG)>>16&0xFF)*0x101,(rgb_to_hex(COLOR_BG)>>8&0xFF)*0x101,(rgb_to_hex(COLOR_BG)&0xFF)*0x101,0xFFFF};
+        XftColor c0; XftColorAllocValue(dpy, vis, cmap, &rc0, &c0);
+        XftDrawRect(xd, &c0, 0, y0, state->width, state->height - y0);
+        XftColorFree(dpy, vis, cmap, &c0);
+      }
+      for (int i = 0; i < visible; i++) {
+        int idx = lb->view_offset + i;
+        int y = y0 + i * itemH;
+        bool sel = (idx == lb->selected_index);
+        unsigned long bg = sel ? rgb_to_hex(COLOR_SELECTED_TEXT) : rgb_to_hex(COLOR_BG);
+        XRenderColor rc={ (bg>>16&0xFF)*0x101,(bg>>8&0xFF)*0x101,(bg&0xFF)*0x101,0xFFFF};
+        XftColor bgc; XftColorAllocValue(dpy, vis, cmap, &rc, &bgc);
+        XftDrawRect(xd, &bgc, 0, y, state->width, itemH);
+
+        unsigned long fg_text = rgb_to_hex(COLOR_TEXT);
+        XRenderColor rc2_text={(fg_text>>16&0xFF)*0x101,(fg_text>>8&0xFF)*0x101,(fg_text&0xFF)*0x101,0xFFFF};
+        XftColor fcoltext; XftColorAllocValue(dpy, vis, cmap, &rc2_text, &fcoltext);
+
+        float ft = (float)idx / 32.0f;
+        unsigned long fg_rainbow = rgb_to_hex(GetRainbowColor(ft, 0.55f, GradientBrightness));
+        XRenderColor rc2_rainbow={(fg_rainbow>>16&0xFF)*0x101,(fg_rainbow>>8&0xFF)*0x101,(fg_rainbow&0xFF)*0x101,0xFFFF};
+        XftColor fcolrainbow; XftColorAllocValue(dpy, vis, cmap, &rc2_rainbow, &fcolrainbow);
+
+        if (RainbowText) {
+            char num[8];
+            snprintf(num,sizeof(num),"%d.",idx+1);
+            draw_wrapped_text(dpy, xd, &fcolrainbow, font, num, y, "LEFT",10);
+            draw_wrapped_text(dpy, xd, &fcolrainbow, font, lb->populated_cache[idx], y, "LEFT", 55);
+        } else {
+            char num[8];
+            snprintf(num,sizeof(num),"%d.",idx+1);
+            draw_wrapped_text(dpy, xd, &fcoltext, font, num, y, "LEFT", 10);
+            draw_wrapped_text(dpy, xd, &fcoltext, font, lb->populated_cache[idx], y, "LEFT", 45);
+        }
+
+        XftColorFree(dpy, vis, cmap, &bgc);
+        XftColorFree(dpy, vis, cmap, &fcoltext);
+        XftColorFree(dpy, vis, cmap, &fcolrainbow);
+      }
+      XftDrawDestroy(xd);
+      Platform_DestroyFont(font);
 }
 
 bool Linux_RenderPromptUser(Display *dpy, Window *win, PromptState *state) {
-    DrawEditControl(dpy, win,state);
+    DrawPromptUserEditControl(dpy, win,state);
     if (state->has_listbox && state->listbox.populated_count > 0) {
-        // Minimal listbox rendering: could be expanded later
-        // For now just ensure selection is maintained
+        DrawPromptUserListBox(dpy,win,state);
     }
     return true;
 }

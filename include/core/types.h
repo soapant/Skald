@@ -555,7 +555,11 @@ typedef struct {
 #define COLOR_INSERT_MODE_TEXT    RGB(50, 255, 50)
 #define COLOR_NORMAL_MODE_TEXT    RGB(100, 255, 255)
 #define COLOR_VISUAL_MODE_TEXT    RGB(200, 3, 222)
+#if defined(_WIN32)
 #define DATA_DIR "data\\"
+#else
+#define DATA_DIR "data/"
+#endif
 #define TODO_FILE_PATH DATA_DIR "todo.txt"
 #define FORGETFULL_FILE_PATH DATA_DIR "forgetfull.txt"
 #define ID_TRAY_ICON 1001

@@ -1,4 +1,5 @@
 #include "common.h"
+#include "core/modal.h"
 #include "platform/platform.h"
 #include "core/types.h"
 #include "core/timer.h"
@@ -132,18 +133,21 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
     while (running) {
         XNextEvent(dpy, &ev);
         if (ev.type == KeyPress) {
-            if (!Linux_HandlePromptKey(&ev,state) && (!state->has_listbox || state->listbox.selected_index == -1)) {
-              char buf[32];
-              KeySym ks;
-              int len = XLookupString(&ev.xkey, buf, sizeof(buf), &ks, NULL);
-              if (len > 0) {
-                  size_t n = strlen(state->filter);
-                  if (n + len < sizeof(state->filter) - 1) {
-                      memcpy(state->filter + n, buf, len);
-                      state->filter[n + len] = '\0';
+            if (!Linux_HandlePromptKey(&ev,state)) {
+              if (IsInsertMode()) {
+                  char buf[32];
+                  KeySym ks;
+                  int len = XLookupString(&ev.xkey, buf, sizeof(buf), &ks, NULL);
+                  if (len > 0) {
+                      size_t n = strlen(state->filter);
+                      if (n + len < sizeof(state->filter) - 1) {
+                          memcpy(state->filter + n, buf, len);
+                          state->filter[n + len] = '\0';
+                          state->cursor += len;
+                          if (g_refresh_callback) g_refresh_callback(state->filter, hListBox, state->has_listbox ? &state->listbox : NULL);
+                      }
                   }
               }
-              state->cursor += 1;
             }
         }
         Linux_RenderPromptUser(dpy,&win, state);
@@ -623,6 +627,7 @@ void Platform_RunHotKeyMessageLoop(void) {
     }
     free(fds);
 }
+
 // On X11 Window Initalization Doesnt Need To Be Done
 void Platform_InitUI(void) {
 }
