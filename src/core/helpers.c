@@ -82,9 +82,13 @@ bool ProcessHotkey(const HotkeyBinding* bindings, int bindings_count,
                 extern bool selection_complete;
                 selection_complete = true;
             }
+            // this is the acutal closing of the current window since i am too lazy to do the refactoring necessary for this just leave it for now
+            // g_currentPromptState->selection;
 #endif
         } else {
-          if (IsPopupActive(hPopupWnd)) return false;
+          if (IsPopupActive(hPopupWnd)) {
+            return false;
+          }
         }
         
         if (b->handler) {
