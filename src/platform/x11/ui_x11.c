@@ -27,6 +27,7 @@
 #include <X11/Xatom.h>
 #include <X11/Xlib.h>
 #include <X11/Xft/Xft.h>
+int _xErrHandler(Display *d, XErrorEvent *e);
 
 PromptState* g_currentPromptState = NULL;
 
@@ -67,7 +68,10 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
     state->cursor = 0;
     state->width = layout_w;
     state->height = layout_h;
-    state->window_title = (char*)(window_title + 5);
+    {
+        const char* p = strchr(window_title, ' ');
+        state->window_title = (char*)(p ? p+1 : window_title);
+    }
     state->filter[0] = '\0';
     state->has_listbox = (count >= 0);
     ListBoxInfo_Init(&state->listbox);
@@ -124,13 +128,17 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
     g_filter_callback = filter_callback;
     g_help_callback = help_callback;
     g_title = window_title;
-    g_current_feature = (char*)window_title + 5;
+    {
+        const char* p = strchr(window_title, ' ');
+        g_current_feature = (char*)(p ? p+1 : window_title);
+    }
     SetCurrentFeatureName(g_current_feature);
     if (g_refresh_callback) g_refresh_callback(state->filter, hListBox, state->has_listbox ? &state->listbox : NULL);
 
     XEvent ev;
     int running = 1;
     while (running) {
+        if (selection_complete) { running = 0; break; }
         XNextEvent(dpy, &ev);
         if (ev.type == KeyPress) {
             if (!Linux_HandlePromptKey(&ev,state)) {
@@ -149,6 +157,8 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
                   }
               }
             }
+        } else if (ev.type == Expose) {
+            // drain expose
         }
         Linux_RenderPromptUser(dpy,&win, state);
         if (selection_complete) {
@@ -157,7 +167,9 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
     }
 
     g_currentPromptState = NULL;
+    XSync(dpy, False);
     XDestroyWindow(dpy, win);
+    XSync(dpy, False);
     XCloseDisplay(dpy);
     free(state);
     return output_buffer;

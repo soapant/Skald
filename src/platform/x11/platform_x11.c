@@ -3,6 +3,10 @@
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 #include <X11/Xft/Xft.h>
+int _xErrHandler(Display *d, XErrorEvent *e) {
+  fprintf(stderr, "[X11] XError %d major=%d serial=%lu\n", e->error_code, e->request_code, e->serial);
+  return 0;
+}
 #include <sys/mman.h>
 #include <sys/stat.h> 
 #include <linux/input.h>
