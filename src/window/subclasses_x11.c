@@ -64,7 +64,6 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
     bool ctrl_pressed = (ev->xkey.state & ControlMask) != 0;
     bool shift_pressed = (ev->xkey.state & ShiftMask) != 0;
     bool alt_pressed = (ev->xkey.state & Mod1Mask) != 0;
-    // Vim handling via abstraction - caller decides context
     {
         int mod = HOTKEY_MOD_NONE;
         if (ctrl_pressed) mod |= HOTKEY_MOD_CTRL;
