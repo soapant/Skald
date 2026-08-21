@@ -45,14 +45,14 @@ static void RebuildCommandCache(void) {
     free(lines);
 }
 
-static void terminal_refresh_callback(const char* filter, WindowHandle hListBox) {
-    if (WH_TO_HWND(hListBox) == NULL) return;
+static void terminal_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
+    if (!lb || WH_TO_HWND(hListBox) == NULL) return;
     
     if (!g_cached_commands) {
         RebuildCommandCache();
     }
     
-    PopulateListBox(hListBox, filter, (const char**)g_cached_commands, g_cached_command_count, NULL);
+    PopulateListBox(lb, hListBox, filter, (const char**)g_cached_commands, g_cached_command_count, NULL);
 }
 
 
@@ -123,32 +123,32 @@ static void RunTerminalCommand(const char* Command, bool save_to_history) {
     printf("[TERMINAL] Running: %s\n", clean_cmd);
 }
 
-static void terminal_enter_callback(const char* selection) {
+static void terminal_enter_callback(const char* selection, ListBoxInfo* lb) {
       if (TerminalHistoryFile->fileSize > 0) {
           char lastChar = Platform_GetLastChar(TerminalHistoryFile);
           if (lastChar != '\n') {
               Platform_FileAppend(TerminalHistoryFile, "\n");
           }
       }
-      if (!UI_IsListBoxSelected()) {
+      if (!UI_IsListBoxSelected(lb)) {
         Platform_FileAppend(TerminalHistoryFile, selection);
         Platform_FileAppend(TerminalHistoryFile, "\n");
       }
       RunTerminalCommand(selection, false);
 }
 
-static void terminal_edit_callback(const char* selection) {
+static void terminal_edit_callback(const char* selection, ListBoxInfo* lb) {
     char* NewterminalQuery = Platform_EditTextPopup(selection,960,540,1000,300);
     
     if (NewterminalQuery != NULL) {
-        WriteToCacheIndex(g_SelectedIndex,NewterminalQuery);
+        WriteToCacheIndex(lb, lb->selected_index,NewterminalQuery);
     }
     
-    Platform_ReplaceLineInMappedFile(TerminalHistoryFile,g_SelectedIndex,NewterminalQuery);
+    Platform_ReplaceLineInMappedFile(TerminalHistoryFile,lb->selected_index,NewterminalQuery);
     
     RebuildCommandCache();
     
-    terminal_refresh_callback("",hListBox);
+    terminal_refresh_callback("", hListBox, lb);
 }
 
 void TriggerTerminalCommand(void) {

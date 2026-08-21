@@ -70,14 +70,14 @@ static void RebuildReminderCache(void) {
     
     free(lines);
 }
-static void reminder_refresh_callback(const char* filter, WindowHandle hListBox) {
-    if (WH_TO_HWND(hListBox) == NULL) return;
+static void reminder_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
+    if (!lb || WH_TO_HWND(hListBox) == NULL) return;
     
     if (!g_cached_reminder_commands) {
         RebuildReminderCache();
     }
     
-    PopulateListBox(hListBox, filter, (const char**)g_cached_reminder_commands, g_cached_reminder_count, NULL);
+    PopulateListBox(lb, hListBox, filter, (const char**)g_cached_reminder_commands, g_cached_reminder_count, NULL);
 }
 
 
@@ -329,32 +329,32 @@ static void StartReminder(const char* selection) {
     printf("[REMINDER] Done\n");
 }
 
-static void reminder_enter_callback(const char* selection) {
+static void reminder_enter_callback(const char* selection, ListBoxInfo* lb) {
       if (ReminderHistoryFile->fileSize > 0) {
           char lastChar = Platform_GetLastChar(ReminderHistoryFile);
           if (lastChar != '\n') {
               Platform_FileAppend(ReminderHistoryFile, "\n");
           }
       }
-      if (!UI_IsListBoxSelected()) {
+      if (!UI_IsListBoxSelected(lb)) {
       Platform_FileAppend(ReminderHistoryFile, selection);
       Platform_FileAppend(ReminderHistoryFile, "\n");
       RebuildReminderCache();
       }
       StartReminder(selection);
 }
-static void reminder_edit_callback(const char* selection) {
+static void reminder_edit_callback(const char* selection, ListBoxInfo* lb) {
     char* NewreminderQuery = Platform_EditTextPopup(selection,960,540,1000,300);
     
     if (NewreminderQuery != NULL) {
-        WriteToCacheIndex(g_SelectedIndex,NewreminderQuery);
+        WriteToCacheIndex(lb, lb->selected_index,NewreminderQuery);
     }
     
-    Platform_ReplaceLineInMappedFile(ReminderHistoryFile,g_SelectedIndex,NewreminderQuery);
+    Platform_ReplaceLineInMappedFile(ReminderHistoryFile,lb->selected_index,NewreminderQuery);
     
     RebuildReminderCache();
     
-    reminder_refresh_callback("",hListBox);
+    reminder_refresh_callback("", hListBox, lb);
 }
 
 void TriggerReminder(void) {

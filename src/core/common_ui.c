@@ -14,11 +14,6 @@ char g_alias_display[MAX_ITEMS][512] = {0};
 int g_alias_display_count = 0;
 bool g_alias_display_active = false;
 
-static char g_last_filter_state[256] = {0};
-static bool g_last_filter_state_valid = false;
-static int g_prev_matches[MAX_MATCHES] = {0};
-static int g_last_filter_full_count = 0;
-
 void BuildAliasDisplayItems(const char** items, int count) {
   g_alias_display_active = false;
   g_alias_display_count = 0;
@@ -43,10 +38,11 @@ void BuildAliasDisplayItems(const char** items, int count) {
   if (g_alias_display_count > 0) g_alias_display_active = true;
 }
 
-void PopulateListBox(WindowHandle hListBox, const char* filter, 
+void PopulateListBox(ListBoxInfo* lb, WindowHandle hListBox, const char* filter, 
     const char** items, int item_count,
     bool (*filter_match)(const char* item, const char* filter)) {
 
+  if (!lb) return;
   WinTimer timer_alias = TimerStart();
 #if defined(_WIN32)
   if (WH_TO_HWND(hListBox) == NULL) return;
@@ -58,13 +54,13 @@ void PopulateListBox(WindowHandle hListBox, const char* filter,
 
 
   WinTimer timer_total = TimerStart();
-  int old_count = g_TotalMatches;
+  int old_count = lb->total_matches;
 
   WinTimer timer_current_sel = TimerStart();
-  int current_sel = g_SelectedIndex; 
+  int current_sel = lb->selected_index; 
   char current_text[256] = {0};
-  if (current_sel >= 0 && current_sel < g_populated_count) {
-    strncpy(current_text, g_populated_cache[current_sel], sizeof(current_text) - 1);
+  if (current_sel >= 0 && current_sel < lb->populated_count) {
+    strncpy(current_text, lb->populated_cache[current_sel], sizeof(current_text) - 1);
     current_text[sizeof(current_text) - 1] = '\0';
   }
   TimerEnd(timer_current_sel, "  PopulateListBox - Get current selection");
@@ -82,14 +78,14 @@ void PopulateListBox(WindowHandle hListBox, const char* filter,
   int use_previous = 0;
   int prev_count = 0;
   if (strlen(clean_filter) > 0 && 
-      g_last_items == items && 
-      g_last_item_count == item_count &&
-      g_last_filter_state_valid &&
-      strlen(clean_filter) > strlen(g_last_filter_state) &&
-      strncmp(clean_filter, g_last_filter_state, strlen(g_last_filter_state)) == 0) {
+      lb->last_items == items && 
+      lb->last_item_count == item_count &&
+      lb->last_filter_valid &&
+      strlen(clean_filter) > strlen(lb->last_filter) &&
+      strncmp(clean_filter, lb->last_filter, strlen(lb->last_filter)) == 0) {
 
     use_previous = 1;
-    prev_count = g_last_filter_full_count;
+    prev_count = lb->last_filter_full_count;
   }
   TimerEnd(timer_inc, "  PopulateListBox - Incremental check");
 
@@ -97,10 +93,10 @@ void PopulateListBox(WindowHandle hListBox, const char* filter,
   if (use_previous && prev_count == 0) {
     total_matches = 0;
     printf("[SKIP] No previous matches for '%s', skipping filter for '%s'\n",
-        g_last_filter_state, clean_filter);
+        lb->last_filter, clean_filter);
   } else if (use_previous && prev_count > 0) {
-    int* prev_matches = g_prev_matches;
-    printf("[OPTIMIZE] Incremental: '%s' -> '%s'\n", g_last_filter_state, clean_filter);
+    int* prev_matches = lb->prev_matches;
+    printf("[OPTIMIZE] Incremental: '%s' -> '%s'\n", lb->last_filter, clean_filter);
 
     for (int i = 0; i < prev_count && total_matches < MAX_MATCHES; i++) {
       int idx = prev_matches[i];
@@ -122,7 +118,7 @@ void PopulateListBox(WindowHandle hListBox, const char* filter,
       }
 
       if (match) {
-        g_matching_indices[total_matches] = idx;
+        lb->matching_indices[total_matches] = idx;
         total_matches++;
       }
     }
@@ -132,7 +128,7 @@ void PopulateListBox(WindowHandle hListBox, const char* filter,
       if (!items[i]) continue;
 
       if (empty_filter) {
-        g_matching_indices[total_matches] = i;
+        lb->matching_indices[total_matches] = i;
         total_matches++;
         continue;
       }
@@ -148,7 +144,7 @@ void PopulateListBox(WindowHandle hListBox, const char* filter,
 #endif
 
       if (match) {
-        g_matching_indices[total_matches] = i;
+        lb->matching_indices[total_matches] = i;
         total_matches++;
       }
     }
@@ -157,11 +153,11 @@ void PopulateListBox(WindowHandle hListBox, const char* filter,
 
   WinTimer timer_history = TimerStart();
   if (total_matches > 0 && strlen(clean_filter) > 0) {
-    memcpy(g_prev_matches, g_matching_indices, total_matches * sizeof(int));
-    g_last_filter_full_count = total_matches;
+    memcpy(lb->prev_matches, lb->matching_indices, total_matches * sizeof(int));
+    lb->last_filter_full_count = total_matches;
     printf("[HISTORY] Saved '%s' (%d matches)\n", clean_filter, total_matches);
   } else {
-    g_last_filter_full_count = 0;
+    lb->last_filter_full_count = 0;
   }
   TimerEnd(timer_history, "  PopulateListBox - History save");
 
@@ -169,7 +165,7 @@ void PopulateListBox(WindowHandle hListBox, const char* filter,
   if (total_matches == 0 && item_count > 0 && strlen(clean_filter) == 0) {
     int force_count = (item_count < 30) ? item_count : 30;
     for (int i = 0; i < force_count; i++) {
-      g_matching_indices[total_matches] = i;
+      lb->matching_indices[total_matches] = i;
       total_matches++;
     }
   }
@@ -183,43 +179,43 @@ void PopulateListBox(WindowHandle hListBox, const char* filter,
   TimerEnd(timer_pool, "  PopulateListBox - Pool adjust");
 
   WinTimer timer_cache = TimerStart();
-  g_populated_count = 0;
+  lb->populated_count = 0;
 
   for (int i = 0; i < total_matches; i++) {
-    int raw_data_index = g_matching_indices[i];
+    int raw_data_index = lb->matching_indices[i];
     if (!items[raw_data_index]) continue;
 
-    strncpy(g_populated_cache[g_populated_count], items[raw_data_index], 511);
-    g_populated_cache[g_populated_count][511] = '\0';
-    g_populated_cache[g_populated_count][strcspn(g_populated_cache[g_populated_count], "\r\n")] = '\0';
-    g_populated_count++;
+    strncpy(lb->populated_cache[lb->populated_count], items[raw_data_index], 511);
+    lb->populated_cache[lb->populated_count][511] = '\0';
+    lb->populated_cache[lb->populated_count][strcspn(lb->populated_cache[lb->populated_count], "\r\n")] = '\0';
+    lb->populated_count++;
   }
   TimerEnd(timer_cache, "  PopulateListBox - Cache build");
 
-  UI_LB_SetCount(hListBox, total_matches);
+  UI_LB_SetCount(lb, hListBox, total_matches);
 
   WinTimer timer_ui = TimerStart();
   if (!g_seq_state.waiting) {
     if (IsNormalMode()) {
       int keep;
       if (RememberLastIndex) {
-        keep = g_SelectedIndex;
+        keep = lb->selected_index;
         if (keep < 0 && last_index >= 0) {
           keep = last_index;
         }
         if (total_matches == 0) keep = -1;
         else if (keep < 0) keep = 0;
         else if (keep >= total_matches) keep = total_matches - 1;
-        UI_NavigateTo(keep);
+        UI_NavigateTo(lb, hListBox, keep);
       } else {
         keep = (total_matches > 0) ? 0 : -1;
-        UI_SetSelection(hListBox, keep, g_SelectedIndex);
+        UI_SetSelection(lb, hListBox, keep);
       }
     } else if (total_matches != 0 && strlen(filter) > 0) {
-      UI_SetSelection(hListBox, 0, g_SelectedIndex);
+      UI_SetSelection(lb, hListBox, 0);
       draw_background = false;
     } else {
-      UI_SetSelection(hListBox, -1, g_SelectedIndex);
+      UI_SetSelection(lb, hListBox, -1);
       draw_background = true;
     }
     if (total_matches == 0) {
@@ -242,15 +238,15 @@ void PopulateListBox(WindowHandle hListBox, const char* filter,
 
   WinTimer timer_cleanup = TimerStart();
   if (strlen(clean_filter) > 0) {
-    strncpy(g_last_filter_state, clean_filter, sizeof(g_last_filter_state) - 1);
-    g_last_filter_state[sizeof(g_last_filter_state) - 1] = '\0';
-    g_last_filter_state_valid = true;
+    strncpy(lb->last_filter, clean_filter, sizeof(lb->last_filter) - 1);
+    lb->last_filter[sizeof(lb->last_filter) - 1] = '\0';
+    lb->last_filter_valid = true;
   } else {
-    g_last_filter_state_valid = false;
+    lb->last_filter_valid = false;
   }
-  g_last_items = items;
-  g_last_item_count = item_count;
-  g_TotalMatches = total_matches;
+  lb->last_items = items;
+  lb->last_item_count = item_count;
+  lb->total_matches = total_matches;
   if (total_matches != old_count) {
     draw_background = true;
   }
@@ -442,7 +438,7 @@ void ForceWindowFocus(WindowHandle hwndTarget, WindowHandle hwndInput) {
     AttachThreadInput(currentThreadID, targetThreadID, FALSE);
 }
 
-void CreateChildControls(WindowHandle hwndParent, HFONT hFont, const char* list[], int count, const WindowLayout* layout) {
+void CreateChildControls(WindowHandle hwndParent, HFONT hFont, const char* list[], int count, const WindowLayout* layout, ListBoxInfo* lb) {
   
   HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtrA(WH_TO_HWND(hwndParent), GWLP_HINSTANCE);
 
@@ -485,9 +481,25 @@ void CreateChildControls(WindowHandle hwndParent, HFONT hFont, const char* list[
     g_initial_items = list;        
     g_initial_count = count;
 
-    UI_SetItemCount(hListBox, count);
+    if (lb) {
+        ListBoxInfo_Init(lb);
+        lb->populated_count = count;
+        lb->total_matches = count;
+        lb->last_items = list;
+        lb->last_item_count = count;
+        // selected_index will be set by PopulateListBox logic; keep -1 initially
+        lb->selected_index = -1;
+        // Also populate cache with initial items for early display
+        for (int i = 0; i < count && i < MAX_ITEMS; i++) {
+            if (list[i]) {
+                strncpy(lb->populated_cache[i], list[i], 511);
+                lb->populated_cache[i][511] = '\0';
+                lb->populated_cache[i][strcspn(lb->populated_cache[i], "\r\n")] = '\0';
+            }
+        }
+    }
+    SendMessageA(WH_TO_HWND(hListBox), LB_SETCOUNT, count, 0);
 
-    UI_RedrawNow(hListBox);
     UpdateWindow(WH_TO_HWND(hListBox)); 
 
     SelectObject(hdc, hOldFont);

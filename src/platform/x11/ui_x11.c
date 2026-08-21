@@ -27,6 +27,8 @@
 #include <X11/Xlib.h>
 #include <X11/Xft/Xft.h>
 
+PromptState* g_currentPromptState = NULL;
+
 void Platform_WaitForKeypressAsync(KeyCallback callback) {
     (void)callback;
     fprintf(stderr, "[PLATFORM] Platform_WaitForKeypressAsync not implemented yet\n");
@@ -57,17 +59,18 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
     if (layout_h < height) layout_h = height;
     if (layout_h > width) layout_h = width;
 
-    PromptState state = {
-      .items = (char**)window_list,
-      .item_count = count,
-      .cursor = 0,
-      .selection = -1,
-      .scroll_offset = 0,
-      .width = layout_w,
-      .height = layout_h,
-      .window_title = window_title + 5,
-    };
+    PromptState state = {0};
+    state.items = (char**)window_list;
+    state.item_count = count;
+    state.cursor = 0;
+    state.width = layout_w;
+    state.height = layout_h;
+    state.window_title = (char*)(window_title + 5);
     state.filter[0] = '\0';
+    state.has_listbox = (count >= 0);
+    ListBoxInfo_Init(&state.listbox);
+    state.listbox.selected_index = -1;
+    g_currentPromptState = &state;
 
     int x = (screen_width - layout_w) / 2;
     int y = (screen_height - layout_h) / 2;
@@ -121,14 +124,14 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
     g_title = window_title;
     g_current_feature = (char*)window_title + 5;
     SetCurrentFeatureName(g_current_feature);
-    if (g_refresh_callback) g_refresh_callback(state.filter, hListBox);
+    if (g_refresh_callback) g_refresh_callback(state.filter, hListBox, state.has_listbox ? &state.listbox : NULL);
 
     XEvent ev;
     int running = 1;
     while (running) {
         XNextEvent(dpy, &ev);
         if (ev.type == KeyPress) {
-            if (!Linux_HandlePromptKey(&ev,&state) && state.selection == -1) {
+            if (!Linux_HandlePromptKey(&ev,&state) && (!state.has_listbox || state.listbox.selected_index == -1)) {
               char buf[32];
               KeySym ks;
               int len = XLookupString(&ev.xkey, buf, sizeof(buf), &ks, NULL);
@@ -148,6 +151,7 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
         }
     }
 
+    g_currentPromptState = NULL;
     XDestroyWindow(dpy, win);
     XCloseDisplay(dpy);
     return output_buffer;
@@ -214,6 +218,7 @@ char* Platform_SimplePromptUser(const char* prompt, const char* window_title,int
         }
     }
 
+    g_currentPromptState = NULL;
     XDestroyWindow(dpy, win);
     XCloseDisplay(dpy);
     return output_buffer;

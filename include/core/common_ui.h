@@ -16,20 +16,22 @@ extern bool g_alias_display_active;
 void BuildAliasDisplayItems(const char** items, int count);
 
 #if defined(_WIN32)
-static inline void UI_SetSelection(WindowHandle hList, int index, int old_sel) {
+static inline void UI_SetSelection(ListBoxInfo* lb, WindowHandle hList, int index) {
+  if (!lb) return;
+  int old_sel = lb->selected_index;
   if (old_sel == index) return;
-  g_SelectedIndex = index;
+  lb->selected_index = index;
 
   RECT invalidRect = {0};
   bool hasInvalid = false;
   RECT itemRect = {0, 0, 0, 0};
 
-  if (old_sel >= 0 && old_sel < g_populated_count) {
+  if (old_sel >= 0 && old_sel < lb->populated_count) {
     SendMessageA(WH_TO_HWND(hList), LB_GETITEMRECT, old_sel, (LPARAM)&itemRect);
     invalidRect = itemRect;
     hasInvalid = true;
   }
-  if (index >= 0 && index < g_populated_count) {
+  if (index >= 0 && index < lb->populated_count) {
     SendMessageA(WH_TO_HWND(hList), LB_GETITEMRECT, index, (LPARAM)&itemRect);
     if (!hasInvalid) {
       invalidRect = itemRect;
@@ -44,35 +46,37 @@ static inline void UI_SetSelection(WindowHandle hList, int index, int old_sel) {
   }
 }
 #else
-static inline void UI_SetSelection(WindowHandle hList, int index, int old_sel) {
+static inline void UI_SetSelection(ListBoxInfo* lb, WindowHandle hList, int index) {
   (void)hList;
-  if (old_sel == index) return;
-  g_SelectedIndex = index;
+  if (!lb) return;
+  if (lb->selected_index == index) return;
+  lb->selected_index = index;
 }
 #endif
 
-static inline int UI_GetCount(WindowHandle hList) {
+static inline int UI_GetCount(ListBoxInfo* lb, WindowHandle hList) {
   (void)hList;
-  return g_populated_count;
+  if (!lb) return 0;
+  return lb->populated_count;
 }
-static inline bool UI_IsListBoxSelected(void) {
-  return g_SelectedIndex != -1;
+static inline bool UI_IsListBoxSelected(ListBoxInfo* lb) {
+  return lb && lb->selected_index != -1;
 }
 
-bool GetFromHistory(void);
+bool GetFromHistory(ListBoxInfo* lb);
 
 #if defined(_WIN32)
 static inline void UI_SetHorizontalExtent(WindowHandle hList, int width) {
   SendMessageA(WH_TO_HWND(hList), LB_SETHORIZONTALEXTENT, width, 0);
 }
 
-static inline void UI_SetItemCount(WindowHandle hList, int count) {
-  g_populated_count = count;
+static inline void UI_SetItemCount(ListBoxInfo* lb, WindowHandle hList, int count) {
+  if (lb) lb->populated_count = count;
   SendMessageA(WH_TO_HWND(hList), LB_SETCOUNT, count, 0);
 }
 
-static inline void UI_LB_SetCount(WindowHandle hList, int count) {
-  g_populated_count = count;
+static inline void UI_LB_SetCount(ListBoxInfo* lb, WindowHandle hList, int count) {
+  if (lb) lb->populated_count = count;
   SendMessageA(WH_TO_HWND(hList), LB_SETCOUNT, count, 0);
 }
 
@@ -126,29 +130,30 @@ static inline int UI_LB_GetItemHeight(WindowHandle hList) {
   return 0;
 }
 
-static inline void UI_LB_SetCount(WindowHandle hList, int count) {
-  g_populated_count = count;
+static inline void UI_LB_SetCount(ListBoxInfo* lb, WindowHandle hList, int count) {
+  if (lb) lb->populated_count = count;
   (void)hList;
 }
 #endif
 
-static inline void UI_NavigateTo(int index) {
-  int count = g_populated_count;
+static inline void UI_NavigateTo(ListBoxInfo* lb, WindowHandle hListBox, int index) {
+  if (!lb) return;
+  int count = lb->populated_count;
   if (count <= 0) {
-    g_SelectedIndex = -1;
+    lb->selected_index = -1;
     UI_LB_SetCaretIndex(hListBox, -1, FALSE);
     return;
   }
   if (index >= count) index = count - 1;
   if (index == -1) {
-    g_SelectedIndex = -1;
+    lb->selected_index = -1;
     UI_LB_SetCaretIndex(hListBox, -1, FALSE);
     return;
   }
 
-  int old_sel = g_SelectedIndex;
+  int old_sel = lb->selected_index;
   int oldTop = UI_LB_GetTopIndex(hListBox);
-  g_SelectedIndex = index;
+  lb->selected_index = index;
 
   UI_LB_SetCaretIndex(hListBox, index, FALSE);
 
@@ -183,7 +188,7 @@ static inline void UI_NavigateTo(int index) {
   }
 
   RECT itemRect;
-  if (old_sel >= 0 && old_sel != index && old_sel < g_populated_count) {
+  if (old_sel >= 0 && old_sel != index && old_sel < lb->populated_count) {
     SendMessageA(WH_TO_HWND(hListBox), LB_GETITEMRECT, old_sel, (LPARAM)&itemRect);
     if (!hasInvalid) {
       invalidRect = itemRect;
@@ -192,7 +197,7 @@ static inline void UI_NavigateTo(int index) {
       UnionRect(&invalidRect, &invalidRect, &itemRect);
     }
   }
-  if (index >= 0 && index < g_populated_count) {
+  if (index >= 0 && index < lb->populated_count) {
     SendMessageA(WH_TO_HWND(hListBox), LB_GETITEMRECT, index, (LPARAM)&itemRect);
     if (!hasInvalid) {
       invalidRect = itemRect;
@@ -212,26 +217,28 @@ static inline void UI_NavigateTo(int index) {
 #endif
 }
 
-static inline void UI_NavigateUp(void) {
-  int count = g_populated_count;
+static inline void UI_NavigateUp(ListBoxInfo* lb, WindowHandle hListBox) {
+  if (!lb) return;
+  int count = lb->populated_count;
   if (count <= 0) return;
-  int sel = g_SelectedIndex;
+  int sel = lb->selected_index;
   if (sel >= 0) {
     sel--;
   }
-  if (sel == g_SelectedIndex) return;
-  UI_NavigateTo(sel);
+  if (sel == lb->selected_index) return;
+  UI_NavigateTo(lb, hListBox, sel);
 }
 
-static inline void UI_NavigateDown(void) {
-  int count = g_populated_count;
+static inline void UI_NavigateDown(ListBoxInfo* lb, WindowHandle hListBox) {
+  if (!lb) return;
+  int count = lb->populated_count;
   if (count <= 0) return;
-  int sel = g_SelectedIndex;
+  int sel = lb->selected_index;
   if (sel < 0) sel = -1;
   if (sel >= count - 1) sel = count - 1;
   else sel++;
-  if (sel == g_SelectedIndex) return;
-  UI_NavigateTo(sel);
+  if (sel == lb->selected_index) return;
+  UI_NavigateTo(lb, hListBox, sel);
 }
 
 #if defined(_WIN32)
@@ -294,7 +301,7 @@ static inline void UI_Edit_KeyUp(WindowHandle hEdit, int vk) {
 }
 #endif
 
-void PopulateListBox(WindowHandle hListBox, const char* filter, 
+void PopulateListBox(ListBoxInfo* lb, WindowHandle hListBox, const char* filter, 
     const char** items, int item_count,
     bool (*filter_match)(const char* item, const char* filter));
 
@@ -309,7 +316,7 @@ void CalculateSettingsWindowMetrics(int count, WindowLayout* layout,int height ,
 void SimpleCreateChildControls(WindowHandle hwndParent, HFONT hFont, const char* string, int count, const WindowLayout* layout);
 void SettingsCreateChildControls(WindowHandle hwndParent, HFONT hFont,const WindowLayout* layout);
 void ForceWindowFocus(WindowHandle hwndTarget, WindowHandle hwndInput);
-void CreateChildControls(WindowHandle hwndParent, HFONT hFont, const char* list[], int count, const WindowLayout* layout);
+void CreateChildControls(WindowHandle hwndParent, HFONT hFont, const char* list[], int count, const WindowLayout* layout, ListBoxInfo* lb);
 #endif
 
 #if defined(_WIN32)
@@ -341,8 +348,8 @@ static inline void UI_GetCurrentCursorPosition(uint32_t *start, uint32_t *end) {
     UI_Edit_GetSel(g_ActiveEditControl, start, end);
   }
 }
-static inline void UI_SetCursorPosition(WindowHandle g_ActiveEditControl,int position) {
-  UI_Edit_SetSel(g_ActiveEditControl, position, position);
+static inline void UI_SetCursorPosition(WindowHandle ctrl,int position) {
+  UI_Edit_SetSel(ctrl, position, position);
 }
 #if defined(_WIN32)
 #define UI_GetCurrentText(edit, buffer) GetWindowTextA(WH_TO_HWND(edit), buffer, sizeof(buffer))
@@ -362,25 +369,25 @@ static inline void UI_SetText(WindowHandle hEdit,char* text) {
 #define UI_DEBOUNCE_MS 0
 #define UI_DEBOUNCE_TIMER_ID 998
 
-static inline void UI_RedrawNow(WindowHandle hListBox) {
+static inline void UI_RedrawNow(ListBoxInfo* lb, WindowHandle hListBox) {
   if (g_refresh_callback != NULL) {
     char buffer[128];
     UI_GetCurrentText(hEditControl,buffer);
-    g_refresh_callback(buffer,hListBox);
+    g_refresh_callback(buffer,hListBox,lb);
   }
 }
 
 #if defined(_WIN32)
-static inline void UI_Redraw(WindowHandle hListBox) {
+static inline void UI_Redraw(ListBoxInfo* lb, WindowHandle hListBox) {
   if (IsPopupActive(hPopupWnd)) {
     SetTimer(WH_TO_HWND(hPopupWnd), UI_DEBOUNCE_TIMER_ID, UI_DEBOUNCE_MS, NULL);
     return;
   }
-  UI_RedrawNow(hListBox);
+  UI_RedrawNow(lb, hListBox);
 }
 #else
-static inline void UI_Redraw(WindowHandle hListBox) {
-  UI_RedrawNow(hListBox);
+static inline void UI_Redraw(ListBoxInfo* lb, WindowHandle hListBox) {
+  UI_RedrawNow(lb, hListBox);
 }
 #endif
 #if defined(_WIN32)

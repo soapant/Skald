@@ -109,17 +109,17 @@ bool HandleBulkKillProcess(int vk_code, int modifiers, const char* current_title
     }
     return false;
 }
-static void pk_enter_callback(const char* selection) {
+static void pk_enter_callback(const char* selection, ListBoxInfo* lb) {
       terminate_process_by_name(selection);
 }
 
-static void pk_refresh_callback(const char* filter, WindowHandle hListBox) {
+static void pk_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
     const char** items = (const char**)malloc(G_PK_COUNT * sizeof(char*));
     if (!items) return;
     for (int i = 0; i < G_PK_COUNT; i++) {
         items[i] = G_PK_LIST[i];
     }
-    PopulateListBox(hListBox, filter, items, G_PK_COUNT, NULL);
+    PopulateListBox(lb, hListBox, filter, items, G_PK_COUNT, NULL);
     free(items);
 }
 

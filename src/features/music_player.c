@@ -5,7 +5,7 @@
 #include "features/app_launcher.h"
 #include "platform/platform.h"
 
-static void music_refresh_callback(const char* filter, WindowHandle hListBox) {
+static void music_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
     ClearFileList();
     GetFilesRecursive(MusicPath, false);
     
@@ -14,11 +14,11 @@ static void music_refresh_callback(const char* filter, WindowHandle hListBox) {
     for (int i = 0; i < GetFileCount(); i++) {
         items[i] = G_FILES_WITH_TIME[i].name;
     }
-    PopulateListBox(hListBox, filter, items, GetFileCount(), NULL);
+    PopulateListBox(lb, hListBox, filter, items, GetFileCount(), NULL);
     free(items);
 }
 
-static void music_enter_callback(const char* selection) {
+static void music_enter_callback(const char* selection, ListBoxInfo* lb) {
     char* result = SearchFileInDirectory(MusicPath, selection);
     
     if (!result) return;

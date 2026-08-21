@@ -46,18 +46,18 @@ static void RebuildYaziCache(void) {
 }
 
 
-static void yazi_refresh_callback(const char* filter, WindowHandle hListBox) {
-    if (WH_TO_HWND(hListBox) == NULL) return;
+static void yazi_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
+    if (!lb || WH_TO_HWND(hListBox) == NULL) return;
     
     if (!g_cached_yazi_commands) {
         RebuildYaziCache();
     }
     
-    PopulateListBox(hListBox, filter, (const char**)g_cached_yazi_commands, g_cached_yazi_count, NULL);
+    PopulateListBox(lb, hListBox, filter, (const char**)g_cached_yazi_commands, g_cached_yazi_count, NULL);
 }
 
 
-static void yazi_enter_callback(const char* selection) {
+static void yazi_enter_callback(const char* selection, ListBoxInfo* lb) {
       char* path = Platform_QueryZoxidePath(selection);
       if (path) {
           char cmd_args[512];
@@ -77,7 +77,7 @@ static void yazi_enter_callback(const char* selection) {
                   Platform_FileAppend(YaziZoxideFile, "\n");
               }
           }
-          if (!UI_IsListBoxSelected()) {
+          if (!UI_IsListBoxSelected(lb)) {
               Platform_FileAppend(YaziZoxideFile, selection);
               Platform_FileAppend(YaziZoxideFile, "\n");
               RebuildYaziCache();
@@ -85,18 +85,18 @@ static void yazi_enter_callback(const char* selection) {
       }
     
 }
-static void yazi_edit_callback(const char* selection) {
+static void yazi_edit_callback(const char* selection, ListBoxInfo* lb) {
     char* NewyaziQuery = Platform_EditTextPopup(selection,960,540,1000,300);
     
     if (NewyaziQuery != NULL) {
-        WriteToCacheIndex(g_SelectedIndex,NewyaziQuery);
+        WriteToCacheIndex(lb, lb->selected_index,NewyaziQuery);
     }
     
-    Platform_ReplaceLineInMappedFile(YaziZoxideFile,g_SelectedIndex,NewyaziQuery);
+    Platform_ReplaceLineInMappedFile(YaziZoxideFile,lb->selected_index,NewyaziQuery);
     
     RebuildYaziCache();
     
-    yazi_refresh_callback("",hListBox);
+    yazi_refresh_callback("", hListBox, lb);
 }
 
 void TriggerYaziZoxide(void) {

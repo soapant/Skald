@@ -23,8 +23,8 @@ static void SendTargetToReplica(WindowHandle target) {
 }
 
 
-static void replica_refresh_callback(const char* filter, WindowHandle hListBox) {
-    if (WH_TO_HWND(hListBox) == NULL) return;
+static void replica_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
+    if (!lb || WH_TO_HWND(hListBox) == NULL) return;
     
     WindowUtils_GetAll(&g_replica_windows);
     
@@ -42,12 +42,12 @@ static void replica_refresh_callback(const char* filter, WindowHandle hListBox) 
         }
     }
     
-    PopulateListBox(hListBox, filter, titles, count, NULL);
+    PopulateListBox(lb, hListBox, filter, titles, count, NULL);
     free(titles);
 }
 
 
-static void replica_enter_callback(const char* selection) {
+static void replica_enter_callback(const char* selection, ListBoxInfo* lb) {
     g_replica_selected_hwnd = WH_NULL;
     
     for (int i = 0; i < g_replica_windows.count; i++) {
