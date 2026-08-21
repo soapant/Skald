@@ -428,16 +428,16 @@ char Platform_GetLastChar(MappedFile *file) {
 }
 
 int Platform_FileInit(const char* filePath, MappedFile *mf) {
-    if (!mf) return 0;
+    if (!mf || !filePath) return 0;
 
     mf->pBuffer = NULL;
     mf->fileSize = 0;
 
-    mf->fd = memfd_create(filePath, MFD_CLOEXEC);
+    mf->fd = open(filePath, O_RDWR | O_CREAT, 0644);
     if (mf->fd == -1) {
-        perror("memfd_create failed");
+        perror("open failed in Platform_FileInit");
         return 0;
-    } 
+    }
 
     struct stat sb;
     if (fstat(mf->fd, &sb) == -1) {

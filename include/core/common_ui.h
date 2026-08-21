@@ -220,12 +220,12 @@ static inline void UI_NavigateTo(ListBoxInfo* lb, WindowHandle hListBox, int ind
 static inline void UI_NavigateUp(ListBoxInfo* lb, WindowHandle hListBox) {
   if (!lb) return;
   int count = lb->populated_count;
-  if (count <= 0) return;
   int sel = lb->selected_index;
   if (sel >= 0) {
     sel--;
   }
   if (sel == lb->selected_index) return;
+  lb->view_offset -= 1;
   UI_NavigateTo(lb, hListBox, sel);
 }
 
@@ -238,6 +238,7 @@ static inline void UI_NavigateDown(ListBoxInfo* lb, WindowHandle hListBox) {
   if (sel >= count - 1) sel = count - 1;
   else sel++;
   if (sel == lb->selected_index) return;
+  lb->view_offset += 1;
   UI_NavigateTo(lb, hListBox, sel);
 }
 

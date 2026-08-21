@@ -3,6 +3,11 @@
 #include "helpers.h"
 #include "core/feature_data.h"
 #include "features/app_launcher.h"
+#include "features/todo.h"
+#if !defined(_WIN32)
+#include <pthread.h>
+#include <unistd.h>
+#endif
 #if !defined(_WIN32)
 #include <X11/Xlib.h>
 #endif
@@ -57,6 +62,7 @@ HFONT g_hMainFont = NULL;
 #endif
 HashMap* feature_history = NULL;
 HashMap* g_item_index_map = NULL;
+
 
 void OInNotificationRecieved(const char* text) {
   SubjectiveMessageDisplay(text,140,TimeOutForMessages,COLOR_TEXT);
