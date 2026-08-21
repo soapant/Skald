@@ -45,32 +45,32 @@ static void RebuildZoxideCache(void) {
     free(lines);
 }
 
-static void zoxide_refresh_callback(const char* filter, WindowHandle hListBox) {
+static void zoxide_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
 
     if (!g_cached_zoxide_commands) {
         RebuildZoxideCache();
     }
     
-    PopulateListBox(hListBox, filter, (const char**)g_cached_zoxide_commands, g_cached_zoxide_count, NULL);
+    PopulateListBox(lb, hListBox, filter, (const char**)g_cached_zoxide_commands, g_cached_zoxide_count, NULL);
 }
 
-static void zoxide_edit_callback(const char* selection) {
+static void zoxide_edit_callback(const char* selection, ListBoxInfo* lb) {
     char* NewZoxideQuery = Platform_EditTextPopup(selection,960,540,1000,300);
     
     if (NewZoxideQuery != NULL) {
-        WriteToCacheIndex(g_SelectedIndex,NewZoxideQuery);
+        WriteToCacheIndex(lb, lb->selected_index,NewZoxideQuery);
     }
     
-    Platform_ReplaceLineInMappedFile(TerminalZoxideFile,g_SelectedIndex,NewZoxideQuery);
+    Platform_ReplaceLineInMappedFile(TerminalZoxideFile,lb->selected_index,NewZoxideQuery);
     
     RebuildZoxideCache();
     
-    zoxide_refresh_callback("",hListBox);
+    zoxide_refresh_callback("", hListBox, lb);
 }
 
 
 
-static void zoxide_enter_callback(const char* selection) {
+static void zoxide_enter_callback(const char* selection, ListBoxInfo* lb) {
         char* path = Platform_QueryZoxidePath(selection);
         if (path) {
             char terminal[512];
@@ -89,7 +89,7 @@ static void zoxide_enter_callback(const char* selection) {
                 }
             }
 
-            if (!UI_IsListBoxSelected()) {
+            if (!UI_IsListBoxSelected(lb)) {
               Platform_FileAppend(TerminalZoxideFile, selection);
               Platform_FileAppend(TerminalZoxideFile, "\n");
               RebuildZoxideCache();

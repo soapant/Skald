@@ -25,17 +25,9 @@ int SelectionDataCount = 0;
 
 void SubjectiveMessageDisplay(const char* buffer,int msg_height,int timeout,ColorRef color) {
     if (MessagesEnabled) {
-        if (color == COLOR_OF_SELECTION) {
-            if (UI_IsListBoxSelected()) {
-              DisplayMessageText = COLOR_OF_SELECTION;
-            } else {
-              DisplayMessageText = COLOR_TEXT;
-            }
-        }
-        else if (color) {
+        if (color) {
             DisplayMessageText = color;
-        }
-        else {
+        } else {
             DisplayMessageText = COLOR_TEXT;
         }
         if (WH_TO_HWND(hPopupWnd) != NULL) {
@@ -351,11 +343,12 @@ int ReplaceLineInFile(const char* filepath, int line_index, const char* new_text
     return 1;
 }
 
-void WriteToCacheIndex(int index, const char* text) {
+void WriteToCacheIndex(ListBoxInfo* lb, int index, const char* text) {
+    if (!lb) return;
     if (index < 0 || index >= MAX_ITEMS || !text) return;
     
-    strncpy(g_populated_cache[index], text, sizeof(g_populated_cache[index]) - 1);
-    g_populated_cache[index][sizeof(g_populated_cache[index]) - 1] = '\0';
+    strncpy(lb->populated_cache[index], text, sizeof(lb->populated_cache[index]) - 1);
+    lb->populated_cache[index][sizeof(lb->populated_cache[index]) - 1] = '\0';
 }
 
 int ReadMdFile(char lines[100][512], const char* path) {
@@ -408,7 +401,7 @@ void WriteMdFile(char lines[100][512], int count, const char* path) {
 
 HashMap* history_indices = NULL;
 
-bool GetFromHistory() {
+bool GetFromHistory(ListBoxInfo* lb) {
     char** HistoryList = (char**)HashMap_Get(feature_history, g_current_feature);
     if (HistoryList) {
         int* idx_ptr = (int*)HashMap_Get(history_indices, g_current_feature);
@@ -424,7 +417,7 @@ bool GetFromHistory() {
             UI_SetCursorPosition(hEditControl,strlen(HistoryList[idx]));
 
             if (!IsNormalMode()) {
-              UI_Redraw(hListBox);
+              UI_Redraw(lb, hListBox);
             }
             if (!idx_ptr) {
                 idx_ptr = malloc(sizeof(int));
@@ -447,9 +440,10 @@ int convert_string_to_int(const char *str) {
     return num;
 }
 
-void HandleCommandExecution(char* string) {
+void HandleCommandExecution(ListBoxInfo* lb, char* string) {
+    if (!lb) return;
     int num = convert_string_to_int(string);
-    UI_SetSelection(hListBox,num - 1,g_SelectedIndex);
+    UI_SetSelection(lb, hListBox, num - 1);
     UI_LB_SetCaretIndex(hListBox, num, TRUE);
 }
 

@@ -46,17 +46,17 @@ static void RebuildExplorerCache(void) {
     free(lines);
 }
 
-static void explorer_refresh_callback(const char* filter, WindowHandle hListBox) {
-    if (WH_TO_HWND(hListBox) == NULL) return;
+static void explorer_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
+    if (!lb || WH_TO_HWND(hListBox) == NULL) return;
     
     if (!g_cached_explorer_commands) {
         RebuildExplorerCache();
     }
     
-    PopulateListBox(hListBox, filter, (const char**)g_cached_explorer_commands, g_cached_explorer_count, NULL);
+    PopulateListBox(lb, hListBox, filter, (const char**)g_cached_explorer_commands, g_cached_explorer_count, NULL);
 }
 
-static void explorer_enter_callback(const char* selection) {
+static void explorer_enter_callback(const char* selection, ListBoxInfo* lb) {
           char* path = Platform_QueryZoxidePath(selection);
           if (path) {
 #if defined(_WIN32)
@@ -73,7 +73,7 @@ static void explorer_enter_callback(const char* selection) {
                   }
               }
 
-              if (!UI_IsListBoxSelected()) {
+              if (!UI_IsListBoxSelected(lb)) {
                 Platform_FileAppend(ExplorerZoxideFile, selection);
                 Platform_FileAppend(ExplorerZoxideFile, "\n");
                 RebuildExplorerCache();
@@ -81,18 +81,18 @@ static void explorer_enter_callback(const char* selection) {
           }
 }
 
-static void explorer_edit_callback(const char* selection) {
+static void explorer_edit_callback(const char* selection, ListBoxInfo* lb) {
     char* NewexplorerQuery = Platform_EditTextPopup(selection,960,540,1000,300);
     
     if (NewexplorerQuery != NULL) {
-        WriteToCacheIndex(g_SelectedIndex,NewexplorerQuery);
+        WriteToCacheIndex(lb, lb->selected_index,NewexplorerQuery);
     }
     
-    Platform_ReplaceLineInMappedFile(ExplorerZoxideFile,g_SelectedIndex,NewexplorerQuery);
+    Platform_ReplaceLineInMappedFile(ExplorerZoxideFile,lb->selected_index,NewexplorerQuery);
     
     RebuildExplorerCache();
     
-    explorer_refresh_callback("",hListBox);
+    explorer_refresh_callback("", hListBox, lb);
 }
 
 void TriggerExplorer(void) {

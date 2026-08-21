@@ -11,12 +11,26 @@
 #include "helpers.h"
 #include "platform/platform.h"
 
+static ListBoxInfo* GetLBFromPopup(HWND hPopup) {
+  if (hPopup && IsWindow(hPopup)) return (ListBoxInfo*)GetWindowLongPtrA(hPopup, GWLP_USERDATA);
+  return NULL;
+}
+static ListBoxInfo* GetLBFromChild(HWND hChild) {
+  HWND hParent = GetParent(hChild);
+  if (hParent && IsWindow(hParent)) return GetLBFromPopup(hParent);
+  // fallback to global popup
+  if (WH_TO_HWND(hPopupWnd) && IsWindow(WH_TO_HWND(hPopupWnd))) return GetLBFromPopup(WH_TO_HWND(hPopupWnd));
+  return NULL;
+}
+static ListBoxInfo* GetLBForPopupWindow(HWND hPopup) { return GetLBFromPopup(hPopup); }
+
 static bool only_once = true;
 static bool rainbow_init = false;
 
 #define WM_PREVIEW_SELECTION (WM_APP + 1)
 
 LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
+  ListBoxInfo* lb = GetLBFromChild(hwnd);
   HWND hParent = GetParent(hwnd);
     HWND hListBox = GetDlgItem(hParent, IDC_LIST_BOX);
     HWND hEditControl = hwnd;
@@ -30,7 +44,7 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
       
         if (wParam >= '0' && wParam <= '9') {
           if (ctrl_pressed) {
-            HandleNumberShortcut(wParam, WH_FROM_HWND(hListBox), WH_FROM_HWND(hEditControl));
+            HandleNumberShortcut(wParam, WH_FROM_HWND(hListBox), WH_FROM_HWND(hEditControl), lb);
               return 0;
           }
         }
@@ -40,9 +54,9 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
           if (wParam == VK_UP || wParam == VK_DOWN) {
             if (hListBox != NULL) {
               if (wParam == VK_UP) {
-                UI_NavigateUp();
+                UI_NavigateUp(lb, WH_FROM_HWND(hListBox));
               } else {
-                UI_NavigateDown();
+                UI_NavigateDown(lb, WH_FROM_HWND(hListBox));
               }
             }
             return 0;
@@ -53,8 +67,8 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
           bool ctrl_pressed = (GetKeyState(VK_CONTROL) & 0x8000);
             struct feature_data* data = GetFeatureData(g_current_feature);
             output_buffer[0] = '\0';
-            if (UI_IsListBoxSelected()) {
-              strncpy(output_buffer, g_populated_cache[g_SelectedIndex], sizeof(output_buffer) - 1);
+            if (UI_IsListBoxSelected(lb)) {
+              if (lb && lb->selected_index >=0 && lb->selected_index < lb->populated_count) strncpy(output_buffer, lb->populated_cache[lb->selected_index], sizeof(output_buffer) - 1);
             } else {
               GetWindowTextA(hwnd, output_buffer, sizeof(output_buffer));
             }
@@ -67,13 +81,13 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
           if (ctrl_pressed) {
             AddSelectionToData(output_buffer,g_current_feature,data);
               if (g_ctrl_enter_callback != NULL) {
-                g_ctrl_enter_callback(output_buffer);
+                g_ctrl_enter_callback(output_buffer, lb);
               }
             return 0;
           } else {
             AddSelectionToData(output_buffer,g_current_feature,data);
               if (g_enter_callback != NULL) {
-                g_enter_callback(output_buffer);
+                g_enter_callback(output_buffer, lb);
               }
             
               selection_complete = true; 
@@ -94,7 +108,7 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
         if (wParam == VK_TAB) {
           struct feature_data* data = GetFeatureData(g_current_feature);
             if (g_tab_callback != NULL) {
-              g_tab_callback();
+              g_tab_callback(lb);
             }
           for (int i = 0;i < data->selection_count;++i) {
             printf("%s \n",data->last_selections[i]);
@@ -104,22 +118,22 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
       if (wParam == VK_BACK) {
         if (ctrl_pressed) {
           UI_SetText(WH_FROM_HWND(hEditControl),"");
-            UI_Redraw(WH_FROM_HWND(hListBox));
+            UI_Redraw(lb, WH_FROM_HWND(hListBox));
             return 0;
         }
       }
       if (wParam == EDIT_TEXT_KEY) {
         output_buffer[0] = '\0';
-          if (UI_IsListBoxSelected()) {
-            strncpy(output_buffer, g_populated_cache[g_SelectedIndex], sizeof(output_buffer) - 1);
+          if (UI_IsListBoxSelected(lb)) {
+            if (lb && lb->selected_index >=0 && lb->selected_index < lb->populated_count) strncpy(output_buffer, lb->populated_cache[lb->selected_index], sizeof(output_buffer) - 1);
               if (ctrl_pressed && IsInsertMode()){
                 if (g_edit_callback != NULL) {
-                  g_edit_callback(output_buffer);
+                  g_edit_callback(output_buffer, lb);
                 }
                 return 0;
               }else if (IsNormalMode()) {
                 if (g_edit_callback != NULL) {
-                  g_edit_callback(output_buffer);
+                  g_edit_callback(output_buffer, lb);
                 }
                 return 0;
               }
@@ -130,8 +144,8 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
         bool ctrl_pressed = (GetKeyState(VK_CONTROL) & 0x8000);
           bool shift_pressed = (GetKeyState(VK_SHIFT) & 0x8000);
           if (shift_pressed) {
-            if (UI_IsListBoxSelected()) {
-              strncpy(output_buffer, g_populated_cache[g_SelectedIndex], sizeof(output_buffer) - 1);
+            if (UI_IsListBoxSelected(lb)) {
+              if (lb && lb->selected_index >=0 && lb->selected_index < lb->populated_count) strncpy(output_buffer, lb->populated_cache[lb->selected_index], sizeof(output_buffer) - 1);
                 output_buffer[sizeof(output_buffer) - 1] = '\0';
             }
             if (g_copy_callback != NULL) {
@@ -140,8 +154,8 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
               Platform_CopyToClipboard(output_buffer);
             }
           } else if (ctrl_pressed) {
-            if (UI_IsListBoxSelected()) {
-              strncpy(output_buffer, g_populated_cache[g_SelectedIndex], sizeof(output_buffer) - 1);
+            if (UI_IsListBoxSelected(lb)) {
+              if (lb && lb->selected_index >=0 && lb->selected_index < lb->populated_count) strncpy(output_buffer, lb->populated_cache[lb->selected_index], sizeof(output_buffer) - 1);
                 output_buffer[sizeof(output_buffer) - 1] = '\0';
             }
             
@@ -342,6 +356,7 @@ void RequestInitialNavigation(int index) {
 }
 
 LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+  ListBoxInfo* lb = GetLBForPopupWindow(hwnd);
   static HBRUSH s_bg_brush = NULL;
     static HBRUSH s_bg_colorful_brush = NULL;
     static HBRUSH s_bg_gradient_brushes[128] = {0};
@@ -392,7 +407,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         int idx = g_pending_navigate;
           g_pending_navigate = -1;
           if (WH_TO_HWND(hListBox) != NULL && IsWindow(WH_TO_HWND(hListBox))) {
-            UI_NavigateTo(idx);
+            UI_NavigateTo(lb, hListBox, idx);
               UpdateWindow(WH_TO_HWND(hListBox));
           }
       }
@@ -412,7 +427,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
           }
           
             if (WH_TO_HWND(hEditControl) != NULL && WH_TO_HWND(hListBox) != NULL) {
-              UI_Redraw(hListBox);
+              UI_Redraw(lb, hListBox);
             }
         }
       
@@ -425,15 +440,15 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     case WM_TIMER: {
       if (wParam == UI_DEBOUNCE_TIMER_ID) {
         KillTimer(hwnd, UI_DEBOUNCE_TIMER_ID);
-          UI_RedrawNow(hListBox);
+          UI_RedrawNow(lb, hListBox);
           return 0;
       }
       break;
     }
     case WM_PREVIEW_SELECTION: {
       int idx = (int)lParam;
-        if (idx >= 0 && idx < g_populated_count) {
-          SubjectiveMessageDisplay(g_populated_cache[idx], 140, 6969, COLOR_OF_SELECTION);
+        if (idx >= 0 && idx < (lb ? lb->populated_count : 0)) {
+          SubjectiveMessageDisplay(lb->populated_cache[idx], 140, 6969, COLOR_OF_SELECTION_LB(lb));
         } else {
           if (WH_TO_HWND(hDisplayMessage) != NULL) {
             KillTimer(WH_TO_HWND(hDisplayMessage), 999);
@@ -454,8 +469,8 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     case WM_DRAWITEM: {
       DRAWITEMSTRUCT* pdis = (DRAWITEMSTRUCT*)lParam;
         if (pdis->CtlID == IDC_LIST_BOX && pdis->itemID != -1) {
-          BOOL isSelected = (pdis->itemID == g_SelectedIndex);
-            if (pdis->itemID >= g_populated_count) {
+          BOOL isSelected = (pdis->itemID == (lb ? lb->selected_index : -1));
+            if (pdis->itemID >= (lb ? lb->populated_count : 0)) {
               return TRUE;
             }
           if (!s_colorful_ready) {
@@ -531,9 +546,9 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
           } else {
             if (!s_bg_brush) s_bg_brush = CreateSolidBrush(COLOR_BG);
               FillRect(pdis->hDC, &pdis->rcItem, isSelected ? s_sel_brush : s_bg_brush);
-                if (UI_IsListBoxSelected()) {
+                if (UI_IsListBoxSelected(lb)) {
                   char measureBuffer[512];
-                    strncpy(measureBuffer, g_populated_cache[pdis->itemID], sizeof(measureBuffer) - 1);
+                    strncpy(measureBuffer, lb->populated_cache[pdis->itemID], sizeof(measureBuffer) - 1);
                     measureBuffer[sizeof(measureBuffer) - 1] = '\0';
                     char* pos = strchr(measureBuffer, '|');
                     if (pos) {
@@ -562,16 +577,16 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
           }
           
             const char* textBuffer = "";
-            if (pdis->itemID < g_populated_count) {
-              int raw = g_matching_indices[pdis->itemID];
+            if (pdis->itemID < (lb ? lb->populated_count : 0)) {
+              int raw = lb->matching_indices[pdis->itemID];
                 if (g_alias_display_active && g_alias_display_count > 0 && raw >= 0 && raw < g_alias_display_count && g_alias_display[raw][0] != '\0') {
                   textBuffer = g_alias_display[raw];
                 } else {
-                  textBuffer = g_populated_cache[pdis->itemID];
+                  textBuffer = lb->populated_cache[pdis->itemID];
                 }
             }
           
-            if (pdis->itemID == -1 || pdis->itemID >= g_populated_count) {
+            if (pdis->itemID == -1 || pdis->itemID >= (lb ? lb->populated_count : 0)) {
               return TRUE;
             }
           
@@ -705,21 +720,21 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
           titleRect.bottom = rect.top + sz.cy + 15;
           
           COLORREF titleColor;
-          if (g_populated_count < 25) {
+          if ((lb ? lb->populated_count : 0) < 25) {
             titleColor = RGB(0, 255, 0);
-          } else if (g_populated_count < 50) {
+          } else if ((lb ? lb->populated_count : 0) < 50) {
             titleColor = RGB(100, 255, 0);
-          } else if (g_populated_count < 75) {
+          } else if ((lb ? lb->populated_count : 0) < 75) {
             titleColor = RGB(200, 255, 0);
-          } else if (g_populated_count < 100) {
+          } else if ((lb ? lb->populated_count : 0) < 100) {
             titleColor = RGB(255, 255, 0);
-          } else if (g_populated_count < 125) {
+          } else if ((lb ? lb->populated_count : 0) < 125) {
             titleColor = RGB(255, 200, 0);
-          } else if (g_populated_count < 150) {
+          } else if ((lb ? lb->populated_count : 0) < 150) {
             titleColor = RGB(255, 150, 0);
-          } else if (g_populated_count < 175) {
+          } else if ((lb ? lb->populated_count : 0) < 175) {
             titleColor = RGB(255, 100, 0);
-          } else if (g_populated_count < 200) {
+          } else if ((lb ? lb->populated_count : 0) < 200) {
             titleColor = RGB(255, 50, 0);
           } else {
             titleColor = RGB(255, 0, 0);
@@ -743,7 +758,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         VK_LMENU, VK_RMENU, VK_LWIN, VK_RWIN };
         if (!KeepSelectionAfterClose)  {
           last_index = 0;
-            g_SelectedIndex = 0;
+            if (lb) lb->selected_index = 0;
         }
       
         g_last_mode = g_current_mode;
@@ -975,6 +990,7 @@ LRESULT CALLBACK SettingsPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 }
 
 LRESULT CALLBACK SettingsEditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
+  ListBoxInfo* lb = GetLBFromChild(hwnd);
   HWND hEditControl = hwnd;
     
     if (msg == WM_KEYDOWN) {
@@ -986,7 +1002,7 @@ LRESULT CALLBACK SettingsEditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LP
       
         if (wParam == VK_ESCAPE) {
           if (IsInsertMode()) {
-            SetMode(MODE_NORMAL);
+            SetModeWithListBox(MODE_NORMAL, lb);
           }else {
             DestroyWindow(GetParent(hwnd));
               hSettings = WH_NULL;
@@ -1014,6 +1030,9 @@ LRESULT CALLBACK SettingsEditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LP
 } 
 
 LRESULT CALLBACK EditPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
+  ListBoxInfo* lb = GetLBFromChild(hWnd);
+  // fallback to main popup if not found
+  if (!lb && WH_TO_HWND(hPopupWnd) && IsWindow(WH_TO_HWND(hPopupWnd))) lb = GetLBFromPopup(WH_TO_HWND(hPopupWnd));
   EditPopupData* data = (EditPopupData*)dwRefData;
     if (!data || !WH_TO_HWND(data->hEdit)) {
       data = (EditPopupData*)GetWindowLongPtrA(hWnd, GWLP_USERDATA);
@@ -1027,7 +1046,7 @@ LRESULT CALLBACK EditPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
         printf("[EditPopup] Escape pressed\n");
           data->result = NULL;
           DestroyWindow(GetParent(hWnd));
-          UI_Redraw(hListBox);
+          UI_Redraw(lb, hListBox);
           return 0;
       }
     if (wParam == VK_RETURN) {
@@ -1039,7 +1058,7 @@ LRESULT CALLBACK EditPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
         GetWindowTextA(WH_TO_HWND(data->hEdit), buffer, sizeof(buffer) - 1);
         data->result = _strdup(buffer);
         DestroyWindow(GetParent(hWnd));
-        UI_Redraw(hListBox);
+        UI_Redraw(lb, hListBox);
         
         return 0;
     }
@@ -1048,10 +1067,12 @@ LRESULT CALLBACK EditPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 }
 
 LRESULT CALLBACK SearchPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
+  ListBoxInfo* lb = GetLBFromChild(hWnd);
+  if (!lb && WH_TO_HWND(hPopupWnd) && IsWindow(WH_TO_HWND(hPopupWnd))) lb = GetLBFromPopup(WH_TO_HWND(hPopupWnd));
   if (uMsg == WM_KEYDOWN) {
     if (wParam == VK_ESCAPE) {
       DestroyWindow(GetParent(hWnd));
-        UI_Redraw(hListBox);
+        UI_Redraw(lb, hListBox);
         return 0;
     }
     if (wParam == VK_RETURN) {
@@ -1061,7 +1082,7 @@ LRESULT CALLBACK SearchPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LP
       printf("[SearchPopup] Enter pressed\n");
         char buffer[2048] = {0};
         DestroyWindow(GetParent(hWnd));
-        UI_Redraw(hListBox);
+        UI_Redraw(lb, hListBox);
         return 0;
     }
   }
@@ -1069,6 +1090,8 @@ LRESULT CALLBACK SearchPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LP
 }
 
 LRESULT CALLBACK EditPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+  ListBoxInfo* lb = NULL;
+  if (WH_TO_HWND(hPopupWnd) && IsWindow(WH_TO_HWND(hPopupWnd))) lb = GetLBFromPopup(WH_TO_HWND(hPopupWnd));
   EditPopupData* data = (EditPopupData*)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
     
     switch (msg) {
@@ -1170,8 +1193,8 @@ LRESULT CALLBACK EditPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
               SetWindowLongPtrA(hwnd, GWLP_USERDATA, 0);
         }
       ForceWindowFocus(hPopupWnd, hEditControl);
-        last_index = g_SelectedIndex;
-        SetMode(MODE_NORMAL);
+        last_index = lb ? lb->selected_index : -1;
+        SetModeWithListBox(MODE_NORMAL, lb);
         UpdateTextCaret(hEditControl);
         break;
     }
@@ -1180,6 +1203,8 @@ LRESULT CALLBACK EditPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 }
 
 LRESULT CALLBACK SearchPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+  ListBoxInfo* lb = NULL;
+  if (WH_TO_HWND(hPopupWnd) && IsWindow(WH_TO_HWND(hPopupWnd))) lb = GetLBFromPopup(WH_TO_HWND(hPopupWnd));
   HFONT hFont = CreateCustomNerdFont(FontSize, UsedFont);
     switch (msg) {
     case WM_NCCREATE: {
@@ -1276,7 +1301,7 @@ LRESULT CALLBACK SearchPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPar
         DeleteObject(hFont);
         SetWindowLongPtrA(hwnd, GWLP_USERDATA, 0);
         ForceWindowFocus(hPopupWnd, hEditControl);
-        SetMode(MODE_NORMAL);
+        SetModeWithListBox(MODE_NORMAL, lb);
         UpdateTextCaret(hEditControl);
         break;
     }

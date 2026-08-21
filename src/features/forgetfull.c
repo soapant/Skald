@@ -61,7 +61,7 @@ static void RemoveTextFromFile(const char* item_to_remove) {
 #endif
 }
 
-static void forgetfull_refresh_callback(const char* filter, WindowHandle hListBox) {
+static void forgetfull_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
     char forgetfull_lines[100][512];
     int forgetfull_count = ReadMdFile(forgetfull_lines, FORGETFULL_FILE_PATH);
     
@@ -70,36 +70,36 @@ static void forgetfull_refresh_callback(const char* filter, WindowHandle hListBo
         items[i] = forgetfull_lines[i];
     }
 
-    PopulateListBox(hListBox,filter, items, forgetfull_count, NULL);
+    PopulateListBox(lb, hListBox, filter, items, forgetfull_count, NULL);
 }
 
-static void forgetfull_enter_callback(const char* selection) {
-    if (UI_IsListBoxSelected()) {
+static void forgetfull_enter_callback(const char* selection, ListBoxInfo* lb) {
+    if (UI_IsListBoxSelected(lb)) {
         RemoveTextFromFile(selection);
     } 
     else {
         AddTextToFile(selection);
         UI_SetText(hEditControl, "");
     }
-    UI_Redraw(hListBox);
+    UI_Redraw(lb, hListBox);
 }
-static void forgetfull_edit_callback(const char* selection) {
+static void forgetfull_edit_callback(const char* selection, ListBoxInfo* lb) {
     char* NewForgetFullName = Platform_EditTextPopup(selection, 960, 540, 1000, 300);
     
     if (NewForgetFullName != NULL) {
-        WriteToCacheIndex(g_SelectedIndex, NewForgetFullName);
+        WriteToCacheIndex(lb, lb->selected_index, NewForgetFullName);
     }
-    ReplaceLineInFile(FORGETFULL_FILE_PATH, g_SelectedIndex, NewForgetFullName);
+    ReplaceLineInFile(FORGETFULL_FILE_PATH, lb->selected_index, NewForgetFullName);
 }
 
-static void forgetfull_ctrlenter_callback(const char* selection) {
-    if (UI_IsListBoxSelected()) {
+static void forgetfull_ctrlenter_callback(const char* selection, ListBoxInfo* lb) {
+    if (UI_IsListBoxSelected(lb)) {
         RemoveTextFromFile(selection);
     } else {
         AddTextToFile(selection);
         UI_SetText(hEditControl, "");
     }
-    forgetfull_refresh_callback(NULL, hListBox);
+    forgetfull_refresh_callback(NULL, hListBox, lb);
     selection_complete = false;
 }
 

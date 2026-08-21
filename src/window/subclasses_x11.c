@@ -3,6 +3,7 @@
 #include "config.h"
 #include "platform/platform.h"
 #include "helpers.h"
+#include "core/common_ui.h"
 #include <X11/X.h>
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
@@ -66,7 +67,7 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
                     n - state->cursor + 1);
             state->cursor--;
         }
-        if (g_refresh_callback) g_refresh_callback(state->filter, hListBox);
+        if (g_refresh_callback) g_refresh_callback(state->filter, hListBox, state->has_listbox ? &state->listbox : NULL);
         return true;
     }
     if (wParam == VK_ESCAPE) {
@@ -83,6 +84,25 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
     }
     if (wParam == VK_LEFT) {
        CursorBack(&state->cursor, strlen(state->filter));
+      return true;
+    }
+    if (wParam == VK_UP) {
+      if (state->has_listbox) UI_NavigateUp(&state->listbox, hListBox);
+      return true;
+    }
+    if (wParam == VK_DOWN) {
+      if (state->has_listbox) UI_NavigateDown(&state->listbox, hListBox);
+      return true;
+    }
+    if (wParam == VK_RETURN) {
+      if (state->has_listbox && UI_IsListBoxSelected(&state->listbox)) {
+        const char* sel = state->listbox.populated_cache[state->listbox.selected_index];
+        if (g_enter_callback) g_enter_callback(sel, &state->listbox);
+        selection_complete = true;
+      } else {
+        if (g_enter_callback) g_enter_callback(state->filter, state->has_listbox ? &state->listbox : NULL);
+        selection_complete = true;
+      }
       return true;
     }
 
@@ -160,5 +180,9 @@ void DrawEditControl(Display *dpy,Window* win,PromptState *state) {
 
 bool Linux_RenderPromptUser(Display *dpy, Window *win, PromptState *state) {
     DrawEditControl(dpy, win,state);
+    if (state->has_listbox && state->listbox.populated_count > 0) {
+        // Minimal listbox rendering: could be expanded later
+        // For now just ensure selection is maintained
+    }
     return true;
 }

@@ -95,17 +95,17 @@ void launch_exe_with_args(const char* exe_path, const char* args) {
 #endif
 }
 
-static void applauncher_enter_callback(const char* selection) {
+static void applauncher_enter_callback(const char* selection, ListBoxInfo* lb) {
     launch_app_by_name(selection);
 }
 
-static void applauncher_ctrlenter_callback(const char* selection) {
+static void applauncher_ctrlenter_callback(const char* selection, ListBoxInfo* lb) {
     launch_app_as_admin(selection);
     selection_complete = true;
 }
 
-static void applauncher_refresh_callback(const char* filter, WindowHandle hListBox) {
-    if (WH_TO_HWND(hListBox) == NULL) return;
+static void applauncher_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
+    if (!lb || WH_TO_HWND(hListBox) == NULL) return;
 
     const char* names[MAX_APPS];
     int count = (G_APP_COUNT < MAX_APPS) ? G_APP_COUNT : MAX_APPS;
@@ -113,7 +113,7 @@ static void applauncher_refresh_callback(const char* filter, WindowHandle hListB
     for (int i = 0; i < count; i++) {
         names[i] = G_APPS[i].name;
     }
-    PopulateListBox(hListBox, filter, names, count, NULL);
+    PopulateListBox(lb, hListBox, filter, names, count, NULL);
 }
 static void applauncher_copy_callback(const char* selection,int true_index,int type) {
     char* text = (char*)selection;

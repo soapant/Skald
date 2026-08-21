@@ -161,18 +161,18 @@ static bool switcher_match_helper(const char* item, const char* filter) {
     return false;
 }
 
-static void switcher_refresh_callback(const char* filter, WindowHandle hListBox) {
-    if (WH_TO_HWND(hListBox) == NULL) return;
+static void switcher_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
+    if (!lb || WH_TO_HWND(hListBox) == NULL) return;
     
     const char* titles[MAX_SWITCHER_WINDOWS];
     for (int i = 0; i < g_switcher_count && i < MAX_SWITCHER_WINDOWS; i++) {
         titles[i] = g_switcher_windows[i].title;
     }
     
-    PopulateListBox(hListBox, filter, titles, g_switcher_count, switcher_match_helper);
+    PopulateListBox(lb, hListBox, filter, titles, g_switcher_count, switcher_match_helper);
 }
 
-static void switcher_enter_callback(const char* selection) {
+static void switcher_enter_callback(const char* selection, ListBoxInfo* lb) {
     for (int i = 0; i < g_switcher_count; i++) {
 #if defined(_WIN32)
         if (StrStrIA(g_switcher_windows[i].title, selection) != NULL) {

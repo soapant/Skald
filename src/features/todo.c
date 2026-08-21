@@ -247,7 +247,7 @@ static void RemoveTodoItemFromFile(const char* item_to_remove) {
 #endif
 }
 
-static void todo_refresh_callback(const char* filter, WindowHandle hListBox) {
+static void todo_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
     char todo_lines[100][512];
     int todo_count = ReadMdFile(todo_lines, TODO_FILE_PATH);
     
@@ -256,28 +256,28 @@ static void todo_refresh_callback(const char* filter, WindowHandle hListBox) {
         items[i] = todo_lines[i];
     }
 
-    PopulateListBox(hListBox, filter, items, todo_count, NULL);
+    PopulateListBox(lb, hListBox, filter, items, todo_count, NULL);
 
 }
 
-static void todo_enter_callback(const char* selection) {
-    if (UI_IsListBoxSelected()) {
+static void todo_enter_callback(const char* selection, ListBoxInfo* lb) {
+    if (UI_IsListBoxSelected(lb)) {
         RemoveTodoItemFromFile(selection);
     } 
     else {
         AddTodoToFile(selection);
     }
-    UI_Redraw(hListBox);
+    UI_Redraw(lb, hListBox);
 }
 
-static void todo_ctrlenter_callback(const char* selection) {
-    if (UI_IsListBoxSelected()) {
+static void todo_ctrlenter_callback(const char* selection, ListBoxInfo* lb) {
+    if (UI_IsListBoxSelected(lb)) {
         RemoveTodoItemFromFile(selection);
     } else {
         AddTodoToFile(selection);
         UI_SetText(hEditControl, "");
     }
-    UI_Redraw(hListBox);
+    UI_Redraw(lb, hListBox);
     selection_complete = false;
 }
 
@@ -366,13 +366,13 @@ static void todo_render_callback(HDC hdc, const char* text, RECT* rect, BOOL is_
 }
 #endif
 
-static void todo_edit_callback(const char* selection) {
+static void todo_edit_callback(const char* selection, ListBoxInfo* lb) {
     char* NewTodoName = Platform_EditTextPopup(selection, 960, 540, 1000, 300);
     
     if (NewTodoName != NULL) {
-        WriteToCacheIndex(g_SelectedIndex, NewTodoName);
+        WriteToCacheIndex(lb, lb->selected_index, NewTodoName);
     }
-    ReplaceLineInFile(TODO_FILE_PATH, g_SelectedIndex, NewTodoName);
+    ReplaceLineInFile(TODO_FILE_PATH, lb->selected_index, NewTodoName);
 }
 
 void TriggerTodo(void) {

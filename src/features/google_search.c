@@ -46,14 +46,14 @@ static void RebuildGoogleCache(void) {
 }
 
 
-static void google_refresh_callback(const char* filter, WindowHandle hListBox) {
-    if (WH_TO_HWND(hListBox) == NULL) return;
+static void google_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
+    if (!lb || WH_TO_HWND(hListBox) == NULL) return;
     
     if (!g_cached_google_queries) {
         RebuildGoogleCache();
     }
     
-    PopulateListBox(hListBox, filter, (const char**)g_cached_google_queries, g_cached_google_count, NULL);
+    PopulateListBox(lb, hListBox, filter, (const char**)g_cached_google_queries, g_cached_google_count, NULL);
 }
 
 
@@ -89,14 +89,14 @@ static void DoGoogleSearch(const char* query) {
     Platform_ShellExecuteWithVerb(url, "open", true);
 }
 
-static void google_enter_callback(const char* selection) {
+static void google_enter_callback(const char* selection, ListBoxInfo* lb) {
         if (GoogleZoxideFile->fileSize > 0) {
                   char lastChar = Platform_GetLastChar(GoogleZoxideFile);
             if (lastChar != '\n') {
                 Platform_FileAppend(GoogleZoxideFile, "\n");
             }
         }
-        if (!UI_IsListBoxSelected()) {
+        if (!UI_IsListBoxSelected(lb)) {
         Platform_FileAppend(GoogleZoxideFile, selection);
         Platform_FileAppend(GoogleZoxideFile, "\n");
         RebuildGoogleCache();
@@ -104,18 +104,18 @@ static void google_enter_callback(const char* selection) {
         DoGoogleSearch(selection);
 }
 
-static void google_edit_callback(const char* selection) {
+static void google_edit_callback(const char* selection, ListBoxInfo* lb) {
     char* NewgoogleQuery = Platform_EditTextPopup(selection,960,540,1000,300);
     
     if (NewgoogleQuery != NULL) {
-        WriteToCacheIndex(g_SelectedIndex,NewgoogleQuery);
+        WriteToCacheIndex(lb, lb->selected_index,NewgoogleQuery);
     }
     
-    Platform_ReplaceLineInMappedFile(GoogleZoxideFile,g_SelectedIndex,NewgoogleQuery);
+    Platform_ReplaceLineInMappedFile(GoogleZoxideFile,lb->selected_index,NewgoogleQuery);
     
     RebuildGoogleCache();
     
-    google_refresh_callback("",hListBox);
+    google_refresh_callback("", hListBox, lb);
 }
 
 void TriggerGoogleSearch(void) {

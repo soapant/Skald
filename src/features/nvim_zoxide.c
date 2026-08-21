@@ -105,18 +105,18 @@ static void RebuildNvimCache(void) {
     free(lines);
 }
 
-static void neovide_refresh_callback(const char* filter, WindowHandle hListBox) {
-    if (WH_TO_HWND(hListBox) == NULL) return;
+static void neovide_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
+    if (!lb || WH_TO_HWND(hListBox) == NULL) return;
     
     if (!g_cached_nvim_commands) {
         RebuildNvimCache();
     }
     
-    PopulateListBox(hListBox, filter, (const char**)g_cached_nvim_commands, g_cached_nvim_count, NULL);
+    PopulateListBox(lb, hListBox, filter, (const char**)g_cached_nvim_commands, g_cached_nvim_count, NULL);
 }
 
 
-static void neovide_enter_callback(const char* selection) {
+static void neovide_enter_callback(const char* selection, ListBoxInfo* lb) {
       char* path = Platform_QueryZoxidePath(selection);
       if (path) {
           LaunchNvim(path);
@@ -127,25 +127,25 @@ static void neovide_enter_callback(const char* selection) {
               }
           }
 
-          if (!UI_IsListBoxSelected()) {
+          if (!UI_IsListBoxSelected(lb)) {
               Platform_FileAppend(NvimZoxideFile, selection);
               Platform_FileAppend(NvimZoxideFile, "\n");
               RebuildNvimCache();
           }
       }
 }
-static void neovide_edit_callback(const char* selection) {
+static void neovide_edit_callback(const char* selection, ListBoxInfo* lb) {
     char* NewneovideQuery = Platform_EditTextPopup(selection,960,540,1000,300);
     
     if (NewneovideQuery != NULL) {
-        WriteToCacheIndex(g_SelectedIndex,NewneovideQuery);
+        WriteToCacheIndex(lb, lb->selected_index,NewneovideQuery);
     }
     
-    Platform_ReplaceLineInMappedFile(NvimZoxideFile,g_SelectedIndex,NewneovideQuery);
+    Platform_ReplaceLineInMappedFile(NvimZoxideFile,lb->selected_index,NewneovideQuery);
     
     RebuildNvimCache();
     
-    neovide_refresh_callback("",hListBox);
+    neovide_refresh_callback("", hListBox, lb);
 }
 
 void TriggerNvimZoxide(void) {

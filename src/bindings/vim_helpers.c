@@ -2,6 +2,24 @@
 #include "bindings/vim_helpers.h"
 #include "core/common_ui.h"
 #include <ctype.h>
+#if defined(_WIN32)
+#include <windows.h>
+#endif
+
+#if defined(_WIN32)
+static ListBoxInfo* GetActiveListBoxForHelpers(void) {
+    if (WH_TO_HWND(hPopupWnd) && IsWindow(WH_TO_HWND(hPopupWnd))) {
+        return (ListBoxInfo*)GetWindowLongPtrA(WH_TO_HWND(hPopupWnd), GWLP_USERDATA);
+    }
+    return NULL;
+}
+#else
+extern PromptState* g_currentPromptState;
+static ListBoxInfo* GetActiveListBoxForHelpers(void) {
+    if (g_currentPromptState && g_currentPromptState->has_listbox) return &g_currentPromptState->listbox;
+    return NULL;
+}
+#endif
 
 void DeleteCharUnderCursor(void) {
     if (!IsWindowValid(g_ActiveEditControl)) return;
@@ -24,13 +42,17 @@ void DeleteCharUnderCursor(void) {
 }
 
 void GoToFirstListBoxItem(void) {
-    UI_SetSelection(hListBox,0,g_SelectedIndex);
+    ListBoxInfo* lb = GetActiveListBoxForHelpers();
+    if (!lb) return;
+    UI_SetSelection(lb, hListBox, 0);
     UI_LB_SetTopIndex(hListBox,0);
 }
 
 void GoToLastListBoxItem(void) {
-    int lastIndex = g_populated_count - 1;
-    UI_SetSelection(hListBox,lastIndex,g_SelectedIndex);
+    ListBoxInfo* lb = GetActiveListBoxForHelpers();
+    if (!lb) return;
+    int lastIndex = lb->populated_count - 1;
+    UI_SetSelection(lb, hListBox, lastIndex);
     UI_LB_SetCaretIndex(hListBox, lastIndex, FALSE);
 }
 
@@ -90,8 +112,6 @@ void DeleteInsideDelimiter(char open_char, char close_char, bool keep_mode) {
         start = open_pos;
         end = close_pos;
     } else {
-        // === BACKWARDS: Cursor is after the closing bracket ===
-        // Search left for close_char
         int close_left = -1;
         for (int i = cursor - 1; i >= 0; i--) {
             if (text[i] == close_char) {
@@ -100,7 +120,6 @@ void DeleteInsideDelimiter(char open_char, char close_char, bool keep_mode) {
             }
         }
         
-        // Search left from close_char for matching open_char
         int open_left = -1;
         if (close_left != -1) {
             int depth = 0;
@@ -121,7 +140,6 @@ void DeleteInsideDelimiter(char open_char, char close_char, bool keep_mode) {
             start = open_left;
             end = close_left;
         } else if (open_char == close_char) {
-            // For quotes (same char), find the pair
             int found = 0;
             for (int i = 0; i < len; i++) {
                 if (text[i] == open_char) {
@@ -130,7 +148,6 @@ void DeleteInsideDelimiter(char open_char, char close_char, bool keep_mode) {
                 }
             }
         } else {
-            // Fallback: scan entire text
             int depth = 0;
             int first_open = -1;
             for (int i = 0; i < len; i++) {
@@ -155,7 +172,6 @@ void DeleteInsideDelimiter(char open_char, char close_char, bool keep_mode) {
         return;
     }
     
-    // Delete inside
     int delete_start = start + 1;
     int delete_end = end;
     
@@ -205,7 +221,7 @@ void DeleteInnerWord(bool keep_mode) {
             if (isalnum(c) || c == '_') break;
             word_end++;
         }
-        if (word_end >= len) return; // No word found
+        if (word_end >= len) return;
         word_start = word_end;
         while (word_start < len) {
             char c = text[word_start];

@@ -391,8 +391,8 @@ void get_flip_expression(char* out, size_t max_len) {
 
 
 
-static void calculator_refresh_callback(const char* filter, WindowHandle hListBox) {
-    if (WH_TO_HWND(hListBox) == NULL) return;
+static void calculator_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
+    if (!lb || WH_TO_HWND(hListBox) == NULL) return;
     
     char result_buffer[256] = {0};
     if (filter && strlen(filter) > 0) {
@@ -404,17 +404,17 @@ static void calculator_refresh_callback(const char* filter, WindowHandle hListBo
     const char* items[1] = { result_buffer };
 
     BuildAliasDisplayItems(items, 1);
-    PopulateListBox(hListBox, NULL, items, 1,NULL);
+    PopulateListBox(lb, hListBox, NULL, items, 1,NULL);
 }
 
-static void calculator_enter_callback(const char* selection) {
-    char* result = g_populated_cache[0];
+static void calculator_enter_callback(const char* selection, ListBoxInfo* lb) {
+    char* result = lb->populated_cache[0];
     Platform_CopyToClipboard(result);
 }
 
 
 
-static void calculator_tab_callback(void) {
+static void calculator_tab_callback(ListBoxInfo* lb) {
     if (WH_TO_HWND(hEditControl) == NULL) return;
     
     
@@ -445,8 +445,8 @@ static void calculator_tab_callback(void) {
 
 
 
-static void calculator_ctrlenter_callback(const char* selection) {
-    char* result = g_populated_cache[0] + 2;
+static void calculator_ctrlenter_callback(const char* selection, ListBoxInfo* lb) {
+    char* result = lb->populated_cache[0] + 2;
     UI_SetText(hEditControl, result);
     int len = strlen(result);
     UI_SetCursorPosition(hEditControl, len);
