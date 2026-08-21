@@ -47,7 +47,7 @@ static void RebuildExplorerCache(void) {
 }
 
 static void explorer_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
-    if (!lb || WH_TO_HWND(hListBox) == NULL) return;
+    if (!lb) return;
     
     if (!g_cached_explorer_commands) {
         RebuildExplorerCache();

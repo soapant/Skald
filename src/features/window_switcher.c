@@ -162,7 +162,7 @@ static bool switcher_match_helper(const char* item, const char* filter) {
 }
 
 static void switcher_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
-    if (!lb || WH_TO_HWND(hListBox) == NULL) return;
+    if (!lb) return;
     
     const char* titles[MAX_SWITCHER_WINDOWS];
     for (int i = 0; i < g_switcher_count && i < MAX_SWITCHER_WINDOWS; i++) {

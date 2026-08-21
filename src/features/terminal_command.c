@@ -46,7 +46,7 @@ static void RebuildCommandCache(void) {
 }
 
 static void terminal_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
-    if (!lb || WH_TO_HWND(hListBox) == NULL) return;
+    if (!lb) return;
     
     if (!g_cached_commands) {
         RebuildCommandCache();

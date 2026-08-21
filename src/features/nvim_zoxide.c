@@ -18,12 +18,15 @@ static void InitTextEditor() {
     if (!Platform_ExpandPath(TextEditorPath, expanded_path, sizeof(expanded_path))) return;
     
     const char* last_slash = strrchr(expanded_path, '\\');
+    const char* last_slash2 = strrchr(expanded_path, '/');
+    if (last_slash2 && (!last_slash || last_slash2 > last_slash)) last_slash = last_slash2;
 
     const char* start = (last_slash != NULL) ? (last_slash + 1) : expanded_path;
 
-    const char* dot_exe = strstr(start, ".exe");
-
-    size_t len = dot_exe - start;
+    const char* dot = strrchr(start, '.');
+    size_t len;
+    if (dot && strcmp(dot, ".exe") == 0) len = dot - start;
+    else len = strlen(start);
 
     static char app_name[64];
     
@@ -31,7 +34,7 @@ static void InitTextEditor() {
     
     TextEditorName = app_name;
     
-    TextEditorName[0] = toupper(TextEditorName[0]);
+    if (TextEditorName[0]) TextEditorName[0] = toupper(TextEditorName[0]);
     
     Initialized = true;
           
@@ -106,7 +109,7 @@ static void RebuildNvimCache(void) {
 }
 
 static void neovide_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
-    if (!lb || WH_TO_HWND(hListBox) == NULL) return;
+    if (!lb) return;
     
     if (!g_cached_nvim_commands) {
         RebuildNvimCache();
