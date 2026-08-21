@@ -22,6 +22,7 @@
 #include <poll.h>
 #include <stdbool.h>
 #include <sys/ioctl.h>
+#include <sys/time.h>
 #include <linux/input.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -504,8 +505,9 @@ void HandleGlobalKeyEvent(int key_code, int value) {
     if (g_Linux_CtrlHeld)  modifiers |= HOTKEY_MOD_CTRL;
 
     WinTimer timer = TimerStart();
-    if (ProcessHotkey(G_HOTKEY_BINDINGS, HOTKEY_BINDING_COUNT, 
+    if (ProcessHotkey(G_HOTKEY_BINDINGS, HOTKEY_BINDING_COUNT,
           pressed_vk, modifiers, fgTitle)) {
+        return;
     }
     TimerEnd(timer, "ProcessHotkey");
 
@@ -579,6 +581,7 @@ void Platform_RunHotKeyMessageLoop(void) {
     }
 
     struct input_event ev;
+    const long HOTKEY_STALE_EVENT_MS = 200;
 
     while (true) {
         int poll_res = poll(fds, active_kb_count, -1);
@@ -587,9 +590,15 @@ void Platform_RunHotKeyMessageLoop(void) {
         for (int i = 0; i < active_kb_count; i++) {
             if (fds[i].revents & POLLIN) {
                 while (read(fds[i].fd, &ev, sizeof(struct input_event)) > 0) {
-                    if (ev.type == EV_KEY) {
-                        HandleGlobalKeyEvent(ev.code, ev.value);
-                    }
+                    if (ev.type != EV_KEY) continue;
+
+                    struct timeval now;
+                    gettimeofday(&now, NULL);
+                    long age_ms = (now.tv_sec - ev.time.tv_sec) * 1000L
+                                + (now.tv_usec - ev.time.tv_usec) / 1000L;
+                    if (age_ms > HOTKEY_STALE_EVENT_MS) continue;
+
+                    HandleGlobalKeyEvent(ev.code, ev.value);
                 }
             }
         }
