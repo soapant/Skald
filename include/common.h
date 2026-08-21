@@ -28,6 +28,7 @@ extern WindowHandle g_hEditPopup;
 extern WindowHandle g_hSearchPopup;
 extern WindowHandle g_ActiveEditControl;
 extern EditPopupData* g_EditData;
+extern Display* g_font_dpy;
 
 extern uint32_t g_main_thread_id;
 

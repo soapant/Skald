@@ -48,6 +48,7 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
     HelpCallback help_callback) {
     selection_complete = false;
     output_buffer[0] = '\0';
+    
     Display* dpy = XOpenDisplay(NULL);
     if (!dpy) return NULL;
 
@@ -170,7 +171,7 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
     XSync(dpy, False);
     XDestroyWindow(dpy, win);
     XSync(dpy, False);
-    XCloseDisplay(dpy);
+    /* DO NOT close dpy here - g_font_dpy is shared and kept alive for the app lifetime */
     free(state);
     return output_buffer;
 }

@@ -239,12 +239,18 @@ void DrawPromptUserListBox(Display *dpy,Window* win,PromptState *state) {
             char num[8];
             snprintf(num,sizeof(num),"%d.",idx+1);
             draw_wrapped_text(dpy, xd, &fcolrainbow, font, num, y, "LEFT",10);
-            draw_wrapped_text(dpy, xd, &fcolrainbow, font, lb->populated_cache[idx], y, "LEFT", 55);
+            /* Truncate cached text to avoid X11 BadLength on X_PolyText8 */
+            char cache_trunc[256];
+            snprintf(cache_trunc, sizeof(cache_trunc), "%.80s", lb->populated_cache[idx]);
+            draw_wrapped_text(dpy, xd, &fcolrainbow, font, cache_trunc, y, "LEFT", 55);
         } else {
             char num[8];
             snprintf(num,sizeof(num),"%d.",idx+1);
             draw_wrapped_text(dpy, xd, &fcoltext, font, num, y, "LEFT", 10);
-            draw_wrapped_text(dpy, xd, &fcoltext, font, lb->populated_cache[idx], y, "LEFT", 45);
+            /* Truncate cached text to avoid X11 BadLength on X_PolyText8 */
+            char cache_trunc[256];
+            snprintf(cache_trunc, sizeof(cache_trunc), "%.80s", lb->populated_cache[idx]);
+            draw_wrapped_text(dpy, xd, &fcoltext, font, cache_trunc, y, "LEFT", 45);
         }
 
         XftColorFree(dpy, vis, cmap, &bgc);
