@@ -11,6 +11,8 @@
 #include <time.h>
 #endif
 #define MAX_VISIBLE_ITEMS 100
+#define MAX_ITEMS 4000
+#define MAX_MATCHES 4000
 
 #define MAX_SEQUENCE_LEN 8
 #define SEQUENCE_TIMEOUT_MS 500
@@ -188,10 +190,12 @@ typedef struct FontHandle {
 #define FH_TO_DPY(h) ((h).dpy)
 #endif
 
-typedef void (*RefreshCallback)(const char* filter, WindowHandle hListBox);
-typedef void (*EnterCallback)(const char* selection);
-typedef void (*CtrlEnterCallback)(const char* selection);
-typedef void (*TabCallback)(void);
+typedef struct ListBoxInfo ListBoxInfo;
+
+typedef void (*RefreshCallback)(const char* filter, WindowHandle hListBox, ListBoxInfo* lb);
+typedef void (*EnterCallback)(const char* selection, ListBoxInfo* lb);
+typedef void (*CtrlEnterCallback)(const char* selection, ListBoxInfo* lb);
+typedef void (*TabCallback)(ListBoxInfo* lb);
 #if defined(_WIN32)
 typedef void (*RenderCallback)(HDC hdc, const char* text, RECT* rect, BOOL is_selected, int itemIndex);
 typedef void (*AliasCallback)(HDC hdc, const char* text, RECT* rect, BOOL is_selected, int itemIndex);
@@ -199,11 +203,49 @@ typedef void (*AliasCallback)(HDC hdc, const char* text, RECT* rect, BOOL is_sel
 typedef void (*RenderCallback)(void* hdc, const char* text, void* rect, bool is_selected, int itemIndex);
 typedef void (*AliasCallback)(void* hdc, const char* text, void* rect, bool is_selected, int itemIndex);
 #endif
-typedef void (*EditCallback)(const char*);
+typedef void (*EditCallback)(const char* selection, ListBoxInfo* lb);
 typedef void (*FilterCallback)(const char* item,const char* filter);
 typedef void (*CopyCallback)(const char* selection,int true_index,int type);
 typedef void (*HelpCallback)();
 typedef void (*KeyCallback)(int vkCode);
+
+struct ListBoxInfo {
+    char populated_cache[MAX_ITEMS][512];
+    int  populated_count;
+    int  matching_indices[MAX_MATCHES];
+    int  total_matches;
+    int  selected_index;
+    int  view_offset;
+    const char **last_items;
+    int  last_item_count;
+    char last_filter[256];
+    bool last_filter_valid;
+    int  prev_matches[MAX_MATCHES];
+    int  last_filter_full_count;
+};
+
+static inline void ListBoxInfo_Init(ListBoxInfo *lb) {
+    if (!lb) return;
+    memset(lb, 0, sizeof(*lb));
+    lb->selected_index = -1;
+    lb->populated_count = 0;
+    lb->total_matches = 0;
+    lb->view_offset = 0;
+}
+
+static inline const char* ListBoxInfo_GetSelectedText(ListBoxInfo *lb) {
+    if (!lb) return NULL;
+    if (lb->selected_index < 0 || lb->selected_index >= lb->populated_count) return NULL;
+    return lb->populated_cache[lb->selected_index];
+}
+
+static inline int ListBoxInfo_GetCount(ListBoxInfo *lb) {
+    return lb ? lb->populated_count : 0;
+}
+
+static inline bool ListBoxInfo_IsSelected(ListBoxInfo *lb) {
+    return lb && lb->selected_index != -1;
+}
 
 extern KeyCallback g_key_callback;
 extern char* Platform_PromptUser(const char* window_list[], const char* window_title, int count, int height, int width, int item_height,
@@ -337,24 +379,34 @@ typedef struct {
 } MappedFile;
 
 #if !defined(_WIN32)
-typedef struct {                                                   
-     char**      items;          
-     size_t      item_count;                                        
-     char        filter[512];   
-     size_t      cursor;        
-     int         selection;     
-     int         scroll_offset; 
-     int         width, height; 
+typedef struct {
+     char**      items;
+     size_t      item_count;
+     char        filter[512];
+     size_t      cursor;
+     int         width, height;
      char*       window_title;
-} PromptState; 
+     ListBoxInfo listbox;
+     bool        has_listbox;
+} PromptState;
 
-typedef struct {                                                   
-     char*       display_message;          
-     size_t      cursor;        
-     int         width, height; 
+typedef struct {
+     char*       display_message;
+     size_t      cursor;
+     int         width, height;
      char*       window_title;
-} SimplePromptState; 
+} SimplePromptState;
 
+#endif
+
+#if defined(_WIN32)
+typedef struct {
+     ListBoxInfo listbox;
+     bool        has_listbox;
+     WindowHandle hListBox;
+     WindowHandle hEditControl;
+     WindowHandle hPopupWnd;
+} WinPromptState;
 #endif
 
 
@@ -495,9 +547,6 @@ typedef struct {
 #ifndef RGB
 #define RGB(r, g, b)  ((unsigned long)(((unsigned char)(r)|((unsigned short)((unsigned char)(g))<<8))|(((unsigned long)(unsigned char)(b))<<16)))
 #endif
-
-#define MAX_ITEMS 4000
-#define MAX_MATCHES 4000
 #define COLOR_BG      RGB(30, 35, 45)   
 #define COLOR_TEXT    RGB(255, 255, 255)
 #define COLOR_SELECTED_TEXT    RGB(70, 55, 90)

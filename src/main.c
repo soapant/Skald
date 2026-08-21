@@ -48,16 +48,6 @@ HANDLE g_key_event = NULL;
 #endif
 const char** g_initial_items = NULL;
 int g_initial_count = 0;
-int g_SelectedIndex = 0;
-int g_TotalMatches = 0;
-int g_last_match_count = 0;
-const char** g_last_items = NULL;
-int g_last_item_count = 0;
-char g_last_filter[256] = {0};
-char g_populated_cache[MAX_ITEMS][512];
-int g_matching_indices[MAX_MATCHES];
-int g_populated_count = 0;
-int g_view_offset = 0;
 const char* g_title = NULL;
 int img_region_step = 0;
 long img_x1 = 0, img_y1 = 0;

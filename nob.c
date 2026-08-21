@@ -250,7 +250,7 @@ int main(int argc, char** argv) {
     if (argc > 1) {
         if (strcmp(argv[1], "-actual") == 0) windowed = true;
     }
-    if (strcmp(argv[2], "-run") == 0) {
+    if (argc > 2 && strcmp(argv[2], "-run") == 0) {
       do_run = 1;
     }
 
