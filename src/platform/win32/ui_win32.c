@@ -41,9 +41,13 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
   g_initial_count = count;
   WinTimer timer = TimerStart();
 
-  ListBoxInfo lb;
-  ListBoxInfo_Init(&lb);
+  ListBoxInfo* lb_ptr = NULL;
   bool has_listbox = (count >= 0);
+  if (has_listbox) {
+    lb_ptr = (ListBoxInfo*)calloc(1, sizeof(ListBoxInfo));
+    if (!lb_ptr) return NULL;
+    ListBoxInfo_Init(lb_ptr);
+  }
 
   if (g_item_index_map) {
     HashMap_Destroy(g_item_index_map);
@@ -72,9 +76,9 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
   BuildAliasDisplayItems(window_list, count);
 
   if (ModePersistsThroughFeatures) {
-    SetModeWithListBox(g_last_mode, has_listbox ? &lb : NULL);
+    SetModeWithListBox(g_last_mode, lb_ptr);
   } else {
-    SetModeWithListBox(MODE_INSERT, has_listbox ? &lb : NULL);
+    SetModeWithListBox(MODE_INSERT, lb_ptr);
   }
 
   WindowLayout layout;
@@ -92,14 +96,14 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
     DeleteObject(hCustomFont);
     return NULL;
   }
-  SetWindowLongPtrA(WH_TO_HWND(hPopupWnd), GWLP_USERDATA, (LONG_PTR)(has_listbox ? &lb : NULL));
+  SetWindowLongPtrA(WH_TO_HWND(hPopupWnd), GWLP_USERDATA, (LONG_PTR)(lb_ptr));
 
   TimerEnd(timer,"Window Init");
 
   WinTimer timer1 = TimerStart();
 
 
-  CreateChildControls(hPopupWnd, hCustomFont, window_list, count, &layout, has_listbox ? &lb : NULL);
+  CreateChildControls(hPopupWnd, hCustomFont, window_list, count, &layout, lb_ptr);
 
   TimerEnd(timer1,"CreateChildControl");
 
@@ -168,6 +172,7 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
 
 
   DeleteObject(hCustomFont); 
+  if (lb_ptr) free(lb_ptr);
   selection_complete = false;
   g_refresh_callback = NULL;
   g_enter_callback = NULL;
