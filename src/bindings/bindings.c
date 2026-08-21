@@ -4,6 +4,7 @@
 #include "bindings/character_sequence.h"
 #include "bindings/macro_bindings.h"
 #include "core/common_ui.h"
+#include "core/modal.h"
 #include "core/vim_context.h"
 #include "helpers.h"
 #include "features/window_switcher.h"
@@ -26,23 +27,14 @@ bool CheckVimMotion(int pressed_vk, int modifiers, MotionAction* out_action, con
     if (!g_currentPromptState) return false;
 #endif
     
-    if (pressed_vk == VK_SHIFT || pressed_vk == VK_LSHIFT || pressed_vk == VK_RSHIFT ||
-        pressed_vk == VK_CONTROL || pressed_vk == VK_LCONTROL || pressed_vk == VK_RCONTROL ||
-        pressed_vk == VK_MENU || pressed_vk == VK_LMENU || pressed_vk == VK_RMENU ||
-        pressed_vk == VK_LWIN || pressed_vk == VK_RWIN) {
-        return false;
-    }
-    
     bool in_popup = IsWindowValid(g_hEditPopup);
     
 #if defined(_WIN32)
     bool ctrl_held = (GetKeyState(VK_CONTROL) & 0x8000);
     bool shift_held = (GetKeyState(VK_SHIFT) & 0x8000);
-    bool alt_held = (GetKeyState(VK_MENU) & 0x8000);
 #else
-    bool ctrl_held = false;
-    bool shift_held = false;
-    bool alt_held = false;
+    bool ctrl_held = modifiers > 1;
+    bool shift_held = modifiers > 1;
 #endif
     
     if (pressed_vk == VK_ESCAPE) {
@@ -96,7 +88,6 @@ bool CheckVimMotion(int pressed_vk, int modifiers, MotionAction* out_action, con
     }
     
     if (in_insert) {
-        
         if (shift_held) {
             return false;
         }
@@ -180,10 +171,8 @@ bool CheckVimMotion(int pressed_vk, int modifiers, MotionAction* out_action, con
 
 void ExecuteMotion(MotionAction action, const char* sequence, int typed_count) {
     VimContext ctx = VimCtx_FromGlobals();
-    if (typed_count > 0 && sequence != NULL && strlen(sequence) > 0) {
+    if (typed_count > 0 && sequence != NULL && strlen(sequence) > 0 && IsInsertMode()) {
         DeleteLastTypedChar(&ctx);
-        // Refresh after deleting last typed char that was left in filter from insert mode sequence prefix
-        // For X11, VimCtx_SetText already refreshed, but ensure listbox updates:
         if (g_refresh_callback) g_refresh_callback(ctx.state ? ctx.state->filter : "", ctx.hListBox, ctx.lb);
     }
     for (int i = 0; i < VIM_SEQUENCE_BINDING_COUNT; i++) {
