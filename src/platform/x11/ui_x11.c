@@ -522,61 +522,6 @@ void HandleGlobalKeyEvent(int key_code, int value) {
     }
     TimerEnd(timer, "ProcessHotkey");
 
-    // if (g_Linux_ShiftHeld && !IsInsertMode() && WH_TO_HWND(hPopupWnd) != NULL) {
-    //     if (WH_TO_HWND(g_hEditPopup) == NULL) {
-    //         if (pressed_vk == COMMAND_MODE_KEY) {
-    //             SetMode(MODE_INSERT);
-    //             char* output = Platform_EditTextPopup("", 960, 540, 1000, 300);
-    //             if (output) {
-    //                 HandleCommandExecution(output);
-    //             }
-    //             return;
-    //         }
-    //     }
-    // }
-    
-    // if (WH_TO_HWND(g_hSearchPopup) == NULL && WH_TO_HWND(hPopupWnd) != NULL && IsNormalMode()) {
-    //     if (pressed_vk == SEARCH_PROGRAM_KEY) {
-    //         Platform_SearchPopup();
-    //     }
-    // }
-
-    // WinTimer timer2 = TimerStart();
-    // if (g_Linux_CtrlHeld) {
-    //     if (pressed_vk == HELP_SCREEN_KEY) {
-    //         if (g_help_callback != NULL) {
-    //             g_help_callback();
-    //             TimerEnd(timer2, "HelpScreen");
-    //         }
-    //     }
-    // }
-    // TimerEnd(timer2, "HelpScreenCheck");
-    
-    // WinTimer timer3 = TimerStart();
-    // if (IsNormalMode()) {
-    //     if (g_waiting_for_key) {
-    //         g_waiting_for_key = false;
-    //         if (g_key_callback) {
-    //             g_key_callback(pressed_vk); // Pass converted key variable down
-    //             TimerEnd(timer3, "KeyCallback");
-    //         }
-    //         return;
-    //     }       
-    // }
-    // TimerEnd(timer3, "NormalModeCheck");
-
-    // MotionAction vimAction = MOTION_NONE;
-    // const char* matchedSequence = NULL;
-    // int typedCount = 0;
-
-    // WinTimer timer4 = TimerStart();
-    // if (CheckVimMotion(pressed_vk, modifiers, &vimAction, &matchedSequence, &typedCount)) {
-    //     ExecuteMotion(vimAction, matchedSequence, typedCount);
-    //     TimerEnd(timer4, "ExecuteMotion");
-    //     return;
-    // }
-    // TimerEnd(timer4, "CheckVimMotion");
-
     WinTimer timer5 = TimerStart();
 
     if (CheckTextSnippetBindings(pressed_vk, modifiers)) {
