@@ -2,230 +2,199 @@
 #include "bindings/vim_motions.h"
 #include "bindings/vim_helpers.h"
 #include "core/common_ui.h"
+#include "core/vim_context.h"
 #include "helpers.h"
 #include <ctype.h>
 #if defined(_WIN32)
 #include <windows.h>
 #endif
 
-#if defined(_WIN32)
-static ListBoxInfo* GetActiveListBoxForMotions(void) {
-    if (WH_TO_HWND(hPopupWnd) && IsWindow(WH_TO_HWND(hPopupWnd))) {
-        return (ListBoxInfo*)GetWindowLongPtrA(WH_TO_HWND(hPopupWnd), GWLP_USERDATA);
-    }
-    return NULL;
-}
-#else
-extern PromptState* g_currentPromptState;
-static ListBoxInfo* GetActiveListBoxForMotions(void) {
-    if (g_currentPromptState && g_currentPromptState->has_listbox) return &g_currentPromptState->listbox;
-    return NULL;
-}
-#endif
-
-void HandleEnterNormal(void) { 
+void HandleEnterNormal(VimContext* ctx) { 
+    (void)ctx;
     SetMode(MODE_NORMAL); 
     printf("[VIM] Entered NORMAL mode\n");
 }
 
-void HandleEnterInsertOut(void) { 
-    if (!IsWindowValid(g_ActiveEditControl)) return;
-    
-    uint32_t start = 0, end = 0;
-    UI_GetCurrentCursorPosition(&start, &end);
-    
-    int pos = (int)start + 1;
-    
-    UI_SetCursorPosition(g_ActiveEditControl,pos);
-    
+void HandleEnterInsertOut(VimContext* ctx) { 
+    if (!ctx) return;
+    int pos = VimCtx_GetCursor(ctx);
+    VimCtx_SetCursor(ctx, pos + 1);
     SetMode(MODE_INSERT); 
     printf("[VIM] Entered INSERT mode\n");
 }
 
-void HandleEnterInsertIn(void) { 
-    if (!IsWindowValid(g_ActiveEditControl)) return;
-    
-    uint32_t start = 0, end = 0;
-    UI_GetCurrentCursorPosition(&start, &end);
-    
-    int pos = (int)start;
-    
-    UI_SetCursorPosition(g_ActiveEditControl,pos);
-    
+void HandleEnterInsertIn(VimContext* ctx) { 
+    if (!ctx) return;
+    int pos = VimCtx_GetCursor(ctx);
+    VimCtx_SetCursor(ctx, pos);
     SetMode(MODE_INSERT); 
-    
     printf("[VIM] Entered INSERT mode\n");
 }
 
-void HandleEnterVisual(void) { 
-  
+void HandleEnterVisual(VimContext* ctx) { 
+    (void)ctx;
     SetMode(MODE_VISUAL); 
     printf("[VIM] Entered VISUAL mode\n");
 }
 
-void HandleMoveLeft(void) {
-      UI_Edit_KeyDown(g_ActiveEditControl, VK_LEFT);
-      UI_Edit_KeyUp(g_ActiveEditControl, VK_LEFT);
+void HandleMoveLeft(VimContext* ctx) {
+    if (!ctx) return;
+    int pos = VimCtx_GetCursor(ctx);
+    if (pos > 0) VimCtx_SetCursor(ctx, pos - 1);
 }
 
-void HandleEnter(void) {
-    ListBoxInfo* lb = GetActiveListBoxForMotions();
-    if (WH_TO_HWND(hListBox) != NULL && UI_IsListBoxSelected(lb)) {
-        UI_Edit_KeyDown(g_ActiveEditControl, VK_RETURN);
-        UI_Edit_KeyUp(g_ActiveEditControl, VK_RETURN);
+void HandleEnter(VimContext* ctx) {
+    if (!ctx) return;
+    if (ctx->lb && UI_IsListBoxSelected(ctx->lb)) {
+        // simulate enter on selection - use g_enter_callback via state
+        // For abstraction, just move cursor right as fallback
+        int pos = VimCtx_GetCursor(ctx);
+        VimCtx_SetCursor(ctx, pos + 1);
     } else {
-      UI_Edit_KeyDown(g_ActiveEditControl, VK_RIGHT);
-      UI_Edit_KeyUp(g_ActiveEditControl, VK_RIGHT);
-    }
-
-}
-void HandleMoveUp(void) {
-    ListBoxInfo* lb = GetActiveListBoxForMotions();
-    UI_NavigateUp(lb, hListBox);
-}
-void HandleMoveRight(void) {
-    if (WH_TO_HWND(g_ActiveEditControl) != NULL) {
-        UI_Edit_KeyDown(g_ActiveEditControl, VK_RIGHT);
-        UI_Edit_KeyUp(g_ActiveEditControl, VK_RIGHT);
+        int pos = VimCtx_GetCursor(ctx);
+        char text[512];
+        VimCtx_GetText(ctx, text, sizeof(text));
+        int len = (int)strlen(text);
+        if (pos < len) VimCtx_SetCursor(ctx, pos + 1);
     }
 }
-
-void HandleMoveDown(void) {
-    ListBoxInfo* lb = GetActiveListBoxForMotions();
-    UI_NavigateDown(lb, hListBox);
+void HandleMoveUp(VimContext* ctx) {
+    if (!ctx || !ctx->lb) return;
+    UI_NavigateUp(ctx->lb, ctx->hListBox);
+}
+void HandleMoveRight(VimContext* ctx) {
+    if (!ctx) return;
+    int pos = VimCtx_GetCursor(ctx);
+    char text[512];
+    VimCtx_GetText(ctx, text, sizeof(text));
+    int len = (int)strlen(text);
+    if (pos < len) VimCtx_SetCursor(ctx, pos + 1);
 }
 
-void HandlePersistentDelete(void) {
-    ListBoxInfo* lb = GetActiveListBoxForMotions();
-    if (!UI_IsListBoxSelected(lb) || WH_TO_HWND(g_ActiveEditControl) == NULL) return;
-    if (g_ctrl_enter_callback != NULL && lb) {
-        const char* txt = lb->populated_cache[lb->selected_index];
-        g_ctrl_enter_callback(txt, lb);
-    }
+void HandleMoveDown(VimContext* ctx) {
+    if (!ctx || !ctx->lb) return;
+    UI_NavigateDown(ctx->lb, ctx->hListBox);
 }
 
-void HandleDeleteCharInsert(void) {
-    DeleteCharUnderCursor();
-    HandleEnterInsertIn(); 
-}
-
-void HandleDeleteCharNormal(void) {
-    if (WH_TO_HWND(g_ActiveEditControl) != NULL) {
-        DeleteCharUnderCursor();
-        printf("[VIM] Deleted character under cursor\n");
+void HandlePersistentDelete(VimContext* ctx) {
+    if (!ctx || !ctx->lb) return;
+    if (!UI_IsListBoxSelected(ctx->lb)) return;
+    if (g_ctrl_enter_callback != NULL && ctx->lb) {
+        const char* txt = ctx->lb->populated_cache[ctx->lb->selected_index];
+        g_ctrl_enter_callback(txt, ctx->lb);
     }
 }
 
-void HandleDeleteLine(void) {
-    if (WH_TO_HWND(g_ActiveEditControl) != NULL) {
-        UI_SetText(g_ActiveEditControl,"");
-        printf("[VIM] Deleted Entire Search Box \n");
-    }
+void HandleDeleteCharInsert(VimContext* ctx) {
+    DeleteCharUnderCursor(ctx);
+    HandleEnterInsertIn(ctx); 
 }
 
-void HandleDeleteLineInsert(void) {
-    if (WH_TO_HWND(g_ActiveEditControl) != NULL) {
-        UI_SetText(g_ActiveEditControl,"");
-        SetMode(MODE_INSERT);
-        printf("[VIM] Deleted Entire Search Box & Switched to Insert\n");
-    }
+void HandleDeleteCharNormal(VimContext* ctx) {
+    if (!ctx) return;
+    DeleteCharUnderCursor(ctx);
+    printf("[VIM] Deleted character under cursor\n");
 }
 
-void HandleMoveListboxStart(void) {
-    GoToFirstListBoxItem();
-}
-void HandleMoveListboxEnd(void) {
-    GoToLastListBoxItem();
-}
-void HandleMoveLineEnd(void) {
-  SetCursorToEndOfText();
-}
-void HandleMoveLineStart(void) {
-  SetCursorToStartOfText();
+void HandleDeleteLine(VimContext* ctx) {
+    if (!ctx) return;
+    VimCtx_SetText(ctx, "");
+    printf("[VIM] Deleted Entire Search Box \n");
 }
 
-void HandleEnterInsertInStart(void) {
-  SetCursorToStartOfText();
-  HandleEnterInsertIn();
+void HandleDeleteLineInsert(VimContext* ctx) {
+    if (!ctx) return;
+    VimCtx_SetText(ctx, "");
+    SetMode(MODE_INSERT);
+    printf("[VIM] Deleted Entire Search Box & Switched to Insert\n");
 }
 
-void HandleEnterInsertOutEnd(void) {
-  SetCursorToEndOfText();
-  HandleEnterInsertOut();
+void HandleMoveListboxStart(VimContext* ctx) {
+    GoToFirstListBoxItem(ctx);
 }
-void HandleExitWindow(void) {
+void HandleMoveListboxEnd(VimContext* ctx) {
+    GoToLastListBoxItem(ctx);
+}
+void HandleMoveLineEnd(VimContext* ctx) {
+  SetCursorToEndOfText(ctx);
+}
+void HandleMoveLineStart(VimContext* ctx) {
+  SetCursorToStartOfText(ctx);
+}
+
+void HandleEnterInsertInStart(VimContext* ctx) {
+  SetCursorToStartOfText(ctx);
+  HandleEnterInsertIn(ctx);
+}
+
+void HandleEnterInsertOutEnd(VimContext* ctx) {
+  SetCursorToEndOfText(ctx);
+  HandleEnterInsertOut(ctx);
+}
+void HandleExitWindow(VimContext* ctx) {
+  (void)ctx;
+#if defined(_WIN32)
   if (WH_TO_HWND(g_hEditPopup) != NULL) {
     UI_Edit_KeyDown(g_ActiveEditControl, VK_ESCAPE);
     UI_Edit_KeyUp(g_ActiveEditControl, VK_ESCAPE);
   } else {
     selection_complete = true;
   }
+#else
+  selection_complete = true;
+#endif
 }
 
-void HandleYankLine(void) {
-    if (WH_TO_HWND(g_ActiveEditControl) != NULL) {
-        char textBuffer[256] = {0};
-        char buffer[256];
-        UI_GetCurrentText(g_ActiveEditControl,textBuffer);
-        
-        textBuffer[strcspn(textBuffer, "\r\n")] = '\0';
-        
-        if (strlen(textBuffer) > 0) {
-            Platform_CopyToClipboard(textBuffer);
-        } else {
-            printf("[VIM] Yank failed: Search box is currently empty.\n");
-        }
+void HandleYankLine(VimContext* ctx) {
+    if (!ctx) return;
+    char textBuffer[512] = {0};
+    VimCtx_GetText(ctx, textBuffer, sizeof(textBuffer));
+    textBuffer[strcspn(textBuffer, "\r\n")] = '\0';
+    if (strlen(textBuffer) > 0) {
+        Platform_CopyToClipboard(textBuffer);
+    } else {
+        printf("[VIM] Yank failed: Search box is currently empty.\n");
     }
 }
 
-void HandleInsertControlEnter(void) {
-  ListBoxInfo* lb = GetActiveListBoxForMotions();
+void HandleInsertControlEnter(VimContext* ctx) {
+  if (!ctx || !ctx->lb) return;
   char text[256];
-  if (UI_IsListBoxSelected(lb) && lb) {
-    snprintf(text,sizeof(text),"%s",lb->populated_cache[lb->selected_index]);
+  if (UI_IsListBoxSelected(ctx->lb) && ctx->lb) {
+    snprintf(text,sizeof(text),"%s",ctx->lb->populated_cache[ctx->lb->selected_index]);
   } else {
-    UI_GetCurrentText(g_ActiveEditControl,text);
+    VimCtx_GetText(ctx, text, sizeof(text));
   }
   printf("TRYING TO DO CTRL ENTER WITH TEXT %s \n",text);
   if (g_ctrl_enter_callback != NULL) {
-    g_ctrl_enter_callback(text, lb);
+    g_ctrl_enter_callback(text, ctx->lb);
   }
   selection_complete = false;
 }
 
-void HandleMoveWordForward(void) {
-    char text[256];
-      
-    UI_GetCurrentText(g_ActiveEditControl,text);
-    
-    uint32_t start = 0;
-    uint32_t end = 0;
-
-    UI_GetCurrentCursorPosition(&start, &end);
+void HandleMoveWordForward(VimContext* ctx) {
+    if (!ctx) return;
+    char text[512];
+    VimCtx_GetText(ctx, text, sizeof(text));
+    int start = VimCtx_GetCursor(ctx);
     int len = strlen(text);
-
     for (int i = start + 1;i <= len;i++) {
         if (i == len) {
-          UI_SetCursorPosition(g_ActiveEditControl,len - 1);
+          VimCtx_SetCursor(ctx, len - 1);
           break;
         }
         if (text[i] == ' ') {
-          UI_SetCursorPosition(g_ActiveEditControl,i + 1);
+          VimCtx_SetCursor(ctx, i + 1);
           break;
         }
     }
 }
 
-void HandleMoveWordBackward(void) {
+void HandleMoveWordBackward(VimContext* ctx) {
+    if (!ctx) return;
     char text[512];
-    UI_GetCurrentText(g_ActiveEditControl, text);
-    
-    uint32_t start = 0;
-    uint32_t end = 0;
-    UI_GetCurrentCursorPosition(&start, &end);
-    
-    int pos = (int)start;
-
+    VimCtx_GetText(ctx, text, sizeof(text));
+    int pos = VimCtx_GetCursor(ctx);
     for (int i = pos - 1; i >= -1; i--) {
       char current_char = (i >= 0) ? text[i] : ' ';
       if (current_char != ' ') {
@@ -233,182 +202,191 @@ void HandleMoveWordBackward(void) {
       } else {
         for (int j = i - 1; j >= -1; j--) {
           char next_char = (j >= 0) ? text[j] : ' ';
-
           if (next_char != ' ') {
-            UI_SetCursorPosition(g_ActiveEditControl, j + 1);
+            VimCtx_SetCursor(ctx, j + 1);
             return; 
           } else {
             continue;
           }
         }
-        
-        UI_SetCursorPosition(g_ActiveEditControl, 0);
+        VimCtx_SetCursor(ctx, 0);
         return;
       }
     }
 }
-void HandleDeleteSingleQuotesInsert(void) {
-    DeleteInsideDelimiter('\'', '\'', true);
+void HandleDeleteSingleQuotesInsert(VimContext* ctx) {
+    DeleteInsideDelimiter(ctx, '\'', '\'', true);
 }
-void HandleDeleteSingleQuotesNormal(void) {
-    DeleteInsideDelimiter('\'', '\'', false);
-}
-
-void HandleDeleteQuotesInsert(void) {
-    DeleteInsideDelimiter('\"', '\"', true);
-}
-void HandleDeleteQuotesNormal(void) {
-    DeleteInsideDelimiter('\"', '\"', false);
+void HandleDeleteSingleQuotesNormal(VimContext* ctx) {
+    DeleteInsideDelimiter(ctx, '\'', '\'', false);
 }
 
-void HandleDeleteBracketsInsert(void) {
-    DeleteInsideDelimiter('(', ')', true);
+void HandleDeleteQuotesInsert(VimContext* ctx) {
+    DeleteInsideDelimiter(ctx, '\"', '\"', true);
 }
-void HandleDeleteBracketsNormal(void) {
-    DeleteInsideDelimiter('(', ')', false);
-}
-
-void HandleDeleteCurlyBracketsInsert(void) {
-    DeleteInsideDelimiter('{', '}', true);
-}
-void HandleDeleteCurlyBracketsNormal(void) {
-    DeleteInsideDelimiter('{', '}', false);
+void HandleDeleteQuotesNormal(VimContext* ctx) {
+    DeleteInsideDelimiter(ctx, '\"', '\"', false);
 }
 
-void HandleDeleteSquareBracketsInsert(void) {
-    DeleteInsideDelimiter('[', ']', true);
+void HandleDeleteBracketsInsert(VimContext* ctx) {
+    DeleteInsideDelimiter(ctx, '(', ')', true);
 }
-void HandleDeleteSquareBracketsNormal(void) {
-    DeleteInsideDelimiter('[', ']', false);
-}
-void HandleDeleteWordInsert(void) {
-    DeleteInnerWord(true);   
+void HandleDeleteBracketsNormal(VimContext* ctx) {
+    DeleteInsideDelimiter(ctx, '(', ')', false);
 }
 
-void HandleDeleteWordNormal(void) {
-    DeleteInnerWord(false); 
+void HandleDeleteCurlyBracketsInsert(VimContext* ctx) {
+    DeleteInsideDelimiter(ctx, '{', '}', true);
 }
-void HandleSendEdit(void) {
+void HandleDeleteCurlyBracketsNormal(VimContext* ctx) {
+    DeleteInsideDelimiter(ctx, '{', '}', false);
+}
+
+void HandleDeleteSquareBracketsInsert(VimContext* ctx) {
+    DeleteInsideDelimiter(ctx, '[', ']', true);
+}
+void HandleDeleteSquareBracketsNormal(VimContext* ctx) {
+    DeleteInsideDelimiter(ctx, '[', ']', false);
+}
+void HandleDeleteWordInsert(VimContext* ctx) {
+    DeleteInnerWord(ctx, true);   
+}
+
+void HandleDeleteWordNormal(VimContext* ctx) {
+    DeleteInnerWord(ctx, false); 
+}
+void HandleSendEdit(VimContext* ctx) {
+    (void)ctx;
+#if defined(_WIN32)
     UI_Edit_KeyDown(g_ActiveEditControl,EDIT_TEXT_KEY);
     UI_Edit_KeyUp(g_ActiveEditControl, EDIT_TEXT_KEY);
+#else
+    if (g_edit_callback && ctx && ctx->lb && UI_IsListBoxSelected(ctx->lb)) {
+        const char* sel = ctx->lb->populated_cache[ctx->lb->selected_index];
+        g_edit_callback(sel, ctx->lb);
+    }
+#endif
 }
 
-void HandleSendCopyShift(void) {
+void HandleSendCopyShift(VimContext* ctx) {
+#if defined(_WIN32)
+    (void)ctx;
     UI_Edit_KeyUp(g_ActiveEditControl,VK_SHIFT);
     UI_Edit_KeyDown(g_ActiveEditControl,COPY_SELECTION_KEY);
     UI_Edit_KeyUp(g_ActiveEditControl, COPY_SELECTION_KEY);
     UI_Edit_KeyDown(g_ActiveEditControl,VK_SHIFT);
+#else
+    if (!ctx || !ctx->lb) return;
+    const char* sel = UI_IsListBoxSelected(ctx->lb) ? ctx->lb->populated_cache[ctx->lb->selected_index] : "";
+    if (g_copy_callback) g_copy_callback(sel, ctx->lb->selected_index, 0);
+    else Platform_CopyToClipboard(sel);
+#endif
 }
-void HandleSendCopyControl(void) {
+void HandleSendCopyControl(VimContext* ctx) {
+#if defined(_WIN32)
+    (void)ctx;
     UI_Edit_KeyUp(g_ActiveEditControl,VK_CONTROL);
     UI_Edit_KeyDown(g_ActiveEditControl,COPY_SELECTION_KEY);
     UI_Edit_KeyUp(g_ActiveEditControl, COPY_SELECTION_KEY);
     UI_Edit_KeyDown(g_ActiveEditControl,VK_CONTROL);
+#else
+    if (!ctx || !ctx->lb) return;
+    const char* sel = UI_IsListBoxSelected(ctx->lb) ? ctx->lb->populated_cache[ctx->lb->selected_index] : "";
+    if (g_copy_callback) g_copy_callback(sel, ctx->lb->selected_index, 1);
+    else Platform_CopyToClipboard(sel);
+#endif
 }
-void HandleCopyToSearch(void) {
-  ListBoxInfo* lb = GetActiveListBoxForMotions();
-  if (UI_IsListBoxSelected(lb) && lb) {
-    char* text = lb->populated_cache[lb->selected_index];
-    UI_SetText(g_ActiveEditControl,text);
-    UI_SetCursorPosition(g_ActiveEditControl,strlen(text));
+void HandleCopyToSearch(VimContext* ctx) {
+  if (!ctx) return;
+  if (ctx->lb && UI_IsListBoxSelected(ctx->lb)) {
+    const char* text = ctx->lb->populated_cache[ctx->lb->selected_index];
+    VimCtx_SetText(ctx, text);
+    VimCtx_SetCursor(ctx, (int)strlen(text));
   }
 }
-void HandleToggleHistory(void) {
-  ListBoxInfo* lb = GetActiveListBoxForMotions();
-  if (UI_IsListBoxSelected(lb) && lb) {
-    UI_SetSelection(lb, hListBox, -1);
+void HandleToggleHistory(VimContext* ctx) {
+  if (!ctx || !ctx->lb) return;
+  if (UI_IsListBoxSelected(ctx->lb)) {
+    UI_SetSelection(ctx->lb, ctx->hListBox, -1);
   }
-  GetFromHistory(lb);
+  GetFromHistory(ctx->lb);
 }
 
-void HandleShowFullText(void) {
+void HandleShowFullText(VimContext* ctx) {
   if (FullTextNeedsKeyPress) {
-      ListBoxInfo* lb = GetActiveListBoxForMotions();
-      if (UI_IsListBoxSelected(lb) && lb) {
-        SubjectiveMessageDisplay(lb->populated_cache[lb->selected_index], 140, 6969, COLOR_OF_SELECTION_LB(lb));
+      if (ctx && ctx->lb && UI_IsListBoxSelected(ctx->lb)) {
+        SubjectiveMessageDisplay(ctx->lb->populated_cache[ctx->lb->selected_index], 140, 6969, COLOR_OF_SELECTION_LB(ctx->lb));
       }
-      
   }
 }
 
 void SearchTextForward(int key) {
+  VimContext ctx = VimCtx_FromGlobals();
   char text[512];
-  UI_GetCurrentText(g_ActiveEditControl, text);
-  uint32_t start_pos, end_pos;
-  UI_Edit_GetSel(g_ActiveEditControl, &start_pos, &end_pos);
-  int cursor = (int)start_pos;
-
-  for (int i = 0; i < strlen(text);i++) {
-    if (tolower(text[i]) == tolower((char)key)) {
-      if (i <= start_pos ) continue;
-      UI_SetCursorPosition(g_ActiveEditControl,i);
+  VimCtx_GetText(&ctx, text, sizeof(text));
+  int cursor = VimCtx_GetCursor(&ctx);
+  for (int i = 0; i < (int)strlen(text);i++) {
+    if (tolower((unsigned char)text[i]) == tolower((unsigned char)(char)key)) {
+      if (i <= cursor ) continue;
+      VimCtx_SetCursor(&ctx,i);
       return;
     }
   }
 }
 void SearchTextBackward(int key) {
+  VimContext ctx = VimCtx_FromGlobals();
   char text[512];
-  UI_GetCurrentText(g_ActiveEditControl, text);
-  uint32_t start_pos, end_pos;
-  UI_Edit_GetSel(g_ActiveEditControl, &start_pos, &end_pos);
-  int cursor = (int)start_pos;
-
-  for (int i = 0; i < strlen(text);i++) {
-    if (tolower(text[i]) == tolower((char)key)) {
-      if (i >= start_pos ) continue;
-      UI_SetCursorPosition(g_ActiveEditControl,i);
+  VimCtx_GetText(&ctx, text, sizeof(text));
+  int cursor = VimCtx_GetCursor(&ctx);
+  for (int i = 0; i < (int)strlen(text);i++) {
+    if (tolower((unsigned char)text[i]) == tolower((unsigned char)(char)key)) {
+      if (i >= cursor ) continue;
+      VimCtx_SetCursor(&ctx,i);
       return;
     }
   }
 }
 
-void HandleSearchTextForward(void ) {
-  ListBoxInfo* lb = GetActiveListBoxForMotions();
-  if (!UI_IsListBoxSelected(lb)) {
-    Platform_WaitForKeypressAsync(SearchTextForward);
-  }
+void HandleSearchTextForward(VimContext* ctx) {
+  (void)ctx;
+  if (ctx && ctx->lb && UI_IsListBoxSelected(ctx->lb)) return;
+  Platform_WaitForKeypressAsync(SearchTextForward);
 }
 
-void HandleSearchTextBackward(void) {
-  ListBoxInfo* lb = GetActiveListBoxForMotions();
-  if (!UI_IsListBoxSelected(lb)) {
-    Platform_WaitForKeypressAsync(SearchTextBackward);
-  }
+void HandleSearchTextBackward(VimContext* ctx) {
+  (void)ctx;
+  if (ctx && ctx->lb && UI_IsListBoxSelected(ctx->lb)) return;
+  Platform_WaitForKeypressAsync(SearchTextBackward);
 }
-void HandleDeleteTillEnd(void) {
-  ListBoxInfo* lb = GetActiveListBoxForMotions();
-  if (!UI_IsListBoxSelected(lb)) {
-      char text[512];
-      UI_GetCurrentText(g_ActiveEditControl, text);
-      uint32_t start_pos, end_pos;
-      UI_Edit_GetSel(g_ActiveEditControl, &start_pos, &end_pos);
-      int cursor = (int)start_pos;
-      for (int i = cursor; i < strlen(text); ++i){
-          text[i] = '\0';
-      }
-      UI_SetText(g_ActiveEditControl,text);
+void HandleDeleteTillEnd(VimContext* ctx) {
+  if (!ctx) return;
+  if (ctx->lb && UI_IsListBoxSelected(ctx->lb)) return;
+  char text[512];
+  VimCtx_GetText(ctx, text, sizeof(text));
+  int cursor = VimCtx_GetCursor(ctx);
+  for (int i = cursor; i < (int)strlen(text); ++i){
+      text[i] = '\0';
   }
+  VimCtx_SetText(ctx, text);
+  VimCtx_SetCursor(ctx, cursor);
 }
-void HandlePageUp(void) {
-  ListBoxInfo* lb = GetActiveListBoxForMotions();
-  if (!lb) return;
-  int current_sel = lb->selected_index;
+void HandlePageUp(VimContext* ctx) {
+  if (!ctx || !ctx->lb) return;
+  int current_sel = ctx->lb->selected_index;
   int wanted_sel = current_sel - PageUpDownLen;
   if (wanted_sel <= 0) wanted_sel = 0;
-  UI_SetSelection(lb, hListBox, wanted_sel);
-  UI_LB_SetTopIndex(hListBox,wanted_sel);
+  UI_SetSelection(ctx->lb, ctx->hListBox, wanted_sel);
+  UI_LB_SetTopIndex(ctx->hListBox,wanted_sel);
 }
-void HandlePageDown(void) {
-  ListBoxInfo* lb = GetActiveListBoxForMotions();
-  if (!lb) return;
-  int current_sel = lb->selected_index;
+void HandlePageDown(VimContext* ctx) {
+  if (!ctx || !ctx->lb) return;
+  int current_sel = ctx->lb->selected_index;
   int wanted_sel = current_sel + PageUpDownLen;
-  if (wanted_sel >= lb->total_matches) wanted_sel = lb->total_matches;
-  UI_SetSelection(lb, hListBox, wanted_sel - 1);
-  UI_LB_SetTopIndex(hListBox,current_sel);
+  if (wanted_sel >= ctx->lb->total_matches) wanted_sel = ctx->lb->total_matches;
+  UI_SetSelection(ctx->lb, ctx->hListBox, wanted_sel - 1);
+  UI_LB_SetTopIndex(ctx->hListBox,current_sel);
 }
-void HandleNormalEdit(void) {
-  ListBoxInfo* lb = GetActiveListBoxForMotions();
-  if (!lb) return;
-  UI_SetSelection(lb, hListBox, -1);
+void HandleNormalEdit(VimContext* ctx) {
+  if (!ctx || !ctx->lb) return;
+  UI_SetSelection(ctx->lb, ctx->hListBox, -1);
 }

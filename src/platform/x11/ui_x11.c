@@ -30,6 +30,8 @@
 int _xErrHandler(Display *d, XErrorEvent *e);
 
 PromptState* g_currentPromptState = NULL;
+int pending_hotkey_vk = 0;
+int pending_hotkey_mod = 0;
 
 void Platform_WaitForKeypressAsync(KeyCallback callback) {
     (void)callback;
@@ -78,6 +80,12 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
     ListBoxInfo_Init(&state->listbox);
     state->listbox.selected_index = -1;
     g_currentPromptState = state;
+    if (ModePersistsThroughFeatures) {
+        extern EditorMode g_last_mode;
+        SetModeWithListBox(g_last_mode, &state->listbox);
+    } else {
+        SetModeWithListBox(MODE_INSERT, &state->listbox);
+    }
 
     int x = (screen_width - layout_w) / 2;
     int y = (screen_height - layout_h) / 2;
@@ -167,11 +175,31 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
         }
     }
 
+    if (!KeepSelectionAfterClose) {
+        last_index = 0;
+        if (state->has_listbox) state->listbox.selected_index = 0;
+    }
+    g_last_mode = g_current_mode;
     g_currentPromptState = NULL;
     XSync(dpy, False);
     XDestroyWindow(dpy, win);
     XSync(dpy, False);
     /* DO NOT close dpy here - g_font_dpy is shared and kept alive for the app lifetime */
+    // Handle pending feature toggle (AllowOtherFeatureTogglesInFeature)
+    if (pending_hotkey_vk != 0) {
+        int vk = pending_hotkey_vk;
+        int mod = pending_hotkey_mod;
+        pending_hotkey_vk = 0;
+        pending_hotkey_mod = 0;
+        char fgTitle[256] = {0};
+        Linux_GetActiveWindowTitle(fgTitle, sizeof(fgTitle));
+        // This will trigger new prompt if hotkey matches
+        if (ProcessHotkey(G_HOTKEY_BINDINGS, HOTKEY_BINDING_COUNT, vk, mod, fgTitle)) {
+            // New prompt was launched and its result is in output_buffer; return it
+            free(state);
+            return output_buffer;
+        }
+    }
     free(state);
     return output_buffer;
 }

@@ -4,6 +4,10 @@
 #include "platform/platform.h"
 #include "helpers.h"
 #include "core/common_ui.h"
+#include "core/vim_context.h"
+#include "bindings/bindings.h"
+#include "bindings/vim_motions.h"
+#include "bindings/hotkey_definitions.h"
 #include <X11/X.h>
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
@@ -59,6 +63,38 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
     int wParam = Linux_KeysymToWindowsVK(XLookupKeysym(&ev->xkey, 0));
     bool ctrl_pressed = (ev->xkey.state & ControlMask) != 0;
     bool shift_pressed = (ev->xkey.state & ShiftMask) != 0;
+    bool alt_pressed = (ev->xkey.state & Mod1Mask) != 0;
+    // Vim handling via abstraction - caller decides context
+    {
+        int mod = HOTKEY_MOD_NONE;
+        if (ctrl_pressed) mod |= HOTKEY_MOD_CTRL;
+        if (shift_pressed) mod |= HOTKEY_MOD_SHIFT;
+        if (alt_pressed) mod |= HOTKEY_MOD_ALT;
+        MotionAction act; const char* seq; int typed;
+        if (CheckVimMotion(wParam, mod, &act, &seq, &typed)) {
+            ExecuteMotion(act, seq, typed);
+            if (g_refresh_callback) g_refresh_callback(state->filter, hListBox, state->has_listbox ? &state->listbox : NULL);
+            return true;
+        }
+    }
+    // Feature toggle while popup is open (AllowOtherFeatureTogglesInFeature)
+    if (AllowOtherFeatureTogglesInFeature && alt_pressed) {
+        int mod = HOTKEY_MOD_NONE;
+        if (ctrl_pressed) mod |= HOTKEY_MOD_CTRL;
+        if (shift_pressed) mod |= HOTKEY_MOD_SHIFT;
+        if (alt_pressed) mod |= HOTKEY_MOD_ALT;
+        for (int i=0;i<HOTKEY_BINDING_COUNT;i++) {
+            const HotkeyBinding* b = &G_HOTKEY_BINDINGS[i];
+            if (b->vk_code == wParam && b->modifiers == mod) {
+                extern int pending_hotkey_vk;
+                extern int pending_hotkey_mod;
+                pending_hotkey_vk = wParam;
+                pending_hotkey_mod = mod;
+                selection_complete = true;
+                return true;
+            }
+        }
+    }
     if (wParam == VK_BACK) {
         size_t n = strlen(state->filter);
         if (state->cursor > 0) {
@@ -79,10 +115,12 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
       }
     }
     if (wParam == VK_RIGHT) {
+      if (state->has_listbox && state->listbox.selected_index != -1) return true;
       CursorForward(&state->cursor, strlen(state->filter));
       return true;
     }
     if (wParam == VK_LEFT) {
+       if (state->has_listbox && state->listbox.selected_index != -1) return true;
        CursorBack(&state->cursor, strlen(state->filter));
       return true;
     }
@@ -94,16 +132,56 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
       if (state->has_listbox) UI_NavigateDown(&state->listbox, hListBox);
       return true;
     }
+    if (wParam == VK_TAB) {
+      if (g_tab_callback) g_tab_callback(&state->listbox);
+      return true;
+    }
     if (wParam == VK_RETURN) {
+      bool is_ctrl = ctrl_pressed;
+      const char* sel = NULL;
+      char filter_copy[sizeof(state->filter)];
       if (state->has_listbox && UI_IsListBoxSelected(&state->listbox)) {
-        const char* sel = state->listbox.populated_cache[state->listbox.selected_index];
+        sel = state->listbox.populated_cache[state->listbox.selected_index];
+      } else {
+        strncpy(filter_copy, state->filter, sizeof(filter_copy)-1);
+        filter_copy[sizeof(filter_copy)-1]='\0';
+        sel = filter_copy;
+      }
+      if (is_ctrl) {
+        if (g_ctrl_enter_callback) g_ctrl_enter_callback(sel, &state->listbox);
+        else if (g_enter_callback) g_enter_callback(sel, &state->listbox);
+        return true;
+      } else {
         if (g_enter_callback) g_enter_callback(sel, &state->listbox);
         selection_complete = true;
-      } else {
-        if (g_enter_callback) g_enter_callback(state->filter, state->has_listbox ? &state->listbox : NULL);
-        selection_complete = true;
+        return true;
       }
-      return true;
+    }
+    if (wParam == EDIT_TEXT_KEY) {
+      bool do_edit = (ctrl_pressed && IsInsertMode()) || IsNormalMode();
+      if (do_edit && g_edit_callback) {
+        const char* sel = "";
+        if (state->has_listbox && UI_IsListBoxSelected(&state->listbox)) sel = state->listbox.populated_cache[state->listbox.selected_index];
+        else sel = state->filter;
+        g_edit_callback(sel, &state->listbox);
+        return true;
+      }
+    }
+    if (wParam == COPY_SELECTION_KEY) {
+      if (shift_pressed || ctrl_pressed) {
+        const char* sel = "";
+        if (state->has_listbox && UI_IsListBoxSelected(&state->listbox)) sel = state->listbox.populated_cache[state->listbox.selected_index];
+        else sel = state->filter;
+        int type = shift_pressed ? 0 : 1;
+        if (g_copy_callback) {
+          int idx = UI_IsListBoxSelected(&state->listbox) ? state->listbox.selected_index : -1;
+          // Lookup true index not needed for X11, just pass
+          g_copy_callback(sel, idx, type);
+        } else {
+          Platform_CopyToClipboard(sel);
+        }
+        return true;
+      }
     }
 
     return false;

@@ -79,7 +79,9 @@ bool ProcessHotkey(const HotkeyBinding* bindings, int bindings_count,
             }
 #else
             if (IsPopupActive(hPopupWnd)) {
-                hPopupWnd = WH_NULL;
+                extern bool selection_complete;
+                selection_complete = true;
+                // Prompt loop will exit and XDestroyWindow will be called; keep g_currentPromptState check happy
             }
 #endif
         } else {
@@ -352,10 +354,8 @@ void WriteToCacheIndex(ListBoxInfo* lb, int index, const char* text) {
 }
 
 int ReadMdFile(char lines[100][512], const char* path) {
-    printf("[DEBUG] Attempting to open file: %s\n", path);
     FILE* f = fopen(path, "r");
     if (!f) {
-        printf("[DEBUG] Error: Failed to open file '%s'\n", path);
         return 0;
     }
     
@@ -363,24 +363,17 @@ int ReadMdFile(char lines[100][512], const char* path) {
     char buffer[512];
     
     while (fgets(buffer, sizeof(buffer), f) && count < 100) {
-        // Strip trailing newlines/carriage returns
         buffer[strcspn(buffer, "\r\n")] = '\0';
         
         if (strlen(buffer) > 0) {
             strncpy(lines[count], buffer, 511);
             lines[count][511] = '\0';
             
-            // Print what was successfully saved
-            printf("[DEBUG] Read line %d: \"%s\"\n", count, lines[count]);
-            
             count++;
-        } else {
-            printf("[DEBUG] Skipped an empty line.\n");
-        }
+        } 
     }
     
     fclose(f);
-    printf("[DEBUG] Finished reading. Total valid lines stored: %d\n", count);
     return count;
 }
 
