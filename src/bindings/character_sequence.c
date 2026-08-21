@@ -101,39 +101,27 @@ bool SequenceTimedOut(void) {
     return g_seq_state.timed_out;
 }
 
-void DeleteLastTypedChar(void) {
+void DeleteLastTypedChar(VimContext* ctx) {
     printf("[VIM-DEBUG] DeleteLastTypedChar: START\n");
-    
-    if (!IsWindowValid(g_ActiveEditControl)) {
-        printf("[VIM-DEBUG] DeleteLastTypedChar: g_ActiveEditControl invalid!\n");
+    if (!ctx) {
+        printf("[VIM-DEBUG] DeleteLastTypedChar: ctx null!\n");
         return;
     }
-    
     char text[512];
-    UI_GetCurrentText(g_ActiveEditControl, text);
+    VimCtx_GetText(ctx, text, sizeof(text));
     int len = (int)strlen(text);
-    
-    uint32_t start, end;
-    UI_GetCurrentCursorPosition(&start, &end);
-    int cursor_pos = (int)start;
-    
+    int cursor_pos = VimCtx_GetCursor(ctx);
     printf("[VIM-DEBUG] DeleteLastTypedChar: text='%s', len=%d, cursor_pos=%d\n", text, len, cursor_pos);
-    
     if (cursor_pos == 0 || len == 0) {
         printf("[VIM-DEBUG] Nothing to delete (cursor at start or empty)\n");
         return;
     }
-    
     int delete_pos = cursor_pos - 1;
     char deleted_char = text[delete_pos];
-    
     printf("[VIM-DEBUG] Deleting character at position %d: '%c'\n", delete_pos, deleted_char);
-    
     memmove(&text[delete_pos], &text[delete_pos + 1], len - delete_pos);
-    UI_SetText(g_ActiveEditControl, text);
-    
-    UI_Edit_SetSel(g_ActiveEditControl, delete_pos, delete_pos);
-    
+    VimCtx_SetText(ctx, text);
+    VimCtx_SetCursor(ctx, delete_pos);
     printf("[VIM-DEBUG] Deleted character '%c', new text='%s', cursor at %d\n", 
            deleted_char, text, delete_pos);
 }

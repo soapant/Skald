@@ -3,6 +3,7 @@
 #define CHARACTER_SEQUENCE_H
 
 #include <stdbool.h>
+#include "core/vim_context.h"
 
 void SequenceAddKey(char key, bool was_typed);
 void SequenceReset(void);
@@ -13,6 +14,6 @@ bool SequenceStartsWith(const char* pattern);
 void SequenceStartTimer(void);
 bool SequenceIsWaiting(void);
 bool SequenceTimedOut(void);
-void DeleteLastTypedChar(void);
 
+void DeleteLastTypedChar(VimContext* ctx);
 #endif
