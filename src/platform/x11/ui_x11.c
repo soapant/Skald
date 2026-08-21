@@ -59,18 +59,19 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
     if (layout_h < height) layout_h = height;
     if (layout_h > width) layout_h = width;
 
-    PromptState state = {0};
-    state.items = (char**)window_list;
-    state.item_count = count;
-    state.cursor = 0;
-    state.width = layout_w;
-    state.height = layout_h;
-    state.window_title = (char*)(window_title + 5);
-    state.filter[0] = '\0';
-    state.has_listbox = (count >= 0);
-    ListBoxInfo_Init(&state.listbox);
-    state.listbox.selected_index = -1;
-    g_currentPromptState = &state;
+    PromptState* state = (PromptState*)calloc(1, sizeof(PromptState));
+    if (!state) { XCloseDisplay(dpy); return NULL; }
+    state->items = (char**)window_list;
+    state->item_count = count;
+    state->cursor = 0;
+    state->width = layout_w;
+    state->height = layout_h;
+    state->window_title = (char*)(window_title + 5);
+    state->filter[0] = '\0';
+    state->has_listbox = (count >= 0);
+    ListBoxInfo_Init(&state->listbox);
+    state->listbox.selected_index = -1;
+    g_currentPromptState = state;
 
     int x = (screen_width - layout_w) / 2;
     int y = (screen_height - layout_h) / 2;
@@ -124,28 +125,28 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
     g_title = window_title;
     g_current_feature = (char*)window_title + 5;
     SetCurrentFeatureName(g_current_feature);
-    if (g_refresh_callback) g_refresh_callback(state.filter, hListBox, state.has_listbox ? &state.listbox : NULL);
+    if (g_refresh_callback) g_refresh_callback(state->filter, hListBox, state->has_listbox ? &state->listbox : NULL);
 
     XEvent ev;
     int running = 1;
     while (running) {
         XNextEvent(dpy, &ev);
         if (ev.type == KeyPress) {
-            if (!Linux_HandlePromptKey(&ev,&state) && (!state.has_listbox || state.listbox.selected_index == -1)) {
+            if (!Linux_HandlePromptKey(&ev,state) && (!state->has_listbox || state->listbox.selected_index == -1)) {
               char buf[32];
               KeySym ks;
               int len = XLookupString(&ev.xkey, buf, sizeof(buf), &ks, NULL);
               if (len > 0) {
-                  size_t n = strlen(state.filter);
-                  if (n + len < sizeof(state.filter) - 1) {
-                      memcpy(state.filter + n, buf, len);
-                      state.filter[n + len] = '\0';
+                  size_t n = strlen(state->filter);
+                  if (n + len < sizeof(state->filter) - 1) {
+                      memcpy(state->filter + n, buf, len);
+                      state->filter[n + len] = '\0';
                   }
               }
-              state.cursor += 1;
+              state->cursor += 1;
             }
         }
-        Linux_RenderPromptUser(dpy,&win, &state);
+        Linux_RenderPromptUser(dpy,&win, state);
         if (selection_complete) {
             running = 0;
         }
@@ -154,6 +155,7 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
     g_currentPromptState = NULL;
     XDestroyWindow(dpy, win);
     XCloseDisplay(dpy);
+    free(state);
     return output_buffer;
 }
 
@@ -211,7 +213,7 @@ char* Platform_SimplePromptUser(const char* prompt, const char* window_title,int
     while (running) {
         XNextEvent(dpy, &ev);
         if (ev.type == KeyPress) {
-            // Linux_HandlePromptKey(&ev,&state);
+            // Linux_HandlePromptKey(&ev,state);
             if (selection_complete) {
                 running = 0;
             }
