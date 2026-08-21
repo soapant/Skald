@@ -45,6 +45,8 @@ static void RebuildReminderCache(void) {
         g_cached_reminder_count = 0;
     }
     
+
+    
     if (!ReminderHistoryFile || ReminderHistoryFile->fileSize == 0) {
         return;
     }

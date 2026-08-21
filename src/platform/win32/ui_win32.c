@@ -33,7 +33,10 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
     EditCallback edit_callback,
     FilterCallback filter_callback,
     HelpCallback help_callback) {
-  TimerEnd(g_timer,window_title + 5);
+  {
+    const char* p = strchr(window_title, ' ');
+    TimerEnd(g_timer, p ? p+1 : window_title);
+  }
   HINSTANCE hInstance = GetModuleHandle(NULL);
   selection_complete = false;
   output_buffer[0] = '\0';
@@ -71,7 +74,10 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
   g_filter_callback = filter_callback;
   g_help_callback = help_callback;
   g_title = window_title;
-  g_current_feature = (char*)window_title + 5;
+  {
+    const char* p = strchr(window_title, ' ');
+    g_current_feature = (char*)(p ? p+1 : window_title);
+  }
   SetCurrentFeatureName(g_current_feature);
   BuildAliasDisplayItems(window_list, count);
 
@@ -198,7 +204,10 @@ char* Platform_SimplePromptUser(const char* prompt, const char* window_title,int
   selection_complete = false;
   output_buffer[0] = '\0';
   g_title = window_title;
-  g_current_feature = (char*)window_title + 4;
+  {
+    const char* p = strchr(window_title, ' ');
+    g_current_feature = (char*)(p ? p+1 : window_title);
+  }
   SetCurrentFeatureName(g_current_feature);
 
   SetMode(MODE_INSERT);
