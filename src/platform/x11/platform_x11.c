@@ -840,7 +840,6 @@ void Platform_ModifyUniversalTimer(double seconds_to_add) {
 }
 
 double Platform_GetUniversalTimeSeconds(void) {
-    fprintf(stderr, "[PLATFORM] Platform_GetUniversalTimeSeconds not implemented yet\n");
     return 0.0;
 }
 

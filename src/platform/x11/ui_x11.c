@@ -1,4 +1,5 @@
 #include "common.h"
+#include "config.h"
 #include "core/modal.h"
 #include "platform/platform.h"
 #include "core/types.h"
@@ -166,8 +167,6 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
                   }
               }
             }
-        } else if (ev.type == Expose) {
-            // drain expose
         }
         Linux_RenderPromptUser(dpy,&win, state);
         if (selection_complete) {
@@ -184,22 +183,6 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
     XSync(dpy, False);
     XDestroyWindow(dpy, win);
     XSync(dpy, False);
-    /* DO NOT close dpy here - g_font_dpy is shared and kept alive for the app lifetime */
-    // Handle pending feature toggle (AllowOtherFeatureTogglesInFeature)
-    if (pending_hotkey_vk != 0) {
-        int vk = pending_hotkey_vk;
-        int mod = pending_hotkey_mod;
-        pending_hotkey_vk = 0;
-        pending_hotkey_mod = 0;
-        char fgTitle[256] = {0};
-        Linux_GetActiveWindowTitle(fgTitle, sizeof(fgTitle));
-        // This will trigger new prompt if hotkey matches
-        if (ProcessHotkey(G_HOTKEY_BINDINGS, HOTKEY_BINDING_COUNT, vk, mod, fgTitle)) {
-            // New prompt was launched and its result is in output_buffer; return it
-            free(state);
-            return output_buffer;
-        }
-    }
     free(state);
     return output_buffer;
 }
@@ -258,7 +241,6 @@ char* Platform_SimplePromptUser(const char* prompt, const char* window_title,int
     while (running) {
         XNextEvent(dpy, &ev);
         if (ev.type == KeyPress) {
-            // Linux_HandlePromptKey(&ev,state);
             if (selection_complete) {
                 running = 0;
             }
@@ -269,7 +251,6 @@ char* Platform_SimplePromptUser(const char* prompt, const char* window_title,int
     XDestroyWindow(dpy, win);
     XCloseDisplay(dpy);
     return output_buffer;
-    return NULL;
 }
 
 
@@ -335,12 +316,19 @@ void Platform_DisplayMessage(const char* message, int centerX, int centerY, int 
     int textW = 0, textH = 0;
     Platform_GetTextExtents(font, message, maxWidth - 30, &textW, &textH);
 
-    int winWidth = maxWidth;
+    int text_len = strlen(message);
+    int internalWrappedMaxWidth = (FontSize * text_len) * 1.5;
+
+    int winWidth = internalWrappedMaxWidth;
+    if (winWidth > maxWidth) winWidth = maxWidth;
+    
+    if (textW + 40 > winWidth) winWidth = textW + 40;
+
     int winHeight = maxHeight;
     if (textH + 20 > winHeight) winHeight = textH + 20;
 
     unsigned long bg_color = rgb_to_hex(COLOR_BG);
-    unsigned long text_color = rgb_to_hex(COLOR_TEXT);
+    unsigned long text_color = rgb_to_hex(DisplayMessageText);
     int topLeftX = centerX - (winWidth / 2);
     int topLeftY = centerY - (winHeight / 2);
 
@@ -398,7 +386,7 @@ void Platform_DisplayMessage(const char* message, int centerX, int centerY, int 
 
     int startY = (winHeight - textH) / 2;
 
-    draw_wrapped_text(dpy, xd, &color, font, message,startY,"CENTER",0);
+    draw_wrapped_text(dpy, xd,&color, font, message,startY,"CENTER",0);
 
     XFlush(dpy);
 
@@ -498,7 +486,6 @@ void HandleGlobalKeyEvent(int key_code, int value) {
     
     
     if (!is_pressed) return;
-    
     
     double seconds = Platform_GetUniversalTimeSeconds();
     if (seconds >= 300) {
