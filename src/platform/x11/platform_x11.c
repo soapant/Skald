@@ -808,7 +808,15 @@ int Platform_CopyToClipboard(const char* text) {
         return 0;
     }
 
-    fprintf(pipe, "%s", text);
+    size_t len = strlen(text);
+    size_t max = 8000;  // Truncate to avoid X11 BadLength error (80KB approx safe limit)
+    if (len > max) {
+        fprintf(stderr, "[PLATFORM] Clipboard truncating %zu -> %zu bytes\n", len, max);
+        // Write first part, then ellipsis marker
+        fprintf(pipe, "%.8000s…", text);
+    } else {
+        fprintf(pipe, "%s", text);
+    }
     
     int status = pclose(pipe);
 
@@ -841,7 +849,7 @@ void Platform_SaveRegionToPNG(int x1, int y1, int x2, int y2, const char* fullPa
     fprintf(stderr, "[PLATFORM] Platform_SaveRegionToPNG not implemented yet\n");
 }
 
-static Display* g_font_dpy = NULL;
+Display* g_font_dpy = NULL;
 static pthread_mutex_t g_font_dpy_mtx = PTHREAD_MUTEX_INITIALIZER;
 
 FontHandle Platform_CreateFontOnDisplay(Display* dpy, int size, const char* face_name) {
@@ -849,19 +857,26 @@ FontHandle Platform_CreateFontOnDisplay(Display* dpy, int size, const char* face
     if (!dpy) return fh;
     int screen = DefaultScreen(dpy);
 
+    // Lock the display so other threads cannot write to the X socket simultaneously
+    XLockDisplay(dpy);
+
     XftFont* xf = XftFontOpen(dpy, screen,
-                              FC_FAMILY, FcTypeString, face_name,
-                              FC_PIXEL_SIZE, FcTypeDouble, (double)size,
-                              NULL);
+                            FC_FAMILY, FcTypeString, face_name,
+                            FC_PIXEL_SIZE, FcTypeDouble, (double)size,
+                            NULL);
     if (!xf) {
         xf = XftFontOpen(dpy, screen,
-                         FC_FAMILY, FcTypeString, "sans",
-                         FC_PIXEL_SIZE, FcTypeDouble, (double)size,
-                         NULL);
+                       FC_FAMILY, FcTypeString, "sans",
+                       FC_PIXEL_SIZE, FcTypeDouble, (double)size,
+                       NULL);
     }
     if (!xf) {
         xf = XftFontOpenName(dpy, screen, "fixed");
     }
+
+    // Always unlock when finished
+    XUnlockDisplay(dpy);
+
     if (!xf) return fh;
 
     fh.xfont = xf;
@@ -869,12 +884,24 @@ FontHandle Platform_CreateFontOnDisplay(Display* dpy, int size, const char* face
     return fh;
 }
 
+pthread_mutex_t g_font_mtx = PTHREAD_MUTEX_INITIALIZER;
+
 FontHandle Platform_CreateFont(int size, const char* face_name) {
+    pthread_mutex_lock(&g_font_mtx); 
+
     pthread_mutex_lock(&g_font_dpy_mtx);
     if (!g_font_dpy) g_font_dpy = XOpenDisplay(NULL);
     pthread_mutex_unlock(&g_font_dpy_mtx);
-    if (!g_font_dpy) return FH_NULL;
-    return Platform_CreateFontOnDisplay(g_font_dpy, size, face_name);
+    
+    if (!g_font_dpy) {
+        pthread_mutex_unlock(&g_font_mtx);
+        return FH_NULL;
+    }
+
+    FontHandle fh = Platform_CreateFontOnDisplay(g_font_dpy, size, face_name);
+
+    pthread_mutex_unlock(&g_font_mtx); // <-- Unlock when done
+    return fh;
 }
 
 void Platform_DestroyFont(FontHandle font) {
