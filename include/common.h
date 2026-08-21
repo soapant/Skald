@@ -54,17 +54,6 @@ extern FilterCallback g_filter_callback;
 extern char* g_current_feature;
 extern const char** g_initial_items;
 extern int g_initial_count;
-extern int g_SelectedIndex;
-extern int g_TotalMatches;
-extern int g_last_match_count;
-extern const char** g_last_items;
-extern int g_last_item_count;
-extern char g_last_filter[256];
-extern char g_populated_cache[MAX_ITEMS][512];
-extern int g_matching_indices[MAX_MATCHES];
-extern char g_populated_cache[MAX_ITEMS][512];
-extern int g_populated_count;
-extern int g_view_offset;
 extern const char* g_title;
 #if defined(_WIN32)
 extern HFONT g_hNumFont;

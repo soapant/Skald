@@ -6,7 +6,7 @@
 #include "features/app_launcher.h"
 #include "platform/platform.h"
 
-static void video_refresh_callback(const char* filter, WindowHandle hListBox) {
+static void video_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
     ClearFileList();
     GetFilesRecursive(VideosPath, false);
     
@@ -15,11 +15,11 @@ static void video_refresh_callback(const char* filter, WindowHandle hListBox) {
     for (int i = 0; i < GetFileCount(); i++) {
         items[i] = G_FILES_WITH_TIME[i].name;
     }
-    PopulateListBox(hListBox, filter, items, GetFileCount(), NULL);
+    PopulateListBox(lb, hListBox, filter, items, GetFileCount(), NULL);
     free(items);
 }
 
-static void video_enter_callback(const char* selection) {
+static void video_enter_callback(const char* selection, ListBoxInfo* lb) {
     char* result = SearchFileRecursive(VideosPath, selection);
     
     if (!result) return;

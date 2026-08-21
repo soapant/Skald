@@ -9,25 +9,27 @@ static struct {
     uint32_t timer_id;
     WindowHandle hEditControl;
     WindowHandle hListBox;
+    ListBoxInfo* lb;
     bool close_popup;
-} g_num_shortcut_state = {0, 0, 0, WH_NULL, WH_NULL, true};
+} g_num_shortcut_state = {0, 0, 0, WH_NULL, WH_NULL, NULL, true};
 
 static void ExecuteNumberShortcut(int number, bool close_popup) {
     if (WH_TO_HWND(g_num_shortcut_state.hListBox) == NULL) return;
+    if (!g_num_shortcut_state.lb) return;
 
     int index = number - 1;
-    int count = UI_GetCount(g_num_shortcut_state.hListBox);
+    int count = UI_GetCount(g_num_shortcut_state.lb, g_num_shortcut_state.hListBox);
 
     if (index >= 0 && index < count) {
-        UI_SetSelection(g_num_shortcut_state.hListBox, index, g_SelectedIndex);
+        UI_SetSelection(g_num_shortcut_state.lb, g_num_shortcut_state.hListBox, index);
 
-        char* selected_text = g_populated_cache[index];
+        const char* selected_text = g_num_shortcut_state.lb->populated_cache[index];
 
         strncpy(output_buffer, selected_text, sizeof(output_buffer) - 1);
         output_buffer[sizeof(output_buffer) - 1] = '\0';
         SaveFeatureHistory(output_buffer);
         if (g_enter_callback != NULL) {
-            g_enter_callback(output_buffer);
+            g_enter_callback(output_buffer, g_num_shortcut_state.lb);
             selection_complete = true;
         }
         printf("[NUM-SHORTCUT] Selected item %d: %s (close=%d)\n",
@@ -56,17 +58,19 @@ static void CALLBACK NumberShortcutTimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEv
 }
 #endif
 
-bool HandleNumberShortcut(int wParam, WindowHandle hListBox, WindowHandle hEditControl) {
+bool HandleNumberShortcut(int wParam, WindowHandle hListBox, WindowHandle hEditControl, ListBoxInfo* lb) {
     if (wParam < '0' || wParam > '9') return false;
     
     if (WH_TO_HWND(hListBox) == NULL) return false;
+    if (!lb) return false;
     
     int digit = wParam - '0';
-    int count = UI_GetCount(hListBox);
+    int count = UI_GetCount(lb, hListBox);
     if (count == 0) return false;
     
     g_num_shortcut_state.hListBox = hListBox;
     g_num_shortcut_state.hEditControl = hEditControl;
+    g_num_shortcut_state.lb = lb;
     
     if (g_num_shortcut_state.state == 0) {
         g_num_shortcut_state.first_digit = digit;
@@ -111,4 +115,5 @@ void ResetNumberShortcutState(void) {
     g_num_shortcut_state.first_digit = 0;
     g_num_shortcut_state.hListBox = WH_NULL;
     g_num_shortcut_state.hEditControl = WH_NULL;
+    g_num_shortcut_state.lb = NULL;
 }

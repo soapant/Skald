@@ -87,14 +87,14 @@ bool IsWindowBlacklisted(const char* window_title, const char* blacklist[], int 
 int UI_LookupTrueIndex(const char* name);
 void SaveFeatureHistory(char* string);
 int ReplaceLineInFile(const char* filepath, int line_index, const char* new_text);
-void WriteToCacheIndex(int index, const char* text);
+void WriteToCacheIndex(ListBoxInfo* lb, int index, const char* text);
 int ReadMdFile(char lines[100][512], const char* path);
 void StripCheckboxes(char* str);
 void WriteMdFile(char lines[100][512], int count, const char* path);
 extern HashMap* history_indices;
-bool GetFromHistory(void);
+bool GetFromHistory(ListBoxInfo* lb);
 int convert_string_to_int(const char *str);
-void HandleCommandExecution(char* string);
+void HandleCommandExecution(ListBoxInfo* lb, char* string);
 const char* get_alias_for_item(const char* item);
 unsigned long rgb_to_hex(unsigned long win_color);
 #if !defined(_WIN32)

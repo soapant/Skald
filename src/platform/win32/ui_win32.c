@@ -8,7 +8,14 @@
 #include "core/feature_data.h"
 #include "window/subclasses.h"
 #include "platform/platform.h"
+#include "bindings/bindings.h"
 #include "bindings/hotkey_definitions.h"
+#include "bindings/macro_bindings.h"
+#include "bindings/character_sequence.h"
+#include "features/focus_switcher.h"
+#include "features/music_player.h"
+#include "features/video_player.h"
+#include "features/process_killer.h"
 #include <gdiplus.h>
 
 void Platform_WaitForKeypressAsync(KeyCallback callback) {
@@ -33,6 +40,10 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
   g_initial_items = window_list;
   g_initial_count = count;
   WinTimer timer = TimerStart();
+
+  ListBoxInfo lb;
+  ListBoxInfo_Init(&lb);
+  bool has_listbox = (count >= 0);
 
   if (g_item_index_map) {
     HashMap_Destroy(g_item_index_map);
@@ -61,9 +72,9 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
   BuildAliasDisplayItems(window_list, count);
 
   if (ModePersistsThroughFeatures) {
-    SetMode(g_last_mode);
+    SetModeWithListBox(g_last_mode, has_listbox ? &lb : NULL);
   } else {
-    SetMode(MODE_INSERT);
+    SetModeWithListBox(MODE_INSERT, has_listbox ? &lb : NULL);
   }
 
   WindowLayout layout;
@@ -81,13 +92,14 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
     DeleteObject(hCustomFont);
     return NULL;
   }
+  SetWindowLongPtrA(WH_TO_HWND(hPopupWnd), GWLP_USERDATA, (LONG_PTR)(has_listbox ? &lb : NULL));
 
   TimerEnd(timer,"Window Init");
 
   WinTimer timer1 = TimerStart();
 
 
-  CreateChildControls(hPopupWnd, hCustomFont, window_list, count, &layout);
+  CreateChildControls(hPopupWnd, hCustomFont, window_list, count, &layout, has_listbox ? &lb : NULL);
 
   TimerEnd(timer1,"CreateChildControl");
 
@@ -99,7 +111,7 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
 
   WinTimer timer3 = TimerStart();
 
-  if (IsNormalMode() && RememberLastIndex && last_index >= 0) {
+  if (IsNormalMode() && RememberLastIndex && last_index >= 0 && has_listbox) {
     RequestInitialNavigation(last_index);
   }
 
@@ -374,7 +386,12 @@ void Platform_SettingsPopUp() {
 
 char* Platform_EditTextPopup(const char* initial_text, int centerX, int centerY, int maxWidth, int maxHeight) {
   HINSTANCE hInstance = GetModuleHandle(NULL);
-  int index = g_SelectedIndex;
+  ListBoxInfo* active_lb = NULL;
+  int saved_index = -1;
+  if (WH_TO_HWND(hPopupWnd) && IsWindow(WH_TO_HWND(hPopupWnd))) {
+    active_lb = (ListBoxInfo*)GetWindowLongPtrA(WH_TO_HWND(hPopupWnd), GWLP_USERDATA);
+    if (active_lb) saved_index = active_lb->selected_index;
+  }
 
   if (!initial_text) return NULL;
 
@@ -416,35 +433,35 @@ char* Platform_EditTextPopup(const char* initial_text, int centerX, int centerY,
   int topLeftX = centerX - (winWidth / 2);
   int topLeftY = centerY - (winHeight / 2);
 
-  HWND hPopupWnd = CreateWindowExA(
+  HWND hPopupWndLocal = CreateWindowExA(
       WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED | WS_EX_NOACTIVATE,
       "EditPopupClass", NULL, WS_POPUP,
       topLeftX, topLeftY, winWidth, winHeight,
       NULL, NULL, hInstance, pData
       );
 
-  if (hPopupWnd == NULL) {
+  if (hPopupWndLocal == NULL) {
     printf("[ERROR] EditPopup creation failed\n");
     DeleteObject(pData->hFont);
     free(pData);
     return NULL;
   }
 
-  g_hEditPopup = WH_FROM_HWND(hPopupWnd);
+  g_hEditPopup = WH_FROM_HWND(hPopupWndLocal);
   g_EditData = pData;
 
-  SetLayeredWindowAttributes(hPopupWnd, 0, pData->alpha, LWA_ALPHA);
+  SetLayeredWindowAttributes(hPopupWndLocal, 0, pData->alpha, LWA_ALPHA);
 
-  ShowWindow(hPopupWnd, SW_SHOWNOACTIVATE);
-  UpdateWindow(hPopupWnd);
+  ShowWindow(hPopupWndLocal, SW_SHOWNOACTIVATE);
+  UpdateWindow(hPopupWndLocal);
 
   UpdateTextCaret(g_ActiveEditControl);
 
-  SetTimer(hPopupWnd, 999, 50, NULL);
+  SetTimer(hPopupWndLocal, 999, 50, NULL);
 
   MSG msg;
   UI_PreparePopupPump();
-  while (IsWindow(hPopupWnd) && g_EditData && g_EditData->result == NULL) {
+  while (IsWindow(hPopupWndLocal) && g_EditData && g_EditData->result == NULL) {
     if (GetMessage(&msg, NULL, 0, 0)) {
       if (UI_ShouldSkipPopupKey(&msg)) continue;
       TranslateMessage(&msg);
@@ -459,12 +476,12 @@ char* Platform_EditTextPopup(const char* initial_text, int centerX, int centerY,
     result = _strdup(g_EditData->result);
   }
 
-  if (hPopupWnd && IsWindow(hPopupWnd)) {
-    DestroyWindow(hPopupWnd);
+  if (hPopupWndLocal && IsWindow(hPopupWndLocal)) {
+    DestroyWindow(hPopupWndLocal);
   }
   g_hEditPopup = WH_NULL;
   g_EditData = NULL;
-  g_SelectedIndex = index;
+  if (active_lb) active_lb->selected_index = saved_index;
 
 
   return result;
@@ -472,7 +489,12 @@ char* Platform_EditTextPopup(const char* initial_text, int centerX, int centerY,
 
 char* Platform_SearchPopup() {
   HINSTANCE hInstance = GetModuleHandle(NULL);
-  int index = g_SelectedIndex;
+  ListBoxInfo* active_lb = NULL;
+  int saved_index = -1;
+  if (WH_TO_HWND(hPopupWnd) && IsWindow(WH_TO_HWND(hPopupWnd))) {
+    active_lb = (ListBoxInfo*)GetWindowLongPtrA(WH_TO_HWND(hPopupWnd), GWLP_USERDATA);
+    if (active_lb) saved_index = active_lb->selected_index;
+  }
   int winWidth = 280;
   int winHeight = 80;
 
@@ -495,31 +517,31 @@ char* Platform_SearchPopup() {
   int topLeftX = 1270 - (winWidth / 2);
   int topLeftY = 920 - (winHeight / 2);
 
-  HWND hPopupWnd = CreateWindowExA(
+  HWND hPopupWndLocal = CreateWindowExA(
       WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED | WS_EX_NOACTIVATE,
       "SearchPopupClass", NULL, WS_POPUP,
       topLeftX, topLeftY, winWidth, winHeight,
       NULL, NULL, hInstance, NULL
       );
 
-  if (hPopupWnd == NULL) {
+  if (hPopupWndLocal == NULL) {
     printf("[ERROR] Platform_SearchPopup creation failed\n");
     DeleteObject(hFont);
     return NULL;
   }
 
-  SetLayeredWindowAttributes(hPopupWnd, 0, 255, LWA_ALPHA);
+  SetLayeredWindowAttributes(hPopupWndLocal, 0, 255, LWA_ALPHA);
 
-  ShowWindow(hPopupWnd,SW_SHOWNOACTIVATE);
-  UpdateWindow(hPopupWnd);
+  ShowWindow(hPopupWndLocal,SW_SHOWNOACTIVATE);
+  UpdateWindow(hPopupWndLocal);
 
   UpdateTextCaret(g_ActiveEditControl);
 
-  SetTimer(hPopupWnd, 999, 50, NULL);
+  SetTimer(hPopupWndLocal, 999, 50, NULL);
 
   MSG msg;
   UI_PreparePopupPump();
-  while (IsWindow(hPopupWnd)) {
+  while (IsWindow(hPopupWndLocal)) {
     if (GetMessage(&msg, NULL, 0, 0)) {
       if (UI_ShouldSkipPopupKey(&msg)) continue;
       TranslateMessage(&msg);
@@ -531,12 +553,12 @@ char* Platform_SearchPopup() {
 
   char* result = NULL;
 
-  if (hPopupWnd && IsWindow(hPopupWnd)) {
-    DestroyWindow(hPopupWnd);
+  if (hPopupWndLocal && IsWindow(hPopupWndLocal)) {
+    DestroyWindow(hPopupWndLocal);
   }
 
   g_hSearchPopup = WH_NULL;
-  g_SelectedIndex = index;
+  if (active_lb) active_lb->selected_index = saved_index;
 
 
   return result;
@@ -612,7 +634,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
           SetMode(MODE_INSERT);
           char* output = Platform_EditTextPopup("", 960, 540, 1000, 300);
           if (output) {
-            HandleCommandExecution(output);
+            HandleCommandExecution(NULL, output);
           } else {
           }
           return 1;
