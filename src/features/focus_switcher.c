@@ -1,18 +1,89 @@
 #include "common.h"
 #include "features/focus_switcher.h"
 #include "core/common_ui.h"
+
 #if defined(_WIN32)
 #include <psapi.h>
 #include <shlwapi.h>
+#else
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
+#include <X11/Xatom.h>
+#include <string.h>
+#include <strings.h>
+#endif
+
+// Helper: Case-insensitive substring search
+static char* my_strcasestr(const char* haystack, const char* needle) {
+#if defined(_WIN32)
+    return (char*)StrStrIA(haystack, needle);
+#else
+    return (char*)strcasestr(haystack, needle);
+#endif
+}
+
+#if !defined(_WIN32)
+// Helper to get window title string from X11 window
+static bool GetX11WindowPropertyString(Display* dpy, Window w, Atom prop, char* buf, int max_len) {
+    Atom actual_type;
+    int actual_format;
+    unsigned long nitems, bytes_after;
+    unsigned char* prop_data = NULL;
+
+    if (XGetWindowProperty(dpy, w, prop, 0, 1024, False, XA_STRING,
+                           &actual_type, &actual_format, &nitems, &bytes_after, &prop_data) == Success && prop_data) {
+        snprintf(buf, max_len, "%s", (char*)prop_data);
+        XFree(prop_data);
+        return true;
+    }
+    
+    // Fallback for UTF8 strings (_NET_WM_NAME)
+    Atom utf8_string = XInternAtom(dpy, "UTF8_STRING", True);
+    if (utf8_string != None) {
+        if (XGetWindowProperty(dpy, w, prop, 0, 1024, False, utf8_string,
+                               &actual_type, &actual_format, &nitems, &bytes_after, &prop_data) == Success && prop_data) {
+            snprintf(buf, max_len, "%s", (char*)prop_data);
+            XFree(prop_data);
+            return true;
+        }
+    }
+    return false;
+}
+
+// Helper to recursively collect all client windows on Linux
+static void GetX11ClientWindows(Display* dpy, Window w, Window** list, int* count, int* capacity) {
+    Window root, parent;
+    Window* children;
+    unsigned int nchildren;
+
+    if (XQueryTree(dpy, w, &root, &parent, &children, &nchildren) && children) {
+        for (unsigned int i = 0; i < nchildren; i++) {
+            char title[256] = {0};
+            Atom net_wm_name = XInternAtom(dpy, "_NET_WM_NAME", True);
+            if ((net_wm_name != None && GetX11WindowPropertyString(dpy, children[i], net_wm_name, title, sizeof(title))) ||
+                GetX11WindowPropertyString(dpy, children[i], XA_WM_NAME, title, sizeof(title))) {
+                
+                if (*count >= *capacity) {
+                    *capacity *= 2;
+                    *list = realloc(*list, (*capacity) * sizeof(Window));
+                }
+                (*list)[(*count)++] = children[i];
+            }
+            GetX11ClientWindows(dpy, children[i], list, count, capacity);
+        }
+        XFree(children);
+    }
+}
 #endif
 
 void FocusWindow(WindowHandle hwnd) {
 #if defined(_WIN32)
-    if (WH_TO_HWND(hwnd) == NULL || !IsWindow(WH_TO_HWND(hwnd))) return;
+    HWND win = WH_TO_HWND(hwnd);
+    if (win == NULL || !IsWindow(win)) return;
     
     HWND hForegroundWnd = GetForegroundWindow();
     DWORD foregroundThreadID = GetWindowThreadProcessId(hForegroundWnd, NULL);
-    DWORD targetThreadID = GetWindowThreadProcessId(WH_TO_HWND(hwnd), NULL);
+    DWORD targetThreadID = GetWindowThreadProcessId(win, NULL);
     DWORD currentThreadID = GetCurrentThreadId();
 
     if (foregroundThreadID != currentThreadID) {
@@ -22,16 +93,16 @@ void FocusWindow(WindowHandle hwnd) {
         AttachThreadInput(currentThreadID, targetThreadID, TRUE);
     }
 
-    if (IsIconic(WH_TO_HWND(hwnd))) {
-        ShowWindow(WH_TO_HWND(hwnd), SW_RESTORE);
+    if (IsIconic(win)) {
+        ShowWindow(win, SW_RESTORE);
     } else {
-        ShowWindow(WH_TO_HWND(hwnd), SW_SHOW);
+        ShowWindow(win, SW_SHOW);
     }
 
-    SetForegroundWindow(WH_TO_HWND(hwnd));
-    SetFocus(WH_TO_HWND(hwnd));
-    SetActiveWindow(WH_TO_HWND(hwnd));
-    BringWindowToTop(WH_TO_HWND(hwnd));
+    SetForegroundWindow(win);
+    SetFocus(win);
+    SetActiveWindow(win);
+    BringWindowToTop(win);
 
     if (foregroundThreadID != currentThreadID) {
         AttachThreadInput(currentThreadID, foregroundThreadID, FALSE);
@@ -42,7 +113,31 @@ void FocusWindow(WindowHandle hwnd) {
 
     printf("[FOCUS] Window focused!\n");
 #else
-    (void)hwnd;
+    Display* dpy = XOpenDisplay(NULL);
+    if (!dpy) return;
+
+    // Assuming WH_TO_HWND or a similar macro extracts the raw X11 Window ID, 
+    // or you can adjust this extraction based on how your common.h defines WindowHandle.
+    Window w = (Window)WH_TO_HWND(hwnd); 
+    int screen = DefaultScreen(dpy);
+    Window root = RootWindow(dpy, screen);
+
+    XEvent event;
+    memset(&event, 0, sizeof(event));
+    event.type = ClientMessage;
+    event.xclient.window = w;
+    event.xclient.message_type = XInternAtom(dpy, "_NET_ACTIVE_WINDOW", False);
+    event.xclient.format = 32;
+    event.xclient.data.l[0] = 1; 
+    event.xclient.data.l[1] = CurrentTime;
+    event.xclient.data.l[2] = 0;
+
+    XSendEvent(dpy, root, False, SubstructureRedirectMask | SubstructureNotifyMask, &event);
+    XMapRaised(dpy, w);
+    XFlush(dpy);
+    XCloseDisplay(dpy);
+
+    printf("[FOCUS] X11 Window focused!\n");
 #endif
 }
 
@@ -63,41 +158,61 @@ static BOOL CALLBACK FindWindowByPartialTitleProc(HWND hwnd, LPARAM lParam) {
 WindowHandle FindWindowByPartialTitle(const char* title) {
 #if defined(_WIN32)
     FindWindowSomething data;
-    
     data.search_title = title;
-    
     data.result = WH_NULL;
-    
     EnumWindows(FindWindowByPartialTitleProc, (LPARAM)&data);
-    
     return data.result;
 #else
-    (void)title;
-    return WH_NULL;
+    Display* dpy = XOpenDisplay(NULL);
+    if (!dpy) return WH_NULL;
+
+    int screen = DefaultScreen(dpy);
+    Window root = RootWindow(dpy, screen);
+
+    int capacity = 64;
+    int count = 0;
+    Window* windows = malloc(capacity * sizeof(Window));
+    GetX11ClientWindows(dpy, root, &windows, &count, &capacity);
+
+    WindowHandle found = WH_NULL;
+    Atom net_wm_name = XInternAtom(dpy, "_NET_WM_NAME", True);
+
+    for (int i = 0; i < count; i++) {
+        char window_title[256] = {0};
+        if ((net_wm_name == None || !GetX11WindowPropertyString(dpy, windows[i], net_wm_name, window_title, sizeof(window_title)))) {
+            GetX11WindowPropertyString(dpy, windows[i], XA_WM_NAME, window_title, sizeof(window_title));
+        }
+
+        if (strlen(window_title) > 0 && my_strcasestr(window_title, title) != NULL) {
+            found = WH_FROM_HWND(windows[i]);
+            break;
+        }
+    }
+
+    free(windows);
+    XCloseDisplay(dpy);
+    return found;
 #endif
 }
 
-
-
-
-#if defined(_WIN32)
 static WindowHandle FindAnyWindow(const char* titles[], int count) {
+#if defined(_WIN32)
     for (int i = 0; i < count; i++) {
         printf("[FOCUS-DEBUG] Looking for: \"%s\"\n", titles[i]);
         
-        
         WindowHandle hwnd = WH_FROM_HWND(FindWindowA(NULL, titles[i]));
-        if (WH_TO_HWND(hwnd) != NULL && IsWindow(WH_TO_HWND(hwnd)) && IsWindowVisible(WH_TO_HWND(hwnd))) {
-            printf("[FOCUS-DEBUG] FOUND (exact): \"%s\" (HWND: %p)\n", titles[i], (void*)WH_TO_HWND(hwnd));
+        HWND win = WH_TO_HWND(hwnd);
+        if (win != NULL && IsWindow(win) && IsWindowVisible(win)) {
+            printf("[FOCUS-DEBUG] FOUND (exact): \"%s\" (HWND: %p)\n", titles[i], (void*)win);
             return hwnd;
         }
         
-        
         hwnd = FindWindowByPartialTitle(titles[i]);
-        if (WH_TO_HWND(hwnd) != NULL && IsWindow(WH_TO_HWND(hwnd)) && IsWindowVisible(WH_TO_HWND(hwnd))) {
+        win = WH_TO_HWND(hwnd);
+        if (win != NULL && IsWindow(win) && IsWindowVisible(win)) {
             char window_title[256];
-            GetWindowTextA(WH_TO_HWND(hwnd), window_title, sizeof(window_title));
-            printf("[FOCUS-DEBUG] FOUND (partial): \"%s\" (HWND: %p)\n", window_title, (void*)WH_TO_HWND(hwnd));
+            GetWindowTextA(win, window_title, sizeof(window_title));
+            printf("[FOCUS-DEBUG] FOUND (partial): \"%s\" (HWND: %p)\n", window_title, (void*)win);
             return hwnd;
         }
         
@@ -105,33 +220,55 @@ static WindowHandle FindAnyWindow(const char* titles[], int count) {
     }
     printf("[FOCUS-DEBUG] No matching windows found.\n");
     return WH_NULL;
-}
 #else
-static WindowHandle FindAnyWindow(const char* titles[], int count) {
-    (void)titles;
-    (void)count;
-    return WH_NULL;
-}
+    Display* dpy = XOpenDisplay(NULL);
+    if (!dpy) return WH_NULL;
+
+    int screen = DefaultScreen(dpy);
+    Window root = RootWindow(dpy, screen);
+
+    int cap = 64;
+    int win_count = 0;
+    Window* windows = malloc(cap * sizeof(Window));
+    GetX11ClientWindows(dpy, root, &windows, &win_count, &cap);
+
+    Atom net_wm_name = XInternAtom(dpy, "_NET_WM_NAME", True);
+    WindowHandle found = WH_NULL;
+
+    for (int i = 0; i < count; i++) {
+        printf("[FOCUS-DEBUG] Looking for: \"%s\"\n", titles[i]);
+
+        for (int j = 0; j < win_count; j++) {
+            char window_title[256] = {0};
+            if ((net_wm_name == None || !GetX11WindowPropertyString(dpy, windows[j], net_wm_name, window_title, sizeof(window_title)))) {
+                GetX11WindowPropertyString(dpy, windows[j], XA_WM_NAME, window_title, sizeof(window_title));
+            }
+
+            if (strlen(window_title) > 0 && my_strcasestr(window_title, titles[i]) != NULL) {
+                printf("[FOCUS-DEBUG] FOUND: \"%s\" (Window ID: %lu)\n", window_title, windows[j]);
+                found = WH_FROM_HWND(windows[j]);
+                break;
+            }
+        }
+        // Assuming WH_NULL can be compared or checked via a helper macro if it's a struct, 
+        // or check WH_TO_HWND(found) != NULL. Let's use WH_TO_HWND comparison to be safe:
+        if (WH_TO_HWND(found) != NULL) break;
+    }
+
+    free(windows);
+    XCloseDisplay(dpy);
+    return found;
 #endif
-
-
-
+}
 
 static bool IsBlacklisted(const char* title, const char* blacklist[], int count) {
     for (int i = 0; i < count; i++) {
-#if defined(_WIN32)
-        if (StrStrIA(title, blacklist[i]) != NULL) {
-#else
-        if (strstr(title, blacklist[i]) != NULL) {
-#endif
+        if (my_strcasestr(title, blacklist[i]) != NULL) {
             return true;
         }
     }
     return false;
 }
-
-
-
 
 bool HandleFocusSwitcher(int vk_code, int modifiers, const char* current_title) {
     for (int i = 0; i < FOCUS_SWITCHER_COUNT; i++) {
@@ -139,17 +276,15 @@ bool HandleFocusSwitcher(int vk_code, int modifiers, const char* current_title) 
         if (binding->vk_code == vk_code && binding->modifiers == modifiers) {
             if (IsBlacklisted(current_title, binding->blacklist, binding->blacklist_count)) {
                 return false;
+            } else { 
+                WindowHandle target = FindAnyWindow(binding->window_titles, binding->window_count);
+                if (WH_TO_HWND(target) != NULL) {
+                    FocusWindow(target);
+                    return true;
+                } else {
+                    return false;
+                }
             }
-            else { 
-                  WindowHandle target = FindAnyWindow(binding->window_titles, binding->window_count);
-                  if (WH_TO_HWND(target) != NULL) {
-                      FocusWindow(target);
-                      return true;
-                  } else {
-                      return false;
-                  }
-            }
-              
         }
     }
     return false;
