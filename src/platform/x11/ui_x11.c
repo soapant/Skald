@@ -124,10 +124,18 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
     XSetWMHints(dpy, win, wm_hints);
     XFree(wm_hints);
 
-    XSelectInput(dpy, win, KeyPressMask | ExposureMask);
+    XSelectInput(dpy, win, KeyPressMask | ExposureMask | FocusChangeMask);
 
     XMapWindow(dpy, win);
     XFlush(dpy);
+    {
+        extern int _xErrHandler(Display*, XErrorEvent*);
+        XSync(dpy, False);
+        XErrorHandler old = XSetErrorHandler(_xErrHandler);
+        XSetInputFocus(dpy, win, RevertToParent, CurrentTime);
+        XSync(dpy, False);
+        XSetErrorHandler(old);
+    }
 
     g_refresh_callback = refresh_callback;
     g_enter_callback = enter_callback;
@@ -151,6 +159,14 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
     while (running) {
         if (selection_complete) { running = 0; break; }
         XNextEvent(dpy, &ev);
+        if (CloseOnLossOfFocus && ev.type == FocusOut) {
+            if (ev.xfocus.mode == NotifyNormal) {
+                output_buffer[0] = '\0';
+                selection_complete = true;
+                running = 0;
+                break;
+            }
+        }
         if (ev.type == KeyPress) {
             bool handled = Linux_HandlePromptKey(&ev,state);
             if (!handled) {
