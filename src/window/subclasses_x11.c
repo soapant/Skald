@@ -434,7 +434,7 @@ void DrawPromptUserListBox(Display *dpy,Window* win,PromptState *state) {
       XftFont *xf = FH_TO_XFT(font);
 
       int y0 = 100;
-      int itemH = FontSize + 34;
+      int itemH = FontSize + 14;
       {
         Visual *visClear = DefaultVisual(dpy, screen);
         Colormap cmapClear = DefaultColormap(dpy, screen);
