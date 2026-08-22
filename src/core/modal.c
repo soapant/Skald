@@ -38,8 +38,9 @@ void SetModeWithListBox(EditorMode mode, ListBoxInfo* lb) {
 #if defined(_WIN32)
         lb = GetActiveListBoxForModal();
 #else
-        // On Linux, PromptState owns lb; if not provided we skip listbox handling
-        lb = NULL;
+        extern PromptState* g_currentPromptState;
+        if (g_currentPromptState && g_currentPromptState->has_listbox) lb = &g_currentPromptState->listbox;
+        else lb = NULL;
 #endif
     }
 
