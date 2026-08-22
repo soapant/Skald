@@ -74,7 +74,6 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
         MotionAction act; const char* seq; int typed;
         if (CheckVimMotion(wParam, mod, &act, &seq, &typed)) {
             ExecuteMotion(act, seq, typed);
-            if (g_refresh_callback) g_refresh_callback(state->filter, hListBox, state->has_listbox ? &state->listbox : NULL);
             return true;
         }
     }
