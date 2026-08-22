@@ -4,7 +4,15 @@
 #include "core/common_ui.h"
 #include "helpers.h"
 #if !defined(_WIN32)
+#include <string.h>
+#include <strings.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
 #include "x11_display.h"
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
+#include <X11/Xatom.h>
 #endif
 #if defined(_WIN32)
 #include <psapi.h>
@@ -22,7 +30,7 @@ static SavedWindow g_switcher_windows[MAX_SWITCHER_WINDOWS];
 static int g_switcher_count = 0;
 
 // ============================================================
-// EXE CACHE
+// EXE CACHE & WINDOW FETCHING (PLATFORM SPLIT)
 // ============================================================
 
 #if defined(_WIN32)
@@ -77,25 +85,7 @@ const char* GetExeNameForWindow(WindowHandle hwnd) {
         return exe_name;
     }
 
-    Window w = hwnd.xid;
-    if (w == 0) {
-        Atom net_active = XInternAtom(dpy, "_NET_ACTIVE_WINDOW", True);
-        Atom actual_type;
-        int actual_format;
-        unsigned long nitems, bytes_after;
-        unsigned char* prop_data = NULL;
-
-        Window root = DefaultRootWindow(dpy);
-        if (XGetWindowProperty(dpy, root, net_active, 0, 1, False, XA_WINDOW,
-                               &actual_type, &actual_format, &nitems,
-                               &bytes_after, &prop_data) == Success) {
-            if (prop_data && nitems > 0) {
-                w = *((Window*)prop_data);
-            }
-            if (prop_data) XFree(prop_data);
-        }
-    }
-
+    Window w = (Window)WH_TO_HWND(hwnd);
     pid_t pid = GetWindowPid(dpy, w);
     GetExeNameFromPid(pid, exe_name, sizeof(exe_name));
 
@@ -126,7 +116,6 @@ static BOOL CALLBACK EnumWindowsProcEx(HWND hwnd, LPARAM lParam) {
     GetWindowTextA(hwnd, title, sizeof(title));
     const char* exe = GetExeNameForWindow(hwnd);
     
-    // Filter based on mode
     if (ctx->mode == 1) { // By title
         if (strstr(title, ctx->pattern) == NULL) return TRUE;
     } else if (ctx->mode == 2) { // By exe
@@ -147,34 +136,119 @@ static BOOL CALLBACK EnumWindowsProcEx(HWND hwnd, LPARAM lParam) {
 }
 #endif
 
+#if !defined(_WIN32)
+static bool WindowSwitcher_GetWindowTitle(Display* dpy, Window w, char* buf, int max_len) {
+    Atom actual_type;
+    int actual_format;
+    unsigned long nitems, bytes_after;
+    unsigned char* prop_data = NULL;
+
+    Atom net_wm_name = XInternAtom(dpy, "_NET_WM_NAME", True);
+    if (net_wm_name != None && 
+        XGetWindowProperty(dpy, w, net_wm_name, 0, 1024, False, AnyPropertyType,
+                           &actual_type, &actual_format, &nitems, &bytes_after, &prop_data) == Success && prop_data) {
+        snprintf(buf, max_len, "%s", (char*)prop_data);
+        XFree(prop_data);
+        if (strlen(buf) > 0) return true;
+    }
+
+    if (XGetWindowProperty(dpy, w, XA_WM_NAME, 0, 1024, False, AnyPropertyType,
+                           &actual_type, &actual_format, &nitems, &bytes_after, &prop_data) == Success && prop_data) {
+        snprintf(buf, max_len, "%s", (char*)prop_data);
+        XFree(prop_data);
+        if (strlen(buf) > 0) return true;
+    }
+
+    return false;
+}
+
+// X11 Window Collection implementation via _NET_CLIENT_LIST
+static void CollectX11Windows(WindowList* list, const char** blacklist, int blacklistCount) {
+    Display* dpy = get_display();
+    if (!dpy) return;
+
+    Window root = DefaultRootWindow(dpy);
+    Atom net_client_list = XInternAtom(dpy, "_NET_CLIENT_LIST", True);
+
+    Atom actual_type;
+    int actual_format;
+    unsigned long nitems = 0, bytes_after = 0;
+    unsigned char* prop_data = NULL;
+
+    if (net_client_list != None &&
+        XGetWindowProperty(dpy, root, net_client_list, 0, 1024, False, XA_WINDOW,
+                           &actual_type, &actual_format, &nitems, &bytes_after, &prop_data) == Success && prop_data) {
+        
+        Window* windows = (Window*)prop_data;
+        for (unsigned long i = 0; i < nitems && list->count < MAX_WINDOWS; i++) {
+            char title[256] = {0};
+
+            if (WindowSwitcher_GetWindowTitle(dpy, windows[i], title, sizeof(title))) {
+                bool blacklisted = false;
+                for (int b = 0; b < blacklistCount; b++) {
+                    if (strcasestr(title, blacklist[b]) != NULL) {
+                        blacklisted = true;
+                        break;
+                    }
+                }
+
+                if (!blacklisted) {
+                    WindowInfo* info = &list->items[list->count];
+                    info->hwnd = WH_FROM_HWND(windows[i]);
+                    strcpy(info->title, title);
+                    
+                    const char* exe = GetExeNameForWindow(WH_FROM_HWND(windows[i]));
+                    strcpy(info->exe, exe);
+                    
+                    list->count++;
+                }
+            }
+        }
+        XFree(prop_data);
+    }
+}
+#endif
+
 // ============================================================
 // PUBLIC WINDOW FUNCTIONS
 // ============================================================
 
 void WindowUtils_GetAll(WindowList* list) {
-#if defined(_WIN32)
     list->count = 0;
+#if defined(_WIN32)
     EnumContext ctx = { .list = list, .mode = 0 };
     EnumWindows(EnumWindowsProcEx, (LPARAM)&ctx);
 #else
-    list->count = 0;
+    // Check if running under Wayland natively (e.g. Hyprland, Sway)
+    if (getenv("WAYLAND_DISPLAY") != NULL) {
+        // TODO: Implement Wayland/Hyprland IPC client parsing here if needed 
+        // (e.g., parsing output of `hyprctl clients -j`)
+        printf("[SWITCHER] Native Wayland window listing requires compositor IPC (e.g., hyprctl)\n");
+        return;
+    }
+    
+    // Otherwise fallback to X11/XWayland
+    CollectX11Windows(list, NULL, 0);
 #endif
 }
 
 static void WindowUtils_GetFiltered(WindowList* list, const char** blacklist, int blacklistCount) {
-#if defined(_WIN32)
     list->count = 0;
+#if defined(_WIN32)
     EnumContext ctx = { .list = list, .blacklist = blacklist, .blacklistCount = blacklistCount, .mode = 3 };
     EnumWindows(EnumWindowsProcEx, (LPARAM)&ctx);
 #else
-    (void)blacklist;
-    (void)blacklistCount;
-    list->count = 0;
+    if (getenv("WAYLAND_DISPLAY") != NULL) {
+        // Wayland placeholder filter block
+        return;
+    }
+    
+    CollectX11Windows(list, blacklist, blacklistCount);
 #endif
 }
 
 // ============================================================
-// SWITCHER CALLBACKS
+// SWITCHER CALLBACKS & TRIGGERS (Unchanged)
 // ============================================================
 
 static bool switcher_match_helper(const char* item, const char* filter) {
@@ -184,8 +258,8 @@ static bool switcher_match_helper(const char* item, const char* filter) {
             return (StrStrIA(g_switcher_windows[i].title, filter) != NULL ||
                     StrStrIA(g_switcher_windows[i].exe, filter) != NULL);
 #else
-            return (strstr(g_switcher_windows[i].title, filter) != NULL ||
-                    strstr(g_switcher_windows[i].exe, filter) != NULL);
+            return (strcasestr(g_switcher_windows[i].title, filter) != NULL ||
+                    strcasestr(g_switcher_windows[i].exe, filter) != NULL);
 #endif
         }
     }
@@ -194,21 +268,20 @@ static bool switcher_match_helper(const char* item, const char* filter) {
 
 static void switcher_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
     if (!lb) return;
-    
     const char* titles[MAX_SWITCHER_WINDOWS];
     for (int i = 0; i < g_switcher_count && i < MAX_SWITCHER_WINDOWS; i++) {
         titles[i] = g_switcher_windows[i].title;
     }
-    
     PopulateListBox(lb, hListBox, filter, titles, g_switcher_count, switcher_match_helper);
 }
 
 static void switcher_enter_callback(const char* selection, ListBoxInfo* lb) {
+    (void)lb;
     for (int i = 0; i < g_switcher_count; i++) {
 #if defined(_WIN32)
         if (StrStrIA(g_switcher_windows[i].title, selection) != NULL) {
 #else
-        if (strstr(g_switcher_windows[i].title, selection) != NULL) {
+        if (strcasestr(g_switcher_windows[i].title, selection) != NULL) {
 #endif
             if (IsWindowValid(g_switcher_windows[i].hwnd)) {
                 FocusWindow(g_switcher_windows[i].hwnd);
@@ -220,14 +293,11 @@ static void switcher_enter_callback(const char* selection, ListBoxInfo* lb) {
 
 static void switcher_copy_callback(const char* selection, int true_index, int type) {
     (void)selection;
+    (void)type;
     if (true_index >= 0 && true_index < g_switcher_count) {
         Platform_CopyToClipboard(g_switcher_windows[true_index].exe);
     }
 }
-
-// ============================================================
-// TRIGGER
-// ============================================================
 
 void TriggerWindowSwitcher() {
     if (IsPopupActive(hPopupWnd)) return;
@@ -243,7 +313,7 @@ void TriggerWindowSwitcher() {
         strcpy(g_switcher_windows[g_switcher_count].exe, windows.items[i].exe);
         g_switcher_windows[g_switcher_count].index = g_switcher_count;
         g_switcher_count++;
-    }
+            }
     
     if (g_switcher_count == 0) {
         printf("[SWITCHER] No windows found\n");
