@@ -276,25 +276,28 @@ bool Linux_HandleSimplePromptKey(const XEvent* ev,SimplePromptState *state) {
     return false;
 }
 
-void DrawSimplePromptUserEditControl(Display *dpy,Window* win,SimplePromptState *state) {
+void DrawSimplePromptUserEditControl(Display *dpy, Window *win, SimplePromptState *state) {
     int screen = DefaultScreen(dpy);
     XftDraw* xd = XftDrawCreate(dpy, *win, DefaultVisual(dpy, screen), DefaultColormap(dpy, screen));
 
     FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
+    XftFont* xf = FH_TO_XFT(font);
 
-    int textW = 0, textH = 0;
-    Platform_GetTextExtents(font,state->user_input,state->width, &textW, &textH);
+    // Get actual text extents using Xft
+    XGlyphInfo ext;
+    XftTextExtentsUtf8(dpy, xf, (FcChar8*)state->display_message, strlen(state->display_message), &ext);
+    int text_width = ext.xOff;  // Actual pixel width of the text
 
     unsigned long text_color_map = rgb_to_hex(COLOR_TEXT);
     unsigned long bg_color_map = rgb_to_hex(COLOR_BG);
 
     unsigned long vim_text_color_map;
     if (g_current_mode == MODE_NORMAL) {
-      vim_text_color_map = rgb_to_hex(COLOR_NORMAL_MODE_TEXT);
+        vim_text_color_map = rgb_to_hex(COLOR_NORMAL_MODE_TEXT);
     } else if (g_current_mode == MODE_INSERT) {
-      vim_text_color_map = rgb_to_hex(COLOR_INSERT_MODE_TEXT);
+        vim_text_color_map = rgb_to_hex(COLOR_INSERT_MODE_TEXT);
     } else {
-      vim_text_color_map = rgb_to_hex(COLOR_VISUAL_MODE_TEXT);
+        vim_text_color_map = rgb_to_hex(COLOR_VISUAL_MODE_TEXT);
     }
 
     Visual* visual = DefaultVisual(dpy, screen);
@@ -310,7 +313,9 @@ void DrawSimplePromptUserEditControl(Display *dpy,Window* win,SimplePromptState 
     XftColorAllocValue(dpy, visual, cmap, &rc_bg, &bg_color);
 
     XRenderColor rc_text = {
-        ((text_color_map >> 16) & 0xFF) * 0x101, ((text_color_map >> 8) & 0xFF) * 0x101, (text_color_map & 0xFF) * 0x101,
+        ((text_color_map >> 16) & 0xFF) * 0x101,
+        ((text_color_map >> 8) & 0xFF) * 0x101,
+        (text_color_map & 0xFF) * 0x101,
         0xFFFF
     };
     XftColor text_color;
@@ -324,26 +329,34 @@ void DrawSimplePromptUserEditControl(Display *dpy,Window* win,SimplePromptState 
     };
     XftColor vim_text_color;
     XftColorAllocValue(dpy, visual, cmap, &rc_vim_text_color, &vim_text_color);
+
     int centerX = state->width / 2;
     int centerY = state->height / 2;
     int topLeftX = centerX - state->width / 2;                                                  
-    int topLeftY = centerY - state->height / 2; 
-    XftDrawRect(xd, &bg_color, topLeftX, topLeftY, state->width,80);                       
-    draw_wrapped_text(dpy, xd, &text_color, font,state->user_input,40,"LEFT",20);
-    draw_wrapped_text(dpy, xd, &vim_text_color, font,g_vim_mode,0,"LEFT",5);
-    draw_wrapped_text(dpy, xd, &text_color,font,state->window_title,0,"RIGHT",5);
-    draw_wrapped_text(dpy, xd, &text_color, font,state->display_message,70, "CENTER",-300);
+    int topLeftY = centerY - state->height / 2;
+    
+    XftDrawRect(xd, &bg_color, topLeftX, topLeftY, state->width, 80);
+
+    // Draw elements with proper positioning
+    draw_wrapped_text(dpy, xd, &text_color, font, state->user_input, 40, "LEFT", 20);
+    draw_wrapped_text(dpy, xd, &vim_text_color, font, g_vim_mode, 0, "LEFT", 5);
+    draw_wrapped_text(dpy, xd, &text_color, font, state->window_title, 0, "RIGHT", 5);
+    
+    // FIXED: Center the display_message using actual text width
+    int centered_x = (state->width - text_width) / 2;
+    draw_wrapped_text(dpy, xd, &text_color, font, state->display_message, 70, "LEFT", centered_x);
+
+    // Cursor drawing
     if (IsInsertMode()) {
-        XftFont* xf = FH_TO_XFT(font);
-        XGlyphInfo ext;
-        XftTextExtentsUtf8(dpy, xf, (FcChar8*)state->user_input, state->cursor, &ext);
-        XftDrawRect(xd, &text_color,22 + ext.xOff, 47, 2,FontSize);
+        XGlyphInfo cursor_ext;
+        XftTextExtentsUtf8(dpy, xf, (FcChar8*)state->user_input, state->cursor, &cursor_ext);
+        XftDrawRect(xd, &text_color, 22 + cursor_ext.xOff, 47, 2, FontSize);
     } else {
-        XftFont* xf = FH_TO_XFT(font);
-        XGlyphInfo ext;
-        XftTextExtentsUtf8(dpy, xf, (FcChar8*)state->user_input, state->cursor, &ext);
-        XftDrawRect(xd, &text_color,22 + ext.xOff, 47, 12,FontSize);
+        XGlyphInfo cursor_ext;
+        XftTextExtentsUtf8(dpy, xf, (FcChar8*)state->user_input, state->cursor, &cursor_ext);
+        XftDrawRect(xd, &text_color, 22 + cursor_ext.xOff, 47, 12, FontSize);
     }
+
     XftColorFree(dpy, visual, cmap, &bg_color);
     XftColorFree(dpy, visual, cmap, &text_color);
     XftColorFree(dpy, visual, cmap, &vim_text_color);
