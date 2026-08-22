@@ -40,11 +40,10 @@ cleanup:
     if (pEnumerator) pEnumerator->lpVtbl->Release(pEnumerator);
     CoUninitialize();
 
-    return (int)(currentVolume * 100.0f + 0.5f); // Rounding up
+    return (int)(currentVolume * 100.0f + 0.5f);
 }
 
 void SetSystemVolume(float volume) {
-    
     HRESULT hr;
     IMMDeviceEnumerator *pEnumerator = NULL;
     IMMDevice *pDevice = NULL;
@@ -72,16 +71,68 @@ cleanup:
     if (pEnumerator) pEnumerator->lpVtbl->Release(pEnumerator);
     CoUninitialize();
 }
+
 #else
+
 int GetSystemVolume(void) {
+    const char* real_user = getenv("SUDO_USER");
+    if (!real_user) real_user = "diggy";
+
+    const char* display = getenv("DISPLAY");
+    if (!display) display = ":0";
+
+    const char* runtime_dir = getenv("XDG_RUNTIME_DIR");
+    char rt_buf[256];
+    if (!runtime_dir) {
+        snprintf(rt_buf, sizeof(rt_buf), "/run/user/1000");
+        runtime_dir = rt_buf;
+    }
+
+    char cmd[512];
+    // Run wpctl as user to read the default audio sink volume (e.g., "Volume: 0.75")
+    snprintf(cmd, sizeof(cmd), "sudo -u %s DISPLAY=%s XDG_RUNTIME_DIR=%s wpctl get-volume @DEFAULT_AUDIO_SINK@", 
+             real_user, display, runtime_dir);
+
+    FILE* fp = popen(cmd, "r");
+    if (!fp) return 0;
+
+    char output[128] = {0};
+    if (fgets(output, sizeof(output), fp) != NULL) {
+        pclose(fp);
+        // Parse float value from string like "Volume: 0.75 [MUTED]"
+        float vol = 0.0f;
+        if (sscanf(output, "Volume: %f", &vol) == 1) {
+            return (int)(vol * 100.0f + 0.5f);
+        }
+    } else {
+        pclose(fp);
+    }
     return 0;
 }
 
 void SetSystemVolume(float volume) {
-    (void)volume;
-}
-#endif
+    const char* real_user = getenv("SUDO_USER");
+    if (!real_user) real_user = "diggy";
 
+    const char* display = getenv("DISPLAY");
+    if (!display) display = ":0";
+
+    const char* runtime_dir = getenv("XDG_RUNTIME_DIR");
+    char rt_buf[256];
+    if (!runtime_dir) {
+        snprintf(rt_buf, sizeof(rt_buf), "/run/user/1000");
+        runtime_dir = rt_buf;
+    }
+
+    char cmd[512];
+    // Set volume using wpctl (expects a percentage like "75%" or decimal like "0.75")
+    snprintf(cmd, sizeof(cmd), "sudo -u %s DISPLAY=%s XDG_RUNTIME_DIR=%s wpctl set-volume @DEFAULT_AUDIO_SINK%s %.2f", 
+             real_user, display, runtime_dir, "%", volume);
+
+    system(cmd);
+}
+
+#endif
 
 void TriggerVolume(void) {
     if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
@@ -90,22 +141,22 @@ void TriggerVolume(void) {
     char* input;
     snprintf(prompt, sizeof(prompt), "Enter Volume (0 - 100) Current Volume: %d", current_vol);
     
-    input = Platform_SimplePromptUser(prompt, "🔊 Volume",920, 650, 32);
+    input = Platform_SimplePromptUser(prompt, "🔊 Volume", 920, 650, 32);
 
     if (input != NULL) {
-    if (strcmp(input,"mx") == 0) {
-        SetSystemVolume(1.0);
-    } else if (strcmp(input,"mn") == 0) {
-        SetSystemVolume(0.0);
-    } else if (strcmp(input,"md") == 0) {
-        SetSystemVolume(0.5);
-    } else if (atoi(input) > 100) {
-      SubjectiveMessageDisplay("VOLUME WAS MORE THAN 100 THAT IS NOT ALLOWED",140,TimeOutForMessages,COLOR_ERROR);
-    } else if (atoi(input) < 0) {
-      SubjectiveMessageDisplay("VOLUME WAS LESS THAN 0 THAT IS NOT ALLOWED",140,TimeOutForMessages,COLOR_ERROR);
-    } else {
-        int vol = atoi(input);
-        SetSystemVolume(vol / 100.0f);
-    }
+        if (strcmp(input, "mx") == 0) {
+            SetSystemVolume(1.0f);
+        } else if (strcmp(input, "mn") == 0) {
+            SetSystemVolume(0.0f);
+        } else if (strcmp(input, "md") == 0) {
+            SetSystemVolume(0.5f);
+        } else if (atoi(input) > 100) {
+            SubjectiveMessageDisplay("VOLUME WAS MORE THAN 100 THAT IS NOT ALLOWED", 140, TimeOutForMessages, COLOR_ERROR);
+        } else if (atoi(input) < 0) {
+            SubjectiveMessageDisplay("VOLUME WAS LESS THAN 0 THAT IS NOT ALLOWED", 140, TimeOutForMessages, COLOR_ERROR);
+        } else {
+            int vol = atoi(input);
+            SetSystemVolume(vol / 100.0f);
+        }
     }
 }
