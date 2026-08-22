@@ -86,6 +86,7 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
     state->has_listbox = (count >= 0);
     ListBoxInfo_Init(&state->listbox);
     state->listbox.selected_index = -1;
+    g_currentPromptState = state;
     g_IsMainWindowActive = true;
     g_Linux_AltHeld = false;
     g_Linux_CtrlHeld = false;
@@ -136,14 +137,6 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
 
     XMapWindow(dpy, win);
     XFlush(dpy);
-    {
-        extern int _xErrHandler(Display*, XErrorEvent*);
-        XSync(dpy, False);
-        XErrorHandler old = XSetErrorHandler(_xErrHandler);
-        XSetInputFocus(dpy, win, RevertToParent, CurrentTime);
-        XSync(dpy, False);
-        XSetErrorHandler(old);
-    }
 
     g_refresh_callback = refresh_callback;
     g_enter_callback = enter_callback;
@@ -282,14 +275,6 @@ char* Platform_SimplePromptUser(const char* prompt, const char* window_title,int
     XFlush(dpy);
     g_IsMainWindowActive = true;
     g_PromptJustClosed = false;
-    {
-        extern int _xErrHandler(Display*, XErrorEvent*);
-        XSync(dpy, False);
-        XErrorHandler old = XSetErrorHandler(_xErrHandler);
-        XSetInputFocus(dpy, win, RevertToParent, CurrentTime);
-        XSync(dpy, False);
-        XSetErrorHandler(old);
-    }
 
     XEvent ev;
     int running = 1;
