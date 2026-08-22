@@ -240,23 +240,48 @@ bool Platform_ExpandPath(const char* template_path, char* out, size_t out_size) 
 bool Platform_LaunchApp(const char* path) {
     if (!path) return false;
 
-    char expanded[MAX_PATH];
+    char expanded[1024];
     if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) return false;
-    path = expanded;
 
-    pid_t pid = fork();
-    if (pid < 0) {
-        return false;
+    const char* real_user = getenv("SUDO_USER");
+    if (!real_user) real_user = "root";
+
+    const char* display = getenv("DISPLAY");
+    if (!display) display = ":0";
+    
+    const char* xauthority = getenv("XAUTHORITY");
+    if (!xauthority) xauthority = "";
+
+    char runtime_dir[256];
+    const char* env_runtime = getenv("XDG_RUNTIME_DIR");
+    if (env_runtime) {
+        snprintf(runtime_dir, sizeof(runtime_dir), "%s", env_runtime);
+    } else {
+        snprintf(runtime_dir, sizeof(runtime_dir), "/run/user/1000");
     }
 
-    if (pid == 0) {
-        char *args[] = {(char*)path, NULL};
-        
-        execvp(path, args);
-        
-        exit(1); 
+    char cmd[2048];
+
+    if (strstr(expanded, ".desktop") != NULL) {
+        char* filename = strrchr(expanded, '/');
+        filename = filename ? filename + 1 : expanded;
+
+        char app_id[256];
+        strncpy(app_id, filename, sizeof(app_id) - 1);
+        app_id[sizeof(app_id) - 1] = '\0';
+        char* ext = strstr(app_id, ".desktop");
+        if (ext) *ext = '\0';
+
+        snprintf(cmd, sizeof(cmd), 
+                 "sudo -u %s DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s gtk-launch \"%s\" &", 
+                 real_user, display, xauthority, runtime_dir, app_id);
+    } else {
+        snprintf(cmd, sizeof(cmd), 
+                 "sudo -u %s DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s \"%s\" &", 
+                 real_user, display, xauthority, runtime_dir, expanded);
     }
 
+    system(cmd);
     return true;
 }
 
