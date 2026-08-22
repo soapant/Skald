@@ -91,7 +91,29 @@ void launch_exe_with_args(const char* exe_path, const char* args) {
         CloseHandle(pi.hThread);
     }
 #else
-    system(cmd);
+    const char* real_user = getenv("SUDO_USER");
+    if (!real_user) real_user = "root";
+
+    const char* display = getenv("DISPLAY");
+    if (!display) display = ":0";
+    
+    const char* xauthority = getenv("XAUTHORITY");
+    if (!xauthority) xauthority = "";
+
+    char runtime_dir[256];
+    const char* env_runtime = getenv("XDG_RUNTIME_DIR");
+    if (env_runtime) {
+        snprintf(runtime_dir, sizeof(runtime_dir), "%s", env_runtime);
+    } else {
+        snprintf(runtime_dir, sizeof(runtime_dir), "/run/user/1000");
+    }
+
+    char linux_cmd[MAX_PATH * 2 + 1024];
+    snprintf(linux_cmd, sizeof(linux_cmd), 
+             "sudo -u %s DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s %s &", 
+             real_user, display, xauthority, runtime_dir, cmd);
+    
+    system(linux_cmd);
 #endif
 }
 
