@@ -89,5 +89,6 @@ extern ColorRef g_rainbow_text_cache[MAX_VISIBLE_ITEMS + 1];
 extern bool draw_background;
 
 extern bool mic_muted;
+extern bool g_IsMainWindowActive;
 
 #endif

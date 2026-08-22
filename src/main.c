@@ -62,6 +62,7 @@ HFONT g_hMainFont = NULL;
 #endif
 HashMap* feature_history = NULL;
 HashMap* g_item_index_map = NULL;
+bool g_IsMainWindowActive = false;
 
 
 void OInNotificationRecieved(const char* text) {
