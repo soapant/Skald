@@ -378,12 +378,33 @@ bool CheckMiscHotkeyBindings(int pressed_vk, int modifiers) {
 }
 
 void open_browser(const char *url) {
-    char command[256];
+    if (!url) return;
+
+    char command[1024];
 
 #if defined(_WIN32)
     snprintf(command, sizeof(command), "start %s", url);
 #else
-    snprintf(command, sizeof(command), "xdg-open %s", url);
+    const char* real_user = getenv("SUDO_USER");
+    if (!real_user) real_user = "root";
+
+    const char* display = getenv("DISPLAY");
+    if (!display) display = ":0";
+    
+    const char* xauthority = getenv("XAUTHORITY");
+    if (!xauthority) xauthority = "";
+
+    char runtime_dir[256];
+    const char* env_runtime = getenv("XDG_RUNTIME_DIR");
+    if (env_runtime) {
+        snprintf(runtime_dir, sizeof(runtime_dir), "%s", env_runtime);
+    } else {
+        snprintf(runtime_dir, sizeof(runtime_dir), "/run/user/1000");
+    }
+
+    snprintf(command, sizeof(command), 
+             "sudo -u %s DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s xdg-open \"%s\" > /dev/null 2>&1 &", 
+             real_user, display, xauthority, runtime_dir, url);
 #endif
 
     int result = system(command);
@@ -398,10 +419,10 @@ void open_browser(const char *url) {
 bool CheckQuickLinkHotkeyBindings(int pressed_vk, int modifiers) {
 #if defined(_WIN32)
     WindowHandle hActiveWnd = WH_FROM_HWND(GetForegroundWindow());
+    if (WH_TO_HWND(hActiveWnd) == NULL) return false;
 #else
     WindowHandle hActiveWnd = WH_NULL;
 #endif
-    if (WH_TO_HWND(hActiveWnd) == NULL) return false;
 
     char activeExe[256] = {0};
     FetchExeNameOnDemand(hActiveWnd, activeExe, sizeof(activeExe) - 1);
@@ -416,7 +437,6 @@ bool CheckQuickLinkHotkeyBindings(int pressed_vk, int modifiers) {
             if (strcmp(G_QUICKLINK_HOTKEYS[i].exe_name, "*") == 0 ||
                 strstr(activeExe, G_QUICKLINK_HOTKEYS[i].exe_name) != NULL) {
 #endif
-              
                 open_browser(G_QUICKLINK_HOTKEYS[i].QuickLinkQuery);
                 if (MessageAfterEachHotkey) {
                   char buffer[64];

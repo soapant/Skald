@@ -64,11 +64,40 @@ static const char* GetExeNameForWindow(HWND hwnd) {
     return result;
 }
 #else
-static const char* GetExeNameForWindow(WindowHandle hwnd) {
-    (void)hwnd;
-    static char result[64];
-    strcpy(result, "Unknown.exe");
-    return result;
+const char* GetExeNameForWindow(WindowHandle hwnd) {
+    static char exe_name[256];
+    memset(exe_name, 0, sizeof(exe_name));
+
+    Display* dpy = XOpenDisplay(NULL);
+    if (!dpy) {
+        strncpy(exe_name, "unknown", sizeof(exe_name));
+        return exe_name;
+    }
+
+    Window w = hwnd.xid;
+    if (w == 0) {
+        Atom net_active = XInternAtom(dpy, "_NET_ACTIVE_WINDOW", True);
+        Atom actual_type;
+        int actual_format;
+        unsigned long nitems, bytes_after;
+        unsigned char* prop_data = NULL;
+
+        Window root = DefaultRootWindow(dpy);
+        if (XGetWindowProperty(dpy, root, net_active, 0, 1, False, XA_WINDOW,
+                               &actual_type, &actual_format, &nitems,
+                               &bytes_after, &prop_data) == Success) {
+            if (prop_data && nitems > 0) {
+                w = *((Window*)prop_data);
+            }
+            if (prop_data) XFree(prop_data);
+        }
+    }
+
+    pid_t pid = GetWindowPid(dpy, w);
+    GetExeNameFromPid(pid, exe_name, sizeof(exe_name));
+
+    XCloseDisplay(dpy);
+    return exe_name;
 }
 #endif
 
