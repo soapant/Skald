@@ -368,6 +368,20 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     static bool s_num_init = false;
     
     switch (msg) {
+    case WM_ACTIVATE: {
+        if (CloseOnLossOfFocus && LOWORD(wParam) == WA_INACTIVE) {
+            output_buffer[0] = '\0';
+            selection_complete = true;
+        }
+        break;
+    }
+    case WM_KILLFOCUS: {
+        if (CloseOnLossOfFocus) {
+            output_buffer[0] = '\0';
+            selection_complete = true;
+        }
+        break;
+    }
     case WM_CTLCOLOREDIT:
     case WM_CTLCOLORLISTBOX: {
       HDC hdc = (HDC)wParam;
