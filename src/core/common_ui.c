@@ -62,9 +62,7 @@ void PopulateListBox(ListBoxInfo* lb, WindowHandle hListBox, const char* filter,
 #if defined(_WIN32)
   if (WH_TO_HWND(hListBox) == NULL) return;
 #endif
-  // Don't block filtering while in INSERT – the filter should always reflect the edit text
-  // Normal/Visual sequences (like "dd", "gg") should not trigger filtering anyway
-  if (g_seq_state.waiting && !IsInsertMode()) return;
+  if (g_seq_state.waiting) return;
   if (!filter) filter = "";
   BuildAliasDisplayItems(items, item_count);
   TimerEnd(timer_alias,"PopulateListBox - Aliases");

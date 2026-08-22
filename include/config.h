@@ -90,6 +90,7 @@ extern const bool RainbowText;
 extern const int GradientItems;
 extern const float GradientBrightness;
 extern bool PixelHotkeys;
+extern bool CloseOnLossOfFocus;
 
 typedef struct {
     const char* path;
