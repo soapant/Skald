@@ -3,10 +3,8 @@
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 #include <X11/Xft/Xft.h>
-int _xErrHandler(Display *d, XErrorEvent *e) {
-  fprintf(stderr, "[X11] XError %d major=%d serial=%lu\n", e->error_code, e->request_code, e->serial);
-  return 0;
-}
+#include "x11_display.h"
+
 #include <sys/mman.h>
 #include <sys/stat.h> 
 #include <linux/input.h>
@@ -58,25 +56,7 @@ bool Platform_ShellExecuteWithVerb(const char* path, const char* verb, bool asyn
     return (status == 0);
 }
 
-static Display* OpenBestDisplay(void) {
-    Display* d = XOpenDisplay(NULL);
-    if (d) return d;
 
-    DIR* dir = opendir("/tmp/.X11-unix");
-    if (!dir) return NULL;
-
-    char name[32];
-    struct dirent* e;
-    while ((e = readdir(dir)) != NULL) {
-        if (e->d_name[0] == 'X') {
-            snprintf(name, sizeof(name), ":%s", e->d_name + 1);
-            d = XOpenDisplay(name);
-            if (d) break;
-        }
-    }
-    closedir(dir);
-    return d;
-}
 
 static Window FindWindowByTitleRecursive(Display* dpy, Window w, const char* title) {
     char* name = NULL;
@@ -106,7 +86,7 @@ static Window FindWindowByTitle(Display* dpy, const char* title) {
 }
 
 bool Platform_SendX11Command(const char* window_title, const char* atom_name, long command) {
-    Display* dpy = OpenBestDisplay();
+    Display* dpy = get_display();
     if (!dpy) return false;
 
     Window win = FindWindowByTitle(dpy, window_title);
@@ -123,12 +103,11 @@ bool Platform_SendX11Command(const char* window_title, const char* atom_name, lo
             ok = true;
         }
     }
-    XCloseDisplay(dpy);
     return ok;
 }
 
 bool Platform_SetX11Property(const char* window_title, const char* atom_name, long value) {
-    Display* dpy = OpenBestDisplay();
+    Display* dpy = get_display();
     if (!dpy) return false;
 
     Window win = FindWindowByTitle(dpy, window_title);
@@ -139,12 +118,11 @@ bool Platform_SetX11Property(const char* window_title, const char* atom_name, lo
         XFlush(dpy);
         ok = true;
     }
-    XCloseDisplay(dpy);
     return ok;
 }
 
 bool Platform_SetX11StringProperty(const char* window_title, const char* atom_name, const char* value) {
-    Display* dpy = OpenBestDisplay();
+    Display* dpy = get_display();
     if (!dpy) return false;
 
     Window win = FindWindowByTitle(dpy, window_title);
@@ -155,7 +133,6 @@ bool Platform_SetX11StringProperty(const char* window_title, const char* atom_na
         XFlush(dpy);
         ok = true;
     }
-    XCloseDisplay(dpy);
     return ok;
 }
 
@@ -331,7 +308,7 @@ bool Platform_LaunchAppAsAdmin(const char* path) {
 }
 
 bool Platform_IsCtrlPressed(void) {
-    Display *display = XOpenDisplay(NULL);
+    Display *display = get_display();
     if (!display) {
         return false; 
     }
@@ -343,8 +320,6 @@ bool Platform_IsCtrlPressed(void) {
     XQueryPointer(display, DefaultRootWindow(display), 
                   &root, &child, &root_x, &root_y, &win_x, &win_y, &mask);
 
-    XCloseDisplay(display);
-
     return (mask & ControlMask) != 0;
 }
 
@@ -352,7 +327,7 @@ void Linux_GetActiveWindowTitle(char* buffer, int buffer_size) {
     if (!buffer || buffer_size <= 0) return;
     buffer[0] = '\0';
 
-    Display *display = XOpenDisplay(NULL);
+    Display *display = get_display();
     if (!display) return;
 
     Window focus = None;
@@ -367,8 +342,6 @@ void Linux_GetActiveWindowTitle(char* buffer, int buffer_size) {
             XFree(name);
         }
     }
-
-    XCloseDisplay(display);
 }
 
 int ConvertLinuxKeyToWindowsVK(int key_code) {
@@ -902,8 +875,7 @@ void Platform_SaveRegionToPNG(int x1, int y1, int x2, int y2, const char* fullPa
     fprintf(stderr, "[PLATFORM] Platform_SaveRegionToPNG not implemented yet\n");
 }
 
-Display* g_font_dpy = NULL;
-static pthread_mutex_t g_font_dpy_mtx = PTHREAD_MUTEX_INITIALIZER;
+
 
 FontHandle Platform_CreateFontOnDisplay(Display* dpy, int size, const char* face_name) {
     FontHandle fh = FH_NULL;
@@ -942,16 +914,13 @@ pthread_mutex_t g_font_mtx = PTHREAD_MUTEX_INITIALIZER;
 FontHandle Platform_CreateFont(int size, const char* face_name) {
     pthread_mutex_lock(&g_font_mtx); 
 
-    pthread_mutex_lock(&g_font_dpy_mtx);
-    if (!g_font_dpy) g_font_dpy = XOpenDisplay(NULL);
-    pthread_mutex_unlock(&g_font_dpy_mtx);
-    
-    if (!g_font_dpy) {
+    Display* dpy = get_display();
+    if (!dpy) {
         pthread_mutex_unlock(&g_font_mtx);
         return FH_NULL;
     }
 
-    FontHandle fh = Platform_CreateFontOnDisplay(g_font_dpy, size, face_name);
+    FontHandle fh = Platform_CreateFontOnDisplay(dpy, size, face_name);
 
     pthread_mutex_unlock(&g_font_mtx); // <-- Unlock when done
     return fh;
