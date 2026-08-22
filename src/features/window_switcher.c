@@ -3,6 +3,9 @@
 #include "features/focus_switcher.h"
 #include "core/common_ui.h"
 #include "helpers.h"
+#if !defined(_WIN32)
+#include "x11_display.h"
+#endif
 #if defined(_WIN32)
 #include <psapi.h>
 #include <shlwapi.h>
@@ -68,7 +71,7 @@ const char* GetExeNameForWindow(WindowHandle hwnd) {
     static char exe_name[256];
     memset(exe_name, 0, sizeof(exe_name));
 
-    Display* dpy = XOpenDisplay(NULL);
+    Display* dpy = get_display();
     if (!dpy) {
         strncpy(exe_name, "unknown", sizeof(exe_name));
         return exe_name;
@@ -96,7 +99,6 @@ const char* GetExeNameForWindow(WindowHandle hwnd) {
     pid_t pid = GetWindowPid(dpy, w);
     GetExeNameFromPid(pid, exe_name, sizeof(exe_name));
 
-    XCloseDisplay(dpy);
     return exe_name;
 }
 #endif
