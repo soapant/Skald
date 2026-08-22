@@ -31,7 +31,17 @@ void SetMonitorBright(int brightness) {
 
     free(pMonitors);
 #else
-    (void)brightness;
+    if (brightness < 0) brightness = 0;
+    if (brightness > 100) brightness = 100;
+
+    char cmd[256];
+    snprintf(cmd, sizeof(cmd), "brightnessctl set %d%% > /dev/null 2>&1", brightness);
+    
+    int ret = system(cmd);
+    if (ret != 0) {
+        snprintf(cmd, sizeof(cmd), "ddcutil setvcp 10 %d > /dev/null 2>&1", brightness);
+        system(cmd);
+    }
 #endif
 }
 

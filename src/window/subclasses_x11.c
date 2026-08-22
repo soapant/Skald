@@ -332,7 +332,7 @@ void DrawSimplePromptUserEditControl(Display *dpy,Window* win,SimplePromptState 
     draw_wrapped_text(dpy, xd, &text_color, font,state->user_input,40,"LEFT",20);
     draw_wrapped_text(dpy, xd, &vim_text_color, font,g_vim_mode,0,"LEFT",5);
     draw_wrapped_text(dpy, xd, &text_color,font,state->window_title,0,"RIGHT",5);
-    draw_wrapped_text(dpy, xd, &text_color, font,state->display_message,70, "CENTER",-450);
+    draw_wrapped_text(dpy, xd, &text_color, font,state->display_message,70, "CENTER",-300);
     if (IsInsertMode()) {
         XftFont* xf = FH_TO_XFT(font);
         XGlyphInfo ext;
