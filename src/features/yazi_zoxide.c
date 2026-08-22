@@ -62,15 +62,39 @@ static void yazi_enter_callback(const char* selection, ListBoxInfo* lb) {
       if (path) {
           char cmd_args[512];
           snprintf(cmd_args, sizeof(cmd_args), "-e yazi \"%s\"", path);
-          char terminal[512];
-          snprintf(terminal,sizeof(terminal),"%s.exe",UsedTerminal);
+          
 #if defined(_WIN32)
+          char terminal[512];
+          snprintf(terminal, sizeof(terminal), "%s.exe", UsedTerminal);
           ShellExecuteA(NULL, "open", terminal, cmd_args, NULL, SW_SHOWNORMAL);
 #else
-          char cmd_open[512];
-          snprintf(cmd_open, sizeof(cmd_open), "xdg-open \"%s\"", path);
+          const char* real_user = getenv("SUDO_USER");
+          if (!real_user) real_user = "diggy";
+
+          const char* display = getenv("DISPLAY");
+          if (!display) display = ":0";
+          
+          const char* xauthority = getenv("XAUTHORITY");
+          if (!xauthority) xauthority = "";
+
+          char runtime_dir[256];
+          const char* env_runtime = getenv("XDG_RUNTIME_DIR");
+          if (env_runtime) {
+              snprintf(runtime_dir, sizeof(runtime_dir), "%s", env_runtime);
+          } else {
+              snprintf(runtime_dir, sizeof(runtime_dir), "/run/user/1000");
+          }
+
+          const char* term = (UsedTerminal && strlen(UsedTerminal) > 0) ? UsedTerminal : "alacritty";
+
+          char cmd_open[1024];
+          snprintf(cmd_open, sizeof(cmd_open), 
+                   "sudo -u %s DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s %s %s &", 
+                   real_user, display, xauthority, runtime_dir, term, cmd_args);
+          
           system(cmd_open);
 #endif
+
           if (YaziZoxideFile->fileSize > 0) {
               char lastChar = Platform_GetLastChar(YaziZoxideFile);
               if (lastChar != '\n') {
@@ -83,8 +107,8 @@ static void yazi_enter_callback(const char* selection, ListBoxInfo* lb) {
               RebuildYaziCache();
           }
       }
-    
 }
+
 static void yazi_edit_callback(const char* selection, ListBoxInfo* lb) {
     char* NewyaziQuery = Platform_EditTextPopup(selection,960,540,1000,300);
     
