@@ -8,6 +8,21 @@
 #include <commctrl.h>
 #include <shlwapi.h>
 #endif
+#if !defined(_WIN32)
+#include <strings.h>
+#include <ctype.h>
+#include <string.h>
+// Case-insensitive substring search for Linux (like StrStrIA on Windows)
+static const char* Linux_StrStrIA(const char* haystack, const char* needle) {
+    if (!haystack || !needle) return NULL;
+    if (!*needle) return haystack;
+    size_t nlen = strlen(needle);
+    for (const char* p = haystack; *p; ++p) {
+        if (strncasecmp(p, needle, nlen) == 0) return p;
+    }
+    return NULL;
+}
+#endif
 
 bool g_add_alias_to_string = true;
 char g_alias_display[MAX_ITEMS][512] = {0};
@@ -47,7 +62,9 @@ void PopulateListBox(ListBoxInfo* lb, WindowHandle hListBox, const char* filter,
 #if defined(_WIN32)
   if (WH_TO_HWND(hListBox) == NULL) return;
 #endif
-  if (g_seq_state.waiting) return;
+  // Don't block filtering while in INSERT – the filter should always reflect the edit text
+  // Normal/Visual sequences (like "dd", "gg") should not trigger filtering anyway
+  if (g_seq_state.waiting && !IsInsertMode()) return;
   if (!filter) filter = "";
   BuildAliasDisplayItems(items, item_count);
   TimerEnd(timer_alias,"PopulateListBox - Aliases");
@@ -82,7 +99,11 @@ void PopulateListBox(ListBoxInfo* lb, WindowHandle hListBox, const char* filter,
       lb->last_item_count == item_count &&
       lb->last_filter_valid &&
       strlen(clean_filter) > strlen(lb->last_filter) &&
-      strncmp(clean_filter, lb->last_filter, strlen(lb->last_filter)) == 0) {
+#if defined(_WIN32)
+      StrStrIA(clean_filter, lb->last_filter) == clean_filter) {
+#else
+      strncasecmp(clean_filter, lb->last_filter, strlen(lb->last_filter)) == 0) {
+#endif
 
     use_previous = 1;
     prev_count = lb->last_filter_full_count;
@@ -113,7 +134,7 @@ void PopulateListBox(ListBoxInfo* lb, WindowHandle hListBox, const char* filter,
 #if defined(_WIN32)
         match = (StrStrIA(search_text, clean_filter) != NULL);
 #else
-        match = (strstr(search_text, clean_filter) != NULL);
+        match = (Linux_StrStrIA(search_text, clean_filter) != NULL);
 #endif
       }
 
@@ -140,7 +161,7 @@ void PopulateListBox(ListBoxInfo* lb, WindowHandle hListBox, const char* filter,
 #if defined(_WIN32)
       bool match = filter_match ? filter_match(search_text, clean_filter) : (StrStrIA(search_text, clean_filter) != NULL);
 #else
-      bool match = filter_match ? filter_match(search_text, clean_filter) : (strstr(search_text, clean_filter) != NULL);
+      bool match = filter_match ? filter_match(search_text, clean_filter) : (Linux_StrStrIA(search_text, clean_filter) != NULL);
 #endif
 
       if (match) {

@@ -33,8 +33,8 @@ bool CheckVimMotion(int pressed_vk, int modifiers, MotionAction* out_action, con
     bool ctrl_held = (GetKeyState(VK_CONTROL) & 0x8000);
     bool shift_held = (GetKeyState(VK_SHIFT) & 0x8000);
 #else
-    bool ctrl_held = modifiers > 1;
-    bool shift_held = modifiers > 1;
+    bool ctrl_held = (modifiers & HOTKEY_MOD_CTRL) != 0;
+    bool shift_held = (modifiers & HOTKEY_MOD_SHIFT) != 0;
 #endif
     
     if (pressed_vk == VK_ESCAPE) {
@@ -159,11 +159,11 @@ bool CheckVimMotion(int pressed_vk, int modifiers, MotionAction* out_action, con
             }
         }
         
-        return true;
+        return false;
     }
     
     if (in_visual) {
-        return true;
+        return false;
     }
     
     return false;
