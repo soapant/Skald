@@ -68,7 +68,21 @@ static void LaunchNvim(const char* path) {
         ShellExecuteA(NULL, "open", TextEditorName, path, NULL, SW_SHOWNORMAL);
     }
 #else
-    system(cmd);
+    const char* real_user = getenv("SUDO_USER");
+    if (!real_user) real_user = "root";
+
+    char linux_cmd[4096];
+    
+    snprintf(linux_cmd, sizeof(linux_cmd), 
+             "sudo -u %s DISPLAY=%s XAUTHORITY=%s %s -e %s \"%s\" &", 
+             real_user,
+             getenv("DISPLAY") ? getenv("DISPLAY") : ":0",
+             getenv("XAUTHORITY") ? getenv("XAUTHORITY") : "",
+             UsedTerminal,
+             expanded_path,
+             path);
+             
+    system(linux_cmd);
 #endif
 }
 
