@@ -24,7 +24,8 @@ bool CheckVimMotion(int pressed_vk, int modifiers, MotionAction* out_action, con
     if (GetFocus() != WH_TO_HWND(g_ActiveEditControl)) return false;
 #else
     extern PromptState* g_currentPromptState;
-    if (!g_currentPromptState) return false;
+    extern bool g_IsMainWindowActive;
+    if (!g_currentPromptState && !g_IsMainWindowActive) return false;
 #endif
     
     bool in_popup = IsWindowValid(g_hEditPopup);
