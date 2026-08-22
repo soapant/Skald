@@ -9,7 +9,7 @@
 #include <unistd.h>
 #endif
 #if !defined(_WIN32)
-#include <X11/Xlib.h>
+#include "x11_display.h"
 #endif
 #if defined(_WIN32)
 #include "features/notification_getter.h"
@@ -71,7 +71,9 @@ void OInNotificationRecieved(const char* text) {
 
 int main() {
 #if !defined(_WIN32)
-  XInitThreads();
+  if (!init_display()) {
+    fprintf(stderr, "[SYSTEM] Continuing without X11 display (headless mode)\n");
+  }
 #endif
 #if defined(_WIN32)
   g_main_thread_id = GetCurrentThreadId();
@@ -138,6 +140,9 @@ int main() {
   Platform_RunHotKeyMessageLoop();
 
   Platform_ShutdownUI();
+#if !defined(_WIN32)
+  cleanup_display();
+#endif
 
   for (int i = 0; i < FILE_ENTRY_COUNT; i++) {
     if (G_FILE_ENTRIES[i].mf != NULL) {
