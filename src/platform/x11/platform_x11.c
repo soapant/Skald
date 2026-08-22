@@ -386,10 +386,7 @@ int ConvertLinuxKeyToWindowsVK(int key_code) {
 }
 
 char* Platform_QueryZoxidePath(const char* query) {
-    printf("Zoxide Debug -> Function called with query: '%s'\n", query ? query : "NULL");
-
     if (!query) {
-        printf("Zoxide Debug -> Bail: query is NULL\n");
         return NULL;
     }
 
@@ -409,8 +406,6 @@ char* Platform_QueryZoxidePath(const char* query) {
              "zoxide query -- \"%s\" 2>&1", 
              real_user, real_user, real_user, real_user, clean_query);
 
-    printf("Zoxide Debug -> Executing command: %s\n", command);
-
     FILE *pipe = popen(command, "r");
     if (!pipe) {
         perror("Zoxide Debug -> popen failed");
@@ -425,17 +420,13 @@ char* Platform_QueryZoxidePath(const char* query) {
 
     int pclose_res = pclose(pipe);
 
-    printf("Zoxide Debug -> Output captured: '%s' (exit code: %d)\n", temp_path, pclose_res);
-
     if (pclose_res != 0 || strstr(temp_path, "no match found") || strlen(temp_path) == 0) {
-        printf("Zoxide Debug -> Bail: No match found or exit code non-zero\n");
         char buffer[256];
         snprintf(buffer, sizeof(buffer), "Query {%s} Doesnt Have A Zoxide Path", query);
         SubjectiveMessageDisplay(buffer, 140, TimeOutForMessages, COLOR_ERROR);
         return NULL;
     }
 
-    printf("Zoxide Debug -> Success! Returning path: %s\n", temp_path);
     return strdup(temp_path);
 }
 
