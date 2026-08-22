@@ -26,15 +26,35 @@ int _xErrHandler(Display *d, XErrorEvent *e) {
 bool Platform_ShellExecuteWithVerb(const char* path, const char* verb, bool async) {
     if (!path) return false;
 
-    char command[1024];
-    if (async) {
-        snprintf(command, sizeof(command), "xdg-open \"%s\" > /dev/null 2>&1 &", path);
+    const char* real_user = getenv("SUDO_USER");
+    if (!real_user) real_user = "root";
+
+    const char* display = getenv("DISPLAY");
+    if (!display) display = ":0";
+    
+    const char* xauthority = getenv("XAUTHORITY");
+    if (!xauthority) xauthority = "";
+
+    char runtime_dir[256];
+    const char* env_runtime = getenv("XDG_RUNTIME_DIR");
+    if (env_runtime) {
+        snprintf(runtime_dir, sizeof(runtime_dir), "%s", env_runtime);
     } else {
-        snprintf(command, sizeof(command), "xdg-open \"%s\" > /dev/null 2>&1", path);
+        snprintf(runtime_dir, sizeof(runtime_dir), "/run/user/1000");
+    }
+
+    char command[2048];
+    if (async) {
+        snprintf(command, sizeof(command), 
+                 "sudo -u %s DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s xdg-open \"%s\" > /dev/null 2>&1 &", 
+                 real_user, display, xauthority, runtime_dir, path);
+    } else {
+        snprintf(command, sizeof(command), 
+                 "sudo -u %s DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s xdg-open \"%s\" > /dev/null 2>&1", 
+                 real_user, display, xauthority, runtime_dir, path);
     }
 
     int status = system(command);
-
     return (status == 0);
 }
 
