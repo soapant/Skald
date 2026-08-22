@@ -1,6 +1,7 @@
 #include "common.h"
 #include "config.h"
 #include "core/modal.h"
+#include "core/common_ui.h"
 #include "platform/platform.h"
 #include "core/types.h"
 #include "core/timer.h"
@@ -34,6 +35,9 @@ int _xErrHandler(Display *d, XErrorEvent *e);
 PromptState* g_currentPromptState = NULL;
 int pending_hotkey_vk = 0;
 int pending_hotkey_mod = 0;
+Window g_PromptWin = None;
+bool g_PromptJustClosed = false;
+long g_PromptCloseTimeMs = 0;
 
 void Platform_WaitForKeypressAsync(KeyCallback callback) {
     (void)callback;
@@ -103,7 +107,6 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
         bg_color,       
         bg_color        
     );
-
     Atom wm_state = XInternAtom(dpy, "_NET_WM_STATE", False);
     Atom wm_state_fullscreen = XInternAtom(dpy, "_NET_WM_STATE_FULLSCREEN", False);
     
@@ -517,7 +520,6 @@ void HandleGlobalKeyEvent(int key_code, int value) {
     if (key_code == KEY_LEFTSHIFT || key_code == KEY_RIGHTSHIFT) {
         g_Linux_ShiftHeld = is_pressed;
     }
-    
     
     if (!is_pressed) return;
     
