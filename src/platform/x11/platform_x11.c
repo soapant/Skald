@@ -386,39 +386,57 @@ int ConvertLinuxKeyToWindowsVK(int key_code) {
 }
 
 char* Platform_QueryZoxidePath(const char* query) {
-    if (!query) return NULL;
+    printf("Zoxide Debug -> Function called with query: '%s'\n", query ? query : "NULL");
 
-    static char path[1024];
-    path[0] = '\0';
+    if (!query) {
+        printf("Zoxide Debug -> Bail: query is NULL\n");
+        return NULL;
+    }
 
     char clean_query[512];
     strncpy(clean_query, query, sizeof(clean_query) - 1);
     clean_query[sizeof(clean_query) - 1] = '\0';
     clean_query[strcspn(clean_query, "\r\n")] = '\0';
 
+    const char* real_user = getenv("SUDO_USER");
+    if (!real_user) real_user = "root";
+
     char command[1024];
-    snprintf(command, sizeof(command), "zoxide query %s 2>&1", clean_query);
+    snprintf(command, sizeof(command), 
+             "export HOME=\"/home/%s\"; "
+             "export _ZO_DATA_DIR=\"/home/%s/.local/share/zoxide\"; "
+             "export PATH=\"/home/%s/.local/bin:/home/%s/.cargo/bin:/usr/local/bin:$PATH\"; "
+             "zoxide query -- \"%s\" 2>&1", 
+             real_user, real_user, real_user, real_user, clean_query);
+
+    printf("Zoxide Debug -> Executing command: %s\n", command);
 
     FILE *pipe = popen(command, "r");
     if (!pipe) {
+        perror("Zoxide Debug -> popen failed");
         return NULL;
     }
 
-    if (fgets(path, sizeof(path) - 1, pipe) != NULL) {
-        path[strcspn(path, "\r\n")] = '\0';
+    char temp_path[1024];
+    temp_path[0] = '\0';
+    if (fgets(temp_path, sizeof(temp_path) - 1, pipe) != NULL) {
+        temp_path[strcspn(temp_path, "\r\n")] = '\0';
     }
 
-    pclose(pipe);
+    int pclose_res = pclose(pipe);
 
-    if (strstr(path, "no match found") || strlen(path) == 0) {
+    printf("Zoxide Debug -> Output captured: '%s' (exit code: %d)\n", temp_path, pclose_res);
+
+    if (pclose_res != 0 || strstr(temp_path, "no match found") || strlen(temp_path) == 0) {
+        printf("Zoxide Debug -> Bail: No match found or exit code non-zero\n");
         char buffer[256];
         snprintf(buffer, sizeof(buffer), "Query {%s} Doesnt Have A Zoxide Path", query);
-        
         SubjectiveMessageDisplay(buffer, 140, TimeOutForMessages, COLOR_ERROR);
         return NULL;
     }
 
-    return path;
+    printf("Zoxide Debug -> Success! Returning path: %s\n", temp_path);
+    return strdup(temp_path);
 }
 
 char Platform_GetLastChar(MappedFile *file) {

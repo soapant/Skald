@@ -178,21 +178,17 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
                   KeySym ks;
                   int len = XLookupString(&ev.xkey, buf, sizeof(buf), &ks, NULL);
                   if (len > 0) {
-                      // Filter out non-printable control characters that slipped through
-                      // XLookupString may return bytes for non-printable; only allow printable ASCII
                       bool is_printable = true;
                       for (int i=0;i<len;i++) {
                         unsigned char c = (unsigned char)buf[i];
                         if (c < 0x20 || c == 0x7F) { is_printable = false; break; }
                       }
                       if (!is_printable) {
-                          // ignore
                       } else {
                         size_t n = strlen(state->filter);
                         if (n + len < sizeof(state->filter) - 1) {
                           if (state->cursor < 0) state->cursor = 0;
                           if ((size_t)state->cursor > n) state->cursor = (int)n;
-                          // Insert at cursor instead of always appending
                           memmove(state->filter + state->cursor + len,
                                   state->filter + state->cursor,
                                   n - state->cursor + 1);
@@ -217,9 +213,11 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
     }
     g_last_mode = g_current_mode;
     g_currentPromptState = NULL;
-    XSync(dpy, False);
-    XDestroyWindow(dpy, win);
-    XSync(dpy, False);
+    if (dpy && win) {
+            XSync(dpy, False);
+            XDestroyWindow(dpy, win);
+            XSync(dpy, False);
+    }
     free(state);
     return output_buffer;
 }
