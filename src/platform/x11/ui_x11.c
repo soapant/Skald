@@ -30,7 +30,8 @@
 #include <X11/Xatom.h>
 #include <X11/Xlib.h>
 #include <X11/Xft/Xft.h>
-int _xErrHandler(Display *d, XErrorEvent *e);
+#include "x11_display.h"
+
 
 PromptState* g_currentPromptState = NULL;
 SimplePromptState* g_currentSimplePromptState = NULL;
@@ -58,8 +59,8 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
     HelpCallback help_callback) {
     selection_complete = false;
     output_buffer[0] = '\0';
-    
-    Display* dpy = XOpenDisplay(NULL);
+
+    Display* dpy = get_display();
     if (!dpy) return NULL;
 
     int screen = DefaultScreen(dpy);
@@ -73,7 +74,7 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
     if (layout_h > width) layout_h = width;
 
     PromptState* state = (PromptState*)calloc(1, sizeof(PromptState));
-    if (!state) { XCloseDisplay(dpy); return NULL; }
+    if (!state) return NULL;
     state->items = (char**)window_list;
     state->item_count = count;
     state->cursor = 0;
@@ -221,7 +222,7 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
 }
 
 char* Platform_SimplePromptUser(const char* prompt, const char* window_title,int height, int width, int item_height) {
-    Display* dpy = XOpenDisplay(NULL);
+    Display* dpy = get_display();
     if (!dpy) return NULL;
 
     int screen = DefaultScreen(dpy);
@@ -326,7 +327,6 @@ char* Platform_SimplePromptUser(const char* prompt, const char* window_title,int
     g_currentSimplePromptState = NULL;
     g_currentPromptState = NULL;
     XDestroyWindow(dpy, win);
-    XCloseDisplay(dpy);
     return output_buffer;
 }
 
@@ -344,9 +344,8 @@ static pthread_mutex_t g_msg_mtx = PTHREAD_MUTEX_INITIALIZER;
 static MsgWindow* g_msg_window = NULL;
 
 static void destroy_msg_window(MsgWindow* m) {
-    XftDrawDestroy(m->xd);
+    if (m->xd) XftDrawDestroy(m->xd);
     Platform_DestroyFont(m->font);
-    XCloseDisplay(m->dpy);
 }
 
 static void* msg_destroy_thread(void* arg) {
@@ -374,16 +373,15 @@ static void replace_msg_window(MsgWindow* m) {
 }
 
 void Platform_DisplayMessage(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, int timeout) {
-    Display* dpy = XOpenDisplay(NULL);
+    Display* dpy = get_display();
     if (!dpy) {
-        fprintf(stderr, "[PLATFORM] Platform_DisplayMessage: XOpenDisplay failed\n");
+        fprintf(stderr, "[PLATFORM] Platform_DisplayMessage: no X11 display\n");
         return;
     }
 
     FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
     if (!FH_TO_XFT(font)) {
         fprintf(stderr, "[PLATFORM] Platform_DisplayMessage: font load failed\n");
-        XCloseDisplay(dpy);
         return;
     }
     fprintf(stderr, "[MSG] font='%s' size=%d\n", UsedFont, FontSize);
