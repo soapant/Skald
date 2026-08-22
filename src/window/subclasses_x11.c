@@ -219,6 +219,137 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
 
     return false;
 }
+bool Linux_HandleSimplePromptKey(const XEvent* ev,SimplePromptState *state) {
+    if (ev->type != KeyPress) return false;
+
+    int wParam = Linux_KeysymToWindowsVK(XLookupKeysym(&ev->xkey, 0));
+    bool ctrl_pressed = (ev->xkey.state & ControlMask) != 0;
+    bool shift_pressed = (ev->xkey.state & ShiftMask) != 0;
+    bool alt_pressed = (ev->xkey.state & Mod1Mask) != 0;
+    {
+        int mod = HOTKEY_MOD_NONE;
+        if (ctrl_pressed) mod |= HOTKEY_MOD_CTRL;
+        if (shift_pressed) mod |= HOTKEY_MOD_SHIFT;
+        if (alt_pressed) mod |= HOTKEY_MOD_ALT;
+        MotionAction act; const char* seq; int typed;
+        if (CheckVimMotion(wParam, mod, &act, &seq, &typed)) {
+            ExecuteMotion(act, seq, typed);
+            return true;
+        }
+    }
+    if (wParam == VK_BACK) {
+        if (ctrl_pressed) {
+            state->user_input[0] = '\0';
+            state->cursor = 0;
+            return true;
+        }
+        size_t n = strlen(state->user_input);
+        if (state->cursor > 0) {
+            memmove(state->user_input + state->cursor - 1,
+                    state->user_input + state->cursor,
+                    n - state->cursor + 1);
+            state->cursor--;
+        }
+        return true;
+    }
+    if (wParam == VK_ESCAPE) {
+      if (IsInsertMode()) {
+        SetMode(MODE_NORMAL);
+        return true;
+      } else {
+        selection_complete = true;
+        return true;
+      }
+    }
+    if (wParam == VK_RIGHT) {
+      CursorForward(&state->cursor, strlen(state->user_input));
+      return true;
+    }
+    if (wParam == VK_LEFT) {
+       CursorBack(&state->cursor, strlen(state->user_input));
+      return true;
+    }
+    if (wParam == VK_RETURN) {
+      selection_complete = true;
+      return true;
+    }
+    return false;
+}
+
+void DrawSimplePromptUserEditControl(Display *dpy,Window* win,SimplePromptState *state) {
+    int screen = DefaultScreen(dpy);
+    XftDraw* xd = XftDrawCreate(dpy, *win, DefaultVisual(dpy, screen), DefaultColormap(dpy, screen));
+
+    FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
+
+    int textW = 0, textH = 0;
+    Platform_GetTextExtents(font,state->user_input,state->width, &textW, &textH);
+
+    unsigned long text_color_map = rgb_to_hex(COLOR_TEXT);
+    unsigned long bg_color_map = rgb_to_hex(COLOR_BG);
+
+    unsigned long vim_text_color_map;
+    if (g_current_mode == MODE_NORMAL) {
+      vim_text_color_map = rgb_to_hex(COLOR_NORMAL_MODE_TEXT);
+    } else if (g_current_mode == MODE_INSERT) {
+      vim_text_color_map = rgb_to_hex(COLOR_INSERT_MODE_TEXT);
+    } else {
+      vim_text_color_map = rgb_to_hex(COLOR_VISUAL_MODE_TEXT);
+    }
+
+    Visual* visual = DefaultVisual(dpy, screen);
+    Colormap cmap = DefaultColormap(dpy, screen);
+
+    XRenderColor rc_bg = {
+        ((bg_color_map >> 16) & 0xFF) * 0x101,
+        ((bg_color_map >> 8) & 0xFF) * 0x101,
+        (bg_color_map & 0xFF) * 0x101,
+        0xFFFF
+    };
+    XftColor bg_color;
+    XftColorAllocValue(dpy, visual, cmap, &rc_bg, &bg_color);
+
+    XRenderColor rc_text = {
+        ((text_color_map >> 16) & 0xFF) * 0x101, ((text_color_map >> 8) & 0xFF) * 0x101, (text_color_map & 0xFF) * 0x101,
+        0xFFFF
+    };
+    XftColor text_color;
+    XftColorAllocValue(dpy, visual, cmap, &rc_text, &text_color);
+
+    XRenderColor rc_vim_text_color = {
+        ((vim_text_color_map >> 16) & 0xFF) * 0x101,
+        ((vim_text_color_map >> 8) & 0xFF) * 0x101,
+        (vim_text_color_map & 0xFF) * 0x101,
+        0xFFFF
+    };
+    XftColor vim_text_color;
+    XftColorAllocValue(dpy, visual, cmap, &rc_vim_text_color, &vim_text_color);
+    int centerX = state->width / 2;
+    int centerY = state->height / 2;
+    int topLeftX = centerX - state->width / 2;                                                  
+    int topLeftY = centerY - state->height / 2; 
+    XftDrawRect(xd, &bg_color, topLeftX, topLeftY, state->width,80);                       
+    draw_wrapped_text(dpy, xd, &text_color, font,state->user_input,40,"LEFT",20);
+    draw_wrapped_text(dpy, xd, &vim_text_color, font,g_vim_mode,0,"LEFT",5);
+    draw_wrapped_text(dpy, xd, &text_color,font,state->window_title,0,"RIGHT",5);
+    draw_wrapped_text(dpy, xd, &text_color, font,state->display_message,70, "CENTER",-450);
+    if (IsInsertMode()) {
+        XftFont* xf = FH_TO_XFT(font);
+        XGlyphInfo ext;
+        XftTextExtentsUtf8(dpy, xf, (FcChar8*)state->user_input, state->cursor, &ext);
+        XftDrawRect(xd, &text_color,22 + ext.xOff, 47, 2,FontSize);
+    } else {
+        XftFont* xf = FH_TO_XFT(font);
+        XGlyphInfo ext;
+        XftTextExtentsUtf8(dpy, xf, (FcChar8*)state->user_input, state->cursor, &ext);
+        XftDrawRect(xd, &text_color,22 + ext.xOff, 47, 12,FontSize);
+    }
+    XftColorFree(dpy, visual, cmap, &bg_color);
+    XftColorFree(dpy, visual, cmap, &text_color);
+    XftColorFree(dpy, visual, cmap, &vim_text_color);
+    XftDrawDestroy(xd);
+    Platform_DestroyFont(font);
+}
 
 void DrawPromptUserEditControl(Display *dpy,Window* win,PromptState *state) {
     int screen = DefaultScreen(dpy);
@@ -304,7 +435,6 @@ void DrawPromptUserListBox(Display *dpy,Window* win,PromptState *state) {
 
       int y0 = 100;
       int itemH = FontSize + 34;
-      // Always clear list area, even when empty, to avoid stale items
       {
         Visual *visClear = DefaultVisual(dpy, screen);
         Colormap cmapClear = DefaultColormap(dpy, screen);
@@ -357,7 +487,6 @@ void DrawPromptUserListBox(Display *dpy,Window* win,PromptState *state) {
             char num[8];
             snprintf(num,sizeof(num),"%d.",idx+1);
             draw_wrapped_text(dpy, xd, &fcolrainbow, font, num, y, "LEFT",10);
-            /* Truncate cached text to avoid X11 BadLength on X_PolyText8 */
             char cache_trunc[256];
             snprintf(cache_trunc, sizeof(cache_trunc), "%.80s", lb->populated_cache[idx]);
             draw_wrapped_text(dpy, xd, &fcolrainbow, font, cache_trunc, y, "LEFT", 55);
@@ -365,7 +494,6 @@ void DrawPromptUserListBox(Display *dpy,Window* win,PromptState *state) {
             char num[8];
             snprintf(num,sizeof(num),"%d.",idx+1);
             draw_wrapped_text(dpy, xd, &fcoltext, font, num, y, "LEFT", 10);
-            /* Truncate cached text to avoid X11 BadLength on X_PolyText8 */
             char cache_trunc[256];
             snprintf(cache_trunc, sizeof(cache_trunc), "%.80s", lb->populated_cache[idx]);
             draw_wrapped_text(dpy, xd, &fcoltext, font, cache_trunc, y, "LEFT", 45);
@@ -384,6 +512,11 @@ bool Linux_RenderPromptUser(Display *dpy, Window *win, PromptState *state) {
     if (state->has_listbox) {
         DrawPromptUserListBox(dpy,win,state);
     }
+    XFlush(dpy);
+    return true;
+}
+bool Linux_RenderSimplePromptUser(Display *dpy, Window *win, SimplePromptState *state) {
+    DrawSimplePromptUserEditControl(dpy, win,state);
     XFlush(dpy);
     return true;
 }
