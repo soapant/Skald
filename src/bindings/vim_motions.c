@@ -5,6 +5,9 @@
 #include "core/vim_context.h"
 #include "helpers.h"
 #include <ctype.h>
+#if !defined(_WIN32)
+#include <sys/time.h>
+#endif
 #if defined(_WIN32)
 #include <windows.h>
 #endif
@@ -141,6 +144,13 @@ void HandleExitWindow(VimContext* ctx) {
     selection_complete = true;
   }
 #else
+  {
+    extern bool g_PromptJustClosed;
+    extern long g_PromptCloseTimeMs;
+    g_PromptJustClosed = true;
+    struct timeval tv; gettimeofday(&tv, NULL);
+    g_PromptCloseTimeMs = tv.tv_sec*1000 + tv.tv_usec/1000;
+  }
   selection_complete = true;
 #endif
 }
