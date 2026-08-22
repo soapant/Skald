@@ -74,15 +74,25 @@ static void zoxide_edit_callback(const char* selection, ListBoxInfo* lb) {
 
 static void zoxide_enter_callback(const char* selection, ListBoxInfo* lb) {
         char* path = Platform_QueryZoxidePath(selection);
+        printf("Got Path %s \n",path);
         if (path) {
             char terminal[512];
             snprintf(terminal,sizeof(terminal),"%s.exe",UsedTerminal);
 #if defined(_WIN32)
             ShellExecuteA(NULL, "open", terminal, NULL, path, SW_SHOWNORMAL);
 #else
-            char cmd_open[512];
-            snprintf(cmd_open, sizeof(cmd_open), "xdg-open \"%s\"", path);
-            system(cmd_open);
+        const char* real_user = getenv("SUDO_USER");
+
+        char cmd_open[1024];
+        snprintf(cmd_open, sizeof(cmd_open), 
+                 "sudo -u %s DISPLAY=%s XAUTHORITY=%s %s --working-directory=\"%s\" &", 
+                 real_user,
+                 getenv("DISPLAY") ? getenv("DISPLAY") : ":0",
+                 getenv("XAUTHORITY") ? getenv("XAUTHORITY") : "",
+                 UsedTerminal, 
+                 path);
+        
+        system(cmd_open);
 #endif
             if (TerminalZoxideFile->fileSize > 0) {
                   char lastChar = Platform_GetLastChar(TerminalZoxideFile);
