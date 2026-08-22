@@ -7,7 +7,9 @@
 #include "core/vim_context.h"
 #include "bindings/bindings.h"
 #include "bindings/vim_motions.h"
+#include "bindings/vim_helpers.h"
 #include "bindings/hotkey_definitions.h"
+#include "core/number_shortcut.h"
 #include <X11/X.h>
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
@@ -77,6 +79,12 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
         }
     }
     if (wParam == VK_BACK) {
+        if (ctrl_pressed) {
+            state->filter[0] = '\0';
+            state->cursor = 0;
+            if (g_refresh_callback) g_refresh_callback(state->filter, hListBox, state->has_listbox ? &state->listbox : NULL);
+            return true;
+        }
         size_t n = strlen(state->filter);
         if (state->cursor > 0) {
             memmove(state->filter + state->cursor - 1,
@@ -93,24 +101,70 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
         return true;
       } else {
         selection_complete = true;
+        return true;
+      }
+    }
+    // Number shortcuts: Ctrl+0..9
+    if (wParam >= '0' && wParam <= '9') {
+      if (ctrl_pressed) {
+        // HandleNumberShortcut expects WindowHandles; on X11 hListBox/hEditControl are dummy
+        HandleNumberShortcut(wParam, hListBox, g_ActiveEditControl, state->has_listbox ? &state->listbox : NULL);
+        return true;
       }
     }
     if (wParam == VK_RIGHT) {
-      if (state->has_listbox && state->listbox.selected_index != -1) return true;
+      // Allow cursor movement even when list has selection (match Win32 behavior)
       CursorForward(&state->cursor, strlen(state->filter));
       return true;
     }
     if (wParam == VK_LEFT) {
-       if (state->has_listbox && state->listbox.selected_index != -1) return true;
        CursorBack(&state->cursor, strlen(state->filter));
       return true;
     }
     if (wParam == VK_UP) {
+      if (ctrl_pressed) {
+        if (state) {
+          VimContext ctx = VimCtx_FromState(state);
+          SetCursorToStartOfText(&ctx);
+        }
+        return true;
+      }
       if (state->has_listbox) UI_NavigateUp(&state->listbox, hListBox);
       return true;
     }
     if (wParam == VK_DOWN) {
+      if (ctrl_pressed) {
+        if (state) {
+          VimContext ctx = VimCtx_FromState(state);
+          SetCursorToEndOfText(&ctx);
+        }
+        return true;
+      }
       if (state->has_listbox) UI_NavigateDown(&state->listbox, hListBox);
+      return true;
+    }
+    if (wParam == VK_DELETE) {
+      if (state && state->cursor < (int)strlen(state->filter)) {
+        size_t n = strlen(state->filter);
+        memmove(state->filter + state->cursor,
+                state->filter + state->cursor + 1,
+                n - state->cursor);
+        if (g_refresh_callback) g_refresh_callback(state->filter, hListBox, state->has_listbox ? &state->listbox : NULL);
+      }
+      return true;
+    }
+    if (wParam == VK_HOME) {
+      if (state) {
+        VimContext ctx = VimCtx_FromState(state);
+        SetCursorToStartOfText(&ctx);
+      }
+      return true;
+    }
+    if (wParam == VK_END) {
+      if (state) {
+        VimContext ctx = VimCtx_FromState(state);
+        SetCursorToEndOfText(&ctx);
+      }
       return true;
     }
     if (wParam == VK_TAB) {
@@ -242,7 +296,7 @@ void DrawPromptUserEditControl(Display *dpy,Window* win,PromptState *state) {
 }
 
 void DrawPromptUserListBox(Display *dpy,Window* win,PromptState *state) {
-      if (!state->has_listbox || !state->listbox.populated_count) return;
+      if (!state->has_listbox) return;
       ListBoxInfo *lb = &state->listbox;
       int screen = DefaultScreen(dpy);
       XftDraw *xd = XftDrawCreate(dpy, *win, DefaultVisual(dpy, screen), DefaultColormap(dpy, screen));
@@ -251,6 +305,20 @@ void DrawPromptUserListBox(Display *dpy,Window* win,PromptState *state) {
 
       int y0 = 100;
       int itemH = FontSize + 34;
+      // Always clear list area, even when empty, to avoid stale items
+      {
+        Visual *visClear = DefaultVisual(dpy, screen);
+        Colormap cmapClear = DefaultColormap(dpy, screen);
+        XRenderColor rc0={(rgb_to_hex(COLOR_BG)>>16&0xFF)*0x101,(rgb_to_hex(COLOR_BG)>>8&0xFF)*0x101,(rgb_to_hex(COLOR_BG)&0xFF)*0x101,0xFFFF};
+        XftColor c0; XftColorAllocValue(dpy, visClear, cmapClear, &rc0, &c0);
+        XftDrawRect(xd, &c0, 0, y0, state->width, state->height - y0);
+        XftColorFree(dpy, visClear, cmapClear, &c0);
+      }
+      if (!lb->populated_count) {
+        XftDrawDestroy(xd);
+        Platform_DestroyFont(font);
+        return;
+      }
       int visible = (state->height - y0) / itemH;
       if (visible < 1) visible = 1;
       if (visible > lb->populated_count) visible = lb->populated_count;
@@ -268,13 +336,6 @@ void DrawPromptUserListBox(Display *dpy,Window* win,PromptState *state) {
 
       Visual *vis = DefaultVisual(dpy, screen);
       Colormap cmap = DefaultColormap(dpy, screen);
-      // clear whole list area when visible shrinks (5->3 leaves old items)
-      {
-        XRenderColor rc0={(rgb_to_hex(COLOR_BG)>>16&0xFF)*0x101,(rgb_to_hex(COLOR_BG)>>8&0xFF)*0x101,(rgb_to_hex(COLOR_BG)&0xFF)*0x101,0xFFFF};
-        XftColor c0; XftColorAllocValue(dpy, vis, cmap, &rc0, &c0);
-        XftDrawRect(xd, &c0, 0, y0, state->width, state->height - y0);
-        XftColorFree(dpy, vis, cmap, &c0);
-      }
       for (int i = 0; i < visible; i++) {
         int idx = lb->view_offset + i;
         int y = y0 + i * itemH;
@@ -321,8 +382,9 @@ void DrawPromptUserListBox(Display *dpy,Window* win,PromptState *state) {
 
 bool Linux_RenderPromptUser(Display *dpy, Window *win, PromptState *state) {
     DrawPromptUserEditControl(dpy, win,state);
-    if (state->has_listbox && state->listbox.populated_count > 0) {
+    if (state->has_listbox) {
         DrawPromptUserListBox(dpy,win,state);
     }
+    XFlush(dpy);
     return true;
 }
