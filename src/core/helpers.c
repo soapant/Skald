@@ -8,8 +8,8 @@
 #include <X11/keysym.h>
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
-#include <X11/Xlib.h>
 #include <X11/Xft/Xft.h>
+#include <unistd.h>
 #endif
 #include "helpers.h"
 #include "core/timer.h"
@@ -564,4 +564,73 @@ bool CursorForward(size_t* cursor, size_t text_len) {
     (*cursor)++;
     return true;
 }
+
+static int x11_error_occurred = 0;
+
+static int dummy_x_error_handler(Display *dpy, XErrorEvent *error) {
+    if (error->error_code == BadWindow) {
+        x11_error_occurred = 1;
+        return 0;
+    }
+    return 0;
+}
+
+pid_t GetWindowPid(Display* dpy, Window w) {
+    if (w == 0) return -1;
+
+    Atom prop = XInternAtom(dpy, "_NET_WM_PID", True);
+    Atom actual_type;
+    int actual_format;
+    unsigned long nitems, bytes_after;
+    unsigned char* prop_data = NULL;
+
+    // Set custom error trap
+    x11_error_occurred = 0;
+    int (*old_handler)(Display*, XErrorEvent*) = XSetErrorHandler(dummy_x_error_handler);
+
+    pid_t pid = -1;
+    if (prop != None) {
+        int status = XGetWindowProperty(dpy, w, prop, 0, 1, False, XA_CARDINAL,
+                                        &actual_type, &actual_format, &nitems,
+                                        &bytes_after, &prop_data);
+        if (status == Success && !x11_error_occurred && prop_data && nitems > 0) {
+            pid = *((pid_t*)prop_data);
+        }
+    }
+
+    if (prop_data) {
+        XFree(prop_data);
+    }
+
+    // Restore old error handler
+    XSetErrorHandler(old_handler);
+
+    if (x11_error_occurred) {
+        return -1; // Window was destroyed mid-call
+    }
+
+    return pid;
+}
+
+void GetExeNameFromPid(pid_t pid, char* outExe, size_t maxLen) {
+    if (pid <= 0) {
+        strncpy(outExe, "unknown", maxLen);
+        return;
+    }
+
+    char path[64];
+    snprintf(path, sizeof(path), "/proc/%d/exe", pid);
+    
+    ssize_t len = readlink(path, outExe, maxLen - 1);
+    if (len != -1) {
+        outExe[len] = '\0';
+        char* basename = strrchr(outExe, '/');
+        if (basename) {
+            memmove(outExe, basename + 1, strlen(basename));
+        }
+    } else {
+        strncpy(outExe, "unknown", maxLen);
+    }
+}
+
 #endif

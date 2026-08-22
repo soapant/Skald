@@ -101,6 +101,8 @@ unsigned long rgb_to_hex(unsigned long win_color);
 void draw_wrapped_text(Display* dpy, XftDraw* xd, XftColor* color, FontHandle font, const char* text, int startY,char* centered_to,int xOffset);
 bool CursorBack(size_t* cursor, size_t text_len);
 bool CursorForward(size_t* cursor, size_t text_len);
+pid_t GetWindowPid(Display* dpy, Window w);
+void GetExeNameFromPid(pid_t pid, char* outExe, size_t maxLen);
 #endif
 
 #endif
