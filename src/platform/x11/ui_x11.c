@@ -38,6 +38,7 @@ int pending_hotkey_mod = 0;
 Window g_PromptWin = None;
 bool g_PromptJustClosed = false;
 long g_PromptCloseTimeMs = 0;
+extern bool g_Linux_CtrlHeld, g_Linux_AltHeld, g_Linux_ShiftHeld;
 
 void Platform_WaitForKeypressAsync(KeyCallback callback) {
     (void)callback;
@@ -85,7 +86,11 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
     state->has_listbox = (count >= 0);
     ListBoxInfo_Init(&state->listbox);
     state->listbox.selected_index = -1;
-    g_currentPromptState = state;
+    g_IsMainWindowActive = true;
+    g_Linux_AltHeld = false;
+    g_Linux_CtrlHeld = false;
+    g_Linux_ShiftHeld = false;
+    g_PromptJustClosed = false;
     if (ModePersistsThroughFeatures) {
         extern EditorMode g_last_mode;
         SetModeWithListBox(g_last_mode, &state->listbox);
@@ -213,11 +218,17 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
     }
     g_last_mode = g_current_mode;
     g_currentPromptState = NULL;
-    if (dpy && win) {
-            XSync(dpy, False);
-            XDestroyWindow(dpy, win);
-            XSync(dpy, False);
+    g_IsMainWindowActive = false;
+    {
+        extern bool g_PromptJustClosed;
+        extern long g_PromptCloseTimeMs;
+        g_PromptJustClosed = true;
+        struct timeval tv; gettimeofday(&tv, NULL);
+        g_PromptCloseTimeMs = tv.tv_sec*1000 + tv.tv_usec/1000;
     }
+    XSync(dpy, False);
+    XDestroyWindow(dpy, win);
+    XSync(dpy, False);
     free(state);
     return output_buffer;
 }
@@ -265,16 +276,34 @@ char* Platform_SimplePromptUser(const char* prompt, const char* window_title,int
     XSetClassHint(dpy, win, class_hint);
     XFree(class_hint);
 
-    XSelectInput(dpy, win, KeyPressMask | ExposureMask);
+    XSelectInput(dpy, win, KeyPressMask | ExposureMask | FocusChangeMask);
 
     XMapWindow(dpy, win);
     XFlush(dpy);
+    g_IsMainWindowActive = true;
+    g_PromptJustClosed = false;
+    {
+        extern int _xErrHandler(Display*, XErrorEvent*);
+        XSync(dpy, False);
+        XErrorHandler old = XSetErrorHandler(_xErrHandler);
+        XSetInputFocus(dpy, win, RevertToParent, CurrentTime);
+        XSync(dpy, False);
+        XSetErrorHandler(old);
+    }
 
     XEvent ev;
     int running = 1;
 
     while (running) {
         XNextEvent(dpy, &ev);
+        if (CloseOnLossOfFocus && ev.type == FocusOut) {
+            if (ev.xfocus.mode == NotifyNormal) {
+                output_buffer[0] = '\0';
+                selection_complete = true;
+                running = 0;
+                break;
+            }
+        }
         if (ev.type == KeyPress) {
             if (selection_complete) {
                 running = 0;
@@ -282,6 +311,14 @@ char* Platform_SimplePromptUser(const char* prompt, const char* window_title,int
         }
     }
 
+    g_IsMainWindowActive = false;
+    {
+        extern bool g_PromptJustClosed;
+        extern long g_PromptCloseTimeMs;
+        g_PromptJustClosed = true;
+        struct timeval tv; gettimeofday(&tv, NULL);
+        g_PromptCloseTimeMs = tv.tv_sec*1000 + tv.tv_usec/1000;
+    }
     g_currentPromptState = NULL;
     XDestroyWindow(dpy, win);
     XCloseDisplay(dpy);
@@ -520,6 +557,15 @@ void HandleGlobalKeyEvent(int key_code, int value) {
     }
     
     if (!is_pressed) return;
+
+    if (g_PromptJustClosed) {
+        struct timeval tv; gettimeofday(&tv, NULL);
+        long now = tv.tv_sec*1000 + tv.tv_usec/1000;
+        if (now - g_PromptCloseTimeMs < 600) {
+            return;
+        }
+        g_PromptJustClosed = false;
+    }
     
     double seconds = Platform_GetUniversalTimeSeconds();
     if (seconds >= 300) {
