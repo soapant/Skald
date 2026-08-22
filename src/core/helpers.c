@@ -489,7 +489,9 @@ static int xft_width(Display* dpy, XftFont* xf, const char* text, int len) {
 }
 
 void draw_wrapped_text(Display* dpy, XftDraw* xd, XftColor* color, FontHandle font, const char* text, int startY, char* centered_to, int xOffset) {
+    if (!text) return;
     XftFont* xf = FH_TO_XFT(font);
+    if (!xf) return;
     int lineHeight = xf->ascent + xf->descent;
     int spaceWidth = xft_width(dpy, xf, " ", 1);
     int y = startY + xf->ascent;

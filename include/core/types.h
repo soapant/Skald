@@ -389,6 +389,7 @@ typedef struct {
 typedef struct {
      char*       display_message;
      size_t      cursor;
+     char        user_input[512];
      int         width, height;
      char*       window_title;
 } SimplePromptState;

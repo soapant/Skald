@@ -33,6 +33,7 @@
 int _xErrHandler(Display *d, XErrorEvent *e);
 
 PromptState* g_currentPromptState = NULL;
+SimplePromptState* g_currentSimplePromptState = NULL;
 int pending_hotkey_vk = 0;
 int pending_hotkey_mod = 0;
 Window g_PromptWin = None;
@@ -212,13 +213,6 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
     g_last_mode = g_current_mode;
     g_currentPromptState = NULL;
     g_IsMainWindowActive = false;
-    {
-        extern bool g_PromptJustClosed;
-        extern long g_PromptCloseTimeMs;
-        g_PromptJustClosed = true;
-        struct timeval tv; gettimeofday(&tv, NULL);
-        g_PromptCloseTimeMs = tv.tv_sec*1000 + tv.tv_usec/1000;
-    }
     XSync(dpy, False);
     XDestroyWindow(dpy, win);
     XSync(dpy, False);
@@ -231,11 +225,23 @@ char* Platform_SimplePromptUser(const char* prompt, const char* window_title,int
     if (!dpy) return NULL;
 
     int screen = DefaultScreen(dpy);
-    int screen_width = DisplayWidth(dpy, screen);
-    int screen_height = DisplayHeight(dpy, screen);
+    int screen_width = 1920;
+    int screen_height = 1080;
 
     int layout_w = 900;
     int layout_h = 95 + (1 > 0 ? (1 * item_height) : 0);
+
+    SimplePromptState* state = (SimplePromptState*)calloc(1, sizeof(SimplePromptState));
+    state->display_message = (char*)prompt;
+    state->user_input[0] = '\0';
+    state->cursor = 0;
+    state->width = layout_w;
+    state->height = layout_h;
+    {
+        const char* p = strchr(window_title, ' ');
+        state->window_title = (char*)(p ? p+1 : window_title);
+        if (!state->window_title) state->window_title = (char*)window_title;
+    }
 
     if (layout_h < height) layout_h = height;
     if (layout_h > width) layout_h = width;
@@ -269,10 +275,11 @@ char* Platform_SimplePromptUser(const char* prompt, const char* window_title,int
     XSetClassHint(dpy, win, class_hint);
     XFree(class_hint);
 
-    XSelectInput(dpy, win, KeyPressMask | ExposureMask | FocusChangeMask);
+    XSelectInput(dpy, win, KeyPressMask | ExposureMask);
 
     XMapWindow(dpy, win);
     XFlush(dpy);
+    g_currentSimplePromptState = state;
     g_IsMainWindowActive = true;
     g_PromptJustClosed = false;
 
@@ -281,29 +288,42 @@ char* Platform_SimplePromptUser(const char* prompt, const char* window_title,int
 
     while (running) {
         XNextEvent(dpy, &ev);
-        if (CloseOnLossOfFocus && ev.type == FocusOut) {
-            if (ev.xfocus.mode == NotifyNormal) {
-                output_buffer[0] = '\0';
-                selection_complete = true;
-                running = 0;
-                break;
-            }
-        }
         if (ev.type == KeyPress) {
-            if (selection_complete) {
-                running = 0;
+            bool handled = Linux_HandleSimplePromptKey(&ev,state);
+            if (!handled) {
+              if (IsInsertMode()) {
+                  char buf[32];
+                  KeySym ks;
+                  int len = XLookupString(&ev.xkey, buf, sizeof(buf), &ks, NULL);
+                  if (len > 0) {
+                      bool is_printable = true;
+                      for (int i=0;i<len;i++) {
+                        unsigned char c = (unsigned char)buf[i];
+                        if (c < 0x20 || c == 0x7F) { is_printable = false; break; }
+                      }
+                      if (!is_printable) {
+                      } else {
+                        size_t n = strlen(state->user_input);
+                        if (n + len < sizeof(state->user_input) - 1) {
+                          if (state->cursor < 0) state->cursor = 0;
+                          if ((size_t)state->cursor > n) state->cursor = (int)n;
+                          memmove(state->user_input + state->cursor + len,
+                                  state->user_input + state->cursor,
+                                  n - state->cursor + 1);
+                          memcpy(state->user_input + state->cursor, buf, len);
+                          state->cursor += len;
+                        }
+                      }
+                  }
+              }
             }
         }
+        Linux_RenderSimplePromptUser(dpy,&win, state);
+        if (selection_complete) { running = 0; break; }
     }
 
     g_IsMainWindowActive = false;
-    {
-        extern bool g_PromptJustClosed;
-        extern long g_PromptCloseTimeMs;
-        g_PromptJustClosed = true;
-        struct timeval tv; gettimeofday(&tv, NULL);
-        g_PromptCloseTimeMs = tv.tv_sec*1000 + tv.tv_usec/1000;
-    }
+    g_currentSimplePromptState = NULL;
     g_currentPromptState = NULL;
     XDestroyWindow(dpy, win);
     XCloseDisplay(dpy);
@@ -542,15 +562,6 @@ void HandleGlobalKeyEvent(int key_code, int value) {
     }
     
     if (!is_pressed) return;
-
-    if (g_PromptJustClosed) {
-        struct timeval tv; gettimeofday(&tv, NULL);
-        long now = tv.tv_sec*1000 + tv.tv_usec/1000;
-        if (now - g_PromptCloseTimeMs < 600) {
-            return;
-        }
-        g_PromptJustClosed = false;
-    }
     
     double seconds = Platform_GetUniversalTimeSeconds();
     if (seconds >= 300) {
