@@ -631,4 +631,16 @@ void GetExeNameFromPid(pid_t pid, char* outExe, size_t maxLen) {
     }
 }
 
+int get_offset_based_on_number(int index) {
+  if (index < 9) {
+    return 35;
+  }
+  else if (index < 99) {
+    return 45;
+  }
+  else if (index < 999) {
+    return 55;
+  }
+}
+
 #endif

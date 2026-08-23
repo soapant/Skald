@@ -9,6 +9,13 @@
 #include <string.h>
 #if !defined(_WIN32)
 #include <time.h>
+#include <X11/X.h>
+#include <X11/Xlib.h>
+#include <X11/keysym.h>
+#include <X11/Xutil.h>
+#include <X11/Xatom.h>
+#include <X11/Xlib.h>
+#include <X11/Xft/Xft.h>
 #endif
 #define MAX_VISIBLE_ITEMS 100
 #define MAX_ITEMS 4000
@@ -148,6 +155,23 @@ typedef uint32_t ColorRef;
 #define RGB(r, g, b) ((uint32_t)(((r) & 0xFF) | (((g) & 0xFF) << 8) | (((b) & 0xFF) << 16)))
 #endif
 
+typedef struct ListBoxInfo ListBoxInfo;
+
+struct ListBoxInfo {
+    char populated_cache[MAX_ITEMS][512];
+    int  populated_count;
+    int  matching_indices[MAX_MATCHES];
+    int  total_matches;
+    int  selected_index;
+    int  view_offset;
+    const char **last_items;
+    int  last_item_count;
+    char last_filter[256];
+    bool last_filter_valid;
+    int  prev_matches[MAX_MATCHES];
+    int  last_filter_full_count;
+};
+
 typedef struct WindowHandle {
 #if defined(_WIN32)
     HWND hwnd;
@@ -155,6 +179,28 @@ typedef struct WindowHandle {
     unsigned long xid;
 #endif
 } WindowHandle;
+
+#if !defined(_WIN32)
+typedef struct {
+     char**      items;
+     size_t      item_count;
+     char        filter[512];
+     size_t      cursor;
+     int         width, height;
+     char*       window_title;
+     ListBoxInfo listbox;
+     bool        has_listbox;
+} PromptState;
+
+typedef struct {
+     char*       display_message;
+     size_t      cursor;
+     char        user_input[512];
+     int         width, height;
+     char*       window_title;
+} SimplePromptState;
+
+#endif
 
 #define WH_NULL ((WindowHandle){0})
 
@@ -190,7 +236,6 @@ typedef struct FontHandle {
 #define FH_TO_DPY(h) ((h).dpy)
 #endif
 
-typedef struct ListBoxInfo ListBoxInfo;
 
 typedef void (*RefreshCallback)(const char* filter, WindowHandle hListBox, ListBoxInfo* lb);
 typedef void (*EnterCallback)(const char* selection, ListBoxInfo* lb);
@@ -200,7 +245,7 @@ typedef void (*TabCallback)(ListBoxInfo* lb);
 typedef void (*RenderCallback)(HDC hdc, const char* text, RECT* rect, BOOL is_selected, int itemIndex);
 typedef void (*AliasCallback)(HDC hdc, const char* text, RECT* rect, BOOL is_selected, int itemIndex);
 #else
-typedef void (*RenderCallback)(void* hdc, const char* text, void* rect, bool is_selected, int itemIndex);
+typedef void (*RenderCallback)(Display *dpy, Window *win, PromptState *state);
 typedef void (*AliasCallback)(void* hdc, const char* text, void* rect, bool is_selected, int itemIndex);
 #endif
 typedef void (*EditCallback)(const char* selection, ListBoxInfo* lb);
@@ -209,20 +254,6 @@ typedef void (*CopyCallback)(const char* selection,int true_index,int type);
 typedef void (*HelpCallback)();
 typedef void (*KeyCallback)(int vkCode);
 
-struct ListBoxInfo {
-    char populated_cache[MAX_ITEMS][512];
-    int  populated_count;
-    int  matching_indices[MAX_MATCHES];
-    int  total_matches;
-    int  selected_index;
-    int  view_offset;
-    const char **last_items;
-    int  last_item_count;
-    char last_filter[256];
-    bool last_filter_valid;
-    int  prev_matches[MAX_MATCHES];
-    int  last_filter_full_count;
-};
 
 static inline void ListBoxInfo_Init(ListBoxInfo *lb) {
     if (!lb) return;
@@ -374,27 +405,6 @@ typedef struct {
     char *pBuffer;
 } MappedFile;
 
-#if !defined(_WIN32)
-typedef struct {
-     char**      items;
-     size_t      item_count;
-     char        filter[512];
-     size_t      cursor;
-     int         width, height;
-     char*       window_title;
-     ListBoxInfo listbox;
-     bool        has_listbox;
-} PromptState;
-
-typedef struct {
-     char*       display_message;
-     size_t      cursor;
-     char        user_input[512];
-     int         width, height;
-     char*       window_title;
-} SimplePromptState;
-
-#endif
 
 #if defined(_WIN32)
 typedef struct {
