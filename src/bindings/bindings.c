@@ -24,8 +24,9 @@ bool CheckVimMotion(int pressed_vk, int modifiers, MotionAction* out_action, con
     if (GetFocus() != WH_TO_HWND(g_ActiveEditControl)) return false;
 #else
     extern PromptState* g_currentPromptState;
+    extern SimplePromptState* g_currentEditPopupState;
     extern bool g_IsMainWindowActive;
-    if (!g_currentPromptState && !g_IsMainWindowActive) return false;
+    if (!g_currentPromptState && !g_currentEditPopupState && !g_IsMainWindowActive) return false;
 #endif
     
     bool in_popup = IsWindowValid(g_hEditPopup);
@@ -174,7 +175,7 @@ void ExecuteMotion(MotionAction action, const char* sequence, int typed_count) {
     VimContext ctx = VimCtx_FromGlobals();
     if (typed_count > 0 && sequence != NULL && strlen(sequence) > 0 && IsInsertMode()) {
         DeleteLastTypedChar(&ctx);
-        if (g_refresh_callback) g_refresh_callback(ctx.state ? ctx.state->filter : "", ctx.hListBox, ctx.lb);
+        if (ctx.state && g_refresh_callback) g_refresh_callback(ctx.state->filter, ctx.hListBox, ctx.lb);
     }
     for (int i = 0; i < VIM_SEQUENCE_BINDING_COUNT; i++) {
         const SequenceBinding* b = &G_VIM_SEQUENCE_BINDINGS[i];

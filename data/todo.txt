@@ -1,5 +1,5 @@
 calc.h should be able to handle longer strings like 2 x 4 x 19 or something||[Cprogram]
-make my own fucking task manaegr this||[Cprogram]|[Fun]
+make my own fucking task ||[Cprogram]|[Fun]
 the history system doest work its only the last inputted||[Cprogram]|[Bug]
 add an undo system but that is way way way later down the raod||[Cprogram]|[Maybe]
 make a preset for the not plugged in to modify system settings||[Misc]|[DontForget]

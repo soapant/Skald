@@ -8,6 +8,7 @@
 #include "helpers.h"
 #include "bindings/bindings.h"
 #include "bindings/hotkey_definitions.h"
+#include "window/subclasses.h"
 #include "features/focus_switcher.h"
 #include "core/feature_data.h"
 #include "features/music_player.h"
@@ -34,6 +35,8 @@
 
 PromptState* g_currentPromptState = NULL;
 SimplePromptState* g_currentSimplePromptState = NULL;
+SimplePromptState* g_currentEditPopupState = NULL;
+bool g_EditPopupCloseRequested = false;
 int pending_hotkey_vk = 0;
 int pending_hotkey_mod = 0;
 Window g_PromptWin = None;
@@ -333,7 +336,6 @@ char* Platform_SimplePromptUser(const char* prompt, const char* window_title,int
         if (selection_complete) { running = 0;selection_complete = false;}
     }
 
-    // Fix: copy user_input to output_buffer for Linux SimplePrompt (Win32 does GetWindowText)
     if (state->user_input[0] != '\0') {
         strncpy(output_buffer, state->user_input, sizeof(output_buffer)-1);
         output_buffer[sizeof(output_buffer)-1] = '\0';
@@ -533,24 +535,44 @@ void Platform_SettingsPopUp(void) {
 char* Platform_EditTextPopup(const char* initial_text, int centerX, int centerY, int maxWidth, int maxHeight) {
     Display* dpy = get_display();
     if (!dpy) return NULL;
+    if (!initial_text) return NULL;
 
     int screen = DefaultScreen(dpy);
-    
-    selection_complete = false;
-    output_buffer[0] = '\0';
-    
+
+    // Match Win32 clamping: never absurdly small
+    if (maxWidth < 200) maxWidth = 200;
+    if (maxHeight < 100) maxHeight = 100;
+
+    int x = centerX - (maxWidth / 2);
+    int y = centerY - (maxHeight / 2);
+
+    // Remember who owns focus so we can hand it back when we close
+    Window focus_win = None;
+    int focus_revert = RevertToNone;
+    XGetInputFocus(dpy, &focus_win, &focus_revert);
+
+    // Remember the parent prompt state so vim motions/focus return to it
+    ListBoxInfo* active_lb = NULL;
+    int saved_index = -1;
+    bool parent_was_active = false;
+    if (g_currentPromptState && g_currentPromptState->has_listbox) {
+        active_lb = &g_currentPromptState->listbox;
+        saved_index = active_lb->selected_index;
+        parent_was_active = true;
+    } else if (g_currentSimplePromptState) {
+        parent_was_active = true;
+    }
+
     SimplePromptState* state = (SimplePromptState*)calloc(1, sizeof(SimplePromptState));
     if (!state) return NULL;
-    
-    state->display_message = "Edit Text:"; // Default prompt
-    strncpy(state->user_input, initial_text ? initial_text : "", sizeof(state->user_input) - 1);
+
+    state->display_message = "";
+    strncpy(state->user_input, initial_text, sizeof(state->user_input) - 1);
+    state->user_input[sizeof(state->user_input) - 1] = '\0';
     state->cursor = strlen(state->user_input);
     state->width = maxWidth;
     state->height = maxHeight;
     state->window_title = "EditPopup";
-
-    int x = centerX - (maxWidth / 2);
-    int y = centerY - (maxHeight / 2);
 
     unsigned long bg_color = rgb_to_hex(COLOR_BG);
 
@@ -575,79 +597,117 @@ char* Platform_EditTextPopup(const char* initial_text, int centerX, int centerY,
     XSetClassHint(dpy, win, class_hint);
     XFree(class_hint);
 
+    XWMHints* wm_hints = XAllocWMHints();
+    wm_hints->flags = InputHint;
+    wm_hints->input = True;
+    XSetWMHints(dpy, win, wm_hints);
+    XFree(wm_hints);
+
     XSelectInput(dpy, win, KeyPressMask | ExposureMask | FocusChangeMask);
+
+    // Route vim motions into THIS popup while it is open. g_hEditPopup makes
+    // ScopeMatches treat us as "the popup" (same as Win32), so modal-only
+    // bindings like listbox navigation pause and text bindings take over.
+    bool prev_main_active = g_IsMainWindowActive;
+    g_currentEditPopupState = state;
+    g_EditPopupCloseRequested = false;
+    g_IsMainWindowActive = true;
+    g_hEditPopup.xid = win;
+    SetMode(MODE_INSERT);
+
     XMapWindow(dpy, win);
     XFlush(dpy);
+    XSetInputFocus(dpy, win, RevertToParent, CurrentTime);
+    XFlush(dpy);
 
-    g_currentSimplePromptState = state;
-    g_IsMainWindowActive = true;
-    g_PromptJustClosed = false;
-
+    char* result = NULL;
+    bool focus_lost = false;
+    bool running = true;
     XEvent ev;
-    int running = 1;
-
     while (running) {
+        if (g_EditPopupCloseRequested) {
+            g_EditPopupCloseRequested = false;
+            break;
+        }
         XNextEvent(dpy, &ev);
-        
+
         if (ev.type == KeyPress) {
-            bool handled = Linux_HandleSimplePromptKey(&ev, state);
-            if (!handled) {
-                if (IsInsertMode()) {
-                    char buf[32];
-                    KeySym ks;
-                    int len = XLookupString(&ev.xkey, buf, sizeof(buf), &ks, NULL);
-                    
-                    if (ks == XK_Return) {
-                        selection_complete = true;
-                        running = 0;
-                    } else if (ks == XK_Escape) {
-                        state->user_input[0] = '\0';
-                        selection_complete = true;
-                        running = 0;
-                    } else if (len > 0) {
-                        bool is_printable = true;
-                        for (int i=0; i<len; i++) {
-                            unsigned char c = (unsigned char)buf[i];
-                            if (c < 0x20 || c == 0x7F) { is_printable = false; break; }
-                        }
-                        if (is_printable) {
-                            size_t n = strlen(state->user_input);
-                            if (n + len < sizeof(state->user_input) - 1) {
-                                if (state->cursor > n) state->cursor = n;
-                                memmove(state->user_input + state->cursor + len,
-                                        state->user_input + state->cursor,
-                                        n - state->cursor + 1);
-                                memcpy(state->user_input + state->cursor, buf, len);
-                                state->cursor += len;
-                            }
+            bool confirmed = false;
+            bool cancelled = false;
+            bool handled = Linux_HandleEditPopupKey(&ev, state, &confirmed, &cancelled);
+            if (confirmed) {
+                result = strdup(state->user_input);
+                running = false;
+            } else if (cancelled || g_EditPopupCloseRequested) {
+                g_EditPopupCloseRequested = false;
+                running = false;
+            } else if (!handled && IsInsertMode()) {
+                char buf[32];
+                KeySym ks;
+                int len = XLookupString(&ev.xkey, buf, sizeof(buf), &ks, NULL);
+                if (len > 0) {
+                    bool is_printable = true;
+                    for (int i=0;i<len;i++) {
+                        unsigned char c = (unsigned char)buf[i];
+                        if (c < 0x20 || c == 0x7F) { is_printable = false; break; }
+                    }
+                    if (is_printable) {
+                        size_t n = strlen(state->user_input);
+                        if (n + len < sizeof(state->user_input) - 1) {
+                            size_t cursor = state->cursor;
+                            if (cursor > n) cursor = n;
+                            memmove(state->user_input + cursor + len,
+                                    state->user_input + cursor,
+                                    n - cursor + 1);
+                            memcpy(state->user_input + cursor, buf, len);
+                            state->cursor = cursor + len;
                         }
                     }
                 }
             }
+        } else if (ev.type == FocusOut) {
+            if (CloseOnLossOfFocus && ev.xfocus.mode == NotifyNormal) {
+                focus_lost = true;
+                running = false;
+            }
         }
+
+        if (!running) break;
+
         Linux_RenderSimplePromptUser(dpy, &win, state);
-        if (selection_complete) {
-            running = 0;
-            selection_complete = false;
-        }
     }
 
-    if (state->user_input[0] != '\0') {
-        strncpy(output_buffer, state->user_input, sizeof(output_buffer)-1);
-        output_buffer[sizeof(output_buffer)-1] = '\0';
-    } else {
-        output_buffer[0] = '\0';
+    // ---- Teardown: hand vim motions + focus back to the previous window ----
+    g_currentEditPopupState = NULL;
+    g_EditPopupCloseRequested = false;
+    g_hEditPopup = WH_NULL;
+    g_IsMainWindowActive = parent_was_active ? true : prev_main_active;
+    g_Linux_AltHeld = false;
+    g_Linux_CtrlHeld = false;
+    g_Linux_ShiftHeld = false;
+
+    if (active_lb) {
+        active_lb->selected_index = saved_index;
+        if (RememberLastIndex) last_index = saved_index;
     }
 
-    g_IsMainWindowActive = false;
-    g_currentSimplePromptState = NULL;
-    
-    XSync(dpy, False);
     XDestroyWindow(dpy, win);
     XSync(dpy, False);
-    
+
+    // Same restore step as Win32 WM_DESTROY: NORMAL bound to the parent list
+    SetModeWithListBox(MODE_NORMAL, active_lb);
+
+    if (!focus_lost && focus_win != None && focus_win != PointerRoot) {
+        XSetInputFocus(dpy, focus_win, RevertToParent, CurrentTime);
+    }
+
+    // Drop stale FocusOut events the parent prompt queued while we held focus,
+    // otherwise CloseOnLossOfFocus would kill it the moment its loop resumes.
+    while (XCheckTypedEvent(dpy, FocusOut, &ev)) {}
+    XSync(dpy, False);
+
     free(state);
-    return strdup(output_buffer);
+    return result;
 }
 
 // Not Implemented

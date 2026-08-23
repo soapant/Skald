@@ -488,7 +488,7 @@ static void todo_render_callback(HDC hdc, const char* text, RECT* rect, BOOL is_
 #endif
 
 static void todo_edit_callback(const char* selection, ListBoxInfo* lb) {
-    char* NewTodoName = Platform_EditTextPopup(selection, 960, 540, 1000, 300);
+    char* NewTodoName = Platform_EditTextPopup(selection, 960, 540, 1000,100);
     
     if (NewTodoName != NULL) {
         WriteToCacheIndex(lb, lb->selected_index, NewTodoName);

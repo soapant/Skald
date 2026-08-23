@@ -10,7 +10,10 @@
 void VimCtx_GetText(VimContext* ctx, char* buf, size_t cap) {
     if (!ctx || !buf || cap==0) return;
     buf[0]='\0';
-    if (ctx->state) {
+    if (ctx->edit_state) {
+        strncpy(buf, ctx->edit_state->user_input, cap-1);
+        buf[cap-1]='\0';
+    } else if (ctx->state) {
         strncpy(buf, ctx->state->filter, cap-1);
         buf[cap-1]='\0';
     } else if (ctx->simple_state) {
@@ -26,7 +29,11 @@ void VimCtx_GetText(VimContext* ctx, char* buf, size_t cap) {
 }
 void VimCtx_SetText(VimContext* ctx, const char* text) {
     if (!ctx || !text) return;
-    if (ctx->state) {
+    if (ctx->edit_state) {
+        strncpy(ctx->edit_state->user_input, text, sizeof(ctx->edit_state->user_input)-1);
+        ctx->edit_state->user_input[sizeof(ctx->edit_state->user_input)-1]='\0';
+        ctx->edit_state->cursor = strlen(ctx->edit_state->user_input);
+    } else if (ctx->state) {
         strncpy(ctx->state->filter, text, sizeof(ctx->state->filter)-1);
         ctx->state->filter[sizeof(ctx->state->filter)-1]='\0';
         ctx->state->cursor = (int)strlen(ctx->state->filter);
@@ -41,6 +48,7 @@ void VimCtx_SetText(VimContext* ctx, const char* text) {
 }
 int VimCtx_GetCursor(VimContext* ctx) {
     if (!ctx) return 0;
+    if (ctx->edit_state) return (int)ctx->edit_state->cursor;
     if (ctx->state) return ctx->state->cursor;
     if (ctx->simple_state) return ctx->simple_state->cursor;
     uint32_t s=0,e=0;
@@ -49,7 +57,12 @@ int VimCtx_GetCursor(VimContext* ctx) {
 }
 void VimCtx_SetCursor(VimContext* ctx, int pos) {
     if (!ctx) return;
-    if (ctx->state) {
+    if (ctx->edit_state) {
+        int len = (int)strlen(ctx->edit_state->user_input);
+        if (pos<0) pos=0;
+        if (pos>len) pos=len;
+        ctx->edit_state->cursor = pos;
+    } else if (ctx->state) {
         int len = (int)strlen(ctx->state->filter);
         if (pos<0) pos=0;
         if (pos>len) pos=len;
@@ -87,6 +100,10 @@ VimContext VimCtx_FromGlobals(void) {
 #else
     extern PromptState* g_currentPromptState;
     extern SimplePromptState* g_currentSimplePromptState;
+    extern SimplePromptState* g_currentEditPopupState;
+    if (g_currentEditPopupState) {
+        return VimCtx_FromEditState(g_currentEditPopupState);
+    }
     ctx.state = g_currentPromptState;
     ctx.simple_state = g_currentSimplePromptState;
     if (ctx.state) {
@@ -118,6 +135,14 @@ VimContext VimCtx_FromState(PromptState* state) {
 VimContext VimCtx_FromSimpleState(SimplePromptState* state) {
     VimContext ctx = {0};
     ctx.simple_state = state;
+    ctx.lb = NULL;
+    ctx.hListBox = hListBox;
+    ctx.hEdit = g_ActiveEditControl;
+    return ctx;
+}
+VimContext VimCtx_FromEditState(SimplePromptState* state) {
+    VimContext ctx = {0};
+    ctx.edit_state = state;
     ctx.lb = NULL;
     ctx.hListBox = hListBox;
     ctx.hEdit = g_ActiveEditControl;
