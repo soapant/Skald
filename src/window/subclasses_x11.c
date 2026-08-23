@@ -518,10 +518,15 @@ void DrawPromptUserListBox(Display *dpy,Window* win,PromptState *state) {
 }
 
 bool Linux_RenderPromptUser(Display *dpy, Window *win, PromptState *state) {
-    DrawPromptUserEditControl(dpy, win,state);
-    if (state->has_listbox) {
-        DrawPromptUserListBox(dpy,win,state);
+    if (g_render_callback != NULL) {
+      g_render_callback(dpy,win,state);
+    } else {
+      if (state->has_listbox) {
+          DrawPromptUserListBox(dpy,win,state);
+      }
     }
+    // maybe later the user can control the editcontrol too 
+    DrawPromptUserEditControl(dpy, win,state);
     XFlush(dpy);
     return true;
 }

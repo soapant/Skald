@@ -99,6 +99,7 @@ const char* get_alias_for_item(const char* item);
 unsigned long rgb_to_hex(unsigned long win_color);
 #if !defined(_WIN32)
 void draw_wrapped_text(Display* dpy, XftDraw* xd, XftColor* color, FontHandle font, const char* text, int startY,char* centered_to,int xOffset);
+int get_offset_based_on_number(int index);
 bool CursorBack(size_t* cursor, size_t text_len);
 bool CursorForward(size_t* cursor, size_t text_len);
 pid_t GetWindowPid(Display* dpy, Window w);
