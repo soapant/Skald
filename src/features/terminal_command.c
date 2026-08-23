@@ -102,12 +102,10 @@ static void RunTerminalCommand(const char* Command, bool save_to_history) {
         fprintf(f, "%s\n", clean_cmd);
         fclose(f);
         
-#ifndef _WIN32
+#if !defined (_WIN32)
         char chown_file[MAX_PATH + 64];
         snprintf(chown_file, sizeof(chown_file), "chown %s:%s \"%s\" && chmod 755 \"%s\"", real_user, real_user, temp_file, temp_file);
         system(chown_file);
-#else
-        chmod(temp_file, 0755);
 #endif
     }
     

@@ -6,6 +6,7 @@
 #include "core/common_ui.h"
 #include "core/feature_data.h"
 #include "core/number_shortcut.h"
+#include "core/types.h"
 #include "window/subclasses.h"
 #include "wingdi.h"
 #include "helpers.h"
@@ -168,12 +169,14 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
       }
       if (wParam == VK_DOWN) {
         if (ctrl_pressed) {
-          SetCursorToEndOfText();
+          char text[256];
+          UI_GetCurrentText(WH_FROM_HWND(hEditControl), text);
+          UI_SetCursorPosition(WH_FROM_HWND(hEditControl),strlen(text));
         }
       }
       if (wParam == VK_UP) {
         if (ctrl_pressed) {
-          SetCursorToStartOfText();
+          UI_SetCursorPosition(WH_FROM_HWND(hEditControl),1);
         }
       }
     } 
@@ -1031,12 +1034,14 @@ LRESULT CALLBACK SettingsEditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LP
       }
       if (wParam == VK_DOWN) {
         if (ctrl_pressed) {
-          SetCursorToEndOfText();
+          char text[256];
+          UI_GetCurrentText(WH_FROM_HWND(hEditControl), text);
+          UI_SetCursorPosition(WH_FROM_HWND(hEditControl),strlen(text));
         }
       }
       if (wParam == VK_UP) {
         if (ctrl_pressed) {
-          SetCursorToStartOfText();
+          UI_SetCursorPosition(WH_FROM_HWND(hEditControl),1);
         }
       }
     } 
@@ -1242,7 +1247,7 @@ LRESULT CALLBACK SearchPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPar
                                          hwnd, (HMENU)1001, hInstance, NULL
                                         ));
         if (WH_TO_HWND(g_hSearchPopup) != NULL) {
-          UI_Edit_SetFont(g_hSearchPopup,hFont);
+            UI_Edit_SetFont(g_hSearchPopup,hFont);
             UI_Edit_SetSel(g_hSearchPopup,0,0);
             SetFocus(WH_TO_HWND(g_hSearchPopup));
             g_ActiveEditControl = g_hSearchPopup;

@@ -36,6 +36,7 @@ void SubjectiveMessageDisplay(const char* buffer,int msg_height,int timeout,Colo
 }
 EditorMode g_last_mode = MODE_INSERT;
 bool AlwaysEnabled(void) { return true; }
+bool AlwaysDisabled(void) { return false; }
 bool ProcessHotkey(const HotkeyBinding* bindings, int bindings_count,
                                   int pressed_vk, int modifiers,
                                   const char* current_title) {

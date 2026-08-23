@@ -38,6 +38,7 @@ typedef struct {
 void SubjectiveMessageDisplay(const char* buffer,int msg_height,int timeout,ColorRef color);
 extern EditorMode g_last_mode;
 bool AlwaysEnabled(void);
+bool AlwaysDisabled(void);
 bool ProcessHotkey(const HotkeyBinding* bindings, int bindings_count,
                    int pressed_vk, int modifiers,
                    const char* current_title);
