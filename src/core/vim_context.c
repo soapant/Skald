@@ -20,7 +20,6 @@ void VimCtx_GetText(VimContext* ctx, char* buf, size_t cap) {
 #if defined(_WIN32)
         if (WH_TO_HWND(ctx->hEdit)) GetWindowTextA(WH_TO_HWND(ctx->hEdit), buf, (int)cap);
 #else
-        // fallback for X11 without state - try global active edit via UI
         UI_GetCurrentText(ctx->hEdit, buf);
 #endif
     }
