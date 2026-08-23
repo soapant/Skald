@@ -525,7 +525,6 @@ bool Linux_RenderPromptUser(Display *dpy, Window *win, PromptState *state) {
           DrawPromptUserListBox(dpy,win,state);
       }
     }
-    // maybe later the user can control the editcontrol too 
     DrawPromptUserEditControl(dpy, win,state);
     XFlush(dpy);
     return true;
