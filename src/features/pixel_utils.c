@@ -32,6 +32,7 @@ static bool GetCursorPixel(long* out_x, long* out_y, uint8_t* out_r, uint8_t* ou
 
     return true;
 #else
+    // Not Implemented
     (void)out_x; (void)out_y; (void)out_r; (void)out_g; (void)out_b;
     return false;
 #endif
@@ -45,6 +46,8 @@ void TriggerPosCopy(void) {
         snprintf(coords_buf, sizeof(coords_buf), "%ld, %ld", mousePos.x, mousePos.y);
         Platform_CopyToClipboard(coords_buf);
     }
+#else
+    // Not Implemented
 #endif
 }
 
@@ -61,6 +64,8 @@ void TriggerPosAdd(void) {
             WriteMdFile(temp_lines, temp_count + 1, TEMP_FILE_PATH);
         }
     }
+#else
+    // Not Implemented
 #endif
 }
 
@@ -127,6 +132,8 @@ void TriggerRegionCoords(void) {
         Platform_CopyToClipboard(buf);
         region_step = 0;
     }
+#else
+    // Not Implemented
 #endif
 }
 
@@ -154,5 +161,7 @@ void TriggerRegionImage(void) {
             SendNotifyMessage(WH_TO_HWND(hGlobalTrayWnd), WM_TRIGGER_IMG_CAPTURE, 0, 0);
         }
     }
+#else
+    // Not Implemented
 #endif
 }

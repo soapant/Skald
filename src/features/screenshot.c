@@ -54,6 +54,8 @@ void TriggerSaveScreenshot(void) {
         img_region_step = 0;
         TriggerScreenshot(hPopupWnd, false);
     }
+#else
+    // Not Implemented
 #endif
 }
 
@@ -76,5 +78,7 @@ void TriggerOpenScreenshot(void) {
         img_region_step = 0;
         TriggerScreenshot(hPopupWnd, true);
     }
+#else
+    // Not Implemented
 #endif
 }
