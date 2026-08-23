@@ -9,6 +9,7 @@ typedef struct {
     WindowHandle hEdit;
     PromptState* state;
     SimplePromptState* simple_state;
+    SimplePromptState* edit_state;
 } VimContext;
 
 void VimCtx_GetText(VimContext* ctx, char* buf, size_t cap);
@@ -18,5 +19,6 @@ void VimCtx_SetCursor(VimContext* ctx, int pos);
 VimContext VimCtx_FromGlobals(void);
 VimContext VimCtx_FromState(PromptState* state);
 VimContext VimCtx_FromSimpleState(SimplePromptState* state);
+VimContext VimCtx_FromEditState(SimplePromptState* state);
 
 #endif
