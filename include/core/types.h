@@ -358,7 +358,8 @@ struct feature_data {
 
 typedef struct {
    char* alias;
-   char* expanded_text;
+   char* win_text;
+   char* linux_text;
    char* feature;
 }AliasEntry;
 

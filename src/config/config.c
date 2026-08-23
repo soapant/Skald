@@ -190,7 +190,7 @@ const FocusSwitcherBinding G_FOCUS_SWITCHERS[] = {
 const unsigned int FOCUS_SWITCHER_COUNT = sizeof(G_FOCUS_SWITCHERS) / sizeof(G_FOCUS_SWITCHERS[0]);
 
 const AliasEntry Aliases[] = {
-  {"brw","Brawlhalla","AppLauncher"},
+  {"brw","Brawlhalla","Brawlhalla","AppLauncher"},
 };
 const size_t ALIAS_ENTRY_COUNT = ARRAY_LEN(Aliases);
 
