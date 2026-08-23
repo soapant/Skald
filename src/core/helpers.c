@@ -462,9 +462,20 @@ const char* get_alias_for_item(const char* item) {
 
     for (size_t i = 0; i < ALIAS_ENTRY_COUNT; i++) {
         if (strcmp(Aliases[i].feature, g_current_feature) == 0) continue;
-        if (strcmp(item, Aliases[i].expanded_text) == 0) {
+#if defined(_WIN32)
+        const char* expanded = Aliases[i].win_text;
+        if (!expanded) continue;
+        if (strcmp(item, expanded) == 0) {
             return Aliases[i].alias;
         }
+#else
+        const char* expanded = Aliases[i].linux_text;
+        if (!expanded || expanded[0]=='\0') expanded = Aliases[i].win_text;
+        if (!expanded) continue;
+        if (strcasecmp(item, expanded) == 0) {
+            return Aliases[i].alias;
+        }
+#endif
     }
     return NULL;
 }

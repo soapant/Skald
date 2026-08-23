@@ -9,5 +9,3 @@ add a debug menu to show data about the feature||[Cprogram]|[DontForget]
 make a display all hotkeys thingy maybe in the settings ig||[Cprogram]|[Maybe]
 sort callback||[Cprogram]|[NotImplemetedYet]
 info on feature callback?||[Cprogram]|[NotImplemetedYet]
-
-
