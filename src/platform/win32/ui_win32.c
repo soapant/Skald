@@ -18,6 +18,9 @@
 #include "features/process_killer.h"
 #include <gdiplus.h>
 
+PromptState* g_currentPromptState = NULL;
+SimplePromptState* g_currentSimplePromptState = NULL;
+
 void Platform_WaitForKeypressAsync(KeyCallback callback) {
   g_waiting_for_key = true;
   g_key_callback = callback;
