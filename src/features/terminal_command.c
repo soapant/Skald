@@ -2,6 +2,7 @@
 #include "features/terminal_command.h"
 #include "helpers.h"
 #include "core/common_ui.h"
+#include "core/zoxide_helpers.h"
 #if defined(_WIN32)
 #include <shellapi.h>
 #endif
@@ -10,49 +11,12 @@ static char** g_cached_commands = NULL;
 static int g_cached_command_count = 0;
 
 static void RebuildCommandCache(void) {
-    if (g_cached_commands) {
-        for (int i = 0; i < g_cached_command_count; i++) {
-            free(g_cached_commands[i]);
-        }
-        free(g_cached_commands);
-        g_cached_commands = NULL;
-        g_cached_command_count = 0;
-    }
-    
-    if (!TerminalHistoryFile || TerminalHistoryFile->fileSize == 0) {
-        return;
-    }
-    
-    size_t lineCount = 0;
-    Line* lines = Platform_FileGetLines(TerminalHistoryFile, &lineCount);
-    if (!lines) return;
-    
-    g_cached_commands = (char**)malloc(lineCount * sizeof(char*));
-    g_cached_command_count = 0;
-    
-    for (size_t i = 0; i < lineCount; i++) {
-        size_t len = lines[i].length;
-        while (len > 0 && lines[i].ptr[len-1] == '\r') len--;
-        
-        if (len > 0) {
-            char* cmd = (char*)malloc(len + 1);
-            memcpy(cmd, lines[i].ptr, len);
-            cmd[len] = '\0';
-            g_cached_commands[g_cached_command_count++] = cmd;
-        }
-    }
-    
-    free(lines);
+    ZoxideHelper_RebuildCache(TerminalHistoryFile, &g_cached_commands, &g_cached_command_count);
 }
 
 static void terminal_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
     if (!lb) return;
-    
-    if (!g_cached_commands) {
-        RebuildCommandCache();
-    }
-    
-    PopulateListBox(lb, hListBox, filter, (const char**)g_cached_commands, g_cached_command_count, NULL);
+    ZoxideHelper_Refresh(filter, hListBox, lb, TerminalHistoryFile, &g_cached_commands, &g_cached_command_count);
 }
 
 
@@ -159,37 +123,16 @@ static void terminal_enter_callback(const char* selection, ListBoxInfo* lb) {
 }
 
 static void terminal_edit_callback(const char* selection, ListBoxInfo* lb) {
-    char* NewterminalQuery = Platform_EditTextPopup(selection,960,540,1000,300);
-    
-    if (NewterminalQuery != NULL) {
-        WriteToCacheIndex(lb, lb->selected_index,NewterminalQuery);
-    }
-    
-    Platform_ReplaceLineInMappedFile(TerminalHistoryFile,lb->selected_index,NewterminalQuery);
-    
-    RebuildCommandCache();
-    
-    terminal_refresh_callback("", hListBox, lb);
+    ZoxideHelper_Edit(selection, lb, TerminalHistoryFile, &g_cached_commands, &g_cached_command_count, terminal_refresh_callback);
 }
 
 void TriggerTerminalCommand(void) {
     if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
-    
-    if (!g_cached_commands) {
-        RebuildCommandCache();
-    }
-    
-    const char** list = (const char**)malloc(g_cached_command_count * sizeof(char*));
-    if (!list) return;
-    
-    for (int i = 0; i < g_cached_command_count; i++) {
-        list[i] = g_cached_commands[i];
-    }
-    
+    if (!g_cached_commands) RebuildCommandCache();
+    const char** list = ZoxideHelper_PrepareTriggerList(NULL, &g_cached_commands, &g_cached_command_count, NULL);
     ImportantPromptUser(list, "⌨️ Terminal", g_cached_command_count, 920, 650, 32, 
                terminal_refresh_callback, 
                terminal_enter_callback, 
                terminal_edit_callback,NULL);
-    
-    free(list);
+    ZoxideHelper_CleanupTriggerList(list);
 }
