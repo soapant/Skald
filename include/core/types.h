@@ -180,7 +180,6 @@ typedef struct WindowHandle {
 #endif
 } WindowHandle;
 
-#if !defined(_WIN32)
 typedef struct {
      char**      items;
      size_t      item_count;
@@ -199,8 +198,6 @@ typedef struct {
      int         width, height;
      char*       window_title;
 } SimplePromptState;
-
-#endif
 
 #define WH_NULL ((WindowHandle){0})
 
