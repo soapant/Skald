@@ -362,26 +362,7 @@ void CalculateWindowMetrics(int count, WindowLayout* layout,int height , int wid
   layout->y = mi.rcMonitor.top + (monitorHeight - layout->h) / 2;
 }
 void CalculateSettingsWindowMetrics(int count, WindowLayout* layout,int height , int width,int item_height) {
-  POINT ptPrimary = { 0, 0 }; 
-  HMONITOR hMonitor = MonitorFromPoint(ptPrimary, MONITOR_DEFAULTTOPRIMARY);
-
-  MONITORINFO mi = {0};
-  mi.cbSize = sizeof(MONITORINFO);
-  GetMonitorInfoA(hMonitor, &mi);
-
-  int monitorWidth = mi.rcMonitor.right - mi.rcMonitor.left;
-  int monitorHeight = mi.rcMonitor.bottom - mi.rcMonitor.top;
-
-  layout->w = 900;          
-  layout->item_height = item_height; 
-
-  layout->h = 95 + (count > 0 ? (count * layout->item_height) : 0); 
-
-  if (layout->h < height) layout->h = height;
-  if (layout->h > width) layout->h = width; 
-
-  layout->x = mi.rcMonitor.left + (monitorWidth - layout->w) / 2;
-  layout->y = mi.rcMonitor.top + (monitorHeight - layout->h) / 2;
+  CalculateWindowMetrics(count, layout, height, width, item_height);
 }
 
 void SimpleCreateChildControls(WindowHandle hwndParent, HFONT hFont, const char* string, int count, const WindowLayout* layout) {

@@ -12,7 +12,6 @@
 #include <unistd.h>
 #include <string.h>
 #include <dirent.h>
-#include <linux/input.h>
 #include <sys/socket.h>
 #include <sys/un.h>
 #include "platform/platform.h"
