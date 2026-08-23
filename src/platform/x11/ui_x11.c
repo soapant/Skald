@@ -324,11 +324,19 @@ char* Platform_SimplePromptUser(const char* prompt, const char* window_title,int
         if (selection_complete) { running = 0;selection_complete = false;}
     }
 
+    // Fix: copy user_input to output_buffer for Linux SimplePrompt (Win32 does GetWindowText)
+    if (state->user_input[0] != '\0') {
+        strncpy(output_buffer, state->user_input, sizeof(output_buffer)-1);
+        output_buffer[sizeof(output_buffer)-1] = '\0';
+    } else {
+        output_buffer[0] = '\0';
+    }
     g_IsMainWindowActive = false;
     g_currentSimplePromptState = NULL;
     g_currentPromptState = NULL;
     XDestroyWindow(dpy, win);
-    return output_buffer;
+    free(state);
+    return output_buffer[0] ? output_buffer : NULL;
 }
 
 

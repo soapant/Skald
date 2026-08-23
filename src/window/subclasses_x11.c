@@ -334,7 +334,8 @@ void DrawSimplePromptUserEditControl(Display *dpy, Window *win, SimplePromptStat
     int topLeftX = centerX - state->width / 2;                                                  
     int topLeftY = centerY - state->height / 2;
     
-    XftDrawRect(xd, &bg_color, topLeftX, topLeftY, state->width, 80);
+    // Fix: clear whole window to avoid saturation of display_message on redraw (was 80, text at y=70+ascent ~85 exceeds)
+    XftDrawRect(xd, &bg_color, topLeftX, topLeftY, state->width, state->height);
 
     // Draw elements with proper positioning
     draw_wrapped_text(dpy, xd, &text_color, font, state->user_input, 40, "LEFT", 20);
