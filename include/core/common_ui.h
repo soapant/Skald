@@ -11,6 +11,9 @@
 #include "core/types.h"
 #include "config.h"
 #include "core/timer.h"
+#if !defined(_WIN32)
+#include "platform/platform.h"
+#endif
 
 extern bool g_add_alias_to_string;
 extern char g_alias_display[MAX_ITEMS][512];
@@ -53,6 +56,7 @@ static inline void UI_SetSelection(ListBoxInfo* lb, WindowHandle hList, int inde
   (void)hList;
   if (!lb) return;
   if (lb->selected_index == index) return;
+  Platform_DismissMessage();
   lb->selected_index = index;
 }
 #endif
@@ -143,18 +147,32 @@ static inline void UI_NavigateTo(ListBoxInfo* lb, WindowHandle hListBox, int ind
   if (!lb) return;
   int count = lb->populated_count;
   if (count <= 0) {
+    if (lb->selected_index != -1) {
+#if !defined(_WIN32)
+      Platform_DismissMessage();
+#endif
+    }
     lb->selected_index = -1;
     UI_LB_SetCaretIndex(hListBox, -1, FALSE);
     return;
   }
   if (index >= count) index = count - 1;
   if (index == -1) {
+    if (lb->selected_index != -1) {
+#if !defined(_WIN32)
+      Platform_DismissMessage();
+#endif
+    }
     lb->selected_index = -1;
     UI_LB_SetCaretIndex(hListBox, -1, FALSE);
     return;
   }
 
   int old_sel = lb->selected_index;
+  if (old_sel == index) return;
+#if !defined(_WIN32)
+  Platform_DismissMessage();
+#endif
   int oldTop = UI_LB_GetTopIndex(hListBox);
   lb->selected_index = index;
 

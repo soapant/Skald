@@ -344,8 +344,25 @@ static pthread_mutex_t g_msg_mtx = PTHREAD_MUTEX_INITIALIZER;
 static MsgWindow* g_msg_window = NULL;
 
 static void destroy_msg_window(MsgWindow* m) {
-    if (m->xd) XftDrawDestroy(m->xd);
+    if (m->win != None && m->dpy) {
+        XDestroyWindow(m->dpy, m->win);
+        XFlush(m->dpy);
+        m->win = None;
+    }
+    if (m->xd) { XftDrawDestroy(m->xd); m->xd = NULL; }
     Platform_DestroyFont(m->font);
+    m->font = (FontHandle){0};
+}
+
+void Platform_DismissMessage(void) {
+    pthread_mutex_lock(&g_msg_mtx);
+    MsgWindow* old = g_msg_window;
+    if (old) {
+        g_msg_window = NULL;
+        old->dead = 1;
+        destroy_msg_window(old);
+    }
+    pthread_mutex_unlock(&g_msg_mtx);
 }
 
 static void* msg_destroy_thread(void* arg) {
