@@ -497,16 +497,56 @@ void DrawPromptUserListBox(Display *dpy,Window* win,PromptState *state) {
             char num[8];
             snprintf(num,sizeof(num),"%d.",idx+1);
             draw_wrapped_text(dpy, xd, &fcolrainbow, font, num, y, "LEFT",10);
-            char cache_trunc[256];
-            snprintf(cache_trunc, sizeof(cache_trunc), "%.80s", lb->populated_cache[idx]);
-            draw_wrapped_text(dpy, xd, &fcolrainbow, font, cache_trunc, y, "LEFT", 55);
+            int raw = (idx >=0 && idx < lb->populated_count) ? lb->matching_indices[idx] : -1;
+            const char* baseText = NULL;
+            if (g_alias_display_active && raw >=0 && raw < g_alias_display_count && g_alias_display[raw][0]!='\0')
+                baseText = g_alias_display[raw];
+            else
+                baseText = lb->populated_cache[idx];
+            char trunc[512];
+            snprintf(trunc, sizeof(trunc), "%.80s", baseText ? baseText : "");
+            const char* alias_pos = strstr(trunc, " [");
+            if (alias_pos) {
+                int main_len = (int)(alias_pos - trunc);
+                int text_x = 55;
+                XftDrawStringUtf8(xd, &fcolrainbow, xf, text_x, y + xf->ascent, (FcChar8*)trunc, main_len);
+                XGlyphInfo ext_main; XftTextExtentsUtf8(dpy, xf, (FcChar8*)trunc, main_len, &ext_main); int main_w = ext_main.xOff;
+                unsigned long alias_fg = rgb_to_hex(COLOR_ALIAS_TEXT);
+                XRenderColor rc_alias = {(alias_fg>>16&0xFF)*0x101,(alias_fg>>8&0xFF)*0x101,(alias_fg&0xFF)*0x101,0xFFFF};
+                XftColor aliasCol; XftColorAllocValue(dpy, vis, cmap, &rc_alias, &aliasCol);
+                const char* alias_part = alias_pos;
+                XftDrawStringUtf8(xd, &aliasCol, xf, text_x + main_w, y + xf->ascent, (FcChar8*)alias_part, strlen(alias_part));
+                XftColorFree(dpy, vis, cmap, &aliasCol);
+            } else {
+                draw_wrapped_text(dpy, xd, &fcolrainbow, font, trunc, y, "LEFT", 55);
+            }
         } else {
             char num[8];
             snprintf(num,sizeof(num),"%d.",idx+1);
             draw_wrapped_text(dpy, xd, &fcoltext, font, num, y, "LEFT", 10);
-            char cache_trunc[256];
-            snprintf(cache_trunc, sizeof(cache_trunc), "%.80s", lb->populated_cache[idx]);
-            draw_wrapped_text(dpy, xd, &fcoltext, font, cache_trunc, y, "LEFT", 45);
+            int raw = (idx >=0 && idx < lb->populated_count) ? lb->matching_indices[idx] : -1;
+            const char* baseText = NULL;
+            if (g_alias_display_active && raw >=0 && raw < g_alias_display_count && g_alias_display[raw][0]!='\0')
+                baseText = g_alias_display[raw];
+            else
+                baseText = lb->populated_cache[idx];
+            char trunc[512];
+            snprintf(trunc, sizeof(trunc), "%.80s", baseText ? baseText : "");
+            const char* alias_pos = strstr(trunc, " [");
+            if (alias_pos) {
+                int main_len = (int)(alias_pos - trunc);
+                int text_x = 45;
+                XftDrawStringUtf8(xd, &fcoltext, xf, text_x, y + xf->ascent, (FcChar8*)trunc, main_len);
+                XGlyphInfo ext_main; XftTextExtentsUtf8(dpy, xf, (FcChar8*)trunc, main_len, &ext_main); int main_w = ext_main.xOff;
+                unsigned long alias_fg = rgb_to_hex(COLOR_ALIAS_TEXT);
+                XRenderColor rc_alias = {(alias_fg>>16&0xFF)*0x101,(alias_fg>>8&0xFF)*0x101,(alias_fg&0xFF)*0x101,0xFFFF};
+                XftColor aliasCol; XftColorAllocValue(dpy, vis, cmap, &rc_alias, &aliasCol);
+                const char* alias_part = alias_pos;
+                XftDrawStringUtf8(xd, &aliasCol, xf, text_x + main_w, y + xf->ascent, (FcChar8*)alias_part, strlen(alias_part));
+                XftColorFree(dpy, vis, cmap, &aliasCol);
+            } else {
+                draw_wrapped_text(dpy, xd, &fcoltext, font, trunc, y, "LEFT", 45);
+            }
         }
 
         XftColorFree(dpy, vis, cmap, &bgc);
