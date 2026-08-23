@@ -25,11 +25,7 @@ int SelectionDataCount = 0;
 
 void SubjectiveMessageDisplay(const char* buffer,int msg_height,int timeout,ColorRef color) {
     if (MessagesEnabled) {
-        if (color) {
-            DisplayMessageText = color;
-        } else {
-            DisplayMessageText = COLOR_TEXT;
-        }
+        DisplayMessageText = color;
         if (WH_TO_HWND(hPopupWnd) != NULL) {
           MSG_TOP(buffer,msg_height,timeout);
         }else {

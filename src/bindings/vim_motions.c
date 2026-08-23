@@ -325,7 +325,7 @@ void HandleToggleHistory(VimContext* ctx) {
 void HandleShowFullText(VimContext* ctx) {
   if (FullTextNeedsKeyPress) {
       if (ctx && ctx->lb && UI_IsListBoxSelected(ctx->lb)) {
-        SubjectiveMessageDisplay(ctx->lb->populated_cache[ctx->lb->selected_index], 140, 6969, COLOR_OF_SELECTION_LB(ctx->lb));
+        SubjectiveMessageDisplay(ctx->lb->populated_cache[ctx->lb->selected_index], 140, 6969,COLOR_TEXT);
       }
   }
 }

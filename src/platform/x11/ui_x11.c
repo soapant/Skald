@@ -404,6 +404,7 @@ void Platform_DisplayMessage(const char* message, int centerX, int centerY, int 
 
     unsigned long bg_color = rgb_to_hex(COLOR_BG);
     unsigned long text_color = rgb_to_hex(DisplayMessageText);
+
     int topLeftX = centerX - (winWidth / 2);
     int topLeftY = centerY - (winHeight / 2);
 
