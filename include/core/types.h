@@ -185,6 +185,7 @@ typedef struct {
      size_t      item_count;
      char        filter[512];
      size_t      cursor;
+     int         scroll_offset;
      int         width, height;
      char*       window_title;
      ListBoxInfo listbox;
@@ -194,6 +195,7 @@ typedef struct {
 typedef struct {
      char*       display_message;
      size_t      cursor;
+     int         scroll_offset;
      char        user_input[512];
      int         width, height;
      char*       window_title;
