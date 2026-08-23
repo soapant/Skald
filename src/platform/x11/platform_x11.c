@@ -853,23 +853,28 @@ int Platform_CopyToClipboard(const char* text) {
     return (status == 0) ? 1 : 0;
 }
 
+// Not Implemented
 void Platform_StartUniversalTimer(void) {
     fprintf(stderr, "[PLATFORM] Platform_StartUniversalTimer not implemented yet\n");
 }
 
+// Not Implemented
 void Platform_ResetUniversalTimer(void) {
     fprintf(stderr, "[PLATFORM] Platform_ResetUniversalTimer not implemented yet\n");
 }
 
+// Not Implemented
 void Platform_ModifyUniversalTimer(double seconds_to_add) {
     (void)seconds_to_add;
     fprintf(stderr, "[PLATFORM] Platform_ModifyUniversalTimer not implemented yet\n");
 }
 
+// Not Implemented
 double Platform_GetUniversalTimeSeconds(void) {
     return 0.0;
 }
 
+// Not Implemented
 void Platform_SaveRegionToPNG(int x1, int y1, int x2, int y2, const char* fullPath) {
     (void)x1; (void)y1; (void)x2; (void)y2; (void)fullPath;
     fprintf(stderr, "[PLATFORM] Platform_SaveRegionToPNG not implemented yet\n");
