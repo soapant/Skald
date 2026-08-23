@@ -101,6 +101,7 @@ void toggle_messenger_speaker(void) {
 #include <string.h>
 #include <stdbool.h>
 
+// Not Implemented
 bool connect_phone(void) {
     return false;
 }
@@ -109,9 +110,11 @@ void tap(int x, int y) {
     (void)x; (void)y;
 }
 
+// Not Implemented
 void mute_messenger_call(void) {
 }
 
+// Not Implemented
 void toggle_messenger_speaker(void) {
 }
 #endif

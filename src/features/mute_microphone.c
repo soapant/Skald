@@ -77,5 +77,7 @@ void TriggerMuteState(void) {
             DisplayMessageText = COLOR_TEXT;
         }
     }
+#else
+    // Not Implemented
 #endif
 }

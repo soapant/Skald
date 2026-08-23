@@ -42,6 +42,7 @@ bool g_PromptJustClosed = false;
 long g_PromptCloseTimeMs = 0;
 extern bool g_Linux_CtrlHeld, g_Linux_AltHeld, g_Linux_ShiftHeld;
 
+// Not Implemented
 void Platform_WaitForKeypressAsync(KeyCallback callback) {
     (void)callback;
     fprintf(stderr, "[PLATFORM] Platform_WaitForKeypressAsync not implemented yet\n");
@@ -498,22 +499,26 @@ void Platform_DisplayMessage(const char* message, int centerX, int centerY, int 
     pthread_detach(tid);
 }
 
+// Not Implemented
 void Platform_SettingsPopUp(void) {
     fprintf(stderr, "[PLATFORM] Platform_SettingsPopUp not implemented yet\n");
 }
 
 
+// Not Implemented
 char* Platform_EditTextPopup(const char* initial_text, int centerX, int centerY, int maxWidth, int maxHeight) {
     (void)initial_text; (void)centerX; (void)centerY; (void)maxWidth; (void)maxHeight;
     fprintf(stderr, "[PLATFORM] Platform_EditTextPopup not implemented yet\n");
     return NULL;
 }
 
+// Not Implemented
 char* Platform_SearchPopup(void) {
     fprintf(stderr, "[PLATFORM] Platform_SearchPopup not implemented yet\n");
     return NULL;
 }
 // On HyperLand There Is No Tray
+// Not Implemented
 int Platform_InitializeTrayIcon(void) {
     return -1;
 }
@@ -702,8 +707,10 @@ void Platform_RunHotKeyMessageLoop(void) {
 }
 
 // On X11 Window Initalization Doesnt Need To Be Done
+// Not Implemented
 void Platform_InitUI(void) {
 }
 // Same Thing Here
+// Not Implemented
 void Platform_ShutdownUI(void) {
 }

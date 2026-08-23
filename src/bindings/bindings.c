@@ -340,6 +340,7 @@ void RunMiscApplication(const char* path) {
         printf("[MISC] Failed to open: %s (Error: %lu)\n", path, GetLastError());
     }
 #else
+    // Not Implemented
     (void)path;
 #endif
 }
