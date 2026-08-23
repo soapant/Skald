@@ -2,6 +2,7 @@
 #include "features/nvim_zoxide.h"
 #include "helpers.h"
 #include "core/common_ui.h"
+#include "core/zoxide_helpers.h"
 #include <ctype.h>
 #if defined(_WIN32)
 #include <shellapi.h>
@@ -87,49 +88,12 @@ static void LaunchNvim(const char* path) {
 }
 
 static void RebuildNvimCache(void) {
-    if (g_cached_nvim_commands) {
-        for (int i = 0; i < g_cached_nvim_count; i++) {
-            free(g_cached_nvim_commands[i]);
-        }
-        free(g_cached_nvim_commands);
-        g_cached_nvim_commands = NULL;
-        g_cached_nvim_count = 0;
-    }
-    
-    if (!NvimZoxideFile || NvimZoxideFile->fileSize == 0) {
-        return;
-    }
-    
-    size_t lineCount = 0;
-    Line* lines = Platform_FileGetLines(NvimZoxideFile, &lineCount);
-    if (!lines) return;
-    
-    g_cached_nvim_commands = (char**)malloc(lineCount * sizeof(char*));
-    g_cached_nvim_count = 0;
-    
-    for (size_t i = 0; i < lineCount; i++) {
-        size_t len = lines[i].length;
-        while (len > 0 && lines[i].ptr[len-1] == '\r') len--;
-        
-        if (len > 0) {
-            char* cmd = (char*)malloc(len + 1);
-            memcpy(cmd, lines[i].ptr, len);
-            cmd[len] = '\0';
-            g_cached_nvim_commands[g_cached_nvim_count++] = cmd;
-        }
-    }
-    
-    free(lines);
+    ZoxideHelper_RebuildCache(NvimZoxideFile, &g_cached_nvim_commands, &g_cached_nvim_count);
 }
 
 static void neovide_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
     if (!lb) return;
-    
-    if (!g_cached_nvim_commands) {
-        RebuildNvimCache();
-    }
-    
-    PopulateListBox(lb, hListBox, filter, (const char**)g_cached_nvim_commands, g_cached_nvim_count, NULL);
+    ZoxideHelper_Refresh(filter, hListBox, lb, NvimZoxideFile, &g_cached_nvim_commands, &g_cached_nvim_count);
 }
 
 
@@ -137,57 +101,23 @@ static void neovide_enter_callback(const char* selection, ListBoxInfo* lb) {
       char* path = Platform_QueryZoxidePath(selection);
       if (path) {
           LaunchNvim(path);
-          if (NvimZoxideFile->fileSize > 0) {
-          char lastChar = Platform_GetLastChar(NvimZoxideFile);
-              if (lastChar != '\n') {
-                  Platform_FileAppend(NvimZoxideFile, "\n");
-              }
-          }
-
-          if (!UI_IsListBoxSelected(lb)) {
-              Platform_FileAppend(NvimZoxideFile, selection);
-              Platform_FileAppend(NvimZoxideFile, "\n");
-              RebuildNvimCache();
-          }
+          ZoxideHelper_AppendNewEntry(NvimZoxideFile, selection, lb, &g_cached_nvim_commands, &g_cached_nvim_count);
       }
 }
 static void neovide_edit_callback(const char* selection, ListBoxInfo* lb) {
-    char* NewneovideQuery = Platform_EditTextPopup(selection,960,540,1000,300);
-    
-    if (NewneovideQuery != NULL) {
-        WriteToCacheIndex(lb, lb->selected_index,NewneovideQuery);
-    }
-    
-    Platform_ReplaceLineInMappedFile(NvimZoxideFile,lb->selected_index,NewneovideQuery);
-    
-    RebuildNvimCache();
-    
-    neovide_refresh_callback("", hListBox, lb);
+    ZoxideHelper_Edit(selection, lb, NvimZoxideFile, &g_cached_nvim_commands, &g_cached_nvim_count, neovide_refresh_callback);
 }
 
 void TriggerNvimZoxide(void) {
     if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
-    
-    if (!g_cached_nvim_commands) {
-        RebuildNvimCache();
-    }
-    if (!Initialized) {
-      InitTextEditor();
-    }
-    
-    const char** list = (const char**)malloc(g_cached_nvim_count * sizeof(char*));
-    if (!list) return;
-    
-    for (int i = 0; i < g_cached_nvim_count; i++) {
-        list[i] = g_cached_nvim_commands[i];
-    }
+    if (!g_cached_nvim_commands) RebuildNvimCache();
+    if (!Initialized) InitTextEditor();
+    const char** list = ZoxideHelper_PrepareTriggerList(NULL, &g_cached_nvim_commands, &g_cached_nvim_count, NULL);
     char titleBuffer[256];
-    
     snprintf(titleBuffer,sizeof(titleBuffer),"📝 %s",TextEditorName);
-    
     ImportantPromptUser(list, titleBuffer, g_cached_nvim_count, 920, 650, 32, 
                neovide_refresh_callback, 
                neovide_enter_callback, 
                neovide_edit_callback,NULL);
-    free(list);
+    ZoxideHelper_CleanupTriggerList(list);
 }

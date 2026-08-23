@@ -2,6 +2,7 @@
 #include "features/google_search.h"
 #include "helpers.h"
 #include "core/common_ui.h"
+#include "core/zoxide_helpers.h"
 #if defined(_WIN32)
 #include <shellapi.h>
 #endif
@@ -10,50 +11,13 @@ static char** g_cached_google_queries = NULL;
 static int g_cached_google_count = 0;
 
 static void RebuildGoogleCache(void) {
-    if (g_cached_google_queries) {
-        for (int i = 0; i < g_cached_google_count; i++) {
-            free(g_cached_google_queries[i]);
-        }
-        free(g_cached_google_queries);
-        g_cached_google_queries = NULL;
-        g_cached_google_count = 0;
-    }
-    
-    if (!GoogleZoxideFile || GoogleZoxideFile->fileSize == 0) {
-        return;
-    }
-    
-    size_t lineCount = 0;
-    Line* lines = Platform_FileGetLines(GoogleZoxideFile, &lineCount);
-    if (!lines) return;
-    
-    g_cached_google_queries = (char**)malloc(lineCount * sizeof(char*));
-    g_cached_google_count = 0;
-    
-    for (size_t i = 0; i < lineCount; i++) {
-        size_t len = lines[i].length;
-        while (len > 0 && lines[i].ptr[len-1] == '\r') len--;
-        
-        if (len > 0) {
-            char* cmd = (char*)malloc(len + 1);
-            memcpy(cmd, lines[i].ptr, len);
-            cmd[len] = '\0';
-            g_cached_google_queries[g_cached_google_count++] = cmd;
-        }
-    }
-    
-    free(lines);
+    ZoxideHelper_RebuildCache(GoogleZoxideFile, &g_cached_google_queries, &g_cached_google_count);
 }
 
 
 static void google_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
     if (!lb) return;
-    
-    if (!g_cached_google_queries) {
-        RebuildGoogleCache();
-    }
-    
-    PopulateListBox(lb, hListBox, filter, (const char**)g_cached_google_queries, g_cached_google_count, NULL);
+    ZoxideHelper_Refresh(filter, hListBox, lb, GoogleZoxideFile, &g_cached_google_queries, &g_cached_google_count);
 }
 
 
@@ -90,52 +54,21 @@ static void DoGoogleSearch(const char* query) {
 }
 
 static void google_enter_callback(const char* selection, ListBoxInfo* lb) {
-        if (GoogleZoxideFile->fileSize > 0) {
-                  char lastChar = Platform_GetLastChar(GoogleZoxideFile);
-            if (lastChar != '\n') {
-                Platform_FileAppend(GoogleZoxideFile, "\n");
-            }
-        }
-        if (!UI_IsListBoxSelected(lb)) {
-        Platform_FileAppend(GoogleZoxideFile, selection);
-        Platform_FileAppend(GoogleZoxideFile, "\n");
-        RebuildGoogleCache();
-        }
+        ZoxideHelper_AppendNewEntry(GoogleZoxideFile, selection, lb, &g_cached_google_queries, &g_cached_google_count);
         DoGoogleSearch(selection);
 }
 
 static void google_edit_callback(const char* selection, ListBoxInfo* lb) {
-    char* NewgoogleQuery = Platform_EditTextPopup(selection,960,540,1000,300);
-    
-    if (NewgoogleQuery != NULL) {
-        WriteToCacheIndex(lb, lb->selected_index,NewgoogleQuery);
-    }
-    
-    Platform_ReplaceLineInMappedFile(GoogleZoxideFile,lb->selected_index,NewgoogleQuery);
-    
-    RebuildGoogleCache();
-    
-    google_refresh_callback("", hListBox, lb);
+    ZoxideHelper_Edit(selection, lb, GoogleZoxideFile, &g_cached_google_queries, &g_cached_google_count, google_refresh_callback);
 }
 
 void TriggerGoogleSearch(void) {
     if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
-    
-    if (!g_cached_google_queries) {
-        RebuildGoogleCache();
-    }
-    
-    const char** list = (const char**)malloc(g_cached_google_count * sizeof(char*));
-    if (!list) return;
-    
-    for (int i = 0; i < g_cached_google_count; i++) {
-        list[i] = g_cached_google_queries[i];
-    }
-    
+    if (!g_cached_google_queries) RebuildGoogleCache();
+    const char** list = ZoxideHelper_PrepareTriggerList(NULL, &g_cached_google_queries, &g_cached_google_count, NULL);
     ImportantPromptUser(list, "🔍 Google", g_cached_google_count, 920, 650, 32, 
                google_refresh_callback, 
                google_enter_callback, 
                google_edit_callback,NULL);
-    
-    free(list);
+    ZoxideHelper_CleanupTriggerList(list);
 }
