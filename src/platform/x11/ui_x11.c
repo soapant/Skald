@@ -233,6 +233,8 @@ char* Platform_SimplePromptUser(const char* prompt, const char* window_title,int
     int layout_w = 900;
     int layout_h = 95 + (1 > 0 ? (1 * item_height) : 0);
 
+    selection_complete = false;
+    output_buffer[0] = '\0';
     SimplePromptState* state = (SimplePromptState*)calloc(1, sizeof(SimplePromptState));
     state->display_message = (char*)prompt;
     state->user_input[0] = '\0';
