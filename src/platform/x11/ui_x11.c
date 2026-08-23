@@ -215,6 +215,14 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
     g_last_mode = g_current_mode;
     g_currentPromptState = NULL;
     g_IsMainWindowActive = false;
+    {
+        struct timeval tv; gettimeofday(&tv, NULL);
+        g_PromptJustClosed = true;
+        g_PromptCloseTimeMs = tv.tv_sec*1000 + tv.tv_usec/1000;
+    }
+    g_Linux_AltHeld = false;
+    g_Linux_CtrlHeld = false;
+    g_Linux_ShiftHeld = false;
     XSync(dpy, False);
     XDestroyWindow(dpy, win);
     XSync(dpy, False);
@@ -336,6 +344,14 @@ char* Platform_SimplePromptUser(const char* prompt, const char* window_title,int
     g_IsMainWindowActive = false;
     g_currentSimplePromptState = NULL;
     g_currentPromptState = NULL;
+    {
+        struct timeval tv; gettimeofday(&tv, NULL);
+        g_PromptJustClosed = true;
+        g_PromptCloseTimeMs = tv.tv_sec*1000 + tv.tv_usec/1000;
+    }
+    g_Linux_AltHeld = false;
+    g_Linux_CtrlHeld = false;
+    g_Linux_ShiftHeld = false;
     XDestroyWindow(dpy, win);
     free(state);
     return output_buffer[0] ? output_buffer : NULL;
@@ -702,7 +718,14 @@ void Platform_RunHotKeyMessageLoop(void) {
                     gettimeofday(&now, NULL);
                     long age_ms = (now.tv_sec - ev.time.tv_sec) * 1000L
                                 + (now.tv_usec - ev.time.tv_usec) / 1000L;
-                    if (age_ms > HOTKEY_STALE_EVENT_MS) continue;
+                    if (age_ms > HOTKEY_STALE_EVENT_MS) {
+                        bool is_modifier = (ev.code == KEY_LEFTALT || ev.code == KEY_RIGHTALT ||
+                                            ev.code == KEY_LEFTCTRL || ev.code == KEY_RIGHTCTRL ||
+                                            ev.code == KEY_LEFTSHIFT || ev.code == KEY_RIGHTSHIFT ||
+                                            ev.code == KEY_LEFTMETA || ev.code == KEY_RIGHTMETA);
+                        if (!is_modifier) continue;
+                        if (ev.value == 1) continue;
+                    }
 
                     HandleGlobalKeyEvent(ev.code, ev.value);
                 }
