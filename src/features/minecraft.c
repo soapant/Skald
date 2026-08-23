@@ -31,6 +31,7 @@ void minecraft_type_command(const char* command) {
     enter[1].ki.dwFlags = KEYEVENTF_KEYUP;
     SendInput(2, enter, sizeof(INPUT));
 #else
+    // Not Implemented
     (void)command;
 #endif
 }

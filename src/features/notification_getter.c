@@ -55,4 +55,6 @@ void StartNtfyDaemon(const wchar_t* topic, NtfyCallback callback) {
     
     CreateThread(NULL, 0, NtfyListenerThread, config, 0, NULL);
 }
+#else
+// Not Implemented
 #endif

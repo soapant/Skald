@@ -1,6 +1,7 @@
 #include "common.h"
 #include "features/windows_control.h"
 #include "helpers.h"
+// Not Implemented on Linux - uses netsh (Windows only)
 
 bool IsWifiEnabled(void) {
     FILE* fp = popen("netsh interface show interface", "r");
