@@ -295,8 +295,133 @@ static void todo_copy_callback(const char* selection,int true_index,int type) {
 }
 
 #if !defined(_WIN32)
-static void todo_render_callback(void* hdc, const char* text, void* rect, bool is_selected, int itemIndex) {
-    (void)hdc; (void)rect; (void)text; (void)is_selected; (void)itemIndex;
+static void todo_render_callback(Display *dpy, Window *win, PromptState *state) {
+    if (!state->has_listbox) return;
+    ListBoxInfo *lb = &state->listbox;
+    int screen = DefaultScreen(dpy);
+    
+    XftDraw *xd = XftDrawCreate(dpy, *win, DefaultVisual(dpy, screen), DefaultColormap(dpy, screen));
+    FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
+    
+    int y0 = 100;
+    int itemH = FontSize + 36; 
+
+    {
+        Visual *visClear = DefaultVisual(dpy, screen);
+        Colormap cmapClear = DefaultColormap(dpy, screen);
+        unsigned long bg_hex = rgb_to_hex(COLOR_BG);
+        XRenderColor rc0 = { 
+            (bg_hex >> 16 & 0xFF) * 0x101, 
+            (bg_hex >> 8 & 0xFF) * 0x101, 
+            (bg_hex & 0xFF) * 0x101, 
+            0xFFFF 
+        };
+        XftColor c0; 
+        XftColorAllocValue(dpy, visClear, cmapClear, &rc0, &c0);
+        XftDrawRect(xd, &c0, 0, y0, state->width, state->height - y0);
+        XftColorFree(dpy, visClear, cmapClear, &c0);
+    }
+
+    if (!lb->populated_count) {
+        XftDrawDestroy(xd);
+        Platform_DestroyFont(font);
+        return;
+    }
+
+    int visible = (state->height - y0) / itemH;
+    if (visible < 1) visible = 1;
+    if (visible > lb->populated_count) visible = lb->populated_count;
+
+    // Scrolling boundary checks
+    if (lb->selected_index >= 0) {
+        if (lb->selected_index < lb->view_offset + PaddingForScrolling)
+            lb->view_offset = lb->selected_index - PaddingForScrolling;
+        else if (lb->selected_index >= lb->view_offset + visible - PaddingForScrolling)
+            lb->view_offset = lb->selected_index - visible + PaddingForScrolling + 1;
+    }
+    if (lb->view_offset < 0) lb->view_offset = 0;
+    if (lb->view_offset + visible > lb->populated_count)
+        lb->view_offset = lb->populated_count - visible;
+    if (lb->view_offset < 0) lb->view_offset = 0;
+
+    Visual *vis = DefaultVisual(dpy, screen);
+    Colormap cmap = DefaultColormap(dpy, screen);
+
+    // 2. Render each visible list item
+    for (int i = 0; i < visible; i++) {
+        int idx = lb->view_offset + i;
+        int y = y0 + (i * itemH);
+        bool sel = (idx == lb->selected_index);
+
+        // Background highlight
+        unsigned long bg = sel ? rgb_to_hex(COLOR_SELECTED_TEXT) : rgb_to_hex(COLOR_BG);
+        XRenderColor rc = { (bg >> 16 & 0xFF) * 0x101, (bg >> 8 & 0xFF) * 0x101, (bg & 0xFF) * 0x101, 0xFFFF };
+        XftColor bgc; 
+        XftColorAllocValue(dpy, vis, cmap, &rc, &bgc);
+        XftDrawRect(xd, &bgc, 0, y, state->width, itemH);
+        XftColorFree(dpy, vis, cmap, &bgc);
+
+        // Parse todo line data
+        char text_buf[256];
+        snprintf(text_buf, sizeof(text_buf), "%s", lb->populated_cache[idx]);
+
+        char main_text[512] = {0};
+        char tags[10][64];
+        int tag_count = 0;
+        ParseTodoLine(text_buf, main_text, tags, &tag_count);
+        char num_buf[128];
+        snprintf(num_buf, sizeof(num_buf), "%d.", idx + 1);
+
+        unsigned long fg_raw = rgb_to_hex(GetRainbowColor((float)(idx % GradientItems) / (float)GradientItems, 0.85f, GradientBrightness));
+        
+        XRenderColor rcf = { (fg_raw >> 16 & 0xFF) * 0x101, (fg_raw >> 8 & 0xFF) * 0x101, (fg_raw & 0xFF) * 0x101, 0xFFFF };
+        XftColor fg_color;
+        XftColorAllocValue(dpy, vis, cmap, &rcf, &fg_color);
+
+        draw_wrapped_text(dpy, xd, &fg_color, font, num_buf, y + 4, "LEFT", 10);
+
+        int XOffset = get_offset_based_on_number(idx);
+        draw_wrapped_text(dpy, xd, &fg_color, font, main_text, y + 4, "LEFT",XOffset);
+        XftColorFree(dpy, vis, cmap, &fg_color);
+
+        // draw_wrapped_text(dpy, xd, &fg_color, font, main_text, y + 4, "LEFT", 10);
+        // XftColorFree(dpy, vis, cmap, &fg_color);
+
+        if (tag_count > 0) {
+            if (tag_count == 1) {
+                int y_offset = 0;
+                for (int t = 0; t < tag_count; t++) {
+                    unsigned long tag_rgb = rgb_to_hex(GetTagColor(tags[t]));
+                    XRenderColor rct = { (tag_rgb >> 16 & 0xFF) * 0x101, (tag_rgb >> 8 & 0xFF) * 0x101, (tag_rgb & 0xFF) * 0x101, 0xFFFF };
+                    XftColor tag_col;
+                    XftColorAllocValue(dpy, vis, cmap, &rct, &tag_col);
+
+                    // Single tag vertical drop logic
+                    draw_wrapped_text(dpy, xd, &tag_col, font, tags[t], y + 28 + y_offset, "LEFT", 14);
+                    XftColorFree(dpy, vis, cmap, &tag_col);
+                    y_offset += 18;
+                }
+            } else {
+                int x_offset = 0;
+                for (int t = 0; t < tag_count; t++) {
+                    unsigned long tag_rgb = rgb_to_hex(GetTagColor(tags[t]));
+                    XRenderColor rct = { (tag_rgb >> 16 & 0xFF) * 0x101, (tag_rgb >> 8 & 0xFF) * 0x101, (tag_rgb & 0xFF) * 0x101, 0xFFFF };
+                    XftColor tag_col;
+                    XftColorAllocValue(dpy, vis, cmap, &rct, &tag_col);
+
+                    // Multiple tags horizontal side-by-side flow logic (matching Win32 tagRect.left += 14 + x_offset)
+                    draw_wrapped_text(dpy, xd, &tag_col, font, tags[t], y + 28, "LEFT", 14 + x_offset);
+                    
+                    // Increment horizontal spacing per tag length
+                    x_offset += strlen(tags[t]) * 12; 
+                    XftColorFree(dpy, vis, cmap, &tag_col);
+                }
+            }
+        }
+    }
+
+    XftDrawDestroy(xd);
+    Platform_DestroyFont(font);
 }
 #endif
 #if defined(_WIN32)
