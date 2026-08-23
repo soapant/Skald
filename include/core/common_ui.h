@@ -397,7 +397,9 @@ static inline void UI_SetText(WindowHandle hEdit,char* text) {
 }
 #else
 static inline void UI_SetText(WindowHandle hEdit,char* text) {
-  (void)hEdit; (void)text;
+    strncpy(g_currentPromptState->filter,"", sizeof(g_currentPromptState->filter)-1);
+    g_currentPromptState->filter[sizeof(g_currentPromptState->filter)-1]='\0';
+    g_currentPromptState->cursor = (int)strlen(g_currentPromptState->filter);
 }
 #endif
 

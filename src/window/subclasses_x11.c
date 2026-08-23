@@ -63,9 +63,10 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
     if (ev->type != KeyPress) return false;
 
     int wParam = Linux_KeysymToWindowsVK(XLookupKeysym(&ev->xkey, 0));
-    bool ctrl_pressed = (ev->xkey.state & ControlMask) != 0;
-    bool shift_pressed = (ev->xkey.state & ShiftMask) != 0;
-    bool alt_pressed = (ev->xkey.state & Mod1Mask) != 0;
+    extern bool g_Linux_CtrlHeld, g_Linux_AltHeld, g_Linux_ShiftHeld;
+    bool ctrl_pressed = ((ev->xkey.state & ControlMask) != 0) || g_Linux_CtrlHeld;
+    bool shift_pressed = ((ev->xkey.state & ShiftMask) != 0) || g_Linux_ShiftHeld;
+    bool alt_pressed = ((ev->xkey.state & Mod1Mask) != 0) || g_Linux_AltHeld;
     {
         int mod = HOTKEY_MOD_NONE;
         if (ctrl_pressed) mod |= HOTKEY_MOD_CTRL;
@@ -182,7 +183,9 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
         sel = filter_copy;
       }
       if (is_ctrl) {
-        if (g_ctrl_enter_callback) g_ctrl_enter_callback(sel, &state->listbox);
+        if (g_ctrl_enter_callback) {
+          g_ctrl_enter_callback(sel, &state->listbox);
+        }
         else if (g_enter_callback) g_enter_callback(sel, &state->listbox);
         return true;
       } else {
@@ -223,9 +226,10 @@ bool Linux_HandleSimplePromptKey(const XEvent* ev,SimplePromptState *state) {
     if (ev->type != KeyPress) return false;
 
     int wParam = Linux_KeysymToWindowsVK(XLookupKeysym(&ev->xkey, 0));
-    bool ctrl_pressed = (ev->xkey.state & ControlMask) != 0;
-    bool shift_pressed = (ev->xkey.state & ShiftMask) != 0;
-    bool alt_pressed = (ev->xkey.state & Mod1Mask) != 0;
+    extern bool g_Linux_CtrlHeld, g_Linux_AltHeld, g_Linux_ShiftHeld;
+    bool ctrl_pressed = ((ev->xkey.state & ControlMask) != 0) || g_Linux_CtrlHeld;
+    bool shift_pressed = ((ev->xkey.state & ShiftMask) != 0) || g_Linux_ShiftHeld;
+    bool alt_pressed = ((ev->xkey.state & Mod1Mask) != 0) || g_Linux_AltHeld;
     {
         int mod = HOTKEY_MOD_NONE;
         if (ctrl_pressed) mod |= HOTKEY_MOD_CTRL;
@@ -285,7 +289,7 @@ void DrawSimplePromptUserEditControl(Display *dpy, Window *win, SimplePromptStat
 
     XGlyphInfo ext;
     XftTextExtentsUtf8(dpy, xf, (FcChar8*)state->display_message, strlen(state->display_message), &ext);
-    int text_width = ext.xOff;  
+    int text_width = ext.xOff;
 
     unsigned long text_color_map = rgb_to_hex(COLOR_TEXT);
     unsigned long bg_color_map = rgb_to_hex(COLOR_BG);
@@ -331,28 +335,51 @@ void DrawSimplePromptUserEditControl(Display *dpy, Window *win, SimplePromptStat
 
     int centerX = state->width / 2;
     int centerY = state->height / 2;
-    int topLeftX = centerX - state->width / 2;                                                  
+    int topLeftX = centerX - state->width / 2;
     int topLeftY = centerY - state->height / 2;
-    
-    // Fix: clear whole window to avoid saturation of display_message on redraw (was 80, text at y=70+ascent ~85 exceeds)
     XftDrawRect(xd, &bg_color, topLeftX, topLeftY, state->width, state->height);
 
-    // Draw elements with proper positioning
-    draw_wrapped_text(dpy, xd, &text_color, font, state->user_input, 40, "LEFT", 20);
     draw_wrapped_text(dpy, xd, &vim_text_color, font, g_vim_mode, 0, "LEFT", 5);
     draw_wrapped_text(dpy, xd, &text_color, font, state->window_title, 0, "RIGHT", 5);
-    
     int centered_x = (state->width - text_width) / 2;
     draw_wrapped_text(dpy, xd, &text_color, font, state->display_message, 70, "LEFT", centered_x);
 
+    int visible_w = state->width - 40;
+    int text_len = strlen(state->user_input);
+    int cursor_x = 0;
+    int text_w = 0;
+    if (xf) {
+        XGlyphInfo cext;
+        XftTextExtentsUtf8(dpy, xf, (FcChar8*)state->user_input, state->cursor, &cext);
+        cursor_x = cext.xOff;
+        XGlyphInfo textExt;
+        XftTextExtentsUtf8(dpy, xf, (FcChar8*)state->user_input, text_len, &textExt);
+        text_w = textExt.xOff;
+    }
+    int scroll = state->scroll_offset;
+    int margin = 20;
+    if (cursor_x - scroll > visible_w - margin) scroll = cursor_x - visible_w + margin;
+    if (cursor_x - scroll < margin) scroll = cursor_x - margin;
+    if (scroll < 0) scroll = 0;
+    if (text_w - scroll < visible_w && scroll > 0) {
+        if (text_w < visible_w) scroll = 0;
+        else scroll = text_w - visible_w;
+    }
+    if (cursor_x - scroll < 0) scroll = cursor_x;
+    if (cursor_x - scroll > visible_w) scroll = cursor_x - visible_w;
+    state->scroll_offset = scroll;
+    int draw_x = 20 - scroll;
+    int draw_y = 40 + (xf ? xf->ascent : FontSize);
+    if (xf && text_len > 0) {
+        XftDrawStringUtf8(xd, &text_color, xf, draw_x, draw_y, (FcChar8*)state->user_input, text_len);
+    }
+    int cursor_draw_x = 22 + cursor_x - scroll;
+    if (cursor_draw_x < 20) cursor_draw_x = 20;
+    if (cursor_draw_x > state->width - 10) cursor_draw_x = state->width - 10;
     if (IsInsertMode()) {
-        XGlyphInfo cursor_ext;
-        XftTextExtentsUtf8(dpy, xf, (FcChar8*)state->user_input, state->cursor, &cursor_ext);
-        XftDrawRect(xd, &text_color, 22 + cursor_ext.xOff, 47, 2, FontSize);
+        XftDrawRect(xd, &text_color, cursor_draw_x, 47, 2, FontSize);
     } else {
-        XGlyphInfo cursor_ext;
-        XftTextExtentsUtf8(dpy, xf, (FcChar8*)state->user_input, state->cursor, &cursor_ext);
-        XftDrawRect(xd, &text_color, 22 + cursor_ext.xOff, 47, 12, FontSize);
+        XftDrawRect(xd, &text_color, cursor_draw_x, 47, 12, FontSize);
     }
 
     XftColorFree(dpy, visual, cmap, &bg_color);
@@ -367,9 +394,7 @@ void DrawPromptUserEditControl(Display *dpy,Window* win,PromptState *state) {
     XftDraw* xd = XftDrawCreate(dpy, *win, DefaultVisual(dpy, screen), DefaultColormap(dpy, screen));
 
     FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
-
-    int textW = 0, textH = 0;
-    Platform_GetTextExtents(font,state->filter,state->width, &textW, &textH);
+    XftFont* xf = FH_TO_XFT(font);
 
     unsigned long text_color_map = rgb_to_hex(COLOR_TEXT);
     unsigned long bg_color_map = rgb_to_hex(COLOR_BG);
@@ -412,22 +437,48 @@ void DrawPromptUserEditControl(Display *dpy,Window* win,PromptState *state) {
     XftColorAllocValue(dpy, visual, cmap, &rc_vim_text_color, &vim_text_color);
     int centerX = state->width / 2;
     int centerY = state->height / 2;
-    int topLeftX = centerX - state->width / 2;                                                  
-    int topLeftY = centerY - state->height / 2; 
-    XftDrawRect(xd, &bg_color, topLeftX, topLeftY, state->width,80);                       
-    draw_wrapped_text(dpy, xd, &text_color, font,state->filter,40,"LEFT",20);
+    int topLeftX = centerX - state->width / 2;
+    int topLeftY = centerY - state->height / 2;
+    XftDrawRect(xd, &bg_color, topLeftX, topLeftY, state->width,80);
     draw_wrapped_text(dpy, xd, &vim_text_color, font,g_vim_mode,0,"LEFT",5);
     draw_wrapped_text(dpy, xd, &text_color,font,state->window_title,0,"RIGHT",5);
+
+    int visible_w = state->width - 40;
+    int text_len = strlen(state->filter);
+    int cursor_x = 0;
+    int text_w = 0;
+    if (xf) {
+        XGlyphInfo cext;
+        XftTextExtentsUtf8(dpy, xf, (FcChar8*)state->filter, state->cursor, &cext);
+        cursor_x = cext.xOff;
+        XGlyphInfo textExt;
+        XftTextExtentsUtf8(dpy, xf, (FcChar8*)state->filter, text_len, &textExt);
+        text_w = textExt.xOff;
+    }
+    int scroll = state->scroll_offset;
+    int margin = 20;
+    if (cursor_x - scroll > visible_w - margin) scroll = cursor_x - visible_w + margin;
+    if (cursor_x - scroll < margin) scroll = cursor_x - margin;
+    if (scroll < 0) scroll = 0;
+    if (text_w - scroll < visible_w && scroll > 0) {
+        if (text_w < visible_w) scroll = 0;
+        else scroll = text_w - visible_w;
+    }
+    if (cursor_x - scroll < 0) scroll = cursor_x;
+    if (cursor_x - scroll > visible_w) scroll = cursor_x - visible_w;
+    state->scroll_offset = scroll;
+    int draw_x = 20 - scroll;
+    int draw_y = 40 + (xf ? xf->ascent : FontSize);
+    if (xf && text_len > 0) {
+        XftDrawStringUtf8(xd, &text_color, xf, draw_x, draw_y, (FcChar8*)state->filter, text_len);
+    }
+    int cursor_draw_x = 22 + cursor_x - scroll;
+    if (cursor_draw_x < 20) cursor_draw_x = 20;
+    if (cursor_draw_x > state->width - 10) cursor_draw_x = state->width - 10;
     if (IsInsertMode()) {
-        XftFont* xf = FH_TO_XFT(font);
-        XGlyphInfo ext;
-        XftTextExtentsUtf8(dpy, xf, (FcChar8*)state->filter, state->cursor, &ext);
-        XftDrawRect(xd, &text_color,22 + ext.xOff, 47, 2,FontSize);
+        XftDrawRect(xd, &text_color, cursor_draw_x, 47, 2, FontSize);
     } else {
-        XftFont* xf = FH_TO_XFT(font);
-        XGlyphInfo ext;
-        XftTextExtentsUtf8(dpy, xf, (FcChar8*)state->filter, state->cursor, &ext);
-        XftDrawRect(xd, &text_color,22 + ext.xOff, 47, 12,FontSize);
+        XftDrawRect(xd, &text_color, cursor_draw_x, 47, 12, FontSize);
     }
     XftColorFree(dpy, visual, cmap, &bg_color);
     XftColorFree(dpy, visual, cmap, &text_color);

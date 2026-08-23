@@ -175,7 +175,6 @@ void HandleInsertControlEnter(VimContext* ctx) {
   } else {
     VimCtx_GetText(ctx, text, sizeof(text));
   }
-  printf("TRYING TO DO CTRL ENTER WITH TEXT %s \n",text);
   if (g_ctrl_enter_callback != NULL) {
     g_ctrl_enter_callback(text, ctx->lb);
   }
