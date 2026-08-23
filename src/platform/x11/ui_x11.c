@@ -320,7 +320,7 @@ char* Platform_SimplePromptUser(const char* prompt, const char* window_title,int
             }
         }
         Linux_RenderSimplePromptUser(dpy,&win, state);
-        if (selection_complete) { running = 0; break; }
+        if (selection_complete) { running = 0;selection_complete = false;}
     }
 
     g_IsMainWindowActive = false;

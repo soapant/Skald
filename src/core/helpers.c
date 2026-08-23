@@ -500,10 +500,7 @@ void draw_wrapped_text(Display* dpy, XftDraw* xd, XftColor* color, FontHandle fo
     int alignment = 0;
 
     if (centered_to != NULL) {
-        if (strstr(centered_to, "CENTER") != NULL) {
-            alignment = 1;
-            maxWidth = (FontSize * text_len) * 1.5; 
-        } else if (strstr(centered_to, "RIGHT") != NULL) {
+        if (strstr(centered_to, "RIGHT") != NULL) {
             alignment = 2;
             maxWidth = 900;
         } else {
@@ -529,8 +526,7 @@ void draw_wrapped_text(Display* dpy, XftDraw* xd, XftColor* color, FontHandle fo
             int lw = xft_width(dpy, xf, lineStart, word_start - lineStart);
             
             int drawX = 0;
-            if (alignment == 1)      drawX = xOffset + (maxWidth - lw) / 2; 
-            else if (alignment == 2) drawX = maxWidth - lw - xOffset;      
+            if (alignment == 2) drawX = maxWidth - lw - xOffset;      
             else                     drawX = xOffset;                      
             
             XftDrawStringUtf8(xd, color, xf, drawX, y, (FcChar8*)lineStart, word_start - lineStart);
