@@ -530,11 +530,124 @@ void Platform_SettingsPopUp(void) {
 }
 
 
-// Not Implemented
 char* Platform_EditTextPopup(const char* initial_text, int centerX, int centerY, int maxWidth, int maxHeight) {
-    (void)initial_text; (void)centerX; (void)centerY; (void)maxWidth; (void)maxHeight;
-    fprintf(stderr, "[PLATFORM] Platform_EditTextPopup not implemented yet\n");
-    return NULL;
+    Display* dpy = get_display();
+    if (!dpy) return NULL;
+
+    int screen = DefaultScreen(dpy);
+    
+    selection_complete = false;
+    output_buffer[0] = '\0';
+    
+    SimplePromptState* state = (SimplePromptState*)calloc(1, sizeof(SimplePromptState));
+    if (!state) return NULL;
+    
+    state->display_message = "Edit Text:"; // Default prompt
+    strncpy(state->user_input, initial_text ? initial_text : "", sizeof(state->user_input) - 1);
+    state->cursor = strlen(state->user_input);
+    state->width = maxWidth;
+    state->height = maxHeight;
+    state->window_title = "EditPopup";
+
+    int x = centerX - (maxWidth / 2);
+    int y = centerY - (maxHeight / 2);
+
+    unsigned long bg_color = rgb_to_hex(COLOR_BG);
+
+    Window win = XCreateSimpleWindow(
+        dpy,
+        RootWindow(dpy, screen),
+        x, y,
+        maxWidth, maxHeight,
+        0,
+        bg_color,
+        bg_color
+    );
+
+    Atom wm_type = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE", False);
+    Atom wm_type_dialog = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE_DIALOG", False);
+    XChangeProperty(dpy, win, wm_type, XA_ATOM, 32,
+                    PropModeReplace, (unsigned char*)&wm_type_dialog, 1);
+
+    XClassHint* class_hint = XAllocClassHint();
+    class_hint->res_name = "colored";
+    class_hint->res_class = "colored";
+    XSetClassHint(dpy, win, class_hint);
+    XFree(class_hint);
+
+    XSelectInput(dpy, win, KeyPressMask | ExposureMask | FocusChangeMask);
+    XMapWindow(dpy, win);
+    XFlush(dpy);
+
+    g_currentSimplePromptState = state;
+    g_IsMainWindowActive = true;
+    g_PromptJustClosed = false;
+
+    XEvent ev;
+    int running = 1;
+
+    while (running) {
+        XNextEvent(dpy, &ev);
+        
+        if (ev.type == KeyPress) {
+            bool handled = Linux_HandleSimplePromptKey(&ev, state);
+            if (!handled) {
+                if (IsInsertMode()) {
+                    char buf[32];
+                    KeySym ks;
+                    int len = XLookupString(&ev.xkey, buf, sizeof(buf), &ks, NULL);
+                    
+                    if (ks == XK_Return) {
+                        selection_complete = true;
+                        running = 0;
+                    } else if (ks == XK_Escape) {
+                        state->user_input[0] = '\0';
+                        selection_complete = true;
+                        running = 0;
+                    } else if (len > 0) {
+                        bool is_printable = true;
+                        for (int i=0; i<len; i++) {
+                            unsigned char c = (unsigned char)buf[i];
+                            if (c < 0x20 || c == 0x7F) { is_printable = false; break; }
+                        }
+                        if (is_printable) {
+                            size_t n = strlen(state->user_input);
+                            if (n + len < sizeof(state->user_input) - 1) {
+                                if (state->cursor > n) state->cursor = n;
+                                memmove(state->user_input + state->cursor + len,
+                                        state->user_input + state->cursor,
+                                        n - state->cursor + 1);
+                                memcpy(state->user_input + state->cursor, buf, len);
+                                state->cursor += len;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        Linux_RenderSimplePromptUser(dpy, &win, state);
+        if (selection_complete) {
+            running = 0;
+            selection_complete = false;
+        }
+    }
+
+    if (state->user_input[0] != '\0') {
+        strncpy(output_buffer, state->user_input, sizeof(output_buffer)-1);
+        output_buffer[sizeof(output_buffer)-1] = '\0';
+    } else {
+        output_buffer[0] = '\0';
+    }
+
+    g_IsMainWindowActive = false;
+    g_currentSimplePromptState = NULL;
+    
+    XSync(dpy, False);
+    XDestroyWindow(dpy, win);
+    XSync(dpy, False);
+    
+    free(state);
+    return strdup(output_buffer);
 }
 
 // Not Implemented
