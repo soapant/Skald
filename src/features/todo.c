@@ -384,9 +384,6 @@ static void todo_render_callback(Display *dpy, Window *win, PromptState *state) 
         draw_wrapped_text(dpy, xd, &fg_color, font, main_text, y + 4, "LEFT",XOffset);
         XftColorFree(dpy, vis, cmap, &fg_color);
 
-        // draw_wrapped_text(dpy, xd, &fg_color, font, main_text, y + 4, "LEFT", 10);
-        // XftColorFree(dpy, vis, cmap, &fg_color);
-
         if (tag_count > 0) {
             if (tag_count == 1) {
                 int y_offset = 0;
@@ -396,7 +393,6 @@ static void todo_render_callback(Display *dpy, Window *win, PromptState *state) 
                     XftColor tag_col;
                     XftColorAllocValue(dpy, vis, cmap, &rct, &tag_col);
 
-                    // Single tag vertical drop logic
                     draw_wrapped_text(dpy, xd, &tag_col, font, tags[t], y + 28 + y_offset, "LEFT", 14);
                     XftColorFree(dpy, vis, cmap, &tag_col);
                     y_offset += 18;

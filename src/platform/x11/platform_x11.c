@@ -848,7 +848,7 @@ int Platform_CopyToClipboard(const char* text) {
     int status = pclose(pipe);
 
     snprintf(buffer,sizeof(buffer),"Copied %s",text);
-    SubjectiveMessageDisplay(buffer,140,TimeOutForMessages,COLOR_OF_SELECTION);
+    SubjectiveMessageDisplay(buffer,140,TimeOutForMessages,COLOR_TEXT);
 
     return (status == 0) ? 1 : 0;
 }
