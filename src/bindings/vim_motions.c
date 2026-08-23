@@ -145,6 +145,12 @@ void HandleExitWindow(VimContext* ctx) {
   }
 #else
   {
+    extern SimplePromptState* g_currentEditPopupState;
+    extern bool g_EditPopupCloseRequested;
+    if (g_currentEditPopupState) {
+      g_EditPopupCloseRequested = true;
+      return;
+    }
     extern bool g_PromptJustClosed;
     extern long g_PromptCloseTimeMs;
     g_PromptJustClosed = true;

@@ -280,6 +280,73 @@ bool Linux_HandleSimplePromptKey(const XEvent* ev,SimplePromptState *state) {
     return false;
 }
 
+bool Linux_HandleEditPopupKey(const XEvent* ev, SimplePromptState* state, bool* confirmed, bool* cancelled) {
+    *confirmed = false;
+    *cancelled = false;
+    if (ev->type != KeyPress) return false;
+
+    int wParam = Linux_KeysymToWindowsVK(XLookupKeysym(&ev->xkey, 0));
+    extern bool g_Linux_CtrlHeld, g_Linux_AltHeld, g_Linux_ShiftHeld;
+    bool ctrl_pressed = ((ev->xkey.state & ControlMask) != 0) || g_Linux_CtrlHeld;
+    bool shift_pressed = ((ev->xkey.state & ShiftMask) != 0) || g_Linux_ShiftHeld;
+    bool alt_pressed = ((ev->xkey.state & Mod1Mask) != 0) || g_Linux_AltHeld;
+    {
+        int mod = HOTKEY_MOD_NONE;
+        if (ctrl_pressed) mod |= HOTKEY_MOD_CTRL;
+        if (shift_pressed) mod |= HOTKEY_MOD_SHIFT;
+        if (alt_pressed) mod |= HOTKEY_MOD_ALT;
+        MotionAction act; const char* seq; int typed;
+        if (CheckVimMotion(wParam, mod, &act, &seq, &typed)) {
+            ExecuteMotion(act, seq, typed);
+            return true;
+        }
+    }
+    if (wParam == VK_BACK) {
+        size_t n = strlen(state->user_input);
+        if (state->cursor > 0) {
+            memmove(state->user_input + state->cursor - 1,
+                    state->user_input + state->cursor,
+                    n - state->cursor + 1);
+            state->cursor--;
+        }
+        return true;
+    }
+    if (wParam == VK_ESCAPE) {
+      *cancelled = true;
+      return true;
+    }
+    if (wParam == VK_RETURN) {
+      *confirmed = true;
+      return true;
+    }
+    if (wParam == VK_RIGHT) {
+      CursorForward(&state->cursor, strlen(state->user_input));
+      return true;
+    }
+    if (wParam == VK_LEFT) {
+       CursorBack(&state->cursor, strlen(state->user_input));
+      return true;
+    }
+    if (wParam == VK_DELETE) {
+      size_t n = strlen(state->user_input);
+      if (state->cursor < n) {
+        memmove(state->user_input + state->cursor,
+                state->user_input + state->cursor + 1,
+                n - state->cursor);
+      }
+      return true;
+    }
+    if (wParam == VK_HOME) {
+      state->cursor = 0;
+      return true;
+    }
+    if (wParam == VK_END) {
+      state->cursor = strlen(state->user_input);
+      return true;
+    }
+    return false;
+}
+
 void DrawSimplePromptUserEditControl(Display *dpy, Window *win, SimplePromptState *state) {
     int screen = DefaultScreen(dpy);
     XftDraw* xd = XftDrawCreate(dpy, *win, DefaultVisual(dpy, screen), DefaultColormap(dpy, screen));
