@@ -5,6 +5,7 @@
 #include "features/focus_switcher.h"
 #include "helpers.h"
 #include "core/common_ui.h"
+#include "core/zoxide_helpers.h"
 #if !defined(_WIN32)
 #include <pthread.h>
 #include <unistd.h>
@@ -36,50 +37,11 @@ static const char* REMINDER_CONSTRAINT_FLAGS[] = {
 };
 
 static void RebuildReminderCache(void) {
-    if (g_cached_reminder_commands) {
-        for (int i = 0; i < g_cached_reminder_count; i++) {
-            free(g_cached_reminder_commands[i]);
-        }
-        free(g_cached_reminder_commands);
-        g_cached_reminder_commands = NULL;
-        g_cached_reminder_count = 0;
-    }
-    
-
-    
-    if (!ReminderHistoryFile || ReminderHistoryFile->fileSize == 0) {
-        return;
-    }
-    
-    size_t lineCount = 0;
-    Line* lines = Platform_FileGetLines(ReminderHistoryFile, &lineCount);
-    if (!lines) return;
-    
-    g_cached_reminder_commands = (char**)malloc(lineCount * sizeof(char*));
-    g_cached_reminder_count = 0;
-    
-    for (size_t i = 0; i < lineCount; i++) {
-        size_t len = lines[i].length;
-        while (len > 0 && lines[i].ptr[len-1] == '\r') len--;
-        
-        if (len > 0) {
-            char* cmd = (char*)malloc(len + 1);
-            memcpy(cmd, lines[i].ptr, len);
-            cmd[len] = '\0';
-            g_cached_reminder_commands[g_cached_reminder_count++] = cmd;
-        }
-    }
-    
-    free(lines);
+    ZoxideHelper_RebuildCache(ReminderHistoryFile, &g_cached_reminder_commands, &g_cached_reminder_count);
 }
 static void reminder_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
     if (!lb) return;
-    
-    if (!g_cached_reminder_commands) {
-        RebuildReminderCache();
-    }
-    
-    PopulateListBox(lb, hListBox, filter, (const char**)g_cached_reminder_commands, g_cached_reminder_count, NULL);
+    ZoxideHelper_Refresh(filter, hListBox, lb, ReminderHistoryFile, &g_cached_reminder_commands, &g_cached_reminder_count);
 }
 
 
@@ -332,50 +294,20 @@ static void StartReminder(const char* selection) {
 }
 
 static void reminder_enter_callback(const char* selection, ListBoxInfo* lb) {
-      if (ReminderHistoryFile->fileSize > 0) {
-          char lastChar = Platform_GetLastChar(ReminderHistoryFile);
-          if (lastChar != '\n') {
-              Platform_FileAppend(ReminderHistoryFile, "\n");
-          }
-      }
-      if (!UI_IsListBoxSelected(lb)) {
-      Platform_FileAppend(ReminderHistoryFile, selection);
-      Platform_FileAppend(ReminderHistoryFile, "\n");
-      RebuildReminderCache();
-      }
+      ZoxideHelper_AppendNewEntry(ReminderHistoryFile, selection, lb, &g_cached_reminder_commands, &g_cached_reminder_count);
       StartReminder(selection);
 }
 static void reminder_edit_callback(const char* selection, ListBoxInfo* lb) {
-    char* NewreminderQuery = Platform_EditTextPopup(selection,960,540,1000,300);
-    
-    if (NewreminderQuery != NULL) {
-        WriteToCacheIndex(lb, lb->selected_index,NewreminderQuery);
-    }
-    
-    Platform_ReplaceLineInMappedFile(ReminderHistoryFile,lb->selected_index,NewreminderQuery);
-    
-    RebuildReminderCache();
-    
-    reminder_refresh_callback("", hListBox, lb);
+    ZoxideHelper_Edit(selection, lb, ReminderHistoryFile, &g_cached_reminder_commands, &g_cached_reminder_count, reminder_refresh_callback);
 }
 
 void TriggerReminder(void) {
     if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
-    
-    if (!g_cached_reminder_commands) {
-        RebuildReminderCache();
-    }
-    
-    const char** list = (const char**)malloc(g_cached_reminder_count * sizeof(char*));
-    if (!list) return;
-    
-    for (int i = 0; i < g_cached_reminder_count; i++) {
-        list[i] = g_cached_reminder_commands[i];
-    }
-    
+    if (!g_cached_reminder_commands) RebuildReminderCache();
+    const char** list = ZoxideHelper_PrepareTriggerList(NULL, &g_cached_reminder_commands, &g_cached_reminder_count, NULL);
     ImportantPromptUser(list, "⏱️ Reminder", g_cached_reminder_count, 920,650, 32, 
                reminder_refresh_callback, 
                reminder_enter_callback, 
                reminder_edit_callback,NULL);
-    
+    ZoxideHelper_CleanupTriggerList(list);
 }
