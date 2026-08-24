@@ -677,8 +677,6 @@ void DrawPromptUserListBox(Display *dpy,Window* win,PromptState *state) {
 }
 
 bool Linux_RenderPromptUser(Display *dpy, Window *win, PromptState *state) {
-    XSetWindowBackground(dpy, *win, 0);
-    XClearWindow(dpy, *win);
     if (g_render_callback != NULL) {
       g_render_callback(dpy,win,state);
     } else {
@@ -691,8 +689,6 @@ bool Linux_RenderPromptUser(Display *dpy, Window *win, PromptState *state) {
     return true;
 }
 bool Linux_RenderSimplePromptUser(Display *dpy, Window *win, SimplePromptState *state) {
-    XSetWindowBackground(dpy, *win, 0);
-    XClearWindow(dpy, *win);
     DrawSimplePromptUserEditControl(dpy, win,state);
     XFlush(dpy);
     return true;

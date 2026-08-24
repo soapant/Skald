@@ -554,7 +554,7 @@ typedef struct {
 #ifndef RGB
 #define RGB(r, g, b)  ((unsigned long)(((unsigned char)(r)|((unsigned short)((unsigned char)(g))<<8))|(((unsigned long)(unsigned char)(b))<<16)))
 #endif
-#define COLOR_BG      RGB(30, 35, 45)   
+#define COLOR_BG      RGB(5, 5, 10)   
 #define COLOR_TEXT    RGB(255, 255, 255)
 #define COLOR_SELECTED_TEXT    RGB(70, 55, 90)
 #define COLOR_VISUAL_SELECTED_TEXT    RGB(48,25,52)
