@@ -118,7 +118,7 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
 
   WinTimer timer2 = TimerStart();
 
-  SetLayeredWindowAttributes(WH_TO_HWND(hPopupWnd), 0, 245, LWA_ALPHA);
+  SetLayeredWindowAttributes(WH_TO_HWND(hPopupWnd), 0, WindowOpacity, LWA_ALPHA);
 
   TimerEnd(timer2,"WindowBs");
 
@@ -239,7 +239,7 @@ char* Platform_SimplePromptUser(const char* prompt, const char* window_title,int
 
   SimpleCreateChildControls(hPopupWnd, hCustomFont, prompt, 1, &layout);
 
-  SetLayeredWindowAttributes(WH_TO_HWND(hPopupWnd), 0, 245, LWA_ALPHA);
+  SetLayeredWindowAttributes(WH_TO_HWND(hPopupWnd), 0, WindowOpacity, LWA_ALPHA);
 
   ForceWindowFocus(hPopupWnd, hEditControl);
 
@@ -308,7 +308,7 @@ void Platform_CreateDisplayMessageWindow(const char* message, int centerX, int c
 
   pWndData->message = _strdup(message);
   pWndData->hFont = msgFont;
-  pWndData->alpha = 245;
+  pWndData->alpha = WindowOpacity;
   g_timeout = timeout * 20;
 
   int topLeftX = centerX - (winWidth / 2);
@@ -370,7 +370,7 @@ void Platform_SettingsPopUp() {
 
   SettingsCreateChildControls(hPopupWnd, hCustomFont,&layout);
 
-  SetLayeredWindowAttributes(WH_TO_HWND(hPopupWnd), 0, 245, LWA_ALPHA);
+  SetLayeredWindowAttributes(WH_TO_HWND(hPopupWnd), 0, WindowOpacity, LWA_ALPHA);
 
   ForceWindowFocus(hPopupWnd, hEditControl);
 
