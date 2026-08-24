@@ -314,7 +314,7 @@ static void todo_render_callback(Display *dpy, Window *win, PromptState *state) 
             (bg_hex >> 16 & 0xFF) * 0x101, 
             (bg_hex >> 8 & 0xFF) * 0x101, 
             (bg_hex & 0xFF) * 0x101, 
-            0xFFFF 
+            OpacityAlpha16() 
         };
         XftColor c0; 
         XftColorAllocValue(dpy, visClear, cmapClear, &rc0, &c0);
@@ -355,7 +355,7 @@ static void todo_render_callback(Display *dpy, Window *win, PromptState *state) 
 
         // Background highlight
         unsigned long bg = sel ? rgb_to_hex(COLOR_SELECTED_TEXT) : rgb_to_hex(COLOR_BG);
-        XRenderColor rc = { (bg >> 16 & 0xFF) * 0x101, (bg >> 8 & 0xFF) * 0x101, (bg & 0xFF) * 0x101, 0xFFFF };
+        XRenderColor rc = { (bg >> 16 & 0xFF) * 0x101, (bg >> 8 & 0xFF) * 0x101, (bg & 0xFF) * 0x101, OpacityAlpha16() };
         XftColor bgc; 
         XftColorAllocValue(dpy, vis, cmap, &rc, &bgc);
         XftDrawRect(xd, &bgc, 0, y, state->width, itemH);

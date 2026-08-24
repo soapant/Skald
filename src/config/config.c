@@ -13,7 +13,7 @@ int EditPopUpWidthMin = 400;
 int PageUpDownLen = 6;
 bool ColorfullMode = false;
 bool SearchBoxDiffColor = false; 
-float WindowOpacity = 245.0;
+float WindowOpacity = 235.0;
 const wchar_t* HttpUrlForNotis = L"doingthistomakeitrarebitch";
 
 const char* BASE_SCREENSHOT_FOLDER_PATH = "{PICTURES}/Screenshots/";

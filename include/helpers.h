@@ -98,6 +98,7 @@ int convert_string_to_int(const char *str);
 void HandleCommandExecution(ListBoxInfo* lb, char* string);
 const char* get_alias_for_item(const char* item);
 unsigned long rgb_to_hex(unsigned long win_color);
+unsigned short OpacityAlpha16(void);
 #if !defined(_WIN32)
 void draw_wrapped_text(Display* dpy, XftDraw* xd, XftColor* color, FontHandle font, const char* text, int startY,char* centered_to,int xOffset);
 int get_offset_based_on_number(int index);
