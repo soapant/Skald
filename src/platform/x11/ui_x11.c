@@ -791,19 +791,21 @@ bool g_Linux_AltHeld   = false;
 bool g_Linux_ShiftHeld = false;
 
 void HandleGlobalKeyEvent(int key_code, int value) {
-    bool is_pressed = (value == 1);
-    bool is_released = (value == 0);
-    
+    // value: 0=release, 1=press, 2=autorepeat - treat 2 as still held
     if (key_code == KEY_LEFTCTRL || key_code == KEY_RIGHTCTRL) {
-        g_Linux_CtrlHeld = is_pressed;
+        if (value == 0) g_Linux_CtrlHeld = false;
+        else g_Linux_CtrlHeld = true;
     }
     if (key_code == KEY_LEFTALT || key_code == KEY_RIGHTALT) {
-        g_Linux_AltHeld = is_pressed;
+        if (value == 0) g_Linux_AltHeld = false;
+        else g_Linux_AltHeld = true;
     }
     if (key_code == KEY_LEFTSHIFT || key_code == KEY_RIGHTSHIFT) {
-        g_Linux_ShiftHeld = is_pressed;
+        if (value == 0) g_Linux_ShiftHeld = false;
+        else g_Linux_ShiftHeld = true;
     }
-    
+    // Only trigger hotkeys on press (1), not repeat (2) or release (0)
+    if (value != 1) return;
     
     double seconds = Platform_GetUniversalTimeSeconds();
     if (seconds >= 300) {
