@@ -310,16 +310,10 @@ int main(int argc, char** argv) {
     }
     if (g_want_static){
 #if !defined(_WIN32)
-        bool have_static = nob_file_exists("/usr/lib/libX11.a") || nob_file_exists("/usr/lib64/libX11.a") || nob_file_exists("/usr/lib/x86_64-linux-gnu/libX11.a");
+        bool have_static = nob_file_exists("/usr/lib/libX11.a") || nob_file_exists("/usr/lib64/libX11.a") || nob_file_exists("/usr/lib/x86_64-linux-gnu/libX11.a") || nob_file_exists("/usr/lib/musl/lib/libX11.a");
         if (!have_static){
-            nob_log(NOB_WARNING, "Static X11 libs not found (libX11.a) - true static needs .a files");
-            nob_log(NOB_WARNING, "Arch: yay -S libx11-static or build with --static not available, falling back to dynamic with musl check");
-            if (has_musl_gcc()){
-                nob_log(NOB_INFO, "musl-gcc found, trying musl static (still needs .a)");
-            } else {
-                nob_log(NOB_WARNING, "No static libs, building dynamic (ship with ldd deps) - for single exe use musl + static libs");
-            }
-            // Fallback to dynamic if no static libs - still produce exe but not truly static
+            nob_log(NOB_WARNING, "Static X11 libs not found (libX11.a) - true musl static needs .a");
+            nob_log(NOB_INFO, "Building portable dynamic + bundling runtime deps (no UX hit, ship build/main + build/bundle/*.so)");
             nob_cmd_append(&cmd, LINK_FLAGS);
         } else {
             nob_cmd_append(&cmd, "-static");
@@ -337,6 +331,26 @@ int main(int argc, char** argv) {
     if (!nob_cmd_run(&cmd)) {
         nob_log(NOB_ERROR, "Failed to link %s", output);
         return 1;
+    }
+    if (g_want_static){
+#if !defined(_WIN32)
+        bool have_static2 = nob_file_exists("/usr/lib/libX11.a") || nob_file_exists("/usr/lib64/libX11.a") || nob_file_exists("/usr/lib/x86_64-linux-gnu/libX11.a") || nob_file_exists("/usr/lib/musl/lib/libX11.a");
+        if (!have_static2){
+            // Bundle runtime deps for portable ship (single exe + so dir, no static .a needed)
+            nob_log(NOB_INFO, "Bundling runtime deps for portable -static (ship build/main + build/bundle/)");
+            Nob_Cmd bundle = {0};
+            nob_cmd_append(&bundle, "sh", "-c", "mkdir -p build/bundle && ldd build/main | grep -o '/[^ ]*\\.so[^ ]*' | xargs -I{} cp -v {} build/bundle/ 2>/dev/null; echo \"Bundled $(ls build/bundle/*.so 2>/dev/null | wc -l) libs to build/bundle/ (ship with LD_LIBRARY_PATH=./build/bundle)\"");
+            nob_cmd_run(&bundle);
+            // Also try patchelf rpath if available
+            Nob_Cmd rpath = {0};
+            nob_cmd_append(&rpath, "sh", "-c", "which patchelf >/dev/null 2>&1 && patchelf --set-rpath '$ORIGIN/bundle' build/main 2>/dev/null && echo \"Patched rpath to \\$ORIGIN/bundle\" || true");
+            nob_cmd_run(&rpath);
+        } else {
+            Nob_Cmd check = {0};
+            nob_cmd_append(&check, "sh", "-c", "ldd build/main 2>&1 | head -n 5; echo \"---\"; ls -lh build/main | awk '{print $9, $5}'");
+            nob_cmd_run(&check);
+        }
+#endif
     }
 
     if (do_run) {
