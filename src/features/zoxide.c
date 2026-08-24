@@ -39,25 +39,15 @@ static void zoxide_enter_callback(const char* selection, ListBoxInfo* lb) {
         char* path = Platform_QueryZoxidePath(selection);
         printf("Got Path %s \n",path);
         if (path) {
+#if defined(_WIN32)
             char terminal[512];
             snprintf(terminal,sizeof(terminal),"%s.exe",UsedTerminal);
-#if defined(_WIN32)
             ShellExecuteA(NULL, "open", terminal, NULL, path, SW_SHOWNORMAL);
 #else
-        const char* real_user = getenv("SUDO_USER");
-
-        char cmd_open[1024];
-        snprintf(cmd_open, sizeof(cmd_open), 
-                 "sudo -u %s DISPLAY=%s XAUTHORITY=%s %s --working-directory=\"%s\" &", 
-                 real_user,
-                 getenv("DISPLAY") ? getenv("DISPLAY") : ":0",
-                 getenv("XAUTHORITY") ? getenv("XAUTHORITY") : "",
-                 UsedTerminal, 
-                 path);
-        
-        system(cmd_open);
+            Platform_LaunchTerminal(path, NULL);
 #endif
             ZoxideHelper_AppendNewEntry(TerminalZoxideFile, selection, lb, &g_cached_zoxide_commands, &g_cached_zoxide_count);
+            free(path);
         }
 }
 
