@@ -1,4 +1,5 @@
 #include "common.h"
+#include "config.h"
 #include <ctype.h>
 #if defined(_WIN32)
 #include <shellapi.h>
@@ -594,6 +595,50 @@ void Linux_XftAllocColor(Display* dpy, Visual* vis, Colormap cmap, unsigned long
         alpha
     };
     XftColorAllocValue(dpy, vis, cmap, &rc, out);
+}
+
+unsigned long VimModeTextColor(void) {
+    if (g_current_mode == MODE_NORMAL) return rgb_to_hex(COLOR_NORMAL_MODE_TEXT);
+    if (g_current_mode == MODE_INSERT) return rgb_to_hex(COLOR_INSERT_MODE_TEXT);
+    return rgb_to_hex(COLOR_VISUAL_MODE_TEXT);
+}
+
+int Linux_UpdateEditScrollOffset(Display* dpy, XftFont* xf, const char* text, int text_len, int cursor, int width, int prev_scroll, int* out_cursor_x) {
+    int visible_w = width - 40;
+    int cursor_x = 0;
+    int text_w = 0;
+    if (xf) {
+        XGlyphInfo cext;
+        XftTextExtentsUtf8(dpy, xf, (FcChar8*)text, cursor, &cext);
+        cursor_x = cext.xOff;
+        XGlyphInfo textExt;
+        XftTextExtentsUtf8(dpy, xf, (FcChar8*)text, text_len, &textExt);
+        text_w = textExt.xOff;
+    }
+    int scroll = prev_scroll;
+    int margin = 20;
+    if (cursor_x - scroll > visible_w - margin) scroll = cursor_x - visible_w + margin;
+    if (cursor_x - scroll < margin) scroll = cursor_x - margin;
+    if (scroll < 0) scroll = 0;
+    if (text_w - scroll < visible_w && scroll > 0) {
+        if (text_w < visible_w) scroll = 0;
+        else scroll = text_w - visible_w;
+    }
+    if (cursor_x - scroll < 0) scroll = cursor_x;
+    if (cursor_x - scroll > visible_w) scroll = cursor_x - visible_w;
+    *out_cursor_x = cursor_x;
+    return scroll;
+}
+
+void Linux_DrawEditCursor(XftDraw* xd, XftColor* color, int cursor_x, int scroll, int width) {
+    int cursor_draw_x = 22 + cursor_x - scroll;
+    if (cursor_draw_x < 20) cursor_draw_x = 20;
+    if (cursor_draw_x > width - 10) cursor_draw_x = width - 10;
+    if (IsInsertMode()) {
+        XftDrawRect(xd, color, cursor_draw_x, 47, 2, FontSize);
+    } else {
+        XftDrawRect(xd, color, cursor_draw_x, 47, 12, FontSize);
+    }
 }
 
 const char* ListBoxItemDisplayText(ListBoxInfo* lb, int idx, char* trunc, size_t trunc_size) {

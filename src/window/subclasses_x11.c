@@ -59,38 +59,59 @@ static int Linux_KeysymToWindowsVK(KeySym keysym) {
         default: return 0;
     }
 }
+extern bool g_Linux_CtrlHeld, g_Linux_AltHeld, g_Linux_ShiftHeld;
+
+static void ReadModifiers(const XEvent* ev, bool* ctrl_pressed, bool* shift_pressed, bool* alt_pressed) {
+    *ctrl_pressed = ((ev->xkey.state & ControlMask) != 0) || g_Linux_CtrlHeld;
+    *shift_pressed = ((ev->xkey.state & ShiftMask) != 0) || g_Linux_ShiftHeld;
+    *alt_pressed = ((ev->xkey.state & Mod1Mask) != 0) || g_Linux_AltHeld;
+}
+
+static bool TryVimMotion(int wParam, bool ctrl_pressed, bool shift_pressed, bool alt_pressed) {
+    int mod = HOTKEY_MOD_NONE;
+    if (ctrl_pressed) mod |= HOTKEY_MOD_CTRL;
+    if (shift_pressed) mod |= HOTKEY_MOD_SHIFT;
+    if (alt_pressed) mod |= HOTKEY_MOD_ALT;
+    MotionAction act; const char* seq; int typed;
+    if (CheckVimMotion(wParam, mod, &act, &seq, &typed)) {
+        ExecuteMotion(act, seq, typed);
+        return true;
+    }
+    return false;
+}
+
+static void EditBufferBackspace(char* buf, size_t* cursor) {
+    size_t n = strlen(buf);
+    if (*cursor > 0) {
+        memmove(buf + *cursor - 1,
+                buf + *cursor,
+                n - *cursor + 1);
+        (*cursor)--;
+    }
+}
+
+static bool EditBufferDeleteChar(char* buf, size_t* cursor) {
+    size_t n = strlen(buf);
+    if (*cursor >= n) return false;
+    memmove(buf + *cursor,
+            buf + *cursor + 1,
+            n - *cursor);
+    return true;
+}
+
 bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
     if (ev->type != KeyPress) return false;
 
     int wParam = Linux_KeysymToWindowsVK(XLookupKeysym(&ev->xkey, 0));
-    extern bool g_Linux_CtrlHeld, g_Linux_AltHeld, g_Linux_ShiftHeld;
-    bool ctrl_pressed = ((ev->xkey.state & ControlMask) != 0) || g_Linux_CtrlHeld;
-    bool shift_pressed = ((ev->xkey.state & ShiftMask) != 0) || g_Linux_ShiftHeld;
-    bool alt_pressed = ((ev->xkey.state & Mod1Mask) != 0) || g_Linux_AltHeld;
-    {
-        int mod = HOTKEY_MOD_NONE;
-        if (ctrl_pressed) mod |= HOTKEY_MOD_CTRL;
-        if (shift_pressed) mod |= HOTKEY_MOD_SHIFT;
-        if (alt_pressed) mod |= HOTKEY_MOD_ALT;
-        MotionAction act; const char* seq; int typed;
-        if (CheckVimMotion(wParam, mod, &act, &seq, &typed)) {
-            ExecuteMotion(act, seq, typed);
-            return true;
-        }
-    }
+    bool ctrl_pressed, shift_pressed, alt_pressed;
+    ReadModifiers(ev, &ctrl_pressed, &shift_pressed, &alt_pressed);
+    if (TryVimMotion(wParam, ctrl_pressed, shift_pressed, alt_pressed)) return true;
     if (wParam == VK_BACK) {
         if (ctrl_pressed) {
             state->filter[0] = '\0';
             state->cursor = 0;
-            if (g_refresh_callback) g_refresh_callback(state->filter, hListBox, state->has_listbox ? &state->listbox : NULL);
-            return true;
-        }
-        size_t n = strlen(state->filter);
-        if (state->cursor > 0) {
-            memmove(state->filter + state->cursor - 1,
-                    state->filter + state->cursor,
-                    n - state->cursor + 1);
-            state->cursor--;
+        } else {
+            EditBufferBackspace(state->filter, &state->cursor);
         }
         if (g_refresh_callback) g_refresh_callback(state->filter, hListBox, state->has_listbox ? &state->listbox : NULL);
         return true;
@@ -144,11 +165,7 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
       return true;
     }
     if (wParam == VK_DELETE) {
-      if (state && state->cursor < (int)strlen(state->filter)) {
-        size_t n = strlen(state->filter);
-        memmove(state->filter + state->cursor,
-                state->filter + state->cursor + 1,
-                n - state->cursor);
+      if (state && EditBufferDeleteChar(state->filter, &state->cursor)) {
         if (g_refresh_callback) g_refresh_callback(state->filter, hListBox, state->has_listbox ? &state->listbox : NULL);
       }
       return true;
@@ -226,33 +243,15 @@ bool Linux_HandleSimplePromptKey(const XEvent* ev,SimplePromptState *state) {
     if (ev->type != KeyPress) return false;
 
     int wParam = Linux_KeysymToWindowsVK(XLookupKeysym(&ev->xkey, 0));
-    extern bool g_Linux_CtrlHeld, g_Linux_AltHeld, g_Linux_ShiftHeld;
-    bool ctrl_pressed = ((ev->xkey.state & ControlMask) != 0) || g_Linux_CtrlHeld;
-    bool shift_pressed = ((ev->xkey.state & ShiftMask) != 0) || g_Linux_ShiftHeld;
-    bool alt_pressed = ((ev->xkey.state & Mod1Mask) != 0) || g_Linux_AltHeld;
-    {
-        int mod = HOTKEY_MOD_NONE;
-        if (ctrl_pressed) mod |= HOTKEY_MOD_CTRL;
-        if (shift_pressed) mod |= HOTKEY_MOD_SHIFT;
-        if (alt_pressed) mod |= HOTKEY_MOD_ALT;
-        MotionAction act; const char* seq; int typed;
-        if (CheckVimMotion(wParam, mod, &act, &seq, &typed)) {
-            ExecuteMotion(act, seq, typed);
-            return true;
-        }
-    }
+    bool ctrl_pressed, shift_pressed, alt_pressed;
+    ReadModifiers(ev, &ctrl_pressed, &shift_pressed, &alt_pressed);
+    if (TryVimMotion(wParam, ctrl_pressed, shift_pressed, alt_pressed)) return true;
     if (wParam == VK_BACK) {
         if (ctrl_pressed) {
             state->user_input[0] = '\0';
             state->cursor = 0;
-            return true;
-        }
-        size_t n = strlen(state->user_input);
-        if (state->cursor > 0) {
-            memmove(state->user_input + state->cursor - 1,
-                    state->user_input + state->cursor,
-                    n - state->cursor + 1);
-            state->cursor--;
+        } else {
+            EditBufferBackspace(state->user_input, &state->cursor);
         }
         return true;
     }
@@ -286,29 +285,11 @@ bool Linux_HandleEditPopupKey(const XEvent* ev, SimplePromptState* state, bool* 
     if (ev->type != KeyPress) return false;
 
     int wParam = Linux_KeysymToWindowsVK(XLookupKeysym(&ev->xkey, 0));
-    extern bool g_Linux_CtrlHeld, g_Linux_AltHeld, g_Linux_ShiftHeld;
-    bool ctrl_pressed = ((ev->xkey.state & ControlMask) != 0) || g_Linux_CtrlHeld;
-    bool shift_pressed = ((ev->xkey.state & ShiftMask) != 0) || g_Linux_ShiftHeld;
-    bool alt_pressed = ((ev->xkey.state & Mod1Mask) != 0) || g_Linux_AltHeld;
-    {
-        int mod = HOTKEY_MOD_NONE;
-        if (ctrl_pressed) mod |= HOTKEY_MOD_CTRL;
-        if (shift_pressed) mod |= HOTKEY_MOD_SHIFT;
-        if (alt_pressed) mod |= HOTKEY_MOD_ALT;
-        MotionAction act; const char* seq; int typed;
-        if (CheckVimMotion(wParam, mod, &act, &seq, &typed)) {
-            ExecuteMotion(act, seq, typed);
-            return true;
-        }
-    }
+    bool ctrl_pressed, shift_pressed, alt_pressed;
+    ReadModifiers(ev, &ctrl_pressed, &shift_pressed, &alt_pressed);
+    if (TryVimMotion(wParam, ctrl_pressed, shift_pressed, alt_pressed)) return true;
     if (wParam == VK_BACK) {
-        size_t n = strlen(state->user_input);
-        if (state->cursor > 0) {
-            memmove(state->user_input + state->cursor - 1,
-                    state->user_input + state->cursor,
-                    n - state->cursor + 1);
-            state->cursor--;
-        }
+        EditBufferBackspace(state->user_input, &state->cursor);
         return true;
     }
     if (wParam == VK_ESCAPE) {
@@ -328,12 +309,7 @@ bool Linux_HandleEditPopupKey(const XEvent* ev, SimplePromptState* state, bool* 
       return true;
     }
     if (wParam == VK_DELETE) {
-      size_t n = strlen(state->user_input);
-      if (state->cursor < n) {
-        memmove(state->user_input + state->cursor,
-                state->user_input + state->cursor + 1,
-                n - state->cursor);
-      }
+      EditBufferDeleteChar(state->user_input, &state->cursor);
       return true;
     }
     if (wParam == VK_HOME) {
@@ -358,47 +334,13 @@ void DrawSimplePromptUserEditControl(Display *dpy, Window *win, SimplePromptStat
     XftTextExtentsUtf8(dpy, xf, (FcChar8*)state->display_message, strlen(state->display_message), &ext);
     int text_width = ext.xOff;
 
-    unsigned long text_color_map = rgb_to_hex(COLOR_TEXT);
-    unsigned long bg_color_map = rgb_to_hex(COLOR_BG);
-
-    unsigned long vim_text_color_map;
-    if (g_current_mode == MODE_NORMAL) {
-        vim_text_color_map = rgb_to_hex(COLOR_NORMAL_MODE_TEXT);
-    } else if (g_current_mode == MODE_INSERT) {
-        vim_text_color_map = rgb_to_hex(COLOR_INSERT_MODE_TEXT);
-    } else {
-        vim_text_color_map = rgb_to_hex(COLOR_VISUAL_MODE_TEXT);
-    }
-
     Visual* visual = DefaultVisual(dpy, screen);
     Colormap cmap = DefaultColormap(dpy, screen);
 
-    XRenderColor rc_bg = {
-        ((bg_color_map >> 16) & 0xFF) * 0x101,
-        ((bg_color_map >> 8) & 0xFF) * 0x101,
-        (bg_color_map & 0xFF) * 0x101,
-        OpacityAlpha16()
-    };
-    XftColor bg_color;
-    XftColorAllocValue(dpy, visual, cmap, &rc_bg, &bg_color);
-
-    XRenderColor rc_text = {
-        ((text_color_map >> 16) & 0xFF) * 0x101,
-        ((text_color_map >> 8) & 0xFF) * 0x101,
-        (text_color_map & 0xFF) * 0x101,
-        0xFFFF
-    };
-    XftColor text_color;
-    XftColorAllocValue(dpy, visual, cmap, &rc_text, &text_color);
-
-    XRenderColor rc_vim_text_color = {
-        ((vim_text_color_map >> 16) & 0xFF) * 0x101,
-        ((vim_text_color_map >> 8) & 0xFF) * 0x101,
-        (vim_text_color_map & 0xFF) * 0x101,
-        0xFFFF
-    };
-    XftColor vim_text_color;
-    XftColorAllocValue(dpy, visual, cmap, &rc_vim_text_color, &vim_text_color);
+    XftColor bg_color, text_color, vim_text_color;
+    Linux_XftAllocColor(dpy, visual, cmap, rgb_to_hex(COLOR_BG), OpacityAlpha16(), &bg_color);
+    Linux_XftAllocColor(dpy, visual, cmap, rgb_to_hex(COLOR_TEXT), 0xFFFF, &text_color);
+    Linux_XftAllocColor(dpy, visual, cmap, VimModeTextColor(), 0xFFFF, &vim_text_color);
 
     int centerX = state->width / 2;
     int centerY = state->height / 2;
@@ -411,43 +353,16 @@ void DrawSimplePromptUserEditControl(Display *dpy, Window *win, SimplePromptStat
     int centered_x = (state->width - text_width) / 2;
     draw_wrapped_text(dpy, xd, &text_color, font, state->display_message, 70, "LEFT", centered_x);
 
-    int visible_w = state->width - 40;
-    int text_len = strlen(state->user_input);
     int cursor_x = 0;
-    int text_w = 0;
-    if (xf) {
-        XGlyphInfo cext;
-        XftTextExtentsUtf8(dpy, xf, (FcChar8*)state->user_input, state->cursor, &cext);
-        cursor_x = cext.xOff;
-        XGlyphInfo textExt;
-        XftTextExtentsUtf8(dpy, xf, (FcChar8*)state->user_input, text_len, &textExt);
-        text_w = textExt.xOff;
-    }
-    int scroll = state->scroll_offset;
-    int margin = 20;
-    if (cursor_x - scroll > visible_w - margin) scroll = cursor_x - visible_w + margin;
-    if (cursor_x - scroll < margin) scroll = cursor_x - margin;
-    if (scroll < 0) scroll = 0;
-    if (text_w - scroll < visible_w && scroll > 0) {
-        if (text_w < visible_w) scroll = 0;
-        else scroll = text_w - visible_w;
-    }
-    if (cursor_x - scroll < 0) scroll = cursor_x;
-    if (cursor_x - scroll > visible_w) scroll = cursor_x - visible_w;
+    int text_len = strlen(state->user_input);
+    int scroll = Linux_UpdateEditScrollOffset(dpy, xf, state->user_input, text_len, state->cursor, state->width, state->scroll_offset, &cursor_x);
     state->scroll_offset = scroll;
     int draw_x = 20 - scroll;
     int draw_y = 40 + (xf ? xf->ascent : FontSize);
     if (xf && text_len > 0) {
         XftDrawStringUtf8(xd, &text_color, xf, draw_x, draw_y, (FcChar8*)state->user_input, text_len);
     }
-    int cursor_draw_x = 22 + cursor_x - scroll;
-    if (cursor_draw_x < 20) cursor_draw_x = 20;
-    if (cursor_draw_x > state->width - 10) cursor_draw_x = state->width - 10;
-    if (IsInsertMode()) {
-        XftDrawRect(xd, &text_color, cursor_draw_x, 47, 2, FontSize);
-    } else {
-        XftDrawRect(xd, &text_color, cursor_draw_x, 47, 12, FontSize);
-    }
+    Linux_DrawEditCursor(xd, &text_color, cursor_x, scroll, state->width);
 
     XftColorFree(dpy, visual, cmap, &bg_color);
     XftColorFree(dpy, visual, cmap, &text_color);
@@ -463,56 +378,18 @@ void DrawPromptUserEditControl(Display *dpy,Window* win,PromptState *state) {
     FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
     XftFont* xf = FH_TO_XFT(font);
 
-    unsigned long text_color_map = rgb_to_hex(COLOR_TEXT);
-    unsigned long bg_color_map = rgb_to_hex(COLOR_BG);
-    unsigned long vim_text_color_map;
     unsigned long window_title_text_color_map;
-
     eval_window_title_color(state,&window_title_text_color_map);
-
-    if (g_current_mode == MODE_NORMAL) {
-      vim_text_color_map = rgb_to_hex(COLOR_NORMAL_MODE_TEXT);
-    } else if (g_current_mode == MODE_INSERT) {
-      vim_text_color_map = rgb_to_hex(COLOR_INSERT_MODE_TEXT);
-    } else {
-      vim_text_color_map = rgb_to_hex(COLOR_VISUAL_MODE_TEXT);
-    }
 
     Visual* visual = DefaultVisual(dpy, screen);
     Colormap cmap = DefaultColormap(dpy, screen);
 
-    XRenderColor rc_bg = {
-        ((bg_color_map >> 16) & 0xFF) * 0x101,
-        ((bg_color_map >> 8) & 0xFF) * 0x101,
-        (bg_color_map & 0xFF) * 0x101,
-        OpacityAlpha16()
-    };
-    XftColor bg_color;
-    XftColorAllocValue(dpy, visual, cmap, &rc_bg, &bg_color);
+    XftColor bg_color, text_color, window_title_text_color, vim_text_color;
+    Linux_XftAllocColor(dpy, visual, cmap, rgb_to_hex(COLOR_BG), OpacityAlpha16(), &bg_color);
+    Linux_XftAllocColor(dpy, visual, cmap, rgb_to_hex(COLOR_TEXT), 0xFFFF, &text_color);
+    Linux_XftAllocColor(dpy, visual, cmap, window_title_text_color_map, 0xFFFF, &window_title_text_color);
+    Linux_XftAllocColor(dpy, visual, cmap, VimModeTextColor(), 0xFFFF, &vim_text_color);
 
-    XRenderColor rc_text = {
-        ((text_color_map >> 16) & 0xFF) * 0x101, ((text_color_map >> 8) & 0xFF) * 0x101, (text_color_map & 0xFF) * 0x101,
-        0xFFFF
-    };
-    XftColor text_color;
-    XftColorAllocValue(dpy, visual, cmap, &rc_text, &text_color);
-
-    XRenderColor rc_window_title_text = {
-        ((window_title_text_color_map >> 16) & 0xFF) * 0x101, ((window_title_text_color_map >> 8) & 0xFF) * 0x101, (window_title_text_color_map & 0xFF) * 0x101,
-        0xFFFF
-    };
-    XftColor window_title_text_color;
-    XftColorAllocValue(dpy, visual, cmap, &rc_window_title_text, &window_title_text_color);
-
-    XRenderColor rc_vim_text_color = {
-        ((vim_text_color_map >> 16) & 0xFF) * 0x101,
-        ((vim_text_color_map >> 8) & 0xFF) * 0x101,
-        (vim_text_color_map & 0xFF) * 0x101,
-        0xFFFF
-    };
-
-    XftColor vim_text_color;
-    XftColorAllocValue(dpy, visual, cmap, &rc_vim_text_color, &vim_text_color);
     int centerX = state->width / 2;
     int centerY = state->height / 2;
     int topLeftX = centerX - state->width / 2;
@@ -521,46 +398,21 @@ void DrawPromptUserEditControl(Display *dpy,Window* win,PromptState *state) {
     draw_wrapped_text(dpy, xd, &vim_text_color, font,g_vim_mode,0,"LEFT",5);
     draw_wrapped_text(dpy, xd, &window_title_text_color,font,state->window_title,0,"RIGHT",5);
 
-    int visible_w = state->width - 40;
-    int text_len = strlen(state->filter);
     int cursor_x = 0;
-    int text_w = 0;
-    if (xf) {
-        XGlyphInfo cext;
-        XftTextExtentsUtf8(dpy, xf, (FcChar8*)state->filter, state->cursor, &cext);
-        cursor_x = cext.xOff;
-        XGlyphInfo textExt;
-        XftTextExtentsUtf8(dpy, xf, (FcChar8*)state->filter, text_len, &textExt);
-        text_w = textExt.xOff;
-    }
-    int scroll = state->scroll_offset;
-    int margin = 20;
-    if (cursor_x - scroll > visible_w - margin) scroll = cursor_x - visible_w + margin;
-    if (cursor_x - scroll < margin) scroll = cursor_x - margin;
-    if (scroll < 0) scroll = 0;
-    if (text_w - scroll < visible_w && scroll > 0) {
-        if (text_w < visible_w) scroll = 0;
-        else scroll = text_w - visible_w;
-    }
-    if (cursor_x - scroll < 0) scroll = cursor_x;
-    if (cursor_x - scroll > visible_w) scroll = cursor_x - visible_w;
+    int text_len = strlen(state->filter);
+    int scroll = Linux_UpdateEditScrollOffset(dpy, xf, state->filter, text_len, state->cursor, state->width, state->scroll_offset, &cursor_x);
     state->scroll_offset = scroll;
     int draw_x = 20 - scroll;
     int draw_y = 40 + (xf ? xf->ascent : FontSize);
     if (xf && text_len > 0) {
         XftDrawStringUtf8(xd, &text_color, xf, draw_x, draw_y, (FcChar8*)state->filter, text_len);
     }
-    int cursor_draw_x = 22 + cursor_x - scroll;
-    if (cursor_draw_x < 20) cursor_draw_x = 20;
-    if (cursor_draw_x > state->width - 10) cursor_draw_x = state->width - 10;
-    if (IsInsertMode()) {
-        XftDrawRect(xd, &text_color, cursor_draw_x, 47, 2, FontSize);
-    } else {
-        XftDrawRect(xd, &text_color, cursor_draw_x, 47, 12, FontSize);
-    }
+    Linux_DrawEditCursor(xd, &text_color, cursor_x, scroll, state->width);
+
     XftColorFree(dpy, visual, cmap, &bg_color);
     XftColorFree(dpy, visual, cmap, &text_color);
     XftColorFree(dpy, visual, cmap, &vim_text_color);
+    XftColorFree(dpy, visual, cmap, &window_title_text_color);
     XftDrawDestroy(xd);
     Platform_DestroyFont(font);
 }
