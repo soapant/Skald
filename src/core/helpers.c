@@ -657,38 +657,11 @@ int get_offset_based_on_number(int index) {
 }
 
 Window Linux_CreateWindowEx(Display* dpy, int x, int y, int w, int h, unsigned long bg_color, const char* res_name, const char* res_class, long event_mask) {
-    int screen = DefaultScreen(dpy);
-    extern float WindowOpacity;
-    // Try ARGB visual for true per-pixel alpha (no Hyprland windowrulev2 needed)
-    XVisualInfo vinfo;
-    bool use_argb = false;
-    Visual* visual = DefaultVisual(dpy, screen);
-    int depth = DefaultDepth(dpy, screen);
-    Colormap cmap = DefaultColormap(dpy, screen);
-    if (XMatchVisualInfo(dpy, screen, 32, TrueColor, &vinfo)) {
-        visual = vinfo.visual;
-        depth = 32;
-        cmap = XCreateColormap(dpy, RootWindow(dpy, screen), visual, AllocNone);
-        use_argb = true;
-    }
-    XSetWindowAttributes attrs = {0};
-    attrs.background_pixel = bg_color;
-    // For ARGB, make background with alpha from WindowOpacity like Win32
-    if (use_argb) {
-        unsigned int r = (bg_color >> 16) & 0xFF;
-        unsigned int g = (bg_color >> 8) & 0xFF;
-        unsigned int b = bg_color & 0xFF;
-        unsigned int a = (unsigned int)WindowOpacity;
-        if (a > 255) a = 255;
-        attrs.background_pixel = (a << 24) | (r << 16) | (g << 8) | b;
-        attrs.colormap = cmap;
-        attrs.border_pixel = 0;
-        attrs.override_redirect = False;
-    }
-    unsigned long valuemask = CWBackPixel | (use_argb ? CWColormap | CWBorderPixel : 0);
-    Window win = XCreateWindow(dpy, RootWindow(dpy, screen), x, y, w, h, 0, depth, InputOutput, visual, valuemask, &attrs);
-    // Opacity fallback for compositors without ARGB (_NET_WM_WINDOW_OPACITY)
+    // Use simple window + _NET_WM_WINDOW_OPACITY (Hyprland needs windowrulev2, but avoids RenderBadPicture)
+    // ARGB 32-bit visual caused XftDraw BadMatch (XftDraw uses DefaultVisual 24-bit)
+    Window win = XCreateSimpleWindow(dpy, RootWindow(dpy, DefaultScreen(dpy)), x, y, w, h, 0, bg_color, bg_color);
     {
+        extern float WindowOpacity;
         Atom opacity = XInternAtom(dpy, "_NET_WM_WINDOW_OPACITY", False);
         unsigned long alpha = (unsigned long)(0xffffffff * (WindowOpacity / 255.0));
         XChangeProperty(dpy, win, opacity, XA_CARDINAL, 32, PropModeReplace, (unsigned char*)&alpha, 1);
