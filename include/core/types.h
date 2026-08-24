@@ -556,12 +556,12 @@ typedef struct {
 #endif
 #define COLOR_BG      RGB(5, 5, 10)   
 #define COLOR_TEXT    RGB(255, 255, 255)
-#define COLOR_SELECTED_TEXT    RGB(70, 55, 90)
+#define COLOR_SELECTED_TEXT     RGB(57, 205, 20)
 #define COLOR_VISUAL_SELECTED_TEXT    RGB(48,25,52)
 #define COLOR_ALIAS_TEXT    RGB(255,255,255)
-#define COLOR_INSERT_MODE_TEXT    RGB(50, 255, 50)
-#define COLOR_NORMAL_MODE_TEXT    RGB(100, 255, 255)
-#define COLOR_VISUAL_MODE_TEXT    RGB(200, 3, 222)
+#define COLOR_INSERT_MODE_TEXT (RainbowText ? RGB(50, 255, 50) : COLOR_TEXT)
+#define COLOR_NORMAL_MODE_TEXT (RainbowText ? RGB(100, 255, 255) : COLOR_TEXT)
+#define COLOR_VISUAL_MODE_TEXT (RainbowText ? RGB(200, 3, 222) : COLOR_TEXT)
 #if defined(_WIN32)
 #define DATA_DIR "data\\"
 #else
