@@ -377,7 +377,7 @@ void DrawSimplePromptUserEditControl(Display *dpy, Window *win, SimplePromptStat
         ((bg_color_map >> 16) & 0xFF) * 0x101,
         ((bg_color_map >> 8) & 0xFF) * 0x101,
         (bg_color_map & 0xFF) * 0x101,
-        0xFFFF
+        OpacityAlpha16()
     };
     XftColor bg_color;
     XftColorAllocValue(dpy, visual, cmap, &rc_bg, &bg_color);
@@ -482,7 +482,7 @@ void DrawPromptUserEditControl(Display *dpy,Window* win,PromptState *state) {
         ((bg_color_map >> 16) & 0xFF) * 0x101,
         ((bg_color_map >> 8) & 0xFF) * 0x101,
         (bg_color_map & 0xFF) * 0x101,
-        0xFFFF
+        OpacityAlpha16()
     };
     XftColor bg_color;
     XftColorAllocValue(dpy, visual, cmap, &rc_bg, &bg_color);
@@ -506,7 +506,7 @@ void DrawPromptUserEditControl(Display *dpy,Window* win,PromptState *state) {
     int centerY = state->height / 2;
     int topLeftX = centerX - state->width / 2;
     int topLeftY = centerY - state->height / 2;
-    XftDrawRect(xd, &bg_color, topLeftX, topLeftY, state->width,80);
+    XftDrawRect(xd, &bg_color, topLeftX, topLeftY, state->width,100);
     draw_wrapped_text(dpy, xd, &vim_text_color, font,g_vim_mode,0,"LEFT",5);
     draw_wrapped_text(dpy, xd, &text_color,font,state->window_title,0,"RIGHT",5);
 
@@ -567,7 +567,7 @@ void DrawPromptUserListBox(Display *dpy,Window* win,PromptState *state) {
       {
         Visual *visClear = DefaultVisual(dpy, screen);
         Colormap cmapClear = DefaultColormap(dpy, screen);
-        XRenderColor rc0={(rgb_to_hex(COLOR_BG)>>16&0xFF)*0x101,(rgb_to_hex(COLOR_BG)>>8&0xFF)*0x101,(rgb_to_hex(COLOR_BG)&0xFF)*0x101,0xFFFF};
+        XRenderColor rc0={(rgb_to_hex(COLOR_BG)>>16&0xFF)*0x101,(rgb_to_hex(COLOR_BG)>>8&0xFF)*0x101,(rgb_to_hex(COLOR_BG)&0xFF)*0x101,OpacityAlpha16()};
         XftColor c0; XftColorAllocValue(dpy, visClear, cmapClear, &rc0, &c0);
         XftDrawRect(xd, &c0, 0, y0, state->width, state->height - y0);
         XftColorFree(dpy, visClear, cmapClear, &c0);
@@ -599,7 +599,7 @@ void DrawPromptUserListBox(Display *dpy,Window* win,PromptState *state) {
         int y = y0 + i * itemH;
         bool sel = (idx == lb->selected_index);
         unsigned long bg = sel ? rgb_to_hex(COLOR_SELECTED_TEXT) : rgb_to_hex(COLOR_BG);
-        XRenderColor rc={ (bg>>16&0xFF)*0x101,(bg>>8&0xFF)*0x101,(bg&0xFF)*0x101,0xFFFF};
+        XRenderColor rc={ (bg>>16&0xFF)*0x101,(bg>>8&0xFF)*0x101,(bg&0xFF)*0x101,OpacityAlpha16()};
         XftColor bgc; XftColorAllocValue(dpy, vis, cmap, &rc, &bgc);
         XftDrawRect(xd, &bgc, 0, y, state->width, itemH);
 
@@ -677,6 +677,8 @@ void DrawPromptUserListBox(Display *dpy,Window* win,PromptState *state) {
 }
 
 bool Linux_RenderPromptUser(Display *dpy, Window *win, PromptState *state) {
+    XSetWindowBackground(dpy, *win, 0);
+    XClearWindow(dpy, *win);
     if (g_render_callback != NULL) {
       g_render_callback(dpy,win,state);
     } else {
@@ -689,6 +691,8 @@ bool Linux_RenderPromptUser(Display *dpy, Window *win, PromptState *state) {
     return true;
 }
 bool Linux_RenderSimplePromptUser(Display *dpy, Window *win, SimplePromptState *state) {
+    XSetWindowBackground(dpy, *win, 0);
+    XClearWindow(dpy, *win);
     DrawSimplePromptUserEditControl(dpy, win,state);
     XFlush(dpy);
     return true;
