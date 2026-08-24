@@ -24,7 +24,7 @@
 
 // Helpers to correctly resolve real user/home even when launched via
 // `sudo true; nohup ./build/main &` where SUDO_USER is not set for the nohup child.
-static const char* GetRealUser(void){
+const char* Platform_GetRealUser(void){
     static char buf[256]={0};
     static bool done=false;
     if(done) return buf[0]?buf:"diggy";
@@ -38,11 +38,11 @@ static const char* GetRealUser(void){
     if(pw && pw->pw_name){ strncpy(buf,pw->pw_name,sizeof(buf)-1); done=true; return buf; }
     strncpy(buf,"diggy",sizeof(buf)-1); done=true; return buf;
 }
-static const char* GetRealHome(void){
+const char* Platform_GetRealHome(void){
     static char buf[512]={0};
     static bool done=false;
     if(done) return buf[0]?buf:"/home/diggy";
-    const char* u=GetRealUser();
+    const char* u=Platform_GetRealUser();
     struct passwd* pw=getpwnam(u);
     if(pw && pw->pw_dir){ strncpy(buf,pw->pw_dir,sizeof(buf)-1); done=true; return buf; }
     pw=getpwuid(getuid());
@@ -51,7 +51,66 @@ static const char* GetRealHome(void){
     if(h && h[0]){ strncpy(buf,h,sizeof(buf)-1); done=true; return buf; }
     snprintf(buf,sizeof(buf),"/home/%s",u); done=true; return buf;
 }
-static bool IsRunningAsRoot(void){ return getuid()==0; }
+bool Platform_IsRunningAsRoot(void){ return getuid()==0; }
+
+// Keep old static names for internal callers that still use them
+static const char* GetRealUser(void){ return Platform_GetRealUser(); }
+static const char* GetRealHome(void){ return Platform_GetRealHome(); }
+static bool IsRunningAsRoot(void){ return Platform_IsRunningAsRoot(); }
+
+bool Platform_LaunchTerminal(const char* working_dir, const char* extra_args){
+    if(!working_dir) return false;
+    const char* real_user = Platform_GetRealUser();
+    const char* display = getenv("DISPLAY"); if(!display) display=":0";
+    const char* xauthority = getenv("XAUTHORITY"); if(!xauthority) xauthority="";
+    char runtime_dir[256];
+    const char* env_rt=getenv("XDG_RUNTIME_DIR");
+    if(env_rt) snprintf(runtime_dir,sizeof(runtime_dir),"%s",env_rt);
+    else snprintf(runtime_dir,sizeof(runtime_dir),"/run/user/1000");
+    const char* term = (UsedTerminal && strlen(UsedTerminal)>0) ? UsedTerminal : "alacritty";
+    char disp_env[256], xauth_env[512], runtime_env[512];
+    snprintf(disp_env,sizeof(disp_env),"DISPLAY=%s",display);
+    snprintf(xauth_env,sizeof(xauth_env),"XAUTHORITY=%s",xauthority);
+    snprintf(runtime_env,sizeof(runtime_env),"XDG_RUNTIME_DIR=%s",runtime_dir);
+    // Build terminal command: terminal [--working-directory=dir] [extra_args]
+    // extra_args already contains leading space if needed, e.g. " -e yazi \"/path\""
+    pid_t pid=fork();
+    if(pid<0) return false;
+    if(pid==0){
+        setsid();
+        pid_t pid2=fork();
+        if(pid2<0) _exit(1);
+        if(pid2>0) _exit(0);
+        int fd=open("/dev/null",O_RDWR); if(fd>=0){dup2(fd,0);dup2(fd,1);dup2(fd,2); if(fd>2) close(fd);}
+        if(Platform_IsRunningAsRoot()){
+            if(extra_args && extra_args[0]){
+                char cmd[2048];
+                snprintf(cmd,sizeof(cmd),"%s --working-directory=\"%s\" %s", term, working_dir, extra_args);
+                char* const argv[]={"sudo","-u",(char*)real_user,"env",disp_env,xauth_env,runtime_env,"sh","-c",cmd,NULL};
+                execvp(argv[0],argv);
+            } else {
+                char* const argv[]={"sudo","-u",(char*)real_user,"env",disp_env,xauth_env,runtime_env,(char*)term,"--working-directory", (char*)working_dir, NULL};
+                execvp(argv[0],argv);
+                // fallback without --working-directory
+                char* const argv2[]={"sudo","-u",(char*)real_user,"env",disp_env,xauth_env,runtime_env,(char*)term,NULL};
+                execvp(argv2[0],argv2);
+            }
+        } else {
+            setenv("DISPLAY",display,1); setenv("XAUTHORITY",xauthority,1); setenv("XDG_RUNTIME_DIR",runtime_dir,1);
+            if(extra_args && extra_args[0]){
+                char cmd[2048];
+                snprintf(cmd,sizeof(cmd),"%s --working-directory=\"%s\" %s", term, working_dir, extra_args);
+                execl("/bin/sh","sh","-c",cmd,(char*)NULL);
+            } else {
+                execlp(term,term,"--working-directory",working_dir,(char*)NULL);
+                execlp(term,term,(char*)NULL);
+            }
+        }
+        _exit(127);
+    }
+    int st=0; waitpid(pid,&st,0);
+    return true;
+}
 
 static bool daemon_spawn_sudo_env(const char* real_user, const char* display, const char* xauthority, const char* runtime_dir, char* const argv[]) {
     pid_t pid = fork();
