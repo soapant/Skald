@@ -465,8 +465,11 @@ void DrawPromptUserEditControl(Display *dpy,Window* win,PromptState *state) {
 
     unsigned long text_color_map = rgb_to_hex(COLOR_TEXT);
     unsigned long bg_color_map = rgb_to_hex(COLOR_BG);
-
     unsigned long vim_text_color_map;
+    unsigned long window_title_text_color_map;
+
+    eval_window_title_color(state,&window_title_text_color_map);
+
     if (g_current_mode == MODE_NORMAL) {
       vim_text_color_map = rgb_to_hex(COLOR_NORMAL_MODE_TEXT);
     } else if (g_current_mode == MODE_INSERT) {
@@ -494,12 +497,20 @@ void DrawPromptUserEditControl(Display *dpy,Window* win,PromptState *state) {
     XftColor text_color;
     XftColorAllocValue(dpy, visual, cmap, &rc_text, &text_color);
 
+    XRenderColor rc_window_title_text = {
+        ((window_title_text_color_map >> 16) & 0xFF) * 0x101, ((window_title_text_color_map >> 8) & 0xFF) * 0x101, (window_title_text_color_map & 0xFF) * 0x101,
+        0xFFFF
+    };
+    XftColor window_title_text_color;
+    XftColorAllocValue(dpy, visual, cmap, &rc_window_title_text, &window_title_text_color);
+
     XRenderColor rc_vim_text_color = {
         ((vim_text_color_map >> 16) & 0xFF) * 0x101,
         ((vim_text_color_map >> 8) & 0xFF) * 0x101,
         (vim_text_color_map & 0xFF) * 0x101,
         0xFFFF
     };
+
     XftColor vim_text_color;
     XftColorAllocValue(dpy, visual, cmap, &rc_vim_text_color, &vim_text_color);
     int centerX = state->width / 2;
@@ -508,7 +519,7 @@ void DrawPromptUserEditControl(Display *dpy,Window* win,PromptState *state) {
     int topLeftY = centerY - state->height / 2;
     XftDrawRect(xd, &bg_color, topLeftX, topLeftY, state->width,100);
     draw_wrapped_text(dpy, xd, &vim_text_color, font,g_vim_mode,0,"LEFT",5);
-    draw_wrapped_text(dpy, xd, &text_color,font,state->window_title,0,"RIGHT",5);
+    draw_wrapped_text(dpy, xd, &window_title_text_color,font,state->window_title,0,"RIGHT",5);
 
     int visible_w = state->width - 40;
     int text_len = strlen(state->filter);
@@ -556,10 +567,6 @@ void DrawPromptUserEditControl(Display *dpy,Window* win,PromptState *state) {
 
 void DrawPromptUserListBox(Display *dpy,Window* win,PromptState *state) {
       if (!state->has_listbox) return;
-      if (AlternatingText && RainbowText) {
-        printf("You Cant Have Both Rainbow And Alternating Text");
-        exit(1);
-      }
       ListBoxInfo *lb = &state->listbox;
       int screen = DefaultScreen(dpy);
       XftDraw* xd = Linux_CreateXftDraw(dpy, *win);
@@ -645,7 +652,9 @@ void DrawPromptUserListBox(Display *dpy,Window* win,PromptState *state) {
                 XftDrawStringUtf8(xd, &aliasCol, xf, text_x + main_w, y + xf->ascent, (FcChar8*)alias_part, strlen(alias_part));
                 XftColorFree(dpy, vis, cmap, &aliasCol);
             } else {
-                draw_wrapped_text(dpy, xd, &fcolrainbow, font, trunc, y, "LEFT", 55);
+
+                int XOffset = get_offset_based_on_number(idx);
+                draw_wrapped_text(dpy, xd, &fcolrainbow, font, trunc, y, "LEFT",XOffset);
             }
         } else if (AlternatingText) {
             static int toggle = 0;
@@ -677,7 +686,8 @@ void DrawPromptUserListBox(Display *dpy,Window* win,PromptState *state) {
                 XftDrawStringUtf8(xd, &aliasCol, xf, text_x + main_w, y + xf->ascent, (FcChar8*)alias_part, strlen(alias_part));
                 XftColorFree(dpy, vis, cmap, &aliasCol);
             } else {
-                draw_wrapped_text(dpy, xd, &fcoltext, font, trunc, y, "LEFT", 45);
+                int XOffset = get_offset_based_on_number(idx);
+                draw_wrapped_text(dpy, xd, &fcoltext, font, trunc, y, "LEFT",XOffset);
             }
         }
         else {
@@ -705,7 +715,8 @@ void DrawPromptUserListBox(Display *dpy,Window* win,PromptState *state) {
                 XftDrawStringUtf8(xd, &aliasCol, xf, text_x + main_w, y + xf->ascent, (FcChar8*)alias_part, strlen(alias_part));
                 XftColorFree(dpy, vis, cmap, &aliasCol);
             } else {
-                draw_wrapped_text(dpy, xd, &fcoltext, font, trunc, y, "LEFT", 45);
+                int XOffset = get_offset_based_on_number(idx);
+                draw_wrapped_text(dpy, xd, &fcolrainbow, font, trunc, y, "LEFT",XOffset);
             }
         }
 
