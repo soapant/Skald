@@ -38,8 +38,8 @@ const PathVar G_PATH_VARS[] = {
     {"MISC",         "D:\\retard games\\miscellaneous", "/home/diggy/miscellaneous"},
     {"MUSIC",        "D:\\Music",                       "/home/diggy/Music"},
     {"VIDEOS",       "D:\\videos",                      "/home/diggy/Videos"},
-    {"PROGRAMDATA",  "C:\\ProgramData",                 ""}, // Not Implemented on Linux
-    {"SystemRoot",   "C:\\Windows",                     ""}, // Not Implemented on Linux
+    {"PROGRAMDATA",  "C:\\ProgramData",                 ""}, // Not A Thing On Linux
+    {"SystemRoot",   "C:\\Windows",                     ""}, // Not A Thing On Linux
 };
 const unsigned int PATH_VAR_COUNT = sizeof(G_PATH_VARS) / sizeof(G_PATH_VARS[0]);
 
