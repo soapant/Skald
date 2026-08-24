@@ -456,7 +456,6 @@ void DrawPromptUserListBox(Display *dpy,Window* win,PromptState *state) {
 
       Visual *vis = DefaultVisual(dpy, screen);
       Colormap cmap = DefaultColormap(dpy, screen);
-      static int toggle = 0;
 
       for (int i = 0; i < visible; i++) {
         int idx = lb->view_offset + i;
@@ -479,10 +478,8 @@ void DrawPromptUserListBox(Display *dpy,Window* win,PromptState *state) {
         int text_x = 45;
         if (RainbowText) {
             num_color = body_color = plain_color = &fcolrainbow;
-            text_x = 55;
         } else if (AlternatingText) {
-            toggle ^= 1;
-            if (toggle) {
+            if (idx % 2 == 0) {
                 num_color = body_color = plain_color = &fcolalternate;
             }
         }
