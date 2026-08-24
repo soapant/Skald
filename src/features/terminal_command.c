@@ -3,8 +3,12 @@
 #include "helpers.h"
 #include "core/common_ui.h"
 #include "core/zoxide_helpers.h"
+#include "platform/platform.h"
+#include <sys/stat.h>
 #if defined(_WIN32)
 #include <shellapi.h>
+#else
+#include <unistd.h>
 #endif
 
 static char** g_cached_commands = NULL;
@@ -44,19 +48,16 @@ static void RunTerminalCommand(const char* Command, bool save_to_history) {
     GetTempPathA(MAX_PATH, temp_file);
     strcat(temp_file, "temp_cmd.sh");
 #else
-    const char* real_user = getenv("SUDO_USER");
-    if (!real_user) real_user = "diggy";
-    
+    const char* real_user = Platform_GetRealUser();
+    const char* real_home = Platform_GetRealHome();
     char cache_dir[MAX_PATH];
-    if (strcmp(real_user, "root") == 0) {
-        snprintf(cache_dir, sizeof(cache_dir), "/home/diggy/.cache");
-        snprintf(temp_file, sizeof(temp_file), "/home/diggy/.cache/temp_cmd.sh");
-    } else {
-        snprintf(cache_dir, sizeof(cache_dir), "/home/%s/.cache", real_user);
-        snprintf(temp_file, sizeof(temp_file), "/home/%s/.cache/temp_cmd.sh", real_user);
-    }
+    snprintf(cache_dir, sizeof(cache_dir), "%s/.cache", real_home);
+    snprintf(temp_file, sizeof(temp_file), "%s/.cache/temp_cmd.sh", real_home);
     char mkdir_cmd[MAX_PATH + 64];
-    snprintf(mkdir_cmd, sizeof(mkdir_cmd), "mkdir -p \"%s\" && chown %s:%s \"%s\"", cache_dir, real_user, real_user, cache_dir);
+    if (Platform_IsRunningAsRoot())
+        snprintf(mkdir_cmd, sizeof(mkdir_cmd), "mkdir -p \"%s\" && chown %s:%s \"%s\"", cache_dir, real_user, real_user, cache_dir);
+    else
+        snprintf(mkdir_cmd, sizeof(mkdir_cmd), "mkdir -p \"%s\"", cache_dir);
     system(mkdir_cmd);
 #endif
 
@@ -65,11 +66,14 @@ static void RunTerminalCommand(const char* Command, bool save_to_history) {
         fprintf(f, "#!/bin/bash\n");
         fprintf(f, "%s\n", clean_cmd);
         fclose(f);
-        
 #if !defined (_WIN32)
-        char chown_file[MAX_PATH + 64];
-        snprintf(chown_file, sizeof(chown_file), "chown %s:%s \"%s\" && chmod 755 \"%s\"", real_user, real_user, temp_file, temp_file);
-        system(chown_file);
+        if (Platform_IsRunningAsRoot()){
+            char chown_file[MAX_PATH + 64];
+            snprintf(chown_file, sizeof(chown_file), "chown %s:%s \"%s\" && chmod 755 \"%s\"", real_user, real_user, temp_file, temp_file);
+            system(chown_file);
+        } else {
+            chmod(temp_file, 0755);
+        }
 #endif
     }
     
@@ -81,28 +85,18 @@ static void RunTerminalCommand(const char* Command, bool save_to_history) {
     snprintf(args, sizeof(args), "-e bash \"%s\"", temp_file);
     ShellExecuteA(NULL, "open", terminal_exe, args, NULL, SW_SHOWNORMAL);
 #else
-    const char* display = getenv("DISPLAY");
-    if (!display) display = ":0";
-    
-    const char* xauthority = getenv("XAUTHORITY");
-    if (!xauthority) xauthority = "";
-
+    const char* display = getenv("DISPLAY"); if(!display) display=":0";
+    const char* xauthority = getenv("XAUTHORITY"); if(!xauthority) xauthority="";
     char runtime_dir[256];
-    const char* env_runtime = getenv("XDG_RUNTIME_DIR");
-    if (env_runtime) {
-        snprintf(runtime_dir, sizeof(runtime_dir), "%s", env_runtime);
-    } else {
-        snprintf(runtime_dir, sizeof(runtime_dir), "/run/user/1000");
-    }
-
-    const char* term = (UsedTerminal && strlen(UsedTerminal) > 0) ? UsedTerminal : "alacritty";
-
-    char cmd_open[1024];
-    snprintf(cmd_open, sizeof(cmd_open), 
-             "sudo -u %s DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s %s -e bash \"%s\" &", 
-             real_user, display, xauthority, runtime_dir, term, temp_file);
-    
-    system(cmd_open);
+    const char* env_runtime=getenv("XDG_RUNTIME_DIR");
+    if(env_runtime) snprintf(runtime_dir,sizeof(runtime_dir),"%s",env_runtime);
+    else snprintf(runtime_dir,sizeof(runtime_dir),"/run/user/1000");
+    const char* term = (UsedTerminal && strlen(UsedTerminal)>0) ? UsedTerminal : "alacritty";
+    char extra[1024];
+    snprintf(extra,sizeof(extra),"-e bash \"%s\"", temp_file);
+    Platform_LaunchTerminal(real_home, extra);
+    // Fallback direct if Platform_LaunchTerminal fails (should not)
+    // Keep old path for compat but now daemonized via Platform_LaunchTerminal
 #endif
     
     printf("[TERMINAL] Running: %s\n", clean_cmd);
