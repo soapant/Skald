@@ -51,6 +51,7 @@ const bool ReplicaAvailable = true;
 const bool FullTextNeedsKeyPress = true;
 const bool MessagesEnabled = true;
 const bool RainbowText = false;
+const bool AlternatingText = true;
 const int GradientItems = 30;
 const float GradientBrightness = 1.0f;
 bool PixelHotkeys = false;

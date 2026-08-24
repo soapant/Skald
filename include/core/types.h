@@ -556,7 +556,8 @@ typedef struct {
 #endif
 #define COLOR_BG      RGB(5, 5, 10)   
 #define COLOR_TEXT    RGB(255, 255, 255)
-#define COLOR_SELECTED_TEXT     RGB(57, 205, 20)
+#define COLOR_ALTERNATE RGB(57, 255, 20)
+#define COLOR_SELECTED_TEXT     RGB(57, 105, 20)
 #define COLOR_VISUAL_SELECTED_TEXT    RGB(48,25,52)
 #define COLOR_ALIAS_TEXT    RGB(255,255,255)
 #define COLOR_INSERT_MODE_TEXT (RainbowText ? RGB(50, 255, 50) : COLOR_TEXT)
