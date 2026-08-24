@@ -138,42 +138,7 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
     int x = (screen_width - layout_w) / 2;
     int y = (screen_height - layout_h) / 2;
 
-    unsigned long bg_color = rgb_to_hex(COLOR_BG);
-
-    Window win = XCreateSimpleWindow(
-        dpy,
-        RootWindow(dpy, screen),
-        x, y,
-        layout_w, layout_h,
-        0,              
-        bg_color,       
-        bg_color        
-    );
-    // Opacity like Win32 SetLayeredWindowAttributes WindowOpacity/255 (~0.96)
-    {
-        Atom opacity = XInternAtom(dpy, "_NET_WM_WINDOW_OPACITY", False);
-        unsigned long alpha = (unsigned long)(0xffffffff * (WindowOpacity / 255.0));
-        XChangeProperty(dpy, win, opacity, XA_CARDINAL, 32, PropModeReplace, (unsigned char*)&alpha, 1);
-    }
-    Atom wm_state = XInternAtom(dpy, "_NET_WM_STATE", False);
-    Atom wm_state_fullscreen = XInternAtom(dpy, "_NET_WM_STATE_FULLSCREEN", False);
-    
-    Atom wm_type = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE", False);
-    Atom wm_type_dialog = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE_DIALOG", False);
-    XChangeProperty(dpy, win, wm_type, XA_ATOM, 32,
-                    PropModeReplace, (unsigned char*)&wm_type_dialog, 1);
-
-    XClassHint* class_hint = XAllocClassHint();
-    class_hint->res_name = "colored";
-    class_hint->res_class = "colored";
-    XSetClassHint(dpy, win, class_hint);
-    XFree(class_hint);
-
-    XWMHints* wm_hints = XAllocWMHints();
-    wm_hints->flags = InputHint;
-    wm_hints->input = True;
-    XSetWMHints(dpy, win, wm_hints);
-    XFree(wm_hints);
+    Window win = Linux_CreatePromptWindow(dpy, x, y, layout_w, layout_h);
 
     XSelectInput(dpy, win, KeyPressMask | ExposureMask | FocusChangeMask);
 
@@ -306,37 +271,7 @@ char* Platform_SimplePromptUser(const char* prompt, const char* window_title,int
     int x = (screen_width - layout_w) / 2;
     int y = (screen_height - layout_h) / 2;
 
-    unsigned long bg_color = rgb_to_hex(COLOR_BG);
-
-    Window win = XCreateSimpleWindow(
-        dpy,
-        RootWindow(dpy, screen),
-        x, y,
-        layout_w, layout_h,
-        0,              
-        bg_color,       
-        bg_color        
-    );
-    {
-        Atom opacity = XInternAtom(dpy, "_NET_WM_WINDOW_OPACITY", False);
-        unsigned long alpha = (unsigned long)(0xffffffff * (WindowOpacity / 255.0));
-        XChangeProperty(dpy, win, opacity, XA_CARDINAL, 32, PropModeReplace, (unsigned char*)&alpha, 1);
-    }
-    Atom wm_state = XInternAtom(dpy, "_NET_WM_STATE", False);
-    Atom wm_state_fullscreen = XInternAtom(dpy, "_NET_WM_STATE_FULLSCREEN", False);
-    
-    Atom wm_type = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE", False);
-    Atom wm_type_dialog = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE_DIALOG", False);
-    XChangeProperty(dpy, win, wm_type, XA_ATOM, 32,
-                    PropModeReplace, (unsigned char*)&wm_type_dialog, 1);
-
-    XClassHint* class_hint = XAllocClassHint();
-    class_hint->res_name = "colored";
-    class_hint->res_class = "colored";
-    XSetClassHint(dpy, win, class_hint);
-    XFree(class_hint);
-
-    XSelectInput(dpy, win, KeyPressMask | ExposureMask);
+    Window win = Linux_CreateSimplePromptWindow(dpy, x, y, layout_w, layout_h);
 
     XMapWindow(dpy, win);
     XFlush(dpy);
@@ -500,38 +435,7 @@ void Platform_DisplayMessage(const char* message, int centerX, int centerY, int 
     int topLeftX = centerX - (winWidth / 2);
     int topLeftY = centerY - (winHeight / 2);
 
-    Window win = XCreateSimpleWindow(
-        dpy,
-        RootWindow(dpy, screen),
-        topLeftX, topLeftY, 
-        winWidth, winHeight,
-        0,
-        bg_color,
-        bg_color
-    );
-    {
-        Atom opacity = XInternAtom(dpy, "_NET_WM_WINDOW_OPACITY", False);
-        unsigned long alpha = (unsigned long)(0xffffffff * (WindowOpacity / 255.0));
-        XChangeProperty(dpy, win, opacity, XA_CARDINAL, 32, PropModeReplace, (unsigned char*)&alpha, 1);
-    }
-    Atom wm_type = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE", False);
-    Atom wm_type_dialog = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE_DIALOG", False);
-    XChangeProperty(dpy, win, wm_type, XA_ATOM, 32,
-                    PropModeReplace, (unsigned char*)&wm_type_dialog, 1);
-
-    XClassHint* class_hint = XAllocClassHint();
-    class_hint->res_name = "flashtext";
-    class_hint->res_class = "flashtext";
-    XSetClassHint(dpy, win, class_hint);
-    XFree(class_hint);
-
-    XWMHints* wm_hints = XAllocWMHints();
-    wm_hints->flags = InputHint;
-    wm_hints->input = False;
-    XSetWMHints(dpy, win, wm_hints);
-    XFree(wm_hints);
-
-    XSelectInput(dpy, win, ExposureMask | KeyPressMask);
+    Window win = Linux_CreateDisplayMessageWindow(dpy, topLeftX, topLeftY, winWidth, winHeight);
 
     XftDraw* xd = XftDrawCreate(dpy, win, DefaultVisual(dpy, screen), DefaultColormap(dpy, screen));
     Visual* visual = DefaultVisual(dpy, screen);
@@ -621,40 +525,7 @@ char* Platform_EditTextPopup(const char* initial_text, int centerX, int centerY,
     state->height = maxHeight;
     state->window_title = "EditPopup";
 
-    unsigned long bg_color = rgb_to_hex(COLOR_BG);
-
-    Window win = XCreateSimpleWindow(
-        dpy,
-        RootWindow(dpy, screen),
-        x, y,
-        maxWidth, maxHeight,
-        0,
-        bg_color,
-        bg_color
-    );
-    {
-        Atom opacity = XInternAtom(dpy, "_NET_WM_WINDOW_OPACITY", False);
-        unsigned long alpha = (unsigned long)(0xffffffff * (WindowOpacity / 255.0));
-        XChangeProperty(dpy, win, opacity, XA_CARDINAL, 32, PropModeReplace, (unsigned char*)&alpha, 1);
-    }
-    Atom wm_type = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE", False);
-    Atom wm_type_dialog = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE_DIALOG", False);
-    XChangeProperty(dpy, win, wm_type, XA_ATOM, 32,
-                    PropModeReplace, (unsigned char*)&wm_type_dialog, 1);
-
-    XClassHint* class_hint = XAllocClassHint();
-    class_hint->res_name = "colored";
-    class_hint->res_class = "colored";
-    XSetClassHint(dpy, win, class_hint);
-    XFree(class_hint);
-
-    XWMHints* wm_hints = XAllocWMHints();
-    wm_hints->flags = InputHint;
-    wm_hints->input = True;
-    XSetWMHints(dpy, win, wm_hints);
-    XFree(wm_hints);
-
-    XSelectInput(dpy, win, KeyPressMask | ExposureMask | FocusChangeMask);
+    Window win = Linux_CreateEditPopupWindow(dpy, x, y, maxWidth, maxHeight);
 
     bool prev_main_active = g_IsMainWindowActive;
     g_currentEditPopupState = state;
