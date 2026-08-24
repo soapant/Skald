@@ -379,6 +379,7 @@ bool Platform_LaunchApp(const char* path) {
     if (!path) return false;
     char expanded[1024];
     if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) return false;
+    printf("Launching App Of Path %s \n",path);
     const char* real_user = GetRealUser();
     const char* display = getenv("DISPLAY");
     if (!display) display = ":0";
@@ -389,9 +390,81 @@ bool Platform_LaunchApp(const char* path) {
     if (env_runtime) snprintf(runtime_dir, sizeof(runtime_dir), "%s", env_runtime);
     else snprintf(runtime_dir, sizeof(runtime_dir), "/run/user/1000");
 
-    // Prefer systemd-run --user --scope if available (most robust on Hyprland)
-    // fallback to double-fork daemon - handle both sudo (running as root) and nohup (running as user)
     if (strstr(expanded, ".desktop") != NULL) {
+        // Robust .desktop handling: check Terminal=true and launch via terminal if needed
+        bool is_terminal = false;
+        char exec_line[1024] = {0};
+        char workdir[1024] = {0};
+        FILE* df = fopen(expanded, "r");
+        if (df){
+            char line[1024];
+            while (fgets(line, sizeof(line), df)){
+                // trim leading space
+                char* p=line;
+                while(*p==' '||*p=='\t') p++;
+                if (strncasecmp(p, "Terminal=", 9)==0){
+                    char* v=p+9;
+                    while(*v==' '||*v=='\t') v++;
+                    v[strcspn(v, "\r\n")]='\0';
+                    if(strcasecmp(v,"true")==0 || strcmp(v,"1")==0) is_terminal=true;
+                } else if (strncasecmp(p, "Exec=", 5)==0){
+                    char* v=p+5;
+                    while(*v==' '||*v=='\t') v++;
+                    v[strcspn(v, "\r\n")]='\0';
+                    strncpy(exec_line, v, sizeof(exec_line)-1);
+                } else if (strncasecmp(p, "Path=", 5)==0){
+                    char* v=p+5;
+                    while(*v==' '||*v=='\t') v++;
+                    v[strcspn(v, "\r\n")]='\0';
+                    strncpy(workdir, v, sizeof(workdir)-1);
+                }
+            }
+            fclose(df);
+        }
+        // Strip field codes %f %F %u %U %i %c %k etc. from Exec
+        if(exec_line[0]){
+            char cleaned[1024]={0};
+            size_t o=0;
+            for(size_t i=0; exec_line[i] && o<sizeof(cleaned)-1; i++){
+                if(exec_line[i]=='%' && exec_line[i+1]){
+                    char c=exec_line[i+1];
+                    if(c=='f'||c=='F'||c=='u'||c=='U'||c=='i'||c=='c'||c=='k'||c=='v'||c=='m'){
+                        i++; // skip %x
+                        // also skip following space if any to avoid double spaces
+                        while(exec_line[i+1]==' ') i++;
+                        continue;
+                    }
+                }
+                cleaned[o++]=exec_line[i];
+            }
+            cleaned[o]='\0';
+            // trim
+            char* s=cleaned;
+            while(*s==' '||*s=='\t') s++;
+            char* e=s+strlen(s)-1;
+            while(e>s && (*e==' '||*e=='\t')) *e--='\0';
+            strncpy(exec_line, s, sizeof(exec_line)-1);
+        }
+        if(is_terminal && exec_line[0]){
+            // Launch via terminal (alacritty via UsedTerminal)
+            const char* term = (UsedTerminal && strlen(UsedTerminal)>0) ? UsedTerminal : "alacritty";
+            const char* wd = workdir[0] ? workdir : NULL;
+            // Build extra args: -e sh -c 'exec_line; exec $SHELL' or just -e <exec>
+            // Use Platform_LaunchTerminal for proper daemon + env handling
+            char extra[2048];
+            // If workdir specified, use it, else no workdir
+            // We need to run the exec_line inside terminal
+            snprintf(extra, sizeof(extra), "-e sh -c '%s; exec ${SHELL:-/bin/sh}'", exec_line);
+            // Platform_LaunchTerminal will daemonize and handle sudo/nohup
+            // For .desktop terminal apps, we want to keep terminal open after command
+            if(wd) return Platform_LaunchTerminal(wd, extra);
+            else {
+                // Use home as fallback workdir
+                const char* home = GetRealHome();
+                return Platform_LaunchTerminal(home, extra);
+            }
+        }
+        // Non-terminal .desktop: try gtk-launch first
         char* filename = strrchr(expanded, '/');
         filename = filename ? filename + 1 : expanded;
         char app_id[256];
@@ -425,11 +498,39 @@ bool Platform_LaunchApp(const char* path) {
             _exit(127);
         } else if(pid>0){
             int st=0; waitpid(pid,&st,0);
+            // If gtk-launch failed (e.g., Terminal app without proper handling), fallback to Exec via terminal
+            // The is_terminal check above already handled Terminal=true, but some desktops have Terminal=false yet still need terminal
+            // If we are here and is_terminal was false, consider fallback to direct Exec if gtk-launch returns non-zero
+            // Check exit status - if failed, try direct Exec
+            if(WIFEXITED(st) && WEXITSTATUS(st)!=0 && exec_line[0]){
+                // Fallback: try Exec directly (maybe path is direct binary, not desktop id)
+                printf("[LAUNCH] gtk-launch failed for %s, trying direct Exec: %s\n", app_id, exec_line);
+                if(is_terminal){
+                    // already handled above, but just in case
+                    char extra2[2048];
+                    snprintf(extra2, sizeof(extra2), "-e sh -c '%s; exec ${SHELL:-/bin/sh}'", exec_line);
+                    return Platform_LaunchTerminal(GetRealHome(), extra2);
+                } else {
+                    // Try xdg-open fallback is not needed, try sh -c
+                    pid_t pid3=fork();
+                    if(pid3==0){
+                        setsid(); pid_t p2=fork(); if(p2<0) _exit(1); if(p2>0) _exit(0);
+                        int fd2=open("/dev/null",O_RDWR); if(fd2>=0){dup2(fd2,0);dup2(fd2,1);dup2(fd2,2); if(fd2>2) close(fd2);}
+                        if(IsRunningAsRoot()){
+                            char* const av2[]={"sudo","-u",(char*)real_user,"env",disp_env,xauth_env,runtime_env,"sh","-c",exec_line,NULL};
+                            execvp(av2[0],av2);
+                        } else {
+                            setenv("DISPLAY",display,1); setenv("XAUTHORITY",xauthority,1); setenv("XDG_RUNTIME_DIR",runtime_dir,1);
+                            execl("/bin/sh","sh","-c",exec_line,(char*)NULL);
+                        }
+                        _exit(127);
+                    } else if(pid3>0){ int st2=0; waitpid(pid3,&st2,0); return WIFEXITED(st2) && WEXITSTATUS(st2)==0; }
+                }
+            }
             return true;
         }
         return false;
     } else {
-        // direct binary - daemon double-fork, handle nohup (non-root) case without sudo
         char disp_env[256], xauth_env[512], runtime_env[512];
         snprintf(disp_env, sizeof(disp_env), "DISPLAY=%s", display);
         snprintf(xauth_env, sizeof(xauth_env), "XAUTHORITY=%s", xauthority);
