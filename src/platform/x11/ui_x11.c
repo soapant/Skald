@@ -149,10 +149,10 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
         bg_color,       
         bg_color        
     );
-    // Opacity like Win32 SetLayeredWindowAttributes 245/255 (~0.96)
+    // Opacity like Win32 SetLayeredWindowAttributes WindowOpacity/255 (~0.96)
     {
         Atom opacity = XInternAtom(dpy, "_NET_WM_WINDOW_OPACITY", False);
-        unsigned long alpha = (unsigned long)(0xffffffff * (245.0 / 255.0));
+        unsigned long alpha = (unsigned long)(0xffffffff * (WindowOpacity / 255.0));
         XChangeProperty(dpy, win, opacity, XA_CARDINAL, 32, PropModeReplace, (unsigned char*)&alpha, 1);
     }
     Atom wm_state = XInternAtom(dpy, "_NET_WM_STATE", False);
@@ -319,7 +319,7 @@ char* Platform_SimplePromptUser(const char* prompt, const char* window_title,int
     );
     {
         Atom opacity = XInternAtom(dpy, "_NET_WM_WINDOW_OPACITY", False);
-        unsigned long alpha = (unsigned long)(0xffffffff * (245.0 / 255.0));
+        unsigned long alpha = (unsigned long)(0xffffffff * (WindowOpacity / 255.0));
         XChangeProperty(dpy, win, opacity, XA_CARDINAL, 32, PropModeReplace, (unsigned char*)&alpha, 1);
     }
     Atom wm_state = XInternAtom(dpy, "_NET_WM_STATE", False);
@@ -511,7 +511,7 @@ void Platform_DisplayMessage(const char* message, int centerX, int centerY, int 
     );
     {
         Atom opacity = XInternAtom(dpy, "_NET_WM_WINDOW_OPACITY", False);
-        unsigned long alpha = (unsigned long)(0xffffffff * (245.0 / 255.0));
+        unsigned long alpha = (unsigned long)(0xffffffff * (WindowOpacity / 255.0));
         XChangeProperty(dpy, win, opacity, XA_CARDINAL, 32, PropModeReplace, (unsigned char*)&alpha, 1);
     }
     Atom wm_type = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE", False);
@@ -634,7 +634,7 @@ char* Platform_EditTextPopup(const char* initial_text, int centerX, int centerY,
     );
     {
         Atom opacity = XInternAtom(dpy, "_NET_WM_WINDOW_OPACITY", False);
-        unsigned long alpha = (unsigned long)(0xffffffff * (245.0 / 255.0));
+        unsigned long alpha = (unsigned long)(0xffffffff * (WindowOpacity / 255.0));
         XChangeProperty(dpy, win, opacity, XA_CARDINAL, 32, PropModeReplace, (unsigned char*)&alpha, 1);
     }
     Atom wm_type = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE", False);
