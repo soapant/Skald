@@ -24,14 +24,14 @@ const int VimFontSize = 18;
 const int PaddingForScrolling = 3;
 const char* UsedTerminal = "alacritty";
 const char* ImageEditorPath =  "{APPDATA}/Microsoft/Windows/Start Menu/Programs/Scoop Apps/PicView.lnk"; // Not Implemented on Linux
-const char* TimerPath = "{DEV}/Tscoding Timer/sowon/sowon.exe"; // Not Implemented on Linux
-const char* MusicPlayerPath = "{DEV}/Music Player/music_player.exe"; // Not Implemented on Linux
+const char* TimerPath = "{DEV}/Tscoding Timer/sowon/sowon.exe"; 
+const char* MusicPlayerPath = "{DEV}/Music Player/music_player.exe";
 // const char* MusicPlayerPath = "{MISC}/Useful Repos/musializer/build/musializer.exe";
-const char* VideoViewerPath = "{DEV}/Video Viewer/video_viewer.exe"; // Not Implemented on Linux
+const char* VideoViewerPath = "{DEV}/Video Viewer/video_viewer.exe";
 const char* TextEditorPath = "{PROGRAM_FILES}/bin/nvim";
 const char* MusicPath = "{MUSIC}/Mp3";
 const char* VideosPath = "{VIDEOS}";
-const char* IconPath = "{MISC}/switch_window.ico"; // Not Implemented on Linux
+const char* IconPath = "{MISC}/switch_window.ico";
 
 const PathVar G_PATH_VARS[] = {
     {"DEV",          "D:\\Projects",                    "/home/diggy/Programming/Projects"},

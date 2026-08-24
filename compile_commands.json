@@ -127,6 +127,24 @@
   },
   {
     "directory": "/home/diggy/Programming/Projects/C Code",
+    "file": "src/core/vim_view.c",
+    "arguments": [
+      "gcc",
+      "-Wall",
+      "-Wextra",
+      "-I",
+      "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
+      "-w",
+      "-g",
+      "-c",
+      "src/core/vim_view.c"
+    ]
+  },
+  {
+    "directory": "/home/diggy/Programming/Projects/C Code",
     "file": "src/core/feature_data.c",
     "arguments": [
       "gcc",

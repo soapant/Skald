@@ -3,6 +3,7 @@
 #include "core/types.h"
 #include <stddef.h>
 
+struct VimView;
 typedef struct {
     ListBoxInfo* lb;
     WindowHandle hListBox;
@@ -10,6 +11,7 @@ typedef struct {
     PromptState* state;
     SimplePromptState* simple_state;
     SimplePromptState* edit_state;
+    struct VimView* view;
 } VimContext;
 
 void VimCtx_GetText(VimContext* ctx, char* buf, size_t cap);
@@ -20,5 +22,8 @@ VimContext VimCtx_FromGlobals(void);
 VimContext VimCtx_FromState(PromptState* state);
 VimContext VimCtx_FromSimpleState(SimplePromptState* state);
 VimContext VimCtx_FromEditState(SimplePromptState* state);
+struct VimView;
+VimContext VimView_ToContext(struct VimView* view);
+VimContext VimCtx_FromView(struct VimView* view);
 
 #endif
