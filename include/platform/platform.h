@@ -78,5 +78,9 @@ void Platform_ShutdownUI(void);
 
 void Linux_GetActiveWindowTitle(char* buffer, int buffer_size);
 int ConvertLinuxKeyToWindowsVK(int key_code);
+const char* Platform_GetRealUser(void);
+const char* Platform_GetRealHome(void);
+bool Platform_IsRunningAsRoot(void);
+bool Platform_LaunchTerminal(const char* working_dir, const char* extra_args);
 
 #endif

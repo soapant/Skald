@@ -26,31 +26,10 @@ static void explorer_enter_callback(const char* selection, ListBoxInfo* lb) {
 #if defined(_WIN32)
               ShellExecuteA(NULL, "open", "explorer.exe", path, NULL, SW_SHOWNORMAL);
 #else
-        const char* real_user = getenv("SUDO_USER");
-        if (!real_user) real_user = "root";
-
-        const char* display = getenv("DISPLAY");
-        if (!display) display = ":0";
-        
-        const char* xauthority = getenv("XAUTHORITY");
-        if (!xauthority) xauthority = "";
-
-        char runtime_dir[256];
-        const char* env_runtime = getenv("XDG_RUNTIME_DIR");
-        if (env_runtime) {
-            snprintf(runtime_dir, sizeof(runtime_dir), "%s", env_runtime);
-        } else {
-            snprintf(runtime_dir, sizeof(runtime_dir), "/run/user/1000");
-        }
-
-        char cmd_open[1024];
-        snprintf(cmd_open, sizeof(cmd_open), 
-                 "sudo -u %s DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s xdg-open \"%s\" &", 
-                 real_user, display, xauthority, runtime_dir, path);
-        
-        system(cmd_open);
+              Platform_ShellExecuteWithVerb(path, "open", true);
 #endif
               ZoxideHelper_AppendNewEntry(ExplorerZoxideFile, selection, lb, &g_cached_explorer_commands, &g_cached_explorer_count);
+              free(path);
           }
 }
 
