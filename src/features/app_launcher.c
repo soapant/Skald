@@ -5,6 +5,10 @@
 #include "core/common_ui.h"
 #if defined(_WIN32)
 #include <shlwapi.h>
+#else
+#include <unistd.h>
+#include <sys/wait.h>
+#include <fcntl.h>
 #endif
 
 void initialize_app_cache(void) {
@@ -93,27 +97,33 @@ void launch_exe_with_args(const char* exe_path, const char* args) {
 #else
     const char* real_user = getenv("SUDO_USER");
     if (!real_user) real_user = "root";
-
     const char* display = getenv("DISPLAY");
     if (!display) display = ":0";
-    
     const char* xauthority = getenv("XAUTHORITY");
     if (!xauthority) xauthority = "";
-
     char runtime_dir[256];
     const char* env_runtime = getenv("XDG_RUNTIME_DIR");
-    if (env_runtime) {
-        snprintf(runtime_dir, sizeof(runtime_dir), "%s", env_runtime);
-    } else {
-        snprintf(runtime_dir, sizeof(runtime_dir), "/run/user/1000");
+    if (env_runtime) snprintf(runtime_dir, sizeof(runtime_dir), "%s", env_runtime);
+    else snprintf(runtime_dir, sizeof(runtime_dir), "/run/user/1000");
+    // daemon double-fork so app outlives launcher
+    char disp_env[256], xauth_env[512], runtime_env[512];
+    snprintf(disp_env, sizeof(disp_env), "DISPLAY=%s", display);
+    snprintf(xauth_env, sizeof(xauth_env), "XAUTHORITY=%s", xauthority);
+    snprintf(runtime_env, sizeof(runtime_env), "XDG_RUNTIME_DIR=%s", runtime_dir);
+    pid_t pid = fork();
+    if (pid==0){
+        setsid();
+        pid_t pid2=fork();
+        if(pid2<0) _exit(1);
+        if(pid2>0) _exit(0);
+        int fd=open("/dev/null",O_RDWR); if(fd>=0){dup2(fd,0);dup2(fd,1);dup2(fd,2); if(fd>2) close(fd);}
+        // use sh -c to handle quoted path + args
+        char* const argv[] = {"sudo","-u",(char*)real_user,"env",disp_env,xauth_env,runtime_env,"sh","-c",cmd,NULL};
+        execvp(argv[0], argv);
+        _exit(127);
+    } else if(pid>0){
+        int st=0; waitpid(pid,&st,0);
     }
-
-    char linux_cmd[MAX_PATH * 2 + 1024];
-    snprintf(linux_cmd, sizeof(linux_cmd), 
-             "sudo -u %s DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s %s &", 
-             real_user, display, xauthority, runtime_dir, cmd);
-    
-    system(linux_cmd);
 #endif
 }
 
