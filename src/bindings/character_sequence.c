@@ -1,6 +1,7 @@
 #include "common.h"
 #include "bindings/character_sequence.h"
 #include "core/common_ui.h"
+#include "core/vim_view.h"
 #include <ctype.h>
 
 #if defined(_WIN32)
@@ -15,6 +16,8 @@ static void CALLBACK SequenceTimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, D
 #endif
 
 void SequenceAddKey(char key, bool was_typed) {
+    VimView* v = VimView_GetActive();
+    if (v) { VimView_SeqAddKey(v, key, was_typed); return; }
     if (g_seq_state.len < MAX_SEQUENCE_LEN - 1) {
         g_seq_state.keys[g_seq_state.len++] = key;
         g_seq_state.keys[g_seq_state.len] = '\0';
@@ -27,6 +30,8 @@ void SequenceAddKey(char key, bool was_typed) {
 }
 
 void SequenceReset(void) {
+    VimView* v = VimView_GetActive();
+    if (v) { VimView_SeqReset(v); return; }
     memset(g_seq_state.keys, 0, MAX_SEQUENCE_LEN);
     g_seq_state.len = 0;
     g_seq_state.typed_count = 0;
@@ -41,14 +46,20 @@ void SequenceReset(void) {
 }
 
 int SequenceLen(void) {
+    VimView* v = VimView_GetActive();
+    if (v) return VimView_SeqLen(v);
     return g_seq_state.len;
 }
 
 int SequenceTypedCount(void) {
+    VimView* v = VimView_GetActive();
+    if (v) return VimView_SeqTypedCount(v);
     return g_seq_state.typed_count;
 }
 
 bool SequenceMatches(const char* pattern) {
+    VimView* v = VimView_GetActive();
+    if (v) return VimView_SeqMatches(v, pattern);
     int seq_len = g_seq_state.len;
     int pat_len = strlen(pattern);
     
@@ -64,6 +75,8 @@ bool SequenceMatches(const char* pattern) {
 }
 
 bool SequenceStartsWith(const char* pattern) {
+    VimView* v = VimView_GetActive();
+    if (v) return VimView_SeqStartsWith(v, pattern);
     int seq_len = g_seq_state.len;
     int pat_len = strlen(pattern);
     
@@ -85,6 +98,8 @@ bool SequenceStartsWith(const char* pattern) {
 }
 
 void SequenceStartTimer(void) {
+    VimView* v = VimView_GetActive();
+    if (v) { VimView_SeqStartTimer(v); return; }
 #if defined(_WIN32)
     if (g_seq_state.timer_id != 0) {
         KillTimer(NULL, g_seq_state.timer_id);
@@ -94,10 +109,14 @@ void SequenceStartTimer(void) {
 }
 
 bool SequenceIsWaiting(void) {
+    VimView* v = VimView_GetActive();
+    if (v) return VimView_SeqIsWaiting(v);
     return g_seq_state.waiting;
 }
 
 bool SequenceTimedOut(void) {
+    VimView* v = VimView_GetActive();
+    if (v) return VimView_SeqTimedOut(v);
     return g_seq_state.timed_out;
 }
 

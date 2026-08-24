@@ -879,6 +879,11 @@ void Platform_SaveRegionToPNG(int x1, int y1, int x2, int y2, const char* fullPa
     fprintf(stderr, "[PLATFORM] Platform_SaveRegionToPNG not implemented yet\n");
 }
 
+void Platform_WaitForKeypressAsync(KeyCallback callback) {
+    (void)callback;
+    fprintf(stderr, "[PLATFORM] Platform_WaitForKeypressAsync not implemented yet on Linux\n");
+}
+
 
 
 FontHandle Platform_CreateFontOnDisplay(Display* dpy, int size, const char* face_name) {

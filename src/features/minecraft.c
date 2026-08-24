@@ -12,7 +12,6 @@ void minecraft_type_command(const char* command) {
     SendInput(2, t, sizeof(INPUT));
     Sleep(60);
 
-    // Type the command
     for (int i = 0; command[i]; i++) {
         INPUT ch[2] = {0};
         ch[0].type = INPUT_KEYBOARD; 
@@ -31,7 +30,6 @@ void minecraft_type_command(const char* command) {
     enter[1].ki.dwFlags = KEYEVENTF_KEYUP;
     SendInput(2, enter, sizeof(INPUT));
 #else
-    // Not Implemented
     (void)command;
 #endif
 }

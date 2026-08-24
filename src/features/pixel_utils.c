@@ -32,7 +32,6 @@ static bool GetCursorPixel(long* out_x, long* out_y, uint8_t* out_r, uint8_t* ou
 
     return true;
 #else
-    // Not Implemented
     (void)out_x; (void)out_y; (void)out_r; (void)out_g; (void)out_b;
     return false;
 #endif

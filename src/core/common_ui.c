@@ -2,6 +2,7 @@
 #include "config.h"
 #include "helpers.h"
 #include "core/common_ui.h"
+#include "bindings/character_sequence.h"
 #include "platform/platform.h"
 #if defined(_WIN32)
 #include <windows.h>
@@ -62,7 +63,7 @@ void PopulateListBox(ListBoxInfo* lb, WindowHandle hListBox, const char* filter,
 #if defined(_WIN32)
   if (WH_TO_HWND(hListBox) == NULL) return;
 #endif
-  if (g_seq_state.waiting) return;
+  if (SequenceIsWaiting()) return;
   if (!filter) filter = "";
   BuildAliasDisplayItems(items, item_count);
   TimerEnd(timer_alias,"PopulateListBox - Aliases");
@@ -214,7 +215,7 @@ void PopulateListBox(ListBoxInfo* lb, WindowHandle hListBox, const char* filter,
   UI_LB_SetCount(lb, hListBox, total_matches);
 
   WinTimer timer_ui = TimerStart();
-  if (!g_seq_state.waiting) {
+  if (!SequenceIsWaiting()) {
     if (IsNormalMode()) {
       int keep;
       if (RememberLastIndex) {
