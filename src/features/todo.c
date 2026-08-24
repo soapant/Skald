@@ -488,12 +488,22 @@ static void todo_render_callback(HDC hdc, const char* text, RECT* rect, BOOL is_
 #endif
 
 static void todo_edit_callback(const char* selection, ListBoxInfo* lb) {
+    printf("[TODO_EDIT] selection='%s' idx=%d\n", selection, lb ? lb->selected_index : -1);
     char* NewTodoName = Platform_EditTextPopup(selection, 960, 540, 1000,100);
-    
+    printf("[TODO_EDIT] popup returned '%s'\n", NewTodoName ? NewTodoName : "NULL");
     if (NewTodoName != NULL) {
         WriteToCacheIndex(lb, lb->selected_index, NewTodoName);
+        ReplaceLineInFile(TODO_FILE_PATH, lb->selected_index, NewTodoName);
+        // Force listbox refresh so render shows new text immediately
+        if (lb) {
+            // Trigger a redraw - the next frame will read from lb->populated_cache
+            // Also ensure file cache is consistent
+            printf("[TODO_EDIT] updated cache idx %d to '%s'\n", lb->selected_index, NewTodoName);
+        }
+        free(NewTodoName);
+    } else {
+        printf("[TODO_EDIT] edit cancelled\n");
     }
-    ReplaceLineInFile(TODO_FILE_PATH, lb->selected_index, NewTodoName);
 }
 
 void TriggerTodo(void) {

@@ -5,6 +5,7 @@
 #include "platform/platform.h"
 #include "core/types.h"
 #include "core/timer.h"
+#include "core/vim_view.h"
 #include "helpers.h"
 #include "bindings/bindings.h"
 #include "bindings/hotkey_definitions.h"
@@ -44,10 +45,31 @@ bool g_PromptJustClosed = false;
 long g_PromptCloseTimeMs = 0;
 extern bool g_Linux_CtrlHeld, g_Linux_AltHeld, g_Linux_ShiftHeld;
 
-// Not Implemented
-void Platform_WaitForKeypressAsync(KeyCallback callback) {
-    (void)callback;
-    fprintf(stderr, "[PLATFORM] Platform_WaitForKeypressAsync not implemented yet\n");
+// Per-feature isolated vim state - each feature keeps its own mode/seq/last_index
+// so a listbox from one feature never pollutes another.
+typedef struct {
+    EditorMode mode;
+    SequenceState seq;
+    int last_index;
+} PerFeatureVimState;
+static HashMap* g_perFeatureVimMap = NULL;
+static PerFeatureVimState* GetPerFeatureState(const char* feature) {
+    if (!feature) return NULL;
+    if (!g_perFeatureVimMap) g_perFeatureVimMap = HashMap_Create(32);
+    void* val = HashMap_Get(g_perFeatureVimMap, feature);
+    return (PerFeatureVimState*)val;
+}
+static void SavePerFeatureState(const char* feature, EditorMode mode, SequenceState seq, int last_index) {
+    if (!feature) return;
+    if (!g_perFeatureVimMap) g_perFeatureVimMap = HashMap_Create(32);
+    PerFeatureVimState* st = (PerFeatureVimState*)HashMap_Get(g_perFeatureVimMap, feature);
+    if (!st) {
+        st = (PerFeatureVimState*)calloc(1, sizeof(PerFeatureVimState));
+        HashMap_Put(g_perFeatureVimMap, feature, st);
+    }
+    st->mode = mode;
+    st->seq = seq;
+    st->last_index = last_index;
 }
 
 char* Platform_PromptUser(const char* window_list[], const char* window_title, int count, int height, int width, int item_height,
@@ -97,11 +119,22 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
     g_Linux_CtrlHeld = false;
     g_Linux_ShiftHeld = false;
     g_PromptJustClosed = false;
-    if (ModePersistsThroughFeatures) {
-        extern EditorMode g_last_mode;
-        SetModeWithListBox(g_last_mode, &state->listbox);
-    } else {
-        SetModeWithListBox(MODE_INSERT, &state->listbox);
+    // Per-feature isolation: restore this feature's vim state if we have it
+    {
+        const char* feat = window_title ? (strchr(window_title,' ') ? strchr(window_title,' ')+1 : window_title) : "unknown";
+        PerFeatureVimState* pfs = GetPerFeatureState(feat);
+        if (pfs && ModePersistsThroughFeatures) {
+            g_current_mode = pfs->mode;
+            g_vim_mode = (pfs->mode==MODE_NORMAL?"NORMAL":pfs->mode==MODE_INSERT?"INSERT":"VISUAL");
+            g_seq_state = pfs->seq;
+            last_index = pfs->last_index;
+            SetModeWithListBox(pfs->mode, &state->listbox);
+        } else if (ModePersistsThroughFeatures) {
+            extern EditorMode g_last_mode;
+            SetModeWithListBox(g_last_mode, &state->listbox);
+        } else {
+            SetModeWithListBox(MODE_INSERT, &state->listbox);
+        }
     }
 
     int x = (screen_width - layout_w) / 2;
@@ -214,6 +247,11 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
         last_index = 0;
         if (state->has_listbox) state->listbox.selected_index = 0;
     }
+    // Save per-feature vim state for isolation
+    {
+        const char* feat = g_current_feature ? g_current_feature : (window_title ? (strchr(window_title,' ') ? strchr(window_title,' ')+1 : window_title) : "unknown");
+        SavePerFeatureState(feat, g_current_mode, g_seq_state, last_index);
+    }
     g_last_mode = g_current_mode;
     g_currentPromptState = NULL;
     g_IsMainWindowActive = false;
@@ -242,6 +280,7 @@ char* Platform_SimplePromptUser(const char* prompt, const char* window_title,int
 
     int layout_w = 900;
     int layout_h = 95 + (1 > 0 ? (1 * item_height) : 0);
+
 
     selection_complete = false;
     output_buffer[0] = '\0';
@@ -605,9 +644,6 @@ char* Platform_EditTextPopup(const char* initial_text, int centerX, int centerY,
 
     XSelectInput(dpy, win, KeyPressMask | ExposureMask | FocusChangeMask);
 
-    // Route vim motions into THIS popup while it is open. g_hEditPopup makes
-    // ScopeMatches treat us as "the popup" (same as Win32), so modal-only
-    // bindings like listbox navigation pause and text bindings take over.
     bool prev_main_active = g_IsMainWindowActive;
     g_currentEditPopupState = state;
     g_EditPopupCloseRequested = false;
@@ -677,7 +713,6 @@ char* Platform_EditTextPopup(const char* initial_text, int centerX, int centerY,
         Linux_RenderSimplePromptUser(dpy, &win, state);
     }
 
-    // ---- Teardown: hand vim motions + focus back to the previous window ----
     g_currentEditPopupState = NULL;
     g_EditPopupCloseRequested = false;
     g_hEditPopup = WH_NULL;
@@ -694,15 +729,12 @@ char* Platform_EditTextPopup(const char* initial_text, int centerX, int centerY,
     XDestroyWindow(dpy, win);
     XSync(dpy, False);
 
-    // Same restore step as Win32 WM_DESTROY: NORMAL bound to the parent list
     SetModeWithListBox(MODE_NORMAL, active_lb);
 
     if (!focus_lost && focus_win != None && focus_win != PointerRoot) {
         XSetInputFocus(dpy, focus_win, RevertToParent, CurrentTime);
     }
 
-    // Drop stale FocusOut events the parent prompt queued while we held focus,
-    // otherwise CloseOnLossOfFocus would kill it the moment its loop resumes.
     while (XCheckTypedEvent(dpy, FocusOut, &ev)) {}
     XSync(dpy, False);
 
@@ -716,7 +748,6 @@ char* Platform_SearchPopup(void) {
     return NULL;
 }
 // On HyperLand There Is No Tray
-// Not Implemented
 int Platform_InitializeTrayIcon(void) {
     return -1;
 }
@@ -804,6 +835,11 @@ void HandleGlobalKeyEvent(int key_code, int value) {
         return;
     }
     TimerEnd(timer, "ProcessHotkey");
+
+    // Dynamic hotkeys disabled for debug - was causing double trigger?
+    // if (Feature_HandleDynamicHotkey(pressed_vk, modifiers, fgTitle)) {
+    //     return;
+    // }
 
     WinTimer timer5 = TimerStart();
 
