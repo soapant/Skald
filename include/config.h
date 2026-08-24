@@ -87,6 +87,7 @@ extern const bool ReplicaAvailable;
 extern const bool FullTextNeedsKeyPress;
 extern const bool MessagesEnabled;
 extern const bool RainbowText;
+extern const bool ColoredVimModeText;
 extern const bool AlternatingText;
 extern const bool EnableLineNumbers;
 extern const int GradientItems;

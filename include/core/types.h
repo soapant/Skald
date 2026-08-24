@@ -560,9 +560,9 @@ typedef struct {
 #define COLOR_SELECTED_TEXT     RGB(57, 105, 20)
 #define COLOR_VISUAL_SELECTED_TEXT    RGB(48,25,52)
 #define COLOR_ALIAS_TEXT    RGB(255,255,255)
-#define COLOR_INSERT_MODE_TEXT (RainbowText ? RGB(50, 255, 50) : COLOR_TEXT)
-#define COLOR_NORMAL_MODE_TEXT (RainbowText ? RGB(100, 255, 255) : COLOR_TEXT)
-#define COLOR_VISUAL_MODE_TEXT (RainbowText ? RGB(200, 3, 222) : COLOR_TEXT)
+#define COLOR_INSERT_MODE_TEXT (ColoredVimModeText ? RGB(50, 255, 50) : COLOR_TEXT)
+#define COLOR_NORMAL_MODE_TEXT (ColoredVimModeText ? RGB(100, 255, 255) : COLOR_TEXT)
+#define COLOR_VISUAL_MODE_TEXT (ColoredVimModeText ? RGB(200, 3, 222) : COLOR_TEXT)
 #if defined(_WIN32)
 #define DATA_DIR "data\\"
 #else

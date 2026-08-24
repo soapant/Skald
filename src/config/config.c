@@ -53,6 +53,7 @@ const bool MessagesEnabled = true;
 const bool RainbowText = false;
 const bool AlternatingText = true;
 const bool EnableLineNumbers = true;
+const bool ColoredVimModeText = true;
 const int GradientItems = 30;
 const float GradientBrightness = 1.0f;
 bool PixelHotkeys = false;

@@ -24,7 +24,7 @@ typedef struct {
     FILETIME last_write;
 } FileItemWithTime;
 
-#define MAX_APPS 2000
+#define MAX_APPS 4000
 
 typedef struct {
     char name[128];

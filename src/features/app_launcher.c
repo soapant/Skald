@@ -20,23 +20,19 @@ void initialize_app_cache(void) {
         scan_directory_recursive(ListOfProgramPaths[i]);
     }
     
+#if defined(_WIN32)
     for (int shortcut_idx = 0; shortcut_idx < SYSTEM_SHORTCUT_COUNT; shortcut_idx++) {
         if (G_APP_COUNT >= MAX_APPS) break;
         
         bool found = false;
         for (int app_idx = 0; app_idx < G_APP_COUNT; app_idx++) {
-#if defined(_WIN32)
             if (StrStrIA(G_APPS[app_idx].path, SystemShortcuts[shortcut_idx].path) != NULL) {
-#else
-            if (strstr(G_APPS[app_idx].path, SystemShortcuts[shortcut_idx].path) != NULL) {
-#endif
                 strncpy(G_APPS[app_idx].name, SystemShortcuts[shortcut_idx].name, sizeof(G_APPS[app_idx].name) - 1);
                 G_APPS[app_idx].name[sizeof(G_APPS[app_idx].name) - 1] = '\0';
                 found = true;
                 break;
             }
         }
-        
         if (!found) {
             strncpy(G_APPS[G_APP_COUNT].name, SystemShortcuts[shortcut_idx].name, sizeof(G_APPS[G_APP_COUNT].name) - 1);
             G_APPS[G_APP_COUNT].name[sizeof(G_APPS[G_APP_COUNT].name) - 1] = '\0';
@@ -47,6 +43,9 @@ void initialize_app_cache(void) {
             G_APP_COUNT++;
         }
     }
+
+#endif
+
 }
 void launch_app_by_name(const char* display_name) {
     for (int i = 0; i < G_APP_COUNT; i++) {
