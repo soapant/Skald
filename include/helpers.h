@@ -103,6 +103,11 @@ unsigned short OpacityAlpha16(void);
 #if !defined(_WIN32)
 void draw_wrapped_text(Display* dpy, XftDraw* xd, XftColor* color, FontHandle font, const char* text, int startY,char* centered_to,int xOffset);
 int get_offset_based_on_number(int index);
+void Linux_XftAllocColor(Display* dpy, Visual* vis, Colormap cmap, unsigned long hex, unsigned short alpha, XftColor* out);
+const char* ListBoxItemDisplayText(ListBoxInfo* lb, int idx, char* trunc, size_t trunc_size);
+void DrawListBoxItemText(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap, FontHandle font,
+                         XftColor* num_color, XftColor* body_color, XftColor* plain_color,
+                         ListBoxInfo* lb, int idx, int y, int text_x);
 bool CursorBack(size_t* cursor, size_t text_len);
 bool CursorForward(size_t* cursor, size_t text_len);
 pid_t GetWindowPid(Display* dpy, Window w);

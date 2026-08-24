@@ -586,6 +586,60 @@ void draw_wrapped_text(Display* dpy, XftDraw* xd, XftColor* color, FontHandle fo
     }
 }
 
+void Linux_XftAllocColor(Display* dpy, Visual* vis, Colormap cmap, unsigned long hex, unsigned short alpha, XftColor* out) {
+    XRenderColor rc = {
+        ((hex >> 16) & 0xFF) * 0x101,
+        ((hex >> 8) & 0xFF) * 0x101,
+        (hex & 0xFF) * 0x101,
+        alpha
+    };
+    XftColorAllocValue(dpy, vis, cmap, &rc, out);
+}
+
+const char* ListBoxItemDisplayText(ListBoxInfo* lb, int idx, char* trunc, size_t trunc_size) {
+    int raw = (idx >= 0 && idx < lb->populated_count) ? lb->matching_indices[idx] : -1;
+    const char* baseText = NULL;
+    if (g_alias_display_active && raw >= 0 && raw < g_alias_display_count && g_alias_display[raw][0] != '\0')
+        baseText = g_alias_display[raw];
+    else
+        baseText = lb->populated_cache[idx];
+    snprintf(trunc, trunc_size, "%.80s", baseText ? baseText : "");
+    return trunc;
+}
+
+void DrawListBoxItemText(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap, FontHandle font,
+                         XftColor* num_color, XftColor* body_color, XftColor* plain_color,
+                         ListBoxInfo* lb, int idx, int y, int text_x) {
+    XftFont* xf = FH_TO_XFT(font);
+    if (!xf) return;
+
+
+    char trunc[512];
+    ListBoxItemDisplayText(lb, idx, trunc, sizeof(trunc));
+    int XOffset = 10;
+    if (EnableLineNumbers) {
+        char num[8];
+        snprintf(num, sizeof(num), "%d.", idx + 1);
+        draw_wrapped_text(dpy, xd, num_color, font, num, y, "LEFT", 10);
+        XOffset = get_offset_based_on_number(idx);
+    }
+
+    const char* alias_pos = strstr(trunc, " [");
+    if (alias_pos) {
+        int main_len = (int)(alias_pos - trunc);
+        XftDrawStringUtf8(xd, body_color, xf, text_x, y + xf->ascent, (FcChar8*)trunc, main_len);
+        XGlyphInfo ext_main;
+        XftTextExtentsUtf8(dpy, xf, (FcChar8*)trunc, main_len, &ext_main);
+        int main_w = ext_main.xOff;
+        XftColor aliasCol;
+        Linux_XftAllocColor(dpy, vis, cmap, rgb_to_hex(COLOR_ALIAS_TEXT), 0xFFFF, &aliasCol);
+        XftDrawStringUtf8(xd, &aliasCol, xf, text_x + main_w, y + xf->ascent, (FcChar8*)alias_pos, strlen(alias_pos));
+        XftColorFree(dpy, vis, cmap, &aliasCol);
+    } else {
+        draw_wrapped_text(dpy, xd, plain_color, font, trunc, y, "LEFT", XOffset);
+    }
+}
+
 bool CursorBack(size_t* cursor, size_t text_len) {
     if (*cursor == 0) return false; 
     (*cursor)--;
