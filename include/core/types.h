@@ -17,7 +17,7 @@
 #include <X11/Xlib.h>
 #include <X11/Xft/Xft.h>
 #endif
-#define MAX_VISIBLE_ITEMS 100
+#define MAX_VISIBLE_ITEMS 1000
 #define MAX_ITEMS 4000
 #define MAX_MATCHES 4000
 

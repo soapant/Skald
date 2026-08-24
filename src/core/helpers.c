@@ -489,6 +489,22 @@ unsigned long rgb_to_hex(unsigned long win_color) {
     return (r << 16) | (g << 8) | b;
 }
 
+void eval_window_title_color(PromptState* state,unsigned long *window_title_color) {
+  unsigned long final_color;
+  if (state->item_count > 1000) {
+    final_color = rgb_to_hex(RGB(255,0,0));
+  } else if (state->item_count > 500) {
+    final_color = rgb_to_hex(RGB(255,165,0));
+  } else if (state->item_count > 200) {
+    final_color = rgb_to_hex(RGB(255,255,0));
+  } else if (state->item_count > 100) {
+    final_color = rgb_to_hex(RGB(255,255,50));
+  } else {
+    final_color = rgb_to_hex(RGB(30,255,30));
+  }
+  *window_title_color = final_color;
+}
+
 unsigned short OpacityAlpha16(void) {
     float t = WindowOpacity / 255.0f;
     if (t < 0.0f) t = 0.0f;
@@ -651,16 +667,15 @@ void GetExeNameFromPid(pid_t pid, char* outExe, size_t maxLen) {
 }
 
 int get_offset_based_on_number(int index) {
-  if (index < 9) {
-    return 35;
-  }
-  else if (index < 99) {
-    return 45;
-  }
-  else if (index < 999) {
-    return 55;
-  }
-  return 55;
+    if (index < 9) {        
+        return 35;
+    } else if (index < 99) { 
+        return 50;
+    } else if (index < 999) {
+        return 60;
+    } else if (index < 9999) {
+        return 70;
+    }
 }
 
 Window Linux_CreateWindowEx(Display* dpy, int x, int y, int w, int h, unsigned long bg_color, const char* res_name, const char* res_class, long event_mask) {
@@ -684,7 +699,6 @@ Window Linux_CreateWindowEx(Display* dpy, int x, int y, int w, int h, unsigned l
         unsigned int g = (bg_color >> 8) & 0xFF;
         unsigned int b = bg_color & 0xFF;
         unsigned int a = (unsigned int)WindowOpacity;
-        if (a > 255) a = 255;
         attrs.background_pixel = (a << 24) | (r << 16) | (g << 8) | b;
         attrs.colormap = cmap;
         attrs.border_pixel = 0;
