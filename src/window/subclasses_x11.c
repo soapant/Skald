@@ -556,6 +556,10 @@ void DrawPromptUserEditControl(Display *dpy,Window* win,PromptState *state) {
 
 void DrawPromptUserListBox(Display *dpy,Window* win,PromptState *state) {
       if (!state->has_listbox) return;
+      if (AlternatingText && RainbowText) {
+        printf("You Cant Have Both Rainbow And Alternating Text");
+        exit(1);
+      }
       ListBoxInfo *lb = &state->listbox;
       int screen = DefaultScreen(dpy);
       XftDraw* xd = Linux_CreateXftDraw(dpy, *win);
@@ -607,6 +611,10 @@ void DrawPromptUserListBox(Display *dpy,Window* win,PromptState *state) {
         XRenderColor rc2_text={(fg_text>>16&0xFF)*0x101,(fg_text>>8&0xFF)*0x101,(fg_text&0xFF)*0x101,0xFFFF};
         XftColor fcoltext; XftColorAllocValue(dpy, vis, cmap, &rc2_text, &fcoltext);
 
+        unsigned long fg_alternate = rgb_to_hex(COLOR_ALTERNATE);
+        XRenderColor rc2_alternate={(fg_alternate>>16&0xFF)*0x101,(fg_alternate>>8&0xFF)*0x101,(fg_alternate&0xFF)*0x101,0xFFFF};
+        XftColor fcolalternate; XftColorAllocValue(dpy, vis, cmap, &rc2_alternate, &fcolalternate);
+
         float ft = (float)idx / 32.0f;
         unsigned long fg_rainbow = rgb_to_hex(GetRainbowColor(ft, 0.55f, GradientBrightness));
         XRenderColor rc2_rainbow={(fg_rainbow>>16&0xFF)*0x101,(fg_rainbow>>8&0xFF)*0x101,(fg_rainbow&0xFF)*0x101,0xFFFF};
@@ -639,7 +647,40 @@ void DrawPromptUserListBox(Display *dpy,Window* win,PromptState *state) {
             } else {
                 draw_wrapped_text(dpy, xd, &fcolrainbow, font, trunc, y, "LEFT", 55);
             }
-        } else {
+        } else if (AlternatingText) {
+            static int toggle = 0;
+            toggle ^= 1;
+            if (toggle) {
+              fcoltext = fcolalternate;
+            }
+            char num[8];
+            snprintf(num,sizeof(num),"%d.",idx+1);
+            draw_wrapped_text(dpy, xd, &fcoltext, font, num, y, "LEFT", 10);
+            int raw = (idx >=0 && idx < lb->populated_count) ? lb->matching_indices[idx] : -1;
+            const char* baseText = NULL;
+            if (g_alias_display_active && raw >=0 && raw < g_alias_display_count && g_alias_display[raw][0]!='\0')
+                baseText = g_alias_display[raw];
+            else
+                baseText = lb->populated_cache[idx];
+            char trunc[512];
+            snprintf(trunc, sizeof(trunc), "%.80s", baseText ? baseText : "");
+            const char* alias_pos = strstr(trunc, " [");
+            if (alias_pos) {
+                int main_len = (int)(alias_pos - trunc);
+                int text_x = 45;
+                XftDrawStringUtf8(xd, &fcoltext, xf, text_x, y + xf->ascent, (FcChar8*)trunc, main_len);
+                XGlyphInfo ext_main; XftTextExtentsUtf8(dpy, xf, (FcChar8*)trunc, main_len, &ext_main); int main_w = ext_main.xOff;
+                unsigned long alias_fg = rgb_to_hex(COLOR_ALIAS_TEXT);
+                XRenderColor rc_alias = {(alias_fg>>16&0xFF)*0x101,(alias_fg>>8&0xFF)*0x101,(alias_fg&0xFF)*0x101,0xFFFF};
+                XftColor aliasCol; XftColorAllocValue(dpy, vis, cmap, &rc_alias, &aliasCol);
+                const char* alias_part = alias_pos;
+                XftDrawStringUtf8(xd, &aliasCol, xf, text_x + main_w, y + xf->ascent, (FcChar8*)alias_part, strlen(alias_part));
+                XftColorFree(dpy, vis, cmap, &aliasCol);
+            } else {
+                draw_wrapped_text(dpy, xd, &fcoltext, font, trunc, y, "LEFT", 45);
+            }
+        }
+        else {
             char num[8];
             snprintf(num,sizeof(num),"%d.",idx+1);
             draw_wrapped_text(dpy, xd, &fcoltext, font, num, y, "LEFT", 10);
