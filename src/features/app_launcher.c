@@ -9,6 +9,8 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <fcntl.h>
+#include <pwd.h>
+#include <string.h>
 #endif
 
 void initialize_app_cache(void) {
@@ -95,8 +97,24 @@ void launch_exe_with_args(const char* exe_path, const char* args) {
         CloseHandle(pi.hThread);
     }
 #else
-    const char* real_user = getenv("SUDO_USER");
-    if (!real_user) real_user = "root";
+    // Use GetRealUser logic inline to handle `sudo true; nohup ... &` where SUDO_USER not set for nohup child
+    const char* real_user = NULL;
+    {
+        const char* u=getenv("SUDO_USER");
+        if(u && u[0] && strcmp(u,"root")!=0) real_user=u;
+        else {
+            u=getenv("USER");
+            if(u && u[0]) real_user=u;
+            else {
+                u=getenv("LOGNAME");
+                if(u && u[0]) real_user=u;
+                else {
+                    struct passwd* pw=getpwuid(getuid());
+                    real_user = (pw && pw->pw_name) ? pw->pw_name : "diggy";
+                }
+            }
+        }
+    }
     const char* display = getenv("DISPLAY");
     if (!display) display = ":0";
     const char* xauthority = getenv("XAUTHORITY");
@@ -105,7 +123,7 @@ void launch_exe_with_args(const char* exe_path, const char* args) {
     const char* env_runtime = getenv("XDG_RUNTIME_DIR");
     if (env_runtime) snprintf(runtime_dir, sizeof(runtime_dir), "%s", env_runtime);
     else snprintf(runtime_dir, sizeof(runtime_dir), "/run/user/1000");
-    // daemon double-fork so app outlives launcher
+    // daemon double-fork so app outlives launcher - handle both sudo and nohup cases
     char disp_env[256], xauth_env[512], runtime_env[512];
     snprintf(disp_env, sizeof(disp_env), "DISPLAY=%s", display);
     snprintf(xauth_env, sizeof(xauth_env), "XAUTHORITY=%s", xauthority);
@@ -117,9 +135,13 @@ void launch_exe_with_args(const char* exe_path, const char* args) {
         if(pid2<0) _exit(1);
         if(pid2>0) _exit(0);
         int fd=open("/dev/null",O_RDWR); if(fd>=0){dup2(fd,0);dup2(fd,1);dup2(fd,2); if(fd>2) close(fd);}
-        // use sh -c to handle quoted path + args
-        char* const argv[] = {"sudo","-u",(char*)real_user,"env",disp_env,xauth_env,runtime_env,"sh","-c",cmd,NULL};
-        execvp(argv[0], argv);
+        if(getuid()==0){
+            char* const argv[] = {"sudo","-u",(char*)real_user,"env",disp_env,xauth_env,runtime_env,"sh","-c",cmd,NULL};
+            execvp(argv[0], argv);
+        } else {
+            setenv("DISPLAY",display,1); setenv("XAUTHORITY",xauthority,1); setenv("XDG_RUNTIME_DIR",runtime_dir,1);
+            execl("/bin/sh","sh","-c",cmd,(char*)NULL);
+        }
         _exit(127);
     } else if(pid>0){
         int st=0; waitpid(pid,&st,0);
