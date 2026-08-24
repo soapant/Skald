@@ -332,7 +332,6 @@ static void todo_render_callback(Display *dpy, Window *win, PromptState *state) 
     if (visible < 1) visible = 1;
     if (visible > lb->populated_count) visible = lb->populated_count;
 
-    // Scrolling boundary checks
     if (lb->selected_index >= 0) {
         if (lb->selected_index < lb->view_offset + PaddingForScrolling)
             lb->view_offset = lb->selected_index - PaddingForScrolling;
@@ -347,13 +346,11 @@ static void todo_render_callback(Display *dpy, Window *win, PromptState *state) 
     Visual *vis = DefaultVisual(dpy, screen);
     Colormap cmap = DefaultColormap(dpy, screen);
 
-    // 2. Render each visible list item
     for (int i = 0; i < visible; i++) {
         int idx = lb->view_offset + i;
         int y = y0 + (i * itemH);
         bool sel = (idx == lb->selected_index);
 
-        // Background highlight
         unsigned long bg = sel ? rgb_to_hex(COLOR_SELECTED_TEXT) : rgb_to_hex(COLOR_BG);
         XRenderColor rc = { (bg >> 16 & 0xFF) * 0x101, (bg >> 8 & 0xFF) * 0x101, (bg & 0xFF) * 0x101, OpacityAlpha16() };
         XftColor bgc; 
@@ -361,7 +358,6 @@ static void todo_render_callback(Display *dpy, Window *win, PromptState *state) 
         XftDrawRect(xd, &bgc, 0, y, state->width, itemH);
         XftColorFree(dpy, vis, cmap, &bgc);
 
-        // Parse todo line data
         char text_buf[256];
         snprintf(text_buf, sizeof(text_buf), "%s", lb->populated_cache[idx]);
 
@@ -405,10 +401,8 @@ static void todo_render_callback(Display *dpy, Window *win, PromptState *state) 
                     XftColor tag_col;
                     XftColorAllocValue(dpy, vis, cmap, &rct, &tag_col);
 
-                    // Multiple tags horizontal side-by-side flow logic (matching Win32 tagRect.left += 14 + x_offset)
                     draw_wrapped_text(dpy, xd, &tag_col, font, tags[t], y + 28, "LEFT", 14 + x_offset);
                     
-                    // Increment horizontal spacing per tag length
                     x_offset += strlen(tags[t]) * 12; 
                     XftColorFree(dpy, vis, cmap, &tag_col);
                 }
