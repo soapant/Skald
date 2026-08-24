@@ -128,6 +128,10 @@ void terminate_process_by_name(const char* exe_name) {
     run_hidden_command(cmd);
 #else
     if (!exe_name || !*exe_name) return;
+    char *ext = strrchr(exe_name, '.');
+    if (ext && strcmp(ext, ".exe") == 0) {
+        *ext = '\0';
+    }
     char cmd[512];
     snprintf(cmd, sizeof(cmd), "pkill -f \"%s\"", exe_name);
     run_hidden_command(cmd);
