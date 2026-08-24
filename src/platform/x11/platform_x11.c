@@ -7,6 +7,7 @@
 
 #include <sys/mman.h>
 #include <sys/stat.h> 
+#include <sys/wait.h>
 #include <linux/input.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -20,39 +21,63 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+static bool daemon_spawn_sudo_env(const char* real_user, const char* display, const char* xauthority, const char* runtime_dir, char* const argv[]) {
+    pid_t pid = fork();
+    if (pid < 0) return false;
+    if (pid == 0) {
+        setsid();
+        pid_t pid2 = fork();
+        if (pid2 < 0) _exit(1);
+        if (pid2 > 0) _exit(0);
+        // grandchild - detach stdio
+        int fd = open("/dev/null", O_RDWR);
+        if (fd >= 0) {
+            dup2(fd, STDIN_FILENO);
+            dup2(fd, STDOUT_FILENO);
+            dup2(fd, STDERR_FILENO);
+            if (fd > 2) close(fd);
+        }
+        // set env for the sudo child (sudo -u will preserve if we use env)
+        setenv("DISPLAY", display, 1);
+        setenv("XAUTHORITY", xauthority, 1);
+        setenv("XDG_RUNTIME_DIR", runtime_dir, 1);
+        execvp(argv[0], argv);
+        _exit(127);
+    }
+    // parent waits for intermediate child to avoid zombie
+    int st=0; waitpid(pid, &st, 0);
+    return true;
+}
+
 bool Platform_ShellExecuteWithVerb(const char* path, const char* verb, bool async) {
     if (!path) return false;
-
+    (void)verb;
     const char* real_user = getenv("SUDO_USER");
     if (!real_user) real_user = "root";
-
     const char* display = getenv("DISPLAY");
     if (!display) display = ":0";
-    
     const char* xauthority = getenv("XAUTHORITY");
     if (!xauthority) xauthority = "";
-
     char runtime_dir[256];
     const char* env_runtime = getenv("XDG_RUNTIME_DIR");
-    if (env_runtime) {
-        snprintf(runtime_dir, sizeof(runtime_dir), "%s", env_runtime);
-    } else {
-        snprintf(runtime_dir, sizeof(runtime_dir), "/run/user/1000");
-    }
+    if (env_runtime) snprintf(runtime_dir, sizeof(runtime_dir), "%s", env_runtime);
+    else snprintf(runtime_dir, sizeof(runtime_dir), "/run/user/1000");
 
-    char command[2048];
-    if (async) {
-        snprintf(command, sizeof(command), 
-                 "sudo -u %s DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s xdg-open \"%s\" > /dev/null 2>&1 &", 
+    if (!async) {
+        char command[2048];
+        snprintf(command, sizeof(command),
+                 "sudo -u %s DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s xdg-open \"%s\" > /dev/null 2>&1",
                  real_user, display, xauthority, runtime_dir, path);
-    } else {
-        snprintf(command, sizeof(command), 
-                 "sudo -u %s DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s xdg-open \"%s\" > /dev/null 2>&1", 
-                 real_user, display, xauthority, runtime_dir, path);
+        int status = system(command);
+        return (status == 0);
     }
-
-    int status = system(command);
-    return (status == 0);
+    // daemonized async: fork+setsid double-fork so app outlives main
+    char disp_env[256], xauth_env[512], runtime_env[512];
+    snprintf(disp_env, sizeof(disp_env), "DISPLAY=%s", display);
+    snprintf(xauth_env, sizeof(xauth_env), "XAUTHORITY=%s", xauthority);
+    snprintf(runtime_env, sizeof(runtime_env), "XDG_RUNTIME_DIR=%s", runtime_dir);
+    char* const argv[] = {"sudo","-u", (char*)real_user, "env", disp_env, xauth_env, runtime_env, "xdg-open", (char*)path, NULL};
+    return daemon_spawn_sudo_env(real_user, display, xauthority, runtime_dir, argv);
 }
 
 
@@ -235,50 +260,60 @@ bool Platform_ExpandPath(const char* template_path, char* out, size_t out_size) 
 
 bool Platform_LaunchApp(const char* path) {
     if (!path) return false;
-
     char expanded[1024];
     if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) return false;
-
     const char* real_user = getenv("SUDO_USER");
     if (!real_user) real_user = "root";
-
     const char* display = getenv("DISPLAY");
     if (!display) display = ":0";
-    
     const char* xauthority = getenv("XAUTHORITY");
     if (!xauthority) xauthority = "";
-
     char runtime_dir[256];
     const char* env_runtime = getenv("XDG_RUNTIME_DIR");
-    if (env_runtime) {
-        snprintf(runtime_dir, sizeof(runtime_dir), "%s", env_runtime);
-    } else {
-        snprintf(runtime_dir, sizeof(runtime_dir), "/run/user/1000");
-    }
+    if (env_runtime) snprintf(runtime_dir, sizeof(runtime_dir), "%s", env_runtime);
+    else snprintf(runtime_dir, sizeof(runtime_dir), "/run/user/1000");
 
-    char cmd[2048];
-
+    // Prefer systemd-run --user --scope if available (most robust on Hyprland)
+    // fallback to double-fork daemon
     if (strstr(expanded, ".desktop") != NULL) {
         char* filename = strrchr(expanded, '/');
         filename = filename ? filename + 1 : expanded;
-
         char app_id[256];
         strncpy(app_id, filename, sizeof(app_id) - 1);
         app_id[sizeof(app_id) - 1] = '\0';
         char* ext = strstr(app_id, ".desktop");
         if (ext) *ext = '\0';
-
-        snprintf(cmd, sizeof(cmd), 
-                 "sudo -u %s DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s gtk-launch \"%s\" &", 
-                 real_user, display, xauthority, runtime_dir, app_id);
+        char disp_env[256], xauth_env[512], runtime_env[512];
+        snprintf(disp_env, sizeof(disp_env), "DISPLAY=%s", display);
+        snprintf(xauth_env, sizeof(xauth_env), "XAUTHORITY=%s", xauthority);
+        snprintf(runtime_env, sizeof(runtime_env), "XDG_RUNTIME_DIR=%s", runtime_dir);
+        pid_t pid = fork();
+        if (pid==0){
+            setsid();
+            pid_t pid2=fork();
+            if(pid2<0) _exit(1);
+            if(pid2>0) _exit(0);
+            int fd=open("/dev/null",O_RDWR); if(fd>=0){dup2(fd,0);dup2(fd,1);dup2(fd,2); if(fd>2) close(fd);}
+            char* const argv_sysd[] = {"sudo","-u",(char*)real_user,"env",disp_env,xauth_env,runtime_env,"systemd-run","--user","--scope","gtk-launch",app_id,NULL};
+            execvp(argv_sysd[0], argv_sysd);
+            char* const argv_fallback[] = {"sudo","-u",(char*)real_user,"env",disp_env,xauth_env,runtime_env,"gtk-launch",app_id,NULL};
+            execvp(argv_fallback[0], argv_fallback);
+            _exit(127);
+        } else if(pid>0){
+            int st=0; waitpid(pid,&st,0);
+            return true;
+        }
+        return false;
     } else {
-        snprintf(cmd, sizeof(cmd), 
-                 "sudo -u %s DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s \"%s\" &", 
-                 real_user, display, xauthority, runtime_dir, expanded);
+        // direct binary - daemon double-fork
+        char disp_env[256], xauth_env[512], runtime_env[512];
+        snprintf(disp_env, sizeof(disp_env), "DISPLAY=%s", display);
+        snprintf(xauth_env, sizeof(xauth_env), "XAUTHORITY=%s", xauthority);
+        snprintf(runtime_env, sizeof(runtime_env), "XDG_RUNTIME_DIR=%s", runtime_dir);
+        // Use sh -c to handle quoted path with spaces, but daemonized
+        char* const argv[] = {"sudo","-u",(char*)real_user,"env",disp_env,xauth_env,runtime_env,"sh","-c",expanded,NULL};
+        return daemon_spawn_sudo_env(real_user, display, xauthority, runtime_dir, argv);
     }
-
-    system(cmd);
-    return true;
 }
 
 
