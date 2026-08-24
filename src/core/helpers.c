@@ -489,6 +489,13 @@ unsigned long rgb_to_hex(unsigned long win_color) {
     return (r << 16) | (g << 8) | b;
 }
 
+unsigned short OpacityAlpha16(void) {
+    float t = WindowOpacity / 255.0f;
+    if (t < 0.0f) t = 0.0f;
+    if (t > 1.0f) t = 1.0f;
+    return (unsigned short)(t * 65535.0f + 0.5f);
+}
+
 #if !defined(_WIN32)
 static int xft_width(Display* dpy, XftFont* xf, const char* text, int len) {
     XGlyphInfo ext;
@@ -684,11 +691,6 @@ Window Linux_CreateWindowEx(Display* dpy, int x, int y, int w, int h, unsigned l
         win = XCreateWindow(dpy, RootWindow(dpy, screen), x, y, w, h, 0, depth, InputOutput, visual, CWBackPixel|CWColormap|CWBorderPixel, &attrs);
     } else {
         win = XCreateSimpleWindow(dpy, RootWindow(dpy, screen), x, y, w, h, 0, bg_color, bg_color);
-    }
-    {
-        Atom opacity = XInternAtom(dpy, "_NET_WM_WINDOW_OPACITY", False);
-        unsigned long alpha = (unsigned long)(0xffffffff * (WindowOpacity / 255.0));
-        XChangeProperty(dpy, win, opacity, XA_CARDINAL, 32, PropModeReplace, (unsigned char*)&alpha, 1);
     }
     Atom wm_type = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE", False);
     Atom wm_type_dialog = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE_DIALOG", False);
