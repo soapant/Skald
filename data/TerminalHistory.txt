@@ -15177,13 +15177,13 @@ wpctl set-mute 122 0<\n>wpctl set-volume 122 0.60
 wpctl status
 # Unmute and crank up your speaker (ID 46)<\n>wpctl set-mute 46 0<\n>wpctl set-volume 46 0.70<\n><\n># Make sure the master node isn't muted<\n>wpctl set-mute @DEFAULT_AUDIO_SINK@ 0<\n>
 wpctl status
-sudo tee /etc/modprobe.d/alsa-base.conf <<EOF<\n>options snd-hda-intel model=alc245-hp-gpio<\n>EOF
+sudo tee /etc/modprobe.d/alsa-base.conf <<EOF<\n>options snd-hda-intel model=alcWindowOpacity-hp-gpio<\n>EOF
 sudo pacman -S sof-firmware alsa-firmware
 z ala ; nvim alacritty.toml
 cd ~
 cd .config
 nvim
-sudo tee /etc/modprobe.d/alsa-base.conf <<EOF<\n>options snd-hda-intel model=alc245-hp-gpio<\n>EOF<\n>
+sudo tee /etc/modprobe.d/alsa-base.conf <<EOF<\n>options snd-hda-intel model=alcWindowOpacity-hp-gpio<\n>EOF<\n>
 sudo nvim /etc/modprobe.d/alsa-base.conf
 sudo cat /etc/modprobe.d/alsa-base.conf
 pavucontrol

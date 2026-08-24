@@ -91,6 +91,7 @@ extern const int GradientItems;
 extern const float GradientBrightness;
 extern bool PixelHotkeys;
 extern bool CloseOnLossOfFocus;
+extern float WindowOpacity;
 
 typedef struct {
     const char* path;
