@@ -110,6 +110,7 @@ Window Linux_CreatePromptWindow(Display* dpy, int x, int y, int w, int h);
 Window Linux_CreateSimplePromptWindow(Display* dpy, int x, int y, int w, int h);
 Window Linux_CreateEditPopupWindow(Display* dpy, int x, int y, int w, int h);
 Window Linux_CreateDisplayMessageWindow(Display* dpy, int x, int y, int w, int h);
+XftDraw* Linux_CreateXftDraw(Display* dpy, Window win);
 #endif
 
 #endif

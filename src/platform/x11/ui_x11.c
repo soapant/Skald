@@ -437,7 +437,7 @@ void Platform_DisplayMessage(const char* message, int centerX, int centerY, int 
 
     Window win = Linux_CreateDisplayMessageWindow(dpy, topLeftX, topLeftY, winWidth, winHeight);
 
-    XftDraw* xd = XftDrawCreate(dpy, win, DefaultVisual(dpy, screen), DefaultColormap(dpy, screen));
+    XftDraw* xd = Linux_CreateXftDraw(dpy, win);
     Visual* visual = DefaultVisual(dpy, screen);
     Colormap cmap = DefaultColormap(dpy, screen);
     XRenderColor rc = {
