@@ -45,13 +45,12 @@ bool g_PromptJustClosed = false;
 long g_PromptCloseTimeMs = 0;
 extern bool g_Linux_CtrlHeld, g_Linux_AltHeld, g_Linux_ShiftHeld;
 
-// Per-feature isolated vim state - each feature keeps its own mode/seq/last_index
-// so a listbox from one feature never pollutes another.
 typedef struct {
     EditorMode mode;
     SequenceState seq;
     int last_index;
 } PerFeatureVimState;
+
 static HashMap* g_perFeatureVimMap = NULL;
 static PerFeatureVimState* GetPerFeatureState(const char* feature) {
     if (!feature) return NULL;
@@ -119,7 +118,6 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
     g_Linux_CtrlHeld = false;
     g_Linux_ShiftHeld = false;
     g_PromptJustClosed = false;
-    // Per-feature isolation: restore this feature's vim state if we have it
     {
         const char* feat = window_title ? (strchr(window_title,' ') ? strchr(window_title,' ')+1 : window_title) : "unknown";
         PerFeatureVimState* pfs = GetPerFeatureState(feat);
@@ -247,7 +245,7 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
         last_index = 0;
         if (state->has_listbox) state->listbox.selected_index = 0;
     }
-    // Save per-feature vim state for isolation
+
     {
         const char* feat = g_current_feature ? g_current_feature : (window_title ? (strchr(window_title,' ') ? strchr(window_title,' ')+1 : window_title) : "unknown");
         SavePerFeatureState(feat, g_current_mode, g_seq_state, last_index);
@@ -565,7 +563,6 @@ void Platform_DisplayMessage(const char* message, int centerX, int centerY, int 
     pthread_detach(tid);
 }
 
-// Not Implemented
 void Platform_SettingsPopUp(void) {
     fprintf(stderr, "[PLATFORM] Platform_SettingsPopUp not implemented yet\n");
 }
@@ -578,19 +575,16 @@ char* Platform_EditTextPopup(const char* initial_text, int centerX, int centerY,
 
     int screen = DefaultScreen(dpy);
 
-    // Match Win32 clamping: never absurdly small
-    if (maxWidth < 200) maxWidth = 200;
-    if (maxHeight < 100) maxHeight = 100;
+    if (maxWidth > 200) maxWidth = 200;
+    if (maxHeight > 100) maxHeight = 100;
 
     int x = centerX - (maxWidth / 2);
     int y = centerY - (maxHeight / 2);
 
-    // Remember who owns focus so we can hand it back when we close
     Window focus_win = None;
     int focus_revert = RevertToNone;
     XGetInputFocus(dpy, &focus_win, &focus_revert);
 
-    // Remember the parent prompt state so vim motions/focus return to it
     ListBoxInfo* active_lb = NULL;
     int saved_index = -1;
     bool parent_was_active = false;
@@ -742,7 +736,6 @@ char* Platform_EditTextPopup(const char* initial_text, int centerX, int centerY,
     return result;
 }
 
-// Not Implemented
 char* Platform_SearchPopup(void) {
     fprintf(stderr, "[PLATFORM] Platform_SearchPopup not implemented yet\n");
     return NULL;
@@ -811,7 +804,6 @@ void HandleGlobalKeyEvent(int key_code, int value) {
         g_Linux_ShiftHeld = is_pressed;
     }
     
-    if (!is_pressed) return;
     
     double seconds = Platform_GetUniversalTimeSeconds();
     if (seconds >= 300) {
@@ -835,11 +827,6 @@ void HandleGlobalKeyEvent(int key_code, int value) {
         return;
     }
     TimerEnd(timer, "ProcessHotkey");
-
-    // Dynamic hotkeys disabled for debug - was causing double trigger?
-    // if (Feature_HandleDynamicHotkey(pressed_vk, modifiers, fgTitle)) {
-    //     return;
-    // }
 
     WinTimer timer5 = TimerStart();
 
@@ -948,10 +935,8 @@ void Platform_RunHotKeyMessageLoop(void) {
 }
 
 // On X11 Window Initalization Doesnt Need To Be Done
-// Not Implemented
 void Platform_InitUI(void) {
 }
 // Same Thing Here
-// Not Implemented
 void Platform_ShutdownUI(void) {
 }

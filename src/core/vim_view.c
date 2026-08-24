@@ -10,11 +10,8 @@
 #include <sys/time.h>
 #endif
 
-// Active view singleton - only one modal prompt is active at once,
-// but each view retains its own mode/seq/lb when inactive.
 static VimView* g_activeVimView = NULL;
 
-// Dynamic hotkey registry for per-file FEATURE_HOTKEY macro
 #define MAX_DYNAMIC_HOTKEYS 64
 typedef struct {
     int vk;
@@ -24,8 +21,6 @@ typedef struct {
     FeatureEnabledFn enabled;
     bool used;
 } DynamicHotkey;
-static DynamicHotkey g_dynamicHotkeys[MAX_DYNAMIC_HOTKEYS];
-static int g_dynamicHotkeyCount = 0;
 
 static const char* g_mode_names[] = { "NORMAL", "INSERT", "VISUAL" };
 
@@ -433,37 +428,6 @@ void VimView_SetCursor(VimView* v, int pos) {
     v->cursor = pos;
 }
 
-// Hotkey registry
-void Feature_RegisterHotkey(int vk, int mod, void (*handler)(void), const char* name, FeatureEnabledFn enabled) {
-    if (g_dynamicHotkeyCount >= MAX_DYNAMIC_HOTKEYS) {
-        fprintf(stderr, "[FEATURE] Too many dynamic hotkeys\n");
-        return;
-    }
-    g_dynamicHotkeys[g_dynamicHotkeyCount].vk = vk;
-    g_dynamicHotkeys[g_dynamicHotkeyCount].mod = mod;
-    g_dynamicHotkeys[g_dynamicHotkeyCount].handler = handler;
-    g_dynamicHotkeys[g_dynamicHotkeyCount].name = name;
-    g_dynamicHotkeys[g_dynamicHotkeyCount].enabled = enabled;
-    g_dynamicHotkeys[g_dynamicHotkeyCount].used = true;
-    g_dynamicHotkeyCount++;
-    printf("[FEATURE] Registered hotkey %s vk=%d mod=%d\n", name, vk, mod);
-}
-
-bool Feature_HandleDynamicHotkey(int vk, int mod, const char* fgTitle) {
-    (void)fgTitle;
-    for (int i = 0; i < g_dynamicHotkeyCount; i++) {
-        if (g_dynamicHotkeys[i].vk == vk && g_dynamicHotkeys[i].mod == mod) {
-            if (g_dynamicHotkeys[i].enabled && !g_dynamicHotkeys[i].enabled()) continue;
-            // blacklist check? For now respect global blacklist via caller
-            g_dynamicHotkeys[i].handler();
-            return true;
-        }
-    }
-    return false;
-}
-
-// EZ prompt implementations - thin wrappers that create isolated VimView
-// Forward declare Platform helpers to avoid circular
 extern char* Platform_PromptUser(const char* window_list[], const char* window_title, int count, int height, int width, int item_height,
     RefreshCallback refresh_callback, 
     EnterCallback enter_callback,
@@ -474,12 +438,11 @@ extern char* Platform_PromptUser(const char* window_list[], const char* window_t
     EditCallback edit_callback,
     FilterCallback filter_callback,
     HelpCallback help_callback);
+
 extern char* Platform_SimplePromptUser(const char* prompt, const char* window_title,int height, int width, int item_height);
 
 char* VimView_ShowPrompt(const VimViewSpec* spec) {
     if (!spec) return NULL;
-    // Platform_PromptUser already creates an isolated VimView internally,
-    // so just delegate - isolation is automatic.
     return Platform_PromptUser(spec->items, spec->title, spec->count, spec->height, spec->width, spec->item_height,
         spec->refresh, spec->enter, spec->ctrl_enter, spec->tab, spec->copy, spec->render, spec->edit, spec->filter, spec->help);
 }
