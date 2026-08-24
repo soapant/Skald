@@ -22,6 +22,10 @@
 #endif
 
 static Nob_File_Paths sources = {0};
+static bool g_want_static = false;
+static bool has_musl_gcc(void){
+    return nob_file_exists("/usr/bin/musl-gcc") || nob_file_exists("/bin/musl-gcc");
+}
 
 static bool collect_source(Nob_Walk_Entry entry) {
     if (entry.type == NOB_FILE_REGULAR) {
@@ -246,13 +250,15 @@ int main(int argc, char** argv) {
     NOB_GO_REBUILD_URSELF_PLUS(argc, argv, "nob.h");
 
     bool windowed = false;
+    bool want_static = false;
     int do_run = 0;
-    if (argc > 1) {
-        if (strcmp(argv[1], "-actual") == 0) windowed = true;
+    for (int i=1;i<argc;i++){
+        if (strcmp(argv[i], "-actual")==0) windowed=true;
+        else if (strcmp(argv[i], "-static")==0) want_static=true;
+        else if (strcmp(argv[i], "-run")==0) do_run=1;
     }
-    if (argc > 2 && strcmp(argv[2], "-run") == 0) {
-      do_run = 1;
-    }
+    g_want_static = want_static;
+    if (g_want_static) nob_log(NOB_INFO, "Static build requested (%s)", has_musl_gcc() ? "musl-gcc" : "gcc -static");
 
     if (!nob_mkdir_if_not_exists(BUILD_FOLDER)) return 1;
     if (!nob_mkdir_if_not_exists(OBJ_FOLDER)) return 1;
@@ -293,12 +299,39 @@ int main(int argc, char** argv) {
     }
 
     Nob_Cmd cmd = {0};
-    nob_cc(&cmd);
+    if (g_want_static && has_musl_gcc()){
+        nob_cmd_append(&cmd, "musl-gcc");
+    } else {
+        nob_cc(&cmd);
+    }
     nob_cmd_append(&cmd, "-o", output);
     for (size_t i = 0; i < objs.count; ++i) {
         nob_cmd_append(&cmd, objs.items[i]);
     }
-    nob_cmd_append(&cmd, LINK_FLAGS);
+    if (g_want_static){
+#if !defined(_WIN32)
+        bool have_static = nob_file_exists("/usr/lib/libX11.a") || nob_file_exists("/usr/lib64/libX11.a") || nob_file_exists("/usr/lib/x86_64-linux-gnu/libX11.a");
+        if (!have_static){
+            nob_log(NOB_WARNING, "Static X11 libs not found (libX11.a) - true static needs .a files");
+            nob_log(NOB_WARNING, "Arch: yay -S libx11-static or build with --static not available, falling back to dynamic with musl check");
+            if (has_musl_gcc()){
+                nob_log(NOB_INFO, "musl-gcc found, trying musl static (still needs .a)");
+            } else {
+                nob_log(NOB_WARNING, "No static libs, building dynamic (ship with ldd deps) - for single exe use musl + static libs");
+            }
+            // Fallback to dynamic if no static libs - still produce exe but not truly static
+            nob_cmd_append(&cmd, LINK_FLAGS);
+        } else {
+            nob_cmd_append(&cmd, "-static");
+            nob_cmd_append(&cmd, LINK_FLAGS, "-lXau", "-lXdmcp", "-lfontconfig", "-lfreetype", "-lexpat", "-lz", "-lbz2", "-lpng16", "-lbrotlidec", "-lbrotlicommon", "-lm", "-pthread");
+        }
+#else
+        nob_cmd_append(&cmd, "-static");
+        nob_cmd_append(&cmd, LINK_FLAGS);
+#endif
+    } else {
+        nob_cmd_append(&cmd, LINK_FLAGS);
+    }
     if (windowed) nob_cmd_append(&cmd, "-mwindows");
 
     if (!nob_cmd_run(&cmd)) {
