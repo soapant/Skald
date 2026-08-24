@@ -1,6 +1,8 @@
 #include "common.h"
 #include "bindings/hotkey_definitions.h"
+#include "core/types.h"
 #include "helpers.h"
+#include "platform/platform.h"
 #include "features/window_switcher.h"
 #include "features/google_search.h"
 #include "features/todo.h"
@@ -60,6 +62,7 @@ void HandleKillMyProgram(void) {
     terminate_process_by_name("myprogram.exe");
     terminate_process_by_name("main.exe");
 }
+
 void HandleInitAppLauncherCache(void) {
     initialize_app_cache();
 }
@@ -115,5 +118,6 @@ HotkeyBinding G_HOTKEY_BINDINGS[] = {
     BINDING_SIMPLE('S', HOTKEY_MOD_ALT_SHIFT,  toggle_messenger_speaker),
     BINDING_SIMPLE('K', HOTKEY_MOD_ALT_SHIFT,  HandleKillMyProgram),
     BINDING_SIMPLE('E', HOTKEY_MOD_ALT_SHIFT,  HandleInitAppLauncherCache),
+    BINDING_SIMPLE('T',HOTKEY_MOD_ALT_SHIFT,Platform_HandleShowCurrentTime),
     BINDING_SIMPLE(TOGGLE_PIXEL_HOTKEYS_KEY,HOTKEY_MOD_SHIFT_CTRL,HandleSwapHotkeyMode),
 };
