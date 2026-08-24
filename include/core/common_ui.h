@@ -372,7 +372,7 @@ static inline bool CheckAndBlockIfPopupActive(WindowHandle hPopupWnd) {
   if (g_PromptJustClosed) {
     struct timeval tv; gettimeofday(&tv, NULL);
     long now = tv.tv_sec*1000 + tv.tv_usec/1000;
-    if (now - g_PromptCloseTimeMs < 600) {
+    if (now - g_PromptCloseTimeMs < 150) {
       return true;
     }
     g_PromptJustClosed = false;
