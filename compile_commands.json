@@ -952,5 +952,23 @@
       "-c",
       "src/platform/x11/display_x11.c"
     ]
+  },
+  {
+    "directory": "/home/diggy/Programming/Projects/C Code",
+    "file": "src/platform/x11/misc_x11.c",
+    "arguments": [
+      "gcc",
+      "-Wall",
+      "-Wextra",
+      "-I",
+      "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
+      "-w",
+      "-g",
+      "-c",
+      "src/platform/x11/misc_x11.c"
+    ]
   }
 ]
