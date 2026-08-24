@@ -657,11 +657,35 @@ int get_offset_based_on_number(int index) {
 }
 
 Window Linux_CreateWindowEx(Display* dpy, int x, int y, int w, int h, unsigned long bg_color, const char* res_name, const char* res_class, long event_mask) {
-    // Use simple window + _NET_WM_WINDOW_OPACITY (Hyprland needs windowrulev2, but avoids RenderBadPicture)
-    // ARGB 32-bit visual caused XftDraw BadMatch (XftDraw uses DefaultVisual 24-bit)
-    Window win = XCreateSimpleWindow(dpy, RootWindow(dpy, DefaultScreen(dpy)), x, y, w, h, 0, bg_color, bg_color);
+    int screen = DefaultScreen(dpy);
+    extern float WindowOpacity;
+    XVisualInfo vinfo;
+    Visual* visual = NULL;
+    int depth = 0;
+    Colormap cmap = 0;
+    bool use_argb = false;
+    if (XMatchVisualInfo(dpy, screen, 32, TrueColor, &vinfo)) {
+        visual = vinfo.visual;
+        depth = 32;
+        cmap = XCreateColormap(dpy, RootWindow(dpy, screen), visual, AllocNone);
+        use_argb = true;
+    }
+    Window win;
+    if (use_argb) {
+        XSetWindowAttributes attrs = {0};
+        unsigned int r = (bg_color >> 16) & 0xFF;
+        unsigned int g = (bg_color >> 8) & 0xFF;
+        unsigned int b = bg_color & 0xFF;
+        unsigned int a = (unsigned int)WindowOpacity;
+        if (a > 255) a = 255;
+        attrs.background_pixel = (a << 24) | (r << 16) | (g << 8) | b;
+        attrs.colormap = cmap;
+        attrs.border_pixel = 0;
+        win = XCreateWindow(dpy, RootWindow(dpy, screen), x, y, w, h, 0, depth, InputOutput, visual, CWBackPixel|CWColormap|CWBorderPixel, &attrs);
+    } else {
+        win = XCreateSimpleWindow(dpy, RootWindow(dpy, screen), x, y, w, h, 0, bg_color, bg_color);
+    }
     {
-        extern float WindowOpacity;
         Atom opacity = XInternAtom(dpy, "_NET_WM_WINDOW_OPACITY", False);
         unsigned long alpha = (unsigned long)(0xffffffff * (WindowOpacity / 255.0));
         XChangeProperty(dpy, win, opacity, XA_CARDINAL, 32, PropModeReplace, (unsigned char*)&alpha, 1);
@@ -679,7 +703,6 @@ Window Linux_CreateWindowEx(Display* dpy, int x, int y, int w, int h, unsigned l
     XWMHints* hints = XAllocWMHints();
     hints->flags = InputHint;
     hints->input = True;
-    // flashtext (DisplayMessage) should not take focus
     if (res_name && strcmp(res_name, "flashtext")==0) hints->input = False;
     XSetWMHints(dpy, win, hints);
     XFree(hints);
@@ -702,6 +725,15 @@ Window Linux_CreateEditPopupWindow(Display* dpy, int x, int y, int w, int h) {
 Window Linux_CreateDisplayMessageWindow(Display* dpy, int x, int y, int w, int h) {
     unsigned long bg = rgb_to_hex(COLOR_BG);
     return Linux_CreateWindowEx(dpy, x, y, w, h, bg, "flashtext", "flashtext", ExposureMask | KeyPressMask);
+}
+
+XftDraw* Linux_CreateXftDraw(Display* dpy, Window win) {
+    XWindowAttributes attrs;
+    if (XGetWindowAttributes(dpy, win, &attrs)) {
+        return XftDrawCreate(dpy, win, attrs.visual, attrs.colormap);
+    }
+    int screen = DefaultScreen(dpy);
+    return XftDrawCreate(dpy, win, DefaultVisual(dpy, screen), DefaultColormap(dpy, screen));
 }
 
 #endif

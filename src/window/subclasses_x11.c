@@ -349,7 +349,7 @@ bool Linux_HandleEditPopupKey(const XEvent* ev, SimplePromptState* state, bool* 
 
 void DrawSimplePromptUserEditControl(Display *dpy, Window *win, SimplePromptState *state) {
     int screen = DefaultScreen(dpy);
-    XftDraw* xd = XftDrawCreate(dpy, *win, DefaultVisual(dpy, screen), DefaultColormap(dpy, screen));
+    XftDraw* xd = Linux_CreateXftDraw(dpy, *win);
 
     FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
     XftFont* xf = FH_TO_XFT(font);
@@ -458,7 +458,7 @@ void DrawSimplePromptUserEditControl(Display *dpy, Window *win, SimplePromptStat
 
 void DrawPromptUserEditControl(Display *dpy,Window* win,PromptState *state) {
     int screen = DefaultScreen(dpy);
-    XftDraw* xd = XftDrawCreate(dpy, *win, DefaultVisual(dpy, screen), DefaultColormap(dpy, screen));
+    XftDraw* xd = Linux_CreateXftDraw(dpy, *win);
 
     FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
     XftFont* xf = FH_TO_XFT(font);
@@ -558,7 +558,7 @@ void DrawPromptUserListBox(Display *dpy,Window* win,PromptState *state) {
       if (!state->has_listbox) return;
       ListBoxInfo *lb = &state->listbox;
       int screen = DefaultScreen(dpy);
-      XftDraw *xd = XftDrawCreate(dpy, *win, DefaultVisual(dpy, screen), DefaultColormap(dpy, screen));
+      XftDraw* xd = Linux_CreateXftDraw(dpy, *win);
       FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
       XftFont *xf = FH_TO_XFT(font);
 

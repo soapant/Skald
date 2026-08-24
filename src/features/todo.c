@@ -300,7 +300,7 @@ static void todo_render_callback(Display *dpy, Window *win, PromptState *state) 
     ListBoxInfo *lb = &state->listbox;
     int screen = DefaultScreen(dpy);
     
-    XftDraw *xd = XftDrawCreate(dpy, *win, DefaultVisual(dpy, screen), DefaultColormap(dpy, screen));
+    XftDraw* xd = Linux_CreateXftDraw(dpy, *win);
     FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
     
     int y0 = 100;
