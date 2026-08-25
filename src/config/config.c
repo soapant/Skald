@@ -113,7 +113,7 @@ const char* ListOfShitToIgnore[30] = {
 };
 
 const TerminalCommandHotkey G_TERMINAL_COMMAND_HOTKEYS[] = {
-    { 'B', HOTKEY_MOD_ALT_CTRL,"btop" },
+    { 'B', HOTKEY_MOD_ALT_CTRL,"hyprctl reload",false},
 };
 const unsigned int TERMINAL_COMMAND_HOTKEY_COUNT = sizeof(G_TERMINAL_COMMAND_HOTKEYS) / sizeof(G_TERMINAL_COMMAND_HOTKEYS[0]);
 

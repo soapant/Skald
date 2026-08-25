@@ -251,7 +251,7 @@ bool CheckTerminalCommandHotkeyBindings(int pressed_vk, int modifiers) {
     for (int i = 0; i < TERMINAL_COMMAND_HOTKEY_COUNT; i++) {
         if (G_TERMINAL_COMMAND_HOTKEYS[i].vk_code == pressed_vk && 
             G_TERMINAL_COMMAND_HOTKEYS[i].modifiers == modifiers) {
-                RunTerminalCommand(G_TERMINAL_COMMAND_HOTKEYS[i].terminal_command, false);
+                RunTerminalCommand(G_TERMINAL_COMMAND_HOTKEYS[i].terminal_command, false,G_TERMINAL_COMMAND_HOTKEYS[i].open_in_terminal);
                 return true;
             }
         }

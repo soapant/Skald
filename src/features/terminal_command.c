@@ -24,9 +24,8 @@ static void terminal_refresh_callback(const char* filter, WindowHandle hListBox,
 }
 
 
-void RunTerminalCommand(const char* Command, bool save_to_history) {
+void RunTerminalCommand(const char* Command, bool save_to_history,bool open_in_terminal) {
     if (Command == NULL || strlen(Command) == 0) return;
-    printf("Running Terminal COmmand %s \n",Command);
     
     char clean_cmd[512];
     strncpy(clean_cmd, Command, sizeof(clean_cmd) - 1);
@@ -92,14 +91,12 @@ void RunTerminalCommand(const char* Command, bool save_to_history) {
     const char* env_runtime=getenv("XDG_RUNTIME_DIR");
     if(env_runtime) snprintf(runtime_dir,sizeof(runtime_dir),"%s",env_runtime);
     else snprintf(runtime_dir,sizeof(runtime_dir),"/run/user/1000");
-    const char* term = (UsedTerminal && strlen(UsedTerminal)>0) ? UsedTerminal : "alacritty";
     char extra[1024];
     snprintf(extra,sizeof(extra),"-e bash \"%s\"", temp_file);
+    if (open_in_terminal) {
     Platform_LaunchTerminal(real_home, extra);
-    // Fallback direct if Platform_LaunchTerminal fails (should not)
-    // Keep old path for compat but now daemonized via Platform_LaunchTerminal
+    }
 #endif
-    
     printf("[TERMINAL] Running: %s\n", clean_cmd);
 }
 
@@ -114,7 +111,7 @@ static void terminal_enter_callback(const char* selection, ListBoxInfo* lb) {
         Platform_FileAppend(TerminalHistoryFile, selection);
         Platform_FileAppend(TerminalHistoryFile, "\n");
       }
-      RunTerminalCommand(selection, false);
+      RunTerminalCommand(selection, false,true);
 }
 
 static void terminal_edit_callback(const char* selection, ListBoxInfo* lb) {
