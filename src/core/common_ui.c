@@ -2,7 +2,7 @@
 #include "config.h"
 #include "helpers.h"
 #include "core/common_ui.h"
-#include "bindings/character_sequence.h"
+#include "core/vim.h"
 #include "platform/platform.h"
 #if defined(_WIN32)
 #include <windows.h>

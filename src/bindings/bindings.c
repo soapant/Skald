@@ -1,11 +1,10 @@
 #include "common.h"
 #include "bindings/bindings.h"
 #include "bindings/vim_bindings.h"
-#include "bindings/character_sequence.h"
 #include "bindings/macro_bindings.h"
 #include "core/common_ui.h"
 #include "core/modal.h"
-#include "core/vim_context.h"
+#include "core/vim.h"
 #include "helpers.h"
 #include "features/window_switcher.h"
 #include "features/app_launcher.h"
@@ -174,7 +173,7 @@ bool CheckVimMotion(int pressed_vk, int modifiers, MotionAction* out_action, con
 }
 
 void ExecuteMotion(MotionAction action, const char* sequence, int typed_count) {
-    VimContext ctx = VimCtx_FromGlobals();
+    VimContext ctx = Vim_FromGlobals();
     if (typed_count > 0 && sequence != NULL && strlen(sequence) > 0 && IsInsertMode()) {
         DeleteLastTypedChar(&ctx);
         if (ctx.state && g_refresh_callback) g_refresh_callback(ctx.state->filter, ctx.hListBox, ctx.lb);

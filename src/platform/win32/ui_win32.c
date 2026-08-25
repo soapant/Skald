@@ -11,7 +11,7 @@
 #include "bindings/bindings.h"
 #include "bindings/hotkey_definitions.h"
 #include "bindings/macro_bindings.h"
-#include "bindings/character_sequence.h"
+#include "core/vim.h"
 #include "features/focus_switcher.h"
 #include "features/music_player.h"
 #include "features/video_player.h"
