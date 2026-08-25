@@ -774,9 +774,9 @@ bool HandleGlobalKeyEvent(int key_code, int value) {
     if (HandleBulkKillProcess(pressed_vk, modifiers, fgTitle)) {
         return 1;
     }
-    return 0;
-
     TimerEnd(timer14, "HandleBulkKillProcess");
+
+    return 0;
 }
 
 void Platform_RunHotKeyMessageLoop(void) {
@@ -796,7 +796,6 @@ void Platform_RunHotKeyMessageLoop(void) {
 
     struct input_event ev;
     const long HOTKEY_STALE_EVENT_MS = 200;
-    bool is_grabbed = false;
 
     while (true) {
         int poll_res = poll(fds, active_kb_count, -1);
@@ -821,27 +820,9 @@ void Platform_RunHotKeyMessageLoop(void) {
                     }
 
                     if (HandleGlobalKeyEvent(ev.code, ev.value)) {
-                        if (!is_grabbed) {
-                            for (int j = 0; j < active_kb_count; j++) {
-                                ioctl(active_kbs[j].fd, EVIOCGRAB, 1);
-                            }
-                            is_grabbed = true;
-                        }
-                    } else {
-                        if (is_grabbed) {
-                            for (int j = 0; j < active_kb_count; j++) {
-                                ioctl(active_kbs[j].fd, EVIOCGRAB, 0);
-                            }
-                            is_grabbed = false;
-                        }
                     }
                 }
             }
-        }
-    }
-    if (is_grabbed) {
-        for (int i = 0; i < active_kb_count; i++) {
-            ioctl(active_kbs[i].fd, EVIOCGRAB, 0);
         }
     }
 
