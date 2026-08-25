@@ -13,7 +13,7 @@
 #include "features/focus_switcher.h"
 #include "core/feature_data.h"
 #include "features/music_player.h"
-#include "features/video_player.h"
+#include "features/video_viewer.h"
 #include "features/process_killer.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -761,7 +761,7 @@ void HandleGlobalKeyEvent(int key_code, int value) {
     TimerEnd(timer11, "HandleMusicPlayer");
 
     WinTimer timer12 = TimerStart();
-    if (HandleVideoPlayer(pressed_vk, modifiers, fgTitle)) {
+    if (HandleVideoViewer(pressed_vk, modifiers, fgTitle)) {
         return;
     }
     TimerEnd(timer12, "HandleVideoPlayer");

@@ -1,1 +1,1 @@
-coping of the listbox is broken
+the copying only works while hte program is active||[Cprogram]|[DontForget]
