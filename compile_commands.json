@@ -181,24 +181,6 @@
   },
   {
     "directory": "/home/diggy/Programming/Projects/C Code",
-    "file": "src/core/vim_context.c",
-    "arguments": [
-      "gcc",
-      "-Wall",
-      "-Wextra",
-      "-I",
-      "include",
-      "-I/usr/include/freetype2",
-      "-MMD",
-      "-MP",
-      "-w",
-      "-g",
-      "-c",
-      "src/core/vim_context.c"
-    ]
-  },
-  {
-    "directory": "/home/diggy/Programming/Projects/C Code",
     "file": "src/core/helpers_x11.c",
     "arguments": [
       "gcc",
@@ -213,6 +195,24 @@
       "-g",
       "-c",
       "src/core/helpers_x11.c"
+    ]
+  },
+  {
+    "directory": "/home/diggy/Programming/Projects/C Code",
+    "file": "src/core/vim.c",
+    "arguments": [
+      "gcc",
+      "-Wall",
+      "-Wextra",
+      "-I",
+      "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
+      "-w",
+      "-g",
+      "-c",
+      "src/core/vim.c"
     ]
   },
   {
@@ -375,24 +375,6 @@
       "-g",
       "-c",
       "src/bindings/bindings.c"
-    ]
-  },
-  {
-    "directory": "/home/diggy/Programming/Projects/C Code",
-    "file": "src/bindings/character_sequence.c",
-    "arguments": [
-      "gcc",
-      "-Wall",
-      "-Wextra",
-      "-I",
-      "include",
-      "-I/usr/include/freetype2",
-      "-MMD",
-      "-MP",
-      "-w",
-      "-g",
-      "-c",
-      "src/bindings/character_sequence.c"
     ]
   },
   {

@@ -3,7 +3,7 @@
 #define VIM_HELPERS_H
 
 #include <stdbool.h>
-#include "core/vim_context.h"
+#include "core/vim.h"
 
 void DeleteCharUnderCursor(VimContext* ctx);
 void GoToFirstListBoxItem(VimContext* ctx);

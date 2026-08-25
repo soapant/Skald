@@ -1,7 +1,7 @@
 #include "common.h"
 #include "bindings/vim_helpers.h"
 #include "core/common_ui.h"
-#include "core/vim_context.h"
+#include "core/vim.h"
 #include <ctype.h>
 #if defined(_WIN32)
 #include <windows.h>
@@ -10,13 +10,13 @@
 void DeleteCharUnderCursor(VimContext* ctx) {
     if (!ctx) return;
     char text[512];
-    VimCtx_GetText(ctx, text, sizeof(text));
-    int pos = VimCtx_GetCursor(ctx);
+    Vim_GetText(ctx, text, sizeof(text));
+    int pos = Vim_GetCursor(ctx);
     int len = (int)strlen(text);
     if (pos < len) {
         memmove(&text[pos], &text[pos + 1], len - pos);
-        VimCtx_SetText(ctx, text);
-        VimCtx_SetCursor(ctx, pos);
+        Vim_SetText(ctx, text);
+        Vim_SetCursor(ctx, pos);
     }
 }
 
@@ -38,7 +38,7 @@ void SetCursorToStartOfText(VimContext* ctx) {
 #if defined(_WIN32)
     if (IsWindowValid(ctx->hEdit)) SetFocus(WH_TO_HWND(ctx->hEdit));
 #endif
-    VimCtx_SetCursor(ctx, 0);
+    Vim_SetCursor(ctx, 0);
 }
 
 void SetCursorToEndOfText(VimContext* ctx) {
@@ -47,21 +47,21 @@ void SetCursorToEndOfText(VimContext* ctx) {
     if (IsWindowValid(ctx->hEdit)) {
         SetFocus(WH_TO_HWND(ctx->hEdit));
         int len = GetWindowTextLengthA(WH_TO_HWND(ctx->hEdit));
-        VimCtx_SetCursor(ctx, len);
+        Vim_SetCursor(ctx, len);
         return;
     }
 #endif
     char text[512];
-    VimCtx_GetText(ctx, text, sizeof(text));
-    VimCtx_SetCursor(ctx, (int)strlen(text));
+    Vim_GetText(ctx, text, sizeof(text));
+    Vim_SetCursor(ctx, (int)strlen(text));
 }
 
 void DeleteInsideDelimiter(VimContext* ctx, char open_char, char close_char, bool keep_mode) {
     if (!ctx) return;
     char text[512];
-    VimCtx_GetText(ctx, text, sizeof(text));
+    Vim_GetText(ctx, text, sizeof(text));
     int len = (int)strlen(text);
-    int cursor = VimCtx_GetCursor(ctx);
+    int cursor = Vim_GetCursor(ctx);
     int start = -1, end = -1;
     int open_pos = -1;
     for (int i = cursor - 1; i >= 0; i--) {
@@ -109,17 +109,17 @@ void DeleteInsideDelimiter(VimContext* ctx, char open_char, char close_char, boo
     int delete_end = end;
     printf("[DEBUG] Deleting from %d to %d (inside %c%c)\n", delete_start, delete_end, open_char, close_char);
     memmove(&text[delete_start], &text[delete_end], len - delete_end + 1);
-    VimCtx_SetText(ctx, text);
-    VimCtx_SetCursor(ctx, delete_start);
+    Vim_SetText(ctx, text);
+    Vim_SetCursor(ctx, delete_start);
     if (keep_mode) SetMode(MODE_INSERT); else SetMode(MODE_NORMAL);
 }
 
 void DeleteInnerWord(VimContext* ctx, bool keep_mode) {
     if (!ctx) return;
     char text[512];
-    VimCtx_GetText(ctx, text, sizeof(text));
+    Vim_GetText(ctx, text, sizeof(text));
     int len = (int)strlen(text);
-    int cursor = VimCtx_GetCursor(ctx);
+    int cursor = Vim_GetCursor(ctx);
     int word_start = cursor;
     while (word_start > 0) { char c = text[word_start - 1]; if (!isalnum((unsigned char)c) && c != '_') break; word_start--; }
     int word_end = cursor;
@@ -142,8 +142,8 @@ void DeleteInnerWord(VimContext* ctx, bool keep_mode) {
     if (word_start > word_end) { int temp = word_start; word_start = word_end; word_end = temp; }
     if (word_start >= 0 && word_end <= len && word_start < word_end) {
         memmove(&text[word_start], &text[word_end], len - word_end + 1);
-        VimCtx_SetText(ctx, text);
-        VimCtx_SetCursor(ctx, word_start);
+        Vim_SetText(ctx, text);
+        Vim_SetCursor(ctx, word_start);
         if (keep_mode) SetMode(MODE_INSERT); else SetMode(MODE_NORMAL);
     }
 }
