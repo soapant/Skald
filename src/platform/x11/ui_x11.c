@@ -679,8 +679,7 @@ bool g_Linux_CtrlHeld  = false;
 bool g_Linux_AltHeld   = false;
 bool g_Linux_ShiftHeld = false;
 
-void HandleGlobalKeyEvent(int key_code, int value) {
-    // value: 0=release, 1=press, 2=autorepeat - treat 2 as still held
+bool HandleGlobalKeyEvent(int key_code, int value) {
     if (key_code == KEY_LEFTCTRL || key_code == KEY_RIGHTCTRL) {
         if (value == 0) g_Linux_CtrlHeld = false;
         else g_Linux_CtrlHeld = true;
@@ -693,8 +692,7 @@ void HandleGlobalKeyEvent(int key_code, int value) {
         if (value == 0) g_Linux_ShiftHeld = false;
         else g_Linux_ShiftHeld = true;
     }
-    // Only trigger hotkeys on press (1), not repeat (2) or release (0)
-    if (value != 1) return;
+    if (value != 1) return 0;
     
     double seconds = Platform_GetUniversalTimeSeconds();
     if (seconds >= 300) {
@@ -715,67 +713,69 @@ void HandleGlobalKeyEvent(int key_code, int value) {
     WinTimer timer = TimerStart();
     if (ProcessHotkey(G_HOTKEY_BINDINGS, HOTKEY_BINDING_COUNT,
           pressed_vk, modifiers, fgTitle)) {
-        return;
+        return 1;
     }
     TimerEnd(timer, "ProcessHotkey");
 
     WinTimer timer5 = TimerStart();
 
     if (CheckTextSnippetBindings(pressed_vk, modifiers)) {
-        return;
+        return 1;
     }
     TimerEnd(timer5, "CheckTextSnippetBindings");
 
     if (CheckMacroBindings(pressed_vk, modifiers)) {
-        return;
+        return 1;
     }
 
     WinTimer timer7 = TimerStart();
     if (CheckAppHotkeyBindings(pressed_vk, modifiers)) {
-        return;
+        return 1;
     }
     TimerEnd(timer7, "CheckAppHotkeyBindings");
 
     WinTimer timer8 = TimerStart();
     if (CheckMiscHotkeyBindings(pressed_vk, modifiers)) {
-        return;
+        return 1;
     }
     TimerEnd(timer8, "CheckMiscHotkeyBindings");
 
     WinTimer timer9 = TimerStart();
     if (CheckQuickLinkHotkeyBindings(pressed_vk, modifiers)) {
-        return;
+        return 1;
     }
     TimerEnd(timer9, "CheckQuickLinkHotkeyBindings");
 
     WinTimer timer10 = TimerStart();
     if (CheckTerminalCommandHotkeyBindings(pressed_vk, modifiers)) {
-      return;
+      return 1;
     }
     TimerEnd(timer10, "HandleTerminalCommand");
 
     WinTimer timer11 = TimerStart();
     if (HandleFocusSwitcher(pressed_vk, modifiers, fgTitle)) {
-        return;
+        return 1;
     }
     TimerEnd(timer11, "HandleFocusSwitcher");
 
     WinTimer timer12 = TimerStart();
     if (HandleMusicPlayer(pressed_vk, modifiers, fgTitle)) {
-        return;
+        return 1;
     }
     TimerEnd(timer12, "HandleMusicPlayer");
 
     WinTimer timer13 = TimerStart();
     if (HandleVideoViewer(pressed_vk, modifiers, fgTitle)) {
-        return;
+        return 1;
     }
     TimerEnd(timer13, "HandleVideoPlayer");
 
     WinTimer timer14 = TimerStart();
     if (HandleBulkKillProcess(pressed_vk, modifiers, fgTitle)) {
-        return;
+        return 1;
     }
+    return 0;
+
     TimerEnd(timer14, "HandleBulkKillProcess");
 }
 
@@ -796,6 +796,7 @@ void Platform_RunHotKeyMessageLoop(void) {
 
     struct input_event ev;
     const long HOTKEY_STALE_EVENT_MS = 200;
+    bool is_grabbed = false;
 
     while (true) {
         int poll_res = poll(fds, active_kb_count, -1);
@@ -819,9 +820,28 @@ void Platform_RunHotKeyMessageLoop(void) {
                         if (ev.value == 1) continue;
                     }
 
-                    HandleGlobalKeyEvent(ev.code, ev.value);
+                    if (HandleGlobalKeyEvent(ev.code, ev.value)) {
+                        if (!is_grabbed) {
+                            for (int j = 0; j < active_kb_count; j++) {
+                                ioctl(active_kbs[j].fd, EVIOCGRAB, 1);
+                            }
+                            is_grabbed = true;
+                        }
+                    } else {
+                        if (is_grabbed) {
+                            for (int j = 0; j < active_kb_count; j++) {
+                                ioctl(active_kbs[j].fd, EVIOCGRAB, 0);
+                            }
+                            is_grabbed = false;
+                        }
+                    }
                 }
             }
+        }
+    }
+    if (is_grabbed) {
+        for (int i = 0; i < active_kb_count; i++) {
+            ioctl(active_kbs[i].fd, EVIOCGRAB, 0);
         }
     }
 
