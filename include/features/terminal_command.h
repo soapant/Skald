@@ -7,6 +7,7 @@
 #define FILE_TERMINAL_HISTORY 0
 #define TerminalHistoryFile G_FILE_ENTRIES[FILE_TERMINAL_HISTORY].mf
 
+void RunTerminalCommand(const char* Command, bool save_to_history);
 void TriggerTerminalCommand(void);
 
 #endif

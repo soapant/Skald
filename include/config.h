@@ -122,6 +122,9 @@ extern const unsigned int APP_HOTKEY_COUNT;
 extern const MiscHotkey G_MISC_HOTKEYS[];
 extern const unsigned int MISC_HOTKEY_COUNT;
 
+extern const TerminalCommandHotkey G_TERMINAL_COMMAND_HOTKEYS[];
+extern const unsigned int TERMINAL_COMMAND_HOTKEY_COUNT;
+
 extern const QuickLinkHotkey G_QUICKLINK_HOTKEYS[];
 extern const unsigned int QUICKLINK_HOTKEY_COUNT;
 

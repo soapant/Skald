@@ -24,8 +24,9 @@ static void terminal_refresh_callback(const char* filter, WindowHandle hListBox,
 }
 
 
-static void RunTerminalCommand(const char* Command, bool save_to_history) {
+void RunTerminalCommand(const char* Command, bool save_to_history) {
     if (Command == NULL || strlen(Command) == 0) return;
+    printf("Running Terminal COmmand %s \n",Command);
     
     char clean_cmd[512];
     strncpy(clean_cmd, Command, sizeof(clean_cmd) - 1);

@@ -11,6 +11,7 @@
 #include "features/window_switcher.h"
 #include "features/app_launcher.h"
 #include "features/focus_switcher.h"
+#include "features/terminal_command.h"
 #if defined(_WIN32)
 #include <shellapi.h>
 #include <shlwapi.h>
@@ -210,7 +211,6 @@ bool CheckAppHotkeyBindings(int pressed_vk, int modifiers) {
 #else
     WindowHandle hActiveWnd = WH_NULL;
 #endif
-    if (WH_TO_HWND(hActiveWnd) == NULL) return false;
 
     char activeExe[256] = {0};
     FetchExeNameOnDemand(hActiveWnd, activeExe, sizeof(activeExe) - 1);
@@ -236,6 +236,28 @@ bool CheckAppHotkeyBindings(int pressed_vk, int modifiers) {
     }
     return false;
 }
+
+bool CheckTerminalCommandHotkeyBindings(int pressed_vk, int modifiers) {
+#if defined(_WIN32)
+    WindowHandle hActiveWnd = WH_FROM_HWND(GetForegroundWindow());
+#else
+    WindowHandle hActiveWnd = WH_NULL;
+#endif
+
+    char activeExe[256] = {0};
+    FetchExeNameOnDemand(hActiveWnd, activeExe, sizeof(activeExe) - 1);
+
+
+    for (int i = 0; i < TERMINAL_COMMAND_HOTKEY_COUNT; i++) {
+        if (G_TERMINAL_COMMAND_HOTKEYS[i].vk_code == pressed_vk && 
+            G_TERMINAL_COMMAND_HOTKEYS[i].modifiers == modifiers) {
+                RunTerminalCommand(G_TERMINAL_COMMAND_HOTKEYS[i].terminal_command, false);
+                return true;
+            }
+        }
+    return false;
+}
+
 void RunMiscApplication(const char* path) {
     char expanded_path[MAX_PATH];
     if (path != NULL && !Platform_ExpandPath(path, expanded_path, sizeof(expanded_path))) return;
@@ -342,7 +364,6 @@ void RunMiscApplication(const char* path) {
         printf("[MISC] Failed to open: %s (Error: %lu)\n", path, GetLastError());
     }
 #else
-    // Not Implemented
     (void)path;
 #endif
 }
@@ -353,8 +374,6 @@ bool CheckMiscHotkeyBindings(int pressed_vk, int modifiers) {
 #else
     WindowHandle hActiveWnd = WH_NULL;
 #endif
-    if (WH_TO_HWND(hActiveWnd) == NULL) return false;
-
     char activeExe[256] = {0};
     FetchExeNameOnDemand(hActiveWnd, activeExe, sizeof(activeExe) - 1);
     
@@ -422,7 +441,6 @@ void open_browser(const char *url) {
 bool CheckQuickLinkHotkeyBindings(int pressed_vk, int modifiers) {
 #if defined(_WIN32)
     WindowHandle hActiveWnd = WH_FROM_HWND(GetForegroundWindow());
-    if (WH_TO_HWND(hActiveWnd) == NULL) return false;
 #else
     WindowHandle hActiveWnd = WH_NULL;
 #endif
@@ -460,8 +478,6 @@ bool CheckMacroBindings(int pressed_vk, int modifiers) {
 #else
     WindowHandle hActiveWnd = WH_NULL;
 #endif
-    if (WH_TO_HWND(hActiveWnd) == NULL) return false;
-
     char activeExe[256] = {0};
     FetchExeNameOnDemand(hActiveWnd, activeExe, sizeof(activeExe) - 1);
     
