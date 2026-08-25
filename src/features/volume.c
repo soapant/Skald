@@ -1,6 +1,7 @@
 #include "common.h"
 #include "features/volume.h"
 #include "core/common_ui.h"
+#include "platform/platform.h"
 
 #if defined(_WIN32)
 #include <mmdeviceapi.h>
@@ -75,9 +76,7 @@ cleanup:
 #else
 
 int GetSystemVolume(void) {
-    const char* real_user = getenv("SUDO_USER");
-    if (!real_user) real_user = "diggy";
-
+    const char* real_user = Platform_GetRealUser();
     const char* display = getenv("DISPLAY");
     if (!display) display = ":0";
 
@@ -89,9 +88,13 @@ int GetSystemVolume(void) {
     }
 
     char cmd[512];
-    // Run wpctl as user to read the default audio sink volume (e.g., "Volume: 0.75")
-    snprintf(cmd, sizeof(cmd), "sudo -u %s DISPLAY=%s XDG_RUNTIME_DIR=%s wpctl get-volume @DEFAULT_AUDIO_SINK@", 
-             real_user, display, runtime_dir);
+    if (Platform_IsRunningAsRoot()) {
+        snprintf(cmd, sizeof(cmd), "sudo -u %s DISPLAY=%s XDG_RUNTIME_DIR=%s wpctl get-volume @DEFAULT_AUDIO_SINK@", 
+                 real_user, display, runtime_dir);
+    } else {
+        snprintf(cmd, sizeof(cmd), "DISPLAY=%s XDG_RUNTIME_DIR=%s wpctl get-volume @DEFAULT_AUDIO_SINK@", 
+                 display, runtime_dir);
+    }
 
     FILE* fp = popen(cmd, "r");
     if (!fp) return 0;
@@ -111,9 +114,7 @@ int GetSystemVolume(void) {
 }
 
 void SetSystemVolume(float volume) {
-    const char* real_user = getenv("SUDO_USER");
-    if (!real_user) real_user = "diggy";
-
+    const char* real_user = Platform_GetRealUser();
     const char* display = getenv("DISPLAY");
     if (!display) display = ":0";
 
@@ -125,9 +126,13 @@ void SetSystemVolume(float volume) {
     }
 
     char cmd[512];
-    // Set volume using wpctl (expects a percentage like "75%" or decimal like "0.75")
-    snprintf(cmd, sizeof(cmd), "sudo -u %s DISPLAY=%s XDG_RUNTIME_DIR=%s wpctl set-volume @DEFAULT_AUDIO_SINK%s %.2f", 
-             real_user, display, runtime_dir, "%", volume);
+    if (Platform_IsRunningAsRoot()) {
+        snprintf(cmd, sizeof(cmd), "sudo -u %s DISPLAY=%s XDG_RUNTIME_DIR=%s wpctl set-volume @DEFAULT_AUDIO_SINK%s %.2f", 
+                 real_user, display, runtime_dir, "%", volume);
+    } else {
+        snprintf(cmd, sizeof(cmd), "DISPLAY=%s XDG_RUNTIME_DIR=%s wpctl set-volume @DEFAULT_AUDIO_SINK%s %.2f", 
+                 display, runtime_dir, "%", volume);
+    }
 
     system(cmd);
 }

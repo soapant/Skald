@@ -27,6 +27,8 @@
 #include <sys/ioctl.h>
 #include <sys/time.h>
 #include <linux/input.h>
+#include <linux/uinput.h>
+#include <errno.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
@@ -40,10 +42,20 @@ SimplePromptState* g_currentEditPopupState = NULL;
 bool g_EditPopupCloseRequested = false;
 int pending_hotkey_vk = 0;
 int pending_hotkey_mod = 0;
+long pending_hotkey_timeMs = 0;
 Window g_PromptWin = None;
 bool g_PromptJustClosed = false;
 long g_PromptCloseTimeMs = 0;
 extern bool g_Linux_CtrlHeld, g_Linux_AltHeld, g_Linux_ShiftHeld;
+
+static bool should_use_grab(void) {
+    // On Wayland/Hyprland, libinput holds evdev exclusively. EVIOCGRAB bricks.
+    if (getenv("WAYLAND_DISPLAY")) return false;
+    if (getenv("HYPRLAND_INSTANCE_SIGNATURE")) return false;
+    const char* t = getenv("XDG_SESSION_TYPE");
+    if (t && strcmp(t, "wayland") == 0) return false;
+    return true;
+}
 
 typedef struct {
     EditorMode mode;
@@ -183,24 +195,46 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
                   KeySym ks;
                   int len = XLookupString(&ev.xkey, buf, sizeof(buf), &ks, NULL);
                   if (len > 0) {
-                      bool is_printable = true;
-                      for (int i=0;i<len;i++) {
-                        unsigned char c = (unsigned char)buf[i];
-                        if (c < 0x20 || c == 0x7F) { is_printable = false; break; }
+                      // Wayland pending swallow fallback: if this printable char matches pending hotkey, drop it
+                      bool swallow_pending = false;
+                      if (pending_hotkey_vk != 0 && len==1) {
+                          struct timeval tv; gettimeofday(&tv,NULL); long now=tv.tv_sec*1000+tv.tv_usec/1000;
+                          if (now - pending_hotkey_timeMs < 800) {
+                              unsigned char c = (unsigned char)buf[0];
+                              int vk_from_char = (c >= 'a' && c <= 'z') ? (c - 'a' + 'A') : (c >= 'A' && c <= 'Z') ? c : (c==' ' ? VK_SPACE : 0);
+                              if (vk_from_char !=0 && vk_from_char == pending_hotkey_vk) {
+                                  swallow_pending = true;
+                                  pending_hotkey_vk=0; pending_hotkey_mod=0;
+                              } else if (vk_from_char==0 && pending_hotkey_vk==VK_SPACE && c==' ') {
+                                  swallow_pending = true;
+                                  pending_hotkey_vk=0; pending_hotkey_mod=0;
+                              }
+                          } else {
+                              pending_hotkey_vk=0; pending_hotkey_mod=0;
+                          }
                       }
-                      if (!is_printable) {
+                      if (swallow_pending) {
+                          // drop leaked char
                       } else {
-                        size_t n = strlen(state->filter);
-                        if (n + len < sizeof(state->filter) - 1) {
-                          if (state->cursor < 0) state->cursor = 0;
-                          if ((size_t)state->cursor > n) state->cursor = (int)n;
-                          memmove(state->filter + state->cursor + len,
-                                  state->filter + state->cursor,
-                                  n - state->cursor + 1);
-                          memcpy(state->filter + state->cursor, buf, len);
-                          state->cursor += len;
-                          if (g_refresh_callback) g_refresh_callback(state->filter, hListBox, state->has_listbox ? &state->listbox : NULL);
-                        }
+                          bool is_printable = true;
+                          for (int i=0;i<len;i++) {
+                            unsigned char c = (unsigned char)buf[i];
+                            if (c < 0x20 || c == 0x7F) { is_printable = false; break; }
+                          }
+                          if (!is_printable) {
+                          } else {
+                            size_t n = strlen(state->filter);
+                            if (n + len < sizeof(state->filter) - 1) {
+                              if (state->cursor < 0) state->cursor = 0;
+                              if ((size_t)state->cursor > n) state->cursor = (int)n;
+                              memmove(state->filter + state->cursor + len,
+                                      state->filter + state->cursor,
+                                      n - state->cursor + 1);
+                              memcpy(state->filter + state->cursor, buf, len);
+                              state->cursor += len;
+                              if (g_refresh_callback) g_refresh_callback(state->filter, hListBox, state->has_listbox ? &state->listbox : NULL);
+                            }
+                          }
                       }
                   }
               }
@@ -292,23 +326,35 @@ char* Platform_SimplePromptUser(const char* prompt, const char* window_title,int
                   KeySym ks;
                   int len = XLookupString(&ev.xkey, buf, sizeof(buf), &ks, NULL);
                   if (len > 0) {
-                      bool is_printable = true;
-                      for (int i=0;i<len;i++) {
-                        unsigned char c = (unsigned char)buf[i];
-                        if (c < 0x20 || c == 0x7F) { is_printable = false; break; }
+                      bool swallow_pending = false;
+                      if (pending_hotkey_vk !=0 && len==1) {
+                          struct timeval tv; gettimeofday(&tv,NULL); long now=tv.tv_sec*1000+tv.tv_usec/1000;
+                          if (now - pending_hotkey_timeMs < 800) {
+                              unsigned char c=(unsigned char)buf[0];
+                              int vkc=(c>='a'&&c<='z')?(c-'a'+'A'):(c>='A'&&c<='Z')?c:(c==' '?VK_SPACE:0);
+                              if (vkc!=0 && vkc==pending_hotkey_vk) { swallow_pending=true; pending_hotkey_vk=0; pending_hotkey_mod=0; }
+                          } else pending_hotkey_vk=0;
                       }
-                      if (!is_printable) {
-                      } else {
-                        size_t n = strlen(state->user_input);
-                        if (n + len < sizeof(state->user_input) - 1) {
-                          if (state->cursor < 0) state->cursor = 0;
-                          if ((size_t)state->cursor > n) state->cursor = (int)n;
-                          memmove(state->user_input + state->cursor + len,
-                                  state->user_input + state->cursor,
-                                  n - state->cursor + 1);
-                          memcpy(state->user_input + state->cursor, buf, len);
-                          state->cursor += len;
-                        }
+                      if (swallow_pending) {}
+                      else {
+                          bool is_printable = true;
+                          for (int i=0;i<len;i++) {
+                            unsigned char c = (unsigned char)buf[i];
+                            if (c < 0x20 || c == 0x7F) { is_printable = false; break; }
+                          }
+                          if (!is_printable) {
+                          } else {
+                            size_t n = strlen(state->user_input);
+                            if (n + len < sizeof(state->user_input) - 1) {
+                              if (state->cursor < 0) state->cursor = 0;
+                              if ((size_t)state->cursor > n) state->cursor = (int)n;
+                              memmove(state->user_input + state->cursor + len,
+                                      state->user_input + state->cursor,
+                                      n - state->cursor + 1);
+                              memcpy(state->user_input + state->cursor, buf, len);
+                              state->cursor += len;
+                            }
+                          }
                       }
                   }
               }
@@ -565,21 +611,34 @@ char* Platform_EditTextPopup(const char* initial_text, int centerX, int centerY,
                 KeySym ks;
                 int len = XLookupString(&ev.xkey, buf, sizeof(buf), &ks, NULL);
                 if (len > 0) {
-                    bool is_printable = true;
-                    for (int i=0;i<len;i++) {
-                        unsigned char c = (unsigned char)buf[i];
-                        if (c < 0x20 || c == 0x7F) { is_printable = false; break; }
+                    bool swallow=false;
+                    if (pending_hotkey_vk!=0 && len==1) {
+                        struct timeval tv; gettimeofday(&tv,NULL); long now=tv.tv_sec*1000+tv.tv_usec/1000;
+                        if (now - pending_hotkey_timeMs < 800) {
+                            unsigned char c=(unsigned char)buf[0]; int vkc=(c>='a'&&c<='z')?(c-'a'+'A'):(c>='A'&&c<='Z')?c:(c==' '?VK_SPACE:0);
+                            if (vkc!=0 && vkc==pending_hotkey_vk) swallow=true;
+                        }
+                        if (swallow) pending_hotkey_vk=0;
+                        else if (now - pending_hotkey_timeMs >=800) pending_hotkey_vk=0;
                     }
-                    if (is_printable) {
-                        size_t n = strlen(state->user_input);
-                        if (n + len < sizeof(state->user_input) - 1) {
-                            size_t cursor = state->cursor;
-                            if (cursor > n) cursor = n;
-                            memmove(state->user_input + cursor + len,
-                                    state->user_input + cursor,
-                                    n - cursor + 1);
-                            memcpy(state->user_input + cursor, buf, len);
-                            state->cursor = cursor + len;
+                    if (swallow) {}
+                    else {
+                        bool is_printable = true;
+                        for (int i=0;i<len;i++) {
+                            unsigned char c = (unsigned char)buf[i];
+                            if (c < 0x20 || c == 0x7F) { is_printable = false; break; }
+                        }
+                        if (is_printable) {
+                            size_t n = strlen(state->user_input);
+                            if (n + len < sizeof(state->user_input) - 1) {
+                                size_t cursor = state->cursor;
+                                if (cursor > n) cursor = n;
+                                memmove(state->user_input + cursor + len,
+                                        state->user_input + cursor,
+                                        n - cursor + 1);
+                                memcpy(state->user_input + cursor, buf, len);
+                                state->cursor = cursor + len;
+                            }
                         }
                     }
                 }
@@ -644,6 +703,91 @@ typedef struct {
 static SystemKeyboard active_kbs[MAX_KEYBOARDS];
 static int active_kb_count = 0;
 
+// Option B: unprivileged evdev via input group + uinput for swallow. Works as both root and user.
+// If EVIOCGRAB fails (no permission), hotkeys still work but without swallowing.
+static int g_uinput_fd = -1;
+static bool g_suppress_release[KEY_MAX + 1] = {0};
+static bool g_device_grabbed[MAX_KEYBOARDS] = {0};
+
+static int init_uinput(void) {
+    int fd = open("/dev/uinput", O_WRONLY | O_NONBLOCK);
+    if (fd < 0) fd = open("/dev/input/uinput", O_WRONLY | O_NONBLOCK);
+    if (fd < 0) {
+        fprintf(stderr, "[UINPUT] open failed: %s (swallow disabled)\n", strerror(errno));
+        return -1;
+    }
+    if (ioctl(fd, UI_SET_EVBIT, EV_KEY) < 0) perror("[UINPUT] UI_SET_EVBIT EV_KEY");
+    if (ioctl(fd, UI_SET_EVBIT, EV_SYN) < 0) perror("[UINPUT] UI_SET_EVBIT EV_SYN");
+    // Keyboards also emit MSC_SCAN and sometimes LED/REP - set them for completeness
+    // but virtual keyboard only needs KEY. We deliberately NOT set EV_REL/EV_ABS to avoid
+    // advertising as mouse/touchpad (which would brick cursor if we grabbed those, and confuses libinput).
+    ioctl(fd, UI_SET_EVBIT, EV_MSC);
+    ioctl(fd, UI_SET_MSCBIT, MSC_SCAN);
+    for (int i = 0; i <= KEY_MAX; i++) {
+        ioctl(fd, UI_SET_KEYBIT, i);
+    }
+    // try modern setup API first
+    struct uinput_setup setup;
+    memset(&setup, 0, sizeof(setup));
+    setup.id.bustype = BUS_USB;
+    setup.id.vendor = 0x1234;
+    setup.id.product = 0x5678;
+    snprintf(setup.name, sizeof(setup.name), "myprogram-virtual-keyboard");
+    if (ioctl(fd, UI_DEV_SETUP, &setup) == 0) {
+        if (ioctl(fd, UI_DEV_CREATE) < 0) {
+            perror("[UINPUT] UI_DEV_CREATE");
+            close(fd);
+            return -1;
+        }
+    } else {
+        // fallback to legacy uinput_user_dev
+        struct uinput_user_dev uud;
+        memset(&uud, 0, sizeof(uud));
+        snprintf(uud.name, sizeof(uud.name), "myprogram-virtual-keyboard");
+        uud.id.bustype = BUS_USB;
+        uud.id.vendor = 0x1234;
+        uud.id.product = 0x5678;
+        if (write(fd, &uud, sizeof(uud)) != sizeof(uud)) {
+            perror("[UINPUT] write uud");
+        }
+        if (ioctl(fd, UI_DEV_CREATE) < 0) {
+            perror("[UINPUT] UI_DEV_CREATE legacy");
+            close(fd);
+            return -1;
+        }
+    }
+    // give X/Wayland time to pick up the new virtual device
+    usleep(150 * 1000);
+    fprintf(stderr, "[UINPUT] virtual keyboard created (fd=%d)\n", fd);
+    return fd;
+}
+
+static void destroy_uinput(void) {
+    if (g_uinput_fd >= 0) {
+        ioctl(g_uinput_fd, UI_DEV_DESTROY);
+        close(g_uinput_fd);
+        g_uinput_fd = -1;
+    }
+}
+
+static void uinput_emit(const struct input_event *ev) {
+    if (g_uinput_fd < 0) return;
+    if (write(g_uinput_fd, ev, sizeof(*ev)) < 0) {
+        // EAGAIN is ok for NONBLOCK
+        if (errno != EAGAIN) perror("[UINPUT] write");
+        return;
+    }
+    struct input_event syn;
+    memset(&syn, 0, sizeof(syn));
+    gettimeofday(&syn.time, NULL);
+    syn.type = EV_SYN;
+    syn.code = SYN_REPORT;
+    syn.value = 0;
+    if (write(g_uinput_fd, &syn, sizeof(syn)) < 0 && errno != EAGAIN) {
+        perror("[UINPUT] write syn");
+    }
+}
+
 void ScanAndHookKeyboards(void) {
     DIR *dir = opendir("/dev/input");
     if (!dir) return;
@@ -660,8 +804,59 @@ void ScanAndHookKeyboards(void) {
             unsigned long ev_bits[EV_MAX / 8 + 1] = {0};
             if (ioctl(fd, EVIOCGBIT(0, sizeof(ev_bits)), ev_bits) >= 0) {
                 if (ev_bits[0] & (1 << EV_KEY)) {
+                    // Skip our own virtual keyboard to avoid self-grab loop (would brick)
+                    char dev_name[256] = {0};
+                    if (ioctl(fd, EVIOCGNAME(sizeof(dev_name)), dev_name) == 0) {
+                        if (strstr(dev_name, "myprogram") || strstr(dev_name, "Custom Remap")) {
+                            fprintf(stderr, "[GRAB] skipping %s (self virtual device '%s')\n", full_path, dev_name);
+                            close(fd);
+                            continue;
+                        }
+                    }
+                    // Brick fix: never grab mice/touchpads/combo devices that have REL or ABS
+                    // Pure keyboards are EV_SYN+EV_KEY+maybe EV_MSC/LED/REP, never REL/ABS.
+                    // Grabbing a mouse (EV_REL) bricks cursor because uinput lacks REL setup.
+                    bool is_mouse_or_touch = (ev_bits[0] & (1 << EV_REL)) || (ev_bits[0] & (1 << EV_ABS));
+                    if (is_mouse_or_touch) {
+                        // Don't grab - just monitor read-only for hotkeys (no swallow) so mouse stays alive
+                        // But we still need to detect hotkeys on this node? Most hotkeys come from pure kbd,
+                        // combo devices handled via their pure-kbd subnode. Skipping grab avoids brick.
+                        fprintf(stderr, "[GRAB] skipping %s (has REL/ABS, mouse/touch/combo - no grab)\n", full_path);
+                        close(fd);
+                        continue;
+                    }
+                    // Further filter: require at least one alphabet key (A-Z) to avoid power/video buttons
+                    unsigned long key_bits[(KEY_MAX/8)+1] = {0};
+                    bool has_alpha = false;
+                    if (ioctl(fd, EVIOCGBIT(EV_KEY, sizeof(key_bits)), key_bits) >= 0) {
+                        // KEY_A = 30
+                        if (key_bits[30/ (8*sizeof(unsigned long))] & (1UL << (30 % (8*sizeof(unsigned long))))) has_alpha = true;
+                        // also check KEY_ESC as fallback for small keyboards
+                        if (!has_alpha && (key_bits[KEY_ESC/ (8*sizeof(unsigned long))] & (1UL << (KEY_ESC % (8*sizeof(unsigned long)))))) {
+                            // check for space as additional heuristic
+                            if (key_bits[KEY_SPACE/ (8*sizeof(unsigned long))] & (1UL << (KEY_SPACE % (8*sizeof(unsigned long))))) has_alpha = true;
+                        }
+                        // If neither A nor ESC+SPACE, treat as non-keyboard (e.g., power button with only KEY_POWER)
+                        if (!has_alpha) {
+                            fprintf(stderr, "[GRAB] skipping %s (no alpha keys, likely power/video button)\n", full_path);
+                            close(fd);
+                            continue;
+                        }
+                    }
                     active_kbs[active_kb_count].fd = fd;
                     strncpy(active_kbs[active_kb_count].path, full_path, 255);
+                    // try to grab for swallowing; non-fatal if fails (e.g., permission)
+                    if (g_uinput_fd >= 0 && ioctl(fd, EVIOCGRAB, 1) == 0) {
+                        g_device_grabbed[active_kb_count] = true;
+                        fprintf(stderr, "[GRAB] grabbed %s (swallow enabled)\n", full_path);
+                    } else {
+                        g_device_grabbed[active_kb_count] = false;
+                        if (g_uinput_fd < 0) {
+                            fprintf(stderr, "[GRAB] not grabbing %s (no uinput, would brick)\n", full_path);
+                        } else {
+                            fprintf(stderr, "[GRAB] EVIOCGRAB failed for %s: %s (hotkeys work, no swallow)\n", full_path, strerror(errno));
+                        }
+                    }
                     active_kb_count++;
                 } else {
                     close(fd);
@@ -692,8 +887,6 @@ bool HandleGlobalKeyEvent(int key_code, int value) {
         if (value == 0) g_Linux_ShiftHeld = false;
         else g_Linux_ShiftHeld = true;
     }
-    if (value != 1) return 0;
-    
     double seconds = Platform_GetUniversalTimeSeconds();
     if (seconds >= 300) {
         Platform_ResetUniversalTimer();
@@ -713,6 +906,8 @@ bool HandleGlobalKeyEvent(int key_code, int value) {
     WinTimer timer = TimerStart();
     if (ProcessHotkey(G_HOTKEY_BINDINGS, HOTKEY_BINDING_COUNT,
           pressed_vk, modifiers, fgTitle)) {
+        if (value == 1) { pending_hotkey_vk = pressed_vk; pending_hotkey_mod = modifiers; struct timeval tv; gettimeofday(&tv,NULL); pending_hotkey_timeMs = tv.tv_sec*1000 + tv.tv_usec/1000; }
+        else if (value == 2) { pending_hotkey_vk = pressed_vk; pending_hotkey_mod = modifiers; struct timeval tv2; gettimeofday(&tv2,NULL); pending_hotkey_timeMs = tv2.tv_sec*1000 + tv2.tv_usec/1000; }
         return 1;
     }
     TimerEnd(timer, "ProcessHotkey");
@@ -720,58 +915,68 @@ bool HandleGlobalKeyEvent(int key_code, int value) {
     WinTimer timer5 = TimerStart();
 
     if (CheckTextSnippetBindings(pressed_vk, modifiers)) {
+        if (value==1||value==2){ pending_hotkey_vk=pressed_vk; pending_hotkey_mod=modifiers; struct timeval tv; gettimeofday(&tv,NULL); pending_hotkey_timeMs=tv.tv_sec*1000+tv.tv_usec/1000; }
         return 1;
     }
     TimerEnd(timer5, "CheckTextSnippetBindings");
 
     if (CheckMacroBindings(pressed_vk, modifiers)) {
+        if (value==1||value==2){ pending_hotkey_vk=pressed_vk; pending_hotkey_mod=modifiers; struct timeval tv; gettimeofday(&tv,NULL); pending_hotkey_timeMs=tv.tv_sec*1000+tv.tv_usec/1000; }
         return 1;
     }
 
     WinTimer timer7 = TimerStart();
     if (CheckAppHotkeyBindings(pressed_vk, modifiers)) {
+        if (value==1||value==2){ pending_hotkey_vk=pressed_vk; pending_hotkey_mod=modifiers; struct timeval tv; gettimeofday(&tv,NULL); pending_hotkey_timeMs=tv.tv_sec*1000+tv.tv_usec/1000; }
         return 1;
     }
     TimerEnd(timer7, "CheckAppHotkeyBindings");
 
     WinTimer timer8 = TimerStart();
     if (CheckMiscHotkeyBindings(pressed_vk, modifiers)) {
+        if (value==1||value==2){ pending_hotkey_vk=pressed_vk; pending_hotkey_mod=modifiers; struct timeval tv; gettimeofday(&tv,NULL); pending_hotkey_timeMs=tv.tv_sec*1000+tv.tv_usec/1000; }
         return 1;
     }
     TimerEnd(timer8, "CheckMiscHotkeyBindings");
 
     WinTimer timer9 = TimerStart();
     if (CheckQuickLinkHotkeyBindings(pressed_vk, modifiers)) {
+        if (value==1||value==2){ pending_hotkey_vk=pressed_vk; pending_hotkey_mod=modifiers; struct timeval tv; gettimeofday(&tv,NULL); pending_hotkey_timeMs=tv.tv_sec*1000+tv.tv_usec/1000; }
         return 1;
     }
     TimerEnd(timer9, "CheckQuickLinkHotkeyBindings");
 
     WinTimer timer10 = TimerStart();
     if (CheckTerminalCommandHotkeyBindings(pressed_vk, modifiers)) {
+        if (value==1||value==2){ pending_hotkey_vk=pressed_vk; pending_hotkey_mod=modifiers; struct timeval tv; gettimeofday(&tv,NULL); pending_hotkey_timeMs=tv.tv_sec*1000+tv.tv_usec/1000; }
       return 1;
     }
     TimerEnd(timer10, "HandleTerminalCommand");
 
     WinTimer timer11 = TimerStart();
     if (HandleFocusSwitcher(pressed_vk, modifiers, fgTitle)) {
+        if (value==1||value==2){ pending_hotkey_vk=pressed_vk; pending_hotkey_mod=modifiers; struct timeval tv; gettimeofday(&tv,NULL); pending_hotkey_timeMs=tv.tv_sec*1000+tv.tv_usec/1000; }
         return 1;
     }
     TimerEnd(timer11, "HandleFocusSwitcher");
 
     WinTimer timer12 = TimerStart();
     if (HandleMusicPlayer(pressed_vk, modifiers, fgTitle)) {
+        if (value==1||value==2){ pending_hotkey_vk=pressed_vk; pending_hotkey_mod=modifiers; struct timeval tv; gettimeofday(&tv,NULL); pending_hotkey_timeMs=tv.tv_sec*1000+tv.tv_usec/1000; }
         return 1;
     }
     TimerEnd(timer12, "HandleMusicPlayer");
 
     WinTimer timer13 = TimerStart();
     if (HandleVideoViewer(pressed_vk, modifiers, fgTitle)) {
+        if (value==1||value==2){ pending_hotkey_vk=pressed_vk; pending_hotkey_mod=modifiers; struct timeval tv; gettimeofday(&tv,NULL); pending_hotkey_timeMs=tv.tv_sec*1000+tv.tv_usec/1000; }
         return 1;
     }
     TimerEnd(timer13, "HandleVideoPlayer");
 
     WinTimer timer14 = TimerStart();
     if (HandleBulkKillProcess(pressed_vk, modifiers, fgTitle)) {
+        if (value==1||value==2){ pending_hotkey_vk=pressed_vk; pending_hotkey_mod=modifiers; struct timeval tv; gettimeofday(&tv,NULL); pending_hotkey_timeMs=tv.tv_sec*1000+tv.tv_usec/1000; }
         return 1;
     }
     TimerEnd(timer14, "HandleBulkKillProcess");
@@ -780,13 +985,32 @@ bool HandleGlobalKeyEvent(int key_code, int value) {
 }
 
 void Platform_RunHotKeyMessageLoop(void) {
+    bool use_grab = should_use_grab();
+    if (!use_grab) {
+        g_uinput_fd = -1;
+        fprintf(stderr, "[SYSTEM] Wayland/Hyprland detected - using read-only monitor (no EVIOCGRAB, pending-key swallow for prompts)\n");
+    } else {
+        // Option B: try to create uinput first so we can forward when grabbed.
+        // If creation fails we still run (hotkeys work, but swallow disabled).
+        g_uinput_fd = init_uinput();
+        if (g_uinput_fd < 0) {
+            fprintf(stderr, "[SYSTEM] continuing without uinput (no swallow)\n");
+        }
+    }
+
     ScanAndHookKeyboards();
     if (active_kb_count == 0) {
         fprintf(stderr, "[ERROR] No structural keyboard nodes located under /dev/input/\n");
+        destroy_uinput();
         return;
     }
 
-    printf("[SYSTEM] Low-Level Kernel Hook installed across %d input streams.\n", active_kb_count);
+    printf("[SYSTEM] Low-Level Kernel Hook installed across %d input streams (%s).\n", active_kb_count, g_uinput_fd>=0?"grab+uinput":"read-only");
+    if (!Platform_IsRunningAsRoot()) {
+        printf("[SYSTEM] Running as user '%s' (no sudo required, input group handles perms)\n", Platform_GetRealUser());
+    } else {
+        printf("[SYSTEM] Running as root (sudo compatibility mode, will sudo -u '%s' for launches)\n", Platform_GetRealUser());
+    }
 
     struct pollfd *fds = calloc(active_kb_count, sizeof(struct pollfd));
     for (int i = 0; i < active_kb_count; i++) {
@@ -803,8 +1027,13 @@ void Platform_RunHotKeyMessageLoop(void) {
 
         for (int i = 0; i < active_kb_count; i++) {
             if (fds[i].revents & POLLIN) {
+                bool grabbed = g_device_grabbed[i];
                 while (read(fds[i].fd, &ev, sizeof(struct input_event)) > 0) {
-                    if (ev.type != EV_KEY) continue;
+                    // Forward non-key events via uinput only when we grabbed that device
+                    if (ev.type != EV_KEY) {
+                        if (grabbed && g_uinput_fd >= 0) uinput_emit(&ev);
+                        continue;
+                    }
 
                     struct timeval now;
                     gettimeofday(&now, NULL);
@@ -815,21 +1044,64 @@ void Platform_RunHotKeyMessageLoop(void) {
                                             ev.code == KEY_LEFTCTRL || ev.code == KEY_RIGHTCTRL ||
                                             ev.code == KEY_LEFTSHIFT || ev.code == KEY_RIGHTSHIFT ||
                                             ev.code == KEY_LEFTMETA || ev.code == KEY_RIGHTMETA);
-                        if (!is_modifier) continue;
-                        if (ev.value == 1) continue;
+                        if (!is_modifier) {
+                            if (grabbed && g_uinput_fd >= 0) uinput_emit(&ev);
+                            continue;
+                        }
+                        if (ev.value == 1) {
+                            if (grabbed && g_uinput_fd >= 0) uinput_emit(&ev);
+                            continue;
+                        }
+                    }
+
+                    // swallow logic: if hotkey handled, suppress this press and the following release
+                    // check for release suppression first
+                    if (ev.value == 0 && ev.code <= KEY_MAX && g_suppress_release[ev.code]) {
+                        g_suppress_release[ev.code] = false;
+                        // swallow the release of a previously-swallowed press
+                        continue;
+                    }
+                    if (ev.value == 2 && ev.code <= KEY_MAX && g_suppress_release[ev.code]) {
+                        // swallow autorepeat of swallowed key
+                        continue;
                     }
 
                     if (HandleGlobalKeyEvent(ev.code, ev.value)) {
+                        // Swallow last key: don't forward via uinput. Remember to swallow release.
+                        if (ev.value == 1 && ev.code <= KEY_MAX) {
+                            g_suppress_release[ev.code] = true;
+                        } else if (ev.value == 2 && ev.code <= KEY_MAX) {
+                            // also suppress eventual release after autorepeat
+                            g_suppress_release[ev.code] = true;
+                        }
+                        continue;
+                    }
+                    // not a hotkey -> forward only if we grabbed (otherwise OS already delivered)
+                    if (grabbed) {
+                        if (g_uinput_fd >= 0) {
+                            uinput_emit(&ev);
+                        } else {
+                            static bool warned = false;
+                            if (!warned) {
+                                fprintf(stderr, "[WARN] grabbed but no uinput - key %d lost. Check /dev/uinput perms (need input group or ACL)\n", ev.code);
+                                warned = true;
+                            }
+                        }
+                    } else {
+                        // not grabbed -> OS will deliver, do nothing
                     }
                 }
             }
         }
     }
 
+    // cleanup grabs
     for (int i = 0; i < active_kb_count; i++) {
+        ioctl(active_kbs[i].fd, EVIOCGRAB, 0);
         close(active_kbs[i].fd);
     }
     free(fds);
+    destroy_uinput();
 }
 
 // On X11 Window Initalization Doesnt Need To Be Done
