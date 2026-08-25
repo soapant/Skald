@@ -12,6 +12,7 @@
 #include "features/app_launcher.h"
 #include "features/focus_switcher.h"
 #include "features/terminal_command.h"
+#include "platform/platform.h"
 #if defined(_WIN32)
 #include <shellapi.h>
 #include <shlwapi.h>
@@ -407,9 +408,7 @@ void open_browser(const char *url) {
 #if defined(_WIN32)
     snprintf(command, sizeof(command), "start %s", url);
 #else
-    const char* real_user = getenv("SUDO_USER");
-    if (!real_user) real_user = "root";
-
+    const char* real_user = Platform_GetRealUser();
     const char* display = getenv("DISPLAY");
     if (!display) display = ":0";
     
@@ -424,9 +423,15 @@ void open_browser(const char *url) {
         snprintf(runtime_dir, sizeof(runtime_dir), "/run/user/1000");
     }
 
-    snprintf(command, sizeof(command), 
-             "sudo -u %s DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s xdg-open \"%s\" > /dev/null 2>&1 &", 
-             real_user, display, xauthority, runtime_dir, url);
+    if (Platform_IsRunningAsRoot()) {
+        snprintf(command, sizeof(command), 
+                 "sudo -u %s DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s xdg-open \"%s\" > /dev/null 2>&1 &", 
+                 real_user, display, xauthority, runtime_dir, url);
+    } else {
+        snprintf(command, sizeof(command), 
+                 "DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s xdg-open \"%s\" > /dev/null 2>&1 &", 
+                 display, xauthority, runtime_dir, url);
+    }
 #endif
 
     int result = system(command);

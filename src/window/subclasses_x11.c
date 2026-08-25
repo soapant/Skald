@@ -17,6 +17,29 @@
 #include <X11/Xatom.h>
 #include <X11/Xlib.h>
 #include <X11/Xft/Xft.h>
+#include <sys/time.h>
+#include <string.h>
+
+// Pending hotkey swallow for Wayland (no EVIOCGRAB). Set in ui_x11.c HandleGlobalKeyEvent.
+extern int pending_hotkey_vk;
+extern int pending_hotkey_mod;
+extern long pending_hotkey_timeMs;
+static bool should_swallow_pending(int wParam, int mods) {
+    if (pending_hotkey_vk == 0) return false;
+    struct timeval tv; gettimeofday(&tv,NULL);
+    long now = tv.tv_sec*1000 + tv.tv_usec/1000;
+    if (now - pending_hotkey_timeMs > 800) {
+        pending_hotkey_vk = 0; pending_hotkey_mod = 0; return false;
+    }
+    // Strict: vk must match. Mod check is lenient (pending may be ALT, prompt may see same alt)
+    // For safety, if vk matches, swallow. This prevents leaked 'w' after alt+w.
+    if (wParam == pending_hotkey_vk) {
+        pending_hotkey_vk = 0; pending_hotkey_mod = 0;
+        return true;
+    }
+    // Also swallow if pending was space and wParam is space (common leak)
+    return false;
+}
 
 static int Linux_KeysymToWindowsVK(KeySym keysym) {
     if (keysym >= XK_a && keysym <= XK_z) return 'A' + (keysym - XK_a);
@@ -105,6 +128,7 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
     int wParam = Linux_KeysymToWindowsVK(XLookupKeysym(&ev->xkey, 0));
     bool ctrl_pressed, shift_pressed, alt_pressed;
     ReadModifiers(ev, &ctrl_pressed, &shift_pressed, &alt_pressed);
+    if (should_swallow_pending(wParam, (ctrl_pressed?HOTKEY_MOD_CTRL:0)|(shift_pressed?HOTKEY_MOD_SHIFT:0)|(alt_pressed?HOTKEY_MOD_ALT:0))) return true;
     if (TryVimMotion(wParam, ctrl_pressed, shift_pressed, alt_pressed)) return true;
     if (wParam == VK_BACK) {
         if (ctrl_pressed) {
@@ -245,6 +269,7 @@ bool Linux_HandleSimplePromptKey(const XEvent* ev,SimplePromptState *state) {
     int wParam = Linux_KeysymToWindowsVK(XLookupKeysym(&ev->xkey, 0));
     bool ctrl_pressed, shift_pressed, alt_pressed;
     ReadModifiers(ev, &ctrl_pressed, &shift_pressed, &alt_pressed);
+    if (should_swallow_pending(wParam, (ctrl_pressed?HOTKEY_MOD_CTRL:0)|(shift_pressed?HOTKEY_MOD_SHIFT:0)|(alt_pressed?HOTKEY_MOD_ALT:0))) return true;
     if (TryVimMotion(wParam, ctrl_pressed, shift_pressed, alt_pressed)) return true;
     if (wParam == VK_BACK) {
         if (ctrl_pressed) {
@@ -287,6 +312,7 @@ bool Linux_HandleEditPopupKey(const XEvent* ev, SimplePromptState* state, bool* 
     int wParam = Linux_KeysymToWindowsVK(XLookupKeysym(&ev->xkey, 0));
     bool ctrl_pressed, shift_pressed, alt_pressed;
     ReadModifiers(ev, &ctrl_pressed, &shift_pressed, &alt_pressed);
+    if (should_swallow_pending(wParam, (ctrl_pressed?HOTKEY_MOD_CTRL:0)|(shift_pressed?HOTKEY_MOD_SHIFT:0)|(alt_pressed?HOTKEY_MOD_ALT:0))) return true;
     if (TryVimMotion(wParam, ctrl_pressed, shift_pressed, alt_pressed)) return true;
     if (wParam == VK_BACK) {
         EditBufferBackspace(state->user_input, &state->cursor);

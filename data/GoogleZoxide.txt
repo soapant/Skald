@@ -38,3 +38,4 @@ python endswith
 fast.com
 get steam passwordo f steam account
 python pdf module
+brawhalla turn off screen shake 
