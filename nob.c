@@ -9,8 +9,7 @@
 #define CONSOLE_OUTPUT BUILD_FOLDER "/main.exe"
 #define ACTUAL_OUTPUT BUILD_FOLDER "/myprogram.exe"
 #else
-#define CONSOLE_OUTPUT BUILD_FOLDER "/main"
-#define ACTUAL_OUTPUT BUILD_FOLDER "/myprogram"
+#define CONSOLE_OUTPUT BUILD_FOLDER "/myprogram"
 #endif
 
 #if defined(_WIN32)
@@ -62,7 +61,6 @@ static void write_json_string(FILE* f, const char* s) {
             fputc('"', f);
         } else if (*p == '\\') {
 #if defined(_WIN32)
-            // clangd wants forward slashes even on Windows
             fputc('/', f);
 #else
             fputc('\\', f);
@@ -249,13 +247,10 @@ static bool compile_all(bool* any_compiled) {
 int main(int argc, char** argv) {
     NOB_GO_REBUILD_URSELF_PLUS(argc, argv, "nob.h");
 
-    bool windowed = false;
     bool want_static = false;
     int do_run = 0;
     for (int i=1;i<argc;i++){
-        if (strcmp(argv[i], "-actual")==0) windowed=true;
-        else if (strcmp(argv[i], "-static")==0) want_static=true;
-        else if (strcmp(argv[i], "-run")==0) do_run=1;
+        if (strcmp(argv[i], "-run")==0) do_run=1;
     }
     g_want_static = want_static;
     if (g_want_static) nob_log(NOB_INFO, "Static build requested (%s)", has_musl_gcc() ? "musl-gcc" : "gcc -static");
@@ -280,7 +275,7 @@ int main(int argc, char** argv) {
     bool any_compiled = false;
     if (!compile_all(&any_compiled)) return 1;
 
-    const char* output = windowed ? ACTUAL_OUTPUT : CONSOLE_OUTPUT;
+    const char* output = CONSOLE_OUTPUT;
     if (!any_compiled && nob_file_exists(output) &&
         nob_needs_rebuild(output, (const char**)to_build.items, to_build.count) == 0) {
         nob_log(NOB_INFO, "No changes, skipping link");
@@ -326,8 +321,6 @@ int main(int argc, char** argv) {
     } else {
         nob_cmd_append(&cmd, LINK_FLAGS);
     }
-    if (windowed) nob_cmd_append(&cmd, "-mwindows");
-
     if (!nob_cmd_run(&cmd)) {
         nob_log(NOB_ERROR, "Failed to link %s", output);
         return 1;
