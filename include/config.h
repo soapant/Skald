@@ -131,7 +131,7 @@ extern const unsigned int TEXT_SNIPPET_COUNT;
 extern const MusicPlayerBinding G_MUSIC_PLAYERS[];
 extern const unsigned int MUSIC_PLAYER_COUNT;
 
-extern const VideoPlayerBinding G_VIDEO_PLAYERS[];
+extern const VideoViewerBinding G_VIDEO_PLAYERS[];
 extern const unsigned int VIDEO_PLAYER_COUNT;
 
 extern const char* bkp_windows[];
