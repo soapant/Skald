@@ -10,6 +10,7 @@
 #endif
 #if !defined(_WIN32)
 #include "x11_display.h"
+#include <fontconfig/fontconfig.h>
 #endif
 #if defined(_WIN32)
 #include "features/notification_getter.h"
@@ -118,9 +119,14 @@ int main() {
     if (G_FILE_ENTRIES[i].mf != NULL) {
 #if !defined(_WIN32)
         G_FILE_ENTRIES[i].mf->fd = -1;
-        FcInit();
 #endif
     }
+  }
+#if !defined(_WIN32)
+  FcInit();
+#endif
+  for (int i = 0; i < FILE_ENTRY_COUNT; i++) {
+    if (!G_FILE_ENTRIES[i].mf) continue;
     const char* path = G_FILE_ENTRIES[i].path;
 
 
@@ -162,6 +168,42 @@ int main() {
   }
 #endif
   CleanupFeatureDataSystem();
+
+  if (feature_history) {
+    for (int i = 0; i < feature_history->size; i++) {
+        HashMapEntry* entry = feature_history->buckets[i];
+        while (entry) {
+            char** list = (char**)entry->value;
+            if (list) {
+                for (int k = 0; list[k]; k++) free(list[k]);
+                free(list);
+            }
+            entry = entry->next;
+        }
+    }
+    HashMap_Destroy(feature_history);
+    feature_history = NULL;
+  }
+  if (history_indices) {
+    for (int i = 0; i < history_indices->size; i++) {
+        HashMapEntry* entry = history_indices->buckets[i];
+        while (entry) {
+            free(entry->value);
+            entry = entry->next;
+        }
+    }
+    HashMap_Destroy(history_indices);
+    history_indices = NULL;
+  }
+  if (g_item_index_map) {
+    HashMap_Destroy(g_item_index_map);
+    g_item_index_map = NULL;
+  }
+#if !defined(_WIN32)
+  extern void CleanupPerFeatureVimMap(void);
+  CleanupPerFeatureVimMap();
+  FcFini();
+#endif
 
   return 0;
 }

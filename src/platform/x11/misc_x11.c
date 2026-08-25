@@ -146,14 +146,18 @@ bool Platform_ExpandPath(const char* template_path, char* out, size_t out_size) 
 void Platform_HandleShowCurrentTime(void) {
     FILE *fp;
     char buffer[1024];
+    buffer[0] = '\0';
 
     fp = popen("date", "r");
+    if (!fp) return;
 
     while (fgets(buffer, sizeof(buffer), fp) != NULL) {
         printf("%s \n", buffer);
     }
+    pclose(fp);
 
-    SubjectiveMessageDisplay(buffer,70,TimeOutForMessages * 3,COLOR_TEXT);
+    if (buffer[0] != '\0')
+        SubjectiveMessageDisplay(buffer,70,TimeOutForMessages * 3,COLOR_TEXT);
 }
 
 int ConvertLinuxKeyToWindowsVK(int key_code) {
@@ -317,16 +321,33 @@ Line* Platform_FileGetLines(MappedFile *mf, size_t *outLineCount) {
     for (size_t i = 0; i < totalBytes; i++) {
         if (pBuffer[i] == '\n' || i == totalBytes - 1) {
             if (count >= maxLines) {
-                maxLines *= 2;
-                list = (Line *)realloc(list, maxLines * sizeof(Line));
+                size_t newMax = maxLines * 2;
+                Line *tmp = (Line *)realloc(list, newMax * sizeof(Line));
+                if (!tmp) {
+                    for (size_t k = 0; k < count; k++) free(list[k].ptr);
+                    free(list);
+                    munmap(pBuffer, mf->fileSize);
+                    *outLineCount = 0;
+                    return NULL;
+                }
+                list = tmp;
+                maxLines = newMax;
             }
             size_t currentLineLen = &pBuffer[i] - lineStart;
             if (i == totalBytes - 1) currentLineLen++;
 
-            list[count].ptr = (char *)malloc(currentLineLen + 1);
-            memcpy(list[count].ptr, lineStart, currentLineLen);
-            list[count].ptr[currentLineLen] = '\0';
+            char *copy = (char *)malloc(currentLineLen + 1);
+            if (!copy) {
+                for (size_t k = 0; k < count; k++) free(list[k].ptr);
+                free(list);
+                munmap(pBuffer, mf->fileSize);
+                *outLineCount = 0;
+                return NULL;
+            }
+            memcpy(copy, lineStart, currentLineLen);
+            copy[currentLineLen] = '\0';
 
+            list[count].ptr = copy;
             list[count].length = currentLineLen;
             count++;
             lineStart = &pBuffer[i + 1];
@@ -379,8 +400,20 @@ char** Platform_FileGetStrings(MappedFile *mf, size_t *outLineCount, NewlineInfo
             pBuffer[i] = '\0';
 
             if (newlineCount >= maxNewlines) {
-                maxNewlines *= 2;
-                newlines = (NewlineInfo *)realloc(newlines, maxNewlines * sizeof(NewlineInfo));
+                size_t newMax = maxNewlines * 2;
+                NewlineInfo *tmp = (NewlineInfo *)realloc(newlines, newMax * sizeof(NewlineInfo));
+                if (!tmp) {
+                    munmap(pBuffer, mf->fileSize);
+                    mf->pBuffer = NULL;
+                    free(stringList);
+                    free(newlines);
+                    *outLineCount = 0;
+                    *outNewlines = NULL;
+                    *outNewlineCount = 0;
+                    return NULL;
+                }
+                newlines = tmp;
+                maxNewlines = newMax;
             }
             newlines[newlineCount++] = (NewlineInfo){ .index = i, .original = orig };
         }
@@ -389,15 +422,39 @@ char** Platform_FileGetStrings(MappedFile *mf, size_t *outLineCount, NewlineInfo
             pBuffer[i] = '\0';
 
             if (newlineCount >= maxNewlines) {
-                maxNewlines *= 2;
-                newlines = (NewlineInfo *)realloc(newlines, maxNewlines * sizeof(NewlineInfo));
+                size_t newMax = maxNewlines * 2;
+                NewlineInfo *tmp = (NewlineInfo *)realloc(newlines, newMax * sizeof(NewlineInfo));
+                if (!tmp) {
+                    munmap(pBuffer, mf->fileSize);
+                    mf->pBuffer = NULL;
+                    free(stringList);
+                    free(newlines);
+                    *outLineCount = 0;
+                    *outNewlines = NULL;
+                    *outNewlineCount = 0;
+                    return NULL;
+                }
+                newlines = tmp;
+                maxNewlines = newMax;
             }
             newlines[newlineCount++] = (NewlineInfo){ .index = i, .original = orig };
 
             if (i + 1 < totalBytes) {
                 if (count >= maxLines) {
-                    maxLines *= 2;
-                    stringList = (char **)realloc(stringList, maxLines * sizeof(char*));
+                    size_t newMaxL = maxLines * 2;
+                    char **tmp = (char **)realloc(stringList, newMaxL * sizeof(char*));
+                    if (!tmp) {
+                        munmap(pBuffer, mf->fileSize);
+                        mf->pBuffer = NULL;
+                        free(stringList);
+                        free(newlines);
+                        *outLineCount = 0;
+                        *outNewlines = NULL;
+                        *outNewlineCount = 0;
+                        return NULL;
+                    }
+                    stringList = tmp;
+                    maxLines = newMaxL;
                 }
                 stringList[count++] = &pBuffer[i + 1];
             }

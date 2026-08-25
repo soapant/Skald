@@ -17,6 +17,10 @@ HashMap* HashMap_Create(int initial_size) {
     map->size = initial_size ? initial_size : 32;
     map->count = 0;
     map->buckets = calloc(map->size, sizeof(HashMapEntry*));
+    if (!map->buckets) {
+        free(map);
+        return NULL;
+    }
 
     return map;
 }
@@ -53,7 +57,12 @@ void HashMap_Put(HashMap* map, const char* key, void* value) {
     }
 
     HashMapEntry* new_entry = malloc(sizeof(HashMapEntry));
+    if (!new_entry) return;
     new_entry->key = _strdup(key);
+    if (!new_entry->key) {
+        free(new_entry);
+        return;
+    }
     new_entry->value = value;
     new_entry->next = map->buckets[index];
     map->buckets[index] = new_entry;
@@ -109,9 +118,17 @@ void* HashMap_Remove(HashMap* map, const char* key) {
 }
 
 char** HashMap_GetKeys(HashMap* map, int* count) {
-    if (!map) return NULL;
+    if (!map || !count) return NULL;
+    if (map->count == 0) {
+        *count = 0;
+        return NULL;
+    }
 
     char** keys = malloc(map->count * sizeof(char*));
+    if (!keys) {
+        *count = 0;
+        return NULL;
+    }
     int idx = 0;
 
     for (int i = 0; i < map->size; i++) {
@@ -133,10 +150,13 @@ int HashMap_Size(HashMap* map) {
 char** StringList_Append(char** list, int* count, const char* str) {
     if (!str) return list;
 
-    list = realloc(list, (*count + 2) * sizeof(char*));
-    if (!list) return NULL;
+    char** tmp = realloc(list, (*count + 2) * sizeof(char*));
+    if (!tmp) return list;
+    list = tmp;
 
-    list[*count] = _strdup(str);
+    char* dup = _strdup(str);
+    if (!dup) return list;
+    list[*count] = dup;
     (*count)++;
     list[*count] = NULL;
 

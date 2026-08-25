@@ -76,11 +76,25 @@ static void SavePerFeatureState(const char* feature, EditorMode mode, SequenceSt
     PerFeatureVimState* st = (PerFeatureVimState*)HashMap_Get(g_perFeatureVimMap, feature);
     if (!st) {
         st = (PerFeatureVimState*)calloc(1, sizeof(PerFeatureVimState));
+        if (!st) return;
         HashMap_Put(g_perFeatureVimMap, feature, st);
     }
     st->mode = mode;
     st->seq = seq;
     st->last_index = last_index;
+}
+
+void CleanupPerFeatureVimMap(void) {
+    if (!g_perFeatureVimMap) return;
+    for (int i = 0; i < g_perFeatureVimMap->size; i++) {
+        HashMapEntry* entry = g_perFeatureVimMap->buckets[i];
+        while (entry) {
+            free(entry->value);
+            entry = entry->next;
+        }
+    }
+    HashMap_Destroy(g_perFeatureVimMap);
+    g_perFeatureVimMap = NULL;
 }
 
 char* Platform_PromptUser(const char* window_list[], const char* window_title, int count, int height, int width, int item_height,
@@ -511,6 +525,7 @@ void Platform_DisplayMessage(const char* message, int centerX, int centerY, int 
     draw_wrapped_text(dpy, xd,&color, font, message,startY,"CENTER",0);
 
     XFlush(dpy);
+    if (alloc_ok) XftColorFree(dpy, visual, cmap, &color);
 
     MsgWindow* m = (MsgWindow*)malloc(sizeof(MsgWindow));
     m->dead = 0;

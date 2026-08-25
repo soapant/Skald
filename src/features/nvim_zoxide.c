@@ -117,6 +117,7 @@ static void neovide_enter_callback(const char* selection, ListBoxInfo* lb) {
       if (path) {
           LaunchNvim(path);
           ZoxideHelper_AppendNewEntry(NvimZoxideFile, selection, lb, &g_cached_nvim_commands, &g_cached_nvim_count);
+          free(path);
       }
 }
 static void neovide_edit_callback(const char* selection, ListBoxInfo* lb) {

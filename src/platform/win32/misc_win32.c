@@ -219,8 +219,11 @@ Line* Platform_FileGetLines(MappedFile *mf, size_t *outLineCount) {
     for (size_t i = 0; i < totalBytes; i++) {
         if (mf->pBuffer[i] == '\n' || i == totalBytes - 1) {
             if (count >= maxLines) {
-                maxLines *= 2;
-                list = (Line *)realloc(list, maxLines * sizeof(Line));
+                size_t newMax = maxLines * 2;
+                Line *tmp = (Line *)realloc(list, newMax * sizeof(Line));
+                if (!tmp) { free(list); *outLineCount = 0; return NULL; }
+                list = tmp;
+                maxLines = newMax;
             }
             size_t currentLineLen = &mf->pBuffer[i] - lineStart;
             if (i == totalBytes - 1) currentLineLen++;
@@ -259,8 +262,11 @@ char** Platform_FileGetStrings(MappedFile *mf, size_t *outLineCount, NewlineInfo
             mf->pBuffer[i] = '\0';
 
             if (newlineCount >= maxNewlines) {
-                maxNewlines *= 2;
-                newlines = (NewlineInfo *)realloc(newlines, maxNewlines * sizeof(NewlineInfo));
+                size_t newMax = maxNewlines * 2;
+                NewlineInfo *tmp = (NewlineInfo *)realloc(newlines, newMax * sizeof(NewlineInfo));
+                if (!tmp) { free(stringList); free(newlines); *outLineCount = 0; *outNewlines = NULL; *outNewlineCount = 0; return NULL; }
+                newlines = tmp;
+                maxNewlines = newMax;
             }
             newlines[newlineCount++] = (NewlineInfo){ .index = i, .original = orig };
         }
@@ -269,15 +275,21 @@ char** Platform_FileGetStrings(MappedFile *mf, size_t *outLineCount, NewlineInfo
             mf->pBuffer[i] = '\0';
 
             if (newlineCount >= maxNewlines) {
-                maxNewlines *= 2;
-                newlines = (NewlineInfo *)realloc(newlines, maxNewlines * sizeof(NewlineInfo));
+                size_t newMax = maxNewlines * 2;
+                NewlineInfo *tmp = (NewlineInfo *)realloc(newlines, newMax * sizeof(NewlineInfo));
+                if (!tmp) { free(stringList); free(newlines); *outLineCount = 0; *outNewlines = NULL; *outNewlineCount = 0; return NULL; }
+                newlines = tmp;
+                maxNewlines = newMax;
             }
             newlines[newlineCount++] = (NewlineInfo){ .index = i, .original = orig };
 
             if (i + 1 < totalBytes) {
                 if (count >= maxLines) {
-                    maxLines *= 2;
-                    stringList = (char **)realloc(stringList, maxLines * sizeof(char*));
+                    size_t newMaxL = maxLines * 2;
+                    char **tmp = (char **)realloc(stringList, newMaxL * sizeof(char*));
+                    if (!tmp) { free(stringList); free(newlines); *outLineCount = 0; *outNewlines = NULL; *outNewlineCount = 0; return NULL; }
+                    stringList = tmp;
+                    maxLines = newMaxL;
                 }
                 stringList[count++] = &mf->pBuffer[i + 1];
             }

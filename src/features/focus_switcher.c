@@ -64,8 +64,11 @@ static void GetX11ClientWindows(Display* dpy, Window w, Window** list, int* coun
                 GetX11WindowPropertyString(dpy, children[i], XA_WM_NAME, title, sizeof(title))) {
                 
                 if (*count >= *capacity) {
-                    *capacity *= 2;
-                    *list = realloc(*list, (*capacity) * sizeof(Window));
+                    int newCap = *capacity * 2;
+                    Window* tmp = realloc(*list, newCap * sizeof(Window));
+                    if (!tmp) return;
+                    *list = tmp;
+                    *capacity = newCap;
                 }
                 (*list)[(*count)++] = children[i];
             }
@@ -172,6 +175,7 @@ WindowHandle FindWindowByPartialTitle(const char* title) {
     int capacity = 64;
     int count = 0;
     Window* windows = malloc(capacity * sizeof(Window));
+    if (!windows) { XCloseDisplay(dpy); return WH_NULL; }
     GetX11ClientWindows(dpy, root, &windows, &count, &capacity);
 
     WindowHandle found = WH_NULL;
@@ -230,6 +234,7 @@ static WindowHandle FindAnyWindow(const char* titles[], int count) {
     int cap = 64;
     int win_count = 0;
     Window* windows = malloc(cap * sizeof(Window));
+    if (!windows) { XCloseDisplay(dpy); return WH_NULL; }
     GetX11ClientWindows(dpy, root, &windows, &win_count, &cap);
 
     Atom net_wm_name = XInternAtom(dpy, "_NET_WM_NAME", True);
