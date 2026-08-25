@@ -357,8 +357,7 @@ struct feature_data {
 
 typedef struct {
    char* alias;
-   char* win_text;
-   char* linux_text;
+   char* text;
    char* feature;
 }AliasEntry;
 
@@ -462,7 +461,7 @@ typedef struct {
     int vk_code;
     int modifiers;
     int code;
-} VideoPlayerBinding;
+} VideoViewerBinding;
 
 typedef struct {
     int vk_code;

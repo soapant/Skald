@@ -585,10 +585,8 @@ int Platform_CopyToClipboard(const char* text) {
         runtime_dir != NULL && runtime_dir[0] != '\0') {
         snprintf(cmd, sizeof(cmd), "XDG_RUNTIME_DIR=%s WAYLAND_DISPLAY=%s wl-copy",
                  runtime_dir, wayland_display);
-        printf("PICKED WAYLAND (display=%s runtime=%s)\n", wayland_display, runtime_dir);
     } else {
         snprintf(cmd, sizeof(cmd), "xclip -selection clipboard");
-        printf("PICKED X11\n");
     }
 
     FILE *pipe = popen(cmd, "w");
@@ -605,10 +603,9 @@ int Platform_CopyToClipboard(const char* text) {
     }
 
     size_t len = strlen(text);
-    size_t max = 8000;  // Truncate to avoid X11 BadLength error (80KB approx safe limit)
+    size_t max = 8000;  
     if (len > max) {
         fprintf(stderr, "[PLATFORM] Clipboard truncating %zu -> %zu bytes\n", len, max);
-        // Write first part, then ellipsis marker
         fprintf(pipe, "%.8000s…", text);
     } else {
         fprintf(pipe, "%s", text);

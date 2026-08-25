@@ -146,7 +146,7 @@ const MusicPlayerBinding G_MUSIC_PLAYERS[] = {
 
 const unsigned int MUSIC_PLAYER_COUNT = sizeof(G_MUSIC_PLAYERS) / sizeof(G_MUSIC_PLAYERS[0]);
 
-const VideoPlayerBinding G_VIDEO_PLAYERS[] = {
+const VideoViewerBinding G_VIDEO_PLAYERS[] = {
   { VK_OEM_COMMA, HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT, 1 },
   { VK_OEM_PERIOD, HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT, 5 },
   { VK_OEM_1, HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT, 6 },
@@ -194,7 +194,7 @@ const FocusSwitcherBinding G_FOCUS_SWITCHERS[] = {
 const unsigned int FOCUS_SWITCHER_COUNT = sizeof(G_FOCUS_SWITCHERS) / sizeof(G_FOCUS_SWITCHERS[0]);
 
 const AliasEntry Aliases[] = {
-  {"brw","Brawlhalla","Brawlhalla","AppLauncher"},
+  {"brw","Brawlhalla","AppLauncher"},
 };
 const size_t ALIAS_ENTRY_COUNT = ARRAY_LEN(Aliases);
 

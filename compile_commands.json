@@ -577,24 +577,6 @@
   },
   {
     "directory": "/home/diggy/Programming/Projects/C Code",
-    "file": "src/features/video_player.c",
-    "arguments": [
-      "gcc",
-      "-Wall",
-      "-Wextra",
-      "-I",
-      "include",
-      "-I/usr/include/freetype2",
-      "-MMD",
-      "-MP",
-      "-w",
-      "-g",
-      "-c",
-      "src/features/video_player.c"
-    ]
-  },
-  {
-    "directory": "/home/diggy/Programming/Projects/C Code",
     "file": "src/features/monitor_focus.c",
     "arguments": [
       "gcc",
@@ -645,6 +627,24 @@
       "-g",
       "-c",
       "src/features/music_player.c"
+    ]
+  },
+  {
+    "directory": "/home/diggy/Programming/Projects/C Code",
+    "file": "src/features/video_viewer.c",
+    "arguments": [
+      "gcc",
+      "-Wall",
+      "-Wextra",
+      "-I",
+      "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
+      "-w",
+      "-g",
+      "-c",
+      "src/features/video_viewer.c"
     ]
   },
   {
