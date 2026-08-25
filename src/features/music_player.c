@@ -40,7 +40,6 @@ static void music_enter_callback(const char* selection, ListBoxInfo* lb) {
 #else
     if (Platform_SetX11StringProperty("Music Player", "_MP_TRACK", result) &&
         Platform_SendX11Command("Music Player", "_MP_TRACK_CHANGED", 1)) {
-        printf("[MUSIC] Sent to existing player: %s\n", result);
         return;
     }
     if (strlen(MusicPlayerPath) > 0) {
