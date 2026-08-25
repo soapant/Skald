@@ -1,5 +1,4 @@
 #include "core/vim_context.h"
-#include "core/vim_view.h"
 #include "common.h"
 #include "core/common_ui.h"
 #include <string.h>
@@ -11,10 +10,6 @@
 void VimCtx_GetText(VimContext* ctx, char* buf, size_t cap) {
     if (!ctx || !buf || cap==0) return;
     buf[0]='\0';
-    if (ctx->view) {
-        VimView_GetText(ctx->view, buf, cap);
-        return;
-    }
     if (ctx->edit_state) {
         strncpy(buf, ctx->edit_state->user_input, cap-1);
         buf[cap-1]='\0';
@@ -34,10 +29,6 @@ void VimCtx_GetText(VimContext* ctx, char* buf, size_t cap) {
 }
 void VimCtx_SetText(VimContext* ctx, const char* text) {
     if (!ctx || !text) return;
-    if (ctx->view) {
-        VimView_SetText(ctx->view, text);
-        return;
-    }
     if (ctx->edit_state) {
         strncpy(ctx->edit_state->user_input, text, sizeof(ctx->edit_state->user_input)-1);
         ctx->edit_state->user_input[sizeof(ctx->edit_state->user_input)-1]='\0';
@@ -57,7 +48,6 @@ void VimCtx_SetText(VimContext* ctx, const char* text) {
 }
 int VimCtx_GetCursor(VimContext* ctx) {
     if (!ctx) return 0;
-    if (ctx->view) return VimView_GetCursor(ctx->view);
     if (ctx->edit_state) return (int)ctx->edit_state->cursor;
     if (ctx->state) return ctx->state->cursor;
     if (ctx->simple_state) return ctx->simple_state->cursor;
@@ -67,7 +57,6 @@ int VimCtx_GetCursor(VimContext* ctx) {
 }
 void VimCtx_SetCursor(VimContext* ctx, int pos) {
     if (!ctx) return;
-    if (ctx->view) { VimView_SetCursor(ctx->view, pos); return; }
     if (ctx->edit_state) {
         int len = (int)strlen(ctx->edit_state->user_input);
         if (pos<0) pos=0;
@@ -88,8 +77,6 @@ void VimCtx_SetCursor(VimContext* ctx, int pos) {
     }
 }
 VimContext VimCtx_FromGlobals(void) {
-    VimView* active = VimView_GetActive();
-    if (active) return VimView_ToContext(active);
     VimContext ctx = {0};
 #if defined(_WIN32)
     ctx.hEdit = g_ActiveEditControl;
@@ -161,24 +148,3 @@ VimContext VimCtx_FromEditState(SimplePromptState* state) {
     ctx.hEdit = g_ActiveEditControl;
     return ctx;
 }
-VimContext VimView_ToContext(VimView* view) {
-    VimContext ctx = {0};
-    if (!view) return ctx;
-    ctx.view = view;
-    // Prefer PromptState's lb for prompt windows (rendering source of truth)
-    extern PromptState* g_currentPromptState;
-    extern SimplePromptState* g_currentEditPopupState;
-    if (g_currentPromptState && g_currentPromptState->has_listbox) {
-        ctx.lb = &g_currentPromptState->listbox;
-        ctx.state = g_currentPromptState;
-    } else if (g_currentEditPopupState) {
-        ctx.edit_state = g_currentEditPopupState;
-        ctx.lb = NULL;
-    } else {
-        ctx.lb = view->has_listbox ? &view->lb : NULL;
-    }
-    ctx.hListBox = hListBox;
-    ctx.hEdit = g_ActiveEditControl;
-    return ctx;
-}
-VimContext VimCtx_FromView(struct VimView* view) { return VimView_ToContext(view); }

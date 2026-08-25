@@ -6,7 +6,6 @@
 #include "core/common_ui.h"
 #include "core/modal.h"
 #include "core/vim_context.h"
-#include "core/vim_view.h"
 #include "helpers.h"
 #include "features/window_switcher.h"
 #include "features/app_launcher.h"
@@ -29,7 +28,7 @@ bool CheckVimMotion(int pressed_vk, int modifiers, MotionAction* out_action, con
     extern PromptState* g_currentPromptState;
     extern SimplePromptState* g_currentEditPopupState;
     extern bool g_IsMainWindowActive;
-    if (!VimView_GetActive() && !g_currentPromptState && !g_currentEditPopupState && !g_IsMainWindowActive) return false;
+    if (!g_currentPromptState && !g_currentEditPopupState && !g_IsMainWindowActive) return false;
 #endif
     
     bool in_popup = IsWindowValid(g_hEditPopup);
