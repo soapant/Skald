@@ -20,17 +20,32 @@ void ZoxideHelper_RebuildCache(MappedFile* file, char*** cached_out, int* count_
     size_t lineCount = 0;
     Line* lines = Platform_FileGetLines(file, &lineCount);
     if (!lines) return;
-    *cached_out = (char**)malloc(lineCount * sizeof(char*));
+    char** new_cache = (char**)malloc(lineCount * sizeof(char*));
+    if (!new_cache) {
+#if !defined(_WIN32)
+        for (size_t i = 0; i < lineCount; i++) {
+            free(lines[i].ptr);
+        }
+#endif
+        free(lines);
+        return;
+    }
+    *cached_out = new_cache;
     *count_out = 0;
     for (size_t i = 0; i < lineCount; i++) {
         size_t len = lines[i].length;
         while (len > 0 && lines[i].ptr[len-1] == '\r') len--;
         if (len > 0) {
             char* cmd = (char*)malloc(len + 1);
-            memcpy(cmd, lines[i].ptr, len);
-            cmd[len] = '\0';
-            (*cached_out)[(*count_out)++] = cmd;
+            if (cmd) {
+                memcpy(cmd, lines[i].ptr, len);
+                cmd[len] = '\0';
+                (*cached_out)[(*count_out)++] = cmd;
+            }
         }
+#if !defined(_WIN32)
+        free(lines[i].ptr);
+#endif
     }
     free(lines);
 }
@@ -44,8 +59,9 @@ void ZoxideHelper_Edit(const char* selection, ListBoxInfo* lb, MappedFile* file,
     char* newQuery = Platform_EditTextPopup(selection, 960, 540, 1000, 300);
     if (newQuery != NULL) {
         WriteToCacheIndex(lb, lb->selected_index, newQuery);
+        Platform_ReplaceLineInMappedFile(file, lb->selected_index, newQuery);
+        free(newQuery);
     }
-    Platform_ReplaceLineInMappedFile(file, lb->selected_index, newQuery);
     ZoxideHelper_RebuildCache(file, cached, count);
     if (refresh) refresh("", hListBox, lb);
 }

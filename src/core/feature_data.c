@@ -13,6 +13,17 @@ void InitFeatureDataSystem(void) {
 
 void CleanupFeatureDataSystem(void) {
     if (g_feature_data) {
+        for (int i = 0; i < g_feature_data->size; i++) {
+            HashMapEntry* entry = g_feature_data->buckets[i];
+            while (entry) {
+                struct feature_data* fd = (struct feature_data*)entry->value;
+                if (fd) {
+                    free(fd->name);
+                    free(fd);
+                }
+                entry = entry->next;
+            }
+        }
         HashMap_Destroy(g_feature_data);
         g_feature_data = NULL;
     }

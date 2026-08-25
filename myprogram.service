@@ -1,12 +1,27 @@
 [Unit]
 Description=Custom keyboard remapper
-After=multi-user.target
+# FIX: Was `After=multi-user.target` + WantedBy=multi-user.target as a SYSTEM service.
+# That runs as root before the graphical session, with no DISPLAY/WAYLAND_DISPLAY/XAUTHORITY/XDG_RUNTIME_DIR
+# and wrong WorkingDirectory. Result: `Authorization required` / `Failed to open X11 display`,
+# and hotkeys reading /dev/input as root cannot forward to the user's Wayland session.
+# This must be a USER service: ~/.config/systemd/user/myprogram.service
+After=graphical-session.target
+PartOf=graphical-session.target
+Wants=graphical-session.target
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/myprogram
-Restart=always
+# data/ paths (data/todo.txt etc.) are relative -> project dir contains a space, so we
+# cannot use WorkingDirectory= with systemd's parsing. Use a shell wrapper that cd's first.
+# Alternative robust fix: sudo cp build/myprogram /usr/local/bin/myprogram and use WorkingDirectory=/home/diggy/Programming/Projects/C\ Code
+ExecStart=/bin/sh -c 'cd "/home/diggy/Programming/Projects/C Code" && exec "/home/diggy/Programming/Projects/C Code/build/myprogram"'
+# Inherit Wayland/X11 env from user manager. Ensure after login you run:
+#   systemctl --user import-environment DISPLAY WAYLAND_DISPLAY XDG_RUNTIME_DIR XAUTHORITY
+PassEnvironment=DISPLAY WAYLAND_DISPLAY XDG_RUNTIME_DIR XAUTHORITY
+Environment=XDG_RUNTIME_DIR=%t
+Restart=on-failure
 RestartSec=2
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=default.target
+WantedBy=graphical-session.target

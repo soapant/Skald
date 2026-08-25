@@ -1187,8 +1187,8 @@ LRESULT CALLBACK EditPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
     case WM_DESTROY: {
       g_ActiveEditControl = hEditControl;
         if (data) {
-          if (data->initial_text) free((void*)data->initial_text);
-            if (data->hFont) DeleteObject(data->hFont);
+          if (data->initial_text) { free((void*)data->initial_text); data->initial_text = NULL; }
+            if (data->hFont) { DeleteObject(data->hFont); data->hFont = NULL; }
               SetWindowLongPtrA(hwnd, GWLP_USERDATA, 0);
         }
       ForceWindowFocus(hPopupWnd, hEditControl);
