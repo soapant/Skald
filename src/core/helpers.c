@@ -431,7 +431,11 @@ bool GetFromHistory(ListBoxInfo* lb) {
             }
             if (!idx_ptr) {
                 idx_ptr = malloc(sizeof(int));
+                if (!idx_ptr) return true;
+                if (!history_indices) history_indices = HashMap_Create(32);
+                if (!history_indices) { free(idx_ptr); return true; }
                 HashMap_Put(history_indices, g_current_feature, idx_ptr);
+                if (!HashMap_Get(history_indices, g_current_feature)) { free(idx_ptr); return true; }
             }
             *idx_ptr = idx;
             return true;
@@ -786,10 +790,19 @@ Window Linux_CreateWindowEx(Display* dpy, int x, int y, int w, int h, unsigned l
     int depth = 0;
     Colormap cmap = 0;
     bool use_argb = false;
+    static Colormap cached_cmap = None;
+    static Visual* cached_visual = NULL;
+    static int cached_screen = -1;
     if (XMatchVisualInfo(dpy, screen, 32, TrueColor, &vinfo)) {
         visual = vinfo.visual;
         depth = 32;
-        cmap = XCreateColormap(dpy, RootWindow(dpy, screen), visual, AllocNone);
+        if (cached_cmap == None || cached_screen != screen || cached_visual != visual) {
+            if (cached_cmap != None) XFreeColormap(dpy, cached_cmap);
+            cached_cmap = XCreateColormap(dpy, RootWindow(dpy, screen), visual, AllocNone);
+            cached_visual = visual;
+            cached_screen = screen;
+        }
+        cmap = cached_cmap;
         use_argb = true;
     }
     Window win;

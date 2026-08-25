@@ -103,6 +103,7 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
 
   if (WH_TO_HWND(hPopupWnd) == NULL) {
     DeleteObject(hCustomFont);
+    if (lb_ptr) free(lb_ptr);
     return NULL;
   }
   SetWindowLongPtrA(WH_TO_HWND(hPopupWnd), GWLP_USERDATA, (LONG_PTR)(lb_ptr));
@@ -164,7 +165,11 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
 
   struct feature_data* data = GetFeatureData(g_current_feature);
   if (data) {
-    data->name = _strdup(g_current_feature);
+    char* new_name = _strdup(g_current_feature);
+    if (new_name) {
+        free(data->name);
+        data->name = new_name;
+    }
     data->items = window_list;
     data->item_count = count;
     data->refresh_callback = refresh_callback;
@@ -490,11 +495,17 @@ char* Platform_EditTextPopup(const char* initial_text, int centerX, int centerY,
 
   char* result = NULL;
   if (g_EditData && g_EditData->result) {
-    result = _strdup(g_EditData->result);
+    result = g_EditData->result;
+    g_EditData->result = NULL;
   }
 
   if (hPopupWndLocal && IsWindow(hPopupWndLocal)) {
     DestroyWindow(hPopupWndLocal);
+  }
+  if (pData) {
+    if (pData->result) free(pData->result);
+    // pData->initial_text and pData->hFont freed in WM_DESTROY
+    free(pData);
   }
   g_hEditPopup = WH_NULL;
   g_EditData = NULL;

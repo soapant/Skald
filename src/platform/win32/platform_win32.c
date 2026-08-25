@@ -9,7 +9,7 @@
 char* Platform_QueryZoxidePath(const char* query) {
     DWORD start_time = GetTickCount();
 
-    static char path[1024];
+    char path[1024];
     path[0] = '\0';
 
     char clean_query[512];
@@ -66,7 +66,9 @@ char* Platform_QueryZoxidePath(const char* query) {
         SubjectiveMessageDisplay(buffer,140,TimeOutForMessages,COLOR_ERROR);
         return NULL;
     }
-    return (strlen(path) > 0) ? path : NULL;
+    if (strlen(path) == 0) return NULL;
+    char* dup = _strdup(path);
+    return dup;
 }
 
 bool Platform_ShellExecuteWithVerb(const char* path, const char* verb, bool async) {
