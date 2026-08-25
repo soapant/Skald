@@ -438,6 +438,12 @@ typedef struct {
 typedef struct {
     int vk_code;
     int modifiers;
+    const char* terminal_command;
+} TerminalCommandHotkey;
+
+typedef struct {
+    int vk_code;
+    int modifiers;
     const char* exe_name;
     const char* QuickLinkQuery; 
 } QuickLinkHotkey;
