@@ -5,9 +5,11 @@
 #include "features/app_launcher.h"
 #include "platform/platform.h"
 
+char *allowed_audio_formats[] = {"mp3","ogg","flac"};
+
 static void music_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
     ClearFileList();
-    GetFilesRecursive(MusicPath, false);
+    GetFilesRecursive(MusicPath, false,allowed_audio_formats);
     
     const char** items = (const char**)malloc(GetFileCount() * sizeof(char*));
     if (!items) return;
@@ -73,7 +75,7 @@ bool HandleMusicPlayer(int vk_code, int modifiers, const char* current_title) {
 #endif
             } else {
                 ClearFileList();
-                GetFilesRecursive(MusicPath,false);
+                GetFilesRecursive(MusicPath,false,allowed_audio_formats);
                 
                 const char** initial_items = (const char**)malloc(GetFileCount() * sizeof(char*));
                 if (!initial_items) return false;

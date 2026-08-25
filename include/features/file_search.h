@@ -38,7 +38,7 @@ extern FileItemWithTime G_FILES_WITH_TIME[MAX_FILES];
 
 char* SearchFileInDirectory(const char* directory, const char* search_string);
 char* SearchFileRecursive(const char* directory, const char* search_string);
-void GetFilesRecursive(const char* dir_path, bool show_folder);
+void GetFilesRecursive(const char* dir_path, bool show_folder,char** list_of_allowed_extentions);
 void ClearFileList(void);
 int GetFileCount(void);
 void scan_directory_recursive(const char* dir_path);

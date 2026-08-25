@@ -85,7 +85,7 @@ char* SearchFileInDirectory(const char* directory, const char* search_string) {
     return NULL;
 #endif
 }
-static void GetFilesRecursiveWithTime(const char* dir_path, bool show_folder) {
+static void GetFilesRecursiveWithTime(const char* dir_path, bool show_folder, char** list_of_allowed_extentions) {
     char expanded_dir[MAX_PATH];
     if (!Platform_ExpandPath(dir_path, expanded_dir, sizeof(expanded_dir))) return;
     dir_path = expanded_dir;
@@ -107,21 +107,42 @@ static void GetFilesRecursiveWithTime(const char* dir_path, bool show_folder) {
         snprintf(full_path, sizeof(full_path), "%s\\%s", dir_path, find_data.cFileName);
 
         if (find_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-            if (StrCmpIA(find_data.cFileName, "node_modules") == 0 ||
-                StrCmpIA(find_data.cFileName, ".git") == 0 ||
-                StrCmpIA(find_data.cFileName, "bin") == 0 ||
-                StrCmpIA(find_data.cFileName, "obj") == 0 ||
-                StrCmpIA(find_data.cFileName, "build") == 0) {
-                continue;
+            // Check if directory should be ignored
+            bool should_ignore = false;
+            for (int i = 0; i < sizeof(ListOfShitToIgnore) / sizeof(ListOfShitToIgnore[0]); i++) {
+                if (StrCmpIA(find_data.cFileName, ListOfShitToIgnore[i]) == 0) {
+                    should_ignore = true;
+                    break;
+                }
             }
-            GetFilesRecursiveWithTime(full_path, show_folder);
+            if (!should_ignore) {
+                GetFilesRecursiveWithTime(full_path, show_folder, list_of_allowed_extentions);
+            }
         } else {
-            if (G_FILE_COUNT < MAX_FILES) {
+            bool allowed = true;
+            if (list_of_allowed_extentions) {
+                allowed = false;
+                const char* ext = strrchr(find_data.cFileName, '.');
+                if (ext) {
+                    ext++;
+                    int ext_count = 0;
+                    while (list_of_allowed_extentions[ext_count] != NULL) {
+                        ext_count++;
+                    }
+                    for (int i = 0; i < ext_count; i++) {
+                        if (list_of_allowed_extentions[i] && StrCmpIA(ext, list_of_allowed_extentions[i]) == 0) {
+                            allowed = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            if (allowed && G_FILE_COUNT < MAX_FILES) {
                 char clean_name[256];
                 strncpy(clean_name, find_data.cFileName, sizeof(clean_name) - 1);
                 PathRemoveExtensionA(clean_name);
 
-                
                 if (show_folder) {
                     char folder_name[MAX_PATH];
                     strncpy(folder_name, dir_path, sizeof(folder_name) - 1);
@@ -141,7 +162,6 @@ static void GetFilesRecursiveWithTime(const char* dir_path, bool show_folder) {
                 strncpy(G_FILES_WITH_TIME[G_FILE_COUNT].path, full_path, 
                         sizeof(G_FILES_WITH_TIME[G_FILE_COUNT].path) - 1);
                 
-                
                 G_FILES_WITH_TIME[G_FILE_COUNT].last_write = find_data.ftLastWriteTime;
                 G_FILE_COUNT++;
             }
@@ -160,35 +180,60 @@ static void GetFilesRecursiveWithTime(const char* dir_path, bool show_folder) {
         struct stat st;
         if (stat(full_path, &st)!=0) continue;
         if (S_ISDIR(st.st_mode)) {
-            if (strcasecmp(entry->d_name,"node_modules")==0 ||
-                strcasecmp(entry->d_name,".git")==0 ||
-                strcasecmp(entry->d_name,"bin")==0 ||
-                strcasecmp(entry->d_name,"obj")==0 ||
-                strcasecmp(entry->d_name,"build")==0) continue;
-            GetFilesRecursiveWithTime(full_path, show_folder);
-        } else {
-            if (G_FILE_COUNT >= MAX_FILES) break;
-            char clean_name[256];
-            strncpy(clean_name, entry->d_name, sizeof(clean_name)-1);
-            clean_name[sizeof(clean_name)-1]='\0';
-            char* dot = strrchr(clean_name, '.');
-            if (dot) *dot='\0';
-            if (show_folder) {
-                char folder_name[MAX_PATH];
-                strncpy(folder_name, dir_path, sizeof(folder_name)-1);
-                folder_name[sizeof(folder_name)-1]='\0';
-                char* last_slash = strrchr(folder_name, '/');
-                char* last_bs = strrchr(folder_name, '\\');
-                if (last_bs && (!last_slash || last_bs > last_slash)) last_slash = last_bs;
-                if (last_slash) snprintf(G_FILES_WITH_TIME[G_FILE_COUNT].name, sizeof(G_FILES_WITH_TIME[G_FILE_COUNT].name), "%s/%s", last_slash+1, clean_name);
-                else strncpy(G_FILES_WITH_TIME[G_FILE_COUNT].name, clean_name, sizeof(G_FILES_WITH_TIME[G_FILE_COUNT].name)-1);
-            } else {
-                strncpy(G_FILES_WITH_TIME[G_FILE_COUNT].name, clean_name, sizeof(G_FILES_WITH_TIME[G_FILE_COUNT].name)-1);
+            bool should_ignore = false;
+            for (int i = 0; i < sizeof(ListOfShitToIgnore) / sizeof(ListOfShitToIgnore[0]); i++) {
+                if (strcasecmp(entry->d_name, ListOfShitToIgnore[i]) == 0) {
+                    should_ignore = true;
+                    break;
+                }
             }
-            strncpy(G_FILES_WITH_TIME[G_FILE_COUNT].path, full_path, sizeof(G_FILES_WITH_TIME[G_FILE_COUNT].path)-1);
-            G_FILES_WITH_TIME[G_FILE_COUNT].last_write.dwLowDateTime = (uint32_t)(st.st_mtime & 0xFFFFFFFF);
-            G_FILES_WITH_TIME[G_FILE_COUNT].last_write.dwHighDateTime = (uint32_t)((st.st_mtime >> 32) & 0xFFFFFFFF);
-            G_FILE_COUNT++;
+            if (!should_ignore) {
+                GetFilesRecursiveWithTime(full_path, show_folder, list_of_allowed_extentions);
+            }
+        } else {
+            bool allowed = true;
+            if (list_of_allowed_extentions) {
+                allowed = false;
+                const char* ext = strrchr(entry->d_name, '.');
+                if (ext) {
+                    ext++;
+                    int ext_count = 0;
+                    while (list_of_allowed_extentions[ext_count] != NULL) {
+                        ext_count++;
+                    }
+                    for (int i = 0; i < ext_count; i++) {
+                        if (list_of_allowed_extentions[i] && strcasecmp(ext, list_of_allowed_extentions[i]) == 0) {
+                            allowed = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            if (allowed) {
+                if (G_FILE_COUNT >= MAX_FILES) break;
+                char clean_name[256];
+                strncpy(clean_name, entry->d_name, sizeof(clean_name)-1);
+                clean_name[sizeof(clean_name)-1]='\0';
+                char* dot = strrchr(clean_name, '.');
+                if (dot) *dot='\0';
+                if (show_folder) {
+                    char folder_name[MAX_PATH];
+                    strncpy(folder_name, dir_path, sizeof(folder_name)-1);
+                    folder_name[sizeof(folder_name)-1]='\0';
+                    char* last_slash = strrchr(folder_name, '/');
+                    char* last_bs = strrchr(folder_name, '\\');
+                    if (last_bs && (!last_slash || last_bs > last_slash)) last_slash = last_bs;
+                    if (last_slash) snprintf(G_FILES_WITH_TIME[G_FILE_COUNT].name, sizeof(G_FILES_WITH_TIME[G_FILE_COUNT].name), "%s/%s", last_slash+1, clean_name);
+                    else strncpy(G_FILES_WITH_TIME[G_FILE_COUNT].name, clean_name, sizeof(G_FILES_WITH_TIME[G_FILE_COUNT].name)-1);
+                } else {
+                    strncpy(G_FILES_WITH_TIME[G_FILE_COUNT].name, clean_name, sizeof(G_FILES_WITH_TIME[G_FILE_COUNT].name)-1);
+                }
+                strncpy(G_FILES_WITH_TIME[G_FILE_COUNT].path, full_path, sizeof(G_FILES_WITH_TIME[G_FILE_COUNT].path)-1);
+                G_FILES_WITH_TIME[G_FILE_COUNT].last_write.dwLowDateTime = (uint32_t)(st.st_mtime & 0xFFFFFFFF);
+                G_FILES_WITH_TIME[G_FILE_COUNT].last_write.dwHighDateTime = (uint32_t)((st.st_mtime >> 32) & 0xFFFFFFFF);
+                G_FILE_COUNT++;
+            }
         }
     }
     closedir(dir);
@@ -208,9 +253,9 @@ static void SortFilesByTime(void) {
     qsort(G_FILES_WITH_TIME, G_FILE_COUNT, sizeof(FileItemWithTime), CompareFileByTime);
 }
 
-void GetFilesRecursive(const char* dir_path, bool show_folder) {
+void GetFilesRecursive(const char* dir_path, bool show_folder,char** list_of_allowed_extentions) {
     G_FILE_COUNT = 0;
-    GetFilesRecursiveWithTime(dir_path, show_folder);
+    GetFilesRecursiveWithTime(dir_path, show_folder,list_of_allowed_extentions);
     SortFilesByTime();
     
     for (int i = 0; i < G_FILE_COUNT && i < MAX_FILES; i++) {
