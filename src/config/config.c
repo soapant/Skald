@@ -30,7 +30,7 @@ const char* MusicPlayerPath = "{DEV}/Music Player/music_player.exe";
 // const char* MusicPlayerPath = "{MISC}/Useful Repos/musializer/build/musializer.exe";
 const char* VideoViewerPath = "{DEV}/Video Viewer/video_viewer.exe";
 const char* TextEditorPath = "{PROGRAM_FILES}/bin/nvim";
-const char* MusicPath = "{MUSIC}/Mp3";
+const char* MusicPath = "{MUSIC}";
 const char* VideosPath = "{VIDEOS}";
 const char* IconPath = "{MISC}/switch_window.ico";
 

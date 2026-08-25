@@ -6,9 +6,11 @@
 #include "features/app_launcher.h"
 #include "platform/platform.h"
 
+char *allowed_video_formats[] = {"webm","mp4"};
+
 static void video_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
     ClearFileList();
-    GetFilesRecursive(VideosPath, false);
+    GetFilesRecursive(VideosPath, false,allowed_video_formats);
     
     const char** items = (const char**)malloc(GetFileCount() * sizeof(char*));
     if (!items) return;
@@ -72,10 +74,10 @@ bool HandleVideoViewer(int vk_code, int modifiers, const char* current_title) {
                 return Platform_SetX11Property("Video Viewer", "_MP_CMD", binding->code);
 #endif
             } else {
-                const char* prompt[1] = { "Search for video..." };
+                const char* prompt[1] = { "Your Directory Is Empty (Has No Videos)" };
                 
                 ClearFileList();
-                GetFilesRecursive(VideosPath,false);
+                GetFilesRecursive(VideosPath,false,allowed_video_formats);
                 
                 const char** initial_items = (const char**)malloc(GetFileCount() * sizeof(char*));
                 if (!initial_items) return false;
