@@ -4,7 +4,7 @@
 
 #include <stdbool.h>
 #include "core/modal.h"
-#include "core/vim_context.h"
+#include "core/vim.h"
 
 typedef enum {
     MOTION_NONE = 0,

@@ -4,7 +4,7 @@
 #include "platform/platform.h"
 #include "helpers.h"
 #include "core/common_ui.h"
-#include "core/vim_context.h"
+#include "core/vim.h"
 #include "bindings/bindings.h"
 #include "bindings/vim_motions.h"
 #include "bindings/vim_helpers.h"
@@ -169,7 +169,7 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
     if (wParam == VK_UP) {
       if (ctrl_pressed) {
         if (state) {
-          VimContext ctx = VimCtx_FromState(state);
+          VimContext ctx = Vim_FromState(state);
           SetCursorToStartOfText(&ctx);
         }
         return true;
@@ -180,7 +180,7 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
     if (wParam == VK_DOWN) {
       if (ctrl_pressed) {
         if (state) {
-          VimContext ctx = VimCtx_FromState(state);
+          VimContext ctx = Vim_FromState(state);
           SetCursorToEndOfText(&ctx);
         }
         return true;
@@ -196,14 +196,14 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
     }
     if (wParam == VK_HOME) {
       if (state) {
-        VimContext ctx = VimCtx_FromState(state);
+        VimContext ctx = Vim_FromState(state);
         SetCursorToStartOfText(&ctx);
       }
       return true;
     }
     if (wParam == VK_END) {
       if (state) {
-        VimContext ctx = VimCtx_FromState(state);
+        VimContext ctx = Vim_FromState(state);
         SetCursorToEndOfText(&ctx);
       }
       return true;

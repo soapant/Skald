@@ -2,7 +2,7 @@
 #include "bindings/vim_motions.h"
 #include "bindings/vim_helpers.h"
 #include "core/common_ui.h"
-#include "core/vim_context.h"
+#include "core/vim.h"
 #include "helpers.h"
 #include <ctype.h>
 #if !defined(_WIN32)
@@ -20,16 +20,16 @@ void HandleEnterNormal(VimContext* ctx) {
 
 void HandleEnterInsertOut(VimContext* ctx) { 
     if (!ctx) return;
-    int pos = VimCtx_GetCursor(ctx);
-    VimCtx_SetCursor(ctx, pos + 1);
+    int pos = Vim_GetCursor(ctx);
+    Vim_SetCursor(ctx, pos + 1);
     SetMode(MODE_INSERT); 
     printf("[VIM] Entered INSERT mode\n");
 }
 
 void HandleEnterInsertIn(VimContext* ctx) { 
     if (!ctx) return;
-    int pos = VimCtx_GetCursor(ctx);
-    VimCtx_SetCursor(ctx, pos);
+    int pos = Vim_GetCursor(ctx);
+    Vim_SetCursor(ctx, pos);
     SetMode(MODE_INSERT); 
     printf("[VIM] Entered INSERT mode\n");
 }
@@ -42,8 +42,8 @@ void HandleEnterVisual(VimContext* ctx) {
 
 void HandleMoveLeft(VimContext* ctx) {
     if (!ctx) return;
-    int pos = VimCtx_GetCursor(ctx);
-    if (pos > 0) VimCtx_SetCursor(ctx, pos - 1);
+    int pos = Vim_GetCursor(ctx);
+    if (pos > 0) Vim_SetCursor(ctx, pos - 1);
 }
 
 void HandleEnter(VimContext* ctx) {
@@ -51,14 +51,14 @@ void HandleEnter(VimContext* ctx) {
     if (ctx->lb && UI_IsListBoxSelected(ctx->lb)) {
         // simulate enter on selection - use g_enter_callback via state
         // For abstraction, just move cursor right as fallback
-        int pos = VimCtx_GetCursor(ctx);
-        VimCtx_SetCursor(ctx, pos + 1);
+        int pos = Vim_GetCursor(ctx);
+        Vim_SetCursor(ctx, pos + 1);
     } else {
-        int pos = VimCtx_GetCursor(ctx);
+        int pos = Vim_GetCursor(ctx);
         char text[512];
-        VimCtx_GetText(ctx, text, sizeof(text));
+        Vim_GetText(ctx, text, sizeof(text));
         int len = (int)strlen(text);
-        if (pos < len) VimCtx_SetCursor(ctx, pos + 1);
+        if (pos < len) Vim_SetCursor(ctx, pos + 1);
     }
 }
 void HandleMoveUp(VimContext* ctx) {
@@ -67,11 +67,11 @@ void HandleMoveUp(VimContext* ctx) {
 }
 void HandleMoveRight(VimContext* ctx) {
     if (!ctx) return;
-    int pos = VimCtx_GetCursor(ctx);
+    int pos = Vim_GetCursor(ctx);
     char text[512];
-    VimCtx_GetText(ctx, text, sizeof(text));
+    Vim_GetText(ctx, text, sizeof(text));
     int len = (int)strlen(text);
-    if (pos < len) VimCtx_SetCursor(ctx, pos + 1);
+    if (pos < len) Vim_SetCursor(ctx, pos + 1);
 }
 
 void HandleMoveDown(VimContext* ctx) {
@@ -101,13 +101,13 @@ void HandleDeleteCharNormal(VimContext* ctx) {
 
 void HandleDeleteLine(VimContext* ctx) {
     if (!ctx) return;
-    VimCtx_SetText(ctx, "");
+    Vim_SetText(ctx, "");
     printf("[VIM] Deleted Entire Search Box \n");
 }
 
 void HandleDeleteLineInsert(VimContext* ctx) {
     if (!ctx) return;
-    VimCtx_SetText(ctx, "");
+    Vim_SetText(ctx, "");
     SetMode(MODE_INSERT);
     printf("[VIM] Deleted Entire Search Box & Switched to Insert\n");
 }
@@ -164,7 +164,7 @@ void HandleExitWindow(VimContext* ctx) {
 void HandleYankLine(VimContext* ctx) {
     if (!ctx) return;
     char textBuffer[512] = {0};
-    VimCtx_GetText(ctx, textBuffer, sizeof(textBuffer));
+    Vim_GetText(ctx, textBuffer, sizeof(textBuffer));
     textBuffer[strcspn(textBuffer, "\r\n")] = '\0';
     if (strlen(textBuffer) > 0) {
         Platform_CopyToClipboard(textBuffer);
@@ -179,7 +179,7 @@ void HandleInsertControlEnter(VimContext* ctx) {
   if (UI_IsListBoxSelected(ctx->lb) && ctx->lb) {
     snprintf(text,sizeof(text),"%s",ctx->lb->populated_cache[ctx->lb->selected_index]);
   } else {
-    VimCtx_GetText(ctx, text, sizeof(text));
+    Vim_GetText(ctx, text, sizeof(text));
   }
   if (g_ctrl_enter_callback != NULL) {
     g_ctrl_enter_callback(text, ctx->lb);
@@ -190,16 +190,16 @@ void HandleInsertControlEnter(VimContext* ctx) {
 void HandleMoveWordForward(VimContext* ctx) {
     if (!ctx) return;
     char text[512];
-    VimCtx_GetText(ctx, text, sizeof(text));
-    int start = VimCtx_GetCursor(ctx);
+    Vim_GetText(ctx, text, sizeof(text));
+    int start = Vim_GetCursor(ctx);
     int len = strlen(text);
     for (int i = start + 1;i <= len;i++) {
         if (i == len) {
-          VimCtx_SetCursor(ctx, len - 1);
+          Vim_SetCursor(ctx, len - 1);
           break;
         }
         if (text[i] == ' ') {
-          VimCtx_SetCursor(ctx, i + 1);
+          Vim_SetCursor(ctx, i + 1);
           break;
         }
     }
@@ -208,8 +208,8 @@ void HandleMoveWordForward(VimContext* ctx) {
 void HandleMoveWordBackward(VimContext* ctx) {
     if (!ctx) return;
     char text[512];
-    VimCtx_GetText(ctx, text, sizeof(text));
-    int pos = VimCtx_GetCursor(ctx);
+    Vim_GetText(ctx, text, sizeof(text));
+    int pos = Vim_GetCursor(ctx);
     for (int i = pos - 1; i >= -1; i--) {
       char current_char = (i >= 0) ? text[i] : ' ';
       if (current_char != ' ') {
@@ -218,13 +218,13 @@ void HandleMoveWordBackward(VimContext* ctx) {
         for (int j = i - 1; j >= -1; j--) {
           char next_char = (j >= 0) ? text[j] : ' ';
           if (next_char != ' ') {
-            VimCtx_SetCursor(ctx, j + 1);
+            Vim_SetCursor(ctx, j + 1);
             return; 
           } else {
             continue;
           }
         }
-        VimCtx_SetCursor(ctx, 0);
+        Vim_SetCursor(ctx, 0);
         return;
       }
     }
@@ -315,8 +315,8 @@ void HandleCopyToSearch(VimContext* ctx) {
   if (!ctx) return;
   if (ctx->lb && UI_IsListBoxSelected(ctx->lb)) {
     const char* text = ctx->lb->populated_cache[ctx->lb->selected_index];
-    VimCtx_SetText(ctx, text);
-    VimCtx_SetCursor(ctx, (int)strlen(text));
+    Vim_SetText(ctx, text);
+    Vim_SetCursor(ctx, (int)strlen(text));
   }
 }
 void HandleToggleHistory(VimContext* ctx) {
@@ -336,27 +336,27 @@ void HandleShowFullText(VimContext* ctx) {
 }
 
 void SearchTextForward(int key) {
-  VimContext ctx = VimCtx_FromGlobals();
+  VimContext ctx = Vim_FromGlobals();
   char text[512];
-  VimCtx_GetText(&ctx, text, sizeof(text));
-  int cursor = VimCtx_GetCursor(&ctx);
+  Vim_GetText(&ctx, text, sizeof(text));
+  int cursor = Vim_GetCursor(&ctx);
   for (int i = 0; i < (int)strlen(text);i++) {
     if (tolower((unsigned char)text[i]) == tolower((unsigned char)(char)key)) {
       if (i <= cursor ) continue;
-      VimCtx_SetCursor(&ctx,i);
+      Vim_SetCursor(&ctx,i);
       return;
     }
   }
 }
 void SearchTextBackward(int key) {
-  VimContext ctx = VimCtx_FromGlobals();
+  VimContext ctx = Vim_FromGlobals();
   char text[512];
-  VimCtx_GetText(&ctx, text, sizeof(text));
-  int cursor = VimCtx_GetCursor(&ctx);
+  Vim_GetText(&ctx, text, sizeof(text));
+  int cursor = Vim_GetCursor(&ctx);
   for (int i = 0; i < (int)strlen(text);i++) {
     if (tolower((unsigned char)text[i]) == tolower((unsigned char)(char)key)) {
       if (i >= cursor ) continue;
-      VimCtx_SetCursor(&ctx,i);
+      Vim_SetCursor(&ctx,i);
       return;
     }
   }
@@ -377,13 +377,13 @@ void HandleDeleteTillEnd(VimContext* ctx) {
   if (!ctx) return;
   if (ctx->lb && UI_IsListBoxSelected(ctx->lb)) return;
   char text[512];
-  VimCtx_GetText(ctx, text, sizeof(text));
-  int cursor = VimCtx_GetCursor(ctx);
+  Vim_GetText(ctx, text, sizeof(text));
+  int cursor = Vim_GetCursor(ctx);
   for (int i = cursor; i < (int)strlen(text); ++i){
       text[i] = '\0';
   }
-  VimCtx_SetText(ctx, text);
-  VimCtx_SetCursor(ctx, cursor);
+  Vim_SetText(ctx, text);
+  Vim_SetCursor(ctx, cursor);
 }
 void HandlePageUp(VimContext* ctx) {
   if (!ctx || !ctx->lb) return;
