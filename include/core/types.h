@@ -439,6 +439,7 @@ typedef struct {
     int vk_code;
     int modifiers;
     const char* terminal_command;
+    bool open_in_terminal
 } TerminalCommandHotkey;
 
 typedef struct {
