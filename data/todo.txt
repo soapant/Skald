@@ -1,5 +1,5 @@
 the copying only works while hte program is active||[Cprogram]|[DontForget]
-calc.h should be able to handle longer strings like 2 x 4 x 19 or something||[Cprogram]
+calc.h should be able to handle longer strings like 2 x 4 x 19  something||[Cprogram]
 the history system doest work its only the last inputted||[Cprogram]|[Bug]
 make a preset for the not plugged in to modify system settings||[Misc]|[DontForget]
 maybe you can make a central sort of control where yo ucan oepn other parts of the program so you dont have to clutter hotkeys||[Cprogram]|[DontForget]|[Fun]

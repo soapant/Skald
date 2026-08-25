@@ -5,7 +5,6 @@
 #include "platform/platform.h"
 #include "core/types.h"
 #include "core/timer.h"
-#include "core/vim_view.h"
 #include "helpers.h"
 #include "bindings/bindings.h"
 #include "bindings/hotkey_definitions.h"
