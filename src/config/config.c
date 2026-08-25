@@ -112,27 +112,30 @@ const char* ListOfShitToIgnore[30] = {
   "build"
 };
 
+const TerminalCommandHotkey G_TERMINAL_COMMAND_HOTKEYS[] = {
+    { 'B', HOTKEY_MOD_ALT_CTRL,"btop" },
+};
+const unsigned int TERMINAL_COMMAND_HOTKEY_COUNT = sizeof(G_TERMINAL_COMMAND_HOTKEYS) / sizeof(G_TERMINAL_COMMAND_HOTKEYS[0]);
+
 const AppHotkey G_APP_HOTKEYS[] = {
-    { VK_RETURN, HOTKEY_MOD_ALT, "*", "Alacritty" },
-    { 'B', HOTKEY_MOD_CTRL | HOTKEY_MOD_SHIFT, "*", "Zen" },
 };
 const unsigned int APP_HOTKEY_COUNT = sizeof(G_APP_HOTKEYS) / sizeof(G_APP_HOTKEYS[0]);
 
 const MiscHotkey G_MISC_HOTKEYS[] = {
-    // {'G', HOTKEY_MOD_CTRL | HOTKEY_MOD_ALT, "*", "{DEV}/retard games/Grand Theft Auto V Legacy/PlayGTAV.bat" },
-    // {'O', HOTKEY_MOD_CTRL | HOTKEY_MOD_ALT, "*", "{APPDATA}/Microsoft/Windows/Start Menu/Programs/OnTopReplica/OnTopReplica.lnk"}
+    // {'G', HOTKEY_MOD_ALT_CTRL, "*", "{DEV}/retard games/Grand Theft Auto V Legacy/PlayGTAV.bat" },
+    // {'O', HOTKEY_MOD_ALT_CTRL, "*", "{APPDATA}/Microsoft/Windows/Start Menu/Programs/OnTopReplica/OnTopReplica.lnk"}
 };
 const unsigned int MISC_HOTKEY_COUNT = sizeof(G_MISC_HOTKEYS) / sizeof(G_MISC_HOTKEYS[0]);
 
 const QuickLinkHotkey G_QUICKLINK_HOTKEYS[] = {
-    {'Y', HOTKEY_MOD_CTRL | HOTKEY_MOD_ALT, "*", "https://youtube.com" },
-    // {'M', HOTKEY_MOD_CTRL | HOTKEY_MOD_ALT, "*", "https://messenger.com" },
+    {'Y', HOTKEY_MOD_ALT_CTRL, "*", "https://youtube.com" },
+    // {'M', HOTKEY_MOD_ALT_CTRL, "*", "https://messenger.com" },
 };
 const unsigned int QUICKLINK_HOTKEY_COUNT = sizeof(G_QUICKLINK_HOTKEYS) / sizeof(G_QUICKLINK_HOTKEYS[0]);
 
 const TextSnippet G_TEXT_SNIPPETS[] = {
-    { 'O', HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL, "*", "seifisbad@gmail.com" },
-    { 'P', HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL, "*", "i_am_retarded1" },
+    { 'O', HOTKEY_MOD_ALT_CTRL, "*", "seifisbad@gmail.com" },
+    { 'P', HOTKEY_MOD_ALT_CTRL, "*", "i_am_retarded1" },
 };
 const unsigned int TEXT_SNIPPET_COUNT = sizeof(G_TEXT_SNIPPETS) / sizeof(G_TEXT_SNIPPETS[0]);
 
@@ -147,9 +150,9 @@ const MusicPlayerBinding G_MUSIC_PLAYERS[] = {
 const unsigned int MUSIC_PLAYER_COUNT = sizeof(G_MUSIC_PLAYERS) / sizeof(G_MUSIC_PLAYERS[0]);
 
 const VideoViewerBinding G_VIDEO_PLAYERS[] = {
-  { VK_OEM_COMMA, HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT, 1 },
-  { VK_OEM_PERIOD, HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT, 5 },
-  { VK_OEM_1, HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT, 6 },
+  { VK_OEM_COMMA, HOTKEY_MOD_ALT_SHIFT, 1 },
+  { VK_OEM_PERIOD, HOTKEY_MOD_ALT_SHIFT, 5 },
+  { VK_OEM_1, HOTKEY_MOD_ALT_SHIFT, 6 },
   { VIDEO_VIEWER_KEY, HOTKEY_MOD_ALT, 69 },
 };
 
@@ -160,7 +163,7 @@ const char* bkp_windows[] = {"Brawlhalla","Fortnite","RocketLeague","Factorio","
 const BulkKillProcessBinding G_BULK_KILL_PROCESS[] = {
     {
         'P',           
-        HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL,               
+        HOTKEY_MOD_ALT_CTRL,               
         bkp_windows,              
         sizeof(bkp_windows) / sizeof(bkp_windows[0])
     },
