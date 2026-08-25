@@ -804,59 +804,17 @@ void ScanAndHookKeyboards(void) {
             unsigned long ev_bits[EV_MAX / 8 + 1] = {0};
             if (ioctl(fd, EVIOCGBIT(0, sizeof(ev_bits)), ev_bits) >= 0) {
                 if (ev_bits[0] & (1 << EV_KEY)) {
-                    // Skip our own virtual keyboard to avoid self-grab loop (would brick)
                     char dev_name[256] = {0};
-                    if (ioctl(fd, EVIOCGNAME(sizeof(dev_name)), dev_name) == 0) {
-                        if (strstr(dev_name, "myprogram") || strstr(dev_name, "Custom Remap")) {
-                            fprintf(stderr, "[GRAB] skipping %s (self virtual device '%s')\n", full_path, dev_name);
-                            close(fd);
-                            continue;
-                        }
-                    }
-                    // Brick fix: never grab mice/touchpads/combo devices that have REL or ABS
-                    // Pure keyboards are EV_SYN+EV_KEY+maybe EV_MSC/LED/REP, never REL/ABS.
-                    // Grabbing a mouse (EV_REL) bricks cursor because uinput lacks REL setup.
-                    bool is_mouse_or_touch = (ev_bits[0] & (1 << EV_REL)) || (ev_bits[0] & (1 << EV_ABS));
-                    if (is_mouse_or_touch) {
-                        // Don't grab - just monitor read-only for hotkeys (no swallow) so mouse stays alive
-                        // But we still need to detect hotkeys on this node? Most hotkeys come from pure kbd,
-                        // combo devices handled via their pure-kbd subnode. Skipping grab avoids brick.
-                        fprintf(stderr, "[GRAB] skipping %s (has REL/ABS, mouse/touch/combo - no grab)\n", full_path);
-                        close(fd);
-                        continue;
-                    }
-                    // Further filter: require at least one alphabet key (A-Z) to avoid power/video buttons
                     unsigned long key_bits[(KEY_MAX/8)+1] = {0};
                     bool has_alpha = false;
                     if (ioctl(fd, EVIOCGBIT(EV_KEY, sizeof(key_bits)), key_bits) >= 0) {
-                        // KEY_A = 30
                         if (key_bits[30/ (8*sizeof(unsigned long))] & (1UL << (30 % (8*sizeof(unsigned long))))) has_alpha = true;
-                        // also check KEY_ESC as fallback for small keyboards
                         if (!has_alpha && (key_bits[KEY_ESC/ (8*sizeof(unsigned long))] & (1UL << (KEY_ESC % (8*sizeof(unsigned long)))))) {
-                            // check for space as additional heuristic
                             if (key_bits[KEY_SPACE/ (8*sizeof(unsigned long))] & (1UL << (KEY_SPACE % (8*sizeof(unsigned long))))) has_alpha = true;
-                        }
-                        // If neither A nor ESC+SPACE, treat as non-keyboard (e.g., power button with only KEY_POWER)
-                        if (!has_alpha) {
-                            fprintf(stderr, "[GRAB] skipping %s (no alpha keys, likely power/video button)\n", full_path);
-                            close(fd);
-                            continue;
                         }
                     }
                     active_kbs[active_kb_count].fd = fd;
                     strncpy(active_kbs[active_kb_count].path, full_path, 255);
-                    // try to grab for swallowing; non-fatal if fails (e.g., permission)
-                    if (g_uinput_fd >= 0 && ioctl(fd, EVIOCGRAB, 1) == 0) {
-                        g_device_grabbed[active_kb_count] = true;
-                        fprintf(stderr, "[GRAB] grabbed %s (swallow enabled)\n", full_path);
-                    } else {
-                        g_device_grabbed[active_kb_count] = false;
-                        if (g_uinput_fd < 0) {
-                            fprintf(stderr, "[GRAB] not grabbing %s (no uinput, would brick)\n", full_path);
-                        } else {
-                            fprintf(stderr, "[GRAB] EVIOCGRAB failed for %s: %s (hotkeys work, no swallow)\n", full_path, strerror(errno));
-                        }
-                    }
                     active_kb_count++;
                 } else {
                     close(fd);
@@ -988,10 +946,7 @@ void Platform_RunHotKeyMessageLoop(void) {
     bool use_grab = should_use_grab();
     if (!use_grab) {
         g_uinput_fd = -1;
-        fprintf(stderr, "[SYSTEM] Wayland/Hyprland detected - using read-only monitor (no EVIOCGRAB, pending-key swallow for prompts)\n");
     } else {
-        // Option B: try to create uinput first so we can forward when grabbed.
-        // If creation fails we still run (hotkeys work, but swallow disabled).
         g_uinput_fd = init_uinput();
         if (g_uinput_fd < 0) {
             fprintf(stderr, "[SYSTEM] continuing without uinput (no swallow)\n");
@@ -1003,13 +958,6 @@ void Platform_RunHotKeyMessageLoop(void) {
         fprintf(stderr, "[ERROR] No structural keyboard nodes located under /dev/input/\n");
         destroy_uinput();
         return;
-    }
-
-    printf("[SYSTEM] Low-Level Kernel Hook installed across %d input streams (%s).\n", active_kb_count, g_uinput_fd>=0?"grab+uinput":"read-only");
-    if (!Platform_IsRunningAsRoot()) {
-        printf("[SYSTEM] Running as user '%s' (no sudo required, input group handles perms)\n", Platform_GetRealUser());
-    } else {
-        printf("[SYSTEM] Running as root (sudo compatibility mode, will sudo -u '%s' for launches)\n", Platform_GetRealUser());
     }
 
     struct pollfd *fds = calloc(active_kb_count, sizeof(struct pollfd));
