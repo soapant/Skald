@@ -4,3 +4,4 @@
 *.d
 /build/obj
 /build/bundle
+/nohup.out
