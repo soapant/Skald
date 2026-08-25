@@ -749,28 +749,34 @@ void HandleGlobalKeyEvent(int key_code, int value) {
     TimerEnd(timer9, "CheckQuickLinkHotkeyBindings");
 
     WinTimer timer10 = TimerStart();
+    if (CheckTerminalCommandHotkeyBindings(pressed_vk, modifiers)) {
+      return;
+    }
+    TimerEnd(timer10, "HandleTerminalCommand");
+
+    WinTimer timer11 = TimerStart();
     if (HandleFocusSwitcher(pressed_vk, modifiers, fgTitle)) {
         return;
     }
-    TimerEnd(timer10, "HandleFocusSwitcher");
+    TimerEnd(timer11, "HandleFocusSwitcher");
 
-    WinTimer timer11 = TimerStart();
+    WinTimer timer12 = TimerStart();
     if (HandleMusicPlayer(pressed_vk, modifiers, fgTitle)) {
         return;
     }
-    TimerEnd(timer11, "HandleMusicPlayer");
+    TimerEnd(timer12, "HandleMusicPlayer");
 
-    WinTimer timer12 = TimerStart();
+    WinTimer timer13 = TimerStart();
     if (HandleVideoViewer(pressed_vk, modifiers, fgTitle)) {
         return;
     }
-    TimerEnd(timer12, "HandleVideoPlayer");
+    TimerEnd(timer13, "HandleVideoPlayer");
 
-    WinTimer timer13 = TimerStart();
+    WinTimer timer14 = TimerStart();
     if (HandleBulkKillProcess(pressed_vk, modifiers, fgTitle)) {
         return;
     }
-    TimerEnd(timer13, "HandleBulkKillProcess");
+    TimerEnd(timer14, "HandleBulkKillProcess");
 }
 
 void Platform_RunHotKeyMessageLoop(void) {

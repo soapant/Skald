@@ -14,5 +14,6 @@ void open_browser(const char *url);
 bool CheckQuickLinkHotkeyBindings(int pressed_vk, int modifiers);
 bool CheckMacroBindings(int pressed_vk, int modifiers);
 bool CheckTextSnippetBindings(int pressed_vk, int modifiers);
+bool CheckTerminalCommandHotkeyBindings(int pressed_vk, int modifiers);
 
 #endif

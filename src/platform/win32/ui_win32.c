@@ -734,28 +734,35 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
     TimerEnd(timer9, "CheckQuickLinkHotkeyBindings");
 
     WinTimer timer10 = TimerStart();
+    if (CheckTerminalCommandHotkeyBindings(pressed_vk, modifiers)) {
+      return 1;
+    }
+    TimerEnd(timer10, "HandleTerminalCommand");
+
+    WinTimer timer11 = TimerStart();
     if (HandleFocusSwitcher(pressed_vk, modifiers, fgTitle)) {
       return 1;
     }
-    TimerEnd(timer10, "HandleFocusSwitcher");
+    TimerEnd(timer11, "HandleFocusSwitcher");
 
-    WinTimer timer11 = TimerStart();
+    WinTimer timer12 = TimerStart();
     if (HandleMusicPlayer(pressed_vk, modifiers, fgTitle)) {
       return 1;
     }
-    TimerEnd(timer11, "HandleMusicPlayer");
+    TimerEnd(timer12, "HandleMusicPlayer");
 
-    WinTimer timer12 = TimerStart();
+    WinTimer timer13 = TimerStart();
     if (HandleVideoPlayer(pressed_vk, modifiers, fgTitle)) {
       return 1;
     }
-    TimerEnd(timer12, "HandleVideoPlayer");
+    TimerEnd(timer13, "HandleVideoPlayer");
 
-    WinTimer timer13 = TimerStart();
+    WinTimer timer14 = TimerStart();
     if (HandleBulkKillProcess(pressed_vk, modifiers, fgTitle)) {
       return 1;
     }
-    TimerEnd(timer13, "HandleBulkKillProcess");
+    TimerEnd(timer14, "HandleBulkKillProcess");
+
   }
   return CallNextHookEx(NULL, nCode, wParam, lParam);
 }
