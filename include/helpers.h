@@ -99,6 +99,7 @@ void HandleCommandExecution(ListBoxInfo* lb, char* string);
 const char* get_alias_for_item(const char* item);
 unsigned long rgb_to_hex(unsigned long win_color);
 void eval_window_title_color(PromptState * state,unsigned long *window_title_color);
+void eval_xoffset_for_alias(char* alias_text,int main_text_lenght,int *xOffsetAlias);
 unsigned short OpacityAlpha16(void);
 #if !defined(_WIN32)
 void draw_wrapped_text(Display* dpy, XftDraw* xd, XftColor* color, FontHandle font, const char* text, int startY,char* centered_to,int xOffset);

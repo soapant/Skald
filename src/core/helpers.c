@@ -506,6 +506,12 @@ void eval_window_title_color(PromptState* state,unsigned long *window_title_colo
   *window_title_color = final_color;
 }
 
+void eval_xoffset_for_alias(char* alias_text,int main_text_lenght,int* xOffsetAlias) {
+  int main_text_w = (main_text_lenght * FontSize) / 2;
+  // if the main text is small we want the offset to be smaller vice versa
+  *xOffsetAlias = main_text_w;
+}
+
 unsigned short OpacityAlpha16(void) {
     float t = WindowOpacity / 255.0f;
     if (t < 0.0f) t = 0.0f;
@@ -669,20 +675,23 @@ void DrawListBoxItemText(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap, 
         XOffset = get_offset_based_on_number(idx);
     }
 
-    const char* alias_pos = strstr(trunc, " [");
-    if (alias_pos) {
-        int main_len = (int)(alias_pos - trunc);
-        XftDrawStringUtf8(xd, body_color, xf, text_x, y + xf->ascent, (FcChar8*)trunc, main_len);
-        XGlyphInfo ext_main;
-        XftTextExtentsUtf8(dpy, xf, (FcChar8*)trunc, main_len, &ext_main);
-        int main_w = ext_main.xOff;
+    char* alias_text = strstr(trunc, " [");
+
+    if (alias_text) {
         XftColor aliasCol;
+        int XOffsetAlias = 0;
         Linux_XftAllocColor(dpy, vis, cmap, rgb_to_hex(COLOR_ALIAS_TEXT), 0xFFFF, &aliasCol);
-        XftDrawStringUtf8(xd, &aliasCol, xf, text_x + main_w, y + xf->ascent, (FcChar8*)alias_pos, strlen(alias_pos));
+        eval_xoffset_for_alias(alias_text,strlen(trunc),&XOffsetAlias);
+        draw_wrapped_text(dpy, xd, &aliasCol, font, alias_text, y, "LEFT",XOffsetAlias);
         XftColorFree(dpy, vis, cmap, &aliasCol);
-    } else {
-        draw_wrapped_text(dpy, xd, plain_color, font, trunc, y, "LEFT", XOffset);
     }
+
+    char* pos =strchr(trunc,'['); 
+    if(pos) {
+      *pos = 0;
+    }
+    draw_wrapped_text(dpy, xd, plain_color, font, trunc, y, "LEFT", XOffset);
+
 }
 
 bool CursorBack(size_t* cursor, size_t text_len) {
