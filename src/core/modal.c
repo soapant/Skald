@@ -4,7 +4,6 @@
 #include "core/common_ui.h"
 
 EditorMode g_current_mode = MODE_INSERT;
-bool g_vim_mode_enabled = true;
 static const char* g_mode_names[] = { "NORMAL", "INSERT", "VISUAL" };
 const char* g_vim_mode = "INSERT";
 int last_index = 0;
