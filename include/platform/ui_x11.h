@@ -1,11 +1,6 @@
 #ifndef UI_X11_H
 #define UI_X11_H
 
-// Linux implementations of the UI_* helper layer.
-// Included by core/common_ui.h on non-Windows builds.
-// Most controls are custom-drawn from PromptState, so these are thin
-// state-only operations.
-
 #include "core/types.h"
 #include "platform/platform.h"
 
@@ -16,8 +11,7 @@ static inline void UI_SetSelection(ListBoxInfo* lb, WindowHandle hList, int inde
   if (!lb) return;
   if (lb->selected_index == index) return;
   Platform_DismissMessage();
-  lb->selected_index = index;
-}
+  lb->selected_index = index; }
 
 static inline int UI_GetCount(ListBoxInfo* lb, WindowHandle hList) {
   (void)hList;
