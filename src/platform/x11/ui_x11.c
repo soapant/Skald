@@ -530,7 +530,6 @@ void Platform_DisplayMessage(const char* message, int centerX, int centerY, int 
         fprintf(stderr, "[PLATFORM] Platform_DisplayMessage: font load failed\n");
         return;
     }
-    fprintf(stderr, "[MSG] font='%s' size=%d\n", UsedFont, FontSize);
 
     int screen = DefaultScreen(dpy);
 
@@ -970,68 +969,68 @@ bool HandleGlobalKeyEvent(int key_code, int value) {
     WinTimer timer5 = TimerStart();
 
     if (CheckTextSnippetBindings(pressed_vk, modifiers)) {
-        if (value==1||value==2){ pending_hotkey_vk=pressed_vk; pending_hotkey_mod=modifiers; struct timeval tv; gettimeofday(&tv,NULL); pending_hotkey_timeMs=tv.tv_sec*1000+tv.tv_usec/1000; }
+        if (value==1){ pending_hotkey_vk=pressed_vk; pending_hotkey_mod=modifiers; struct timeval tv; gettimeofday(&tv,NULL); pending_hotkey_timeMs=tv.tv_sec*1000+tv.tv_usec/1000; }
         return 1;
     }
     TimerEnd(timer5, "CheckTextSnippetBindings");
 
     if (CheckMacroBindings(pressed_vk, modifiers)) {
-        if (value==1||value==2){ pending_hotkey_vk=pressed_vk; pending_hotkey_mod=modifiers; struct timeval tv; gettimeofday(&tv,NULL); pending_hotkey_timeMs=tv.tv_sec*1000+tv.tv_usec/1000; }
+        if (value==1){ pending_hotkey_vk=pressed_vk; pending_hotkey_mod=modifiers; struct timeval tv; gettimeofday(&tv,NULL); pending_hotkey_timeMs=tv.tv_sec*1000+tv.tv_usec/1000; }
         return 1;
     }
 
     WinTimer timer7 = TimerStart();
     if (CheckAppHotkeyBindings(pressed_vk, modifiers)) {
-        if (value==1||value==2){ pending_hotkey_vk=pressed_vk; pending_hotkey_mod=modifiers; struct timeval tv; gettimeofday(&tv,NULL); pending_hotkey_timeMs=tv.tv_sec*1000+tv.tv_usec/1000; }
+        if (value==1){ pending_hotkey_vk=pressed_vk; pending_hotkey_mod=modifiers; struct timeval tv; gettimeofday(&tv,NULL); pending_hotkey_timeMs=tv.tv_sec*1000+tv.tv_usec/1000; }
         return 1;
     }
     TimerEnd(timer7, "CheckAppHotkeyBindings");
 
     WinTimer timer8 = TimerStart();
     if (CheckMiscHotkeyBindings(pressed_vk, modifiers)) {
-        if (value==1||value==2){ pending_hotkey_vk=pressed_vk; pending_hotkey_mod=modifiers; struct timeval tv; gettimeofday(&tv,NULL); pending_hotkey_timeMs=tv.tv_sec*1000+tv.tv_usec/1000; }
+        if (value==1){ pending_hotkey_vk=pressed_vk; pending_hotkey_mod=modifiers; struct timeval tv; gettimeofday(&tv,NULL); pending_hotkey_timeMs=tv.tv_sec*1000+tv.tv_usec/1000; }
         return 1;
     }
     TimerEnd(timer8, "CheckMiscHotkeyBindings");
 
     WinTimer timer9 = TimerStart();
     if (CheckQuickLinkHotkeyBindings(pressed_vk, modifiers)) {
-        if (value==1||value==2){ pending_hotkey_vk=pressed_vk; pending_hotkey_mod=modifiers; struct timeval tv; gettimeofday(&tv,NULL); pending_hotkey_timeMs=tv.tv_sec*1000+tv.tv_usec/1000; }
+        if (value==1){ pending_hotkey_vk=pressed_vk; pending_hotkey_mod=modifiers; struct timeval tv; gettimeofday(&tv,NULL); pending_hotkey_timeMs=tv.tv_sec*1000+tv.tv_usec/1000; }
         return 1;
     }
     TimerEnd(timer9, "CheckQuickLinkHotkeyBindings");
 
     WinTimer timer10 = TimerStart();
     if (CheckTerminalCommandHotkeyBindings(pressed_vk, modifiers)) {
-        if (value==1||value==2){ pending_hotkey_vk=pressed_vk; pending_hotkey_mod=modifiers; struct timeval tv; gettimeofday(&tv,NULL); pending_hotkey_timeMs=tv.tv_sec*1000+tv.tv_usec/1000; }
+        if (value==1){ pending_hotkey_vk=pressed_vk; pending_hotkey_mod=modifiers; struct timeval tv; gettimeofday(&tv,NULL); pending_hotkey_timeMs=tv.tv_sec*1000+tv.tv_usec/1000; }
       return 1;
     }
     TimerEnd(timer10, "HandleTerminalCommand");
 
     WinTimer timer11 = TimerStart();
     if (HandleFocusSwitcher(pressed_vk, modifiers, fgTitle)) {
-        if (value==1||value==2){ pending_hotkey_vk=pressed_vk; pending_hotkey_mod=modifiers; struct timeval tv; gettimeofday(&tv,NULL); pending_hotkey_timeMs=tv.tv_sec*1000+tv.tv_usec/1000; }
+        if (value==1){ pending_hotkey_vk=pressed_vk; pending_hotkey_mod=modifiers; struct timeval tv; gettimeofday(&tv,NULL); pending_hotkey_timeMs=tv.tv_sec*1000+tv.tv_usec/1000; }
         return 1;
     }
     TimerEnd(timer11, "HandleFocusSwitcher");
 
     WinTimer timer12 = TimerStart();
     if (HandleMusicPlayer(pressed_vk, modifiers, fgTitle)) {
-        if (value==1||value==2){ pending_hotkey_vk=pressed_vk; pending_hotkey_mod=modifiers; struct timeval tv; gettimeofday(&tv,NULL); pending_hotkey_timeMs=tv.tv_sec*1000+tv.tv_usec/1000; }
+        if (value==1){ pending_hotkey_vk=pressed_vk; pending_hotkey_mod=modifiers; struct timeval tv; gettimeofday(&tv,NULL); pending_hotkey_timeMs=tv.tv_sec*1000+tv.tv_usec/1000; }
         return 1;
     }
     TimerEnd(timer12, "HandleMusicPlayer");
 
     WinTimer timer13 = TimerStart();
     if (HandleVideoViewer(pressed_vk, modifiers, fgTitle)) {
-        if (value==1||value==2){ pending_hotkey_vk=pressed_vk; pending_hotkey_mod=modifiers; struct timeval tv; gettimeofday(&tv,NULL); pending_hotkey_timeMs=tv.tv_sec*1000+tv.tv_usec/1000; }
+        if (value==1){ pending_hotkey_vk=pressed_vk; pending_hotkey_mod=modifiers; struct timeval tv; gettimeofday(&tv,NULL); pending_hotkey_timeMs=tv.tv_sec*1000+tv.tv_usec/1000; }
         return 1;
     }
     TimerEnd(timer13, "HandleVideoPlayer");
 
     WinTimer timer14 = TimerStart();
     if (HandleBulkKillProcess(pressed_vk, modifiers, fgTitle)) {
-        if (value==1||value==2){ pending_hotkey_vk=pressed_vk; pending_hotkey_mod=modifiers; struct timeval tv; gettimeofday(&tv,NULL); pending_hotkey_timeMs=tv.tv_sec*1000+tv.tv_usec/1000; }
+        if (value==1){ pending_hotkey_vk=pressed_vk; pending_hotkey_mod=modifiers; struct timeval tv; gettimeofday(&tv,NULL); pending_hotkey_timeMs=tv.tv_sec*1000+tv.tv_usec/1000; }
         return 1;
     }
     TimerEnd(timer14, "HandleBulkKillProcess");
