@@ -248,12 +248,27 @@ static bool compile_all(bool* any_compiled) {
 // flock singleton lock, so an old instance would make new runs exit instantly.
 // Stops the user service AND any stray manually-launched copies.
 // ([m] trick so pkill doesn't match this very shell command)
-static void stop_running_instance(void) {
+static bool instance_running(void) {
+    // Always exits 0; signals via stdout so nob doesn't log a bogus ERROR.
+    const char* marker = "/tmp/myprogram_nob_check";
     Nob_Cmd chk = {0};
     nob_cmd_append(&chk, "sh", "-c",
-        "systemctl --user is-active --quiet myprogram.service 2>/dev/null || "
-        "pgrep -f 'build/[m]yprogram' >/dev/null 2>&1");
-    if (!nob_cmd_run(&chk)) return; // nothing running, don't even log
+        "if systemctl --user is-active --quiet myprogram.service 2>/dev/null "
+        "|| pgrep -f 'build/[m]yprogram' >/dev/null 2>&1; then echo running; fi; "
+        "exit 0");
+    if (!nob_cmd_run(&chk, .stdout_path = marker)) return false;
+    Nob_String_Builder sb = {0};
+    bool running = false;
+    if (nob_read_entire_file(marker, &sb)) {
+        running = sb.count > 0;
+    }
+    nob_sb_free(sb);
+    remove(marker);
+    return running;
+}
+
+static void stop_running_instance(void) {
+    if (!instance_running()) return;
 
     Nob_Cmd cmd = {0};
     nob_cmd_append(&cmd, "sh", "-c",
