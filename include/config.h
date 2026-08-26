@@ -46,8 +46,6 @@
 #define COLOR_ERROR             RGB(180, 0, 0) 
 #define COLOR_NORMAL            RGB(200, 200, 0) 
 #define COLOR_TIP               RGB(0, 160, 0)
-#define COLOR_OF_SELECTION (g_rainbow_text_cache[0])
-#define COLOR_OF_SELECTION_LB(lb) ((lb && (lb)->selected_index >=0 && (lb)->selected_index <= MAX_VISIBLE_ITEMS) ? g_rainbow_text_cache[(lb)->selected_index] : COLOR_TEXT)
 
 extern bool Tray;
 extern bool EnableVimMode;

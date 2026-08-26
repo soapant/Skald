@@ -56,6 +56,7 @@ extern int g_key_pressed;
 extern KeyCallback g_key_callback;
 extern char* selection_feature;
 extern bool draw_background;
+extern char output_buffer[256];
 #endif
 extern HashMap* feature_history;
 extern HashMap* g_item_index_map;

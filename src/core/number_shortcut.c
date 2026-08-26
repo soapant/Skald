@@ -3,7 +3,7 @@
 #include "core/common_ui.h"
 #include "helpers.h"
 
-extern char output_buffer[255];
+extern char output_buffer[256];
 
 static struct {
     int first_digit;

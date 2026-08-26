@@ -143,6 +143,7 @@ void TriggerRegionImage(void) {
     
     extern int img_region_step;
     extern long img_x1, img_y1, img_x2, img_y2;
+    extern long saved_x1,saved_y1;
     char buffer[128];
     
     

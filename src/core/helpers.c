@@ -10,7 +10,6 @@
 #include "core/common_ui.h"
 
 int g_refresh_count = 0;
-ColorRef g_rainbow_text_cache[MAX_VISIBLE_ITEMS + 1] = {0};
 bool draw_background = true;
 
 char* SelectionData[2048] = {0};
