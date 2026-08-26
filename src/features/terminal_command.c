@@ -19,10 +19,8 @@ static void RebuildCommandCache(void) {
 }
 
 static void terminal_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
-    if (!lb) return;
     ZoxideHelper_Refresh(filter, hListBox, lb, TerminalHistoryFile, &g_cached_commands, &g_cached_command_count);
 }
-
 
 void RunTerminalCommand(const char* Command, bool save_to_history,bool open_in_terminal) {
     if (Command == NULL || strlen(Command) == 0) return;
@@ -97,7 +95,6 @@ void RunTerminalCommand(const char* Command, bool save_to_history,bool open_in_t
     Platform_LaunchTerminal(real_home, extra);
     }
 #endif
-    printf("[TERMINAL] Running: %s\n", clean_cmd);
 }
 
 static void terminal_enter_callback(const char* selection, ListBoxInfo* lb) {
@@ -121,10 +118,12 @@ static void terminal_edit_callback(const char* selection, ListBoxInfo* lb) {
 void TriggerTerminalCommand(void) {
     if (!g_cached_commands) RebuildCommandCache();
     const char** list = ZoxideHelper_PrepareTriggerList(NULL, &g_cached_commands, &g_cached_command_count, NULL);
+
     PROMPT(.title = "⌨️ Terminal", .items = list, .count = g_cached_command_count,
            .height = 920, .width = 650, .item_height = 32,
            .refresh = terminal_refresh_callback,
            .enter = terminal_enter_callback,
            .edit = terminal_edit_callback);
+
     ZoxideHelper_CleanupTriggerList(list);
 }
