@@ -300,8 +300,6 @@ static void switcher_copy_callback(const char* selection, int true_index, int ty
 }
 
 void TriggerWindowSwitcher() {
-    if (IsPopupActive(hPopupWnd)) return;
-    
     WindowList windows;
     static const char* blacklist[] = {"Input", "Manager", "Settings"};
     WindowUtils_GetFiltered(&windows, blacklist, 3);
