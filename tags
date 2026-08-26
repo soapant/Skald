@@ -2191,7 +2191,7 @@ allowed_video_formats	/home/diggy/Programming/Projects/C Code/src/features/video
 alpha	/home/diggy/Programming/Projects/C Code/include/core/types.h	/^    int alpha;$/;"	m	struct:__anon9bbca43d0708	typeref:typename:int
 alpha	/home/diggy/Programming/Projects/C Code/include/window/subclasses.h	/^  int alpha;$/;"	m	struct:__anon3186d8cf0108	typeref:typename:int
 app_launcher.c	/home/diggy/Programming/Projects/C Code/src/features/app_launcher.c	1;"	F	epoch:1787577249
-app_launcher.c.d	/home/diggy/Programming/Projects/C Code/build/obj/app_launcher.c.d	1;"	F	epoch:1787707990
+app_launcher.c.d	/home/diggy/Programming/Projects/C Code/build/obj/app_launcher.c.d	1;"	F	epoch:1787708731
 app_launcher.h	/home/diggy/Programming/Projects/C Code/include/features/app_launcher.h	1;"	F	epoch:1787109917
 app_name	/home/diggy/Programming/Projects/C Code/include/core/types.h	/^    const char* app_name;  $/;"	m	struct:__anon9bbca43d0e08	typeref:typename:const char *
 applauncher_copy_callback	/home/diggy/Programming/Projects/C Code/src/features/app_launcher.c	/^static void applauncher_copy_callback(const char* selection,int true_index,int type) {$/;"	f	typeref:typename:void	file:
@@ -2258,7 +2258,7 @@ arguments	/home/diggy/Programming/Projects/C Code/compile_commands.json	/^    "a
 async	/home/diggy/Programming/Projects/C Code/nob.h	/^    Nob_Procs *async;$/;"	m	struct:__anondf57539c0d08	typeref:typename:Nob_Procs *
 async	/home/diggy/Programming/Projects/C Code/nob.h	/^    Nob_Procs *async;$/;"	m	struct:__anondf57539c1108	typeref:typename:Nob_Procs *
 bindings.c	/home/diggy/Programming/Projects/C Code/src/bindings/bindings.c	1;"	F	epoch:1787707911
-bindings.c.d	/home/diggy/Programming/Projects/C Code/build/obj/bindings.c.d	1;"	F	epoch:1787707990
+bindings.c.d	/home/diggy/Programming/Projects/C Code/build/obj/bindings.c.d	1;"	F	epoch:1787708731
 bindings.h	/home/diggy/Programming/Projects/C Code/include/bindings/bindings.h	1;"	F	epoch:1787635810
 bkp_windows	/home/diggy/Programming/Projects/C Code/src/config/config.c	/^const char* bkp_windows[] = {"Brawlhalla","Fortnite","RocketLeague","Factorio","Steam"};$/;"	v	typeref:typename:const char * []
 blacklist	/home/diggy/Programming/Projects/C Code/include/core/types.h	/^    const char** blacklist;      $/;"	m	struct:__anon9bbca43d1208	typeref:typename:const char **
@@ -2271,7 +2271,7 @@ browsers_windows	/home/diggy/Programming/Projects/C Code/src/config/config.c	/^c
 buckets	/home/diggy/Programming/Projects/C Code/include/core/hashmap.h	/^    HashMapEntry** buckets;$/;"	m	struct:__anoncf13232a0108	typeref:typename:HashMapEntry **
 bytes_for_utf8	/home/diggy/Programming/Projects/C Code/nob.h	/^        #define bytes_for_utf8 nob_bytes_for_utf8$/;"	d
 calc.c	/home/diggy/Programming/Projects/C Code/src/features/calc.c	1;"	F	epoch:1787309743
-calc.c.d	/home/diggy/Programming/Projects/C Code/build/obj/calc.c.d	1;"	F	epoch:1787707991
+calc.c.d	/home/diggy/Programming/Projects/C Code/build/obj/calc.c.d	1;"	F	epoch:1787708731
 calc.h	/home/diggy/Programming/Projects/C Code/include/features/calc.h	1;"	F	epoch:1787103851
 calculator_ctrlenter_callback	/home/diggy/Programming/Projects/C Code/src/features/calc.c	/^static void calculator_ctrlenter_callback(const char* selection, ListBoxInfo* lb) {$/;"	f	typeref:typename:void	file:
 calculator_enter_callback	/home/diggy/Programming/Projects/C Code/src/features/calc.c	/^static void calculator_enter_callback(const char* selection, ListBoxInfo* lb) {$/;"	f	typeref:typename:void	file:
@@ -2320,12 +2320,12 @@ collect_source	/home/diggy/Programming/Projects/C Code/nob.c	/^static bool colle
 collect_source	/home/diggy/Programming/Projects/C Code/nob_linux_window_build.c	/^static bool collect_source(Nob_Walk_Entry entry) {$/;"	f	typeref:typename:bool	file:
 color	/home/diggy/Programming/Projects/C Code/include/core/types.h	/^    ColorRef color;$/;"	m	struct:__anon9bbca43d1c08	typeref:typename:ColorRef
 color	/home/diggy/Programming/Projects/C Code/include/core/types.h	/^    ColorRef color;$/;"	m	struct:__anon9bbca43d1d08	typeref:typename:ColorRef
-common.h	/home/diggy/Programming/Projects/C Code/include/common.h	1;"	F	epoch:1787708073
-common_ui.c	/home/diggy/Programming/Projects/C Code/src/core/common_ui.c	1;"	F	epoch:1787667074
-common_ui.c.d	/home/diggy/Programming/Projects/C Code/build/obj/common_ui.c.d	1;"	F	epoch:1787707990
+common.h	/home/diggy/Programming/Projects/C Code/include/common.h	1;"	F	epoch:1787708746
+common_ui.c	/home/diggy/Programming/Projects/C Code/src/core/common_ui.c	1;"	F	epoch:1787708198
+common_ui.c.d	/home/diggy/Programming/Projects/C Code/build/obj/common_ui.c.d	1;"	F	epoch:1787708731
 common_ui.h	/home/diggy/Programming/Projects/C Code/include/core/common_ui.h	1;"	F	epoch:1787564902
 compile_all	/home/diggy/Programming/Projects/C Code/nob.c	/^static bool compile_all(bool* any_compiled) {$/;"	f	typeref:typename:bool	file:
-compile_commands.json	/home/diggy/Programming/Projects/C Code/compile_commands.json	1;"	F	epoch:1787707990
+compile_commands.json	/home/diggy/Programming/Projects/C Code/compile_commands.json	1;"	F	epoch:1787708731
 condition_func	/home/diggy/Programming/Projects/C Code/include/features/reminder.h	/^    ConditionFn condition_func;$/;"	m	struct:__anon6c09bdd40108	typeref:typename:ConditionFn
 condition_param	/home/diggy/Programming/Projects/C Code/include/features/reminder.h	/^    const char* condition_param;$/;"	m	struct:__anon6c09bdd40108	typeref:typename:const char *
 config.c	/home/diggy/Programming/Projects/C Code/src/config/config.c	1;"	F	epoch:1787707952
@@ -2466,7 +2466,7 @@ exe_name	/home/diggy/Programming/Projects/C Code/include/core/types.h	/^    cons
 exe_name	/home/diggy/Programming/Projects/C Code/include/core/types.h	/^    const char* exe_name;$/;"	m	struct:__anon9bbca43d1108	typeref:typename:const char *
 exe_name	/home/diggy/Programming/Projects/C Code/include/core/types.h	/^    const char* exe_name;$/;"	m	struct:__anon9bbca43d1708	typeref:typename:const char *
 explorer.c	/home/diggy/Programming/Projects/C Code/src/features/explorer.c	1;"	F	epoch:1787552747
-explorer.c.d	/home/diggy/Programming/Projects/C Code/build/obj/explorer.c.d	1;"	F	epoch:1787707990
+explorer.c.d	/home/diggy/Programming/Projects/C Code/build/obj/explorer.c.d	1;"	F	epoch:1787708731
 explorer.h	/home/diggy/Programming/Projects/C Code/include/features/explorer.h	1;"	F	epoch:1787212967
 explorer_edit_callback	/home/diggy/Programming/Projects/C Code/src/features/explorer.c	/^static void explorer_edit_callback(const char* selection, ListBoxInfo* lb) {$/;"	f	typeref:typename:void	file:
 explorer_enter_callback	/home/diggy/Programming/Projects/C Code/src/features/explorer.c	/^static void explorer_enter_callback(const char* selection, ListBoxInfo* lb) {$/;"	f	typeref:typename:void	file:
@@ -2487,7 +2487,7 @@ fdout	/home/diggy/Programming/Projects/C Code/nob.h	/^    Nob_Fd *fdout;$/;"	m	s
 feature	/home/diggy/Programming/Projects/C Code/include/core/types.h	/^   char* feature;$/;"	m	struct:__anon9bbca43d0608	typeref:typename:char *
 feature_data	/home/diggy/Programming/Projects/C Code/include/core/types.h	/^struct feature_data {$/;"	s
 feature_data.c	/home/diggy/Programming/Projects/C Code/src/core/feature_data.c	1;"	F	epoch:1787664232
-feature_data.c.d	/home/diggy/Programming/Projects/C Code/build/obj/feature_data.c.d	1;"	F	epoch:1787707990
+feature_data.c.d	/home/diggy/Programming/Projects/C Code/build/obj/feature_data.c.d	1;"	F	epoch:1787708731
 feature_data.h	/home/diggy/Programming/Projects/C Code/include/core/feature_data.h	1;"	F	epoch:1787103851
 feature_history	/home/diggy/Programming/Projects/C Code/src/main.c	/^HashMap* feature_history = NULL;$/;"	v	typeref:typename:HashMap *
 file	/home/diggy/Programming/Projects/C Code/compile_commands.json	/^    "file": "src\/bindings\/bindings.c",$/;"	s	object:20
@@ -2550,7 +2550,7 @@ file	/home/diggy/Programming/Projects/C Code/compile_commands.json	/^    "file":
 fileSize	/home/diggy/Programming/Projects/C Code/include/core/types.h	/^    size_t fileSize;   $/;"	m	struct:__anon9bbca43d0b08	typeref:typename:size_t
 file_exists	/home/diggy/Programming/Projects/C Code/nob.h	/^        #define file_exists nob_file_exists$/;"	d
 file_search.c	/home/diggy/Programming/Projects/C Code/src/features/file_search.c	1;"	F	epoch:1787627960
-file_search.c.d	/home/diggy/Programming/Projects/C Code/build/obj/file_search.c.d	1;"	F	epoch:1787707991
+file_search.c.d	/home/diggy/Programming/Projects/C Code/build/obj/file_search.c.d	1;"	F	epoch:1787708731
 file_search.h	/home/diggy/Programming/Projects/C Code/include/features/file_search.h	1;"	F	epoch:1787627450
 filepath	/home/diggy/Programming/Projects/C Code/main.py	/^            filepath = os.path.join(root, file)$/;"	v
 filter	/home/diggy/Programming/Projects/C Code/include/core/types.h	/^     char        filter[512];$/;"	m	struct:__anon9bbca43d0108	typeref:typename:char[512]
@@ -2566,11 +2566,11 @@ focus_blacklist_coding	/home/diggy/Programming/Projects/C Code/src/config/config
 focus_blacklist_games	/home/diggy/Programming/Projects/C Code/src/config/config.c	/^const char* focus_blacklist_games[] = {"CrosshairX"};$/;"	v	typeref:typename:const char * []
 focus_blacklist_terminal	/home/diggy/Programming/Projects/C Code/src/config/config.c	/^const char* focus_blacklist_terminal[] = {"CrosshairX"};$/;"	v	typeref:typename:const char * []
 focus_switcher.c	/home/diggy/Programming/Projects/C Code/src/features/focus_switcher.c	1;"	F	epoch:1787664424
-focus_switcher.c.d	/home/diggy/Programming/Projects/C Code/build/obj/focus_switcher.c.d	1;"	F	epoch:1787707990
+focus_switcher.c.d	/home/diggy/Programming/Projects/C Code/build/obj/focus_switcher.c.d	1;"	F	epoch:1787708731
 focus_switcher.h	/home/diggy/Programming/Projects/C Code/include/features/focus_switcher.h	1;"	F	epoch:1787109901
 font	/home/diggy/Programming/Projects/C Code/src/platform/x11/ui_x11.c	/^    FontHandle font;$/;"	m	struct:__anon10d81b430208	typeref:typename:FontHandle	file:
 forgetfull.c	/home/diggy/Programming/Projects/C Code/src/features/forgetfull.c	1;"	F	epoch:1787272035
-forgetfull.c.d	/home/diggy/Programming/Projects/C Code/build/obj/forgetfull.c.d	1;"	F	epoch:1787707990
+forgetfull.c.d	/home/diggy/Programming/Projects/C Code/build/obj/forgetfull.c.d	1;"	F	epoch:1787708731
 forgetfull.h	/home/diggy/Programming/Projects/C Code/include/features/forgetfull.h	1;"	F	epoch:1787103851
 forgetfull_ctrlenter_callback	/home/diggy/Programming/Projects/C Code/src/features/forgetfull.c	/^static void forgetfull_ctrlenter_callback(const char* selection, ListBoxInfo* lb) {$/;"	f	typeref:typename:void	file:
 forgetfull_edit_callback	/home/diggy/Programming/Projects/C Code/src/features/forgetfull.c	/^static void forgetfull_edit_callback(const char* selection, ListBoxInfo* lb) {$/;"	f	typeref:typename:void	file:
@@ -2645,8 +2645,6 @@ g_hNumFont	/home/diggy/Programming/Projects/C Code/src/main.c	/^HFONT g_hNumFont
 g_hSearchPopup	/home/diggy/Programming/Projects/C Code/src/main.c	/^WindowHandle g_hSearchPopup = WH_NULL;$/;"	v	typeref:typename:WindowHandle
 g_has_last_op	/home/diggy/Programming/Projects/C Code/src/features/calc.c	/^static bool g_has_last_op = false;$/;"	v	typeref:typename:bool	file:
 g_help_callback	/home/diggy/Programming/Projects/C Code/src/main.c	/^HelpCallback g_help_callback = NULL;$/;"	v	typeref:typename:HelpCallback
-g_initial_count	/home/diggy/Programming/Projects/C Code/src/main.c	/^int g_initial_count = 0;$/;"	v	typeref:typename:int
-g_initial_items	/home/diggy/Programming/Projects/C Code/src/main.c	/^const char** g_initial_items = NULL;$/;"	v	typeref:typename:const char **
 g_is_flipped	/home/diggy/Programming/Projects/C Code/src/features/calc.c	/^static bool g_is_flipped = false;$/;"	v	typeref:typename:bool	file:
 g_item_index_map	/home/diggy/Programming/Projects/C Code/src/main.c	/^HashMap* g_item_index_map = NULL;$/;"	v	typeref:typename:HashMap *
 g_key_callback	/home/diggy/Programming/Projects/C Code/src/core/types.c	/^KeyCallback g_key_callback = NULL;$/;"	v	typeref:typename:KeyCallback
@@ -2704,7 +2702,7 @@ google_edit_callback	/home/diggy/Programming/Projects/C Code/src/features/google
 google_enter_callback	/home/diggy/Programming/Projects/C Code/src/features/google_search.c	/^static void google_enter_callback(const char* selection, ListBoxInfo* lb) {$/;"	f	typeref:typename:void	file:
 google_refresh_callback	/home/diggy/Programming/Projects/C Code/src/features/google_search.c	/^static void google_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) /;"	f	typeref:typename:void	file:
 google_search.c	/home/diggy/Programming/Projects/C Code/src/features/google_search.c	1;"	F	epoch:1787475159
-google_search.c.d	/home/diggy/Programming/Projects/C Code/build/obj/google_search.c.d	1;"	F	epoch:1787707990
+google_search.c.d	/home/diggy/Programming/Projects/C Code/build/obj/google_search.c.d	1;"	F	epoch:1787708731
 google_search.h	/home/diggy/Programming/Projects/C Code/include/features/google_search.h	1;"	F	epoch:1787109917
 h	/home/diggy/Programming/Projects/C Code/include/core/types.h	/^    int x, y, w, h;$/;"	m	struct:__anon9bbca43d0a08	typeref:typename:int
 hDisplayMessage	/home/diggy/Programming/Projects/C Code/src/main.c	/^WindowHandle hDisplayMessage = WH_NULL;$/;"	v	typeref:typename:WindowHandle
@@ -2743,22 +2741,22 @@ height	/home/diggy/Programming/Projects/C Code/include/core/types.h	/^     int  
 height	/home/diggy/Programming/Projects/C Code/include/core/types.h	/^     int         width, height;$/;"	m	struct:__anon9bbca43d0208	typeref:typename:int
 help_callback	/home/diggy/Programming/Projects/C Code/include/core/types.h	/^    HelpCallback help_callback;$/;"	m	struct:feature_data	typeref:typename:HelpCallback
 helpers.c	/home/diggy/Programming/Projects/C Code/src/core/helpers.c	1;"	F	epoch:1787666241
-helpers.c.d	/home/diggy/Programming/Projects/C Code/build/obj/helpers.c.d	1;"	F	epoch:1787707990
+helpers.c.d	/home/diggy/Programming/Projects/C Code/build/obj/helpers.c.d	1;"	F	epoch:1787708731
 helpers.h	/home/diggy/Programming/Projects/C Code/include/helpers.h	1;"	F	epoch:1787621714
 helpers_color.c	/home/diggy/Programming/Projects/C Code/src/core/helpers_color.c	1;"	F	epoch:1787666209
-helpers_color.c.d	/home/diggy/Programming/Projects/C Code/build/obj/helpers_color.c.d	1;"	F	epoch:1787707990
+helpers_color.c.d	/home/diggy/Programming/Projects/C Code/build/obj/helpers_color.c.d	1;"	F	epoch:1787708731
 helpers_file.c	/home/diggy/Programming/Projects/C Code/src/core/helpers_file.c	1;"	F	epoch:1787666196
-helpers_file.c.d	/home/diggy/Programming/Projects/C Code/build/obj/helpers_file.c.d	1;"	F	epoch:1787707990
+helpers_file.c.d	/home/diggy/Programming/Projects/C Code/build/obj/helpers_file.c.d	1;"	F	epoch:1787708731
 helpers_history.c	/home/diggy/Programming/Projects/C Code/src/core/helpers_history.c	1;"	F	epoch:1787666203
-helpers_history.c.d	/home/diggy/Programming/Projects/C Code/build/obj/helpers_history.c.d	1;"	F	epoch:1787707990
+helpers_history.c.d	/home/diggy/Programming/Projects/C Code/build/obj/helpers_history.c.d	1;"	F	epoch:1787708731
 helpers_text.c	/home/diggy/Programming/Projects/C Code/src/core/helpers_text.c	1;"	F	epoch:1787666186
-helpers_text.c.d	/home/diggy/Programming/Projects/C Code/build/obj/helpers_text.c.d	1;"	F	epoch:1787707990
+helpers_text.c.d	/home/diggy/Programming/Projects/C Code/build/obj/helpers_text.c.d	1;"	F	epoch:1787708731
 helpers_x11.c	/home/diggy/Programming/Projects/C Code/src/core/helpers_x11.c	1;"	F	epoch:1787666021
-helpers_x11.c.d	/home/diggy/Programming/Projects/C Code/build/obj/helpers_x11.c.d	1;"	F	epoch:1787707990
+helpers_x11.c.d	/home/diggy/Programming/Projects/C Code/build/obj/helpers_x11.c.d	1;"	F	epoch:1787708731
 hfont	/home/diggy/Programming/Projects/C Code/include/core/types.h	/^    HFONT hfont;$/;"	m	struct:FontHandle	typeref:typename:HFONT
 history_indices	/home/diggy/Programming/Projects/C Code/src/core/helpers_history.c	/^HashMap* history_indices = NULL;$/;"	v	typeref:typename:HashMap *
 hotkey_definitions.c	/home/diggy/Programming/Projects/C Code/src/bindings/hotkey_definitions.c	1;"	F	epoch:1787578056
-hotkey_definitions.c.d	/home/diggy/Programming/Projects/C Code/build/obj/hotkey_definitions.c.d	1;"	F	epoch:1787707990
+hotkey_definitions.c.d	/home/diggy/Programming/Projects/C Code/build/obj/hotkey_definitions.c.d	1;"	F	epoch:1787708731
 hotkey_definitions.h	/home/diggy/Programming/Projects/C Code/include/bindings/hotkey_definitions.h	1;"	F	epoch:1787103851
 hwnd	/home/diggy/Programming/Projects/C Code/include/core/types.h	/^    HWND hwnd;$/;"	m	struct:WindowHandle	typeref:typename:HWND
 hwnd	/home/diggy/Programming/Projects/C Code/include/core/types.h	/^    WindowHandle hwnd;$/;"	m	struct:__anon9bbca43d0808	typeref:typename:WindowHandle
@@ -2830,13 +2828,13 @@ listbox	/home/diggy/Programming/Projects/C Code/include/core/types.h	/^     List
 live_evaluate	/home/diggy/Programming/Projects/C Code/src/features/calc.c	/^void live_evaluate(const char* input, char* out_result, size_t max_len) {$/;"	f	typeref:typename:void
 log_handler	/home/diggy/Programming/Projects/C Code/nob.h	/^        #define log_handler nob_log_handler$/;"	d
 macro_bindings.c	/home/diggy/Programming/Projects/C Code/src/bindings/macro_bindings.c	1;"	F	epoch:1787103851
-macro_bindings.c.d	/home/diggy/Programming/Projects/C Code/build/obj/macro_bindings.c.d	1;"	F	epoch:1787707990
+macro_bindings.c.d	/home/diggy/Programming/Projects/C Code/build/obj/macro_bindings.c.d	1;"	F	epoch:1787708731
 macro_bindings.h	/home/diggy/Programming/Projects/C Code/include/bindings/macro_bindings.h	1;"	F	epoch:1787103851
 main	/home/diggy/Programming/Projects/C Code/nob.c	/^int main(int argc, char** argv) {$/;"	f	typeref:typename:int
 main	/home/diggy/Programming/Projects/C Code/nob_linux_window_build.c	/^int main(int argc, char** argv) {$/;"	f	typeref:typename:int
 main	/home/diggy/Programming/Projects/C Code/src/main.c	/^int main() {$/;"	f	typeref:typename:int
-main.c	/home/diggy/Programming/Projects/C Code/src/main.c	1;"	F	epoch:1787707598
-main.c.d	/home/diggy/Programming/Projects/C Code/build/obj/main.c.d	1;"	F	epoch:1787707990
+main.c	/home/diggy/Programming/Projects/C Code/src/main.c	1;"	F	epoch:1787708226
+main.c.d	/home/diggy/Programming/Projects/C Code/build/obj/main.c.d	1;"	F	epoch:1787708731
 main.py	/home/diggy/Programming/Projects/C Code/main.py	1;"	F	epoch:1787471130
 matches	/home/diggy/Programming/Projects/C Code/include/helpers.h	/^    AliasInfo matches[1024];$/;"	m	struct:__anon6b5af8430408	typeref:typename:AliasInfo[1024]
 matching_indices	/home/diggy/Programming/Projects/C Code/include/core/types.h	/^    int  matching_indices[MAX_MATCHES];$/;"	m	struct:ListBoxInfo	typeref:typename:int[]
@@ -2850,17 +2848,17 @@ message	/home/diggy/Programming/Projects/C Code/include/window/subclasses.h	/^  
 mf	/home/diggy/Programming/Projects/C Code/include/core/types.h	/^    MappedFile* mf;$/;"	m	struct:__anon9bbca43d1608	typeref:typename:MappedFile *
 mic_muted	/home/diggy/Programming/Projects/C Code/src/features/mute_microphone.c	/^bool mic_muted = false;$/;"	v	typeref:typename:bool
 minecraft.c	/home/diggy/Programming/Projects/C Code/src/features/minecraft.c	1;"	F	epoch:1787537224
-minecraft.c.d	/home/diggy/Programming/Projects/C Code/build/obj/minecraft.c.d	1;"	F	epoch:1787707991
+minecraft.c.d	/home/diggy/Programming/Projects/C Code/build/obj/minecraft.c.d	1;"	F	epoch:1787708731
 minecraft.h	/home/diggy/Programming/Projects/C Code/include/features/minecraft.h	1;"	F	epoch:1787103851
 minecraft_type_command	/home/diggy/Programming/Projects/C Code/src/features/minecraft.c	/^void minecraft_type_command(const char* command) {$/;"	f	typeref:typename:void
 minimal_log_level	/home/diggy/Programming/Projects/C Code/nob.h	/^        #define minimal_log_level nob_minimal_log_level$/;"	d
 misc_path	/home/diggy/Programming/Projects/C Code/include/core/types.h	/^    const char* misc_path; $/;"	m	struct:__anon9bbca43d0f08	typeref:typename:const char *
 misc_win32.c	/home/diggy/Programming/Projects/C Code/src/platform/win32/misc_win32.c	1;"	F	epoch:1787664480
 misc_x11.c	/home/diggy/Programming/Projects/C Code/src/platform/x11/misc_x11.c	1;"	F	epoch:1787664270
-misc_x11.c.d	/home/diggy/Programming/Projects/C Code/build/obj/misc_x11.c.d	1;"	F	epoch:1787707991
+misc_x11.c.d	/home/diggy/Programming/Projects/C Code/build/obj/misc_x11.c.d	1;"	F	epoch:1787708731
 mkdir_if_not_exists	/home/diggy/Programming/Projects/C Code/nob.h	/^        #define mkdir_if_not_exists nob_mkdir_if_not_exists$/;"	d
 modal.c	/home/diggy/Programming/Projects/C Code/src/core/modal.c	1;"	F	epoch:1787707847
-modal.c.d	/home/diggy/Programming/Projects/C Code/build/obj/modal.c.d	1;"	F	epoch:1787707990
+modal.c.d	/home/diggy/Programming/Projects/C Code/build/obj/modal.c.d	1;"	F	epoch:1787708731
 modal.h	/home/diggy/Programming/Projects/C Code/include/core/modal.h	1;"	F	epoch:1787707863
 mode	/home/diggy/Programming/Projects/C Code/include/bindings/vim_motions.h	/^    EditorMode mode;$/;"	m	struct:__anonaed3f7010308	typeref:typename:EditorMode
 mode	/home/diggy/Programming/Projects/C Code/include/bindings/vim_motions.h	/^    EditorMode mode;$/;"	m	struct:__anonaed3f7010408	typeref:typename:EditorMode
@@ -2879,20 +2877,20 @@ modifiers	/home/diggy/Programming/Projects/C Code/include/core/types.h	/^    int
 modifiers	/home/diggy/Programming/Projects/C Code/include/core/types.h	/^    int modifiers;$/;"	m	struct:__anon9bbca43d1708	typeref:typename:int
 modifiers	/home/diggy/Programming/Projects/C Code/include/helpers.h	/^    int modifiers;$/;"	m	struct:__anon6b5af8430108	typeref:typename:int
 monitor_control.c	/home/diggy/Programming/Projects/C Code/src/features/monitor_control.c	1;"	F	epoch:1787402297
-monitor_control.c.d	/home/diggy/Programming/Projects/C Code/build/obj/monitor_control.c.d	1;"	F	epoch:1787707991
+monitor_control.c.d	/home/diggy/Programming/Projects/C Code/build/obj/monitor_control.c.d	1;"	F	epoch:1787708731
 monitor_control.h	/home/diggy/Programming/Projects/C Code/include/features/monitor_control.h	1;"	F	epoch:1787103851
 monitor_focus.c	/home/diggy/Programming/Projects/C Code/src/features/monitor_focus.c	1;"	F	epoch:1787110999
-monitor_focus.c.d	/home/diggy/Programming/Projects/C Code/build/obj/monitor_focus.c.d	1;"	F	epoch:1787707990
+monitor_focus.c.d	/home/diggy/Programming/Projects/C Code/build/obj/monitor_focus.c.d	1;"	F	epoch:1787708731
 monitor_focus.h	/home/diggy/Programming/Projects/C Code/include/features/monitor_focus.h	1;"	F	epoch:1787111378
 msg_destroy_thread	/home/diggy/Programming/Projects/C Code/src/platform/x11/ui_x11.c	/^static void* msg_destroy_thread(void* arg) {$/;"	f	typeref:typename:void *	file:
 music_enter_callback	/home/diggy/Programming/Projects/C Code/src/features/music_player.c	/^static void music_enter_callback(const char* selection, ListBoxInfo* lb) {$/;"	f	typeref:typename:void	file:
 music_player.c	/home/diggy/Programming/Projects/C Code/src/features/music_player.c	1;"	F	epoch:1787628000
-music_player.c.d	/home/diggy/Programming/Projects/C Code/build/obj/music_player.c.d	1;"	F	epoch:1787707990
+music_player.c.d	/home/diggy/Programming/Projects/C Code/build/obj/music_player.c.d	1;"	F	epoch:1787708731
 music_player.h	/home/diggy/Programming/Projects/C Code/include/features/music_player.h	1;"	F	epoch:1787109917
 music_refresh_callback	/home/diggy/Programming/Projects/C Code/src/features/music_player.c	/^static void music_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {$/;"	f	typeref:typename:void	file:
 mute_messenger_call	/home/diggy/Programming/Projects/C Code/src/features/adb.c	/^void mute_messenger_call(void) {$/;"	f	typeref:typename:void
 mute_microphone.c	/home/diggy/Programming/Projects/C Code/src/features/mute_microphone.c	1;"	F	epoch:1787472231
-mute_microphone.c.d	/home/diggy/Programming/Projects/C Code/build/obj/mute_microphone.c.d	1;"	F	epoch:1787707990
+mute_microphone.c.d	/home/diggy/Programming/Projects/C Code/build/obj/mute_microphone.c.d	1;"	F	epoch:1787708731
 mute_microphone.h	/home/diggy/Programming/Projects/C Code/include/features/mute_microphone.h	1;"	F	epoch:1787111018
 my_strcasestr	/home/diggy/Programming/Projects/C Code/src/features/focus_switcher.c	/^static char* my_strcasestr(const char* haystack, const char* needle) {$/;"	f	typeref:typename:char *	file:
 myprogram.service	/home/diggy/Programming/Projects/C Code/myprogram.service	1;"	F	epoch:1787662818
@@ -3060,11 +3058,11 @@ notification_getter.c.d	/home/diggy/Programming/Projects/C Code/build/obj/notifi
 notification_getter.h	/home/diggy/Programming/Projects/C Code/include/features/notification_getter.h	1;"	F	epoch:1787111032
 nprocs	/home/diggy/Programming/Projects/C Code/nob.h	/^        #define nprocs nob_nprocs$/;"	d
 null_log_handler	/home/diggy/Programming/Projects/C Code/nob.h	/^        #define null_log_handler nob_null_log_handler$/;"	d
-number_shortcut.c	/home/diggy/Programming/Projects/C Code/src/core/number_shortcut.c	1;"	F	epoch:1787272035
-number_shortcut.c.d	/home/diggy/Programming/Projects/C Code/build/obj/number_shortcut.c.d	1;"	F	epoch:1787707990
+number_shortcut.c	/home/diggy/Programming/Projects/C Code/src/core/number_shortcut.c	1;"	F	epoch:1787708437
+number_shortcut.c.d	/home/diggy/Programming/Projects/C Code/build/obj/number_shortcut.c.d	1;"	F	epoch:1787708731
 number_shortcut.h	/home/diggy/Programming/Projects/C Code/include/core/number_shortcut.h	1;"	F	epoch:1787272035
 nvim_zoxide.c	/home/diggy/Programming/Projects/C Code/src/features/nvim_zoxide.c	1;"	F	epoch:1787664408
-nvim_zoxide.c.d	/home/diggy/Programming/Projects/C Code/build/obj/nvim_zoxide.c.d	1;"	F	epoch:1787707990
+nvim_zoxide.c.d	/home/diggy/Programming/Projects/C Code/build/obj/nvim_zoxide.c.d	1;"	F	epoch:1787708731
 nvim_zoxide.h	/home/diggy/Programming/Projects/C Code/include/features/nvim_zoxide.h	1;"	F	epoch:1787109917
 obj_path	/home/diggy/Programming/Projects/C Code/nob.c	/^static const char* obj_path(const char* src) {$/;"	f	typeref:typename:const char *	file:
 obj_path	/home/diggy/Programming/Projects/C Code/nob_linux_window_build.c	/^static const char* obj_path(const char* src) {$/;"	f	typeref:typename:const char *	file:
@@ -3093,14 +3091,14 @@ pending_hotkey_timeMs	/home/diggy/Programming/Projects/C Code/src/platform/x11/u
 pending_hotkey_vk	/home/diggy/Programming/Projects/C Code/src/platform/x11/ui_x11.c	/^int pending_hotkey_vk = 0;$/;"	v	typeref:typename:int
 pipe_create	/home/diggy/Programming/Projects/C Code/nob.h	/^        #define pipe_create nob_pipe_create$/;"	d
 pixel_utils.c	/home/diggy/Programming/Projects/C Code/src/features/pixel_utils.c	1;"	F	epoch:1787537224
-pixel_utils.c.d	/home/diggy/Programming/Projects/C Code/build/obj/pixel_utils.c.d	1;"	F	epoch:1787707990
+pixel_utils.c.d	/home/diggy/Programming/Projects/C Code/build/obj/pixel_utils.c.d	1;"	F	epoch:1787708731
 pixel_utils.h	/home/diggy/Programming/Projects/C Code/include/features/pixel_utils.h	1;"	F	epoch:1787103851
 pk_enter_callback	/home/diggy/Programming/Projects/C Code/src/features/process_killer.c	/^static void pk_enter_callback(const char* selection, ListBoxInfo* lb) {$/;"	f	typeref:typename:void	file:
 pk_refresh_callback	/home/diggy/Programming/Projects/C Code/src/features/process_killer.c	/^static void pk_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {$/;"	f	typeref:typename:void	file:
 platform.h	/home/diggy/Programming/Projects/C Code/include/platform/platform.h	1;"	F	epoch:1787578207
 platform_win32.c	/home/diggy/Programming/Projects/C Code/src/platform/win32/platform_win32.c	1;"	F	epoch:1787664340
 platform_x11.c	/home/diggy/Programming/Projects/C Code/src/platform/x11/platform_x11.c	1;"	F	epoch:1787623832
-platform_x11.c.d	/home/diggy/Programming/Projects/C Code/build/obj/platform_x11.c.d	1;"	F	epoch:1787707991
+platform_x11.c.d	/home/diggy/Programming/Projects/C Code/build/obj/platform_x11.c.d	1;"	F	epoch:1787708731
 populated_cache	/home/diggy/Programming/Projects/C Code/include/core/types.h	/^    char populated_cache[MAX_ITEMS][512];$/;"	m	struct:ListBoxInfo	typeref:typename:char[][512]
 populated_count	/home/diggy/Programming/Projects/C Code/include/core/types.h	/^    int  populated_count;$/;"	m	struct:ListBoxInfo	typeref:typename:int
 post_order	/home/diggy/Programming/Projects/C Code/nob.h	/^    bool post_order;$/;"	m	struct:__anondf57539c0608	typeref:typename:bool
@@ -3110,7 +3108,7 @@ printed_sigs	/home/diggy/Programming/Projects/C Code/nob.c	/^static Nob_File_Pat
 proc_wait	/home/diggy/Programming/Projects/C Code/nob.h	/^        #define proc_wait nob_proc_wait$/;"	d
 processId	/home/diggy/Programming/Projects/C Code/include/features/window_switcher.h	/^    uint32_t processId;$/;"	m	struct:__anonfba48d9e0308	typeref:typename:uint32_t
 process_killer.c	/home/diggy/Programming/Projects/C Code/src/features/process_killer.c	1;"	F	epoch:1787552211
-process_killer.c.d	/home/diggy/Programming/Projects/C Code/build/obj/process_killer.c.d	1;"	F	epoch:1787707991
+process_killer.c.d	/home/diggy/Programming/Projects/C Code/build/obj/process_killer.c.d	1;"	F	epoch:1787708731
 process_killer.h	/home/diggy/Programming/Projects/C Code/include/features/process_killer.h	1;"	F	epoch:1787103851
 procs_append_with_flush	/home/diggy/Programming/Projects/C Code/nob.h	/^        #define procs_append_with_flush nob_procs_append_with_flush$/;"	d
 procs_flush	/home/diggy/Programming/Projects/C Code/nob.h	/^        #define procs_flush nob_procs_flush$/;"	d
@@ -3125,7 +3123,7 @@ read_entire_file	/home/diggy/Programming/Projects/C Code/nob.h	/^        #define
 refresh_callback	/home/diggy/Programming/Projects/C Code/include/core/types.h	/^    RefreshCallback refresh_callback;$/;"	m	struct:feature_data	typeref:typename:RefreshCallback
 region_step	/home/diggy/Programming/Projects/C Code/src/features/screenshot.c	/^int region_step = 0;$/;"	v	typeref:typename:int
 reminder.c	/home/diggy/Programming/Projects/C Code/src/features/reminder.c	1;"	F	epoch:1787475213
-reminder.c.d	/home/diggy/Programming/Projects/C Code/build/obj/reminder.c.d	1;"	F	epoch:1787707991
+reminder.c.d	/home/diggy/Programming/Projects/C Code/build/obj/reminder.c.d	1;"	F	epoch:1787708731
 reminder.h	/home/diggy/Programming/Projects/C Code/include/features/reminder.h	1;"	F	epoch:1787103851
 reminder_edit_callback	/home/diggy/Programming/Projects/C Code/src/features/reminder.c	/^static void reminder_edit_callback(const char* selection, ListBoxInfo* lb) {$/;"	f	typeref:typename:void	file:
 reminder_enter_callback	/home/diggy/Programming/Projects/C Code/src/features/reminder.c	/^static void reminder_enter_callback(const char* selection, ListBoxInfo* lb) {$/;"	f	typeref:typename:void	file:
@@ -3133,7 +3131,7 @@ reminder_refresh_callback	/home/diggy/Programming/Projects/C Code/src/features/r
 render_callback	/home/diggy/Programming/Projects/C Code/include/core/types.h	/^    RenderCallback render_callback;$/;"	m	struct:feature_data	typeref:typename:RenderCallback
 replace_msg_window	/home/diggy/Programming/Projects/C Code/src/platform/x11/ui_x11.c	/^static void replace_msg_window(MsgWindow* m) {$/;"	f	typeref:typename:void	file:
 replica.c	/home/diggy/Programming/Projects/C Code/src/features/replica.c	1;"	F	epoch:1787309743
-replica.c.d	/home/diggy/Programming/Projects/C Code/build/obj/replica.c.d	1;"	F	epoch:1787707990
+replica.c.d	/home/diggy/Programming/Projects/C Code/build/obj/replica.c.d	1;"	F	epoch:1787708731
 replica.h	/home/diggy/Programming/Projects/C Code/include/features/replica.h	1;"	F	epoch:1787103851
 replica_enter_callback	/home/diggy/Programming/Projects/C Code/src/features/replica.c	/^static void replica_enter_callback(const char* selection, ListBoxInfo* lb) {$/;"	f	typeref:typename:void	file:
 replica_refresh_callback	/home/diggy/Programming/Projects/C Code/src/features/replica.c	/^static void replica_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb)/;"	f	typeref:typename:void	file:
@@ -3159,7 +3157,7 @@ scan_directory_recursive	/home/diggy/Programming/Projects/C Code/src/features/fi
 scope	/home/diggy/Programming/Projects/C Code/include/bindings/vim_motions.h	/^    VimScope scope;$/;"	m	struct:__anonaed3f7010308	typeref:typename:VimScope
 scope	/home/diggy/Programming/Projects/C Code/include/bindings/vim_motions.h	/^    VimScope scope;$/;"	m	struct:__anonaed3f7010408	typeref:typename:VimScope
 screenshot.c	/home/diggy/Programming/Projects/C Code/src/features/screenshot.c	1;"	F	epoch:1787707591
-screenshot.c.d	/home/diggy/Programming/Projects/C Code/build/obj/screenshot.c.d	1;"	F	epoch:1787707990
+screenshot.c.d	/home/diggy/Programming/Projects/C Code/build/obj/screenshot.c.d	1;"	F	epoch:1787708731
 screenshot.h	/home/diggy/Programming/Projects/C Code/include/features/screenshot.h	1;"	F	epoch:1787103851
 scroll_offset	/home/diggy/Programming/Projects/C Code/include/core/types.h	/^     int         scroll_offset;$/;"	m	struct:__anon9bbca43d0108	typeref:typename:int
 scroll_offset	/home/diggy/Programming/Projects/C Code/include/core/types.h	/^     int         scroll_offset;$/;"	m	struct:__anon9bbca43d0208	typeref:typename:int
@@ -3198,7 +3196,7 @@ str	/home/diggy/Programming/Projects/C Code/include/helpers.h	/^typedef struct {
 subclasses.h	/home/diggy/Programming/Projects/C Code/include/window/subclasses.h	1;"	F	epoch:1787487990
 subclasses_win32.c	/home/diggy/Programming/Projects/C Code/src/window/subclasses_win32.c	1;"	F	epoch:1787664399
 subclasses_x11.c	/home/diggy/Programming/Projects/C Code/src/window/subclasses_x11.c	1;"	F	epoch:1787667074
-subclasses_x11.c.d	/home/diggy/Programming/Projects/C Code/build/obj/subclasses_x11.c.d	1;"	F	epoch:1787707990
+subclasses_x11.c.d	/home/diggy/Programming/Projects/C Code/build/obj/subclasses_x11.c.d	1;"	F	epoch:1787708731
 subdir	/home/diggy/Programming/Projects/C Code/src/platform/x11/misc_x11.c	/^    static const struct { const char* name; const char* subdir; } subdirs[] = {$/;"	m	struct:ResolvePathToken::__anon1be804310108	typeref:typename:const char *	file:
 sv_chop_by_delim	/home/diggy/Programming/Projects/C Code/nob.h	/^        #define sv_chop_by_delim nob_sv_chop_by_delim$/;"	d
 sv_chop_left	/home/diggy/Programming/Projects/C Code/nob.h	/^        #define sv_chop_left nob_sv_chop_left$/;"	d
@@ -3248,7 +3246,7 @@ temp_sv_to_cstr	/home/diggy/Programming/Projects/C Code/nob.h	/^        #define 
 temp_vsprintf	/home/diggy/Programming/Projects/C Code/nob.h	/^        #define temp_vsprintf nob_temp_vsprintf$/;"	d
 terminal_command	/home/diggy/Programming/Projects/C Code/include/core/types.h	/^    const char* terminal_command;$/;"	m	struct:__anon9bbca43d1008	typeref:typename:const char *
 terminal_command.c	/home/diggy/Programming/Projects/C Code/src/features/terminal_command.c	1;"	F	epoch:1787637511
-terminal_command.c.d	/home/diggy/Programming/Projects/C Code/build/obj/terminal_command.c.d	1;"	F	epoch:1787707990
+terminal_command.c.d	/home/diggy/Programming/Projects/C Code/build/obj/terminal_command.c.d	1;"	F	epoch:1787708731
 terminal_command.h	/home/diggy/Programming/Projects/C Code/include/features/terminal_command.h	1;"	F	epoch:1787637298
 terminal_edit_callback	/home/diggy/Programming/Projects/C Code/src/features/terminal_command.c	/^static void terminal_edit_callback(const char* selection, ListBoxInfo* lb) {$/;"	f	typeref:typename:void	file:
 terminal_enter_callback	/home/diggy/Programming/Projects/C Code/src/features/terminal_command.c	/^static void terminal_enter_callback(const char* selection, ListBoxInfo* lb) {$/;"	f	typeref:typename:void	file:
@@ -3262,7 +3260,7 @@ timed_out	/home/diggy/Programming/Projects/C Code/include/core/types.h	/^    boo
 timeout	/home/diggy/Programming/Projects/C Code/include/window/subclasses.h	/^  int timeout;$/;"	m	struct:__anon3186d8cf0208	typeref:typename:int
 timeout	/home/diggy/Programming/Projects/C Code/src/platform/x11/ui_x11.c	/^    int timeout;$/;"	m	struct:__anon10d81b430208	typeref:typename:int	file:
 timer.c	/home/diggy/Programming/Projects/C Code/src/features/timer.c	1;"	F	epoch:1787472231
-timer.c.d	/home/diggy/Programming/Projects/C Code/build/obj/timer.c.d	1;"	F	epoch:1787707991
+timer.c.d	/home/diggy/Programming/Projects/C Code/build/obj/timer.c.d	1;"	F	epoch:1787708731
 timer.h	/home/diggy/Programming/Projects/C Code/include/core/timer.h	1;"	F	epoch:1787109814
 timer.h	/home/diggy/Programming/Projects/C Code/include/features/timer.h	1;"	F	epoch:1787103851
 timer_func	/home/diggy/Programming/Projects/C Code/include/features/reminder.h	/^    TimerFn     timer_func;$/;"	m	struct:__anon6c09bdd40108	typeref:typename:TimerFn
@@ -3276,7 +3274,7 @@ title	/home/diggy/Programming/Projects/C Code/include/features/window_switcher.h
 to_build	/home/diggy/Programming/Projects/C Code/nob.c	/^static Nob_File_Paths to_build = {0};$/;"	v	typeref:typename:Nob_File_Paths	file:
 to_unit	/home/diggy/Programming/Projects/C Code/include/features/calc.h	/^    const char* to_unit;$/;"	m	struct:__anon1a66f3310108	typeref:typename:const char *
 todo.c	/home/diggy/Programming/Projects/C Code/src/features/todo.c	1;"	F	epoch:1787575399
-todo.c.d	/home/diggy/Programming/Projects/C Code/build/obj/todo.c.d	1;"	F	epoch:1787707991
+todo.c.d	/home/diggy/Programming/Projects/C Code/build/obj/todo.c.d	1;"	F	epoch:1787708731
 todo.h	/home/diggy/Programming/Projects/C Code/include/features/todo.h	1;"	F	epoch:1787103851
 todo_copy_callback	/home/diggy/Programming/Projects/C Code/src/features/todo.c	/^static void todo_copy_callback(const char* selection,int true_index,int type) {$/;"	f	typeref:typename:void	file:
 todo_ctrlenter_callback	/home/diggy/Programming/Projects/C Code/src/features/todo.c	/^static void todo_ctrlenter_callback(const char* selection, ListBoxInfo* lb) {$/;"	f	typeref:typename:void	file:
@@ -3292,11 +3290,11 @@ trim_trailing_spaces	/home/diggy/Programming/Projects/C Code/src/features/calc.c
 type	/home/diggy/Programming/Projects/C Code/nob.h	/^    Nob_File_Type type;$/;"	m	struct:__anondf57539c0508	typeref:typename:Nob_File_Type
 typed_count	/home/diggy/Programming/Projects/C Code/include/core/types.h	/^    int typed_count;$/;"	m	struct:__anon9bbca43d0308	typeref:typename:int
 types.c	/home/diggy/Programming/Projects/C Code/src/core/types.c	1;"	F	epoch:1787103851
-types.c.d	/home/diggy/Programming/Projects/C Code/build/obj/types.c.d	1;"	F	epoch:1787707990
+types.c.d	/home/diggy/Programming/Projects/C Code/build/obj/types.c.d	1;"	F	epoch:1787708731
 types.h	/home/diggy/Programming/Projects/C Code/include/core/types.h	1;"	F	epoch:1787637220
-ui_win32.c	/home/diggy/Programming/Projects/C Code/src/platform/win32/ui_win32.c	1;"	F	epoch:1787667074
-ui_x11.c	/home/diggy/Programming/Projects/C Code/src/platform/x11/ui_x11.c	1;"	F	epoch:1787666764
-ui_x11.c.d	/home/diggy/Programming/Projects/C Code/build/obj/ui_x11.c.d	1;"	F	epoch:1787707991
+ui_win32.c	/home/diggy/Programming/Projects/C Code/src/platform/win32/ui_win32.c	1;"	F	epoch:1787708238
+ui_x11.c	/home/diggy/Programming/Projects/C Code/src/platform/x11/ui_x11.c	1;"	F	epoch:1787708444
+ui_x11.c.d	/home/diggy/Programming/Projects/C Code/build/obj/ui_x11.c.d	1;"	F	epoch:1787708731
 uinput_emit	/home/diggy/Programming/Projects/C Code/src/platform/x11/ui_x11.c	/^static void uinput_emit(const struct input_event *ev) {$/;"	f	typeref:typename:void	file:
 unset_include_env	/home/diggy/Programming/Projects/C Code/nob_linux_window_build.c	/^static void unset_include_env(void) {$/;"	f	typeref:typename:void	file:
 user_input	/home/diggy/Programming/Projects/C Code/include/core/types.h	/^     char        user_input[512];$/;"	m	struct:__anon9bbca43d0208	typeref:typename:char[512]
@@ -3304,21 +3302,21 @@ value	/home/diggy/Programming/Projects/C Code/include/core/hashmap.h	/^    void*
 video_enter_callback	/home/diggy/Programming/Projects/C Code/src/features/video_viewer.c	/^static void video_enter_callback(const char* selection, ListBoxInfo* lb) {$/;"	f	typeref:typename:void	file:
 video_refresh_callback	/home/diggy/Programming/Projects/C Code/src/features/video_viewer.c	/^static void video_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {$/;"	f	typeref:typename:void	file:
 video_viewer.c	/home/diggy/Programming/Projects/C Code/src/features/video_viewer.c	1;"	F	epoch:1787628009
-video_viewer.c.d	/home/diggy/Programming/Projects/C Code/build/obj/video_viewer.c.d	1;"	F	epoch:1787707990
+video_viewer.c.d	/home/diggy/Programming/Projects/C Code/build/obj/video_viewer.c.d	1;"	F	epoch:1787708731
 video_viewer.h	/home/diggy/Programming/Projects/C Code/include/features/video_viewer.h	1;"	F	epoch:1787626547
 view_offset	/home/diggy/Programming/Projects/C Code/include/core/types.h	/^    int  view_offset;$/;"	m	struct:ListBoxInfo	typeref:typename:int
 vim.c	/home/diggy/Programming/Projects/C Code/src/core/vim.c	1;"	F	epoch:1787667055
-vim.c.d	/home/diggy/Programming/Projects/C Code/build/obj/vim.c.d	1;"	F	epoch:1787707990
+vim.c.d	/home/diggy/Programming/Projects/C Code/build/obj/vim.c.d	1;"	F	epoch:1787708731
 vim.h	/home/diggy/Programming/Projects/C Code/include/core/vim.h	1;"	F	epoch:1787667014
 vim_bindings.c	/home/diggy/Programming/Projects/C Code/src/bindings/vim_bindings.c	1;"	F	epoch:1787103851
-vim_bindings.c.d	/home/diggy/Programming/Projects/C Code/build/obj/vim_bindings.c.d	1;"	F	epoch:1787707990
+vim_bindings.c.d	/home/diggy/Programming/Projects/C Code/build/obj/vim_bindings.c.d	1;"	F	epoch:1787708731
 vim_bindings.h	/home/diggy/Programming/Projects/C Code/include/bindings/vim_bindings.h	1;"	F	epoch:1787103851
 vim_context.c.d	/home/diggy/Programming/Projects/C Code/build/obj/vim_context.c.d	1;"	F	epoch:1787666778
 vim_helpers.c	/home/diggy/Programming/Projects/C Code/src/bindings/vim_helpers.c	1;"	F	epoch:1787667074
-vim_helpers.c.d	/home/diggy/Programming/Projects/C Code/build/obj/vim_helpers.c.d	1;"	F	epoch:1787707990
+vim_helpers.c.d	/home/diggy/Programming/Projects/C Code/build/obj/vim_helpers.c.d	1;"	F	epoch:1787708731
 vim_helpers.h	/home/diggy/Programming/Projects/C Code/include/bindings/vim_helpers.h	1;"	F	epoch:1787667074
 vim_motions.c	/home/diggy/Programming/Projects/C Code/src/bindings/vim_motions.c	1;"	F	epoch:1787667074
-vim_motions.c.d	/home/diggy/Programming/Projects/C Code/build/obj/vim_motions.c.d	1;"	F	epoch:1787707990
+vim_motions.c.d	/home/diggy/Programming/Projects/C Code/build/obj/vim_motions.c.d	1;"	F	epoch:1787708731
 vim_motions.h	/home/diggy/Programming/Projects/C Code/include/bindings/vim_motions.h	1;"	F	epoch:1787667074
 vim_view.c.d	/home/diggy/Programming/Projects/C Code/build/obj/vim_view.c.d	1;"	F	epoch:1787640146
 vk_code	/home/diggy/Programming/Projects/C Code/include/bindings/macro_bindings.h	/^    int vk_code;$/;"	m	struct:__anonf75fbfcc0208	typeref:typename:int
@@ -3334,7 +3332,7 @@ vk_code	/home/diggy/Programming/Projects/C Code/include/core/types.h	/^    int v
 vk_code	/home/diggy/Programming/Projects/C Code/include/core/types.h	/^    int vk_code;$/;"	m	struct:__anon9bbca43d1708	typeref:typename:int
 vk_code	/home/diggy/Programming/Projects/C Code/include/helpers.h	/^    int vk_code;$/;"	m	struct:__anon6b5af8430108	typeref:typename:int
 volume.c	/home/diggy/Programming/Projects/C Code/src/features/volume.c	1;"	F	epoch:1787643453
-volume.c.d	/home/diggy/Programming/Projects/C Code/build/obj/volume.c.d	1;"	F	epoch:1787707991
+volume.c.d	/home/diggy/Programming/Projects/C Code/build/obj/volume.c.d	1;"	F	epoch:1787708731
 volume.h	/home/diggy/Programming/Projects/C Code/include/features/volume.h	1;"	F	epoch:1787103851
 w	/home/diggy/Programming/Projects/C Code/include/core/types.h	/^    int x, y, w, h;$/;"	m	struct:__anon9bbca43d0a08	typeref:typename:int
 waiting	/home/diggy/Programming/Projects/C Code/include/core/types.h	/^    bool waiting;$/;"	m	struct:__anon9bbca43d0308	typeref:typename:bool
@@ -3351,14 +3349,14 @@ win32_value	/home/diggy/Programming/Projects/C Code/include/config.h	/^    const
 window_count	/home/diggy/Programming/Projects/C Code/include/core/types.h	/^    int window_count;$/;"	m	struct:__anon9bbca43d1208	typeref:typename:int
 window_count	/home/diggy/Programming/Projects/C Code/include/core/types.h	/^    int window_count;$/;"	m	struct:__anon9bbca43d1508	typeref:typename:int
 window_switcher.c	/home/diggy/Programming/Projects/C Code/src/features/window_switcher.c	1;"	F	epoch:1787653846
-window_switcher.c.d	/home/diggy/Programming/Projects/C Code/build/obj/window_switcher.c.d	1;"	F	epoch:1787707991
+window_switcher.c.d	/home/diggy/Programming/Projects/C Code/build/obj/window_switcher.c.d	1;"	F	epoch:1787708731
 window_switcher.h	/home/diggy/Programming/Projects/C Code/include/features/window_switcher.h	1;"	F	epoch:1787401792
 window_title	/home/diggy/Programming/Projects/C Code/include/core/types.h	/^     char*       window_title;$/;"	m	struct:__anon9bbca43d0108	typeref:typename:char *
 window_title	/home/diggy/Programming/Projects/C Code/include/core/types.h	/^     char*       window_title;$/;"	m	struct:__anon9bbca43d0208	typeref:typename:char *
 window_titles	/home/diggy/Programming/Projects/C Code/include/core/types.h	/^    const char** window_titles;  $/;"	m	struct:__anon9bbca43d1208	typeref:typename:const char **
 window_titles	/home/diggy/Programming/Projects/C Code/include/core/types.h	/^    const char** window_titles;  $/;"	m	struct:__anon9bbca43d1508	typeref:typename:const char **
 windows_control.c	/home/diggy/Programming/Projects/C Code/src/features/windows_control.c	1;"	F	epoch:1787563486
-windows_control.c.d	/home/diggy/Programming/Projects/C Code/build/obj/windows_control.c.d	1;"	F	epoch:1787707991
+windows_control.c.d	/home/diggy/Programming/Projects/C Code/build/obj/windows_control.c.d	1;"	F	epoch:1787708731
 windows_control.h	/home/diggy/Programming/Projects/C Code/include/features/windows_control.h	1;"	F	epoch:1787103851
 write	/home/diggy/Programming/Projects/C Code/nob.h	/^    Nob_Fd write;$/;"	m	struct:__anondf57539c0a08	typeref:typename:Nob_Fd
 write_compile_commands	/home/diggy/Programming/Projects/C Code/nob.c	/^static bool write_compile_commands(void) {$/;"	f	typeref:typename:bool	file:
@@ -3376,14 +3374,14 @@ yazi_edit_callback	/home/diggy/Programming/Projects/C Code/src/features/yazi_zox
 yazi_enter_callback	/home/diggy/Programming/Projects/C Code/src/features/yazi_zoxide.c	/^static void yazi_enter_callback(const char* selection, ListBoxInfo* lb) {$/;"	f	typeref:typename:void	file:
 yazi_refresh_callback	/home/diggy/Programming/Projects/C Code/src/features/yazi_zoxide.c	/^static void yazi_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {$/;"	f	typeref:typename:void	file:
 yazi_zoxide.c	/home/diggy/Programming/Projects/C Code/src/features/yazi_zoxide.c	1;"	F	epoch:1787552711
-yazi_zoxide.c.d	/home/diggy/Programming/Projects/C Code/build/obj/yazi_zoxide.c.d	1;"	F	epoch:1787707991
+yazi_zoxide.c.d	/home/diggy/Programming/Projects/C Code/build/obj/yazi_zoxide.c.d	1;"	F	epoch:1787708731
 yazi_zoxide.h	/home/diggy/Programming/Projects/C Code/include/features/yazi_zoxide.h	1;"	F	epoch:1787109917
 zoxide.c	/home/diggy/Programming/Projects/C Code/src/features/zoxide.c	1;"	F	epoch:1787552705
-zoxide.c.d	/home/diggy/Programming/Projects/C Code/build/obj/zoxide.c.d	1;"	F	epoch:1787707991
+zoxide.c.d	/home/diggy/Programming/Projects/C Code/build/obj/zoxide.c.d	1;"	F	epoch:1787708731
 zoxide.h	/home/diggy/Programming/Projects/C Code/include/features/zoxide.h	1;"	F	epoch:1787109917
 zoxide_edit_callback	/home/diggy/Programming/Projects/C Code/src/features/zoxide.c	/^static void zoxide_edit_callback(const char* selection, ListBoxInfo* lb) {$/;"	f	typeref:typename:void	file:
 zoxide_enter_callback	/home/diggy/Programming/Projects/C Code/src/features/zoxide.c	/^static void zoxide_enter_callback(const char* selection, ListBoxInfo* lb) {$/;"	f	typeref:typename:void	file:
 zoxide_helpers.c	/home/diggy/Programming/Projects/C Code/src/core/zoxide_helpers.c	1;"	F	epoch:1787664453
-zoxide_helpers.c.d	/home/diggy/Programming/Projects/C Code/build/obj/zoxide_helpers.c.d	1;"	F	epoch:1787707990
+zoxide_helpers.c.d	/home/diggy/Programming/Projects/C Code/build/obj/zoxide_helpers.c.d	1;"	F	epoch:1787708731
 zoxide_helpers.h	/home/diggy/Programming/Projects/C Code/include/core/zoxide_helpers.h	1;"	F	epoch:1787474996
 zoxide_refresh_callback	/home/diggy/Programming/Projects/C Code/src/features/zoxide.c	/^static void zoxide_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) /;"	f	typeref:typename:void	file:
