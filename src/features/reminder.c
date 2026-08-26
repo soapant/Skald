@@ -305,9 +305,10 @@ void TriggerReminder(void) {
     if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
     if (!g_cached_reminder_commands) RebuildReminderCache();
     const char** list = ZoxideHelper_PrepareTriggerList(NULL, &g_cached_reminder_commands, &g_cached_reminder_count, NULL);
-    ImportantPromptUser(list, "⏱️ Reminder", g_cached_reminder_count, 920,650, 32, 
-               reminder_refresh_callback, 
-               reminder_enter_callback, 
-               reminder_edit_callback,NULL);
+    PROMPT(.title = "⏱️ Reminder", .items = list, .count = g_cached_reminder_count,
+           .height = 920, .width = 650, .item_height = 32,
+           .refresh = reminder_refresh_callback,
+           .enter = reminder_enter_callback,
+           .edit = reminder_edit_callback);
     ZoxideHelper_CleanupTriggerList(list);
 }

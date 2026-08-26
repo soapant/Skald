@@ -122,9 +122,10 @@ void TriggerTerminalCommand(void) {
     if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
     if (!g_cached_commands) RebuildCommandCache();
     const char** list = ZoxideHelper_PrepareTriggerList(NULL, &g_cached_commands, &g_cached_command_count, NULL);
-    ImportantPromptUser(list, "⌨️ Terminal", g_cached_command_count, 920, 650, 32, 
-               terminal_refresh_callback, 
-               terminal_enter_callback, 
-               terminal_edit_callback,NULL);
+    PROMPT(.title = "⌨️ Terminal", .items = list, .count = g_cached_command_count,
+           .height = 920, .width = 650, .item_height = 32,
+           .refresh = terminal_refresh_callback,
+           .enter = terminal_enter_callback,
+           .edit = terminal_edit_callback);
     ZoxideHelper_CleanupTriggerList(list);
 }

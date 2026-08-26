@@ -14,7 +14,8 @@ static void TriggerScreenshot(WindowHandle hPopupWnd,bool open_screenshot) {
     if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
 
     const char* name_prompt = "Enter image name...";
-    char* raw_name = Platform_SimplePromptUser(name_prompt,"📷 Screenshot",920, 650,32);
+    char* raw_name = SIMPLE_PROMPT(.prompt = name_prompt, .title = "📷 Screenshot",
+                                   .height = 920, .width = 650, .item_height = 32);
 
     if (raw_name != NULL && strlen(raw_name) > 0) {
         char final_file_path[512];

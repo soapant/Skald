@@ -55,9 +55,10 @@ void TriggerZoxide(void) {
     if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
     if (!g_cached_zoxide_commands) RebuildZoxideCache();
     const char** list = ZoxideHelper_PrepareTriggerList(NULL, &g_cached_zoxide_commands, &g_cached_zoxide_count, NULL);
-    ImportantPromptUser(list, "⌨️ Zoxide", g_cached_zoxide_count,920,650, 32, 
-               zoxide_refresh_callback, 
-               zoxide_enter_callback, 
-               zoxide_edit_callback,NULL);
+    PROMPT(.title = "⌨️ Zoxide", .items = list, .count = g_cached_zoxide_count,
+           .height = 920, .width = 650, .item_height = 32,
+           .refresh = zoxide_refresh_callback,
+           .enter = zoxide_enter_callback,
+           .edit = zoxide_edit_callback);
     ZoxideHelper_CleanupTriggerList(list);
 }

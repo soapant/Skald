@@ -195,9 +195,9 @@ void TriggerProcessKiller(void) {
         list_items[i] = G_PK_LIST[i];
     }
 
-    ImportantPromptUser(list_items,"💀 ProcessKiller", G_PK_COUNT, 920, 650,32,
-                        pk_refresh_callback,        
-                        pk_enter_callback,          
-                        NULL,NULL);
+    PROMPT(.title = "💀 ProcessKiller", .items = list_items, .count = G_PK_COUNT,
+           .height = 920, .width = 650, .item_height = 32,
+           .refresh = pk_refresh_callback,
+           .enter = pk_enter_callback);
     free(list_items);
 }

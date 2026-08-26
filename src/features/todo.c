@@ -499,13 +499,13 @@ void TriggerTodo(void) {
         ui_list[i] = todo_lines[i];
     }
 
-    char* selected_item = Platform_PromptUser(ui_list, "📝 Todo", count, 920, 650, 56,
-                                     todo_refresh_callback,  
-                                     todo_enter_callback,    
-                                     todo_ctrlenter_callback, 
-                                     NULL,                    
-                                     todo_copy_callback,                    
-                                     todo_render_callback,
-                                     todo_edit_callback,
-                                     NULL,NULL);
+    char* selected_item = PROMPT(
+        .title = "📝 Todo", .items = ui_list, .count = count,
+        .height = 920, .width = 650, .item_height = 56,
+        .refresh = todo_refresh_callback,
+        .enter = todo_enter_callback,
+        .ctrl_enter = todo_ctrlenter_callback,
+        .copy = todo_copy_callback,
+        .render = todo_render_callback,
+        .edit = todo_edit_callback);
 }

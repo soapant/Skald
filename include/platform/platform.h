@@ -51,17 +51,8 @@ double Platform_GetUniversalTimeSeconds(void);
 void Platform_SaveRegionToPNG(int x1, int y1, int x2, int y2, const char* fullPath);
 
 void Platform_WaitForKeypressAsync(KeyCallback callback);
-char* Platform_PromptUser(const char* window_list[], const char* window_title, int count, int height, int width, int item_height,
-    RefreshCallback refresh_callback, 
-    EnterCallback enter_callback,
-    CtrlEnterCallback ctrl_enter_callback,
-    TabCallback tab_callback,
-    CopyCallback copy_callback,
-    RenderCallback render_callback,
-    EditCallback edit_callback,
-    FilterCallback filter_callback,
-    HelpCallback help_callback);
-char* Platform_SimplePromptUser(const char* prompt, const char* window_title,int height, int width, int item_height);
+char* Platform_PromptUser(const PromptSpec* spec);
+char* Platform_SimplePromptUser(const SimplePromptSpec* spec);
 void Platform_DisplayMessage(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, int timeout);
 void Platform_CreateDisplayMessageWindow(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, int timeout);
 FontHandle Platform_CreateFont(int size, const char* face_name);

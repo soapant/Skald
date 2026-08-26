@@ -41,9 +41,10 @@ void TriggerExplorer(void) {
     if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
     if (!g_cached_explorer_commands) RebuildExplorerCache();
     const char** list = ZoxideHelper_PrepareTriggerList(NULL, &g_cached_explorer_commands, &g_cached_explorer_count, NULL);
-    ImportantPromptUser(list, "📁 Explorer", g_cached_explorer_count, 920, 650, 32, 
-               explorer_refresh_callback, 
-               explorer_enter_callback, 
-               explorer_edit_callback,NULL);
+    PROMPT(.title = "📁 Explorer", .items = list, .count = g_cached_explorer_count,
+           .height = 920, .width = 650, .item_height = 32,
+           .refresh = explorer_refresh_callback,
+           .enter = explorer_enter_callback,
+           .edit = explorer_edit_callback);
     ZoxideHelper_CleanupTriggerList(list);
 }
