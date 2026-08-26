@@ -8,9 +8,7 @@
 #include <windows.h>
 #endif
 
-// ---------------------------------------------------------------------------
-// VimContext: text/cursor access for the active surface
-// ---------------------------------------------------------------------------
+SequenceState g_seq_state = {0};
 
 void Vim_GetText(VimContext* ctx, char* buf, size_t cap) {
     if (!ctx || !buf || cap==0) return;
