@@ -281,7 +281,15 @@ int get_offset_based_on_number(int index) {
     return 0;
 }
 
+Window Linux_CreateWindowExOR(Display* dpy, int x, int y, int w, int h, unsigned long bg_color, const char* res_name, const char* res_class, long event_mask, bool override_redirect);
+
 Window Linux_CreateWindowEx(Display* dpy, int x, int y, int w, int h, unsigned long bg_color, const char* res_name, const char* res_class, long event_mask) {
+    return Linux_CreateWindowExOR(dpy, x, y, w, h, bg_color, res_name, res_class, event_mask, false);
+}
+
+// override_redirect=true bypasses the WM completely: no auto-centering, no
+// placement interference. Used for flash messages that position themselves.
+Window Linux_CreateWindowExOR(Display* dpy, int x, int y, int w, int h, unsigned long bg_color, const char* res_name, const char* res_class, long event_mask, bool override_redirect) {
     int screen = DefaultScreen(dpy);
     extern float WindowOpacity;
     XVisualInfo vinfo;
@@ -314,13 +322,20 @@ Window Linux_CreateWindowEx(Display* dpy, int x, int y, int w, int h, unsigned l
         attrs.background_pixel = (a << 24) | (r << 16) | (g << 8) | b;
         attrs.colormap = cmap;
         attrs.border_pixel = 0;
-        win = XCreateWindow(dpy, RootWindow(dpy, screen), x, y, w, h, 0, depth, InputOutput, visual, CWBackPixel|CWColormap|CWBorderPixel, &attrs);
+        if (override_redirect) attrs.override_redirect = True;
+        win = XCreateWindow(dpy, RootWindow(dpy, screen), x, y, w, h, 0, depth, InputOutput, visual,
+                            CWBackPixel|CWColormap|CWBorderPixel|(override_redirect ? CWOverrideRedirect : 0), &attrs);
     } else {
+        XSetWindowAttributes attrs = {0};
+        if (override_redirect) attrs.override_redirect = True;
         win = XCreateSimpleWindow(dpy, RootWindow(dpy, screen), x, y, w, h, 0, bg_color, bg_color);
+        if (override_redirect) XChangeWindowAttributes(dpy, win, CWOverrideRedirect, &attrs);
     }
-    Atom wm_type = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE", False);
-    Atom wm_type_dialog = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE_DIALOG", False);
-    XChangeProperty(dpy, win, wm_type, XA_ATOM, 32, PropModeReplace, (unsigned char*)&wm_type_dialog, 1);
+    if (!override_redirect) {
+        Atom wm_type = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE", False);
+        Atom wm_type_dialog = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE_DIALOG", False);
+        XChangeProperty(dpy, win, wm_type, XA_ATOM, 32, PropModeReplace, (unsigned char*)&wm_type_dialog, 1);
+    }
     if (res_name || res_class) {
         XClassHint* ch = XAllocClassHint();
         ch->res_name = (char*)(res_name ? res_name : "colored");
@@ -352,7 +367,7 @@ Window Linux_CreateEditPopupWindow(Display* dpy, int x, int y, int w, int h) {
 }
 Window Linux_CreateDisplayMessageWindow(Display* dpy, int x, int y, int w, int h) {
     unsigned long bg = rgb_to_hex(COLOR_BG);
-    return Linux_CreateWindowEx(dpy, x, y, w, h, bg, "flashtext", "flashtext", ExposureMask | KeyPressMask);
+    return Linux_CreateWindowExOR(dpy, x, y, w, h, bg, "flashtext", "flashtext", ExposureMask | KeyPressMask, true);
 }
 
 XftDraw* Linux_CreateXftDraw(Display* dpy, Window win) {
