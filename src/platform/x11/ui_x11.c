@@ -46,9 +46,9 @@ Window g_PromptWin = None;
 bool g_PromptJustClosed = false;
 long g_PromptCloseTimeMs = 0;
 extern bool g_Linux_CtrlHeld, g_Linux_AltHeld, g_Linux_ShiftHeld;
+extern char output_buffer[255];
 
 static bool should_use_grab(void) {
-    // On Wayland/Hyprland, libinput holds evdev exclusively. EVIOCGRAB bricks.
     if (getenv("WAYLAND_DISPLAY")) return false;
     if (getenv("HYPRLAND_INSTANCE_SIGNATURE")) return false;
     const char* t = getenv("XDG_SESSION_TYPE");
