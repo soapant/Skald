@@ -2355,7 +2355,7 @@ common_ui.c.d	/home/diggy/Programming/Projects/C Code/build/obj/common_ui.c.d	1;
 common_ui.h	/home/diggy/Programming/Projects/C Code/include/core/common_ui.h	1;"	F	epoch:1787713183
 common_ui_win32.c	/home/diggy/Programming/Projects/C Code/src/platform/win32/common_ui_win32.c	1;"	F	epoch:1787713067
 compile_all	/home/diggy/Programming/Projects/C Code/nob.c	/^static bool compile_all(bool* any_compiled) {$/;"	f	typeref:typename:bool	file:
-compile_commands.json	/home/diggy/Programming/Projects/C Code/compile_commands.json	1;"	F	epoch:1787746118
+compile_commands.json	/home/diggy/Programming/Projects/C Code/compile_commands.json	1;"	F	epoch:1787748597
 condition_func	/home/diggy/Programming/Projects/C Code/include/features/reminder.h	/^    ConditionFn condition_func;$/;"	m	struct:__anon6c09bdd40108	typeref:typename:ConditionFn
 condition_param	/home/diggy/Programming/Projects/C Code/include/features/reminder.h	/^    const char* condition_param;$/;"	m	struct:__anon6c09bdd40108	typeref:typename:const char *
 config.c	/home/diggy/Programming/Projects/C Code/src/config/config.c	1;"	F	epoch:1787742929
@@ -2778,8 +2778,8 @@ height	/home/diggy/Programming/Projects/C Code/include/core/types.h	/^    int he
 height	/home/diggy/Programming/Projects/C Code/include/core/types.h	/^    int height, width, item_height;$/;"	m	struct:__anon9bbca43d0408	typeref:typename:int
 help	/home/diggy/Programming/Projects/C Code/include/core/types.h	/^    HelpCallback help;$/;"	m	struct:__anon9bbca43d0308	typeref:typename:HelpCallback
 help_callback	/home/diggy/Programming/Projects/C Code/include/core/types.h	/^    HelpCallback help_callback;$/;"	m	struct:feature_data	typeref:typename:HelpCallback
-helpers.c	/home/diggy/Programming/Projects/C Code/src/core/helpers.c	1;"	F	epoch:1787710425
-helpers.c.d	/home/diggy/Programming/Projects/C Code/build/obj/helpers.c.d	1;"	F	epoch:1787746074
+helpers.c	/home/diggy/Programming/Projects/C Code/src/core/helpers.c	1;"	F	epoch:1787748225
+helpers.c.d	/home/diggy/Programming/Projects/C Code/build/obj/helpers.c.d	1;"	F	epoch:1787748409
 helpers.h	/home/diggy/Programming/Projects/C Code/include/helpers.h	1;"	F	epoch:1787621714
 helpers_color.c	/home/diggy/Programming/Projects/C Code/src/core/helpers_color.c	1;"	F	epoch:1787666209
 helpers_color.c.d	/home/diggy/Programming/Projects/C Code/build/obj/helpers_color.c.d	1;"	F	epoch:1787746074
@@ -2875,8 +2875,8 @@ macro_bindings.h	/home/diggy/Programming/Projects/C Code/include/bindings/macro_
 main	/home/diggy/Programming/Projects/C Code/nob.c	/^int main(int argc, char** argv) {$/;"	f	typeref:typename:int
 main	/home/diggy/Programming/Projects/C Code/nob_linux_window_build.c	/^int main(int argc, char** argv) {$/;"	f	typeref:typename:int
 main	/home/diggy/Programming/Projects/C Code/src/main.c	/^int main() {$/;"	f	typeref:typename:int
-main.c	/home/diggy/Programming/Projects/C Code/src/main.c	1;"	F	epoch:1787742885
-main.c.d	/home/diggy/Programming/Projects/C Code/build/obj/main.c.d	1;"	F	epoch:1787746074
+main.c	/home/diggy/Programming/Projects/C Code/src/main.c	1;"	F	epoch:1787746470
+main.c.d	/home/diggy/Programming/Projects/C Code/build/obj/main.c.d	1;"	F	epoch:1787746488
 main.py	/home/diggy/Programming/Projects/C Code/main.py	1;"	F	epoch:1787743372
 matches	/home/diggy/Programming/Projects/C Code/include/helpers.h	/^    AliasInfo matches[1024];$/;"	m	struct:__anon6b5af8430408	typeref:typename:AliasInfo[1024]
 matching_indices	/home/diggy/Programming/Projects/C Code/include/core/types.h	/^    int  matching_indices[MAX_MATCHES];$/;"	m	struct:ListBoxInfo	typeref:typename:int[]
@@ -3236,8 +3236,8 @@ str	/home/diggy/Programming/Projects/C Code/include/helpers.h	/^typedef struct {
 str	/home/diggy/Programming/Projects/C Code/include/helpers.h	/^typedef struct { char* str; TimerFn     func; } TimerDef;$/;"	m	struct:__anon6b5af8430808	typeref:typename:char *
 subclasses.h	/home/diggy/Programming/Projects/C Code/include/window/subclasses.h	1;"	F	epoch:1787710288
 subclasses_win32.c	/home/diggy/Programming/Projects/C Code/src/window/subclasses_win32.c	1;"	F	epoch:1787710347
-subclasses_x11.c	/home/diggy/Programming/Projects/C Code/src/window/subclasses_x11.c	1;"	F	epoch:1787713210
-subclasses_x11.c.d	/home/diggy/Programming/Projects/C Code/build/obj/subclasses_x11.c.d	1;"	F	epoch:1787746074
+subclasses_x11.c	/home/diggy/Programming/Projects/C Code/src/window/subclasses_x11.c	1;"	F	epoch:1787748287
+subclasses_x11.c.d	/home/diggy/Programming/Projects/C Code/build/obj/subclasses_x11.c.d	1;"	F	epoch:1787748409
 subdir	/home/diggy/Programming/Projects/C Code/src/platform/x11/misc_x11.c	/^    static const struct { const char* name; const char* subdir; } subdirs[] = {$/;"	m	struct:ResolvePathToken::__anon1be804310108	typeref:typename:const char *	file:
 sv_chop_by_delim	/home/diggy/Programming/Projects/C Code/nob.h	/^        #define sv_chop_by_delim nob_sv_chop_by_delim$/;"	d
 sv_chop_left	/home/diggy/Programming/Projects/C Code/nob.h	/^        #define sv_chop_left nob_sv_chop_left$/;"	d
@@ -3344,8 +3344,8 @@ types.c.d	/home/diggy/Programming/Projects/C Code/build/obj/types.c.d	1;"	F	epoc
 types.h	/home/diggy/Programming/Projects/C Code/include/core/types.h	1;"	F	epoch:1787745647
 ui_win32.c	/home/diggy/Programming/Projects/C Code/src/platform/win32/ui_win32.c	1;"	F	epoch:1787710321
 ui_win32.h	/home/diggy/Programming/Projects/C Code/include/platform/ui_win32.h	1;"	F	epoch:1787745018
-ui_x11.c	/home/diggy/Programming/Projects/C Code/src/platform/x11/ui_x11.c	1;"	F	epoch:1787746132
-ui_x11.c.d	/home/diggy/Programming/Projects/C Code/build/obj/ui_x11.c.d	1;"	F	epoch:1787746075
+ui_x11.c	/home/diggy/Programming/Projects/C Code/src/platform/x11/ui_x11.c	1;"	F	epoch:1787748342
+ui_x11.c.d	/home/diggy/Programming/Projects/C Code/build/obj/ui_x11.c.d	1;"	F	epoch:1787748409
 ui_x11.h	/home/diggy/Programming/Projects/C Code/include/platform/ui_x11.h	1;"	F	epoch:1787712966
 uinput_emit	/home/diggy/Programming/Projects/C Code/src/platform/x11/ui_x11.c	/^static void uinput_emit(const struct input_event *ev) {$/;"	f	typeref:typename:void	file:
 unset_include_env	/home/diggy/Programming/Projects/C Code/nob_linux_window_build.c	/^static void unset_include_env(void) {$/;"	f	typeref:typename:void	file:
