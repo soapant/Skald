@@ -114,14 +114,10 @@ void launch_exe_with_args(const char* exe_path, const char* args) {
             }
         }
     }
-    const char* display = getenv("DISPLAY");
-    if (!display) display = ":0";
-    const char* xauthority = getenv("XAUTHORITY");
-    if (!xauthority) xauthority = "";
+    const char* display = Platform_GetSessionDisplay();
+    const char* xauthority = Platform_GetSessionXAuthority();
     char runtime_dir[256];
-    const char* env_runtime = getenv("XDG_RUNTIME_DIR");
-    if (env_runtime) snprintf(runtime_dir, sizeof(runtime_dir), "%s", env_runtime);
-    else snprintf(runtime_dir, sizeof(runtime_dir), "/run/user/1000");
+    snprintf(runtime_dir, sizeof(runtime_dir), "%s", Platform_GetRuntimeDir());
     // daemon double-fork so app outlives launcher - handle both sudo and nohup cases
     char disp_env[256], xauth_env[512], runtime_env[512];
     snprintf(disp_env, sizeof(disp_env), "DISPLAY=%s", display);

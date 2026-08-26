@@ -7,6 +7,9 @@
 #if !defined(_WIN32)
 #include <pthread.h>
 #include <unistd.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <sys/file.h>
 #endif
 #if !defined(_WIN32)
 #include "x11_display.h"
@@ -63,6 +66,38 @@ void OInNotificationRecieved(const char* text) {
 }
 
 int main() {
+#if !defined(_WIN32)
+  // Single-instance guard: two copies would both grab keyboards and fight
+  // over X11/uinput (e.g. old root system service + user service both enabled).
+  // /tmp on purpose: must be the SAME path for a root instance and a user
+  // instance so they actually see each other.
+  {
+    int lock_fd = open("/tmp/myprogram.lock", O_RDWR | O_CREAT, 0666);
+    if (lock_fd < 0) {
+      fprintf(stderr, "[SYSTEM] Cannot open singleton lock /tmp/myprogram.lock (%s).\n"
+                      "If it is owned by another user, remove it: sudo rm /tmp/myprogram.lock\n",
+              strerror(errno));
+      return 1;
+    }
+    if (flock(lock_fd, LOCK_EX | LOCK_NB) != 0) {
+      fprintf(stderr, "[SYSTEM] Another instance is already running. Exiting.\n");
+      close(lock_fd);
+      return 1;
+    }
+    // Intentionally keep lock_fd open for the process lifetime.
+  }
+#endif
+#if defined(_WIN32)
+  // Single-instance guard for Windows.
+  {
+    HANDLE mtx = CreateMutexA(NULL, TRUE, "myprogram_single_instance_mutex");
+    if (mtx && GetLastError() == ERROR_ALREADY_EXISTS) {
+      fprintf(stderr, "[SYSTEM] Another instance is already running. Exiting.\n");
+      return 1;
+    }
+    // Intentionally never release/close: held for process lifetime.
+  }
+#endif
 #if !defined(_WIN32)
   if (!init_display()) {
     fprintf(stderr, "[SYSTEM] Continuing without X11 display (headless mode)\n");

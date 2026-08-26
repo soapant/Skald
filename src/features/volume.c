@@ -77,15 +77,11 @@ cleanup:
 
 int GetSystemVolume(void) {
     const char* real_user = Platform_GetRealUser();
-    const char* display = getenv("DISPLAY");
-    if (!display) display = ":0";
+    const char* display = Platform_GetSessionDisplay();
 
-    const char* runtime_dir = getenv("XDG_RUNTIME_DIR");
     char rt_buf[256];
-    if (!runtime_dir) {
-        snprintf(rt_buf, sizeof(rt_buf), "/run/user/1000");
-        runtime_dir = rt_buf;
-    }
+    snprintf(rt_buf, sizeof(rt_buf), "%s", Platform_GetRuntimeDir());
+    const char* runtime_dir = rt_buf;
 
     char cmd[512];
     if (Platform_IsRunningAsRoot()) {
@@ -115,15 +111,11 @@ int GetSystemVolume(void) {
 
 void SetSystemVolume(float volume) {
     const char* real_user = Platform_GetRealUser();
-    const char* display = getenv("DISPLAY");
-    if (!display) display = ":0";
+    const char* display = Platform_GetSessionDisplay();
 
-    const char* runtime_dir = getenv("XDG_RUNTIME_DIR");
     char rt_buf[256];
-    if (!runtime_dir) {
-        snprintf(rt_buf, sizeof(rt_buf), "/run/user/1000");
-        runtime_dir = rt_buf;
-    }
+    snprintf(rt_buf, sizeof(rt_buf), "%s", Platform_GetRuntimeDir());
+    const char* runtime_dir = rt_buf;
 
     char cmd[512];
     if (Platform_IsRunningAsRoot()) {

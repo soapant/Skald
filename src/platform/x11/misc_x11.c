@@ -7,12 +7,33 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pwd.h>
+#include <dirent.h>
+#include <errno.h>
 #include <linux/input.h>
 
 #include "common.h"
 #include "config.h"
 #include "helpers.h"
 #include "platform/platform.h"
+
+// Owner of the active X socket = the human's uid, even when we run as root.
+static uid_t ProbeSessionUid(void){
+    DIR* d = opendir("/tmp/.X11-unix");
+    if (!d) return (uid_t)-1;
+    struct dirent* e;
+    while ((e = readdir(d)) != NULL) {
+        if (e->d_name[0] != 'X') continue;
+        char path[512];
+        snprintf(path, sizeof(path), "/tmp/.X11-unix/%s", e->d_name);
+        struct stat st;
+        if (stat(path, &st) == 0 && st.st_uid != 0) {
+            closedir(d);
+            return st.st_uid;
+        }
+    }
+    closedir(d);
+    return (uid_t)-1;
+}
 
 const char* Platform_GetRealUser(void){
     static char buf[256]={0};
@@ -21,11 +42,17 @@ const char* Platform_GetRealUser(void){
     const char* u=getenv("SUDO_USER");
     if(u && u[0] && strcmp(u,"root")!=0){ strncpy(buf,u,sizeof(buf)-1); done=true; return buf; }
     u=getenv("USER");
-    if(u && u[0]){ strncpy(buf,u,sizeof(buf)-1); done=true; return buf; }
+    if(u && u[0] && strcmp(u,"root")!=0){ strncpy(buf,u,sizeof(buf)-1); done=true; return buf; }
     u=getenv("LOGNAME");
-    if(u && u[0]){ strncpy(buf,u,sizeof(buf)-1); done=true; return buf; }
+    if(u && u[0] && strcmp(u,"root")!=0){ strncpy(buf,u,sizeof(buf)-1); done=true; return buf; }
+    // Service context running as root: the X session owner is the real user.
+    uid_t suid = ProbeSessionUid();
+    if (suid != (uid_t)-1) {
+        struct passwd* spw = getpwuid(suid);
+        if (spw && spw->pw_name) { strncpy(buf,spw->pw_name,sizeof(buf)-1); done=true; return buf; }
+    }
     struct passwd* pw=getpwuid(getuid());
-    if(pw && pw->pw_name){ strncpy(buf,pw->pw_name,sizeof(buf)-1); done=true; return buf; }
+    if(pw && pw->pw_name && strcmp(pw->pw_name,"root")!=0){ strncpy(buf,pw->pw_name,sizeof(buf)-1); done=true; return buf; }
     strncpy(buf,"diggy",sizeof(buf)-1); done=true; return buf;
 }
 
@@ -44,6 +71,65 @@ const char* Platform_GetRealHome(void){
 }
 
 bool Platform_IsRunningAsRoot(void){ return getuid()==0; }
+
+// DISPLAY for spawned processes: env if present, else the socket owned by a
+// real user session. Fixes ":0" guesses when the service has no DISPLAY.
+const char* Platform_GetSessionDisplay(void){
+    static char buf[64]={0};
+    static bool done=false;
+    if(done) return buf[0]?buf:":0";
+    const char* env=getenv("DISPLAY");
+    if(env && env[0]){ snprintf(buf,sizeof(buf),"%s",env); done=true; return buf; }
+    DIR* d = opendir("/tmp/.X11-unix");
+    if (d) {
+        struct dirent* e;
+        while ((e = readdir(d)) != NULL) {
+            if (e->d_name[0] != 'X') continue;
+            char* end = NULL;
+            long n = strtol(e->d_name + 1, &end, 10);
+            if (end == e->d_name + 1 || *end != '\0') continue;
+            char path[512];
+            snprintf(path, sizeof(path), "/tmp/.X11-unix/%s", e->d_name);
+            struct stat st;
+            if (stat(path, &st) != 0) continue;
+            // Prefer our own uid's socket, else any non-root session.
+            if (st.st_uid == geteuid() || st.st_uid != 0) {
+                snprintf(buf, sizeof(buf), ":%ld", n);
+                break;
+            }
+        }
+        closedir(d);
+    }
+    done=true;
+    return buf[0]?buf:":0";
+}
+
+// XAUTHORITY for spawned processes: env, else <real home>/.Xauthority.
+const char* Platform_GetSessionXAuthority(void){
+    static char buf[512]={0};
+    static bool done=false;
+    if(done) return buf[0]?buf:"";
+    const char* xa=getenv("XAUTHORITY");
+    if(xa && xa[0]){ snprintf(buf,sizeof(buf),"%s",xa); done=true; return buf; }
+    snprintf(buf,sizeof(buf),"%s/.Xauthority",Platform_GetRealHome());
+    if(access(buf,R_OK)==0){ done=true; return buf; }
+    buf[0]='\0'; done=true;
+    return "";
+}
+
+// XDG_RUNTIME_DIR for spawned processes (wpctl/pipewire, wl-copy...).
+const char* Platform_GetRuntimeDir(void){
+    static char buf[256]={0};
+    static bool done=false;
+    if(done) return buf[0]?buf:"/run/user/1000";
+    const char* rt=getenv("XDG_RUNTIME_DIR");
+    if(rt && rt[0]){ snprintf(buf,sizeof(buf),"%s",rt); done=true; return buf; }
+    const char* u=Platform_GetRealUser();
+    struct passwd* pw=getpwnam(u);
+    if(pw){ snprintf(buf,sizeof(buf),"/run/user/%d",(int)pw->pw_uid); done=true; return buf; }
+    snprintf(buf,sizeof(buf),"/run/user/%d",(int)getuid()); done=true;
+    return buf[0]?buf:"/run/user/1000";
+}
 
 static bool ResolvePathToken(const char* token, char* out, size_t out_size) {
     for (unsigned int i = 0; i < PATH_VAR_COUNT; i++) {

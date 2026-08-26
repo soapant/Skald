@@ -26,12 +26,10 @@
 bool Platform_LaunchTerminal(const char* working_dir, const char* extra_args){
     if(!working_dir) return false;
     const char* real_user = Platform_GetRealUser();
-    const char* display = getenv("DISPLAY"); if(!display) display=":0";
-    const char* xauthority = getenv("XAUTHORITY"); if(!xauthority) xauthority="";
+    const char* display = Platform_GetSessionDisplay();
+    const char* xauthority = Platform_GetSessionXAuthority();
     char runtime_dir[256];
-    const char* env_rt=getenv("XDG_RUNTIME_DIR");
-    if(env_rt) snprintf(runtime_dir,sizeof(runtime_dir),"%s",env_rt);
-    else snprintf(runtime_dir,sizeof(runtime_dir),"/run/user/1000");
+    snprintf(runtime_dir,sizeof(runtime_dir),"%s",Platform_GetRuntimeDir());
     const char* term = (UsedTerminal && strlen(UsedTerminal)>0) ? UsedTerminal : "alacritty";
     char disp_env[256], xauth_env[512], runtime_env[512];
     snprintf(disp_env,sizeof(disp_env),"DISPLAY=%s",display);
@@ -109,14 +107,10 @@ bool Platform_ShellExecuteWithVerb(const char* path, const char* verb, bool asyn
     if (!path) return false;
     (void)verb;
     const char* real_user = Platform_GetRealUser();
-    const char* display = getenv("DISPLAY");
-    if (!display) display = ":0";
-    const char* xauthority = getenv("XAUTHORITY");
-    if (!xauthority) xauthority = "";
+    const char* display = Platform_GetSessionDisplay();
+    const char* xauthority = Platform_GetSessionXAuthority();
     char runtime_dir[256];
-    const char* env_runtime = getenv("XDG_RUNTIME_DIR");
-    if (env_runtime) snprintf(runtime_dir, sizeof(runtime_dir), "%s", env_runtime);
-    else snprintf(runtime_dir, sizeof(runtime_dir), "/run/user/1000");
+    snprintf(runtime_dir, sizeof(runtime_dir), "%s", Platform_GetRuntimeDir());
 
     if (!async) {
         if (Platform_IsRunningAsRoot()){
@@ -248,14 +242,10 @@ bool Platform_LaunchApp(const char* path) {
     if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) return false;
     printf("Launching App Of Path %s \n",path);
     const char* real_user = Platform_GetRealUser();
-    const char* display = getenv("DISPLAY");
-    if (!display) display = ":0";
-    const char* xauthority = getenv("XAUTHORITY");
-    if (!xauthority) xauthority = "";
+    const char* display = Platform_GetSessionDisplay();
+    const char* xauthority = Platform_GetSessionXAuthority();
     char runtime_dir[256];
-    const char* env_runtime = getenv("XDG_RUNTIME_DIR");
-    if (env_runtime) snprintf(runtime_dir, sizeof(runtime_dir), "%s", env_runtime);
-    else snprintf(runtime_dir, sizeof(runtime_dir), "/run/user/1000");
+    snprintf(runtime_dir, sizeof(runtime_dir), "%s", Platform_GetRuntimeDir());
 
     if (strstr(expanded, ".desktop") != NULL) {
         // Robust .desktop handling: check Terminal=true and launch via terminal if needed

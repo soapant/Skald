@@ -83,12 +83,10 @@ void RunTerminalCommand(const char* Command, bool save_to_history,bool open_in_t
     snprintf(args, sizeof(args), "-e bash \"%s\"", temp_file);
     ShellExecuteA(NULL, "open", terminal_exe, args, NULL, SW_SHOWNORMAL);
 #else
-    const char* display = getenv("DISPLAY"); if(!display) display=":0";
-    const char* xauthority = getenv("XAUTHORITY"); if(!xauthority) xauthority="";
+    const char* display = Platform_GetSessionDisplay();
+    const char* xauthority = Platform_GetSessionXAuthority();
     char runtime_dir[256];
-    const char* env_runtime=getenv("XDG_RUNTIME_DIR");
-    if(env_runtime) snprintf(runtime_dir,sizeof(runtime_dir),"%s",env_runtime);
-    else snprintf(runtime_dir,sizeof(runtime_dir),"/run/user/1000");
+    snprintf(runtime_dir,sizeof(runtime_dir),"%s",Platform_GetRuntimeDir());
     char extra[1024];
     snprintf(extra,sizeof(extra),"-e bash \"%s\"", temp_file);
     if (open_in_terminal) {
