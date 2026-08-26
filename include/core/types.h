@@ -620,34 +620,34 @@ typedef struct {
 #define MAIN_CENTER_Y (GetSystemMetrics(SM_CYSCREEN) / 2)
 #endif
 
-#define MSG_LEFT(msg, msg_width, timeout) \
+#define MSG_LEFT(msg, msg_width, timeout, color) \
     Platform_DisplayMessage((msg), \
                    (960 - 450 - GAP - ((msg_width) / 2)), \
                    540, \
-                   (msg_width), 650, (timeout))
+                   (msg_width), 650, (timeout), (color))
 
-#define MSG_RIGHT(msg, msg_width, timeout) \
+#define MSG_RIGHT(msg, msg_width, timeout, color) \
     Platform_DisplayMessage((msg), \
                    (960 + 450 + GAP + ((msg_width) / 2)), \
                    540, \
-                   (msg_width), 650, (timeout))
+                   (msg_width), 650, (timeout), (color))
 
-#define MSG_TOP(msg, msg_height, timeout) \
+#define MSG_TOP(msg, msg_height, timeout, color) \
     Platform_DisplayMessage((msg), \
                    960, \
                    (960 - 540  - GAP * 10 - ((msg_height) / 2)), \
-                   900, (msg_height), (timeout))
+                   900, (msg_height), (timeout), (color))
 
-#define MSG_BOTTOM(msg, msg_height, timeout) \
+#define MSG_BOTTOM(msg, msg_height, timeout, color) \
     Platform_DisplayMessage((msg), \
                    960, \
                    (540 + (960 / 2) + GAP + ((msg_height) / 2)), \
-                   900, (msg_height), (timeout))
-#define MSG_MIDDLE_BOTTOM(msg,msg_height,timeout) \
+                   900, (msg_height), (timeout), (color))
+#define MSG_MIDDLE_BOTTOM(msg,msg_height,timeout,color) \
     Platform_DisplayMessage((msg), \
                    960, \
                    1080 - msg_height, \
-                   900,(msg_height), (timeout))
+                   900,(msg_height), (timeout), (color))
 
 #define MIDDLE_POS 960, 540, 1000, 300
 #define TOP_POS 960, 540, 1000, 300

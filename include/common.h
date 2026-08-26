@@ -72,6 +72,4 @@ extern int SelectionDataCount;
 extern const char* g_vim_mode;
 extern int last_index;
 
-extern ColorRef DisplayMessageText;
-
 #endif
