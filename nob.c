@@ -244,6 +244,27 @@ static bool compile_all(bool* any_compiled) {
     return print_failures() && ok;
 }
 
+// Stop a running instance so a fresh build can take over. The binary holds a
+// flock singleton lock, so an old instance would make new runs exit instantly.
+// Stops the user service AND any stray manually-launched copies.
+// ([m] trick so pkill doesn't match this very shell command)
+static void stop_running_instance(void) {
+    Nob_Cmd chk = {0};
+    nob_cmd_append(&chk, "sh", "-c",
+        "systemctl --user is-active --quiet myprogram.service 2>/dev/null || "
+        "pgrep -f 'build/[m]yprogram' >/dev/null 2>&1");
+    if (!nob_cmd_run(&chk)) return; // nothing running, don't even log
+
+    Nob_Cmd cmd = {0};
+    nob_cmd_append(&cmd, "sh", "-c",
+        "systemctl --user stop myprogram.service 2>/dev/null; "
+        "pkill -f 'build/[m]yprogram' 2>/dev/null; "
+        "exit 0");
+    if (nob_cmd_run(&cmd)) {
+        nob_log(NOB_INFO, "Stopped previously running myprogram instance");
+    }
+}
+
 int main(int argc, char** argv) {
     NOB_GO_REBUILD_URSELF_PLUS(argc, argv, "nob.h");
 
@@ -280,6 +301,7 @@ int main(int argc, char** argv) {
         nob_needs_rebuild(output, (const char**)to_build.items, to_build.count) == 0) {
         nob_log(NOB_INFO, "No changes, skipping link");
         if (do_run) {
+            stop_running_instance();
             Nob_Cmd cmd = {0};
             nob_cmd_append(&cmd, output);
             nob_log(NOB_INFO, "Started %s", output);
@@ -325,6 +347,10 @@ int main(int argc, char** argv) {
         nob_log(NOB_ERROR, "Failed to link %s", output);
         return 1;
     }
+    // Fresh binary linked: the old running instance is stale now, stop it.
+    // (No auto-restart - run `systemctl --user start myprogram` or ./nob -run
+    // yourself when you're done debugging.)
+    stop_running_instance();
     if (g_want_static){
 #if !defined(_WIN32)
         bool have_static2 = nob_file_exists("/usr/lib/libX11.a") || nob_file_exists("/usr/lib64/libX11.a") || nob_file_exists("/usr/lib/x86_64-linux-gnu/libX11.a") || nob_file_exists("/usr/lib/musl/lib/libX11.a");
