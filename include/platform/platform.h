@@ -53,8 +53,8 @@ void Platform_SaveRegionToPNG(int x1, int y1, int x2, int y2, const char* fullPa
 void Platform_WaitForKeypressAsync(KeyCallback callback);
 char* Platform_PromptUser(const PromptSpec* spec);
 char* Platform_SimplePromptUser(const SimplePromptSpec* spec);
-void Platform_DisplayMessage(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, int timeout);
-void Platform_CreateDisplayMessageWindow(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, int timeout);
+void Platform_DisplayMessage(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, int timeout, ColorRef color);
+void Platform_CreateDisplayMessageWindow(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, int timeout, ColorRef color);
 FontHandle Platform_CreateFont(int size, const char* face_name);
 #if !defined(_WIN32)
 FontHandle Platform_CreateFontOnDisplay(Display* dpy, int size, const char* face_name);
