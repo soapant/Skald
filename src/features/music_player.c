@@ -84,10 +84,10 @@ bool HandleMusicPlayer(int vk_code, int modifiers, const char* current_title) {
                     initial_items[i] = G_FILES_WITH_TIME[i].name;
                 }
 
-                ImportantPromptUser(initial_items,"🎵 Player",GetFileCount(), 920, 650,32,
-                                    music_refresh_callback,  
-                                    music_enter_callback,    
-                                    NULL,NULL);
+                PROMPT(.title = "🎵 Player", .items = initial_items, .count = GetFileCount(),
+                       .height = 920, .width = 650, .item_height = 32,
+                       .refresh = music_refresh_callback,
+                       .enter = music_enter_callback);
                 
                 free((void*)initial_items);
 

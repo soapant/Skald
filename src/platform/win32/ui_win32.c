@@ -26,16 +26,23 @@ void Platform_WaitForKeypressAsync(KeyCallback callback) {
   g_key_callback = callback;
 }
 
-char* Platform_PromptUser(const char* window_list[], const char* window_title, int count, int height, int width, int item_height,
-    RefreshCallback refresh_callback, 
-    EnterCallback enter_callback,
-    CtrlEnterCallback ctrl_enter_callback,
-    TabCallback tab_callback,
-    CopyCallback copy_callback,
-    RenderCallback render_callback,
-    EditCallback edit_callback,
-    FilterCallback filter_callback,
-    HelpCallback help_callback) {
+char* Platform_PromptUser(const PromptSpec* spec) {
+  const char** window_list = spec->items;
+  const char* window_title = spec->title;
+  int count = spec->count;
+  int height = spec->height;
+  int width = spec->width;
+  int item_height = spec->item_height;
+  RefreshCallback refresh_callback = spec->refresh;
+  EnterCallback enter_callback = spec->enter;
+  CtrlEnterCallback ctrl_enter_callback = spec->ctrl_enter;
+  TabCallback tab_callback = spec->tab;
+  CopyCallback copy_callback = spec->copy;
+  RenderCallback render_callback = spec->render;
+  EditCallback edit_callback = spec->edit;
+  FilterCallback filter_callback = spec->filter;
+  HelpCallback help_callback = spec->help;
+
   {
     const char* p = strchr(window_title, ' ');
     TimerEnd(g_timer, p ? p+1 : window_title);
@@ -205,7 +212,13 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
   return (strlen(output_buffer) > 0) ? output_buffer : NULL;
 }
 
-char* Platform_SimplePromptUser(const char* prompt, const char* window_title,int height, int width, int item_height) {
+char* Platform_SimplePromptUser(const SimplePromptSpec* spec) {
+  const char* prompt = spec->prompt;
+  const char* window_title = spec->title;
+  int height = spec->height;
+  int width = spec->width;
+  int item_height = spec->item_height;
+
   HINSTANCE hInstance = GetModuleHandle(NULL);
   selection_complete = false;
   output_buffer[0] = '\0';

@@ -85,16 +85,10 @@ void TriggerReplica(void) {
         }
     }
     
-    ImportantPromptUser(
-        titles,
-        "🔍 Replica",
-        count,
-        920, 650, 32,
-        replica_refresh_callback,
-        replica_enter_callback,
-        NULL,
-        NULL
-    );
+    PROMPT(.title = "🔍 Replica", .items = titles, .count = count,
+           .height = 920, .width = 650, .item_height = 32,
+           .refresh = replica_refresh_callback,
+           .enter = replica_enter_callback);
     
     free(titles);
     

@@ -46,9 +46,10 @@ void TriggerYaziZoxide(void) {
     if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
     if (!g_cached_yazi_commands) RebuildYaziCache();
     const char** list = ZoxideHelper_PrepareTriggerList(NULL, &g_cached_yazi_commands, &g_cached_yazi_count, NULL);
-    ImportantPromptUser(list, "📂 Yazi", g_cached_yazi_count, 920, 650, 32, 
-               yazi_refresh_callback, 
-               yazi_enter_callback, 
-               yazi_edit_callback,NULL);
+    PROMPT(.title = "📂 Yazi", .items = list, .count = g_cached_yazi_count,
+           .height = 920, .width = 650, .item_height = 32,
+           .refresh = yazi_refresh_callback,
+           .enter = yazi_enter_callback,
+           .edit = yazi_edit_callback);
     ZoxideHelper_CleanupTriggerList(list);
 }

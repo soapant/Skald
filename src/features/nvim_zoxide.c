@@ -131,9 +131,10 @@ void TriggerNvimZoxide(void) {
     const char** list = ZoxideHelper_PrepareTriggerList(NULL, &g_cached_nvim_commands, &g_cached_nvim_count, NULL);
     char titleBuffer[256];
     snprintf(titleBuffer,sizeof(titleBuffer),"📝 %s",TextEditorName);
-    ImportantPromptUser(list, titleBuffer, g_cached_nvim_count, 920, 650, 32, 
-               neovide_refresh_callback, 
-               neovide_enter_callback, 
-               neovide_edit_callback,NULL);
+    PROMPT(.title = titleBuffer, .items = list, .count = g_cached_nvim_count,
+           .height = 920, .width = 650, .item_height = 32,
+           .refresh = neovide_refresh_callback,
+           .enter = neovide_enter_callback,
+           .edit = neovide_edit_callback);
     ZoxideHelper_CleanupTriggerList(list);
 }
