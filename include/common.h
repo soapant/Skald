@@ -28,9 +28,6 @@ extern EditPopupData* g_EditData;
 extern Display* g_font_dpy;
 #endif
 
-extern uint32_t g_main_thread_id;
-
-extern bool selection_complete;
 
 extern RefreshCallback g_refresh_callback;
 extern EnterCallback g_enter_callback;
@@ -45,8 +42,10 @@ extern FilterCallback g_filter_callback;
 
 extern char* g_current_feature;
 extern const char* g_title;
+extern bool selection_complete;
 
 #if defined(_WIN32)
+extern uint32_t g_main_thread_id;
 extern HFONT g_hNumFont;
 extern HFONT g_hMainFont;
 extern HANDLE g_key_event;

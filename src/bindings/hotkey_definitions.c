@@ -74,12 +74,6 @@ bool IsPixelHotkeysEnabled(void) { return PixelHotkeys; }
 bool IsTimerAvailable(void) { return TimerAvailable; }
 bool IsReplicaAvailable(void) { return ReplicaAvailable; }
 
-void HandleSwapHotkeyMode(void) {
-    PixelHotkeys = !PixelHotkeys;
-    char buffer[20];
-    snprintf(buffer,sizeof(buffer),"Set The Pixel Hotkeys Mode To %s",PixelHotkeys  ? "True" : "False");
-    MSG_BOTTOM(buffer,140,TimeOutForMessages,COLOR_TEXT);
-}
 //only alt is for windows
 //ctrl alt is for things that oepn something new
 //shift alt is for toggles / thigns that dont need a window like muting
@@ -119,5 +113,4 @@ HotkeyBinding G_HOTKEY_BINDINGS[] = {
     BINDING_SIMPLE('K', HOTKEY_MOD_ALT_SHIFT,  HandleKillMyProgram),
     BINDING_SIMPLE('E', HOTKEY_MOD_ALT_SHIFT,  HandleInitAppLauncherCache),
     BINDING_SIMPLE('T',HOTKEY_MOD_ALT_SHIFT,Platform_HandleShowCurrentTime),
-    BINDING_SIMPLE(TOGGLE_PIXEL_HOTKEYS_KEY,HOTKEY_MOD_SHIFT_CTRL,HandleSwapHotkeyMode),
 };
