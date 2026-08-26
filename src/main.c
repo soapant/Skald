@@ -28,10 +28,6 @@ EditPopupData* g_EditData = NULL;
 char output_buffer[256];
 bool selection_complete = false;
 bool setting_complete = false;
-int region_step = 0;
-long saved_x1 = 0;
-long saved_y1 = 0;
-long img_x2 = 0, img_y2 = 0;
 RefreshCallback g_refresh_callback = NULL;
 EnterCallback g_enter_callback = NULL;
 CtrlEnterCallback g_ctrl_enter_callback = NULL;
@@ -52,11 +48,7 @@ WinTimer g_timer;
 #if defined(_WIN32)
 HANDLE g_key_event = NULL;
 #endif
-const char** g_initial_items = NULL;
-int g_initial_count = 0;
 const char* g_title = NULL;
-int img_region_step = 0;
-long img_x1 = 0, img_y1 = 0;
 #if defined(_WIN32)
 HFONT g_hNumFont = NULL;
 HFONT g_hMainFont = NULL;

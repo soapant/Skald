@@ -3,6 +3,13 @@
 #include "features/screenshot.h"
 #include "core/common_ui.h"
 
+int region_step = 0;
+long saved_x1 = 0;
+long saved_y1 = 0;
+long img_x2 = 0, img_y2 = 0;
+long img_x1 = 0, img_y1 = 0;
+int img_region_step = 0;
+
 static void TriggerScreenshot(WindowHandle hPopupWnd,bool open_screenshot) {
     if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
 

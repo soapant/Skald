@@ -18,7 +18,7 @@
 #include <ctype.h>
 
 bool CheckVimMotion(int pressed_vk, int modifiers, MotionAction* out_action, const char** out_sequence, int* out_typed_count) {
-    if (!g_vim_mode_enabled) return false;
+    if (!EnableVimMode) return false;
 #if defined(_WIN32)
     if (!IsWindowValid(hPopupWnd)) return false;
     if (!IsWindowValid(g_ActiveEditControl)) return false;

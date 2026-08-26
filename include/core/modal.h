@@ -11,7 +11,6 @@ typedef enum {
 } EditorMode;
 
 extern EditorMode g_current_mode;
-extern bool g_vim_mode_enabled;
 extern const char* g_vim_mode;
 extern int last_index;
 extern char* selection_feature;

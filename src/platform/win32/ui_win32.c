@@ -43,8 +43,6 @@ char* Platform_PromptUser(const char* window_list[], const char* window_title, i
   HINSTANCE hInstance = GetModuleHandle(NULL);
   selection_complete = false;
   output_buffer[0] = '\0';
-  g_initial_items = window_list;
-  g_initial_count = count;
   WinTimer timer = TimerStart();
 
   ListBoxInfo* lb_ptr = NULL;

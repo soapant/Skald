@@ -50,6 +50,7 @@
 #define COLOR_OF_SELECTION_LB(lb) ((lb && (lb)->selected_index >=0 && (lb)->selected_index <= MAX_VISIBLE_ITEMS) ? g_rainbow_text_cache[(lb)->selected_index] : COLOR_TEXT)
 
 extern bool Tray;
+extern bool EnableVimMode;
 extern bool RememberLastIndex;
 extern bool KeepSelectionAfterClose;
 extern bool MessageAfterEachHotkey;
