@@ -19,7 +19,7 @@ static ListBoxInfo* GetLBFromPopup(HWND hPopup) {
 static ListBoxInfo* GetLBFromChild(HWND hChild) {
   HWND hParent = GetParent(hChild);
   if (hParent && IsWindow(hParent)) return GetLBFromPopup(hParent);
-  // fallback to global popup
+  
   if (WH_TO_HWND(hPopupWnd) && IsWindow(WH_TO_HWND(hPopupWnd))) return GetLBFromPopup(WH_TO_HWND(hPopupWnd));
   return NULL;
 }
@@ -913,7 +913,7 @@ LRESULT CALLBACK SettingsPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
       RECT rect;
       GetClientRect(hwnd, &rect);
       
-      // Select font FIRST
+      
       HFONT hOldFont = (HFONT)SelectObject(hdc, g_hMainFont);
       
       HBRUSH hBgBrush = CreateSolidBrush(COLOR_BG);
@@ -967,7 +967,7 @@ LRESULT CALLBACK SettingsPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 
     SelectObject(hdc, hOldFont);
     
-      // Restore old font before ending paint
+      
       SelectObject(hdc, hOldFont);
       
       EndPaint(hwnd, &ps);
@@ -1026,7 +1026,7 @@ LRESULT CALLBACK SettingsEditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LP
 
 LRESULT CALLBACK EditPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
   ListBoxInfo* lb = GetLBFromChild(hWnd);
-  // fallback to main popup if not found
+  
   if (!lb && WH_TO_HWND(hPopupWnd) && IsWindow(WH_TO_HWND(hPopupWnd))) lb = GetLBFromPopup(WH_TO_HWND(hPopupWnd));
   EditPopupData* data = (EditPopupData*)dwRefData;
     if (!data || !WH_TO_HWND(data->hEdit)) {

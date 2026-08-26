@@ -195,8 +195,8 @@ char* Platform_PromptUser(const PromptSpec* spec) {
 
     XEvent ev;
     int running = 1;
-    bool got_focus = false; // FocusOut before any FocusIn is a compositor
-                            // focus race, not a lost-focus: ignore it.
+    bool got_focus = false; 
+                            
     while (running) {
         if (selection_complete) { running = 0; break; }
         XNextEvent(dpy, &ev);
@@ -219,7 +219,7 @@ char* Platform_PromptUser(const PromptSpec* spec) {
                   KeySym ks;
                   int len = XLookupString(&ev.xkey, buf, sizeof(buf), &ks, NULL);
                   if (len > 0) {
-                      // Wayland pending swallow fallback: if this printable char matches pending hotkey, drop it
+                      
                       bool swallow_pending = false;
                       if (pending_hotkey_vk != 0 && len==1) {
                           struct timeval tv; gettimeofday(&tv,NULL); long now=tv.tv_sec*1000+tv.tv_usec/1000;
@@ -238,7 +238,7 @@ char* Platform_PromptUser(const PromptSpec* spec) {
                           }
                       }
                       if (swallow_pending) {
-                          // drop leaked char
+                          
                       } else {
                           bool is_printable = true;
                           for (int i=0;i<len;i++) {
@@ -291,7 +291,7 @@ char* Platform_PromptUser(const PromptSpec* spec) {
     g_Linux_CtrlHeld = false;
     g_Linux_ShiftHeld = false;
     XSync(dpy, False);
-    // Any flash message spawned inside this popup dies with it.
+    
     Platform_DismissMessage();
     XDestroyWindow(dpy, win);
     XSync(dpy, False);
@@ -413,7 +413,7 @@ char* Platform_SimplePromptUser(const SimplePromptSpec* spec) {
     g_Linux_AltHeld = false;
     g_Linux_CtrlHeld = false;
     g_Linux_ShiftHeld = false;
-    // Any flash message spawned inside this popup dies with it.
+    
     Platform_DismissMessage();
     XDestroyWindow(dpy, win);
     free(state);
@@ -479,17 +479,12 @@ static void replace_msg_window(MsgWindow* m) {
     pthread_mutex_unlock(&g_msg_mtx);
 }
 
-// Geometry of the "main" monitor. Priority: monitor under the focused
-// window -> _NET_WM primary output -> largest active monitor.
-// The MSG_* macros assume a 1920x1080 canvas at origin 0,0; on multi-monitor
-// layouts that lands on whatever screen owns those global coords.
 static bool Linux_GetMainMonitorGeometry(Display* dpy, int* ox, int* oy, int* ow, int* oh) {
     Window root = DefaultRootWindow(dpy);
     XRRScreenResources* res = XRRGetScreenResourcesCurrent(dpy, root);
     if (!res) return false;
     RROutput primary = XRRGetOutputPrimary(dpy, root);
 
-    // Where is the user looking? Center of the focused X window, if any.
     int fx = -1, fy = -1;
     Window fw = None; int revert;
     XGetInputFocus(dpy, &fw, &revert);
@@ -507,10 +502,10 @@ static bool Linux_GetMainMonitorGeometry(Display* dpy, int* ox, int* oy, int* ow
     for (int c = 0; c < res->ncrtc; c++) {
         XRRCrtcInfo* ci = XRRGetCrtcInfo(dpy, res, res->crtcs[c]);
         if (!ci || ci->noutput == 0 || ci->width == 0) { if (ci) XRRFreeCrtcInfo(ci); continue; }
-        long score = (long)ci->width * (long)ci->height;      // base: bigger wins ties
+        long score = (long)ci->width * (long)ci->height;      
         bool contains_focus = (fx >= ci->x && fx < ci->x + ci->width &&
                                fy >= ci->y && fy < ci->y + ci->height);
-        if (contains_focus) score += 1000000000L;             // strongest signal
+        if (contains_focus) score += 1000000000L;             
         else if (primary != None && ci->outputs[0] == primary) score += 500000000L;
         if (score > best_score) {
             best_score = score;
@@ -556,9 +551,6 @@ void Platform_DisplayMessage(const char* message, int centerX, int centerY, int 
     unsigned long bg_color = rgb_to_hex(COLOR_BG);
     unsigned long text_color = rgb_to_hex(color);
 
-    // The macros compute positions on a 1920x1080 canvas; remap that point
-    // proportionally onto the main monitor so "bottom middle" is bottom
-    // middle of THAT monitor, not of the global desktop.
     int mox = 0, moy = 0, mow = 1920, moh = 1080;
     bool have_mon = Linux_GetMainMonitorGeometry(dpy, &mox, &moy, &mow, &moh);
     int px = mox + (int)((centerX / 1920.0) * mow);
@@ -739,8 +731,8 @@ char* Platform_EditTextPopup(const char* initial_text, int centerX, int centerY,
         } else if (ev.type == FocusIn) {
             edit_got_focus = true;
         } else if (ev.type == FocusOut) {
-            // Same never-had-focus guard as Platform_PromptUser: a FocusOut
-            // before any FocusIn is the compositor focus race, not a loss.
+            
+            
             if (CloseOnLossOfFocus && edit_got_focus && ev.xfocus.mode == NotifyNormal) {
                 focus_lost = true;
                 running = false;
@@ -765,7 +757,7 @@ char* Platform_EditTextPopup(const char* initial_text, int centerX, int centerY,
         if (RememberLastIndex) last_index = saved_index;
     }
 
-    // Any flash message spawned inside this popup dies with it.
+    
     Platform_DismissMessage();
     XDestroyWindow(dpy, win);
     XSync(dpy, False);
@@ -787,7 +779,7 @@ char* Platform_SearchPopup(void) {
     fprintf(stderr, "[PLATFORM] Platform_SearchPopup not implemented yet\n");
     return NULL;
 }
-// On HyperLand There Is No Tray
+
 int Platform_InitializeTrayIcon(void) {
     return -1;
 }
@@ -802,8 +794,8 @@ typedef struct {
 static SystemKeyboard active_kbs[MAX_KEYBOARDS];
 static int active_kb_count = 0;
 
-// Option B: unprivileged evdev via input group + uinput for swallow. Works as both root and user.
-// If EVIOCGRAB fails (no permission), hotkeys still work but without swallowing.
+
+
 static int g_uinput_fd = -1;
 static bool g_suppress_release[KEY_MAX + 1] = {0};
 static bool g_device_grabbed[MAX_KEYBOARDS] = {0};
@@ -817,15 +809,15 @@ static int init_uinput(void) {
     }
     if (ioctl(fd, UI_SET_EVBIT, EV_KEY) < 0) perror("[UINPUT] UI_SET_EVBIT EV_KEY");
     if (ioctl(fd, UI_SET_EVBIT, EV_SYN) < 0) perror("[UINPUT] UI_SET_EVBIT EV_SYN");
-    // Keyboards also emit MSC_SCAN and sometimes LED/REP - set them for completeness
-    // but virtual keyboard only needs KEY. We deliberately NOT set EV_REL/EV_ABS to avoid
-    // advertising as mouse/touchpad (which would brick cursor if we grabbed those, and confuses libinput).
+    
+    
+    
     ioctl(fd, UI_SET_EVBIT, EV_MSC);
     ioctl(fd, UI_SET_MSCBIT, MSC_SCAN);
     for (int i = 0; i <= KEY_MAX; i++) {
         ioctl(fd, UI_SET_KEYBIT, i);
     }
-    // try modern setup API first
+    
     struct uinput_setup setup;
     memset(&setup, 0, sizeof(setup));
     setup.id.bustype = BUS_USB;
@@ -839,7 +831,7 @@ static int init_uinput(void) {
             return -1;
         }
     } else {
-        // fallback to legacy uinput_user_dev
+        
         struct uinput_user_dev uud;
         memset(&uud, 0, sizeof(uud));
         snprintf(uud.name, sizeof(uud.name), "myprogram-virtual-keyboard");
@@ -855,7 +847,7 @@ static int init_uinput(void) {
             return -1;
         }
     }
-    // give X/Wayland time to pick up the new virtual device
+    
     usleep(150 * 1000);
     fprintf(stderr, "[UINPUT] virtual keyboard created (fd=%d)\n", fd);
     return fd;
@@ -872,7 +864,7 @@ static void destroy_uinput(void) {
 static void uinput_emit(const struct input_event *ev) {
     if (g_uinput_fd < 0) return;
     if (write(g_uinput_fd, ev, sizeof(*ev)) < 0) {
-        // EAGAIN is ok for NONBLOCK
+        
         if (errno != EAGAIN) perror("[UINPUT] write");
         return;
     }
@@ -950,8 +942,8 @@ bool HandleGlobalKeyEvent(int key_code, int value) {
         printf("SUPPOSED TO CLEAR FILE\n");
     }
 
-    // Bindings fire on press only; releases/repeats would re-match the same
-    // combo (W-release with Alt still held) and double-fire handlers.
+    
+    
     if (value != 1) {
         return 0;
     }
@@ -1082,7 +1074,7 @@ void Platform_RunHotKeyMessageLoop(void) {
             if (fds[i].revents & POLLIN) {
                 bool grabbed = g_device_grabbed[i];
                 while (read(fds[i].fd, &ev, sizeof(struct input_event)) > 0) {
-                    // Forward non-key events via uinput only when we grabbed that device
+                    
                     if (ev.type != EV_KEY) {
                         if (grabbed && g_uinput_fd >= 0) uinput_emit(&ev);
                         continue;
@@ -1098,9 +1090,9 @@ void Platform_RunHotKeyMessageLoop(void) {
                                             ev.code == KEY_LEFTSHIFT || ev.code == KEY_RIGHTSHIFT ||
                                             ev.code == KEY_LEFTMETA || ev.code == KEY_RIGHTMETA);
                         if (!is_modifier) {
-                            // Stale press from the backlog that piled up while
-                            // a prompt blocked this thread: still evaluate
-                            // bindings, else quick follow-up hotkeys vanish.
+                            
+                            
+                            
                             if (ev.value == 1 && !grabbed) {
                                 if (HandleGlobalKeyEvent(ev.code, ev.value)) {
                                     continue;
@@ -1115,29 +1107,29 @@ void Platform_RunHotKeyMessageLoop(void) {
                         }
                     }
 
-                    // swallow logic: if hotkey handled, suppress this press and the following release
-                    // check for release suppression first
+                    
+                    
                     if (ev.value == 0 && ev.code <= KEY_MAX && g_suppress_release[ev.code]) {
                         g_suppress_release[ev.code] = false;
-                        // swallow the release of a previously-swallowed press
+                        
                         continue;
                     }
                     if (ev.value == 2 && ev.code <= KEY_MAX && g_suppress_release[ev.code]) {
-                        // swallow autorepeat of swallowed key
+                        
                         continue;
                     }
 
                     if (HandleGlobalKeyEvent(ev.code, ev.value)) {
-                        // Swallow last key: don't forward via uinput. Remember to swallow release.
+                        
                         if (ev.value == 1 && ev.code <= KEY_MAX) {
                             g_suppress_release[ev.code] = true;
                         } else if (ev.value == 2 && ev.code <= KEY_MAX) {
-                            // also suppress eventual release after autorepeat
+                            
                             g_suppress_release[ev.code] = true;
                         }
                         continue;
                     }
-                    // not a hotkey -> forward only if we grabbed (otherwise OS already delivered)
+                    
                     if (grabbed) {
                         if (g_uinput_fd >= 0) {
                             uinput_emit(&ev);
@@ -1149,14 +1141,14 @@ void Platform_RunHotKeyMessageLoop(void) {
                             }
                         }
                     } else {
-                        // not grabbed -> OS will deliver, do nothing
+                        
                     }
                 }
             }
         }
     }
 
-    // cleanup grabs
+    
     for (int i = 0; i < active_kb_count; i++) {
         ioctl(active_kbs[i].fd, EVIOCGRAB, 0);
         close(active_kbs[i].fd);
@@ -1165,9 +1157,9 @@ void Platform_RunHotKeyMessageLoop(void) {
     destroy_uinput();
 }
 
-// On X11 Window Initalization Doesnt Need To Be Done
+
 void Platform_InitUI(void) {
 }
-// Same Thing Here
+
 void Platform_ShutdownUI(void) {
 }
