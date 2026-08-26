@@ -19,6 +19,7 @@
 #include "features/notification_getter.h"
 #endif
 
+
 WindowHandle hGlobalTrayWnd = WH_NULL;
 WindowHandle hPopupWnd = WH_NULL;
 WindowHandle hEditControl = WH_NULL;
