@@ -298,8 +298,8 @@ LRESULT CALLBACK SimpleListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, 
         GetClientRect(hWnd, &rect);
         if (ColorfullMode) {
           if (!s_gradient_ready) {
-            for (int i = 0; i < 32; i++) {
-              float ft = (float)i / 32.0f;
+            for (int i = 0; i < GradientItems; i++) {
+              float ft = (float)i / GradientItems;
                 s_gradient_brushes[i] = CreateSolidBrush(GetRainbowColor(ft, 0.55f, GradientBrightness));
             }
             s_gradient_ready = true;
@@ -462,19 +462,6 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
       }
       break;
     }
-    case WM_PREVIEW_SELECTION: {
-      int idx = (int)lParam;
-        if (idx >= 0 && idx < (lb ? lb->populated_count : 0)) {
-          SubjectiveMessageDisplay(lb->populated_cache[idx], 140, 6969, COLOR_OF_SELECTION_LB(lb));
-        } else {
-          if (WH_TO_HWND(hDisplayMessage) != NULL) {
-            KillTimer(WH_TO_HWND(hDisplayMessage), 999);
-              DestroyWindow(WH_TO_HWND(hDisplayMessage));
-              hDisplayMessage = WH_NULL;
-          }
-        }
-      return 0;
-    }
     case WM_MEASUREITEM: {
       MEASUREITEMSTRUCT* pmis = (MEASUREITEMSTRUCT*)lParam;
         if (pmis->CtlID == IDC_LIST_BOX) {
@@ -523,19 +510,6 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             s_num_init = true;
           }
           
-            if (RainbowText) {
-              if (!rainbow_init) {
-                for (int i = 0; i <= MAX_VISIBLE_ITEMS; i++) {
-                  float t = (float)(i % GradientItems) / (float)GradientItems;
-                  g_rainbow_text_cache[i] = GetRainbowColor(t, 0.85f, GradientBrightness);
-                }
-                rainbow_init = true;
-              }
-            } else {
-              for (int i = 0; i <= MAX_VISIBLE_ITEMS; i++) {
-                g_rainbow_text_cache[i] = COLOR_TEXT;
-              }
-            }
           if (ColorfullMode) {
             int color_index = pdis->itemID % 100;
               HBRUSH hBrush = s_colorful_brushes[color_index];
@@ -597,7 +571,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 numRect.right = numRect.left + 25;
                 
                 HFONT hOldFont = (HFONT)SelectObject(pdis->hDC, g_hNumFont);
-                SetTextColor(pdis->hDC, g_rainbow_text_cache[pdis->itemID]);
+                SetTextColor(pdis->hDC, GetRainbowColor((float)(pdis->itemID % GradientItems) / (float)GradientItems, 0.85f, GradientBrightness));
                 DrawTextA(pdis->hDC, s_num_cache[pdis->itemID], -1, &numRect, DT_SINGLELINE | DT_VCENTER | DT_CENTER);
                 SelectObject(pdis->hDC, hOldFont);
                 textRect.left += 35;
@@ -606,7 +580,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 RECT numRect = pdis->rcItem;
                   numRect.right = 35;
                   HFONT hOldFont = (HFONT)SelectObject(pdis->hDC, g_hNumFont);
-                  SetTextColor(pdis->hDC, g_rainbow_text_cache[pdis->itemID]);
+                  SetTextColor(pdis->hDC, GetRainbowColor((float)(pdis->itemID % GradientItems) / (float)GradientItems, 0.85f, GradientBrightness));
                   DrawTextA(pdis->hDC, s_num_cache[pdis->itemID], -1, &numRect, DT_SINGLELINE | DT_VCENTER | DT_CENTER);
                   SelectObject(pdis->hDC, hOldFont);
                   textRect.left += 35;
@@ -615,7 +589,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                   RECT numRect = pdis->rcItem;
                     numRect.right = 45;
                     HFONT hOldFont = (HFONT)SelectObject(pdis->hDC, g_hNumFont);
-                    SetTextColor(pdis->hDC, g_rainbow_text_cache[pdis->itemID]);
+                    SetTextColor(pdis->hDC, GetRainbowColor((float)(pdis->itemID % GradientItems) / (float)GradientItems, 0.85f, GradientBrightness));
                     DrawTextA(pdis->hDC, s_num_cache[pdis->itemID], -1, &numRect, DT_SINGLELINE | DT_VCENTER | DT_CENTER);
                   SelectObject(pdis->hDC, hOldFont);
                     textRect.left += 45;
@@ -974,7 +948,6 @@ LRESULT CALLBACK SettingsPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
       return 0;
   }
   case WM_DESTROY: {
-    setting_complete = true;
       hSettings = WH_NULL;
       break;
   }
@@ -1187,7 +1160,7 @@ LRESULT CALLBACK EditPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
             if (data->hFont) { DeleteObject(data->hFont); data->hFont = NULL; }
               SetWindowLongPtrA(hwnd, GWLP_USERDATA, 0);
         }
-      ForceWindowFocus(hPopupWnd, hEditControl);
+        ForceWindowFocus(hPopupWnd, hEditControl);
         last_index = lb ? lb->selected_index : -1;
         SetModeWithListBox(MODE_NORMAL, lb);
         UpdateTextCaret(hEditControl);

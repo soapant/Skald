@@ -8,6 +8,10 @@
 #include "core/timer.h"
 #include "core/common_ui.h"
 
+#if defined(_WIN32)
+#include <shlwapi.h>
+#endif
+
 HashMap* history_indices = NULL;
 
 bool IsWindowBlacklisted(const char* window_title, const char* blacklist[], int count) {

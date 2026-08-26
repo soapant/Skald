@@ -495,7 +495,7 @@ void DrawPromptUserListBox(Display *dpy,Window* win,PromptState *state) {
         XftColor fcoltext, fcolalternate, fcolrainbow;
         Linux_XftAllocColor(dpy, vis, cmap, rgb_to_hex(COLOR_TEXT), 0xFFFF, &fcoltext);
         Linux_XftAllocColor(dpy, vis, cmap, rgb_to_hex(COLOR_ALTERNATE), 0xFFFF, &fcolalternate);
-        float ft = (float)idx / 32.0f;
+        float ft = (float)idx / GradientItems;
         Linux_XftAllocColor(dpy, vis, cmap, rgb_to_hex(GetRainbowColor(ft, 0.55f, GradientBrightness)), 0xFFFF, &fcolrainbow);
 
         XftColor *num_color = &fcoltext;
