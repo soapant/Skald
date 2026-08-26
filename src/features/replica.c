@@ -59,9 +59,6 @@ static void replica_enter_callback(const char* selection, ListBoxInfo* lb) {
 }
 
 void TriggerReplica(void) {
-    if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
-    if (!ReplicaAvailable) return;
-    
     g_replica_selected_hwnd = WH_NULL;
     
     WindowUtils_GetAll(&g_replica_windows);

@@ -11,8 +11,6 @@ long img_x1 = 0, img_y1 = 0;
 int img_region_step = 0;
 
 static void TriggerScreenshot(WindowHandle hPopupWnd,bool open_screenshot) {
-    if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
-
     const char* name_prompt = "Enter image name...";
     char* raw_name = SIMPLE_PROMPT(.prompt = name_prompt, .title = "📷 Screenshot",
                                    .height = 920, .width = 650, .item_height = 32);

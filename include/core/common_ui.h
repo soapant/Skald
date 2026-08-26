@@ -365,21 +365,6 @@ static inline bool IsWindowValid(WindowHandle h) {
 }
 #endif
 
-static inline bool CheckAndBlockIfPopupActive(WindowHandle hPopupWnd) {
-#if !defined(_WIN32)
-  extern bool g_PromptJustClosed;
-  extern long g_PromptCloseTimeMs;
-  if (g_PromptJustClosed) {
-    struct timeval tv; gettimeofday(&tv, NULL);
-    long now = tv.tv_sec*1000 + tv.tv_usec/1000;
-    if (now - g_PromptCloseTimeMs < 150) {
-      return true;
-    }
-    g_PromptJustClosed = false;
-  }
-#endif
-  return IsPopupActive(hPopupWnd);
-}
 static inline void UI_GetCurrentCursorPosition(uint32_t *start, uint32_t *end) {
   if (start && end) {
     UI_Edit_GetSel(g_ActiveEditControl, start, end);

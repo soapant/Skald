@@ -43,7 +43,6 @@ static void yazi_edit_callback(const char* selection, ListBoxInfo* lb) {
 }
 
 void TriggerYaziZoxide(void) {
-    if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
     if (!g_cached_yazi_commands) RebuildYaziCache();
     const char** list = ZoxideHelper_PrepareTriggerList(NULL, &g_cached_yazi_commands, &g_cached_yazi_count, NULL);
     PROMPT(.title = "📂 Yazi", .items = list, .count = g_cached_yazi_count,

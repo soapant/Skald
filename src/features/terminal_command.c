@@ -119,7 +119,6 @@ static void terminal_edit_callback(const char* selection, ListBoxInfo* lb) {
 }
 
 void TriggerTerminalCommand(void) {
-    if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
     if (!g_cached_commands) RebuildCommandCache();
     const char** list = ZoxideHelper_PrepareTriggerList(NULL, &g_cached_commands, &g_cached_command_count, NULL);
     PROMPT(.title = "⌨️ Terminal", .items = list, .count = g_cached_command_count,
