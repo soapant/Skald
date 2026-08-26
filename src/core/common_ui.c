@@ -13,7 +13,7 @@
 #include <strings.h>
 #include <ctype.h>
 #include <string.h>
-// Case-insensitive substring search for Linux (like StrStrIA on Windows)
+
 static const char* Linux_StrStrIA(const char* haystack, const char* needle) {
     if (!haystack || !needle) return NULL;
     if (!*needle) return haystack;
@@ -340,8 +340,6 @@ void UpdateTextCaret(WindowHandle hwndEditControl)
     lastWidth = caretWidth;
     lastHwnd = WH_TO_HWND(hwndEditControl);
   }
-#else
-  (void)hwndEditControl;
 #endif
 }
 
