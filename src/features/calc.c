@@ -456,8 +456,6 @@ static void calculator_ctrlenter_callback(const char* selection, ListBoxInfo* lb
 
 
 void TriggerCalculator(void) {
-    if (IsPopupActive(hPopupWnd)) return;
-
     const char* default_msg[1] = { "Enter operation (e.g. 5 x 5 or 10 hours in minutes)" };
 
     PROMPT(.title = "🧮 Calculator", .items = default_msg, .count = 1,

@@ -505,24 +505,6 @@
   },
   {
     "directory": "/home/diggy/Programming/Projects/C Code",
-    "file": "src/features/nvim_zoxide.c",
-    "arguments": [
-      "gcc",
-      "-Wall",
-      "-Wextra",
-      "-I",
-      "include",
-      "-I/usr/include/freetype2",
-      "-MMD",
-      "-MP",
-      "-w",
-      "-g",
-      "-c",
-      "src/features/nvim_zoxide.c"
-    ]
-  },
-  {
-    "directory": "/home/diggy/Programming/Projects/C Code",
     "file": "src/features/terminal_command.c",
     "arguments": [
       "gcc",
@@ -591,6 +573,24 @@
       "-g",
       "-c",
       "src/features/app_launcher.c"
+    ]
+  },
+  {
+    "directory": "/home/diggy/Programming/Projects/C Code",
+    "file": "src/features/text_editor_zoxide.c",
+    "arguments": [
+      "gcc",
+      "-Wall",
+      "-Wextra",
+      "-I",
+      "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
+      "-w",
+      "-g",
+      "-c",
+      "src/features/text_editor_zoxide.c"
     ]
   },
   {
