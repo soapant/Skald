@@ -112,13 +112,10 @@ void TriggerForgetFull(void) {
         ui_list[i] = forgetfull_lines[i];
     }
 
-    Platform_PromptUser(ui_list, "📁 ForgetFull", count, 920, 650, 32, 
-               forgetfull_refresh_callback, 
-               forgetfull_enter_callback, 
-               forgetfull_ctrlenter_callback, 
-               NULL,
-               NULL,
-               NULL,
-               forgetfull_edit_callback,NULL,NULL);
-
+    PROMPT(.title = "📁 ForgetFull", .items = ui_list, .count = count,
+           .height = 920, .width = 650, .item_height = 32,
+           .refresh = forgetfull_refresh_callback,
+           .enter = forgetfull_enter_callback,
+           .ctrl_enter = forgetfull_ctrlenter_callback,
+           .edit = forgetfull_edit_callback);
 }

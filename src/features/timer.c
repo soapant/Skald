@@ -15,7 +15,8 @@ void TriggerTimer(void) {
     
     const char* prompt =  "Enter timer duration (10s 50m 2h or enter 0 for a stopwatch)";
     
-    input = Platform_SimplePromptUser(prompt,"⏱️ Timer",920, 650,32);
+    input = SIMPLE_PROMPT(.prompt = prompt, .title = "⏱️ Timer",
+                          .height = 920, .width = 650, .item_height = 32);
 
     printf("GOT INPUT %s \n",input);
     

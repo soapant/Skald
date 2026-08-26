@@ -146,7 +146,8 @@ void TriggerVolume(void) {
     char* input;
     snprintf(prompt, sizeof(prompt), "Enter Volume (0 - 100) Current Volume: %d", current_vol);
     
-    input = Platform_SimplePromptUser(prompt, "🔊 Volume", 920, 650, 32);
+    input = SIMPLE_PROMPT(.prompt = prompt, .title = "🔊 Volume",
+                          .height = 920, .width = 650, .item_height = 32);
 
     if (input != NULL) {
         if (strcmp(input, "mx") == 0) {

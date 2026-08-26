@@ -203,14 +203,11 @@ void TriggerAppLauncher(void) {
         initial_items[i] = G_APPS[i].name;
     }
 
-    Platform_PromptUser(initial_items,"🚀 Launcher", G_APP_COUNT, 920, 650,32,
-                        applauncher_refresh_callback,
-                        applauncher_enter_callback,   
-                        applauncher_ctrlenter_callback,
-                        NULL,
-                        applauncher_copy_callback,
-                        NULL,
-                        NULL,
-                        NULL,NULL);                         
+    PROMPT(.title = "🚀 Launcher", .items = initial_items, .count = G_APP_COUNT,
+           .height = 920, .width = 650, .item_height = 32,
+           .refresh = applauncher_refresh_callback,
+           .enter = applauncher_enter_callback,
+           .ctrl_enter = applauncher_ctrlenter_callback,
+           .copy = applauncher_copy_callback);
     free(initial_items);
 }

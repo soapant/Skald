@@ -66,9 +66,10 @@ void TriggerGoogleSearch(void) {
     if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
     if (!g_cached_google_queries) RebuildGoogleCache();
     const char** list = ZoxideHelper_PrepareTriggerList(NULL, &g_cached_google_queries, &g_cached_google_count, NULL);
-    ImportantPromptUser(list, "🔍 Google", g_cached_google_count, 920, 650, 32, 
-               google_refresh_callback, 
-               google_enter_callback, 
-               google_edit_callback,NULL);
+    PROMPT(.title = "🔍 Google", .items = list, .count = g_cached_google_count,
+           .height = 920, .width = 650, .item_height = 32,
+           .refresh = google_refresh_callback,
+           .enter = google_enter_callback,
+           .edit = google_edit_callback);
     ZoxideHelper_CleanupTriggerList(list);
 }

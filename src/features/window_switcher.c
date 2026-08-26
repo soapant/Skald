@@ -325,10 +325,9 @@ void TriggerWindowSwitcher() {
         ui_list[i] = g_switcher_windows[i].title;
     }
     
-    Platform_PromptUser(ui_list, "🪟 Switcher", g_switcher_count, 920, 650, 32,
-               switcher_refresh_callback,
-               switcher_enter_callback,
-               NULL, NULL,
-               switcher_copy_callback,
-               NULL, NULL, NULL, NULL);
+    PROMPT(.title = "🪟 Switcher", .items = ui_list, .count = g_switcher_count,
+           .height = 920, .width = 650, .item_height = 32,
+           .refresh = switcher_refresh_callback,
+           .enter = switcher_enter_callback,
+           .copy = switcher_copy_callback);
 }

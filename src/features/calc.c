@@ -460,11 +460,12 @@ void TriggerCalculator(void) {
 
     const char* default_msg[1] = { "Enter operation (e.g. 5 x 5 or 10 hours in minutes)" };
 
-    OnlyIOPromptUser(default_msg,"🧮 Calculator", 1, 920, 650,32,
-                        calculator_refresh_callback,   
-                        calculator_enter_callback,     
-                        calculator_ctrlenter_callback, 
-                        calculator_tab_callback);                         
+    PROMPT(.title = "🧮 Calculator", .items = default_msg, .count = 1,
+           .height = 920, .width = 650, .item_height = 32,
+           .refresh = calculator_refresh_callback,
+           .enter = calculator_enter_callback,
+           .ctrl_enter = calculator_ctrlenter_callback,
+           .tab = calculator_tab_callback);
   
                                                               
 }

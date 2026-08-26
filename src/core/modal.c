@@ -31,8 +31,6 @@ void SetModeWithListBox(EditorMode mode, ListBoxInfo* lb) {
         InvalidateRect(WH_TO_HWND(hPopupWnd), &titleRect, FALSE);
     }
 #endif
-
-    // Resolve lb if not provided
     if (!lb) {
 #if defined(_WIN32)
         lb = GetActiveListBoxForModal();
