@@ -12,3 +12,5 @@ filter callback||[Cprogram]|[NotImplemetedYet]
 sort callback||[Cprogram]|[NotImplemetedYet]
 feature data is completely broken||[Cprogram]
 refactor: introduce AppContext struct to replace global soup in include/common.h:22 and src/main.c:19 (hPopupWnd, feature_history, output_buffer, selection_complete, g_current_feature)||[Cprogram]|[Change]
+dont forget about the displaymessage being fucky wucky on linux
+experiment with displaying the text from the song for the music player
