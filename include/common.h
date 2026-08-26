@@ -30,7 +30,6 @@ extern Display* g_font_dpy;
 
 extern uint32_t g_main_thread_id;
 
-extern char output_buffer[256];
 extern bool selection_complete;
 
 extern RefreshCallback g_refresh_callback;
