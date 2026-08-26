@@ -22,7 +22,7 @@
 #include "features/replica.h"
 #include "features/pixel_utils.h"
 #include "features/screenshot.h"
-#include "features/nvim_zoxide.h"
+#include "features/text_editor_zoxide.h"
 #include "features/windows_control.h"
 #include "features/adb.h"
 #include "features/monitor_control.h"
@@ -100,7 +100,7 @@ HotkeyBinding G_HOTKEY_BINDINGS[] = {
     BINDING(MONITOR_FOCUS_SIDE, HOTKEY_MOD_ALT,       TriggerMonitorFocusSide, AlwaysDisabled),
     BINDING(MONITOR_CONTROL,    HOTKEY_MOD_ALT,       TriggerMonitorControl,   AlwaysDisabled),
     BINDING(REMINDER,           HOTKEY_MOD_ALT,       TriggerReminder,         AlwaysEnabled),
-    BINDING(NVIM,               HOTKEY_MOD_ALT,       TriggerNvimZoxide,       AlwaysEnabled),
+    BINDING(NVIM,               HOTKEY_MOD_ALT,       TriggerTextEditorZoxide,       AlwaysEnabled),
     BINDING(SETTINGS,           HOTKEY_MOD_ALT,       HandleSettingsTrigger,   AlwaysEnabled),
     BINDING(FORGETFULL,         HOTKEY_MOD_ALT,       TriggerForgetFull,       AlwaysDisabled),
     BINDING(REPLICA,            HOTKEY_MOD_ALT_CTRL,  TriggerReplica,          AlwaysDisabled),

@@ -4,12 +4,12 @@
 #include <stdbool.h>
 #include "core/types.h"
 
-#define FILE_NVIM_ZOXIDE 2
-#define NvimZoxideFile G_FILE_ENTRIES[FILE_NVIM_ZOXIDE].mf
+#define FILE_TEXT_EDITOR_ZOXIDE 2
+#define TextEditorFile G_FILE_ENTRIES[FILE_TEXT_EDITOR_ZOXIDE].mf
 
 extern char* TextEditorName;
 extern bool Initialized;
 
-void TriggerNvimZoxide(void);
+void TriggerTextEditorZoxide(void);
 
 #endif
