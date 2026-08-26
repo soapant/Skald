@@ -64,7 +64,6 @@ extern HashMap* history_indices;
 extern WinTimer g_timer;
 
 extern FileEntry G_FILE_ENTRIES[];
-extern SequenceState g_seq_state;
 extern char* SelectionData[2048];
 extern int SelectionDataCount;
 

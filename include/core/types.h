@@ -337,8 +337,6 @@ typedef struct {
     bool timed_out;
 } SequenceState;
 
-extern SequenceState g_seq_state;
-
 typedef struct {
     const char* name;                         
     void (*func)(const char** items, int count);

@@ -3,8 +3,6 @@
 
 KeyCallback g_key_callback = NULL;
 
-SequenceState g_seq_state = {0};
-
 FileEntry G_FILE_ENTRIES[7] = {
     {"TerminalHistory", DATA_DIR "TerminalHistory.txt", NULL},
     {"YaziZoxide",      DATA_DIR "YaziZoxide.txt", NULL},
