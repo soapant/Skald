@@ -11,6 +11,7 @@ typedef struct {
   const char* message;
   FontHandle hFont;
   int alpha;
+  ColorRef color;
 } FadeWindowData;
 
 typedef struct {
@@ -20,6 +21,7 @@ typedef struct {
   int maxWidth;
   int maxHeight;
   int timeout;
+  ColorRef color;
 } DisplayMessageParams;
 
 

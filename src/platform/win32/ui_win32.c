@@ -290,16 +290,16 @@ char* Platform_SimplePromptUser(const SimplePromptSpec* spec) {
   return (strlen(output_buffer) > 0) ? output_buffer : NULL;
 }
 
-void Platform_DisplayMessage(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, int timeout) {
+void Platform_DisplayMessage(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, int timeout, ColorRef color) {
   if (WH_TO_HWND(hGlobalTrayWnd) != NULL && GetCurrentThreadId() != g_main_thread_id) {
-    DisplayMessageParams params = { message, centerX, centerY, maxWidth, maxHeight, timeout };
+    DisplayMessageParams params = { message, centerX, centerY, maxWidth, maxHeight, timeout, color };
     SendMessageA(WH_TO_HWND(hGlobalTrayWnd), WM_DISPLAY_MESSAGE, 0, (LPARAM)&params);
     return;
   }
-  Platform_CreateDisplayMessageWindow(message, centerX, centerY, maxWidth, maxHeight, timeout);
+  Platform_CreateDisplayMessageWindow(message, centerX, centerY, maxWidth, maxHeight, timeout, color);
 }
 
-void Platform_CreateDisplayMessageWindow(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, int timeout) {
+void Platform_CreateDisplayMessageWindow(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, int timeout, ColorRef color) {
   HINSTANCE hInstance = GetModuleHandle(NULL);
 
   DestroyWindow(WH_TO_HWND(hDisplayMessage));
@@ -325,6 +325,7 @@ void Platform_CreateDisplayMessageWindow(const char* message, int centerX, int c
   pWndData->message = _strdup(message);
   pWndData->hFont = msgFont;
   pWndData->alpha = WindowOpacity;
+  pWndData->color = color;
   g_timeout = timeout * 20;
 
   int topLeftX = centerX - (winWidth / 2);

@@ -465,7 +465,7 @@ bool CheckQuickLinkHotkeyBindings(int pressed_vk, int modifiers) {
                 if (MessageAfterEachHotkey) {
                   char buffer[64];
                   snprintf(buffer,sizeof(buffer),"[QuickLink] Hotkey Name %s Triggered \n",G_QUICKLINK_HOTKEYS[i].QuickLinkQuery);
-                  MSG_BOTTOM(buffer,140,TimeOutForMessages);
+                  MSG_BOTTOM(buffer,140,TimeOutForMessages,COLOR_TEXT);
                 }
               
                 return true;
