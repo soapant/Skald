@@ -63,7 +63,6 @@ static void google_edit_callback(const char* selection, ListBoxInfo* lb) {
 }
 
 void TriggerGoogleSearch(void) {
-    if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
     if (!g_cached_google_queries) RebuildGoogleCache();
     const char** list = ZoxideHelper_PrepareTriggerList(NULL, &g_cached_google_queries, &g_cached_google_count, NULL);
     PROMPT(.title = "🔍 Google", .items = list, .count = g_cached_google_count,

@@ -52,7 +52,6 @@ static void zoxide_enter_callback(const char* selection, ListBoxInfo* lb) {
 }
 
 void TriggerZoxide(void) {
-    if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
     if (!g_cached_zoxide_commands) RebuildZoxideCache();
     const char** list = ZoxideHelper_PrepareTriggerList(NULL, &g_cached_zoxide_commands, &g_cached_zoxide_count, NULL);
     PROMPT(.title = "⌨️ Zoxide", .items = list, .count = g_cached_zoxide_count,

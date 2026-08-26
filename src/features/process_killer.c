@@ -182,7 +182,6 @@ static void pk_refresh_callback(const char* filter, WindowHandle hListBox, ListB
 }
 
 void TriggerProcessKiller(void) {
-    if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
 
     collect_running_processes();
 

@@ -60,7 +60,6 @@ Cleanup:
 #endif
 
 void TriggerMuteState(void) {
-    if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
 #if defined(_WIN32)
     if (!mic_muted){
         if (SUCCEEDED(SetDeviceMute(eCapture, TRUE))) {

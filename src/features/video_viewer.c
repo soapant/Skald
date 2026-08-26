@@ -52,7 +52,6 @@ static void video_enter_callback(const char* selection, ListBoxInfo* lb) {
 #endif
 }
 bool HandleVideoViewer(int vk_code, int modifiers, const char* current_title) {
-    if (CheckAndBlockIfPopupActive(hPopupWnd)) return false;
     if (!VideoViewerAvailable) return false;
     
     for (int i = 0; i < VIDEO_PLAYER_COUNT; i++) {
