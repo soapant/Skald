@@ -471,7 +471,7 @@ static void replace_msg_window(MsgWindow* m) {
     pthread_mutex_unlock(&g_msg_mtx);
 }
 
-void Platform_DisplayMessage(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, int timeout) {
+void Platform_DisplayMessage(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, int timeout, ColorRef color) {
     Display* dpy = get_display();
     if (!dpy) {
         fprintf(stderr, "[PLATFORM] Platform_DisplayMessage: no X11 display\n");
@@ -502,7 +502,7 @@ void Platform_DisplayMessage(const char* message, int centerX, int centerY, int 
     if (textH + 20 > winHeight) winHeight = textH + 20;
 
     unsigned long bg_color = rgb_to_hex(COLOR_BG);
-    unsigned long text_color = rgb_to_hex(DisplayMessageText);
+    unsigned long text_color = rgb_to_hex(color);
 
     int topLeftX = centerX - (winWidth / 2);
     int topLeftY = centerY - (winHeight / 2);
@@ -518,8 +518,8 @@ void Platform_DisplayMessage(const char* message, int centerX, int centerY, int 
         (text_color & 0xFF) * 0x101,
         0xFFFF
     };
-    XftColor color;
-    int alloc_ok = XftColorAllocValue(dpy, visual, cmap, &rc, &color);
+    XftColor text_xft_color;
+    int alloc_ok = XftColorAllocValue(dpy, visual, cmap, &rc, &text_xft_color);
 
     XMapWindow(dpy, win);
     XFlush(dpy);
@@ -534,10 +534,10 @@ void Platform_DisplayMessage(const char* message, int centerX, int centerY, int 
 
     int startY = (winHeight - textH) / 2;
 
-    draw_wrapped_text(dpy, xd,&color, font, message,startY,"CENTER",0);
+    draw_wrapped_text(dpy, xd,&text_xft_color, font, message,startY,"CENTER",0);
 
     XFlush(dpy);
-    if (alloc_ok) XftColorFree(dpy, visual, cmap, &color);
+    if (alloc_ok) XftColorFree(dpy, visual, cmap, &text_xft_color);
 
     MsgWindow* m = (MsgWindow*)malloc(sizeof(MsgWindow));
     m->dead = 0;

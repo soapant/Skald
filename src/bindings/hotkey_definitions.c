@@ -78,7 +78,7 @@ void HandleSwapHotkeyMode(void) {
     PixelHotkeys = !PixelHotkeys;
     char buffer[20];
     snprintf(buffer,sizeof(buffer),"Set The Pixel Hotkeys Mode To %s",PixelHotkeys  ? "True" : "False");
-    MSG_BOTTOM(buffer,140,TimeOutForMessages);
+    MSG_BOTTOM(buffer,140,TimeOutForMessages,COLOR_TEXT);
 }
 //only alt is for windows
 //ctrl alt is for things that oepn something new

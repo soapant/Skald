@@ -67,7 +67,7 @@ void HandleFocusWindowFlag(const char* parameter) {
 void DisplayText(const char* parameter){
     printf("DISPLAYING MESSAGE %s",parameter);
     
-    Platform_DisplayMessage(parameter,960,999,950,70,3);
+    Platform_DisplayMessage(parameter,960,999,950,70,3,COLOR_TEXT);
     
 }
 

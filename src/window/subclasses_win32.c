@@ -807,11 +807,7 @@ LRESULT CALLBACK DisplayMessageProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
           DeleteObject(hBackgroundBrush);
           
           SetBkMode(hdc, TRANSPARENT);
-          if (!DisplayMessageText){
-            SetTextColor(hdc, COLOR_TEXT);
-          } else {
-            SetTextColor(hdc, DisplayMessageText);
-          }
+          SetTextColor(hdc, data->color ? data->color : COLOR_TEXT);
       
         HFONT hOldFont = NULL;
         if (FH_TO_HFONT(data->hFont)) {
@@ -1363,7 +1359,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
   case WM_DISPLAY_MESSAGE: {
     DisplayMessageParams* p = (DisplayMessageParams*)lParam;
       if (p != NULL) {
-        Platform_CreateDisplayMessageWindow(p->message, p->centerX, p->centerY, p->maxWidth, p->maxHeight, p->timeout);
+        Platform_CreateDisplayMessageWindow(p->message, p->centerX, p->centerY, p->maxWidth, p->maxHeight, p->timeout, p->color);
       }
     return 0;
   }

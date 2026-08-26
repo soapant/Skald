@@ -10,7 +10,6 @@
 #include "core/common_ui.h"
 
 int g_refresh_count = 0;
-ColorRef DisplayMessageText;
 ColorRef g_rainbow_text_cache[MAX_VISIBLE_ITEMS + 1] = {0};
 bool draw_background = true;
 
@@ -19,13 +18,11 @@ int SelectionDataCount = 0;
 
 void SubjectiveMessageDisplay(const char* buffer,int msg_height,int timeout,ColorRef color) {
     if (MessagesEnabled) {
-        DisplayMessageText = color;
         if (WH_TO_HWND(hPopupWnd) != NULL) {
-          MSG_TOP(buffer,msg_height,timeout);
+          MSG_TOP(buffer,msg_height,timeout,color);
         }else {
-          MSG_MIDDLE_BOTTOM(buffer,msg_height / 2,timeout);
+          MSG_MIDDLE_BOTTOM(buffer,msg_height / 2,timeout,color);
         }
-        DisplayMessageText = COLOR_TEXT;
     }
 }
 EditorMode g_last_mode = MODE_INSERT;
@@ -87,7 +84,7 @@ bool ProcessHotkey(const HotkeyBinding* bindings, int bindings_count,
             if (MessageAfterEachHotkey) {
               char buffer[64];
               snprintf(buffer,sizeof(buffer),"[%s] Triggered \n",b->name);
-              MSG_BOTTOM(buffer,140,TimeOutForMessages);
+              MSG_BOTTOM(buffer,140,TimeOutForMessages,COLOR_TEXT);
             }
             b->handler();
             return true;
