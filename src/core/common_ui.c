@@ -233,10 +233,14 @@ void PopulateListBox(ListBoxInfo* lb, WindowHandle hListBox, const char* filter,
       }
     } else if (total_matches != 0 && strlen(filter) > 0) {
       UI_SetSelection(lb, hListBox, 0);
+#if defined(_WIN32)
       draw_background = false;
+#endif
     } else {
       UI_SetSelection(lb, hListBox, -1);
+#if defined(_WIN32)
       draw_background = true;
+#endif
     }
     if (total_matches == 0) {
       if (WH_TO_HWND(hDisplayMessage) != NULL) {
@@ -268,7 +272,9 @@ void PopulateListBox(ListBoxInfo* lb, WindowHandle hListBox, const char* filter,
   lb->last_item_count = item_count;
   lb->total_matches = total_matches;
   if (total_matches != old_count) {
+#if defined(_WIN32)
     draw_background = true;
+#endif
   }
   TimerEnd(timer_cleanup, "  PopulateListBox - Cleanup");
 
@@ -479,8 +485,6 @@ void CreateChildControls(WindowHandle hwndParent, HFONT hFont, const char* list[
     
     HFONT hOldFont = (HFONT)SelectObject(hdc, hFont);
 
-    g_initial_items = list;        
-    g_initial_count = count;
 
     if (lb) {
         ListBoxInfo_Init(lb);
@@ -488,9 +492,7 @@ void CreateChildControls(WindowHandle hwndParent, HFONT hFont, const char* list[
         lb->total_matches = count;
         lb->last_items = list;
         lb->last_item_count = count;
-        // selected_index will be set by PopulateListBox logic; keep -1 initially
         lb->selected_index = -1;
-        // Also populate cache with initial items for early display
         for (int i = 0; i < count && i < MAX_ITEMS; i++) {
             if (list[i]) {
                 strncpy(lb->populated_cache[i], list[i], 511);

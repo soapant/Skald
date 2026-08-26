@@ -1,6 +1,7 @@
 #include "config.h"
 
 bool Tray = true;
+bool EnableVimMode = true;
 bool RememberLastIndex = true;
 bool KeepSelectionAfterClose = false;
 bool MessageAfterEachHotkey = false;
