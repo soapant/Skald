@@ -8,6 +8,8 @@
 #include <strings.h>
 #include <ctype.h>
 #include <string.h>
+#else
+#include <shlwapi.h>
 #endif
 
 bool g_add_alias_to_string = true;
