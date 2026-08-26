@@ -312,8 +312,6 @@ char* Platform_SimplePromptUser(const SimplePromptSpec* spec);
 #define PROMPT(...) Platform_PromptUser(&(PromptSpec){ __VA_ARGS__ })
 #define SIMPLE_PROMPT(...) Platform_SimplePromptUser(&(SimplePromptSpec){ __VA_ARGS__ })
 
-void UpdateTextCaret(WindowHandle hwndEditControl);
-
 #if defined(_WIN32)
 LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 
