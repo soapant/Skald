@@ -31,6 +31,7 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
+#include <X11/extensions/Xrandr.h>
 #include <X11/Xft/Xft.h>
 #include "x11_display.h"
 
@@ -474,6 +475,50 @@ static void replace_msg_window(MsgWindow* m) {
     pthread_mutex_unlock(&g_msg_mtx);
 }
 
+// Geometry of the "main" monitor. Priority: monitor under the focused
+// window -> _NET_WM primary output -> largest active monitor.
+// The MSG_* macros assume a 1920x1080 canvas at origin 0,0; on multi-monitor
+// layouts that lands on whatever screen owns those global coords.
+static bool Linux_GetMainMonitorGeometry(Display* dpy, int* ox, int* oy, int* ow, int* oh) {
+    Window root = DefaultRootWindow(dpy);
+    XRRScreenResources* res = XRRGetScreenResourcesCurrent(dpy, root);
+    if (!res) return false;
+    RROutput primary = XRRGetOutputPrimary(dpy, root);
+
+    // Where is the user looking? Center of the focused X window, if any.
+    int fx = -1, fy = -1;
+    Window fw = None; int revert;
+    XGetInputFocus(dpy, &fw, &revert);
+    if (fw != None && fw != PointerRoot) {
+        XWindowAttributes a;
+        int wx = 0, wy = 0; Window child;
+        if (XGetWindowAttributes(dpy, fw, &a) &&
+            XTranslateCoordinates(dpy, fw, root, a.width / 2, a.height / 2, &wx, &wy, &child)) {
+            fx = wx; fy = wy;
+        }
+    }
+
+    bool found = false;
+    long best_score = -1;
+    for (int c = 0; c < res->ncrtc; c++) {
+        XRRCrtcInfo* ci = XRRGetCrtcInfo(dpy, res, res->crtcs[c]);
+        if (!ci || ci->noutput == 0 || ci->width == 0) { if (ci) XRRFreeCrtcInfo(ci); continue; }
+        long score = (long)ci->width * (long)ci->height;      // base: bigger wins ties
+        bool contains_focus = (fx >= ci->x && fx < ci->x + ci->width &&
+                               fy >= ci->y && fy < ci->y + ci->height);
+        if (contains_focus) score += 1000000000L;             // strongest signal
+        else if (primary != None && ci->outputs[0] == primary) score += 500000000L;
+        if (score > best_score) {
+            best_score = score;
+            *ox = ci->x; *oy = ci->y; *ow = ci->width; *oh = ci->height;
+            found = true;
+        }
+        XRRFreeCrtcInfo(ci);
+    }
+    XRRFreeScreenResources(res);
+    return found;
+}
+
 void Platform_DisplayMessage(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, int timeout, ColorRef color) {
     Display* dpy = get_display();
     if (!dpy) {
@@ -507,8 +552,20 @@ void Platform_DisplayMessage(const char* message, int centerX, int centerY, int 
     unsigned long bg_color = rgb_to_hex(COLOR_BG);
     unsigned long text_color = rgb_to_hex(color);
 
-    int topLeftX = centerX - (winWidth / 2);
-    int topLeftY = centerY - (winHeight / 2);
+    // The macros compute positions on a 1920x1080 canvas; remap that point
+    // proportionally onto the main monitor so "bottom middle" is bottom
+    // middle of THAT monitor, not of the global desktop.
+    int mox = 0, moy = 0, mow = 1920, moh = 1080;
+    bool have_mon = Linux_GetMainMonitorGeometry(dpy, &mox, &moy, &mow, &moh);
+    int px = mox + (int)((centerX / 1920.0) * mow);
+    int py = moy + (int)((centerY / 1080.0) * moh);
+    int topLeftX = px - (winWidth / 2);
+    int topLeftY = py - (winHeight / 2);
+    (void)have_mon;
+    if (topLeftX < mox) topLeftX = mox;
+    if (topLeftY < moy) topLeftY = moy;
+    if (topLeftX + winWidth > mox + mow) topLeftX = mox + mow - winWidth;
+    if (topLeftY + winHeight > moy + moh) topLeftY = moy + moh - winHeight;
 
     Window win = Linux_CreateDisplayMessageWindow(dpy, topLeftX, topLeftY, winWidth, winHeight);
 
@@ -525,6 +582,7 @@ void Platform_DisplayMessage(const char* message, int centerX, int centerY, int 
     int alloc_ok = XftColorAllocValue(dpy, visual, cmap, &rc, &text_xft_color);
 
     XMapWindow(dpy, win);
+    XMoveWindow(dpy, win, topLeftX, topLeftY);
     XFlush(dpy);
 
     struct pollfd pfd = { .fd = ConnectionNumber(dpy), .events = POLLIN };
