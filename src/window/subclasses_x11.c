@@ -20,7 +20,7 @@
 #include <sys/time.h>
 #include <string.h>
 
-// Pending hotkey swallow for Wayland (no EVIOCGRAB). Set in ui_x11.c HandleGlobalKeyEvent.
+
 extern int pending_hotkey_vk;
 extern int pending_hotkey_mod;
 extern long pending_hotkey_timeMs;
@@ -31,13 +31,13 @@ static bool should_swallow_pending(int wParam, int mods) {
     if (now - pending_hotkey_timeMs > 800) {
         pending_hotkey_vk = 0; pending_hotkey_mod = 0; return false;
     }
-    // Strict: vk must match. Mod check is lenient (pending may be ALT, prompt may see same alt)
-    // For safety, if vk matches, swallow. This prevents leaked 'w' after alt+w.
+    
+    
     if (wParam == pending_hotkey_vk) {
         pending_hotkey_vk = 0; pending_hotkey_mod = 0;
         return true;
     }
-    // Also swallow if pending was space and wParam is space (common leak)
+    
     return false;
 }
 
@@ -149,16 +149,16 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
         return true;
       }
     }
-    // Number shortcuts: Ctrl+0..9
+    
     if (wParam >= '0' && wParam <= '9') {
       if (ctrl_pressed) {
-        // HandleNumberShortcut expects WindowHandles; on X11 hListBox/hEditControl are dummy
+        
         HandleNumberShortcut(wParam, hListBox, g_ActiveEditControl, state->has_listbox ? &state->listbox : NULL);
         return true;
       }
     }
     if (wParam == VK_RIGHT) {
-      // Allow cursor movement even when list has selection (match Win32 behavior)
+      
       CursorForward(&state->cursor, strlen(state->filter));
       return true;
     }

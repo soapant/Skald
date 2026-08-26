@@ -16,7 +16,7 @@
 #include "helpers.h"
 #include "platform/platform.h"
 
-// Owner of the active X socket = the human's uid, even when we run as root.
+
 static uid_t ProbeSessionUid(void){
     DIR* d = opendir("/tmp/.X11-unix");
     if (!d) return (uid_t)-1;
@@ -45,7 +45,7 @@ const char* Platform_GetRealUser(void){
     if(u && u[0] && strcmp(u,"root")!=0){ strncpy(buf,u,sizeof(buf)-1); done=true; return buf; }
     u=getenv("LOGNAME");
     if(u && u[0] && strcmp(u,"root")!=0){ strncpy(buf,u,sizeof(buf)-1); done=true; return buf; }
-    // Service context running as root: the X session owner is the real user.
+    
     uid_t suid = ProbeSessionUid();
     if (suid != (uid_t)-1) {
         struct passwd* spw = getpwuid(suid);
@@ -72,8 +72,8 @@ const char* Platform_GetRealHome(void){
 
 bool Platform_IsRunningAsRoot(void){ return getuid()==0; }
 
-// DISPLAY for spawned processes: env if present, else the socket owned by a
-// real user session. Fixes ":0" guesses when the service has no DISPLAY.
+
+
 const char* Platform_GetSessionDisplay(void){
     static char buf[64]={0};
     static bool done=false;
@@ -92,7 +92,7 @@ const char* Platform_GetSessionDisplay(void){
             snprintf(path, sizeof(path), "/tmp/.X11-unix/%s", e->d_name);
             struct stat st;
             if (stat(path, &st) != 0) continue;
-            // Prefer our own uid's socket, else any non-root session.
+            
             if (st.st_uid == geteuid() || st.st_uid != 0) {
                 snprintf(buf, sizeof(buf), ":%ld", n);
                 break;
@@ -104,7 +104,8 @@ const char* Platform_GetSessionDisplay(void){
     return buf[0]?buf:":0";
 }
 
-// XAUTHORITY for spawned processes: env, else <real home>/.Xauthority.
+
+
 const char* Platform_GetSessionXAuthority(void){
     static char buf[512]={0};
     static bool done=false;
@@ -117,7 +118,7 @@ const char* Platform_GetSessionXAuthority(void){
     return "";
 }
 
-// XDG_RUNTIME_DIR for spawned processes (wpctl/pipewire, wl-copy...).
+
 const char* Platform_GetRuntimeDir(void){
     static char buf[256]={0};
     static bool done=false;
