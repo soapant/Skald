@@ -84,6 +84,10 @@ int main() {
       close(lock_fd);
       return 1;
     }
+    // Don't leak the lock into spawned children (music player, terminals...):
+    // an inherited fd would keep the flock held after we exit, blocking the
+    // next start with "another instance is already running".
+    fcntl(lock_fd, F_SETFD, FD_CLOEXEC);
     // Intentionally keep lock_fd open for the process lifetime.
   }
 #endif
