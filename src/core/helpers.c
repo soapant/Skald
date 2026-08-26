@@ -33,14 +33,14 @@ bool ProcessHotkey(const HotkeyBinding* bindings, int bindings_count,
                                   const char* current_title) {
     for (int i = 0; i < bindings_count; i++) {
         const HotkeyBinding* b = &bindings[i];
-        
+
         if (b->vk_code != pressed_vk) continue;
         if (b->modifiers != modifiers) continue;
-        
+
         if (b->is_enabled && !b->is_enabled()) {
             continue;
         }
-        
+
         if (b->blacklist && b->blacklist_count > 0) {
             bool blacklisted = false;
             for (int j = 0; j < b->blacklist_count; j++) {
@@ -57,7 +57,7 @@ bool ProcessHotkey(const HotkeyBinding* bindings, int bindings_count,
             }
             if (blacklisted) return false;
         }
-        
+
         if (AllowOtherFeatureTogglesInFeature) {
 #if defined(_WIN32)
             if (IsPopupActive(hPopupWnd)) {
@@ -70,15 +70,13 @@ bool ProcessHotkey(const HotkeyBinding* bindings, int bindings_count,
                 extern bool selection_complete;
                 selection_complete = true;
             }
-            // this is the actual closing of the current window since i am too lazy to do the refactoring necessary for this just leave it for now
-            // g_currentPromptState->selection;
 #endif
         } else {
           if (IsPopupActive(hPopupWnd)) {
             return false;
           }
         }
-        
+
         if (b->handler) {
             g_timer = TimerStart();
             if (MessageAfterEachHotkey) {

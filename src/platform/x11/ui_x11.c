@@ -194,10 +194,15 @@ char* Platform_PromptUser(const PromptSpec* spec) {
 
     XEvent ev;
     int running = 1;
+    bool got_focus = false; // FocusOut before any FocusIn is a compositor
+                            // focus race, not a lost-focus: ignore it.
     while (running) {
         if (selection_complete) { running = 0; break; }
         XNextEvent(dpy, &ev);
-        if (CloseOnLossOfFocus && ev.type == FocusOut) {
+        if (ev.type == FocusIn) {
+            got_focus = true;
+        }
+        if (CloseOnLossOfFocus && ev.type == FocusOut && got_focus) {
             if (ev.xfocus.mode == NotifyNormal) {
                 output_buffer[0] = '\0';
                 selection_complete = true;
@@ -612,6 +617,7 @@ char* Platform_EditTextPopup(const char* initial_text, int centerX, int centerY,
 
     char* result = NULL;
     bool focus_lost = false;
+    bool edit_got_focus = false;
     bool running = true;
     XEvent ev;
     while (running) {
@@ -668,8 +674,12 @@ char* Platform_EditTextPopup(const char* initial_text, int centerX, int centerY,
                     }
                 }
             }
+        } else if (ev.type == FocusIn) {
+            edit_got_focus = true;
         } else if (ev.type == FocusOut) {
-            if (CloseOnLossOfFocus && ev.xfocus.mode == NotifyNormal) {
+            // Same never-had-focus guard as Platform_PromptUser: a FocusOut
+            // before any FocusIn is the compositor focus race, not a loss.
+            if (CloseOnLossOfFocus && edit_got_focus && ev.xfocus.mode == NotifyNormal) {
                 focus_lost = true;
                 running = false;
             }
@@ -876,6 +886,12 @@ bool HandleGlobalKeyEvent(int key_code, int value) {
         printf("SUPPOSED TO CLEAR FILE\n");
     }
 
+    // Bindings fire on press only; releases/repeats would re-match the same
+    // combo (W-release with Alt still held) and double-fire handlers.
+    if (value != 1) {
+        return 0;
+    }
+
     char fgTitle[256] = {0};
     Linux_GetActiveWindowTitle(fgTitle, sizeof(fgTitle));
 
@@ -1018,6 +1034,14 @@ void Platform_RunHotKeyMessageLoop(void) {
                                             ev.code == KEY_LEFTSHIFT || ev.code == KEY_RIGHTSHIFT ||
                                             ev.code == KEY_LEFTMETA || ev.code == KEY_RIGHTMETA);
                         if (!is_modifier) {
+                            // Stale press from the backlog that piled up while
+                            // a prompt blocked this thread: still evaluate
+                            // bindings, else quick follow-up hotkeys vanish.
+                            if (ev.value == 1 && !grabbed) {
+                                if (HandleGlobalKeyEvent(ev.code, ev.value)) {
+                                    continue;
+                                }
+                            }
                             if (grabbed && g_uinput_fd >= 0) uinput_emit(&ev);
                             continue;
                         }
