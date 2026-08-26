@@ -291,6 +291,8 @@ char* Platform_PromptUser(const PromptSpec* spec) {
     g_Linux_CtrlHeld = false;
     g_Linux_ShiftHeld = false;
     XSync(dpy, False);
+    // Any flash message spawned inside this popup dies with it.
+    Platform_DismissMessage();
     XDestroyWindow(dpy, win);
     XSync(dpy, False);
     free(state);
@@ -411,6 +413,8 @@ char* Platform_SimplePromptUser(const SimplePromptSpec* spec) {
     g_Linux_AltHeld = false;
     g_Linux_CtrlHeld = false;
     g_Linux_ShiftHeld = false;
+    // Any flash message spawned inside this popup dies with it.
+    Platform_DismissMessage();
     XDestroyWindow(dpy, win);
     free(state);
     return output_buffer[0] ? output_buffer : NULL;
@@ -761,6 +765,8 @@ char* Platform_EditTextPopup(const char* initial_text, int centerX, int centerY,
         if (RememberLastIndex) last_index = saved_index;
     }
 
+    // Any flash message spawned inside this popup dies with it.
+    Platform_DismissMessage();
     XDestroyWindow(dpy, win);
     XSync(dpy, False);
 
