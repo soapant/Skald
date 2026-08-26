@@ -8,7 +8,7 @@
 #include <windows.h>
 #endif
 
-SequenceState g_seq_state = {0};
+SequenceState seq_state = {0};
 
 void Vim_GetText(VimContext* ctx, char* buf, size_t cap) {
     if (!ctx || !buf || cap==0) return;
@@ -165,58 +165,58 @@ VimContext Vim_FromEditState(SimplePromptState* state) {
 
 #if defined(_WIN32)
 static void CALLBACK SequenceTimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime) {
-    if (g_seq_state.waiting) {
-        g_seq_state.waiting = false;
-        g_seq_state.timed_out = true;
-        printf("[SEQ-DEBUG] Timer expired! Sequence: '%s'\n", g_seq_state.keys);
+    if (seq_state.waiting) {
+        seq_state.waiting = false;
+        seq_state.timed_out = true;
+        printf("[SEQ-DEBUG] Timer expired! Sequence: '%s'\n", seq_state.keys);
     }
-    g_seq_state.timer_id = 0;
+    seq_state.timer_id = 0;
 }
 #endif
 
 void SequenceAddKey(char key, bool was_typed) {
-    if (g_seq_state.len < MAX_SEQUENCE_LEN - 1) {
-        g_seq_state.keys[g_seq_state.len++] = key;
-        g_seq_state.keys[g_seq_state.len] = '\0';
-        g_seq_state.waiting = true;
-        g_seq_state.timed_out = false;
+    if (seq_state.len < MAX_SEQUENCE_LEN - 1) {
+        seq_state.keys[seq_state.len++] = key;
+        seq_state.keys[seq_state.len] = '\0';
+        seq_state.waiting = true;
+        seq_state.timed_out = false;
         if (was_typed) {
-            g_seq_state.typed_count++;
+            seq_state.typed_count++;
         }
     }
 }
 
 void SequenceReset(void) {
-    memset(g_seq_state.keys, 0, MAX_SEQUENCE_LEN);
-    g_seq_state.len = 0;
-    g_seq_state.typed_count = 0;
-    g_seq_state.waiting = false;
-    g_seq_state.timed_out = false;
+    memset(seq_state.keys, 0, MAX_SEQUENCE_LEN);
+    seq_state.len = 0;
+    seq_state.typed_count = 0;
+    seq_state.waiting = false;
+    seq_state.timed_out = false;
 #if defined(_WIN32)
-    if (g_seq_state.timer_id != 0) {
-        KillTimer(NULL, g_seq_state.timer_id);
-        g_seq_state.timer_id = 0;
+    if (seq_state.timer_id != 0) {
+        KillTimer(NULL, seq_state.timer_id);
+        seq_state.timer_id = 0;
     }
 #endif
 }
 
 int SequenceLen(void) {
-    return g_seq_state.len;
+    return seq_state.len;
 }
 
 int SequenceTypedCount(void) {
-    return g_seq_state.typed_count;
+    return seq_state.typed_count;
 }
 
 bool SequenceMatches(const char* pattern) {
-    int seq_len = g_seq_state.len;
+    int seq_len = seq_state.len;
     int pat_len = strlen(pattern);
 
     if (seq_len != pat_len) return false;
     if (seq_len == 0) return false;
 
     for (int i = 0; i < seq_len; i++) {
-        if (tolower((unsigned char)pattern[i]) != tolower((unsigned char)g_seq_state.keys[i])) {
+        if (tolower((unsigned char)pattern[i]) != tolower((unsigned char)seq_state.keys[i])) {
             return false;
         }
     }
@@ -224,7 +224,7 @@ bool SequenceMatches(const char* pattern) {
 }
 
 bool SequenceStartsWith(const char* pattern) {
-    int seq_len = g_seq_state.len;
+    int seq_len = seq_state.len;
     int pat_len = strlen(pattern);
 
     if (seq_len > pat_len) {
@@ -236,7 +236,7 @@ bool SequenceStartsWith(const char* pattern) {
 
     for (int i = 0; i < seq_len; i++) {
         char pattern_char = tolower((unsigned char)pattern[i]);
-        char seq_char = tolower((unsigned char)g_seq_state.keys[i]);
+        char seq_char = tolower((unsigned char)seq_state.keys[i]);
         if (pattern_char != seq_char) {
             return false;
         }
@@ -246,19 +246,19 @@ bool SequenceStartsWith(const char* pattern) {
 
 void SequenceStartTimer(void) {
 #if defined(_WIN32)
-    if (g_seq_state.timer_id != 0) {
-        KillTimer(NULL, g_seq_state.timer_id);
+    if (seq_state.timer_id != 0) {
+        KillTimer(NULL, seq_state.timer_id);
     }
-    g_seq_state.timer_id = SetTimer(NULL, 0, SEQUENCE_TIMEOUT_MS, SequenceTimerProc);
+    seq_state.timer_id = SetTimer(NULL, 0, SEQUENCE_TIMEOUT_MS, SequenceTimerProc);
 #endif
 }
 
 bool SequenceIsWaiting(void) {
-    return g_seq_state.waiting;
+    return seq_state.waiting;
 }
 
 bool SequenceTimedOut(void) {
-    return g_seq_state.timed_out;
+    return seq_state.timed_out;
 }
 
 void DeleteLastTypedChar(VimContext* ctx) {
