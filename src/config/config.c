@@ -58,7 +58,7 @@ const bool ColoredVimModeText = true;
 const int GradientItems = 30;
 const float GradientBrightness = 1.0f;
 bool PixelHotkeys = false;
-bool CloseOnLossOfFocus = false;
+bool CloseOnLossOfFocus = true;
 
 const char* ListOfProgramPaths[20] = {
 #if defined(_WIN32)
