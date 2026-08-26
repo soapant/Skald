@@ -8,16 +8,6 @@
 #include <strings.h>
 #include <ctype.h>
 #include <string.h>
-
-static const char* Linux_StrStrIA(const char* haystack, const char* needle) {
-    if (!haystack || !needle) return NULL;
-    if (!*needle) return haystack;
-    size_t nlen = strlen(needle);
-    for (const char* p = haystack; *p; ++p) {
-        if (strncasecmp(p, needle, nlen) == 0) return p;
-    }
-    return NULL;
-}
 #endif
 
 bool g_add_alias_to_string = true;
@@ -128,7 +118,7 @@ void PopulateListBox(ListBoxInfo* lb, WindowHandle hListBox, const char* filter,
 #if defined(_WIN32)
         match = (StrStrIA(search_text, clean_filter) != NULL);
 #else
-        match = (Linux_StrStrIA(search_text, clean_filter) != NULL);
+        match = (strstr(search_text, clean_filter) != NULL);
 #endif
       }
 
@@ -155,7 +145,7 @@ void PopulateListBox(ListBoxInfo* lb, WindowHandle hListBox, const char* filter,
 #if defined(_WIN32)
       bool match = filter_match ? filter_match(search_text, clean_filter) : (StrStrIA(search_text, clean_filter) != NULL);
 #else
-      bool match = filter_match ? filter_match(search_text, clean_filter) : (Linux_StrStrIA(search_text, clean_filter) != NULL);
+      bool match = filter_match ? filter_match(search_text, clean_filter) : (strstr(search_text, clean_filter) != NULL);
 #endif
 
       if (match) {

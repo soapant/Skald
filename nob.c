@@ -144,8 +144,8 @@ static bool stale(const char* src, const char* obj) {
         sv = nob_sv_from_parts(sv.data + j, sv.count - j);
 
         if (tok.count == 0) continue;
-        if (tok.data[tok.count - 1] == '\\') continue; // line continuation
-        if (tok.data[tok.count - 1] == ':') continue;  // phony target from -MP
+        if (tok.data[tok.count - 1] == '\\') continue; 
+        if (tok.data[tok.count - 1] == ':') continue; 
 
         char* dep_file = nob_temp_sprintf("%.*s", (int)tok.count, tok.data);
         if (nob_needs_rebuild1(obj, dep_file) != 0) return true;
@@ -233,9 +233,9 @@ static bool compile_all(bool* any_compiled) {
         nob_cmd_append(&cmd, CC_FLAGS, "-c", to_build.items[i], "-o", obj_path(to_build.items[i]));
         if (!nob_cmd_run(&cmd, .async = &procs, .max_procs = max_procs,
                          .stderr_path = err_paths.items[i])) {
-            // Either the compiler could not be started (nob.h already logged
-            // the reason) or another compiler in the pool already failed.
-            // Either way: keep building the rest and report every error below.
+            
+            
+            
             ok = false;
         }
     }
@@ -244,12 +244,12 @@ static bool compile_all(bool* any_compiled) {
     return print_failures() && ok;
 }
 
-// Stop a running instance so a fresh build can take over. The binary holds a
-// flock singleton lock, so an old instance would make new runs exit instantly.
-// Stops the user service AND any stray manually-launched copies.
-// ([m] trick so pkill doesn't match this very shell command)
+
+
+
+
 static bool instance_running(void) {
-    // Always exits 0; signals via stdout so nob doesn't log a bogus ERROR.
+    
     const char* marker = "/tmp/myprogram_nob_check";
     Nob_Cmd chk = {0};
     nob_cmd_append(&chk, "sh", "-c",
@@ -362,20 +362,15 @@ int main(int argc, char** argv) {
         nob_log(NOB_ERROR, "Failed to link %s", output);
         return 1;
     }
-    // Fresh binary linked: the old running instance is stale now, stop it.
-    // (No auto-restart - run `systemctl --user start myprogram` or ./nob -run
-    // yourself when you're done debugging.)
     stop_running_instance();
     if (g_want_static){
 #if !defined(_WIN32)
         bool have_static2 = nob_file_exists("/usr/lib/libX11.a") || nob_file_exists("/usr/lib64/libX11.a") || nob_file_exists("/usr/lib/x86_64-linux-gnu/libX11.a") || nob_file_exists("/usr/lib/musl/lib/libX11.a");
         if (!have_static2){
-            // Bundle runtime deps for portable ship (single exe + so dir, no static .a needed)
             nob_log(NOB_INFO, "Bundling runtime deps for portable -static (ship build/main + build/bundle/)");
             Nob_Cmd bundle = {0};
             nob_cmd_append(&bundle, "sh", "-c", "mkdir -p build/bundle && ldd build/main | grep -o '/[^ ]*\\.so[^ ]*' | xargs -I{} cp -v {} build/bundle/ 2>/dev/null; echo \"Bundled $(ls build/bundle/*.so 2>/dev/null | wc -l) libs to build/bundle/ (ship with LD_LIBRARY_PATH=./build/bundle)\"");
             nob_cmd_run(&bundle);
-            // Also try patchelf rpath if available
             Nob_Cmd rpath = {0};
             nob_cmd_append(&rpath, "sh", "-c", "which patchelf >/dev/null 2>&1 && patchelf --set-rpath '$ORIGIN/bundle' build/main 2>/dev/null && echo \"Patched rpath to \\$ORIGIN/bundle\" || true");
             nob_cmd_run(&rpath);
@@ -393,6 +388,7 @@ int main(int argc, char** argv) {
         if (nob_cmd_run_async_and_reset(&run) == NOB_INVALID_PROC) return 1;
         nob_log(NOB_INFO, "Started %s", output);
     }
+    nob_log(NOB_INFO,"Built Successfully");
 
     return 0;
 }
