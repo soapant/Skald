@@ -14,7 +14,7 @@
 #include "core/vim.h"
 #include "features/focus_switcher.h"
 #include "features/music_player.h"
-#include "features/video_player.h"
+#include "features/video_viewer.h"
 #include "features/process_killer.h"
 #include <gdiplus.h>
 
@@ -360,8 +360,6 @@ void Platform_SettingsPopUp() {
   int width = 900;
   int item_height = 32;
 
-  setting_complete = false;
-
   SetMode(MODE_INSERT);
 
   WindowLayout layout;
@@ -393,7 +391,7 @@ void Platform_SettingsPopUp() {
 
   MSG msg;
   UI_PreparePopupPump();
-  while (!setting_complete) {
+  while (!selection_complete) {
     if (GetMessage(&msg, NULL, 0, 0)) {
       if (UI_ShouldSkipPopupKey(&msg)) continue;
       TranslateMessage(&msg);
@@ -775,10 +773,10 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
     TimerEnd(timer12, "HandleMusicPlayer");
 
     WinTimer timer13 = TimerStart();
-    if (HandleVideoPlayer(pressed_vk, modifiers, fgTitle)) {
+    if (HandleVideoViewer(pressed_vk, modifiers, fgTitle)) {
       return 1;
     }
-    TimerEnd(timer13, "HandleVideoPlayer");
+    TimerEnd(timer13, "HandleVideoViewer");
 
     WinTimer timer14 = TimerStart();
     if (HandleBulkKillProcess(pressed_vk, modifiers, fgTitle)) {

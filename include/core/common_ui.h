@@ -49,6 +49,11 @@ static inline void UpdateTextCaret(WindowHandle hwndEditControl) { (void)hwndEdi
 static inline bool IsPopupActive(WindowHandle hPopupWnd) {
   return WH_TO_HWND(hPopupWnd) != NULL && IsWindow(WH_TO_HWND(hPopupWnd));
 }
+void ForceWindowFocus(WindowHandle hwndTarget, WindowHandle hwndInput);
+HFONT CreateCustomNerdFont(int height, const char* face_name);
+void CreateChildControls(WindowHandle hwndParent, HFONT hFont, const char* list[], int count, const WindowLayout* layout, ListBoxInfo* lb);
+void SettingsCreateChildControls(WindowHandle hwndParent, HFONT hFont,const WindowLayout* layout);
+void SimpleCreateChildControls(WindowHandle hwndParent, HFONT hFont, const char* string, int count, const WindowLayout* layout);
 static inline bool IsWindowValid(WindowHandle h) {
   return WH_TO_HWND(h) != NULL && IsWindow(WH_TO_HWND(h));
 }
