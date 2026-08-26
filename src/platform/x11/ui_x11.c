@@ -69,7 +69,7 @@ static PerFeatureVimState* GetPerFeatureState(const char* feature) {
     void* val = HashMap_Get(g_perFeatureVimMap, feature);
     return (PerFeatureVimState*)val;
 }
-static void SavePerFeatureState(const char* feature, EditorMode mode, SequenceState seq, int last_index) {
+static void SavePerFeatureState(const char* feature, EditorMode mode,int last_index) {
     if (!feature) return;
     if (!g_perFeatureVimMap) g_perFeatureVimMap = HashMap_Create(32);
     PerFeatureVimState* st = (PerFeatureVimState*)HashMap_Get(g_perFeatureVimMap, feature);
@@ -79,7 +79,6 @@ static void SavePerFeatureState(const char* feature, EditorMode mode, SequenceSt
         HashMap_Put(g_perFeatureVimMap, feature, st);
     }
     st->mode = mode;
-    st->seq = seq;
     st->last_index = last_index;
 }
 
@@ -156,7 +155,6 @@ char* Platform_PromptUser(const PromptSpec* spec) {
         if (pfs && ModePersistsThroughFeatures) {
             g_current_mode = pfs->mode;
             g_vim_mode = (pfs->mode==MODE_NORMAL?"NORMAL":pfs->mode==MODE_INSERT?"INSERT":"VISUAL");
-            g_seq_state = pfs->seq;
             last_index = pfs->last_index;
             SetModeWithListBox(pfs->mode, &state->listbox);
         } else if (ModePersistsThroughFeatures) {
@@ -273,7 +271,7 @@ char* Platform_PromptUser(const PromptSpec* spec) {
 
     {
         const char* feat = g_current_feature ? g_current_feature : (window_title ? (strchr(window_title,' ') ? strchr(window_title,' ')+1 : window_title) : "unknown");
-        SavePerFeatureState(feat, g_current_mode, g_seq_state, last_index);
+        SavePerFeatureState(feat, g_current_mode,last_index);
     }
     g_last_mode = g_current_mode;
     g_currentPromptState = NULL;
