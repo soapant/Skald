@@ -80,9 +80,9 @@ static void LaunchNvim(const char* path) {
         char expanded_cmd[2048];
         snprintf(expanded_cmd, sizeof(expanded_cmd), "%s -e %s \"%s\"", UsedTerminal, expanded_path, path);
         const char* real_user = Platform_GetRealUser();
-        const char* disp=getenv("DISPLAY"); if(!disp) disp=":0";
-        const char* xa=getenv("XAUTHORITY"); if(!xa) xa="";
-        char rt[256]; const char* ert=getenv("XDG_RUNTIME_DIR"); if(ert) snprintf(rt,sizeof(rt),"%s",ert); else snprintf(rt,sizeof(rt),"/run/user/1000");
+        const char* disp=Platform_GetSessionDisplay();
+        const char* xa=Platform_GetSessionXAuthority();
+        char rt[256]; snprintf(rt,sizeof(rt),"%s",Platform_GetRuntimeDir());
         pid_t pid=fork();
         if(pid==0){
             setsid(); pid_t p2=fork(); if(p2<0) _exit(1); if(p2>0) _exit(0);

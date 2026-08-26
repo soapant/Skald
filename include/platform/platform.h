@@ -74,6 +74,11 @@ int ConvertLinuxKeyToWindowsVK(int key_code);
 const char* Platform_GetRealUser(void);
 const char* Platform_GetRealHome(void);
 bool Platform_IsRunningAsRoot(void);
+#if !defined(_WIN32)
+const char* Platform_GetSessionDisplay(void);
+const char* Platform_GetSessionXAuthority(void);
+const char* Platform_GetRuntimeDir(void);
+#endif
 bool Platform_LaunchTerminal(const char* working_dir, const char* extra_args);
 
 #endif

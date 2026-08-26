@@ -25,3 +25,14 @@ RestartSec=2
 [Install]
 WantedBy=default.target
 WantedBy=graphical-session.target
+
+# NOTE: There must be exactly ONE copy of this unit installed.
+# If an OLD root-level unit also exists (/etc/systemd/system/myprogram.service),
+# both start on boot -> two instances fighting over /dev/input.
+# Remove it with:
+#   sudo systemctl disable --now myprogram.service
+#   sudo rm /etc/systemd/system/myprogram.service
+# The binary itself also refuses to run twice (flock /tmp/myprogram.lock).
+#
+# Env import after login (needed for DISPLAY/XAUTHORITY so prompts work):
+#   systemctl --user import-environment DISPLAY WAYLAND_DISPLAY XDG_RUNTIME_DIR XAUTHORITY
