@@ -125,7 +125,6 @@ static void neovide_edit_callback(const char* selection, ListBoxInfo* lb) {
 }
 
 void TriggerNvimZoxide(void) {
-    if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
     if (!g_cached_nvim_commands) RebuildNvimCache();
     if (!Initialized) InitTextEditor();
     const char** list = ZoxideHelper_PrepareTriggerList(NULL, &g_cached_nvim_commands, &g_cached_nvim_count, NULL);

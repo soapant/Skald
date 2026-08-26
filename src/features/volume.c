@@ -140,7 +140,6 @@ void SetSystemVolume(float volume) {
 #endif
 
 void TriggerVolume(void) {
-    if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
     int current_vol = GetSystemVolume();
     char prompt[256]; 
     char* input;

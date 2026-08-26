@@ -38,7 +38,6 @@ static void explorer_edit_callback(const char* selection, ListBoxInfo* lb) {
 }
 
 void TriggerExplorer(void) {
-    if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
     if (!g_cached_explorer_commands) RebuildExplorerCache();
     const char** list = ZoxideHelper_PrepareTriggerList(NULL, &g_cached_explorer_commands, &g_cached_explorer_count, NULL);
     PROMPT(.title = "📁 Explorer", .items = list, .count = g_cached_explorer_count,

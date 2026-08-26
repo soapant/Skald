@@ -9,8 +9,6 @@ void LaunchTimer(const char* selection) {
 }
 
 void TriggerTimer(void) {
-    if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
-    
     char* input;
     
     const char* prompt =  "Enter timer duration (10s 50m 2h or enter 0 for a stopwatch)";
@@ -18,7 +16,5 @@ void TriggerTimer(void) {
     input = SIMPLE_PROMPT(.prompt = prompt, .title = "⏱️ Timer",
                           .height = 920, .width = 650, .item_height = 32);
 
-    printf("GOT INPUT %s \n",input);
-    
     LaunchTimer(input);
 }

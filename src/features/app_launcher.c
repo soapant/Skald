@@ -194,8 +194,6 @@ static void applauncher_copy_callback(const char* selection,int true_index,int t
 }
 
 void TriggerAppLauncher(void) {
-    if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
-
     const char** initial_items = (const char**)malloc(G_APP_COUNT * sizeof(char*));
     if (!initial_items) return;
     

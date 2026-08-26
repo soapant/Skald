@@ -302,7 +302,6 @@ static void reminder_edit_callback(const char* selection, ListBoxInfo* lb) {
 }
 
 void TriggerReminder(void) {
-    if (CheckAndBlockIfPopupActive(hPopupWnd)) return;
     if (!g_cached_reminder_commands) RebuildReminderCache();
     const char** list = ZoxideHelper_PrepareTriggerList(NULL, &g_cached_reminder_commands, &g_cached_reminder_count, NULL);
     PROMPT(.title = "⏱️ Reminder", .items = list, .count = g_cached_reminder_count,
