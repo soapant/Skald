@@ -99,11 +99,9 @@ void PopulateListBox(ListBoxInfo* lb, WindowHandle hListBox, const char* filter,
   WinTimer timer_filter = TimerStart();
   if (use_previous && prev_count == 0) {
     total_matches = 0;
-    printf("[SKIP] No previous matches for '%s', skipping filter for '%s'\n",
         lb->last_filter, clean_filter);
   } else if (use_previous && prev_count > 0) {
     int* prev_matches = lb->prev_matches;
-    printf("[OPTIMIZE] Incremental: '%s' -> '%s'\n", lb->last_filter, clean_filter);
 
     for (int i = 0; i < prev_count && total_matches < MAX_MATCHES; i++) {
       int idx = prev_matches[i];
@@ -162,7 +160,6 @@ void PopulateListBox(ListBoxInfo* lb, WindowHandle hListBox, const char* filter,
   if (total_matches > 0 && strlen(clean_filter) > 0) {
     memcpy(lb->prev_matches, lb->matching_indices, total_matches * sizeof(int));
     lb->last_filter_full_count = total_matches;
-    printf("[HISTORY] Saved '%s' (%d matches)\n", clean_filter, total_matches);
   } else {
     lb->last_filter_full_count = 0;
   }
