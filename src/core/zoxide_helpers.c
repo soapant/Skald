@@ -60,16 +60,19 @@ void ZoxideHelper_Edit(const char* selection, ListBoxInfo* lb, MappedFile* file,
     int true_idx = (lb && idx >= 0 && idx < lb->populated_count) ? lb->matching_indices[idx] : idx;
     char* newQuery = Platform_EditTextPopup(selection, 960, 540, 1000, 300);
     if (newQuery != NULL) {
+        extern WindowHandle hListBox;
+        extern WindowHandle hEditControl;
         EditCallbackData data = {
             .filepath = NULL,
             .lb = lb,
             .selected_index = idx,
             .true_index = true_idx,
             .new_text = newQuery,
-            .restore_selection = true
+            .restore_selection = true,
+            .hListBox = hListBox,
+            .hEditControl = hEditControl
         };
-        extern WindowHandle hListBox;
-        EditCallback_Handle(&data, refresh, hListBox);
+        EditCallback_Handle(&data, refresh);
         Platform_ReplaceLineInMappedFile(file, (data.true_index >= 0) ? data.true_index : data.selected_index, newQuery);
         free(newQuery);
     }

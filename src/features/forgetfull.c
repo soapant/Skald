@@ -88,16 +88,19 @@ static void forgetfull_edit_callback(const char* selection, ListBoxInfo* lb) {
     int true_idx = (lb && idx >= 0 && idx < lb->populated_count) ? lb->matching_indices[idx] : idx;
     char* NewForgetFullName = Platform_EditTextPopup(selection, 960, 540, 1000, 300);
     if (NewForgetFullName != NULL) {
+        extern WindowHandle hListBox;
+        extern WindowHandle hEditControl;
         EditCallbackData data = {
             .filepath = FORGETFULL_FILE_PATH,
             .lb = lb,
             .selected_index = idx,
             .true_index = true_idx,
             .new_text = NewForgetFullName,
-            .restore_selection = true
+            .restore_selection = true,
+            .hListBox = hListBox,
+            .hEditControl = hEditControl
         };
-        extern WindowHandle hListBox;
-        EditCallback_Handle(&data, forgetfull_refresh_callback, hListBox);
+        EditCallback_Handle(&data, forgetfull_refresh_callback);
         free(NewForgetFullName);
     }
 }
