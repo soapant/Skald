@@ -363,7 +363,7 @@ void Platform_SettingsPopUp() {
   SetMode(MODE_INSERT);
 
   WindowLayout layout;
-  CalculateSettingsWindowMetrics(1, &layout, height, width, item_height);
+  CalculateWindowMetrics(1, &layout, height, width, item_height);
 
   HFONT hCustomFont = CreateCustomNerdFont(FontSize, UsedFont);
 

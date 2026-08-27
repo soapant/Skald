@@ -54,9 +54,11 @@ void SetModeWithListBox(EditorMode mode, ListBoxInfo* lb) {
         }
     }
 
+#if defined(WIN_32)
     if (WH_TO_HWND(g_ActiveEditControl) != NULL) {
         UpdateTextCaret(g_ActiveEditControl);
     }
+#endif
 }
 
 void SetMode(EditorMode mode) {
