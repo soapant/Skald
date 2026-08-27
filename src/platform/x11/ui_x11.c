@@ -198,7 +198,6 @@ char* Platform_PromptUser(const PromptSpec* spec) {
     bool got_focus = false; 
                             
     while (running) {
-        if (selection_complete) { running = 0; break; }
         XNextEvent(dpy, &ev);
         if (ev.type == FocusIn) {
             got_focus = true;
@@ -293,7 +292,7 @@ char* Platform_PromptUser(const PromptSpec* spec) {
     XSync(dpy, False);
     
     Platform_DismissMessage();
-    XDestroyWindow(dpy, win);
+    XDestroyWindow(dpy,win);
     XSync(dpy, False);
     free(state);
     return output_buffer;
@@ -617,8 +616,6 @@ void Platform_SettingsPopUp(void) {
 
 char* Platform_EditTextPopup(const char* initial_text, int centerX, int centerY, int maxWidth, int maxHeight) {
     Display* dpy = get_display();
-    if (!dpy) return NULL;
-    if (!initial_text) return NULL;
 
     int screen = DefaultScreen(dpy);
 
@@ -634,16 +631,9 @@ char* Platform_EditTextPopup(const char* initial_text, int centerX, int centerY,
 
     ListBoxInfo* active_lb = NULL;
     int saved_index = -1;
-    bool parent_was_active = false;
-    if (g_currentPromptState && g_currentPromptState->has_listbox) {
-        active_lb = &g_currentPromptState->listbox;
-        saved_index = active_lb->selected_index;
-        parent_was_active = true;
-    } else if (g_currentSimplePromptState) {
-        parent_was_active = true;
-    }
 
     SimplePromptState* state = (SimplePromptState*)calloc(1, sizeof(SimplePromptState));
+
     if (!state) return NULL;
 
     state->display_message = "";
@@ -656,22 +646,16 @@ char* Platform_EditTextPopup(const char* initial_text, int centerX, int centerY,
 
     Window win = Linux_CreateEditPopupWindow(dpy, x, y, maxWidth, maxHeight);
 
-
-    bool prev_main_active = g_IsMainWindowActive;
     g_currentEditPopupState = state;
     g_EditPopupCloseRequested = false;
-    g_IsMainWindowActive = true;
     g_hEditPopup.xid = win;
     SetMode(MODE_INSERT);
 
     XMapWindow(dpy, win);
-    XFlush(dpy);
     XSetInputFocus(dpy, win, RevertToParent, CurrentTime);
     XFlush(dpy);
 
     char* result = NULL;
-    bool focus_lost = false;
-    bool edit_got_focus = false;
     bool running = true;
     XEvent ev;
     while (running) {
@@ -727,20 +711,17 @@ char* Platform_EditTextPopup(const char* initial_text, int centerX, int centerY,
                     }
                 }
             }
-        } else if (ev.type == FocusIn) {
-            edit_got_focus = true;
-        // temporary just so it works 
+        }
+        // temporary just so it works  for some reason it thinks its not getting focus no idea why
         // } else if (ev.type == FocusOut) {
         //     if (CloseOnLossOfFocus) {
         //         focus_lost = true;
         //         running = false;
         //     }
-        }
 
         if (!running) {
           break;
         }
-
 
         Linux_RenderSimplePromptUser(dpy, &win, state);
     }
@@ -748,33 +729,18 @@ char* Platform_EditTextPopup(const char* initial_text, int centerX, int centerY,
     g_currentEditPopupState = NULL;
     g_EditPopupCloseRequested = false;
     g_hEditPopup = WH_NULL;
-    g_IsMainWindowActive = parent_was_active ? true : prev_main_active;
-    g_Linux_AltHeld = false;
-    g_Linux_CtrlHeld = false;
-    g_Linux_ShiftHeld = false;
 
-    if (active_lb) {
-        active_lb->selected_index = saved_index;
-        if (RememberLastIndex) last_index = saved_index;
-    }
-
-    
     Platform_DismissMessage();
-    XDestroyWindow(dpy, win);
-    XSync(dpy, False);
 
-
+    //this destroy windwo distroys the main windwo too for some reason
+    // it was supposed to be removed from the dismiss message function 
 
     SetModeWithListBox(MODE_NORMAL, active_lb);
 
-    if (!focus_lost && focus_win != None && focus_win != PointerRoot) {
-        XSetInputFocus(dpy, focus_win, RevertToParent, CurrentTime);
-    }
-
-    while (XCheckTypedEvent(dpy, FocusOut, &ev)) {}
     XSync(dpy, False);
 
     free(state);
+
     return result;
 }
 

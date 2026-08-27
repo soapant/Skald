@@ -41,12 +41,9 @@ bool init_display(void) {
     if (g_display_initialized) {
         return true; 
     }
-
-    
     
     XInitThreads();
 
-    
     XSetErrorHandler(x11_error_handler);
 
     g_display = OpenBestDisplay();
