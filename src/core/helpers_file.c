@@ -89,7 +89,7 @@ void WriteMdFile(char lines[100][512], int count, const char* path) {
     fclose(f);
 }
 
-int EditCallback_Handle(EditCallbackData* data, RefreshCallback refresh, WindowHandle hListBox) {
+int EditCallback_Handle(EditCallbackData* data, RefreshCallback refresh) {
     if (!data || !data->new_text) return 0;
     
     if (data->selected_index >= 0 && data->lb) {
@@ -104,17 +104,15 @@ int EditCallback_Handle(EditCallbackData* data, RefreshCallback refresh, WindowH
     }
     
     if (refresh && data->lb) {
-        refresh("", hListBox, data->lb);
+        refresh("", data->hListBox, data->lb);
     }
     if (data->lb) {
-        extern WindowHandle hEditControl;
-        UI_Redraw(data->lb, hListBox);
+        UI_Redraw(data->lb, data->hListBox);
     }
     
     // Restore selection if requested
     if (data->restore_selection && data->lb && data->selected_index >= 0) {
-        extern WindowHandle hListBox;
-        UI_NavigateTo(data->lb, hListBox, data->selected_index);
+        UI_NavigateTo(data->lb, data->hListBox, data->selected_index);
     }
     
     return rc;
