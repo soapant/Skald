@@ -1,0 +1,5 @@
+# This directory is a Syncthing folder marker.
+# Do not delete.
+
+folderID: dup5y-tpqsc
+created: 2026-08-27T18:02:01+03:00
