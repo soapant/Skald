@@ -123,24 +123,6 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
             return 0;
         }
       }
-      if (wParam == EDIT_TEXT_KEY) {
-        output_buffer[0] = '\0';
-          if (UI_IsListBoxSelected(lb)) {
-            if (lb && lb->selected_index >=0 && lb->selected_index < lb->populated_count) strncpy(output_buffer, lb->populated_cache[lb->selected_index], sizeof(output_buffer) - 1);
-              if (ctrl_pressed && IsInsertMode()){
-                if (g_edit_callback != NULL) {
-                  g_edit_callback(output_buffer, lb);
-                }
-                return 0;
-              }else if (IsNormalMode()) {
-                if (g_edit_callback != NULL) {
-                  g_edit_callback(output_buffer, lb);
-                }
-                return 0;
-              }
-          }
-        
-      }
       if (wParam == COPY_SELECTION_KEY) {
         bool ctrl_pressed = (GetKeyState(VK_CONTROL) & 0x8000);
           bool shift_pressed = (GetKeyState(VK_SHIFT) & 0x8000);

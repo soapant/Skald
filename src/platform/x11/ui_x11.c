@@ -656,6 +656,7 @@ char* Platform_EditTextPopup(const char* initial_text, int centerX, int centerY,
 
     Window win = Linux_CreateEditPopupWindow(dpy, x, y, maxWidth, maxHeight);
 
+
     bool prev_main_active = g_IsMainWindowActive;
     g_currentEditPopupState = state;
     g_EditPopupCloseRequested = false;
@@ -679,7 +680,6 @@ char* Platform_EditTextPopup(const char* initial_text, int centerX, int centerY,
             break;
         }
         XNextEvent(dpy, &ev);
-
         if (ev.type == KeyPress) {
             bool confirmed = false;
             bool cancelled = false;
@@ -729,16 +729,18 @@ char* Platform_EditTextPopup(const char* initial_text, int centerX, int centerY,
             }
         } else if (ev.type == FocusIn) {
             edit_got_focus = true;
-        } else if (ev.type == FocusOut) {
-            
-            
-            if (CloseOnLossOfFocus && edit_got_focus && ev.xfocus.mode == NotifyNormal) {
-                focus_lost = true;
-                running = false;
-            }
+        // temporary just so it works 
+        // } else if (ev.type == FocusOut) {
+        //     if (CloseOnLossOfFocus) {
+        //         focus_lost = true;
+        //         running = false;
+        //     }
         }
 
-        if (!running) break;
+        if (!running) {
+          break;
+        }
+
 
         Linux_RenderSimplePromptUser(dpy, &win, state);
     }
@@ -760,6 +762,8 @@ char* Platform_EditTextPopup(const char* initial_text, int centerX, int centerY,
     Platform_DismissMessage();
     XDestroyWindow(dpy, win);
     XSync(dpy, False);
+
+
 
     SetModeWithListBox(MODE_NORMAL, active_lb);
 
