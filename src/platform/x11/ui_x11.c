@@ -653,7 +653,6 @@ char* Platform_EditTextPopup(const char* initial_text, int centerX, int centerY,
 
     XMapWindow(dpy, win);
     XSetInputFocus(dpy, win, RevertToParent, CurrentTime);
-    XFlush(dpy);
 
     char* result = NULL;
     bool running = true;
@@ -730,10 +729,7 @@ char* Platform_EditTextPopup(const char* initial_text, int centerX, int centerY,
     g_EditPopupCloseRequested = false;
     g_hEditPopup = WH_NULL;
 
-    Platform_DismissMessage();
-
-    //this destroy windwo distroys the main windwo too for some reason
-    // it was supposed to be removed from the dismiss message function 
+    XDestroyWindow(dpy,win);
 
     SetModeWithListBox(MODE_NORMAL, active_lb);
 
