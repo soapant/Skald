@@ -695,10 +695,13 @@ char* Platform_EditTextPopup(const char* initial_text, int centerX, int centerY,
             bool confirmed = false;
             bool cancelled = false;
             bool handled = Linux_HandleEditPopupKey(&ev, state, &confirmed, &cancelled);
+            fprintf(stderr, "[EDIT_LOOP] key handled=%d confirmed=%d cancelled=%d input='%s'\n", handled, confirmed, cancelled, state->user_input);
             if (confirmed) {
                 result = strdup(state->user_input);
+                fprintf(stderr, "[EDIT_LOOP] confirmed result='%s'\n", result ? result : "(null)");
                 running = false;
             } else if (cancelled || g_EditPopupCloseRequested) {
+                fprintf(stderr, "[EDIT_LOOP] cancelled\n");
                 g_EditPopupCloseRequested = false;
                 running = false;
             } else if (!handled && IsInsertMode()) {
