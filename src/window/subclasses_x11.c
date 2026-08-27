@@ -235,16 +235,6 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
         return true;
       }
     }
-    if (wParam == EDIT_TEXT_KEY) {
-      bool do_edit = (ctrl_pressed && IsInsertMode()) || IsNormalMode();
-      if (do_edit && g_edit_callback) {
-        const char* sel = "";
-        if (state->has_listbox && UI_IsListBoxSelected(&state->listbox)) sel = state->listbox.populated_cache[state->listbox.selected_index];
-        else sel = state->filter;
-        g_edit_callback(sel, &state->listbox);
-        return true;
-      }
-    }
     if (wParam == COPY_SELECTION_KEY) {
       if (shift_pressed || ctrl_pressed) {
         const char* sel = "";
