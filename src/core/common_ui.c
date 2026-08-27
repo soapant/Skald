@@ -99,7 +99,6 @@ void PopulateListBox(ListBoxInfo* lb, WindowHandle hListBox, const char* filter,
   WinTimer timer_filter = TimerStart();
   if (use_previous && prev_count == 0) {
     total_matches = 0;
-        lb->last_filter, clean_filter);
   } else if (use_previous && prev_count > 0) {
     int* prev_matches = lb->prev_matches;
 
