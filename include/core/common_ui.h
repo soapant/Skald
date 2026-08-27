@@ -32,7 +32,8 @@ static inline bool UI_IsListBoxSelected(ListBoxInfo* lb) {
   return lb && lb->selected_index != -1;
 }
 
-static inline void UpdateTextCaret(WindowHandle hwndEditControl) { (void)hwndEditControl; }
+void UpdateTextCaret(WindowHandle hwndEditControl);
+void CalculateWindowMetrics(int count, WindowLayout* layout,int height , int width,int item_height);
 
 
 #if defined(_WIN32)

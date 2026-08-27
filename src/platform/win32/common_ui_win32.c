@@ -1,6 +1,3 @@
-// Win32-only UI helpers: child control creation, window metrics, caret.
-// Excluded from Linux builds by the build script ( *_win32.c filter ).
-
 #include "common.h"
 #include "config.h"
 #include "helpers.h"
@@ -65,10 +62,6 @@ void CalculateWindowMetrics(int count, WindowLayout* layout,int height , int wid
   layout->x = mi.rcMonitor.left + (monitorWidth - layout->w) / 2;
   layout->y = mi.rcMonitor.top + (monitorHeight - layout->h) / 2;
 }
-void CalculateSettingsWindowMetrics(int count, WindowLayout* layout,int height , int width,int item_height) {
-  CalculateWindowMetrics(count, layout, height, width, item_height);
-}
-
 void SimpleCreateChildControls(WindowHandle hwndParent, HFONT hFont, const char* string, int count, const WindowLayout* layout) {
   HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtrA(WH_TO_HWND(hwndParent), GWLP_HINSTANCE);
 
