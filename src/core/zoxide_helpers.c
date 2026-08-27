@@ -58,16 +58,19 @@ void ZoxideHelper_Refresh(const char* filter, WindowHandle hListBox, ListBoxInfo
 void ZoxideHelper_Edit(const char* selection, ListBoxInfo* lb, MappedFile* file, char*** cached, int* count, RefreshCallback refresh) {
     int idx = lb ? lb->selected_index : -1;
     int true_idx = (lb && idx >= 0 && idx < lb->populated_count) ? lb->matching_indices[idx] : idx;
-    fprintf(stderr, "[ZOXIDE_EDIT] called selection='%s' idx=%d true_idx=%d\n", selection ? selection : "(null)", idx, true_idx);
     char* newQuery = Platform_EditTextPopup(selection, 960, 540, 1000, 300);
-    fprintf(stderr, "[ZOXIDE_EDIT] popup returned '%s'\n", newQuery ? newQuery : "(null)");
     if (newQuery != NULL) {
-        fprintf(stderr, "[ZOXIDE_EDIT] using saved idx=%d true_idx=%d\n", idx, true_idx);
-        if (idx >= 0) WriteToCacheIndex(lb, idx, newQuery);
-        int rc = -1;
-        if (true_idx >= 0) rc = Platform_ReplaceLineInMappedFile(file, true_idx, newQuery);
-        else if (idx >= 0) rc = Platform_ReplaceLineInMappedFile(file, idx, newQuery);
-        fprintf(stderr, "[ZOXIDE_EDIT] replace rc=%d\n", rc);
+        EditCallbackData data = {
+            .filepath = NULL,
+            .lb = lb,
+            .selected_index = idx,
+            .true_index = true_idx,
+            .new_text = newQuery,
+            .restore_selection = true
+        };
+        extern WindowHandle hListBox;
+        EditCallback_Handle(&data, refresh, hListBox);
+        Platform_ReplaceLineInMappedFile(file, (data.true_index >= 0) ? data.true_index : data.selected_index, newQuery);
         free(newQuery);
     }
     ZoxideHelper_RebuildCache(file, cached, count);

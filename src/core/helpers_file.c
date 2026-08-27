@@ -88,3 +88,34 @@ void WriteMdFile(char lines[100][512], int count, const char* path) {
     }
     fclose(f);
 }
+
+int EditCallback_Handle(EditCallbackData* data, RefreshCallback refresh, WindowHandle hListBox) {
+    if (!data || !data->new_text) return 0;
+    
+    if (data->selected_index >= 0 && data->lb) {
+        WriteToCacheIndex(data->lb, data->selected_index, data->new_text);
+    }
+    
+    int rc = 0;
+    if (data->true_index >= 0 && data->filepath) {
+        rc = ReplaceLineInFile(data->filepath, data->true_index, data->new_text);
+    } else if (data->selected_index >= 0 && data->filepath) {
+        rc = ReplaceLineInFile(data->filepath, data->selected_index, data->new_text);
+    }
+    
+    if (refresh && data->lb) {
+        refresh("", hListBox, data->lb);
+    }
+    if (data->lb) {
+        extern WindowHandle hEditControl;
+        UI_Redraw(data->lb, hListBox);
+    }
+    
+    // Restore selection if requested
+    if (data->restore_selection && data->lb && data->selected_index >= 0) {
+        extern WindowHandle hListBox;
+        UI_NavigateTo(data->lb, hListBox, data->selected_index);
+    }
+    
+    return rc;
+}
