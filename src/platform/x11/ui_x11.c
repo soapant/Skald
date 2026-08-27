@@ -46,6 +46,7 @@ long pending_hotkey_timeMs = 0;
 Window g_PromptWin = None;
 bool g_PromptJustClosed = false;
 long g_PromptCloseTimeMs = 0;
+long g_lastEditDestroyTimeMs = 0;
 extern bool g_Linux_CtrlHeld, g_Linux_AltHeld, g_Linux_ShiftHeld;
 extern char output_buffer[255];
 
@@ -170,6 +171,7 @@ char* Platform_PromptUser(const PromptSpec* spec) {
     int y = (screen_height - layout_h) / 2;
 
     Window win = Linux_CreatePromptWindow(dpy, x, y, layout_w, layout_h);
+    g_PromptWin = win;
 
     XSelectInput(dpy, win, KeyPressMask | ExposureMask | FocusChangeMask);
 
@@ -199,15 +201,24 @@ char* Platform_PromptUser(const PromptSpec* spec) {
                             
     while (running) {
         XNextEvent(dpy, &ev);
-        if (ev.type == FocusIn) {
+        if (ev.type == FocusIn && ev.xfocus.window == win) {
             got_focus = true;
         }
-        if (CloseOnLossOfFocus && ev.type == FocusOut && got_focus) {
-            if (ev.xfocus.mode == NotifyNormal) {
-                output_buffer[0] = '\0';
-                selection_complete = true;
-                running = 0;
-                break;
+        if (CloseOnLossOfFocus && ev.type == FocusOut && got_focus && ev.xfocus.window == win) {
+            if (g_currentEditPopupState != NULL) {
+                fprintf(stderr, "[PROMPT] FocusOut win %lu ignored - edit popup still open\n", (unsigned long)win);
+            } else {
+                struct timeval _tv; gettimeofday(&_tv,NULL);
+                long _now = _tv.tv_sec*1000 + _tv.tv_usec/1000;
+                if (_now - g_lastEditDestroyTimeMs < 500) {
+                    fprintf(stderr, "[PROMPT] FocusOut win %lu ignored - within 500ms of edit destroy (%ld ms ago)\n", (unsigned long)win, _now - g_lastEditDestroyTimeMs);
+                } else if (ev.xfocus.mode == NotifyNormal) {
+                    fprintf(stderr, "[PROMPT] FocusOut closing main win %lu mode %d detail %d\n", (unsigned long)win, ev.xfocus.mode, ev.xfocus.detail);
+                    output_buffer[0] = '\0';
+                    selection_complete = true;
+                    running = 0;
+                    break;
+                }
             }
         }
         if (ev.type == KeyPress) {
@@ -292,7 +303,8 @@ char* Platform_PromptUser(const PromptSpec* spec) {
     XSync(dpy, False);
     
     Platform_DismissMessage();
-    XDestroyWindow(dpy,win);
+    if (win != None) XDestroyWindow(dpy,win);
+    g_PromptWin = None;
     XSync(dpy, False);
     free(state);
     return output_buffer;
@@ -645,14 +657,30 @@ char* Platform_EditTextPopup(const char* initial_text, int centerX, int centerY,
     state->window_title = "EditPopup";
 
     Window win = Linux_CreateEditPopupWindow(dpy, x, y, maxWidth, maxHeight);
+    fprintf(stderr, "[EDIT] created win %lu g_PromptWin %lu\n", (unsigned long)win, (unsigned long)g_PromptWin);
 
+    bool saved_selection_complete = selection_complete;
+    selection_complete = false;
     g_currentEditPopupState = state;
     g_EditPopupCloseRequested = false;
     g_hEditPopup.xid = win;
     SetMode(MODE_INSERT);
 
     XMapWindow(dpy, win);
+    XFlush(dpy);
+    // Fix BadMatch on SetInputFocus: wait until window is viewable
+    {
+        XWindowAttributes _attr;
+        for (int _i=0; _i<50; _i++) {
+            if (XGetWindowAttributes(dpy, win, &_attr) && _attr.map_state == IsViewable) break;
+            usleep(10000);
+            XSync(dpy, False);
+        }
+    }
+    XSync(dpy, False);
     XSetInputFocus(dpy, win, RevertToParent, CurrentTime);
+    XFlush(dpy);
+    XSync(dpy, False);
 
     char* result = NULL;
     bool running = true;
@@ -728,8 +756,50 @@ char* Platform_EditTextPopup(const char* initial_text, int centerX, int centerY,
     g_currentEditPopupState = NULL;
     g_EditPopupCloseRequested = false;
     g_hEditPopup = WH_NULL;
-
-    XDestroyWindow(dpy,win);
+    fprintf(stderr, "[EDIT] destroying win %lu g_PromptWin %lu saved_sel %d cur_sel %d\n", (unsigned long)win, (unsigned long)g_PromptWin, saved_selection_complete, selection_complete);
+    // Fix: ensure ESC in edit doesn't close main - restore main's selection_complete
+    selection_complete = saved_selection_complete;
+    // If edit was cancelled (ESC), main must stay open
+    if (selection_complete) {
+        fprintf(stderr, "[EDIT] main selection_complete was true, resetting to false to keep main open\n");
+        selection_complete = false;
+    }
+    // Only destroy if it's the edit window, not main
+    if (win != None && win != g_PromptWin) {
+        XDestroyWindow(dpy,win);
+    } else if (win == g_PromptWin) {
+        fprintf(stderr, "[BUG] Edit popup win %lu == main win %lu, skipping destroy to avoid killing main\n", (unsigned long)win, (unsigned long)g_PromptWin);
+        XUnmapWindow(dpy, win);
+    } else {
+        XDestroyWindow(dpy,win);
+    }
+    {
+        struct timeval _tv; gettimeofday(&_tv,NULL);
+        g_lastEditDestroyTimeMs = _tv.tv_sec*1000 + _tv.tv_usec/1000;
+        fprintf(stderr, "[EDIT] set g_lastEditDestroyTimeMs %ld\n", g_lastEditDestroyTimeMs);
+    }
+    if (focus_win != None && focus_win != PointerRoot) {
+        XSync(dpy, False);
+        usleep(20000);
+        XSetInputFocus(dpy, focus_win, RevertToParent, CurrentTime);
+        XFlush(dpy);
+        XSync(dpy, False);
+        fprintf(stderr, "[EDIT] restored focus to %lu (main %lu)\n", (unsigned long)focus_win, (unsigned long)g_PromptWin);
+    }
+    // Flush any pending FocusOut/Key events that would otherwise close main
+    {
+        XEvent _ev;
+        while (XCheckTypedEvent(dpy, FocusOut, &_ev)) {
+            fprintf(stderr, "[EDIT] flushed FocusOut win %lu\n", (unsigned long)_ev.xfocus.window);
+        }
+        while (XCheckTypedEvent(dpy, KeyPress, &_ev)) {
+            fprintf(stderr, "[EDIT] flushed KeyPress win %lu keycode %u\n", (unsigned long)_ev.xkey.window, _ev.xkey.keycode);
+        }
+        while (XCheckTypedEvent(dpy, KeyRelease, &_ev)) {
+            fprintf(stderr, "[EDIT] flushed KeyRelease win %lu\n", (unsigned long)_ev.xkey.window);
+        }
+        XSync(dpy, False);
+    }
 
     SetModeWithListBox(MODE_NORMAL, active_lb);
 
