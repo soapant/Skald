@@ -1,211 +1,180 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 #include <string.h>
-#include <windows.h>
-#include "types.h"
-#include "macro_bindings.h"
-
-static bool TRAY = true;
-
-static bool COLORFUL_MODE = false;
-
-#define MAX_VISIBLE_ITEMS 60
-
-const char* UsedTerminal = "Alacritty";
-
-const char* BASE_SCREENSHOT_FOLDER_PATH = "C:\\Users\\HP\\Pictures\\Screenshots\\";
-
-const char* TEMP_FILE_PATH = "temp_list_of_positions.md";
-
-const char* UsedImageEditor =  "picview.exe";
-
-const char* UsedFont =  "0xProto Nerd Font";
-
-const int FontSize = 24;
-
-const int NumberFontSize = 18;
-
-const char* SowonPath = "D:\\Projects\\Tscoding Timer\\sowon\\sowon.exe";
-
-const char* MusicPlayerPath = "D:\\Projects\\Music Player\\music_player.exe";
-
-const char* VideoViewerPath = "D:\\Projects\\Video Viewer\\video_viewer.exe";
-
-const char* TextEditorPath = "C:\\Program Files\\Neovide\\neovide.exe";
-
-static const char* MusicPath = "D:\\Music\\Mp3";
-
-static const char* VideosPath = "D:\\videos";
-
-static const char* IconPath = "D:\\retard games\\miscellaneous\\switch_window.ico";
-
-const bool TimerAvailable = false;
-
-const bool MusicPlayerAvailable = true;
-
-const bool VideoViewerAvailable = true;
-
-static const char* ListOfProgramPaths[20] = {
-    "C:\\Users\\HP\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu",
-    "C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs",
-    "D:\\Projects",
-    "D:\\retard games\\miscellaneous"
-};
-
-static const char* ListOfShitToIgnore[30] = {
-  "node_modules",
-  ".git",
-  "bin",
-  "dll",
-  "gtnh 2.8",
-  ".h",
-  "yazi",
-  "obj",
-  "build"
-};
+#include <wchar.h>
+#include "core/types.h"
 
 
-static const AppHotkey G_APP_HOTKEYS[] = {
-    { VK_RETURN, HOTKEY_MOD_ALT, "*", "Alacritty" },
-    { 'B', HOTKEY_MOD_CTRL | HOTKEY_MOD_SHIFT, "*", "Zen" },
-};
+#define SWITCHER            VK_SPACE
+#define TODO                'T'
+#define FORGETFULL          'F'
+#define CALCULATOR          'C'
+#define EXE                 'E'
+#define KILL_PROCESS        'U'
+#define GOOGLE_SEARCH       'G'  
+#define TERMINAL            'W'
+#define YAZI                'Q'
+#define TIMER               'O'
+#define EXPLORER            'R'
+#define TERMINAL_COMMAND    VK_OEM_4 // {
+#define VOLUME              'M'
+#define SCREENSHOT          'A'
+#define POS                 'Z'
+#define COLOR               'X'
+#define PIXEL_EQUALS        'B'
+#define WAIT_FOR_PIXEL      'N'
+#define REGION              'Y'
+#define NVIM                'I'
+#define MONITOR_FOCUS_MAIN  'L'
+#define MONITOR_FOCUS_SIDE  'H'
+#define REMINDER            'S'
+#define MUTE                'P'
+#define SETTINGS            'D'
+#define MONITOR_CONTROL     '1'
+#define MUSIC_PLAYER_KEY    'P'
+#define VIDEO_VIEWER_KEY    'V'
+#define REPLICA             'R'
+#define KILL_MYPROGRAM      'M'
+#define WIFI_TOGGLE         'W'
+#define BLUETOOTH_TOGGLE    'B'
+#define EDIT_TEXT_KEY       'E'
+#define HELP_SCREEN_KEY     'H'
+#define COPY_SELECTION_KEY  'Y'
+#define TOGGLE_PIXEL_HOTKEYS_KEY 'Z'
+#define COMMAND_MODE_KEY        VK_OEM_1 // ;
+#define SEARCH_PROGRAM_KEY      VK_OEM_2 // /
+#define COLOR_ERROR             RGB(180, 0, 0) 
+#define COLOR_NORMAL            RGB(200, 200, 0) 
+#define COLOR_TIP               RGB(0, 160, 0)
 
-#define APP_HOTKEY_COUNT (sizeof(G_APP_HOTKEYS) / sizeof(G_APP_HOTKEYS[0]))
+extern bool Tray;
+extern bool EnableVimMode;
+extern bool RememberLastIndex;
+extern bool KeepSelectionAfterClose;
+extern bool MessageAfterEachHotkey;
+extern bool AllowOtherFeatureTogglesInFeature;
+extern bool ModePersistsThroughFeatures;
+extern int  TimeOutForMessages;
+extern bool DoTimeDebugs;
+extern char* EditPopUpPos;
+extern int EditPopUpWidthMin;
+extern int PageUpDownLen;
+extern bool ColorfullMode;
+extern bool SearchBoxDiffColor;
 
-static const MiscHotkey G_MISC_HOTKEYS[] = {
-    {'G', HOTKEY_MOD_CTRL | HOTKEY_MOD_ALT, "*", "D:\\retard games\\Grand Theft Auto V Legacy\\PlayGTAV.bat" },
-};
+extern const wchar_t* HttpUrlForNotis;
+extern const char* BASE_SCREENSHOT_FOLDER_PATH;
+extern const char* TEMP_FILE_PATH;
+extern const char* UsedFont;
+extern const int FontSize;
+extern const int NumberFontSize;
+extern const int VimFontSize;
+extern const int PaddingForScrolling;
+extern const char* UsedTerminal;
+extern const char* ImageEditorPath;
+extern const char* TimerPath;
+extern const char* MusicPlayerPath;
+extern const char* VideoViewerPath;
+extern const char* TextEditorPath;
+extern const char* MusicPath;
+extern const char* VideosPath;
+extern const char* IconPath;
+extern const bool TimerAvailable;
+extern const bool MusicPlayerAvailable;
+extern const bool VideoViewerAvailable;
+extern const bool ReplicaAvailable;
+extern const bool FullTextNeedsKeyPress;
+extern const bool MessagesEnabled;
+extern const bool RainbowText;
+extern const bool ColoredVimModeText;
+extern const bool AlternatingText;
+extern const bool EnableLineNumbers;
+extern const int GradientItems;
+extern const float GradientBrightness;
+extern bool PixelHotkeys;
+extern bool CloseOnLossOfFocus;
+extern float WindowOpacity;
 
-#define MISC_HOTKEY_COUNT (sizeof(G_MISC_HOTKEYS) / sizeof(G_MISC_HOTKEYS[0]))
+typedef struct {
+    const char* path;
+    const char* name;
+} PathEntry;
 
-static const QuickLinkHotkey G_QUICKLINK_HOTKEYS[] = {
-    {'Y', HOTKEY_MOD_CTRL | HOTKEY_MOD_ALT, "*", "https:youtube.com" },
-    {'A', HOTKEY_MOD_CTRL | HOTKEY_MOD_ALT, "*", "https://gemini.google.com/app" },
-};
+typedef struct {
+    const char* name;
+    const char* win32_value;
+    const char* linux_value;
+} PathVar;
 
-#define QUICKLINK_HOTKEY_COUNT (sizeof(G_QUICKLINK_HOTKEYS) / sizeof(G_QUICKLINK_HOTKEYS[0]))
+extern const char* ListOfProgramPaths[20];
+extern const PathEntry SystemShortcuts[];
+#define SYSTEM_SHORTCUT_COUNT 19
 
-static const TextSnippet G_TEXT_SNIPPETS[] = {
-    { 'O', HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT, "EpicGamesLauncher", "seifisbad@gmail.com" },
-    { 'P', HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT, "EpicGamesLauncher", "i_am_retarded1" },
-};
+extern const char* ListOfShitToIgnore[30];
 
-#define TEXT_SNIPPET_COUNT (sizeof(G_TEXT_SNIPPETS) / sizeof(G_TEXT_SNIPPETS[0]))
+extern const PathVar G_PATH_VARS[];
+extern const unsigned int PATH_VAR_COUNT;
 
-static const MusicPlayerBinding G_MUSIC_PLAYERS[] = {
-  {
-    VK_OEM_COMMA,
-    HOTKEY_MOD_ALT,
-    1 //PAUSE
-  },
-  { 
-    VK_OEM_2,
-    HOTKEY_MOD_ALT,
-    5 // TOGGLE PLAYBACK
-  },
-  { 
-    VK_OEM_1,
-    HOTKEY_MOD_ALT,
-    6 // TERMINATE
-  },
-  { 
-    'P',
-    HOTKEY_MOD_ALT,
-    69 // PLAY SONG
-  },
-  
-};
+extern const AppHotkey G_APP_HOTKEYS[];
+extern const unsigned int APP_HOTKEY_COUNT;
 
-#define MUSIC_PLAYER_COUNT (sizeof(G_MUSIC_PLAYERS) / sizeof(G_MUSIC_PLAYERS[0]))
-static const VideoPlayerBinding G_VIDEO_PLAYERS[] = {
-  {
-    VK_OEM_COMMA,
-    HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT,
-    1 //PAUSE
-  },
-  { 
-    VK_OEM_PERIOD,
-    HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT,
-    5 // TOGGLE FullScreen
-  },
-  { 
-    VK_OEM_1,
-    HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT,
-    6 // TERMINATE
-  },
-  { 
-    'V',
-    HOTKEY_MOD_ALT,
-    69 // PLAY VIDEO
-  },
-};
-#define VIDEO_PLAYER_COUNT (sizeof(G_VIDEO_PLAYERS) / sizeof(G_VIDEO_PLAYERS[0]))
+extern const MiscHotkey G_MISC_HOTKEYS[];
+extern const unsigned int MISC_HOTKEY_COUNT;
 
-static const char* bkp_windows[] = {"Brawlhalla","Fortnite","RocketLeague","Factorio","Steam"};
+extern const TerminalCommandHotkey G_TERMINAL_COMMAND_HOTKEYS[];
+extern const unsigned int TERMINAL_COMMAND_HOTKEY_COUNT;
 
-static const BulkKillProcessBinding G_BULK_KILL_PROCESS[] = {
-    {
-        'P',           
-        HOTKEY_MOD_ALT | HOTKEY_MOD_CTRL,               
-        bkp_windows,              
-        sizeof(bkp_windows) / sizeof(bkp_windows[0])
-    },
-};
+extern const QuickLinkHotkey G_QUICKLINK_HOTKEYS[];
+extern const unsigned int QUICKLINK_HOTKEY_COUNT;
 
-#define BULKKILLPROCESS_COUNT (sizeof(G_BULK_KILL_PROCESS) / sizeof(G_BULK_KILL_PROCESS[0]))
+extern const TextSnippet G_TEXT_SNIPPETS[];
+extern const unsigned int TEXT_SNIPPET_COUNT;
 
-  
-static const char* focus_blacklist_games[] = {"CrosshairX"};
+extern const MusicPlayerBinding G_MUSIC_PLAYERS[];
+extern const unsigned int MUSIC_PLAYER_COUNT;
 
-static const char* games_windows[] = {"Brawlhalla","Fortnite","RocketLeague","Factorio","Minecraft"};
+extern const VideoViewerBinding G_VIDEO_PLAYERS[];
+extern const unsigned int VIDEO_PLAYER_COUNT;
 
-static const char* focus_blacklist_browsers[] = {"CrosshairX"};
+extern const char* bkp_windows[];
+extern const BulkKillProcessBinding G_BULK_KILL_PROCESS[];
+extern const unsigned int BULKKILLPROCESS_COUNT;
 
-static const char* browsers_windows[] = {"Zen","Chrome"};
+extern const char* focus_blacklist_games[];
+extern const char* games_windows[];
+extern const char* focus_blacklist_browsers[];
+extern const char* browsers_windows[];
+extern const char* focus_blacklist_coding[];
+extern const char* coding_windows[];
+extern const char* focus_blacklist_terminal[];
+extern const char* terminal_windows[];
+extern const FocusSwitcherBinding G_FOCUS_SWITCHERS[];
+extern const unsigned int FOCUS_SWITCHER_COUNT;
 
-static const char* focus_blacklist_coding[] = {"CrosshairX"};
+extern const AliasEntry Aliases[];
+extern const size_t ALIAS_ENTRY_COUNT;
 
-static const char* coding_windows[] = {"Nvim","Neovide","Alacritty","vim","pwsh"};
+extern const TagFormatConfig TODO_TAG_FORMAT;
 
-static const FocusSwitcherBinding G_FOCUS_SWITCHERS[] = {
-    {
-        'O',           
-        HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT,               
-        focus_blacklist_games,      
-        sizeof(focus_blacklist_games) / sizeof(focus_blacklist_games[0]),
-        games_windows,              
-        sizeof(games_windows) / sizeof(games_windows[0])
-    },
-    {
-        'I',           
-        HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT,               
-        focus_blacklist_browsers,      
-        sizeof(focus_blacklist_browsers) / sizeof(focus_blacklist_browsers[0]),
-        browsers_windows,              
-        sizeof(browsers_windows) / sizeof(browsers_windows[0])
-    },
-    {
-        'U',           
-        HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT,               
-        focus_blacklist_coding,      
-        sizeof(focus_blacklist_coding) / sizeof(focus_blacklist_coding[0]),
-        coding_windows,              
-        sizeof(coding_windows) / sizeof(coding_windows[0])
-    },
-};
+#define TODO_TAG_OPEN "["
+#define TODO_TAG_CLOSE "]"
+#define TODO_TAG_SEPARATOR "|"
+#define TODO_ENTRY_DELIMITER "||"
 
-#define FOCUS_SWITCHER_COUNT (sizeof(G_FOCUS_SWITCHERS) / sizeof(G_FOCUS_SWITCHERS[0]))
 
-static const TodoConfigEntry TODO_DICT[] = {
-    { "-pc", "Cprogram",          NULL, RGB(98,  160, 234), true  },
-    { "-ph", "HeaderC",           NULL, RGB(51,  209, 122), true  },
-    { "-pm", "MinecraftModpack", NULL, RGB(255, 120, 0), true  },
-    { "-pb", "CocBot",           NULL, RGB(255, 255, 0), true  },
+extern const TodoAliasEntry TODO_ALIAS_DICT[];
+extern const size_t TODO_ALIAS_DICT_COUNT;
 
-    { "-m",  NULL,                "[Misc]", RGB(154, 153, 150), false },
-    { "-l",  NULL,                "[Learning]", RGB(102, 255, 0), false },
-};
+extern const GenericFlagEntry TODO_ALIAS_FLAGS[];
+extern const size_t TODO_ALIAS_FLAGS_COUNT;
 
-enum { TODO_DICT_COUNT = sizeof(TODO_DICT) / sizeof(TODO_DICT[0]) };
+extern const GenericFlagEntry TODO_CONFIG_FLAGS[];
+extern const size_t TODO_CONFIG_FLAGS_COUNT;
+
+extern const TodoConfigEntry TODO_DICT[];
+#define TODO_CONFIG_FLAGS_ENTRIES TODO_DICT
+extern const size_t TODO_DICT_COUNT;
+
+#define ARRAY_LEN(a) (sizeof(a) / sizeof((a)[0]))
 
 #endif
