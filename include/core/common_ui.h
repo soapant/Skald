@@ -32,18 +32,8 @@ static inline bool UI_IsListBoxSelected(ListBoxInfo* lb) {
   return lb && lb->selected_index != -1;
 }
 
-// Win32-only UI (child controls, metrics, caret). Not built on Linux.
-#if defined(_WIN32)
-void UpdateTextCaret(WindowHandle hwndEditControl);
-void CalculateWindowMetrics(int count, WindowLayout* layout,int height , int width,int item_height);
-void CalculateSettingsWindowMetrics(int count, WindowLayout* layout,int height , int width,int item_height);
-#else
 static inline void UpdateTextCaret(WindowHandle hwndEditControl) { (void)hwndEditControl; }
-#endif
 
-// ---------------------------------------------------------------------------
-// Popup state queries (small enough to keep here, bodies differ per OS)
-// ---------------------------------------------------------------------------
 
 #if defined(_WIN32)
 static inline bool IsPopupActive(WindowHandle hPopupWnd) {
