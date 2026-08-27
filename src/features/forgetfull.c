@@ -86,20 +86,19 @@ static void forgetfull_enter_callback(const char* selection, ListBoxInfo* lb) {
 static void forgetfull_edit_callback(const char* selection, ListBoxInfo* lb) {
     int idx = lb ? lb->selected_index : -1;
     int true_idx = (lb && idx >= 0 && idx < lb->populated_count) ? lb->matching_indices[idx] : idx;
-    fprintf(stderr, "[FORGET_EDIT] called selection='%s' idx=%d true_idx=%d\n", selection ? selection : "(null)", idx, true_idx);
     char* NewForgetFullName = Platform_EditTextPopup(selection, 960, 540, 1000, 300);
-    fprintf(stderr, "[FORGET_EDIT] popup returned '%s'\n", NewForgetFullName ? NewForgetFullName : "(null)");
     if (NewForgetFullName != NULL) {
-        fprintf(stderr, "[FORGET_EDIT] using saved idx=%d true_idx=%d\n", idx, true_idx);
-        if (idx >= 0) WriteToCacheIndex(lb, idx, NewForgetFullName);
-        int rc = -1;
-        if (true_idx >= 0) rc = ReplaceLineInFile(FORGETFULL_FILE_PATH, true_idx, NewForgetFullName);
-        else if (idx >= 0) rc = ReplaceLineInFile(FORGETFULL_FILE_PATH, idx, NewForgetFullName);
-        fprintf(stderr, "[FORGET_EDIT] Replace rc=%d\n", rc);
-        free(NewForgetFullName);
+        EditCallbackData data = {
+            .filepath = FORGETFULL_FILE_PATH,
+            .lb = lb,
+            .selected_index = idx,
+            .true_index = true_idx,
+            .new_text = NewForgetFullName,
+            .restore_selection = true
+        };
         extern WindowHandle hListBox;
-        forgetfull_refresh_callback("", hListBox, lb);
-        UI_Redraw(lb, hListBox);
+        EditCallback_Handle(&data, forgetfull_refresh_callback, hListBox);
+        free(NewForgetFullName);
     }
 }
 

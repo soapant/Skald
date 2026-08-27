@@ -89,6 +89,17 @@ int UI_LookupTrueIndex(const char* name);
 void SaveFeatureHistory(char* string);
 int ReplaceLineInFile(const char* filepath, int line_index, const char* new_text);
 void WriteToCacheIndex(ListBoxInfo* lb, int index, const char* text);
+
+typedef struct {
+    const char* filepath;
+    ListBoxInfo* lb;
+    int selected_index;
+    int true_index;
+    char* new_text;
+    bool restore_selection;
+} EditCallbackData;
+
+int EditCallback_Handle(EditCallbackData* data, RefreshCallback refresh, WindowHandle hListBox);
 int ReadMdFile(char lines[100][512], const char* path);
 void StripCheckboxes(char* str);
 void WriteMdFile(char lines[100][512], int count, const char* path);
