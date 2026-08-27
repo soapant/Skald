@@ -287,11 +287,8 @@ Window Linux_CreateWindowEx(Display* dpy, int x, int y, int w, int h, unsigned l
     return Linux_CreateWindowExOR(dpy, x, y, w, h, bg_color, res_name, res_class, event_mask, false);
 }
 
-// override_redirect=true bypasses the WM completely: no auto-centering, no
-// placement interference. Used for flash messages that position themselves.
 Window Linux_CreateWindowExOR(Display* dpy, int x, int y, int w, int h, unsigned long bg_color, const char* res_name, const char* res_class, long event_mask, bool override_redirect) {
     int screen = DefaultScreen(dpy);
-    extern float WindowOpacity;
     XVisualInfo vinfo;
     Visual* visual = NULL;
     int depth = 0;
