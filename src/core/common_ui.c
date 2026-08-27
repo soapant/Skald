@@ -117,7 +117,7 @@ void PopulateListBox(ListBoxInfo* lb, WindowHandle hListBox, const char* filter,
 #if defined(_WIN32)
         match = (StrStrIA(search_text, clean_filter) != NULL);
 #else
-        match = (strstr(search_text, clean_filter) != NULL);
+        match = (strcasestr(search_text, clean_filter) != NULL);
 #endif
       }
 
@@ -144,7 +144,7 @@ void PopulateListBox(ListBoxInfo* lb, WindowHandle hListBox, const char* filter,
 #if defined(_WIN32)
       bool match = filter_match ? filter_match(search_text, clean_filter) : (StrStrIA(search_text, clean_filter) != NULL);
 #else
-      bool match = filter_match ? filter_match(search_text, clean_filter) : (strstr(search_text, clean_filter) != NULL);
+      bool match = filter_match ? filter_match(search_text, clean_filter) : (strcasestr(search_text, clean_filter) != NULL);
 #endif
 
       if (match) {

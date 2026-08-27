@@ -482,11 +482,25 @@ static void todo_render_callback(HDC hdc, const char* text, RECT* rect, BOOL is_
 #endif
 
 static void todo_edit_callback(const char* selection, ListBoxInfo* lb) {
+    int idx = lb ? lb->selected_index : -1;
+    int true_idx = (lb && idx >= 0 && idx < lb->populated_count) ? lb->matching_indices[idx] : idx;
+    fprintf(stderr, "[TODO_EDIT] called selection='%s' lb=%p idx=%d true_idx=%d count=%d\n", selection ? selection : "(null)", (void*)lb, idx, true_idx, lb ? lb->populated_count : -1);
     char* NewTodoName = Platform_EditTextPopup(selection, 960, 540, 1000,100);
+    fprintf(stderr, "[TODO_EDIT] popup returned '%s'\n", NewTodoName ? NewTodoName : "(null)");
     if (NewTodoName != NULL) {
-        WriteToCacheIndex(lb, lb->selected_index, NewTodoName);
-        ReplaceLineInFile(TODO_FILE_PATH, lb->selected_index, NewTodoName);
+        fprintf(stderr, "[TODO_EDIT] using saved idx=%d true_idx=%d\n", idx, true_idx);
+        if (idx >= 0) WriteToCacheIndex(lb, idx, NewTodoName);
+        int rc = -1;
+        if (true_idx >= 0) rc = ReplaceLineInFile(TODO_FILE_PATH, true_idx, NewTodoName);
+        else if (idx >= 0) rc = ReplaceLineInFile(TODO_FILE_PATH, idx, NewTodoName);
+        fprintf(stderr, "[TODO_EDIT] ReplaceLineInFile rc=%d\n", rc);
         free(NewTodoName);
+        extern WindowHandle hListBox;
+        todo_refresh_callback("", hListBox, lb);
+        UI_Redraw(lb, hListBox);
+        fprintf(stderr, "[TODO_EDIT] done refresh\n");
+    } else {
+        fprintf(stderr, "[TODO_EDIT] cancelled (NULL)\n");
     }
 }
 
