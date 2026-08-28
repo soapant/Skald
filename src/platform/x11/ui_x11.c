@@ -57,14 +57,14 @@ typedef struct {
     int last_index;
 } PerFeatureVimState;
 
-static HashMap* g_perFeatureVimMap = NULL;
-static PerFeatureVimState* GetPerFeatureState(const char* feature) {
+HashMap* g_perFeatureVimMap = NULL;
+PerFeatureVimState* GetPerFeatureState(const char* feature) {
     if (!feature) return NULL;
     if (!g_perFeatureVimMap) g_perFeatureVimMap = HashMap_Create(32);
     void* val = HashMap_Get(g_perFeatureVimMap, feature);
     return (PerFeatureVimState*)val;
 }
-static void SavePerFeatureState(const char* feature, EditorMode mode,int last_index) {
+void SavePerFeatureState(const char* feature, EditorMode mode,int last_index) {
     if (!feature) return;
     if (!g_perFeatureVimMap) g_perFeatureVimMap = HashMap_Create(32);
     PerFeatureVimState* st = (PerFeatureVimState*)HashMap_Get(g_perFeatureVimMap, feature);
