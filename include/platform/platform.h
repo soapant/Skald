@@ -51,8 +51,6 @@ double Platform_GetUniversalTimeSeconds(void);
 void Platform_SaveRegionToPNG(int x1, int y1, int x2, int y2, const char* fullPath);
 
 void Platform_WaitForKeypressAsync(KeyCallback callback);
-char* Platform_PromptUser(const PromptSpec* spec);
-char* Platform_SimplePromptUser(const SimplePromptSpec* spec);
 void Platform_DisplayMessage(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, int timeout, ColorRef color);
 void Platform_CreateDisplayMessageWindow(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, int timeout, ColorRef color);
 FontHandle Platform_CreateFont(int size, const char* face_name);
@@ -62,8 +60,6 @@ FontHandle Platform_CreateFontOnDisplay(Display* dpy, int size, const char* face
 void Platform_DestroyFont(FontHandle font);
 void Platform_GetTextExtents(FontHandle font, const char* text, int maxWidth, int* outWidth, int* outHeight);
 void Platform_SettingsPopUp(void);
-char* Platform_EditTextPopup(const char* initial_text, int centerX, int centerY, int maxWidth, int maxHeight);
-char* Platform_SearchPopup(void);
 int Platform_InitializeTrayIcon(void);
 void Platform_RunHotKeyMessageLoop(void);
 void Platform_InitUI(void);
