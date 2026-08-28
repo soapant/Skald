@@ -49,14 +49,11 @@ static inline bool IsWindowValid(WindowHandle h) {
   return WH_TO_HWND(h) != NULL && IsWindow(WH_TO_HWND(h));
 }
 #else
-extern PromptState* g_currentPromptState;
-extern SimplePromptState* g_currentSimplePromptState;
-extern SimplePromptState* g_currentEditPopupState;
-extern bool g_EditPopupCloseRequested;
-extern bool g_IsMainWindowActive;
+#include "core/window_manager.h"
 static inline bool IsPopupActive(WindowHandle hPopupWnd) {
   (void)hPopupWnd;
-  return g_IsMainWindowActive || g_currentPromptState != NULL || g_currentSimplePromptState != NULL || g_currentEditPopupState != NULL;
+  WindowManager* wm = WindowManager_Get();
+  return wm && wm->popup_count > 0;
 }
 static inline bool IsWindowValid(WindowHandle h) {
   return WH_TO_HWND(h) != NULL;

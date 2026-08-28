@@ -2,6 +2,7 @@
 #include "core/modal.h"
 #include "config.h"
 #include "core/common_ui.h"
+#include "core/window_manager.h"
 
 EditorMode g_current_mode = MODE_INSERT;
 static const char* g_mode_names[] = { "NORMAL", "INSERT", "VISUAL" };
@@ -9,39 +10,27 @@ const char* g_vim_mode = "INSERT";
 int last_index = 0;
 char* selection_feature = "";
 
-#if defined(_WIN32)
-static ListBoxInfo* GetActiveListBoxForModal(void) {
-  if (WH_TO_HWND(hPopupWnd) && IsWindow(WH_TO_HWND(hPopupWnd))) {
-    return (ListBoxInfo*)GetWindowLongPtrA(WH_TO_HWND(hPopupWnd), GWLP_USERDATA);
-  }
-  return NULL;
+static ListBoxInfo* GetActiveListBoxFromTopPopup(void) {
+    WindowManager* wm = WindowManager_Get();
+    if (!wm) return NULL;
+    Popup* top = WindowManager_GetTopPopup(wm);
+    if (!top || !top->user_data) return NULL;
+    PromptState* state = (PromptState*)top->user_data;
+    if (state->has_listbox) return &state->listbox;
+    return NULL;
 }
-#endif
 
 void SetModeWithListBox(EditorMode mode, ListBoxInfo* lb) {
     g_current_mode = mode;
     g_vim_mode = g_mode_names[mode];
-    bool in_main = WH_TO_HWND(g_hSearchPopup) == NULL && WH_TO_HWND(g_hEditPopup) == NULL;
+    WindowManager* wm = WindowManager_Get();
+    bool in_main = wm ? wm->popup_count == 1 : true;
 
-#if defined(_WIN32)
-    if (WH_TO_HWND(hPopupWnd) && IsWindow(WH_TO_HWND(hPopupWnd))) {
-        RECT rect;
-        GetClientRect(WH_TO_HWND(hPopupWnd), &rect);
-        RECT titleRect = {0, 0, rect.right, 40};
-        InvalidateRect(WH_TO_HWND(hPopupWnd), &titleRect, FALSE);
-    }
-#endif
     if (!lb) {
-#if defined(_WIN32)
-        lb = GetActiveListBoxForModal();
-#else
-        extern PromptState* g_currentPromptState;
-        if (g_currentPromptState && g_currentPromptState->has_listbox) lb = &g_currentPromptState->listbox;
-        else lb = NULL;
-#endif
+        lb = GetActiveListBoxFromTopPopup();
     }
 
-    if (in_main && IsPopupActive(hPopupWnd) && lb) {
+    if (in_main && IsPopupActive(WH_NULL) && lb) {
         if (strcmp(g_vim_mode, "INSERT") == 0) {
             if (RememberLastIndex) last_index = lb->selected_index;
             UI_SetSelection(lb, hListBox, -1);

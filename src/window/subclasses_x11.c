@@ -103,7 +103,7 @@ static bool TryVimMotion(int wParam, bool ctrl_pressed, bool shift_pressed, bool
     return false;
 }
 
-static void EditBufferBackspace(char* buf, size_t* cursor) {
+void EditBufferBackspace(char* buf, size_t* cursor) {
     size_t n = strlen(buf);
     if (*cursor > 0) {
         memmove(buf + *cursor - 1,
@@ -113,7 +113,7 @@ static void EditBufferBackspace(char* buf, size_t* cursor) {
     }
 }
 
-static bool EditBufferDeleteChar(char* buf, size_t* cursor) {
+bool EditBufferDeleteChar(char* buf, size_t* cursor) {
     size_t n = strlen(buf);
     if (*cursor >= n) return false;
     memmove(buf + *cursor,

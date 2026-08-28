@@ -3,8 +3,15 @@
 
 #include "core/types.h"
 #include "platform/platform.h"
+#include "core/window_manager.h"
 
-extern PromptState* g_currentPromptState;
+static inline void* GetActivePopupUserData(void) {
+    WindowManager* wm = WindowManager_Get();
+    if (!wm) return NULL;
+    Popup* top = WindowManager_GetTopPopup(wm);
+    if (!top) return NULL;
+    return top->user_data;
+}
 
 static inline void UI_SetSelection(ListBoxInfo* lb, WindowHandle hList, int index) {
   (void)hList;
@@ -151,26 +158,39 @@ static inline void UI_GetCurrentTextEdit(WindowHandle edit, char* buffer, size_t
   (void)edit;
   if (!buffer || cap == 0) return;
   buffer[0] = '\0';
-  extern SimplePromptState* g_currentSimplePromptState;
-  extern SimplePromptState* g_currentEditPopupState;
-  if (g_currentEditPopupState) {
-    strncpy(buffer, g_currentEditPopupState->user_input, cap-1);
+  void* user_data = GetActivePopupUserData();
+  if (!user_data) return;
+  
+  // Check if it's a PromptState (list-based popup)
+  PromptState* prompt = (PromptState*)user_data;
+  if (prompt && prompt->has_listbox) {
+    strncpy(buffer, prompt->filter, cap-1);
     buffer[cap-1]='\0';
-  } else if (g_currentPromptState) {
-    strncpy(buffer, g_currentPromptState->filter, cap-1);
+    return;
+  }
+  // Check if it's a SimplePromptState (simple text popup)
+  SimplePromptState* simple = (SimplePromptState*)user_data;
+  if (simple && simple->user_input) {
+    strncpy(buffer, simple->user_input, cap-1);
     buffer[cap-1]='\0';
-  } else if (g_currentSimplePromptState) {
-    strncpy(buffer, g_currentSimplePromptState->user_input, cap-1);
-    buffer[cap-1]='\0';
+    return;
   }
 }
 
 static inline void UI_SetText(WindowHandle hEdit,char* text) {
   (void)text;
-  // Linux prompts keep text in PromptState; clearing is the only legacy use.
-  if (g_currentPromptState) {
-    g_currentPromptState->filter[0] = '\0';
-    g_currentPromptState->cursor = 0;
+  void* user_data = GetActivePopupUserData();
+  if (!user_data) return;
+  
+  PromptState* prompt = (PromptState*)user_data;
+  if (prompt && prompt->has_listbox) {
+    prompt->filter[0] = '\0';
+    prompt->cursor = 0;
+  }
+  SimplePromptState* simple = (SimplePromptState*)user_data;
+  if (simple && simple->user_input) {
+    simple->user_input[0] = '\0';
+    simple->cursor = 0;
   }
 }
 

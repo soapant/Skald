@@ -1,6 +1,7 @@
 #include "core/vim.h"
 #include "common.h"
 #include "core/common_ui.h"
+#include "core/window_manager.h"
 #include <string.h>
 #include <stdio.h>
 #include <ctype.h>
@@ -9,6 +10,33 @@
 #endif
 
 SequenceState seq_state = {0};
+
+static PromptState* GetActivePromptState(void) {
+    WindowManager* wm = WindowManager_Get();
+    if (!wm) return NULL;
+    Popup* top = WindowManager_GetTopPopup(wm);
+    if (!top || !top->user_data) return NULL;
+    if (top->type != POPUP_PROMPT) return NULL;
+    return (PromptState*)top->user_data;
+}
+
+static SimplePromptState* GetActiveSimplePromptState(void) {
+    WindowManager* wm = WindowManager_Get();
+    if (!wm) return NULL;
+    Popup* top = WindowManager_GetTopPopup(wm);
+    if (!top || !top->user_data) return NULL;
+    if (top->type != POPUP_SIMPLE) return NULL;
+    return (SimplePromptState*)top->user_data;
+}
+
+static EditPopupData* GetActiveEditPopupState(void) {
+    WindowManager* wm = WindowManager_Get();
+    if (!wm) return NULL;
+    Popup* top = WindowManager_GetTopPopup(wm);
+    if (!top || !top->user_data) return NULL;
+    if (top->type != POPUP_EDIT) return NULL;
+    return (EditPopupData*)top->user_data;
+}
 
 void Vim_GetText(VimContext* ctx, char* buf, size_t cap) {
     if (!ctx || !buf || cap==0) return;
@@ -94,37 +122,39 @@ VimContext Vim_FromGlobals(void) {
     ctx.state = NULL;
     ctx.simple_state = NULL;
     if (!ctx.lb) {
-        extern PromptState* g_currentPromptState;
-        extern SimplePromptState* g_currentSimplePromptState;
-        if (g_currentPromptState) {
-            ctx.lb = g_currentPromptState->has_listbox ? &g_currentPromptState->listbox : NULL;
-            ctx.state = g_currentPromptState;
-        } else if (g_currentSimplePromptState) {
-            ctx.simple_state = g_currentSimplePromptState;
+        PromptState* prompt = GetActivePromptState();
+        if (prompt) {
+            ctx.lb = prompt->has_listbox ? &prompt->listbox : NULL;
+            ctx.state = prompt;
+        } else {
+            SimplePromptState* simple = GetActiveSimplePromptState();
+            ctx.simple_state = simple;
             ctx.lb = NULL;
         }
     }
 #else
-    extern PromptState* g_currentPromptState;
-    extern SimplePromptState* g_currentSimplePromptState;
-    extern SimplePromptState* g_currentEditPopupState;
-    if (g_currentEditPopupState) {
-        return Vim_FromEditState(g_currentEditPopupState);
+    EditPopupData* edit_state = GetActiveEditPopupState();
+    if (edit_state) {
+        return Vim_FromEditState((SimplePromptState*)edit_state);
     }
-    ctx.state = g_currentPromptState;
-    ctx.simple_state = g_currentSimplePromptState;
-    if (ctx.state) {
-        ctx.lb = ctx.state->has_listbox ? &ctx.state->listbox : NULL;
-        ctx.hListBox = hListBox;
-        ctx.hEdit = g_ActiveEditControl;
-    } else if (ctx.simple_state) {
-        ctx.lb = NULL;
+    PromptState* prompt = GetActivePromptState();
+    if (prompt) {
+        ctx.state = prompt;
+        ctx.lb = prompt->has_listbox ? &prompt->listbox : NULL;
         ctx.hListBox = hListBox;
         ctx.hEdit = g_ActiveEditControl;
     } else {
-        ctx.lb = NULL;
-        ctx.hListBox = hListBox;
-        ctx.hEdit = g_ActiveEditControl;
+        SimplePromptState* simple = GetActiveSimplePromptState();
+        if (simple) {
+            ctx.simple_state = simple;
+            ctx.lb = NULL;
+            ctx.hListBox = hListBox;
+            ctx.hEdit = g_ActiveEditControl;
+        } else {
+            ctx.lb = NULL;
+            ctx.hListBox = hListBox;
+            ctx.hEdit = g_ActiveEditControl;
+        }
     }
 #endif
     return ctx;
