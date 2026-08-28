@@ -297,8 +297,6 @@ typedef struct {
     HelpCallback help;
 } PromptSpec;
 
-char* Platform_PromptUser(const PromptSpec* spec);
-
 // Same idea for simple text prompts.
 typedef struct {
     const char* prompt;
@@ -306,11 +304,9 @@ typedef struct {
     int height, width, item_height;
 } SimplePromptSpec;
 
-char* Platform_SimplePromptUser(const SimplePromptSpec* spec);
-
 // One-liner: PROMPT(.title = "x", .items = list, .count = n, .enter = cb);
-#define PROMPT(...) Platform_PromptUser(&(PromptSpec){ __VA_ARGS__ })
-#define SIMPLE_PROMPT(...) Platform_SimplePromptUser(&(SimplePromptSpec){ __VA_ARGS__ })
+#define PROMPT(...) ((char*)WindowManager_ShowPrompt(WindowManager_Get(), &(PromptSpec){ __VA_ARGS__ }))
+#define SIMPLE_PROMPT(...) ((char*)WindowManager_ShowSimplePrompt(WindowManager_Get(), &(SimplePromptSpec){ __VA_ARGS__ }))
 
 #if defined(_WIN32)
 LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);

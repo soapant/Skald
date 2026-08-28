@@ -4,6 +4,7 @@
 #include "core/feature_data.h"
 #include "features/app_launcher.h"
 #include "features/todo.h"
+#include "core/window_manager.h"
 #if !defined(_WIN32)
 #include <pthread.h>
 #include <unistd.h>
@@ -59,7 +60,6 @@ HFONT g_hMainFont = NULL;
 #endif
 HashMap* feature_history = NULL;
 HashMap* g_item_index_map = NULL;
-bool g_IsMainWindowActive = false;
 
 
 void OInNotificationRecieved(const char* text) {
@@ -175,8 +175,17 @@ int main() {
   }
 
   printf("[SYSTEM] Low-Level Hotkey Services Running. GDI+ Online.\n");
-  Platform_RunHotKeyMessageLoop();
-
+  
+  WindowManager* wm = WindowManager_Create();
+  if (!wm) {
+      fprintf(stderr, "[SYSTEM] Failed to create WindowManager\n");
+      return 1;
+  }
+  
+  // Run window manager event loop (which also handles hotkeys)
+  WindowManager_Run(wm);
+  WindowManager_Destroy(wm);
+  
   Platform_ShutdownUI();
 #if !defined(_WIN32)
   cleanup_display();

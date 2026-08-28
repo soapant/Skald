@@ -91,6 +91,7 @@ void WriteToCacheIndex(ListBoxInfo* lb, int index, const char* text);
 
 typedef struct {
     const char* filepath;
+    MappedFile* file;
     ListBoxInfo* lb;
     int selected_index;
     int true_index;
@@ -98,6 +99,7 @@ typedef struct {
     bool restore_selection;
     WindowHandle hListBox;
     WindowHandle hEditControl;
+    RefreshCallback refresh_cb;
 } EditCallbackData;
 
 int EditCallback_Handle(EditCallbackData* data, RefreshCallback refresh);
