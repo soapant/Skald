@@ -2,6 +2,7 @@
 #include "features/forgetfull.h"
 #include "helpers.h"
 #include "core/common_ui.h"
+#include "core/window_manager.h"
 
 static void AddTextToFile(const char* text) {
     if (!text || strlen(text) == 0) return;
@@ -83,25 +84,43 @@ static void forgetfull_enter_callback(const char* selection, ListBoxInfo* lb) {
     }
     UI_Redraw(lb, hListBox);
 }
+static void forgetfull_edit_confirm_callback(const char* new_text, void* user_data) {
+    EditCallbackData* data = (EditCallbackData*)user_data;
+    if (new_text && data) {
+        data->new_text = (char*)new_text;
+        EditCallback_Handle(data, forgetfull_refresh_callback);
+    }
+    free(data);
+}
+
 static void forgetfull_edit_callback(const char* selection, ListBoxInfo* lb) {
     int idx = lb ? lb->selected_index : -1;
     int true_idx = (lb && idx >= 0 && idx < lb->populated_count) ? lb->matching_indices[idx] : idx;
-    char* NewForgetFullName = Platform_EditTextPopup(selection, 960, 540, 1000, 300);
-    if (NewForgetFullName != NULL) {
-        extern WindowHandle hListBox;
-        extern WindowHandle hEditControl;
-        EditCallbackData data = {
-            .filepath = FORGETFULL_FILE_PATH,
-            .lb = lb,
-            .selected_index = idx,
-            .true_index = true_idx,
-            .new_text = NewForgetFullName,
-            .restore_selection = true,
-            .hListBox = hListBox,
-            .hEditControl = hEditControl
-        };
-        EditCallback_Handle(&data, forgetfull_refresh_callback);
-        free(NewForgetFullName);
+    
+    WindowManager* wm = WindowManager_Get();
+    if (!wm) return;
+    
+    extern WindowHandle hListBox;
+    extern WindowHandle hEditControl;
+    
+    EditCallbackData* data = calloc(1, sizeof(EditCallbackData));
+    if (!data) return;
+    
+    data->filepath = FORGETFULL_FILE_PATH;
+    data->lb = lb;
+    data->selected_index = idx;
+    data->true_index = true_idx;
+    data->new_text = NULL;
+    data->restore_selection = true;
+    data->hListBox = hListBox;
+    data->hEditControl = hEditControl;
+    
+    Popup* popup = EditPopup_Create(wm, selection, "Edit ForgetFull", 960, 540, 1000, 300,
+                                    forgetfull_edit_confirm_callback, data);
+    if (popup) {
+        WindowManager_PushPopup(wm, popup);
+    } else {
+        free(data);
     }
 }
 

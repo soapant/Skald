@@ -3,6 +3,7 @@
 #include "bindings/vim_helpers.h"
 #include "core/common_ui.h"
 #include "core/vim.h"
+#include "core/window_manager.h"
 #include "helpers.h"
 #include <ctype.h>
 #if !defined(_WIN32)
@@ -135,30 +136,17 @@ void HandleEnterInsertOutEnd(VimContext* ctx) {
   HandleEnterInsertOut(ctx);
 }
 void HandleExitWindow(VimContext* ctx) {
-  (void)ctx;
-#if defined(_WIN32)
-  if (WH_TO_HWND(g_hEditPopup) != NULL) {
-    UI_Edit_KeyDown(g_ActiveEditControl, VK_ESCAPE);
-    UI_Edit_KeyUp(g_ActiveEditControl, VK_ESCAPE);
-  } else {
-    selection_complete = true;
-  }
-#else
-  {
-    extern SimplePromptState* g_currentEditPopupState;
-    extern bool g_EditPopupCloseRequested;
-    if (g_currentEditPopupState) {
-      g_EditPopupCloseRequested = true;
-      return;
+    (void)ctx;
+    WindowManager* wm = WindowManager_Get();
+    if (!wm) return;
+    
+    Popup* top = WindowManager_GetTopPopup(wm);
+    if (top && top->vtable && top->vtable->on_key) {
+        // Send ESC to the top popup
+        top->vtable->on_key(top, VK_ESCAPE, true, 0);
+    } else {
+        selection_complete = true;
     }
-    extern bool g_PromptJustClosed;
-    extern long g_PromptCloseTimeMs;
-    g_PromptJustClosed = true;
-    struct timeval tv; gettimeofday(&tv, NULL);
-    g_PromptCloseTimeMs = tv.tv_sec*1000 + tv.tv_usec/1000;
-  }
-  selection_complete = true;
-#endif
 }
 
 void HandleYankLine(VimContext* ctx) {

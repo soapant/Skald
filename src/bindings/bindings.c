@@ -5,6 +5,7 @@
 #include "core/common_ui.h"
 #include "core/modal.h"
 #include "core/vim.h"
+#include "core/window_manager.h"
 #include "helpers.h"
 #include "features/window_switcher.h"
 #include "features/app_launcher.h"
@@ -19,16 +20,11 @@
 
 bool CheckVimMotion(int pressed_vk, int modifiers, MotionAction* out_action, const char** out_sequence, int* out_typed_count) {
     if (!EnableVimMode) return false;
-#if defined(_WIN32)
-    if (!IsWindowValid(hPopupWnd)) return false;
-    if (!IsWindowValid(g_ActiveEditControl)) return false;
-    if (GetFocus() != WH_TO_HWND(g_ActiveEditControl)) return false;
-#else
-    extern PromptState* g_currentPromptState;
-    extern SimplePromptState* g_currentEditPopupState;
-    extern bool g_IsMainWindowActive;
-    if (!g_currentPromptState && !g_currentEditPopupState && !g_IsMainWindowActive) return false;
-#endif
+    WindowManager* wm = WindowManager_Get();
+    if (!wm) return false;
+    
+    Popup* top = WindowManager_GetTopPopup(wm);
+    if (!top) return false;
     
     bool in_popup = IsWindowValid(g_hEditPopup);
     

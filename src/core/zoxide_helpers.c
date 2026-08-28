@@ -1,8 +1,8 @@
 #include "common.h"
 #include "core/zoxide_helpers.h"
 #include "core/common_ui.h"
-#include "platform/platform.h"
 #include "helpers.h"
+#include "core/window_manager.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -55,27 +55,48 @@ void ZoxideHelper_Refresh(const char* filter, WindowHandle hListBox, ListBoxInfo
     PopulateListBox(lb, hListBox, filter, (const char**)*cached, *count, NULL);
 }
 
+static void zoxide_edit_confirm_callback(const char* new_text, void* user_data) {
+    EditCallbackData* data = (EditCallbackData*)user_data;
+    if (new_text && data) {
+        data->new_text = (char*)new_text;
+        EditCallback_Handle(data, data->refresh_cb);
+        Platform_ReplaceLineInMappedFile(data->file, (data->true_index >= 0) ? data->true_index : data->selected_index, new_text);
+    }
+    free(data);
+}
+
 void ZoxideHelper_Edit(const char* selection, ListBoxInfo* lb, MappedFile* file, char*** cached, int* count, RefreshCallback refresh) {
     int idx = lb ? lb->selected_index : -1;
     int true_idx = (lb && idx >= 0 && idx < lb->populated_count) ? lb->matching_indices[idx] : idx;
-    char* newQuery = Platform_EditTextPopup(selection, 960, 540, 1000, 300);
-    if (newQuery != NULL) {
-        extern WindowHandle hListBox;
-        extern WindowHandle hEditControl;
-        EditCallbackData data = {
-            .filepath = NULL,
-            .lb = lb,
-            .selected_index = idx,
-            .true_index = true_idx,
-            .new_text = newQuery,
-            .restore_selection = true,
-            .hListBox = hListBox,
-            .hEditControl = hEditControl
-        };
-        EditCallback_Handle(&data, refresh);
-        Platform_ReplaceLineInMappedFile(file, (data.true_index >= 0) ? data.true_index : data.selected_index, newQuery);
-        free(newQuery);
+    
+    WindowManager* wm = WindowManager_Get();
+    if (!wm) return;
+    
+    extern WindowHandle hListBox;
+    extern WindowHandle hEditControl;
+    
+    EditCallbackData* data = calloc(1, sizeof(EditCallbackData));
+    if (!data) return;
+    
+    data->filepath = NULL;
+    data->file = file;
+    data->lb = lb;
+    data->selected_index = idx;
+    data->true_index = true_idx;
+    data->new_text = NULL;
+    data->restore_selection = true;
+    data->hListBox = hListBox;
+    data->hEditControl = hEditControl;
+    data->refresh_cb = refresh;
+    
+    Popup* popup = EditPopup_Create(wm, selection, "Edit Zoxide", 960, 540, 1000, 300,
+                                    zoxide_edit_confirm_callback, data);
+    if (popup) {
+        WindowManager_PushPopup(wm, popup);
+    } else {
+        free(data);
     }
+    
     ZoxideHelper_RebuildCache(file, cached, count);
     if (refresh) refresh("", hListBox, lb);
     else if (lb) UI_Redraw(lb, hListBox);

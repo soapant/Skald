@@ -4,8 +4,6 @@
 #include "core/types.h"
 #include "platform/platform.h"
 
-extern PromptState* g_currentPromptState;
-
 static inline void UI_SetSelection(ListBoxInfo* lb, WindowHandle hList, int index);
 static inline int UI_GetCount(ListBoxInfo* lb, WindowHandle hList);
 static inline void UI_SetHorizontalExtent(WindowHandle hList, int width);

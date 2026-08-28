@@ -73,6 +73,24 @@
   },
   {
     "directory": "/home/diggy/Programming/Projects/C Code",
+    "file": "src/core/window_manager.c",
+    "arguments": [
+      "gcc",
+      "-Wall",
+      "-Wextra",
+      "-I",
+      "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
+      "-w",
+      "-g",
+      "-c",
+      "src/core/window_manager.c"
+    ]
+  },
+  {
+    "directory": "/home/diggy/Programming/Projects/C Code",
     "file": "src/core/number_shortcut.c",
     "arguments": [
       "gcc",
@@ -249,6 +267,24 @@
       "-g",
       "-c",
       "src/core/modal.c"
+    ]
+  },
+  {
+    "directory": "/home/diggy/Programming/Projects/C Code",
+    "file": "src/core/window_manager_linux.c",
+    "arguments": [
+      "gcc",
+      "-Wall",
+      "-Wextra",
+      "-I",
+      "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
+      "-w",
+      "-g",
+      "-c",
+      "src/core/window_manager_linux.c"
     ]
   },
   {
