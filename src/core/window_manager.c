@@ -454,6 +454,17 @@ static void PromptPopup_OnShow(Popup* self) {
     data->state->has_listbox = (data->spec.count >= 0);
     ListBoxInfo_Init(&data->state->listbox);
     data->state->listbox.selected_index = -1;
+    // Handle vim mode persistence per config
+    extern EditorMode g_last_mode;
+    extern int last_index;
+    if (ModePersistsThroughFeatures) {
+        SetModeWithListBox(g_last_mode, &data->state->listbox);
+        if (RememberLastIndex && last_index >= 0 && data->state->has_listbox) {
+            data->state->listbox.selected_index = last_index;
+        }
+    } else {
+        SetModeWithListBox(MODE_INSERT, &data->state->listbox);
+    }
     self->user_data = data->state;
     
     g_refresh_callback = data->spec.refresh;
@@ -635,6 +646,7 @@ static void PromptPopup_OnKey(Popup* self, int vk_code, bool pressed, int modifi
 }
 
 static void PromptPopup_OnHide(Popup* self) {
+    PromptPopupData* data = (PromptPopupData*)self;
     #if !defined(_WIN32)
     Display* dpy = get_display();
     if (dpy) {
@@ -642,6 +654,24 @@ static void PromptPopup_OnHide(Popup* self) {
         XFlush(dpy);
     }
     #endif
+    // handle config toggles
+    extern EditorMode g_last_mode;
+    extern int last_index;
+    extern EditorMode g_current_mode;
+    if (data->state) {
+        if (!KeepSelectionAfterClose) {
+            last_index = 0;
+            if (data->state->has_listbox) data->state->listbox.selected_index = 0;
+        } else {
+            last_index = data->state->listbox.selected_index;
+        }
+        g_last_mode = g_current_mode;
+        // per-feature save if needed
+        if (ModePersistsThroughFeatures && g_current_feature) {
+            extern void SavePerFeatureState(const char* feature, EditorMode mode,int last_index);
+            SavePerFeatureState(g_current_feature, g_current_mode, last_index);
+        }
+    }
 }
 
 static void PromptPopup_OnRender(Popup* self) {
