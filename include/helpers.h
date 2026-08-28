@@ -43,7 +43,6 @@ bool ProcessHotkey(const HotkeyBinding* bindings, int bindings_count,
                    int pressed_vk, int modifiers,
                    const char* current_title);
 
-
 typedef struct {
     const char* prompt_title;
     const char* icon;
@@ -136,5 +135,4 @@ Window Linux_CreateEditPopupWindow(Display* dpy, int x, int y, int w, int h);
 Window Linux_CreateDisplayMessageWindow(Display* dpy, int x, int y, int w, int h);
 XftDraw* Linux_CreateXftDraw(Display* dpy, Window win);
 #endif
-
 #endif
