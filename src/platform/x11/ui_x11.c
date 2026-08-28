@@ -668,7 +668,6 @@ char* Platform_EditTextPopup(const char* initial_text, int centerX, int centerY,
 
     XMapWindow(dpy, win);
     XFlush(dpy);
-    // Fix BadMatch on SetInputFocus: wait until window is viewable
     {
         XWindowAttributes _attr;
         for (int _i=0; _i<50; _i++) {
@@ -739,12 +738,6 @@ char* Platform_EditTextPopup(const char* initial_text, int centerX, int centerY,
                 }
             }
         }
-        // temporary just so it works  for some reason it thinks its not getting focus no idea why
-        // } else if (ev.type == FocusOut) {
-        //     if (CloseOnLossOfFocus) {
-        //         focus_lost = true;
-        //         running = false;
-        //     }
 
         if (!running) {
           break;
@@ -756,28 +749,8 @@ char* Platform_EditTextPopup(const char* initial_text, int centerX, int centerY,
     g_currentEditPopupState = NULL;
     g_EditPopupCloseRequested = false;
     g_hEditPopup = WH_NULL;
-    fprintf(stderr, "[EDIT] destroying win %lu g_PromptWin %lu saved_sel %d cur_sel %d\n", (unsigned long)win, (unsigned long)g_PromptWin, saved_selection_complete, selection_complete);
-    // Fix: ensure ESC in edit doesn't close main - restore main's selection_complete
-    selection_complete = saved_selection_complete;
-    // If edit was cancelled (ESC), main must stay open
-    if (selection_complete) {
-        fprintf(stderr, "[EDIT] main selection_complete was true, resetting to false to keep main open\n");
-        selection_complete = false;
-    }
-    // Only destroy if it's the edit window, not main
-    if (win != None && win != g_PromptWin) {
-        XDestroyWindow(dpy,win);
-    } else if (win == g_PromptWin) {
-        fprintf(stderr, "[BUG] Edit popup win %lu == main win %lu, skipping destroy to avoid killing main\n", (unsigned long)win, (unsigned long)g_PromptWin);
-        XUnmapWindow(dpy, win);
-    } else {
-        XDestroyWindow(dpy,win);
-    }
-    {
-        struct timeval _tv; gettimeofday(&_tv,NULL);
-        g_lastEditDestroyTimeMs = _tv.tv_sec*1000 + _tv.tv_usec/1000;
-        fprintf(stderr, "[EDIT] set g_lastEditDestroyTimeMs %ld\n", g_lastEditDestroyTimeMs);
-    }
+    XDestroyWindow(dpy,win);
+
     if (focus_win != None && focus_win != PointerRoot) {
         XSync(dpy, False);
         usleep(20000);
@@ -785,20 +758,6 @@ char* Platform_EditTextPopup(const char* initial_text, int centerX, int centerY,
         XFlush(dpy);
         XSync(dpy, False);
         fprintf(stderr, "[EDIT] restored focus to %lu (main %lu)\n", (unsigned long)focus_win, (unsigned long)g_PromptWin);
-    }
-    // Flush any pending FocusOut/Key events that would otherwise close main
-    {
-        XEvent _ev;
-        while (XCheckTypedEvent(dpy, FocusOut, &_ev)) {
-            fprintf(stderr, "[EDIT] flushed FocusOut win %lu\n", (unsigned long)_ev.xfocus.window);
-        }
-        while (XCheckTypedEvent(dpy, KeyPress, &_ev)) {
-            fprintf(stderr, "[EDIT] flushed KeyPress win %lu keycode %u\n", (unsigned long)_ev.xkey.window, _ev.xkey.keycode);
-        }
-        while (XCheckTypedEvent(dpy, KeyRelease, &_ev)) {
-            fprintf(stderr, "[EDIT] flushed KeyRelease win %lu\n", (unsigned long)_ev.xkey.window);
-        }
-        XSync(dpy, False);
     }
 
     SetModeWithListBox(MODE_NORMAL, active_lb);
