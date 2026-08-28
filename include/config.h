@@ -61,7 +61,7 @@ extern int EditPopUpWidthMin;
 extern int PageUpDownLen;
 extern bool ColorfullMode;
 extern bool SearchBoxDiffColor;
-
+extern float WindowOpacity;
 extern const wchar_t* HttpUrlForNotis;
 extern const char* BASE_SCREENSHOT_FOLDER_PATH;
 extern const char* TEMP_FILE_PATH;
@@ -115,6 +115,8 @@ extern const char* ListOfShitToIgnore[30];
 extern const PathVar G_PATH_VARS[];
 extern const unsigned int PATH_VAR_COUNT;
 
+extern const char* ListOfShitToIgnore[30];
+
 extern const AppHotkey G_APP_HOTKEYS[];
 extern const unsigned int APP_HOTKEY_COUNT;
 
@@ -160,7 +162,6 @@ extern const TagFormatConfig TODO_TAG_FORMAT;
 #define TODO_TAG_CLOSE "]"
 #define TODO_TAG_SEPARATOR "|"
 #define TODO_ENTRY_DELIMITER "||"
-
 
 extern const TodoAliasEntry TODO_ALIAS_DICT[];
 extern const size_t TODO_ALIAS_DICT_COUNT;
