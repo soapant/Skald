@@ -29,18 +29,24 @@ static SimplePromptState* GetActiveSimplePromptState(void) {
     return (SimplePromptState*)top->user_data;
 }
 
-static EditPopupData* GetActiveEditPopupState(void) {
+static WMEditPopupData* GetActiveEditPopupState(void) {
     WindowManager* wm = WindowManager_Get();
     if (!wm) return NULL;
     Popup* top = WindowManager_GetTopPopup(wm);
-    if (!top || !top->user_data) return NULL;
+    if (!top) return NULL;
     if (top->type != POPUP_EDIT) return NULL;
-    return (EditPopupData*)top->user_data;
+    return (WMEditPopupData*)top;
 }
 
 void Vim_GetText(VimContext* ctx, char* buf, size_t cap) {
     if (!ctx || !buf || cap==0) return;
     buf[0]='\0';
+    WMEditPopupData* wm_edit = GetActiveEditPopupState();
+    if (wm_edit) {
+        strncpy(buf, wm_edit->text, cap-1);
+        buf[cap-1]='\0';
+        return;
+    }
     if (ctx->edit_state) {
         strncpy(buf, ctx->edit_state->user_input, cap-1);
         buf[cap-1]='\0';
@@ -61,6 +67,13 @@ void Vim_GetText(VimContext* ctx, char* buf, size_t cap) {
 
 void Vim_SetText(VimContext* ctx, const char* text) {
     if (!ctx || !text) return;
+    WMEditPopupData* wm_edit = GetActiveEditPopupState();
+    if (wm_edit) {
+        strncpy(wm_edit->text, text, wm_edit->text_capacity-1);
+        wm_edit->text[wm_edit->text_capacity-1]='\0';
+        wm_edit->cursor = strlen(wm_edit->text);
+        return;
+    }
     if (ctx->edit_state) {
         strncpy(ctx->edit_state->user_input, text, sizeof(ctx->edit_state->user_input)-1);
         ctx->edit_state->user_input[sizeof(ctx->edit_state->user_input)-1]='\0';
@@ -80,6 +93,8 @@ void Vim_SetText(VimContext* ctx, const char* text) {
 }
 
 int Vim_GetCursor(VimContext* ctx) {
+    WMEditPopupData* wm_edit = GetActiveEditPopupState();
+    if (wm_edit) return wm_edit->cursor;
     if (!ctx) return 0;
     if (ctx->edit_state) return (int)ctx->edit_state->cursor;
     if (ctx->state) return ctx->state->cursor;
@@ -90,6 +105,14 @@ int Vim_GetCursor(VimContext* ctx) {
 }
 
 void Vim_SetCursor(VimContext* ctx, int pos) {
+    WMEditPopupData* wm_edit = GetActiveEditPopupState();
+    if (wm_edit) {
+        int len = wm_edit->text ? (int)strlen(wm_edit->text) : 0;
+        if (pos<0) pos=0;
+        if (pos>len) pos=len;
+        wm_edit->cursor = pos;
+        return;
+    }
     if (!ctx) return;
     if (ctx->edit_state) {
         int len = (int)strlen(ctx->edit_state->user_input);
@@ -133,9 +156,13 @@ VimContext Vim_FromGlobals(void) {
         }
     }
 #else
-    EditPopupData* edit_state = GetActiveEditPopupState();
-    if (edit_state) {
-        return Vim_FromEditState((SimplePromptState*)edit_state);
+    WMEditPopupData* wm_edit = GetActiveEditPopupState();
+    if (wm_edit) {
+        VimContext ctx2 = {0};
+        ctx2.hListBox = hListBox;
+        ctx2.hEdit = g_ActiveEditControl;
+        // Vim_* funcs will detect POPUP_EDIT via WindowManager and use wm_edit->text directly
+        return ctx2;
     }
     PromptState* prompt = GetActivePromptState();
     if (prompt) {
