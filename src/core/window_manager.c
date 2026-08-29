@@ -233,6 +233,10 @@ static void EditPopup_OnShow(Popup* self) {
     EditPopupDataInternal* data = (EditPopupDataInternal*)self;
     data->saved_mode = g_current_mode;
     SetMode(MODE_INSERT);
+    extern bool g_Linux_CtrlHeld, g_Linux_AltHeld, g_Linux_ShiftHeld;
+    extern bool g_linux_ctrl_held, g_linux_alt_held, g_linux_shift_held;
+    g_Linux_CtrlHeld = g_Linux_AltHeld = g_Linux_ShiftHeld = false;
+    g_linux_ctrl_held = g_linux_alt_held = g_linux_shift_held = false;
     #if !defined(_WIN32)
     Display* dpy = ((WindowManager*)self->manager)->display;
     XMapWindow(dpy, self->handle.xid);
@@ -497,6 +501,11 @@ static void PromptPopup_OnShow(Popup* self) {
     WindowManager* wm = (WindowManager*)self->manager;
     selection_complete = false;
     output_buffer[0] = '\0';
+    // clear stuck modifiers from Alt+T hotkey
+    extern bool g_Linux_CtrlHeld, g_Linux_AltHeld, g_Linux_ShiftHeld;
+    extern bool g_linux_ctrl_held, g_linux_alt_held, g_linux_shift_held;
+    g_Linux_CtrlHeld = g_Linux_AltHeld = g_Linux_ShiftHeld = false;
+    g_linux_ctrl_held = g_linux_alt_held = g_linux_shift_held = false;
     
     #if !defined(_WIN32)
     Display* dpy = wm->display;
@@ -680,8 +689,7 @@ static void PromptPopup_OnKey(Popup* self, int vk_code, bool pressed, int modifi
         if (is_ctrl) {
             if (g_ctrl_enter_callback) g_ctrl_enter_callback(sel, data->state->has_listbox ? &data->state->listbox : NULL);
         } else {
-            if (g_enter_callback) g_enter_callback(sel, data->state->has_listbox ? &data->state->listbox : NULL);
-            selection_complete = true;
+            if (g_enter_callback) g_enter_callback(sel, data->state->has_listbox ? &data->state->listbox : NULL) ; selection_complete = true;
         }
         if (selection_complete) WindowManager_PopPopup(self->manager);
         return;
@@ -808,6 +816,10 @@ static void SimplePromptPopup_OnShow(Popup* self) {
     WindowManager* wm = (WindowManager*)self->manager;
     selection_complete = false;
     output_buffer[0] = '\0';
+    extern bool g_Linux_CtrlHeld, g_Linux_AltHeld, g_Linux_ShiftHeld;
+    extern bool g_linux_ctrl_held, g_linux_alt_held, g_linux_shift_held;
+    g_Linux_CtrlHeld = g_Linux_AltHeld = g_Linux_ShiftHeld = false;
+    g_linux_ctrl_held = g_linux_alt_held = g_linux_shift_held = false;
     
     #if !defined(_WIN32)
     Display* dpy = wm->display;

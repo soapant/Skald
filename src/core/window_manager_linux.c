@@ -34,9 +34,9 @@
 #include <errno.h>
 #include "x11_display.h"
 
-static bool g_linux_ctrl_held = false;
-static bool g_linux_alt_held = false;
-static bool g_linux_shift_held = false;
+bool g_linux_ctrl_held = false;
+bool g_linux_alt_held = false;
+bool g_linux_shift_held = false;
 
 extern char output_buffer[256];
 extern bool selection_complete;
@@ -228,26 +228,27 @@ static int XKeysymToVK(KeySym ks) {
 }
 
 static void Linux_HandleKeyPress(Display* dpy, XKeyEvent* ev, WindowManager* wm) {
+    // sync modifier state with X state to avoid stuck modifiers
+    extern bool g_Linux_CtrlHeld, g_Linux_AltHeld, g_Linux_ShiftHeld;
+    g_linux_ctrl_held = (ev->state & ControlMask) != 0;
+    g_Linux_CtrlHeld = g_linux_ctrl_held;
+    g_linux_alt_held = (ev->state & Mod1Mask) != 0;
+    g_Linux_AltHeld = g_linux_alt_held;
+    g_linux_shift_held = (ev->state & ShiftMask) != 0;
+    g_Linux_ShiftHeld = g_linux_shift_held;
+
     KeySym ks;
     char buf[32];
     int len = XLookupString(ev, buf, sizeof(buf), &ks, NULL);
 
-    // update modifier state
-    if (ks == XK_Control_L || ks == XK_Control_R) g_linux_ctrl_held = true;
-    else if (ks == XK_Alt_L || ks == XK_Alt_R) g_linux_alt_held = true;
-    else if (ks == XK_Shift_L || ks == XK_Shift_R) g_linux_shift_held = true;
+    // update for specific modifier keys
+    if (ks == XK_Control_L || ks == XK_Control_R) { g_linux_ctrl_held = true; g_Linux_CtrlHeld = true; }
+    else if (ks == XK_Alt_L || ks == XK_Alt_R) { g_linux_alt_held = true; g_Linux_AltHeld = true; }
+    else if (ks == XK_Shift_L || ks == XK_Shift_R) { g_linux_shift_held = true; g_Linux_ShiftHeld = true; }
 
     int vk_code = 0;
-    // for printable single char use the actual char to preserve case
     if (len == 1 && (unsigned char)buf[0] >= 32 && (unsigned char)buf[0] <= 126) {
         vk_code = (unsigned char)buf[0];
-        // map lower a-z to upper VK_A..VK_Z for hotkey matching but keep char for insertion?
-        // For prompt typing we need actual char, so keep buf[0] as vk_code.
-        // For navigation keys fallback to keysym mapping.
-        if (vk_code >= 'a' && vk_code <= 'z') {
-            // keep lower for correct insertion, but also handle as VK for vim?
-            // Keep as lower - PromptPopup_OnKey handles 32..126 as printable.
-        }
     } else {
         vk_code = XKeysymToVK(ks);
     }
@@ -257,7 +258,61 @@ static void Linux_HandleKeyPress(Display* dpy, XKeyEvent* ev, WindowManager* wm)
     if (g_linux_shift_held) modifiers |= HOTKEY_MOD_SHIFT;
     if (g_linux_ctrl_held) modifiers |= HOTKEY_MOD_CTRL;
 
-    Popup* top_before = WindowManager_GetTopPopup(wm);
+    Popup* top = WindowManager_GetTopPopup(wm);
+    if (!top) return;
+
+    // For prompt, use original handler directly for correct vim handling
+    if (top->type == POPUP_PROMPT) {
+        PromptState* state = (PromptState*)top->user_data;
+        XEvent xev; memset(&xev,0,sizeof(xev));
+        xev.type = KeyPress;
+        xev.xkey = *ev;
+        bool handled = Linux_HandlePromptKey(&xev, state);
+        if (!handled && IsInsertMode()) {
+            char buf2[32]; KeySym ks2; int len2 = XLookupString(ev, buf2, sizeof(buf2), &ks2, NULL);
+            if (len2 > 0) {
+                extern int pending_hotkey_vk; extern int pending_hotkey_mod; extern long pending_hotkey_timeMs;
+                bool swallow=false;
+                if (pending_hotkey_vk!=0 && len2==1) {
+                    struct timeval tv; gettimeofday(&tv,NULL); long now=tv.tv_sec*1000+tv.tv_usec/1000;
+                    if (now - pending_hotkey_timeMs < 800) {
+                        unsigned char c=(unsigned char)buf2[0];
+                        int vkc=(c>='a'&&c<='z')?(c-'a'+'A'):(c>='A'&&c<='Z')?c:(c==' '?VK_SPACE:0);
+                        if (vkc!=0 && vkc==pending_hotkey_vk) swallow=true;
+                    }
+                    if (swallow) pending_hotkey_vk=0;
+                    else if (now - pending_hotkey_timeMs >=800) pending_hotkey_vk=0;
+                }
+                if (!swallow) {
+                    bool is_printable=true;
+                    for (int i=0;i<len2;i++) { unsigned char c=(unsigned char)buf2[i]; if (c<0x20||c==0x7F) {is_printable=false;break;}}
+                    if (is_printable) {
+                        size_t n=strlen(state->filter);
+                        if (n+len2 < sizeof(state->filter)-1) {
+                            if (state->cursor<0) state->cursor=0;
+                            if ((size_t)state->cursor>n) state->cursor=n;
+                            memmove(state->filter+state->cursor+len2, state->filter+state->cursor, n-state->cursor+1);
+                            memcpy(state->filter+state->cursor, buf2, len2);
+                            state->cursor+=len2;
+                            if (g_refresh_callback) g_refresh_callback(state->filter, hListBox, state->has_listbox ? &state->listbox : NULL);
+                        }
+                    }
+                }
+            }
+        }
+        if (selection_complete) {
+            WindowManager_PopPopup(wm);
+            Popup* new_top = WindowManager_GetTopPopup(wm);
+            if (new_top && new_top->vtable && new_top->vtable->on_render) new_top->vtable->on_render(new_top);
+            XFlush(dpy);
+            return;
+        }
+        if (top->vtable && top->vtable->on_render) top->vtable->on_render(top);
+        XFlush(dpy);
+        return;
+    }
+
+    Popup* top_before = top;
     if (top_before && top_before->vtable && top_before->vtable->on_key) {
         top_before->vtable->on_key(top_before, vk_code, pressed, modifiers);
     }
@@ -271,10 +326,10 @@ static void Linux_HandleKeyPress(Display* dpy, XKeyEvent* ev, WindowManager* wm)
 static void Linux_HandleKeyRelease(Display* dpy, XKeyEvent* ev) {
     int keycode = ev->keycode;
     KeySym ks = XKeycodeToKeysym(dpy, keycode, 0);
-    
-    if (ks == XK_Control_L || ks == XK_Control_R) g_linux_ctrl_held = false;
-    else if (ks == XK_Alt_L || ks == XK_Alt_R) g_linux_alt_held = false;
-    else if (ks == XK_Shift_L || ks == XK_Shift_R) g_linux_shift_held = false;
+    extern bool g_Linux_CtrlHeld, g_Linux_AltHeld, g_Linux_ShiftHeld;
+    if (ks == XK_Control_L || ks == XK_Control_R) { g_linux_ctrl_held = false; g_Linux_CtrlHeld = false; }
+    else if (ks == XK_Alt_L || ks == XK_Alt_R) { g_linux_alt_held = false; g_Linux_AltHeld = false; }
+    else if (ks == XK_Shift_L || ks == XK_Shift_R) { g_linux_shift_held = false; g_Linux_ShiftHeld = false; }
 }
 
 void Linux_ProcessXEvent(Display* dpy, XEvent* ev, WindowManager* wm) {
@@ -354,6 +409,40 @@ int WindowManager_RunLinux(WindowManager* wm) {
             if (fds[i + 1].revents & POLLIN) {
                 bool grabbed = g_device_grabbed[i];
                 while (read(fds[i + 1].fd, &ev, sizeof(struct input_event)) > 0) {
+                    // If popup is open, don't handle as global hotkey - let X11 handle for popup input
+                    // This prevents opening new feature windows without closing current and respects toggles
+                    Popup* top_for_hotkey = WindowManager_GetTopPopup(wm);
+                    if (top_for_hotkey) {
+                        // Update global modifier state even when popup open to avoid stuck Alt/Ctrl
+                        extern bool g_Linux_CtrlHeld, g_Linux_AltHeld, g_Linux_ShiftHeld;
+                        if (ev.type == EV_KEY) {
+                            if (ev.code == KEY_LEFTCTRL || ev.code == KEY_RIGHTCTRL) {
+                                if (ev.value == 0) g_Linux_CtrlHeld = false;
+                                else if (ev.value == 1 || ev.value == 2) g_Linux_CtrlHeld = true;
+                            } else if (ev.code == KEY_LEFTALT || ev.code == KEY_RIGHTALT) {
+                                if (ev.value == 0) g_Linux_AltHeld = false;
+                                else if (ev.value == 1 || ev.value == 2) g_Linux_AltHeld = true;
+                            } else if (ev.code == KEY_LEFTSHIFT || ev.code == KEY_RIGHTSHIFT) {
+                                if (ev.value == 0) g_Linux_ShiftHeld = false;
+                                else if (ev.value == 1 || ev.value == 2) g_Linux_ShiftHeld = true;
+                            }
+                            // also update window_manager's own g_linux_* for X11 vim handling
+                            if (ev.code == KEY_LEFTCTRL || ev.code == KEY_RIGHTCTRL) {
+                                if (ev.value == 0) g_linux_ctrl_held = false;
+                                else g_linux_ctrl_held = true;
+                            } else if (ev.code == KEY_LEFTALT || ev.code == KEY_RIGHTALT) {
+                                if (ev.value == 0) g_linux_alt_held = false;
+                                else g_linux_alt_held = true;
+                            } else if (ev.code == KEY_LEFTSHIFT || ev.code == KEY_RIGHTSHIFT) {
+                                if (ev.value == 0) g_linux_shift_held = false;
+                                else g_linux_shift_held = true;
+                            }
+                        }
+                        if (ev.type != EV_KEY) {
+                            if (grabbed && g_uinput_fd >= 0) uinput_emit(&ev);
+                        }
+                        continue;
+                    }
                     
                     if (ev.type != EV_KEY) {
                         if (grabbed && g_uinput_fd >= 0) uinput_emit(&ev);
