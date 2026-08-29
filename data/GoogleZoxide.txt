@@ -40,3 +40,5 @@ get steam passwordo f steam account
 python pdf module
 brawhalla turn off screen shake 
 scythe katars character brawlhalla
+what is xorg on arch linux
+what is polkit on arch linux
