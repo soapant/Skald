@@ -110,7 +110,6 @@ int EditCallback_Handle(EditCallbackData* data, RefreshCallback refresh) {
         UI_Redraw(data->lb, data->hListBox);
     }
     
-    // Restore selection if requested
     if (data->restore_selection && data->lb && data->selected_index >= 0) {
         UI_NavigateTo(data->lb, data->hListBox, data->selected_index);
     }

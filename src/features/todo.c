@@ -508,7 +508,7 @@ static void todo_edit_callback(const char* selection, ListBoxInfo* lb) {
     data->hListBox = hListBox;
     data->hEditControl = hEditControl;
     
-    Popup* popup = EditPopup_Create(wm, selection, "Edit Todo", 960, 540, 1000, 100,
+    Popup* popup = EditPopup_Create(wm, selection, "Edit Todo", 960, 540,
                                     todo_edit_confirm_callback, data);
     WindowManager_PushPopup(wm, popup);
 }
