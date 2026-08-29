@@ -16,7 +16,6 @@ static void RebuildYaziCache(void) {
 
 
 static void yazi_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
-    if (!lb) return;
     ZoxideHelper_Refresh(filter, hListBox, lb, YaziZoxideFile, &g_cached_yazi_commands, &g_cached_yazi_count);
 }
 
