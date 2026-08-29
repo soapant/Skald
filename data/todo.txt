@@ -1,6 +1,6 @@
 the copying only works while hte program is active||[Cprogram]|[DontForget]
-the history system doest work its only the last inputted||[Cprogram]|[Bug]
-make a preset for the not plugged in to system||[Misc]|[DontForget]
+the history system doest work its only the last ||[Cprogram]|[Bug]
+make a preset for the not plugged in to ||[Misc]|[DontForget]
 i totally forgot i  really make the clipbaord manaegr||[Cprogram]|[DontForget]|[Feature]
 add a debug menu to show data about the feature||[Cprogram]|[DontForget]
 make a display all hotkeys thingy maybe in the settings ig||[Cprogram]|[Maybe]

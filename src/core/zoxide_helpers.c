@@ -70,13 +70,9 @@ void ZoxideHelper_Edit(const char* selection, ListBoxInfo* lb, MappedFile* file,
     int true_idx = (lb && idx >= 0 && idx < lb->populated_count) ? lb->matching_indices[idx] : idx;
     
     WindowManager* wm = WindowManager_Get();
-    if (!wm) return;
     
-    extern WindowHandle hListBox;
-    extern WindowHandle hEditControl;
     
     EditCallbackData* data = calloc(1, sizeof(EditCallbackData));
-    if (!data) return;
     
     data->filepath = NULL;
     data->file = file;
@@ -91,15 +87,7 @@ void ZoxideHelper_Edit(const char* selection, ListBoxInfo* lb, MappedFile* file,
     
     Popup* popup = EditPopup_Create(wm, selection, "Edit Zoxide", 960, 540, 1000, 300,
                                     zoxide_edit_confirm_callback, data);
-    if (popup) {
-        WindowManager_PushPopup(wm, popup);
-    } else {
-        free(data);
-    }
-    
-    ZoxideHelper_RebuildCache(file, cached, count);
-    if (refresh) refresh("", hListBox, lb);
-    else if (lb) UI_Redraw(lb, hListBox);
+    WindowManager_PushPopup(wm, popup);
 }
 
 void ZoxideHelper_AppendNewEntry(MappedFile* file, const char* selection, ListBoxInfo* lb, char*** cached, int* count) {
