@@ -496,13 +496,8 @@ static void todo_edit_callback(const char* selection, ListBoxInfo* lb) {
     int true_idx = (lb && idx >= 0 && idx < lb->populated_count) ? lb->matching_indices[idx] : idx;
     
     WindowManager* wm = WindowManager_Get();
-    if (!wm) return;
-    
-    extern WindowHandle hListBox;
-    extern WindowHandle hEditControl;
     
     EditCallbackData* data = calloc(1, sizeof(EditCallbackData));
-    if (!data) return;
     
     data->filepath = TODO_FILE_PATH;
     data->lb = lb;
@@ -515,11 +510,7 @@ static void todo_edit_callback(const char* selection, ListBoxInfo* lb) {
     
     Popup* popup = EditPopup_Create(wm, selection, "Edit Todo", 960, 540, 1000, 100,
                                     todo_edit_confirm_callback, data);
-    if (popup) {
-        WindowManager_PushPopup(wm, popup);
-    } else {
-        free(data);
-    }
+    WindowManager_PushPopup(wm, popup);
 }
 
 void TriggerTodo(void) {
