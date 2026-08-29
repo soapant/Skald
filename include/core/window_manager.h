@@ -17,7 +17,11 @@ typedef struct {
     void (*destroy)(Popup* self);
 } PopupVTable;
 
-typedef enum { POPUP_PROMPT, POPUP_SIMPLE, POPUP_EDIT, POPUP_MESSAGE, POPUP_SEARCH } PopupType;
+typedef enum { POPUP_PROMPT,
+  POPUP_SIMPLE, 
+  POPUP_EDIT, 
+  POPUP_MESSAGE, 
+  POPUP_SEARCH } PopupType;
 
 struct Popup {
     const PopupVTable* vtable;
@@ -35,7 +39,6 @@ struct WindowManager {
     int popup_capacity;
     bool running;
     
-    // Platform-specific
     #if !defined(_WIN32)
     Display* display;
     #endif

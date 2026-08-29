@@ -141,8 +141,8 @@ void HandleExitWindow(VimContext* ctx) {
     if (!wm) return;
     
     Popup* top = WindowManager_GetTopPopup(wm);
-    if (top && top->vtable && top->vtable->on_key) {
-        // Send ESC to the top popup
+    if (top && top->manager->popup_count > 1) {
+        SetMode(MODE_NORMAL);
         top->vtable->on_key(top, VK_ESCAPE, true, 0);
     } else {
         selection_complete = true;
