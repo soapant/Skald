@@ -41,6 +41,19 @@ struct WindowManager {
     #endif
 };
 
+typedef struct {
+    Popup base;
+    char* text;
+    int text_capacity;
+    int cursor;
+    char* title;
+    EditPopupConfirmCallback on_confirm;
+    void* user_data;
+    int x, y, w, h;
+    bool confirmed;
+    int saved_mode;
+} WMEditPopupData;
+
 WindowManager* WindowManager_Create(void);
 void WindowManager_Destroy(WindowManager* wm);
 int WindowManager_Run(WindowManager* wm);
