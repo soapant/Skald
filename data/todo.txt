@@ -1,5 +1,4 @@
 the copying only works while hte program is active||[Cprogram]|[DontForget]
-calc.h should be       2 x 4 x 19  ||[Cprogram]
 the history system doest work its only the last inputted||[Cprogram]|[Bug]
 make a preset for the not plugged in to system||[Misc]|[DontForget]
 i totally forgot i  really make the clipbaord manaegr||[Cprogram]|[DontForget]|[Feature]
