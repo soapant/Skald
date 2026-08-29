@@ -158,7 +158,6 @@ char* WindowManager_ShowPrompt(WindowManager* wm, const PromptSpec* spec) {
     Popup* popup = PromptPopup_Create(wm, spec);
     if (!popup) return NULL;
     
-    // Run nested event loop until this popup is dismissed
     #if defined(_WIN32)
     MSG msg;
     while (wm->running && wm->popup_count > 0 && GetMessage(&msg, NULL, 0, 0)) {
@@ -178,17 +177,13 @@ char* WindowManager_ShowPrompt(WindowManager* wm, const PromptSpec* spec) {
     }
     #endif
     
-    // cleanup: popup was popped (hidden) but not destroyed - destroy now
     if (popup->manager == NULL) {
-        // already popped, destroy
         if (popup->vtable && popup->vtable->destroy) popup->vtable->destroy(popup);
     } else {
-        // still in stack (should not happen) - pop and destroy
         WindowManager_PopPopup(wm);
         if (popup->vtable && popup->vtable->destroy) popup->vtable->destroy(popup);
     }
     
-    // The result is in output_buffer (set by the enter_callback)
     return output_buffer[0] ? output_buffer : NULL;
 }
 
@@ -198,7 +193,6 @@ char* WindowManager_ShowSimplePrompt(WindowManager* wm, const SimplePromptSpec* 
     Popup* popup = SimplePromptPopup_Create(wm, spec);
     if (!popup) return NULL;
     
-    // Run nested event loop until this popup is dismissed
     #if defined(_WIN32)
     MSG msg;
     while (wm->running && wm->popup_count > 0 && GetMessage(&msg, NULL, 0, 0)) {
@@ -228,22 +222,17 @@ char* WindowManager_ShowSimplePrompt(WindowManager* wm, const SimplePromptSpec* 
     return output_buffer[0] ? output_buffer : NULL;
 }
 
+static bool prompt_should_swallow_pending(int wParam, int mods);
+static bool prompt_try_vim_motion(int wParam, bool ctrl, bool shift, bool alt);
+
 // ============ Edit Popup Implementation ============
 
-typedef struct {
-    Popup base;
-    char* text;
-    int text_capacity;
-    int cursor;
-    char* title;
-    EditPopupConfirmCallback on_confirm;
-    void* user_data;
-    int x, y, w, h;
-    bool confirmed;
-} EditPopupDataInternal;
+typedef WMEditPopupData EditPopupDataInternal;
 
 static void EditPopup_OnShow(Popup* self) {
     EditPopupDataInternal* data = (EditPopupDataInternal*)self;
+    data->saved_mode = g_current_mode;
+    SetMode(MODE_INSERT);
     #if !defined(_WIN32)
     Display* dpy = ((WindowManager*)self->manager)->display;
     XMapWindow(dpy, self->handle.xid);
@@ -254,20 +243,48 @@ static void EditPopup_OnShow(Popup* self) {
 
 static void EditPopup_OnHide(Popup* self) {
     EditPopupDataInternal* data = (EditPopupDataInternal*)self;
+    SetMode(data->saved_mode);
     #if !defined(_WIN32)
     Display* dpy = get_display();
     if (dpy) { XUnmapWindow(dpy, self->handle.xid); XFlush(dpy); }
     #endif
+    // restore focus to new top popup
+    WindowManager* wm = WindowManager_Get();
+    if (wm) {
+        Popup* top = WindowManager_GetTopPopup(wm);
+        if (top) {
+            Display* d2 = get_display();
+            if (d2) { 
+                XSetInputFocus(d2, top->handle.xid, RevertToParent, CurrentTime); 
+                XFlush(d2); 
+                if (top->vtable && top->vtable->on_render) top->vtable->on_render(top);
+                XFlush(d2);
+            }
+        }
+    }
 }
 
 static void EditPopup_OnKey(Popup* self, int vk_code, bool pressed, int modifiers) {
     if (!pressed) return;
     
     EditPopupDataInternal* data = (EditPopupDataInternal*)self;
-    
+    int vk_upper = (vk_code >= 'a' && vk_code <= 'z') ? vk_code - 32 : vk_code;
+    bool ctrl = modifiers & HOTKEY_MOD_CTRL;
+    bool shift = modifiers & HOTKEY_MOD_SHIFT;
+    bool alt = modifiers & HOTKEY_MOD_ALT;
+    if (prompt_should_swallow_pending(vk_upper, modifiers)) return;
+    if (prompt_try_vim_motion(vk_upper, ctrl, shift, alt)) {
+        if (selection_complete) { data->confirmed=false; WindowManager_PopPopup(self->manager); }
+        return;
+    }
     if (vk_code == VK_ESCAPE) {
-        data->confirmed = false;
-        WindowManager_PopPopup(self->manager);
+        if (IsInsertMode()) {
+            SetMode(MODE_NORMAL);
+            if (self->vtable && self->vtable->on_render) self->vtable->on_render(self);
+        } else {
+            data->confirmed = false;
+            WindowManager_PopPopup(self->manager);
+        }
         return;
     }
     
@@ -280,7 +297,7 @@ static void EditPopup_OnKey(Popup* self, int vk_code, bool pressed, int modifier
         return;
     }
     
-    // Handle text input
+    // Handle text input - only in INSERT
     if (vk_code == VK_BACK) {
         if (data->cursor > 0) {
             memmove(data->text + data->cursor - 1, data->text + data->cursor, 
@@ -288,6 +305,7 @@ static void EditPopup_OnKey(Popup* self, int vk_code, bool pressed, int modifier
             data->cursor--;
         }
     } else if (vk_code >= 32 && vk_code <= 126) { // Printable
+        if (!IsInsertMode()) return;
         if (data->cursor < data->text_capacity - 1) {
             memmove(data->text + data->cursor + 1, data->text + data->cursor,
                     strlen(data->text) - data->cursor + 1);
@@ -310,8 +328,57 @@ static void EditPopup_OnKey(Popup* self, int vk_code, bool pressed, int modifier
 }
 
 static void EditPopup_OnRender(Popup* self) {
-    // Rendering handled by platform-specific code
-    (void)self;
+    EditPopupDataInternal* data = (EditPopupDataInternal*)self;
+#if !defined(_WIN32)
+    Display* dpy = get_display();
+    if (!dpy) return;
+    XftDraw* xd = Linux_CreateXftDraw(dpy, self->handle.xid);
+    if (!xd) return;
+    FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
+    XftFont* xf = FH_TO_XFT(font);
+    int screen = DefaultScreen(dpy);
+    Visual* visual = DefaultVisual(dpy, screen);
+    Colormap cmap = DefaultColormap(dpy, screen);
+    XftColor bg, fg, title_col, vim_col;
+    Linux_XftAllocColor(dpy, visual, cmap, rgb_to_hex(COLOR_BG), 0xFFFF, &bg);
+    Linux_XftAllocColor(dpy, visual, cmap, rgb_to_hex(COLOR_TEXT), 0xFFFF, &fg);
+    Linux_XftAllocColor(dpy, visual, cmap, rgb_to_hex(COLOR_TEXT), 0xFFFF, &title_col);
+    Linux_XftAllocColor(dpy, visual, cmap, VimModeTextColor(), 0xFFFF, &vim_col);
+    // clear
+    XftDrawRect(xd, &bg, 0, 0, data->w, data->h);
+    // vim mode on left, title on right
+    if (xf) {
+        draw_wrapped_text(dpy, xd, &vim_col, font, g_vim_mode, 5, "LEFT", 5);
+    }
+    if (data->title && xf) {
+        draw_wrapped_text(dpy, xd, &title_col, font, data->title, 5, "RIGHT", 5);
+    }
+    // text with scroll
+    int cursor_x = 0;
+    int text_len = data->text ? strlen(data->text) : 0;
+    int scroll = 0;
+    if (xf) {
+        scroll = Linux_UpdateEditScrollOffset(dpy, xf, data->text ? data->text : "", text_len, data->cursor, data->w, 0, &cursor_x);
+    }
+    if (xf && text_len > 0) {
+        XGlyphInfo ext;
+        XftTextExtentsUtf8(dpy, xf, (FcChar8*)data->text, text_len, &ext);
+        int draw_x = 10 - scroll;
+        int draw_y = 40 + xf->ascent;
+        XftDrawStringUtf8(xd, &fg, xf, draw_x, draw_y, (FcChar8*)data->text, text_len);
+    }
+    // cursor
+    if (xf) {
+        Linux_DrawEditCursor(xd, &fg, cursor_x, scroll, data->w);
+    }
+    XftColorFree(dpy, visual, cmap, &bg);
+    XftColorFree(dpy, visual, cmap, &fg);
+    XftColorFree(dpy, visual, cmap, &title_col);
+    XftColorFree(dpy, visual, cmap, &vim_col);
+    XftDrawDestroy(xd);
+    Platform_DestroyFont(font);
+    XFlush(dpy);
+#endif
 }
 
 static void EditPopup_Destroy(Popup* self) {
@@ -527,7 +594,6 @@ static void PromptPopup_OnKey(Popup* self, int vk_code, bool pressed, int modifi
     if (vk_code == VK_ESCAPE) {
         if (IsInsertMode()) {
             SetMode(MODE_NORMAL);
-            // need to re-render to show mode change
             if (self->vtable && self->vtable->on_render) self->vtable->on_render(self);
         } else {
             selection_complete = true;
@@ -615,12 +681,12 @@ static void PromptPopup_OnKey(Popup* self, int vk_code, bool pressed, int modifi
             if (g_ctrl_enter_callback) g_ctrl_enter_callback(sel, data->state->has_listbox ? &data->state->listbox : NULL);
         } else {
             if (g_enter_callback) g_enter_callback(sel, data->state->has_listbox ? &data->state->listbox : NULL);
+            selection_complete = true;
         }
         if (selection_complete) WindowManager_PopPopup(self->manager);
         return;
     }
     
-    // Handle text input for printable characters
     if (vk_code >= 32 && vk_code <= 126) {
         if (IsInsertMode()) {
             int len = 1;
