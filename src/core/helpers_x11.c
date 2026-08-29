@@ -297,9 +297,7 @@ Window Linux_CreateWindowExOR(Display* dpy, int x, int y, int w, int h, unsigned
     static Colormap cached_cmap = None;
     static Visual* cached_visual = NULL;
     static int cached_screen = -1;
-    // Force simple visual for prompt to avoid BadMatch
-    bool force_simple = (res_name && strcmp(res_name, "colored")==0);
-    if (!force_simple && XMatchVisualInfo(dpy, screen, 32, TrueColor, &vinfo)) {
+    if (XMatchVisualInfo(dpy, screen, 32, TrueColor, &vinfo)) {
         visual = vinfo.visual;
         depth = 32;
         if (cached_cmap == None || cached_screen != screen || cached_visual != visual) {
