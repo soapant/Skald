@@ -350,12 +350,15 @@ static void EditPopup_OnRender(Popup* self) {
     Linux_XftAllocColor(dpy, visual, cmap, VimModeTextColor(), 0xFFFF, &vim_col);
     // clear
     XftDrawRect(xd, &bg, 0, 0, data->w, data->h);
-    // vim mode on left, title on right
+    // vim mode on left, title on right using draw_wrapped_text correctly
     if (xf) {
         draw_wrapped_text(dpy, xd, &vim_col, font, g_vim_mode, 5, "LEFT", 5);
     }
     if (data->title && xf) {
-        draw_wrapped_text(dpy, xd, &title_col, font, data->title, 5, "RIGHT", 5);
+        XGlyphInfo ext; XftTextExtentsUtf8(dpy, xf, (FcChar8*)data->title, strlen(data->title), &ext);
+        int title_x = data->w - ext.xOff - 10;
+        if (title_x < 50) title_x = 50;
+        draw_wrapped_text(dpy, xd, &title_col, font, data->title, 5, "LEFT", title_x);
     }
     // text with scroll
     int cursor_x = 0;
@@ -371,9 +374,16 @@ static void EditPopup_OnRender(Popup* self) {
         int draw_y = 40 + xf->ascent;
         XftDrawStringUtf8(xd, &fg, xf, draw_x, draw_y, (FcChar8*)data->text, text_len);
     }
-    // cursor
+    // cursor aligned with text baseline (prompt uses 47)
     if (xf) {
-        Linux_DrawEditCursor(xd, &fg, cursor_x, scroll, data->w);
+        int cursor_draw_x = 12 + cursor_x - scroll;
+        if (cursor_draw_x < 10) cursor_draw_x = 10;
+        if (cursor_draw_x > data->w - 10) cursor_draw_x = data->w - 10;
+        if (IsInsertMode()) {
+            XftDrawRect(xd, &fg, cursor_draw_x, 47, 2, FontSize);
+        } else {
+            XftDrawRect(xd, &fg, cursor_draw_x, 47, 12, FontSize);
+        }
     }
     XftColorFree(dpy, visual, cmap, &bg);
     XftColorFree(dpy, visual, cmap, &fg);
@@ -430,7 +440,7 @@ Popup* EditPopup_Create(WindowManager* wm, const char* initial_text,
     data->base.handle.xid = Linux_CreateEditPopupWindow(dpy, x, y, w, h);
     #endif
     
-    return WindowManager_PushPopup(wm, (Popup*)data);
+    return (Popup*)data;
 }
 
 // ============ Message Popup ============
