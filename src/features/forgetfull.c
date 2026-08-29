@@ -115,7 +115,7 @@ static void forgetfull_edit_callback(const char* selection, ListBoxInfo* lb) {
     data->hListBox = hListBox;
     data->hEditControl = hEditControl;
     
-    Popup* popup = EditPopup_Create(wm, selection, "Edit ForgetFull", 960, 540, 1000, 300,
+    Popup* popup = EditPopup_Create(wm, selection, "Edit ForgetFull", 960, 540,
                                     forgetfull_edit_confirm_callback, data);
     if (popup) {
         WindowManager_PushPopup(wm, popup);

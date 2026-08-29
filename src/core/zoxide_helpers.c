@@ -71,7 +71,6 @@ void ZoxideHelper_Edit(const char* selection, ListBoxInfo* lb, MappedFile* file,
     
     WindowManager* wm = WindowManager_Get();
     
-    
     EditCallbackData* data = calloc(1, sizeof(EditCallbackData));
     
     data->filepath = NULL;
@@ -85,7 +84,7 @@ void ZoxideHelper_Edit(const char* selection, ListBoxInfo* lb, MappedFile* file,
     data->hEditControl = hEditControl;
     data->refresh_cb = refresh;
     
-    Popup* popup = EditPopup_Create(wm, selection, "Edit Zoxide", 960, 540, 1000, 300,
+    Popup* popup = EditPopup_Create(wm, selection, "Edit Zoxide", 960, 540,
                                     zoxide_edit_confirm_callback, data);
     WindowManager_PushPopup(wm, popup);
 }

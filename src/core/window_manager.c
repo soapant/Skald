@@ -415,10 +415,12 @@ static const PopupVTable g_edit_popup_vtable = {
 };
 
 Popup* EditPopup_Create(WindowManager* wm, const char* initial_text,
-                        const char* title, int x, int y, int w, int h,
+                        const char* title, int x, int y,
                         EditPopupConfirmCallback on_confirm, void* user_data) {
     EditPopupDataInternal* data = calloc(1, sizeof(EditPopupDataInternal));
     if (!data) return NULL;
+    int h = 100;
+    int w = 1000;
     
     data->base.vtable = &g_edit_popup_vtable;
     data->base.manager = wm;

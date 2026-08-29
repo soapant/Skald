@@ -11,17 +11,6 @@ static char** g_cached_zoxide_commands = NULL;
 static int g_cached_zoxide_count = 0;
 
 static void RebuildZoxideCache(void) {
-    printf("[ZOXIDE] Rebuild fileSize=%zu path=%s\n", TerminalZoxideFile ? TerminalZoxideFile->fileSize : 0, TerminalZoxideFile ? "ok" : "null");
-    if (!TerminalZoxideFile || TerminalZoxideFile->fileSize == 0) {
-        if (g_cached_zoxide_commands) {
-            for (int i = 0; i < g_cached_zoxide_count; i++) free(g_cached_zoxide_commands[i]);
-            free(g_cached_zoxide_commands);
-            g_cached_zoxide_commands = NULL;
-            g_cached_zoxide_count = 0;
-        }
-        printf("[ZOXIDE] empty, return\n");
-        return;
-    }
     ZoxideHelper_RebuildCache(TerminalZoxideFile, &g_cached_zoxide_commands, &g_cached_zoxide_count);
 }
 
