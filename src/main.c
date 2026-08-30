@@ -68,10 +68,6 @@ void OInNotificationRecieved(const char* text) {
 
 int main() {
 #if !defined(_WIN32)
-  // Single-instance guard: two copies would both grab keyboards and fight
-  // over X11/uinput (e.g. old root system service + user service both enabled).
-  // /tmp on purpose: must be the SAME path for a root instance and a user
-  // instance so they actually see each other.
   {
     int lock_fd = open("/tmp/myprogram.lock", O_RDWR | O_CREAT, 0666);
     if (lock_fd < 0) {
@@ -85,22 +81,16 @@ int main() {
       close(lock_fd);
       return 1;
     }
-    // Don't leak the lock into spawned children (music player, terminals...):
-    // an inherited fd would keep the flock held after we exit, blocking the
-    // next start with "another instance is already running".
     fcntl(lock_fd, F_SETFD, FD_CLOEXEC);
-    // Intentionally keep lock_fd open for the process lifetime.
   }
 #endif
 #if defined(_WIN32)
-  // Single-instance guard for Windows.
   {
     HANDLE mtx = CreateMutexA(NULL, TRUE, "myprogram_single_instance_mutex");
     if (mtx && GetLastError() == ERROR_ALREADY_EXISTS) {
       fprintf(stderr, "[SYSTEM] Another instance is already running. Exiting.\n");
       return 1;
     }
-    // Intentionally never release/close: held for process lifetime.
   }
 #endif
 #if !defined(_WIN32)

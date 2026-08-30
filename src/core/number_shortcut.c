@@ -61,11 +61,6 @@ static void CALLBACK NumberShortcutTimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEv
 #endif
 
 bool HandleNumberShortcut(int wParam, WindowHandle hListBox, WindowHandle hEditControl, ListBoxInfo* lb) {
-    if (wParam < '0' || wParam > '9') return false;
-    
-    if (WH_TO_HWND(hListBox) == NULL) return false;
-    if (!lb) return false;
-    
     int digit = wParam - '0';
     int count = UI_GetCount(lb, hListBox);
     if (count == 0) return false;
@@ -77,7 +72,6 @@ bool HandleNumberShortcut(int wParam, WindowHandle hListBox, WindowHandle hEditC
     if (g_num_shortcut_state.state == 0) {
         g_num_shortcut_state.first_digit = digit;
         g_num_shortcut_state.state = 1;
-        
 #if defined(_WIN32)
         if (g_num_shortcut_state.timer_id != 0) {
             KillTimer(NULL, g_num_shortcut_state.timer_id);
@@ -85,7 +79,6 @@ bool HandleNumberShortcut(int wParam, WindowHandle hListBox, WindowHandle hEditC
         }
         g_num_shortcut_state.timer_id = SetTimer(NULL, 0, NUMBER_SHORTCUT_DELAY_MS, NumberShortcutTimerProc);
 #endif
-        
         printf("[NUM-SHORTCUT] Waiting for second digit... (first=%d)\n", digit);
         return true;
     } else if (g_num_shortcut_state.state == 1) {
@@ -97,7 +90,6 @@ bool HandleNumberShortcut(int wParam, WindowHandle hListBox, WindowHandle hEditC
             g_num_shortcut_state.timer_id = 0;
         }
 #endif
-        
         printf("[NUM-SHORTCUT] Two-digit number: %d\n", combined_number);
         ExecuteNumberShortcut(combined_number, g_num_shortcut_state.close_popup);
         return true;

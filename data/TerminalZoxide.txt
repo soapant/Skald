@@ -30,3 +30,4 @@ go
 j
 
 j
+.config
