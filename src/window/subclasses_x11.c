@@ -152,8 +152,7 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
     
     if (wParam >= '0' && wParam <= '9') {
       if (ctrl_pressed) {
-        
-        HandleNumberShortcut(wParam, hListBox, g_ActiveEditControl, state->has_listbox ? &state->listbox : NULL);
+        HandleNumberShortcut(wParam, hListBox, g_ActiveEditControl,&state->listbox);
         return true;
       }
     }
