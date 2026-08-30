@@ -9,6 +9,7 @@ bool AllowOtherFeatureTogglesInFeature = false;
 bool ModePersistsThroughFeatures = false;
 int  TimeOutForMessages = 1;
 bool DoTimeDebugs = false;
+//right now this is doing nothing
 char* EditPopUpPos = "middle";
 int EditPopUpWidthMin = 400;
 int PageUpDownLen = 6;
@@ -24,7 +25,7 @@ const int FontSize = 20;
 const int NumberFontSize = 18;
 const int VimFontSize = 18;
 const int PaddingForScrolling = 3;
-const char* UsedTerminal = "alacritty";
+const char* UsedTerminal = "foot";
 const char* ImageEditorPath =  "{APPDATA}/Microsoft/Windows/Start Menu/Programs/Scoop Apps/PicView.lnk"; // Not Implemented on Linux
 const char* TimerPath = "{DEV}/Tscoding Timer/sowon/sowon.exe"; 
 const char* MusicPlayerPath = "{DEV}/Music Player/music_player.exe";
@@ -178,7 +179,7 @@ const char* browsers_windows[] = {"Zen","Chrome"};
 const char* focus_blacklist_coding[] = {"CrosshairX"};
 const char* coding_windows[] = {"Neovide","vim"};
 const char* focus_blacklist_terminal[] = {"CrosshairX"};
-const char* terminal_windows[] = {"Alacritty","pwsh"};
+const char* terminal_windows[] = {"alacritty","pwsh","foot"};
 
 const FocusSwitcherBinding G_FOCUS_SWITCHERS[] = {
     // { 'O', HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT,

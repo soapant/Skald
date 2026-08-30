@@ -30,13 +30,10 @@ bool Platform_LaunchTerminal(const char* working_dir, const char* extra_args){
     const char* xauthority = Platform_GetSessionXAuthority();
     char runtime_dir[256];
     snprintf(runtime_dir,sizeof(runtime_dir),"%s",Platform_GetRuntimeDir());
-    const char* term = (UsedTerminal && strlen(UsedTerminal)>0) ? UsedTerminal : "alacritty";
     char disp_env[256], xauth_env[512], runtime_env[512];
     snprintf(disp_env,sizeof(disp_env),"DISPLAY=%s",display);
     snprintf(xauth_env,sizeof(xauth_env),"XAUTHORITY=%s",xauthority);
     snprintf(runtime_env,sizeof(runtime_env),"XDG_RUNTIME_DIR=%s",runtime_dir);
-    // Build terminal command: terminal [--working-directory=dir] [extra_args]
-    // extra_args already contains leading space if needed, e.g. " -e yazi \"/path\""
     pid_t pid=fork();
     if(pid<0) return false;
     if(pid==0){
@@ -48,25 +45,24 @@ bool Platform_LaunchTerminal(const char* working_dir, const char* extra_args){
         if(Platform_IsRunningAsRoot()){
             if(extra_args && extra_args[0]){
                 char cmd[2048];
-                snprintf(cmd,sizeof(cmd),"%s --working-directory=\"%s\" %s", term, working_dir, extra_args);
+                snprintf(cmd,sizeof(cmd),"%s --working-directory=\"%s\" %s", UsedTerminal, working_dir, extra_args);
                 char* const argv[]={"sudo","-u",(char*)real_user,"env",disp_env,xauth_env,runtime_env,"sh","-c",cmd,NULL};
                 execvp(argv[0],argv);
             } else {
-                char* const argv[]={"sudo","-u",(char*)real_user,"env",disp_env,xauth_env,runtime_env,(char*)term,"--working-directory", (char*)working_dir, NULL};
+                char* const argv[]={"sudo","-u",(char*)real_user,"env",disp_env,xauth_env,runtime_env,(char*)UsedTerminal,"--working-directory", (char*)working_dir, NULL};
                 execvp(argv[0],argv);
-                // fallback without --working-directory
-                char* const argv2[]={"sudo","-u",(char*)real_user,"env",disp_env,xauth_env,runtime_env,(char*)term,NULL};
+                char* const argv2[]={"sudo","-u",(char*)real_user,"env",disp_env,xauth_env,runtime_env,(char*)UsedTerminal,NULL};
                 execvp(argv2[0],argv2);
             }
         } else {
             setenv("DISPLAY",display,1); setenv("XAUTHORITY",xauthority,1); setenv("XDG_RUNTIME_DIR",runtime_dir,1);
             if(extra_args && extra_args[0]){
                 char cmd[2048];
-                snprintf(cmd,sizeof(cmd),"%s --working-directory=\"%s\" %s", term, working_dir, extra_args);
+                snprintf(cmd,sizeof(cmd),"%s --working-directory=\"%s\" %s", UsedTerminal, working_dir, extra_args);
                 execl("/bin/sh","sh","-c",cmd,(char*)NULL);
             } else {
-                execlp(term,term,"--working-directory",working_dir,(char*)NULL);
-                execlp(term,term,(char*)NULL);
+                execlp(UsedTerminal,UsedTerminal,"--working-directory",working_dir,(char*)NULL);
+                execlp(UsedTerminal,UsedTerminal,(char*)NULL);
             }
         }
         _exit(127);
@@ -303,25 +299,15 @@ bool Platform_LaunchApp(const char* path) {
             strncpy(exec_line, s, sizeof(exec_line)-1);
         }
         if(is_terminal && exec_line[0]){
-            // Launch via terminal (alacritty via UsedTerminal)
-            const char* term = (UsedTerminal && strlen(UsedTerminal)>0) ? UsedTerminal : "alacritty";
             const char* wd = workdir[0] ? workdir : NULL;
-            // Build extra args: -e sh -c 'exec_line; exec $SHELL' or just -e <exec>
-            // Use Platform_LaunchTerminal for proper daemon + env handling
             char extra[2048];
-            // If workdir specified, use it, else no workdir
-            // We need to run the exec_line inside terminal
             snprintf(extra, sizeof(extra), "-e sh -c '%s; exec ${SHELL:-/bin/sh}'", exec_line);
-            // Platform_LaunchTerminal will daemonize and handle sudo/nohup
-            // For .desktop terminal apps, we want to keep terminal open after command
             if(wd) return Platform_LaunchTerminal(wd, extra);
             else {
-                // Use home as fallback workdir
                 const char* home = Platform_GetRealHome();
                 return Platform_LaunchTerminal(home, extra);
             }
         }
-        // Non-terminal .desktop: try gtk-launch first
         char* filename = strrchr(expanded, '/');
         filename = filename ? filename + 1 : expanded;
         char app_id[256];
@@ -355,20 +341,13 @@ bool Platform_LaunchApp(const char* path) {
             _exit(127);
         } else if(pid>0){
             int st=0; waitpid(pid,&st,0);
-            // If gtk-launch failed (e.g., Terminal app without proper handling), fallback to Exec via terminal
-            // The is_terminal check above already handled Terminal=true, but some desktops have Terminal=false yet still need terminal
-            // If we are here and is_terminal was false, consider fallback to direct Exec if gtk-launch returns non-zero
-            // Check exit status - if failed, try direct Exec
             if(WIFEXITED(st) && WEXITSTATUS(st)!=0 && exec_line[0]){
-                // Fallback: try Exec directly (maybe path is direct binary, not desktop id)
                 printf("[LAUNCH] gtk-launch failed for %s, trying direct Exec: %s\n", app_id, exec_line);
                 if(is_terminal){
-                    // already handled above, but just in case
                     char extra2[2048];
                     snprintf(extra2, sizeof(extra2), "-e sh -c '%s; exec ${SHELL:-/bin/sh}'", exec_line);
                     return Platform_LaunchTerminal(Platform_GetRealHome(), extra2);
                 } else {
-                    // Try xdg-open fallback is not needed, try sh -c
                     pid_t pid3=fork();
                     if(pid3==0){
                         setsid(); pid_t p2=fork(); if(p2<0) _exit(1); if(p2>0) _exit(0);

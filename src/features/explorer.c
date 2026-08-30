@@ -10,7 +10,6 @@
 static char** g_cached_explorer_commands = NULL;
 static int g_cached_explorer_count = 0;
 
-
 static void RebuildExplorerCache(void) {
     ZoxideHelper_RebuildCache(ExplorerZoxideFile, &g_cached_explorer_commands, &g_cached_explorer_count);
 }
@@ -38,12 +37,13 @@ static void explorer_edit_callback(const char* selection, ListBoxInfo* lb) {
 }
 
 void TriggerExplorer(void) {
-    if (!g_cached_explorer_commands) RebuildExplorerCache();
+    RebuildExplorerCache();
     const char** list = ZoxideHelper_PrepareTriggerList(NULL, &g_cached_explorer_commands, &g_cached_explorer_count, NULL);
     PROMPT(.title = "📁 Explorer", .items = list, .count = g_cached_explorer_count,
            .height = 920, .width = 650, .item_height = 32,
            .refresh = explorer_refresh_callback,
            .enter = explorer_enter_callback,
            .edit = explorer_edit_callback);
+
     ZoxideHelper_CleanupTriggerList(list);
 }
