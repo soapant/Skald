@@ -527,3 +527,6 @@ void TriggerTodo(void) {
         .edit = todo_edit_callback);
     fl_free_file_list(ui_list, count);
 }
+void todo_init(void) {
+  fl_register_hotkey("Alt+T",TriggerTodo,NULL,NULL);
+}

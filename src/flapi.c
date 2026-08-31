@@ -59,6 +59,10 @@ void fl_free_file_list(const char* list[], int count) {
     for (int i = 0; i < count; i++) free((void*)list[i]);
 }
 
-void fl_register_hotkey(HotkeyBinding hotkey) {
+void fl_register_hotkey(char* hotkey_string,void (*on_hotkey_trigger)(void),bool (*optional_condition_for_hotkey)(void),const char** optional_blacklistedwindows) {
+    HotkeyBinding binding = convert_into_hotkey_binding(hotkey_string,
+                                                        on_hotkey_trigger,
+                                                        optional_condition_for_hotkey,
+                                                        optional_blacklistedwindows);
 }
 
