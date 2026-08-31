@@ -4,11 +4,9 @@
 int fl_copy_into_clipboard(const char* text) {
     if (text == NULL) return 0;
     int status = 0;
+    size_t len = strlen(text);
 
 #if defined(_WIN32)
-    size_t len = strlen(text);
-    if (len == 0) return 0;
-
     char* clean_text = (char*)malloc(len + 1);
     if (clean_text == NULL) return 0;
     size_t write_idx = 0;
@@ -119,18 +117,160 @@ int fl_copy_into_clipboard(const char* text) {
     }
 
     size_t len = strlen(text);
-    size_t max = 8000;  
-    if (len > max) {
-        fprintf(stderr, "[PLATFORM] Clipboard truncating %zu -> %zu bytes\n", len, max);
-        fprintf(pipe, "%.8000s…", text);
-    } else {
-        fprintf(pipe, "%s", text);
-    }
+    fprintf(pipe, "%s", text);
     
     status = pclose(pipe);
-
 #endif
-    snprintf(buffer,sizeof(buffer),"Copied %s",text);
-    SubjectiveMessageDisplay(buffer,140,TimeOutForMessages,COLOR_TEXT);
     return (status == 0) ? 1 : 0;
+}
+
+void fl_get_all_files_from_dir(const char* dir_path, char** list_of_allowed_extensions, ListOfFiles* list_of_files,char** list_of_names_to_ignore) {
+    if (!dir_path || !list_of_files) return;
+
+    char expanded_dir[MAX_PATH];
+    if (!Platform_ExpandPath(dir_path, expanded_dir, sizeof(expanded_dir))) return;
+    dir_path = expanded_dir;
+
+#if defined(_WIN32)
+    char search_path[MAX_PATH];
+    snprintf(search_path, sizeof(search_path), "%s\\*", dir_path);
+
+    WIN32_FIND_DATAA find_data;
+    HANDLE hFind = FindFirstFileA(search_path, &find_data);
+    if (hFind == INVALID_HANDLE_VALUE) return;
+
+    do {
+        if (strcmp(find_data.cFileName, ".") == 0 || strcmp(find_data.cFileName, "..") == 0) {
+            continue;
+        }
+
+        char full_path[MAX_PATH];
+        snprintf(full_path, sizeof(full_path), "%s\\%s", dir_path, find_data.cFileName);
+
+        if (find_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+            bool should_ignore = false;
+            if (list_of_names_to_ignore) {
+                for (int i = 0; i < sizeof(list_of_names_to_ignore) / sizeof(list_of_names_to_ignore[0]); i++) {
+                    if (StrCmpIA(find_data.cFileName, list_of_names_to_ignore[i]) == 0) {
+                        should_ignore = true;
+                        break;
+                    }
+                }
+            }
+            if (!should_ignore) {
+                fl_get_all_files_from_dir(full_path, list_of_allowed_extensions, list_of_files);
+            }
+        } else {
+            bool allowed = true;
+            if (list_of_allowed_extensions) {
+                allowed = false;
+                const char* ext = strrchr(find_data.cFileName, '.');
+                if (ext) {
+                    ext++;
+                    for (int i = 0; list_of_allowed_extensions[i] != NULL; i++) {
+                        if (StrCmpIA(ext, list_of_allowed_extensions[i]) == 0) {
+                            allowed = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (allowed) {
+                if (list_of_files->count >= list_of_files->capacity) {
+                    list_of_files->capacity = list_of_files->capacity == 0 ? 10 : list_of_files->capacity * 2;
+                    list_of_files->items = realloc(list_of_files->items, list_of_files->capacity * sizeof(FileItem));
+                }
+
+                FileItem* item = &list_of_files->items[list_of_files->count];
+                strncpy(item->path, full_path, sizeof(item->path) - 1);
+                item->path[sizeof(item->path) - 1] = '\0';
+
+                char clean_name[256];
+                strncpy(clean_name, find_data.cFileName, sizeof(clean_name) - 1);
+                clean_name[sizeof(clean_name) - 1] = '\0';
+                char* dot = strrchr(clean_name, '.');
+                if (dot) *dot = '\0';
+                strncpy(item->name, clean_name, sizeof(item->name) - 1);
+                item->name[sizeof(item->name) - 1] = '\0';
+
+                list_of_files->count++;
+            }
+        }
+    } while (FindNextFileA(hFind, &find_data));
+
+    FindClose(hFind);
+
+#else
+    DIR* dir = opendir(dir_path);
+    if (!dir) return;
+
+    struct dirent* entry;
+    while ((entry = readdir(dir)) != NULL) {
+        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
+            continue;
+        }
+
+        char full_path[MAX_PATH];
+        snprintf(full_path, sizeof(full_path), "%s/%s", dir_path, entry->d_name);
+
+        struct stat st;
+        if (stat(full_path, &st) != 0) continue;
+
+        if (S_ISDIR(st.st_mode)) {
+            bool should_ignore = false;
+            if (list_of_names_to_ignore) {
+                for (int i = 0; i < sizeof(list_of_names_to_ignore) / sizeof(list_of_names_to_ignore[0]); i++) {
+                    if (StrCmpIA(find_data.cFileName, list_of_names_to_ignore[i]) == 0) {
+                        should_ignore = true;
+                        break;
+                    }
+                }
+            }
+            if (!should_ignore) {
+                fl_get_all_files_from_dir(full_path, list_of_allowed_extensions, list_of_files);
+            }
+        } else {
+            bool allowed = true;
+            if (list_of_allowed_extensions) {
+                allowed = false;
+                const char* ext = strrchr(entry->d_name, '.');
+                if (ext) {
+                    ext++;
+                    for (int i = 0; list_of_allowed_extensions[i] != NULL; i++) {
+                        if (strcasecmp(ext, list_of_allowed_extensions[i]) == 0) {
+                            allowed = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (allowed) {
+                if (list_of_files->count >= list_of_files->capacity) {
+                    list_of_files->capacity = list_of_files->capacity == 0 ? 10 : list_of_files->capacity * 2;
+                    list_of_files->items = realloc(list_of_files->items, list_of_files->capacity * sizeof(FileItem));
+                }
+
+                FileItem* item = &list_of_files->items[list_of_files->count];
+
+                // Full path
+                strncpy(item->path, full_path, sizeof(item->path) - 1);
+                item->path[sizeof(item->path) - 1] = '\0';
+
+                // Name: filename without extension
+                char clean_name[256];
+                strncpy(clean_name, entry->d_name, sizeof(clean_name) - 1);
+                clean_name[sizeof(clean_name) - 1] = '\0';
+                char* dot = strrchr(clean_name, '.');
+                if (dot) *dot = '\0';
+                strncpy(item->name, clean_name, sizeof(item->name) - 1);
+                item->name[sizeof(item->name) - 1] = '\0';
+
+                list_of_files->count++;
+            }
+        }
+    }
+    closedir(dir);
+#endif
 }
