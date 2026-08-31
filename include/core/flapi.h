@@ -16,6 +16,7 @@
 #include <stddef.h>
 #if defined(_WIN32)
 #include <shellapi.h>
+#include <psapi.h>
 #else
 #include <unistd.h>
 #include <sys/wait.h>
@@ -24,5 +25,7 @@
 #include <dirent.h> 
 #include <pthread.h>
 #endif
+
+int fl_copy_into_clipboard(const char* text);
 
 #endif
