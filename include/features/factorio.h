@@ -1,7 +1,16 @@
 #ifndef FACTORIO_H
 #define FACTORIO_H
 
-void create_tag();
-void search_factory();
+#include "features/factorio.h"
+#include <stdio.h>
+
+void create_tag() {
+  printf("CREATE TAG");
+  
+}
+
+void search_factory() {
+  printf("SEARHC TAG");
+}
 
 #endif
