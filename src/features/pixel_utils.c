@@ -1,5 +1,4 @@
 #include "core/flapi.h"
-#include "features/pixel_utils.h"
 
 static bool GetCursorPixel(long* out_x, long* out_y, uint8_t* out_r, uint8_t* out_g, uint8_t* out_b) {
 #if defined(_WIN32)
