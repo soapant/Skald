@@ -189,14 +189,3 @@ void ExecuteMotion(MotionAction action, const char* sequence, int typed_count) {
     }
 }
 
-// Per-feature Check* bindings moved to their feature files (using flapi simple helpers):
-// CheckAppHotkeyBindings          -> src/features/app_launcher.c
-// CheckTerminalCommandHotkeyBindings -> src/features/terminal_command.c
-// RunMiscApplication / CheckMiscHotkeyBindings -> src/features/misc_hotkeys.c
-// open_browser / CheckQuickLinkHotkeyBindings -> src/features/quicklink.c
-// CheckTextSnippetBindings        -> src/features/text_snippets.c
-// CheckMacroBindings              -> src/bindings/macro_bindings.c
-// HandleMusicPlayer               -> src/features/music_player.c
-// HandleVideoViewer               -> src/features/video_viewer.c
-// HandleBulkKillProcess           -> src/features/process_killer.c
-// HandleFocusSwitcher             -> src/features/focus_switcher.c

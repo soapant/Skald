@@ -60,17 +60,6 @@ const float GradientBrightness = 1.0f;
 bool PixelHotkeys = false;
 bool CloseOnLossOfFocus = false;
 
-// Per-feature hotkey bindings moved to their feature files:
-// G_TERMINAL_COMMAND_HOTKEYS -> src/features/terminal_command.c
-// G_APP_HOTKEYS               -> src/features/app_launcher.c
-// G_MISC_HOTKEYS              -> src/features/misc_hotkeys.c
-// G_QUICKLINK_HOTKEYS         -> src/features/quicklink.c
-// G_TEXT_SNIPPETS             -> src/features/text_snippets.c
-// G_MUSIC_PLAYERS             -> src/features/music_player.c
-// G_VIDEO_PLAYERS             -> src/features/video_viewer.c
-// G_BULK_KILL_PROCESS         -> src/features/process_killer.c
-// G_FOCUS_SWITCHERS           -> src/features/focus_switcher.c
-
 const AliasEntry Aliases[] = {
   {"brw","Brawlhalla","AppLauncher"},
 };
