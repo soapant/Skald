@@ -1,8 +1,6 @@
 #include "core/flapi.h"
-#include "features/file_search.h"
 
 void initialize_app_cache(void) {
-    G_APP_COUNT = 0;
     
     for (int i = 0; i < sizeof(ListOfProgramPaths) / sizeof(ListOfProgramPaths[0]); i++) {
         scan_directory_recursive(ListOfProgramPaths[i]);

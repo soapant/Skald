@@ -1,5 +1,4 @@
 #include "core/flapi.h"
-#include "features/file_search.h"
 #include "features/app_launcher.h"
 
 char *allowed_video_formats[] = {"webm","mp4"};
