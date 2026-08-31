@@ -19,10 +19,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-// Helpers to correctly resolve real user/home even when launched via
-// `sudo true; nohup ./build/main &` where SUDO_USER is not set for the nohup child
-// live in misc_x11.c (Platform_GetRealUser / Platform_GetRealHome / Platform_IsRunningAsRoot).
-
 bool Platform_LaunchTerminal(const char* working_dir, const char* extra_args){
     if(!working_dir) return false;
     const char* real_user = Platform_GetRealUser();
