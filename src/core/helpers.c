@@ -36,7 +36,7 @@ bool ProcessHotkey(const HotkeyBinding* bindings, int bindings_count,
         if (b->vk_code != pressed_vk) continue;
         if (b->modifiers != modifiers) continue;
 
-        if (b->is_enabled && !b->is_enabled()) {
+        if (b->hotkey_condition && !b->hotkey_condition()) {
             continue;
         }
 
@@ -76,16 +76,15 @@ bool ProcessHotkey(const HotkeyBinding* bindings, int bindings_count,
           }
         }
 
-        if (b->handler) {
-            g_timer = TimerStart();
-            if (MessageAfterEachHotkey) {
-              char buffer[64];
-              snprintf(buffer,sizeof(buffer),"[%s] Triggered \n",b->name);
-              MSG_BOTTOM(buffer,140,TimeOutForMessages,COLOR_TEXT);
-            }
-            b->handler();
-            return true;
+        g_timer = TimerStart();
+        if (MessageAfterEachHotkey) {
+          char buffer[64];
+          //figure out later
+          snprintf(buffer,sizeof(buffer),"[%i] Triggered \n",b->vk_code);
+          MSG_BOTTOM(buffer,140,TimeOutForMessages,COLOR_TEXT);
         }
+        b->hotkey_callback();
+        return true;
     }
     return false;
 }

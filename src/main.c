@@ -133,10 +133,6 @@ int main() {
   Platform_InitUI();
 
   for (int i = 0; i < FILE_ENTRY_COUNT; i++) {
-    Platform_SanitizeFile(G_FILE_ENTRIES[i].path);
-  }
-
-  for (int i = 0; i < FILE_ENTRY_COUNT; i++) {
     G_FILE_ENTRIES[i].mf = (MappedFile*)calloc(1, sizeof(MappedFile));
     if (G_FILE_ENTRIES[i].mf != NULL) {
 #if !defined(_WIN32)
