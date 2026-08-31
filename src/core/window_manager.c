@@ -1,5 +1,5 @@
 #include "core/window_manager.h"
-#include "platform/platform.h"
+#include "core/platform.h"
 #include "core/common_ui.h"
 #include "core/modal.h"
 #include "core/feature_data.h"

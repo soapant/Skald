@@ -2,7 +2,7 @@
 #include "core/common_ui.h"
 #include "core/modal.h"
 #include "core/vim.h"
-#include "platform/platform.h"
+#include "core/platform.h"
 #include "window/subclasses_win32.h"
 #include "features/focus_switcher.h"
 #include "features/music_player.h"

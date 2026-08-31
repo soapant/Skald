@@ -2,7 +2,7 @@
 #include "bindings/hotkey_definitions.h"
 #include "core/types.h"
 #include "helpers.h"
-#include "platform/platform.h"
+#include "core/platform.h"
 #include "features/window_switcher.h"
 #include "features/google_search.h"
 #include "features/todo.h"
@@ -59,7 +59,7 @@ static const char* MONITOR_FOCUS_SIDE_blacklist[] = {"Fortnite","Nvim", "Neovide
 static const char* SETTINGS_blacklist[] = {""};
 
 void HandleKillMyProgram(void) {
-    terminate_process_by_name("myprogram.exe");
+    terminate_process_by_name("flint.exe");
     terminate_process_by_name("main.exe");
 }
 

@@ -60,16 +60,13 @@ static inline bool IsWindowValid(WindowHandle h) {
 }
 #endif
 
-// ---------------------------------------------------------------------------
-// Platform UI helper layer (SendMessage wrappers vs state structs)
-// ---------------------------------------------------------------------------
 
 static inline void UI_RedrawNow(ListBoxInfo* lb, WindowHandle hListBox);
 
 #if defined(_WIN32)
 #include "platform/ui_win32.h"
 #else
-#include "platform/ui_x11.h"
+#include "platform/x11/ui_x11.h"
 #endif
 
 static inline void UI_RedrawNow(ListBoxInfo* lb, WindowHandle hListBox) {

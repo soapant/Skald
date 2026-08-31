@@ -1,7 +1,7 @@
 #include "common.h"
 #include "core/modal.h"
 #include "config.h"
-#include "platform/platform.h"
+#include "core/platform.h"
 #include "helpers.h"
 #include "core/common_ui.h"
 #include "core/vim.h"

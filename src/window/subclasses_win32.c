@@ -10,7 +10,7 @@
 #include "window/subclasses.h"
 #include "wingdi.h"
 #include "helpers.h"
-#include "platform/platform.h"
+#include "core/platform.h"
 
 static ListBoxInfo* GetLBFromPopup(HWND hPopup) {
   if (hPopup && IsWindow(hPopup)) return (ListBoxInfo*)GetWindowLongPtrA(hPopup, GWLP_USERDATA);

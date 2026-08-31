@@ -1,7 +1,7 @@
 #include "common.h"
 #include "features/volume.h"
 #include "core/common_ui.h"
-#include "platform/platform.h"
+#include "core/platform.h"
 
 #if defined(_WIN32)
 #include <mmdeviceapi.h>

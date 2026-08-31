@@ -10,7 +10,7 @@
 #include "core/types.h"
 #include "core/hashmap.h"
 #include "config.h"
-#include "platform/platform.h"
+#include "core/platform.h"
 #if !defined(_WIN32)
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
@@ -103,9 +103,9 @@ typedef struct {
 } EditCallbackData;
 
 int EditCallback_Handle(EditCallbackData* data, RefreshCallback refresh);
-int ReadMdFile(char lines[100][512], const char* path);
+int ReadFile(char lines[100][512], const char* path);
 void StripCheckboxes(char* str);
-void WriteMdFile(char lines[100][512], int count, const char* path);
+void WriteFile(char lines[100][512], int count, const char* path);
 extern HashMap* history_indices;
 bool GetFromHistory(ListBoxInfo* lb);
 int convert_string_to_int(const char *str);
