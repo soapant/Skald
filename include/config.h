@@ -72,15 +72,9 @@ typedef struct {
     const char* linux_value;
 } PathVar;
 
-extern const char* ListOfProgramPaths[20];
-
 extern const PathVar G_PATH_VARS[];
 extern const unsigned int PATH_VAR_COUNT;
 
-// Per-feature bindings moved to feature files (see src/features/*.c):
-// AppHotkey, MiscHotkey, TerminalCommandHotkey, QuickLinkHotkey, TextSnippet,
-// MusicPlayerBinding, VideoViewerBinding, BulkKillProcessBinding, FocusSwitcherBinding
-// are now static in their respective feature files and accessed via Check* helpers.
 
 extern const AliasEntry Aliases[];
 extern const size_t ALIAS_ENTRY_COUNT;
