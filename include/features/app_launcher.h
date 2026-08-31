@@ -5,9 +5,7 @@
 #include "features/window_switcher.h"
 #include "features/focus_switcher.h"
 
-static const AppHotkey G_APP_HOTKEYS[] = {
-};
-static const unsigned int APP_HOTKEY_COUNT = sizeof(G_APP_HOTKEYS) / sizeof(G_APP_HOTKEYS[0]);
+
 
 static const char* ListOfShitToIgnore[] = {
   "node_modules",
@@ -194,22 +192,6 @@ static void TriggerAppLauncher(void) {
            .ctrl_enter = applauncher_ctrlenter_callback,
            .copy = applauncher_copy_callback);
     free(initial_items);
-}
-
-static inline bool CheckAppHotkeyBindings(int pressed_vk, int modifiers) {
-#if defined(_WIN32)
-    WindowHandle hActiveWnd = WH_FROM_HWND(GetForegroundWindow());
-#else
-    WindowHandle hActiveWnd = WH_NULL;
-#endif
-    char activeExe[256] = {0};
-    FetchExeNameOnDemand(hActiveWnd, activeExe, sizeof(activeExe) - 1);
-    // simple helper - one-liner finding
-    int idx = fl_find_app_hotkey_idx(pressed_vk, modifiers, activeExe, G_APP_HOTKEYS, APP_HOTKEY_COUNT);
-    if (idx < 0) return false;
-    WindowHandle hwnd = FindWindowByPartialTitle(G_APP_HOTKEYS[idx].app_name);
-    (void)hwnd;
-    return true;
 }
 
 static inline void app_launcher_init(void) {

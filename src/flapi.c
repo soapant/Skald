@@ -21,6 +21,9 @@
 #include "features/replica.h"
 #include "features/quicklink.h"
 #include "features/text_snippets.h"
+#include "features/music_player.h"
+#include "features/video_viewer.h"
+#include "features/focus_switcher.h"
 
 int fl_copy_into_clipboard(const char* text) {
     if (text == NULL) return 0;
@@ -111,5 +114,8 @@ void fl_init_all_hotkeys(void) {
     replica_init();
     quicklink_init();
     text_snippets_init();
+    music_player_init();
+    video_viewer_init();
+    focus_switcher_init();
 }
 

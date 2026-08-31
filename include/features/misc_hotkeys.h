@@ -11,11 +11,7 @@
 #include <shlwapi.h>
 #endif
 
-static const MiscHotkey G_MISC_HOTKEYS[] = {
-    // {'G', HOTKEY_MOD_ALT_CTRL, "*", "{DEV}/retard games/Grand Theft Auto V Legacy/PlayGTAV.bat" },
-    // {'O', HOTKEY_MOD_ALT_CTRL, "*", "{APPDATA}/Microsoft/Windows/Start Menu/Programs/OnTopReplica/OnTopReplica.lnk"}
-};
-static const unsigned int MISC_HOTKEY_COUNT = sizeof(G_MISC_HOTKEYS) / sizeof(G_MISC_HOTKEYS[0]);
+
 
 static void HandleKillMyProgram(void) {
     terminate_process_by_name("flint.exe");
@@ -82,20 +78,6 @@ static inline void RunMiscApplication(const char* path) {
 #else
     (void)path;
 #endif
-}
-
-static inline bool CheckMiscHotkeyBindings(int pressed_vk, int modifiers) {
-#if defined(_WIN32)
-    WindowHandle hActiveWnd = WH_FROM_HWND(GetForegroundWindow());
-#else
-    WindowHandle hActiveWnd = WH_NULL;
-#endif
-    char activeExe[256] = {0};
-    FetchExeNameOnDemand(hActiveWnd, activeExe, sizeof(activeExe) - 1);
-    int idx = fl_find_misc_hotkey_idx(pressed_vk, modifiers, activeExe, G_MISC_HOTKEYS, MISC_HOTKEY_COUNT);
-    if (idx < 0) return false;
-    RunMiscApplication(G_MISC_HOTKEYS[idx].misc_path);
-    return true;
 }
 
 static inline void misc_hotkeys_init(void) {

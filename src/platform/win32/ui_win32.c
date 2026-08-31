@@ -541,63 +541,9 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
     }
     TimerEnd(timer4, "CheckVimMotion");
 
-    WinTimer timer5 = TimerStart();
-    if (CheckTextSnippetBindings(pressed_vk, modifiers)) {
-      return 1;
-    }
-    TimerEnd(timer5, "CheckTextSnippetBindings");
-
     if (CheckMacroBindings(pressed_vk, modifiers)) {
       return 1;
     }
-
-    WinTimer timer7 = TimerStart();
-    if (CheckAppHotkeyBindings(pressed_vk, modifiers)) {
-      return 1;
-    }
-    TimerEnd(timer7, "CheckAppHotkeyBindings");
-
-    WinTimer timer8 = TimerStart();
-    if (CheckMiscHotkeyBindings(pressed_vk, modifiers)) {
-      return 1;
-    }
-    TimerEnd(timer8, "CheckMiscHotkeyBindings");
-
-    WinTimer timer9 = TimerStart();
-    if (CheckQuickLinkHotkeyBindings(pressed_vk, modifiers)) {
-      return 1;
-    }
-    TimerEnd(timer9, "CheckQuickLinkHotkeyBindings");
-
-    WinTimer timer10 = TimerStart();
-    if (CheckTerminalCommandHotkeyBindings(pressed_vk, modifiers)) {
-      return 1;
-    }
-    TimerEnd(timer10, "HandleTerminalCommand");
-
-    WinTimer timer11 = TimerStart();
-    if (HandleFocusSwitcher(pressed_vk, modifiers, fgTitle)) {
-      return 1;
-    }
-    TimerEnd(timer11, "HandleFocusSwitcher");
-
-    WinTimer timer12 = TimerStart();
-    if (HandleMusicPlayer(pressed_vk, modifiers, fgTitle)) {
-      return 1;
-    }
-    TimerEnd(timer12, "HandleMusicPlayer");
-
-    WinTimer timer13 = TimerStart();
-    if (HandleVideoViewer(pressed_vk, modifiers, fgTitle)) {
-      return 1;
-    }
-    TimerEnd(timer13, "HandleVideoViewer");
-
-    WinTimer timer14 = TimerStart();
-    if (HandleBulkKillProcess(pressed_vk, modifiers, fgTitle)) {
-      return 1;
-    }
-    TimerEnd(timer14, "HandleBulkKillProcess");
 
   }
   return CallNextHookEx(NULL, nCode, wParam, lParam);
