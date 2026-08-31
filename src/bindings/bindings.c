@@ -212,7 +212,6 @@ bool CheckAppHotkeyBindings(int pressed_vk, int modifiers) {
     for (int i = 0; i < APP_HOTKEY_COUNT; i++) {
         if (G_APP_HOTKEYS[i].vk_code == pressed_vk && 
             G_APP_HOTKEYS[i].modifiers == modifiers) {
-            
 #if defined(_WIN32)
             if (strcmp(G_APP_HOTKEYS[i].exe_name, "*") == 0 ||
                 StrStrIA(activeExe, G_APP_HOTKEYS[i].exe_name) != NULL) {

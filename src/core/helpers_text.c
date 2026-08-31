@@ -213,4 +213,58 @@ int convert_string_to_int(const char *str) {
     }
     return num;
 }
+HotkeyBinding convert_into_hotkey_binding(char* hotkey_string,void (*on_hotkey_trigger)(void),bool (*optional_condition_for_hotkey)(void),const char** optional_blacklistedwindows){ 
+  HotkeyBinding output;
+  int out_modifiers = 0;
+  char out_key = '\0';
+  
+  char buffer[256];
+  strncpy(buffer, hotkey_string, sizeof(buffer) - 1);
+  buffer[sizeof(buffer) - 1] = '\0';
+  
+  char* token = strtok(buffer, "+");
+  char* last_token = NULL;
+  
+  while (token != NULL) {
+      last_token = token;
+      
+      if (strcasecmp(token, "Ctrl") == 0 || strcasecmp(token, "Control") == 0) {
+          out_modifiers |= HOTKEY_MOD_CTRL;
+      } else if (strcasecmp(token, "Shift") == 0) {
+          out_modifiers |= HOTKEY_MOD_SHIFT;
+      } else if (strcasecmp(token, "Alt") == 0) {
+          out_modifiers |= HOTKEY_MOD_ALT;
+      } else if (strcasecmp(token, "Win") == 0 || strcasecmp(token, "Super") == 0 || strcasecmp(token, "Meta") == 0 ) {
+          out_modifiers |= HOTKEY_MOD_SUPER;
+      } else {
+          if (strcasecmp(token, "Space") == 0) {
+              out_key = ' ';
+          } else if (strcasecmp(token, "Tab") == 0) {
+              out_key = '\t';
+          } else if (strcasecmp(token, "Enter") == 0 || strcasecmp(token, "Return") == 0) {
+              out_key = '\n';
+          } else if (strcasecmp(token, "Escape") == 0 || strcasecmp(token, "Esc") == 0) {
+              out_key = 27;
+          } else if (strlen(token) == 1) {
+              out_key = token[0];
+          } else {
+              out_key = token[0];
+          }
+      }
+      
+      token = strtok(NULL, "+");
+  }
+  output.vk_code = out_key;
+  output.modifiers = out_modifiers;
+  output.hotkey_callback = on_hotkey_trigger;
+  if (optional_condition_for_hotkey) {
+      output.hotkey_condition = optional_condition_for_hotkey;
+  }
+  if (optional_blacklistedwindows) {
+      output.blacklist = optional_blacklistedwindows;
+      output.blacklist_count = sizeof(optional_blacklistedwindows) / sizeof(optional_blacklistedwindows[0]);
+  }
+  return output;
+}
+
 
