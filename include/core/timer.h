@@ -1,5 +1,5 @@
-#ifndef TIMER_H
-#define TIMER_H
+#ifndef CORE_TIMER_H
+#define CORE_TIMER_H
 
 #define TIMER_LOG_CAP 4096
 

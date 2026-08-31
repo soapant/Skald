@@ -10,5 +10,6 @@ void TriggerPixelEqualsAdb(void);
 void TriggerPixelEqualsFn(void);
 void TriggerRegionCoords(void);
 void TriggerRegionImage(void);
+void pixel_utils_init(void);
 
 #endif

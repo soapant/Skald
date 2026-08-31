@@ -186,3 +186,7 @@ void TriggerAppLauncher(void) {
            .copy = applauncher_copy_callback);
     free(initial_items);
 }
+
+void app_launcher_init(void) {
+    fl_register_hotkey("Alt+E", TriggerAppLauncher, NULL, NULL);
+}

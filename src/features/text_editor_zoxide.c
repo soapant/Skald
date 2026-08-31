@@ -124,3 +124,7 @@ void TriggerTextEditorZoxide(void) {
            .edit = text_editor_edit_callback);
     ZoxideHelper_CleanupTriggerList(list);
 }
+
+void text_editor_zoxide_init(void) {
+    fl_register_hotkey("Alt+I", TriggerTextEditorZoxide, NULL, NULL);
+}

@@ -4,5 +4,6 @@
 void terminate_process_by_name(const char* exe_name);
 bool HandleBulkKillProcess(int vk_code, int modifiers, const char* current_title);
 void TriggerProcessKiller(void);
+void process_killer_init(void);
 
 #endif

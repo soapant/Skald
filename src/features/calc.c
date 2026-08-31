@@ -460,5 +460,9 @@ void TriggerCalculator(void) {
            .ctrl_enter = calculator_ctrlenter_callback,
            .tab = calculator_tab_callback);
   
-                                                              
+                                                             
+}
+
+void calc_init(void) {
+    fl_register_hotkey("Alt+C", TriggerCalculator, NULL, NULL);
 }

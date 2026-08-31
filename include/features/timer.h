@@ -1,7 +1,8 @@
-#ifndef TIMER_H
-#define TIMER_H
+#ifndef FEATURE_TIMER_H
+#define FEATURE_TIMER_H
 
 void LaunchTimer(const char* selection);
 void TriggerTimer(void);
+void timer_init(void);
 
 #endif

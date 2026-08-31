@@ -1,4 +1,5 @@
 #include "common.h"
+#include "core/flapi.h"
 #include "core/platform.h"
 #include "features/mute_microphone.h"
 #include "core/common_ui.h"
@@ -75,4 +76,8 @@ void TriggerMuteState(void) {
 #else
     // Not Implemented
 #endif
+}
+
+void mute_microphone_init(void) {
+    fl_register_hotkey("Alt+Shift+P", TriggerMuteState, NULL, NULL);
 }

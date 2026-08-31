@@ -32,5 +32,6 @@ typedef struct {
 #define REMINDER_CONSTRAINT_FLAGS_COUNT (sizeof(REMINDER_CONSTRAINT_FLAGS) / sizeof(REMINDER_CONSTRAINT_FLAGS[0]))
 
 void TriggerReminder(void);
+void reminder_init(void);
 
 #endif

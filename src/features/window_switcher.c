@@ -325,3 +325,7 @@ void TriggerWindowSwitcher() {
            .enter = switcher_enter_callback,
            .copy = switcher_copy_callback);
 }
+
+void window_switcher_init(void) {
+    fl_register_hotkey("Alt+Space", TriggerWindowSwitcher, NULL, NULL);
+}

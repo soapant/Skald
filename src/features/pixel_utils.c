@@ -170,3 +170,10 @@ void TriggerRegionImage(void) {
     // Not Implemented
 #endif
 }
+
+void pixel_utils_init(void) {
+    fl_register_hotkey("Alt+Ctrl+Y", TriggerRegionImage, NULL, NULL);
+    fl_register_hotkey("Alt+Shift+Z", TriggerPosCopy, NULL, NULL);
+    fl_register_hotkey("Alt+Shift+X", TriggerColorPlain, NULL, NULL);
+    fl_register_hotkey("Alt+Shift+Y", TriggerRegionCoords, NULL, NULL);
+}

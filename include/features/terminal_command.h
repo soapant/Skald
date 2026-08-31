@@ -4,5 +4,6 @@
 
 void RunTerminalCommand(const char* Command, bool save_to_history,bool open_in_terminal);
 void TriggerTerminalCommand(void);
+void terminal_command_init(void);
 
 #endif
