@@ -42,5 +42,7 @@ void fl_get_all_files_from_dir_platform(const char* dir_path, char** list_of_all
 char* fl_search_file_in_dir_platform(const char* directory, const char* search_string,char* output_path);
 
 int fl_copy_into_clipboard(const char* text);
+char* fl_search_file_in_dir(const char* directory, const char* search_string,char* output_path);
+void fl_get_all_files_from_dir(const char* dir_path, char** list_of_allowed_extensions, ListOfFiles* list_of_files,char** list_of_names_to_ignore);
 
 #endif

@@ -110,12 +110,9 @@ extern const char* ListOfProgramPaths[20];
 extern const PathEntry SystemShortcuts[];
 #define SYSTEM_SHORTCUT_COUNT 19
 
-extern const char* ListOfShitToIgnore[30];
 
 extern const PathVar G_PATH_VARS[];
 extern const unsigned int PATH_VAR_COUNT;
-
-extern const char* ListOfShitToIgnore[30];
 
 extern const AppHotkey G_APP_HOTKEYS[];
 extern const unsigned int APP_HOTKEY_COUNT;
