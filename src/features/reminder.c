@@ -129,7 +129,8 @@ void RunWindowTimer(const char* parameter) {
 
     if (strlen(g_timer_param) > 0) {
         printf("[TIMER] Launching timer with param: %s\n", g_timer_param);
-        LaunchTimer(g_timer_param); 
+        // shouldnt be here
+        // LaunchTimer(g_timer_param); 
     }
 }
 bool CheckGameRunning(const char* parameter) {
