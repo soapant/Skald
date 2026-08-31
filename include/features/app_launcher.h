@@ -5,5 +5,6 @@ void initialize_app_cache(void);
 void launch_app_by_name(const char* display_name);
 void launch_exe_with_args(const char* exe_path, const char* args);
 void TriggerAppLauncher(void);
+void app_launcher_init(void);
 
 #endif

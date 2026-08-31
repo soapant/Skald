@@ -6,8 +6,8 @@
 #include "core/types.h"
 #include "core/timer.h"
 #include "helpers.h"
+#include "core/hotkey_manager.h"
 #include "bindings/bindings.h"
-#include "bindings/hotkey_definitions.h"
 #include "window/subclasses.h"
 #include "features/focus_switcher.h"
 #include "core/feature_data.h"
@@ -467,8 +467,7 @@ bool HandleGlobalKeyEvent(int key_code, int value) {
     if (g_Linux_CtrlHeld)  modifiers |= HOTKEY_MOD_CTRL;
 
     WinTimer timer = TimerStart();
-    if (ProcessHotkey(G_HOTKEY_BINDINGS, HOTKEY_BINDING_COUNT,
-          pressed_vk, modifiers, fgTitle)) {
+    if (hotkey_process(pressed_vk, modifiers, fgTitle)) {
         if (value == 1) { pending_hotkey_vk = pressed_vk; pending_hotkey_mod = modifiers; struct timeval tv; gettimeofday(&tv,NULL); pending_hotkey_timeMs = tv.tv_sec*1000 + tv.tv_usec/1000; }
         else if (value == 2) { pending_hotkey_vk = pressed_vk; pending_hotkey_mod = modifiers; struct timeval tv2; gettimeofday(&tv2,NULL); pending_hotkey_timeMs = tv2.tv_sec*1000 + tv2.tv_usec/1000; }
         return 1;

@@ -17,3 +17,7 @@ void TriggerTimer(void) {
 
     LaunchTimer(input);
 }
+
+void timer_init(void) {
+    fl_register_hotkey("Alt+O", TriggerTimer, NULL, NULL);
+}

@@ -39,3 +39,7 @@ void TriggerZoxide(void) {
            .edit = zoxide_edit_callback);
     ZoxideHelper_CleanupTriggerList(list);
 }
+
+void zoxide_init(void) {
+    fl_register_hotkey("Alt+W", TriggerZoxide, NULL, NULL);
+}

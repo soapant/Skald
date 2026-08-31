@@ -3,13 +3,13 @@
 #include "core/modal.h"
 #include "core/types.h"
 #include "helpers.h"
+#include "core/hotkey_manager.h"
 #include "core/common_ui.h"
 #include "core/number_shortcut.h"
 #include "core/feature_data.h"
 #include "window/subclasses.h"
 #include "core/platform.h"
 #include "bindings/bindings.h"
-#include "bindings/hotkey_definitions.h"
 #include "bindings/macro_bindings.h"
 #include "core/vim.h"
 #include "features/focus_switcher.h"
@@ -471,8 +471,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
     if (ctrl_down) modifiers |= HOTKEY_MOD_CTRL;
 
     WinTimer timer = TimerStart();
-    if (ProcessHotkey(G_HOTKEY_BINDINGS, HOTKEY_BINDING_COUNT, 
-          pressed_vk, modifiers, fgTitle)) {
+    if (hotkey_process(pressed_vk, modifiers, fgTitle)) {
       return 1;
     }
     TimerEnd(timer, "ProcessHotkey");

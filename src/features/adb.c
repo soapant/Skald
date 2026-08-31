@@ -1,3 +1,5 @@
+#include "core/flapi.h"
+#include "features/adb.h"
 #if defined(_WIN32)
 #include <windows.h>
 #include <stdio.h>
@@ -118,3 +120,8 @@ void mute_messenger_call(void) {
 void toggle_messenger_speaker(void) {
 }
 #endif
+
+void adb_init(void) {
+    fl_register_hotkey("Alt+Shift+M", mute_messenger_call, NULL, NULL);
+    fl_register_hotkey("Alt+Shift+S", toggle_messenger_speaker, NULL, NULL);
+}

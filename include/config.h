@@ -4,43 +4,9 @@
 #include <wchar.h>
 #include "core/types.h"
 
-
-#define SWITCHER            VK_SPACE
-#define TODO                'T'
-#define FORGETFULL          'F'
-#define CALCULATOR          'C'
-#define EXE                 'E'
-#define KILL_PROCESS        'U'
-#define GOOGLE_SEARCH       'G'  
-#define TERMINAL            'W'
-#define YAZI                'Q'
-#define TIMER               'O'
-#define EXPLORER            'R'
-#define TERMINAL_COMMAND    VK_OEM_4 // {
-#define VOLUME              'M'
-#define SCREENSHOT          'A'
-#define POS                 'Z'
-#define COLOR               'X'
-#define PIXEL_EQUALS        'B'
-#define WAIT_FOR_PIXEL      'N'
-#define REGION              'Y'
-#define NVIM                'I'
-#define MONITOR_FOCUS_MAIN  'L'
-#define MONITOR_FOCUS_SIDE  'H'
-#define REMINDER            'S'
-#define MUTE                'P'
-#define SETTINGS            'D'
-#define MONITOR_CONTROL     '1'
-#define MUSIC_PLAYER_KEY    'P'
-#define VIDEO_VIEWER_KEY    'V'
-#define REPLICA             'R'
-#define KILL_MYPROGRAM      'M'
-#define WIFI_TOGGLE         'W'
-#define BLUETOOTH_TOGGLE    'B'
 #define EDIT_TEXT_KEY       'E'
 #define HELP_SCREEN_KEY     'H'
 #define COPY_SELECTION_KEY  'Y'
-#define TOGGLE_PIXEL_HOTKEYS_KEY 'Z'
 #define COMMAND_MODE_KEY        VK_OEM_1 // ;
 #define SEARCH_PROGRAM_KEY      VK_OEM_2 // /
 #define COLOR_ERROR             RGB(180, 0, 0) 

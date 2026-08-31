@@ -69,3 +69,7 @@ void TriggerGoogleSearch(void) {
            .edit = google_edit_callback);
     ZoxideHelper_CleanupTriggerList(list);
 }
+
+void google_search_init(void) {
+    fl_register_hotkey("Alt+G", TriggerGoogleSearch, NULL, NULL);
+}

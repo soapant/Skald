@@ -184,3 +184,7 @@ void TriggerProcessKiller(void) {
            .enter = pk_enter_callback);
     free(list_items);
 }
+
+void process_killer_init(void) {
+    fl_register_hotkey("Alt+U", TriggerProcessKiller, NULL, NULL);
+}
