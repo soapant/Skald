@@ -132,6 +132,48 @@ void fl_get_all_files_from_dir_platform(const char* dir_path, char** list_of_all
     FindClose(hFind);
 }
 
+bool fl_launch_with_args_platform(const char* path, const char* args) {
+    if (!path) return false;
+    char expanded[1024];
+    // Platform_ExpandPath is available via flapi.h -> platform.h
+    extern bool Platform_ExpandPath(const char* t, char* o, size_t s);
+    if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) return false;
+    path = expanded;
+    char cmd[2048];
+    if (args && args[0] && strcmp(args, "0") != 0) {
+        snprintf(cmd, sizeof(cmd), "\"%s\" %s", path, args);
+    } else {
+        snprintf(cmd, sizeof(cmd), "\"%s\"", path);
+    }
+    // Use ShellExecute for .desktop/.lnk handling if needed, otherwise CreateProcess
+    // For simplicity, use ShellExecute for all, fallback to CreateProcess
+    HINSTANCE res = ShellExecuteA(NULL, "open", path, args && args[0] ? args : NULL, NULL, SW_SHOWNORMAL);
+    if ((intptr_t)res > 32) return true;
+    STARTUPINFOA si = {0}; si.cb = sizeof(si);
+    PROCESS_INFORMATION pi = {0};
+    if (CreateProcessA(NULL, cmd, NULL, NULL, FALSE, CREATE_NO_WINDOW, NULL, NULL, &si, &pi)) {
+        CloseHandle(pi.hProcess); CloseHandle(pi.hThread); return true;
+    }
+    return false;
+}
+
+bool fl_launch_with_args_as_admin_platform(const char* path, const char* args) {
+    if (!path) return false;
+    char expanded[MAX_PATH];
+    extern bool Platform_ExpandPath(const char* t, char* o, size_t s);
+    if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) return false;
+    path = expanded;
+    char params[1024] = {0};
+    if (args && args[0]) snprintf(params, sizeof(params), "%s", args);
+    SHELLEXECUTEINFOA sei = {0};
+    sei.cbSize = sizeof(sei);
+    sei.lpVerb = "runas";
+    sei.lpFile = path;
+    sei.lpParameters = params[0] ? params : NULL;
+    sei.nShow = SW_SHOWNORMAL;
+    return ShellExecuteExA(&sei);
+}
+
 char* fl_search_file_in_dir_platform(const char* directory, const char* search_string,char* output_path) {
     char search_path[MAX_PATH];
     snprintf(search_path, sizeof(search_path), "%s\\*", directory);

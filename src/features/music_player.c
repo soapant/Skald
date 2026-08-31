@@ -1,15 +1,10 @@
 #include "core/flapi.h"
-#include "features/app_launcher.h"
 
 char *allowed_audio_formats[] = {"mp3","ogg","flac", NULL};
 
 static ListOfFiles s_music_files = {0};
 
 static void music_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
-    // Clear previous and rescan
-    for (size_t i = 0; i < s_music_files.count; i++) {
-        // FileItem path/name are static buffers, no need to free
-    }
     s_music_files.count = 0;
     fl_get_all_files_from_dir(MusicPath, allowed_audio_formats, &s_music_files, NULL);
     
@@ -66,7 +61,7 @@ static void music_enter_callback(const char* selection, ListBoxInfo* lb) {
     } else {
         char quoted_result[MAX_PATH + 3] = {0};
         snprintf(quoted_result, sizeof(quoted_result), "\"%s\"", result);
-        launch_exe_with_args(MusicPlayerPath, quoted_result);
+        fl_launch_with_args(MusicPlayerPath, quoted_result);
     }
 #else
     if (Platform_SetX11StringProperty("Music Player", "_MP_TRACK", result) &&
@@ -76,7 +71,7 @@ static void music_enter_callback(const char* selection, ListBoxInfo* lb) {
     if (strlen(MusicPlayerPath) > 0) {
         char quoted_result[MAX_PATH + 3] = {0};
         snprintf(quoted_result, sizeof(quoted_result), "\"%s\"", result);
-        launch_exe_with_args(MusicPlayerPath, quoted_result);
+        fl_launch_with_args(MusicPlayerPath, quoted_result);
     }
 #endif
 }

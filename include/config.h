@@ -107,9 +107,6 @@ typedef struct {
 } PathVar;
 
 extern const char* ListOfProgramPaths[20];
-extern const PathEntry SystemShortcuts[];
-#define SYSTEM_SHORTCUT_COUNT 19
-
 
 extern const PathVar G_PATH_VARS[];
 extern const unsigned int PATH_VAR_COUNT;

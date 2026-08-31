@@ -8,7 +8,6 @@
 #include "core/window_manager.h"
 #include "helpers.h"
 #include "features/window_switcher.h"
-#include "features/app_launcher.h"
 #include "features/focus_switcher.h"
 #include "features/terminal_command.h"
 #include "core/platform.h"
@@ -221,8 +220,8 @@ bool CheckAppHotkeyBindings(int pressed_vk, int modifiers) {
             if (strcmp(G_APP_HOTKEYS[i].exe_name, "*") == 0 ||
                 strstr(activeExe, G_APP_HOTKEYS[i].exe_name) != NULL) {
 #endif
-                
-                launch_app_by_name(G_APP_HOTKEYS[i].app_name);
+                // shouldn't be here since we dont want the core to do anything like that
+                // launch_app_by_name(G_APP_HOTKEYS[i].app_name);
                 WindowHandle hwnd = FindWindowByPartialTitle(G_APP_HOTKEYS[i].app_name);
                 (void)hwnd;
                 return true;
