@@ -81,7 +81,6 @@ char* GetFlagParameter(const char* text, int flag_index);
 char* GetCleanText(const char* text);
 bool IsWindowBlacklisted(const char* window_title, const char* blacklist[], int count);
 
-// --- Simple helpers for per-feature Check* functions (flapi) ---
 static inline bool fl_hotkey_match(int pressed_vk, int pressed_mod, int bind_vk, int bind_mod) {
     return pressed_vk == bind_vk && pressed_mod == bind_mod;
 }

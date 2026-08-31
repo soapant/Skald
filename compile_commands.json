@@ -1,24 +1,6 @@
 [
   {
     "directory": "/home/diggy/Programming/Projects/C Code",
-    "file": "src/config/config.c",
-    "arguments": [
-      "gcc",
-      "-Wall",
-      "-Wextra",
-      "-I",
-      "include",
-      "-I/usr/include/freetype2",
-      "-MMD",
-      "-MP",
-      "-w",
-      "-g",
-      "-c",
-      "src/config/config.c"
-    ]
-  },
-  {
-    "directory": "/home/diggy/Programming/Projects/C Code",
     "file": "src/window/subclasses_x11.c",
     "arguments": [
       "gcc",
@@ -357,6 +339,24 @@
       "-g",
       "-c",
       "src/core/helpers_history.c"
+    ]
+  },
+  {
+    "directory": "/home/diggy/Programming/Projects/C Code",
+    "file": "src/config.c",
+    "arguments": [
+      "gcc",
+      "-Wall",
+      "-Wextra",
+      "-I",
+      "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
+      "-w",
+      "-g",
+      "-c",
+      "src/config.c"
     ]
   },
   {
