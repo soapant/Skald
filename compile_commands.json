@@ -343,6 +343,24 @@
   },
   {
     "directory": "/home/diggy/Programming/Projects/C Code",
+    "file": "src/flapi_x11.c",
+    "arguments": [
+      "gcc",
+      "-Wall",
+      "-Wextra",
+      "-I",
+      "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
+      "-w",
+      "-g",
+      "-c",
+      "src/flapi_x11.c"
+    ]
+  },
+  {
+    "directory": "/home/diggy/Programming/Projects/C Code",
     "file": "src/bindings/macro_bindings.c",
     "arguments": [
       "gcc",
