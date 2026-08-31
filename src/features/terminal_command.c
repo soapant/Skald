@@ -3,7 +3,7 @@
 #include "helpers.h"
 #include "core/common_ui.h"
 #include "core/zoxide_helpers.h"
-#include "platform/platform.h"
+#include "core/platform.h"
 #include <sys/stat.h>
 #if defined(_WIN32)
 #include <shellapi.h>

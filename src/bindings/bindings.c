@@ -11,7 +11,7 @@
 #include "features/app_launcher.h"
 #include "features/focus_switcher.h"
 #include "features/terminal_command.h"
-#include "platform/platform.h"
+#include "core/platform.h"
 #if defined(_WIN32)
 #include <shellapi.h>
 #include <shlwapi.h>

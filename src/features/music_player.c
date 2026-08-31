@@ -3,7 +3,7 @@
 #include "core/common_ui.h"
 #include "features/file_search.h"
 #include "features/app_launcher.h"
-#include "platform/platform.h"
+#include "core/platform.h"
 
 char *allowed_audio_formats[] = {"mp3","ogg","flac"};
 

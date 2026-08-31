@@ -13,7 +13,7 @@
 #include <dirent.h>
 #include <sys/socket.h>
 #include <sys/un.h>
-#include "platform/platform.h"
+#include "core/platform.h"
 #include "config.h"
 #include "common.h"
 #include <stdio.h>
@@ -21,49 +21,67 @@
 
 bool Platform_LaunchTerminal(const char* working_dir, const char* extra_args){
     if(!working_dir) return false;
+
     const char* real_user = Platform_GetRealUser();
     const char* display = Platform_GetSessionDisplay();
     const char* xauthority = Platform_GetSessionXAuthority();
+    const char* runtime_dir_raw = Platform_GetRuntimeDir();
+
     char runtime_dir[256];
-    snprintf(runtime_dir,sizeof(runtime_dir),"%s",Platform_GetRuntimeDir());
+    snprintf(runtime_dir, sizeof(runtime_dir), "%s", runtime_dir_raw ? runtime_dir_raw : "");
+
     char disp_env[256], xauth_env[512], runtime_env[512];
-    snprintf(disp_env,sizeof(disp_env),"DISPLAY=%s",display);
-    snprintf(xauth_env,sizeof(xauth_env),"XAUTHORITY=%s",xauthority);
-    snprintf(runtime_env,sizeof(runtime_env),"XDG_RUNTIME_DIR=%s",runtime_dir);
-    pid_t pid=fork();
-    if(pid<0) return false;
-    if(pid==0){
+    snprintf(disp_env, sizeof(disp_env), "DISPLAY=%s", display ? display : "");
+    snprintf(xauth_env, sizeof(xauth_env), "XAUTHORITY=%s", xauthority ? xauthority : "");
+    snprintf(runtime_env, sizeof(runtime_env), "XDG_RUNTIME_DIR=%s", runtime_dir);
+
+    pid_t pid = fork();
+    if(pid < 0) return false;
+
+    if(pid == 0){
         setsid();
-        pid_t pid2=fork();
-        if(pid2<0) _exit(1);
-        if(pid2>0) _exit(0);
-        int fd=open("/dev/null",O_RDWR); if(fd>=0){dup2(fd,0);dup2(fd,1);dup2(fd,2); if(fd>2) close(fd);}
+        pid_t pid2 = fork();
+        if(pid2 < 0) _exit(1);
+        if(pid2 > 0) _exit(0);
+
+        int fd = open("/dev/null", O_RDWR);
+        if(fd >= 0){
+            dup2(fd, 0);
+            dup2(fd, 1);
+            dup2(fd, 2);
+            if(fd > 2) close(fd);
+        }
+
         if(Platform_IsRunningAsRoot()){
             if(extra_args && extra_args[0]){
                 char cmd[2048];
-                snprintf(cmd,sizeof(cmd),"%s --working-directory=\"%s\" %s", UsedTerminal, working_dir, extra_args);
-                char* const argv[]={"sudo","-u",(char*)real_user,"env",disp_env,xauth_env,runtime_env,"sh","-c",cmd,NULL};
-                execvp(argv[0],argv);
+                snprintf(cmd, sizeof(cmd), "%s --working-directory=\"%s\" %s", UsedTerminal, working_dir, extra_args);
+                char* const argv[] = {"sudo","-u",(char*)real_user,"env",disp_env,xauth_env,runtime_env,"sh","-c",cmd,NULL};
+                execvp(argv[0], argv);
             } else {
-                char* const argv[]={"sudo","-u",(char*)real_user,"env",disp_env,xauth_env,runtime_env,(char*)UsedTerminal,"--working-directory", (char*)working_dir, NULL};
-                execvp(argv[0],argv);
-                char* const argv2[]={"sudo","-u",(char*)real_user,"env",disp_env,xauth_env,runtime_env,(char*)UsedTerminal,NULL};
-                execvp(argv2[0],argv2);
+                char* const argv[] = {"sudo","-u",(char*)real_user,"env",disp_env,xauth_env,runtime_env,(char*)UsedTerminal,"--working-directory",(char*)working_dir,NULL};
+                execvp(argv[0], argv);
+                char* const argv2[] = {"sudo","-u",(char*)real_user,"env",disp_env,xauth_env,runtime_env,(char*)UsedTerminal,NULL};
+                execvp(argv2[0], argv2);
             }
         } else {
-            setenv("DISPLAY",display,1); setenv("XAUTHORITY",xauthority,1); setenv("XDG_RUNTIME_DIR",runtime_dir,1);
+            setenv("DISPLAY", display, 1);
+            setenv("XAUTHORITY", xauthority, 1);
+            setenv("XDG_RUNTIME_DIR", runtime_dir, 1);
+
             if(extra_args && extra_args[0]){
                 char cmd[2048];
-                snprintf(cmd,sizeof(cmd),"%s --working-directory=\"%s\" %s", UsedTerminal, working_dir, extra_args);
-                execl("/bin/sh","sh","-c",cmd,(char*)NULL);
+                snprintf(cmd, sizeof(cmd), "%s --working-directory=\"%s\" %s", UsedTerminal, working_dir, extra_args);
+                execl("/bin/sh", "sh", "-c", cmd, (char*)NULL);
             } else {
-                execlp(UsedTerminal,UsedTerminal,"--working-directory",working_dir,(char*)NULL);
-                execlp(UsedTerminal,UsedTerminal,(char*)NULL);
+                execlp(UsedTerminal, UsedTerminal, "--working-directory", working_dir, (char*)NULL);
             }
         }
         _exit(127);
     }
-    int st=0; waitpid(pid,&st,0);
+
+    int st = 0;
+    waitpid(pid, &st, 0);
     return true;
 }
 
@@ -75,7 +93,6 @@ static bool daemon_spawn_sudo_env(const char* real_user, const char* display, co
         pid_t pid2 = fork();
         if (pid2 < 0) _exit(1);
         if (pid2 > 0) _exit(0);
-        // grandchild - detach stdio
         int fd = open("/dev/null", O_RDWR);
         if (fd >= 0) {
             dup2(fd, STDIN_FILENO);
@@ -83,14 +100,12 @@ static bool daemon_spawn_sudo_env(const char* real_user, const char* display, co
             dup2(fd, STDERR_FILENO);
             if (fd > 2) close(fd);
         }
-        // set env for the sudo child (sudo -u will preserve if we use env)
         setenv("DISPLAY", display, 1);
         setenv("XAUTHORITY", xauthority, 1);
         setenv("XDG_RUNTIME_DIR", runtime_dir, 1);
         execvp(argv[0], argv);
         _exit(127);
     }
-    // parent waits for intermediate child to avoid zombie
     int st=0; waitpid(pid, &st, 0);
     return true;
 }
@@ -121,7 +136,6 @@ bool Platform_ShellExecuteWithVerb(const char* path, const char* verb, bool asyn
             return (status == 0);
         }
     }
-    // daemonized async: fork+setsid double-fork so app outlives main
     char disp_env[256], xauth_env[512], runtime_env[512];
     snprintf(disp_env, sizeof(disp_env), "DISPLAY=%s", display);
     snprintf(xauth_env, sizeof(xauth_env), "XAUTHORITY=%s", xauthority);
@@ -130,7 +144,6 @@ bool Platform_ShellExecuteWithVerb(const char* path, const char* verb, bool asyn
         char* const argv[] = {"sudo","-u", (char*)real_user, "env", disp_env, xauth_env, runtime_env, "xdg-open", (char*)path, NULL};
         return daemon_spawn_sudo_env(real_user, display, xauthority, runtime_dir, argv);
     } else {
-        // running as regular user (nohup case) - no sudo needed
         pid_t pid=fork();
         if(pid<0) return false;
         if(pid==0){
@@ -240,7 +253,6 @@ bool Platform_LaunchApp(const char* path) {
     snprintf(runtime_dir, sizeof(runtime_dir), "%s", Platform_GetRuntimeDir());
 
     if (strstr(expanded, ".desktop") != NULL) {
-        // Robust .desktop handling: check Terminal=true and launch via terminal if needed
         bool is_terminal = false;
         char exec_line[1024] = {0};
         char workdir[1024] = {0};
@@ -248,7 +260,7 @@ bool Platform_LaunchApp(const char* path) {
         if (df){
             char line[1024];
             while (fgets(line, sizeof(line), df)){
-                // trim leading space
+                
                 char* p=line;
                 while(*p==' '||*p=='\t') p++;
                 if (strncasecmp(p, "Terminal=", 9)==0){
@@ -270,7 +282,7 @@ bool Platform_LaunchApp(const char* path) {
             }
             fclose(df);
         }
-        // Strip field codes %f %F %u %U %i %c %k etc. from Exec
+        
         if(exec_line[0]){
             char cleaned[1024]={0};
             size_t o=0;
@@ -278,8 +290,8 @@ bool Platform_LaunchApp(const char* path) {
                 if(exec_line[i]=='%' && exec_line[i+1]){
                     char c=exec_line[i+1];
                     if(c=='f'||c=='F'||c=='u'||c=='U'||c=='i'||c=='c'||c=='k'||c=='v'||c=='m'){
-                        i++; // skip %x
-                        // also skip following space if any to avoid double spaces
+                        i++; 
+                        
                         while(exec_line[i+1]==' ') i++;
                         continue;
                     }
@@ -287,7 +299,7 @@ bool Platform_LaunchApp(const char* path) {
                 cleaned[o++]=exec_line[i];
             }
             cleaned[o]='\0';
-            // trim
+            
             char* s=cleaned;
             while(*s==' '||*s=='\t') s++;
             char* e=s+strlen(s)-1;
@@ -463,7 +475,7 @@ char* Platform_QueryZoxidePath(const char* query) {
 
     const char* real_user = Platform_GetRealUser();
     const char* real_home = Platform_GetRealHome();
-    // Use real_home for HOME and _ZO_DATA_DIR, handle both running-as-root and running-as-user
+    
     char command[1024];
     if (Platform_IsRunningAsRoot()){
         snprintf(command, sizeof(command),
@@ -618,7 +630,7 @@ FontHandle Platform_CreateFontOnDisplay(Display* dpy, int size, const char* face
     if (!dpy) return fh;
     int screen = DefaultScreen(dpy);
 
-    // Lock the display so other threads cannot write to the X socket simultaneously
+    
     XLockDisplay(dpy);
 
     XftFont* xf = XftFontOpen(dpy, screen,
@@ -635,7 +647,7 @@ FontHandle Platform_CreateFontOnDisplay(Display* dpy, int size, const char* face
         xf = XftFontOpenName(dpy, screen, "fixed");
     }
 
-    // Always unlock when finished
+   
     XUnlockDisplay(dpy);
 
     if (!xf) return fh;
@@ -658,7 +670,7 @@ FontHandle Platform_CreateFont(int size, const char* face_name) {
 
     FontHandle fh = Platform_CreateFontOnDisplay(dpy, size, face_name);
 
-    pthread_mutex_unlock(&g_font_mtx); // <-- Unlock when done
+    pthread_mutex_unlock(&g_font_mtx); 
     return fh;
 }
 

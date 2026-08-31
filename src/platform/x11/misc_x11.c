@@ -14,7 +14,7 @@
 #include "common.h"
 #include "config.h"
 #include "helpers.h"
-#include "platform/platform.h"
+#include "core/platform.h"
 
 
 static uid_t ProbeSessionUid(void){

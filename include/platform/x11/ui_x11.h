@@ -2,7 +2,7 @@
 #define UI_X11_H
 
 #include "core/types.h"
-#include "platform/platform.h"
+#include "core/platform.h"
 
 static inline void UI_SetSelection(ListBoxInfo* lb, WindowHandle hList, int index);
 static inline int UI_GetCount(ListBoxInfo* lb, WindowHandle hList);
@@ -10,7 +10,7 @@ static inline void UI_SetHorizontalExtent(WindowHandle hList, int width);
 static inline void UI_SetItemCount(ListBoxInfo* lb, WindowHandle hList, int count);
 static inline void UI_LB_SetCount(ListBoxInfo* lb, WindowHandle hList, int count);
 static inline void UI_LB_SetItemHeight(WindowHandle hList, int height);
-static inline void UI_LB_SetCaretIndex(WindowHandle hList, int index, BOOL scroll);
+static inline void UI_LB_SetCaretIndex(WindowHandle hList, int index, bool scroll);
 static inline void UI_LB_SetTopIndex(WindowHandle hList, int index);
 static inline int UI_LB_GetTopIndex(WindowHandle hList);
 static inline void UI_LB_SetFont(WindowHandle hList, void* hFont);

@@ -3,7 +3,7 @@
 #include "helpers.h"
 #include "core/common_ui.h"
 #include "core/vim.h"
-#include "platform/platform.h"
+#include "core/platform.h"
 #if !defined(_WIN32)
 #include <strings.h>
 #include <ctype.h>
