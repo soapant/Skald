@@ -739,6 +739,24 @@
   },
   {
     "directory": "/home/diggy/Programming/Projects/C Code",
+    "file": "src/features/text_snippets.c",
+    "arguments": [
+      "gcc",
+      "-Wall",
+      "-Wextra",
+      "-I",
+      "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
+      "-w",
+      "-g",
+      "-c",
+      "src/features/text_snippets.c"
+    ]
+  },
+  {
+    "directory": "/home/diggy/Programming/Projects/C Code",
     "file": "src/features/music_player.c",
     "arguments": [
       "gcc",
@@ -861,6 +879,24 @@
       "-g",
       "-c",
       "src/features/volume.c"
+    ]
+  },
+  {
+    "directory": "/home/diggy/Programming/Projects/C Code",
+    "file": "src/features/quicklink.c",
+    "arguments": [
+      "gcc",
+      "-Wall",
+      "-Wextra",
+      "-I",
+      "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
+      "-w",
+      "-g",
+      "-c",
+      "src/features/quicklink.c"
     ]
   },
   {

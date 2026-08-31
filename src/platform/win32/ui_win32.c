@@ -16,6 +16,11 @@
 #include "features/music_player.h"
 #include "features/video_viewer.h"
 #include "features/process_killer.h"
+#include "features/app_launcher.h"
+#include "features/terminal_command.h"
+#include "features/misc_hotkeys.h"
+#include "features/quicklink.h"
+#include "features/text_snippets.h"
 #include <gdiplus.h>
 
 void Platform_WaitForKeypressAsync(KeyCallback callback) {

@@ -77,41 +77,10 @@ extern const char* ListOfProgramPaths[20];
 extern const PathVar G_PATH_VARS[];
 extern const unsigned int PATH_VAR_COUNT;
 
-extern const AppHotkey G_APP_HOTKEYS[];
-extern const unsigned int APP_HOTKEY_COUNT;
-
-extern const MiscHotkey G_MISC_HOTKEYS[];
-extern const unsigned int MISC_HOTKEY_COUNT;
-
-extern const TerminalCommandHotkey G_TERMINAL_COMMAND_HOTKEYS[];
-extern const unsigned int TERMINAL_COMMAND_HOTKEY_COUNT;
-
-extern const QuickLinkHotkey G_QUICKLINK_HOTKEYS[];
-extern const unsigned int QUICKLINK_HOTKEY_COUNT;
-
-extern const TextSnippet G_TEXT_SNIPPETS[];
-extern const unsigned int TEXT_SNIPPET_COUNT;
-
-extern const MusicPlayerBinding G_MUSIC_PLAYERS[];
-extern const unsigned int MUSIC_PLAYER_COUNT;
-
-extern const VideoViewerBinding G_VIDEO_PLAYERS[];
-extern const unsigned int VIDEO_PLAYER_COUNT;
-
-extern const char* bkp_windows[];
-extern const BulkKillProcessBinding G_BULK_KILL_PROCESS[];
-extern const unsigned int BULKKILLPROCESS_COUNT;
-
-extern const char* focus_blacklist_games[];
-extern const char* games_windows[];
-extern const char* focus_blacklist_browsers[];
-extern const char* browsers_windows[];
-extern const char* focus_blacklist_coding[];
-extern const char* coding_windows[];
-extern const char* focus_blacklist_terminal[];
-extern const char* terminal_windows[];
-extern const FocusSwitcherBinding G_FOCUS_SWITCHERS[];
-extern const unsigned int FOCUS_SWITCHER_COUNT;
+// Per-feature bindings moved to feature files (see src/features/*.c):
+// AppHotkey, MiscHotkey, TerminalCommandHotkey, QuickLinkHotkey, TextSnippet,
+// MusicPlayerBinding, VideoViewerBinding, BulkKillProcessBinding, FocusSwitcherBinding
+// are now static in their respective feature files and accessed via Check* helpers.
 
 extern const AliasEntry Aliases[];
 extern const size_t ALIAS_ENTRY_COUNT;

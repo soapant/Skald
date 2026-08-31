@@ -1,5 +1,13 @@
 #include "core/flapi.h"
 
+static const VideoViewerBinding G_VIDEO_PLAYERS[] = {
+  { VK_OEM_COMMA, HOTKEY_MOD_ALT_SHIFT, 1 },
+  { VK_OEM_PERIOD, HOTKEY_MOD_ALT_SHIFT, 5 },
+  { VK_OEM_1, HOTKEY_MOD_ALT_SHIFT, 6 },
+  { 'V', HOTKEY_MOD_ALT, 69 },
+};
+static const unsigned int VIDEO_PLAYER_COUNT = sizeof(G_VIDEO_PLAYERS) / sizeof(G_VIDEO_PLAYERS[0]);
+
 char *allowed_video_formats[] = {"webm","mp4", NULL};
 
 static ListOfFiles s_video_files = {0};
@@ -72,10 +80,10 @@ static void video_enter_callback(const char* selection, ListBoxInfo* lb) {
 }
 bool HandleVideoViewer(int vk_code, int modifiers, const char* current_title) {
     if (!VideoViewerAvailable) return false;
-    
-    for (int i = 0; i < VIDEO_PLAYER_COUNT; i++) {
-        const VideoViewerBinding* binding = &G_VIDEO_PLAYERS[i];
-        if (binding->vk_code == vk_code && binding->modifiers == modifiers) {
+    int _idx = fl_find_video_idx(vk_code, modifiers, G_VIDEO_PLAYERS, VIDEO_PLAYER_COUNT);
+    if (_idx < 0) return false;
+    {
+        const VideoViewerBinding* binding = &G_VIDEO_PLAYERS[_idx];
 #if defined(_WIN32)
             HWND playerHwnd = FindWindow(NULL, "Video Viewer");
 #endif
@@ -114,6 +122,5 @@ bool HandleVideoViewer(int vk_code, int modifiers, const char* current_title) {
                 return true;
             }
         }
-    }
     return false;
 }
