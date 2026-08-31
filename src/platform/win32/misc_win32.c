@@ -310,39 +310,6 @@ void Platform_CleanUpFile(MappedFile *mf, NewlineInfo *newlines, size_t newlineC
     free(newlines);
 }
 
-void Platform_SanitizeFile(const char *filePath) {
-    HANDLE hFile = CreateFileA(filePath, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-    if (hFile == INVALID_HANDLE_VALUE) return;
-
-    LARGE_INTEGER fs;
-    GetFileSizeEx(hFile, &fs);
-    DWORD fileSize = (DWORD)fs.QuadPart;
-    if (fileSize == 0) { CloseHandle(hFile); return; }
-
-    char *buf = (char *)malloc(fileSize);
-    if (!buf) { CloseHandle(hFile); return; }
-
-    DWORD bytesRead = 0;
-    ReadFile(hFile, buf, fileSize, &bytesRead, NULL);
-
-    DWORD cleanCount = 0;
-    for (DWORD i = 0; i < bytesRead; i++) {
-        if (buf[i] != '\0') {
-            buf[cleanCount++] = buf[i];
-        }
-    }
-
-    if (cleanCount < bytesRead) {
-        SetFilePointer(hFile, 0, NULL, FILE_BEGIN);
-        WriteFile(hFile, buf, cleanCount, &bytesRead, NULL);
-        SetEndOfFile(hFile);
-        printf("[SANITIZE] Cleaned %lu null bytes from %s\n", bytesRead - cleanCount, filePath);
-    }
-
-    free(buf);
-    CloseHandle(hFile);
-}
-
 int Platform_ReplaceLineInMappedFile(MappedFile* mf, int line_index, const char* new_text) {
     if (!mf || !mf->pBuffer || !new_text || line_index < 0) return 0;
 
