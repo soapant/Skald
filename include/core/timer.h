@@ -1,8 +1,6 @@
 #ifndef TIMER_H
 #define TIMER_H
 
-#include "features/app_launcher.h"
-
 #define TIMER_LOG_CAP 4096
 
 static char g_timer_buffer[TIMER_LOG_CAP];
@@ -78,11 +76,5 @@ static inline void TimerEnd(WinTimer t, const char* operation_name) {
     }
   }
 }
-
-static inline void LaunchTimer(const char* selection) {
-    launch_exe_with_args(TimerPath, selection);
-    printf("[TIMER] Launching: %s %s\n", TimerPath, selection);
-}
-
 
 #endif
