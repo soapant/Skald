@@ -174,9 +174,16 @@ typedef struct {
 } EditCallbackData;
 
 int EditCallback_Handle(EditCallbackData* data, RefreshCallback refresh);
+#if defined(_WIN32)
+int Helpers_ReadFile(char lines[100][512], const char* path);
+void Helpers_WriteFile(char lines[100][512], int count, const char* path);
+#define ReadFile Helpers_ReadFile
+#define WriteFile Helpers_WriteFile
+#else
 int ReadFile(char lines[100][512], const char* path);
-void StripCheckboxes(char* str);
 void WriteFile(char lines[100][512], int count, const char* path);
+#endif
+void StripCheckboxes(char* str);
 extern HashMap* history_indices;
 bool GetFromHistory(ListBoxInfo* lb);
 int convert_string_to_int(const char *str);

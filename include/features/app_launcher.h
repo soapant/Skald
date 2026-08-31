@@ -5,8 +5,6 @@
 #include "features/window_switcher.h"
 #include "features/focus_switcher.h"
 
-
-
 static const char* ListOfShitToIgnore[] = {
   "node_modules",
   ".git",
@@ -16,7 +14,8 @@ static const char* ListOfShitToIgnore[] = {
   ".h",
   "yazi",
   "obj",
-  "build"
+  "build",
+  NULL
 };
 
 static const char* ListOfProgramPaths[20] = {
@@ -62,7 +61,8 @@ static const PathEntry SystemShortcuts[] = {
 
 #define SYSTEM_SHORTCUT_COUNT 19
 
-static ListOfFiles s_apps = {0};
+extern ListOfFiles g_app_list;
+#define s_apps g_app_list
 
 static void initialize_app_cache(void) {
 #if defined(_WIN32)

@@ -1,7 +1,9 @@
 #include "core/flapi.h"
+#include <errno.h>
+#include <string.h>
 
 bool fl_case_insensitive_string_match_platform(char* needle,char* haystack) {
-  return strstr(needle,haystack);
+  return strcasecmp(needle,haystack);
 }
 
 int fl_copy_into_clipboard_platform(const char* text) {
@@ -73,7 +75,6 @@ int fl_copy_into_clipboard_platform(const char* text) {
     status = pclose(pipe);
     return (status == 0) ? 1 : 0;
 }
-
 void fl_get_all_files_from_dir_platform(const char* dir_path, char** list_of_allowed_extensions, ListOfFiles* list_of_files,char** list_of_names_to_ignore) {
 
     DIR* dir = opendir(dir_path);
@@ -94,8 +95,8 @@ void fl_get_all_files_from_dir_platform(const char* dir_path, char** list_of_all
         if (S_ISDIR(st.st_mode)) {
             bool should_ignore = false;
             if (list_of_names_to_ignore) {
-                for (int i = 0; i < sizeof(list_of_names_to_ignore) / sizeof(list_of_names_to_ignore[0]); i++) {
-                    if (fl_case_insensitive_string_match_platform(list_of_files->items[i].name, list_of_names_to_ignore[i]) == 0) {
+                for (int i = 0; list_of_names_to_ignore[i] != NULL; i++) {
+                    if (strcasecmp(entry->d_name, list_of_names_to_ignore[i]) == 0) {
                         should_ignore = true;
                         break;
                     }
@@ -159,7 +160,6 @@ bool fl_launch_with_args_platform(const char* path, const char* args) {
     extern bool Platform_LaunchTerminal(const char* wd, const char* extra);
     if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) return false;
     path = expanded;
-    // Handle .desktop as in Platform_LaunchApp
     if (strstr(path, ".desktop") != NULL) {
         bool is_terminal = false;
         char exec_line[1024] = {0};

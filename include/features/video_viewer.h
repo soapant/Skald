@@ -1,11 +1,13 @@
 #ifndef VIDEO_VIEWER_H
+
 #define VIDEO_VIEWER_H
 
 #include "core/flapi.h"
 
 static char *allowed_video_formats[] = {"webm","mp4", NULL};
 
-static ListOfFiles s_video_files = {0};
+extern ListOfFiles g_video_files;
+#define s_video_files g_video_files
 
 static void video_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
     s_video_files.count = 0;
