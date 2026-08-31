@@ -9,7 +9,7 @@ static const AppHotkey G_APP_HOTKEYS[] = {
 };
 static const unsigned int APP_HOTKEY_COUNT = sizeof(G_APP_HOTKEYS) / sizeof(G_APP_HOTKEYS[0]);
 
-const char* ListOfShitToIgnore[] = {
+static const char* ListOfShitToIgnore[] = {
   "node_modules",
   ".git",
   "bin",
@@ -21,7 +21,7 @@ const char* ListOfShitToIgnore[] = {
   "build"
 };
 
-const char* ListOfProgramPaths[20] = {
+static const char* ListOfProgramPaths[20] = {
 #if defined(_WIN32)
     "{APPDATA}/Microsoft/Windows/Start Menu",
     "{PROGRAMDATA}/Microsoft/Windows/Start Menu/Programs",
@@ -40,7 +40,7 @@ const char* ListOfProgramPaths[20] = {
 #endif
 };
 
-const PathEntry SystemShortcuts[] = {
+static const PathEntry SystemShortcuts[] = {
     {"control.exe", "Control Panel"},
     {"devmgmt.msc", "Device Manager"},
     {"compmgmt.msc", "Computer Management"},
@@ -66,7 +66,7 @@ const PathEntry SystemShortcuts[] = {
 
 static ListOfFiles s_apps = {0};
 
-void initialize_app_cache(void) {
+static void initialize_app_cache(void) {
 #if defined(_WIN32)
     char* allowed[] = {"lnk", "exe", "url", NULL};
 #else
@@ -108,7 +108,7 @@ void initialize_app_cache(void) {
 #endif
 
 }
-void launch_app_by_name(const char* display_name) {
+static void launch_app_by_name(const char* display_name) {
     for (size_t i = 0; i < s_apps.count; i++) {
 #if defined(_WIN32)
         if (StrCmpIA(s_apps.items[i].name, display_name) == 0) {
@@ -179,7 +179,7 @@ static void applauncher_copy_callback(const char* selection,int true_index,int t
     fl_copy_into_clipboard(text);
 }
 
-void TriggerAppLauncher(void) {
+static void TriggerAppLauncher(void) {
     const char** initial_items = (const char**)malloc(s_apps.count * sizeof(char*));
     if (!initial_items) return;
     
@@ -196,7 +196,7 @@ void TriggerAppLauncher(void) {
     free(initial_items);
 }
 
-bool CheckAppHotkeyBindings(int pressed_vk, int modifiers) {
+static inline bool CheckAppHotkeyBindings(int pressed_vk, int modifiers) {
 #if defined(_WIN32)
     WindowHandle hActiveWnd = WH_FROM_HWND(GetForegroundWindow());
 #else

@@ -92,7 +92,7 @@ static const char* GetExeNameForWindow(HWND hwnd) {
     return result;
 }
 #else
-const char* GetExeNameForWindow(WindowHandle hwnd) {
+static const char* GetExeNameForWindow(WindowHandle hwnd) {
     static char exe_name[256];
     memset(exe_name, 0, sizeof(exe_name));
 
@@ -110,7 +110,7 @@ const char* GetExeNameForWindow(WindowHandle hwnd) {
 }
 #endif
 
-void FetchExeNameOnDemand(WindowHandle hwnd, char* outExe, size_t maxLen) {
+static void FetchExeNameOnDemand(WindowHandle hwnd, char* outExe, size_t maxLen) {
 #if defined(_WIN32)
     const char* name = GetExeNameForWindow(WH_TO_HWND(hwnd));
 #else
@@ -230,7 +230,7 @@ static void CollectX11Windows(WindowList* list, const char** blacklist, int blac
 // PUBLIC WINDOW FUNCTIONS
 // ============================================================
 
-void WindowUtils_GetAll(WindowList* list) {
+static void WindowUtils_GetAll(WindowList* list) {
     list->count = 0;
 #if defined(_WIN32)
     EnumContext ctx = { .list = list, .mode = 0 };
@@ -311,7 +311,7 @@ static void switcher_copy_callback(const char* selection, int true_index, int ty
     }
 }
 
-void TriggerWindowSwitcher() {
+static void TriggerWindowSwitcher() {
     WindowList windows;
     static const char* blacklist[] = {"Input", "Manager", "Settings"};
     WindowUtils_GetFiltered(&windows, blacklist, 3);

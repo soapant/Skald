@@ -23,7 +23,7 @@ static void terminal_refresh_callback(const char* filter, WindowHandle hListBox,
     ZoxideHelper_Refresh(filter, hListBox, lb, TerminalHistoryFile, &g_cached_commands, &g_cached_command_count);
 }
 
-void RunTerminalCommand(const char* Command, bool save_to_history,bool open_in_terminal) {
+static void RunTerminalCommand(const char* Command, bool save_to_history,bool open_in_terminal) {
     if (Command == NULL || strlen(Command) == 0) return;
     
     char clean_cmd[512];
@@ -114,7 +114,7 @@ static void terminal_edit_callback(const char* selection, ListBoxInfo* lb) {
     ZoxideHelper_Edit(selection, lb, TerminalHistoryFile, &g_cached_commands, &g_cached_command_count, terminal_refresh_callback);
 }
 
-void TriggerTerminalCommand(void) {
+static void TriggerTerminalCommand(void) {
     if (!g_cached_commands) RebuildCommandCache();
     const char** list = ZoxideHelper_PrepareTriggerList(NULL, &g_cached_commands, &g_cached_command_count, NULL);
 
@@ -127,8 +127,7 @@ void TriggerTerminalCommand(void) {
     ZoxideHelper_CleanupTriggerList(list);
 }
 
-bool CheckTerminalCommandHotkeyBindings(int pressed_vk, int modifiers) {
-    // very simple helper - one-liner finding
+static inline bool CheckTerminalCommandHotkeyBindings(int pressed_vk, int modifiers) {
     int idx = fl_find_terminal_idx(pressed_vk, modifiers, G_TERMINAL_COMMAND_HOTKEYS, TERMINAL_COMMAND_HOTKEY_COUNT);
     if (idx < 0) return false;
     RunTerminalCommand(G_TERMINAL_COMMAND_HOTKEYS[idx].terminal_command, false, G_TERMINAL_COMMAND_HOTKEYS[idx].open_in_terminal);
