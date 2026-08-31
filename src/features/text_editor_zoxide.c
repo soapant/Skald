@@ -65,8 +65,6 @@ static void Launchtext_editor(const char* path) {
         ShellExecuteA(NULL, "open", TextEditorName, path, NULL, SW_SHOWNORMAL);
     }
 #else
-    // Use Platform_LaunchTerminal with working dir = path's dir and extra = -e text_editor
-    // Extract dir from path if it's a file
     char dir[MAX_PATH];
     strncpy(dir, path, sizeof(dir)-1); dir[sizeof(dir)-1]='\0';
     char* slash = strrchr(dir, '/');
@@ -74,9 +72,7 @@ static void Launchtext_editor(const char* path) {
     else strncpy(dir, path, sizeof(dir)-1);
     char extra[1024];
     snprintf(extra, sizeof(extra), "-e %s \"%s\"", expanded_path, path);
-    // Leverage Platform_LaunchTerminal for daemonized, nohup-aware launch
     if (!Platform_LaunchTerminal(dir[0]?dir:path, extra)){
-        // fallback to shell
         char expanded_cmd[2048];
         snprintf(expanded_cmd, sizeof(expanded_cmd), "%s -e %s \"%s\"", UsedTerminal, expanded_path, path);
         const char* real_user = Platform_GetRealUser();

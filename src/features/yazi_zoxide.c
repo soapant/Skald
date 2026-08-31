@@ -23,15 +23,7 @@ static void yazi_refresh_callback(const char* filter, WindowHandle hListBox, Lis
 static void yazi_enter_callback(const char* selection, ListBoxInfo* lb) {
       char* path = Platform_QueryZoxidePath(selection);
       if (path) {
-          char cmd_args[512];
-          snprintf(cmd_args, sizeof(cmd_args), "-e yazi \"%s\"", path);
-#if defined(_WIN32)
-          char terminal[512];
-          snprintf(terminal, sizeof(terminal), "%s.exe", UsedTerminal);
-          ShellExecuteA(NULL, "open", terminal, cmd_args, NULL, SW_SHOWNORMAL);
-#else
           Platform_LaunchTerminal(path, cmd_args);
-#endif
           ZoxideHelper_AppendNewEntry(YaziZoxideFile, selection, lb, &g_cached_yazi_commands, &g_cached_yazi_count);
           free(path);
       }
