@@ -19,8 +19,6 @@ static void zoxide_edit_callback(const char* selection, ListBoxInfo* lb) {
     ZoxideHelper_Edit(selection, lb, TerminalZoxideFile, &g_cached_zoxide_commands, &g_cached_zoxide_count, zoxide_refresh_callback);
 }
 
-
-
 static void zoxide_enter_callback(const char* selection, ListBoxInfo* lb) {
         char* path = Platform_QueryZoxidePath(selection);
         if (path) {
@@ -33,6 +31,7 @@ static void zoxide_enter_callback(const char* selection, ListBoxInfo* lb) {
 void TriggerZoxide(void) {
     if (!g_cached_zoxide_commands) RebuildZoxideCache();
     const char** list = ZoxideHelper_PrepareTriggerList(NULL, &g_cached_zoxide_commands, &g_cached_zoxide_count, NULL);
+
     PROMPT(.title = "⌨️ Zoxide", .items = list, .count = g_cached_zoxide_count,
            .height = 920, .width = 650, .item_height = 32,
            .refresh = zoxide_refresh_callback,

@@ -39,7 +39,6 @@ void Platform_FileClose(MappedFile *mf);
 Line* Platform_FileGetLines(MappedFile *mf, size_t *outLineCount);
 char** Platform_FileGetStrings(MappedFile *mf, size_t *outLineCount, NewlineInfo **outNewlines, size_t *outNewlineCount);
 void Platform_CleanUpFile(MappedFile *mf, NewlineInfo *newlines, size_t newlineCount);
-void Platform_SanitizeFile(const char *filePath);
 int Platform_ReplaceLineInMappedFile(MappedFile* mf, int line_index, const char* new_text);
 int Platform_CopyToClipboard(const char* text);
 

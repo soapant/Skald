@@ -566,49 +566,6 @@ void Platform_CleanUpFile(MappedFile *mf, NewlineInfo *newlines, size_t newlineC
     }
 }
 
-void Platform_SanitizeFile(const char *filePath) {
-    int fd = open(filePath, O_RDWR);
-    if (fd == -1) return;
-
-    struct stat sb;
-    if (fstat(fd, &sb) == -1 || sb.st_size == 0) {
-        close(fd);
-        return;
-    }
-
-    size_t fileSize = sb.st_size;
-    char *buf = (char *)malloc(fileSize);
-    if (!buf) {
-        close(fd);
-        return;
-    }
-
-    ssize_t bytesRead = read(fd, buf, fileSize);
-    if (bytesRead <= 0) {
-        free(buf);
-        close(fd);
-        return;
-    }
-
-    size_t cleanCount = 0;
-    for (ssize_t i = 0; i < bytesRead; i++) {
-        if (buf[i] != '\0') {
-            buf[cleanCount++] = buf[i];
-        }
-    }
-
-    if (cleanCount < (size_t)bytesRead) {
-        lseek(fd, 0, SEEK_SET);
-        if (write(fd, buf, cleanCount) != -1) {
-            ftruncate(fd, cleanCount);
-            printf("[SANITIZE] Cleaned %zu null bytes from %s\n", (size_t)bytesRead - cleanCount, filePath);
-        }
-    }
-
-    free(buf);
-    close(fd);
-}
-
 int Platform_ReplaceLineInMappedFile(MappedFile* mf, int line_index, const char* new_text) {
     if (!mf || !new_text || mf->fd < 0) return 0;
 

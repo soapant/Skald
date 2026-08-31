@@ -14,3 +14,5 @@ probably should do the whole display text of the message of the text of the sele
 unit tests???????????? ||[Cprogram]
 video viewer closes on program close ||[Cprogram]
 give the user the choice of a fiele exploere ||[Cprogram]
+mayne make my own rlwrap uit for vim motions||[Maybe]
+duck.ai||[DontForget]
