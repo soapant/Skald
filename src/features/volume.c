@@ -1,7 +1,4 @@
-#include "common.h"
-#include "features/volume.h"
-#include "core/common_ui.h"
-#include "core/platform.h"
+#include "core/flapi.h"
 
 #if defined(_WIN32)
 #include <mmdeviceapi.h>

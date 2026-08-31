@@ -1,11 +1,8 @@
-#include "common.h"
-#include "features/yazi_zoxide.h"
-#include "helpers.h"
-#include "core/common_ui.h"
+#include "core/flapi.h"
 #include "core/zoxide_helpers.h"
-#if defined(_WIN32)
-#include <shellapi.h>
-#endif
+
+#define FILE_YAZI_ZOXIDE 1
+#define YaziZoxideFile G_FILE_ENTRIES[FILE_YAZI_ZOXIDE].mf
 
 static char** g_cached_yazi_commands = NULL;
 static int g_cached_yazi_count = 0;

@@ -1,12 +1,5 @@
-#include "common.h"
+#include "core/flapi.h"
 #include "features/timer.h"
-#include "features/app_launcher.h"
-#include "core/common_ui.h"
-
-void LaunchTimer(const char* selection) {
-    launch_exe_with_args(TimerPath, selection);
-    printf("[TIMER] Launching: %s %s\n", TimerPath, selection);
-}
 
 void TriggerTimer(void) {
     char* input;

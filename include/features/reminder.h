@@ -1,11 +1,7 @@
 #ifndef REMINDER_H
 #define REMINDER_H
 
-#include "helpers.h"
-#include "core/types.h"
 
-#define FILE_REMINDER_HISTORY 6
-#define ReminderHistoryFile G_FILE_ENTRIES[FILE_REMINDER_HISTORY].mf
 
 bool FortniteGameLoaded(const char* param);
 
