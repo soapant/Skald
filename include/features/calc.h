@@ -4,14 +4,6 @@
 #define IDC_INPUT_BOX 101
 #define IDC_LIST_BOX 102
 
-#include <stdbool.h>
-#include <stddef.h>
-
-typedef struct {
-    const char* from_unit;
-    const char* to_unit;
-    double factor;
-} UnitConversion;
 
 double parse_number_with_suffix(const char* str);
 void format_number_with_suffix(double num, char* out, size_t max_len);
@@ -26,6 +18,5 @@ void get_flip_display(char* out, size_t max_len);
 void get_flip_expression(char* out, size_t max_len);
 void TriggerCalculator(void);
 
-#define CONVERSION_COUNT (sizeof(G_CONVERSIONS) / sizeof(G_CONVERSIONS[0]))
 
 #endif

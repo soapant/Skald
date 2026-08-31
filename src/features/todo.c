@@ -1,8 +1,4 @@
-#include "common.h"
-#include "features/todo.h"
-#include "helpers.h"
-#include "core/common_ui.h"
-#include "core/window_manager.h"
+#include "core/flapi.h"
 
 static ColorRef GetTagColor(const char* tag_text) {
     if (!tag_text || strlen(tag_text) == 0) return COLOR_TEXT;

@@ -1,11 +1,9 @@
-#include "common.h"
+#include "core/flapi.h"
 #include "features/google_search.h"
-#include "helpers.h"
-#include "core/common_ui.h"
 #include "core/zoxide_helpers.h"
-#if defined(_WIN32)
-#include <shellapi.h>
-#endif
+
+#define FILE_GOOGLE_ZOXIDE 5
+#define GoogleZoxideFile G_FILE_ENTRIES[FILE_GOOGLE_ZOXIDE].mf
 
 static char** g_cached_google_queries = NULL;
 static int g_cached_google_count = 0;
@@ -54,8 +52,8 @@ static void DoGoogleSearch(const char* query) {
 }
 
 static void google_enter_callback(const char* selection, ListBoxInfo* lb) {
-        ZoxideHelper_AppendNewEntry(GoogleZoxideFile, selection, lb, &g_cached_google_queries, &g_cached_google_count);
-        DoGoogleSearch(selection);
+      ZoxideHelper_AppendNewEntry(GoogleZoxideFile, selection, lb, &g_cached_google_queries, &g_cached_google_count);
+      DoGoogleSearch(selection);
 }
 
 static void google_edit_callback(const char* selection, ListBoxInfo* lb) {

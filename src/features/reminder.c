@@ -1,15 +1,12 @@
-#include "common.h"
+#include "core/flapi.h"
 #include "features/reminder.h"
 #include "features/process_killer.h"
 #include "features/timer.h"
 #include "features/focus_switcher.h"
-#include "helpers.h"
-#include "core/common_ui.h"
 #include "core/zoxide_helpers.h"
-#if !defined(_WIN32)
-#include <pthread.h>
-#include <unistd.h>
-#endif
+
+#define FILE_REMINDER_HISTORY 6
+#define ReminderHistoryFile G_FILE_ENTRIES[FILE_REMINDER_HISTORY].mf
 
 static char** g_cached_reminder_commands = NULL;
 static int g_cached_reminder_count = 0;

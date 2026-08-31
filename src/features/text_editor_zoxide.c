@@ -1,17 +1,8 @@
-#include "common.h"
-#include "features/text_editor_zoxide.h"
-#include "helpers.h"
-#include "core/common_ui.h"
+#include "core/flapi.h"
 #include "core/zoxide_helpers.h"
-#include "core/platform.h"
-#include <ctype.h>
-#if defined(_WIN32)
-#include <shellapi.h>
-#else
-#include <unistd.h>
-#include <sys/wait.h>
-#include <fcntl.h>
-#endif
+
+#define FILE_TEXT_EDITOR_ZOXIDE 2
+#define TextEditorFile G_FILE_ENTRIES[FILE_TEXT_EDITOR_ZOXIDE].mf
 
 static char** g_cached_text_editor_commands = NULL;
 static int g_cached_text_editor_count = 0;

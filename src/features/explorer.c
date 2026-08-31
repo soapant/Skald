@@ -1,11 +1,8 @@
-#include "common.h"
-#include "features/explorer.h"
-#include "helpers.h"
-#include "core/common_ui.h"
+#include "core/flapi.h"
 #include "core/zoxide_helpers.h"
-#if defined(_WIN32)
-#include <shellapi.h>
-#endif
+
+#define FILE_EXPLORER_ZOXIDE 4
+#define ExplorerZoxideFile G_FILE_ENTRIES[FILE_EXPLORER_ZOXIDE].mf
 
 static char** g_cached_explorer_commands = NULL;
 static int g_cached_explorer_count = 0;

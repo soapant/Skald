@@ -1,8 +1,4 @@
-#include "common.h"
-#include "features/forgetfull.h"
-#include "helpers.h"
-#include "core/common_ui.h"
-#include "core/window_manager.h"
+#include "core/flapi.h"
 
 static void AddTextToFile(const char* text) {
     if (!text || strlen(text) == 0) return;
