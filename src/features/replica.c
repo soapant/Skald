@@ -3,8 +3,23 @@
 #include "features/window_switcher.h"
 #include "core/common_ui.h"
 
+typedef struct {
+    uint32_t processId;
+    char exeName[64];
+    uint32_t lastAccessTime;
+} ExeCacheEntry;
+
+typedef struct {
+    WindowList* list;
+    const char* pattern;
+    const char** blacklist;
+    int blacklistCount;
+    int mode;
+} EnumContext;
+
 static WindowList g_replica_windows = {0};
 static WindowHandle g_replica_selected_hwnd = WH_NULL;
+
 
 static void SendTargetToReplica(WindowHandle target) {
 #if defined(_WIN32)

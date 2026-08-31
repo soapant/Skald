@@ -1,6 +1,5 @@
-#include "common.h"
+#include "core/flapi.h"
 #include "features/pixel_utils.h"
-#include "helpers.h"
 
 static bool GetCursorPixel(long* out_x, long* out_y, uint8_t* out_r, uint8_t* out_g, uint8_t* out_b) {
 #if defined(_WIN32)
@@ -43,7 +42,7 @@ void TriggerPosCopy(void) {
     if (GetCursorPos(&mousePos)) {
         char coords_buf[64];
         snprintf(coords_buf, sizeof(coords_buf), "%ld, %ld", mousePos.x, mousePos.y);
-        Platform_CopyToClipboard(coords_buf);
+        fl_copy_into_clipboard(coords_buf);
     }
 #else
     // Not Implemented
@@ -78,7 +77,7 @@ void TriggerColorPlain(void) {
     if (GetCursorPixel(&x, &y, &r, &g, &b)) {
         char buf[128];
         snprintf(buf, sizeof(buf), "%d, %d, %d", r, g, b);
-        Platform_CopyToClipboard(buf);
+        fl_copy_into_clipboard(buf);
     }
 }
 
@@ -87,7 +86,7 @@ void TriggerColorParen(void) {
     if (GetCursorPixel(&x, &y, &r, &g, &b)) {
         char buf[128];
         snprintf(buf, sizeof(buf), "(%d, %d, %d)", r, g, b);
-        Platform_CopyToClipboard(buf);
+        fl_copy_into_clipboard(buf);
     }
 }
 
@@ -97,7 +96,7 @@ void TriggerPixelEqualsAdb(void) {
     if (GetCursorPixel(&x, &y, &r, &g, &b)) {
         char buf[128];
         snprintf(buf, sizeof(buf), "adb.pixel_equals(%ld,%ld,(%d,%d,%d))", x, y, r, g, b);
-        Platform_CopyToClipboard(buf);
+        fl_copy_into_clipboard(buf);
     }
 }
 
@@ -106,7 +105,7 @@ void TriggerPixelEqualsFn(void) {
     if (GetCursorPixel(&x, &y, &r, &g, &b)) {
         char buf[128];
         snprintf(buf, sizeof(buf), "fn.pixel_equals(%ld,%ld,(%d,%d,%d))", x, y, r, g, b);
-        Platform_CopyToClipboard(buf);
+        fl_copy_into_clipboard(buf);
     }
 }
 
@@ -128,7 +127,7 @@ void TriggerRegionCoords(void) {
     } else {
         char buf[128];
         snprintf(buf, sizeof(buf), "%ld,%ld,%ld,%ld", saved_x1, saved_y1, cursorPos.x, cursorPos.y);
-        Platform_CopyToClipboard(buf);
+        fl_copy_into_clipboard(buf);
         region_step = 0;
     }
 #else

@@ -1,27 +1,31 @@
-#include "common.h"
-#include "features/window_switcher.h"
+#include "core/flapi.h"
 #include "features/focus_switcher.h"
-#include "core/common_ui.h"
-#include "helpers.h"
+#include "features/window_switcher.h"
 #if !defined(_WIN32)
-#include <string.h>
-#include <strings.h>
-#include <stdlib.h>
-#include <unistd.h>
 #include <sys/types.h>
 #include "x11_display.h"
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
 #endif
-#if defined(_WIN32)
-#include <psapi.h>
-#include <shlwapi.h>
-#endif
 
-// ============================================================
-// STATIC DATA
-// ============================================================
+#define MAX_WINDOWS 256
+#define MAX_SWITCHER_WINDOWS 100
+#define MAX_EXE_CACHE 128
+
+typedef struct {
+    uint32_t processId;
+    char exeName[64];
+    uint32_t lastAccessTime;
+} ExeCacheEntry;
+
+typedef struct {
+    WindowList* list;
+    const char* pattern;
+    const char** blacklist;
+    int blacklistCount;
+    int mode;
+} EnumContext;
 
 static ExeCacheEntry g_exeCache[MAX_EXE_CACHE] = {0};
 static int g_exeCacheCount = 0;
@@ -29,9 +33,6 @@ static int g_exeCacheCount = 0;
 static SavedWindow g_switcher_windows[MAX_SWITCHER_WINDOWS];
 static int g_switcher_count = 0;
 
-// ============================================================
-// EXE CACHE & WINDOW FETCHING (PLATFORM SPLIT)
-// ============================================================
 
 #if defined(_WIN32)
 static const char* GetExeNameForWindow(HWND hwnd) {
@@ -295,7 +296,7 @@ static void switcher_copy_callback(const char* selection, int true_index, int ty
     (void)selection;
     (void)type;
     if (true_index >= 0 && true_index < g_switcher_count) {
-        Platform_CopyToClipboard(g_switcher_windows[true_index].exe);
+        fl_copy_into_clipboard(g_switcher_windows[true_index].exe);
     }
 }
 

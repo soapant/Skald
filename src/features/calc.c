@@ -410,7 +410,7 @@ static void calculator_refresh_callback(const char* filter, WindowHandle hListBo
 
 static void calculator_enter_callback(const char* selection, ListBoxInfo* lb) {
     char* result = lb->populated_cache[0];
-    Platform_CopyToClipboard(result);
+    fl_copy_into_clipboard(result);
 }
 
 

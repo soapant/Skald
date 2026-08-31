@@ -234,21 +234,21 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
         return true;
       }
     }
-    if (wParam == COPY_SELECTION_KEY) {
-      if (shift_pressed || ctrl_pressed) {
-        const char* sel = "";
-        if (state->has_listbox && UI_IsListBoxSelected(&state->listbox)) sel = state->listbox.populated_cache[state->listbox.selected_index];
-        else sel = state->filter;
-        int type = shift_pressed ? 0 : 1;
-        if (g_copy_callback) {
-          int idx = UI_IsListBoxSelected(&state->listbox) ? state->listbox.selected_index : -1;
-          g_copy_callback(sel, idx, type);
-        } else {
-          Platform_CopyToClipboard(sel);
-        }
-        return true;
-      }
-    }
+    // if (wParam == COPY_SELECTION_KEY) {
+    //   if (shift_pressed || ctrl_pressed) {
+    //     const char* sel = "";
+    //     if (state->has_listbox && UI_IsListBoxSelected(&state->listbox)) sel = state->listbox.populated_cache[state->listbox.selected_index];
+    //     else sel = state->filter;
+    //     int type = shift_pressed ? 0 : 1;
+    //     if (g_copy_callback) {
+    //       int idx = UI_IsListBoxSelected(&state->listbox) ? state->listbox.selected_index : -1;
+    //       g_copy_callback(sel, idx, type);
+    //     } else {
+    //       Platform_CopyToClipboard(sel);
+    //     }
+    //     return true;
+    //   }
+    // }
 
     return false;
 }
