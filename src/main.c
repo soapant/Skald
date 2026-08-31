@@ -2,6 +2,7 @@
 #include "core/types.h"
 #include "helpers.h"
 #include "core/feature_data.h"
+#include "core/flapi.h"
 #include "features/app_launcher.h"
 #include "features/todo.h"
 #include "core/window_manager.h"
@@ -161,6 +162,7 @@ int main() {
   }
 
   printf("[SYSTEM] Low-Level Hotkey Services Running. GDI+ Online.\n");
+  fl_init_all_hotkeys();
   
   WindowManager* wm = WindowManager_Create();
   if (!wm) {
