@@ -1,4 +1,5 @@
 #include "common.h"
+#include "helpers.h"
 #include "features/focus_switcher.h"
 #include "core/common_ui.h"
 
@@ -12,6 +13,31 @@
 #include <string.h>
 #include <strings.h>
 #endif
+
+static const char* focus_blacklist_games[] = {"CrosshairX"};
+static const char* games_windows[] = {"Brawlhalla","Fortnite","RocketLeague","Factorio","Minecraft"};
+static const char* focus_blacklist_browsers[] = {"CrosshairX"};
+static const char* browsers_windows[] = {"Zen","Chrome"};
+static const char* focus_blacklist_coding[] = {"CrosshairX"};
+static const char* coding_windows[] = {"Neovide","vim"};
+static const char* focus_blacklist_terminal[] = {"CrosshairX"};
+static const char* terminal_windows[] = {"alacritty","pwsh","foot"};
+
+static const FocusSwitcherBinding G_FOCUS_SWITCHERS[] = {
+    // { 'O', HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT,
+    //   focus_blacklist_games, sizeof(focus_blacklist_games) / sizeof(focus_blacklist_games[0]),
+    //   games_windows, sizeof(games_windows) / sizeof(games_windows[0]) },
+    // { 'I', HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT,
+    //   focus_blacklist_browsers, sizeof(focus_blacklist_browsers) / sizeof(focus_blacklist_browsers[0]),
+    //   browsers_windows, sizeof(browsers_windows) / sizeof(browsers_windows[0]) },
+    // { 'U', HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT,
+    //   focus_blacklist_coding, sizeof(focus_blacklist_coding) / sizeof(focus_blacklist_coding[0]),
+    //   coding_windows, sizeof(coding_windows) / sizeof(coding_windows[0]) },
+    // { 'L', HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT,
+    //   focus_blacklist_terminal, sizeof(focus_blacklist_terminal) / sizeof(focus_blacklist_terminal[0]),
+    //   terminal_windows, sizeof(terminal_windows) / sizeof(terminal_windows[0]) },
+};
+static const unsigned int FOCUS_SWITCHER_COUNT = sizeof(G_FOCUS_SWITCHERS) / sizeof(G_FOCUS_SWITCHERS[0]);
 
 static char* my_strcasestr(const char* haystack, const char* needle) {
 #if defined(_WIN32)
@@ -274,21 +300,15 @@ static bool IsBlacklisted(const char* title, const char* blacklist[], int count)
 }
 
 bool HandleFocusSwitcher(int vk_code, int modifiers, const char* current_title) {
-    for (int i = 0; i < FOCUS_SWITCHER_COUNT; i++) {
-        const FocusSwitcherBinding* binding = &G_FOCUS_SWITCHERS[i];
-        if (binding->vk_code == vk_code && binding->modifiers == modifiers) {
-            if (IsBlacklisted(current_title, binding->blacklist, binding->blacklist_count)) {
-                return false;
-            } else { 
-                WindowHandle target = FindAnyWindow(binding->window_titles, binding->window_count);
-                if (WH_TO_HWND(target) != NULL) {
-                    FocusWindow(target);
-                    return true;
-                } else {
-                    return false;
-                }
-            }
-        }
+    // simple helper - one-liner finding
+    int _idx = fl_find_focus_idx(vk_code, modifiers, G_FOCUS_SWITCHERS, FOCUS_SWITCHER_COUNT);
+    if (_idx < 0) return false;
+    const FocusSwitcherBinding* binding = &G_FOCUS_SWITCHERS[_idx];
+    if (IsBlacklisted(current_title, binding->blacklist, binding->blacklist_count)) return false;
+    WindowHandle target = FindAnyWindow(binding->window_titles, binding->window_count);
+    if (WH_TO_HWND(target) != NULL) {
+        FocusWindow(target);
+        return true;
     }
     return false;
 }

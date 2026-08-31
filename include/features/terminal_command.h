@@ -3,6 +3,7 @@
 
 
 void RunTerminalCommand(const char* Command, bool save_to_history,bool open_in_terminal);
+bool CheckTerminalCommandHotkeyBindings(int pressed_vk, int modifiers);
 void TriggerTerminalCommand(void);
 void terminal_command_init(void);
 

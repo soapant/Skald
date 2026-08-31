@@ -25,4 +25,7 @@ extern const MacroBinding G_MACRO_BINDINGS[7];
 
 #define MACRO_BINDING_COUNT (sizeof(G_MACRO_BINDINGS) / sizeof(G_MACRO_BINDINGS[0]))
 
+#include <stdbool.h>
+bool CheckMacroBindings(int pressed_vk, int modifiers);
+
 #endif
