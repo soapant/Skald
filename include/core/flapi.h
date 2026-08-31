@@ -26,6 +26,17 @@
 #include <pthread.h>
 #endif
 
+typedef struct {
+    char name[256];
+    char path[MAX_PATH];
+} FileItem;
+
+typedef struct {
+    FileItem* items;
+    size_t count;
+    size_t capacity;
+} ListOfFiles;
+
 int fl_copy_into_clipboard(const char* text);
 
 #endif

@@ -13,16 +13,6 @@ typedef struct {
 
 #define MAX_FILES 2000
 
-typedef struct {
-    char name[256];
-    char path[MAX_PATH];
-} FileItem;
-
-typedef struct {
-    char name[512];
-    char path[MAX_PATH];
-    FILETIME last_write;
-} FileItemWithTime;
 
 #define MAX_APPS 4000
 
