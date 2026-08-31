@@ -60,25 +60,6 @@ const float GradientBrightness = 1.0f;
 bool PixelHotkeys = false;
 bool CloseOnLossOfFocus = false;
 
-const char* ListOfProgramPaths[20] = {
-#if defined(_WIN32)
-    "{APPDATA}/Microsoft/Windows/Start Menu",
-    "{PROGRAMDATA}/Microsoft/Windows/Start Menu/Programs",
-    "{DEV}",
-    "{MISC}",
-    "{SystemRoot}/System32/",             
-    "shell:AppsFolder",
-#else
-    "/usr/share/applications",
-    "/usr/local/share/applications",
-    "/home/diggy/.local/share/applications",
-    "/usr/bin",
-    "/home/diggy/.local/bin",
-    "{DEV}",
-    "{MISC}",
-#endif
-};
-
 const PathEntry SystemShortcuts[] = {
     {"control.exe", "Control Panel"},
     {"devmgmt.msc", "Device Manager"},
@@ -99,18 +80,6 @@ const PathEntry SystemShortcuts[] = {
     {"timedate.cpl", "Date and Time"},
     {"desk.cpl", "Display Settings"},
     {"main.cpl", "Mouse Properties"}
-};
-
-const char* ListOfShitToIgnore[30] = {
-  "node_modules",
-  ".git",
-  "bin",
-  "dll",
-  "gtnh 2.8",
-  ".h",
-  "yazi",
-  "obj",
-  "build"
 };
 
 const TerminalCommandHotkey G_TERMINAL_COMMAND_HOTKEYS[] = {
