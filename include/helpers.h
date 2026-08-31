@@ -22,8 +22,6 @@
 
 typedef void (*HotkeyCallback)(void);
 typedef bool (*HotkeyCondition)(void);
-extern char* SelectionData[2048];
-extern int SelectionDataCount;
 
 typedef struct {
     int vk_code;
@@ -33,10 +31,6 @@ typedef struct {
     HotkeyCallback hotkey_callback;
     HotkeyCondition hotkey_condition;
 } HotkeyBinding;
-
-typedef struct {
-
-} Hotkey;
 
 void SubjectiveMessageDisplay(const char* buffer,int msg_height,int timeout,ColorRef color);
 extern EditorMode g_last_mode;
@@ -112,6 +106,7 @@ void WriteFile(char lines[100][512], int count, const char* path);
 extern HashMap* history_indices;
 bool GetFromHistory(ListBoxInfo* lb);
 int convert_string_to_int(const char *str);
+HotkeyBinding convert_into_hotkey_binding(char* hotkey_string,void (*on_hotkey_trigger)(void),bool (*optional_condition_for_hotkey)(void),const char** optional_blacklistedwindows);
 void HandleCommandExecution(ListBoxInfo* lb, char* string);
 const char* get_alias_for_item(const char* item);
 unsigned long rgb_to_hex(unsigned long win_color);
