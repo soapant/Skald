@@ -1,4 +1,5 @@
 #include "common.h"
+#include "core/flapi.h"
 #include "core/platform.h"
 #include "features/screenshot.h"
 #include "core/common_ui.h"
@@ -87,4 +88,9 @@ void TriggerOpenScreenshot(void) {
 #else
     // Not Implemented
 #endif
+}
+
+void screenshot_init(void) {
+    fl_register_hotkey("Alt+Ctrl+A", TriggerSaveScreenshot, NULL, NULL);
+    fl_register_hotkey("Alt+Shift+A", TriggerOpenScreenshot, NULL, NULL);
 }

@@ -3,5 +3,6 @@
 
 void TriggerSaveScreenshot(void);
 void TriggerOpenScreenshot(void);
+void screenshot_init(void);
 
 #endif

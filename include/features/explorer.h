@@ -3,5 +3,6 @@
 
 
 void TriggerExplorer(void);
+void explorer_init(void);
 
 #endif

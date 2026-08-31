@@ -44,3 +44,7 @@ void TriggerExplorer(void) {
 
     ZoxideHelper_CleanupTriggerList(list);
 }
+
+void explorer_init(void) {
+    fl_register_hotkey("Alt+R", TriggerExplorer, NULL, NULL);
+}

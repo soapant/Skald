@@ -15,5 +15,6 @@ typedef struct {
 void FetchExeNameOnDemand(WindowHandle hwnd, char* outExe, size_t maxLen);
 void WindowUtils_GetAll(WindowList* list);
 void TriggerWindowSwitcher();
+void window_switcher_init(void);
 
 #endif

@@ -309,3 +309,7 @@ void TriggerReminder(void) {
            .edit = reminder_edit_callback);
     ZoxideHelper_CleanupTriggerList(list);
 }
+
+void reminder_init(void) {
+    fl_register_hotkey("Alt+S", TriggerReminder, NULL, NULL);
+}

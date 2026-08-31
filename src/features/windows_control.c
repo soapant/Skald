@@ -1,4 +1,5 @@
 #include "common.h"
+#include "core/flapi.h"
 #include "features/windows_control.h"
 #include "helpers.h"
 //
@@ -68,4 +69,9 @@ void TriggerBlueToothToggle(void) {
         SubjectiveMessageDisplay("BlueTooth Turned ON",140,TimeOutForMessages,COLOR_TEXT);
     }
 
+}
+
+void windows_control_init(void) {
+    fl_register_hotkey("Alt+Shift+W", TriggerWifiToggle, NULL, NULL);
+    fl_register_hotkey("Alt+Shift+B", TriggerBlueToothToggle, NULL, NULL);
 }

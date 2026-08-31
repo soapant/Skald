@@ -17,6 +17,7 @@ void get_flip_info(char* out, size_t max_len);
 void get_flip_display(char* out, size_t max_len);
 void get_flip_expression(char* out, size_t max_len);
 void TriggerCalculator(void);
+void calc_init(void);
 
 
 #endif

@@ -118,3 +118,7 @@ void TriggerTerminalCommand(void) {
 
     ZoxideHelper_CleanupTriggerList(list);
 }
+
+void terminal_command_init(void) {
+    fl_register_hotkey("Alt+{", TriggerTerminalCommand, NULL, NULL);
+}

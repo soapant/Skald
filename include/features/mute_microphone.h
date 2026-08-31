@@ -6,6 +6,7 @@
 extern bool mic_muted;
 
 void TriggerMuteState(void);
+void mute_microphone_init(void);
 
 #if defined(_WIN32)
 #ifndef COBJMACROS

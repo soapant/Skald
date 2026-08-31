@@ -7,5 +7,6 @@ bool IsWifiEnabled(void);
 bool IsBluetoothEnabled(void);
 void TriggerWifiToggle(void);
 void TriggerBlueToothToggle(void);
+void windows_control_init(void);
 
 #endif
