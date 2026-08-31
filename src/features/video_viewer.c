@@ -1,23 +1,48 @@
 #include "core/flapi.h"
 #include "features/app_launcher.h"
 
-char *allowed_video_formats[] = {"webm","mp4"};
+char *allowed_video_formats[] = {"webm","mp4", NULL};
+
+static ListOfFiles s_video_files = {0};
 
 static void video_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
-    ClearFileList();
-    GetFilesRecursive(VideosPath, false,allowed_video_formats);
+    s_video_files.count = 0;
+    fl_get_all_files_from_dir(VideosPath, allowed_video_formats, &s_video_files, NULL);
     
-    const char** items = (const char**)malloc(GetFileCount() * sizeof(char*));
+    const char** items = (const char**)malloc(s_video_files.count * sizeof(char*));
     if (!items) return;
-    for (int i = 0; i < GetFileCount(); i++) {
-        items[i] = G_FILES_WITH_TIME[i].name;
+    for (size_t i = 0; i < s_video_files.count; i++) {
+        items[i] = s_video_files.items[i].name;
     }
-    PopulateListBox(lb, hListBox, filter, items, GetFileCount(), NULL);
+    PopulateListBox(lb, hListBox, filter, items, (int)s_video_files.count, NULL);
     free(items);
 }
 
 static void video_enter_callback(const char* selection, ListBoxInfo* lb) {
-    char* result = SearchFileInDirectory(VideosPath, selection);
+    char* result = NULL;
+    for (size_t i = 0; i < s_video_files.count; i++) {
+        if (strcmp(s_video_files.items[i].name, selection) == 0) {
+            result = s_video_files.items[i].path;
+            break;
+        }
+    }
+    if (!result) {
+        ListOfFiles tmp = {0};
+        fl_get_all_files_from_dir(VideosPath, allowed_video_formats, &tmp, NULL);
+        for (size_t i = 0; i < tmp.count; i++) {
+            if (strcmp(tmp.items[i].name, selection) == 0) {
+                result = tmp.items[i].path;
+                break;
+            }
+        }
+        if (result) {
+            static char found_path[MAX_PATH];
+            strncpy(found_path, result, sizeof(found_path)-1);
+            found_path[sizeof(found_path)-1] = '\0';
+            result = found_path;
+        }
+        free(tmp.items);
+    }
     if (!result) return;
     
 #if defined(_WIN32)
@@ -70,17 +95,17 @@ bool HandleVideoViewer(int vk_code, int modifiers, const char* current_title) {
             } else {
                 const char* prompt[1] = { "Your Directory Is Empty (Has No Videos)" };
                 
-                ClearFileList();
-                GetFilesRecursive(VideosPath,false,allowed_video_formats);
+                s_video_files.count = 0;
+                fl_get_all_files_from_dir(VideosPath, allowed_video_formats, &s_video_files, NULL);
                 
-                const char** initial_items = (const char**)malloc(GetFileCount() * sizeof(char*));
+                const char** initial_items = (const char**)malloc(s_video_files.count * sizeof(char*));
                 if (!initial_items) return false;
                 
-                for (int i = 0; i < GetFileCount(); i++) {
-                    initial_items[i] = G_FILES_WITH_TIME[i].name;
+                for (size_t i = 0; i < s_video_files.count; i++) {
+                    initial_items[i] = s_video_files.items[i].name;
                 }
                 
-                PROMPT(.title = "🎥 Viewer", .items = initial_items, .count = GetFileCount(),
+                PROMPT(.title = "🎥 Viewer", .items = initial_items, .count = (int)s_video_files.count,
                        .height = 920, .width = 650, .item_height = 32,
                        .refresh = video_refresh_callback,
                        .enter = video_enter_callback);
