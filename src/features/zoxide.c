@@ -26,15 +26,8 @@ static void zoxide_edit_callback(const char* selection, ListBoxInfo* lb) {
 
 static void zoxide_enter_callback(const char* selection, ListBoxInfo* lb) {
         char* path = Platform_QueryZoxidePath(selection);
-        printf("Got Path %s \n",path);
         if (path) {
-#if defined(_WIN32)
-            char terminal[512];
-            snprintf(terminal,sizeof(terminal),"%s.exe",UsedTerminal);
-            ShellExecuteA(NULL, "open", terminal, NULL, path, SW_SHOWNORMAL);
-#else
             Platform_LaunchTerminal(path, NULL);
-#endif
             ZoxideHelper_AppendNewEntry(TerminalZoxideFile, selection, lb, &g_cached_zoxide_commands, &g_cached_zoxide_count);
             free(path);
         }
