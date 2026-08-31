@@ -80,7 +80,7 @@ void fl_get_all_files_from_dir_platform(const char* dir_path, char** list_of_all
         if (find_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
             bool should_ignore = false;
             if (list_of_names_to_ignore) {
-                for (int i = 0; i < sizeof(list_of_names_to_ignore) / sizeof(list_of_names_to_ignore[0]); i++) {
+                for (int i = 0; list_of_names_to_ignore[i] != NULL; i++) {
                     if (StrCmpIA(find_data.cFileName, list_of_names_to_ignore[i]) == 0) {
                         should_ignore = true;
                         break;
