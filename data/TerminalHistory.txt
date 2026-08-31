@@ -5844,7 +5844,7 @@ ls
 ./main.exe
 gcc main.c main
 ls
-gcc main.c -o myprogram
+gcc main.c -o flint
 gcc main.c -o main ; ./main.exe`
 
 python main.py
@@ -6135,8 +6135,8 @@ Remove-Item -ErrorAction Ignore .\main.exe
 gcc main.c -o main.exe -lgdi32 -lcomctl32 ; ./main.exe
 z c code
 ls
-gcc main.c -o myprogram.exe -mwindows
-gcc main.c -o myprogram.exe -mwindows -lcomctl32
+gcc main.c -o flint.exe -mwindows
+gcc main.c -o flint.exe -mwindows -lcomctl32
 scoop install taskwarrior
 ls
 task --version
@@ -6149,15 +6149,15 @@ ls
 nvim main.c
 z c codE
 ls
-gcc main.c -o myprogram.exe -mwindows -lcomctl32
+gcc main.c -o flint.exe -mwindows -lcomctl32
 z c code
 ls
 nvim .\main.c
-gcc main.c -o myprogram.exe -mwindows -lcomctl32
+gcc main.c -o flint.exe -mwindows -lcomctl32
 z c code
 ls
 nvim .\main.c
-gcc main.c -o myprogram.exe -mwindows -lcomctl32
+gcc main.c -o flint.exe -mwindows -lcomctl32
 z auto
 ls
 z autohto
@@ -6218,28 +6218,28 @@ z c coe
 z c code
 ls
 nvim main.c
-gcc main.c -o myprogram.exe -mwindows -lcomctl32
-./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 ; ./myprogram.exe
-./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32
+./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 ; ./flint.exe
+./flint.exe
 z c code
 ls
 nvim main.c
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 ; ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 ; ./flint.exe
 z c code
 ls
 nvim main.c
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 ; ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 ; ./flint.exe
 explorer .
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 ; ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 ; ./flint.exe
 ls
-./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 ; ./myprogram.exe
-./myprogram.exe
+./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 ; ./flint.exe
+./flint.exe
 gcc main.c -o main.exe -lgdi32 -lcomctl32 ; ./main.exe
 ./main.exe
 gcc main.c -o main.exe -lgdi32 -lcomctl32 ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 ; ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 ; ./flint.exe
 gcc main.c -o main.exe -lgdi32 -lcomctl32 ; ./main.exe
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
  Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
@@ -6254,13 +6254,13 @@ ls
 nvim '.\Omar Momen_3.json'
 z c code
 ls
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 ; ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 ; ./flint.exe
 z c code
 ls
 nvim .\main.c
 z c code
 ls
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 ; ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 ; ./flint.exe
 z glaze
 ls
 nvim .\config.yaml
@@ -6367,12 +6367,12 @@ nvim main.c
 cd c code
 z c code
 ls
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 ; ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 ; ./flint.exe
 a`
 
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 ; ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 ; ./flint.exe
 z c code
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 ; ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 ; ./flint.exe
 z rew
 ls
 python main.py farming
@@ -6407,7 +6407,7 @@ ls
 nvim main.c
 z c code
 ls
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 ; ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 ; ./flint.exe
 ls
 nvim '.\force close.ahk'
 z c code
@@ -6422,19 +6422,19 @@ nvim main,.c
 z rew
 ls
 cd '.\C Code\'
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 ; ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 ; ./flint.exe
 z erw
 z rew
 ls
 nvim .\functions.py
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 ; ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 ; ./flint.exe
 z rew
 ls
 nvim .\functions.py
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 ; ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 ; ./flint.exe
 explorer .
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 ; ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus ; if ($?) { ./myprogram.exe }
+gcc main.c -o flint.exe -mwindows -lcomctl32 ; ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus ; if ($?) { ./flint.exe }
 z roam
 ls
 cd .\.minecraft\
@@ -6496,12 +6496,12 @@ ls
 gcc main.c -o main.exe -lgdi32 -lcomctl32 ; ./main.exe
 ls
 gcc main.c -o main.exe -lgdi32 -lcomctl32 ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus ; if ($?) { ./myprogram.exe }
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus ; if ($?) { ./flint.exe }
 gcc main.c -o main.exe  -lcomctl32 -lgdiplus ; if ($?) { ./main.exe }
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 ; if ($?) { ./main.exe }
 explorer .
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 ; if ($?) { ./main.exe }
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus ; if ($?) { ./myprogram.exe }
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus ; if ($?) { ./flint.exe }
 z rew
 python main.py farming
 python main.py spread
@@ -6526,7 +6526,7 @@ z rew
 ls
 python main.py farming
 z c code ; nvim main.c
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus ; if ($?) { ./myprogram.exe }
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus ; if ($?) { ./flint.exe }
 z c code
 ls
 nvim main.c
@@ -6605,11 +6605,11 @@ ls
 nvim main.c
 z c code
 ls
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus ; if ($?) { ./myprogram.exe }
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus ; if ($?) { ./flint.exe }
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 ; if ($?) { ./main.exe }
 z c code
  `
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus ; if ($?) { ./myprogram.exe }
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus ; if ($?) { ./flint.exe }
 z rew ; python main.py builder_farming
 z rew
 python main.py spread
@@ -6663,9 +6663,9 @@ nvim main.c
 cd '.\C Code\'
 explorer .
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 ; if ($?) { ./main.exe }
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus ; if ($?) { ./myprogram.exe }
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus ; if ($?) { ./flint.exe }
 }
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; if ($?) { ./myprogram.exe }
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; if ($?) { ./flint.exe }
 static void launch_app_by_name(const char* display_name) {`
     for (int i = 0; i < G_APP_COUNT; i++) {`
         if (strcmp(G_APPS[i].name, display_name) == 0) {`
@@ -6699,10 +6699,10 @@ cd c code
 cd '.\C Code\'
 explorer .
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 ; if ($?) { ./main.exe }
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; if ($?) { ./myprogram.exe }
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; if ($?) { ./flint.exe }
 z c code
 nvim .\app_launcher.h
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; if ($?) { ./myprogram.exe }
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; if ($?) { ./flint.exe }
 z c code
 ls
 nvim .\app_launcher.h
@@ -6761,7 +6761,7 @@ nvim main.c
 cd c .\.git\
 cd c '.\C Code'
 cd '.\C Code\'
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; if ($?) { ./myprogram.exe }
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; if ($?) { ./flint.exe }
 z rew
 python main.py farming
 z rew
@@ -6783,22 +6783,22 @@ s
 lS
 nvim main.c
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 ; if ($?) { ./main.exe }
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; if ($?) { ./myprogram.exe }
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; if ($?) { ./flint.exe }
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 ; if ($?) { ./main.exe }
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; if ($?) { ./myprogram.exe }
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; if ($?) { ./flint.exe }
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 ; if ($?) { ./main.exe }
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; if ($?) { ./myprogram.exe }
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; if ($?) { ./flint.exe }
 z c code
 nvim main.c
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; if ($?) { ./myprogram.exe }
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; if ($?) { ./flint.exe }
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 ; if ($?) { ./main.exe }
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; if ($?) { ./myprogram.exe }
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; if ($?) { ./flint.exe }
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 ; if ($?) { ./main.exe }
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; if ($?) { ./myprogram.exe }
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; if ($?) { ./flint.exe }
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 ; if ($?) { ./main.exe }
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; if ($?) { ./myprogram.exe }
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; if ($?) { ./flint.exe }
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 ; if ($?) { ./main.exe }
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; if ($?) { ./myprogram.exe }
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; if ($?) { ./flint.exe }
 z rew ; python main.py farming
 z c code ; nvim main.c
 z rew ; python main.py farming
@@ -6857,7 +6857,7 @@ cd C:\Users\HP\scoop\apps\gcc\15.2.0\x86_64-w64-mingw32\include\
 ls
 z c code
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 ; if ($?) { ./main.exe }
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; if ($?) { ./myprogram.exe }
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; if ($?) { ./flint.exe }
 z rew ; python main.py builder_farming
 z ming
 zi
@@ -6873,7 +6873,7 @@ cd '.\C Code\'
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 ; if ($?) { ./main.exe }
 explorer .
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 ; if ($?) { ./main.exe }
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; if ($?) { ./myprogram.exe }
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; if ($?) { ./flint.exe }
 cd..
 cd '.\Factorio Helper\'
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 ; if ($?) { ./main.exe }
@@ -6889,7 +6889,7 @@ ls
 gcc testing.c -o testing.exe -lgdi32 -lcomctl32 ; ./testing.exe
 z c
 z c code
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; if ($?) { ./myprogram.exe }
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; if ($?) { ./flint.exe }
 z helper
 z helpre
 cdd
@@ -6912,7 +6912,7 @@ z include
 explorer .
 z c code
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 ; if ($?) { ./main.exe }
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; if ($?) { ./myprogram.exe }
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; if ($?) { ./flint.exe }
 gcc testing.c -o testing.exe -lgdi32 -lcomctl32 ; ./testing.exe
 z rew
 python main.py farming
@@ -6939,16 +6939,16 @@ z c code
 ls
 nvim main.c
 z c code
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; if ($?) { ./myprogram.exe }
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; if ($?) { ./flint.exe }
 z c code ; nvim main.c
 z c code
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; if ($?) { ./myprogram.exe }
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; if ($?) { ./flint.exe }
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 ; if ($?) { ./main.exe }
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; if ($?) { ./myprogram.exe }
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; if ($?) { ./flint.exe }
 z c code ; nvim main.c
 z c code
 gcc testing.c -o testing.exe -lgdi32 -lcomctl32 ; ./testing.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; if ($?) { ./myprogram.exe }
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; if ($?) { ./flint.exe }
 gcc testing.c -o testing.exe -lgdi32 -lcomctl32 ; ./testing.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 ; if ($?) { ./main.exe }
 gcc testing.c -o testing.exe -lgdi32 -lcomctl32 ; ./testing.exe
@@ -6958,22 +6958,22 @@ z rand ; python testing.py
 python testing.py
 z c code
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 ; if ($?) { ./main.exe }
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; if ($?) { ./myprogram.exe }
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; if ($?) { ./flint.exe }
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 ; if ($?) { ./main.exe }
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; if ($?) { ./myprogram.exe }
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; if ($?) { ./flint.exe }
 z c code ; nvim main.c
 z c code
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; if ($?) { ./myprogram.exe }
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; if ($?) { ./flint.exe }
 z c code 
 nvim config.h
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; if ($?) { ./myprogram.exe }
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; if ($?) { ./flint.exe }
 z c code ; nvim config.h
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; if ($?) { ./myprogram.exe }
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; if ($?) { ./flint.exe }
 z c code ; nvim config.h
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; if ($?) { ./myprogram.exe }
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; if ($?) { ./flint.exe }
 z c code
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 ; if ($?) { ./main.exe }
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; if ($?) { ./myprogram.exe }
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; if ($?) { ./flint.exe }
 z c code ; nvim config.h
 z c code
 z include
@@ -6986,7 +6986,7 @@ z ala
 ls
 nvim .\alacritty.toml
 z c code 
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; if ($?) { ./myprogram.exe }
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; if ($?) { ./flint.exe }
 tasklist /v | findstr /i "nvim"
 z ala
 nvim
@@ -6995,9 +6995,9 @@ nvim .\alacritty.toml
 cd c code
 cd '.\C Code\'
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 ; if ($?) { ./main.exe }
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
 cd '.\C Code\'
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
 cd '.\C Code\'
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 ; if ($?) { ./main.exe }
 gcc testing.c -o testing.exe -lgdi32 -lcomctl32 ; ./testing.exe
@@ -7007,12 +7007,12 @@ gcc testing.c -o testing.exe -lgdi32 -lcomctl32 ; ./testing.exe
 [KEY] VK: 0x43, Count: 36`
 
 gcc testing.c -o testing.exe -lgdi32 -lcomctl32 ; ./testing.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
 gcc testing.c -o testing.exe -lgdi32 -lcomctl32 ; ./testing.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 ; if ($?) { ./main.exe }
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
 cd '.\C Code\'
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 ; if ($?) { ./main.exe }
 "C:\Program Files\Zen Browser\zen.exe" --new-window
 z zen
@@ -7020,7 +7020,7 @@ z program
 ls
 cd C:
 cd..
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus ; if ($?) { ./myprogram.exe }
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus ; if ($?) { ./flint.exe }
 ./factorio.exe --benchmark "pyblock"
 cd..
 cd '.\Program Files\'
@@ -7029,12 +7029,12 @@ ls
 zen.exe --new-window
 .\zen.exe --new-window
 z c code
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus ; if ($?) { ./myprogram.exe }
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus ; if ($?) { ./flint.exe }
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 ; if ($?) { ./main.exe }
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
 z rew ; python main.py builder_farming
 cd '.\C Code\'
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
 cd..
 mkdir Clipboard
 cd .\Clipboard\
@@ -7061,11 +7061,11 @@ neovide main.cpp
 Copy-Item clipboard.cpp
 explorer .
 cd '.\C Code\'
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
 4B
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 ; if ($?) { ./main.exe }
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
 cd c code
 neovide
 git rev-parse --show-toplevel
@@ -7075,24 +7075,24 @@ lS
 explorer .
 rg -n "autochdir|lcd|tcd|cd |chdir|getcwd" C:\Users\HP\AppData\Local\nvim
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 ; if ($?) { ./main.exe }
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 ; if ($?) { ./main.exe }
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus ; if ($?) { ./myprogram.exe }
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
-.\myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus ; if ($?) { ./flint.exe }
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
+.\flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 ; if ($?) { ./main.exe }
-.\myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
-.\myprogram.exe
+.\flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
+.\flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 ; if ($?) { ./main.exe }
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
 z rew ; python main.py farming
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 ; if ($?) { ./main.exe }
 z rew ; python main.py farming
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
 z code
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 ; if ($?) { ./main.exe }
 where zen.exe
 where zen
@@ -7100,13 +7100,13 @@ z zen
 ls
 z cod
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 ; if ($?) { ./main.exe }
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
 ls
 nvim 
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
 ./program.exe
-.\myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
+.\flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
 reg query "HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts"
 fc-list | findstr Geist
 fc-list | findstr Proto
@@ -7125,7 +7125,7 @@ z ala ; nvim alacritty.toml
 z nvim ; nvim
 clear
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 ; if ($?) { ./main.exe }
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
 tree $env:LOCALAPPDATA\nvim /F
            undotree.lua`
 
@@ -7183,19 +7183,19 @@ z dev
 python main.py
 z nvim ; nvim
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 ; if ($?) { ./main.exe }
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
 nvim
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 ; if ($?) { ./main.exe }
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
 explerer .
 explorere .
 explorer .
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
-.\myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
-.\myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
-.\myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
+.\flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
+.\flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
+.\flint.exe
 powershell -NoProfile -Command "Measure-Command { Start-Process powershell -ArgumentList '-NoProfile', '-Command', 'exit' }"
 pwsh -NoProfile -Command "Measure-Command { . $PROFILE }"
 notepad $PROFILE
@@ -7244,26 +7244,26 @@ nvim
 ./sowon.exe 500s
 ./sowon.exe 30m
 z code
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
 z sow
 ls
 .\build\
 .\build_msvc.bat
 z code
 gcc
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 ; if ($?) { ./main.exe }
 nvim -r '.\D%%Projects%Random Shit%i_will_do_this_for_as_long_as_it_takes.md.swp'
  q
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 ; if ($?) { ./main.exe }
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
 z sowow
 z sow
 ls
 yazi
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 ; if ($?) { ./main.exe }
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
 z dev
 ls
 cd .\templates\
@@ -7296,14 +7296,14 @@ git clone https://github.com/sxyazi/yazi.git
 cd yazi
 ls
 nvim
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
 yazo
 z output ; yazi
 cargo build --release
 $env:CARGO_HTTP_MULTIPLEXING="false"
 cargo build --release
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 ; if ($?) { ./main.exe }
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
 cargo build --release
 $env:VERGEN_GIT_SHA="custom-build"
 cargo build --release
@@ -7318,10 +7318,10 @@ yazi
 Copy-Item ".\target\release-windows\yazi.exe" "$(scoop which yazi)" -Force
 yazi
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 ; if ($?) { ./main.exe }
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 ; if ($?) { ./main.exe }
 yazi
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
 git clone https://github.com/rphii/c-image-viewer/
 cd .\c-image-viewer\
 ls
@@ -7388,7 +7388,7 @@ z misc
 .\MinimalImageViewer.exe .\testing.png
 .\mspaint.exe
 mspaint.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
 yazi
 z misc
 ls
@@ -7454,13 +7454,13 @@ picview .\testing.png ; mspaint
 picview .\testing.png ; mspaint .\testing.png
 ls
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 ; if ($?) { ./main.exe }
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
-.\myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
+.\flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 ; if ($?) { ./main.exe }
-.\myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
-.\myprogram.exe
+.\flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
+.\flint.exe
 python .\test.py
 ls
 python .\test.py
@@ -7490,7 +7490,7 @@ yt-dlp --yes-playlist --playlist-start 31 --playlist-end 60 -f "bestvideo[height
 yt-dlp --yes-playlist -f "bestvideo[height<=480]+bestaudio/best[height<=480]" --download-archive playlist_archive.txt -o "%(playlist_title)s/[%(playlist_index)s] %(title)s.%(ext)s" "PASTE_YOUR_PLAYLIST_URL_HERE"
 yt-dlp --yes-playlist -f "bestvideo[height<=480]+bestaudio/best[height<=480]" --download-archive playlist_archive.txt -o "%(playlist_title)s/[%(playlist_index)s] %(title)s.%(ext)s" "https://www.youtube.com/playlist?list=PLpM-Dvs8t0Vak1rrE2NJn8XYEJ5M7-BqT"
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 ; if ($?) { ./main.exe }
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
 yt-dlp --yes-playlist -f "bestvideo[height<=480]+bestaudio/best[height<=480]" --download-archive playlist_archive.txt -o "%(playlist_title)s/[%(playlist_index)s] %(title)s.%(ext)s" "https://www.youtube.com/watch?v=maSIQg8IFRI&list=PLpM-Dvs8t0VaOBDp6cVRLBScgSJ2L8blq"
 z rand
 scoop install zeal
@@ -7509,10 +7509,10 @@ zioyek
 sioyek
 sioyek .\WinDirStat\
 sioyek .\windows-win32-api.pdf
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
-.\myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
-.\myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
+.\flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
+.\flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 ; if ($?) { ./main.exe }
 z rand
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 ; if ($?) { ./main.exe }
@@ -7520,7 +7520,7 @@ z rand
 python .\testing.py
 ls
 nvim .\filename.txt
-z code ; ./myprogram.exe
+z code ; ./flint.exe
 z rand
 gcc main.c -o main.exe ; ./main.exe
 cat filename.txt
@@ -7550,8 +7550,8 @@ gcc main.c -o main.exe ; ./main.exe filename.txt GETFUCKINGBITCHED
 Get-Content .\filename.txt
 python testing.py
 z rew ; python main.py farming
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
-.\myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
+.\flint.exe
 z dev
 python .\parse_recipe_into_kubejs.py recipe_file_assembler.txt
 z dev
@@ -7579,8 +7579,8 @@ yazi
 python .\get_machine_recipe_file.py extruder
 python .\parse_recipe_into_kubejs.py recipe_file_extruder.txt
 yazi
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
-./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
+./flint.exe
 ls
 git clone https://github.com/DeaDBeeF-Player/deadbeef.git
 ls
@@ -7611,9 +7611,9 @@ yt-dlp -x --audio-format mp3 "https://www.youtube.com/watch?v=GwSSrwryxN0"
 ls
 yt-dlp -x --audio-format mp3 "https://www.youtube.com/watch?v=-7AfRAU69d8"
 yt-dlp -x --audio-format mp3 "https://www.youtube.com/watch?v=lSD_L-xic9o"
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
-.\myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi
+.\flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; ./flint.exe
 ls
 cd foo
 yazi
@@ -7703,12 +7703,12 @@ cd.>
 cd..
 ls
 z code
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lshlwapi ; ./main.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 ; if ($?) { ./main.exe }
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 ; if ($?) { ./main.exe }
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; ./flint.exe
 z zear;
 z zeal
 sl
@@ -7859,7 +7859,7 @@ gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 ; if ($?
 z code
 ls
 z code
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; ./flint.exe
 adb.wait_for_pixel(1599,475,(15,15,15),tolerance=0)
 winget install aria2.aria2
 winget settings
@@ -7871,7 +7871,7 @@ python main.py spread
 python main.py farming
 python main.py spread
 ls
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; ./flint.exe
 git clone sha256:8cbb25ea784f01afbb3f904217cab1317430a8bcfd5680fd827a866367f71cc9
 ls
 cd .\mpv-dev-x86_64-20260610-git-304426c\
@@ -8000,7 +8000,7 @@ nvim main.c
 Remove-Item '.\`[01`] 3D Software Rendering in 2025.webm'
 nvim mainc
 z code
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 ; if ($?) { ./main.exe }
 cd C;
 cd c:
@@ -8089,11 +8089,11 @@ gcc main.c -o video_viewer.exe ./mpv/libmpv.dll.a ``
 z code
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 ; if ($?) { ./main.exe }
 z code
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; ./flint.exe
 z rew ; python main.py farming
 python main.py builder_farming
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 ; if ($?) { ./main.exe }
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; ./flint.exe
 z music
 ls
 yt-dlp -x --audio-format mp3 "YOUR_VIDEO_URL_HERE"
@@ -8117,12 +8117,12 @@ gcc tetsing.c -o tetsing.exe -lole32 -loleaut32
 gcc testing.c -o testing.exe -lole32 -loleaut32
 gcc testing.c -o testing.exe -lole32 -loleaut32 -luuid
 ./testing.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; ./myprogram.exe
-gcc main.c -o myprogram.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lole32 -loleaut32 -luuid -lwinmm
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm
-.\myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; ./flint.exe
+gcc main.c -o flint.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lole32 -loleaut32 -luuid -lwinmm
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lshlwapi ; ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm
+.\flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -loleaut32 -luuid ; ./main.exe
 explorer .
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -loleaut32 -luuid ; ./main.exe
@@ -8130,7 +8130,7 @@ winget install -e --id NirSoft.NirCmd
 scoop install nircmd
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -loleaut32 -luuid ; ./main.exe
 z code
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./flint.exe
 cd '.\Grand Theft Auto Mods\'
 aria2c -x 16 -s 16 "https://www.mediafire.com/file/bpdzd89xcqaak11/2012_Lamborghini_Aventador_LP-700-4_HQ_SV-KIT.rar/file"
 cd '.\Grand Theft Auto Mods\'
@@ -8138,7 +8138,7 @@ aria2c -x 16 -s 16 "https://www.mediafire.com/file/bpdzd89xcqaak11/2012_Lamborgh
 aria2c --help
 winget install aria2.aria2
 alias-aria2c -x 16 -s 16 "https://www.mediafire.com/file/bpdzd89xcqaak11/2012_Lamborghini_Aventador_LP-700-4_HQ_SV-KIT.rar/file"
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./flint.exe
 z view
 ls
 gcc main.c -o music_player.exe -I"$HOME/scoop/apps/glfw/current/include" -L"$HOME/scoop/apps/glfw/current/lib-mingw-w64" -lglfw3 -lopengl32 -lgdi32 -lshlwapi -lcomctl32
@@ -8158,29 +8158,29 @@ extern char* PromptQuickSwitcher(const char* window_list[], int count, int heigh
                                  TabCallback tab_callback);' | Set-Content $_.FullName`
 }
 explorer .
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./flint.exe
 DAD
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./flint.exe
 gcc main.c -o music_player.exe -I"$HOME/scoop/apps/glfw/current/include" -L"$HOME/scoop/apps/glfw/current/lib-mingw-w64" -lglfw3 -lopengl32 -lgdi32 -lshlwapi -lcomctl32
 z music
 gcc main.c -o music_player.exe -I"$HOME/scoop/apps/glfw/current/include" -L"$HOME/scoop/apps/glfw/current/lib-mingw-w64" -lglfw3 -lopengl32 -lgdi32 -lshlwapi -lcomctl32
 python main.py spread
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -loleaut32 -luuid ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -loleaut32 -luuid ; ./main.exe
 python main.py
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -loleaut32 -luuid ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -loleaut32 -luuid ; ./main.exe
-.\myprogram.exe
+.\flint.exe
 explorer.
 explorer .
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -loleaut32 -luuid ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -loleaut32 -luuid ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./flint.exe
 gcc main.c -o video_player.exe -lglfw3 -lopengl32 -lmpv -lgdi32
 ls
 cd .\mpv\
@@ -8203,20 +8203,20 @@ scoop install glfw
 gcc main.c -o video_player.exe -I. -I"C:/Users/HP/scoop/apps/glfw/current/include" -L. -L"C:/Users/HP/scoop/apps/glfw/current/lib-mingw-w64" -L"C:/Users/HP/scoop/apps/glfw/current/lib" -lglfw3 -lopengl32 -lmpv -lgdi32
 gcc main.c -o video_player.exe -I. -I"C:/Users/HP/scoop/apps/glfw/current/include" -L. -L"C:/Users/HP/scoop/apps/glfw/current/lib-mingw-w64" -L"C:/Users/HP/scoop/apps/glfw/current/lib" -lglfw3 -lopengl32 -lmpv -lgdi32 -lcomctl32
 gcc main.c -o video_viewer.exe -I. -I"C:/Users/HP/scoop/apps/glfw/current/include" -L. -L"C:/Users/HP/scoop/apps/glfw/current/lib-mingw-w64" -L"C:/Users/HP/scoop/apps/glfw/current/lib" -lglfw3 -lopengl32 -lmpv -lgdi32 -lcomctl32
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./flint.exe
 aaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -loleaut32 -luuid ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -loleaut32 -luuid ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./myprogram.exe
-gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -loleaut32 -luuid ; ./main.exe
-explorer .
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -loleaut32 -luuid ; ./main.exe
 explorer .
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./myprogram.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -loleaut32 -luuid ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./myprogram.exe
+explorer .
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./flint.exe
+gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -loleaut32 -luuid ; ./main.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./flint.exe
 z video
 gcc main.c -o video_viewer.exe -I. -I"C:/Users/HP/scoop/apps/glfw/current/include" -L. -L"C:/Users/HP/scoop/apps/glfw/current/lib-mingw-w64" -L"C:/Users/HP/scoop/apps/glfw/current/lib" -lglfw3 -lopengl32 -lmpv -lgdi32 -lcomctl32
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -loleaut32 -luuid ; ./main.exe
@@ -8227,14 +8227,14 @@ python .\parse_json_into_txt.py .\blast_furnace\
 python .\parse_recipe_into_kubejs.py .\recipe_file_blast_furnace.txt
 yazi
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -loleaut32 -luuid ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./flint.exe
 z dev
 python .\textures.py
 python main.py
 python .\parse_json_into_txt.py .\macerator\
 python .\parse_recipe_into_kubejs.py .\recipe_file_macerator.txt
 z code
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./flint.exe
 scoop install nu
 & "C:\Users\HP\scoop\apps\nushell\current\nu.exe" --no-welcome-history
 scoop install nu
@@ -8258,9 +8258,9 @@ cd "C:\WINDOWS\TEMP"
 ls
 notepad $nu.config-path
 nu
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -loleaut32 -luuid ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -loleaut32 -luuid ; ./main.exe
 cd..
 cd '.\Tscoding Timer\'
@@ -8272,37 +8272,37 @@ sowon.exe 50s
 ./sowon.exe 50s
 z code
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -loleaut32 -luuid ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -loleaut32 -luuid ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -loleaut32 -luuid ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./flint.exe
 yt-dlp -x --audio-format mp3 "https://www.youtube.com/watch?v=A3TKxux17ZA"
 yazi
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -loleaut32 -luuid ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./flint.exe
 python main.py spread
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -loleaut32 -luuid ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -loleaut32 -luuid ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -loleaut32 -luuid ; ./main.exe
 gcc main.c -fdiagnostics-print-source-range-info -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -loleaut32 -luuid 2>&1 | findstr "error"
 gcc main.c -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -loleaut32 -luuid 2>&1 | findstr /C:"error" /C:"at end of input"
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -loleaut32 -luuid ; ./main.exe
 gcc main.c -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -loleaut32 -luuid 2>&1 | findstr /C:"error" /C:"at end of input"
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -loleaut32 -luuid ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -loleaut32 -luuid ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./flint.exe
 python main.py
 ls
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./flint.exe
 python main.py
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -loleaut32 -luuid ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -loleaut32 -luuid ; ./main.exe
 python main.py
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -loleaut32 -luuid ; ./main.exe
@@ -8376,11 +8376,11 @@ hotkey_definitions.h:297:99: note: (near initialization for 'G_HOTKEY_BINDINGS[2
 [DEBUG] Key: 0x43 (67), Modifiers: 0x4, Active exe: 'neovide.exe'`
 
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -loleaut32 -luuid ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -loleaut32 -luuid ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -loleaut32 -luuid ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./flint.exe
 (Get-PSReadLineOption).HistorySavePath`
 
 cd C:\Users\HP\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadLine\ConsoleHost_history.txt
@@ -8388,35 +8388,35 @@ vd C:\Users\HP\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadLine
 cd C:\Users\HP\AppData\Roaming\Microsoft\Windows\PowerShell\PSReadLine
 explorer .
 python main.py
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./flint.exe
 python main.py
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -loleaut32 -luuid ; ./main.exe
 python .\output.py
 python main.py
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -loleaut32 -luuid ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -loleaut32 -luuid ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-.\myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm ; ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+.\flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
 ./main.exe
-.\myprogram.exe
+.\flint.exe
 ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-.\myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+.\flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; main.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+./flint.exe
 winget install aria2.aria2
 winget source reset --force
 aria2c --help
@@ -8426,144 +8426,144 @@ ni ExplorerZoxide.txt
 ni NvimZoxide.txt
 ni YaziZoxide.txt
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe
-./myprogram.exe
+./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ;  ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ;  ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ;  ./myprogram.exe
-./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ;  ./myprogram.exe
-gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe
-explorer .
-gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ;  ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ;  ./flint.exe
+./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ;  ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe
 explorer .
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ;  ./myprogram.exe
+gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ;  ./flint.exe
+gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe
 explorer .
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ;  ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ;  ./flint.exe
+explorer .
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ;  ./flint.exe
 python .\output.py
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ;  ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ;  ./flint.exe
 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ;  ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ;  ./flint.exe
       |                                                                                                   ^~~~~~~~~~~~~~~~~~~~~~~~~~`
 
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ;  ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ;  ./flint.exe
       |                                                                                                   ^~~~~~~~~~~~~~~~~~~~~~~~~~`
 
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ;  ./myprogram.exe
-./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ;  ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ;  ./flint.exe
+./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ;  ./flint.exe
 python .\output.py
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ;  ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ;  ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ;  ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ;  ./flint.exe
 grep -rn (HWND hpopupwnd)
 grep
 grep.exe -rn (HWND hpopupwnd)
 grep.exe -rn "(HWND hpopupwnd)" .
 grep.exe -rni "(HWND hpopupwnd)" .
-./myprogram.exe
+./flint.exe
 grep.exe -rni "(HWND hpopupwnd)" .
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ;  ./myprogram.exe
-./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-ugcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ;  ./flint.exe
+./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+ugcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+./flint.exe
 nvim
 rm historyb.txt
 ;s
 ls
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
 z code
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
 ./process_killer.h
-./myprogram.exe
-start ./myprogram.exe
+./flint.exe
+start ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe
-./myprogram.exe
-start ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+./flint.exe
+start ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
 start 
-start ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+start ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-./myprogram.exe
-start ./myprogram.exe
-./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+./flint.exe
+start ./flint.exe
+./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe
-start ./myprogram.exe
+start ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe
 cc
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe
 \yazi
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe
-start ./myprogram.exe
+start ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe
 z code
-start ./myprogram.exe
+start ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 gcc - o main.c main.exe
 gcc -o main.c main.exe
 gcc main.c -o main.exe
@@ -8578,38 +8578,38 @@ z code
 python main.py
 z code
 python main.py
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe
-start ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe
 z code
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
 nvim
 z code
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe
-start ./myprogram.exe
+start ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 z code
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 nvim vim_bindings.h
 z video
 opencoe
@@ -8617,51 +8617,51 @@ gcc main.c -o video_viewer.exe -I. -I"C:/Users/HP/scoop/apps/glfw/current/includ
 gcc -o video_viewer.exe main.c -L. -lmpv -lglfw3 -lopengl32 -lgdi32 -lcomdlg32 -lcomctl32
 z code
 nvim zoxide.h
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 nvim zoxide.h
 z video
 gcc main.c -o video_viewer.exe -I. -I"C:/Users/HP/scoop/apps/glfw/current/include" -L. -L"C:/Users/HP/scoop/apps/glfw/current/lib-mingw-w64" -L"C:/Users/HP/scoop/apps/glfw/current/lib" -lglfw3 -lopengl32 -lmpv -lgdi32 -lcomctl32
 z code
-start ./myprogram.exe
+start ./flint.exe
 nvim main.c
 z code
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe
 nvim main.c
 z code
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 z video
 gcc main.c -o video_viewer.exe -I. -I"C:/Users/HP/scoop/apps/glfw/current/include" -L. -L"C:/Users/HP/scoop/apps/glfw/current/lib-mingw-w64" -L"C:/Users/HP/scoop/apps/glfw/current/lib" -lglfw3 -lopengl32 -lmpv -lgdi32 -lcomctl32
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuidz vo
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuidz vo
 z code
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuidz vo
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuidz vo
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 nvim code
 gcc main.c -o video_viewer.exe -I. -I"C:/Users/HP/scoop/apps/glfw/current/include" -L. -L"C:/Users/HP/scoop/apps/glfw/current/lib-mingw-w64" -L"C:/Users/HP/scoop/apps/glfw/current/lib" -lglfw3 -lopengl32 -lmpv -lgdi32 -lcomctl32
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
 nvim main.c
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 nvim main.c
 nvim process_killer.h
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 nvim main.c
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 nvim vim_bindings.h
 z video
 ls
@@ -8683,9 +8683,9 @@ gcc main.c -o video_viewer.exe -I. -I"C:/Users/HP/scoop/apps/glfw/current/includ
 z music
 yt-dlp -x --audio-format mp3 "https://www.youtube.com/watch?v=hT_nvWreIhg"
 yazi
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
 gcc main.c -o video_viewer.exe -I. -I"C:/Users/HP/scoop/apps/glfw/current/include" -L. -L"C:/Users/HP/scoop/apps/glfw/current/lib-mingw-w64" -L"C:/Users/HP/scoop/apps/glfw/current/lib" -lglfw3 -lopengl32 -lmpv -lgdi32 -lcomctl32a
-start ./myprogram.exe
+start ./flint.exe
 gcc main.c -o main.exe
 ./main.exe
 gcc main.c -o main.exe
@@ -8698,27 +8698,27 @@ gcc main.c -o main.exe
 ./main.exe
 gcc main.c -o main.exe
 ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 z code
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe
 z code
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe
-start ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+start ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe
 \yazi
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe
 \yazi
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
 s
-start ./myprogram.exe
+start ./flint.exe
 ls
 cd Roaming\
 ls
@@ -8751,7 +8751,7 @@ grep -rl --include="*.c" --include="*.h" 'PopulateListBox' . \| xargs sed -i 's/
 grep -rl --include="*.c" --include="*.h" 'PopulateListBox' . | xargs sed -i 's/\<PopulateListBox\>/UIList_Filter/g'
 git bash
 bash
-./myprogram.exe
+./flint.exe
 z code
 ls **/*.{c,h} | each {|f| open $f.name | str replace -a 'PopulateListBox' 'UIList_Filter' | save -f $f.name }
 version
@@ -8809,14 +8809,14 @@ z code
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe\
 \Get-Content .\filename.txt
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe\
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe\
 \Get-Content .\filename.txt
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe\
 z codE
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 python main.py
 python main.py spread
 adb connect 127.0.0.1:5557
@@ -8826,8 +8826,8 @@ z rew
 python main.py spread
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe\
 z code
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 z misc
 sL
 ls
@@ -8850,13 +8850,13 @@ sqlite3 places.sqlite
 nvim my_data.txt
 sqlite3 places.sqlite
 nvim my_data.txt
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 ls
 nvim GoogleZoxide.txt
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe\
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe\\
 \Get-Content .\filename.txt
@@ -8866,39 +8866,39 @@ yazi
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe\\
 adb connect 127.0.0.1:5561
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe\\
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 z code
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe\\
 z code
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe\\
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 nvim volume.h
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe\\
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe\\
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
 nvim volume.h
 st
-start ./myprogram.exe
+start ./flint.exe
 z rew
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe
 yazi
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe
 \Get-Content .\filename.txt
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exet
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 z music
 yt-dlp -x --audio-format mp3 "https://www.youtube.com/watch?v=VoEsEC2CLgE"
 yazi
@@ -9006,8 +9006,8 @@ aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe\
 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe\
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 explorer .
 gcc main.c -o video_viewer.exe -I. -I"C:/Users/HP/scoop/apps/glfw/current/include" -L. -L"C:/Users/HP/scoop/apps/glfw/current/lib-mingw-w64" -L"C:/Users/HP/scoop/apps/glfw/current/lib" -lglfw3 -lopengl32 -lmpv -lgdi32 -lcomctl32a
 gcc main.c -o video_viewer.exe -I. -I"C:/Users/HP/scoop/apps/glfw/current/include" -L. -L"C:/Users/HP/scoop/apps/glfw/current/lib-mingw-w64" -L"C:/Users/HP/scoop/apps/glfw/current/lib" -lglfw3 -lopengl32 -lmpv -lgdi32 -lcomctl32 -lonnxruntime
@@ -9152,7 +9152,7 @@ z video
 ./video_viewer.exe '.\testing.webm' -ai
 z code
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe\
-start ./myprogram.exe
+start ./flint.exe
 nvim
 z video
 ls
@@ -9187,21 +9187,21 @@ ls
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe\\\
 ./ollama.exe run phi4-mini
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe\\\
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe\\\
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe\\\\
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid ; ./main.exe\\\
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -luxtheme ; ./main.exe
 \
 z code
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -luxtheme ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -luxtheme ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -luxtheme ; ./main.exe
 \
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -luxtheme ; ./main.exe
@@ -9209,11 +9209,11 @@ z code
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -luxtheme ; ./main.exe
 \u
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -luxtheme ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -luxtheme ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 nvim alacritty.toml
 alacritty -o "window.opacity=0.3"
 $env:ALACRITTY_LOG="debug"
@@ -9257,14 +9257,14 @@ yt-dlp -x --audio-format mp3 "https://www.youtube.com/watch?v=J9abt3xpdDU"
 yazi
 explorer .
 yazi
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
 z code
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 z misc
 ls
 cp cfr-0.152.jar "D:Projects/KubeJs Dev"
@@ -9286,26 +9286,26 @@ touch testing.py ; nvim testing.py
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -luxtheme ; ./main.exe
 explorer .
 z code
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -luxtheme ; ./main.exe
 ls
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -luxtheme ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
 st2
-start ./myprogram.exe
+start ./flint.exe
 z code
 ls
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 nvim common_ui.h
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -luxtheme ; ./main.exe
 cp cfr-0.152.jar "D:Projects/Kubejs Dev"
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -luxtheme ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -luxtheme ; ./main.exe
-start ./myprogram.exe
+start ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -luxtheme ; ./main.exe
 z itmer
 z sowo 
@@ -9314,10 +9314,10 @@ z sowo
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -luxtheme ; ./main.exe
 z code
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -luxtheme ; ./main.exe
-start ./myprogram.exe
+start ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -luxtheme ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 pacman -S man-db man-pages
 edit enviromental
 enviromental
@@ -9358,11 +9358,11 @@ man 3 print
 man print
 man for
 st
-start ./myprogram.exe
+start ./flint.exe
 z code
 ls
 nvim NvimZoxide.txt
-start ./myprogram.exe
+start ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -luxtheme ; ./main.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 ; ./main.exe
 alacritty -o window.opacity=0.3
@@ -9381,21 +9381,21 @@ explorer .
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 ; ./main.exe
 explorer .
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 python main.py spread
 reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows Defender" /v DisableAntiSpyware /t REG_DWORD /d 1 /f
 reg add "HKLM\SOFTWARE\Policies\Microsoft\Windows Defender\Real-Time Protection" /v DisableRealtimeMonitoring /t REG_DWORD /d 1 /f
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
 Starting package install...
 stae
-start ./myprogram.exe
+start ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 ; ./main.exe
-start ./myprogram.exe
+start ./flint.exe
 pip install -e .
 pip install wimman
 cd C:\Users\HP
@@ -9555,22 +9555,22 @@ cmds
 tldr --update
 tldr gcc
 gcc --help
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 z code
-start ./myprogram.exe
+start ./flint.exe
 z codE
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 ; ./main.exe
 nvim config
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 ; ./main.exe
 z code
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 ; ./main.exe
 z code
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 ; ./main.exe
@@ -9585,24 +9585,24 @@ rg -l "520" | xargs sed -i 's/520/920/g'
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 ; ./main.exe
 \u
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 ; ./main.exe
 kj
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 ; ./main.exe
 \u
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 ; ./main.exe
-start ./myprogram.exe
+start ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 ; ./main.exe
 \u
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 ; ./main.exe
@@ -9617,25 +9617,25 @@ nvim calc.h
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 ; ./main.exe
 nvim types.h
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 nvim calc.h
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 ; ./main.exe
 \u
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 ; ./main.exe
 \u
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 ; ./main.exe
 z cdoe
 z code
 nviM
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 python main.py spread
 gcc main.c -i main.exe
 gcc main.c -o main.exe
@@ -9668,13 +9668,13 @@ z codE
 z codE
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 ; ./main.exe
 python output.py
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 git rev-list --count HEAD
 git help
 git help | dump output.nigga
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 ; ./main.exe
 \\
 z cdoE
@@ -9690,25 +9690,25 @@ nviM
 yazI
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 ; ./main.exe
 nvim
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 gcc -M main.c
 gcc -MM main.c
 gcc -MM main.c | tr -d '\\' | tr ' ' '\n' | grep '\.h'
 ls
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 ; ./main.exe
-start ./myprogram.exe
+start ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 ; ./main.exe
 z code
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 ; ./main.exe
@@ -9717,24 +9717,24 @@ gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm 
 z code
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 ; ./main.exe
 gcc main.c -o mypo
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 ; ./main.exe
 z code
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 ; ./main.exe
 hh
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 ; ./main.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -lbdghelp ; ./main.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp ; ./main.exe
-start ./myprogram.exe
+start ./flint.exe
 yazo
 yazi
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp ; ./main.exe
@@ -9748,8 +9748,8 @@ z codew
 z code
 z codew
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 z play
 ls
 z proJ
@@ -9760,8 +9760,8 @@ cd ..
 mv `Music Viewer\` `Music Player\`
 cd `Music Player\`
 ls
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 z code ; nvim
 z play
 ls
@@ -9783,14 +9783,14 @@ z music
 ls
 mv `The Winner Takes It All` `The Winner Takes It All.mp3`
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp ; ./main.exe
 ==
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp ; ./main.exe
@@ -9803,53 +9803,53 @@ gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm 
 python main.py
 z codE
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp ; ./main.exe
-start ./myprogram.exe
+start ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp ; ./main.exe
 z code
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp ; ./main.exe
 \\
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp ; ./main.exe
-start ./myprogram.exe
+start ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp ; ./main.exe
 z code
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp ; ./main.exe
 ls
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp ; ./main.exe
 \\
 z code
 \\
 z code
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp ; ./main.exe
 z codE
 opencod
 z codE
 opencod
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 z pro
 ls
 cd `CocBot C++ Remake\`
@@ -9993,16 +9993,16 @@ ls
 explorer.
 explorer .
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 ^C:/msys64/mingw64/bin/g++.exe -std=c++23 main.cpp -o main.exe -I"C:/Users/HP/scoop/apps/gcc/15.2.0/x86_64-w64-mingw32/include" -I"C:/msys64/mingw64/include" -I"C:/msys64/mingw64/include/opencv4" -L"C:/msys64/mingw64/lib" -lopencv_core -lopencv_imgproc -lopencv_imgcodecs -lopencv_highgui -ltesseract -lleptonica -lgdi32 -luser32 -lstdc++exp
 C:/msys64/mingw64/bin/g++.exe -std=c++23 main.cpp -o main.exe -I"C:/Users/HP/scoop/apps/gcc/15.2.0/x86_64-w64-mingw32/include" -I"C:/msys64/mingw64/include" -I"C:/msys64/mingw64/include/opencv4" -L"C:/msys64/mingw64/lib" -lopencv_core -lopencv_imgproc -lopencv_imgcodecs -lopencv_highgui -ltesseract -lleptonica -lgdi32 -luser32 -lstdc++exp
 ./main.exe
 z codE
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp ; ./main.exe
 C:/msys64/mingw64/bin/g++.exe -std=c++23 main.cpp -o main.exe -I"C:/Users/HP/scoop/apps/gcc/15.2.0/x86_64-w64-mingw32/include" -I"C:/msys64/mingw64/include" -I"C:/msys64/mingw64/include/opencv4" -L"C:/msys64/mingw64/lib" -lopencv_core -lopencv_imgproc -lopencv_imgcodecs -lopencv_highgui -ltesseract -lleptonica -lgdi32 -luser32 -lstdc++exp
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 C:/msys64/mingw64/bin/g++.exe -std=c++23 main.cpp -o main.exe -I"C:/Users/HP/scoop/apps/gcc/15.2.0/x86_64-w64-mingw32/include" -I"C:/msys64/mingw64/include" -I"C:/msys64/mingw64/include/opencv4" -L"C:/msys64/mingw64/lib" -lopencv_core -lopencv_imgproc -lopencv_imgcodecs -lopencv_highgui -ltesseract -lleptonica -lgdi32 -luser32 -lstdc++exp
 ls
 gem
@@ -10030,11 +10030,11 @@ C:/msys64/mingw64/bin/g++.exe -std=c++23 main.cpp -o main.exe -I"C:/Users/HP/sco
 C:/msys64/mingw64/bin/g++.exe -std=c++23 main.cpp -o main.exe -I"C:/Users/HP/scoop/apps/gcc/15.2.0/x86_64-w64-mingw32/include" -I"C:/msys64/mingw64/include" -I"C:/msys64/mingw64/include/opencv4" -L"C:/msys64/mingw64/lib" -lopencv_core -lopencv_imgproc -lopencv_imgcodecs -lopencv_highgui -ltesseract -lleptonica -lgdi32 -luser32 -lstdc++exp
 ./main.exe
 C:/msys64/mingw64/bin/g++.exe -std=c++23 main.cpp -o main.exe -I"C:/Users/HP/scoop/apps/gcc/15.2.0/x86_64-w64-mingw32/include" -I"C:/msys64/mingw64/include" -I"C:/msys64/mingw64/include/opencv4" -L"C:/msys64/mingw64/lib" -lopencv_core -lopencv_imgproc -lopencv_imgcodecs -lopencv_highgui -ltesseract -lleptonica -lgdi32 -luser32 -lstdc++exp ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 $env.PATH = ($env.PATH | prepend "C:/msys64/mingw64/bin")
 C:/msys64/mingw64/bin/g++.exe -std=c++23 main.cpp -o main.exe -I"C:/Users/HP/scoop/apps/gcc/15.2.0/x86_64-w64-mingw32/include" -I"C:/msys64/mingw64/include" -I"C:/msys64/mingw64/include/opencv4" -L"C:/msys64/mingw64/lib" -lopencv_core -lopencv_imgproc -lopencv_imgcodecs -lopencv_highgui -ltesseract -lleptonica -lgdi32 -luser32 -lstdc++exp ; ./main.exe
 z coc
@@ -10056,8 +10056,8 @@ z code
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp ; ./main.exe
 z code
 ls
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 z music
 ls
 yt-dlp -x --audio-format mp3 "https://www.youtube.com/watch?v=ByiOOe6XuvM"
@@ -10091,8 +10091,8 @@ touch main.py
 ls
 z code
 nvim video_player.h
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 z music
 s
 ls
@@ -10111,9 +10111,9 @@ nvim main.py
 z code
 ls
 python main.py
-start ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+start ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp ; ./main.exe
 adb.exe push `Line Without a Hook.mp3` /sdcard/Download/
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp ; ./main.exe
@@ -10122,8 +10122,8 @@ gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm 
 z code
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp ; ./main.exe
 nvim main.py
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 ls
 python main.py
 nvim main.py
@@ -10148,25 +10148,25 @@ z code
 git rev-list --count HEAD
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp ; ./main.exe
 z code
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
 st
-start ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
 python output.py
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 z aoc
 python main.py
 'shell:<\n>  command: powershell' | save -f ~/.config/navi/config.yaml
 python main.py
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 python main.py builder_farming
 python main.py farming
 python main.py spread
@@ -10183,14 +10183,14 @@ rf --file | rg "monika"
 find . | grep "partial_file_name"
 find . | grep "monika"
 glob **/monika*
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
 st
-start ./myprogram.exe
+start ./flint.exe
 st
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp ; ./main.exe
 z code
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 tldr hex
 man
 man help
@@ -10201,7 +10201,7 @@ which raylib
 winget help
 scoop which raylib
 z code
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp ; ./main.exe
 scoop install raylib
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp ; ./main.exe
@@ -10237,8 +10237,8 @@ cd 5.5\
 ls
 z rand
 z code
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 gcc main.c -o main.exe -L ~\scoop\apps\raylib-mingw\5.5
 gcc main.c -o main.exe -L ~\scoop\apps\raylib-mingw\5.5\raylib.h
 gcc main.c -o main.exe -L C:Users\HP\scoop\apps\raylib-mingw\5.5\raylib.h
@@ -10291,7 +10291,7 @@ ls main,.exe
 ls main.exe
 z code
 ls
-ls myprogram.exe
+ls flint.exe
 nvim main.c
 z misc
 git clone 
@@ -10304,16 +10304,16 @@ ls
 nvim toggleterm.nvim\
 git clone https://github.com/raysan5/raylib-games.git
 z code
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
 gcc main.c -o main.exe -B "raylib.dll"
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 tldr printf
 tldr snprintf
 man printf
@@ -10323,15 +10323,15 @@ ls
 nvim output.txt
 man snprintf | dump output.txt
 nvim output.txt
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp ; ./main.exe
 'shell:<\n>  command: powershell' | save -f ~/.config/navi/config.yaml
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 pip list
 python main.py
 python outputxt
@@ -10354,43 +10354,43 @@ nvim main.c
 neovide main.c
 ls
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
 nvim
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 z code
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
 z code
-start ./myprogram.exe
+start ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp ; ./main.exe
-start ./myprogram.exe
+start ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp ; ./main.exe
-start ./myprogram.exe
+start ./flint.exe
 gcc main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp ; ./main.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 nvim subclasses.h
 nvim main.c
 z copde
 z code
 ls
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 z code
 ls
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 z ala
 ls
 nvim alacritty.toml
 nvim main.c
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 ls
 git clone --depth 1 https://github.com/MicrosoftDocs/win32.git
 ls
@@ -10400,34 +10400,34 @@ nvim README.md
 $ npm install --global zeal-user-contrib
 npm install --global zeal-user-contrib
 zeal-user-contrib
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
-gcc main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-gcc -DCOBJMACROS main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
-gcc -DCOBJMACROS  main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
+gcc main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+gcc -DCOBJMACROS main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
+gcc -DCOBJMACROS  main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
 gcc -DCOBJMACROS  main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp ; ./main.exe
-gcc -DCOBJMACROS  main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc -DCOBJMACROS  main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 gcc -DCOBJMACROS  main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp ; ./main.exe
-gcc -DCOBJMACROS  main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc -DCOBJMACROS  main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 gcc -DCOBJMACROS  main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp ; ./main.exe
 gcc -DCOBJMACROS  main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp ; ./main.exe | dump nigga.txt
 gcc -DCOBJMACROS  main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp | dump nigga.txt
 gcc -DCOBJMACROS  main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp ; ./main.exe
-gcc -DCOBJMACROS  main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc -DCOBJMACROS  main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 gcc -DCOBJMACROS  main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp ; ./main.exe
-gcc -DCOBJMACROS  main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+gcc -DCOBJMACROS  main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
 gcc -DCOBJMACROS  main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp ; ./main.exe
-gcc -DCOBJMACROS  main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc -DCOBJMACROS  main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 nvim
-gcc -DCOBJMACROS  main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
-gcc -DCOBJMACROS  main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc -DCOBJMACROS  main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
+gcc -DCOBJMACROS  main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 grep -rn 
 grep -rn ";"
 grep -rn -o ";"
@@ -10454,7 +10454,7 @@ ls
 ollama.exe
 z code
 gcc -DCOBJMACROS  main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp ; ./main.exe
-start ./myprogram.exe
+start ./flint.exe
 nvim subclasses.h
 z oll
 ollama.exe
@@ -10462,14 +10462,14 @@ Z CODE
 z code
 ls
 gcc -DCOBJMACROS  main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp ; ./main.exe
-start ./myprogram.exe
+start ./flint.exe
 gcc
 gcc -DCOBJMACROS  main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp ; ./main.exe
 tldr snprintf
 gcc -DCOBJMACROS  main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp ; ./main.exe
-gcc -DCOBJMACROS  main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
-gcc -DCOBJMACROS  main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+gcc -DCOBJMACROS  main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
+gcc -DCOBJMACROS  main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
 gcc -DCOBJMACROS  main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp ; ./main.exe
 tldr string.h
 man string.h
@@ -10481,7 +10481,7 @@ z oll
 ol
 ollama.exe
 z code
-start ./myprogram.exe
+start ./flint.exe
 ls
 gcc -DCOBJMACROS  main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp ; ./main.exe
 z oll
@@ -10494,7 +10494,7 @@ z code
 gcc -DCOBJMACROS  main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp ; ./main.exe
 z code
 gcc -DCOBJMACROS  main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp ; ./main.exe
-start ./myprogram.exe
+start ./flint.exe
 nvim helpers.h
 cd verysleepy-0.91\
 ;s
@@ -10502,52 +10502,52 @@ ls
 cd verysleepy-0.91\
 ls
 z code
-start ./myprogram.exe
+start ./flint.exe
 gcc -DCOBJMACROS  main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp ; ./main.exe
-gcc -DCOBJMACROS  main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc -DCOBJMACROS  main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 python output.py
-gcc -DCOBJMACROS  main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
-gcc -DCOBJMACROS  main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
-gcc -DCOBJMACROS  main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
-gcc -DCOBJMACROS  main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+gcc -DCOBJMACROS  main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
+gcc -DCOBJMACROS  main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
+gcc -DCOBJMACROS  main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
+gcc -DCOBJMACROS  main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
 gcc -DCOBJMACROS  main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp ; ./main.exe
 gcc -DCOBJMACROS  main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp ; ./main.exew
 gcc -DCOBJMACROS  main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp ; ./main.exe
-start ./myprogram.exe
+start ./flint.exe
 gcc -DCOBJMACROS  main.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp ; ./main.exe
-gcc -DCOBJMACROS  main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc -DCOBJMACROS  main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 ./main.sh
 main.sh
 bash main.sh
 bash program.sh
 ls
-bash myprogram.sh
+bash flint.sh
 bash main.sh
 z oll
 ollama.exe
 z code
 bash main.sh
-start ./myprogram.exe
+start ./flint.exe
 bash main.sh
 z code
-bash myprogram.sh
+bash flint.sh
 bash main.sh
-bash myprogram.sh
+bash flint.sh
 bash main.sh
-bash myprogram.sh
+bash flint.sh
 python main.py
 bash main.sh
-bash myprogram.sh
+bash flint.sh
 python main.py
 python output.py
 python main.py
 bash main.sh
-bash myprogram.sh
+bash flint.sh
 git clone https://github.com/LorenzCK/OnTopReplica.git
 cd OnTopReplica\
 ls
@@ -10570,26 +10570,26 @@ ls
 tar.exe -xf OnTopReplica-v3.5.1-fix.zip
 ./setup.exe
 bash main.sh
-bash myprogram.sh
+bash flint.sh
 bash main.sh
-bash myprogram.sh
+bash flint.sh
 B
-bash myprogram.sh
+bash flint.sh
 nvim main.sh
-bash myprogram.sh
+bash flint.sh
 nvim main.c
-bash myprogram.sh
+bash flint.sh
 nvim main.c
 scoop install ccache
 nvim main.sh
-bash myprogram.sh
+bash flint.sh
 z oll
 ollama.exe
 z code
-bash myprogram.sh
+bash flint.sh
 bash main.sh
 bash st
-bash myprogram.sh
+bash flint.sh
 nvim vim_motions.h
 ls
 nvim main.c
@@ -10671,7 +10671,7 @@ z code
 z oll
 ollama.exe
 z code
-start ./myprogram.exe
+start ./flint.exe
 z oll
 ollama.exe
 z code
@@ -10682,43 +10682,43 @@ bash main.sh
 z oll
 z code
 ls
-start ./myprogram.exe
+start ./flint.exe
 bash main.sh
-start ./myprogram.exe
-bash main.sh
-;s
+start ./flint.exe
 bash main.sh
 ;s
 bash main.sh
-start ./myprogram.exe
+;s
 bash main.sh
-bash myprogram.sh
+start ./flint.exe
 bash main.sh
-bash myprogram.sh
+bash flint.sh
+bash main.sh
+bash flint.sh
 nvim main.c
 python main.py
 gcc main.c -o main.exe
 ./main.exe
 bash main.sh
-start ./myprogram.exe
+start ./flint.exe
 bash main.sh
 git config 
 Omit --global
 Omit -Global
 git add -A
 git commit -m "testing"
-start ./myprogram.exe
+start ./flint.exe
 git config --global user.name
 ls
 git config user.email "random@email.com"
 git config user.name "RandomUser"
 git add -A
 git commit -m "testing"
-bash myprogram.sh
+bash flint.sh
 nvim main.c
 bash main.sh
-bash myprogram.sh
-start ./myprogram.exe
+bash flint.sh
+start ./flint.exe
 bash main.sh
 z repl
 z pro
@@ -10735,7 +10735,7 @@ z code
 bash main.sh
 z repl
 z code
-bash myprogram.sh
+bash flint.sh
 cd ..
 cd Replica\
 gcc replica.c -o replica.exe -ldwmapi
@@ -10748,7 +10748,7 @@ z code
 bash main.sh
 openvode
 opencode
-bash myprogram.sh
+bash flint.sh
 z videos
 lS
 ls
@@ -10769,7 +10769,7 @@ ls
 yt-dlp --yes-playlist -f "bestvideo[height<=240]+bestaudio/best[height<=240]" --download-archive playlist_archive.txt -o "%(playlist_title)s/[%(playlist_index)s] %(title)s.%(ext)s" "https://www.youtube.com/watch?v=9Xx5I9StU_Q&t=35s"
 ls
 nvim
-bash myprogram.sh
+bash flint.sh
 nvim
 z al
 l
@@ -10971,7 +10971,7 @@ yazi
 bash build.sh
 z code
 ls
-bash myprogram.sh
+bash flint.sh
 cd..
 cd ..
 ls
@@ -11224,7 +11224,7 @@ self._widget.focusProxy().installEventFilter(self._mouse_event_filter)
 C:/Users/HP/AppData/Local/Microsoft/WindowsApps/python.exe qutebrowser.py
 z code
 ls
-bash myprogram.sh
+bash flint.sh
 nvim README.asciidoc
 cd ..
 ls
@@ -11426,41 +11426,41 @@ rm -rg auto-complete\
 lS
 rm -rf auto-complete\
 bash build.sh
-bash myprogram.sh
+bash flint.sh
 ccd ..
 z misc
 cd `Useful Repos\`
 ls
 cd musializer\
 ls
-bash myprogram.sh
+bash flint.sh
 bash main.sh
 ollama
 bash main.sh
 opencode
 gcc main.cpp -o main.exe
 bash main.sh
-bash myprogram.sh
+bash flint.sh
 z code
-bash myprogram.sh
+bash flint.sh
 ollam
 ollama
-bash myprogram.sh
+bash flint.sh
 bash main.sh
-start ./myprogram.exe
+start ./flint.exe
 bash main.sh
-bash myprogram.sh
+bash flint.sh
 bash main.sh
 git clone https://github.com/neovim/neovim.git
 z code
 bash main.sh
-bash myprogram.sh
+bash flint.sh
 bash main.sh
 ;k
 bash main.sh
 bash main.sa
 bash main.sh
-bash myprogram.sh
+bash flint.sh
 nvim main.c
 gcc main.c -o main.exe
 ./main.exe
@@ -11470,25 +11470,25 @@ man sizeof
 gcc main.c -o main.exe ; ./main.exe
 kj
 gcc main.c -o main.exe ; ./main.exe
-bash myprogram.sh
+bash flint.sh
 bash main.sh
-bash myprogram.sh
+bash flint.sh
 bash main
 bash main.sh
 bash main
 bash main.sh
-bash myprogram.sh
+bash flint.sh
 bash main.sh
 ollama
 bash main.sh
-bash myprogram.sh
+bash flint.sh
 bash main.sh
-bash myprogram.sh
+bash flint.sh
 grep -r -l 
 grep -r -l  "raylib"
 cd ..
 grep -r -l  "raylib"
-bash myprogram.sh
+bash flint.sh
 cd `Useful Repos\`
 cd musializer\
 ls
@@ -11501,26 +11501,26 @@ cd ..
 ls
 cd resources\
 ls
-bash myprogram.sh
+bash flint.sh
 bash main.sh
-bash myprogram.sh
+bash flint.sh
 bash main.sh
-bash myprogram.sh
+bash flint.sh
 bash main.sh
-bash myprogram.sh
+bash flint.sh
 git clone https://github.com/raysan5/raylib.git
-bash myprogram.sh
+bash flint.sh
 ls
-bash myprogram.sh
+bash flint.sh
 bash main.sh
-bash myprogram.sh
+bash flint.sh
 bash main.sh
-gcc -DCOBJMACROS  main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
-start ./myprogram.exe
+gcc -DCOBJMACROS  main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+start ./flint.exe
 bash main.sh
-start ./myprogram.exe
+start ./flint.exe
 bash main.sh
-bash myprogram.sh
+bash flint.sh
 bash main.sh
 z rpos
 z repos
@@ -11531,11 +11531,11 @@ Z CODE
 z code
 sl
 ls
-bash myprogram.sh
+bash flint.sh
 bash main.sh
-bash myprogram.sh
+bash flint.sh
 opencode
-bash myprogram.sh
+bash flint.sh
 z repos
 git clone https://github.com/raysan5/raylib.git
 opencode
@@ -11549,9 +11549,9 @@ opencode
 z code
 bash main.sa
 bash main.sh
-bash myprogram.sh
+bash flint.sh
 nvim main.c
-bash myprogram.sh
+bash flint.sh
 python output.py
 python main.py
 z software
@@ -11649,11 +11649,11 @@ grep -r -l
 grep -r -l "SDL"
 grep -r -L "SDL"
 nvim
-bash myprogram.sh
+bash flint.sh
 bash main.sh
-bash myprogram.sh
+bash flint.sh
 bash main.sh
-bash myprogram.sh
+bash flint.sh
 bash main.sh
 ls
 bash main.sh
@@ -11661,31 +11661,31 @@ ls
 bash main.sh
 ;s
 bash main.sh
-bash myprogram.sh
+bash flint.sh
 bash main.sh
-bash myprogram.sh
+bash flint.sh
 bash main.sh
-bash myprogram.sh
+bash flint.sh
 bash main.sh
-bash myprogram.sh
+bash flint.sh
 ls
 bash main.sh
-bash myprogram.sh
+bash flint.sh
 bash main.sh
-bash myprogram.sh
+bash flint.sh
 nvim subclasses.h
 z repos
 git clone https://github.com/raysan5/raylib.git
 bash main.sh
-bash myprogram.sh
+bash flint.sh
 git clone https://github.com/nothings/stb.git
 git clone https://github.com/tsoding/panim.git
 git clone https://github.com/nothings/obbg.git
 bash main.sh
-bash myprogram.sh
+bash flint.sh
 bash MAIN
 bash main.sh
-bash myprogram.sh
+bash flint.sh
 cd software-rendered-game\
 gcc nob.c -o nob.exe
 ./nob.exe
@@ -11732,7 +11732,7 @@ rm -rf simple-todo-c\
 ls
 gcc Longhouse.c -o main.exe
 gcc Longhouse.c -o main.exe -lgdi
-gcc Longhouse.c -o main.exe D:\retard games\miscellaneous\Useful Repos\WinApi\win32ui: gcc -DCOBJMACROS  main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshl
+gcc Longhouse.c -o main.exe D:\retard games\miscellaneous\Useful Repos\WinApi\win32ui: gcc -DCOBJMACROS  main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshl
 wapi -lshell32 -lwinmm -lole32 -luuid
 gcc Longhouse.c -o main.exe -lcomctl32 -lgdiplus -lgdi32 -lshl
 gcc Longhouse.c -o main.exe -lcomctl32 -lgdiplus -lgdi32
@@ -11873,11 +11873,11 @@ gcc main.c -ggdb -omain -lgdi32 -lmingw32 # -mwindows # comment -mwindows out fo
 gcc main.c -ggdb -omain -lgdi32 -lmingw32 -o main.exe
 gcc main.c -o main.exe -l D:\Projects\Random Shit\raylib-5.5_win64_mingw-w64
 gcc main.c -o main.exe
-gcc -DCOBJMACROS  main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
+gcc -DCOBJMACROS  main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid
 gcc main.c -ggdb -omain -lgdi32 -lmingw32 -o main.exe
-gcc -DCOBJMACROS  main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -omain -ggdb
-gcc -DCOBJMACROS  main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -omain
-gcc -DCOBJMACROS  main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -ggdb
+gcc -DCOBJMACROS  main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -omain -ggdb
+gcc -DCOBJMACROS  main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -omain
+gcc -DCOBJMACROS  main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -ggdb
 cd ..
 cd terminal-example\
 gcc main.c -o main.exe
@@ -11972,47 +11972,47 @@ cd `Eagle Mode\`
 ls
 `./Eagle Mode.lnk`
 z code
-bash myprogram.sh
+bash flint.sh
 ls
 bash main.sh
-bash myprogram.sh
+bash flint.sh
 nvim README.md
 git clone https://github.com/Tejas1510/Hacking-Scripts.git
 bash main.sh
-bash myprogram.sh
+bash flint.sh
 bash main.sh
-bash myprogram.sh
+bash flint.sh
 bash main.sh
 ;s
 bash main.sh
-bash myprogram.sh
-start ./myprogram.exe
-bash myprogram.sh
+bash flint.sh
+start ./flint.exe
+bash flint.sh
 bash main.sh
-start ./myprogram.exe
+start ./flint.exe
 bash main.sh
-bash myprogram.sh
+bash flint.sh
 bash main.sh
 z code
 bash main.sh
 nvim subclasses.h
 bash main.sh
-gcc -DCOBJMACROS  main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -ggdb -Wmultichar
+gcc -DCOBJMACROS  main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -ggdb -Wmultichar
 bash main.sh
-gcc -DCOBJMACROS  main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -ggdb
-gcc -DCOBJMACROS  main.c -o myprogram.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -ggdb -Wno-multichar
+gcc -DCOBJMACROS  main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -ggdb
+gcc -DCOBJMACROS  main.c -o flint.exe -mwindows -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -ggdb -Wno-multichar
 bash main.sh
-bash myprogram.sh
+bash flint.sh
 bash main.sh
-start ./myprogram.exe
+start ./flint.exe
 bash main.sh
-bash myprogram.sh
-bash main.sh
-;kkkk
+bash flint.sh
 bash main.sh
 ;kkkk
 bash main.sh
-bash myprogram.sh
+;kkkk
+bash main.sh
+bash flint.sh
 bash main.sh
 opencode
 ls
@@ -12031,55 +12031,55 @@ setup_dependencies.bat
 bash build_msys2_ming64.sh
 bash build_msys2_mingw64.sh
 bash main.sh
-bash myprogram.sh
+bash flint.sh
 ls
 nvim main.c
 bash main.sh
-start ./myprogram.exe
+start ./flint.exe
 bash main.sh
-start ./myprogram.exe
+start ./flint.exe
 bash main.sh
-start ./myprogram.exe
+start ./flint.exe
 nvim main.c
 bash main.sh
 ;kkkk
 bash main.sh
 bash my
-bash myprogram.sh
+bash flint.sh
 bash main.sh
-bash myprogram.sh
+bash flint.sh
 ollama
 bash main.sh
-bash myprogram.sh
+bash flint.sh
 bash main.sh
-start ./myprogram.exe
-bash myprogram.sh
+start ./flint.exe
+bash flint.sh
 bash main.sh
-bash myprogram.sh
+bash flint.sh
 bash main.sh
-bash myprogram.sh
+bash flint.sh
 bash MAIN
-bash myprogram.sh
+bash flint.sh
 bash main.sh
 ;kkkk
 bash main.sh
 ;kkkk
 bash main.sh
-bash myprogram.sh
+bash flint.sh
 ls
 bash main.sh
-bash myprogram.sh
+bash flint.sh
 winget install Raycast.Raycast
-bash myprogram.sh
+bash flint.sh
 bash maim
 bash main.sh
 ''
 bash main.sh
-bash myprogram.sh
+bash flint.sh
 yt-dlp -x --audio-format mp3 "https://www.youtube.com/watch?v=eVli-tstM5E"
 mv 'Sabrina Carpenter - Espresso [eVli-tstM5E].mp3' 'Espresso'
 bash main.sh
-bash myprogram.sh
+bash flint.sh
 git clone https://github.com/CoolSunflower/AMacs.git
 scoop install make
 cd AMacs\
@@ -12124,7 +12124,7 @@ z ama
 make
 ls
 build_msvc.bat
-bash myprogram.sh
+bash flint.sh
 build_msvc.bat
 cd src\
 ls
@@ -12190,7 +12190,7 @@ cd src\
 ./main.exe testing.c
 ./main.exe
 bash main.sh
-bash myprogram.sh
+bash flint.sh
 nvim main.c
 z code
 nvim main.c
@@ -12199,7 +12199,7 @@ z code
 bash main.sh
 ./main.exe
 bash main.sh
-bash myprogram.sh
+bash flint.sh
 bash mainm
 bash main.sh
 z files
@@ -12216,7 +12216,7 @@ explorere .
 explorer .
 z code
 ./main.exe
-bash myprogram.sh
+bash flint.sh
 python main.py spread
 z ded
 z ama
@@ -12300,11 +12300,11 @@ bash build.sh ; ./ded.exe
 ./ded.exe
 bash build.sh ; ./ded.exe
 nvim
-bash myprogram.sh
+bash flint.sh
 bash main.sh
 z cpde
 z code
-bash myprogram.sh
+bash flint.sh
 opencode
 bash main.sh
 z code
@@ -12314,28 +12314,28 @@ z code
 bash main.sh
 z code
 bash main.sh
-bash myprogram.sh
+bash flint.sh
 bash main.sh
-bash myprogram.sh
+bash flint.sh
 bash main.sh
 ;kj 
 bash main.sh
 python output.py
-bash myprogram.sh
+bash flint.sh
 z code
 bash main.sh
-bash myprogram.sh
+bash flint.sh
 python main.py spread
 z code
 opencode
 bash main.sh
-bash myprogram.sh
+bash flint.sh
 nvim
 bash main.sh
-bash myprogram.sh
+bash flint.sh
 opencode
 bash main.sh
-bash myprogram.sh
+bash flint.sh
 yt-dlp -x --audio-format mp3 "https://www.youtube.com/watch?v=wSrmDdYasAU"
 ls
 yazi
@@ -12343,12 +12343,12 @@ cd Mp3\
 yt-dlp -x --audio-format mp3 "https://www.youtube.com/watch?v=y4zdDXPYo0I"
 mv 'Coldplay - Viva la Vida (Lyrics) [y4zdDXPYo0I].mp3' 'Viva La Vida.mp3'
 bash main.sh
-bash myprogram.sh
+bash flint.sh
 BASH MAI
 bash main.sh
-bash myprogram.sh
+bash flint.sh
 bash main.sh
-bash myprogram.sh
+bash flint.sh
 ./ded.exe
 z ded
 cd sr
@@ -12365,10 +12365,10 @@ z ded
 ./ded.exe
 yt-dlp -x --audio-format mp3 "https://www.youtube.com/watch?v=UkuoYYfxEfw"
 yazi
-bash myprogram.sh
+bash flint.sh
 main.sh
 bash main.sh
-bash myprogram.sh
+bash flint.sh
 git clone https://github.com/erincatto/box3d.git
 ls
 cd box3d\
@@ -12472,7 +12472,7 @@ git config user.name "RandomUser"
 git config user.email "random@email.com"
 z cpde
 z code
-bash myprogram.sh
+bash flint.sh
 z indie
 ./nob.exe
 ls
@@ -12499,7 +12499,7 @@ ls build/
 ls
 ls build/
 ./nob.exe
-z code ; bash myprogram.sh
+z code ; bash flint.sh
 z indie
 ./nob.exe
 cc -o nob nob.c
@@ -12512,16 +12512,16 @@ cc -o nob nob.c
 ./nob.exe -run
 nvim
 bash main.sh
-bash myprogram.sh
+bash flint.sh
 yt-dlp -x --audio-format mp3 "https://www.youtube.com/watch?v=HXSIxi-VUBM"
 yazi
-bash myprogram.sh
+bash flint.sh
 bash main.sh
 :W
 bash main.sh
-bash myprogram.sh
+bash flint.sh
 bash main.sh
-bash myprogram.sh
+bash flint.sh
 ls
 ./nob.exe -run
 ./nob.exe
@@ -12709,7 +12709,7 @@ adb connect 192.168.1.3:34059
 ./nob.exe -console run
 ./nob.exe -actual run
 ./nob.exe -console run
-./build/myprogram.exe
+./build/flint.exe
 ./nob.exe -console run
 ./nob.exe -actual run
 nviM

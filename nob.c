@@ -7,9 +7,9 @@
 #define OBJ_FOLDER BUILD_FOLDER "/obj"
 #if defined(_WIN32)
 #define CONSOLE_OUTPUT BUILD_FOLDER "/main.exe"
-#define ACTUAL_OUTPUT BUILD_FOLDER "/myprogram.exe"
+#define ACTUAL_OUTPUT BUILD_FOLDER "/flint.exe"
 #else
-#define CONSOLE_OUTPUT BUILD_FOLDER "/myprogram"
+#define CONSOLE_OUTPUT BUILD_FOLDER "/flint"
 #endif
 
 #if defined(_WIN32)
@@ -250,11 +250,11 @@ static bool compile_all(bool* any_compiled) {
 
 static bool instance_running(void) {
     
-    const char* marker = "/tmp/myprogram_nob_check";
+    const char* marker = "/tmp/flint_nob_check";
     Nob_Cmd chk = {0};
     nob_cmd_append(&chk, "sh", "-c",
-        "if systemctl --user is-active --quiet myprogram.service 2>/dev/null "
-        "|| pgrep -f 'build/[m]yprogram' >/dev/null 2>&1; then echo running; fi; "
+        "if systemctl --user is-active --quiet flint.service 2>/dev/null "
+        "|| pgrep -f 'build/[f]lint' >/dev/null 2>&1; then echo running; fi; "
         "exit 0");
     if (!nob_cmd_run(&chk, .stdout_path = marker)) return false;
     Nob_String_Builder sb = {0};
@@ -272,11 +272,11 @@ static void stop_running_instance(void) {
 
     Nob_Cmd cmd = {0};
     nob_cmd_append(&cmd, "sh", "-c",
-        "systemctl --user stop myprogram.service 2>/dev/null; "
-        "pkill -f 'build/[m]yprogram' 2>/dev/null; "
+        "systemctl --user stop flint.service 2>/dev/null; "
+        "pkill -f 'build/[f]lint' 2>/dev/null; "
         "exit 0");
     if (nob_cmd_run(&cmd)) {
-        nob_log(NOB_INFO, "Stopped previously running myprogram instance");
+        nob_log(NOB_INFO, "Stopped previously running flint instance");
     }
 }
 

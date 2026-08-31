@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "common.h"
 #include "features/file_search.h"
-#include "platform/platform.h"
+#include "core/platform.h"
 #include "config.h"
 #if defined(_WIN32)
 #include <shlwapi.h>

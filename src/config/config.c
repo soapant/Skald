@@ -29,7 +29,6 @@ const char* UsedTerminal = "foot";
 const char* ImageEditorPath =  "{APPDATA}/Microsoft/Windows/Start Menu/Programs/Scoop Apps/PicView.lnk"; // Not Implemented on Linux
 const char* TimerPath = "{DEV}/Tscoding Timer/sowon/sowon.exe"; 
 const char* MusicPlayerPath = "{DEV}/Music Player/music_player.exe";
-// const char* MusicPlayerPath = "{MISC}/Useful Repos/musializer/build/musializer.exe";
 const char* VideoViewerPath = "{DEV}/Video Viewer/video_viewer.exe";
 const char* TextEditorPath = "{PROGRAM_FILES}/bin/nvim";
 const char* MusicPath = "{MUSIC}";
@@ -49,7 +48,7 @@ const unsigned int PATH_VAR_COUNT = sizeof(G_PATH_VARS) / sizeof(G_PATH_VARS[0])
 const bool TimerAvailable = true;
 const bool MusicPlayerAvailable = true;
 const bool VideoViewerAvailable = true;
-const bool ReplicaAvailable = true;
+const bool ReplicaAvailable = false;
 const bool FullTextNeedsKeyPress = true;
 const bool MessagesEnabled = true;
 const bool RainbowText = false;
@@ -115,7 +114,7 @@ const char* ListOfShitToIgnore[30] = {
 };
 
 const TerminalCommandHotkey G_TERMINAL_COMMAND_HOTKEYS[] = {
-    { 'B', HOTKEY_MOD_ALT_CTRL,"hyprctl reload",false},
+    { 'B', HOTKEY_MOD_ALT_CTRL,"btop",false},
 };
 const unsigned int TERMINAL_COMMAND_HOTKEY_COUNT = sizeof(G_TERMINAL_COMMAND_HOTKEYS) / sizeof(G_TERMINAL_COMMAND_HOTKEYS[0]);
 

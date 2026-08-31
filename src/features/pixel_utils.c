@@ -57,10 +57,10 @@ void TriggerPosAdd(void) {
         char coords_buf[64];
         snprintf(coords_buf, sizeof(coords_buf), "(%ld, %ld)", mousePos.x, mousePos.y);
         char temp_lines[100][512];
-        int temp_count = ReadMdFile(temp_lines, TEMP_FILE_PATH);
+        int temp_count = ReadFile(temp_lines, TEMP_FILE_PATH);
         if (temp_count < 100) {
             snprintf(temp_lines[temp_count], sizeof(temp_lines[temp_count]), "%s", coords_buf);
-            WriteMdFile(temp_lines, temp_count + 1, TEMP_FILE_PATH);
+            WriteFile(temp_lines, temp_count + 1, TEMP_FILE_PATH);
         }
     }
 #else
@@ -70,7 +70,7 @@ void TriggerPosAdd(void) {
 
 void TriggerPosClear(void) {
   char temp_lines[100][512] = {0};
-  WriteMdFile(temp_lines,0,TEMP_FILE_PATH);
+  WriteFile(temp_lines,0,TEMP_FILE_PATH);
 }
 
 void TriggerColorPlain(void) {

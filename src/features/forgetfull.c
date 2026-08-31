@@ -8,7 +8,7 @@ static void AddTextToFile(const char* text) {
     if (!text || strlen(text) == 0) return;
     
     char lines[100][512];
-    int count = ReadMdFile(lines, FORGETFULL_FILE_PATH);
+    int count = ReadFile(lines, FORGETFULL_FILE_PATH);
     
     char new_entry[512];
     new_entry[0] = '\0';
@@ -17,7 +17,7 @@ static void AddTextToFile(const char* text) {
     strncpy(lines[count], new_entry, sizeof(lines[count]) - 1);
     lines[count][sizeof(lines[count]) - 1] = '\0';
     count++;
-    WriteMdFile(lines, count, FORGETFULL_FILE_PATH);
+    WriteFile(lines, count, FORGETFULL_FILE_PATH);
 }
 
 static void RemoveTextFromFile(const char* item_to_remove) {
@@ -64,7 +64,7 @@ static void RemoveTextFromFile(const char* item_to_remove) {
 
 static void forgetfull_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
     char forgetfull_lines[100][512];
-    int forgetfull_count = ReadMdFile(forgetfull_lines, FORGETFULL_FILE_PATH);
+    int forgetfull_count = ReadFile(forgetfull_lines, FORGETFULL_FILE_PATH);
     
     const char* items[100];
     for (int i = 0; i < forgetfull_count; i++) {
@@ -137,7 +137,7 @@ static void forgetfull_ctrlenter_callback(const char* selection, ListBoxInfo* lb
 
 void TriggerForgetFull(void) {
     char forgetfull_lines[100][512];
-    int count = ReadMdFile(forgetfull_lines, FORGETFULL_FILE_PATH);
+    int count = ReadFile(forgetfull_lines, FORGETFULL_FILE_PATH);
 
     const char* ui_list[100];
     for (int i = 0; i < count; i++) {

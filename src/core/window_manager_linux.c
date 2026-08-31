@@ -2,7 +2,7 @@
 #include "core/common_ui.h"
 #include "core/modal.h"
 #include "core/vim.h"
-#include "platform/platform.h"
+#include "core/platform.h"
 #include "platform/x11/ui_x11.h"
 #include "helpers.h"
 #include "window/subclasses_x11.h"
@@ -90,7 +90,7 @@ static int init_uinput(void) {
     setup.id.bustype = BUS_USB;
     setup.id.vendor = 0x1234;
     setup.id.product = 0x5678;
-    snprintf(setup.name, sizeof(setup.name), "myprogram-virtual-keyboard");
+    snprintf(setup.name, sizeof(setup.name), "flint-virtual-keyboard");
     if (ioctl(fd, UI_DEV_SETUP, &setup) == 0) {
         if (ioctl(fd, UI_DEV_CREATE) < 0) {
             perror("[UINPUT] UI_DEV_CREATE");
@@ -101,7 +101,7 @@ static int init_uinput(void) {
         
         struct uinput_user_dev uud;
         memset(&uud, 0, sizeof(uud));
-        snprintf(uud.name, sizeof(uud.name), "myprogram-virtual-keyboard");
+        snprintf(uud.name, sizeof(uud.name), "flint-virtual-keyboard");
         uud.id.bustype = BUS_USB;
         uud.id.vendor = 0x1234;
         uud.id.product = 0x5678;

@@ -156,7 +156,7 @@ static void AddTodoToFile(const char* text) {
     if (!text || strlen(text) == 0) return;
     
     char lines[100][512];
-    int count = ReadMdFile(lines, TODO_FILE_PATH);
+    int count = ReadFile(lines, TODO_FILE_PATH);
     
     char input_copy[512];
     strncpy(input_copy, text, sizeof(input_copy) - 1);
@@ -195,7 +195,7 @@ static void AddTodoToFile(const char* text) {
     strncpy(lines[count], new_entry, sizeof(lines[count]) - 1);
     lines[count][sizeof(lines[count]) - 1] = '\0';
     count++;
-    WriteMdFile(lines, count, TODO_FILE_PATH);
+    WriteFile(lines, count, TODO_FILE_PATH);
 }
 
 static void RemoveTodoItemFromFile(const char* item_to_remove) {
@@ -250,7 +250,7 @@ static void RemoveTodoItemFromFile(const char* item_to_remove) {
 
 static void todo_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
     char todo_lines[100][512];
-    int todo_count = ReadMdFile(todo_lines, TODO_FILE_PATH);
+    int todo_count = ReadFile(todo_lines, TODO_FILE_PATH);
     
     const char* items[100];
     for (int i = 0; i < todo_count; i++) {
@@ -258,7 +258,6 @@ static void todo_refresh_callback(const char* filter, WindowHandle hListBox, Lis
     }
 
     PopulateListBox(lb, hListBox, filter, items, todo_count, NULL);
-
 }
 
 static void todo_enter_callback(const char* selection, ListBoxInfo* lb) {
@@ -515,7 +514,7 @@ static void todo_edit_callback(const char* selection, ListBoxInfo* lb) {
 
 void TriggerTodo(void) {
     char todo_lines[100][512];
-    int count = ReadMdFile(todo_lines, TODO_FILE_PATH);
+    int count = ReadFile(todo_lines, TODO_FILE_PATH);
 
     const char* ui_list[100];
     for (int i = 0; i < count; i++) {

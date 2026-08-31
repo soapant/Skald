@@ -69,10 +69,10 @@ void OInNotificationRecieved(const char* text) {
 int main() {
 #if !defined(_WIN32)
   {
-    int lock_fd = open("/tmp/myprogram.lock", O_RDWR | O_CREAT, 0666);
+    int lock_fd = open("/tmp/flint.lock", O_RDWR | O_CREAT, 0666);
     if (lock_fd < 0) {
-      fprintf(stderr, "[SYSTEM] Cannot open singleton lock /tmp/myprogram.lock (%s).\n"
-                      "If it is owned by another user, remove it: sudo rm /tmp/myprogram.lock\n",
+      fprintf(stderr, "[SYSTEM] Cannot open singleton lock /tmp/flint.lock (%s).\n"
+                      "If it is owned by another user, remove it: sudo rm /tmp/flint.lock\n",
               strerror(errno));
       return 1;
     }
@@ -86,7 +86,7 @@ int main() {
 #endif
 #if defined(_WIN32)
   {
-    HANDLE mtx = CreateMutexA(NULL, TRUE, "myprogram_single_instance_mutex");
+    HANDLE mtx = CreateMutexA(NULL, TRUE, "flint_single_instance_mutex");
     if (mtx && GetLastError() == ERROR_ALREADY_EXISTS) {
       fprintf(stderr, "[SYSTEM] Another instance is already running. Exiting.\n");
       return 1;
