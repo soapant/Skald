@@ -16,6 +16,7 @@
 #include <stddef.h>
 #if defined(_WIN32)
 #include <shellapi.h>
+#include <shlwapi.h>
 #include <psapi.h>
 #else
 #include <unistd.h>

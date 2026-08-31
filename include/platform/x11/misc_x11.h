@@ -3,7 +3,6 @@
 
 #include "core/types.h"
 
-void Platform_SanitizeFile(const char* filePath);
 bool Platform_ExpandPath(const char* template_path, char* out, size_t out_size);
 int Platform_FileInit(const char* filePath, MappedFile* mf);
 int Platform_FileAppend(MappedFile* mf, const char* text);
