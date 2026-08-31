@@ -25,6 +25,10 @@
 #include "features/video_viewer.h"
 #include "features/focus_switcher.h"
 
+ListOfFiles g_app_list = {0};
+ListOfFiles g_music_files = {0};
+ListOfFiles g_video_files = {0};
+
 int fl_copy_into_clipboard(const char* text) {
     if (text == NULL) return 0;
     return fl_copy_into_clipboard_platform(text);

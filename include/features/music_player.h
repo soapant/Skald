@@ -5,7 +5,8 @@
 
 static char *allowed_audio_formats[] = {"mp3","ogg","flac", NULL};
 
-static ListOfFiles s_music_files = {0};
+extern ListOfFiles g_music_files;
+#define s_music_files g_music_files
 
 static void music_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
     s_music_files.count = 0;
@@ -132,7 +133,7 @@ static inline void music_player_init(void) {
     fl_register_hotkey("Alt+/", music_cmd_5, NULL, NULL);
     fl_register_hotkey("Alt+;", music_cmd_6, NULL, NULL);
     fl_register_hotkey("Alt+'", music_cmd_2, NULL, NULL);
-    fl_register_hotkey("Alt+M", music_prompt, NULL, NULL);
+    fl_register_hotkey("Alt+P", music_prompt, NULL, NULL);
 }
 
 #endif
