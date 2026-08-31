@@ -519,7 +519,8 @@ bool CheckTextSnippetBindings(int pressed_vk, int modifiers) {
 #else
             if (strcmp(G_TEXT_SNIPPETS[i].exe_name, "*") == 0 || strstr(activeExe, G_TEXT_SNIPPETS[i].exe_name) != NULL) {
 #endif
-                Platform_CopyToClipboard(G_TEXT_SNIPPETS[i].text);
+              // temporary i think
+                // Platform_CopyToClipboard(G_TEXT_SNIPPETS[i].text);
             }
         }
     }

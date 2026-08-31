@@ -287,7 +287,7 @@ static void todo_copy_callback(const char* selection,int true_index,int type) {
         *pipe = '\0';
     }
     
-    Platform_CopyToClipboard(buffer);
+    fl_copy_into_clipboard(buffer);
 }
 
 #if !defined(_WIN32)
