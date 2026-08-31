@@ -3,14 +3,6 @@
 
 #include "core/flapi.h"
 
-static const VideoViewerBinding G_VIDEO_PLAYERS[] = {
-  { VK_OEM_COMMA, HOTKEY_MOD_ALT_SHIFT, 1 },
-  { VK_OEM_PERIOD, HOTKEY_MOD_ALT_SHIFT, 5 },
-  { VK_OEM_1, HOTKEY_MOD_ALT_SHIFT, 6 },
-  { 'V', HOTKEY_MOD_ALT, 69 },
-};
-static const unsigned int VIDEO_PLAYER_COUNT = sizeof(G_VIDEO_PLAYERS) / sizeof(G_VIDEO_PLAYERS[0]);
-
 static char *allowed_video_formats[] = {"webm","mp4", NULL};
 
 static ListOfFiles s_video_files = {0};
@@ -81,51 +73,54 @@ static void video_enter_callback(const char* selection, ListBoxInfo* lb) {
     }
 #endif
 }
-static inline bool HandleVideoViewer(int vk_code, int modifiers, const char* current_title) {
-    if (!VideoViewerAvailable) return false;
-    int _idx = fl_find_video_idx(vk_code, modifiers, G_VIDEO_PLAYERS, VIDEO_PLAYER_COUNT);
-    if (_idx < 0) return false;
-    {
-        const VideoViewerBinding* binding = &G_VIDEO_PLAYERS[_idx];
+static void video_cmd_1(void) {
+    if (!VideoViewerAvailable) return;
 #if defined(_WIN32)
-            HWND playerHwnd = FindWindow(NULL, "Video Viewer");
-#endif
-            
-            if (binding->code != 69) {
-#if defined(_WIN32)
-                if (playerHwnd) {
-                    PostMessage(playerHwnd, WM_USER + 1, binding->code, 0);
-                    return true;
-                } else {
-                    return false;
-                }
+    HWND playerHwnd = FindWindow(NULL, "Video Viewer");
+    if (playerHwnd) PostMessage(playerHwnd, WM_USER + 1, 1, 0);
 #else
-                return Platform_SetX11Property("Video Viewer", "_MP_CMD", binding->code);
+    Platform_SetX11Property("Video Viewer", "_MP_CMD", 1);
 #endif
-            } else {
-                const char* prompt[1] = { "Your Directory Is Empty (Has No Videos)" };
-                
-                s_video_files.count = 0;
-                fl_get_all_files_from_dir(VideosPath, allowed_video_formats, &s_video_files, NULL);
-                
-                const char** initial_items = (const char**)malloc(s_video_files.count * sizeof(char*));
-                if (!initial_items) return false;
-                
-                for (size_t i = 0; i < s_video_files.count; i++) {
-                    initial_items[i] = s_video_files.items[i].name;
-                }
-                
-                PROMPT(.title = "🎥 Viewer", .items = initial_items, .count = (int)s_video_files.count,
-                       .height = 920, .width = 650, .item_height = 32,
-                       .refresh = video_refresh_callback,
-                       .enter = video_enter_callback);
-                
-                free((void*)initial_items);
+}
+static void video_cmd_5(void) {
+    if (!VideoViewerAvailable) return;
+#if defined(_WIN32)
+    HWND playerHwnd = FindWindow(NULL, "Video Viewer");
+    if (playerHwnd) PostMessage(playerHwnd, WM_USER + 1, 5, 0);
+#else
+    Platform_SetX11Property("Video Viewer", "_MP_CMD", 5);
+#endif
+}
+static void video_cmd_6(void) {
+    if (!VideoViewerAvailable) return;
+#if defined(_WIN32)
+    HWND playerHwnd = FindWindow(NULL, "Video Viewer");
+    if (playerHwnd) PostMessage(playerHwnd, WM_USER + 1, 6, 0);
+#else
+    Platform_SetX11Property("Video Viewer", "_MP_CMD", 6);
+#endif
+}
+static void video_prompt(void) {
+    if (!VideoViewerAvailable) return;
+    s_video_files.count = 0;
+    fl_get_all_files_from_dir(VideosPath, allowed_video_formats, &s_video_files, NULL);
+    const char** initial_items = (const char**)malloc(s_video_files.count * sizeof(char*));
+    if (!initial_items) return;
+    for (size_t i = 0; i < s_video_files.count; i++) {
+        initial_items[i] = s_video_files.items[i].name;
+    }
+    PROMPT(.title = "🎥 Viewer", .items = initial_items, .count = (int)s_video_files.count,
+           .height = 920, .width = 650, .item_height = 32,
+           .refresh = video_refresh_callback,
+           .enter = video_enter_callback);
+    free((void*)initial_items);
+}
 
-                return true;
-            }
-        }
-    return false;
+static inline void video_viewer_init(void) {
+    fl_register_hotkey("Alt+Shift+,", video_cmd_1, NULL, NULL);
+    fl_register_hotkey("Alt+Shift+.", video_cmd_5, NULL, NULL);
+    fl_register_hotkey("Alt+Shift+;", video_cmd_6, NULL, NULL);
+    fl_register_hotkey("Alt+V", video_prompt, NULL, NULL);
 }
 
 #endif

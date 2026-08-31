@@ -3,15 +3,6 @@
 
 #include "core/flapi.h"
 
-static const MusicPlayerBinding G_MUSIC_PLAYERS[] = {
-  { VK_OEM_COMMA, HOTKEY_MOD_ALT, 1 },
-  { VK_OEM_2, HOTKEY_MOD_ALT, 5 },
-  { VK_OEM_1, HOTKEY_MOD_ALT, 6 },
-  { VK_OEM_7, HOTKEY_MOD_ALT, 2 },
-  { 'M', HOTKEY_MOD_ALT, 69 },
-};
-static const unsigned int MUSIC_PLAYER_COUNT = sizeof(G_MUSIC_PLAYERS) / sizeof(G_MUSIC_PLAYERS[0]);
-
 static char *allowed_audio_formats[] = {"mp3","ogg","flac", NULL};
 
 static ListOfFiles s_music_files = {0};
@@ -88,50 +79,60 @@ static void music_enter_callback(const char* selection, ListBoxInfo* lb) {
 #endif
 }
 
-static inline bool HandleMusicPlayer(int vk_code, int modifiers, const char* current_title) {
-    if (!MusicPlayerAvailable) return false;
-    // very simple helper from flapi/helpers - one-liner binding lookup
-    int _idx = fl_find_music_idx(vk_code, modifiers, G_MUSIC_PLAYERS, MUSIC_PLAYER_COUNT);
-    if (_idx < 0) return false;
-    {
-        const MusicPlayerBinding* binding = &G_MUSIC_PLAYERS[_idx];
+static void music_cmd_1(void) {
 #if defined(_WIN32)
-            HWND playerHwnd = FindWindow(NULL, "Music Player");
-#endif
-            
-            if (binding->code != 69) {
-#if defined(_WIN32)
-                if (playerHwnd) {
-                    PostMessage(playerHwnd, WM_USER + 1, binding->code, 0);
-                    return true;
-                } else {
-                    return false;
-                }
+    HWND playerHwnd = FindWindow(NULL, "Music Player");
+    if (playerHwnd) PostMessage(playerHwnd, WM_USER + 1, 1, 0);
 #else
-                return Platform_SendX11Command("Music Player", "_MP_PLAYER_CMD", binding->code);
+    Platform_SendX11Command("Music Player", "_MP_PLAYER_CMD", 1);
 #endif
-            } else {
-                s_music_files.count = 0;
-                fl_get_all_files_from_dir(MusicPath, allowed_audio_formats, &s_music_files, NULL);
-                
-                const char** initial_items = (const char**)malloc(s_music_files.count * sizeof(char*));
-                if (!initial_items) return false;
-                
-                for (size_t i = 0; i < s_music_files.count; i++) {
-                    initial_items[i] = s_music_files.items[i].name;
-                }
+}
+static void music_cmd_5(void) {
+#if defined(_WIN32)
+    HWND playerHwnd = FindWindow(NULL, "Music Player");
+    if (playerHwnd) PostMessage(playerHwnd, WM_USER + 1, 5, 0);
+#else
+    Platform_SendX11Command("Music Player", "_MP_PLAYER_CMD", 5);
+#endif
+}
+static void music_cmd_6(void) {
+#if defined(_WIN32)
+    HWND playerHwnd = FindWindow(NULL, "Music Player");
+    if (playerHwnd) PostMessage(playerHwnd, WM_USER + 1, 6, 0);
+#else
+    Platform_SendX11Command("Music Player", "_MP_PLAYER_CMD", 6);
+#endif
+}
+static void music_cmd_2(void) {
+#if defined(_WIN32)
+    HWND playerHwnd = FindWindow(NULL, "Music Player");
+    if (playerHwnd) PostMessage(playerHwnd, WM_USER + 1, 2, 0);
+#else
+    Platform_SendX11Command("Music Player", "_MP_PLAYER_CMD", 2);
+#endif
+}
+static void music_prompt(void) {
+    if (!MusicPlayerAvailable) return;
+    s_music_files.count = 0;
+    fl_get_all_files_from_dir(MusicPath, allowed_audio_formats, &s_music_files, NULL);
+    const char** initial_items = (const char**)malloc(s_music_files.count * sizeof(char*));
+    if (!initial_items) return;
+    for (size_t i = 0; i < s_music_files.count; i++) {
+        initial_items[i] = s_music_files.items[i].name;
+    }
+    PROMPT(.title = "🎵 Player", .items = initial_items, .count = (int)s_music_files.count,
+           .height = 920, .width = 650, .item_height = 32,
+           .refresh = music_refresh_callback,
+           .enter = music_enter_callback);
+    free((void*)initial_items);
+}
 
-                PROMPT(.title = "🎵 Player", .items = initial_items, .count = (int)s_music_files.count,
-                       .height = 920, .width = 650, .item_height = 32,
-                       .refresh = music_refresh_callback,
-                       .enter = music_enter_callback);
-                
-                free((void*)initial_items);
-
-                return true;
-            }
-        }
-    return false;
+static inline void music_player_init(void) {
+    fl_register_hotkey("Alt+,", music_cmd_1, NULL, NULL);
+    fl_register_hotkey("Alt+/", music_cmd_5, NULL, NULL);
+    fl_register_hotkey("Alt+;", music_cmd_6, NULL, NULL);
+    fl_register_hotkey("Alt+'", music_cmd_2, NULL, NULL);
+    fl_register_hotkey("Alt+M", music_prompt, NULL, NULL);
 }
 
 #endif

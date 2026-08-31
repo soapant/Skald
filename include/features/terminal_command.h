@@ -4,10 +4,7 @@
 #include "core/flapi.h"
 #include "core/zoxide_helpers.h"
 
-static const TerminalCommandHotkey G_TERMINAL_COMMAND_HOTKEYS[] = {
-    { 'B', HOTKEY_MOD_ALT_CTRL,"btop",false},
-};
-static const unsigned int TERMINAL_COMMAND_HOTKEY_COUNT = sizeof(G_TERMINAL_COMMAND_HOTKEYS) / sizeof(G_TERMINAL_COMMAND_HOTKEYS[0]);
+
 
 static char** g_cached_commands = NULL;
 static int g_cached_command_count = 0;
@@ -127,15 +124,13 @@ static void TriggerTerminalCommand(void) {
     ZoxideHelper_CleanupTriggerList(list);
 }
 
-static inline bool CheckTerminalCommandHotkeyBindings(int pressed_vk, int modifiers) {
-    int idx = fl_find_terminal_idx(pressed_vk, modifiers, G_TERMINAL_COMMAND_HOTKEYS, TERMINAL_COMMAND_HOTKEY_COUNT);
-    if (idx < 0) return false;
-    RunTerminalCommand(G_TERMINAL_COMMAND_HOTKEYS[idx].terminal_command, false, G_TERMINAL_COMMAND_HOTKEYS[idx].open_in_terminal);
-    return true;
+static void run_btop(void) {
+    RunTerminalCommand("btop", false, false);
 }
 
 static inline void terminal_command_init(void) {
     fl_register_hotkey("Alt+{", TriggerTerminalCommand, NULL, NULL);
+    fl_register_hotkey("Alt+Ctrl+B", run_btop, NULL, NULL);
 }
 
 #endif

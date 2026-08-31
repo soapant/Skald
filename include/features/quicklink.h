@@ -5,11 +5,7 @@
 #include "core/platform.h"
 #include "features/window_switcher.h"
 
-static const QuickLinkHotkey G_QUICKLINK_HOTKEYS[] = {
-    {'Y', HOTKEY_MOD_ALT_CTRL, "*", "https://youtube.com" },
-    // {'M', HOTKEY_MOD_ALT_CTRL, "*", "https://messenger.com" },
-};
-static const unsigned int QUICKLINK_HOTKEY_COUNT = sizeof(G_QUICKLINK_HOTKEYS) / sizeof(G_QUICKLINK_HOTKEYS[0]);
+
 
 static inline void open_browser(const char *url) {
     if (!url) return;
@@ -37,27 +33,17 @@ static inline void open_browser(const char *url) {
     else printf("Failed to open the browser.\n");
 }
 
-static inline bool CheckQuickLinkHotkeyBindings(int pressed_vk, int modifiers) {
-#if defined(_WIN32)
-    WindowHandle hActiveWnd = WH_FROM_HWND(GetForegroundWindow());
-#else
-    WindowHandle hActiveWnd = WH_NULL;
-#endif
-    char activeExe[256] = {0};
-    FetchExeNameOnDemand(hActiveWnd, activeExe, sizeof(activeExe) - 1);
-    int idx = fl_find_quicklink_idx(pressed_vk, modifiers, activeExe, G_QUICKLINK_HOTKEYS, QUICKLINK_HOTKEY_COUNT);
-    if (idx < 0) return false;
-    open_browser(G_QUICKLINK_HOTKEYS[idx].QuickLinkQuery);
+static void open_youtube(void) {
+    open_browser("https://youtube.com");
     if (MessageAfterEachHotkey) {
         char buffer[64];
-        snprintf(buffer,sizeof(buffer),"[QuickLink] Hotkey Name %s Triggered \n",G_QUICKLINK_HOTKEYS[idx].QuickLinkQuery);
+        snprintf(buffer,sizeof(buffer),"[QuickLink] Hotkey Name %s Triggered \n","https://youtube.com");
         MSG_BOTTOM(buffer,140,TimeOutForMessages,COLOR_TEXT);
     }
-    return true;
 }
 
 static inline void quicklink_init(void) {
-    // G_QUICKLINK_HOTKEYS are handled via CheckQuickLinkHotkeyBindings (polling), not via fl_register_hotkey
+    fl_register_hotkey("Alt+Ctrl+Y", open_youtube, NULL, NULL);
 }
 
 #endif

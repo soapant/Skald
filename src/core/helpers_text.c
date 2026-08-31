@@ -216,7 +216,7 @@ int convert_string_to_int(const char *str) {
 HotkeyBinding convert_into_hotkey_binding(char* hotkey_string,void (*on_hotkey_trigger)(void),bool (*optional_condition_for_hotkey)(void),const char** optional_blacklistedwindows){ 
   HotkeyBinding output = {0};
   int out_modifiers = 0;
-  char out_key = '\0';
+  int out_key = 0;
   
   char buffer[256];
   strncpy(buffer, hotkey_string, sizeof(buffer) - 1);
@@ -234,22 +234,40 @@ HotkeyBinding convert_into_hotkey_binding(char* hotkey_string,void (*on_hotkey_t
       } else if (strcasecmp(token, "Win") == 0 || strcasecmp(token, "Super") == 0 || strcasecmp(token, "Meta") == 0 ) {
           out_modifiers |= HOTKEY_MOD_SUPER;
        } else {
-          if (strcasecmp(token, "Space") == 0) {
-              out_key = ' ';
-          } else if (strcasecmp(token, "Tab") == 0) {
-              out_key = '\t';
-          } else if (strcasecmp(token, "Enter") == 0 || strcasecmp(token, "Return") == 0) {
-              out_key = '\n';
-          } else if (strcasecmp(token, "Escape") == 0 || strcasecmp(token, "Esc") == 0) {
-              out_key = 27;
-          } else if (strcasecmp(token, "{") == 0 || strcasecmp(token, "[") == 0 || strcasecmp(token, "OEM_4") == 0 || strcasecmp(token, "Oem4") == 0) {
-              out_key = VK_OEM_4;
-          } else if (strlen(token) == 1) {
-              out_key = toupper((unsigned char)token[0]);
-          } else {
-              out_key = toupper((unsigned char)token[0]);
-          }
-      }
+           if (strcasecmp(token, "Space") == 0) {
+               out_key = ' ';
+           } else if (strcasecmp(token, "Tab") == 0) {
+               out_key = '\t';
+           } else if (strcasecmp(token, "Enter") == 0 || strcasecmp(token, "Return") == 0) {
+               out_key = '\n';
+           } else if (strcasecmp(token, "Escape") == 0 || strcasecmp(token, "Esc") == 0) {
+               out_key = 27;
+           } else if (strcasecmp(token, "{") == 0 || strcasecmp(token, "[") == 0 || strcasecmp(token, "OEM_4") == 0 || strcasecmp(token, "Oem4") == 0) {
+               out_key = VK_OEM_4;
+           } else if (strcasecmp(token, "}") == 0 || strcasecmp(token, "]") == 0 || strcasecmp(token, "OEM_6") == 0 || strcasecmp(token, "Oem6") == 0) {
+               out_key = VK_OEM_6;
+           } else if (strcasecmp(token, ",") == 0 || strcasecmp(token, "OEM_COMMA") == 0 || strcasecmp(token, "OemComma") == 0) {
+               out_key = VK_OEM_COMMA;
+           } else if (strcasecmp(token, ".") == 0 || strcasecmp(token, "OEM_PERIOD") == 0 || strcasecmp(token, "OemPeriod") == 0) {
+               out_key = VK_OEM_PERIOD;
+           } else if (strcasecmp(token, ";") == 0 || strcasecmp(token, "OEM_1") == 0 || strcasecmp(token, "Oem1") == 0) {
+               out_key = VK_OEM_1;
+           } else if (strcasecmp(token, "/") == 0 || strcasecmp(token, "OEM_2") == 0 || strcasecmp(token, "Oem2") == 0) {
+               out_key = VK_OEM_2;
+           } else if (strcasecmp(token, "'") == 0 || strcasecmp(token, "\"") == 0 || strcasecmp(token, "OEM_7") == 0 || strcasecmp(token, "Oem7") == 0) {
+               out_key = VK_OEM_7;
+           } else if (strcasecmp(token, "`") == 0 || strcasecmp(token, "OEM_3") == 0 || strcasecmp(token, "Oem3") == 0) {
+               out_key = VK_OEM_3;
+           } else if (strcasecmp(token, "-") == 0 || strcasecmp(token, "OEM_MINUS") == 0 || strcasecmp(token, "OemMinus") == 0) {
+               out_key = VK_OEM_MINUS;
+           } else if (strcasecmp(token, "=") == 0 || strcasecmp(token, "OEM_PLUS") == 0 || strcasecmp(token, "OemPlus") == 0) {
+               out_key = VK_OEM_PLUS;
+           } else if (strlen(token) == 1) {
+               out_key = toupper((unsigned char)token[0]);
+           } else {
+               out_key = toupper((unsigned char)token[0]);
+           }
+       }
       
       token = strtok(NULL, "+");
   }
