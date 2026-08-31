@@ -1,8 +1,6 @@
 #ifndef FOCUS_SWITCHER_H
 #define FOCUS_SWITCHER_H
 
-#include <stdbool.h>
-
 typedef struct {
     const char* search_title;
     WindowHandle result;

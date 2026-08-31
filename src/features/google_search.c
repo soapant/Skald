@@ -1,5 +1,4 @@
 #include "core/flapi.h"
-#include "features/google_search.h"
 #include "core/zoxide_helpers.h"
 
 #define FILE_GOOGLE_ZOXIDE 5

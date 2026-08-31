@@ -74,7 +74,7 @@ void initialize_app_cache(void) {
         
         bool found = false;
         for (size_t app_idx = 0; app_idx < s_apps.count; app_idx++) {
-            if (StrStrIA(s_apps.items[app_idx].path, SystemShortcuts[shortcut_idx].path) != NULL) {
+            if (fl_case_insensitive_string_match_platform(s_apps.items[app_idx].path, SystemShortcuts[shortcut_idx].path) != NULL) {
                 strncpy(s_apps.items[app_idx].name, SystemShortcuts[shortcut_idx].name, sizeof(s_apps.items[app_idx].name) - 1);
                 s_apps.items[app_idx].name[sizeof(s_apps.items[app_idx].name) - 1] = '\0';
                 found = true;

@@ -15,11 +15,7 @@ static bool is_system_noise(const char* exe) {
         "taskhostw.exe", "dwm.exe", "fontdrvhost.exe", "Registry","TextInputHost.exe"
     };
     for (size_t i = 0; i < sizeof(noise) / sizeof(noise[0]); i++) {
-#if defined(_WIN32)
-        if (StrCmpIA(exe, noise[i]) == 0) return true;
-#else
-        if (strcasecmp(exe, noise[i]) == 0) return true;
-#endif
+        if (fl_case_insensitive_string_match_platform(exe, noise[i])) return true;
     }
     return false;
 }
