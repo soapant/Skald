@@ -973,24 +973,6 @@
   },
   {
     "directory": "/home/diggy/Programming/Projects/C Code",
-    "file": "src/features/file_search.c",
-    "arguments": [
-      "gcc",
-      "-Wall",
-      "-Wextra",
-      "-I",
-      "include",
-      "-I/usr/include/freetype2",
-      "-MMD",
-      "-MP",
-      "-w",
-      "-g",
-      "-c",
-      "src/features/file_search.c"
-    ]
-  },
-  {
-    "directory": "/home/diggy/Programming/Projects/C Code",
     "file": "src/features/zoxide.c",
     "arguments": [
       "gcc",

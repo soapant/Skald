@@ -13,7 +13,6 @@
 #include <strings.h>
 #endif
 
-// Helper: Case-insensitive substring search
 static char* my_strcasestr(const char* haystack, const char* needle) {
 #if defined(_WIN32)
     return (char*)StrStrIA(haystack, needle);
@@ -23,7 +22,6 @@ static char* my_strcasestr(const char* haystack, const char* needle) {
 }
 
 #if !defined(_WIN32)
-// Helper to get window title string from X11 window
 static bool GetX11WindowPropertyString(Display* dpy, Window w, Atom prop, char* buf, int max_len) {
     Atom actual_type;
     int actual_format;

@@ -166,14 +166,8 @@ void live_evaluate(const char* input, char* out_result, size_t max_len) {
     strncpy(clean, input, sizeof(clean) - 1);
     clean[sizeof(clean) - 1] = '\0';
 
-    
-    
-    
-#if defined(_WIN32)
-    char* in_keyword = StrStrIA(clean, " in ");
-#else
-    char* in_keyword = strstr(clean, " in ");
-#endif
+    //i think this wont workf for now keep it 
+    char* in_keyword = strchr(clean,'i');
     if (in_keyword) {
         char target_unit[64] = {0};
         strncpy(target_unit, in_keyword + 4, sizeof(target_unit) - 1);

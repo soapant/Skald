@@ -255,13 +255,8 @@ static void WindowUtils_GetFiltered(WindowList* list, const char** blacklist, in
 static bool switcher_match_helper(const char* item, const char* filter) {
     for (int i = 0; i < g_switcher_count; i++) {
         if (strcmp(g_switcher_windows[i].title, item) == 0) {
-#if defined(_WIN32)
-            return (StrStrIA(g_switcher_windows[i].title, filter) != NULL ||
-                    StrStrIA(g_switcher_windows[i].exe, filter) != NULL);
-#else
-            return (strcasestr(g_switcher_windows[i].title, filter) != NULL ||
-                    strcasestr(g_switcher_windows[i].exe, filter) != NULL);
-#endif
+            return (fl_case_insensitive_string_match_platform(g_switcher_windows[i].title, filter) != NULL ||
+                    fl_case_insensitive_string_match_platform(g_switcher_windows[i].exe, filter) != NULL);
         }
     }
     return false;
