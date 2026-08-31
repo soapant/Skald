@@ -12,7 +12,7 @@ static const MusicPlayerBinding G_MUSIC_PLAYERS[] = {
 };
 static const unsigned int MUSIC_PLAYER_COUNT = sizeof(G_MUSIC_PLAYERS) / sizeof(G_MUSIC_PLAYERS[0]);
 
-char *allowed_audio_formats[] = {"mp3","ogg","flac", NULL};
+static char *allowed_audio_formats[] = {"mp3","ogg","flac", NULL};
 
 static ListOfFiles s_music_files = {0};
 
@@ -88,7 +88,7 @@ static void music_enter_callback(const char* selection, ListBoxInfo* lb) {
 #endif
 }
 
-bool HandleMusicPlayer(int vk_code, int modifiers, const char* current_title) {
+static inline bool HandleMusicPlayer(int vk_code, int modifiers, const char* current_title) {
     if (!MusicPlayerAvailable) return false;
     // very simple helper from flapi/helpers - one-liner binding lookup
     int _idx = fl_find_music_idx(vk_code, modifiers, G_MUSIC_PLAYERS, MUSIC_PLAYER_COUNT);

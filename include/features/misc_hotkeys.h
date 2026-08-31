@@ -17,20 +17,16 @@ static const MiscHotkey G_MISC_HOTKEYS[] = {
 };
 static const unsigned int MISC_HOTKEY_COUNT = sizeof(G_MISC_HOTKEYS) / sizeof(G_MISC_HOTKEYS[0]);
 
-void HandleKillMyProgram(void) {
+static void HandleKillMyProgram(void) {
     terminate_process_by_name("flint.exe");
     terminate_process_by_name("main.exe");
 }
 
-void HandleInitAppLauncherCache(void) {
-    initialize_app_cache();
-}
-
-void HandleSettingsTrigger(void) {
+static void HandleSettingsTrigger(void) {
     Platform_SettingsPopUp();
 }
 
-void RunMiscApplication(const char* path) {
+static inline void RunMiscApplication(const char* path) {
     char expanded_path[MAX_PATH];
     if (path != NULL && !Platform_ExpandPath(path, expanded_path, sizeof(expanded_path))) return;
     if (path != NULL) path = expanded_path;
@@ -88,7 +84,7 @@ void RunMiscApplication(const char* path) {
 #endif
 }
 
-bool CheckMiscHotkeyBindings(int pressed_vk, int modifiers) {
+static inline bool CheckMiscHotkeyBindings(int pressed_vk, int modifiers) {
 #if defined(_WIN32)
     WindowHandle hActiveWnd = WH_FROM_HWND(GetForegroundWindow());
 #else
@@ -104,7 +100,6 @@ bool CheckMiscHotkeyBindings(int pressed_vk, int modifiers) {
 
 static inline void misc_hotkeys_init(void) {
     fl_register_hotkey("Alt+Shift+K", HandleKillMyProgram, NULL, NULL);
-    fl_register_hotkey("Alt+Shift+E", HandleInitAppLauncherCache, NULL, NULL);
     fl_register_hotkey("Alt+Shift+T", Platform_HandleShowCurrentTime, NULL, NULL);
     fl_register_hotkey("Alt+D", HandleSettingsTrigger, NULL, NULL);
 }

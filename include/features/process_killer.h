@@ -119,7 +119,7 @@ static void run_hidden_command(const char* cmd) {
 #endif
 }
 
-void terminate_process_by_name(const char* exe_name) {
+static void terminate_process_by_name(const char* exe_name) {
 #if defined(_WIN32)
     char cmd[512];
     snprintf(cmd, sizeof(cmd), "taskkill /f /im \"%s*\"", exe_name);
@@ -155,7 +155,7 @@ static void BulkKillProcesses(const char* window_titles[], int count) {
 #endif
 }
 
-bool HandleBulkKillProcess(int vk_code, int modifiers, const char* current_title) {
+static bool HandleBulkKillProcess(int vk_code, int modifiers, const char* current_title) {
     // simple helper - one-liner finding
     int _idx = fl_find_bulk_idx(vk_code, modifiers, G_BULK_KILL_PROCESS, BULKKILLPROCESS_COUNT);
     if (_idx < 0) return false;
@@ -176,7 +176,7 @@ static void pk_refresh_callback(const char* filter, WindowHandle hListBox, ListB
     free(items);
 }
 
-void TriggerProcessKiller(void) {
+static void TriggerProcessKiller(void) {
 
     collect_running_processes();
 
