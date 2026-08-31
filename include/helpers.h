@@ -20,7 +20,7 @@
 #include <X11/Xft/Xft.h>
 #endif
 
-typedef void (*HotkeyHandler)(void);
+typedef void (*HotkeyCallback)(void);
 typedef bool (*HotkeyCondition)(void);
 extern char* SelectionData[2048];
 extern int SelectionDataCount;
@@ -30,10 +30,13 @@ typedef struct {
     int modifiers;
     const char** blacklist;
     int blacklist_count;
-    HotkeyHandler handler;
-    const char* name;
-    HotkeyCondition is_enabled;
+    HotkeyCallback hotkey_callback;
+    HotkeyCondition hotkey_condition;
 } HotkeyBinding;
+
+typedef struct {
+
+} Hotkey;
 
 void SubjectiveMessageDisplay(const char* buffer,int msg_height,int timeout,ColorRef color);
 extern EditorMode g_last_mode;

@@ -59,3 +59,6 @@ void fl_free_file_list(const char* list[], int count) {
     for (int i = 0; i < count; i++) free((void*)list[i]);
 }
 
+void fl_register_hotkey(HotkeyBinding hotkey) {
+}
+
