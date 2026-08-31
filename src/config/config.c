@@ -60,28 +60,6 @@ const float GradientBrightness = 1.0f;
 bool PixelHotkeys = false;
 bool CloseOnLossOfFocus = false;
 
-const PathEntry SystemShortcuts[] = {
-    {"control.exe", "Control Panel"},
-    {"devmgmt.msc", "Device Manager"},
-    {"compmgmt.msc", "Computer Management"},
-    {"diskmgmt.msc", "Disk Management"},
-    {"services.msc", "Services"},
-    {"taskmgr.exe", "Task Manager"},
-    {"notepad.exe", "Notepad"},
-    {"calc.exe", "Calculator"},
-    {"mspaint.exe", "Paint"},
-    {"cmd.exe", "Command Prompt"},
-    {"powershell.exe", "PowerShell"},
-    {"msconfig.exe", "System Configuration"},
-    {"dxdiag.exe", "DirectX Diagnostic Tool"},
-    {"sysdm.cpl", "System Properties"},
-    {"inetcpl.cpl", "Internet Options"},
-    {"appwiz.cpl", "Programs and Features"},
-    {"timedate.cpl", "Date and Time"},
-    {"desk.cpl", "Display Settings"},
-    {"main.cpl", "Mouse Properties"}
-};
-
 const TerminalCommandHotkey G_TERMINAL_COMMAND_HOTKEYS[] = {
     { 'B', HOTKEY_MOD_ALT_CTRL,"btop",false},
 };

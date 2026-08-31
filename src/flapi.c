@@ -21,5 +21,19 @@ char* fl_search_file_in_dir(const char* directory, const char* search_string,cha
     if (!Platform_ExpandPath(directory, expanded_dir, sizeof(expanded_dir))) return NULL;
     directory = expanded_dir;
 
-    fl_search_file_in_dir(directory,search_string,output_path);
+    return fl_search_file_in_dir_platform(directory,search_string,output_path);
+}
+
+bool fl_launch_with_args(const char* path, const char* args) {
+    if (!path) return false;
+    char expanded[MAX_PATH];
+    if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) return false;
+    return fl_launch_with_args_platform(expanded, args);
+}
+
+bool fl_launch_with_args_as_admin(const char* path, const char* args) {
+    if (!path) return false;
+    char expanded[MAX_PATH];
+    if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) return false;
+    return fl_launch_with_args_as_admin_platform(expanded, args);
 }

@@ -1,5 +1,4 @@
 #include "core/flapi.h"
-#include "features/app_launcher.h"
 
 char *allowed_video_formats[] = {"webm","mp4", NULL};
 
@@ -57,7 +56,7 @@ static void video_enter_callback(const char* selection, ListBoxInfo* lb) {
     } else {
         char quoted_result[MAX_PATH + 3] = {0};
         snprintf(quoted_result, sizeof(quoted_result), "\"%s\"", result);
-        launch_exe_with_args(VideoViewerPath, quoted_result);
+        fl_launch_with_args(VideoViewerPath, quoted_result);
     }
 #else
     if (Platform_SetX11StringProperty("Video Viewer", "_MP_TRACK", result) &&
@@ -67,7 +66,7 @@ static void video_enter_callback(const char* selection, ListBoxInfo* lb) {
     if (strlen(VideoViewerPath) > 0) {
         char quoted_result[MAX_PATH + 3] = {0};
         snprintf(quoted_result, sizeof(quoted_result), "\"%s\"", result);
-        launch_exe_with_args(VideoViewerPath, quoted_result);
+        fl_launch_with_args(VideoViewerPath, quoted_result);
     }
 #endif
 }

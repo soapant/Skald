@@ -31,6 +31,30 @@ const char* ListOfProgramPaths[20] = {
 #endif
 };
 
+const PathEntry SystemShortcuts[] = {
+    {"control.exe", "Control Panel"},
+    {"devmgmt.msc", "Device Manager"},
+    {"compmgmt.msc", "Computer Management"},
+    {"diskmgmt.msc", "Disk Management"},
+    {"services.msc", "Services"},
+    {"taskmgr.exe", "Task Manager"},
+    {"notepad.exe", "Notepad"},
+    {"calc.exe", "Calculator"},
+    {"mspaint.exe", "Paint"},
+    {"cmd.exe", "Command Prompt"},
+    {"powershell.exe", "PowerShell"},
+    {"msconfig.exe", "System Configuration"},
+    {"dxdiag.exe", "DirectX Diagnostic Tool"},
+    {"sysdm.cpl", "System Properties"},
+    {"inetcpl.cpl", "Internet Options"},
+    {"appwiz.cpl", "Programs and Features"},
+    {"timedate.cpl", "Date and Time"},
+    {"desk.cpl", "Display Settings"},
+    {"main.cpl", "Mouse Properties"}
+};
+
+#define SYSTEM_SHORTCUT_COUNT 19
+
 static ListOfFiles s_apps = {0};
 
 void initialize_app_cache(void) {
@@ -82,7 +106,7 @@ void launch_app_by_name(const char* display_name) {
 #else
         if (strcasecmp(s_apps.items[i].name, display_name) == 0) {
 #endif
-            Platform_LaunchApp(s_apps.items[i].path);
+            fl_launch_with_args(s_apps.items[i].path, NULL);
             return;
         }
     }
@@ -95,79 +119,10 @@ static void launch_app_as_admin(const char* display_name) {
 #else
         if (strcasecmp(s_apps.items[i].name, display_name) == 0) {
 #endif
-            Platform_LaunchAppAsAdmin(s_apps.items[i].path);
+            fl_launch_with_args_as_admin(s_apps.items[i].path, NULL);
             return;
         }
     }
-}
-
-void launch_exe_with_args(const char* exe_path, const char* args) {
-    char cmd[MAX_PATH * 2 + 512];
-
-    char expanded_path[MAX_PATH];
-    if (!Platform_ExpandPath(exe_path, expanded_path, sizeof(expanded_path))) return;
-    exe_path = expanded_path;
-
-    if (args != NULL && strlen(args) > 0 && strcmp(args, "0") != 0) {
-        snprintf(cmd, sizeof(cmd), "\"%s\" %s", exe_path, args);
-    } else {
-        snprintf(cmd, sizeof(cmd), "\"%s\"", exe_path);
-    }
-    
-#if defined(_WIN32)
-    STARTUPINFOA si = {0};
-    si.cb = sizeof(si);
-    PROCESS_INFORMATION pi = {0};
-    
-    if (CreateProcessA(NULL, cmd, NULL, NULL, FALSE, CREATE_NO_WINDOW, NULL, NULL, &si, &pi)) {
-        CloseHandle(pi.hProcess);
-        CloseHandle(pi.hThread);
-    }
-#else
-    const char* real_user = NULL;
-    {
-        const char* u=getenv("SUDO_USER");
-        if(u && u[0] && strcmp(u,"root")!=0) real_user=u;
-        else {
-            u=getenv("USER");
-            if(u && u[0]) real_user=u;
-            else {
-                u=getenv("LOGNAME");
-                if(u && u[0]) real_user=u;
-                else {
-                    struct passwd* pw=getpwuid(getuid());
-                    real_user = (pw && pw->pw_name) ? pw->pw_name : "diggy";
-                }
-            }
-        }
-    }
-    const char* display = Platform_GetSessionDisplay();
-    const char* xauthority = Platform_GetSessionXAuthority();
-    char runtime_dir[256];
-    snprintf(runtime_dir, sizeof(runtime_dir), "%s", Platform_GetRuntimeDir());
-    char disp_env[256], xauth_env[512], runtime_env[512];
-    snprintf(disp_env, sizeof(disp_env), "DISPLAY=%s", display);
-    snprintf(xauth_env, sizeof(xauth_env), "XAUTHORITY=%s", xauthority);
-    snprintf(runtime_env, sizeof(runtime_env), "XDG_RUNTIME_DIR=%s", runtime_dir);
-    pid_t pid = fork();
-    if (pid==0){
-        setsid();
-        pid_t pid2=fork();
-        if(pid2<0) _exit(1);
-        if(pid2>0) _exit(0);
-        int fd=open("/dev/null",O_RDWR); if(fd>=0){dup2(fd,0);dup2(fd,1);dup2(fd,2); if(fd>2) close(fd);}
-        if(getuid()==0){
-            char* const argv[] = {"sudo","-u",(char*)real_user,"env",disp_env,xauth_env,runtime_env,"sh","-c",cmd,NULL};
-            execvp(argv[0], argv);
-        } else {
-            setenv("DISPLAY",display,1); setenv("XAUTHORITY",xauthority,1); setenv("XDG_RUNTIME_DIR",runtime_dir,1);
-            execl("/bin/sh","sh","-c",cmd,(char*)NULL);
-        }
-        _exit(127);
-    } else if(pid>0){
-        int st=0; waitpid(pid,&st,0);
-    }
-#endif
 }
 
 static void applauncher_enter_callback(const char* selection, ListBoxInfo* lb) {
