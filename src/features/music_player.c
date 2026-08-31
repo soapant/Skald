@@ -1,5 +1,4 @@
 #include "core/flapi.h"
-#include "features/file_search.h"
 #include "features/app_launcher.h"
 
 char *allowed_audio_formats[] = {"mp3","ogg","flac"};
