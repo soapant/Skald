@@ -11,7 +11,7 @@ static const QuickLinkHotkey G_QUICKLINK_HOTKEYS[] = {
 };
 static const unsigned int QUICKLINK_HOTKEY_COUNT = sizeof(G_QUICKLINK_HOTKEYS) / sizeof(G_QUICKLINK_HOTKEYS[0]);
 
-void open_browser(const char *url) {
+static inline void open_browser(const char *url) {
     if (!url) return;
     char command[1024];
 #if defined(_WIN32)
@@ -37,7 +37,7 @@ void open_browser(const char *url) {
     else printf("Failed to open the browser.\n");
 }
 
-bool CheckQuickLinkHotkeyBindings(int pressed_vk, int modifiers) {
+static inline bool CheckQuickLinkHotkeyBindings(int pressed_vk, int modifiers) {
 #if defined(_WIN32)
     WindowHandle hActiveWnd = WH_FROM_HWND(GetForegroundWindow());
 #else

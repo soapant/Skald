@@ -106,7 +106,7 @@ static void GetX11ClientWindows(Display* dpy, Window w, Window** list, int* coun
 }
 #endif
 
-void FocusWindow(WindowHandle hwnd) {
+static void FocusWindow(WindowHandle hwnd) {
 #if defined(_WIN32)
     HWND win = WH_TO_HWND(hwnd);
     if (win == NULL || !IsWindow(win)) return;
@@ -185,7 +185,7 @@ static BOOL CALLBACK FindWindowByPartialTitleProc(HWND hwnd, LPARAM lParam) {
 }
 #endif
 
-WindowHandle FindWindowByPartialTitle(const char* title) {
+static WindowHandle FindWindowByPartialTitle(const char* title) {
 #if defined(_WIN32)
     FindWindowSomething data;
     data.search_title = title;
@@ -302,7 +302,7 @@ static bool IsBlacklisted(const char* title, const char* blacklist[], int count)
     return false;
 }
 
-bool HandleFocusSwitcher(int vk_code, int modifiers, const char* current_title) {
+static bool HandleFocusSwitcher(int vk_code, int modifiers, const char* current_title) {
     // simple helper - one-liner finding
     int _idx = fl_find_focus_idx(vk_code, modifiers, G_FOCUS_SWITCHERS, FOCUS_SWITCHER_COUNT);
     if (_idx < 0) return false;

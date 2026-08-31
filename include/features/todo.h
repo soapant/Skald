@@ -515,7 +515,7 @@ static void todo_edit_callback(const char* selection, ListBoxInfo* lb) {
     WindowManager_PushPopup(wm, popup);
 }
 
-void TriggerTodo(void) {
+static void TriggerTodo(void) {
     const char* ui_list[100];
     int count = fl_load_file_list(TODO_FILE_PATH, ui_list, 100);
 

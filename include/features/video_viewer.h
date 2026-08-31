@@ -11,7 +11,7 @@ static const VideoViewerBinding G_VIDEO_PLAYERS[] = {
 };
 static const unsigned int VIDEO_PLAYER_COUNT = sizeof(G_VIDEO_PLAYERS) / sizeof(G_VIDEO_PLAYERS[0]);
 
-char *allowed_video_formats[] = {"webm","mp4", NULL};
+static char *allowed_video_formats[] = {"webm","mp4", NULL};
 
 static ListOfFiles s_video_files = {0};
 
@@ -81,7 +81,7 @@ static void video_enter_callback(const char* selection, ListBoxInfo* lb) {
     }
 #endif
 }
-bool HandleVideoViewer(int vk_code, int modifiers, const char* current_title) {
+static inline bool HandleVideoViewer(int vk_code, int modifiers, const char* current_title) {
     if (!VideoViewerAvailable) return false;
     int _idx = fl_find_video_idx(vk_code, modifiers, G_VIDEO_PLAYERS, VIDEO_PLAYER_COUNT);
     if (_idx < 0) return false;

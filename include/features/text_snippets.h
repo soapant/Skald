@@ -11,7 +11,7 @@ static const TextSnippet G_TEXT_SNIPPETS[] = {
 };
 static const unsigned int TEXT_SNIPPET_COUNT = sizeof(G_TEXT_SNIPPETS) / sizeof(G_TEXT_SNIPPETS[0]);
 
-bool CheckTextSnippetBindings(int pressed_vk, int modifiers) {
+static inline bool CheckTextSnippetBindings(int pressed_vk, int modifiers) {
 #if defined(_WIN32)
     WindowHandle hActiveWnd = WH_FROM_HWND(GetForegroundWindow());
 #else
