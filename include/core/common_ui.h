@@ -64,7 +64,7 @@ static inline bool IsWindowValid(WindowHandle h) {
 static inline void UI_RedrawNow(ListBoxInfo* lb, WindowHandle hListBox);
 
 #if defined(_WIN32)
-#include "platform/ui_win32.h"
+#include "platform/win32/ui_win32.h"
 #else
 #include "platform/x11/ui_x11.h"
 #endif
