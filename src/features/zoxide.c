@@ -1,11 +1,8 @@
-#include "common.h"
-#include "features/zoxide.h"
-#include "helpers.h"
-#include "core/common_ui.h"
+#include "core/flapi.h"
 #include "core/zoxide_helpers.h"
-#if defined(_WIN32)
-#include <shellapi.h>
-#endif
+
+#define FILE_TERMINAL_ZOXIDE 3
+#define TerminalZoxideFile G_FILE_ENTRIES[FILE_TERMINAL_ZOXIDE].mf
 
 static char** g_cached_zoxide_commands = NULL;
 static int g_cached_zoxide_count = 0;

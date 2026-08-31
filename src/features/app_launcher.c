@@ -1,17 +1,5 @@
-#include "common.h"
-#include "features/app_launcher.h"
+#include "core/flapi.h"
 #include "features/file_search.h"
-#include "helpers.h"
-#include "core/common_ui.h"
-#if defined(_WIN32)
-#include <shlwapi.h>
-#else
-#include <unistd.h>
-#include <sys/wait.h>
-#include <fcntl.h>
-#include <pwd.h>
-#include <string.h>
-#endif
 
 void initialize_app_cache(void) {
     G_APP_COUNT = 0;

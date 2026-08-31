@@ -1,18 +1,11 @@
-#include "common.h"
-#include "features/terminal_command.h"
-#include "helpers.h"
-#include "core/common_ui.h"
+#include "core/flapi.h"
 #include "core/zoxide_helpers.h"
-#include "core/platform.h"
-#include <sys/stat.h>
-#if defined(_WIN32)
-#include <shellapi.h>
-#else
-#include <unistd.h>
-#endif
 
 static char** g_cached_commands = NULL;
 static int g_cached_command_count = 0;
+
+#define FILE_TERMINAL_HISTORY 0
+#define TerminalHistoryFile G_FILE_ENTRIES[FILE_TERMINAL_HISTORY].mf
 
 static void RebuildCommandCache(void) {
     ZoxideHelper_RebuildCache(TerminalHistoryFile, &g_cached_commands, &g_cached_command_count);

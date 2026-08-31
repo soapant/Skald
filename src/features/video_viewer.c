@@ -1,10 +1,6 @@
-#include "common.h"
-#include "features/video_viewer.h"
-#include "config.h"
-#include "core/common_ui.h"
+#include "core/flapi.h"
 #include "features/file_search.h"
 #include "features/app_launcher.h"
-#include "core/platform.h"
 
 char *allowed_video_formats[] = {"webm","mp4"};
 

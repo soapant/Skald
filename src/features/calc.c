@@ -1,11 +1,12 @@
-#include "common.h"
-#include "features/calc.h"
-#include "helpers.h"
-#include "core/common_ui.h"
-#include <ctype.h>
-#if defined(_WIN32)
-#include <shlwapi.h>
-#endif
+#include "core/flapi.h"
+
+typedef struct {
+    const char* from_unit;
+    const char* to_unit;
+    double factor;
+} UnitConversion;
+
+#define CONVERSION_COUNT (sizeof(G_CONVERSIONS) / sizeof(G_CONVERSIONS[0]))
 
 static double g_last_a = 0.0;
 static double g_last_b = 0.0;

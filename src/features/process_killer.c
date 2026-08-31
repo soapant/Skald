@@ -1,18 +1,6 @@
-#include "common.h"
-#include "features/process_killer.h"
-#if defined(_WIN32)
-#include <tlhelp32.h>
-#include <shlwapi.h>
-#else
-#include <dirent.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <strings.h>
-#include <ctype.h>
-#include <stdio.h>
-#include <string.h>
-#endif
-#include "core/common_ui.h"
+#include "core/flapi.h"
+
+#define MAX_PK_APPS 256
 
 static char G_PK_LIST[MAX_PK_APPS][128];
 static int G_PK_COUNT = 0;

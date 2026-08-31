@@ -451,6 +451,24 @@
   },
   {
     "directory": "/home/diggy/Programming/Projects/C Code",
+    "file": "src/flapi.c",
+    "arguments": [
+      "gcc",
+      "-Wall",
+      "-Wextra",
+      "-I",
+      "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
+      "-w",
+      "-g",
+      "-c",
+      "src/flapi.c"
+    ]
+  },
+  {
+    "directory": "/home/diggy/Programming/Projects/C Code",
     "file": "src/features/mute_microphone.c",
     "arguments": [
       "gcc",
