@@ -54,12 +54,19 @@ void TriggerPosAdd(void) {
     if (GetCursorPos(&mousePos)) {
         char coords_buf[64];
         snprintf(coords_buf, sizeof(coords_buf), "(%ld, %ld)", mousePos.x, mousePos.y);
-        char temp_lines[100][512];
-        int temp_count = ReadFile(temp_lines, TEMP_FILE_PATH);
+        const char* temp_lines[100];
+        int temp_count = fl_load_file_list(TEMP_FILE_PATH, temp_lines, 100);
         if (temp_count < 100) {
-            snprintf(temp_lines[temp_count], sizeof(temp_lines[temp_count]), "%s", coords_buf);
-            WriteFile(temp_lines, temp_count + 1, TEMP_FILE_PATH);
+            FILE* f = fopen(TEMP_FILE_PATH, "w");
+            if (f) {
+                for (int i = 0; i < temp_count; i++) {
+                    fprintf(f, "%s\n", temp_lines[i]);
+                }
+                fprintf(f, "%s\n", coords_buf);
+                fclose(f);
+            }
         }
+        fl_free_file_list(temp_lines, temp_count);
     }
 #else
     // Not Implemented

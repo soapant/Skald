@@ -37,3 +37,25 @@ bool fl_launch_with_args_as_admin(const char* path, const char* args) {
     if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) return false;
     return fl_launch_with_args_as_admin_platform(expanded, args);
 }
+
+int fl_load_file_list(const char* filepath, const char* out[], int max) {
+    if (!filepath || !out || max <= 0) return 0;
+    char temp[100][512];
+    int count = ReadFile(temp, filepath);
+    if (count > max) count = max;
+    for (int i = 0; i < count; i++) {
+        char* dup = strdup(temp[i]);
+        if (!dup) {
+            for (int j = 0; j < i; j++) free((void*)out[j]);
+            return 0;
+        }
+        out[i] = dup;
+    }
+    return count;
+}
+
+void fl_free_file_list(const char* list[], int count) {
+    if (!list || count <= 0) return;
+    for (int i = 0; i < count; i++) free((void*)list[i]);
+}
+

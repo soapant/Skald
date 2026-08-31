@@ -3,17 +3,22 @@
 static void AddTextToFile(const char* text) {
     if (!text || strlen(text) == 0) return;
     
-    char lines[100][512];
-    int count = ReadFile(lines, FORGETFULL_FILE_PATH);
+    const char* lines[100];
+    int count = fl_load_file_list(FORGETFULL_FILE_PATH, lines, 100);
     
     char new_entry[512];
     new_entry[0] = '\0';
     strncpy(new_entry, text, sizeof(new_entry) - 1);
     
-    strncpy(lines[count], new_entry, sizeof(lines[count]) - 1);
-    lines[count][sizeof(lines[count]) - 1] = '\0';
-    count++;
-    WriteFile(lines, count, FORGETFULL_FILE_PATH);
+    FILE* f = fopen(FORGETFULL_FILE_PATH, "w");
+    if (f) {
+        for (int i = 0; i < count; i++) {
+            fprintf(f, "%s\n", lines[i]);
+        }
+        fprintf(f, "%s\n", new_entry);
+        fclose(f);
+    }
+    fl_free_file_list(lines, count);
 }
 
 static void RemoveTextFromFile(const char* item_to_remove) {
@@ -59,15 +64,11 @@ static void RemoveTextFromFile(const char* item_to_remove) {
 }
 
 static void forgetfull_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
-    char forgetfull_lines[100][512];
-    int forgetfull_count = ReadFile(forgetfull_lines, FORGETFULL_FILE_PATH);
-    
     const char* items[100];
-    for (int i = 0; i < forgetfull_count; i++) {
-        items[i] = forgetfull_lines[i];
-    }
+    int forgetfull_count = fl_load_file_list(FORGETFULL_FILE_PATH, items, 100);
 
     PopulateListBox(lb, hListBox, filter, items, forgetfull_count, NULL);
+    fl_free_file_list(items, forgetfull_count);
 }
 
 static void forgetfull_enter_callback(const char* selection, ListBoxInfo* lb) {
@@ -132,13 +133,8 @@ static void forgetfull_ctrlenter_callback(const char* selection, ListBoxInfo* lb
 }
 
 void TriggerForgetFull(void) {
-    char forgetfull_lines[100][512];
-    int count = ReadFile(forgetfull_lines, FORGETFULL_FILE_PATH);
-
     const char* ui_list[100];
-    for (int i = 0; i < count; i++) {
-        ui_list[i] = forgetfull_lines[i];
-    }
+    int count = fl_load_file_list(FORGETFULL_FILE_PATH, ui_list, 100);
 
     PROMPT(.title = "📁 ForgetFull", .items = ui_list, .count = count,
            .height = 920, .width = 650, .item_height = 32,
@@ -146,4 +142,5 @@ void TriggerForgetFull(void) {
            .enter = forgetfull_enter_callback,
            .ctrl_enter = forgetfull_ctrlenter_callback,
            .edit = forgetfull_edit_callback);
+    fl_free_file_list(ui_list, count);
 }
