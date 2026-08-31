@@ -60,89 +60,16 @@ const float GradientBrightness = 1.0f;
 bool PixelHotkeys = false;
 bool CloseOnLossOfFocus = false;
 
-const TerminalCommandHotkey G_TERMINAL_COMMAND_HOTKEYS[] = {
-    { 'B', HOTKEY_MOD_ALT_CTRL,"btop",false},
-};
-const unsigned int TERMINAL_COMMAND_HOTKEY_COUNT = sizeof(G_TERMINAL_COMMAND_HOTKEYS) / sizeof(G_TERMINAL_COMMAND_HOTKEYS[0]);
-
-const AppHotkey G_APP_HOTKEYS[] = {
-};
-const unsigned int APP_HOTKEY_COUNT = sizeof(G_APP_HOTKEYS) / sizeof(G_APP_HOTKEYS[0]);
-
-const MiscHotkey G_MISC_HOTKEYS[] = {
-    // {'G', HOTKEY_MOD_ALT_CTRL, "*", "{DEV}/retard games/Grand Theft Auto V Legacy/PlayGTAV.bat" },
-    // {'O', HOTKEY_MOD_ALT_CTRL, "*", "{APPDATA}/Microsoft/Windows/Start Menu/Programs/OnTopReplica/OnTopReplica.lnk"}
-};
-const unsigned int MISC_HOTKEY_COUNT = sizeof(G_MISC_HOTKEYS) / sizeof(G_MISC_HOTKEYS[0]);
-
-const QuickLinkHotkey G_QUICKLINK_HOTKEYS[] = {
-    {'Y', HOTKEY_MOD_ALT_CTRL, "*", "https://youtube.com" },
-    // {'M', HOTKEY_MOD_ALT_CTRL, "*", "https://messenger.com" },
-};
-const unsigned int QUICKLINK_HOTKEY_COUNT = sizeof(G_QUICKLINK_HOTKEYS) / sizeof(G_QUICKLINK_HOTKEYS[0]);
-
-const TextSnippet G_TEXT_SNIPPETS[] = {
-    { 'O', HOTKEY_MOD_ALT_SHIFT, "*", "seifisbad@gmail.com" },
-    { 'P', HOTKEY_MOD_ALT_SHIFT, "*", "i_am_retarded1" },
-};
-const unsigned int TEXT_SNIPPET_COUNT = sizeof(G_TEXT_SNIPPETS) / sizeof(G_TEXT_SNIPPETS[0]);
-
-const MusicPlayerBinding G_MUSIC_PLAYERS[] = {
-  { VK_OEM_COMMA, HOTKEY_MOD_ALT, 1 },
-  { VK_OEM_2, HOTKEY_MOD_ALT, 5 },
-  { VK_OEM_1, HOTKEY_MOD_ALT, 6 },
-  { VK_OEM_7, HOTKEY_MOD_ALT, 2 },
-  { MUSIC_PLAYER_KEY, HOTKEY_MOD_ALT, 69 },
-};
-
-const unsigned int MUSIC_PLAYER_COUNT = sizeof(G_MUSIC_PLAYERS) / sizeof(G_MUSIC_PLAYERS[0]);
-
-const VideoViewerBinding G_VIDEO_PLAYERS[] = {
-  { VK_OEM_COMMA, HOTKEY_MOD_ALT_SHIFT, 1 },
-  { VK_OEM_PERIOD, HOTKEY_MOD_ALT_SHIFT, 5 },
-  { VK_OEM_1, HOTKEY_MOD_ALT_SHIFT, 6 },
-  { VIDEO_VIEWER_KEY, HOTKEY_MOD_ALT, 69 },
-};
-
-const unsigned int VIDEO_PLAYER_COUNT = sizeof(G_VIDEO_PLAYERS) / sizeof(G_VIDEO_PLAYERS[0]);
-
-const char* bkp_windows[] = {"Brawlhalla","Fortnite","RocketLeague","Factorio","Steam"};
-
-const BulkKillProcessBinding G_BULK_KILL_PROCESS[] = {
-    {
-        'P',           
-        HOTKEY_MOD_ALT_CTRL,               
-        bkp_windows,              
-        sizeof(bkp_windows) / sizeof(bkp_windows[0])
-    },
-};
-const unsigned int BULKKILLPROCESS_COUNT = sizeof(G_BULK_KILL_PROCESS) / sizeof(G_BULK_KILL_PROCESS[0]);
-
-const char* focus_blacklist_games[] = {"CrosshairX"};
-const char* games_windows[] = {"Brawlhalla","Fortnite","RocketLeague","Factorio","Minecraft"};
-const char* focus_blacklist_browsers[] = {"CrosshairX"};
-const char* browsers_windows[] = {"Zen","Chrome"};
-const char* focus_blacklist_coding[] = {"CrosshairX"};
-const char* coding_windows[] = {"Neovide","vim"};
-const char* focus_blacklist_terminal[] = {"CrosshairX"};
-const char* terminal_windows[] = {"alacritty","pwsh","foot"};
-
-const FocusSwitcherBinding G_FOCUS_SWITCHERS[] = {
-    // { 'O', HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT,
-    //   focus_blacklist_games, sizeof(focus_blacklist_games) / sizeof(focus_blacklist_games[0]),
-    //   games_windows, sizeof(games_windows) / sizeof(games_windows[0]) },
-    // { 'I', HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT,
-    //   focus_blacklist_browsers, sizeof(focus_blacklist_browsers) / sizeof(focus_blacklist_browsers[0]),
-    //   browsers_windows, sizeof(browsers_windows) / sizeof(browsers_windows[0]) },
-    // { 'U', HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT,
-    //   focus_blacklist_coding, sizeof(focus_blacklist_coding) / sizeof(focus_blacklist_coding[0]),
-    //   coding_windows, sizeof(coding_windows) / sizeof(coding_windows[0]) },
-    // { 'L', HOTKEY_MOD_ALT | HOTKEY_MOD_SHIFT,
-    //   focus_blacklist_terminal, sizeof(focus_blacklist_terminal) / sizeof(focus_blacklist_terminal[0]),
-    //   terminal_windows, sizeof(terminal_windows) / sizeof(terminal_windows[0]) },
-};
-
-const unsigned int FOCUS_SWITCHER_COUNT = sizeof(G_FOCUS_SWITCHERS) / sizeof(G_FOCUS_SWITCHERS[0]);
+// Per-feature hotkey bindings moved to their feature files:
+// G_TERMINAL_COMMAND_HOTKEYS -> src/features/terminal_command.c
+// G_APP_HOTKEYS               -> src/features/app_launcher.c
+// G_MISC_HOTKEYS              -> src/features/misc_hotkeys.c
+// G_QUICKLINK_HOTKEYS         -> src/features/quicklink.c
+// G_TEXT_SNIPPETS             -> src/features/text_snippets.c
+// G_MUSIC_PLAYERS             -> src/features/music_player.c
+// G_VIDEO_PLAYERS             -> src/features/video_viewer.c
+// G_BULK_KILL_PROCESS         -> src/features/process_killer.c
+// G_FOCUS_SWITCHERS           -> src/features/focus_switcher.c
 
 const AliasEntry Aliases[] = {
   {"brw","Brawlhalla","AppLauncher"},

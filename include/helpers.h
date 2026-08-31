@@ -81,6 +81,81 @@ char* GetFlagParameter(const char* text, int flag_index);
 char* GetCleanText(const char* text);
 bool IsWindowBlacklisted(const char* window_title, const char* blacklist[], int count);
 
+// --- Simple helpers for per-feature Check* functions (flapi) ---
+static inline bool fl_hotkey_match(int pressed_vk, int pressed_mod, int bind_vk, int bind_mod) {
+    return pressed_vk == bind_vk && pressed_mod == bind_mod;
+}
+static inline bool fl_exe_matches(const char* bind_exe, const char* activeExe) {
+    if (!bind_exe || !activeExe) return false;
+    if (strcmp(bind_exe, "*") == 0) return true;
+#if defined(_WIN32)
+    size_t nlen = strlen(bind_exe);
+    size_t hlen = strlen(activeExe);
+    if (nlen == 0) return true;
+    for (size_t i = 0; i + nlen <= hlen; i++) {
+        size_t j = 0;
+        for (; j < nlen; j++) {
+            char a = activeExe[i+j];
+            char b = bind_exe[j];
+            if (a >= 'A' && a <= 'Z') a = a - 'A' + 'a';
+            if (b >= 'A' && b <= 'Z') b = b - 'A' + 'a';
+            if (a != b) break;
+        }
+        if (j == nlen) return true;
+    }
+    return false;
+#else
+    return strstr(activeExe, bind_exe) != NULL;
+#endif
+}
+static inline bool fl_check_hotkey_bindings(int vk, int mod, const char* title, const HotkeyBinding* bindings, int count) {
+    for (int i = 0; i < count; i++) {
+        const HotkeyBinding* b = &bindings[i];
+        if (b->vk_code != vk || b->modifiers != mod) continue;
+        if (b->hotkey_condition && !b->hotkey_condition()) continue;
+        if (IsWindowBlacklisted(title, b->blacklist, b->blacklist_count)) continue;
+        if (b->hotkey_callback) b->hotkey_callback();
+        return true;
+    }
+    return false;
+}
+static inline int fl_find_app_hotkey_idx(int vk, int mod, const char* activeExe, const AppHotkey* arr, int count) {
+    for (int i = 0; i < count; i++) if (arr[i].vk_code == vk && arr[i].modifiers == mod && fl_exe_matches(arr[i].exe_name, activeExe)) return i;
+    return -1;
+}
+static inline int fl_find_misc_hotkey_idx(int vk, int mod, const char* activeExe, const MiscHotkey* arr, int count) {
+    for (int i = 0; i < count; i++) if (arr[i].vk_code == vk && arr[i].modifiers == mod && fl_exe_matches(arr[i].exe_name, activeExe)) return i;
+    return -1;
+}
+static inline int fl_find_quicklink_idx(int vk, int mod, const char* activeExe, const QuickLinkHotkey* arr, int count) {
+    for (int i = 0; i < count; i++) if (arr[i].vk_code == vk && arr[i].modifiers == mod && fl_exe_matches(arr[i].exe_name, activeExe)) return i;
+    return -1;
+}
+static inline int fl_find_text_snippet_idx(int vk, int mod, const char* activeExe, const TextSnippet* arr, int count) {
+    for (int i = 0; i < count; i++) if (arr[i].vk_code == vk && arr[i].modifiers == mod && fl_exe_matches(arr[i].exe_name, activeExe)) return i;
+    return -1;
+}
+static inline int fl_find_terminal_idx(int vk, int mod, const TerminalCommandHotkey* arr, int count) {
+    for (int i = 0; i < count; i++) if (arr[i].vk_code == vk && arr[i].modifiers == mod) return i;
+    return -1;
+}
+static inline int fl_find_music_idx(int vk, int mod, const MusicPlayerBinding* arr, int count) {
+    for (int i = 0; i < count; i++) if (arr[i].vk_code == vk && arr[i].modifiers == mod) return i;
+    return -1;
+}
+static inline int fl_find_video_idx(int vk, int mod, const VideoViewerBinding* arr, int count) {
+    for (int i = 0; i < count; i++) if (arr[i].vk_code == vk && arr[i].modifiers == mod) return i;
+    return -1;
+}
+static inline int fl_find_bulk_idx(int vk, int mod, const BulkKillProcessBinding* arr, int count) {
+    for (int i = 0; i < count; i++) if (arr[i].vk_code == vk && arr[i].modifiers == mod) return i;
+    return -1;
+}
+static inline int fl_find_focus_idx(int vk, int mod, const FocusSwitcherBinding* arr, int count) {
+    for (int i = 0; i < count; i++) if (arr[i].vk_code == vk && arr[i].modifiers == mod) return i;
+    return -1;
+}
+
 int UI_LookupTrueIndex(const char* name);
 void SaveFeatureHistory(char* string);
 int ReplaceLineInFile(const char* filepath, int line_index, const char* new_text);

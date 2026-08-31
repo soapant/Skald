@@ -18,6 +18,9 @@
 #include "features/screenshot.h"
 #include "features/adb.h"
 #include "features/misc_hotkeys.h"
+#include "features/replica.h"
+#include "features/quicklink.h"
+#include "features/text_snippets.h"
 
 int fl_copy_into_clipboard(const char* text) {
     if (text == NULL) return 0;
@@ -105,5 +108,8 @@ void fl_init_all_hotkeys(void) {
     screenshot_init();
     adb_init();
     misc_hotkeys_init();
+    replica_init();
+    quicklink_init();
+    text_snippets_init();
 }
 

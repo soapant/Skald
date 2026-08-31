@@ -1,5 +1,16 @@
 #include "core/flapi.h"
 
+static const char* bkp_windows[] = {"Brawlhalla","Fortnite","RocketLeague","Factorio","Steam"};
+static const BulkKillProcessBinding G_BULK_KILL_PROCESS[] = {
+    {
+        'P',
+        HOTKEY_MOD_ALT_CTRL,
+        bkp_windows,
+        sizeof(bkp_windows) / sizeof(bkp_windows[0])
+    },
+};
+static const unsigned int BULKKILLPROCESS_COUNT = sizeof(G_BULK_KILL_PROCESS) / sizeof(G_BULK_KILL_PROCESS[0]);
+
 #define MAX_PK_APPS 256
 
 static char G_PK_LIST[MAX_PK_APPS][128];
@@ -142,14 +153,11 @@ static void BulkKillProcesses(const char* window_titles[], int count) {
 }
 
 bool HandleBulkKillProcess(int vk_code, int modifiers, const char* current_title) {
-    for (int i = 0; i < BULKKILLPROCESS_COUNT; i++) {
-        const BulkKillProcessBinding* binding = &G_BULK_KILL_PROCESS[i];
-        if (binding->vk_code == vk_code && binding->modifiers == modifiers) {
-            BulkKillProcesses(binding->window_titles, binding->window_count);
-            return true;
-        }
-    }
-    return false;
+    // simple helper - one-liner finding
+    int _idx = fl_find_bulk_idx(vk_code, modifiers, G_BULK_KILL_PROCESS, BULKKILLPROCESS_COUNT);
+    if (_idx < 0) return false;
+    BulkKillProcesses(G_BULK_KILL_PROCESS[_idx].window_titles, G_BULK_KILL_PROCESS[_idx].window_count);
+    return true;
 }
 static void pk_enter_callback(const char* selection, ListBoxInfo* lb) {
       terminate_process_by_name(selection);

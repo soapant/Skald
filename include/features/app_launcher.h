@@ -4,6 +4,7 @@
 void initialize_app_cache(void);
 void launch_app_by_name(const char* display_name);
 void launch_exe_with_args(const char* exe_path, const char* args);
+bool CheckAppHotkeyBindings(int pressed_vk, int modifiers);
 void TriggerAppLauncher(void);
 void app_launcher_init(void);
 

@@ -1,5 +1,7 @@
 #include "common.h"
+#include "helpers.h"
 #include "bindings/macro_bindings.h"
+#include "features/window_switcher.h"
 #include "features/minecraft.h"
 #include "features/factorio.h"
 
@@ -40,3 +42,22 @@ const MacroBinding G_MACRO_BINDINGS[] = {
     { 'Q', HOTKEY_MOD_SHIFT, "Java", MACRO_MINECRAFT_UP, 0, HandleMinecraftUp },
     { 'R', HOTKEY_MOD_SHIFT, "Java", MACRO_MINECRAFT_ROTATE, 0, HandleMinecraftRotate },
 };
+
+bool CheckMacroBindings(int pressed_vk, int modifiers) {
+#if defined(_WIN32)
+    WindowHandle hActiveWnd = WH_FROM_HWND(GetForegroundWindow());
+#else
+    WindowHandle hActiveWnd = WH_NULL;
+#endif
+    char activeExe[256] = {0};
+    FetchExeNameOnDemand(hActiveWnd, activeExe, sizeof(activeExe) - 1);
+    for (size_t i = 0; i < MACRO_BINDING_COUNT; i++) {
+        if (G_MACRO_BINDINGS[i].vk_code == pressed_vk && G_MACRO_BINDINGS[i].modifiers == modifiers) {
+            if (fl_exe_matches(G_MACRO_BINDINGS[i].exe_name, activeExe)) {
+                if (G_MACRO_BINDINGS[i].handler) G_MACRO_BINDINGS[i].handler();
+                return true;
+            }
+        }
+    }
+    return false;
+}

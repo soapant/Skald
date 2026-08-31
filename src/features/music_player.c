@@ -1,5 +1,14 @@
 #include "core/flapi.h"
 
+static const MusicPlayerBinding G_MUSIC_PLAYERS[] = {
+  { VK_OEM_COMMA, HOTKEY_MOD_ALT, 1 },
+  { VK_OEM_2, HOTKEY_MOD_ALT, 5 },
+  { VK_OEM_1, HOTKEY_MOD_ALT, 6 },
+  { VK_OEM_7, HOTKEY_MOD_ALT, 2 },
+  { 'M', HOTKEY_MOD_ALT, 69 },
+};
+static const unsigned int MUSIC_PLAYER_COUNT = sizeof(G_MUSIC_PLAYERS) / sizeof(G_MUSIC_PLAYERS[0]);
+
 char *allowed_audio_formats[] = {"mp3","ogg","flac", NULL};
 
 static ListOfFiles s_music_files = {0};
@@ -78,9 +87,11 @@ static void music_enter_callback(const char* selection, ListBoxInfo* lb) {
 
 bool HandleMusicPlayer(int vk_code, int modifiers, const char* current_title) {
     if (!MusicPlayerAvailable) return false;
-    for (int i = 0; i < MUSIC_PLAYER_COUNT; i++) {
-        const MusicPlayerBinding* binding = &G_MUSIC_PLAYERS[i];
-        if (binding->vk_code == vk_code && binding->modifiers == modifiers) {
+    // very simple helper from flapi/helpers - one-liner binding lookup
+    int _idx = fl_find_music_idx(vk_code, modifiers, G_MUSIC_PLAYERS, MUSIC_PLAYER_COUNT);
+    if (_idx < 0) return false;
+    {
+        const MusicPlayerBinding* binding = &G_MUSIC_PLAYERS[_idx];
 #if defined(_WIN32)
             HWND playerHwnd = FindWindow(NULL, "Music Player");
 #endif
@@ -117,6 +128,5 @@ bool HandleMusicPlayer(int vk_code, int modifiers, const char* current_title) {
                 return true;
             }
         }
-    }
     return false;
 }

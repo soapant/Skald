@@ -1,4 +1,5 @@
 #include "common.h"
+#include "core/flapi.h"
 #include "features/replica.h"
 #include "features/window_switcher.h"
 #include "core/common_ui.h"
@@ -71,6 +72,11 @@ static void replica_enter_callback(const char* selection, ListBoxInfo* lb) {
             return;
         }
     }
+}
+
+void replica_init(void) {
+    if (!ReplicaAvailable) return;
+    fl_register_hotkey("Alt+Shift+R", TriggerReplica, NULL, NULL);
 }
 
 void TriggerReplica(void) {
