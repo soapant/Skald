@@ -151,8 +151,8 @@ static void ParseTodoLine(const char* line, char* clean_text, char tags_out[][64
 static void AddTodoToFile(const char* text) {
     if (!text || strlen(text) == 0) return;
     
-    char lines[100][512];
-    int count = ReadFile(lines, TODO_FILE_PATH);
+    const char* lines[100];
+    int count = fl_load_file_list(TODO_FILE_PATH, lines, 100);
     
     char input_copy[512];
     strncpy(input_copy, text, sizeof(input_copy) - 1);
@@ -171,7 +171,10 @@ static void AddTodoToFile(const char* text) {
         char existing_tags[10][64];
         int existing_tag_count = 0;
         ParseTodoLine(lines[i], existing_clean, existing_tags, &existing_tag_count);
-        if (strcmp(existing_clean, clean_text) == 0) return;
+        if (strcmp(existing_clean, clean_text) == 0) {
+            fl_free_file_list(lines, count);
+            return;
+        }
     }
     
     char new_entry[512];
@@ -188,10 +191,15 @@ static void AddTodoToFile(const char* text) {
         }
     }
     
-    strncpy(lines[count], new_entry, sizeof(lines[count]) - 1);
-    lines[count][sizeof(lines[count]) - 1] = '\0';
-    count++;
-    WriteFile(lines, count, TODO_FILE_PATH);
+    FILE* f = fopen(TODO_FILE_PATH, "w");
+    if (f) {
+        for (int i = 0; i < count; i++) {
+            fprintf(f, "%s\n", lines[i]);
+        }
+        fprintf(f, "%s\n", new_entry);
+        fclose(f);
+    }
+    fl_free_file_list(lines, count);
 }
 
 static void RemoveTodoItemFromFile(const char* item_to_remove) {
@@ -245,15 +253,11 @@ static void RemoveTodoItemFromFile(const char* item_to_remove) {
 }
 
 static void todo_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
-    char todo_lines[100][512];
-    int todo_count = ReadFile(todo_lines, TODO_FILE_PATH);
-    
     const char* items[100];
-    for (int i = 0; i < todo_count; i++) {
-        items[i] = todo_lines[i];
-    }
+    int todo_count = fl_load_file_list(TODO_FILE_PATH, items, 100);
 
     PopulateListBox(lb, hListBox, filter, items, todo_count, NULL);
+    fl_free_file_list(items, todo_count);
 }
 
 static void todo_enter_callback(const char* selection, ListBoxInfo* lb) {
@@ -509,13 +513,8 @@ static void todo_edit_callback(const char* selection, ListBoxInfo* lb) {
 }
 
 void TriggerTodo(void) {
-    char todo_lines[100][512];
-    int count = ReadFile(todo_lines, TODO_FILE_PATH);
-
     const char* ui_list[100];
-    for (int i = 0; i < count; i++) {
-        ui_list[i] = todo_lines[i];
-    }
+    int count = fl_load_file_list(TODO_FILE_PATH, ui_list, 100);
 
     char* selected_item = PROMPT(
         .title = "📝 Todo", .items = ui_list, .count = count,
@@ -526,4 +525,5 @@ void TriggerTodo(void) {
         .copy = todo_copy_callback,
         .render = todo_render_callback,
         .edit = todo_edit_callback);
+    fl_free_file_list(ui_list, count);
 }
