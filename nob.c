@@ -362,6 +362,11 @@ int main(int argc, char** argv) {
         nob_log(NOB_ERROR, "Failed to link %s", output);
         return 1;
     }
+    {
+        Nob_Cmd chmod = {0};
+        nob_cmd_append(&chmod, "chmod", "+x", output);
+        nob_cmd_run(&chmod);
+    }
     stop_running_instance();
     if (g_want_static){
 #if !defined(_WIN32)
