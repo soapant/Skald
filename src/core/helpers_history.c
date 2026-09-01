@@ -80,7 +80,7 @@ bool GetFromHistory(ListBoxInfo* lb) {
 
 void HandleCommandExecution(ListBoxInfo* lb, char* string) {
     if (!lb) return;
-    int num = convert_string_to_int(string);
+    int num = atoi(string);
     UI_SetSelection(lb, hListBox, num - 1);
     UI_LB_SetCaretIndex(hListBox, num, TRUE);
 }
