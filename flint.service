@@ -11,10 +11,8 @@ Wants=graphical-session.target
 
 [Service]
 Type=simple
-# data/ paths (data/todo.txt etc.) are relative -> project dir contains a space, so we
-# cannot use WorkingDirectory= with systemd's parsing. Use a shell wrapper that cd's first.
-# Alternative robust fix: sudo cp build/flint /usr/local/bin/flint and use WorkingDirectory=/home/diggy/Programming/Projects/C\ Code
-ExecStart=/bin/sh -c 'cd "/home/diggy/Programming/Projects/C Code" && exec "/home/diggy/Programming/Projects/C Code/build/flint"'
+WorkingDirectory=/home/diggy/Programming/Projects/Flint
+ExecStart=/home/diggy/Programming/Projects/Flint/build/flint
 # Inherit Wayland/X11 env from user manager. Ensure after login you run:
 #   systemctl --user import-environment DISPLAY WAYLAND_DISPLAY XDG_RUNTIME_DIR XAUTHORITY
 PassEnvironment=DISPLAY WAYLAND_DISPLAY XDG_RUNTIME_DIR XAUTHORITY

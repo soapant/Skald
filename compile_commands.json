@@ -1,6 +1,6 @@
 [
   {
-    "directory": "/home/diggy/Programming/Projects/C Code",
+    "directory": "/home/diggy/Programming/Projects/Flint",
     "file": "src/window/subclasses_x11.c",
     "arguments": [
       "gcc",
@@ -18,7 +18,7 @@
     ]
   },
   {
-    "directory": "/home/diggy/Programming/Projects/C Code",
+    "directory": "/home/diggy/Programming/Projects/Flint",
     "file": "src/main.c",
     "arguments": [
       "gcc",
@@ -36,7 +36,7 @@
     ]
   },
   {
-    "directory": "/home/diggy/Programming/Projects/C Code",
+    "directory": "/home/diggy/Programming/Projects/Flint",
     "file": "src/core/helpers.c",
     "arguments": [
       "gcc",
@@ -54,7 +54,7 @@
     ]
   },
   {
-    "directory": "/home/diggy/Programming/Projects/C Code",
+    "directory": "/home/diggy/Programming/Projects/Flint",
     "file": "src/core/window_manager.c",
     "arguments": [
       "gcc",
@@ -72,7 +72,7 @@
     ]
   },
   {
-    "directory": "/home/diggy/Programming/Projects/C Code",
+    "directory": "/home/diggy/Programming/Projects/Flint",
     "file": "src/core/number_shortcut.c",
     "arguments": [
       "gcc",
@@ -90,7 +90,7 @@
     ]
   },
   {
-    "directory": "/home/diggy/Programming/Projects/C Code",
+    "directory": "/home/diggy/Programming/Projects/Flint",
     "file": "src/core/zoxide_helpers.c",
     "arguments": [
       "gcc",
@@ -108,7 +108,7 @@
     ]
   },
   {
-    "directory": "/home/diggy/Programming/Projects/C Code",
+    "directory": "/home/diggy/Programming/Projects/Flint",
     "file": "src/core/hashmap.c",
     "arguments": [
       "gcc",
@@ -126,7 +126,7 @@
     ]
   },
   {
-    "directory": "/home/diggy/Programming/Projects/C Code",
+    "directory": "/home/diggy/Programming/Projects/Flint",
     "file": "src/core/feature_data.c",
     "arguments": [
       "gcc",
@@ -144,7 +144,7 @@
     ]
   },
   {
-    "directory": "/home/diggy/Programming/Projects/C Code",
+    "directory": "/home/diggy/Programming/Projects/Flint",
     "file": "src/core/helpers_file.c",
     "arguments": [
       "gcc",
@@ -162,7 +162,7 @@
     ]
   },
   {
-    "directory": "/home/diggy/Programming/Projects/C Code",
+    "directory": "/home/diggy/Programming/Projects/Flint",
     "file": "src/core/helpers_text.c",
     "arguments": [
       "gcc",
@@ -180,7 +180,7 @@
     ]
   },
   {
-    "directory": "/home/diggy/Programming/Projects/C Code",
+    "directory": "/home/diggy/Programming/Projects/Flint",
     "file": "src/core/hotkey_manager.c",
     "arguments": [
       "gcc",
@@ -198,7 +198,7 @@
     ]
   },
   {
-    "directory": "/home/diggy/Programming/Projects/C Code",
+    "directory": "/home/diggy/Programming/Projects/Flint",
     "file": "src/core/helpers_x11.c",
     "arguments": [
       "gcc",
@@ -216,7 +216,7 @@
     ]
   },
   {
-    "directory": "/home/diggy/Programming/Projects/C Code",
+    "directory": "/home/diggy/Programming/Projects/Flint",
     "file": "src/core/vim.c",
     "arguments": [
       "gcc",
@@ -234,7 +234,7 @@
     ]
   },
   {
-    "directory": "/home/diggy/Programming/Projects/C Code",
+    "directory": "/home/diggy/Programming/Projects/Flint",
     "file": "src/core/types.c",
     "arguments": [
       "gcc",
@@ -252,7 +252,7 @@
     ]
   },
   {
-    "directory": "/home/diggy/Programming/Projects/C Code",
+    "directory": "/home/diggy/Programming/Projects/Flint",
     "file": "src/core/modal.c",
     "arguments": [
       "gcc",
@@ -270,7 +270,7 @@
     ]
   },
   {
-    "directory": "/home/diggy/Programming/Projects/C Code",
+    "directory": "/home/diggy/Programming/Projects/Flint",
     "file": "src/core/window_manager_linux.c",
     "arguments": [
       "gcc",
@@ -288,7 +288,7 @@
     ]
   },
   {
-    "directory": "/home/diggy/Programming/Projects/C Code",
+    "directory": "/home/diggy/Programming/Projects/Flint",
     "file": "src/core/helpers_color.c",
     "arguments": [
       "gcc",
@@ -306,7 +306,7 @@
     ]
   },
   {
-    "directory": "/home/diggy/Programming/Projects/C Code",
+    "directory": "/home/diggy/Programming/Projects/Flint",
     "file": "src/core/common_ui.c",
     "arguments": [
       "gcc",
@@ -324,7 +324,7 @@
     ]
   },
   {
-    "directory": "/home/diggy/Programming/Projects/C Code",
+    "directory": "/home/diggy/Programming/Projects/Flint",
     "file": "src/core/helpers_history.c",
     "arguments": [
       "gcc",
@@ -342,7 +342,7 @@
     ]
   },
   {
-    "directory": "/home/diggy/Programming/Projects/C Code",
+    "directory": "/home/diggy/Programming/Projects/Flint",
     "file": "src/config.c",
     "arguments": [
       "gcc",
@@ -360,7 +360,7 @@
     ]
   },
   {
-    "directory": "/home/diggy/Programming/Projects/C Code",
+    "directory": "/home/diggy/Programming/Projects/Flint",
     "file": "src/flapi_x11.c",
     "arguments": [
       "gcc",
@@ -378,7 +378,7 @@
     ]
   },
   {
-    "directory": "/home/diggy/Programming/Projects/C Code",
+    "directory": "/home/diggy/Programming/Projects/Flint",
     "file": "src/bindings/macro_bindings.c",
     "arguments": [
       "gcc",
@@ -396,7 +396,7 @@
     ]
   },
   {
-    "directory": "/home/diggy/Programming/Projects/C Code",
+    "directory": "/home/diggy/Programming/Projects/Flint",
     "file": "src/bindings/vim_bindings.c",
     "arguments": [
       "gcc",
@@ -414,7 +414,7 @@
     ]
   },
   {
-    "directory": "/home/diggy/Programming/Projects/C Code",
+    "directory": "/home/diggy/Programming/Projects/Flint",
     "file": "src/bindings/bindings.c",
     "arguments": [
       "gcc",
@@ -432,7 +432,7 @@
     ]
   },
   {
-    "directory": "/home/diggy/Programming/Projects/C Code",
+    "directory": "/home/diggy/Programming/Projects/Flint",
     "file": "src/bindings/vim_helpers.c",
     "arguments": [
       "gcc",
@@ -450,7 +450,7 @@
     ]
   },
   {
-    "directory": "/home/diggy/Programming/Projects/C Code",
+    "directory": "/home/diggy/Programming/Projects/Flint",
     "file": "src/bindings/vim_motions.c",
     "arguments": [
       "gcc",
@@ -468,7 +468,7 @@
     ]
   },
   {
-    "directory": "/home/diggy/Programming/Projects/C Code",
+    "directory": "/home/diggy/Programming/Projects/Flint",
     "file": "src/flapi.c",
     "arguments": [
       "gcc",
@@ -486,7 +486,7 @@
     ]
   },
   {
-    "directory": "/home/diggy/Programming/Projects/C Code",
+    "directory": "/home/diggy/Programming/Projects/Flint",
     "file": "src/platform/x11/ui_x11.c",
     "arguments": [
       "gcc",
@@ -504,7 +504,7 @@
     ]
   },
   {
-    "directory": "/home/diggy/Programming/Projects/C Code",
+    "directory": "/home/diggy/Programming/Projects/Flint",
     "file": "src/platform/x11/platform_x11.c",
     "arguments": [
       "gcc",
@@ -522,7 +522,7 @@
     ]
   },
   {
-    "directory": "/home/diggy/Programming/Projects/C Code",
+    "directory": "/home/diggy/Programming/Projects/Flint",
     "file": "src/platform/x11/display_x11.c",
     "arguments": [
       "gcc",
@@ -540,7 +540,7 @@
     ]
   },
   {
-    "directory": "/home/diggy/Programming/Projects/C Code",
+    "directory": "/home/diggy/Programming/Projects/Flint",
     "file": "src/platform/x11/misc_x11.c",
     "arguments": [
       "gcc",
