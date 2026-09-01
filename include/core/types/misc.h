@@ -48,6 +48,7 @@ typedef struct {
     WindowHandle hEdit;
 } EditPopupData;
 
+
 #define MIDDLE_POS 960, 540, 1000, 300
 #define TOP_POS 960, 540, 1000, 300
 #define BOTTOM_POS 960, 540, 1000, 300
