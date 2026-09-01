@@ -22,33 +22,7 @@ static const char* bkp_windows[] = {"Brawlhalla","Fortnite","RocketLeague","Fact
 static char G_PK_LIST[MAX_PK_APPS][128];
 static int G_PK_COUNT = 0;
 
-static bool is_system_noise(const char* exe) {
-    if (!exe || exe[0]=='\0') return true;
-    // Filter kernel threads on Linux: they start with 'k' or are in brackets or have ppid 2
-    if (exe[0]=='[') return true; // e.g. [kthreadd]
-    if (strncmp(exe, "kworker", 7)==0) return true;
-    if (strncmp(exe, "kthreadd", 8)==0) return true;
-    if (strncmp(exe, "ksoftirqd", 9)==0) return true;
-    if (strncmp(exe, "rcu_", 4)==0) return true;
-    if (strncmp(exe, "migration", 9)==0) return true;
-    if (strncmp(exe, "cpuhp", 5)==0) return true;
-    if (strncmp(exe, "kprobe", 6)==0) return true;
-    const char* noise[] = {
-        "[system process]", "system", "idle", "svchost.exe", "lsass.exe", 
-        "services.exe", "wininit.exe", "csrss.exe", "smss.exe", 
-        "winlogon.exe", "spoolsv.exe", "dasHost.exe", "conhost.exe",
-        "sihost.exe", "RuntimeBroker.exe", "ctfmon.exe", "SearchHost.exe",
-        "SearchIndexer.exe", "wmiprvse.exe", "dllhost.exe", "audiodg.exe",
-        "taskhostw.exe", "dwm.exe", "fontdrvhost.exe", "Registry","TextInputHost.exe"
-    };
-    for (size_t i = 0; i < ARRAY_LEN(noise); i++) {
-        if (fl_case_insensitive_string_match_platform(exe, noise[i])) return true;
-    }
-    return false;
-}
-
 static void collect_running_processes() {
-    fprintf(stderr, "[PK] collect start\n");
 #if defined(_WIN32)
     G_PK_COUNT = 0;
 
@@ -60,20 +34,18 @@ static void collect_running_processes() {
 
     if (Process32First(hSnapshot, &pe)) {
         do {
-            if (!is_system_noise(pe.szExeFile)) {
-                bool exists = false;
-                for (int i = 0; i < G_PK_COUNT; i++) {
-                    if (StrCmpIA(G_PK_LIST[i], pe.szExeFile) == 0) {
-                        exists = true;
-                        break;
-                    }
+            bool exists = false;
+            for (int i = 0; i < G_PK_COUNT; i++) {
+                if (StrCmpIA(G_PK_LIST[i], pe.szExeFile) == 0) {
+                    exists = true;
+                    break;
                 }
+            }
 
-                if (!exists && G_PK_COUNT < MAX_PK_APPS) {
-                    strncpy(G_PK_LIST[G_PK_COUNT], pe.szExeFile, 127);
-                    G_PK_LIST[G_PK_COUNT][127] = '\0';
-                    G_PK_COUNT++;
-                }
+            if (!exists && G_PK_COUNT < MAX_PK_APPS) {
+                strncpy(G_PK_LIST[G_PK_COUNT], pe.szExeFile, 127);
+                G_PK_LIST[G_PK_COUNT][127] = '\0';
+                G_PK_COUNT++;
             }
         } while (Process32Next(hSnapshot, &pe));
     }
@@ -115,7 +87,6 @@ static void collect_running_processes() {
                 fclose(fstat);
             }
         }
-        if (is_system_noise(exe)) continue;
         bool exists=false;
         for (int i=0;i<G_PK_COUNT;i++) if (strcasecmp(G_PK_LIST[i], exe)==0) {exists=true;break;}
         if (!exists && G_PK_COUNT < MAX_PK_APPS) {
@@ -125,9 +96,7 @@ static void collect_running_processes() {
         }
     }
     closedir(proc);
-    fprintf(stderr, "[PK] collect done count=%d\n", G_PK_COUNT);
 #endif
-    fprintf(stderr, "[PK] final count=%d\n", G_PK_COUNT);
 }
 
 static void run_hidden_command(const char* cmd) {
@@ -199,20 +168,16 @@ static void pk_enter_callback(const char* selection, ListBoxInfo* lb) {
 }
 
 static void pk_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
-    fprintf(stderr, "[PK] refresh filter='%s' count=%d lb=%p\n", filter?filter:"(null)", G_PK_COUNT, lb);
     const char** items = (const char**)malloc(G_PK_COUNT * sizeof(char*));
     if (!items) return;
     for (int i = 0; i < G_PK_COUNT; i++) {
         items[i] = G_PK_LIST[i];
     }
     PopulateListBox(lb, hListBox, filter, items, G_PK_COUNT, NULL);
-    if (lb) fprintf(stderr, "[PK] after populate populated=%d total=%d selected=%d\n", lb->populated_count, lb->total_matches, lb->selected_index);
     free(items);
 }
 static void TriggerProcessKiller(void) {
-    fprintf(stderr, "[PK] TriggerProcessKiller start\n");
     collect_running_processes();
-    fprintf(stderr, "[PK] Trigger with %d items\n", G_PK_COUNT);
 
     const char** list_items = (const char**)malloc(G_PK_COUNT * sizeof(char*));
     if (!list_items) {
