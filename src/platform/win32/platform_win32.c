@@ -40,6 +40,13 @@ char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
     snprintf(args, sizeof(args), "-e %s \"%s\"",UsedShell,temp_file);
     ShellExecuteA(NULL, "open", terminal_exe, args, NULL, SW_SHOWNORMAL);
 }
+
+bool Platform_LaunchFileManagerAtPath(char* path,char* args) {
+    char buffer[100];
+    snprintf(buffer,sizeof(buffer),"%s.exe",UsedFileManager);
+    ShellExecuteA(NULL, "open",buffer, path, NULL, SW_SHOWNORMAL);
+}
+
 char* Platform_QueryZoxidePath(const char* query) {
     DWORD start_time = GetTickCount();
 

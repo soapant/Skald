@@ -103,7 +103,7 @@ static void text_editor_refresh_callback(const char* filter, WindowHandle hListB
 
 
 static void text_editor_enter_callback(const char* selection, ListBoxInfo* lb) {
-      char* path = Platform_QueryZoxidePath(selection);
+      char* path = fl_get_zoxide_match(selection);
       if (path) {
           Launchtext_editor(path);
           ZoxideHelper_AppendNewEntry(TextEditorFile, selection, lb, &g_cached_text_editor_commands, &g_cached_text_editor_count);

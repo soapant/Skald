@@ -20,13 +20,8 @@ static void explorer_refresh_callback(const char* filter, WindowHandle hListBox,
 }
 
 static void explorer_enter_callback(const char* selection, ListBoxInfo* lb) {
-          char* path = Platform_QueryZoxidePath(selection);
-          if (path) {
-#if defined(_WIN32)
-              ShellExecuteA(NULL, "open", "explorer.exe", path, NULL, SW_SHOWNORMAL);
-#else
-              Platform_ShellExecuteWithVerb(path, "open", true);
-#endif
+          char* path = fl_get_zoxide_match(selection);
+          if (fl_launch_file_manager_at_path(path,NULL)) {
               ZoxideHelper_AppendNewEntry(ExplorerZoxideFile, selection, lb, &g_cached_explorer_commands, &g_cached_explorer_count);
               free(path);
           }

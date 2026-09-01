@@ -27,6 +27,7 @@ const int VimFontSize = 18;
 const int PaddingForScrolling = 3;
 const char* UsedTerminal = "foot";
 const char* UsedShell = "nu";
+const char* UsedFileManager = "thunar";
 const char* ImageEditorPath =  "{APPDATA}/Microsoft/Windows/Start Menu/Programs/Scoop Apps/PicView.lnk"; // Not Implemented on Linux
 const char* TimerPath = "{DEV}/Tscoding Timer/sowon/sowon.exe"; 
 const char* MusicPlayerPath = "{DEV}/Music Player/music_player.exe";

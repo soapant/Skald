@@ -139,6 +139,16 @@ bool fl_launch_terminal_at_path(char* path,char* args) {
     char expanded[MAX_PATH];
     if (!Platform_ExpandPath(path, expanded, sizeof(expanded)))return false;
     return Platform_LaunchTerminalAtPath(expanded,args);
+}
 
+bool fl_launch_file_manager_at_path(char* path,char* args) {
+    if (!path) return false;
+    char expanded[MAX_PATH];
+    if (!Platform_ExpandPath(path, expanded, sizeof(expanded)))return false;
+    Platform_LaunchFileManagerAtPath(expanded,args);
+}
+char* fl_get_zoxide_match(char* query) {
+  if (!query) return NULL;
+  return Platform_QueryZoxidePath(query);
 }
 
