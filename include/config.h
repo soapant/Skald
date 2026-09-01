@@ -39,6 +39,7 @@ extern const int PaddingForScrolling;
 extern const char* UsedTerminal;
 extern const char* UsedShell;
 extern const char* UsedFileManager;
+extern const char* UsedTextEditor;
 extern const char* ImageEditorPath;
 extern const char* TimerPath;
 extern const char* MusicPlayerPath;
