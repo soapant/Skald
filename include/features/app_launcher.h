@@ -60,6 +60,9 @@ static const PathEntry SystemShortcuts[] = {
 };
 
 #define SYSTEM_SHORTCUT_COUNT 19
+#ifndef MAX_APPS
+#define MAX_APPS 2048
+#endif
 
 extern ListOfFiles g_app_list;
 #define s_apps g_app_list

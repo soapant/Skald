@@ -5,7 +5,7 @@
 #define SRC_FOLDER "src"
 #define BUILD_FOLDER "build"
 #define OBJ_FOLDER BUILD_FOLDER "/win_obj"
-#define OUTPUT BUILD_FOLDER "/main_win.exe"
+#define OUTPUT BUILD_FOLDER "/flint_win.exe"
 #define CROSS_CC "x86_64-w64-mingw32-gcc"
 
 #define CC_FLAGS "-std=gnu17", "-DCOBJMACROS", "-I", "include", "-MMD", "-MP", "-w"
@@ -174,15 +174,6 @@ static bool compile_all(bool* any_compiled) {
 int main(int argc, char** argv) {
     NOB_GO_REBUILD_URSELF(argc, argv);
     unset_include_env();
-
-    Nob_Cmd check = {0};
-    nob_cmd_append(&check, CROSS_CC, "--version");
-    if (!nob_cmd_run(&check)) {
-        nob_log(NOB_ERROR, "Cross compiler '%s' not found. Install it first:", CROSS_CC);
-        nob_log(NOB_INFO, "Arch:      pacman -S mingw-w64-gcc");
-        nob_log(NOB_INFO, "Debian/Ubuntu: sudo apt install gcc-mingw-w64-x86-64");
-        return 1;
-    }
 
     if (!nob_mkdir_if_not_exists(BUILD_FOLDER)) return 1;
     if (!nob_mkdir_if_not_exists(OBJ_FOLDER)) return 1;

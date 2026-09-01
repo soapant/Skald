@@ -2,6 +2,10 @@
 #define PROCESS_KILLER_H
 
 #include "core/flapi.h"
+#if defined(_WIN32)
+#include <windows.h>
+#include <tlhelp32.h>
+#endif
 
 static const char* bkp_windows[] = {"Brawlhalla","Fortnite","RocketLeague","Factorio","Steam"};
 

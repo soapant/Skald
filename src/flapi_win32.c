@@ -200,3 +200,4 @@ char* fl_search_file_in_dir_platform(const char* directory, const char* search_s
 
     FindClose(hFind);
     return NULL;
+}

@@ -1,4 +1,6 @@
 #include <windows.h>
+#include <fileapi.h>
+#include <handleapi.h>
 #include "common.h"
 #include "helpers.h"
 #include "core/platform.h"
