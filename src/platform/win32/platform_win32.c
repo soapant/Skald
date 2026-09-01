@@ -14,7 +14,7 @@ bool Platform_LaunchTerminalAtPath(const char* working_dir, const char* extra_ar
       ShellExecuteA(NULL, "open", terminal, NULL, working_dir, SW_SHOWNORMAL);
 }
 
-bool Platform_RunTerminalCommand(char* command,bool open_terminal) {
+char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
     if (command == NULL || strlen(command) == 0) return;
     
     char clean_cmd[512];
@@ -35,7 +35,7 @@ bool Platform_RunTerminalCommand(char* command,bool open_terminal) {
     char terminal_exe[512];
     snprintf(terminal_exe, sizeof(terminal_exe), "%s.exe", UsedTerminal);
     
-    // i think this wont work but sure 
+    // i think this wont work but sure implement
     char args[2048];
     snprintf(args, sizeof(args), "-e bash \"%s\"", temp_file);
     ShellExecuteA(NULL, "open", terminal_exe, args, NULL, SW_SHOWNORMAL);
