@@ -303,20 +303,17 @@ static void EditPopup_OnKey(Popup* self, int vk_code, bool pressed, int modifier
         return;
     }
     
-    // Handle text input - only in INSERT
+    // Handle text input - arrow/handle before printable (arrow VKs are 37/39 which are '%'/' in ASCII)
     if (vk_code == VK_BACK) {
         if (data->cursor > 0) {
             memmove(data->text + data->cursor - 1, data->text + data->cursor, 
                     strlen(data->text) - data->cursor + 1);
             data->cursor--;
         }
-    } else if (vk_code >= 32 && vk_code <= 126) { // Printable
-        if (!IsInsertMode()) return;
-        if (data->cursor < data->text_capacity - 1) {
-            memmove(data->text + data->cursor + 1, data->text + data->cursor,
-                    strlen(data->text) - data->cursor + 1);
-            data->text[data->cursor] = (char)vk_code;
-            data->cursor++;
+    } else if (vk_code == VK_DELETE) {
+        if (data->cursor < (int)strlen(data->text)) {
+            memmove(data->text + data->cursor, data->text + data->cursor + 1,
+                    strlen(data->text) - data->cursor);
         }
     } else if (vk_code == VK_LEFT) {
         if (data->cursor > 0) data->cursor--;
@@ -326,6 +323,14 @@ static void EditPopup_OnKey(Popup* self, int vk_code, bool pressed, int modifier
         data->cursor = 0;
     } else if (vk_code == VK_END) {
         data->cursor = strlen(data->text);
+    } else if (vk_code >= 32 && vk_code <= 126) { // Printable
+        if (!IsInsertMode()) return;
+        if (data->cursor < data->text_capacity - 1) {
+            memmove(data->text + data->cursor + 1, data->text + data->cursor,
+                    strlen(data->text) - data->cursor + 1);
+            data->text[data->cursor] = (char)vk_code;
+            data->cursor++;
+        }
     }
     
     if (self->vtable && self->vtable->on_render) {

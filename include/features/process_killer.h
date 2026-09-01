@@ -23,6 +23,16 @@ static char G_PK_LIST[MAX_PK_APPS][128];
 static int G_PK_COUNT = 0;
 
 static bool is_system_noise(const char* exe) {
+    if (!exe || exe[0]=='\0') return true;
+    // Filter kernel threads on Linux: they start with 'k' or are in brackets or have ppid 2
+    if (exe[0]=='[') return true; // e.g. [kthreadd]
+    if (strncmp(exe, "kworker", 7)==0) return true;
+    if (strncmp(exe, "kthreadd", 8)==0) return true;
+    if (strncmp(exe, "ksoftirqd", 9)==0) return true;
+    if (strncmp(exe, "rcu_", 4)==0) return true;
+    if (strncmp(exe, "migration", 9)==0) return true;
+    if (strncmp(exe, "cpuhp", 5)==0) return true;
+    if (strncmp(exe, "kprobe", 6)==0) return true;
     const char* noise[] = {
         "[system process]", "system", "idle", "svchost.exe", "lsass.exe", 
         "services.exe", "wininit.exe", "csrss.exe", "smss.exe", 
@@ -38,6 +48,7 @@ static bool is_system_noise(const char* exe) {
 }
 
 static void collect_running_processes() {
+    fprintf(stderr, "[PK] collect start\n");
 #if defined(_WIN32)
     G_PK_COUNT = 0;
 
@@ -84,6 +95,26 @@ static void collect_running_processes() {
         size_t len = strlen(exe);
         while (len>0 && (exe[len-1]=='\n' || exe[len-1]=='\r')) exe[--len]='\0';
         if (len==0) continue;
+        // Skip kernel threads (ppid 2 = kthreadd) and also check exe prefix
+        {
+            char stat_path[512];
+            snprintf(stat_path, sizeof(stat_path), "/proc/%s/stat", entry->d_name);
+            FILE* fstat = fopen(stat_path, "r");
+            if (fstat) {
+                char stat_buf[1024];
+                if (fgets(stat_buf, sizeof(stat_buf), fstat)) {
+                    char* rparen = strrchr(stat_buf, ')');
+                    if (rparen) {
+                        int ppid = 0;
+                        if (sscanf(rparen+2, "%*c %d", &ppid)==1 && ppid==2) {
+                            fclose(fstat);
+                            continue;
+                        }
+                    }
+                }
+                fclose(fstat);
+            }
+        }
         if (is_system_noise(exe)) continue;
         bool exists=false;
         for (int i=0;i<G_PK_COUNT;i++) if (strcasecmp(G_PK_LIST[i], exe)==0) {exists=true;break;}
@@ -94,7 +125,9 @@ static void collect_running_processes() {
         }
     }
     closedir(proc);
+    fprintf(stderr, "[PK] collect done count=%d\n", G_PK_COUNT);
 #endif
+    fprintf(stderr, "[PK] final count=%d\n", G_PK_COUNT);
 }
 
 static void run_hidden_command(const char* cmd) {
@@ -166,18 +199,20 @@ static void pk_enter_callback(const char* selection, ListBoxInfo* lb) {
 }
 
 static void pk_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
+    fprintf(stderr, "[PK] refresh filter='%s' count=%d lb=%p\n", filter?filter:"(null)", G_PK_COUNT, lb);
     const char** items = (const char**)malloc(G_PK_COUNT * sizeof(char*));
     if (!items) return;
     for (int i = 0; i < G_PK_COUNT; i++) {
         items[i] = G_PK_LIST[i];
     }
     PopulateListBox(lb, hListBox, filter, items, G_PK_COUNT, NULL);
+    if (lb) fprintf(stderr, "[PK] after populate populated=%d total=%d selected=%d\n", lb->populated_count, lb->total_matches, lb->selected_index);
     free(items);
 }
-
 static void TriggerProcessKiller(void) {
-
+    fprintf(stderr, "[PK] TriggerProcessKiller start\n");
     collect_running_processes();
+    fprintf(stderr, "[PK] Trigger with %d items\n", G_PK_COUNT);
 
     const char** list_items = (const char**)malloc(G_PK_COUNT * sizeof(char*));
     if (!list_items) {
