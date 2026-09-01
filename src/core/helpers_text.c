@@ -139,7 +139,7 @@ char* GetCleanText(const char* text) {
     clean[0] = '\0';
     
     const char* flags[] = {"-f", "-cg", "-trw", "-tr", "-t"};
-    int flag_count = sizeof(flags) / sizeof(flags[0]);
+    int flag_count = ARRAY_LEN(flags);
     
     char* text_copy = _strdup(text);
     if (!text_copy) return NULL;

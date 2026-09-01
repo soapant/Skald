@@ -19,7 +19,7 @@ static bool is_system_noise(const char* exe) {
         "SearchIndexer.exe", "wmiprvse.exe", "dllhost.exe", "audiodg.exe",
         "taskhostw.exe", "dwm.exe", "fontdrvhost.exe", "Registry","TextInputHost.exe"
     };
-    for (size_t i = 0; i < sizeof(noise) / sizeof(noise[0]); i++) {
+    for (size_t i = 0; i < ARRAY_LEN(noise); i++) {
         if (fl_case_insensitive_string_match_platform(exe, noise[i])) return true;
     }
     return false;
@@ -147,7 +147,7 @@ static void BulkKillProcesses(const char* window_titles[], int count) {
 }
 
 static void bulk_kill_bkp(void) {
-    BulkKillProcesses(bkp_windows, sizeof(bkp_windows)/sizeof(bkp_windows[0]));
+    BulkKillProcesses(bkp_windows, ARRAY_LEN(bkp_windows));
 }
 static void pk_enter_callback(const char* selection, ListBoxInfo* lb) {
       terminate_process_by_name(selection);
