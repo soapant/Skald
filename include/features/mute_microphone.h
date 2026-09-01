@@ -4,7 +4,6 @@
 #include "common.h"
 #include "core/flapi.h"
 #include "core/platform.h"
-#include "features/mute_microphone.h"
 #include "core/common_ui.h"
 
 #if defined(_WIN32)

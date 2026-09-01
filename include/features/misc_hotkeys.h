@@ -2,10 +2,10 @@
 #define MISC_HOTKEYS_H
 
 #include "core/flapi.h"
-#include "core/platform.h"
-#include "features/window_switcher.h"
-#include "features/process_killer.h"
 #include "features/app_launcher.h"
+#include "features/process_killer.h"
+#include "features/window_switcher.h"
+#include "core/platform.h"
 #if defined(_WIN32)
 #include <shellapi.h>
 #include <shlwapi.h>

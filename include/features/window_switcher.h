@@ -3,7 +3,6 @@
 
 #include "core/flapi.h"
 #include "features/focus_switcher.h"
-#include "features/window_switcher.h"
 #if !defined(_WIN32)
 #include <sys/types.h>
 #include "x11_display.h"

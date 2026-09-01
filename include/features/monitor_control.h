@@ -8,8 +8,6 @@
 #endif
 #include "common.h"
 #include "core/common_ui.h"
-#include "features/monitor_control.h"
-
 void SetMonitorBright(int brightness) {
 #if defined(_WIN32)
     HMONITOR hMonitor = MonitorFromWindow(GetDesktopWindow(), MONITOR_DEFAULTTOPRIMARY);
