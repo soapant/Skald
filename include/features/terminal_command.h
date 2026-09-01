@@ -44,12 +44,13 @@ static void TriggerTerminalCommand(void) {
 }
 
 static void run_btop(void) {
-    fl_run_terminal_command("btop",true);
+    char* output = fl_run_terminal_command("ls",true);
+    printf("%s \n",output);
 }
 
 static inline void terminal_command_init(void) {
     fl_register_hotkey("Alt+{", TriggerTerminalCommand, NULL, NULL);
-    fl_register_hotkey("Alt+Ctrl+B", run_btop, NULL, NULL);
+    fl_register_hotkey("Ctrl+B", run_btop, NULL, NULL);
 }
 
 #endif
