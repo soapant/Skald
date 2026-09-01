@@ -41,8 +41,7 @@ bool fl_get_all_files_from_dir(const char* dir_path, char** list_of_allowed_exte
     if (!Platform_ExpandPath(dir_path, expanded_dir, sizeof(expanded_dir))) return false;
     dir_path = expanded_dir;
 
-    fl_get_all_files_from_dir_platform(dir_path, list_of_allowed_extensions, list_of_files, list_of_names_to_ignore);
-    return true;
+    return fl_get_all_files_from_dir_platform(dir_path, list_of_allowed_extensions, list_of_files, list_of_names_to_ignore);
 }
 char* fl_search_file_in_dir(const char* directory, const char* search_string,char* output_path){
     if (!directory) return NULL;
@@ -95,8 +94,7 @@ bool fl_register_hotkey(char* hotkey_string,void (*on_hotkey_trigger)(void),bool
                                                         on_hotkey_trigger,
                                                         optional_condition_for_hotkey,
                                                         optional_blacklistedwindows);
-    hotkey_register_internal(binding);
-    return true;
+    return hotkey_register_internal(binding);
 }
 
 void fl_init_all_hotkeys(void) {
@@ -129,11 +127,14 @@ void fl_init_all_hotkeys(void) {
 bool fl_launch_terminal_with_args(char* args) {
 
 }
+bool fl_run_terminal_command(char* command,bool open_terminal) {
+}
+
 bool fl_launch_terminal_at_path(char* path,char* args) {
     if (!path) return false;
     char expanded[MAX_PATH];
     if (!Platform_ExpandPath(path, expanded, sizeof(expanded)))return false;
-    Platform_LaunchTerminalAtPath(expanded,args);
-    return true;
+    return Platform_LaunchTerminalAtPath(expanded,args);
+
 }
 
