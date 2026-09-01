@@ -8,7 +8,7 @@
 #include <shellapi.h>
 #include <gdiplus.h>
 
-bool Platform_LaunchTerminal(const char* working_dir, const char* extra_args){
+bool Platform_LaunchTerminalAtPath(const char* working_dir, const char* extra_args){
       char terminal[512];
       snprintf(terminal,sizeof(terminal),"%s.exe",UsedTerminal);
       ShellExecuteA(NULL, "open", terminal, NULL, working_dir, SW_SHOWNORMAL);

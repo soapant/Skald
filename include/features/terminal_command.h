@@ -96,7 +96,7 @@ static void RunTerminalCommand(const char* Command, bool save_to_history,bool op
     char extra[1024];
     snprintf(extra,sizeof(extra),"-e bash \"%s\"", temp_file);
     if (open_in_terminal) {
-    Platform_LaunchTerminal(real_home, extra);
+    fl_launch_terminal_at_path(real_home, extra);
     }
 #endif
 }
