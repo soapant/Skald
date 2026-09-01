@@ -2,9 +2,8 @@
 #define APP_LAUNCHER_H
 
 #include "core/flapi.h"
-#include "features/window_switcher.h"
 #include "features/focus_switcher.h"
-
+#include "features/window_switcher.h"
 static const char* ListOfShitToIgnore[] = {
   "node_modules",
   ".git",

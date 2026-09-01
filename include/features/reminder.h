@@ -2,14 +2,33 @@
 #define REMINDER_H
 
 #include "core/flapi.h"
-#include "features/reminder.h"
-#include "features/process_killer.h"
-#include "features/timer.h"
 #include "features/focus_switcher.h"
+#include "features/timer.h"
+#include "features/process_killer.h"
 #include "core/zoxide_helpers.h"
 
 #define FILE_REMINDER_HISTORY 6
 #define ReminderHistoryFile G_FILE_ENTRIES[FILE_REMINDER_HISTORY].mf
+
+// Moved from helpers/flag.h - reminder-specific flag handling
+typedef void (*ActionFn)(const char* parameter);
+typedef bool (*ConditionFn)(const char* parameter);
+typedef void (*TimerFn)(const char* parameter);
+typedef struct { char* str; ActionFn    func; } ActionDef;
+typedef struct { char* str; ConditionFn func; } ConditionDef;
+typedef struct { char* str; TimerFn     func; } TimerDef;
+typedef struct {
+    char* name;
+    ConditionFn func;
+} ConditionParamDef;
+
+typedef struct {
+    const char* prompt_title;
+    const char* icon;
+    bool open_neovide;
+    bool open_yazi;
+    bool open_explorer;
+} ZoxideOptions;
 
 static char** g_cached_reminder_commands = NULL;
 static int g_cached_reminder_count = 0;

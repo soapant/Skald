@@ -2,11 +2,8 @@
 #define QUICKLINK_H
 
 #include "core/flapi.h"
-#include "core/platform.h"
 #include "features/window_switcher.h"
-
-
-
+#include "core/platform.h"
 static inline void open_browser(const char *url) {
     if (!url) return;
     char command[1024];

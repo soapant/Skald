@@ -2,8 +2,6 @@
 #define TIMER_H
 
 #include "core/flapi.h"
-#include "features/timer.h"
-
 void LaunchTimer(const char* selection) {
     fl_launch_with_args(TimerPath, selection);
     printf("[TIMER] Launching: %s %s\n", TimerPath, selection);

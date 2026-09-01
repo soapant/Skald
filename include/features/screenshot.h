@@ -4,7 +4,6 @@
 #include "common.h"
 #include "core/flapi.h"
 #include "core/platform.h"
-#include "features/screenshot.h"
 #include "core/common_ui.h"
 
 int region_step = 0;

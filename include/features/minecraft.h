@@ -2,8 +2,6 @@
 #define MINECRAFT_H
 
 #include "common.h"
-#include "features/minecraft.h"
-
 void minecraft_type_command(const char* command) {
 #if defined(_WIN32)
     INPUT t[2] = {0};
