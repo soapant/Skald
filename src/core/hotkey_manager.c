@@ -6,15 +6,16 @@ static HotkeyBinding* g_hotkeys = NULL;
 static int g_hotkey_count = 0;
 static int g_hotkey_capacity = 0;
 
-void hotkey_register_internal(HotkeyBinding binding) {
+bool hotkey_register_internal(HotkeyBinding binding) {
     if (g_hotkey_count >= g_hotkey_capacity) {
         int new_cap = g_hotkey_capacity == 0 ? 16 : g_hotkey_capacity * 2;
         HotkeyBinding* new_arr = realloc(g_hotkeys, new_cap * sizeof(HotkeyBinding));
-        if (!new_arr) return;
+        if (!new_arr) return false;
         g_hotkeys = new_arr;
         g_hotkey_capacity = new_cap;
     }
     g_hotkeys[g_hotkey_count++] = binding;
+    return true;
 }
 
 bool hotkey_process(int vk_code, int modifiers, const char* title) {
