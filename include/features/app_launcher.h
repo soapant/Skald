@@ -4,6 +4,14 @@
 #include "core/flapi.h"
 #include "features/focus_switcher.h"
 #include "features/window_switcher.h"
+
+typedef struct {
+    int vk_code;
+    int modifiers;
+    const char* exe_name;
+    const char* app_name;  
+} AppHotkey;
+
 static const char* ListOfShitToIgnore[] = {
   "node_modules",
   ".git",

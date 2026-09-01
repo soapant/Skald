@@ -8,7 +8,6 @@
 #endif
 #include "core/types/window.h"
 #include "core/types/prompt.h"
-#include "core/types/todo.h"
 
 typedef struct {
 #if defined(_WIN32)

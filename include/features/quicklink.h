@@ -4,6 +4,14 @@
 #include "core/flapi.h"
 #include "features/window_switcher.h"
 #include "core/platform.h"
+
+typedef struct {
+    int vk_code;
+    int modifiers;
+    const char* exe_name;
+    const char* QuickLinkQuery; 
+} QuickLinkHotkey;
+
 static inline void open_browser(const char *url) {
     if (!url) return;
     char command[1024];

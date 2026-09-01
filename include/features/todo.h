@@ -3,9 +3,49 @@
 
 #include "core/flapi.h"
 
-// --- Per-feature config moved from config.h/c into feature file (no longer depends on config) ---
-#ifndef TODO_CONFIG_DEFINED
-#define TODO_CONFIG_DEFINED
+typedef struct {
+    const char* alias;
+    const char* alias_label;
+} TodoAliasEntry;
+
+typedef struct {
+    const char* flag;
+    const char* internal_name;
+    const char* tag_label;
+    ColorRef color;
+    bool is_alias;
+} TodoConfigEntry;
+
+typedef struct {
+    char tag_label[64];
+    char internal_name[64];
+    ColorRef color;
+} TodoTag;
+
+typedef struct {
+    TodoTag tags[10];
+    int tag_count;
+    char text[256];
+} TodoEntry;
+
+typedef struct {
+    const char* flag;
+    void (*handler)(const char*);
+} GenericFlagEntry;
+
+typedef struct {
+    const char* open_bracket;
+    const char* close_bracket;
+    const char* tag_separator;
+    const char* tag_prefix;
+    const char* alias_separator;
+} TagFormatConfig;
+
+#define TODO_TAG_OPEN "["
+#define TODO_TAG_CLOSE "]"
+#define TODO_TAG_SEPARATOR "|"
+#define TODO_ENTRY_DELIMITER "||"
+
 static const TagFormatConfig TODO_TAG_FORMAT_LOCAL = {
     "[",
     "]",
@@ -67,7 +107,6 @@ static const TodoConfigEntry TODO_DICT_LOCAL[] = {
 static const size_t TODO_DICT_COUNT_LOCAL = ARRAY_LEN(TODO_DICT_LOCAL);
 #undef X
 
-// Compatibility shims - keep original names but point to local copies
 #define TODO_ALIAS_DICT TODO_ALIAS_DICT_LOCAL
 #define TODO_ALIAS_DICT_COUNT TODO_ALIAS_DICT_COUNT_LOCAL
 #define TODO_ALIAS_FLAGS TODO_ALIAS_FLAGS_LOCAL
@@ -77,7 +116,6 @@ static const size_t TODO_DICT_COUNT_LOCAL = ARRAY_LEN(TODO_DICT_LOCAL);
 #define TODO_DICT TODO_DICT_LOCAL
 #define TODO_DICT_COUNT TODO_DICT_COUNT_LOCAL
 #define TODO_CONFIG_FLAGS_ENTRIES TODO_DICT_LOCAL
-#endif
 
 static ColorRef GetTagColor(const char* tag_text) {
     if (!tag_text || strlen(tag_text) == 0) return COLOR_TEXT;

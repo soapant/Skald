@@ -3,6 +3,13 @@
 
 #include "core/flapi.h"
 
+typedef struct {
+    int vk_code;
+    int modifiers;
+    int code;
+} MusicPlayerBinding;
+
+
 static char *allowed_audio_formats[] = {"mp3","ogg","flac", NULL};
 
 extern ListOfFiles g_music_files;
