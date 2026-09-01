@@ -5,6 +5,16 @@
 #include "helpers.h"
 #include "core/common_ui.h"
 
+typedef struct {
+    int vk_code;
+    int modifiers;
+    const char** blacklist;      
+    int blacklist_count;
+    const char** window_titles;  
+    int window_count;
+} FocusSwitcherBinding;
+
+
 #if defined(_WIN32)
 #include <psapi.h>
 #include <shlwapi.h>

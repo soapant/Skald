@@ -6,6 +6,14 @@
 #include "features/process_killer.h"
 #include "features/window_switcher.h"
 #include "core/platform.h"
+
+typedef struct {
+    int vk_code;
+    int modifiers;
+    const char* exe_name;
+    const char* misc_path; 
+} MiscHotkey;
+
 #if defined(_WIN32)
 #include <shellapi.h>
 #include <shlwapi.h>

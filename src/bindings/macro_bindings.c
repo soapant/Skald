@@ -53,7 +53,7 @@ bool CheckMacroBindings(int pressed_vk, int modifiers) {
     FetchExeNameOnDemand(hActiveWnd, activeExe, sizeof(activeExe) - 1);
     for (size_t i = 0; i < MACRO_BINDING_COUNT; i++) {
         if (G_MACRO_BINDINGS[i].vk_code == pressed_vk && G_MACRO_BINDINGS[i].modifiers == modifiers) {
-            if (fl_exe_matches(G_MACRO_BINDINGS[i].exe_name, activeExe)) {
+            if (strcasecmp(G_MACRO_BINDINGS[i].exe_name, activeExe)) {
                 if (G_MACRO_BINDINGS[i].handler) G_MACRO_BINDINGS[i].handler();
                 return true;
             }
