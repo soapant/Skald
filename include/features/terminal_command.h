@@ -36,7 +36,7 @@ static void terminal_enter_callback(const char* selection, ListBoxInfo* lb) {
         Platform_FileAppend(TerminalHistoryFile, selection);
         Platform_FileAppend(TerminalHistoryFile, "\n");
       }
-      // RunTerminalCommand(selection, false,true);
+      fl_run_terminal_command(selection,true);
 }
 
 static void terminal_edit_callback(const char* selection, ListBoxInfo* lb) {
@@ -57,7 +57,7 @@ static void TriggerTerminalCommand(void) {
 }
 
 static void run_btop(void) {
-    // RunTerminalCommand("btop", false, false);
+    fl_run_terminal_command("btop",true);
 }
 
 static inline void terminal_command_init(void) {
