@@ -290,7 +290,7 @@ char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
 
     FILE* f = fopen(temp_file, "w");
     if (f) {
-        fprintf(f, "#!/bin/bash\n");
+        fprintf(f, "#!/bin/%s\n",UsedShell);
         fprintf(f, "%s\n", clean_cmd);
         fclose(f);
         if (Platform_IsRunningAsRoot()){
@@ -307,7 +307,7 @@ char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
     char runtime_dir[256];
     snprintf(runtime_dir,sizeof(runtime_dir),"%s",Platform_GetRuntimeDir());
     char extra[1024];
-    snprintf(extra,sizeof(extra),"bash \"%s\"", temp_file);
+    snprintf(extra, sizeof(extra), "-e %s -c \"%s '%s'; exec %s\"",UsedShell,UsedShell,temp_file,UsedShell);
     if (open_terminal) {
          Platform_LaunchTerminalAtPath(real_home,extra);
          return "";
