@@ -95,9 +95,11 @@ char* Platform_PromptUser(const PromptSpec* spec) {
   }
   SetCurrentFeatureName(g_current_feature);
   BuildAliasDisplayItems(window_list, count);
+  extern EditorMode g_last_mode;
 
   if (ModePersistsThroughFeatures) {
     SetModeWithListBox(g_last_mode, lb_ptr);
+
   } else {
     SetModeWithListBox(MODE_INSERT, lb_ptr);
   }

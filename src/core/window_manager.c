@@ -544,9 +544,7 @@ static void PromptPopup_OnShow(Popup* self) {
     data->state->has_listbox = (data->spec.count >= 0);
     ListBoxInfo_Init(&data->state->listbox);
     data->state->listbox.selected_index = -1;
-    // Handle vim mode persistence per config
     extern EditorMode g_last_mode;
-    extern int last_index;
     if (ModePersistsThroughFeatures) {
         SetModeWithListBox(g_last_mode, &data->state->listbox);
         if (RememberLastIndex && last_index >= 0 && data->state->has_listbox) {
