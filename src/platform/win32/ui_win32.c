@@ -433,17 +433,23 @@ int Platform_InitializeTrayIcon() {
     wc.hInstance = hInstance;
     wc.lpszClassName = "TrayAppClass";
 
-    if (!RegisterClass(&wc)) return -1;
+    if (!RegisterClass(&wc)) {
+      return -1;
+    }
 
-
-    hGlobalTrayWnd = WH_FROM_HWND(CreateWindow(
+    // Use hidden toolwindow instead of overlapped to avoid visible white window on Wine
+    hGlobalTrayWnd = WH_FROM_HWND(CreateWindowExA(
+        WS_EX_TOOLWINDOW,
         wc.lpszClassName, "TrayApp", 
-        WS_OVERLAPPEDWINDOW, 
-        CW_USEDEFAULT, CW_USEDEFAULT, 0, 0, 
+        WS_POPUP, 
+        0, 0, 0, 0, 
         NULL, NULL, hInstance, NULL
         ));
 
-    if (WH_TO_HWND(hGlobalTrayWnd) == NULL) return -1;
+    if (WH_TO_HWND(hGlobalTrayWnd) == NULL) {
+      return -1;
+    }
+    // Don't ShowWindow - keep hidden
   }
   return 0;
 }
@@ -620,16 +626,23 @@ void Platform_InitUI() {
   searchPopupWc.lpszClassName = "SearchPopupClass";
   RegisterClassA(&searchPopupWc);
 
-  WNDCLASSA settingsPopupWc = {0};
-  settingsPopupWc.lpfnWndProc = SettingsPopupProc;
-  settingsPopupWc.hInstance = GetModuleHandle(NULL);
-  settingsPopupWc.hCursor = LoadCursor(NULL, IDC_ARROW);
-  settingsPopupWc.hbrBackground = CreateSolidBrush(COLOR_BG);
-  settingsPopupWc.lpszClassName = "SettingsPopupClass";
-  RegisterClassA(&settingsPopupWc);
+   WNDCLASSA settingsPopupWc = {0};
+   settingsPopupWc.lpfnWndProc = SettingsPopupProc;
+   settingsPopupWc.hInstance = GetModuleHandle(NULL);
+   settingsPopupWc.hCursor = LoadCursor(NULL, IDC_ARROW);
+   settingsPopupWc.hbrBackground = CreateSolidBrush(COLOR_BG);
+   settingsPopupWc.lpszClassName = "SettingsPopupClass";
+   RegisterClassA(&settingsPopupWc);
+
+   // Install low-level keyboard hook for hotkeys
+   hKeyboardHook = SetWindowsHookExA(WH_KEYBOARD_LL, LowLevelKeyboardProc, GetModuleHandle(NULL), 0);
 }
 
 void Platform_ShutdownUI() {
+  if (hKeyboardHook) {
+    UnhookWindowsHookEx(hKeyboardHook);
+    hKeyboardHook = NULL;
+  }
   if (g_gdiplusToken != 0) {
     GdiplusShutdown(g_gdiplusToken);
   }
