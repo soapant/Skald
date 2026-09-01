@@ -26,7 +26,6 @@ extern char* EditPopUpPos;
 extern int EditPopUpWidthMin;
 extern int PageUpDownLen;
 extern bool ColorfullMode;
-extern bool SearchBoxDiffColor;
 extern float WindowOpacity;
 extern const wchar_t* HttpUrlForNotis;
 extern const char* BASE_SCREENSHOT_FOLDER_PATH;
@@ -36,6 +35,7 @@ extern const int FontSize;
 extern const int NumberFontSize;
 extern const int VimFontSize;
 extern const int PaddingForScrolling;
+extern bool CloseOnLossOfFocus;
 extern const char* UsedTerminal;
 extern const char* UsedShell;
 extern const char* UsedFileManager;
@@ -44,7 +44,6 @@ extern const char* ImageEditorPath;
 extern const char* TimerPath;
 extern const char* MusicPlayerPath;
 extern const char* VideoViewerPath;
-extern const char* TextEditorPath;
 extern const char* MusicPath;
 extern const char* VideosPath;
 extern const char* IconPath;
@@ -61,8 +60,6 @@ extern const bool EnableLineNumbers;
 extern const int GradientItems;
 extern const float GradientBrightness;
 extern bool PixelHotkeys;
-extern bool CloseOnLossOfFocus;
-extern float WindowOpacity;
 
 typedef struct {
     const char* path;
@@ -78,11 +75,8 @@ typedef struct {
 extern const PathVar G_PATH_VARS[];
 extern const unsigned int PATH_VAR_COUNT;
 
-
 extern const AliasEntry Aliases[];
 extern const size_t ALIAS_ENTRY_COUNT;
-
-// Per-feature TODO config moved to include/features/todo.h (feature no longer depends on config)
 
 #define ARRAY_LEN(a) (sizeof(a) / sizeof((a)[0]))
 

@@ -14,7 +14,6 @@ char* EditPopUpPos = "middle";
 int EditPopUpWidthMin = 400;
 int PageUpDownLen = 6;
 bool ColorfullMode = false;
-bool SearchBoxDiffColor = false; 
 float WindowOpacity = 235.0;
 const wchar_t* HttpUrlForNotis = L"doingthistomakeitrarebitch";
 
