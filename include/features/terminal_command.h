@@ -44,8 +44,7 @@ static void TriggerTerminalCommand(void) {
 }
 
 static void run_btop(void) {
-    char* output = fl_run_terminal_command("ls",true);
-    printf("%s \n",output);
+    fl_run_terminal_command("ls",true);
 }
 
 static inline void terminal_command_init(void) {

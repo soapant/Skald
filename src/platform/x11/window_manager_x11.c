@@ -1,4 +1,5 @@
 #include "core/window_manager.h"
+
 #include "core/common_ui.h"
 #include "core/modal.h"
 #include "core/vim.h"
