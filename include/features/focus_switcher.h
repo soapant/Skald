@@ -3,7 +3,6 @@
 
 #include "common.h"
 #include "helpers.h"
-#include "features/focus_switcher.h"
 #include "core/common_ui.h"
 
 #if defined(_WIN32)

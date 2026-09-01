@@ -2,7 +2,6 @@
 #define ADB_H
 
 #include "core/flapi.h"
-#include "features/adb.h"
 #if defined(_WIN32)
 #include <windows.h>
 #include <fileapi.h>

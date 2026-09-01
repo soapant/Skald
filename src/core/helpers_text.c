@@ -61,19 +61,8 @@ int SearchFlagsInText(const char* text, const void* flag_array, int flag_count, 
     }
     
     for (int i = 0; i < flag_count && match_count < max_matches; i++) {
-        const char* flag_str = NULL;
-        
-        if (flag_size == sizeof(char*)) {
-            flag_str = ((char**)flag_array)[i];
-        } else if (flag_size == sizeof(ActionDef)) {
-            flag_str = ((ActionDef*)flag_array)[i].str;
-        } else if (flag_size == sizeof(ConditionDef)) {
-            flag_str = ((ConditionDef*)flag_array)[i].str;
-        } else if (flag_size == sizeof(TimerDef)) {
-            flag_str = ((TimerDef*)flag_array)[i].str;
-        } else if (flag_size == sizeof(GenericFlagEntry)) {
-            flag_str = ((const GenericFlagEntry*)flag_array)[i].flag;
-        }
+        // Generic: first member is always char* flag/str at offset 0
+        const char* flag_str = *(const char**)((const char*)flag_array + i * flag_size);
         
         if (!flag_str) continue;
         

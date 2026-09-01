@@ -3,7 +3,6 @@
 
 #include "common.h"
 #include "core/flapi.h"
-#include "features/replica.h"
 #include "features/window_switcher.h"
 #include "core/common_ui.h"
 

@@ -3,7 +3,6 @@
 
 #include "common.h"
 #include "core/flapi.h"
-#include "features/windows_control.h"
 #include "helpers.h"
 //
 // Not Implemented on Linux - uses netsh (Windows only)
