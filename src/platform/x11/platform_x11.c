@@ -19,7 +19,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-bool Platform_LaunchTerminal(const char* working_dir, const char* extra_args){
+bool Platform_LaunchTerminalAtPath(const char* working_dir, const char* extra_args){
     if(!working_dir) return false;
 
     const char* real_user = Platform_GetRealUser();
@@ -242,6 +242,7 @@ bool Platform_SetX11StringProperty(const char* window_title, const char* atom_na
 }
 
 bool Platform_LaunchApp(const char* path) {
+    // should be removed
     if (!path) return false;
     char expanded[1024];
     if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) return false;
@@ -310,10 +311,10 @@ bool Platform_LaunchApp(const char* path) {
             const char* wd = workdir[0] ? workdir : NULL;
             char extra[2048];
             snprintf(extra, sizeof(extra), "-e sh -c '%s; exec ${SHELL:-/bin/sh}'", exec_line);
-            if(wd) return Platform_LaunchTerminal(wd, extra);
+            if(wd) return Platform_LaunchTerminalAtPath(wd, extra);
             else {
                 const char* home = Platform_GetRealHome();
-                return Platform_LaunchTerminal(home, extra);
+                return Platform_LaunchTerminalAtPath(home, extra);
             }
         }
         char* filename = strrchr(expanded, '/');
@@ -354,7 +355,7 @@ bool Platform_LaunchApp(const char* path) {
                 if(is_terminal){
                     char extra2[2048];
                     snprintf(extra2, sizeof(extra2), "-e sh -c '%s; exec ${SHELL:-/bin/sh}'", exec_line);
-                    return Platform_LaunchTerminal(Platform_GetRealHome(), extra2);
+                    return Platform_LaunchTerminalAtPath(Platform_GetRealHome(), extra2);
                 } else {
                     pid_t pid3=fork();
                     if(pid3==0){
