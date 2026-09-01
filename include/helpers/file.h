@@ -22,4 +22,7 @@ void Helpers_WriteFile(char lines[100][512], int count, const char* path);
 int ReplaceLineInFile(const char* filepath, int line_index, const char* new_text);
 void WriteToCacheIndex(ListBoxInfo* lb, int index, const char* text);
 
+// Simple API for edit popup - hides all boilerplate (selection, title, position, file, listbox, refresh)
+void fl_edit_text_popup(const char* initial_text, const char* title, int x, int y, const char* filepath, ListBoxInfo* lb, RefreshCallback refresh);
+
 #endif
