@@ -56,7 +56,7 @@ void WriteToCacheIndex(ListBoxInfo* lb, int index, const char* text) {
     lb->populated_cache[index][sizeof(lb->populated_cache[index]) - 1] = '\0';
 }
 
-int ReadFile(char lines[100][512], const char* path) {
+int Helpers_ReadFile(char lines[100][512], const char* path) {
     FILE* f = fopen(path, "r");
     if (!f) {
         return 0;
@@ -80,7 +80,7 @@ int ReadFile(char lines[100][512], const char* path) {
     return count;
 }
 
-void WriteFile(char lines[100][512], int count, const char* path) {
+void Helpers_WriteFile(char lines[100][512], int count, const char* path) {
     FILE* f = fopen(path, "w");
     if (!f) return;
     for (int i = 0; i < count; i++) {

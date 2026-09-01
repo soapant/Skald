@@ -18,6 +18,11 @@
 #include "features/process_killer.h"
 #include "features/app_launcher.h"
 #include "features/terminal_command.h"
+
+#if defined(_WIN32)
+char* Platform_EditTextPopup(const char* a, int b, int c, int d, int e) { (void)a;(void)b;(void)c;(void)d;(void)e; return NULL; }
+char* Platform_SearchPopup(void) { return NULL; }
+#endif
 #include "features/misc_hotkeys.h"
 #include "features/quicklink.h"
 #include "features/text_snippets.h"
