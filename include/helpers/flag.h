@@ -31,9 +31,6 @@ typedef struct {
 
 int SearchFlagsInText(const char* text, const void* flag_array, int flag_count, size_t flag_size, FoundFlag* matches, int max_matches);
 char* GetFlagParameter(const char* text, int flag_index);
-char* GetCleanText(const char* text);
-void StripCheckboxes(char* str);
-int convert_string_to_int(const char *str);
 void HandleCommandExecution(ListBoxInfo* lb, char* string);
 
 #endif
