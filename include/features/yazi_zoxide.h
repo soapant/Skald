@@ -25,7 +25,7 @@ static void yazi_enter_callback(const char* selection, ListBoxInfo* lb) {
       if (path) {
           char cmd_args[512];
           snprintf(cmd_args, sizeof(cmd_args), "-e yazi \"%s\"", path);
-          Platform_LaunchTerminal(path, cmd_args);
+          fl_launch_terminal_at_path(path, cmd_args);
           ZoxideHelper_AppendNewEntry(YaziZoxideFile, selection, lb, &g_cached_yazi_commands, &g_cached_yazi_count);
           free(path);
       }

@@ -66,7 +66,7 @@ static void Launchtext_editor(const char* path) {
     else strncpy(dir, path, sizeof(dir)-1);
     char extra[1024];
     snprintf(extra, sizeof(extra), "-e %s \"%s\"", expanded_path, path);
-    if (!Platform_LaunchTerminal(dir[0]?dir:path, extra)){
+    if (!fl_launch_terminal_at_path(dir[0]?dir:path, extra)){
         char expanded_cmd[2048];
         snprintf(expanded_cmd, sizeof(expanded_cmd), "%s -e %s \"%s\"", UsedTerminal, expanded_path, path);
         const char* real_user = Platform_GetRealUser();
