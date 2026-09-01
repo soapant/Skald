@@ -244,8 +244,34 @@ bool Platform_SetX11StringProperty(const char* window_title, const char* atom_na
     return ok;
 }
 
+char* Platform_RunCommandAndGetOutput(char* command) {
+    FILE* fp;
+    char buffer[4096];
+    char* output = NULL;
+    size_t total_size = 0;
+    
+    fp = popen(command, "r");
+    if (fp == NULL) {
+        return strdup(""); 
+    }
+    
+    while (fgets(buffer, sizeof(buffer), fp) != NULL) {
+        size_t len = strlen(buffer);
+        output = realloc(output, total_size + len + 1);
+        if (output == NULL) {
+            pclose(fp);
+            return strdup("");
+        }
+        memcpy(output + total_size, buffer, len);
+        total_size += len;
+        output[total_size] = '\0';
+    }
+    
+    pclose(fp);
+    return output;  
+}
 
-bool Platform_RunTerminalCommand(char* command,bool open_terminal) {
+char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
     if (command == NULL || strlen(command) == 0) return false;
     
     char clean_cmd[512];
@@ -286,7 +312,9 @@ bool Platform_RunTerminalCommand(char* command,bool open_terminal) {
     char extra[1024];
     snprintf(extra,sizeof(extra),"-e bash \"%s\"", temp_file);
     if (open_terminal) {
-    return Platform_LaunchTerminalAtPath(real_home,extra);
+    return (char*)Platform_LaunchTerminalAtPath(real_home,extra);
+    } else {
+    return Platform_RunCommandAndGetOutput(extra);
     }
 }
 

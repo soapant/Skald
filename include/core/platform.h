@@ -63,7 +63,7 @@ int Platform_InitializeTrayIcon(void);
 void Platform_RunHotKeyMessageLoop(void);
 void Platform_InitUI(void);
 void Platform_ShutdownUI(void);
-bool Platform_RunTerminalCommand(char* command,bool open_terminal);
+char* Platform_RunTerminalCommand(char* command,bool open_terminal);
 
 void Linux_GetActiveWindowTitle(char* buffer, int buffer_size);
 int ConvertLinuxKeyToWindowsVK(int key_code);
