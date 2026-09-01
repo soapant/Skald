@@ -23,7 +23,10 @@ typedef struct {
 
 extern const MacroBinding G_MACRO_BINDINGS[7];
 
-#define MACRO_BINDING_COUNT (sizeof(G_MACRO_BINDINGS) / sizeof(G_MACRO_BINDINGS[0]))
+#ifndef ARRAY_LEN
+#define ARRAY_LEN(a) (sizeof(a) / sizeof((a)[0]))
+#endif
+#define MACRO_BINDING_COUNT ARRAY_LEN(G_MACRO_BINDINGS)
 
 #include <stdbool.h>
 bool CheckMacroBindings(int pressed_vk, int modifiers);

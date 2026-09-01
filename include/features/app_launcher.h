@@ -70,7 +70,7 @@ static void initialize_app_cache(void) {
 #else
     char* allowed[] = {"desktop", "sh", "lnk", "exe", "url", NULL};
 #endif
-    for (int i = 0; i < sizeof(ListOfProgramPaths) / sizeof(ListOfProgramPaths[0]); i++) {
+    for (int i = 0; i < (int)ARRAY_LEN(ListOfProgramPaths); i++) {
         if (!ListOfProgramPaths[i] || ListOfProgramPaths[i][0] == '\0') continue;
         fl_get_all_files_from_dir(ListOfProgramPaths[i], allowed, &s_apps, (char**)ListOfShitToIgnore);
     }

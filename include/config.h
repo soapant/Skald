@@ -79,25 +79,7 @@ extern const unsigned int PATH_VAR_COUNT;
 extern const AliasEntry Aliases[];
 extern const size_t ALIAS_ENTRY_COUNT;
 
-extern const TagFormatConfig TODO_TAG_FORMAT;
-
-#define TODO_TAG_OPEN "["
-#define TODO_TAG_CLOSE "]"
-#define TODO_TAG_SEPARATOR "|"
-#define TODO_ENTRY_DELIMITER "||"
-
-extern const TodoAliasEntry TODO_ALIAS_DICT[];
-extern const size_t TODO_ALIAS_DICT_COUNT;
-
-extern const GenericFlagEntry TODO_ALIAS_FLAGS[];
-extern const size_t TODO_ALIAS_FLAGS_COUNT;
-
-extern const GenericFlagEntry TODO_CONFIG_FLAGS[];
-extern const size_t TODO_CONFIG_FLAGS_COUNT;
-
-extern const TodoConfigEntry TODO_DICT[];
-#define TODO_CONFIG_FLAGS_ENTRIES TODO_DICT
-extern const size_t TODO_DICT_COUNT;
+// Per-feature TODO config moved to include/features/todo.h (feature no longer depends on config)
 
 #define ARRAY_LEN(a) (sizeof(a) / sizeof((a)[0]))
 

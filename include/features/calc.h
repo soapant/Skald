@@ -9,7 +9,7 @@ typedef struct {
     double factor;
 } UnitConversion;
 
-#define CONVERSION_COUNT (sizeof(G_CONVERSIONS) / sizeof(G_CONVERSIONS[0]))
+#define CONVERSION_COUNT ARRAY_LEN(G_CONVERSIONS)
 
 static double g_last_a = 0.0;
 static double g_last_b = 0.0;

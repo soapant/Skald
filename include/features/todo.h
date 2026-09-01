@@ -3,6 +3,82 @@
 
 #include "core/flapi.h"
 
+// --- Per-feature config moved from config.h/c into feature file (no longer depends on config) ---
+#ifndef TODO_CONFIG_DEFINED
+#define TODO_CONFIG_DEFINED
+static const TagFormatConfig TODO_TAG_FORMAT_LOCAL = {
+    "[",
+    "]",
+    "|",
+    "",
+    " "
+};
+#define TODO_TAG_FORMAT TODO_TAG_FORMAT_LOCAL
+
+#define TODO_ALIAS_MASTER \
+    X("-p", "Project:") \
+    X("-n", "Note:")
+
+#define TODO_CONFIG_MASTER \
+    X("-pc", "Cprogram",         "Cprogram",         RGB(137, 180, 250), true) \
+    X("-ph", "HeaderC",          "HeaderC",          RGB(148, 226, 183), true) \
+    X("-pm", "MinecraftModpack", "MinecraftModpack", RGB(250, 179, 135), true) \
+    X("-pb", "CocBot",           "CocBot",           RGB(249, 226, 175), true) \
+    X("-pp", "MusicPlayer",      "MusicPlayer",      RGB(209, 106, 175), true) \
+    X("-pv", "VideoViewer",      "VideoViewer",      RGB(219, 226, 105), true) \
+    X("-pd", "Ded",              "Ded",              RGB(19,  226, 105), true) \
+    X("-pi", "IndieGame",     "IndieGame",     RGB(19,  26, 105), true) \
+    X("-m",  NULL,               "Misc",             RGB(225, 225, 225), false) \
+    X("-l",  NULL,               "Learning",         RGB(166, 227, 161), false) \
+    X("-b",  NULL,               "Bored",            RGB(203, 166, 247), false) \
+    X("-d",  NULL,               "DontForget",       RGB(255, 109, 108), false) \
+    X("-my", NULL,               "Maybe",            RGB(150, 5,   142), false) \
+    X("-bg", NULL,               "Bug",              RGB(250, 9,   2),   false) \
+    X("-v",  NULL,               "Nvim",             RGB(57,  235, 20),  false) \
+    X("-f",  NULL,               "Fun",              RGB(210, 9,   102), false) \
+    X("-r",  NULL,               "Research",         RGB(235, 60,  235), false) \
+    X("-u",  NULL,               "Urgent",           RGB(255, 0,   35),  false) \
+    X("-ne", NULL,               "NotImplemetedYet", RGB(155, 255, 35),  false) \
+    X("-ft", NULL,               "Feature",          RGB(250, 205, 102), false) \
+    X("-c",  NULL,               "Change",           RGB(150, 105, 12),  false)
+
+#define X(flag, label) {flag, label},
+static const TodoAliasEntry TODO_ALIAS_DICT_LOCAL[] = {
+    TODO_ALIAS_MASTER
+};
+static const size_t TODO_ALIAS_DICT_COUNT_LOCAL = ARRAY_LEN(TODO_ALIAS_DICT_LOCAL);
+#undef X
+#define X(flag, label) {flag, NULL},
+static const GenericFlagEntry TODO_ALIAS_FLAGS_LOCAL[] = {
+    TODO_ALIAS_MASTER
+};
+static const size_t TODO_ALIAS_FLAGS_COUNT_LOCAL = ARRAY_LEN(TODO_ALIAS_FLAGS_LOCAL);
+#undef X
+#define X(flag, internal, label, color, is_alias) {flag, NULL},
+static const GenericFlagEntry TODO_CONFIG_FLAGS_LOCAL[] = {
+    TODO_CONFIG_MASTER
+};
+static const size_t TODO_CONFIG_FLAGS_COUNT_LOCAL = ARRAY_LEN(TODO_CONFIG_FLAGS_LOCAL);
+#undef X
+#define X(flag, internal, label, color, is_alias) {flag, internal, label, color, is_alias},
+static const TodoConfigEntry TODO_DICT_LOCAL[] = {
+    TODO_CONFIG_MASTER
+};
+static const size_t TODO_DICT_COUNT_LOCAL = ARRAY_LEN(TODO_DICT_LOCAL);
+#undef X
+
+// Compatibility shims - keep original names but point to local copies
+#define TODO_ALIAS_DICT TODO_ALIAS_DICT_LOCAL
+#define TODO_ALIAS_DICT_COUNT TODO_ALIAS_DICT_COUNT_LOCAL
+#define TODO_ALIAS_FLAGS TODO_ALIAS_FLAGS_LOCAL
+#define TODO_ALIAS_FLAGS_COUNT TODO_ALIAS_FLAGS_COUNT_LOCAL
+#define TODO_CONFIG_FLAGS TODO_CONFIG_FLAGS_LOCAL
+#define TODO_CONFIG_FLAGS_COUNT TODO_CONFIG_FLAGS_COUNT_LOCAL
+#define TODO_DICT TODO_DICT_LOCAL
+#define TODO_DICT_COUNT TODO_DICT_COUNT_LOCAL
+#define TODO_CONFIG_FLAGS_ENTRIES TODO_DICT_LOCAL
+#endif
+
 static ColorRef GetTagColor(const char* tag_text) {
     if (!tag_text || strlen(tag_text) == 0) return COLOR_TEXT;
     
