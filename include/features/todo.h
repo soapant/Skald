@@ -598,35 +598,8 @@ static void todo_render_callback(HDC hdc, const char* text, RECT* rect, BOOL is_
 }
 #endif
 
-static void todo_edit_confirm_callback(const char* new_text, void* user_data) {
-    EditCallbackData* data = (EditCallbackData*)user_data;
-    if (new_text && data) {
-        data->new_text = (char*)new_text;
-        EditCallback_Handle(data, todo_refresh_callback);
-    }
-    free(data);
-}
-
 static void todo_edit_callback(const char* selection, ListBoxInfo* lb) {
-    int idx = lb ? lb->selected_index : -1;
-    int true_idx = (lb && idx >= 0 && idx < lb->populated_count) ? lb->matching_indices[idx] : idx;
-    
-    WindowManager* wm = WindowManager_Get();
-    
-    EditCallbackData* data = calloc(1, sizeof(EditCallbackData));
-    
-    data->filepath = TODO_FILE_PATH;
-    data->lb = lb;
-    data->selected_index = idx;
-    data->true_index = true_idx;
-    data->new_text = NULL;
-    data->restore_selection = true;
-    data->hListBox = hListBox;
-    data->hEditControl = hEditControl;
-    
-    Popup* popup = EditPopup_Create(wm, selection, "Edit Todo", 960, 540,
-                                    todo_edit_confirm_callback, data);
-    WindowManager_PushPopup(wm, popup);
+    fl_edit_text_popup(selection, "Edit Todo", 960, 540, TODO_FILE_PATH, lb, todo_refresh_callback);
 }
 
 static void TriggerTodo(void) {

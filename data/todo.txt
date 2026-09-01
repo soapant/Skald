@@ -1,6 +1,6 @@
 the copying only works while hte program is active||[Cprogram]|[DontForget]
 make a preset for the not plugged in to ||[Misc]|[DontForget]
-i totally forgot i  really make the clipbaord manaegr||[Cprogram]|[DontForget]|[Feature]
+i totally forgot i  really make the clipbaord ||[Cprogram]|[DontForget]|[Feature]
 add a debug menu to show data about the feature||[Cprogram]|[DontForget]
 make a display all hotkeys thingy maybe in the settings ig||[Cprogram]|[Maybe]
 settings ui||[Cprogram]|[NotImplemetedYet]
