@@ -43,7 +43,7 @@ const PathVar G_PATH_VARS[] = {
     {"PROGRAMDATA",  "C:\\ProgramData",                 ""}, // Not A Thing On Linux
     {"SystemRoot",   "C:\\Windows",                     ""}, // Not A Thing On Linux
 };
-const unsigned int PATH_VAR_COUNT = sizeof(G_PATH_VARS) / sizeof(G_PATH_VARS[0]);
+const unsigned int PATH_VAR_COUNT = ARRAY_LEN(G_PATH_VARS);
 
 const bool TimerAvailable = true;
 const bool MusicPlayerAvailable = true;
@@ -65,66 +65,4 @@ const AliasEntry Aliases[] = {
 };
 const size_t ALIAS_ENTRY_COUNT = ARRAY_LEN(Aliases);
 
-const TagFormatConfig TODO_TAG_FORMAT = {
-    "[",
-    "]",
-    "|",
-    "",
-    " "
-};
-
-#define TODO_ALIAS_MASTER \
-    X("-p", "Project:") \
-    X("-n", "Note:")
-
-#define TODO_CONFIG_MASTER \
-    X("-pc", "Cprogram",         "Cprogram",         RGB(137, 180, 250), true) \
-    X("-ph", "HeaderC",          "HeaderC",          RGB(148, 226, 183), true) \
-    X("-pm", "MinecraftModpack", "MinecraftModpack", RGB(250, 179, 135), true) \
-    X("-pb", "CocBot",           "CocBot",           RGB(249, 226, 175), true) \
-    X("-pp", "MusicPlayer",      "MusicPlayer",      RGB(209, 106, 175), true) \
-    X("-pv", "VideoViewer",      "VideoViewer",      RGB(219, 226, 105), true) \
-    X("-pd", "Ded",              "Ded",              RGB(19,  226, 105), true) \
-    X("-pi", "IndieGame",     "IndieGame",     RGB(19,  26, 105), true) \
-    X("-m",  NULL,               "Misc",             RGB(225, 225, 225), false) \
-    X("-l",  NULL,               "Learning",         RGB(166, 227, 161), false) \
-    X("-b",  NULL,               "Bored",            RGB(203, 166, 247), false) \
-    X("-d",  NULL,               "DontForget",       RGB(255, 109, 108), false) \
-    X("-my", NULL,               "Maybe",            RGB(150, 5,   142), false) \
-    X("-bg", NULL,               "Bug",              RGB(250, 9,   2),   false) \
-    X("-v",  NULL,               "Nvim",             RGB(57,  235, 20),  false) \
-    X("-f",  NULL,               "Fun",              RGB(210, 9,   102), false) \
-    X("-r",  NULL,               "Research",         RGB(235, 60,  235), false) \
-    X("-u",  NULL,               "Urgent",           RGB(255, 0,   35),  false) \
-    X("-ne", NULL,               "NotImplemetedYet", RGB(155, 255, 35),  false) \
-    X("-ft", NULL,               "Feature",          RGB(250, 205, 102), false) \
-    X("-c",  NULL,               "Change",           RGB(150, 105, 12),  false) \
-
-
-#define X(flag, label) {flag, label},
-const TodoAliasEntry TODO_ALIAS_DICT[] = {
-    TODO_ALIAS_MASTER
-};
-const size_t TODO_ALIAS_DICT_COUNT = ARRAY_LEN(TODO_ALIAS_DICT);
-#undef X
-
-#define X(flag, label) {flag, NULL},
-const GenericFlagEntry TODO_ALIAS_FLAGS[] = {
-    TODO_ALIAS_MASTER
-};
-const size_t TODO_ALIAS_FLAGS_COUNT = ARRAY_LEN(TODO_ALIAS_FLAGS);
-#undef X
-
-#define X(flag, internal, label, color, is_alias) {flag, NULL},
-const GenericFlagEntry TODO_CONFIG_FLAGS[] = {
-    TODO_CONFIG_MASTER
-};
-const size_t TODO_CONFIG_FLAGS_COUNT = ARRAY_LEN(TODO_CONFIG_FLAGS);
-#undef X
-
-#define X(flag, internal, label, color, is_alias) {flag, internal, label, color, is_alias},
-const TodoConfigEntry TODO_DICT[] = {
-    TODO_CONFIG_MASTER
-};
-const size_t TODO_DICT_COUNT = ARRAY_LEN(TODO_DICT);
-#undef X
+// Per-feature TODO config moved to include/features/todo.h

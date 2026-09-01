@@ -97,7 +97,7 @@ ConditionParamDef custom_conditions[] = {
 
 
 bool CheckGameRunning(const char* parameter) {
-    int condition_count = sizeof(custom_conditions) / sizeof(custom_conditions[0]);
+    int condition_count = ARRAY_LEN(custom_conditions);
     
     for (int i = 0; i < condition_count; i++) {
         if (strcmp(parameter, custom_conditions[i].name) == 0) {
@@ -173,10 +173,10 @@ static void StartReminder(const char* selection) {
     memset(condition_matches, 0, sizeof(condition_matches));
     memset(constraint_matches, 0, sizeof(constraint_matches));
     memset(timer_matches, 0, sizeof(timer_matches));
-#define REMINDER_ACTION_FLAGS_COUNT sizeof(action_matches) / sizeof(action_matches[0])
-#define REMINDER_CONDITION_FLAGS_COUNT sizeof(condition_matches) / sizeof(condition_matches[0])
-#define REMINDER_CONSTRAINT_FLAGS_COUNT sizeof(constraint_matches) / sizeof(constraint_matches[0])
-#define REMINDER_TIMER_FLAGS_COUNT sizeof(timer_matches) / sizeof(timer_matches[0])
+#define REMINDER_ACTION_FLAGS_COUNT ARRAY_LEN(action_matches)
+#define REMINDER_CONDITION_FLAGS_COUNT ARRAY_LEN(condition_matches)
+#define REMINDER_CONSTRAINT_FLAGS_COUNT ARRAY_LEN(constraint_matches)
+#define REMINDER_TIMER_FLAGS_COUNT ARRAY_LEN(timer_matches)
     
     int total_action_flags = SearchFlagsInText(selection, REMINDER_ACTION_FLAGS, REMINDER_ACTION_FLAGS_COUNT, sizeof(ActionDef), action_matches, 10);
     int total_condition_flags = SearchFlagsInText(selection, REMINDER_CONDITION_FLAGS, REMINDER_CONDITION_FLAGS_COUNT, sizeof(ConditionDef), condition_matches, 10);

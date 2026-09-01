@@ -175,7 +175,7 @@ static bool ResolvePathToken(const char* token, char* out, size_t out_size) {
         {"DOCUMENTS", "Documents"},
         {"DOWNLOADS", "Downloads"},
     };
-    for (size_t i = 0; i < sizeof(subdirs) / sizeof(subdirs[0]); i++) {
+    for (size_t i = 0; i < ARRAY_LEN(subdirs); i++) {
         if (strcmp(token, subdirs[i].name) == 0) {
             if (!home) return false;
             snprintf(out, out_size, "%s/%s", home, subdirs[i].subdir);

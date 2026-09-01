@@ -716,7 +716,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
       
         g_last_mode = g_current_mode;
         selection_feature = g_current_feature;
-        for (int i = 0; i < (int)(sizeof(held_modifiers) / sizeof(held_modifiers[0])); i++) {
+        for (int i = 0; i < (int)ARRAY_LEN(held_modifiers); i++) {
           if (GetAsyncKeyState(held_modifiers[i]) & 0x8000) {
             INPUT up = {0};
               up.type = INPUT_KEYBOARD;
