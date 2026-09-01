@@ -4,13 +4,6 @@
 #include "core/flapi.h"
 #include "core/zoxide_helpers.h"
 
-typedef struct {
-    int vk_code;
-    int modifiers;
-    const char* terminal_command;
-    bool open_in_terminal;
-} TerminalCommandHotkey;
-
 static char** g_cached_commands = NULL;
 static int g_cached_command_count = 0;
 
@@ -26,12 +19,6 @@ static void terminal_refresh_callback(const char* filter, WindowHandle hListBox,
 }
 
 static void terminal_enter_callback(const char* selection, ListBoxInfo* lb) {
-      if (TerminalHistoryFile->fileSize > 0) {
-          char lastChar = Platform_GetLastChar(TerminalHistoryFile);
-          if (lastChar != '\n') {
-              Platform_FileAppend(TerminalHistoryFile, "\n");
-          }
-      }
       if (!UI_IsListBoxSelected(lb)) {
         Platform_FileAppend(TerminalHistoryFile, selection);
         Platform_FileAppend(TerminalHistoryFile, "\n");
