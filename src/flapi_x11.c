@@ -203,7 +203,6 @@ bool fl_launch_with_args_platform(const char* path, const char* args) {
             snprintf(combined, sizeof(combined), "%s %s", exec_line, args);
             strncpy(exec_line, combined, sizeof(exec_line)-1);
         }
-        // try gtk-launch
         const char* real_user = Platform_GetRealUser();
         const char* display = Platform_GetSessionDisplay();
         const char* xauthority = Platform_GetSessionXAuthority();

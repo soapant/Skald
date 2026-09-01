@@ -13,6 +13,33 @@ bool Platform_LaunchTerminalAtPath(const char* working_dir, const char* extra_ar
       snprintf(terminal,sizeof(terminal),"%s.exe",UsedTerminal);
       ShellExecuteA(NULL, "open", terminal, NULL, working_dir, SW_SHOWNORMAL);
 }
+
+bool Platform_RunTerminalCommand(char* command,bool open_terminal) {
+    if (command == NULL || strlen(command) == 0) return;
+    
+    char clean_cmd[512];
+    strncpy(clean_cmd, command, sizeof(clean_cmd) - 1);
+    clean_cmd[sizeof(clean_cmd) - 1] = '\0';
+
+    char temp_file[MAX_PATH];
+    GetTempPathA(MAX_PATH, temp_file);
+    strcat(temp_file, "temp_cmd.sh");
+
+    FILE* f = fopen(temp_file, "w");
+    if (f) {
+        fprintf(f, "#!/bin/bash\n");
+        fprintf(f, "%s\n", clean_cmd);
+        fclose(f);
+    }
+
+    char terminal_exe[512];
+    snprintf(terminal_exe, sizeof(terminal_exe), "%s.exe", UsedTerminal);
+    
+    // i think this wont work but sure 
+    char args[2048];
+    snprintf(args, sizeof(args), "-e bash \"%s\"", temp_file);
+    ShellExecuteA(NULL, "open", terminal_exe, args, NULL, SW_SHOWNORMAL);
+}
 char* Platform_QueryZoxidePath(const char* query) {
     DWORD start_time = GetTickCount();
 
