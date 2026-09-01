@@ -32,7 +32,6 @@
 #define _strdup strdup
 #endif
 
-// Modular split - includes (feature-specific types removed, now in feature files)
 #include "core/types/keys.h"
 #include "core/types/color.h"
 #include "core/types/window.h"
