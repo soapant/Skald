@@ -39,6 +39,20 @@ extern char output_buffer[256];
 
 static WindowManager* g_window_manager = NULL;
 
+#if defined(_WIN32)
+// Stubs for Linux-only symbols referenced by generic code but not available on Windows
+int pending_hotkey_vk = 0;
+int pending_hotkey_mod = 0;
+long pending_hotkey_timeMs = 0;
+bool g_linux_ctrl_held = false;
+bool g_linux_alt_held = false;
+bool g_linux_shift_held = false;
+bool g_Linux_CtrlHeld = false;
+bool g_Linux_AltHeld = false;
+bool g_Linux_ShiftHeld = false;
+void SavePerFeatureState(const char* feature, EditorMode mode, int last_index) { (void)feature; (void)mode; (void)last_index; }
+#endif
+
 WindowManager* WindowManager_Create(void) {
     WindowManager* wm = calloc(1, sizeof(WindowManager));
     if (!wm) return NULL;
@@ -251,7 +265,6 @@ static void EditPopup_OnHide(Popup* self) {
     #if !defined(_WIN32)
     Display* dpy = get_display();
     if (dpy) { XUnmapWindow(dpy, self->handle.xid); XFlush(dpy); }
-    #endif
     // restore focus to new top popup
     WindowManager* wm = WindowManager_Get();
     if (wm) {
@@ -266,6 +279,7 @@ static void EditPopup_OnHide(Popup* self) {
             }
         }
     }
+    #endif
 }
 
 static void EditPopup_OnKey(Popup* self, int vk_code, bool pressed, int modifiers) {
