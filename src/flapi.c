@@ -1,4 +1,5 @@
 #include "core/flapi.h"
+#include "core/flapi_platform.h"
 #include "core/hotkey_manager.h"
 #include "features/window_switcher.h"
 #include "features/google_search.h"

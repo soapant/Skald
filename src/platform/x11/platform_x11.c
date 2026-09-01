@@ -26,14 +26,16 @@ bool Platform_LaunchTerminalAtPath(const char* working_dir, const char* extra_ar
     const char* display = Platform_GetSessionDisplay();
     const char* xauthority = Platform_GetSessionXAuthority();
     const char* runtime_dir_raw = Platform_GetRuntimeDir();
+    const char* wayland_display = getenv("WAYLAND_DISPLAY");
 
     char runtime_dir[256];
     snprintf(runtime_dir, sizeof(runtime_dir), "%s", runtime_dir_raw ? runtime_dir_raw : "");
 
-    char disp_env[256], xauth_env[512], runtime_env[512];
+    char disp_env[256], xauth_env[512], runtime_env[512], wayland_env[512];
     snprintf(disp_env, sizeof(disp_env), "DISPLAY=%s", display ? display : "");
     snprintf(xauth_env, sizeof(xauth_env), "XAUTHORITY=%s", xauthority ? xauthority : "");
     snprintf(runtime_env, sizeof(runtime_env), "XDG_RUNTIME_DIR=%s", runtime_dir);
+    snprintf(wayland_env, sizeof(wayland_env), "WAYLAND_DISPLAY=%s", wayland_display ? wayland_display : "");
 
     pid_t pid = fork();
     if(pid < 0) return false;
@@ -56,18 +58,20 @@ bool Platform_LaunchTerminalAtPath(const char* working_dir, const char* extra_ar
             if(extra_args && extra_args[0]){
                 char cmd[2048];
                 snprintf(cmd, sizeof(cmd), "%s --working-directory=\"%s\" %s", UsedTerminal, working_dir, extra_args);
-                char* const argv[] = {"sudo","-u",(char*)real_user,"env",disp_env,xauth_env,runtime_env,"sh","-c",cmd,NULL};
+                char* const argv[] = {"sudo","-u",(char*)real_user,"env",disp_env,xauth_env,runtime_env,wayland_env,"sh","-c",cmd,NULL};
                 execvp(argv[0], argv);
             } else {
-                char* const argv[] = {"sudo","-u",(char*)real_user,"env",disp_env,xauth_env,runtime_env,(char*)UsedTerminal,"--working-directory",(char*)working_dir,NULL};
+                char* const argv[] = {"sudo","-u",(char*)real_user,"env",disp_env,xauth_env,runtime_env,wayland_env,(char*)UsedTerminal,"--working-directory",(char*)working_dir,NULL};
                 execvp(argv[0], argv);
-                char* const argv2[] = {"sudo","-u",(char*)real_user,"env",disp_env,xauth_env,runtime_env,(char*)UsedTerminal,NULL};
+                char* const argv2[] = {"sudo","-u",(char*)real_user,"env",disp_env,xauth_env,runtime_env,wayland_env,(char*)UsedTerminal,NULL};
                 execvp(argv2[0], argv2);
             }
         } else {
             setenv("DISPLAY", display, 1);
             setenv("XAUTHORITY", xauthority, 1);
             setenv("XDG_RUNTIME_DIR", runtime_dir, 1);
+            if (wayland_display && wayland_display[0])
+                setenv("WAYLAND_DISPLAY", wayland_display, 1);
 
             if(extra_args && extra_args[0]){
                 char cmd[2048];

@@ -263,15 +263,11 @@ static void WindowUtils_GetFiltered(WindowList* list, const char** blacklist, in
 #endif
 }
 
-// ============================================================
-// SWITCHER CALLBACKS & TRIGGERS (Unchanged)
-// ============================================================
-
 static bool switcher_match_helper(const char* item, const char* filter) {
     for (int i = 0; i < g_switcher_count; i++) {
         if (strcmp(g_switcher_windows[i].title, item) == 0) {
-            return (fl_case_insensitive_string_match_platform(g_switcher_windows[i].title, filter) != NULL ||
-                    fl_case_insensitive_string_match_platform(g_switcher_windows[i].exe, filter) != NULL);
+            return (strcasecmp(g_switcher_windows[i].title, filter) != NULL ||
+                    strcasecmp(g_switcher_windows[i].exe, filter) != NULL);
         }
     }
     return false;
