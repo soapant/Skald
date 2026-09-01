@@ -168,17 +168,13 @@ void WindowManager_ProcessEvents(WindowManager* wm) {
 
 char* WindowManager_ShowPrompt(WindowManager* wm, const PromptSpec* spec) {
     if (!wm || !spec) return NULL;
-    
+#if defined(_WIN32)
+    extern char* Platform_PromptUser(const PromptSpec* spec);
+    char* res = Platform_PromptUser(spec);
+    return res;
+#else
     Popup* popup = PromptPopup_Create(wm, spec);
     if (!popup) return NULL;
-    
-    #if defined(_WIN32)
-    MSG msg;
-    while (wm->running && wm->popup_count > 0 && GetMessage(&msg, NULL, 0, 0)) {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
-    }
-    #else
     Display* dpy = wm->display;
     XEvent ev;
     while (wm->running && wm->popup_count > 0) {
@@ -189,31 +185,25 @@ char* WindowManager_ShowPrompt(WindowManager* wm, const PromptSpec* spec) {
             usleep(1000);
         }
     }
-    #endif
-    
     if (popup->manager == NULL) {
         if (popup->vtable && popup->vtable->destroy) popup->vtable->destroy(popup);
     } else {
         WindowManager_PopPopup(wm);
         if (popup->vtable && popup->vtable->destroy) popup->vtable->destroy(popup);
     }
-    
     return output_buffer[0] ? output_buffer : NULL;
+#endif
 }
 
 char* WindowManager_ShowSimplePrompt(WindowManager* wm, const SimplePromptSpec* spec) {
     if (!wm || !spec) return NULL;
-    
+#if defined(_WIN32)
+    extern char* Platform_SimplePromptUser(const SimplePromptSpec* spec);
+    char* res = Platform_SimplePromptUser(spec);
+    return res;
+#else
     Popup* popup = SimplePromptPopup_Create(wm, spec);
     if (!popup) return NULL;
-    
-    #if defined(_WIN32)
-    MSG msg;
-    while (wm->running && wm->popup_count > 0 && GetMessage(&msg, NULL, 0, 0)) {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
-    }
-    #else
     Display* dpy = wm->display;
     XEvent ev;
     while (wm->running && wm->popup_count > 0) {
@@ -224,16 +214,14 @@ char* WindowManager_ShowSimplePrompt(WindowManager* wm, const SimplePromptSpec* 
             usleep(1000);
         }
     }
-    #endif
-    
     if (popup->manager == NULL) {
         if (popup->vtable && popup->vtable->destroy) popup->vtable->destroy(popup);
     } else {
         WindowManager_PopPopup(wm);
         if (popup->vtable && popup->vtable->destroy) popup->vtable->destroy(popup);
     }
-    
     return output_buffer[0] ? output_buffer : NULL;
+#endif
 }
 
 static bool prompt_should_swallow_pending(int wParam, int mods);

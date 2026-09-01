@@ -21,8 +21,6 @@ bool hotkey_process(int vk_code, int modifiers, const char* title) {
     for (int i = 0; i < g_hotkey_count; i++) {
         HotkeyBinding* b = &g_hotkeys[i];
         if (b->vk_code == vk_code && b->modifiers == modifiers) {
-            if (b->hotkey_condition && !b->hotkey_condition()) continue;
-            if (IsWindowBlacklisted(title, b->blacklist, b->blacklist_count)) continue;
             if (b->hotkey_callback) b->hotkey_callback();
             return true;
         }
