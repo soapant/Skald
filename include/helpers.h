@@ -107,54 +107,6 @@ static inline bool fl_exe_matches(const char* bind_exe, const char* activeExe) {
     return strstr(activeExe, bind_exe) != NULL;
 #endif
 }
-static inline bool fl_check_hotkey_bindings(int vk, int mod, const char* title, const HotkeyBinding* bindings, int count) {
-    for (int i = 0; i < count; i++) {
-        const HotkeyBinding* b = &bindings[i];
-        if (b->vk_code != vk || b->modifiers != mod) continue;
-        if (b->hotkey_condition && !b->hotkey_condition()) continue;
-        if (IsWindowBlacklisted(title, b->blacklist, b->blacklist_count)) continue;
-        if (b->hotkey_callback) b->hotkey_callback();
-        return true;
-    }
-    return false;
-}
-static inline int fl_find_app_hotkey_idx(int vk, int mod, const char* activeExe, const AppHotkey* arr, int count) {
-    for (int i = 0; i < count; i++) if (arr[i].vk_code == vk && arr[i].modifiers == mod && fl_exe_matches(arr[i].exe_name, activeExe)) return i;
-    return -1;
-}
-static inline int fl_find_misc_hotkey_idx(int vk, int mod, const char* activeExe, const MiscHotkey* arr, int count) {
-    for (int i = 0; i < count; i++) if (arr[i].vk_code == vk && arr[i].modifiers == mod && fl_exe_matches(arr[i].exe_name, activeExe)) return i;
-    return -1;
-}
-static inline int fl_find_quicklink_idx(int vk, int mod, const char* activeExe, const QuickLinkHotkey* arr, int count) {
-    for (int i = 0; i < count; i++) if (arr[i].vk_code == vk && arr[i].modifiers == mod && fl_exe_matches(arr[i].exe_name, activeExe)) return i;
-    return -1;
-}
-static inline int fl_find_text_snippet_idx(int vk, int mod, const char* activeExe, const TextSnippet* arr, int count) {
-    for (int i = 0; i < count; i++) if (arr[i].vk_code == vk && arr[i].modifiers == mod && fl_exe_matches(arr[i].exe_name, activeExe)) return i;
-    return -1;
-}
-static inline int fl_find_terminal_idx(int vk, int mod, const TerminalCommandHotkey* arr, int count) {
-    for (int i = 0; i < count; i++) if (arr[i].vk_code == vk && arr[i].modifiers == mod) return i;
-    return -1;
-}
-static inline int fl_find_music_idx(int vk, int mod, const MusicPlayerBinding* arr, int count) {
-    for (int i = 0; i < count; i++) if (arr[i].vk_code == vk && arr[i].modifiers == mod) return i;
-    return -1;
-}
-static inline int fl_find_video_idx(int vk, int mod, const VideoViewerBinding* arr, int count) {
-    for (int i = 0; i < count; i++) if (arr[i].vk_code == vk && arr[i].modifiers == mod) return i;
-    return -1;
-}
-static inline int fl_find_bulk_idx(int vk, int mod, const BulkKillProcessBinding* arr, int count) {
-    for (int i = 0; i < count; i++) if (arr[i].vk_code == vk && arr[i].modifiers == mod) return i;
-    return -1;
-}
-static inline int fl_find_focus_idx(int vk, int mod, const FocusSwitcherBinding* arr, int count) {
-    for (int i = 0; i < count; i++) if (arr[i].vk_code == vk && arr[i].modifiers == mod) return i;
-    return -1;
-}
-
 int UI_LookupTrueIndex(const char* name);
 void SaveFeatureHistory(char* string);
 int ReplaceLineInFile(const char* filepath, int line_index, const char* new_text);
