@@ -158,6 +158,11 @@ static void FocusWindow(WindowHandle hwnd) {
 }
 
 #if defined(_WIN32)
+typedef struct {
+    const char* search_title;
+    WindowHandle result;
+} FindWindowSomething;
+
 static BOOL CALLBACK FindWindowByPartialTitleProc(HWND hwnd, LPARAM lParam) {
     FindWindowSomething* data = (FindWindowSomething*)lParam;
     char window_title[256];

@@ -8,9 +8,10 @@
 #include "core/common_ui.h"
 
 #if defined(_WIN32)
-EXTERN_C const GUID CLSID_MMDeviceEnumerator;
-EXTERN_C const GUID IID_IMMDeviceEnumerator;
-EXTERN_C const GUID IID_IAudioEndpointVolume;
+#include <initguid.h>
+#include <mmdeviceapi.h>
+#include <audioclient.h>
+#include <endpointvolume.h>
 #endif
 
 bool mic_muted = false;
