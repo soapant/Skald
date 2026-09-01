@@ -4,6 +4,14 @@
 #include "core/flapi.h"
 #include "core/zoxide_helpers.h"
 
+typedef struct {
+    int vk_code;
+    int modifiers;
+    const char* terminal_command;
+    bool open_in_terminal;
+} TerminalCommandHotkey;
+
+
 
 
 static char** g_cached_commands = NULL;

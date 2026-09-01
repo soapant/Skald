@@ -2,6 +2,14 @@
 #define PROCESS_KILLER_H
 
 #include "core/flapi.h"
+
+typedef struct {
+    int vk_code;
+    int modifiers;
+    const char** window_titles;  
+    int window_count;
+} BulkKillProcessBinding;
+
 #if defined(_WIN32)
 #include <windows.h>
 #include <tlhelp32.h>

@@ -4,6 +4,13 @@
 
 #include "core/flapi.h"
 
+typedef struct {
+    int vk_code;
+    int modifiers;
+    int code;
+} VideoViewerBinding;
+
+
 static char *allowed_video_formats[] = {"webm","mp4", NULL};
 
 extern ListOfFiles g_video_files;
