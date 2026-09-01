@@ -1,4 +1,5 @@
 the copying only works while hte program is active||[Cprogram]|[DontForget]
+
 make a preset for the not plugged in to ||[Misc]|[DontForget]
 i totally forgot i  really make the clipbaord ||[Cprogram]|[DontForget]|[Feature]
 add a debug menu to show data about the feature||[Cprogram]|[DontForget]
@@ -15,6 +16,5 @@ unit tests???????????? ||[Cprogram]
 video viewer closes on program close ||[Cprogram]
 give the user the choice of a fiele exploere ||[Cprogram]
 mayne make my own rlwrap uit for vim motions||[Maybe]
-duck.ai||[DontForget]
 eventually you need to hoit reload the entire program so it can be modifed while its running and the hotkyes too ||[Cprogram]
-app launcher doesnt work ||[Cprogram]
+hotkey system cannot handle ctrl shift or any two modifer ||[Cprogram]
