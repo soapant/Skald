@@ -3,7 +3,7 @@
 
 #include "core/types.h"
 
-bool Platform_LaunchTerminal(const char* working_dir, const char* extra_args);
+bool Platform_LaunchTerminalAtPath(const char* working_dir, const char* extra_args);
 bool Platform_ExpandPath(const char* template_path, char* out, size_t out_size);
 bool Platform_ShellExecuteWithVerb(const char* path, const char* verb, bool async);
 bool Platform_LaunchApp(const char* path);

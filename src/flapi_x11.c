@@ -75,10 +75,10 @@ int fl_copy_into_clipboard_platform(const char* text) {
     status = pclose(pipe);
     return (status == 0) ? 1 : 0;
 }
-void fl_get_all_files_from_dir_platform(const char* dir_path, char** list_of_allowed_extensions, ListOfFiles* list_of_files,char** list_of_names_to_ignore) {
+bool fl_get_all_files_from_dir_platform(const char* dir_path, char** list_of_allowed_extensions, ListOfFiles* list_of_files,char** list_of_names_to_ignore) {
 
     DIR* dir = opendir(dir_path);
-    if (!dir) return;
+    if (!dir) return false;
 
     struct dirent* entry;
     while ((entry = readdir(dir)) != NULL) {
@@ -145,19 +145,13 @@ void fl_get_all_files_from_dir_platform(const char* dir_path, char** list_of_all
         }
     }
     closedir(dir);
+    return true;
 }
 
 
 bool fl_launch_with_args_platform(const char* path, const char* args) {
     if (!path) return false;
     char expanded[1024];
-    extern bool Platform_ExpandPath(const char* t, char* o, size_t s);
-    extern const char* Platform_GetRealUser(void);
-    extern const char* Platform_GetSessionDisplay(void);
-    extern const char* Platform_GetSessionXAuthority(void);
-    extern const char* Platform_GetRuntimeDir(void);
-    extern bool Platform_IsRunningAsRoot(void);
-    extern bool Platform_LaunchTerminal(const char* wd, const char* extra);
     if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) return false;
     path = expanded;
     if (strstr(path, ".desktop") != NULL) {
@@ -201,8 +195,8 @@ bool fl_launch_with_args_platform(const char* path, const char* args) {
             char extra[2048];
             if (args && args[0]) snprintf(extra, sizeof(extra), "-e sh -c '%s %s; exec ${SHELL:-/bin/sh}'", exec_line, args);
             else snprintf(extra, sizeof(extra), "-e sh -c '%s; exec ${SHELL:-/bin/sh}'", exec_line);
-            if(wd) return Platform_LaunchTerminal(wd, extra);
-            else return Platform_LaunchTerminal(Platform_GetRealHome(), extra);
+            if(wd) return Platform_LaunchTerminalAtPath(wd, extra);
+            else return Platform_LaunchTerminalAtPath(Platform_GetRealHome(), extra);
         }
         if (exec_line[0] && args && args[0]) {
             char combined[2048];
@@ -242,7 +236,7 @@ bool fl_launch_with_args_platform(const char* path, const char* args) {
         } else if(pid>0){ int st=0; waitpid(pid,&st,0); if(WIFEXITED(st) && WEXITSTATUS(st)!=0 && exec_line[0]){
                 if(is_terminal){
                     char extra2[2048]; snprintf(extra2, sizeof(extra2), "-e sh -c '%s; exec ${SHELL:-/bin/sh}'", exec_line);
-                    return Platform_LaunchTerminal(Platform_GetRealHome(), extra2);
+                    return Platform_LaunchTerminalAtPath(Platform_GetRealHome(), extra2);
                 } else {
                     pid_t pid3=fork();
                     if(pid3==0){
