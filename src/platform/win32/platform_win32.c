@@ -27,7 +27,7 @@ char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
 
     FILE* f = fopen(temp_file, "w");
     if (f) {
-        fprintf(f, "#!/bin/bash\n");
+        fprintf(f, "#!/bin/%s\n",UsedShell);
         fprintf(f, "%s\n", clean_cmd);
         fclose(f);
     }
@@ -37,7 +37,7 @@ char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
     
     // i think this wont work but sure implement
     char args[2048];
-    snprintf(args, sizeof(args), "-e bash \"%s\"", temp_file);
+    snprintf(args, sizeof(args), "-e %s \"%s\"",UsedShell,temp_file);
     ShellExecuteA(NULL, "open", terminal_exe, args, NULL, SW_SHOWNORMAL);
 }
 char* Platform_QueryZoxidePath(const char* query) {
