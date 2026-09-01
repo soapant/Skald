@@ -49,6 +49,8 @@ bool fl_register_hotkey(char* hotkey_string,void (*on_hotkey_trigger)(void),bool
 void fl_init_all_hotkeys(void);
 bool fl_launch_terminal_with_args(char* args);
 bool fl_launch_terminal_at_path(char* path,char* args);
+bool fl_launch_file_manager_at_path(char* path,char* args);
+char* fl_get_zoxide_match(char* query);
 char* fl_run_terminal_command(char* command,bool open_terminal);
 
 #endif

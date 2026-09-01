@@ -21,7 +21,7 @@ static void yazi_refresh_callback(const char* filter, WindowHandle hListBox, Lis
 
 
 static void yazi_enter_callback(const char* selection, ListBoxInfo* lb) {
-      char* path = Platform_QueryZoxidePath(selection);
+      char* path = fl_get_zoxide_match(selection);
       if (path) {
           char cmd_args[512];
           snprintf(cmd_args, sizeof(cmd_args), "-e yazi \"%s\"", path);

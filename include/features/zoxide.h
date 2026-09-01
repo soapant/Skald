@@ -23,7 +23,7 @@ static void zoxide_edit_callback(const char* selection, ListBoxInfo* lb) {
 }
 
 static void zoxide_enter_callback(const char* selection, ListBoxInfo* lb) {
-        char* path = Platform_QueryZoxidePath(selection);
+        char* path = fl_get_zoxide_match(selection);
         if (path) {
             fl_launch_terminal_at_path(path, NULL);
             ZoxideHelper_AppendNewEntry(TerminalZoxideFile, selection, lb, &g_cached_zoxide_commands, &g_cached_zoxide_count);

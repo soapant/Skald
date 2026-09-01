@@ -320,6 +320,10 @@ char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
     }
 }
 
+bool Platform_LaunchFileManagerAtPath(char* path,char* args) {
+     Platform_ShellExecuteWithVerb(path, "open", true);
+}
+
 bool Platform_LaunchApp(const char* path) {
     // should be removed
     if (!path) return false;
