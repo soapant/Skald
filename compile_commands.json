@@ -1,24 +1,6 @@
 [
   {
     "directory": "/home/diggy/Programming/Projects/Flint",
-    "file": "src/window/subclasses_x11.c",
-    "arguments": [
-      "gcc",
-      "-Wall",
-      "-Wextra",
-      "-I",
-      "include",
-      "-I/usr/include/freetype2",
-      "-MMD",
-      "-MP",
-      "-w",
-      "-g",
-      "-c",
-      "src/window/subclasses_x11.c"
-    ]
-  },
-  {
-    "directory": "/home/diggy/Programming/Projects/Flint",
     "file": "src/main.c",
     "arguments": [
       "gcc",
@@ -325,24 +307,6 @@
   },
   {
     "directory": "/home/diggy/Programming/Projects/Flint",
-    "file": "src/flapi_x11.c",
-    "arguments": [
-      "gcc",
-      "-Wall",
-      "-Wextra",
-      "-I",
-      "include",
-      "-I/usr/include/freetype2",
-      "-MMD",
-      "-MP",
-      "-w",
-      "-g",
-      "-c",
-      "src/flapi_x11.c"
-    ]
-  },
-  {
-    "directory": "/home/diggy/Programming/Projects/Flint",
     "file": "src/bindings/macro_bindings.c",
     "arguments": [
       "gcc",
@@ -469,6 +433,24 @@
   },
   {
     "directory": "/home/diggy/Programming/Projects/Flint",
+    "file": "src/platform/x11/subclasses_x11.c",
+    "arguments": [
+      "gcc",
+      "-Wall",
+      "-Wextra",
+      "-I",
+      "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
+      "-w",
+      "-g",
+      "-c",
+      "src/platform/x11/subclasses_x11.c"
+    ]
+  },
+  {
+    "directory": "/home/diggy/Programming/Projects/Flint",
     "file": "src/platform/x11/window_manager_x11.c",
     "arguments": [
       "gcc",
@@ -519,6 +501,24 @@
       "-g",
       "-c",
       "src/platform/x11/helpers_x11.c"
+    ]
+  },
+  {
+    "directory": "/home/diggy/Programming/Projects/Flint",
+    "file": "src/platform/x11/flapi_x11.c",
+    "arguments": [
+      "gcc",
+      "-Wall",
+      "-Wextra",
+      "-I",
+      "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
+      "-w",
+      "-g",
+      "-c",
+      "src/platform/x11/flapi_x11.c"
     ]
   },
   {

@@ -9,7 +9,7 @@
 #include "core/hotkey_manager.h"
 #include "bindings/bindings.h"
 #include "bindings/macro_bindings.h"
-#include "window/subclasses.h"
+#include "platform/subclasses.h"
 #include "features/focus_switcher.h"
 #include "core/feature_data.h"
 #include "features/music_player.h"

@@ -3,7 +3,7 @@
 #include "core/modal.h"
 #include "core/vim.h"
 #include "core/platform.h"
-#include "window/subclasses_win32.h"
+#include "platform/win32/subclasses_win32.h"
 #include "features/focus_switcher.h"
 #include "features/music_player.h"
 #include "features/video_viewer.h"
