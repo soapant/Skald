@@ -1,3 +1,5 @@
+#include <windows.h>
+#include <shlwapi.h>
 #include "core/flapi.h"
 #include "core/platform.h"
 
