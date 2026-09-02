@@ -3,6 +3,7 @@
 #include "config.h"
 #include "core/common_ui.h"
 #include "core/window_manager.h"
+#include "core/context.h"
 
 EditorMode g_current_mode = MODE_INSERT;
 static const char* g_mode_names[] = { "NORMAL", "INSERT", "VISUAL" };
@@ -23,6 +24,8 @@ static ListBoxInfo* GetActiveListBoxFromTopPopup(void) {
 void SetModeWithListBox(EditorMode mode, ListBoxInfo* lb) {
     g_current_mode = mode;
     g_vim_mode = g_mode_names[mode];
+    FlintContext* ctx = FlintContext_Get();
+    if (ctx) { ctx->vim_mode = mode; ctx->vim_mode_str = g_vim_mode; }
     WindowManager* wm = WindowManager_Get();
     bool in_main = wm ? wm->popup_count == 1 : true;
 
@@ -32,7 +35,7 @@ void SetModeWithListBox(EditorMode mode, ListBoxInfo* lb) {
 
     if (in_main && IsPopupActive(WH_NULL) && lb) {
         if (strcmp(g_vim_mode, "INSERT") == 0) {
-            if (RememberLastIndex) last_index = lb->selected_index;
+            if (RememberLastIndex) { last_index = lb->selected_index; if (ctx) ctx->window.last_index = last_index; }
             UI_SetSelection(lb, hListBox, -1);
         } else if (strcmp(g_vim_mode, "NORMAL") == 0) {
             if (last_index < lb->total_matches && RememberLastIndex) {

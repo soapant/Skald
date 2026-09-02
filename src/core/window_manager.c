@@ -73,6 +73,7 @@ WindowManager* WindowManager_Create(void) {
     }
     #endif
     
+    wm->ctx = FlintContext_Get();
     g_window_manager = wm;
     return wm;
 }
@@ -560,6 +561,21 @@ static void PromptPopup_OnShow(Popup* self) {
     g_title = data->spec.title;
     g_current_feature = (char*)(p ? p+1 : data->spec.title);
     SetCurrentFeatureName(g_current_feature);
+    if (wm->ctx) {
+        wm->ctx->prompt_callbacks.refresh = data->spec.refresh;
+        wm->ctx->prompt_callbacks.enter = data->spec.enter;
+        wm->ctx->prompt_callbacks.ctrl_enter = data->spec.ctrl_enter;
+        wm->ctx->prompt_callbacks.tab = data->spec.tab;
+        wm->ctx->prompt_callbacks.copy = data->spec.copy;
+        wm->ctx->prompt_callbacks.render = data->spec.render;
+        wm->ctx->prompt_callbacks.edit = data->spec.edit;
+        wm->ctx->prompt_callbacks.filter = data->spec.filter;
+        wm->ctx->prompt_callbacks.help = data->spec.help;
+        wm->ctx->prompt_callbacks.alias = g_alias_callback;
+        wm->ctx->window.current_feature = g_current_feature;
+        wm->ctx->window.title = g_title;
+        wm->ctx->window.callbacks = wm->ctx->prompt_callbacks;
+    }
     if (g_refresh_callback) g_refresh_callback(data->state->filter, hListBox, data->state->has_listbox ? &data->state->listbox : NULL);
 }
 
@@ -598,7 +614,7 @@ static void PromptPopup_OnKey(Popup* self, int vk_code, bool pressed, int modifi
         } else {
             EditBufferBackspace(data->state->filter, &data->state->cursor);
         }
-        if (g_refresh_callback) g_refresh_callback(data->state->filter, hListBox, data->state->has_listbox ? &data->state->listbox : NULL);
+        if (data->spec.refresh) data->spec.refresh(data->state->filter, hListBox, data->state->has_listbox ? &data->state->listbox : NULL);
         return;
     }
     
@@ -637,7 +653,7 @@ static void PromptPopup_OnKey(Popup* self, int vk_code, bool pressed, int modifi
     }
     if (vk_code == VK_DELETE) {
         if (EditBufferDeleteChar(data->state->filter, &data->state->cursor)) {
-            if (g_refresh_callback) g_refresh_callback(data->state->filter, hListBox, data->state->has_listbox ? &data->state->listbox : NULL);
+            if (data->spec.refresh) data->spec.refresh(data->state->filter, hListBox, data->state->has_listbox ? &data->state->listbox : NULL);
         }
         return;
     }
@@ -652,7 +668,7 @@ static void PromptPopup_OnKey(Popup* self, int vk_code, bool pressed, int modifi
         return;
     }
     if (vk_code == VK_TAB) {
-        if (g_tab_callback) g_tab_callback(&data->state->listbox);
+        if (data->spec.tab) data->spec.tab(&data->state->listbox);
         return;
     }
     if (vk_code == VK_RETURN) {
@@ -667,9 +683,9 @@ static void PromptPopup_OnKey(Popup* self, int vk_code, bool pressed, int modifi
             sel = filter_copy;
         }
         if (is_ctrl) {
-            if (g_ctrl_enter_callback) g_ctrl_enter_callback(sel, data->state->has_listbox ? &data->state->listbox : NULL);
+            if (data->spec.ctrl_enter) data->spec.ctrl_enter(sel, data->state->has_listbox ? &data->state->listbox : NULL);
         } else {
-            if (g_enter_callback) g_enter_callback(sel, data->state->has_listbox ? &data->state->listbox : NULL) ; selection_complete = true;
+            if (data->spec.enter) data->spec.enter(sel, data->state->has_listbox ? &data->state->listbox : NULL) ; selection_complete = true;
         }
         if (selection_complete) WindowManager_PopPopup(self->manager);
         return;
@@ -688,7 +704,7 @@ static void PromptPopup_OnKey(Popup* self, int vk_code, bool pressed, int modifi
                         n - data->state->cursor + 1);
                 memcpy(data->state->filter + data->state->cursor, buf, len);
                 data->state->cursor += len;
-                if (g_refresh_callback) g_refresh_callback(data->state->filter, hListBox, data->state->has_listbox ? &data->state->listbox : NULL);
+                if (data->spec.refresh) data->spec.refresh(data->state->filter, hListBox, data->state->has_listbox ? &data->state->listbox : NULL);
             }
         }
     }

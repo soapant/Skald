@@ -19,6 +19,24 @@
   },
   {
     "directory": "/home/diggy/Programming/Projects/Flint",
+    "file": "src/core/context.c",
+    "arguments": [
+      "gcc",
+      "-Wall",
+      "-Wextra",
+      "-I",
+      "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
+      "-w",
+      "-g",
+      "-c",
+      "src/core/context.c"
+    ]
+  },
+  {
+    "directory": "/home/diggy/Programming/Projects/Flint",
     "file": "src/core/helpers.c",
     "arguments": [
       "gcc",
