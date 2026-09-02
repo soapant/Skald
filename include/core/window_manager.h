@@ -2,6 +2,7 @@
 #define WINDOW_MANAGER_H
 
 #include "core/types.h"
+#include "core/context.h"
 
 typedef struct Popup Popup;
 typedef struct WindowManager WindowManager;
@@ -38,6 +39,7 @@ struct WindowManager {
     int popup_count;
     int popup_capacity;
     bool running;
+    FlintContext* ctx;
     
     #if !defined(_WIN32)
     Display* display;
