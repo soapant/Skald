@@ -11,8 +11,6 @@
 
 int g_refresh_count = 0;
 bool draw_background = true;
-char* SelectionData[2048] = {0};
-int SelectionDataCount = 0;
 
 void SubjectiveMessageDisplay(const char* buffer,int msg_height,int timeout,ColorRef color) {
     if (MessagesEnabled) {
