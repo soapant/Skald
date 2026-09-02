@@ -2,10 +2,6 @@
 #define MISC_HOTKEYS_H
 
 #include "core/flapi.h"
-#include "features/app_launcher.h"
-#include "features/process_killer.h"
-#include "features/window_switcher.h"
-#include "core/platform.h"
 
 typedef struct {
     int vk_code;
@@ -21,16 +17,16 @@ typedef struct {
 
 
 
-static void HandleKillMyProgram(void) {
-    terminate_process_by_name("flint.exe");
-    terminate_process_by_name("main.exe");
+void HandleKillMyProgram(void) {
+    fl_terminate_process_by_name("flint.exe");
+    fl_terminate_process_by_name("main.exe");
 }
 
-static void HandleSettingsTrigger(void) {
+void HandleSettingsTrigger(void) {
     Platform_SettingsPopUp();
 }
 
-static inline void RunMiscApplication(const char* path) {
+inline void RunMiscApplication(const char* path) {
     char expanded_path[MAX_PATH];
     if (path != NULL && !Platform_ExpandPath(path, expanded_path, sizeof(expanded_path))) return;
     if (path != NULL) path = expanded_path;

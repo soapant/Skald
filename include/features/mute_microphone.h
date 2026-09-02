@@ -13,7 +13,7 @@
 #include <endpointvolume.h>
 #endif
 
-static bool mic_muted = false;
+bool mic_muted = false;
 
 #if defined(_WIN32)
 HRESULT SetDeviceMute(EDataFlow flow, BOOL mute) {

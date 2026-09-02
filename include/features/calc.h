@@ -11,15 +11,15 @@ typedef struct {
 
 #define CONVERSION_COUNT ARRAY_LEN(G_CONVERSIONS)
 
-static double g_last_a = 0.0;
-static double g_last_b = 0.0;
-static char g_last_op = 0;
-static bool g_has_last_op = false;
-static char g_last_expression[256] = {0};
-static double g_flipped_result = 0.0;
-static bool g_is_flipped = false;
+double g_last_a = 0.0;
+double g_last_b = 0.0;
+char g_last_op = 0;
+bool g_has_last_op = false;
+char g_last_expression[256] = {0};
+double g_flipped_result = 0.0;
+bool g_is_flipped = false;
 
-static const UnitConversion G_CONVERSIONS[] = {
+const UnitConversion G_CONVERSIONS[] = {
     
     { "minutes", "hours",   1.0 / 60.0 },
     { "minute",  "hours",   1.0 / 60.0 },
@@ -388,7 +388,7 @@ void get_flip_expression(char* out, size_t max_len) {
 
 
 
-static void calculator_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
+void calculator_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
     if (!lb) return;
     
     char result_buffer[256] = {0};
@@ -404,14 +404,14 @@ static void calculator_refresh_callback(const char* filter, WindowHandle hListBo
     PopulateListBox(lb, hListBox, NULL, items, 1,NULL);
 }
 
-static void calculator_enter_callback(const char* selection, ListBoxInfo* lb) {
+void calculator_enter_callback(const char* selection, ListBoxInfo* lb) {
     char* result = lb->populated_cache[0];
     fl_copy_into_clipboard(result);
 }
 
 
 
-static void calculator_tab_callback(ListBoxInfo* lb) {
+void calculator_tab_callback(ListBoxInfo* lb) {
     if (WH_TO_HWND(hEditControl) == NULL) return;
     
     
@@ -442,7 +442,7 @@ static void calculator_tab_callback(ListBoxInfo* lb) {
 
 
 
-static void calculator_ctrlenter_callback(const char* selection, ListBoxInfo* lb) {
+void calculator_ctrlenter_callback(const char* selection, ListBoxInfo* lb) {
     char* result = lb->populated_cache[0] + 2;
     UI_SetText(hEditControl, result);
     int len = strlen(result);

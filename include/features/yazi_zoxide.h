@@ -5,10 +5,10 @@
 #include "core/zoxide_helpers.h"
 #include "core/platform.h"
 
-static const char* YaziZoxideFilePath = "data/YaziZoxide.txt";
-static MappedFile YaziZoxideFileData = {0};
-static bool YaziZoxideFileInit = false;
-static MappedFile* GetYaziZoxideFile(void) {
+const char* YaziZoxideFilePath = "data/YaziZoxide.txt";
+MappedFile YaziZoxideFileData = {0};
+bool YaziZoxideFileInit = false;
+MappedFile* GetYaziZoxideFile(void) {
     if (!YaziZoxideFileInit) {
 #if !defined(_WIN32)
         YaziZoxideFileData.fd = -1;
@@ -22,20 +22,20 @@ static MappedFile* GetYaziZoxideFile(void) {
 
 
 
-static char** g_cached_yazi_commands = NULL;
-static int g_cached_yazi_count = 0;
+char** g_cached_yazi_commands = NULL;
+int g_cached_yazi_count = 0;
 
-static void RebuildYaziCache(void) {
+void RebuildYaziCache(void) {
     ZoxideHelper_RebuildCache(YaziZoxideFile, &g_cached_yazi_commands, &g_cached_yazi_count);
 }
 
 
-static void yazi_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
+void yazi_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
     ZoxideHelper_Refresh(filter, hListBox, lb, YaziZoxideFile, &g_cached_yazi_commands, &g_cached_yazi_count);
 }
 
 
-static void yazi_enter_callback(const char* selection, ListBoxInfo* lb) {
+void yazi_enter_callback(const char* selection, ListBoxInfo* lb) {
       char* path = fl_get_zoxide_match(selection);
       if (path) {
           char cmd_args[512];
@@ -46,7 +46,7 @@ static void yazi_enter_callback(const char* selection, ListBoxInfo* lb) {
       }
 }
 
-static void yazi_edit_callback(const char* selection, ListBoxInfo* lb) {
+void yazi_edit_callback(const char* selection, ListBoxInfo* lb) {
     ZoxideHelper_Edit(selection, lb, YaziZoxideFile, &g_cached_yazi_commands, &g_cached_yazi_count, yazi_refresh_callback);
 }
 

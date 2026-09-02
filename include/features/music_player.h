@@ -10,11 +10,11 @@ typedef struct {
 } MusicPlayerBinding;
 
 
-static char *allowed_audio_formats[] = {"mp3","ogg","flac", NULL};
+char *allowed_audio_formats[] = {"mp3","ogg","flac", NULL};
 
-static ListOfFiles s_music_files = {0};
+ListOfFiles s_music_files = {0};
 
-static void music_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
+void music_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
     s_music_files.count = 0;
     fl_get_all_files_from_dir(MusicPath, allowed_audio_formats, &s_music_files, NULL);
     
@@ -27,7 +27,7 @@ static void music_refresh_callback(const char* filter, WindowHandle hListBox, Li
     free(items);
 }
 
-static void music_enter_callback(const char* selection, ListBoxInfo* lb) {
+void music_enter_callback(const char* selection, ListBoxInfo* lb) {
     char* result = NULL;
     for (size_t i = 0; i < s_music_files.count; i++) {
         if (strcmp(s_music_files.items[i].name, selection) == 0) {
@@ -45,7 +45,7 @@ static void music_enter_callback(const char* selection, ListBoxInfo* lb) {
             }
         }
         if (result) {
-            static char found_path[MAX_PATH];
+            char found_path[MAX_PATH];
             strncpy(found_path, result, sizeof(found_path)-1);
             found_path[sizeof(found_path)-1] = '\0';
             result = found_path;
@@ -82,7 +82,7 @@ static void music_enter_callback(const char* selection, ListBoxInfo* lb) {
 #endif
 }
 
-static void music_cmd_1(void) {
+void music_cmd_1(void) {
 #if defined(_WIN32)
     HWND playerHwnd = FindWindow(NULL, "Music Player");
     if (playerHwnd) PostMessage(playerHwnd, WM_USER + 1, 1, 0);
@@ -90,7 +90,7 @@ static void music_cmd_1(void) {
     Platform_SendX11Command("Music Player", "_MP_PLAYER_CMD", 1);
 #endif
 }
-static void music_cmd_5(void) {
+void music_cmd_5(void) {
 #if defined(_WIN32)
     HWND playerHwnd = FindWindow(NULL, "Music Player");
     if (playerHwnd) PostMessage(playerHwnd, WM_USER + 1, 5, 0);
@@ -98,7 +98,7 @@ static void music_cmd_5(void) {
     Platform_SendX11Command("Music Player", "_MP_PLAYER_CMD", 5);
 #endif
 }
-static void music_cmd_6(void) {
+void music_cmd_6(void) {
 #if defined(_WIN32)
     HWND playerHwnd = FindWindow(NULL, "Music Player");
     if (playerHwnd) PostMessage(playerHwnd, WM_USER + 1, 6, 0);
@@ -106,7 +106,7 @@ static void music_cmd_6(void) {
     Platform_SendX11Command("Music Player", "_MP_PLAYER_CMD", 6);
 #endif
 }
-static void music_cmd_2(void) {
+void music_cmd_2(void) {
 #if defined(_WIN32)
     HWND playerHwnd = FindWindow(NULL, "Music Player");
     if (playerHwnd) PostMessage(playerHwnd, WM_USER + 1, 2, 0);
@@ -114,7 +114,7 @@ static void music_cmd_2(void) {
     Platform_SendX11Command("Music Player", "_MP_PLAYER_CMD", 2);
 #endif
 }
-static void music_prompt(void) {
+void music_prompt(void) {
     if (!MusicPlayerAvailable) return;
     s_music_files.count = 0;
     fl_get_all_files_from_dir(MusicPath, allowed_audio_formats, &s_music_files, NULL);

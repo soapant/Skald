@@ -2,8 +2,6 @@
 #define APP_LAUNCHER_H
 
 #include "core/flapi.h"
-#include "features/focus_switcher.h"
-#include "features/window_switcher.h"
 
 typedef struct {
     int vk_code;
@@ -12,7 +10,7 @@ typedef struct {
     const char* app_name;  
 } AppHotkey;
 
-static const char* ListOfShitToIgnore[] = {
+const char* ListOfShitToIgnore[] = {
   "node_modules",
   ".git",
   "bin",
@@ -25,7 +23,7 @@ static const char* ListOfShitToIgnore[] = {
   NULL
 };
 
-static const char* ListOfProgramPaths[20] = {
+const char* ListOfProgramPaths[20] = {
 #if defined(_WIN32)
     "{APPDATA}/Microsoft/Windows/Start Menu",
     "{PROGRAMDATA}/Microsoft/Windows/Start Menu/Programs",
@@ -39,12 +37,12 @@ static const char* ListOfProgramPaths[20] = {
     "/home/diggy/.local/share/applications",
     "/usr/bin",
     "/home/diggy/.local/bin",
-    "{DEV}",
-    "{MISC}",
+    "/home/diggy/Programming",
+    "/home/diggy/miscellaneous",
 #endif
 };
 
-static const PathEntry SystemShortcuts[] = {
+const PathEntry SystemShortcuts[] = {
     {"control.exe", "Control Panel"},
     {"devmgmt.msc", "Device Manager"},
     {"compmgmt.msc", "Computer Management"},
@@ -71,9 +69,9 @@ static const PathEntry SystemShortcuts[] = {
 #define MAX_APPS 2048
 #endif
 
-static ListOfFiles s_apps = {0};
+ListOfFiles s_apps = {0};
 
-static void initialize_app_cache(void) {
+void initialize_app_cache(void) {
 #if defined(_WIN32)
     char* allowed[] = {"lnk", "exe", "url", NULL};
 #else
@@ -111,57 +109,45 @@ static void initialize_app_cache(void) {
             s_apps.count++;
         }
     }
-
 #endif
 
 }
-static void launch_app_by_name(const char* display_name) {
+void launch_app_by_name(const char* display_name) {
     for (size_t i = 0; i < s_apps.count; i++) {
-#if defined(_WIN32)
-        if (StrCmpIA(s_apps.items[i].name, display_name) == 0) {
-#else
-        if (strcasecmp(s_apps.items[i].name, display_name) == 0) {
-#endif
+        if (fl_string_match_insensitive(s_apps.items[i].name, display_name) == 0) {
             fl_launch_with_args(s_apps.items[i].path, NULL);
             return;
         }
     }
 }
 
-static void launch_app_as_admin(const char* display_name) {
+void launch_app_as_admin(const char* display_name) {
     for (size_t i = 0; i < s_apps.count; i++) {
-#if defined(_WIN32)
-        if (StrCmpIA(s_apps.items[i].name, display_name) == 0) {
-#else
-        if (strcasecmp(s_apps.items[i].name, display_name) == 0) {
-#endif
+        if (fl_string_match_insensitive(s_apps.items[i].name, display_name) == 0) {
             fl_launch_with_args_as_admin(s_apps.items[i].path, NULL);
             return;
         }
     }
 }
 
-static void applauncher_enter_callback(const char* selection, ListBoxInfo* lb) {
+void applauncher_enter_callback(const char* selection, ListBoxInfo* lb) {
     launch_app_by_name(selection);
 }
 
-static void applauncher_ctrlenter_callback(const char* selection, ListBoxInfo* lb) {
+void applauncher_ctrlenter_callback(const char* selection, ListBoxInfo* lb) {
     launch_app_as_admin(selection);
     selection_complete = true;
 }
 
-static void applauncher_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
-    if (!lb) return;
-
+void applauncher_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
     const char** names = (const char**)malloc(s_apps.count * sizeof(char*));
-    if (!names) return;
     for (size_t i = 0; i < s_apps.count; i++) {
         names[i] = s_apps.items[i].name;
     }
     PopulateListBox(lb, hListBox, filter, names, (int)s_apps.count, NULL);
     free(names);
 }
-static void applauncher_copy_callback(const char* selection,int true_index,int type) {
+void applauncher_copy_callback(const char* selection,int true_index,int type) {
     char* text = (char*)selection;
     switch(type) {
       case 0: {
@@ -186,7 +172,7 @@ static void applauncher_copy_callback(const char* selection,int true_index,int t
     fl_copy_into_clipboard(text);
 }
 
-static void TriggerAppLauncher(void) {
+void TriggerAppLauncher(void) {
     const char** initial_items = (const char**)malloc(s_apps.count * sizeof(char*));
     if (!initial_items) return;
     
@@ -205,6 +191,7 @@ static void TriggerAppLauncher(void) {
 
 static inline void app_launcher_init(void) {
     fl_register_hotkey("Alt+E", TriggerAppLauncher, NULL, NULL);
+    initialize_app_cache();
 }
 
 #endif

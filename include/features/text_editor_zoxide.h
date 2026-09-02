@@ -5,10 +5,10 @@
 #include "core/zoxide_helpers.h"
 #include "core/platform.h"
 
-static const char* TextEditorZoxideFilePath = "data/NvimZoxide.txt";
-static MappedFile TextEditorZoxideFileData = {0};
-static bool TextEditorZoxideFileInit = false;
-static MappedFile* GetTextEditorZoxideFile(void) {
+const char* TextEditorZoxideFilePath = "data/NvimZoxide.txt";
+MappedFile TextEditorZoxideFileData = {0};
+bool TextEditorZoxideFileInit = false;
+MappedFile* GetTextEditorZoxideFile(void) {
     if (!TextEditorZoxideFileInit) {
 #if !defined(_WIN32)
         TextEditorZoxideFileData.fd = -1;
@@ -21,20 +21,20 @@ static MappedFile* GetTextEditorZoxideFile(void) {
 #define TextEditorZoxideFile GetTextEditorZoxideFile()
 
 
-static char** g_cached_text_editor_commands = NULL;
-static int g_cached_text_editor_count = 0;
+char** g_cached_text_editor_commands = NULL;
+int g_cached_text_editor_count = 0;
 
-static void Rebuildtext_editorCache(void) {
+void Rebuildtext_editorCache(void) {
     ZoxideHelper_RebuildCache(TextEditorZoxideFile, &g_cached_text_editor_commands, &g_cached_text_editor_count);
 }
 
 
-static void text_editor_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
+void text_editor_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
     ZoxideHelper_Refresh(filter, hListBox, lb, TextEditorZoxideFile, &g_cached_text_editor_commands, &g_cached_text_editor_count);
 }
 
 
-static void text_editor_enter_callback(const char* selection, ListBoxInfo* lb) {
+void text_editor_enter_callback(const char* selection, ListBoxInfo* lb) {
       char* path = fl_get_zoxide_match(selection);
       if (path) {
           char cmd_args[512];
@@ -45,7 +45,7 @@ static void text_editor_enter_callback(const char* selection, ListBoxInfo* lb) {
       }
 }
 
-static void text_editor_edit_callback(const char* selection, ListBoxInfo* lb) {
+void text_editor_edit_callback(const char* selection, ListBoxInfo* lb) {
     ZoxideHelper_Edit(selection, lb, TextEditorZoxideFile, &g_cached_text_editor_commands, &g_cached_text_editor_count, text_editor_refresh_callback);
 }
 

@@ -83,35 +83,45 @@ int fl_copy_into_clipboard_platform(const char* text) {
     status = pclose(pipe);
     return (status == 0) ? 1 : 0;
 }
-bool fl_get_all_files_from_dir_platform(const char* dir_path, char** list_of_allowed_extensions, ListOfFiles* list_of_files,char** list_of_names_to_ignore) {
-
+bool fl_get_all_files_from_dir_platform(const char* dir_path, char** list_of_allowed_extensions, ListOfFiles* list_of_files, char** list_of_names_to_ignore) {
+    
+    if (!dir_path || !list_of_files) {
+        return false;
+    }
+    
     DIR* dir = opendir(dir_path);
-    if (!dir) return false;
-
+    if (!dir) {
+        return false;
+    }
+    
     struct dirent* entry;
+    int entry_count = 0;
     while ((entry = readdir(dir)) != NULL) {
+        entry_count++;
+        
         if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
             continue;
         }
 
         char full_path[MAX_PATH];
-        snprintf(full_path, sizeof(full_path), "%s/%s", dir_path, entry->d_name);
 
         struct stat st;
-        if (stat(full_path, &st) != 0) continue;
+        if (stat(full_path, &st) != 0) {
+            continue;
+        }
 
         if (S_ISDIR(st.st_mode)) {
             bool should_ignore = false;
             if (list_of_names_to_ignore) {
                 for (int i = 0; list_of_names_to_ignore[i] != NULL; i++) {
-                    if (strcasecmp(entry->d_name, list_of_names_to_ignore[i]) == 0) {
+                    if (Platform_StringContainsCaseInsensitive(entry->d_name, list_of_names_to_ignore[i]) == 0) {
                         should_ignore = true;
                         break;
                     }
                 }
             }
             if (!should_ignore) {
-                fl_get_all_files_from_dir_platform(full_path, list_of_allowed_extensions, list_of_files, list_of_names_to_ignore);
+                bool result = fl_get_all_files_from_dir_platform(full_path, list_of_allowed_extensions, list_of_files, list_of_names_to_ignore);
             }
         } else {
             bool allowed = true;
@@ -121,7 +131,7 @@ bool fl_get_all_files_from_dir_platform(const char* dir_path, char** list_of_all
                 if (ext) {
                     ext++;
                     for (int i = 0; list_of_allowed_extensions[i] != NULL; i++) {
-                        if (strcasecmp(ext, list_of_allowed_extensions[i]) == 0) {
+                        if (Platform_StringContainsCaseInsensitive(ext, list_of_allowed_extensions[i]) == 0) {
                             allowed = true;
                             break;
                         }
@@ -131,12 +141,16 @@ bool fl_get_all_files_from_dir_platform(const char* dir_path, char** list_of_all
 
             if (allowed) {
                 if (list_of_files->count >= list_of_files->capacity) {
-                    list_of_files->capacity = list_of_files->capacity == 0 ? 10 : list_of_files->capacity * 2;
+                    size_t new_capacity = list_of_files->capacity == 0 ? 10 : list_of_files->capacity * 2;
+                    list_of_files->capacity = new_capacity;
                     list_of_files->items = realloc(list_of_files->items, list_of_files->capacity * sizeof(FileItem));
+                    if (!list_of_files->items) {
+                        closedir(dir);
+                        return false;
+                    }
                 }
 
                 FileItem* item = &list_of_files->items[list_of_files->count];
-
                 strncpy(item->path, full_path, sizeof(item->path) - 1);
                 item->path[sizeof(item->path) - 1] = '\0';
 
@@ -148,7 +162,6 @@ bool fl_get_all_files_from_dir_platform(const char* dir_path, char** list_of_all
                 strncpy(item->name, clean_name, sizeof(item->name) - 1);
                 item->name[sizeof(item->name) - 1] = '\0';
 
-                list_of_files->count++;
             }
         }
     }
