@@ -2,6 +2,7 @@
 #define CONTEXT_H
 
 #include "core/types.h"
+#include "core/hashmap.h"
 
 typedef enum {
     MODE_NORMAL,
@@ -49,6 +50,20 @@ typedef struct {
     const char* vim_mode_str;
     WindowContext window;
     PromptCallbacks prompt_callbacks;
+    HashMap* feature_history;
+    HashMap* g_item_index_map;
+    HashMap* history_indices;
+    WinTimer g_timer;
+    char* SelectionData[2048];
+    int SelectionDataCount;
+#if defined(_WIN32)
+    uint32_t g_main_thread_id;
+    int g_timeout;
+    bool g_waiting_for_key;
+    int g_key_pressed;
+    KeyCallback g_key_callback;
+    bool draw_background;
+#endif
 } FlintContext;
 
 FlintContext* FlintContext_Get(void);
