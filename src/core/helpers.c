@@ -44,11 +44,7 @@ bool ProcessHotkey(const HotkeyBinding* bindings, int bindings_count,
             bool blacklisted = false;
             for (int j = 0; j < b->blacklist_count; j++) {
                 if (b->blacklist[j][0] == '\0') continue;
-#if defined(_WIN32)
-                bool found = StrStrIA(current_title, b->blacklist[j]) != NULL;
-#else
-                bool found = strstr(current_title, b->blacklist[j]) != NULL;
-#endif
+                bool found = Platform_StringContainsCaseInsensitive(current_title, b->blacklist[j]);
                 if (found) {
                     blacklisted = true;
                     break;

@@ -1,4 +1,5 @@
 #include "core/flapi.h"
+#include "core/platform.h"
 
 bool fl_case_insensitive_string_match_platform(char* needle,char* haystack) {
   return StrStrIA(needle,haystack);

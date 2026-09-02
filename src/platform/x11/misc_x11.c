@@ -566,6 +566,18 @@ void Platform_CleanUpFile(MappedFile *mf, NewlineInfo *newlines, size_t newlineC
     }
 }
 
+bool Platform_StringContainsCaseInsensitive(const char* haystack, const char* needle) {
+    if (!haystack || !needle) return false;
+    return strcasestr(haystack, needle) != NULL;
+}
+
+bool Platform_StringStartsWithCaseInsensitive(const char* str, const char* prefix) {
+    if (!str || !prefix) return false;
+    size_t plen = strlen(prefix);
+    if (plen == 0) return true;
+    return strncasecmp(str, prefix, plen) == 0;
+}
+
 int Platform_ReplaceLineInMappedFile(MappedFile* mf, int line_index, const char* new_text) {
     if (!mf || !new_text || mf->fd < 0) return 0;
 

@@ -1,6 +1,17 @@
 #include "core/flapi.h"
+#include "core/platform.h"
+#include "core/flapi_platform.h"
 #include <errno.h>
 #include <string.h>
+#include <unistd.h>
+#include <sys/wait.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <pwd.h>
+#include <dirent.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <sys/types.h>
 
 bool fl_case_insensitive_string_match_platform(char* needle,char* haystack) {
   return strcasecmp(needle,haystack);
@@ -291,7 +302,6 @@ bool fl_launch_with_args_platform(const char* path, const char* args) {
 bool fl_launch_with_args_as_admin_platform(const char* path, const char* args) {
     if (!path) return false;
     char expanded[MAX_PATH];
-    extern bool Platform_ExpandPath(const char* t, char* o, size_t s);
     if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) return false;
     // pkexec with args
     char cmd[2048];
