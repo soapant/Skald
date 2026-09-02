@@ -1,3 +1,4 @@
+#include "common.h"
 #include "core/window_manager.h"
 #include "core/platform.h"
 #include "core/common_ui.h"
@@ -27,7 +28,6 @@ extern int WindowManager_RunLinux(WindowManager* wm);
 extern void WindowManager_ProcessEventsLinux(WindowManager* wm);
 extern void WindowManager_QuitLinux(WindowManager* wm);
 extern void Linux_ProcessXEvent(Display* dpy, XEvent* ev, WindowManager* wm);
-extern char output_buffer[256];
 extern void EditBufferBackspace(char* buf, size_t* cursor);
 extern bool EditBufferDeleteChar(char* buf, size_t* cursor);
 #else
@@ -35,7 +35,6 @@ extern bool EditBufferDeleteChar(char* buf, size_t* cursor);
 extern int WindowManager_RunWin32(WindowManager* wm);
 extern void WindowManager_ProcessEventsWin32(WindowManager* wm);
 extern void WindowManager_QuitWin32(WindowManager* wm);
-extern char output_buffer[256];
 #endif
 
 static WindowManager* g_window_manager = NULL;
@@ -725,8 +724,7 @@ static void PromptPopup_OnHide(Popup* self) {
     }
     #endif
     extern EditorMode g_last_mode;
-    extern int last_index;
-    extern EditorMode g_current_mode;
+    extern void SavePerFeatureState(const char* feature, EditorMode mode, int last_index);
     if (data->state) {
         if (!KeepSelectionAfterClose) {
             last_index = 0;
@@ -736,7 +734,6 @@ static void PromptPopup_OnHide(Popup* self) {
         }
         g_last_mode = g_current_mode;
         if (ModePersistsThroughFeatures && g_current_feature) {
-            extern void SavePerFeatureState(const char* feature, EditorMode mode,int last_index);
             SavePerFeatureState(g_current_feature, g_current_mode, last_index);
         }
     }

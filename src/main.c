@@ -31,21 +31,8 @@ WindowHandle hSettings = WH_NULL;
 WindowHandle g_hEditPopup = WH_NULL;
 WindowHandle g_hSearchPopup = WH_NULL;
 EditPopupData* g_EditData = NULL;
-char output_buffer[256];
-bool selection_complete = false;
 bool setting_complete = false;
-RefreshCallback g_refresh_callback = NULL;
-EnterCallback g_enter_callback = NULL;
-CtrlEnterCallback g_ctrl_enter_callback = NULL;
-TabCallback g_tab_callback = NULL;
-HelpCallback g_help_callback = NULL;
-CopyCallback g_copy_callback = NULL;
-RenderCallback g_render_callback = NULL;
-AliasCallback g_alias_callback = NULL;
-EditCallback g_edit_callback = NULL;
-FilterCallback g_filter_callback = NULL;
 WindowHandle g_ActiveEditControl = WH_NULL;
-char* g_current_feature = NULL;
 int g_timeout = 1;
 uint32_t g_main_thread_id = 0;
 bool g_waiting_for_key = false;
@@ -54,7 +41,6 @@ WinTimer g_timer;
 #if defined(_WIN32)
 HANDLE g_key_event = NULL;
 #endif
-const char* g_title = NULL;
 #if defined(_WIN32)
 HFONT g_hNumFont = NULL;
 HFONT g_hMainFont = NULL;
