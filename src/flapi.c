@@ -168,4 +168,9 @@ bool fl_string_match_insensitive(char* needle,char* haystack) {
     if (!needle || !haystack) return false;
     return Platform_StringContainsCaseInsensitive(needle,haystack);
 }
+bool fl_launch_browser(char* url) {
+  if (!url) return false;
+  return Platform_LaunchBrowserAtUrl(url);
+
+}
 

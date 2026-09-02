@@ -1,31 +1,18 @@
 #include <windows.h>
 #include "common.h"
-#include "core/modal.h"
 #include "core/types.h"
-#include "helpers.h"
 #include "core/hotkey_manager.h"
-#include "core/common_ui.h"
 #include "core/number_shortcut.h"
 #include "core/feature_data.h"
 #include "platform/subclasses.h"
 #include "core/platform.h"
 #include "bindings/bindings.h"
 #include "bindings/macro_bindings.h"
-#include "core/vim.h"
-#include "features/focus_switcher.h"
-#include "features/music_player.h"
-#include "features/video_viewer.h"
-#include "features/process_killer.h"
-#include "features/app_launcher.h"
-#include "features/terminal_command.h"
+#include "helpers/flag.h"
+#include "core/common_ui.h"
 
-#if defined(_WIN32)
 char* Platform_EditTextPopup(const char* a, int b, int c, int d, int e) { (void)a;(void)b;(void)c;(void)d;(void)e; return NULL; }
 char* Platform_SearchPopup(void) { return NULL; }
-#endif
-#include "features/misc_hotkeys.h"
-#include "features/quicklink.h"
-#include "features/text_snippets.h"
 #include <gdiplus.h>
 
 void Platform_WaitForKeypressAsync(KeyCallback callback) {

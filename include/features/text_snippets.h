@@ -2,9 +2,8 @@
 #define TEXT_SNIPPETS_H
 
 #include "core/flapi.h"
-#include "core/platform.h"
 
-static void copy_seifisbad(void) {
+void copy_seifisbad(void) {
     fl_copy_into_clipboard("seifisbad@gmail.com");
     if (MessageAfterEachHotkey) {
         char buffer[128];
@@ -12,7 +11,7 @@ static void copy_seifisbad(void) {
         SubjectiveMessageDisplay(buffer,140,TimeOutForMessages,COLOR_TEXT);
     }
 }
-static void copy_password(void) {
+void copy_password(void) {
     fl_copy_into_clipboard("i_am_retarded1");
     if (MessageAfterEachHotkey) {
         char buffer[128];

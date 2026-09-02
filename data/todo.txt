@@ -20,3 +20,4 @@ eventually you need to hoit reload the entire program so it can be modifed while
 hotkey system cannot handle ctrl shift or any two modifer ||[Cprogram]
 windowns platform functions are like non tested at all no idea if they work also args isnt used in hte file manaer ||[Cprogram]|[DontForget]
 add the whole interaction with web brwosers more so bookmarks etcs ||[Cprogram] 
+move the macro bindings intoi a feature file ||[Cprogram]

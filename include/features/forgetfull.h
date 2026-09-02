@@ -3,7 +3,7 @@
 
 #include "core/flapi.h"
 
-static void AddTextToFile(const char* text) {
+void AddTextToFile(const char* text) {
     if (!text || strlen(text) == 0) return;
     
     const char* lines[100];
@@ -24,7 +24,7 @@ static void AddTextToFile(const char* text) {
     fl_free_file_list(lines, count);
 }
 
-static void RemoveTextFromFile(const char* item_to_remove) {
+void RemoveTextFromFile(const char* item_to_remove) {
     FILE* infile = fopen(FORGETFULL_FILE_PATH, "r");
     if (!infile) return;
 
@@ -66,7 +66,7 @@ static void RemoveTextFromFile(const char* item_to_remove) {
 #endif
 }
 
-static void forgetfull_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
+void forgetfull_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
     const char* items[100];
     int forgetfull_count = fl_load_file_list(FORGETFULL_FILE_PATH, items, 100);
 
@@ -74,7 +74,7 @@ static void forgetfull_refresh_callback(const char* filter, WindowHandle hListBo
     fl_free_file_list(items, forgetfull_count);
 }
 
-static void forgetfull_enter_callback(const char* selection, ListBoxInfo* lb) {
+void forgetfull_enter_callback(const char* selection, ListBoxInfo* lb) {
     if (UI_IsListBoxSelected(lb)) {
         RemoveTextFromFile(selection);
     } 
@@ -84,7 +84,7 @@ static void forgetfull_enter_callback(const char* selection, ListBoxInfo* lb) {
     }
     UI_Redraw(lb, hListBox);
 }
-static void forgetfull_edit_confirm_callback(const char* new_text, void* user_data) {
+void forgetfull_edit_confirm_callback(const char* new_text, void* user_data) {
     EditCallbackData* data = (EditCallbackData*)user_data;
     if (new_text && data) {
         data->new_text = (char*)new_text;
@@ -93,7 +93,7 @@ static void forgetfull_edit_confirm_callback(const char* new_text, void* user_da
     free(data);
 }
 
-static void forgetfull_edit_callback(const char* selection, ListBoxInfo* lb) {
+void forgetfull_edit_callback(const char* selection, ListBoxInfo* lb) {
     int idx = lb ? lb->selected_index : -1;
     int true_idx = (lb && idx >= 0 && idx < lb->populated_count) ? lb->matching_indices[idx] : idx;
     
@@ -122,7 +122,7 @@ static void forgetfull_edit_callback(const char* selection, ListBoxInfo* lb) {
     }
 }
 
-static void forgetfull_ctrlenter_callback(const char* selection, ListBoxInfo* lb) {
+void forgetfull_ctrlenter_callback(const char* selection, ListBoxInfo* lb) {
     if (UI_IsListBoxSelected(lb)) {
         RemoveTextFromFile(selection);
     } else {

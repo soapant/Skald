@@ -5,10 +5,10 @@
 #include "core/zoxide_helpers.h"
 #include "core/platform.h"
 
-static const char* GoogleZoxideFilePath = "data/GoogleZoxide.txt";
-static MappedFile GoogleZoxideFileData = {0};
-static bool GoogleZoxideFileInit = false;
-static MappedFile* GetGoogleZoxideFile(void) {
+const char* GoogleZoxideFilePath = "data/GoogleZoxide.txt";
+MappedFile GoogleZoxideFileData = {0};
+bool GoogleZoxideFileInit = false;
+MappedFile* GetGoogleZoxideFile(void) {
     if (!GoogleZoxideFileInit) {
 #if !defined(_WIN32)
         GoogleZoxideFileData.fd = -1;
@@ -22,21 +22,21 @@ static MappedFile* GetGoogleZoxideFile(void) {
 
 
 
-static char** g_cached_google_queries = NULL;
-static int g_cached_google_count = 0;
+char** g_cached_google_queries = NULL;
+int g_cached_google_count = 0;
 
-static void RebuildGoogleCache(void) {
+void RebuildGoogleCache(void) {
     ZoxideHelper_RebuildCache(GoogleZoxideFile, &g_cached_google_queries, &g_cached_google_count);
 }
 
 
-static void google_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
+void google_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
     if (!lb) return;
     ZoxideHelper_Refresh(filter, hListBox, lb, GoogleZoxideFile, &g_cached_google_queries, &g_cached_google_count);
 }
 
 
-static void DoGoogleSearch(const char* query) {
+void DoGoogleSearch(const char* query) {
     if (!query || strlen(query) == 0) return;
     
     char url[2048] = {0};
@@ -68,12 +68,12 @@ static void DoGoogleSearch(const char* query) {
     Platform_ShellExecuteWithVerb(url, "open", true);
 }
 
-static void google_enter_callback(const char* selection, ListBoxInfo* lb) {
+void google_enter_callback(const char* selection, ListBoxInfo* lb) {
       ZoxideHelper_AppendNewEntry(GoogleZoxideFile, selection, lb, &g_cached_google_queries, &g_cached_google_count);
       DoGoogleSearch(selection);
 }
 
-static void google_edit_callback(const char* selection, ListBoxInfo* lb) {
+void google_edit_callback(const char* selection, ListBoxInfo* lb) {
     ZoxideHelper_Edit(selection, lb, GoogleZoxideFile, &g_cached_google_queries, &g_cached_google_count, google_refresh_callback);
 }
 

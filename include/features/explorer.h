@@ -3,12 +3,11 @@
 
 #include "core/flapi.h"
 #include "core/zoxide_helpers.h"
-#include "core/platform.h"
 
-static const char* ExplorerZoxideFilePath = "data/ExplorerZoxide.txt";
-static MappedFile ExplorerZoxideFileData = {0};
-static bool ExplorerZoxideFileInit = false;
-static MappedFile* GetExplorerZoxideFile(void) {
+const char* ExplorerZoxideFilePath = "data/ExplorerZoxide.txt";
+MappedFile ExplorerZoxideFileData = {0};
+bool ExplorerZoxideFileInit = false;
+MappedFile* GetExplorerZoxideFile(void) {
     if (!ExplorerZoxideFileInit) {
 #if !defined(_WIN32)
         ExplorerZoxideFileData.fd = -1;
@@ -22,19 +21,19 @@ static MappedFile* GetExplorerZoxideFile(void) {
 
 
 
-static char** g_cached_explorer_commands = NULL;
-static int g_cached_explorer_count = 0;
+char** g_cached_explorer_commands = NULL;
+int g_cached_explorer_count = 0;
 
-static void RebuildExplorerCache(void) {
+void RebuildExplorerCache(void) {
     ZoxideHelper_RebuildCache(ExplorerZoxideFile, &g_cached_explorer_commands, &g_cached_explorer_count);
 }
 
-static void explorer_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
+void explorer_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
     if (!lb) return;
     ZoxideHelper_Refresh(filter, hListBox, lb, ExplorerZoxideFile, &g_cached_explorer_commands, &g_cached_explorer_count);
 }
 
-static void explorer_enter_callback(const char* selection, ListBoxInfo* lb) {
+void explorer_enter_callback(const char* selection, ListBoxInfo* lb) {
           char* path = fl_get_zoxide_match(selection);
           if (fl_launch_file_manager_at_path(path,NULL)) {
               ZoxideHelper_AppendNewEntry(ExplorerZoxideFile, selection, lb, &g_cached_explorer_commands, &g_cached_explorer_count);
@@ -42,7 +41,7 @@ static void explorer_enter_callback(const char* selection, ListBoxInfo* lb) {
           }
 }
 
-static void explorer_edit_callback(const char* selection, ListBoxInfo* lb) {
+void explorer_edit_callback(const char* selection, ListBoxInfo* lb) {
     ZoxideHelper_Edit(selection, lb, ExplorerZoxideFile, &g_cached_explorer_commands, &g_cached_explorer_count, explorer_refresh_callback);
 }
 

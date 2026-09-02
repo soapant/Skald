@@ -3,43 +3,37 @@
 
 #include "core/flapi.h"
 
-typedef struct {
-    int vk_code;
-    int modifiers;
-    const char** window_titles;  
-    int window_count;
-} BulkKillProcessBinding;
 
-static const char* bkp_windows[] = {"Brawlhalla","Fortnite","RocketLeague","Factorio","Steam"};
+const char* bkp_windows[] = {"Brawlhalla","Fortnite","RocketLeague","Factorio","Steam"};
 
 #define MAX_PK_APPS 256
 
-static char G_PK_LIST[MAX_PK_APPS][128];
-static int G_PK_COUNT = 0;
+char G_PK_LIST[MAX_PK_APPS][128];
+int G_PK_COUNT = 0;
 
-static void collect_running_processes() {
+void collect_running_processes() {
     G_PK_COUNT = fl_collect_running_processes(G_PK_LIST, MAX_PK_APPS);
 }
 
-static void terminate_process_by_name(const char* exe_name) {
+void terminate_process_by_name(const char* exe_name) {
     fl_terminate_process_by_name(exe_name);
 }
 
-static void BulkKillProcesses(const char* window_titles[], int count) {
+void BulkKillProcesses(const char* window_titles[], int count) {
     for (int i = 0; i < count; i++) {
         if (!window_titles[i] || !*window_titles[i]) continue;
         fl_terminate_process_by_name(window_titles[i]);
     }
 }
 
-static void bulk_kill_bkp(void) {
+void bulk_kill_bkp(void) {
     BulkKillProcesses(bkp_windows, ARRAY_LEN(bkp_windows));
 }
-static void pk_enter_callback(const char* selection, ListBoxInfo* lb) {
+void pk_enter_callback(const char* selection, ListBoxInfo* lb) {
       fl_terminate_process_by_name(selection);
 }
 
-static void pk_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
+void pk_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
     const char** items = (const char**)malloc(G_PK_COUNT * sizeof(char*));
     if (!items) return;
     for (int i = 0; i < G_PK_COUNT; i++) {
@@ -48,7 +42,7 @@ static void pk_refresh_callback(const char* filter, WindowHandle hListBox, ListB
     PopulateListBox(lb, hListBox, filter, items, G_PK_COUNT, NULL);
     free(items);
 }
-static void TriggerProcessKiller(void) {
+void TriggerProcessKiller(void) {
     collect_running_processes();
 
     const char** list_items = (const char**)malloc(G_PK_COUNT * sizeof(char*));
