@@ -3,9 +3,24 @@
 
 #include "core/flapi.h"
 #include "core/zoxide_helpers.h"
+#include "core/platform.h"
 
-#define FILE_YAZI_ZOXIDE 1
-#define YaziZoxideFile G_FILE_ENTRIES[FILE_YAZI_ZOXIDE].mf
+static const char* YaziZoxideFilePath = "data/YaziZoxide.txt";
+static MappedFile YaziZoxideFileData = {0};
+static bool YaziZoxideFileInit = false;
+static MappedFile* GetYaziZoxideFile(void) {
+    if (!YaziZoxideFileInit) {
+#if !defined(_WIN32)
+        YaziZoxideFileData.fd = -1;
+#endif
+        Platform_FileInit(YaziZoxideFilePath, &YaziZoxideFileData);
+        YaziZoxideFileInit = true;
+    }
+    return &YaziZoxideFileData;
+}
+#define YaziZoxideFile GetYaziZoxideFile()
+
+
 
 static char** g_cached_yazi_commands = NULL;
 static int g_cached_yazi_count = 0;
