@@ -3,15 +3,10 @@
 
 #include <stdbool.h>
 #include "core/types.h"
+#include "core/context.h"
 
-typedef enum {
-    MODE_NORMAL,
-    MODE_INSERT,
-    MODE_VISUAL,
-} EditorMode;
-
-extern EditorMode g_current_mode;
-extern const char* g_vim_mode;
+#define g_current_mode (FlintContext_Get()->vim_mode)
+#define g_vim_mode (FlintContext_Get()->vim_mode_str)
 extern int last_index;
 extern char* selection_feature;
 

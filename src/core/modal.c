@@ -5,9 +5,7 @@
 #include "core/window_manager.h"
 #include "core/context.h"
 
-EditorMode g_current_mode = MODE_INSERT;
 static const char* g_mode_names[] = { "NORMAL", "INSERT", "VISUAL" };
-const char* g_vim_mode = "INSERT";
 int last_index = 0;
 char* selection_feature = "";
 
