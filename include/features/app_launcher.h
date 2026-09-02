@@ -2,7 +2,6 @@
 #define APP_LAUNCHER_H
 
 #include "core/flapi.h"
-#include "core/flapi_platform.h"
 #include "features/focus_switcher.h"
 #include "features/window_switcher.h"
 
@@ -67,7 +66,7 @@ static const PathEntry SystemShortcuts[] = {
     {"main.cpl", "Mouse Properties"}
 };
 
-#define SYSTEM_SHORTCUT_COUNT 19
+#define SYSTEM_SHORTCUT_COUNT ARRAY_LEN(SystemShortcuts)
 #ifndef MAX_APPS
 #define MAX_APPS 2048
 #endif
@@ -78,7 +77,7 @@ static void initialize_app_cache(void) {
 #if defined(_WIN32)
     char* allowed[] = {"lnk", "exe", "url", NULL};
 #else
-    char* allowed[] = {"desktop", "sh", "lnk", "exe", "url", NULL};
+    char* allowed[] = {"desktop", "sh","exe", "url", NULL};
 #endif
     for (int i = 0; i < (int)ARRAY_LEN(ListOfProgramPaths); i++) {
         if (!ListOfProgramPaths[i] || ListOfProgramPaths[i][0] == '\0') continue;
@@ -91,7 +90,7 @@ static void initialize_app_cache(void) {
         
         bool found = false;
         for (size_t app_idx = 0; app_idx < s_apps.count; app_idx++) {
-            if (fl_case_insensitive_string_match_platform(s_apps.items[app_idx].path, SystemShortcuts[shortcut_idx].path) != NULL) {
+            if (fl_string_match_insensitive(s_apps.items[app_idx].path, SystemShortcuts[shortcut_idx].path) != NULL) {
                 strncpy(s_apps.items[app_idx].name, SystemShortcuts[shortcut_idx].name, sizeof(s_apps.items[app_idx].name) - 1);
                 s_apps.items[app_idx].name[sizeof(s_apps.items[app_idx].name) - 1] = '\0';
                 found = true;
