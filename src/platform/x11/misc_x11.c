@@ -698,18 +698,19 @@ int Platform_CollectRunningProcesses(char process_list[][128], int max_count) {
     return count;
 }
 
-void Platform_TerminateProcessByName(const char* exe_name) {
-    if (!exe_name || !*exe_name) return;
+bool Platform_TerminateProcessByName(const char* exe_name) {
+    if (!exe_name || !*exe_name) return false;
     char tmp[256];
     strncpy(tmp, exe_name, sizeof(tmp)-1);
     tmp[sizeof(tmp)-1]='\0';
     char *ext = strrchr(tmp, '.');
     if (ext && strcmp(ext, ".exe") == 0) *ext = '\0';
     char cmd[512];
-    snprintf(cmd, sizeof(cmd), "pkill -f \"%s\"", tmp);
+    snprintf(cmd, sizeof(cmd), "pkill -f -i \"%s\"", tmp);
     Platform_RunTerminalCommand(cmd, false);
-    snprintf(cmd, sizeof(cmd), "killall \"%s\"", tmp);
+    snprintf(cmd, sizeof(cmd), "killall -i \"%s\"", tmp);
     Platform_RunTerminalCommand(cmd, false);
+    return true;
 }
 
 bool Platform_LaunchBrowserAtUrl(char* url) {
