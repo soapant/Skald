@@ -7,9 +7,6 @@
 #endif
 #endif
 
-#include <stdbool.h>
-#include <assert.h>
-
 #include "core/types.h"
 #include "core/hashmap.h"
 #include "core/modal.h"

@@ -17,6 +17,8 @@ bool Platform_LaunchApp(const char* path);
 bool Platform_LaunchAppAsAdmin(const char* path);
 bool Platform_IsCtrlPressed(void);
 bool Platform_ExpandPath(const char* template_path, char* out, size_t out_size);
+bool Platform_StringContainsCaseInsensitive(const char* haystack, const char* needle);
+bool Platform_StringStartsWithCaseInsensitive(const char* str, const char* prefix);
 void Platform_HandleShowCurrentTime(void);
 bool Platform_SendX11Command(const char* window_title, const char* atom_name, long command);
 bool Platform_SetX11Property(const char* window_title, const char* atom_name, long value);

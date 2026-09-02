@@ -1,6 +1,12 @@
+#include "common.h"
+#include "helpers.h"
+#include "core/platform.h"
 #include "core/flapi.h"
 #include "core/flapi_platform.h"
 #include "core/hotkey_manager.h"
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
 #include "features/window_switcher.h"
 #include "features/google_search.h"
 #include "features/todo.h"

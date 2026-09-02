@@ -73,6 +73,24 @@
   },
   {
     "directory": "/home/diggy/Programming/Projects/Flint",
+    "file": "src/core/prompt_controller.c",
+    "arguments": [
+      "gcc",
+      "-Wall",
+      "-Wextra",
+      "-I",
+      "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
+      "-w",
+      "-g",
+      "-c",
+      "src/core/prompt_controller.c"
+    ]
+  },
+  {
+    "directory": "/home/diggy/Programming/Projects/Flint",
     "file": "src/core/zoxide_helpers.c",
     "arguments": [
       "gcc",
