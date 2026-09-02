@@ -310,6 +310,16 @@ void Platform_CleanUpFile(MappedFile *mf, NewlineInfo *newlines, size_t newlineC
     free(newlines);
 }
 
+bool Platform_StringContainsCaseInsensitive(const char* haystack, const char* needle) {
+    if (!haystack || !needle) return false;
+    return StrStrIA(haystack, needle) != NULL;
+}
+
+bool Platform_StringStartsWithCaseInsensitive(const char* str, const char* prefix) {
+    if (!str || !prefix) return false;
+    return StrStrIA(str, prefix) == str;
+}
+
 int Platform_ReplaceLineInMappedFile(MappedFile* mf, int line_index, const char* new_text) {
     if (!mf || !mf->pBuffer || !new_text || line_index < 0) return 0;
 

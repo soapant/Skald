@@ -8,6 +8,7 @@
 #include "bindings/vim_motions.h"
 #include "bindings/bindings.h"
 #include "core/number_shortcut.h"
+#include "core/prompt_controller.h"
 #include "helpers.h"
 #include <sys/time.h>
 #include <stdlib.h>
@@ -224,9 +225,6 @@ char* WindowManager_ShowSimplePrompt(WindowManager* wm, const SimplePromptSpec* 
 #endif
 }
 
-static bool prompt_should_swallow_pending(int wParam, int mods);
-static bool prompt_try_vim_motion(int wParam, bool ctrl, bool shift, bool alt);
-
 // ============ Edit Popup Implementation ============
 
 typedef WMEditPopupData EditPopupDataInternal;
@@ -278,8 +276,8 @@ static void EditPopup_OnKey(Popup* self, int vk_code, bool pressed, int modifier
     bool ctrl = modifiers & HOTKEY_MOD_CTRL;
     bool shift = modifiers & HOTKEY_MOD_SHIFT;
     bool alt = modifiers & HOTKEY_MOD_ALT;
-    if (prompt_should_swallow_pending(vk_upper, modifiers)) return;
-    if (prompt_try_vim_motion(vk_upper, ctrl, shift, alt)) {
+    if (PromptController_ShouldSwallowPending(vk_upper, modifiers)) return;
+    if (PromptController_TryVimMotion(vk_upper, ctrl, shift, alt)) {
         if (selection_complete) { data->confirmed=false; WindowManager_PopPopup(self->manager); }
         return;
     }
@@ -575,31 +573,6 @@ static void PromptPopup_OnShow(Popup* self) {
     if (g_refresh_callback) g_refresh_callback(data->state->filter, hListBox, data->state->has_listbox ? &data->state->listbox : NULL);
 }
 
-static bool prompt_should_swallow_pending(int wParam, int mods) {
-    extern int pending_hotkey_vk;
-    extern int pending_hotkey_mod;
-    extern long pending_hotkey_timeMs;
-    if (pending_hotkey_vk == 0) return false;
-    struct timeval tv; gettimeofday(&tv,NULL);
-    long now = tv.tv_sec*1000 + tv.tv_usec/1000;
-    if (now - pending_hotkey_timeMs > 800) { pending_hotkey_vk=0; pending_hotkey_mod=0; return false; }
-    if (wParam == pending_hotkey_vk) { pending_hotkey_vk=0; pending_hotkey_mod=0; return true; }
-    return false;
-}
-
-static bool prompt_try_vim_motion(int wParam, bool ctrl, bool shift, bool alt) {
-    int mod = HOTKEY_MOD_NONE;
-    if (ctrl) mod |= HOTKEY_MOD_CTRL;
-    if (shift) mod |= HOTKEY_MOD_SHIFT;
-    if (alt) mod |= HOTKEY_MOD_ALT;
-    MotionAction act; const char* seq; int typed;
-    if (CheckVimMotion(wParam, mod, &act, &seq, &typed)) {
-        ExecuteMotion(act, seq, typed);
-        return true;
-    }
-    return false;
-}
-
 static void PromptPopup_OnKey(Popup* self, int vk_code, bool pressed, int modifiers) {
     if (!pressed) return;
     PromptPopupData* data = (PromptPopupData*)self;
@@ -611,8 +584,8 @@ static void PromptPopup_OnKey(Popup* self, int vk_code, bool pressed, int modifi
     bool alt_pressed = modifiers & HOTKEY_MOD_ALT;
     int vk_upper = (vk_code >= 'a' && vk_code <= 'z') ? vk_code - 32 : vk_code;
     
-    if (prompt_should_swallow_pending(vk_upper, modifiers)) return;
-    if (prompt_try_vim_motion(vk_upper, ctrl_pressed, shift_pressed, alt_pressed)) {
+    if (PromptController_ShouldSwallowPending(vk_upper, modifiers)) return;
+    if (PromptController_TryVimMotion(vk_upper, ctrl_pressed, shift_pressed, alt_pressed)) {
         if (selection_complete) WindowManager_PopPopup(self->manager);
         return;
     }

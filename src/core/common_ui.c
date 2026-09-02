@@ -85,11 +85,7 @@ void PopulateListBox(ListBoxInfo* lb, WindowHandle hListBox, const char* filter,
       lb->last_item_count == item_count &&
       lb->last_filter_valid &&
       strlen(clean_filter) > strlen(lb->last_filter) &&
-#if defined(_WIN32)
-      StrStrIA(clean_filter, lb->last_filter) == clean_filter) {
-#else
-      strncasecmp(clean_filter, lb->last_filter, strlen(lb->last_filter)) == 0) {
-#endif
+      Platform_StringStartsWithCaseInsensitive(clean_filter, lb->last_filter)) {
 
     use_previous = 1;
     prev_count = lb->last_filter_full_count;
@@ -114,11 +110,7 @@ void PopulateListBox(ListBoxInfo* lb, WindowHandle hListBox, const char* filter,
       if (filter_match) {
         match = filter_match(search_text, clean_filter);
       } else {
-#if defined(_WIN32)
-        match = (StrStrIA(search_text, clean_filter) != NULL);
-#else
-        match = (strcasestr(search_text, clean_filter) != NULL);
-#endif
+        match = Platform_StringContainsCaseInsensitive(search_text, clean_filter);
       }
 
       if (match) {
@@ -141,11 +133,7 @@ void PopulateListBox(ListBoxInfo* lb, WindowHandle hListBox, const char* filter,
       if (g_alias_display_active && i < g_alias_display_count && g_alias_display[i][0] != '\0') {
         search_text = g_alias_display[i];
       }
-#if defined(_WIN32)
-      bool match = filter_match ? filter_match(search_text, clean_filter) : (StrStrIA(search_text, clean_filter) != NULL);
-#else
-      bool match = filter_match ? filter_match(search_text, clean_filter) : (strcasestr(search_text, clean_filter) != NULL);
-#endif
+      bool match = filter_match ? filter_match(search_text, clean_filter) : Platform_StringContainsCaseInsensitive(search_text, clean_filter);
 
       if (match) {
         lb->matching_indices[total_matches] = i;
