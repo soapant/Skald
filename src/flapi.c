@@ -161,8 +161,9 @@ int fl_collect_running_processes(char process_list[][128], int max_count) {
     return Platform_CollectRunningProcesses(process_list, max_count);
 }
 
-void fl_terminate_process_by_name(const char* exe_name) {
-    Platform_TerminateProcessByName(exe_name);
+bool fl_terminate_process_by_name(const char* exe_name) {
+    if (!exe_name) return false;
+    return Platform_TerminateProcessByName(exe_name);
 }
 bool fl_string_match_insensitive(char* needle,char* haystack) {
     if (!needle || !haystack) return false;
