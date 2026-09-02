@@ -3,10 +3,6 @@
 #include "core/flapi.h"
 #include "core/platform.h"
 
-bool fl_case_insensitive_string_match_platform(char* needle,char* haystack) {
-  return StrStrIA(needle,haystack);
-}
-
 int fl_copy_into_clipboard_platform(const char* text) {
     int status = 0;
     size_t len = strlen(text);
@@ -191,7 +187,7 @@ char* fl_search_file_in_dir_platform(const char* directory, const char* search_s
         if (find_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
             continue;
         }
-        if (fl_case_insensitive_string_match_platform(find_data.cFileName, search_string) != NULL) {
+        if (Platform_StringContainsCaseInsensitive(find_data.cFileName, search_string) != NULL) {
             snprintf(found_path, sizeof(found_path), "%s\\%s", directory, find_data.cFileName);
             FindClose(hFind);
             return found_path;

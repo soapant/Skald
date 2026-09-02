@@ -13,9 +13,6 @@
 #include <stdio.h>
 #include <sys/types.h>
 
-bool fl_case_insensitive_string_match_platform(char* needle,char* haystack) {
-  return strcasecmp(needle,haystack);
-}
 
 int fl_copy_into_clipboard_platform(const char* text) {
     int status = 0;
