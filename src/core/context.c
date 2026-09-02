@@ -19,6 +19,20 @@ static FlintContext g_ctx = {
         .last_index = 0,
     },
     .prompt_callbacks = {0},
+    .feature_history = NULL,
+    .g_item_index_map = NULL,
+    .history_indices = NULL,
+    .g_timer = {0},
+    .SelectionData = {0},
+    .SelectionDataCount = 0,
+#if defined(_WIN32)
+    .g_main_thread_id = 0,
+    .g_timeout = 1,
+    .g_waiting_for_key = false,
+    .g_key_pressed = 0,
+    .g_key_callback = NULL,
+    .draw_background = true,
+#endif
 };
 
 FlintContext* FlintContext_Get(void) {
