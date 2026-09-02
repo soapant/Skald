@@ -115,6 +115,10 @@ typedef struct {
     int height, width, item_height;
 } SimplePromptSpec;
 
+typedef struct WindowManager WindowManager;
+WindowManager* WindowManager_Get(void);
+char* WindowManager_ShowPrompt(WindowManager* wm, const PromptSpec* spec);
+char* WindowManager_ShowSimplePrompt(WindowManager* wm, const SimplePromptSpec* spec);
 #define PROMPT(...) ((char*)WindowManager_ShowPrompt(WindowManager_Get(), &(PromptSpec){ __VA_ARGS__ }))
 #define SIMPLE_PROMPT(...) ((char*)WindowManager_ShowSimplePrompt(WindowManager_Get(), &(SimplePromptSpec){ __VA_ARGS__ }))
 

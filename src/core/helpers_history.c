@@ -12,8 +12,6 @@
 #include <shlwapi.h>
 #endif
 
-HashMap* history_indices = NULL;
-
 bool IsWindowBlacklisted(const char* window_title, const char* blacklist[], int count) {
     for (int i = 0; i < count; i++) {
 #if defined(_WIN32)

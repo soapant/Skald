@@ -2,6 +2,7 @@
 #define APP_LAUNCHER_H
 
 #include "core/flapi.h"
+#include "core/flapi_platform.h"
 #include "features/focus_switcher.h"
 #include "features/window_switcher.h"
 
