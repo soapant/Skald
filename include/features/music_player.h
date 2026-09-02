@@ -12,8 +12,7 @@ typedef struct {
 
 static char *allowed_audio_formats[] = {"mp3","ogg","flac", NULL};
 
-extern ListOfFiles g_music_files;
-#define s_music_files g_music_files
+static ListOfFiles s_music_files = {0};
 
 static void music_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
     s_music_files.count = 0;

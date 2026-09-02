@@ -6,12 +6,12 @@
 #include "core/platform.h"
 #include "core/common_ui.h"
 
-int region_step = 0;
-long saved_x1 = 0;
-long saved_y1 = 0;
-long img_x2 = 0, img_y2 = 0;
-long img_x1 = 0, img_y1 = 0;
-int img_region_step = 0;
+static int region_step = 0;
+static long saved_x1 = 0;
+static long saved_y1 = 0;
+static long img_x2 = 0, img_y2 = 0;
+static long img_x1 = 0, img_y1 = 0;
+static int img_region_step = 0;
 
 static void TriggerScreenshot(WindowHandle hPopupWnd,bool open_screenshot) {
     const char* name_prompt = "Enter image name...";

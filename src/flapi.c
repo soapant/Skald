@@ -32,9 +32,7 @@
 #include "features/video_viewer.h"
 #include "features/focus_switcher.h"
 
-ListOfFiles g_app_list = {0};
-ListOfFiles g_music_files = {0};
-ListOfFiles g_video_files = {0};
+
 
 bool fl_copy_into_clipboard(const char* text) {
     if (text == NULL) return 0;
@@ -157,5 +155,13 @@ bool fl_launch_file_manager_at_path(char* path,char* args) {
 char* fl_get_zoxide_match(char* query) {
   if (!query) return NULL;
   return Platform_QueryZoxidePath(query);
+}
+
+int fl_collect_running_processes(char process_list[][128], int max_count) {
+    return Platform_CollectRunningProcesses(process_list, max_count);
+}
+
+void fl_terminate_process_by_name(const char* exe_name) {
+    Platform_TerminateProcessByName(exe_name);
 }
 

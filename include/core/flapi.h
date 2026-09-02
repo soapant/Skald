@@ -51,5 +51,7 @@ bool fl_launch_terminal_at_path(char* path,char* args);
 bool fl_launch_file_manager_at_path(char* path,char* args);
 char* fl_get_zoxide_match(char* query);
 char* fl_run_terminal_command(char* command,bool open_terminal);
+int fl_collect_running_processes(char process_list[][128], int max_count);
+void fl_terminate_process_by_name(const char* exe_name);
 
 #endif

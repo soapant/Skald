@@ -3,20 +3,34 @@
 
 #include "core/flapi.h"
 #include "core/zoxide_helpers.h"
+#include "core/platform.h"
 
-#define FILE_TEXT_EDITOR_ZOXIDE 1
-#define TEXT_EDITOR_ZOXIDEFILE G_FILE_ENTRIES[FILE_TEXT_EDITOR_ZOXIDE].mf
+static const char* TextEditorZoxideFilePath = "data/NvimZoxide.txt";
+static MappedFile TextEditorZoxideFileData = {0};
+static bool TextEditorZoxideFileInit = false;
+static MappedFile* GetTextEditorZoxideFile(void) {
+    if (!TextEditorZoxideFileInit) {
+#if !defined(_WIN32)
+        TextEditorZoxideFileData.fd = -1;
+#endif
+        Platform_FileInit(TextEditorZoxideFilePath, &TextEditorZoxideFileData);
+        TextEditorZoxideFileInit = true;
+    }
+    return &TextEditorZoxideFileData;
+}
+#define TextEditorZoxideFile GetTextEditorZoxideFile()
+
 
 static char** g_cached_text_editor_commands = NULL;
 static int g_cached_text_editor_count = 0;
 
 static void Rebuildtext_editorCache(void) {
-    ZoxideHelper_RebuildCache(TEXT_EDITOR_ZOXIDEFILE, &g_cached_text_editor_commands, &g_cached_text_editor_count);
+    ZoxideHelper_RebuildCache(TextEditorZoxideFile, &g_cached_text_editor_commands, &g_cached_text_editor_count);
 }
 
 
 static void text_editor_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
-    ZoxideHelper_Refresh(filter, hListBox, lb, TEXT_EDITOR_ZOXIDEFILE, &g_cached_text_editor_commands, &g_cached_text_editor_count);
+    ZoxideHelper_Refresh(filter, hListBox, lb, TextEditorZoxideFile, &g_cached_text_editor_commands, &g_cached_text_editor_count);
 }
 
 
@@ -26,13 +40,13 @@ static void text_editor_enter_callback(const char* selection, ListBoxInfo* lb) {
           char cmd_args[512];
           snprintf(cmd_args, sizeof(cmd_args), "-e %s \"%s\"",UsedTextEditor,path);
           fl_launch_terminal_at_path(path, cmd_args);
-          ZoxideHelper_AppendNewEntry(TEXT_EDITOR_ZOXIDEFILE, selection, lb, &g_cached_text_editor_commands, &g_cached_text_editor_count);
+          ZoxideHelper_AppendNewEntry(TextEditorZoxideFile, selection, lb, &g_cached_text_editor_commands, &g_cached_text_editor_count);
           free(path);
       }
 }
 
 static void text_editor_edit_callback(const char* selection, ListBoxInfo* lb) {
-    ZoxideHelper_Edit(selection, lb, TEXT_EDITOR_ZOXIDEFILE, &g_cached_text_editor_commands, &g_cached_text_editor_count, text_editor_refresh_callback);
+    ZoxideHelper_Edit(selection, lb, TextEditorZoxideFile, &g_cached_text_editor_commands, &g_cached_text_editor_count, text_editor_refresh_callback);
 }
 
 void TriggerTextEditorZoxide(void) {

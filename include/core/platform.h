@@ -20,6 +20,8 @@ bool Platform_ExpandPath(const char* template_path, char* out, size_t out_size);
 bool Platform_StringContainsCaseInsensitive(const char* haystack, const char* needle);
 bool Platform_StringStartsWithCaseInsensitive(const char* str, const char* prefix);
 void Platform_HandleShowCurrentTime(void);
+int Platform_CollectRunningProcesses(char process_list[][128], int max_count);
+void Platform_TerminateProcessByName(const char* exe_name);
 bool Platform_SendX11Command(const char* window_title, const char* atom_name, long command);
 bool Platform_SetX11Property(const char* window_title, const char* atom_name, long value);
 bool Platform_SetX11StringProperty(const char* window_title, const char* atom_name, const char* value);
@@ -73,6 +75,7 @@ int ConvertLinuxKeyToWindowsVK(int key_code);
 const char* Platform_GetRealUser(void);
 const char* Platform_GetRealHome(void);
 bool Platform_IsRunningAsRoot(void);
+
 #if !defined(_WIN32)
 const char* Platform_GetSessionDisplay(void);
 const char* Platform_GetSessionXAuthority(void);

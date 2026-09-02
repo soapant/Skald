@@ -6,9 +6,24 @@
 #include "features/timer.h"
 #include "features/process_killer.h"
 #include "core/zoxide_helpers.h"
+#include "core/platform.h"
 
-#define FILE_REMINDER_HISTORY 6
-#define ReminderHistoryFile G_FILE_ENTRIES[FILE_REMINDER_HISTORY].mf
+static const char* ReminderHistoryFilePath = "data/ReminderHistory.txt";
+static MappedFile ReminderHistoryFileData = {0};
+static bool ReminderHistoryFileInit = false;
+static MappedFile* GetReminderHistoryFile(void) {
+    if (!ReminderHistoryFileInit) {
+#if !defined(_WIN32)
+        ReminderHistoryFileData.fd = -1;
+#endif
+        Platform_FileInit(ReminderHistoryFilePath, &ReminderHistoryFileData);
+        ReminderHistoryFileInit = true;
+    }
+    return &ReminderHistoryFileData;
+}
+#define ReminderHistoryFile GetReminderHistoryFile()
+
+
 
 // Moved from helpers/flag.h - reminder-specific flag handling
 typedef void (*ActionFn)(const char* parameter);

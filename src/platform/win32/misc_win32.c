@@ -1,4 +1,5 @@
 #include <windows.h>
+#include <tlhelp32.h>
 #include <shlobj.h>
 #include "common.h"
 #include "helpers.h"
@@ -318,6 +319,37 @@ bool Platform_StringContainsCaseInsensitive(const char* haystack, const char* ne
 bool Platform_StringStartsWithCaseInsensitive(const char* str, const char* prefix) {
     if (!str || !prefix) return false;
     return StrStrIA(str, prefix) == str;
+}
+
+int Platform_CollectRunningProcesses(char process_list[][128], int max_count) {
+    if (!process_list || max_count <= 0) return 0;
+    int count = 0;
+    HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (hSnapshot == INVALID_HANDLE_VALUE) return 0;
+    PROCESSENTRY32 pe;
+    pe.dwSize = sizeof(PROCESSENTRY32);
+    if (Process32First(hSnapshot, &pe)) {
+        do {
+            bool exists = false;
+            for (int i = 0; i < count; i++) {
+                if (StrCmpIA(process_list[i], pe.szExeFile) == 0) { exists = true; break; }
+            }
+            if (!exists && count < max_count) {
+                strncpy(process_list[count], pe.szExeFile, 127);
+                process_list[count][127] = '\0';
+                count++;
+            }
+        } while (Process32Next(hSnapshot, &pe));
+    }
+    CloseHandle(hSnapshot);
+    return count;
+}
+
+void Platform_TerminateProcessByName(const char* exe_name) {
+    if (!exe_name || !*exe_name) return;
+    char cmd[512];
+    snprintf(cmd, sizeof(cmd), "taskkill /f /im \"%s*\"", exe_name);
+    Platform_RunTerminalCommand(cmd, false);
 }
 
 int Platform_ReplaceLineInMappedFile(MappedFile* mf, int line_index, const char* new_text) {
