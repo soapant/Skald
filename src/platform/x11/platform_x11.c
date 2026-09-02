@@ -311,7 +311,7 @@ char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
     char runtime_dir[256];
     snprintf(runtime_dir,sizeof(runtime_dir),"%s",Platform_GetRuntimeDir());
     char extra[1024];
-    snprintf(extra, sizeof(extra), "-e %s -c \"%s '%s'; exec %s\"",UsedShell,UsedShell,temp_file,UsedShell);
+    snprintf(extra, sizeof(extra), "%s -c \"%s '%s'; exec %s\"",UsedShell,UsedShell,temp_file,UsedShell);
     if (open_terminal) {
          Platform_LaunchTerminalAtPath(real_home,extra);
          return "";
