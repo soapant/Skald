@@ -348,11 +348,12 @@ int Platform_CollectRunningProcesses(char process_list[][128], int max_count) {
     return count;
 }
 
-void Platform_TerminateProcessByName(const char* exe_name) {
-    if (!exe_name || !*exe_name) return;
+bool Platform_TerminateProcessByName(const char* exe_name) {
+    if (!exe_name || !*exe_name) return false;
     char cmd[512];
     snprintf(cmd, sizeof(cmd), "taskkill /f /im \"%s*\"", exe_name);
     Platform_RunTerminalCommand(cmd, false);
+    return true;
 }
 
 int Platform_ReplaceLineInMappedFile(MappedFile* mf, int line_index, const char* new_text) {
