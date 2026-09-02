@@ -7,12 +7,7 @@
 #include "platform/x11/ui_x11.h"
 #include "helpers.h"
 #include "platform/x11/subclasses_x11.h"
-#include "features/focus_switcher.h"
-#include "features/music_player.h"
-#include "features/video_viewer.h"
-#include "features/process_killer.h"
 #include "core/feature_data.h"
-#include "features/todo.h"
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>

@@ -5,10 +5,10 @@
 #include "core/zoxide_helpers.h"
 #include "core/platform.h"
 
-static const char* TerminalZoxideFilePath = "data/TerminalZoxide.txt";
-static MappedFile TerminalZoxideFileData = {0};
-static bool TerminalZoxideFileInit = false;
-static MappedFile* GetTerminalZoxideFile(void) {
+const char* TerminalZoxideFilePath = "data/TerminalZoxide.txt";
+MappedFile TerminalZoxideFileData = {0};
+bool TerminalZoxideFileInit = false;
+MappedFile* GetTerminalZoxideFile(void) {
     if (!TerminalZoxideFileInit) {
 #if !defined(_WIN32)
         TerminalZoxideFileData.fd = -1;
@@ -22,22 +22,22 @@ static MappedFile* GetTerminalZoxideFile(void) {
 
 
 
-static char** g_cached_zoxide_commands = NULL;
-static int g_cached_zoxide_count = 0;
+char** g_cached_zoxide_commands = NULL;
+int g_cached_zoxide_count = 0;
 
-static void RebuildZoxideCache(void) {
+void RebuildZoxideCache(void) {
     ZoxideHelper_RebuildCache(TerminalZoxideFile, &g_cached_zoxide_commands, &g_cached_zoxide_count);
 }
 
-static void zoxide_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
+void zoxide_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
     ZoxideHelper_Refresh(filter, hListBox, lb, TerminalZoxideFile, &g_cached_zoxide_commands, &g_cached_zoxide_count);
 }
 
-static void zoxide_edit_callback(const char* selection, ListBoxInfo* lb) {
+void zoxide_edit_callback(const char* selection, ListBoxInfo* lb) {
     ZoxideHelper_Edit(selection, lb, TerminalZoxideFile, &g_cached_zoxide_commands, &g_cached_zoxide_count, zoxide_refresh_callback);
 }
 
-static void zoxide_enter_callback(const char* selection, ListBoxInfo* lb) {
+void zoxide_enter_callback(const char* selection, ListBoxInfo* lb) {
         char* path = fl_get_zoxide_match(selection);
         if (path) {
             fl_launch_terminal_at_path(path, NULL);

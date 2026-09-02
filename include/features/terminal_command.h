@@ -5,10 +5,10 @@
 #include "core/zoxide_helpers.h"
 #include "core/platform.h"
 
-static const char* TerminalHistoryFilePath = "data/TerminalHistory.txt";
-static MappedFile TerminalHistoryFileData = {0};
-static bool TerminalHistoryFileInit = false;
-static MappedFile* GetTerminalHistoryFile(void) {
+const char* TerminalHistoryFilePath = "data/TerminalHistory.txt";
+MappedFile TerminalHistoryFileData = {0};
+bool TerminalHistoryFileInit = false;
+MappedFile* GetTerminalHistoryFile(void) {
     if (!TerminalHistoryFileInit) {
 #if !defined(_WIN32)
         TerminalHistoryFileData.fd = -1;
@@ -21,19 +21,19 @@ static MappedFile* GetTerminalHistoryFile(void) {
 #define TerminalHistoryFile GetTerminalHistoryFile()
 
 
-static char** g_cached_commands = NULL;
-static int g_cached_command_count = 0;
+char** g_cached_commands = NULL;
+int g_cached_command_count = 0;
 
 
-static void RebuildCommandCache(void) {
+void RebuildCommandCache(void) {
     ZoxideHelper_RebuildCache(TerminalHistoryFile, &g_cached_commands, &g_cached_command_count);
 }
 
-static void terminal_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
+void terminal_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
     ZoxideHelper_Refresh(filter, hListBox, lb, TerminalHistoryFile, &g_cached_commands, &g_cached_command_count);
 }
 
-static void terminal_enter_callback(const char* selection, ListBoxInfo* lb) {
+void terminal_enter_callback(const char* selection, ListBoxInfo* lb) {
       if (!UI_IsListBoxSelected(lb)) {
         Platform_FileAppend(TerminalHistoryFile, selection);
         Platform_FileAppend(TerminalHistoryFile, "\n");
@@ -41,11 +41,11 @@ static void terminal_enter_callback(const char* selection, ListBoxInfo* lb) {
       fl_run_terminal_command(selection,true);
 }
 
-static void terminal_edit_callback(const char* selection, ListBoxInfo* lb) {
+void terminal_edit_callback(const char* selection, ListBoxInfo* lb) {
     ZoxideHelper_Edit(selection, lb, TerminalHistoryFile, &g_cached_commands, &g_cached_command_count, terminal_refresh_callback);
 }
 
-static void TriggerTerminalCommand(void) {
+void TriggerTerminalCommand(void) {
     if (!g_cached_commands) RebuildCommandCache();
     const char** list = ZoxideHelper_PrepareTriggerList(NULL, &g_cached_commands, &g_cached_command_count, NULL);
 
@@ -58,7 +58,7 @@ static void TriggerTerminalCommand(void) {
     ZoxideHelper_CleanupTriggerList(list);
 }
 
-static void run_btop(void) {
+void run_btop(void) {
     fl_run_terminal_command("ls",true);
 }
 

@@ -46,7 +46,7 @@ typedef struct {
 #define TODO_TAG_SEPARATOR "|"
 #define TODO_ENTRY_DELIMITER "||"
 
-static const TagFormatConfig TODO_TAG_FORMAT_LOCAL = {
+const TagFormatConfig TODO_TAG_FORMAT_LOCAL = {
     "[",
     "]",
     "|",
@@ -83,28 +83,28 @@ static const TagFormatConfig TODO_TAG_FORMAT_LOCAL = {
     X("-c",  NULL,               "Change",           RGB(150, 105, 12),  false)
 
 #define X(flag, label) {flag, label},
-static const TodoAliasEntry TODO_ALIAS_DICT_LOCAL[] = {
+const TodoAliasEntry TODO_ALIAS_DICT_LOCAL[] = {
     TODO_ALIAS_MASTER
 };
-static const size_t TODO_ALIAS_DICT_COUNT_LOCAL = ARRAY_LEN(TODO_ALIAS_DICT_LOCAL);
+const size_t TODO_ALIAS_DICT_COUNT_LOCAL = ARRAY_LEN(TODO_ALIAS_DICT_LOCAL);
 #undef X
 #define X(flag, label) {flag, NULL},
-static const GenericFlagEntry TODO_ALIAS_FLAGS_LOCAL[] = {
+const GenericFlagEntry TODO_ALIAS_FLAGS_LOCAL[] = {
     TODO_ALIAS_MASTER
 };
-static const size_t TODO_ALIAS_FLAGS_COUNT_LOCAL = ARRAY_LEN(TODO_ALIAS_FLAGS_LOCAL);
+const size_t TODO_ALIAS_FLAGS_COUNT_LOCAL = ARRAY_LEN(TODO_ALIAS_FLAGS_LOCAL);
 #undef X
 #define X(flag, internal, label, color, is_alias) {flag, NULL},
-static const GenericFlagEntry TODO_CONFIG_FLAGS_LOCAL[] = {
+const GenericFlagEntry TODO_CONFIG_FLAGS_LOCAL[] = {
     TODO_CONFIG_MASTER
 };
-static const size_t TODO_CONFIG_FLAGS_COUNT_LOCAL = ARRAY_LEN(TODO_CONFIG_FLAGS_LOCAL);
+const size_t TODO_CONFIG_FLAGS_COUNT_LOCAL = ARRAY_LEN(TODO_CONFIG_FLAGS_LOCAL);
 #undef X
 #define X(flag, internal, label, color, is_alias) {flag, internal, label, color, is_alias},
-static const TodoConfigEntry TODO_DICT_LOCAL[] = {
+const TodoConfigEntry TODO_DICT_LOCAL[] = {
     TODO_CONFIG_MASTER
 };
-static const size_t TODO_DICT_COUNT_LOCAL = ARRAY_LEN(TODO_DICT_LOCAL);
+const size_t TODO_DICT_COUNT_LOCAL = ARRAY_LEN(TODO_DICT_LOCAL);
 #undef X
 
 #define TODO_ALIAS_DICT TODO_ALIAS_DICT_LOCAL
@@ -117,7 +117,7 @@ static const size_t TODO_DICT_COUNT_LOCAL = ARRAY_LEN(TODO_DICT_LOCAL);
 #define TODO_DICT_COUNT TODO_DICT_COUNT_LOCAL
 #define TODO_CONFIG_FLAGS_ENTRIES TODO_DICT_LOCAL
 
-static ColorRef GetTagColor(const char* tag_text) {
+ColorRef GetTagColor(const char* tag_text) {
     if (!tag_text || strlen(tag_text) == 0) return COLOR_TEXT;
     
     for (int i = 0; i < TODO_CONFIG_FLAGS_COUNT; i++) {
@@ -135,7 +135,7 @@ static ColorRef GetTagColor(const char* tag_text) {
     return COLOR_TEXT;
 }
 
-static void ParseTodoInput(const char* input, TodoAliasEntry* alias_out, TodoConfigEntry* config_out, char* clean_text, char tags_out[][64], int* tag_count) {
+void ParseTodoInput(const char* input, TodoAliasEntry* alias_out, TodoConfigEntry* config_out, char* clean_text, char tags_out[][64], int* tag_count) {
     if (!input) return;
     
     memset(alias_out, 0, sizeof(TodoAliasEntry));
@@ -237,7 +237,7 @@ static void ParseTodoInput(const char* input, TodoAliasEntry* alias_out, TodoCon
     clean_text[511] = '\0';
 }
 
-static void ParseTodoLine(const char* line, char* clean_text, char tags_out[][64], int* tag_count) {
+void ParseTodoLine(const char* line, char* clean_text, char tags_out[][64], int* tag_count) {
     clean_text[0] = '\0';
     *tag_count = 0;
     
@@ -265,7 +265,7 @@ static void ParseTodoLine(const char* line, char* clean_text, char tags_out[][64
     }
 }
 
-static void AddTodoToFile(const char* text) {
+void AddTodoToFile(const char* text) {
     if (!text || strlen(text) == 0) return;
     
     const char* lines[100];
@@ -319,7 +319,7 @@ static void AddTodoToFile(const char* text) {
     fl_free_file_list(lines, count);
 }
 
-static void RemoveTodoItemFromFile(const char* item_to_remove) {
+void RemoveTodoItemFromFile(const char* item_to_remove) {
     FILE* infile = fopen(TODO_FILE_PATH, "r");
     if (!infile) return;
 
@@ -369,7 +369,7 @@ static void RemoveTodoItemFromFile(const char* item_to_remove) {
 #endif
 }
 
-static void todo_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
+void todo_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
     const char* items[100];
     int todo_count = fl_load_file_list(TODO_FILE_PATH, items, 100);
 
@@ -377,7 +377,7 @@ static void todo_refresh_callback(const char* filter, WindowHandle hListBox, Lis
     fl_free_file_list(items, todo_count);
 }
 
-static void todo_enter_callback(const char* selection, ListBoxInfo* lb) {
+void todo_enter_callback(const char* selection, ListBoxInfo* lb) {
     if (UI_IsListBoxSelected(lb)) {
         RemoveTodoItemFromFile(selection);
     } 
@@ -387,7 +387,7 @@ static void todo_enter_callback(const char* selection, ListBoxInfo* lb) {
     UI_Redraw(lb, hListBox);
 }
 
-static void todo_ctrlenter_callback(const char* selection, ListBoxInfo* lb) {
+void todo_ctrlenter_callback(const char* selection, ListBoxInfo* lb) {
     if (UI_IsListBoxSelected(lb)) {
         RemoveTodoItemFromFile(selection);
     } else {
@@ -398,7 +398,7 @@ static void todo_ctrlenter_callback(const char* selection, ListBoxInfo* lb) {
     selection_complete = false;
 }
 
-static void todo_copy_callback(const char* selection,int true_index,int type) {
+void todo_copy_callback(const char* selection,int true_index,int type) {
     char buffer[512];
     strncpy(buffer, selection, sizeof(buffer) - 1);
     buffer[sizeof(buffer) - 1] = '\0';
@@ -412,7 +412,7 @@ static void todo_copy_callback(const char* selection,int true_index,int type) {
 }
 
 #if !defined(_WIN32)
-static void todo_render_callback(Display *dpy, Window *win, PromptState *state) {
+void todo_render_callback(Display *dpy, Window *win, PromptState *state) {
     if (!state->has_listbox) return;
     ListBoxInfo *lb = &state->listbox;
     int screen = DefaultScreen(dpy);
@@ -532,7 +532,7 @@ static void todo_render_callback(Display *dpy, Window *win, PromptState *state) 
 }
 #endif
 #if defined(_WIN32)
-static void todo_render_callback_impl(HDC hdc, const char* text, RECT* rect, BOOL is_selected, int itemIndex) {
+void todo_render_callback_impl(HDC hdc, const char* text, RECT* rect, BOOL is_selected, int itemIndex) {
     if (!text || !rect) return;
 
     UI_RedrawBackground(hdc,rect,is_selected);
@@ -593,16 +593,16 @@ static void todo_render_callback_impl(HDC hdc, const char* text, RECT* rect, BOO
     SelectObject(hdc, hOldFont);
 }
 
-static void todo_render_callback(HDC hdc, const char* text, RECT* rect, BOOL is_selected, int itemIndex) {
+void todo_render_callback(HDC hdc, const char* text, RECT* rect, BOOL is_selected, int itemIndex) {
     todo_render_callback_impl(hdc, text, rect, is_selected, itemIndex);
 }
 #endif
 
-static void todo_edit_callback(const char* selection, ListBoxInfo* lb) {
+void todo_edit_callback(const char* selection, ListBoxInfo* lb) {
     fl_edit_text_popup(selection, "Edit Todo", 960, 540, TODO_FILE_PATH, lb, todo_refresh_callback);
 }
 
-static void TriggerTodo(void) {
+void TriggerTodo(void) {
     const char* ui_list[100];
     int count = fl_load_file_list(TODO_FILE_PATH, ui_list, 100);
 

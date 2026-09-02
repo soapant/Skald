@@ -8,10 +8,10 @@
 #include "core/zoxide_helpers.h"
 #include "core/platform.h"
 
-static const char* ReminderHistoryFilePath = "data/ReminderHistory.txt";
-static MappedFile ReminderHistoryFileData = {0};
-static bool ReminderHistoryFileInit = false;
-static MappedFile* GetReminderHistoryFile(void) {
+const char* ReminderHistoryFilePath = "data/ReminderHistory.txt";
+MappedFile ReminderHistoryFileData = {0};
+bool ReminderHistoryFileInit = false;
+MappedFile* GetReminderHistoryFile(void) {
     if (!ReminderHistoryFileInit) {
 #if !defined(_WIN32)
         ReminderHistoryFileData.fd = -1;
@@ -45,16 +45,16 @@ typedef struct {
     bool open_explorer;
 } ZoxideOptions;
 
-static char** g_cached_reminder_commands = NULL;
-static int g_cached_reminder_count = 0;
+char** g_cached_reminder_commands = NULL;
+int g_cached_reminder_count = 0;
 
-static ActionFn g_async_action = NULL;
-static char g_action_param[256] = {0};
-static char g_timer_param[256] = {0};
+ActionFn g_async_action = NULL;
+char g_action_param[256] = {0};
+char g_timer_param[256] = {0};
 
 
 #if defined(_WIN32)
-static DWORD WINAPI SimpleTimerThread(LPVOID lpParam) {
+DWORD WINAPI SimpleTimerThread(LPVOID lpParam) {
     int remaining = (int)(INT_PTR)lpParam;
     
     while (remaining > 0) {
@@ -69,7 +69,7 @@ static DWORD WINAPI SimpleTimerThread(LPVOID lpParam) {
     return 0;
 }
 #else
-static void* SimpleTimerThread(void* lpParam) {
+void* SimpleTimerThread(void* lpParam) {
     int remaining = (int)(intptr_t)lpParam;
     
     while (remaining > 0) {
@@ -85,7 +85,7 @@ static void* SimpleTimerThread(void* lpParam) {
 }
 #endif
 
-static void StartSimpleBackgroundTimer(const char* parameter) {
+void StartSimpleBackgroundTimer(const char* parameter) {
     int total_seconds = ParseTimeToSeconds(parameter);
     if (total_seconds <= 0) return;
 
@@ -162,34 +162,34 @@ void DisplayText(const char* parameter){
 
 
 
-static const ActionDef REMINDER_ACTION_FLAGS[] = {
+const ActionDef REMINDER_ACTION_FLAGS[] = {
     {"-f", HandleFocusWindowFlag},
     {"-dt", DisplayText},
 };
 
-static const ConditionDef REMINDER_CONDITION_FLAGS[] = {
+const ConditionDef REMINDER_CONDITION_FLAGS[] = {
     {"-cg", CheckGameRunning},
 };
 
-static const TimerDef REMINDER_TIMER_FLAGS[] = {
+const TimerDef REMINDER_TIMER_FLAGS[] = {
     {"-trw", RunWindowTimer},
     {"-tr",  RunBackgroundTimer},
 };
 
-static const char* REMINDER_CONSTRAINT_FLAGS[] = {
+const char* REMINDER_CONSTRAINT_FLAGS[] = {
     "-t",
 };
 
-static void RebuildReminderCache(void) {
+void RebuildReminderCache(void) {
     ZoxideHelper_RebuildCache(ReminderHistoryFile, &g_cached_reminder_commands, &g_cached_reminder_count);
 }
-static void reminder_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
+void reminder_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
     if (!lb) return;
     ZoxideHelper_Refresh(filter, hListBox, lb, ReminderHistoryFile, &g_cached_reminder_commands, &g_cached_reminder_count);
 }
 
 
-static void StartReminder(const char* selection) {
+void StartReminder(const char* selection) {
     if (!selection || strlen(selection) == 0) {
         printf("[REMINDER] Empty input\n");
         return;
@@ -338,11 +338,11 @@ static void StartReminder(const char* selection) {
     printf("[REMINDER] Done\n");
 }
 
-static void reminder_enter_callback(const char* selection, ListBoxInfo* lb) {
+void reminder_enter_callback(const char* selection, ListBoxInfo* lb) {
       ZoxideHelper_AppendNewEntry(ReminderHistoryFile, selection, lb, &g_cached_reminder_commands, &g_cached_reminder_count);
       StartReminder(selection);
 }
-static void reminder_edit_callback(const char* selection, ListBoxInfo* lb) {
+void reminder_edit_callback(const char* selection, ListBoxInfo* lb) {
     ZoxideHelper_Edit(selection, lb, ReminderHistoryFile, &g_cached_reminder_commands, &g_cached_reminder_count, reminder_refresh_callback);
 }
 

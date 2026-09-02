@@ -4,18 +4,12 @@
 
 #include "core/flapi.h"
 
-typedef struct {
-    int vk_code;
-    int modifiers;
-    int code;
-} VideoViewerBinding;
 
+char *allowed_video_formats[] = {"webm","mp4", NULL};
 
-static char *allowed_video_formats[] = {"webm","mp4", NULL};
+ListOfFiles s_video_files = {0};
 
-static ListOfFiles s_video_files = {0};
-
-static void video_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
+void video_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
     s_video_files.count = 0;
     fl_get_all_files_from_dir(VideosPath, allowed_video_formats, &s_video_files, NULL);
     
@@ -28,7 +22,7 @@ static void video_refresh_callback(const char* filter, WindowHandle hListBox, Li
     free(items);
 }
 
-static void video_enter_callback(const char* selection, ListBoxInfo* lb) {
+void video_enter_callback(const char* selection, ListBoxInfo* lb) {
     char* result = NULL;
     for (size_t i = 0; i < s_video_files.count; i++) {
         if (strcmp(s_video_files.items[i].name, selection) == 0) {
@@ -46,7 +40,7 @@ static void video_enter_callback(const char* selection, ListBoxInfo* lb) {
             }
         }
         if (result) {
-            static char found_path[MAX_PATH];
+            char found_path[MAX_PATH];
             strncpy(found_path, result, sizeof(found_path)-1);
             found_path[sizeof(found_path)-1] = '\0';
             result = found_path;
@@ -81,7 +75,7 @@ static void video_enter_callback(const char* selection, ListBoxInfo* lb) {
     }
 #endif
 }
-static void video_cmd_1(void) {
+void video_cmd_1(void) {
     if (!VideoViewerAvailable) return;
 #if defined(_WIN32)
     HWND playerHwnd = FindWindow(NULL, "Video Viewer");
@@ -90,7 +84,7 @@ static void video_cmd_1(void) {
     Platform_SetX11Property("Video Viewer", "_MP_CMD", 1);
 #endif
 }
-static void video_cmd_5(void) {
+void video_cmd_5(void) {
     if (!VideoViewerAvailable) return;
 #if defined(_WIN32)
     HWND playerHwnd = FindWindow(NULL, "Video Viewer");
@@ -99,7 +93,7 @@ static void video_cmd_5(void) {
     Platform_SetX11Property("Video Viewer", "_MP_CMD", 5);
 #endif
 }
-static void video_cmd_6(void) {
+void video_cmd_6(void) {
     if (!VideoViewerAvailable) return;
 #if defined(_WIN32)
     HWND playerHwnd = FindWindow(NULL, "Video Viewer");
@@ -108,7 +102,7 @@ static void video_cmd_6(void) {
     Platform_SetX11Property("Video Viewer", "_MP_CMD", 6);
 #endif
 }
-static void video_prompt(void) {
+void video_prompt(void) {
     if (!VideoViewerAvailable) return;
     s_video_files.count = 0;
     fl_get_all_files_from_dir(VideosPath, allowed_video_formats, &s_video_files, NULL);

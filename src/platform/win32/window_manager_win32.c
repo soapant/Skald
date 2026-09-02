@@ -4,10 +4,6 @@
 #include "core/vim.h"
 #include "core/platform.h"
 #include "platform/win32/subclasses_win32.h"
-#include "features/focus_switcher.h"
-#include "features/music_player.h"
-#include "features/video_viewer.h"
-#include "features/process_killer.h"
 #include "core/feature_data.h"
 #include <windows.h>
 #include <stdio.h>

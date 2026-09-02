@@ -10,16 +10,7 @@
 #include "bindings/bindings.h"
 #include "bindings/macro_bindings.h"
 #include "platform/subclasses.h"
-#include "features/focus_switcher.h"
 #include "core/feature_data.h"
-#include "features/music_player.h"
-#include "features/video_viewer.h"
-#include "features/process_killer.h"
-#include "features/app_launcher.h"
-#include "features/terminal_command.h"
-#include "features/misc_hotkeys.h"
-#include "features/quicklink.h"
-#include "features/text_snippets.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
