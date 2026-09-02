@@ -7,7 +7,7 @@
 #include "core/common_ui.h"
 #include "core/number_shortcut.h"
 #include "core/feature_data.h"
-#include "window/subclasses.h"
+#include "platform/subclasses.h"
 #include "core/platform.h"
 #include "bindings/bindings.h"
 #include "bindings/macro_bindings.h"
