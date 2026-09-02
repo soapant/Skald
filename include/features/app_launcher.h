@@ -71,8 +71,7 @@ static const PathEntry SystemShortcuts[] = {
 #define MAX_APPS 2048
 #endif
 
-extern ListOfFiles g_app_list;
-#define s_apps g_app_list
+static ListOfFiles s_apps = {0};
 
 static void initialize_app_cache(void) {
 #if defined(_WIN32)

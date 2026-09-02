@@ -3,9 +3,24 @@
 
 #include "core/flapi.h"
 #include "core/zoxide_helpers.h"
+#include "core/platform.h"
 
-#define FILE_EXPLORER_ZOXIDE 4
-#define ExplorerZoxideFile G_FILE_ENTRIES[FILE_EXPLORER_ZOXIDE].mf
+static const char* ExplorerZoxideFilePath = "data/ExplorerZoxide.txt";
+static MappedFile ExplorerZoxideFileData = {0};
+static bool ExplorerZoxideFileInit = false;
+static MappedFile* GetExplorerZoxideFile(void) {
+    if (!ExplorerZoxideFileInit) {
+#if !defined(_WIN32)
+        ExplorerZoxideFileData.fd = -1;
+#endif
+        Platform_FileInit(ExplorerZoxideFilePath, &ExplorerZoxideFileData);
+        ExplorerZoxideFileInit = true;
+    }
+    return &ExplorerZoxideFileData;
+}
+#define ExplorerZoxideFile GetExplorerZoxideFile()
+
+
 
 static char** g_cached_explorer_commands = NULL;
 static int g_cached_explorer_count = 0;

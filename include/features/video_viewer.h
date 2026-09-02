@@ -13,8 +13,7 @@ typedef struct {
 
 static char *allowed_video_formats[] = {"webm","mp4", NULL};
 
-extern ListOfFiles g_video_files;
-#define s_video_files g_video_files
+static ListOfFiles s_video_files = {0};
 
 static void video_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
     s_video_files.count = 0;

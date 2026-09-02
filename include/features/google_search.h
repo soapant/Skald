@@ -3,9 +3,24 @@
 
 #include "core/flapi.h"
 #include "core/zoxide_helpers.h"
+#include "core/platform.h"
 
-#define FILE_GOOGLE_ZOXIDE 5
-#define GoogleZoxideFile G_FILE_ENTRIES[FILE_GOOGLE_ZOXIDE].mf
+static const char* GoogleZoxideFilePath = "data/GoogleZoxide.txt";
+static MappedFile GoogleZoxideFileData = {0};
+static bool GoogleZoxideFileInit = false;
+static MappedFile* GetGoogleZoxideFile(void) {
+    if (!GoogleZoxideFileInit) {
+#if !defined(_WIN32)
+        GoogleZoxideFileData.fd = -1;
+#endif
+        Platform_FileInit(GoogleZoxideFilePath, &GoogleZoxideFileData);
+        GoogleZoxideFileInit = true;
+    }
+    return &GoogleZoxideFileData;
+}
+#define GoogleZoxideFile GetGoogleZoxideFile()
+
+
 
 static char** g_cached_google_queries = NULL;
 static int g_cached_google_count = 0;

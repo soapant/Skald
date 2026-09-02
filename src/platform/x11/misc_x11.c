@@ -9,6 +9,7 @@
 #include <pwd.h>
 #include <dirent.h>
 #include <errno.h>
+#include <ctype.h>
 #include <linux/input.h>
 
 #include "common.h"
@@ -648,4 +649,65 @@ int Platform_ReplaceLineInMappedFile(MappedFile* mf, int line_index, const char*
 
     mf->fileSize = new_size;
     return 1;
+}
+
+int Platform_CollectRunningProcesses(char process_list[][128], int max_count) {
+    if (!process_list || max_count <= 0) return 0;
+    int count = 0;
+    DIR* proc = opendir("/proc");
+    if (!proc) return 0;
+    struct dirent* entry;
+    while ((entry = readdir(proc)) != NULL && count < max_count) {
+        if (!isdigit((unsigned char)entry->d_name[0])) continue;
+        char comm_path[512];
+        snprintf(comm_path, sizeof(comm_path), "/proc/%s/comm", entry->d_name);
+        FILE* f = fopen(comm_path, "r");
+        if (!f) continue;
+        char exe[256];
+        if (!fgets(exe, sizeof(exe), f)) { fclose(f); continue; }
+        fclose(f);
+        size_t len = strlen(exe);
+        while (len>0 && (exe[len-1]=='\n' || exe[len-1]=='\r')) exe[--len]='\0';
+        if (len==0) continue;
+        char stat_path[512];
+        snprintf(stat_path, sizeof(stat_path), "/proc/%s/stat", entry->d_name);
+        FILE* fstat = fopen(stat_path, "r");
+        if (fstat) {
+            char stat_buf[1024];
+            if (fgets(stat_buf, sizeof(stat_buf), fstat)) {
+                char* rparen = strrchr(stat_buf, ')');
+                if (rparen) {
+                    int ppid = 0;
+                    if (sscanf(rparen+2, "%*c %d", &ppid)==1 && ppid==2) {
+                        fclose(fstat);
+                        continue;
+                    }
+                }
+            }
+            fclose(fstat);
+        }
+        bool exists=false;
+        for (int i=0;i<count;i++) if (strcasecmp(process_list[i], exe)==0) {exists=true;break;}
+        if (!exists) {
+            strncpy(process_list[count], exe, 127);
+            process_list[count][127]='\0';
+            count++;
+        }
+    }
+    closedir(proc);
+    return count;
+}
+
+void Platform_TerminateProcessByName(const char* exe_name) {
+    if (!exe_name || !*exe_name) return;
+    char tmp[256];
+    strncpy(tmp, exe_name, sizeof(tmp)-1);
+    tmp[sizeof(tmp)-1]='\0';
+    char *ext = strrchr(tmp, '.');
+    if (ext && strcmp(ext, ".exe") == 0) *ext = '\0';
+    char cmd[512];
+    snprintf(cmd, sizeof(cmd), "pkill -f \"%s\"", tmp);
+    Platform_RunTerminalCommand(cmd, false);
+    snprintf(cmd, sizeof(cmd), "killall \"%s\"", tmp);
+    Platform_RunTerminalCommand(cmd, false);
 }

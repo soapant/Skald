@@ -149,22 +149,22 @@ void TriggerRegionImage(void) {
     POINT cursorPos;
     if (!GetCursorPos(&cursorPos)) return;
     
-    extern int img_region_step;
-    extern long img_x1, img_y1, img_x2, img_y2;
-    extern long saved_x1,saved_y1;
+    static int s_img_region_step = 0;
+    static long s_img_x1 = 0, s_img_y1 = 0, s_img_x2 = 0, s_img_y2 = 0;
+    static long s_saved_x1 = 0, s_saved_y1 = 0;
     char buffer[128];
     
     
-    if (img_region_step == 0) {
-        img_x1 = cursorPos.x;
-        img_y1 = cursorPos.y;
-        img_region_step = 1;
-        snprintf(buffer,sizeof(buffer),"Started Region Image At %ld %ld \n",saved_x1,saved_y1);
+    if (s_img_region_step == 0) {
+        s_img_x1 = cursorPos.x;
+        s_img_y1 = cursorPos.y;
+        s_img_region_step = 1;
+        snprintf(buffer,sizeof(buffer),"Started Region Image At %ld %ld \n",s_saved_x1,s_saved_y1);
         SubjectiveMessageDisplay(buffer,140,TimeOutForMessages,COLOR_TEXT);
     } else {
-        img_x2 = cursorPos.x;
-        img_y2 = cursorPos.y;
-        img_region_step = 0;
+        s_img_x2 = cursorPos.x;
+        s_img_y2 = cursorPos.y;
+        s_img_region_step = 0;
         if (WH_TO_HWND(hGlobalTrayWnd) != NULL) {
             SendNotifyMessage(WH_TO_HWND(hGlobalTrayWnd), WM_TRIGGER_IMG_CAPTURE, 0, 0);
         }

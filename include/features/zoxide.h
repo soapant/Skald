@@ -3,9 +3,24 @@
 
 #include "core/flapi.h"
 #include "core/zoxide_helpers.h"
+#include "core/platform.h"
 
-#define FILE_TERMINAL_ZOXIDE 3
-#define TerminalZoxideFile G_FILE_ENTRIES[FILE_TERMINAL_ZOXIDE].mf
+static const char* TerminalZoxideFilePath = "data/TerminalZoxide.txt";
+static MappedFile TerminalZoxideFileData = {0};
+static bool TerminalZoxideFileInit = false;
+static MappedFile* GetTerminalZoxideFile(void) {
+    if (!TerminalZoxideFileInit) {
+#if !defined(_WIN32)
+        TerminalZoxideFileData.fd = -1;
+#endif
+        Platform_FileInit(TerminalZoxideFilePath, &TerminalZoxideFileData);
+        TerminalZoxideFileInit = true;
+    }
+    return &TerminalZoxideFileData;
+}
+#define TerminalZoxideFile GetTerminalZoxideFile()
+
+
 
 static char** g_cached_zoxide_commands = NULL;
 static int g_cached_zoxide_count = 0;
