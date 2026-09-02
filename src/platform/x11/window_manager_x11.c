@@ -39,8 +39,6 @@ bool g_linux_ctrl_held = false;
 bool g_linux_alt_held = false;
 bool g_linux_shift_held = false;
 
-extern char output_buffer[256];
-extern bool selection_complete;
 
 extern bool HandleGlobalKeyEvent(int key_code, int value);
 
