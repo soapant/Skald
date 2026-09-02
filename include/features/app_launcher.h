@@ -88,7 +88,7 @@ void initialize_app_cache(void) {
         
         bool found = false;
         for (size_t app_idx = 0; app_idx < s_apps.count; app_idx++) {
-            if (fl_string_match_insensitive(s_apps.items[app_idx].path, SystemShortcuts[shortcut_idx].path) != NULL) {
+            if (fl_string_match_insensitive(s_apps.items[app_idx].path, SystemShortcuts[shortcut_idx].path)) {
                 strncpy(s_apps.items[app_idx].name, SystemShortcuts[shortcut_idx].name, sizeof(s_apps.items[app_idx].name) - 1);
                 s_apps.items[app_idx].name[sizeof(s_apps.items[app_idx].name) - 1] = '\0';
                 found = true;
@@ -114,7 +114,7 @@ void initialize_app_cache(void) {
 }
 void launch_app_by_name(const char* display_name) {
     for (size_t i = 0; i < s_apps.count; i++) {
-        if (fl_string_match_insensitive(s_apps.items[i].name, display_name) == 0) {
+        if (fl_string_match_insensitive(display_name,s_apps.items[i].name)) {
             fl_launch_with_args(s_apps.items[i].path, NULL);
             return;
         }
@@ -123,7 +123,7 @@ void launch_app_by_name(const char* display_name) {
 
 void launch_app_as_admin(const char* display_name) {
     for (size_t i = 0; i < s_apps.count; i++) {
-        if (fl_string_match_insensitive(s_apps.items[i].name, display_name) == 0) {
+        if (fl_string_match_insensitive(s_apps.items[i].name, display_name)) {
             fl_launch_with_args_as_admin(s_apps.items[i].path, NULL);
             return;
         }
