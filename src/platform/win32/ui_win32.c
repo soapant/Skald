@@ -439,7 +439,6 @@ int Platform_InitializeTrayIcon() {
       return -1;
     }
 
-    // Use hidden toolwindow instead of overlapped to avoid visible white window on Wine
     hGlobalTrayWnd = WH_FROM_HWND(CreateWindowExA(
         WS_EX_TOOLWINDOW,
         wc.lpszClassName, "TrayApp", 
@@ -451,7 +450,6 @@ int Platform_InitializeTrayIcon() {
     if (WH_TO_HWND(hGlobalTrayWnd) == NULL) {
       return -1;
     }
-    // Don't ShowWindow - keep hidden
   }
   return 0;
 }
@@ -636,7 +634,6 @@ void Platform_InitUI() {
    settingsPopupWc.lpszClassName = "SettingsPopupClass";
    RegisterClassA(&settingsPopupWc);
 
-   // Install low-level keyboard hook for hotkeys
    hKeyboardHook = SetWindowsHookExA(WH_KEYBOARD_LL, LowLevelKeyboardProc, GetModuleHandle(NULL), 0);
 }
 

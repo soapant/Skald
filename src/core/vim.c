@@ -161,7 +161,6 @@ VimContext Vim_FromGlobals(void) {
         VimContext ctx2 = {0};
         ctx2.hListBox = hListBox;
         ctx2.hEdit = g_ActiveEditControl;
-        // Vim_* funcs will detect POPUP_EDIT via WindowManager and use wm_edit->text directly
         return ctx2;
     }
     PromptState* prompt = GetActivePromptState();

@@ -67,7 +67,6 @@ static void collect_running_processes() {
         size_t len = strlen(exe);
         while (len>0 && (exe[len-1]=='\n' || exe[len-1]=='\r')) exe[--len]='\0';
         if (len==0) continue;
-        // Skip kernel threads (ppid 2 = kthreadd) and also check exe prefix
         {
             char stat_path[512];
             snprintf(stat_path, sizeof(stat_path), "/proc/%s/stat", entry->d_name);

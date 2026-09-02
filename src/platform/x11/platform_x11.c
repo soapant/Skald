@@ -325,7 +325,6 @@ bool Platform_LaunchFileManagerAtPath(char* path,char* args) {
 }
 
 bool Platform_LaunchApp(const char* path) {
-    // should be removed
     if (!path) return false;
     char expanded[1024];
     if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) return false;

@@ -229,7 +229,6 @@ static int XKeysymToVK(KeySym ks) {
 }
 
 static void Linux_HandleKeyPress(Display* dpy, XKeyEvent* ev, WindowManager* wm) {
-    // sync modifier state with X state to avoid stuck modifiers
     extern bool g_Linux_CtrlHeld, g_Linux_AltHeld, g_Linux_ShiftHeld;
     g_linux_ctrl_held = (ev->state & ControlMask) != 0;
     g_Linux_CtrlHeld = g_linux_ctrl_held;
@@ -242,7 +241,6 @@ static void Linux_HandleKeyPress(Display* dpy, XKeyEvent* ev, WindowManager* wm)
     char buf[32];
     int len = XLookupString(ev, buf, sizeof(buf), &ks, NULL);
 
-    // update for specific modifier keys
     if (ks == XK_Control_L || ks == XK_Control_R) { g_linux_ctrl_held = true; g_Linux_CtrlHeld = true; }
     else if (ks == XK_Alt_L || ks == XK_Alt_R) { g_linux_alt_held = true; g_Linux_AltHeld = true; }
     else if (ks == XK_Shift_L || ks == XK_Shift_R) { g_linux_shift_held = true; g_Linux_ShiftHeld = true; }
@@ -262,7 +260,6 @@ static void Linux_HandleKeyPress(Display* dpy, XKeyEvent* ev, WindowManager* wm)
     Popup* top = WindowManager_GetTopPopup(wm);
     if (!top) return;
 
-    // For prompt, use original handler directly for correct vim handling
     if (top->type == POPUP_PROMPT) {
         PromptState* state = (PromptState*)top->user_data;
         XEvent xev; memset(&xev,0,sizeof(xev));
@@ -410,11 +407,8 @@ int WindowManager_RunLinux(WindowManager* wm) {
             if (fds[i + 1].revents & POLLIN) {
                 bool grabbed = g_device_grabbed[i];
                 while (read(fds[i + 1].fd, &ev, sizeof(struct input_event)) > 0) {
-                    // If popup is open, don't handle as global hotkey - let X11 handle for popup input
-                    // This prevents opening new feature windows without closing current and respects toggles
                     Popup* top_for_hotkey = WindowManager_GetTopPopup(wm);
                     if (top_for_hotkey) {
-                        // Update global modifier state even when popup open to avoid stuck Alt/Ctrl
                         extern bool g_Linux_CtrlHeld, g_Linux_AltHeld, g_Linux_ShiftHeld;
                         if (ev.type == EV_KEY) {
                             if (ev.code == KEY_LEFTCTRL || ev.code == KEY_RIGHTCTRL) {
@@ -427,7 +421,6 @@ int WindowManager_RunLinux(WindowManager* wm) {
                                 if (ev.value == 0) g_Linux_ShiftHeld = false;
                                 else if (ev.value == 1 || ev.value == 2) g_Linux_ShiftHeld = true;
                             }
-                            // also update window_manager's own g_linux_* for X11 vim handling
                             if (ev.code == KEY_LEFTCTRL || ev.code == KEY_RIGHTCTRL) {
                                 if (ev.value == 0) g_linux_ctrl_held = false;
                                 else g_linux_ctrl_held = true;

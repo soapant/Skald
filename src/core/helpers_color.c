@@ -34,7 +34,6 @@ void eval_window_title_color(PromptState* state,unsigned long *window_title_colo
 
 void eval_xoffset_for_alias(char* alias_text,int main_text_lenght,int* xOffsetAlias) {
   int main_text_w = (main_text_lenght * FontSize) / 2;
-  // if the main text is small we want the offset to be smaller vice versa
   *xOffsetAlias = main_text_w;
 }
 

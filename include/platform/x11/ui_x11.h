@@ -161,14 +161,12 @@ static inline void UI_GetCurrentTextEdit(WindowHandle edit, char* buffer, size_t
   void* user_data = GetActivePopupUserData();
   if (!user_data) return;
   
-  // Check if it's a PromptState (list-based popup)
   PromptState* prompt = (PromptState*)user_data;
   if (prompt && prompt->has_listbox) {
     strncpy(buffer, prompt->filter, cap-1);
     buffer[cap-1]='\0';
     return;
   }
-  // Check if it's a SimplePromptState (simple text popup)
   SimplePromptState* simple = (SimplePromptState*)user_data;
   if (simple && simple->user_input) {
     strncpy(buffer, simple->user_input, cap-1);
