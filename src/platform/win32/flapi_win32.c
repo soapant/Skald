@@ -136,7 +136,6 @@ void fl_get_all_files_from_dir_platform(const char* dir_path, char** list_of_all
 bool fl_launch_with_args_platform(const char* path, const char* args) {
     if (!path) return false;
     char expanded[1024];
-    // Platform_ExpandPath is available via flapi.h -> platform.h
     extern bool Platform_ExpandPath(const char* t, char* o, size_t s);
     if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) return false;
     path = expanded;
@@ -146,8 +145,6 @@ bool fl_launch_with_args_platform(const char* path, const char* args) {
     } else {
         snprintf(cmd, sizeof(cmd), "\"%s\"", path);
     }
-    // Use ShellExecute for .desktop/.lnk handling if needed, otherwise CreateProcess
-    // For simplicity, use ShellExecute for all, fallback to CreateProcess
     HINSTANCE res = ShellExecuteA(NULL, "open", path, args && args[0] ? args : NULL, NULL, SW_SHOWNORMAL);
     if ((intptr_t)res > 32) return true;
     STARTUPINFOA si = {0}; si.cb = sizeof(si);

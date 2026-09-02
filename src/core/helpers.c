@@ -75,7 +75,6 @@ bool ProcessHotkey(const HotkeyBinding* bindings, int bindings_count,
         g_timer = TimerStart();
         if (MessageAfterEachHotkey) {
           char buffer[64];
-          //figure out later
           snprintf(buffer,sizeof(buffer),"[%i] Triggered \n",b->vk_code);
           MSG_BOTTOM(buffer,140,TimeOutForMessages,COLOR_TEXT);
         }

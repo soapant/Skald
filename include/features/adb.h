@@ -59,11 +59,9 @@ bool connect_phone(void) {
     CloseHandle(pi.hThread);
     CloseHandle(hRead);
 
-    // Strictly match the TLS active connection service string
     char* target = strstr(buffer, "_adb-tls-connect._tcp");
     if (!target) return false;
 
-    // Scan forward to locate the IP:PORT string
     int a, b, c, d, port;
     char* ptr = target;
     while (*ptr) {
@@ -71,12 +69,10 @@ bool connect_phone(void) {
             char ip_port[64];
             snprintf(ip_port, sizeof(ip_port), "%d.%d.%d.%d:%d", a, b, c, d, port);
 
-            // Connect directly to the specific active port
             char connect_args[128];
             snprintf(connect_args, sizeof(connect_args), "connect %s", ip_port);
             run_adb_cmd_sync(connect_args);
 
-            // Give the ADB daemon 200ms to finalize handshake
             Sleep(200);
             return true;
         }

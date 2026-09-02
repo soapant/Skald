@@ -61,7 +61,6 @@ int SearchFlagsInText(const char* text, const void* flag_array, int flag_count, 
     }
     
     for (int i = 0; i < flag_count && match_count < max_matches; i++) {
-        // Generic: first member is always char* flag/str at offset 0
         const char* flag_str = *(const char**)((const char*)flag_array + i * flag_size);
         
         if (!flag_str) continue;

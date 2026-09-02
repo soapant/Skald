@@ -170,7 +170,6 @@ int main() {
       return 1;
   }
   
-  // Run window manager event loop (which also handles hotkeys)
   WindowManager_Run(wm);
   WindowManager_Destroy(wm);
   

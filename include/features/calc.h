@@ -169,7 +169,6 @@ void live_evaluate(const char* input, char* out_result, size_t max_len) {
     strncpy(clean, input, sizeof(clean) - 1);
     clean[sizeof(clean) - 1] = '\0';
 
-    //i think this wont workf for now keep it 
     char* in_keyword = strchr(clean,'i');
     if (in_keyword) {
         char target_unit[64] = {0};

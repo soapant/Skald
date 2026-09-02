@@ -219,7 +219,6 @@ pid_t GetWindowPid(Display* dpy, Window w) {
     unsigned long nitems, bytes_after;
     unsigned char* prop_data = NULL;
 
-    // Set custom error trap
     x11_error_occurred = 0;
     int (*old_handler)(Display*, XErrorEvent*) = XSetErrorHandler(dummy_x_error_handler);
 
@@ -237,7 +236,6 @@ pid_t GetWindowPid(Display* dpy, Window w) {
         XFree(prop_data);
     }
 
-    // Restore old error handler
     XSetErrorHandler(old_handler);
 
     if (x11_error_occurred) {

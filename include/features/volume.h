@@ -98,7 +98,6 @@ int GetSystemVolume(void) {
     char output[128] = {0};
     if (fgets(output, sizeof(output), fp) != NULL) {
         pclose(fp);
-        // Parse float value from string like "Volume: 0.75 [MUTED]"
         float vol = 0.0f;
         if (sscanf(output, "Volume: %f", &vol) == 1) {
             return (int)(vol * 100.0f + 0.5f);

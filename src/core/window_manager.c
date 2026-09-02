@@ -80,7 +80,6 @@ WindowManager* WindowManager_Create(void) {
 void WindowManager_Destroy(WindowManager* wm) {
     if (!wm) return;
     
-    // Destroy all popups
     for (int i = 0; i < wm->popup_count; i++) {
         if (wm->popups[i] && wm->popups[i]->vtable && wm->popups[i]->vtable->destroy) {
             wm->popups[i]->vtable->destroy(wm->popups[i]);
@@ -90,7 +89,6 @@ void WindowManager_Destroy(WindowManager* wm) {
     free(wm->popups);
     
     #if !defined(_WIN32)
-    // Don't close display here - it's shared
     #endif
     
     if (g_window_manager == wm) g_window_manager = NULL;
@@ -251,7 +249,6 @@ static void EditPopup_OnHide(Popup* self) {
     #if !defined(_WIN32)
     Display* dpy = get_display();
     if (dpy) { XUnmapWindow(dpy, self->handle.xid); XFlush(dpy); }
-    // restore focus to new top popup
     WindowManager* wm = WindowManager_Get();
     if (wm) {
         Popup* top = WindowManager_GetTopPopup(wm);
@@ -301,7 +298,6 @@ static void EditPopup_OnKey(Popup* self, int vk_code, bool pressed, int modifier
         return;
     }
     
-    // Handle text input - arrow/handle before printable (arrow VKs are 37/39 which are '%'/' in ASCII)
     if (vk_code == VK_BACK) {
         if (data->cursor > 0) {
             memmove(data->text + data->cursor - 1, data->text + data->cursor, 
@@ -355,7 +351,6 @@ static void EditPopup_OnRender(Popup* self) {
     Linux_XftAllocColor(dpy, visual, cmap, VimModeTextColor(), 0xFFFF, &vim_col);
     // clear
     XftDrawRect(xd, &bg, 0, 0, data->w, data->h);
-    // vim mode on left, title on right using draw_wrapped_text correctly
     if (xf) {
         draw_wrapped_text(dpy, xd, &vim_col, font, g_vim_mode, 5, "LEFT", 5);
     }
@@ -365,7 +360,6 @@ static void EditPopup_OnRender(Popup* self) {
         if (title_x < 50) title_x = 50;
         draw_wrapped_text(dpy, xd, &title_col, font, data->title, 5, "LEFT", title_x);
     }
-    // text with scroll
     int cursor_x = 0;
     int text_len = data->text ? strlen(data->text) : 0;
     int scroll = 0;
@@ -379,7 +373,6 @@ static void EditPopup_OnRender(Popup* self) {
         int draw_y = 40 + xf->ascent;
         XftDrawStringUtf8(xd, &fg, xf, draw_x, draw_y, (FcChar8*)data->text, text_len);
     }
-    // cursor aligned with text baseline (prompt uses 47)
     if (xf) {
         int cursor_draw_x = 12 + cursor_x - scroll;
         if (cursor_draw_x < 10) cursor_draw_x = 10;
@@ -496,8 +489,6 @@ Popup* MessagePopup_Create(WindowManager* wm, const char* message, int timeout_m
     
     #if !defined(_WIN32)
     Display* dpy = wm->display;
-    // Create simple message window - reuse existing platform function
-    // For now just create a basic window
     data->base.handle.xid = Linux_CreateDisplayMessageWindow(dpy, 0, 0, 400, 100);
     #endif
     
@@ -518,7 +509,6 @@ static void PromptPopup_OnShow(Popup* self) {
     WindowManager* wm = (WindowManager*)self->manager;
     selection_complete = false;
     output_buffer[0] = '\0';
-    // clear stuck modifiers from Alt+T hotkey
     extern bool g_Linux_CtrlHeld, g_Linux_AltHeld, g_Linux_ShiftHeld;
     extern bool g_linux_ctrl_held, g_linux_alt_held, g_linux_shift_held;
     g_Linux_CtrlHeld = g_Linux_AltHeld = g_Linux_ShiftHeld = false;
@@ -718,7 +708,6 @@ static void PromptPopup_OnHide(Popup* self) {
         XFlush(dpy);
     }
     #endif
-    // handle config toggles
     extern EditorMode g_last_mode;
     extern int last_index;
     extern EditorMode g_current_mode;
@@ -730,7 +719,6 @@ static void PromptPopup_OnHide(Popup* self) {
             last_index = data->state->listbox.selected_index;
         }
         g_last_mode = g_current_mode;
-        // per-feature save if needed
         if (ModePersistsThroughFeatures && g_current_feature) {
             extern void SavePerFeatureState(const char* feature, EditorMode mode,int last_index);
             SavePerFeatureState(g_current_feature, g_current_mode, last_index);
@@ -900,7 +888,6 @@ static void SimplePromptPopup_OnKey(Popup* self, int vk_code, bool pressed, int 
         }
         return;
     }
-    // fallback to original handler for any other keys
     {
         XEvent ev = {0};
         ev.type = KeyPress;

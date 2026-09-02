@@ -35,7 +35,6 @@ char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
     char terminal_exe[512];
     snprintf(terminal_exe, sizeof(terminal_exe), "%s.exe", UsedTerminal);
     
-    // i think this wont work but sure implement
     char args[2048];
     snprintf(args, sizeof(args), "-e %s \"%s\"",UsedShell,temp_file);
     ShellExecuteA(NULL, "open", terminal_exe, args, NULL, SW_SHOWNORMAL);

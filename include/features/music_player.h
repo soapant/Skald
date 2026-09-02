@@ -36,7 +36,6 @@ static void music_enter_callback(const char* selection, ListBoxInfo* lb) {
             break;
         }
     }
-    // Fallback: rescan if not found (e.g., list was cleared)
     if (!result) {
         ListOfFiles tmp = {0};
         fl_get_all_files_from_dir(MusicPath, allowed_audio_formats, &tmp, NULL);
@@ -46,15 +45,12 @@ static void music_enter_callback(const char* selection, ListBoxInfo* lb) {
                 break;
             }
         }
-        // Note: tmp will leak a bit but selection is used immediately and tmp is on stack, items will be leaked - ok for now, will be cleaned on next refresh
-        // To avoid leak, we could keep it, but we just need the path for immediate use, so we copy it
         if (result) {
             static char found_path[MAX_PATH];
             strncpy(found_path, result, sizeof(found_path)-1);
             found_path[sizeof(found_path)-1] = '\0';
             result = found_path;
         }
-        // free tmp items
         free(tmp.items);
     }
     
