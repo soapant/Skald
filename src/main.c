@@ -32,6 +32,10 @@ WindowHandle g_hEditPopup = WH_NULL;
 WindowHandle g_hSearchPopup = WH_NULL;
 EditPopupData* g_EditData = NULL;
 WindowHandle g_ActiveEditControl = WH_NULL;
+char output_buffer[256];
+bool selection_complete = false;
+char* g_current_feature = NULL;
+const char* g_title = NULL;
 int g_timeout = 1;
 uint32_t g_main_thread_id = 0;
 bool g_waiting_for_key = false;
@@ -46,6 +50,9 @@ HFONT g_hMainFont = NULL;
 #endif
 HashMap* feature_history = NULL;
 HashMap* g_item_index_map = NULL;
+HashMap* history_indices = NULL;
+char* SelectionData[2048] = {0};
+int SelectionDataCount = 0;
 
 
 void OInNotificationRecieved(const char* text) {
