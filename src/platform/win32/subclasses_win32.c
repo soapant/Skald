@@ -7,7 +7,7 @@
 #include "core/feature_data.h"
 #include "core/number_shortcut.h"
 #include "core/types.h"
-#include "window/subclasses.h"
+#include "platform/subclasses.h"
 #include "wingdi.h"
 #include "helpers.h"
 #include "core/platform.h"

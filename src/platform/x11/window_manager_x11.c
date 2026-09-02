@@ -6,7 +6,7 @@
 #include "core/platform.h"
 #include "platform/x11/ui_x11.h"
 #include "helpers.h"
-#include "window/subclasses_x11.h"
+#include "platform/x11/subclasses_x11.h"
 #include "features/focus_switcher.h"
 #include "features/music_player.h"
 #include "features/video_viewer.h"
