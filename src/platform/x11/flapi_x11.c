@@ -268,7 +268,6 @@ bool fl_launch_with_args_platform(const char* path, const char* args) {
         }
         return false;
     } else {
-        // direct launch with args (like old launch_exe_with_args)
         char cmd[2048];
         if (args && args[0] && strcmp(args,"0")!=0) snprintf(cmd, sizeof(cmd), "\"%s\" %s", path, args);
         else snprintf(cmd, sizeof(cmd), "\"%s\"", path);
@@ -303,7 +302,6 @@ bool fl_launch_with_args_as_admin_platform(const char* path, const char* args) {
     if (!path) return false;
     char expanded[MAX_PATH];
     if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) return false;
-    // pkexec with args
     char cmd[2048];
     if (args && args[0]) snprintf(cmd, sizeof(cmd), "%s %s", expanded, args);
     else snprintf(cmd, sizeof(cmd), "%s", expanded);

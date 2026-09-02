@@ -6,7 +6,6 @@
 #include <sys/time.h>
 #include <stddef.h>
 
-// Externs for pending hotkey state (owned by window_manager_x11 / window_manager_win32)
 extern int pending_hotkey_vk;
 extern int pending_hotkey_mod;
 extern long pending_hotkey_timeMs;

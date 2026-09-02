@@ -59,7 +59,6 @@ static bool GetX11WindowPropertyString(Display* dpy, Window w, Atom prop, char* 
         return true;
     }
     
-    // Fallback for UTF8 strings (_NET_WM_NAME)
     Atom utf8_string = XInternAtom(dpy, "UTF8_STRING", True);
     if (utf8_string != None) {
         if (XGetWindowProperty(dpy, w, prop, 0, 1024, False, utf8_string,
@@ -141,8 +140,6 @@ static void FocusWindow(WindowHandle hwnd) {
     Display* dpy = XOpenDisplay(NULL);
     if (!dpy) return;
 
-    // Assuming WH_TO_HWND or a similar macro extracts the raw X11 Window ID, 
-    // or you can adjust this extraction based on how your common.h defines WindowHandle.
     Window w = (Window)WH_TO_HWND(hwnd); 
     int screen = DefaultScreen(dpy);
     Window root = RootWindow(dpy, screen);
@@ -282,8 +279,6 @@ static WindowHandle FindAnyWindow(const char* titles[], int count) {
                 break;
             }
         }
-        // Assuming WH_NULL can be compared or checked via a helper macro if it's a struct, 
-        // or check WH_TO_HWND(found) != NULL. Let's use WH_TO_HWND comparison to be safe:
         if (WH_TO_HWND(found) != NULL) break;
     }
 

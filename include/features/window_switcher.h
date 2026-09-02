@@ -235,7 +235,6 @@ static void WindowUtils_GetAll(WindowList* list) {
     EnumContext ctx = { .list = list, .mode = 0 };
     EnumWindows(EnumWindowsProcEx, (LPARAM)&ctx);
 #else
-    // Check if running under Wayland natively (e.g. Hyprland, Sway)
     if (getenv("WAYLAND_DISPLAY") != NULL) {
         // TODO: Implement Wayland/Hyprland IPC client parsing here if needed 
         // (e.g., parsing output of `hyprctl clients -j`)
@@ -243,7 +242,6 @@ static void WindowUtils_GetAll(WindowList* list) {
         return;
     }
     
-    // Otherwise fallback to X11/XWayland
     CollectX11Windows(list, NULL, 0);
 #endif
 }
@@ -255,7 +253,6 @@ static void WindowUtils_GetFiltered(WindowList* list, const char** blacklist, in
     EnumWindows(EnumWindowsProcEx, (LPARAM)&ctx);
 #else
     if (getenv("WAYLAND_DISPLAY") != NULL) {
-        // Wayland placeholder filter block
         return;
     }
     
