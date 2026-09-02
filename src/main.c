@@ -3,8 +3,6 @@
 #include "helpers.h"
 #include "core/feature_data.h"
 #include "core/flapi.h"
-#include "features/app_launcher.h"
-#include "features/todo.h"
 #include "core/window_manager.h"
 #if !defined(_WIN32)
 #include <pthread.h>
@@ -117,7 +115,6 @@ int main() {
 
   Platform_StartUniversalTimer();
   Platform_InitializeTrayIcon();
-  initialize_app_cache();
 #if defined(_WIN32)
   StartNtfyDaemon(HttpUrlForNotis,OInNotificationRecieved);
 #endif

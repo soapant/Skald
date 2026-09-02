@@ -440,3 +440,9 @@ int Platform_ReplaceLineInMappedFile(MappedFile* mf, int line_index, const char*
     free(new_buffer);
     return 1;
 }
+
+bool Platform_LaunchBrowserAtUrl(char* url) {
+    char command[1024];
+    snprintf(command, sizeof(command), "start %s", url);
+    return system(command);
+}
