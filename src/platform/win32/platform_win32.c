@@ -1,6 +1,9 @@
 #include <windows.h>
 #include <fileapi.h>
 #include <handleapi.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 #include "common.h"
 #include "helpers.h"
 #include "core/platform.h"
@@ -15,7 +18,7 @@ bool Platform_LaunchTerminalAtPath(const char* working_dir, const char* extra_ar
 }
 
 char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
-    if (command == NULL || strlen(command) == 0) return;
+    if (command == NULL || strlen(command) == 0) return NULL;
     
     char clean_cmd[512];
     strncpy(clean_cmd, command, sizeof(clean_cmd) - 1);

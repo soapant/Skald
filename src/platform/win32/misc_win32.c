@@ -1,7 +1,10 @@
 #include <windows.h>
 #include <tlhelp32.h>
 #include <shlobj.h>
-#include "common.h"
+#include <shlwapi.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 #include "helpers.h"
 #include "core/platform.h"
 #include "config.h"
