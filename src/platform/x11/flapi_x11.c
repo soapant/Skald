@@ -83,6 +83,7 @@ int fl_copy_into_clipboard_platform(const char* text) {
     status = pclose(pipe);
     return (status == 0) ? 1 : 0;
 }
+
 bool fl_get_all_files_from_dir_platform(const char* dir_path, char** list_of_allowed_extensions, ListOfFiles* list_of_files, char** list_of_names_to_ignore) {
     
     if (!dir_path || !list_of_files) {
@@ -91,6 +92,7 @@ bool fl_get_all_files_from_dir_platform(const char* dir_path, char** list_of_all
     
     DIR* dir = opendir(dir_path);
     if (!dir) {
+        perror("opendir");
         return false;
     }
     
@@ -104,6 +106,7 @@ bool fl_get_all_files_from_dir_platform(const char* dir_path, char** list_of_all
         }
 
         char full_path[MAX_PATH];
+        snprintf(full_path, sizeof(full_path), "%s/%s", dir_path, entry->d_name);
 
         struct stat st;
         if (stat(full_path, &st) != 0) {
@@ -137,7 +140,7 @@ bool fl_get_all_files_from_dir_platform(const char* dir_path, char** list_of_all
                         }
                     }
                 }
-            }
+            } 
 
             if (allowed) {
                 if (list_of_files->count >= list_of_files->capacity) {
@@ -162,7 +165,8 @@ bool fl_get_all_files_from_dir_platform(const char* dir_path, char** list_of_all
                 strncpy(item->name, clean_name, sizeof(item->name) - 1);
                 item->name[sizeof(item->name) - 1] = '\0';
 
-            }
+                list_of_files->count++;
+            } 
         }
     }
     closedir(dir);
