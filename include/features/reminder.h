@@ -80,7 +80,7 @@ void* SimpleTimerThread(void* lpParam) {
     if (g_async_action != NULL) {
         g_async_action(g_action_param);
     }
-    terminate_process_by_name("sowon.exe");
+    fl_terminate_process_by_name("sowon.exe");
     return NULL;
 }
 #endif

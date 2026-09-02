@@ -15,10 +15,6 @@ void collect_running_processes() {
     G_PK_COUNT = fl_collect_running_processes(G_PK_LIST, MAX_PK_APPS);
 }
 
-void terminate_process_by_name(const char* exe_name) {
-    fl_terminate_process_by_name(exe_name);
-}
-
 void BulkKillProcesses(const char* window_titles[], int count) {
     for (int i = 0; i < count; i++) {
         if (!window_titles[i] || !*window_titles[i]) continue;

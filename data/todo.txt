@@ -1,5 +1,4 @@
 the copying only works while hte program is active||[Cprogram]|[DontForget]
-
 make a preset for the not plugged in to ||[Misc]|[DontForget]
 i totally forgot i  really make the clipbaord ||[Cprogram]|[DontForget]|[Feature]
 add a debug menu to show data about the feature||[Cprogram]|[DontForget]
@@ -21,3 +20,4 @@ hotkey system cannot handle ctrl shift or any two modifer ||[Cprogram]
 windowns platform functions are like non tested at all no idea if they work also args isnt used in hte file manaer ||[Cprogram]|[DontForget]
 add the whole interaction with web brwosers more so bookmarks etcs ||[Cprogram] 
 move the macro bindings intoi a feature file ||[Cprogram]
+maybe for the central contorl it would be every feature oyu have but its just prefixed with the name of the feature||[Cprogram]|[DontForget]
