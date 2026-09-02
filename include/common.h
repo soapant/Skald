@@ -50,10 +50,10 @@ extern int g_key_pressed;
 extern KeyCallback g_key_callback;
 extern bool draw_background;
 #endif
-extern char output_buffer[256];
-extern bool selection_complete;
-extern char* g_current_feature;
-extern const char* g_title;
+#define output_buffer (FlintContext_Get()->window.output_buffer)
+#define selection_complete (FlintContext_Get()->window.selection_complete)
+#define g_current_feature (FlintContext_Get()->window.current_feature)
+#define g_title (FlintContext_Get()->window.title)
 
 extern HashMap* feature_history;
 extern HashMap* g_item_index_map;
