@@ -43,7 +43,6 @@
 
 
 extern bool g_Linux_CtrlHeld, g_Linux_AltHeld, g_Linux_ShiftHeld;
-extern char output_buffer[255];
 
 extern int pending_hotkey_vk;
 extern int pending_hotkey_mod;

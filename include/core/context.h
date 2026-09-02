@@ -2,7 +2,12 @@
 #define CONTEXT_H
 
 #include "core/types.h"
-#include "core/modal.h"
+
+typedef enum {
+    MODE_NORMAL,
+    MODE_INSERT,
+    MODE_VISUAL,
+} EditorMode;
 
 typedef struct {
     RefreshCallback refresh;
@@ -18,18 +23,25 @@ typedef struct {
 } PromptCallbacks;
 
 typedef struct {
+    WindowHandle hGlobalTrayWnd;
     WindowHandle hPopupWnd;
     WindowHandle hListBox;
     WindowHandle hEditControl;
     WindowHandle hDisplayMessage;
     WindowHandle hSettings;
+    WindowHandle g_hEditPopup;
+    WindowHandle g_hSearchPopup;
     WindowHandle g_ActiveEditControl;
+    EditPopupData* g_EditData;
     bool selection_complete;
     char output_buffer[256];
     char* current_feature;
     const char* title;
     int last_index;
     PromptCallbacks callbacks;
+#if !defined(_WIN32)
+    Display* g_font_dpy;
+#endif
 } WindowContext;
 
 typedef struct {

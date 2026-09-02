@@ -100,8 +100,6 @@ static void forgetfull_edit_callback(const char* selection, ListBoxInfo* lb) {
     WindowManager* wm = WindowManager_Get();
     if (!wm) return;
     
-    extern WindowHandle hListBox;
-    extern WindowHandle hEditControl;
     
     EditCallbackData* data = calloc(1, sizeof(EditCallbackData));
     if (!data) return;

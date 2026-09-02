@@ -62,7 +62,6 @@ bool ProcessHotkey(const HotkeyBinding* bindings, int bindings_count,
             }
 #else
             if (IsPopupActive(hPopupWnd)) {
-                extern bool selection_complete;
                 selection_complete = true;
             }
 #endif
