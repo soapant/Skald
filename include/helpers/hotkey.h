@@ -28,4 +28,5 @@ bool ProcessHotkey(const HotkeyBinding* bindings, int bindings_count,
 bool IsWindowBlacklisted(const char* window_title, const char* blacklist[], int count);
 HotkeyBinding convert_into_hotkey_binding(char* hotkey_string,void (*on_hotkey_trigger)(void),bool (*optional_condition_for_hotkey)(void),const char** optional_blacklistedwindows);
 
+
 #endif
