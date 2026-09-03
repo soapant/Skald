@@ -75,13 +75,13 @@ static void HandleMinecraftRotate(void) {
 }
 
 static inline void macros_init(void) {
-    fl_register_hotkey("Alt+Ctrl+V", HandleFactorioMakeTag, NULL, NULL);
-    fl_register_hotkey("Alt+Ctrl+B", HandleFactorioSearchFactory, NULL, NULL);
-    fl_register_hotkey("Alt+Shift+C",HandleMinecraftCopy, NULL, NULL);
-    fl_register_hotkey("Alt+Shift+V",HandleMinecraftPaste, NULL, NULL);
-    fl_register_hotkey("Alt+Shift+Z",HandleMinecraftUndo, NULL, NULL);
-    fl_register_hotkey("Alt+Shift+Q",HandleMinecraftUp, NULL, NULL);
-    fl_register_hotkey("Alt+Shift+R",HandleMinecraftRotate, NULL, NULL);
+    fl_register_hotkey("Alt+Ctrl+V", HandleFactorioMakeTag, NULL, "Factorio");
+    fl_register_hotkey("Alt+Ctrl+B", HandleFactorioSearchFactory, NULL, "Factorio");
+    fl_register_hotkey("Alt+Shift+C",HandleMinecraftCopy, NULL, "Minecraft");
+    fl_register_hotkey("Alt+Shift+V",HandleMinecraftPaste, NULL, "Minecraft");
+    fl_register_hotkey("Alt+Shift+Z",HandleMinecraftUndo, NULL, "Minecraft");
+    fl_register_hotkey("Alt+Shift+Q",HandleMinecraftUp, NULL, "Minecraft");
+    fl_register_hotkey("Alt+Shift+R",HandleMinecraftRotate,NULL,"Minecraft");
 }
 
 #endif
