@@ -32,8 +32,6 @@
 #include "x11_display.h"
 
 
-extern bool g_Linux_CtrlHeld, g_Linux_AltHeld, g_Linux_ShiftHeld;
-
 extern int pending_hotkey_vk;
 extern int pending_hotkey_mod;
 extern long pending_hotkey_timeMs;
