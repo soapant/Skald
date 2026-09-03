@@ -75,7 +75,7 @@ bool fl_launch_with_args_as_admin(const char* path, const char* args) {
 int fl_load_file_list(const char* filepath, const char* out[], int max) {
     if (!filepath || !out || max <= 0) return 0;
     char temp[100][512];
-    int count = Helpers_ReadFile(temp, filepath);
+    int count = ReadFile(temp, filepath);
     if (count > max) count = max;
     for (int i = 0; i < count; i++) {
         char* dup = strdup(temp[i]);
