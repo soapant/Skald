@@ -78,6 +78,11 @@ extern const unsigned int PATH_VAR_COUNT;
 extern const AliasEntry Aliases[];
 extern const size_t ALIAS_ENTRY_COUNT;
 
+#define MAX_FILE_LINES 10000
+#define MAX_FILE_LINE_LENGTH 1024
+
+extern const int MaxFileIOLines;
+
 #define ARRAY_LEN(a) (sizeof(a) / sizeof((a)[0]))
 
 #endif

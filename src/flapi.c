@@ -1,5 +1,6 @@
 #include "common.h"
 #include "helpers.h"
+#include "config.h"
 #include "core/platform.h"
 #include "core/flapi.h"
 #include "core/flapi_platform.h"
@@ -74,17 +75,22 @@ bool fl_launch_with_args_as_admin(const char* path, const char* args) {
 
 int fl_load_file_list(const char* filepath, const char* out[], int max) {
     if (!filepath || !out || max <= 0) return 0;
-    char temp[100][512];
-    int count = ReadFile(temp, filepath);
-    if (count > max) count = max;
-    for (int i = 0; i < count; i++) {
-        char* dup = strdup(temp[i]);
+    FILE* f = fopen(filepath, "r");
+    if (!f) return 0;
+    int count = 0;
+    char buffer[MAX_FILE_LINE_LENGTH];
+    while (count < max && fgets(buffer, sizeof(buffer), f)) {
+        buffer[strcspn(buffer, "\r\n")] = '\0';
+        if (buffer[0] == '\0') continue;
+        char* dup = strdup(buffer);
         if (!dup) {
-            for (int j = 0; j < i; j++) free((void*)out[j]);
+            for (int j = 0; j < count; j++) free((void*)out[j]);
+            fclose(f);
             return 0;
         }
-        out[i] = dup;
+        out[count++] = dup;
     }
+    fclose(f);
     return count;
 }
 
