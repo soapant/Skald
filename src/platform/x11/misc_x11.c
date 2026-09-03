@@ -317,30 +317,6 @@ char Platform_GetLastChar(MappedFile *file) {
     return lastChar;
 }
 
-int Platform_FileInit(const char* filePath, MappedFile *mf) {
-    if (!mf || !filePath) return 0;
-
-    mf->pBuffer = NULL;
-    mf->fileSize = 0;
-
-    mf->fd = open(filePath, O_RDWR | O_CREAT, 0644);
-    if (mf->fd == -1) {
-        perror("open failed in Platform_FileInit");
-        return 0;
-    }
-
-    struct stat sb;
-    if (fstat(mf->fd, &sb) == -1) {
-        perror("fstat failed");
-        close(mf->fd);
-        mf->fd = -1;
-        return 0;
-    }
-
-    mf->fileSize = sb.st_size;
-    return 1;
-}
-
 int Platform_FileAppend(MappedFile *mf, const char *text) {
     if (mf == NULL || text == NULL) {
         return 0;
