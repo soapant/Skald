@@ -9,6 +9,7 @@
 #include <string.h>
 
 void ZoxideHelper_RebuildCache(const char* filepath, char*** cached_out, int* count_out) {
+    WinTimer timer = TimerStart();
     if (!cached_out || !count_out) return;
     if (*cached_out) {
         for (int i = 0; i < *count_out; i++) {
@@ -32,6 +33,7 @@ void ZoxideHelper_RebuildCache(const char* filepath, char*** cached_out, int* co
     }
     *cached_out = new_cache;
     *count_out = n;
+    TimerEnd(timer,"Load File");
 }
 
 void ZoxideHelper_Refresh(const char* filter, WindowHandle hListBox, ListBoxInfo* lb, const char* filepath, char*** cached, int* count) {

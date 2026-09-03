@@ -3,7 +3,6 @@
 
 #include "core/flapi.h"
 #include "core/zoxide_helpers.h"
-#include "core/platform.h"
 
 const char* TerminalZoxideFilePath = "data/TerminalZoxide.txt";
 
@@ -23,12 +22,12 @@ void zoxide_edit_callback(const char* selection, ListBoxInfo* lb) {
 }
 
 void zoxide_enter_callback(const char* selection, ListBoxInfo* lb) {
-        char* path = fl_get_zoxide_match(selection);
-        if (path) {
-            fl_launch_terminal_at_path(path, NULL);
-            ZoxideHelper_AppendNewEntry(TerminalZoxideFilePath, selection, lb, &g_cached_zoxide_commands, &g_cached_zoxide_count);
-            free(path);
-        }
+    char* path = fl_get_zoxide_match(selection);
+    if (path) {
+        fl_launch_terminal_at_path(path, NULL);
+        ZoxideHelper_AppendNewEntry(TerminalZoxideFilePath, selection, lb, &g_cached_zoxide_commands, &g_cached_zoxide_count);
+        free(path);
+    }
 }
 
 void TriggerZoxide(void) {

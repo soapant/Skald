@@ -32,6 +32,7 @@
 #include "features/music_player.h"
 #include "features/video_viewer.h"
 #include "features/focus_switcher.h"
+#include "features/macros.h"
 
 
 
@@ -157,6 +158,7 @@ bool fl_register_hotkey(char* hotkey_string,void (*on_hotkey_trigger)(void),bool
 void fl_init_all_hotkeys(void) {
     window_switcher_init();
     google_search_init();
+    macros_init();
     todo_init();
     calc_init();
     app_launcher_init();

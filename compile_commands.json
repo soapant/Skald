@@ -325,24 +325,6 @@
   },
   {
     "directory": "/home/diggy/Programming/Projects/Flint",
-    "file": "src/bindings/macro_bindings.c",
-    "arguments": [
-      "gcc",
-      "-Wall",
-      "-Wextra",
-      "-I",
-      "include",
-      "-I/usr/include/freetype2",
-      "-MMD",
-      "-MP",
-      "-w",
-      "-g",
-      "-c",
-      "src/bindings/macro_bindings.c"
-    ]
-  },
-  {
-    "directory": "/home/diggy/Programming/Projects/Flint",
     "file": "src/bindings/vim_bindings.c",
     "arguments": [
       "gcc",

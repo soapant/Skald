@@ -7,7 +7,6 @@
 #include "platform/subclasses.h"
 #include "core/platform.h"
 #include "bindings/bindings.h"
-#include "bindings/macro_bindings.h"
 #include "helpers/flag.h"
 #include "core/common_ui.h"
 KeyCallback g_key_callback;
@@ -87,7 +86,6 @@ char* Platform_PromptUser(const PromptSpec* spec) {
 
   if (ModePersistsThroughFeatures) {
     SetModeWithListBox(g_last_mode, lb_ptr);
-
   } else {
     SetModeWithListBox(MODE_INSERT, lb_ptr);
   }
@@ -113,7 +111,6 @@ char* Platform_PromptUser(const PromptSpec* spec) {
   TimerEnd(timer,"Window Init");
 
   WinTimer timer1 = TimerStart();
-
 
   CreateChildControls(hPopupWnd, hCustomFont, window_list, count, &layout, lb_ptr);
 
@@ -510,9 +507,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
     }
     TimerEnd(timer2, "HelpScreenCheck");
 
-    MacroAction matchedAction = MACRO_NONE;
     int matchedDelay = 0;
-    const char* snippet_text = NULL;
 
     MotionAction vimAction = MOTION_NONE;
     const char* matchedSequence = NULL;
@@ -540,9 +535,6 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
     }
     TimerEnd(timer4, "CheckVimMotion");
 
-    if (CheckMacroBindings(pressed_vk, modifiers)) {
-      return 1;
-    }
 
   }
   return CallNextHookEx(NULL, nCode, wParam, lParam);

@@ -82,9 +82,7 @@ static inline void TimerEnd(WinTimer t, const char* operation_name) {
     }
     TimerBufferAppend(line);
 
-    if (strstr(operation_name, "TOTAL") != NULL) {
-      TimerBufferFlush();
-    }
+    TimerBufferFlush();
   }
 }
 
