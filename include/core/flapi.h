@@ -46,7 +46,7 @@ int fl_load_file_list(const char* filepath, const char* out[], int max);
 bool fl_free_file_list(const char* list[], int count);
 bool fl_append_to_file(const char* filepath, const char* line);
 bool fl_write_to_file(const char* filepath, const char* lines[], int count);
-bool fl_register_hotkey(char* hotkey_string,void (*on_hotkey_trigger)(void),bool (*optional_condition_for_hotkey)(void),const char** optional_blacklistedwindows);
+bool fl_register_hotkey_impl(char* hotkey_string,void (*on_hotkey_trigger)(void),bool (*optional_condition_for_hotkey)(void),const char** optional_blacklistedwindows);
 void fl_init_all_hotkeys(void);
 bool fl_launch_terminal_with_args(char* args);
 bool fl_launch_terminal_at_path(char* path,char* args);
@@ -57,5 +57,9 @@ int fl_collect_running_processes(char process_list[][128], int max_count);
 bool fl_terminate_process_by_name(const char* exe_name);
 bool fl_string_match_insensitive(char* needle,char* haystack);
 bool fl_launch_browser(char* url);
+
+#define fl_register_hotkey(hotkey, trigger, cond, ...) \
+    fl_register_hotkey_impl(hotkey, trigger, cond, (const char*[]){__VA_ARGS__, NULL})
+
 
 #endif
