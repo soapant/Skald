@@ -13,57 +13,37 @@ void AddTextToFile(const char* text) {
     new_entry[0] = '\0';
     strncpy(new_entry, text, sizeof(new_entry) - 1);
     
-    FILE* f = fopen(FORGETFULL_FILE_PATH, "w");
-    if (f) {
-        for (int i = 0; i < count; i++) {
-            fprintf(f, "%s\n", lines[i]);
-        }
-        fprintf(f, "%s\n", new_entry);
-        fclose(f);
-    }
+    const char* to_write[101];
+    for (int i = 0; i < count; i++) to_write[i] = lines[i];
+    to_write[count] = new_entry;
+    fl_write_to_file(FORGETFULL_FILE_PATH, to_write, count + 1);
     fl_free_file_list(lines, count);
 }
 
 void RemoveTextFromFile(const char* item_to_remove) {
-    FILE* infile = fopen(FORGETFULL_FILE_PATH, "r");
-    if (!infile) return;
-
-    FILE* outfile = fopen("forgetfull.tmp", "w");
-    if (!outfile) {
-        fclose(infile);
-        return;
-    }
-
-    char line[512];
-    while (fgets(line, sizeof(line), infile)) {
+    if (!item_to_remove) return;
+    const char* lines[100];
+    int count = fl_load_file_list(FORGETFULL_FILE_PATH, lines, 100);
+    if (count == 0) return;
+    const char* kept[100];
+    int kept_count = 0;
+    char clean_item[512];
+    strncpy(clean_item, item_to_remove, sizeof(clean_item) - 1);
+    clean_item[sizeof(clean_item) - 1] = '\0';
+    clean_item[strcspn(clean_item, "\r\n")] = '\0';
+    for (int i = 0; i < count; i++) {
         char clean_line[512];
-        strncpy(clean_line, line, sizeof(clean_line) - 1);
+        strncpy(clean_line, lines[i], sizeof(clean_line) - 1);
         clean_line[sizeof(clean_line) - 1] = '\0';
         clean_line[strcspn(clean_line, "\r\n")] = '\0';
-
-        char compare_text[512];
-        strncpy(compare_text, clean_line, sizeof(compare_text) - 1);
-        
-        char clean_item[512];
-        strncpy(clean_item, item_to_remove, sizeof(clean_item) - 1);
-        
-        if (strcmp(compare_text, clean_item) == 0) {
+        if (strcmp(clean_line, clean_item) == 0) {
             printf("[FORGETFULL-MGR] Dropped file line item: \"%s\"\n", item_to_remove);
-            continue; 
+            continue;
         }
-        fprintf(outfile, "%s\n", clean_line);
+        kept[kept_count++] = lines[i];
     }
-
-    fclose(infile);
-    fclose(outfile);
-
-#if defined(_WIN32)
-    DeleteFileA(FORGETFULL_FILE_PATH);
-    MoveFileA("forgetfull.tmp", FORGETFULL_FILE_PATH);
-#else
-    remove(FORGETFULL_FILE_PATH);
-    rename("forgetfull.tmp", FORGETFULL_FILE_PATH);
-#endif
+    fl_write_to_file(FORGETFULL_FILE_PATH, kept, kept_count);
+    fl_free_file_list(lines, count);
 }
 
 void forgetfull_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {

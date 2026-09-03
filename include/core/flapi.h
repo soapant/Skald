@@ -45,6 +45,7 @@ bool fl_launch_with_args_as_admin(const char* path, const char* args);
 int fl_load_file_list(const char* filepath, const char* out[], int max);
 bool fl_free_file_list(const char* list[], int count);
 bool fl_append_to_file(const char* filepath, const char* line);
+bool fl_write_to_file(const char* filepath, const char* lines[], int count);
 bool fl_register_hotkey(char* hotkey_string,void (*on_hotkey_trigger)(void),bool (*optional_condition_for_hotkey)(void),const char** optional_blacklistedwindows);
 void fl_init_all_hotkeys(void);
 bool fl_launch_terminal_with_args(char* args);
