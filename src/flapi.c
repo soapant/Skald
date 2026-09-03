@@ -88,12 +88,6 @@ int fl_load_file_list(const char* filepath, const char* out[], int max) {
     return count;
 }
 
-bool fl_free_file_list(const char* list[], int count) {
-    if (!list || count <= 0) return false;
-    for (int i = 0; i < count; i++) free((void*)list[i]);
-    return true;
-}
-
 bool fl_append_to_file(const char* filepath, const char* line) {
     if (!filepath || !line) return false;
     FILE* f = fopen(filepath, "a");
@@ -124,6 +118,27 @@ bool fl_append_to_file(const char* filepath, const char* line) {
     fclose(f);
     return true;
 }
+
+bool fl_write_to_file(const char* filepath, const char* lines[], int count) {
+    if (!filepath) return false;
+    if (count < 0) return false;
+    if (count > 0 && !lines) return false;
+    FILE* f = fopen(filepath, "w");
+    if (!f) return false;
+    for (int i = 0; i < count; i++) {
+        if (lines[i]) fprintf(f, "%s\n", lines[i]);
+        else fprintf(f, "\n");
+    }
+    fclose(f);
+    return true;
+}
+
+bool fl_free_file_list(const char* list[], int count) {
+    if (!list || count <= 0) return false;
+    for (int i = 0; i < count; i++) free((void*)list[i]);
+    return true;
+}
+
 
 bool fl_register_hotkey(char* hotkey_string,void (*on_hotkey_trigger)(void),bool (*optional_condition_for_hotkey)(void),const char** optional_blacklistedwindows) {
     HotkeyBinding binding = convert_into_hotkey_binding(hotkey_string,

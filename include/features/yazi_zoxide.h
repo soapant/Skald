@@ -13,7 +13,6 @@ void RebuildYaziCache(void) {
     ZoxideHelper_RebuildCache(YaziZoxideFilePath, &g_cached_yazi_commands, &g_cached_yazi_count);
 }
 
-
 void yazi_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
     ZoxideHelper_Refresh(filter, hListBox, lb, YaziZoxideFilePath, &g_cached_yazi_commands, &g_cached_yazi_count);
 }
