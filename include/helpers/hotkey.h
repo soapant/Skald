@@ -15,6 +15,7 @@ typedef struct {
     int modifiers;
     const char** blacklist;
     int blacklist_count;
+    int whitelist;
     HotkeyCallback hotkey_callback;
     HotkeyCondition hotkey_condition;
 } HotkeyBinding;
@@ -26,7 +27,7 @@ bool ProcessHotkey(const HotkeyBinding* bindings, int bindings_count,
                    int pressed_vk, int modifiers,
                    const char* current_title);
 bool IsWindowBlacklisted(const char* window_title, const char* blacklist[], int count);
-HotkeyBinding convert_into_hotkey_binding(char* hotkey_string,void (*on_hotkey_trigger)(void),bool (*optional_condition_for_hotkey)(void),const char** optional_blacklistedwindows);
+HotkeyBinding convert_into_hotkey_binding(char* hotkey_string,void (*on_hotkey_trigger)(void),bool (*optional_condition_for_hotkey)(void),const char** optional_blacklistedwindows,bool whitelist);
 
 
 #endif
