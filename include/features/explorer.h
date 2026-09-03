@@ -43,7 +43,7 @@ void TriggerExplorer(void) {
 }
 
 static inline void explorer_init(void) {
-    fl_register_hotkey("Alt+R", TriggerExplorer, NULL, NULL);
+    fl_register_hotkey("Alt+R", TriggerExplorer);
 }
 
 #endif

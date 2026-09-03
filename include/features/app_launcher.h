@@ -190,7 +190,7 @@ void TriggerAppLauncher(void) {
 }
 
 static inline void app_launcher_init(void) {
-    fl_register_hotkey("Alt+E", TriggerAppLauncher, NULL, NULL);
+    fl_register_hotkey("Alt+E", TriggerAppLauncher);
     initialize_app_cache();
 }
 

@@ -131,11 +131,11 @@ void music_prompt(void) {
 }
 
 static inline void music_player_init(void) {
-    fl_register_hotkey("Alt+,", music_cmd_1, NULL, NULL);
-    fl_register_hotkey("Alt+/", music_cmd_5, NULL, NULL);
-    fl_register_hotkey("Alt+;", music_cmd_6, NULL, NULL);
-    fl_register_hotkey("Alt+'", music_cmd_2, NULL, NULL);
-    fl_register_hotkey("Alt+P", music_prompt, NULL, NULL);
+    fl_register_hotkey("Alt+,", music_cmd_1);
+    fl_register_hotkey("Alt+/", music_cmd_5);
+    fl_register_hotkey("Alt+;", music_cmd_6);
+    fl_register_hotkey("Alt+'", music_cmd_2);
+    fl_register_hotkey("Alt+P", music_prompt);
 }
 
 #endif
