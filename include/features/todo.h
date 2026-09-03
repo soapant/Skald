@@ -45,14 +45,14 @@ typedef struct {
 #define TODO_TAG_SEPARATOR "|"
 #define TODO_ENTRY_DELIMITER "||"
 
-const TagFormatConfig TODO_TAG_FORMAT_LOCAL = {
+const TagFormatConfig TODO_TAG_FORMAT = {
     "[",
     "]",
     "|",
     "",
     " "
 };
-#define TODO_TAG_FORMAT TODO_TAG_FORMAT_LOCAL
+#define TODO_TAG_FORMAT TODO_TAG_FORMAT
 
 #define TODO_ALIAS_MASTER \
     X("-p", "Project:") \
@@ -82,47 +82,37 @@ const TagFormatConfig TODO_TAG_FORMAT_LOCAL = {
     X("-c",  NULL,               "Change",           RGB(150, 105, 12),  false)
 
 #define X(flag, label) {flag, label},
-const TodoAliasEntry TODO_ALIAS_DICT_LOCAL[] = {
+const TodoAliasEntry TODO_ALIAS_DICT[] = {
     TODO_ALIAS_MASTER
 };
-const size_t TODO_ALIAS_DICT_COUNT_LOCAL = ARRAY_LEN(TODO_ALIAS_DICT_LOCAL);
+const size_t TODO_ALIAS_DICT_COUNT = ARRAY_LEN(TODO_ALIAS_DICT);
 #undef X
 #define X(flag, label) {flag, NULL},
-const GenericFlagEntry TODO_ALIAS_FLAGS_LOCAL[] = {
+const GenericFlagEntry TODO_ALIAS_FLAGS[] = {
     TODO_ALIAS_MASTER
 };
-const size_t TODO_ALIAS_FLAGS_COUNT_LOCAL = ARRAY_LEN(TODO_ALIAS_FLAGS_LOCAL);
+const size_t TODO_ALIAS_FLAGS_COUNT = ARRAY_LEN(TODO_ALIAS_FLAGS);
 #undef X
 #define X(flag, internal, label, color, is_alias) {flag, NULL},
-const GenericFlagEntry TODO_CONFIG_FLAGS_LOCAL[] = {
+const GenericFlagEntry TODO_CONFIG_FLAGS[] = {
     TODO_CONFIG_MASTER
 };
-const size_t TODO_CONFIG_FLAGS_COUNT_LOCAL = ARRAY_LEN(TODO_CONFIG_FLAGS_LOCAL);
+const size_t TODO_CONFIG_FLAGS_COUNT = ARRAY_LEN(TODO_CONFIG_FLAGS);
 #undef X
 #define X(flag, internal, label, color, is_alias) {flag, internal, label, color, is_alias},
-const TodoConfigEntry TODO_DICT_LOCAL[] = {
+const TodoConfigEntry TODO_DICT[] = {
     TODO_CONFIG_MASTER
 };
-const size_t TODO_DICT_COUNT_LOCAL = ARRAY_LEN(TODO_DICT_LOCAL);
+const size_t TODO_DICT_COUNT = ARRAY_LEN(TODO_DICT);
 #undef X
-
-#define TODO_ALIAS_DICT TODO_ALIAS_DICT_LOCAL
-#define TODO_ALIAS_DICT_COUNT TODO_ALIAS_DICT_COUNT_LOCAL
-#define TODO_ALIAS_FLAGS TODO_ALIAS_FLAGS_LOCAL
-#define TODO_ALIAS_FLAGS_COUNT TODO_ALIAS_FLAGS_COUNT_LOCAL
-#define TODO_CONFIG_FLAGS TODO_CONFIG_FLAGS_LOCAL
-#define TODO_CONFIG_FLAGS_COUNT TODO_CONFIG_FLAGS_COUNT_LOCAL
-#define TODO_DICT TODO_DICT_LOCAL
-#define TODO_DICT_COUNT TODO_DICT_COUNT_LOCAL
-#define TODO_CONFIG_FLAGS_ENTRIES TODO_DICT_LOCAL
 
 ColorRef GetTagColor(const char* tag_text) {
     if (!tag_text || strlen(tag_text) == 0) return COLOR_TEXT;
     
     for (int i = 0; i < TODO_CONFIG_FLAGS_COUNT; i++) {
-        if (TODO_CONFIG_FLAGS_ENTRIES[i].tag_label) {
-            if (strstr(tag_text, TODO_CONFIG_FLAGS_ENTRIES[i].tag_label) != NULL) {
-                return TODO_CONFIG_FLAGS_ENTRIES[i].color;
+        if (TODO_DICT[i].tag_label) {
+            if (strstr(tag_text, TODO_DICT[i].tag_label) != NULL) {
+                return TODO_DICT[i].color;
             }
         }
     }
@@ -173,17 +163,17 @@ void ParseTodoInput(const char* input, TodoAliasEntry* alias_out, TodoConfigEntr
     for (int i = 0; i < config_match_count && *tag_count < 10; i++) {
         for (int j = 0; j < TODO_CONFIG_FLAGS_COUNT; j++) {
             if (strcmp(config_matches[i].flag, TODO_CONFIG_FLAGS[j].flag) == 0) {
-                if (TODO_CONFIG_FLAGS_ENTRIES[j].tag_label) {
+                if (TODO_DICT[j].tag_label) {
                     snprintf(tags_out[*tag_count], 64, "%s%s%s", 
-                        TODO_TAG_OPEN, TODO_CONFIG_FLAGS_ENTRIES[j].tag_label, TODO_TAG_CLOSE);
+                        TODO_TAG_OPEN, TODO_DICT[j].tag_label, TODO_TAG_CLOSE);
                     (*tag_count)++;
                 }
-                if (config_out && TODO_CONFIG_FLAGS_ENTRIES[j].is_alias) {
+                if (config_out && TODO_DICT[j].is_alias) {
                     char* param = GetFlagParameter(input_copy, config_matches[i].index);
                     if (param && strlen(param) > 0) {
-                        memcpy((void*)config_out->internal_name, TODO_CONFIG_FLAGS_ENTRIES[j].internal_name, sizeof(config_out->internal_name) - 1);
+                        memcpy((void*)config_out->internal_name, TODO_DICT[j].internal_name, sizeof(config_out->internal_name) - 1);
                         snprintf(tags_out[*tag_count], 64, "%s%s %s%s", 
-                            TODO_TAG_OPEN, TODO_CONFIG_FLAGS_ENTRIES[j].internal_name, param, TODO_TAG_CLOSE);
+                            TODO_TAG_OPEN, TODO_DICT[j].internal_name, param, TODO_TAG_CLOSE);
                         (*tag_count)++;
                     }
                 }
@@ -211,7 +201,7 @@ void ParseTodoInput(const char* input, TodoAliasEntry* alias_out, TodoConfigEntr
             for (int i = 0; i < TODO_CONFIG_FLAGS_COUNT; i++) {
                 if (strcmp(token, TODO_CONFIG_FLAGS[i].flag) == 0) {
                     is_flag = true;
-                    if (TODO_CONFIG_FLAGS_ENTRIES[i].is_alias) {
+                    if (TODO_DICT[i].is_alias) {
                         token = strtok(NULL, " ");
                     }
                     break;
