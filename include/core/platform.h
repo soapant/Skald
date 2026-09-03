@@ -37,7 +37,6 @@ void Platform_DismissMessage(void);
 char* Platform_QueryZoxidePath(const char* query);
 char Platform_GetLastChar(MappedFile *file);
 
-int Platform_FileInit(const char *filePath, MappedFile *mf);
 int Platform_FileAppend(MappedFile *mf, const char *text);
 void Platform_FileClose(MappedFile *mf);
 Line* Platform_FileGetLines(MappedFile *mf, size_t *outLineCount);
@@ -69,6 +68,7 @@ void Platform_InitUI(void);
 void Platform_ShutdownUI(void);
 char* Platform_RunTerminalCommand(char* command,bool open_terminal);
 bool Platform_LaunchFileManagerAtPath(char* path,char* args);
+long Platform_GetFileSize(char *filepath);
 
 void Linux_GetActiveWindowTitle(char* buffer, int buffer_size);
 int ConvertLinuxKeyToWindowsVK(int key_code);

@@ -99,42 +99,6 @@ char Platform_GetLastChar(MappedFile *file) {
     return file->pBuffer[file->fileSize - 1];
 }
 
-int Platform_FileInit(const char *filePath, MappedFile *mf) {
-    mf->hFile = CreateFileA(filePath, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-    if (mf->hFile == INVALID_HANDLE_VALUE) {
-        return 0;
-    }
-
-    LARGE_INTEGER fs;
-    GetFileSizeEx(mf->hFile, &fs);
-    mf->fileSize = (size_t)fs.QuadPart;
-
-    size_t mapSize = (mf->fileSize > 0) ? mf->fileSize : 1;
-    mf->capacity = mapSize;
-
-    LARGE_INTEGER mapSizeLI;
-    mapSizeLI.QuadPart = mapSize;
-
-    mf->hMapping = CreateFileMappingA(mf->hFile, NULL, PAGE_READWRITE, mapSizeLI.HighPart, mapSizeLI.LowPart, NULL);
-    if (!mf->hMapping) {
-        CloseHandle(mf->hFile);
-        return 0;
-    }
-
-    mf->pBuffer = (char *)MapViewOfFile(mf->hMapping, FILE_MAP_WRITE, 0, 0, 0);
-    if (!mf->pBuffer) {
-        CloseHandle(mf->hMapping);
-        CloseHandle(mf->hFile);
-        return 0;
-    }
-
-    if (mf->fileSize == 0) {
-        mf->pBuffer[0] = '\0';
-    }
-
-    return 1;
-}
-
 int Platform_FileAppend(MappedFile *mf, const char *text) {
     if (!mf || !text) return 0;
 

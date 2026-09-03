@@ -720,3 +720,20 @@ void Platform_GetTextExtents(FontHandle font, const char* text, int maxWidth, in
     *outWidth = lineWidth;
     *outHeight = totalHeight;
 }
+
+long Platform_GetFileSize(char *filepath) {
+    FILE *fp = fopen(filepath, "rb"); 
+    if (fp == NULL) {
+        return -1; 
+    }
+
+    if (fseek(fp, 0L, SEEK_END) != 0) {
+        fclose(fp);
+        return -1;
+    }
+
+    long size = ftell(fp);
+
+    fclose(fp);
+    return size;
+}
