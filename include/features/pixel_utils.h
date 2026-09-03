@@ -78,7 +78,7 @@ void TriggerPosAdd(void) {
 
 void TriggerPosClear(void) {
   char temp_lines[100][512] = {0};
-  Helpers_WriteFile(temp_lines,0,TEMP_FILE_PATH);
+  WriteFile(temp_lines,0,TEMP_FILE_PATH);
 }
 
 void TriggerColorPlain(void) {
