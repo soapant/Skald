@@ -37,17 +37,29 @@ bool ProcessHotkey(const HotkeyBinding* bindings, int bindings_count,
             continue;
         }
 
-        if (b->blacklist && b->blacklist_count > 0) {
-            bool blacklisted = false;
+        if (!b->whitelist)  {
+          if (b->blacklist && b->blacklist_count > 0) {
+              bool blacklisted = false;
+              for (int j = 0; j < b->blacklist_count; j++) {
+                  if (b->blacklist[j][0] == '\0') continue;
+                  bool found = Platform_StringContainsCaseInsensitive(current_title, b->blacklist[j]);
+                  if (found) {
+                      blacklisted = true;
+                      break;
+                  }
+              }
+              if (blacklisted) return false;
+          }
+        } else {
+            bool whitelisted = false;
             for (int j = 0; j < b->blacklist_count; j++) {
                 if (b->blacklist[j][0] == '\0') continue;
-                bool found = Platform_StringContainsCaseInsensitive(current_title, b->blacklist[j]);
-                if (found) {
-                    blacklisted = true;
+                if (Platform_StringContainsCaseInsensitive(current_title, b->blacklist[j])) {
+                    whitelisted = true;
                     break;
-                }
+                } 
             }
-            if (blacklisted) return false;
+            if (!whitelisted) return false;
         }
 
         if (AllowOtherFeatureTogglesInFeature) {
@@ -67,13 +79,7 @@ bool ProcessHotkey(const HotkeyBinding* bindings, int bindings_count,
             return false;
           }
         }
-
         g_timer = TimerStart();
-        if (MessageAfterEachHotkey) {
-          char buffer[64];
-          snprintf(buffer,sizeof(buffer),"[%i] Triggered \n",b->vk_code);
-          MSG_BOTTOM(buffer,140,TimeOutForMessages,COLOR_TEXT);
-        }
         b->hotkey_callback();
         return true;
     }

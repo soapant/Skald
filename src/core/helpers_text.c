@@ -120,7 +120,7 @@ char* GetFlagParameter(const char* text, int flag_index) {
     return NULL;
 }
 
-HotkeyBinding convert_into_hotkey_binding(char* hotkey_string,void (*on_hotkey_trigger)(void),bool (*optional_condition_for_hotkey)(void),const char** optional_blacklistedwindows){ 
+HotkeyBinding convert_into_hotkey_binding(char* hotkey_string,void (*on_hotkey_trigger)(void),bool (*optional_condition_for_hotkey)(void),const char** optional_blacklistedwindows,bool whitelist){ 
   HotkeyBinding output = {0};
   int out_modifiers = 0;
   int out_key = 0;
@@ -183,6 +183,7 @@ HotkeyBinding convert_into_hotkey_binding(char* hotkey_string,void (*on_hotkey_t
   output.hotkey_callback = on_hotkey_trigger;
   output.hotkey_condition = optional_condition_for_hotkey;
   output.blacklist = optional_blacklistedwindows;
+  output.whitelist = whitelist;
   if (optional_blacklistedwindows) {
       int cnt = 0;
       while (optional_blacklistedwindows[cnt] != NULL) cnt++;
