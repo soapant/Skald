@@ -66,4 +66,6 @@ const AliasEntry Aliases[] = {
 };
 const size_t ALIAS_ENTRY_COUNT = ARRAY_LEN(Aliases);
 
+const int MaxFileIOLines = MAX_FILE_LINES;
+
 // Per-feature TODO config moved to include/features/todo.h

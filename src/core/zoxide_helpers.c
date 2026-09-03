@@ -1,4 +1,5 @@
 #include "common.h"
+#include "config.h"
 #include "core/zoxide_helpers.h"
 #include "core/common_ui.h"
 #include "helpers.h"
@@ -18,8 +19,8 @@ void ZoxideHelper_RebuildCache(const char* filepath, char*** cached_out, int* co
         *count_out = 0;
     }
     if (!filepath) return;
-    const char* tmp[512];
-    int n = fl_load_file_list(filepath, tmp, 512);
+    const char* tmp[MAX_FILE_LINES];
+    int n = fl_load_file_list(filepath, tmp, MAX_FILE_LINES);
     if (n <= 0) return;
     char** new_cache = (char**)malloc((size_t)n * sizeof(char*));
     if (!new_cache) {
