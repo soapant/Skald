@@ -15,37 +15,34 @@ int ReplaceLineInFile(const char* filepath, int line_index, const char* new_text
         fprintf(stderr, "[REPLACE] early return 0\n");
         return 0;
     }
-    
     FILE* f = fopen(filepath, "r");
     if (!f) {
         return 0;
     }
-    
-    char lines[100][512];
+    char (*lines)[MAX_FILE_LINE_LENGTH] = malloc(MAX_FILE_LINES * sizeof(*lines));
+    if (!lines) { fclose(f); return 0; }
     int count = 0;
-    while (fgets(lines[count], sizeof(lines[count]), f) && count < 100) {
+    while (count < MAX_FILE_LINES && fgets(lines[count], sizeof(lines[count]), f)) {
         lines[count][strcspn(lines[count], "\r\n")] = '\0';
         count++;
     }
     fclose(f);
-    
     if (line_index >= count) {
+        free(lines);
         return 0;
     }
-    
     strncpy(lines[line_index], new_text, sizeof(lines[line_index]) - 1);
     lines[line_index][sizeof(lines[line_index]) - 1] = '\0';
-    
     f = fopen(filepath, "w");
     if (!f) {
+        free(lines);
         return 0;
     }
-    
     for (int i = 0; i < count; i++) {
         fprintf(f, "%s\n", lines[i]);
     }
     fclose(f);
-    
+    free(lines);
     return 1;
 }
 
