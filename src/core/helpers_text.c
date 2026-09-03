@@ -120,78 +120,87 @@ char* GetFlagParameter(const char* text, int flag_index) {
     return NULL;
 }
 
-HotkeyBinding convert_into_hotkey_binding(char* hotkey_string,void (*on_hotkey_trigger)(void),bool (*optional_condition_for_hotkey)(void),const char** optional_blacklistedwindows,bool whitelist){ 
-  HotkeyBinding output = {0};
-  int out_modifiers = 0;
-  int out_key = 0;
-  
-  char buffer[256];
-  strncpy(buffer, hotkey_string, sizeof(buffer) - 1);
-  buffer[sizeof(buffer) - 1] = '\0';
-  
-  char* token = strtok(buffer, "+");
-  
-  while (token != NULL) {
-      if (strcasecmp(token, "Ctrl") == 0 || strcasecmp(token, "Control") == 0) {
-          out_modifiers |= HOTKEY_MOD_CTRL;
-      } else if (strcasecmp(token, "Shift") == 0) {
-          out_modifiers |= HOTKEY_MOD_SHIFT;
-      } else if (strcasecmp(token, "Alt") == 0) {
-          out_modifiers |= HOTKEY_MOD_ALT;
-      } else if (strcasecmp(token, "Win") == 0 || strcasecmp(token, "Super") == 0 || strcasecmp(token, "Meta") == 0 ) {
-          out_modifiers |= HOTKEY_MOD_SUPER;
-       } else {
-           if (strcasecmp(token, "Space") == 0) {
-               out_key = ' ';
-           } else if (strcasecmp(token, "Tab") == 0) {
-               out_key = '\t';
-           } else if (strcasecmp(token, "Enter") == 0 || strcasecmp(token, "Return") == 0) {
-               out_key = '\n';
-           } else if (strcasecmp(token, "Escape") == 0 || strcasecmp(token, "Esc") == 0) {
-               out_key = 27;
-           } else if (strcasecmp(token, "{") == 0 || strcasecmp(token, "[") == 0 || strcasecmp(token, "OEM_4") == 0 || strcasecmp(token, "Oem4") == 0) {
-               out_key = VK_OEM_4;
-           } else if (strcasecmp(token, "}") == 0 || strcasecmp(token, "]") == 0 || strcasecmp(token, "OEM_6") == 0 || strcasecmp(token, "Oem6") == 0) {
-               out_key = VK_OEM_6;
-           } else if (strcasecmp(token, ",") == 0 || strcasecmp(token, "OEM_COMMA") == 0 || strcasecmp(token, "OemComma") == 0) {
-               out_key = VK_OEM_COMMA;
-           } else if (strcasecmp(token, ".") == 0 || strcasecmp(token, "OEM_PERIOD") == 0 || strcasecmp(token, "OemPeriod") == 0) {
-               out_key = VK_OEM_PERIOD;
-           } else if (strcasecmp(token, ";") == 0 || strcasecmp(token, "OEM_1") == 0 || strcasecmp(token, "Oem1") == 0) {
-               out_key = VK_OEM_1;
-           } else if (strcasecmp(token, "/") == 0 || strcasecmp(token, "OEM_2") == 0 || strcasecmp(token, "Oem2") == 0) {
-               out_key = VK_OEM_2;
-           } else if (strcasecmp(token, "'") == 0 || strcasecmp(token, "\"") == 0 || strcasecmp(token, "OEM_7") == 0 || strcasecmp(token, "Oem7") == 0) {
-               out_key = VK_OEM_7;
-           } else if (strcasecmp(token, "`") == 0 || strcasecmp(token, "OEM_3") == 0 || strcasecmp(token, "Oem3") == 0) {
-               out_key = VK_OEM_3;
-           } else if (strcasecmp(token, "-") == 0 || strcasecmp(token, "OEM_MINUS") == 0 || strcasecmp(token, "OemMinus") == 0) {
-               out_key = VK_OEM_MINUS;
-           } else if (strcasecmp(token, "=") == 0 || strcasecmp(token, "OEM_PLUS") == 0 || strcasecmp(token, "OemPlus") == 0) {
-               out_key = VK_OEM_PLUS;
-           } else if (strlen(token) == 1) {
-               out_key = toupper((unsigned char)token[0]);
-           } else {
-               out_key = toupper((unsigned char)token[0]);
-           }
-       }
-      
-      token = strtok(NULL, "+");
-  }
-  output.vk_code = out_key;
-  output.modifiers = out_modifiers;
-  output.hotkey_callback = on_hotkey_trigger;
-  output.hotkey_condition = optional_condition_for_hotkey;
-  output.blacklist = optional_blacklistedwindows;
-  output.whitelist = whitelist;
-  if (optional_blacklistedwindows) {
-      int cnt = 0;
-      while (optional_blacklistedwindows[cnt] != NULL) cnt++;
-      output.blacklist_count = cnt;
-  } else {
-      output.blacklist_count = 0;
-  }
-  return output;
+
+HotkeyBinding convert_into_hotkey_binding(char* hotkey_string, void (*on_hotkey_trigger)(void), 
+                                          bool (*optional_condition_for_hotkey)(void), 
+                                          const char** optional_blacklistedwindows, bool whitelist) { 
+    HotkeyBinding output = {0};
+    int out_modifiers = 0;
+    int out_key = 0;
+    
+    char buffer[256];
+    strncpy(buffer, hotkey_string, sizeof(buffer) - 1);
+    buffer[sizeof(buffer) - 1] = '\0';
+    
+    size_t len = strlen(buffer);
+    bool ends_with_plus = false;
+    if (len > 2 && buffer[len-1] == '+' && buffer[len-2] == '+') {
+        ends_with_plus = true;
+        buffer[len-2] = '\0'; // Chop off the delimiter and key so strtok stops early
+    }
+
+    char* token = strtok(buffer, "+");
+    while (token != NULL) {
+        if (strcasecmp(token, "Ctrl") == 0 || strcasecmp(token, "Control") == 0) {
+            out_modifiers |= HOTKEY_MOD_CTRL;
+        } else if (strcasecmp(token, "Shift") == 0) {
+            out_modifiers |= HOTKEY_MOD_SHIFT;
+        } else if (strcasecmp(token, "Alt") == 0) {
+            out_modifiers |= HOTKEY_MOD_ALT;
+        } else if (strcasecmp(token, "Win") == 0 || strcasecmp(token, "Super") == 0 || strcasecmp(token, "Meta") == 0 ) {
+            out_modifiers |= HOTKEY_MOD_SUPER;
+        } else {
+            if (strcasecmp(token, "Space") == 0) out_key = ' ';
+            else if (strcasecmp(token, "Tab") == 0) out_key = '\t';
+            else if (strcasecmp(token, "Enter") == 0 || strcasecmp(token, "Return") == 0) out_key = '\n';
+            else if (strcasecmp(token, "Escape") == 0 || strcasecmp(token, "Esc") == 0) out_key = 27;
+            else if (strcasecmp(token, "{") == 0 || strcasecmp(token, "[") == 0 || strcasecmp(token, "OEM_4") == 0 || strcasecmp(token, "Oem4") == 0) out_key = VK_OEM_4;
+            else if (strcasecmp(token, "}") == 0 || strcasecmp(token, "]") == 0 || strcasecmp(token, "OEM_6") == 0 || strcasecmp(token, "Oem6") == 0) out_key = VK_OEM_6;
+            else if (strcasecmp(token, ",") == 0 || strcasecmp(token, "OEM_COMMA") == 0 || strcasecmp(token, "OemComma") == 0) out_key = VK_OEM_COMMA;
+            else if (strcasecmp(token, ".") == 0 || strcasecmp(token, "OEM_PERIOD") == 0 || strcasecmp(token, "OemPeriod") == 0) out_key = VK_OEM_PERIOD;
+            else if (strcasecmp(token, ";") == 0 || strcasecmp(token, "OEM_1") == 0 || strcasecmp(token, "Oem1") == 0) out_key = VK_OEM_1;
+            else if (strcasecmp(token, "/") == 0 || strcasecmp(token, "OEM_2") == 0 || strcasecmp(token, "Oem2") == 0) out_key = VK_OEM_2;
+            else if (strcasecmp(token, "'") == 0 || strcasecmp(token, "\"") == 0 || strcasecmp(token, "OEM_7") == 0 || strcasecmp(token, "Oem7") == 0) out_key = VK_OEM_7;
+            else if (strcasecmp(token, "`") == 0 || strcasecmp(token, "OEM_3") == 0 || strcasecmp(token, "Oem3") == 0) out_key = VK_OEM_3;
+            else if (strcasecmp(token, "-") == 0 || strcasecmp(token, "OEM_MINUS") == 0 || strcasecmp(token, "OemMinus") == 0) out_key = VK_OEM_MINUS;
+            else if (strcasecmp(token, "=") == 0 || strcasecmp(token, "OEM_PLUS") == 0 || strcasecmp(token, "OemPlus") == 0) out_key = VK_OEM_PLUS;
+            else out_key = toupper((unsigned char)token[0]);
+        }
+        token = strtok(NULL, "+");
+    }
+
+    if (ends_with_plus) {
+        out_key = VK_OEM_PLUS; // Explicit override if manual trailing plus check triggered
+    }
+
+    output.vk_code = out_key;
+    output.modifiers = out_modifiers;
+    output.hotkey_callback = on_hotkey_trigger;
+    output.hotkey_condition = optional_condition_for_hotkey;
+    output.whitelist = whitelist;
+
+    // --- FIX MEMORY CORRUPTION: ALLOCATE PERSISTENT ARRAY COPIES ---
+    if (optional_blacklistedwindows) {
+        int cnt = 0;
+        while (optional_blacklistedwindows[cnt] != NULL) cnt++;
+        output.blacklist_count = cnt;
+
+        if (cnt > 0) {
+            // Allocate heap space for the pointers
+            output.blacklist = malloc(sizeof(char*) * cnt);
+            for (int i = 0; i < cnt; i++) {
+                // Duplicate strings so they survive macro termination
+                output.blacklist[i] = strdup(optional_blacklistedwindows[i]);
+            }
+        } else {
+            output.blacklist = NULL;
+        }
+    } else {
+        output.blacklist = NULL;
+        output.blacklist_count = 0;
+    }
+
+    return output;
 }
 
 

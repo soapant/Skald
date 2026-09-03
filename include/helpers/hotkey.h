@@ -23,9 +23,6 @@ typedef struct {
 void SubjectiveMessageDisplay(const char* buffer,int msg_height,int timeout,ColorRef color);
 bool AlwaysEnabled(void);
 bool AlwaysDisabled(void);
-bool ProcessHotkey(const HotkeyBinding* bindings, int bindings_count,
-                   int pressed_vk, int modifiers,
-                   const char* current_title);
 bool IsWindowBlacklisted(const char* window_title, const char* blacklist[], int count);
 HotkeyBinding convert_into_hotkey_binding(char* hotkey_string,void (*on_hotkey_trigger)(void),bool (*optional_condition_for_hotkey)(void),const char** optional_blacklistedwindows,bool whitelist);
 
