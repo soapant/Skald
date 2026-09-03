@@ -148,20 +148,11 @@ bool fl_free_file_list(const char* list[], int count) {
 
 
 bool fl_register_hotkey_impl(char* hotkey_string,void (*on_hotkey_trigger)(void),bool (*optional_condition_for_hotkey)(void),bool whitelist,const char** optional_blacklistedwindows) {
-    HotkeyBinding binding = {0};
-   if (!whitelist) {
-      binding = convert_into_hotkey_binding(hotkey_string,
-                                                          on_hotkey_trigger,
-                                                          optional_condition_for_hotkey,
-                                                          optional_blacklistedwindows,
-                                                          1);
-   } else {
-      binding = convert_into_hotkey_binding(hotkey_string,
-                                                          on_hotkey_trigger,
-                                                          optional_condition_for_hotkey,
-                                                          optional_blacklistedwindows,
-                                           0);
-   }
+    HotkeyBinding binding = convert_into_hotkey_binding(hotkey_string,
+                                                        on_hotkey_trigger,
+                                                        optional_condition_for_hotkey,
+                                                        optional_blacklistedwindows,
+                                                        whitelist);
     return hotkey_register_internal(binding);
 }
 

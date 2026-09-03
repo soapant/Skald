@@ -463,6 +463,7 @@ bool HandleGlobalKeyEvent(int key_code, int value) {
         else if (value == 2) { pending_hotkey_vk = pressed_vk; pending_hotkey_mod = modifiers; struct timeval tv2; gettimeofday(&tv2,NULL); pending_hotkey_timeMs = tv2.tv_sec*1000 + tv2.tv_usec/1000; }
         return 1;
     }
+
     TimerEnd(timer, "ProcessHotkey");
 
     return 0;
