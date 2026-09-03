@@ -122,34 +122,6 @@ int main() {
   InitFeatureDataSystem();
   Platform_InitUI();
 
-  for (int i = 0; i < FILE_ENTRY_COUNT; i++) {
-    G_FILE_ENTRIES[i].mf = (MappedFile*)calloc(1, sizeof(MappedFile));
-    if (G_FILE_ENTRIES[i].mf != NULL) {
-#if !defined(_WIN32)
-        G_FILE_ENTRIES[i].mf->fd = -1;
-#endif
-    }
-  }
-#if !defined(_WIN32)
-  FcInit();
-#endif
-  for (int i = 0; i < FILE_ENTRY_COUNT; i++) {
-    if (!G_FILE_ENTRIES[i].mf) continue;
-    const char* path = G_FILE_ENTRIES[i].path;
-
-
-    if (!Platform_FileInit(path, G_FILE_ENTRIES[i].mf)) {
-      printf("[SYSTEM] Failed to open %s. Creating new.\n", G_FILE_ENTRIES[i].name);
-#if defined(_WIN32)
-      HANDLE hFile = CreateFileA(path, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
-      if (hFile != INVALID_HANDLE_VALUE) {
-        CloseHandle(hFile);
-        Platform_FileInit(path, G_FILE_ENTRIES[i].mf); 
-      }
-#endif
-    }
-  }
-
   printf("[SYSTEM] Low-Level Hotkey Services Running. GDI+ Online.\n");
   fl_init_all_hotkeys();
   
@@ -167,13 +139,6 @@ int main() {
   cleanup_display();
 #endif
 
-  for (int i = 0; i < FILE_ENTRY_COUNT; i++) {
-    if (G_FILE_ENTRIES[i].mf != NULL) {
-      Platform_FileClose(G_FILE_ENTRIES[i].mf);
-      free(G_FILE_ENTRIES[i].mf);
-      G_FILE_ENTRIES[i].mf = NULL;
-    }
-  }
 #if defined(_WIN32)
   if (g_hNumFont) {
     DeleteObject(g_hNumFont);

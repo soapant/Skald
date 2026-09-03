@@ -33,6 +33,11 @@ typedef struct {
     char *pBuffer;
 } MappedFile;
 
+typedef struct {
+    char *ptr;
+    size_t length;
+} Line;
+
 #if defined(_WIN32)
 typedef struct {
      ListBoxInfo listbox;
@@ -42,20 +47,6 @@ typedef struct {
      WindowHandle hPopupWnd;
 } WinPromptState;
 #endif
-
-typedef struct {
-    char *ptr;
-    size_t length;
-} Line;
-
-typedef struct {
-    const char* name;
-    const char* path;
-    MappedFile* mf;
-} FileEntry;
-
-extern FileEntry G_FILE_ENTRIES[7];
-#define FILE_ENTRY_COUNT ARRAY_LEN(G_FILE_ENTRIES)
 
 #if defined(_WIN32)
 #define DATA_DIR "data\\"
