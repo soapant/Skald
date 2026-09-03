@@ -60,14 +60,10 @@ void TriggerPosAdd(void) {
         const char* temp_lines[100];
         int temp_count = fl_load_file_list(TEMP_FILE_PATH, temp_lines, 100);
         if (temp_count < 100) {
-            FILE* f = fopen(TEMP_FILE_PATH, "w");
-            if (f) {
-                for (int i = 0; i < temp_count; i++) {
-                    fprintf(f, "%s\n", temp_lines[i]);
-                }
-                fprintf(f, "%s\n", coords_buf);
-                fclose(f);
-            }
+            const char* to_write[101];
+            for (int i = 0; i < temp_count; i++) to_write[i] = temp_lines[i];
+            to_write[temp_count] = coords_buf;
+            fl_write_to_file(TEMP_FILE_PATH, to_write, temp_count + 1);
         }
         fl_free_file_list(temp_lines, temp_count);
     }
@@ -77,8 +73,7 @@ void TriggerPosAdd(void) {
 }
 
 void TriggerPosClear(void) {
-  char temp_lines[100][512] = {0};
-  WriteFile(temp_lines,0,TEMP_FILE_PATH);
+  fl_write_to_file(TEMP_FILE_PATH, NULL, 0);
 }
 
 void TriggerColorPlain(void) {
