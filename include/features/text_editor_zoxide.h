@@ -48,7 +48,7 @@ void TriggerTextEditorZoxide(void) {
 }
 
 static inline void text_editor_zoxide_init(void) {
-    fl_register_hotkey("Alt+I", TriggerTextEditorZoxide, NULL, NULL);
+    fl_register_hotkey("Alt+I", TriggerTextEditorZoxide);
 }
 
 #endif

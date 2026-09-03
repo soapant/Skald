@@ -64,8 +64,23 @@ bool fl_launch_browser(char* url);
 #define _FL_HOTKEY_EXPAND(hotkey, trigger, cond, whitelist, ...) \
     fl_register_hotkey_impl(hotkey, trigger, cond, whitelist, (const char*[]){__VA_ARGS__, NULL})
 
-#define fl_register_hotkey(hotkey, trigger, cond, ...) \
-    _FL_HOTKEY_EXPAND(hotkey, trigger, cond, __VA_ARGS__, BLACKLIST, NULL)
+#define _FL_AS_COND(x)   _Generic((x)+0, int: (bool(*)(void))NULL, default: (bool(*)(void))(x))
+#define _FL_AS_BOOL(x)   _Generic((x)+0, int: (bool)(x), default: false)
+#define _FL_AS_STR(x)    _Generic((x)+0, int: (const char*)NULL, default: (const char*)(x))
 
+#define _FL_HOTKEY_ROUTER_2(hk, tr)              _FL_HOTKEY_EXPAND(hk, tr, NULL, 0, NULL)
+#define _FL_HOTKEY_ROUTER_3(hk, tr, s1)          _FL_HOTKEY_EXPAND(hk, tr, NULL, 0, s1)
 
+#define _FL_HOTKEY_ROUTER_4(hk, tr, arg3, arg4) \
+    _Generic((arg3) + 0, \
+        int: _FL_HOTKEY_EXPAND(hk, tr, NULL, _FL_AS_BOOL(arg3), _FL_AS_STR(arg4)), \
+        default: _FL_HOTKEY_EXPAND(hk, tr, _FL_AS_COND(arg3), false, _FL_AS_STR(arg4)) \
+    )
+
+#define _FL_HOTKEY_ROUTER_5(hk, tr, cond, wl, s1) _FL_HOTKEY_EXPAND(hk, tr, cond, wl, s1)
+
+#define _FL_GET_MACRO(_1, _2, _3, _4, _5, NAME, ...) NAME
+
+#define fl_register_hotkey(...) \
+    _FL_GET_MACRO(__VA_ARGS__, _FL_HOTKEY_ROUTER_5, _FL_HOTKEY_ROUTER_4, _FL_HOTKEY_ROUTER_3, _FL_HOTKEY_ROUTER_2)(__VA_ARGS__)
 #endif

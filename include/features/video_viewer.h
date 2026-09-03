@@ -119,10 +119,10 @@ void video_prompt(void) {
 }
 
 static inline void video_viewer_init(void) {
-    fl_register_hotkey("Alt+Shift+,", video_cmd_1, NULL, NULL);
-    fl_register_hotkey("Alt+Shift+.", video_cmd_5, NULL, NULL);
-    fl_register_hotkey("Alt+Shift+;", video_cmd_6, NULL, NULL);
-    fl_register_hotkey("Alt+V", video_prompt, NULL, NULL);
+    fl_register_hotkey("Alt+Shift+,", video_cmd_1);
+    fl_register_hotkey("Alt+Shift+.", video_cmd_5);
+    fl_register_hotkey("Alt+Shift+;", video_cmd_6);
+    fl_register_hotkey("Alt+V", video_prompt);
 }
 
 #endif

@@ -587,7 +587,7 @@ void TriggerTodo(void) {
 }
 
 static inline void todo_init(void) {
-  fl_register_hotkey("Alt+T",TriggerTodo,NULL,NULL);
+  fl_register_hotkey("Alt+T",TriggerTodo);
 }
 
 #endif

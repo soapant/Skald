@@ -21,8 +21,8 @@ void copy_password(void) {
 }
 
 static inline void text_snippets_init(void) {
-    fl_register_hotkey("Alt+Shift+O", copy_seifisbad, NULL, NULL);
-    fl_register_hotkey("Alt+Shift+P", copy_password, NULL, NULL);
+    fl_register_hotkey("Alt+Shift+O", copy_seifisbad);
+    fl_register_hotkey("Alt+Shift+P", copy_password);
 }
 
 #endif

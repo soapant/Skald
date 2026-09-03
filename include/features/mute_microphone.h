@@ -82,7 +82,7 @@ void TriggerMuteState(void) {
 }
 
 static inline void mute_microphone_init(void) {
-    fl_register_hotkey("Alt+Shift+P", TriggerMuteState, NULL, NULL);
+    fl_register_hotkey("Alt+Shift+P", TriggerMuteState);
 }
 
 #endif

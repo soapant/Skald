@@ -74,8 +74,8 @@ void TriggerBlueToothToggle(void) {
 }
 
 static inline void windows_control_init(void) {
-    fl_register_hotkey("Alt+Shift+W", TriggerWifiToggle, NULL, NULL);
-    fl_register_hotkey("Alt+Shift+B", TriggerBlueToothToggle, NULL, NULL);
+    fl_register_hotkey("Alt+Shift+W", TriggerWifiToggle);
+    fl_register_hotkey("Alt+Shift+B", TriggerBlueToothToggle);
 }
 
 #endif

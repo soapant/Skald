@@ -335,7 +335,7 @@ static void TriggerWindowSwitcher() {
 }
 
 static inline void window_switcher_init(void) {
-    fl_register_hotkey("Alt+Space", TriggerWindowSwitcher, NULL, NULL);
+    fl_register_hotkey("Alt+Space", TriggerWindowSwitcher);
 }
 
 #endif

@@ -466,7 +466,7 @@ void TriggerCalculator(void) {
 }
 
 static inline void calc_init(void) {
-    fl_register_hotkey("Alt+C", TriggerCalculator, NULL, NULL);
+    fl_register_hotkey("Alt+C", TriggerCalculator);
 }
 
 #endif

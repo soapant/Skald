@@ -100,7 +100,7 @@ void TriggerReplica(void) {
 
 static inline void replica_init(void) {
     if (!ReplicaAvailable) return;
-    fl_register_hotkey("Alt+Shift+R", TriggerReplica, NULL, NULL);
+    fl_register_hotkey("Alt+Shift+R", TriggerReplica);
 }
 
 #endif
