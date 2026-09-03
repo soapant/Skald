@@ -57,7 +57,7 @@ void WriteToCacheIndex(ListBoxInfo* lb, int index, const char* text) {
     lb->populated_cache[index][sizeof(lb->populated_cache[index]) - 1] = '\0';
 }
 
-int Helpers_ReadFile(char lines[100][512], const char* path) {
+int ReadFile(char lines[100][512], const char* path) {
     FILE* f = fopen(path, "r");
     if (!f) {
         return 0;
@@ -81,7 +81,7 @@ int Helpers_ReadFile(char lines[100][512], const char* path) {
     return count;
 }
 
-void Helpers_WriteFile(char lines[100][512], int count, const char* path) {
+void WriteFile(char lines[100][512], int count, const char* path) {
     FILE* f = fopen(path, "w");
     if (!f) return;
     for (int i = 0; i < count; i++) {
@@ -152,4 +152,20 @@ void fl_edit_text_popup(const char* initial_text, const char* title, int x, int 
         return;
     }
     WindowManager_PushPopup(wm, popup);
+}
+long GetFileSize(char *filename) {
+    FILE *fp = fopen(filename, "rb"); 
+    if (fp == NULL) {
+        return -1; 
+    }
+
+    if (fseek(fp, 0L, SEEK_END) != 0) {
+        fclose(fp);
+        return -1;
+    }
+
+    long size = ftell(fp);
+
+    fclose(fp);
+    return size;
 }
