@@ -9,19 +9,6 @@
 #include "core/platform.h"
 
 const char* ReminderHistoryFilePath = "data/ReminderHistory.txt";
-MappedFile ReminderHistoryFileData = {0};
-bool ReminderHistoryFileInit = false;
-MappedFile* GetReminderHistoryFile(void) {
-    if (!ReminderHistoryFileInit) {
-#if !defined(_WIN32)
-        ReminderHistoryFileData.fd = -1;
-#endif
-        Platform_FileInit(ReminderHistoryFilePath, &ReminderHistoryFileData);
-        ReminderHistoryFileInit = true;
-    }
-    return &ReminderHistoryFileData;
-}
-#define ReminderHistoryFile GetReminderHistoryFile()
 
 
 
@@ -181,11 +168,11 @@ const char* REMINDER_CONSTRAINT_FLAGS[] = {
 };
 
 void RebuildReminderCache(void) {
-    ZoxideHelper_RebuildCache(ReminderHistoryFile, &g_cached_reminder_commands, &g_cached_reminder_count);
+    ZoxideHelper_RebuildCache(ReminderHistoryFilePath, &g_cached_reminder_commands, &g_cached_reminder_count);
 }
 void reminder_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
     if (!lb) return;
-    ZoxideHelper_Refresh(filter, hListBox, lb, ReminderHistoryFile, &g_cached_reminder_commands, &g_cached_reminder_count);
+    ZoxideHelper_Refresh(filter, hListBox, lb, ReminderHistoryFilePath, &g_cached_reminder_commands, &g_cached_reminder_count);
 }
 
 
@@ -339,16 +326,16 @@ void StartReminder(const char* selection) {
 }
 
 void reminder_enter_callback(const char* selection, ListBoxInfo* lb) {
-      ZoxideHelper_AppendNewEntry(ReminderHistoryFile, selection, lb, &g_cached_reminder_commands, &g_cached_reminder_count);
+      ZoxideHelper_AppendNewEntry(ReminderHistoryFilePath, selection, lb, &g_cached_reminder_commands, &g_cached_reminder_count);
       StartReminder(selection);
 }
 void reminder_edit_callback(const char* selection, ListBoxInfo* lb) {
-    ZoxideHelper_Edit(selection, lb, ReminderHistoryFile, &g_cached_reminder_commands, &g_cached_reminder_count, reminder_refresh_callback);
+    ZoxideHelper_Edit(selection, lb, ReminderHistoryFilePath, &g_cached_reminder_commands, &g_cached_reminder_count, reminder_refresh_callback);
 }
 
 void TriggerReminder(void) {
     if (!g_cached_reminder_commands) RebuildReminderCache();
-    const char** list = ZoxideHelper_PrepareTriggerList(NULL, &g_cached_reminder_commands, &g_cached_reminder_count, NULL);
+    const char** list = ZoxideHelper_PrepareTriggerList(ReminderHistoryFilePath, &g_cached_reminder_commands, &g_cached_reminder_count, NULL);
     PROMPT(.title = "⏱️ Reminder", .items = list, .count = g_cached_reminder_count,
            .height = 920, .width = 650, .item_height = 32,
            .refresh = reminder_refresh_callback,

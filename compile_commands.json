@@ -235,24 +235,6 @@
   },
   {
     "directory": "/home/diggy/Programming/Projects/Flint",
-    "file": "src/core/types.c",
-    "arguments": [
-      "gcc",
-      "-Wall",
-      "-Wextra",
-      "-I",
-      "include",
-      "-I/usr/include/freetype2",
-      "-MMD",
-      "-MP",
-      "-w",
-      "-g",
-      "-c",
-      "src/core/types.c"
-    ]
-  },
-  {
-    "directory": "/home/diggy/Programming/Projects/Flint",
     "file": "src/core/modal.c",
     "arguments": [
       "gcc",

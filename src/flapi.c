@@ -94,6 +94,37 @@ bool fl_free_file_list(const char* list[], int count) {
     return true;
 }
 
+bool fl_append_to_file(const char* filepath, const char* line) {
+    if (!filepath || !line) return false;
+    FILE* f = fopen(filepath, "a");
+    if (!f) {
+        f = fopen(filepath, "w");
+        if (!f) return false;
+    }
+    fclose(f);
+    f = fopen(filepath, "r");
+    bool need_newline = false;
+    if (f) {
+        if (fseek(f, 0, SEEK_END) == 0) {
+            long sz = ftell(f);
+            if (sz > 0) {
+                if (fseek(f, -1, SEEK_END) == 0) {
+                    int c = fgetc(f);
+                    if (c != '\n' && c != '\r') need_newline = true;
+                }
+            }
+        }
+        fclose(f);
+    }
+    f = fopen(filepath, "a");
+    if (!f) return false;
+    if (need_newline) fputc('\n', f);
+    fputs(line, f);
+    fputc('\n', f);
+    fclose(f);
+    return true;
+}
+
 bool fl_register_hotkey(char* hotkey_string,void (*on_hotkey_trigger)(void),bool (*optional_condition_for_hotkey)(void),const char** optional_blacklistedwindows) {
     HotkeyBinding binding = convert_into_hotkey_binding(hotkey_string,
                                                         on_hotkey_trigger,
