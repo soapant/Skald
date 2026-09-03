@@ -4,7 +4,6 @@
 #include "core/types.h"
 
 bool Platform_ExpandPath(const char* template_path, char* out, size_t out_size);
-int Platform_FileInit(const char* filePath, MappedFile* mf);
 int Platform_FileAppend(MappedFile* mf, const char* text);
 void Platform_FileClose(MappedFile* mf);
 int Platform_ReplaceLineInMappedFile(MappedFile* mf, int line_index, const char* new_text);
