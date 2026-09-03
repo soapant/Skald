@@ -8,7 +8,7 @@ void open_youtube(void) {
 }
 
 static inline void quicklink_init(void) {
-    fl_register_hotkey("Alt+Ctrl+Y", open_youtube, NULL, NULL);
+    fl_register_hotkey("Alt+Ctrl+Y", open_youtube);
 }
 
 #endif

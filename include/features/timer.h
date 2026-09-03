@@ -20,7 +20,7 @@ void TriggerTimer(void) {
 }
 
 static inline void timer_init(void) {
-    fl_register_hotkey("Alt+O", TriggerTimer, NULL, NULL);
+    fl_register_hotkey("Alt+O", TriggerTimer);
 }
 
 #endif

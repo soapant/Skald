@@ -58,8 +58,8 @@ void TriggerProcessKiller(void) {
 }
 
 static inline void process_killer_init(void) {
-    fl_register_hotkey("Alt+U", TriggerProcessKiller, NULL, NULL);
-    fl_register_hotkey("Alt+Ctrl+P", bulk_kill_bkp, NULL, NULL);
+    fl_register_hotkey("Alt+U", TriggerProcessKiller);
+    fl_register_hotkey("Alt+Ctrl+P", bulk_kill_bkp);
 }
 
 #endif

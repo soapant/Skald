@@ -345,7 +345,7 @@ void TriggerReminder(void) {
 }
 
 static inline void reminder_init(void) {
-    fl_register_hotkey("Alt+S", TriggerReminder, NULL, NULL);
+    fl_register_hotkey("Alt+S", TriggerReminder);
 }
 
 #endif

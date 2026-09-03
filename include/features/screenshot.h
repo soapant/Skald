@@ -93,8 +93,8 @@ void TriggerOpenScreenshot(void) {
 }
 
 static inline void screenshot_init(void) {
-    fl_register_hotkey("Alt+Ctrl+A", TriggerSaveScreenshot, NULL, NULL);
-    fl_register_hotkey("Alt+Shift+A", TriggerOpenScreenshot, NULL, NULL);
+    fl_register_hotkey("Alt+Ctrl+A", TriggerSaveScreenshot);
+    fl_register_hotkey("Alt+Shift+A", TriggerOpenScreenshot);
 }
 
 #endif

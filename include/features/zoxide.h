@@ -43,7 +43,7 @@ void TriggerZoxide(void) {
 }
 
 static inline void zoxide_init(void) {
-    fl_register_hotkey("Alt+W", TriggerZoxide, NULL, NULL);
+    fl_register_hotkey("Alt+W", TriggerZoxide);
 }
 
 #endif

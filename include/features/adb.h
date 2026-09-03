@@ -122,7 +122,7 @@ void toggle_messenger_speaker(void) {
 #endif
 
 static inline void adb_init(void) {
-    fl_register_hotkey("Alt+Shift+M", mute_messenger_call, NULL, NULL);
-    fl_register_hotkey("Alt+Shift+S", toggle_messenger_speaker, NULL, NULL);
+    fl_register_hotkey("Alt+Shift+M", mute_messenger_call);
+    fl_register_hotkey("Alt+Shift+S", toggle_messenger_speaker);
 }
 #endif

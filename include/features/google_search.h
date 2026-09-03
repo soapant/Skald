@@ -74,7 +74,7 @@ void TriggerGoogleSearch(void) {
 }
 
 static inline void google_search_init(void) {
-    fl_register_hotkey("Alt+G", TriggerGoogleSearch, NULL, NULL);
+    fl_register_hotkey("Alt+G", TriggerGoogleSearch);
 }
 
 #endif

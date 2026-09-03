@@ -85,9 +85,9 @@ inline void RunMiscApplication(const char* path) {
 }
 
 static inline void misc_hotkeys_init(void) {
-    fl_register_hotkey("Alt+Shift+K", HandleKillMyProgram, NULL, NULL);
-    fl_register_hotkey("Alt+Shift+T", Platform_HandleShowCurrentTime, NULL, NULL);
-    fl_register_hotkey("Alt+D", HandleSettingsTrigger, NULL, NULL);
+    fl_register_hotkey("Alt+Shift+K", HandleKillMyProgram);
+    fl_register_hotkey("Alt+Shift+T", Platform_HandleShowCurrentTime);
+    fl_register_hotkey("Alt+D", HandleSettingsTrigger);
 }
 
 #endif

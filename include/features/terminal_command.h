@@ -48,8 +48,8 @@ void run_btop(void) {
 }
 
 static inline void terminal_command_init(void) {
-    fl_register_hotkey("Alt+{", TriggerTerminalCommand, NULL, NULL);
-    fl_register_hotkey("Ctrl+B", run_btop, NULL, NULL);
+    fl_register_hotkey("Alt+{", TriggerTerminalCommand);
+    fl_register_hotkey("Ctrl+B", run_btop);
 }
 
 #endif
