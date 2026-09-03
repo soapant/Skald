@@ -147,7 +147,7 @@ bool fl_free_file_list(const char* list[], int count) {
 }
 
 
-bool fl_register_hotkey(char* hotkey_string,void (*on_hotkey_trigger)(void),bool (*optional_condition_for_hotkey)(void),const char** optional_blacklistedwindows) {
+bool fl_register_hotkey_impl(char* hotkey_string,void (*on_hotkey_trigger)(void),bool (*optional_condition_for_hotkey)(void),const char** optional_blacklistedwindows) {
     HotkeyBinding binding = convert_into_hotkey_binding(hotkey_string,
                                                         on_hotkey_trigger,
                                                         optional_condition_for_hotkey,
