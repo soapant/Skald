@@ -17,7 +17,6 @@ void yazi_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInf
     ZoxideHelper_Refresh(filter, hListBox, lb, YaziZoxideFilePath, &g_cached_yazi_commands, &g_cached_yazi_count);
 }
 
-
 void yazi_enter_callback(const char* selection, ListBoxInfo* lb) {
       char* path = fl_get_zoxide_match((char*)selection);
       if (path) {
