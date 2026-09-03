@@ -8,7 +8,6 @@
 #include "helpers.h"
 #include "core/hotkey_manager.h"
 #include "bindings/bindings.h"
-#include "bindings/macro_bindings.h"
 #include "platform/subclasses.h"
 #include "core/feature_data.h"
 #include <stdio.h>
@@ -446,8 +445,6 @@ bool HandleGlobalKeyEvent(int key_code, int value) {
         printf("SUPPOSED TO CLEAR FILE\n");
     }
 
-    
-    
     if (value != 1) {
         return 0;
     }
@@ -469,11 +466,6 @@ bool HandleGlobalKeyEvent(int key_code, int value) {
         return 1;
     }
     TimerEnd(timer, "ProcessHotkey");
-
-    if (CheckMacroBindings(pressed_vk, modifiers)) {
-        if (value==1){ pending_hotkey_vk=pressed_vk; pending_hotkey_mod=modifiers; struct timeval tv; gettimeofday(&tv,NULL); pending_hotkey_timeMs=tv.tv_sec*1000+tv.tv_usec/1000; }
-        return 1;
-    }
 
     return 0;
 }
