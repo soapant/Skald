@@ -21,10 +21,87 @@ bool hotkey_register_internal(HotkeyBinding binding) {
 bool hotkey_process(int vk_code, int modifiers, const char* title) {
     for (int i = 0; i < g_hotkey_count; i++) {
         HotkeyBinding* b = &g_hotkeys[i];
-        if (b->vk_code == vk_code && b->modifiers == modifiers) {
-            if (b->hotkey_callback) b->hotkey_callback();
-            return true;
+        
+        if (b->vk_code != vk_code) {
+            continue;
         }
+        if (b->modifiers != modifiers) {
+            continue;
+        }
+
+        if (b->hotkey_condition) {
+            bool cond_pass = b->hotkey_condition();
+            if (!cond_pass) {
+                continue;
+            }
+        }
+
+        if (!b->whitelist) {
+            if (b->blacklist && b->blacklist_count > 0) {
+                bool blacklisted = false;
+                for (int j = 0; j < b->blacklist_count; j++) {
+                    if (b->blacklist[j][0] == '\0') {
+                        continue;
+                    }
+                    
+                    bool match = Platform_StringContainsCaseInsensitive(title, b->blacklist[j]);
+                    
+                    if (match) {
+                        blacklisted = true;
+                        break;
+                    }
+                }
+                if (blacklisted) {
+                    continue; 
+                }
+            } else {
+            }
+        } 
+        else {
+            if (!b->blacklist || b->blacklist_count == 0) {
+                continue;
+            }
+
+            bool whitelisted = false;
+            for (int j = 0; j < b->blacklist_count; j++) {
+                if (b->blacklist[j][0] == '\0') {
+                    continue;
+                }
+                
+                bool match = Platform_StringContainsCaseInsensitive(title, b->blacklist[j]);
+                
+                if (match) {
+                    whitelisted = true;
+                    break;
+                } 
+            }
+            if (!whitelisted) {
+                continue;
+            }
+        }
+
+        b->hotkey_callback();
+        return true; 
     }
+
+    //         temprary need to implement
+//         if (AllowOtherFeatureTogglesInFeature) {
+// #if defined(_WIN32)
+//             if (IsPopupActive(hPopupWnd)) {
+//                 KillTimer(WH_TO_HWND(hPopupWnd), 999);
+//                 DestroyWindow(WH_TO_HWND(hPopupWnd));
+//                 hPopupWnd = WH_NULL;
+//             }
+// #else
+//             if (IsPopupActive(hPopupWnd)) {
+//                 selection_complete = true;
+//             }
+// #endif
+//         } else {
+//           if (IsPopupActive(hPopupWnd)) {
+//             return false;
+//           }
+//         }
+    
     return false;
 }
