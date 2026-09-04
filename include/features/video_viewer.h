@@ -4,7 +4,8 @@
 
 #include "core/flapi.h"
 
-
+const char* VideoViewerPath = "{DEV}/Video Viewer/video_viewer.exe";
+const char* VideosPath = "{VIDEOS}";
 char *allowed_video_formats[] = {"webm","mp4", NULL};
 
 ListOfFiles s_video_files = {0};
@@ -76,7 +77,6 @@ void video_enter_callback(const char* selection, ListBoxInfo* lb) {
 #endif
 }
 void video_cmd_1(void) {
-    if (!VideoViewerAvailable) return;
 #if defined(_WIN32)
     HWND playerHwnd = FindWindow(NULL, "Video Viewer");
     if (playerHwnd) PostMessage(playerHwnd, WM_USER + 1, 1, 0);
@@ -85,7 +85,6 @@ void video_cmd_1(void) {
 #endif
 }
 void video_cmd_5(void) {
-    if (!VideoViewerAvailable) return;
 #if defined(_WIN32)
     HWND playerHwnd = FindWindow(NULL, "Video Viewer");
     if (playerHwnd) PostMessage(playerHwnd, WM_USER + 1, 5, 0);
@@ -94,7 +93,6 @@ void video_cmd_5(void) {
 #endif
 }
 void video_cmd_6(void) {
-    if (!VideoViewerAvailable) return;
 #if defined(_WIN32)
     HWND playerHwnd = FindWindow(NULL, "Video Viewer");
     if (playerHwnd) PostMessage(playerHwnd, WM_USER + 1, 6, 0);
@@ -103,7 +101,6 @@ void video_cmd_6(void) {
 #endif
 }
 void video_prompt(void) {
-    if (!VideoViewerAvailable) return;
     s_video_files.count = 0;
     fl_get_all_files_from_dir(VideosPath, allowed_video_formats, &s_video_files, NULL);
     const char** initial_items = (const char**)malloc(s_video_files.count * sizeof(char*));

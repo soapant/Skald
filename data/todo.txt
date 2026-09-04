@@ -21,3 +21,4 @@ windowns platform functions are like non tested at all no idea if they work also
 add the whole interaction with web brwosers more so bookmarks etcs ||[Cprogram] 
 maybe for the central contorl it would be every feature oyu have but its just prefixed with the name of the feature||[Cprogram]|[DontForget]
 the window shows up slow when running on battery ||[Cprogram]
+this is the path for zen /home/diggy/.config/zen/8b8q3ma0.Default ||[Cprogram]

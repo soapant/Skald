@@ -8,6 +8,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+const wchar_t* HttpUrlForNotis = L"doingthistomakeitrarebitch";
+
 typedef void (*NtfyCallback)(const char*);
 typedef struct {
     wchar_t path[256];
