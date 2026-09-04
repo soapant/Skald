@@ -248,28 +248,39 @@ bool Platform_SetX11StringProperty(const char* window_title, const char* atom_na
 char* Platform_RunCommandAndGetOutput(char* command) {
     FILE* fp;
     char buffer[4096];
-    char* output = NULL;
+    char* output = malloc(1);
     size_t total_size = 0;
-    
+
+    if (output == NULL)
+        return NULL;
+
+    output[0] = '\0';
+
     fp = popen(command, "r");
     if (fp == NULL) {
-        return strdup(""); 
+        free(output);
+        return strdup("");
     }
-    
+
     while (fgets(buffer, sizeof(buffer), fp) != NULL) {
         size_t len = strlen(buffer);
-        output = realloc(output, total_size + len + 1);
-        if (output == NULL) {
+
+        char* new_output = realloc(output, total_size + len + 1);
+        if (new_output == NULL) {
+            free(output);
             pclose(fp);
             return strdup("");
         }
+
+        output = new_output;
+
         memcpy(output + total_size, buffer, len);
         total_size += len;
         output[total_size] = '\0';
     }
-    
+
     pclose(fp);
-    return output;  
+    return output;
 }
 
 char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
@@ -311,12 +322,20 @@ char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
     char runtime_dir[256];
     snprintf(runtime_dir,sizeof(runtime_dir),"%s",Platform_GetRuntimeDir());
     char extra[1024];
-    snprintf(extra, sizeof(extra), "%s -c \"%s '%s'; exec %s\"",UsedShell,UsedShell,temp_file,UsedShell);
+
     if (open_terminal) {
-         Platform_LaunchTerminalAtPath(real_home,extra);
-         return "";
+        snprintf(extra, sizeof(extra),
+                 "%s -c \"%s '%s'; exec %s\"",
+                 UsedShell, UsedShell, temp_file, UsedShell);
+
+        Platform_LaunchTerminalAtPath(real_home, extra);
+        return strdup("");
     } else {
-    return Platform_RunCommandAndGetOutput(extra);
+        snprintf(extra, sizeof(extra),
+                 "%s -c \"%s '%s'\"",
+                 UsedShell, UsedShell, temp_file);
+
+        return Platform_RunCommandAndGetOutput(extra);
     }
 }
 
