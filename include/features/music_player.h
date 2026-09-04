@@ -2,6 +2,8 @@
 #define MUSIC_PLAYER_H
 
 #include "core/flapi.h"
+const char* MusicPlayerPath = "{DEV}/Music Player/music_player.exe";
+const char* MusicPath = "{MUSIC}";
 
 typedef struct {
     int vk_code;
@@ -115,7 +117,6 @@ void music_cmd_2(void) {
 #endif
 }
 void music_prompt(void) {
-    if (!MusicPlayerAvailable) return;
     s_music_files.count = 0;
     fl_get_all_files_from_dir(MusicPath, allowed_audio_formats, &s_music_files, NULL);
     const char** initial_items = (const char**)malloc(s_music_files.count * sizeof(char*));
