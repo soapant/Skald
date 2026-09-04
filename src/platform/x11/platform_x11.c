@@ -15,6 +15,7 @@
 #include <sys/un.h>
 #include "core/platform.h"
 #include "config.h"
+#include "helpers.h"
 #include "common.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -544,25 +545,108 @@ bool Platform_IsCtrlPressed(void) {
     return (mask & ControlMask) != 0;
 }
 
-void Linux_GetActiveWindowTitle(char* buffer, int buffer_size) {
-    if (!buffer || buffer_size <= 0) return;
-    buffer[0] = '\0';
+typedef bool (*WindowTitleGetter)(char *buffer, int buffer_size);
 
+bool Linux_X11_GetActiveWindowTitle(char *buffer, int buffer_size)
+{
     Display *display = get_display();
-    if (!display) return;
+    if (!display)
+        return false;
 
     Window focus = None;
     int revert_to = 0;
+
     XGetInputFocus(display, &focus, &revert_to);
 
-    if (focus != None && focus != PointerRoot) {
-        char *name = NULL;
-        if (XFetchName(display, focus, &name) && name) {
-            strncpy(buffer, name, buffer_size - 1);
-            buffer[buffer_size - 1] = '\0';
-            XFree(name);
+    if (focus == None || focus == PointerRoot)
+        return false;
+
+    char *name = NULL;
+
+    if (!XFetchName(display, focus, &name) || !name)
+        return false;
+
+    strncpy(buffer, name, buffer_size - 1);
+    buffer[buffer_size - 1] = '\0';
+
+    XFree(name);
+
+    return buffer[0] != '\0';
+}
+
+bool Linux_Hyprland_GetActiveWindowTitle(char *buffer, int buffer_size)
+{
+  printf("Hyperland Isnt Supported Right Now So Any Window Getting Code Wont Work \n");
+
+}
+
+bool Linux_Sway_GetActiveWindowTitle(char *buffer, int buffer_size)
+{
+    char *name = NULL;
+    char *app_id = NULL;
+
+    char *command_output = Platform_RunTerminalCommand(
+        "sh -c \"swaymsg -t get_tree | jq '.. | objects | select(.focused? == true)'\"",
+        false
+    );
+
+    if (!command_output)
+        return false;
+
+    StringList lines = String_Split(command_output, "\n");
+
+    for (size_t i = 0; i < lines.count; i++) {
+        if (Platform_StringContainsCaseInsensitive(lines.items[i], "name")) {
+            name = lines.items[i];
+        } else if (Platform_StringContainsCaseInsensitive(lines.items[i], "app_id")) {
+            app_id = lines.items[i];
+            break;
         }
     }
+    size_t size = strlen(name) + strlen(app_id) + 1;
+
+    char *output_name = malloc(size);
+
+    if (!output_name)
+        return false;
+
+    strcpy(output_name, name);
+    strcat(output_name, app_id);
+
+    strncpy(buffer, output_name, buffer_size - 1);
+    buffer[buffer_size - 1] = '\0';
+
+    free(output_name);
+
+    StringList_Free(&lines);
+
+    return buffer[0] != '\0';
+}
+
+bool Linux_GetActiveWindowTitle(char *buffer, int buffer_size)
+{
+    if (!buffer || buffer_size <= 0)
+        return false;
+
+    buffer[0] = '\0';
+
+    static WindowTitleGetter getter = NULL;
+
+    if (!getter) {
+        if (Linux_Sway_GetActiveWindowTitle(buffer, buffer_size))
+            getter = Linux_Sway_GetActiveWindowTitle;
+        else if (Linux_Hyprland_GetActiveWindowTitle(buffer, buffer_size))
+            getter = Linux_Hyprland_GetActiveWindowTitle;
+        else if (Linux_X11_GetActiveWindowTitle(buffer, buffer_size))
+            getter = Linux_X11_GetActiveWindowTitle;
+    }
+
+    if (getter) {
+        buffer[0] = '\0';
+        return getter(buffer, buffer_size);
+    }
+
+    return false;
 }
 
 char* Platform_QueryZoxidePath(const char* query) {

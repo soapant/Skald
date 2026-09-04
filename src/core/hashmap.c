@@ -147,26 +147,3 @@ int HashMap_Size(HashMap* map) {
     return map ? map->count : 0;
 }
 
-char** StringList_Append(char** list, int* count, const char* str) {
-    if (!str) return list;
-
-    char** tmp = realloc(list, (*count + 2) * sizeof(char*));
-    if (!tmp) return list;
-    list = tmp;
-
-    char* dup = _strdup(str);
-    if (!dup) return list;
-    list[*count] = dup;
-    (*count)++;
-    list[*count] = NULL;
-
-    return list;
-}
-
-void StringList_Free(char** list, int count) {
-    if (!list) return;
-    for (int i = 0; i < count; i++) {
-        free(list[i]);
-    }
-    free(list);
-}

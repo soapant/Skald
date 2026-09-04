@@ -19,4 +19,13 @@
 #include "platform/x11/window_factory.h"
 #endif
 
+typedef struct {
+    char **items;
+    size_t count;
+} StringList;
+
+StringList String_Split(const char *string, const char *delimiter);
+void StringList_Free(StringList *list);
+
+
 #endif

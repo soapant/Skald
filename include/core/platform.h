@@ -69,7 +69,7 @@ char* Platform_RunTerminalCommand(char* command,bool open_terminal);
 bool Platform_LaunchFileManagerAtPath(char* path,char* args);
 long Platform_GetFileSize(char *filepath);
 
-void Linux_GetActiveWindowTitle(char* buffer, int buffer_size);
+bool Linux_GetActiveWindowTitle(char* buffer, int buffer_size);
 int ConvertLinuxKeyToWindowsVK(int key_code);
 const char* Platform_GetRealUser(void);
 const char* Platform_GetRealHome(void);
