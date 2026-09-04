@@ -81,19 +81,6 @@ bool Platform_ExpandPath(const char* template_path, char* out, size_t out_size) 
     return true;
 }
 
-void Platform_HandleShowCurrentTime(void) {
-    time_t raw_time;
-    struct tm *local_time;
-    char buffer[80];
-
-    time(&raw_time);
-
-    local_time = localtime(&raw_time);
-
-    strftime(buffer, sizeof(buffer), "%a %b %d %T %Z %Y", local_time);
-
-    SubjectiveMessageDisplay(buffer,70,TimeOutForMessages * 3,COLOR_TEXT);
-}
 
 char Platform_GetLastChar(MappedFile *file) {
     return file->pBuffer[file->fileSize - 1];
