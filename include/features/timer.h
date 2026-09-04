@@ -6,7 +6,6 @@ const char* TimerPath = "{DEV}/Tscoding Timer/sowon/sowon.exe";
 
 void LaunchTimer(const char* selection) {
     fl_launch_with_args(TimerPath, selection);
-    printf("[TIMER] Launching: %s %s\n", TimerPath, selection);
 }
 
 void TriggerTimer(void) {

@@ -6,35 +6,35 @@
 
 const char* TerminalZoxideFilePath = "data/TerminalZoxide.txt";
 
-char** g_cached_zoxide_commands = NULL;
-int g_cached_zoxide_count = 0;
+char** cached_zoxide_commands = NULL;
+int cached_zoxide_count = 0;
 
 void RebuildZoxideCache(void) {
-    ZoxideHelper_RebuildCache(TerminalZoxideFilePath, &g_cached_zoxide_commands, &g_cached_zoxide_count);
+    ZoxideHelper_RebuildCache(TerminalZoxideFilePath, &cached_zoxide_commands, &cached_zoxide_count);
 }
 
 void zoxide_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
-    ZoxideHelper_Refresh(filter, hListBox, lb, TerminalZoxideFilePath, &g_cached_zoxide_commands, &g_cached_zoxide_count);
+    ZoxideHelper_Refresh(filter, hListBox, lb, TerminalZoxideFilePath, &cached_zoxide_commands, &cached_zoxide_count);
 }
 
 void zoxide_edit_callback(const char* selection, ListBoxInfo* lb) {
-    ZoxideHelper_Edit(selection, lb, TerminalZoxideFilePath, &g_cached_zoxide_commands, &g_cached_zoxide_count, zoxide_refresh_callback);
+    ZoxideHelper_Edit(selection, lb, TerminalZoxideFilePath, &cached_zoxide_commands, &cached_zoxide_count, zoxide_refresh_callback);
 }
 
 void zoxide_enter_callback(const char* selection, ListBoxInfo* lb) {
     char* path = fl_get_zoxide_match(selection);
     if (path) {
         fl_launch_terminal_at_path(path, NULL);
-        ZoxideHelper_AppendNewEntry(TerminalZoxideFilePath, selection, lb, &g_cached_zoxide_commands, &g_cached_zoxide_count);
+        ZoxideHelper_AppendNewEntry(TerminalZoxideFilePath, selection, lb, &cached_zoxide_commands, &cached_zoxide_count);
         free(path);
     }
 }
 
 void TriggerZoxide(void) {
-    if (!g_cached_zoxide_commands) RebuildZoxideCache();
-    const char** list = ZoxideHelper_PrepareTriggerList(TerminalZoxideFilePath, &g_cached_zoxide_commands, &g_cached_zoxide_count, NULL);
+    if (!cached_zoxide_commands) RebuildZoxideCache();
+    const char** list = ZoxideHelper_PrepareTriggerList(TerminalZoxideFilePath, &cached_zoxide_commands, &cached_zoxide_count, NULL);
 
-    PROMPT(.title = "⌨️ Zoxide", .items = list, .count = g_cached_zoxide_count,
+    PROMPT(.title = "⌨️ Zoxide", .items = list, .count = cached_zoxide_count,
            .height = 920, .width = 650, .item_height = 32,
            .refresh = zoxide_refresh_callback,
            .enter = zoxide_enter_callback,

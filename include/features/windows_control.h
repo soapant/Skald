@@ -4,8 +4,6 @@
 #include "common.h"
 #include "core/flapi.h"
 #include "helpers.h"
-//
-// Not Implemented on Linux - uses netsh (Windows only)
 
 bool IsWifiEnabled(void) {
     FILE* fp = popen("netsh interface show interface", "r");

@@ -3,16 +3,13 @@
 
 #include "core/flapi.h"
 
-
 const char* bkp_windows[] = {"Brawlhalla","Fortnite","RocketLeague","Factorio","Steam"};
 
-#define MAX_PK_APPS 256
-
-char G_PK_LIST[MAX_PK_APPS][128];
-int G_PK_COUNT = 0;
+char PK_LIST[256][128];
+int PK_COUNT = 0;
 
 void collect_running_processes() {
-    G_PK_COUNT = fl_collect_running_processes(G_PK_LIST, MAX_PK_APPS);
+    PK_COUNT = fl_collect_running_processes(PK_LIST, 256);
 }
 
 void BulkKillProcesses(const char* window_titles[], int count) {
@@ -30,27 +27,27 @@ void pk_enter_callback(const char* selection, ListBoxInfo* lb) {
 }
 
 void pk_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
-    const char** items = (const char**)malloc(G_PK_COUNT * sizeof(char*));
+    const char** items = (const char**)malloc(PK_COUNT * sizeof(char*));
     if (!items) return;
-    for (int i = 0; i < G_PK_COUNT; i++) {
-        items[i] = G_PK_LIST[i];
+    for (int i = 0; i < PK_COUNT; i++) {
+        items[i] = PK_LIST[i];
     }
-    PopulateListBox(lb, hListBox, filter, items, G_PK_COUNT, NULL);
+    PopulateListBox(lb, hListBox, filter, items, PK_COUNT, NULL);
     free(items);
 }
 void TriggerProcessKiller(void) {
     collect_running_processes();
 
-    const char** list_items = (const char**)malloc(G_PK_COUNT * sizeof(char*));
+    const char** list_items = (const char**)malloc(PK_COUNT * sizeof(char*));
     if (!list_items) {
         return;
     }
 
-    for (int i = 0; i < G_PK_COUNT; i++) {
-        list_items[i] = G_PK_LIST[i];
+    for (int i = 0; i < PK_COUNT; i++) {
+        list_items[i] = PK_LIST[i];
     }
 
-    PROMPT(.title = "💀 ProcessKiller", .items = list_items, .count = G_PK_COUNT,
+    PROMPT(.title = "💀 ProcessKiller", .items = list_items, .count = PK_COUNT,
            .height = 920, .width = 650, .item_height = 32,
            .refresh = pk_refresh_callback,
            .enter = pk_enter_callback);

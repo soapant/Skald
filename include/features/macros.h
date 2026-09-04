@@ -1,7 +1,6 @@
 #ifndef MACROS_H
 #define MACROS_H
 
-
 #include "core/flapi.h"
 
 void create_tag() {
