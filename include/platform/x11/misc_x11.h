@@ -19,6 +19,5 @@ FontHandle Platform_CreateFontOnDisplay(Display* dpy, int size, const char* face
 const char* Platform_GetRealUser(void);
 const char* Platform_GetRealHome(void);
 bool Platform_IsRunningAsRoot(void);
-void Platform_HandleShowCurrentTime(void);
 
 #endif

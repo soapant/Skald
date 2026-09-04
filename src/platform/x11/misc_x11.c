@@ -231,23 +231,6 @@ bool Platform_ExpandPath(const char* template_path, char* out, size_t out_size) 
     return true;
 }
 
-void Platform_HandleShowCurrentTime(void) {
-    FILE *fp;
-    char buffer[1024];
-    buffer[0] = '\0';
-
-    fp = popen("date", "r");
-    if (!fp) return;
-
-    while (fgets(buffer, sizeof(buffer), fp) != NULL) {
-        printf("%s \n", buffer);
-    }
-    pclose(fp);
-
-    if (buffer[0] != '\0')
-        SubjectiveMessageDisplay(buffer,70,TimeOutForMessages * 3,COLOR_TEXT);
-}
-
 int ConvertLinuxKeyToWindowsVK(int key_code) {
     if (key_code >= KEY_1 && key_code <= KEY_0) {
         return '1' + (key_code - KEY_1);
