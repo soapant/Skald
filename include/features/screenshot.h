@@ -6,6 +6,7 @@
 #include "core/platform.h"
 #include "core/common_ui.h"
 
+const char* BASE_SCREENSHOT_FOLDER_PATH = "{PICTURES}/Screenshots/";
 static int region_step = 0;
 static long saved_x1 = 0;
 static long saved_y1 = 0;

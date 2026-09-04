@@ -47,10 +47,6 @@ extern const char* VideoViewerPath;
 extern const char* MusicPath;
 extern const char* VideosPath;
 extern const char* IconPath;
-extern const bool TimerAvailable;
-extern const bool MusicPlayerAvailable;
-extern const bool VideoViewerAvailable;
-extern const bool ReplicaAvailable;
 extern const bool FullTextNeedsKeyPress;
 extern const bool MessagesEnabled;
 extern const bool RainbowText;
@@ -59,7 +55,6 @@ extern const bool AlternatingText;
 extern const bool EnableLineNumbers;
 extern const int GradientItems;
 extern const float GradientBrightness;
-extern bool PixelHotkeys;
 
 typedef struct {
     const char* path;

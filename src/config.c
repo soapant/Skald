@@ -15,10 +15,7 @@ int EditPopUpWidthMin = 400;
 int PageUpDownLen = 6;
 bool ColorfullMode = false;
 float WindowOpacity = 235.0;
-const wchar_t* HttpUrlForNotis = L"doingthistomakeitrarebitch";
 
-const char* BASE_SCREENSHOT_FOLDER_PATH = "{PICTURES}/Screenshots/";
-const char* TEMP_FILE_PATH = DATA_DIR "temp_list_of_positions.md";
 const char* UsedFont =  "0xProto Nerd Font";
 const int FontSize = 20;
 const int NumberFontSize = 18;
@@ -29,11 +26,6 @@ const char* UsedShell = "nu";
 const char* UsedFileManager = "thunar";
 const char* UsedTextEditor = "nvim";
 const char* ImageEditorPath =  "{APPDATA}/Microsoft/Windows/Start Menu/Programs/Scoop Apps/PicView.lnk";
-const char* TimerPath = "{DEV}/Tscoding Timer/sowon/sowon.exe"; 
-const char* MusicPlayerPath = "{DEV}/Music Player/music_player.exe";
-const char* VideoViewerPath = "{DEV}/Video Viewer/video_viewer.exe";
-const char* MusicPath = "{MUSIC}";
-const char* VideosPath = "{VIDEOS}";
 const char* IconPath = "{MISC}/switch_window.ico";
 
 const PathVar G_PATH_VARS[] = {
@@ -46,10 +38,6 @@ const PathVar G_PATH_VARS[] = {
 };
 const unsigned int PATH_VAR_COUNT = ARRAY_LEN(G_PATH_VARS);
 
-const bool TimerAvailable = true;
-const bool MusicPlayerAvailable = true;
-const bool VideoViewerAvailable = true;
-const bool ReplicaAvailable = false;
 const bool FullTextNeedsKeyPress = true;
 const bool MessagesEnabled = true;
 const bool RainbowText = false;
@@ -58,7 +46,6 @@ const bool EnableLineNumbers = true;
 const bool ColoredVimModeText = true;
 const int GradientItems = 30;
 const float GradientBrightness = 1.0f;
-bool PixelHotkeys = false;
 bool CloseOnLossOfFocus = false;
 
 const AliasEntry Aliases[] = {
