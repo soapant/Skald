@@ -26,7 +26,4 @@ void* HashMap_Remove(HashMap* map, const char* key);
 char** HashMap_GetKeys(HashMap* map, int* count);
 int HashMap_Size(HashMap* map);
 
-char** StringList_Append(char** list, int* count, const char* str);
-void StringList_Free(char** list, int count);
-
 #endif

@@ -38,7 +38,8 @@ void SaveFeatureHistory(char* string) {
     HistoryList = (char**)HashMap_Get(feature_history, g_current_feature);
     while (HistoryList && HistoryList[count]) count++;
     
-    HistoryList = StringList_Append(HistoryList, &count, string);
+    // temporary i think
+    // HistoryList = StringList_Append(HistoryList, &count, string);
     
     HashMap_Put(feature_history, g_current_feature, HistoryList);
 }
