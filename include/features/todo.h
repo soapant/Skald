@@ -15,17 +15,6 @@ typedef struct {
     bool is_alias;
 } TodoConfigEntry;
 
-typedef struct {
-    char tag_label[64];
-    char internal_name[64];
-    ColorRef color;
-} TodoTag;
-
-typedef struct {
-    TodoTag tags[10];
-    int tag_count;
-    char text[256];
-} TodoEntry;
 
 typedef struct {
     const char* flag;

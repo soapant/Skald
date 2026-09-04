@@ -6,28 +6,29 @@
 
 const char* VideoViewerPath = "{DEV}/Video Viewer/video_viewer.exe";
 const char* VideosPath = "{VIDEOS}";
-char *allowed_video_formats[] = {"webm","mp4", NULL};
 
-ListOfFiles s_video_files = {0};
+char *allowed_video_formats[] = {"webm","mp4"};
+
+ListOfFiles video_files = {0};
 
 void video_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
-    s_video_files.count = 0;
-    fl_get_all_files_from_dir(VideosPath, allowed_video_formats, &s_video_files, NULL);
+    video_files.count = 0;
+    fl_get_all_files_from_dir(VideosPath, allowed_video_formats, &video_files, NULL);
     
-    const char** items = (const char**)malloc(s_video_files.count * sizeof(char*));
+    const char** items = (const char**)malloc(video_files.count * sizeof(char*));
     if (!items) return;
-    for (size_t i = 0; i < s_video_files.count; i++) {
-        items[i] = s_video_files.items[i].name;
+    for (size_t i = 0; i < video_files.count; i++) {
+        items[i] = video_files.items[i].name;
     }
-    PopulateListBox(lb, hListBox, filter, items, (int)s_video_files.count, NULL);
+    PopulateListBox(lb, hListBox, filter, items, (int)video_files.count, NULL);
     free(items);
 }
 
 void video_enter_callback(const char* selection, ListBoxInfo* lb) {
     char* result = NULL;
-    for (size_t i = 0; i < s_video_files.count; i++) {
-        if (strcmp(s_video_files.items[i].name, selection) == 0) {
-            result = s_video_files.items[i].path;
+    for (size_t i = 0; i < video_files.count; i++) {
+        if (strcmp(video_files.items[i].name, selection) == 0) {
+            result = video_files.items[i].path;
             break;
         }
     }
@@ -101,14 +102,14 @@ void video_cmd_6(void) {
 #endif
 }
 void video_prompt(void) {
-    s_video_files.count = 0;
-    fl_get_all_files_from_dir(VideosPath, allowed_video_formats, &s_video_files, NULL);
-    const char** initial_items = (const char**)malloc(s_video_files.count * sizeof(char*));
+    video_files.count = 0;
+    fl_get_all_files_from_dir(VideosPath, allowed_video_formats, &video_files, NULL);
+    const char** initial_items = (const char**)malloc(video_files.count * sizeof(char*));
     if (!initial_items) return;
-    for (size_t i = 0; i < s_video_files.count; i++) {
-        initial_items[i] = s_video_files.items[i].name;
+    for (size_t i = 0; i < video_files.count; i++) {
+        initial_items[i] = video_files.items[i].name;
     }
-    PROMPT(.title = "🎥 Viewer", .items = initial_items, .count = (int)s_video_files.count,
+    PROMPT(.title = "🎥 Viewer", .items = initial_items, .count = (int)video_files.count,
            .height = 920, .width = 650, .item_height = 32,
            .refresh = video_refresh_callback,
            .enter = video_enter_callback);

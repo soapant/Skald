@@ -5,13 +5,6 @@
 const char* MusicPlayerPath = "{DEV}/Music Player/music_player.exe";
 const char* MusicPath = "{MUSIC}";
 
-typedef struct {
-    int vk_code;
-    int modifiers;
-    int code;
-} MusicPlayerBinding;
-
-
 char *allowed_audio_formats[] = {"mp3","ogg","flac", NULL};
 
 ListOfFiles s_music_files = {0};
