@@ -179,7 +179,6 @@ HotkeyBinding convert_into_hotkey_binding(char* hotkey_string, void (*on_hotkey_
     output.hotkey_condition = optional_condition_for_hotkey;
     output.whitelist = whitelist;
 
-    // --- FIX MEMORY CORRUPTION: ALLOCATE PERSISTENT ARRAY COPIES ---
     if (optional_blacklistedwindows) {
         int cnt = 0;
         while (optional_blacklistedwindows[cnt] != NULL) cnt++;
@@ -201,6 +200,80 @@ HotkeyBinding convert_into_hotkey_binding(char* hotkey_string, void (*on_hotkey_
     }
 
     return output;
+}
+
+StringList String_Split(const char *string, const char *delimiter)
+{
+    StringList result = {0};
+
+    if (!string || !delimiter || delimiter[0] == '\0')
+        return result;
+
+    size_t delimiter_count = 0;
+    const char *p = string;
+
+    while ((p = strstr(p, delimiter)) != NULL) {
+        delimiter_count++;
+        p += strlen(delimiter);
+    }
+
+    result.count = delimiter_count + 1;
+    result.items = malloc(result.count * sizeof(char *));
+
+    if (!result.items) {
+        result.count = 0;
+        return result;
+    }
+
+    size_t delimiter_len = strlen(delimiter);
+    const char *start = string;
+
+    for (size_t i = 0; i < result.count; i++) {
+        const char *end = strstr(start, delimiter);
+
+        size_t length;
+
+        if (end)
+            length = (size_t)(end - start);
+        else
+            length = strlen(start);
+
+        result.items[i] = malloc(length + 1);
+
+        if (!result.items[i]) {
+            for (size_t j = 0; j < i; j++)
+                free(result.items[j]);
+
+            free(result.items);
+            result.items = NULL;
+            result.count = 0;
+            return result;
+        }
+
+        memcpy(result.items[i], start, length);
+        result.items[i][length] = '\0';
+
+        if (!end)
+            break;
+
+        start = end + delimiter_len;
+    }
+
+    return result;
+}
+
+void StringList_Free(StringList *list)
+{
+    if (!list)
+        return;
+
+    for (size_t i = 0; i < list->count; i++)
+        free(list->items[i]);
+
+    free(list->items);
+
+    list->items = NULL;
+    list->count = 0;
 }
 
 
