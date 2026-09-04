@@ -6,35 +6,35 @@
 
 const char* TerminalHistoryFilePath = "data/TerminalHistory.txt";
 
-char** g_cached_commands = NULL;
-int g_cached_command_count = 0;
+char** cached_commands = NULL;
+int cached_command_count = 0;
 
 
 void RebuildCommandCache(void) {
-    ZoxideHelper_RebuildCache(TerminalHistoryFilePath, &g_cached_commands, &g_cached_command_count);
+    ZoxideHelper_RebuildCache(TerminalHistoryFilePath, &cached_commands, &cached_command_count);
 }
 
 void terminal_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
-    ZoxideHelper_Refresh(filter, hListBox, lb, TerminalHistoryFilePath, &g_cached_commands, &g_cached_command_count);
+    ZoxideHelper_Refresh(filter, hListBox, lb, TerminalHistoryFilePath, &cached_commands, &cached_command_count);
 }
 
 void terminal_enter_callback(const char* selection, ListBoxInfo* lb) {
       if (!UI_IsListBoxSelected(lb)) {
         fl_append_to_file(TerminalHistoryFilePath, selection);
-        ZoxideHelper_RebuildCache(TerminalHistoryFilePath, &g_cached_commands, &g_cached_command_count);
+        ZoxideHelper_RebuildCache(TerminalHistoryFilePath, &cached_commands, &cached_command_count);
       }
       fl_run_terminal_command_and_open((char*)selection);
 }
 
 void terminal_edit_callback(const char* selection, ListBoxInfo* lb) {
-    ZoxideHelper_Edit(selection, lb, TerminalHistoryFilePath, &g_cached_commands, &g_cached_command_count, terminal_refresh_callback);
+    ZoxideHelper_Edit(selection, lb, TerminalHistoryFilePath, &cached_commands, &cached_command_count, terminal_refresh_callback);
 }
 
 void TriggerTerminalCommand(void) {
-    if (!g_cached_commands) RebuildCommandCache();
-    const char** list = ZoxideHelper_PrepareTriggerList(TerminalHistoryFilePath, &g_cached_commands, &g_cached_command_count, NULL);
+    if (!cached_commands) RebuildCommandCache();
+    const char** list = ZoxideHelper_PrepareTriggerList(TerminalHistoryFilePath, &cached_commands, &cached_command_count, NULL);
 
-    PROMPT(.title = "⌨️ Terminal", .items = list, .count = g_cached_command_count,
+    PROMPT(.title = "⌨️ Terminal", .items = list, .count = cached_command_count,
            .height = 920, .width = 650, .item_height = 32,
            .refresh = terminal_refresh_callback,
            .enter = terminal_enter_callback,
