@@ -23,7 +23,7 @@ void terminal_enter_callback(const char* selection, ListBoxInfo* lb) {
         fl_append_to_file(TerminalHistoryFilePath, selection);
         ZoxideHelper_RebuildCache(TerminalHistoryFilePath, &g_cached_commands, &g_cached_command_count);
       }
-      fl_run_terminal_command((char*)selection,true);
+      fl_run_terminal_command_and_open((char*)selection);
 }
 
 void terminal_edit_callback(const char* selection, ListBoxInfo* lb) {
@@ -44,7 +44,7 @@ void TriggerTerminalCommand(void) {
 }
 
 void run_btop(void) {
-    fl_run_terminal_command((char*)"ls",true);
+    fl_run_terminal_command_and_open((char*)"ls");
 }
 
 static inline void terminal_command_init(void) {

@@ -22,7 +22,7 @@ void HandleKillMyProgram(void) {
     fl_terminate_process_by_name("main.exe");
 }
 void HandleShowCurrentTime(void) {
-  char* output = fl_run_terminal_command("date now",false);
+  char* output = fl_run_terminal_command("date now");
   if (output) {
     SubjectiveMessageDisplay(output,140,3,COLOR_TEXT);
   }
