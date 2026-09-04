@@ -188,9 +188,14 @@ bool fl_launch_terminal_with_args(char* args) {
 
 }
 
-char* fl_run_terminal_command(char* command,bool open_terminal) {
+char* fl_run_terminal_command(char* command) {
   if (!command) return NULL;
-  return Platform_RunTerminalCommand(command,open_terminal);
+  return Platform_RunTerminalCommand(command,false);
+}
+
+char* fl_run_terminal_command_and_open(char* command) {
+  if (!command) return NULL;
+  return Platform_RunTerminalCommand(command,true);
 }
 
 bool fl_launch_terminal_at_path(char* path,char* args) {
