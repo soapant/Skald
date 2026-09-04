@@ -27,6 +27,12 @@ void HandleShowCurrentTime(void) {
     SubjectiveMessageDisplay(output,140,3,COLOR_TEXT);
   }
 }
+void HandleShowCurrentBatteryPercentage(void) {
+  char* output = fl_run_terminal_command("cat /sys/class/power_supply/BAT0/capacity");
+  if (output) {
+    SubjectiveMessageDisplay(output,140,3,COLOR_TEXT);
+  }
+}
 
 void HandleSettingsTrigger(void) {
     Platform_SettingsPopUp();
@@ -94,6 +100,7 @@ static inline void misc_hotkeys_init(void) {
     fl_register_hotkey("Alt+Shift+K", HandleKillMyProgram);
     fl_register_hotkey("Alt+Shift+T", HandleShowCurrentTime);
     fl_register_hotkey("Alt+D", HandleSettingsTrigger);
+    fl_register_hotkey("Alt+Shift+N", HandleShowCurrentBatteryPercentage);
 }
 
 #endif
