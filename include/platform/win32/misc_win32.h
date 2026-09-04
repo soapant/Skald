@@ -14,6 +14,5 @@ bool Platform_IsRunningAsRoot(void);
 bool Platform_ShellExecuteWithVerb(const char* path, const char* verb, bool async);
 bool Platform_LaunchApp(const char* path);
 bool Platform_LaunchAppAsAdmin(const char* path);
-void Platform_HandleShowCurrentTime(void);
 
 #endif

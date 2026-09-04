@@ -587,8 +587,6 @@ void TriggerTodo(void) {
 }
 
 static inline void todo_init(void) {
-  char* output = fl_run_terminal_command("pacman -Q",false);
-  printf("%s \n",output);
   fl_register_hotkey("Alt+T",TriggerTodo);
 }
 
