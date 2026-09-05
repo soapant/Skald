@@ -9,17 +9,17 @@ typedef struct {
     double factor;
 } UnitConversion;
 
-#define CONVERSION_COUNT ARRAY_LEN(G_CONVERSIONS)
+#define CONVERSION_COUNT ARRAY_LEN(CONVERSIONS)
 
-double g_last_a = 0.0;
-double g_last_b = 0.0;
-char g_last_op = 0;
-bool g_has_last_op = false;
-char g_last_expression[256] = {0};
-double g_flipped_result = 0.0;
-bool g_is_flipped = false;
+double last_a = 0.0;
+double last_b = 0.0;
+char last_op = 0;
+bool has_last_op = false;
+char last_expression[256] = {0};
+double flipped_result = 0.0;
+bool is_flipped = false;
 
-const UnitConversion G_CONVERSIONS[] = {
+const UnitConversion CONVERSIONS[] = {
     
     { "minutes", "hours",   1.0 / 60.0 },
     { "minute",  "hours",   1.0 / 60.0 },
@@ -140,19 +140,19 @@ void format_number_with_suffix(double num, char* out, size_t max_len) {
 }
 
 double get_flipped_result(void) {
-    return g_flipped_result;
+    return flipped_result;
 }
 
 bool is_flipped_mode(void) {
-    return g_is_flipped;
+    return is_flipped;
 }
 
 void reset_flip_state(void) {
-    g_is_flipped = false;
-    g_flipped_result = 0.0;
+    is_flipped = false;
+    flipped_result = 0.0;
 }
 
-void trim_trailing_spaces(char* str) {
+void trim_trailinspaces(char* str) {
     int len = strlen(str);
     while (len > 0 && isspace((unsigned char)str[len - 1])) {
         str[--len] = '\0';
@@ -173,7 +173,7 @@ void live_evaluate(const char* input, char* out_result, size_t max_len) {
     if (in_keyword) {
         char target_unit[64] = {0};
         strncpy(target_unit, in_keyword + 4, sizeof(target_unit) - 1);
-        trim_trailing_spaces(target_unit);
+        trim_trailinspaces(target_unit);
 
         *in_keyword = '\0'; 
 
@@ -182,20 +182,20 @@ void live_evaluate(const char* input, char* out_result, size_t max_len) {
         if (sscanf(clean, "%lf %63s", &val, source_unit) == 2) {
             for (size_t i = 0; i < CONVERSION_COUNT; i++) {
 #if defined(_WIN32)
-                if (StrCmpIA(source_unit, G_CONVERSIONS[i].from_unit) == 0 &&
-                    StrCmpIA(target_unit, G_CONVERSIONS[i].to_unit) == 0) {
+                if (StrCmpIA(source_unit, CONVERSIONS[i].from_unit) == 0 &&
+                    StrCmpIA(target_unit, CONVERSIONS[i].to_unit) == 0) {
 #else
-                if (strcasecmp(source_unit, G_CONVERSIONS[i].from_unit) == 0 &&
-                    strcasecmp(target_unit, G_CONVERSIONS[i].to_unit) == 0) {
+                if (strcasecmp(source_unit, CONVERSIONS[i].from_unit) == 0 &&
+                    strcasecmp(target_unit, CONVERSIONS[i].to_unit) == 0) {
 #endif
-                    snprintf(out_result, max_len, "= %.4g %s", val * G_CONVERSIONS[i].factor, G_CONVERSIONS[i].to_unit);
-                    g_has_last_op = false;
+                    snprintf(out_result, max_len, "= %.4g %s", val * CONVERSIONS[i].factor, CONVERSIONS[i].to_unit);
+                    has_last_op = false;
                     return;
                 }
             }
         }
         strncpy(out_result, "Unknown unit conversion format", max_len);
-        g_has_last_op = false;
+        has_last_op = false;
         return;
     }
 
@@ -215,11 +215,11 @@ void live_evaluate(const char* input, char* out_result, size_t max_len) {
         double b = parse_number_with_suffix(b_str);
         char op = op_str[0];
         
-        g_last_a = a;
-        g_last_b = b;
-        g_last_op = op;
-        g_has_last_op = true;
-        strncpy(g_last_expression, clean, sizeof(g_last_expression) - 1);
+        last_a = a;
+        last_b = b;
+        last_op = op;
+        has_last_op = true;
+        strncpy(last_expression, clean, sizeof(last_expression) - 1);
         
         double result = 0.0;
         
@@ -255,7 +255,7 @@ void live_evaluate(const char* input, char* out_result, size_t max_len) {
         char formatted[64];
         format_number_with_suffix(val, formatted, sizeof(formatted));
         snprintf(out_result, max_len, "= %s", formatted);
-        g_has_last_op = false;
+        has_last_op = false;
         return;
     }
     
@@ -266,22 +266,22 @@ void live_evaluate(const char* input, char* out_result, size_t max_len) {
 
 
 void flip_last_operation(char* out_result, size_t max_len) {
-    if (!g_has_last_op) {
+    if (!has_last_op) {
         strncpy(out_result, "No operation to flip", max_len);
         return;
     }
     
-    if (g_last_b == 0 && g_last_op == '/') {
+    if (last_b == 0 && last_op == '/') {
         strncpy(out_result, "Cannot flip: division by zero", max_len);
         return;
     }
     
-    double flipped_a = g_last_b;
-    double flipped_b = g_last_a;
+    double flipped_a = last_b;
+    double flipped_b = last_a;
     
     double result = 0.0;
     
-    switch (g_last_op) {
+    switch (last_op) {
         case '+': result = flipped_a + flipped_b; break;
         case '-': result = flipped_a - flipped_b; break;
         case '*': result = flipped_a * flipped_b; break;
@@ -298,8 +298,8 @@ void flip_last_operation(char* out_result, size_t max_len) {
             return;
     }
     
-    g_flipped_result = result;
-    g_is_flipped = true;
+    flipped_result = result;
+    is_flipped = true;
     
     char a_formatted[32], b_formatted[32], result_formatted[32];
     format_number_with_suffix(flipped_a, a_formatted, sizeof(a_formatted));
@@ -307,44 +307,44 @@ void flip_last_operation(char* out_result, size_t max_len) {
     format_number_with_suffix(result, result_formatted, sizeof(result_formatted));
     
     snprintf(out_result, max_len, "FLIP: %s %c %s = %s", 
-             a_formatted, g_last_op, b_formatted, result_formatted);
+             a_formatted, last_op, b_formatted, result_formatted);
 }
 
 
 
 
 void get_flip_info(char* out, size_t max_len) {
-    if (!g_has_last_op || !g_is_flipped) {
+    if (!has_last_op || !is_flipped) {
         strncpy(out, "Press Tab to flip", max_len);
         return;
     }
     
     char a_formatted[32], b_formatted[32], result_formatted[32];
-    format_number_with_suffix(g_last_b, a_formatted, sizeof(a_formatted));
-    format_number_with_suffix(g_last_a, b_formatted, sizeof(b_formatted));
-    format_number_with_suffix(g_flipped_result, result_formatted, sizeof(result_formatted));
+    format_number_with_suffix(last_b, a_formatted, sizeof(a_formatted));
+    format_number_with_suffix(last_a, b_formatted, sizeof(b_formatted));
+    format_number_with_suffix(flipped_result, result_formatted, sizeof(result_formatted));
     
     snprintf(out, max_len, "↕ %s %c %s = %s", 
-             a_formatted, g_last_op, b_formatted, result_formatted);
+             a_formatted, last_op, b_formatted, result_formatted);
 }
 
 void get_flip_display(char* out, size_t max_len) {
-    if (!g_has_last_op) {
+    if (!has_last_op) {
         strncpy(out, "No operation to flip", max_len);
         return;
     }
     
-    if (g_last_b == 0 && g_last_op == '/') {
+    if (last_b == 0 && last_op == '/') {
         strncpy(out, "Cannot flip: division by zero", max_len);
         return;
     }
     
-    double flipped_a = g_last_b;
-    double flipped_b = g_last_a;
+    double flipped_a = last_b;
+    double flipped_b = last_a;
     
     double result = 0.0;
     
-    switch (g_last_op) {
+    switch (last_op) {
         case '+': result = flipped_a + flipped_b; break;
         case '-': result = flipped_a - flipped_b; break;
         case '*': result = flipped_a * flipped_b; break;
@@ -361,8 +361,8 @@ void get_flip_display(char* out, size_t max_len) {
             return;
     }
     
-    g_flipped_result = result;
-    g_is_flipped = true;
+    flipped_result = result;
+    is_flipped = true;
     
     char a_formatted[32], b_formatted[32], result_formatted[32];
     format_number_with_suffix(flipped_a, a_formatted, sizeof(a_formatted));
@@ -370,20 +370,20 @@ void get_flip_display(char* out, size_t max_len) {
     format_number_with_suffix(result, result_formatted, sizeof(result_formatted));
     
     snprintf(out, max_len, "↕ %s %c %s = %s", 
-             a_formatted, g_last_op, b_formatted, result_formatted);
+             a_formatted, last_op, b_formatted, result_formatted);
 }
 
 void get_flip_expression(char* out, size_t max_len) {
-    if (!g_has_last_op) {
+    if (!has_last_op) {
         strncpy(out, "", max_len);
         return;
     }
     
     char a_formatted[32], b_formatted[32];
-    format_number_with_suffix(g_last_b, a_formatted, sizeof(a_formatted));
-    format_number_with_suffix(g_last_a, b_formatted, sizeof(b_formatted));
+    format_number_with_suffix(last_b, a_formatted, sizeof(a_formatted));
+    format_number_with_suffix(last_a, b_formatted, sizeof(b_formatted));
     
-    snprintf(out, max_len, "%s %c %s", a_formatted, g_last_op, b_formatted);
+    snprintf(out, max_len, "%s %c %s", a_formatted, last_op, b_formatted);
 }
 
 
