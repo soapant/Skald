@@ -547,79 +547,87 @@ bool Platform_IsCtrlPressed(void) {
 
 typedef bool (*WindowTitleGetter)(char *buffer, int buffer_size);
 
+static int _x11_err = 0;
+static int _x11_err_handler(Display *dpy, XErrorEvent *ev) { (void)dpy; (void)ev; _x11_err = 1; return 0; }
+
 bool Linux_X11_GetActiveWindowTitle(char *buffer, int buffer_size)
 {
+    if (!buffer || buffer_size <= 0) return false;
+    buffer[0] = '\0';
     Display *display = get_display();
-    if (!display)
-        return false;
+    if (!display) return false;
 
     Window focus = None;
     int revert_to = 0;
-
+    _x11_err = 0;
+    XErrorHandler old = XSetErrorHandler(_x11_err_handler);
     XGetInputFocus(display, &focus, &revert_to);
-
-    if (focus == None || focus == PointerRoot)
+    XSync(display, False);
+    if (_x11_err || focus == None || focus == PointerRoot) {
+        XSetErrorHandler(old);
         return false;
-
+    }
     char *name = NULL;
-
-    if (!XFetchName(display, focus, &name) || !name)
+    _x11_err = 0;
+    int ok = XFetchName(display, focus, &name);
+    XSync(display, False);
+    XSetErrorHandler(old);
+    if (_x11_err || !ok || !name) {
+        if (name) XFree(name);
         return false;
-
+    }
     strncpy(buffer, name, buffer_size - 1);
     buffer[buffer_size - 1] = '\0';
-
     XFree(name);
-
     return buffer[0] != '\0';
 }
 
 bool Linux_Hyprland_GetActiveWindowTitle(char *buffer, int buffer_size)
 {
-  printf("Hyperland Isnt Supported Right Now So Any Window Getting Code Wont Work \n");
-
+  (void)buffer; (void)buffer_size;
+  // not implemented - return false so X11 fallback is used
+  return false;
 }
 
 bool Linux_Sway_GetActiveWindowTitle(char *buffer, int buffer_size)
 {
-    char *name = NULL;
-    char *app_id = NULL;
-
+    if (!buffer || buffer_size <= 0) return false;
+    buffer[0] = '\0';
     char *command_output = Platform_RunTerminalCommand(
         "sh -c \"swaymsg -t get_tree | jq '.. | objects | select(.focused? == true)'\"",
         false
     );
-
-    if (!command_output)
-        return false;
+    if (!command_output) return false;
+    if (command_output[0] == '\0') { free(command_output); return false; }
 
     StringList lines = String_Split(command_output, "\n");
-
+    char *name = NULL;
+    char *app_id = NULL;
     for (size_t i = 0; i < lines.count; i++) {
-        if (Platform_StringContainsCaseInsensitive(lines.items[i], "name")) {
+        if (!lines.items[i]) continue;
+        if (!name && Platform_StringContainsCaseInsensitive(lines.items[i], "\"name\"")) {
             name = lines.items[i];
-        } else if (Platform_StringContainsCaseInsensitive(lines.items[i], "app_id")) {
+        } else if (Platform_StringContainsCaseInsensitive(lines.items[i], "\"app_id\"")) {
             app_id = lines.items[i];
             break;
         }
     }
-    size_t size = strlen(name) + strlen(app_id) + 1;
-
+    if (!name) name = (char*)"";
+    if (!app_id) app_id = (char*)"";
+    // name/app_id are lines like '  "name": "foo",' - use as-is, but ensure not NULL
+    size_t nlen = strlen(name);
+    size_t alen = strlen(app_id);
+    size_t size = nlen + alen + 2;
     char *output_name = malloc(size);
-
-    if (!output_name)
-        return false;
-
-    strcpy(output_name, name);
-    strcat(output_name, app_id);
-
+    if (!output_name) { StringList_Free(&lines); free(command_output); return false; }
+    output_name[0] = '\0';
+    if (nlen) strncpy(output_name, name, size-1);
+    if (alen) strncat(output_name, app_id, size-1 - strlen(output_name));
     strncpy(buffer, output_name, buffer_size - 1);
     buffer[buffer_size - 1] = '\0';
-
     free(output_name);
-
     StringList_Free(&lines);
-
+    free(command_output);
     return buffer[0] != '\0';
 }
 
