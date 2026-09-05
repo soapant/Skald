@@ -103,9 +103,13 @@ void video_cmd_6(void) {
 }
 void video_prompt(void) {
     video_files.count = 0;
+
     fl_get_all_files_from_dir(VideosPath, allowed_video_formats, &video_files, NULL);
+
     const char** initial_items = (const char**)malloc(video_files.count * sizeof(char*));
+
     if (!initial_items) return;
+
     for (size_t i = 0; i < video_files.count; i++) {
         initial_items[i] = video_files.items[i].name;
     }
@@ -113,6 +117,7 @@ void video_prompt(void) {
            .height = 920, .width = 650, .item_height = 32,
            .refresh = video_refresh_callback,
            .enter = video_enter_callback);
+
     free((void*)initial_items);
 }
 
