@@ -386,7 +386,7 @@ int WindowManager_RunLinux(WindowManager* wm) {
     const long HOTKEY_STALE_EVENT_MS = 200;
 
     while (wm->running) {
-        int poll_res = poll(fds, active_kb_count + 1, -1);
+        int poll_res = poll(fds, active_kb_count + 1, 500);
         if (poll_res < 0) break;
 
         if (fds[0].revents & POLLIN) {

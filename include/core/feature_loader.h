@@ -5,9 +5,8 @@
 
 bool FeatureLoader_Init(void);
 void FeatureLoader_Shutdown(void);
-bool FeatureLoader_Reload(const char* name);
-bool FeatureLoader_ReloadAll(void);
-// control for you to tinker - call to trigger reload of single/all
+void FeatureLoader_Reload(const char* name);
+void FeatureLoader_ReloadAll(void);
 bool FeatureLoader_LoadAllFromDir(const char* dir);
 
 #endif

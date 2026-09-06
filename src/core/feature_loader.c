@@ -34,14 +34,12 @@ static bool load_single(const char* dir, const char* filename) {
     if (g_feature_count >= MAX_FEATURES) return false;
     char full[1024];
     snprintf(full, sizeof(full), "%s/%s", dir, filename);
-    // strip extension for name
     char name[64];
     strncpy(name, filename, sizeof(name)-1);
     name[sizeof(name)-1] = '\0';
     char* dot = strrchr(name, '.');
     if (dot) *dot = '\0';
 
-    // avoid duplicate
     for (int i=0;i<g_feature_count;i++) if (strcmp(g_features[i].name, name)==0) return true;
 
     LibHandle h = Platform_LoadLibrary(full);
@@ -106,7 +104,7 @@ void FeatureLoader_Shutdown(void) {
     g_feature_count = 0;
 }
 
-bool FeatureLoader_Reload(const char* name) {
+void FeatureLoader_Reload(const char* name) {
     if (!name) return FeatureLoader_ReloadAll();
     for (int i=0;i<g_feature_count;i++) {
         if (strcmp(g_features[i].name, name)==0) {
@@ -114,29 +112,29 @@ bool FeatureLoader_Reload(const char* name) {
             ShutdownFn shut = (ShutdownFn)Platform_GetSymbol(g_features[i].handle, "FlintFeatureShutdown");
             if (shut) shut();
             Platform_UnloadLibrary(g_features[i].handle);
-            // handle file may be overwritten - small delay for win32 lock
 #ifdef _WIN32
             Sleep(100);
 #endif
             LibHandle h = Platform_LoadLibrary(g_features[i].path);
-            if (!h) return false;
+            if (!h) return;
             typedef void (*InitFn)(void);
             InitFn init = (InitFn)Platform_GetSymbol(h, "FlintFeatureInit");
             if (!init) init = (InitFn)Platform_GetSymbol(h, "FlintFeatureReload");
             if (init) init();
             g_features[i].handle = h;
             printf("[FEATURE] reloaded %s\n", name);
-            return true;
+            return;
         }
     }
-    // not loaded before, try load as new file
     char file[128];
     snprintf(file, sizeof(file), "%s%s", name, Platform_LibExtension());
-    return load_single("build/features", file);
+    load_single("build/features", file);
+    return;
 }
 
-bool FeatureLoader_ReloadAll(void) {
-    // simplest: shutdown all and re-init
+void FeatureLoader_ReloadAll(void) {
+    printf("relaoding all \n");
     FeatureLoader_Shutdown();
-    return FeatureLoader_Init();
+    FeatureLoader_Init();
 }
+
