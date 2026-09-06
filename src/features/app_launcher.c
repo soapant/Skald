@@ -127,13 +127,14 @@ void launch_app_as_admin(const char* display_name) {
     }
 }
 
-void applauncher_enter_callback(const char* selection, ListBoxInfo* lb) {
+bool applauncher_enter_callback(const char* selection, ListBoxInfo* lb) {
     launch_app_by_name(selection);
+    return true;
 }
 
-void applauncher_ctrlenter_callback(const char* selection, ListBoxInfo* lb) {
+bool applauncher_ctrlenter_callback(const char* selection, ListBoxInfo* lb) {
     launch_app_as_admin(selection);
-    selection_complete = true;
+    return true;
 }
 
 void applauncher_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {

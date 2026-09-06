@@ -401,9 +401,10 @@ void calculator_refresh_callback(const char* filter, WindowHandle hListBox, List
     PopulateListBox(lb, hListBox, NULL, items, 1,NULL);
 }
 
-void calculator_enter_callback(const char* selection, ListBoxInfo* lb) {
+bool calculator_enter_callback(const char* selection, ListBoxInfo* lb) {
     char* result = lb->populated_cache[0];
     fl_copy_into_clipboard(result);
+    return true;
 }
 
 
@@ -439,11 +440,12 @@ void calculator_tab_callback(ListBoxInfo* lb) {
 
 
 
-void calculator_ctrlenter_callback(const char* selection, ListBoxInfo* lb) {
+bool calculator_ctrlenter_callback(const char* selection, ListBoxInfo* lb) {
     char* result = lb->populated_cache[0] + 2;
     UI_SetText(hEditControl, result);
     int len = strlen(result);
     UI_SetCursorPosition(hEditControl, len);
+    return false;
 }
 
 

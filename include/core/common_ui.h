@@ -70,10 +70,11 @@ static inline void UI_RedrawNow(ListBoxInfo* lb, WindowHandle hListBox);
 #endif
 
 static inline void UI_RedrawNow(ListBoxInfo* lb, WindowHandle hListBox) {
-  if (g_refresh_callback != NULL) {
+  FlintContext* _c = FlintContext_Get();
+  if (_c->prompt_callbacks.refresh != NULL) {
     char buffer[128];
     UI_GetCurrentText(hEditControl,buffer);
-    g_refresh_callback(buffer,hListBox,lb);
+    _c->prompt_callbacks.refresh(buffer,hListBox,lb);
   }
 }
 

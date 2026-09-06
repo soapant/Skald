@@ -51,7 +51,7 @@ void forgetfull_refresh_callback(const char* filter, WindowHandle hListBox, List
     fl_free_file_list(items, forgetfull_count);
 }
 
-void forgetfull_enter_callback(const char* selection, ListBoxInfo* lb) {
+bool forgetfull_enter_callback(const char* selection, ListBoxInfo* lb) {
     if (UI_IsListBoxSelected(lb)) {
         RemoveTextFromFile(selection);
     } 
@@ -60,6 +60,7 @@ void forgetfull_enter_callback(const char* selection, ListBoxInfo* lb) {
         UI_SetText(hEditControl, "");
     }
     UI_Redraw(lb, hListBox);
+    return true;
 }
 void forgetfull_edit_confirm_callback(const char* new_text, void* user_data) {
     EditCallbackData* data = (EditCallbackData*)user_data;
@@ -99,7 +100,7 @@ void forgetfull_edit_callback(const char* selection, ListBoxInfo* lb) {
     }
 }
 
-void forgetfull_ctrlenter_callback(const char* selection, ListBoxInfo* lb) {
+bool forgetfull_ctrlenter_callback(const char* selection, ListBoxInfo* lb) {
     if (UI_IsListBoxSelected(lb)) {
         RemoveTextFromFile(selection);
     } else {
@@ -107,7 +108,7 @@ void forgetfull_ctrlenter_callback(const char* selection, ListBoxInfo* lb) {
         UI_SetText(hEditControl, "");
     }
     forgetfull_refresh_callback(NULL, hListBox, lb);
-    selection_complete = false;
+    return false;
 }
 
 void TriggerForgetFull(void) {

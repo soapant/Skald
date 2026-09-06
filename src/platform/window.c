@@ -48,3 +48,7 @@ bool Window_SetFloating(const char *title, bool floating) {
 bool Linux_GetActiveWindowTitle(char *buffer, int buffer_size) {
     return Window_GetActiveWindowTitle(buffer, buffer_size);
 }
+
+bool Platform_FocusWindow(const char* window_name) {
+    return Window_FocusByTitle(window_name);
+}

@@ -19,7 +19,7 @@ void music_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxIn
     free(items);
 }
 
-void music_enter_callback(const char* selection, ListBoxInfo* lb) {
+bool music_enter_callback(const char* selection, ListBoxInfo* lb) {
     char* result = NULL;
     for (size_t i = 0; i < s_music_files.count; i++) {
         if (strcmp(s_music_files.items[i].name, selection) == 0) {
@@ -45,7 +45,7 @@ void music_enter_callback(const char* selection, ListBoxInfo* lb) {
         free(tmp.items);
     }
     
-    if (!result) return;
+    if (!result) return true;
     
 #if defined(_WIN32)
     HWND playerHwnd = FindWindow(NULL, "Music Player");
@@ -55,7 +55,7 @@ void music_enter_callback(const char* selection, ListBoxInfo* lb) {
         cds.cbData = (DWORD)(strlen(result) + 1);
         cds.lpData = (PVOID)result;
         SendMessage(playerHwnd, WM_COPYDATA, (WPARAM)NULL, (LPARAM)&cds);
-        return;
+        return true;
     } else {
         char quoted_result[MAX_PATH + 3] = {0};
         snprintf(quoted_result, sizeof(quoted_result), "\"%s\"", result);
@@ -64,7 +64,7 @@ void music_enter_callback(const char* selection, ListBoxInfo* lb) {
 #else
     if (Platform_SetX11StringProperty("Music Player", "_MP_TRACK", result) &&
         Platform_SendX11Command("Music Player", "_MP_TRACK_CHANGED", 1)) {
-        return;
+        return true;
     }
     if (strlen(MusicPlayerPath) > 0) {
         char quoted_result[MAX_PATH + 3] = {0};
@@ -72,6 +72,7 @@ void music_enter_callback(const char* selection, ListBoxInfo* lb) {
         fl_launch_with_args(MusicPlayerPath, quoted_result);
     }
 #endif
+    return true;
 }
 
 void music_cmd_1(void) {

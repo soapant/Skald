@@ -275,7 +275,7 @@ static void switcher_refresh_callback(const char* filter, WindowHandle hListBox,
     PopulateListBox(lb, hListBox, filter, titles, g_switcher_count, switcher_match_helper);
 }
 
-static void switcher_enter_callback(const char* selection, ListBoxInfo* lb) {
+static bool switcher_enter_callback(const char* selection, ListBoxInfo* lb) {
     (void)lb;
     for (int i = 0; i < g_switcher_count; i++) {
 #if defined(_WIN32)
@@ -289,6 +289,7 @@ static void switcher_enter_callback(const char* selection, ListBoxInfo* lb) {
             break;
         }
     }
+    return true;
 }
 
 static void switcher_copy_callback(const char* selection, int true_index, int type) {
