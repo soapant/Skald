@@ -330,6 +330,15 @@ Window Linux_CreateWindowExOR(Display* dpy, int x, int y, int w, int h, unsigned
         Atom wm_type = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE", False);
         Atom wm_type_dialog = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE_DIALOG", False);
         XChangeProperty(dpy, win, wm_type, XA_ATOM, 32, PropModeReplace, (unsigned char*)&wm_type_dialog, 1);
+    } else if (res_name && strcmp(res_name, "flashtext")==0) {
+        Atom wm_type = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE", False);
+        Atom wm_type_note = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE_NOTIFICATION", False);
+        XChangeProperty(dpy, win, wm_type, XA_ATOM, 32, PropModeReplace, (unsigned char*)&wm_type_note, 1);
+        Atom wm_state = XInternAtom(dpy, "_NET_WM_STATE", False);
+        Atom state_skip_taskbar = XInternAtom(dpy, "_NET_WM_STATE_SKIP_TASKBAR", False);
+        Atom state_skip_pager = XInternAtom(dpy, "_NET_WM_STATE_SKIP_PAGER", False);
+        Atom states[2] = {state_skip_taskbar, state_skip_pager};
+        XChangeProperty(dpy, win, wm_state, XA_ATOM, 32, PropModeReplace, (unsigned char*)states, 2);
     }
     if (res_name || res_class) {
         XClassHint* ch = XAllocClassHint();
