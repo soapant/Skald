@@ -23,7 +23,7 @@
 #include <X11/keysym.h>
 #include <X11/Xft/Xft.h>
 #include <unistd.h>
-#include "x11_display.h"
+#include "platform/x11/display.h"
 extern int WindowManager_RunLinux(WindowManager* wm);
 extern void WindowManager_ProcessEventsLinux(WindowManager* wm);
 extern void WindowManager_QuitLinux(WindowManager* wm);
@@ -192,8 +192,6 @@ char* WindowManager_ShowPrompt(WindowManager* wm, const PromptSpec* spec) {
     }
     FlintContext* _c = FlintContext_Get();
     // sync deprecated global
-    strncpy(output_buffer, _c->window.output_buffer, sizeof(output_buffer)-1);
-    output_buffer[sizeof(output_buffer)-1]='\0';
     return _c->window.output_buffer[0] ? _c->window.output_buffer : NULL;
 #endif
 }
@@ -224,8 +222,6 @@ char* WindowManager_ShowSimplePrompt(WindowManager* wm, const SimplePromptSpec* 
         if (popup->vtable && popup->vtable->destroy) popup->vtable->destroy(popup);
     }
     FlintContext* _c2 = FlintContext_Get();
-    strncpy(output_buffer, _c2->window.output_buffer, sizeof(output_buffer)-1);
-    output_buffer[sizeof(output_buffer)-1]='\0';
     return _c2->window.output_buffer[0] ? _c2->window.output_buffer : NULL;
 #endif
 }
@@ -282,7 +278,7 @@ static void EditPopup_OnKey(Popup* self, int vk_code, bool pressed, int modifier
     bool alt = modifiers & HOTKEY_MOD_ALT;
     if (PromptController_ShouldSwallowPending(vk_upper, modifiers)) return;
     if (PromptController_TryVimMotion(vk_upper, ctrl, shift, alt)) {
-        if (FlintContext_Get()->window.selection_complete) { data->confirmed=false; WindowManager_PopPopup(self->manager); FlintContext_Get()->window.selection_complete=false; selection_complete=false; }
+        if (FlintContext_Get()->window.selection_complete) { data->confirmed=false; WindowManager_PopPopup(self->manager); FlintContext_Get()->window.selection_complete=false; }
         return;
     }
     if (vk_code == VK_ESCAPE) {
@@ -518,8 +514,6 @@ static void PromptPopup_OnShow(Popup* self) {
     ctx->window.selection_complete = false;
     ctx->window.output_buffer[0] = '\0';
     // deprecated globals sync
-    selection_complete = false;
-    output_buffer[0] = '\0';
     extern bool g_Linux_CtrlHeld, g_Linux_AltHeld, g_Linux_ShiftHeld;
     extern bool g_linux_ctrl_held, g_linux_alt_held, g_linux_shift_held;
     g_Linux_CtrlHeld = g_Linux_AltHeld = g_Linux_ShiftHeld = false;
@@ -576,8 +570,6 @@ static void PromptPopup_OnShow(Popup* self) {
     ctx2->window.title = data->spec.title;
     ctx2->window.callbacks = ctx2->prompt_callbacks;
     // deprecated globals sync for external .so compatibility
-    g_current_feature = ctx2->window.current_feature;
-    g_title = ctx2->window.title;
     SetCurrentFeatureName(ctx2->window.current_feature);
     if (data->spec.refresh) data->spec.refresh(data->state->filter, hListBox, data->state->has_listbox ? &data->state->listbox : NULL);
 }
@@ -596,7 +588,7 @@ static void PromptPopup_OnKey(Popup* self, int vk_code, bool pressed, int modifi
     if (PromptController_ShouldSwallowPending(vk_upper, modifiers)) return;
     if (PromptController_TryVimMotion(vk_upper, ctrl_pressed, shift_pressed, alt_pressed)) {
         FlintContext* _c = FlintContext_Get();
-        if (_c->window.selection_complete) { WindowManager_PopPopup(self->manager); _c->window.selection_complete = false; selection_complete = false; }
+        if (_c->window.selection_complete) { WindowManager_PopPopup(self->manager); _c->window.selection_complete = false; }
         return;
     }
     
@@ -606,7 +598,6 @@ static void PromptPopup_OnKey(Popup* self, int vk_code, bool pressed, int modifi
             if (self->vtable && self->vtable->on_render) self->vtable->on_render(self);
         } else {
             FlintContext_Get()->window.selection_complete = true;
-            selection_complete = true;
             WindowManager_PopPopup(self->manager);
         }
         return;
@@ -696,7 +687,6 @@ static void PromptPopup_OnKey(Popup* self, int vk_code, bool pressed, int modifi
             else should_close = true;
         }
         FlintContext_Get()->window.selection_complete = should_close;
-        selection_complete = should_close;
         if (should_close) WindowManager_PopPopup(self->manager);
         return;
     }
@@ -723,7 +713,6 @@ static void PromptPopup_OnKey(Popup* self, int vk_code, bool pressed, int modifi
     if (_c2->window.selection_complete) {
         WindowManager_PopPopup(self->manager);
         _c2->window.selection_complete = false;
-        selection_complete = false;
     }
 }
 
@@ -747,7 +736,7 @@ static void PromptPopup_OnHide(Popup* self) {
         }
         g_last_mode = g_current_mode;
         FlintContext* _c3 = FlintContext_Get();
-        const char* feat = _c3->window.current_feature ? _c3->window.current_feature : g_current_feature;
+        const char* feat = _c3->window.current_feature;
         if (ModePersistsThroughFeatures && feat) {
             SavePerFeatureState(feat, g_current_mode, last_index);
         }
@@ -822,8 +811,6 @@ static void SimplePromptPopup_OnShow(Popup* self) {
     WindowManager* wm = (WindowManager*)self->manager;
     FlintContext_Get()->window.selection_complete = false;
     FlintContext_Get()->window.output_buffer[0] = '\0';
-    selection_complete = false;
-    output_buffer[0] = '\0';
     extern bool g_Linux_CtrlHeld, g_Linux_AltHeld, g_Linux_ShiftHeld;
     extern bool g_linux_ctrl_held, g_linux_alt_held, g_linux_shift_held;
     g_Linux_CtrlHeld = g_Linux_AltHeld = g_Linux_ShiftHeld = false;
@@ -866,7 +853,6 @@ static void SimplePromptPopup_OnKey(Popup* self, int vk_code, bool pressed, int 
             if (self->vtable && self->vtable->on_render) self->vtable->on_render(self);
         } else {
             FlintContext_Get()->window.selection_complete = true;
-            selection_complete = true;
             WindowManager_PopPopup(self->manager);
         }
         return;
@@ -901,10 +887,7 @@ static void SimplePromptPopup_OnKey(Popup* self, int vk_code, bool pressed, int 
         FlintContext* _c = FlintContext_Get();
         strncpy(_c->window.output_buffer, data->state->user_input, sizeof(_c->window.output_buffer)-1);
         _c->window.output_buffer[sizeof(_c->window.output_buffer)-1]='\0';
-        strncpy(output_buffer, data->state->user_input, sizeof(output_buffer)-1);
-        output_buffer[sizeof(output_buffer)-1]='\0';
         _c->window.selection_complete = true;
-        selection_complete = true;
         WindowManager_PopPopup(self->manager);
         return;
     }
@@ -935,7 +918,6 @@ static void SimplePromptPopup_OnKey(Popup* self, int vk_code, bool pressed, int 
     if (_c4->window.selection_complete) {
         WindowManager_PopPopup(self->manager);
         _c4->window.selection_complete = false;
-        selection_complete = false;
     }
 }
 
