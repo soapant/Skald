@@ -352,3 +352,83 @@ long Platform_GetFileSize(char *filepath) {
     fclose(fp);
     return size;
 }
+
+
+typedef void (*DirChangedCallback)();
+
+typedef struct {
+    char dir_path[256];
+    DirChangedCallback callback;
+} WatcherArgs;
+
+DWORD WINAPI Platform_WatchWorker(LPVOID arg) {
+    WatcherArgs *args = (WatcherArgs*)arg;
+
+    HANDLE hDir = CreateFileA(
+        args->dir_path,
+        FILE_LIST_DIRECTORY,
+        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+        NULL,
+        OPEN_EXISTING,
+        FILE_FLAG_BACKUP_SEMANTICS,
+        NULL
+    );
+
+    if (hDir == INVALID_HANDLE_VALUE) {
+        free(args);
+        return 1;
+    }
+
+    BYTE buffer[4096];
+    DWORD bytesReturned;
+
+    while (1) {
+        BOOL success = ReadDirectoryChangesW(
+            hDir,
+            &buffer,
+            sizeof(buffer),
+            TRUE,
+            FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_DIR_NAME,
+            &bytesReturned,
+            NULL,
+            NULL
+        );
+
+        if (!success || bytesReturned == 0) {
+            break;
+        }
+
+        args->callback();
+    }
+
+    CloseHandle(hDir);
+    free(args);
+    return 0;
+}
+
+bool Platform_RegisterDirWatcher(const char* dir_path, void (*callback)(void)) {
+    WatcherArgs *args = malloc(sizeof(WatcherArgs));
+    if (!args) {
+        return false;
+    }
+
+    snprintf(args->dir_path, sizeof(args->dir_path), "%s", dir_path);
+    args->callback = callback;
+
+    HANDLE hThread = CreateThread(
+        NULL,                   
+        0,                      
+        Platform_WatchWorker,   
+        args,                   
+        0,                      
+        NULL                    
+    );
+
+    if (hThread != NULL) {
+        CloseHandle(hThread);
+        return true;
+    }
+
+    free(args);
+    return false;
+}
