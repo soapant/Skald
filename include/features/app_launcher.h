@@ -23,7 +23,7 @@ const char* ListOfShitToIgnore[] = {
   NULL
 };
 
-const char* ListOfProgramPaths[20] = {
+const char* ListOfProgramPaths[] = {
 #if defined(_WIN32)
     "{APPDATA}/Microsoft/Windows/Start Menu",
     "{PROGRAMDATA}/Microsoft/Windows/Start Menu/Programs",
@@ -178,6 +178,9 @@ void TriggerAppLauncher(void) {
     
     for (size_t i = 0; i < s_apps.count; i++) {
         initial_items[i] = s_apps.items[i].name;
+    }
+    for (int i = 0; i < ARRAY_LEN(ListOfProgramPaths); i++) {
+        fl_on_dir_changed(ListOfProgramPaths[i], initialize_app_cache);
     }
 
     PROMPT(.title = "🚀 Launcher", .items = initial_items, .count = (int)s_apps.count,

@@ -232,6 +232,10 @@ bool fl_string_match_insensitive(char* needle,char* haystack) {
 bool fl_launch_browser(char* url) {
   if (!url) return false;
   return Platform_LaunchBrowserAtUrl(url);
+}
 
+char* fl_on_dir_changed(char* dir_path, void (*callback)(void)) {
+    if (!dir_path) return NULL;
+    return Platform_RegisterDirWatcher(dir_path, callback);
 }
 
