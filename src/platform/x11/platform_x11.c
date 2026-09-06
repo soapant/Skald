@@ -1,4 +1,5 @@
 #define _GNU_SOURCE
+#define _XOPEN_SOURCE 500
 #include <pthread.h>
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
@@ -19,6 +20,8 @@
 #include "common.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/inotify.h>
+#include <pthread.h>
 
 bool Platform_LaunchTerminalAtPath(const char* working_dir, const char* extra_args){
     if(!working_dir) return false;
@@ -585,7 +588,7 @@ bool Linux_X11_GetActiveWindowTitle(char *buffer, int buffer_size)
 bool Linux_Hyprland_GetActiveWindowTitle(char *buffer, int buffer_size)
 {
   (void)buffer; (void)buffer_size;
-  // not implemented - return false so X11 fallback is used
+  
   return false;
 }
 
@@ -614,7 +617,7 @@ bool Linux_Sway_GetActiveWindowTitle(char *buffer, int buffer_size)
     }
     if (!name) name = (char*)"";
     if (!app_id) app_id = (char*)"";
-    // name/app_id are lines like '  "name": "foo",' - use as-is, but ensure not NULL
+    
     size_t nlen = strlen(name);
     size_t alen = strlen(app_id);
     size_t size = nlen + alen + 2;
@@ -839,8 +842,7 @@ long Platform_GetFileSize(char *filepath) {
     }
 
     if (fseek(fp, 0L, SEEK_END) != 0) {
-        fclose(fp);
-        return -1;
+        fclose(fp); return -1;
     }
 
     long size = ftell(fp);
@@ -848,3 +850,80 @@ long Platform_GetFileSize(char *filepath) {
     fclose(fp);
     return size;
 }
+
+
+#define MAX_WATCHED_DIRS 128
+
+typedef struct {
+    int fd;
+    int wd;
+    char root_path[256];
+} InstantWatch;
+
+static InstantWatch g_instant_watches[MAX_WATCHED_DIRS];
+static int g_instant_count = 0;
+
+char* Platform_RegisterDirWatcher(const char* dir_path, void (*callback)(void)) {
+    if (!dir_path) return NULL;
+
+    for (int i = 0; i < g_instant_count; i++) {
+        if (strcmp(g_instant_watches[i].root_path, dir_path) == 0) {
+            int fd = g_instant_watches[i].fd;
+            char buffer[1024 * (sizeof(struct inotify_event) + 16)];
+            
+            // Set the file descriptor to non-blocking so it returns immediately
+            int flags = fcntl(fd, F_GETFL, 0);
+            fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+
+            int length = read(fd, buffer, sizeof(buffer));
+            if (length > 0) {
+                int j = 0;
+                while (j < length) {
+                    struct inotify_event *event = (struct inotify_event *)&buffer[j];
+                    
+                    // Run the user's callback immediately on change detection
+                    if (callback) {
+                        callback();
+                    }
+
+                    // Dynamically allocate and return the altered object filename
+                    if (event->len > 0) {
+                        char *found_name = malloc(event->len + 1);
+                        if (found_name) {
+                            strcpy(found_name, event->name);
+                            return found_name;
+                        }
+                    }
+                    // Fallback if event name length field is zero but an attribute shifted
+                    char* generic_name = malloc(32);
+                    if (generic_name) {
+                        strcpy(generic_name, "modified_resource");
+                        return generic_name;
+                    }
+                    return NULL;
+                }
+            }
+            return NULL; 
+        }
+    }
+
+    // Lazy initialization configuration setup on the first loop encounter
+    if (g_instant_count < MAX_WATCHED_DIRS) {
+        int fd = inotify_init();
+        if (fd >= 0) {
+            // Monitor modifications, attribute adjustments (mtime changes on inner folders), creation, and deletions
+            int wd = inotify_add_watch(fd, dir_path, IN_MODIFY | IN_ATTRIB | IN_CREATE | IN_DELETE);
+            if (wd >= 0) {
+                g_instant_watches[g_instant_count].fd = fd;
+                g_instant_watches[g_instant_count].wd = wd;
+                snprintf(g_instant_watches[g_instant_count].root_path, 256, "%s", dir_path);
+                g_instant_count++;
+            } else {
+                close(fd);
+            }
+        }
+    }
+
+    return NULL;
+}
+
