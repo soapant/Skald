@@ -415,6 +415,42 @@
   },
   {
     "directory": "/home/diggy/Programming/Projects/Flint",
+    "file": "src/platform/window_x11.c",
+    "arguments": [
+      "gcc",
+      "-Wall",
+      "-Wextra",
+      "-I",
+      "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
+      "-w",
+      "-g",
+      "-c",
+      "src/platform/window_x11.c"
+    ]
+  },
+  {
+    "directory": "/home/diggy/Programming/Projects/Flint",
+    "file": "src/platform/window_sway.c",
+    "arguments": [
+      "gcc",
+      "-Wall",
+      "-Wextra",
+      "-I",
+      "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
+      "-w",
+      "-g",
+      "-c",
+      "src/platform/window_sway.c"
+    ]
+  },
+  {
+    "directory": "/home/diggy/Programming/Projects/Flint",
     "file": "src/platform/x11/ui_x11.c",
     "arguments": [
       "gcc",
@@ -555,6 +591,42 @@
       "-g",
       "-c",
       "src/platform/x11/misc_x11.c"
+    ]
+  },
+  {
+    "directory": "/home/diggy/Programming/Projects/Flint",
+    "file": "src/platform/window_hyprland.c",
+    "arguments": [
+      "gcc",
+      "-Wall",
+      "-Wextra",
+      "-I",
+      "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
+      "-w",
+      "-g",
+      "-c",
+      "src/platform/window_hyprland.c"
+    ]
+  },
+  {
+    "directory": "/home/diggy/Programming/Projects/Flint",
+    "file": "src/platform/window.c",
+    "arguments": [
+      "gcc",
+      "-Wall",
+      "-Wextra",
+      "-I",
+      "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
+      "-w",
+      "-g",
+      "-c",
+      "src/platform/window.c"
     ]
   }
 ]
