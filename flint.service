@@ -15,8 +15,12 @@ WorkingDirectory=/home/diggy/Programming/Projects/Flint
 ExecStart=/home/diggy/Programming/Projects/Flint/build/flint
 # Inherit Wayland/X11 env from user manager. Ensure after login you run:
 #   systemctl --user import-environment DISPLAY WAYLAND_DISPLAY XDG_RUNTIME_DIR XAUTHORITY
-PassEnvironment=DISPLAY WAYLAND_DISPLAY XDG_RUNTIME_DIR XAUTHORITY
+PassEnvironment=DISPLAY WAYLAND_DISPLAY XDG_RUNTIME_DIR XAUTHORITY WAYLAND_DISPLAY
 Environment=XDG_RUNTIME_DIR=%t
+Environment=WAYLAND_DISPLAY=wayland-1
+Environment=DISPLAY=:0
+# Fallback for foot (Wayland-native, fails without WAYLAND_DISPLAY). Manager often has no WAYLAND_DISPLAY
+# until import-environment runs, so provide sane defaults. Foot itself ignores -e, other terms need it.
 Restart=on-failure
 RestartSec=2
 
