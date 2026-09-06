@@ -46,3 +46,4 @@ linux sleep for time
 list size of files and folders in current dir arhc linux
 strstria windwos
 nigga
+works
