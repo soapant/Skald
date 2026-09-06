@@ -423,7 +423,6 @@ void ScanAndHookKeyboards(void) {
 void HandleRunNobAndReload(void) {
   Platform_RunTerminalCommand("./nob",false);
   FeatureLoader_ReloadAll();
-
 }
 
 

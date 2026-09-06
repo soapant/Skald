@@ -8,29 +8,6 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "features/window_switcher.h"
-#include "features/google_search.h"
-#include "features/calc.h"
-#include "features/app_launcher.h"
-#include "features/process_killer.h"
-#include "features/timer.h"
-#include "features/explorer.h"
-#include "features/terminal_command.h"
-#include "features/reminder.h"
-#include "features/text_editor_zoxide.h"
-#include "features/mute_microphone.h"
-#include "features/windows_control.h"
-#include "features/pixel_utils.h"
-#include "features/screenshot.h"
-#include "features/adb.h"
-#include "features/misc_hotkeys.h"
-#include "features/replica.h"
-#include "features/quicklink.h"
-#include "features/text_snippets.h"
-#include "features/music_player.h"
-#include "features/video_viewer.h"
-#include "features/focus_switcher.h"
-#include "features/macros.h"
 
 
 
@@ -152,32 +129,6 @@ bool fl_register_hotkey_impl(char* hotkey_string,void (*on_hotkey_trigger)(void)
                                                         optional_blacklistedwindows,
                                                         whitelist);
     return hotkey_register_internal(binding);
-}
-
-void fl_init_all_hotkeys(void) {
-    window_switcher_init();
-    google_search_init();
-    macros_init();
-    calc_init();
-    app_launcher_init();
-    process_killer_init();
-    timer_init();
-    explorer_init();
-    terminal_command_init();
-    reminder_init();
-    text_editor_zoxide_init();
-    mute_microphone_init();
-    windows_control_init();
-    pixel_utils_init();
-    screenshot_init();
-    adb_init();
-    misc_hotkeys_init();
-    replica_init();
-    quicklink_init();
-    text_snippets_init();
-    music_player_init();
-    video_viewer_init();
-    focus_switcher_init();
 }
 
 bool fl_launch_terminal_with_args(char* args) {
