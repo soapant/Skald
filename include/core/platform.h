@@ -84,6 +84,6 @@ const char* Platform_GetSessionXAuthority(void);
 const char* Platform_GetRuntimeDir(void);
 #endif
 bool Platform_LaunchTerminalAtPath(const char* working_dir, const char* extra_args);
-bool Platform_LaunchBrowserAtUrl(char* url);
+bool Platform_LaunchBrowserAtUrl(char* url,bool new_window);
 
 #endif

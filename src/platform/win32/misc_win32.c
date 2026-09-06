@@ -393,7 +393,7 @@ int Platform_ReplaceLineInMappedFile(MappedFile* mf, int line_index, const char*
     return 1;
 }
 
-bool Platform_LaunchBrowserAtUrl(char* url) {
+bool Platform_LaunchBrowserAtUrl(char* url,bool new_window) {
     char command[1024];
     snprintf(command, sizeof(command), "start %s", url);
     return system(command);
