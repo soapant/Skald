@@ -1,16 +1,4 @@
-#include "features/api.h"
-#include "common.h"
-#include "helpers.h"
-#include "core/common_ui.h"
-
-typedef struct {
-    int vk_code;
-    int modifiers;
-    const char** blacklist;      
-    int blacklist_count;
-    const char** window_titles;  
-    int window_count;
-} FocusSwitcherBinding;
+#include "core/flapi.h"
 
 
 #if defined(_WIN32)
@@ -295,9 +283,5 @@ static bool IsBlacklisted(const char* title, const char* blacklist[], int count)
     return false;
 }
 
-static inline void focus_switcher_init(void) {
-}
-
 FLINT_FEATURE_INIT {
-    focus_switcher_init();
 }

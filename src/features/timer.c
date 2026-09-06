@@ -1,4 +1,3 @@
-#include "features/api.h"
 #include "core/flapi.h"
 const char* TimerPath = "{DEV}/Tscoding Timer/sowon/sowon.exe"; 
 
@@ -18,10 +17,6 @@ void TriggerTimer(void) {
     LaunchTimer(input);
 }
 
-static inline void timer_init(void) {
-    fl_register_hotkey("Alt+O", TriggerTimer);
-}
-
 FLINT_FEATURE_INIT {
-    timer_init();
+fl_register_hotkey("Alt+O", TriggerTimer);
 }

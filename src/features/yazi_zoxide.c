@@ -1,4 +1,3 @@
-#include "features/api.h"
 #include "core/flapi.h"
 #include "core/zoxide_helpers.h"
 

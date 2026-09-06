@@ -1,7 +1,5 @@
-#include "features/api.h"
 #include "core/flapi.h"
 #include "core/zoxide_helpers.h"
-#include "core/platform.h"
 
 const char* GoogleZoxideFilePath = "data/GoogleZoxide.txt";
 
@@ -71,10 +69,6 @@ void TriggerGoogleSearch(void) {
     ZoxideHelper_CleanupTriggerList(list);
 }
 
-static inline void google_search_init(void) {
-    fl_register_hotkey("Alt+G", TriggerGoogleSearch);
-}
-
 FLINT_FEATURE_INIT {
-    google_search_init();
+  fl_register_hotkey("Alt+G", TriggerGoogleSearch);
 }

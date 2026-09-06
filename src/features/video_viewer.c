@@ -1,4 +1,3 @@
-#include "features/api.h"
 #define VIDEO_VIEWER_H
 
 #include "core/flapi.h"
@@ -120,13 +119,9 @@ void video_prompt(void) {
     free((void*)initial_items);
 }
 
-static inline void video_viewer_init(void) {
-    fl_register_hotkey("Alt+Shift+,", video_cmd_1);
+FLINT_FEATURE_INIT {
+fl_register_hotkey("Alt+Shift+,", video_cmd_1);
     fl_register_hotkey("Alt+Shift+.", video_cmd_5);
     fl_register_hotkey("Alt+Shift+;", video_cmd_6);
     fl_register_hotkey("Alt+V", video_prompt);
-}
-
-FLINT_FEATURE_INIT {
-    video_viewer_init();
 }

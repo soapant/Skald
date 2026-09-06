@@ -1,8 +1,4 @@
-#include "features/api.h"
-#include "common.h"
 #include "core/flapi.h"
-#include "core/platform.h"
-#include "core/common_ui.h"
 
 #if defined(_WIN32)
 #include <initguid.h>
@@ -79,10 +75,6 @@ void TriggerMuteState(void) {
 #endif
 }
 
-static inline void mute_microphone_init(void) {
-    fl_register_hotkey("Alt+Shift+P", TriggerMuteState);
-}
-
 FLINT_FEATURE_INIT {
-    mute_microphone_init();
+fl_register_hotkey("Alt+Shift+P", TriggerMuteState);
 }

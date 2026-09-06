@@ -1,4 +1,3 @@
-#include "features/api.h"
 #include "core/flapi.h"
 
 void HandleKillMyProgram(void) {
@@ -22,13 +21,9 @@ void HandleSettingsTrigger(void) {
     Platform_SettingsPopUp();
 }
 
-static inline void misc_hotkeys_init(void) {
-    fl_register_hotkey("Alt+Shift+K", HandleKillMyProgram);
+FLINT_FEATURE_INIT {
+fl_register_hotkey("Alt+Shift+K", HandleKillMyProgram);
     fl_register_hotkey("Alt+Shift+T", HandleShowCurrentTime);
     fl_register_hotkey("Alt+D", HandleSettingsTrigger);
     fl_register_hotkey("Alt+Shift+N", HandleShowCurrentBatteryPercentage);
-}
-
-FLINT_FEATURE_INIT {
-    misc_hotkeys_init();
 }

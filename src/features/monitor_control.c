@@ -1,11 +1,10 @@
-#include "features/api.h"
+#include "core/flapi.h"
+
 #if defined(_WIN32)
 #include <windows.h>
 #include <stdlib.h>
 #include <highlevelmonitorconfigurationapi.h>
 #endif
-#include "common.h"
-#include "core/common_ui.h"
 void SetMonitorBright(int brightness) {
 #if defined(_WIN32)
     HMONITOR hMonitor = MonitorFromWindow(GetDesktopWindow(), MONITOR_DEFAULTTOPRIMARY);

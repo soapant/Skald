@@ -1,7 +1,4 @@
-#include "features/api.h"
-#include "common.h"
 #include "core/flapi.h"
-#include "helpers.h"
 
 bool IsWifiEnabled(void) {
     FILE* fp = popen("netsh interface show interface", "r");
@@ -69,11 +66,7 @@ void TriggerBlueToothToggle(void) {
 
 }
 
-static inline void windows_control_init(void) {
-    fl_register_hotkey("Alt+Shift+W", TriggerWifiToggle);
-    fl_register_hotkey("Alt+Shift+B", TriggerBlueToothToggle);
-}
-
 FLINT_FEATURE_INIT {
-    windows_control_init();
+fl_register_hotkey("Alt+Shift+W", TriggerWifiToggle);
+    fl_register_hotkey("Alt+Shift+B", TriggerBlueToothToggle);
 }
