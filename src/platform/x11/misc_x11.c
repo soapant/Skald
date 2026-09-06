@@ -673,7 +673,7 @@ bool Platform_TerminateProcessByName(const char* exe_name) {
 }
 
 bool Platform_LaunchBrowserAtUrl(char* url) {
-    char command[1024];
+    char command[2048];
     const char* real_user = Platform_GetRealUser();
     const char* display = getenv("DISPLAY");
     if (!display) display = ":0";
@@ -683,11 +683,16 @@ bool Platform_LaunchBrowserAtUrl(char* url) {
     const char* env_runtime = getenv("XDG_RUNTIME_DIR");
     if (env_runtime) snprintf(runtime_dir, sizeof(runtime_dir), "%s", env_runtime);
     else snprintf(runtime_dir, sizeof(runtime_dir), "/run/user/1000");
-    if (Platform_IsRunningAsRoot()) {
-        snprintf(command, sizeof(command), "sudo -u %s DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s xdg-open \"%s\" > /dev/null 2>&1 &", real_user, display, xauthority, runtime_dir, url);
-    } else {
-        snprintf(command, sizeof(command), "DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s xdg-open \"%s\" > /dev/null 2>&1 &", display, xauthority, runtime_dir, url);
-    }
-    return system(command);
 
+    if (Platform_IsRunningAsRoot()) {
+        snprintf(command, sizeof(command), 
+                 "sudo -u %s DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s %s --new-window \"%s\" > /dev/null 2>&1 &",
+                 real_user, display, xauthority, runtime_dir, UsedBrowser, url);
+    } else {
+        snprintf(command, sizeof(command), 
+                 "DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s %s --new-window \"%s\" > /dev/null 2>&1 &",
+                 display, xauthority, runtime_dir, UsedBrowser, url);
+    }
+    
+    return system(command) == 0;
 }
