@@ -20,7 +20,7 @@ void zoxide_edit_callback(const char* selection, ListBoxInfo* lb) {
 }
 
 void zoxide_enter_callback(const char* selection, ListBoxInfo* lb) {
-    char* path = fl_get_zoxide_match((char*)selection);
+    char* path = fl_get_zoxide_match(selection);
     if (path) {
         fl_launch_terminal_at_path(path, NULL);
         ZoxideHelper_AppendNewEntry(TerminalZoxideFilePath, selection, lb, &cached_zoxide_commands, &cached_zoxide_count);
@@ -40,7 +40,7 @@ void TriggerZoxide(void) {
     ZoxideHelper_CleanupTriggerList(list);
 }
 
-void zoxide_init(void) {
+static inline void zoxide_init(void) {
     fl_register_hotkey("Alt+W", TriggerZoxide);
 }
 
