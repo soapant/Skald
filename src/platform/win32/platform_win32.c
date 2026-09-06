@@ -406,10 +406,10 @@ DWORD WINAPI Platform_WatchWorker(LPVOID arg) {
     return 0;
 }
 
-bool Platform_RegisterDirWatcher(const char* dir_path, void (*callback)(void)) {
+char* Platform_RegisterDirWatcher(const char* dir_path, void (*callback)(void)) {
     WatcherArgs *args = malloc(sizeof(WatcherArgs));
     if (!args) {
-        return false;
+        return NULL;
     }
 
     snprintf(args->dir_path, sizeof(args->dir_path), "%s", dir_path);
@@ -426,9 +426,9 @@ bool Platform_RegisterDirWatcher(const char* dir_path, void (*callback)(void)) {
 
     if (hThread != NULL) {
         CloseHandle(hThread);
-        return true;
+        return NULL;
     }
 
     free(args);
-    return false;
+    return NULL;
 }

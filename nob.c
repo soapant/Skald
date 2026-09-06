@@ -21,6 +21,7 @@
 #endif
 
 static Nob_File_Paths sources = {0};
+static Nob_File_Paths feature_sources = {0};
 static bool g_want_static = false;
 static bool has_musl_gcc(void){
     return nob_file_exists("/usr/bin/musl-gcc") || nob_file_exists("/bin/musl-gcc");
@@ -35,10 +36,31 @@ static bool collect_source(Nob_Walk_Entry entry) {
 #else
             if (nob_sv_ends_with_cstr(path, "_win32.c")) return true;
 #endif
-            nob_da_append(&sources, strdup(path.data));
+            if (nob_sv_starts_with(path, nob_sv_from_cstr("src/features/"))) {
+                nob_da_append(&feature_sources, strdup(path.data));
+            } else {
+                nob_da_append(&sources, strdup(path.data));
+            }
         }
     }
     return true;
+}
+
+static const char* feature_so_path(const char* src) {
+    const char* base = nob_path_name(src);
+    size_t len = strlen(base);
+    char* no_ext = malloc(len+1);
+    strcpy(no_ext, base);
+    char* dot = strrchr(no_ext, '.');
+    if (dot) *dot = '\0';
+#if defined(_WIN32)
+    const char* ext = ".dll";
+#elif defined(__APPLE__)
+    const char* ext = ".dylib";
+#else
+    const char* ext = ".so";
+#endif
+    return nob_temp_sprintf("build/features/%s%s", no_ext, ext);
 }
 
 static const char* obj_path(const char* src) {
@@ -305,6 +327,23 @@ int main(int argc, char** argv) {
         if (stale(src, obj_path(src))) {
             nob_da_append(&to_build, src);
             nob_da_append(&err_paths, strdup(err_path(src)));
+        }
+    }
+
+    if (!nob_mkdir_if_not_exists("build/features")) return 1;
+    for (size_t i = 0; i < feature_sources.count; ++i) {
+        const char* src = feature_sources.items[i];
+        const char* so = feature_so_path(src);
+        if (!nob_file_exists(so) || nob_needs_rebuild1(so, src) != 0) {
+            Nob_Cmd fcmd = {0};
+            nob_cc(&fcmd);
+            nob_cc_flags(&fcmd);
+            nob_cmd_append(&fcmd, CC_FLAGS, "-fPIC", "-shared", "-o", so, src);
+            if (!nob_cmd_run(&fcmd)) {
+                nob_log(NOB_ERROR, "Failed to build feature %s", so);
+                return 1;
+            }
+            nob_log(NOB_INFO, "Built feature %s", so);
         }
     }
 

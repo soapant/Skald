@@ -1,7 +1,12 @@
-#ifndef TODO_H
-#define TODO_H
-
+#include "features/api.h"
+#include "core/feature_loader.h"
+#include "common.h"
+#include "helpers.h"
+#include "config.h"
 #include "core/flapi.h"
+#include "core/platform.h"
+#include "core/common_ui.h"
+#include "core/window_manager.h"
 typedef struct {
     const char* alias;
     const char* alias_label;
@@ -98,14 +103,14 @@ const size_t TODO_DICT_COUNT = ARRAY_LEN(TODO_DICT);
 ColorRef GetTagColor(const char* tag_text) {
     if (!tag_text || strlen(tag_text) == 0) return COLOR_TEXT;
     
-    for (int i = 0; i < TODO_CONFIG_FLAGS_COUNT; i++) {
+    for (size_t i = 0; i < TODO_CONFIG_FLAGS_COUNT; i++) {
         if (TODO_DICT[i].tag_label) {
             if (strstr(tag_text, TODO_DICT[i].tag_label) != NULL) {
                 return TODO_DICT[i].color;
             }
         }
     }
-    for (int i = 0; i < TODO_ALIAS_DICT_COUNT; i++) {
+    for (size_t i = 0; i < TODO_ALIAS_DICT_COUNT; i++) {
         if (strstr(tag_text, TODO_ALIAS_DICT[i].alias) != NULL) {
             return COLOR_TEXT;
         }
@@ -132,7 +137,7 @@ void ParseTodoInput(const char* input, TodoAliasEntry* alias_out, TodoConfigEntr
         char* param = GetFlagParameter(input_copy, alias_matches[i].index);
         if (param && strlen(param) > 0) {
             int alias_idx = -1;
-            for (int j = 0; j < TODO_ALIAS_DICT_COUNT; j++) {
+            for (size_t j = 0; j < TODO_ALIAS_DICT_COUNT; j++) {
                 if (strcmp(alias_matches[i].flag, TODO_ALIAS_DICT[j].alias) == 0) {
                     alias_idx = j;
                     break;
@@ -150,7 +155,7 @@ void ParseTodoInput(const char* input, TodoAliasEntry* alias_out, TodoConfigEntr
     int config_match_count = SearchFlagsInText(input_copy, TODO_CONFIG_FLAGS, TODO_CONFIG_FLAGS_COUNT, sizeof(GenericFlagEntry), config_matches, 10);
     
     for (int i = 0; i < config_match_count && *tag_count < 10; i++) {
-        for (int j = 0; j < TODO_CONFIG_FLAGS_COUNT; j++) {
+        for (size_t j = 0; j < TODO_CONFIG_FLAGS_COUNT; j++) {
             if (strcmp(config_matches[i].flag, TODO_CONFIG_FLAGS[j].flag) == 0) {
                 if (TODO_DICT[j].tag_label) {
                     snprintf(tags_out[*tag_count], 64, "%s%s%s", 
@@ -178,7 +183,7 @@ void ParseTodoInput(const char* input, TodoAliasEntry* alias_out, TodoConfigEntr
     while (token != NULL) {
         bool is_flag = false;
         
-        for (int i = 0; i < TODO_ALIAS_FLAGS_COUNT; i++) {
+        for (size_t i = 0; i < TODO_ALIAS_FLAGS_COUNT; i++) {
             if (strcmp(token, TODO_ALIAS_FLAGS[i].flag) == 0) {
                 is_flag = true;
                 token = strtok(NULL, " ");
@@ -187,7 +192,7 @@ void ParseTodoInput(const char* input, TodoAliasEntry* alias_out, TodoConfigEntr
         }
         
         if (!is_flag) {
-            for (int i = 0; i < TODO_CONFIG_FLAGS_COUNT; i++) {
+            for (size_t i = 0; i < TODO_CONFIG_FLAGS_COUNT; i++) {
                 if (strcmp(token, TODO_CONFIG_FLAGS[i].flag) == 0) {
                     is_flag = true;
                     if (TODO_DICT[i].is_alias) {
@@ -575,8 +580,11 @@ void TriggerTodo(void) {
     fl_free_file_list(ui_list, count);
 }
 
-static inline void todo_init(void) {
+void todo_init(void) {
   fl_register_hotkey("Alt+T",TriggerTodo);
+  fl_register_hotkey("Alt+B",FeatureLoader_ReloadAll);
 }
 
-#endif
+FLINT_FEATURE_INIT {
+    todo_init();
+}
