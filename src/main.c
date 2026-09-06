@@ -3,6 +3,7 @@
 #include "helpers.h"
 #include "core/feature_data.h"
 #include "core/flapi.h"
+#include "core/feature_loader.h"
 #include "core/window_manager.h"
 #if !defined(_WIN32)
 #include <pthread.h>
@@ -124,6 +125,7 @@ int main() {
 
   printf("[SYSTEM] Low-Level Hotkey Services Running. GDI+ Online.\n");
   fl_init_all_hotkeys();
+  FeatureLoader_Init();
   
   WindowManager* wm = WindowManager_Create();
   if (!wm) {
@@ -134,6 +136,7 @@ int main() {
   WindowManager_Run(wm);
   WindowManager_Destroy(wm);
   
+  FeatureLoader_Shutdown();
   Platform_ShutdownUI();
 #if !defined(_WIN32)
   cleanup_display();
