@@ -51,8 +51,8 @@ typedef struct {
 } SimplePromptState;
 
 typedef void (*RefreshCallback)(const char* filter, WindowHandle hListBox, ListBoxInfo* lb);
-typedef void (*EnterCallback)(const char* selection, ListBoxInfo* lb);
-typedef void (*CtrlEnterCallback)(const char* selection, ListBoxInfo* lb);
+typedef bool (*EnterCallback)(const char* selection, ListBoxInfo* lb);
+typedef bool (*CtrlEnterCallback)(const char* selection, ListBoxInfo* lb);
 typedef void (*TabCallback)(ListBoxInfo* lb);
 #if defined(_WIN32)
 typedef void (*RenderCallback)(HDC hdc, const char* text, RECT* rect, BOOL is_selected, int itemIndex);
