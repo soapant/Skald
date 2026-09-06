@@ -672,27 +672,35 @@ bool Platform_TerminateProcessByName(const char* exe_name) {
     return true;
 }
 
-bool Platform_LaunchBrowserAtUrl(char* url) {
+bool Platform_LaunchBrowserAtUrl(char* url,bool new_window) {
     char command[2048];
     const char* real_user = Platform_GetRealUser();
     const char* display = getenv("DISPLAY");
     if (!display) display = ":0";
     const char* xauthority = getenv("XAUTHORITY");
     if (!xauthority) xauthority = "";
-    char runtime_dir[256];
     const char* env_runtime = getenv("XDG_RUNTIME_DIR");
+    char runtime_dir[256];
     if (env_runtime) snprintf(runtime_dir, sizeof(runtime_dir), "%s", env_runtime);
     else snprintf(runtime_dir, sizeof(runtime_dir), "/run/user/1000");
-
-    if (Platform_IsRunningAsRoot()) {
-        snprintf(command, sizeof(command), 
-                 "sudo -u %s DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s %s --new-window \"%s\" > /dev/null 2>&1 &",
-                 real_user, display, xauthority, runtime_dir, UsedBrowser, url);
+    if (new_window) {
+      if (Platform_IsRunningAsRoot()) {
+          snprintf(command, sizeof(command), 
+                   "sudo -u %s DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s %s --new-window \"%s\" > /dev/null 2>&1 &",
+                   real_user, display, xauthority, runtime_dir, UsedBrowser, url);
+      } else {
+          snprintf(command, sizeof(command), 
+                   "DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s %s --new-window \"%s\" > /dev/null 2>&1 &",
+                   display, xauthority, runtime_dir, UsedBrowser, url);
+      }
+      
+      return system(command) == 0;
     } else {
-        snprintf(command, sizeof(command), 
-                 "DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s %s --new-window \"%s\" > /dev/null 2>&1 &",
-                 display, xauthority, runtime_dir, UsedBrowser, url);
+    if (Platform_IsRunningAsRoot()) {
+        snprintf(command, sizeof(command), "sudo -u %s DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s xdg-open \"%s\" > /dev/null 2>&1 &", real_user, display, xauthority, runtime_dir, url);
+    } else {
+        snprintf(command, sizeof(command), "DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s xdg-open \"%s\" > /dev/null 2>&1 &", display, xauthority, runtime_dir, url);
     }
-    
-    return system(command) == 0;
+    return system(command);
+    }
 }
