@@ -1,0 +1,47 @@
+#ifndef _WIN32
+#include "platform/window.h"
+#include "core/platform.h"
+#include "helpers.h"
+#include <string.h>
+#include <stdlib.h>
+
+bool Window_Sway_GetActiveWindowTitle(char *buffer, int buffer_size)
+{
+    if (!buffer || buffer_size <= 0) return false;
+    buffer[0] = '\0';
+    char *command_output = Platform_RunTerminalCommand(
+        "sh -c \"swaymsg -t get_tree | jq '.. | objects | select(.focused? == true)'\"",
+        false
+    );
+    if (!command_output) return false;
+    if (command_output[0] == '\0') { free(command_output); return false; }
+    StringList lines = String_Split(command_output, "\n");
+    char *name = NULL;
+    char *app_id = NULL;
+    for (size_t i = 0; i < lines.count; i++) {
+        if (!lines.items[i]) continue;
+        if (!name && Platform_StringContainsCaseInsensitive(lines.items[i], "\"name\"")) {
+            name = lines.items[i];
+        } else if (Platform_StringContainsCaseInsensitive(lines.items[i], "\"app_id\"")) {
+            app_id = lines.items[i];
+            break;
+        }
+    }
+    if (!name) name = (char*)"";
+    if (!app_id) app_id = (char*)"";
+    size_t nlen = strlen(name);
+    size_t alen = strlen(app_id);
+    size_t size = nlen + alen + 2;
+    char *output_name = malloc(size);
+    if (!output_name) { StringList_Free(&lines); free(command_output); return false; }
+    output_name[0] = '\0';
+    if (nlen) strncpy(output_name, name, size-1);
+    if (alen) strncat(output_name, app_id, size-1 - strlen(output_name));
+    strncpy(buffer, output_name, buffer_size - 1);
+    buffer[buffer_size - 1] = '\0';
+    free(output_name);
+    StringList_Free(&lines);
+    free(command_output);
+    return buffer[0] != '\0';
+}
+#endif
