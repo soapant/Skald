@@ -25,6 +25,7 @@ const char* UsedTerminal = "foot";
 const char* UsedShell = "nu";
 const char* UsedFileManager = "thunar";
 const char* UsedTextEditor = "nvim";
+const char* UsedBrowser = "zen-browser";
 const char* ImageEditorPath =  "{APPDATA}/Microsoft/Windows/Start Menu/Programs/Scoop Apps/PicView.lnk";
 const char* IconPath = "{MISC}/switch_window.ico";
 

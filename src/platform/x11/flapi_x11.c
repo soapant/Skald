@@ -217,8 +217,8 @@ bool fl_launch_with_args_platform(const char* path, const char* args) {
         if(is_terminal && exec_line[0]){
             const char* wd = workdir[0] ? workdir : NULL;
             char extra[2048];
-            if (args && args[0]) snprintf(extra, sizeof(extra), "-e sh -c '%s %s; exec ${SHELL:-/bin/sh}'", exec_line, args);
-            else snprintf(extra, sizeof(extra), "-e sh -c '%s; exec ${SHELL:-/bin/sh}'", exec_line);
+            if (args && args[0]) snprintf(extra, sizeof(extra), "-e sh -c '%s %s; exec %s'", exec_line, args,UsedShell);
+            else snprintf(extra, sizeof(extra), "-e sh -c '%s; exec %s'", exec_line,UsedShell);
             if(wd) return Platform_LaunchTerminalAtPath(wd, extra);
             else return Platform_LaunchTerminalAtPath(Platform_GetRealHome(), extra);
         }
@@ -260,7 +260,7 @@ bool fl_launch_with_args_platform(const char* path, const char* args) {
             _exit(127);
         } else if(pid>0){ int st=0; waitpid(pid,&st,0); if(WIFEXITED(st) && WEXITSTATUS(st)!=0 && exec_line[0]){
                 if(is_terminal){
-                    char extra2[2048]; snprintf(extra2, sizeof(extra2), "-e sh -c '%s; exec ${SHELL:-/bin/sh}'", exec_line);
+                    char extra2[2048]; snprintf(extra2, sizeof(extra2), "-e sh -c '%s; exec'", exec_line,UsedShell);
                     return Platform_LaunchTerminalAtPath(Platform_GetRealHome(), extra2);
                 } else {
                     pid_t pid3=fork();

@@ -17,41 +17,10 @@ void google_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxI
 }
 
 
-void DoGoogleSearch(const char* query) {
-    if (!query || strlen(query) == 0) return;
-    
-    char url[2048] = {0};
-    char encoded_query[1024] = {0};
-    
-    for (int i = 0; query[i] && i < sizeof(encoded_query) - 1; i++) {
-        char c = query[i];
-        if (c == ' ') {
-            encoded_query[strlen(encoded_query)] = '+';
-        } else if (c == '#') {
-            strcat(encoded_query, "%23");
-        } else if (c == '&') {
-            strcat(encoded_query, "%26");
-        } else if (c == '?') {
-            strcat(encoded_query, "%3F");
-        } else if (c == '%') {
-            strcat(encoded_query, "%25");
-        } else if (c == '+') {
-            strcat(encoded_query, "%2B");
-        } else {
-            encoded_query[strlen(encoded_query)] = c;
-        }
-    }
-    
-    snprintf(url, sizeof(url), "https://www.google.com/search?q=%s", encoded_query);
-    
-    printf("[GOOGLE] Searching: %s\n", url);
-    
-    Platform_ShellExecuteWithVerb(url, "open", true);
-}
 
 void google_enter_callback(const char* selection, ListBoxInfo* lb) {
       ZoxideHelper_AppendNewEntry(GoogleZoxideFilePath, selection, lb, &g_cached_google_queries, &g_cached_google_count);
-      DoGoogleSearch(selection);
+      Platform_LaunchBrowserAtUrl(selection);
 }
 
 void google_edit_callback(const char* selection, ListBoxInfo* lb) {
