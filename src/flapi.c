@@ -10,11 +10,9 @@
 #include <stdio.h>
 #include "features/window_switcher.h"
 #include "features/google_search.h"
-#include "features/todo.h"
 #include "features/calc.h"
 #include "features/app_launcher.h"
 #include "features/process_killer.h"
-#include "features/zoxide.h"
 #include "features/timer.h"
 #include "features/explorer.h"
 #include "features/terminal_command.h"
@@ -160,11 +158,9 @@ void fl_init_all_hotkeys(void) {
     window_switcher_init();
     google_search_init();
     macros_init();
-    todo_init();
     calc_init();
     app_launcher_init();
     process_killer_init();
-    zoxide_init();
     timer_init();
     explorer_init();
     terminal_command_init();
