@@ -16,9 +16,6 @@ void HandleShowCurrentBatteryPercentage(void) {
     SubjectiveMessageDisplay(output,140,3,COLOR_TEXT);
   }
 }
-void HandleTest(void) {
-  SubjectiveMessageDisplay("text",140,1,COLOR_TEXT);
-}
 
 void HandleSettingsTrigger(void) {
     Platform_SettingsPopUp();
@@ -29,5 +26,4 @@ FLINT_FEATURE_INIT {
     fl_register_hotkey("Alt+Shift+T", HandleShowCurrentTime);
     fl_register_hotkey("Alt+D", HandleSettingsTrigger);
     fl_register_hotkey("Alt+Shift+N", HandleShowCurrentBatteryPercentage);
-    fl_register_hotkey("Alt+Shift+B", HandleTest);
 }

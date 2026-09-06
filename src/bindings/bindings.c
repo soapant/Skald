@@ -162,7 +162,8 @@ void ExecuteMotion(MotionAction action, const char* sequence, int typed_count) {
     VimContext ctx = Vim_FromGlobals();
     if (typed_count > 0 && sequence != NULL && strlen(sequence) > 0 && IsInsertMode()) {
         DeleteLastTypedChar(&ctx);
-        if (ctx.state && g_refresh_callback) g_refresh_callback(ctx.state->filter, ctx.hListBox, ctx.lb);
+        FlintContext* _c = FlintContext_Get();
+        if (ctx.state && _c->prompt_callbacks.refresh) _c->prompt_callbacks.refresh(ctx.state->filter, ctx.hListBox, ctx.lb);
     }
     for (int i = 0; i < VIM_SEQUENCE_BINDING_COUNT; i++) {
         const SequenceBinding* b = &G_VIM_SEQUENCE_BINDINGS[i];

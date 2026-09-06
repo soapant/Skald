@@ -18,13 +18,13 @@ void zoxide_edit_callback(const char* selection, ListBoxInfo* lb) {
     ZoxideHelper_Edit(selection, lb, TerminalZoxideFilePath, &cached_zoxide_commands, &cached_zoxide_count, zoxide_refresh_callback);
 }
 
-void zoxide_enter_callback(const char* selection, ListBoxInfo* lb) {
+bool zoxide_enter_callback(const char* selection, ListBoxInfo* lb) {
     char* path = fl_get_zoxide_match(selection);
     if (path) {
         fl_launch_terminal_at_path(path, NULL);
         ZoxideHelper_AppendNewEntry(TerminalZoxideFilePath, selection, lb, &cached_zoxide_commands, &cached_zoxide_count);
-        free(path);
     }
+    return true;
 }
 
 void TriggerZoxide(void) {

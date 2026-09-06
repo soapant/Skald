@@ -26,15 +26,20 @@ static void ExecuteNumberShortcut(int number, bool close_popup) {
 
         const char* selected_text = g_num_shortcut_state.lb->populated_cache[index];
 
+        FlintContext* _c = FlintContext_Get();
+        strncpy(_c->window.output_buffer, selected_text, sizeof(_c->window.output_buffer) - 1);
+        _c->window.output_buffer[sizeof(_c->window.output_buffer) - 1] = '\0';
         strncpy(output_buffer, selected_text, sizeof(output_buffer) - 1);
         output_buffer[sizeof(output_buffer) - 1] = '\0';
-        SaveFeatureHistory(output_buffer);
-        if (g_enter_callback != NULL) {
-            g_enter_callback(output_buffer, g_num_shortcut_state.lb);
-            selection_complete = true;
+        SaveFeatureHistory(_c->window.output_buffer);
+        bool should_close = false;
+        if (_c->prompt_callbacks.enter != NULL) {
+            should_close = _c->prompt_callbacks.enter(_c->window.output_buffer, g_num_shortcut_state.lb);
         }
+        _c->window.selection_complete = should_close;
+        selection_complete = should_close;
         printf("[NUM-SHORTCUT] Selected item %d: %s (close=%d)\n",
-               index + 1, output_buffer, close_popup);
+               index + 1, _c->window.output_buffer, close_popup);
     } else {
         printf("[NUM-SHORTCUT] Item %d doesn't exist (only %d items)\n",
                index + 1, count);

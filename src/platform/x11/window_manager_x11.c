@@ -285,13 +285,18 @@ static void Linux_HandleKeyPress(Display* dpy, XKeyEvent* ev, WindowManager* wm)
                             memmove(state->filter+state->cursor+len2, state->filter+state->cursor, n-state->cursor+1);
                             memcpy(state->filter+state->cursor, buf2, len2);
                             state->cursor+=len2;
-                            if (g_refresh_callback) g_refresh_callback(state->filter, hListBox, state->has_listbox ? &state->listbox : NULL);
+                            FlintContext* _c = FlintContext_Get();
+                            if (_c->prompt_callbacks.refresh) _c->prompt_callbacks.refresh(state->filter, hListBox, state->has_listbox ? &state->listbox : NULL);
+                            else if (state && state->listbox.populated_count >=0) {} // no-op
                         }
                     }
                 }
             }
         }
-        if (selection_complete) {
+        FlintContext* _c2 = FlintContext_Get();
+        if (_c2->window.selection_complete) {
+            _c2->window.selection_complete = false;
+            selection_complete = false;
             WindowManager_PopPopup(wm);
             Popup* new_top = WindowManager_GetTopPopup(wm);
             if (new_top && new_top->vtable && new_top->vtable->on_render) new_top->vtable->on_render(new_top);
