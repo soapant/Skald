@@ -144,7 +144,7 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
         SetMode(MODE_NORMAL);
         return true;
       } else {
-        do { FlintContext_Get()->window.selection_complete = true; selection_complete = true; } while(0);
+        FlintContext_Get()->window.selection_complete = true;
         return true;
       }
     }
@@ -227,7 +227,7 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
           bool should_close = false;
           if (_c->prompt_callbacks.ctrl_enter) should_close = _c->prompt_callbacks.ctrl_enter(sel, &state->listbox);
           else if (_c->prompt_callbacks.enter) should_close = _c->prompt_callbacks.enter(sel, &state->listbox);
-          _c->window.selection_complete = should_close; selection_complete = should_close;
+          _c->window.selection_complete = should_close;
         }
         return true;
       } else {
@@ -235,7 +235,7 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
           FlintContext* _c2 = FlintContext_Get();
           bool should_close = true;
           if (_c2->prompt_callbacks.enter) should_close = _c2->prompt_callbacks.enter(sel, &state->listbox);
-          _c2->window.selection_complete = should_close; selection_complete = should_close;
+          _c2->window.selection_complete = should_close;
         }
         return true;
       }
@@ -280,7 +280,7 @@ bool Linux_HandleSimplePromptKey(const XEvent* ev,SimplePromptState *state) {
         SetMode(MODE_NORMAL);
         return true;
       } else {
-        do { FlintContext_Get()->window.selection_complete = true; selection_complete = true; } while(0);
+        FlintContext_Get()->window.selection_complete = true;
         return true;
       }
     }
@@ -293,7 +293,7 @@ bool Linux_HandleSimplePromptKey(const XEvent* ev,SimplePromptState *state) {
       return true;
     }
     if (wParam == VK_RETURN) {
-      do { FlintContext_Get()->window.selection_complete = true; selection_complete = true; } while(0);
+      FlintContext_Get()->window.selection_complete = true;
       return true;
     }
     return false;

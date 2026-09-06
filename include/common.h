@@ -43,16 +43,7 @@ extern int g_key_pressed;
 extern KeyCallback g_key_callback;
 extern bool draw_background;
 #endif
-extern char output_buffer[256];
-extern bool selection_complete;
-extern char* g_current_feature;
-extern const char* g_title;
-
-extern HashMap* feature_history;
-extern HashMap* g_item_index_map;
-extern HashMap* history_indices;
-extern WinTimer g_timer;
-extern char* SelectionData[2048];
-extern int SelectionDataCount;
+// Migrated to FlintContext: use FlintContext_Get()->window.output_buffer / .selection_complete / .current_feature / .title
+// and FlintContext_Get()->feature_history / ->g_item_index_map / ->history_indices / ->g_timer / ->SelectionData
 
 #endif

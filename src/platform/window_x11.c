@@ -1,6 +1,6 @@
 #ifndef _WIN32
 #include "platform/window.h"
-#include "x11_display.h"
+#include "platform/x11/display.h"
 #include <X11/Xlib.h>
 #include <string.h>
 

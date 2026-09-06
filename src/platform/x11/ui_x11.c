@@ -30,7 +30,7 @@
 #include <X11/Xatom.h>
 #include <X11/extensions/Xrandr.h>
 #include <X11/Xft/Xft.h>
-#include "x11_display.h"
+#include "platform/x11/display.h"
 
 
 extern int pending_hotkey_vk;
