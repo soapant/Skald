@@ -6,6 +6,7 @@
 #include <dirent.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include "core/timer.h"
 #ifndef _WIN32
 #include <dlfcn.h>
 #else
@@ -133,8 +134,11 @@ void FeatureLoader_Reload(const char* name) {
 }
 
 void FeatureLoader_ReloadAll(void) {
-    printf("relaoding all \n");
+    WinTimer timer1 = TimerStart();
+
     FeatureLoader_Shutdown();
     FeatureLoader_Init();
+
+    TimerEnd(timer1, "Hot Reload");
 }
 
