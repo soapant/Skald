@@ -225,6 +225,11 @@ void Platform_DisplayMessage(const char* message, int centerX, int centerY, int 
     if (topLeftX + winWidth > mox + mow) topLeftX = mox + mow - winWidth;
     if (topLeftY + winHeight > moy + moh) topLeftY = moy + moh - winHeight;
 
+    // save focus to restore after showing notification
+    Window prev_focus = None;
+    int prev_revert = 0;
+    XGetInputFocus(dpy, &prev_focus, &prev_revert);
+
     Window win = Linux_CreateDisplayMessageWindow(dpy, topLeftX, topLeftY, winWidth, winHeight);
 
     XftDraw* xd = Linux_CreateXftDraw(dpy, win);
@@ -242,6 +247,11 @@ void Platform_DisplayMessage(const char* message, int centerX, int centerY, int 
     XMapWindow(dpy, win);
     XMoveWindow(dpy, win, topLeftX, topLeftY);
     XFlush(dpy);
+    // restore focus - don't steal
+    if (prev_focus != None && prev_focus != PointerRoot && prev_focus != win) {
+        XSetInputFocus(dpy, prev_focus, RevertToParent, CurrentTime);
+        XFlush(dpy);
+    }
 
     struct pollfd pfd = { .fd = ConnectionNumber(dpy), .events = POLLIN };
     while (poll(&pfd, 1, 300) > 0) {
