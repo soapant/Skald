@@ -176,9 +176,14 @@ bool fl_string_match_insensitive(char* needle,char* haystack) {
     if (!needle || !haystack) return false;
     return Platform_StringContainsCaseInsensitive(needle,haystack);
 }
+bool fl_launch_browser_window(char* url) {
+  if (!url) return false;
+  return Platform_LaunchBrowserAtUrl(url,true);
+}
+
 bool fl_launch_browser(char* url) {
   if (!url) return false;
-  return Platform_LaunchBrowserAtUrl(url);
+  return Platform_LaunchBrowserAtUrl(url,false);
 }
 
 char* fl_on_dir_changed(char* dir_path, void (*callback)(void)) {

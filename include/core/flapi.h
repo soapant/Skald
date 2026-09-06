@@ -67,6 +67,7 @@ int fl_collect_running_processes(char process_list[][128], int max_count);
 bool fl_terminate_process_by_name(const char* exe_name);
 bool fl_string_match_insensitive(char* needle,char* haystack);
 bool fl_launch_browser(char* url);
+bool fl_launch_browser_in_a_new_window(char* url);
 char* fl_on_dir_changed(char* dir_path,void(callback)(void));
 
 #define _FL_HOTKEY_EXPAND(hotkey, trigger, cond, whitelist, ...) \

@@ -22,4 +22,3 @@ the fucking display message needs a certain lengh of message to display correctl
 quicklinks dont work in service? maybe also overall||[Cprogram]
 fucking windows implementation of dir watcehr doesnt work ||[Cprogram]
 google serach doesnt owrk in the servcice||[Cprogram]
-the fucking service keeps attaching itself to browser so when it closes the browser closes its only when nob closes it tho 
