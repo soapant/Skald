@@ -420,8 +420,9 @@ void ScanAndHookKeyboards(void) {
     closedir(dir);
 }
 //TEMPORARY
-void HandleRunNob(void) {
+void HandleRunNobAndReload(void) {
   Platform_RunTerminalCommand("./nob",false);
+  FeatureLoader_ReloadAll();
 
 }
 
@@ -473,28 +474,17 @@ bool HandleGlobalKeyEvent(int key_code, int value) {
 
     TimerEnd(timer, "ProcessHotkey");
 
-    //temporary
+    //temp
     HotkeyBinding binding = {
-        .vk_code = 'R',
-        .modifiers = HOTKEY_MOD_ALT_CTRL,
-        .blacklist = NULL,
-        .blacklist_count = 0,
-        .whitelist = 0,
-        .hotkey_callback = FeatureLoader_ReloadAll,
-        .hotkey_condition = NULL
-    };
-    hotkey_register_internal(binding);
-
-    HotkeyBinding binding2 = {
         .vk_code = 'N',
         .modifiers = HOTKEY_MOD_ALT_CTRL,
         .blacklist = NULL,
         .blacklist_count = 0,
         .whitelist = 0,
-        .hotkey_callback = HandleRunNob,
+        .hotkey_callback = HandleRunNobAndReload,
         .hotkey_condition = NULL
     };
-    hotkey_register_internal(binding2);
+    hotkey_register_internal(binding);
 
     return 0;
 }
