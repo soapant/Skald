@@ -109,6 +109,24 @@
   },
   {
     "directory": "/home/diggy/Programming/Projects/Flint",
+    "file": "src/core/feature_loader.c",
+    "arguments": [
+      "gcc",
+      "-Wall",
+      "-Wextra",
+      "-I",
+      "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
+      "-w",
+      "-g",
+      "-c",
+      "src/core/feature_loader.c"
+    ]
+  },
+  {
+    "directory": "/home/diggy/Programming/Projects/Flint",
     "file": "src/core/zoxide_helpers.c",
     "arguments": [
       "gcc",
@@ -627,6 +645,24 @@
       "-g",
       "-c",
       "src/platform/window.c"
+    ]
+  },
+  {
+    "directory": "/home/diggy/Programming/Projects/Flint",
+    "file": "src/platform/lib.c",
+    "arguments": [
+      "gcc",
+      "-Wall",
+      "-Wextra",
+      "-I",
+      "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
+      "-w",
+      "-g",
+      "-c",
+      "src/platform/lib.c"
     ]
   }
 ]

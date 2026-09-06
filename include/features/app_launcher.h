@@ -179,6 +179,7 @@ void TriggerAppLauncher(void) {
     for (size_t i = 0; i < s_apps.count; i++) {
         initial_items[i] = s_apps.items[i].name;
     }
+
     for (int i = 0; i < ARRAY_LEN(ListOfProgramPaths); i++) {
         fl_on_dir_changed(ListOfProgramPaths[i], initialize_app_cache);
     }
@@ -189,6 +190,7 @@ void TriggerAppLauncher(void) {
            .enter = applauncher_enter_callback,
            .ctrl_enter = applauncher_ctrlenter_callback,
            .copy = applauncher_copy_callback);
+
     free(initial_items);
 }
 
