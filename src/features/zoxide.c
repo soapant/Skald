@@ -1,4 +1,3 @@
-#include "features/api.h"
 #include "core/flapi.h"
 #include "core/zoxide_helpers.h"
 
@@ -40,10 +39,6 @@ void TriggerZoxide(void) {
     ZoxideHelper_CleanupTriggerList(list);
 }
 
-static inline void zoxide_init(void) {
-    fl_register_hotkey("Alt+W", TriggerZoxide);
-}
-
 FLINT_FEATURE_INIT {
-    zoxide_init();
+fl_register_hotkey("Alt+W", TriggerZoxide);
 }

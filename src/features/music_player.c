@@ -1,4 +1,3 @@
-#include "features/api.h"
 #include "core/flapi.h"
 const char* MusicPlayerPath = "{DEV}/Music Player/music_player.exe";
 const char* MusicPath = "{MUSIC}";
@@ -122,14 +121,10 @@ void music_prompt(void) {
     free((void*)initial_items);
 }
 
-static inline void music_player_init(void) {
-    fl_register_hotkey("Alt+,", music_cmd_1);
+FLINT_FEATURE_INIT {
+fl_register_hotkey("Alt+,", music_cmd_1);
     fl_register_hotkey("Alt+/", music_cmd_5);
     fl_register_hotkey("Alt+;", music_cmd_6);
     fl_register_hotkey("Alt+'", music_cmd_2);
     fl_register_hotkey("Alt+P", music_prompt);
-}
-
-FLINT_FEATURE_INIT {
-    music_player_init();
 }

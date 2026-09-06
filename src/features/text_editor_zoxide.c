@@ -1,4 +1,3 @@
-#include "features/api.h"
 #include "core/flapi.h"
 #include "core/zoxide_helpers.h"
 
@@ -45,10 +44,6 @@ void TriggerTextEditorZoxide(void) {
     ZoxideHelper_CleanupTriggerList(list);
 }
 
-static inline void text_editor_zoxide_init(void) {
-    fl_register_hotkey("Alt+I", TriggerTextEditorZoxide);
-}
-
 FLINT_FEATURE_INIT {
-    text_editor_zoxide_init();
+fl_register_hotkey("Alt+I", TriggerTextEditorZoxide);
 }

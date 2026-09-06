@@ -1,8 +1,4 @@
-#include "features/api.h"
-#include "common.h"
 #include "core/flapi.h"
-#include "core/platform.h"
-#include "core/common_ui.h"
 
 const char* BASE_SCREENSHOT_FOLDER_PATH = "{PICTURES}/Screenshots/";
 static int region_step = 0;
@@ -91,11 +87,7 @@ void TriggerOpenScreenshot(void) {
 #endif
 }
 
-static inline void screenshot_init(void) {
+FLINT_FEATURE_INIT {
     fl_register_hotkey("Alt+Ctrl+A", TriggerSaveScreenshot);
     fl_register_hotkey("Alt+Shift+A", TriggerOpenScreenshot);
-}
-
-FLINT_FEATURE_INIT {
-    screenshot_init();
 }

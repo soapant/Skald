@@ -1,6 +1,4 @@
-#include "features/api.h"
 #include "core/flapi.h"
-#include "features/focus_switcher.h"
 #if !defined(_WIN32)
 #include <sys/types.h>
 #include "x11_display.h"
@@ -286,7 +284,7 @@ static void switcher_enter_callback(const char* selection, ListBoxInfo* lb) {
         if (strcasestr(g_switcher_windows[i].title, selection) != NULL) {
 #endif
             if (IsWindowValid(g_switcher_windows[i].hwnd)) {
-                FocusWindow(g_switcher_windows[i].hwnd);
+                Platform_FocusWindow(g_switcher_windows[i].title);
             }
             break;
         }
@@ -332,10 +330,6 @@ static void TriggerWindowSwitcher() {
            .copy = switcher_copy_callback);
 }
 
-static inline void window_switcher_init(void) {
-    fl_register_hotkey("Alt+Space", TriggerWindowSwitcher);
-}
-
 FLINT_FEATURE_INIT {
-    window_switcher_init();
+fl_register_hotkey("Alt+Space", TriggerWindowSwitcher);
 }

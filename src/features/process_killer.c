@@ -1,4 +1,3 @@
-#include "features/api.h"
 #include "core/flapi.h"
 
 const char* bkp_windows[] = {"Brawlhalla","Fortnite","RocketLeague","Factorio","Steam"};
@@ -52,11 +51,7 @@ void TriggerProcessKiller(void) {
     free(list_items);
 }
 
-static inline void process_killer_init(void) {
-    fl_register_hotkey("Alt+U", TriggerProcessKiller);
-    fl_register_hotkey("Alt+Ctrl+P", bulk_kill_bkp);
-}
-
 FLINT_FEATURE_INIT {
-    process_killer_init();
+fl_register_hotkey("Alt+U", TriggerProcessKiller);
+    fl_register_hotkey("Alt+Ctrl+P", bulk_kill_bkp);
 }
