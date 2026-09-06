@@ -1,4 +1,5 @@
 #include "core/flapi.h"
+
 const char* TEMP_FILE_PATH = DATA_DIR "temp_list_of_positions.md";
 
 static bool GetCursorPixel(long* out_x, long* out_y, uint8_t* out_r, uint8_t* out_g, uint8_t* out_b) {
@@ -168,7 +169,7 @@ void TriggerRegionImage(void) {
 }
 
 FLINT_FEATURE_INIT {
-fl_register_hotkey("Alt+Ctrl+Y", TriggerRegionImage);
+    fl_register_hotkey("Alt+Ctrl+Y", TriggerRegionImage);
     fl_register_hotkey("Alt+Shift+Z", TriggerPosCopy);
     fl_register_hotkey("Alt+Shift+X", TriggerColorPlain);
     fl_register_hotkey("Alt+Shift+Y", TriggerRegionCoords);

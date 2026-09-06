@@ -1,7 +1,6 @@
 #include "platform/window.h"
 #include "core/platform.h"
 #include <string.h>
-#include <stdlib.h>
 
 WM_Type g_current_wm = WM_UNKNOWN;
 

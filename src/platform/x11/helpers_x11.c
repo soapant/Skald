@@ -362,7 +362,7 @@ Window Linux_CreateEditPopupWindow(Display* dpy, int x, int y, int w, int h) {
 }
 Window Linux_CreateDisplayMessageWindow(Display* dpy, int x, int y, int w, int h) {
     unsigned long bg = rgb_to_hex(COLOR_BG);
-    return Linux_CreateWindowExOR(dpy, x, y, w, h, bg, "flashtext", "flashtext", ExposureMask | KeyPressMask, true);
+    return Linux_CreateWindowExOR(dpy, x, y, w, h, bg, "flashtext", "flashtext", ExposureMask, true);
 }
 
 XftDraw* Linux_CreateXftDraw(Display* dpy, Window win) {
