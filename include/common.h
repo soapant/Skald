@@ -27,16 +27,9 @@ extern Display* g_font_dpy;
 #endif
 
 
-#define g_refresh_callback (FlintContext_Get()->prompt_callbacks.refresh)
-#define g_enter_callback (FlintContext_Get()->prompt_callbacks.enter)
-#define g_ctrl_enter_callback (FlintContext_Get()->prompt_callbacks.ctrl_enter)
-#define g_tab_callback (FlintContext_Get()->prompt_callbacks.tab)
-#define g_help_callback (FlintContext_Get()->prompt_callbacks.help)
-#define g_copy_callback (FlintContext_Get()->prompt_callbacks.copy)
-#define g_render_callback (FlintContext_Get()->prompt_callbacks.render)
-#define g_alias_callback (FlintContext_Get()->prompt_callbacks.alias)
-#define g_edit_callback (FlintContext_Get()->prompt_callbacks.edit)
-#define g_filter_callback (FlintContext_Get()->prompt_callbacks.filter)
+// Deprecated prompt callback macros removed. Use FlintContext_Get()->prompt_callbacks.* or spec->*
+// Kept for transition: if you still use g_refresh_callback etc, include this shim:
+// #define g_refresh_callback (FlintContext_Get()->prompt_callbacks.refresh)
 
 #if defined(_WIN32)
 extern uint32_t g_main_thread_id;

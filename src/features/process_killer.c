@@ -19,8 +19,9 @@ void BulkKillProcesses(const char* window_titles[], int count) {
 void bulk_kill_bkp(void) {
     BulkKillProcesses(bkp_windows, ARRAY_LEN(bkp_windows));
 }
-void pk_enter_callback(const char* selection, ListBoxInfo* lb) {
+bool pk_enter_callback(const char* selection, ListBoxInfo* lb) {
       fl_terminate_process_by_name(selection);
+    return true;
 }
 
 void pk_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {

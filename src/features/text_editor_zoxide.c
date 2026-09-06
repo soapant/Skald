@@ -16,15 +16,15 @@ void text_editor_refresh_callback(const char* filter, WindowHandle hListBox, Lis
 }
 
 
-void text_editor_enter_callback(const char* selection, ListBoxInfo* lb) {
+bool text_editor_enter_callback(const char* selection, ListBoxInfo* lb) {
       char* path = fl_get_zoxide_match((char*)selection);
       if (path) {
           char cmd_args[512];
           snprintf(cmd_args, sizeof(cmd_args), "-e %s \"%s\"",UsedTextEditor,path);
           fl_launch_terminal_at_path(path, cmd_args);
           ZoxideHelper_AppendNewEntry(TextEditorZoxideFilePath, selection, lb, &cached_text_editor_commands, &cached_text_editor_count);
-          free(path);
       }
+    return true;
 }
 
 void text_editor_edit_callback(const char* selection, ListBoxInfo* lb) {

@@ -14,15 +14,15 @@ void yazi_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInf
     ZoxideHelper_Refresh(filter, hListBox, lb, YaziZoxideFilePath, &cached_yazi_commands, &cached_yazi_count);
 }
 
-void yazi_enter_callback(const char* selection, ListBoxInfo* lb) {
+bool yazi_enter_callback(const char* selection, ListBoxInfo* lb) {
       char* path = fl_get_zoxide_match((char*)selection);
       if (path) {
           char cmd_args[512];
           snprintf(cmd_args, sizeof(cmd_args), "-e yazi \"%s\"", path);
           fl_launch_terminal_at_path(path, cmd_args);
           ZoxideHelper_AppendNewEntry(YaziZoxideFilePath, selection, lb, &cached_yazi_commands, &cached_yazi_count);
-          free(path);
       }
+    return true;
 }
 
 void yazi_edit_callback(const char* selection, ListBoxInfo* lb) {

@@ -308,9 +308,10 @@ void StartReminder(const char* selection) {
     printf("[REMINDER] Done\n");
 }
 
-void reminder_enter_callback(const char* selection, ListBoxInfo* lb) {
+bool reminder_enter_callback(const char* selection, ListBoxInfo* lb) {
       ZoxideHelper_AppendNewEntry(ReminderHistoryFilePath, selection, lb, &g_cached_reminder_commands, &g_cached_reminder_count);
       StartReminder(selection);
+    return true;
 }
 void reminder_edit_callback(const char* selection, ListBoxInfo* lb) {
     ZoxideHelper_Edit(selection, lb, ReminderHistoryFilePath, &g_cached_reminder_commands, &g_cached_reminder_count, reminder_refresh_callback);

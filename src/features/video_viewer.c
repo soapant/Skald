@@ -22,7 +22,7 @@ void video_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxIn
     free(items);
 }
 
-void video_enter_callback(const char* selection, ListBoxInfo* lb) {
+bool video_enter_callback(const char* selection, ListBoxInfo* lb) {
     char* result = NULL;
     for (size_t i = 0; i < video_files.count; i++) {
         if (strcmp(video_files.items[i].name, selection) == 0) {
@@ -47,8 +47,7 @@ void video_enter_callback(const char* selection, ListBoxInfo* lb) {
         }
         free(tmp.items);
     }
-    if (!result) return;
-    
+    if (!result) return true;
 #if defined(_WIN32)
     HWND playerHwnd = FindWindow(NULL, "Video Viewer");
     if (playerHwnd) {
@@ -57,7 +56,7 @@ void video_enter_callback(const char* selection, ListBoxInfo* lb) {
         cds.cbData = (DWORD)(strlen(result) + 1);
         cds.lpData = (PVOID)result;
         SendMessage(playerHwnd, WM_COPYDATA, (WPARAM)NULL, (LPARAM)&cds);
-        return;
+        return true;
     } else {
         char quoted_result[MAX_PATH + 3] = {0};
         snprintf(quoted_result, sizeof(quoted_result), "\"%s\"", result);
@@ -66,7 +65,7 @@ void video_enter_callback(const char* selection, ListBoxInfo* lb) {
 #else
     if (Platform_SetX11StringProperty("Video Viewer", "_MP_TRACK", result) &&
         Platform_SendX11Command("Video Viewer", "_MP_TRACK_CHANGED", 1)) {
-        return;
+        return true;
     }
     if (strlen(VideoViewerPath) > 0) {
         char quoted_result[MAX_PATH + 3] = {0};
@@ -74,6 +73,7 @@ void video_enter_callback(const char* selection, ListBoxInfo* lb) {
         fl_launch_with_args(VideoViewerPath, quoted_result);
     }
 #endif
+    return true;
 }
 void video_cmd_1(void) {
 #if defined(_WIN32)

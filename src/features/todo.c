@@ -332,7 +332,7 @@ void todo_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInf
     fl_free_file_list(items, todo_count);
 }
 
-void todo_enter_callback(const char* selection, ListBoxInfo* lb) {
+bool todo_enter_callback(const char* selection, ListBoxInfo* lb) {
     if (UI_IsListBoxSelected(lb)) {
         RemoveTodoItemFromFile(selection);
     } 
@@ -340,9 +340,10 @@ void todo_enter_callback(const char* selection, ListBoxInfo* lb) {
         AddTodoToFile(selection);
     }
     UI_Redraw(lb, hListBox);
+    return true;
 }
 
-void todo_ctrlenter_callback(const char* selection, ListBoxInfo* lb) {
+bool todo_ctrlenter_callback(const char* selection, ListBoxInfo* lb) {
     if (UI_IsListBoxSelected(lb)) {
         RemoveTodoItemFromFile(selection);
     } else {
@@ -350,7 +351,7 @@ void todo_ctrlenter_callback(const char* selection, ListBoxInfo* lb) {
         UI_SetText(hEditControl, "");
     }
     UI_Redraw(lb, hListBox);
-    selection_complete = false;
+    return false;
 }
 
 void todo_copy_callback(const char* selection,int true_index,int type) {

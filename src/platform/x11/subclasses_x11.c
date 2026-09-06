@@ -136,7 +136,7 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
         } else {
             EditBufferBackspace(state->filter, &state->cursor);
         }
-        if (g_refresh_callback) g_refresh_callback(state->filter, hListBox, state->has_listbox ? &state->listbox : NULL);
+        if (FlintContext_Get()->prompt_callbacks.refresh) FlintContext_Get()->prompt_callbacks.refresh(state->filter, hListBox, state->has_listbox ? &state->listbox : NULL);
         return true;
     }
     if (wParam == VK_ESCAPE) {
@@ -144,7 +144,7 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
         SetMode(MODE_NORMAL);
         return true;
       } else {
-        selection_complete = true;
+        do { FlintContext_Get()->window.selection_complete = true; selection_complete = true; } while(0);
         return true;
       }
     }
@@ -188,7 +188,7 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
     }
     if (wParam == VK_DELETE) {
       if (state && EditBufferDeleteChar(state->filter, &state->cursor)) {
-        if (g_refresh_callback) g_refresh_callback(state->filter, hListBox, state->has_listbox ? &state->listbox : NULL);
+        if (FlintContext_Get()->prompt_callbacks.refresh) FlintContext_Get()->prompt_callbacks.refresh(state->filter, hListBox, state->has_listbox ? &state->listbox : NULL);
       }
       return true;
     }
@@ -207,7 +207,7 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
       return true;
     }
     if (wParam == VK_TAB) {
-      if (g_tab_callback) g_tab_callback(&state->listbox);
+      if (FlintContext_Get()->prompt_callbacks.tab) FlintContext_Get()->prompt_callbacks.tab(&state->listbox);
       return true;
     }
     if (wParam == VK_RETURN) {
@@ -222,14 +222,21 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
         sel = filter_copy;
       }
       if (is_ctrl) {
-        if (g_ctrl_enter_callback) {
-          g_ctrl_enter_callback(sel, &state->listbox);
+        {
+          FlintContext* _c = FlintContext_Get();
+          bool should_close = false;
+          if (_c->prompt_callbacks.ctrl_enter) should_close = _c->prompt_callbacks.ctrl_enter(sel, &state->listbox);
+          else if (_c->prompt_callbacks.enter) should_close = _c->prompt_callbacks.enter(sel, &state->listbox);
+          _c->window.selection_complete = should_close; selection_complete = should_close;
         }
-        else if (g_enter_callback) g_enter_callback(sel, &state->listbox);
         return true;
       } else {
-        if (g_enter_callback) g_enter_callback(sel, &state->listbox);
-        selection_complete = true;
+        {
+          FlintContext* _c2 = FlintContext_Get();
+          bool should_close = true;
+          if (_c2->prompt_callbacks.enter) should_close = _c2->prompt_callbacks.enter(sel, &state->listbox);
+          _c2->window.selection_complete = should_close; selection_complete = should_close;
+        }
         return true;
       }
     }
@@ -239,9 +246,9 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
     //     if (state->has_listbox && UI_IsListBoxSelected(&state->listbox)) sel = state->listbox.populated_cache[state->listbox.selected_index];
     //     else sel = state->filter;
     //     int type = shift_pressed ? 0 : 1;
-    //     if (g_copy_callback) {
+    //     if (FlintContext_Get()->prompt_callbacks.copy) {
     //       int idx = UI_IsListBoxSelected(&state->listbox) ? state->listbox.selected_index : -1;
-    //       g_copy_callback(sel, idx, type);
+    //       FlintContext_Get()->prompt_callbacks.copy(sel, idx, type);
     //     } else {
     //       Platform_CopyToClipboard(sel);
     //     }
@@ -273,7 +280,7 @@ bool Linux_HandleSimplePromptKey(const XEvent* ev,SimplePromptState *state) {
         SetMode(MODE_NORMAL);
         return true;
       } else {
-        selection_complete = true;
+        do { FlintContext_Get()->window.selection_complete = true; selection_complete = true; } while(0);
         return true;
       }
     }
@@ -286,7 +293,7 @@ bool Linux_HandleSimplePromptKey(const XEvent* ev,SimplePromptState *state) {
       return true;
     }
     if (wParam == VK_RETURN) {
-      selection_complete = true;
+      do { FlintContext_Get()->window.selection_complete = true; selection_complete = true; } while(0);
       return true;
     }
     return false;
@@ -510,8 +517,8 @@ void DrawPromptUserListBox(Display *dpy,Window* win,PromptState *state) {
 }
 
 bool Linux_RenderPromptUser(Display *dpy, Window *win, PromptState *state) {
-    if (g_render_callback != NULL) {
-      g_render_callback(dpy,win,state);
+    if (FlintContext_Get()->prompt_callbacks.render != NULL) {
+      FlintContext_Get()->prompt_callbacks.render(dpy,win,state);
     } else {
       if (state->has_listbox) {
           DrawPromptUserListBox(dpy,win,state);

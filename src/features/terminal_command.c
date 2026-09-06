@@ -15,12 +15,13 @@ void terminal_refresh_callback(const char* filter, WindowHandle hListBox, ListBo
     ZoxideHelper_Refresh(filter, hListBox, lb, TerminalHistoryFilePath, &cached_commands, &cached_command_count);
 }
 
-void terminal_enter_callback(const char* selection, ListBoxInfo* lb) {
+bool terminal_enter_callback(const char* selection, ListBoxInfo* lb) {
       if (!UI_IsListBoxSelected(lb)) {
         fl_append_to_file(TerminalHistoryFilePath, selection);
         ZoxideHelper_RebuildCache(TerminalHistoryFilePath, &cached_commands, &cached_command_count);
       }
       fl_run_terminal_command_and_open((char*)selection);
+    return true;
 }
 
 void terminal_edit_callback(const char* selection, ListBoxInfo* lb) {

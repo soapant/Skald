@@ -15,12 +15,13 @@ void explorer_refresh_callback(const char* filter, WindowHandle hListBox, ListBo
     ZoxideHelper_Refresh(filter, hListBox, lb, ExplorerZoxideFilePath, &g_cached_explorer_commands, &g_cached_explorer_count);
 }
 
-void explorer_enter_callback(const char* selection, ListBoxInfo* lb) {
+bool explorer_enter_callback(const char* selection, ListBoxInfo* lb) {
           char* path = fl_get_zoxide_match((char*)selection);
           if (fl_launch_file_manager_at_path(path,NULL)) {
               ZoxideHelper_AppendNewEntry(ExplorerZoxideFilePath, selection, lb, &g_cached_explorer_commands, &g_cached_explorer_count);
               free(path);
           }
+    return true;
 }
 
 void explorer_edit_callback(const char* selection, ListBoxInfo* lb) {

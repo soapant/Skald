@@ -82,7 +82,8 @@ void Vim_SetText(VimContext* ctx, const char* text) {
         strncpy(ctx->state->filter, text, sizeof(ctx->state->filter)-1);
         ctx->state->filter[sizeof(ctx->state->filter)-1]='\0';
         ctx->state->cursor = (int)strlen(ctx->state->filter);
-        if (g_refresh_callback) g_refresh_callback(ctx->state->filter, ctx->hListBox, ctx->lb);
+        FlintContext* _c = FlintContext_Get();
+        if (_c->prompt_callbacks.refresh) _c->prompt_callbacks.refresh(ctx->state->filter, ctx->hListBox, ctx->lb);
     } else if (ctx->simple_state) {
         strncpy(ctx->simple_state->user_input, text, sizeof(ctx->simple_state->user_input)-1);
         ctx->simple_state->user_input[sizeof(ctx->simple_state->user_input)-1]='\0';
