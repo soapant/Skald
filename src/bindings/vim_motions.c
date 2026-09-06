@@ -86,7 +86,6 @@ void HandlePersistentDelete(VimContext* ctx) {
         const char* txt = ctx->lb->populated_cache[ctx->lb->selected_index];
         bool should_close = _c->prompt_callbacks.ctrl_enter(txt, ctx->lb);
         _c->window.selection_complete = should_close;
-        selection_complete = should_close;
     }
 }
 
@@ -147,7 +146,6 @@ void HandleExitWindow(VimContext* ctx) {
         top->vtable->on_key(top, VK_ESCAPE, true, 0);
     } else {
         FlintContext_Get()->window.selection_complete = true;
-        selection_complete = true;
     }
 }
 void HandleYankLine(VimContext* ctx) {
@@ -174,10 +172,8 @@ void HandleInsertControlEnter(VimContext* ctx) {
   if (_c->prompt_callbacks.ctrl_enter != NULL) {
     bool should_close = _c->prompt_callbacks.ctrl_enter(text, ctx->lb);
     _c->window.selection_complete = should_close;
-    selection_complete = should_close;
   } else {
     _c->window.selection_complete = false;
-    selection_complete = false;
   }
 }
 

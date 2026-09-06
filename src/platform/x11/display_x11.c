@@ -1,4 +1,4 @@
-#include "x11_display.h"
+#include "platform/x11/display.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <dirent.h>

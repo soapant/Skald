@@ -28,7 +28,7 @@
 #include <linux/input.h>
 #include <linux/uinput.h>
 #include <errno.h>
-#include "x11_display.h"
+#include "platform/x11/display.h"
 
 bool g_linux_ctrl_held = false;
 bool g_linux_alt_held = false;
@@ -296,7 +296,6 @@ static void Linux_HandleKeyPress(Display* dpy, XKeyEvent* ev, WindowManager* wm)
         FlintContext* _c2 = FlintContext_Get();
         if (_c2->window.selection_complete) {
             _c2->window.selection_complete = false;
-            selection_complete = false;
             WindowManager_PopPopup(wm);
             Popup* new_top = WindowManager_GetTopPopup(wm);
             if (new_top && new_top->vtable && new_top->vtable->on_render) new_top->vtable->on_render(new_top);

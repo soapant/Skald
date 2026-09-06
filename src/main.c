@@ -13,7 +13,7 @@
 #include <sys/file.h>
 #endif
 #if !defined(_WIN32)
-#include "x11_display.h"
+#include "platform/x11/display.h"
 #include <fontconfig/fontconfig.h>
 #endif
 #if defined(_WIN32)
@@ -31,15 +31,10 @@ WindowHandle g_hEditPopup = WH_NULL;
 WindowHandle g_hSearchPopup = WH_NULL;
 EditPopupData* g_EditData = NULL;
 WindowHandle g_ActiveEditControl = WH_NULL;
-char output_buffer[256];
-bool selection_complete = false;
-char* g_current_feature = NULL;
-const char* g_title = NULL;
 int g_timeout = 1;
 uint32_t g_main_thread_id = 0;
 bool g_waiting_for_key = false;
 int g_key_pressed = 0;
-WinTimer g_timer;
 #if defined(_WIN32)
 HANDLE g_key_event = NULL;
 #endif
@@ -47,11 +42,6 @@ HANDLE g_key_event = NULL;
 HFONT g_hNumFont = NULL;
 HFONT g_hMainFont = NULL;
 #endif
-HashMap* feature_history = NULL;
-HashMap* g_item_index_map = NULL;
-HashMap* history_indices = NULL;
-char* SelectionData[2048] = {0};
-int SelectionDataCount = 0;
 
 
 void OInNotificationRecieved(const char* text) {
@@ -119,7 +109,7 @@ int main() {
 #if defined(_WIN32)
   StartNtfyDaemon(HttpUrlForNotis,OInNotificationRecieved);
 #endif
-  feature_history = HashMap_Create(32);
+  FlintContext_Get()->feature_history = HashMap_Create(32);
   InitFeatureDataSystem();
   Platform_InitUI();
 
@@ -152,9 +142,10 @@ int main() {
 #endif
   CleanupFeatureDataSystem();
 
-  if (feature_history) {
-    for (int i = 0; i < feature_history->size; i++) {
-        HashMapEntry* entry = feature_history->buckets[i];
+  FlintContext* _ctx = FlintContext_Get();
+  if (_ctx->feature_history) {
+    for (int i = 0; i < _ctx->feature_history->size; i++) {
+        HashMapEntry* entry = _ctx->feature_history->buckets[i];
         while (entry) {
             char** list = (char**)entry->value;
             if (list) {
@@ -164,23 +155,23 @@ int main() {
             entry = entry->next;
         }
     }
-    HashMap_Destroy(feature_history);
-    feature_history = NULL;
+    HashMap_Destroy(_ctx->feature_history);
+    _ctx->feature_history = NULL;
   }
-  if (history_indices) {
-    for (int i = 0; i < history_indices->size; i++) {
-        HashMapEntry* entry = history_indices->buckets[i];
+  if (_ctx->history_indices) {
+    for (int i = 0; i < _ctx->history_indices->size; i++) {
+        HashMapEntry* entry = _ctx->history_indices->buckets[i];
         while (entry) {
             free(entry->value);
             entry = entry->next;
         }
     }
-    HashMap_Destroy(history_indices);
-    history_indices = NULL;
+    HashMap_Destroy(_ctx->history_indices);
+    _ctx->history_indices = NULL;
   }
-  if (g_item_index_map) {
-    HashMap_Destroy(g_item_index_map);
-    g_item_index_map = NULL;
+  if (_ctx->g_item_index_map) {
+    HashMap_Destroy(_ctx->g_item_index_map);
+    _ctx->g_item_index_map = NULL;
   }
 #if !defined(_WIN32)
   extern void CleanupPerFeatureVimMap(void);
