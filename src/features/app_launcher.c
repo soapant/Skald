@@ -1,4 +1,3 @@
-#include "features/api.h"
 #include "core/flapi.h"
 
 typedef struct {
@@ -192,11 +191,8 @@ void TriggerAppLauncher(void) {
     free(initial_items);
 }
 
-static inline void app_launcher_init(void) {
+FLINT_FEATURE_INIT {
     initialize_app_cache();
     fl_register_hotkey("Alt+E", TriggerAppLauncher);
 }
 
-FLINT_FEATURE_INIT {
-    app_launcher_init();
-}

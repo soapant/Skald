@@ -1,4 +1,3 @@
-#include "features/api.h"
 #include "core/flapi.h"
 
 typedef struct {
@@ -463,10 +462,6 @@ void TriggerCalculator(void) {
                                                              
 }
 
-static inline void calc_init(void) {
-    fl_register_hotkey("Alt+C", TriggerCalculator);
-}
-
 FLINT_FEATURE_INIT {
-    calc_init();
+fl_register_hotkey("Alt+C", TriggerCalculator);
 }

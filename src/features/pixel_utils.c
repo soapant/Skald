@@ -1,4 +1,3 @@
-#include "features/api.h"
 #include "core/flapi.h"
 const char* TEMP_FILE_PATH = DATA_DIR "temp_list_of_positions.md";
 
@@ -168,13 +167,9 @@ void TriggerRegionImage(void) {
 #endif
 }
 
-static inline void pixel_utils_init(void) {
-    fl_register_hotkey("Alt+Ctrl+Y", TriggerRegionImage);
+FLINT_FEATURE_INIT {
+fl_register_hotkey("Alt+Ctrl+Y", TriggerRegionImage);
     fl_register_hotkey("Alt+Shift+Z", TriggerPosCopy);
     fl_register_hotkey("Alt+Shift+X", TriggerColorPlain);
     fl_register_hotkey("Alt+Shift+Y", TriggerRegionCoords);
-}
-
-FLINT_FEATURE_INIT {
-    pixel_utils_init();
 }

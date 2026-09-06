@@ -1,10 +1,4 @@
-#include "features/api.h"
 #include "core/flapi.h"
-#include "features/focus_switcher.h"
-#include "features/timer.h"
-#include "features/process_killer.h"
-#include "core/zoxide_helpers.h"
-#include "core/platform.h"
 
 const char* ReminderHistoryFilePath = "data/ReminderHistory.txt";
 
@@ -128,27 +122,18 @@ bool CheckGameRunning(const char* parameter) {
 }
 
 
-void HandleFocusWindowFlag(const char* parameter) {
-    printf("TRYING TO FOCUS WINDOW OF TITLE %s\n", parameter);
-    WindowHandle target_hwnd = FindWindowByPartialTitle(parameter);
-    if (WH_TO_HWND(target_hwnd) != NULL) {
-        printf("FOUND WINDWO TRYING TO FOCUS");
-        FocusWindow(target_hwnd);
-    } else {
-      printf("COULDNT FIND WINDOW");
-    }
-}
+// void HandleFocusWindowFlag(const char* parameter) {
+//     WindowHandle target_hwnd = FindWindowByPartialTitle(parameter);
+//     if (WH_TO_HWND(target_hwnd) != NULL) {
+//         FocusWindow(target_hwnd);
+//     }
+// }
 void DisplayText(const char* parameter){
-    printf("DISPLAYING MESSAGE %s",parameter);
-    
     Platform_DisplayMessage(parameter,960,999,950,70,3,COLOR_TEXT);
-    
 }
-
-
 
 const ActionDef REMINDER_ACTION_FLAGS[] = {
-    {"-f", HandleFocusWindowFlag},
+    // {"-f", HandleFocusWindowFlag},
     {"-dt", DisplayText},
 };
 
@@ -342,10 +327,6 @@ void TriggerReminder(void) {
     ZoxideHelper_CleanupTriggerList(list);
 }
 
-static inline void reminder_init(void) {
-    fl_register_hotkey("Alt+S", TriggerReminder);
-}
-
 FLINT_FEATURE_INIT {
-    reminder_init();
+fl_register_hotkey("Alt+S", TriggerReminder);
 }

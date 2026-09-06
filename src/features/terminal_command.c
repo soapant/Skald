@@ -1,4 +1,3 @@
-#include "features/api.h"
 #include "core/flapi.h"
 #include "core/zoxide_helpers.h"
 
@@ -45,11 +44,7 @@ void run_btop(void) {
     fl_run_terminal_command_and_open((char*)"ls");
 }
 
-static inline void terminal_command_init(void) {
-    fl_register_hotkey("Alt+{", TriggerTerminalCommand);
-    fl_register_hotkey("Ctrl+B", run_btop);
-}
-
 FLINT_FEATURE_INIT {
-    terminal_command_init();
+fl_register_hotkey("Alt+{", TriggerTerminalCommand);
+    fl_register_hotkey("Ctrl+B", run_btop);
 }
