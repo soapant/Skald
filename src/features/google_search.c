@@ -20,7 +20,7 @@ void google_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxI
 
 void google_enter_callback(const char* selection, ListBoxInfo* lb) {
       ZoxideHelper_AppendNewEntry(GoogleZoxideFilePath, selection, lb, &g_cached_google_queries, &g_cached_google_count);
-      Platform_LaunchBrowserAtUrl(selection);
+      Platform_LaunchBrowserAtUrl(selection,false);
 }
 
 void google_edit_callback(const char* selection, ListBoxInfo* lb) {
