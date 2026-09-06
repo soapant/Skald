@@ -123,8 +123,6 @@ int main() {
   InitFeatureDataSystem();
   Platform_InitUI();
 
-  printf("[SYSTEM] Low-Level Hotkey Services Running. GDI+ Online.\n");
-  fl_init_all_hotkeys();
   FeatureLoader_Init();
   
   WindowManager* wm = WindowManager_Create();
