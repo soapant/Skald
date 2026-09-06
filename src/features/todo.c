@@ -1,12 +1,5 @@
-#include "features/api.h"
-#include "core/feature_loader.h"
-#include "common.h"
-#include "helpers.h"
-#include "config.h"
 #include "core/flapi.h"
-#include "core/platform.h"
-#include "core/common_ui.h"
-#include "core/window_manager.h"
+
 typedef struct {
     const char* alias;
     const char* alias_label;
@@ -569,7 +562,7 @@ void TriggerTodo(void) {
     int count = fl_load_file_list(TODO_FILE_PATH, ui_list, 100);
 
     char* selected_item = PROMPT(
-        .title = "📝 NIGGA", .items = ui_list, .count = count,
+        .title = "📝 Todo", .items = ui_list, .count = count,
         .height = 920, .width = 650, .item_height = 56,
         .refresh = todo_refresh_callback,
         .enter = todo_enter_callback,
@@ -580,11 +573,6 @@ void TriggerTodo(void) {
     fl_free_file_list(ui_list, count);
 }
 
-void todo_init(void) {
-  fl_register_hotkey("Alt+T",TriggerTodo);
-  fl_register_hotkey("Alt+B",FeatureLoader_ReloadAll);
-}
-
 FLINT_FEATURE_INIT {
-    todo_init();
+  fl_register_hotkey("Alt+T",TriggerTodo);
 }

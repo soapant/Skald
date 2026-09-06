@@ -91,4 +91,14 @@ char* fl_on_dir_changed(char* dir_path,void(callback)(void));
 
 #define fl_register_hotkey(...) \
     _FL_GET_MACRO(__VA_ARGS__, _FL_HOTKEY_ROUTER_5, _FL_HOTKEY_ROUTER_4, _FL_HOTKEY_ROUTER_3, _FL_HOTKEY_ROUTER_2)(__VA_ARGS__)
+
+
+#ifdef _WIN32
+#define FLINT_FEATURE_EXPORT __declspec(dllexport)
+#else
+#define FLINT_FEATURE_EXPORT __attribute__((visibility("default")))
+#endif
+
+#define FLINT_FEATURE_INIT FLINT_FEATURE_EXPORT void FlintFeatureInit(void)
+
 #endif
