@@ -252,8 +252,17 @@ void Platform_DisplayMessage(const char* message, int centerX, int centerY, int 
     }
 
     int startY = (winHeight - textH) / 2;
-
-    draw_wrapped_text(dpy, xd,&text_xft_color, font, message,startY,"CENTER",0);
+    // fix: for short messages "CENTER" with hardcoded 870 draws outside small winWidth (textW+40)
+    // use winWidth for centering when message has no spaces or fits in one line
+    if (textW < winWidth && textW > 0) {
+        XftFont* xf = FH_TO_XFT(font);
+        int y = startY + xf->ascent;
+        int drawX = (winWidth - textW) / 2;
+        if (drawX < 0) drawX = 0;
+        XftDrawStringUtf8(xd, &text_xft_color, xf, drawX, y, (FcChar8*)message, strlen(message));
+    } else {
+        draw_wrapped_text(dpy, xd,&text_xft_color, font, message,startY,"CENTER",0);
+    }
 
     XFlush(dpy);
     if (alloc_ok) XftColorFree(dpy, visual, cmap, &text_xft_color);
