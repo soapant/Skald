@@ -569,7 +569,7 @@ void TriggerTodo(void) {
     int count = fl_load_file_list(TODO_FILE_PATH, ui_list, 100);
 
     char* selected_item = PROMPT(
-        .title = "📝 Todo", .items = ui_list, .count = count,
+        .title = "📝 NIGGA", .items = ui_list, .count = count,
         .height = 920, .width = 650, .item_height = 56,
         .refresh = todo_refresh_callback,
         .enter = todo_enter_callback,
