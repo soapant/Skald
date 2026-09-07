@@ -1,4 +1,5 @@
-#include "common.h"
+#include "core/context.h"
+#include "core/modal.h"
 #include "core/feature_data.h"
 #include <stdio.h>
 

@@ -13,7 +13,7 @@ void RebuildGoogleCache(void) {
 
 void google_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
     if (!lb) return;
-    ZoxideHelper_Refresh(filter, hListBox, lb, GoogleZoxideFilePath, &g_cached_google_queries, &g_cached_google_count);
+    ZoxideHelper_Refresh(filter, FlintContext_Get()->window.hListBox, lb, GoogleZoxideFilePath, &g_cached_google_queries, &g_cached_google_count);
 }
 
 

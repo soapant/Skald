@@ -1,4 +1,5 @@
-#include "common.h"
+#include "core/context.h"
+#include "core/modal.h"
 #include "bindings/bindings.h"
 #include "bindings/vim_bindings.h"
 #include "core/common_ui.h"
@@ -16,7 +17,7 @@ bool CheckVimMotion(int pressed_vk, int modifiers, MotionAction* out_action, con
     Popup* top = WindowManager_GetTopPopup(wm);
     if (!top) return false;
     
-    bool in_popup = IsWindowValid(g_hEditPopup);
+    bool in_popup = IsWindowValid(FlintContext_Get()->window.g_hEditPopup);
     
 #if defined(_WIN32)
     bool ctrl_held = (GetKeyState(VK_CONTROL) & 0x8000);

@@ -1,4 +1,5 @@
-#include "common.h"
+#include "core/context.h"
+#include "core/modal.h"
 #include "config.h"
 #include "core/zoxide_helpers.h"
 #include "core/common_ui.h"
@@ -39,7 +40,7 @@ void ZoxideHelper_RebuildCache(const char* filepath, char*** cached_out, int* co
 void ZoxideHelper_Refresh(const char* filter, WindowHandle hListBox, ListBoxInfo* lb, const char* filepath, char*** cached, int* count) {
     if (!cached || !count) return;
     if (!*cached) ZoxideHelper_RebuildCache(filepath, cached, count);
-    PopulateListBox(lb, hListBox, filter, (const char**)*cached, *count, NULL);
+    PopulateListBox(lb, FlintContext_Get()->window.hListBox, filter, (const char**)*cached, *count, NULL);
 }
 
 static void zoxide_edit_confirm_callback(const char* new_text, void* user_data) {
@@ -66,8 +67,8 @@ void ZoxideHelper_Edit(const char* selection, ListBoxInfo* lb, const char* filep
     data->true_index = true_idx;
     data->new_text = NULL;
     data->restore_selection = true;
-    data->hListBox = hListBox;
-    data->hEditControl = hEditControl;
+    data->hListBox = FlintContext_Get()->window.hListBox;
+    data->hEditControl = FlintContext_Get()->window.hEditControl;
     data->refresh_cb = refresh;
 
     Popup* popup = EditPopup_Create(wm, selection, "Edit Zoxide", 960, 540,

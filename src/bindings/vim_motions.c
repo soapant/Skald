@@ -1,4 +1,5 @@
-#include "common.h"
+#include "core/context.h"
+#include "core/modal.h"
 #include "bindings/vim_motions.h"
 #include "bindings/vim_helpers.h"
 #include "core/common_ui.h"
@@ -263,8 +264,8 @@ void HandleDeleteWordNormal(VimContext* ctx) {
 void HandleSendEdit(VimContext* ctx) {
     (void)ctx;
 #if defined(_WIN32)
-    UI_Edit_KeyDown(g_ActiveEditControl,EDIT_TEXT_KEY);
-    UI_Edit_KeyUp(g_ActiveEditControl, EDIT_TEXT_KEY);
+    UI_Edit_KeyDown(FlintContext_Get()->window.g_ActiveEditControl,EDIT_TEXT_KEY);
+    UI_Edit_KeyUp(FlintContext_Get()->window.g_ActiveEditControl, EDIT_TEXT_KEY);
 #else
     FlintContext* _c = FlintContext_Get();
     if (_c->prompt_callbacks.edit && ctx && ctx->lb && UI_IsListBoxSelected(ctx->lb)) {
@@ -277,10 +278,10 @@ void HandleSendEdit(VimContext* ctx) {
 void HandleSendCopyShift(VimContext* ctx) {
 #if defined(_WIN32)
     (void)ctx;
-    UI_Edit_KeyUp(g_ActiveEditControl,VK_SHIFT);
-    UI_Edit_KeyDown(g_ActiveEditControl,COPY_SELECTION_KEY);
-    UI_Edit_KeyUp(g_ActiveEditControl, COPY_SELECTION_KEY);
-    UI_Edit_KeyDown(g_ActiveEditControl,VK_SHIFT);
+    UI_Edit_KeyUp(FlintContext_Get()->window.g_ActiveEditControl,VK_SHIFT);
+    UI_Edit_KeyDown(FlintContext_Get()->window.g_ActiveEditControl,COPY_SELECTION_KEY);
+    UI_Edit_KeyUp(FlintContext_Get()->window.g_ActiveEditControl, COPY_SELECTION_KEY);
+    UI_Edit_KeyDown(FlintContext_Get()->window.g_ActiveEditControl,VK_SHIFT);
 #else
     if (!ctx || !ctx->lb) return;
     const char* sel = UI_IsListBoxSelected(ctx->lb) ? ctx->lb->populated_cache[ctx->lb->selected_index] : "";
@@ -292,10 +293,10 @@ void HandleSendCopyShift(VimContext* ctx) {
 void HandleSendCopyControl(VimContext* ctx) {
 #if defined(_WIN32)
     (void)ctx;
-    UI_Edit_KeyUp(g_ActiveEditControl,VK_CONTROL);
-    UI_Edit_KeyDown(g_ActiveEditControl,COPY_SELECTION_KEY);
-    UI_Edit_KeyUp(g_ActiveEditControl, COPY_SELECTION_KEY);
-    UI_Edit_KeyDown(g_ActiveEditControl,VK_CONTROL);
+    UI_Edit_KeyUp(FlintContext_Get()->window.g_ActiveEditControl,VK_CONTROL);
+    UI_Edit_KeyDown(FlintContext_Get()->window.g_ActiveEditControl,COPY_SELECTION_KEY);
+    UI_Edit_KeyUp(FlintContext_Get()->window.g_ActiveEditControl, COPY_SELECTION_KEY);
+    UI_Edit_KeyDown(FlintContext_Get()->window.g_ActiveEditControl,VK_CONTROL);
 #else
     if (!ctx || !ctx->lb) return;
     const char* sel = UI_IsListBoxSelected(ctx->lb) ? ctx->lb->populated_cache[ctx->lb->selected_index] : "";

@@ -1,4 +1,5 @@
 #include "core/flapi.h"
+#include "core/window_manager.h"
 
 void AddTextToFile(const char* text) {
     if (!text || strlen(text) == 0) return;
@@ -47,7 +48,7 @@ void forgetfull_refresh_callback(const char* filter, WindowHandle hListBox, List
     const char* items[100];
     int forgetfull_count = fl_load_file_list(FORGETFULL_FILE_PATH, items, 100);
 
-    PopulateListBox(lb, hListBox, filter, items, forgetfull_count, NULL);
+    PopulateListBox(lb, FlintContext_Get()->window.hListBox, filter, items, forgetfull_count, NULL);
     fl_free_file_list(items, forgetfull_count);
 }
 
@@ -57,9 +58,9 @@ bool forgetfull_enter_callback(const char* selection, ListBoxInfo* lb) {
     } 
     else {
         AddTextToFile(selection);
-        UI_SetText(hEditControl, "");
+        UI_SetText(FlintContext_Get()->window.hEditControl, "");
     }
-    UI_Redraw(lb, hListBox);
+    UI_Redraw(lb, FlintContext_Get()->window.hListBox);
     return true;
 }
 void forgetfull_edit_confirm_callback(const char* new_text, void* user_data) {
@@ -88,8 +89,8 @@ void forgetfull_edit_callback(const char* selection, ListBoxInfo* lb) {
     data->true_index = true_idx;
     data->new_text = NULL;
     data->restore_selection = true;
-    data->hListBox = hListBox;
-    data->hEditControl = hEditControl;
+    data->hListBox = FlintContext_Get()->window.hListBox;
+    data->hEditControl = FlintContext_Get()->window.hEditControl;
     
     Popup* popup = EditPopup_Create(wm, selection, "Edit ForgetFull", 960, 540,
                                     forgetfull_edit_confirm_callback, data);
@@ -105,9 +106,9 @@ bool forgetfull_ctrlenter_callback(const char* selection, ListBoxInfo* lb) {
         RemoveTextFromFile(selection);
     } else {
         AddTextToFile(selection);
-        UI_SetText(hEditControl, "");
+        UI_SetText(FlintContext_Get()->window.hEditControl, "");
     }
-    forgetfull_refresh_callback(NULL, hListBox, lb);
+    forgetfull_refresh_callback(NULL, FlintContext_Get()->window.hListBox, lb);
     return false;
 }
 

@@ -12,7 +12,7 @@ void Rebuildtext_editorCache(void) {
 
 
 void text_editor_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
-    ZoxideHelper_Refresh(filter, hListBox, lb, TextEditorZoxideFilePath, &cached_text_editor_commands, &cached_text_editor_count);
+    ZoxideHelper_Refresh(filter, FlintContext_Get()->window.hListBox, lb, TextEditorZoxideFilePath, &cached_text_editor_commands, &cached_text_editor_count);
 }
 
 

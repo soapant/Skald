@@ -159,8 +159,8 @@ void TriggerRegionImage(void) {
         s_img_x2 = cursorPos.x;
         s_img_y2 = cursorPos.y;
         s_img_region_step = 0;
-        if (WH_TO_HWND(hGlobalTrayWnd) != NULL) {
-            SendNotifyMessage(WH_TO_HWND(hGlobalTrayWnd), WM_TRIGGER_IMG_CAPTURE, 0, 0);
+        if (WH_TO_HWND(FlintContext_Get()->window.hGlobalTrayWnd) != NULL) {
+            SendNotifyMessage(WH_TO_HWND(FlintContext_Get()->window.hGlobalTrayWnd), WM_TRIGGER_IMG_CAPTURE, 0, 0);
         }
     }
 #else

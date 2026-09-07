@@ -1,5 +1,6 @@
 #include "core/vim.h"
-#include "common.h"
+#include "core/context.h"
+#include "core/modal.h"
 #include "core/common_ui.h"
 #include "core/window_manager.h"
 #include <string.h>
@@ -138,10 +139,10 @@ void Vim_SetCursor(VimContext* ctx, int pos) {
 VimContext Vim_FromGlobals(void) {
     VimContext ctx = {0};
 #if defined(_WIN32)
-    ctx.hEdit = g_ActiveEditControl;
-    ctx.hListBox = hListBox;
-    if (WH_TO_HWND(hPopupWnd) && IsWindow(WH_TO_HWND(hPopupWnd))) {
-        ctx.lb = (ListBoxInfo*)GetWindowLongPtrA(WH_TO_HWND(hPopupWnd), GWLP_USERDATA);
+    ctx.hEdit = FlintContext_Get()->window.g_ActiveEditControl;
+    ctx.hListBox = FlintContext_Get()->window.hListBox;
+    if (WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) && IsWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd))) {
+        ctx.lb = (ListBoxInfo*)GetWindowLongPtrA(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), GWLP_USERDATA);
     }
     ctx.state = NULL;
     ctx.simple_state = NULL;
@@ -160,27 +161,27 @@ VimContext Vim_FromGlobals(void) {
     WMEditPopupData* wm_edit = GetActiveEditPopupState();
     if (wm_edit) {
         VimContext ctx2 = {0};
-        ctx2.hListBox = hListBox;
-        ctx2.hEdit = g_ActiveEditControl;
+        ctx2.hListBox = FlintContext_Get()->window.hListBox;
+        ctx2.hEdit = FlintContext_Get()->window.g_ActiveEditControl;
         return ctx2;
     }
     PromptState* prompt = GetActivePromptState();
     if (prompt) {
         ctx.state = prompt;
         ctx.lb = prompt->has_listbox ? &prompt->listbox : NULL;
-        ctx.hListBox = hListBox;
-        ctx.hEdit = g_ActiveEditControl;
+        ctx.hListBox = FlintContext_Get()->window.hListBox;
+        ctx.hEdit = FlintContext_Get()->window.g_ActiveEditControl;
     } else {
         SimplePromptState* simple = GetActiveSimplePromptState();
         if (simple) {
             ctx.simple_state = simple;
             ctx.lb = NULL;
-            ctx.hListBox = hListBox;
-            ctx.hEdit = g_ActiveEditControl;
+            ctx.hListBox = FlintContext_Get()->window.hListBox;
+            ctx.hEdit = FlintContext_Get()->window.g_ActiveEditControl;
         } else {
             ctx.lb = NULL;
-            ctx.hListBox = hListBox;
-            ctx.hEdit = g_ActiveEditControl;
+            ctx.hListBox = FlintContext_Get()->window.hListBox;
+            ctx.hEdit = FlintContext_Get()->window.g_ActiveEditControl;
         }
     }
 #endif
@@ -192,8 +193,8 @@ VimContext Vim_FromState(PromptState* state) {
     ctx.state = state;
     if (state) {
         ctx.lb = state->has_listbox ? &state->listbox : NULL;
-        ctx.hListBox = hListBox;
-        ctx.hEdit = g_ActiveEditControl;
+        ctx.hListBox = FlintContext_Get()->window.hListBox;
+        ctx.hEdit = FlintContext_Get()->window.g_ActiveEditControl;
     }
     return ctx;
 }
@@ -202,8 +203,8 @@ VimContext Vim_FromSimpleState(SimplePromptState* state) {
     VimContext ctx = {0};
     ctx.simple_state = state;
     ctx.lb = NULL;
-    ctx.hListBox = hListBox;
-    ctx.hEdit = g_ActiveEditControl;
+    ctx.hListBox = FlintContext_Get()->window.hListBox;
+    ctx.hEdit = FlintContext_Get()->window.g_ActiveEditControl;
     return ctx;
 }
 
@@ -211,8 +212,8 @@ VimContext Vim_FromEditState(SimplePromptState* state) {
     VimContext ctx = {0};
     ctx.edit_state = state;
     ctx.lb = NULL;
-    ctx.hListBox = hListBox;
-    ctx.hEdit = g_ActiveEditControl;
+    ctx.hListBox = FlintContext_Get()->window.hListBox;
+    ctx.hEdit = FlintContext_Get()->window.g_ActiveEditControl;
     return ctx;
 }
 

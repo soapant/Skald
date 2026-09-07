@@ -1,5 +1,6 @@
 #include <windows.h>
-#include "common.h"
+#include "core/context.h"
+#include "core/modal.h"
 #include <commctrl.h>
 #include <shellapi.h>
 #include "config.h"
@@ -20,7 +21,7 @@ static ListBoxInfo* GetLBFromChild(HWND hChild) {
   HWND hParent = GetParent(hChild);
   if (hParent && IsWindow(hParent)) return GetLBFromPopup(hParent);
   
-  if (WH_TO_HWND(hPopupWnd) && IsWindow(WH_TO_HWND(hPopupWnd))) return GetLBFromPopup(WH_TO_HWND(hPopupWnd));
+  if (WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) && IsWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd))) return GetLBFromPopup(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd));
   return NULL;
 }
 static ListBoxInfo* GetLBForPopupWindow(HWND hPopup) { return GetLBFromPopup(hPopup); }
@@ -37,7 +38,7 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
     HWND hEditControl = hwnd;
     
     if (msg == WM_KEYDOWN) {
-      g_ActiveEditControl = WH_FROM_HWND(hEditControl);
+      FlintContext_Get()->window.g_ActiveEditControl = FlintContext_Get()->window.hEditControl;
         bool ctrl_pressed = (GetKeyState(VK_CONTROL) & 0x8000);
         if (wParam == VK_CONTROL || wParam == VK_SHIFT) {
           return DefSubclassProc(hwnd, msg, wParam, lParam);
@@ -45,7 +46,7 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
       
         if (wParam >= '0' && wParam <= '9') {
           if (ctrl_pressed) {
-            HandleNumberShortcut(wParam, WH_FROM_HWND(hListBox), WH_FROM_HWND(hEditControl), lb);
+            HandleNumberShortcut(wParam, FlintContext_Get()->window.hListBox, FlintContext_Get()->window.hEditControl, lb);
               return 0;
           }
         }
@@ -53,11 +54,11 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
         
         if (!ctrl_pressed) {
           if (wParam == VK_UP || wParam == VK_DOWN) {
-            if (hListBox != NULL) {
+            if (WH_TO_HWND(FlintContext_Get()->window.hListBox) != NULL) {
               if (wParam == VK_UP) {
-                UI_NavigateUp(lb, WH_FROM_HWND(hListBox));
+                UI_NavigateUp(lb, FlintContext_Get()->window.hListBox);
               } else {
-                UI_NavigateDown(lb, WH_FROM_HWND(hListBox));
+                UI_NavigateDown(lb, FlintContext_Get()->window.hListBox);
               }
             }
             return 0;
@@ -66,50 +67,50 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
       
         if (wParam == VK_RETURN) {
           bool ctrl_pressed = (GetKeyState(VK_CONTROL) & 0x8000);
-            struct feature_data* data = GetFeatureData(g_current_feature);
-            output_buffer[0] = '\0';
+            struct feature_data* data = GetFeatureData(FlintContext_Get()->window.current_feature);
+            FlintContext_Get()->window.output_buffer[0] = '\0';
             if (UI_IsListBoxSelected(lb)) {
-              if (lb && lb->selected_index >=0 && lb->selected_index < lb->populated_count) strncpy(output_buffer, lb->populated_cache[lb->selected_index], sizeof(output_buffer) - 1);
+              if (lb && lb->selected_index >=0 && lb->selected_index < lb->populated_count) strncpy(FlintContext_Get()->window.output_buffer, lb->populated_cache[lb->selected_index], sizeof(FlintContext_Get()->window.output_buffer) - 1);
             } else {
-              GetWindowTextA(hwnd, output_buffer, sizeof(output_buffer));
+              GetWindowTextA(hwnd, FlintContext_Get()->window.output_buffer, sizeof(FlintContext_Get()->window.output_buffer));
             }
-          SaveFeatureHistory(output_buffer);
-            if (WH_TO_HWND(hDisplayMessage) != NULL) {
-              KillTimer(WH_TO_HWND(hDisplayMessage), 999);
-                DestroyWindow(WH_TO_HWND(hDisplayMessage));
-                hDisplayMessage = WH_NULL;
+          SaveFeatureHistory(FlintContext_Get()->window.output_buffer);
+            if (WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage) != NULL) {
+              KillTimer(WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage), 999);
+                DestroyWindow(WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage));
+                FlintContext_Get()->window.hDisplayMessage = WH_NULL;
             }
           if (ctrl_pressed) {
-            AddSelectionToData(output_buffer,g_current_feature,data);
-              if (g_ctrl_enter_callback != NULL) {
-                g_ctrl_enter_callback(output_buffer, lb);
+            AddSelectionToData(FlintContext_Get()->window.output_buffer,FlintContext_Get()->window.current_feature,data);
+              if (FlintContext_Get()->prompt_callbacks.ctrl_enter != NULL) {
+                FlintContext_Get()->prompt_callbacks.ctrl_enter(FlintContext_Get()->window.output_buffer, lb);
               }
             return 0;
           } else {
-            AddSelectionToData(output_buffer,g_current_feature,data);
-              if (g_enter_callback != NULL) {
-                g_enter_callback(output_buffer, lb);
+            AddSelectionToData(FlintContext_Get()->window.output_buffer,FlintContext_Get()->window.current_feature,data);
+              if (FlintContext_Get()->prompt_callbacks.enter != NULL) {
+                FlintContext_Get()->prompt_callbacks.enter(FlintContext_Get()->window.output_buffer, lb);
               }
             
-              selection_complete = true; 
+              FlintContext_Get()->window.selection_complete = true; 
               return 0;
           }
         }
       
         if (wParam == VK_ESCAPE) {
-          output_buffer[0] = '\0'; 
-            selection_complete = true;  
-            if (WH_TO_HWND(hDisplayMessage) != NULL) {
-              KillTimer(WH_TO_HWND(hDisplayMessage), 999);
-                DestroyWindow(WH_TO_HWND(hDisplayMessage));
+          FlintContext_Get()->window.output_buffer[0] = '\0'; 
+            FlintContext_Get()->window.selection_complete = true;  
+            if (WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage) != NULL) {
+              KillTimer(WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage), 999);
+                DestroyWindow(WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage));
             }
           return 1;
         }
       
         if (wParam == VK_TAB) {
-          struct feature_data* data = GetFeatureData(g_current_feature);
-            if (g_tab_callback != NULL) {
-              g_tab_callback(lb);
+          struct feature_data* data = GetFeatureData(FlintContext_Get()->window.current_feature);
+            if (FlintContext_Get()->prompt_callbacks.tab != NULL) {
+              FlintContext_Get()->prompt_callbacks.tab(lb);
             }
           for (int i = 0;i < data->selection_count;++i) {
             printf("%s \n",data->last_selections[i]);
@@ -118,8 +119,8 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
         }
       if (wParam == VK_BACK) {
         if (ctrl_pressed) {
-          UI_SetText(WH_FROM_HWND(hEditControl),"");
-            UI_Redraw(lb, WH_FROM_HWND(hListBox));
+          UI_SetText(FlintContext_Get()->window.hEditControl,"");
+            UI_Redraw(lb, FlintContext_Get()->window.hListBox);
             return 0;
         }
       }
@@ -128,37 +129,37 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
           bool shift_pressed = (GetKeyState(VK_SHIFT) & 0x8000);
           if (shift_pressed) {
             if (UI_IsListBoxSelected(lb)) {
-              if (lb && lb->selected_index >=0 && lb->selected_index < lb->populated_count) strncpy(output_buffer, lb->populated_cache[lb->selected_index], sizeof(output_buffer) - 1);
-                output_buffer[sizeof(output_buffer) - 1] = '\0';
+              if (lb && lb->selected_index >=0 && lb->selected_index < lb->populated_count) strncpy(FlintContext_Get()->window.output_buffer, lb->populated_cache[lb->selected_index], sizeof(FlintContext_Get()->window.output_buffer) - 1);
+                FlintContext_Get()->window.output_buffer[sizeof(FlintContext_Get()->window.output_buffer) - 1] = '\0';
             }
-            if (g_copy_callback != NULL) {
-              g_copy_callback(output_buffer, UI_LookupTrueIndex(output_buffer), 0);
+            if (FlintContext_Get()->prompt_callbacks.copy != NULL) {
+              FlintContext_Get()->prompt_callbacks.copy(FlintContext_Get()->window.output_buffer, UI_LookupTrueIndex(FlintContext_Get()->window.output_buffer), 0);
             } else {
-              Platform_CopyToClipboard(output_buffer);
+              Platform_CopyToClipboard(FlintContext_Get()->window.output_buffer);
             }
           } else if (ctrl_pressed) {
             if (UI_IsListBoxSelected(lb)) {
-              if (lb && lb->selected_index >=0 && lb->selected_index < lb->populated_count) strncpy(output_buffer, lb->populated_cache[lb->selected_index], sizeof(output_buffer) - 1);
-                output_buffer[sizeof(output_buffer) - 1] = '\0';
+              if (lb && lb->selected_index >=0 && lb->selected_index < lb->populated_count) strncpy(FlintContext_Get()->window.output_buffer, lb->populated_cache[lb->selected_index], sizeof(FlintContext_Get()->window.output_buffer) - 1);
+                FlintContext_Get()->window.output_buffer[sizeof(FlintContext_Get()->window.output_buffer) - 1] = '\0';
             }
             
-              if (g_copy_callback != NULL) {
-                g_copy_callback(output_buffer, UI_LookupTrueIndex(output_buffer), 1);
+              if (FlintContext_Get()->prompt_callbacks.copy != NULL) {
+                FlintContext_Get()->prompt_callbacks.copy(FlintContext_Get()->window.output_buffer, UI_LookupTrueIndex(FlintContext_Get()->window.output_buffer), 1);
               } else {
-                Platform_CopyToClipboard(output_buffer);
+                Platform_CopyToClipboard(FlintContext_Get()->window.output_buffer);
               }
           }
       }
       if (wParam == VK_DOWN) {
         if (ctrl_pressed) {
           char text[256];
-          UI_GetCurrentText(WH_FROM_HWND(hEditControl), text);
-          UI_SetCursorPosition(WH_FROM_HWND(hEditControl),strlen(text));
+          UI_GetCurrentText(FlintContext_Get()->window.hEditControl, text);
+          UI_SetCursorPosition(FlintContext_Get()->window.hEditControl,strlen(text));
         }
       }
       if (wParam == VK_UP) {
         if (ctrl_pressed) {
-          UI_SetCursorPosition(WH_FROM_HWND(hEditControl),1);
+          UI_SetCursorPosition(FlintContext_Get()->window.hEditControl,1);
         }
       }
     } 
@@ -178,31 +179,31 @@ LRESULT CALLBACK SimpleEditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPAR
     bool ctrl_pressed = (GetKeyState(VK_CONTROL) & 0x8000);
     
     if (msg == WM_KEYDOWN) {
-      g_ActiveEditControl = WH_FROM_HWND(hEditControl);
+      FlintContext_Get()->window.g_ActiveEditControl = FlintContext_Get()->window.hEditControl;
         if (wParam == VK_CONTROL || wParam == VK_SHIFT || wParam == VK_MENU) {
           return DefSubclassProc(hwnd, msg, wParam, lParam);
         }
       if (wParam == VK_RETURN) {
-        GetWindowTextA(hEditControl, output_buffer, sizeof(output_buffer));
+        GetWindowTextA(WH_TO_HWND(FlintContext_Get()->window.hEditControl), FlintContext_Get()->window.output_buffer, sizeof(FlintContext_Get()->window.output_buffer));
           
-          selection_complete = true; 
+          FlintContext_Get()->window.selection_complete = true; 
           
           return 0; 
       }
       
         if (wParam == VK_ESCAPE) {
-          output_buffer[0] = '\0'; 
-            selection_complete = true;  
-            if (WH_TO_HWND(hDisplayMessage) != NULL) {
-              KillTimer(WH_TO_HWND(hDisplayMessage), 999);
-                DestroyWindow(WH_TO_HWND(hDisplayMessage));
+          FlintContext_Get()->window.output_buffer[0] = '\0'; 
+            FlintContext_Get()->window.selection_complete = true;  
+            if (WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage) != NULL) {
+              KillTimer(WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage), 999);
+                DestroyWindow(WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage));
             }
           return 0;
         }
       
         if (wParam == VK_BACK) {
           if (ctrl_pressed) {
-            UI_SetText(WH_FROM_HWND(hEditControl),"");
+            UI_SetText(FlintContext_Get()->window.hEditControl,"");
               return 0;
           }
         }
@@ -355,15 +356,15 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     switch (msg) {
     case WM_ACTIVATE: {
         if (CloseOnLossOfFocus && LOWORD(wParam) == WA_INACTIVE) {
-            output_buffer[0] = '\0';
-            selection_complete = true;
+            FlintContext_Get()->window.output_buffer[0] = '\0';
+            FlintContext_Get()->window.selection_complete = true;
         }
         break;
     }
     case WM_KILLFOCUS: {
         if (CloseOnLossOfFocus) {
-            output_buffer[0] = '\0';
-            selection_complete = true;
+            FlintContext_Get()->window.output_buffer[0] = '\0';
+            FlintContext_Get()->window.selection_complete = true;
         }
         break;
     }
@@ -387,17 +388,17 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         }
     }
     case WM_CREATE: {
-      if (!g_hNumFont) {
-        g_hNumFont = CreateFontA(NumberFontSize, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
+      if (!FlintContext_Get()->g_hNumFont) {
+        FlintContext_Get()->g_hNumFont = CreateFontA(NumberFontSize, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
                                  DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
                                  CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, UsedFont);
       }
-      if (!g_hMainFont) {
-        g_hMainFont = CreateFontA(FontSize, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+      if (!FlintContext_Get()->g_hMainFont) {
+        FlintContext_Get()->g_hMainFont = CreateFontA(FontSize, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
                                   DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
                                   CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, UsedFont);
       }
-      if (only_once) selection_feature = g_current_feature;
+      if (only_once) selection_feature = FlintContext_Get()->window.current_feature;
         only_once = false;
           break;
     }
@@ -405,9 +406,9 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
       if (wParam && g_pending_navigate >= 0) {
         int idx = g_pending_navigate;
           g_pending_navigate = -1;
-          if (WH_TO_HWND(hListBox) != NULL && IsWindow(WH_TO_HWND(hListBox))) {
-            UI_NavigateTo(lb, hListBox, idx);
-              UpdateWindow(WH_TO_HWND(hListBox));
+          if (WH_TO_HWND(FlintContext_Get()->window.hListBox) != NULL && IsWindow(WH_TO_HWND(FlintContext_Get()->window.hListBox))) {
+            UI_NavigateTo(lb, FlintContext_Get()->window.hListBox, idx);
+              UpdateWindow(WH_TO_HWND(FlintContext_Get()->window.hListBox));
           }
       }
       break;
@@ -425,8 +426,8 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             break;
           }
           
-            if (WH_TO_HWND(hEditControl) != NULL && WH_TO_HWND(hListBox) != NULL) {
-              UI_Redraw(lb, hListBox);
+            if (WH_TO_HWND(FlintContext_Get()->window.hEditControl) != NULL && WH_TO_HWND(FlintContext_Get()->window.hListBox) != NULL) {
+              UI_Redraw(lb, FlintContext_Get()->window.hListBox);
             }
         }
       
@@ -439,7 +440,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     case WM_TIMER: {
       if (wParam == UI_DEBOUNCE_TIMER_ID) {
         KillTimer(hwnd, UI_DEBOUNCE_TIMER_ID);
-          UI_RedrawNow(lb, hListBox);
+          UI_RedrawNow(lb, FlintContext_Get()->window.hListBox);
           return 0;
       }
       break;
@@ -509,7 +510,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                     }
                   if (!FullTextNeedsKeyPress) {
                     if (isSelected && strlen(measureBuffer) >= 70) {
-                      if (g_last_selected_index != pdis->itemID || WH_TO_HWND(hDisplayMessage) == NULL) {
+                      if (g_last_selected_index != pdis->itemID || WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage) == NULL) {
                         g_last_selected_index = pdis->itemID;
                           PostMessageA(hwnd, WM_PREVIEW_SELECTION, 0, (LPARAM)pdis->itemID);
                       }
@@ -520,10 +521,10 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                       }
                     }
                   } else {
-                    if (WH_TO_HWND(hDisplayMessage) != NULL) {
-                      KillTimer(WH_TO_HWND(hDisplayMessage), 999);
-                        DestroyWindow(WH_TO_HWND(hDisplayMessage));
-                        hDisplayMessage = WH_NULL;
+                    if (WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage) != NULL) {
+                      KillTimer(WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage), 999);
+                        DestroyWindow(WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage));
+                        FlintContext_Get()->window.hDisplayMessage = WH_NULL;
                     }
                   } 
                 } 
@@ -552,7 +553,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 numRect.left += 5;
                 numRect.right = numRect.left + 25;
                 
-                HFONT hOldFont = (HFONT)SelectObject(pdis->hDC, g_hNumFont);
+                HFONT hOldFont = (HFONT)SelectObject(pdis->hDC, FlintContext_Get()->g_hNumFont);
                 SetTextColor(pdis->hDC, GetRainbowColor((float)(pdis->itemID % GradientItems) / (float)GradientItems, 0.85f, GradientBrightness));
                 DrawTextA(pdis->hDC, s_num_cache[pdis->itemID], -1, &numRect, DT_SINGLELINE | DT_VCENTER | DT_CENTER);
                 SelectObject(pdis->hDC, hOldFont);
@@ -561,7 +562,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
               if (pdis->itemID < MAX_VISIBLE_ITEMS && pdis->itemID <= 998) {
                 RECT numRect = pdis->rcItem;
                   numRect.right = 35;
-                  HFONT hOldFont = (HFONT)SelectObject(pdis->hDC, g_hNumFont);
+                  HFONT hOldFont = (HFONT)SelectObject(pdis->hDC, FlintContext_Get()->g_hNumFont);
                   SetTextColor(pdis->hDC, GetRainbowColor((float)(pdis->itemID % GradientItems) / (float)GradientItems, 0.85f, GradientBrightness));
                   DrawTextA(pdis->hDC, s_num_cache[pdis->itemID], -1, &numRect, DT_SINGLELINE | DT_VCENTER | DT_CENTER);
                   SelectObject(pdis->hDC, hOldFont);
@@ -570,7 +571,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 if (pdis->itemID < MAX_VISIBLE_ITEMS ) {
                   RECT numRect = pdis->rcItem;
                     numRect.right = 45;
-                    HFONT hOldFont = (HFONT)SelectObject(pdis->hDC, g_hNumFont);
+                    HFONT hOldFont = (HFONT)SelectObject(pdis->hDC, FlintContext_Get()->g_hNumFont);
                     SetTextColor(pdis->hDC, GetRainbowColor((float)(pdis->itemID % GradientItems) / (float)GradientItems, 0.85f, GradientBrightness));
                     DrawTextA(pdis->hDC, s_num_cache[pdis->itemID], -1, &numRect, DT_SINGLELINE | DT_VCENTER | DT_CENTER);
                   SelectObject(pdis->hDC, hOldFont);
@@ -581,10 +582,10 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
               }
             }
           
-            if (g_render_callback != NULL) {
-              g_render_callback(pdis->hDC, textBuffer, &textRect, isSelected, pdis->itemID);
+            if (FlintContext_Get()->prompt_callbacks.render != NULL) {
+              FlintContext_Get()->prompt_callbacks.render(pdis->hDC, textBuffer, &textRect, isSelected, pdis->itemID);
             } else {
-              HFONT hOldMainFont = (HFONT)SelectObject(pdis->hDC, g_hMainFont);
+              HFONT hOldMainFont = (HFONT)SelectObject(pdis->hDC, FlintContext_Get()->g_hMainFont);
                 DrawTextA(pdis->hDC, textBuffer, -1, &textRect, DT_SINGLELINE | DT_VCENTER);
                 const char* alias_pos = strstr(textBuffer, " [");
                 if (alias_pos) {
@@ -631,7 +632,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         wchar_t wmode[256];
           MultiByteToWideChar(CP_UTF8, 0, g_vim_mode, -1, wmode, 256);
           
-          HFONT hOldFont = (HFONT)SelectObject(hdc, g_hMainFont);
+          HFONT hOldFont = (HFONT)SelectObject(hdc, FlintContext_Get()->g_hMainFont);
           
           SetBkMode(hdc, TRANSPARENT);
           
@@ -656,11 +657,11 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
           
           SelectObject(hdc, hOldFont);
       }
-      if (g_title != NULL && strlen(g_title) > 0) {
+      if (FlintContext_Get()->window.title != NULL && strlen(FlintContext_Get()->window.title) > 0) {
         wchar_t wtitle[256];
-          MultiByteToWideChar(CP_UTF8, 0, g_title, -1, wtitle, 256);
+          MultiByteToWideChar(CP_UTF8, 0, FlintContext_Get()->window.title, -1, wtitle, 256);
           
-          HFONT hOldFont = (HFONT)SelectObject(hdc, g_hMainFont);
+          HFONT hOldFont = (HFONT)SelectObject(hdc, FlintContext_Get()->g_hMainFont);
           SetBkMode(hdc, TRANSPARENT);
           
           SIZE sz;
@@ -716,7 +717,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
       
         extern EditorMode g_last_mode;
         g_last_mode = g_current_mode;
-        selection_feature = g_current_feature;
+        selection_feature = FlintContext_Get()->window.current_feature;
         for (int i = 0; i < (int)ARRAY_LEN(held_modifiers); i++) {
           if (GetAsyncKeyState(held_modifiers[i]) & 0x8000) {
             INPUT up = {0};
@@ -743,7 +744,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 LRESULT CALLBACK DisplayMessageProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
   FadeWindowData* data = (FadeWindowData*)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
-    hDisplayMessage = WH_FROM_HWND(hwnd);
+    FlintContext_Get()->window.hDisplayMessage = WH_FROM_HWND(hwnd);
     
     switch (msg) {
     case WM_NCCREATE: {
@@ -795,12 +796,12 @@ LRESULT CALLBACK DisplayMessageProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
     }
     case WM_TIMER: {
       if (wParam == 999 && data) {
-        if (g_timeout == 6969) {
+        if (FlintContext_Get()->g_timeout == 6969) {
           return 0;
         }
         
-          if (g_timeout > 0) {
-            g_timeout--;
+          if (FlintContext_Get()->g_timeout > 0) {
+            FlintContext_Get()->g_timeout--;
               return 0; 
           }
         
@@ -808,7 +809,7 @@ LRESULT CALLBACK DisplayMessageProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
           
           if (data->alpha <= 0) {
             KillTimer(hwnd, 999);
-              hDisplayMessage = WH_NULL; 
+              FlintContext_Get()->window.hDisplayMessage = WH_NULL; 
               DestroyWindow(hwnd);
           } else {
             SetLayeredWindowAttributes(hwnd, 0, (BYTE)data->alpha, LWA_ALPHA);
@@ -838,13 +839,13 @@ LRESULT CALLBACK SettingsPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
   }
     
   case WM_CREATE: {
-    if (!g_hNumFont) {
-      g_hNumFont = CreateFontA(NumberFontSize, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
+    if (!FlintContext_Get()->g_hNumFont) {
+      FlintContext_Get()->g_hNumFont = CreateFontA(NumberFontSize, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
                                DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
                                CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, UsedFont);
     }
-    if (!g_hMainFont) {
-      g_hMainFont = CreateFontA(FontSize, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+    if (!FlintContext_Get()->g_hMainFont) {
+      FlintContext_Get()->g_hMainFont = CreateFontA(FontSize, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
                                 DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
                                 CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, UsedFont);
     }
@@ -871,7 +872,7 @@ LRESULT CALLBACK SettingsPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
       GetClientRect(hwnd, &rect);
       
       
-      HFONT hOldFont = (HFONT)SelectObject(hdc, g_hMainFont);
+      HFONT hOldFont = (HFONT)SelectObject(hdc, FlintContext_Get()->g_hMainFont);
       
       HBRUSH hBgBrush = CreateSolidBrush(COLOR_BG);
       FillRect(hdc, &rect, hBgBrush);
@@ -931,7 +932,7 @@ LRESULT CALLBACK SettingsPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
       return 0;
   }
   case WM_DESTROY: {
-      hSettings = WH_NULL;
+      FlintContext_Get()->window.hSettings = WH_NULL;
       break;
   }
   }
@@ -943,7 +944,7 @@ LRESULT CALLBACK SettingsEditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LP
   HWND hEditControl = hwnd;
     
     if (msg == WM_KEYDOWN) {
-      g_ActiveEditControl = WH_FROM_HWND(hEditControl);
+      FlintContext_Get()->window.g_ActiveEditControl = FlintContext_Get()->window.hEditControl;
         bool ctrl_pressed = (GetKeyState(VK_CONTROL) & 0x8000);
         if (wParam == VK_CONTROL || wParam == VK_SHIFT) {
           return DefSubclassProc(hwnd, msg, wParam, lParam);
@@ -954,26 +955,26 @@ LRESULT CALLBACK SettingsEditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LP
             SetModeWithListBox(MODE_NORMAL, lb);
           }else {
             DestroyWindow(GetParent(hwnd));
-              hSettings = WH_NULL;
+              FlintContext_Get()->window.hSettings = WH_NULL;
               return 1;
           }
         }
       if (wParam == VK_BACK) {
         if (ctrl_pressed) {
-          UI_SetText(WH_FROM_HWND(hEditControl),"");
+          UI_SetText(FlintContext_Get()->window.hEditControl,"");
             return 0;
         }
       }
       if (wParam == VK_DOWN) {
         if (ctrl_pressed) {
           char text[256];
-          UI_GetCurrentText(WH_FROM_HWND(hEditControl), text);
-          UI_SetCursorPosition(WH_FROM_HWND(hEditControl),strlen(text));
+          UI_GetCurrentText(FlintContext_Get()->window.hEditControl, text);
+          UI_SetCursorPosition(FlintContext_Get()->window.hEditControl,strlen(text));
         }
       }
       if (wParam == VK_UP) {
         if (ctrl_pressed) {
-          UI_SetCursorPosition(WH_FROM_HWND(hEditControl),1);
+          UI_SetCursorPosition(FlintContext_Get()->window.hEditControl,1);
         }
       }
     } 
@@ -983,7 +984,7 @@ LRESULT CALLBACK SettingsEditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LP
 LRESULT CALLBACK EditPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
   ListBoxInfo* lb = GetLBFromChild(hWnd);
   
-  if (!lb && WH_TO_HWND(hPopupWnd) && IsWindow(WH_TO_HWND(hPopupWnd))) lb = GetLBFromPopup(WH_TO_HWND(hPopupWnd));
+  if (!lb && WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) && IsWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd))) lb = GetLBFromPopup(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd));
   EditPopupData* data = (EditPopupData*)dwRefData;
     if (!data || !WH_TO_HWND(data->hEdit)) {
       data = (EditPopupData*)GetWindowLongPtrA(hWnd, GWLP_USERDATA);
@@ -997,7 +998,7 @@ LRESULT CALLBACK EditPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
         printf("[EditPopup] Escape pressed\n");
           data->result = NULL;
           DestroyWindow(GetParent(hWnd));
-          UI_Redraw(lb, hListBox);
+          UI_Redraw(lb, FlintContext_Get()->window.hListBox);
           return 0;
       }
     if (wParam == VK_RETURN) {
@@ -1009,7 +1010,7 @@ LRESULT CALLBACK EditPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
         GetWindowTextA(WH_TO_HWND(data->hEdit), buffer, sizeof(buffer) - 1);
         data->result = _strdup(buffer);
         DestroyWindow(GetParent(hWnd));
-        UI_Redraw(lb, hListBox);
+        UI_Redraw(lb, FlintContext_Get()->window.hListBox);
         
         return 0;
     }
@@ -1019,11 +1020,11 @@ LRESULT CALLBACK EditPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 
 LRESULT CALLBACK SearchPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
   ListBoxInfo* lb = GetLBFromChild(hWnd);
-  if (!lb && WH_TO_HWND(hPopupWnd) && IsWindow(WH_TO_HWND(hPopupWnd))) lb = GetLBFromPopup(WH_TO_HWND(hPopupWnd));
+  if (!lb && WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) && IsWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd))) lb = GetLBFromPopup(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd));
   if (uMsg == WM_KEYDOWN) {
     if (wParam == VK_ESCAPE) {
       DestroyWindow(GetParent(hWnd));
-        UI_Redraw(lb, hListBox);
+        UI_Redraw(lb, FlintContext_Get()->window.hListBox);
         return 0;
     }
     if (wParam == VK_RETURN) {
@@ -1033,7 +1034,7 @@ LRESULT CALLBACK SearchPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LP
       printf("[SearchPopup] Enter pressed\n");
         char buffer[2048] = {0};
         DestroyWindow(GetParent(hWnd));
-        UI_Redraw(lb, hListBox);
+        UI_Redraw(lb, FlintContext_Get()->window.hListBox);
         return 0;
     }
   }
@@ -1042,7 +1043,7 @@ LRESULT CALLBACK SearchPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LP
 
 LRESULT CALLBACK EditPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
   ListBoxInfo* lb = NULL;
-  if (WH_TO_HWND(hPopupWnd) && IsWindow(WH_TO_HWND(hPopupWnd))) lb = GetLBFromPopup(WH_TO_HWND(hPopupWnd));
+  if (WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) && IsWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd))) lb = GetLBFromPopup(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd));
   EditPopupData* data = (EditPopupData*)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
     
     switch (msg) {
@@ -1071,7 +1072,7 @@ LRESULT CALLBACK EditPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
             UI_Edit_SetFont(data->hEdit,data->hFont);
               UI_Edit_SetSel(data->hEdit,0,0);
               SetFocus(WH_TO_HWND(data->hEdit));
-              g_ActiveEditControl = data->hEdit;
+              FlintContext_Get()->window.g_ActiveEditControl = data->hEdit;
               
               SetWindowLongPtrA(WH_TO_HWND(data->hEdit), GWLP_USERDATA, (LONG_PTR)data);
               SetWindowSubclass(WH_TO_HWND(data->hEdit), EditPopupSubclassProc, 0, (DWORD_PTR)data);
@@ -1101,7 +1102,7 @@ LRESULT CALLBACK EditPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
           wchar_t wmode[256];
             MultiByteToWideChar(CP_UTF8, 0, g_vim_mode, -1, wmode, 256);
             
-            HFONT hOldFont = (HFONT)SelectObject(hdc, g_hMainFont);
+            HFONT hOldFont = (HFONT)SelectObject(hdc, FlintContext_Get()->g_hMainFont);
             SetBkMode(hdc, TRANSPARENT);
             
             COLORREF modeColor;
@@ -1137,16 +1138,16 @@ LRESULT CALLBACK EditPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
     }
             
     case WM_DESTROY: {
-      g_ActiveEditControl = hEditControl;
+      FlintContext_Get()->window.g_ActiveEditControl = FlintContext_Get()->window.hEditControl;
         if (data) {
           if (data->initial_text) { free((void*)data->initial_text); data->initial_text = NULL; }
             if (data->hFont) { DeleteObject(data->hFont); data->hFont = NULL; }
               SetWindowLongPtrA(hwnd, GWLP_USERDATA, 0);
         }
-        ForceWindowFocus(hPopupWnd, hEditControl);
+        ForceWindowFocus(FlintContext_Get()->window.hPopupWnd, FlintContext_Get()->window.hEditControl);
         last_index = lb ? lb->selected_index : -1;
         SetModeWithListBox(MODE_NORMAL, lb);
-        UpdateTextCaret(hEditControl);
+        UpdateTextCaret(FlintContext_Get()->window.hEditControl);
         break;
     }
     }
@@ -1155,7 +1156,7 @@ LRESULT CALLBACK EditPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
 
 LRESULT CALLBACK SearchPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
   ListBoxInfo* lb = NULL;
-  if (WH_TO_HWND(hPopupWnd) && IsWindow(WH_TO_HWND(hPopupWnd))) lb = GetLBFromPopup(WH_TO_HWND(hPopupWnd));
+  if (WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) && IsWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd))) lb = GetLBFromPopup(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd));
   HFONT hFont = CreateCustomNerdFont(FontSize, UsedFont);
     switch (msg) {
     case WM_NCCREATE: {
@@ -1171,21 +1172,21 @@ LRESULT CALLBACK SearchPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPar
         
         int modeHeight = 30;
         
-        g_hSearchPopup = WH_FROM_HWND(CreateWindowExA(
+        FlintContext_Get()->window.g_hSearchPopup = WH_FROM_HWND(CreateWindowExA(
                                          0, "EDIT","",
                                          WS_CHILD | WS_VISIBLE | ES_LEFT | ES_MULTILINE,
                                          5, modeHeight + 5,
                                          rect.right - 10, rect.bottom - modeHeight - 10,
                                          hwnd, (HMENU)1001, hInstance, NULL
                                         ));
-        if (WH_TO_HWND(g_hSearchPopup) != NULL) {
-            UI_Edit_SetFont(g_hSearchPopup,hFont);
-            UI_Edit_SetSel(g_hSearchPopup,0,0);
-            SetFocus(WH_TO_HWND(g_hSearchPopup));
-            g_ActiveEditControl = g_hSearchPopup;
+        if (WH_TO_HWND(FlintContext_Get()->window.g_hSearchPopup) != NULL) {
+            UI_Edit_SetFont(FlintContext_Get()->window.g_hSearchPopup,hFont);
+            UI_Edit_SetSel(FlintContext_Get()->window.g_hSearchPopup,0,0);
+            SetFocus(WH_TO_HWND(FlintContext_Get()->window.g_hSearchPopup));
+            FlintContext_Get()->window.g_ActiveEditControl = FlintContext_Get()->window.g_hSearchPopup;
             
-            SetWindowLongPtrA(WH_TO_HWND(g_hSearchPopup), GWLP_USERDATA,1);
-            SetWindowSubclass(WH_TO_HWND(g_hSearchPopup), SearchPopupSubclassProc, 0,1);
+            SetWindowLongPtrA(WH_TO_HWND(FlintContext_Get()->window.g_hSearchPopup), GWLP_USERDATA,1);
+            SetWindowSubclass(WH_TO_HWND(FlintContext_Get()->window.g_hSearchPopup), SearchPopupSubclassProc, 0,1);
         }
       break;
     }
@@ -1212,7 +1213,7 @@ LRESULT CALLBACK SearchPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPar
           wchar_t wmode[256];
             MultiByteToWideChar(CP_UTF8, 0, g_vim_mode, -1, wmode, 256);
             
-            HFONT hOldFont = (HFONT)SelectObject(hdc, g_hMainFont);
+            HFONT hOldFont = (HFONT)SelectObject(hdc, FlintContext_Get()->g_hMainFont);
             SetBkMode(hdc, TRANSPARENT);
             
             COLORREF modeColor;
@@ -1248,12 +1249,12 @@ LRESULT CALLBACK SearchPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPar
     }
             
     case WM_DESTROY: {
-      g_ActiveEditControl = hEditControl;
+      FlintContext_Get()->window.g_ActiveEditControl = FlintContext_Get()->window.hEditControl;
         DeleteObject(hFont);
         SetWindowLongPtrA(hwnd, GWLP_USERDATA, 0);
-        ForceWindowFocus(hPopupWnd, hEditControl);
+        ForceWindowFocus(FlintContext_Get()->window.hPopupWnd, FlintContext_Get()->window.hEditControl);
         SetModeWithListBox(MODE_NORMAL, lb);
-        UpdateTextCaret(hEditControl);
+        UpdateTextCaret(FlintContext_Get()->window.hEditControl);
         break;
     }
     }
@@ -1326,13 +1327,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
       nid.hWnd = hwnd;
       nid.uID = ID_TRAY_ICON;
       Shell_NotifyIcon(NIM_DELETE, &nid);
-      if (g_hNumFont) {
-        DeleteObject(g_hNumFont);
-          g_hNumFont = NULL;
+      if (FlintContext_Get()->g_hNumFont) {
+        DeleteObject(FlintContext_Get()->g_hNumFont);
+          FlintContext_Get()->g_hNumFont = NULL;
       }
-    if (g_hMainFont) {
-      DeleteObject(g_hMainFont);
-        g_hMainFont = NULL;
+    if (FlintContext_Get()->g_hMainFont) {
+      DeleteObject(FlintContext_Get()->g_hMainFont);
+        FlintContext_Get()->g_hMainFont = NULL;
     }
     PostQuitMessage(0);
       break;

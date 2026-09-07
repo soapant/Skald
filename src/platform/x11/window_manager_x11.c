@@ -286,7 +286,7 @@ static void Linux_HandleKeyPress(Display* dpy, XKeyEvent* ev, WindowManager* wm)
                             memcpy(state->filter+state->cursor, buf2, len2);
                             state->cursor+=len2;
                             FlintContext* _c = FlintContext_Get();
-                            if (_c->prompt_callbacks.refresh) _c->prompt_callbacks.refresh(state->filter, hListBox, state->has_listbox ? &state->listbox : NULL);
+                            if (_c->prompt_callbacks.refresh) _c->prompt_callbacks.refresh(state->filter, FlintContext_Get()->window.hListBox, state->has_listbox ? &state->listbox : NULL);
                             else if (state && state->listbox.populated_count >=0) {} // no-op
                         }
                     }

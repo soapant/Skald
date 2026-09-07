@@ -12,7 +12,8 @@
 #include <ctype.h>
 #include <linux/input.h>
 
-#include "common.h"
+#include "core/context.h"
+#include "core/modal.h"
 #include "config.h"
 #include "helpers.h"
 #include "core/platform.h"

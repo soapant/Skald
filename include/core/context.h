@@ -58,6 +58,10 @@ typedef struct {
     int SelectionDataCount;
 #if defined(_WIN32)
     uint32_t g_main_thread_id;
+    HFONT g_hNumFont;
+    HFONT g_hMainFont;
+    HANDLE g_key_event;
+    HHOOK hKeyboardHook;
     int g_timeout;
     bool g_waiting_for_key;
     int g_key_pressed;

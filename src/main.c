@@ -1,4 +1,5 @@
-#include "common.h"
+#include "core/context.h"
+#include "core/modal.h"
 #include "core/types.h"
 #include "helpers.h"
 #include "core/feature_data.h"
@@ -17,31 +18,13 @@
 #include <fontconfig/fontconfig.h>
 #endif
 #if defined(_WIN32)
-#include "features/notification_getter.h"
+// notification getter decls (src/features/notification_getter.c - no header)
+extern const wchar_t* HttpUrlForNotis;
+extern void StartNtfyDaemon(const wchar_t* topic, void (*callback)(const char*));
 #endif
 
 
-WindowHandle hGlobalTrayWnd = WH_NULL;
-WindowHandle hPopupWnd = WH_NULL;
-WindowHandle hEditControl = WH_NULL;
-WindowHandle hListBox = WH_NULL;
-WindowHandle hDisplayMessage = WH_NULL;
-WindowHandle hSettings = WH_NULL;
-WindowHandle g_hEditPopup = WH_NULL;
-WindowHandle g_hSearchPopup = WH_NULL;
-EditPopupData* g_EditData = NULL;
-WindowHandle g_ActiveEditControl = WH_NULL;
-int g_timeout = 1;
-uint32_t g_main_thread_id = 0;
-bool g_waiting_for_key = false;
-int g_key_pressed = 0;
-#if defined(_WIN32)
-HANDLE g_key_event = NULL;
-#endif
-#if defined(_WIN32)
-HFONT g_hNumFont = NULL;
-HFONT g_hMainFont = NULL;
-#endif
+// Window handles and feature globals now in FlintContext (src/core/context.c)
 
 
 void OInNotificationRecieved(const char* text) {
@@ -81,7 +64,7 @@ int main() {
   }
 #endif
 #if defined(_WIN32)
-  g_main_thread_id = GetCurrentThreadId();
+  FlintContext_Get()->g_main_thread_id = GetCurrentThreadId();
   {
     char buf[MAX_PATH];
     DWORD len = GetModuleFileNameA(NULL, buf, MAX_PATH);
@@ -131,13 +114,13 @@ int main() {
 #endif
 
 #if defined(_WIN32)
-  if (g_hNumFont) {
-    DeleteObject(g_hNumFont);
-    g_hNumFont = NULL;
+  if (FlintContext_Get()->g_hNumFont) {
+    DeleteObject(FlintContext_Get()->g_hNumFont);
+    FlintContext_Get()->g_hNumFont = NULL;
   }
-  if (g_hMainFont) {
-    DeleteObject(g_hMainFont);
-    g_hMainFont = NULL;
+  if (FlintContext_Get()->g_hMainFont) {
+    DeleteObject(FlintContext_Get()->g_hMainFont);
+    FlintContext_Get()->g_hMainFont = NULL;
   }
 #endif
   CleanupFeatureDataSystem();
