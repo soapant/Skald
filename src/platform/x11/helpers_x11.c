@@ -13,6 +13,7 @@
 #include <X11/extensions/shape.h>
 #include <unistd.h>
 #endif
+#include <stdint.h>
 #include "helpers.h"
 #include "core/timer.h"
 #include "core/common_ui.h"
@@ -565,7 +566,6 @@ static unsigned long LerpHex(unsigned long a, unsigned long b, float t) {
     return (rr << 16) | (rg << 8) | rb;
 }
 static unsigned long DeriveLighter(unsigned long base, float intensity) {
-    WinTimer timer = TimerStart();
     float f = ShaderIntensity;
     if (f < 0) f = 0; if (f > 1) f = 1;
     float eff = f * intensity;
@@ -574,15 +574,29 @@ static unsigned long DeriveLighter(unsigned long base, float intensity) {
     unsigned int ng = g + (unsigned int)((90 - g) * eff + 35 * eff);
     unsigned int nb = b + (unsigned int)((140 - b) * eff + 40 * eff);
     if (nr > 255) nr = 255; if (ng > 255) ng = 255; if (nb > 255) nb = 255;
-    TimerEnd(timer, "helpers_x11:DeriveLighter");
     return (nr << 16) | (ng << 8) | nb;
 }
 static unsigned int HashNoise(int x, int y) {
-    WinTimer timer = TimerStart();
     unsigned int h = (unsigned int)(x * 374761393U + y * 668265263U);
     h = (h ^ (h >> 13)) * 1274126177U;
-    TimerEnd(timer, "helpers_x11:HashNoise");
     return h & 0xFF;
+}
+static unsigned int CornerAlpha(int x, int y, int w, int h, int R, unsigned int baseAlpha8) {
+    float dx, dy, d_sq, R_plus_sq, R_minus_sq;
+    if (x < R && y < R) { dx = R - x - 0.5f; dy = R - y - 0.5f; }
+    else if (x >= w - R && y < R) { dx = x - (w - R) + 0.5f; dy = R - y - 0.5f; }
+    else if (x < R && y >= h - R) { dx = R - x - 0.5f; dy = y - (h - R) + 0.5f; }
+    else if (x >= w - R && y >= h - R) { dx = x - (w - R) + 0.5f; dy = y - (h - R) + 0.5f; }
+    else return baseAlpha8;
+    d_sq = dx*dx + dy*dy;
+    R_plus_sq = (R + 0.5f) * (R + 0.5f);
+    R_minus_sq = (R - 0.5f) * (R - 0.5f);
+    if (d_sq >= R_plus_sq) return 0;
+    if (d_sq > R_minus_sq) {
+        float d = sqrtf(d_sq);
+        return (unsigned int)(baseAlpha8 * (R + 0.5f - d) + 0.5f);
+    }
+    return baseAlpha8;
 }
 
 void Linux_FreeCachedBackground(void) {
@@ -603,7 +617,6 @@ void Linux_FreeCachedBackground(void) {
 }
 
 static Pixmap Linux_CreateBackgroundPixmap(Display* dpy, Window win, int w, int h, XWindowAttributes* attrs, unsigned long base, unsigned int baseAlpha8) {
-    WinTimer timer = TimerStart();
     Visual* vis = attrs->visual;
     int depth = attrs->depth;
     bool hasAlpha = (depth == 32);
@@ -611,146 +624,110 @@ static Pixmap Linux_CreateBackgroundPixmap(Display* dpy, Window win, int w, int 
     int R = rounded ? CornerRadius : 0;
     if (R > w/2) R = w/2; if (R > h/2) R = h/2;
     Pixmap pm = XCreatePixmap(dpy, win, w, h, depth);
-    if (!pm) { TimerEnd(timer, "helpers_x11:Linux_CreateBackgroundPixmap"); return None; }
+    if (!pm) return None;
     XImage* img = XCreateImage(dpy, vis, depth, ZPixmap, 0, NULL, w, h, 32, 0);
-    if (!img) { XFreePixmap(dpy, pm); TimerEnd(timer, "helpers_x11:Linux_CreateBackgroundPixmap"); return None; }
+    if (!img) { XFreePixmap(dpy, pm); return None; }
     img->data = (char*)calloc(1, h * img->bytes_per_line);
-    if (!img->data) { XDestroyImage(img); XFreePixmap(dpy, pm); TimerEnd(timer, "helpers_x11:Linux_CreateBackgroundPixmap"); return None; }
-    unsigned long light = DeriveLighter(base, 1.0f);
+    if (!img->data) { XDestroyImage(img); XFreePixmap(dpy, pm); return None; }
+
+    uint32_t *row, *pxrow;
+    unsigned int r = (base >> 16) & 0xFF, g = (base >> 8) & 0xFF, b = base & 0xFF;
+    unsigned long pixel = hasAlpha ? (baseAlpha8 << 24) | (r << 16) | (g << 8) | b : (r << 16) | (g << 8) | b;
+
     if (!EnableShaders || ShaderPreset == 0) {
-        unsigned int r = (base >> 16) & 0xFF, g = (base >> 8) & 0xFF, b = base & 0xFF;
-        unsigned long pixel = hasAlpha ? (baseAlpha8 << 24) | (r << 16) | (g << 8) | b : (r << 16) | (g << 8) | b;
-        for (int y = 0; y < h; y++) {
-            for (int x = 0; x < w; x++) {
-                bool inside = true;
-                unsigned int a = baseAlpha8;
-                if (rounded) {
-                    if (x < R && y < R) { float dx = R - x -0.5f, dy = R - y -0.5f; float d = sqrtf(dx*dx+dy*dy); if (d >= R+0.5f) inside=false; else if (d > R-0.5f) a = (unsigned int)(baseAlpha8 * (R+0.5f - d) + 0.5f); }
-                    else if (x >= w - R && y < R) { float dx = x - (w - R) +0.5f, dy = R - y -0.5f; float d = sqrtf(dx*dx+dy*dy); if (d >= R+0.5f) inside=false; else if (d > R-0.5f) a = (unsigned int)(baseAlpha8 * (R+0.5f - d) + 0.5f); }
-                    else if (x < R && y >= h - R) { float dx = R - x -0.5f, dy = y - (h - R) +0.5f; float d = sqrtf(dx*dx+dy*dy); if (d >= R+0.5f) inside=false; else if (d > R-0.5f) a = (unsigned int)(baseAlpha8 * (R+0.5f - d) + 0.5f); }
-                    else if (x >= w - R && y >= h - R) { float dx = x - (w - R) +0.5f, dy = y - (h - R) +0.5f; float d = sqrtf(dx*dx+dy*dy); if (d >= R+0.5f) inside=false; else if (d > R-0.5f) a = (unsigned int)(baseAlpha8 * (R+0.5f - d) + 0.5f); }
+        unsigned long fill = pixel;
+        if (R <= 0) {
+            row = (uint32_t*)img->data;
+            for (int y = 0; y < h; y++) {
+                for (int x = 0; x < w; x++) row[x] = fill;
+                row = (uint32_t*)((char*)row + img->bytes_per_line);
+            }
+        } else {
+            for (int y = 0; y < h; y++) {
+                row = (uint32_t*)(img->data + y * img->bytes_per_line);
+                for (int x = 0; x < w; x++) {
+                    unsigned int a = CornerAlpha(x, y, w, h, R, baseAlpha8);
+                    row[x] = a ? (a << 24) | (r << 16) | (g << 8) | b : 0;
                 }
-                unsigned long px = 0;
-                if (!inside) { px = hasAlpha ? 0 : pixel; if (!hasAlpha) px = 0; else a = 0; }
-                if (inside) px = hasAlpha ? (a << 24) | (r << 16) | (g << 8) | b : (r << 16) | (g << 8) | b;
-                else if (hasAlpha) px = 0;
-                XPutPixel(img, x, y, px);
             }
         }
-    } else if (ShaderPreset == 1) { // vertical
+    } else if (ShaderPreset == 1) {
+        unsigned long light = DeriveLighter(base, 1.0f);
         for (int y = 0; y < h; y++) {
             float t = h > 1 ? (float)y / (float)(h - 1) : 0;
             unsigned long col = LerpHex(base, light, t * 0.9f);
-            unsigned int r = (col >> 16) & 0xFF, g = (col >> 8) & 0xFF, b = col & 0xFF;
+            unsigned int cr = (col >> 16) & 0xFF, cg = (col >> 8) & 0xFF, cb = col & 0xFF;
+            row = (uint32_t*)(img->data + y * img->bytes_per_line);
             for (int x = 0; x < w; x++) {
-                bool inside = true;
-                unsigned int a = baseAlpha8;
-                if (rounded) {
-                    if (x < R && y < R) { float dx = R - x -0.5f, dy = R - y -0.5f; float d = sqrtf(dx*dx+dy*dy); if (d >= R+0.5f) inside=false; else if (d > R-0.5f) a = (unsigned int)(baseAlpha8 * (R+0.5f - d) + 0.5f); }
-                    else if (x >= w - R && y < R) { float dx = x - (w - R) +0.5f, dy = R - y -0.5f; float d = sqrtf(dx*dx+dy*dy); if (d >= R+0.5f) inside=false; else if (d > R-0.5f) a = (unsigned int)(baseAlpha8 * (R+0.5f - d) + 0.5f); }
-                    else if (x < R && y >= h - R) { float dx = R - x -0.5f, dy = y - (h - R) +0.5f; float d = sqrtf(dx*dx+dy*dy); if (d >= R+0.5f) inside=false; else if (d > R-0.5f) a = (unsigned int)(baseAlpha8 * (R+0.5f - d) + 0.5f); }
-                    else if (x >= w - R && y >= h - R) { float dx = x - (w - R) +0.5f, dy = y - (h - R) +0.5f; float d = sqrtf(dx*dx+dy*dy); if (d >= R+0.5f) inside=false; else if (d > R-0.5f) a = (unsigned int)(baseAlpha8 * (R+0.5f - d) + 0.5f); }
-                }
-                unsigned long px = hasAlpha ? (a << 24) | (r << 16) | (g << 8) | b : (r << 16) | (g << 8) | b;
-                if (!inside) px = hasAlpha ? 0 : 0;
-                XPutPixel(img, x, y, px);
+                unsigned int a = CornerAlpha(x, y, w, h, R, baseAlpha8);
+                row[x] = a ? (a << 24) | (cr << 16) | (cg << 8) | cb : 0;
             }
         }
-    } else if (ShaderPreset == 3) { // diagonal
+    } else if (ShaderPreset == 3) {
+        unsigned long light = DeriveLighter(base, 1.0f);
         for (int y = 0; y < h; y++) {
+            row = (uint32_t*)(img->data + y * img->bytes_per_line);
             for (int x = 0; x < w; x++) {
-                float t = (w + h > 0) ? ((float)(x + y) / (float)(w + h)) : 0;
+                float t = (float)(x + y) / (float)(w + h);
                 unsigned long col = LerpHex(base, light, t * 0.9f);
-                unsigned int r = (col >> 16) & 0xFF, g = (col >> 8) & 0xFF, b = col & 0xFF;
-                bool inside = true;
-                unsigned int a = baseAlpha8;
-                if (rounded) {
-                    if (x < R && y < R) { float dx = R - x -0.5f, dy = R - y -0.5f; float d = sqrtf(dx*dx+dy*dy); if (d >= R+0.5f) inside=false; else if (d > R-0.5f) a = (unsigned int)(baseAlpha8 * (R+0.5f - d) + 0.5f); }
-                    else if (x >= w - R && y < R) { float dx = x - (w - R) +0.5f, dy = R - y -0.5f; float d = sqrtf(dx*dx+dy*dy); if (d >= R+0.5f) inside=false; else if (d > R-0.5f) a = (unsigned int)(baseAlpha8 * (R+0.5f - d) + 0.5f); }
-                    else if (x < R && y >= h - R) { float dx = R - x -0.5f, dy = y - (h - R) +0.5f; float d = sqrtf(dx*dx+dy*dy); if (d >= R+0.5f) inside=false; else if (d > R-0.5f) a = (unsigned int)(baseAlpha8 * (R+0.5f - d) + 0.5f); }
-                    else if (x >= w - R && y >= h - R) { float dx = x - (w - R) +0.5f, dy = y - (h - R) +0.5f; float d = sqrtf(dx*dx+dy*dy); if (d >= R+0.5f) inside=false; else if (d > R-0.5f) a = (unsigned int)(baseAlpha8 * (R+0.5f - d) + 0.5f); }
-                }
-                unsigned long px = hasAlpha ? (a << 24) | (r << 16) | (g << 8) | b : (r << 16) | (g << 8) | b;
-                if (!inside) px = hasAlpha ? 0 : 0;
-                XPutPixel(img, x, y, px);
+                unsigned int cr = (col >> 16) & 0xFF, cg = (col >> 8) & 0xFF, cb = col & 0xFF;
+                unsigned int a = CornerAlpha(x, y, w, h, R, baseAlpha8);
+                row[x] = a ? (a << 24) | (cr << 16) | (cg << 8) | cb : 0;
             }
         }
-    } else if (ShaderPreset == 2) { // radial
+    } else if (ShaderPreset == 2) {
+        unsigned long light = DeriveLighter(base, 1.0f);
         float cx = w * 0.5f, cy = h * 0.35f;
-        float maxDist = sqrtf(cx*cx + cy*cy);
-        if (maxDist < 1) maxDist = 1;
+        float maxDist_sq = cx*cx + cy*cy;
+        if (maxDist_sq < 1) maxDist_sq = 1;
+        float inv_max_dist = 1.0f / sqrtf(maxDist_sq);
         for (int y = 0; y < h; y++) {
+            row = (uint32_t*)(img->data + y * img->bytes_per_line);
             for (int x = 0; x < w; x++) {
                 float dx = x - cx, dy = y - cy;
-                float dist = sqrtf(dx*dx + dy*dy) / maxDist;
+                float dist = sqrtf(dx*dx + dy*dy) * inv_max_dist;
                 if (dist > 1) dist = 1;
-                float t = dist * 0.85f;
-                unsigned long col = LerpHex(light, base, t);
-                unsigned int r = (col >> 16) & 0xFF, g = (col >> 8) & 0xFF, b = col & 0xFF;
-                bool inside = true;
-                unsigned int a = baseAlpha8;
-                if (rounded) {
-                    if (x < R && y < R) { float dxc = R - x -0.5f, dyc = R - y -0.5f; float d = sqrtf(dxc*dxc+dyc*dyc); if (d >= R+0.5f) inside=false; else if (d > R-0.5f) a = (unsigned int)(baseAlpha8 * (R+0.5f - d) + 0.5f); }
-                    else if (x >= w - R && y < R) { float dxc = x - (w - R) +0.5f, dyc = R - y -0.5f; float d = sqrtf(dxc*dxc+dyc*dyc); if (d >= R+0.5f) inside=false; else if (d > R-0.5f) a = (unsigned int)(baseAlpha8 * (R+0.5f - d) + 0.5f); }
-                    else if (x < R && y >= h - R) { float dxc = R - x -0.5f, dyc = y - (h - R) +0.5f; float d = sqrtf(dxc*dxc+dyc*dyc); if (d >= R+0.5f) inside=false; else if (d > R-0.5f) a = (unsigned int)(baseAlpha8 * (R+0.5f - d) + 0.5f); }
-                    else if (x >= w - R && y >= h - R) { float dxc = x - (w - R) +0.5f, dyc = y - (h - R) +0.5f; float d = sqrtf(dxc*dxc+dyc*dyc); if (d >= R+0.5f) inside=false; else if (d > R-0.5f) a = (unsigned int)(baseAlpha8 * (R+0.5f - d) + 0.5f); }
-                }
-                unsigned long px = hasAlpha ? (a << 24) | (r << 16) | (g << 8) | b : (r << 16) | (g << 8) | b;
-                if (!inside) px = hasAlpha ? 0 : 0;
-                XPutPixel(img, x, y, px);
+                unsigned long col = LerpHex(light, base, dist * 0.85f);
+                unsigned int cr = (col >> 16) & 0xFF, cg = (col >> 8) & 0xFF, cb = col & 0xFF;
+                unsigned int a = CornerAlpha(x, y, w, h, R, baseAlpha8);
+                row[x] = a ? (a << 24) | (cr << 16) | (cg << 8) | cb : 0;
             }
         }
-    } else if (ShaderPreset == 4) { // noise
+    } else if (ShaderPreset == 4) {
+        unsigned long light = DeriveLighter(base, 1.0f);
         for (int y = 0; y < h; y++) {
             float tBase = h > 1 ? (float)y / (float)(h - 1) : 0;
+            row = (uint32_t*)(img->data + y * img->bytes_per_line);
             for (int x = 0; x < w; x++) {
                 float t = tBase * 0.9f;
                 unsigned long col = LerpHex(base, light, t);
                 unsigned int n = HashNoise(x, y);
                 int delta = (int)(n & 0x1F) - 16;
                 delta = (int)(delta * ShaderIntensity * 0.5f);
-                unsigned int r0 = (col >> 16) & 0xFF, g0 = (col >> 8) & 0xFF, b0 = col & 0xFF;
-                int nr = (int)r0 + delta, ng = (int)g0 + delta, nb = (int)b0 + delta;
+                int nr = (int)((col >> 16) & 0xFF) + delta;
+                int ng = (int)((col >> 8) & 0xFF) + delta;
+                int nb = (int)(col & 0xFF) + delta;
                 if (nr < 0) nr = 0; if (nr > 255) nr = 255;
                 if (ng < 0) ng = 0; if (ng > 255) ng = 255;
                 if (nb < 0) nb = 0; if (nb > 255) nb = 255;
-                unsigned int r = (unsigned int)nr, g = (unsigned int)ng, b = (unsigned int)nb;
-                bool inside = true;
-                unsigned int a = baseAlpha8;
-                if (rounded) {
-                    if (x < R && y < R) { float dx = R - x -0.5f, dy = R - y -0.5f; float d = sqrtf(dx*dx+dy*dy); if (d >= R+0.5f) inside=false; else if (d > R-0.5f) a = (unsigned int)(baseAlpha8 * (R+0.5f - d) + 0.5f); }
-                    else if (x >= w - R && y < R) { float dx = x - (w - R) +0.5f, dy = R - y -0.5f; float d = sqrtf(dx*dx+dy*dy); if (d >= R+0.5f) inside=false; else if (d > R-0.5f) a = (unsigned int)(baseAlpha8 * (R+0.5f - d) + 0.5f); }
-                    else if (x < R && y >= h - R) { float dx = R - x -0.5f, dy = y - (h - R) +0.5f; float d = sqrtf(dx*dx+dy*dy); if (d >= R+0.5f) inside=false; else if (d > R-0.5f) a = (unsigned int)(baseAlpha8 * (R+0.5f - d) + 0.5f); }
-                    else if (x >= w - R && y >= h - R) { float dx = x - (w - R) +0.5f, dy = y - (h - R) +0.5f; float d = sqrtf(dx*dx+dy*dy); if (d >= R+0.5f) inside=false; else if (d > R-0.5f) a = (unsigned int)(baseAlpha8 * (R+0.5f - d) + 0.5f); }
-                }
-                unsigned long px = hasAlpha ? (a << 24) | (r << 16) | (g << 8) | b : (r << 16) | (g << 8) | b;
-                if (!inside) px = hasAlpha ? 0 : 0;
-                XPutPixel(img, x, y, px);
+                unsigned int a = CornerAlpha(x, y, w, h, R, baseAlpha8);
+                row[x] = a ? ((a << 24) | ((unsigned int)nr << 16) | ((unsigned int)ng << 8) | (unsigned int)nb) : 0;
             }
         }
     } else {
-        unsigned int r = (base >> 16) & 0xFF, g = (base >> 8) & 0xFF, b = base & 0xFF;
         for (int y = 0; y < h; y++) {
+            row = (uint32_t*)(img->data + y * img->bytes_per_line);
             for (int x = 0; x < w; x++) {
-                bool inside = true;
-                unsigned int a = baseAlpha8;
-                if (rounded) {
-                    if (x < R && y < R) { float dx = R - x -0.5f, dy = R - y -0.5f; float d = sqrtf(dx*dx+dy*dy); if (d >= R+0.5f) inside=false; else if (d > R-0.5f) a = (unsigned int)(baseAlpha8 * (R+0.5f - d) + 0.5f); }
-                    else if (x >= w - R && y < R) { float dx = x - (w - R) +0.5f, dy = R - y -0.5f; float d = sqrtf(dx*dx+dy*dy); if (d >= R+0.5f) inside=false; else if (d > R-0.5f) a = (unsigned int)(baseAlpha8 * (R+0.5f - d) + 0.5f); }
-                    else if (x < R && y >= h - R) { float dx = R - x -0.5f, dy = y - (h - R) +0.5f; float d = sqrtf(dx*dx+dy*dy); if (d >= R+0.5f) inside=false; else if (d > R-0.5f) a = (unsigned int)(baseAlpha8 * (R+0.5f - d) + 0.5f); }
-                    else if (x >= w - R && y >= h - R) { float dx = x - (w - R) +0.5f, dy = y - (h - R) +0.5f; float d = sqrtf(dx*dx+dy*dy); if (d >= R+0.5f) inside=false; else if (d > R-0.5f) a = (unsigned int)(baseAlpha8 * (R+0.5f - d) + 0.5f); }
-                }
-                unsigned long px = hasAlpha ? (a << 24) | (r << 16) | (g << 8) | b : (r << 16) | (g << 8) | b;
-                if (!inside) px = hasAlpha ? 0 : 0;
-                XPutPixel(img, x, y, px);
+                unsigned int a = CornerAlpha(x, y, w, h, R, baseAlpha8);
+                row[x] = a ? (a << 24) | (r << 16) | (g << 8) | b : 0;
             }
         }
     }
+
     GC gc = XCreateGC(dpy, pm, 0, NULL);
     XPutImage(dpy, pm, gc, img, 0, 0, 0, 0, w, h);
     XFreeGC(dpy, gc);
     XDestroyImage(img);
-    TimerEnd(timer, "helpers_x11:Linux_CreateBackgroundPixmap");
     return pm;
 }
 
@@ -784,9 +761,7 @@ Pixmap Linux_GetCachedBackground(Display* dpy, Window win, int w, int h) {
 }
 
 void Linux_DrawBackgroundToDrawable(Display* dpy, Drawable drw, int w, int h) {
-    WinTimer timer = TimerStart();
-    if (!dpy || w <= 0 || h <= 0) { TimerEnd(timer, "helpers_x11:Linux_DrawBackgroundToDrawable"); return; }
-    // Prefer cached pixmap if valid for same w/h and settings
+    if (!dpy || w <= 0 || h <= 0) return;
     unsigned long base = rgb_to_hex(COLOR_BG);
     int preset = ShaderPreset;
     float intensity = ShaderIntensity;
@@ -800,10 +775,8 @@ void Linux_DrawBackgroundToDrawable(Display* dpy, Drawable drw, int w, int h) {
         GC gc = XCreateGC(dpy, drw, 0, NULL);
         XCopyArea(dpy, cached, drw, gc, 0, 0, w, h, 0, 0);
         XFreeGC(dpy, gc);
-        TimerEnd(timer, "helpers_x11:Linux_DrawBackgroundToDrawable");
         return;
     }
-    // Fallback: try to generate via DefaultVisual if no window available
     int screen = DefaultScreen(dpy);
     Visual* vis = DefaultVisual(dpy, screen);
     int depth = DefaultDepth(dpy, screen);
@@ -814,35 +787,30 @@ void Linux_DrawBackgroundToDrawable(Display* dpy, Drawable drw, int w, int h) {
     unsigned int baseAlpha8 = (unsigned int)WindowOpacity;
     if (baseAlpha8 > 255) baseAlpha8 = 255;
     XImage* img = XCreateImage(dpy, vis, depth, ZPixmap, 0, NULL, w, h, 32, 0);
-    if (!img) { TimerEnd(timer, "helpers_x11:Linux_DrawBackgroundToDrawable"); return; }
+    if (!img) return;
     img->data = (char*)calloc(1, h * img->bytes_per_line);
-    if (!img->data) { XDestroyImage(img); TimerEnd(timer, "helpers_x11:Linux_DrawBackgroundToDrawable"); return; }
-    unsigned long light = DeriveLighter(base, 1.0f);
-    GC gc = XCreateGC(dpy, drw, 0, NULL);
-    // Simplified fill: solid fallback if no window attrs available
+    if (!img->data) { XDestroyImage(img); return; }
     unsigned int r = (base >> 16) & 0xFF, g = (base >> 8) & 0xFF, b = base & 0xFF;
-    for (int y = 0; y < h; y++) {
-        for (int x = 0; x < w; x++) {
-            unsigned long px = hasAlpha ? (baseAlpha8 << 24) | (r << 16) | (g << 8) | b : (r << 16) | (g << 8) | b;
-            // handle rounded for fallback (simple)
-            if (rded) {
-                bool inside = true;
-                unsigned int a = baseAlpha8;
-                if (x < R && y < R) { float dx = R - x -0.5f, dy = R - y -0.5f; float d = sqrtf(dx*dx+dy*dy); if (d >= R+0.5f) inside=false; else if (d > R-0.5f) a = (unsigned int)(baseAlpha8 * (R+0.5f - d) + 0.5f); }
-                else if (x >= w - R && y < R) { float dx = x - (w - R) +0.5f, dy = R - y -0.5f; float d = sqrtf(dx*dx+dy*dy); if (d >= R+0.5f) inside=false; else if (d > R-0.5f) a = (unsigned int)(baseAlpha8 * (R+0.5f - d) + 0.5f); }
-                else if (x < R && y >= h - R) { float dx = R - x -0.5f, dy = y - (h - R) +0.5f; float d = sqrtf(dx*dx+dy*dy); if (d >= R+0.5f) inside=false; else if (d > R-0.5f) a = (unsigned int)(baseAlpha8 * (R+0.5f - d) + 0.5f); }
-                else if (x >= w - R && y >= h - R) { float dx = x - (w - R) +0.5f, dy = y - (h - R) +0.5f; float d = sqrtf(dx*dx+dy*dy); if (d >= R+0.5f) inside=false; else if (d > R-0.5f) a = (unsigned int)(baseAlpha8 * (R+0.5f - d) + 0.5f); }
-                if (!inside) px = hasAlpha ? 0 : 0;
-                else if (a != baseAlpha8) px = hasAlpha ? (a << 24) | (r << 16) | (g << 8) | b : px;
+    unsigned long fill = hasAlpha ? (baseAlpha8 << 24) | (r << 16) | (g << 8) | b : (r << 16) | (g << 8) | b;
+    GC gc = XCreateGC(dpy, drw, 0, NULL);
+    if (!rded) {
+        uint32_t *row = (uint32_t*)img->data;
+        for (int y = 0; y < h; y++) {
+            for (int x = 0; x < w; x++) row[x] = fill;
+            row = (uint32_t*)((char*)row + img->bytes_per_line);
+        }
+    } else {
+        for (int y = 0; y < h; y++) {
+            uint32_t *row = (uint32_t*)(img->data + y * img->bytes_per_line);
+            for (int x = 0; x < w; x++) {
+                unsigned int a = CornerAlpha(x, y, w, h, R, baseAlpha8);
+                row[x] = a ? (a << 24) | (r << 16) | (g << 8) | b : 0;
             }
-            XPutPixel(img, x, y, px);
         }
     }
-    (void)light; // unused in fallback solid
     XPutImage(dpy, drw, gc, img, 0, 0, 0, 0, w, h);
     XFreeGC(dpy, gc);
     XDestroyImage(img);
-    TimerEnd(timer, "helpers_x11:Linux_DrawBackgroundToDrawable");
 }
 
 void Linux_DrawBackground(Display* dpy, Window win, int w, int h) {
