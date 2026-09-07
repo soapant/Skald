@@ -17,6 +17,7 @@ static void edit_confirm(const char* new_text, void* user_data) {
     }
     free(data);
 }
+
 void terminal_edit_callback(const char* selection, ListBoxInfo* lb) {
     int idx = lb ? lb->selected_index : -1;
     int true_idx = (lb && idx >= 0 && idx < lb->populated_count) ? lb->matching_indices[idx] : idx;
@@ -55,11 +56,6 @@ void TriggerTerminalCommand(void) {
     fl_free_file_list(items, n);
 }
 
-void run_btop(void) {
-    fl_run_terminal_command_and_open((char*)"ls");
-}
-
 FLINT_FEATURE_INIT {
-fl_register_hotkey("Alt+{", TriggerTerminalCommand);
-    fl_register_hotkey("Ctrl+B", run_btop);
+    fl_register_hotkey("Alt+{", TriggerTerminalCommand);
 }

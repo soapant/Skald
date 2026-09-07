@@ -136,18 +136,6 @@ void format_number_with_suffix(double num, char* out, size_t max_len) {
     }
 }
 
-double get_flipped_result(void) {
-    return flipped_result;
-}
-
-bool is_flipped_mode(void) {
-    return is_flipped;
-}
-
-void reset_flip_state(void) {
-    is_flipped = false;
-    flipped_result = 0.0;
-}
 
 void trim_trailinspaces(char* str) {
     int len = strlen(str);
@@ -195,8 +183,6 @@ void live_evaluate(const char* input, char* out_result, size_t max_len) {
         has_last_op = false;
         return;
     }
-
-    
     
     
     for (int i = 0; clean[i]; i++) {
@@ -245,8 +231,6 @@ void live_evaluate(const char* input, char* out_result, size_t max_len) {
     }
     
     
-    
-    
     double val = parse_number_with_suffix(clean);
     if (val != 0.0 || (strlen(clean) > 0 && clean[0] == '0')) {
         char formatted[64];
@@ -258,9 +242,6 @@ void live_evaluate(const char* input, char* out_result, size_t max_len) {
     
     strncpy(out_result, "Parsing input...", max_len);
 }
-
-
-
 
 void flip_last_operation(char* out_result, size_t max_len) {
     if (!has_last_op) {
@@ -306,9 +287,6 @@ void flip_last_operation(char* out_result, size_t max_len) {
     snprintf(out_result, max_len, "FLIP: %s %c %s = %s", 
              a_formatted, last_op, b_formatted, result_formatted);
 }
-
-
-
 
 void get_flip_info(char* out, size_t max_len) {
     if (!has_last_op || !is_flipped) {
@@ -407,8 +385,6 @@ bool calculator_enter_callback(const char* selection, ListBoxInfo* lb) {
     return true;
 }
 
-
-
 void calculator_tab_callback(ListBoxInfo* lb) {
     if (WH_TO_HWND(FlintContext_Get()->window.hEditControl) == NULL) return;
     
@@ -437,9 +413,6 @@ void calculator_tab_callback(ListBoxInfo* lb) {
     }
 }
 
-
-
-
 bool calculator_ctrlenter_callback(const char* selection, ListBoxInfo* lb) {
     char* result = lb->populated_cache[0] + 2;
     UI_SetText(FlintContext_Get()->window.hEditControl, result);
@@ -447,9 +420,6 @@ bool calculator_ctrlenter_callback(const char* selection, ListBoxInfo* lb) {
     UI_SetCursorPosition(FlintContext_Get()->window.hEditControl, len);
     return false;
 }
-
-
-
 
 void TriggerCalculator(void) {
     const char* default_msg[1] = { "Enter operation (e.g. 5 x 5 or 10 hours in minutes)" };
@@ -461,7 +431,6 @@ void TriggerCalculator(void) {
            .ctrl_enter = calculator_ctrlenter_callback,
            .tab = calculator_tab_callback);
   
-                                                             
 }
 
 FLINT_FEATURE_INIT {

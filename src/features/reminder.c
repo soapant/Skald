@@ -14,12 +14,9 @@ typedef struct {
     ConditionFn func;
 } ConditionParamDef;
 
-char** g_cached_reminder_commands = NULL;
-int g_cached_reminder_count = 0;
-
-ActionFn g_async_action = NULL;
-char g_action_param[256] = {0};
-char g_timer_param[256] = {0};
+ActionFn async_action = NULL;
+char action_param[256] = {0};
+char timer_param[256] = {0};
 
 
 #if defined(_WIN32)
@@ -31,8 +28,8 @@ DWORD WINAPI SimpleTimerThread(LPVOID lpParam) {
         remaining--;
     }
     
-    if (g_async_action != NULL) {
-        g_async_action(g_action_param);
+    if (async_action != NULL) {
+        async_action(action_param);
     }
     fl_terminate_process_by_name("sowon.exe");
     return 0;
@@ -46,8 +43,8 @@ void* SimpleTimerThread(void* lpParam) {
         remaining--;
     }
     
-    if (g_async_action != NULL) {
-        g_async_action(g_action_param);
+    if (async_action != NULL) {
+        async_action(action_param);
     }
     fl_terminate_process_by_name("sowon.exe");
     return NULL;
@@ -75,15 +72,15 @@ void RunBackgroundTimer(const char* parameter) {
 }
 
 void RunWindowTimer(const char* parameter) {
-    strncpy(g_timer_param, parameter, sizeof(g_timer_param) - 1);
-    g_timer_param[sizeof(g_timer_param) - 1] = '\0';
+    strncpy(timer_param, parameter, sizeof(timer_param) - 1);
+    timer_param[sizeof(timer_param) - 1] = '\0';
 
-    printf("[TIMER] Timer duration: %s, Action to execute: %s\n", parameter, g_action_param);
+    printf("[TIMER] Timer duration: %s, Action to execute: %s\n", parameter, action_param);
     StartSimpleBackgroundTimer(parameter);
 
-    if (strlen(g_timer_param) > 0) {
-        printf("[TIMER] Launching timer with param: %s\n", g_timer_param);
-        // LaunchTimer(g_timer_param); 
+    if (strlen(timer_param) > 0) {
+        printf("[TIMER] Launching timer with param: %s\n", timer_param);
+        // LaunchTimer(timer_param); 
     }
 }
 
@@ -140,12 +137,11 @@ const char* REMINDER_CONSTRAINT_FLAGS[] = {
     "-t",
 };
 
-void RebuildReminderCache(void) {
-    ZoxideHelper_RebuildCache(ReminderHistoryFilePath, &g_cached_reminder_commands, &g_cached_reminder_count);
-}
 void reminder_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
-    if (!lb) return;
-    ZoxideHelper_Refresh(filter, FlintContext_Get()->window.hListBox, lb, ReminderHistoryFilePath, &g_cached_reminder_commands, &g_cached_reminder_count);
+    const char* items[MAX_FILE_LINES];
+    int n = fl_load_file_list(ReminderHistoryFilePath, items, MAX_FILE_LINES);
+    PopulateListBox(lb, FlintContext_Get()->window.hListBox, filter, items, n, NULL);
+    fl_free_file_list(items, n);
 }
 
 
@@ -210,11 +206,11 @@ void StartReminder(const char* selection) {
             }
         }
         
-        g_async_action = action_func;
+        async_action = action_func;
         if (action_param) {
-            strncpy(g_action_param, action_param, sizeof(g_action_param) - 1);
+            strncpy(action_param, action_param, sizeof(action_param) - 1);
         }
-        printf("[REMINDER] Stored action for later execution: %p\n", (void*)g_async_action);
+        printf("[REMINDER] Stored action for later execution: %p\n", (void*)async_action);
     }
     
     if (total_condition_flags > 0) {
@@ -290,8 +286,8 @@ void StartReminder(const char* selection) {
     }
     
     if (action_func != NULL) {
-        printf("[REMINDER] Stage 3: Executing action immediately for action param %s \n", g_action_param);
-        action_func(g_action_param);
+        printf("[REMINDER] Stage 3: Executing action immediately for action param %s \n", action_param);
+        action_func(action_param);
         printf("[REMINDER] Action executed\n");
     }
     
@@ -299,23 +295,46 @@ void StartReminder(const char* selection) {
 }
 
 bool reminder_enter_callback(const char* selection, ListBoxInfo* lb) {
-      ZoxideHelper_AppendNewEntry(ReminderHistoryFilePath, selection, lb, &g_cached_reminder_commands, &g_cached_reminder_count);
+      if (!UI_IsListBoxSelected(lb)) fl_append_to_file(ReminderHistoryFilePath, selection);
       StartReminder(selection);
     return true;
 }
+static void edit_confirm(const char* new_text, void* user_data) {
+    EditCallbackData* data = (EditCallbackData*)user_data;
+    if (new_text && data) {
+        data->new_text = (char*)new_text;
+        EditCallback_Handle(data, reminder_refresh_callback);
+    }
+    free(data);
+}
 void reminder_edit_callback(const char* selection, ListBoxInfo* lb) {
-    ZoxideHelper_Edit(selection, lb, ReminderHistoryFilePath, &g_cached_reminder_commands, &g_cached_reminder_count, reminder_refresh_callback);
+    int idx = lb ? lb->selected_index : -1;
+    int true_idx = (lb && idx >= 0 && idx < lb->populated_count) ? lb->matching_indices[idx] : idx;
+    WindowManager* wm = WindowManager_Get();
+    EditCallbackData* data = calloc(1, sizeof(EditCallbackData));
+    if (!data) return;
+    data->filepath = ReminderHistoryFilePath;
+    data->lb = lb;
+    data->selected_index = idx;
+    data->true_index = true_idx;
+    data->new_text = NULL;
+    data->restore_selection = true;
+    data->hListBox = FlintContext_Get()->window.hListBox;
+    data->hEditControl = FlintContext_Get()->window.hEditControl;
+    data->refresh_cb = reminder_refresh_callback;
+    Popup* popup = EditPopup_Create(wm, selection, "Edit Reminder", 960, 540, edit_confirm, data);
+    WindowManager_PushPopup(wm, popup);
 }
 
 void TriggerReminder(void) {
-    if (!g_cached_reminder_commands) RebuildReminderCache();
-    const char** list = ZoxideHelper_PrepareTriggerList(ReminderHistoryFilePath, &g_cached_reminder_commands, &g_cached_reminder_count, NULL);
-    PROMPT(.title = "⏱️ Reminder", .items = list, .count = g_cached_reminder_count,
+    const char* items[MAX_FILE_LINES];
+    int n = fl_load_file_list(ReminderHistoryFilePath, items, MAX_FILE_LINES);
+    PROMPT(.title = "⏱️ Reminder", .items = items, .count = n,
            .height = 920, .width = 650, .item_height = 32,
            .refresh = reminder_refresh_callback,
            .enter = reminder_enter_callback,
            .edit = reminder_edit_callback);
-    ZoxideHelper_CleanupTriggerList(list);
+    fl_free_file_list(items, n);
 }
 
 FLINT_FEATURE_INIT {

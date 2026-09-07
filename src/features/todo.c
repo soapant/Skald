@@ -2,7 +2,6 @@
 #if !defined(_WIN32)
 #include "platform/x11/drawing.h"
 #endif
-#include "core/context.h"
 
 typedef struct {
     const char* alias;

@@ -317,8 +317,8 @@ char* Platform_RunCommandAndGetOutput(char* command) {
 }
 
 char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
-     WinTimer timer = TimerStart();
-     if (command == NULL || strlen(command) == 0) { TimerEnd(timer, "platform_x11:Platform_RunTerminalCommand"); return NULL; }
+    WinTimer timer = TimerStart();
+    if (command == NULL || strlen(command) == 0) { TimerEnd(timer, "platform_x11:Platform_RunTerminalCommand"); return NULL; }
     
     char clean_cmd[512];
     strncpy(clean_cmd, command, sizeof(clean_cmd) - 1);
