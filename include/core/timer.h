@@ -42,12 +42,10 @@ static void TimerBufferFlush(void) {
 static void TimerBufferAppend(const char* line) {
   size_t len = strlen(line);
   if (len == 0) return;
-  // unbuffered for SIGKILL safety - direct append
   const char* path = "time_logs.txt";
   FILE* f = fopen(path, "a");
   if (!f) f = fopen("/home/diggy/Programming/Projects/Flint/time_logs.txt", "a");
   if (f) { fwrite(line, 1, len, f); fclose(f); }
-  // also keep buffer for atexit compat
   if (len >= TIMER_LOG_CAP - g_timer_buffer_len) {
     TimerBufferFlush();
     if (len >= TIMER_LOG_CAP) return;
@@ -87,7 +85,7 @@ static inline void TimerEnd(WinTimer t, const char* operation_name) {
   if (DoTimeDebugs) {
     char line[128];
     if (elapsed_us < 1000.0) {
-      snprintf(line, sizeof(line), "[ TIMER] %-25s : %8.2f µs\n", operation_name, elapsed_us);
+      snprintf(line, sizeof(line), "");
     } else if (elapsed_us < 1000000.0) {
       snprintf(line, sizeof(line), "[ TIMER] %-25s : %8.2f ms\n", operation_name, elapsed_us / 1000.0);
     } else {
