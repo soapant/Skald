@@ -3,8 +3,6 @@
 const char* ReminderHistoryFilePath = "data/ReminderHistory.txt";
 
 
-
-// Moved from helpers/flag.h - reminder-specific flag handling
 typedef void (*ActionFn)(const char* parameter);
 typedef bool (*ConditionFn)(const char* parameter);
 typedef void (*TimerFn)(const char* parameter);
@@ -15,14 +13,6 @@ typedef struct {
     char* name;
     ConditionFn func;
 } ConditionParamDef;
-
-typedef struct {
-    const char* prompt_title;
-    const char* icon;
-    bool open_neovide;
-    bool open_yazi;
-    bool open_explorer;
-} ZoxideOptions;
 
 char** g_cached_reminder_commands = NULL;
 int g_cached_reminder_count = 0;
