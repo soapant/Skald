@@ -437,7 +437,6 @@ void DrawSimplePromptUserEditControlOnDraw(Display *dpy, XftDraw* xd, Visual* vi
 }
 
 void DrawPromptUserEditControlOnDraw(Display *dpy, XftDraw* xd, Visual* vis, Colormap cmap, PromptState *state) {
-    WinTimer timer = TimerStart();
     FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
     XftFont* xf = FH_TO_XFT(font);
 
@@ -466,23 +465,16 @@ void DrawPromptUserEditControlOnDraw(Display *dpy, XftDraw* xd, Visual* vis, Col
     XftColorFree(dpy, vis, cmap, &text_color);
     XftColorFree(dpy, vis, cmap, &vim_text_color);
     XftColorFree(dpy, vis, cmap, &window_title_text_color);
-    Platform_DestroyFont(font);
-    TimerEnd(timer, "subclasses_x11:DrawPromptUserEditControlOnDraw");
 }
 
 void DrawPromptUserListBoxOnDraw(Display *dpy, XftDraw* xd, Visual* vis, Colormap cmap, PromptState *state) {
-      WinTimer timer = TimerStart();
-      if (!state->has_listbox) { TimerEnd(timer, "subclasses_x11:DrawPromptUserListBoxOnDraw"); return; }
+      if (!state->has_listbox) return;
       ListBoxInfo *lb = &state->listbox;
       FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
 
       int y0 = 100;
       int itemH = FontSize + 14;
-      if (!lb->populated_count) {
-        Platform_DestroyFont(font);
-        TimerEnd(timer, "subclasses_x11:DrawPromptUserListBoxOnDraw");
-        return;
-      }
+      if (!lb->populated_count) return;
       int visible = (state->height - y0) / itemH;
       if (visible < 1) visible = 1;
       if (visible > lb->populated_count) visible = lb->populated_count;
@@ -498,6 +490,13 @@ void DrawPromptUserListBoxOnDraw(Display *dpy, XftDraw* xd, Visual* vis, Colorma
         lb->view_offset = lb->populated_count - visible;
       if (lb->view_offset < 0) lb->view_offset = 0;
 
+      XftColor bgc, fcoltext, fcolalternate, fcolrainbow;
+      if (!EnableShaders || ShaderPreset == 0) {
+          Linux_XftAllocColor(dpy, vis, cmap, rgb_to_hex(COLOR_BG), OpacityAlpha16(), &bgc);
+      }
+      Linux_XftAllocColor(dpy, vis, cmap, rgb_to_hex(COLOR_TEXT), 0xFFFF, &fcoltext);
+      Linux_XftAllocColor(dpy, vis, cmap, rgb_to_hex(COLOR_ALTERNATE), 0xFFFF, &fcolalternate);
+
       for (int i = 0; i < visible; i++) {
         int idx = lb->view_offset + i;
         int y = y0 + i * itemH;
@@ -507,20 +506,11 @@ void DrawPromptUserListBoxOnDraw(Display *dpy, XftDraw* xd, Visual* vis, Colorma
             Linux_DrawSelectionBackground(dpy, xd, vis, cmap, 0, y, state->width, itemH, rgb_to_hex(COLOR_SELECTED_TEXT));
         } else {
             if (!EnableShaders || ShaderPreset == 0) {
-                XftColor bgc;
-                Linux_XftAllocColor(dpy, vis, cmap, rgb_to_hex(COLOR_BG), OpacityAlpha16(), &bgc);
                 XftDrawRect(xd, &bgc, 0, y, state->width, itemH);
-                XftColorFree(dpy, vis, cmap, &bgc);
-            } else {
-                // shader background already drawn by Linux_DrawBackground, keep transparent
             }
         }
 
-        XftColor fcoltext, fcolalternate, fcolrainbow;
-        Linux_XftAllocColor(dpy, vis, cmap, rgb_to_hex(COLOR_TEXT), 0xFFFF, &fcoltext);
-        Linux_XftAllocColor(dpy, vis, cmap, rgb_to_hex(COLOR_ALTERNATE), 0xFFFF, &fcolalternate);
-        float ft = (float)idx / GradientItems;
-        Linux_XftAllocColor(dpy, vis, cmap, rgb_to_hex(GetRainbowColor(ft, 0.55f, GradientBrightness)), 0xFFFF, &fcolrainbow);
+        Linux_XftAllocColor(dpy, vis, cmap, rgb_to_hex(GetRainbowColor((float)idx / GradientItems, 0.55f, GradientBrightness)), 0xFFFF, &fcolrainbow);
 
         XftColor *num_color = &fcoltext;
         XftColor *body_color = &fcoltext;
@@ -536,12 +526,13 @@ void DrawPromptUserListBoxOnDraw(Display *dpy, XftDraw* xd, Visual* vis, Colorma
 
         DrawListBoxItemText(dpy, xd, vis, cmap, font, num_color, body_color, plain_color, lb, idx, y, text_x);
 
-        XftColorFree(dpy, vis, cmap, &fcoltext);
-        XftColorFree(dpy, vis, cmap, &fcolalternate);
         XftColorFree(dpy, vis, cmap, &fcolrainbow);
       }
-      Platform_DestroyFont(font);
-      TimerEnd(timer, "subclasses_x11:DrawPromptUserListBoxOnDraw");
+      if (!EnableShaders || ShaderPreset == 0) {
+          XftColorFree(dpy, vis, cmap, &bgc);
+      }
+      XftColorFree(dpy, vis, cmap, &fcoltext);
+      XftColorFree(dpy, vis, cmap, &fcolalternate);
 }
 
 // Wrappers keep old API (create XftDraw and delegate)
