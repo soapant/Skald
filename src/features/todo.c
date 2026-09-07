@@ -430,12 +430,7 @@ void todo_render_callback(Display *dpy, Window *win, PromptState *state) {
         bool sel = (idx == lb->selected_index);
 
         if (sel) {
-            unsigned long bg = rgb_to_hex(COLOR_SELECTED_TEXT);
-            XRenderColor rc = { (bg >> 16 & 0xFF) * 0x101, (bg >> 8 & 0xFF) * 0x101, (bg & 0xFF) * 0x101, OpacityAlpha16() };
-            XftColor bgc; 
-            XftColorAllocValue(dpy, vis, cmap, &rc, &bgc);
-            XftDrawRect(xd, &bgc, 0, y, state->width, itemH);
-            XftColorFree(dpy, vis, cmap, &bgc);
+            Linux_DrawSelectionBackground(dpy, xd, vis, cmap, 0, y, state->width, itemH, rgb_to_hex(COLOR_SELECTED_TEXT));
         } else {
             if (!EnableShaders || ShaderPreset == 0) {
                 unsigned long bg = rgb_to_hex(COLOR_BG);

@@ -69,6 +69,81 @@ static unsigned int HashNoiseWin(int x, int y) {
   h = (h ^ (h >> 13)) * 1274126177U;
   return h & 0xFF;
 }
+void Win32_DrawSelectionBackground(HDC hdc, RECT* rc, COLORREF base) {
+  WinTimer timer = TimerStart();
+  const char* name = "sel-solid";
+  int w = rc->right - rc->left;
+  int h = rc->bottom - rc->top;
+  if (w <= 0 || h <= 0) { TimerEnd(timer, "WinSel solid"); return; }
+  COLORREF light = DeriveLighterWin(base, 1.0f);
+  if (!EnableShaders || ShaderPreset == 0) {
+    name = "sel-solid";
+    HBRUSH br = CreateSolidBrush(base);
+    FillRect(hdc, rc, br);
+    DeleteObject(br);
+    TimerEnd(timer, name);
+    return;
+  }
+  if (ShaderPreset == 1) {
+    name = "sel-vertical";
+    for (int y = rc->top; y < rc->bottom; y++) {
+      float t = h > 1 ? (float)(y - rc->top) / (float)(h - 1) : 0;
+      COLORREF col = LerpColor(base, light, t * 0.9f);
+      HBRUSH br = CreateSolidBrush(col);
+      RECT band = {rc->left, y, rc->right, y+1};
+      FillRect(hdc, &band, br);
+      DeleteObject(br);
+    }
+  } else if (ShaderPreset == 3) {
+    name = "sel-diagonal";
+    for (int y = rc->top; y < rc->bottom; y++) {
+      float t = (float)(y - rc->top) / (float)(h - 1) * 0.7f + 0.5f * 0.3f;
+      COLORREF col = LerpColor(base, light, t);
+      HBRUSH br = CreateSolidBrush(col);
+      RECT band = {rc->left, y, rc->right, y+1};
+      FillRect(hdc, &band, br);
+      DeleteObject(br);
+    }
+  } else if (ShaderPreset == 2) {
+    name = "sel-radial";
+    float cx = w * 0.5f, cy = h * 0.35f;
+    float maxDist = sqrtf(cx*cx + cy*cy);
+    if (maxDist < 1) maxDist = 1;
+    for (int y = rc->top; y < rc->bottom; y++) {
+      for (int x = rc->left; x < rc->right; x++) {
+        float dx = x - rc->left - cx, dy = y - rc->top - cy;
+        float dist = sqrtf(dx*dx + dy*dy) / maxDist;
+        if (dist > 1) dist = 1;
+        float t = dist * 0.85f;
+        COLORREF col = LerpColor(light, base, t);
+        SetPixel(hdc, x, y, col);
+      }
+    }
+  } else if (ShaderPreset == 4) {
+    name = "sel-noise";
+    for (int y = rc->top; y < rc->bottom; y++) {
+      float tBase = h > 1 ? (float)(y - rc->top) / (float)(h - 1) : 0;
+      for (int x = rc->left; x < rc->right; x++) {
+        float t = tBase * 0.85f;
+        COLORREF col = LerpColor(base, light, t);
+        unsigned int n = HashNoiseWin(x, y);
+        int delta = (int)(n & 0x1F) - 16;
+        delta = (int)(delta * ShaderIntensity * 0.5f);
+        int r = GetRValue(col) + delta, g = GetGValue(col) + delta, b = GetBValue(col) + delta;
+        if (r < 0) r = 0; if (r > 255) r = 255;
+        if (g < 0) g = 0; if (g > 255) g = 255;
+        if (b < 0) b = 0; if (b > 255) b = 255;
+        SetPixel(hdc, x, y, RGB(r,g,b));
+      }
+    }
+  } else {
+    HBRUSH br = CreateSolidBrush(base);
+    FillRect(hdc, rc, br);
+    DeleteObject(br);
+  }
+  TimerEnd(timer, name);
+}
+
 void Win32_DrawBackground(HDC hdc, RECT* rc) {
   WinTimer timer = TimerStart();
   const char* name = "solid";

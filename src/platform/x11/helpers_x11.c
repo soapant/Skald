@@ -870,6 +870,80 @@ void Linux_DrawBackground(Display* dpy, Window win, int w, int h) {
     TimerEnd(timer, "helpers_x11:Linux_DrawBackground");
 }
 
+void Linux_DrawSelectionBackground(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap, int x, int y, int w, int h, unsigned long baseHex) {
+    WinTimer timer = TimerStart();
+    if (w <= 0 || h <= 0) { TimerEnd(timer, "helpers_x11:Linux_DrawSelectionBackground"); return; }
+    if (!EnableShaders || ShaderPreset == 0) {
+        XftColor c; Linux_XftAllocColor(dpy, vis, cmap, baseHex, OpacityAlpha16(), &c);
+        XftDrawRect(xd, &c, x, y, w, h);
+        XftColorFree(dpy, vis, cmap, &c);
+        TimerEnd(timer, "helpers_x11:Linux_DrawSelectionBackground");
+        return;
+    }
+    unsigned long light = DeriveLighter(baseHex, 1.0f);
+    unsigned short alpha = OpacityAlpha16();
+    // Use same presets as background but per-item
+    if (ShaderPreset == 1) { // vertical per-item
+        for (int yy = 0; yy < h; yy++) {
+            float t = h > 1 ? (float)yy / (float)(h - 1) : 0;
+            unsigned long col = LerpHex(baseHex, light, t * 0.9f);
+            XftColor c; Linux_XftAllocColor(dpy, vis, cmap, col, alpha, &c);
+            XftDrawRect(xd, &c, x, y + yy, w, 1);
+            XftColorFree(dpy, vis, cmap, &c);
+        }
+    } else if (ShaderPreset == 3) { // diagonal per-item
+        for (int yy = 0; yy < h; yy++) {
+            for (int xx = 0; xx < w; xx++) {
+                float t = (w + h > 0) ? ((float)xx + (float)yy) / (float)(w + h) : 0;
+                unsigned long col = LerpHex(baseHex, light, t * 0.9f);
+                XftColor c; Linux_XftAllocColor(dpy, vis, cmap, col, alpha, &c);
+                XftDrawRect(xd, &c, x + xx, y + yy, 1, 1);
+                XftColorFree(dpy, vis, cmap, &c);
+            }
+        }
+    } else if (ShaderPreset == 2) { // radial per-item
+        float cx = w * 0.5f, cy = h * 0.35f;
+        float maxDist = sqrtf(cx*cx + cy*cy);
+        if (maxDist < 1) maxDist = 1;
+        for (int yy = 0; yy < h; yy++) {
+            for (int xx = 0; xx < w; xx++) {
+                float dx = xx - cx, dy = yy - cy;
+                float dist = sqrtf(dx*dx + dy*dy) / maxDist;
+                if (dist > 1) dist = 1;
+                unsigned long col = LerpHex(light, baseHex, dist * 0.85f);
+                XftColor c; Linux_XftAllocColor(dpy, vis, cmap, col, alpha, &c);
+                XftDrawRect(xd, &c, x + xx, y + yy, 1, 1);
+                XftColorFree(dpy, vis, cmap, &c);
+            }
+        }
+    } else if (ShaderPreset == 4) { // noise per-item
+        for (int yy = 0; yy < h; yy++) {
+            float tBase = h > 1 ? (float)yy / (float)(h - 1) : 0;
+            for (int xx = 0; xx < w; xx++) {
+                float t = tBase * 0.85f;
+                unsigned long col = LerpHex(baseHex, light, t);
+                unsigned int n = HashNoise(x + xx, y + yy);
+                int delta = (int)(n & 0x1F) - 16;
+                delta = (int)(delta * ShaderIntensity * 0.5f);
+                unsigned int r = (col >> 16) & 0xFF, g = (col >> 8) & 0xFF, b = col & 0xFF;
+                int nr = (int)r + delta, ng = (int)g + delta, nb = (int)b + delta;
+                if (nr < 0) nr = 0; if (nr > 255) nr = 255;
+                if (ng < 0) ng = 0; if (ng > 255) ng = 255;
+                if (nb < 0) nb = 0; if (nb > 255) nb = 255;
+                unsigned long ncol = (nr << 16) | (ng << 8) | nb;
+                XftColor c; Linux_XftAllocColor(dpy, vis, cmap, ncol, alpha, &c);
+                XftDrawRect(xd, &c, x + xx, y + yy, 1, 1);
+                XftColorFree(dpy, vis, cmap, &c);
+            }
+        }
+    } else {
+        XftColor c; Linux_XftAllocColor(dpy, vis, cmap, baseHex, alpha, &c);
+        XftDrawRect(xd, &c, x, y, w, h);
+        XftColorFree(dpy, vis, cmap, &c);
+    }
+    TimerEnd(timer, "helpers_x11:Linux_DrawSelectionBackground");
+}
+
 Window Linux_CreatePromptWindow(Display* dpy, int x, int y, int w, int h) {
     WinTimer timer = TimerStart();
     unsigned long bg = rgb_to_hex(COLOR_BG);

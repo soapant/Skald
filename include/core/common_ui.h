@@ -51,6 +51,7 @@ static inline bool IsWindowValid(WindowHandle h) {
 }
 void Win32_ApplyRoundedCorners(HWND hwnd, int w, int h);
 void Win32_DrawBackground(HDC hdc, RECT* rc);
+void Win32_DrawSelectionBackground(HDC hdc, RECT* rc, COLORREF base);
 #else
 #include "core/window_manager.h"
 static inline bool IsPopupActive(WindowHandle hPopupWnd) {
