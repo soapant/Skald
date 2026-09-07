@@ -555,27 +555,21 @@ void Linux_DrawRoundedBackground(Display* dpy, Window win, int w, int h, unsigne
     TimerEnd(timer, "helpers_x11:Linux_DrawRoundedBackground");
 }
 
-// --- Shader helpers (derived from COLOR_BG only) ---
 static unsigned long LerpHex(unsigned long a, unsigned long b, float t) {
-    WinTimer timer = TimerStart();
     if (t < 0) t = 0; if (t > 1) t = 1;
     unsigned int ar = (a >> 16) & 0xFF, ag = (a >> 8) & 0xFF, ab = a & 0xFF;
     unsigned int br = (b >> 16) & 0xFF, bg = (b >> 8) & 0xFF, bb = b & 0xFF;
     unsigned int rr = (unsigned int)(ar + (br - ar) * t + 0.5f);
     unsigned int rg = (unsigned int)(ag + (bg - ag) * t + 0.5f);
     unsigned int rb = (unsigned int)(ab + (bb - ab) * t + 0.5f);
-    TimerEnd(timer, "helpers_x11:LerpHex");
     return (rr << 16) | (rg << 8) | rb;
 }
 static unsigned long DeriveLighter(unsigned long base, float intensity) {
     WinTimer timer = TimerStart();
-    // intensity 0..1, base 5,5,10 -> lighter up to ~ 60,60,110 at 1.0
     float f = ShaderIntensity;
     if (f < 0) f = 0; if (f > 1) f = 1;
-    // combine global intensity with per-call intensity
     float eff = f * intensity;
     unsigned int r = (base >> 16) & 0xFF, g = (base >> 8) & 0xFF, b = base & 0xFF;
-    // move towards 255 + slight hue shift (keep bluish)
     unsigned int nr = r + (unsigned int)((90 - r) * eff + 35 * eff);
     unsigned int ng = g + (unsigned int)((90 - g) * eff + 35 * eff);
     unsigned int nb = b + (unsigned int)((140 - b) * eff + 40 * eff);
