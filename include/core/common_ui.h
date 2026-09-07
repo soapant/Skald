@@ -7,7 +7,8 @@
 #if !defined(_WIN32)
 #include <sys/time.h>
 #endif
-#include "common.h"
+#include "core/context.h"
+#include "core/modal.h"
 #include "core/types.h"
 #include "config.h"
 #include "core/timer.h"
@@ -38,7 +39,7 @@ void CalculateWindowMetrics(int count, WindowLayout* layout,int height , int wid
 
 #if defined(_WIN32)
 static inline bool IsPopupActive(WindowHandle hPopupWnd) {
-  return WH_TO_HWND(hPopupWnd) != NULL && IsWindow(WH_TO_HWND(hPopupWnd));
+  return WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) != NULL && IsWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd));
 }
 void ForceWindowFocus(WindowHandle hwndTarget, WindowHandle hwndInput);
 HFONT CreateCustomNerdFont(int height, const char* face_name);
@@ -51,7 +52,7 @@ static inline bool IsWindowValid(WindowHandle h) {
 #else
 #include "core/window_manager.h"
 static inline bool IsPopupActive(WindowHandle hPopupWnd) {
-  (void)hPopupWnd;
+  (void)FlintContext_Get()->window.hPopupWnd;
   WindowManager* wm = WindowManager_Get();
   return wm && wm->popup_count > 0;
 }
@@ -73,8 +74,8 @@ static inline void UI_RedrawNow(ListBoxInfo* lb, WindowHandle hListBox) {
   FlintContext* _c = FlintContext_Get();
   if (_c->prompt_callbacks.refresh != NULL) {
     char buffer[128];
-    UI_GetCurrentText(hEditControl,buffer);
-    _c->prompt_callbacks.refresh(buffer,hListBox,lb);
+    UI_GetCurrentText(FlintContext_Get()->window.hEditControl,buffer);
+    _c->prompt_callbacks.refresh(buffer,FlintContext_Get()->window.hListBox,lb);
   }
 }
 

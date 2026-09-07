@@ -27,6 +27,10 @@ static FlintContext g_ctx = {
     .SelectionDataCount = 0,
 #if defined(_WIN32)
     .g_main_thread_id = 0,
+    .g_hNumFont = NULL,
+    .g_hMainFont = NULL,
+    .g_key_event = NULL,
+    .hKeyboardHook = NULL,
     .g_timeout = 1,
     .g_waiting_for_key = false,
     .g_key_pressed = 0,

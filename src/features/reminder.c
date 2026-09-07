@@ -155,7 +155,7 @@ void RebuildReminderCache(void) {
 }
 void reminder_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
     if (!lb) return;
-    ZoxideHelper_Refresh(filter, hListBox, lb, ReminderHistoryFilePath, &g_cached_reminder_commands, &g_cached_reminder_count);
+    ZoxideHelper_Refresh(filter, FlintContext_Get()->window.hListBox, lb, ReminderHistoryFilePath, &g_cached_reminder_commands, &g_cached_reminder_count);
 }
 
 

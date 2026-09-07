@@ -5,6 +5,9 @@
 WM_Type g_current_wm = WM_UNKNOWN;
 
 WM_Type Window_DetectWM(void) {
+#if defined(_WIN32)
+    return WM_UNKNOWN;
+#else
     if (g_current_wm != WM_UNKNOWN) return g_current_wm;
     const char *desktop = getenv("XDG_CURRENT_DESKTOP");
     const char *wayland = getenv("WAYLAND_DISPLAY");
@@ -16,9 +19,15 @@ WM_Type Window_DetectWM(void) {
     if (wayland && strstr(wayland, "hyprland")) { g_current_wm = WM_HYPRLAND; return g_current_wm; }
     g_current_wm = WM_X11;
     return g_current_wm;
+#endif
 }
 
 bool Window_GetActiveWindowTitle(char *buffer, int buffer_size) {
+#if defined(_WIN32)
+    if (!buffer || buffer_size <= 0) return false;
+    buffer[0] = '\0';
+    return false;
+#else
     if (!buffer || buffer_size <= 0) return false;
     buffer[0] = '\0';
     WM_Type wm = Window_DetectWM();
@@ -28,6 +37,7 @@ bool Window_GetActiveWindowTitle(char *buffer, int buffer_size) {
     else ok = Window_X11_GetActiveWindowTitle(buffer, buffer_size);
     if (!ok && wm != WM_X11) ok = Window_X11_GetActiveWindowTitle(buffer, buffer_size);
     return ok;
+#endif
 }
 
 bool Window_FocusByTitle(const char *title) {

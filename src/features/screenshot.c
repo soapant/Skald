@@ -56,7 +56,7 @@ void TriggerSaveScreenshot(void) {
         img_x2 = cursorPos.x;
         img_y2 = cursorPos.y;
         img_region_step = 0;
-        TriggerScreenshot(hPopupWnd, false);
+        TriggerScreenshot(FlintContext_Get()->window.hPopupWnd, false);
     }
 #else
     // Not Implemented
@@ -80,7 +80,7 @@ void TriggerOpenScreenshot(void) {
         img_x2 = cursorPos.x;
         img_y2 = cursorPos.y;
         img_region_step = 0;
-        TriggerScreenshot(hPopupWnd, true);
+        TriggerScreenshot(FlintContext_Get()->window.hPopupWnd, true);
     }
 #else
     // Not Implemented

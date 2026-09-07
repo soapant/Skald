@@ -74,7 +74,7 @@ static inline void UI_NavigateTo(ListBoxInfo* lb, WindowHandle hListBox, int ind
       Platform_DismissMessage();
     }
     lb->selected_index = -1;
-    UI_LB_SetCaretIndex(hListBox, -1, FALSE);
+    UI_LB_SetCaretIndex(FlintContext_Get()->window.hListBox, -1, FALSE);
     return;
   }
   if (index >= count) index = count - 1;
@@ -83,17 +83,17 @@ static inline void UI_NavigateTo(ListBoxInfo* lb, WindowHandle hListBox, int ind
       Platform_DismissMessage();
     }
     lb->selected_index = -1;
-    UI_LB_SetCaretIndex(hListBox, -1, FALSE);
+    UI_LB_SetCaretIndex(FlintContext_Get()->window.hListBox, -1, FALSE);
     return;
   }
 
   int old_sel = lb->selected_index;
   if (old_sel == index) return;
   Platform_DismissMessage();
-  int oldTop = UI_LB_GetTopIndex(hListBox);
+  int oldTop = UI_LB_GetTopIndex(FlintContext_Get()->window.hListBox);
   lb->selected_index = index;
 
-  UI_LB_SetCaretIndex(hListBox, index, FALSE);
+  UI_LB_SetCaretIndex(FlintContext_Get()->window.hListBox, index, FALSE);
 
   int visibleCount = 16;
 
@@ -108,7 +108,7 @@ static inline void UI_NavigateTo(ListBoxInfo* lb, WindowHandle hListBox, int ind
   if (newTop < 0) newTop = 0;
 
   if (newTop != oldTop) {
-    UI_LB_SetTopIndex(hListBox, newTop);
+    UI_LB_SetTopIndex(FlintContext_Get()->window.hListBox, newTop);
   }
 }
 
@@ -119,7 +119,7 @@ static inline void UI_NavigateUp(ListBoxInfo* lb, WindowHandle hListBox) {
     sel--;
   }
   if (sel == lb->selected_index) return;
-  UI_NavigateTo(lb, hListBox, sel);
+  UI_NavigateTo(lb, FlintContext_Get()->window.hListBox, sel);
 }
 
 static inline void UI_NavigateDown(ListBoxInfo* lb, WindowHandle hListBox) {
@@ -131,7 +131,7 @@ static inline void UI_NavigateDown(ListBoxInfo* lb, WindowHandle hListBox) {
   if (sel >= count - 1) sel = count - 1;
   else sel++;
   if (sel == lb->selected_index) return;
-  UI_NavigateTo(lb, hListBox, sel);
+  UI_NavigateTo(lb, FlintContext_Get()->window.hListBox, sel);
 }
 
 static inline void UI_Edit_SetSel(WindowHandle hEdit, uint32_t start, uint32_t end) {
@@ -201,7 +201,7 @@ static inline void UI_GetCurrentCursorPosition(uint32_t *start, uint32_t *end) {
 }
 
 static inline void UI_Redraw(ListBoxInfo* lb, WindowHandle hListBox) {
-  UI_RedrawNow(lb, hListBox);
+  UI_RedrawNow(lb, FlintContext_Get()->window.hListBox);
 }
 
 static inline void UI_GetParent(WindowHandle hwnd) {

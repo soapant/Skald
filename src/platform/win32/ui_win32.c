@@ -1,5 +1,6 @@
 #include <windows.h>
-#include "common.h"
+#include "core/context.h"
+#include "core/modal.h"
 #include "core/types.h"
 #include "core/hotkey_manager.h"
 #include "core/number_shortcut.h"
@@ -9,15 +10,13 @@
 #include "bindings/bindings.h"
 #include "helpers/flag.h"
 #include "core/common_ui.h"
-KeyCallback g_key_callback;
-
 char* Platform_EditTextPopup(const char* a, int b, int c, int d, int e) { (void)a;(void)b;(void)c;(void)d;(void)e; return NULL; }
 char* Platform_SearchPopup(void) { return NULL; }
 #include <gdiplus.h>
 
 void Platform_WaitForKeypressAsync(KeyCallback callback) {
-  g_waiting_for_key = true;
-  g_key_callback = callback;
+  FlintContext_Get()->g_waiting_for_key = true;
+  FlintContext_Get()->g_key_callback = callback;
 }
 
 char* Platform_PromptUser(const PromptSpec* spec) {
@@ -39,11 +38,11 @@ char* Platform_PromptUser(const PromptSpec* spec) {
 
   {
     const char* p = strchr(window_title, ' ');
-    TimerEnd(g_timer, p ? p+1 : window_title);
+    TimerEnd(FlintContext_Get()->g_timer, p ? p+1 : window_title);
   }
   HINSTANCE hInstance = GetModuleHandle(NULL);
-  selection_complete = false;
-  output_buffer[0] = '\0';
+  FlintContext_Get()->window.selection_complete = false;
+  FlintContext_Get()->window.output_buffer[0] = '\0';
   WinTimer timer = TimerStart();
 
   ListBoxInfo* lb_ptr = NULL;
@@ -54,33 +53,33 @@ char* Platform_PromptUser(const PromptSpec* spec) {
     ListBoxInfo_Init(lb_ptr);
   }
 
-  if (g_item_index_map) {
-    HashMap_Destroy(g_item_index_map);
-    g_item_index_map = NULL;
+  if (FlintContext_Get()->g_item_index_map) {
+    HashMap_Destroy(FlintContext_Get()->g_item_index_map);
+    FlintContext_Get()->g_item_index_map = NULL;
   }
   if (window_list && count > 0) {
-    g_item_index_map = HashMap_Create(count);
+    FlintContext_Get()->g_item_index_map = HashMap_Create(count);
     for (int i = 0; i < count; i++) {
       if (window_list[i]) {
-        HashMap_Put(g_item_index_map, window_list[i], (void*)(size_t)(i + 1));
+        HashMap_Put(FlintContext_Get()->g_item_index_map, window_list[i], (void*)(size_t)(i + 1));
       }
     }
   }
-  g_refresh_callback = refresh_callback;
-  g_enter_callback = enter_callback;
-  g_ctrl_enter_callback = ctrl_enter_callback;
-  g_tab_callback = tab_callback;
-  g_copy_callback = copy_callback;
-  g_render_callback = render_callback;
-  g_edit_callback = edit_callback;
-  g_filter_callback = filter_callback;
-  g_help_callback = help_callback;
-  g_title = window_title;
+  FlintContext_Get()->prompt_callbacks.refresh = refresh_callback;
+  FlintContext_Get()->prompt_callbacks.enter = enter_callback;
+  FlintContext_Get()->prompt_callbacks.ctrl_enter = ctrl_enter_callback;
+  FlintContext_Get()->prompt_callbacks.tab = tab_callback;
+  FlintContext_Get()->prompt_callbacks.copy = copy_callback;
+  FlintContext_Get()->prompt_callbacks.render = render_callback;
+  FlintContext_Get()->prompt_callbacks.edit = edit_callback;
+  FlintContext_Get()->prompt_callbacks.filter = filter_callback;
+  FlintContext_Get()->prompt_callbacks.help = help_callback;
+  FlintContext_Get()->window.title = window_title;
   {
     const char* p = strchr(window_title, ' ');
-    g_current_feature = (char*)(p ? p+1 : window_title);
+    FlintContext_Get()->window.current_feature = (char*)(p ? p+1 : window_title);
   }
-  SetCurrentFeatureName(g_current_feature);
+  SetCurrentFeatureName(FlintContext_Get()->window.current_feature);
   BuildAliasDisplayItems(window_list, count);
   extern EditorMode g_last_mode;
 
@@ -95,30 +94,30 @@ char* Platform_PromptUser(const PromptSpec* spec) {
 
   HFONT hCustomFont = CreateCustomNerdFont(FontSize, UsedFont);
 
-  hPopupWnd = WH_FROM_HWND(CreateWindowExA(
+  FlintContext_Get()->window.hPopupWnd = WH_FROM_HWND(CreateWindowExA(
       WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_COMPOSITED,
       "QuickSwitcherModalClass", NULL, WS_POPUP | WS_CLIPCHILDREN, 
       layout.x, layout.y, layout.w, layout.h, NULL, NULL, hInstance, NULL
       ));
 
-  if (WH_TO_HWND(hPopupWnd) == NULL) {
+  if (WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) == NULL) {
     DeleteObject(hCustomFont);
     if (lb_ptr) free(lb_ptr);
     return NULL;
   }
-  SetWindowLongPtrA(WH_TO_HWND(hPopupWnd), GWLP_USERDATA, (LONG_PTR)(lb_ptr));
+  SetWindowLongPtrA(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), GWLP_USERDATA, (LONG_PTR)(lb_ptr));
 
   TimerEnd(timer,"Window Init");
 
   WinTimer timer1 = TimerStart();
 
-  CreateChildControls(hPopupWnd, hCustomFont, window_list, count, &layout, lb_ptr);
+  CreateChildControls(FlintContext_Get()->window.hPopupWnd, hCustomFont, window_list, count, &layout, lb_ptr);
 
   TimerEnd(timer1,"CreateChildControl");
 
   WinTimer timer2 = TimerStart();
 
-  SetLayeredWindowAttributes(WH_TO_HWND(hPopupWnd), 0, WindowOpacity, LWA_ALPHA);
+  SetLayeredWindowAttributes(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), 0, WindowOpacity, LWA_ALPHA);
 
   TimerEnd(timer2,"WindowBs");
 
@@ -128,7 +127,7 @@ char* Platform_PromptUser(const PromptSpec* spec) {
     RequestInitialNavigation(last_index);
   }
 
-  ForceWindowFocus(hPopupWnd, hEditControl);
+  ForceWindowFocus(FlintContext_Get()->window.hPopupWnd, FlintContext_Get()->window.hEditControl);
 
 
   TimerEnd(timer3,"Focus");
@@ -137,7 +136,7 @@ char* Platform_PromptUser(const PromptSpec* spec) {
   MSG msg;
   int loop_counter = 0;
   UI_PreparePopupPump();
-  while (!selection_complete) {
+  while (!FlintContext_Get()->window.selection_complete) {
     if (GetMessage(&msg, NULL, 0, 0)) {
       if (UI_ShouldSkipPopupKey(&msg)) continue;
       TranslateMessage(&msg);
@@ -149,10 +148,10 @@ char* Platform_PromptUser(const PromptSpec* spec) {
   }
   printf("[DEBUG-UI] Left local loop. Processed %d messages.\n", loop_counter);
 
-  if (WH_TO_HWND(hPopupWnd) != NULL && IsWindow(WH_TO_HWND(hPopupWnd))) {
-    KillTimer(WH_TO_HWND(hPopupWnd), 999);
-    DestroyWindow(WH_TO_HWND(hPopupWnd));
-    hPopupWnd = WH_NULL;
+  if (WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) != NULL && IsWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd))) {
+    KillTimer(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), 999);
+    DestroyWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd));
+    FlintContext_Get()->window.hPopupWnd = WH_NULL;
   }
   ResetNumberShortcutState();
 
@@ -162,9 +161,9 @@ char* Platform_PromptUser(const PromptSpec* spec) {
     DispatchMessage(&msg);
   }
 
-  struct feature_data* data = GetFeatureData(g_current_feature);
+  struct feature_data* data = GetFeatureData(FlintContext_Get()->window.current_feature);
   if (data) {
-    char* new_name = _strdup(g_current_feature);
+    char* new_name = _strdup(FlintContext_Get()->window.current_feature);
     if (new_name) {
         free(data->name);
         data->name = new_name;
@@ -186,24 +185,24 @@ char* Platform_PromptUser(const PromptSpec* spec) {
 
   DeleteObject(hCustomFont); 
   if (lb_ptr) free(lb_ptr);
-  selection_complete = false;
-  g_refresh_callback = NULL;
-  g_enter_callback = NULL;
-  g_ctrl_enter_callback = NULL;
-  g_tab_callback = NULL;
-  g_copy_callback = NULL;
-  g_render_callback = NULL;
-  g_edit_callback = NULL;
-  g_filter_callback = NULL;
-  g_help_callback = NULL;
+  FlintContext_Get()->window.selection_complete = false;
+  FlintContext_Get()->prompt_callbacks.refresh = NULL;
+  FlintContext_Get()->prompt_callbacks.enter = NULL;
+  FlintContext_Get()->prompt_callbacks.ctrl_enter = NULL;
+  FlintContext_Get()->prompt_callbacks.tab = NULL;
+  FlintContext_Get()->prompt_callbacks.copy = NULL;
+  FlintContext_Get()->prompt_callbacks.render = NULL;
+  FlintContext_Get()->prompt_callbacks.edit = NULL;
+  FlintContext_Get()->prompt_callbacks.filter = NULL;
+  FlintContext_Get()->prompt_callbacks.help = NULL;
 
-  if (g_item_index_map) {
-    HashMap_Destroy(g_item_index_map);
-    g_item_index_map = NULL;
+  if (FlintContext_Get()->g_item_index_map) {
+    HashMap_Destroy(FlintContext_Get()->g_item_index_map);
+    FlintContext_Get()->g_item_index_map = NULL;
   }
 
-  printf("[DEBUG-UI] Returning from Platform_PromptUser. Buffer Length: %zu\n", strlen(output_buffer));
-  return (strlen(output_buffer) > 0) ? output_buffer : NULL;
+  printf("[DEBUG-UI] Returning from Platform_PromptUser. Buffer Length: %zu\n", strlen(FlintContext_Get()->window.output_buffer));
+  return (strlen(FlintContext_Get()->window.output_buffer) > 0) ? FlintContext_Get()->window.output_buffer : NULL;
 }
 
 char* Platform_SimplePromptUser(const SimplePromptSpec* spec) {
@@ -214,14 +213,14 @@ char* Platform_SimplePromptUser(const SimplePromptSpec* spec) {
   int item_height = spec->item_height;
 
   HINSTANCE hInstance = GetModuleHandle(NULL);
-  selection_complete = false;
-  output_buffer[0] = '\0';
-  g_title = window_title;
+  FlintContext_Get()->window.selection_complete = false;
+  FlintContext_Get()->window.output_buffer[0] = '\0';
+  FlintContext_Get()->window.title = window_title;
   {
     const char* p = strchr(window_title, ' ');
-    g_current_feature = (char*)(p ? p+1 : window_title);
+    FlintContext_Get()->window.current_feature = (char*)(p ? p+1 : window_title);
   }
-  SetCurrentFeatureName(g_current_feature);
+  SetCurrentFeatureName(FlintContext_Get()->window.current_feature);
 
   SetMode(MODE_INSERT);
 
@@ -230,16 +229,16 @@ char* Platform_SimplePromptUser(const SimplePromptSpec* spec) {
 
   HFONT hCustomFont = CreateCustomNerdFont(FontSize, UsedFont);
 
-  hPopupWnd = WH_FROM_HWND(CreateWindowExA(
+  FlintContext_Get()->window.hPopupWnd = WH_FROM_HWND(CreateWindowExA(
       WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED, 
       "QuickSwitcherModalClass", NULL, WS_POPUP | WS_CLIPCHILDREN, 
       layout.x, layout.y, layout.w, layout.h, NULL, NULL, hInstance, NULL
       ));
 
 
-  SetTimer(WH_TO_HWND(hPopupWnd), 999, 50, NULL);
+  SetTimer(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), 999, 50, NULL);
 
-  if (WH_TO_HWND(hPopupWnd) == NULL) {
+  if (WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) == NULL) {
     DWORD err = GetLastError();
     if (err == 1407) {
     }
@@ -247,16 +246,16 @@ char* Platform_SimplePromptUser(const SimplePromptSpec* spec) {
     return NULL;
   }
 
-  SimpleCreateChildControls(hPopupWnd, hCustomFont, prompt, 1, &layout);
+  SimpleCreateChildControls(FlintContext_Get()->window.hPopupWnd, hCustomFont, prompt, 1, &layout);
 
-  SetLayeredWindowAttributes(WH_TO_HWND(hPopupWnd), 0, WindowOpacity, LWA_ALPHA);
+  SetLayeredWindowAttributes(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), 0, WindowOpacity, LWA_ALPHA);
 
-  ForceWindowFocus(hPopupWnd, hEditControl);
+  ForceWindowFocus(FlintContext_Get()->window.hPopupWnd, FlintContext_Get()->window.hEditControl);
 
   MSG msg;
   int loop_counter = 0;
   UI_PreparePopupPump();
-  while (!selection_complete) {
+  while (!FlintContext_Get()->window.selection_complete) {
     if (GetMessage(&msg, NULL, 0, 0)) {
       if (UI_ShouldSkipPopupKey(&msg)) continue;
       loop_counter++;
@@ -267,10 +266,10 @@ char* Platform_SimplePromptUser(const SimplePromptSpec* spec) {
     }
   }
 
-  if (WH_TO_HWND(hPopupWnd) != NULL && IsWindow(WH_TO_HWND(hPopupWnd))) {
-    KillTimer(WH_TO_HWND(hPopupWnd), 999);
-    DestroyWindow(WH_TO_HWND(hPopupWnd));
-    hPopupWnd = WH_NULL;
+  if (WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) != NULL && IsWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd))) {
+    KillTimer(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), 999);
+    DestroyWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd));
+    FlintContext_Get()->window.hPopupWnd = WH_NULL;
   }
 
   while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
@@ -279,15 +278,15 @@ char* Platform_SimplePromptUser(const SimplePromptSpec* spec) {
   }
 
   DeleteObject(hCustomFont); 
-  selection_complete = false;
-  printf("[DEBUG-UI] Returning from Platform_SimplePromptUser. Buffer %s\n", output_buffer);
-  return (strlen(output_buffer) > 0) ? output_buffer : NULL;
+  FlintContext_Get()->window.selection_complete = false;
+  printf("[DEBUG-UI] Returning from Platform_SimplePromptUser. Buffer %s\n", FlintContext_Get()->window.output_buffer);
+  return (strlen(FlintContext_Get()->window.output_buffer) > 0) ? FlintContext_Get()->window.output_buffer : NULL;
 }
 
 void Platform_DisplayMessage(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, int timeout, ColorRef color) {
-  if (WH_TO_HWND(hGlobalTrayWnd) != NULL && GetCurrentThreadId() != g_main_thread_id) {
+  if (WH_TO_HWND(FlintContext_Get()->window.hGlobalTrayWnd) != NULL && GetCurrentThreadId() != FlintContext_Get()->g_main_thread_id) {
     DisplayMessageParams params = { message, centerX, centerY, maxWidth, maxHeight, timeout, color };
-    SendMessageA(WH_TO_HWND(hGlobalTrayWnd), WM_DISPLAY_MESSAGE, 0, (LPARAM)&params);
+    SendMessageA(WH_TO_HWND(FlintContext_Get()->window.hGlobalTrayWnd), WM_DISPLAY_MESSAGE, 0, (LPARAM)&params);
     return;
   }
   Platform_CreateDisplayMessageWindow(message, centerX, centerY, maxWidth, maxHeight, timeout, color);
@@ -296,8 +295,8 @@ void Platform_DisplayMessage(const char* message, int centerX, int centerY, int 
 void Platform_CreateDisplayMessageWindow(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, int timeout, ColorRef color) {
   HINSTANCE hInstance = GetModuleHandle(NULL);
 
-  DestroyWindow(WH_TO_HWND(hDisplayMessage));
-  KillTimer(WH_TO_HWND(hDisplayMessage),999);
+  DestroyWindow(WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage));
+  KillTimer(WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage),999);
 
   FontHandle msgFont = Platform_CreateFont(FontSize, UsedFont);
   int textWidth = 0, textHeight = 0;
@@ -320,7 +319,7 @@ void Platform_CreateDisplayMessageWindow(const char* message, int centerX, int c
   pWndData->hFont = msgFont;
   pWndData->alpha = WindowOpacity;
   pWndData->color = color;
-  g_timeout = timeout * 20;
+  FlintContext_Get()->g_timeout = timeout * 20;
 
   int topLeftX = centerX - (winWidth / 2);
   int topLeftY = centerY - (winHeight / 2);
@@ -331,19 +330,19 @@ void Platform_CreateDisplayMessageWindow(const char* message, int centerX, int c
       topLeftX, topLeftY, winWidth, winHeight, NULL, NULL, hInstance, pWndData
       );
 
-  if (hPopupWnd == NULL) {
+  if (WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) == NULL) {
     printf("[DEBUG-UI] ERROR: CreateWindowExA failed. GetLastError: %lu\n", GetLastError());
     Platform_DestroyFont(pWndData->hFont);
     free(pWndData);
     return;
   }
 
-  SetLayeredWindowAttributes(hPopupWnd, 0, pWndData->alpha, LWA_ALPHA);
+  SetLayeredWindowAttributes(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), 0, pWndData->alpha, LWA_ALPHA);
 
-  ShowWindow(hPopupWnd, SW_SHOWNOACTIVATE);
-  UpdateWindow(hPopupWnd);
+  ShowWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), SW_SHOWNOACTIVATE);
+  UpdateWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd));
 
-  SetTimer(hPopupWnd, 999, 50, NULL);
+  SetTimer(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), 999, 50, NULL);
 
   return; 
 }
@@ -361,31 +360,31 @@ void Platform_SettingsPopUp() {
 
   HFONT hCustomFont = CreateCustomNerdFont(FontSize, UsedFont);
 
-  hPopupWnd = WH_FROM_HWND(CreateWindowExA(
+  FlintContext_Get()->window.hPopupWnd = WH_FROM_HWND(CreateWindowExA(
       WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED | WS_EX_COMPOSITED,
       "SettingsPopupClass", NULL, WS_POPUP | WS_CLIPCHILDREN, 
       510, 210, width, height, NULL, NULL, hInstance, NULL
       ));
 
-  if (WH_TO_HWND(hPopupWnd) == NULL) {
+  if (WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) == NULL) {
     DWORD err = GetLastError();
     printf("CreateWindowExA failed: %lu\n", err);
     DeleteObject(hCustomFont);
     return;
   }
 
-  hSettings = hPopupWnd;
-  SetTimer(WH_TO_HWND(hPopupWnd), 999, 50, NULL);
+  FlintContext_Get()->window.hSettings = FlintContext_Get()->window.hPopupWnd;
+  SetTimer(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), 999, 50, NULL);
 
-  SettingsCreateChildControls(hPopupWnd, hCustomFont,&layout);
+  SettingsCreateChildControls(FlintContext_Get()->window.hPopupWnd, hCustomFont,&layout);
 
-  SetLayeredWindowAttributes(WH_TO_HWND(hPopupWnd), 0, WindowOpacity, LWA_ALPHA);
+  SetLayeredWindowAttributes(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), 0, WindowOpacity, LWA_ALPHA);
 
-  ForceWindowFocus(hPopupWnd, hEditControl);
+  ForceWindowFocus(FlintContext_Get()->window.hPopupWnd, FlintContext_Get()->window.hEditControl);
 
   MSG msg;
   UI_PreparePopupPump();
-  while (!selection_complete) {
+  while (!FlintContext_Get()->window.selection_complete) {
     if (GetMessage(&msg, NULL, 0, 0)) {
       if (UI_ShouldSkipPopupKey(&msg)) continue;
       TranslateMessage(&msg);
@@ -395,12 +394,12 @@ void Platform_SettingsPopUp() {
     }
   }
 
-  if (WH_TO_HWND(hPopupWnd) != NULL && IsWindow(WH_TO_HWND(hPopupWnd))) { 
-    KillTimer(WH_TO_HWND(hPopupWnd), 999);
-    DestroyWindow(WH_TO_HWND(hPopupWnd));
-    hPopupWnd = WH_NULL;
+  if (WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) != NULL && IsWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd))) { 
+    KillTimer(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), 999);
+    DestroyWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd));
+    FlintContext_Get()->window.hPopupWnd = WH_NULL;
   }
-  hSettings = WH_NULL;
+  FlintContext_Get()->window.hSettings = WH_NULL;
 
   while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
     TranslateMessage(&msg);
@@ -409,8 +408,6 @@ void Platform_SettingsPopUp() {
 
   DeleteObject(hCustomFont); 
 }
-
-HHOOK hKeyboardHook = NULL;
 
 int Platform_InitializeTrayIcon() {
   HINSTANCE hInstance = GetModuleHandle(NULL);
@@ -424,7 +421,7 @@ int Platform_InitializeTrayIcon() {
       return -1;
     }
 
-    hGlobalTrayWnd = WH_FROM_HWND(CreateWindowExA(
+    FlintContext_Get()->window.hGlobalTrayWnd = WH_FROM_HWND(CreateWindowExA(
         WS_EX_TOOLWINDOW,
         wc.lpszClassName, "TrayApp", 
         WS_POPUP, 
@@ -432,7 +429,7 @@ int Platform_InitializeTrayIcon() {
         NULL, NULL, hInstance, NULL
         ));
 
-    if (WH_TO_HWND(hGlobalTrayWnd) == NULL) {
+    if (WH_TO_HWND(FlintContext_Get()->window.hGlobalTrayWnd) == NULL) {
       return -1;
     }
   }
@@ -477,8 +474,8 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
     }
     TimerEnd(timer, "ProcessHotkey");
 
-    if (shift_down && !IsInsertMode() && WH_TO_HWND(hPopupWnd) != NULL) {
-      if (WH_TO_HWND(g_hEditPopup) == NULL) {
+    if (shift_down && !IsInsertMode() && WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) != NULL) {
+      if (WH_TO_HWND(FlintContext_Get()->window.g_hEditPopup) == NULL) {
         if (pressed_vk == COMMAND_MODE_KEY) {
           SetMode(MODE_INSERT);
           char* output = Platform_EditTextPopup("", 960, 540, 1000, 300);
@@ -490,7 +487,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
         }
       }
     }
-    if (WH_TO_HWND(g_hSearchPopup) == NULL && WH_TO_HWND(hPopupWnd) != NULL && IsNormalMode()) {
+    if (WH_TO_HWND(FlintContext_Get()->window.g_hSearchPopup) == NULL && WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) != NULL && IsNormalMode()) {
       if (pressed_vk == SEARCH_PROGRAM_KEY) {
         Platform_SearchPopup();
       }
@@ -499,8 +496,8 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
     WinTimer timer2 = TimerStart();
     if (ctrl_down) {
       if (pressed_vk == HELP_SCREEN_KEY) {
-        if (g_help_callback != NULL) {
-          g_help_callback();
+        if (FlintContext_Get()->prompt_callbacks.help != NULL) {
+          FlintContext_Get()->prompt_callbacks.help();
           TimerEnd(timer2, "HelpScreen");
         }
       }
@@ -516,10 +513,10 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
     WinTimer timer3 = TimerStart();
 
     if (IsNormalMode()) {
-      if (g_waiting_for_key) {
-        g_waiting_for_key = false;
-        if (g_key_callback) {
-          g_key_callback(pKeyInfo->vkCode);
+      if (FlintContext_Get()->g_waiting_for_key) {
+        FlintContext_Get()->g_waiting_for_key = false;
+        if (FlintContext_Get()->g_key_callback) {
+          FlintContext_Get()->g_key_callback(pKeyInfo->vkCode);
           TimerEnd(timer3, "KeyCallback");
         }
         return 1;
@@ -543,8 +540,8 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 void Platform_RunHotKeyMessageLoop() {
   HINSTANCE hInstance = GetModuleHandle(NULL);
 
-  hKeyboardHook = SetWindowsHookEx(WH_KEYBOARD_LL, LowLevelKeyboardProc, hInstance, 0);
-  if (!hKeyboardHook) {
+  FlintContext_Get()->hKeyboardHook = SetWindowsHookEx(WH_KEYBOARD_LL, LowLevelKeyboardProc, hInstance, 0);
+  if (!FlintContext_Get()->hKeyboardHook) {
     printf("[ERROR] Failed to install keyboard hook! Error: %lu\n", GetLastError());
     return;
   }
@@ -555,7 +552,7 @@ void Platform_RunHotKeyMessageLoop() {
     DispatchMessage(&msg);
   }
 
-  if (hKeyboardHook) UnhookWindowsHookEx(hKeyboardHook);
+  if (FlintContext_Get()->hKeyboardHook) UnhookWindowsHookEx(FlintContext_Get()->hKeyboardHook);
 }
 
 static ULONG_PTR g_gdiplusToken = 0;
@@ -614,13 +611,13 @@ void Platform_InitUI() {
    settingsPopupWc.lpszClassName = "SettingsPopupClass";
    RegisterClassA(&settingsPopupWc);
 
-   hKeyboardHook = SetWindowsHookExA(WH_KEYBOARD_LL, LowLevelKeyboardProc, GetModuleHandle(NULL), 0);
+   FlintContext_Get()->hKeyboardHook = SetWindowsHookExA(WH_KEYBOARD_LL, LowLevelKeyboardProc, GetModuleHandle(NULL), 0);
 }
 
 void Platform_ShutdownUI() {
-  if (hKeyboardHook) {
-    UnhookWindowsHookEx(hKeyboardHook);
-    hKeyboardHook = NULL;
+  if (FlintContext_Get()->hKeyboardHook) {
+    UnhookWindowsHookEx(FlintContext_Get()->hKeyboardHook);
+    FlintContext_Get()->hKeyboardHook = NULL;
   }
   if (g_gdiplusToken != 0) {
     GdiplusShutdown(g_gdiplusToken);

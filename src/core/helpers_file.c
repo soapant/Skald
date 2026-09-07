@@ -1,4 +1,5 @@
-#include "common.h"
+#include "core/context.h"
+#include "core/modal.h"
 #include "config.h"
 #include <ctype.h>
 #include <string.h>
@@ -107,8 +108,8 @@ void fl_edit_text_popup(const char* initial_text, const char* title, int x, int 
     data->true_index = true_idx;
     data->new_text = NULL;
     data->restore_selection = true;
-    data->hListBox = hListBox;
-    data->hEditControl = hEditControl;
+    data->hListBox = FlintContext_Get()->window.hListBox;
+    data->hEditControl = FlintContext_Get()->window.hEditControl;
     data->refresh_cb = refresh;
     Popup* popup = EditPopup_Create(wm, initial_text, title, x, y, fl_edit_confirm_callback, data);
     if (!popup) {

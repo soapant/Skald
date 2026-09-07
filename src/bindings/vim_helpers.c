@@ -1,4 +1,5 @@
-#include "common.h"
+#include "core/context.h"
+#include "core/modal.h"
 #include "bindings/vim_helpers.h"
 #include "core/common_ui.h"
 #include "core/vim.h"

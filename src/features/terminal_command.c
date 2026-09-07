@@ -12,7 +12,7 @@ void RebuildCommandCache(void) {
 }
 
 void terminal_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
-    ZoxideHelper_Refresh(filter, hListBox, lb, TerminalHistoryFilePath, &cached_commands, &cached_command_count);
+    ZoxideHelper_Refresh(filter, FlintContext_Get()->window.hListBox, lb, TerminalHistoryFilePath, &cached_commands, &cached_command_count);
 }
 
 bool terminal_enter_callback(const char* selection, ListBoxInfo* lb) {

@@ -11,7 +11,7 @@ void RebuildZoxideCache(void) {
 }
 
 void zoxide_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
-    ZoxideHelper_Refresh(filter, hListBox, lb, TerminalZoxideFilePath, &cached_zoxide_commands, &cached_zoxide_count);
+    ZoxideHelper_Refresh(filter, FlintContext_Get()->window.hListBox, lb, TerminalZoxideFilePath, &cached_zoxide_commands, &cached_zoxide_count);
 }
 
 void zoxide_edit_callback(const char* selection, ListBoxInfo* lb) {

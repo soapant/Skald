@@ -398,7 +398,7 @@ void calculator_refresh_callback(const char* filter, WindowHandle hListBox, List
     const char* items[1] = { result_buffer };
 
     BuildAliasDisplayItems(items, 1);
-    PopulateListBox(lb, hListBox, NULL, items, 1,NULL);
+    PopulateListBox(lb, FlintContext_Get()->window.hListBox, NULL, items, 1,NULL);
 }
 
 bool calculator_enter_callback(const char* selection, ListBoxInfo* lb) {
@@ -410,11 +410,11 @@ bool calculator_enter_callback(const char* selection, ListBoxInfo* lb) {
 
 
 void calculator_tab_callback(ListBoxInfo* lb) {
-    if (WH_TO_HWND(hEditControl) == NULL) return;
+    if (WH_TO_HWND(FlintContext_Get()->window.hEditControl) == NULL) return;
     
     
     char current_input[256] = {0};
-    UI_GetCurrentText(hEditControl,current_input);
+    UI_GetCurrentText(FlintContext_Get()->window.hEditControl,current_input);
     
     
     char a_str[64] = {0};
@@ -425,11 +425,11 @@ void calculator_tab_callback(ListBoxInfo* lb) {
         
         char flipped[256];
         snprintf(flipped, sizeof(flipped), "%s %s %s", b_str, op_str, a_str);
-        UI_SetText(hEditControl,flipped);
+        UI_SetText(FlintContext_Get()->window.hEditControl,flipped);
         
         int len = strlen(flipped);
-        UI_SetCursorPosition(hEditControl,len);
-        UI_GetParent(hEditControl);
+        UI_SetCursorPosition(FlintContext_Get()->window.hEditControl,len);
+        UI_GetParent(FlintContext_Get()->window.hEditControl);
         
         printf("[CALCULATOR] Flipped: %s\n", flipped);
     } else {
@@ -442,9 +442,9 @@ void calculator_tab_callback(ListBoxInfo* lb) {
 
 bool calculator_ctrlenter_callback(const char* selection, ListBoxInfo* lb) {
     char* result = lb->populated_cache[0] + 2;
-    UI_SetText(hEditControl, result);
+    UI_SetText(FlintContext_Get()->window.hEditControl, result);
     int len = strlen(result);
-    UI_SetCursorPosition(hEditControl, len);
+    UI_SetCursorPosition(FlintContext_Get()->window.hEditControl, len);
     return false;
 }
 

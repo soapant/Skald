@@ -17,7 +17,8 @@
 #include "core/platform.h"
 #include "config.h"
 #include "helpers.h"
-#include "common.h"
+#include "core/context.h"
+#include "core/modal.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/inotify.h>

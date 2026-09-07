@@ -1,4 +1,5 @@
-#include "common.h"
+#include "core/context.h"
+#include "core/modal.h"
 #include "config.h"
 #include "helpers.h"
 #include "core/common_ui.h"
@@ -65,40 +66,40 @@ void CalculateWindowMetrics(int count, WindowLayout* layout,int height , int wid
 void SimpleCreateChildControls(WindowHandle hwndParent, HFONT hFont, const char* string, int count, const WindowLayout* layout) {
   HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtrA(WH_TO_HWND(hwndParent), GWLP_HINSTANCE);
 
-  hEditControl = WH_FROM_HWND(CreateWindowExA(
+  FlintContext_Get()->window.hEditControl = WH_FROM_HWND(CreateWindowExA(
       0, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
       20, 50, layout->w - 40, 40, WH_TO_HWND(hwndParent), (HMENU)IDC_INPUT_BOX, hInstance, NULL
       ));
 
-  if (WH_TO_HWND(hEditControl) == NULL) return;
+  if (WH_TO_HWND(FlintContext_Get()->window.hEditControl) == NULL) return;
 
-  g_ActiveEditControl = hEditControl;
-  UI_Edit_SetFont(hEditControl, hFont);
-  SetWindowSubclass(WH_TO_HWND(hEditControl), SimpleEditSubclassProc, 0, 0);
+  FlintContext_Get()->window.g_ActiveEditControl = FlintContext_Get()->window.hEditControl;
+  UI_Edit_SetFont(FlintContext_Get()->window.hEditControl, hFont);
+  SetWindowSubclass(WH_TO_HWND(FlintContext_Get()->window.hEditControl), SimpleEditSubclassProc, 0, 0);
 
   if (count > 0) {
-    hListBox = WH_FROM_HWND(CreateWindowExA(
+    FlintContext_Get()->window.hListBox = WH_FROM_HWND(CreateWindowExA(
         0, "LISTBOX", "",
         WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOSEL,
         20, 105, layout->w - 40, layout->h - 115, WH_TO_HWND(hwndParent), (HMENU)IDC_LIST_BOX, hInstance, NULL
         ));
 
-    if (WH_TO_HWND(hListBox) == NULL) return;
+    if (WH_TO_HWND(FlintContext_Get()->window.hListBox) == NULL) return;
 
-    SetWindowSubclass(WH_TO_HWND(hListBox), SimpleListBoxSubclassProc, 0, 0);
-    UI_LB_SetFont(hListBox, hFont);
-    UI_LB_SetItemHeight(hListBox, layout->item_height);
+    SetWindowSubclass(WH_TO_HWND(FlintContext_Get()->window.hListBox), SimpleListBoxSubclassProc, 0, 0);
+    UI_LB_SetFont(FlintContext_Get()->window.hListBox, hFont);
+    UI_LB_SetItemHeight(FlintContext_Get()->window.hListBox, layout->item_height);
 
-    HDC hdc = GetDC(WH_TO_HWND(hListBox));
+    HDC hdc = GetDC(WH_TO_HWND(FlintContext_Get()->window.hListBox));
     if (!hdc) return;
     HFONT hOldFont = (HFONT)SelectObject(hdc, hFont);
 
-    SendMessage(WH_TO_HWND(hListBox), LB_ADDSTRING, 0, (LPARAM)string);
-    SendMessage(WH_TO_HWND(hListBox), LB_SETCURSEL, (WPARAM)-1, 0);
-    UpdateWindow(WH_TO_HWND(hListBox));
+    SendMessage(WH_TO_HWND(FlintContext_Get()->window.hListBox), LB_ADDSTRING, 0, (LPARAM)string);
+    SendMessage(WH_TO_HWND(FlintContext_Get()->window.hListBox), LB_SETCURSEL, (WPARAM)-1, 0);
+    UpdateWindow(WH_TO_HWND(FlintContext_Get()->window.hListBox));
 
     SelectObject(hdc, hOldFont);
-    ReleaseDC(WH_TO_HWND(hListBox), hdc);
+    ReleaseDC(WH_TO_HWND(FlintContext_Get()->window.hListBox), hdc);
   }
 }
 
@@ -138,36 +139,36 @@ void CreateChildControls(WindowHandle hwndParent, HFONT hFont, const char* list[
 
   HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtrA(WH_TO_HWND(hwndParent), GWLP_HINSTANCE);
 
-  hEditControl = WH_FROM_HWND(CreateWindowExA(
+  FlintContext_Get()->window.hEditControl = WH_FROM_HWND(CreateWindowExA(
       0, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
       20, 50, layout->w - 40, 40, WH_TO_HWND(hwndParent), (HMENU)IDC_INPUT_BOX, hInstance, NULL
       ));
-  if (WH_TO_HWND(hEditControl) == NULL) {
+  if (WH_TO_HWND(FlintContext_Get()->window.hEditControl) == NULL) {
     return;
   }
 
-  g_ActiveEditControl = hEditControl;
-  UI_Edit_SetFont(hEditControl, hFont);
-  SetWindowSubclass(WH_TO_HWND(hEditControl), EditSubclassProc, 0, 0);
+  FlintContext_Get()->window.g_ActiveEditControl = FlintContext_Get()->window.hEditControl;
+  UI_Edit_SetFont(FlintContext_Get()->window.hEditControl, hFont);
+  SetWindowSubclass(WH_TO_HWND(FlintContext_Get()->window.hEditControl), EditSubclassProc, 0, 0);
 
   if (count >= 0) {
-    hListBox = WH_FROM_HWND(CreateWindowExA(
+    FlintContext_Get()->window.hListBox = WH_FROM_HWND(CreateWindowExA(
         0, "LISTBOX", "",
         WS_CHILD | WS_VISIBLE | LBS_NODATA | LBS_OWNERDRAWFIXED,
         20, 105, layout->w - 40, layout->h - 115, WH_TO_HWND(hwndParent), (HMENU)IDC_LIST_BOX, hInstance, NULL
         ));
 
-    if (WH_TO_HWND(hListBox) == NULL) {
+    if (WH_TO_HWND(FlintContext_Get()->window.hListBox) == NULL) {
       return;
     }
 
-    SetWindowSubclass(WH_TO_HWND(hListBox), ListBoxSubclassProc, 0, 0);
-    UI_LB_SetFont(hListBox, hFont);
-    UI_LB_SetItemHeight(hListBox, layout->item_height);
+    SetWindowSubclass(WH_TO_HWND(FlintContext_Get()->window.hListBox), ListBoxSubclassProc, 0, 0);
+    UI_LB_SetFont(FlintContext_Get()->window.hListBox, hFont);
+    UI_LB_SetItemHeight(FlintContext_Get()->window.hListBox, layout->item_height);
 
     int max_width = layout->w - 40;
 
-    HDC hdc = GetDC(WH_TO_HWND(hListBox));
+    HDC hdc = GetDC(WH_TO_HWND(FlintContext_Get()->window.hListBox));
     if (!hdc) {
       return;
     }
@@ -190,27 +191,27 @@ void CreateChildControls(WindowHandle hwndParent, HFONT hFont, const char* list[
             }
         }
     }
-    SendMessageA(WH_TO_HWND(hListBox), LB_SETCOUNT, count, 0);
+    SendMessageA(WH_TO_HWND(FlintContext_Get()->window.hListBox), LB_SETCOUNT, count, 0);
 
-    UpdateWindow(WH_TO_HWND(hListBox));
+    UpdateWindow(WH_TO_HWND(FlintContext_Get()->window.hListBox));
 
     SelectObject(hdc, hOldFont);
-    ReleaseDC(WH_TO_HWND(hListBox), hdc);
+    ReleaseDC(WH_TO_HWND(FlintContext_Get()->window.hListBox), hdc);
 
-    UI_SetHorizontalExtent(hListBox, max_width);
+    UI_SetHorizontalExtent(FlintContext_Get()->window.hListBox, max_width);
   }
 }
 void SettingsCreateChildControls(WindowHandle hwndParent, HFONT hFont,const WindowLayout* layout) {
   HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtrA(WH_TO_HWND(hwndParent), GWLP_HINSTANCE);
 
-  hEditControl = WH_FROM_HWND(CreateWindowExA(
+  FlintContext_Get()->window.hEditControl = WH_FROM_HWND(CreateWindowExA(
       0, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
       20, 50, layout->w - 40, 40, WH_TO_HWND(hwndParent), (HMENU)IDC_INPUT_BOX, hInstance, NULL
       ));
 
-  if (WH_TO_HWND(hEditControl) == NULL) return;
+  if (WH_TO_HWND(FlintContext_Get()->window.hEditControl) == NULL) return;
 
-  g_ActiveEditControl = hEditControl;
-  UI_Edit_SetFont(hEditControl, hFont);
-  SetWindowSubclass(WH_TO_HWND(hEditControl), SettingsEditSubclassProc, 0, 0);
+  FlintContext_Get()->window.g_ActiveEditControl = FlintContext_Get()->window.hEditControl;
+  UI_Edit_SetFont(FlintContext_Get()->window.hEditControl, hFont);
+  SetWindowSubclass(WH_TO_HWND(FlintContext_Get()->window.hEditControl), SettingsEditSubclassProc, 0, 0);
 }

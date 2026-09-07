@@ -1,4 +1,5 @@
 #include "core/flapi.h"
+#include "core/context.h"
 
 typedef struct {
     const char* alias;
@@ -328,7 +329,7 @@ void todo_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInf
     const char* items[100];
     int todo_count = fl_load_file_list(TODO_FILE_PATH, items, 100);
 
-    PopulateListBox(lb, hListBox, filter, items, todo_count, NULL);
+    PopulateListBox(lb, FlintContext_Get()->window.hListBox, filter, items, todo_count, NULL);
     fl_free_file_list(items, todo_count);
 }
 
@@ -339,7 +340,7 @@ bool todo_enter_callback(const char* selection, ListBoxInfo* lb) {
     else {
         AddTodoToFile(selection);
     }
-    UI_Redraw(lb, hListBox);
+    UI_Redraw(lb, FlintContext_Get()->window.hListBox);
     return true;
 }
 
@@ -348,9 +349,9 @@ bool todo_ctrlenter_callback(const char* selection, ListBoxInfo* lb) {
         RemoveTodoItemFromFile(selection);
     } else {
         AddTodoToFile(selection);
-        UI_SetText(hEditControl, "");
+        UI_SetText(FlintContext_Get()->window.hEditControl, "");
     }
-    UI_Redraw(lb, hListBox);
+    UI_Redraw(lb, FlintContext_Get()->window.hListBox);
     return false;
 }
 
@@ -506,7 +507,7 @@ void todo_render_callback_impl(HDC hdc, const char* text, RECT* rect, BOOL is_se
         SetTextColor(hdc, GetRainbowColor((float)(itemIndex % GradientItems) / (float)GradientItems, 0.85f, GradientBrightness));
     }
     
-    HFONT hOldFont = (HFONT)SelectObject(hdc, g_hMainFont);
+    HFONT hOldFont = (HFONT)SelectObject(hdc, FlintContext_Get()->g_hMainFont);
     DrawTextA(hdc, main_text, -1, &textRect, DT_SINGLELINE | DT_VCENTER);
     
     if (tag_count == 1) {
@@ -515,7 +516,7 @@ void todo_render_callback_impl(HDC hdc, const char* text, RECT* rect, BOOL is_se
         tagRect.top += 28;
         tagRect.bottom -= 4;
         
-        HFONT hOldTagFont = (HFONT)SelectObject(hdc, g_hMainFont);
+        HFONT hOldTagFont = (HFONT)SelectObject(hdc, FlintContext_Get()->g_hMainFont);
         
         int y_offset = 0;
         for (int i = 0; i < tag_count; i++) {
@@ -532,7 +533,7 @@ void todo_render_callback_impl(HDC hdc, const char* text, RECT* rect, BOOL is_se
         tagRect.left += 14;
         tagRect.top += 28;
         
-        HFONT hOldTagFont = (HFONT)SelectObject(hdc, g_hMainFont);
+        HFONT hOldTagFont = (HFONT)SelectObject(hdc, FlintContext_Get()->g_hMainFont);
         
         int x_offset = 0;
         for (int i = 0; i < tag_count; i++) {

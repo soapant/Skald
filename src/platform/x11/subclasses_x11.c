@@ -1,4 +1,5 @@
-#include "common.h"
+#include "core/context.h"
+#include "core/modal.h"
 #include "core/modal.h"
 #include "config.h"
 #include "core/platform.h"
@@ -136,7 +137,7 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
         } else {
             EditBufferBackspace(state->filter, &state->cursor);
         }
-        if (FlintContext_Get()->prompt_callbacks.refresh) FlintContext_Get()->prompt_callbacks.refresh(state->filter, hListBox, state->has_listbox ? &state->listbox : NULL);
+        if (FlintContext_Get()->prompt_callbacks.refresh) FlintContext_Get()->prompt_callbacks.refresh(state->filter, FlintContext_Get()->window.hListBox, state->has_listbox ? &state->listbox : NULL);
         return true;
     }
     if (wParam == VK_ESCAPE) {
@@ -151,7 +152,7 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
     
     if (wParam >= '0' && wParam <= '9') {
       if (ctrl_pressed) {
-        HandleNumberShortcut(wParam, hListBox, g_ActiveEditControl,&state->listbox);
+        HandleNumberShortcut(wParam, FlintContext_Get()->window.hListBox, FlintContext_Get()->window.g_ActiveEditControl,&state->listbox);
         return true;
       }
     }
@@ -172,7 +173,7 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
         }
         return true;
       }
-      if (state->has_listbox) UI_NavigateUp(&state->listbox, hListBox);
+      if (state->has_listbox) UI_NavigateUp(&state->listbox, FlintContext_Get()->window.hListBox);
       return true;
     }
     if (wParam == VK_DOWN) {
@@ -183,12 +184,12 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
         }
         return true;
       }
-      if (state->has_listbox) UI_NavigateDown(&state->listbox, hListBox);
+      if (state->has_listbox) UI_NavigateDown(&state->listbox, FlintContext_Get()->window.hListBox);
       return true;
     }
     if (wParam == VK_DELETE) {
       if (state && EditBufferDeleteChar(state->filter, &state->cursor)) {
-        if (FlintContext_Get()->prompt_callbacks.refresh) FlintContext_Get()->prompt_callbacks.refresh(state->filter, hListBox, state->has_listbox ? &state->listbox : NULL);
+        if (FlintContext_Get()->prompt_callbacks.refresh) FlintContext_Get()->prompt_callbacks.refresh(state->filter, FlintContext_Get()->window.hListBox, state->has_listbox ? &state->listbox : NULL);
       }
       return true;
     }

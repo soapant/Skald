@@ -142,7 +142,7 @@ void applauncher_refresh_callback(const char* filter, WindowHandle hListBox, Lis
     for (size_t i = 0; i < s_apps.count; i++) {
         names[i] = s_apps.items[i].name;
     }
-    PopulateListBox(lb, hListBox, filter, names, (int)s_apps.count, NULL);
+    PopulateListBox(lb, FlintContext_Get()->window.hListBox, filter, names, (int)s_apps.count, NULL);
     free(names);
 }
 void applauncher_copy_callback(const char* selection,int true_index,int type) {

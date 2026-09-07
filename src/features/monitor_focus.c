@@ -56,7 +56,7 @@ static void ScanWindowsOnMonitor(HMONITOR targetMonitor) {
 
     if (myList.count == 0) {
     } else {
-        FocusWindow(myList.items[0].hwnd);
+        SetForegroundWindow(WH_TO_HWND(myList.items[0].hwnd));
     }
 }
 #endif
