@@ -105,6 +105,7 @@ bool connect_phone(void) {
     return false;
 }
 
+// Not Implemented
 void tap(int x, int y) {
     (void)x; (void)y;
 }

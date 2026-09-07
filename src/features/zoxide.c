@@ -77,6 +77,7 @@ static int cached_zoxide_count = 0;
 static void RebuildZoxideCache(void) { Zox_RebuildCache(TerminalZoxideFilePath, &cached_zoxide_commands, &cached_zoxide_count); }
 static void zoxide_refresh(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) { Zox_Refresh(filter, hListBox, lb, TerminalZoxideFilePath, &cached_zoxide_commands, &cached_zoxide_count); }
 static void zoxide_edit(const char* selection, ListBoxInfo* lb) { Zox_Edit(selection, lb, TerminalZoxideFilePath, &cached_zoxide_commands, &cached_zoxide_count, zoxide_refresh); }
+
 static bool zoxide_enter(const char* selection, ListBoxInfo* lb) {
     char* path = fl_get_zoxide_match((char*)selection);
     if (path) {
@@ -146,8 +147,32 @@ static void TriggerYaziZoxide(void) {
     Zox_Cleanup(list);
 }
 
+const char* FileManagerZoxideFilePath = "data/FileManagerZoxide.txt";
+static char** g_cached_FileManager_commands = NULL;
+static int g_cached_FileManager_count = 0;
+static void RebuildFileManagerCache(void) { Zox_RebuildCache(FileManagerZoxideFilePath, &g_cached_FileManager_commands, &g_cached_FileManager_count); }
+static void FileManager_refresh(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) { Zox_Refresh(filter, hListBox, lb, FileManagerZoxideFilePath, &g_cached_FileManager_commands, &g_cached_FileManager_count); }
+static bool FileManager_enter(const char* selection, ListBoxInfo* lb) {
+    char* path = fl_get_zoxide_match((char*)selection);
+    if (fl_launch_file_manager_at_path(path,NULL)) {
+        Zox_Append(FileManagerZoxideFilePath, selection, lb, &g_cached_FileManager_commands, &g_cached_FileManager_count);
+        free(path);
+    }
+    return true;
+}
+static void FileManager_edit(const char* selection, ListBoxInfo* lb) { Zox_Edit(selection, lb, FileManagerZoxideFilePath, &g_cached_FileManager_commands, &g_cached_FileManager_count, FileManager_refresh); }
+static void TriggerFileManager(void) {
+    RebuildFileManagerCache();
+    const char** list = Zox_Prepare(FileManagerZoxideFilePath, &g_cached_FileManager_commands, &g_cached_FileManager_count, NULL);
+    PROMPT(.title = "📁 FileManager", .items = list, .count = g_cached_FileManager_count,
+           .height = 920, .width = 650, .item_height = 32,
+           .refresh = FileManager_refresh, .enter = FileManager_enter, .edit = FileManager_edit);
+    Zox_Cleanup(list);
+}
+
 FLINT_FEATURE_INIT {
     fl_register_hotkey("Alt+W", TriggerZoxide);
     fl_register_hotkey("Alt+I", TriggerTextEditorZoxide);
     // fl_register_hotkey("Alt+Q", TriggerYaziZoxide);
+    fl_register_hotkey("Alt+R", TriggerFileManager);
 }

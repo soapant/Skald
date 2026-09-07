@@ -11,3 +11,4 @@ include
 windowsapps
 build
 gizmo
+misc
