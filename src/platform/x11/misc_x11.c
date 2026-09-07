@@ -728,7 +728,6 @@ int Platform_CollectRunningProcesses(char process_list[][128], int max_count) {
 }
 
 bool Platform_TerminateProcessByName(const char* exe_name) {
-    printf("Killing PRocess %s \n",exe_name);
     WinTimer timer = TimerStart();
     if (!exe_name || !*exe_name) { TimerEnd(timer, "misc_x11:Platform_TerminateProcessByName"); return false; }
     char tmp[256];
@@ -737,13 +736,9 @@ bool Platform_TerminateProcessByName(const char* exe_name) {
     char *ext = strrchr(tmp, '.');
     if (ext && strcmp(ext, ".exe") == 0) *ext = '\0';
     char cmd[512];
-    // use normal pkill/killall without -i (interactive) and with -9, like user does manually
-    snprintf(cmd, sizeof(cmd), "pkill -9 \"%s\" 2>/dev/null; pkill -9 -f \"%s\" 2>/dev/null", tmp, tmp);
+    snprintf(cmd, sizeof(cmd), "pkill \"%s\"", tmp);
     Platform_RunTerminalCommand(cmd, false);
     snprintf(cmd, sizeof(cmd), "killall -9 \"%s\" 2>/dev/null; killall -9 -r \"%s\" 2>/dev/null", tmp, tmp);
-    Platform_RunTerminalCommand(cmd, false);
-    // also try exact pkill without -9 as fallback
-    snprintf(cmd, sizeof(cmd), "pkill \"%s\" 2>/dev/null", tmp);
     Platform_RunTerminalCommand(cmd, false);
     TimerEnd(timer, "misc_x11:Platform_TerminateProcessByName");
     return true;
