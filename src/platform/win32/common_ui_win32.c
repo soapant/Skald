@@ -3,6 +3,7 @@
 #include "config.h"
 #include "helpers.h"
 #include "core/common_ui.h"
+#include <math.h>
 #include <windows.h>
 #include <commctrl.h>
 #include <shlwapi.h>
@@ -41,6 +42,107 @@ void Win32_ApplyRoundedCorners(HWND hwnd, int w, int h) {
   if (radius > 32) radius = 32;
   HRGN rgn = CreateRoundRectRgn(0, 0, w + 1, h + 1, radius*2, radius*2);
   if (rgn) SetWindowRgn(hwnd, rgn, TRUE);
+}
+
+static COLORREF LerpColor(COLORREF a, COLORREF b, float t) {
+  if (t < 0) t = 0; if (t > 1) t = 1;
+  BYTE ar = GetRValue(a), ag = GetGValue(a), ab = GetBValue(a);
+  BYTE br = GetRValue(b), bg = GetGValue(b), bb = GetBValue(b);
+  BYTE rr = (BYTE)(ar + (br - ar) * t + 0.5f);
+  BYTE rg = (BYTE)(ag + (bg - ag) * t + 0.5f);
+  BYTE rb = (BYTE)(ab + (bb - ab) * t + 0.5f);
+  return RGB(rr, rg, rb);
+}
+static COLORREF DeriveLighterWin(COLORREF base, float intensity) {
+  float f = ShaderIntensity;
+  if (f < 0) f = 0; if (f > 1) f = 1;
+  float eff = f * intensity;
+  BYTE r = GetRValue(base), g = GetGValue(base), b = GetBValue(base);
+  BYTE nr = (BYTE)(r + (90 - r) * eff + 35 * eff + 0.5f);
+  BYTE ng = (BYTE)(g + (90 - g) * eff + 35 * eff + 0.5f);
+  BYTE nb = (BYTE)(b + (140 - b) * eff + 40 * eff + 0.5f);
+  if (nr > 255) nr = 255; if (ng > 255) ng = 255; if (nb > 255) nb = 255;
+  return RGB(nr, ng, nb);
+}
+static unsigned int HashNoiseWin(int x, int y) {
+  unsigned int h = (unsigned int)(x * 374761393U + y * 668265263U);
+  h = (h ^ (h >> 13)) * 1274126177U;
+  return h & 0xFF;
+}
+void Win32_DrawBackground(HDC hdc, RECT* rc) {
+  WinTimer timer = TimerStart();
+  const char* name = "solid";
+  int w = rc->right - rc->left;
+  int h = rc->bottom - rc->top;
+  if (w <= 0 || h <= 0) { TimerEnd(timer, "WinBg solid"); return; }
+  COLORREF base = COLOR_BG;
+  COLORREF light = DeriveLighterWin(base, 1.0f);
+  if (!EnableShaders || ShaderPreset == 0) {
+    name = "solid";
+    HBRUSH br = CreateSolidBrush(base);
+    FillRect(hdc, rc, br);
+    DeleteObject(br);
+    TimerEnd(timer, name);
+    return;
+  }
+  if (ShaderPreset == 1) { // vertical
+    name = "vertical";
+    for (int y = rc->top; y < rc->bottom; y++) {
+      float t = h > 1 ? (float)(y - rc->top) / (float)(h - 1) : 0;
+      COLORREF col = LerpColor(base, light, t * 0.9f);
+      HBRUSH br = CreateSolidBrush(col);
+      RECT band = {rc->left, y, rc->right, y+1};
+      FillRect(hdc, &band, br);
+      DeleteObject(br);
+    }
+  } else if (ShaderPreset == 3) { // diagonal (per-row approx)
+    name = "diagonal";
+    for (int y = rc->top; y < rc->bottom; y++) {
+      float t = (float)(y - rc->top) / (float)(h - 1) * 0.7f + 0.5f * 0.3f;
+      COLORREF col = LerpColor(base, light, t);
+      HBRUSH br = CreateSolidBrush(col);
+      RECT band = {rc->left, y, rc->right, y+1};
+      FillRect(hdc, &band, br);
+      DeleteObject(br);
+    }
+  } else if (ShaderPreset == 2) { // radial
+    name = "radial";
+    float cx = w * 0.5f, cy = h * 0.35f;
+    float maxDist = sqrtf(cx*cx + cy*cy);
+    if (maxDist < 1) maxDist = 1;
+    for (int y = rc->top; y < rc->bottom; y++) {
+      for (int x = rc->left; x < rc->right; x++) {
+        float dx = x - rc->left - cx, dy = y - rc->top - cy;
+        float dist = sqrtf(dx*dx + dy*dy) / maxDist;
+        if (dist > 1) dist = 1;
+        float t = dist * 0.85f;
+        COLORREF col = LerpColor(light, base, t);
+        SetPixel(hdc, x, y, col);
+      }
+    }
+  } else if (ShaderPreset == 4) { // noise
+    name = "noise";
+    for (int y = rc->top; y < rc->bottom; y++) {
+      float tBase = h > 1 ? (float)(y - rc->top) / (float)(h - 1) : 0;
+      for (int x = rc->left; x < rc->right; x++) {
+        float t = tBase * 0.85f;
+        COLORREF col = LerpColor(base, light, t);
+        unsigned int n = HashNoiseWin(x, y);
+        int delta = (int)(n & 0x1F) - 16;
+        delta = (int)(delta * ShaderIntensity * 0.5f);
+        int r = GetRValue(col) + delta, g = GetGValue(col) + delta, b = GetBValue(col) + delta;
+        if (r < 0) r = 0; if (r > 255) r = 255;
+        if (g < 0) g = 0; if (g > 255) g = 255;
+        if (b < 0) b = 0; if (b > 255) b = 255;
+        SetPixel(hdc, x, y, RGB(r,g,b));
+      }
+    }
+  } else {
+    HBRUSH br = CreateSolidBrush(base);
+    FillRect(hdc, rc, br);
+    DeleteObject(br);
+  }
+  TimerEnd(timer, name);
 }
 
 void UpdateTextCaret(WindowHandle hwndEditControl)

@@ -10,7 +10,10 @@ bool ModePersistsThroughFeatures = false;
 int  TimeOutForMessages = 1;
 bool DoTimeDebugs = false;
 bool RoundedCorners = true;
-int CornerRadius = 24;
+int CornerRadius = 14;
+bool EnableShaders = true;
+int ShaderPreset = 1; // 0 solid, 1 vertical, 2 radial, 3 diagonal, 4 noise
+float ShaderIntensity = 0.15f; // 0.0-1.0 how strong the gradient is (0.35 subtle, 0.65 visible, 1.0 punchy)
 //right now this is doing nothing
 char* EditPopUpPos = "middle";
 int EditPopUpWidthMin = 400;

@@ -346,32 +346,21 @@ bool Linux_HandleEditPopupKey(const XEvent* ev, SimplePromptState* state, bool* 
     return false;
 }
 
-void DrawSimplePromptUserEditControl(Display *dpy, Window *win, SimplePromptState *state) {
-    int screen = DefaultScreen(dpy);
-    XftDraw* xd = Linux_CreateXftDraw(dpy, *win);
 
+// --- OnDraw variants for double buffering (avoid creating XftDraw per call) ---
+void DrawSimplePromptUserEditControlOnDraw(Display *dpy, XftDraw* xd, Visual* vis, Colormap cmap, SimplePromptState *state) {
     FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
     XftFont* xf = FH_TO_XFT(font);
 
     XGlyphInfo ext;
-    XftTextExtentsUtf8(dpy, xf, (FcChar8*)state->display_message, strlen(state->display_message), &ext);
+    if (xf && state->display_message)
+        XftTextExtentsUtf8(dpy, xf, (FcChar8*)state->display_message, strlen(state->display_message), &ext);
+    else ext.xOff = 0;
     int text_width = ext.xOff;
 
-    Visual* visual = DefaultVisual(dpy, screen);
-    Colormap cmap = DefaultColormap(dpy, screen);
-
-    XftColor bg_color, text_color, vim_text_color;
-    Linux_XftAllocColor(dpy, visual, cmap, rgb_to_hex(COLOR_BG), OpacityAlpha16(), &bg_color);
-    Linux_XftAllocColor(dpy, visual, cmap, rgb_to_hex(COLOR_TEXT), 0xFFFF, &text_color);
-    Linux_XftAllocColor(dpy, visual, cmap, VimModeTextColor(), 0xFFFF, &vim_text_color);
-
-    int centerX = state->width / 2;
-    int centerY = state->height / 2;
-    int topLeftX = centerX - state->width / 2;
-    int topLeftY = centerY - state->height / 2;
-    if (!RoundedCorners) {
-        XftDrawRect(xd, &bg_color, topLeftX, topLeftY, state->width, state->height);
-    }
+    XftColor text_color, vim_text_color;
+    Linux_XftAllocColor(dpy, vis, cmap, rgb_to_hex(COLOR_TEXT), 0xFFFF, &text_color);
+    Linux_XftAllocColor(dpy, vis, cmap, VimModeTextColor(), 0xFFFF, &vim_text_color);
 
     draw_wrapped_text(dpy, xd, &vim_text_color, font, g_vim_mode, 0, "LEFT", 5);
     draw_wrapped_text(dpy, xd, &text_color, font, state->window_title, 0, "RIGHT", 5);
@@ -389,42 +378,23 @@ void DrawSimplePromptUserEditControl(Display *dpy, Window *win, SimplePromptStat
     }
     Linux_DrawEditCursor(xd, &text_color, cursor_x, scroll, state->width);
 
-    XftColorFree(dpy, visual, cmap, &bg_color);
-    XftColorFree(dpy, visual, cmap, &text_color);
-    XftColorFree(dpy, visual, cmap, &vim_text_color);
-    XftDrawDestroy(xd);
+    XftColorFree(dpy, vis, cmap, &text_color);
+    XftColorFree(dpy, vis, cmap, &vim_text_color);
     Platform_DestroyFont(font);
 }
 
-void DrawPromptUserEditControl(Display *dpy,Window* win,PromptState *state) {
-    int screen = DefaultScreen(dpy);
-    XftDraw* xd = Linux_CreateXftDraw(dpy, *win);
-
+void DrawPromptUserEditControlOnDraw(Display *dpy, XftDraw* xd, Visual* vis, Colormap cmap, PromptState *state) {
     FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
     XftFont* xf = FH_TO_XFT(font);
 
     unsigned long window_title_text_color_map;
     eval_window_title_color(state,&window_title_text_color_map);
 
-    Visual* visual = DefaultVisual(dpy, screen);
-    Colormap cmap = DefaultColormap(dpy, screen);
+    XftColor text_color, window_title_text_color, vim_text_color;
+    Linux_XftAllocColor(dpy, vis, cmap, rgb_to_hex(COLOR_TEXT), 0xFFFF, &text_color);
+    Linux_XftAllocColor(dpy, vis, cmap, window_title_text_color_map, 0xFFFF, &window_title_text_color);
+    Linux_XftAllocColor(dpy, vis, cmap, VimModeTextColor(), 0xFFFF, &vim_text_color);
 
-    XftColor bg_color, text_color, window_title_text_color, vim_text_color;
-    Linux_XftAllocColor(dpy, visual, cmap, rgb_to_hex(COLOR_BG), OpacityAlpha16(), &bg_color);
-    Linux_XftAllocColor(dpy, visual, cmap, rgb_to_hex(COLOR_TEXT), 0xFFFF, &text_color);
-    Linux_XftAllocColor(dpy, visual, cmap, window_title_text_color_map, 0xFFFF, &window_title_text_color);
-    Linux_XftAllocColor(dpy, visual, cmap, VimModeTextColor(), 0xFFFF, &vim_text_color);
-
-    int centerX = state->width / 2;
-    int centerY = state->height / 2;
-    int topLeftX = centerX - state->width / 2;
-    int topLeftY = centerY - state->height / 2;
-    if (!RoundedCorners) {
-        XftDrawRect(xd, &bg_color, topLeftX, topLeftY, state->width,100);
-    } else {
-        // whole window background will be drawn rounded in Linux_RenderPromptUser,
-        // skip rectangular fill to keep top corners rounded
-    }
     draw_wrapped_text(dpy, xd, &vim_text_color, font,g_vim_mode,0,"LEFT",5);
     draw_wrapped_text(dpy, xd, &window_title_text_color,font,state->window_title,0,"RIGHT",5);
 
@@ -439,33 +409,20 @@ void DrawPromptUserEditControl(Display *dpy,Window* win,PromptState *state) {
     }
     Linux_DrawEditCursor(xd, &text_color, cursor_x, scroll, state->width);
 
-    XftColorFree(dpy, visual, cmap, &bg_color);
-    XftColorFree(dpy, visual, cmap, &text_color);
-    XftColorFree(dpy, visual, cmap, &vim_text_color);
-    XftColorFree(dpy, visual, cmap, &window_title_text_color);
-    XftDrawDestroy(xd);
+    XftColorFree(dpy, vis, cmap, &text_color);
+    XftColorFree(dpy, vis, cmap, &vim_text_color);
+    XftColorFree(dpy, vis, cmap, &window_title_text_color);
     Platform_DestroyFont(font);
 }
 
-void DrawPromptUserListBox(Display *dpy,Window* win,PromptState *state) {
+void DrawPromptUserListBoxOnDraw(Display *dpy, XftDraw* xd, Visual* vis, Colormap cmap, PromptState *state) {
       if (!state->has_listbox) return;
       ListBoxInfo *lb = &state->listbox;
-      int screen = DefaultScreen(dpy);
-      XftDraw* xd = Linux_CreateXftDraw(dpy, *win);
       FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
 
       int y0 = 100;
       int itemH = FontSize + 14;
-      if (!RoundedCorners) {
-        Visual *visClear = DefaultVisual(dpy, screen);
-        Colormap cmapClear = DefaultColormap(dpy, screen);
-        XftColor c0;
-        Linux_XftAllocColor(dpy, visClear, cmapClear, rgb_to_hex(COLOR_BG), OpacityAlpha16(), &c0);
-        XftDrawRect(xd, &c0, 0, y0, state->width, state->height - y0);
-        XftColorFree(dpy, visClear, cmapClear, &c0);
-      }
       if (!lb->populated_count) {
-        XftDrawDestroy(xd);
         Platform_DestroyFont(font);
         return;
       }
@@ -484,17 +441,26 @@ void DrawPromptUserListBox(Display *dpy,Window* win,PromptState *state) {
         lb->view_offset = lb->populated_count - visible;
       if (lb->view_offset < 0) lb->view_offset = 0;
 
-      Visual *vis = DefaultVisual(dpy, screen);
-      Colormap cmap = DefaultColormap(dpy, screen);
-
       for (int i = 0; i < visible; i++) {
         int idx = lb->view_offset + i;
         int y = y0 + i * itemH;
         bool sel = (idx == lb->selected_index);
 
-        XftColor bgc;
-        Linux_XftAllocColor(dpy, vis, cmap, rgb_to_hex(sel ? COLOR_SELECTED_TEXT : COLOR_BG), OpacityAlpha16(), &bgc);
-        XftDrawRect(xd, &bgc, 0, y, state->width, itemH);
+        if (sel) {
+            XftColor bgc;
+            Linux_XftAllocColor(dpy, vis, cmap, rgb_to_hex(COLOR_SELECTED_TEXT), OpacityAlpha16(), &bgc);
+            XftDrawRect(xd, &bgc, 0, y, state->width, itemH);
+            XftColorFree(dpy, vis, cmap, &bgc);
+        } else {
+            if (!EnableShaders || ShaderPreset == 0) {
+                XftColor bgc;
+                Linux_XftAllocColor(dpy, vis, cmap, rgb_to_hex(COLOR_BG), OpacityAlpha16(), &bgc);
+                XftDrawRect(xd, &bgc, 0, y, state->width, itemH);
+                XftColorFree(dpy, vis, cmap, &bgc);
+            } else {
+                // shader background already drawn by Linux_DrawBackground, keep transparent
+            }
+        }
 
         XftColor fcoltext, fcolalternate, fcolrainbow;
         Linux_XftAllocColor(dpy, vis, cmap, rgb_to_hex(COLOR_TEXT), 0xFFFF, &fcoltext);
@@ -516,35 +482,181 @@ void DrawPromptUserListBox(Display *dpy,Window* win,PromptState *state) {
 
         DrawListBoxItemText(dpy, xd, vis, cmap, font, num_color, body_color, plain_color, lb, idx, y, text_x);
 
-        XftColorFree(dpy, vis, cmap, &bgc);
         XftColorFree(dpy, vis, cmap, &fcoltext);
         XftColorFree(dpy, vis, cmap, &fcolalternate);
         XftColorFree(dpy, vis, cmap, &fcolrainbow);
       }
-      XftDrawDestroy(xd);
       Platform_DestroyFont(font);
 }
 
+// Wrappers keep old API (create XftDraw and delegate)
+void DrawSimplePromptUserEditControl(Display *dpy, Window *win, SimplePromptState *state) {
+    XWindowAttributes attrs;
+    Visual* vis = NULL;
+    Colormap cmap = 0;
+    if (XGetWindowAttributes(dpy, *win, &attrs)) {
+        vis = attrs.visual; cmap = attrs.colormap;
+    } else {
+        int screen = DefaultScreen(dpy);
+        vis = DefaultVisual(dpy, screen);
+        cmap = DefaultColormap(dpy, screen);
+    }
+    XftDraw* xd = XftDrawCreate(dpy, *win, vis, cmap);
+    if (!xd) return;
+    DrawSimplePromptUserEditControlOnDraw(dpy, xd, vis, cmap, state);
+    XftDrawDestroy(xd);
+}
+
+void DrawPromptUserEditControl(Display *dpy,Window* win,PromptState *state) {
+    XWindowAttributes attrs;
+    Visual* vis = NULL;
+    Colormap cmap = 0;
+    if (XGetWindowAttributes(dpy, *win, &attrs)) {
+        vis = attrs.visual; cmap = attrs.colormap;
+    } else {
+        int screen = DefaultScreen(dpy);
+        vis = DefaultVisual(dpy, screen);
+        cmap = DefaultColormap(dpy, screen);
+    }
+    XftDraw* xd = XftDrawCreate(dpy, *win, vis, cmap);
+    if (!xd) return;
+    DrawPromptUserEditControlOnDraw(dpy, xd, vis, cmap, state);
+    XftDrawDestroy(xd);
+}
+
+void DrawPromptUserListBox(Display *dpy,Window* win,PromptState *state) {
+      XWindowAttributes attrs;
+      Visual* vis = NULL;
+      Colormap cmap = 0;
+      if (XGetWindowAttributes(dpy, *win, &attrs)) {
+          vis = attrs.visual; cmap = attrs.colormap;
+      } else {
+          int screen = DefaultScreen(dpy);
+          vis = DefaultVisual(dpy, screen);
+          cmap = DefaultColormap(dpy, screen);
+      }
+      XftDraw* xd = XftDrawCreate(dpy, *win, vis, cmap);
+      if (!xd) return;
+      DrawPromptUserListBoxOnDraw(dpy, xd, vis, cmap, state);
+      XftDrawDestroy(xd);
+}
+
 bool Linux_RenderPromptUser(Display *dpy, Window *win, PromptState *state) {
-    if (RoundedCorners) {
-        Linux_DrawRoundedBackground(dpy, *win, state->width, state->height, rgb_to_hex(COLOR_BG), OpacityAlpha16());
+    int w = state->width;
+    int h = state->height;
+    if (w <= 0 || h <= 0) return false;
+    XWindowAttributes attrs;
+    if (!XGetWindowAttributes(dpy, *win, &attrs)) {
+        Linux_DrawBackground(dpy, *win, w, h);
+        if (FlintContext_Get()->prompt_callbacks.render != NULL) {
+          FlintContext_Get()->prompt_callbacks.render(dpy,win,state);
+        } else {
+          if (state->has_listbox) DrawPromptUserListBox(dpy,win,state);
+        }
+        DrawPromptUserEditControl(dpy, win,state);
+        XFlush(dpy);
+        return true;
+    }
+    Visual* vis = attrs.visual;
+    int depth = attrs.depth;
+    Colormap cmap = attrs.colormap;
+    Pixmap dbl = XCreatePixmap(dpy, *win, w, h, depth);
+    if (!dbl) {
+        Linux_DrawBackground(dpy, *win, w, h);
+        if (FlintContext_Get()->prompt_callbacks.render != NULL) {
+          FlintContext_Get()->prompt_callbacks.render(dpy,win,state);
+        } else {
+          if (state->has_listbox) DrawPromptUserListBox(dpy,win,state);
+        }
+        DrawPromptUserEditControl(dpy, win,state);
+        XFlush(dpy);
+        return true;
+    }
+    XftDraw* xdDbl = XftDrawCreate(dpy, dbl, vis, cmap);
+    if (!xdDbl) {
+        XFreePixmap(dpy, dbl);
+        Linux_DrawBackground(dpy, *win, w, h);
+        if (FlintContext_Get()->prompt_callbacks.render != NULL) {
+          FlintContext_Get()->prompt_callbacks.render(dpy,win,state);
+        } else {
+          if (state->has_listbox) DrawPromptUserListBox(dpy,win,state);
+        }
+        DrawPromptUserEditControl(dpy, win,state);
+        XFlush(dpy);
+        return true;
+    }
+    Linux_SetDblVisual(dpy, vis, cmap, depth);
+    Pixmap bg = Linux_GetCachedBackground(dpy, *win, w, h);
+    if (bg) {
+        GC gc = XCreateGC(dpy, dbl, 0, NULL);
+        XCopyArea(dpy, bg, dbl, gc, 0, 0, w, h, 0, 0);
+        XFreeGC(dpy, gc);
+    } else {
+        Linux_DrawBackgroundToDrawable(dpy, dbl, w, h);
     }
     if (FlintContext_Get()->prompt_callbacks.render != NULL) {
-      FlintContext_Get()->prompt_callbacks.render(dpy,win,state);
+        Window dbl_win = (Window)dbl;
+        FlintContext_Get()->prompt_callbacks.render(dpy, &dbl_win, state);
+        DrawPromptUserEditControlOnDraw(dpy, xdDbl, vis, cmap, state);
     } else {
-      if (state->has_listbox) {
-          DrawPromptUserListBox(dpy,win,state);
-      }
+        if (state->has_listbox) {
+            DrawPromptUserListBoxOnDraw(dpy, xdDbl, vis, cmap, state);
+        }
+        DrawPromptUserEditControlOnDraw(dpy, xdDbl, vis, cmap, state);
     }
-    DrawPromptUserEditControl(dpy, win,state);
+    Linux_ClearDblVisual();
+    GC gc = XCreateGC(dpy, *win, 0, NULL);
+    XCopyArea(dpy, dbl, *win, gc, 0, 0, w, h, 0, 0);
+    XFreeGC(dpy, gc);
+    XftDrawDestroy(xdDbl);
+    XFreePixmap(dpy, dbl);
     XFlush(dpy);
     return true;
 }
 bool Linux_RenderSimplePromptUser(Display *dpy, Window *win, SimplePromptState *state) {
-    if (RoundedCorners) {
-        Linux_DrawRoundedBackground(dpy, *win, state->width, state->height, rgb_to_hex(COLOR_BG), OpacityAlpha16());
+    int w = state->width;
+    int h = state->height;
+    if (w <= 0 || h <= 0) return false;
+    XWindowAttributes attrs;
+    if (!XGetWindowAttributes(dpy, *win, &attrs)) {
+        Linux_DrawBackground(dpy, *win, w, h);
+        DrawSimplePromptUserEditControl(dpy, win,state);
+        XFlush(dpy);
+        return true;
     }
-    DrawSimplePromptUserEditControl(dpy, win,state);
+    Visual* vis = attrs.visual;
+    int depth = attrs.depth;
+    Colormap cmap = attrs.colormap;
+    Pixmap dbl = XCreatePixmap(dpy, *win, w, h, depth);
+    if (!dbl) {
+        Linux_DrawBackground(dpy, *win, w, h);
+        DrawSimplePromptUserEditControl(dpy, win,state);
+        XFlush(dpy);
+        return true;
+    }
+    XftDraw* xdDbl = XftDrawCreate(dpy, dbl, vis, cmap);
+    if (!xdDbl) {
+        XFreePixmap(dpy, dbl);
+        Linux_DrawBackground(dpy, *win, w, h);
+        DrawSimplePromptUserEditControl(dpy, win,state);
+        XFlush(dpy);
+        return true;
+    }
+    Pixmap bg = Linux_GetCachedBackground(dpy, *win, w, h);
+    if (bg) {
+        GC gc = XCreateGC(dpy, dbl, 0, NULL);
+        XCopyArea(dpy, bg, dbl, gc, 0, 0, w, h, 0, 0);
+        XFreeGC(dpy, gc);
+    } else {
+        Linux_DrawBackgroundToDrawable(dpy, dbl, w, h);
+    }
+    DrawSimplePromptUserEditControlOnDraw(dpy, xdDbl, vis, cmap, state);
+    GC gc = XCreateGC(dpy, *win, 0, NULL);
+    XCopyArea(dpy, dbl, *win, gc, 0, 0, w, h, 0, 0);
+    XFreeGC(dpy, gc);
+    XftDrawDestroy(xdDbl);
+    XFreePixmap(dpy, dbl);
     XFlush(dpy);
     return true;
 }
+

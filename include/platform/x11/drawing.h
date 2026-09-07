@@ -23,6 +23,15 @@ bool CursorForward(size_t* cursor, size_t text_len);
 void Linux_FillRoundedRect(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap, unsigned long hex, unsigned short alpha16, int x, int y, int w, int h, int radius);
 void Linux_DrawRoundedBackground(Display* dpy, Window win, int w, int h, unsigned long hex, unsigned short alpha);
 bool Linux_ShouldUseRounded(void);
+void Linux_DrawBackground(Display* dpy, Window win, int w, int h);
+void Linux_DrawBackgroundToDrawable(Display* dpy, Drawable d, int w, int h);
+Pixmap Linux_GetCachedBackground(Display* dpy, Window win, int w, int h);
+void Linux_SetDblVisual(Display* dpy, Visual* vis, Colormap cmap, int depth);
+void Linux_ClearDblVisual(void);
+bool Linux_GetDrawableVisual(Display* dpy, Drawable d, Visual** visOut, Colormap* cmapOut, int* depthOut);
+Pixmap Linux_GetCachedBackground(Display* dpy, Window win, int w, int h);
+void Linux_DrawBackgroundToDrawable(Display* dpy, Drawable drw, int w, int h);
+void Linux_FreeCachedBackground(void);
 #endif
 
 #endif

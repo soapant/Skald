@@ -1,4 +1,7 @@
 #include "core/flapi.h"
+#if !defined(_WIN32)
+#include "platform/x11/drawing.h"
+#endif
 #include "core/context.h"
 
 typedef struct {
@@ -381,19 +384,21 @@ void todo_render_callback(Display *dpy, Window *win, PromptState *state) {
     int itemH = FontSize + 36; 
 
     {
-        Visual *visClear = DefaultVisual(dpy, screen);
-        Colormap cmapClear = DefaultColormap(dpy, screen);
-        unsigned long bg_hex = rgb_to_hex(COLOR_BG);
-        XRenderColor rc0 = { 
-            (bg_hex >> 16 & 0xFF) * 0x101, 
-            (bg_hex >> 8 & 0xFF) * 0x101, 
-            (bg_hex & 0xFF) * 0x101, 
-            OpacityAlpha16() 
-        };
-        XftColor c0; 
-        XftColorAllocValue(dpy, visClear, cmapClear, &rc0, &c0);
-        XftDrawRect(xd, &c0, 0, y0, state->width, state->height - y0);
-        XftColorFree(dpy, visClear, cmapClear, &c0);
+        if (!EnableShaders || ShaderPreset == 0) {
+            Visual *visClear; Colormap cmapClear;
+            if (!Linux_GetDrawableVisual(dpy, *win, &visClear, &cmapClear, NULL)) { visClear = DefaultVisual(dpy, screen); cmapClear = DefaultColormap(dpy, screen); }
+            unsigned long bg_hex = rgb_to_hex(COLOR_BG);
+            XRenderColor rc0 = { 
+                (bg_hex >> 16 & 0xFF) * 0x101, 
+                (bg_hex >> 8 & 0xFF) * 0x101, 
+                (bg_hex & 0xFF) * 0x101, 
+                OpacityAlpha16() 
+            };
+            XftColor c0; 
+            XftColorAllocValue(dpy, visClear, cmapClear, &rc0, &c0);
+            XftDrawRect(xd, &c0, 0, y0, state->width, state->height - y0);
+            XftColorFree(dpy, visClear, cmapClear, &c0);
+        }
     }
 
     if (!lb->populated_count) {
@@ -417,20 +422,31 @@ void todo_render_callback(Display *dpy, Window *win, PromptState *state) {
         lb->view_offset = lb->populated_count - visible;
     if (lb->view_offset < 0) lb->view_offset = 0;
 
-    Visual *vis = DefaultVisual(dpy, screen);
-    Colormap cmap = DefaultColormap(dpy, screen);
+    Visual *vis; Colormap cmap;
+    if (!Linux_GetDrawableVisual(dpy, *win, &vis, &cmap, NULL)) { vis = DefaultVisual(dpy, screen); cmap = DefaultColormap(dpy, screen); }
 
     for (int i = 0; i < visible; i++) {
         int idx = lb->view_offset + i;
         int y = y0 + (i * itemH);
         bool sel = (idx == lb->selected_index);
 
-        unsigned long bg = sel ? rgb_to_hex(COLOR_SELECTED_TEXT) : rgb_to_hex(COLOR_BG);
-        XRenderColor rc = { (bg >> 16 & 0xFF) * 0x101, (bg >> 8 & 0xFF) * 0x101, (bg & 0xFF) * 0x101, OpacityAlpha16() };
-        XftColor bgc; 
-        XftColorAllocValue(dpy, vis, cmap, &rc, &bgc);
-        XftDrawRect(xd, &bgc, 0, y, state->width, itemH);
-        XftColorFree(dpy, vis, cmap, &bgc);
+        if (sel) {
+            unsigned long bg = rgb_to_hex(COLOR_SELECTED_TEXT);
+            XRenderColor rc = { (bg >> 16 & 0xFF) * 0x101, (bg >> 8 & 0xFF) * 0x101, (bg & 0xFF) * 0x101, OpacityAlpha16() };
+            XftColor bgc; 
+            XftColorAllocValue(dpy, vis, cmap, &rc, &bgc);
+            XftDrawRect(xd, &bgc, 0, y, state->width, itemH);
+            XftColorFree(dpy, vis, cmap, &bgc);
+        } else {
+            if (!EnableShaders || ShaderPreset == 0) {
+                unsigned long bg = rgb_to_hex(COLOR_BG);
+                XRenderColor rc = { (bg >> 16 & 0xFF) * 0x101, (bg >> 8 & 0xFF) * 0x101, (bg & 0xFF) * 0x101, OpacityAlpha16() };
+                XftColor bgc; 
+                XftColorAllocValue(dpy, vis, cmap, &rc, &bgc);
+                XftDrawRect(xd, &bgc, 0, y, state->width, itemH);
+                XftColorFree(dpy, vis, cmap, &bgc);
+            }
+        }
 
         char text_buf[256];
         snprintf(text_buf, sizeof(text_buf), "%s", lb->populated_cache[idx]);
