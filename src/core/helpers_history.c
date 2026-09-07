@@ -79,7 +79,6 @@ const char* get_alias_for_item(const char* item) {
     if (!item) return NULL;
 
     for (size_t i = 0; i < ALIAS_ENTRY_COUNT; i++) {
-        if (strcmp(Aliases[i].feature, FlintContext_Get()->window.current_feature) == 0) continue;
         const char* expanded = Aliases[i].text;
         if (!expanded || expanded[0]=='\0') expanded = Aliases[i].text;
         if (!expanded) continue;
