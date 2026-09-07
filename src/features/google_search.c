@@ -1,42 +1,58 @@
 #include "core/flapi.h"
-#include "core/zoxide_helpers.h"
 
-const char* GoogleZoxideFilePath = "data/GoogleZoxide.txt";
-
-char** g_cached_google_queries = NULL;
-int g_cached_google_count = 0;
-
-void RebuildGoogleCache(void) {
-    ZoxideHelper_RebuildCache(GoogleZoxideFilePath, &g_cached_google_queries, &g_cached_google_count);
-}
-
+const char* GoogleHistoryFile = "data/GoogleZoxide.txt";
 
 void google_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
-    if (!lb) return;
-    ZoxideHelper_Refresh(filter, FlintContext_Get()->window.hListBox, lb, GoogleZoxideFilePath, &g_cached_google_queries, &g_cached_google_count);
+    const char* items[MAX_FILE_LINES];
+    int n = fl_load_file_list(GoogleHistoryFile, items, MAX_FILE_LINES);
+    PopulateListBox(lb, FlintContext_Get()->window.hListBox, filter, items, n, NULL);
+    fl_free_file_list(items, n);
 }
 
-
+static void edit_confirm(const char* new_text, void* user_data) {
+    EditCallbackData* data = (EditCallbackData*)user_data;
+    if (new_text && data) {
+        data->new_text = (char*)new_text;
+        EditCallback_Handle(data, google_refresh_callback);
+    }
+    free(data);
+}
+void google_edit_callback(const char* selection, ListBoxInfo* lb) {
+    int idx = lb ? lb->selected_index : -1;
+    int true_idx = (lb && idx >= 0 && idx < lb->populated_count) ? lb->matching_indices[idx] : idx;
+    WindowManager* wm = WindowManager_Get();
+    EditCallbackData* data = calloc(1, sizeof(EditCallbackData));
+    if (!data) return;
+    data->filepath = GoogleHistoryFile;
+    data->lb = lb;
+    data->selected_index = idx;
+    data->true_index = true_idx;
+    data->new_text = NULL;
+    data->restore_selection = true;
+    data->hListBox = FlintContext_Get()->window.hListBox;
+    data->hEditControl = FlintContext_Get()->window.hEditControl;
+    data->refresh_cb = google_refresh_callback;
+    Popup* popup = EditPopup_Create(wm, selection, "Edit Google", 960, 540, edit_confirm, data);
+    WindowManager_PushPopup(wm, popup);
+}
 
 bool google_enter_callback(const char* selection, ListBoxInfo* lb) {
-      ZoxideHelper_AppendNewEntry(GoogleZoxideFilePath, selection, lb, &g_cached_google_queries, &g_cached_google_count);
-      Platform_LaunchBrowserAtUrl(selection,false);
+    if (!UI_IsListBoxSelected(lb)) {
+        fl_append_to_file(GoogleHistoryFile, selection);
+    }
+    Platform_LaunchBrowserAtUrl((char*)selection, false);
     return true;
 }
 
-void google_edit_callback(const char* selection, ListBoxInfo* lb) {
-    ZoxideHelper_Edit(selection, lb, GoogleZoxideFilePath, &g_cached_google_queries, &g_cached_google_count, google_refresh_callback);
-}
-
 void TriggerGoogleSearch(void) {
-    if (!g_cached_google_queries) RebuildGoogleCache();
-    const char** list = ZoxideHelper_PrepareTriggerList(GoogleZoxideFilePath, &g_cached_google_queries, &g_cached_google_count, NULL);
-    PROMPT(.title = "🔍 Google", .items = list, .count = g_cached_google_count,
+    const char* items[MAX_FILE_LINES];
+    int n = fl_load_file_list(GoogleHistoryFile, items, MAX_FILE_LINES);
+    PROMPT(.title = "🔍 Google", .items = items, .count = n,
            .height = 920, .width = 650, .item_height = 32,
            .refresh = google_refresh_callback,
            .enter = google_enter_callback,
            .edit = google_edit_callback);
-    ZoxideHelper_CleanupTriggerList(list);
+    fl_free_file_list(items, n);
 }
 
 FLINT_FEATURE_INIT {
