@@ -2,6 +2,7 @@
 #include "core/modal.h"
 #include "core/modal.h"
 #include "config.h"
+#include "platform/x11/drawing.h"
 #include "core/platform.h"
 #include "helpers.h"
 #include "core/common_ui.h"
@@ -368,7 +369,9 @@ void DrawSimplePromptUserEditControl(Display *dpy, Window *win, SimplePromptStat
     int centerY = state->height / 2;
     int topLeftX = centerX - state->width / 2;
     int topLeftY = centerY - state->height / 2;
-    XftDrawRect(xd, &bg_color, topLeftX, topLeftY, state->width, state->height);
+    if (!RoundedCorners) {
+        XftDrawRect(xd, &bg_color, topLeftX, topLeftY, state->width, state->height);
+    }
 
     draw_wrapped_text(dpy, xd, &vim_text_color, font, g_vim_mode, 0, "LEFT", 5);
     draw_wrapped_text(dpy, xd, &text_color, font, state->window_title, 0, "RIGHT", 5);
@@ -416,7 +419,12 @@ void DrawPromptUserEditControl(Display *dpy,Window* win,PromptState *state) {
     int centerY = state->height / 2;
     int topLeftX = centerX - state->width / 2;
     int topLeftY = centerY - state->height / 2;
-    XftDrawRect(xd, &bg_color, topLeftX, topLeftY, state->width,100);
+    if (!RoundedCorners) {
+        XftDrawRect(xd, &bg_color, topLeftX, topLeftY, state->width,100);
+    } else {
+        // whole window background will be drawn rounded in Linux_RenderPromptUser,
+        // skip rectangular fill to keep top corners rounded
+    }
     draw_wrapped_text(dpy, xd, &vim_text_color, font,g_vim_mode,0,"LEFT",5);
     draw_wrapped_text(dpy, xd, &window_title_text_color,font,state->window_title,0,"RIGHT",5);
 
@@ -448,7 +456,7 @@ void DrawPromptUserListBox(Display *dpy,Window* win,PromptState *state) {
 
       int y0 = 100;
       int itemH = FontSize + 14;
-      {
+      if (!RoundedCorners) {
         Visual *visClear = DefaultVisual(dpy, screen);
         Colormap cmapClear = DefaultColormap(dpy, screen);
         XftColor c0;
@@ -518,6 +526,9 @@ void DrawPromptUserListBox(Display *dpy,Window* win,PromptState *state) {
 }
 
 bool Linux_RenderPromptUser(Display *dpy, Window *win, PromptState *state) {
+    if (RoundedCorners) {
+        Linux_DrawRoundedBackground(dpy, *win, state->width, state->height, rgb_to_hex(COLOR_BG), OpacityAlpha16());
+    }
     if (FlintContext_Get()->prompt_callbacks.render != NULL) {
       FlintContext_Get()->prompt_callbacks.render(dpy,win,state);
     } else {
@@ -530,6 +541,9 @@ bool Linux_RenderPromptUser(Display *dpy, Window *win, PromptState *state) {
     return true;
 }
 bool Linux_RenderSimplePromptUser(Display *dpy, Window *win, SimplePromptState *state) {
+    if (RoundedCorners) {
+        Linux_DrawRoundedBackground(dpy, *win, state->width, state->height, rgb_to_hex(COLOR_BG), OpacityAlpha16());
+    }
     DrawSimplePromptUserEditControl(dpy, win,state);
     XFlush(dpy);
     return true;

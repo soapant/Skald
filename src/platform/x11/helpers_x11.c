@@ -2,17 +2,20 @@
 #include "core/modal.h"
 #include "config.h"
 #include <ctype.h>
+#include <math.h>
 #if !defined(_WIN32)
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
 #include <X11/Xft/Xft.h>
+#include <X11/extensions/shape.h>
 #include <unistd.h>
 #endif
 #include "helpers.h"
 #include "core/timer.h"
 #include "core/common_ui.h"
+#include "platform/x11/drawing.h"
 
 #if !defined(_WIN32)
 static int xft_width(Display* dpy, XftFont* xf, const char* text, int len) {
@@ -286,6 +289,10 @@ Window Linux_CreateWindowEx(Display* dpy, int x, int y, int w, int h, unsigned l
     return Linux_CreateWindowExOR(dpy, x, y, w, h, bg_color, res_name, res_class, event_mask, false);
 }
 
+bool Linux_ShouldUseRounded(void) { return RoundedCorners; }
+
+static void Linux_ApplyShapeRounded(Display* dpy, Window win, int w, int h, int radius);
+
 Window Linux_CreateWindowExOR(Display* dpy, int x, int y, int w, int h, unsigned long bg_color, const char* res_name, const char* res_class, long event_mask, bool override_redirect) {
     int screen = DefaultScreen(dpy);
     XVisualInfo vinfo;
@@ -309,12 +316,13 @@ Window Linux_CreateWindowExOR(Display* dpy, int x, int y, int w, int h, unsigned
         use_argb = true;
     }
     Window win;
+    bool rounded = Linux_ShouldUseRounded() && use_argb;
     if (use_argb) {
         XSetWindowAttributes attrs = {0};
         unsigned int r = (bg_color >> 16) & 0xFF;
         unsigned int g = (bg_color >> 8) & 0xFF;
         unsigned int b = bg_color & 0xFF;
-        unsigned int a = (unsigned int)WindowOpacity;
+        unsigned int a = rounded ? 0 : (unsigned int)WindowOpacity;
         attrs.background_pixel = (a << 24) | (r << 16) | (g << 8) | b;
         attrs.colormap = cmap;
         attrs.border_pixel = 0;
@@ -355,7 +363,94 @@ Window Linux_CreateWindowExOR(Display* dpy, int x, int y, int w, int h, unsigned
     XSetWMHints(dpy, win, hints);
     XFree(hints);
     XSelectInput(dpy, win, event_mask);
+    if (Linux_ShouldUseRounded() && !use_argb) {
+        Linux_ApplyShapeRounded(dpy, win, w, h, CornerRadius);
+    }
     return win;
+}
+
+static void Linux_ApplyShapeRounded(Display* dpy, Window win, int w, int h, int radius) {
+    if (radius <= 0 || w <= 0 || h <= 0) return;
+    Pixmap mask = XCreatePixmap(dpy, win, w, h, 1);
+    GC gc = XCreateGC(dpy, mask, 0, NULL);
+    XSetForeground(dpy, gc, 0);
+    XFillRectangle(dpy, mask, gc, 0, 0, w, h);
+    XSetForeground(dpy, gc, 1);
+    // central rects
+    XFillRectangle(dpy, mask, gc, radius, 0, w - 2*radius, h);
+    XFillRectangle(dpy, mask, gc, 0, radius, w, h - 2*radius);
+    // corners as filled arcs (1-bit, slightly pixelated but fallback)
+    XFillArc(dpy, mask, gc, 0, 0, radius*2, radius*2, 0, 360*64);
+    XFillArc(dpy, mask, gc, w - radius*2 -1, 0, radius*2, radius*2, 0, 360*64);
+    XFillArc(dpy, mask, gc, 0, h - radius*2 -1, radius*2, radius*2, 0, 360*64);
+    XFillArc(dpy, mask, gc, w - radius*2 -1, h - radius*2 -1, radius*2, radius*2, 0, 360*64);
+    XShapeCombineMask(dpy, win, ShapeBounding, 0, 0, mask, ShapeSet);
+    XFreePixmap(dpy, mask);
+    XFreeGC(dpy, gc);
+}
+
+void Linux_FillRoundedRect(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap, unsigned long hex, unsigned short alpha16, int x, int y, int w, int h, int radius) {
+    if (!RoundedCorners || radius <= 0 || w <= 0 || h <= 0) {
+        XftColor c;
+        Linux_XftAllocColor(dpy, vis, cmap, hex, alpha16, &c);
+        XftDrawRect(xd, &c, x, y, w, h);
+        XftColorFree(dpy, vis, cmap, &c);
+        return;
+    }
+    if (radius > w/2) radius = w/2;
+    if (radius > h/2) radius = h/2;
+    XftColor solid;
+    Linux_XftAllocColor(dpy, vis, cmap, hex, alpha16, &solid);
+    // central rects (no corners)
+    XftDrawRect(xd, &solid, x + radius, y, w - 2*radius, h);
+    XftDrawRect(xd, &solid, x, y + radius, radius, h - 2*radius);
+    XftDrawRect(xd, &solid, x + w - radius, y + radius, radius, h - 2*radius);
+    // corners with anti-alias via per-pixel 1x1 with varying alpha
+    for (int corner = 0; corner < 4; corner++) {
+        int cx = (corner % 2 == 0) ? x + radius : x + w - radius - 1;
+        int cy = (corner < 2) ? y + radius : y + h - radius - 1;
+        int ox0 = (corner % 2 == 0) ? x : x + w - radius;
+        int oy0 = (corner < 2) ? y : y + h - radius;
+        for (int dy = 0; dy < radius; dy++) {
+            for (int dx = 0; dx < radius; dx++) {
+                float fx = (corner % 2 == 0) ? (radius - dx - 0.5f) : (dx + 0.5f);
+                float fy = (corner < 2) ? (radius - dy - 0.5f) : (dy + 0.5f);
+                // Actually compute distance from corner center
+                float ddx = (corner % 2 == 0) ? (radius - dx - 0.5f) : (dx + 0.5f - radius);
+                // Simpler: distance from (cx,cy)
+                float px = ox0 + dx + 0.5f;
+                float py = oy0 + dy + 0.5f;
+                float ddx2 = px - (cx + 0.5f);
+                float ddy2 = py - (cy + 0.5f);
+                float dist = sqrtf(ddx2*ddx2 + ddy2*ddy2);
+                if (dist >= radius + 0.5f) continue;
+                float coverage = 1.0f;
+                if (dist > radius - 0.5f) coverage = (radius + 0.5f - dist);
+                if (coverage <= 0) continue;
+                if (coverage >= 1.0f) {
+                    XftDrawRect(xd, &solid, ox0 + dx, oy0 + dy, 1, 1);
+                } else {
+                    unsigned short a = (unsigned short)(alpha16 * coverage + 0.5f);
+                    XftColor ac;
+                    Linux_XftAllocColor(dpy, vis, cmap, hex, a, &ac);
+                    XftDrawRect(xd, &ac, ox0 + dx, oy0 + dy, 1, 1);
+                    XftColorFree(dpy, vis, cmap, &ac);
+                }
+            }
+        }
+    }
+    XftColorFree(dpy, vis, cmap, &solid);
+}
+
+void Linux_DrawRoundedBackground(Display* dpy, Window win, int w, int h, unsigned long hex, unsigned short alpha) {
+    if (!RoundedCorners) return;
+    if (CornerRadius <= 0) return;
+    XWindowAttributes attrs;
+    if (!XGetWindowAttributes(dpy, win, &attrs)) return;
+    XftDraw* xd = XftDrawCreate(dpy, win, attrs.visual, attrs.colormap);
+    if (!xd) return;
+    Linux_FillRoundedRect(dpy, xd, attrs.visual, attrs.colormap, hex, alpha, 0, 0, w, h, CornerRadius);
+    XftDrawDestroy(xd);
 }
 
 Window Linux_CreatePromptWindow(Display* dpy, int x, int y, int w, int h) {
