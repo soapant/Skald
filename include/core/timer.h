@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <signal.h>
 #if defined(_WIN32)
 #include <windows.h>
 #else
@@ -41,6 +42,12 @@ static void TimerBufferFlush(void) {
 static void TimerBufferAppend(const char* line) {
   size_t len = strlen(line);
   if (len == 0) return;
+  // unbuffered for SIGKILL safety - direct append
+  const char* path = "time_logs.txt";
+  FILE* f = fopen(path, "a");
+  if (!f) f = fopen("/home/diggy/Programming/Projects/Flint/time_logs.txt", "a");
+  if (f) { fwrite(line, 1, len, f); fclose(f); }
+  // also keep buffer for atexit compat
   if (len >= TIMER_LOG_CAP - g_timer_buffer_len) {
     TimerBufferFlush();
     if (len >= TIMER_LOG_CAP) return;
