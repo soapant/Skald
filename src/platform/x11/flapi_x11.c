@@ -230,7 +230,7 @@ bool fl_launch_with_args_platform(const char* path, const char* args) {
             if (args && args[0]) snprintf(extra, sizeof(extra), "-e sh -c '%s %s; exec %s'", exec_line, args,UsedShell);
             else snprintf(extra, sizeof(extra), "-e sh -c '%s; exec %s'", exec_line,UsedShell);
             if(wd) { TimerEnd(timer, "flapi_x11:fl_launch_with_args_platform"); return Platform_LaunchTerminalAtPath(wd, extra); }
-            else TimerEnd(timer, "flapi_x11:fl_launch_with_args_platform"); return Platform_LaunchTerminalAtPath(Platform_GetRealHome(), extra);
+            else { TimerEnd(timer, "flapi_x11:fl_launch_with_args_platform"); return Platform_LaunchTerminalAtPath(Platform_GetRealHome(), extra); }
         }
         if (exec_line[0] && args && args[0]) {
             char combined[2048];
@@ -308,11 +308,11 @@ bool fl_launch_with_args_platform(const char* path, const char* args) {
         snprintf(runtime_env, sizeof(runtime_env), "XDG_RUNTIME_DIR=%s", runtime_dir);
         if(Platform_IsRunningAsRoot()){
             char* const argv[] = {"sudo","-u",(char*)real_user,"env",disp_env,xauth_env,runtime_env,"sh","-c",cmd,NULL};
-            pid_t pid=fork(); if(pid<0) TimerEnd(timer, "flapi_x11:fl_launch_with_args_platform"); return false;
+            pid_t pid=fork(); if(pid<0) { TimerEnd(timer, "flapi_x11:fl_launch_with_args_platform"); return false; }
             if(pid==0){ setsid(); pid_t p2=fork(); if(p2<0) _exit(1); if(p2>0) _exit(0); int fd=open("/dev/null",O_RDWR); if(fd>=0){dup2(fd,0);dup2(fd,1);dup2(fd,2); if(fd>2) close(fd);} execvp(argv[0],argv); _exit(127); }
             int st=0; waitpid(pid,&st,0); TimerEnd(timer, "flapi_x11:fl_launch_with_args_platform"); return true;
         } else {
-            pid_t pid=fork(); if(pid<0) TimerEnd(timer, "flapi_x11:fl_launch_with_args_platform"); return false;
+            pid_t pid=fork(); if(pid<0) { TimerEnd(timer, "flapi_x11:fl_launch_with_args_platform"); return false; }
             if(pid==0){
                 setsid(); pid_t pid2=fork(); if(pid2<0) _exit(1); if(pid2>0) _exit(0);
                 int fd=open("/dev/null",O_RDWR); if(fd>=0){dup2(fd,0);dup2(fd,1);dup2(fd,2); if(fd>2) close(fd);}
