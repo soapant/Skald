@@ -912,15 +912,13 @@ char* Platform_RegisterDirWatcher(const char* dir_path, void (*callback)(void)) 
 
 bool Platform_ClickAtPos(int x,int y) {
     static bool seeded=false; if (!seeded) { srand((unsigned)time(NULL) ^ (unsigned)getpid()); seeded=true; }
-    // small jitter so 200,600 twice is not identical ABS (Wayland coalesce)
-    int jx = (rand() % 5) - 2;
     int jy = (rand() % 5) - 2;
+    int jx = (rand() % 5) - 2;
     x += jx; y += jy;
     if (x < 0) x = 0; if (x > 3839) x = 3839;
     if (y < 0) y = 0; if (y > 2159) y = 2159;
     WinTimer timer = TimerStart();
     if (getenv("DEBUG_CLICK")) fprintf(stderr, "[CLICK] Platform_ClickAtPos called x=%d y=%d jitter %d,%d\n", x, y, jx, jy); else usleep(80);
-    // Try XTest first on X11/XWayland - more reliable for 100,600 eDP
     {
         Display* dpy_try = get_display();
         if (dpy_try) {

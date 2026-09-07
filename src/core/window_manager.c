@@ -165,8 +165,7 @@ Popup* WindowManager_PushPopup(WindowManager* wm, Popup* popup) {
 }
 
 void WindowManager_PopPopup(WindowManager* wm) {
-    WinTimer timer = TimerStart();
-    if (!wm || wm->popup_count == 0) { TimerEnd(timer, "window_manager:WindowManager_PopPopup"); return; }
+    if (!wm || wm->popup_count == 0) return;
     
     Popup* popup = wm->popups[--wm->popup_count];
     if (popup->vtable && popup->vtable->on_hide) {
@@ -174,24 +173,19 @@ void WindowManager_PopPopup(WindowManager* wm) {
     }
     popup->visible = false;
     popup->manager = NULL;
-    TimerEnd(timer, "window_manager:WindowManager_PopPopup");
 }
 
 Popup* WindowManager_GetTopPopup(WindowManager* wm) {
-    WinTimer timer = TimerStart();
-    if (!wm || wm->popup_count == 0) { TimerEnd(timer, "window_manager:WindowManager_GetTopPopup"); return NULL; }
-    TimerEnd(timer, "window_manager:WindowManager_GetTopPopup");
+    if (!wm || wm->popup_count == 0) return NULL;
     return wm->popups[wm->popup_count - 1];
 }
 
 void WindowManager_ProcessEvents(WindowManager* wm) {
-    WinTimer timer = TimerStart();
     #if defined(_WIN32)
     WindowManager_ProcessEventsWin32(wm);
     #else
     WindowManager_ProcessEventsLinux(wm);
     #endif
-    TimerEnd(timer, "window_manager:WindowManager_ProcessEvents");
 }
 
 char* WindowManager_ShowPrompt(WindowManager* wm, const PromptSpec* spec) {
