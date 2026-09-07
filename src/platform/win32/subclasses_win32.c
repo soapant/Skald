@@ -608,7 +608,9 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         HDC hdc = BeginPaint(hwnd, &ps);
         RECT rect;
         GetClientRect(hwnd, &rect);
-        if (ColorfullMode) {
+        if (EnableShaders && ShaderPreset != 0) {
+          Win32_DrawBackground(hdc, &rect);
+        } else if (ColorfullMode) {
           if (!s_bg_gradient_ready) {
             for (int i = 0; i < 128; i++) {
               float ft = (float)i / 128.0f;
@@ -760,9 +762,8 @@ LRESULT CALLBACK DisplayMessageProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
           RECT rect;
           GetClientRect(hwnd, &rect);
           
-          HBRUSH hBackgroundBrush = CreateSolidBrush(COLOR_BG); 
-          FillRect(hdc, &rect, hBackgroundBrush);
-          DeleteObject(hBackgroundBrush);
+          if (EnableShaders && ShaderPreset != 0) Win32_DrawBackground(hdc, &rect);
+          else { HBRUSH hBackgroundBrush = CreateSolidBrush(COLOR_BG); FillRect(hdc, &rect, hBackgroundBrush); DeleteObject(hBackgroundBrush); }
           
           SetBkMode(hdc, TRANSPARENT);
           SetTextColor(hdc, data->color ? data->color : COLOR_TEXT);
@@ -1094,9 +1095,8 @@ LRESULT CALLBACK EditPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
         HDC hdc = BeginPaint(hwnd, &ps);
         RECT rect;
         GetClientRect(hwnd, &rect);
-        HBRUSH hBgBrush = CreateSolidBrush(COLOR_BG);
-        FillRect(hdc, &rect, hBgBrush);
-        DeleteObject(hBgBrush);
+        if (EnableShaders && ShaderPreset != 0) Win32_DrawBackground(hdc, &rect);
+        else { HBRUSH hBgBrush = CreateSolidBrush(COLOR_BG); FillRect(hdc, &rect, hBgBrush); DeleteObject(hBgBrush); }
         
         if (g_vim_mode != NULL) {
           wchar_t wmode[256];
@@ -1205,9 +1205,8 @@ LRESULT CALLBACK SearchPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPar
         HDC hdc = BeginPaint(hwnd, &ps);
         RECT rect;
         GetClientRect(hwnd, &rect);
-        HBRUSH hBgBrush = CreateSolidBrush(COLOR_BG);
-        FillRect(hdc, &rect, hBgBrush);
-        DeleteObject(hBgBrush);
+        if (EnableShaders && ShaderPreset != 0) Win32_DrawBackground(hdc, &rect);
+        else { HBRUSH hBgBrush = CreateSolidBrush(COLOR_BG); FillRect(hdc, &rect, hBgBrush); DeleteObject(hBgBrush); }
         
         if (g_vim_mode != NULL) {
           wchar_t wmode[256];
