@@ -279,9 +279,10 @@ char* Platform_RunCommandAndGetOutput(char* command) {
     char* output = malloc(1);
     size_t total_size = 0;
 
-    if (output == NULL)
+    if (output == NULL) {
         TimerEnd(timer, "platform_x11:Platform_RunCommandAndGetOutput");
         return NULL;
+    }
 
     output[0] = '\0';
 
@@ -316,8 +317,8 @@ char* Platform_RunCommandAndGetOutput(char* command) {
 }
 
 char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
-    WinTimer timer = TimerStart();
-    if (command == NULL || strlen(command) == 0) { TimerEnd(timer, "platform_x11:Platform_RunTerminalCommand"); return false; }
+     WinTimer timer = TimerStart();
+     if (command == NULL || strlen(command) == 0) { TimerEnd(timer, "platform_x11:Platform_RunTerminalCommand"); return NULL; }
     
     char clean_cmd[512];
     strncpy(clean_cmd, command, sizeof(clean_cmd) - 1);
@@ -369,16 +370,17 @@ char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
                  "%s -c \"%s '%s'\"",
                  UsedShell, UsedShell, temp_file);
 
+        char* result = Platform_RunCommandAndGetOutput(extra);
         TimerEnd(timer, "platform_x11:Platform_RunTerminalCommand");
-        return Platform_RunCommandAndGetOutput(extra);
+        return result;
     }
-    TimerEnd(timer, "platform_x11:Platform_RunTerminalCommand");
 }
 
 bool Platform_LaunchFileManagerAtPath(char* path,char* args) {
      WinTimer timer = TimerStart();
-     Platform_ShellExecuteWithVerb(path, "open", true);
+     bool ret = Platform_ShellExecuteWithVerb(path, "open", true);
      TimerEnd(timer, "platform_x11:Platform_LaunchFileManagerAtPath");
+     return ret;
 }
 
 bool Platform_LaunchApp(const char* path) {
