@@ -1,4 +1,5 @@
-#include "common.h"
+#include "core/context.h"
+#include "core/modal.h"
 #include "core/modal.h"
 #include "config.h"
 #include "core/common_ui.h"
@@ -34,19 +35,19 @@ void SetModeWithListBox(EditorMode mode, ListBoxInfo* lb) {
     if (in_main && IsPopupActive(WH_NULL) && lb) {
         if (strcmp(g_vim_mode, "INSERT") == 0) {
             if (RememberLastIndex) { last_index = lb->selected_index; if (ctx) ctx->window.last_index = last_index; }
-            UI_SetSelection(lb, hListBox, -1);
+            UI_SetSelection(lb, FlintContext_Get()->window.hListBox, -1);
         } else if (strcmp(g_vim_mode, "NORMAL") == 0) {
             if (last_index < lb->total_matches && RememberLastIndex) {
-                UI_NavigateTo(lb, hListBox, last_index);
+                UI_NavigateTo(lb, FlintContext_Get()->window.hListBox, last_index);
             } else {
-                UI_SetSelection(lb, hListBox, 0);
+                UI_SetSelection(lb, FlintContext_Get()->window.hListBox, 0);
             }
         }
     }
 
 #if defined(WIN_32)
-    if (WH_TO_HWND(g_ActiveEditControl) != NULL) {
-        UpdateTextCaret(g_ActiveEditControl);
+    if (WH_TO_HWND(FlintContext_Get()->window.g_ActiveEditControl) != NULL) {
+        UpdateTextCaret(FlintContext_Get()->window.g_ActiveEditControl);
     }
 #endif
 }

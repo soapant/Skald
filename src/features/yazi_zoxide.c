@@ -11,7 +11,7 @@ void RebuildYaziCache(void) {
 }
 
 void yazi_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
-    ZoxideHelper_Refresh(filter, hListBox, lb, YaziZoxideFilePath, &cached_yazi_commands, &cached_yazi_count);
+    ZoxideHelper_Refresh(filter, FlintContext_Get()->window.hListBox, lb, YaziZoxideFilePath, &cached_yazi_commands, &cached_yazi_count);
 }
 
 bool yazi_enter_callback(const char* selection, ListBoxInfo* lb) {

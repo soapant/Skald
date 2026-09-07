@@ -8,7 +8,7 @@
 #define OUTPUT BUILD_FOLDER "/flint_win.exe"
 #define CROSS_CC "x86_64-w64-mingw32-gcc"
 
-#define CC_FLAGS "-std=gnu17", "-DCOBJMACROS", "-I", "include", "-MMD", "-MP", "-w"
+#define CC_FLAGS "-std=gnu17", "-DCOBJMACROS", "-DWINVER=0x0601", "-D_WIN32_WINNT=0x0601", "-I/usr/x86_64-w64-mingw32/include", "-I", "include", "-MMD", "-MP", "-w"
 #define LINK_FLAGS "-lcomctl32", "-lgdiplus", "-lgdi32", "-lshlwapi", "-lshell32", "-lwinmm", "-lole32", "-luuid", "-lmsimg32", "-ldbghelp", "-ldwmapi", "-lpsapi", "-lcrypt32", "-lcomdlg32", "-ladvapi32", "-ldxva2", "-luser32", "-lwinhttp"
 
 static Nob_File_Paths sources = {0};
@@ -18,6 +18,18 @@ static bool collect_source(Nob_Walk_Entry entry) {
         Nob_String_View path = nob_sv_from_cstr(entry.path);
         if (nob_sv_ends_with_cstr(path, ".c")) {
             if (nob_sv_ends_with_cstr(path, "_x11.c")) return true;
+            if (nob_sv_ends_with_cstr(path, "_sway.c")) return true;
+            if (nob_sv_ends_with_cstr(path, "_hyprland.c")) return true;
+            if (nob_sv_ends_with_cstr(path, "window_sway.c")) return true;
+            if (nob_sv_ends_with_cstr(path, "window_hyprland.c")) return true;
+            if (nob_sv_ends_with_cstr(path, "display_x11.c")) return true;
+            if (nob_sv_ends_with_cstr(path, "helpers_x11.c")) return true;
+            if (nob_sv_ends_with_cstr(path, "flapi_x11.c")) return true;
+            if (nob_sv_ends_with_cstr(path, "misc_x11.c")) return true;
+            if (nob_sv_ends_with_cstr(path, "subclasses_x11.c")) return true;
+            if (nob_sv_ends_with_cstr(path, "window_manager_x11.c")) return true;
+            if (nob_sv_ends_with_cstr(path, "ui_x11.c")) return true;
+            if (nob_sv_ends_with_cstr(path, "platform_x11.c")) return true;
             nob_da_append(&sources, strdup(path.data));
         }
     }

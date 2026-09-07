@@ -15,7 +15,7 @@ void music_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxIn
     for (size_t i = 0; i < s_music_files.count; i++) {
         items[i] = s_music_files.items[i].name;
     }
-    PopulateListBox(lb, hListBox, filter, items, (int)s_music_files.count, NULL);
+    PopulateListBox(lb, FlintContext_Get()->window.hListBox, filter, items, (int)s_music_files.count, NULL);
     free(items);
 }
 

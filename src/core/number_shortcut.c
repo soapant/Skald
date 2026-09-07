@@ -1,4 +1,5 @@
-#include "common.h"
+#include "core/context.h"
+#include "core/modal.h"
 #include "core/number_shortcut.h"
 #include "core/common_ui.h"
 #include "helpers.h"
@@ -63,11 +64,11 @@ static void CALLBACK NumberShortcutTimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEv
 
 bool HandleNumberShortcut(int wParam, WindowHandle hListBox, WindowHandle hEditControl, ListBoxInfo* lb) {
     int digit = wParam - '0';
-    int count = UI_GetCount(lb, hListBox);
+    int count = UI_GetCount(lb, FlintContext_Get()->window.hListBox);
     if (count == 0) return false;
     
-    g_num_shortcut_state.hListBox = hListBox;
-    g_num_shortcut_state.hEditControl = hEditControl;
+    g_num_shortcut_state.hListBox = FlintContext_Get()->window.hListBox;
+    g_num_shortcut_state.hEditControl = FlintContext_Get()->window.hEditControl;
     g_num_shortcut_state.lb = lb;
     
     if (g_num_shortcut_state.state == 0) {

@@ -1,6 +1,7 @@
 #ifndef UI_WIN32_H
 #define UI_WIN32_H
 
+#include "core/context.h"
 #include "core/types.h"
 
 static inline void UI_SetSelection(ListBoxInfo* lb, WindowHandle hList, int index) {
@@ -216,7 +217,7 @@ static inline void UI_SetCursorPosition(WindowHandle ctrl,int position) {
 }
 static inline void UI_GetCurrentCursorPosition(uint32_t *start, uint32_t *end) {
   if (start && end) {
-    UI_Edit_GetSel(g_ActiveEditControl, start, end);
+    UI_Edit_GetSel(FlintContext_Get()->window.g_ActiveEditControl, start, end);
   }
 }
 
@@ -251,8 +252,8 @@ static inline bool UI_ShouldSkipPopupKey(const MSG* msg) {
 }
 
 static inline void UI_Redraw(ListBoxInfo* lb, WindowHandle hListBox) {
-  if (IsPopupActive(hPopupWnd)) {
-    SetTimer(WH_TO_HWND(hPopupWnd), UI_DEBOUNCE_TIMER_ID, UI_DEBOUNCE_MS, NULL);
+  if (IsPopupActive(FlintContext_Get()->window.hPopupWnd)) {
+    SetTimer(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), UI_DEBOUNCE_TIMER_ID, UI_DEBOUNCE_MS, NULL);
     return;
   }
   UI_RedrawNow(lb, hListBox);
@@ -265,7 +266,7 @@ static inline void UI_RedrawBackground(HDC hdc,RECT* rect,BOOL is_selected) {
 }
 
 static inline void UI_GetParent(WindowHandle hwnd) {
-  SendMessageA(GetParent(WH_TO_HWND(hwnd)), WM_COMMAND, MAKEWPARAM(IDC_INPUT_BOX, EN_CHANGE), (LPARAM)WH_TO_HWND(hEditControl));
+  SendMessageA(GetParent(WH_TO_HWND(hwnd)), WM_COMMAND, MAKEWPARAM(IDC_INPUT_BOX, EN_CHANGE), (LPARAM)WH_TO_HWND(FlintContext_Get()->window.hEditControl));
 }
 
 #endif

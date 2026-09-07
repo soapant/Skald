@@ -1,4 +1,5 @@
-#include "common.h"
+#include "core/context.h"
+#include "core/modal.h"
 #include "config.h"
 #include <ctype.h>
 #include <string.h>
@@ -56,11 +57,11 @@ bool GetFromHistory(ListBoxInfo* lb) {
         if (count > 0) {
             idx = (idx - 1 + count) % count;
             
-            UI_SetText(hEditControl, HistoryList[idx]);
-            UI_SetCursorPosition(hEditControl,strlen(HistoryList[idx]));
+            UI_SetText(FlintContext_Get()->window.hEditControl, HistoryList[idx]);
+            UI_SetCursorPosition(FlintContext_Get()->window.hEditControl,strlen(HistoryList[idx]));
 
             if (!IsNormalMode()) {
-              UI_Redraw(lb, hListBox);
+              UI_Redraw(lb, FlintContext_Get()->window.hListBox);
             }
             if (!idx_ptr) {
                 idx_ptr = malloc(sizeof(int));
@@ -80,8 +81,8 @@ bool GetFromHistory(ListBoxInfo* lb) {
 void HandleCommandExecution(ListBoxInfo* lb, char* string) {
     if (!lb) return;
     int num = atoi(string);
-    UI_SetSelection(lb, hListBox, num - 1);
-    UI_LB_SetCaretIndex(hListBox, num, TRUE);
+    UI_SetSelection(lb, FlintContext_Get()->window.hListBox, num - 1);
+    UI_LB_SetCaretIndex(FlintContext_Get()->window.hListBox, num, TRUE);
 }
 
 const char* get_alias_for_item(const char* item) {

@@ -1,11 +1,13 @@
 #ifndef FLAPI_H
 #define FLAPI_H
 
+#if defined(_WIN32)
+#include <windows.h>
+#endif
 #include <stdbool.h>
 #include <stddef.h>
 #include <ctype.h>
 #include <string.h>
-#include <sys/stat.h>
 #include <stdio.h>
 #include <stdlib.h>
 #if defined(_WIN32)
@@ -13,6 +15,7 @@
 #include <shlwapi.h>
 #include <psapi.h>
 #else
+#include <sys/stat.h>
 #include <unistd.h>
 #include <sys/wait.h>
 #include <fcntl.h>
@@ -20,7 +23,8 @@
 #include <dirent.h>
 #include <pthread.h>
 #endif
-#include "common.h"
+#include "core/context.h"
+#include "core/modal.h"
 #include "helpers.h"
 #include "config.h"
 #include "core/platform.h"
@@ -94,12 +98,12 @@ char* fl_on_dir_changed(char* dir_path,void(callback)(void));
     _FL_GET_MACRO(__VA_ARGS__, _FL_HOTKEY_ROUTER_5, _FL_HOTKEY_ROUTER_4, _FL_HOTKEY_ROUTER_3, _FL_HOTKEY_ROUTER_2)(__VA_ARGS__)
 
 
-#ifdef _WIN32
-#define FLINT_FEATURE_EXPORT __declspec(dllexport)
+#if defined(_WIN32)
+#define FLINT_FEATURE_EXPORT static
 #else
 #define FLINT_FEATURE_EXPORT __attribute__((visibility("default")))
 #endif
 
-#define FLINT_FEATURE_INIT FLINT_FEATURE_EXPORT void FlintFeatureInit(void)
+#define FLINT_FEATURE_INIT FLINT_FEATURE_EXPORT __attribute__((constructor)) void FlintFeatureInit(void)
 
 #endif

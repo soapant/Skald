@@ -1,4 +1,5 @@
-#include "common.h"
+#include "core/context.h"
+#include "core/modal.h"
 #include "config.h"
 #include <ctype.h>
 #include <string.h>

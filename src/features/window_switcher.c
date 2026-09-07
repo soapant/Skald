@@ -272,7 +272,7 @@ static void switcher_refresh_callback(const char* filter, WindowHandle hListBox,
     for (int i = 0; i < g_switcher_count && i < MAX_SWITCHER_WINDOWS; i++) {
         titles[i] = g_switcher_windows[i].title;
     }
-    PopulateListBox(lb, hListBox, filter, titles, g_switcher_count, switcher_match_helper);
+    PopulateListBox(lb, FlintContext_Get()->window.hListBox, filter, titles, g_switcher_count, switcher_match_helper);
 }
 
 static bool switcher_enter_callback(const char* selection, ListBoxInfo* lb) {

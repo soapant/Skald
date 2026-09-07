@@ -12,7 +12,7 @@ void RebuildExplorerCache(void) {
 
 void explorer_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
     if (!lb) return;
-    ZoxideHelper_Refresh(filter, hListBox, lb, ExplorerZoxideFilePath, &g_cached_explorer_commands, &g_cached_explorer_count);
+    ZoxideHelper_Refresh(filter, FlintContext_Get()->window.hListBox, lb, ExplorerZoxideFilePath, &g_cached_explorer_commands, &g_cached_explorer_count);
 }
 
 bool explorer_enter_callback(const char* selection, ListBoxInfo* lb) {
