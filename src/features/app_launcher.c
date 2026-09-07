@@ -74,9 +74,20 @@ void initialize_app_cache(void) {
 #else
     char* allowed[] = {"desktop", "sh","exe", "url", NULL};
 #endif
+    s_apps.count = 0;
     for (int i = 0; i < (int)ARRAY_LEN(ListOfProgramPaths); i++) {
         if (!ListOfProgramPaths[i] || ListOfProgramPaths[i][0] == '\0') continue;
         fl_get_all_files_from_dir(ListOfProgramPaths[i], allowed, &s_apps, (char**)ListOfShitToIgnore);
+    }
+    for (size_t i = 0; i < s_apps.count; i++) {
+        for (size_t j = i + 1; j < s_apps.count; ) {
+            if (fl_string_match_insensitive(s_apps.items[i].name, s_apps.items[j].name)) {
+                for (size_t k = j; k + 1 < s_apps.count; k++) s_apps.items[k] = s_apps.items[k+1];
+                s_apps.count--;
+            } else {
+                j++;
+            }
+        }
     }
     
 #if defined(_WIN32)
@@ -107,7 +118,6 @@ void initialize_app_cache(void) {
         }
     }
 #endif
-
 }
 void launch_app_by_name(const char* display_name) {
     for (size_t i = 0; i < s_apps.count; i++) {
@@ -182,7 +192,7 @@ void TriggerAppLauncher(void) {
         fl_on_dir_changed(ListOfProgramPaths[i], initialize_app_cache);
     }
 
-    PROMPT(.title = "🚀 Launcher", .items = initial_items, .count = (int)s_apps.count,
+    PROMPT(.title = "🚀 AppLauncher", .items = initial_items, .count = (int)s_apps.count,
            .height = 920, .width = 650, .item_height = 32,
            .refresh = applauncher_refresh_callback,
            .enter = applauncher_enter_callback,
