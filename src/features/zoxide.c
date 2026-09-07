@@ -147,7 +147,7 @@ static void TriggerYaziZoxide(void) {
     Zox_Cleanup(list);
 }
 
-const char* FileManagerZoxideFilePath = "data/FileManagerZoxide.txt";
+const char* FileManagerZoxideFilePath = "data/ExplorerZoxide.txt";
 static char** g_cached_FileManager_commands = NULL;
 static int g_cached_FileManager_count = 0;
 static void RebuildFileManagerCache(void) { Zox_RebuildCache(FileManagerZoxideFilePath, &g_cached_FileManager_commands, &g_cached_FileManager_count); }
