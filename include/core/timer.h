@@ -12,11 +12,12 @@
 #include "core/types.h"
 #include "config.h"
 
-#define TIMER_LOG_CAP 4096
+#define TIMER_LOG_CAP 65536
 
 static char g_timer_buffer[TIMER_LOG_CAP];
 static size_t g_timer_buffer_len = 0;
 static int g_timer_atexit_registered = 0;
+static int g_timer_file_initialized = 0;
 
 static void TimerBufferFlush(void);
 
@@ -25,11 +26,16 @@ static void TimerAtexitFlush(void) {
 }
 
 static void TimerBufferFlush(void) {
-  if (g_timer_buffer_len > 0) {
-    fwrite(g_timer_buffer, 1, g_timer_buffer_len, stdout);
-    g_timer_buffer_len = 0;
-    g_timer_buffer[0] = '\0';
+  if (g_timer_buffer_len == 0) return;
+  const char* path = "time_logs.txt";
+  FILE* f = fopen(path, "a");
+  if (!f) f = fopen("/home/diggy/Programming/Projects/Flint/time_logs.txt", "a");
+  if (f) {
+    fwrite(g_timer_buffer, 1, g_timer_buffer_len, f);
+    fclose(f);
   }
+  g_timer_buffer_len = 0;
+  g_timer_buffer[0] = '\0';
 }
 
 static void TimerBufferAppend(const char* line) {
@@ -81,8 +87,6 @@ static inline void TimerEnd(WinTimer t, const char* operation_name) {
       snprintf(line, sizeof(line), "[ TIMER] %-25s : %8.2f s\n", operation_name, elapsed_us / 1000000.0);
     }
     TimerBufferAppend(line);
-
-    TimerBufferFlush();
   }
 }
 

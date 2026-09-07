@@ -17,11 +17,13 @@
 #include "config.h"
 #include "helpers.h"
 #include "core/platform.h"
+#include "core/timer.h"
 
 
 static uid_t ProbeSessionUid(void){
+    WinTimer timer = TimerStart();
     DIR* d = opendir("/tmp/.X11-unix");
-    if (!d) return (uid_t)-1;
+    if (!d) { TimerEnd(timer, "misc_x11:ProbeSessionUid"); return (uid_t)-1; }
     struct dirent* e;
     while ((e = readdir(d)) != NULL) {
         if (e->d_name[0] != 'X') continue;
@@ -30,58 +32,66 @@ static uid_t ProbeSessionUid(void){
         struct stat st;
         if (stat(path, &st) == 0 && st.st_uid != 0) {
             closedir(d);
+            TimerEnd(timer, "misc_x11:ProbeSessionUid");
             return st.st_uid;
         }
     }
     closedir(d);
+    TimerEnd(timer, "misc_x11:ProbeSessionUid");
     return (uid_t)-1;
 }
 
 const char* Platform_GetRealUser(void){
+    WinTimer timer = TimerStart();
     static char buf[256]={0};
     static bool done=false;
-    if(done) return buf[0]?buf:"diggy";
+    if(done) { TimerEnd(timer, "misc_x11:Platform_GetRealUser"); return buf[0]?buf:"diggy"; }
     const char* u=getenv("SUDO_USER");
-    if(u && u[0] && strcmp(u,"root")!=0){ strncpy(buf,u,sizeof(buf)-1); done=true; return buf; }
+    if(u && u[0] && strcmp(u,"root")!=0){ strncpy(buf,u,sizeof(buf)-1); done=true; TimerEnd(timer, "misc_x11:Platform_GetRealUser"); return buf; }
     u=getenv("USER");
-    if(u && u[0] && strcmp(u,"root")!=0){ strncpy(buf,u,sizeof(buf)-1); done=true; return buf; }
+    if(u && u[0] && strcmp(u,"root")!=0){ strncpy(buf,u,sizeof(buf)-1); done=true; TimerEnd(timer, "misc_x11:Platform_GetRealUser"); return buf; }
     u=getenv("LOGNAME");
-    if(u && u[0] && strcmp(u,"root")!=0){ strncpy(buf,u,sizeof(buf)-1); done=true; return buf; }
+    if(u && u[0] && strcmp(u,"root")!=0){ strncpy(buf,u,sizeof(buf)-1); done=true; TimerEnd(timer, "misc_x11:Platform_GetRealUser"); return buf; }
     
     uid_t suid = ProbeSessionUid();
     if (suid != (uid_t)-1) {
         struct passwd* spw = getpwuid(suid);
-        if (spw && spw->pw_name) { strncpy(buf,spw->pw_name,sizeof(buf)-1); done=true; return buf; }
+        if (spw && spw->pw_name) { strncpy(buf,spw->pw_name,sizeof(buf)-1); done=true; TimerEnd(timer, "misc_x11:Platform_GetRealUser"); return buf; }
     }
     struct passwd* pw=getpwuid(getuid());
-    if(pw && pw->pw_name && strcmp(pw->pw_name,"root")!=0){ strncpy(buf,pw->pw_name,sizeof(buf)-1); done=true; return buf; }
-    strncpy(buf,"diggy",sizeof(buf)-1); done=true; return buf;
+    if(pw && pw->pw_name && strcmp(pw->pw_name,"root")!=0){ strncpy(buf,pw->pw_name,sizeof(buf)-1); done=true; TimerEnd(timer, "misc_x11:Platform_GetRealUser"); return buf; }
+    strncpy(buf,"diggy",sizeof(buf)-1); done=true; TimerEnd(timer, "misc_x11:Platform_GetRealUser"); return buf;
 }
 
 const char* Platform_GetRealHome(void){
+    WinTimer timer = TimerStart();
     static char buf[512]={0};
     static bool done=false;
-    if(done) return buf[0]?buf:"/home/diggy";
+    if(done) { TimerEnd(timer, "misc_x11:Platform_GetRealHome"); return buf[0]?buf:"/home/diggy"; }
     const char* u=Platform_GetRealUser();
     struct passwd* pw=getpwnam(u);
-    if(pw && pw->pw_dir){ strncpy(buf,pw->pw_dir,sizeof(buf)-1); done=true; return buf; }
+    if(pw && pw->pw_dir){ strncpy(buf,pw->pw_dir,sizeof(buf)-1); done=true; TimerEnd(timer, "misc_x11:Platform_GetRealHome"); return buf; }
     pw=getpwuid(getuid());
-    if(pw && pw->pw_dir){ strncpy(buf,pw->pw_dir,sizeof(buf)-1); done=true; return buf; }
+    if(pw && pw->pw_dir){ strncpy(buf,pw->pw_dir,sizeof(buf)-1); done=true; TimerEnd(timer, "misc_x11:Platform_GetRealHome"); return buf; }
     const char* h=getenv("HOME");
-    if(h && h[0]){ strncpy(buf,h,sizeof(buf)-1); done=true; return buf; }
-    snprintf(buf,sizeof(buf),"/home/%s",u); done=true; return buf;
+    if(h && h[0]){ strncpy(buf,h,sizeof(buf)-1); done=true; TimerEnd(timer, "misc_x11:Platform_GetRealHome"); return buf; }
+    snprintf(buf,sizeof(buf),"/home/%s",u); done=true; TimerEnd(timer, "misc_x11:Platform_GetRealHome"); return buf;
 }
 
-bool Platform_IsRunningAsRoot(void){ return getuid()==0; }
+bool Platform_IsRunningAsRoot(void){
+    WinTimer timer = TimerStart();
+    TimerEnd(timer, "misc_x11:Platform_IsRunningAsRoot"); return getuid()==0;
+}
 
 
 
 const char* Platform_GetSessionDisplay(void){
+    WinTimer timer = TimerStart();
     static char buf[64]={0};
     static bool done=false;
-    if(done) return buf[0]?buf:":0";
+    if(done) { TimerEnd(timer, "misc_x11:Platform_GetSessionDisplay"); return buf[0]?buf:":0"; }
     const char* env=getenv("DISPLAY");
-    if(env && env[0]){ snprintf(buf,sizeof(buf),"%s",env); done=true; return buf; }
+    if(env && env[0]){ snprintf(buf,sizeof(buf),"%s",env); done=true; TimerEnd(timer, "misc_x11:Platform_GetSessionDisplay"); return buf; }
     DIR* d = opendir("/tmp/.X11-unix");
     if (d) {
         struct dirent* e;
@@ -103,38 +113,44 @@ const char* Platform_GetSessionDisplay(void){
         closedir(d);
     }
     done=true;
+    TimerEnd(timer, "misc_x11:Platform_GetSessionDisplay");
     return buf[0]?buf:":0";
 }
 
 
 
 const char* Platform_GetSessionXAuthority(void){
+    WinTimer timer = TimerStart();
     static char buf[512]={0};
     static bool done=false;
-    if(done) return buf[0]?buf:"";
+    if(done) { TimerEnd(timer, "misc_x11:Platform_GetSessionXAuthority"); return buf[0]?buf:""; }
     const char* xa=getenv("XAUTHORITY");
-    if(xa && xa[0]){ snprintf(buf,sizeof(buf),"%s",xa); done=true; return buf; }
+    if(xa && xa[0]){ snprintf(buf,sizeof(buf),"%s",xa); done=true; TimerEnd(timer, "misc_x11:Platform_GetSessionXAuthority"); return buf; }
     snprintf(buf,sizeof(buf),"%s/.Xauthority",Platform_GetRealHome());
-    if(access(buf,R_OK)==0){ done=true; return buf; }
+    if(access(buf,R_OK)==0){ done=true; TimerEnd(timer, "misc_x11:Platform_GetSessionXAuthority"); return buf; }
     buf[0]='\0'; done=true;
+    TimerEnd(timer, "misc_x11:Platform_GetSessionXAuthority");
     return "";
 }
 
 
 const char* Platform_GetRuntimeDir(void){
+    WinTimer timer = TimerStart();
     static char buf[256]={0};
     static bool done=false;
-    if(done) return buf[0]?buf:"/run/user/1000";
+    if(done) { TimerEnd(timer, "misc_x11:Platform_GetRuntimeDir"); return buf[0]?buf:"/run/user/1000"; }
     const char* rt=getenv("XDG_RUNTIME_DIR");
-    if(rt && rt[0]){ snprintf(buf,sizeof(buf),"%s",rt); done=true; return buf; }
+    if(rt && rt[0]){ snprintf(buf,sizeof(buf),"%s",rt); done=true; TimerEnd(timer, "misc_x11:Platform_GetRuntimeDir"); return buf; }
     const char* u=Platform_GetRealUser();
     struct passwd* pw=getpwnam(u);
-    if(pw){ snprintf(buf,sizeof(buf),"/run/user/%d",(int)pw->pw_uid); done=true; return buf; }
+    if(pw){ snprintf(buf,sizeof(buf),"/run/user/%d",(int)pw->pw_uid); done=true; TimerEnd(timer, "misc_x11:Platform_GetRuntimeDir"); return buf; }
     snprintf(buf,sizeof(buf),"/run/user/%d",(int)getuid()); done=true;
+    TimerEnd(timer, "misc_x11:Platform_GetRuntimeDir");
     return buf[0]?buf:"/run/user/1000";
 }
 
 static bool ResolvePathToken(const char* token, char* out, size_t out_size) {
+    WinTimer timer = TimerStart();
     for (unsigned int i = 0; i < PATH_VAR_COUNT; i++) {
         if (strcmp(G_PATH_VARS[i].name, token) == 0) {
             const char* value =
@@ -143,8 +159,9 @@ static bool ResolvePathToken(const char* token, char* out, size_t out_size) {
 #else
                 G_PATH_VARS[i].linux_value;
 #endif
-            if (value == NULL || value[0] == '\0') return false;
+            if (value == NULL || value[0] == '\0') { TimerEnd(timer, "misc_x11:ResolvePathToken"); return false; }
             snprintf(out, out_size, "%s", value);
+            TimerEnd(timer, "misc_x11:ResolvePathToken");
             return true;
         }
     }
@@ -152,22 +169,26 @@ static bool ResolvePathToken(const char* token, char* out, size_t out_size) {
     const char* home = getenv("HOME");
 
     if (strcmp(token, "HOME") == 0) {
-        if (!home) return false;
+        if (!home) { TimerEnd(timer, "misc_x11:ResolvePathToken"); return false; }
         snprintf(out, out_size, "%s", home);
+        TimerEnd(timer, "misc_x11:ResolvePathToken");
         return true;
     }
     if (strcmp(token, "APPDATA") == 0) {
         const char* xdg = getenv("XDG_CONFIG_HOME");
         if (xdg && xdg[0] != '\0') {
             snprintf(out, out_size, "%s", xdg);
+            TimerEnd(timer, "misc_x11:ResolvePathToken");
             return true;
         }
-        if (!home) return false;
+        if (!home) { TimerEnd(timer, "misc_x11:ResolvePathToken"); return false; }
         snprintf(out, out_size, "%s/.config", home);
+        TimerEnd(timer, "misc_x11:ResolvePathToken");
         return true;
     }
     if (strcmp(token, "PROGRAM_FILES") == 0) {
         snprintf(out, out_size, "/usr");
+        TimerEnd(timer, "misc_x11:ResolvePathToken");
         return true;
     }
 
@@ -179,16 +200,19 @@ static bool ResolvePathToken(const char* token, char* out, size_t out_size) {
     };
     for (size_t i = 0; i < ARRAY_LEN(subdirs); i++) {
         if (strcmp(token, subdirs[i].name) == 0) {
-            if (!home) return false;
+            if (!home) { TimerEnd(timer, "misc_x11:ResolvePathToken"); return false; }
             snprintf(out, out_size, "%s/%s", home, subdirs[i].subdir);
+            TimerEnd(timer, "misc_x11:ResolvePathToken");
             return true;
         }
     }
+    TimerEnd(timer, "misc_x11:ResolvePathToken");
     return false;
 }
 
 bool Platform_ExpandPath(const char* template_path, char* out, size_t out_size) {
-    if (template_path == NULL || out_size == 0) return false;
+    WinTimer timer = TimerStart();
+    if (template_path == NULL || out_size == 0) { TimerEnd(timer, "misc_x11:Platform_ExpandPath"); return false; }
 
     size_t o = 0;
     const char* p = template_path;
@@ -212,6 +236,7 @@ bool Platform_ExpandPath(const char* template_path, char* out, size_t out_size) 
                         continue;
                     }
                     fprintf(stderr, "[PATH] '%s' is not set, ignoring: %s\n", token, template_path);
+                    TimerEnd(timer, "misc_x11:Platform_ExpandPath");
                     return false;
                 }
             }
@@ -229,85 +254,94 @@ bool Platform_ExpandPath(const char* template_path, char* out, size_t out_size) 
             out[i] = '\0';
         }
     }
+    TimerEnd(timer, "misc_x11:Platform_ExpandPath");
     return true;
 }
 
 int ConvertLinuxKeyToWindowsVK(int key_code) {
+    WinTimer timer = TimerStart();
     if (key_code >= KEY_1 && key_code <= KEY_0) {
+        TimerEnd(timer, "misc_x11:ConvertLinuxKeyToWindowsVK");
         return '1' + (key_code - KEY_1);
     }
 
     switch (key_code) {
-        case KEY_A: return 'A';
-        case KEY_B: return 'B';
-        case KEY_C: return 'C';
-        case KEY_D: return 'D';
-        case KEY_E: return 'E';
-        case KEY_F: return 'F';
-        case KEY_G: return 'G';
-        case KEY_H: return 'H';
-        case KEY_I: return 'I';
-        case KEY_J: return 'J';
-        case KEY_K: return 'K';
-        case KEY_L: return 'L';
-        case KEY_M: return 'M';
-        case KEY_N: return 'N';
-        case KEY_O: return 'O';
-        case KEY_P: return 'P';
-        case KEY_Q: return 'Q';
-        case KEY_R: return 'R';
-        case KEY_S: return 'S';
-        case KEY_T: return 'T';
-        case KEY_U: return 'U';
-        case KEY_V: return 'V';
-        case KEY_W: return 'W';
-        case KEY_X: return 'X';
-        case KEY_Y: return 'Y';
-        case KEY_Z: return 'Z';
-        case KEY_SPACE: return VK_SPACE;
-        case KEY_ENTER: return VK_RETURN;
-        case KEY_BACKSPACE: return VK_BACK;
-        case KEY_TAB: return VK_TAB;
-        case KEY_ESC: return VK_ESCAPE;
-        case KEY_LEFT: return VK_LEFT;
-        case KEY_UP: return VK_UP;
-        case KEY_RIGHT: return VK_RIGHT;
-        case KEY_DOWN: return VK_DOWN;
-        case KEY_LEFTCTRL: return VK_LCONTROL;
-        case KEY_RIGHTCTRL: return VK_RCONTROL;
-        case KEY_LEFTALT: return VK_LMENU;
-        case KEY_RIGHTALT: return VK_RMENU;
-        case KEY_LEFTSHIFT: return VK_LSHIFT;
-        case KEY_RIGHTSHIFT: return VK_RSHIFT;
-        case KEY_LEFTMETA: return VK_LWIN;
-        case KEY_RIGHTMETA: return VK_RWIN;
-        case KEY_SEMICOLON: return VK_OEM_1;
-        case KEY_SLASH: return VK_OEM_2;
-        case KEY_LEFTBRACE: return VK_OEM_4;
-        case KEY_COMMA: return VK_OEM_COMMA;
-        case KEY_DOT: return VK_OEM_PERIOD;
-        case KEY_APOSTROPHE: return VK_OEM_7;
-        default: return 0;
+        case KEY_A: TimerEnd(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return 'A';
+        case KEY_B: TimerEnd(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return 'B';
+        case KEY_C: TimerEnd(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return 'C';
+        case KEY_D: TimerEnd(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return 'D';
+        case KEY_E: TimerEnd(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return 'E';
+        case KEY_F: TimerEnd(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return 'F';
+        case KEY_G: TimerEnd(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return 'G';
+        case KEY_H: TimerEnd(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return 'H';
+        case KEY_I: TimerEnd(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return 'I';
+        case KEY_J: TimerEnd(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return 'J';
+        case KEY_K: TimerEnd(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return 'K';
+        case KEY_L: TimerEnd(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return 'L';
+        case KEY_M: TimerEnd(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return 'M';
+        case KEY_N: TimerEnd(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return 'N';
+        case KEY_O: TimerEnd(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return 'O';
+        case KEY_P: TimerEnd(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return 'P';
+        case KEY_Q: TimerEnd(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return 'Q';
+        case KEY_R: TimerEnd(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return 'R';
+        case KEY_S: TimerEnd(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return 'S';
+        case KEY_T: TimerEnd(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return 'T';
+        case KEY_U: TimerEnd(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return 'U';
+        case KEY_V: TimerEnd(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return 'V';
+        case KEY_W: TimerEnd(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return 'W';
+        case KEY_X: TimerEnd(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return 'X';
+        case KEY_Y: TimerEnd(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return 'Y';
+        case KEY_Z: TimerEnd(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return 'Z';
+        case KEY_SPACE: TimerEnd(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return VK_SPACE;
+        case KEY_ENTER: TimerEnd(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return VK_RETURN;
+        case KEY_BACKSPACE: TimerEnd(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return VK_BACK;
+        case KEY_TAB: TimerEnd(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return VK_TAB;
+        case KEY_ESC: TimerEnd(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return VK_ESCAPE;
+        case KEY_LEFT: TimerEnd(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return VK_LEFT;
+        case KEY_UP: TimerEnd(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return VK_UP;
+        case KEY_RIGHT: TimerEnd(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return VK_RIGHT;
+        case KEY_DOWN: TimerEnd(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return VK_DOWN;
+        case KEY_LEFTCTRL: TimerEnd(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return VK_LCONTROL;
+        case KEY_RIGHTCTRL: TimerEnd(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return VK_RCONTROL;
+        case KEY_LEFTALT: TimerEnd(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return VK_LMENU;
+        case KEY_RIGHTALT: TimerEnd(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return VK_RMENU;
+        case KEY_LEFTSHIFT: TimerEnd(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return VK_LSHIFT;
+        case KEY_RIGHTSHIFT: TimerEnd(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return VK_RSHIFT;
+        case KEY_LEFTMETA: TimerEnd(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return VK_LWIN;
+        case KEY_RIGHTMETA: TimerEnd(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return VK_RWIN;
+        case KEY_SEMICOLON: TimerEnd(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return VK_OEM_1;
+        case KEY_SLASH: TimerEnd(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return VK_OEM_2;
+        case KEY_LEFTBRACE: TimerEnd(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return VK_OEM_4;
+        case KEY_COMMA: TimerEnd(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return VK_OEM_COMMA;
+        case KEY_DOT: TimerEnd(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return VK_OEM_PERIOD;
+        case KEY_APOSTROPHE: TimerEnd(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return VK_OEM_7;
+        default: TimerEnd(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return 0;
     }
+    TimerEnd(timer, "misc_x11:ConvertLinuxKeyToWindowsVK");
 }
 
 char Platform_GetLastChar(MappedFile *file) {
+    WinTimer timer = TimerStart();
     char lastChar = '\0';
 
     lseek(file->fd, -1, SEEK_END);
 
     read(file->fd, &lastChar, 1);
 
+    TimerEnd(timer, "misc_x11:Platform_GetLastChar");
     return lastChar;
 }
 
 int Platform_FileAppend(MappedFile *mf, const char *text) {
+    WinTimer timer = TimerStart();
     if (mf == NULL || text == NULL) {
+        TimerEnd(timer, "misc_x11:Platform_FileAppend");
         return 0;
     }
 
     if (lseek(mf->fd, 0, SEEK_END) == -1) {
         perror("Platform_FileAppend seek failed");
+        TimerEnd(timer, "misc_x11:Platform_FileAppend");
         return 0;
     }
 
@@ -315,21 +349,26 @@ int Platform_FileAppend(MappedFile *mf, const char *text) {
     ssize_t bytesWritten = write(mf->fd, text, textLen);
     if (bytesWritten == -1 || (size_t)bytesWritten != textLen) {
         perror("Platform_FileAppend write failed");
+        TimerEnd(timer, "misc_x11:Platform_FileAppend");
         return 0;
     }
 
     struct stat sb;
     if (fstat(mf->fd, &sb) == -1) {
         perror("Platform_FileAppend fstat failed");
+        TimerEnd(timer, "misc_x11:Platform_FileAppend");
         return 0;
     }
     mf->fileSize = sb.st_size;
 
+    TimerEnd(timer, "misc_x11:Platform_FileAppend");
     return 1;
 }
 
 void Platform_FileClose(MappedFile *mf) {
+    WinTimer timer = TimerStart();
     if (mf == NULL) {
+        TimerEnd(timer, "misc_x11:Platform_FileClose");
         return;
     }
 
@@ -341,17 +380,21 @@ void Platform_FileClose(MappedFile *mf) {
     }
 
     mf->fileSize = 0;
+    TimerEnd(timer, "misc_x11:Platform_FileClose");
 }
 
 Line* Platform_FileGetLines(MappedFile *mf, size_t *outLineCount) {
+    WinTimer timer = TimerStart();
     if (!mf || mf->fileSize == 0) {
         *outLineCount = 0;
+        TimerEnd(timer, "misc_x11:Platform_FileGetLines");
         return NULL;
     }
 
     char *pBuffer = (char *)mmap(NULL, mf->fileSize, PROT_READ | PROT_WRITE, MAP_PRIVATE, mf->fd, 0);
     if (pBuffer == MAP_FAILED) {
         perror("mmap failed in FileGetLines");
+        TimerEnd(timer, "misc_x11:Platform_FileGetLines");
         return NULL;
     }
 
@@ -360,6 +403,7 @@ Line* Platform_FileGetLines(MappedFile *mf, size_t *outLineCount) {
     Line *list = (Line *)malloc(maxLines * sizeof(Line));
     if (list == NULL) {
         munmap(pBuffer, mf->fileSize);
+        TimerEnd(timer, "misc_x11:Platform_FileGetLines");
         return NULL;
     }
 
@@ -376,6 +420,7 @@ Line* Platform_FileGetLines(MappedFile *mf, size_t *outLineCount) {
                     free(list);
                     munmap(pBuffer, mf->fileSize);
                     *outLineCount = 0;
+                    TimerEnd(timer, "misc_x11:Platform_FileGetLines");
                     return NULL;
                 }
                 list = tmp;
@@ -390,6 +435,7 @@ Line* Platform_FileGetLines(MappedFile *mf, size_t *outLineCount) {
                 free(list);
                 munmap(pBuffer, mf->fileSize);
                 *outLineCount = 0;
+                TimerEnd(timer, "misc_x11:Platform_FileGetLines");
                 return NULL;
             }
             memcpy(copy, lineStart, currentLineLen);
@@ -405,27 +451,31 @@ Line* Platform_FileGetLines(MappedFile *mf, size_t *outLineCount) {
     munmap(pBuffer, mf->fileSize);
 
     *outLineCount = count;
+    TimerEnd(timer, "misc_x11:Platform_FileGetLines");
     return list;
 }
 
 char** Platform_FileGetStrings(MappedFile *mf, size_t *outLineCount, NewlineInfo **outNewlines, size_t *outNewlineCount) {
+    WinTimer timer = TimerStart();
     if (!mf || mf->fileSize == 0) {
         *outLineCount = 0;
         *outNewlines = NULL;
         *outNewlineCount = 0;
+        TimerEnd(timer, "misc_x11:Platform_FileGetStrings");
         return NULL;
     }
 
     size_t maxLines = 1000;
     size_t count = 0;
     char **stringList = (char **)malloc(maxLines * sizeof(char*));
-    if (stringList == NULL) return NULL;
+    if (stringList == NULL) { TimerEnd(timer, "misc_x11:Platform_FileGetStrings"); return NULL; }
 
     size_t maxNewlines = 2000;
     size_t newlineCount = 0;
     NewlineInfo *newlines = (NewlineInfo *)malloc(maxNewlines * sizeof(NewlineInfo));
     if (newlines == NULL) {
         free(stringList);
+        TimerEnd(timer, "misc_x11:Platform_FileGetStrings");
         return NULL;
     }
 
@@ -434,6 +484,7 @@ char** Platform_FileGetStrings(MappedFile *mf, size_t *outLineCount, NewlineInfo
         perror("mmap failed in FileGetStrings");
         free(stringList);
         free(newlines);
+        TimerEnd(timer, "misc_x11:Platform_FileGetStrings");
         return NULL;
     }
 
@@ -458,6 +509,7 @@ char** Platform_FileGetStrings(MappedFile *mf, size_t *outLineCount, NewlineInfo
                     *outLineCount = 0;
                     *outNewlines = NULL;
                     *outNewlineCount = 0;
+                    TimerEnd(timer, "misc_x11:Platform_FileGetStrings");
                     return NULL;
                 }
                 newlines = tmp;
@@ -480,6 +532,7 @@ char** Platform_FileGetStrings(MappedFile *mf, size_t *outLineCount, NewlineInfo
                     *outLineCount = 0;
                     *outNewlines = NULL;
                     *outNewlineCount = 0;
+                    TimerEnd(timer, "misc_x11:Platform_FileGetStrings");
                     return NULL;
                 }
                 newlines = tmp;
@@ -499,6 +552,7 @@ char** Platform_FileGetStrings(MappedFile *mf, size_t *outLineCount, NewlineInfo
                         *outLineCount = 0;
                         *outNewlines = NULL;
                         *outNewlineCount = 0;
+                        TimerEnd(timer, "misc_x11:Platform_FileGetStrings");
                         return NULL;
                     }
                     stringList = tmp;
@@ -512,12 +566,14 @@ char** Platform_FileGetStrings(MappedFile *mf, size_t *outLineCount, NewlineInfo
     *outLineCount = count;
     *outNewlines = newlines;
     *outNewlineCount = newlineCount;
+    TimerEnd(timer, "misc_x11:Platform_FileGetStrings");
     return stringList;
 }
 
 void Platform_CleanUpFile(MappedFile *mf, NewlineInfo *newlines, size_t newlineCount) {
+    WinTimer timer = TimerStart();
     (void)newlineCount;
-    if (!mf || !mf->pBuffer) return;
+    if (!mf || !mf->pBuffer) { TimerEnd(timer, "misc_x11:Platform_CleanUpFile"); return; }
 
     munmap(mf->pBuffer, mf->fileSize);
     mf->pBuffer = NULL;
@@ -525,29 +581,36 @@ void Platform_CleanUpFile(MappedFile *mf, NewlineInfo *newlines, size_t newlineC
     if (newlines) {
         free(newlines);
     }
+    TimerEnd(timer, "misc_x11:Platform_CleanUpFile");
 }
 
 bool Platform_StringContainsCaseInsensitive(const char* haystack, const char* needle) {
-    if (!haystack || !needle) return false;
+    WinTimer timer = TimerStart();
+    if (!haystack || !needle) { TimerEnd(timer, "misc_x11:Platform_StringContainsCaseInsensitive"); return false; }
+    TimerEnd(timer, "misc_x11:Platform_StringContainsCaseInsensitive");
     return strcasestr(haystack, needle) != NULL;
 }
 
 bool Platform_StringStartsWithCaseInsensitive(const char* str, const char* prefix) {
-    if (!str || !prefix) return false;
+    WinTimer timer = TimerStart();
+    if (!str || !prefix) { TimerEnd(timer, "misc_x11:Platform_StringStartsWithCaseInsensitive"); return false; }
     size_t plen = strlen(prefix);
-    if (plen == 0) return true;
+    if (plen == 0) { TimerEnd(timer, "misc_x11:Platform_StringStartsWithCaseInsensitive"); return true; }
+    TimerEnd(timer, "misc_x11:Platform_StringStartsWithCaseInsensitive");
     return strncasecmp(str, prefix, plen) == 0;
 }
 
 int Platform_ReplaceLineInMappedFile(MappedFile* mf, int line_index, const char* new_text) {
-    if (!mf || !new_text || mf->fd < 0) return 0;
+    WinTimer timer = TimerStart();
+    if (!mf || !new_text || mf->fd < 0) { TimerEnd(timer, "misc_x11:Platform_ReplaceLineInMappedFile"); return 0; }
 
     char* old_data = (char*)malloc(mf->fileSize + 1);
-    if (!old_data) return 0;
+    if (!old_data) { TimerEnd(timer, "misc_x11:Platform_ReplaceLineInMappedFile"); return 0; }
 
     lseek(mf->fd, 0, SEEK_SET);
     if (read(mf->fd, old_data, mf->fileSize) != (ssize_t)mf->fileSize) {
         free(old_data);
+        TimerEnd(timer, "misc_x11:Platform_ReplaceLineInMappedFile");
         return 0;
     }
     old_data[mf->fileSize] = '\0';
@@ -555,6 +618,7 @@ int Platform_ReplaceLineInMappedFile(MappedFile* mf, int line_index, const char*
     int scratch_fd = memfd_create("replace_scratch", MFD_CLOEXEC);
     if (scratch_fd == -1) {
         free(old_data);
+        TimerEnd(timer, "misc_x11:Platform_ReplaceLineInMappedFile");
         return 0;
     }
 
@@ -588,6 +652,7 @@ int Platform_ReplaceLineInMappedFile(MappedFile* mf, int line_index, const char*
     struct stat sb;
     if (fstat(scratch_fd, &sb) == -1) {
         close(scratch_fd);
+        TimerEnd(timer, "misc_x11:Platform_ReplaceLineInMappedFile");
         return 0;
     }
     size_t new_size = sb.st_size;
@@ -595,6 +660,7 @@ int Platform_ReplaceLineInMappedFile(MappedFile* mf, int line_index, const char*
     char* transfer_buf = (char*)malloc(new_size);
     if (!transfer_buf) {
         close(scratch_fd);
+        TimerEnd(timer, "misc_x11:Platform_ReplaceLineInMappedFile");
         return 0;
     }
 
@@ -608,14 +674,16 @@ int Platform_ReplaceLineInMappedFile(MappedFile* mf, int line_index, const char*
     free(transfer_buf);
 
     mf->fileSize = new_size;
+    TimerEnd(timer, "misc_x11:Platform_ReplaceLineInMappedFile");
     return 1;
 }
 
 int Platform_CollectRunningProcesses(char process_list[][128], int max_count) {
-    if (!process_list || max_count <= 0) return 0;
+    WinTimer timer = TimerStart();
+    if (!process_list || max_count <= 0) { TimerEnd(timer, "misc_x11:Platform_CollectRunningProcesses"); return 0; }
     int count = 0;
     DIR* proc = opendir("/proc");
-    if (!proc) return 0;
+    if (!proc) { TimerEnd(timer, "misc_x11:Platform_CollectRunningProcesses"); return 0; }
     struct dirent* entry;
     while ((entry = readdir(proc)) != NULL && count < max_count) {
         if (!isdigit((unsigned char)entry->d_name[0])) continue;
@@ -655,25 +723,34 @@ int Platform_CollectRunningProcesses(char process_list[][128], int max_count) {
         }
     }
     closedir(proc);
+    TimerEnd(timer, "misc_x11:Platform_CollectRunningProcesses");
     return count;
 }
 
 bool Platform_TerminateProcessByName(const char* exe_name) {
-    if (!exe_name || !*exe_name) return false;
+    printf("Killing PRocess %s \n",exe_name);
+    WinTimer timer = TimerStart();
+    if (!exe_name || !*exe_name) { TimerEnd(timer, "misc_x11:Platform_TerminateProcessByName"); return false; }
     char tmp[256];
     strncpy(tmp, exe_name, sizeof(tmp)-1);
     tmp[sizeof(tmp)-1]='\0';
     char *ext = strrchr(tmp, '.');
     if (ext && strcmp(ext, ".exe") == 0) *ext = '\0';
     char cmd[512];
-    snprintf(cmd, sizeof(cmd), "pkill -f -i \"%s\"", tmp);
+    // use normal pkill/killall without -i (interactive) and with -9, like user does manually
+    snprintf(cmd, sizeof(cmd), "pkill -9 \"%s\" 2>/dev/null; pkill -9 -f \"%s\" 2>/dev/null", tmp, tmp);
     Platform_RunTerminalCommand(cmd, false);
-    snprintf(cmd, sizeof(cmd), "killall -i \"%s\"", tmp);
+    snprintf(cmd, sizeof(cmd), "killall -9 \"%s\" 2>/dev/null; killall -9 -r \"%s\" 2>/dev/null", tmp, tmp);
     Platform_RunTerminalCommand(cmd, false);
+    // also try exact pkill without -9 as fallback
+    snprintf(cmd, sizeof(cmd), "pkill \"%s\" 2>/dev/null", tmp);
+    Platform_RunTerminalCommand(cmd, false);
+    TimerEnd(timer, "misc_x11:Platform_TerminateProcessByName");
     return true;
 }
 
 bool Platform_LaunchBrowserAtUrl(char* url,bool new_window) {
+    WinTimer timer = TimerStart();
     char command[2048];
     const char* real_user = Platform_GetRealUser();
     const char* display = getenv("DISPLAY");
@@ -695,6 +772,7 @@ bool Platform_LaunchBrowserAtUrl(char* url,bool new_window) {
                    display, xauthority, runtime_dir, UsedBrowser, url);
       }
       
+      TimerEnd(timer, "misc_x11:Platform_LaunchBrowserAtUrl");
       return system(command) == 0;
     } else {
     if (Platform_IsRunningAsRoot()) {
@@ -702,6 +780,8 @@ bool Platform_LaunchBrowserAtUrl(char* url,bool new_window) {
     } else {
         snprintf(command, sizeof(command), "DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s xdg-open \"%s\" > /dev/null 2>&1 &", display, xauthority, runtime_dir, url);
     }
+    TimerEnd(timer, "misc_x11:Platform_LaunchBrowserAtUrl");
     return system(command);
     }
+    TimerEnd(timer, "misc_x11:Platform_LaunchBrowserAtUrl");
 }
