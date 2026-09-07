@@ -72,6 +72,16 @@ bool fl_string_match_insensitive(char* needle,char* haystack);
 bool fl_launch_browser(char* url);
 bool fl_launch_browser_in_a_new_window(char* url);
 char* fl_on_dir_changed(char* dir_path,void(callback)(void));
+char* fl_adb_tap(int x,int y);
+char* fl_adb_type_text(char* text);
+char* fl_adb_get_devices();
+char* fl_adb_install(char* app_path);
+char* fl_adb_uninstall(char* app_name);
+char* fl_adb_force_close(char* app_name);
+char* fl_adb_clear_app_data(char* app_name);
+char* fl_adb_get_file(char* filepath,char* output_file_path);
+char* fl_adb_put_file(char* filepath,char* output_file_path);
+char* fl_adb_reboot();
 
 #define _FL_HOTKEY_EXPAND(hotkey, trigger, cond, whitelist, ...) \
     fl_register_hotkey_impl(hotkey, trigger, cond, whitelist, (const char*[]){__VA_ARGS__, NULL})

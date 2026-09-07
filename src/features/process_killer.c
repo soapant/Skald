@@ -53,6 +53,6 @@ void TriggerProcessKiller(void) {
 }
 
 FLINT_FEATURE_INIT {
-fl_register_hotkey("Alt+U", TriggerProcessKiller);
+    fl_register_hotkey("Alt+U", TriggerProcessKiller);
     fl_register_hotkey("Alt+Ctrl+P", bulk_kill_bkp);
 }
