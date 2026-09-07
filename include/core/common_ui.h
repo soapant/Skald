@@ -49,6 +49,7 @@ void SimpleCreateChildControls(WindowHandle hwndParent, HFONT hFont, const char*
 static inline bool IsWindowValid(WindowHandle h) {
   return WH_TO_HWND(h) != NULL && IsWindow(WH_TO_HWND(h));
 }
+void Win32_ApplyRoundedCorners(HWND hwnd, int w, int h);
 #else
 #include "core/window_manager.h"
 static inline bool IsPopupActive(WindowHandle hPopupWnd) {

@@ -11,6 +11,38 @@ HFONT CreateCustomNerdFont(int height, const char* face_name) {
   return FH_TO_HFONT(Platform_CreateFont(height, face_name));
 }
 
+void Win32_ApplyRoundedCorners(HWND hwnd, int w, int h) {
+  if (!RoundedCorners) return;
+  if (!hwnd || !IsWindow(hwnd)) return;
+  if (w <= 0 || h <= 0) {
+    RECT rc; GetWindowRect(hwnd, &rc);
+    w = rc.right - rc.left;
+    h = rc.bottom - rc.top;
+    if (w <= 0 || h <= 0) return;
+  }
+  // Try DWM (Win11) - anti-aliased by compositor
+  HMODULE dwm = LoadLibraryA("dwmapi.dll");
+  if (dwm) {
+    HRESULT (WINAPI *pDwmSetWindowAttribute)(HWND, DWORD, LPCVOID, DWORD) = (void*)GetProcAddress(dwm, "DwmSetWindowAttribute");
+    if (pDwmSetWindowAttribute) {
+      const int DWMWCP_ROUND = 2; // DWM_WINDOW_CORNER_PREFERENCE round
+      const DWORD DWMWA_WINDOW_CORNER_PREFERENCE = 33;
+      HRESULT hr = pDwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, &DWMWCP_ROUND, sizeof(DWMWCP_ROUND));
+      if (SUCCEEDED(hr)) {
+        FreeLibrary(dwm);
+        return; // DWM handled, no need for region
+      }
+    }
+    FreeLibrary(dwm);
+  }
+  // Fallback: region (1-bit but radius small, no dwm)
+  int radius = CornerRadius;
+  if (radius < 0) radius = 0;
+  if (radius > 32) radius = 32;
+  HRGN rgn = CreateRoundRectRgn(0, 0, w + 1, h + 1, radius*2, radius*2);
+  if (rgn) SetWindowRgn(hwnd, rgn, TRUE);
+}
+
 void UpdateTextCaret(WindowHandle hwndEditControl)
 {
   int caretWidth = 1;

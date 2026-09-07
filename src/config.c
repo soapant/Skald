@@ -9,6 +9,8 @@ bool AllowOtherFeatureTogglesInFeature = false;
 bool ModePersistsThroughFeatures = false;
 int  TimeOutForMessages = 1;
 bool DoTimeDebugs = false;
+bool RoundedCorners = true;
+int CornerRadius = 24;
 //right now this is doing nothing
 char* EditPopUpPos = "middle";
 int EditPopUpWidthMin = 400;

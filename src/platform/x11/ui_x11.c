@@ -32,6 +32,7 @@
 #include <X11/extensions/Xrandr.h>
 #include <X11/Xft/Xft.h>
 #include "platform/x11/display.h"
+#include "platform/x11/drawing.h"
 
 
 extern int pending_hotkey_vk;
@@ -252,6 +253,9 @@ void Platform_DisplayMessage(const char* message, int centerX, int centerY, int 
     if (prev_focus != None && prev_focus != PointerRoot && prev_focus != win) {
         XSetInputFocus(dpy, prev_focus, RevertToParent, CurrentTime);
         XFlush(dpy);
+    }
+    if (RoundedCorners) {
+        Linux_DrawRoundedBackground(dpy, win, winWidth, winHeight, bg_color, OpacityAlpha16());
     }
 
     struct pollfd pfd = { .fd = ConnectionNumber(dpy), .events = POLLIN };
