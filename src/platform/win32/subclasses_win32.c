@@ -74,7 +74,6 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
             } else {
               GetWindowTextA(hwnd, FlintContext_Get()->window.output_buffer, sizeof(FlintContext_Get()->window.output_buffer));
             }
-          SaveFeatureHistory(FlintContext_Get()->window.output_buffer);
             if (WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage) != NULL) {
               KillTimer(WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage), 999);
                 DestroyWindow(WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage));

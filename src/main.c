@@ -32,6 +32,11 @@ void OInNotificationRecieved(const char* text) {
 }
 
 int main() {
+  if (DoTimeDebugs) {
+    FILE* tf = fopen("time_logs.txt", "w");
+    if (!tf) tf = fopen("/home/diggy/Programming/Projects/Flint/time_logs.txt", "w");
+    if (tf) { fprintf(tf, "=== Flint time_logs started ===\n"); fclose(tf); }
+  }
 #if !defined(_WIN32)
   {
     int lock_fd = open("/tmp/flint.lock", O_RDWR | O_CREAT, 0666);
