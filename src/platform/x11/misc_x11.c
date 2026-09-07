@@ -585,18 +585,14 @@ void Platform_CleanUpFile(MappedFile *mf, NewlineInfo *newlines, size_t newlineC
 }
 
 bool Platform_StringContainsCaseInsensitive(const char* haystack, const char* needle) {
-    WinTimer timer = TimerStart();
-    if (!haystack || !needle) { TimerEnd(timer, "misc_x11:Platform_StringContainsCaseInsensitive"); return false; }
-    TimerEnd(timer, "misc_x11:Platform_StringContainsCaseInsensitive");
+    if (!haystack || !needle) return false;
     return strcasestr(haystack, needle) != NULL;
 }
 
 bool Platform_StringStartsWithCaseInsensitive(const char* str, const char* prefix) {
-    WinTimer timer = TimerStart();
-    if (!str || !prefix) { TimerEnd(timer, "misc_x11:Platform_StringStartsWithCaseInsensitive"); return false; }
+    if (!str || !prefix) return false;
     size_t plen = strlen(prefix);
-    if (plen == 0) { TimerEnd(timer, "misc_x11:Platform_StringStartsWithCaseInsensitive"); return true; }
-    TimerEnd(timer, "misc_x11:Platform_StringStartsWithCaseInsensitive");
+    if (plen == 0) return true;
     return strncasecmp(str, prefix, plen) == 0;
 }
 
