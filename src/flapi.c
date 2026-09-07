@@ -187,6 +187,20 @@ bool fl_launch_browser(char* url) {
   return Platform_LaunchBrowserAtUrl(url,false);
 }
 
+bool fl_click(int x,int y) {
+  return Platform_ClickAtPos(x,y);
+
+}
+bool fl_move(int x,int y) {
+
+}
+FlColor fl_get_color(int x,int y) {
+
+}
+bool fl_compare_color(FlColor color,int x,int y) {
+
+}
+
 char* fl_on_dir_changed(char* dir_path, void (*callback)(void)) {
     if (!dir_path) return NULL;
     return Platform_RegisterDirWatcher(dir_path, callback);

@@ -433,3 +433,23 @@ char* Platform_RegisterDirWatcher(const char* dir_path, void (*callback)(void)) 
     free(args);
     return NULL;
 }
+
+bool Platform_ClickAtPos(int x,int y) {
+    int screenWidth = GetSystemMetrics(SM_CXSCREEN);
+    int screenHeight = GetSystemMetrics(SM_CYSCREEN);
+
+    INPUT inputs[3] = {0};
+
+    inputs[0].type = INPUT_MOUSE;
+    inputs[0].mi.dx = (x * 65535) / screenWidth;
+    inputs[0].mi.dy = (y * 65535) / screenHeight;
+    inputs[0].mi.dwFlags = MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE;
+
+    inputs[1].type = INPUT_MOUSE;
+    inputs[1].mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
+
+    inputs[2].type = INPUT_MOUSE;
+    inputs[2].mi.dwFlags = MOUSEEVENTF_LEFTUP;
+
+    SendInput(3, inputs, sizeof(INPUT));
+}

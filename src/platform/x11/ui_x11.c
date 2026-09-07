@@ -160,7 +160,7 @@ static void replace_msg_window(MsgWindow* m) {
     TimerEnd(timer, "ui_x11:replace_msg_window");
 }
 
-static bool Linux_GetMainMonitorGeometry(Display* dpy, int* ox, int* oy, int* ow, int* oh) {
+bool Linux_GetMainMonitorGeometry(Display* dpy, int* ox, int* oy, int* ow, int* oh) {
     WinTimer timer = TimerStart();
     Window root = DefaultRootWindow(dpy);
     XRRScreenResources* res = XRRGetScreenResourcesCurrent(dpy, root);
