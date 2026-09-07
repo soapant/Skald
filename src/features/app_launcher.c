@@ -17,7 +17,6 @@ const char* ListOfShitToIgnore[] = {
   "yazi",
   "obj",
   "build",
-  NULL
 };
 
 const char* ListOfProgramPaths[] = {
@@ -62,9 +61,7 @@ const PathEntry SystemShortcuts[] = {
 };
 
 #define SYSTEM_SHORTCUT_COUNT ARRAY_LEN(SystemShortcuts)
-#ifndef MAX_APPS
 #define MAX_APPS 2048
-#endif
 
 ListOfFiles s_apps = {0};
 

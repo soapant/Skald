@@ -49,6 +49,10 @@ typedef struct {
     size_t capacity;
 } ListOfFiles;
 
+typedef struct {
+    size_t r, g, b;
+} FlColor;
+
 bool fl_copy_into_clipboard(const char* text);
 char* fl_search_file_in_dir(const char* directory, const char* search_string,char* output_path);
 bool fl_get_all_files_from_dir(const char* dir_path, char** list_of_allowed_extensions, ListOfFiles* list_of_files,char** list_of_names_to_ignore);
@@ -71,6 +75,10 @@ bool fl_terminate_process_by_name(const char* exe_name);
 bool fl_string_match_insensitive(char* needle,char* haystack);
 bool fl_launch_browser(char* url);
 bool fl_launch_browser_in_a_new_window(char* url);
+bool fl_click(int x,int y);
+bool fl_move(int x,int y);
+FlColor fl_get_color(int x,int y);
+bool fl_compare_color(FlColor color,int x,int y);
 char* fl_on_dir_changed(char* dir_path,void(callback)(void));
 char* fl_adb_tap(int x,int y);
 char* fl_adb_type_text(char* text);

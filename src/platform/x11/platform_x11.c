@@ -21,9 +21,17 @@
 #include "core/modal.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
 #include <sys/inotify.h>
 #include <pthread.h>
 #include "core/timer.h"
+#include <linux/uinput.h>
+#include <linux/input.h>
+#include <errno.h>
+#include "platform/x11/drawing.h"
+#if __has_include(<X11/extensions/XTest.h>)
+#include <X11/extensions/XTest.h>
+#endif
 
 bool Platform_LaunchTerminalAtPath(const char* working_dir, const char* extra_args){
     WinTimer timer = TimerStart();
@@ -900,5 +908,190 @@ char* Platform_RegisterDirWatcher(const char* dir_path, void (*callback)(void)) 
 
     TimerEnd(timer, "platform_x11:Platform_RegisterDirWatcher");
     return NULL;
+}
+
+bool Platform_ClickAtPos(int x,int y) {
+    static bool seeded=false; if (!seeded) { srand((unsigned)time(NULL) ^ (unsigned)getpid()); seeded=true; }
+    // small jitter so 200,600 twice is not identical ABS (Wayland coalesce)
+    int jx = (rand() % 5) - 2;
+    int jy = (rand() % 5) - 2;
+    x += jx; y += jy;
+    if (x < 0) x = 0; if (x > 3839) x = 3839;
+    if (y < 0) y = 0; if (y > 2159) y = 2159;
+    WinTimer timer = TimerStart();
+    fprintf(stderr, "[CLICK] Platform_ClickAtPos called x=%d y=%d jitter %d,%d\n", x, y, jx, jy);
+    // Try XTest first on X11/XWayland - more reliable for 100,600 eDP
+    {
+        Display* dpy_try = get_display();
+        if (dpy_try) {
+#if __has_include(<X11/extensions/XTest.h>)
+            int ev,er,ma,mi;
+            if (XQueryExtension(dpy_try, "XTEST", &ma, &ev, &er)) {
+                int cur_x=0,cur_y=0; bool have=false;
+                Window r,c; int wx,wy,rx,ry; unsigned int m;
+                if (XQueryPointer(dpy_try, DefaultRootWindow(dpy_try), &r,&c,&rx,&ry,&wx,&wy,&m)) { cur_x=rx; cur_y=ry; have=true; fprintf(stderr, "[CLICK] XTest path cur %d,%d -> %d,%d\n", cur_x,cur_y,x,y); }
+                fprintf(stderr, "[CLICK] XTest primary XWarp %d,%d\n", x,y);
+                XWarpPointer(dpy_try, None, DefaultRootWindow(dpy_try), 0,0,0,0, x,y);
+                XFlush(dpy_try);
+                usleep(50*1000);
+                XSync(dpy_try, False);
+                if (have) {
+                    Window r2,c2; int wx2,wy2,rx2,ry2; unsigned int m2;
+                    if (XQueryPointer(dpy_try, DefaultRootWindow(dpy_try), &r2,&c2,&rx2,&ry2,&wx2,&wy2,&m2)) {
+                        fprintf(stderr, "[CLICK] after XWarp pos %d,%d\n", rx2,ry2);
+                        int dist = (rx2-x)*(rx2-x)+(ry2-y)*(ry2-y);
+                        if (dist > 400) {
+                            fprintf(stderr, "[CLICK] XWarp miss %d, retry\n", dist);
+                            XWarpPointer(dpy_try, None, DefaultRootWindow(dpy_try), 0,0,0,0, x,y);
+                            XFlush(dpy_try);
+                            usleep(50*1000);
+                        }
+                    }
+                }
+                XTestFakeButtonEvent(dpy_try, 1, True, CurrentTime);
+                XFlush(dpy_try);
+                usleep(50*1000);
+                XTestFakeButtonEvent(dpy_try, 1, False, CurrentTime);
+                XFlush(dpy_try);
+                XSync(dpy_try, False);
+                fprintf(stderr, "[CLICK] XTest done primary\n");
+                // Verify XTest, then also try uinput for Wayland generic (no sway)
+                {
+                    Window r3,c3; int wx3,wy3,rx3,ry3; unsigned int m3;
+                    if (XQueryPointer(dpy_try, DefaultRootWindow(dpy_try), &r3,&c3,&rx3,&ry3,&wx3,&wy3,&m3)) {
+                        int dist = (rx3-x)*(rx3-x)+(ry3-y)*(ry3-y);
+                        fprintf(stderr, "[CLICK] after XTest pos %d,%d dist %d child=0x%lx\n", rx3,ry3,dist,(unsigned long)c3);
+                        if (c3) {
+                            XWindowAttributes attr; if (XGetWindowAttributes(dpy_try, c3, &attr)) fprintf(stderr, "[CLICK] child at %d,%d %dx%d\n", attr.x, attr.y, attr.width, attr.height);
+                            char* name=NULL; XFetchName(dpy_try, c3, &name); if (name) { fprintf(stderr, "[CLICK] child name '%s'\n", name); XFree(name); }
+                        }
+                        if (dist < 400) {
+                            fprintf(stderr, "[CLICK] XTest ok, also try uinput for Wayland\n");
+                        } else {
+                            fprintf(stderr, "[CLICK] XTest miss, trying uinput\n");
+                        }
+                    }
+                }
+                // also try generic ydotool/wtype as fallback for Wayland native without swaymsg
+                {
+                    char cmd[256];
+                    // try ydotool if available (uinput generic)
+                    snprintf(cmd, sizeof(cmd), "which ydotool >/dev/null 2>&1 && ydotool mousemove --absolute -x %d -y %d >/dev/null 2>&1 && ydotool click 0xC0 >/dev/null 2>&1 &", x,y);
+                    system(cmd);
+                    // try wtype for Wayland (not for mouse but keep)
+                    snprintf(cmd, sizeof(cmd), "which wlrctl >/dev/null 2>&1 && wlrctl pointer move %d %d >/dev/null 2>&1 && wlrctl pointer click left >/dev/null 2>&1 &", x,y);
+                    system(cmd);
+                }
+                // fallthrough to uinput for Wayland libinput generic
+            }
+#endif
+        }
+    }
+    {
+        static int ufd = -2;
+        static bool tried = false;
+        if (!tried) {
+            tried = true;
+            int fd = open("/dev/uinput", O_WRONLY | O_NONBLOCK);
+            if (fd < 0) { fprintf(stderr, "[CLICK] open /dev/uinput failed: %s\n", strerror(errno)); fd = open("/dev/input/uinput", O_WRONLY | O_NONBLOCK); if (fd < 0) fprintf(stderr, "[CLICK] open /dev/input/uinput failed: %s\n", strerror(errno)); }
+            if (fd >= 0) { fprintf(stderr, "[CLICK] uinput open fd=%d\n", fd);
+                ioctl(fd, UI_SET_EVBIT, EV_KEY); ioctl(fd, UI_SET_KEYBIT, BTN_LEFT);
+                ioctl(fd, UI_SET_EVBIT, EV_ABS); ioctl(fd, UI_SET_ABSBIT, ABS_X); ioctl(fd, UI_SET_ABSBIT, ABS_Y);
+                ioctl(fd, UI_SET_PROPBIT, INPUT_PROP_POINTER);
+                ioctl(fd, UI_SET_EVBIT, EV_SYN);
+                struct uinput_abs_setup abs_setup = {0};
+                abs_setup.code = ABS_X;
+                abs_setup.absinfo.minimum = 0; abs_setup.absinfo.maximum = 3840; abs_setup.absinfo.fuzz = 0; abs_setup.absinfo.flat = 0; abs_setup.absinfo.resolution = 1;
+                if (ioctl(fd, UI_ABS_SETUP, &abs_setup) < 0) fprintf(stderr, "[CLICK] UI_ABS_SETUP X failed %s\n", strerror(errno));
+                abs_setup.code = ABS_Y;
+                abs_setup.absinfo.minimum = 0; abs_setup.absinfo.maximum = 2160;
+                if (ioctl(fd, UI_ABS_SETUP, &abs_setup) < 0) fprintf(stderr, "[CLICK] UI_ABS_SETUP Y failed %s\n", strerror(errno));
+                struct uinput_setup usetup = {0};
+                usetup.id.bustype = BUS_USB; usetup.id.vendor = 0x1234; usetup.id.product = 0x5679;
+                snprintf(usetup.name, sizeof(usetup.name), "flint-virtual-mouse");
+                if (ioctl(fd, UI_DEV_SETUP, &usetup) == 0) {
+                    if (ioctl(fd, UI_DEV_CREATE) == 0) { usleep(100*1000); ufd = fd; }
+                    else { close(fd); ufd = -1; }
+                } else {
+                    struct uinput_user_dev udev = {0};
+                    snprintf(udev.name, sizeof(udev.name), "flint-virtual-mouse");
+                    udev.id.bustype = BUS_USB; udev.id.vendor = 0x1234; udev.id.product = 0x5679;
+                    udev.absmin[ABS_X] = 0; udev.absmax[ABS_X] = 3840; udev.absmin[ABS_Y] = 0; udev.absmax[ABS_Y] = 2160;
+                    if (write(fd, &udev, sizeof(udev)) == sizeof(udev) && ioctl(fd, UI_DEV_CREATE) == 0) { usleep(100*1000); ufd = fd; }
+                    else { close(fd); ufd = -1; }
+                }
+            } else {
+                fprintf(stderr, "[CLICK] open uinput failed both: %s (need input group)\n", strerror(errno));
+                ufd = -1;
+            }
+        } else { fprintf(stderr, "[CLICK] uinput already tried ufd=%d\n", ufd); }
+        if (ufd >= 0) {
+            int cur_x = 0, cur_y = 0;
+            Display* dpy_q = get_display();
+            bool have_cur = false;
+            if (dpy_q) {
+                Window root, child; int win_x, win_y, root_x, root_y; unsigned int mask;
+                if (XQueryPointer(dpy_q, DefaultRootWindow(dpy_q), &root, &child, &root_x, &root_y, &win_x, &win_y, &mask)) {
+                    cur_x = root_x; cur_y = root_y; have_cur = true;
+                    fprintf(stderr, "[CLICK] cur pos %d,%d -> target %d,%d delta %d,%d\n", cur_x, cur_y, x, y, x - cur_x, y - cur_y);
+                }
+            }
+            if (have_cur) {
+                fprintf(stderr, "[CLICK] uinput emit ABS %d,%d + BTN\n", x, y);
+                struct input_event e = {0};
+                struct input_event syn = {0};
+                ssize_t w;
+                gettimeofday(&e.time, NULL); e.type = EV_ABS; e.code = ABS_X; e.value = x; w=write(ufd, &e, sizeof(e)); fprintf(stderr, "[CLICK] write ABS_X %zd\n", w);
+                gettimeofday(&e.time, NULL); e.type = EV_ABS; e.code = ABS_Y; e.value = y; w=write(ufd, &e, sizeof(e)); fprintf(stderr, "[CLICK] write ABS_Y %zd\n", w);
+                gettimeofday(&syn.time, NULL); syn.type = EV_SYN; syn.code = SYN_REPORT; w=write(ufd, &syn, sizeof(syn)); fprintf(stderr, "[CLICK] write SYN %zd\n", w);
+                usleep(10*1000);
+                struct input_event btn = {0}; gettimeofday(&btn.time, NULL); btn.type = EV_KEY; btn.code = BTN_LEFT; btn.value = 1; w=write(ufd, &btn, sizeof(btn)); fprintf(stderr, "[CLICK] write BTN1 %zd\n", w);
+                gettimeofday(&syn.time, NULL); w=write(ufd, &syn, sizeof(syn)); fprintf(stderr, "[CLICK] write SYN2 %zd\n", w);
+                usleep(30*1000);
+                gettimeofday(&btn.time, NULL); btn.type = EV_KEY; btn.code = BTN_LEFT; btn.value = 0; w=write(ufd, &btn, sizeof(btn)); fprintf(stderr, "[CLICK] write BTN0 %zd\n", w);
+                gettimeofday(&syn.time, NULL); w=write(ufd, &syn, sizeof(syn)); fprintf(stderr, "[CLICK] write SYN3 %zd\n", w);
+            } else {
+                fprintf(stderr, "[CLICK] uinput emit ABS %d,%d + BTN (no cur)\n", x, y);
+                struct input_event e = {0};
+                struct input_event syn = {0};
+                gettimeofday(&e.time, NULL); e.type = EV_ABS; e.code = ABS_X; e.value = x; write(ufd, &e, sizeof(e));
+                gettimeofday(&e.time, NULL); e.type = EV_ABS; e.code = ABS_Y; e.value = y; write(ufd, &e, sizeof(e));
+                gettimeofday(&syn.time, NULL); syn.type = EV_SYN; syn.code = SYN_REPORT; write(ufd, &syn, sizeof(syn));
+                usleep(10*1000);
+                struct input_event btn = {0}; gettimeofday(&btn.time, NULL); btn.type = EV_KEY; btn.code = BTN_LEFT; btn.value = 1; write(ufd, &btn, sizeof(btn));
+                gettimeofday(&syn.time, NULL); syn.type = EV_SYN; syn.code = SYN_REPORT; write(ufd, &syn, sizeof(syn));
+                usleep(30*1000);
+                gettimeofday(&btn.time, NULL); btn.type = EV_KEY; btn.code = BTN_LEFT; btn.value = 0; write(ufd, &btn, sizeof(btn));
+                gettimeofday(&syn.time, NULL); syn.type = EV_SYN; syn.code = SYN_REPORT; write(ufd, &syn, sizeof(syn));
+            }
+            // verify if we actually moved, fallback to XTest if not
+            usleep(30*1000);
+            if (dpy_q) {
+                Window root2, child2; int wx, wy, rx2, ry2; unsigned int m2;
+                if (XQueryPointer(dpy_q, DefaultRootWindow(dpy_q), &root2, &child2, &rx2, &ry2, &wx, &wy, &m2)) {
+                    fprintf(stderr, "[CLICK] after uinput pos %d,%d target %d,%d\n", rx2, ry2, x, y);
+                    int dist = (rx2-x)*(rx2-x)+(ry2-y)*(ry2-y);
+                    if (dist < 400) { TimerEnd(timer, "platform_x11:Platform_ClickAtPos"); return true; }
+                    fprintf(stderr, "[CLICK] uinput miss, fallback to XTest\n");
+                }
+            } else { TimerEnd(timer, "platform_x11:Platform_ClickAtPos"); return true; }
+        }
+    }
+    Display* dpy = get_display();
+    fprintf(stderr, "[CLICK] get_display=%p\n", (void*)dpy);
+    if (dpy) {
+        fprintf(stderr, "[CLICK] XWarpPointer %d,%d\n", x, y);
+        XWarpPointer(dpy, None, DefaultRootWindow(dpy), 0, 0, 0, 0, x, y);
+        XFlush(dpy);
+        usleep(10*1000);
+#if __has_include(<X11/extensions/XTest.h>)
+        int ev,er,ma,mi; if (XQueryExtension(dpy, "XTEST", &ma, &ev, &er)) { fprintf(stderr, "[CLICK] XTest present, fake button\n"); XTestFakeButtonEvent(dpy, 1, True, CurrentTime); XTestFakeButtonEvent(dpy, 1, False, CurrentTime); XFlush(dpy); fprintf(stderr, "[CLICK] XTest done\n"); } else fprintf(stderr, "[CLICK] XTest not present\n");
+#endif
+        TimerEnd(timer, "platform_x11:Platform_ClickAtPos");
+        return true;
+    }
+    fprintf(stderr, "[CLICK] no dpy and no uinput, fail\n");
+    TimerEnd(timer, "platform_x11:Platform_ClickAtPos");
+    return false;
 }
 
