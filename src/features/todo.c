@@ -25,8 +25,7 @@ typedef struct {
 
 typedef struct {
     const char* open_bracket;
-    const char* close_bracket;
-    const char* tag_separator;
+    const char* close_bracket; const char* tag_separator;
     const char* tag_prefix;
     const char* alias_separator;
 } TagFormatConfig;

@@ -30,7 +30,6 @@ static void ExecuteNumberShortcut(int number, bool close_popup) {
         FlintContext* _c = FlintContext_Get();
         strncpy(_c->window.output_buffer, selected_text, sizeof(_c->window.output_buffer) - 1);
         _c->window.output_buffer[sizeof(_c->window.output_buffer) - 1] = '\0';
-        SaveFeatureHistory(_c->window.output_buffer);
         bool should_close = false;
         if (_c->prompt_callbacks.enter != NULL) {
             should_close = _c->prompt_callbacks.enter(_c->window.output_buffer, g_num_shortcut_state.lb);
