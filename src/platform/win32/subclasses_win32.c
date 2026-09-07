@@ -492,13 +492,19 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             s_num_init = true;
           }
           
-          if (ColorfullMode) {
+          if (EnableShaders && ShaderPreset != 0) {
+            Win32_DrawSelectionBackground(pdis->hDC, &pdis->rcItem, isSelected ? COLOR_SELECTED_TEXT : COLOR_BG);
+          } else if (ColorfullMode) {
             int color_index = pdis->itemID % 100;
               HBRUSH hBrush = s_colorful_brushes[color_index];
               FillRect(pdis->hDC, &pdis->rcItem, hBrush);
           } else {
-            if (!s_bg_brush) s_bg_brush = CreateSolidBrush(COLOR_BG);
-              FillRect(pdis->hDC, &pdis->rcItem, isSelected ? s_sel_brush : s_bg_brush);
+            if (isSelected) {
+              FillRect(pdis->hDC, &pdis->rcItem, s_sel_brush);
+            } else {
+              if (!s_bg_brush) s_bg_brush = CreateSolidBrush(COLOR_BG);
+              FillRect(pdis->hDC, &pdis->rcItem, s_bg_brush);
+            }
                 if (UI_IsListBoxSelected(lb)) {
                   char measureBuffer[512];
                     strncpy(measureBuffer, lb->populated_cache[pdis->itemID], sizeof(measureBuffer) - 1);
