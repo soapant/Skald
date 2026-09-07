@@ -34,6 +34,7 @@ extern void EditBufferBackspace(char* buf, size_t* cursor);
 extern bool EditBufferDeleteChar(char* buf, size_t* cursor);
 #else
 #include <windows.h>
+#include "core/timer.h"
 extern int WindowManager_RunWin32(WindowManager* wm);
 extern void WindowManager_ProcessEventsWin32(WindowManager* wm);
 extern void WindowManager_QuitWin32(WindowManager* wm);
@@ -52,16 +53,22 @@ bool g_linux_shift_held = false;
 bool g_Linux_CtrlHeld = false;
 bool g_Linux_AltHeld = false;
 bool g_Linux_ShiftHeld = false;
-void SavePerFeatureState(const char* feature, EditorMode mode, int last_index) { (void)feature; (void)mode; (void)last_index; }
+void SavePerFeatureState(const char* feature, EditorMode mode, int last_index) {
+    WinTimer timer = TimerStart();
+    (void)feature; (void)mode; (void)last_index;
+    TimerEnd(timer, "window_manager:SavePerFeatureState");
+}
 #endif
 
 WindowManager* WindowManager_Create(void) {
+    WinTimer timer = TimerStart();
     WindowManager* wm = calloc(1, sizeof(WindowManager));
-    if (!wm) return NULL;
+    if (!wm) { TimerEnd(timer, "window_manager:WindowManager_Create"); return NULL; }
     wm->popup_capacity = 8;
     wm->popups = calloc(wm->popup_capacity, sizeof(Popup*));
     if (!wm->popups) {
         free(wm);
+        TimerEnd(timer, "window_manager:WindowManager_Create");
         return NULL;
     }
     
@@ -70,17 +77,20 @@ WindowManager* WindowManager_Create(void) {
     if (!wm->display) {
         free(wm->popups);
         free(wm);
+        TimerEnd(timer, "window_manager:WindowManager_Create");
         return NULL;
     }
     #endif
     
     wm->ctx = FlintContext_Get();
     g_window_manager = wm;
+    TimerEnd(timer, "window_manager:WindowManager_Create");
     return wm;
 }
 
 void WindowManager_Destroy(WindowManager* wm) {
-    if (!wm) return;
+    WinTimer timer = TimerStart();
+    if (!wm) { TimerEnd(timer, "window_manager:WindowManager_Destroy"); return; }
     
     for (int i = 0; i < wm->popup_count; i++) {
         if (wm->popups[i] && wm->popups[i]->vtable && wm->popups[i]->vtable->destroy) {
@@ -95,39 +105,49 @@ void WindowManager_Destroy(WindowManager* wm) {
     
     if (g_window_manager == wm) g_window_manager = NULL;
     free(wm);
+    TimerEnd(timer, "window_manager:WindowManager_Destroy");
 }
 
 WindowManager* WindowManager_Get(void) {
+    WinTimer timer = TimerStart();
+    TimerEnd(timer, "window_manager:WindowManager_Get");
     return g_window_manager;
 }
 
 int WindowManager_Run(WindowManager* wm) {
-    if (!wm) return -1;
+    WinTimer timer = TimerStart();
+    if (!wm) { TimerEnd(timer, "window_manager:WindowManager_Run"); return -1; }
     
     #if defined(_WIN32)
+    TimerEnd(timer, "window_manager:WindowManager_Run");
     return WindowManager_RunWin32(wm);
     #else
+    TimerEnd(timer, "window_manager:WindowManager_Run");
     return WindowManager_RunLinux(wm);
     #endif
+    TimerEnd(timer, "window_manager:WindowManager_Run");
 }
 
 void WindowManager_Quit(WindowManager* wm) {
-    if (!wm) return;
+    WinTimer timer = TimerStart();
+    if (!wm) { TimerEnd(timer, "window_manager:WindowManager_Quit"); return; }
     
     #if defined(_WIN32)
     WindowManager_QuitWin32(wm);
     #else
     WindowManager_QuitLinux(wm);
     #endif
+    TimerEnd(timer, "window_manager:WindowManager_Quit");
 }
 
 Popup* WindowManager_PushPopup(WindowManager* wm, Popup* popup) {
-    if (!wm || !popup) return NULL;
+    WinTimer timer = TimerStart();
+    if (!wm || !popup) { TimerEnd(timer, "window_manager:WindowManager_PushPopup"); return NULL; }
     
     if (wm->popup_count >= wm->popup_capacity) {
         int new_cap = wm->popup_capacity * 2;
         Popup** new_popups = realloc(wm->popups, new_cap * sizeof(Popup*));
-        if (!new_popups) return NULL;
+        if (!new_popups) { TimerEnd(timer, "window_manager:WindowManager_PushPopup"); return NULL; }
         wm->popups = new_popups;
         wm->popup_capacity = new_cap;
     }
@@ -140,11 +160,13 @@ Popup* WindowManager_PushPopup(WindowManager* wm, Popup* popup) {
         popup->vtable->on_show(popup);
     }
     
+    TimerEnd(timer, "window_manager:WindowManager_PushPopup");
     return popup;
 }
 
 void WindowManager_PopPopup(WindowManager* wm) {
-    if (!wm || wm->popup_count == 0) return;
+    WinTimer timer = TimerStart();
+    if (!wm || wm->popup_count == 0) { TimerEnd(timer, "window_manager:WindowManager_PopPopup"); return; }
     
     Popup* popup = wm->popups[--wm->popup_count];
     if (popup->vtable && popup->vtable->on_hide) {
@@ -152,30 +174,37 @@ void WindowManager_PopPopup(WindowManager* wm) {
     }
     popup->visible = false;
     popup->manager = NULL;
+    TimerEnd(timer, "window_manager:WindowManager_PopPopup");
 }
 
 Popup* WindowManager_GetTopPopup(WindowManager* wm) {
-    if (!wm || wm->popup_count == 0) return NULL;
+    WinTimer timer = TimerStart();
+    if (!wm || wm->popup_count == 0) { TimerEnd(timer, "window_manager:WindowManager_GetTopPopup"); return NULL; }
+    TimerEnd(timer, "window_manager:WindowManager_GetTopPopup");
     return wm->popups[wm->popup_count - 1];
 }
 
 void WindowManager_ProcessEvents(WindowManager* wm) {
+    WinTimer timer = TimerStart();
     #if defined(_WIN32)
     WindowManager_ProcessEventsWin32(wm);
     #else
     WindowManager_ProcessEventsLinux(wm);
     #endif
+    TimerEnd(timer, "window_manager:WindowManager_ProcessEvents");
 }
 
 char* WindowManager_ShowPrompt(WindowManager* wm, const PromptSpec* spec) {
-    if (!wm || !spec) return NULL;
+    WinTimer timer = TimerStart();
+    if (!wm || !spec) { TimerEnd(timer, "window_manager:WindowManager_ShowPrompt"); return NULL; }
 #if defined(_WIN32)
     extern char* Platform_PromptUser(const PromptSpec* spec);
     char* res = Platform_PromptUser(spec);
+    TimerEnd(timer, "window_manager:WindowManager_ShowPrompt");
     return res;
 #else
     Popup* popup = PromptPopup_Create(wm, spec);
-    if (!popup) return NULL;
+    if (!popup) { TimerEnd(timer, "window_manager:WindowManager_ShowPrompt"); return NULL; }
     Display* dpy = wm->display;
     XEvent ev;
     while (wm->running && wm->popup_count > 0) {
@@ -194,19 +223,23 @@ char* WindowManager_ShowPrompt(WindowManager* wm, const PromptSpec* spec) {
     }
     FlintContext* _c = FlintContext_Get();
     // sync deprecated global
+    TimerEnd(timer, "window_manager:WindowManager_ShowPrompt");
     return _c->window.output_buffer[0] ? _c->window.output_buffer : NULL;
 #endif
+    TimerEnd(timer, "window_manager:WindowManager_ShowPrompt");
 }
 
 char* WindowManager_ShowSimplePrompt(WindowManager* wm, const SimplePromptSpec* spec) {
-    if (!wm || !spec) return NULL;
+    WinTimer timer = TimerStart();
+    if (!wm || !spec) { TimerEnd(timer, "window_manager:WindowManager_ShowSimplePrompt"); return NULL; }
 #if defined(_WIN32)
     extern char* Platform_SimplePromptUser(const SimplePromptSpec* spec);
     char* res = Platform_SimplePromptUser(spec);
+    TimerEnd(timer, "window_manager:WindowManager_ShowSimplePrompt");
     return res;
 #else
     Popup* popup = SimplePromptPopup_Create(wm, spec);
-    if (!popup) return NULL;
+    if (!popup) { TimerEnd(timer, "window_manager:WindowManager_ShowSimplePrompt"); return NULL; }
     Display* dpy = wm->display;
     XEvent ev;
     while (wm->running && wm->popup_count > 0) {
@@ -224,8 +257,10 @@ char* WindowManager_ShowSimplePrompt(WindowManager* wm, const SimplePromptSpec* 
         if (popup->vtable && popup->vtable->destroy) popup->vtable->destroy(popup);
     }
     FlintContext* _c2 = FlintContext_Get();
+    TimerEnd(timer, "window_manager:WindowManager_ShowSimplePrompt");
     return _c2->window.output_buffer[0] ? _c2->window.output_buffer : NULL;
 #endif
+    TimerEnd(timer, "window_manager:WindowManager_ShowSimplePrompt");
 }
 
 // ============ Edit Popup Implementation ============
@@ -233,6 +268,7 @@ char* WindowManager_ShowSimplePrompt(WindowManager* wm, const SimplePromptSpec* 
 typedef WMEditPopupData EditPopupDataInternal;
 
 static void EditPopup_OnShow(Popup* self) {
+    WinTimer timer = TimerStart();
     EditPopupDataInternal* data = (EditPopupDataInternal*)self;
     data->saved_mode = g_current_mode;
     SetMode(MODE_INSERT);
@@ -246,9 +282,11 @@ static void EditPopup_OnShow(Popup* self) {
     XSetInputFocus(dpy, self->handle.xid, RevertToParent, CurrentTime);
     XFlush(dpy);
     #endif
+    TimerEnd(timer, "window_manager:EditPopup_OnShow");
 }
 
 static void EditPopup_OnHide(Popup* self) {
+    WinTimer timer = TimerStart();
     EditPopupDataInternal* data = (EditPopupDataInternal*)self;
     SetMode(data->saved_mode);
     #if !defined(_WIN32)
@@ -268,19 +306,22 @@ static void EditPopup_OnHide(Popup* self) {
         }
     }
     #endif
+    TimerEnd(timer, "window_manager:EditPopup_OnHide");
 }
 
 static void EditPopup_OnKey(Popup* self, int vk_code, bool pressed, int modifiers) {
-    if (!pressed) return;
+    WinTimer timer = TimerStart();
+    if (!pressed) { TimerEnd(timer, "window_manager:EditPopup_OnKey"); return; }
     
     EditPopupDataInternal* data = (EditPopupDataInternal*)self;
     int vk_upper = (vk_code >= 'a' && vk_code <= 'z') ? vk_code - 32 : vk_code;
     bool ctrl = modifiers & HOTKEY_MOD_CTRL;
     bool shift = modifiers & HOTKEY_MOD_SHIFT;
     bool alt = modifiers & HOTKEY_MOD_ALT;
-    if (PromptController_ShouldSwallowPending(vk_upper, modifiers)) return;
+    if (PromptController_ShouldSwallowPending(vk_upper, modifiers)) { TimerEnd(timer, "window_manager:EditPopup_OnKey"); return; }
     if (PromptController_TryVimMotion(vk_upper, ctrl, shift, alt)) {
         if (FlintContext_Get()->window.selection_complete) { data->confirmed=false; WindowManager_PopPopup(self->manager); FlintContext_Get()->window.selection_complete=false; }
+        TimerEnd(timer, "window_manager:EditPopup_OnKey");
         return;
     }
     if (vk_code == VK_ESCAPE) {
@@ -291,6 +332,7 @@ static void EditPopup_OnKey(Popup* self, int vk_code, bool pressed, int modifier
             data->confirmed = false;
             WindowManager_PopPopup(self->manager);
         }
+        TimerEnd(timer, "window_manager:EditPopup_OnKey");
         return;
     }
     
@@ -300,6 +342,7 @@ static void EditPopup_OnKey(Popup* self, int vk_code, bool pressed, int modifier
             data->on_confirm(data->text, data->user_data);
         }
         WindowManager_PopPopup(self->manager);
+        TimerEnd(timer, "window_manager:EditPopup_OnKey");
         return;
     }
     
@@ -323,7 +366,7 @@ static void EditPopup_OnKey(Popup* self, int vk_code, bool pressed, int modifier
     } else if (vk_code == VK_END) {
         data->cursor = strlen(data->text);
     } else if (vk_code >= 32 && vk_code <= 126) { // Printable
-        if (!IsInsertMode()) return;
+        if (!IsInsertMode()) { TimerEnd(timer, "window_manager:EditPopup_OnKey"); return; }
         if (data->cursor < data->text_capacity - 1) {
             memmove(data->text + data->cursor + 1, data->text + data->cursor,
                     strlen(data->text) - data->cursor + 1);
@@ -335,15 +378,17 @@ static void EditPopup_OnKey(Popup* self, int vk_code, bool pressed, int modifier
     if (self->vtable && self->vtable->on_render) {
         self->vtable->on_render(self);
     }
+    TimerEnd(timer, "window_manager:EditPopup_OnKey");
 }
 
 static void EditPopup_OnRender(Popup* self) {
+    WinTimer timer = TimerStart();
     EditPopupDataInternal* data = (EditPopupDataInternal*)self;
 #if !defined(_WIN32)
     Display* dpy = get_display();
-    if (!dpy) return;
+    if (!dpy) { TimerEnd(timer, "window_manager:EditPopup_OnRender"); return; }
     XftDraw* xd = Linux_CreateXftDraw(dpy, self->handle.xid);
-    if (!xd) return;
+    if (!xd) { TimerEnd(timer, "window_manager:EditPopup_OnRender"); return; }
     FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
     XftFont* xf = FH_TO_XFT(font);
     int screen = DefaultScreen(dpy);
@@ -400,9 +445,11 @@ static void EditPopup_OnRender(Popup* self) {
     Platform_DestroyFont(font);
     XFlush(dpy);
 #endif
+    TimerEnd(timer, "window_manager:EditPopup_OnRender");
 }
 
 static void EditPopup_Destroy(Popup* self) {
+    WinTimer timer = TimerStart();
     EditPopupDataInternal* data = (EditPopupDataInternal*)self;
     free(data->text);
     free(data->title);
@@ -411,6 +458,7 @@ static void EditPopup_Destroy(Popup* self) {
     if (dpy) XDestroyWindow(dpy, self->handle.xid);
     #endif
     free(data);
+    TimerEnd(timer, "window_manager:EditPopup_Destroy");
 }
 
 static const PopupVTable g_edit_popup_vtable = {
@@ -424,8 +472,9 @@ static const PopupVTable g_edit_popup_vtable = {
 Popup* EditPopup_Create(WindowManager* wm, const char* initial_text,
                         const char* title, int x, int y,
                         EditPopupConfirmCallback on_confirm, void* user_data) {
+    WinTimer timer = TimerStart();
     EditPopupDataInternal* data = calloc(1, sizeof(EditPopupDataInternal));
-    if (!data) return NULL;
+    if (!data) { TimerEnd(timer, "window_manager:EditPopup_Create"); return NULL; }
     int h = 100;
     int w = 1000;
     
@@ -449,6 +498,7 @@ Popup* EditPopup_Create(WindowManager* wm, const char* initial_text,
     data->base.handle.xid = Linux_CreateEditPopupWindow(dpy, x, y, w, h);
     #endif
     
+    TimerEnd(timer, "window_manager:EditPopup_Create");
     return (Popup*)data;
 }
 
@@ -462,14 +512,17 @@ typedef struct {
 } MessagePopupData;
 
 static void MessagePopup_OnShow(Popup* self) {
+    WinTimer timer = TimerStart();
     #if !defined(_WIN32)
     Display* dpy = ((WindowManager*)self->manager)->display;
     XMapWindow(dpy, self->handle.xid);
     XFlush(dpy);
     #endif
+    TimerEnd(timer, "window_manager:MessagePopup_OnShow");
 }
 
 static void MessagePopup_Destroy(Popup* self) {
+    WinTimer timer = TimerStart();
     MessagePopupData* data = (MessagePopupData*)self;
     free(data->message);
     #if !defined(_WIN32)
@@ -477,6 +530,7 @@ static void MessagePopup_Destroy(Popup* self) {
     if (dpy) XDestroyWindow(dpy, self->handle.xid);
     #endif
     free(data);
+    TimerEnd(timer, "window_manager:MessagePopup_Destroy");
 }
 
 static const PopupVTable g_message_popup_vtable = {
@@ -488,8 +542,9 @@ static const PopupVTable g_message_popup_vtable = {
 };
 
 Popup* MessagePopup_Create(WindowManager* wm, const char* message, int timeout_ms) {
+    WinTimer timer = TimerStart();
     MessagePopupData* data = calloc(1, sizeof(MessagePopupData));
-    if (!data) return NULL;
+    if (!data) { TimerEnd(timer, "window_manager:MessagePopup_Create"); return NULL; }
     
     data->base.vtable = &g_message_popup_vtable;
     data->base.manager = wm;
@@ -501,6 +556,7 @@ Popup* MessagePopup_Create(WindowManager* wm, const char* message, int timeout_m
     data->base.handle.xid = Linux_CreateDisplayMessageWindow(dpy, 0, 0, 400, 100);
     #endif
     
+    TimerEnd(timer, "window_manager:MessagePopup_Create");
     return WindowManager_PushPopup(wm, (Popup*)data);
 }
 
@@ -514,6 +570,7 @@ typedef struct {
 } PromptPopupData;
 
 static void PromptPopup_OnShow(Popup* self) {
+    WinTimer timer = TimerStart();
     PromptPopupData* data = (PromptPopupData*)self;
     WindowManager* wm = (WindowManager*)self->manager;
     FlintContext* ctx = FlintContext_Get();
@@ -535,7 +592,7 @@ static void PromptPopup_OnShow(Popup* self) {
     #endif
     
     data->state = calloc(1, sizeof(PromptState));
-    if (!data->state) return;
+    if (!data->state) { TimerEnd(timer, "window_manager:PromptPopup_OnShow"); return; }
     
     data->state->items = (char**)data->spec.items;
     data->state->item_count = data->spec.count;
@@ -578,12 +635,14 @@ static void PromptPopup_OnShow(Popup* self) {
     // deprecated globals sync for external .so compatibility
     SetCurrentFeatureName(ctx2->window.current_feature);
     if (data->spec.refresh) data->spec.refresh(data->state->filter, FlintContext_Get()->window.hListBox, data->state->has_listbox ? &data->state->listbox : NULL);
+    TimerEnd(timer, "window_manager:PromptPopup_OnShow");
 }
 
 static void PromptPopup_OnKey(Popup* self, int vk_code, bool pressed, int modifiers) {
-    if (!pressed) return;
+    WinTimer timer = TimerStart();
+    if (!pressed) { TimerEnd(timer, "window_manager:PromptPopup_OnKey"); return; }
     PromptPopupData* data = (PromptPopupData*)self;
-    if (!data->state) return;
+    if (!data->state) { TimerEnd(timer, "window_manager:PromptPopup_OnKey"); return; }
     
     #if !defined(_WIN32)
     bool ctrl_pressed = modifiers & HOTKEY_MOD_CTRL;
@@ -591,10 +650,11 @@ static void PromptPopup_OnKey(Popup* self, int vk_code, bool pressed, int modifi
     bool alt_pressed = modifiers & HOTKEY_MOD_ALT;
     int vk_upper = (vk_code >= 'a' && vk_code <= 'z') ? vk_code - 32 : vk_code;
     
-    if (PromptController_ShouldSwallowPending(vk_upper, modifiers)) return;
+    if (PromptController_ShouldSwallowPending(vk_upper, modifiers)) { TimerEnd(timer, "window_manager:PromptPopup_OnKey"); return; }
     if (PromptController_TryVimMotion(vk_upper, ctrl_pressed, shift_pressed, alt_pressed)) {
         FlintContext* _c = FlintContext_Get();
         if (_c->window.selection_complete) { WindowManager_PopPopup(self->manager); _c->window.selection_complete = false; }
+        TimerEnd(timer, "window_manager:PromptPopup_OnKey");
         return;
     }
     
@@ -606,6 +666,7 @@ static void PromptPopup_OnKey(Popup* self, int vk_code, bool pressed, int modifi
             FlintContext_Get()->window.selection_complete = true;
             WindowManager_PopPopup(self->manager);
         }
+        TimerEnd(timer, "window_manager:PromptPopup_OnKey");
         return;
     }
     
@@ -617,22 +678,26 @@ static void PromptPopup_OnKey(Popup* self, int vk_code, bool pressed, int modifi
             EditBufferBackspace(data->state->filter, &data->state->cursor);
         }
         if (data->spec.refresh) data->spec.refresh(data->state->filter, FlintContext_Get()->window.hListBox, data->state->has_listbox ? &data->state->listbox : NULL);
+        TimerEnd(timer, "window_manager:PromptPopup_OnKey");
         return;
     }
     
     if (vk_code >= '0' && vk_code <= '9') {
         if (ctrl_pressed) {
             HandleNumberShortcut(vk_code, FlintContext_Get()->window.hListBox, FlintContext_Get()->window.g_ActiveEditControl, data->state->has_listbox ? &data->state->listbox : NULL);
+            TimerEnd(timer, "window_manager:PromptPopup_OnKey");
             return;
         }
     }
     
     if (vk_code == VK_RIGHT) {
         CursorForward(&data->state->cursor, strlen(data->state->filter));
+        TimerEnd(timer, "window_manager:PromptPopup_OnKey");
         return;
     }
     if (vk_code == VK_LEFT) {
         CursorBack(&data->state->cursor, strlen(data->state->filter));
+        TimerEnd(timer, "window_manager:PromptPopup_OnKey");
         return;
     }
     if (vk_code == VK_UP) {
@@ -642,6 +707,7 @@ static void PromptPopup_OnKey(Popup* self, int vk_code, bool pressed, int modifi
         } else if (data->state->has_listbox) {
             UI_NavigateUp(&data->state->listbox, FlintContext_Get()->window.hListBox);
         }
+        TimerEnd(timer, "window_manager:PromptPopup_OnKey");
         return;
     }
     if (vk_code == VK_DOWN) {
@@ -651,26 +717,31 @@ static void PromptPopup_OnKey(Popup* self, int vk_code, bool pressed, int modifi
         } else if (data->state->has_listbox) {
             UI_NavigateDown(&data->state->listbox, FlintContext_Get()->window.hListBox);
         }
+        TimerEnd(timer, "window_manager:PromptPopup_OnKey");
         return;
     }
     if (vk_code == VK_DELETE) {
         if (EditBufferDeleteChar(data->state->filter, &data->state->cursor)) {
             if (data->spec.refresh) data->spec.refresh(data->state->filter, FlintContext_Get()->window.hListBox, data->state->has_listbox ? &data->state->listbox : NULL);
         }
+        TimerEnd(timer, "window_manager:PromptPopup_OnKey");
         return;
     }
     if (vk_code == VK_HOME) {
         VimContext ctx = Vim_FromState(data->state);
         SetCursorToStartOfText(&ctx);
+        TimerEnd(timer, "window_manager:PromptPopup_OnKey");
         return;
     }
     if (vk_code == VK_END) {
         VimContext ctx = Vim_FromState(data->state);
         SetCursorToEndOfText(&ctx);
+        TimerEnd(timer, "window_manager:PromptPopup_OnKey");
         return;
     }
     if (vk_code == VK_TAB) {
         if (data->spec.tab) data->spec.tab(&data->state->listbox);
+        TimerEnd(timer, "window_manager:PromptPopup_OnKey");
         return;
     }
     if (vk_code == VK_RETURN) {
@@ -694,6 +765,7 @@ static void PromptPopup_OnKey(Popup* self, int vk_code, bool pressed, int modifi
         }
         FlintContext_Get()->window.selection_complete = should_close;
         if (should_close) WindowManager_PopPopup(self->manager);
+        TimerEnd(timer, "window_manager:PromptPopup_OnKey");
         return;
     }
     
@@ -720,9 +792,11 @@ static void PromptPopup_OnKey(Popup* self, int vk_code, bool pressed, int modifi
         WindowManager_PopPopup(self->manager);
         _c2->window.selection_complete = false;
     }
+    TimerEnd(timer, "window_manager:PromptPopup_OnKey");
 }
 
 static void PromptPopup_OnHide(Popup* self) {
+    WinTimer timer = TimerStart();
     PromptPopupData* data = (PromptPopupData*)self;
     #if !defined(_WIN32)
     Display* dpy = get_display();
@@ -747,19 +821,23 @@ static void PromptPopup_OnHide(Popup* self) {
             SavePerFeatureState(feat, g_current_mode, last_index);
         }
     }
+    TimerEnd(timer, "window_manager:PromptPopup_OnHide");
 }
 
 static void PromptPopup_OnRender(Popup* self) {
+    WinTimer timer = TimerStart();
     PromptPopupData* data = (PromptPopupData*)self;
-    if (!data->state) return;
+    if (!data->state) { TimerEnd(timer, "window_manager:PromptPopup_OnRender"); return; }
     
     #if !defined(_WIN32)
     Display* dpy = ((WindowManager*)self->manager)->display;
     Linux_RenderPromptUser(dpy, &self->handle.xid, data->state);
     #endif
+    TimerEnd(timer, "window_manager:PromptPopup_OnRender");
 }
 
 static void PromptPopup_Destroy(Popup* self) {
+    WinTimer timer = TimerStart();
     PromptPopupData* data = (PromptPopupData*)self;
     #if !defined(_WIN32)
     Display* dpy = get_display();
@@ -767,6 +845,7 @@ static void PromptPopup_Destroy(Popup* self) {
     #endif
     free(data->state);
     free(data);
+    TimerEnd(timer, "window_manager:PromptPopup_Destroy");
 }
 
 static const PopupVTable g_prompt_popup_vtable = {
@@ -778,7 +857,8 @@ static const PopupVTable g_prompt_popup_vtable = {
 };
 
 Popup* PromptPopup_Create(WindowManager* wm, const PromptSpec* spec) {
-    if (!wm || !spec) return NULL;
+    WinTimer timer = TimerStart();
+    if (!wm || !spec) { TimerEnd(timer, "window_manager:PromptPopup_Create"); return NULL; }
     
     int screen_width = 1920;
     int screen_height = 1080;
@@ -792,7 +872,7 @@ Popup* PromptPopup_Create(WindowManager* wm, const PromptSpec* spec) {
     int y = (screen_height - layout_h) / 2;
     
     PromptPopupData* data = calloc(1, sizeof(PromptPopupData));
-    if (!data) return NULL;
+    if (!data) { TimerEnd(timer, "window_manager:PromptPopup_Create"); return NULL; }
     
     data->base.vtable = &g_prompt_popup_vtable;
     data->base.manager = wm;
@@ -800,6 +880,7 @@ Popup* PromptPopup_Create(WindowManager* wm, const PromptSpec* spec) {
     data->spec = *spec;
     data->x = x; data->y = y; data->w = layout_w; data->h = layout_h;
     
+    TimerEnd(timer, "window_manager:PromptPopup_Create");
     return WindowManager_PushPopup(wm, (Popup*)data);
 }
 
@@ -813,6 +894,7 @@ typedef struct {
 } SimplePromptPopupData;
 
 static void SimplePromptPopup_OnShow(Popup* self) {
+    WinTimer timer = TimerStart();
     SimplePromptPopupData* data = (SimplePromptPopupData*)self;
     WindowManager* wm = (WindowManager*)self->manager;
     FlintContext_Get()->window.selection_complete = false;
@@ -832,7 +914,7 @@ static void SimplePromptPopup_OnShow(Popup* self) {
     #endif
     
     data->state = calloc(1, sizeof(SimplePromptState));
-    if (!data->state) return;
+    if (!data->state) { TimerEnd(timer, "window_manager:SimplePromptPopup_OnShow"); return; }
     
     data->state->display_message = (char*)data->spec.prompt;
     data->state->user_input[0] = '\0';
@@ -845,12 +927,14 @@ static void SimplePromptPopup_OnShow(Popup* self) {
     self->user_data = data->state;
     
     SetMode(MODE_INSERT);
+    TimerEnd(timer, "window_manager:SimplePromptPopup_OnShow");
 }
 
 static void SimplePromptPopup_OnKey(Popup* self, int vk_code, bool pressed, int modifiers) {
-    if (!pressed) return;
+    WinTimer timer = TimerStart();
+    if (!pressed) { TimerEnd(timer, "window_manager:SimplePromptPopup_OnKey"); return; }
     SimplePromptPopupData* data = (SimplePromptPopupData*)self;
-    if (!data->state) return;
+    if (!data->state) { TimerEnd(timer, "window_manager:SimplePromptPopup_OnKey"); return; }
     
     #if !defined(_WIN32)
     if (vk_code == VK_ESCAPE) {
@@ -861,6 +945,7 @@ static void SimplePromptPopup_OnKey(Popup* self, int vk_code, bool pressed, int 
             FlintContext_Get()->window.selection_complete = true;
             WindowManager_PopPopup(self->manager);
         }
+        TimerEnd(timer, "window_manager:SimplePromptPopup_OnKey");
         return;
     }
     if (vk_code == VK_BACK) {
@@ -871,22 +956,27 @@ static void SimplePromptPopup_OnKey(Popup* self, int vk_code, bool pressed, int 
                     n - data->state->cursor + 1);
             data->state->cursor--;
         }
+        TimerEnd(timer, "window_manager:SimplePromptPopup_OnKey");
         return;
     }
     if (vk_code == VK_LEFT) {
         if (data->state->cursor > 0) data->state->cursor--;
+        TimerEnd(timer, "window_manager:SimplePromptPopup_OnKey");
         return;
     }
     if (vk_code == VK_RIGHT) {
         if (data->state->cursor < (int)strlen(data->state->user_input)) data->state->cursor++;
+        TimerEnd(timer, "window_manager:SimplePromptPopup_OnKey");
         return;
     }
     if (vk_code == VK_HOME) {
         data->state->cursor = 0;
+        TimerEnd(timer, "window_manager:SimplePromptPopup_OnKey");
         return;
     }
     if (vk_code == VK_END) {
         data->state->cursor = strlen(data->state->user_input);
+        TimerEnd(timer, "window_manager:SimplePromptPopup_OnKey");
         return;
     }
     if (vk_code == VK_RETURN) {
@@ -895,6 +985,7 @@ static void SimplePromptPopup_OnKey(Popup* self, int vk_code, bool pressed, int 
         _c->window.output_buffer[sizeof(_c->window.output_buffer)-1]='\0';
         _c->window.selection_complete = true;
         WindowManager_PopPopup(self->manager);
+        TimerEnd(timer, "window_manager:SimplePromptPopup_OnKey");
         return;
     }
     if (vk_code >= 32 && vk_code <= 126) {
@@ -910,6 +1001,7 @@ static void SimplePromptPopup_OnKey(Popup* self, int vk_code, bool pressed, int 
                 data->state->cursor++;
             }
         }
+        TimerEnd(timer, "window_manager:SimplePromptPopup_OnKey");
         return;
     }
     {
@@ -925,9 +1017,11 @@ static void SimplePromptPopup_OnKey(Popup* self, int vk_code, bool pressed, int 
         WindowManager_PopPopup(self->manager);
         _c4->window.selection_complete = false;
     }
+    TimerEnd(timer, "window_manager:SimplePromptPopup_OnKey");
 }
 
 static void SimplePromptPopup_OnHide(Popup* self) {
+    WinTimer timer = TimerStart();
     #if !defined(_WIN32)
     Display* dpy = get_display();
     if (dpy) {
@@ -935,19 +1029,23 @@ static void SimplePromptPopup_OnHide(Popup* self) {
         XFlush(dpy);
     }
     #endif
+    TimerEnd(timer, "window_manager:SimplePromptPopup_OnHide");
 }
 
 static void SimplePromptPopup_OnRender(Popup* self) {
+    WinTimer timer = TimerStart();
     SimplePromptPopupData* data = (SimplePromptPopupData*)self;
-    if (!data->state) return;
+    if (!data->state) { TimerEnd(timer, "window_manager:SimplePromptPopup_OnRender"); return; }
     
     #if !defined(_WIN32)
     Display* dpy = ((WindowManager*)self->manager)->display;
     Linux_RenderSimplePromptUser(dpy, &self->handle.xid, data->state);
     #endif
+    TimerEnd(timer, "window_manager:SimplePromptPopup_OnRender");
 }
 
 static void SimplePromptPopup_Destroy(Popup* self) {
+    WinTimer timer = TimerStart();
     SimplePromptPopupData* data = (SimplePromptPopupData*)self;
     #if !defined(_WIN32)
     Display* dpy = get_display();
@@ -955,6 +1053,7 @@ static void SimplePromptPopup_Destroy(Popup* self) {
     #endif
     free(data->state);
     free(data);
+    TimerEnd(timer, "window_manager:SimplePromptPopup_Destroy");
 }
 
 static const PopupVTable g_simple_prompt_popup_vtable = {
@@ -966,7 +1065,8 @@ static const PopupVTable g_simple_prompt_popup_vtable = {
 };
 
 Popup* SimplePromptPopup_Create(WindowManager* wm, const SimplePromptSpec* spec) {
-    if (!wm || !spec) return NULL;
+    WinTimer timer = TimerStart();
+    if (!wm || !spec) { TimerEnd(timer, "window_manager:SimplePromptPopup_Create"); return NULL; }
     
     int screen_width = 1920;
     int screen_height = 1080;
@@ -980,7 +1080,7 @@ Popup* SimplePromptPopup_Create(WindowManager* wm, const SimplePromptSpec* spec)
     int y = (screen_height - layout_h) / 2;
     
     SimplePromptPopupData* data = calloc(1, sizeof(SimplePromptPopupData));
-    if (!data) return NULL;
+    if (!data) { TimerEnd(timer, "window_manager:SimplePromptPopup_Create"); return NULL; }
     
     data->base.vtable = &g_simple_prompt_popup_vtable;
     data->base.manager = wm;
@@ -988,13 +1088,16 @@ Popup* SimplePromptPopup_Create(WindowManager* wm, const SimplePromptSpec* spec)
     data->spec = *spec;
     data->x = x; data->y = y; data->w = layout_w; data->h = layout_h;
     
+    TimerEnd(timer, "window_manager:SimplePromptPopup_Create");
     return WindowManager_PushPopup(wm, (Popup*)data);
 }
 
 // Search popup stub
 Popup* SearchPopup_Create(WindowManager* wm, const char* title, int x, int y, int w, int h,
                           EditPopupConfirmCallback on_confirm, void* user_data) {
+    WinTimer timer = TimerStart();
     (void)wm; (void)title; (void)x; (void)y; (void)w; (void)h;
     (void)on_confirm; (void)user_data;
+    TimerEnd(timer, "window_manager:SearchPopup_Create");
     return NULL; // TODO
 }
