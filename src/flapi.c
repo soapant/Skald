@@ -192,3 +192,64 @@ char* fl_on_dir_changed(char* dir_path, void (*callback)(void)) {
     return Platform_RegisterDirWatcher(dir_path, callback);
 }
 
+char* fl_adb_tap(int x,int y) {
+  char buffer[100];
+  snprintf(buffer,sizeof(buffer),"adb shell input tap %i %i",x,y);
+  return Platform_RunTerminalCommand(buffer,false);
+}
+char* fl_adb_type_text(char* text) {
+  char buffer[100];
+  snprintf(buffer,sizeof(buffer),"adb shell input text %s",text);
+  return Platform_RunTerminalCommand(buffer,false);
+}
+char* fl_adb_get_devices() {
+  char buffer[100];
+  snprintf(buffer,sizeof(buffer),"adb devices");
+  return Platform_RunTerminalCommand(buffer,false);
+}
+
+char* fl_adb_install(char* app_path) {
+  char buffer[100];
+  snprintf(buffer,sizeof(buffer),"adb install %s",app_path);
+  return Platform_RunTerminalCommand(buffer,false);
+
+}
+char* fl_adb_uninstall(char* app_name) {
+  char buffer[100];
+  snprintf(buffer,sizeof(buffer),"adb uninstall %s",app_name);
+  return Platform_RunTerminalCommand(buffer,false);
+
+}
+char* fl_adb_force_close(char* app_name) {
+  char buffer[100];
+  snprintf(buffer,sizeof(buffer),"adb shell am force-stop %s",app_name);
+  return Platform_RunTerminalCommand(buffer,false);
+
+}
+char* fl_adb_clear_app_data(char* app_name) {
+  char buffer[100];
+  snprintf(buffer,sizeof(buffer),"adb shell pm clear %s",app_name);
+  return Platform_RunTerminalCommand(buffer,false);
+}
+char* fl_adb_get_file(char* filepath,char* output_file_path) {
+  char buffer[100];
+  snprintf(buffer,sizeof(buffer),"adb pull %s %s",filepath,output_file_path);
+  return Platform_RunTerminalCommand(buffer,false);
+
+}
+char* fl_adb_put_file(char* filepath,char* output_file_path) {
+  char buffer[100];
+  snprintf(buffer,sizeof(buffer),"adb push %s %s",filepath,output_file_path);
+  return Platform_RunTerminalCommand(buffer,false);
+
+}
+
+char* fl_adb_reboot() {
+  char buffer[100];
+  snprintf(buffer,sizeof(buffer),"adb reboot");
+  return Platform_RunTerminalCommand(buffer,false);
+
+}
+
+
+

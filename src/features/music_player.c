@@ -1,4 +1,5 @@
 #include "core/flapi.h"
+
 const char* MusicPlayerPath = "{DEV}/Music Player/music_player.exe";
 const char* MusicPath = "{MUSIC}";
 
