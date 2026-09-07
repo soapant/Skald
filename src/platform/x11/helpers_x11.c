@@ -2,6 +2,7 @@
 #include "core/modal.h"
 #include "config.h"
 #include <ctype.h>
+#include <stdlib.h>
 #include <math.h>
 #if !defined(_WIN32)
 #include <X11/Xlib.h>
@@ -18,6 +19,50 @@
 #include "platform/x11/drawing.h"
 
 #if !defined(_WIN32)
+// --- Cached background pixmap (double-buffer + shader cache) ---
+static Pixmap g_bgPixmap = None;
+static int g_bgW = 0, g_bgH = 0;
+static unsigned long g_bgBase = 0;
+static int g_bgPreset = -1;
+static float g_bgIntensity = -1.0f;
+static int g_bgRadius = -1;
+static bool g_bgRounded = false;
+static Display* g_bgDpy = NULL;
+static Visual* g_dblVisual = NULL;
+static Colormap g_dblColormap = None;
+static int g_dblDepth = 0;
+static Display* g_dblDpy = NULL;
+static int g_bgDepth = 0;
+
+void Linux_SetDblVisual(Display* dpy, Visual* vis, Colormap cmap, int depth) {
+    g_dblVisual = vis;
+    g_dblColormap = cmap;
+    g_dblDepth = depth;
+    g_dblDpy = dpy;
+}
+void Linux_ClearDblVisual(void) {
+    g_dblVisual = NULL;
+    g_dblColormap = None;
+    g_dblDepth = 0;
+    g_dblDpy = NULL;
+}
+bool Linux_GetDrawableVisual(Display* dpy, Drawable d, Visual** visOut, Colormap* cmapOut, int* depthOut) {
+    XWindowAttributes attrs;
+    if (XGetWindowAttributes(dpy, d, &attrs)) {
+        if (visOut) *visOut = attrs.visual;
+        if (cmapOut) *cmapOut = attrs.colormap;
+        if (depthOut) *depthOut = attrs.depth;
+        return true;
+    }
+    if (g_dblVisual && g_dblDpy == dpy) {
+        if (visOut) *visOut = g_dblVisual;
+        if (cmapOut) *cmapOut = g_dblColormap;
+        if (depthOut) *depthOut = g_dblDepth;
+        return true;
+    }
+    return false;
+}
+
 static int xft_width(Display* dpy, XftFont* xf, const char* text, int len) {
     XGlyphInfo ext;
     XftTextExtentsUtf8(dpy, xf, (FcChar8*)text, len, &ext);
@@ -453,6 +498,304 @@ void Linux_DrawRoundedBackground(Display* dpy, Window win, int w, int h, unsigne
     XftDrawDestroy(xd);
 }
 
+// --- Shader helpers (derived from COLOR_BG only) ---
+static unsigned long LerpHex(unsigned long a, unsigned long b, float t) {
+    if (t < 0) t = 0; if (t > 1) t = 1;
+    unsigned int ar = (a >> 16) & 0xFF, ag = (a >> 8) & 0xFF, ab = a & 0xFF;
+    unsigned int br = (b >> 16) & 0xFF, bg = (b >> 8) & 0xFF, bb = b & 0xFF;
+    unsigned int rr = (unsigned int)(ar + (br - ar) * t + 0.5f);
+    unsigned int rg = (unsigned int)(ag + (bg - ag) * t + 0.5f);
+    unsigned int rb = (unsigned int)(ab + (bb - ab) * t + 0.5f);
+    return (rr << 16) | (rg << 8) | rb;
+}
+static unsigned long DeriveLighter(unsigned long base, float intensity) {
+    // intensity 0..1, base 5,5,10 -> lighter up to ~ 60,60,110 at 1.0
+    float f = ShaderIntensity;
+    if (f < 0) f = 0; if (f > 1) f = 1;
+    // combine global intensity with per-call intensity
+    float eff = f * intensity;
+    unsigned int r = (base >> 16) & 0xFF, g = (base >> 8) & 0xFF, b = base & 0xFF;
+    // move towards 255 + slight hue shift (keep bluish)
+    unsigned int nr = r + (unsigned int)((90 - r) * eff + 35 * eff);
+    unsigned int ng = g + (unsigned int)((90 - g) * eff + 35 * eff);
+    unsigned int nb = b + (unsigned int)((140 - b) * eff + 40 * eff);
+    if (nr > 255) nr = 255; if (ng > 255) ng = 255; if (nb > 255) nb = 255;
+    return (nr << 16) | (ng << 8) | nb;
+}
+static unsigned int HashNoise(int x, int y) {
+    unsigned int h = (unsigned int)(x * 374761393U + y * 668265263U);
+    h = (h ^ (h >> 13)) * 1274126177U;
+    return h & 0xFF;
+}
+
+void Linux_FreeCachedBackground(void) {
+    if (g_bgPixmap != None && g_bgDpy) {
+        XFreePixmap(g_bgDpy, g_bgPixmap);
+        g_bgPixmap = None;
+    }
+    g_bgW = g_bgH = 0;
+    g_bgBase = 0;
+    g_bgPreset = -1;
+    g_bgIntensity = -1.0f;
+    g_bgRadius = -1;
+    g_bgRounded = false;
+    g_bgDpy = NULL;
+    g_bgDepth = 0;
+}
+
+static Pixmap Linux_CreateBackgroundPixmap(Display* dpy, Window win, int w, int h, XWindowAttributes* attrs, unsigned long base, unsigned int baseAlpha8) {
+    Visual* vis = attrs->visual;
+    int depth = attrs->depth;
+    bool hasAlpha = (depth == 32);
+    bool rounded = RoundedCorners && CornerRadius > 0 && hasAlpha;
+    int R = rounded ? CornerRadius : 0;
+    if (R > w/2) R = w/2; if (R > h/2) R = h/2;
+    Pixmap pm = XCreatePixmap(dpy, win, w, h, depth);
+    if (!pm) return None;
+    XImage* img = XCreateImage(dpy, vis, depth, ZPixmap, 0, NULL, w, h, 32, 0);
+    if (!img) { XFreePixmap(dpy, pm); return None; }
+    img->data = (char*)calloc(1, h * img->bytes_per_line);
+    if (!img->data) { XDestroyImage(img); XFreePixmap(dpy, pm); return None; }
+    unsigned long light = DeriveLighter(base, 1.0f);
+    if (!EnableShaders || ShaderPreset == 0) {
+        unsigned int r = (base >> 16) & 0xFF, g = (base >> 8) & 0xFF, b = base & 0xFF;
+        unsigned long pixel = hasAlpha ? (baseAlpha8 << 24) | (r << 16) | (g << 8) | b : (r << 16) | (g << 8) | b;
+        for (int y = 0; y < h; y++) {
+            for (int x = 0; x < w; x++) {
+                bool inside = true;
+                unsigned int a = baseAlpha8;
+                if (rounded) {
+                    if (x < R && y < R) { float dx = R - x -0.5f, dy = R - y -0.5f; float d = sqrtf(dx*dx+dy*dy); if (d >= R+0.5f) inside=false; else if (d > R-0.5f) a = (unsigned int)(baseAlpha8 * (R+0.5f - d) + 0.5f); }
+                    else if (x >= w - R && y < R) { float dx = x - (w - R) +0.5f, dy = R - y -0.5f; float d = sqrtf(dx*dx+dy*dy); if (d >= R+0.5f) inside=false; else if (d > R-0.5f) a = (unsigned int)(baseAlpha8 * (R+0.5f - d) + 0.5f); }
+                    else if (x < R && y >= h - R) { float dx = R - x -0.5f, dy = y - (h - R) +0.5f; float d = sqrtf(dx*dx+dy*dy); if (d >= R+0.5f) inside=false; else if (d > R-0.5f) a = (unsigned int)(baseAlpha8 * (R+0.5f - d) + 0.5f); }
+                    else if (x >= w - R && y >= h - R) { float dx = x - (w - R) +0.5f, dy = y - (h - R) +0.5f; float d = sqrtf(dx*dx+dy*dy); if (d >= R+0.5f) inside=false; else if (d > R-0.5f) a = (unsigned int)(baseAlpha8 * (R+0.5f - d) + 0.5f); }
+                }
+                unsigned long px = 0;
+                if (!inside) { px = hasAlpha ? 0 : pixel; if (!hasAlpha) px = 0; else a = 0; }
+                if (inside) px = hasAlpha ? (a << 24) | (r << 16) | (g << 8) | b : (r << 16) | (g << 8) | b;
+                else if (hasAlpha) px = 0;
+                XPutPixel(img, x, y, px);
+            }
+        }
+    } else if (ShaderPreset == 1) { // vertical
+        for (int y = 0; y < h; y++) {
+            float t = h > 1 ? (float)y / (float)(h - 1) : 0;
+            unsigned long col = LerpHex(base, light, t * 0.9f);
+            unsigned int r = (col >> 16) & 0xFF, g = (col >> 8) & 0xFF, b = col & 0xFF;
+            for (int x = 0; x < w; x++) {
+                bool inside = true;
+                unsigned int a = baseAlpha8;
+                if (rounded) {
+                    if (x < R && y < R) { float dx = R - x -0.5f, dy = R - y -0.5f; float d = sqrtf(dx*dx+dy*dy); if (d >= R+0.5f) inside=false; else if (d > R-0.5f) a = (unsigned int)(baseAlpha8 * (R+0.5f - d) + 0.5f); }
+                    else if (x >= w - R && y < R) { float dx = x - (w - R) +0.5f, dy = R - y -0.5f; float d = sqrtf(dx*dx+dy*dy); if (d >= R+0.5f) inside=false; else if (d > R-0.5f) a = (unsigned int)(baseAlpha8 * (R+0.5f - d) + 0.5f); }
+                    else if (x < R && y >= h - R) { float dx = R - x -0.5f, dy = y - (h - R) +0.5f; float d = sqrtf(dx*dx+dy*dy); if (d >= R+0.5f) inside=false; else if (d > R-0.5f) a = (unsigned int)(baseAlpha8 * (R+0.5f - d) + 0.5f); }
+                    else if (x >= w - R && y >= h - R) { float dx = x - (w - R) +0.5f, dy = y - (h - R) +0.5f; float d = sqrtf(dx*dx+dy*dy); if (d >= R+0.5f) inside=false; else if (d > R-0.5f) a = (unsigned int)(baseAlpha8 * (R+0.5f - d) + 0.5f); }
+                }
+                unsigned long px = hasAlpha ? (a << 24) | (r << 16) | (g << 8) | b : (r << 16) | (g << 8) | b;
+                if (!inside) px = hasAlpha ? 0 : 0;
+                XPutPixel(img, x, y, px);
+            }
+        }
+    } else if (ShaderPreset == 3) { // diagonal
+        for (int y = 0; y < h; y++) {
+            for (int x = 0; x < w; x++) {
+                float t = (w + h > 0) ? ((float)(x + y) / (float)(w + h)) : 0;
+                unsigned long col = LerpHex(base, light, t * 0.9f);
+                unsigned int r = (col >> 16) & 0xFF, g = (col >> 8) & 0xFF, b = col & 0xFF;
+                bool inside = true;
+                unsigned int a = baseAlpha8;
+                if (rounded) {
+                    if (x < R && y < R) { float dx = R - x -0.5f, dy = R - y -0.5f; float d = sqrtf(dx*dx+dy*dy); if (d >= R+0.5f) inside=false; else if (d > R-0.5f) a = (unsigned int)(baseAlpha8 * (R+0.5f - d) + 0.5f); }
+                    else if (x >= w - R && y < R) { float dx = x - (w - R) +0.5f, dy = R - y -0.5f; float d = sqrtf(dx*dx+dy*dy); if (d >= R+0.5f) inside=false; else if (d > R-0.5f) a = (unsigned int)(baseAlpha8 * (R+0.5f - d) + 0.5f); }
+                    else if (x < R && y >= h - R) { float dx = R - x -0.5f, dy = y - (h - R) +0.5f; float d = sqrtf(dx*dx+dy*dy); if (d >= R+0.5f) inside=false; else if (d > R-0.5f) a = (unsigned int)(baseAlpha8 * (R+0.5f - d) + 0.5f); }
+                    else if (x >= w - R && y >= h - R) { float dx = x - (w - R) +0.5f, dy = y - (h - R) +0.5f; float d = sqrtf(dx*dx+dy*dy); if (d >= R+0.5f) inside=false; else if (d > R-0.5f) a = (unsigned int)(baseAlpha8 * (R+0.5f - d) + 0.5f); }
+                }
+                unsigned long px = hasAlpha ? (a << 24) | (r << 16) | (g << 8) | b : (r << 16) | (g << 8) | b;
+                if (!inside) px = hasAlpha ? 0 : 0;
+                XPutPixel(img, x, y, px);
+            }
+        }
+    } else if (ShaderPreset == 2) { // radial
+        float cx = w * 0.5f, cy = h * 0.35f;
+        float maxDist = sqrtf(cx*cx + cy*cy);
+        if (maxDist < 1) maxDist = 1;
+        for (int y = 0; y < h; y++) {
+            for (int x = 0; x < w; x++) {
+                float dx = x - cx, dy = y - cy;
+                float dist = sqrtf(dx*dx + dy*dy) / maxDist;
+                if (dist > 1) dist = 1;
+                float t = dist * 0.85f;
+                unsigned long col = LerpHex(light, base, t);
+                unsigned int r = (col >> 16) & 0xFF, g = (col >> 8) & 0xFF, b = col & 0xFF;
+                bool inside = true;
+                unsigned int a = baseAlpha8;
+                if (rounded) {
+                    if (x < R && y < R) { float dxc = R - x -0.5f, dyc = R - y -0.5f; float d = sqrtf(dxc*dxc+dyc*dyc); if (d >= R+0.5f) inside=false; else if (d > R-0.5f) a = (unsigned int)(baseAlpha8 * (R+0.5f - d) + 0.5f); }
+                    else if (x >= w - R && y < R) { float dxc = x - (w - R) +0.5f, dyc = R - y -0.5f; float d = sqrtf(dxc*dxc+dyc*dyc); if (d >= R+0.5f) inside=false; else if (d > R-0.5f) a = (unsigned int)(baseAlpha8 * (R+0.5f - d) + 0.5f); }
+                    else if (x < R && y >= h - R) { float dxc = R - x -0.5f, dyc = y - (h - R) +0.5f; float d = sqrtf(dxc*dxc+dyc*dyc); if (d >= R+0.5f) inside=false; else if (d > R-0.5f) a = (unsigned int)(baseAlpha8 * (R+0.5f - d) + 0.5f); }
+                    else if (x >= w - R && y >= h - R) { float dxc = x - (w - R) +0.5f, dyc = y - (h - R) +0.5f; float d = sqrtf(dxc*dxc+dyc*dyc); if (d >= R+0.5f) inside=false; else if (d > R-0.5f) a = (unsigned int)(baseAlpha8 * (R+0.5f - d) + 0.5f); }
+                }
+                unsigned long px = hasAlpha ? (a << 24) | (r << 16) | (g << 8) | b : (r << 16) | (g << 8) | b;
+                if (!inside) px = hasAlpha ? 0 : 0;
+                XPutPixel(img, x, y, px);
+            }
+        }
+    } else if (ShaderPreset == 4) { // noise
+        for (int y = 0; y < h; y++) {
+            float tBase = h > 1 ? (float)y / (float)(h - 1) : 0;
+            for (int x = 0; x < w; x++) {
+                float t = tBase * 0.9f;
+                unsigned long col = LerpHex(base, light, t);
+                unsigned int n = HashNoise(x, y);
+                int delta = (int)(n & 0x1F) - 16;
+                delta = (int)(delta * ShaderIntensity * 0.5f);
+                unsigned int r0 = (col >> 16) & 0xFF, g0 = (col >> 8) & 0xFF, b0 = col & 0xFF;
+                int nr = (int)r0 + delta, ng = (int)g0 + delta, nb = (int)b0 + delta;
+                if (nr < 0) nr = 0; if (nr > 255) nr = 255;
+                if (ng < 0) ng = 0; if (ng > 255) ng = 255;
+                if (nb < 0) nb = 0; if (nb > 255) nb = 255;
+                unsigned int r = (unsigned int)nr, g = (unsigned int)ng, b = (unsigned int)nb;
+                bool inside = true;
+                unsigned int a = baseAlpha8;
+                if (rounded) {
+                    if (x < R && y < R) { float dx = R - x -0.5f, dy = R - y -0.5f; float d = sqrtf(dx*dx+dy*dy); if (d >= R+0.5f) inside=false; else if (d > R-0.5f) a = (unsigned int)(baseAlpha8 * (R+0.5f - d) + 0.5f); }
+                    else if (x >= w - R && y < R) { float dx = x - (w - R) +0.5f, dy = R - y -0.5f; float d = sqrtf(dx*dx+dy*dy); if (d >= R+0.5f) inside=false; else if (d > R-0.5f) a = (unsigned int)(baseAlpha8 * (R+0.5f - d) + 0.5f); }
+                    else if (x < R && y >= h - R) { float dx = R - x -0.5f, dy = y - (h - R) +0.5f; float d = sqrtf(dx*dx+dy*dy); if (d >= R+0.5f) inside=false; else if (d > R-0.5f) a = (unsigned int)(baseAlpha8 * (R+0.5f - d) + 0.5f); }
+                    else if (x >= w - R && y >= h - R) { float dx = x - (w - R) +0.5f, dy = y - (h - R) +0.5f; float d = sqrtf(dx*dx+dy*dy); if (d >= R+0.5f) inside=false; else if (d > R-0.5f) a = (unsigned int)(baseAlpha8 * (R+0.5f - d) + 0.5f); }
+                }
+                unsigned long px = hasAlpha ? (a << 24) | (r << 16) | (g << 8) | b : (r << 16) | (g << 8) | b;
+                if (!inside) px = hasAlpha ? 0 : 0;
+                XPutPixel(img, x, y, px);
+            }
+        }
+    } else {
+        unsigned int r = (base >> 16) & 0xFF, g = (base >> 8) & 0xFF, b = base & 0xFF;
+        for (int y = 0; y < h; y++) {
+            for (int x = 0; x < w; x++) {
+                bool inside = true;
+                unsigned int a = baseAlpha8;
+                if (rounded) {
+                    if (x < R && y < R) { float dx = R - x -0.5f, dy = R - y -0.5f; float d = sqrtf(dx*dx+dy*dy); if (d >= R+0.5f) inside=false; else if (d > R-0.5f) a = (unsigned int)(baseAlpha8 * (R+0.5f - d) + 0.5f); }
+                    else if (x >= w - R && y < R) { float dx = x - (w - R) +0.5f, dy = R - y -0.5f; float d = sqrtf(dx*dx+dy*dy); if (d >= R+0.5f) inside=false; else if (d > R-0.5f) a = (unsigned int)(baseAlpha8 * (R+0.5f - d) + 0.5f); }
+                    else if (x < R && y >= h - R) { float dx = R - x -0.5f, dy = y - (h - R) +0.5f; float d = sqrtf(dx*dx+dy*dy); if (d >= R+0.5f) inside=false; else if (d > R-0.5f) a = (unsigned int)(baseAlpha8 * (R+0.5f - d) + 0.5f); }
+                    else if (x >= w - R && y >= h - R) { float dx = x - (w - R) +0.5f, dy = y - (h - R) +0.5f; float d = sqrtf(dx*dx+dy*dy); if (d >= R+0.5f) inside=false; else if (d > R-0.5f) a = (unsigned int)(baseAlpha8 * (R+0.5f - d) + 0.5f); }
+                }
+                unsigned long px = hasAlpha ? (a << 24) | (r << 16) | (g << 8) | b : (r << 16) | (g << 8) | b;
+                if (!inside) px = hasAlpha ? 0 : 0;
+                XPutPixel(img, x, y, px);
+            }
+        }
+    }
+    GC gc = XCreateGC(dpy, pm, 0, NULL);
+    XPutImage(dpy, pm, gc, img, 0, 0, 0, 0, w, h);
+    XFreeGC(dpy, gc);
+    XDestroyImage(img);
+    return pm;
+}
+
+Pixmap Linux_GetCachedBackground(Display* dpy, Window win, int w, int h) {
+    if (!dpy || w <= 0 || h <= 0) return None;
+    unsigned long base = rgb_to_hex(COLOR_BG);
+    int preset = ShaderPreset;
+    float intensity = ShaderIntensity;
+    int radius = CornerRadius;
+    bool rounded = RoundedCorners;
+    if (g_bgPixmap != None && g_bgDpy == dpy && g_bgW == w && g_bgH == h && g_bgBase == base && g_bgPreset == preset && g_bgIntensity == intensity && g_bgRadius == radius && g_bgRounded == rounded) {
+        return g_bgPixmap;
+    }
+    if (g_bgPixmap != None) {
+        XFreePixmap(g_bgDpy, g_bgPixmap);
+        g_bgPixmap = None;
+        g_bgW = g_bgH = 0;
+    }
+    XWindowAttributes attrs;
+    if (!XGetWindowAttributes(dpy, win, &attrs)) return None;
+    unsigned int baseAlpha8 = (unsigned int)WindowOpacity;
+    if (baseAlpha8 > 255) baseAlpha8 = 255;
+    Pixmap pm = Linux_CreateBackgroundPixmap(dpy, win, w, h, &attrs, base, baseAlpha8);
+    if (!pm) return None;
+    g_bgPixmap = pm;
+    g_bgW = w; g_bgH = h; g_bgBase = base; g_bgPreset = preset; g_bgIntensity = intensity; g_bgRadius = radius; g_bgRounded = rounded; g_bgDpy = dpy; g_bgDepth = attrs.depth;
+    return g_bgPixmap;
+}
+
+void Linux_DrawBackgroundToDrawable(Display* dpy, Drawable drw, int w, int h) {
+    if (!dpy || w <= 0 || h <= 0) return;
+    // Prefer cached pixmap if valid for same w/h and settings
+    unsigned long base = rgb_to_hex(COLOR_BG);
+    int preset = ShaderPreset;
+    float intensity = ShaderIntensity;
+    int radius = CornerRadius;
+    bool rounded = RoundedCorners;
+    Pixmap cached = None;
+    if (g_bgPixmap != None && g_bgDpy == dpy && g_bgW == w && g_bgH == h && g_bgBase == base && g_bgPreset == preset && g_bgIntensity == intensity && g_bgRadius == radius && g_bgRounded == rounded) {
+        cached = g_bgPixmap;
+    }
+    if (cached != None) {
+        GC gc = XCreateGC(dpy, drw, 0, NULL);
+        XCopyArea(dpy, cached, drw, gc, 0, 0, w, h, 0, 0);
+        XFreeGC(dpy, gc);
+        return;
+    }
+    // Fallback: try to generate via DefaultVisual if no window available
+    int screen = DefaultScreen(dpy);
+    Visual* vis = DefaultVisual(dpy, screen);
+    int depth = DefaultDepth(dpy, screen);
+    bool hasAlpha = (depth == 32);
+    bool rded = rounded && radius > 0 && hasAlpha;
+    int R = rded ? radius : 0;
+    if (R > w/2) R = w/2; if (R > h/2) R = h/2;
+    unsigned int baseAlpha8 = (unsigned int)WindowOpacity;
+    if (baseAlpha8 > 255) baseAlpha8 = 255;
+    XImage* img = XCreateImage(dpy, vis, depth, ZPixmap, 0, NULL, w, h, 32, 0);
+    if (!img) return;
+    img->data = (char*)calloc(1, h * img->bytes_per_line);
+    if (!img->data) { XDestroyImage(img); return; }
+    unsigned long light = DeriveLighter(base, 1.0f);
+    GC gc = XCreateGC(dpy, drw, 0, NULL);
+    // Simplified fill: solid fallback if no window attrs available
+    unsigned int r = (base >> 16) & 0xFF, g = (base >> 8) & 0xFF, b = base & 0xFF;
+    for (int y = 0; y < h; y++) {
+        for (int x = 0; x < w; x++) {
+            unsigned long px = hasAlpha ? (baseAlpha8 << 24) | (r << 16) | (g << 8) | b : (r << 16) | (g << 8) | b;
+            // handle rounded for fallback (simple)
+            if (rded) {
+                bool inside = true;
+                unsigned int a = baseAlpha8;
+                if (x < R && y < R) { float dx = R - x -0.5f, dy = R - y -0.5f; float d = sqrtf(dx*dx+dy*dy); if (d >= R+0.5f) inside=false; else if (d > R-0.5f) a = (unsigned int)(baseAlpha8 * (R+0.5f - d) + 0.5f); }
+                else if (x >= w - R && y < R) { float dx = x - (w - R) +0.5f, dy = R - y -0.5f; float d = sqrtf(dx*dx+dy*dy); if (d >= R+0.5f) inside=false; else if (d > R-0.5f) a = (unsigned int)(baseAlpha8 * (R+0.5f - d) + 0.5f); }
+                else if (x < R && y >= h - R) { float dx = R - x -0.5f, dy = y - (h - R) +0.5f; float d = sqrtf(dx*dx+dy*dy); if (d >= R+0.5f) inside=false; else if (d > R-0.5f) a = (unsigned int)(baseAlpha8 * (R+0.5f - d) + 0.5f); }
+                else if (x >= w - R && y >= h - R) { float dx = x - (w - R) +0.5f, dy = y - (h - R) +0.5f; float d = sqrtf(dx*dx+dy*dy); if (d >= R+0.5f) inside=false; else if (d > R-0.5f) a = (unsigned int)(baseAlpha8 * (R+0.5f - d) + 0.5f); }
+                if (!inside) px = hasAlpha ? 0 : 0;
+                else if (a != baseAlpha8) px = hasAlpha ? (a << 24) | (r << 16) | (g << 8) | b : px;
+            }
+            XPutPixel(img, x, y, px);
+        }
+    }
+    (void)light; // unused in fallback solid
+    XPutImage(dpy, drw, gc, img, 0, 0, 0, 0, w, h);
+    XFreeGC(dpy, gc);
+    XDestroyImage(img);
+}
+
+void Linux_DrawBackground(Display* dpy, Window win, int w, int h) {
+    WinTimer timer = TimerStart();
+    const char* presetName = "solid";
+    if (!EnableShaders || ShaderPreset == 0) presetName = "solid";
+    else if (ShaderPreset == 1) presetName = "vertical";
+    else if (ShaderPreset == 2) presetName = "radial";
+    else if (ShaderPreset == 3) presetName = "diagonal";
+    else if (ShaderPreset == 4) presetName = "noise";
+    else presetName = "solid-fallback";
+    Pixmap bg = Linux_GetCachedBackground(dpy, win, w, h);
+    if (bg) {
+        GC gc = XCreateGC(dpy, win, 0, NULL);
+        XCopyArea(dpy, bg, win, gc, 0, 0, w, h, 0, 0);
+        XFreeGC(dpy, gc);
+    }
+    TimerEnd(timer, presetName);
+}
+
 Window Linux_CreatePromptWindow(Display* dpy, int x, int y, int w, int h) {
     unsigned long bg = rgb_to_hex(COLOR_BG);
     return Linux_CreateWindowEx(dpy, x, y, w, h, bg, "colored", "colored", KeyPressMask | ExposureMask | FocusChangeMask);
@@ -471,9 +814,9 @@ Window Linux_CreateDisplayMessageWindow(Display* dpy, int x, int y, int w, int h
 }
 
 XftDraw* Linux_CreateXftDraw(Display* dpy, Window win) {
-    XWindowAttributes attrs;
-    if (XGetWindowAttributes(dpy, win, &attrs)) {
-        return XftDrawCreate(dpy, win, attrs.visual, attrs.colormap);
+    Visual* vis = NULL; Colormap cmap = 0; int depth = 0;
+    if (Linux_GetDrawableVisual(dpy, win, &vis, &cmap, &depth)) {
+        return XftDrawCreate(dpy, win, vis, cmap);
     }
     int screen = DefaultScreen(dpy);
     return XftDrawCreate(dpy, win, DefaultVisual(dpy, screen), DefaultColormap(dpy, screen));
