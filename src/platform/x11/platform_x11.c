@@ -693,13 +693,26 @@ void Platform_WaitForKeypressAsync(KeyCallback callback) {
 
 
 
+static FontHandle g_cached_font = FH_NULL;
+static Display* g_cached_font_dpy = NULL;
+static int g_cached_font_size = 0;
+static const char* g_cached_font_name = NULL;
+
 FontHandle Platform_CreateFontOnDisplay(Display* dpy, int size, const char* face_name) {
     WinTimer timer = TimerStart();
-    FontHandle fh = FH_NULL;
-    if (!dpy) { TimerEnd(timer, "platform_x11:Platform_CreateFontOnDisplay"); return fh; }
-    int screen = DefaultScreen(dpy);
+    if (!dpy) { TimerEnd(timer, "platform_x11:Platform_CreateFontOnDisplay"); return FH_NULL; }
 
-    
+    if (g_cached_font_dpy == dpy && g_cached_font_size == size && g_cached_font_name == face_name && FH_TO_XFT(g_cached_font)) {
+        TimerEnd(timer, "platform_x11:Platform_CreateFontOnDisplay");
+        return g_cached_font;
+    }
+
+    if (FH_TO_XFT(g_cached_font)) {
+        XftFontClose(g_cached_font_dpy, FH_TO_XFT(g_cached_font));
+        g_cached_font = FH_NULL;
+    }
+
+    int screen = DefaultScreen(dpy);
     XLockDisplay(dpy);
 
     XftFont* xf = XftFontOpen(dpy, screen,
@@ -716,15 +729,17 @@ FontHandle Platform_CreateFontOnDisplay(Display* dpy, int size, const char* face
         xf = XftFontOpenName(dpy, screen, "fixed");
     }
 
-   
     XUnlockDisplay(dpy);
 
-    if (!xf) { TimerEnd(timer, "platform_x11:Platform_CreateFontOnDisplay"); return fh; }
+    if (!xf) { TimerEnd(timer, "platform_x11:Platform_CreateFontOnDisplay"); return FH_NULL; }
 
-    fh.xfont = xf;
-    fh.dpy = dpy;
+    g_cached_font.xfont = xf;
+    g_cached_font.dpy = dpy;
+    g_cached_font_dpy = dpy;
+    g_cached_font_size = size;
+    g_cached_font_name = face_name;
     TimerEnd(timer, "platform_x11:Platform_CreateFontOnDisplay");
-    return fh;
+    return g_cached_font;
 }
 
 pthread_mutex_t g_font_mtx = PTHREAD_MUTEX_INITIALIZER;
@@ -748,11 +763,15 @@ FontHandle Platform_CreateFont(int size, const char* face_name) {
 }
 
 void Platform_DestroyFont(FontHandle font) {
-    WinTimer timer = TimerStart();
     if (FH_TO_XFT(font)) {
+        if (FH_TO_DPY(font) == g_cached_font_dpy && FH_TO_XFT(font) == FH_TO_XFT(g_cached_font)) {
+            g_cached_font = FH_NULL;
+            g_cached_font_dpy = NULL;
+            g_cached_font_size = 0;
+            g_cached_font_name = NULL;
+        }
         XftFontClose(FH_TO_DPY(font), FH_TO_XFT(font));
     }
-    TimerEnd(timer, "platform_x11:Platform_DestroyFont");
 }
 
 static int xft_text_width(Display* dpy, XftFont* xf, const char* text, int len) {
