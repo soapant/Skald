@@ -1,44 +1,58 @@
 #include "core/flapi.h"
-#include "core/zoxide_helpers.h"
 
 const char* TerminalHistoryFilePath = "data/TerminalHistory.txt";
 
-char** cached_commands = NULL;
-int cached_command_count = 0;
-
-
-void RebuildCommandCache(void) {
-    ZoxideHelper_RebuildCache(TerminalHistoryFilePath, &cached_commands, &cached_command_count);
+void terminal_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
+    const char* items[MAX_FILE_LINES];
+    int n = fl_load_file_list(TerminalHistoryFilePath, items, MAX_FILE_LINES);
+    PopulateListBox(lb, FlintContext_Get()->window.hListBox, filter, items, n, NULL);
+    fl_free_file_list(items, n);
 }
 
-void terminal_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
-    ZoxideHelper_Refresh(filter, FlintContext_Get()->window.hListBox, lb, TerminalHistoryFilePath, &cached_commands, &cached_command_count);
+static void edit_confirm(const char* new_text, void* user_data) {
+    EditCallbackData* data = (EditCallbackData*)user_data;
+    if (new_text && data) {
+        data->new_text = (char*)new_text;
+        EditCallback_Handle(data, terminal_refresh_callback);
+    }
+    free(data);
+}
+void terminal_edit_callback(const char* selection, ListBoxInfo* lb) {
+    int idx = lb ? lb->selected_index : -1;
+    int true_idx = (lb && idx >= 0 && idx < lb->populated_count) ? lb->matching_indices[idx] : idx;
+    WindowManager* wm = WindowManager_Get();
+    EditCallbackData* data = calloc(1, sizeof(EditCallbackData));
+    if (!data) return;
+    data->filepath = TerminalHistoryFilePath;
+    data->lb = lb;
+    data->selected_index = idx;
+    data->true_index = true_idx;
+    data->new_text = NULL;
+    data->restore_selection = true;
+    data->hListBox = FlintContext_Get()->window.hListBox;
+    data->hEditControl = FlintContext_Get()->window.hEditControl;
+    data->refresh_cb = terminal_refresh_callback;
+    Popup* popup = EditPopup_Create(wm, selection, "Edit Terminal", 960, 540, edit_confirm, data);
+    WindowManager_PushPopup(wm, popup);
 }
 
 bool terminal_enter_callback(const char* selection, ListBoxInfo* lb) {
       if (!UI_IsListBoxSelected(lb)) {
         fl_append_to_file(TerminalHistoryFilePath, selection);
-        ZoxideHelper_RebuildCache(TerminalHistoryFilePath, &cached_commands, &cached_command_count);
       }
       fl_run_terminal_command_and_open((char*)selection);
     return true;
 }
 
-void terminal_edit_callback(const char* selection, ListBoxInfo* lb) {
-    ZoxideHelper_Edit(selection, lb, TerminalHistoryFilePath, &cached_commands, &cached_command_count, terminal_refresh_callback);
-}
-
 void TriggerTerminalCommand(void) {
-    if (!cached_commands) RebuildCommandCache();
-    const char** list = ZoxideHelper_PrepareTriggerList(TerminalHistoryFilePath, &cached_commands, &cached_command_count, NULL);
-
-    PROMPT(.title = "⌨️ Terminal", .items = list, .count = cached_command_count,
+    const char* items[MAX_FILE_LINES];
+    int n = fl_load_file_list(TerminalHistoryFilePath, items, MAX_FILE_LINES);
+    PROMPT(.title = "⌨️ Terminal", .items = items, .count = n,
            .height = 920, .width = 650, .item_height = 32,
            .refresh = terminal_refresh_callback,
            .enter = terminal_enter_callback,
            .edit = terminal_edit_callback);
-
-    ZoxideHelper_CleanupTriggerList(list);
+    fl_free_file_list(items, n);
 }
 
 void run_btop(void) {

@@ -1,5 +1,4 @@
 #include "core/flapi.h"
-#include "core/window_manager.h"
 
 void AddTextToFile(const char* text) {
     if (!text || strlen(text) == 0) return;
