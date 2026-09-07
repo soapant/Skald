@@ -735,11 +735,13 @@ bool Platform_TerminateProcessByName(const char* exe_name) {
     tmp[sizeof(tmp)-1]='\0';
     char *ext = strrchr(tmp, '.');
     if (ext && strcmp(ext, ".exe") == 0) *ext = '\0';
-    char cmd[512];
-    snprintf(cmd, sizeof(cmd), "pkill \"%s\"", tmp);
-    Platform_RunTerminalCommand(cmd, false);
-    snprintf(cmd, sizeof(cmd), "killall -9 \"%s\" 2>/dev/null; killall -9 -r \"%s\" 2>/dev/null", tmp, tmp);
-    Platform_RunTerminalCommand(cmd, false);
+    // Use sh directly, not nu via Platform_RunTerminalCommand (nu doesn't handle 2>/dev/null and ; the same)
+    // This mirrors normal `pkill flint` that works in terminal
+    char cmd[1024];
+    snprintf(cmd, sizeof(cmd), "sh -c 'pkill -9 \"%s\" 2>/dev/null; pkill -9 -f \"%s\" 2>/dev/null; pkill -9 -f \"build/[f]lint\" 2>/dev/null; pkill \"%s\" 2>/dev/null; killall -9 \"%s\" 2>/dev/null; killall -9 -r \"%s\" 2>/dev/null; killall \"%s\" 2>/dev/null' &", tmp, tmp, tmp, tmp, tmp, tmp);
+    // Run detached so hotkey handler doesn't block
+    int ret = system(cmd);
+    (void)ret;
     TimerEnd(timer, "misc_x11:Platform_TerminateProcessByName");
     return true;
 }
