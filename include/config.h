@@ -22,6 +22,8 @@ extern bool AllowOtherFeatureTogglesInFeature;
 extern bool ModePersistsThroughFeatures;
 extern int  TimeOutForMessages;
 extern bool DoTimeDebugs;
+extern bool RoundedCorners;
+extern int CornerRadius;
 extern char* EditPopUpPos;
 extern int EditPopUpWidthMin;
 extern int PageUpDownLen;

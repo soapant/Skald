@@ -25,6 +25,7 @@
 #include <X11/Xft/Xft.h>
 #include <unistd.h>
 #include "platform/x11/display.h"
+#include "platform/x11/drawing.h"
 extern int WindowManager_RunLinux(WindowManager* wm);
 extern void WindowManager_ProcessEventsLinux(WindowManager* wm);
 extern void WindowManager_QuitLinux(WindowManager* wm);
@@ -354,7 +355,15 @@ static void EditPopup_OnRender(Popup* self) {
     Linux_XftAllocColor(dpy, visual, cmap, rgb_to_hex(COLOR_TEXT), 0xFFFF, &title_col);
     Linux_XftAllocColor(dpy, visual, cmap, VimModeTextColor(), 0xFFFF, &vim_col);
     // clear
-    XftDrawRect(xd, &bg, 0, 0, data->w, data->h);
+    if (RoundedCorners) {
+        XftColorFree(dpy, visual, cmap, &bg);
+        XftDrawDestroy(xd);
+        Linux_DrawRoundedBackground(dpy, self->handle.xid, data->w, data->h, rgb_to_hex(COLOR_BG), 0xFFFF);
+        xd = Linux_CreateXftDraw(dpy, self->handle.xid);
+        Linux_XftAllocColor(dpy, visual, cmap, rgb_to_hex(COLOR_BG), 0xFFFF, &bg);
+    } else {
+        XftDrawRect(xd, &bg, 0, 0, data->w, data->h);
+    }
     if (xf) {
         draw_wrapped_text(dpy, xd, &vim_col, font, g_vim_mode, 5, "LEFT", 5);
     }

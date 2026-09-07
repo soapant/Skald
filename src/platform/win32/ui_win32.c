@@ -106,6 +106,7 @@ char* Platform_PromptUser(const PromptSpec* spec) {
     return NULL;
   }
   SetWindowLongPtrA(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), GWLP_USERDATA, (LONG_PTR)(lb_ptr));
+  Win32_ApplyRoundedCorners(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), layout.w, layout.h);
 
   TimerEnd(timer,"Window Init");
 
@@ -245,6 +246,7 @@ char* Platform_SimplePromptUser(const SimplePromptSpec* spec) {
     DeleteObject(hCustomFont);
     return NULL;
   }
+  Win32_ApplyRoundedCorners(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), layout.w, layout.h);
 
   SimpleCreateChildControls(FlintContext_Get()->window.hPopupWnd, hCustomFont, prompt, 1, &layout);
 
@@ -330,19 +332,20 @@ void Platform_CreateDisplayMessageWindow(const char* message, int centerX, int c
       topLeftX, topLeftY, winWidth, winHeight, NULL, NULL, hInstance, pWndData
       );
 
-  if (WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) == NULL) {
+  if (hPopupWnd == NULL) {
     printf("[DEBUG-UI] ERROR: CreateWindowExA failed. GetLastError: %lu\n", GetLastError());
     Platform_DestroyFont(pWndData->hFont);
     free(pWndData);
     return;
   }
+  Win32_ApplyRoundedCorners(hPopupWnd, winWidth, winHeight);
 
-  SetLayeredWindowAttributes(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), 0, pWndData->alpha, LWA_ALPHA);
+  SetLayeredWindowAttributes(hPopupWnd, 0, pWndData->alpha, LWA_ALPHA);
 
-  ShowWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), SW_SHOWNOACTIVATE);
-  UpdateWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd));
+  ShowWindow(hPopupWnd, SW_SHOWNOACTIVATE);
+  UpdateWindow(hPopupWnd);
 
-  SetTimer(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), 999, 50, NULL);
+  SetTimer(hPopupWnd, 999, 50, NULL);
 
   return; 
 }
@@ -372,6 +375,7 @@ void Platform_SettingsPopUp() {
     DeleteObject(hCustomFont);
     return;
   }
+  Win32_ApplyRoundedCorners(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), width, height);
 
   FlintContext_Get()->window.hSettings = FlintContext_Get()->window.hPopupWnd;
   SetTimer(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), 999, 50, NULL);
