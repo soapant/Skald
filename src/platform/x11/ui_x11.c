@@ -40,10 +40,12 @@ extern int pending_hotkey_mod;
 extern long pending_hotkey_timeMs;
 
 static bool should_use_grab(void) {
-    if (getenv("WAYLAND_DISPLAY")) return false;
-    if (getenv("HYPRLAND_INSTANCE_SIGNATURE")) return false;
+    WinTimer timer = TimerStart();
+    if (getenv("WAYLAND_DISPLAY")) { TimerEnd(timer, "ui_x11:should_use_grab"); return false; }
+    if (getenv("HYPRLAND_INSTANCE_SIGNATURE")) { TimerEnd(timer, "ui_x11:should_use_grab"); return false; }
     const char* t = getenv("XDG_SESSION_TYPE");
-    if (t && strcmp(t, "wayland") == 0) return false;
+    if (t && strcmp(t, "wayland") == 0) { TimerEnd(timer, "ui_x11:should_use_grab"); return false; }
+    TimerEnd(timer, "ui_x11:should_use_grab");
     return true;
 }
 
@@ -55,26 +57,31 @@ typedef struct {
 
 HashMap* g_perFeatureVimMap = NULL;
 PerFeatureVimState* GetPerFeatureState(const char* feature) {
-    if (!feature) return NULL;
+    WinTimer timer = TimerStart();
+    if (!feature) { TimerEnd(timer, "ui_x11:GetPerFeatureState"); return NULL; }
     if (!g_perFeatureVimMap) g_perFeatureVimMap = HashMap_Create(32);
     void* val = HashMap_Get(g_perFeatureVimMap, feature);
+    TimerEnd(timer, "ui_x11:GetPerFeatureState");
     return (PerFeatureVimState*)val;
 }
 void SavePerFeatureState(const char* feature, EditorMode mode,int last_index) {
-    if (!feature) return;
+    WinTimer timer = TimerStart();
+    if (!feature) { TimerEnd(timer, "ui_x11:SavePerFeatureState"); return; }
     if (!g_perFeatureVimMap) g_perFeatureVimMap = HashMap_Create(32);
     PerFeatureVimState* st = (PerFeatureVimState*)HashMap_Get(g_perFeatureVimMap, feature);
     if (!st) {
         st = (PerFeatureVimState*)calloc(1, sizeof(PerFeatureVimState));
-        if (!st) return;
+        if (!st) { TimerEnd(timer, "ui_x11:SavePerFeatureState"); return; }
         HashMap_Put(g_perFeatureVimMap, feature, st);
     }
     st->mode = mode;
     st->last_index = last_index;
+    TimerEnd(timer, "ui_x11:SavePerFeatureState");
 }
 
 void CleanupPerFeatureVimMap(void) {
-    if (!g_perFeatureVimMap) return;
+    WinTimer timer = TimerStart();
+    if (!g_perFeatureVimMap) { TimerEnd(timer, "ui_x11:CleanupPerFeatureVimMap"); return; }
     for (int i = 0; i < g_perFeatureVimMap->size; i++) {
         HashMapEntry* entry = g_perFeatureVimMap->buckets[i];
         while (entry) {
@@ -84,6 +91,7 @@ void CleanupPerFeatureVimMap(void) {
     }
     HashMap_Destroy(g_perFeatureVimMap);
     g_perFeatureVimMap = NULL;
+    TimerEnd(timer, "ui_x11:CleanupPerFeatureVimMap");
 }
 
 typedef struct {
@@ -99,6 +107,7 @@ static pthread_mutex_t g_msg_mtx = PTHREAD_MUTEX_INITIALIZER;
 static MsgWindow* g_msg_window = NULL;
 
 static void destroy_msg_window(MsgWindow* m) {
+    WinTimer timer = TimerStart();
     if (m->win != None && m->dpy) {
         XDestroyWindow(m->dpy, m->win);
         XFlush(m->dpy);
@@ -107,9 +116,11 @@ static void destroy_msg_window(MsgWindow* m) {
     if (m->xd) { XftDrawDestroy(m->xd); m->xd = NULL; }
     Platform_DestroyFont(m->font);
     m->font = (FontHandle){0};
+    TimerEnd(timer, "ui_x11:destroy_msg_window");
 }
 
 void Platform_DismissMessage(void) {
+    WinTimer timer = TimerStart();
     pthread_mutex_lock(&g_msg_mtx);
     MsgWindow* old = g_msg_window;
     if (old) {
@@ -118,9 +129,11 @@ void Platform_DismissMessage(void) {
         destroy_msg_window(old);
     }
     pthread_mutex_unlock(&g_msg_mtx);
+    TimerEnd(timer, "ui_x11:Platform_DismissMessage");
 }
 
 static void* msg_destroy_thread(void* arg) {
+    WinTimer timer = TimerStart();
     MsgWindow* m = (MsgWindow*)arg;
     usleep((useconds_t)m->timeout * 1000000);
     pthread_mutex_lock(&g_msg_mtx);
@@ -130,10 +143,12 @@ static void* msg_destroy_thread(void* arg) {
     }
     pthread_mutex_unlock(&g_msg_mtx);
     free(m);
+    TimerEnd(timer, "ui_x11:msg_destroy_thread");
     return NULL;
 }
 
 static void replace_msg_window(MsgWindow* m) {
+    WinTimer timer = TimerStart();
     pthread_mutex_lock(&g_msg_mtx);
     MsgWindow* old = g_msg_window;
     g_msg_window = m;
@@ -142,12 +157,14 @@ static void replace_msg_window(MsgWindow* m) {
         destroy_msg_window(old);
     }
     pthread_mutex_unlock(&g_msg_mtx);
+    TimerEnd(timer, "ui_x11:replace_msg_window");
 }
 
 static bool Linux_GetMainMonitorGeometry(Display* dpy, int* ox, int* oy, int* ow, int* oh) {
+    WinTimer timer = TimerStart();
     Window root = DefaultRootWindow(dpy);
     XRRScreenResources* res = XRRGetScreenResourcesCurrent(dpy, root);
-    if (!res) return false;
+    if (!res) { TimerEnd(timer, "ui_x11:Linux_GetMainMonitorGeometry"); return false; }
     RROutput primary = XRRGetOutputPrimary(dpy, root);
 
     int fx = -1, fy = -1;
@@ -180,19 +197,23 @@ static bool Linux_GetMainMonitorGeometry(Display* dpy, int* ox, int* oy, int* ow
         XRRFreeCrtcInfo(ci);
     }
     XRRFreeScreenResources(res);
+    TimerEnd(timer, "ui_x11:Linux_GetMainMonitorGeometry");
     return found;
 }
 
 void Platform_DisplayMessage(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, int timeout, ColorRef color) {
+    WinTimer timer = TimerStart();
     Display* dpy = get_display();
     if (!dpy) {
         fprintf(stderr, "[PLATFORM] Platform_DisplayMessage: no X11 display\n");
+        TimerEnd(timer, "ui_x11:Platform_DisplayMessage");
         return;
     }
 
     FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
     if (!FH_TO_XFT(font)) {
         fprintf(stderr, "[PLATFORM] Platform_DisplayMessage: font load failed\n");
+        TimerEnd(timer, "ui_x11:Platform_DisplayMessage");
         return;
     }
 
@@ -293,18 +314,25 @@ void Platform_DisplayMessage(const char* message, int centerX, int centerY, int 
     pthread_t tid;
     pthread_create(&tid, NULL, msg_destroy_thread, m);
     pthread_detach(tid);
+    TimerEnd(timer, "ui_x11:Platform_DisplayMessage");
 }
 
 void Platform_SettingsPopUp(void) {
+    WinTimer timer = TimerStart();
     fprintf(stderr, "[PLATFORM] Platform_SettingsPopUp not implemented yet\n");
+    TimerEnd(timer, "ui_x11:Platform_SettingsPopUp");
 }
 
 char* Platform_SearchPopup(void) {
+    WinTimer timer = TimerStart();
     fprintf(stderr, "[PLATFORM] Platform_SearchPopup not implemented yet\n");
+    TimerEnd(timer, "ui_x11:Platform_SearchPopup");
     return NULL;
 }
 
 int Platform_InitializeTrayIcon(void) {
+    WinTimer timer = TimerStart();
+    TimerEnd(timer, "ui_x11:Platform_InitializeTrayIcon");
     return -1;
 }
 
@@ -325,10 +353,12 @@ static bool g_suppress_release[KEY_MAX + 1] = {0};
 static bool g_device_grabbed[MAX_KEYBOARDS] = {0};
 
 static int init_uinput(void) {
+    WinTimer timer = TimerStart();
     int fd = open("/dev/uinput", O_WRONLY | O_NONBLOCK);
     if (fd < 0) fd = open("/dev/input/uinput", O_WRONLY | O_NONBLOCK);
     if (fd < 0) {
         fprintf(stderr, "[UINPUT] open failed: %s (swallow disabled)\n", strerror(errno));
+        TimerEnd(timer, "ui_x11:init_uinput");
         return -1;
     }
     if (ioctl(fd, UI_SET_EVBIT, EV_KEY) < 0) perror("[UINPUT] UI_SET_EVBIT EV_KEY");
@@ -352,6 +382,7 @@ static int init_uinput(void) {
         if (ioctl(fd, UI_DEV_CREATE) < 0) {
             perror("[UINPUT] UI_DEV_CREATE");
             close(fd);
+            TimerEnd(timer, "ui_x11:init_uinput");
             return -1;
         }
     } else {
@@ -368,28 +399,34 @@ static int init_uinput(void) {
         if (ioctl(fd, UI_DEV_CREATE) < 0) {
             perror("[UINPUT] UI_DEV_CREATE legacy");
             close(fd);
+            TimerEnd(timer, "ui_x11:init_uinput");
             return -1;
         }
     }
     
     usleep(150 * 1000);
     fprintf(stderr, "[UINPUT] virtual keyboard created (fd=%d)\n", fd);
+    TimerEnd(timer, "ui_x11:init_uinput");
     return fd;
 }
 
 static void destroy_uinput(void) {
+    WinTimer timer = TimerStart();
     if (g_uinput_fd >= 0) {
         ioctl(g_uinput_fd, UI_DEV_DESTROY);
         close(g_uinput_fd);
         g_uinput_fd = -1;
     }
+    TimerEnd(timer, "ui_x11:destroy_uinput");
 }
 
 static void uinput_emit(const struct input_event *ev) {
-    if (g_uinput_fd < 0) return;
+    WinTimer timer = TimerStart();
+    if (g_uinput_fd < 0) { TimerEnd(timer, "ui_x11:uinput_emit"); return; }
     if (write(g_uinput_fd, ev, sizeof(*ev)) < 0) {
         
         if (errno != EAGAIN) perror("[UINPUT] write");
+        TimerEnd(timer, "ui_x11:uinput_emit");
         return;
     }
     struct input_event syn;
@@ -401,11 +438,13 @@ static void uinput_emit(const struct input_event *ev) {
     if (write(g_uinput_fd, &syn, sizeof(syn)) < 0 && errno != EAGAIN) {
         perror("[UINPUT] write syn");
     }
+    TimerEnd(timer, "ui_x11:uinput_emit");
 }
 
 void ScanAndHookKeyboards(void) {
+    WinTimer timer = TimerStart();
     DIR *dir = opendir("/dev/input");
-    if (!dir) return;
+    if (!dir) { TimerEnd(timer, "ui_x11:ScanAndHookKeyboards"); return; }
 
     struct dirent *entry;
     while ((entry = readdir(dir)) != NULL && active_kb_count < MAX_KEYBOARDS) {
@@ -440,11 +479,14 @@ void ScanAndHookKeyboards(void) {
         }
     }
     closedir(dir);
+    TimerEnd(timer, "ui_x11:ScanAndHookKeyboards");
 }
 //TEMPORARY
 void HandleRunNobAndReload(void) {
+  WinTimer timer = TimerStart();
   Platform_RunTerminalCommand("./nob",false);
   FeatureLoader_ReloadAll();
+  TimerEnd(timer, "ui_x11:HandleRunNobAndReload");
 }
 
 
@@ -453,6 +495,7 @@ bool g_Linux_AltHeld   = false;
 bool g_Linux_ShiftHeld = false;
 
 bool HandleGlobalKeyEvent(int key_code, int value) {
+    WinTimer timer = TimerStart();
     if (key_code == KEY_LEFTCTRL || key_code == KEY_RIGHTCTRL) {
         if (value == 0) g_Linux_CtrlHeld = false;
         else g_Linux_CtrlHeld = true;
@@ -472,6 +515,7 @@ bool HandleGlobalKeyEvent(int key_code, int value) {
     }
 
     if (value != 1) {
+        TimerEnd(timer, "ui_x11:HandleGlobalKeyEvent");
         return 0;
     }
 
@@ -485,15 +529,13 @@ bool HandleGlobalKeyEvent(int key_code, int value) {
     if (g_Linux_ShiftHeld) modifiers |= HOTKEY_MOD_SHIFT;
     if (g_Linux_CtrlHeld)  modifiers |= HOTKEY_MOD_CTRL;
 
-    WinTimer timer = TimerStart();
 
     if (hotkey_process(pressed_vk, modifiers, fgTitle)) {
         if (value == 1) { pending_hotkey_vk = pressed_vk; pending_hotkey_mod = modifiers; struct timeval tv; gettimeofday(&tv,NULL); pending_hotkey_timeMs = tv.tv_sec*1000 + tv.tv_usec/1000; }
         else if (value == 2) { pending_hotkey_vk = pressed_vk; pending_hotkey_mod = modifiers; struct timeval tv2; gettimeofday(&tv2,NULL); pending_hotkey_timeMs = tv2.tv_sec*1000 + tv2.tv_usec/1000; }
+        TimerEnd(timer, "ui_x11:HandleGlobalKeyEvent");
         return 1;
     }
-
-    TimerEnd(timer, "ProcessHotkey");
 
     //temp
     HotkeyBinding binding = {
@@ -507,10 +549,12 @@ bool HandleGlobalKeyEvent(int key_code, int value) {
     };
     hotkey_register_internal(binding);
 
+    TimerEnd(timer, "ui_x11:HandleGlobalKeyEvent");
     return 0;
 }
 
 void Platform_RunHotKeyMessageLoop(void) {
+    WinTimer timer = TimerStart();
     bool use_grab = should_use_grab();
     if (!use_grab) {
         g_uinput_fd = -1;
@@ -525,6 +569,7 @@ void Platform_RunHotKeyMessageLoop(void) {
     if (active_kb_count == 0) {
         fprintf(stderr, "[ERROR] No structural keyboard nodes located under /dev/input/\n");
         destroy_uinput();
+        TimerEnd(timer, "ui_x11:Platform_RunHotKeyMessageLoop");
         return;
     }
 
@@ -626,11 +671,16 @@ void Platform_RunHotKeyMessageLoop(void) {
     }
     free(fds);
     destroy_uinput();
+    TimerEnd(timer, "ui_x11:Platform_RunHotKeyMessageLoop");
 }
 
 
 void Platform_InitUI(void) {
+    WinTimer timer = TimerStart();
+    TimerEnd(timer, "ui_x11:Platform_InitUI");
 }
 
 void Platform_ShutdownUI(void) {
+    WinTimer timer = TimerStart();
+    TimerEnd(timer, "ui_x11:Platform_ShutdownUI");
 }
