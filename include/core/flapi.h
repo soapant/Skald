@@ -29,7 +29,6 @@
 #include "config.h"
 #include "core/platform.h"
 #include "platform/window.h"
-#include "core/zoxide_helpers.h"
 #include "common_ui.h"
 
 #if !defined(MAX_PATH)
