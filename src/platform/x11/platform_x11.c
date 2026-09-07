@@ -283,16 +283,15 @@ bool Platform_SetX11StringProperty(const char* window_title, const char* atom_na
 char* Platform_RunCommandAndGetOutput(char* command) {
     WinTimer timer = TimerStart();
     FILE* fp;
-    char buffer[4096];
-    char* output = malloc(1);
+    char buffer[8192];
+    size_t cap = 8192;
     size_t total_size = 0;
+    char* output = malloc(cap);
 
     if (output == NULL) {
         TimerEnd(timer, "platform_x11:Platform_RunCommandAndGetOutput");
         return NULL;
     }
-
-    output[0] = '\0';
 
     fp = popen(command, "r");
     if (fp == NULL) {
@@ -301,25 +300,25 @@ char* Platform_RunCommandAndGetOutput(char* command) {
         return strdup("");
     }
 
-    while (fgets(buffer, sizeof(buffer), fp) != NULL) {
-        size_t len = strlen(buffer);
-
-        char* new_output = realloc(output, total_size + len + 1);
-        if (new_output == NULL) {
-            free(output);
-            pclose(fp);
-            TimerEnd(timer, "platform_x11:Platform_RunCommandAndGetOutput");
-            return strdup("");
+    size_t len;
+    while ((len = fread(buffer, 1, sizeof(buffer), fp)) > 0) {
+        while (total_size + len > cap) {
+            cap *= 2;
+            char* new_output = realloc(output, cap);
+            if (!new_output) {
+                free(output);
+                pclose(fp);
+                TimerEnd(timer, "platform_x11:Platform_RunCommandAndGetOutput");
+                return strdup("");
+            }
+            output = new_output;
         }
-
-        output = new_output;
-
         memcpy(output + total_size, buffer, len);
         total_size += len;
-        output[total_size] = '\0';
     }
 
     pclose(fp);
+    output[total_size] = '\0';
     TimerEnd(timer, "platform_x11:Platform_RunCommandAndGetOutput");
     return output;
 }
@@ -327,37 +326,36 @@ char* Platform_RunCommandAndGetOutput(char* command) {
 char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
     WinTimer timer = TimerStart();
     if (command == NULL || strlen(command) == 0) { TimerEnd(timer, "platform_x11:Platform_RunTerminalCommand"); return NULL; }
-    
-    char clean_cmd[512];
-    strncpy(clean_cmd, command, sizeof(clean_cmd) - 1);
-    clean_cmd[sizeof(clean_cmd) - 1] = '\0';
 
     const char* real_user = Platform_GetRealUser();
     const char* real_home = Platform_GetRealHome();
+
+    if (!open_terminal) {
+        char* result = Platform_RunCommandAndGetOutput(command);
+        TimerEnd(timer, "platform_x11:Platform_RunTerminalCommand");
+        return result;
+    }
+
     char temp_file[MAX_PATH];
     char cache_dir[MAX_PATH];
     snprintf(cache_dir, sizeof(cache_dir), "%s/.cache", real_home);
     snprintf(temp_file, sizeof(temp_file), "%s/.cache/temp_cmd.sh", real_home);
-    char mkdir_cmd[MAX_PATH + 64];
-    if (Platform_IsRunningAsRoot())
-        snprintf(mkdir_cmd, sizeof(mkdir_cmd), "mkdir -p \"%s\" && chown %s:%s \"%s\"", cache_dir, real_user, real_user, cache_dir);
-    else
-        snprintf(mkdir_cmd, sizeof(mkdir_cmd), "mkdir -p \"%s\"", cache_dir);
-    system(mkdir_cmd);
+
+    if (mkdir(cache_dir, 0755) != 0 && errno != EEXIST) { /* ignore */ }
 
     FILE* f = fopen(temp_file, "w");
     if (f) {
         fprintf(f, "#!/bin/%s\n",UsedShell);
-        fprintf(f, "%s\n", clean_cmd);
+        fprintf(f, "%s\n", command);
         fclose(f);
         if (Platform_IsRunningAsRoot()){
-            char chown_file[MAX_PATH + 64];
-            snprintf(chown_file, sizeof(chown_file), "chown %s:%s \"%s\" && chmod 755 \"%s\"", real_user, real_user, temp_file, temp_file);
-            system(chown_file);
+            char chown_cmd[MAX_PATH + 64];
+            snprintf(chown_cmd, sizeof(chown_cmd), "chown %s:%s \"%s\" && chmod 755 \"%s\"", real_user, real_user, temp_file, temp_file);
+            system(chown_cmd);
         } else {
             chmod(temp_file, 0755);
         }
-   }
+    }
 
     const char* display = Platform_GetSessionDisplay();
     const char* xauthority = Platform_GetSessionXAuthority();
@@ -365,23 +363,13 @@ char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
     snprintf(runtime_dir,sizeof(runtime_dir),"%s",Platform_GetRuntimeDir());
     char extra[1024];
 
-    if (open_terminal) {
-        snprintf(extra, sizeof(extra),
-                 "%s -c \"%s '%s'; exec %s\"",
-                 UsedShell, UsedShell, temp_file, UsedShell);
+    snprintf(extra, sizeof(extra),
+             "%s -c \"%s '%s'; exec %s\"",
+             UsedShell, UsedShell, temp_file, UsedShell);
 
-        Platform_LaunchTerminalAtPath(real_home, extra);
-        TimerEnd(timer, "platform_x11:Platform_RunTerminalCommand");
-        return strdup("");
-    } else {
-        snprintf(extra, sizeof(extra),
-                 "%s -c \"%s '%s'\"",
-                 UsedShell, UsedShell, temp_file);
-
-        char* result = Platform_RunCommandAndGetOutput(extra);
-        TimerEnd(timer, "platform_x11:Platform_RunTerminalCommand");
-        return result;
-    }
+    Platform_LaunchTerminalAtPath(real_home, extra);
+    TimerEnd(timer, "platform_x11:Platform_RunTerminalCommand");
+    return strdup("");
 }
 
 bool Platform_LaunchFileManagerAtPath(char* path,char* args) {
