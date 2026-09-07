@@ -61,7 +61,6 @@ static bool load_single(const char* dir, const char* filename) {
     strncpy(f->name, name, sizeof(f->name)-1);
     strncpy(f->path, full, sizeof(f->path)-1);
     f->handle = h;
-    printf("[FEATURE] loaded %s from %s\n", f->name, full);
     return true;
 }
 

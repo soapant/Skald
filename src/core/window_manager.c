@@ -1,4 +1,5 @@
-#include "common.h"
+#include "core/context.h"
+#include "core/modal.h"
 #include "core/window_manager.h"
 #include "core/platform.h"
 #include "core/common_ui.h"
@@ -571,7 +572,7 @@ static void PromptPopup_OnShow(Popup* self) {
     ctx2->window.callbacks = ctx2->prompt_callbacks;
     // deprecated globals sync for external .so compatibility
     SetCurrentFeatureName(ctx2->window.current_feature);
-    if (data->spec.refresh) data->spec.refresh(data->state->filter, hListBox, data->state->has_listbox ? &data->state->listbox : NULL);
+    if (data->spec.refresh) data->spec.refresh(data->state->filter, FlintContext_Get()->window.hListBox, data->state->has_listbox ? &data->state->listbox : NULL);
 }
 
 static void PromptPopup_OnKey(Popup* self, int vk_code, bool pressed, int modifiers) {
@@ -610,13 +611,13 @@ static void PromptPopup_OnKey(Popup* self, int vk_code, bool pressed, int modifi
         } else {
             EditBufferBackspace(data->state->filter, &data->state->cursor);
         }
-        if (data->spec.refresh) data->spec.refresh(data->state->filter, hListBox, data->state->has_listbox ? &data->state->listbox : NULL);
+        if (data->spec.refresh) data->spec.refresh(data->state->filter, FlintContext_Get()->window.hListBox, data->state->has_listbox ? &data->state->listbox : NULL);
         return;
     }
     
     if (vk_code >= '0' && vk_code <= '9') {
         if (ctrl_pressed) {
-            HandleNumberShortcut(vk_code, hListBox, g_ActiveEditControl, data->state->has_listbox ? &data->state->listbox : NULL);
+            HandleNumberShortcut(vk_code, FlintContext_Get()->window.hListBox, FlintContext_Get()->window.g_ActiveEditControl, data->state->has_listbox ? &data->state->listbox : NULL);
             return;
         }
     }
@@ -634,7 +635,7 @@ static void PromptPopup_OnKey(Popup* self, int vk_code, bool pressed, int modifi
             VimContext ctx = Vim_FromState(data->state);
             SetCursorToStartOfText(&ctx);
         } else if (data->state->has_listbox) {
-            UI_NavigateUp(&data->state->listbox, hListBox);
+            UI_NavigateUp(&data->state->listbox, FlintContext_Get()->window.hListBox);
         }
         return;
     }
@@ -643,13 +644,13 @@ static void PromptPopup_OnKey(Popup* self, int vk_code, bool pressed, int modifi
             VimContext ctx = Vim_FromState(data->state);
             SetCursorToEndOfText(&ctx);
         } else if (data->state->has_listbox) {
-            UI_NavigateDown(&data->state->listbox, hListBox);
+            UI_NavigateDown(&data->state->listbox, FlintContext_Get()->window.hListBox);
         }
         return;
     }
     if (vk_code == VK_DELETE) {
         if (EditBufferDeleteChar(data->state->filter, &data->state->cursor)) {
-            if (data->spec.refresh) data->spec.refresh(data->state->filter, hListBox, data->state->has_listbox ? &data->state->listbox : NULL);
+            if (data->spec.refresh) data->spec.refresh(data->state->filter, FlintContext_Get()->window.hListBox, data->state->has_listbox ? &data->state->listbox : NULL);
         }
         return;
     }
@@ -704,7 +705,7 @@ static void PromptPopup_OnKey(Popup* self, int vk_code, bool pressed, int modifi
                         n - data->state->cursor + 1);
                 memcpy(data->state->filter + data->state->cursor, buf, len);
                 data->state->cursor += len;
-                if (data->spec.refresh) data->spec.refresh(data->state->filter, hListBox, data->state->has_listbox ? &data->state->listbox : NULL);
+                if (data->spec.refresh) data->spec.refresh(data->state->filter, FlintContext_Get()->window.hListBox, data->state->has_listbox ? &data->state->listbox : NULL);
             }
         }
     }

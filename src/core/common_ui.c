@@ -1,4 +1,5 @@
-#include "common.h"
+#include "core/context.h"
+#include "core/modal.h"
 #include "config.h"
 #include "helpers.h"
 #include "core/common_ui.h"
@@ -48,7 +49,7 @@ void PopulateListBox(ListBoxInfo* lb, WindowHandle hListBox, const char* filter,
   if (!lb) return;
   WinTimer timer_alias = TimerStart();
 #if defined(_WIN32)
-  if (WH_TO_HWND(hListBox) == NULL) return;
+  if (WH_TO_HWND(FlintContext_Get()->window.hListBox) == NULL) return;
 #endif
   if (SequenceIsWaiting()) return;
   if (!filter) filter = "";
@@ -183,7 +184,7 @@ void PopulateListBox(ListBoxInfo* lb, WindowHandle hListBox, const char* filter,
   }
   TimerEnd(timer_cache, "  PopulateListBox - Cache build");
 
-  UI_LB_SetCount(lb, hListBox, total_matches);
+  UI_LB_SetCount(lb, FlintContext_Get()->window.hListBox, total_matches);
 
   WinTimer timer_ui = TimerStart();
   if (!SequenceIsWaiting()) {
@@ -197,36 +198,36 @@ void PopulateListBox(ListBoxInfo* lb, WindowHandle hListBox, const char* filter,
         if (total_matches == 0) keep = -1;
         else if (keep < 0) keep = 0;
         else if (keep >= total_matches) keep = total_matches - 1;
-        UI_NavigateTo(lb, hListBox, keep);
+        UI_NavigateTo(lb, FlintContext_Get()->window.hListBox, keep);
       } else {
         keep = (total_matches > 0) ? 0 : -1;
-        UI_SetSelection(lb, hListBox, keep);
+        UI_SetSelection(lb, FlintContext_Get()->window.hListBox, keep);
       }
     } else if (total_matches != 0 && strlen(filter) > 0) {
-      UI_SetSelection(lb, hListBox, 0);
+      UI_SetSelection(lb, FlintContext_Get()->window.hListBox, 0);
 #if defined(_WIN32)
-      draw_background = false;
+      FlintContext_Get()->draw_background = false;
 #endif
     } else {
-      UI_SetSelection(lb, hListBox, -1);
+      UI_SetSelection(lb, FlintContext_Get()->window.hListBox, -1);
 #if defined(_WIN32)
-      draw_background = true;
+      FlintContext_Get()->draw_background = true;
 #endif
     }
     if (total_matches == 0) {
-      if (WH_TO_HWND(hDisplayMessage) != NULL) {
+      if (WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage) != NULL) {
 #if defined(_WIN32)
-        KillTimer(WH_TO_HWND(hDisplayMessage), 999);
-        DestroyWindow(WH_TO_HWND(hDisplayMessage));
+        KillTimer(WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage), 999);
+        DestroyWindow(WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage));
 #endif
-        hDisplayMessage = WH_NULL;
+        FlintContext_Get()->window.hDisplayMessage = WH_NULL;
       }
     }
   }
 
   if (total_matches != old_count || clean_filter[0] != '\0') {
 #if defined(_WIN32)
-    InvalidateRect(WH_TO_HWND(hListBox), NULL, FALSE);
+    InvalidateRect(WH_TO_HWND(FlintContext_Get()->window.hListBox), NULL, FALSE);
 #endif
   }
   TimerEnd(timer_ui, "  PopulateListBox - UI update");
@@ -244,7 +245,7 @@ void PopulateListBox(ListBoxInfo* lb, WindowHandle hListBox, const char* filter,
   lb->total_matches = total_matches;
   if (total_matches != old_count) {
 #if defined(_WIN32)
-    draw_background = true;
+    FlintContext_Get()->draw_background = true;
 #endif
   }
   TimerEnd(timer_cleanup, "  PopulateListBox - Cleanup");

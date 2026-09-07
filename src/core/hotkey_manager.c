@@ -87,18 +87,18 @@ bool hotkey_process(int vk_code, int modifiers, const char* title) {
     //         temprary need to implement
 //         if (AllowOtherFeatureTogglesInFeature) {
 // #if defined(_WIN32)
-//             if (IsPopupActive(hPopupWnd)) {
-//                 KillTimer(WH_TO_HWND(hPopupWnd), 999);
-//                 DestroyWindow(WH_TO_HWND(hPopupWnd));
-//                 hPopupWnd = WH_NULL;
+//             if (IsPopupActive(FlintContext_Get()->window.hPopupWnd)) {
+//                 KillTimer(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), 999);
+//                 DestroyWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd));
+//                 FlintContext_Get()->window.hPopupWnd = WH_NULL;
 //             }
 // #else
-//             if (IsPopupActive(hPopupWnd)) {
+//             if (IsPopupActive(FlintContext_Get()->window.hPopupWnd)) {
 //                 selection_complete = true;
 //             }
 // #endif
 //         } else {
-//           if (IsPopupActive(hPopupWnd)) {
+//           if (IsPopupActive(FlintContext_Get()->window.hPopupWnd)) {
 //             return false;
 //           }
 //         }

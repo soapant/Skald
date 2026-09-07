@@ -4,7 +4,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include "common.h"
+#include "core/context.h"
+#include "core/modal.h"
 #include "helpers.h"
 #include "core/platform.h"
 #include "config.h"
