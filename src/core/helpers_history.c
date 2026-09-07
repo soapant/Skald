@@ -32,18 +32,6 @@ int UI_LookupTrueIndex(const char* name) {
     return value > 0 ? (int)(value - 1) : -1;
 }
 
-void SaveFeatureHistory(char* string) {
-    char** HistoryList = NULL;
-    int count = 0;
-    
-    HistoryList = (char**)HashMap_Get(FlintContext_Get()->feature_history, FlintContext_Get()->window.current_feature);
-    while (HistoryList && HistoryList[count]) count++;
-    
-    // temporary i think
-    // HistoryList = StringList_Append(HistoryList, &count, string);
-    
-    HashMap_Put(FlintContext_Get()->feature_history, FlintContext_Get()->window.current_feature, HistoryList);
-}
 
 bool GetFromHistory(ListBoxInfo* lb) {
     char** HistoryList = (char**)HashMap_Get(FlintContext_Get()->feature_history, FlintContext_Get()->window.current_feature);
