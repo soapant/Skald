@@ -29,6 +29,7 @@ Pixmap Linux_GetCachedBackground(Display* dpy, Window win, int w, int h);
 void Linux_SetDblVisual(Display* dpy, Visual* vis, Colormap cmap, int depth);
 void Linux_ClearDblVisual(void);
 bool Linux_GetDrawableVisual(Display* dpy, Drawable d, Visual** visOut, Colormap* cmapOut, int* depthOut);
+void Linux_DrawSelectionBackground(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap, int x, int y, int w, int h, unsigned long baseHex);
 Pixmap Linux_GetCachedBackground(Display* dpy, Window win, int w, int h);
 void Linux_DrawBackgroundToDrawable(Display* dpy, Drawable drw, int w, int h);
 void Linux_FreeCachedBackground(void);

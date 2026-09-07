@@ -504,10 +504,7 @@ void DrawPromptUserListBoxOnDraw(Display *dpy, XftDraw* xd, Visual* vis, Colorma
         bool sel = (idx == lb->selected_index);
 
         if (sel) {
-            XftColor bgc;
-            Linux_XftAllocColor(dpy, vis, cmap, rgb_to_hex(COLOR_SELECTED_TEXT), OpacityAlpha16(), &bgc);
-            XftDrawRect(xd, &bgc, 0, y, state->width, itemH);
-            XftColorFree(dpy, vis, cmap, &bgc);
+            Linux_DrawSelectionBackground(dpy, xd, vis, cmap, 0, y, state->width, itemH, rgb_to_hex(COLOR_SELECTED_TEXT));
         } else {
             if (!EnableShaders || ShaderPreset == 0) {
                 XftColor bgc;
