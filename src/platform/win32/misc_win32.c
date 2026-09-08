@@ -393,8 +393,49 @@ int Platform_ReplaceLineInMappedFile(MappedFile* mf, int line_index, const char*
     return 1;
 }
 
-bool Platform_LaunchBrowserAtUrl(char* url,bool new_window) {
-    char command[1024];
-    snprintf(command, sizeof(command), "start %s", url);
-    return system(command);
+bool Platform_LaunchBrowserAtUrl(char* url, bool new_window) {
+    char command[2048];
+    
+    if (new_window) {
+        snprintf(command, sizeof(command), "start \"\" \"%s\" --new-window \"%s\"",UsedBrowser,url);
+    } else {
+        snprintf(command, sizeof(command), "start \"\" \"%s\"", url);
+    }
+    
+    return system(command) == 0;
+}
+
+bool Platform_QueryBrowser(char* query) {
+    if (!query || !query[0]) return false;
+    
+    char encoded_query[2048] = {0};
+    char* src = query;
+    char* dst = encoded_query;
+    while (*src && (dst - encoded_query) < sizeof(encoded_query) - 1) {
+        if (*src == ' ') {
+            *dst++ = '%';
+            *dst++ = '2';
+            *dst++ = '0';
+        } else if (*src == '&') {
+            *dst++ = '%';
+            *dst++ = '2';
+            *dst++ = '6';
+        } else if (*src == '?') {
+            *dst++ = '%';
+            *dst++ = '3';
+            *dst++ = 'F';
+        } else {
+            *dst++ = *src;
+        }
+        src++;
+    }
+    *dst = '\0';
+    
+    char url[4096];
+    
+    snprintf(url, sizeof(url), "https://duckduckgo.com/?q=%s", encoded_query);
+    
+    char command[4096];
+    snprintf(command, sizeof(command), "start \"\" \"%s\"", url);
+    return system(command) == 0;
 }
