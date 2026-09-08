@@ -477,4 +477,42 @@ char* Platform_GetLastClipboardEntry(void) {
 }
 
 bool Platform_PasteContent(char* content) {
+    if (!content || !content[0]) return false;
+
+    size_t len = strlen(content);
+    INPUT* inputs = (INPUT*)calloc(len, sizeof(INPUT));
+    if (!inputs) return false;
+
+    for (size_t i = 0; i < len; i++) {
+        char c = content[i];
+        inputs[i].type = INPUT_KEYBOARD;
+        inputs[i].ki.wVk = 0;           
+        inputs[i].ki.wScan = c;         
+        inputs[i].ki.dwFlags = KEYEVENTF_SCANCODE;  
+        inputs[i].ki.time = 0;
+        inputs[i].ki.dwExtraInfo = 0;
+    }
+
+    UINT result = SendInput((UINT)len, inputs, sizeof(INPUT));
+
+    bool success = (result == len);
+    if (success) {
+        INPUT* up_inputs = (INPUT*)calloc(len, sizeof(INPUT));
+        if (!up_inputs) {
+            free(inputs);
+            return false;
+        }
+
+        for (size_t i = 0; i < len; i++) {
+            up_inputs[i] = inputs[i];
+            up_inputs[i].ki.dwFlags |= KEYEVENTF_KEYUP;
+        }
+
+        result = SendInput((UINT)len, up_inputs, sizeof(INPUT));
+        success = (result == len);
+        free(up_inputs);
+    }
+
+    free(inputs);
+    return success;
 }
