@@ -13,13 +13,11 @@ typedef enum {
 extern WM_Type g_current_wm;
 
 WM_Type Window_DetectWM(void);
+
+// generic — dispatch to the right WM inside window.c
+// ADD NEW FEATURES HERE: just add a new generic func here + implement it in window.c
 bool Window_GetActiveWindowTitle(char *buffer, int buffer_size);
 bool Window_FocusByTitle(const char *title);
 bool Window_SetFloating(const char *title, bool floating);
-
-// per-WM implementations (called via dispatcher)
-bool Window_X11_GetActiveWindowTitle(char *buffer, int buffer_size);
-bool Window_Sway_GetActiveWindowTitle(char *buffer, int buffer_size);
-bool Window_Hyprland_GetActiveWindowTitle(char *buffer, int buffer_size);
 
 #endif

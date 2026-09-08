@@ -1,46 +1,99 @@
 #include "platform/window.h"
-#include "core/platform.h"
 #include <string.h>
+#include <stdlib.h>
 
-WM_Type g_current_wm = WM_UNKNOWN;
+#include "core/platform.h"
+#include "helpers.h"
+#include "platform/x11/display.h"
+#include <X11/Xlib.h>
 
-WM_Type Window_DetectWM(void) {
-    if (g_current_wm != WM_UNKNOWN) return g_current_wm;
-    const char *desktop = getenv("XDG_CURRENT_DESKTOP");
-    const char *wayland = getenv("WAYLAND_DISPLAY");
-    const char *sway_sock = getenv("SWAYSOCK");
-    if (desktop) {
-        if (strstr(desktop, "sway") || sway_sock) { g_current_wm = WM_SWAY; return g_current_wm; }
-        if (strstr(desktop, "Hyprland")) { g_current_wm = WM_HYPRLAND; return g_current_wm; }
+static int _x11_err = 0;
+static int _x11_err_handler(Display *dpy, XErrorEvent *ev) { (void)dpy; (void)ev; _x11_err = 1; return 0; }
+
+static bool get_title_x11(char *buffer, int buffer_size) {
+    if (!buffer || buffer_size <= 0) return false;
+    buffer[0] = '\0';
+    Display *display = get_display();
+    if (!display) return false;
+    Window focus = None;
+    int revert_to = 0;
+    _x11_err = 0;
+    XErrorHandler old = XSetErrorHandler(_x11_err_handler);
+    XGetInputFocus(display, &focus, &revert_to);
+    XSync(display, False);
+    if (_x11_err || focus == None || focus == PointerRoot) {
+        XSetErrorHandler(old);
+        return false;
     }
-    if (wayland && strstr(wayland, "hyprland")) { g_current_wm = WM_HYPRLAND; return g_current_wm; }
-    g_current_wm = WM_X11;
-    return g_current_wm;
+    char *name = NULL;
+    _x11_err = 0;
+    int ok = XFetchName(display, focus, &name);
+    XSync(display, False);
+    XSetErrorHandler(old);
+    if (_x11_err || !ok || !name) {
+        if (name) XFree(name);
+        return false;
+    }
+    strncpy(buffer, name, buffer_size - 1);
+    buffer[buffer_size - 1] = '\0';
+    XFree(name);
+    return buffer[0] != '\0';
+}
+
+static bool get_title_sway(char *buffer, int buffer_size) {
+    if (!buffer || buffer_size <= 0) return false;
+    buffer[0] = '\0';
+    char *command_output = Platform_RunTerminalCommand(
+        "sh -c \"swaymsg -t get_tree | jq '.. | objects | select(.focused? == true)'\"",
+        false
+    );
+    if (!command_output) return false;
+    if (command_output[0] == '\0') { free(command_output); return false; }
+    StringList lines = String_Split(command_output, "\n");
+    char *name = NULL;
+    char *app_id = NULL;
+    for (size_t i = 0; i < lines.count; i++) {
+        if (!lines.items[i]) continue;
+        if (!name && Platform_StringContainsCaseInsensitive(lines.items[i], "\"name\"")) {
+            name = lines.items[i];
+        } else if (Platform_StringContainsCaseInsensitive(lines.items[i], "\"app_id\"")) {
+            app_id = lines.items[i];
+            break;
+        }
+    }
+    if (!name) name = (char*)"";
+    if (!app_id) app_id = (char*)"";
+    size_t nlen = strlen(name);
+    size_t alen = strlen(app_id);
+    size_t size = nlen + alen + 2;
+    char *output_name = malloc(size);
+    if (!output_name) { StringList_Free(&lines); free(command_output); return false; }
+    output_name[0] = '\0';
+    if (nlen) strncpy(output_name, name, size-1);
+    if (alen) strncat(output_name, app_id, size-1 - strlen(output_name));
+    strncpy(buffer, output_name, buffer_size - 1);
+    buffer[buffer_size - 1] = '\0';
+    free(output_name);
+    StringList_Free(&lines);
+    free(command_output);
+    return buffer[0] != '\0';
+}
+
+static bool get_title_hyprland(char *buffer, int buffer_size) {
+    (void)buffer; (void)buffer_size;
+    return false;
 }
 
 bool Window_GetActiveWindowTitle(char *buffer, int buffer_size) {
     if (!buffer || buffer_size <= 0) return false;
     buffer[0] = '\0';
-    WM_Type wm = Window_DetectWM();
-    bool ok = false;
-    if (wm == WM_SWAY) ok = Window_Sway_GetActiveWindowTitle(buffer, buffer_size);
-    else if (wm == WM_HYPRLAND) ok = Window_Hyprland_GetActiveWindowTitle(buffer, buffer_size);
-    else ok = Window_X11_GetActiveWindowTitle(buffer, buffer_size);
-    if (!ok && wm != WM_X11) ok = Window_X11_GetActiveWindowTitle(buffer, buffer_size);
-    return ok;
+    if (get_title_hyprland(buffer, buffer_size)) return true;
+    if (get_title_sway(buffer, buffer_size)) return true;
+    return get_title_x11(buffer, buffer_size);
 }
 
 bool Window_FocusByTitle(const char *title) {
-    if (!title) return false;
-    WM_Type wm = Window_DetectWM();
-    (void)wm;
+    (void)title;
     return false;
 }
 
-bool Linux_GetActiveWindowTitle(char *buffer, int buffer_size) {
-    return Window_GetActiveWindowTitle(buffer, buffer_size);
-}
-
-bool Platform_FocusWindow(const char* window_name) {
-    return Window_FocusByTitle(window_name);
-}
