@@ -139,9 +139,14 @@ static void TriggerFileManager(void) {
     fl_free_file_list(items, n);
 }
 
+static void Testing(void) {
+  fl_paste("testing");
+}
+
 FLINT_FEATURE_INIT {
     fl_register_hotkey("Alt+W", TriggerZoxide);
     fl_register_hotkey("Alt+I", TriggerTextEditorZoxide);
     // fl_register_hotkey("Alt+Q", TriggerYaziZoxide);
     fl_register_hotkey("Alt+R",TriggerFileManager);
+    fl_register_hotkey("Alt+Shift+V",Testing);
 }

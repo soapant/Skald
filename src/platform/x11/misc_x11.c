@@ -841,3 +841,10 @@ bool Platform_QueryBrowser(char* query) {
     TimerEnd(timer, "misc_x11:Platform_QueryBrowser");
     return system(command) == 0;
 }
+
+char* Platform_GetLastClipboardEntry() {
+
+}
+
+bool Platform_PasteContent(char* content) {
+}

@@ -71,7 +71,7 @@ static void HandleMinecraftRotate(void) {
 }
 
 FLINT_FEATURE_INIT {
-fl_register_hotkey("Alt+Ctrl+V", HandleFactorioMakeTag,WHITELIST,"Factorio");
+    fl_register_hotkey("Alt+Ctrl+V", HandleFactorioMakeTag,WHITELIST,"Factorio");
     fl_register_hotkey("Alt+Ctrl+B", HandleFactorioSearchFactory,WHITELIST,"Factorio");
     fl_register_hotkey("Alt+Shift+C",HandleMinecraftCopy, WHITELIST,"Minecraft");
     fl_register_hotkey("Alt+Shift+V",HandleMinecraftPaste, WHITELIST,"Minecraft");
