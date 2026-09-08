@@ -439,3 +439,42 @@ bool Platform_QueryBrowser(char* query) {
     snprintf(command, sizeof(command), "start \"\" \"%s\"", url);
     return system(command) == 0;
 }
+
+char* Platform_GetLastClipboardEntry(void) {
+    char* result = NULL;
+
+    if (!OpenClipboard(NULL)) {
+        return NULL;
+    }
+
+    HANDLE hClipData = GetClipboardData(CF_UNICODETEXT);
+    if (hClipData == NULL) {
+        CloseClipboard();
+        return NULL;
+    }
+
+    wchar_t* pClipText = (wchar_t*)GlobalLock(hClipData);
+    if (pClipText == NULL) {
+        CloseClipboard();
+        return NULL;
+    }
+
+    int wideCharLen = wcslen(pClipText);
+    int utf8Len = WideCharToMultiByte(CP_UTF8, 0, pClipText, wideCharLen, NULL, 0, NULL, NULL);
+
+    if (utf8Len > 0) {
+        result = (char*)malloc(utf8Len + 1);
+        if (result != NULL) {
+            WideCharToMultiByte(CP_UTF8, 0, pClipText, wideCharLen, result, utf8Len, NULL, NULL);
+            result[utf8Len] = '\0';
+        }
+    }
+
+    GlobalUnlock(hClipData);
+    CloseClipboard();
+
+    return result;
+}
+
+bool Platform_PasteContent(char* content) {
+}

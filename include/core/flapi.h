@@ -28,7 +28,6 @@
 #include "helpers.h"
 #include "config.h"
 #include "core/platform.h"
-#include "platform/window.h"
 #include "common_ui.h"
 
 #if !defined(MAX_PATH)
@@ -93,6 +92,7 @@ char* fl_adb_put_file(char* filepath,char* output_file_path);
 char* fl_adb_reboot();
 bool fl_paste_from_clipboard();
 bool fl_paste(char* content);
+char* fl_get_last_clipboard_entry();
 
 #define _FL_HOTKEY_EXPAND(hotkey, trigger, cond, whitelist, ...) \
     fl_register_hotkey_impl(hotkey, trigger, cond, whitelist, (const char*[]){__VA_ARGS__, NULL})

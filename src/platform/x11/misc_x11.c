@@ -18,6 +18,7 @@
 #include "helpers.h"
 #include "core/platform.h"
 #include "core/timer.h"
+#include "wm/wm.h"
 
 
 static uid_t ProbeSessionUid(void){
@@ -843,7 +844,7 @@ bool Platform_QueryBrowser(char* query) {
 }
 
 char* Platform_GetLastClipboardEntry() {
-
+  return Wm_GetClipboardLastEntry();
 }
 
 bool Platform_PasteContent(char* content) {

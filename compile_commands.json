@@ -559,7 +559,7 @@
   },
   {
     "directory": "/home/diggy/Programming/Projects/Flint",
-    "file": "src/platform/window.c",
+    "file": "src/platform/wm/wm.c",
     "arguments": [
       "gcc",
       "-Wall",
@@ -572,7 +572,61 @@
       "-w",
       "-g",
       "-c",
-      "src/platform/window.c"
+      "src/platform/wm/wm.c"
+    ]
+  },
+  {
+    "directory": "/home/diggy/Programming/Projects/Flint",
+    "file": "src/platform/wm/hyprland_wm.c",
+    "arguments": [
+      "gcc",
+      "-Wall",
+      "-Wextra",
+      "-I",
+      "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
+      "-w",
+      "-g",
+      "-c",
+      "src/platform/wm/hyprland_wm.c"
+    ]
+  },
+  {
+    "directory": "/home/diggy/Programming/Projects/Flint",
+    "file": "src/platform/wm/x11_wm.c",
+    "arguments": [
+      "gcc",
+      "-Wall",
+      "-Wextra",
+      "-I",
+      "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
+      "-w",
+      "-g",
+      "-c",
+      "src/platform/wm/x11_wm.c"
+    ]
+  },
+  {
+    "directory": "/home/diggy/Programming/Projects/Flint",
+    "file": "src/platform/wm/sway_wm.c",
+    "arguments": [
+      "gcc",
+      "-Wall",
+      "-Wextra",
+      "-I",
+      "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
+      "-w",
+      "-g",
+      "-c",
+      "src/platform/wm/sway_wm.c"
     ]
   },
   {
