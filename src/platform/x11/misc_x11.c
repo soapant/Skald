@@ -778,3 +778,66 @@ bool Platform_LaunchBrowserAtUrl(char* url,bool new_window) {
     }
     TimerEnd(timer, "misc_x11:Platform_LaunchBrowserAtUrl");
 }
+
+bool Platform_QueryBrowser(char* query) {
+    if (!query || !query[0]) return false;
+    
+    WinTimer timer = TimerStart();
+    char command[2048];
+    char url[2048];
+    
+    char encoded_query[2048] = {0};
+    char* src = query;
+    char* dst = encoded_query;
+    while (*src && (dst - encoded_query) < sizeof(encoded_query) - 1) {
+        if (*src == ' ') {
+            *dst++ = '%';
+            *dst++ = '2';
+            *dst++ = '0';
+        } else if (*src == '&') {
+            *dst++ = '%';
+            *dst++ = '2';
+            *dst++ = '6';
+        } else if (*src == '?') {
+            *dst++ = '%';
+            *dst++ = '3';
+            *dst++ = 'F';
+        } else {
+            *dst++ = *src;
+        }
+        src++;
+    }
+    *dst = '\0';
+    
+    //temporary guess the wanted search engine 
+    snprintf(url, sizeof(url), "https://duckduckgo.com/?q=%s", encoded_query);
+    
+    // Alternatively, use Google:
+    // snprintf(url, sizeof(url), "https://www.google.com/search?q=%s", encoded_query);
+    
+    // Or use your preferred search engine
+    // snprintf(url, sizeof(url), "https://search.brave.com/search?q=%s", encoded_query);
+    
+    const char* real_user = Platform_GetRealUser();
+    const char* display = getenv("DISPLAY");
+    if (!display) display = ":0";
+    const char* xauthority = getenv("XAUTHORITY");
+    if (!xauthority) xauthority = "";
+    const char* env_runtime = getenv("XDG_RUNTIME_DIR");
+    char runtime_dir[256];
+    if (env_runtime) snprintf(runtime_dir, sizeof(runtime_dir), "%s", env_runtime);
+    else snprintf(runtime_dir, sizeof(runtime_dir), "/run/user/1000");
+    
+    if (Platform_IsRunningAsRoot()) {
+        snprintf(command, sizeof(command), 
+                 "sudo -u %s DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s %s\"%s\" > /dev/null 2>&1 &",
+                 real_user, display, xauthority, runtime_dir, UsedBrowser, url);
+    } else {
+        snprintf(command, sizeof(command), 
+                 "DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s %s \"%s\" > /dev/null 2>&1 &",
+                 display, xauthority, runtime_dir, UsedBrowser, url);
+    }
+    
+    TimerEnd(timer, "misc_x11:Platform_QueryBrowser");
+    return system(command) == 0;
+}
