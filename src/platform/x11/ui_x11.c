@@ -12,6 +12,7 @@
 #include "platform/subclasses.h"
 #include "core/feature_loader.h"
 #include "core/feature_data.h"
+#include "platform/window.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -520,7 +521,7 @@ bool HandleGlobalKeyEvent(int key_code, int value) {
     }
 
     char fgTitle[256] = {0};
-    Linux_GetActiveWindowTitle(fgTitle, sizeof(fgTitle));
+    Window_GetActiveWindowTitle(fgTitle, sizeof(fgTitle));
 
     int pressed_vk = ConvertLinuxKeyToWindowsVK(key_code);
     
