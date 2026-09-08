@@ -39,3 +39,9 @@ bool get_title_x11(char *buffer, int buffer_size) {
 char* get_clipboard_entry_x11() {
   return Platform_RunTerminalCommand("xclip -o -selection clipboard",false);
 }
+
+char* paste_x11(char* content) {
+  char buffer[100];
+  snprintf(buffer,sizeof(buffer),"xdotool %s",content);
+  return Platform_RunTerminalCommand(buffer,false);
+}

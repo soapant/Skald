@@ -140,9 +140,7 @@ static void TriggerFileManager(void) {
 }
 
 static void Testing(void) {
-  printf("DID WE GET HERE \n");
-  char* result = fl_get_last_clipboard_entry();
-  printf("%s \n",result);
+  fl_paste_from_clipboard();
 }
 
 FLINT_FEATURE_INIT {

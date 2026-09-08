@@ -9,5 +9,6 @@
 bool Wm_GetActiveWindowTitle(char *buffer, int buffer_size);
 bool Wm_FocusByTitle(const char *title);
 char* Wm_GetClipboardLastEntry();
+char* Wm_Paste(char* content);
 
 #endif
