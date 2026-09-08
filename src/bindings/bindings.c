@@ -69,6 +69,9 @@ bool CheckVimMotion(int pressed_vk, int modifiers, MotionAction* out_action, con
             const SequenceBinding* b = &G_VIM_SEQUENCE_BINDINGS[i];
             if (b->mode == MODE_INSERT && SequenceStartsWith(b->sequence) &&
                 ScopeMatches(b->scope, in_popup)) {
+                *out_action = MOTION_NONE;
+                *out_sequence = NULL;
+                *out_typed_count = 0;
                 return true;
             }
         }
@@ -130,6 +133,9 @@ bool CheckVimMotion(int pressed_vk, int modifiers, MotionAction* out_action, con
                         return true;
                     }
                     if (SequenceStartsWith(b->sequence)) {
+                        *out_action = MOTION_NONE;
+                        *out_sequence = NULL;
+                        *out_typed_count = 0;
                         return true;
                     }
                 }
@@ -164,7 +170,7 @@ void ExecuteMotion(MotionAction action, const char* sequence, int typed_count) {
     if (typed_count > 0 && sequence != NULL && strlen(sequence) > 0 && IsInsertMode()) {
         DeleteLastTypedChar(&ctx);
         FlintContext* _c = FlintContext_Get();
-        if (ctx.state && _c->prompt_callbacks.refresh) _c->prompt_callbacks.refresh(ctx.state->filter, ctx.hListBox, ctx.lb);
+        if (ctx.state && _c && _c->prompt_callbacks.refresh) _c->prompt_callbacks.refresh(ctx.state->filter, ctx.hListBox, ctx.lb);
     }
     for (int i = 0; i < VIM_SEQUENCE_BINDING_COUNT; i++) {
         const SequenceBinding* b = &G_VIM_SEQUENCE_BINDINGS[i];
@@ -190,4 +196,3 @@ void ExecuteMotion(MotionAction action, const char* sequence, int typed_count) {
         HandleEnterVisual(&ctx);
     }
 }
-
