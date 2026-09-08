@@ -848,4 +848,5 @@ char* Platform_GetLastClipboardEntry() {
 }
 
 bool Platform_PasteContent(char* content) {
+  return Wm_Paste(content);
 }

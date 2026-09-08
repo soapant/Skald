@@ -9,3 +9,9 @@ bool get_title_hyprland(char *buffer, int buffer_size) {
 char* get_clipboard_entry_hyprland() {
   return Platform_RunTerminalCommand("wl-paste",false);
 }
+
+char* paste_hyprland(char* content) {
+  char buffer[100];
+  snprintf(buffer,sizeof(buffer),"wtype %s",content);
+  return Platform_RunTerminalCommand(buffer,false);
+}

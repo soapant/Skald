@@ -4,4 +4,6 @@
 #include "core/platform.h"
 bool get_title_sway(char *buffer, int buffer_size);
 char* get_clipboard_entry_sway();
+char* paste_sway(char* content);
+
 #endif

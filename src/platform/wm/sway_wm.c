@@ -46,3 +46,9 @@ bool get_title_sway(char *buffer, int buffer_size) {
 char* get_clipboard_entry_sway() {
   return Platform_RunTerminalCommand("wl-paste",false);
 }
+
+char* paste_sway(char* content) {
+  char buffer[100];
+  snprintf(buffer,sizeof(buffer),"wtype %s",content);
+  return Platform_RunTerminalCommand(buffer,false);
+}
