@@ -453,3 +453,7 @@ bool Platform_ClickAtPos(int x,int y) {
 
     SendInput(3, inputs, sizeof(INPUT));
 }
+
+bool Platform_FocusWindow(const char* title) {
+
+}

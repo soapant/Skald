@@ -174,7 +174,7 @@ void applauncher_copy_callback(const char* selection,int true_index,int type) {
         break;
       }
     }
-    fl_copy_into_clipboard(text);
+    fl_copy_to_clipboard(text);
 }
 
 void TriggerAppLauncher(void) {
