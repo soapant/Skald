@@ -24,9 +24,9 @@ bool PromptController_TryVimMotion(int wParam, bool ctrl, bool shift, bool alt) 
     if (ctrl) mod |= HOTKEY_MOD_CTRL;
     if (shift) mod |= HOTKEY_MOD_SHIFT;
     if (alt) mod |= HOTKEY_MOD_ALT;
-    MotionAction act; const char* seq; int typed;
+    MotionAction act = MOTION_NONE; const char* seq = NULL; int typed = 0;
     if (CheckVimMotion(wParam, mod, &act, &seq, &typed)) {
-        ExecuteMotion(act, seq, typed);
+        if (act != MOTION_NONE) ExecuteMotion(act, seq, typed);
         return true;
     }
     return false;

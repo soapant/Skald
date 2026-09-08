@@ -84,7 +84,7 @@ void Vim_SetText(VimContext* ctx, const char* text) {
         ctx->state->filter[sizeof(ctx->state->filter)-1]='\0';
         ctx->state->cursor = (int)strlen(ctx->state->filter);
         FlintContext* _c = FlintContext_Get();
-        if (_c->prompt_callbacks.refresh) _c->prompt_callbacks.refresh(ctx->state->filter, ctx->hListBox, ctx->lb);
+        if (_c && _c->prompt_callbacks.refresh) _c->prompt_callbacks.refresh(ctx->state->filter, ctx->hListBox, ctx->lb);
     } else if (ctx->simple_state) {
         strncpy(ctx->simple_state->user_input, text, sizeof(ctx->simple_state->user_input)-1);
         ctx->simple_state->user_input[sizeof(ctx->simple_state->user_input)-1]='\0';
@@ -320,26 +320,14 @@ bool SequenceTimedOut(void) {
 }
 
 void DeleteLastTypedChar(VimContext* ctx) {
-    printf("[VIM-DEBUG] DeleteLastTypedChar: START\n");
-    if (!ctx) {
-        printf("[VIM-DEBUG] DeleteLastTypedChar: ctx null!\n");
-        return;
-    }
+    if (!ctx) return;
     char text[512];
     Vim_GetText(ctx, text, sizeof(text));
     int len = (int)strlen(text);
     int cursor_pos = Vim_GetCursor(ctx);
-    printf("[VIM-DEBUG] DeleteLastTypedChar: text='%s', len=%d, cursor_pos=%d\n", text, len, cursor_pos);
-    if (cursor_pos == 0 || len == 0) {
-        printf("[VIM-DEBUG] Nothing to delete (cursor at start or empty)\n");
-        return;
-    }
+    if (cursor_pos == 0 || len == 0) return;
     int delete_pos = cursor_pos - 1;
-    char deleted_char = text[delete_pos];
-    printf("[VIM-DEBUG] Deleting character at position %d: '%c'\n", delete_pos, deleted_char);
     memmove(&text[delete_pos], &text[delete_pos + 1], len - delete_pos);
     Vim_SetText(ctx, text);
     Vim_SetCursor(ctx, delete_pos);
-    printf("[VIM-DEBUG] Deleted character '%c', new text='%s', cursor at %d\n",
-           deleted_char, text, delete_pos);
 }
