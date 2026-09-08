@@ -12,7 +12,7 @@
 
 
 
-bool fl_copy_into_clipboard(const char* text) {
+bool fl_copy_to_clipboard(const char* text) {
     if (text == NULL) return 0;
     return fl_copy_into_clipboard_platform(text);
 }
