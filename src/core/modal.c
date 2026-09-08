@@ -15,6 +15,7 @@ static ListBoxInfo* GetActiveListBoxFromTopPopup(void) {
     if (!wm) return NULL;
     Popup* top = WindowManager_GetTopPopup(wm);
     if (!top || !top->user_data) return NULL;
+    if (top->type != POPUP_PROMPT) return NULL;
     PromptState* state = (PromptState*)top->user_data;
     if (state->has_listbox) return &state->listbox;
     return NULL;
