@@ -40,7 +40,7 @@ bool google_enter_callback(const char* selection, ListBoxInfo* lb) {
     if (!UI_IsListBoxSelected(lb)) {
         fl_append_to_file(GoogleHistoryFile, selection);
     }
-    Platform_LaunchBrowserAtUrl((char*)selection, false);
+    fl_query_browser(selection);
     return true;
 }
 

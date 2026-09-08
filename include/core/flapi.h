@@ -74,6 +74,7 @@ int fl_collect_running_processes(char process_list[][128], int max_count);
 bool fl_terminate_process_by_name(const char* exe_name);
 bool fl_string_match_insensitive(char* needle,char* haystack);
 bool fl_launch_browser(char* url);
+bool fl_query_browser(char* query);
 bool fl_launch_browser_in_a_new_window(char* url);
 bool fl_click(int x,int y);
 bool fl_move(int x,int y);

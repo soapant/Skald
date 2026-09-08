@@ -23,6 +23,8 @@ Environment=DISPLAY=:0
 # until import-environment runs, so provide sane defaults. Foot itself ignores -e, other terms need it.
 Restart=on-failure
 RestartSec=2
+KillMode=process
+TimeoutStopSec=5
 
 [Install]
 WantedBy=default.target
