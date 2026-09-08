@@ -1,0 +1,7 @@
+#ifndef SWAY_WM_H
+#define SWAY_WM_H
+#include <stdbool.h>
+#include "core/platform.h"
+bool get_title_sway(char *buffer, int buffer_size);
+char* get_clipboard_entry_sway();
+#endif
