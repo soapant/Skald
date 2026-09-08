@@ -91,6 +91,8 @@ char* fl_adb_clear_app_data(char* app_name);
 char* fl_adb_get_file(char* filepath,char* output_file_path);
 char* fl_adb_put_file(char* filepath,char* output_file_path);
 char* fl_adb_reboot();
+bool fl_paste_from_clipboard();
+bool fl_paste(char* content);
 
 #define _FL_HOTKEY_EXPAND(hotkey, trigger, cond, whitelist, ...) \
     fl_register_hotkey_impl(hotkey, trigger, cond, whitelist, (const char*[]){__VA_ARGS__, NULL})
