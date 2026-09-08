@@ -1090,4 +1090,7 @@ bool Platform_ClickAtPos(int x,int y) {
     TimerEnd(timer, "platform_x11:Platform_ClickAtPos");
     return false;
 }
+bool Platform_FocusWindow(const char* title) {
+
+}
 

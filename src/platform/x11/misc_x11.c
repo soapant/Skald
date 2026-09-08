@@ -810,14 +810,7 @@ bool Platform_QueryBrowser(char* query) {
     }
     *dst = '\0';
     
-    //temporary guess the wanted search engine 
-    snprintf(url, sizeof(url), "https://duckduckgo.com/?q=%s", encoded_query);
-    
-    // Alternatively, use Google:
-    // snprintf(url, sizeof(url), "https://www.google.com/search?q=%s", encoded_query);
-    
-    // Or use your preferred search engine
-    // snprintf(url, sizeof(url), "https://search.brave.com/search?q=%s", encoded_query);
+    snprintf(url, sizeof(url), "https://%s.com/?q=%s",UsedSearchEngine,encoded_query);
     
     const char* real_user = Platform_GetRealUser();
     const char* display = getenv("DISPLAY");
