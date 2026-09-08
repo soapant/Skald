@@ -186,6 +186,10 @@ bool fl_launch_browser(char* url) {
   if (!url) return false;
   return Platform_LaunchBrowserAtUrl(url,false);
 }
+bool fl_query_browser(char* query) {
+    if (!query) return false;
+    return Platform_QueryBrowser(query);
+}
 
 bool fl_click(int x,int y) {
   return Platform_ClickAtPos(x,y);
@@ -264,6 +268,7 @@ char* fl_adb_reboot() {
   return Platform_RunTerminalCommand(buffer,false);
 
 }
+
 
 
 

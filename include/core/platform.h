@@ -26,6 +26,7 @@ bool Platform_SetX11Property(const char* window_title, const char* atom_name, lo
 bool Platform_SetX11StringProperty(const char* window_title, const char* atom_name, const char* value);
 bool Platform_FocusWindow(const char* window_name);
 bool Platform_ClickAtPos(int x,int y);
+bool Platform_QueryBrowser(char* query);
 
 #if !defined(_WIN32)
 bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state);
