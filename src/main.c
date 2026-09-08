@@ -18,13 +18,11 @@
 #include <fontconfig/fontconfig.h>
 #endif
 #if defined(_WIN32)
-// notification getter decls (src/features/notification_getter.c - no header)
 extern const wchar_t* HttpUrlForNotis;
 extern void StartNtfyDaemon(const wchar_t* topic, void (*callback)(const char*));
 #endif
 
 
-// Window handles and feature globals now in FlintContext (src/core/context.c)
 
 
 void OInNotificationRecieved(const char* text) {
