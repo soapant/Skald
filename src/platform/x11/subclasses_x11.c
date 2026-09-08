@@ -105,9 +105,9 @@ static bool TryVimMotion(int wParam, bool ctrl_pressed, bool shift_pressed, bool
     if (ctrl_pressed) mod |= HOTKEY_MOD_CTRL;
     if (shift_pressed) mod |= HOTKEY_MOD_SHIFT;
     if (alt_pressed) mod |= HOTKEY_MOD_ALT;
-    MotionAction act; const char* seq; int typed;
+    MotionAction act = MOTION_NONE; const char* seq = NULL; int typed = 0;
     if (CheckVimMotion(wParam, mod, &act, &seq, &typed)) {
-        ExecuteMotion(act, seq, typed);
+        if (act != MOTION_NONE) ExecuteMotion(act, seq, typed);
         TimerEnd(timer, "subclasses_x11:TryVimMotion");
         return true;
     }

@@ -108,7 +108,6 @@ void DeleteInsideDelimiter(VimContext* ctx, char open_char, char close_char, boo
     }
     int delete_start = start + 1;
     int delete_end = end;
-    printf("[DEBUG] Deleting from %d to %d (inside %c%c)\n", delete_start, delete_end, open_char, close_char);
     memmove(&text[delete_start], &text[delete_end], len - delete_end + 1);
     Vim_SetText(ctx, text);
     Vim_SetCursor(ctx, delete_start);
