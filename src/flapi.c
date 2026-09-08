@@ -268,7 +268,7 @@ char* fl_adb_reboot() {
   return Platform_RunTerminalCommand(buffer,false);
 
 }
-char* fl_get_last_clibpoard_entry() {
+char* fl_get_last_clipboard_entry() {
    return Platform_GetLastClipboardEntry();
 }
 bool fl_paste_from_clipboard() {

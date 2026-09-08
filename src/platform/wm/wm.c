@@ -27,3 +27,12 @@ char* Wm_GetClipboardLastEntry(void) {
     
     return NULL;
 }
+char* Wm_Paste(char* content) {
+    char* result;
+    
+    if ((result = paste_hyprland(content))) return result;
+    if ((result = paste_sway(content))) return result;
+    if ((result = paste_x11(content))) return result;
+    
+    return NULL;
+}
