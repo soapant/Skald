@@ -1,10 +1,10 @@
 #include "core/flapi.h"
 
 void copy_seifisbad(void) {
-    fl_copy_into_clipboard("seifisbad@gmail.com");
+    fl_copy_to_clipboard("seifisbad@gmail.com");
 }
 void copy_password(void) {
-    fl_copy_into_clipboard("i_am_retarded1");
+    fl_copy_to_clipboard("i_am_retarded1");
 }
 
 FLINT_FEATURE_INIT {

@@ -296,7 +296,7 @@ static void switcher_copy_callback(const char* selection, int true_index, int ty
     (void)selection;
     (void)type;
     if (true_index >= 0 && true_index < g_switcher_count) {
-        fl_copy_into_clipboard(g_switcher_windows[true_index].exe);
+        fl_copy_to_clipboard(g_switcher_windows[true_index].exe);
     }
 }
 

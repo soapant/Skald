@@ -366,7 +366,7 @@ void todo_copy_callback(const char* selection,int true_index,int type) {
         *pipe = '\0';
     }
     
-    fl_copy_into_clipboard(buffer);
+    fl_copy_to_clipboard(buffer);
 }
 
 #if !defined(_WIN32)
