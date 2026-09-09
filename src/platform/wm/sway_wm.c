@@ -2,6 +2,7 @@
 #include "core/platform.h"
 #include "helpers.h"
 #include <string.h>
+#include <stdio.h>
 #include <stdlib.h>
 
 bool get_title_sway(char *buffer, int buffer_size) {

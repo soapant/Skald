@@ -29,6 +29,7 @@
 #include "config.h"
 #include "core/platform.h"
 #include "common_ui.h"
+#include "core/window_manager.h"
 
 #if !defined(MAX_PATH)
 #define MAX_PATH 260
