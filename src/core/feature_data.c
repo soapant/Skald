@@ -49,9 +49,9 @@ struct feature_data* GetFeatureData(const char* name) {
     return data;
 }
 
+//temporary not working like at all 
 void AddSelectionToData(char* selection, const char* feature_name, struct feature_data* data) {
     if (!data) return;
-    printf("ADD SELECTION TO DATA OF SELECTION %s FEATURE %s\n", selection, feature_name);
     data->last_selections[data->selection_count] = selection;
     data->selection_count++;
     for (int i = 0; i < data->selection_count; i++) {
