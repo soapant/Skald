@@ -155,7 +155,7 @@ void HandleYankLine(VimContext* ctx) {
     Vim_GetText(ctx, textBuffer, sizeof(textBuffer));
     textBuffer[strcspn(textBuffer, "\r\n")] = '\0';
     if (strlen(textBuffer) > 0) {
-        // Platform_CopyToClipboard(textBuffer);
+        Platform_CopyToClipboard(textBuffer);
     } else {
       printf("[VIM] Yank failed: Search box is currently empty.\n");
     }
@@ -287,7 +287,7 @@ void HandleSendCopyShift(VimContext* ctx) {
     const char* sel = UI_IsListBoxSelected(ctx->lb) ? ctx->lb->populated_cache[ctx->lb->selected_index] : "";
     FlintContext* _c = FlintContext_Get();
     if (_c->prompt_callbacks.copy) _c->prompt_callbacks.copy(sel, ctx->lb->selected_index, 0);
-    // else Platform_CopyToClipboard(sel);
+    else Platform_CopyToClipboard(sel);
 #endif
 }
 void HandleSendCopyControl(VimContext* ctx) {
@@ -302,7 +302,7 @@ void HandleSendCopyControl(VimContext* ctx) {
     const char* sel = UI_IsListBoxSelected(ctx->lb) ? ctx->lb->populated_cache[ctx->lb->selected_index] : "";
     FlintContext* _c = FlintContext_Get();
     if (_c->prompt_callbacks.copy) _c->prompt_callbacks.copy(sel, ctx->lb->selected_index, 1);
-    // else Platform_CopyToClipboard(sel);
+    else Platform_CopyToClipboard(sel);
 #endif
 }
 void HandleCopyToSearch(VimContext* ctx) {

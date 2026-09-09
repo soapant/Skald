@@ -38,8 +38,5 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 void RequestInitialNavigation(int index);
 #endif
 
-#if !defined(_WIN32)
-bool Linux_HandleEditPopupKey(const XEvent* ev, SimplePromptState* state, bool* confirmed, bool* cancelled);
-#endif
 
 #endif
