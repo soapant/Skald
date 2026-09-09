@@ -18,18 +18,7 @@ static bool collect_source(Nob_Walk_Entry entry) {
         Nob_String_View path = nob_sv_from_cstr(entry.path);
         if (nob_sv_ends_with_cstr(path, ".c")) {
             if (nob_sv_ends_with_cstr(path, "_x11.c")) return true;
-            if (nob_sv_ends_with_cstr(path, "_sway.c")) return true;
-            if (nob_sv_ends_with_cstr(path, "_hyprland.c")) return true;
-            if (nob_sv_ends_with_cstr(path, "window_sway.c")) return true;
-            if (nob_sv_ends_with_cstr(path, "window_hyprland.c")) return true;
-            if (nob_sv_ends_with_cstr(path, "display_x11.c")) return true;
-            if (nob_sv_ends_with_cstr(path, "helpers_x11.c")) return true;
-            if (nob_sv_ends_with_cstr(path, "flapi_x11.c")) return true;
-            if (nob_sv_ends_with_cstr(path, "misc_x11.c")) return true;
-            if (nob_sv_ends_with_cstr(path, "subclasses_x11.c")) return true;
-            if (nob_sv_ends_with_cstr(path, "window_manager_x11.c")) return true;
-            if (nob_sv_ends_with_cstr(path, "ui_x11.c")) return true;
-            if (nob_sv_ends_with_cstr(path, "platform_x11.c")) return true;
+            if (nob_sv_ends_with_cstr(path, "wm.c")) return true;
             nob_da_append(&sources, strdup(path.data));
         }
     }
