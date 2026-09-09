@@ -1,6 +1,7 @@
 #include "helpers.h"
 #include <stdlib.h>
 #include <string.h>
+#include "wm/wm.h"
 
 static HotkeyBinding* g_hotkeys = NULL;
 static int g_hotkey_count = 0;
@@ -18,7 +19,9 @@ bool hotkey_register_internal(HotkeyBinding binding) {
     return true;
 }
 
-bool hotkey_process(int vk_code, int modifiers, const char* title) {
+bool hotkey_process(int vk_code, int modifiers) {
+    char title[256] = {0};
+    Wm_GetActiveWindowTitle(title, sizeof(title));
     for (int i = 0; i < g_hotkey_count; i++) {
         HotkeyBinding* b = &g_hotkeys[i];
         
