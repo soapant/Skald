@@ -132,6 +132,15 @@ bool fl_register_hotkey_impl(char* hotkey_string,void (*on_hotkey_trigger)(void)
     return hotkey_register_internal(binding);
 }
 
+bool fl_register_mapping(const char* from_hotkey, const char* to_hotkey) {
+    if (!from_hotkey || !to_hotkey) return false;
+    // use same parser as hotkeys, no callback/condition
+    HotkeyBinding from = convert_into_hotkey_binding((char*)from_hotkey, NULL, NULL, NULL, 0);
+    HotkeyBinding to = convert_into_hotkey_binding((char*)to_hotkey, NULL, NULL, NULL, 0);
+    if (from.vk_code == 0 || to.vk_code == 0) return false;
+    return hotkey_remap_register(from.vk_code, from.modifiers, to.vk_code, to.modifiers);
+}
+
 bool fl_launch_terminal_with_args(char* args) {
 
 }
