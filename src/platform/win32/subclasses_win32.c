@@ -459,10 +459,10 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             if (pdis->itemID >= (lb ? lb->populated_count : 0)) {
               return TRUE;
             }
-          if (!s_colorful_ready) {
+           if (!s_colorful_ready) {
             s_sel_brush = CreateSolidBrush(COLOR_SELECTED_TEXT);
               for (int i = 0; i < MAX_VISIBLE_ITEMS + 40; i++) {
-                float t = (float)(i % GradientItems) / (float)GradientItems;
+                float t = (float)i / (float)(MAX_VISIBLE_ITEMS + 40);
                   float hue = t * 240.0f;
                   float h = hue / 60.0f;
                   float s = 0.85f;
@@ -559,7 +559,10 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 numRect.right = numRect.left + 25;
                 
                 HFONT hOldFont = (HFONT)SelectObject(pdis->hDC, FlintContext_Get()->g_hNumFont);
-                SetTextColor(pdis->hDC, GetRainbowColor((float)(pdis->itemID % GradientItems) / (float)GradientItems, 0.85f, GradientBrightness));
+                {
+                    float _t = (lb && lb->populated_count>1) ? (float)pdis->itemID/(float)(lb->populated_count-1) : (float)(pdis->itemID%GradientItems)/(float)GradientItems;
+                    SetTextColor(pdis->hDC, GetRainbowColor(_t, 0.85f, GradientBrightness));
+                }
                 DrawTextA(pdis->hDC, s_num_cache[pdis->itemID], -1, &numRect, DT_SINGLELINE | DT_VCENTER | DT_CENTER);
                 SelectObject(pdis->hDC, hOldFont);
                 textRect.left += 35;
@@ -568,7 +571,10 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 RECT numRect = pdis->rcItem;
                   numRect.right = 35;
                   HFONT hOldFont = (HFONT)SelectObject(pdis->hDC, FlintContext_Get()->g_hNumFont);
-                  SetTextColor(pdis->hDC, GetRainbowColor((float)(pdis->itemID % GradientItems) / (float)GradientItems, 0.85f, GradientBrightness));
+                  {
+                    float _t = (lb && lb->populated_count>1) ? (float)pdis->itemID/(float)(lb->populated_count-1) : (float)(pdis->itemID%GradientItems)/(float)GradientItems;
+                    SetTextColor(pdis->hDC, GetRainbowColor(_t, 0.85f, GradientBrightness));
+                  }
                   DrawTextA(pdis->hDC, s_num_cache[pdis->itemID], -1, &numRect, DT_SINGLELINE | DT_VCENTER | DT_CENTER);
                   SelectObject(pdis->hDC, hOldFont);
                   textRect.left += 35;
@@ -577,7 +583,10 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                   RECT numRect = pdis->rcItem;
                     numRect.right = 45;
                     HFONT hOldFont = (HFONT)SelectObject(pdis->hDC, FlintContext_Get()->g_hNumFont);
-                    SetTextColor(pdis->hDC, GetRainbowColor((float)(pdis->itemID % GradientItems) / (float)GradientItems, 0.85f, GradientBrightness));
+                    {
+                    float _t = (lb && lb->populated_count>1) ? (float)pdis->itemID/(float)(lb->populated_count-1) : (float)(pdis->itemID%GradientItems)/(float)GradientItems;
+                    SetTextColor(pdis->hDC, GetRainbowColor(_t, 0.85f, GradientBrightness));
+                    }
                     DrawTextA(pdis->hDC, s_num_cache[pdis->itemID], -1, &numRect, DT_SINGLELINE | DT_VCENTER | DT_CENTER);
                   SelectObject(pdis->hDC, hOldFont);
                     textRect.left += 45;

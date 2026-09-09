@@ -8,6 +8,7 @@
 bool get_title_sway(char *buffer, int buffer_size) {
     if (!buffer || buffer_size <= 0) return false;
     buffer[0] = '\0';
+    if (!getenv("SWAYSOCK") && !getenv("I3SOCK")) return false;
     char *command_output = Platform_RunTerminalCommand(
         "sh -c \"swaymsg -t get_tree | jq '.. | objects | select(.focused? == true)'\"",
         false
