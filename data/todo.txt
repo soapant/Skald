@@ -18,3 +18,6 @@ maybe for the central contorl it would be every feature oyu have but its just pr
 you really need to figure out caching and some best way to do it ||[Cprogram]
 fucking windows implementation of dir watcher doesnt work ||[Cprogram]
 maybe fuck with the ai mp3 from text thing ||[Maybe]
+make a saerch in app so like saerch in gemini or ai thing||[Cprogram]|[DontForget]
+use wtype for the remapper||[Cprogram]
+smooth out the shaders a bit more||[Cprogram]

@@ -481,14 +481,6 @@ void ScanAndHookKeyboards(void) {
     closedir(dir);
     TimerEnd(timer, "ui_x11:ScanAndHookKeyboards");
 }
-//TEMPORARY
-void HandleRunNobAndReload(void) {
-  WinTimer timer = TimerStart();
-  Platform_RunTerminalCommand("./nob",false);
-  FeatureLoader_ReloadAll();
-  TimerEnd(timer, "ui_x11:HandleRunNobAndReload");
-}
-
 
 bool g_Linux_CtrlHeld  = false;
 bool g_Linux_AltHeld   = false;
@@ -532,18 +524,6 @@ bool HandleGlobalKeyEvent(int key_code, int value) {
         TimerEnd(timer, "ui_x11:HandleGlobalKeyEvent");
         return 1;
     }
-
-    //temporary
-    HotkeyBinding binding = {
-        .vk_code = 'N',
-        .modifiers = HOTKEY_MOD_ALT_CTRL,
-        .blacklist = NULL,
-        .blacklist_count = 0,
-        .whitelist = 0,
-        .hotkey_callback = HandleRunNobAndReload,
-        .hotkey_condition = NULL
-    };
-    hotkey_register_internal(binding);
 
     TimerEnd(timer, "ui_x11:HandleGlobalKeyEvent");
     return 0;
