@@ -4,6 +4,6 @@
 #include "helpers/hotkey.h"
 
 bool hotkey_register_internal(HotkeyBinding binding);
-bool hotkey_process(int vk_code, int modifiers, const char* title);
+bool hotkey_process(int vk_code, int modifiers);
 
 #endif
