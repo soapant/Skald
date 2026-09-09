@@ -50,6 +50,7 @@ extern const char* UsedSearchEngine;
 extern const char* ImageEditorPath;
 extern const char* FeaturePath;
 extern const char* IconPath;
+extern const char* ControlHotkey;
 extern const bool FullTextNeedsKeyPress;
 extern const bool MessagesEnabled;
 extern const bool RainbowText;

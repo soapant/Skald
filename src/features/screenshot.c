@@ -90,4 +90,6 @@ void TriggerOpenScreenshot(void) {
 FLINT_FEATURE_INIT {
     fl_register_hotkey("Alt+Ctrl+A", TriggerSaveScreenshot);
     fl_register_hotkey("Alt+Shift+A", TriggerOpenScreenshot);
+
+    fl_register_feature("Screenshot", TriggerSaveScreenshot);
 }

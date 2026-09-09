@@ -915,7 +915,19 @@ Window Linux_CreatePromptWindow(Display* dpy, int x, int y, int w, int h) {
     WinTimer timer = TimerStart();
     unsigned long bg = rgb_to_hex(COLOR_BG);
     TimerEnd(timer, "helpers_x11:Linux_CreatePromptWindow");
-    return Linux_CreateWindowEx(dpy, x, y, w, h, bg, "colored", "colored", KeyPressMask | ExposureMask | FocusChangeMask);
+    // use simple window without 32-bit alpha for now to avoid BadMatch on Hyprland/XWayland
+    int screen = DefaultScreen(dpy);
+    Window win = XCreateSimpleWindow(dpy, RootWindow(dpy, screen), x, y, w, h, 0, bg, bg);
+    XSelectInput(dpy, win, KeyPressMask | ExposureMask | FocusChangeMask);
+    Atom wm_type = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE", False);
+    Atom wm_type_dialog = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE_DIALOG", False);
+    XChangeProperty(dpy, win, wm_type, XA_ATOM, 32, PropModeReplace, (unsigned char*)&wm_type_dialog, 1);
+    XClassHint* ch = XAllocClassHint();
+    ch->res_name = (char*)"colored"; ch->res_class = (char*)"colored";
+    XSetClassHint(dpy, win, ch); XFree(ch);
+    XWMHints* hints = XAllocWMHints(); hints->flags = InputHint; hints->input = True; XSetWMHints(dpy, win, hints); XFree(hints);
+    TimerEnd(timer, "helpers_x11:Linux_CreatePromptWindow");
+    return win;
 }
 Window Linux_CreateSimplePromptWindow(Display* dpy, int x, int y, int w, int h) {
     WinTimer timer = TimerStart();

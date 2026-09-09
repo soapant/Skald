@@ -10,4 +10,6 @@ void copy_password(void) {
 FLINT_FEATURE_INIT {
     fl_register_hotkey("Alt+Shift+O", copy_seifisbad);
     fl_register_hotkey("Alt+Shift+P", copy_password);
+
+    fl_register_feature("Text Snippets", copy_seifisbad);
 }

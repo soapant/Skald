@@ -6,4 +6,6 @@ void open_youtube(void) {
 
 FLINT_FEATURE_INIT {
     fl_register_hotkey("Alt+Ctrl+Y", open_youtube);
+
+    fl_register_feature("QuickLink", open_youtube);
 }
