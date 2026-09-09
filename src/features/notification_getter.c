@@ -1,5 +1,4 @@
 #include "core/flapi.h"
-#include <wchar.h>
 #if defined(_WIN32)
 #include <windows.h>
 #include <winhttp.h>
