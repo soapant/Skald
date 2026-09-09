@@ -810,7 +810,26 @@ bool Platform_QueryBrowser(char* query) {
     }
     *dst = '\0';
     
-    snprintf(url, sizeof(url), "https://%s.com/?q=%s",UsedSearchEngine,encoded_query);
+
+    if (strcasecmp(UsedSearchEngine, "google") == 0) {
+        snprintf(url, sizeof(url), "https://www.google.com/search?q=%s", encoded_query);
+    } else if (strcasecmp(UsedSearchEngine, "duckduckgo") == 0) {
+        snprintf(url, sizeof(url), "https://duckduckgo.com/?q=%s", encoded_query);
+    } else if (strcasecmp(UsedSearchEngine, "bing") == 0) {
+        snprintf(url, sizeof(url), "https://www.bing.com/search?q=%s", encoded_query);
+    } else if (strcasecmp(UsedSearchEngine, "brave") == 0) {
+        snprintf(url, sizeof(url), "https://search.brave.com/search?q=%s", encoded_query);
+    } else if (strcasecmp(UsedSearchEngine, "startpage") == 0) {
+        snprintf(url, sizeof(url), "https://www.startpage.com/sp/search?query=%s", encoded_query);
+    } else if (strcasecmp(UsedSearchEngine, "yandex") == 0) {
+        snprintf(url, sizeof(url), "https://yandex.com/search/?text=%s", encoded_query);
+    } else if (strcasecmp(UsedSearchEngine, "ecosia") == 0) {
+        snprintf(url, sizeof(url), "https://www.ecosia.org/search?q=%s", encoded_query);
+    } else if (strcasecmp(UsedSearchEngine, "qwant") == 0) {
+        snprintf(url, sizeof(url), "https://www.qwant.com/?q=%s", encoded_query);
+    } else {
+        snprintf(url, sizeof(url), "https://duckduckgo.com/?q=%s", encoded_query);
+    }
     
     const char* real_user = Platform_GetRealUser();
     const char* display = getenv("DISPLAY");
