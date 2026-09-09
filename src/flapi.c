@@ -312,16 +312,16 @@ void fl_edit_confirm_callback(const char* new_text, void* user_data) {
     free(data);
 }
 
-void fl_edit_text_popup(const char* initial_text, const char* title, int x, int y, const char* filepath, ListBoxInfo* lb, RefreshCallback refresh) {
+bool fl_edit_text_popup(const char* initial_text, const char* title, int x, int y, const char* filepath, ListBoxInfo* lb, RefreshCallback refresh) {
     if (!title) title = "Edit";
     if (!initial_text) initial_text = "";
-    if (!lb) return;
+    if (!lb) return false;
     int idx = lb->selected_index;
     int true_idx = (idx >= 0 && idx < lb->populated_count) ? lb->matching_indices[idx] : idx;
     WindowManager* wm = WindowManager_Get();
-    if (!wm) return;
+    if (!wm) return false;
     EditCallbackData* data = (EditCallbackData*)calloc(1, sizeof(EditCallbackData));
-    if (!data) return;
+    if (!data) return false;
     data->filepath = filepath;
     data->lb = lb;
     data->selected_index = idx;
@@ -334,9 +334,14 @@ void fl_edit_text_popup(const char* initial_text, const char* title, int x, int 
     Popup* popup = EditPopup_Create(wm, initial_text, title, x, y, fl_edit_confirm_callback, data);
     if (!popup) {
         free(data);
-        return;
+        return false;
     }
     WindowManager_PushPopup(wm, popup);
+    return true;
+}
+bool fl_focus_window_by_title(char* title) {
+  if (!title) return false;
+  return Platform_FocusWindow(title);
 }
 
 
