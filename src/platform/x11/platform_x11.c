@@ -1114,66 +1114,6 @@ static int vk_to_linux_key(int vk) {
     return 0;
 }
 
-bool Platform_EmitHotkey(int vk_code, int modifiers) {
-    // Try XTest first (X11), fallback to uinput (Wayland)
-    Display* dpy = get_display();
-#if __has_include(<X11/extensions/XTest.h>)
-    if (dpy) {
-        // need KeyCode for each
-        int mod_keys[4] = {0};
-        int mod_count = 0;
-        if (modifiers & HOTKEY_MOD_CTRL) mod_keys[mod_count++] = XKeysymToKeycode(dpy, XK_Control_L);
-        if (modifiers & HOTKEY_MOD_ALT) mod_keys[mod_count++] = XKeysymToKeycode(dpy, XK_Alt_L);
-        if (modifiers & HOTKEY_MOD_SHIFT) mod_keys[mod_count++] = XKeysymToKeycode(dpy, XK_Shift_L);
-        if (modifiers & HOTKEY_MOD_SUPER) mod_keys[mod_count++] = XKeysymToKeycode(dpy, XK_Super_L);
-        // vk to keysym
-        KeySym ks = 0;
-        if (vk_code >= 'A' && vk_code <= 'Z') ks = 'a' + (vk_code - 'A');
-        else if (vk_code == VK_SPACE) ks = XK_space;
-        else if (vk_code == VK_RETURN) ks = XK_Return;
-        else if (vk_code == VK_BACK) ks = XK_BackSpace;
-        else if (vk_code == VK_TAB) ks = XK_Tab;
-        else if (vk_code == VK_ESCAPE) ks = XK_Escape;
-        else ks = vk_code;
-        int keycode = XKeysymToKeycode(dpy, ks);
-        if (keycode == 0 && vk_code >= 'A' && vk_code <= 'Z') keycode = XKeysymToKeycode(dpy, vk_code);
-        // press mods
-        for (int i = 0; i < mod_count; i++) if (mod_keys[i]) XTestFakeKeyEvent(dpy, mod_keys[i], True, CurrentTime);
-        if (keycode) XTestFakeKeyEvent(dpy, keycode, True, CurrentTime);
-        XFlush(dpy);
-        usleep(10000);
-        if (keycode) XTestFakeKeyEvent(dpy, keycode, False, CurrentTime);
-        for (int i = mod_count - 1; i >= 0; i--) if (mod_keys[i]) XTestFakeKeyEvent(dpy, mod_keys[i], False, CurrentTime);
-        XFlush(dpy);
-        return true;
-    }
-#endif
-    // Fallback uinput
-    int fd = open("/dev/uinput", O_WRONLY | O_NONBLOCK);
-    if (fd < 0) fd = open("/dev/input/uinput", O_WRONLY | O_NONBLOCK);
-    if (fd < 0) return false;
-    // For now, just try to emit via uinput if XTest not available - simplified
-    // Map vk to linux key
-    int linux_mod[4] = {0}, linux_mod_count = 0;
-    if (modifiers & HOTKEY_MOD_CTRL) linux_mod[linux_mod_count++] = KEY_LEFTCTRL;
-    if (modifiers & HOTKEY_MOD_ALT) linux_mod[linux_mod_count++] = KEY_LEFTALT;
-    if (modifiers & HOTKEY_MOD_SHIFT) linux_mod[linux_mod_count++] = KEY_LEFTSHIFT;
-    if (modifiers & HOTKEY_MOD_SUPER) linux_mod[linux_mod_count++] = KEY_LEFTMETA;
-    int linux_key = vk_to_linux_key(vk_code);
-    struct input_event ev = {0}, syn = {0};
-    syn.type = EV_SYN; syn.code = SYN_REPORT;
-    // press mods
-    for (int i = 0; i < linux_mod_count; i++) {
-        gettimeofday(&ev.time, NULL); ev.type = EV_KEY; ev.code = linux_mod[i]; ev.value = 1; write(fd, &ev, sizeof(ev)); write(fd, &syn, sizeof(syn));
-    }
-    if (linux_key) { gettimeofday(&ev.time, NULL); ev.type = EV_KEY; ev.code = linux_key; ev.value = 1; write(fd, &ev, sizeof(ev)); write(fd, &syn, sizeof(syn)); usleep(10000); gettimeofday(&ev.time, NULL); ev.type = EV_KEY; ev.code = linux_key; ev.value = 0; write(fd, &ev, sizeof(ev)); write(fd, &syn, sizeof(syn)); }
-    for (int i = linux_mod_count - 1; i >= 0; i--) {
-        gettimeofday(&ev.time, NULL); ev.type = EV_KEY; ev.code = linux_mod[i]; ev.value = 0; write(fd, &ev, sizeof(ev)); write(fd, &syn, sizeof(syn));
-    }
-    close(fd);
-    return true;
-}
-
 char* Platform_GetActiveWindowTitle() {
   return Wm_GetActiveWindowTitle();
 }
