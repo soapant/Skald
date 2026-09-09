@@ -1,0 +1,442 @@
+00:00:00.000 No text
+00:00:00.080 I can check my schedule and join my next
+00:00:02.240 meeting, control my music, and even
+00:00:04.080 choose where it plays, and run
+00:00:05.759 everything in my smart home, all without
+00:00:07.839 ever leaving this free Spotlight
+00:00:09.519 replacement called Raycast. But that's
+00:00:11.920 just the beginning, because there's a
+00:00:13.200 huge amount of extensions that you can
+00:00:14.799 install with just a single click. And
+00:00:16.000 No text
+00:00:16.640 what's wild is that a lot of the best
+00:00:18.400 stuff comes built in. You don't even
+00:00:20.320 need to install anything, like a
+00:00:21.000 No text
+00:00:21.920 built-in clipboard manager that saves
+00:00:23.840 everything you copy to your clipboard,
+00:00:25.600 like text, links, files, images, and
+00:00:28.720 even videos. And if you remember even a
+00:00:30.880 single word, Raycast finds it instantly,
+00:00:33.600 even text inside images. And you can
+00:00:35.920 then press enter to paste it. And for
+00:00:37.000 No text
+00:00:38.160 those things that you're always going
+00:00:39.280 back to copy and paste, you can turn
+00:00:41.120 those into snippets, which is Raycast's
+00:00:43.360 built-in text replacement tool. Just
+00:00:45.280 give it a name, type the content, and
+00:00:47.200 set a keyword to trigger it. And now, no
+00:00:49.520 matter where you are on your Mac, just
+00:00:51.360 type that keyword, and it expands
+00:00:53.440 instantly. And if you want to get fancy,
+00:00:55.280 you can even add placeholders like the
+00:00:57.360 date, time, or custom fields that ask
+00:00:59.840 you for your input before pasting the
+00:01:01.840 full message, which is really handy to
+00:01:03.680 reply to emails. And you can manage all
+00:01:05.760 of these from the snippets page inside
+00:01:07.840 Raycast. But if you want to launch this
+00:01:08.000 No text
+00:01:09.840 or really anything in Raycast faster,
+00:01:12.159 then you've got two options. You can
+00:01:13.840 either assign an alias, which is
+00:01:15.360 basically a shortcut word that tells
+00:01:17.040 Raycast what you're looking for, or and
+00:01:19.119 this is where it gets really powerful,
+00:01:20.960 you can assign a keyboard shortcut to
+00:01:22.799 it, which bypasses the command bar
+00:01:24.799 altogether. And by the way, you can do
+00:01:26.880 this for any command, which is
+00:01:28.640 especially useful for window management,
+00:01:30.720 so you can move and resize windows
+00:01:32.799 faster. There's a ton of options here,
+00:01:34.880 but my most used ones are snap left,
+00:01:37.680 snap right, maximize, and making it
+00:01:40.000 No text
+00:01:40.400 larger or smaller. And if you're
+00:01:42.240 wondering what the hell this diamond
+00:01:43.840 icon is, that's a hyper key, which is
+00:01:46.079 when you take a key like caps lock and
+00:01:48.159 turn it into a kind of universal
+00:01:50.000 shortcut key. Behind the scenes, it acts
+00:01:52.079 like pressing command, option, control,
+00:01:54.399 and shift all at once. But all you do is
+00:01:56.880 hit the caps lock key. And this combo is
+00:01:58.880 so rare that it's not going to conflict
+00:02:00.479 with any other shortcut. And normally,
+00:02:02.399 you'd need a separate app to set this
+00:02:04.000 up, but we can do this right from
+00:02:05.680 raycast under advanced hyper key. But
+00:02:08.000 No text
+00:02:08.239 one of my favorite features in Raycast
+00:02:10.080 is the calculator because this thing
+00:02:12.239 does everything. Percentages, dates,
+00:02:15.200 time zones, currency, even unit
+00:02:17.680 conversions. Super useful. Raycast also
+00:02:19.000 No text
+00:02:20.480 pulls in your calendar and lets you
+00:02:22.239 glance at it by using the my schedule
+00:02:24.239 command, which I also have mapped to a
+00:02:26.000 hotkey. And what's cool is if a meeting
+00:02:27.840 has a link, you can just hit enter and
+00:02:30.000 it joins it instantly. And if you've
+00:02:31.000 No text
+00:02:32.000 used Notion, Obsidian, or VS Code, you
+00:02:34.640 know that those apps have a command
+00:02:36.239 pallet that gives you quick access to
+00:02:38.080 pretty much everything the app can do.
+00:02:39.920 And Raycast brings that to any app using
+00:02:42.319 the search menu items command. And
+00:02:44.319 what's happening under the hood here is
+00:02:46.080 that it's pulling in all the actions
+00:02:47.920 from the menu bar into a command pallet
+00:02:50.160 that you can search. This is especially
+00:02:52.160 useful in apps like Photoshop that have
+00:02:54.319 a million settings that you can't easily
+00:02:56.160 access. And yep, this is also mapped to
+00:02:58.319 a hotkey. And this is yet another app
+00:03:00.239 that Raycast replaces. And we're still
+00:03:02.560 only on the native features. We haven't
+00:03:04.400 even touched thirdparty extensions yet.
+00:03:06.000 No text
+00:03:06.560 And you know when you're digging through
+00:03:07.760 a pile of screenshots trying to find the
+00:03:09.680 right one. With Raycast, if you remember
+00:03:11.599 even a single word inside the
+00:03:13.360 screenshot, you can search it using the
+00:03:15.360 search screenshots command and it'll
+00:03:17.280 find it. Okay, so now I'm going to rapid
+00:03:19.120 fire through a couple more native
+00:03:20.560 features before going into third party
+00:03:22.480 extensions. First is the emoji picker.
+00:03:23.000 No text
+00:03:24.640 And this not only looks great, but it
+00:03:26.400 also includes a bunch of extra symbols
+00:03:28.319 like keyboard keys, arrows, and currency
+00:03:31.120 icons. There's also a built-in color
+00:03:32.959 picker. Just trigger it, click anywhere
+00:03:34.879 on the screen, and it's going to give
+00:03:36.080 you the hex code. They also have this
+00:03:37.920 feature called quick links, which lets
+00:03:39.760 you create shortcuts to pretty much
+00:03:41.519 anything, folders, files, apps, even
+00:03:44.560 websites. I mostly use it to jump
+00:03:46.480 straight into deep folders, but there's
+00:03:48.319 a lot more that you can do with it. And
+00:03:50.239 last but not least, there's a built-in
+00:03:51.920 Pomodoro timer called Raycast Focus that
+00:03:54.560 also blocks apps or websites while you
+00:03:56.879 work. And when the time's up, you get a
+00:03:58.560 chime and a really clean little
+00:04:00.000 No text
+00:04:00.000 animation. All right, so now let's get
+00:04:01.439 into the third party extensions that I
+00:04:03.120 use. The first one is the Apple Notes
+00:04:05.120 extension, and the standout feature here
+00:04:07.120 is how fast I can pull up my notes. I
+00:04:09.280 have the letter N as an alias for it. So
+00:04:11.360 I just type N, press space, and start
+00:04:13.840 searching. I also use similar extensions
+00:04:16.079 for Obsidian, and even for Google Drive.
+00:04:18.238 I just type my alias for those and start
+00:04:20.478 searching right away. And if you use
+00:04:22.079 something like notion or bear, there are
+00:04:24.000 No text
+00:04:24.000 extensions for those as well. There's
+00:04:25.680 also an extension for almost all
+00:04:27.280 password managers. I use one password
+00:04:29.440 and I pull up my login straight from
+00:04:31.199 Raycast every day. And by the way, if
+00:04:33.280 you press command K on this or on any
+00:04:35.520 other item in Raycast, it's going to
+00:04:37.360 show you a bunch of actions that you can
+00:04:39.000 No text
+00:04:39.199 do with it. And speaking of passwords,
+00:04:41.199 if you use two factor codes, you can
+00:04:42.960 grab those straight from Raycast as well
+00:04:44.960 using the 2FA extension. And this works
+00:04:47.680 both for messages and email. And you
+00:04:50.000 don't even have to copy. Just press
+00:04:51.520 enter and it automatically pastes it. I
+00:04:53.000 No text
+00:04:53.680 also use a few extensions for calendar
+00:04:55.680 and meetings. One of them starts a
+00:04:57.600 Google Meet instantly and copies the
+00:04:59.600 link to my clipboard. If you use Zoom or
+00:05:01.759 Teams, there are extensions for those as
+00:05:03.520 well. Another lets me easily create
+00:05:05.199 calendar events using natural language.
+00:05:07.280 And another shows me the time zones of
+00:05:09.280 family and colleagues. Raycast also
+00:05:10.000 No text
+00:05:11.600 replaces a bunch of those tiny utility
+00:05:13.680 apps that I used to keep around, like
+00:05:15.360 this one that lets me switch my audio
+00:05:17.039 input and output, or this one that lets
+00:05:19.520 me manage my Bluetooth devices, and it
+00:05:21.440 even shows battery levels for Apple
+00:05:23.280 products. There's also an extension that
+00:05:24.880 lets you uninstall any app straight from
+00:05:27.120 Raycast. And the best part is that you
+00:05:29.039 can pick the uninstaller you want. I use
+00:05:30.960 App Cleaner. It's what I've used for
+00:05:32.479 years, and now I can do it straight from
+00:05:34.320 Raycast. And there's also little stuff,
+00:05:36.240 too, like this one that keeps my Mac
+00:05:38.160 awake, or this one that opens my last
+00:05:40.320 downloaded file. But Raycast doesn't
+00:05:41.000 No text
+00:05:42.400 just replace apps. It makes the ones you
+00:05:44.320 already use way better. Like this
+00:05:46.080 Spotify extension that lets you control
+00:05:47.759 your music, start songs or playlists,
+00:05:50.080 and run a ton of other commands. I also
+00:05:52.560 use CleanShot X, which if you don't
+00:05:54.320 know, it's by far the best screenshot
+00:05:56.000 tool out there. And Raycast makes it
+00:05:58.240 even better. There's a ton of commands
+00:05:59.840 you can do with it, but the two I use
+00:06:01.520 the most is open history and restore
+00:06:04.000 recently closed. Very nice. I also use
+00:06:06.560 parcel, which tracks my deliveries, and
+00:06:08.720 flighty for my flights. And I can access
+00:06:10.880 both straight from raycast. Basically,
+00:06:13.120 if there's an app you use all the time,
+00:06:14.960 there's probably a raycast extension for
+00:06:16.800 it. But one of my favorite extensions is
+00:06:17.000 No text
+00:06:18.960 the Home Assistant one, which lets you
+00:06:20.800 control every smart home device in your
+00:06:22.720 home straight from Raycast. This one is
+00:06:24.800 far too long to go into detail here, but
+00:06:26.880 I did send out a newsletter a couple
+00:06:28.560 days ago talking specifically about
+00:06:30.400 this. If you want to check that out, the
+00:06:31.919 link is down there in the description.
+00:06:33.520 And speaking of well-designed tools, you
+00:06:35.440 might want to check out today's sponsor,
+00:06:36.960 Opera, because they've just revamped
+00:06:38.639 their browser and packed it with a ton
+00:06:40.560 of useful features like a built-in music
+00:06:42.800 player that works with all the major
+00:06:44.479 streaming services and lets you control
+00:06:46.240 your music without interrupting your
+00:06:47.759 work. And you can even detach it and
+00:06:49.680 move it anywhere. It has tab islands
+00:06:51.759 which lets you group related tabs like
+00:06:53.520 shopping or travel and expand or
+00:06:55.840 collapse them to keep things tidy. They
+00:06:57.680 also added these underlines here called
+00:06:59.360 tab traces which help you find your most
+00:07:01.360 recently visited tabs amongst all the
+00:07:03.120 clutter. The darker the underscore, the
+00:07:04.880 more recently you've been on a tab. It's
+00:07:06.960 got a split screen mode too. Just drag a
+00:07:08.960 tab down to view two pages side by side.
+00:07:11.360 And there are even a bunch of themes
+00:07:12.639 like Mitsomar or my favorite Aurora that
+00:07:15.199 change the look and sound of your
+00:07:17.039 browser. It even has a built-in AI
+00:07:18.960 called Arya. Simply press command or
+00:07:21.199 control plus slash and ask questions in
+00:07:23.759 the command line. Generate images or
+00:07:26.080 even upload an image to get more info
+00:07:28.000 about it. Check out Opera for free using
+00:07:30.000 my link in the description. Okay, so
+00:07:31.000 No text
+00:07:32.000 everything we've gone over so far is
+00:07:33.759 100% free, but there's also two paid
+00:07:36.000 plans and this is where things get a
+00:07:37.840 little weird. The first one is called
+00:07:38.000 No text
+00:07:39.599 Raycast Pro and it gives you a few extra
+00:07:41.840 features. one of which is cloud sync so
+00:07:44.400 your settings extensions snippets and
+00:07:47.120 everything else with some exceptions
+00:07:48.960 stays in sync across all your Macs. You
+00:07:51.360 can still do this manually on the free
+00:07:53.039 plan by exporting your settings from
+00:07:55.039 Raycast on one Mac and importing them
+00:07:57.759 into Raycast on another but with the pro
+00:08:00.160 plan this happens automatically. You
+00:08:02.160 also get a built-in translator which is
+00:08:04.240 nice but you can also just get the
+00:08:05.599 Google Translate extension. Clipboard
+00:08:07.520 history also goes from being capped at 3
+00:08:10.000 months to unlimited. And this one
+00:08:11.759 actually hurts a little because your
+00:08:13.199 clipboard history is stored locally. So
+00:08:15.280 there's really no reason for this to be
+00:08:16.720 a paid feature. Not to mention, it used
+00:08:18.720 to be unlimited until they introduced
+00:08:20.560 the pro plan. You also get full window
+00:08:22.720 management capabilities, unlimited
+00:08:24.639 raycast notes, and the ability to choose
+00:08:26.800 themes. But the main selling point seems
+00:08:28.000 No text
+00:08:28.720 to be AI. This includes not just
+00:08:30.720 chatting with different language models,
+00:08:32.240 but also using AI powered commands
+00:08:34.399 inside some extensions. You can see
+00:08:36.399 which ones support this by going to the
+00:08:38.240 extensions page and looking for commands
+00:08:40.479 labeled AI extensions. And to show you
+00:08:42.640 this in action, I can ask my calendar
+00:08:44.720 when is my next video going live and it
+00:08:46.720 should answer correctly. Or I can tell
+00:08:48.720 notion to add something to a database
+00:08:50.720 straight from Raycast. I'll admit this
+00:08:52.640 is actually really cool and probably
+00:08:54.320 useful for a lot of people, just not
+00:08:55.839 really for me. And if you want to take
+00:08:56.000 No text
+00:08:57.120 it even further, there's a higher tier
+00:08:58.959 called Raycast Pro plus advanced AI. And
+00:09:01.839 the only difference here is that this
+00:09:03.279 one gives you access to more powerful
+00:09:04.959 language models across the board. And I
+00:09:06.959 know at first glance this looks like a
+00:09:08.560 way better deal than paying for Chatt
+00:09:10.720 Plus or Google Gemini. You're getting
+00:09:12.800 access to pretty much every major
+00:09:14.399 language model for less than what you'd
+00:09:16.240 pay for a single one. But it's not that
+00:09:17.839 simple. With Chatt Plus, you get a lot
+00:09:20.160 of important features that you're not
+00:09:21.760 going to get with Raycast. The most
+00:09:23.519 important one for me is persistent chat
+00:09:25.760 history. This lets me stick with the
+00:09:27.519 same project over time and pick up where
+00:09:29.519 I left off. Using it on Raycast is fast
+00:09:32.160 and it's deeply integrated with the Mac,
+00:09:34.080 but unless I'm missing something, it
+00:09:35.839 seems to be built for quick one-off
+00:09:37.600 tasks. So, for me, this isn't even close
+00:09:39.440 to a replacement. But if you're okay
+00:09:40.880 with that, then Raycast Pro might be
+00:09:42.720 worth it just for this. That's a lot you
+00:09:44.640 get for $8 a month. Plus, you're
+00:09:46.320 supporting the continued development of
+00:09:48.240 what's genuinely one of the best tools
+00:09:50.240 on the Mac. But the thing is, I only
+00:09:51.000 No text
+00:09:52.080 started using Raycast earlier this year.
+00:09:54.160 Before that, I was using Alfred and I
+00:09:56.240 used it for around 10 years. And there
+00:09:58.000 were a few things that finally pushed me
+00:09:59.839 over. The first is that Raycast is under
+00:10:00.000 No text
+00:10:02.160 constant development. There's always new
+00:10:04.160 features coming out, which makes sense
+00:10:05.839 because Alfred is maintained by just a
+00:10:07.920 couple of people, while Raycast has a
+00:10:09.920 pretty big team and it's PC funded. This
+00:10:12.480 also explains why the free version of
+00:10:14.320 Raycast is so generous. You get a ton
+00:10:16.880 out of the box, way more than Alfred.
+00:10:18.800 I think you get more out of the
+00:10:20.560 free version of Raycast than you do from
+00:10:22.720 the paid version of Alfred, which by the
+00:10:24.880 way is a onetime payment of around $40.
+00:10:27.680 But at the same time, it's that VC back
+00:10:29.680 growth mindset that has a lot of people
+00:10:31.440 worried about what could happen down the
+00:10:33.040 line, and I'll come back to this in a
+00:10:34.800 minute. Raycast also looks and feels
+00:10:37.279 like an app from 2025. Everything from
+00:10:39.680 navigating the settings to managing
+00:10:41.440 extensions is super clean and modern.
+00:10:43.839 Meanwhile, Alfred hasn't changed much
+00:10:45.680 from what it looked like 10 years ago.
+00:10:47.519 And then there's the built-in store,
+00:10:49.200 which is a huge win for Raycast. With
+00:10:51.360 Alfred, you have to either dig through
+00:10:52.959 their gallery or download random
+00:10:54.959 workflows from GitHub. Not to mention,
+00:10:56.959 the extension community is way more
+00:10:58.959 active on Raycast with new extensions
+00:11:01.279 popping up all the time. Okay, so now
+00:11:02.000 No text
+00:11:03.279 here's where Alfred still wins. Starting
+00:11:05.360 with speed, Alfred is just faster.
+00:11:07.600 There's no debate about this. Most
+00:11:09.279 actions take one less step, if not more,
+00:11:11.760 compared to Raycast. If you want to
+00:11:13.440 search for a file in Raycast, you launch
+00:11:15.519 it, type search files, hit enter, and
+00:11:18.160 then you can start searching. That's
+00:11:19.839 three steps. And even if you assign an
+00:11:21.760 alias like SF to get there faster, it's
+00:11:24.320 still three steps. With Alfred, you
+00:11:26.160 launch it, press space, and that's it.
+00:11:28.160 Same with extensions. In Alfred, you
+00:11:30.000 type 2FA, and your code is right there.
+00:11:32.240 In Raycast, you always have to select
+00:11:34.079 the extension first before anything else
+00:11:36.240 happens. Everything is always behind the
+00:11:38.480 menu. So unless you're willing to create
+00:11:40.000 a shortcut for everything you want to do
+00:11:41.680 with Raycast, Alfred will always be a
+00:11:44.160 couple seconds faster. And if you use
+00:11:45.760 this a 100 times a day, those extra
+00:11:47.760 steps start to matter. The next big one
+00:11:49.920 is cloud syncing. With Alfred, this is
+00:11:52.079 completely free. You just drop your
+00:11:53.600 settings folder into iCloud or Dropbox
+00:11:56.160 and it's going to sync across all your
+00:11:58.000 Macs. Raycast makes you pay for that. If
+00:12:00.320 you want to sync your settings the easy
+00:12:02.079 way without manually exporting and
+00:12:04.240 importing between Macs, you'll need the
+00:12:06.320 Pro plan. And this leads me to my next
+00:12:08.320 point, which is privacy. Because when
+00:12:10.160 you use their pro plan, it syncs your
+00:12:12.320 data through their servers. That
+00:12:14.320 includes your settings, snippets, notes,
+00:12:16.880 and a bunch of other things. It's not
+00:12:18.800 shady, and they're transparent about it,
+00:12:20.560 but it does mean that more of your data
+00:12:22.480 flows through them. Alfred, on the other
+00:12:24.399 hand, is offline first. It stores
+00:12:26.399 everything locally and only pings their
+00:12:28.639 servers to activate the license key. And
+00:12:30.959 lastly, Alfred has been around for 15
+00:12:32.880 years. They're not going anywhere.
+00:12:34.399 They've had the same sustainable
+00:12:35.760 business model for years and it works.
+00:12:37.680 As much as I like Raycast, we don't know
+00:12:39.519 what the future holds and we could very
+00:12:41.279 well see some form of inchification.
+00:12:43.519 They already placed the cap on clipboard
+00:12:45.279 history from unlimited to 3 months. And
+00:12:47.680 this is really just a cash grab as your
+00:12:49.440 clipboard is stored locally and doesn't
+00:12:51.360 sync with their servers. What if next
+00:12:53.200 it'll be a cap on how many snippets you
+00:12:54.959 can have or how many extensions you can
+00:12:56.800 install? These are things that just
+00:12:58.240 won't happen with Alfred. But even after
+00:12:59.000 No text
+00:13:00.079 all of that, I still think that Raycast
+00:13:02.240 is the better option. I don't love that
+00:13:03.839 it's VC funded, but that's just the
+00:13:05.360 nature of things. The truth is that
+00:13:07.120 right now, this is the better product.
+00:13:08.959 Its free version is insanely good. It
+00:13:11.120 comes with amazing built-in features,
+00:13:12.800 and the third party extensions work
+00:13:14.720 really well and are very stable. It also
+00:13:16.959 keeps getting better every week, and
+00:13:18.560 they actually listen to the community,
+00:13:20.000 which really matters. It's not perfect,
+00:13:21.839 and yeah, when I first switch, taking
+00:13:23.600 that extra step for everything was
+00:13:25.600 annoying, but I got used to it, and in
+00:13:27.360 return, I get a lot more out of it than
+00:13:29.279 I did with Alfred. Raycast replaces a
+00:13:31.519 ton of apps, but definitely not all of
+00:13:33.279 them. And if you want to check out the
+00:13:34.320 other Mac apps that I still rely on,
+00:13:36.160 then watch this video here, and I'll see
+00:13:38.160 you there.

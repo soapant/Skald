@@ -18,5 +18,3 @@ maybe for the central contorl it would be every feature oyu have but its just pr
 you really need to figure out caching and some best way to do it ||[Cprogram]
 fucking windows implementation of dir watcher doesnt work ||[Cprogram]
 maybe fuck with the ai mp3 from text thing ||[Maybe]
-google search doesnt work correctly it just opens google i think that is somethign with teh format of it||[Cprogram]|[DontForget]
-do the title check only if hotkey matches||[Cprogram]|[DontForget]

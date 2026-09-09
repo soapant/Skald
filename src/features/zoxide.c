@@ -1,10 +1,4 @@
 #include "core/flapi.h"
-#include "core/context.h"
-#include "core/common_ui.h"
-#include "core/window_manager.h"
-#include <stdlib.h>
-#include <string.h>
-
 
 static void edit_confirm(const char* new_text, void* user_data) {
     EditCallbackData* data = (EditCallbackData*)user_data;
