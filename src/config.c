@@ -35,6 +35,7 @@ const char* UsedTextEditor = "nvim";
 const char* UsedBrowser = "zen-browser";
 const char* UsedSearchEngine = "google";
 const char* ImageEditorPath =  "{APPDATA}/Microsoft/Windows/Start Menu/Programs/Scoop Apps/PicView.lnk";
+const char* FeaturePath = "src/features";
 const char* IconPath = "{MISC}/switch_window.ico";
 
 const PathVar G_PATH_VARS[] = {
