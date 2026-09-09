@@ -45,3 +45,7 @@ char* paste_x11(char* content) {
   snprintf(buffer,sizeof(buffer),"xdotool %s",content);
   return Platform_RunTerminalCommand(buffer,false);
 }
+
+bool focus_window_title_x11(char* title) {
+  return Platform_RunTerminalCommand("wmctrl -a \"firefox\"",false);
+}

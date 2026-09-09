@@ -1148,7 +1148,7 @@ bool Platform_ClickAtPos(int x,int y) {
     return false;
 }
 bool Platform_FocusWindow(const char* title) {
-
+  return Wm_FocusByTitle(title);
 }
 
 static int vk_to_linux_key(int vk) {

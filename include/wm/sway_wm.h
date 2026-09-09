@@ -5,5 +5,6 @@
 bool get_title_sway(char *buffer, int buffer_size);
 char* get_clipboard_entry_sway();
 char* paste_sway(char* content);
+bool focus_window_title_sway(char* title);
 
 #endif

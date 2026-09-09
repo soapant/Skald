@@ -24,8 +24,18 @@ char* Wm_GetActiveWindowTitle(void) {
 }
 
 bool Wm_FocusByTitle(const char *title) {
-    (void)title;
-    return false;
+    
+    if (focus_window_title_hyprland(title)) {
+        return true;
+    }
+    if (focus_window_title_sway(title)) {
+        return true;
+    }
+    if (focus_window_title_x11(title)) {
+        return true;
+    }
+    
+    return NULL;
 }
 
 char* Wm_GetClipboardLastEntry(void) {
