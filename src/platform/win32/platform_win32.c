@@ -503,8 +503,62 @@ bool Platform_ClickAtPos(int x,int y) {
     SendInput(3, inputs, sizeof(INPUT));
 }
 
-bool Platform_FocusWindow(const char* title) {
+typedef struct {
+    const char* target_title;
+    HWND found_hwnd;
+} FindWindowData;
 
+BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam) {
+    FindWindowData* data = (FindWindowData*)lParam;
+    
+    if (!IsWindowVisible(hwnd)) {
+        return TRUE; 
+    }
+    
+    char window_title[256];
+    GetWindowTextA(hwnd, window_title, sizeof(window_title));
+    
+    if (strcasestr(window_title, data->target_title) != NULL) {
+        data->found_hwnd = hwnd;
+        return FALSE;
+    }
+    
+    return TRUE;
+}
+
+bool Platform_FocusWindow(const char* title) {
+    if (!title || !title[0]) return false;
+    
+    HWND hwnd = FindWindowA(NULL, title);
+    
+    if (hwnd == NULL) {
+        FindWindowData data;
+        data.target_title = title;
+        data.found_hwnd = NULL;
+        
+        EnumWindows(EnumWindowsProc, (LPARAM)&data);
+        hwnd = data.found_hwnd;
+    }
+    
+    if (hwnd == NULL) {
+        return false;
+    }
+    
+    if (IsIconic(hwnd)) {
+        ShowWindow(hwnd, SW_RESTORE);
+    }
+    
+    SetForegroundWindow(hwnd);
+    
+    FLASHWINFO fwi;
+    fwi.cbSize = sizeof(FLASHWINFO);
+    fwi.hwnd = hwnd;
+    fwi.dwFlags = FLASHW_CAPTION | FLASHW_TRAY;
+    fwi.uCount = 3;
+    fwi.dwTimeout = 0;
+    FlashWindowEx(&fwi);
+    
+    return true;
 }
 
 char* Platform_GetActiveWindowTitle(void) {
