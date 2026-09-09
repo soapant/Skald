@@ -124,4 +124,6 @@ fl_register_hotkey("Alt+Shift+,", video_cmd_1);
     fl_register_hotkey("Alt+Shift+.", video_cmd_5);
     fl_register_hotkey("Alt+Shift+;", video_cmd_6);
     fl_register_hotkey("Alt+V", video_prompt);
+
+    fl_register_feature("Video Viewer", video_prompt);
 }

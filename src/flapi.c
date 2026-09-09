@@ -132,6 +132,29 @@ bool fl_register_hotkey_impl(char* hotkey_string,void (*on_hotkey_trigger)(void)
     return hotkey_register_internal(binding);
 }
 
+#define MAX_FEATURE_REG 128
+typedef struct { char name[128]; void (*cb)(void); } FeatureReg;
+static FeatureReg g_feature_regs[MAX_FEATURE_REG];
+static int g_feature_reg_count = 0;
+
+void fl_register_feature(const char* name, void (*cb)(void)) {
+    if (!name || !cb) return;
+    if (g_feature_reg_count >= MAX_FEATURE_REG) return;
+    for (int i=0;i<g_feature_reg_count;i++) if (strcmp(g_feature_regs[i].name, name)==0) return;
+    strncpy(g_feature_regs[g_feature_reg_count].name, name, sizeof(g_feature_regs[g_feature_reg_count].name)-1);
+    g_feature_regs[g_feature_reg_count].cb = cb;
+    g_feature_reg_count++;
+}
+
+int fl_get_feature_list(const char** out_names, void (**out_cbs)(void), int max) {
+    int n = g_feature_reg_count < max ? g_feature_reg_count : max;
+    for (int i=0;i<n;i++) {
+        if (out_names) out_names[i] = g_feature_regs[i].name;
+        if (out_cbs) out_cbs[i] = g_feature_regs[i].cb;
+    }
+    return n;
+}
+
 
 bool fl_launch_terminal_with_args(char* args) {
 

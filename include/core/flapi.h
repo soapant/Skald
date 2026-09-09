@@ -59,6 +59,9 @@ bool fl_get_all_files_from_dir(const char* dir_path, char** list_of_allowed_exte
 bool fl_launch_with_args(const char* path, const char* args);
 bool fl_launch_with_args_as_admin(const char* path, const char* args);
 int fl_load_file_list(const char* filepath, const char* out[], int max);
+// Feature registry for Control Center
+void fl_register_feature(const char* name, void (*cb)(void));
+int fl_get_feature_list(const char** out_names, void (**out_cbs)(void), int max);
 bool fl_free_file_list(const char* list[], int count);
 bool fl_append_to_file(const char* filepath, const char* line);
 bool fl_write_to_file(const char* filepath, const char* lines[], int count);
