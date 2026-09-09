@@ -11,23 +11,17 @@ static void control_refresh(const char* filter, WindowHandle hListBox, ListBoxIn
 }
 static bool control_enter(const char* selection, ListBoxInfo* lb) {
     (void)lb;
-    printf("[CONTROL] enter %s\n", selection?selection:"(null)"); fflush(stdout);
     if (selection) strncpy(g_sel, selection, sizeof(g_sel)-1);
     else g_sel[0]=0;
-    printf("[CONTROL] g_sel now %s\n", g_sel); fflush(stdout);
     return true;
 }
 static void TriggerControl(void) {
     const char* names[128]; void (*cbs[128])(void);
     int n=fl_get_feature_list(names,cbs,128);
-    printf("[CONTROL] Trigger n=%d\n", n); fflush(stdout);
-    for(int i=0;i<n;i++) printf("[CONTROL] %d %s %p\n", i, names[i], cbs[i]); fflush(stdout);
     g_sel[0]=0;
     PROMPT(.title="⚡ Control", .items=names, .count=n, .height=920, .width=650, .item_height=32, .refresh=control_refresh, .enter=control_enter);
-    printf("[CONTROL] after PROMPT g_sel=%s\n", g_sel); fflush(stdout);
-    if (!g_sel[0]) { printf("[CONTROL] no sel\n"); fflush(stdout); return; }
-    for (int i=0;i<n;i++) if (strcmp(g_sel,names[i])==0 && cbs[i]) { printf("[CONTROL] opening %s\n", names[i]); fflush(stdout); cbs[i](); printf("[CONTROL] opened %s done\n", names[i]); fflush(stdout); return; }
-    printf("[CONTROL] no match for %s\n", g_sel); fflush(stdout);
+    if (!g_sel[0]) return;
+    for (int i=0;i<n;i++) if (strcmp(g_sel,names[i])==0 && cbs[i]) { cbs[i](); return; }
 }
 
 FLINT_FEATURE_INIT {

@@ -260,37 +260,9 @@ void WindowManager_ProcessEvents(WindowManager* wm) {
     #endif
 }
 
-static volatile bool g_in_prompt_enter = false;
-static volatile bool g_has_pending_prompt = false;
-static PromptSpec g_pending_prompt;
-static char* g_pending_title = NULL;
-static char** g_pending_items = NULL;
-
 char* WindowManager_ShowPrompt(WindowManager* wm, const PromptSpec* spec) {
     WinTimer timer = TimerStart();
-    printf("[WM] ShowPrompt title=%s g_in=%d pending=%d count=%d\n", spec?spec->title:"(null)", (int)g_in_prompt_enter, (int)g_has_pending_prompt, wm?wm->popup_count:-1); fflush(stdout);
     if (!wm || !spec) { TimerEnd(timer, "window_manager:WindowManager_ShowPrompt"); return NULL; }
-    if (g_in_prompt_enter) {
-        printf("[WM] deferring %s\n", spec->title?spec->title:"(null)"); fflush(stdout);
-        // defer nested prompt (Control -> Feature) to avoid stacking
-        free(g_pending_title); g_pending_title = NULL;
-        if (g_pending_items) { for (int i=0;i<g_pending_prompt.count;i++) free(g_pending_items[i]); free(g_pending_items); g_pending_items=NULL; }
-        g_pending_prompt = *spec;
-        g_pending_title = spec->title ? strdup(spec->title) : NULL;
-        g_pending_prompt.title = g_pending_title;
-        if (spec->count > 0 && spec->items) {
-            g_pending_items = calloc(spec->count, sizeof(char*));
-            for (int i=0;i<spec->count;i++) g_pending_items[i] = spec->items[i] ? strdup(spec->items[i]) : strdup("");
-            g_pending_prompt.items = (const char**)g_pending_items;
-        } else {
-            g_pending_items = NULL;
-            g_pending_prompt.items = spec->items;
-        }
-        g_pending_prompt.count = spec->count;
-        g_has_pending_prompt = true;
-        TimerEnd(timer, "window_manager:WindowManager_ShowPrompt");
-        return NULL;
-    }
 #if defined(_WIN32)
     extern char* Platform_PromptUser(const PromptSpec* spec);
     char* res = Platform_PromptUser(spec);
@@ -309,15 +281,12 @@ char* WindowManager_ShowPrompt(WindowManager* wm, const PromptSpec* spec) {
             usleep(1000);
         }
     }
-    printf("[WM] ShowPrompt loop done title=%s count=%d manager=%p\n", spec?spec->title:"(null)", wm->popup_count, popup->manager); fflush(stdout);
     if (popup->manager == NULL) {
         if (popup->vtable && popup->vtable->destroy) popup->vtable->destroy(popup);
     } else {
         WindowManager_PopPopup(wm);
         if (popup->vtable && popup->vtable->destroy) popup->vtable->destroy(popup);
     }
-    printf("[WM] ShowPrompt destroy done title=%s count=%d\n", spec?spec->title:"(null)", wm->popup_count); fflush(stdout);
-    // ensure X server has processed destroy before next prompt can be created
     if (dpy) { XFlush(dpy); XSync(dpy, False); }
     FlintContext* _c = FlintContext_Get();
     // sync deprecated global
@@ -876,45 +845,12 @@ static void PromptPopup_OnKey(Popup* self, int vk_code, bool pressed, int modifi
             sel = filter_copy;
         }
         bool should_close = false;
-        printf("[WM] OnKey before enter sel=%s g_in=%d\n", sel?sel:"(null)", (int)g_in_prompt_enter); fflush(stdout);
-        g_in_prompt_enter = true;
         if (is_ctrl) {
             if (data->spec.ctrl_enter) should_close = data->spec.ctrl_enter(sel, data->state->has_listbox ? &data->state->listbox : NULL);
             else should_close = false;
         } else {
             if (data->spec.enter) should_close = data->spec.enter(sel, data->state->has_listbox ? &data->state->listbox : NULL);
             else should_close = true;
-        }
-        g_in_prompt_enter = false;
-        printf("[WM] OnKey sel=%s should_close=%d pending=%d count_before=%d\n", sel?sel:"(null)", should_close, g_has_pending_prompt, self->manager->popup_count); fflush(stdout);
-        if (g_has_pending_prompt) {
-            printf("[WM] pending title=%s count=%d popping control count=%d\n", g_pending_title?g_pending_title:"(null)", g_pending_prompt.count, self->manager->popup_count); fflush(stdout);
-            if (should_close) {
-                FlintContext_Get()->window.selection_complete = false;
-                WindowManager_PopPopup(self->manager);
-                printf("[WM] popped control, count now %d\n", self->manager->popup_count); fflush(stdout);
-            } else {
-                FlintContext_Get()->window.selection_complete = false;
-            }
-#if !defined(_WIN32)
-            Display* dpy = get_display();
-            if (dpy) { XFlush(dpy); XSync(dpy, False); usleep(15000); }
-#endif
-            PromptSpec pending = g_pending_prompt;
-            char* pt = g_pending_title;
-            char** pi = g_pending_items;
-            g_has_pending_prompt = false;
-            g_pending_title = NULL;
-            g_pending_items = NULL;
-            printf("[WM] opening pending %s\n", pending.title?pending.title:"(null)"); fflush(stdout);
-            char* r = WindowManager_ShowPrompt(self->manager, &pending);
-            printf("[WM] pending returned, count %d r=%s\n", self->manager->popup_count, r?r:"null"); fflush(stdout);
-            (void)r;
-            if (pt) free(pt);
-            if (pi) { for (int i=0;i<pending.count;i++) free(pi[i]); free(pi); }
-            printf("[WM] pending done, returning from OnKey, count %d\n", self->manager->popup_count); fflush(stdout);
-            TimerEnd(timer, "window_manager:PromptPopup_OnKey");
-            return;
         }
         FlintContext_Get()->window.selection_complete = should_close;
         if (should_close) WindowManager_PopPopup(self->manager);
