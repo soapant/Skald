@@ -20,14 +20,9 @@ void HandleShowCurrentBatteryPercentage(void) {
 void HandleSettingsTrigger(void) {
     Platform_SettingsPopUp();
 }
-void Testing(void) {
-  fl_click(200,600);
-}
-
 FLINT_FEATURE_INIT {
     fl_register_hotkey("Alt+Shift+K", HandleKillMyProgram);
     fl_register_hotkey("Alt+Shift+T", HandleShowCurrentTime);
     fl_register_hotkey("Alt+D", HandleSettingsTrigger);
     fl_register_hotkey("Alt+Shift+N", HandleShowCurrentBatteryPercentage);
-    fl_register_hotkey("Alt+Shift+D", Testing);
 }
