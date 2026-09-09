@@ -675,7 +675,7 @@ int Platform_ReplaceLineInMappedFile(MappedFile* mf, int line_index, const char*
     return 1;
 }
 
-int Platform_CollectRunningProcesses(char process_list[][128], int max_count) {
+int Platform_CollectRunningProcesses(char process_list[][MaxFeatures], int max_count) {
     WinTimer timer = TimerStart();
     if (!process_list || max_count <= 0) { TimerEnd(timer, "misc_x11:Platform_CollectRunningProcesses"); return 0; }
     int count = 0;

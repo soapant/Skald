@@ -413,7 +413,7 @@ char* Platform_RegisterDirWatcher(const char* dir_path, void (*callback)(void)) 
     return NULL;
 }
 
-#define MAX_C_WATCH 128
+#define MAX_C_WATCH MaxFeatures
 typedef struct { char path[256]; char file[256]; FILETIME lastWrite; bool inited; } CWatch;
 static CWatch g_c_watches[MAX_C_WATCH];
 static int g_c_watch_count = 0;

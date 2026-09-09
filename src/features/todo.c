@@ -448,7 +448,7 @@ void todo_render_callback(Display *dpy, Window *win, PromptState *state) {
         char tags[10][64];
         int tag_count = 0;
         ParseTodoLine(text_buf, main_text, tags, &tag_count);
-        char num_buf[128];
+        char num_buf[MaxFeatures];
         snprintf(num_buf, sizeof(num_buf), "%d.", idx + 1);
 
         unsigned long fg_raw = rgb_to_hex(GetRainbowColor((float)(idx % GradientItems) / (float)GradientItems, 0.85f, GradientBrightness));

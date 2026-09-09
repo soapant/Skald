@@ -6,7 +6,7 @@
 static char g_sel[256]={0};
 
 static void control_refresh(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
-    const char* names[128]; int n=fl_get_feature_list(names,NULL,128);
+    const char* names[MaxFeatures]; int n=fl_get_feature_list(names,NULL,MaxFeatures);
     PopulateListBox(lb, FlintContext_Get()->window.hListBox, filter, names, n, NULL);
 }
 static bool control_enter(const char* selection, ListBoxInfo* lb) {
@@ -16,8 +16,8 @@ static bool control_enter(const char* selection, ListBoxInfo* lb) {
     return true;
 }
 static void TriggerControl(void) {
-    const char* names[128]; void (*cbs[128])(void);
-    int n=fl_get_feature_list(names,cbs,128);
+    const char* names[MaxFeatures]; void (*cbs[MaxFeatures])(void);
+    int n= fl_get_feature_list(names,cbs,MaxFeatures);
     g_sel[0]=0;
     PROMPT(.title="⚡ Control", .items=names, .count=n, .height=920, .width=650, .item_height=32, .refresh=control_refresh, .enter=control_enter);
     if (!g_sel[0]) return;

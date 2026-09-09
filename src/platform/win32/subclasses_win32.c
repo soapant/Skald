@@ -344,7 +344,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
   ListBoxInfo* lb = GetLBForPopupWindow(hwnd);
   static HBRUSH s_bg_brush = NULL;
     static HBRUSH s_bg_colorful_brush = NULL;
-    static HBRUSH s_bg_gradient_brushes[128] = {0};
+    static HBRUSH s_bg_gradient_brushes[MaxFeatures] = {0};
     static bool s_bg_gradient_ready = false;
     static HBRUSH s_sel_brush = NULL;
     static HBRUSH s_colorful_brushes[MAX_VISIBLE_ITEMS + 40] = {0};
@@ -617,16 +617,16 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
           Win32_DrawBackground(hdc, &rect);
         } else if (ColorfullMode) {
           if (!s_bg_gradient_ready) {
-            for (int i = 0; i < 128; i++) {
-              float ft = (float)i / 128.0f;
+            for (int i = 0; i < MaxFeatures; i++) {
+              float ft = (float)i / MaxFeatures.0f;
                 s_bg_gradient_brushes[i] = CreateSolidBrush(GetRainbowColor(ft, 0.55f, GradientBrightness));
             }
             s_bg_gradient_ready = true;
           }
           int h = rect.bottom - rect.top;
-            int bandH = max(1, h / 128);
+            int bandH = max(1, h / MaxFeatures);
             for (int y = 0; y < h; y += bandH) {
-              int colorIndex = (int)(((float)y / (float)h) * 128.0f);
+              int colorIndex = (int)(((float)y / (float)h) * MaxFeatures.0f);
                 if (colorIndex > 127) colorIndex = 127;
                   RECT band = {rect.left, rect.top + y, rect.right, rect.top + min(y + bandH, h)};
                     FillRect(hdc, &band, s_bg_gradient_brushes[colorIndex]);
