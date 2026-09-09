@@ -66,13 +66,6 @@ bool GetFromHistory(ListBoxInfo* lb) {
     return false;
 }
 
-void HandleCommandExecution(ListBoxInfo* lb, char* string) {
-    if (!lb) return;
-    int num = atoi(string);
-    UI_SetSelection(lb, FlintContext_Get()->window.hListBox, num - 1);
-    UI_LB_SetCaretIndex(FlintContext_Get()->window.hListBox, num, TRUE);
-}
-
 const char* get_alias_for_item(const char* item) {
     if (!g_add_alias_to_string) return NULL;
     if (!FlintContext_Get()->window.current_feature) return NULL;
