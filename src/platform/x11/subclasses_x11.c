@@ -137,6 +137,13 @@ bool EditBufferDeleteChar(char* buf, size_t* cursor) {
     TimerEnd(timer, "subclasses_x11:EditBufferDeleteChar");
     return true;
 }
+
+void HandleCommandExecution(ListBoxInfo* lb, char* string) {
+    if (!lb) return;
+    int num = atoi(string);
+    UI_NavigateTo(lb, FlintContext_Get()->window.hListBox, num - 1);
+}
+
 static void command_confirm(const char* new_text, void* user_data) {
     PromptState* state = (PromptState*)user_data;
     HandleCommandExecution(&state->listbox, new_text);
