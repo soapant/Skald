@@ -47,6 +47,7 @@ extern const char* UsedTextEditor;
 extern const char* UsedBrowser;
 extern const char* UsedSearchEngine;
 extern const char* ImageEditorPath;
+extern const char* FeaturePath;
 extern const char* IconPath;
 extern const bool FullTextNeedsKeyPress;
 extern const bool MessagesEnabled;
