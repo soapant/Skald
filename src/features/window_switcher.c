@@ -174,7 +174,6 @@ static bool WindowSwitcher_GetWindowTitle(Display* dpy, Window w, char* buf, int
     return false;
 }
 
-// X11 Window Collection implementation via _NET_CLIENT_LIST
 static void CollectX11Windows(WindowList* list, const char** blacklist, int blacklistCount) {
     Display* dpy = get_display();
     if (!dpy) return;
@@ -221,9 +220,6 @@ static void CollectX11Windows(WindowList* list, const char** blacklist, int blac
 }
 #endif
 
-// ============================================================
-// PUBLIC WINDOW FUNCTIONS
-// ============================================================
 
 static void WindowUtils_GetAll(WindowList* list) {
     list->count = 0;
@@ -232,8 +228,6 @@ static void WindowUtils_GetAll(WindowList* list) {
     EnumWindows(EnumWindowsProcEx, (LPARAM)&ctx);
 #else
     if (getenv("WAYLAND_DISPLAY") != NULL) {
-        // TODO: Implement Wayland/Hyprland IPC client parsing here if needed 
-        // (e.g., parsing output of `hyprctl clients -j`)
         printf("[SWITCHER] Native Wayland window listing requires compositor IPC (e.g., hyprctl)\n");
         return;
     }
@@ -332,7 +326,7 @@ static void TriggerWindowSwitcher() {
 }
 
 FLINT_FEATURE_INIT {
-fl_register_hotkey("Alt+Shift+Space", TriggerWindowSwitcher);
+    fl_register_hotkey("Alt+C", TriggerWindowSwitcher);
 
     fl_register_feature("Window Switcher", TriggerWindowSwitcher);
 }
