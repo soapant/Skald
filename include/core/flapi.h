@@ -94,6 +94,7 @@ char* fl_adb_reboot();
 bool fl_paste_from_clipboard();
 bool fl_paste(char* content);
 char* fl_get_last_clipboard_entry();
+bool fl_register_mapping(const char* from_hotkey, const char* to_hotkey);
 
 #define _FL_HOTKEY_EXPAND(hotkey, trigger, cond, whitelist, ...) \
     fl_register_hotkey_impl(hotkey, trigger, cond, whitelist, (const char*[]){__VA_ARGS__, NULL})

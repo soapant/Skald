@@ -460,11 +460,6 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
       printf("SUPPOSED TO CLEAR FILE");
     }
 
-    HWND hForeground = GetForegroundWindow();
-    char fgTitle[256];
-    if (hForeground != NULL) {
-      GetWindowTextA(hForeground, fgTitle, sizeof(fgTitle));
-    }
 
     int pressed_vk = (int)pKeyInfo->vkCode;
     int modifiers = HOTKEY_MOD_NONE;
@@ -473,7 +468,11 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
     if (ctrl_down) modifiers |= HOTKEY_MOD_CTRL;
 
     WinTimer timer = TimerStart();
-    if (hotkey_process(pressed_vk, modifiers, fgTitle)) {
+    if (hotkey_remap_process(pressed_vk, modifiers, 1)) {
+        TimerEnd(timer, "ProcessHotkey");
+        return 1;
+    }
+    if (hotkey_process(pressed_vk, modifiers)) {
       return 1;
     }
     TimerEnd(timer, "ProcessHotkey");
