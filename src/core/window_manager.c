@@ -12,10 +12,18 @@
 #include "core/number_shortcut.h"
 #include "core/prompt_controller.h"
 #include "helpers.h"
+#include "config.h"
+#include "core/feature_loader.h"
 #include <sys/time.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#if !defined(_WIN32)
+#include <pthread.h>
+#include <unistd.h>
+#else
+#include <windows.h>
+#endif
 
 #if !defined(_WIN32)
 #include <X11/Xlib.h>
@@ -60,6 +68,63 @@ void SavePerFeatureState(const char* feature, EditorMode mode, int last_index) {
 }
 #endif
 
+static void on_c_file_changed(void) {
+    printf("A .c file was modified!\n");
+    fflush(stdout);
+}
+
+#if !defined(_WIN32)
+static void* feature_watcher_thread(void* arg) {
+    (void)arg;
+    while (1) {
+        char* filename = Platform_WatchForCFileChanges(FeaturePath, on_c_file_changed);
+        if (filename) {
+            printf("Changed file: %s\n", filename);
+            fflush(stdout);
+            char* base = strrchr(filename, '/');
+            if (!base) base = strrchr(filename, '\\');
+            if (base) base++; else base = filename;
+            char* dot = strrchr(base, '.');
+            if (dot) *dot = '\0';
+            char cmd[1024];
+            snprintf(cmd, sizeof(cmd), "gcc -I include -I/usr/include/freetype2 -w -g -fPIC -shared -o build/features/%s.so src/features/%s.c 2>&1", base, base);
+            printf("[WATCHER] recompiling %s -> %s\n", filename, cmd); fflush(stdout);
+            int ret = system(cmd);
+            if (ret == 0) {
+                printf("[WATCHER] reload %s\n", base); fflush(stdout);
+                FeatureLoader_Reload(base);
+            } else {
+                printf("[WATCHER] compile failed for %s (%d)\n", base, ret); fflush(stdout);
+            }
+            free(filename);
+        }
+        usleep(500000);
+    }
+    return NULL;
+}
+#else
+static DWORD WINAPI feature_watcher_thread_win(LPVOID arg) {
+    (void)arg;
+    while (1) {
+        char* filename = Platform_WatchForCFileChanges(FeaturePath, on_c_file_changed);
+        if (filename) {
+            printf("Changed file: %s\n", filename);
+            fflush(stdout);
+            char* base = strrchr(filename, '/');
+            if (!base) base = strrchr(filename, '\\');
+            if (base) base++; else base = filename;
+            char* dot = strrchr(base, '.');
+            if (dot) *dot = '\0';
+            // Windows cross-compile from Linux watcher not needed at runtime; just reload .dll if already built
+            FeatureLoader_Reload(base);
+            free(filename);
+        }
+        Sleep(500);
+    }
+    return 0;
+}
+#endif
+
 WindowManager* WindowManager_Create(void) {
     WinTimer timer = TimerStart();
     WindowManager* wm = calloc(1, sizeof(WindowManager));
@@ -84,6 +149,13 @@ WindowManager* WindowManager_Create(void) {
     
     wm->ctx = FlintContext_Get();
     g_window_manager = wm;
+#if !defined(_WIN32)
+    pthread_t tid;
+    pthread_create(&tid, NULL, feature_watcher_thread, NULL);
+    pthread_detach(tid);
+#else
+    CreateThread(NULL, 0, feature_watcher_thread_win, NULL, 0, NULL);
+#endif
     TimerEnd(timer, "window_manager:WindowManager_Create");
     return wm;
 }
