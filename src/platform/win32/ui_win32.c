@@ -10,8 +10,10 @@
 #include "bindings/bindings.h"
 #include "helpers/flag.h"
 #include "core/common_ui.h"
+
 char* Platform_EditTextPopup(const char* a, int b, int c, int d, int e) { (void)a;(void)b;(void)c;(void)d;(void)e; return NULL; }
 char* Platform_SearchPopup(void) { return NULL; }
+
 #include <gdiplus.h>
 
 void Platform_WaitForKeypressAsync(KeyCallback callback) {
@@ -480,7 +482,6 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
           char* output = Platform_EditTextPopup("", 960, 540, 1000, 300);
           if (output) {
             HandleCommandExecution(NULL, output);
-          } else {
           }
           return 1;
         }

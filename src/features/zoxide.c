@@ -8,6 +8,7 @@ static void edit_confirm(const char* new_text, void* user_data) {
     }
     free(data);
 }
+
 static void do_edit(const char* selection, ListBoxInfo* lb, const char* filepath, RefreshCallback refresh) {
     int idx = lb ? lb->selected_index : -1;
     int true_idx = (lb && idx >= 0 && idx < lb->populated_count) ? lb->matching_indices[idx] : idx;

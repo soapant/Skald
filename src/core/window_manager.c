@@ -577,7 +577,6 @@ Popup* EditPopup_Create(WindowManager* wm, const char* initial_text,
     return (Popup*)data;
 }
 
-// ============ Message Popup ============
 
 typedef struct {
     Popup base;
