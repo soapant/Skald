@@ -141,7 +141,8 @@ bool EditBufferDeleteChar(char* buf, size_t* cursor) {
 void HandleCommandExecution(ListBoxInfo* lb, char* string) {
     if (!lb) return;
     int num = atoi(string);
-    UI_NavigateTo(lb, FlintContext_Get()->window.hListBox, num - 1);
+    UI_SetSelection(lb, FlintContext_Get()->window.hListBox, num - 1);
+    UI_LB_SetCaretIndex(FlintContext_Get()->window.hListBox, num, TRUE);
 }
 
 static void command_confirm(const char* new_text, void* user_data) {
@@ -302,11 +303,13 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
     }
 
     if (wParam == COMMAND_MODE_KEY) {
-      WindowManager* wm = WindowManager_Get();
-      Popup* popup = EditPopup_Create(wm,"", "Command Mode", 960, 540,command_confirm,state);
-      WindowManager_PushPopup(wm, popup);
-      return true;
+        WindowManager* wm = WindowManager_Get();
+        Popup* popup = EditPopup_Create(wm,"", "Command Mode", 960, 540,command_confirm,state);
+        WindowManager_PushPopup(wm, popup);
+        return true;
       }
+
+    printf("after index %i \n",state->listbox.selected_index);
 
     TimerEnd(timer, "subclasses_x11:Linux_HandlePromptKey");
     return false;
