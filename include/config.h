@@ -37,6 +37,7 @@ extern bool ColorfullMode;
 extern float WindowOpacity;
 extern const char* UsedFont;
 extern const int FontSize;
+extern const int MaxFeatures;
 extern const int NumberFontSize;
 extern const int VimFontSize;
 extern const int PaddingForScrolling;
