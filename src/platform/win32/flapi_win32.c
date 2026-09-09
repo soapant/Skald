@@ -3,61 +3,6 @@
 #include "core/flapi.h"
 #include "core/platform.h"
 
-int fl_copy_into_clipboard_platform(const char* text) {
-    int status = 0;
-    size_t len = strlen(text);
-
-    char* clean_text = (char*)malloc(len + 1);
-    if (clean_text == NULL) return 0;
-    size_t write_idx = 0;
-    for (size_t i = 0; i < len; i++) {
-        if (text[i] != '\r') {
-            clean_text[write_idx++] = text[i];
-        }
-    }
-    clean_text[write_idx] = '\0';
-
-    len = write_idx;
-    if (len == 0) {
-        free(clean_text);
-        return 0;
-    }
-
-    HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, len + 1);
-    if (hMem == NULL) {
-        free(clean_text);
-        return 0;
-    }
-
-    char* pMem = (char*)GlobalLock(hMem);
-    if (pMem == NULL) {
-        GlobalFree(hMem);
-        free(clean_text);
-        return 0;
-    }
-    
-    memcpy(pMem, clean_text, len + 1); 
-    GlobalUnlock(hMem);
-    free(clean_text);
-
-    if (!OpenClipboard(NULL)) {
-        GlobalFree(hMem);
-        return 0;
-    }
-
-    if (!EmptyClipboard()) {
-        GlobalFree(hMem);
-        CloseClipboard();
-        return 0;
-    }
-
-    if (SetClipboardData(CF_TEXT, hMem) == NULL) {
-        GlobalFree(hMem);
-        CloseClipboard();
-        return 0;
-    }
-    return (status == 0) ? 1 : 0;
-}
 
 void fl_get_all_files_from_dir_platform(const char* dir_path, char** list_of_allowed_extensions, ListOfFiles* list_of_files,char** list_of_names_to_ignore) {
 

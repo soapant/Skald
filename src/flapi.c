@@ -14,7 +14,7 @@
 
 bool fl_copy_to_clipboard(const char* text) {
     if (text == NULL) return 0;
-    return fl_copy_into_clipboard_platform(text);
+    return Platform_CopyToClipboard(text);
 }
 
 bool fl_get_all_files_from_dir(const char* dir_path, char** list_of_allowed_extensions, ListOfFiles* list_of_files,char** list_of_names_to_ignore) {

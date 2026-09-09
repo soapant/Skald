@@ -48,7 +48,6 @@ struct feature_data* GetFeatureData(const char* name) {
     }
     return data;
 }
-
 //temporary not working like at all 
 void AddSelectionToData(char* selection, const char* feature_name, struct feature_data* data) {
     if (!data) return;
