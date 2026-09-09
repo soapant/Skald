@@ -21,9 +21,6 @@ bool Platform_StringContainsCaseInsensitive(const char* haystack, const char* ne
 bool Platform_StringStartsWithCaseInsensitive(const char* str, const char* prefix);
 int Platform_CollectRunningProcesses(char process_list[][128], int max_count);
 bool Platform_TerminateProcessByName(const char* exe_name);
-bool Platform_SendX11Command(const char* window_title, const char* atom_name, long command);
-bool Platform_SetX11Property(const char* window_title, const char* atom_name, long value);
-bool Platform_SetX11StringProperty(const char* window_title, const char* atom_name, const char* value);
 bool Platform_FocusWindow(const char* window_name);
 bool Platform_ClickAtPos(int x,int y);
 bool Platform_QueryBrowser(char* query);
@@ -36,6 +33,9 @@ bool Linux_HandleSimplePromptKey(const XEvent* ev,SimplePromptState *state);
 bool Linux_RenderPromptUser(Display *dpy, Window *win, PromptState* state);
 bool Linux_RenderSimplePromptUser(Display *dpy, Window *win, SimplePromptState *state);
 void Platform_DismissMessage(void);
+bool Platform_SendX11Command(const char* window_title, const char* atom_name, long command);
+bool Platform_SetX11Property(const char* window_title, const char* atom_name, long value);
+bool Platform_SetX11StringProperty(const char* window_title, const char* atom_name, const char* value);
 #endif
 
 char* Platform_QueryZoxidePath(const char* query);

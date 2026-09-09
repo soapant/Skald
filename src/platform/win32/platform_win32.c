@@ -133,27 +133,6 @@ bool Platform_LaunchApp(const char* path) {
     return Platform_ShellExecuteWithVerb(expanded, "open", true);
 }
 
-bool Platform_SendX11Command(const char* window_title, const char* atom_name, long command) {
-    (void)window_title;
-    (void)atom_name;
-    (void)command;
-    return false;
-}
-
-bool Platform_SetX11Property(const char* window_title, const char* atom_name, long value) {
-    (void)window_title;
-    (void)atom_name;
-    (void)value;
-    return false;
-}
-
-bool Platform_SetX11StringProperty(const char* window_title, const char* atom_name, const char* value) {
-    (void)window_title;
-    (void)atom_name;
-    (void)value;
-    return false;
-}
-
 bool Platform_LaunchAppAsAdmin(const char* path) {
     if (!path) return false;
 
