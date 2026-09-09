@@ -11,6 +11,7 @@
 #include "helpers/flag.h"
 #include "core/common_ui.h"
 
+//temporary does nothing 
 char* Platform_EditTextPopup(const char* a, int b, int c, int d, int e) { (void)a;(void)b;(void)c;(void)d;(void)e; return NULL; }
 char* Platform_SearchPopup(void) { return NULL; }
 
