@@ -19,4 +19,4 @@ make a saerch in app so like saerch in gemini or ai thing||[Cprogram]|[DontForge
 use wtype for the remapper||[Cprogram]
 auto detect compiler isntead of just gcc ||[Cprogram]
 change the api of load file list it fucking sucks||[Cprogram]
-
+remove the recycle macerator recipes||[MinecraftModpack]
