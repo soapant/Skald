@@ -18,7 +18,7 @@ typedef uint32_t ColorRef;
 #ifndef RGB
 #define RGB(r, g, b)  ((unsigned long)(((unsigned char)(r)|((unsigned short)((unsigned char)(g))<<8))|(((unsigned long)(unsigned char)(b))<<16)))
 #endif
-#define COLOR_BG      RGB(5, 5, 10)   
+#define COLOR_BG      RGB(0,0, 0)   
 #define COLOR_TEXT    RGB(255, 255, 255)
 #define COLOR_ALTERNATE RGB(57, 255, 20)
 #define COLOR_SELECTED_TEXT     RGB(57, 105, 20)
