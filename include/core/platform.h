@@ -74,9 +74,9 @@ char* Platform_RunTerminalCommand(char* command,bool open_terminal);
 bool Platform_LaunchFileManagerAtPath(char* path,char* args);
 long Platform_GetFileSize(char *filepath);
 char* Platform_RegisterDirWatcher(const char* dir_path, void (*callback)(void));
+char* Platform_GetActiveWindowTitle();
 
 
-bool Linux_GetActiveWindowTitle(char* buffer, int buffer_size);
 int ConvertLinuxKeyToWindowsVK(int key_code);
 const char* Platform_GetRealUser(void);
 const char* Platform_GetRealHome(void);
@@ -89,5 +89,6 @@ const char* Platform_GetRuntimeDir(void);
 #endif
 bool Platform_LaunchTerminalAtPath(const char* working_dir, const char* extra_args);
 bool Platform_LaunchBrowserAtUrl(char* url,bool new_window);
+bool Platform_EmitHotkey(int vk_code, int modifiers);
 
 #endif

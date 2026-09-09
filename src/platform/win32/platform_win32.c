@@ -457,3 +457,85 @@ bool Platform_ClickAtPos(int x,int y) {
 bool Platform_FocusWindow(const char* title) {
 
 }
+
+bool Platform_EmitHotkey(int vk_code, int modifiers) {
+    INPUT inputs[10] = {0};
+    int idx = 0;
+    // press modifiers
+    if (modifiers & HOTKEY_MOD_CTRL) {
+        inputs[idx].type = INPUT_KEYBOARD;
+        inputs[idx].ki.wVk = VK_CONTROL;
+        idx++;
+    }
+    if (modifiers & HOTKEY_MOD_ALT) {
+        inputs[idx].type = INPUT_KEYBOARD;
+        inputs[idx].ki.wVk = VK_MENU;
+        idx++;
+    }
+    if (modifiers & HOTKEY_MOD_SHIFT) {
+        inputs[idx].type = INPUT_KEYBOARD;
+        inputs[idx].ki.wVk = VK_SHIFT;
+        idx++;
+    }
+    if (modifiers & HOTKEY_MOD_SUPER) {
+        inputs[idx].type = INPUT_KEYBOARD;
+        inputs[idx].ki.wVk = VK_LWIN;
+        idx++;
+    }
+    // press main key
+    inputs[idx].type = INPUT_KEYBOARD;
+    inputs[idx].ki.wVk = vk_code;
+    idx++;
+    // release main key
+    inputs[idx].type = INPUT_KEYBOARD;
+    inputs[idx].ki.wVk = vk_code;
+    inputs[idx].ki.dwFlags = KEYEVENTF_KEYUP;
+    idx++;
+    // release modifiers in reverse
+    if (modifiers & HOTKEY_MOD_SUPER) {
+        inputs[idx].type = INPUT_KEYBOARD;
+        inputs[idx].ki.wVk = VK_LWIN;
+        inputs[idx].ki.dwFlags = KEYEVENTF_KEYUP;
+        idx++;
+    }
+    if (modifiers & HOTKEY_MOD_SHIFT) {
+        inputs[idx].type = INPUT_KEYBOARD;
+        inputs[idx].ki.wVk = VK_SHIFT;
+        inputs[idx].ki.dwFlags = KEYEVENTF_KEYUP;
+        idx++;
+    }
+    if (modifiers & HOTKEY_MOD_ALT) {
+        inputs[idx].type = INPUT_KEYBOARD;
+        inputs[idx].ki.wVk = VK_MENU;
+        inputs[idx].ki.dwFlags = KEYEVENTF_KEYUP;
+        idx++;
+    }
+    if (modifiers & HOTKEY_MOD_CTRL) {
+        inputs[idx].type = INPUT_KEYBOARD;
+        inputs[idx].ki.wVk = VK_CONTROL;
+        inputs[idx].ki.dwFlags = KEYEVENTF_KEYUP;
+        idx++;
+    }
+    // SendInput expects count, but we have variable idx, need to handle up to 10
+    // For simplicity, send in two batches if needed
+    if (idx > 6) {
+        // fallback: send first 6, then remaining
+        SendInput(6, inputs, sizeof(INPUT));
+        SendInput(idx - 6, inputs + 6, sizeof(INPUT));
+    } else {
+        SendInput(idx, inputs, sizeof(INPUT));
+    }
+    return true;
+}
+
+char* Platform_GetActiveWindowTitle(void) {
+    static char fgTitle[256];  
+    HWND hForeground = GetForegroundWindow();
+    
+    if (hForeground != NULL) {
+        GetWindowTextA(hForeground, fgTitle, sizeof(fgTitle));
+    } else {
+        fgTitle[0] = '\0';
+    }
+    return fgTitle;
+}

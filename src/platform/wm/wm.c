@@ -5,12 +5,22 @@
 #include <string.h>
 #include <stdlib.h>
 
-bool Wm_GetActiveWindowTitle(char *buffer, int buffer_size) {
-    if (!buffer || buffer_size <= 0) return false;
-    buffer[0] = '\0';
-    if (get_title_hyprland(buffer, buffer_size)) return true;
-    if (get_title_sway(buffer, buffer_size)) return true;
-    return get_title_x11(buffer, buffer_size);
+char* Wm_GetActiveWindowTitle(void) {
+    static char buffer[1024];
+    
+    buffer[0] = '\0'; 
+    
+    if (get_title_hyprland(buffer, sizeof(buffer))) {
+        return buffer;
+    }
+    if (get_title_sway(buffer, sizeof(buffer))) {
+        return buffer;
+    }
+    if (get_title_x11(buffer, sizeof(buffer))) {
+        return buffer;
+    }
+    
+    return NULL;
 }
 
 bool Wm_FocusByTitle(const char *title) {
