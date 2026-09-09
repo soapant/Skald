@@ -29,6 +29,7 @@ extern int ShaderPreset; // 0 solid, 1 vertical, 2 radial, 3 diagonal, 4 noise
 extern bool EnableSelectionShaders;
 extern int SelectionShaderPreset; // 0 solid, 1 vertical, 2 radial, 3 diagonal, 4 noise
 extern float ShaderIntensity;
+extern float ShaderSmoothness; // 0.2 blocky -> 5.0 ultra smooth, 1.0 = full window spread
 extern char* EditPopUpPos;
 extern int EditPopUpWidthMin;
 extern int PageUpDownLen;
