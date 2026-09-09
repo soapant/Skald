@@ -151,4 +151,6 @@ void TriggerVolume(void) {
 
 FLINT_FEATURE_INIT {
     // no auto init for volume.h
+
+    fl_register_feature("Volume", TriggerVolume);
 }

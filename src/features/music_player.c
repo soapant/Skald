@@ -129,4 +129,6 @@ fl_register_hotkey("Alt+,", music_cmd_1);
     fl_register_hotkey("Alt+;", music_cmd_6);
     fl_register_hotkey("Alt+'", music_cmd_2);
     fl_register_hotkey("Alt+P", music_prompt);
+
+    fl_register_feature("Music Player", music_prompt);
 }

@@ -5,4 +5,6 @@ void Testing(void) {
 
 FLINT_FEATURE_INIT {
     fl_register_hotkey("Alt+Shift+V", Testing);
+
+    fl_register_feature("Testing", Testing);
 }

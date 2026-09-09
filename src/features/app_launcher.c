@@ -202,5 +202,7 @@ void TriggerAppLauncher(void) {
 FLINT_FEATURE_INIT {
     initialize_app_cache();
     fl_register_hotkey("Alt+E", TriggerAppLauncher);
+
+    fl_register_feature("App Launcher", TriggerAppLauncher);
 }
 

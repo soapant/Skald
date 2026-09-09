@@ -38,6 +38,7 @@ const char* UsedSearchEngine = "google";
 const char* ImageEditorPath =  "{APPDATA}/Microsoft/Windows/Start Menu/Programs/Scoop Apps/PicView.lnk";
 const char* FeaturePath = "src/features";
 const char* IconPath = "{MISC}/switch_window.ico";
+const char* ControlHotkey = "Alt+Space";
 
 const PathVar G_PATH_VARS[] = {
     {"DEV",          "D:\\Projects",                    "/home/diggy/Programming/Projects"},

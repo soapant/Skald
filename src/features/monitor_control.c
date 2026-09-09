@@ -55,4 +55,6 @@ void TriggerMonitorControl(void) {
 
 FLINT_FEATURE_INIT {
     // no auto init for monitor_control.h
+
+    fl_register_feature("Monitor Control", TriggerMonitorControl);
 }
