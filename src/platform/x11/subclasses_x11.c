@@ -137,6 +137,10 @@ bool EditBufferDeleteChar(char* buf, size_t* cursor) {
     TimerEnd(timer, "subclasses_x11:EditBufferDeleteChar");
     return true;
 }
+static void command_confirm(const char* new_text, void* user_data) {
+    PromptState* state = (PromptState*)user_data;
+    HandleCommandExecution(&state->listbox, new_text);
+}
 
 bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
     WinTimer timer = TimerStart();
@@ -290,9 +294,17 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
       }
     }
 
+    if (wParam == COMMAND_MODE_KEY) {
+      WindowManager* wm = WindowManager_Get();
+      Popup* popup = EditPopup_Create(wm,"", "Command Mode", 960, 540,command_confirm,state);
+      WindowManager_PushPopup(wm, popup);
+      return true;
+      }
+
     TimerEnd(timer, "subclasses_x11:Linux_HandlePromptKey");
     return false;
 }
+
 bool Linux_HandleSimplePromptKey(const XEvent* ev,SimplePromptState *state) {
     WinTimer timer = TimerStart();
     if (ev->type != KeyPress) { TimerEnd(timer, "subclasses_x11:Linux_HandleSimplePromptKey"); return false; }
@@ -342,63 +354,6 @@ bool Linux_HandleSimplePromptKey(const XEvent* ev,SimplePromptState *state) {
     return false;
 }
 
-bool Linux_HandleEditPopupKey(const XEvent* ev, SimplePromptState* state, bool* confirmed, bool* cancelled) {
-    WinTimer timer = TimerStart();
-    *confirmed = false;
-    *cancelled = false;
-    if (ev->type != KeyPress) { TimerEnd(timer, "subclasses_x11:Linux_HandleEditPopupKey"); return false; }
-
-    int wParam = Linux_KeysymToWindowsVK(XLookupKeysym(&ev->xkey, 0));
-    bool ctrl_pressed, shift_pressed, alt_pressed;
-    ReadModifiers(ev, &ctrl_pressed, &shift_pressed, &alt_pressed);
-    if (should_swallow_pending(wParam, (ctrl_pressed?HOTKEY_MOD_CTRL:0)|(shift_pressed?HOTKEY_MOD_SHIFT:0)|(alt_pressed?HOTKEY_MOD_ALT:0))) { TimerEnd(timer, "subclasses_x11:Linux_HandleEditPopupKey"); return true; }
-    if (TryVimMotion(wParam, ctrl_pressed, shift_pressed, alt_pressed)) { TimerEnd(timer, "subclasses_x11:Linux_HandleEditPopupKey"); return true; }
-    if (wParam == VK_BACK) {
-        EditBufferBackspace(state->user_input, &state->cursor);
-        TimerEnd(timer, "subclasses_x11:Linux_HandleEditPopupKey");
-        return true;
-    }
-    if (wParam == VK_ESCAPE) {
-      *cancelled = true;
-      TimerEnd(timer, "subclasses_x11:Linux_HandleEditPopupKey");
-      return true;
-    }
-    if (wParam == VK_RETURN) {
-      *confirmed = true;
-      TimerEnd(timer, "subclasses_x11:Linux_HandleEditPopupKey");
-      return true;
-    }
-    if (wParam == VK_RIGHT) {
-      CursorForward(&state->cursor, strlen(state->user_input));
-      TimerEnd(timer, "subclasses_x11:Linux_HandleEditPopupKey");
-      return true;
-    }
-    if (wParam == VK_LEFT) {
-       CursorBack(&state->cursor, strlen(state->user_input));
-      TimerEnd(timer, "subclasses_x11:Linux_HandleEditPopupKey");
-      return true;
-    }
-    if (wParam == VK_DELETE) {
-      EditBufferDeleteChar(state->user_input, &state->cursor);
-      TimerEnd(timer, "subclasses_x11:Linux_HandleEditPopupKey");
-      return true;
-    }
-    if (wParam == VK_HOME) {
-      state->cursor = 0;
-      TimerEnd(timer, "subclasses_x11:Linux_HandleEditPopupKey");
-      return true;
-    }
-    if (wParam == VK_END) {
-      state->cursor = strlen(state->user_input);
-      TimerEnd(timer, "subclasses_x11:Linux_HandleEditPopupKey");
-      return true;
-    }
-    TimerEnd(timer, "subclasses_x11:Linux_HandleEditPopupKey");
-    return false;
-}
-
-
-// --- OnDraw variants for double buffering (avoid creating XftDraw per call) ---
 void DrawSimplePromptUserEditControlOnDraw(Display *dpy, XftDraw* xd, Visual* vis, Colormap cmap, SimplePromptState *state) {
     WinTimer timer = TimerStart();
     FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
@@ -536,7 +491,6 @@ void DrawPromptUserListBoxOnDraw(Display *dpy, XftDraw* xd, Visual* vis, Colorma
       XftColorFree(dpy, vis, cmap, &fcolalternate);
 }
 
-// Wrappers keep old API (create XftDraw and delegate)
 void DrawSimplePromptUserEditControl(Display *dpy, Window *win, SimplePromptState *state) {
     WinTimer timer = TimerStart();
     XWindowAttributes attrs;

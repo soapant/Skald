@@ -16,7 +16,6 @@ static inline void* GetActivePopupUserData(void) {
 static inline void UI_SetSelection(ListBoxInfo* lb, WindowHandle hList, int index) {
   (void)hList;
   if (!lb) return;
-  if (lb->selected_index == index) return;
   Platform_DismissMessage();
   lb->selected_index = index; }
 
