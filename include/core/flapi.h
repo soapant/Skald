@@ -97,6 +97,8 @@ char* fl_adb_reboot();
 bool fl_paste_from_clipboard();
 bool fl_paste(char* content);
 char* fl_get_last_clipboard_entry();
+void fl_edit_text_popup(const char* initial_text, const char* title, int x, int y, const char* filepath, ListBoxInfo* lb, RefreshCallback refresh);
+void fl_edit_confirm_callback(const char* new_text, void* user_data);
 
 #define _FL_HOTKEY_EXPAND(hotkey, trigger, cond, whitelist, ...) \
     fl_register_hotkey_impl(hotkey, trigger, cond, whitelist, (const char*[]){__VA_ARGS__, NULL})

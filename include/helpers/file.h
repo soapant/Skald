@@ -19,6 +19,4 @@ int EditCallback_Handle(EditCallbackData* data, RefreshCallback refresh);
 int ReplaceLineInFile(const char* filepath, int line_index, const char* new_text);
 void WriteToCacheIndex(ListBoxInfo* lb, int index, const char* text);
 
-void fl_edit_text_popup(const char* initial_text, const char* title, int x, int y, const char* filepath, ListBoxInfo* lb, RefreshCallback refresh);
-
 #endif

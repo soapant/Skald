@@ -83,38 +83,3 @@ int EditCallback_Handle(EditCallbackData* data, RefreshCallback refresh) {
     return rc;
 }
 
-static void fl_edit_confirm_callback(const char* new_text, void* user_data) {
-    EditCallbackData* data = (EditCallbackData*)user_data;
-    if (new_text && data) {
-        data->new_text = (char*)new_text;
-        EditCallback_Handle(data, data->refresh_cb);
-    }
-    free(data);
-}
-
-void fl_edit_text_popup(const char* initial_text, const char* title, int x, int y, const char* filepath, ListBoxInfo* lb, RefreshCallback refresh) {
-    if (!title) title = "Edit";
-    if (!initial_text) initial_text = "";
-    if (!lb) return;
-    int idx = lb->selected_index;
-    int true_idx = (idx >= 0 && idx < lb->populated_count) ? lb->matching_indices[idx] : idx;
-    WindowManager* wm = WindowManager_Get();
-    if (!wm) return;
-    EditCallbackData* data = (EditCallbackData*)calloc(1, sizeof(EditCallbackData));
-    if (!data) return;
-    data->filepath = filepath;
-    data->lb = lb;
-    data->selected_index = idx;
-    data->true_index = true_idx;
-    data->new_text = NULL;
-    data->restore_selection = true;
-    data->hListBox = FlintContext_Get()->window.hListBox;
-    data->hEditControl = FlintContext_Get()->window.hEditControl;
-    data->refresh_cb = refresh;
-    Popup* popup = EditPopup_Create(wm, initial_text, title, x, y, fl_edit_confirm_callback, data);
-    if (!popup) {
-        free(data);
-        return;
-    }
-    WindowManager_PushPopup(wm, popup);
-}
