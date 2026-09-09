@@ -1,6 +1,6 @@
 #include "wm/hyprland_wm.h"
 #include <stddef.h>
-
+#include <stdio.h>
 bool get_title_hyprland(char *buffer, int buffer_size) {
     (void)buffer; (void)buffer_size;
     return false;
