@@ -857,7 +857,6 @@ char* Platform_RegisterDirWatcher(const char* dir_path, void (*callback)(void)) 
             int fd = g_instant_watches[i].fd;
             char buffer[1024 * (sizeof(struct inotify_event) + 16)];
             
-            // Set the file descriptor to non-blocking so it returns immediately
             int flags = fcntl(fd, F_GETFL, 0);
             fcntl(fd, F_SETFL, flags | O_NONBLOCK);
 
@@ -867,12 +866,10 @@ char* Platform_RegisterDirWatcher(const char* dir_path, void (*callback)(void)) 
                 while (j < length) {
                     struct inotify_event *event = (struct inotify_event *)&buffer[j];
                     
-                    // Run the user's callback immediately on change detection
                     if (callback) {
                         callback();
                     }
 
-                    // Dynamically allocate and return the altered object filename
                     if (event->len > 0) {
                         char *found_name = malloc(event->len + 1);
                         if (found_name) {
@@ -881,7 +878,7 @@ char* Platform_RegisterDirWatcher(const char* dir_path, void (*callback)(void)) 
                             return found_name;
                         }
                     }
-                    // Fallback if event name length field is zero but an attribute shifted
+
                     char* generic_name = malloc(32);
                     if (generic_name) {
                         strcpy(generic_name, "modified_resource");
@@ -897,11 +894,9 @@ char* Platform_RegisterDirWatcher(const char* dir_path, void (*callback)(void)) 
         }
     }
 
-    // Lazy initialization configuration setup on the first loop encounter
     if (g_instant_count < MAX_WATCHED_DIRS) {
         int fd = inotify_init();
         if (fd >= 0) {
-            // Monitor modifications, attribute adjustments (mtime changes on inner folders), creation, and deletions
             int wd = inotify_add_watch(fd, dir_path, IN_MODIFY | IN_ATTRIB | IN_CREATE | IN_DELETE);
             if (wd >= 0) {
                 g_instant_watches[g_instant_count].fd = fd;
@@ -915,6 +910,67 @@ char* Platform_RegisterDirWatcher(const char* dir_path, void (*callback)(void)) 
     }
 
     TimerEnd(timer, "platform_x11:Platform_RegisterDirWatcher");
+    return NULL;
+}
+
+char* Platform_WatchForCFileChanges(const char* dir_path, void (*callback)(void)) {
+    WinTimer timer = TimerStart();
+    if (!dir_path) { TimerEnd(timer, "platform_x11:Platform_WatchForCFileChanges"); return NULL; }
+
+    for (int i = 0; i < g_instant_count; i++) {
+        if (strcmp(g_instant_watches[i].root_path, dir_path) == 0) {
+            int fd = g_instant_watches[i].fd;
+            char buffer[1024 * (sizeof(struct inotify_event) + 16)];
+            
+            int flags = fcntl(fd, F_GETFL, 0);
+            fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+
+            int length = read(fd, buffer, sizeof(buffer));
+            if (length > 0) {
+                int j = 0;
+                while (j < length) {
+                    struct inotify_event *event = (struct inotify_event *)&buffer[j];
+                    
+                    if (event->len > 0) {
+                        const char* name = event->name;
+                        size_t name_len = strlen(name);
+                        
+                        if (name_len > 2 && strcmp(name + name_len - 2, ".c") == 0) {
+                            if (callback) callback();
+                            
+                            char *found_name = malloc(event->len + 1);
+                            if (found_name) {
+                                strcpy(found_name, event->name);
+                                TimerEnd(timer, "platform_x11:Platform_WatchForCFileChanges");
+                                return found_name;
+                            }
+                        }
+                    }
+                    
+                    j += sizeof(struct inotify_event) + event->len;
+                }
+            }
+            TimerEnd(timer, "platform_x11:Platform_WatchForCFileChanges");
+            return NULL; 
+        }
+    }
+
+    if (g_instant_count < MAX_WATCHED_DIRS) {
+        int fd = inotify_init();
+        if (fd >= 0) {
+            int wd = inotify_add_watch(fd, dir_path, IN_MODIFY | IN_ATTRIB | IN_CREATE | IN_DELETE);
+            if (wd >= 0) {
+                g_instant_watches[g_instant_count].fd = fd;
+                g_instant_watches[g_instant_count].wd = wd;
+                snprintf(g_instant_watches[g_instant_count].root_path, 256, "%s", dir_path);
+                g_instant_count++;
+            } else {
+                close(fd);
+            }
+        }
+    }
+
+    TimerEnd(timer, "platform_x11:Platform_WatchForCFileChanges");
     return NULL;
 }
 
