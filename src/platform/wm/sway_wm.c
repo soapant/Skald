@@ -4,6 +4,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <ctype.h>
 
 bool get_title_sway(char *buffer, int buffer_size) {
     if (!buffer || buffer_size <= 0) return false;
@@ -53,4 +54,47 @@ char* paste_sway(char* content) {
   char buffer[100];
   snprintf(buffer,sizeof(buffer),"wtype %s",content);
   return Platform_RunTerminalCommand(buffer,false);
+}
+bool succeded_sway(char* output) {
+    StringList lines = String_Split(output, "\n");
+    for (size_t i = 0; i < lines.count; i++) {
+      if (Platform_StringContainsCaseInsensitive(lines.items[i],"\"error\"")) {
+        return false;
+      }
+    }
+    return true;
+}
+
+bool focus_window_title_sway(char* title) {
+    if (!title) return false;
+
+    char escaped_title[512];
+    char* src = title;
+    char* dst = escaped_title;
+    while (*src && (dst - escaped_title) < sizeof(escaped_title) - 1) {
+        if (*src == '"') {
+            *dst++ = '\\';
+            *dst++ = '"';
+        } else {
+            *dst++ = *src;
+        }
+        src++;
+    }
+    *dst = '\0';
+    
+    char cmd[512];
+    snprintf(cmd, sizeof(cmd), "swaymsg '[title=\"%s\"] focus'", escaped_title);
+
+    if (!succeded_sway(Platform_RunTerminalCommand(cmd, false))) {
+        if (escaped_title[0] != '\0') {
+            snprintf(cmd, sizeof(cmd), "swaymsg '[title=\"%c%s\"] focus'", 
+                     toupper((unsigned char)escaped_title[0]), 
+                     &escaped_title[1]);
+            if (succeded_sway(Platform_RunTerminalCommand(cmd, false))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 }
