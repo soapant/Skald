@@ -434,6 +434,76 @@ char* Platform_RegisterDirWatcher(const char* dir_path, void (*callback)(void)) 
     return NULL;
 }
 
+#define MAX_C_WATCH 128
+typedef struct { char path[256]; char file[256]; FILETIME lastWrite; bool inited; } CWatch;
+static CWatch g_c_watches[MAX_C_WATCH];
+static int g_c_watch_count = 0;
+static char g_c_watch_dir[256] = {0};
+
+char* Platform_WatchForCFileChanges(const char* dir_path, void (*callback)(void)) {
+    if (!dir_path) return NULL;
+    const char* watch_dir = dir_path;
+    if (!watch_dir || !watch_dir[0]) watch_dir = FeaturePath ? FeaturePath : "src/features";
+    // init on first call for this dir
+    bool found_dir = false;
+    for (int i = 0; i < g_c_watch_count; i++) if (strcmp(g_c_watches[i].path, watch_dir) == 0) { found_dir = true; break; }
+    if (!found_dir && g_c_watch_count == 0) {
+        strncpy(g_c_watch_dir, watch_dir, sizeof(g_c_watch_dir)-1);
+        // first scan to init lastWrite without triggering
+        char pattern[MAX_PATH];
+        snprintf(pattern, sizeof(pattern), "%s\\*.c", watch_dir);
+        WIN32_FIND_DATAA fd;
+        HANDLE hFind = FindFirstFileA(pattern, &fd);
+        if (hFind != INVALID_HANDLE_VALUE) {
+            do {
+                if (g_c_watch_count >= MAX_C_WATCH) break;
+                strncpy(g_c_watches[g_c_watch_count].path, watch_dir, sizeof(g_c_watches[0].path)-1);
+                strncpy(g_c_watches[g_c_watch_count].file, fd.cFileName, sizeof(g_c_watches[0].file)-1);
+                g_c_watches[g_c_watch_count].lastWrite = fd.ftLastWriteTime;
+                g_c_watches[g_c_watch_count].inited = true;
+                g_c_watch_count++;
+            } while (FindNextFileA(hFind, &fd));
+            FindClose(hFind);
+        }
+        return NULL;
+    }
+    // poll for changes
+    char pattern[MAX_PATH];
+    snprintf(pattern, sizeof(pattern), "%s\\*.c", watch_dir);
+    WIN32_FIND_DATAA fd;
+    HANDLE hFind = FindFirstFileA(pattern, &fd);
+    if (hFind == INVALID_HANDLE_VALUE) return NULL;
+    do {
+        bool found = false;
+        for (int i = 0; i < g_c_watch_count; i++) {
+            if (strcmp(g_c_watches[i].path, watch_dir) == 0 && strcmp(g_c_watches[i].file, fd.cFileName) == 0) {
+                found = true;
+                if (CompareFileTime(&fd.ftLastWriteTime, &g_c_watches[i].lastWrite) != 0) {
+                    g_c_watches[i].lastWrite = fd.ftLastWriteTime;
+                    if (callback) callback();
+                    char* ret = _strdup(fd.cFileName);
+                    FindClose(hFind);
+                    return ret;
+                }
+                break;
+            }
+        }
+        if (!found && g_c_watch_count < MAX_C_WATCH) {
+            strncpy(g_c_watches[g_c_watch_count].path, watch_dir, sizeof(g_c_watches[0].path)-1);
+            strncpy(g_c_watches[g_c_watch_count].file, fd.cFileName, sizeof(g_c_watches[0].file)-1);
+            g_c_watches[g_c_watch_count].lastWrite = fd.ftLastWriteTime;
+            g_c_watches[g_c_watch_count].inited = true;
+            g_c_watch_count++;
+            if (callback) callback();
+            char* ret = _strdup(fd.cFileName);
+            FindClose(hFind);
+            return ret;
+        }
+    } while (FindNextFileA(hFind, &fd));
+    FindClose(hFind);
+    return NULL;
+}
+
 bool Platform_ClickAtPos(int x,int y) {
     int screenWidth = GetSystemMetrics(SM_CXSCREEN);
     int screenHeight = GetSystemMetrics(SM_CYSCREEN);
