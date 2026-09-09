@@ -1175,7 +1175,7 @@ char* Platform_GetActiveWindowTitle() {
 }
 
 
-int PLatform_CopyToClipboard(const char* text) {
+int Platform_CopyToClipboard(const char* text) {
     WinTimer timer = TimerStart();
     int status = 0;
     size_t len = strlen(text);
