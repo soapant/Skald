@@ -26,6 +26,7 @@ static int g_bgW = 0, g_bgH = 0;
 static unsigned long g_bgBase = 0;
 static int g_bgPreset = -1;
 static float g_bgIntensity = -1.0f;
+static float g_bgSmoothness = -1.0f;
 static int g_bgRadius = -1;
 static bool g_bgRounded = false;
 static Display* g_bgDpy = NULL;
@@ -609,6 +610,7 @@ void Linux_FreeCachedBackground(void) {
     g_bgBase = 0;
     g_bgPreset = -1;
     g_bgIntensity = -1.0f;
+    g_bgSmoothness = -1.0f;
     g_bgRadius = -1;
     g_bgRounded = false;
     g_bgDpy = NULL;
@@ -633,6 +635,9 @@ static Pixmap Linux_CreateBackgroundPixmap(Display* dpy, Window win, int w, int 
     uint32_t *row, *pxrow;
     unsigned int r = (base >> 16) & 0xFF, g = (base >> 8) & 0xFF, b = base & 0xFF;
     unsigned long pixel = hasAlpha ? (baseAlpha8 << 24) | (r << 16) | (g << 8) | b : (r << 16) | (g << 8) | b;
+    float _smooth = ShaderSmoothness; if (_smooth < 0.1f) _smooth = 0.1f; if (_smooth > 10.0f) _smooth = 10.0f;
+    int _steps = (int)(_smooth * 20.0f); if (_steps < 2) _steps = 2; if (_steps > 200) _steps = 200;
+    #define _QT(t) (floorf((t) * _steps) / (float)_steps)
 
     if (!EnableShaders || ShaderPreset == 0) {
         unsigned long fill = pixel;
@@ -654,7 +659,7 @@ static Pixmap Linux_CreateBackgroundPixmap(Display* dpy, Window win, int w, int 
     } else if (ShaderPreset == 1) {
         unsigned long light = DeriveLighter(base, 1.0f);
         for (int y = 0; y < h; y++) {
-            float t = h > 1 ? (float)y / (float)(h - 1) : 0;
+            float t = _QT(h > 1 ? (float)y / (float)(h - 1) : 0);
             unsigned long col = LerpHex(base, light, t * 0.9f);
             unsigned int cr = (col >> 16) & 0xFF, cg = (col >> 8) & 0xFF, cb = col & 0xFF;
             row = (uint32_t*)(img->data + y * img->bytes_per_line);
@@ -668,7 +673,7 @@ static Pixmap Linux_CreateBackgroundPixmap(Display* dpy, Window win, int w, int 
         for (int y = 0; y < h; y++) {
             row = (uint32_t*)(img->data + y * img->bytes_per_line);
             for (int x = 0; x < w; x++) {
-                float t = (float)(x + y) / (float)(w + h);
+                float t = _QT((float)(x + y) / (float)(w + h));
                 unsigned long col = LerpHex(base, light, t * 0.9f);
                 unsigned int cr = (col >> 16) & 0xFF, cg = (col >> 8) & 0xFF, cb = col & 0xFF;
                 unsigned int a = CornerAlpha(x, y, w, h, R, baseAlpha8);
@@ -685,9 +690,9 @@ static Pixmap Linux_CreateBackgroundPixmap(Display* dpy, Window win, int w, int 
             row = (uint32_t*)(img->data + y * img->bytes_per_line);
             for (int x = 0; x < w; x++) {
                 float dx = x - cx, dy = y - cy;
-                float dist = sqrtf(dx*dx + dy*dy) * inv_max_dist;
+                float dist = _QT(sqrtf(dx*dx + dy*dy) * inv_max_dist);
                 if (dist > 1) dist = 1;
-                unsigned long col = LerpHex(light, base, dist * 0.85f);
+                unsigned long col = LerpHex(light, base, _QT(dist * 0.85f));
                 unsigned int cr = (col >> 16) & 0xFF, cg = (col >> 8) & 0xFF, cb = col & 0xFF;
                 unsigned int a = CornerAlpha(x, y, w, h, R, baseAlpha8);
                 row[x] = a ? (a << 24) | (cr << 16) | (cg << 8) | cb : 0;
@@ -696,10 +701,10 @@ static Pixmap Linux_CreateBackgroundPixmap(Display* dpy, Window win, int w, int 
     } else if (ShaderPreset == 4) {
         unsigned long light = DeriveLighter(base, 1.0f);
         for (int y = 0; y < h; y++) {
-            float tBase = h > 1 ? (float)y / (float)(h - 1) : 0;
+            float tBase = _QT(h > 1 ? (float)y / (float)(h - 1) : 0);
             row = (uint32_t*)(img->data + y * img->bytes_per_line);
             for (int x = 0; x < w; x++) {
-                float t = tBase * 0.9f;
+                float t = _QT(tBase * 0.9f);
                 unsigned long col = LerpHex(base, light, t);
                 unsigned int n = HashNoise(x, y);
                 int delta = (int)(n & 0x1F) - 16;
@@ -724,6 +729,7 @@ static Pixmap Linux_CreateBackgroundPixmap(Display* dpy, Window win, int w, int 
         }
     }
 
+    #undef _QT
     GC gc = XCreateGC(dpy, pm, 0, NULL);
     XPutImage(dpy, pm, gc, img, 0, 0, 0, 0, w, h);
     XFreeGC(dpy, gc);
@@ -737,9 +743,10 @@ Pixmap Linux_GetCachedBackground(Display* dpy, Window win, int w, int h) {
     unsigned long base = rgb_to_hex(COLOR_BG);
     int preset = ShaderPreset;
     float intensity = ShaderIntensity;
+    float smoothness = ShaderSmoothness;
     int radius = CornerRadius;
     bool rounded = RoundedCorners;
-    if (g_bgPixmap != None && g_bgDpy == dpy && g_bgW == w && g_bgH == h && g_bgBase == base && g_bgPreset == preset && g_bgIntensity == intensity && g_bgRadius == radius && g_bgRounded == rounded) {
+    if (g_bgPixmap != None && g_bgDpy == dpy && g_bgW == w && g_bgH == h && g_bgBase == base && g_bgPreset == preset && g_bgIntensity == intensity && g_bgSmoothness == smoothness && g_bgRadius == radius && g_bgRounded == rounded) {
         TimerEnd(timer, "helpers_x11:Linux_GetCachedBackground");
         return g_bgPixmap;
     }
@@ -755,7 +762,7 @@ Pixmap Linux_GetCachedBackground(Display* dpy, Window win, int w, int h) {
     Pixmap pm = Linux_CreateBackgroundPixmap(dpy, win, w, h, &attrs, base, baseAlpha8);
     if (!pm) { TimerEnd(timer, "helpers_x11:Linux_GetCachedBackground"); return None; }
     g_bgPixmap = pm;
-    g_bgW = w; g_bgH = h; g_bgBase = base; g_bgPreset = preset; g_bgIntensity = intensity; g_bgRadius = radius; g_bgRounded = rounded; g_bgDpy = dpy; g_bgDepth = attrs.depth;
+    g_bgW = w; g_bgH = h; g_bgBase = base; g_bgPreset = preset; g_bgIntensity = intensity; g_bgSmoothness = smoothness; g_bgRadius = radius; g_bgRounded = rounded; g_bgDpy = dpy; g_bgDepth = attrs.depth;
     TimerEnd(timer, "helpers_x11:Linux_GetCachedBackground");
     return g_bgPixmap;
 }
@@ -765,10 +772,11 @@ void Linux_DrawBackgroundToDrawable(Display* dpy, Drawable drw, int w, int h) {
     unsigned long base = rgb_to_hex(COLOR_BG);
     int preset = ShaderPreset;
     float intensity = ShaderIntensity;
+    float smoothness = ShaderSmoothness;
     int radius = CornerRadius;
     bool rounded = RoundedCorners;
     Pixmap cached = None;
-    if (g_bgPixmap != None && g_bgDpy == dpy && g_bgW == w && g_bgH == h && g_bgBase == base && g_bgPreset == preset && g_bgIntensity == intensity && g_bgRadius == radius && g_bgRounded == rounded) {
+    if (g_bgPixmap != None && g_bgDpy == dpy && g_bgW == w && g_bgH == h && g_bgBase == base && g_bgPreset == preset && g_bgIntensity == intensity && g_bgSmoothness == smoothness && g_bgRadius == radius && g_bgRounded == rounded) {
         cached = g_bgPixmap;
     }
     if (cached != None) {
