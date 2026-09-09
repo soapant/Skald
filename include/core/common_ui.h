@@ -76,7 +76,7 @@ static inline void UI_RedrawNow(ListBoxInfo* lb, WindowHandle hListBox);
 static inline void UI_RedrawNow(ListBoxInfo* lb, WindowHandle hListBox) {
   FlintContext* _c = FlintContext_Get();
   if (_c->prompt_callbacks.refresh != NULL) {
-    char buffer[128];
+    char buffer[MaxFeatures];
     UI_GetCurrentText(FlintContext_Get()->window.hEditControl,buffer);
     _c->prompt_callbacks.refresh(buffer,FlintContext_Get()->window.hListBox,lb);
   }

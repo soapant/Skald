@@ -78,7 +78,7 @@ void TriggerPosClear(void) {
 void TriggerColorPlain(void) {
     long x, y; uint8_t r, g, b;
     if (GetCursorPixel(&x, &y, &r, &g, &b)) {
-        char buf[128];
+        char buf[MaxFeatures];
         snprintf(buf, sizeof(buf), "%d, %d, %d", r, g, b);
         fl_copy_to_clipboard(buf);
     }
@@ -87,7 +87,7 @@ void TriggerColorPlain(void) {
 void TriggerColorParen(void) {
     long x, y; uint8_t r, g, b;
     if (GetCursorPixel(&x, &y, &r, &g, &b)) {
-        char buf[128];
+        char buf[MaxFeatures];
         snprintf(buf, sizeof(buf), "(%d, %d, %d)", r, g, b);
         fl_copy_to_clipboard(buf);
     }
@@ -97,7 +97,7 @@ void TriggerColorParen(void) {
 void TriggerPixelEqualsAdb(void) {
     long x, y; uint8_t r, g, b;
     if (GetCursorPixel(&x, &y, &r, &g, &b)) {
-        char buf[128];
+        char buf[MaxFeatures];
         snprintf(buf, sizeof(buf), "adb.pixel_equals(%ld,%ld,(%d,%d,%d))", x, y, r, g, b);
         fl_copy_to_clipboard(buf);
     }
@@ -106,7 +106,7 @@ void TriggerPixelEqualsAdb(void) {
 void TriggerPixelEqualsFn(void) {
     long x, y; uint8_t r, g, b;
     if (GetCursorPixel(&x, &y, &r, &g, &b)) {
-        char buf[128];
+        char buf[MaxFeatures];
         snprintf(buf, sizeof(buf), "fn.pixel_equals(%ld,%ld,(%d,%d,%d))", x, y, r, g, b);
         fl_copy_to_clipboard(buf);
     }
@@ -119,7 +119,7 @@ void TriggerRegionCoords(void) {
     
     static long saved_x1 = 0, saved_y1 = 0;
     static int region_step = 0;
-    char buffer[128];
+    char buffer[MaxFeatures];
     
     if (region_step == 0) {
         saved_x1 = cursorPos.x;
@@ -128,7 +128,7 @@ void TriggerRegionCoords(void) {
         snprintf(buffer,sizeof(buffer),"Started Region Coord At %ld %ld \n",saved_x1,saved_y1);
         SubjectiveMessageDisplay(buffer,140,TimeOutForMessages,COLOR_TEXT);
     } else {
-        char buf[128];
+        char buf[MaxFeatures];
         snprintf(buf, sizeof(buf), "%ld,%ld,%ld,%ld", saved_x1, saved_y1, cursorPos.x, cursorPos.y);
         fl_copy_to_clipboard(buf);
         region_step = 0;
@@ -146,7 +146,7 @@ void TriggerRegionImage(void) {
     static int s_img_region_step = 0;
     static long s_img_x1 = 0, s_img_y1 = 0, s_img_x2 = 0, s_img_y2 = 0;
     static long s_saved_x1 = 0, s_saved_y1 = 0;
-    char buffer[128];
+    char buffer[MaxFeatures];
     
     
     if (s_img_region_step == 0) {
