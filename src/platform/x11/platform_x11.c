@@ -1173,3 +1173,77 @@ static int vk_to_linux_key(int vk) {
 char* Platform_GetActiveWindowTitle() {
   return Wm_GetActiveWindowTitle();
 }
+
+
+int PLatform_CopyToClipboard(const char* text) {
+    WinTimer timer = TimerStart();
+    int status = 0;
+    size_t len = strlen(text);
+
+    char buffer[256];
+    char cmd[256];
+
+    const char *wayland_display = getenv("WAYLAND_DISPLAY");
+    const char *runtime_dir = getenv("XDG_RUNTIME_DIR");
+    if ((!wayland_display || !wayland_display[0]) || (!runtime_dir || !runtime_dir[0])) {
+        static char found_display[64];
+        static char found_runtime[256];
+        found_display[0] = '\0';
+        found_runtime[0] = '\0';
+        DIR *dir = opendir("/run/user");
+        if (dir) {
+            struct dirent *e;
+            while ((e = readdir(dir)) != NULL) {
+                if (e->d_name[0] == '.') continue;
+                char udir[256];
+                snprintf(udir, sizeof(udir), "/run/user/%s", e->d_name);
+                DIR *sub = opendir(udir);
+                if (!sub) continue;
+                struct dirent *f;
+                while ((f = readdir(sub)) != NULL) {
+                    if (strncmp(f->d_name, "wayland-", 8) == 0) {
+                        snprintf(found_display, sizeof(found_display), "%s", f->d_name);
+                        snprintf(found_runtime, sizeof(found_runtime), "%s", udir);
+                        break;
+                    }
+                }
+                closedir(sub);
+                if (found_display[0] != '\0') break;
+            }
+            closedir(dir);
+        }
+        if (!wayland_display || !wayland_display[0])
+            wayland_display = found_display[0] != '\0' ? found_display : NULL;
+        if (!runtime_dir || !runtime_dir[0])
+            runtime_dir = found_runtime[0] != '\0' ? found_runtime : NULL;
+    }
+
+    if (wayland_display != NULL && wayland_display[0] != '\0' &&
+        runtime_dir != NULL && runtime_dir[0] != '\0') {
+        snprintf(cmd, sizeof(cmd), "XDG_RUNTIME_DIR=%s WAYLAND_DISPLAY=%s wl-copy",
+                 runtime_dir, wayland_display);
+    } else {
+        snprintf(cmd, sizeof(cmd), "xclip -selection clipboard");
+    }
+
+    FILE *pipe = popen(cmd, "w");
+    if (!pipe) {
+        pipe = popen("xclip -selection clipboard", "w");
+        if (!pipe) {
+            pipe = popen("xsel --clipboard --input", "w");
+        }
+    }
+
+    if (!pipe) {
+        fprintf(stderr, "[PLATFORM] Error: Failed to find a valid Linux clipboard manager.\n");
+        TimerEnd(timer, "flapi_x11:fl_copy_into_clipboard_platform");
+        return 0;
+    }
+
+    size_t len2 = strlen(text);
+    fprintf(pipe, "%s", text);
+    
+    status = pclose(pipe);
+    TimerEnd(timer, "flapi_x11:fl_copy_into_clipboard_platform");
+    return (status == 0) ? 1 : 0;
+}
