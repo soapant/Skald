@@ -83,7 +83,7 @@ static inline void TimerEnd(WinTimer t, const char* operation_name) {
 #endif
 
   if (DoTimeDebugs) {
-    char line[128];
+    char line[MaxFeatures];
     if (elapsed_us < 1000.0) {
       snprintf(line, sizeof(line), "");
     } else if (elapsed_us < 1000000.0) {

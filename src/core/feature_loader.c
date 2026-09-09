@@ -126,7 +126,7 @@ void FeatureLoader_Reload(const char* name) {
             return;
         }
     }
-    char file[128];
+    char file[MaxFeatures];
     snprintf(file, sizeof(file), "%s%s", name, Platform_LibExtension());
     load_single("build/features", file);
     return;

@@ -4808,7 +4808,7 @@ adb devices
 adb -s 127.0.0.1:5557 shell settings put global disable_window_blurs 1
 adb -s 127.0.0.1:555y shell settings put global accessibility_reduce_transparency 1adb -s 127.0.0.1:5555 shell settings put global accessibility_reduce_transparency 1
 adb -s 127.0.0.1:5557 shell settings put global accessibility_reduce_transparency 1adb -s 127.0.0.1:5555 shell settings put global accessibility_reduce_transparency 1
-adb -s 127.0.0.1:5557 shell pm trim-caches 128G
+adb -s 127.0.0.1:5557 shell pm trim-caches MaxFeaturesG
 python main.py achievement_farming anti-artillery`
 
 python main.py achievement_farming shattered_and_scattered
@@ -8247,11 +8247,11 @@ nu --config $nu.env-path`
 nu --config $nu.config-path
 cd $env:APPDATA\alacritty`
 alacritty -v
-cd C:"C:\WINDOWS\TEMP\Alacritty-12876.log"
-cd "C:\WINDOWS\TEMP\Alacritty-12876.log"`
+cd C:"C:\WINDOWS\TEMP\Alacritty-MaxFeatures76.log"
+cd "C:\WINDOWS\TEMP\Alacritty-MaxFeatures76.log"`
 `
 
-cd "C:\WINDOWS\TEMP\Alacritty-12876.log"`
+cd "C:\WINDOWS\TEMP\Alacritty-MaxFeatures76.log"`
 
 cd "C:\WINDOWS\TEMP"
 cd "C:\WINDOWS\TEMP"
