@@ -1,15 +1,5 @@
 #include "core/flapi.h"
 
-void AddTextToFile(const char* text) {
-    if (!text || strlen(text) == 0) return;
-    fl_append_unique_line(FORGETFULL_FILE_PATH, text);
-}
-
-void RemoveTextFromFile(const char* item_to_remove) {
-    if (!item_to_remove) return;
-    fl_remove_line(FORGETFULL_FILE_PATH, item_to_remove);
-}
-
 void forgetfull_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
     const char* items[100];
     int forgetfull_count = fl_load_file_list(FORGETFULL_FILE_PATH, items, 100);
@@ -20,10 +10,10 @@ void forgetfull_refresh_callback(const char* filter, WindowHandle hListBox, List
 
 bool forgetfull_enter_callback(const char* selection, ListBoxInfo* lb) {
     if (UI_IsListBoxSelected(lb)) {
-        RemoveTextFromFile(selection);
+        fl_remove_line(FORGETFULL_FILE_PATH,selection);
     } 
     else {
-        AddTextToFile(selection);
+        fl_append_unique_line(FORGETFULL_FILE_PATH,selection);
         UI_SetText(FlintContext_Get()->window.hEditControl, "");
     }
     UI_Redraw(lb, FlintContext_Get()->window.hListBox);
@@ -69,9 +59,9 @@ void forgetfull_edit_callback(const char* selection, ListBoxInfo* lb) {
 
 bool forgetfull_ctrlenter_callback(const char* selection, ListBoxInfo* lb) {
     if (UI_IsListBoxSelected(lb)) {
-        RemoveTextFromFile(selection);
+        fl_remove_line(FORGETFULL_FILE_PATH,selection);
     } else {
-        AddTextToFile(selection);
+        fl_append_unique_line(FORGETFULL_FILE_PATH,selection);
         UI_SetText(FlintContext_Get()->window.hEditControl, "");
     }
     forgetfull_refresh_callback(NULL, FlintContext_Get()->window.hListBox, lb);
