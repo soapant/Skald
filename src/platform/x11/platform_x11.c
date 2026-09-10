@@ -1211,6 +1211,19 @@ char* Platform_GetIconPath(char* desktop_or_icon) {
     const char* sizes[]={"32x32","48x48","64x64","128x128","256x256","scalable",NULL};
     const char* bases[]={"/usr/share/icons/hicolor","/usr/share/pixmaps","/usr/share/icons/Adwaita","/usr/share/icons/breeze",NULL};
     static char found[1024];
+    const char* home = Platform_GetRealHome();
+    if (!home || !home[0]) home = getenv("HOME");
+    if (home && home[0]) {
+        for(int s=0;sizes[s];s++){
+            char path[1024];
+            const char* sz=sizes[s];
+            while(*sz==' ') sz++;
+            snprintf(path,sizeof(path),"%s/.local/share/icons/hicolor/%s/apps/%s.png",home,sz,bare);
+            if(access(path,F_OK)==0) { strncpy(found,path,sizeof(found)-1); return found; }
+            snprintf(path,sizeof(path),"%s/.local/share/icons/hicolor/%s/apps/%s.svg",home,sz,bare);
+            if(access(path,F_OK)==0) { strncpy(found,path,sizeof(found)-1); return found; }
+        }
+    }
     for(int b=0;bases[b];b++){
         for(int s=0;sizes[s];s++){
             char path[1024];
