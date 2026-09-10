@@ -26,6 +26,7 @@ float WindowOpacity = 235.0;
 
 const char* UsedFont =  "0xProto Nerd Font";
 const int FontSize = 20;
+const int IconSize = 32;
 const int MaxFeatures = 130;
 const int VimFontSize = 18;
 const int PaddingForScrolling = 3;

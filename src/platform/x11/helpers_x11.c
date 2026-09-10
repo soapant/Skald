@@ -227,7 +227,7 @@ const char* ListBoxItemDisplayText(ListBoxInfo* lb, int idx, char* trunc, size_t
 }
 
 static void draw_icon_png(Display* dpy, XftDraw* xd, const char* path,
-                          int x, int y, int size)
+                          int x, int y,int size)
 {
     if (!path || !path[0]) return;
     if (access(path, F_OK) != 0) return;
@@ -295,23 +295,56 @@ static void draw_icon_png(Display* dpy, XftDraw* xd, const char* path,
     png_destroy_read_struct(&png, &info, NULL);
     free(rows);
 
-    /* ---- Scale + convert RGBA (straight) -> premultiplied BGRA ---- */
-    unsigned char* argb = (unsigned char*)malloc((size_t)size * size * 4);
+    unsigned char* argb = (unsigned char*)malloc((size_t)IconSize * IconSize * 4);
     if (!argb) { free(data); return; }
 
-    for (int dy = 0; dy < size; dy++) {
-        int sy = dy * h / size;
-        const unsigned char* src_row = data + (size_t)sy * row_bytes;
-        unsigned char* dst_row = argb + (size_t)dy * size * 4;
-        for (int dx = 0; dx < size; dx++) {
-            int sx = dx * w / size;
-            const unsigned char* s = src_row + (size_t)sx * 4;
-            unsigned int r = s[0], g = s[1], b = s[2], a = s[3];
+    for (int dy = 0; dy < IconSize; dy++) {
+        float y0f = (float)dy       * h / IconSize;
+        float y1f = (float)(dy + 1) * h / IconSize;
+
+        int y0 = (int)y0f;
+        int y1 = (int)(y1f + 0.5f);
+        if (y1 > h) y1 = h;
+        if (y1 <= y0) y1 = y0 + 1;
+        if (y0 >= h) y0 = h - 1;
+
+        unsigned char* dst_row = argb + (size_t)dy * IconSize * 4;
+
+        for (int dx = 0; dx < IconSize; dx++) {
+            float x0f = (float)dx       * w / IconSize;
+            float x1f = (float)(dx + 1) * w / IconSize;
+
+            int x0 = (int)x0f;
+            int x1 = (int)(x1f + 0.5f);
+            if (x1 > w) x1 = w;
+            if (x1 <= x0) x1 = x0 + 1;
+            if (x0 >= w) x0 = w - 1;
+
+            unsigned int sum_r = 0, sum_g = 0, sum_b = 0, sum_a = 0;
+            unsigned int count = 0;
+
+            for (int sy = y0; sy < y1; sy++) {
+                const unsigned char* src_row = data + (size_t)sy * row_bytes;
+                for (int sx = x0; sx < x1; sx++) {
+                    const unsigned char* s = src_row + (size_t)sx * 4;
+                    sum_r += s[0];
+                    sum_g += s[1];
+                    sum_b += s[2];
+                    sum_a += s[3];
+                    count++;
+                }
+            }
+
+            unsigned int r = sum_r / count;
+            unsigned int g = sum_g / count;
+            unsigned int b = sum_b / count;
+            unsigned int a = sum_a / count;
+
             unsigned int pr = r * a / 255;
             unsigned int pg = g * a / 255;
             unsigned int pb = b * a / 255;
+
             unsigned char* d = dst_row + (size_t)dx * 4;
-            /* XRender ARGB32 expects little-endian memory layout B,G,R,A */
             d[0] = (unsigned char)pb;
             d[1] = (unsigned char)pg;
             d[2] = (unsigned char)pr;
@@ -320,23 +353,22 @@ static void draw_icon_png(Display* dpy, XftDraw* xd, const char* path,
     }
     free(data);
 
-    /* ---- Upload to a Pixmap ---- */
+    /* ---- Upload to Pixmap ---- */
     Drawable drw = XftDrawDrawable(xd);
     Screen* scr  = DefaultScreenOfDisplay(dpy);
     Visual* vis  = DefaultVisualOfScreen(scr);
 
     XImage* img = XCreateImage(dpy, vis, 32, ZPixmap, 0, (char*)argb,
-                               size, size, 32, 0);
+                               IconSize, IconSize, 32, 0);
     if (!img) { free(argb); return; }
 
-    Pixmap pix = XCreatePixmap(dpy, drw, size, size, 32);
-    if (!pix) { XDestroyImage(img); return; }   /* frees argb via img->data */
+    Pixmap pix = XCreatePixmap(dpy, drw, IconSize, IconSize, 32);
+    if (!pix) { XDestroyImage(img); return; }
 
     GC gc = XCreateGC(dpy, pix, 0, NULL);
-    XPutImage(dpy, pix, gc, img, 0, 0, 0, 0, size, size);
+    XPutImage(dpy, pix, gc, img, 0, 0, 0, 0, IconSize, IconSize);
     XFreeGC(dpy, gc);
 
-    /* ---- Composite with XRender ---- */
     XRenderPictFormat* src_fmt = XRenderFindStandardFormat(dpy, PictStandardARGB32);
     XRenderPictFormat* dst_fmt = XRenderFindVisualFormat(dpy, vis);
 
@@ -345,14 +377,13 @@ static void draw_icon_png(Display* dpy, XftDraw* xd, const char* path,
         Picture dst = XRenderCreatePicture(dpy, drw, dst_fmt, 0, NULL);
         if (src && dst) {
             XRenderComposite(dpy, PictOpOver, src, None, dst,
-                             0, 0, 0, 0, x, y, size, size);
+                             0, 0, 0, 0, x, y, IconSize, IconSize);
         }
         if (src) XRenderFreePicture(dpy, src);
         if (dst) XRenderFreePicture(dpy, dst);
     }
 
-    /* XDestroyImage frees img->data, which is `argb`. Don't free it again. */
-    XDestroyImage(img);
+    XDestroyImage(img);   /* frees argb via img->data */
     XFreePixmap(dpy, pix);
 }
 
@@ -366,9 +397,9 @@ void DrawListBoxItemText(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap, 
 
     if (icon_path) {
         int iconX = XOffset;
-        int iconY = y + (FontSize+14 - icon_size)/2;
-        XOffset += icon_size + XOffset;
-        draw_icon_png(dpy, xd, icon_path, iconX, iconY, icon_size);
+        int iconY = y + (FontSize+14 - IconSize)/2;
+        XOffset += IconSize + XOffset;
+        draw_icon_png(dpy, xd, icon_path, iconX, iconY, IconSize);
     }
 
     char trunc[512];
