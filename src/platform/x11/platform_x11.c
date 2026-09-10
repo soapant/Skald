@@ -1247,7 +1247,7 @@ char* Platform_GetIconPath(char* desktop_or_icon) {
     if(access(pix,F_OK)==0) { strncpy(found,pix,sizeof(found)-1); return found; }
     snprintf(pix,sizeof(pix),"/usr/share/pixmaps/%s.svg",bare);
     if(access(pix,F_OK)==0) { strncpy(found,pix,sizeof(found)-1); return found; }
-    return NULL;
+    return "~/Programming/Projects/Flint/resources/Placholder.png";
 }
 
 
