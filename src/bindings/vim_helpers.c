@@ -37,7 +37,7 @@ void GoToLastListBoxItem(VimContext* ctx) {
 void SetCursorToStartOfText(VimContext* ctx) {
     if (!ctx) return;
 #if defined(_WIN32)
-    if (IsWindowValid(ctx->hEdit)) SetFocus(WH_TO_HWND(ctx->hEdit));
+    SetFocus(WH_TO_HWND(ctx->hEdit));
 #endif
     Vim_SetCursor(ctx, 0);
 }
@@ -45,12 +45,10 @@ void SetCursorToStartOfText(VimContext* ctx) {
 void SetCursorToEndOfText(VimContext* ctx) {
     if (!ctx) return;
 #if defined(_WIN32)
-    if (IsWindowValid(ctx->hEdit)) {
-        SetFocus(WH_TO_HWND(ctx->hEdit));
-        int len = GetWindowTextLengthA(WH_TO_HWND(ctx->hEdit));
-        Vim_SetCursor(ctx, len);
-        return;
-    }
+    SetFocus(WH_TO_HWND(ctx->hEdit));
+    int len = GetWindowTextLengthA(WH_TO_HWND(ctx->hEdit));
+    Vim_SetCursor(ctx, len);
+    return;
 #endif
     char text[512];
     Vim_GetText(ctx, text, sizeof(text));

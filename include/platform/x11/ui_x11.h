@@ -160,17 +160,13 @@ static inline void UI_GetCurrentTextEdit(WindowHandle edit, char* buffer, size_t
   if (!user_data) return;
   
   PromptState* prompt = (PromptState*)user_data;
-  if (prompt && prompt->has_listbox) {
-    strncpy(buffer, prompt->filter, cap-1);
-    buffer[cap-1]='\0';
-    return;
-  }
+  strncpy(buffer, prompt->filter, cap-1);
+  buffer[cap-1]='\0';
+  return;
   SimplePromptState* simple = (SimplePromptState*)user_data;
-  if (simple && simple->user_input) {
-    strncpy(buffer, simple->user_input, cap-1);
-    buffer[cap-1]='\0';
-    return;
-  }
+  strncpy(buffer, simple->user_input, cap-1);
+  buffer[cap-1]='\0';
+  return;
 }
 
 static inline void UI_SetText(WindowHandle hEdit,char* text) {
@@ -179,15 +175,11 @@ static inline void UI_SetText(WindowHandle hEdit,char* text) {
   if (!user_data) return;
   
   PromptState* prompt = (PromptState*)user_data;
-  if (prompt && prompt->has_listbox) {
-    prompt->filter[0] = '\0';
-    prompt->cursor = 0;
-  }
+  prompt->filter[0] = '\0';
+  prompt->cursor = 0;
   SimplePromptState* simple = (SimplePromptState*)user_data;
-  if (simple && simple->user_input) {
-    simple->user_input[0] = '\0';
-    simple->cursor = 0;
-  }
+  simple->user_input[0] = '\0';
+  simple->cursor = 0;
 }
 
 static inline void UI_SetCursorPosition(WindowHandle ctrl,int position) {

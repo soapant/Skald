@@ -277,9 +277,7 @@ static bool switcher_enter_callback(const char* selection, ListBoxInfo* lb) {
 #else
         if (Platform_StringContainsCaseInsensitive(g_switcher_windows[i].title, selection)) {
 #endif
-            if (IsWindowValid(g_switcher_windows[i].hwnd)) {
-                Platform_FocusWindow(g_switcher_windows[i].title);
-            }
+            Platform_FocusWindow(g_switcher_windows[i].title);
             break;
         }
     }

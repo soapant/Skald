@@ -76,15 +76,6 @@ typedef enum {
     VIM_SCOPE_POPUP,
 } VimScope;
 
-static inline bool ScopeMatches(VimScope scope, bool in_popup) {
-    switch (scope) {
-        case VIM_SCOPE_ALL:   return true;
-        case VIM_SCOPE_MODAL: return !in_popup;
-        case VIM_SCOPE_POPUP: return in_popup;
-        default:              return false;
-    }
-}
-
 typedef struct {
     int vk_code;
     int modifiers;
