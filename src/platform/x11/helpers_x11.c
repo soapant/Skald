@@ -237,7 +237,7 @@ static void draw_icon_png(Display* dpy, XftDraw* xd, const char* path,
     if (access(path, F_OK) != 0) return;
     (void)size;
     size_t _plen = strlen(path);
-    bool _is_svg = _plen > 4 && strcasecmp(path + _plen - 4, ".svg") == 0;
+    bool _is_svg = _plen > 4 && Platform_StringContainsCaseInsensitive(path + _plen - 4, ".svg");
     if (_is_svg) {
         NSVGimage* image = nsvgParseFromFile(path, "px", 96.0f);
         if (!image) return;

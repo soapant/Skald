@@ -197,7 +197,7 @@ static void CollectX11Windows(WindowList* list, const char** blacklist, int blac
             if (WindowSwitcher_GetWindowTitle(dpy, windows[i], title, sizeof(title))) {
                 bool blacklisted = false;
                 for (int b = 0; b < blacklistCount; b++) {
-                    if (strcasestr(title, blacklist[b]) != NULL) {
+                    if (Platform_StringContainsCaseInsensitive(title, blacklist[b])) {
                         blacklisted = true;
                         break;
                     }
@@ -253,8 +253,8 @@ static void WindowUtils_GetFiltered(WindowList* list, const char** blacklist, in
 static bool switcher_match_helper(const char* item, const char* filter) {
     for (int i = 0; i < g_switcher_count; i++) {
         if (strcmp(g_switcher_windows[i].title, item) == 0) {
-            return (strcasecmp(g_switcher_windows[i].title, filter) != NULL ||
-                    strcasecmp(g_switcher_windows[i].exe, filter) != NULL);
+            return (!Platform_StringContainsCaseInsensitive(g_switcher_windows[i].title, filter) ||
+                    !Platform_StringContainsCaseInsensitive(g_switcher_windows[i].exe, filter));
         }
     }
     return false;
@@ -275,7 +275,7 @@ static bool switcher_enter_callback(const char* selection, ListBoxInfo* lb) {
 #if defined(_WIN32)
         if (StrStrIA(g_switcher_windows[i].title, selection) != NULL) {
 #else
-        if (strcasestr(g_switcher_windows[i].title, selection) != NULL) {
+        if (Platform_StringContainsCaseInsensitive(g_switcher_windows[i].title, selection)) {
 #endif
             if (IsWindowValid(g_switcher_windows[i].hwnd)) {
                 Platform_FocusWindow(g_switcher_windows[i].title);

@@ -25,7 +25,7 @@ void fl_get_all_files_from_dir_platform(const char* dir_path, char** list_of_all
             bool should_ignore = false;
             if (list_of_names_to_ignore) {
                 for (int i = 0; list_of_names_to_ignore[i] != NULL; i++) {
-                    if (StrCmpIA(find_data.cFileName, list_of_names_to_ignore[i]) == 0) {
+                    if (Platform_StringContainsCaseInsensitive(find_data.cFileName, list_of_names_to_ignore[i])) {
                         should_ignore = true;
                         break;
                     }
@@ -42,7 +42,7 @@ void fl_get_all_files_from_dir_platform(const char* dir_path, char** list_of_all
                 if (ext) {
                     ext++;
                     for (int i = 0; list_of_allowed_extensions[i] != NULL; i++) {
-                        if (StrCmpIA(ext, list_of_allowed_extensions[i]) == 0) {
+                        if (Platform_StringContainsCaseInsensitive(ext, list_of_allowed_extensions[i])) {
                             allowed = true;
                             break;
                         }

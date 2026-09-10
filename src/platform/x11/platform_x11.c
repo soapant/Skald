@@ -405,17 +405,17 @@ bool Platform_LaunchApp(const char* path) {
                 
                 char* p=line;
                 while(*p==' '||*p=='\t') p++;
-                if (strncasecmp(p, "Terminal=", 9)==0){
+                if (Platform_StringContainsCaseInsensitive(p, "Terminal=")){
                     char* v=p+9;
                     while(*v==' '||*v=='\t') v++;
                     v[strcspn(v, "\r\n")]='\0';
-                    if(strcasecmp(v,"true")==0 || strcmp(v,"1")==0) is_terminal=true;
-                } else if (strncasecmp(p, "Exec=", 5)==0){
+                    if(Platform_StringContainsCaseInsensitive(v, "true") || strcmp(v,"1")==0) is_terminal=true;
+                } else if (Platform_StringContainsCaseInsensitive(p, "Exec=")){
                     char* v=p+5;
                     while(*v==' '||*v=='\t') v++;
                     v[strcspn(v, "\r\n")]='\0';
                     strncpy(exec_line, v, sizeof(exec_line)-1);
-                } else if (strncasecmp(p, "Path=", 5)==0){
+                } else if (Platform_StringContainsCaseInsensitive(p, "Path=")){
                     char* v=p+5;
                     while(*v==' '||*v=='\t') v++;
                     v[strcspn(v, "\r\n")]='\0';
@@ -1268,7 +1268,7 @@ char* Platform_GetIconPath(char* desktop_or_icon) {
             while(fgets(line,sizeof(line),f)){
                 char* p = line;
                 while(*p==' ' || *p=='\t') p++;
-                if (strncasecmp(p, "Icon=", 5)==0){
+                if (Platform_StringContainsCaseInsensitive(p, "Icon=")){
                     p += 5;
                     while(*p==' ' || *p=='\t') p++;
                     p[strcspn(p,"\r\n")]='\0';
