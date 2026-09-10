@@ -1068,6 +1068,9 @@ Window Linux_CreatePromptWindow(Display* dpy, int x, int y, int w, int h) {
     ch->res_name = (char*)"colored"; ch->res_class = (char*)"colored";
     XSetClassHint(dpy, win, ch); XFree(ch);
     XWMHints* hints = XAllocWMHints(); hints->flags = InputHint; hints->input = True; XSetWMHints(dpy, win, hints); XFree(hints);
+    if (RoundedCorners && CornerRadius > 0) {
+        Linux_ApplyShapeRounded(dpy, win, w, h, CornerRadius);
+    }
     TimerEnd(timer, "helpers_x11:Linux_CreatePromptWindow");
     return win;
 }
