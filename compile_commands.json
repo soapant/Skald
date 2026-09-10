@@ -11,11 +11,12 @@
       "-I/usr/include/freetype2",
       "-MMD",
       "-MP",
-      "-w",
       "-g",
       "-O3",
       "-Wall",
       "-Wextra",
+      "-Wno-unused-parameter",
+      "-Wno-sign-compare",
       "-c",
       "src/main.c"
     ]
@@ -32,11 +33,12 @@
       "-I/usr/include/freetype2",
       "-MMD",
       "-MP",
-      "-w",
       "-g",
       "-O3",
       "-Wall",
       "-Wextra",
+      "-Wno-unused-parameter",
+      "-Wno-sign-compare",
       "-c",
       "src/core/context.c"
     ]
@@ -53,11 +55,12 @@
       "-I/usr/include/freetype2",
       "-MMD",
       "-MP",
-      "-w",
       "-g",
       "-O3",
       "-Wall",
       "-Wextra",
+      "-Wno-unused-parameter",
+      "-Wno-sign-compare",
       "-c",
       "src/core/helpers.c"
     ]
@@ -74,11 +77,12 @@
       "-I/usr/include/freetype2",
       "-MMD",
       "-MP",
-      "-w",
       "-g",
       "-O3",
       "-Wall",
       "-Wextra",
+      "-Wno-unused-parameter",
+      "-Wno-sign-compare",
       "-c",
       "src/core/window_manager.c"
     ]
@@ -95,11 +99,12 @@
       "-I/usr/include/freetype2",
       "-MMD",
       "-MP",
-      "-w",
       "-g",
       "-O3",
       "-Wall",
       "-Wextra",
+      "-Wno-unused-parameter",
+      "-Wno-sign-compare",
       "-c",
       "src/core/number_shortcut.c"
     ]
@@ -116,11 +121,12 @@
       "-I/usr/include/freetype2",
       "-MMD",
       "-MP",
-      "-w",
       "-g",
       "-O3",
       "-Wall",
       "-Wextra",
+      "-Wno-unused-parameter",
+      "-Wno-sign-compare",
       "-c",
       "src/core/prompt_controller.c"
     ]
@@ -137,11 +143,12 @@
       "-I/usr/include/freetype2",
       "-MMD",
       "-MP",
-      "-w",
       "-g",
       "-O3",
       "-Wall",
       "-Wextra",
+      "-Wno-unused-parameter",
+      "-Wno-sign-compare",
       "-c",
       "src/core/feature_loader.c"
     ]
@@ -158,11 +165,12 @@
       "-I/usr/include/freetype2",
       "-MMD",
       "-MP",
-      "-w",
       "-g",
       "-O3",
       "-Wall",
       "-Wextra",
+      "-Wno-unused-parameter",
+      "-Wno-sign-compare",
       "-c",
       "src/core/hashmap.c"
     ]
@@ -179,11 +187,12 @@
       "-I/usr/include/freetype2",
       "-MMD",
       "-MP",
-      "-w",
       "-g",
       "-O3",
       "-Wall",
       "-Wextra",
+      "-Wno-unused-parameter",
+      "-Wno-sign-compare",
       "-c",
       "src/core/feature_data.c"
     ]
@@ -200,11 +209,12 @@
       "-I/usr/include/freetype2",
       "-MMD",
       "-MP",
-      "-w",
       "-g",
       "-O3",
       "-Wall",
       "-Wextra",
+      "-Wno-unused-parameter",
+      "-Wno-sign-compare",
       "-c",
       "src/core/helpers_file.c"
     ]
@@ -221,11 +231,12 @@
       "-I/usr/include/freetype2",
       "-MMD",
       "-MP",
-      "-w",
       "-g",
       "-O3",
       "-Wall",
       "-Wextra",
+      "-Wno-unused-parameter",
+      "-Wno-sign-compare",
       "-c",
       "src/core/helpers_text.c"
     ]
@@ -242,11 +253,12 @@
       "-I/usr/include/freetype2",
       "-MMD",
       "-MP",
-      "-w",
       "-g",
       "-O3",
       "-Wall",
       "-Wextra",
+      "-Wno-unused-parameter",
+      "-Wno-sign-compare",
       "-c",
       "src/core/hotkey_manager.c"
     ]
@@ -263,11 +275,12 @@
       "-I/usr/include/freetype2",
       "-MMD",
       "-MP",
-      "-w",
       "-g",
       "-O3",
       "-Wall",
       "-Wextra",
+      "-Wno-unused-parameter",
+      "-Wno-sign-compare",
       "-c",
       "src/core/vim.c"
     ]
@@ -284,11 +297,12 @@
       "-I/usr/include/freetype2",
       "-MMD",
       "-MP",
-      "-w",
       "-g",
       "-O3",
       "-Wall",
       "-Wextra",
+      "-Wno-unused-parameter",
+      "-Wno-sign-compare",
       "-c",
       "src/core/timer.c"
     ]
@@ -305,11 +319,12 @@
       "-I/usr/include/freetype2",
       "-MMD",
       "-MP",
-      "-w",
       "-g",
       "-O3",
       "-Wall",
       "-Wextra",
+      "-Wno-unused-parameter",
+      "-Wno-sign-compare",
       "-c",
       "src/core/modal.c"
     ]
@@ -326,11 +341,12 @@
       "-I/usr/include/freetype2",
       "-MMD",
       "-MP",
-      "-w",
       "-g",
       "-O3",
       "-Wall",
       "-Wextra",
+      "-Wno-unused-parameter",
+      "-Wno-sign-compare",
       "-c",
       "src/core/helpers_color.c"
     ]
@@ -347,11 +363,12 @@
       "-I/usr/include/freetype2",
       "-MMD",
       "-MP",
-      "-w",
       "-g",
       "-O3",
       "-Wall",
       "-Wextra",
+      "-Wno-unused-parameter",
+      "-Wno-sign-compare",
       "-c",
       "src/core/common_ui.c"
     ]
@@ -368,11 +385,12 @@
       "-I/usr/include/freetype2",
       "-MMD",
       "-MP",
-      "-w",
       "-g",
       "-O3",
       "-Wall",
       "-Wextra",
+      "-Wno-unused-parameter",
+      "-Wno-sign-compare",
       "-c",
       "src/core/helpers_history.c"
     ]
@@ -389,11 +407,12 @@
       "-I/usr/include/freetype2",
       "-MMD",
       "-MP",
-      "-w",
       "-g",
       "-O3",
       "-Wall",
       "-Wextra",
+      "-Wno-unused-parameter",
+      "-Wno-sign-compare",
       "-c",
       "src/config.c"
     ]
@@ -410,11 +429,12 @@
       "-I/usr/include/freetype2",
       "-MMD",
       "-MP",
-      "-w",
       "-g",
       "-O3",
       "-Wall",
       "-Wextra",
+      "-Wno-unused-parameter",
+      "-Wno-sign-compare",
       "-c",
       "src/bindings/vim_bindings.c"
     ]
@@ -431,11 +451,12 @@
       "-I/usr/include/freetype2",
       "-MMD",
       "-MP",
-      "-w",
       "-g",
       "-O3",
       "-Wall",
       "-Wextra",
+      "-Wno-unused-parameter",
+      "-Wno-sign-compare",
       "-c",
       "src/bindings/bindings.c"
     ]
@@ -452,11 +473,12 @@
       "-I/usr/include/freetype2",
       "-MMD",
       "-MP",
-      "-w",
       "-g",
       "-O3",
       "-Wall",
       "-Wextra",
+      "-Wno-unused-parameter",
+      "-Wno-sign-compare",
       "-c",
       "src/bindings/vim_helpers.c"
     ]
@@ -473,11 +495,12 @@
       "-I/usr/include/freetype2",
       "-MMD",
       "-MP",
-      "-w",
       "-g",
       "-O3",
       "-Wall",
       "-Wextra",
+      "-Wno-unused-parameter",
+      "-Wno-sign-compare",
       "-c",
       "src/bindings/vim_motions.c"
     ]
@@ -494,11 +517,12 @@
       "-I/usr/include/freetype2",
       "-MMD",
       "-MP",
-      "-w",
       "-g",
       "-O3",
       "-Wall",
       "-Wextra",
+      "-Wno-unused-parameter",
+      "-Wno-sign-compare",
       "-c",
       "src/flapi.c"
     ]
@@ -515,11 +539,12 @@
       "-I/usr/include/freetype2",
       "-MMD",
       "-MP",
-      "-w",
       "-g",
       "-O3",
       "-Wall",
       "-Wextra",
+      "-Wno-unused-parameter",
+      "-Wno-sign-compare",
       "-c",
       "src/platform/x11/ui_x11.c"
     ]
@@ -536,11 +561,12 @@
       "-I/usr/include/freetype2",
       "-MMD",
       "-MP",
-      "-w",
       "-g",
       "-O3",
       "-Wall",
       "-Wextra",
+      "-Wno-unused-parameter",
+      "-Wno-sign-compare",
       "-c",
       "src/platform/x11/subclasses_x11.c"
     ]
@@ -557,11 +583,12 @@
       "-I/usr/include/freetype2",
       "-MMD",
       "-MP",
-      "-w",
       "-g",
       "-O3",
       "-Wall",
       "-Wextra",
+      "-Wno-unused-parameter",
+      "-Wno-sign-compare",
       "-c",
       "src/platform/x11/window_manager_x11.c"
     ]
@@ -578,11 +605,12 @@
       "-I/usr/include/freetype2",
       "-MMD",
       "-MP",
-      "-w",
       "-g",
       "-O3",
       "-Wall",
       "-Wextra",
+      "-Wno-unused-parameter",
+      "-Wno-sign-compare",
       "-c",
       "src/platform/x11/platform_x11.c"
     ]
@@ -599,11 +627,12 @@
       "-I/usr/include/freetype2",
       "-MMD",
       "-MP",
-      "-w",
       "-g",
       "-O3",
       "-Wall",
       "-Wextra",
+      "-Wno-unused-parameter",
+      "-Wno-sign-compare",
       "-c",
       "src/platform/x11/helpers_x11.c"
     ]
@@ -620,11 +649,12 @@
       "-I/usr/include/freetype2",
       "-MMD",
       "-MP",
-      "-w",
       "-g",
       "-O3",
       "-Wall",
       "-Wextra",
+      "-Wno-unused-parameter",
+      "-Wno-sign-compare",
       "-c",
       "src/platform/x11/flapi_x11.c"
     ]
@@ -641,11 +671,12 @@
       "-I/usr/include/freetype2",
       "-MMD",
       "-MP",
-      "-w",
       "-g",
       "-O3",
       "-Wall",
       "-Wextra",
+      "-Wno-unused-parameter",
+      "-Wno-sign-compare",
       "-c",
       "src/platform/x11/input_x11.c"
     ]
@@ -662,11 +693,12 @@
       "-I/usr/include/freetype2",
       "-MMD",
       "-MP",
-      "-w",
       "-g",
       "-O3",
       "-Wall",
       "-Wextra",
+      "-Wno-unused-parameter",
+      "-Wno-sign-compare",
       "-c",
       "src/platform/x11/display_x11.c"
     ]
@@ -683,11 +715,12 @@
       "-I/usr/include/freetype2",
       "-MMD",
       "-MP",
-      "-w",
       "-g",
       "-O3",
       "-Wall",
       "-Wextra",
+      "-Wno-unused-parameter",
+      "-Wno-sign-compare",
       "-c",
       "src/platform/x11/misc_x11.c"
     ]
@@ -704,11 +737,12 @@
       "-I/usr/include/freetype2",
       "-MMD",
       "-MP",
-      "-w",
       "-g",
       "-O3",
       "-Wall",
       "-Wextra",
+      "-Wno-unused-parameter",
+      "-Wno-sign-compare",
       "-c",
       "src/platform/wm/wm.c"
     ]
@@ -725,11 +759,12 @@
       "-I/usr/include/freetype2",
       "-MMD",
       "-MP",
-      "-w",
       "-g",
       "-O3",
       "-Wall",
       "-Wextra",
+      "-Wno-unused-parameter",
+      "-Wno-sign-compare",
       "-c",
       "src/platform/wm/hyprland_wm.c"
     ]
@@ -746,11 +781,12 @@
       "-I/usr/include/freetype2",
       "-MMD",
       "-MP",
-      "-w",
       "-g",
       "-O3",
       "-Wall",
       "-Wextra",
+      "-Wno-unused-parameter",
+      "-Wno-sign-compare",
       "-c",
       "src/platform/wm/x11_wm.c"
     ]
@@ -767,11 +803,12 @@
       "-I/usr/include/freetype2",
       "-MMD",
       "-MP",
-      "-w",
       "-g",
       "-O3",
       "-Wall",
       "-Wextra",
+      "-Wno-unused-parameter",
+      "-Wno-sign-compare",
       "-c",
       "src/platform/wm/sway_wm.c"
     ]
@@ -788,11 +825,12 @@
       "-I/usr/include/freetype2",
       "-MMD",
       "-MP",
-      "-w",
       "-g",
       "-O3",
       "-Wall",
       "-Wextra",
+      "-Wno-unused-parameter",
+      "-Wno-sign-compare",
       "-c",
       "src/platform/lib.c"
     ]
