@@ -17,6 +17,7 @@
       "-Wextra",
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
+      "-Wno-discarded-qualifiers",
       "-c",
       "src/main.c"
     ]
@@ -39,6 +40,7 @@
       "-Wextra",
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
+      "-Wno-discarded-qualifiers",
       "-c",
       "src/core/context.c"
     ]
@@ -61,6 +63,7 @@
       "-Wextra",
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
+      "-Wno-discarded-qualifiers",
       "-c",
       "src/core/helpers.c"
     ]
@@ -83,6 +86,7 @@
       "-Wextra",
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
+      "-Wno-discarded-qualifiers",
       "-c",
       "src/core/window_manager.c"
     ]
@@ -105,6 +109,7 @@
       "-Wextra",
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
+      "-Wno-discarded-qualifiers",
       "-c",
       "src/core/number_shortcut.c"
     ]
@@ -127,6 +132,7 @@
       "-Wextra",
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
+      "-Wno-discarded-qualifiers",
       "-c",
       "src/core/prompt_controller.c"
     ]
@@ -149,6 +155,7 @@
       "-Wextra",
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
+      "-Wno-discarded-qualifiers",
       "-c",
       "src/core/feature_loader.c"
     ]
@@ -171,6 +178,7 @@
       "-Wextra",
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
+      "-Wno-discarded-qualifiers",
       "-c",
       "src/core/hashmap.c"
     ]
@@ -193,6 +201,7 @@
       "-Wextra",
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
+      "-Wno-discarded-qualifiers",
       "-c",
       "src/core/feature_data.c"
     ]
@@ -215,6 +224,7 @@
       "-Wextra",
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
+      "-Wno-discarded-qualifiers",
       "-c",
       "src/core/helpers_file.c"
     ]
@@ -237,6 +247,7 @@
       "-Wextra",
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
+      "-Wno-discarded-qualifiers",
       "-c",
       "src/core/helpers_text.c"
     ]
@@ -259,6 +270,7 @@
       "-Wextra",
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
+      "-Wno-discarded-qualifiers",
       "-c",
       "src/core/hotkey_manager.c"
     ]
@@ -281,6 +293,7 @@
       "-Wextra",
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
+      "-Wno-discarded-qualifiers",
       "-c",
       "src/core/vim.c"
     ]
@@ -303,6 +316,7 @@
       "-Wextra",
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
+      "-Wno-discarded-qualifiers",
       "-c",
       "src/core/timer.c"
     ]
@@ -325,6 +339,7 @@
       "-Wextra",
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
+      "-Wno-discarded-qualifiers",
       "-c",
       "src/core/modal.c"
     ]
@@ -347,6 +362,7 @@
       "-Wextra",
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
+      "-Wno-discarded-qualifiers",
       "-c",
       "src/core/helpers_color.c"
     ]
@@ -369,6 +385,7 @@
       "-Wextra",
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
+      "-Wno-discarded-qualifiers",
       "-c",
       "src/core/common_ui.c"
     ]
@@ -391,6 +408,7 @@
       "-Wextra",
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
+      "-Wno-discarded-qualifiers",
       "-c",
       "src/core/helpers_history.c"
     ]
@@ -413,6 +431,7 @@
       "-Wextra",
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
+      "-Wno-discarded-qualifiers",
       "-c",
       "src/config.c"
     ]
@@ -435,6 +454,7 @@
       "-Wextra",
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
+      "-Wno-discarded-qualifiers",
       "-c",
       "src/bindings/vim_bindings.c"
     ]
@@ -457,6 +477,7 @@
       "-Wextra",
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
+      "-Wno-discarded-qualifiers",
       "-c",
       "src/bindings/bindings.c"
     ]
@@ -479,6 +500,7 @@
       "-Wextra",
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
+      "-Wno-discarded-qualifiers",
       "-c",
       "src/bindings/vim_helpers.c"
     ]
@@ -501,6 +523,7 @@
       "-Wextra",
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
+      "-Wno-discarded-qualifiers",
       "-c",
       "src/bindings/vim_motions.c"
     ]
@@ -523,6 +546,7 @@
       "-Wextra",
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
+      "-Wno-discarded-qualifiers",
       "-c",
       "src/flapi.c"
     ]
@@ -545,6 +569,7 @@
       "-Wextra",
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
+      "-Wno-discarded-qualifiers",
       "-c",
       "src/platform/x11/ui_x11.c"
     ]
@@ -567,6 +592,7 @@
       "-Wextra",
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
+      "-Wno-discarded-qualifiers",
       "-c",
       "src/platform/x11/subclasses_x11.c"
     ]
@@ -589,6 +615,7 @@
       "-Wextra",
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
+      "-Wno-discarded-qualifiers",
       "-c",
       "src/platform/x11/window_manager_x11.c"
     ]
@@ -611,6 +638,7 @@
       "-Wextra",
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
+      "-Wno-discarded-qualifiers",
       "-c",
       "src/platform/x11/platform_x11.c"
     ]
@@ -633,6 +661,7 @@
       "-Wextra",
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
+      "-Wno-discarded-qualifiers",
       "-c",
       "src/platform/x11/helpers_x11.c"
     ]
@@ -655,6 +684,7 @@
       "-Wextra",
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
+      "-Wno-discarded-qualifiers",
       "-c",
       "src/platform/x11/flapi_x11.c"
     ]
@@ -677,6 +707,7 @@
       "-Wextra",
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
+      "-Wno-discarded-qualifiers",
       "-c",
       "src/platform/x11/input_x11.c"
     ]
@@ -699,6 +730,7 @@
       "-Wextra",
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
+      "-Wno-discarded-qualifiers",
       "-c",
       "src/platform/x11/display_x11.c"
     ]
@@ -721,6 +753,7 @@
       "-Wextra",
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
+      "-Wno-discarded-qualifiers",
       "-c",
       "src/platform/x11/misc_x11.c"
     ]
@@ -743,6 +776,7 @@
       "-Wextra",
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
+      "-Wno-discarded-qualifiers",
       "-c",
       "src/platform/wm/wm.c"
     ]
@@ -765,6 +799,7 @@
       "-Wextra",
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
+      "-Wno-discarded-qualifiers",
       "-c",
       "src/platform/wm/hyprland_wm.c"
     ]
@@ -787,6 +822,7 @@
       "-Wextra",
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
+      "-Wno-discarded-qualifiers",
       "-c",
       "src/platform/wm/x11_wm.c"
     ]
@@ -809,6 +845,7 @@
       "-Wextra",
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
+      "-Wno-discarded-qualifiers",
       "-c",
       "src/platform/wm/sway_wm.c"
     ]
@@ -831,6 +868,7 @@
       "-Wextra",
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
+      "-Wno-discarded-qualifiers",
       "-c",
       "src/platform/lib.c"
     ]

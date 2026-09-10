@@ -160,7 +160,7 @@ static inline void UI_GetCurrentTextEdit(WindowHandle edit, char* buffer, size_t
   if (!user_data) return;
   
   PromptState* prompt = (PromptState*)user_data;
-  strncpy(buffer, prompt->filter, cap-1);
+  snprintf(buffer, cap, "%s", prompt->filter);
   buffer[cap-1]='\0';
   return;
   SimplePromptState* simple = (SimplePromptState*)user_data;

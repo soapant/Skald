@@ -91,8 +91,7 @@ void initialize_app_cache(void) {
             continue;
         }
         if (has_display && display_name[0]) {
-            strncpy(s_apps.items[i].name, display_name, sizeof(s_apps.items[i].name)-1);
-            s_apps.items[i].name[sizeof(s_apps.items[i].name)-1] = '\0';
+            snprintf(s_apps.items[i].name, sizeof(s_apps.items[i].name), "%s", display_name);
         }
         i++;
     }

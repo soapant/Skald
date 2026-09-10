@@ -38,9 +38,6 @@ typedef struct {
 
 
 
-static ExeCacheEntry g_exeCache[MAX_EXE_CACHE] = {0};
-static int g_exeCacheCount = 0;
-
 static SavedWindow g_switcher_windows[MAX_SWITCHER_WINDOWS];
 static int g_switcher_count = 0;
 
@@ -104,16 +101,6 @@ static const char* GetExeNameForWindow(WindowHandle hwnd) {
     return exe_name;
 }
 #endif
-
-static void FetchExeNameOnDemand(WindowHandle hwnd, char* outExe, size_t maxLen) {
-#if defined(_WIN32)
-    const char* name = GetExeNameForWindow(WH_TO_HWND(hwnd));
-#else
-    const char* name = GetExeNameForWindow(hwnd);
-#endif
-    strncpy(outExe, name, maxLen - 1);
-    outExe[maxLen - 1] = '\0';
-}
 
 #if defined(_WIN32)
 static BOOL CALLBACK EnumWindowsProcEx(HWND hwnd, LPARAM lParam) {
@@ -220,21 +207,6 @@ static void CollectX11Windows(WindowList* list, const char** blacklist, int blac
 }
 #endif
 
-
-static void WindowUtils_GetAll(WindowList* list) {
-    list->count = 0;
-#if defined(_WIN32)
-    EnumContext ctx = { .list = list, .mode = 0 };
-    EnumWindows(EnumWindowsProcEx, (LPARAM)&ctx);
-#else
-    if (getenv("WAYLAND_DISPLAY") != NULL) {
-        printf("[SWITCHER] Native Wayland window listing requires compositor IPC (e.g., hyprctl)\n");
-        return;
-    }
-    
-    CollectX11Windows(list, NULL, 0);
-#endif
-}
 
 static void WindowUtils_GetFiltered(WindowList* list, const char** blacklist, int blacklistCount) {
     list->count = 0;
