@@ -158,6 +158,7 @@ int fl_get_feature_list(const char** out_names, void (**out_cbs)(void), int max)
     }
     return n;
 }
+
 int fl_get_feature_list_with_icons(const char** out_names, void (**out_cbs)(void), const char*** out_icons, int max) {
     int n = g_feature_reg_count < max ? g_feature_reg_count : max;
     for (int i=0;i<n;i++) {
@@ -165,8 +166,6 @@ int fl_get_feature_list_with_icons(const char** out_names, void (**out_cbs)(void
         if (out_cbs) out_cbs[i] = g_feature_regs[i].cb;
         if (out_icons) *out_icons = (const char**)g_feature_regs[i].icon;
     }
-    // actually need per-entry: caller should use separate array
-    // Provide icons as array of strings
     static const char* icon_ptrs[1000];
     for (int i=0;i<n;i++) icon_ptrs[i] = g_feature_regs[i].icon[0] ? g_feature_regs[i].icon : NULL;
     if (out_icons) *out_icons = icon_ptrs;

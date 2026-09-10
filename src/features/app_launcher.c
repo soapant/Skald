@@ -69,7 +69,7 @@ void initialize_app_cache(void) {
 #if defined(_WIN32)
     char* allowed[] = {"lnk", "exe", "url", NULL};
 #else
-    char* allowed[] = {"desktop", "sh","exe", "url", NULL};
+    char* allowed[] = {"desktop",NULL};
 #endif
     s_apps.count = 0;
     for (int i = 0; i < (int)ARRAY_LEN(ListOfProgramPaths); i++) {
