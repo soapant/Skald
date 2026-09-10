@@ -1177,9 +1177,22 @@ char* Platform_GetActiveWindowTitle() {
 }
 
 int Platform_GetIconSize(char* icon_path) {
-    if (!icon_path) return 32;
-    if (strstr(icon_path, "32x32")) return 32;
-    else return 32;
+    if (strstr(icon_path, "32x32")){
+      return 32;
+    }
+    if (strstr(icon_path, "48x48")) {
+      return 48;
+    }
+    if (strstr(icon_path, "64x64")) {
+      return 64;
+    }
+    if (strstr(icon_path, "128x128")) {
+      return 128;
+    }
+    if (strstr(icon_path, "256x256")) {
+      return 256;
+    }
+    return 32;
 }
 
 char* Platform_GetIconPath(char* desktop_or_icon) {
