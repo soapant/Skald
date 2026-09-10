@@ -5,7 +5,13 @@
 #include "core/common_ui.h"
 #include "core/vim.h"
 #include "core/window_manager.h"
-#include "helpers.h"
+#include "config.h"
+#include "core/platform.h"
+#include "helpers/hotkey.h"
+#include "helpers/alias.h"
+#include "helpers/flag.h"
+#include "helpers/file.h"
+#include "helpers/ui.h"
 #include <ctype.h>
 #if !defined(_WIN32)
 #include <sys/time.h>

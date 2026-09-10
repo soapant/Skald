@@ -18,7 +18,13 @@
 #include <ctype.h>
 #include "core/platform.h"
 #include "config.h"
-#include "helpers.h"
+#include "config.h"
+#include "core/platform.h"
+#include "helpers/hotkey.h"
+#include "helpers/alias.h"
+#include "helpers/flag.h"
+#include "helpers/file.h"
+#include "helpers/ui.h"
 #include "core/context.h"
 #include "core/modal.h"
 #include <stdio.h>
@@ -36,9 +42,9 @@
 #include <X11/extensions/XTest.h>
 #endif
 
-// ---------------------------------------------------------------------------
-// Daemon helpers - unify double-fork pattern (Task 3)
-// ---------------------------------------------------------------------------
+
+
+
 static bool x11_daemon_exec(char* const argv[]) {
     pid_t pid = fork();
     if (pid < 0) return false;
@@ -89,8 +95,8 @@ static bool x11_daemon_exec_with_x11_env(char* const argv[], const char* display
 }
 
 bool Platform_LaunchTerminalAtPath(const char* working_dir, const char* extra_args){
-    WinTimer timer = TimerStart();
-    if(!working_dir) { TimerEnd(timer, "platform_x11:Platform_LaunchTerminalAtPath"); return false; }
+    PROFILE_START(timer);
+    if(!working_dir) { PROFILE_END_VAR(timer, "platform_x11:Platform_LaunchTerminalAtPath"); return false; }
 
     const char* real_user = Platform_GetRealUser();
     const char* display = Platform_GetSessionDisplay();
@@ -108,7 +114,7 @@ bool Platform_LaunchTerminalAtPath(const char* working_dir, const char* extra_ar
     snprintf(wayland_env, sizeof(wayland_env), "WAYLAND_DISPLAY=%s", wayland_display ? wayland_display : "");
 
     pid_t pid = fork();
-    if(pid < 0) { TimerEnd(timer, "platform_x11:Platform_LaunchTerminalAtPath"); return false; }
+    if(pid < 0) { PROFILE_END_VAR(timer, "platform_x11:Platform_LaunchTerminalAtPath"); return false; }
 
     if(pid == 0){
         setsid();
@@ -156,21 +162,21 @@ bool Platform_LaunchTerminalAtPath(const char* working_dir, const char* extra_ar
 
     int st = 0;
     waitpid(pid, &st, 0);
-    TimerEnd(timer, "platform_x11:Platform_LaunchTerminalAtPath");
+    PROFILE_END_VAR(timer, "platform_x11:Platform_LaunchTerminalAtPath");
     return true;
 }
 
 static bool daemon_spawn_sudo_env(const char* real_user, const char* display, const char* xauthority, const char* runtime_dir, char* const argv[]) {
     (void)real_user; (void)display; (void)xauthority; (void)runtime_dir;
-    WinTimer timer = TimerStart();
+    PROFILE_START(timer);
     bool ok = x11_daemon_exec(argv);
-    TimerEnd(timer, "platform_x11:daemon_spawn_sudo_env");
+    PROFILE_END_VAR(timer, "platform_x11:daemon_spawn_sudo_env");
     return ok;
 }
 
 bool Platform_ShellExecuteWithVerb(const char* path, const char* verb, bool async) {
-    WinTimer timer = TimerStart();
-    if (!path) { TimerEnd(timer, "platform_x11:Platform_ShellExecuteWithVerb"); return false; }
+    PROFILE_START(timer);
+    if (!path) { PROFILE_END_VAR(timer, "platform_x11:Platform_ShellExecuteWithVerb"); return false; }
     (void)verb;
     const char* real_user = Platform_GetRealUser();
     const char* display = Platform_GetSessionDisplay();
@@ -185,7 +191,7 @@ bool Platform_ShellExecuteWithVerb(const char* path, const char* verb, bool asyn
                      "sudo -u %s DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s xdg-open \"%s\" > /dev/null 2>&1",
                      real_user, display, xauthority, runtime_dir, path);
             int status = system(command);
-            TimerEnd(timer, "platform_x11:Platform_ShellExecuteWithVerb");
+            PROFILE_END_VAR(timer, "platform_x11:Platform_ShellExecuteWithVerb");
             return (status == 0);
         } else {
             char command[2048];
@@ -193,7 +199,7 @@ bool Platform_ShellExecuteWithVerb(const char* path, const char* verb, bool asyn
                      "DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s xdg-open \"%s\" > /dev/null 2>&1",
                      display, xauthority, runtime_dir, path);
             int status = system(command);
-            TimerEnd(timer, "platform_x11:Platform_ShellExecuteWithVerb");
+            PROFILE_END_VAR(timer, "platform_x11:Platform_ShellExecuteWithVerb");
             return (status == 0);
         }
     }
@@ -203,26 +209,26 @@ bool Platform_ShellExecuteWithVerb(const char* path, const char* verb, bool asyn
     snprintf(runtime_env, sizeof(runtime_env), "XDG_RUNTIME_DIR=%s", runtime_dir);
     if (Platform_IsRunningAsRoot()){
         char* const argv[] = {"sudo","-u", (char*)real_user, "env", disp_env, xauth_env, runtime_env, "xdg-open", (char*)path, NULL};
-        TimerEnd(timer, "platform_x11:Platform_ShellExecuteWithVerb");
+        PROFILE_END_VAR(timer, "platform_x11:Platform_ShellExecuteWithVerb");
         return daemon_spawn_sudo_env(real_user, display, xauthority, runtime_dir, argv);
     } else {
         char* const argv[] = {"xdg-open", (char*)path, NULL};
         bool ok = x11_daemon_exec_with_x11_env(argv, display, xauthority, runtime_dir);
-        TimerEnd(timer, "platform_x11:Platform_ShellExecuteWithVerb");
+        PROFILE_END_VAR(timer, "platform_x11:Platform_ShellExecuteWithVerb");
         return ok;
     }
-    TimerEnd(timer, "platform_x11:Platform_ShellExecuteWithVerb");
+    PROFILE_END_VAR(timer, "platform_x11:Platform_ShellExecuteWithVerb");
 }
 
 
 
 static Window FindWindowByTitleRecursive(Display* dpy, Window w, const char* title) {
-    WinTimer timer = TimerStart();
+    PROFILE_START(timer);
     char* name = NULL;
     if (XFetchName(dpy, w, &name) && name != NULL) {
         bool match = (strcmp(name, title) == 0);
         XFree(name);
-        if (match) { TimerEnd(timer, "platform_x11:FindWindowByTitleRecursive"); return w; }
+        if (match) { PROFILE_END_VAR(timer, "platform_x11:FindWindowByTitleRecursive"); return w; }
     }
 
     Window root, parent, *children = NULL;
@@ -232,26 +238,26 @@ static Window FindWindowByTitleRecursive(Display* dpy, Window w, const char* tit
             Window found = FindWindowByTitleRecursive(dpy, children[i], title);
             if (found != None) {
                 if (children) XFree(children);
-                TimerEnd(timer, "platform_x11:FindWindowByTitleRecursive");
+                PROFILE_END_VAR(timer, "platform_x11:FindWindowByTitleRecursive");
                 return found;
             }
         }
         if (children) XFree(children);
     }
-    TimerEnd(timer, "platform_x11:FindWindowByTitleRecursive");
+    PROFILE_END_VAR(timer, "platform_x11:FindWindowByTitleRecursive");
     return None;
 }
 
 static Window FindWindowByTitle(Display* dpy, const char* title) {
-    WinTimer timer = TimerStart();
-    TimerEnd(timer, "platform_x11:FindWindowByTitle");
+    PROFILE_START(timer);
+    PROFILE_END_VAR(timer, "platform_x11:FindWindowByTitle");
     return FindWindowByTitleRecursive(dpy, DefaultRootWindow(dpy), title);
 }
 
 bool Platform_SendX11Command(const char* window_title, const char* atom_name, long command) {
-    WinTimer timer = TimerStart();
+    PROFILE_START(timer);
     Display* dpy = get_display();
-    if (!dpy) { TimerEnd(timer, "platform_x11:Platform_SendX11Command"); return false; }
+    if (!dpy) { PROFILE_END_VAR(timer, "platform_x11:Platform_SendX11Command"); return false; }
 
     Window win = FindWindowByTitle(dpy, window_title);
     bool ok = false;
@@ -267,14 +273,14 @@ bool Platform_SendX11Command(const char* window_title, const char* atom_name, lo
             ok = true;
         }
     }
-    TimerEnd(timer, "platform_x11:Platform_SendX11Command");
+    PROFILE_END_VAR(timer, "platform_x11:Platform_SendX11Command");
     return ok;
 }
 
 bool Platform_SetX11Property(const char* window_title, const char* atom_name, long value) {
-    WinTimer timer = TimerStart();
+    PROFILE_START(timer);
     Display* dpy = get_display();
-    if (!dpy) { TimerEnd(timer, "platform_x11:Platform_SetX11Property"); return false; }
+    if (!dpy) { PROFILE_END_VAR(timer, "platform_x11:Platform_SetX11Property"); return false; }
 
     Window win = FindWindowByTitle(dpy, window_title);
     bool ok = false;
@@ -284,14 +290,14 @@ bool Platform_SetX11Property(const char* window_title, const char* atom_name, lo
         XFlush(dpy);
         ok = true;
     }
-    TimerEnd(timer, "platform_x11:Platform_SetX11Property");
+    PROFILE_END_VAR(timer, "platform_x11:Platform_SetX11Property");
     return ok;
 }
 
 bool Platform_SetX11StringProperty(const char* window_title, const char* atom_name, const char* value) {
-    WinTimer timer = TimerStart();
+    PROFILE_START(timer);
     Display* dpy = get_display();
-    if (!dpy) { TimerEnd(timer, "platform_x11:Platform_SetX11StringProperty"); return false; }
+    if (!dpy) { PROFILE_END_VAR(timer, "platform_x11:Platform_SetX11StringProperty"); return false; }
 
     Window win = FindWindowByTitle(dpy, window_title);
     bool ok = false;
@@ -301,12 +307,12 @@ bool Platform_SetX11StringProperty(const char* window_title, const char* atom_na
         XFlush(dpy);
         ok = true;
     }
-    TimerEnd(timer, "platform_x11:Platform_SetX11StringProperty");
+    PROFILE_END_VAR(timer, "platform_x11:Platform_SetX11StringProperty");
     return ok;
 }
 
 char* Platform_RunCommandAndGetOutput(char* command) {
-    WinTimer timer = TimerStart();
+    PROFILE_START(timer);
     FILE* fp;
     char buffer[8192];
     size_t cap = 8192;
@@ -314,14 +320,14 @@ char* Platform_RunCommandAndGetOutput(char* command) {
     char* output = malloc(cap);
 
     if (output == NULL) {
-        TimerEnd(timer, "platform_x11:Platform_RunCommandAndGetOutput");
+        PROFILE_END_VAR(timer, "platform_x11:Platform_RunCommandAndGetOutput");
         return NULL;
     }
 
     fp = popen(command, "r");
     if (fp == NULL) {
         free(output);
-        TimerEnd(timer, "platform_x11:Platform_RunCommandAndGetOutput");
+        PROFILE_END_VAR(timer, "platform_x11:Platform_RunCommandAndGetOutput");
         return strdup("");
     }
 
@@ -333,7 +339,7 @@ char* Platform_RunCommandAndGetOutput(char* command) {
             if (!new_output) {
                 free(output);
                 pclose(fp);
-                TimerEnd(timer, "platform_x11:Platform_RunCommandAndGetOutput");
+                PROFILE_END_VAR(timer, "platform_x11:Platform_RunCommandAndGetOutput");
                 return strdup("");
             }
             output = new_output;
@@ -344,20 +350,20 @@ char* Platform_RunCommandAndGetOutput(char* command) {
 
     pclose(fp);
     output[total_size] = '\0';
-    TimerEnd(timer, "platform_x11:Platform_RunCommandAndGetOutput");
+    PROFILE_END_VAR(timer, "platform_x11:Platform_RunCommandAndGetOutput");
     return output;
 }
 
 char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
-    WinTimer timer = TimerStart();
-    if (command == NULL || strlen(command) == 0) { TimerEnd(timer, "platform_x11:Platform_RunTerminalCommand"); return NULL; }
+    PROFILE_START(timer);
+    if (command == NULL || strlen(command) == 0) { PROFILE_END_VAR(timer, "platform_x11:Platform_RunTerminalCommand"); return NULL; }
 
     const char* real_user = Platform_GetRealUser();
     const char* real_home = Platform_GetRealHome();
 
     if (!open_terminal) {
         char* result = Platform_RunCommandAndGetOutput(command);
-        TimerEnd(timer, "platform_x11:Platform_RunTerminalCommand");
+        PROFILE_END_VAR(timer, "platform_x11:Platform_RunTerminalCommand");
         return result;
     }
 
@@ -393,22 +399,22 @@ char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
              UsedShell, UsedShell, temp_file, UsedShell);
 
     Platform_LaunchTerminalAtPath(real_home, extra);
-    TimerEnd(timer, "platform_x11:Platform_RunTerminalCommand");
+    PROFILE_END_VAR(timer, "platform_x11:Platform_RunTerminalCommand");
     return strdup("");
 }
 
 bool Platform_LaunchFileManagerAtPath(char* path,char* args) {
-     WinTimer timer = TimerStart();
+     PROFILE_START(timer);
      bool ret = Platform_ShellExecuteWithVerb(path, "open", true);
-     TimerEnd(timer, "platform_x11:Platform_LaunchFileManagerAtPath");
+     PROFILE_END_VAR(timer, "platform_x11:Platform_LaunchFileManagerAtPath");
      return ret;
 }
 
 bool Platform_LaunchApp(const char* path) {
-    WinTimer timer = TimerStart();
-    if (!path) { TimerEnd(timer, "platform_x11:Platform_LaunchApp"); return false; }
+    PROFILE_START(timer);
+    if (!path) { PROFILE_END_VAR(timer, "platform_x11:Platform_LaunchApp"); return false; }
     char expanded[1024];
-    if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) { TimerEnd(timer, "platform_x11:Platform_LaunchApp"); return false; }
+    if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) { PROFILE_END_VAR(timer, "platform_x11:Platform_LaunchApp"); return false; }
     printf("Launching App Of Path %s \n",path);
     const char* real_user = Platform_GetRealUser();
     const char* display = Platform_GetSessionDisplay();
@@ -474,10 +480,10 @@ bool Platform_LaunchApp(const char* path) {
             const char* wd = workdir[0] ? workdir : NULL;
             char extra[2048];
             snprintf(extra, sizeof(extra), "-e sh -c '%s; exec ${SHELL:-/bin/sh}'", exec_line);
-            if(wd) { TimerEnd(timer, "platform_x11:Platform_LaunchApp"); return Platform_LaunchTerminalAtPath(wd, extra); }
+            if(wd) { PROFILE_END_VAR(timer, "platform_x11:Platform_LaunchApp"); return Platform_LaunchTerminalAtPath(wd, extra); }
             else {
                 const char* home = Platform_GetRealHome();
-                TimerEnd(timer, "platform_x11:Platform_LaunchApp");
+                PROFILE_END_VAR(timer, "platform_x11:Platform_LaunchApp");
                 return Platform_LaunchTerminalAtPath(home, extra);
             }
         }
@@ -519,7 +525,7 @@ bool Platform_LaunchApp(const char* path) {
                 if(is_terminal){
                     char extra2[2048];
                     snprintf(extra2, sizeof(extra2), "-e sh -c '%s; exec ${SHELL:-/bin/sh}'", exec_line);
-                    TimerEnd(timer, "platform_x11:Platform_LaunchApp");
+                    PROFILE_END_VAR(timer, "platform_x11:Platform_LaunchApp");
                     return Platform_LaunchTerminalAtPath(Platform_GetRealHome(), extra2);
                 } else {
                     pid_t pid3=fork();
@@ -534,13 +540,13 @@ bool Platform_LaunchApp(const char* path) {
                             execl("/bin/sh","sh","-c",exec_line,(char*)NULL);
                         }
                         _exit(127);
-                    } else if(pid3>0){ int st2=0; waitpid(pid3,&st2,0); TimerEnd(timer, "platform_x11:Platform_LaunchApp"); return WIFEXITED(st2) && WEXITSTATUS(st2)==0; }
+                    } else if(pid3>0){ int st2=0; waitpid(pid3,&st2,0); PROFILE_END_VAR(timer, "platform_x11:Platform_LaunchApp"); return WIFEXITED(st2) && WEXITSTATUS(st2)==0; }
                 }
             }
-            TimerEnd(timer, "platform_x11:Platform_LaunchApp");
+            PROFILE_END_VAR(timer, "platform_x11:Platform_LaunchApp");
             return true;
         }
-        TimerEnd(timer, "platform_x11:Platform_LaunchApp");
+        PROFILE_END_VAR(timer, "platform_x11:Platform_LaunchApp");
         return false;
     } else {
         char disp_env[256], xauth_env[512], runtime_env[512];
@@ -549,29 +555,29 @@ bool Platform_LaunchApp(const char* path) {
         snprintf(runtime_env, sizeof(runtime_env), "XDG_RUNTIME_DIR=%s", runtime_dir);
         if(Platform_IsRunningAsRoot()){
             char* const argv[] = {"sudo","-u",(char*)real_user,"env",disp_env,xauth_env,runtime_env,"sh","-c",expanded,NULL};
-            TimerEnd(timer, "platform_x11:Platform_LaunchApp");
+            PROFILE_END_VAR(timer, "platform_x11:Platform_LaunchApp");
             return daemon_spawn_sudo_env(real_user, display, xauthority, runtime_dir, argv);
         } else {
             char* const argv[] = {"sh","-c",expanded,NULL};
             bool ok = x11_daemon_exec_with_x11_env(argv, display, xauthority, runtime_dir);
-            TimerEnd(timer, "platform_x11:Platform_LaunchApp");
+            PROFILE_END_VAR(timer, "platform_x11:Platform_LaunchApp");
             return ok;
         }
     }
-    TimerEnd(timer, "platform_x11:Platform_LaunchApp");
+    PROFILE_END_VAR(timer, "platform_x11:Platform_LaunchApp");
 }
 
 
 bool Platform_LaunchAppAsAdmin(const char* path) {
-    WinTimer timer = TimerStart();
-    if (!path) { TimerEnd(timer, "platform_x11:Platform_LaunchAppAsAdmin"); return false; }
+    PROFILE_START(timer);
+    if (!path) { PROFILE_END_VAR(timer, "platform_x11:Platform_LaunchAppAsAdmin"); return false; }
 
     char expanded[MAX_PATH];
-    if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) { TimerEnd(timer, "platform_x11:Platform_LaunchAppAsAdmin"); return false; }
+    if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) { PROFILE_END_VAR(timer, "platform_x11:Platform_LaunchAppAsAdmin"); return false; }
     path = expanded;
 
     pid_t pid = fork();
-    if (pid < 0) { TimerEnd(timer, "platform_x11:Platform_LaunchAppAsAdmin"); return false; }
+    if (pid < 0) { PROFILE_END_VAR(timer, "platform_x11:Platform_LaunchAppAsAdmin"); return false; }
 
     if (pid == 0) {
         char *args[] = {"pkexec", (char*)path, NULL};
@@ -584,15 +590,15 @@ bool Platform_LaunchAppAsAdmin(const char* path) {
         exit(1); 
     }
 
-    TimerEnd(timer, "platform_x11:Platform_LaunchAppAsAdmin");
+    PROFILE_END_VAR(timer, "platform_x11:Platform_LaunchAppAsAdmin");
     return true;
 }
 
 bool Platform_IsCtrlPressed(void) {
-    WinTimer timer = TimerStart();
+    PROFILE_START(timer);
     Display *display = get_display();
     if (!display) {
-        TimerEnd(timer, "platform_x11:Platform_IsCtrlPressed");
+        PROFILE_END_VAR(timer, "platform_x11:Platform_IsCtrlPressed");
         return false; 
     }
 
@@ -603,14 +609,14 @@ bool Platform_IsCtrlPressed(void) {
     XQueryPointer(display, DefaultRootWindow(display), 
                   &root, &child, &root_x, &root_y, &win_x, &win_y, &mask);
 
-    TimerEnd(timer, "platform_x11:Platform_IsCtrlPressed");
+    PROFILE_END_VAR(timer, "platform_x11:Platform_IsCtrlPressed");
     return (mask & ControlMask) != 0;
 }
 
 char* Platform_QueryZoxidePath(const char* query) {
-    WinTimer timer = TimerStart();
+    PROFILE_START(timer);
     if (!query) {
-        TimerEnd(timer, "platform_x11:Platform_QueryZoxidePath");
+        PROFILE_END_VAR(timer, "platform_x11:Platform_QueryZoxidePath");
         return NULL;
     }
 
@@ -642,7 +648,7 @@ char* Platform_QueryZoxidePath(const char* query) {
     FILE *pipe = popen(command, "r");
     if (!pipe) {
         perror("Zoxide Debug -> popen failed");
-        TimerEnd(timer, "platform_x11:Platform_QueryZoxidePath");
+        PROFILE_END_VAR(timer, "platform_x11:Platform_QueryZoxidePath");
         return NULL;
     }
 
@@ -658,51 +664,51 @@ char* Platform_QueryZoxidePath(const char* query) {
         char buffer[256];
         snprintf(buffer, sizeof(buffer), "Query {%s} Doesnt Have A Zoxide Path", query);
         SubjectiveMessageDisplay(buffer, 140, TimeOutForMessages, COLOR_ERROR);
-        TimerEnd(timer, "platform_x11:Platform_QueryZoxidePath");
+        PROFILE_END_VAR(timer, "platform_x11:Platform_QueryZoxidePath");
         return NULL;
     }
 
-    TimerEnd(timer, "platform_x11:Platform_QueryZoxidePath");
+    PROFILE_END_VAR(timer, "platform_x11:Platform_QueryZoxidePath");
     return strdup(temp_path);
 }
 
 void Platform_StartUniversalTimer(void) {
-    WinTimer timer = TimerStart();
+    PROFILE_START(timer);
     fprintf(stderr, "[PLATFORM] Platform_StartUniversalTimer not implemented yet\n");
-    TimerEnd(timer, "platform_x11:Platform_StartUniversalTimer");
+    PROFILE_END_VAR(timer, "platform_x11:Platform_StartUniversalTimer");
 }
 
 void Platform_ResetUniversalTimer(void) {
-    WinTimer timer = TimerStart();
+    PROFILE_START(timer);
     fprintf(stderr, "[PLATFORM] Platform_ResetUniversalTimer not implemented yet\n");
-    TimerEnd(timer, "platform_x11:Platform_ResetUniversalTimer");
+    PROFILE_END_VAR(timer, "platform_x11:Platform_ResetUniversalTimer");
 }
 
 void Platform_ModifyUniversalTimer(double seconds_to_add) {
-    WinTimer timer = TimerStart();
+    PROFILE_START(timer);
     (void)seconds_to_add;
     fprintf(stderr, "[PLATFORM] Platform_ModifyUniversalTimer not implemented yet\n");
-    TimerEnd(timer, "platform_x11:Platform_ModifyUniversalTimer");
+    PROFILE_END_VAR(timer, "platform_x11:Platform_ModifyUniversalTimer");
 }
 
 double Platform_GetUniversalTimeSeconds(void) {
-    WinTimer timer = TimerStart();
-    TimerEnd(timer, "platform_x11:Platform_GetUniversalTimeSeconds");
+    PROFILE_START(timer);
+    PROFILE_END_VAR(timer, "platform_x11:Platform_GetUniversalTimeSeconds");
     return 0.0;
 }
 
 void Platform_SaveRegionToPNG(int x1, int y1, int x2, int y2, const char* fullPath) {
-    WinTimer timer = TimerStart();
+    PROFILE_START(timer);
     (void)x1; (void)y1; (void)x2; (void)y2; (void)fullPath;
     fprintf(stderr, "[PLATFORM] Platform_SaveRegionToPNG not implemented yet\n");
-    TimerEnd(timer, "platform_x11:Platform_SaveRegionToPNG");
+    PROFILE_END_VAR(timer, "platform_x11:Platform_SaveRegionToPNG");
 }
 
 void Platform_WaitForKeypressAsync(KeyCallback callback) {
-    WinTimer timer = TimerStart();
+    PROFILE_START(timer);
     (void)callback;
     fprintf(stderr, "[PLATFORM] Platform_WaitForKeypressAsync not implemented yet on Linux\n");
-    TimerEnd(timer, "platform_x11:Platform_WaitForKeypressAsync");
+    PROFILE_END_VAR(timer, "platform_x11:Platform_WaitForKeypressAsync");
 }
 
 
@@ -713,11 +719,11 @@ static int g_cached_font_size = 0;
 static const char* g_cached_font_name = NULL;
 
 FontHandle Platform_CreateFontOnDisplay(Display* dpy, int size, const char* face_name) {
-    WinTimer timer = TimerStart();
-    if (!dpy) { TimerEnd(timer, "platform_x11:Platform_CreateFontOnDisplay"); return FH_NULL; }
+    PROFILE_START(timer);
+    if (!dpy) { PROFILE_END_VAR(timer, "platform_x11:Platform_CreateFontOnDisplay"); return FH_NULL; }
 
     if (g_cached_font_dpy == dpy && g_cached_font_size == size && g_cached_font_name == face_name && FH_TO_XFT(g_cached_font)) {
-        TimerEnd(timer, "platform_x11:Platform_CreateFontOnDisplay");
+        PROFILE_END_VAR(timer, "platform_x11:Platform_CreateFontOnDisplay");
         return g_cached_font;
     }
 
@@ -745,34 +751,34 @@ FontHandle Platform_CreateFontOnDisplay(Display* dpy, int size, const char* face
 
     XUnlockDisplay(dpy);
 
-    if (!xf) { TimerEnd(timer, "platform_x11:Platform_CreateFontOnDisplay"); return FH_NULL; }
+    if (!xf) { PROFILE_END_VAR(timer, "platform_x11:Platform_CreateFontOnDisplay"); return FH_NULL; }
 
     g_cached_font.xfont = xf;
     g_cached_font.dpy = dpy;
     g_cached_font_dpy = dpy;
     g_cached_font_size = size;
     g_cached_font_name = face_name;
-    TimerEnd(timer, "platform_x11:Platform_CreateFontOnDisplay");
+    PROFILE_END_VAR(timer, "platform_x11:Platform_CreateFontOnDisplay");
     return g_cached_font;
 }
 
 pthread_mutex_t g_font_mtx = PTHREAD_MUTEX_INITIALIZER;
 
 FontHandle Platform_CreateFont(int size, const char* face_name) {
-    WinTimer timer = TimerStart();
+    PROFILE_START(timer);
     pthread_mutex_lock(&g_font_mtx); 
 
     Display* dpy = get_display();
     if (!dpy) {
         pthread_mutex_unlock(&g_font_mtx);
-        TimerEnd(timer, "platform_x11:Platform_CreateFont");
+        PROFILE_END_VAR(timer, "platform_x11:Platform_CreateFont");
         return FH_NULL;
     }
 
     FontHandle fh = Platform_CreateFontOnDisplay(dpy, size, face_name);
 
     pthread_mutex_unlock(&g_font_mtx); 
-    TimerEnd(timer, "platform_x11:Platform_CreateFont");
+    PROFILE_END_VAR(timer, "platform_x11:Platform_CreateFont");
     return fh;
 }
 
@@ -789,19 +795,19 @@ void Platform_DestroyFont(FontHandle font) {
 }
 
 static int xft_text_width(Display* dpy, XftFont* xf, const char* text, int len) {
-    WinTimer timer = TimerStart();
+    PROFILE_START(timer);
     XGlyphInfo ext;
     XftTextExtentsUtf8(dpy, xf, (FcChar8*)text, len, &ext);
-    TimerEnd(timer, "platform_x11:xft_text_width");
+    PROFILE_END_VAR(timer, "platform_x11:xft_text_width");
     return ext.xOff;
 }
 
 void Platform_GetTextExtents(FontHandle font, const char* text, int maxWidth, int* outWidth, int* outHeight) {
-    WinTimer timer = TimerStart();
+    PROFILE_START(timer);
     if (!FH_TO_XFT(font) || !text) {
         *outWidth = 0;
         *outHeight = 0;
-        TimerEnd(timer, "platform_x11:Platform_GetTextExtents");
+        PROFILE_END_VAR(timer, "platform_x11:Platform_GetTextExtents");
         return;
     }
     Display* dpy = FH_TO_DPY(font);
@@ -827,25 +833,25 @@ void Platform_GetTextExtents(FontHandle font, const char* text, int maxWidth, in
     }
     *outWidth = lineWidth;
     *outHeight = totalHeight;
-    TimerEnd(timer, "platform_x11:Platform_GetTextExtents");
+    PROFILE_END_VAR(timer, "platform_x11:Platform_GetTextExtents");
 }
 
 long Platform_GetFileSize(char *filepath) {
-    WinTimer timer = TimerStart();
+    PROFILE_START(timer);
     FILE *fp = fopen(filepath, "rb"); 
     if (fp == NULL) {
-        TimerEnd(timer, "platform_x11:Platform_GetFileSize");
+        PROFILE_END_VAR(timer, "platform_x11:Platform_GetFileSize");
         return -1; 
     }
 
     if (fseek(fp, 0L, SEEK_END) != 0) {
-        fclose(fp); TimerEnd(timer, "platform_x11:Platform_GetFileSize"); return -1;
+        fclose(fp); PROFILE_END_VAR(timer, "platform_x11:Platform_GetFileSize"); return -1;
     }
 
     long size = ftell(fp);
 
     fclose(fp);
-    TimerEnd(timer, "platform_x11:Platform_GetFileSize");
+    PROFILE_END_VAR(timer, "platform_x11:Platform_GetFileSize");
     return size;
 }
 
@@ -861,8 +867,8 @@ static InstantWatch g_instant_watches[MAX_WATCHED_DIRS];
 static int g_instant_count = 0;
 
 char* Platform_RegisterDirWatcher(const char* dir_path, void (*callback)(void)) {
-    WinTimer timer = TimerStart();
-    if (!dir_path) { TimerEnd(timer, "platform_x11:Platform_RegisterDirWatcher"); return NULL; }
+    PROFILE_START(timer);
+    if (!dir_path) { PROFILE_END_VAR(timer, "platform_x11:Platform_RegisterDirWatcher"); return NULL; }
 
     for (int i = 0; i < g_instant_count; i++) {
         if (strcmp(g_instant_watches[i].root_path, dir_path) == 0) {
@@ -886,7 +892,7 @@ char* Platform_RegisterDirWatcher(const char* dir_path, void (*callback)(void)) 
                         char *found_name = malloc(event->len + 1);
                         if (found_name) {
                             strcpy(found_name, event->name);
-                            TimerEnd(timer, "platform_x11:Platform_RegisterDirWatcher");
+                            PROFILE_END_VAR(timer, "platform_x11:Platform_RegisterDirWatcher");
                             return found_name;
                         }
                     }
@@ -894,14 +900,14 @@ char* Platform_RegisterDirWatcher(const char* dir_path, void (*callback)(void)) 
                     char* generic_name = malloc(32);
                     if (generic_name) {
                         strcpy(generic_name, "modified_resource");
-                        TimerEnd(timer, "platform_x11:Platform_RegisterDirWatcher");
+                        PROFILE_END_VAR(timer, "platform_x11:Platform_RegisterDirWatcher");
                         return generic_name;
                     }
-                    TimerEnd(timer, "platform_x11:Platform_RegisterDirWatcher");
+                    PROFILE_END_VAR(timer, "platform_x11:Platform_RegisterDirWatcher");
                     return NULL;
                 }
             }
-            TimerEnd(timer, "platform_x11:Platform_RegisterDirWatcher");
+            PROFILE_END_VAR(timer, "platform_x11:Platform_RegisterDirWatcher");
             return NULL; 
         }
     }
@@ -921,13 +927,13 @@ char* Platform_RegisterDirWatcher(const char* dir_path, void (*callback)(void)) 
         }
     }
 
-    TimerEnd(timer, "platform_x11:Platform_RegisterDirWatcher");
+    PROFILE_END_VAR(timer, "platform_x11:Platform_RegisterDirWatcher");
     return NULL;
 }
 
 char* Platform_WatchForCFileChanges(const char* dir_path, void (*callback)(void)) {
-    WinTimer timer = TimerStart();
-    if (!dir_path) { TimerEnd(timer, "platform_x11:Platform_WatchForCFileChanges"); return NULL; }
+    PROFILE_START(timer);
+    if (!dir_path) { PROFILE_END_VAR(timer, "platform_x11:Platform_WatchForCFileChanges"); return NULL; }
 
     for (int i = 0; i < g_instant_count; i++) {
         if (strcmp(g_instant_watches[i].root_path, dir_path) == 0) {
@@ -953,7 +959,7 @@ char* Platform_WatchForCFileChanges(const char* dir_path, void (*callback)(void)
                             char *found_name = malloc(event->len + 1);
                             if (found_name) {
                                 strcpy(found_name, event->name);
-                                TimerEnd(timer, "platform_x11:Platform_WatchForCFileChanges");
+                                PROFILE_END_VAR(timer, "platform_x11:Platform_WatchForCFileChanges");
                                 return found_name;
                             }
                         }
@@ -962,7 +968,7 @@ char* Platform_WatchForCFileChanges(const char* dir_path, void (*callback)(void)
                     j += sizeof(struct inotify_event) + event->len;
                 }
             }
-            TimerEnd(timer, "platform_x11:Platform_WatchForCFileChanges");
+            PROFILE_END_VAR(timer, "platform_x11:Platform_WatchForCFileChanges");
             return NULL; 
         }
     }
@@ -982,7 +988,7 @@ char* Platform_WatchForCFileChanges(const char* dir_path, void (*callback)(void)
         }
     }
 
-    TimerEnd(timer, "platform_x11:Platform_WatchForCFileChanges");
+    PROFILE_END_VAR(timer, "platform_x11:Platform_WatchForCFileChanges");
     return NULL;
 }
 
@@ -993,7 +999,7 @@ bool Platform_ClickAtPos(int x,int y) {
     x += jx; y += jy;
     if (x < 0) x = 0; if (x > 3839) x = 3839;
     if (y < 0) y = 0; if (y > 2159) y = 2159;
-    WinTimer timer = TimerStart();
+    PROFILE_START(timer);
     if (getenv("DEBUG_CLICK")) fprintf(stderr, "[CLICK] Platform_ClickAtPos called x=%d y=%d jitter %d,%d\n", x, y, jx, jy); else usleep(5);
     {
         Display* dpy_try = get_display();
@@ -1030,7 +1036,7 @@ bool Platform_ClickAtPos(int x,int y) {
                 XSync(dpy_try, False);
                 if (getenv("DEBUG_CLICK")) if (getenv("DEBUG_CLICK")) fprintf(stderr, "[CLICK] XTest done primary\n");
                 else usleep(5);
-                // Verify XTest, then also try uinput for Wayland generic (no sway)
+
                 {
                     Window r3,c3; int wx3,wy3,rx3,ry3; unsigned int m3;
                     if (XQueryPointer(dpy_try, DefaultRootWindow(dpy_try), &r3,&c3,&rx3,&ry3,&wx3,&wy3,&m3)) {
@@ -1129,17 +1135,17 @@ bool Platform_ClickAtPos(int x,int y) {
                 gettimeofday(&btn.time, NULL); btn.type = EV_KEY; btn.code = BTN_LEFT; btn.value = 0; write(ufd, &btn, sizeof(btn));
                 gettimeofday(&syn.time, NULL); syn.type = EV_SYN; syn.code = SYN_REPORT; write(ufd, &syn, sizeof(syn));
             }
-            // verify if we actually moved, fallback to XTest if not
+
             usleep(50*1000);
             if (dpy_q) {
                 Window root2, child2; int wx, wy, rx2, ry2; unsigned int m2;
                 if (XQueryPointer(dpy_q, DefaultRootWindow(dpy_q), &root2, &child2, &rx2, &ry2, &wx, &wy, &m2)) {
                     if (getenv("DEBUG_CLICK")) fprintf(stderr, "[CLICK] after uinput pos %d,%d target %d,%d\n", rx2, ry2, x, y); else usleep(5);
                     int dist = (rx2-x)*(rx2-x)+(ry2-y)*(ry2-y);
-                    if (dist < 400) { TimerEnd(timer, "platform_x11:Platform_ClickAtPos"); return true; }
+                    if (dist < 400) { PROFILE_END_VAR(timer, "platform_x11:Platform_ClickAtPos"); return true; }
                     if (getenv("DEBUG_CLICK")) fprintf(stderr, "[CLICK] uinput miss, fallback to XTest\n"); else usleep(5);
                 }
-            } else { TimerEnd(timer, "platform_x11:Platform_ClickAtPos"); return true; }
+            } else { PROFILE_END_VAR(timer, "platform_x11:Platform_ClickAtPos"); return true; }
         }
     }
     Display* dpy = get_display();
@@ -1152,11 +1158,11 @@ bool Platform_ClickAtPos(int x,int y) {
 #if __has_include(<X11/extensions/XTest.h>)
         int ev,er,ma,mi; if (XQueryExtension(dpy, "XTEST", &ma, &ev, &er)) { if (getenv("DEBUG_CLICK")) fprintf(stderr, "[CLICK] XTest present, fake button\n"); XTestFakeButtonEvent(dpy, 1, True, CurrentTime); XTestFakeButtonEvent(dpy, 1, False, CurrentTime); XFlush(dpy); if (getenv("DEBUG_CLICK")) fprintf(stderr, "[CLICK] XTest done\n"); } else if (getenv("DEBUG_CLICK")) fprintf(stderr, "[CLICK] XTest not present\n");
 #endif
-        TimerEnd(timer, "platform_x11:Platform_ClickAtPos");
+        PROFILE_END_VAR(timer, "platform_x11:Platform_ClickAtPos");
         return true;
     }
     if (getenv("DEBUG_CLICK")) fprintf(stderr, "[CLICK] no dpy and no uinput, fail\n"); else usleep(5);
-    TimerEnd(timer, "platform_x11:Platform_ClickAtPos");
+    PROFILE_END_VAR(timer, "platform_x11:Platform_ClickAtPos");
     return false;
 }
 bool Platform_FocusWindow(const char* title) {
@@ -1165,7 +1171,7 @@ bool Platform_FocusWindow(const char* title) {
 
 static int vk_to_linux_key(int vk) {
     if (vk >= 'A' && vk <= 'Z') return KEY_A + (vk - 'A');
-    if (vk >= '0' && vk <= '9') return KEY_1 + (vk - '1'); // rough
+    if (vk >= '0' && vk <= '9') return KEY_1 + (vk - '1');
     if (vk == '0') return KEY_0;
     if (vk == VK_SPACE) return KEY_SPACE;
     if (vk == VK_RETURN) return KEY_ENTER;
@@ -1355,7 +1361,7 @@ char* Platform_GetIconPath(char* desktop_or_icon) {
 
 
 int Platform_CopyToClipboard(const char* text) {
-    WinTimer timer = TimerStart();
+    PROFILE_START(timer);
     int status = 0;
     size_t len = strlen(text);
 
@@ -1415,7 +1421,7 @@ int Platform_CopyToClipboard(const char* text) {
 
     if (!pipe) {
         fprintf(stderr, "[PLATFORM] Error: Failed to find a valid Linux clipboard manager.\n");
-        TimerEnd(timer, "flapi_x11:fl_copy_into_clipboard_platform");
+        PROFILE_END_VAR(timer, "flapi_x11:fl_copy_into_clipboard_platform");
         return 0;
     }
 
@@ -1423,6 +1429,6 @@ int Platform_CopyToClipboard(const char* text) {
     fprintf(pipe, "%s", text);
     
     status = pclose(pipe);
-    TimerEnd(timer, "flapi_x11:fl_copy_into_clipboard_platform");
+    PROFILE_END_VAR(timer, "flapi_x11:fl_copy_into_clipboard_platform");
     return (status == 0) ? 1 : 0;
 }

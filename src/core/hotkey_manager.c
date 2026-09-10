@@ -1,4 +1,10 @@
-#include "helpers.h"
+#include "config.h"
+#include "core/platform.h"
+#include "helpers/hotkey.h"
+#include "helpers/alias.h"
+#include "helpers/flag.h"
+#include "helpers/file.h"
+#include "helpers/ui.h"
 #include <stdlib.h>
 #include <string.h>
 #include "core/platform.h"
@@ -86,24 +92,24 @@ bool hotkey_process(int vk_code, int modifiers) {
         return true; 
     }
 
-    //         temprary need to implement
-//         if (AllowOtherFeatureTogglesInFeature) {
-// #if defined(_WIN32)
-//             if (IsPopupActive(FlintContext_Get()->window.hPopupWnd)) {
-//                 KillTimer(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), 999);
-//                 DestroyWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd));
-//                 FlintContext_Get()->window.hPopupWnd = WH_NULL;
-//             }
-// #else
-//             if (IsPopupActive(FlintContext_Get()->window.hPopupWnd)) {
-//                 selection_complete = true;
-//             }
-// #endif
-//         } else {
-//           if (IsPopupActive(FlintContext_Get()->window.hPopupWnd)) {
-//             return false;
-//           }
-//         }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     
     return false;
 }

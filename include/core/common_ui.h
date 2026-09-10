@@ -13,9 +13,9 @@
 #include "config.h"
 #include "core/timer.h"
 
-// ---------------------------------------------------------------------------
-// Shared (both platforms)
-// ---------------------------------------------------------------------------
+
+
+
 
 extern bool g_add_alias_to_string;
 extern char g_alias_display[MAX_ITEMS][512];

@@ -1,6 +1,12 @@
 #include "wm/sway_wm.h"
 #include "core/platform.h"
-#include "helpers.h"
+#include "config.h"
+#include "core/platform.h"
+#include "helpers/hotkey.h"
+#include "helpers/alias.h"
+#include "helpers/flag.h"
+#include "helpers/file.h"
+#include "helpers/ui.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>

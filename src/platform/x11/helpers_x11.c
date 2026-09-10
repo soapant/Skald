@@ -15,7 +15,13 @@
 #include <png.h>
 #endif
 #include <stdint.h>
-#include "helpers.h"
+#include "config.h"
+#include "core/platform.h"
+#include "helpers/hotkey.h"
+#include "helpers/alias.h"
+#include "helpers/flag.h"
+#include "helpers/file.h"
+#include "helpers/ui.h"
 #include "core/timer.h"
 #include "core/common_ui.h"
 #include "platform/x11/drawing.h"
@@ -25,7 +31,7 @@
 #include "deps/nanosvgrast.h"
 
 #if !defined(_WIN32)
-// --- Cached background pixmap (double-buffer + shader cache) ---
+
 static Pixmap g_bgPixmap = None;
 static int g_bgW = 0, g_bgH = 0;
 static unsigned long g_bgBase = 0;
@@ -42,55 +48,55 @@ static Display* g_dblDpy = NULL;
 static int g_bgDepth = 0;
 
 void Linux_SetDblVisual(Display* dpy, Visual* vis, Colormap cmap, int depth) {
-    WinTimer timer = TimerStart();
+    PROFILE_START(timer);
     g_dblVisual = vis;
     g_dblColormap = cmap;
     g_dblDepth = depth;
     g_dblDpy = dpy;
-    TimerEnd(timer, "helpers_x11:Linux_SetDblVisual");
+    PROFILE_END_VAR(timer, "helpers_x11:Linux_SetDblVisual");
 }
 void Linux_ClearDblVisual(void) {
-    WinTimer timer = TimerStart();
+    PROFILE_START(timer);
     g_dblVisual = NULL;
     g_dblColormap = None;
     g_dblDepth = 0;
     g_dblDpy = NULL;
-    TimerEnd(timer, "helpers_x11:Linux_ClearDblVisual");
+    PROFILE_END_VAR(timer, "helpers_x11:Linux_ClearDblVisual");
 }
 bool Linux_GetDrawableVisual(Display* dpy, Drawable d, Visual** visOut, Colormap* cmapOut, int* depthOut) {
-    WinTimer timer = TimerStart();
+    PROFILE_START(timer);
     XWindowAttributes attrs;
     if (XGetWindowAttributes(dpy, d, &attrs)) {
         if (visOut) *visOut = attrs.visual;
         if (cmapOut) *cmapOut = attrs.colormap;
         if (depthOut) *depthOut = attrs.depth;
-        TimerEnd(timer, "helpers_x11:Linux_GetDrawableVisual");
+        PROFILE_END_VAR(timer, "helpers_x11:Linux_GetDrawableVisual");
         return true;
     }
     if (g_dblVisual && g_dblDpy == dpy) {
         if (visOut) *visOut = g_dblVisual;
         if (cmapOut) *cmapOut = g_dblColormap;
         if (depthOut) *depthOut = g_dblDepth;
-        TimerEnd(timer, "helpers_x11:Linux_GetDrawableVisual");
+        PROFILE_END_VAR(timer, "helpers_x11:Linux_GetDrawableVisual");
         return true;
     }
-    TimerEnd(timer, "helpers_x11:Linux_GetDrawableVisual");
+    PROFILE_END_VAR(timer, "helpers_x11:Linux_GetDrawableVisual");
     return false;
 }
 
 static int xft_width(Display* dpy, XftFont* xf, const char* text, int len) {
-    WinTimer timer = TimerStart();
+    PROFILE_START(timer);
     XGlyphInfo ext;
     XftTextExtentsUtf8(dpy, xf, (FcChar8*)text, len, &ext);
-    TimerEnd(timer, "helpers_x11:xft_width");
+    PROFILE_END_VAR(timer, "helpers_x11:xft_width");
     return ext.xOff;
 }
 
 void draw_wrapped_text(Display* dpy, XftDraw* xd, XftColor* color, FontHandle font, const char* text, int startY, char* centered_to, int xOffset) {
-    WinTimer timer = TimerStart();
-    if (!text) { TimerEnd(timer, "helpers_x11:draw_wrapped_text"); return; }
+    PROFILE_START(timer);
+    if (!text) { PROFILE_END_VAR(timer, "helpers_x11:draw_wrapped_text"); return; }
     XftFont* xf = FH_TO_XFT(font);
-    if (!xf) { TimerEnd(timer, "helpers_x11:draw_wrapped_text"); return; }
+    if (!xf) { PROFILE_END_VAR(timer, "helpers_x11:draw_wrapped_text"); return; }
     int lineHeight = xf->ascent + xf->descent;
     int spaceWidth = xft_width(dpy, xf, " ", 1);
     int y = startY + xf->ascent;
@@ -152,11 +158,11 @@ void draw_wrapped_text(Display* dpy, XftDraw* xd, XftColor* color, FontHandle fo
 
         XftDrawStringUtf8(xd, color, xf, drawX, y, (FcChar8*)lineStart, p - lineStart); 
     }
-    TimerEnd(timer, "helpers_x11:draw_wrapped_text");
+    PROFILE_END_VAR(timer, "helpers_x11:draw_wrapped_text");
 }
 
 void Linux_XftAllocColor(Display* dpy, Visual* vis, Colormap cmap, unsigned long hex, unsigned short alpha, XftColor* out) {
-    WinTimer timer = TimerStart();
+    PROFILE_START(timer);
     XRenderColor rc = {
         ((hex >> 16) & 0xFF) * 0x101,
         ((hex >> 8) & 0xFF) * 0x101,
@@ -164,19 +170,19 @@ void Linux_XftAllocColor(Display* dpy, Visual* vis, Colormap cmap, unsigned long
         alpha
     };
     XftColorAllocValue(dpy, vis, cmap, &rc, out);
-    TimerEnd(timer, "helpers_x11:Linux_XftAllocColor");
+    PROFILE_END_VAR(timer, "helpers_x11:Linux_XftAllocColor");
 }
 
 unsigned long VimModeTextColor(void) {
-    WinTimer timer = TimerStart();
-    if (g_current_mode == MODE_NORMAL) { TimerEnd(timer, "helpers_x11:VimModeTextColor"); return rgb_to_hex(COLOR_NORMAL_MODE_TEXT); }
-    if (g_current_mode == MODE_INSERT) { TimerEnd(timer, "helpers_x11:VimModeTextColor"); return rgb_to_hex(COLOR_INSERT_MODE_TEXT); }
-    TimerEnd(timer, "helpers_x11:VimModeTextColor");
+    PROFILE_START(timer);
+    if (g_current_mode == MODE_NORMAL) { PROFILE_END_VAR(timer, "helpers_x11:VimModeTextColor"); return rgb_to_hex(COLOR_NORMAL_MODE_TEXT); }
+    if (g_current_mode == MODE_INSERT) { PROFILE_END_VAR(timer, "helpers_x11:VimModeTextColor"); return rgb_to_hex(COLOR_INSERT_MODE_TEXT); }
+    PROFILE_END_VAR(timer, "helpers_x11:VimModeTextColor");
     return rgb_to_hex(COLOR_VISUAL_MODE_TEXT);
 }
 
 int Linux_UpdateEditScrollOffset(Display* dpy, XftFont* xf, const char* text, int text_len, int cursor, int width, int prev_scroll, int* out_cursor_x) {
-    WinTimer timer = TimerStart();
+    PROFILE_START(timer);
     int visible_w = width - 40;
     int cursor_x = 0;
     int text_w = 0;
@@ -200,12 +206,12 @@ int Linux_UpdateEditScrollOffset(Display* dpy, XftFont* xf, const char* text, in
     if (cursor_x - scroll < 0) scroll = cursor_x;
     if (cursor_x - scroll > visible_w) scroll = cursor_x - visible_w;
     *out_cursor_x = cursor_x;
-    TimerEnd(timer, "helpers_x11:Linux_UpdateEditScrollOffset");
+    PROFILE_END_VAR(timer, "helpers_x11:Linux_UpdateEditScrollOffset");
     return scroll;
 }
 
 void Linux_DrawEditCursor(XftDraw* xd, XftColor* color, int cursor_x, int scroll, int width) {
-    WinTimer timer = TimerStart();
+    PROFILE_START(timer);
     int cursor_draw_x = 22 + cursor_x - scroll;
     if (cursor_draw_x < 20) cursor_draw_x = 20;
     if (cursor_draw_x > width - 10) cursor_draw_x = width - 10;
@@ -214,11 +220,11 @@ void Linux_DrawEditCursor(XftDraw* xd, XftColor* color, int cursor_x, int scroll
     } else {
         XftDrawRect(xd, color, cursor_draw_x, 27, 12, FontSize);
     }
-    TimerEnd(timer, "helpers_x11:Linux_DrawEditCursor");
+    PROFILE_END_VAR(timer, "helpers_x11:Linux_DrawEditCursor");
 }
 
 const char* ListBoxItemDisplayText(ListBoxInfo* lb, int idx, char* trunc, size_t trunc_size) {
-    WinTimer timer = TimerStart();
+    PROFILE_START(timer);
     int raw = (idx >= 0 && idx < lb->populated_count) ? lb->matching_indices[idx] : -1;
     const char* baseText = NULL;
     if (g_alias_display_active && raw >= 0 && raw < g_alias_display_count && g_alias_display[raw][0] != '\0')
@@ -226,7 +232,7 @@ const char* ListBoxItemDisplayText(ListBoxInfo* lb, int idx, char* trunc, size_t
     else
         baseText = lb->populated_cache[idx];
     snprintf(trunc, trunc_size, "%.80s", baseText ? baseText : "");
-    TimerEnd(timer, "helpers_x11:ListBoxItemDisplayText");
+    PROFILE_END_VAR(timer, "helpers_x11:ListBoxItemDisplayText");
     return trunc;
 }
 
@@ -451,9 +457,9 @@ static void draw_icon_png(Display* dpy, XftDraw* xd, const char* path,
 void DrawListBoxItemText(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap, FontHandle font,
                          XftColor* num_color, XftColor* body_color, XftColor* plain_color,
                          ListBoxInfo* lb,char* icon_path,int idx, int y, int text_x) {
-    WinTimer timer = TimerStart();
+    PROFILE_START(timer);
     XftFont* xf = FH_TO_XFT(font);
-    if (!xf) { TimerEnd(timer, "helpers_x11:DrawListBoxItemText"); return; }
+    if (!xf) { PROFILE_END_VAR(timer, "helpers_x11:DrawListBoxItemText"); return; }
     int XOffset = 10;
 
     if (icon_path) {
@@ -483,41 +489,41 @@ void DrawListBoxItemText(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap, 
     }
     draw_wrapped_text(dpy, xd, plain_color, font, trunc, y, "LEFT", XOffset);
 
-    TimerEnd(timer, "helpers_x11:DrawListBoxItemText");
+    PROFILE_END_VAR(timer, "helpers_x11:DrawListBoxItemText");
 }
 
 bool CursorBack(size_t* cursor, size_t text_len) {
-    WinTimer timer = TimerStart();
-    if (*cursor == 0) { TimerEnd(timer, "helpers_x11:CursorBack"); return false;  }
+    PROFILE_START(timer);
+    if (*cursor == 0) { PROFILE_END_VAR(timer, "helpers_x11:CursorBack"); return false;  }
     (*cursor)--;
-    TimerEnd(timer, "helpers_x11:CursorBack");
+    PROFILE_END_VAR(timer, "helpers_x11:CursorBack");
     return true;
 }
 
 bool CursorForward(size_t* cursor, size_t text_len) {
-    WinTimer timer = TimerStart();
-    if (*cursor >= text_len) { TimerEnd(timer, "helpers_x11:CursorForward"); return false; }
+    PROFILE_START(timer);
+    if (*cursor >= text_len) { PROFILE_END_VAR(timer, "helpers_x11:CursorForward"); return false; }
     (*cursor)++;
-    TimerEnd(timer, "helpers_x11:CursorForward");
+    PROFILE_END_VAR(timer, "helpers_x11:CursorForward");
     return true;
 }
 
 static int x11_error_occurred = 0;
 
 static int dummy_x_error_handler(Display *dpy, XErrorEvent *error) {
-    WinTimer timer = TimerStart();
+    PROFILE_START(timer);
     if (error->error_code == BadWindow) {
         x11_error_occurred = 1;
-        TimerEnd(timer, "helpers_x11:dummy_x_error_handler");
+        PROFILE_END_VAR(timer, "helpers_x11:dummy_x_error_handler");
         return 0;
     }
-    TimerEnd(timer, "helpers_x11:dummy_x_error_handler");
+    PROFILE_END_VAR(timer, "helpers_x11:dummy_x_error_handler");
     return 0;
 }
 
 pid_t GetWindowPid(Display* dpy, Window w) {
-    WinTimer timer = TimerStart();
-    if (w == 0) { TimerEnd(timer, "helpers_x11:GetWindowPid"); return -1; }
+    PROFILE_START(timer);
+    if (w == 0) { PROFILE_END_VAR(timer, "helpers_x11:GetWindowPid"); return -1; }
 
     Atom prop = XInternAtom(dpy, "_NET_WM_PID", True);
     Atom actual_type;
@@ -545,19 +551,19 @@ pid_t GetWindowPid(Display* dpy, Window w) {
     XSetErrorHandler(old_handler);
 
     if (x11_error_occurred) {
-        TimerEnd(timer, "helpers_x11:GetWindowPid");
-        return -1; // Window was destroyed mid-call
+        PROFILE_END_VAR(timer, "helpers_x11:GetWindowPid");
+        return -1;
     }
 
-    TimerEnd(timer, "helpers_x11:GetWindowPid");
+    PROFILE_END_VAR(timer, "helpers_x11:GetWindowPid");
     return pid;
 }
 
 void GetExeNameFromPid(pid_t pid, char* outExe, size_t maxLen) {
-    WinTimer timer = TimerStart();
+    PROFILE_START(timer);
     if (pid <= 0) {
         strncpy(outExe, "unknown", maxLen);
-        TimerEnd(timer, "helpers_x11:GetExeNameFromPid");
+        PROFILE_END_VAR(timer, "helpers_x11:GetExeNameFromPid");
         return;
     }
 
@@ -574,26 +580,26 @@ void GetExeNameFromPid(pid_t pid, char* outExe, size_t maxLen) {
     } else {
         strncpy(outExe, "unknown", maxLen);
     }
-    TimerEnd(timer, "helpers_x11:GetExeNameFromPid");
+    PROFILE_END_VAR(timer, "helpers_x11:GetExeNameFromPid");
 }
 
 Window Linux_CreateWindowExOR(Display* dpy, int x, int y, int w, int h, unsigned long bg_color, const char* res_name, const char* res_class, long event_mask, bool override_redirect);
 
 Window Linux_CreateWindowEx(Display* dpy, int x, int y, int w, int h, unsigned long bg_color, const char* res_name, const char* res_class, long event_mask) {
-    WinTimer timer = TimerStart();
-    TimerEnd(timer, "helpers_x11:Linux_CreateWindowEx");
+    PROFILE_START(timer);
+    PROFILE_END_VAR(timer, "helpers_x11:Linux_CreateWindowEx");
     return Linux_CreateWindowExOR(dpy, x, y, w, h, bg_color, res_name, res_class, event_mask, false);
 }
 
 bool Linux_ShouldUseRounded(void) {
-    WinTimer timer = TimerStart();
-    TimerEnd(timer, "helpers_x11:Linux_ShouldUseRounded"); return RoundedCorners;
+    PROFILE_START(timer);
+    PROFILE_END_VAR(timer, "helpers_x11:Linux_ShouldUseRounded"); return RoundedCorners;
 }
 
 static void Linux_ApplyShapeRounded(Display* dpy, Window win, int w, int h, int radius);
 
 Window Linux_CreateWindowExOR(Display* dpy, int x, int y, int w, int h, unsigned long bg_color, const char* res_name, const char* res_class, long event_mask, bool override_redirect) {
-    WinTimer timer = TimerStart();
+    PROFILE_START(timer);
     int screen = DefaultScreen(dpy);
     XVisualInfo vinfo;
     Visual* visual = NULL;
@@ -666,22 +672,22 @@ Window Linux_CreateWindowExOR(Display* dpy, int x, int y, int w, int h, unsigned
     if (Linux_ShouldUseRounded() && !use_argb) {
         Linux_ApplyShapeRounded(dpy, win, w, h, CornerRadius);
     }
-    TimerEnd(timer, "helpers_x11:Linux_CreateWindowExOR");
+    PROFILE_END_VAR(timer, "helpers_x11:Linux_CreateWindowExOR");
     return win;
 }
 
 static void Linux_ApplyShapeRounded(Display* dpy, Window win, int w, int h, int radius) {
-    WinTimer timer = TimerStart();
-    if (radius <= 0 || w <= 0 || h <= 0) { TimerEnd(timer, "helpers_x11:Linux_ApplyShapeRounded"); return; }
+    PROFILE_START(timer);
+    if (radius <= 0 || w <= 0 || h <= 0) { PROFILE_END_VAR(timer, "helpers_x11:Linux_ApplyShapeRounded"); return; }
     Pixmap mask = XCreatePixmap(dpy, win, w, h, 1);
     GC gc = XCreateGC(dpy, mask, 0, NULL);
     XSetForeground(dpy, gc, 0);
     XFillRectangle(dpy, mask, gc, 0, 0, w, h);
     XSetForeground(dpy, gc, 1);
-    // central rects
+
     XFillRectangle(dpy, mask, gc, radius, 0, w - 2*radius, h);
     XFillRectangle(dpy, mask, gc, 0, radius, w, h - 2*radius);
-    // corners as filled arcs (1-bit, slightly pixelated but fallback)
+
     XFillArc(dpy, mask, gc, 0, 0, radius*2, radius*2, 0, 360*64);
     XFillArc(dpy, mask, gc, w - radius*2 -1, 0, radius*2, radius*2, 0, 360*64);
     XFillArc(dpy, mask, gc, 0, h - radius*2 -1, radius*2, radius*2, 0, 360*64);
@@ -689,28 +695,28 @@ static void Linux_ApplyShapeRounded(Display* dpy, Window win, int w, int h, int 
     XShapeCombineMask(dpy, win, ShapeBounding, 0, 0, mask, ShapeSet);
     XFreePixmap(dpy, mask);
     XFreeGC(dpy, gc);
-    TimerEnd(timer, "helpers_x11:Linux_ApplyShapeRounded");
+    PROFILE_END_VAR(timer, "helpers_x11:Linux_ApplyShapeRounded");
 }
 
 void Linux_FillRoundedRect(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap, unsigned long hex, unsigned short alpha16, int x, int y, int w, int h, int radius) {
-    WinTimer timer = TimerStart();
+    PROFILE_START(timer);
     if (!RoundedCorners || radius <= 0 || w <= 0 || h <= 0) {
         XftColor c;
         Linux_XftAllocColor(dpy, vis, cmap, hex, alpha16, &c);
         XftDrawRect(xd, &c, x, y, w, h);
         XftColorFree(dpy, vis, cmap, &c);
-        TimerEnd(timer, "helpers_x11:Linux_FillRoundedRect");
+        PROFILE_END_VAR(timer, "helpers_x11:Linux_FillRoundedRect");
         return;
     }
     if (radius > w/2) radius = w/2;
     if (radius > h/2) radius = h/2;
     XftColor solid;
     Linux_XftAllocColor(dpy, vis, cmap, hex, alpha16, &solid);
-    // central rects (no corners)
+
     XftDrawRect(xd, &solid, x + radius, y, w - 2*radius, h);
     XftDrawRect(xd, &solid, x, y + radius, radius, h - 2*radius);
     XftDrawRect(xd, &solid, x + w - radius, y + radius, radius, h - 2*radius);
-    // corners with anti-alias via per-pixel 1x1 with varying alpha
+
     for (int corner = 0; corner < 4; corner++) {
         int cx = (corner % 2 == 0) ? x + radius : x + w - radius - 1;
         int cy = (corner < 2) ? y + radius : y + h - radius - 1;
@@ -720,9 +726,9 @@ void Linux_FillRoundedRect(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap
             for (int dx = 0; dx < radius; dx++) {
                 float fx = (corner % 2 == 0) ? (radius - dx - 0.5f) : (dx + 0.5f);
                 float fy = (corner < 2) ? (radius - dy - 0.5f) : (dy + 0.5f);
-                // Actually compute distance from corner center
+
                 float ddx = (corner % 2 == 0) ? (radius - dx - 0.5f) : (dx + 0.5f - radius);
-                // Simpler: distance from (cx,cy)
+
                 float px = ox0 + dx + 0.5f;
                 float py = oy0 + dy + 0.5f;
                 float ddx2 = px - (cx + 0.5f);
@@ -745,20 +751,20 @@ void Linux_FillRoundedRect(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap
         }
     }
     XftColorFree(dpy, vis, cmap, &solid);
-    TimerEnd(timer, "helpers_x11:Linux_FillRoundedRect");
+    PROFILE_END_VAR(timer, "helpers_x11:Linux_FillRoundedRect");
 }
 
 void Linux_DrawRoundedBackground(Display* dpy, Window win, int w, int h, unsigned long hex, unsigned short alpha) {
-    WinTimer timer = TimerStart();
-    if (!RoundedCorners) { TimerEnd(timer, "helpers_x11:Linux_DrawRoundedBackground"); return; }
-    if (CornerRadius <= 0) { TimerEnd(timer, "helpers_x11:Linux_DrawRoundedBackground"); return; }
+    PROFILE_START(timer);
+    if (!RoundedCorners) { PROFILE_END_VAR(timer, "helpers_x11:Linux_DrawRoundedBackground"); return; }
+    if (CornerRadius <= 0) { PROFILE_END_VAR(timer, "helpers_x11:Linux_DrawRoundedBackground"); return; }
     XWindowAttributes attrs;
-    if (!XGetWindowAttributes(dpy, win, &attrs)) { TimerEnd(timer, "helpers_x11:Linux_DrawRoundedBackground"); return; }
+    if (!XGetWindowAttributes(dpy, win, &attrs)) { PROFILE_END_VAR(timer, "helpers_x11:Linux_DrawRoundedBackground"); return; }
     XftDraw* xd = XftDrawCreate(dpy, win, attrs.visual, attrs.colormap);
-    if (!xd) { TimerEnd(timer, "helpers_x11:Linux_DrawRoundedBackground"); return; }
+    if (!xd) { PROFILE_END_VAR(timer, "helpers_x11:Linux_DrawRoundedBackground"); return; }
     Linux_FillRoundedRect(dpy, xd, attrs.visual, attrs.colormap, hex, alpha, 0, 0, w, h, CornerRadius);
     XftDrawDestroy(xd);
-    TimerEnd(timer, "helpers_x11:Linux_DrawRoundedBackground");
+    PROFILE_END_VAR(timer, "helpers_x11:Linux_DrawRoundedBackground");
 }
 
 static unsigned long LerpHex(unsigned long a, unsigned long b, float t) {
@@ -805,7 +811,7 @@ static unsigned int CornerAlpha(int x, int y, int w, int h, int R, unsigned int 
 }
 
 void Linux_FreeCachedBackground(void) {
-    WinTimer timer = TimerStart();
+    PROFILE_START(timer);
     if (g_bgPixmap != None && g_bgDpy) {
         XFreePixmap(g_bgDpy, g_bgPixmap);
         g_bgPixmap = None;
@@ -819,7 +825,7 @@ void Linux_FreeCachedBackground(void) {
     g_bgRounded = false;
     g_bgDpy = NULL;
     g_bgDepth = 0;
-    TimerEnd(timer, "helpers_x11:Linux_FreeCachedBackground");
+    PROFILE_END_VAR(timer, "helpers_x11:Linux_FreeCachedBackground");
 }
 
 static Pixmap Linux_CreateBackgroundPixmap(Display* dpy, Window win, int w, int h, XWindowAttributes* attrs, unsigned long base, unsigned int baseAlpha8) {
@@ -942,8 +948,8 @@ static Pixmap Linux_CreateBackgroundPixmap(Display* dpy, Window win, int w, int 
 }
 
 Pixmap Linux_GetCachedBackground(Display* dpy, Window win, int w, int h) {
-    WinTimer timer = TimerStart();
-    if (!dpy || w <= 0 || h <= 0) { TimerEnd(timer, "helpers_x11:Linux_GetCachedBackground"); return None; }
+    PROFILE_START(timer);
+    if (!dpy || w <= 0 || h <= 0) { PROFILE_END_VAR(timer, "helpers_x11:Linux_GetCachedBackground"); return None; }
     unsigned long base = rgb_to_hex(COLOR_BG);
     int preset = ShaderPreset;
     float intensity = ShaderIntensity;
@@ -951,7 +957,7 @@ Pixmap Linux_GetCachedBackground(Display* dpy, Window win, int w, int h) {
     int radius = CornerRadius;
     bool rounded = RoundedCorners;
     if (g_bgPixmap != None && g_bgDpy == dpy && g_bgW == w && g_bgH == h && g_bgBase == base && g_bgPreset == preset && g_bgIntensity == intensity && g_bgSmoothness == smoothness && g_bgRadius == radius && g_bgRounded == rounded) {
-        TimerEnd(timer, "helpers_x11:Linux_GetCachedBackground");
+        PROFILE_END_VAR(timer, "helpers_x11:Linux_GetCachedBackground");
         return g_bgPixmap;
     }
     if (g_bgPixmap != None) {
@@ -960,14 +966,14 @@ Pixmap Linux_GetCachedBackground(Display* dpy, Window win, int w, int h) {
         g_bgW = g_bgH = 0;
     }
     XWindowAttributes attrs;
-    if (!XGetWindowAttributes(dpy, win, &attrs)) { TimerEnd(timer, "helpers_x11:Linux_GetCachedBackground"); return None; }
+    if (!XGetWindowAttributes(dpy, win, &attrs)) { PROFILE_END_VAR(timer, "helpers_x11:Linux_GetCachedBackground"); return None; }
     unsigned int baseAlpha8 = (unsigned int)WindowOpacity;
     if (baseAlpha8 > 255) baseAlpha8 = 255;
     Pixmap pm = Linux_CreateBackgroundPixmap(dpy, win, w, h, &attrs, base, baseAlpha8);
-    if (!pm) { TimerEnd(timer, "helpers_x11:Linux_GetCachedBackground"); return None; }
+    if (!pm) { PROFILE_END_VAR(timer, "helpers_x11:Linux_GetCachedBackground"); return None; }
     g_bgPixmap = pm;
     g_bgW = w; g_bgH = h; g_bgBase = base; g_bgPreset = preset; g_bgIntensity = intensity; g_bgSmoothness = smoothness; g_bgRadius = radius; g_bgRounded = rounded; g_bgDpy = dpy; g_bgDepth = attrs.depth;
-    TimerEnd(timer, "helpers_x11:Linux_GetCachedBackground");
+    PROFILE_END_VAR(timer, "helpers_x11:Linux_GetCachedBackground");
     return g_bgPixmap;
 }
 
@@ -1026,7 +1032,7 @@ void Linux_DrawBackgroundToDrawable(Display* dpy, Drawable drw, int w, int h) {
 }
 
 void Linux_DrawBackground(Display* dpy, Window win, int w, int h) {
-    WinTimer timer = TimerStart();
+    PROFILE_START(timer);
     const char* presetName = "solid";
     if (!EnableShaders || ShaderPreset == 0) presetName = "solid";
     else if (ShaderPreset == 1) presetName = "vertical";
@@ -1041,7 +1047,7 @@ void Linux_DrawBackground(Display* dpy, Window win, int w, int h) {
         XFreeGC(dpy, gc);
     }
     (void)presetName;
-    TimerEnd(timer, "helpers_x11:Linux_DrawBackground");
+    PROFILE_END_VAR(timer, "helpers_x11:Linux_DrawBackground");
 }
 
 void Linux_DrawSelectionBackground(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap, int x, int y, int w, int h, unsigned long baseHex) {
@@ -1054,8 +1060,8 @@ void Linux_DrawSelectionBackground(Display* dpy, XftDraw* xd, Visual* vis, Color
     }
     unsigned long light = DeriveLighter(baseHex, 1.0f);
     unsigned short alpha = OpacityAlpha16();
-    // Use same presets as background but per-item
-    if (SelectionShaderPreset == 1) { // vertical per-item
+
+    if (SelectionShaderPreset == 1) {
         for (int yy = 0; yy < h; yy++) {
             float t = h > 1 ? (float)yy / (float)(h - 1) : 0;
             unsigned long col = LerpHex(baseHex, light, t * 0.9f);
@@ -1063,7 +1069,7 @@ void Linux_DrawSelectionBackground(Display* dpy, XftDraw* xd, Visual* vis, Color
             XftDrawRect(xd, &c, x, y + yy, w, 1);
             XftColorFree(dpy, vis, cmap, &c);
         }
-    } else if (SelectionShaderPreset == 3) { // diagonal per-item
+    } else if (SelectionShaderPreset == 3) {
         for (int yy = 0; yy < h; yy++) {
             for (int xx = 0; xx < w; xx++) {
                 float t = (w + h > 0) ? ((float)xx + (float)yy) / (float)(w + h) : 0;
@@ -1073,7 +1079,7 @@ void Linux_DrawSelectionBackground(Display* dpy, XftDraw* xd, Visual* vis, Color
                 XftColorFree(dpy, vis, cmap, &c);
             }
         }
-    } else if (SelectionShaderPreset == 2) { // radial per-item
+    } else if (SelectionShaderPreset == 2) {
         float cx = w * 0.5f, cy = h * 0.35f;
         float maxDist = sqrtf(cx*cx + cy*cy);
         if (maxDist < 1) maxDist = 1;
@@ -1088,7 +1094,7 @@ void Linux_DrawSelectionBackground(Display* dpy, XftDraw* xd, Visual* vis, Color
                 XftColorFree(dpy, vis, cmap, &c);
             }
         }
-    } else if (SelectionShaderPreset == 4) { // noise per-item
+    } else if (SelectionShaderPreset == 4) {
         for (int yy = 0; yy < h; yy++) {
             float tBase = h > 1 ? (float)yy / (float)(h - 1) : 0;
             for (int xx = 0; xx < w; xx++) {
@@ -1116,10 +1122,10 @@ void Linux_DrawSelectionBackground(Display* dpy, XftDraw* xd, Visual* vis, Color
 }
 
 Window Linux_CreatePromptWindow(Display* dpy, int x, int y, int w, int h) {
-    WinTimer timer = TimerStart();
+    PROFILE_START(timer);
     unsigned long bg = rgb_to_hex(COLOR_BG);
-    TimerEnd(timer, "helpers_x11:Linux_CreatePromptWindow");
-    // use simple window without 32-bit alpha for now to avoid BadMatch on Hyprland/XWayland
+    PROFILE_END_VAR(timer, "helpers_x11:Linux_CreatePromptWindow");
+
     int screen = DefaultScreen(dpy);
     Window win = XCreateSimpleWindow(dpy, RootWindow(dpy, screen), x, y, w, h, 0, bg, bg);
     XSelectInput(dpy, win, KeyPressMask | ExposureMask | FocusChangeMask);
@@ -1133,37 +1139,37 @@ Window Linux_CreatePromptWindow(Display* dpy, int x, int y, int w, int h) {
     if (RoundedCorners && CornerRadius > 0) {
         Linux_ApplyShapeRounded(dpy, win, w, h, CornerRadius);
     }
-    TimerEnd(timer, "helpers_x11:Linux_CreatePromptWindow");
+    PROFILE_END_VAR(timer, "helpers_x11:Linux_CreatePromptWindow");
     return win;
 }
 Window Linux_CreateSimplePromptWindow(Display* dpy, int x, int y, int w, int h) {
-    WinTimer timer = TimerStart();
+    PROFILE_START(timer);
     unsigned long bg = rgb_to_hex(COLOR_BG);
-    TimerEnd(timer, "helpers_x11:Linux_CreateSimplePromptWindow");
+    PROFILE_END_VAR(timer, "helpers_x11:Linux_CreateSimplePromptWindow");
     return Linux_CreateWindowEx(dpy, x, y, w, h, bg, "colored", "colored", KeyPressMask | ExposureMask);
 }
 Window Linux_CreateEditPopupWindow(Display* dpy, int x, int y, int w, int h) {
-    WinTimer timer = TimerStart();
+    PROFILE_START(timer);
     unsigned long bg = rgb_to_hex(COLOR_BG);
-    TimerEnd(timer, "helpers_x11:Linux_CreateEditPopupWindow");
+    PROFILE_END_VAR(timer, "helpers_x11:Linux_CreateEditPopupWindow");
     return Linux_CreateWindowEx(dpy, x, y, w, h, bg, "colored", "colored", KeyPressMask | ExposureMask | FocusChangeMask);
 }
 Window Linux_CreateDisplayMessageWindow(Display* dpy, int x, int y, int w, int h) {
-    WinTimer timer = TimerStart();
+    PROFILE_START(timer);
     unsigned long bg = rgb_to_hex(COLOR_BG);
-    TimerEnd(timer, "helpers_x11:Linux_CreateDisplayMessageWindow");
+    PROFILE_END_VAR(timer, "helpers_x11:Linux_CreateDisplayMessageWindow");
     return Linux_CreateWindowExOR(dpy, x, y, w, h, bg, "flashtext", "flashtext", ExposureMask, true);
 }
 
 XftDraw* Linux_CreateXftDraw(Display* dpy, Window win) {
-    WinTimer timer = TimerStart();
+    PROFILE_START(timer);
     Visual* vis = NULL; Colormap cmap = 0; int depth = 0;
     if (Linux_GetDrawableVisual(dpy, win, &vis, &cmap, &depth)) {
-        TimerEnd(timer, "helpers_x11:Linux_CreateXftDraw");
+        PROFILE_END_VAR(timer, "helpers_x11:Linux_CreateXftDraw");
         return XftDrawCreate(dpy, win, vis, cmap);
     }
     int screen = DefaultScreen(dpy);
-    TimerEnd(timer, "helpers_x11:Linux_CreateXftDraw");
+    PROFILE_END_VAR(timer, "helpers_x11:Linux_CreateXftDraw");
     return XftDrawCreate(dpy, win, DefaultVisual(dpy, screen), DefaultColormap(dpy, screen));
 }
 

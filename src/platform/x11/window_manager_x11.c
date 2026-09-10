@@ -5,7 +5,13 @@
 #include "core/vim.h"
 #include "core/platform.h"
 #include "platform/x11/ui_x11.h"
-#include "helpers.h"
+#include "config.h"
+#include "core/platform.h"
+#include "helpers/hotkey.h"
+#include "helpers/alias.h"
+#include "helpers/flag.h"
+#include "helpers/file.h"
+#include "helpers/ui.h"
 #include "platform/x11/subclasses_x11.h"
 #include "core/feature_data.h"
 #include <X11/Xlib.h>
@@ -32,7 +38,7 @@
 #include "platform/x11/input.h"
 #include "core/timer.h"
 
-// Shared input state now owned by input.c - wrappers below
+
 extern bool HandleGlobalKeyEvent(int key_code, int value);
 
 int pending_hotkey_vk = 0;
@@ -49,22 +55,22 @@ static void ScanAndHookKeyboards(void) { x11_scan_keyboards(); }
 static int XKeysymToVK(KeySym ks) { return x11_keysym_to_vk(ks); }
 
 static void Linux_HandleKeyPress(Display* dpy, XKeyEvent* ev, WindowManager* wm) {
-    WinTimer timer = TimerStart();
-    extern bool g_Linux_CtrlHeld, g_Linux_AltHeld, g_Linux_ShiftHeld;
-    g_linux_ctrl_held = (ev->state & ControlMask) != 0;
-    g_Linux_CtrlHeld = g_linux_ctrl_held;
-    g_linux_alt_held = (ev->state & Mod1Mask) != 0;
-    g_Linux_AltHeld = g_linux_alt_held;
-    g_linux_shift_held = (ev->state & ShiftMask) != 0;
-    g_Linux_ShiftHeld = g_linux_shift_held;
+    PROFILE_START(timer);
+    extern bool g_x11_ctrl_held, g_x11_alt_held, g_x11_shift_held;
+    g_x11_ctrl_held = (ev->state & ControlMask) != 0;
+    g_x11_ctrl_held = g_x11_ctrl_held;
+    g_x11_alt_held = (ev->state & Mod1Mask) != 0;
+    g_x11_alt_held = g_x11_alt_held;
+    g_x11_shift_held = (ev->state & ShiftMask) != 0;
+    g_x11_shift_held = g_x11_shift_held;
 
     KeySym ks;
     char buf[32];
     int len = XLookupString(ev, buf, sizeof(buf), &ks, NULL);
 
-    if (ks == XK_Control_L || ks == XK_Control_R) { g_linux_ctrl_held = true; g_Linux_CtrlHeld = true; }
-    else if (ks == XK_Alt_L || ks == XK_Alt_R) { g_linux_alt_held = true; g_Linux_AltHeld = true; }
-    else if (ks == XK_Shift_L || ks == XK_Shift_R) { g_linux_shift_held = true; g_Linux_ShiftHeld = true; }
+    if (ks == XK_Control_L || ks == XK_Control_R) { g_x11_ctrl_held = true; g_x11_ctrl_held = true; }
+    else if (ks == XK_Alt_L || ks == XK_Alt_R) { g_x11_alt_held = true; g_x11_alt_held = true; }
+    else if (ks == XK_Shift_L || ks == XK_Shift_R) { g_x11_shift_held = true; g_x11_shift_held = true; }
 
     int vk_code = 0;
     if (len == 1 && (unsigned char)buf[0] >= 32 && (unsigned char)buf[0] <= 126) {
@@ -74,12 +80,12 @@ static void Linux_HandleKeyPress(Display* dpy, XKeyEvent* ev, WindowManager* wm)
     }
     bool pressed = true;
     int modifiers = 0;
-    if (g_linux_alt_held) modifiers |= HOTKEY_MOD_ALT;
-    if (g_linux_shift_held) modifiers |= HOTKEY_MOD_SHIFT;
-    if (g_linux_ctrl_held) modifiers |= HOTKEY_MOD_CTRL;
+    if (g_x11_alt_held) modifiers |= HOTKEY_MOD_ALT;
+    if (g_x11_shift_held) modifiers |= HOTKEY_MOD_SHIFT;
+    if (g_x11_ctrl_held) modifiers |= HOTKEY_MOD_CTRL;
 
     Popup* top = WindowManager_GetTopPopup(wm);
-    if (!top) { TimerEnd(timer, "window_manager_x11:Linux_HandleKeyPress"); return; }
+    if (!top) { PROFILE_END_VAR(timer, "window_manager_x11:Linux_HandleKeyPress"); return; }
 
     if (top->type == POPUP_PROMPT) {
         PromptState* state = (PromptState*)top->user_data;
@@ -115,7 +121,7 @@ static void Linux_HandleKeyPress(Display* dpy, XKeyEvent* ev, WindowManager* wm)
                             state->cursor+=len2;
                             FlintContext* _c = FlintContext_Get();
                             if (_c->prompt_callbacks.refresh) _c->prompt_callbacks.refresh(state->filter, FlintContext_Get()->window.hListBox, state->has_listbox ? &state->listbox : NULL);
-                            else if (state && state->listbox.populated_count >=0) {} // no-op
+                            else if (state && state->listbox.populated_count >=0) {}
                         }
                     }
                 }
@@ -128,12 +134,12 @@ static void Linux_HandleKeyPress(Display* dpy, XKeyEvent* ev, WindowManager* wm)
             Popup* new_top = WindowManager_GetTopPopup(wm);
             if (new_top && new_top->vtable && new_top->vtable->on_render) new_top->vtable->on_render(new_top);
             XFlush(dpy);
-            TimerEnd(timer, "window_manager_x11:Linux_HandleKeyPress");
+            PROFILE_END_VAR(timer, "window_manager_x11:Linux_HandleKeyPress");
             return;
         }
         if (top->vtable && top->vtable->on_render) top->vtable->on_render(top);
         XFlush(dpy);
-        TimerEnd(timer, "window_manager_x11:Linux_HandleKeyPress");
+        PROFILE_END_VAR(timer, "window_manager_x11:Linux_HandleKeyPress");
         return;
     }
 
@@ -146,24 +152,24 @@ static void Linux_HandleKeyPress(Display* dpy, XKeyEvent* ev, WindowManager* wm)
         top_after->vtable->on_render(top_after);
     }
     XFlush(dpy);
-    TimerEnd(timer, "window_manager_x11:Linux_HandleKeyPress");
+    PROFILE_END_VAR(timer, "window_manager_x11:Linux_HandleKeyPress");
 }
 
 static void Linux_HandleKeyRelease(Display* dpy, XKeyEvent* ev) {
-    WinTimer timer = TimerStart();
+    PROFILE_START(timer);
     int keycode = ev->keycode;
     KeySym ks = XKeycodeToKeysym(dpy, keycode, 0);
-    extern bool g_Linux_CtrlHeld, g_Linux_AltHeld, g_Linux_ShiftHeld;
-    if (ks == XK_Control_L || ks == XK_Control_R) { g_linux_ctrl_held = false; g_Linux_CtrlHeld = false; }
-    else if (ks == XK_Alt_L || ks == XK_Alt_R) { g_linux_alt_held = false; g_Linux_AltHeld = false; }
-    else if (ks == XK_Shift_L || ks == XK_Shift_R) { g_linux_shift_held = false; g_Linux_ShiftHeld = false; }
-    TimerEnd(timer, "window_manager_x11:Linux_HandleKeyRelease");
+    extern bool g_x11_ctrl_held, g_x11_alt_held, g_x11_shift_held;
+    if (ks == XK_Control_L || ks == XK_Control_R) { g_x11_ctrl_held = false; g_x11_ctrl_held = false; }
+    else if (ks == XK_Alt_L || ks == XK_Alt_R) { g_x11_alt_held = false; g_x11_alt_held = false; }
+    else if (ks == XK_Shift_L || ks == XK_Shift_R) { g_x11_shift_held = false; g_x11_shift_held = false; }
+    PROFILE_END_VAR(timer, "window_manager_x11:Linux_HandleKeyRelease");
 }
 
 void Linux_ProcessXEvent(Display* dpy, XEvent* ev, WindowManager* wm) {
-    WinTimer timer = TimerStart();
+    PROFILE_START(timer);
     Popup* top = WindowManager_GetTopPopup(wm);
-    if (!top) { TimerEnd(timer, "window_manager_x11:Linux_ProcessXEvent"); return; }
+    if (!top) { PROFILE_END_VAR(timer, "window_manager_x11:Linux_ProcessXEvent"); return; }
 
     switch (ev->type) {
         case KeyPress:
@@ -185,40 +191,40 @@ void Linux_ProcessXEvent(Display* dpy, XEvent* ev, WindowManager* wm) {
             }
             break;
     }
-    TimerEnd(timer, "window_manager_x11:Linux_ProcessXEvent");
+    PROFILE_END_VAR(timer, "window_manager_x11:Linux_ProcessXEvent");
 }
 
 int WindowManager_RunLinux(WindowManager* wm) {
-    WinTimer timer = TimerStart();
-    if (!wm) { TimerEnd(timer, "window_manager_x11:WindowManager_RunLinux"); return -1; }
+    PROFILE_START(timer);
+    if (!wm) { PROFILE_END_VAR(timer, "window_manager_x11:WindowManager_RunLinux"); return -1; }
     wm->running = true;
 
     Display* dpy = wm->display;
-    if (!dpy) { TimerEnd(timer, "window_manager_x11:WindowManager_RunLinux"); return -1; }
+    if (!dpy) { PROFILE_END_VAR(timer, "window_manager_x11:WindowManager_RunLinux"); return -1; }
 
     bool use_grab = should_use_grab();
     if (!use_grab) {
-        g_uinput_fd = -1;
+        g_x11_uinput_fd = -1;
     } else {
-        g_uinput_fd = init_uinput();
-        if (g_uinput_fd < 0) {
+        g_x11_uinput_fd = init_uinput();
+        if (g_x11_uinput_fd < 0) {
             fprintf(stderr, "[SYSTEM] continuing without uinput (no swallow)\n");
         }
     }
 
     ScanAndHookKeyboards();
-    if (active_kb_count == 0) {
+    if (g_x11_keyboard_count == 0) {
         fprintf(stderr, "[ERROR] No structural keyboard nodes located under /dev/input/\n");
         destroy_uinput();
-        TimerEnd(timer, "window_manager_x11:WindowManager_RunLinux");
+        PROFILE_END_VAR(timer, "window_manager_x11:WindowManager_RunLinux");
         return -1;
     }
 
-    struct pollfd *fds = calloc(active_kb_count + 1, sizeof(struct pollfd));
+    struct pollfd *fds = calloc(g_x11_keyboard_count + 1, sizeof(struct pollfd));
     fds[0].fd = ConnectionNumber(dpy);
     fds[0].events = POLLIN;
-    for (int i = 0; i < active_kb_count; i++) {
-        fds[i + 1].fd = active_kbs[i].fd;
+    for (int i = 0; i < g_x11_keyboard_count; i++) {
+        fds[i + 1].fd = g_x11_keyboards[i].fd;
         fds[i + 1].events = POLLIN;
     }
 
@@ -227,7 +233,7 @@ int WindowManager_RunLinux(WindowManager* wm) {
     const long HOTKEY_STALE_EVENT_MS = 200;
 
     while (wm->running) {
-        int poll_res = poll(fds, active_kb_count + 1, 500);
+        int poll_res = poll(fds, g_x11_keyboard_count + 1, 500);
         if (poll_res < 0) break;
 
         if (fds[0].revents & POLLIN) {
@@ -237,43 +243,43 @@ int WindowManager_RunLinux(WindowManager* wm) {
             }
         }
 
-        for (int i = 0; i < active_kb_count; i++) {
+        for (int i = 0; i < g_x11_keyboard_count; i++) {
             if (fds[i + 1].revents & POLLIN) {
-                bool grabbed = g_device_grabbed[i];
+                bool grabbed = g_x11_device_grabbed[i];
                 while (read(fds[i + 1].fd, &ev, sizeof(struct input_event)) > 0) {
                     Popup* top_for_hotkey = WindowManager_GetTopPopup(wm);
                     if (top_for_hotkey) {
-                        extern bool g_Linux_CtrlHeld, g_Linux_AltHeld, g_Linux_ShiftHeld;
+                        extern bool g_x11_ctrl_held, g_x11_alt_held, g_x11_shift_held;
                         if (ev.type == EV_KEY) {
                             if (ev.code == KEY_LEFTCTRL || ev.code == KEY_RIGHTCTRL) {
-                                if (ev.value == 0) g_Linux_CtrlHeld = false;
-                                else if (ev.value == 1 || ev.value == 2) g_Linux_CtrlHeld = true;
+                                if (ev.value == 0) g_x11_ctrl_held = false;
+                                else if (ev.value == 1 || ev.value == 2) g_x11_ctrl_held = true;
                             } else if (ev.code == KEY_LEFTALT || ev.code == KEY_RIGHTALT) {
-                                if (ev.value == 0) g_Linux_AltHeld = false;
-                                else if (ev.value == 1 || ev.value == 2) g_Linux_AltHeld = true;
+                                if (ev.value == 0) g_x11_alt_held = false;
+                                else if (ev.value == 1 || ev.value == 2) g_x11_alt_held = true;
                             } else if (ev.code == KEY_LEFTSHIFT || ev.code == KEY_RIGHTSHIFT) {
-                                if (ev.value == 0) g_Linux_ShiftHeld = false;
-                                else if (ev.value == 1 || ev.value == 2) g_Linux_ShiftHeld = true;
+                                if (ev.value == 0) g_x11_shift_held = false;
+                                else if (ev.value == 1 || ev.value == 2) g_x11_shift_held = true;
                             }
                             if (ev.code == KEY_LEFTCTRL || ev.code == KEY_RIGHTCTRL) {
-                                if (ev.value == 0) g_linux_ctrl_held = false;
-                                else g_linux_ctrl_held = true;
+                                if (ev.value == 0) g_x11_ctrl_held = false;
+                                else g_x11_ctrl_held = true;
                             } else if (ev.code == KEY_LEFTALT || ev.code == KEY_RIGHTALT) {
-                                if (ev.value == 0) g_linux_alt_held = false;
-                                else g_linux_alt_held = true;
+                                if (ev.value == 0) g_x11_alt_held = false;
+                                else g_x11_alt_held = true;
                             } else if (ev.code == KEY_LEFTSHIFT || ev.code == KEY_RIGHTSHIFT) {
-                                if (ev.value == 0) g_linux_shift_held = false;
-                                else g_linux_shift_held = true;
+                                if (ev.value == 0) g_x11_shift_held = false;
+                                else g_x11_shift_held = true;
                             }
                         }
                         if (ev.type != EV_KEY) {
-                            if (grabbed && g_uinput_fd >= 0) uinput_emit(&ev);
+                            if (grabbed && g_x11_uinput_fd >= 0) uinput_emit(&ev);
                         }
                         continue;
                     }
                     
                     if (ev.type != EV_KEY) {
-                        if (grabbed && g_uinput_fd >= 0) uinput_emit(&ev);
+                        if (grabbed && g_x11_uinput_fd >= 0) uinput_emit(&ev);
                         continue;
                     }
 
@@ -292,34 +298,34 @@ int WindowManager_RunLinux(WindowManager* wm) {
                                     continue;
                                 }
                             }
-                            if (grabbed && g_uinput_fd >= 0) uinput_emit(&ev);
+                            if (grabbed && g_x11_uinput_fd >= 0) uinput_emit(&ev);
                             continue;
                         }
                         if (ev.value == 1) {
-                            if (grabbed && g_uinput_fd >= 0) uinput_emit(&ev);
+                            if (grabbed && g_x11_uinput_fd >= 0) uinput_emit(&ev);
                             continue;
                         }
                     }
 
-                    if (ev.value == 0 && ev.code <= KEY_MAX && g_suppress_release[ev.code]) {
-                        g_suppress_release[ev.code] = false;
+                    if (ev.value == 0 && ev.code <= KEY_MAX && g_x11_suppress_release[ev.code]) {
+                        g_x11_suppress_release[ev.code] = false;
                         continue;
                     }
-                    if (ev.value == 2 && ev.code <= KEY_MAX && g_suppress_release[ev.code]) {
+                    if (ev.value == 2 && ev.code <= KEY_MAX && g_x11_suppress_release[ev.code]) {
                         continue;
                     }
 
                     if (HandleGlobalKeyEvent(ev.code, ev.value)) {
                         if (ev.value == 1 && ev.code <= KEY_MAX) {
-                            g_suppress_release[ev.code] = true;
+                            g_x11_suppress_release[ev.code] = true;
                         } else if (ev.value == 2 && ev.code <= KEY_MAX) {
-                            g_suppress_release[ev.code] = true;
+                            g_x11_suppress_release[ev.code] = true;
                         }
                         continue;
                     }
                     
                     if (grabbed) {
-                        if (g_uinput_fd >= 0) {
+                        if (g_x11_uinput_fd >= 0) {
                             uinput_emit(&ev);
                         } else {
                             static bool warned = false;
@@ -334,20 +340,20 @@ int WindowManager_RunLinux(WindowManager* wm) {
         }
     }
 
-    for (int i = 0; i < active_kb_count; i++) {
-        ioctl(active_kbs[i].fd, EVIOCGRAB, 0);
-        close(active_kbs[i].fd);
+    for (int i = 0; i < g_x11_keyboard_count; i++) {
+        ioctl(g_x11_keyboards[i].fd, EVIOCGRAB, 0);
+        close(g_x11_keyboards[i].fd);
     }
     free(fds);
     destroy_uinput();
 
-    TimerEnd(timer, "window_manager_x11:WindowManager_RunLinux");
+    PROFILE_END_VAR(timer, "window_manager_x11:WindowManager_RunLinux");
     return 0;
 }
 
 void WindowManager_ProcessEventsLinux(WindowManager* wm) {
-    WinTimer timer = TimerStart();
-    if (!wm || !wm->display) { TimerEnd(timer, "window_manager_x11:WindowManager_ProcessEventsLinux"); return; }
+    PROFILE_START(timer);
+    if (!wm || !wm->display) { PROFILE_END_VAR(timer, "window_manager_x11:WindowManager_ProcessEventsLinux"); return; }
     
     Display* dpy = wm->display;
     XEvent ev;
@@ -356,11 +362,11 @@ void WindowManager_ProcessEventsLinux(WindowManager* wm) {
         XNextEvent(dpy, &ev);
         Linux_ProcessXEvent(dpy, &ev, wm);
     }
-    TimerEnd(timer, "window_manager_x11:WindowManager_ProcessEventsLinux");
+    PROFILE_END_VAR(timer, "window_manager_x11:WindowManager_ProcessEventsLinux");
 }
 
 void WindowManager_QuitLinux(WindowManager* wm) {
-    WinTimer timer = TimerStart();
+    PROFILE_START(timer);
     if (wm) wm->running = false;
-    TimerEnd(timer, "window_manager_x11:WindowManager_QuitLinux");
+    PROFILE_END_VAR(timer, "window_manager_x11:WindowManager_QuitLinux");
 }

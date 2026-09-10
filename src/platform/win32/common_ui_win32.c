@@ -1,7 +1,13 @@
 #include "core/context.h"
 #include "core/modal.h"
 #include "config.h"
-#include "helpers.h"
+#include "config.h"
+#include "core/platform.h"
+#include "helpers/hotkey.h"
+#include "helpers/alias.h"
+#include "helpers/flag.h"
+#include "helpers/file.h"
+#include "helpers/ui.h"
 #include "core/common_ui.h"
 #include <math.h>
 #include <windows.h>
@@ -21,22 +27,22 @@ void Win32_ApplyRoundedCorners(HWND hwnd, int w, int h) {
     h = rc.bottom - rc.top;
     if (w <= 0 || h <= 0) return;
   }
-  // Try DWM (Win11) - anti-aliased by compositor
+
   HMODULE dwm = LoadLibraryA("dwmapi.dll");
   if (dwm) {
     HRESULT (WINAPI *pDwmSetWindowAttribute)(HWND, DWORD, LPCVOID, DWORD) = (void*)GetProcAddress(dwm, "DwmSetWindowAttribute");
     if (pDwmSetWindowAttribute) {
-      const int DWMWCP_ROUND = 2; // DWM_WINDOW_CORNER_PREFERENCE round
+      const int DWMWCP_ROUND = 2;
       const DWORD DWMWA_WINDOW_CORNER_PREFERENCE = 33;
       HRESULT hr = pDwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, &DWMWCP_ROUND, sizeof(DWMWCP_ROUND));
       if (SUCCEEDED(hr)) {
         FreeLibrary(dwm);
-        return; // DWM handled, no need for region
+        return;
       }
     }
     FreeLibrary(dwm);
   }
-  // Fallback: region (1-bit but radius small, no dwm)
+
   int radius = CornerRadius;
   if (radius < 0) radius = 0;
   if (radius > 32) radius = 32;
@@ -70,18 +76,18 @@ static unsigned int HashNoiseWin(int x, int y) {
   return h & 0xFF;
 }
 void Win32_DrawSelectionBackground(HDC hdc, RECT* rc, COLORREF base) {
-  WinTimer timer = TimerStart();
+  PROFILE_START(timer);
   const char* name = "sel-solid";
   int w = rc->right - rc->left;
   int h = rc->bottom - rc->top;
-  if (w <= 0 || h <= 0) { TimerEnd(timer, "WinSel solid"); return; }
+  if (w <= 0 || h <= 0) { PROFILE_END_VAR(timer, "WinSel solid"); return; }
   COLORREF light = DeriveLighterWin(base, 1.0f);
   if (!EnableShaders || ShaderPreset == 0) {
     name = "sel-solid";
     HBRUSH br = CreateSolidBrush(base);
     FillRect(hdc, rc, br);
     DeleteObject(br);
-    TimerEnd(timer, name);
+    PROFILE_END_VAR(timer, name);
     return;
   }
   if (ShaderPreset == 1) {
@@ -141,15 +147,15 @@ void Win32_DrawSelectionBackground(HDC hdc, RECT* rc, COLORREF base) {
     FillRect(hdc, rc, br);
     DeleteObject(br);
   }
-  TimerEnd(timer, name);
+  PROFILE_END_VAR(timer, name);
 }
 
 void Win32_DrawBackground(HDC hdc, RECT* rc) {
-  WinTimer timer = TimerStart();
+  PROFILE_START(timer);
   const char* name = "solid";
   int w = rc->right - rc->left;
   int h = rc->bottom - rc->top;
-  if (w <= 0 || h <= 0) { TimerEnd(timer, "WinBg solid"); return; }
+  if (w <= 0 || h <= 0) { PROFILE_END_VAR(timer, "WinBg solid"); return; }
   COLORREF base = COLOR_BG;
   COLORREF light = DeriveLighterWin(base, 1.0f);
   if (!EnableShaders || ShaderPreset == 0) {
@@ -157,10 +163,10 @@ void Win32_DrawBackground(HDC hdc, RECT* rc) {
     HBRUSH br = CreateSolidBrush(base);
     FillRect(hdc, rc, br);
     DeleteObject(br);
-    TimerEnd(timer, name);
+    PROFILE_END_VAR(timer, name);
     return;
   }
-  if (ShaderPreset == 1) { // vertical
+  if (ShaderPreset == 1) {
     name = "vertical";
     for (int y = rc->top; y < rc->bottom; y++) {
       float t = h > 1 ? (float)(y - rc->top) / (float)(h - 1) : 0;
@@ -170,7 +176,7 @@ void Win32_DrawBackground(HDC hdc, RECT* rc) {
       FillRect(hdc, &band, br);
       DeleteObject(br);
     }
-  } else if (ShaderPreset == 3) { // diagonal (per-row approx)
+  } else if (ShaderPreset == 3) {
     name = "diagonal";
     for (int y = rc->top; y < rc->bottom; y++) {
       float t = (float)(y - rc->top) / (float)(h - 1) * 0.7f + 0.5f * 0.3f;
@@ -180,7 +186,7 @@ void Win32_DrawBackground(HDC hdc, RECT* rc) {
       FillRect(hdc, &band, br);
       DeleteObject(br);
     }
-  } else if (ShaderPreset == 2) { // radial
+  } else if (ShaderPreset == 2) {
     name = "radial";
     float cx = w * 0.5f, cy = h * 0.35f;
     float maxDist = sqrtf(cx*cx + cy*cy);
@@ -195,7 +201,7 @@ void Win32_DrawBackground(HDC hdc, RECT* rc) {
         SetPixel(hdc, x, y, col);
       }
     }
-  } else if (ShaderPreset == 4) { // noise
+  } else if (ShaderPreset == 4) {
     name = "noise";
     for (int y = rc->top; y < rc->bottom; y++) {
       float tBase = h > 1 ? (float)(y - rc->top) / (float)(h - 1) : 0;
@@ -217,7 +223,7 @@ void Win32_DrawBackground(HDC hdc, RECT* rc) {
     FillRect(hdc, rc, br);
     DeleteObject(br);
   }
-  TimerEnd(timer, name);
+  PROFILE_END_VAR(timer, name);
 }
 
 void UpdateTextCaret(WindowHandle hwndEditControl)

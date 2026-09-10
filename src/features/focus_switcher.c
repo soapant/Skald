@@ -51,7 +51,7 @@ static bool GetX11WindowPropertyString(Display* dpy, Window w, Atom prop, char* 
     return false;
 }
 
-// Helper to recursively collect all client windows on Linux
+
 static void GetX11ClientWindows(Display* dpy, Window w, Window** list, int* count, int* capacity) {
     Window root, parent;
     Window* children;

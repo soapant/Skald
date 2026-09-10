@@ -71,7 +71,7 @@ void TriggerMuteState(void) {
         }
     }
 #else
-    // Not Implemented
+
 #endif
 }
 

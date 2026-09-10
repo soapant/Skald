@@ -5,7 +5,13 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "helpers.h"
+#include "config.h"
+#include "core/platform.h"
+#include "helpers/hotkey.h"
+#include "helpers/alias.h"
+#include "helpers/flag.h"
+#include "helpers/file.h"
+#include "helpers/ui.h"
 #include "core/timer.h"
 #include "core/common_ui.h"
 
@@ -137,7 +143,7 @@ HotkeyBinding convert_into_hotkey_binding(char* hotkey_string, void (*on_hotkey_
     bool ends_with_plus = false;
     if (len > 2 && buffer[len-1] == '+' && buffer[len-2] == '+') {
         ends_with_plus = true;
-        buffer[len-2] = '\0'; // Chop off the delimiter and key so strtok stops early
+        buffer[len-2] = '\0';
     }
 
     char* token = strtok(buffer, "+");
@@ -171,7 +177,7 @@ HotkeyBinding convert_into_hotkey_binding(char* hotkey_string, void (*on_hotkey_
     }
 
     if (ends_with_plus) {
-        out_key = VK_OEM_PLUS; // Explicit override if manual trailing plus check triggered
+        out_key = VK_OEM_PLUS;
     }
 
     output.vk_code = out_key;
@@ -186,10 +192,10 @@ HotkeyBinding convert_into_hotkey_binding(char* hotkey_string, void (*on_hotkey_
         output.blacklist_count = cnt;
 
         if (cnt > 0) {
-            // Allocate heap space for the pointers
+
             output.blacklist = malloc(sizeof(char*) * cnt);
             for (int i = 0; i < cnt; i++) {
-                // Duplicate strings so they survive macro termination
+
                 output.blacklist[i] = strdup(optional_blacklistedwindows[i]);
             }
         } else {
@@ -276,5 +282,4 @@ void StringList_Free(StringList *list)
     list->items = NULL;
     list->count = 0;
 }
-
 

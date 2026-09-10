@@ -7,8 +7,8 @@
 #define EDIT_TEXT_KEY       'E'
 #define HELP_SCREEN_KEY     'H'
 #define COPY_SELECTION_KEY  'Y'
-#define COMMAND_MODE_KEY        VK_OEM_1 // ;
-#define SEARCH_PROGRAM_KEY      VK_OEM_2 // /
+#define COMMAND_MODE_KEY        VK_OEM_1
+#define SEARCH_PROGRAM_KEY      VK_OEM_2
 #define COLOR_ERROR             RGB(180, 0, 0) 
 #define COLOR_NORMAL            RGB(200, 200, 0) 
 #define COLOR_TIP               RGB(0, 160, 0)
@@ -25,11 +25,11 @@ extern bool DoTimeDebugs;
 extern bool RoundedCorners;
 extern int CornerRadius;
 extern bool EnableShaders;
-extern int ShaderPreset; // 0 solid, 1 vertical, 2 radial, 3 diagonal, 4 noise
+extern int ShaderPreset;
 extern bool EnableSelectionShaders;
-extern int SelectionShaderPreset; // 0 solid, 1 vertical, 2 radial, 3 diagonal, 4 noise
+extern int SelectionShaderPreset;
 extern float ShaderIntensity;
-extern float ShaderSmoothness; // 0.2 blocky -> 5.0 ultra smooth, 1.0 = full window spread
+extern float ShaderSmoothness;
 extern char* EditPopUpPos;
 extern int EditPopUpWidthMin;
 extern int PageUpDownLen;

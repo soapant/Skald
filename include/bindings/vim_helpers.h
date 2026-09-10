@@ -1,4 +1,4 @@
-// vim_helpers.h
+
 #ifndef VIM_HELPERS_H
 #define VIM_HELPERS_H
 

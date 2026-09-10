@@ -57,11 +57,11 @@ void StartNtfyDaemon(const wchar_t* topic, NtfyCallback callback) {
     CreateThread(NULL, 0, NtfyListenerThread, config, 0, NULL);
 }
 #else
-// Not Implemented
+
 typedef void (*NtfyCallback)(const char*);
 static inline void StartNtfyDaemon(const wchar_t* topic, NtfyCallback callback) { (void)topic; (void)callback; }
 #endif
 
 FLINT_FEATURE_INIT {
-    // no auto init for notification_getter.h
+
 }

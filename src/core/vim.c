@@ -217,9 +217,9 @@ VimContext Vim_FromEditState(SimplePromptState* state) {
     return ctx;
 }
 
-// ---------------------------------------------------------------------------
-// Key sequences
-// ---------------------------------------------------------------------------
+
+
+
 
 #if defined(_WIN32)
 static void CALLBACK SequenceTimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime) {

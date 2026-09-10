@@ -11,7 +11,7 @@
 #include "helpers/flag.h"
 #include "core/common_ui.h"
 
-//temporary does nothing 
+
 char* Platform_EditTextPopup(const char* a, int b, int c, int d, int e) { (void)a;(void)b;(void)c;(void)d;(void)e; return NULL; }
 char* Platform_SearchPopup(void) { return NULL; }
 
@@ -46,7 +46,7 @@ char* Platform_PromptUser(const PromptSpec* spec) {
   HINSTANCE hInstance = GetModuleHandle(NULL);
   FlintContext_Get()->window.selection_complete = false;
   FlintContext_Get()->window.output_buffer[0] = '\0';
-  WinTimer timer = TimerStart();
+  PROFILE_START(timer);
 
   ListBoxInfo* lb_ptr = NULL;
   bool has_listbox = (count >= 0);
@@ -111,21 +111,21 @@ char* Platform_PromptUser(const PromptSpec* spec) {
   SetWindowLongPtrA(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), GWLP_USERDATA, (LONG_PTR)(lb_ptr));
   Win32_ApplyRoundedCorners(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), layout.w, layout.h);
 
-  TimerEnd(timer,"Window Init");
+  PROFILE_END_VAR(timer, "Window Init");
 
-  WinTimer timer1 = TimerStart();
+  PROFILE_START(timer1);
 
   CreateChildControls(FlintContext_Get()->window.hPopupWnd, hCustomFont, window_list, count, &layout, lb_ptr);
 
-  TimerEnd(timer1,"CreateChildControl");
+  PROFILE_END_VAR(timer1, "CreateChildControl");
 
-  WinTimer timer2 = TimerStart();
+  PROFILE_START(timer2);
 
   SetLayeredWindowAttributes(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), 0, WindowOpacity, LWA_ALPHA);
 
-  TimerEnd(timer2,"WindowBs");
+  PROFILE_END_VAR(timer2, "WindowBs");
 
-  WinTimer timer3 = TimerStart();
+  PROFILE_START(timer3);
 
   if (IsNormalMode() && RememberLastIndex && last_index >= 0 && has_listbox) {
     RequestInitialNavigation(last_index);
@@ -134,7 +134,7 @@ char* Platform_PromptUser(const PromptSpec* spec) {
   ForceWindowFocus(FlintContext_Get()->window.hPopupWnd, FlintContext_Get()->window.hEditControl);
 
 
-  TimerEnd(timer3,"Focus");
+  PROFILE_END_VAR(timer3, "Focus");
 
   printf("[DEBUG-UI] Entering local message modal loop...\n");
   MSG msg;
@@ -477,11 +477,11 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
     if (shift_down) modifiers |= HOTKEY_MOD_SHIFT;
     if (ctrl_down) modifiers |= HOTKEY_MOD_CTRL;
 
-    WinTimer timer = TimerStart();
+    PROFILE_START(timer);
     if (hotkey_process(pressed_vk, modifiers)) {
       return 1;
     }
-    TimerEnd(timer, "ProcessHotkey");
+    PROFILE_END_VAR(timer, "ProcessHotkey");
 
     if (shift_down && !IsInsertMode() && WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) != NULL) {
       if (WH_TO_HWND(FlintContext_Get()->window.g_hEditPopup) == NULL) {
@@ -501,16 +501,16 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
       }
     }
 
-    WinTimer timer2 = TimerStart();
+    PROFILE_START(timer2);
     if (ctrl_down) {
       if (pressed_vk == HELP_SCREEN_KEY) {
         if (FlintContext_Get()->prompt_callbacks.help != NULL) {
           FlintContext_Get()->prompt_callbacks.help();
-          TimerEnd(timer2, "HelpScreen");
+          PROFILE_END_VAR(timer2, "HelpScreen");
         }
       }
     }
-    TimerEnd(timer2, "HelpScreenCheck");
+    PROFILE_END_VAR(timer2, "HelpScreenCheck");
 
     int matchedDelay = 0;
 
@@ -518,27 +518,27 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
     const char* matchedSequence = NULL;
     int typedCount = 0;
 
-    WinTimer timer3 = TimerStart();
+    PROFILE_START(timer3);
 
     if (IsNormalMode()) {
       if (FlintContext_Get()->g_waiting_for_key) {
         FlintContext_Get()->g_waiting_for_key = false;
         if (FlintContext_Get()->g_key_callback) {
           FlintContext_Get()->g_key_callback(pKeyInfo->vkCode);
-          TimerEnd(timer3, "KeyCallback");
+          PROFILE_END_VAR(timer3, "KeyCallback");
         }
         return 1;
       }       
     }
-    TimerEnd(timer3, "NormalModeCheck");
+    PROFILE_END_VAR(timer3, "NormalModeCheck");
 
-    WinTimer timer4 = TimerStart();
+    PROFILE_START(timer4);
     if (CheckVimMotion(pressed_vk, modifiers, &vimAction, &matchedSequence, &typedCount)) {
       ExecuteMotion(vimAction, matchedSequence, typedCount);
-      TimerEnd(timer4, "ExecuteMotion");
+      PROFILE_END_VAR(timer4, "ExecuteMotion");
       return 1;
     }
-    TimerEnd(timer4, "CheckVimMotion");
+    PROFILE_END_VAR(timer4, "CheckVimMotion");
 
 
   }

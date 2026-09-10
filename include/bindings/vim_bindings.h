@@ -1,4 +1,4 @@
-// vim_bindings.h
+
 #ifndef VIM_BINDINGS_H
 #define VIM_BINDINGS_H
 

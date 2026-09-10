@@ -46,7 +46,7 @@ void TriggerPosCopy(void) {
         fl_copy_to_clipboard(coords_buf);
     }
 #else
-    // Not Implemented
+
 #endif
 }
 
@@ -59,7 +59,7 @@ void TriggerPosAdd(void) {
         fl_append_unique_line(TEMP_FILE_PATH, coords_buf);
     }
 #else
-    // Not Implemented
+
 #endif
 }
 
@@ -126,7 +126,7 @@ void TriggerRegionCoords(void) {
         region_step = 0;
     }
 #else
-    // Not Implemented
+
 #endif
 }
 
@@ -156,7 +156,7 @@ void TriggerRegionImage(void) {
         }
     }
 #else
-    // Not Implemented
+
 #endif
 }
 

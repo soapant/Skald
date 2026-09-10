@@ -2,7 +2,13 @@
 #include "core/modal.h"
 #include "core/number_shortcut.h"
 #include "core/common_ui.h"
-#include "helpers.h"
+#include "config.h"
+#include "core/platform.h"
+#include "helpers/hotkey.h"
+#include "helpers/alias.h"
+#include "helpers/flag.h"
+#include "helpers/file.h"
+#include "helpers/ui.h"
 
 
 static struct {

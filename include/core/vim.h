@@ -4,11 +4,11 @@
 #include <stddef.h>
 #include <stdbool.h>
 
-// Unified vim state access.
-// A VimContext points at whichever text surface is active
-// (edit popup, prompt filter, simple prompt, or raw Win32 edit control).
-// All mode state lives in globals managed by core/modal.c,
-// all key-sequence state lives in g_seq_state.
+
+
+
+
+
 
 typedef struct {
     ListBoxInfo* lb;
@@ -28,7 +28,7 @@ VimContext Vim_FromState(PromptState* state);
 VimContext Vim_FromSimpleState(SimplePromptState* state);
 VimContext Vim_FromEditState(SimplePromptState* state);
 
-// Key sequences (multi-key chords like di( )
+
 void SequenceAddKey(char key, bool was_typed);
 void SequenceReset(void);
 int SequenceLen(void);
