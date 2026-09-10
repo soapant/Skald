@@ -6,6 +6,7 @@
 #include "core/flapi.h"
 #include "core/feature_loader.h"
 #include "core/window_manager.h"
+#include "core/timer.h"
 #if !defined(_WIN32)
 #include <pthread.h>
 #include <unistd.h>
@@ -34,7 +35,6 @@ int main() {
     FILE* tf = fopen("time_logs.txt", "w");
     if (!tf) tf = fopen("/home/diggy/Programming/Projects/Flint/time_logs.txt", "w");
     if (tf) { fprintf(tf, "=== Flint time_logs started ===\n"); fclose(tf); }
-    extern void TimerBufferFlush(void);
     atexit(TimerBufferFlush);
   }
 #if !defined(_WIN32)

@@ -8,6 +8,7 @@
 #include "helpers/flag.h"
 #include "core/common_ui.h"
 #include "core/vim.h"
+#include "platform/x11/input.h"
 #include "bindings/bindings.h"
 #include "bindings/vim_motions.h"
 #include "bindings/vim_helpers.h"
