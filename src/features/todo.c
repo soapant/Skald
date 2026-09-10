@@ -568,7 +568,7 @@ void TriggerTodo(void) {
     const char* ui_list[100];
     int count = fl_load_file_list(TODO_FILE_PATH, ui_list, 100);
 
-    char* selected_item = PROMPT(
+    PROMPT(
         .title = "📝 Todo", .items = ui_list, .count = count,
         .height = 920, .width = 650, .item_height = 56,
         .refresh = todo_refresh_callback,
@@ -577,6 +577,7 @@ void TriggerTodo(void) {
         .copy = todo_copy_callback,
         .render = todo_render_callback,
         .edit = todo_edit_callback);
+
     fl_free_file_list(ui_list, count);
 }
 

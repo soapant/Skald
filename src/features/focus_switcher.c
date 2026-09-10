@@ -22,9 +22,6 @@ static const char* focus_blacklist_terminal[] = {"CrosshairX"};
 static const char* terminal_windows[] = {"alacritty","pwsh","foot"};
 
 
-
-
-
 #if !defined(_WIN32)
 static bool GetX11WindowPropertyString(Display* dpy, Window w, Atom prop, char* buf, int max_len) {
     Atom actual_type;
@@ -259,7 +256,6 @@ static WindowHandle FindAnyWindow(const char* titles[], int count) {
                 break;
             }
         }
-        if (WH_TO_HWND(found) != NULL) break;
     }
 
     free(windows);
