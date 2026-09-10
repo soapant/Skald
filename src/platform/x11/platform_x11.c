@@ -1185,7 +1185,8 @@ int Platform_GetIconSize(char* icon_path) {
 char* Platform_GetIconPath(char* desktop_or_icon) {
     if (!desktop_or_icon) return NULL;
     if (desktop_or_icon[0]=='/' && strchr(desktop_or_icon, '.') && access(desktop_or_icon, F_OK)==0) {
-        if (strstr(desktop_or_icon, ".png") || strstr(desktop_or_icon, ".svg") || strstr(desktop_or_icon, ".xpm")) return strdup(desktop_or_icon);
+        if (strstr(desktop_or_icon, ".png")) return strdup(desktop_or_icon);
+        // svg/xpm fall through to placeholder (draw_icon_png is png-only)
     }
     char icon_name[512]={0};
     if (strstr(desktop_or_icon, ".desktop")) {
@@ -1201,11 +1202,25 @@ char* Platform_GetIconPath(char* desktop_or_icon) {
             }
             fclose(f);
         }
-        if (!icon_name[0]) return NULL;
+        if (!icon_name[0]) {
+            // no Icon= in .desktop, use placeholder
+            const char* home_ph0 = Platform_GetRealHome();
+            if (!home_ph0 || !home_ph0[0]) home_ph0 = getenv("HOME");
+            char ph_path[1024];
+            if (home_ph0 && home_ph0[0]) {
+                snprintf(ph_path,sizeof(ph_path),"%s/Programming/Projects/Flint/resources/Placholder.png",home_ph0);
+                if(access(ph_path,F_OK)==0) return strdup(ph_path);
+            }
+            snprintf(ph_path,sizeof(ph_path),"/home/diggy/Programming/Projects/Flint/resources/Placholder.png");
+            return strdup(ph_path);
+        }
     } else {
         strncpy(icon_name, desktop_or_icon, sizeof(icon_name)-1);
     }
-    if (icon_name[0]=='/' && access(icon_name, F_OK)==0) return strdup(icon_name);
+    if (icon_name[0]=='/' && access(icon_name, F_OK)==0) {
+        if (strstr(icon_name, ".png")) return strdup(icon_name);
+        // svg/xpm -> fallback to placeholder (png-only renderer)
+    }
     char bare[512]; strncpy(bare, icon_name, sizeof(bare)-1);
     char* dot=strrchr(bare,'.'); if(dot && (strcmp(dot,".png")==0||strcmp(dot,".svg")==0||strcmp(dot,".xpm")==0)) *dot='\0';
     const char* sizes[]={"32x32","48x48","64x64","128x128","256x256","scalable",NULL};
@@ -1220,8 +1235,6 @@ char* Platform_GetIconPath(char* desktop_or_icon) {
             while(*sz==' ') sz++;
             snprintf(path,sizeof(path),"%s/.local/share/icons/hicolor/%s/apps/%s.png",home,sz,bare);
             if(access(path,F_OK)==0) { strncpy(found,path,sizeof(found)-1); return found; }
-            snprintf(path,sizeof(path),"%s/.local/share/icons/hicolor/%s/apps/%s.svg",home,sz,bare);
-            if(access(path,F_OK)==0) { strncpy(found,path,sizeof(found)-1); return found; }
         }
     }
     for(int b=0;bases[b];b++){
@@ -1231,23 +1244,24 @@ char* Platform_GetIconPath(char* desktop_or_icon) {
             while(*sz==' ') sz++;
             snprintf(path,sizeof(path),"%s/%s/apps/%s.png",bases[b],sz,bare);
             if(access(path,F_OK)==0) { strncpy(found,path,sizeof(found)-1); return found; }
-            snprintf(path,sizeof(path),"%s/%s/apps/%s.svg",bases[b],sz,bare);
-            if(access(path,F_OK)==0) { strncpy(found,path,sizeof(found)-1); return found; }
-            snprintf(path,sizeof(path),"%s/%s.svg",bases[b],bare);
-            if(access(path,F_OK)==0) { strncpy(found,path,sizeof(found)-1); return found; }
             snprintf(path,sizeof(path),"%s/%s.png",bases[b],bare);
             if(access(path,F_OK)==0) { strncpy(found,path,sizeof(found)-1); return found; }
         }
         char direct[1024]; snprintf(direct,sizeof(direct),"%s/%s.png",bases[b],bare);
         if(access(direct,F_OK)==0) { strncpy(found,direct,sizeof(found)-1); return found; }
-        snprintf(direct,sizeof(direct),"%s/%s.svg",bases[b],bare);
-        if(access(direct,F_OK)==0) { strncpy(found,direct,sizeof(found)-1); return found; }
     }
     char pix[1024]; snprintf(pix,sizeof(pix),"/usr/share/pixmaps/%s.png",bare);
     if(access(pix,F_OK)==0) { strncpy(found,pix,sizeof(found)-1); return found; }
-    snprintf(pix,sizeof(pix),"/usr/share/pixmaps/%s.svg",bare);
-    if(access(pix,F_OK)==0) { strncpy(found,pix,sizeof(found)-1); return found; }
-    return "~/Programming/Projects/Flint/resources/Placholder.png";
+    const char* home_ph = Platform_GetRealHome();
+    if (!home_ph || !home_ph[0]) home_ph = getenv("HOME");
+    if (home_ph && home_ph[0]) {
+        snprintf(found,sizeof(found),"%s/Programming/Projects/Flint/resources/Placholder.png",home_ph);
+        if(access(found,F_OK)==0) return found;
+        snprintf(found,sizeof(found),"%s/resources/Placholder.png",home_ph);
+        if(access(found,F_OK)==0) return found;
+    }
+    snprintf(found,sizeof(found),"/home/diggy/Programming/Projects/Flint/resources/Placholder.png");
+    return found;
 }
 
 

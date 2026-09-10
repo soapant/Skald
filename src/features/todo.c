@@ -448,16 +448,12 @@ void todo_render_callback(Display *dpy, Window *win, PromptState *state) {
         char tags[10][64];
         int tag_count = 0;
         ParseTodoLine(text_buf, main_text, tags, &tag_count);
-        char num_buf[MaxFeatures];
-        snprintf(num_buf, sizeof(num_buf), "%d.", idx + 1);
 
         unsigned long fg_raw = rgb_to_hex(GetRainbowColor((float)(idx % GradientItems) / (float)GradientItems, 0.85f, GradientBrightness));
         
         XRenderColor rcf = { (fg_raw >> 16 & 0xFF) * 0x101, (fg_raw >> 8 & 0xFF) * 0x101, (fg_raw & 0xFF) * 0x101, 0xFFFF };
         XftColor fg_color;
         XftColorAllocValue(dpy, vis, cmap, &rcf, &fg_color);
-
-        draw_wrapped_text(dpy, xd, &fg_color, font, num_buf, y + 4, "LEFT", 10);
 
         int XOffset = 10;
         draw_wrapped_text(dpy, xd, &fg_color, font, main_text, y + 4, "LEFT",XOffset);
