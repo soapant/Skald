@@ -311,31 +311,17 @@ bool fl_string_match_insensitive(char* needle,char* haystack) {
     return Platform_StringContainsCaseInsensitive(needle,haystack);
 }
 bool fl_launch_browser_window(char* url) {
-  if (!url) return false;
-  return Platform_LaunchBrowserAtUrl(url,true);
+    if (!url) return false;
+    return Platform_LaunchBrowserAtUrl(url,true);
 }
 
 bool fl_launch_browser(char* url) {
-  if (!url) return false;
-  return Platform_LaunchBrowserAtUrl(url,false);
+    if (!url) return false;
+    return Platform_LaunchBrowserAtUrl(url,false);
 }
 bool fl_query_browser(const char* query) {
     if (!query) return false;
     return Platform_QueryBrowser(query);
-}
-
-bool fl_click(int x,int y) {
-  return Platform_ClickAtPos(x,y);
-
-}
-bool fl_move(int x,int y) {
-
-}
-FlColor fl_get_color(int x,int y) {
-
-}
-bool fl_compare_color(FlColor color,int x,int y) {
-
 }
 
 char* fl_on_dir_changed(char* dir_path, void (*callback)(void)) {

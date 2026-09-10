@@ -1,6 +1,6 @@
 #include "core/flapi.h"
 
-const char* bkp_windows[] = {"Brawlhalla","Fortnite","RocketLeague","Factorio","Steam"};
+const char* bkp_windows[] = {"Brawlhalla","Fortnite","RocketLeague","Factorio","Steam","Wine"};
 
 char PK_LIST[256][128];
 int PK_COUNT = 0;
