@@ -2,45 +2,12 @@
 
 void AddTextToFile(const char* text) {
     if (!text || strlen(text) == 0) return;
-    
-    const char* lines[100];
-    int count = fl_load_file_list(FORGETFULL_FILE_PATH, lines, 100);
-    
-    char new_entry[512];
-    new_entry[0] = '\0';
-    strncpy(new_entry, text, sizeof(new_entry) - 1);
-    
-    const char* to_write[101];
-    for (int i = 0; i < count; i++) to_write[i] = lines[i];
-    to_write[count] = new_entry;
-    fl_write_to_file(FORGETFULL_FILE_PATH, to_write, count + 1);
-    fl_free_file_list(lines, count);
+    fl_append_unique_line(FORGETFULL_FILE_PATH, text);
 }
 
 void RemoveTextFromFile(const char* item_to_remove) {
     if (!item_to_remove) return;
-    const char* lines[100];
-    int count = fl_load_file_list(FORGETFULL_FILE_PATH, lines, 100);
-    if (count == 0) return;
-    const char* kept[100];
-    int kept_count = 0;
-    char clean_item[512];
-    strncpy(clean_item, item_to_remove, sizeof(clean_item) - 1);
-    clean_item[sizeof(clean_item) - 1] = '\0';
-    clean_item[strcspn(clean_item, "\r\n")] = '\0';
-    for (int i = 0; i < count; i++) {
-        char clean_line[512];
-        strncpy(clean_line, lines[i], sizeof(clean_line) - 1);
-        clean_line[sizeof(clean_line) - 1] = '\0';
-        clean_line[strcspn(clean_line, "\r\n")] = '\0';
-        if (strcmp(clean_line, clean_item) == 0) {
-            printf("[FORGETFULL-MGR] Dropped file line item: \"%s\"\n", item_to_remove);
-            continue;
-        }
-        kept[kept_count++] = lines[i];
-    }
-    fl_write_to_file(FORGETFULL_FILE_PATH, kept, kept_count);
-    fl_free_file_list(lines, count);
+    fl_remove_line(FORGETFULL_FILE_PATH, item_to_remove);
 }
 
 void forgetfull_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
