@@ -1202,7 +1202,7 @@ typedef struct {
 NameToPath supported_names_to_paths[] =  {
   {"sway","/home/diggy/Programming/Projects/Flint/resources/Sway.svg"},
   {"anki","/home/diggy/Programming/Projects/Flint/resources/Anki.png"},
-  {"pinecone","/home/diggy/Programming/Projects/Flint/resources/ElyPrismLauncher.png"},
+  {"xdg-desktop-portal-gtk","/home/diggy/Programming/Projects/Flint/resources/xdg-desktop-portal-gtk.png"},
 };
 
 
