@@ -15,27 +15,31 @@
 #include "core/timer.h"
 
 
-bool fl_get_all_files_from_dir_platform(const char* dir_path, char** list_of_allowed_extensions, ListOfFiles* list_of_files, char** list_of_names_to_ignore) {
+bool fl_get_all_files_from_dir_platform(const char* dir_path, char** list_of_allowed_extensions,
+                                        ListOfFiles* list_of_files, char** list_of_names_to_ignore) {
     WinTimer timer = TimerStart();
-    
+
     if (!dir_path || !list_of_files) {
         TimerEnd(timer, "flapi_x11:fl_get_all_files_from_dir_platform");
         return false;
     }
-    
+
     DIR* dir = opendir(dir_path);
     if (!dir) {
         perror("opendir");
         TimerEnd(timer, "flapi_x11:fl_get_all_files_from_dir_platform");
         return false;
     }
-    
+
     struct dirent* entry;
     int entry_count = 0;
+
     while ((entry = readdir(dir)) != NULL) {
         entry_count++;
-        
-        if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
+
+        if (entry->d_name[0] == '.' &&
+            (entry->d_name[1] == '\0' ||
+             (entry->d_name[1] == '.' && entry->d_name[2] == '\0'))) {
             continue;
         }
 
@@ -58,7 +62,8 @@ bool fl_get_all_files_from_dir_platform(const char* dir_path, char** list_of_all
                 }
             }
             if (!should_ignore) {
-                bool result = fl_get_all_files_from_dir_platform(full_path, list_of_allowed_extensions, list_of_files, list_of_names_to_ignore);
+                fl_get_all_files_from_dir_platform(full_path, list_of_allowed_extensions,
+                                                   list_of_files, list_of_names_to_ignore);
             }
         } else {
             bool allowed = true;
@@ -68,42 +73,54 @@ bool fl_get_all_files_from_dir_platform(const char* dir_path, char** list_of_all
                 if (ext) {
                     ext++;
                     for (int i = 0; list_of_allowed_extensions[i] != NULL; i++) {
-                        if (Platform_StringContainsCaseInsensitive(ext, list_of_allowed_extensions[i])) {
+                        if (strcasecmp(ext, list_of_allowed_extensions[i]) == 0) {
                             allowed = true;
                             break;
                         }
                     }
                 }
-            } 
+            }
 
             if (allowed) {
                 if (list_of_files->count >= list_of_files->capacity) {
                     size_t new_capacity = list_of_files->capacity == 0 ? 10 : list_of_files->capacity * 2;
-                    list_of_files->capacity = new_capacity;
-                    list_of_files->items = realloc(list_of_files->items, list_of_files->capacity * sizeof(FileItem));
-                    if (!list_of_files->items) {
+
+                    FileItem* new_items = realloc(list_of_files->items, new_capacity * sizeof(FileItem));
+                    if (!new_items) {
                         closedir(dir);
                         TimerEnd(timer, "flapi_x11:fl_get_all_files_from_dir_platform");
                         return false;
                     }
+                    list_of_files->items    = new_items;
+                    list_of_files->capacity = new_capacity;
                 }
 
                 FileItem* item = &list_of_files->items[list_of_files->count];
-                strncpy(item->path, full_path, sizeof(item->path) - 1);
-                item->path[sizeof(item->path) - 1] = '\0';
+
+                size_t plen = strlen(full_path);
+                if (plen >= sizeof(item->path)) plen = sizeof(item->path) - 1;
+                memcpy(item->path, full_path, plen);
+                item->path[plen] = '\0';
 
                 char clean_name[256];
-                strncpy(clean_name, entry->d_name, sizeof(clean_name) - 1);
-                clean_name[sizeof(clean_name) - 1] = '\0';
+                size_t nlen = strlen(entry->d_name);
+                if (nlen >= sizeof(clean_name)) nlen = sizeof(clean_name) - 1;
+                memcpy(clean_name, entry->d_name, nlen);
+                clean_name[nlen] = '\0';
+
                 char* dot = strrchr(clean_name, '.');
                 if (dot) *dot = '\0';
-                strncpy(item->name, clean_name, sizeof(item->name) - 1);
-                item->name[sizeof(item->name) - 1] = '\0';
+
+                size_t clen = strlen(clean_name);
+                if (clen >= sizeof(item->name)) clen = sizeof(item->name) - 1;
+                memcpy(item->name, clean_name, clen);
+                item->name[clen] = '\0';
 
                 list_of_files->count++;
-            } 
+            }
         }
     }
+
     closedir(dir);
     TimerEnd(timer, "flapi_x11:fl_get_all_files_from_dir_platform");
     return true;

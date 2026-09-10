@@ -2,6 +2,8 @@ import os
 
 lines = 0
 for root, _, files in os.walk("."):
+    if "deps" in root:
+        continue
     for file in files:
         if file.endswith((".c", ".h")):
             if "nob" in file:
