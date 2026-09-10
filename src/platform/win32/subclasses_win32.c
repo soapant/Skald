@@ -538,18 +538,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             
             SetBkMode(pdis->hDC, TRANSPARENT);
             RECT textRect = pdis->rcItem;
-            
-            if (pdis->itemID < MAX_VISIBLE_ITEMS) {
-              RECT numRect = pdis->rcItem;
-                numRect.left += 5;
-                numRect.right = numRect.left + 25;
-                if (AlternatingText && (pdis->itemID % 2 == 0)) SetTextColor(pdis->hDC, COLOR_ALTERNATE);
-                else {
-                    float _t = (lb && lb->populated_count>1) ? (float)pdis->itemID/(float)(lb->populated_count-1) : (float)(pdis->itemID%GradientItems)/(float)GradientItems;
-                    SetTextColor(pdis->hDC, GetRainbowColor(_t, 0.85f, GradientBrightness));
-                }
-                textRect.left += 35;
-            }
+            textRect.left += 10;
           
             if (FlintContext_Get()->prompt_callbacks.render != NULL) {
               FlintContext_Get()->prompt_callbacks.render(pdis->hDC, textBuffer, &textRect, isSelected, pdis->itemID);

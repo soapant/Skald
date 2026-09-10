@@ -378,7 +378,7 @@ void todo_render_callback(Display *dpy, Window *win, PromptState *state) {
     XftDraw* xd = Linux_CreateXftDraw(dpy, *win);
     FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
     
-    int y0 = 100;
+    int y0 = 70;
     int itemH = FontSize + 36; 
 
     {
@@ -394,7 +394,7 @@ void todo_render_callback(Display *dpy, Window *win, PromptState *state) {
             };
             XftColor c0; 
             XftColorAllocValue(dpy, visClear, cmapClear, &rc0, &c0);
-            XftDrawRect(xd, &c0, 0, y0, state->width, state->height - y0);
+            XftDrawRect(xd, &c0, 0, y0, state->width, state->height - y0 - 40);
             XftColorFree(dpy, visClear, cmapClear, &c0);
         }
     }
@@ -405,7 +405,7 @@ void todo_render_callback(Display *dpy, Window *win, PromptState *state) {
         return;
     }
 
-    int visible = (state->height - y0) / itemH;
+    int visible = (state->height - y0 - 40) / itemH;
     if (visible < 1) visible = 1;
     if (visible > lb->populated_count) visible = lb->populated_count;
 
