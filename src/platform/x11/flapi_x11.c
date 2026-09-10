@@ -299,3 +299,4 @@ char* fl_search_file_in_dir_platform(const char* directory, const char* search_s
     TimerEnd(timer, "flapi_x11:fl_search_file_in_dir_platform");
     return NULL;
 }
+
