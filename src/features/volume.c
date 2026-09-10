@@ -84,20 +84,12 @@ int GetSystemVolume(void) {
                  display, runtime_dir);
     }
 
-    FILE* fp = popen(cmd, "r");
-    if (!fp) return 0;
-
-    char output[128] = {0};
-    if (fgets(output, sizeof(output), fp) != NULL) {
-        pclose(fp);
-        float vol = 0.0f;
-        if (sscanf(output, "Volume: %f", &vol) == 1) {
-            return (int)(vol * 100.0f + 0.5f);
-        }
-    } else {
-        pclose(fp);
-    }
-    return 0;
+    char* out = fl_run_terminal_command(cmd);
+    if (!out) return 0;
+    float vol = 0.0f;
+    int ret = 0;
+    if (sscanf(out, "Volume: %f", &vol) == 1) ret = (int)(vol * 100.0f + 0.5f);
+    return ret;
 }
 
 void SetSystemVolume(float volume) {
@@ -117,7 +109,7 @@ void SetSystemVolume(float volume) {
                  display, runtime_dir, "%", volume);
     }
 
-    system(cmd);
+    fl_run_terminal_command(cmd);
 }
 
 #endif

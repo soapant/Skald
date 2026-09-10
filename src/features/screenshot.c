@@ -22,16 +22,15 @@ static void TriggerScreenshot(WindowHandle hPopupWnd,bool open_screenshot) {
         Platform_SaveRegionToPNG((int)img_x1, (int)img_y1, (int)img_x2, (int)img_y2, final_file_path);
         printf("[SCREENSHOT] Saved: %s\n", final_file_path);
         if (open_screenshot) {
-          char open_cmd[1024];
 #if defined(_WIN32)
           char expanded_editor[MAX_PATH];
           if (!Platform_ExpandPath(ImageEditorPath, expanded_editor, sizeof(expanded_editor))) return;
-          snprintf(open_cmd, sizeof(open_cmd), "start %s \"%s\"", expanded_editor, final_file_path);
+          fl_launch_with_args(expanded_editor, final_file_path);
+          printf("[SCREENSHOT] Opening in editor: %s\n", final_file_path);
 #else
-          snprintf(open_cmd, sizeof(open_cmd), "xdg-open \"%s\"", final_file_path);
+          fl_launch_with_args(final_file_path, NULL);
+          printf("[SCREENSHOT] Opening: %s\n", final_file_path);
 #endif
-          system(open_cmd);
-          printf("[SCREENSHOT] Opening in editor: %s\n", open_cmd);
         }
     } else {
         printf("[SCREENSHOT] Aborted (no name provided)\n");

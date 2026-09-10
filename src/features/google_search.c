@@ -38,7 +38,7 @@ void google_edit_callback(const char* selection, ListBoxInfo* lb) {
 
 bool google_enter_callback(const char* selection, ListBoxInfo* lb) {
     if (!UI_IsListBoxSelected(lb)) {
-        fl_append_to_file(GoogleHistoryFile, selection);
+        fl_append_unique_line(GoogleHistoryFile, selection);
     }
     fl_query_browser(selection);
     return true;

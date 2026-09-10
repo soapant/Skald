@@ -35,10 +35,10 @@ void SetMonitorBright(int brightness) {
     char cmd[256];
     snprintf(cmd, sizeof(cmd), "brightnessctl set %d%% > /dev/null 2>&1", brightness);
     
-    int ret = system(cmd);
-    if (ret != 0) {
+    char* out = fl_run_terminal_command(cmd);
+    if (!out) {
         snprintf(cmd, sizeof(cmd), "ddcutil setvcp 10 %d > /dev/null 2>&1", brightness);
-        system(cmd);
+        fl_run_terminal_command(cmd);
     }
 #endif
 }

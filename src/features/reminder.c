@@ -295,7 +295,7 @@ void StartReminder(const char* selection) {
 }
 
 bool reminder_enter_callback(const char* selection, ListBoxInfo* lb) {
-      if (!UI_IsListBoxSelected(lb)) fl_append_to_file(ReminderHistoryFilePath, selection);
+      if (!UI_IsListBoxSelected(lb)) fl_append_unique_line(ReminderHistoryFilePath, selection);
       StartReminder(selection);
     return true;
 }
