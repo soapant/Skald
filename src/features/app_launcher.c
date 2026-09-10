@@ -81,25 +81,9 @@ void initialize_app_cache(void) {
         char display_name[256] = {0};
         bool has_display = false;
         if (strstr(s_apps.items[i].path, ".desktop")) {
-            FILE* f = fopen(s_apps.items[i].path, "r");
-            if (f) {
-                char line[512];
-                while (fgets(line, sizeof line, f)) {
-                    char* p = line;
-                    while(*p==' ' || *p=='\t') p++;
-                    if (strncasecmp(p, "NoDisplay=true", 14)==0 || strncasecmp(p, "Hidden=true", 11)==0) {
-                        skip = true;
-                    }
-                    if (!has_display && strncasecmp(p, "Name=", 5)==0) {
-                        p += 5;
-                        while(*p==' ' || *p=='\t') p++;
-                        p[strcspn(p, "\r\n")]='\0';
-                        strncpy(display_name, p, sizeof(display_name)-1);
-                        has_display = true;
-                    }
-                }
-                fclose(f);
-            }
+            bool nodisplay=false;
+            if (fl_parse_desktop_file(s_apps.items[i].path, display_name, sizeof(display_name), &nodisplay)) has_display=true;
+            if (nodisplay) skip=true;
         }
         if (skip) {
             for (size_t k = i; k + 1 < s_apps.count; k++) s_apps.items[k] = s_apps.items[k+1];

@@ -9,6 +9,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdarg.h>
 
 
 
@@ -120,6 +121,91 @@ bool fl_free_file_list(const char* list[], int count) {
     if (!list || count <= 0) return false;
     for (int i = 0; i < count; i++) free((void*)list[i]);
     return true;
+}
+
+char* fl_read_file_to_string(const char* path, size_t* out_len) {
+    if (!path) return NULL;
+    char expanded[MAX_PATH];
+    if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) strncpy(expanded, path, sizeof(expanded)-1);
+    FILE* f = fopen(expanded, "rb");
+    if (!f) return NULL;
+    if (fseek(f, 0, SEEK_END)!=0) { fclose(f); return NULL; }
+    long sz = ftell(f);
+    if (sz < 0) sz = 0;
+    rewind(f);
+    char* buf = (char*)malloc((size_t)sz + 1);
+    if (!buf) { fclose(f); return NULL; }
+    size_t read = fread(buf, 1, (size_t)sz, f);
+    buf[read] = '\0';
+    fclose(f);
+    if (out_len) *out_len = read;
+    return buf;
+}
+bool fl_write_string_to_file(const char* path, const char* content) {
+    if (!path || !content) return false;
+    char expanded[MAX_PATH];
+    if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) strncpy(expanded, path, sizeof(expanded)-1);
+    FILE* f = fopen(expanded, "w");
+    if (!f) return false;
+    fputs(content, f);
+    fclose(f);
+    return true;
+}
+bool fl_file_exists(const char* path) {
+    if (!path) return false;
+    char expanded[MAX_PATH];
+    if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) strncpy(expanded, path, sizeof(expanded)-1);
+    FILE* f = fopen(expanded, "rb");
+    if (f) { fclose(f); return true; }
+    return false;
+}
+bool fl_append_unique_line(const char* path, const char* line) {
+    if (!path || !line) return false;
+    const char* items[1024]; int n = fl_load_file_list(path, items, 1024);
+    for (int i=0;i<n;i++) if (strcmp(items[i], line)==0) { fl_free_file_list(items, n); return false; }
+    bool ok = fl_append_to_file(path, line);
+    fl_free_file_list(items, n);
+    return ok;
+}
+bool fl_remove_line(const char* path, const char* line) {
+    if (!path || !line) return false;
+    const char* items[1024]; int n = fl_load_file_list(path, items, 1024);
+    const char* kept[1024]; int k=0;
+    for (int i=0;i<n;i++) if (strcmp(items[i], line)!=0) kept[k++]=items[i]; else { free((void*)items[i]); items[i]=NULL; }
+    bool ok = fl_write_to_file(path, kept, k);
+    for (int i=0;i<n;i++) if (items[i]) free((void*)items[i]);
+    return ok;
+}
+bool fl_remove_line_contains(const char* path, const char* substr) {
+    if (!path || !substr) return false;
+    const char* items[1024]; int n = fl_load_file_list(path, items, 1024);
+    const char* kept[1024]; int k=0;
+    for (int i=0;i<n;i++) if (!strstr(items[i], substr)) kept[k++]=items[i]; else { free((void*)items[i]); items[i]=NULL; }
+    bool ok = fl_write_to_file(path, kept, k);
+    for (int i=0;i<n;i++) if (items[i]) free((void*)items[i]);
+    return ok;
+}
+bool fl_parse_desktop_file(const char* path, char* out_name, size_t n, bool* out_nodisplay) {
+    if (!path || !out_name) return false;
+    char expanded[MAX_PATH];
+    if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) strncpy(expanded, path, sizeof(expanded)-1);
+    FILE* f = fopen(expanded, "r");
+    if (!f) return false;
+    char line[1024]; bool found=false;
+    if (out_nodisplay) *out_nodisplay=false;
+    while(fgets(line,sizeof(line),f)){
+        char* p=line; while(*p==' '||*p=='\t') p++;
+        if(strncasecmp(p,"NoDisplay=true",14)==0 || strncasecmp(p,"Hidden=true",11)==0){
+            if(out_nodisplay) *out_nodisplay=true;
+        }
+        if(!found && strncasecmp(p,"Name=",5)==0){
+            p+=5; while(*p==' '||*p=='\t') p++;
+            p[strcspn(p,"\r\n")]='\0';
+            strncpy(out_name, p, n-1); out_name[n-1]='\0'; found=true;
+        }
+    }
+    fclose(f);
+    return found;
 }
 
 
