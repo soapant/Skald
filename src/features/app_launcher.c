@@ -207,8 +207,8 @@ void applauncher_render(Display* dpy, Window* win, PromptState* state) {
     if (!xd) return;
     Linux_DrawBackground(dpy, *win, state->width, state->height);
     FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
-    int y0=100; int itemH=FontSize+14;
-    int visible=(state->height - y0)/itemH;
+    int y0=70; int itemH=FontSize+14;
+    int visible=(state->height - y0 - 40)/itemH;
     if(visible<1) visible=1;
     if(visible>lb->populated_count) visible=lb->populated_count;
     if(lb->selected_index>=0){
@@ -234,9 +234,8 @@ void applauncher_render(Display* dpy, Window* win, PromptState* state) {
         else if(AlternatingText && idx%2==0) num_color=body_color=plain_color=&fcolalternate;
         const char* item_text = (idx>=0 && idx < lb->populated_count) ? lb->populated_cache[idx] : "";
         const char* icon_path = applauncher_get_icon_for_item(item_text);
-        int icon_size = applauncher_get_icon_size_for_item(item_text);
         if(!icon_path) icon_path=NULL;
-        DrawListBoxItemText(dpy,xd,vis,cmap,font,num_color,body_color,plain_color,lb,(char*)icon_path,icon_size,idx,y,text_x);
+        DrawListBoxItemText(dpy,xd,vis,cmap,font,num_color,body_color,plain_color,lb,(char*)icon_path,idx,y,text_x);
         XftColorFree(dpy,vis,cmap,&fcolrainbow);
     }
     if(!EnableShaders || ShaderPreset==0) XftColorFree(dpy,vis,cmap,&bgc);
@@ -247,8 +246,15 @@ void applauncher_render(Display* dpy, Window* win, PromptState* state) {
 }
 #else
 #include <windows.h>
-void applauncher_render(void* hdc, const char* text, void* rect, bool is_selected, int itemIndex) {
-    (void)hdc; (void)text; (void)rect; (void)is_selected; (void)itemIndex;
+void applauncher_render(HDC hdc, const char* text, RECT* rect, BOOL is_selected, int itemIndex) {
+    if (!text || !rect) return;
+    UI_RedrawBackground(hdc, rect, is_selected);
+    RECT textRect = *rect;
+    textRect.left += 10;
+    HFONT hOldFont = (HFONT)SelectObject(hdc, FlintContext_Get()->g_hMainFont);
+    SetBkMode(hdc, TRANSPARENT);
+    DrawTextA(hdc, text, -1, &textRect, DT_SINGLELINE | DT_VCENTER | DT_LEFT);
+    SelectObject(hdc, hOldFont);
 }
 #endif
 
