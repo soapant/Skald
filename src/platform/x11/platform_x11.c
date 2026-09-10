@@ -1186,7 +1186,6 @@ char* Platform_GetIconPath(char* desktop_or_icon) {
     if (!desktop_or_icon) return NULL;
     if (desktop_or_icon[0]=='/' && strchr(desktop_or_icon, '.') && access(desktop_or_icon, F_OK)==0) {
         if (strstr(desktop_or_icon, ".png")) return strdup(desktop_or_icon);
-        // svg/xpm fall through to placeholder (draw_icon_png is png-only)
     }
     char icon_name[512]={0};
     if (strstr(desktop_or_icon, ".desktop")) {
