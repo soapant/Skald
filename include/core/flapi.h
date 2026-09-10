@@ -1,28 +1,12 @@
 #ifndef FLAPI_H
 #define FLAPI_H
 
-#if defined(_WIN32)
-#include <windows.h>
-#endif
 #include <stdbool.h>
 #include <stddef.h>
 #include <ctype.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#if defined(_WIN32)
-#include <shellapi.h>
-#include <shlwapi.h>
-#include <psapi.h>
-#else
-#include <sys/stat.h>
-#include <unistd.h>
-#include <sys/wait.h>
-#include <fcntl.h>
-#include <pwd.h>
-#include <dirent.h>
-#include <pthread.h>
-#endif
 #include "core/types.h"
 #include "config.h"
 #include "core/platform.h"
