@@ -177,6 +177,81 @@ void applauncher_copy_callback(const char* selection,int true_index,int type) {
     fl_copy_to_clipboard(text);
 }
 
+const char* applauncher_get_icon_for_item(const char* item_name) {
+    for (size_t i=0;i<s_apps.count;i++) if (strcmp(s_apps.items[i].name, item_name)==0) {
+        char* p = fl_get_icon_path(s_apps.items[i].path);
+        return p;
+    }
+    return NULL;
+}
+
+int applauncher_get_icon_size_for_item(const char* item_name) {
+    const char* p = applauncher_get_icon_for_item(item_name);
+    return fl_get_icon_size(p);
+}
+
+
+#if !defined(_WIN32)
+#include <X11/Xlib.h>
+#include <X11/Xft/Xft.h>
+#include "core/window_manager.h"
+#include "platform/x11/drawing.h"
+void applauncher_render(Display* dpy, Window* win, PromptState* state) {
+    if (!state || !state->has_listbox) return;
+    ListBoxInfo *lb = &state->listbox;
+    if (!lb->populated_count) return;
+    XWindowAttributes attrs; Visual* vis=NULL; Colormap cmap=0;
+    if (XGetWindowAttributes(dpy, *win, &attrs)) { vis=attrs.visual; cmap=attrs.colormap; }
+    else { vis=DefaultVisual(dpy, DefaultScreen(dpy)); cmap=DefaultColormap(dpy, DefaultScreen(dpy)); }
+    XftDraw* xd = XftDrawCreate(dpy, *win, vis, cmap);
+    if (!xd) return;
+    Linux_DrawBackground(dpy, *win, state->width, state->height);
+    FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
+    int y0=100; int itemH=FontSize+14;
+    int visible=(state->height - y0)/itemH;
+    if(visible<1) visible=1;
+    if(visible>lb->populated_count) visible=lb->populated_count;
+    if(lb->selected_index>=0){
+        if(lb->selected_index < lb->view_offset+PaddingForScrolling) lb->view_offset=lb->selected_index-PaddingForScrolling;
+        else if(lb->selected_index >= lb->view_offset+visible-PaddingForScrolling) lb->view_offset=lb->selected_index-visible+PaddingForScrolling+1;
+    }
+    if(lb->view_offset<0) lb->view_offset=0;
+    if(lb->view_offset+visible>lb->populated_count) lb->view_offset=lb->populated_count-visible;
+    if(lb->view_offset<0) lb->view_offset=0;
+    XftColor bgc,fcoltext,fcolalternate,fcolrainbow;
+    if(!EnableShaders || ShaderPreset==0) Linux_XftAllocColor(dpy,vis,cmap,rgb_to_hex(COLOR_BG),OpacityAlpha16(),&bgc);
+    Linux_XftAllocColor(dpy,vis,cmap,rgb_to_hex(COLOR_TEXT),0xFFFF,&fcoltext);
+    Linux_XftAllocColor(dpy,vis,cmap,rgb_to_hex(COLOR_ALTERNATE),0xFFFF,&fcolalternate);
+    for(int i=0;i<visible;i++){
+        int idx=lb->view_offset+i; int y=y0+i*itemH; bool sel=(idx==lb->selected_index);
+        if(sel) Linux_DrawSelectionBackground(dpy,xd,vis,cmap,0,y,state->width,itemH,rgb_to_hex(COLOR_SELECTED_TEXT));
+        else if(!EnableShaders || ShaderPreset==0) XftDrawRect(xd,&bgc,0,y,state->width,itemH);
+        float _t=(lb&&lb->populated_count>1)?(float)idx/(float)(lb->populated_count-1):(float)idx/(float)GradientItems;
+        Linux_XftAllocColor(dpy,vis,cmap,rgb_to_hex(GetRainbowColor(_t,0.55f,GradientBrightness)),0xFFFF,&fcolrainbow);
+        XftColor *num_color=&fcoltext,*body_color=&fcoltext,*plain_color=&fcolrainbow;
+        int text_x=45;
+        if(RainbowText) num_color=body_color=plain_color=&fcolrainbow;
+        else if(AlternatingText && idx%2==0) num_color=body_color=plain_color=&fcolalternate;
+        const char* item_text = (idx>=0 && idx < lb->populated_count) ? lb->populated_cache[idx] : "";
+        const char* icon_path = applauncher_get_icon_for_item(item_text);
+        int icon_size = applauncher_get_icon_size_for_item(item_text);
+        if(!icon_path) icon_path=NULL;
+        DrawListBoxItemText(dpy,xd,vis,cmap,font,num_color,body_color,plain_color,lb,(char*)icon_path,icon_size,idx,y,text_x);
+        XftColorFree(dpy,vis,cmap,&fcolrainbow);
+    }
+    if(!EnableShaders || ShaderPreset==0) XftColorFree(dpy,vis,cmap,&bgc);
+    XftColorFree(dpy,vis,cmap,&fcoltext);
+    XftColorFree(dpy,vis,cmap,&fcolalternate);
+    Platform_DestroyFont(font);
+    XftDrawDestroy(xd);
+}
+#else
+#include <windows.h>
+void applauncher_render(void* hdc, const char* text, void* rect, bool is_selected, int itemIndex) {
+    (void)hdc; (void)text; (void)rect; (void)is_selected; (void)itemIndex;
+}
+#endif
+
 void TriggerAppLauncher(void) {
     const char** initial_items = (const char**)malloc(s_apps.count * sizeof(char*));
     if (!initial_items) return;
@@ -194,7 +269,8 @@ void TriggerAppLauncher(void) {
            .refresh = applauncher_refresh_callback,
            .enter = applauncher_enter_callback,
            .ctrl_enter = applauncher_ctrlenter_callback,
-           .copy = applauncher_copy_callback);
+           .copy = applauncher_copy_callback,
+           .render = applauncher_render);
 
     free(initial_items);
 }
