@@ -258,7 +258,6 @@ void TriggerAppLauncher(void) {
     
     for (size_t i = 0; i < s_apps.count; i++) {
         initial_items[i] = s_apps.items[i].name;
-        printf("%s Got Path %s \n",s_apps.items[i].path);
     }
 
     for (int i = 0; i < ARRAY_LEN(ListOfProgramPaths); i++) {
