@@ -407,24 +407,28 @@ void DrawPromptUserEditControlOnDraw(Display *dpy, XftDraw* xd, Visual* vis, Col
     unsigned long window_title_text_color_map;
     eval_window_title_color(state,&window_title_text_color_map);
 
-    XftColor text_color, window_title_text_color, vim_text_color;
+    XftColor text_color, window_title_text_color, vim_text_color,seperator_color;
     Linux_XftAllocColor(dpy, vis, cmap, rgb_to_hex(COLOR_TEXT), 0xFFFF, &text_color);
+    Linux_XftAllocColor(dpy, vis, cmap, rgb_to_hex(COLOR_SEPERATOR), 0xFFFF, &seperator_color);
     Linux_XftAllocColor(dpy, vis, cmap, window_title_text_color_map, 0xFFFF, &window_title_text_color);
     Linux_XftAllocColor(dpy, vis, cmap, VimModeTextColor(), 0xFFFF, &vim_text_color);
 
-    draw_wrapped_text(dpy, xd, &vim_text_color, font,g_vim_mode,0,"LEFT",5);
-    draw_wrapped_text(dpy, xd, &window_title_text_color,font,state->window_title,0,"RIGHT",5);
+
+    draw_wrapped_text(dpy, xd, &vim_text_color, font,g_vim_mode,state->height - 40,"LEFT",5);
+    draw_wrapped_text(dpy, xd, &window_title_text_color,font,state->window_title,state->height - 40,"RIGHT",5);
 
     int cursor_x = 0;
     int text_len = strlen(state->filter);
     int scroll = Linux_UpdateEditScrollOffset(dpy, xf, state->filter, text_len, state->cursor, state->width, state->scroll_offset, &cursor_x);
     state->scroll_offset = scroll;
     int draw_x = 20 - scroll;
-    int draw_y = 40 + (xf ? xf->ascent : FontSize);
+    int draw_y = 20 + (xf ? xf->ascent : FontSize);
     if (xf && text_len > 0) {
         XftDrawStringUtf8(xd, &text_color, xf, draw_x, draw_y, (FcChar8*)state->filter, text_len);
     }
     Linux_DrawEditCursor(xd, &text_color, cursor_x, scroll, state->width);
+    XftDrawRect(xd, &seperator_color,0,60,state->width,5);
+    XftDrawRect(xd, &seperator_color,0,state->height - 60,state->width,5);
 
     XftColorFree(dpy, vis, cmap, &text_color);
     XftColorFree(dpy, vis, cmap, &vim_text_color);
@@ -436,10 +440,10 @@ void DrawPromptUserListBoxOnDraw(Display *dpy, XftDraw* xd, Visual* vis, Colorma
       ListBoxInfo *lb = &state->listbox;
       FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
 
-      int y0 = 100;
+      int y0 = 70;
       int itemH = FontSize + 14;
       if (!lb->populated_count) return;
-      int visible = (state->height - y0) / itemH;
+      int visible = (state->height - y0 - 40) / itemH;
       if (visible < 1) visible = 1;
       if (visible > lb->populated_count) visible = lb->populated_count;
 
@@ -490,9 +494,8 @@ void DrawPromptUserListBoxOnDraw(Display *dpy, XftDraw* xd, Visual* vis, Colorma
         }
 
         const char* icon_path = NULL;
-        int icon_size = 20;
 
-        DrawListBoxItemText(dpy, xd, vis, cmap, font, num_color, body_color, plain_color, lb,icon_path,icon_size,idx, y, text_x);
+        DrawListBoxItemText(dpy, xd, vis, cmap, font, num_color, body_color, plain_color, lb,icon_path,idx, y, text_x);
 
         XftColorFree(dpy, vis, cmap, &fcolrainbow);
       }

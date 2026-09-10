@@ -206,9 +206,9 @@ void Linux_DrawEditCursor(XftDraw* xd, XftColor* color, int cursor_x, int scroll
     if (cursor_draw_x < 20) cursor_draw_x = 20;
     if (cursor_draw_x > width - 10) cursor_draw_x = width - 10;
     if (IsInsertMode()) {
-        XftDrawRect(xd, color, cursor_draw_x, 47, 2, FontSize);
+        XftDrawRect(xd, color, cursor_draw_x, 27, 2, FontSize);
     } else {
-        XftDrawRect(xd, color, cursor_draw_x, 47, 12, FontSize);
+        XftDrawRect(xd, color, cursor_draw_x, 27, 12, FontSize);
     }
     TimerEnd(timer, "helpers_x11:Linux_DrawEditCursor");
 }
@@ -353,7 +353,6 @@ static void draw_icon_png(Display* dpy, XftDraw* xd, const char* path,
     }
     free(data);
 
-    /* ---- Upload to Pixmap ---- */
     Drawable drw = XftDrawDrawable(xd);
     Screen* scr  = DefaultScreenOfDisplay(dpy);
     Visual* vis  = DefaultVisualOfScreen(scr);
@@ -389,7 +388,7 @@ static void draw_icon_png(Display* dpy, XftDraw* xd, const char* path,
 
 void DrawListBoxItemText(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap, FontHandle font,
                          XftColor* num_color, XftColor* body_color, XftColor* plain_color,
-                         ListBoxInfo* lb,char* icon_path,int icon_size,int idx, int y, int text_x) {
+                         ListBoxInfo* lb,char* icon_path,int idx, int y, int text_x) {
     WinTimer timer = TimerStart();
     XftFont* xf = FH_TO_XFT(font);
     if (!xf) { TimerEnd(timer, "helpers_x11:DrawListBoxItemText"); return; }

@@ -474,7 +474,6 @@ static void EditPopup_OnRender(Popup* self) {
     Linux_XftAllocColor(dpy, visual, cmap, rgb_to_hex(COLOR_TEXT), 0xFFFF, &fg);
     Linux_XftAllocColor(dpy, visual, cmap, rgb_to_hex(COLOR_TEXT), 0xFFFF, &title_col);
     Linux_XftAllocColor(dpy, visual, cmap, VimModeTextColor(), 0xFFFF, &vim_col);
-    // clear - unified background handles rounded + shaders
     XftColorFree(dpy, visual, cmap, &bg);
     XftDrawDestroy(xd);
     Linux_DrawBackground(dpy, self->handle.xid, data->w, data->h);
@@ -501,16 +500,6 @@ static void EditPopup_OnRender(Popup* self) {
         int draw_x = 10 - scroll;
         int draw_y = 40 + xf->ascent;
         XftDrawStringUtf8(xd, &fg, xf, draw_x, draw_y, (FcChar8*)data->text, text_len);
-    }
-    if (xf) {
-        int cursor_draw_x = 12 + cursor_x - scroll;
-        if (cursor_draw_x < 10) cursor_draw_x = 10;
-        if (cursor_draw_x > data->w - 10) cursor_draw_x = data->w - 10;
-        if (IsInsertMode()) {
-            XftDrawRect(xd, &fg, cursor_draw_x, 47, 2, FontSize);
-        } else {
-            XftDrawRect(xd, &fg, cursor_draw_x, 47, 12, FontSize);
-        }
     }
     XftColorFree(dpy, visual, cmap, &bg);
     XftColorFree(dpy, visual, cmap, &fg);
