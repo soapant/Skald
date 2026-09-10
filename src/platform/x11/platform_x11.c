@@ -1205,6 +1205,51 @@ NameToPath supported_names_to_paths[] =  {
   {"xdg-desktop-portal-gtk","/home/diggy/Programming/Projects/Flint/resources/xdg-desktop-portal-gtk.png"},
 };
 
+#define ICON_CACHE_FILE "data/icon_cache.txt"
+#define MAX_ICON_CACHE 1024
+static struct { char key[512]; char value[1024]; } g_icon_cache[MAX_ICON_CACHE];
+static int g_icon_cache_count=0;
+static bool g_icon_cache_loaded=false;
+static void icon_cache_load(void){
+    if(g_icon_cache_loaded) return; g_icon_cache_loaded=true;
+    FILE* f=fopen(ICON_CACHE_FILE,"r");
+    if(!f){
+        char alt[1024]; const char* h=Platform_GetRealHome(); if(!h||!h[0]) h=getenv("HOME");
+        if(h){ snprintf(alt,sizeof(alt),"%s/Programming/Projects/Flint/data/icon_cache.txt",h); f=fopen(alt,"r"); }
+    }
+    if(!f) return;
+    char line[1536];
+    while(fgets(line,sizeof(line),f) && g_icon_cache_count<MAX_ICON_CACHE){
+        line[strcspn(line,"\r\n")]='\0';
+        char* eq=strchr(line,'='); if(!eq) continue; *eq='\0';
+        strncpy(g_icon_cache[g_icon_cache_count].key, line, sizeof(g_icon_cache[0].key)-1);
+        strncpy(g_icon_cache[g_icon_cache_count].value, eq+1, sizeof(g_icon_cache[0].value)-1);
+        if(access(g_icon_cache[g_icon_cache_count].value,F_OK)==0) g_icon_cache_count++;
+    }
+    fclose(f);
+}
+static const char* icon_cache_get(const char* key){
+    icon_cache_load();
+    for(int i=0;i<g_icon_cache_count;i++) if(strcmp(g_icon_cache[i].key,key)==0) return g_icon_cache[i].value;
+    return NULL;
+}
+static void icon_cache_set(const char* key, const char* value){
+    icon_cache_load();
+    for(int i=0;i<g_icon_cache_count;i++) if(strcmp(g_icon_cache[i].key,key)==0) return;
+    if(g_icon_cache_count>=MAX_ICON_CACHE) return;
+    strncpy(g_icon_cache[g_icon_cache_count].key, key, sizeof(g_icon_cache[0].key)-1);
+    strncpy(g_icon_cache[g_icon_cache_count].value, value, sizeof(g_icon_cache[0].value)-1);
+    g_icon_cache_count++;
+    FILE* f=fopen(ICON_CACHE_FILE,"a");
+    if(!f){
+        char alt[1024]; const char* h=Platform_GetRealHome(); if(!h||!h[0]) h=getenv("HOME");
+        if(h){ snprintf(alt,sizeof(alt),"%s/Programming/Projects/Flint/data/icon_cache.txt",h); f=fopen(alt,"a"); }
+        if(!f) return;
+    }
+    fprintf(f,"%s=%s\n",key,value);
+    fclose(f);
+}
+
 
 char* Platform_GetIconPath(char* desktop_or_icon) {
     if (!desktop_or_icon) return NULL;
@@ -1251,6 +1296,10 @@ char* Platform_GetIconPath(char* desktop_or_icon) {
     }
     char bare[512]; strncpy(bare, icon_name, sizeof(bare)-1);
     char* dot=strrchr(bare,'.'); if(dot && (strcmp(dot,".png")==0||strcmp(dot,".svg")==0||strcmp(dot,".xpm")==0)) *dot='\0';
+    if (bare[0]) {
+        const char* cached = icon_cache_get(bare);
+        if (cached && access(cached,F_OK)==0) return strdup(cached);
+    }
     const char* sizes[]={"32x32","48x48","64x64","128x128","256x256","scalable",NULL};
     const char* bases[]={"/usr/share/icons/hicolor","/usr/share/pixmaps","/usr/share/icons/Adwaita","/usr/share/icons/breeze",NULL};
     static char found[1024];
@@ -1262,9 +1311,9 @@ char* Platform_GetIconPath(char* desktop_or_icon) {
             const char* sz=sizes[s];
             while(*sz==' ') sz++;
             snprintf(path,sizeof(path),"%s/.local/share/icons/hicolor/%s/apps/%s.png",home,sz,bare);
-            if(access(path,F_OK)==0) { strncpy(found,path,sizeof(found)-1); return found; }
+            if(access(path,F_OK)==0) { strncpy(found,path,sizeof(found)-1); icon_cache_set(bare, found); return strdup(found); }
             snprintf(path,sizeof(path),"%s/.local/share/icons/hicolor/%s/apps/%s.svg",home,sz,bare);
-            if(access(path,F_OK)==0) { strncpy(found,path,sizeof(found)-1); return found; }
+            if(access(path,F_OK)==0) { strncpy(found,path,sizeof(found)-1); icon_cache_set(bare, found); return strdup(found); }
         }
     }
     for(int b=0;bases[b];b++){
@@ -1273,23 +1322,23 @@ char* Platform_GetIconPath(char* desktop_or_icon) {
             const char* sz=sizes[s];
             while(*sz==' ') sz++;
             snprintf(path,sizeof(path),"%s/%s/apps/%s.png",bases[b],sz,bare);
-            if(access(path,F_OK)==0) { strncpy(found,path,sizeof(found)-1); return found; }
+            if(access(path,F_OK)==0) { strncpy(found,path,sizeof(found)-1); icon_cache_set(bare, found); return strdup(found); }
             snprintf(path,sizeof(path),"%s/%s/apps/%s.svg",bases[b],sz,bare);
-            if(access(path,F_OK)==0) { strncpy(found,path,sizeof(found)-1); return found; }
+            if(access(path,F_OK)==0) { strncpy(found,path,sizeof(found)-1); icon_cache_set(bare, found); return strdup(found); }
             snprintf(path,sizeof(path),"%s/%s.svg",bases[b],bare);
-            if(access(path,F_OK)==0) { strncpy(found,path,sizeof(found)-1); return found; }
+            if(access(path,F_OK)==0) { strncpy(found,path,sizeof(found)-1); icon_cache_set(bare, found); return strdup(found); }
             snprintf(path,sizeof(path),"%s/%s.png",bases[b],bare);
-            if(access(path,F_OK)==0) { strncpy(found,path,sizeof(found)-1); return found; }
+            if(access(path,F_OK)==0) { strncpy(found,path,sizeof(found)-1); icon_cache_set(bare, found); return strdup(found); }
         }
         char direct[1024]; snprintf(direct,sizeof(direct),"%s/%s.png",bases[b],bare);
-        if(access(direct,F_OK)==0) { strncpy(found,direct,sizeof(found)-1); return found; }
+        if(access(direct,F_OK)==0) { strncpy(found,direct,sizeof(found)-1); icon_cache_set(bare, found); return strdup(found); }
         snprintf(direct,sizeof(direct),"%s/%s.svg",bases[b],bare);
-        if(access(direct,F_OK)==0) { strncpy(found,direct,sizeof(found)-1); return found; }
+        if(access(direct,F_OK)==0) { strncpy(found,direct,sizeof(found)-1); icon_cache_set(bare, found); return strdup(found); }
     }
     char pix[1024]; snprintf(pix,sizeof(pix),"/usr/share/pixmaps/%s.png",bare);
-    if(access(pix,F_OK)==0) { strncpy(found,pix,sizeof(found)-1); return found; }
+    if(access(pix,F_OK)==0) { strncpy(found,pix,sizeof(found)-1); icon_cache_set(bare, found); return strdup(found); }
     snprintf(pix,sizeof(pix),"/usr/share/pixmaps/%s.svg",bare);
-    if(access(pix,F_OK)==0) { strncpy(found,pix,sizeof(found)-1); return found; }
+    if(access(pix,F_OK)==0) { strncpy(found,pix,sizeof(found)-1); icon_cache_set(bare, found); return strdup(found); }
     snprintf(found,sizeof(found),"/home/diggy/Programming/Projects/Flint/resources/Placeholder.png");
     return found;
 }
