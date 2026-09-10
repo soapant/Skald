@@ -743,10 +743,8 @@ bool Platform_TerminateProcessByName(const char* exe_name) {
     char cmd[1024];
     snprintf(cmd, sizeof(cmd), "sh -c 'pkill -9 \"%s\" 2>/dev/null; pkill -9 -f \"%s\" 2>/dev/null; pkill -9 -f \"build/[f]lint\" 2>/dev/null; pkill \"%s\" 2>/dev/null; killall -9 \"%s\" 2>/dev/null; killall -9 -r \"%s\" 2>/dev/null; killall \"%s\" 2>/dev/null' &", tmp, tmp, tmp, tmp, tmp, tmp);
 
-    int ret = system(cmd);
-    (void)ret;
     PROFILE_END_VAR(timer, "misc_x11:Platform_TerminateProcessByName");
-    return true;
+    return Platform_RunTerminalCommand(cmd,false);
 }
 
 bool Platform_LaunchBrowserAtUrl(char* url,bool new_window) {
