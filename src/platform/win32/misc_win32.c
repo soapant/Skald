@@ -408,7 +408,7 @@ bool Platform_LaunchBrowserAtUrl(char* url, bool new_window) {
         snprintf(command, sizeof(command), "start \"\" \"%s\"", url);
     }
     
-    return system(command) == 0;
+    return Platform_RunTerminalCommand(command,false);
 }
 
 bool Platform_QueryBrowser(char* query) {
@@ -443,7 +443,7 @@ bool Platform_QueryBrowser(char* query) {
     
     char command[4096];
     snprintf(command, sizeof(command), "start \"\" \"%s\"", url);
-    return system(command) == 0;
+    return Platform_RunTerminalCommand(command,false);
 }
 
 char* Platform_GetLastClipboardEntry(void) {
