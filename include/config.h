@@ -38,7 +38,6 @@ extern float WindowOpacity;
 extern const char* UsedFont;
 extern const int FontSize;
 extern const int MaxFeatures;
-extern const int NumberFontSize;
 extern const int VimFontSize;
 extern const int PaddingForScrolling;
 extern bool CloseOnLossOfFocus;
@@ -57,7 +56,6 @@ extern const bool MessagesEnabled;
 extern const bool RainbowText;
 extern const bool ColoredVimModeText;
 extern const bool AlternatingText;
-extern const bool EnableLineNumbers;
 extern const int GradientItems;
 extern const float GradientBrightness;
 

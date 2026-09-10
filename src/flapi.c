@@ -132,16 +132,21 @@ bool fl_register_hotkey_impl(char* hotkey_string,void (*on_hotkey_trigger)(void)
     return hotkey_register_internal(binding);
 }
 
-typedef struct { char name[128]; void (*cb)(void); } FeatureReg;
+typedef struct { char name[128]; void (*cb)(void); char icon[512]; } FeatureReg;
 static FeatureReg g_feature_regs[1000];
 static int g_feature_reg_count = 0;
 
 void fl_register_feature(const char* name, void (*cb)(void)) {
+    fl_register_feature_with_icon(name, cb, NULL);
+}
+void fl_register_feature_with_icon(const char* name, void (*cb)(void), const char* icon_path) {
     if (!name || !cb) return;
     if (g_feature_reg_count >= MaxFeatures) return;
     for (int i=0;i<g_feature_reg_count;i++) if (strcmp(g_feature_regs[i].name, name)==0) return;
     strncpy(g_feature_regs[g_feature_reg_count].name, name, sizeof(g_feature_regs[g_feature_reg_count].name)-1);
     g_feature_regs[g_feature_reg_count].cb = cb;
+    if (icon_path) strncpy(g_feature_regs[g_feature_reg_count].icon, icon_path, sizeof(g_feature_regs[g_feature_reg_count].icon)-1);
+    else g_feature_regs[g_feature_reg_count].icon[0]='\0';
     g_feature_reg_count++;
 }
 
@@ -152,6 +157,24 @@ int fl_get_feature_list(const char** out_names, void (**out_cbs)(void), int max)
         if (out_cbs) out_cbs[i] = g_feature_regs[i].cb;
     }
     return n;
+}
+int fl_get_feature_list_with_icons(const char** out_names, void (**out_cbs)(void), const char*** out_icons, int max) {
+    int n = g_feature_reg_count < max ? g_feature_reg_count : max;
+    for (int i=0;i<n;i++) {
+        if (out_names) out_names[i] = g_feature_regs[i].name;
+        if (out_cbs) out_cbs[i] = g_feature_regs[i].cb;
+        if (out_icons) *out_icons = (const char**)g_feature_regs[i].icon;
+    }
+    // actually need per-entry: caller should use separate array
+    // Provide icons as array of strings
+    static const char* icon_ptrs[1000];
+    for (int i=0;i<n;i++) icon_ptrs[i] = g_feature_regs[i].icon[0] ? g_feature_regs[i].icon : NULL;
+    if (out_icons) *out_icons = icon_ptrs;
+    return n;
+}
+char* fl_get_icon_path(const char* desktop_or_icon_path) {
+    if (!desktop_or_icon_path) return NULL;
+    return Platform_GetIconPath((char*)desktop_or_icon_path);
 }
 
 

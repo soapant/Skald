@@ -1174,6 +1174,68 @@ char* Platform_GetActiveWindowTitle() {
   return Wm_GetActiveWindowTitle();
 }
 
+char* Platform_GetIconPath(char* desktop_or_icon) {
+    if (!desktop_or_icon) return NULL;
+    // if absolute path and exists, return as is
+    if (desktop_or_icon[0]=='/' && strchr(desktop_or_icon, '.') && access(desktop_or_icon, F_OK)==0) {
+        // if it's already an icon file (png/svg) return copy
+        if (strstr(desktop_or_icon, ".png") || strstr(desktop_or_icon, ".svg") || strstr(desktop_or_icon, ".xpm")) return strdup(desktop_or_icon);
+    }
+    char icon_name[512]={0};
+    // if .desktop, parse Icon=
+    if (strstr(desktop_or_icon, ".desktop")) {
+        FILE* f=fopen(desktop_or_icon,"r");
+        if (f) {
+            char line[1024];
+            while(fgets(line,sizeof(line),f)){
+                if (strncmp(line,"Icon=",5)==0){
+                    line[strcspn(line,"\r\n")]='\0';
+                    strncpy(icon_name, line+5, sizeof(icon_name)-1);
+                    break;
+                }
+            }
+            fclose(f);
+        }
+        if (!icon_name[0]) return NULL;
+    } else {
+        strncpy(icon_name, desktop_or_icon, sizeof(icon_name)-1);
+    }
+    // if icon_name is absolute path, return if exists
+    if (icon_name[0]=='/' && access(icon_name, F_OK)==0) return strdup(icon_name);
+    // strip extension for lookup
+    char bare[512]; strncpy(bare, icon_name, sizeof(bare)-1);
+    char* dot=strrchr(bare,'.'); if(dot && (strcmp(dot,".png")==0||strcmp(dot,".svg")==0||strcmp(dot,".xpm")==0)) *dot='\0';
+    const char* sizes[]={"48x48","32x32","64x64","48x48@2"," scalable","256x256","128x128","24x24",NULL};
+    const char* bases[]={"/usr/share/icons/hicolor","/usr/share/pixmaps","/usr/share/icons/Adwaita","/usr/share/icons/breeze",NULL};
+    static char found[1024];
+    for(int b=0;bases[b];b++){
+        for(int s=0;sizes[s];s++){
+            char path[1024];
+            const char* sz=sizes[s];
+            // trim leading space for scalable
+            while(*sz==' ') sz++;
+            snprintf(path,sizeof(path),"%s/%s/apps/%s.png",bases[b],sz,bare);
+            if(access(path,F_OK)==0) { strncpy(found,path,sizeof(found)-1); return found; }
+            snprintf(path,sizeof(path),"%s/%s/apps/%s.svg",bases[b],sz,bare);
+            if(access(path,F_OK)==0) { strncpy(found,path,sizeof(found)-1); return found; }
+            snprintf(path,sizeof(path),"%s/%s.svg",bases[b],bare);
+            if(access(path,F_OK)==0) { strncpy(found,path,sizeof(found)-1); return found; }
+            snprintf(path,sizeof(path),"%s/%s.png",bases[b],bare);
+            if(access(path,F_OK)==0) { strncpy(found,path,sizeof(found)-1); return found; }
+        }
+        char direct[1024]; snprintf(direct,sizeof(direct),"%s/%s.png",bases[b],bare);
+        if(access(direct,F_OK)==0) { strncpy(found,direct,sizeof(found)-1); return found; }
+        snprintf(direct,sizeof(direct),"%s/%s.svg",bases[b],bare);
+        if(access(direct,F_OK)==0) { strncpy(found,direct,sizeof(found)-1); return found; }
+    }
+    // fallback to /usr/share/pixmaps direct
+    char pix[1024]; snprintf(pix,sizeof(pix),"/usr/share/pixmaps/%s.png",bare);
+    if(access(pix,F_OK)==0) { strncpy(found,pix,sizeof(found)-1); return found; }
+    snprintf(pix,sizeof(pix),"/usr/share/pixmaps/%s.svg",bare);
+    if(access(pix,F_OK)==0) { strncpy(found,pix,sizeof(found)-1); return found; }
+    return NULL;
+}
+
 
 int Platform_CopyToClipboard(const char* text) {
     WinTimer timer = TimerStart();
