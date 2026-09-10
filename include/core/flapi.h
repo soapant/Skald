@@ -57,6 +57,7 @@ bool fl_copy_to_clipboard(const char* text);
 char* fl_search_file_in_dir(const char* directory, const char* search_string,char* output_path);
 bool fl_get_all_files_from_dir(const char* dir_path, char** list_of_allowed_extensions, ListOfFiles* list_of_files,char** list_of_names_to_ignore);
 bool fl_launch_with_args(const char* path, const char* args);
+int fl_get_icon_size(const char* icon_path);
 bool fl_launch_with_args_as_admin(const char* path, const char* args);
 int fl_load_file_list(const char* filepath, const char* out[], int max);
 // Feature registry for Control Center

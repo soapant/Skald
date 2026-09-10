@@ -175,6 +175,11 @@ char* fl_get_icon_path(const char* desktop_or_icon_path) {
     if (!desktop_or_icon_path) return NULL;
     return Platform_GetIconPath((char*)desktop_or_icon_path);
 }
+int fl_get_icon_size(const char* icon_path) {
+    if (!icon_path) return 20;
+
+    return Platform_GetIconSize((char*)icon_path);
+}
 
 
 bool fl_launch_terminal_with_args(char* args) {

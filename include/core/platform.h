@@ -63,6 +63,7 @@ char* Platform_RegisterDirWatcher(const char* dir_path, void (*callback)(void));
 char* Platform_WatchForCFileChanges(const char* dir_path, void (*callback)(void));
 char* Platform_GetActiveWindowTitle();
 char* Platform_GetIconPath(char* desktop_or_icon);
+int Platform_GetIconSize(char* icon_path);
 int ConvertLinuxKeyToWindowsVK(int key_code);
 const char* Platform_GetRealUser(void);
 const char* Platform_GetRealHome(void);
