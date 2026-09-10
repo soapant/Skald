@@ -190,17 +190,15 @@ bool Platform_ShellExecuteWithVerb(const char* path, const char* verb, bool asyn
             snprintf(command, sizeof(command),
                      "sudo -u %s DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s xdg-open \"%s\" > /dev/null 2>&1",
                      real_user, display, xauthority, runtime_dir, path);
-            int status = system(command);
             PROFILE_END_VAR(timer, "platform_x11:Platform_ShellExecuteWithVerb");
-            return (status == 0);
+            return Platform_RunTerminalCommand(command,false);
         } else {
             char command[2048];
             snprintf(command, sizeof(command),
                      "DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s xdg-open \"%s\" > /dev/null 2>&1",
                      display, xauthority, runtime_dir, path);
-            int status = system(command);
             PROFILE_END_VAR(timer, "platform_x11:Platform_ShellExecuteWithVerb");
-            return (status == 0);
+            return  Platform_RunTerminalCommand(command,false);
         }
     }
     char disp_env[256], xauth_env[512], runtime_env[512];
@@ -382,7 +380,7 @@ char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
         if (Platform_IsRunningAsRoot()){
             char chown_cmd[MAX_PATH + 64];
             snprintf(chown_cmd, sizeof(chown_cmd), "chown %s:%s \"%s\" && chmod 755 \"%s\"", real_user, real_user, temp_file, temp_file);
-            system(chown_cmd);
+            Platform_RunTerminalCommand(chown_cmd,false);
         } else {
             chmod(temp_file, 0755);
         }

@@ -90,12 +90,9 @@ static void* feature_watcher_thread(void* arg) {
             char cmd[1024];
             snprintf(cmd, sizeof(cmd), "gcc -I include -I/usr/include/freetype2 -w -g -fPIC -shared -o build/features/%s.so src/features/%s.c 2>&1", base, base);
             printf("[WATCHER] recompiling %s -> %s\n", filename, cmd); fflush(stdout);
-            int ret = system(cmd);
-            if (ret == 0) {
+            if (Platform_RunTerminalCommand(cmd,false)) {
                 printf("[WATCHER] reload %s\n", base); fflush(stdout);
                 FeatureLoader_Reload(base);
-            } else {
-                printf("[WATCHER] compile failed for %s (%d)\n", base, ret); fflush(stdout);
             }
             free(filename);
         }
