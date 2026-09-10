@@ -414,8 +414,8 @@ void DrawPromptUserEditControlOnDraw(Display *dpy, XftDraw* xd, Visual* vis, Col
     Linux_XftAllocColor(dpy, vis, cmap, VimModeTextColor(), 0xFFFF, &vim_text_color);
 
 
-    draw_wrapped_text(dpy, xd, &vim_text_color, font,g_vim_mode,state->height - 40,"LEFT",5);
-    draw_wrapped_text(dpy, xd, &window_title_text_color,font,state->window_title,state->height - 40,"RIGHT",5);
+    draw_wrapped_text(dpy, xd, &window_title_text_color, font,state->window_title,state->height - 40,"LEFT",5);
+    draw_wrapped_text(dpy, xd, &vim_text_color,font,g_vim_mode,state->height - 40,"RIGHT",5);
 
     int cursor_x = 0;
     int text_len = strlen(state->filter);
