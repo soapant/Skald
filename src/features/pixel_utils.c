@@ -56,15 +56,7 @@ void TriggerPosAdd(void) {
     if (GetCursorPos(&mousePos)) {
         char coords_buf[64];
         snprintf(coords_buf, sizeof(coords_buf), "(%ld, %ld)", mousePos.x, mousePos.y);
-        const char* temp_lines[100];
-        int temp_count = fl_load_file_list(TEMP_FILE_PATH, temp_lines, 100);
-        if (temp_count < 100) {
-            const char* to_write[101];
-            for (int i = 0; i < temp_count; i++) to_write[i] = temp_lines[i];
-            to_write[temp_count] = coords_buf;
-            fl_write_to_file(TEMP_FILE_PATH, to_write, temp_count + 1);
-        }
-        fl_free_file_list(temp_lines, temp_count);
+        fl_append_unique_line(TEMP_FILE_PATH, coords_buf);
     }
 #else
     // Not Implemented
@@ -72,7 +64,7 @@ void TriggerPosAdd(void) {
 }
 
 void TriggerPosClear(void) {
-  fl_write_to_file(TEMP_FILE_PATH, NULL, 0);
+  fl_write_string_to_file(TEMP_FILE_PATH, "");
 }
 
 void TriggerColorPlain(void) {

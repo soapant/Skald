@@ -39,7 +39,7 @@ void terminal_edit_callback(const char* selection, ListBoxInfo* lb) {
 
 bool terminal_enter_callback(const char* selection, ListBoxInfo* lb) {
       if (!UI_IsListBoxSelected(lb)) {
-        fl_append_to_file(TerminalHistoryFilePath, selection);
+        fl_append_unique_line(TerminalHistoryFilePath, selection);
       }
       fl_run_terminal_command_and_open((char*)selection);
     return true;

@@ -1,69 +1,41 @@
 #include "core/flapi.h"
 
 bool IsWifiEnabled(void) {
-    FILE* fp = popen("netsh interface show interface", "r");
-    if (!fp) return false;
-    
-    char line[256];
-    bool found = false;
-    bool enabled = false;
-    
-    while (fgets(line, sizeof(line), fp)) {
-        if (strstr(line, "Wi-Fi") || strstr(line, "Wireless")) {
-            found = true;
-            if (strstr(line, "Enabled") || strstr(line, "Connected")) {
-                enabled = true;
-            }
-        }
-    }
-    
-    pclose(fp);
+    char* out = fl_run_terminal_command("netsh interface show interface");
+    if (!out) return false;
+    bool found = strstr(out, "Wi-Fi") || strstr(out, "Wireless");
+    bool enabled = strstr(out, "Enabled") || strstr(out, "Connected");
     return found && enabled;
 }
 
 bool IsBluetoothEnabled(void) {
-    FILE* fp = popen("netsh interface show interface", "r");
-    if (!fp) return false;
-    
-    char line[256];
-    bool found = false;
-    bool enabled = false;
-    
-    while (fgets(line, sizeof(line), fp)) {
-        if (strstr(line, "Bluetooth") && strstr(line, "Network Connection")) {
-            found = true;
-            if (strstr(line, "Enabled") || strstr(line, "Connected")) {
-                enabled = true;
-            }
-        }
-    }
-    
-    pclose(fp);
+    char* out = fl_run_terminal_command("netsh interface show interface");
+    if (!out) return false;
+    bool found = strstr(out, "Bluetooth") && strstr(out, "Network Connection");
+    bool enabled = strstr(out, "Enabled") || strstr(out, "Connected");
     return found && enabled;
 }
 
 void TriggerWifiToggle(void) {
     bool currently_enabled = IsWifiEnabled();
     if (currently_enabled) {
-        system("netsh interface set interface Wi-Fi admin=disabled");
+        fl_run_terminal_command("netsh interface set interface Wi-Fi admin=disabled");
         SubjectiveMessageDisplay("Wifi Turned OFF",140,TimeOutForMessages,COLOR_TEXT);
     } else {
-        system("netsh interface set interface Wi-Fi admin=enabled");
+        fl_run_terminal_command("netsh interface set interface Wi-Fi admin=enabled");
         SubjectiveMessageDisplay("Wifi Turned ON",140,TimeOutForMessages,COLOR_TEXT);
     }
-
 }
 
 void TriggerBlueToothToggle(void) {
     bool currently_enabled = IsWifiEnabled();
     if (currently_enabled) {
-        system("netsh interface set interface \"Bluetooth Network Connection\" admin=enabled");
+        fl_run_terminal_command("netsh interface set interface \"Bluetooth Network Connection\" admin=enabled");
         SubjectiveMessageDisplay("BlueTooth Turned OFF",140,TimeOutForMessages,COLOR_TEXT);
     } else {
-        system("netsh interface set interface \"Bluetooth Network Connection\" admin=disabled");
+        fl_run_terminal_command("netsh interface set interface \"Bluetooth Network Connection\" admin=disabled");
         SubjectiveMessageDisplay("BlueTooth Turned ON",140,TimeOutForMessages,COLOR_TEXT);
     }
-
 }
 
 FLINT_FEATURE_INIT {
