@@ -12,6 +12,7 @@
 #include <X11/Xft/Xft.h>
 #include <X11/extensions/shape.h>
 #include <unistd.h>
+#include <png.h>
 #endif
 #include <stdint.h>
 #include "helpers.h"
@@ -225,23 +226,85 @@ const char* ListBoxItemDisplayText(ListBoxInfo* lb, int idx, char* trunc, size_t
     return trunc;
 }
 
+static void draw_icon_png(Display* dpy, XftDraw* xd, const char* path, int x, int y, int size) {
+    if (!path || !path[0]) return;
+    if (access(path, F_OK)!=0) return;
+    FILE* fp = fopen(path, "rb");
+    if (!fp) return;
+    unsigned char sig[8];
+    if (fread(sig,1,8,fp)!=8 || png_sig_cmp(sig,0,8)!=0) { fclose(fp); return; }
+    png_structp png = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+    if (!png) { fclose(fp); return; }
+    png_infop info = png_create_info_struct(png);
+    if (!info) { png_destroy_read_struct(&png,NULL,NULL); fclose(fp); return; }
+    if (setjmp(png_jmpbuf(png))) { png_destroy_read_struct(&png,&info,NULL); fclose(fp); return; }
+    png_init_io(png, fp);
+    png_set_sig_bytes(png, 8);
+    png_read_info(png, info);
+    int w = png_get_image_width(png, info);
+    int h = png_get_image_height(png, info);
+    png_byte color_type = png_get_color_type(png, info);
+    png_byte bit_depth = png_get_bit_depth(png, info);
+    if (bit_depth==16) png_set_strip_16(png);
+    if (color_type==PNG_COLOR_TYPE_PALETTE) png_set_palette_to_rgb(png);
+    if (color_type==PNG_COLOR_TYPE_GRAY && bit_depth<8) png_set_expand_gray_1_2_4_to_8(png);
+    if (png_get_valid(png, info, PNG_INFO_tRNS)) png_set_tRNS_to_alpha(png);
+    if (color_type==PNG_COLOR_TYPE_RGB || color_type==PNG_COLOR_TYPE_PALETTE) png_set_add_alpha(png, 0xFF, PNG_FILLER_AFTER);
+    if (color_type==PNG_COLOR_TYPE_GRAY) png_set_gray_to_rgb(png);
+    png_read_update_info(png, info);
+    int row_bytes = png_get_rowbytes(png, info);
+    unsigned char* data = (unsigned char*)malloc(row_bytes*h);
+    if (!data) { png_destroy_read_struct(&png,&info,NULL); fclose(fp); return; }
+    png_bytep* rows = (png_bytep*)malloc(sizeof(png_bytep)*h);
+    for(int i=0;i<h;i++) rows[i]=data+i*row_bytes;
+    png_read_image(png, rows);
+    png_read_end(png, NULL);
+    fclose(fp);
+    Drawable drw = XftDrawDrawable(xd);
+    Visual* vis = DefaultVisual(dpy, DefaultScreen(dpy));
+    int depth = DefaultDepth(dpy, DefaultScreen(dpy));
+    XImage* img = XCreateImage(dpy, vis, depth, ZPixmap, 0, NULL, size, size, 32, 0);
+    if (!img) { free(rows); free(data); png_destroy_read_struct(&png,&info,NULL); return; }
+    img->data = (char*)malloc(img->bytes_per_line*size);
+    if (!img->data) { XDestroyImage(img); free(rows); free(data); png_destroy_read_struct(&png,&info,NULL); return; }
+    for(int dy=0; dy<size; dy++){
+        int sy = dy*h/size;
+        for(int dx=0; dx<size; dx++){
+            int sx = dx*w/size;
+            unsigned char* s = data + sy*row_bytes + sx*4;
+            unsigned int r=s[0], g=s[1], b=s[2], a=s[3];
+            unsigned long pixel = (r<<16)|(g<<8)|b;
+            if (depth==32) pixel = (a<<24)|(r<<16)|(g<<8)|b;
+            XPutPixel(img, dx, dy, pixel);
+        }
+    }
+    GC gc = XCreateGC(dpy, drw, 0, NULL);
+    XPutImage(dpy, drw, gc, img, 0,0, x, y, size, size);
+    XFreeGC(dpy, gc);
+    XDestroyImage(img);
+    free(rows); free(data);
+    png_destroy_read_struct(&png,&info,NULL);
+}
+
 void DrawListBoxItemText(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap, FontHandle font,
                          XftColor* num_color, XftColor* body_color, XftColor* plain_color,
                          ListBoxInfo* lb, int idx, int y, int text_x) {
     WinTimer timer = TimerStart();
     XftFont* xf = FH_TO_XFT(font);
     if (!xf) { TimerEnd(timer, "helpers_x11:DrawListBoxItemText"); return; }
+    int XOffset = 10;
 
+    const char* iconpath = "/usr/share/icons/hicolor/64x64/apps/zen-browser.png";
+    int picked_icon_size = 32;
+    if (iconpath) {
+        int iconX = XOffset;
+        int iconY = y + (FontSize+14 - picked_icon_size)/2;
+        XOffset += picked_icon_size + XOffset;
+        draw_icon_png(dpy, xd, iconpath, iconX, iconY, picked_icon_size);
+    }
 
     char trunc[512];
     ListBoxItemDisplayText(lb, idx, trunc, sizeof(trunc));
-    int XOffset = 10;
-    if (EnableLineNumbers) {
-        char num[8];
-        snprintf(num, sizeof(num), "%d.", idx + 1);
-        draw_wrapped_text(dpy, xd, num_color, font, num, y, "LEFT", 10);
-        XOffset = get_offset_based_on_number(idx);
-    }
 
     char* alias_text = strstr(trunc, " [");
 

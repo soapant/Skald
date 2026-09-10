@@ -572,4 +572,5 @@ char* Platform_GetActiveWindowTitle(void) {
     }
     return fgTitle;
 }
+char* Platform_GetIconPath(char* desktop_or_icon) { (void)desktop_or_icon; return NULL; }
 

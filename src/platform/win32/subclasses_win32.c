@@ -349,8 +349,6 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     static HBRUSH s_sel_brush = NULL;
     static HBRUSH s_colorful_brushes[MAX_VISIBLE_ITEMS + 40] = {0};
     static bool s_colorful_ready = false;
-    static char s_num_cache[MAX_VISIBLE_ITEMS + 1][8] = {0};
-    static bool s_num_init = false;
     
     switch (msg) {
     case WM_ACTIVATE: {
@@ -387,11 +385,6 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         }
     }
     case WM_CREATE: {
-      if (!FlintContext_Get()->g_hNumFont) {
-        FlintContext_Get()->g_hNumFont = CreateFontA(NumberFontSize, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
-                                 DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-                                 CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, UsedFont);
-      }
       if (!FlintContext_Get()->g_hMainFont) {
         FlintContext_Get()->g_hMainFont = CreateFontA(FontSize, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
                                   DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
@@ -485,13 +478,6 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
               }
             s_colorful_ready = true;
           }
-          if (!s_num_init) {
-            for (int i = 0; i < MAX_VISIBLE_ITEMS + 1; i++) {
-              snprintf(s_num_cache[i], sizeof(s_num_cache[i]), "%d.", i + 1);
-            }
-            s_num_init = true;
-          }
-          
           if (EnableShaders && ShaderPreset != 0) {
             Win32_DrawSelectionBackground(pdis->hDC, &pdis->rcItem, isSelected ? COLOR_SELECTED_TEXT : COLOR_BG);
           } else if (ColorfullMode) {
@@ -553,50 +539,16 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             SetBkMode(pdis->hDC, TRANSPARENT);
             RECT textRect = pdis->rcItem;
             
-            if (pdis->itemID < MAX_VISIBLE_ITEMS && pdis->itemID <= 98) {
+            if (pdis->itemID < MAX_VISIBLE_ITEMS) {
               RECT numRect = pdis->rcItem;
                 numRect.left += 5;
                 numRect.right = numRect.left + 25;
-                
-                HFONT hOldFont = (HFONT)SelectObject(pdis->hDC, FlintContext_Get()->g_hNumFont);
                 if (AlternatingText && (pdis->itemID % 2 == 0)) SetTextColor(pdis->hDC, COLOR_ALTERNATE);
                 else {
                     float _t = (lb && lb->populated_count>1) ? (float)pdis->itemID/(float)(lb->populated_count-1) : (float)(pdis->itemID%GradientItems)/(float)GradientItems;
                     SetTextColor(pdis->hDC, GetRainbowColor(_t, 0.85f, GradientBrightness));
                 }
-                DrawTextA(pdis->hDC, s_num_cache[pdis->itemID], -1, &numRect, DT_SINGLELINE | DT_VCENTER | DT_CENTER);
-                SelectObject(pdis->hDC, hOldFont);
                 textRect.left += 35;
-            } else {
-              if (pdis->itemID < MAX_VISIBLE_ITEMS && pdis->itemID <= 998) {
-                RECT numRect = pdis->rcItem;
-                  numRect.right = 35;
-                  HFONT hOldFont = (HFONT)SelectObject(pdis->hDC, FlintContext_Get()->g_hNumFont);
-                  if (AlternatingText && (pdis->itemID % 2 == 0)) SetTextColor(pdis->hDC, COLOR_ALTERNATE);
-                  else {
-                    float _t = (lb && lb->populated_count>1) ? (float)pdis->itemID/(float)(lb->populated_count-1) : (float)(pdis->itemID%GradientItems)/(float)GradientItems;
-                    SetTextColor(pdis->hDC, GetRainbowColor(_t, 0.85f, GradientBrightness));
-                  }
-                  DrawTextA(pdis->hDC, s_num_cache[pdis->itemID], -1, &numRect, DT_SINGLELINE | DT_VCENTER | DT_CENTER);
-                  SelectObject(pdis->hDC, hOldFont);
-                  textRect.left += 35;
-              }else {
-                if (pdis->itemID < MAX_VISIBLE_ITEMS ) {
-                  RECT numRect = pdis->rcItem;
-                    numRect.right = 45;
-                    HFONT hOldFont = (HFONT)SelectObject(pdis->hDC, FlintContext_Get()->g_hNumFont);
-                    if (AlternatingText && (pdis->itemID % 2 == 0)) SetTextColor(pdis->hDC, COLOR_ALTERNATE);
-                    else {
-                    float _t = (lb && lb->populated_count>1) ? (float)pdis->itemID/(float)(lb->populated_count-1) : (float)(pdis->itemID%GradientItems)/(float)GradientItems;
-                    SetTextColor(pdis->hDC, GetRainbowColor(_t, 0.85f, GradientBrightness));
-                    }
-                    DrawTextA(pdis->hDC, s_num_cache[pdis->itemID], -1, &numRect, DT_SINGLELINE | DT_VCENTER | DT_CENTER);
-                  SelectObject(pdis->hDC, hOldFont);
-                    textRect.left += 45;
-                } else {
-                  textRect.left += 10;
-                }
-              }
             }
           
             if (FlintContext_Get()->prompt_callbacks.render != NULL) {
@@ -762,8 +714,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         for (int i = 0; i < MAX_VISIBLE_ITEMS + 40; i++) {
           if (s_colorful_brushes[i]) { DeleteObject(s_colorful_brushes[i]); s_colorful_brushes[i] = NULL; }
         }
-      s_colorful_ready = false;
-        s_num_init = false;
+        s_colorful_ready = false;
         rainbow_init = false;
     }
     default:
@@ -869,11 +820,6 @@ LRESULT CALLBACK SettingsPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
   }
     
   case WM_CREATE: {
-    if (!FlintContext_Get()->g_hNumFont) {
-      FlintContext_Get()->g_hNumFont = CreateFontA(NumberFontSize, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
-                               DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-                               CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, UsedFont);
-    }
     if (!FlintContext_Get()->g_hMainFont) {
       FlintContext_Get()->g_hMainFont = CreateFontA(FontSize, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
                                 DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
