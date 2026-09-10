@@ -19,14 +19,8 @@
 #include "helpers/flag.h"
 #include "helpers/file.h"
 #include "helpers/ui.h"
-#if !defined(_WIN32)
-#include "platform/x11/window_factory.h"
-#include "platform/x11/drawing.h"
-#endif
 
-#if !defined(MAX_PATH)
 #define MAX_PATH 260
-#endif
 
 #define WHITELIST 1
 #define BLACKLIST 0
