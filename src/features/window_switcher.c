@@ -5,6 +5,9 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
+#else
+#include <windows.h>
+#include <psapi.h>
 #endif
 
 #define MAX_WINDOWS 256
@@ -37,6 +40,8 @@ typedef struct {
 } EnumContext;
 
 
+static ExeCacheEntry g_exeCache[MAX_EXE_CACHE] = {0};
+static int g_exeCacheCount = 0;
 
 static SavedWindow g_switcher_windows[MAX_SWITCHER_WINDOWS];
 static int g_switcher_count = 0;
@@ -244,11 +249,7 @@ static void switcher_refresh_callback(const char* filter, WindowHandle hListBox,
 static bool switcher_enter_callback(const char* selection, ListBoxInfo* lb) {
     (void)lb;
     for (int i = 0; i < g_switcher_count; i++) {
-#if defined(_WIN32)
-        if (StrStrIA(g_switcher_windows[i].title, selection) != NULL) {
-#else
         if (Platform_StringContainsCaseInsensitive(g_switcher_windows[i].title, selection)) {
-#endif
             Platform_FocusWindow(g_switcher_windows[i].title);
             break;
         }
