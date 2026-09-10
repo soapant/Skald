@@ -60,7 +60,13 @@ bool fl_launch_with_args(const char* path, const char* args);
 int fl_get_icon_size(const char* icon_path);
 bool fl_launch_with_args_as_admin(const char* path, const char* args);
 int fl_load_file_list(const char* filepath, const char* out[], int max);
-// Feature registry for Control Center
+char* fl_read_file_to_string(const char* path, size_t* out_len);
+bool fl_write_string_to_file(const char* path, const char* content);
+bool fl_file_exists(const char* path);
+bool fl_append_unique_line(const char* path, const char* line);
+bool fl_remove_line(const char* path, const char* line);
+bool fl_remove_line_contains(const char* path, const char* substr);
+bool fl_parse_desktop_file(const char* path, char* out_name, size_t n, bool* out_nodisplay);
 void fl_register_feature(const char* name, void (*cb)(void));
 void fl_register_feature_with_icon(const char* name, void (*cb)(void), const char* icon_path);
 int fl_get_feature_list(const char** out_names, void (**out_cbs)(void), int max);
