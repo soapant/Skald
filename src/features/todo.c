@@ -459,7 +459,7 @@ void todo_render_callback(Display *dpy, Window *win, PromptState *state) {
 
         draw_wrapped_text(dpy, xd, &fg_color, font, num_buf, y + 4, "LEFT", 10);
 
-        int XOffset = get_offset_based_on_number(idx);
+        int XOffset = 10;
         draw_wrapped_text(dpy, xd, &fg_color, font, main_text, y + 4, "LEFT",XOffset);
         XftColorFree(dpy, vis, cmap, &fg_color);
 

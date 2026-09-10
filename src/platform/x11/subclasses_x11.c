@@ -5,6 +5,7 @@
 #include "platform/x11/drawing.h"
 #include "core/platform.h"
 #include "helpers.h"
+#include "helpers/flag.h"
 #include "core/common_ui.h"
 #include "core/vim.h"
 #include "bindings/bindings.h"
@@ -488,7 +489,10 @@ void DrawPromptUserListBoxOnDraw(Display *dpy, XftDraw* xd, Visual* vis, Colorma
             }
         }
 
-        DrawListBoxItemText(dpy, xd, vis, cmap, font, num_color, body_color, plain_color, lb, idx, y, text_x);
+        const char* icon_path = NULL;
+        int icon_size = 20;
+
+        DrawListBoxItemText(dpy, xd, vis, cmap, font, num_color, body_color, plain_color, lb,icon_path,icon_size,idx, y, text_x);
 
         XftColorFree(dpy, vis, cmap, &fcolrainbow);
       }
