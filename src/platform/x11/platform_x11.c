@@ -1239,7 +1239,7 @@ char* Platform_GetIconPath(char* desktop_or_icon) {
             if (!home_ph0 || !home_ph0[0]) home_ph0 = getenv("HOME");
             char ph_path[1024];
             if (home_ph0 && home_ph0[0]) {
-                snprintf(ph_path,sizeof(ph_path),"%s/Programming/Projects/Flint/resources/Placholder.png",home_ph0);
+                snprintf(ph_path,sizeof(ph_path),"%s/Programming/Projects/Flint/resources/Placeholder.png",home_ph0);
                 if(access(ph_path,F_OK)==0) return strdup(ph_path);
             }
         }
@@ -1290,7 +1290,7 @@ char* Platform_GetIconPath(char* desktop_or_icon) {
     if(access(pix,F_OK)==0) { strncpy(found,pix,sizeof(found)-1); return found; }
     snprintf(pix,sizeof(pix),"/usr/share/pixmaps/%s.svg",bare);
     if(access(pix,F_OK)==0) { strncpy(found,pix,sizeof(found)-1); return found; }
-    snprintf(found,sizeof(found),"/home/diggy/Programming/Projects/Flint/resources/Placholder.png");
+    snprintf(found,sizeof(found),"/home/diggy/Programming/Projects/Flint/resources/Placeholder.png");
     return found;
 }
 
