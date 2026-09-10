@@ -13,6 +13,7 @@
       "-MP",
       "-w",
       "-g",
+      "-O3",
       "-c",
       "src/main.c"
     ]
@@ -31,6 +32,7 @@
       "-MP",
       "-w",
       "-g",
+      "-O3",
       "-c",
       "src/core/context.c"
     ]
@@ -49,6 +51,7 @@
       "-MP",
       "-w",
       "-g",
+      "-O3",
       "-c",
       "src/core/helpers.c"
     ]
@@ -67,6 +70,7 @@
       "-MP",
       "-w",
       "-g",
+      "-O3",
       "-c",
       "src/core/window_manager.c"
     ]
@@ -85,6 +89,7 @@
       "-MP",
       "-w",
       "-g",
+      "-O3",
       "-c",
       "src/core/number_shortcut.c"
     ]
@@ -103,6 +108,7 @@
       "-MP",
       "-w",
       "-g",
+      "-O3",
       "-c",
       "src/core/prompt_controller.c"
     ]
@@ -121,6 +127,7 @@
       "-MP",
       "-w",
       "-g",
+      "-O3",
       "-c",
       "src/core/feature_loader.c"
     ]
@@ -139,6 +146,7 @@
       "-MP",
       "-w",
       "-g",
+      "-O3",
       "-c",
       "src/core/hashmap.c"
     ]
@@ -157,6 +165,7 @@
       "-MP",
       "-w",
       "-g",
+      "-O3",
       "-c",
       "src/core/feature_data.c"
     ]
@@ -175,6 +184,7 @@
       "-MP",
       "-w",
       "-g",
+      "-O3",
       "-c",
       "src/core/helpers_file.c"
     ]
@@ -193,6 +203,7 @@
       "-MP",
       "-w",
       "-g",
+      "-O3",
       "-c",
       "src/core/helpers_text.c"
     ]
@@ -211,6 +222,7 @@
       "-MP",
       "-w",
       "-g",
+      "-O3",
       "-c",
       "src/core/hotkey_manager.c"
     ]
@@ -229,6 +241,7 @@
       "-MP",
       "-w",
       "-g",
+      "-O3",
       "-c",
       "src/core/vim.c"
     ]
@@ -247,6 +260,7 @@
       "-MP",
       "-w",
       "-g",
+      "-O3",
       "-c",
       "src/core/modal.c"
     ]
@@ -265,6 +279,7 @@
       "-MP",
       "-w",
       "-g",
+      "-O3",
       "-c",
       "src/core/helpers_color.c"
     ]
@@ -283,6 +298,7 @@
       "-MP",
       "-w",
       "-g",
+      "-O3",
       "-c",
       "src/core/common_ui.c"
     ]
@@ -301,6 +317,7 @@
       "-MP",
       "-w",
       "-g",
+      "-O3",
       "-c",
       "src/core/helpers_history.c"
     ]
@@ -319,6 +336,7 @@
       "-MP",
       "-w",
       "-g",
+      "-O3",
       "-c",
       "src/config.c"
     ]
@@ -337,6 +355,7 @@
       "-MP",
       "-w",
       "-g",
+      "-O3",
       "-c",
       "src/bindings/vim_bindings.c"
     ]
@@ -355,6 +374,7 @@
       "-MP",
       "-w",
       "-g",
+      "-O3",
       "-c",
       "src/bindings/bindings.c"
     ]
@@ -373,6 +393,7 @@
       "-MP",
       "-w",
       "-g",
+      "-O3",
       "-c",
       "src/bindings/vim_helpers.c"
     ]
@@ -391,6 +412,7 @@
       "-MP",
       "-w",
       "-g",
+      "-O3",
       "-c",
       "src/bindings/vim_motions.c"
     ]
@@ -409,6 +431,7 @@
       "-MP",
       "-w",
       "-g",
+      "-O3",
       "-c",
       "src/flapi.c"
     ]
@@ -427,6 +450,7 @@
       "-MP",
       "-w",
       "-g",
+      "-O3",
       "-c",
       "src/platform/x11/ui_x11.c"
     ]
@@ -445,6 +469,7 @@
       "-MP",
       "-w",
       "-g",
+      "-O3",
       "-c",
       "src/platform/x11/subclasses_x11.c"
     ]
@@ -463,6 +488,7 @@
       "-MP",
       "-w",
       "-g",
+      "-O3",
       "-c",
       "src/platform/x11/window_manager_x11.c"
     ]
@@ -481,6 +507,7 @@
       "-MP",
       "-w",
       "-g",
+      "-O3",
       "-c",
       "src/platform/x11/platform_x11.c"
     ]
@@ -499,6 +526,7 @@
       "-MP",
       "-w",
       "-g",
+      "-O3",
       "-c",
       "src/platform/x11/helpers_x11.c"
     ]
@@ -517,6 +545,7 @@
       "-MP",
       "-w",
       "-g",
+      "-O3",
       "-c",
       "src/platform/x11/flapi_x11.c"
     ]
@@ -535,6 +564,7 @@
       "-MP",
       "-w",
       "-g",
+      "-O3",
       "-c",
       "src/platform/x11/display_x11.c"
     ]
@@ -553,6 +583,7 @@
       "-MP",
       "-w",
       "-g",
+      "-O3",
       "-c",
       "src/platform/x11/misc_x11.c"
     ]
@@ -571,6 +602,7 @@
       "-MP",
       "-w",
       "-g",
+      "-O3",
       "-c",
       "src/platform/wm/wm.c"
     ]
@@ -589,6 +621,7 @@
       "-MP",
       "-w",
       "-g",
+      "-O3",
       "-c",
       "src/platform/wm/hyprland_wm.c"
     ]
@@ -607,6 +640,7 @@
       "-MP",
       "-w",
       "-g",
+      "-O3",
       "-c",
       "src/platform/wm/x11_wm.c"
     ]
@@ -625,6 +659,7 @@
       "-MP",
       "-w",
       "-g",
+      "-O3",
       "-c",
       "src/platform/wm/sway_wm.c"
     ]
@@ -643,6 +678,7 @@
       "-MP",
       "-w",
       "-g",
+      "-O3",
       "-c",
       "src/platform/lib.c"
     ]
