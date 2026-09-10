@@ -27,6 +27,66 @@ static bool FuzzyMatch(const char* text, const char* pattern) {
     }
     return *pattern == '\0';
 }
+static int Levenshtein(const char* a, const char* b) {
+    int la = (int)strlen(a), lb = (int)strlen(b);
+    if (abs(la - lb) > 2) return 100;
+    int dp[256][256];
+    for (int i=0;i<=la && i<256;i++) dp[i][0]=i;
+    for (int j=0;j<=lb && j<256;j++) dp[0][j]=j;
+    for (int i=1;i<=la && i<256;i++) for(int j=1;j<=lb && j<256;j++){
+        int cost = tolower((unsigned char)a[i-1])==tolower((unsigned char)b[j-1]) ? 0 : 1;
+        int v = dp[i-1][j]+1;
+        if (dp[i][j-1]+1 < v) v = dp[i][j-1]+1;
+        if (dp[i-1][j-1]+cost < v) v = dp[i-1][j-1]+cost;
+        if (i>1 && j>1 && tolower((unsigned char)a[i-1])==tolower((unsigned char)b[j-2]) && tolower((unsigned char)a[i-2])==tolower((unsigned char)b[j-1])) {
+            if (dp[i-2][j-2]+1 < v) v = dp[i-2][j-2]+1;
+        }
+        dp[i][j]=v;
+    }
+    return dp[la][lb];
+}
+static bool FuzzyMatchWithTypo(const char* text, const char* pattern) {
+    if (FuzzyMatch(text, pattern)) return true;
+    if (!text || !pattern) return false;
+    if (strlen(pattern) < 3) return false;
+    int dist = Levenshtein(text, pattern);
+    if (dist <= 1) return true;
+    if (strlen(pattern) >= 4 && dist == 2) return true;
+    return false;
+}
+static int FuzzyScore(const char* text, const char* pattern) {
+    if (!pattern || !pattern[0]) return 0;
+    if (!text || !text[0]) return 1000000;
+    int score = 0;
+    int last = -1;
+    int consecutive = 0;
+    int pos = 0;
+    int tlen = (int)strlen(text);
+    for (int i=0; pattern[i]; i++) {
+        char pc = tolower((unsigned char)pattern[i]);
+        bool found = false;
+        for (int j=pos; text[j]; j++) {
+            if (tolower((unsigned char)text[j]) == pc) {
+                if (last >= 0) {
+                    int gap = j - last - 1;
+                    score += gap * 5;
+                    if (gap==0) consecutive++;
+                } else {
+                    score += j * 2;
+                }
+                if (j==0 || text[j-1]==' ' || text[j-1]=='/' || text[j-1]=='_' || text[j-1]=='-' || text[j-1]=='.') score -= 3;
+                last = j;
+                pos = j+1;
+                found = true;
+                break;
+            }
+        }
+        if (!found) return 1000000;
+    }
+    score -= consecutive * 4;
+    score += tlen / 8;
+    return score;
+}
 
 void BuildAliasDisplayItems(const char** items, int count) {
   g_alias_display_active = false;
@@ -121,7 +181,7 @@ void PopulateListBox(ListBoxInfo* lb, WindowHandle hListBox, const char* filter,
       if (filter_match) {
         match = filter_match(search_text, clean_filter);
       } else {
-        match = FuzzyMatch(search_text, clean_filter);
+        match = FuzzyMatchWithTypo(search_text, clean_filter);
       }
 
       if (match) {
@@ -144,7 +204,7 @@ void PopulateListBox(ListBoxInfo* lb, WindowHandle hListBox, const char* filter,
       if (g_alias_display_active && i < g_alias_display_count && g_alias_display[i][0] != '\0') {
         search_text = g_alias_display[i];
       }
-      bool match = filter_match ? filter_match(search_text, clean_filter) : FuzzyMatch(search_text, clean_filter);
+      bool match = filter_match ? filter_match(search_text, clean_filter) : FuzzyMatchWithTypo(search_text, clean_filter);
 
       if (match) {
         lb->matching_indices[total_matches] = i;
@@ -153,6 +213,20 @@ void PopulateListBox(ListBoxInfo* lb, WindowHandle hListBox, const char* filter,
     }
   }
   TimerEnd(timer_filter, "  PopulateListBox - Filtering");
+  if (clean_filter[0] != '\0' && total_matches > 1) {
+      int scores[MAX_MATCHES];
+      for (int i=0;i<total_matches;i++) {
+          int idx = lb->matching_indices[i];
+          const char* txt = items[idx];
+          if (g_alias_display_active && idx >=0 && idx < g_alias_display_count && g_alias_display[idx][0] != '\0') txt = g_alias_display[idx];
+          if (FuzzyMatch(txt, clean_filter)) scores[i] = FuzzyScore(txt, clean_filter);
+          else scores[i] = 500 + Levenshtein(txt, clean_filter) * 20;
+      }
+      for (int i=0;i<total_matches-1;i++) for (int j=i+1;j<total_matches;j++) if (scores[j] < scores[i]) {
+          int ti = lb->matching_indices[i]; lb->matching_indices[i]=lb->matching_indices[j]; lb->matching_indices[j]=ti;
+          int ts = scores[i]; scores[i]=scores[j]; scores[j]=ts;
+      }
+  }
 
   WinTimer timer_history = TimerStart();
   if (total_matches > 0 && strlen(clean_filter) > 0) {
