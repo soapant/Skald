@@ -1,15 +1,32 @@
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <stdarg.h>
+#include <ctype.h>
+#if defined(_WIN32)
+#include <windows.h>
+#include <shellapi.h>
+#include <shlwapi.h>
+#include <psapi.h>
+#else
+#include <sys/stat.h>
+#include <unistd.h>
+#include <sys/wait.h>
+#include <fcntl.h>
+#include <pwd.h>
+#include <dirent.h>
+#include <pthread.h>
+#endif
 #include "core/context.h"
 #include "core/modal.h"
 #include "helpers.h"
 #include "config.h"
 #include "core/platform.h"
+#include "core/common_ui.h"
+#include "core/window_manager.h"
 #include "core/flapi.h"
 #include "core/flapi_platform.h"
 #include "core/hotkey_manager.h"
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdarg.h>
 
 
 
