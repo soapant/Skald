@@ -76,14 +76,51 @@ void initialize_app_cache(void) {
         if (!ListOfProgramPaths[i] || ListOfProgramPaths[i][0] == '\0') continue;
         fl_get_all_files_from_dir(ListOfProgramPaths[i], allowed, &s_apps, (char**)ListOfShitToIgnore);
     }
-    for(size_t i=0;i<s_apps.count;i++) if(strstr(s_apps.items[i].path,".desktop")){
-      FILE*f=fopen(s_apps.items[i].path,"r"); char line[512];
-      while(fgets(line,sizeof line,f)) if(strncmp(line,"Name=",5)==0){
-        line[strcspn(line,"\r\n")]='\0';
-        strncpy(s_apps.items[i].name, line+5, sizeof(s_apps.items[i].name)-1);
-        break;
-      }
-      fclose(f);
+    for (size_t i = 0; i < s_apps.count; ) {
+        bool skip = false;
+        char display_name[256] = {0};
+        bool has_display = false;
+        if (strstr(s_apps.items[i].path, ".desktop")) {
+            FILE* f = fopen(s_apps.items[i].path, "r");
+            if (f) {
+                char line[512];
+                while (fgets(line, sizeof line, f)) {
+                    char* p = line;
+                    while(*p==' ' || *p=='\t') p++;
+                    if (strncasecmp(p, "NoDisplay=true", 14)==0 || strncasecmp(p, "Hidden=true", 11)==0) {
+                        skip = true;
+                    }
+                    if (!has_display && strncasecmp(p, "Name=", 5)==0) {
+                        p += 5;
+                        while(*p==' ' || *p=='\t') p++;
+                        p[strcspn(p, "\r\n")]='\0';
+                        strncpy(display_name, p, sizeof(display_name)-1);
+                        has_display = true;
+                    }
+                }
+                fclose(f);
+            }
+        }
+        if (skip) {
+            for (size_t k = i; k + 1 < s_apps.count; k++) s_apps.items[k] = s_apps.items[k+1];
+            s_apps.count--;
+            continue;
+        }
+        if (has_display && display_name[0]) {
+            strncpy(s_apps.items[i].name, display_name, sizeof(s_apps.items[i].name)-1);
+            s_apps.items[i].name[sizeof(s_apps.items[i].name)-1] = '\0';
+        }
+        i++;
+    }
+    for (size_t i = 0; i < s_apps.count; i++) {
+        for (size_t j = i + 1; j < s_apps.count; ) {
+            if (fl_string_match_insensitive(s_apps.items[i].name, s_apps.items[j].name)) {
+                for (size_t k = j; k + 1 < s_apps.count; k++) s_apps.items[k] = s_apps.items[k+1];
+                s_apps.count--;
+            } else {
+                j++;
+            }
+        }
     }
     
 #if defined(_WIN32)
