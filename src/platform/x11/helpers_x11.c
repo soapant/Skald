@@ -288,19 +288,17 @@ static void draw_icon_png(Display* dpy, XftDraw* xd, const char* path, int x, in
 
 void DrawListBoxItemText(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap, FontHandle font,
                          XftColor* num_color, XftColor* body_color, XftColor* plain_color,
-                         ListBoxInfo* lb, int idx, int y, int text_x) {
+                         ListBoxInfo* lb,char* icon_path,int icon_size,int idx, int y, int text_x) {
     WinTimer timer = TimerStart();
     XftFont* xf = FH_TO_XFT(font);
     if (!xf) { TimerEnd(timer, "helpers_x11:DrawListBoxItemText"); return; }
     int XOffset = 10;
 
-    const char* iconpath = "/usr/share/icons/hicolor/64x64/apps/zen-browser.png";
-    int picked_icon_size = 32;
-    if (iconpath) {
+    if (icon_path) {
         int iconX = XOffset;
-        int iconY = y + (FontSize+14 - picked_icon_size)/2;
-        XOffset += picked_icon_size + XOffset;
-        draw_icon_png(dpy, xd, iconpath, iconX, iconY, picked_icon_size);
+        int iconY = y + (FontSize+14 - icon_size)/2;
+        XOffset += icon_size + XOffset;
+        draw_icon_png(dpy, xd, icon_path, iconX, iconY, icon_size);
     }
 
     char trunc[512];
@@ -415,25 +413,6 @@ void GetExeNameFromPid(pid_t pid, char* outExe, size_t maxLen) {
         strncpy(outExe, "unknown", maxLen);
     }
     TimerEnd(timer, "helpers_x11:GetExeNameFromPid");
-}
-
-int get_offset_based_on_number(int index) {
-    WinTimer timer = TimerStart();
-    if (index < 9) {        
-        TimerEnd(timer, "helpers_x11:get_offset_based_on_number");
-        return 35;
-    } else if (index < 99) { 
-        TimerEnd(timer, "helpers_x11:get_offset_based_on_number");
-        return 50;
-    } else if (index < 999) {
-        TimerEnd(timer, "helpers_x11:get_offset_based_on_number");
-        return 60;
-    } else if (index < 9999) {
-        TimerEnd(timer, "helpers_x11:get_offset_based_on_number");
-        return 70;
-    }
-    TimerEnd(timer, "helpers_x11:get_offset_based_on_number");
-    return 0;
 }
 
 Window Linux_CreateWindowExOR(Display* dpy, int x, int y, int w, int h, unsigned long bg_color, const char* res_name, const char* res_class, long event_mask, bool override_redirect);
