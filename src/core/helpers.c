@@ -6,7 +6,13 @@
 #include <shellapi.h>
 #include <shlwapi.h>
 #endif
-#include "helpers.h"
+#include "config.h"
+#include "core/platform.h"
+#include "helpers/hotkey.h"
+#include "helpers/alias.h"
+#include "helpers/flag.h"
+#include "helpers/file.h"
+#include "helpers/ui.h"
 #include "core/timer.h"
 #include "core/common_ui.h"
 

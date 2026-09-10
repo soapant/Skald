@@ -94,7 +94,7 @@ void TriggerMonitorFocusSide() {
 }
 
 FLINT_FEATURE_INIT {
-    // no auto init for monitor_focus.h
+
 
     fl_register_feature("monitor_focus", TriggerMonitorFocusMain);
 }

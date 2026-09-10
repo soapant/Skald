@@ -1,5 +1,11 @@
 #include "wm/hyprland_wm.h"
-#include "helpers.h"
+#include "config.h"
+#include "core/platform.h"
+#include "helpers/hotkey.h"
+#include "helpers/alias.h"
+#include "helpers/flag.h"
+#include "helpers/file.h"
+#include "helpers/ui.h"
 #include <stddef.h>
 #include <stdio.h>
 #include <ctype.h>
@@ -18,7 +24,7 @@ char* paste_hyprland(char* content) {
   return Platform_RunTerminalCommand(buffer,false);
 }
 
-//this is a total guess 
+
 bool succeded_hypr(char* output) {
     StringList lines = String_Split(output, "\n");
     for (size_t i = 0; i < lines.count; i++) {

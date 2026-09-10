@@ -74,7 +74,7 @@ void WindowManager_ProcessEvents(WindowManager* wm);
 char* WindowManager_ShowPrompt(WindowManager* wm, const PromptSpec* spec);
 char* WindowManager_ShowSimplePrompt(WindowManager* wm, const SimplePromptSpec* spec);
 
-// Built-in popup types
+
 Popup* EditPopup_Create(WindowManager* wm, const char* initial_text, 
                         const char* title, int x, int y,
                         EditPopupConfirmCallback on_confirm, void* user_data);

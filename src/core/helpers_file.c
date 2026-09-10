@@ -5,7 +5,13 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "helpers.h"
+#include "config.h"
+#include "core/platform.h"
+#include "helpers/hotkey.h"
+#include "helpers/alias.h"
+#include "helpers/flag.h"
+#include "helpers/file.h"
+#include "helpers/ui.h"
 #include "core/timer.h"
 #include "core/common_ui.h"
 #include "core/window_manager.h"
@@ -82,4 +88,3 @@ int EditCallback_Handle(EditCallbackData* data, RefreshCallback refresh) {
     
     return rc;
 }
-

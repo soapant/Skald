@@ -80,7 +80,7 @@ void RunWindowTimer(const char* parameter) {
 
     if (strlen(timer_param) > 0) {
         printf("[TIMER] Launching timer with param: %s\n", timer_param);
-        // LaunchTimer(timer_param); 
+
     }
 }
 
@@ -109,18 +109,18 @@ bool CheckGameRunning(const char* parameter) {
 }
 
 
-// void HandleFocusWindowFlag(const char* parameter) {
-//     WindowHandle target_hwnd = FindWindowByPartialTitle(parameter);
-//     if (WH_TO_HWND(target_hwnd) != NULL) {
-//         FocusWindow(target_hwnd);
-//     }
-// }
+
+
+
+
+
+
 void DisplayText(const char* parameter){
     Platform_DisplayMessage(parameter,960,999,950,70,3,COLOR_TEXT);
 }
 
 const ActionDef REMINDER_ACTION_FLAGS[] = {
-    // {"-f", HandleFocusWindowFlag},
+
     {"-dt", DisplayText},
 };
 

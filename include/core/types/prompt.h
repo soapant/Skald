@@ -90,7 +90,7 @@ static inline bool ListBoxInfo_IsSelected(ListBoxInfo *lb) {
     return lb && lb->selected_index != -1;
 }
 
-// Spec for Platform_PromptUser. Unset fields are NULL/0 automatically.
+
 typedef struct {
     const char* title;
     const char** items;

@@ -146,4 +146,3 @@ char** HashMap_GetKeys(HashMap* map, int* count) {
 int HashMap_Size(HashMap* map) {
     return map ? map->count : 0;
 }
-

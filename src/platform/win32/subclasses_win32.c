@@ -10,7 +10,13 @@
 #include "core/types.h"
 #include "platform/subclasses.h"
 #include "wingdi.h"
-#include "helpers.h"
+#include "config.h"
+#include "core/platform.h"
+#include "helpers/hotkey.h"
+#include "helpers/alias.h"
+#include "helpers/flag.h"
+#include "helpers/file.h"
+#include "helpers/ui.h"
 #include "core/platform.h"
 
 static ListBoxInfo* GetLBFromPopup(HWND hPopup) {
@@ -1307,4 +1313,3 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
   }
   return 0;
 }
-

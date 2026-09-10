@@ -128,11 +128,11 @@ static BOOL CALLBACK EnumWindowsProcEx(HWND hwnd, LPARAM lParam) {
     GetWindowTextA(hwnd, title, sizeof(title));
     const char* exe = GetExeNameForWindow(hwnd);
     
-    if (ctx->mode == 1) { // By title
+    if (ctx->mode == 1) {
         if (strstr(title, ctx->pattern) == NULL) return TRUE;
-    } else if (ctx->mode == 2) { // By exe
+    } else if (ctx->mode == 2) {
         if (strstr(exe, ctx->pattern) == NULL) return TRUE;
-    } else if (ctx->mode == 3) { // Filtered (blacklist)
+    } else if (ctx->mode == 3) {
         for (int i = 0; i < ctx->blacklistCount; i++) {
             if (strstr(title, ctx->blacklist[i]) != NULL) return TRUE;
         }

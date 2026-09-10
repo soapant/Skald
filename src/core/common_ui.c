@@ -1,7 +1,13 @@
 #include "core/context.h"
 #include "core/modal.h"
 #include "config.h"
-#include "helpers.h"
+#include "config.h"
+#include "core/platform.h"
+#include "helpers/hotkey.h"
+#include "helpers/alias.h"
+#include "helpers/flag.h"
+#include "helpers/file.h"
+#include "helpers/ui.h"
 #include "core/common_ui.h"
 #include "core/vim.h"
 #include "core/platform.h"
@@ -117,38 +123,38 @@ void PopulateListBox(ListBoxInfo* lb, WindowHandle hListBox, const char* filter,
     bool (*filter_match)(const char* item, const char* filter)) {
 
   if (!lb) return;
-  WinTimer timer_alias = TimerStart();
+  PROFILE_START(timer_alias);
 #if defined(_WIN32)
   if (WH_TO_HWND(FlintContext_Get()->window.hListBox) == NULL) return;
 #endif
   if (SequenceIsWaiting()) return;
   if (!filter) filter = "";
   BuildAliasDisplayItems(items, item_count);
-  TimerEnd(timer_alias,"PopulateListBox - Aliases");
+  PROFILE_END_VAR(timer_alias, "PopulateListBox - Aliases");
 
 
-  WinTimer timer_total = TimerStart();
+  PROFILE_START(timer_total);
   int old_count = lb->total_matches;
 
-  WinTimer timer_current_sel = TimerStart();
+  PROFILE_START(timer_current_sel);
   int current_sel = lb->selected_index;
   char current_text[256] = {0};
   if (current_sel >= 0 && current_sel < lb->populated_count) {
     strncpy(current_text, lb->populated_cache[current_sel], sizeof(current_text) - 1);
     current_text[sizeof(current_text) - 1] = '\0';
   }
-  TimerEnd(timer_current_sel, "  PopulateListBox - Get current selection");
+  PROFILE_END_VAR(timer_current_sel, "  PopulateListBox - Get current selection");
 
-  WinTimer timer_clean_filter = TimerStart();
+  PROFILE_START(timer_clean_filter);
   int total_matches = 0;
   char clean_filter[256] = {0};
   if (filter) {
     strncpy(clean_filter, filter, sizeof(clean_filter) - 1);
     clean_filter[sizeof(clean_filter) - 1] = '\0';
   }
-  TimerEnd(timer_clean_filter, "  PopulateListBox - Clean filter");
+  PROFILE_END_VAR(timer_clean_filter, "  PopulateListBox - Clean filter");
 
-  WinTimer timer_inc = TimerStart();
+  PROFILE_START(timer_inc);
   int use_previous = 0;
   int prev_count = 0;
   if (strlen(clean_filter) > 0 &&
@@ -161,9 +167,9 @@ void PopulateListBox(ListBoxInfo* lb, WindowHandle hListBox, const char* filter,
     use_previous = 1;
     prev_count = lb->last_filter_full_count;
   }
-  TimerEnd(timer_inc, "  PopulateListBox - Incremental check");
+  PROFILE_END_VAR(timer_inc, "  PopulateListBox - Incremental check");
 
-  WinTimer timer_filter = TimerStart();
+  PROFILE_START(timer_filter);
   if (use_previous && prev_count == 0) {
     total_matches = 0;
   } else if (use_previous && prev_count > 0) {
@@ -212,7 +218,7 @@ void PopulateListBox(ListBoxInfo* lb, WindowHandle hListBox, const char* filter,
       }
     }
   }
-  TimerEnd(timer_filter, "  PopulateListBox - Filtering");
+  PROFILE_END_VAR(timer_filter, "  PopulateListBox - Filtering");
   if (clean_filter[0] != '\0' && total_matches > 1) {
       int scores[MAX_MATCHES];
       for (int i=0;i<total_matches;i++) {
@@ -228,16 +234,16 @@ void PopulateListBox(ListBoxInfo* lb, WindowHandle hListBox, const char* filter,
       }
   }
 
-  WinTimer timer_history = TimerStart();
+  PROFILE_START(timer_history);
   if (total_matches > 0 && strlen(clean_filter) > 0) {
     memcpy(lb->prev_matches, lb->matching_indices, total_matches * sizeof(int));
     lb->last_filter_full_count = total_matches;
   } else {
     lb->last_filter_full_count = 0;
   }
-  TimerEnd(timer_history, "  PopulateListBox - History save");
+  PROFILE_END_VAR(timer_history, "  PopulateListBox - History save");
 
-  WinTimer timer_matches = TimerStart();
+  PROFILE_START(timer_matches);
   if (total_matches == 0 && item_count > 0 && strlen(clean_filter) == 0) {
     int force_count = (item_count < 30) ? item_count : 30;
     for (int i = 0; i < force_count; i++) {
@@ -245,16 +251,16 @@ void PopulateListBox(ListBoxInfo* lb, WindowHandle hListBox, const char* filter,
       total_matches++;
     }
   }
-  TimerEnd(timer_matches," PopulateListBox - Matches");
+  PROFILE_END_VAR(timer_matches, " PopulateListBox - Matches");
 
-  WinTimer timer_pool = TimerStart();
+  PROFILE_START(timer_pool);
   int pool_max = MAX_VISIBLE_ITEMS;
   if (total_matches > pool_max) {
     total_matches = pool_max;
   }
-  TimerEnd(timer_pool, "  PopulateListBox - Pool adjust");
+  PROFILE_END_VAR(timer_pool, "  PopulateListBox - Pool adjust");
 
-  WinTimer timer_cache = TimerStart();
+  PROFILE_START(timer_cache);
   lb->populated_count = 0;
 
   for (int i = 0; i < total_matches; i++) {
@@ -266,11 +272,11 @@ void PopulateListBox(ListBoxInfo* lb, WindowHandle hListBox, const char* filter,
     lb->populated_cache[lb->populated_count][strcspn(lb->populated_cache[lb->populated_count], "\r\n")] = '\0';
     lb->populated_count++;
   }
-  TimerEnd(timer_cache, "  PopulateListBox - Cache build");
+  PROFILE_END_VAR(timer_cache, "  PopulateListBox - Cache build");
 
   UI_LB_SetCount(lb, FlintContext_Get()->window.hListBox, total_matches);
 
-  WinTimer timer_ui = TimerStart();
+  PROFILE_START(timer_ui);
   if (!SequenceIsWaiting()) {
     if (IsNormalMode()) {
       int keep;
@@ -314,9 +320,9 @@ void PopulateListBox(ListBoxInfo* lb, WindowHandle hListBox, const char* filter,
     InvalidateRect(WH_TO_HWND(FlintContext_Get()->window.hListBox), NULL, FALSE);
 #endif
   }
-  TimerEnd(timer_ui, "  PopulateListBox - UI update");
+  PROFILE_END_VAR(timer_ui, "  PopulateListBox - UI update");
 
-  WinTimer timer_cleanup = TimerStart();
+  PROFILE_START(timer_cleanup);
   if (strlen(clean_filter) > 0) {
     strncpy(lb->last_filter, clean_filter, sizeof(lb->last_filter) - 1);
     lb->last_filter[sizeof(lb->last_filter) - 1] = '\0';
@@ -332,9 +338,9 @@ void PopulateListBox(ListBoxInfo* lb, WindowHandle hListBox, const char* filter,
     FlintContext_Get()->draw_background = true;
 #endif
   }
-  TimerEnd(timer_cleanup, "  PopulateListBox - Cleanup");
+  PROFILE_END_VAR(timer_cleanup, "  PopulateListBox - Cleanup");
 
-  TimerEnd(timer_total, "PopulateListBox TOTAL");
+  PROFILE_END_VAR(timer_total, "PopulateListBox TOTAL");
 }
 
 ColorRef GetRainbowColor(float t, float s, float v) {

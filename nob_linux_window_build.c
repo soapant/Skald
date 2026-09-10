@@ -159,7 +159,7 @@ static bool compile_all(bool* any_compiled) {
     for (size_t i = 0; i < to_build.count; ++i) {
         Nob_Cmd cmd = {0};
         nob_cc(&cmd);
-        // override compiler for cross build
+
         cmd.items[0] = (char*)CROSS_CC;
         nob_cmd_append(&cmd, CC_FLAGS, "-c", to_build.items[i], "-o", obj_path(to_build.items[i]));
         if (!nob_cmd_run(&cmd, .async = &procs, .max_procs = max_procs,
