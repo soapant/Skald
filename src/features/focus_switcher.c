@@ -23,13 +23,7 @@ static const char* terminal_windows[] = {"alacritty","pwsh","foot"};
 
 
 
-static char* my_strcasestr(const char* haystack, const char* needle) {
-#if defined(_WIN32)
-    return (char*)StrStrIA(haystack, needle);
-#else
-    return (char*)strcasestr(haystack, needle);
-#endif
-}
+
 
 #if !defined(_WIN32)
 static bool GetX11WindowPropertyString(Display* dpy, Window w, Atom prop, char* buf, int max_len) {
@@ -197,7 +191,7 @@ static WindowHandle FindWindowByPartialTitle(const char* title) {
             GetX11WindowPropertyString(dpy, windows[i], XA_WM_NAME, window_title, sizeof(window_title));
         }
 
-        if (strlen(window_title) > 0 && my_strcasestr(window_title, title) != NULL) {
+        if (strlen(window_title) > 0 && Platform_StringContainsCaseInsensitive(window_title, title)) {
             found = WH_FROM_HWND(windows[i]);
             break;
         }
@@ -259,7 +253,7 @@ static WindowHandle FindAnyWindow(const char* titles[], int count) {
                 GetX11WindowPropertyString(dpy, windows[j], XA_WM_NAME, window_title, sizeof(window_title));
             }
 
-            if (strlen(window_title) > 0 && my_strcasestr(window_title, titles[i]) != NULL) {
+            if (strlen(window_title) > 0 && Platform_StringContainsCaseInsensitive(window_title, titles[i])) {
                 printf("[FOCUS-DEBUG] FOUND: \"%s\" (Window ID: %lu)\n", window_title, windows[j]);
                 found = WH_FROM_HWND(windows[j]);
                 break;
@@ -276,7 +270,7 @@ static WindowHandle FindAnyWindow(const char* titles[], int count) {
 
 static bool IsBlacklisted(const char* title, const char* blacklist[], int count) {
     for (int i = 0; i < count; i++) {
-        if (my_strcasestr(title, blacklist[i]) != NULL) {
+        if (Platform_StringContainsCaseInsensitive(title, blacklist[i])) {
             return true;
         }
     }

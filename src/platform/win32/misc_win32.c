@@ -286,7 +286,7 @@ int Platform_CollectRunningProcesses(char process_list[][MaxFeatures], int max_c
         do {
             bool exists = false;
             for (int i = 0; i < count; i++) {
-                if (StrCmpIA(process_list[i], pe.szExeFile) == 0) { exists = true; break; }
+                if (Platform_StringContainsCaseInsensitive(process_list[i], pe.szExeFile)) { exists = true; break; }
             }
             if (!exists && count < max_count) {
                 strncpy(process_list[count], pe.szExeFile, 127);

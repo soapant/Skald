@@ -73,7 +73,7 @@ bool fl_get_all_files_from_dir_platform(const char* dir_path, char** list_of_all
                 if (ext) {
                     ext++;
                     for (int i = 0; list_of_allowed_extensions[i] != NULL; i++) {
-                        if (strcasecmp(ext, list_of_allowed_extensions[i]) == 0) {
+                        if (Platform_StringContainsCaseInsensitive(ext, list_of_allowed_extensions[i])) {
                             allowed = true;
                             break;
                         }
@@ -141,13 +141,13 @@ bool fl_launch_with_args_platform(const char* path, const char* args) {
             char line[1024];
             while (fgets(line, sizeof(line), df)){
                 char* p=line; while(*p==' '||*p=='\t') p++;
-                if (strncasecmp(p, "Terminal=", 9)==0){
+                if (Platform_StringContainsCaseInsensitive(p, "Terminal=")){
                     char* v=p+9; while(*v==' '||*v=='\t') v++; v[strcspn(v, "\r\n")]='\0';
-                    if(strcasecmp(v,"true")==0 || strcmp(v,"1")==0) is_terminal=true;
-                } else if (strncasecmp(p, "Exec=", 5)==0){
+                    if(Platform_StringContainsCaseInsensitive(v, "true") || strcmp(v,"1")==0) is_terminal=true;
+                } else if (Platform_StringContainsCaseInsensitive(p, "Exec=")){
                     char* v=p+5; while(*v==' '||*v=='\t') v++; v[strcspn(v, "\r\n")]='\0';
                     strncpy(exec_line, v, sizeof(exec_line)-1);
-                } else if (strncasecmp(p, "Path=", 5)==0){
+                } else if (Platform_StringContainsCaseInsensitive(p, "Path=")){
                     char* v=p+5; while(*v==' '||*v=='\t') v++; v[strcspn(v, "\r\n")]='\0';
                     strncpy(workdir, v, sizeof(workdir)-1);
                 }
@@ -305,7 +305,7 @@ char* fl_search_file_in_dir_platform(const char* directory, const char* search_s
         struct stat st;
         if (stat(full_path, &st)!=0) continue;
         if (S_ISDIR(st.st_mode)) continue;
-        if (strcasestr(entry->d_name, search_string) != NULL) {
+        if (Platform_StringContainsCaseInsensitive(entry->d_name, search_string)) {
             snprintf(found_path, sizeof(found_path), "%s", full_path);
             closedir(dir);
             TimerEnd(timer, "flapi_x11:fl_search_file_in_dir_platform");
