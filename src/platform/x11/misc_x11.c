@@ -771,7 +771,7 @@ bool Platform_LaunchBrowserAtUrl(char* url,bool new_window) {
       }
       
       PROFILE_END_VAR(timer, "misc_x11:Platform_LaunchBrowserAtUrl");
-      return system(command) == 0;
+      return Platform_RunTerminalCommand(command,false);
     } else {
     if (Platform_IsRunningAsRoot()) {
         snprintf(command, sizeof(command), "sudo -u %s DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s xdg-open \"%s\" > /dev/null 2>&1 &", real_user, display, xauthority, runtime_dir, url);
@@ -779,7 +779,7 @@ bool Platform_LaunchBrowserAtUrl(char* url,bool new_window) {
         snprintf(command, sizeof(command), "DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s xdg-open \"%s\" > /dev/null 2>&1 &", display, xauthority, runtime_dir, url);
     }
     PROFILE_END_VAR(timer, "misc_x11:Platform_LaunchBrowserAtUrl");
-    return system(command);
+    return Platform_RunTerminalCommand(command,false);
     }
     PROFILE_END_VAR(timer, "misc_x11:Platform_LaunchBrowserAtUrl");
 }
@@ -856,7 +856,7 @@ bool Platform_QueryBrowser(char* query) {
     }
     
     PROFILE_END_VAR(timer, "misc_x11:Platform_QueryBrowser");
-    return system(command) == 0;
+    return Platform_RunTerminalCommand(command,false);
 }
 
 char* Platform_GetLastClipboardEntry() {
