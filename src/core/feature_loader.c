@@ -80,11 +80,11 @@ bool FeatureLoader_LoadAllFromDir(const char* dir) {
 
 bool FeatureLoader_Init(void) {
     g_feature_count = 0;
-    // try build/features and ./features
+
     if (!FeatureLoader_LoadAllFromDir("build/features")) {
         FeatureLoader_LoadAllFromDir("features");
     } else {
-        // also load any extra in features dir if exists
+
         FeatureLoader_LoadAllFromDir("features");
     }
     printf("[FEATURE] init done, %d features loaded (hot reload dir: build/features)\n", g_feature_count);
@@ -94,7 +94,7 @@ bool FeatureLoader_Init(void) {
 void FeatureLoader_Shutdown(void) {
     for (int i=0;i<g_feature_count;i++) {
         if (g_features[i].handle) {
-            // optional shutdown symbol
+
             typedef void (*ShutdownFn)(void);
             ShutdownFn shut = (ShutdownFn)Platform_GetSymbol(g_features[i].handle, "FlintFeatureShutdown");
             if (shut) shut();
@@ -133,11 +133,10 @@ void FeatureLoader_Reload(const char* name) {
 }
 
 void FeatureLoader_ReloadAll(void) {
-    WinTimer timer1 = TimerStart();
+    PROFILE_START(timer1);
 
     FeatureLoader_Shutdown();
     FeatureLoader_Init();
 
-    TimerEnd(timer1, "Hot Reload");
+    PROFILE_END_VAR(timer1, "Hot Reload");
 }
-

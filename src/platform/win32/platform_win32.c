@@ -6,7 +6,13 @@
 #include <stdlib.h>
 #include "core/context.h"
 #include "core/modal.h"
-#include "helpers.h"
+#include "config.h"
+#include "core/platform.h"
+#include "helpers/hotkey.h"
+#include "helpers/alias.h"
+#include "helpers/flag.h"
+#include "helpers/file.h"
+#include "helpers/ui.h"
 #include "core/platform.h"
 #include "config.h"
 #include <shellapi.h>
@@ -423,12 +429,12 @@ char* Platform_WatchForCFileChanges(const char* dir_path, void (*callback)(void)
     if (!dir_path) return NULL;
     const char* watch_dir = dir_path;
     if (!watch_dir || !watch_dir[0]) watch_dir = FeaturePath ? FeaturePath : "src/features";
-    // init on first call for this dir
+
     bool found_dir = false;
     for (int i = 0; i < g_c_watch_count; i++) if (strcmp(g_c_watches[i].path, watch_dir) == 0) { found_dir = true; break; }
     if (!found_dir && g_c_watch_count == 0) {
         strncpy(g_c_watch_dir, watch_dir, sizeof(g_c_watch_dir)-1);
-        // first scan to init lastWrite without triggering
+
         char pattern[MAX_PATH];
         snprintf(pattern, sizeof(pattern), "%s\\*.c", watch_dir);
         WIN32_FIND_DATAA fd;
@@ -446,7 +452,7 @@ char* Platform_WatchForCFileChanges(const char* dir_path, void (*callback)(void)
         }
         return NULL;
     }
-    // poll for changes
+
     char pattern[MAX_PATH];
     snprintf(pattern, sizeof(pattern), "%s\\*.c", watch_dir);
     WIN32_FIND_DATAA fd;
@@ -578,4 +584,3 @@ int Platform_GetIconSize(char* icon_path) {
     if (strstr(icon_path, "32x32")) return 32;
     else return 32;
 }
-
