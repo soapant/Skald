@@ -1,9 +1,6 @@
 #include "core/flapi.h"
 
 const char* BASE_SCREENSHOT_FOLDER_PATH = "{PICTURES}/Screenshots/";
-static int region_step = 0;
-static long saved_x1 = 0;
-static long saved_y1 = 0;
 static long img_x2 = 0, img_y2 = 0;
 static long img_x1 = 0, img_y1 = 0;
 static int img_region_step = 0;

@@ -339,7 +339,7 @@ bool fl_launch_browser(char* url) {
   if (!url) return false;
   return Platform_LaunchBrowserAtUrl(url,false);
 }
-bool fl_query_browser(char* query) {
+bool fl_query_browser(const char* query) {
     if (!query) return false;
     return Platform_QueryBrowser(query);
 }

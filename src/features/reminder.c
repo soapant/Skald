@@ -207,10 +207,6 @@ void StartReminder(const char* selection) {
         }
         
         async_action = action_func;
-        if (action_param) {
-            strncpy(action_param, action_param, sizeof(action_param) - 1);
-        }
-        printf("[REMINDER] Stored action for later execution: %p\n", (void*)async_action);
     }
     
     if (total_condition_flags > 0) {

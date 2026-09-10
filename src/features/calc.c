@@ -202,7 +202,7 @@ void live_evaluate(const char* input, char* out_result, size_t max_len) {
         last_b = b;
         last_op = op;
         has_last_op = true;
-        strncpy(last_expression, clean, sizeof(last_expression) - 1);
+        snprintf(last_expression, sizeof(last_expression), "%s", clean);
         
         double result = 0.0;
         
@@ -386,9 +386,6 @@ bool calculator_enter_callback(const char* selection, ListBoxInfo* lb) {
 }
 
 void calculator_tab_callback(ListBoxInfo* lb) {
-    if (WH_TO_HWND(FlintContext_Get()->window.hEditControl) == NULL) return;
-    
-    
     char current_input[256] = {0};
     UI_GetCurrentText(FlintContext_Get()->window.hEditControl,current_input);
     
