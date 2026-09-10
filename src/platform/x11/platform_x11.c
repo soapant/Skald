@@ -1198,7 +1198,7 @@ int Platform_GetIconSize(char* icon_path) {
 char* Platform_GetIconPath(char* desktop_or_icon) {
     if (!desktop_or_icon) return NULL;
     if (desktop_or_icon[0]=='/' && strchr(desktop_or_icon, '.') && access(desktop_or_icon, F_OK)==0) {
-        if (strstr(desktop_or_icon, ".png")) return strdup(desktop_or_icon);
+        if (strstr(desktop_or_icon, ".png") || strstr(desktop_or_icon, ".svg") || strstr(desktop_or_icon, ".xpm")) return strdup(desktop_or_icon);
     }
     char icon_name[512]={0};
     if (strstr(desktop_or_icon, ".desktop")) {
@@ -1230,8 +1230,7 @@ char* Platform_GetIconPath(char* desktop_or_icon) {
         strncpy(icon_name, desktop_or_icon, sizeof(icon_name)-1);
     }
     if (icon_name[0]=='/' && access(icon_name, F_OK)==0) {
-        if (strstr(icon_name, ".png")) return strdup(icon_name);
-        // svg/xpm -> fallback to placeholder (png-only renderer)
+        if (strstr(icon_name, ".png") || strstr(icon_name, ".svg") || strstr(icon_name, ".xpm")) return strdup(icon_name);
     }
     char bare[512]; strncpy(bare, icon_name, sizeof(bare)-1);
     char* dot=strrchr(bare,'.'); if(dot && (strcmp(dot,".png")==0||strcmp(dot,".svg")==0||strcmp(dot,".xpm")==0)) *dot='\0';
@@ -1247,6 +1246,8 @@ char* Platform_GetIconPath(char* desktop_or_icon) {
             while(*sz==' ') sz++;
             snprintf(path,sizeof(path),"%s/.local/share/icons/hicolor/%s/apps/%s.png",home,sz,bare);
             if(access(path,F_OK)==0) { strncpy(found,path,sizeof(found)-1); return found; }
+            snprintf(path,sizeof(path),"%s/.local/share/icons/hicolor/%s/apps/%s.svg",home,sz,bare);
+            if(access(path,F_OK)==0) { strncpy(found,path,sizeof(found)-1); return found; }
         }
     }
     for(int b=0;bases[b];b++){
@@ -1256,13 +1257,21 @@ char* Platform_GetIconPath(char* desktop_or_icon) {
             while(*sz==' ') sz++;
             snprintf(path,sizeof(path),"%s/%s/apps/%s.png",bases[b],sz,bare);
             if(access(path,F_OK)==0) { strncpy(found,path,sizeof(found)-1); return found; }
+            snprintf(path,sizeof(path),"%s/%s/apps/%s.svg",bases[b],sz,bare);
+            if(access(path,F_OK)==0) { strncpy(found,path,sizeof(found)-1); return found; }
+            snprintf(path,sizeof(path),"%s/%s.svg",bases[b],bare);
+            if(access(path,F_OK)==0) { strncpy(found,path,sizeof(found)-1); return found; }
             snprintf(path,sizeof(path),"%s/%s.png",bases[b],bare);
             if(access(path,F_OK)==0) { strncpy(found,path,sizeof(found)-1); return found; }
         }
         char direct[1024]; snprintf(direct,sizeof(direct),"%s/%s.png",bases[b],bare);
         if(access(direct,F_OK)==0) { strncpy(found,direct,sizeof(found)-1); return found; }
+        snprintf(direct,sizeof(direct),"%s/%s.svg",bases[b],bare);
+        if(access(direct,F_OK)==0) { strncpy(found,direct,sizeof(found)-1); return found; }
     }
     char pix[1024]; snprintf(pix,sizeof(pix),"/usr/share/pixmaps/%s.png",bare);
+    if(access(pix,F_OK)==0) { strncpy(found,pix,sizeof(found)-1); return found; }
+    snprintf(pix,sizeof(pix),"/usr/share/pixmaps/%s.svg",bare);
     if(access(pix,F_OK)==0) { strncpy(found,pix,sizeof(found)-1); return found; }
     const char* home_ph = Platform_GetRealHome();
     if (!home_ph || !home_ph[0]) home_ph = getenv("HOME");

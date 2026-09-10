@@ -76,15 +76,14 @@ void initialize_app_cache(void) {
         if (!ListOfProgramPaths[i] || ListOfProgramPaths[i][0] == '\0') continue;
         fl_get_all_files_from_dir(ListOfProgramPaths[i], allowed, &s_apps, (char**)ListOfShitToIgnore);
     }
-    for (size_t i = 0; i < s_apps.count; i++) {
-        for (size_t j = i + 1; j < s_apps.count; ) {
-            if (fl_string_match_insensitive(s_apps.items[i].name, s_apps.items[j].name)) {
-                for (size_t k = j; k + 1 < s_apps.count; k++) s_apps.items[k] = s_apps.items[k+1];
-                s_apps.count--;
-            } else {
-                j++;
-            }
-        }
+    for(size_t i=0;i<s_apps.count;i++) if(strstr(s_apps.items[i].path,".desktop")){
+      FILE*f=fopen(s_apps.items[i].path,"r"); char line[512];
+      while(fgets(line,sizeof line,f)) if(strncmp(line,"Name=",5)==0){
+        line[strcspn(line,"\r\n")]='\0';
+        strncpy(s_apps.items[i].name, line+5, sizeof(s_apps.items[i].name)-1);
+        break;
+      }
+      fclose(f);
     }
     
 #if defined(_WIN32)
@@ -178,7 +177,7 @@ void applauncher_copy_callback(const char* selection,int true_index,int type) {
 }
 
 const char* applauncher_get_icon_for_item(const char* item_name) {
-    for (size_t i=0;i<s_apps.count;i++) if (strcmp(s_apps.items[i].name, item_name)==0) {
+    for (size_t i=0;i<s_apps.count;i++) if (fl_string_match_insensitive(s_apps.items[i].name, item_name)) {
         char* p = fl_get_icon_path(s_apps.items[i].path);
         return p;
     }
@@ -262,10 +261,6 @@ void TriggerAppLauncher(void) {
     const char** initial_items = (const char**)malloc(s_apps.count * sizeof(char*));
     if (!initial_items) return;
     
-    for (size_t i = 0; i < s_apps.count; i++) {
-        initial_items[i] = s_apps.items[i].name;
-    }
-
     for (int i = 0; i < ARRAY_LEN(ListOfProgramPaths); i++) {
         fl_on_dir_changed(ListOfProgramPaths[i], initialize_app_cache);
     }
