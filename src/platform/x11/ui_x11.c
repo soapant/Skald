@@ -33,21 +33,15 @@
 #include <X11/Xft/Xft.h>
 #include "platform/x11/display.h"
 #include "platform/x11/drawing.h"
+#include "platform/x11/window_factory.h"
+#include "platform/x11/input.h"
 
 
 extern int pending_hotkey_vk;
 extern int pending_hotkey_mod;
 extern long pending_hotkey_timeMs;
 
-static bool should_use_grab(void) {
-    WinTimer timer = TimerStart();
-    if (getenv("WAYLAND_DISPLAY")) { TimerEnd(timer, "ui_x11:should_use_grab"); return false; }
-    if (getenv("HYPRLAND_INSTANCE_SIGNATURE")) { TimerEnd(timer, "ui_x11:should_use_grab"); return false; }
-    const char* t = getenv("XDG_SESSION_TYPE");
-    if (t && strcmp(t, "wayland") == 0) { TimerEnd(timer, "ui_x11:should_use_grab"); return false; }
-    TimerEnd(timer, "ui_x11:should_use_grab");
-    return true;
-}
+static bool should_use_grab(void) { return x11_should_use_grab(); }
 
 typedef struct {
     EditorMode mode;
@@ -336,198 +330,14 @@ int Platform_InitializeTrayIcon(void) {
     return -1;
 }
 
-#define MAX_KEYBOARDS 16
+// Shared input state now in input.c - legacy names mapped via input.h
 
-typedef struct {
-    int fd;
-    char path[256];
-} SystemKeyboard;
+static int init_uinput(void) { return x11_init_uinput(); }
+static void destroy_uinput(void) { x11_destroy_uinput(); }
+static void uinput_emit(const struct input_event *ev) { x11_uinput_emit(ev); }
 
-static SystemKeyboard active_kbs[MAX_KEYBOARDS];
-static int active_kb_count = 0;
-
-
-
-static int g_uinput_fd = -1;
-static bool g_suppress_release[KEY_MAX + 1] = {0};
-static bool g_device_grabbed[MAX_KEYBOARDS] = {0};
-
-static int init_uinput(void) {
-    WinTimer timer = TimerStart();
-    int fd = open("/dev/uinput", O_WRONLY | O_NONBLOCK);
-    if (fd < 0) fd = open("/dev/input/uinput", O_WRONLY | O_NONBLOCK);
-    if (fd < 0) {
-        fprintf(stderr, "[UINPUT] open failed: %s (swallow disabled)\n", strerror(errno));
-        TimerEnd(timer, "ui_x11:init_uinput");
-        return -1;
-    }
-    if (ioctl(fd, UI_SET_EVBIT, EV_KEY) < 0) perror("[UINPUT] UI_SET_EVBIT EV_KEY");
-    if (ioctl(fd, UI_SET_EVBIT, EV_SYN) < 0) perror("[UINPUT] UI_SET_EVBIT EV_SYN");
-    
-    
-    
-    ioctl(fd, UI_SET_EVBIT, EV_MSC);
-    ioctl(fd, UI_SET_MSCBIT, MSC_SCAN);
-    for (int i = 0; i <= KEY_MAX; i++) {
-        ioctl(fd, UI_SET_KEYBIT, i);
-    }
-    
-    struct uinput_setup setup;
-    memset(&setup, 0, sizeof(setup));
-    setup.id.bustype = BUS_USB;
-    setup.id.vendor = 0x1234;
-    setup.id.product = 0x5678;
-    snprintf(setup.name, sizeof(setup.name), "flint-virtual-keyboard");
-    if (ioctl(fd, UI_DEV_SETUP, &setup) == 0) {
-        if (ioctl(fd, UI_DEV_CREATE) < 0) {
-            perror("[UINPUT] UI_DEV_CREATE");
-            close(fd);
-            TimerEnd(timer, "ui_x11:init_uinput");
-            return -1;
-        }
-    } else {
-        
-        struct uinput_user_dev uud;
-        memset(&uud, 0, sizeof(uud));
-        snprintf(uud.name, sizeof(uud.name), "flint-virtual-keyboard");
-        uud.id.bustype = BUS_USB;
-        uud.id.vendor = 0x1234;
-        uud.id.product = 0x5678;
-        if (write(fd, &uud, sizeof(uud)) != sizeof(uud)) {
-            perror("[UINPUT] write uud");
-        }
-        if (ioctl(fd, UI_DEV_CREATE) < 0) {
-            perror("[UINPUT] UI_DEV_CREATE legacy");
-            close(fd);
-            TimerEnd(timer, "ui_x11:init_uinput");
-            return -1;
-        }
-    }
-    
-    usleep(150 * 1000);
-    fprintf(stderr, "[UINPUT] virtual keyboard created (fd=%d)\n", fd);
-    TimerEnd(timer, "ui_x11:init_uinput");
-    return fd;
-}
-
-static void destroy_uinput(void) {
-    WinTimer timer = TimerStart();
-    if (g_uinput_fd >= 0) {
-        ioctl(g_uinput_fd, UI_DEV_DESTROY);
-        close(g_uinput_fd);
-        g_uinput_fd = -1;
-    }
-    TimerEnd(timer, "ui_x11:destroy_uinput");
-}
-
-static void uinput_emit(const struct input_event *ev) {
-    WinTimer timer = TimerStart();
-    if (g_uinput_fd < 0) { TimerEnd(timer, "ui_x11:uinput_emit"); return; }
-    if (write(g_uinput_fd, ev, sizeof(*ev)) < 0) {
-        
-        if (errno != EAGAIN) perror("[UINPUT] write");
-        TimerEnd(timer, "ui_x11:uinput_emit");
-        return;
-    }
-    struct input_event syn;
-    memset(&syn, 0, sizeof(syn));
-    gettimeofday(&syn.time, NULL);
-    syn.type = EV_SYN;
-    syn.code = SYN_REPORT;
-    syn.value = 0;
-    if (write(g_uinput_fd, &syn, sizeof(syn)) < 0 && errno != EAGAIN) {
-        perror("[UINPUT] write syn");
-    }
-    TimerEnd(timer, "ui_x11:uinput_emit");
-}
-
-void ScanAndHookKeyboards(void) {
-    WinTimer timer = TimerStart();
-    DIR *dir = opendir("/dev/input");
-    if (!dir) { TimerEnd(timer, "ui_x11:ScanAndHookKeyboards"); return; }
-
-    struct dirent *entry;
-    while ((entry = readdir(dir)) != NULL && active_kb_count < MAX_KEYBOARDS) {
-        if (strncmp(entry->d_name, "event", 5) == 0) {
-            char full_path[256];
-            snprintf(full_path, sizeof(full_path), "/dev/input/%s", entry->d_name);
-
-            int fd = open(full_path, O_RDONLY | O_NONBLOCK);
-            if (fd < 0) continue;
-
-            unsigned long ev_bits[EV_MAX / 8 + 1] = {0};
-            if (ioctl(fd, EVIOCGBIT(0, sizeof(ev_bits)), ev_bits) >= 0) {
-                if (ev_bits[0] & (1 << EV_KEY)) {
-                    char dev_name[256] = {0};
-                    unsigned long key_bits[(KEY_MAX/8)+1] = {0};
-                    bool has_alpha = false;
-                    if (ioctl(fd, EVIOCGBIT(EV_KEY, sizeof(key_bits)), key_bits) >= 0) {
-                        if (key_bits[30/ (8*sizeof(unsigned long))] & (1UL << (30 % (8*sizeof(unsigned long))))) has_alpha = true;
-                        if (!has_alpha && (key_bits[KEY_ESC/ (8*sizeof(unsigned long))] & (1UL << (KEY_ESC % (8*sizeof(unsigned long)))))) {
-                            if (key_bits[KEY_SPACE/ (8*sizeof(unsigned long))] & (1UL << (KEY_SPACE % (8*sizeof(unsigned long))))) has_alpha = true;
-                        }
-                    }
-                    active_kbs[active_kb_count].fd = fd;
-                    strncpy(active_kbs[active_kb_count].path, full_path, 255);
-                    active_kb_count++;
-                } else {
-                    close(fd);
-                }
-            } else {
-                close(fd);
-            }
-        }
-    }
-    closedir(dir);
-    TimerEnd(timer, "ui_x11:ScanAndHookKeyboards");
-}
-
-bool g_Linux_CtrlHeld  = false;
-bool g_Linux_AltHeld   = false;
-bool g_Linux_ShiftHeld = false;
-
-bool HandleGlobalKeyEvent(int key_code, int value) {
-    WinTimer timer = TimerStart();
-    if (key_code == KEY_LEFTCTRL || key_code == KEY_RIGHTCTRL) {
-        if (value == 0) g_Linux_CtrlHeld = false;
-        else g_Linux_CtrlHeld = true;
-    }
-    if (key_code == KEY_LEFTALT || key_code == KEY_RIGHTALT) {
-        if (value == 0) g_Linux_AltHeld = false;
-        else g_Linux_AltHeld = true;
-    }
-    if (key_code == KEY_LEFTSHIFT || key_code == KEY_RIGHTSHIFT) {
-        if (value == 0) g_Linux_ShiftHeld = false;
-        else g_Linux_ShiftHeld = true;
-    }
-    double seconds = Platform_GetUniversalTimeSeconds();
-    if (seconds >= 300) {
-        Platform_ResetUniversalTimer();
-        printf("SUPPOSED TO CLEAR FILE\n");
-    }
-
-    if (value != 1) {
-        TimerEnd(timer, "ui_x11:HandleGlobalKeyEvent");
-        return 0;
-    }
-
-    int pressed_vk = ConvertLinuxKeyToWindowsVK(key_code);
-    
-    int modifiers = HOTKEY_MOD_NONE;
-    if (g_Linux_AltHeld)   modifiers |= HOTKEY_MOD_ALT;
-    if (g_Linux_ShiftHeld) modifiers |= HOTKEY_MOD_SHIFT;
-    if (g_Linux_CtrlHeld)  modifiers |= HOTKEY_MOD_CTRL;
-
-    if (hotkey_process(pressed_vk, modifiers)) {
-        if (value == 1) { pending_hotkey_vk = pressed_vk; pending_hotkey_mod = modifiers; struct timeval tv; gettimeofday(&tv,NULL); pending_hotkey_timeMs = tv.tv_sec*1000 + tv.tv_usec/1000; }
-        else if (value == 2) { pending_hotkey_vk = pressed_vk; pending_hotkey_mod = modifiers; struct timeval tv2; gettimeofday(&tv2,NULL); pending_hotkey_timeMs = tv2.tv_sec*1000 + tv2.tv_usec/1000; }
-        TimerEnd(timer, "ui_x11:HandleGlobalKeyEvent");
-        return 1;
-    }
-
-    TimerEnd(timer, "ui_x11:HandleGlobalKeyEvent");
-    return 0;
-}
+void ScanAndHookKeyboards(void) { x11_scan_keyboards(); }
+bool HandleGlobalKeyEvent(int key_code, int value) { return x11_handle_global_key(key_code, value); }
 
 void Platform_RunHotKeyMessageLoop(void) {
     WinTimer timer = TimerStart();

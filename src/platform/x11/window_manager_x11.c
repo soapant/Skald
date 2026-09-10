@@ -29,214 +29,24 @@
 #include <linux/uinput.h>
 #include <errno.h>
 #include "platform/x11/display.h"
+#include "platform/x11/input.h"
 #include "core/timer.h"
 
-bool g_linux_ctrl_held = false;
-bool g_linux_alt_held = false;
-bool g_linux_shift_held = false;
-
-
+// Shared input state now owned by input.c - wrappers below
 extern bool HandleGlobalKeyEvent(int key_code, int value);
 
 int pending_hotkey_vk = 0;
 int pending_hotkey_mod = 0;
 long pending_hotkey_timeMs = 0;
 
-static int g_uinput_fd = -1;
-static bool g_suppress_release[KEY_MAX + 1] = {0};
-static bool g_device_grabbed[16] = {0};
+static bool should_use_grab(void) { return x11_should_use_grab(); }
 
-#define MAX_KEYBOARDS 16
+static int init_uinput(void) { return x11_init_uinput(); }
+static void destroy_uinput(void) { x11_destroy_uinput(); }
+static void uinput_emit(const struct input_event *ev) { x11_uinput_emit(ev); }
+static void ScanAndHookKeyboards(void) { x11_scan_keyboards(); }
 
-typedef struct {
-    int fd;
-    char path[256];
-} SystemKeyboard;
-
-static SystemKeyboard active_kbs[MAX_KEYBOARDS];
-static int active_kb_count = 0;
-
-static bool should_use_grab(void) {
-    WinTimer timer = TimerStart();
-    if (getenv("WAYLAND_DISPLAY")) { TimerEnd(timer, "window_manager_x11:should_use_grab"); return false; }
-    if (getenv("HYPRLAND_INSTANCE_SIGNATURE")) { TimerEnd(timer, "window_manager_x11:should_use_grab"); return false; }
-    const char* t = getenv("XDG_SESSION_TYPE");
-    if (t && strcmp(t, "wayland") == 0) { TimerEnd(timer, "window_manager_x11:should_use_grab"); return false; }
-    TimerEnd(timer, "window_manager_x11:should_use_grab");
-    return true;
-}
-
-static int init_uinput(void) {
-    WinTimer timer = TimerStart();
-    int fd = open("/dev/uinput", O_WRONLY | O_NONBLOCK);
-    if (fd < 0) fd = open("/dev/input/uinput", O_WRONLY | O_NONBLOCK);
-    if (fd < 0) {
-        fprintf(stderr, "[UINPUT] open failed: %s (swallow disabled)\n", strerror(errno));
-        TimerEnd(timer, "window_manager_x11:init_uinput");
-        return -1;
-    }
-    if (ioctl(fd, UI_SET_EVBIT, EV_KEY) < 0) perror("[UINPUT] UI_SET_EVBIT EV_KEY");
-    if (ioctl(fd, UI_SET_EVBIT, EV_SYN) < 0) perror("[UINPUT] UI_SET_EVBIT EV_SYN");
-    
-    ioctl(fd, UI_SET_EVBIT, EV_MSC);
-    ioctl(fd, UI_SET_MSCBIT, MSC_SCAN);
-    for (int i = 0; i <= KEY_MAX; i++) {
-        ioctl(fd, UI_SET_KEYBIT, i);
-    }
-    
-    struct uinput_setup setup;
-    memset(&setup, 0, sizeof(setup));
-    setup.id.bustype = BUS_USB;
-    setup.id.vendor = 0x1234;
-    setup.id.product = 0x5678;
-    snprintf(setup.name, sizeof(setup.name), "flint-virtual-keyboard");
-    if (ioctl(fd, UI_DEV_SETUP, &setup) == 0) {
-        if (ioctl(fd, UI_DEV_CREATE) < 0) {
-            perror("[UINPUT] UI_DEV_CREATE");
-            close(fd);
-            TimerEnd(timer, "window_manager_x11:init_uinput");
-            return -1;
-        }
-    } else {
-        
-        struct uinput_user_dev uud;
-        memset(&uud, 0, sizeof(uud));
-        snprintf(uud.name, sizeof(uud.name), "flint-virtual-keyboard");
-        uud.id.bustype = BUS_USB;
-        uud.id.vendor = 0x1234;
-        uud.id.product = 0x5678;
-        if (write(fd, &uud, sizeof(uud)) != sizeof(uud)) {
-            perror("[UINPUT] write uud");
-        }
-        if (ioctl(fd, UI_DEV_CREATE) < 0) {
-            perror("[UINPUT] UI_DEV_CREATE legacy");
-            close(fd);
-            TimerEnd(timer, "window_manager_x11:init_uinput");
-            return -1;
-        }
-    }
-    
-    usleep(150 * 1000);
-    fprintf(stderr, "[UINPUT] virtual keyboard created (fd=%d)\n", fd);
-    TimerEnd(timer, "window_manager_x11:init_uinput");
-    return fd;
-}
-
-static void destroy_uinput(void) {
-    WinTimer timer = TimerStart();
-    if (g_uinput_fd >= 0) {
-        ioctl(g_uinput_fd, UI_DEV_DESTROY);
-        close(g_uinput_fd);
-        g_uinput_fd = -1;
-    }
-    TimerEnd(timer, "window_manager_x11:destroy_uinput");
-}
-
-static void uinput_emit(const struct input_event *ev) {
-    WinTimer timer = TimerStart();
-    if (g_uinput_fd < 0) { TimerEnd(timer, "window_manager_x11:uinput_emit"); return; }
-    if (write(g_uinput_fd, ev, sizeof(*ev)) < 0) {
-        if (errno != EAGAIN) perror("[UINPUT] write");
-        TimerEnd(timer, "window_manager_x11:uinput_emit");
-        return;
-    }
-    struct input_event syn;
-    memset(&syn, 0, sizeof(syn));
-    gettimeofday(&syn.time, NULL);
-    syn.type = EV_SYN;
-    syn.code = SYN_REPORT;
-    syn.value = 0;
-    if (write(g_uinput_fd, &syn, sizeof(syn)) < 0 && errno != EAGAIN) {
-        perror("[UINPUT] write syn");
-    }
-    TimerEnd(timer, "window_manager_x11:uinput_emit");
-}
-
-static void ScanAndHookKeyboards(void) {
-    WinTimer timer = TimerStart();
-    DIR *dir = opendir("/dev/input");
-    if (!dir) { TimerEnd(timer, "window_manager_x11:ScanAndHookKeyboards"); return; }
-
-    struct dirent *entry;
-    while ((entry = readdir(dir)) != NULL && active_kb_count < MAX_KEYBOARDS) {
-        if (strncmp(entry->d_name, "event", 5) == 0) {
-            char full_path[256];
-            snprintf(full_path, sizeof(full_path), "/dev/input/%s", entry->d_name);
-
-            int fd = open(full_path, O_RDONLY | O_NONBLOCK);
-            if (fd < 0) continue;
-
-            unsigned long ev_bits[EV_MAX / 8 + 1] = {0};
-            if (ioctl(fd, EVIOCGBIT(0, sizeof(ev_bits)), ev_bits) >= 0) {
-                if (ev_bits[0] & (1 << EV_KEY)) {
-                    char dev_name[256] = {0};
-                    unsigned long key_bits[(KEY_MAX/8)+1] = {0};
-                    bool has_alpha = false;
-                    if (ioctl(fd, EVIOCGBIT(EV_KEY, sizeof(key_bits)), key_bits) >= 0) {
-                        if (key_bits[30/ (8*sizeof(unsigned long))] & (1UL << (30 % (8*sizeof(unsigned long))))) has_alpha = true;
-                        if (!has_alpha && (key_bits[KEY_ESC/ (8*sizeof(unsigned long))] & (1UL << (KEY_ESC % (8*sizeof(unsigned long)))))) {
-                            if (key_bits[KEY_SPACE/ (8*sizeof(unsigned long))] & (1UL << (KEY_SPACE % (8*sizeof(unsigned long))))) has_alpha = true;
-                        }
-                    }
-                    active_kbs[active_kb_count].fd = fd;
-                    strncpy(active_kbs[active_kb_count].path, full_path, 255);
-                    active_kb_count++;
-                } else {
-                    close(fd);
-                }
-            } else {
-                close(fd);
-            }
-        }
-    }
-    closedir(dir);
-    TimerEnd(timer, "window_manager_x11:ScanAndHookKeyboards");
-}
-
-static int XKeysymToVK(KeySym ks) {
-    WinTimer timer = TimerStart();
-    if (ks >= XK_a && ks <= XK_z) { TimerEnd(timer, "window_manager_x11:XKeysymToVK"); return 'A' + (ks - XK_a); }
-    if (ks >= XK_A && ks <= XK_Z) { TimerEnd(timer, "window_manager_x11:XKeysymToVK"); return 'A' + (ks - XK_A); }
-    if (ks >= XK_0 && ks <= XK_9) { TimerEnd(timer, "window_manager_x11:XKeysymToVK"); return '0' + (ks - XK_0); }
-    if (ks >= XK_F1 && ks <= XK_F12) { TimerEnd(timer, "window_manager_x11:XKeysymToVK"); return VK_F1 + (ks - XK_F1); }
-    switch (ks) {
-        case XK_Escape: TimerEnd(timer, "window_manager_x11:XKeysymToVK"); return VK_ESCAPE;
-        case XK_Return:
-        case XK_KP_Enter: TimerEnd(timer, "window_manager_x11:XKeysymToVK"); return VK_RETURN;
-        case XK_Tab: TimerEnd(timer, "window_manager_x11:XKeysymToVK"); return VK_TAB;
-        case XK_BackSpace: TimerEnd(timer, "window_manager_x11:XKeysymToVK"); return VK_BACK;
-        case XK_Up: TimerEnd(timer, "window_manager_x11:XKeysymToVK"); return VK_UP;
-        case XK_Down: TimerEnd(timer, "window_manager_x11:XKeysymToVK"); return VK_DOWN;
-        case XK_Left: TimerEnd(timer, "window_manager_x11:XKeysymToVK"); return VK_LEFT;
-        case XK_Right: TimerEnd(timer, "window_manager_x11:XKeysymToVK"); return VK_RIGHT;
-        case XK_Delete: TimerEnd(timer, "window_manager_x11:XKeysymToVK"); return VK_DELETE;
-        case XK_Home: TimerEnd(timer, "window_manager_x11:XKeysymToVK"); return VK_HOME;
-        case XK_End: TimerEnd(timer, "window_manager_x11:XKeysymToVK"); return VK_END;
-        case XK_Page_Up: TimerEnd(timer, "window_manager_x11:XKeysymToVK"); return VK_PRIOR;
-        case XK_Page_Down: TimerEnd(timer, "window_manager_x11:XKeysymToVK"); return VK_NEXT;
-        case XK_space: TimerEnd(timer, "window_manager_x11:XKeysymToVK"); return VK_SPACE;
-        case XK_Control_L: TimerEnd(timer, "window_manager_x11:XKeysymToVK"); return VK_LCONTROL;
-        case XK_Control_R: TimerEnd(timer, "window_manager_x11:XKeysymToVK"); return VK_RCONTROL;
-        case XK_Shift_L: TimerEnd(timer, "window_manager_x11:XKeysymToVK"); return VK_LSHIFT;
-        case XK_Shift_R: TimerEnd(timer, "window_manager_x11:XKeysymToVK"); return VK_RSHIFT;
-        case XK_Alt_L: TimerEnd(timer, "window_manager_x11:XKeysymToVK"); return VK_LMENU;
-        case XK_Alt_R: TimerEnd(timer, "window_manager_x11:XKeysymToVK"); return VK_RMENU;
-        case XK_Super_L: TimerEnd(timer, "window_manager_x11:XKeysymToVK"); return VK_LWIN;
-        case XK_Super_R: TimerEnd(timer, "window_manager_x11:XKeysymToVK"); return VK_RWIN;
-        case XK_semicolon: case XK_colon: TimerEnd(timer, "window_manager_x11:XKeysymToVK"); return VK_OEM_1;
-        case XK_slash: case XK_question: TimerEnd(timer, "window_manager_x11:XKeysymToVK"); return VK_OEM_2;
-        case XK_bracketleft: case XK_braceleft: TimerEnd(timer, "window_manager_x11:XKeysymToVK"); return VK_OEM_4;
-        case XK_comma: case XK_less: TimerEnd(timer, "window_manager_x11:XKeysymToVK"); return VK_OEM_COMMA;
-        case XK_period: case XK_greater: TimerEnd(timer, "window_manager_x11:XKeysymToVK"); return VK_OEM_PERIOD;
-        case XK_apostrophe: case XK_quotedbl: TimerEnd(timer, "window_manager_x11:XKeysymToVK"); return VK_OEM_7;
-        case XK_bracketright: case XK_braceright: TimerEnd(timer, "window_manager_x11:XKeysymToVK"); return VK_OEM_6;
-        case XK_grave: case XK_asciitilde: TimerEnd(timer, "window_manager_x11:XKeysymToVK"); return VK_OEM_3;
-        case XK_minus: case XK_underscore: TimerEnd(timer, "window_manager_x11:XKeysymToVK"); return VK_OEM_MINUS;
-        case XK_equal: case XK_plus: TimerEnd(timer, "window_manager_x11:XKeysymToVK"); return VK_OEM_PLUS;
-        default: TimerEnd(timer, "window_manager_x11:XKeysymToVK"); return 0;
-    }
-    TimerEnd(timer, "window_manager_x11:XKeysymToVK");
-}
+static int XKeysymToVK(KeySym ks) { return x11_keysym_to_vk(ks); }
 
 static void Linux_HandleKeyPress(Display* dpy, XKeyEvent* ev, WindowManager* wm) {
     WinTimer timer = TimerStart();

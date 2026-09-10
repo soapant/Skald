@@ -248,6 +248,25 @@
   },
   {
     "directory": "/home/diggy/Programming/Projects/Flint",
+    "file": "src/core/timer.c",
+    "arguments": [
+      "gcc",
+      "-Wall",
+      "-Wextra",
+      "-I",
+      "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
+      "-w",
+      "-g",
+      "-O3",
+      "-c",
+      "src/core/timer.c"
+    ]
+  },
+  {
+    "directory": "/home/diggy/Programming/Projects/Flint",
     "file": "src/core/modal.c",
     "arguments": [
       "gcc",
@@ -548,6 +567,25 @@
       "-O3",
       "-c",
       "src/platform/x11/flapi_x11.c"
+    ]
+  },
+  {
+    "directory": "/home/diggy/Programming/Projects/Flint",
+    "file": "src/platform/x11/input.c",
+    "arguments": [
+      "gcc",
+      "-Wall",
+      "-Wextra",
+      "-I",
+      "include",
+      "-I/usr/include/freetype2",
+      "-MMD",
+      "-MP",
+      "-w",
+      "-g",
+      "-O3",
+      "-c",
+      "src/platform/x11/input.c"
     ]
   },
   {

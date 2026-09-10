@@ -36,6 +36,58 @@
 #include <X11/extensions/XTest.h>
 #endif
 
+// ---------------------------------------------------------------------------
+// Daemon helpers - unify double-fork pattern (Task 3)
+// ---------------------------------------------------------------------------
+static bool x11_daemon_exec(char* const argv[]) {
+    pid_t pid = fork();
+    if (pid < 0) return false;
+    if (pid == 0) {
+        setsid();
+        pid_t pid2 = fork();
+        if (pid2 < 0) _exit(1);
+        if (pid2 > 0) _exit(0);
+        int fd = open("/dev/null", O_RDWR);
+        if (fd >= 0) {
+            dup2(fd, STDIN_FILENO);
+            dup2(fd, STDOUT_FILENO);
+            dup2(fd, STDERR_FILENO);
+            if (fd > 2) close(fd);
+        }
+        execvp(argv[0], argv);
+        _exit(127);
+    }
+    int st = 0;
+    waitpid(pid, &st, 0);
+    return true;
+}
+
+static bool x11_daemon_exec_with_x11_env(char* const argv[], const char* display, const char* xauth, const char* runtime_dir) {
+    pid_t pid = fork();
+    if (pid < 0) return false;
+    if (pid == 0) {
+        setsid();
+        pid_t pid2 = fork();
+        if (pid2 < 0) _exit(1);
+        if (pid2 > 0) _exit(0);
+        int fd = open("/dev/null", O_RDWR);
+        if (fd >= 0) {
+            dup2(fd, STDIN_FILENO);
+            dup2(fd, STDOUT_FILENO);
+            dup2(fd, STDERR_FILENO);
+            if (fd > 2) close(fd);
+        }
+        if (display) setenv("DISPLAY", display, 1);
+        if (xauth) setenv("XAUTHORITY", xauth, 1);
+        if (runtime_dir) setenv("XDG_RUNTIME_DIR", runtime_dir, 1);
+        execvp(argv[0], argv);
+        _exit(127);
+    }
+    int st = 0;
+    waitpid(pid, &st, 0);
+    return true;
+}
+
 bool Platform_LaunchTerminalAtPath(const char* working_dir, const char* extra_args){
     WinTimer timer = TimerStart();
     if(!working_dir) { TimerEnd(timer, "platform_x11:Platform_LaunchTerminalAtPath"); return false; }
@@ -109,30 +161,11 @@ bool Platform_LaunchTerminalAtPath(const char* working_dir, const char* extra_ar
 }
 
 static bool daemon_spawn_sudo_env(const char* real_user, const char* display, const char* xauthority, const char* runtime_dir, char* const argv[]) {
+    (void)real_user; (void)display; (void)xauthority; (void)runtime_dir;
     WinTimer timer = TimerStart();
-    pid_t pid = fork();
-    if (pid < 0) { TimerEnd(timer, "platform_x11:daemon_spawn_sudo_env"); return false; }
-    if (pid == 0) {
-        setsid();
-        pid_t pid2 = fork();
-        if (pid2 < 0) _exit(1);
-        if (pid2 > 0) _exit(0);
-        int fd = open("/dev/null", O_RDWR);
-        if (fd >= 0) {
-            dup2(fd, STDIN_FILENO);
-            dup2(fd, STDOUT_FILENO);
-            dup2(fd, STDERR_FILENO);
-            if (fd > 2) close(fd);
-        }
-        setenv("DISPLAY", display, 1);
-        setenv("XAUTHORITY", xauthority, 1);
-        setenv("XDG_RUNTIME_DIR", runtime_dir, 1);
-        execvp(argv[0], argv);
-        _exit(127);
-    }
-    int st=0; waitpid(pid, &st, 0);
+    bool ok = x11_daemon_exec(argv);
     TimerEnd(timer, "platform_x11:daemon_spawn_sudo_env");
-    return true;
+    return ok;
 }
 
 bool Platform_ShellExecuteWithVerb(const char* path, const char* verb, bool async) {
@@ -173,21 +206,10 @@ bool Platform_ShellExecuteWithVerb(const char* path, const char* verb, bool asyn
         TimerEnd(timer, "platform_x11:Platform_ShellExecuteWithVerb");
         return daemon_spawn_sudo_env(real_user, display, xauthority, runtime_dir, argv);
     } else {
-        pid_t pid=fork();
-        if(pid<0) { TimerEnd(timer, "platform_x11:Platform_ShellExecuteWithVerb"); return false; }
-        if(pid==0){
-            setsid();
-            pid_t pid2=fork();
-            if(pid2<0) _exit(1);
-            if(pid2>0) _exit(0);
-            int fd=open("/dev/null",O_RDWR); if(fd>=0){dup2(fd,0);dup2(fd,1);dup2(fd,2); if(fd>2) close(fd);}
-            setenv("DISPLAY",display,1); setenv("XAUTHORITY",xauthority,1); setenv("XDG_RUNTIME_DIR",runtime_dir,1);
-            execlp("xdg-open","xdg-open",path,(char*)NULL);
-            _exit(127);
-        }
-        int st=0; waitpid(pid,&st,0);
+        char* const argv[] = {"xdg-open", (char*)path, NULL};
+        bool ok = x11_daemon_exec_with_x11_env(argv, display, xauthority, runtime_dir);
         TimerEnd(timer, "platform_x11:Platform_ShellExecuteWithVerb");
-        return true;
+        return ok;
     }
     TimerEnd(timer, "platform_x11:Platform_ShellExecuteWithVerb");
 }
@@ -530,21 +552,10 @@ bool Platform_LaunchApp(const char* path) {
             TimerEnd(timer, "platform_x11:Platform_LaunchApp");
             return daemon_spawn_sudo_env(real_user, display, xauthority, runtime_dir, argv);
         } else {
-            pid_t pid=fork();
-            if(pid<0) { TimerEnd(timer, "platform_x11:Platform_LaunchApp"); return false; }
-            if(pid==0){
-                setsid();
-                pid_t pid2=fork();
-                if(pid2<0) _exit(1);
-                if(pid2>0) _exit(0);
-                int fd=open("/dev/null",O_RDWR); if(fd>=0){dup2(fd,0);dup2(fd,1);dup2(fd,2); if(fd>2) close(fd);}
-                setenv("DISPLAY",display,1); setenv("XAUTHORITY",xauthority,1); setenv("XDG_RUNTIME_DIR",runtime_dir,1);
-                execl("/bin/sh","sh","-c",expanded,(char*)NULL);
-                _exit(127);
-            }
-            int st=0; waitpid(pid,&st,0);
+            char* const argv[] = {"sh","-c",expanded,NULL};
+            bool ok = x11_daemon_exec_with_x11_env(argv, display, xauthority, runtime_dir);
             TimerEnd(timer, "platform_x11:Platform_LaunchApp");
-            return true;
+            return ok;
         }
     }
     TimerEnd(timer, "platform_x11:Platform_LaunchApp");
