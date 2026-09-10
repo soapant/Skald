@@ -75,7 +75,7 @@ const char* get_alias_for_item(const char* item) {
         const char* expanded = Aliases[i].text;
         if (!expanded || expanded[0]=='\0') expanded = Aliases[i].text;
         if (!expanded) continue;
-        if (strcasecmp(item, expanded) == 0) {
+        if (Platform_StringContainsCaseInsensitive(item, expanded)) {
             return Aliases[i].alias;
         }
     }

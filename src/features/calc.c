@@ -167,11 +167,11 @@ void live_evaluate(const char* input, char* out_result, size_t max_len) {
         if (sscanf(clean, "%lf %63s", &val, source_unit) == 2) {
             for (size_t i = 0; i < CONVERSION_COUNT; i++) {
 #if defined(_WIN32)
-                if (StrCmpIA(source_unit, CONVERSIONS[i].from_unit) == 0 &&
-                    StrCmpIA(target_unit, CONVERSIONS[i].to_unit) == 0) {
+                if (Platform_StringContainsCaseInsensitive(source_unit, CONVERSIONS[i].from_unit) &&
+                    Platform_StringContainsCaseInsensitive(target_unit, CONVERSIONS[i].to_unit)) {
 #else
-                if (strcasecmp(source_unit, CONVERSIONS[i].from_unit) == 0 &&
-                    strcasecmp(target_unit, CONVERSIONS[i].to_unit) == 0) {
+                if (Platform_StringContainsCaseInsensitive(source_unit, CONVERSIONS[i].from_unit) &&
+                    Platform_StringContainsCaseInsensitive(target_unit, CONVERSIONS[i].to_unit)) {
 #endif
                     snprintf(out_result, max_len, "= %.4g %s", val * CONVERSIONS[i].factor, CONVERSIONS[i].to_unit);
                     has_last_op = false;

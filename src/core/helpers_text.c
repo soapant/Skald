@@ -142,29 +142,29 @@ HotkeyBinding convert_into_hotkey_binding(char* hotkey_string, void (*on_hotkey_
 
     char* token = strtok(buffer, "+");
     while (token != NULL) {
-        if (strcasecmp(token, "Ctrl") == 0 || strcasecmp(token, "Control") == 0) {
+        if (Platform_StringContainsCaseInsensitive(token, "Ctrl") || Platform_StringContainsCaseInsensitive(token, "Control")) {
             out_modifiers |= HOTKEY_MOD_CTRL;
-        } else if (strcasecmp(token, "Shift") == 0) {
+        } else if (Platform_StringContainsCaseInsensitive(token, "Shift")) {
             out_modifiers |= HOTKEY_MOD_SHIFT;
-        } else if (strcasecmp(token, "Alt") == 0) {
+        } else if (Platform_StringContainsCaseInsensitive(token, "Alt")) {
             out_modifiers |= HOTKEY_MOD_ALT;
-        } else if (strcasecmp(token, "Win") == 0 || strcasecmp(token, "Super") == 0 || strcasecmp(token, "Meta") == 0 ) {
+        } else if (Platform_StringContainsCaseInsensitive(token, "Win") || Platform_StringContainsCaseInsensitive(token, "Super") || Platform_StringContainsCaseInsensitive(token, "Meta") ) {
             out_modifiers |= HOTKEY_MOD_SUPER;
         } else {
-            if (strcasecmp(token, "Space") == 0) out_key = ' ';
-            else if (strcasecmp(token, "Tab") == 0) out_key = '\t';
-            else if (strcasecmp(token, "Enter") == 0 || strcasecmp(token, "Return") == 0) out_key = '\n';
-            else if (strcasecmp(token, "Escape") == 0 || strcasecmp(token, "Esc") == 0) out_key = 27;
-            else if (strcasecmp(token, "{") == 0 || strcasecmp(token, "[") == 0 || strcasecmp(token, "OEM_4") == 0 || strcasecmp(token, "Oem4") == 0) out_key = VK_OEM_4;
-            else if (strcasecmp(token, "}") == 0 || strcasecmp(token, "]") == 0 || strcasecmp(token, "OEM_6") == 0 || strcasecmp(token, "Oem6") == 0) out_key = VK_OEM_6;
-            else if (strcasecmp(token, ",") == 0 || strcasecmp(token, "OEM_COMMA") == 0 || strcasecmp(token, "OemComma") == 0) out_key = VK_OEM_COMMA;
-            else if (strcasecmp(token, ".") == 0 || strcasecmp(token, "OEM_PERIOD") == 0 || strcasecmp(token, "OemPeriod") == 0) out_key = VK_OEM_PERIOD;
-            else if (strcasecmp(token, ";") == 0 || strcasecmp(token, "OEM_1") == 0 || strcasecmp(token, "Oem1") == 0) out_key = VK_OEM_1;
-            else if (strcasecmp(token, "/") == 0 || strcasecmp(token, "OEM_2") == 0 || strcasecmp(token, "Oem2") == 0) out_key = VK_OEM_2;
-            else if (strcasecmp(token, "'") == 0 || strcasecmp(token, "\"") == 0 || strcasecmp(token, "OEM_7") == 0 || strcasecmp(token, "Oem7") == 0) out_key = VK_OEM_7;
-            else if (strcasecmp(token, "`") == 0 || strcasecmp(token, "OEM_3") == 0 || strcasecmp(token, "Oem3") == 0) out_key = VK_OEM_3;
-            else if (strcasecmp(token, "-") == 0 || strcasecmp(token, "OEM_MINUS") == 0 || strcasecmp(token, "OemMinus") == 0) out_key = VK_OEM_MINUS;
-            else if (strcasecmp(token, "=") == 0 || strcasecmp(token, "OEM_PLUS") == 0 || strcasecmp(token, "OemPlus") == 0) out_key = VK_OEM_PLUS;
+            if (Platform_StringContainsCaseInsensitive(token, "Space")) out_key = ' ';
+            else if (Platform_StringContainsCaseInsensitive(token, "Tab")) out_key = '\t';
+            else if (Platform_StringContainsCaseInsensitive(token, "Enter") || Platform_StringContainsCaseInsensitive(token, "Return")) out_key = '\n';
+            else if (Platform_StringContainsCaseInsensitive(token, "Escape") || Platform_StringContainsCaseInsensitive(token, "Esc")) out_key = 27;
+            else if (Platform_StringContainsCaseInsensitive(token, "{") || Platform_StringContainsCaseInsensitive(token, "[") || Platform_StringContainsCaseInsensitive(token, "OEM_4") || Platform_StringContainsCaseInsensitive(token, "Oem4")) out_key = VK_OEM_4;
+            else if (Platform_StringContainsCaseInsensitive(token, "}") || Platform_StringContainsCaseInsensitive(token, "]") || Platform_StringContainsCaseInsensitive(token, "OEM_6") || Platform_StringContainsCaseInsensitive(token, "Oem6")) out_key = VK_OEM_6;
+            else if (Platform_StringContainsCaseInsensitive(token, ",") || Platform_StringContainsCaseInsensitive(token, "OEM_COMMA") || Platform_StringContainsCaseInsensitive(token, "OemComma")) out_key = VK_OEM_COMMA;
+            else if (Platform_StringContainsCaseInsensitive(token, ".") || Platform_StringContainsCaseInsensitive(token, "OEM_PERIOD") || Platform_StringContainsCaseInsensitive(token, "OemPeriod")) out_key = VK_OEM_PERIOD;
+            else if (Platform_StringContainsCaseInsensitive(token, ";") || Platform_StringContainsCaseInsensitive(token, "OEM_1") || Platform_StringContainsCaseInsensitive(token, "Oem1")) out_key = VK_OEM_1;
+            else if (Platform_StringContainsCaseInsensitive(token, "/") || Platform_StringContainsCaseInsensitive(token, "OEM_2") || Platform_StringContainsCaseInsensitive(token, "Oem2")) out_key = VK_OEM_2;
+            else if (Platform_StringContainsCaseInsensitive(token, "'") || Platform_StringContainsCaseInsensitive(token, "\"") || Platform_StringContainsCaseInsensitive(token, "OEM_7") || Platform_StringContainsCaseInsensitive(token, "Oem7")) out_key = VK_OEM_7;
+            else if (Platform_StringContainsCaseInsensitive(token, "`") || Platform_StringContainsCaseInsensitive(token, "OEM_3") || Platform_StringContainsCaseInsensitive(token, "Oem3")) out_key = VK_OEM_3;
+            else if (Platform_StringContainsCaseInsensitive(token, "-") || Platform_StringContainsCaseInsensitive(token, "OEM_MINUS") || Platform_StringContainsCaseInsensitive(token, "OemMinus")) out_key = VK_OEM_MINUS;
+            else if (Platform_StringContainsCaseInsensitive(token, "=") || Platform_StringContainsCaseInsensitive(token, "OEM_PLUS") || Platform_StringContainsCaseInsensitive(token, "OemPlus")) out_key = VK_OEM_PLUS;
             else out_key = toupper((unsigned char)token[0]);
         }
         token = strtok(NULL, "+");

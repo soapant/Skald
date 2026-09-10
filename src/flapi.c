@@ -195,10 +195,10 @@ bool fl_parse_desktop_file(const char* path, char* out_name, size_t n, bool* out
     if (out_nodisplay) *out_nodisplay=false;
     while(fgets(line,sizeof(line),f)){
         char* p=line; while(*p==' '||*p=='\t') p++;
-        if(strncasecmp(p,"NoDisplay=true",14)==0 || strncasecmp(p,"Hidden=true",11)==0){
+        if(Platform_StringContainsCaseInsensitive(p, "NoDisplay=true") || Platform_StringContainsCaseInsensitive(p, "Hidden=true")){
             if(out_nodisplay) *out_nodisplay=true;
         }
-        if(!found && strncasecmp(p,"Name=",5)==0){
+        if(!found && Platform_StringContainsCaseInsensitive(p, "Name=")){
             p+=5; while(*p==' '||*p=='\t') p++;
             p[strcspn(p,"\r\n")]='\0';
             strncpy(out_name, p, n-1); out_name[n-1]='\0'; found=true;
