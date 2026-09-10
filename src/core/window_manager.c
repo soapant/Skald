@@ -41,7 +41,6 @@
 #include "platform/x11/display.h"
 #include "platform/x11/drawing.h"
 #include "platform/x11/window_factory.h"
-#include "platform/x11/input.h"
 extern int WindowManager_RunLinux(WindowManager* wm);
 extern void WindowManager_ProcessEventsLinux(WindowManager* wm);
 extern void WindowManager_QuitLinux(WindowManager* wm);
@@ -63,9 +62,6 @@ static WindowManager* g_window_manager = NULL;
 int pending_hotkey_vk = 0;
 int pending_hotkey_mod = 0;
 long pending_hotkey_timeMs = 0;
-bool g_x11_ctrl_held = false;
-bool g_x11_alt_held = false;
-bool g_x11_shift_held = false;
 void SavePerFeatureState(const char* feature, EditorMode mode, int last_index) {
     PROFILE_START(timer);
     (void)feature; (void)mode; (void)last_index;
@@ -345,10 +341,6 @@ static void EditPopup_OnShow(Popup* self) {
     EditPopupDataInternal* data = (EditPopupDataInternal*)self;
     data->saved_mode = g_current_mode;
     SetMode(MODE_INSERT);
-    extern bool g_x11_ctrl_held, g_x11_alt_held, g_x11_shift_held;
-    extern bool g_x11_ctrl_held, g_x11_alt_held, g_x11_shift_held;
-    g_x11_ctrl_held = g_x11_alt_held = g_x11_shift_held = false;
-    g_x11_ctrl_held = g_x11_alt_held = g_x11_shift_held = false;
     #if !defined(_WIN32)
     Display* dpy = ((WindowManager*)self->manager)->display;
     XMapWindow(dpy, self->handle.xid);
@@ -969,11 +961,6 @@ static void SimplePromptPopup_OnShow(Popup* self) {
     WindowManager* wm = (WindowManager*)self->manager;
     FlintContext_Get()->window.selection_complete = false;
     FlintContext_Get()->window.output_buffer[0] = '\0';
-    extern bool g_x11_ctrl_held, g_x11_alt_held, g_x11_shift_held;
-    extern bool g_x11_ctrl_held, g_x11_alt_held, g_x11_shift_held;
-    g_x11_ctrl_held = g_x11_alt_held = g_x11_shift_held = false;
-    g_x11_ctrl_held = g_x11_alt_held = g_x11_shift_held = false;
-    
     #if !defined(_WIN32)
     Display* dpy = wm->display;
     data->base.handle.xid = Linux_CreateSimplePromptWindow(dpy, data->x, data->y, data->w, data->h);
