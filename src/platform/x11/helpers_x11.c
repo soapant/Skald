@@ -19,6 +19,10 @@
 #include "core/timer.h"
 #include "core/common_ui.h"
 #include "platform/x11/drawing.h"
+#define NANOSVG_IMPLEMENTATION
+#include "deps/nanosvg.h"
+#define NANOSVGRAST_IMPLEMENTATION
+#include "deps/nanosvgrast.h"
 
 #if !defined(_WIN32)
 // --- Cached background pixmap (double-buffer + shader cache) ---
@@ -231,6 +235,64 @@ static void draw_icon_png(Display* dpy, XftDraw* xd, const char* path,
 {
     if (!path || !path[0]) return;
     if (access(path, F_OK) != 0) return;
+    (void)size;
+    size_t _plen = strlen(path);
+    bool _is_svg = _plen > 4 && strcasecmp(path + _plen - 4, ".svg") == 0;
+    if (_is_svg) {
+        NSVGimage* image = nsvgParseFromFile(path, "px", 96.0f);
+        if (!image) return;
+        if (image->width <= 0 || image->height <= 0) { nsvgDelete(image); return; }
+        NSVGrasterizer* rast = nsvgCreateRasterizer();
+        if (!rast) { nsvgDelete(image); return; }
+        unsigned char* svg_data = (unsigned char*)calloc((size_t)IconSize * IconSize * 4, 1);
+        if (!svg_data) { nsvgDeleteRasterizer(rast); nsvgDelete(image); return; }
+        float scale = fminf((float)IconSize / image->width, (float)IconSize / image->height);
+        float tx = ((float)IconSize - image->width * scale) * 0.5f;
+        float ty = ((float)IconSize - image->height * scale) * 0.5f;
+        nsvgRasterize(rast, image, tx, ty, scale, svg_data, IconSize, IconSize, IconSize * 4);
+        unsigned char* argb = (unsigned char*)malloc((size_t)IconSize * IconSize * 4);
+        if (!argb) { free(svg_data); nsvgDeleteRasterizer(rast); nsvgDelete(image); return; }
+        for (int i = 0; i < IconSize * IconSize; i++) {
+            unsigned char r = svg_data[i*4+0];
+            unsigned char g = svg_data[i*4+1];
+            unsigned char b = svg_data[i*4+2];
+            unsigned char a = svg_data[i*4+3];
+            unsigned int pr = (unsigned int)r * a / 255;
+            unsigned int pg = (unsigned int)g * a / 255;
+            unsigned int pb = (unsigned int)b * a / 255;
+            argb[i*4+0] = (unsigned char)pb;
+            argb[i*4+1] = (unsigned char)pg;
+            argb[i*4+2] = (unsigned char)pr;
+            argb[i*4+3] = a;
+        }
+        free(svg_data);
+        nsvgDeleteRasterizer(rast);
+        nsvgDelete(image);
+        Drawable drw = XftDrawDrawable(xd);
+        Screen* scr = DefaultScreenOfDisplay(dpy);
+        Visual* vis = DefaultVisualOfScreen(scr);
+        XImage* img = XCreateImage(dpy, vis, 32, ZPixmap, 0, (char*)argb, IconSize, IconSize, 32, 0);
+        if (!img) { free(argb); return; }
+        Pixmap pix = XCreatePixmap(dpy, drw, IconSize, IconSize, 32);
+        if (!pix) { XDestroyImage(img); return; }
+        GC gc = XCreateGC(dpy, pix, 0, NULL);
+        XPutImage(dpy, pix, gc, img, 0, 0, 0, 0, IconSize, IconSize);
+        XFreeGC(dpy, gc);
+        XRenderPictFormat* src_fmt = XRenderFindStandardFormat(dpy, PictStandardARGB32);
+        XRenderPictFormat* dst_fmt = XRenderFindVisualFormat(dpy, vis);
+        if (src_fmt && dst_fmt) {
+            Picture src = XRenderCreatePicture(dpy, pix, src_fmt, 0, NULL);
+            Picture dst = XRenderCreatePicture(dpy, drw, dst_fmt, 0, NULL);
+            if (src && dst) {
+                XRenderComposite(dpy, PictOpOver, src, None, dst, 0, 0, 0, 0, x, y, IconSize, IconSize);
+            }
+            if (src) XRenderFreePicture(dpy, src);
+            if (dst) XRenderFreePicture(dpy, dst);
+        }
+        XDestroyImage(img);
+        XFreePixmap(dpy, pix);
+        return;
+    }
 
     FILE* fp = fopen(path, "rb");
     if (!fp) return;
