@@ -712,7 +712,7 @@ int Platform_CollectRunningProcesses(char process_list[][MaxFeatures], int max_c
             fclose(fstat);
         }
         bool exists=false;
-        for (int i=0;i<count;i++) if (strcasecmp(process_list[i], exe)==0) {exists=true;break;}
+        for (int i=0;i<count;i++) if (Platform_StringContainsCaseInsensitive(process_list[i], exe)) {exists=true;break;}
         if (!exists) {
             strncpy(process_list[count], exe, 127);
             process_list[count][127]='\0';
@@ -811,21 +811,21 @@ bool Platform_QueryBrowser(char* query) {
     *dst = '\0';
     
 
-    if (strcasecmp(UsedSearchEngine, "google") == 0) {
+    if (Platform_StringContainsCaseInsensitive(UsedSearchEngine, "google")) {
         snprintf(url, sizeof(url), "https://www.google.com/search?q=%s", encoded_query);
-    } else if (strcasecmp(UsedSearchEngine, "duckduckgo") == 0) {
+    } else if (Platform_StringContainsCaseInsensitive(UsedSearchEngine, "duckduckgo")) {
         snprintf(url, sizeof(url), "https://duckduckgo.com/?q=%s", encoded_query);
-    } else if (strcasecmp(UsedSearchEngine, "bing") == 0) {
+    } else if (Platform_StringContainsCaseInsensitive(UsedSearchEngine, "bing")) {
         snprintf(url, sizeof(url), "https://www.bing.com/search?q=%s", encoded_query);
-    } else if (strcasecmp(UsedSearchEngine, "brave") == 0) {
+    } else if (Platform_StringContainsCaseInsensitive(UsedSearchEngine, "brave")) {
         snprintf(url, sizeof(url), "https://search.brave.com/search?q=%s", encoded_query);
-    } else if (strcasecmp(UsedSearchEngine, "startpage") == 0) {
+    } else if (Platform_StringContainsCaseInsensitive(UsedSearchEngine, "startpage")) {
         snprintf(url, sizeof(url), "https://www.startpage.com/sp/search?query=%s", encoded_query);
-    } else if (strcasecmp(UsedSearchEngine, "yandex") == 0) {
+    } else if (Platform_StringContainsCaseInsensitive(UsedSearchEngine, "yandex")) {
         snprintf(url, sizeof(url), "https://yandex.com/search/?text=%s", encoded_query);
-    } else if (strcasecmp(UsedSearchEngine, "ecosia") == 0) {
+    } else if (Platform_StringContainsCaseInsensitive(UsedSearchEngine, "ecosia")) {
         snprintf(url, sizeof(url), "https://www.ecosia.org/search?q=%s", encoded_query);
-    } else if (strcasecmp(UsedSearchEngine, "qwant") == 0) {
+    } else if (Platform_StringContainsCaseInsensitive(UsedSearchEngine, "qwant")) {
         snprintf(url, sizeof(url), "https://www.qwant.com/?q=%s", encoded_query);
     } else {
         snprintf(url, sizeof(url), "https://duckduckgo.com/?q=%s", encoded_query);
