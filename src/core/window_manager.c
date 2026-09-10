@@ -650,11 +650,6 @@ static void PromptPopup_OnShow(Popup* self) {
     FlintContext* ctx = FlintContext_Get();
     ctx->window.selection_complete = false;
     ctx->window.output_buffer[0] = '\0';
-    // deprecated globals sync
-    extern bool g_Linux_CtrlHeld, g_Linux_AltHeld, g_Linux_ShiftHeld;
-    extern bool g_linux_ctrl_held, g_linux_alt_held, g_linux_shift_held;
-    g_Linux_CtrlHeld = g_Linux_AltHeld = g_Linux_ShiftHeld = false;
-    g_linux_ctrl_held = g_linux_alt_held = g_linux_shift_held = false;
     
     #if !defined(_WIN32)
     Display* dpy = wm->display;
@@ -663,11 +658,9 @@ static void PromptPopup_OnShow(Popup* self) {
     XMapWindow(dpy, data->base.handle.xid);
     XFlush(dpy);
     XSync(dpy, False);
-    // wait until viewable then focus (retry, hyprland/xwayland needs time)
     for (int _r=0; _r<20; _r++) {
         XWindowAttributes _a;
         if (XGetWindowAttributes(dpy, data->base.handle.xid, &_a) && _a.map_state == IsViewable) break;
-        usleep(5000);
         XSync(dpy, False);
     }
     {
@@ -706,7 +699,6 @@ static void PromptPopup_OnShow(Popup* self) {
     
     FlintContext* ctx2 = FlintContext_Get();
     if (!wm->ctx) wm->ctx = ctx2;
-    // new canonical storage
     ctx2->prompt_callbacks.refresh = data->spec.refresh;
     ctx2->prompt_callbacks.enter = data->spec.enter;
     ctx2->prompt_callbacks.ctrl_enter = data->spec.ctrl_enter;
@@ -716,11 +708,9 @@ static void PromptPopup_OnShow(Popup* self) {
     ctx2->prompt_callbacks.edit = data->spec.edit;
     ctx2->prompt_callbacks.filter = data->spec.filter;
     ctx2->prompt_callbacks.help = data->spec.help;
-    // g_alias_callback was alias to prompt_callbacks.alias - keep existing value
     ctx2->window.current_feature = (char*)(p ? p+1 : data->spec.title);
     ctx2->window.title = data->spec.title;
     ctx2->window.callbacks = ctx2->prompt_callbacks;
-    // deprecated globals sync for external .so compatibility
     SetCurrentFeatureName(ctx2->window.current_feature);
     if (data->spec.refresh) data->spec.refresh(data->state->filter, FlintContext_Get()->window.hListBox, data->state->has_listbox ? &data->state->listbox : NULL);
     TimerEnd(timer, "window_manager:PromptPopup_OnShow");
@@ -971,8 +961,6 @@ Popup* PromptPopup_Create(WindowManager* wm, const PromptSpec* spec) {
     TimerEnd(timer, "window_manager:PromptPopup_Create");
     return WindowManager_PushPopup(wm, (Popup*)data);
 }
-
-// ============ SimplePrompt Popup ============
 
 typedef struct {
     Popup base;

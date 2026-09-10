@@ -518,7 +518,7 @@ BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam) {
     char window_title[256];
     GetWindowTextA(hwnd, window_title, sizeof(window_title));
     
-    if (strcasestr(window_title, data->target_title) != NULL) {
+    if (Platform_StringContainsCaseInsensitive(window_title, data->target_title) != NULL) {
         data->found_hwnd = hwnd;
         return FALSE;
     }

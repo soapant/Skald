@@ -559,10 +559,8 @@ void DrawPromptUserListBox(Display *dpy,Window* win,PromptState *state) {
 }
 
 bool Linux_RenderPromptUser(Display *dpy, Window *win, PromptState *state) {
-    WinTimer timer = TimerStart();
     int w = state->width;
     int h = state->height;
-    if (w <= 0 || h <= 0) { TimerEnd(timer, "subclasses_x11:Linux_RenderPromptUser"); return false; }
     XWindowAttributes attrs;
     if (!XGetWindowAttributes(dpy, *win, &attrs)) {
         Linux_DrawBackground(dpy, *win, w, h);
@@ -573,7 +571,6 @@ bool Linux_RenderPromptUser(Display *dpy, Window *win, PromptState *state) {
         }
         DrawPromptUserEditControl(dpy, win,state);
         XFlush(dpy);
-        TimerEnd(timer, "subclasses_x11:Linux_RenderPromptUser");
         return true;
     }
     Visual* vis = attrs.visual;
@@ -589,7 +586,6 @@ bool Linux_RenderPromptUser(Display *dpy, Window *win, PromptState *state) {
         }
         DrawPromptUserEditControl(dpy, win,state);
         XFlush(dpy);
-        TimerEnd(timer, "subclasses_x11:Linux_RenderPromptUser");
         return true;
     }
     XftDraw* xdDbl = XftDrawCreate(dpy, dbl, vis, cmap);
@@ -603,7 +599,6 @@ bool Linux_RenderPromptUser(Display *dpy, Window *win, PromptState *state) {
         }
         DrawPromptUserEditControl(dpy, win,state);
         XFlush(dpy);
-        TimerEnd(timer, "subclasses_x11:Linux_RenderPromptUser");
         return true;
     }
     Linux_SetDblVisual(dpy, vis, cmap, depth);
@@ -632,20 +627,16 @@ bool Linux_RenderPromptUser(Display *dpy, Window *win, PromptState *state) {
     XftDrawDestroy(xdDbl);
     XFreePixmap(dpy, dbl);
     XFlush(dpy);
-    TimerEnd(timer, "subclasses_x11:Linux_RenderPromptUser");
     return true;
 }
 bool Linux_RenderSimplePromptUser(Display *dpy, Window *win, SimplePromptState *state) {
-    WinTimer timer = TimerStart();
     int w = state->width;
     int h = state->height;
-    if (w <= 0 || h <= 0) { TimerEnd(timer, "subclasses_x11:Linux_RenderSimplePromptUser"); return false; }
     XWindowAttributes attrs;
     if (!XGetWindowAttributes(dpy, *win, &attrs)) {
         Linux_DrawBackground(dpy, *win, w, h);
         DrawSimplePromptUserEditControl(dpy, win,state);
         XFlush(dpy);
-        TimerEnd(timer, "subclasses_x11:Linux_RenderSimplePromptUser");
         return true;
     }
     Visual* vis = attrs.visual;
@@ -656,7 +647,6 @@ bool Linux_RenderSimplePromptUser(Display *dpy, Window *win, SimplePromptState *
         Linux_DrawBackground(dpy, *win, w, h);
         DrawSimplePromptUserEditControl(dpy, win,state);
         XFlush(dpy);
-        TimerEnd(timer, "subclasses_x11:Linux_RenderSimplePromptUser");
         return true;
     }
     XftDraw* xdDbl = XftDrawCreate(dpy, dbl, vis, cmap);
@@ -665,7 +655,6 @@ bool Linux_RenderSimplePromptUser(Display *dpy, Window *win, SimplePromptState *
         Linux_DrawBackground(dpy, *win, w, h);
         DrawSimplePromptUserEditControl(dpy, win,state);
         XFlush(dpy);
-        TimerEnd(timer, "subclasses_x11:Linux_RenderSimplePromptUser");
         return true;
     }
     Pixmap bg = Linux_GetCachedBackground(dpy, *win, w, h);
@@ -683,7 +672,6 @@ bool Linux_RenderSimplePromptUser(Display *dpy, Window *win, SimplePromptState *
     XftDrawDestroy(xdDbl);
     XFreePixmap(dpy, dbl);
     XFlush(dpy);
-    TimerEnd(timer, "subclasses_x11:Linux_RenderSimplePromptUser");
     return true;
 }
 

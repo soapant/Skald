@@ -443,6 +443,13 @@ int Platform_InitializeTrayIcon() {
   return 0;
 }
 
+void HandleCommandExecution(ListBoxInfo* lb, char* string) {
+    if (!lb) return;
+    int num = atoi(string);
+    UI_SetSelection(lb, FlintContext_Get()->window.hListBox, num - 1);
+    UI_LB_SetCaretIndex(FlintContext_Get()->window.hListBox, num, TRUE);
+}
+
 LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
   if (nCode < 0) {
     return CallNextHookEx(NULL, nCode, wParam, lParam);
