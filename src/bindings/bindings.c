@@ -23,8 +23,6 @@ bool CheckVimMotion(int pressed_vk, int modifiers, MotionAction* out_action, con
     Popup* top = WindowManager_GetTopPopup(wm);
     if (!top) return false;
     
-    bool in_popup = IsWindowValid(FlintContext_Get()->window.g_hEditPopup);
-    
 #if defined(_WIN32)
     bool ctrl_held = (GetKeyState(VK_CONTROL) & 0x8000);
     bool shift_held = (GetKeyState(VK_SHIFT) & 0x8000);
@@ -61,8 +59,7 @@ bool CheckVimMotion(int pressed_vk, int modifiers, MotionAction* out_action, con
         SequenceStartTimer();
         for (int i = 0; i < VIM_SEQUENCE_BINDING_COUNT; i++) {
             const SequenceBinding* b = &G_VIM_SEQUENCE_BINDINGS[i];
-            if (b->mode == MODE_INSERT && SequenceMatches(b->sequence) &&
-                ScopeMatches(b->scope, in_popup)) {
+            if (b->mode == MODE_INSERT && SequenceMatches(b->sequence)) {
                 *out_action = b->action_id;
                 *out_sequence = b->sequence;
                 *out_typed_count = SequenceTypedCount();
@@ -73,8 +70,7 @@ bool CheckVimMotion(int pressed_vk, int modifiers, MotionAction* out_action, con
         
         for (int i = 0; i < VIM_SEQUENCE_BINDING_COUNT; i++) {
             const SequenceBinding* b = &G_VIM_SEQUENCE_BINDINGS[i];
-            if (b->mode == MODE_INSERT && SequenceStartsWith(b->sequence) &&
-                ScopeMatches(b->scope, in_popup)) {
+            if (b->mode == MODE_INSERT && SequenceStartsWith(b->sequence)) {
                 *out_action = MOTION_NONE;
                 *out_sequence = NULL;
                 *out_typed_count = 0;
@@ -94,8 +90,7 @@ bool CheckVimMotion(int pressed_vk, int modifiers, MotionAction* out_action, con
         bool is_prefix = false;
         for (int i = 0; i < VIM_SEQUENCE_BINDING_COUNT; i++) {
             const SequenceBinding* b = &G_VIM_SEQUENCE_BINDINGS[i];
-            if (b->mode == MODE_INSERT && tolower(b->sequence[0]) == seq_char &&
-                ScopeMatches(b->scope, in_popup)) {
+            if (b->mode == MODE_INSERT && tolower(b->sequence[0]) == seq_char) {
                 is_prefix = true;
                 break;
             }
@@ -130,7 +125,7 @@ bool CheckVimMotion(int pressed_vk, int modifiers, MotionAction* out_action, con
             
             for (int i = 0; i < VIM_SEQUENCE_BINDING_COUNT; i++) {
                 const SequenceBinding* b = &G_VIM_SEQUENCE_BINDINGS[i];
-                if (b->mode == MODE_NORMAL && ScopeMatches(b->scope, in_popup)) {
+                if (b->mode == MODE_NORMAL) {
                     if (SequenceMatches(b->sequence)) {
                         *out_action = b->action_id;
                         *out_sequence = b->sequence;
@@ -152,8 +147,7 @@ bool CheckVimMotion(int pressed_vk, int modifiers, MotionAction* out_action, con
         
         for (int i = 0; i < VIM_BINDING_COUNT; i++) {
             const MotionBinding* b = &G_VIM_BINDINGS[i];
-            if (b->vk_code == pressed_vk && b->modifiers == modifiers && b->mode == MODE_NORMAL &&
-                ScopeMatches(b->scope, in_popup)) {
+            if (b->vk_code == pressed_vk && b->modifiers == modifiers && b->mode == MODE_NORMAL) {
                 *out_action = b->action_id;
                 *out_sequence = NULL;
                 *out_typed_count = 0;

@@ -46,9 +46,6 @@ HFONT CreateCustomNerdFont(int height, const char* face_name);
 void CreateChildControls(WindowHandle hwndParent, HFONT hFont, const char* list[], int count, const WindowLayout* layout, ListBoxInfo* lb);
 void SettingsCreateChildControls(WindowHandle hwndParent, HFONT hFont,const WindowLayout* layout);
 void SimpleCreateChildControls(WindowHandle hwndParent, HFONT hFont, const char* string, int count, const WindowLayout* layout);
-static inline bool IsWindowValid(WindowHandle h) {
-  return WH_TO_HWND(h) != NULL && IsWindow(WH_TO_HWND(h));
-}
 void Win32_ApplyRoundedCorners(HWND hwnd, int w, int h);
 void Win32_DrawBackground(HDC hdc, RECT* rc);
 void Win32_DrawSelectionBackground(HDC hdc, RECT* rc, COLORREF base);
@@ -58,9 +55,6 @@ static inline bool IsPopupActive(WindowHandle hPopupWnd) {
   (void)FlintContext_Get()->window.hPopupWnd;
   WindowManager* wm = WindowManager_Get();
   return wm && wm->popup_count > 0;
-}
-static inline bool IsWindowValid(WindowHandle h) {
-  return WH_TO_HWND(h) != NULL;
 }
 #endif
 
