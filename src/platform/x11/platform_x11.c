@@ -838,7 +838,6 @@ long Platform_GetFileSize(char *filepath) {
     return size;
 }
 
-
 #define MAX_WATCHED_DIRS 128
 
 typedef struct {
