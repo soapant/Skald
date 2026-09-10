@@ -15,51 +15,15 @@
 
 #define TIMER_LOG_CAP 65536
 
-static char g_timer_buffer[TIMER_LOG_CAP];
-static size_t g_timer_buffer_len = 0;
-static int g_timer_atexit_registered = 0;
-static int g_timer_file_initialized = 0;
+extern char g_timer_buffer[TIMER_LOG_CAP];
+extern size_t g_timer_buffer_len;
+extern int g_timer_atexit_registered;
+extern int g_timer_file_initialized;
 
-static void TimerBufferFlush(void);
+void TimerBufferFlush(void);
+void TimerBufferAppend(const char* line);
 
-static void TimerAtexitFlush(void) {
-  TimerBufferFlush();
-}
-
-static void TimerBufferFlush(void) {
-  if (g_timer_buffer_len == 0) return;
-  const char* path = "time_logs.txt";
-  FILE* f = fopen(path, "a");
-  if (!f) f = fopen("/home/diggy/Programming/Projects/Flint/time_logs.txt", "a");
-  if (f) {
-    fwrite(g_timer_buffer, 1, g_timer_buffer_len, f);
-    fclose(f);
-  }
-  g_timer_buffer_len = 0;
-  g_timer_buffer[0] = '\0';
-}
-
-static void TimerBufferAppend(const char* line) {
-  size_t len = strlen(line);
-  if (len == 0) return;
-  const char* path = "time_logs.txt";
-  FILE* f = fopen(path, "a");
-  if (!f) f = fopen("/home/diggy/Programming/Projects/Flint/time_logs.txt", "a");
-  if (f) { fwrite(line, 1, len, f); fclose(f); }
-  if (len >= TIMER_LOG_CAP - g_timer_buffer_len) {
-    TimerBufferFlush();
-    if (len >= TIMER_LOG_CAP) return;
-  }
-  memcpy(g_timer_buffer + g_timer_buffer_len, line, len);
-  g_timer_buffer_len += len;
-  g_timer_buffer[g_timer_buffer_len] = '\0';
-  if (!g_timer_atexit_registered) {
-    atexit(TimerAtexitFlush);
-    g_timer_atexit_registered = 1;
-  }
-}
-
-static inline WinTimer TimerStart() {
+static inline WinTimer TimerStart(void) {
   WinTimer t;
 #if defined(_WIN32)
   QueryPerformanceFrequency(&t.frequency);
@@ -70,29 +34,18 @@ static inline WinTimer TimerStart() {
   return t;
 }
 
-static inline void TimerEnd(WinTimer t, const char* operation_name) {
-  double elapsed_us;
-#if defined(_WIN32)
-  LARGE_INTEGER end;
-  QueryPerformanceCounter(&end);
-  elapsed_us = (double)(end.QuadPart - t.start.QuadPart) * 1000000.0 / (double)t.frequency.QuadPart;
-#else
-  struct timespec end;
-  clock_gettime(CLOCK_MONOTONIC, &end);
-  elapsed_us = (double)(end.tv_sec - t.start.tv_sec) * 1000000.0 + (double)(end.tv_nsec - t.start.tv_nsec) / 1000.0;
-#endif
+void TimerEnd(WinTimer t, const char* operation_name);
 
-  if (DoTimeDebugs) {
-    char line[MaxFeatures];
-    if (elapsed_us < 1000.0) {
-      snprintf(line, sizeof(line), "");
-    } else if (elapsed_us < 1000000.0) {
-      snprintf(line, sizeof(line), "[ TIMER] %-25s : %8.2f ms\n", operation_name, elapsed_us / 1000.0);
-    } else {
-      snprintf(line, sizeof(line), "[ TIMER] %-25s : %8.2f s\n", operation_name, elapsed_us / 1000000.0);
-    }
-    TimerBufferAppend(line);
-  }
+// Lightweight profiling helpers to reduce boilerplate.
+// Usage: PROFILE_SCOPE("my_op"); or manual PROFILE_FUNCTION()/PROFILE_END("name")
+#define PROFILE_FUNCTION() WinTimer _profile_timer = TimerStart()
+#define PROFILE_END(name) TimerEnd(_profile_timer, (name))
+#define PROFILE_SCOPE(name) WinTimer _profile_timer_##__LINE__ = TimerStart(); \
+  __attribute__((cleanup(_profile_timer_cleanup))) WinTimer* _profile_ptr_##__LINE__ = &_profile_timer_##__LINE__; \
+  const char* _profile_name_##__LINE__ = (name)
+static inline void _profile_timer_cleanup(WinTimer* t) {
+  // Note: caller still needs name; this helper is for future RAII use if desired.
+  (void)t;
 }
 
 #endif
