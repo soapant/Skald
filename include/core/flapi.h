@@ -77,7 +77,6 @@ bool fl_append_to_file(const char* filepath, const char* line);
 bool fl_write_to_file(const char* filepath, const char* lines[], int count);
 bool fl_register_hotkey_impl(char* hotkey_string,void (*on_hotkey_trigger)(void),bool (*optional_condition_for_hotkey)(void),bool whitelist,const char** optional_blacklistedwindows);
 void fl_init_all_hotkeys(void);
-bool fl_launch_terminal_with_args(char* args);
 bool fl_launch_terminal_at_path(char* path,char* args);
 bool fl_launch_file_manager_at_path(char* path,char* args);
 char* fl_get_zoxide_match(char* query);
