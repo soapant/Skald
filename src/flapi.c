@@ -266,11 +266,6 @@ int fl_get_icon_size(const char* icon_path) {
     return Platform_GetIconSize((char*)icon_path);
 }
 
-
-bool fl_launch_terminal_with_args(char* args) {
-
-}
-
 char* fl_run_terminal_command(char* command) {
   if (!command) return NULL;
   return Platform_RunTerminalCommand(command,false);
