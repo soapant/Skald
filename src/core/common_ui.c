@@ -18,6 +18,16 @@ char g_alias_display[MAX_ITEMS][512] = {0};
 int g_alias_display_count = 0;
 bool g_alias_display_active = false;
 
+static bool FuzzyMatch(const char* text, const char* pattern) {
+    if (!pattern || !pattern[0]) return true;
+    if (!text || !text[0]) return false;
+    while (*pattern && *text) {
+        if (tolower((unsigned char)*pattern) == tolower((unsigned char)*text)) pattern++;
+        text++;
+    }
+    return *pattern == '\0';
+}
+
 void BuildAliasDisplayItems(const char** items, int count) {
   g_alias_display_active = false;
   g_alias_display_count = 0;
@@ -111,7 +121,7 @@ void PopulateListBox(ListBoxInfo* lb, WindowHandle hListBox, const char* filter,
       if (filter_match) {
         match = filter_match(search_text, clean_filter);
       } else {
-        match = Platform_StringContainsCaseInsensitive(search_text, clean_filter);
+        match = FuzzyMatch(search_text, clean_filter);
       }
 
       if (match) {
@@ -134,7 +144,7 @@ void PopulateListBox(ListBoxInfo* lb, WindowHandle hListBox, const char* filter,
       if (g_alias_display_active && i < g_alias_display_count && g_alias_display[i][0] != '\0') {
         search_text = g_alias_display[i];
       }
-      bool match = filter_match ? filter_match(search_text, clean_filter) : Platform_StringContainsCaseInsensitive(search_text, clean_filter);
+      bool match = filter_match ? filter_match(search_text, clean_filter) : FuzzyMatch(search_text, clean_filter);
 
       if (match) {
         lb->matching_indices[total_matches] = i;
