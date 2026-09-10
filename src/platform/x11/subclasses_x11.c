@@ -4,7 +4,13 @@
 #include "config.h"
 #include "platform/x11/drawing.h"
 #include "core/platform.h"
-#include "helpers.h"
+#include "config.h"
+#include "core/platform.h"
+#include "helpers/hotkey.h"
+#include "helpers/alias.h"
+#include "helpers/flag.h"
+#include "helpers/file.h"
+#include "helpers/ui.h"
 #include "helpers/flag.h"
 #include "core/common_ui.h"
 #include "core/vim.h"
@@ -29,80 +35,80 @@ extern int pending_hotkey_vk;
 extern int pending_hotkey_mod;
 extern long pending_hotkey_timeMs;
 static bool should_swallow_pending(int wParam, int mods) {
-    WinTimer timer = TimerStart();
-    if (pending_hotkey_vk == 0) { TimerEnd(timer, "subclasses_x11:should_swallow_pending"); return false; }
+    PROFILE_START(timer);
+    if (pending_hotkey_vk == 0) { PROFILE_END_VAR(timer, "subclasses_x11:should_swallow_pending"); return false; }
     struct timeval tv; gettimeofday(&tv,NULL);
     long now = tv.tv_sec*1000 + tv.tv_usec/1000;
     if (now - pending_hotkey_timeMs > 800) {
-        pending_hotkey_vk = 0; pending_hotkey_mod = 0; TimerEnd(timer, "subclasses_x11:should_swallow_pending"); return false;
+        pending_hotkey_vk = 0; pending_hotkey_mod = 0; PROFILE_END_VAR(timer, "subclasses_x11:should_swallow_pending"); return false;
     }
     
     
     if (wParam == pending_hotkey_vk) {
         pending_hotkey_vk = 0; pending_hotkey_mod = 0;
-        TimerEnd(timer, "subclasses_x11:should_swallow_pending");
+        PROFILE_END_VAR(timer, "subclasses_x11:should_swallow_pending");
         return true;
     }
     
-    TimerEnd(timer, "subclasses_x11:should_swallow_pending");
+    PROFILE_END_VAR(timer, "subclasses_x11:should_swallow_pending");
     return false;
 }
 
 static int Linux_KeysymToWindowsVK(KeySym keysym) {
-    WinTimer timer = TimerStart();
-    if (keysym >= XK_a && keysym <= XK_z) { TimerEnd(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return 'A' + (keysym - XK_a); }
-    if (keysym >= XK_A && keysym <= XK_Z) { TimerEnd(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return 'A' + (keysym - XK_A); }
-    if (keysym >= XK_0 && keysym <= XK_9) { TimerEnd(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return '0' + (keysym - XK_0); }
-    if (keysym >= XK_F1 && keysym <= XK_F12) { TimerEnd(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_F1 + (keysym - XK_F1); }
+    PROFILE_START(timer);
+    if (keysym >= XK_a && keysym <= XK_z) { PROFILE_END_VAR(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return 'A' + (keysym - XK_a); }
+    if (keysym >= XK_A && keysym <= XK_Z) { PROFILE_END_VAR(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return 'A' + (keysym - XK_A); }
+    if (keysym >= XK_0 && keysym <= XK_9) { PROFILE_END_VAR(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return '0' + (keysym - XK_0); }
+    if (keysym >= XK_F1 && keysym <= XK_F12) { PROFILE_END_VAR(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_F1 + (keysym - XK_F1); }
 
     switch (keysym) {
-        case XK_Escape: TimerEnd(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_ESCAPE;
+        case XK_Escape: PROFILE_END_VAR(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_ESCAPE;
         case XK_Return:
-        case XK_KP_Enter: TimerEnd(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_RETURN;
-        case XK_Tab: TimerEnd(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_TAB;
-        case XK_BackSpace: TimerEnd(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_BACK;
-        case XK_Up: TimerEnd(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_UP;
-        case XK_Down: TimerEnd(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_DOWN;
-        case XK_Left: TimerEnd(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_LEFT;
-        case XK_Right: TimerEnd(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_RIGHT;
-        case XK_Delete: TimerEnd(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_DELETE;
-        case XK_Home: TimerEnd(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_HOME;
-        case XK_End: TimerEnd(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_END;
-        case XK_Page_Up: TimerEnd(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_PRIOR;
-        case XK_Page_Down: TimerEnd(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_NEXT;
-        case XK_space: TimerEnd(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_SPACE;
-        case XK_Control_L: TimerEnd(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_LCONTROL;
-        case XK_Control_R: TimerEnd(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_RCONTROL;
-        case XK_Shift_L: TimerEnd(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_LSHIFT;
-        case XK_Shift_R: TimerEnd(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_RSHIFT;
-        case XK_Alt_L: TimerEnd(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_LMENU;
-        case XK_Alt_R: TimerEnd(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_RMENU;
-        case XK_comma: TimerEnd(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_OEM_COMMA;
-        case XK_period: TimerEnd(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_OEM_PERIOD;
-        case XK_semicolon: TimerEnd(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_OEM_1;
-        case XK_slash: TimerEnd(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_OEM_2;
-        case XK_apostrophe: TimerEnd(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_OEM_7;
-        case XK_bracketleft: TimerEnd(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_OEM_4;
-        case XK_bracketright: TimerEnd(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_OEM_6;
-        case XK_grave: TimerEnd(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_OEM_3;
-        case XK_minus: TimerEnd(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_OEM_MINUS;
-        case XK_equal: TimerEnd(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_OEM_PLUS;
-        default: TimerEnd(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return 0;
+        case XK_KP_Enter: PROFILE_END_VAR(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_RETURN;
+        case XK_Tab: PROFILE_END_VAR(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_TAB;
+        case XK_BackSpace: PROFILE_END_VAR(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_BACK;
+        case XK_Up: PROFILE_END_VAR(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_UP;
+        case XK_Down: PROFILE_END_VAR(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_DOWN;
+        case XK_Left: PROFILE_END_VAR(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_LEFT;
+        case XK_Right: PROFILE_END_VAR(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_RIGHT;
+        case XK_Delete: PROFILE_END_VAR(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_DELETE;
+        case XK_Home: PROFILE_END_VAR(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_HOME;
+        case XK_End: PROFILE_END_VAR(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_END;
+        case XK_Page_Up: PROFILE_END_VAR(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_PRIOR;
+        case XK_Page_Down: PROFILE_END_VAR(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_NEXT;
+        case XK_space: PROFILE_END_VAR(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_SPACE;
+        case XK_Control_L: PROFILE_END_VAR(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_LCONTROL;
+        case XK_Control_R: PROFILE_END_VAR(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_RCONTROL;
+        case XK_Shift_L: PROFILE_END_VAR(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_LSHIFT;
+        case XK_Shift_R: PROFILE_END_VAR(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_RSHIFT;
+        case XK_Alt_L: PROFILE_END_VAR(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_LMENU;
+        case XK_Alt_R: PROFILE_END_VAR(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_RMENU;
+        case XK_comma: PROFILE_END_VAR(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_OEM_COMMA;
+        case XK_period: PROFILE_END_VAR(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_OEM_PERIOD;
+        case XK_semicolon: PROFILE_END_VAR(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_OEM_1;
+        case XK_slash: PROFILE_END_VAR(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_OEM_2;
+        case XK_apostrophe: PROFILE_END_VAR(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_OEM_7;
+        case XK_bracketleft: PROFILE_END_VAR(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_OEM_4;
+        case XK_bracketright: PROFILE_END_VAR(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_OEM_6;
+        case XK_grave: PROFILE_END_VAR(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_OEM_3;
+        case XK_minus: PROFILE_END_VAR(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_OEM_MINUS;
+        case XK_equal: PROFILE_END_VAR(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_OEM_PLUS;
+        default: PROFILE_END_VAR(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return 0;
     }
-    TimerEnd(timer, "subclasses_x11:Linux_KeysymToWindowsVK");
+    PROFILE_END_VAR(timer, "subclasses_x11:Linux_KeysymToWindowsVK");
 }
-extern bool g_Linux_CtrlHeld, g_Linux_AltHeld, g_Linux_ShiftHeld;
+extern bool g_x11_ctrl_held, g_x11_alt_held, g_x11_shift_held;
 
 static void ReadModifiers(const XEvent* ev, bool* ctrl_pressed, bool* shift_pressed, bool* alt_pressed) {
-    WinTimer timer = TimerStart();
-    *ctrl_pressed = ((ev->xkey.state & ControlMask) != 0) || g_Linux_CtrlHeld;
-    *shift_pressed = ((ev->xkey.state & ShiftMask) != 0) || g_Linux_ShiftHeld;
-    *alt_pressed = ((ev->xkey.state & Mod1Mask) != 0) || g_Linux_AltHeld;
-    TimerEnd(timer, "subclasses_x11:ReadModifiers");
+    PROFILE_START(timer);
+    *ctrl_pressed = ((ev->xkey.state & ControlMask) != 0) || g_x11_ctrl_held;
+    *shift_pressed = ((ev->xkey.state & ShiftMask) != 0) || g_x11_shift_held;
+    *alt_pressed = ((ev->xkey.state & Mod1Mask) != 0) || g_x11_alt_held;
+    PROFILE_END_VAR(timer, "subclasses_x11:ReadModifiers");
 }
 
 static bool TryVimMotion(int wParam, bool ctrl_pressed, bool shift_pressed, bool alt_pressed) {
-    WinTimer timer = TimerStart();
+    PROFILE_START(timer);
     int mod = HOTKEY_MOD_NONE;
     if (ctrl_pressed) mod |= HOTKEY_MOD_CTRL;
     if (shift_pressed) mod |= HOTKEY_MOD_SHIFT;
@@ -110,15 +116,15 @@ static bool TryVimMotion(int wParam, bool ctrl_pressed, bool shift_pressed, bool
     MotionAction act = MOTION_NONE; const char* seq = NULL; int typed = 0;
     if (CheckVimMotion(wParam, mod, &act, &seq, &typed)) {
         if (act != MOTION_NONE) ExecuteMotion(act, seq, typed);
-        TimerEnd(timer, "subclasses_x11:TryVimMotion");
+        PROFILE_END_VAR(timer, "subclasses_x11:TryVimMotion");
         return true;
     }
-    TimerEnd(timer, "subclasses_x11:TryVimMotion");
+    PROFILE_END_VAR(timer, "subclasses_x11:TryVimMotion");
     return false;
 }
 
 void EditBufferBackspace(char* buf, size_t* cursor) {
-    WinTimer timer = TimerStart();
+    PROFILE_START(timer);
     size_t n = strlen(buf);
     if (*cursor > 0) {
         memmove(buf + *cursor - 1,
@@ -126,17 +132,17 @@ void EditBufferBackspace(char* buf, size_t* cursor) {
                 n - *cursor + 1);
         (*cursor)--;
     }
-    TimerEnd(timer, "subclasses_x11:EditBufferBackspace");
+    PROFILE_END_VAR(timer, "subclasses_x11:EditBufferBackspace");
 }
 
 bool EditBufferDeleteChar(char* buf, size_t* cursor) {
-    WinTimer timer = TimerStart();
+    PROFILE_START(timer);
     size_t n = strlen(buf);
-    if (*cursor >= n) { TimerEnd(timer, "subclasses_x11:EditBufferDeleteChar"); return false; }
+    if (*cursor >= n) { PROFILE_END_VAR(timer, "subclasses_x11:EditBufferDeleteChar"); return false; }
     memmove(buf + *cursor,
             buf + *cursor + 1,
             n - *cursor);
-    TimerEnd(timer, "subclasses_x11:EditBufferDeleteChar");
+    PROFILE_END_VAR(timer, "subclasses_x11:EditBufferDeleteChar");
     return true;
 }
 
@@ -153,14 +159,14 @@ static void command_confirm(const char* new_text, void* user_data) {
 }
 
 bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
-    WinTimer timer = TimerStart();
-    if (ev->type != KeyPress) { TimerEnd(timer, "subclasses_x11:Linux_HandlePromptKey"); return false; }
+    PROFILE_START(timer);
+    if (ev->type != KeyPress) { PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandlePromptKey"); return false; }
 
     int wParam = Linux_KeysymToWindowsVK(XLookupKeysym(&ev->xkey, 0));
     bool ctrl_pressed, shift_pressed, alt_pressed;
     ReadModifiers(ev, &ctrl_pressed, &shift_pressed, &alt_pressed);
-    if (should_swallow_pending(wParam, (ctrl_pressed?HOTKEY_MOD_CTRL:0)|(shift_pressed?HOTKEY_MOD_SHIFT:0)|(alt_pressed?HOTKEY_MOD_ALT:0))) { TimerEnd(timer, "subclasses_x11:Linux_HandlePromptKey"); return true; }
-    if (TryVimMotion(wParam, ctrl_pressed, shift_pressed, alt_pressed)) { TimerEnd(timer, "subclasses_x11:Linux_HandlePromptKey"); return true; }
+    if (should_swallow_pending(wParam, (ctrl_pressed?HOTKEY_MOD_CTRL:0)|(shift_pressed?HOTKEY_MOD_SHIFT:0)|(alt_pressed?HOTKEY_MOD_ALT:0))) { PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandlePromptKey"); return true; }
+    if (TryVimMotion(wParam, ctrl_pressed, shift_pressed, alt_pressed)) { PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandlePromptKey"); return true; }
     if (wParam == VK_BACK) {
         if (ctrl_pressed) {
             state->filter[0] = '\0';
@@ -169,17 +175,17 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
             EditBufferBackspace(state->filter, &state->cursor);
         }
         if (FlintContext_Get()->prompt_callbacks.refresh) FlintContext_Get()->prompt_callbacks.refresh(state->filter, FlintContext_Get()->window.hListBox, state->has_listbox ? &state->listbox : NULL);
-        TimerEnd(timer, "subclasses_x11:Linux_HandlePromptKey");
+        PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandlePromptKey");
         return true;
     }
     if (wParam == VK_ESCAPE) {
       if (IsInsertMode()) {
         SetMode(MODE_NORMAL);
-        TimerEnd(timer, "subclasses_x11:Linux_HandlePromptKey");
+        PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandlePromptKey");
         return true;
       } else {
         FlintContext_Get()->window.selection_complete = true;
-        TimerEnd(timer, "subclasses_x11:Linux_HandlePromptKey");
+        PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandlePromptKey");
         return true;
       }
     }
@@ -187,19 +193,19 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
     if (wParam >= '0' && wParam <= '9') {
       if (ctrl_pressed) {
         HandleNumberShortcut(wParam, FlintContext_Get()->window.hListBox, FlintContext_Get()->window.g_ActiveEditControl,&state->listbox);
-        TimerEnd(timer, "subclasses_x11:Linux_HandlePromptKey");
+        PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandlePromptKey");
         return true;
       }
     }
     if (wParam == VK_RIGHT) {
       
       CursorForward(&state->cursor, strlen(state->filter));
-      TimerEnd(timer, "subclasses_x11:Linux_HandlePromptKey");
+      PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandlePromptKey");
       return true;
     }
     if (wParam == VK_LEFT) {
        CursorBack(&state->cursor, strlen(state->filter));
-      TimerEnd(timer, "subclasses_x11:Linux_HandlePromptKey");
+      PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandlePromptKey");
       return true;
     }
     if (wParam == VK_UP) {
@@ -208,11 +214,11 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
           VimContext ctx = Vim_FromState(state);
           SetCursorToStartOfText(&ctx);
         }
-        TimerEnd(timer, "subclasses_x11:Linux_HandlePromptKey");
+        PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandlePromptKey");
         return true;
       }
       if (state->has_listbox) UI_NavigateUp(&state->listbox, FlintContext_Get()->window.hListBox);
-      TimerEnd(timer, "subclasses_x11:Linux_HandlePromptKey");
+      PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandlePromptKey");
       return true;
     }
     if (wParam == VK_DOWN) {
@@ -221,18 +227,18 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
           VimContext ctx = Vim_FromState(state);
           SetCursorToEndOfText(&ctx);
         }
-        TimerEnd(timer, "subclasses_x11:Linux_HandlePromptKey");
+        PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandlePromptKey");
         return true;
       }
       if (state->has_listbox) UI_NavigateDown(&state->listbox, FlintContext_Get()->window.hListBox);
-      TimerEnd(timer, "subclasses_x11:Linux_HandlePromptKey");
+      PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandlePromptKey");
       return true;
     }
     if (wParam == VK_DELETE) {
       if (state && EditBufferDeleteChar(state->filter, &state->cursor)) {
         if (FlintContext_Get()->prompt_callbacks.refresh) FlintContext_Get()->prompt_callbacks.refresh(state->filter, FlintContext_Get()->window.hListBox, state->has_listbox ? &state->listbox : NULL);
       }
-      TimerEnd(timer, "subclasses_x11:Linux_HandlePromptKey");
+      PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandlePromptKey");
       return true;
     }
     if (wParam == VK_HOME) {
@@ -240,7 +246,7 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
         VimContext ctx = Vim_FromState(state);
         SetCursorToStartOfText(&ctx);
       }
-      TimerEnd(timer, "subclasses_x11:Linux_HandlePromptKey");
+      PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandlePromptKey");
       return true;
     }
     if (wParam == VK_END) {
@@ -248,12 +254,12 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
         VimContext ctx = Vim_FromState(state);
         SetCursorToEndOfText(&ctx);
       }
-      TimerEnd(timer, "subclasses_x11:Linux_HandlePromptKey");
+      PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandlePromptKey");
       return true;
     }
     if (wParam == VK_TAB) {
       if (FlintContext_Get()->prompt_callbacks.tab) FlintContext_Get()->prompt_callbacks.tab(&state->listbox);
-      TimerEnd(timer, "subclasses_x11:Linux_HandlePromptKey");
+      PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandlePromptKey");
       return true;
     }
     if (wParam == VK_RETURN) {
@@ -275,7 +281,7 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
           else if (_c->prompt_callbacks.enter) should_close = _c->prompt_callbacks.enter(sel, &state->listbox);
           _c->window.selection_complete = should_close;
         }
-        TimerEnd(timer, "subclasses_x11:Linux_HandlePromptKey");
+        PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandlePromptKey");
         return true;
       } else {
         {
@@ -284,7 +290,7 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
           if (_c2->prompt_callbacks.enter) should_close = _c2->prompt_callbacks.enter(sel, &state->listbox);
           _c2->window.selection_complete = should_close;
         }
-        TimerEnd(timer, "subclasses_x11:Linux_HandlePromptKey");
+        PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandlePromptKey");
         return true;
       }
     }
@@ -311,19 +317,19 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
         return true;
       }
 
-    TimerEnd(timer, "subclasses_x11:Linux_HandlePromptKey");
+    PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandlePromptKey");
     return false;
 }
 
 bool Linux_HandleSimplePromptKey(const XEvent* ev,SimplePromptState *state) {
-    WinTimer timer = TimerStart();
-    if (ev->type != KeyPress) { TimerEnd(timer, "subclasses_x11:Linux_HandleSimplePromptKey"); return false; }
+    PROFILE_START(timer);
+    if (ev->type != KeyPress) { PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandleSimplePromptKey"); return false; }
 
     int wParam = Linux_KeysymToWindowsVK(XLookupKeysym(&ev->xkey, 0));
     bool ctrl_pressed, shift_pressed, alt_pressed;
     ReadModifiers(ev, &ctrl_pressed, &shift_pressed, &alt_pressed);
-    if (should_swallow_pending(wParam, (ctrl_pressed?HOTKEY_MOD_CTRL:0)|(shift_pressed?HOTKEY_MOD_SHIFT:0)|(alt_pressed?HOTKEY_MOD_ALT:0))) { TimerEnd(timer, "subclasses_x11:Linux_HandleSimplePromptKey"); return true; }
-    if (TryVimMotion(wParam, ctrl_pressed, shift_pressed, alt_pressed)) { TimerEnd(timer, "subclasses_x11:Linux_HandleSimplePromptKey"); return true; }
+    if (should_swallow_pending(wParam, (ctrl_pressed?HOTKEY_MOD_CTRL:0)|(shift_pressed?HOTKEY_MOD_SHIFT:0)|(alt_pressed?HOTKEY_MOD_ALT:0))) { PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandleSimplePromptKey"); return true; }
+    if (TryVimMotion(wParam, ctrl_pressed, shift_pressed, alt_pressed)) { PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandleSimplePromptKey"); return true; }
     if (wParam == VK_BACK) {
         if (ctrl_pressed) {
             state->user_input[0] = '\0';
@@ -331,41 +337,41 @@ bool Linux_HandleSimplePromptKey(const XEvent* ev,SimplePromptState *state) {
         } else {
             EditBufferBackspace(state->user_input, &state->cursor);
         }
-        TimerEnd(timer, "subclasses_x11:Linux_HandleSimplePromptKey");
+        PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandleSimplePromptKey");
         return true;
     }
     if (wParam == VK_ESCAPE) {
       if (IsInsertMode()) {
         SetMode(MODE_NORMAL);
-        TimerEnd(timer, "subclasses_x11:Linux_HandleSimplePromptKey");
+        PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandleSimplePromptKey");
         return true;
       } else {
         FlintContext_Get()->window.selection_complete = true;
-        TimerEnd(timer, "subclasses_x11:Linux_HandleSimplePromptKey");
+        PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandleSimplePromptKey");
         return true;
       }
     }
     if (wParam == VK_RIGHT) {
       CursorForward(&state->cursor, strlen(state->user_input));
-      TimerEnd(timer, "subclasses_x11:Linux_HandleSimplePromptKey");
+      PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandleSimplePromptKey");
       return true;
     }
     if (wParam == VK_LEFT) {
        CursorBack(&state->cursor, strlen(state->user_input));
-      TimerEnd(timer, "subclasses_x11:Linux_HandleSimplePromptKey");
+      PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandleSimplePromptKey");
       return true;
     }
     if (wParam == VK_RETURN) {
       FlintContext_Get()->window.selection_complete = true;
-      TimerEnd(timer, "subclasses_x11:Linux_HandleSimplePromptKey");
+      PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandleSimplePromptKey");
       return true;
     }
-    TimerEnd(timer, "subclasses_x11:Linux_HandleSimplePromptKey");
+    PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandleSimplePromptKey");
     return false;
 }
 
 void DrawSimplePromptUserEditControlOnDraw(Display *dpy, XftDraw* xd, Visual* vis, Colormap cmap, SimplePromptState *state) {
-    WinTimer timer = TimerStart();
+    PROFILE_START(timer);
     FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
     XftFont* xf = FH_TO_XFT(font);
 
@@ -398,7 +404,7 @@ void DrawSimplePromptUserEditControlOnDraw(Display *dpy, XftDraw* xd, Visual* vi
     XftColorFree(dpy, vis, cmap, &text_color);
     XftColorFree(dpy, vis, cmap, &vim_text_color);
     Platform_DestroyFont(font);
-    TimerEnd(timer, "subclasses_x11:DrawSimplePromptUserEditControlOnDraw");
+    PROFILE_END_VAR(timer, "subclasses_x11:DrawSimplePromptUserEditControlOnDraw");
 }
 
 void DrawPromptUserEditControlOnDraw(Display *dpy, XftDraw* xd, Visual* vis, Colormap cmap, PromptState *state) {
@@ -508,7 +514,7 @@ void DrawPromptUserListBoxOnDraw(Display *dpy, XftDraw* xd, Visual* vis, Colorma
 }
 
 void DrawSimplePromptUserEditControl(Display *dpy, Window *win, SimplePromptState *state) {
-    WinTimer timer = TimerStart();
+    PROFILE_START(timer);
     XWindowAttributes attrs;
     Visual* vis = NULL;
     Colormap cmap = 0;
@@ -520,14 +526,14 @@ void DrawSimplePromptUserEditControl(Display *dpy, Window *win, SimplePromptStat
         cmap = DefaultColormap(dpy, screen);
     }
     XftDraw* xd = XftDrawCreate(dpy, *win, vis, cmap);
-    if (!xd) { TimerEnd(timer, "subclasses_x11:DrawSimplePromptUserEditControl"); return; }
+    if (!xd) { PROFILE_END_VAR(timer, "subclasses_x11:DrawSimplePromptUserEditControl"); return; }
     DrawSimplePromptUserEditControlOnDraw(dpy, xd, vis, cmap, state);
     XftDrawDestroy(xd);
-    TimerEnd(timer, "subclasses_x11:DrawSimplePromptUserEditControl");
+    PROFILE_END_VAR(timer, "subclasses_x11:DrawSimplePromptUserEditControl");
 }
 
 void DrawPromptUserEditControl(Display *dpy,Window* win,PromptState *state) {
-    WinTimer timer = TimerStart();
+    PROFILE_START(timer);
     XWindowAttributes attrs;
     Visual* vis = NULL;
     Colormap cmap = 0;
@@ -539,14 +545,14 @@ void DrawPromptUserEditControl(Display *dpy,Window* win,PromptState *state) {
         cmap = DefaultColormap(dpy, screen);
     }
     XftDraw* xd = XftDrawCreate(dpy, *win, vis, cmap);
-    if (!xd) { TimerEnd(timer, "subclasses_x11:DrawPromptUserEditControl"); return; }
+    if (!xd) { PROFILE_END_VAR(timer, "subclasses_x11:DrawPromptUserEditControl"); return; }
     DrawPromptUserEditControlOnDraw(dpy, xd, vis, cmap, state);
     XftDrawDestroy(xd);
-    TimerEnd(timer, "subclasses_x11:DrawPromptUserEditControl");
+    PROFILE_END_VAR(timer, "subclasses_x11:DrawPromptUserEditControl");
 }
 
 void DrawPromptUserListBox(Display *dpy,Window* win,PromptState *state) {
-      WinTimer timer = TimerStart();
+      PROFILE_START(timer);
       XWindowAttributes attrs;
       Visual* vis = NULL;
       Colormap cmap = 0;
@@ -558,10 +564,10 @@ void DrawPromptUserListBox(Display *dpy,Window* win,PromptState *state) {
           cmap = DefaultColormap(dpy, screen);
       }
       XftDraw* xd = XftDrawCreate(dpy, *win, vis, cmap);
-      if (!xd) { TimerEnd(timer, "subclasses_x11:DrawPromptUserListBox"); return; }
+      if (!xd) { PROFILE_END_VAR(timer, "subclasses_x11:DrawPromptUserListBox"); return; }
       DrawPromptUserListBoxOnDraw(dpy, xd, vis, cmap, state);
       XftDrawDestroy(xd);
-      TimerEnd(timer, "subclasses_x11:DrawPromptUserListBox");
+      PROFILE_END_VAR(timer, "subclasses_x11:DrawPromptUserListBox");
 }
 
 bool Linux_RenderPromptUser(Display *dpy, Window *win, PromptState *state) {
@@ -680,4 +686,3 @@ bool Linux_RenderSimplePromptUser(Display *dpy, Window *win, SimplePromptState *
     XFlush(dpy);
     return true;
 }
-

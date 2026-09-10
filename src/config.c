@@ -12,12 +12,12 @@ bool DoTimeDebugs = false;
 bool RoundedCorners = true;
 int CornerRadius = 14;
 bool EnableShaders = false;
-int ShaderPreset = 1; // 0 solid, 1 vertical, 2 radial, 3 diagonal, 4 noise
+int ShaderPreset = 1;
 bool EnableSelectionShaders = false;
-int SelectionShaderPreset = 1; // 0 solid, 1 vertical, 2 radial, 3 diagonal, 4 noise
-float ShaderIntensity = 0.25f; // 0.0-1.0 how strong the gradient is (0.35 subtle, 0.65 visible, 1.0 punchy)
-float ShaderSmoothness = 5.0f; // 0.2 blocky (few rects) -> 5.0 ultra smooth, 1.0 = gradient spans full window
-//right now this is doing nothing
+int SelectionShaderPreset = 1;
+float ShaderIntensity = 0.25f;
+float ShaderSmoothness = 5.0f;
+
 char* EditPopUpPos = "middle";
 int EditPopUpWidthMin = 400;
 int PageUpDownLen = 6;
@@ -46,8 +46,8 @@ const PathVar G_PATH_VARS[] = {
     {"MISC",         "D:\\retard games\\miscellaneous", "/home/diggy/miscellaneous"},
     {"MUSIC",        "D:\\Music",                       "/home/diggy/Music"},
     {"VIDEOS",       "D:\\videos",                      "/home/diggy/Videos"},
-    {"PROGRAMDATA",  "C:\\ProgramData",                 ""}, // Not A Thing On Linux
-    {"SystemRoot",   "C:\\Windows",                     ""}, // Not A Thing On Linux
+    {"PROGRAMDATA",  "C:\\ProgramData",                 ""},
+    {"SystemRoot",   "C:\\Windows",                     ""},
 };
 const unsigned int PATH_VAR_COUNT = ARRAY_LEN(G_PATH_VARS);
 
@@ -64,4 +64,3 @@ const AliasEntry Aliases[] = {
   {"brw","Brawlhalla","AppLauncher"},
 };
 const size_t ALIAS_ENTRY_COUNT = ARRAY_LEN(Aliases);
-

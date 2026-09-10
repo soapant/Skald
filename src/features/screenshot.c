@@ -58,7 +58,7 @@ void TriggerSaveScreenshot(void) {
         TriggerScreenshot(FlintContext_Get()->window.hPopupWnd, false);
     }
 #else
-    // Not Implemented
+
 #endif
 }
 
@@ -82,7 +82,7 @@ void TriggerOpenScreenshot(void) {
         TriggerScreenshot(FlintContext_Get()->window.hPopupWnd, true);
     }
 #else
-    // Not Implemented
+
 #endif
 }
 

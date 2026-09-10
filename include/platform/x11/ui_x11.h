@@ -151,7 +151,7 @@ static inline void UI_Edit_KeyUp(WindowHandle hEdit, int vk) {
 
 #define UI_GetCurrentText(edit, buffer) UI_GetCurrentTextEdit(edit, buffer, sizeof(buffer))
 
-// Reads the text of whatever prompt surface is active.
+
 static inline void UI_GetCurrentTextEdit(WindowHandle edit, char* buffer, size_t cap) {
   (void)edit;
   if (!buffer || cap == 0) return;

@@ -17,17 +17,17 @@
 
 bool fl_get_all_files_from_dir_platform(const char* dir_path, char** list_of_allowed_extensions,
                                         ListOfFiles* list_of_files, char** list_of_names_to_ignore) {
-    WinTimer timer = TimerStart();
+    PROFILE_START(timer);
 
     if (!dir_path || !list_of_files) {
-        TimerEnd(timer, "flapi_x11:fl_get_all_files_from_dir_platform");
+        PROFILE_END_VAR(timer, "flapi_x11:fl_get_all_files_from_dir_platform");
         return false;
     }
 
     DIR* dir = opendir(dir_path);
     if (!dir) {
         perror("opendir");
-        TimerEnd(timer, "flapi_x11:fl_get_all_files_from_dir_platform");
+        PROFILE_END_VAR(timer, "flapi_x11:fl_get_all_files_from_dir_platform");
         return false;
     }
 
@@ -88,7 +88,7 @@ bool fl_get_all_files_from_dir_platform(const char* dir_path, char** list_of_all
                     FileItem* new_items = realloc(list_of_files->items, new_capacity * sizeof(FileItem));
                     if (!new_items) {
                         closedir(dir);
-                        TimerEnd(timer, "flapi_x11:fl_get_all_files_from_dir_platform");
+                        PROFILE_END_VAR(timer, "flapi_x11:fl_get_all_files_from_dir_platform");
                         return false;
                     }
                     list_of_files->items    = new_items;
@@ -122,15 +122,15 @@ bool fl_get_all_files_from_dir_platform(const char* dir_path, char** list_of_all
     }
 
     closedir(dir);
-    TimerEnd(timer, "flapi_x11:fl_get_all_files_from_dir_platform");
+    PROFILE_END_VAR(timer, "flapi_x11:fl_get_all_files_from_dir_platform");
     return true;
 }
 
 bool fl_launch_with_args_platform(const char* path, const char* args) {
-    WinTimer timer = TimerStart();
-    if (!path) { TimerEnd(timer, "flapi_x11:fl_launch_with_args_platform"); return false; }
+    PROFILE_START(timer);
+    if (!path) { PROFILE_END_VAR(timer, "flapi_x11:fl_launch_with_args_platform"); return false; }
     char expanded[1024];
-    if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) { TimerEnd(timer, "flapi_x11:fl_launch_with_args_platform"); return false; }
+    if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) { PROFILE_END_VAR(timer, "flapi_x11:fl_launch_with_args_platform"); return false; }
     path = expanded;
     if (strstr(path, ".desktop") != NULL) {
         bool is_terminal = false;
@@ -173,8 +173,8 @@ bool fl_launch_with_args_platform(const char* path, const char* args) {
             char extra[2048];
             if (args && args[0]) snprintf(extra, sizeof(extra), "-e sh -c '%s %s; exec %s'", exec_line, args,UsedShell);
             else snprintf(extra, sizeof(extra), "-e sh -c '%s; exec %s'", exec_line,UsedShell);
-            if(wd) { TimerEnd(timer, "flapi_x11:fl_launch_with_args_platform"); return Platform_LaunchTerminalAtPath(wd, extra); }
-            else { TimerEnd(timer, "flapi_x11:fl_launch_with_args_platform"); return Platform_LaunchTerminalAtPath(Platform_GetRealHome(), extra); }
+            if(wd) { PROFILE_END_VAR(timer, "flapi_x11:fl_launch_with_args_platform"); return Platform_LaunchTerminalAtPath(wd, extra); }
+            else { PROFILE_END_VAR(timer, "flapi_x11:fl_launch_with_args_platform"); return Platform_LaunchTerminalAtPath(Platform_GetRealHome(), extra); }
         }
         if (exec_line[0] && args && args[0]) {
             char combined[2048];
@@ -215,7 +215,7 @@ bool fl_launch_with_args_platform(const char* path, const char* args) {
         } else if(pid>0){ int st=0; waitpid(pid,&st,0); if(WIFEXITED(st) && WEXITSTATUS(st)!=0 && exec_line[0]){
                 if(is_terminal){
                     char extra2[2048]; snprintf(extra2, sizeof(extra2), "-e sh -c '%s; exec'", exec_line,UsedShell);
-                    TimerEnd(timer, "flapi_x11:fl_launch_with_args_platform");
+                    PROFILE_END_VAR(timer, "flapi_x11:fl_launch_with_args_platform");
                     return Platform_LaunchTerminalAtPath(Platform_GetRealHome(), extra2);
                 } else {
                     pid_t pid3=fork();
@@ -230,13 +230,13 @@ bool fl_launch_with_args_platform(const char* path, const char* args) {
                             execl("/bin/sh","sh","-c",exec_line,(char*)NULL);
                         }
                         _exit(127);
-                    } else if(pid3>0){ int st2=0; waitpid(pid3,&st2,0); TimerEnd(timer, "flapi_x11:fl_launch_with_args_platform"); return WIFEXITED(st2) && WEXITSTATUS(st2)==0; }
+                    } else if(pid3>0){ int st2=0; waitpid(pid3,&st2,0); PROFILE_END_VAR(timer, "flapi_x11:fl_launch_with_args_platform"); return WIFEXITED(st2) && WEXITSTATUS(st2)==0; }
                 }
             }
-            TimerEnd(timer, "flapi_x11:fl_launch_with_args_platform");
+            PROFILE_END_VAR(timer, "flapi_x11:fl_launch_with_args_platform");
             return true;
         }
-        TimerEnd(timer, "flapi_x11:fl_launch_with_args_platform");
+        PROFILE_END_VAR(timer, "flapi_x11:fl_launch_with_args_platform");
         return false;
     } else {
         char cmd[2048];
@@ -252,11 +252,11 @@ bool fl_launch_with_args_platform(const char* path, const char* args) {
         snprintf(runtime_env, sizeof(runtime_env), "XDG_RUNTIME_DIR=%s", runtime_dir);
         if(Platform_IsRunningAsRoot()){
             char* const argv[] = {"sudo","-u",(char*)real_user,"env",disp_env,xauth_env,runtime_env,"sh","-c",cmd,NULL};
-            pid_t pid=fork(); if(pid<0) { TimerEnd(timer, "flapi_x11:fl_launch_with_args_platform"); return false; }
+            pid_t pid=fork(); if(pid<0) { PROFILE_END_VAR(timer, "flapi_x11:fl_launch_with_args_platform"); return false; }
             if(pid==0){ setsid(); pid_t p2=fork(); if(p2<0) _exit(1); if(p2>0) _exit(0); int fd=open("/dev/null",O_RDWR); if(fd>=0){dup2(fd,0);dup2(fd,1);dup2(fd,2); if(fd>2) close(fd);} execvp(argv[0],argv); _exit(127); }
-            int st=0; waitpid(pid,&st,0); TimerEnd(timer, "flapi_x11:fl_launch_with_args_platform"); return true;
+            int st=0; waitpid(pid,&st,0); PROFILE_END_VAR(timer, "flapi_x11:fl_launch_with_args_platform"); return true;
         } else {
-            pid_t pid=fork(); if(pid<0) { TimerEnd(timer, "flapi_x11:fl_launch_with_args_platform"); return false; }
+            pid_t pid=fork(); if(pid<0) { PROFILE_END_VAR(timer, "flapi_x11:fl_launch_with_args_platform"); return false; }
             if(pid==0){
                 setsid(); pid_t pid2=fork(); if(pid2<0) _exit(1); if(pid2>0) _exit(0);
                 int fd=open("/dev/null",O_RDWR); if(fd>=0){dup2(fd,0);dup2(fd,1);dup2(fd,2); if(fd>2) close(fd);}
@@ -264,22 +264,22 @@ bool fl_launch_with_args_platform(const char* path, const char* args) {
                 execl("/bin/sh","sh","-c",cmd,(char*)NULL);
                 _exit(127);
             }
-            int st=0; waitpid(pid,&st,0); TimerEnd(timer, "flapi_x11:fl_launch_with_args_platform"); return true;
+            int st=0; waitpid(pid,&st,0); PROFILE_END_VAR(timer, "flapi_x11:fl_launch_with_args_platform"); return true;
         }
     }
-    TimerEnd(timer, "flapi_x11:fl_launch_with_args_platform");
+    PROFILE_END_VAR(timer, "flapi_x11:fl_launch_with_args_platform");
 }
 
 bool fl_launch_with_args_as_admin_platform(const char* path, const char* args) {
-    WinTimer timer = TimerStart();
-    if (!path) { TimerEnd(timer, "flapi_x11:fl_launch_with_args_as_admin_platform"); return false; }
+    PROFILE_START(timer);
+    if (!path) { PROFILE_END_VAR(timer, "flapi_x11:fl_launch_with_args_as_admin_platform"); return false; }
     char expanded[MAX_PATH];
-    if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) { TimerEnd(timer, "flapi_x11:fl_launch_with_args_as_admin_platform"); return false; }
+    if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) { PROFILE_END_VAR(timer, "flapi_x11:fl_launch_with_args_as_admin_platform"); return false; }
     char cmd[2048];
     if (args && args[0]) snprintf(cmd, sizeof(cmd), "%s %s", expanded, args);
     else snprintf(cmd, sizeof(cmd), "%s", expanded);
     pid_t pid = fork();
-    if (pid < 0) { TimerEnd(timer, "flapi_x11:fl_launch_with_args_as_admin_platform"); return false; }
+    if (pid < 0) { PROFILE_END_VAR(timer, "flapi_x11:fl_launch_with_args_as_admin_platform"); return false; }
     if (pid == 0) {
         char *argv1[] = {"pkexec", cmd, NULL};
         execvp("pkexec", argv1);
@@ -287,15 +287,15 @@ bool fl_launch_with_args_as_admin_platform(const char* path, const char* args) {
         execvp("sudo", argv2);
         _exit(1);
     }
-    TimerEnd(timer, "flapi_x11:fl_launch_with_args_as_admin_platform");
+    PROFILE_END_VAR(timer, "flapi_x11:fl_launch_with_args_as_admin_platform");
     return true;
 }
 
 char* fl_search_file_in_dir_platform(const char* directory, const char* search_string,char* output_path) {
-    WinTimer timer = TimerStart();
-    if (!directory || !search_string || strlen(search_string) == 0) { TimerEnd(timer, "flapi_x11:fl_search_file_in_dir_platform"); return NULL; }
+    PROFILE_START(timer);
+    if (!directory || !search_string || strlen(search_string) == 0) { PROFILE_END_VAR(timer, "flapi_x11:fl_search_file_in_dir_platform"); return NULL; }
     DIR* dir = opendir(directory);
-    if (!dir) { TimerEnd(timer, "flapi_x11:fl_search_file_in_dir_platform"); return NULL; }
+    if (!dir) { PROFILE_END_VAR(timer, "flapi_x11:fl_search_file_in_dir_platform"); return NULL; }
     static char found_path[MAX_PATH];
     struct dirent* entry;
     while ((entry = readdir(dir)) != NULL) {
@@ -308,12 +308,11 @@ char* fl_search_file_in_dir_platform(const char* directory, const char* search_s
         if (Platform_StringContainsCaseInsensitive(entry->d_name, search_string)) {
             snprintf(found_path, sizeof(found_path), "%s", full_path);
             closedir(dir);
-            TimerEnd(timer, "flapi_x11:fl_search_file_in_dir_platform");
+            PROFILE_END_VAR(timer, "flapi_x11:fl_search_file_in_dir_platform");
             return found_path;
         }
     }
     closedir(dir);
-    TimerEnd(timer, "flapi_x11:fl_search_file_in_dir_platform");
+    PROFILE_END_VAR(timer, "flapi_x11:fl_search_file_in_dir_platform");
     return NULL;
 }
-

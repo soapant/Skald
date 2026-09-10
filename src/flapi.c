@@ -19,7 +19,13 @@
 #endif
 #include "core/context.h"
 #include "core/modal.h"
-#include "helpers.h"
+#include "config.h"
+#include "core/platform.h"
+#include "helpers/hotkey.h"
+#include "helpers/alias.h"
+#include "helpers/flag.h"
+#include "helpers/file.h"
+#include "helpers/ui.h"
 #include "config.h"
 #include "core/platform.h"
 #include "core/common_ui.h"
@@ -467,6 +473,5 @@ bool fl_focus_window_by_title(char* title) {
   if (!title) return false;
   return Platform_FocusWindow(title);
 }
-
 
 

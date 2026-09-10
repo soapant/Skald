@@ -82,7 +82,7 @@ void TriggerForgetFull(void) {
 }
 
 FLINT_FEATURE_INIT {
-    // no auto init for forgetfull.h
+
 
     fl_register_feature("ForgetFull", TriggerForgetFull);
 }

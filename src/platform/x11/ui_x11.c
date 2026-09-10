@@ -6,7 +6,13 @@
 #include "core/platform.h"
 #include "core/types.h"
 #include "core/timer.h"
-#include "helpers.h"
+#include "config.h"
+#include "core/platform.h"
+#include "helpers/hotkey.h"
+#include "helpers/alias.h"
+#include "helpers/flag.h"
+#include "helpers/file.h"
+#include "helpers/ui.h"
 #include "core/hotkey_manager.h"
 #include "bindings/bindings.h"
 #include "platform/subclasses.h"
@@ -51,31 +57,31 @@ typedef struct {
 
 HashMap* g_perFeatureVimMap = NULL;
 PerFeatureVimState* GetPerFeatureState(const char* feature) {
-    WinTimer timer = TimerStart();
-    if (!feature) { TimerEnd(timer, "ui_x11:GetPerFeatureState"); return NULL; }
+    PROFILE_START(timer);
+    if (!feature) { PROFILE_END_VAR(timer, "ui_x11:GetPerFeatureState"); return NULL; }
     if (!g_perFeatureVimMap) g_perFeatureVimMap = HashMap_Create(32);
     void* val = HashMap_Get(g_perFeatureVimMap, feature);
-    TimerEnd(timer, "ui_x11:GetPerFeatureState");
+    PROFILE_END_VAR(timer, "ui_x11:GetPerFeatureState");
     return (PerFeatureVimState*)val;
 }
 void SavePerFeatureState(const char* feature, EditorMode mode,int last_index) {
-    WinTimer timer = TimerStart();
-    if (!feature) { TimerEnd(timer, "ui_x11:SavePerFeatureState"); return; }
+    PROFILE_START(timer);
+    if (!feature) { PROFILE_END_VAR(timer, "ui_x11:SavePerFeatureState"); return; }
     if (!g_perFeatureVimMap) g_perFeatureVimMap = HashMap_Create(32);
     PerFeatureVimState* st = (PerFeatureVimState*)HashMap_Get(g_perFeatureVimMap, feature);
     if (!st) {
         st = (PerFeatureVimState*)calloc(1, sizeof(PerFeatureVimState));
-        if (!st) { TimerEnd(timer, "ui_x11:SavePerFeatureState"); return; }
+        if (!st) { PROFILE_END_VAR(timer, "ui_x11:SavePerFeatureState"); return; }
         HashMap_Put(g_perFeatureVimMap, feature, st);
     }
     st->mode = mode;
     st->last_index = last_index;
-    TimerEnd(timer, "ui_x11:SavePerFeatureState");
+    PROFILE_END_VAR(timer, "ui_x11:SavePerFeatureState");
 }
 
 void CleanupPerFeatureVimMap(void) {
-    WinTimer timer = TimerStart();
-    if (!g_perFeatureVimMap) { TimerEnd(timer, "ui_x11:CleanupPerFeatureVimMap"); return; }
+    PROFILE_START(timer);
+    if (!g_perFeatureVimMap) { PROFILE_END_VAR(timer, "ui_x11:CleanupPerFeatureVimMap"); return; }
     for (int i = 0; i < g_perFeatureVimMap->size; i++) {
         HashMapEntry* entry = g_perFeatureVimMap->buckets[i];
         while (entry) {
@@ -85,7 +91,7 @@ void CleanupPerFeatureVimMap(void) {
     }
     HashMap_Destroy(g_perFeatureVimMap);
     g_perFeatureVimMap = NULL;
-    TimerEnd(timer, "ui_x11:CleanupPerFeatureVimMap");
+    PROFILE_END_VAR(timer, "ui_x11:CleanupPerFeatureVimMap");
 }
 
 typedef struct {
@@ -101,7 +107,7 @@ static pthread_mutex_t g_msg_mtx = PTHREAD_MUTEX_INITIALIZER;
 static MsgWindow* g_msg_window = NULL;
 
 static void destroy_msg_window(MsgWindow* m) {
-    WinTimer timer = TimerStart();
+    PROFILE_START(timer);
     if (m->win != None && m->dpy) {
         XDestroyWindow(m->dpy, m->win);
         XFlush(m->dpy);
@@ -110,11 +116,11 @@ static void destroy_msg_window(MsgWindow* m) {
     if (m->xd) { XftDrawDestroy(m->xd); m->xd = NULL; }
     Platform_DestroyFont(m->font);
     m->font = (FontHandle){0};
-    TimerEnd(timer, "ui_x11:destroy_msg_window");
+    PROFILE_END_VAR(timer, "ui_x11:destroy_msg_window");
 }
 
 void Platform_DismissMessage(void) {
-    WinTimer timer = TimerStart();
+    PROFILE_START(timer);
     pthread_mutex_lock(&g_msg_mtx);
     MsgWindow* old = g_msg_window;
     if (old) {
@@ -123,11 +129,11 @@ void Platform_DismissMessage(void) {
         destroy_msg_window(old);
     }
     pthread_mutex_unlock(&g_msg_mtx);
-    TimerEnd(timer, "ui_x11:Platform_DismissMessage");
+    PROFILE_END_VAR(timer, "ui_x11:Platform_DismissMessage");
 }
 
 static void* msg_destroy_thread(void* arg) {
-    WinTimer timer = TimerStart();
+    PROFILE_START(timer);
     MsgWindow* m = (MsgWindow*)arg;
     usleep((useconds_t)m->timeout * 1000000);
     pthread_mutex_lock(&g_msg_mtx);
@@ -137,12 +143,12 @@ static void* msg_destroy_thread(void* arg) {
     }
     pthread_mutex_unlock(&g_msg_mtx);
     free(m);
-    TimerEnd(timer, "ui_x11:msg_destroy_thread");
+    PROFILE_END_VAR(timer, "ui_x11:msg_destroy_thread");
     return NULL;
 }
 
 static void replace_msg_window(MsgWindow* m) {
-    WinTimer timer = TimerStart();
+    PROFILE_START(timer);
     pthread_mutex_lock(&g_msg_mtx);
     MsgWindow* old = g_msg_window;
     g_msg_window = m;
@@ -151,14 +157,14 @@ static void replace_msg_window(MsgWindow* m) {
         destroy_msg_window(old);
     }
     pthread_mutex_unlock(&g_msg_mtx);
-    TimerEnd(timer, "ui_x11:replace_msg_window");
+    PROFILE_END_VAR(timer, "ui_x11:replace_msg_window");
 }
 
 bool Linux_GetMainMonitorGeometry(Display* dpy, int* ox, int* oy, int* ow, int* oh) {
-    WinTimer timer = TimerStart();
+    PROFILE_START(timer);
     Window root = DefaultRootWindow(dpy);
     XRRScreenResources* res = XRRGetScreenResourcesCurrent(dpy, root);
-    if (!res) { TimerEnd(timer, "ui_x11:Linux_GetMainMonitorGeometry"); return false; }
+    if (!res) { PROFILE_END_VAR(timer, "ui_x11:Linux_GetMainMonitorGeometry"); return false; }
     RROutput primary = XRRGetOutputPrimary(dpy, root);
 
     int fx = -1, fy = -1;
@@ -191,23 +197,23 @@ bool Linux_GetMainMonitorGeometry(Display* dpy, int* ox, int* oy, int* ow, int* 
         XRRFreeCrtcInfo(ci);
     }
     XRRFreeScreenResources(res);
-    TimerEnd(timer, "ui_x11:Linux_GetMainMonitorGeometry");
+    PROFILE_END_VAR(timer, "ui_x11:Linux_GetMainMonitorGeometry");
     return found;
 }
 
 void Platform_DisplayMessage(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, int timeout, ColorRef color) {
-    WinTimer timer = TimerStart();
+    PROFILE_START(timer);
     Display* dpy = get_display();
     if (!dpy) {
         fprintf(stderr, "[PLATFORM] Platform_DisplayMessage: no X11 display\n");
-        TimerEnd(timer, "ui_x11:Platform_DisplayMessage");
+        PROFILE_END_VAR(timer, "ui_x11:Platform_DisplayMessage");
         return;
     }
 
     FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
     if (!FH_TO_XFT(font)) {
         fprintf(stderr, "[PLATFORM] Platform_DisplayMessage: font load failed\n");
-        TimerEnd(timer, "ui_x11:Platform_DisplayMessage");
+        PROFILE_END_VAR(timer, "ui_x11:Platform_DisplayMessage");
         return;
     }
 
@@ -242,7 +248,7 @@ void Platform_DisplayMessage(const char* message, int centerX, int centerY, int 
     if (topLeftX + winWidth > mox + mow) topLeftX = mox + mow - winWidth;
     if (topLeftY + winHeight > moy + moh) topLeftY = moy + moh - winHeight;
 
-    // save focus to restore after showing notification
+
     Window prev_focus = None;
     int prev_revert = 0;
     XGetInputFocus(dpy, &prev_focus, &prev_revert);
@@ -264,7 +270,7 @@ void Platform_DisplayMessage(const char* message, int centerX, int centerY, int 
     XMapWindow(dpy, win);
     XMoveWindow(dpy, win, topLeftX, topLeftY);
     XFlush(dpy);
-    // restore focus - don't steal
+
     if (prev_focus != None && prev_focus != PointerRoot && prev_focus != win) {
         XSetInputFocus(dpy, prev_focus, RevertToParent, CurrentTime);
         XFlush(dpy);
@@ -280,8 +286,8 @@ void Platform_DisplayMessage(const char* message, int centerX, int centerY, int 
     }
 
     int startY = (winHeight - textH) / 2;
-    // fix: for short messages "CENTER" with hardcoded 870 draws outside small winWidth (textW+40)
-    // use winWidth for centering when message has no spaces or fits in one line
+
+
     if (textW < winWidth && textW > 0) {
         XftFont* xf = FH_TO_XFT(font);
         int y = startY + xf->ascent;
@@ -308,29 +314,29 @@ void Platform_DisplayMessage(const char* message, int centerX, int centerY, int 
     pthread_t tid;
     pthread_create(&tid, NULL, msg_destroy_thread, m);
     pthread_detach(tid);
-    TimerEnd(timer, "ui_x11:Platform_DisplayMessage");
+    PROFILE_END_VAR(timer, "ui_x11:Platform_DisplayMessage");
 }
 
 void Platform_SettingsPopUp(void) {
-    WinTimer timer = TimerStart();
+    PROFILE_START(timer);
     fprintf(stderr, "[PLATFORM] Platform_SettingsPopUp not implemented yet\n");
-    TimerEnd(timer, "ui_x11:Platform_SettingsPopUp");
+    PROFILE_END_VAR(timer, "ui_x11:Platform_SettingsPopUp");
 }
 
 char* Platform_SearchPopup(void) {
-    WinTimer timer = TimerStart();
+    PROFILE_START(timer);
     fprintf(stderr, "[PLATFORM] Platform_SearchPopup not implemented yet\n");
-    TimerEnd(timer, "ui_x11:Platform_SearchPopup");
+    PROFILE_END_VAR(timer, "ui_x11:Platform_SearchPopup");
     return NULL;
 }
 
 int Platform_InitializeTrayIcon(void) {
-    WinTimer timer = TimerStart();
-    TimerEnd(timer, "ui_x11:Platform_InitializeTrayIcon");
+    PROFILE_START(timer);
+    PROFILE_END_VAR(timer, "ui_x11:Platform_InitializeTrayIcon");
     return -1;
 }
 
-// Shared input state now in input.c - legacy names mapped via input.h
+
 
 static int init_uinput(void) { return x11_init_uinput(); }
 static void destroy_uinput(void) { x11_destroy_uinput(); }
@@ -340,28 +346,28 @@ void ScanAndHookKeyboards(void) { x11_scan_keyboards(); }
 bool HandleGlobalKeyEvent(int key_code, int value) { return x11_handle_global_key(key_code, value); }
 
 void Platform_RunHotKeyMessageLoop(void) {
-    WinTimer timer = TimerStart();
+    PROFILE_START(timer);
     bool use_grab = should_use_grab();
     if (!use_grab) {
-        g_uinput_fd = -1;
+        g_x11_uinput_fd = -1;
     } else {
-        g_uinput_fd = init_uinput();
-        if (g_uinput_fd < 0) {
+        g_x11_uinput_fd = init_uinput();
+        if (g_x11_uinput_fd < 0) {
             fprintf(stderr, "[SYSTEM] continuing without uinput (no swallow)\n");
         }
     }
 
     ScanAndHookKeyboards();
-    if (active_kb_count == 0) {
+    if (g_x11_keyboard_count == 0) {
         fprintf(stderr, "[ERROR] No structural keyboard nodes located under /dev/input/\n");
         destroy_uinput();
-        TimerEnd(timer, "ui_x11:Platform_RunHotKeyMessageLoop");
+        PROFILE_END_VAR(timer, "ui_x11:Platform_RunHotKeyMessageLoop");
         return;
     }
 
-    struct pollfd *fds = calloc(active_kb_count, sizeof(struct pollfd));
-    for (int i = 0; i < active_kb_count; i++) {
-        fds[i].fd = active_kbs[i].fd;
+    struct pollfd *fds = calloc(g_x11_keyboard_count, sizeof(struct pollfd));
+    for (int i = 0; i < g_x11_keyboard_count; i++) {
+        fds[i].fd = g_x11_keyboards[i].fd;
         fds[i].events = POLLIN;
     }
 
@@ -369,16 +375,16 @@ void Platform_RunHotKeyMessageLoop(void) {
     const long HOTKEY_STALE_EVENT_MS = 200;
 
     while (true) {
-        int poll_res = poll(fds, active_kb_count, -1);
+        int poll_res = poll(fds, g_x11_keyboard_count, -1);
         if (poll_res < 0) break;
 
-        for (int i = 0; i < active_kb_count; i++) {
+        for (int i = 0; i < g_x11_keyboard_count; i++) {
             if (fds[i].revents & POLLIN) {
-                bool grabbed = g_device_grabbed[i];
+                bool grabbed = g_x11_device_grabbed[i];
                 while (read(fds[i].fd, &ev, sizeof(struct input_event)) > 0) {
                     
                     if (ev.type != EV_KEY) {
-                        if (grabbed && g_uinput_fd >= 0) uinput_emit(&ev);
+                        if (grabbed && g_x11_uinput_fd >= 0) uinput_emit(&ev);
                         continue;
                     }
 
@@ -400,23 +406,23 @@ void Platform_RunHotKeyMessageLoop(void) {
                                     continue;
                                 }
                             }
-                            if (grabbed && g_uinput_fd >= 0) uinput_emit(&ev);
+                            if (grabbed && g_x11_uinput_fd >= 0) uinput_emit(&ev);
                             continue;
                         }
                         if (ev.value == 1) {
-                            if (grabbed && g_uinput_fd >= 0) uinput_emit(&ev);
+                            if (grabbed && g_x11_uinput_fd >= 0) uinput_emit(&ev);
                             continue;
                         }
                     }
 
                     
                     
-                    if (ev.value == 0 && ev.code <= KEY_MAX && g_suppress_release[ev.code]) {
-                        g_suppress_release[ev.code] = false;
+                    if (ev.value == 0 && ev.code <= KEY_MAX && g_x11_suppress_release[ev.code]) {
+                        g_x11_suppress_release[ev.code] = false;
                         
                         continue;
                     }
-                    if (ev.value == 2 && ev.code <= KEY_MAX && g_suppress_release[ev.code]) {
+                    if (ev.value == 2 && ev.code <= KEY_MAX && g_x11_suppress_release[ev.code]) {
                         
                         continue;
                     }
@@ -424,16 +430,16 @@ void Platform_RunHotKeyMessageLoop(void) {
                     if (HandleGlobalKeyEvent(ev.code, ev.value)) {
                         
                         if (ev.value == 1 && ev.code <= KEY_MAX) {
-                            g_suppress_release[ev.code] = true;
+                            g_x11_suppress_release[ev.code] = true;
                         } else if (ev.value == 2 && ev.code <= KEY_MAX) {
                             
-                            g_suppress_release[ev.code] = true;
+                            g_x11_suppress_release[ev.code] = true;
                         }
                         continue;
                     }
                     
                     if (grabbed) {
-                        if (g_uinput_fd >= 0) {
+                        if (g_x11_uinput_fd >= 0) {
                             uinput_emit(&ev);
                         } else {
                             static bool warned = false;
@@ -451,22 +457,22 @@ void Platform_RunHotKeyMessageLoop(void) {
     }
 
     
-    for (int i = 0; i < active_kb_count; i++) {
-        ioctl(active_kbs[i].fd, EVIOCGRAB, 0);
-        close(active_kbs[i].fd);
+    for (int i = 0; i < g_x11_keyboard_count; i++) {
+        ioctl(g_x11_keyboards[i].fd, EVIOCGRAB, 0);
+        close(g_x11_keyboards[i].fd);
     }
     free(fds);
     destroy_uinput();
-    TimerEnd(timer, "ui_x11:Platform_RunHotKeyMessageLoop");
+    PROFILE_END_VAR(timer, "ui_x11:Platform_RunHotKeyMessageLoop");
 }
 
 
 void Platform_InitUI(void) {
-    WinTimer timer = TimerStart();
-    TimerEnd(timer, "ui_x11:Platform_InitUI");
+    PROFILE_START(timer);
+    PROFILE_END_VAR(timer, "ui_x11:Platform_InitUI");
 }
 
 void Platform_ShutdownUI(void) {
-    WinTimer timer = TimerStart();
-    TimerEnd(timer, "ui_x11:Platform_ShutdownUI");
+    PROFILE_START(timer);
+    PROFILE_END_VAR(timer, "ui_x11:Platform_ShutdownUI");
 }

@@ -1,4 +1,4 @@
-// vim_motions.h
+
 #ifndef VIM_MOTIONS_H
 #define VIM_MOTIONS_H
 

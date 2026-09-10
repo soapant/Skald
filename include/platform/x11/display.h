@@ -20,4 +20,4 @@ int x11_error_handler(Display *d, XErrorEvent *e);
 }
 #endif
 
-#endif // PLATFORM_X11_DISPLAY_H
+#endif
