@@ -309,8 +309,6 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
         return true;
       }
 
-    printf("after index %i \n",state->listbox.selected_index);
-
     TimerEnd(timer, "subclasses_x11:Linux_HandlePromptKey");
     return false;
 }
