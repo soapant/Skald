@@ -1,6 +1,7 @@
 #include "core/flapi.h"
 #if !defined(_WIN32)
 #include <sys/types.h>
+#include "platform/x11/window_factory.h"
 #include "platform/x11/display.h"
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
