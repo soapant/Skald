@@ -1,7 +1,6 @@
 #include "core/context.h"
 #include "core/modal.h"
 #include "config.h"
-#include "config.h"
 #include "core/platform.h"
 #include "helpers/hotkey.h"
 #include "helpers/alias.h"

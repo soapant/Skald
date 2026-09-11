@@ -36,10 +36,16 @@ void OInNotificationRecieved(const char* text) {
   SubjectiveMessageDisplay(text,140,TimeOutForMessages,COLOR_TEXT);
 }
 
+static void free_history_list(void* v) {
+  char** list = (char**)v;
+  if (!list) return;
+  for (int k = 0; list[k]; k++) free(list[k]);
+  free(list);
+}
+
 int main() {
   if (DoTimeDebugs) {
     FILE* tf = fopen("time_logs.txt", "w");
-    if (!tf) tf = fopen("/home/diggy/Programming/Projects/Flint/time_logs.txt", "w");
     if (tf) { fprintf(tf, "=== Flint time_logs started ===\n"); fclose(tf); }
     atexit(TimerBufferFlush);
   }
@@ -138,29 +144,11 @@ int main() {
 
   FlintContext* _ctx = FlintContext_Get();
   if (_ctx->feature_history) {
-    for (int i = 0; i < _ctx->feature_history->size; i++) {
-        HashMapEntry* entry = _ctx->feature_history->buckets[i];
-        while (entry) {
-            char** list = (char**)entry->value;
-            if (list) {
-                for (int k = 0; list[k]; k++) free(list[k]);
-                free(list);
-            }
-            entry = entry->next;
-        }
-    }
-    HashMap_Destroy(_ctx->feature_history);
+    HashMap_DestroyWith(_ctx->feature_history, free_history_list);
     _ctx->feature_history = NULL;
   }
   if (_ctx->history_indices) {
-    for (int i = 0; i < _ctx->history_indices->size; i++) {
-        HashMapEntry* entry = _ctx->history_indices->buckets[i];
-        while (entry) {
-            free(entry->value);
-            entry = entry->next;
-        }
-    }
-    HashMap_Destroy(_ctx->history_indices);
+    HashMap_DestroyWith(_ctx->history_indices, free);
     _ctx->history_indices = NULL;
   }
   if (_ctx->g_item_index_map) {
