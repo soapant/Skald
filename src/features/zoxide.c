@@ -117,8 +117,8 @@ static void TriggerFileManager(void) {
 FLINT_FEATURE_INIT {
     fl_register_hotkey("Alt+W", TriggerZoxide);
     fl_register_hotkey("Alt+I", TriggerTextEditorZoxide);
-
     fl_register_hotkey("Alt+R",TriggerFileManager);
+
     fl_register_feature("Zoxide", TriggerZoxide);
     fl_register_feature("Zoxide Text Editor", TriggerTextEditorZoxide);
     fl_register_feature("File Manager", TriggerFileManager);

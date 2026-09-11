@@ -142,7 +142,6 @@ void TriggerVolume(void) {
 }
 
 FLINT_FEATURE_INIT {
-
-
+    fl_register_hotkey("Alt+N", TriggerVolume);
     fl_register_feature("Volume", TriggerVolume);
 }
