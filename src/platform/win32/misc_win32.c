@@ -281,7 +281,7 @@ bool Platform_StringStartsWithCaseInsensitive(const char* str, const char* prefi
     return StrStrIA(str, prefix) == str;
 }
 
-int Platform_CollectRunningProcesses(char process_list[][MaxFeatures], int max_count) {
+int Platform_CollectRunningProcesses(char process_list[][128], int max_count) {
     if (!process_list || max_count <= 0) return 0;
     int count = 0;
     HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
