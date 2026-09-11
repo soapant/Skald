@@ -58,7 +58,7 @@ void fl_register_feature(const char* name, void (*cb)(void));
 void fl_register_feature_with_icon(const char* name, void (*cb)(void), const char* icon_path);
 int fl_get_feature_list(const char** out_names, void (**out_cbs)(void), int max);
 int fl_get_feature_list_with_icons(const char** out_names, void (**out_cbs)(void), const char*** out_icons, int max);
-char* fl_get_icon_path(const char* desktop_or_icon_path);
+char* fl_get_icon_path(const char* app_path_path);
 bool fl_free_file_list(const char* list[], int count);
 bool fl_append_to_file(const char* filepath, const char* line);
 bool fl_write_to_file(const char* filepath, const char* lines[], int count);
