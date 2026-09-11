@@ -52,31 +52,71 @@ void HashMap_DestroyWithKeyValue(HashMap* map, void (*free_value)(void* value), 
     free(map);
 }
 
+static bool hashmap_resize(HashMap* map, int new_size) {
+    if (!map || new_size < 8) return false;
+    HashMapEntry** new_buckets = calloc(new_size, sizeof(HashMapEntry*));
+    if (!new_buckets) return false;
+    for (int i = 0; i < map->size; i++) {
+        HashMapEntry* e = map->buckets[i];
+        while (e) {
+            HashMapEntry* next = e->next;
+            unsigned int idx = hash(e->key, new_size);
+            e->next = new_buckets[idx];
+            new_buckets[idx] = e;
+            e = next;
+        }
+    }
+    free(map->buckets);
+    map->buckets = new_buckets;
+    map->size = new_size;
+    return true;
+}
+
+bool HashMap_TryResize(HashMap* map) {
+    if (!map) return false;
+    if (map->count > (int)(map->size * 0.75)) {
+        return hashmap_resize(map, map->size * 2);
+    }
+    return true;
+}
+
 void HashMap_Put(HashMap* map, const char* key, void* value) {
-    if (!map || !key) return;
+    (void)HashMap_PutReplace(map, key, value);
+}
+
+void* HashMap_PutReplace(HashMap* map, const char* key, void* value) {
+    if (!map || !key) return NULL;
 
     unsigned int index = hash(key, map->size);
     HashMapEntry* entry = map->buckets[index];
 
     while (entry) {
         if (strcmp(entry->key, key) == 0) {
+            void* old = entry->value;
             entry->value = value;
-            return;
+            return old;
         }
         entry = entry->next;
     }
 
     HashMapEntry* new_entry = malloc(sizeof(HashMapEntry));
-    if (!new_entry) return;
+    if (!new_entry) return NULL;
     new_entry->key = _strdup(key);
     if (!new_entry->key) {
         free(new_entry);
-        return;
+        return NULL;
     }
     new_entry->value = value;
     new_entry->next = map->buckets[index];
     map->buckets[index] = new_entry;
     map->count++;
+    HashMap_TryResize(map);
+    return NULL;
+}
+
+void HashMap_PutWithFree(HashMap* map, const char* key, void* value, void (*free_value)(void*)) {
+    void* old = HashMap_PutReplace(map, key, value);
+    if (old && free_value) free_value(old);
 }
 
 void* HashMap_Get(HashMap* map, const char* key) {
