@@ -12,6 +12,7 @@
 #include "core/flapi.h"
 #include "core/feature_loader.h"
 #include "core/window_manager.h"
+#include "core/history.h"
 #include "core/timer.h"
 #if !defined(_WIN32)
 #include <pthread.h>
@@ -111,6 +112,7 @@ int main() {
 #endif
   FlintContext_Get()->feature_history = HashMap_Create(32);
   InitFeatureDataSystem();
+  History_Init();
   Platform_InitUI();
 
   FeatureLoader_Init();
@@ -141,6 +143,7 @@ int main() {
   }
 #endif
   CleanupFeatureDataSystem();
+  History_Shutdown();
 
   FlintContext* _ctx = FlintContext_Get();
   if (_ctx->feature_history) {

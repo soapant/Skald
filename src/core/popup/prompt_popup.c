@@ -20,6 +20,7 @@
 #include "helpers/ui.h"
 #include "config.h"
 #include "core/feature_loader.h"
+#include "core/history.h"
 #include <sys/time.h>
 #include <stdlib.h>
 #include <string.h>
@@ -131,6 +132,7 @@ static void PromptPopup_OnShow(Popup* self) {
     ctx2->window.title = data->spec.title;
     ctx2->window.callbacks = ctx2->prompt_callbacks;
     SetCurrentFeatureName(ctx2->window.current_feature);
+    History_ResetCursor(ctx2->window.current_feature);
     if (data->spec.refresh) data->spec.refresh(data->state->filter, FlintContext_Get()->window.hListBox, data->state->has_listbox ? &data->state->listbox : NULL);
     PROFILE_END_VAR(timer, "window_manager:PromptPopup_OnShow");
 }
@@ -174,6 +176,7 @@ static void PromptPopup_OnKey(Popup* self, int vk_code, bool pressed, int modifi
         } else {
             EditBufferBackspace(data->state->filter, &data->state->cursor);
         }
+        History_ResetCursor(FlintContext_Get()->window.current_feature);
         if (data->spec.refresh) data->spec.refresh(data->state->filter, FlintContext_Get()->window.hListBox, data->state->has_listbox ? &data->state->listbox : NULL);
         PROFILE_END_VAR(timer, "window_manager:PromptPopup_OnKey");
         return;
@@ -202,7 +205,21 @@ static void PromptPopup_OnKey(Popup* self, int vk_code, bool pressed, int modifi
             VimContext ctx = Vim_FromState(data->state);
             SetCursorToStartOfText(&ctx);
         } else if (data->state->has_listbox) {
-            UI_NavigateUp(&data->state->listbox, FlintContext_Get()->window.hListBox);
+            if (data->state->listbox.selected_index == -1) {
+                char hist[512];
+                const char* feat = FlintContext_Get()->window.current_feature;
+                if (feat && History_CycleUp(feat, hist, sizeof(hist))) {
+                    strncpy(data->state->filter, hist, sizeof(data->state->filter)-1);
+                    data->state->filter[sizeof(data->state->filter)-1]='\0';
+                    data->state->cursor = (int)strlen(data->state->filter);
+                    if (data->spec.refresh) data->spec.refresh(data->state->filter, FlintContext_Get()->window.hListBox, data->state->has_listbox ? &data->state->listbox : NULL);
+                    if (self->vtable && self->vtable->on_render) self->vtable->on_render(self);
+                } else {
+                    UI_NavigateUp(&data->state->listbox, FlintContext_Get()->window.hListBox);
+                }
+            } else {
+                UI_NavigateUp(&data->state->listbox, FlintContext_Get()->window.hListBox);
+            }
         }
         PROFILE_END_VAR(timer, "window_manager:PromptPopup_OnKey");
         return;
@@ -219,6 +236,7 @@ static void PromptPopup_OnKey(Popup* self, int vk_code, bool pressed, int modifi
     }
     if (vk_code == VK_DELETE) {
         if (EditBufferDeleteChar(data->state->filter, &data->state->cursor)) {
+            History_ResetCursor(FlintContext_Get()->window.current_feature);
             if (data->spec.refresh) data->spec.refresh(data->state->filter, FlintContext_Get()->window.hListBox, data->state->has_listbox ? &data->state->listbox : NULL);
         }
         PROFILE_END_VAR(timer, "window_manager:PromptPopup_OnKey");
@@ -252,6 +270,9 @@ static void PromptPopup_OnKey(Popup* self, int vk_code, bool pressed, int modifi
             filter_copy[sizeof(filter_copy) - 1] = '\0';
             sel = filter_copy;
         }
+        // persist to per-feature history (empty sel ignored inside)
+        const char* feat = FlintContext_Get()->window.current_feature;
+        if (feat && sel && sel[0]) History_Add(feat, sel);
         bool should_close = false;
         if (is_ctrl) {
             if (data->spec.ctrl_enter) should_close = data->spec.ctrl_enter(sel, data->state->has_listbox ? &data->state->listbox : NULL);
@@ -279,6 +300,7 @@ static void PromptPopup_OnKey(Popup* self, int vk_code, bool pressed, int modifi
                         n - data->state->cursor + 1);
                 memcpy(data->state->filter + data->state->cursor, buf, len);
                 data->state->cursor += len;
+                History_ResetCursor(FlintContext_Get()->window.current_feature);
                 if (data->spec.refresh) data->spec.refresh(data->state->filter, FlintContext_Get()->window.hListBox, data->state->has_listbox ? &data->state->listbox : NULL);
             }
         }
