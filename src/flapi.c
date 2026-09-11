@@ -298,7 +298,7 @@ char* fl_get_zoxide_match(char* query) {
   return Platform_QueryZoxidePath(query);
 }
 
-int fl_collect_running_processes(char process_list[][MaxFeatures], int max_count) {
+int fl_collect_running_processes(char process_list[][128], int max_count) {
     return Platform_CollectRunningProcesses(process_list, max_count);
 }
 
