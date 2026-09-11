@@ -22,10 +22,6 @@
 
 static Nob_File_Paths sources = {0};
 static Nob_File_Paths feature_sources = {0};
-static bool g_want_static = false;
-static bool has_musl_gcc(void){
-    return nob_file_exists("/usr/bin/musl-gcc") || nob_file_exists("/bin/musl-gcc");
-}
 
 static bool collect_source(Nob_Walk_Entry entry) {
     if (entry.type == NOB_FILE_REGULAR) {
@@ -305,13 +301,10 @@ static void stop_running_instance(void) {
 int main(int argc, char** argv) {
     NOB_GO_REBUILD_URSELF_PLUS(argc, argv, "nob.h");
 
-    bool want_static = false;
     int do_run = 0;
     for (int i=1;i<argc;i++){
         if (strcmp(argv[i], "-run")==0) do_run=1;
     }
-    g_want_static = want_static;
-    if (g_want_static) nob_log(NOB_INFO, "Static build requested (%s)", has_musl_gcc() ? "musl-gcc" : "gcc -static");
 
     if (!nob_mkdir_if_not_exists(BUILD_FOLDER)) return 1;
     if (!nob_mkdir_if_not_exists(OBJ_FOLDER)) return 1;
@@ -370,33 +363,12 @@ int main(int argc, char** argv) {
     }
 
     Nob_Cmd cmd = {0};
-    if (g_want_static && has_musl_gcc()){
-        nob_cmd_append(&cmd, "musl-gcc");
-    } else {
-        nob_cc(&cmd);
-    }
+    nob_cc(&cmd);
     nob_cmd_append(&cmd, "-o", output);
     for (size_t i = 0; i < objs.count; ++i) {
         nob_cmd_append(&cmd, objs.items[i]);
     }
-    if (g_want_static){
-#if !defined(_WIN32)
-        bool have_static = nob_file_exists("/usr/lib/libX11.a") || nob_file_exists("/usr/lib64/libX11.a") || nob_file_exists("/usr/lib/x86_64-linux-gnu/libX11.a") || nob_file_exists("/usr/lib/musl/lib/libX11.a");
-        if (!have_static){
-            nob_log(NOB_WARNING, "Static X11 libs not found (libX11.a) - true musl static needs .a");
-            nob_log(NOB_INFO, "Building portable dynamic + bundling runtime deps (no UX hit, ship build/main + build/bundle/*.so)");
-            nob_cmd_append(&cmd, LINK_FLAGS);
-        } else {
-            nob_cmd_append(&cmd, "-static");
-            nob_cmd_append(&cmd, LINK_FLAGS, "-lXau", "-lXdmcp", "-lfontconfig", "-lfreetype", "-lexpat", "-lz", "-lbz2", "-lpng16", "-lbrotlidec", "-lbrotlicommon", "-lm", "-pthread");
-        }
-#else
-        nob_cmd_append(&cmd, "-static");
-        nob_cmd_append(&cmd, LINK_FLAGS);
-#endif
-    } else {
-        nob_cmd_append(&cmd, LINK_FLAGS);
-    }
+    nob_cmd_append(&cmd, LINK_FLAGS);
     if (!nob_cmd_run(&cmd)) {
         nob_log(NOB_ERROR, "Failed to link %s", output);
         return 1;
@@ -407,24 +379,17 @@ int main(int argc, char** argv) {
         nob_cmd_run(&chmod);
     }
     stop_running_instance();
-    if (g_want_static){
 #if !defined(_WIN32)
-        bool have_static2 = nob_file_exists("/usr/lib/libX11.a") || nob_file_exists("/usr/lib64/libX11.a") || nob_file_exists("/usr/lib/x86_64-linux-gnu/libX11.a") || nob_file_exists("/usr/lib/musl/lib/libX11.a");
-        if (!have_static2){
-            nob_log(NOB_INFO, "Bundling runtime deps for portable -static (ship build/main + build/bundle/)");
-            Nob_Cmd bundle = {0};
-            nob_cmd_append(&bundle, "sh", "-c", "mkdir -p build/bundle && ldd build/main | grep -o '/[^ ]*\\.so[^ ]*' | xargs -I{} cp -v {} build/bundle/ 2>/dev/null; echo \"Bundled $(ls build/bundle/*.so 2>/dev/null | wc -l) libs to build/bundle/ (ship with LD_LIBRARY_PATH=./build/bundle)\"");
-            nob_cmd_run(&bundle);
-            Nob_Cmd rpath = {0};
-            nob_cmd_append(&rpath, "sh", "-c", "which patchelf >/dev/null 2>&1 && patchelf --set-rpath '$ORIGIN/bundle' build/main 2>/dev/null && echo \"Patched rpath to \\$ORIGIN/bundle\" || true");
-            nob_cmd_run(&rpath);
-        } else {
-            Nob_Cmd check = {0};
-            nob_cmd_append(&check, "sh", "-c", "ldd build/main 2>&1 | head -n 5; echo \"---\"; ls -lh build/main | awk '{print $9, $5}'");
-            nob_cmd_run(&check);
-        }
-#endif
+    {
+        nob_log(NOB_INFO, "Bundling runtime deps (ship build/flint + build/bundle/)");
+        Nob_Cmd bundle = {0};
+        nob_cmd_append(&bundle, "sh", "-c", "mkdir -p build/bundle && ldd build/flint | grep -o '/[^ ]*\\.so[^ ]*' | xargs -I{} cp -v {} build/bundle/ 2>/dev/null; echo \"Bundled $(ls build/bundle/*.so* 2>/dev/null | wc -l) libs to build/bundle/ (ship with LD_LIBRARY_PATH=./build/bundle)\"");
+        nob_cmd_run(&bundle);
+        Nob_Cmd rpath = {0};
+        nob_cmd_append(&rpath, "sh", "-c", "which patchelf >/dev/null 2>&1 && patchelf --set-rpath '$ORIGIN/bundle' build/flint 2>/dev/null && echo \"Patched rpath to \\$ORIGIN/bundle\" || true");
+        nob_cmd_run(&rpath);
     }
+#endif
 
     if (do_run) {
         Nob_Cmd run = {0};
