@@ -260,9 +260,9 @@ int fl_get_feature_list_with_icons(const char** out_names, void (**out_cbs)(void
     if (out_icons) *out_icons = icon_ptrs;
     return n;
 }
-char* fl_get_icon_path(const char* desktop_or_icon_path) {
-    if (!desktop_or_icon_path) return NULL;
-    return Platform_GetIconPath((char*)desktop_or_icon_path);
+char* fl_get_icon_path(const char* app_path_path) {
+    if (!app_path_path) return NULL;
+    return Platform_GetIconPath((char*)app_path_path);
 }
 int fl_get_icon_size(const char* icon_path) {
     if (!icon_path) return 20;
@@ -394,6 +394,7 @@ bool fl_paste_from_clipboard() {
    char* content = Platform_GetLastClipboardEntry();
    return Platform_PasteContent(content);
 }
+
 bool fl_paste(char* content) {
     if (!content) return false;
    return Platform_PasteContent(content);
