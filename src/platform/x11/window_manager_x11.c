@@ -37,6 +37,7 @@
 #include "platform/x11/display.h"
 #include "platform/x11/input.h"
 #include "core/timer.h"
+#include "core/history.h"
 
 
 extern bool HandleGlobalKeyEvent(int key_code, int value);
@@ -119,6 +120,7 @@ static void Linux_HandleKeyPress(Display* dpy, XKeyEvent* ev, WindowManager* wm)
                             memmove(state->filter+state->cursor+len2, state->filter+state->cursor, n-state->cursor+1);
                             memcpy(state->filter+state->cursor, buf2, len2);
                             state->cursor+=len2;
+                            History_ResetCursor(FlintContext_Get()->window.current_feature);
                             FlintContext* _c = FlintContext_Get();
                             if (_c->prompt_callbacks.refresh) _c->prompt_callbacks.refresh(state->filter, FlintContext_Get()->window.hListBox, state->has_listbox ? &state->listbox : NULL);
                             else if (state && state->listbox.populated_count >=0) {}

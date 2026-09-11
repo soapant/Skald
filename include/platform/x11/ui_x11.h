@@ -156,34 +156,78 @@ static inline void UI_GetCurrentTextEdit(WindowHandle edit, char* buffer, size_t
   (void)edit;
   if (!buffer || cap == 0) return;
   buffer[0] = '\0';
-  void* user_data = GetActivePopupUserData();
-  if (!user_data) return;
-  
-  PromptState* prompt = (PromptState*)user_data;
-  snprintf(buffer, cap, "%s", prompt->filter);
-  buffer[cap-1]='\0';
-  return;
-  SimplePromptState* simple = (SimplePromptState*)user_data;
-  strncpy(buffer, simple->user_input, cap-1);
-  buffer[cap-1]='\0';
-  return;
+  WindowManager* wm = WindowManager_Get();
+  if (!wm) return;
+  Popup* top = WindowManager_GetTopPopup(wm);
+  if (!top) return;
+  if (top->type == POPUP_PROMPT && top->user_data) {
+    PromptState* prompt = (PromptState*)top->user_data;
+    snprintf(buffer, cap, "%s", prompt->filter);
+    buffer[cap-1]='\0';
+  } else if (top->type == POPUP_SIMPLE && top->user_data) {
+    SimplePromptState* simple = (SimplePromptState*)top->user_data;
+    snprintf(buffer, cap, "%s", simple->user_input);
+    buffer[cap-1]='\0';
+  } else if (top->type == POPUP_EDIT) {
+    WMEditPopupData* ed = (WMEditPopupData*)top;
+    if (ed && ed->text) snprintf(buffer, cap, "%s", ed->text);
+    buffer[cap-1]='\0';
+  }
 }
 
 static inline void UI_SetText(WindowHandle hEdit,char* text) {
-  (void)text;
-  void* user_data = GetActivePopupUserData();
-  if (!user_data) return;
-  
-  PromptState* prompt = (PromptState*)user_data;
-  prompt->filter[0] = '\0';
-  prompt->cursor = 0;
-  SimplePromptState* simple = (SimplePromptState*)user_data;
-  simple->user_input[0] = '\0';
-  simple->cursor = 0;
+  (void)hEdit;
+  if (!text) text = "";
+  WindowManager* wm = WindowManager_Get();
+  if (!wm) return;
+  Popup* top = WindowManager_GetTopPopup(wm);
+  if (!top) return;
+  if (top->type == POPUP_PROMPT && top->user_data) {
+    PromptState* prompt = (PromptState*)top->user_data;
+    strncpy(prompt->filter, text, sizeof(prompt->filter)-1);
+    prompt->filter[sizeof(prompt->filter)-1]='\0';
+    prompt->cursor = (int)strlen(prompt->filter);
+  } else if (top->type == POPUP_SIMPLE && top->user_data) {
+    SimplePromptState* simple = (SimplePromptState*)top->user_data;
+    strncpy(simple->user_input, text, sizeof(simple->user_input)-1);
+    simple->user_input[sizeof(simple->user_input)-1]='\0';
+    simple->cursor = (int)strlen(simple->user_input);
+  } else if (top->type == POPUP_EDIT) {
+    WMEditPopupData* ed = (WMEditPopupData*)top;
+    if (ed && ed->text) {
+        strncpy(ed->text, text, ed->text_capacity-1);
+        ed->text[ed->text_capacity-1]='\0';
+        ed->cursor = (int)strlen(ed->text);
+    }
+  }
 }
 
 static inline void UI_SetCursorPosition(WindowHandle ctrl,int position) {
-  (void)ctrl; (void)position;
+  (void)ctrl;
+  WindowManager* wm = WindowManager_Get();
+  if (!wm) return;
+  Popup* top = WindowManager_GetTopPopup(wm);
+  if (!top) return;
+  if (top->type == POPUP_PROMPT && top->user_data) {
+    PromptState* prompt = (PromptState*)top->user_data;
+    int len = (int)strlen(prompt->filter);
+    if (position < 0) position = 0;
+    if (position > len) position = len;
+    prompt->cursor = position;
+  } else if (top->type == POPUP_SIMPLE && top->user_data) {
+    SimplePromptState* simple = (SimplePromptState*)top->user_data;
+    int len = (int)strlen(simple->user_input);
+    if (position < 0) position = 0;
+    if (position > len) position = len;
+    simple->cursor = position;
+  } else if (top->type == POPUP_EDIT) {
+    WMEditPopupData* ed = (WMEditPopupData*)top;
+    if (!ed || !ed->text) return;
+    int len = (int)strlen(ed->text);
+    if (position < 0) position = 0;
+    if (position > len) position = len;
+    ed->cursor = position;
+  }
 }
 static inline void UI_GetCurrentCursorPosition(uint32_t *start, uint32_t *end) {
   if (start) *start = 0;

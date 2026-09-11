@@ -19,6 +19,7 @@
 #include "bindings/vim_motions.h"
 #include "bindings/vim_helpers.h"
 #include "core/number_shortcut.h"
+#include "core/history.h"
 #include <X11/X.h>
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
@@ -174,6 +175,7 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
         } else {
             EditBufferBackspace(state->filter, &state->cursor);
         }
+        History_ResetCursor(FlintContext_Get()->window.current_feature);
         if (FlintContext_Get()->prompt_callbacks.refresh) FlintContext_Get()->prompt_callbacks.refresh(state->filter, FlintContext_Get()->window.hListBox, state->has_listbox ? &state->listbox : NULL);
         PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandlePromptKey");
         return true;
@@ -217,7 +219,21 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
         PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandlePromptKey");
         return true;
       }
-      if (state->has_listbox) UI_NavigateUp(&state->listbox, FlintContext_Get()->window.hListBox);
+      if (state->has_listbox) {
+        if (state->listbox.selected_index == -1) {
+          char hist[512];
+          const char* feat = FlintContext_Get()->window.current_feature;
+          if (feat && History_CycleUp(feat, hist, sizeof(hist))) {
+            strncpy(state->filter, hist, sizeof(state->filter)-1);
+            state->filter[sizeof(state->filter)-1]='\0';
+            state->cursor = (int)strlen(state->filter);
+            if (FlintContext_Get()->prompt_callbacks.refresh) FlintContext_Get()->prompt_callbacks.refresh(state->filter, FlintContext_Get()->window.hListBox, state->has_listbox ? &state->listbox : NULL);
+            PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandlePromptKey");
+            return true;
+          }
+        }
+        UI_NavigateUp(&state->listbox, FlintContext_Get()->window.hListBox);
+      }
       PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandlePromptKey");
       return true;
     }
@@ -236,6 +252,7 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
     }
     if (wParam == VK_DELETE) {
       if (state && EditBufferDeleteChar(state->filter, &state->cursor)) {
+        History_ResetCursor(FlintContext_Get()->window.current_feature);
         if (FlintContext_Get()->prompt_callbacks.refresh) FlintContext_Get()->prompt_callbacks.refresh(state->filter, FlintContext_Get()->window.hListBox, state->has_listbox ? &state->listbox : NULL);
       }
       PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandlePromptKey");
@@ -273,6 +290,8 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
         filter_copy[sizeof(filter_copy)-1]='\0';
         sel = filter_copy;
       }
+      const char* feat = FlintContext_Get()->window.current_feature;
+      if (feat && sel && sel[0]) History_Add(feat, sel);
       if (is_ctrl) {
         {
           FlintContext* _c = FlintContext_Get();
