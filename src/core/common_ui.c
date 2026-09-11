@@ -186,7 +186,11 @@ void PopulateListBox(ListBoxInfo* lb, WindowHandle hListBox, const char* filter,
       if (filter_match) {
         match = filter_match(search_text, clean_filter);
       } else {
-        match = FuzzyMatchWithTypo(search_text, clean_filter);
+        if (Platform_StringStartsWithCaseInsensitive(FlintContext_Get()->window.current_feature,"center")) {
+          match = FuzzyMatchWithTypo(search_text, clean_filter);
+        }else {
+          match = Platform_StringStartsWithCaseInsensitive(search_text, clean_filter);
+        }
       }
 
       if (match) {
@@ -209,7 +213,16 @@ void PopulateListBox(ListBoxInfo* lb, WindowHandle hListBox, const char* filter,
       if (g_alias_display_active && i < g_alias_display_count && g_alias_display[i][0] != '\0') {
         search_text = g_alias_display[i];
       }
-      bool match = filter_match ? filter_match(search_text, clean_filter) : FuzzyMatchWithTypo(search_text, clean_filter);
+      bool match = false;
+      if (filter_match) {
+        match = filter_match(search_text, clean_filter);
+      } else {
+        if (Platform_StringStartsWithCaseInsensitive(FlintContext_Get()->window.current_feature,"center")) {
+          match = FuzzyMatchWithTypo(search_text, clean_filter);
+        } else {
+          match = Platform_StringStartsWithCaseInsensitive(search_text, clean_filter);
+        }
+      }
 
       if (match) {
         lb->matching_indices[total_matches] = i;

@@ -23,3 +23,4 @@ steam_icon_291550=/home/diggy/.local/share/icons/hicolor/32x32/apps/steam_icon_2
 mpv=/usr/share/icons/hicolor/32x32/apps/mpv.png
 hdspmixer=/usr/share/icons/hicolor/48x48/apps/hdspmixer.png
 nwg-look=/usr/share/pixmaps/nwg-look.svg
+qbittorrent=/usr/share/icons/hicolor/32x32/apps/qbittorrent.png
