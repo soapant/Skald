@@ -15589,3 +15589,4 @@ ls
 ./nob ; sudo build/main
 sudo gdb ./build/main
 ./nob ; sudo build/main
+vnstat
