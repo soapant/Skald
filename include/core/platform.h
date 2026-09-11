@@ -61,6 +61,7 @@ bool Platform_LaunchFileManagerAtPath(char* path,char* args);
 long Platform_GetFileSize(char *filepath);
 char* Platform_RegisterDirWatcher(const char* dir_path, void (*callback)(void));
 char* Platform_WatchForCFileChanges(const char* dir_path, void (*callback)(void));
+void Platform_CleanupDirWatchers(void);
 char* Platform_GetActiveWindowTitle();
 char* Platform_GetIconPath(char* desktop_or_icon);
 int Platform_GetIconSize(char* icon_path);

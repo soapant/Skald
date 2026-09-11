@@ -13,7 +13,6 @@ void TimerBufferFlush(void) {
   if (g_timer_buffer_len == 0) return;
   const char* path = "time_logs.txt";
   FILE* f = fopen(path, "a");
-  if (!f) f = fopen("/home/diggy/Programming/Projects/Flint/time_logs.txt", "a");
   if (f) {
     fwrite(g_timer_buffer, 1, g_timer_buffer_len, f);
     fclose(f);
@@ -29,13 +28,13 @@ static void TimerAtexitFlush(void) {
 void TimerBufferAppend(const char* line) {
   size_t len = strlen(line);
   if (len == 0) return;
-  const char* path = "time_logs.txt";
-  FILE* f = fopen(path, "a");
-  if (!f) f = fopen("/home/diggy/Programming/Projects/Flint/time_logs.txt", "a");
-  if (f) { fwrite(line, 1, len, f); fclose(f); }
+  if (len >= TIMER_LOG_CAP) {
+    FILE* f = fopen("time_logs.txt", "a");
+    if (f) { fwrite(line, 1, len, f); fclose(f); }
+    return;
+  }
   if (len >= TIMER_LOG_CAP - g_timer_buffer_len) {
     TimerBufferFlush();
-    if (len >= TIMER_LOG_CAP) return;
   }
   memcpy(g_timer_buffer + g_timer_buffer_len, line, len);
   g_timer_buffer_len += len;
