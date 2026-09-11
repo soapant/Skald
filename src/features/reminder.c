@@ -1,4 +1,12 @@
 #include "core/flapi.h"
+#if !defined(_WIN32)
+#include <unistd.h>
+#include <pthread.h>
+#include <stdint.h>
+#endif
+#if defined(_WIN32)
+#include <windows.h>
+#endif
 
 const char* ReminderHistoryFilePath = "data/ReminderHistory.txt";
 
