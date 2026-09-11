@@ -10,6 +10,7 @@
 #include "bindings/bindings.h"
 #include "helpers/flag.h"
 #include "core/common_ui.h"
+#include "core/window_manager.h"
 
 
 char* Platform_SearchPopup(void) { return NULL; }
@@ -449,6 +450,15 @@ void HandleCommandExecution(ListBoxInfo* lb, char* string) {
     UI_LB_SetCaretIndex(FlintContext_Get()->window.hListBox, num, TRUE);
 }
 
+static void win_command_confirm(const char* text, void* user_data) {
+  ListBoxInfo* lb = (ListBoxInfo*)user_data;
+  if (!text) return;
+  char* dup = _strdup(text);
+  if (!dup) return;
+  HandleCommandExecution(lb, dup);
+  free(dup);
+}
+
 LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
   if (nCode < 0) {
     return CallNextHookEx(NULL, nCode, wParam, lParam);
@@ -482,19 +492,24 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
     }
     PROFILE_END_VAR(timer, "ProcessHotkey");
 
-    // temporary
-    // if (shift_down && !IsInsertMode() && WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) != NULL) {
-    //   if (WH_TO_HWND(FlintContext_Get()->window.g_hEditPopup) == NULL) {
-    //     if (pressed_vk == COMMAND_MODE_KEY) {
-    //       SetMode(MODE_INSERT);
-    //       char* output = Platform_EditTextPopup("", 960, 540, 1000, 300);
-    //       if (output) {
-    //         HandleCommandExecution(NULL, output);
-    //       }
-    //       return 1;
-    //     }
-    //   }
-    // }
+    if (shift_down && !IsInsertMode() && WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) != NULL) {
+      if (WH_TO_HWND(FlintContext_Get()->window.g_hEditPopup) == NULL) {
+        if (pressed_vk == COMMAND_MODE_KEY) {
+          SetMode(MODE_INSERT);
+          WindowManager* wm = WindowManager_Get();
+          if (wm) {
+            ListBoxInfo* lb = NULL;
+            HWND hPopup = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
+            if (hPopup && IsWindow(hPopup)) {
+              lb = (ListBoxInfo*)GetWindowLongPtrA(hPopup, GWLP_USERDATA);
+            }
+            Popup* popup = EditPopup_Create(wm, "", "Command Mode", 960, 540, win_command_confirm, lb);
+            if (popup) WindowManager_PushPopup(wm, popup);
+          }
+          return 1;
+        }
+      }
+    }
     if (WH_TO_HWND(FlintContext_Get()->window.g_hSearchPopup) == NULL && WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) != NULL && IsNormalMode()) {
       if (pressed_vk == SEARCH_PROGRAM_KEY) {
         Platform_SearchPopup();
