@@ -1102,19 +1102,19 @@ static void icon_cache_set(const char* key, const char* value){
 }
 
 
-char* Platform_GetIconPath(char* desktop_or_icon) {
-    if (!desktop_or_icon) return NULL;
+char* Platform_GetIconPath(char* app_path) {
+    if (!app_path) return NULL;
     for (int i = 0; i < (int)ARRAY_LEN(supported_names_to_paths); i++) {
-        if (Platform_StringContainsCaseInsensitive(desktop_or_icon, supported_names_to_paths[i].name)) {
+        if (Platform_StringContainsCaseInsensitive(app_path, supported_names_to_paths[i].name)) {
             if (access(supported_names_to_paths[i].path, F_OK)==0) return strdup(supported_names_to_paths[i].path);
         }
     }
-    if (desktop_or_icon[0]=='/' && strchr(desktop_or_icon, '.') && access(desktop_or_icon, F_OK)==0) {
-        if (strstr(desktop_or_icon, ".png") || strstr(desktop_or_icon, ".svg") || strstr(desktop_or_icon, ".xpm")) return strdup(desktop_or_icon);
+    if (app_path[0]=='/' && strchr(app_path, '.') && access(app_path, F_OK)==0) {
+        if (strstr(app_path, ".png") || strstr(app_path, ".svg") || strstr(app_path, ".xpm")) return strdup(app_path);
     }
     char icon_name[512]={0};
-    if (strstr(desktop_or_icon, ".desktop")) {
-        FILE* f=fopen(desktop_or_icon,"r");
+    if (strstr(app_path, ".desktop")) {
+        FILE* f=fopen(app_path,"r");
         if (f) {
             char line[1024];
             while(fgets(line,sizeof(line),f)){
@@ -1140,7 +1140,7 @@ char* Platform_GetIconPath(char* desktop_or_icon) {
             }
         }
     } else {
-        strncpy(icon_name, desktop_or_icon, sizeof(icon_name)-1);
+        strncpy(icon_name, app_path, sizeof(icon_name)-1);
     }
     if (icon_name[0]=='/' && access(icon_name, F_OK)==0) {
         if (strstr(icon_name, ".png") || strstr(icon_name, ".svg") || strstr(icon_name, ".xpm")) return strdup(icon_name);

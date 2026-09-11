@@ -583,7 +583,9 @@ char* Platform_GetActiveWindowTitle(void) {
     }
     return fgTitle;
 }
-char* Platform_GetIconPath(char* desktop_or_icon) { (void)desktop_or_icon; return NULL; }
+char* Platform_GetIconPath(char* app_path) {
+  (void)app_path; return NULL;
+  }
 int Platform_GetIconSize(char* icon_path) {
     if (!icon_path) return 32;
     if (strstr(icon_path, "32x32")) return 32;

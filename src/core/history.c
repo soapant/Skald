@@ -95,8 +95,6 @@ void History_Init(void) {
 
 void History_Shutdown(void) {
     if (!g_history) return;
-    // ensure data dir exists
-    mkdir("data", 0755);
     FILE* f = fopen(HISTORY_FILE, "w");
     if (f) {
         for (int i = 0; i < g_history->size; i++) {

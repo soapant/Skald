@@ -12,7 +12,6 @@
 #include "core/common_ui.h"
 
 
-char* Platform_EditTextPopup(const char* a, int b, int c, int d, int e) { (void)a;(void)b;(void)c;(void)d;(void)e; return NULL; }
 char* Platform_SearchPopup(void) { return NULL; }
 
 #include <gdiplus.h>
@@ -483,18 +482,19 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
     }
     PROFILE_END_VAR(timer, "ProcessHotkey");
 
-    if (shift_down && !IsInsertMode() && WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) != NULL) {
-      if (WH_TO_HWND(FlintContext_Get()->window.g_hEditPopup) == NULL) {
-        if (pressed_vk == COMMAND_MODE_KEY) {
-          SetMode(MODE_INSERT);
-          char* output = Platform_EditTextPopup("", 960, 540, 1000, 300);
-          if (output) {
-            HandleCommandExecution(NULL, output);
-          }
-          return 1;
-        }
-      }
-    }
+    // temporary
+    // if (shift_down && !IsInsertMode() && WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) != NULL) {
+    //   if (WH_TO_HWND(FlintContext_Get()->window.g_hEditPopup) == NULL) {
+    //     if (pressed_vk == COMMAND_MODE_KEY) {
+    //       SetMode(MODE_INSERT);
+    //       char* output = Platform_EditTextPopup("", 960, 540, 1000, 300);
+    //       if (output) {
+    //         HandleCommandExecution(NULL, output);
+    //       }
+    //       return 1;
+    //     }
+    //   }
+    // }
     if (WH_TO_HWND(FlintContext_Get()->window.g_hSearchPopup) == NULL && WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) != NULL && IsNormalMode()) {
       if (pressed_vk == SEARCH_PROGRAM_KEY) {
         Platform_SearchPopup();
