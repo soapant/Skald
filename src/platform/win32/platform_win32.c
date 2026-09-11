@@ -489,6 +489,11 @@ char* Platform_WatchForCFileChanges(const char* dir_path, void (*callback)(void)
     return NULL;
 }
 
+void Platform_CleanupDirWatchers(void) {
+    g_c_watch_count = 0;
+    g_c_watch_dir[0] = '\0';
+}
+
 bool Platform_ClickAtPos(int x,int y) {
     int screenWidth = GetSystemMetrics(SM_CXSCREEN);
     int screenHeight = GetSystemMetrics(SM_CYSCREEN);

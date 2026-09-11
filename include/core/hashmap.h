@@ -19,6 +19,8 @@ typedef struct {
 
 HashMap* HashMap_Create(int initial_size);
 void HashMap_Destroy(HashMap* map);
+void HashMap_DestroyWith(HashMap* map, void (*free_value)(void* value));
+void HashMap_DestroyWithKeyValue(HashMap* map, void (*free_value)(void* value), void (*free_key)(void* key));
 void HashMap_Put(HashMap* map, const char* key, void* value);
 void* HashMap_Get(HashMap* map, const char* key);
 bool HashMap_Contains(HashMap* map, const char* key);
