@@ -164,12 +164,21 @@ bool applauncher_ctrlenter_callback(const char* selection, ListBoxInfo* lb) {
 }
 
 void applauncher_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
-    const char** names = (const char**)malloc(s_apps.count * sizeof(char*));
-    for (size_t i = 0; i < s_apps.count; i++) {
-        names[i] = s_apps.items[i].name;
+    if (s_apps.count == 0) {
+        PopulateListBox(lb, FlintContext_Get()->window.hListBox, filter, NULL, 0, NULL);
+        return;
     }
+    if (s_apps.count > 2048) {
+        const char** names = (const char**)malloc(s_apps.count * sizeof(char*));
+        if (!names) return;
+        for (size_t i = 0; i < s_apps.count; i++) names[i] = s_apps.items[i].name;
+        PopulateListBox(lb, FlintContext_Get()->window.hListBox, filter, names, (int)s_apps.count, NULL);
+        free(names);
+        return;
+    }
+    const char* names[2048];
+    for (size_t i = 0; i < s_apps.count; i++) names[i] = s_apps.items[i].name;
     PopulateListBox(lb, FlintContext_Get()->window.hListBox, filter, names, (int)s_apps.count, NULL);
-    free(names);
 }
 void applauncher_copy_callback(const char* selection,int true_index,int type) {
     char* text = (char*)selection;
@@ -204,9 +213,15 @@ const char* applauncher_get_icon_for_item(const char* item_name) {
     return NULL;
 }
 
+void applauncher_free_icon_path(const char* p) {
+    if (p) free((void*)p);
+}
+
 int applauncher_get_icon_size_for_item(const char* item_name) {
     const char* p = applauncher_get_icon_for_item(item_name);
-    return fl_get_icon_size(p);
+    int sz = fl_get_icon_size(p);
+    applauncher_free_icon_path(p);
+    return sz;
 }
 
 
@@ -253,8 +268,8 @@ void applauncher_render(Display* dpy, Window* win, PromptState* state) {
         else if(AlternatingText && idx%2==0) num_color=body_color=plain_color=&fcolalternate;
         const char* item_text = (idx>=0 && idx < lb->populated_count) ? lb->populated_cache[idx] : "";
         const char* icon_path = applauncher_get_icon_for_item(item_text);
-        if(!icon_path) icon_path=NULL;
         DrawListBoxItemText(dpy,xd,vis,cmap,font,num_color,body_color,plain_color,lb,(char*)icon_path,idx,y,text_x);
+        if (icon_path) free((void*)icon_path);
         XftColorFree(dpy,vis,cmap,&fcolrainbow);
     }
     if(!EnableShaders || ShaderPreset==0) XftColorFree(dpy,vis,cmap,&bgc);
@@ -278,22 +293,17 @@ void applauncher_render(HDC hdc, const char* text, RECT* rect, BOOL is_selected,
 #endif
 
 void TriggerAppLauncher(void) {
-    const char** initial_items = (const char**)malloc(s_apps.count * sizeof(char*));
-    if (!initial_items) return;
-    
-    for (int i = 0; i < ARRAY_LEN(ListOfProgramPaths); i++) {
+    for (size_t i = 0; i < ARRAY_LEN(ListOfProgramPaths); i++) {
         fl_on_dir_changed(ListOfProgramPaths[i], initialize_app_cache);
     }
 
-    PROMPT(.title = "🚀 AppLauncher", .items = initial_items, .count = (int)s_apps.count,
+    PROMPT(.title = "🚀 AppLauncher", .items = NULL, .count = (int)s_apps.count,
            .height = 920, .width = 650, .item_height = 32,
            .refresh = applauncher_refresh_callback,
            .enter = applauncher_enter_callback,
            .ctrl_enter = applauncher_ctrlenter_callback,
            .copy = applauncher_copy_callback,
            .render = applauncher_render);
-
-    free(initial_items);
 }
 
 FLINT_FEATURE_INIT {

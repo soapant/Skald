@@ -26,13 +26,23 @@ HashMap* HashMap_Create(int initial_size) {
 }
 
 void HashMap_Destroy(HashMap* map) {
+    HashMap_DestroyWith(map, NULL);
+}
+
+void HashMap_DestroyWith(HashMap* map, void (*free_value)(void* value)) {
+    HashMap_DestroyWithKeyValue(map, free_value, NULL);
+}
+
+void HashMap_DestroyWithKeyValue(HashMap* map, void (*free_value)(void* value), void (*free_key)(void* key)) {
     if (!map) return;
 
     for (int i = 0; i < map->size; i++) {
         HashMapEntry* entry = map->buckets[i];
         while (entry) {
             HashMapEntry* next = entry->next;
-            free(entry->key);
+            if (free_key) free_key(entry->key);
+            else free(entry->key);
+            if (free_value && entry->value) free_value(entry->value);
             free(entry);
             entry = next;
         }

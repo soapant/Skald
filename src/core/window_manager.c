@@ -38,6 +38,7 @@
 #include <X11/keysym.h>
 #include <X11/Xft/Xft.h>
 #include <unistd.h>
+#include <stdatomic.h>
 #include "platform/x11/display.h"
 #include "platform/x11/drawing.h"
 #include "platform/x11/window_factory.h"
@@ -56,6 +57,12 @@ extern void WindowManager_QuitWin32(WindowManager* wm);
 #endif
 
 static WindowManager* g_window_manager = NULL;
+
+#if !defined(_WIN32)
+static _Atomic bool g_watcher_stop = false;
+#else
+static volatile LONG g_watcher_stop_win = 0;
+#endif
 
 #if defined(_WIN32)
 
@@ -76,34 +83,46 @@ static void on_c_file_changed(void) {
 
 #if !defined(_WIN32)
 static void* feature_watcher_thread(void* arg) {
-    (void)arg;
-    while (1) {
+    WindowManager* wm = (WindowManager*)arg;
+    while (!atomic_load(&g_watcher_stop) && !(wm && wm->watcher_stop)) {
         char* filename = Platform_WatchForCFileChanges(FeaturePath, on_c_file_changed);
         if (filename) {
             printf("Changed file: %s\n", filename);
             fflush(stdout);
-            char* base = strrchr(filename, '/');
-            if (!base) base = strrchr(filename, '\\');
-            if (base) base++; else base = filename;
+            char buf[256];
+            strncpy(buf, filename, sizeof(buf)-1);
+            buf[sizeof(buf)-1]='\0';
+            free(filename);
+            char* base = strrchr(buf, '/');
+            if (!base) base = strrchr(buf, '\\');
+            if (base) base++; else base = buf;
             char* dot = strrchr(base, '.');
             if (dot) *dot = '\0';
             char cmd[1024];
             snprintf(cmd, sizeof(cmd), "gcc -I include -I/usr/include/freetype2 -w -g -fPIC -shared -o build/features/%s.so src/features/%s.c 2>&1", base, base);
-            printf("[WATCHER] recompiling %s -> %s\n", filename, cmd); fflush(stdout);
-            if (Platform_RunTerminalCommand(cmd,false)) {
-                printf("[WATCHER] reload %s\n", base); fflush(stdout);
-                FeatureLoader_Reload(base);
+            printf("[WATCHER] recompiling %s -> %s\n", buf, cmd); fflush(stdout);
+            char* out = Platform_RunTerminalCommand(cmd,false);
+            if (out) {
+                if (strlen(out)==0 || !strstr(out, "error:")) {
+                    printf("[WATCHER] reload %s\n", base); fflush(stdout);
+                    FeatureLoader_Reload(base);
+                } else {
+                    fprintf(stderr, "[WATCHER] compile failed for %s: %s\n", base, out);
+                }
+                free(out);
             }
-            free(filename);
         }
-        usleep(500000);
+        for (int i=0;i<5;i++) {
+            if (atomic_load(&g_watcher_stop) || (wm && wm->watcher_stop)) break;
+            usleep(100000);
+        }
     }
     return NULL;
 }
 #else
 static DWORD WINAPI feature_watcher_thread_win(LPVOID arg) {
-    (void)arg;
-    while (1) {
+    WindowManager* wm = (WindowManager*)arg;
+    while (InterlockedCompareExchange(&g_watcher_stop_win, 0, 0)==0 && !(wm && wm->watcher_stop)) {
         char* filename = Platform_WatchForCFileChanges(FeaturePath, on_c_file_changed);
         if (filename) {
             printf("Changed file: %s\n", filename);
@@ -117,7 +136,10 @@ static DWORD WINAPI feature_watcher_thread_win(LPVOID arg) {
             FeatureLoader_Reload(base);
             free(filename);
         }
-        Sleep(500);
+        for (int i=0;i<5;i++) {
+            if (InterlockedCompareExchange(&g_watcher_stop_win, 0, 0)!=0 || (wm && wm->watcher_stop)) break;
+            Sleep(100);
+        }
     }
     return 0;
 }
@@ -146,13 +168,21 @@ WindowManager* WindowManager_Create(void) {
     #endif
     
     wm->ctx = FlintContext_Get();
+    wm->watcher_stop = false;
     g_window_manager = wm;
 #if !defined(_WIN32)
+    atomic_store(&g_watcher_stop, false);
+    wm->watcher_running = false;
     pthread_t tid;
-    pthread_create(&tid, NULL, feature_watcher_thread, NULL);
-    pthread_detach(tid);
+    if (pthread_create(&tid, NULL, feature_watcher_thread, wm) == 0) {
+        wm->watcher_thread = (void*)(uintptr_t)tid;
+        wm->watcher_running = true;
+        /* keep joinable - do not detach, we join on destroy */
+    }
 #else
-    CreateThread(NULL, 0, feature_watcher_thread_win, NULL, 0, NULL);
+    InterlockedExchange(&g_watcher_stop_win, 0);
+    HANDLE h = CreateThread(NULL, 0, feature_watcher_thread_win, wm, 0, NULL);
+    wm->watcher_thread_win = (void*)h;
 #endif
     PROFILE_END_VAR(timer, "window_manager:WindowManager_Create");
     return wm;
@@ -162,6 +192,26 @@ void WindowManager_Destroy(WindowManager* wm) {
     PROFILE_START(timer);
     if (!wm) { PROFILE_END_VAR(timer, "window_manager:WindowManager_Destroy"); return; }
     
+    /* signal watcher thread to stop */
+    wm->watcher_stop = true;
+#if !defined(_WIN32)
+    atomic_store(&g_watcher_stop, true);
+    if (wm->watcher_running) {
+        pthread_t tid = (pthread_t)(uintptr_t)wm->watcher_thread;
+        pthread_join(tid, NULL);
+        wm->watcher_running = false;
+    }
+    Platform_CleanupDirWatchers();
+#else
+    InterlockedExchange(&g_watcher_stop_win, 1);
+    if (wm->watcher_thread_win) {
+        HANDLE h = (HANDLE)wm->watcher_thread_win;
+        WaitForSingleObject(h, 2000);
+        CloseHandle(h);
+        wm->watcher_thread_win = NULL;
+    }
+#endif
+    
     for (int i = 0; i < wm->popup_count; i++) {
         if (wm->popups[i] && wm->popups[i]->vtable && wm->popups[i]->vtable->destroy) {
             wm->popups[i]->vtable->destroy(wm->popups[i]);
@@ -169,9 +219,6 @@ void WindowManager_Destroy(WindowManager* wm) {
     }
     
     free(wm->popups);
-    
-    #if !defined(_WIN32)
-    #endif
     
     if (g_window_manager == wm) g_window_manager = NULL;
     free(wm);

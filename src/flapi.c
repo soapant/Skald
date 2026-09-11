@@ -250,10 +250,10 @@ int fl_get_feature_list(const char** out_names, void (**out_cbs)(void), int max)
 
 int fl_get_feature_list_with_icons(const char** out_names, void (**out_cbs)(void), const char*** out_icons, int max) {
     int n = g_feature_reg_count < max ? g_feature_reg_count : max;
+    if (n > 1000) n = 1000;
     for (int i=0;i<n;i++) {
         if (out_names) out_names[i] = g_feature_regs[i].name;
         if (out_cbs) out_cbs[i] = g_feature_regs[i].cb;
-        if (out_icons) *out_icons = (const char**)g_feature_regs[i].icon;
     }
     static const char* icon_ptrs[1000];
     for (int i=0;i<n;i++) icon_ptrs[i] = g_feature_regs[i].icon[0] ? g_feature_regs[i].icon : NULL;

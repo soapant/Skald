@@ -12,20 +12,19 @@ void InitFeatureDataSystem(void) {
     }
 }
 
+static void free_feature_data(void* v) {
+    struct feature_data* fd = (struct feature_data*)v;
+    if (!fd) return;
+    free(fd->name);
+    for (int i = 0; i < fd->selection_count; i++) {
+        free((void*)fd->last_selections[i]);
+    }
+    free(fd);
+}
+
 void CleanupFeatureDataSystem(void) {
     if (g_feature_data) {
-        for (int i = 0; i < g_feature_data->size; i++) {
-            HashMapEntry* entry = g_feature_data->buckets[i];
-            while (entry) {
-                struct feature_data* fd = (struct feature_data*)entry->value;
-                if (fd) {
-                    free(fd->name);
-                    free(fd);
-                }
-                entry = entry->next;
-            }
-        }
-        HashMap_Destroy(g_feature_data);
+        HashMap_DestroyWith(g_feature_data, free_feature_data);
         g_feature_data = NULL;
     }
     g_current_feature_name = NULL;
@@ -50,8 +49,17 @@ struct feature_data* GetFeatureData(const char* name) {
 }
 
 void AddSelectionToData(char* selection, const char* feature_name, struct feature_data* data) {
-    if (!data) return;
-    data->last_selections[data->selection_count] = selection;
+    (void)feature_name;
+    if (!data || !selection) return;
+    if (data->selection_count >= 2048) {
+        fprintf(stderr, "[feature_data] selection overflow for '%s' (cap 2048), dropping oldest\n", data->name ? data->name : "(null)");
+        free((void*)data->last_selections[0]);
+        memmove(&data->last_selections[0], &data->last_selections[1], sizeof(data->last_selections[0]) * 2047);
+        data->selection_count = 2047;
+    }
+    char* dup = _strdup(selection);
+    if (!dup) return;
+    data->last_selections[data->selection_count] = dup;
     data->selection_count++;
     for (int i = 0; i < data->selection_count; i++) {
         printf("ADDED STRING %s TO SELECTIONDATA\n", data->last_selections[i]);

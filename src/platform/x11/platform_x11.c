@@ -929,6 +929,16 @@ char* Platform_RegisterDirWatcher(const char* dir_path, void (*callback)(void)) 
     return NULL;
 }
 
+void Platform_CleanupDirWatchers(void) {
+    for (int i=0;i<g_instant_count;i++) {
+        if (g_instant_watches[i].fd >= 0) {
+            close(g_instant_watches[i].fd);
+            g_instant_watches[i].fd = -1;
+        }
+    }
+    g_instant_count = 0;
+}
+
 char* Platform_WatchForCFileChanges(const char* dir_path, void (*callback)(void)) {
     PROFILE_START(timer);
     if (!dir_path) { PROFILE_END_VAR(timer, "platform_x11:Platform_WatchForCFileChanges"); return NULL; }
@@ -1180,8 +1190,15 @@ char* Platform_GetIconPath(char* desktop_or_icon) {
     if(access(pix,F_OK)==0) { strncpy(found,pix,sizeof(found)-1); icon_cache_set(bare, found); return strdup(found); }
     snprintf(pix,sizeof(pix),"/usr/share/pixmaps/%s.svg",bare);
     if(access(pix,F_OK)==0) { strncpy(found,pix,sizeof(found)-1); icon_cache_set(bare, found); return strdup(found); }
-    snprintf(found,sizeof(found),"/home/diggy/Programming/Projects/Flint/resources/Placeholder.png");
-    return found;
+    const char* home_ph = Platform_GetRealHome();
+    if (!home_ph || !home_ph[0]) home_ph = getenv("HOME");
+    if (home_ph && home_ph[0]) {
+        snprintf(pix,sizeof(pix),"%s/Programming/Projects/Flint/resources/Placeholder.png", home_ph);
+        if(access(pix,F_OK)==0) return strdup(pix);
+    }
+    snprintf(pix,sizeof(pix),"resources/Placeholder.png");
+    if(access(pix,F_OK)==0) return strdup(pix);
+    return strdup(bare[0] ? bare : "placeholder");
 }
 
 
