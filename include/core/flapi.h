@@ -69,7 +69,7 @@ bool fl_launch_file_manager_at_path(char* path,char* args);
 char* fl_get_zoxide_match(char* query);
 char* fl_run_terminal_command(char* command);
 char* fl_run_terminal_command_and_open(char* command);
-int fl_collect_running_processes(char process_list[][MaxFeatures], int max_count);
+int fl_collect_running_processes(char process_list[][128], int max_count);
 bool fl_terminate_process_by_name(const char* exe_name);
 bool fl_string_match_insensitive(char* needle,char* haystack);
 bool fl_launch_browser(char* url);
