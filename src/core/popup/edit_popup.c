@@ -74,6 +74,14 @@ static void EditPopup_OnShow(Popup* self) {
         XSetErrorHandler(old);
     }
     XFlush(dpy);
+    #else
+    HWND hwnd = WH_TO_HWND(self->handle);
+    if (hwnd && IsWindow(hwnd)) {
+        ShowWindow(hwnd, SW_SHOW);
+        UpdateWindow(hwnd);
+        SetForegroundWindow(hwnd);
+        SetFocus(hwnd);
+    }
     #endif
     PROFILE_END_VAR(timer, "window_manager:EditPopup_OnShow");
 }
@@ -96,6 +104,18 @@ static void EditPopup_OnHide(Popup* self) {
                 if (top->vtable && top->vtable->on_render) top->vtable->on_render(top);
                 XFlush(d2);
             }
+        }
+    }
+    #else
+    HWND hwnd = WH_TO_HWND(self->handle);
+    if (hwnd && IsWindow(hwnd)) ShowWindow(hwnd, SW_HIDE);
+    WindowManager* wm = WindowManager_Get();
+    if (wm) {
+        Popup* top = WindowManager_GetTopPopup(wm);
+        if (top && WH_TO_HWND(top->handle) && IsWindow(WH_TO_HWND(top->handle))) {
+            SetForegroundWindow(WH_TO_HWND(top->handle));
+            SetFocus(WH_TO_HWND(top->handle));
+            if (top->vtable && top->vtable->on_render) top->vtable->on_render(top);
         }
     }
     #endif
@@ -238,6 +258,9 @@ static void EditPopup_Destroy(Popup* self) {
     #if !defined(_WIN32)
     Display* dpy = get_display();
     if (dpy) XDestroyWindow(dpy, self->handle.xid);
+    #else
+    HWND hwnd = WH_TO_HWND(self->handle);
+    if (hwnd && IsWindow(hwnd)) DestroyWindow(hwnd);
     #endif
     free(data);
     PROFILE_END_VAR(timer, "window_manager:EditPopup_Destroy");
@@ -278,6 +301,17 @@ Popup* EditPopup_Create(WindowManager* wm, const char* initial_text,
     #if !defined(_WIN32)
     Display* dpy = wm->display;
     data->base.handle.xid = Linux_CreateEditPopupWindow(dpy, x, y, w, h);
+    #else
+    HINSTANCE hInst = GetModuleHandle(NULL);
+    HWND hwnd = CreateWindowExA(WS_EX_TOPMOST | WS_EX_TOOLWINDOW, "EditPopupClass", title ? title : "Edit", WS_POPUP, x, y, w, h, NULL, NULL, hInst, data);
+    if (!hwnd) {
+        free(data->text);
+        free(data->title);
+        free(data);
+        PROFILE_END_VAR(timer, "window_manager:EditPopup_Create");
+        return NULL;
+    }
+    data->base.handle = WH_FROM_HWND(hwnd);
     #endif
     
     PROFILE_END_VAR(timer, "window_manager:EditPopup_Create");
