@@ -64,6 +64,25 @@ const PathEntry SystemShortcuts[] = {
 #define MAX_APPS 2048
 
 ListOfFiles s_apps = {0};
+static char* s_app_icons[MAX_APPS] = {0};
+static size_t s_app_icon_count = 0;
+
+static void free_icon_cache(void) {
+    for (size_t i = 0; i < s_app_icon_count; i++) {
+        free(s_app_icons[i]);
+        s_app_icons[i] = NULL;
+    }
+    s_app_icon_count = 0;
+}
+
+static void rebuild_icon_cache(void) {
+    free_icon_cache();
+    size_t n = s_apps.count < MAX_APPS ? s_apps.count : MAX_APPS;
+    for (size_t i = 0; i < n; i++) {
+        s_app_icons[i] = fl_get_icon_path(s_apps.items[i].path);
+    }
+    s_app_icon_count = n;
+}
 
 void initialize_app_cache(void) {
 #if defined(_WIN32)
@@ -134,6 +153,7 @@ void initialize_app_cache(void) {
         }
     }
 #endif
+    rebuild_icon_cache();
 }
 void launch_app_by_name(const char* display_name) {
     for (size_t i = 0; i < s_apps.count; i++) {
@@ -206,22 +226,19 @@ void applauncher_copy_callback(const char* selection,int true_index,int type) {
 }
 
 const char* applauncher_get_icon_for_item(const char* item_name) {
-    for (size_t i=0;i<s_apps.count;i++) if (fl_string_match_insensitive(s_apps.items[i].name, item_name)) {
-        char* p = fl_get_icon_path(s_apps.items[i].path);
-        return p;
+    for (size_t i=0;i<s_apps.count && i < MAX_APPS;i++) if (fl_string_match_insensitive(s_apps.items[i].name, item_name)) {
+        return s_app_icons[i];
     }
     return NULL;
 }
 
 void applauncher_free_icon_path(const char* p) {
-    if (p) free((void*)p);
+    (void)p;
 }
 
 int applauncher_get_icon_size_for_item(const char* item_name) {
     const char* p = applauncher_get_icon_for_item(item_name);
-    int sz = fl_get_icon_size(p);
-    applauncher_free_icon_path(p);
-    return sz;
+    return fl_get_icon_size(p);
 }
 
 
@@ -269,7 +286,6 @@ void applauncher_render(Display* dpy, Window* win, PromptState* state) {
         const char* item_text = (idx>=0 && idx < lb->populated_count) ? lb->populated_cache[idx] : "";
         const char* icon_path = applauncher_get_icon_for_item(item_text);
         DrawListBoxItemText(dpy,xd,vis,cmap,font,num_color,body_color,plain_color,lb,(char*)icon_path,idx,y,text_x);
-        if (icon_path) free((void*)icon_path);
         XftColorFree(dpy,vis,cmap,&fcolrainbow);
     }
     if(!EnableShaders || ShaderPreset==0) XftColorFree(dpy,vis,cmap,&bgc);
