@@ -8,5 +8,6 @@ void FeatureLoader_Shutdown(void);
 void FeatureLoader_Reload(const char* name);
 void FeatureLoader_ReloadAll(void);
 bool FeatureLoader_LoadAllFromDir(const char* dir);
+void FeatureLoader_Unload(const char* name);
 
 #endif
