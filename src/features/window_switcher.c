@@ -281,7 +281,6 @@ static void TriggerWindowSwitcher() {
             }
     
     if (g_switcher_count == 0) {
-        printf("[SWITCHER] No windows found\n");
         return;
     }
     
@@ -298,7 +297,6 @@ static void TriggerWindowSwitcher() {
 }
 
 FLINT_FEATURE_INIT {
-    fl_register_hotkey("Alt+C", TriggerWindowSwitcher);
-
+    fl_register_hotkey("Alt+Shift+Space", TriggerWindowSwitcher);
     fl_register_feature("Window Switcher", TriggerWindowSwitcher);
 }
