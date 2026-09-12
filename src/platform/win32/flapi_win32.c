@@ -192,6 +192,17 @@ int fl_listbox_get_count(void) {
     return g_fl_list_lb ? g_fl_list_lb->populated_count : 0;
 }
 
+unsigned long fl_listbox_get_current_standard_color(void) {
+    if (!g_fl_list_lb || g_fl_list_cur == 0) return 0;
+    int idx = g_fl_list_lb->view_offset + g_fl_list_cur - 1;
+    if (idx < 0 || idx >= g_fl_list_lb->populated_count) return 0;
+    bool sel = (idx == g_fl_list_lb->selected_index);
+    if (sel) return COLOR_TEXT;
+    unsigned long ncol, bcol, pcol;
+    Platform_GetItemColors(idx, g_fl_list_lb->populated_count, &ncol, &bcol, &pcol);
+    return pcol;
+}
+
 char* fl_search_file_in_dir_platform(const char* directory, const char* search_string,char* output_path) {
     char search_path[MAX_PATH];
     snprintf(search_path, sizeof(search_path), "%s\\*", directory);
