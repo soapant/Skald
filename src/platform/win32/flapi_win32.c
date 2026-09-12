@@ -116,6 +116,7 @@ bool fl_launch_with_args_as_admin_platform(const char* path, const char* args) {
 }
 
 #include "platform/draw.h"
+#include "core/common_ui.h"
 #include "config.h"
 
 static FlListSpec g_fl_list_spec;
@@ -168,26 +169,54 @@ bool fl_listbox_next_platform(FlListItemCtx *out) {
     int y = g_fl_list_y0 + g_fl_list_cur * g_fl_list_itemH;
     bool sel = (idx == g_fl_list_lb->selected_index);
     if (RoundedCorners && CornerRadius>0) {
-        int R=6; int t=ListboxBorderThickness; if(t<1) t=1; if(t>4) t=4;
-        int bx = g_fl_list_spec.x + 1;
-        int bw = (g_fl_list_spec.w ? g_fl_list_spec.w : 650) - 2;
-        HPEN penB = CreatePen(PS_SOLID, t, COLOR_SEPERATOR);
-        HBRUSH brNull = (HBRUSH)GetStockObject(NULL_BRUSH);
-        HPEN oldPen = (HPEN)SelectObject(g_fl_list_hdc, penB);
-        HBRUSH oldBr = (HBRUSH)SelectObject(g_fl_list_hdc, brNull);
-        RoundRect(g_fl_list_hdc, bx, y+1, bx+bw, y+g_fl_list_itemH-1, R*2, R*2);
-        SelectObject(g_fl_list_hdc, oldPen); SelectObject(g_fl_list_hdc, oldBr); DeleteObject(penB);
-        HBRUSH inner = CreateSolidBrush(sel ? COLOR_SELECTED_TEXT : COLOR_BG);
-        HPEN pen2 = CreatePen(PS_SOLID, 1, sel ? COLOR_SELECTED_TEXT : COLOR_BG);
-        oldPen = (HPEN)SelectObject(g_fl_list_hdc, pen2);
-        oldBr = (HBRUSH)SelectObject(g_fl_list_hdc, inner);
-        RoundRect(g_fl_list_hdc, bx+t, y+1+t, bx+bw-t, y+g_fl_list_itemH-1-t, (R-1)*2, (R-1)*2);
-        SelectObject(g_fl_list_hdc, oldPen); SelectObject(g_fl_list_hdc, oldBr); DeleteObject(pen2); DeleteObject(inner);
+        int R=6; if (R > CornerRadius) R = CornerRadius;
+        int bx = g_fl_list_spec.x;
+        int bw = (g_fl_list_spec.w ? g_fl_list_spec.w : 650);
+        // no surrounding boundary - removed per linux version
+        RECT inner = {bx, y, bx+bw, y+g_fl_list_itemH};
+        int innerR = R;
+        if (sel) {
+            if (EnableSelectionShaders && SelectionShaderPreset != 0) {
+                Win32_DrawRoundedSelection(g_fl_list_hdc, &inner, COLOR_SELECTED_TEXT, innerR);
+            } else {
+                Win32_FillRoundedRect(g_fl_list_hdc, &inner, COLOR_SELECTED_TEXT, innerR);
+            }
+        } else {
+            if (EnableShaders && ShaderPreset != 0) {
+                int containerW = g_fl_list_spec.w ? g_fl_list_spec.w : 650;
+                int containerH = g_fl_list_spec.h ? g_fl_list_spec.h : (g_fl_list_visible * g_fl_list_itemH);
+                int offsetX = inner.left - g_fl_list_spec.x;
+                int offsetY = inner.top - g_fl_list_y0;
+                // also account for view_offset scrolling: global offset within full list? Use visible offset for cohesive across visible window
+                // Items are drawn relative to visible window, so offsetY already is position within visible container (0..containerH)
+                Win32_FillRoundedRectSlice(g_fl_list_hdc, &inner, COLOR_BG, containerW, containerH, offsetX, offsetY, innerR);
+            } else {
+                Win32_FillRoundedRect(g_fl_list_hdc, &inner, COLOR_BG, innerR);
+            }
+        }
     } else {
         RECT rc = { g_fl_list_spec.x, y, g_fl_list_spec.x + (g_fl_list_spec.w ? g_fl_list_spec.w : 900), y + g_fl_list_itemH };
-        HBRUSH br = CreateSolidBrush(sel ? COLOR_SELECTED_TEXT : COLOR_BG);
-        FillRect(g_fl_list_hdc, &rc, br);
-        DeleteObject(br);
+        if (sel) {
+            if (EnableSelectionShaders && SelectionShaderPreset != 0) {
+                Win32_DrawSelectionBackground(g_fl_list_hdc, &rc, COLOR_SELECTED_TEXT);
+            } else {
+                HBRUSH br = CreateSolidBrush(COLOR_SELECTED_TEXT);
+                FillRect(g_fl_list_hdc, &rc, br);
+                DeleteObject(br);
+            }
+        } else {
+            if (EnableShaders && ShaderPreset != 0) {
+                int containerW = g_fl_list_spec.w ? g_fl_list_spec.w : 900;
+                int containerH = g_fl_list_spec.h ? g_fl_list_spec.h : (g_fl_list_visible * g_fl_list_itemH);
+                int offsetX = rc.left - g_fl_list_spec.x;
+                int offsetY = rc.top - g_fl_list_y0;
+                Win32_DrawBackgroundSlice(g_fl_list_hdc, &rc, COLOR_BG, containerW, containerH, offsetX, offsetY);
+            } else {
+                HBRUSH br = CreateSolidBrush(COLOR_BG);
+                FillRect(g_fl_list_hdc, &rc, br);
+                DeleteObject(br);
+            }
+        }
     }
     out->idx = idx;
     out->selected = sel;
