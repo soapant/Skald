@@ -242,9 +242,17 @@ LRESULT CALLBACK ListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
                 HDC hdc = GetDC(hWnd);
                 if (hdc) {
                   if (EnableShaders && ShaderPreset != 0) {
-                    int lbW = rc.right - rc.left;
-                    int lbH = rc.bottom - rc.top;
-                    Win32_DrawBackgroundSlice(hdc, &empty, COLOR_BG, lbW, lbH, 0, itemsBottom);
+                    HWND hParent = GetParent(hWnd);
+                    RECT winRc; GetClientRect(hParent ? hParent : hWnd, &winRc);
+                    int winW = winRc.right - winRc.left;
+                    int winH = winRc.bottom - winRc.top;
+                    POINT lbOrigin = {0,0};
+                    if (hParent) { ClientToScreen(hWnd, &lbOrigin); ScreenToClient(hParent, &lbOrigin); }
+                    int globalX = lbOrigin.x + empty.left;
+                    int globalY = lbOrigin.y + empty.top;
+                    if (winW <= 0) winW = rc.right - rc.left;
+                    if (winH <= 0) winH = rc.bottom - rc.top;
+                    Win32_DrawBackgroundSlice(hdc, &empty, COLOR_BG, winW, winH, globalX, globalY);
                   } else if (ColorfullMode) {
                     if (!s_bg_colorful_brush) {
                       s_bg_colorful_brush = CreateSolidBrush(GetRainbowColor(0.02f, 0.55f, GradientBrightness));
@@ -289,7 +297,14 @@ LRESULT CALLBACK SimpleListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, 
         RECT rect;
         GetClientRect(hWnd, &rect);
         if (EnableShaders && ShaderPreset != 0) {
-          Win32_DrawBackground(hdc, &rect);
+          HWND hParent = GetParent(hWnd);
+          RECT winRc; GetClientRect(hParent ? hParent : hWnd, &winRc);
+          int winW = winRc.right - winRc.left;
+          int winH = winRc.bottom - winRc.top;
+          POINT lbOrigin = {0,0};
+          if (hParent) { ClientToScreen(hWnd, &lbOrigin); ScreenToClient(hParent, &lbOrigin); }
+          if (winW > 0 && winH > 0) Win32_DrawBackgroundSlice(hdc, &rect, COLOR_BG, winW, winH, lbOrigin.x, lbOrigin.y);
+          else Win32_DrawBackground(hdc, &rect);
         } else if (ColorfullMode) {
           if (!s_gradient_ready) {
             for (int i = 0; i < GradientItems; i++) {
@@ -493,9 +508,29 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
           if (RoundedCorners && CornerRadius > 0) {
             int R = 6;
             if (R > CornerRadius) R = CornerRadius;
-            // no surrounding boundary - linux has no boundary around items
+            int t = ListboxBorderThickness; if (t < 1) t = 1; if (t > 4) t = 4;
             RECT inner = pdis->rcItem;
-            int innerR = R;
+            inner.left += t; inner.top += t + 1; inner.right -= t; inner.bottom -= t + 1;
+            if (inner.right <= inner.left || inner.bottom <= inner.top) { inner = pdis->rcItem; t = 0; }
+            int innerR = R - 1; if (innerR < 0) innerR = 0;
+            // Pre-fill entire item rect with window background to avoid black triangles between rounded items and make background continuous
+            {
+              RECT winRc; GetClientRect(hwnd, &winRc);
+              int winW = winRc.right - winRc.left;
+              int winH = winRc.bottom - winRc.top;
+              POINT lbOrigin2 = {0,0};
+              ClientToScreen(pdis->hwndItem, &lbOrigin2);
+              ScreenToClient(hwnd, &lbOrigin2);
+              int gx = lbOrigin2.x + pdis->rcItem.left;
+              int gy = lbOrigin2.y + pdis->rcItem.top;
+              if (EnableShaders && ShaderPreset != 0 && winW > 0 && winH > 0) {
+                Win32_DrawBackgroundSlice(pdis->hDC, &pdis->rcItem, COLOR_BG, winW, winH, gx, gy);
+              } else if (!ColorfullMode) {
+                HBRUSH br = CreateSolidBrush(COLOR_BG);
+                FillRect(pdis->hDC, &pdis->rcItem, br);
+                DeleteObject(br);
+              }
+            }
             if (isSelected) {
               if (EnableSelectionShaders && SelectionShaderPreset != 0) {
                 Win32_DrawRoundedSelection(pdis->hDC, &inner, COLOR_SELECTED_TEXT, innerR);
@@ -517,12 +552,17 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
               }
             } else {
               if (EnableShaders && ShaderPreset != 0) {
-                RECT lbRc; GetClientRect(pdis->hwndItem, &lbRc);
-                int lbW = lbRc.right - lbRc.left;
-                int lbH = lbRc.bottom - lbRc.top;
-                if (lbW <= 0) lbW = pdis->rcItem.right - pdis->rcItem.left;
-                if (lbH <= 0) lbH = 400;
-                Win32_FillRoundedRectSlice(pdis->hDC, &inner, COLOR_BG, lbW, lbH, inner.left, inner.top, innerR);
+                RECT winRc; GetClientRect(hwnd, &winRc);
+                int winW = winRc.right - winRc.left;
+                int winH = winRc.bottom - winRc.top;
+                POINT lbOrigin = {0,0};
+                ClientToScreen(pdis->hwndItem, &lbOrigin);
+                ScreenToClient(hwnd, &lbOrigin);
+                int globalX = lbOrigin.x + inner.left;
+                int globalY = lbOrigin.y + inner.top;
+                if (winW <= 0) winW = pdis->rcItem.right - pdis->rcItem.left;
+                if (winH <= 0) winH = 400;
+                Win32_FillRoundedRectSlice(pdis->hDC, &inner, COLOR_BG, winW, winH, globalX, globalY, innerR);
               } else if (ColorfullMode) {
                 int color_index = pdis->itemID % 100;
                 HBRUSH hBrush = s_colorful_brushes[color_index];
@@ -545,13 +585,18 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 Win32_DrawSelectionBackground(pdis->hDC, &pdis->rcItem, COLOR_SELECTED_TEXT);
               }
             } else {
-              // cohesive background slice for unselected
-              RECT lbRc; GetClientRect(pdis->hwndItem, &lbRc);
-              int lbW = lbRc.right - lbRc.left;
-              int lbH = lbRc.bottom - lbRc.top;
-              if (lbW <= 0) lbW = pdis->rcItem.right - pdis->rcItem.left;
-              if (lbH <= 0) lbH = 400;
-              Win32_DrawBackgroundSlice(pdis->hDC, &pdis->rcItem, COLOR_BG, lbW, lbH, pdis->rcItem.left, pdis->rcItem.top);
+              // cohesive background slice for unselected - continuous with main window
+              RECT winRc; GetClientRect(hwnd, &winRc);
+              int winW = winRc.right - winRc.left;
+              int winH = winRc.bottom - winRc.top;
+              POINT lbOrigin = {0,0};
+              ClientToScreen(pdis->hwndItem, &lbOrigin);
+              ScreenToClient(hwnd, &lbOrigin);
+              int globalX = lbOrigin.x + pdis->rcItem.left;
+              int globalY = lbOrigin.y + pdis->rcItem.top;
+              if (winW <= 0) winW = pdis->rcItem.right - pdis->rcItem.left;
+              if (winH <= 0) winH = 400;
+              Win32_DrawBackgroundSlice(pdis->hDC, &pdis->rcItem, COLOR_BG, winW, winH, globalX, globalY);
             }
           } else if (ColorfullMode) {
             int color_index = pdis->itemID % 100;

@@ -170,11 +170,27 @@ bool fl_listbox_next_platform(FlListItemCtx *out) {
     bool sel = (idx == g_fl_list_lb->selected_index);
     if (RoundedCorners && CornerRadius>0) {
         int R=6; if (R > CornerRadius) R = CornerRadius;
+        int t = ListboxBorderThickness; if (t < 1) t = 1; if (t > 4) t = 4;
         int bx = g_fl_list_spec.x;
         int bw = (g_fl_list_spec.w ? g_fl_list_spec.w : 650);
-        // no surrounding boundary - removed per linux version
-        RECT inner = {bx, y, bx+bw, y+g_fl_list_itemH};
-        int innerR = R;
+        RECT inner = {bx+t, y+1+t, bx+bw-t, y+g_fl_list_itemH-1-t};
+        int innerR = R-1; if (innerR < 0) innerR = 0;
+        if (inner.right <= inner.left || inner.bottom <= inner.top) { inner = (RECT){bx, y, bx+bw, y+g_fl_list_itemH}; innerR = R; }
+        // Pre-fill full item rect with window background to avoid black gaps (continuous background)
+        {
+            RECT fullRc = {bx, y, bx+bw, y+g_fl_list_itemH};
+            if (EnableShaders && ShaderPreset != 0) {
+                HWND hWin2 = WindowFromDC(g_fl_list_hdc);
+                RECT winRc2 = {0,0, bw, g_fl_list_visible * g_fl_list_itemH};
+                int winW2 = bw, winH2 = g_fl_list_visible * g_fl_list_itemH;
+                if (hWin2) { GetClientRect(hWin2, &winRc2); winW2 = winRc2.right - winRc2.left; winH2 = winRc2.bottom - winRc2.top; if(winW2<=0) winW2=bw; if(winH2<=0) winH2=g_fl_list_visible * g_fl_list_itemH; }
+                Win32_DrawBackgroundSlice(g_fl_list_hdc, &fullRc, COLOR_BG, winW2, winH2, fullRc.left, fullRc.top);
+            } else {
+                HBRUSH br = CreateSolidBrush(COLOR_BG);
+                FillRect(g_fl_list_hdc, &fullRc, br);
+                DeleteObject(br);
+            }
+        }
         if (sel) {
             if (EnableSelectionShaders && SelectionShaderPreset != 0) {
                 Win32_DrawRoundedSelection(g_fl_list_hdc, &inner, COLOR_SELECTED_TEXT, innerR);
@@ -183,13 +199,14 @@ bool fl_listbox_next_platform(FlListItemCtx *out) {
             }
         } else {
             if (EnableShaders && ShaderPreset != 0) {
-                int containerW = g_fl_list_spec.w ? g_fl_list_spec.w : 650;
-                int containerH = g_fl_list_spec.h ? g_fl_list_spec.h : (g_fl_list_visible * g_fl_list_itemH);
-                int offsetX = inner.left - g_fl_list_spec.x;
-                int offsetY = inner.top - g_fl_list_y0;
-                // also account for view_offset scrolling: global offset within full list? Use visible offset for cohesive across visible window
-                // Items are drawn relative to visible window, so offsetY already is position within visible container (0..containerH)
-                Win32_FillRoundedRectSlice(g_fl_list_hdc, &inner, COLOR_BG, containerW, containerH, offsetX, offsetY, innerR);
+                HWND hWin = WindowFromDC(g_fl_list_hdc);
+                RECT winRc = {0,0, bw, g_fl_list_visible * g_fl_list_itemH};
+                int winW = bw, winH = g_fl_list_visible * g_fl_list_itemH;
+                if (hWin) { GetClientRect(hWin, &winRc); winW = winRc.right - winRc.left; winH = winRc.bottom - winRc.top; if (winW<=0) winW=bw; if(winH<=0) winH=g_fl_list_visible * g_fl_list_itemH; }
+                int offsetX = inner.left;
+                int offsetY = inner.top;
+                // inner is already in window coords, use window container for continuous gradient
+                Win32_FillRoundedRectSlice(g_fl_list_hdc, &inner, COLOR_BG, winW, winH, offsetX, offsetY, innerR);
             } else {
                 Win32_FillRoundedRect(g_fl_list_hdc, &inner, COLOR_BG, innerR);
             }
@@ -206,11 +223,13 @@ bool fl_listbox_next_platform(FlListItemCtx *out) {
             }
         } else {
             if (EnableShaders && ShaderPreset != 0) {
-                int containerW = g_fl_list_spec.w ? g_fl_list_spec.w : 900;
-                int containerH = g_fl_list_spec.h ? g_fl_list_spec.h : (g_fl_list_visible * g_fl_list_itemH);
-                int offsetX = rc.left - g_fl_list_spec.x;
-                int offsetY = rc.top - g_fl_list_y0;
-                Win32_DrawBackgroundSlice(g_fl_list_hdc, &rc, COLOR_BG, containerW, containerH, offsetX, offsetY);
+                HWND hWin = WindowFromDC(g_fl_list_hdc);
+                RECT winRc = {0,0,900,400};
+                int winW = 900, winH = 400;
+                if (hWin) { GetClientRect(hWin, &winRc); winW = winRc.right - winRc.left; winH = winRc.bottom - winRc.top; if(winW<=0) winW=900; if(winH<=0) winH=400; }
+                int offsetX = rc.left;
+                int offsetY = rc.top;
+                Win32_DrawBackgroundSlice(g_fl_list_hdc, &rc, COLOR_BG, winW, winH, offsetX, offsetY);
             } else {
                 HBRUSH br = CreateSolidBrush(COLOR_BG);
                 FillRect(g_fl_list_hdc, &rc, br);
