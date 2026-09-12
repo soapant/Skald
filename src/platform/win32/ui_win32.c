@@ -1,4 +1,4 @@
-#include <windows.h>
+﻿#include <windows.h>
 #include "core/context.h"
 #include "core/modal.h"
 #include "core/types.h"
@@ -43,6 +43,7 @@ char* Platform_PromptUser(const PromptSpec* spec) {
     const char* p = strchr(window_title, ' ');
     TimerEnd(FlintContext_Get()->g_timer, p ? p+1 : window_title);
   }
+  printf("[%lu] Platform_PromptUser start count=%d title=%s\n",GetTickCount(),count,window_title?window_title:"null");fflush(stdout);
   HINSTANCE hInstance = GetModuleHandle(NULL);
   FlintContext_Get()->window.selection_complete = false;
   FlintContext_Get()->window.output_buffer[0] = '\0';
@@ -110,18 +111,24 @@ char* Platform_PromptUser(const PromptSpec* spec) {
   }
   SetWindowLongPtrA(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), GWLP_USERDATA, (LONG_PTR)(lb_ptr));
   Win32_ApplyRoundedCorners(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), layout.w, layout.h);
+  printf("[%lu] CreateWindowEx done hPopup=%p layout %dx%d\n",GetTickCount(),WH_TO_HWND(FlintContext_Get()->window.hPopupWnd),layout.w,layout.h);fflush(stdout);
 
   PROFILE_END_VAR(timer, "Window Init");
 
   PROFILE_START(timer1);
 
   CreateChildControls(FlintContext_Get()->window.hPopupWnd, hCustomFont, window_list, count, &layout, lb_ptr);
+  if (!window_list && refresh_callback && has_listbox && lb_ptr) {
+      refresh_callback("", FlintContext_Get()->window.hListBox, lb_ptr);
+  }
+  printf("[%lu] CreateChildControls done lb_count=%d\n",GetTickCount(), lb_ptr?lb_ptr->populated_count:-1); fflush(stdout);
 
   PROFILE_END_VAR(timer1, "CreateChildControl");
 
   PROFILE_START(timer2);
 
   SetLayeredWindowAttributes(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), 0, WindowOpacity, LWA_ALPHA);
+  printf("[%lu] SetLayered done\n",GetTickCount());fflush(stdout);
 
   PROFILE_END_VAR(timer2, "WindowBs");
 
@@ -132,11 +139,13 @@ char* Platform_PromptUser(const PromptSpec* spec) {
   }
 
   ForceWindowFocus(FlintContext_Get()->window.hPopupWnd, FlintContext_Get()->window.hEditControl);
+  printf("[%lu] ForceWindowFocus done\n",GetTickCount());fflush(stdout);
 
 
   PROFILE_END_VAR(timer3, "Focus");
 
   printf("[DEBUG-UI] Entering local message modal loop...\n");
+  printf("[%lu] Entering modal loop\n",GetTickCount());fflush(stdout);
   MSG msg;
   int loop_counter = 0;
   UI_PreparePopupPump();
@@ -646,3 +655,5 @@ void Platform_ShutdownUI() {
     GdiplusShutdown(g_gdiplusToken);
   }
 }
+
+

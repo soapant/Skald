@@ -1,4 +1,4 @@
-#include "core/flapi.h"
+﻿#include "core/flapi.h"
 #if defined(_WIN32)
 #include <windows.h>
 #endif
@@ -66,24 +66,42 @@ const PathEntry SystemShortcuts[] = {
 #define MAX_APPS 2048
 
 ListOfFiles s_apps = {0};
+#if defined(_WIN32)
+static CRITICAL_SECTION g_apps_cs;
+static bool g_apps_cs_inited = false;
+static void apps_lock_init(void) { if (!g_apps_cs_inited) { InitializeCriticalSection(&g_apps_cs); g_apps_cs_inited = true; } }
+#define APPS_LOCK() do { apps_lock_init(); EnterCriticalSection(&g_apps_cs); } while(0)
+#define APPS_UNLOCK() LeaveCriticalSection(&g_apps_cs)
+#else
+#define APPS_LOCK() do {} while(0)
+#define APPS_UNLOCK() do {} while(0)
+#endif
 static char* s_app_icons[MAX_APPS] = {0};
 static size_t s_app_icon_count = 0;
 
 static void free_icon_cache(void) {
+    APPS_LOCK();
     for (size_t i = 0; i < s_app_icon_count; i++) {
         free(s_app_icons[i]);
         s_app_icons[i] = NULL;
     }
     s_app_icon_count = 0;
+    APPS_UNLOCK();
 }
 
 static void rebuild_icon_cache(void) {
-    free_icon_cache();
-    size_t n = s_apps.count < MAX_APPS ? s_apps.count : MAX_APPS;
-    for (size_t i = 0; i < n; i++) {
-        s_app_icons[i] = fl_get_icon_path(s_apps.items[i].path);
+    size_t n; APPS_LOCK(); n = s_apps.count < MAX_APPS ? s_apps.count : MAX_APPS; APPS_UNLOCK();
+    char* new_icons[MAX_APPS]={0};
+    for (size_t i=0;i<n;i++) {
+        const char* p=NULL; APPS_LOCK(); if(i < s_apps.count) p=s_apps.items[i].path; APPS_UNLOCK();
+        if(p) new_icons[i]=fl_get_icon_path((char*)p);
     }
-    s_app_icon_count = n;
+    APPS_LOCK();
+    for(size_t i=0;i<s_app_icon_count;i++){ free(s_app_icons[i]); s_app_icons[i]=NULL; }
+    s_app_icon_count=0;
+    for(size_t i=0;i<n;i++) s_app_icons[i]=new_icons[i];
+    s_app_icon_count=n;
+    APPS_UNLOCK();
 }
 
 void initialize_app_cache(void) {
@@ -155,36 +173,40 @@ void initialize_app_cache(void) {
         }
     }
 #endif
-#if defined(_WIN32)
-    static CRITICAL_SECTION g_apps_cs;
-    static bool g_apps_cs_inited = false;
-    if (!g_apps_cs_inited) { InitializeCriticalSection(&g_apps_cs); g_apps_cs_inited = true; }
-    EnterCriticalSection(&g_apps_cs);
+    APPS_LOCK();
     if (s_apps.items) free(s_apps.items);
     s_apps = tmp;
-    LeaveCriticalSection(&g_apps_cs);
-#else
-    if (s_apps.items) free(s_apps.items);
-    s_apps = tmp;
-#endif
+    APPS_UNLOCK();
     rebuild_icon_cache();
 }
 void launch_app_by_name(const char* display_name) {
+    char path_copy[512] = {0};
+    bool found = false;
+    APPS_LOCK();
     for (size_t i = 0; i < s_apps.count; i++) {
         if (fl_string_match_insensitive(display_name,s_apps.items[i].name)) {
-            fl_launch_with_args(s_apps.items[i].path, NULL);
-            return;
+            strncpy(path_copy, s_apps.items[i].path, sizeof(path_copy)-1);
+            found = true;
+            break;
         }
     }
+    APPS_UNLOCK();
+    if (found) fl_launch_with_args(path_copy, NULL);
 }
 
 void launch_app_as_admin(const char* display_name) {
+    char path_copy[512] = {0};
+    bool found = false;
+    APPS_LOCK();
     for (size_t i = 0; i < s_apps.count; i++) {
         if (fl_string_match_insensitive(s_apps.items[i].name, display_name)) {
-            fl_launch_with_args_as_admin(s_apps.items[i].path, NULL);
-            return;
+            strncpy(path_copy, s_apps.items[i].path, sizeof(path_copy)-1);
+            found = true;
+            break;
         }
     }
+    APPS_UNLOCK();
+    if (found) fl_launch_with_args_as_admin(path_copy, NULL);
 }
 
 bool applauncher_enter_callback(const char* selection, ListBoxInfo* lb) {
@@ -198,21 +220,27 @@ bool applauncher_ctrlenter_callback(const char* selection, ListBoxInfo* lb) {
 }
 
 void applauncher_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
-    if (s_apps.count == 0) {
+    size_t cnt = 0;
+    APPS_LOCK(); cnt = s_apps.count; APPS_UNLOCK();
+    if (cnt == 0) {
         PopulateListBox(lb, FlintContext_Get()->window.hListBox, filter, NULL, 0, NULL);
         return;
     }
-    if (s_apps.count > 2048) {
-        const char** names = (const char**)malloc(s_apps.count * sizeof(char*));
+    if (cnt > 2048) {
+        const char** names = (const char**)malloc(cnt * sizeof(char*));
         if (!names) return;
-        for (size_t i = 0; i < s_apps.count; i++) names[i] = s_apps.items[i].name;
-        PopulateListBox(lb, FlintContext_Get()->window.hListBox, filter, names, (int)s_apps.count, NULL);
+        APPS_LOCK();
+        for (size_t i = 0; i < cnt && i < s_apps.count; i++) names[i] = s_apps.items[i].name;
+        APPS_UNLOCK();
+        PopulateListBox(lb, FlintContext_Get()->window.hListBox, filter, names, (int)cnt, NULL);
         free(names);
         return;
     }
     const char* names[2048];
-    for (size_t i = 0; i < s_apps.count; i++) names[i] = s_apps.items[i].name;
-    PopulateListBox(lb, FlintContext_Get()->window.hListBox, filter, names, (int)s_apps.count, NULL);
+    APPS_LOCK();
+    for (size_t i = 0; i < cnt && i < s_apps.count; i++) names[i] = s_apps.items[i].name;
+    APPS_UNLOCK();
+    PopulateListBox(lb, FlintContext_Get()->window.hListBox, filter, names, (int)cnt, NULL);
 }
 void applauncher_copy_callback(const char* selection,int true_index,int type) {
     char* text = (char*)selection;
@@ -230,9 +258,11 @@ void applauncher_copy_callback(const char* selection,int true_index,int type) {
         break;
       }
       case 1: {
-        if (true_index >= 0 && (size_t)true_index < s_apps.count) {
-            text = s_apps.items[true_index].path;
-        }
+        char pc[512]={0}; bool ok=false;
+        APPS_LOCK();
+        if (true_index >= 0 && (size_t)true_index < s_apps.count) { strncpy(pc, s_apps.items[true_index].path, sizeof(pc)-1); ok=true; }
+        APPS_UNLOCK();
+        if (ok) { char* dup=_strdup(pc); if(dup){ fl_copy_to_clipboard(dup); free(dup); return; } }
         break;
       }
     }
@@ -240,10 +270,13 @@ void applauncher_copy_callback(const char* selection,int true_index,int type) {
 }
 
 const char* applauncher_get_icon_for_item(const char* item_name) {
+    const char* ret=NULL;
+    APPS_LOCK();
     for (size_t i=0;i<s_apps.count && i < MAX_APPS;i++) if (fl_string_match_insensitive(s_apps.items[i].name, item_name)) {
-        return s_app_icons[i];
+        ret = s_app_icons[i]; break;
     }
-    return NULL;
+    APPS_UNLOCK();
+    return ret;
 }
 
 void applauncher_free_icon_path(const char* p) {
@@ -323,11 +356,13 @@ void applauncher_render(HDC hdc, const char* text, RECT* rect, BOOL is_selected,
 #endif
 
 void TriggerAppLauncher(void) {
+    printf("[Trigger] start count=%zu\n", s_apps.count); fflush(stdout);
     for (size_t i = 0; i < ARRAY_LEN(ListOfProgramPaths); i++) {
         fl_on_dir_changed(ListOfProgramPaths[i], initialize_app_cache);
     }
-
-    PROMPT(.title = "🚀 AppLauncher", .items = NULL, .count = (int)s_apps.count,
+    int _cnt=0; APPS_LOCK(); _cnt=(int)s_apps.count; APPS_UNLOCK();
+    printf("[Trigger] PROMPT cnt=%d\n", _cnt); fflush(stdout);
+    PROMPT(.title = "🚀 AppLauncher", .items = NULL, .count = _cnt,
            .height = 920, .width = 650, .item_height = 32,
            .refresh = applauncher_refresh_callback,
            .enter = applauncher_enter_callback,
@@ -356,3 +391,11 @@ FLINT_FEATURE_INIT {
     fl_register_feature("App Launcher", TriggerAppLauncher);
 }
 #endif
+
+
+
+
+
+
+
+

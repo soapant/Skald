@@ -393,20 +393,30 @@ void CreateChildControls(WindowHandle hwndParent, HFONT hFont, const char* list[
 
     if (lb) {
         ListBoxInfo_Init(lb);
-        lb->populated_count = count;
-        lb->total_matches = count;
-        lb->last_items = list;
-        lb->last_item_count = count;
-        lb->selected_index = -1;
-        for (int i = 0; i < count && i < MAX_ITEMS; i++) {
-            if (list[i]) {
-                strncpy(lb->populated_cache[i], list[i], 511);
-                lb->populated_cache[i][511] = '\0';
-                lb->populated_cache[i][strcspn(lb->populated_cache[i], "\r\n")] = '\0';
+        if (list) {
+            lb->populated_count = count;
+            lb->total_matches = count;
+            lb->last_items = list;
+            lb->last_item_count = count;
+            lb->selected_index = -1;
+            for (int i = 0; i < count && i < MAX_ITEMS; i++) {
+                if (list[i]) {
+                    strncpy(lb->populated_cache[i], list[i], 511);
+                    lb->populated_cache[i][511] = '\0';
+                    lb->populated_cache[i][strcspn(lb->populated_cache[i], "\r\n")] = '\0';
+                } else {
+                    lb->populated_cache[i][0] = '\0';
+                }
             }
+        } else {
+            lb->populated_count = 0;
+            lb->total_matches = 0;
+            lb->last_items = NULL;
+            lb->last_item_count = 0;
+            lb->selected_index = -1;
         }
     }
-    SendMessageA(WH_TO_HWND(FlintContext_Get()->window.hListBox), LB_SETCOUNT, count, 0);
+    SendMessageA(WH_TO_HWND(FlintContext_Get()->window.hListBox), LB_SETCOUNT, (lb ? lb->populated_count : count), 0);
 
     UpdateWindow(WH_TO_HWND(FlintContext_Get()->window.hListBox));
 
