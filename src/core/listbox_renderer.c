@@ -35,6 +35,7 @@ void Core_DrawListBox(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis
         int y = y0 + i * itemH;
         bool sel = (idx == lb->selected_index);
         Platform_DrawListBackground(state, dpy, xd, vis, cmap, y, itemH, sel);
+        //temporary
         const char *icon_path = NULL;
         Platform_DrawListItem(state, dpy, xd, vis, cmap, font, lb, idx, y, 45, icon_path);
     }
