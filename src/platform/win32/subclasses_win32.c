@@ -606,6 +606,14 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
           if (!s_bg_brush) s_bg_brush = CreateSolidBrush(COLOR_BG);
             FillRect(hdc, &ps.rcPaint, s_bg_brush);
         }
+        {
+            HBRUSH hSep = CreateSolidBrush(COLOR_SEPERATOR);
+            RECT r1 = {0, 60, rect.right, 65};
+            RECT r2 = {0, rect.bottom - 60, rect.right, rect.bottom - 55};
+            FillRect(hdc, &r1, hSep);
+            FillRect(hdc, &r2, hSep);
+            DeleteObject(hSep);
+        }
       if (g_vim_mode != NULL) {
         wchar_t wmode[256];
           MultiByteToWideChar(CP_UTF8, 0, g_vim_mode, -1, wmode, 256);
@@ -626,10 +634,10 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
           GetTextExtentPoint32W(hdc, wmode, (int)wcslen(wmode), &sz);
           
           RECT modeRect;
-          modeRect.left = 15;
-          modeRect.top = 10;
-          modeRect.right = modeRect.left + sz.cx + 10;
-          modeRect.bottom = modeRect.top + sz.cy + 10;
+          modeRect.left = rect.right - sz.cx - 20;
+          modeRect.top = rect.bottom - sz.cy - 10;
+          modeRect.right = rect.right - 10;
+          modeRect.bottom = modeRect.top + sz.cy;
           
           DrawTextW(hdc, wmode, -1, &modeRect, DT_LEFT);
           
@@ -646,10 +654,10 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
           GetTextExtentPoint32W(hdc, wtitle, (int)wcslen(wtitle), &sz);
           
           RECT titleRect;
-          titleRect.left = rect.right - sz.cx - 20;
-          titleRect.top = 10;
-          titleRect.right = rect.right - 10;
-          titleRect.bottom = rect.top + sz.cy + 15;
+          titleRect.left = 15;
+          titleRect.top = rect.bottom - sz.cy - 10;
+          titleRect.right = titleRect.left + sz.cx + 10;
+          titleRect.bottom = titleRect.top + sz.cy;
           
           COLORREF titleColor;
           if ((lb ? lb->populated_count : 0) < 25) {
