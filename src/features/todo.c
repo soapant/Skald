@@ -372,7 +372,6 @@ void todo_copy_callback(const char* selection,int true_index,int type) {
 
 #if !defined(_WIN32)
 void todo_render_callback(Display *dpy, Window *win, PromptState *state) {
-    if (!state->has_listbox) return;
     ListBoxInfo *lb = &state->listbox;
     int screen = DefaultScreen(dpy);
     
@@ -496,9 +495,6 @@ void todo_render_callback(Display *dpy, Window *win, PromptState *state) {
 #endif
 #if defined(_WIN32)
 void todo_render_callback_impl(HDC hdc, const char* text, RECT* rect, BOOL is_selected, int itemIndex) {
-    if (!text || !rect) return;
-
-    UI_RedrawBackground(hdc,rect,is_selected);
     char main_text[512] = {0};
     char tags[10][64];
     int tag_count = 0;
