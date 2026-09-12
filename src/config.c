@@ -12,18 +12,18 @@ bool DoTimeDebugs = false;
 bool RoundedCorners = true;
 int CornerRadius = 14;
 int ListboxBorderThickness = 2;
-bool EnableShaders = true;
+bool EnableShaders = false;
 int ShaderPreset = 1;
 bool EnableSelectionShaders = true;
 int SelectionShaderPreset = 3;
-float ShaderIntensity = 0.40f;
+float ShaderIntensity = 0.20f;
 float ShaderSmoothness = 100.0f;
 
 char* EditPopUpPos = "middle";
 int EditPopUpWidthMin = 400;
 int PageUpDownLen = 6;
 bool ColorfullMode = false;
-float WindowOpacity = 235.0;
+float WindowOpacity = 35.0;
 
 const char* UsedFont =  "0xProto Nerd Font";
 const int FontSize = 24;
