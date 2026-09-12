@@ -13,11 +13,11 @@ bool RoundedCorners = true;
 int CornerRadius = 14;
 int ListboxBorderThickness = 2;
 bool EnableShaders = true;
-int ShaderPreset = 3;
+int ShaderPreset = 1;
 bool EnableSelectionShaders = true;
 int SelectionShaderPreset = 3;
-float ShaderIntensity = 0.40f;
-float ShaderSmoothness = 10.0f;
+float ShaderIntensity = 0.30f;
+float ShaderSmoothness = 10000.0f;
 
 char* EditPopUpPos = "middle";
 int EditPopUpWidthMin = 400;

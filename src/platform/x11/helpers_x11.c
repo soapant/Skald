@@ -827,8 +827,10 @@ static Pixmap Linux_CreateBackgroundPixmap(Display* dpy, Window win, int w, int 
     unsigned int r = (base >> 16) & 0xFF, g = (base >> 8) & 0xFF, b = base & 0xFF;
     unsigned long pixel = hasAlpha ? (baseAlpha8 << 24) | (r << 16) | (g << 8) | b : (r << 16) | (g << 8) | b;
     float _smooth = ShaderSmoothness; if (_smooth < 0.1f) _smooth = 0.1f; if (_smooth > 10.0f) _smooth = 10.0f;
-    int _steps = (int)(_smooth * 20.0f); if (_steps < 2) _steps = 2; if (_steps > 200) _steps = 200;
-    #define _QT(t) (floorf((t) * _steps) / (float)_steps)
+    float _gamma = 2.0f - _smooth * 0.14f; if (_gamma < 0.45f) _gamma = 0.45f; if (_gamma > 2.2f) _gamma = 2.2f;
+    static const int _bayer4x4[16] = {0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5};
+    #define _DITHER(x,y) (((_bayer4x4[((y)&3)*4 + ((x)&3)] / 16.0f) - 0.5f) * 1.2f)
+    #define _APPLY_DITHER(cr,cg,cb,xx,yy) do { float _d = _DITHER(xx,yy); int _nr = (int)(cr + _d); int _ng = (int)(cg + _d); int _nb = (int)(cb + _d); if (_nr < 0) _nr = 0; if (_nr > 255) _nr = 255; if (_ng < 0) _ng = 0; if (_ng > 255) _ng = 255; if (_nb < 0) _nb = 0; if (_nb > 255) _nb = 255; cr = (unsigned int)_nr; cg = (unsigned int)_ng; cb = (unsigned int)_nb; } while(0)
 
     if (!EnableShaders || ShaderPreset == 0) {
         unsigned long fill = pixel;
@@ -850,36 +852,46 @@ static Pixmap Linux_CreateBackgroundPixmap(Display* dpy, Window win, int w, int 
     } else if (ShaderPreset == 1) {
         unsigned long light = DeriveLighter(base, 1.0f);
         for (int y = 0; y < h; y++) {
-            float t = _QT(h > 1 ? (float)y / (float)(h - 1) : 0);
+            float t = h > 1 ? (float)y / (float)(h - 1) : 0;
+            t = powf(t, _gamma);
             unsigned long col = LerpHex(base, light, t * 0.9f);
-            unsigned int cr = (col >> 16) & 0xFF, cg = (col >> 8) & 0xFF, cb = col & 0xFF;
+            unsigned int cr0 = (col >> 16) & 0xFF, cg0 = (col >> 8) & 0xFF, cb0 = col & 0xFF;
             row = (uint32_t*)(img->data + y * img->bytes_per_line);
             for (int x = 0; x < w; x++) {
+                unsigned int cr = cr0, cg = cg0, cb = cb0;
+                _APPLY_DITHER(cr,cg,cb,x,y);
                 unsigned int a = CornerAlpha(x, y, w, h, R, baseAlpha8);
                 row[x] = a ? (a << 24) | (cr << 16) | (cg << 8) | cb : 0;
             }
         }
     } else if (ShaderPreset == 2) {
         unsigned long light = DeriveLighter(base, 1.0f);
+        float denom = (float)(w + h); if (denom < 1) denom = 1;
         for (int y = 0; y < h; y++) {
             row = (uint32_t*)(img->data + y * img->bytes_per_line);
             for (int x = 0; x < w; x++) {
-                float t = _QT((float)(x + y) / (float)(w + h));
+                float t = (float)(x + y) / denom;
+                t = powf(t, _gamma);
                 unsigned long col = LerpHex(base, light, t * 0.9f);
                 unsigned int cr = (col >> 16) & 0xFF, cg = (col >> 8) & 0xFF, cb = col & 0xFF;
+                _APPLY_DITHER(cr,cg,cb,x,y);
                 unsigned int a = CornerAlpha(x, y, w, h, R, baseAlpha8);
                 row[x] = a ? (a << 24) | (cr << 16) | (cg << 8) | cb : 0;
             }
         }
     } else if (ShaderPreset == 3) {
-      //temrporary same thing as 2 as radial was beign fucky
         unsigned long light = DeriveLighter(base, 1.0f);
+        float cx = w * 0.5f, cy = h * 0.35f;
+        float maxDist = sqrtf(cx*cx + cy*cy); if (maxDist < 1) maxDist = 1;
         for (int y = 0; y < h; y++) {
             row = (uint32_t*)(img->data + y * img->bytes_per_line);
             for (int x = 0; x < w; x++) {
-                float t = _QT((float)(x + y) / (float)(w + h));
-                unsigned long col = LerpHex(base, light, t * 0.9f);
+                float dx = x - cx, dy = y - cy;
+                float t = sqrtf(dx*dx + dy*dy) / maxDist; if (t > 1) t = 1;
+                t = powf(t, _gamma);
+                unsigned long col = LerpHex(light, base, t * 0.85f);
                 unsigned int cr = (col >> 16) & 0xFF, cg = (col >> 8) & 0xFF, cb = col & 0xFF;
+                _APPLY_DITHER(cr,cg,cb,x,y);
                 unsigned int a = CornerAlpha(x, y, w, h, R, baseAlpha8);
                 row[x] = a ? (a << 24) | (cr << 16) | (cg << 8) | cb : 0;
             }
@@ -887,10 +899,11 @@ static Pixmap Linux_CreateBackgroundPixmap(Display* dpy, Window win, int w, int 
     } else if (ShaderPreset == 4) {
         unsigned long light = DeriveLighter(base, 1.0f);
         for (int y = 0; y < h; y++) {
-            float tBase = _QT(h > 1 ? (float)y / (float)(h - 1) : 0);
+            float tBase = h > 1 ? (float)y / (float)(h - 1) : 0;
+            tBase = powf(tBase, _gamma);
             row = (uint32_t*)(img->data + y * img->bytes_per_line);
             for (int x = 0; x < w; x++) {
-                float t = _QT(tBase * 0.9f);
+                float t = tBase * 0.9f;
                 unsigned long col = LerpHex(base, light, t);
                 unsigned int n = HashNoise(x, y);
                 int delta = (int)(n & 0x1F) - 16;
@@ -898,6 +911,8 @@ static Pixmap Linux_CreateBackgroundPixmap(Display* dpy, Window win, int w, int 
                 int nr = (int)((col >> 16) & 0xFF) + delta;
                 int ng = (int)((col >> 8) & 0xFF) + delta;
                 int nb = (int)(col & 0xFF) + delta;
+                float d = _DITHER(x,y);
+                nr = (int)(nr + d); ng = (int)(ng + d); nb = (int)(nb + d);
                 if (nr < 0) nr = 0; if (nr > 255) nr = 255;
                 if (ng < 0) ng = 0; if (ng > 255) ng = 255;
                 if (nb < 0) nb = 0; if (nb > 255) nb = 255;
@@ -915,7 +930,8 @@ static Pixmap Linux_CreateBackgroundPixmap(Display* dpy, Window win, int w, int 
         }
     }
 
-    #undef _QT
+    #undef _DITHER
+    #undef _APPLY_DITHER
     GC gc = XCreateGC(dpy, pm, 0, NULL);
     XPutImage(dpy, pm, gc, img, 0, 0, 0, 0, w, h);
     XFreeGC(dpy, gc);
@@ -986,12 +1002,99 @@ void Linux_DrawBackgroundToDrawable(Display* dpy, Drawable drw, int w, int h) {
     if (!img->data) { XDestroyImage(img); return; }
     unsigned int r = (base >> 16) & 0xFF, g = (base >> 8) & 0xFF, b = base & 0xFF;
     unsigned long fill = hasAlpha ? (baseAlpha8 << 24) | (r << 16) | (g << 8) | b : (r << 16) | (g << 8) | b;
+    float _smooth2 = ShaderSmoothness; if (_smooth2 < 0.1f) _smooth2 = 0.1f; if (_smooth2 > 10.0f) _smooth2 = 10.0f;
+    float _gamma2 = 2.0f - _smooth2 * 0.14f; if (_gamma2 < 0.45f) _gamma2 = 0.45f; if (_gamma2 > 2.2f) _gamma2 = 2.2f;
+    static const int _bayer2[16] = {0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5};
+    #define _DITHER2(x,y) (((_bayer2[((y)&3)*4 + ((x)&3)] / 16.0f) - 0.5f) * 1.2f)
     GC gc = XCreateGC(dpy, drw, 0, NULL);
-    if (!rded) {
-        uint32_t *row = (uint32_t*)img->data;
+    if (!EnableShaders || ShaderPreset == 0) {
+        if (!rded) {
+            uint32_t *row = (uint32_t*)img->data;
+            for (int y = 0; y < h; y++) {
+                for (int x = 0; x < w; x++) row[x] = fill;
+                row = (uint32_t*)((char*)row + img->bytes_per_line);
+            }
+        } else {
+            for (int y = 0; y < h; y++) {
+                uint32_t *row = (uint32_t*)(img->data + y * img->bytes_per_line);
+                for (int x = 0; x < w; x++) {
+                    unsigned int a = CornerAlpha(x, y, w, h, R, baseAlpha8);
+                    row[x] = a ? (a << 24) | (r << 16) | (g << 8) | b : 0;
+                }
+            }
+        }
+    } else if (ShaderPreset == 1) {
+        unsigned long light = DeriveLighter(base, 1.0f);
         for (int y = 0; y < h; y++) {
-            for (int x = 0; x < w; x++) row[x] = fill;
-            row = (uint32_t*)((char*)row + img->bytes_per_line);
+            float t = h > 1 ? (float)y / (float)(h - 1) : 0;
+            t = powf(t, _gamma2);
+            unsigned long col = LerpHex(base, light, t * 0.9f);
+            unsigned int cr0 = (col >> 16) & 0xFF, cg0 = (col >> 8) & 0xFF, cb0 = col & 0xFF;
+            uint32_t *row = (uint32_t*)(img->data + y * img->bytes_per_line);
+            for (int x = 0; x < w; x++) {
+                unsigned int cr = cr0, cg = cg0, cb = cb0;
+                float d = _DITHER2(x,y); int nr=(int)(cr+d); int ng=(int)(cg+d); int nb=(int)(cb+d);
+                if(nr<0)nr=0; if(nr>255)nr=255; if(ng<0)ng=0; if(ng>255)ng=255; if(nb<0)nb=0; if(nb>255)nb=255;
+                cr=nr; cg=ng; cb=nb;
+                unsigned int a = CornerAlpha(x, y, w, h, R, baseAlpha8);
+                row[x] = a ? (a << 24) | (cr << 16) | (cg << 8) | cb : 0;
+            }
+        }
+    } else if (ShaderPreset == 2) {
+        unsigned long light = DeriveLighter(base, 1.0f);
+        float denom = (float)(w + h); if (denom < 1) denom = 1;
+        for (int y = 0; y < h; y++) {
+            uint32_t *row = (uint32_t*)(img->data + y * img->bytes_per_line);
+            for (int x = 0; x < w; x++) {
+                float t = (float)(x + y) / denom;
+                t = powf(t, _gamma2);
+                unsigned long col = LerpHex(base, light, t * 0.9f);
+                unsigned int cr = (col >> 16) & 0xFF, cg = (col >> 8) & 0xFF, cb = col & 0xFF;
+                float d = _DITHER2(x,y); int nr=(int)(cr+d); int ng=(int)(cg+d); int nb=(int)(cb+d);
+                if(nr<0)nr=0; if(nr>255)nr=255; if(ng<0)ng=0; if(ng>255)ng=255; if(nb<0)nb=0; if(nb>255)nb=255;
+                cr=nr; cg=ng; cb=nb;
+                unsigned int a = CornerAlpha(x, y, w, h, R, baseAlpha8);
+                row[x] = a ? (a << 24) | (cr << 16) | (cg << 8) | cb : 0;
+            }
+        }
+    } else if (ShaderPreset == 3) {
+        unsigned long light = DeriveLighter(base, 1.0f);
+        float cx = w * 0.5f, cy = h * 0.35f; float maxDist = sqrtf(cx*cx + cy*cy); if (maxDist < 1) maxDist = 1;
+        for (int y = 0; y < h; y++) {
+            uint32_t *row = (uint32_t*)(img->data + y * img->bytes_per_line);
+            for (int x = 0; x < w; x++) {
+                float dx = x - cx, dy = y - cy;
+                float t = sqrtf(dx*dx + dy*dy) / maxDist; if (t > 1) t = 1;
+                t = powf(t, _gamma2);
+                unsigned long col = LerpHex(light, base, t * 0.85f);
+                unsigned int cr = (col >> 16) & 0xFF, cg = (col >> 8) & 0xFF, cb = col & 0xFF;
+                float d = _DITHER2(x,y); int nr=(int)(cr+d); int ng=(int)(cg+d); int nb=(int)(cb+d);
+                if(nr<0)nr=0; if(nr>255)nr=255; if(ng<0)ng=0; if(ng>255)ng=255; if(nb<0)nb=0; if(nb>255)nb=255;
+                cr=nr; cg=ng; cb=nb;
+                unsigned int a = CornerAlpha(x, y, w, h, R, baseAlpha8);
+                row[x] = a ? (a << 24) | (cr << 16) | (cg << 8) | cb : 0;
+            }
+        }
+    } else if (ShaderPreset == 4) {
+        unsigned long light = DeriveLighter(base, 1.0f);
+        for (int y = 0; y < h; y++) {
+            float tBase = h > 1 ? (float)y / (float)(h - 1) : 0;
+            tBase = powf(tBase, _gamma2);
+            uint32_t *row = (uint32_t*)(img->data + y * img->bytes_per_line);
+            for (int x = 0; x < w; x++) {
+                float t = tBase * 0.9f;
+                unsigned long col = LerpHex(base, light, t);
+                unsigned int n = HashNoise(x, y);
+                int delta = (int)(n & 0x1F) - 16;
+                delta = (int)(delta * ShaderIntensity * 0.5f);
+                int nr = (int)((col >> 16) & 0xFF) + delta;
+                int ng = (int)((col >> 8) & 0xFF) + delta;
+                int nb = (int)(col & 0xFF) + delta;
+                float d = _DITHER2(x,y); nr=(int)(nr+d); ng=(int)(ng+d); nb=(int)(nb+d);
+                if(nr<0)nr=0; if(nr>255)nr=255; if(ng<0)ng=0; if(ng>255)ng=255; if(nb<0)nb=0; if(nb>255)nb=255;
+                unsigned int a = CornerAlpha(x, y, w, h, R, baseAlpha8);
+                row[x] = a ? ((a << 24) | ((unsigned int)nr << 16) | ((unsigned int)ng << 8) | (unsigned int)nb) : 0;
+            }
         }
     } else {
         for (int y = 0; y < h; y++) {
@@ -1005,6 +1108,7 @@ void Linux_DrawBackgroundToDrawable(Display* dpy, Drawable drw, int w, int h) {
     XPutImage(dpy, drw, gc, img, 0, 0, 0, 0, w, h);
     XFreeGC(dpy, gc);
     XDestroyImage(img);
+    #undef _DITHER2
 }
 
 void Linux_DrawBackground(Display* dpy, Window win, int w, int h) {
