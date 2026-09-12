@@ -15,17 +15,10 @@
 #include "core/timer.h"
 #include "core/common_ui.h"
 
-#if defined(_WIN32)
-#include <shlwapi.h>
-#endif
 
 bool IsWindowBlacklisted(const char* window_title, const char* blacklist[], int count) {
     for (int i = 0; i < count; i++) {
-#if defined(_WIN32)
-        if (StrStrIA(window_title, blacklist[i]) != NULL) {
-#else
-        if (strstr(window_title, blacklist[i]) != NULL) {
-#endif
+        if (Platform_StringContainsCaseInsensitive(window_title, blacklist[i])) {
             return true;
         }
     }

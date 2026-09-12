@@ -6,7 +6,7 @@
 #include "core/window_manager.h"
 #include "core/context.h"
 
-static const char* g_mode_names[] = { "NORMAL", "INSERT", "VISUAL" };
+static const char* g_mode_names[] = { "Normal", "Insert", "Visual" };
 int last_index = 0;
 char* selection_feature = "";
 
@@ -34,10 +34,10 @@ void SetModeWithListBox(EditorMode mode, ListBoxInfo* lb) {
     }
 
     if (in_main && IsPopupActive(WH_NULL) && lb) {
-        if (strcmp(g_vim_mode, "INSERT") == 0) {
+        if (strcmp(g_vim_mode, "Insert") == 0) {
             if (RememberLastIndex) { last_index = lb->selected_index; if (ctx) ctx->window.last_index = last_index; }
             UI_SetSelection(lb, FlintContext_Get()->window.hListBox, -1);
-        } else if (strcmp(g_vim_mode, "NORMAL") == 0) {
+        } else if (strcmp(g_vim_mode, "Normal") == 0) {
             if (last_index < lb->total_matches && RememberLastIndex) {
                 UI_NavigateTo(lb, FlintContext_Get()->window.hListBox, last_index);
             } else {

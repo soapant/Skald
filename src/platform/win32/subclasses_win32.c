@@ -622,7 +622,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 FlintContext_Get()->prompt_callbacks.render(state);
             }
         }
-      if (g_vim_mode != NULL) {
+      if (g_vim_mode != NULL && VimModeText) {
         wchar_t wmode[256];
           MultiByteToWideChar(CP_UTF8, 0, g_vim_mode, -1, wmode, 256);
           
@@ -651,7 +651,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
           
           SelectObject(hdc, hOldFont);
       }
-      if (FlintContext_Get()->window.title != NULL && strlen(FlintContext_Get()->window.title) > 0) {
+      if (FlintContext_Get()->window.title != NULL && strlen(FlintContext_Get()->window.title) > 0 && WindowTitleText) {
         wchar_t wtitle[256];
           MultiByteToWideChar(CP_UTF8, 0, FlintContext_Get()->window.title, -1, wtitle, 256);
           
@@ -1084,7 +1084,7 @@ LRESULT CALLBACK EditPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
         if (EnableShaders && ShaderPreset != 0) Win32_DrawBackground(hdc, &rect);
         else { HBRUSH hBgBrush = CreateSolidBrush(COLOR_BG); FillRect(hdc, &rect, hBgBrush); DeleteObject(hBgBrush); }
         
-        if (g_vim_mode != NULL) {
+        if (g_vim_mode != NULL && VimModeText) {
           wchar_t wmode[256];
             MultiByteToWideChar(CP_UTF8, 0, g_vim_mode, -1, wmode, 256);
             
