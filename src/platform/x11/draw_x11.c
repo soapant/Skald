@@ -30,6 +30,12 @@ static Colormap g_draw_cmap = 0;
 void Platform_SetDrawContext(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap) {
     g_draw_dpy = dpy; g_draw_xd = xd; g_draw_vis = vis; g_draw_cmap = cmap;
 }
+void Platform_GetDrawContext(Display** dpy, XftDraw** xd, Visual** vis, Colormap* cmap) {
+    if (dpy) *dpy = g_draw_dpy;
+    if (xd) *xd = g_draw_xd;
+    if (vis) *vis = g_draw_vis;
+    if (cmap) *cmap = g_draw_cmap;
+}
 bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, FontHandle font, const char *align, int pad) {
     if (!text || !g_draw_dpy || !g_draw_xd) return false;
     FontHandle fh = font;

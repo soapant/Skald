@@ -115,6 +115,11 @@ bool fl_launch_with_args_as_admin_platform(const char* path, const char* args) {
     return ShellExecuteExA(&sei);
 }
 
+bool fl_listbox_begin_platform(const FlListSpec *spec) { (void)spec; return false; }
+bool fl_listbox_next_platform(FlListItemCtx *out) { (void)out; return false; }
+void fl_listbox_end_platform(void) {}
+int fl_listbox_get_count(void) { return 0; }
+
 char* fl_search_file_in_dir_platform(const char* directory, const char* search_string,char* output_path) {
     char search_path[MAX_PATH];
     snprintf(search_path, sizeof(search_path), "%s\\*", directory);
