@@ -1,6 +1,7 @@
 ﻿#include "core/flapi.h"
 #if defined(_WIN32)
 #include <windows.h>
+#include <shellapi.h>
 #endif
 
 typedef struct {
@@ -78,6 +79,22 @@ static void apps_lock_init(void) { if (!g_apps_cs_inited) { InitializeCriticalSe
 #endif
 static char* s_app_icons[MAX_APPS] = {0};
 static size_t s_app_icon_count = 0;
+#if defined(_WIN32)
+static HICON s_hicons[MAX_APPS] = {0};
+static size_t s_hicon_count = 0;
+static HICON win_load_icon_for_path(const char* path, int size) {
+    if (!path || !path[0]) return NULL;
+    SHFILEINFOA shfi = {0};
+    DWORD flags = SHGFI_ICON | (size <= 16 ? SHGFI_SMALLICON : SHGFI_LARGEICON);
+    if (SHGetFileInfoA(path, 0, &shfi, sizeof(shfi), flags)) return shfi.hIcon;
+    if (SHGetFileInfoA(path, FILE_ATTRIBUTE_NORMAL, &shfi, sizeof(shfi), flags | SHGFI_USEFILEATTRIBUTES)) return shfi.hIcon;
+    // fallback: try large if small failed and vice versa
+    DWORD alt = SHGFI_ICON | (size <= 16 ? SHGFI_LARGEICON : SHGFI_SMALLICON);
+    if (SHGetFileInfoA(path, 0, &shfi, sizeof(shfi), alt)) return shfi.hIcon;
+    if (SHGetFileInfoA(path, FILE_ATTRIBUTE_NORMAL, &shfi, sizeof(shfi), alt | SHGFI_USEFILEATTRIBUTES)) return shfi.hIcon;
+    return NULL;
+}
+#endif
 
 static void free_icon_cache(void) {
     APPS_LOCK();
@@ -86,25 +103,99 @@ static void free_icon_cache(void) {
         s_app_icons[i] = NULL;
     }
     s_app_icon_count = 0;
+#if defined(_WIN32)
+    for (size_t i = 0; i < s_hicon_count; i++) {
+        if (s_hicons[i]) DestroyIcon(s_hicons[i]);
+        s_hicons[i] = NULL;
+    }
+    s_hicon_count = 0;
+#endif
     APPS_UNLOCK();
 }
 
 static void rebuild_icon_cache(void) {
     size_t n; APPS_LOCK(); n = s_apps.count < MAX_APPS ? s_apps.count : MAX_APPS; APPS_UNLOCK();
     char* new_icons[MAX_APPS]={0};
+#if defined(_WIN32)
+    HICON new_hicons[MAX_APPS]={0};
+    int wantSize = IconSize;
+    if (wantSize < 16) wantSize = 16;
+    if (wantSize > 48) wantSize = 48;
+#endif
     for (size_t i=0;i<n;i++) {
         const char* p=NULL; APPS_LOCK(); if(i < s_apps.count) p=s_apps.items[i].path; APPS_UNLOCK();
-        if(p) new_icons[i]=fl_get_icon_path((char*)p);
+        if(p) {
+            new_icons[i]=fl_get_icon_path((char*)p);
+            const char* iconSrc = new_icons[i] ? new_icons[i] : p;
+#if defined(_WIN32)
+            new_hicons[i]=win_load_icon_for_path(iconSrc, wantSize);
+#endif
+        }
     }
     APPS_LOCK();
     for(size_t i=0;i<s_app_icon_count;i++){ free(s_app_icons[i]); s_app_icons[i]=NULL; }
+#if defined(_WIN32)
+    for(size_t i=0;i<s_hicon_count;i++){ if(s_hicons[i]) DestroyIcon(s_hicons[i]); s_hicons[i]=NULL; }
+    s_hicon_count=0;
+#endif
     s_app_icon_count=0;
     for(size_t i=0;i<n;i++) s_app_icons[i]=new_icons[i];
     s_app_icon_count=n;
+#if defined(_WIN32)
+    for(size_t i=0;i<n;i++) s_hicons[i]=new_hicons[i];
+    s_hicon_count=n;
+#endif
     APPS_UNLOCK();
 }
 
+#if defined(_WIN32)
+static const char* kAppCachePath = "data/app_cache_win.txt";
+static bool load_app_cache_from_file(void) {
+    FILE* f = fopen(kAppCachePath, "r");
+    if (!f) return false;
+    ListOfFiles tmp = {0};
+    char line[1024];
+    while (fgets(line, sizeof(line), f) && tmp.count < MAX_APPS) {
+        line[strcspn(line, "\r\n")] = '\0';
+        char* sep = strchr(line, '|');
+        if (!sep) continue;
+        *sep = '\0';
+        const char* name = line;
+        const char* path = sep+1;
+        if (tmp.count >= tmp.capacity) {
+            tmp.capacity = tmp.capacity==0?256:tmp.capacity*2;
+            FileItem* ni = realloc(tmp.items, tmp.capacity*sizeof(FileItem));
+            if (!ni) { fclose(f); if(tmp.items) free(tmp.items); return false; }
+            tmp.items = ni;
+        }
+        strncpy(tmp.items[tmp.count].name, name, sizeof(tmp.items[tmp.count].name)-1);
+        tmp.items[tmp.count].name[sizeof(tmp.items[tmp.count].name)-1]='\0';
+        strncpy(tmp.items[tmp.count].path, path, sizeof(tmp.items[tmp.count].path)-1);
+        tmp.items[tmp.count].path[sizeof(tmp.items[tmp.count].path)-1]='\0';
+        tmp.count++;
+    }
+    fclose(f);
+    if (tmp.count==0) { if(tmp.items) free(tmp.items); return false; }
+    APPS_LOCK();
+    if (s_apps.items) free(s_apps.items);
+    s_apps = tmp;
+    APPS_UNLOCK();
+    rebuild_icon_cache();
+    return true;
+}
+static void save_app_cache_to_file(void) {
+    FILE* f = fopen(kAppCachePath, "w");
+    if (!f) return;
+    APPS_LOCK();
+    for (size_t i=0;i<s_apps.count;i++) fprintf(f, "%s|%s\n", s_apps.items[i].name, s_apps.items[i].path);
+    APPS_UNLOCK();
+    fclose(f);
+}
+#endif
 void initialize_app_cache(void) {
+#if defined(_WIN32)
+    if (s_apps.count==0 && load_app_cache_from_file()) return;
+#endif
 #if defined(_WIN32)
     char* allowed[] = {"lnk", "exe", "url", NULL};
 #else
@@ -343,13 +434,53 @@ void applauncher_render(Display* dpy, Window* win, PromptState* state) {
 }
 #else
 #include <windows.h>
+#include <shellapi.h>
+#include "config.h"
 void applauncher_render(HDC hdc, const char* text, RECT* rect, BOOL is_selected, int itemIndex) {
     if (!text || !rect) return;
     UI_RedrawBackground(hdc, rect, is_selected);
+    int iconSize = IconSize;
+    if (iconSize < 16) iconSize = 16;
+    if (iconSize > 32) iconSize = 32;
+    HICON hIcon = NULL;
+    bool needDestroy = false;
+    char iconPathBuf[MAX_PATH]={0};
+    const char* iconPathForFallback=NULL;
+    if (text) {
+        APPS_LOCK();
+        for (size_t i=0;i<s_apps.count && i < s_hicon_count;i++) if (fl_string_match_insensitive(s_apps.items[i].name, text)) { hIcon = s_hicons[i]; if(hIcon) { /* cached */ } else if(i < s_app_icon_count && s_app_icons[i]) { strncpy(iconPathBuf, s_app_icons[i], sizeof(iconPathBuf)-1); iconPathForFallback=iconPathBuf; } else if(s_apps.items[i].path[0]) { strncpy(iconPathBuf, s_apps.items[i].path, sizeof(iconPathBuf)-1); iconPathForFallback=iconPathBuf; } break; }
+        // if not found in cache (maybe cache not built yet), try direct lookup via s_apps
+        if(!hIcon && !iconPathForFallback) {
+            for(size_t i=0;i<s_apps.count;i++) if(fl_string_match_insensitive(s_apps.items[i].name, text)) { strncpy(iconPathBuf, s_apps.items[i].path, sizeof(iconPathBuf)-1); iconPathForFallback=iconPathBuf; break; }
+            if(!iconPathForFallback) {
+                const char* p = applauncher_get_icon_for_item(text);
+                if(p) { strncpy(iconPathBuf, p, sizeof(iconPathBuf)-1); iconPathForFallback=iconPathBuf; }
+            }
+        }
+        APPS_UNLOCK();
+        if(!hIcon && iconPathForFallback && iconPathForFallback[0]) {
+            SHFILEINFOA shfi={0};
+            if(SHGetFileInfoA(iconPathForFallback,0,&shfi,sizeof(shfi),SHGFI_ICON|SHGFI_LARGEICON)) { hIcon=shfi.hIcon; needDestroy=true; }
+            else if(SHGetFileInfoA(iconPathForFallback,FILE_ATTRIBUTE_NORMAL,&shfi,sizeof(shfi),SHGFI_ICON|SHGFI_LARGEICON|SHGFI_USEFILEATTRIBUTES)) { hIcon=shfi.hIcon; needDestroy=true; }
+            else if(SHGetFileInfoA(iconPathForFallback,0,&shfi,sizeof(shfi),SHGFI_ICON|SHGFI_SMALLICON)) { hIcon=shfi.hIcon; needDestroy=true; }
+            else if(SHGetFileInfoA(iconPathForFallback,FILE_ATTRIBUTE_NORMAL,&shfi,sizeof(shfi),SHGFI_ICON|SHGFI_SMALLICON|SHGFI_USEFILEATTRIBUTES)) { hIcon=shfi.hIcon; needDestroy=true; }
+        }
+    }
     RECT textRect = *rect;
-    textRect.left += 10;
+    if (hIcon) {
+        int y = rect->top + ((rect->bottom - rect->top) - iconSize) / 2;
+        int oldMode = SetStretchBltMode(hdc, HALFTONE);
+        SetBrushOrgEx(hdc, 0, 0, NULL);
+        DrawIconEx(hdc, rect->left + 6, y, hIcon, iconSize, iconSize, 0, NULL, DI_NORMAL);
+        SetStretchBltMode(hdc, oldMode);
+        if(needDestroy) DestroyIcon(hIcon);
+        textRect.left += iconSize + 12;
+    } else {
+        textRect.left += 10;
+    }
     HFONT hOldFont = (HFONT)SelectObject(hdc, FlintContext_Get()->g_hMainFont);
     SetBkMode(hdc, TRANSPARENT);
+    SetTextColor(hdc, COLOR_TEXT);
     DrawTextA(hdc, text, -1, &textRect, DT_SINGLELINE | DT_VCENTER | DT_LEFT);
     SelectObject(hdc, hOldFont);
 }
@@ -360,8 +491,11 @@ void TriggerAppLauncher(void) {
         fl_on_dir_changed(ListOfProgramPaths[i], initialize_app_cache);
     }
     int _cnt=0; APPS_LOCK(); _cnt=(int)s_apps.count; APPS_UNLOCK();
+    int ih = IconSize + 8;
+    if (ih < 32) ih = 32;
+    if (ih > 48) ih = 48;
     PROMPT(.title = "🚀 AppLauncher", .items = NULL, .count = _cnt,
-           .height = 920, .width = 650, .item_height = 32,
+           .height = 920, .width = 650, .item_height = ih,
            .refresh = applauncher_refresh_callback,
            .enter = applauncher_enter_callback,
            .ctrl_enter = applauncher_ctrlenter_callback,
