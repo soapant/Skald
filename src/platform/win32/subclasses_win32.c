@@ -230,43 +230,44 @@ LRESULT CALLBACK ListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
     case WM_ERASEBKGND:
                        return TRUE;
     case WM_PAINT: {
-      LRESULT lr = DefSubclassProc(hWnd, uMsg, wParam, lParam);
-        RECT rc;
-        GetClientRect(hWnd, &rc);
-        int itemH = (int)SendMessageA(hWnd, LB_GETITEMHEIGHT, 0, 0);
-        int count = (int)SendMessageA(hWnd, LB_GETCOUNT, 0, 0);
-        if (itemH > 0) {
-          LONG itemsBottom = (LONG)count * itemH;
-            if (itemsBottom < rc.bottom) {
-              RECT empty = { rc.left, itemsBottom, rc.right, rc.bottom };
-                HDC hdc = GetDC(hWnd);
-                if (hdc) {
-                  if (EnableShaders && ShaderPreset != 0) {
-                    HWND hParent = GetParent(hWnd);
-                    RECT winRc; GetClientRect(hParent ? hParent : hWnd, &winRc);
-                    int winW = winRc.right - winRc.left;
-                    int winH = winRc.bottom - winRc.top;
-                    POINT lbOrigin = {0,0};
-                    if (hParent) { ClientToScreen(hWnd, &lbOrigin); ScreenToClient(hParent, &lbOrigin); }
-                    int globalX = lbOrigin.x + empty.left;
-                    int globalY = lbOrigin.y + empty.top;
-                    if (winW <= 0) winW = rc.right - rc.left;
-                    if (winH <= 0) winH = rc.bottom - rc.top;
-                    Win32_DrawBackgroundSlice(hdc, &empty, COLOR_BG, winW, winH, globalX, globalY);
-                  } else if (ColorfullMode) {
-                    if (!s_bg_colorful_brush) {
-                      s_bg_colorful_brush = CreateSolidBrush(GetRainbowColor(0.02f, 0.55f, GradientBrightness));
-                    }
-                    FillRect(hdc, &empty, s_bg_colorful_brush);
-                  } else {
-                    if (!s_bg_brush) s_bg_brush = CreateSolidBrush(COLOR_BG);
-                    FillRect(hdc, &empty, s_bg_brush);
-                  }
-                    ReleaseDC(hWnd, hdc);
-                }
-            }
-        }
-      return lr;
+      PAINTSTRUCT ps;
+      HDC hdc = BeginPaint(hWnd, &ps);
+      RECT rc; GetClientRect(hWnd, &rc);
+      if (rc.right <= 0 || rc.bottom <= 0) { EndPaint(hWnd, &ps); return 0; }
+      HDC memDC = CreateCompatibleDC(hdc);
+      HBITMAP memBmp = CreateCompatibleBitmap(hdc, rc.right, rc.bottom);
+      if (!memDC || !memBmp) {
+        if (memDC) DeleteDC(memDC);
+        if (memBmp) DeleteObject(memBmp);
+        EndPaint(hWnd, &ps);
+        return DefSubclassProc(hWnd, uMsg, wParam, lParam);
+      }
+      HBITMAP oldBmp = (HBITMAP)SelectObject(memDC, memBmp);
+      // Fill background with continuous window gradient to avoid black gaps and flicker
+      HWND hParent = GetParent(hWnd);
+      RECT winRc; GetClientRect(hParent ? hParent : hWnd, &winRc);
+      int winW = winRc.right - winRc.left;
+      int winH = winRc.bottom - winRc.top;
+      POINT lbOrigin = {0,0};
+      if (hParent) { ClientToScreen(hWnd, &lbOrigin); ScreenToClient(hParent, &lbOrigin); }
+      if (EnableShaders && ShaderPreset != 0 && winW > 0 && winH > 0) {
+        RECT full = rc;
+        Win32_DrawBackgroundSlice(memDC, &full, COLOR_BG, winW, winH, lbOrigin.x, lbOrigin.y);
+      } else if (ColorfullMode) {
+        if (!s_bg_colorful_brush) s_bg_colorful_brush = CreateSolidBrush(GetRainbowColor(0.02f, 0.55f, GradientBrightness));
+        FillRect(memDC, &rc, s_bg_colorful_brush);
+      } else {
+        if (!s_bg_brush) s_bg_brush = CreateSolidBrush(COLOR_BG);
+        FillRect(memDC, &rc, s_bg_brush);
+      }
+      // Let listbox draw its items into memory DC (owner-draw WM_DRAWITEM will be sent to parent)
+      SendMessage(hWnd, WM_PRINTCLIENT, (WPARAM)memDC, PRF_CLIENT);
+      BitBlt(hdc, ps.rcPaint.left, ps.rcPaint.top, ps.rcPaint.right - ps.rcPaint.left, ps.rcPaint.bottom - ps.rcPaint.top, memDC, ps.rcPaint.left, ps.rcPaint.top, SRCCOPY);
+      SelectObject(memDC, oldBmp);
+      DeleteObject(memBmp);
+      DeleteDC(memDC);
+      EndPaint(hWnd, &ps);
+      return 0;
     }
     default:
             return DefSubclassProc(hWnd, uMsg, wParam, lParam);
