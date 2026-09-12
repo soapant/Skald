@@ -3,6 +3,10 @@
 #include "core/common_ui.h"
 #include "config.h"
 #include "platform/draw.h"
+#if !defined(_WIN32)
+#include "platform/x11/drawing.h"
+#endif
+#include "helpers/ui.h"
 #include "core/timer.h"
 
 #if !defined(_WIN32)
@@ -34,7 +38,18 @@ void Core_DrawListBox(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis
         int idx = lb->view_offset + i;
         int y = y0 + i * itemH;
         bool sel = (idx == lb->selected_index);
-        Platform_DrawListBackground(state, dpy, xd, vis, cmap, y, itemH, sel);
+        if (RoundedCorners && CornerRadius>0) {
+            int R=6;
+            int bx=3, bw=state->width-14;
+            Linux_DrawRoundedBorder(dpy, xd, vis, cmap, rgb_to_hex(COLOR_SEPERATOR), OpacityAlpha16(), bx, y+1, bw, itemH-2, R);
+            if (sel) {
+                Linux_FillRoundedRect(dpy, xd, vis, cmap, rgb_to_hex(COLOR_SELECTED_TEXT), OpacityAlpha16(), bx+1, y+2, bw-2, itemH-4, R-1);
+            } else if (!EnableShaders || ShaderPreset==0) {
+                Linux_FillRoundedRect(dpy, xd, vis, cmap, rgb_to_hex(COLOR_BG), OpacityAlpha16(), bx+1, y+2, bw-2, itemH-4, R-1);
+            }
+        } else {
+            Platform_DrawListBackground(state, dpy, xd, vis, cmap, y, itemH, sel);
+        }
         //temporary
         const char *icon_path = NULL;
         Platform_DrawListItem(state, dpy, xd, vis, cmap, font, lb, idx, y, 45, icon_path);
