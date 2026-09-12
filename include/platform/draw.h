@@ -18,5 +18,12 @@ void Platform_DrawEditCursor(PromptState *state, Display *dpy, XftDraw *xd, Visu
 void Platform_DrawSeparators(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap);
 #endif
 void Platform_GetItemColors(int idx, int count, unsigned long *num_color, unsigned long *body_color, unsigned long *plain_color);
+bool Platform_PreRender(void);
+bool fl_prerender(void);
+#if !defined(_WIN32)
+void Platform_SetPreRenderState(PromptState *state);
+#else
+void Platform_SetPreRenderStateWin32(const char *text, void *rect);
+#endif
 
 #endif
