@@ -460,7 +460,7 @@ bool fl_place_text_raw_impl(const FlTextSpec *spec) {
     }
     const char *align = spec->align ? spec->align : "CENTER";
     FontHandle fh = spec->font;
-    return Platform_DrawTextRaw(spec->x, spec->y, spec->text, col, fh, align, spec->pad);
+    return Platform_DrawTextRaw(spec->x, spec->y, spec->text, col, fh, align, spec->pad,spec->fontsize);
 }
 
 bool fl_place_editbox_raw_impl(const FlEditSpec *spec) { (void)spec; return false; }

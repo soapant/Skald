@@ -180,6 +180,7 @@ typedef struct {
     int y;
     unsigned long color;
     FontHandle font;
+    int fontsize;
     const char *align;
     int pad;
 } FlTextSpec;

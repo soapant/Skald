@@ -19,7 +19,7 @@ __attribute__((weak)) bool fl_prerender(void) {
 static HDC g_draw_hdc = NULL;
 void Platform_SetDrawContextWin32(HDC hdc) { g_draw_hdc = hdc; }
 void Platform_GetDrawContextWin32(HDC *out) { if (out) *out = g_draw_hdc; }
-bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, FontHandle font, const char *align, int pad) {
+bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, FontHandle font, const char *align, int pad,int fontsize) {
     if (!text || !g_draw_hdc) return false;
     if (color == 0) color = COLOR_TEXT;
     const char *a = align ? align : "CENTER";
