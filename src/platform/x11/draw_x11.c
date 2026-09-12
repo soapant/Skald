@@ -144,7 +144,8 @@ void Platform_DrawSeparators(PromptState *state, Display *dpy, XftDraw *xd, Visu
     (void)state;
     XftColor seperator_color;
     Linux_XftAllocColor(dpy, vis, cmap, rgb_to_hex(COLOR_SEPERATOR), 0xFFFF, &seperator_color);
-    XftDrawRect(xd, &seperator_color,0,60,state->width,5);
-    XftDrawRect(xd, &seperator_color,0,state->height - 60,state->width,5);
+    // temporary i think
+    // XftDrawRect(xd, &seperator_color,0,60,state->width,5);
+    // XftDrawRect(xd, &seperator_color,0,state->height - 60,state->width,5);
     XftColorFree(dpy, vis, cmap, &seperator_color);
 }

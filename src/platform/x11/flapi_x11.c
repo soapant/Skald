@@ -2,6 +2,7 @@
 #include "core/platform.h"
 #include "core/flapi_platform.h"
 #include "platform/draw.h"
+#include "platform/x11/drawing.h"
 #include "config.h"
 #include <errno.h>
 #include <string.h>
@@ -345,10 +346,22 @@ bool fl_listbox_next_platform(FlListItemCtx *out) {
     if (idx < 0 || idx >= g_fl_list_lb->populated_count) return false;
     int y = g_fl_list_y0 + g_fl_list_cur * g_fl_list_itemH;
     bool sel = (idx == g_fl_list_lb->selected_index);
-    PromptState tmp = {0};
-    tmp.width = g_fl_list_spec.w ? g_fl_list_spec.w : 900;
-    tmp.height = g_fl_list_spec.h ? g_fl_list_spec.h : 400;
-    Platform_DrawListBackground(&tmp, g_fl_list_dpy, g_fl_list_xd, g_fl_list_vis, g_fl_list_cmap, y, g_fl_list_itemH, sel);
+    if (RoundedCorners && CornerRadius>0) {
+        int R=6;
+        int bx = g_fl_list_spec.x + 1;
+        int bw = (g_fl_list_spec.w ? g_fl_list_spec.w : 650) - 2;
+        Linux_DrawRoundedBorder(g_fl_list_dpy, g_fl_list_xd, g_fl_list_vis, g_fl_list_cmap, rgb_to_hex(COLOR_SEPERATOR), OpacityAlpha16(), bx, y+1, bw, g_fl_list_itemH-2, R);
+        if (sel) {
+            Linux_FillRoundedRect(g_fl_list_dpy, g_fl_list_xd, g_fl_list_vis, g_fl_list_cmap, rgb_to_hex(COLOR_SELECTED_TEXT), OpacityAlpha16(), bx+1, y+2, bw-2, g_fl_list_itemH-4, R-1);
+        } else if (!EnableShaders || ShaderPreset==0) {
+            Linux_FillRoundedRect(g_fl_list_dpy, g_fl_list_xd, g_fl_list_vis, g_fl_list_cmap, rgb_to_hex(COLOR_BG), OpacityAlpha16(), bx+1, y+2, bw-2, g_fl_list_itemH-4, R-1);
+        }
+    } else {
+        PromptState tmp = {0};
+        tmp.width = g_fl_list_spec.w ? g_fl_list_spec.w : 900;
+        tmp.height = g_fl_list_spec.h ? g_fl_list_spec.h : 400;
+        Platform_DrawListBackground(&tmp, g_fl_list_dpy, g_fl_list_xd, g_fl_list_vis, g_fl_list_cmap, y, g_fl_list_itemH, sel);
+    }
     out->idx = idx;
     out->selected = sel;
     out->x = g_fl_list_spec.x;
