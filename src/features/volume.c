@@ -1,9 +1,14 @@
+#if defined(_WIN32)
+#define INITGUID
+#endif
 #include "core/flapi.h"
 
 #if defined(_WIN32)
 #include <mmdeviceapi.h>
 #include <endpointvolume.h>
+#endif
 
+#if defined(_WIN32)
 int GetSystemVolume(void) {
     HRESULT hr;
     IMMDeviceEnumerator *pEnumerator = NULL;

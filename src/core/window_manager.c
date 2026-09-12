@@ -117,6 +117,7 @@ static void* feature_watcher_thread(void* arg) {
     return NULL;
 }
 #else
+#include "platform/lib.h"
 static DWORD WINAPI feature_watcher_thread_win(LPVOID arg) {
     WindowManager* wm = (WindowManager*)arg;
     while (InterlockedCompareExchange(&g_watcher_stop_win, 0, 0)==0 && !(wm && wm->watcher_stop)) {
@@ -124,17 +125,33 @@ static DWORD WINAPI feature_watcher_thread_win(LPVOID arg) {
         if (filename) {
             printf("Changed file: %s\n", filename);
             fflush(stdout);
-            char* out = Platform_RunTerminalCommand("cmd /c nob 2>&1", false);
-            if (out) {
-                printf("[WATCHER] rebuild: %s\n", out);
-                free(out);
-            }
-            printf("[WATCHER] %s changed - rebuilt, restart manually\n", filename);
+            char buf[256];
+            strncpy(buf, filename, sizeof(buf)-1);
+            buf[sizeof(buf)-1]='\0';
             free(filename);
-        }
-        for (int i=0;i<5;i++) {
-            if (InterlockedCompareExchange(&g_watcher_stop_win, 0, 0)!=0 || (wm && wm->watcher_stop)) break;
-            Sleep(100);
+            char* base = strrchr(buf, '/');
+            if (!base) base = strrchr(buf, '\\');
+            if (base) base++; else base = buf;
+            char* dot = strrchr(base, '.');
+            if (dot) *dot = '\0';
+            char src[512], dll[512];
+            snprintf(src, sizeof(src), "src/features/%s.c", base);
+            snprintf(dll, sizeof(dll), "build/features/%s%s", base, Platform_LibExtension());
+            printf("[WATCHER] recompiling %s -> %s\n", src, dll); fflush(stdout);
+            // unload to release file lock before rebuilding
+            FeatureLoader_Unload(base);
+            if (Platform_BuildFeature(src, dll)) {
+                printf("[WATCHER] reload %s\n", base); fflush(stdout);
+                FeatureLoader_Reload(base);
+            } else {
+                fprintf(stderr, "[WATCHER] compile failed for %s\n", base);
+            }
+            Sleep(1200); // debounce - avoid double trigger from editor atomic save
+        } else {
+            for (int i=0;i<5;i++) {
+                if (InterlockedCompareExchange(&g_watcher_stop_win, 0, 0)!=0 || (wm && wm->watcher_stop)) break;
+                Sleep(100);
+            }
         }
     }
     return 0;
