@@ -356,12 +356,10 @@ void applauncher_render(HDC hdc, const char* text, RECT* rect, BOOL is_selected,
 #endif
 
 void TriggerAppLauncher(void) {
-    printf("[Trigger] start count=%zu\n", s_apps.count); fflush(stdout);
     for (size_t i = 0; i < ARRAY_LEN(ListOfProgramPaths); i++) {
         fl_on_dir_changed(ListOfProgramPaths[i], initialize_app_cache);
     }
     int _cnt=0; APPS_LOCK(); _cnt=(int)s_apps.count; APPS_UNLOCK();
-    printf("[Trigger] PROMPT cnt=%d\n", _cnt); fflush(stdout);
     PROMPT(.title = "🚀 AppLauncher", .items = NULL, .count = _cnt,
            .height = 920, .width = 650, .item_height = 32,
            .refresh = applauncher_refresh_callback,
