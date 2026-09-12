@@ -11,6 +11,7 @@ int  TimeOutForMessages = 1;
 bool DoTimeDebugs = false;
 bool RoundedCorners = true;
 int CornerRadius = 14;
+int ListboxBorderThickness = 2;
 bool EnableShaders = true;
 int ShaderPreset = 1;
 bool EnableSelectionShaders = true;
@@ -25,7 +26,7 @@ bool ColorfullMode = false;
 float WindowOpacity = 235.0;
 
 const char* UsedFont =  "0xProto Nerd Font";
-const int FontSize = 20;
+const int FontSize = 24;
 const int IconSize = 32;
 const int MaxFeatures = 130;
 const int VimFontSize = 18;

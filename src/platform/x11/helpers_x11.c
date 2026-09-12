@@ -592,11 +592,6 @@ Window Linux_CreateWindowEx(Display* dpy, int x, int y, int w, int h, unsigned l
     return Linux_CreateWindowExOR(dpy, x, y, w, h, bg_color, res_name, res_class, event_mask, false);
 }
 
-bool Linux_ShouldUseRounded(void) {
-    PROFILE_START(timer);
-    PROFILE_END_VAR(timer, "helpers_x11:Linux_ShouldUseRounded"); return RoundedCorners;
-}
-
 static void Linux_ApplyShapeRounded(Display* dpy, Window win, int w, int h, int radius);
 
 Window Linux_CreateWindowExOR(Display* dpy, int x, int y, int w, int h, unsigned long bg_color, const char* res_name, const char* res_class, long event_mask, bool override_redirect) {
@@ -623,13 +618,12 @@ Window Linux_CreateWindowExOR(Display* dpy, int x, int y, int w, int h, unsigned
         use_argb = true;
     }
     Window win;
-    bool rounded = Linux_ShouldUseRounded() && use_argb;
     if (use_argb) {
         XSetWindowAttributes attrs = {0};
         unsigned int r = (bg_color >> 16) & 0xFF;
         unsigned int g = (bg_color >> 8) & 0xFF;
         unsigned int b = bg_color & 0xFF;
-        unsigned int a = rounded ? 0 : (unsigned int)WindowOpacity;
+        unsigned int a = RoundedCorners ? 0 : (unsigned int)WindowOpacity;
         attrs.background_pixel = (a << 24) | (r << 16) | (g << 8) | b;
         attrs.colormap = cmap;
         attrs.border_pixel = 0;
@@ -670,7 +664,7 @@ Window Linux_CreateWindowExOR(Display* dpy, int x, int y, int w, int h, unsigned
     XSetWMHints(dpy, win, hints);
     XFree(hints);
     XSelectInput(dpy, win, event_mask);
-    if (Linux_ShouldUseRounded() && !use_argb) {
+    if (RoundedCorners && !use_argb) {
         Linux_ApplyShapeRounded(dpy, win, w, h, CornerRadius);
     }
     PROFILE_END_VAR(timer, "helpers_x11:Linux_CreateWindowExOR");
@@ -754,53 +748,6 @@ void Linux_FillRoundedRect(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap
     XftColorFree(dpy, vis, cmap, &solid);
     PROFILE_END_VAR(timer, "helpers_x11:Linux_FillRoundedRect");
 }
-void Linux_DrawRoundedBorder(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap, unsigned long hex, unsigned short alpha16, int x, int y, int w, int h, int radius) {
-    PROFILE_START(timer);
-    if (!RoundedCorners || radius <= 0 || w <= 0 || h <= 0) {
-        XftColor c; Linux_XftAllocColor(dpy, vis, cmap, hex, alpha16, &c);
-        XftDrawRect(xd, &c, x, y, w, 1); XftDrawRect(xd, &c, x, y+h-1, w, 1);
-        XftDrawRect(xd, &c, x, y, 1, h); XftDrawRect(xd, &c, x+w-1, y, 1, h);
-        XftColorFree(dpy, vis, cmap, &c); PROFILE_END_VAR(timer, "helpers_x11:Linux_DrawRoundedBorder"); return;
-    }
-    if (radius > w/2) radius = w/2; if (radius > h/2) radius = h/2;
-    XftColor c; Linux_XftAllocColor(dpy, vis, cmap, hex, alpha16, &c);
-    XftDrawRect(xd, &c, x+radius, y, w-2*radius, 1);
-    XftDrawRect(xd, &c, x+radius, y+h-1, w-2*radius, 1);
-    XftDrawRect(xd, &c, x, y+radius, 1, h-2*radius);
-    XftDrawRect(xd, &c, x+w-1, y+radius, 1, h-2*radius);
-    for (int corner=0; corner<4; corner++) {
-        int cx = (corner%2==0)? x+radius : x+w-radius-1;
-        int cy = (corner<2)? y+radius : y+h-radius-1;
-        int ox0 = (corner%2==0)? x : x+w-radius;
-        int oy0 = (corner<2)? y : y+h-radius;
-        for (int dy=0; dy<radius; dy++) for (int dx=0; dx<radius; dx++) {
-            float px = ox0+dx+0.5f, py = oy0+dy+0.5f;
-            float ddx2 = px-(cx+0.5f), ddy2 = py-(cy+0.5f);
-            float dist = sqrtf(ddx2*ddx2+ddy2*ddy2);
-            if (dist < radius-0.5f || dist >= radius+0.5f) continue;
-            float cov = (dist < radius) ? (dist-(radius-0.5f)) : (radius+0.5f-dist);
-            if (cov<=0) continue; if (cov>1) cov=1;
-            if (cov>=1.0f) XftDrawRect(xd, &c, ox0+dx, oy0+dy, 1, 1);
-            else { unsigned short a=(unsigned short)(alpha16*cov+0.5f); XftColor ac; Linux_XftAllocColor(dpy,vis,cmap,hex,a,&ac); XftDrawRect(xd,&ac,ox0+dx,oy0+dy,1,1); XftColorFree(dpy,vis,cmap,&ac); }
-        }
-    }
-    XftColorFree(dpy, vis, cmap, &c);
-    PROFILE_END_VAR(timer, "helpers_x11:Linux_DrawRoundedBorder");
-}
-
-void Linux_DrawRoundedBackground(Display* dpy, Window win, int w, int h, unsigned long hex, unsigned short alpha) {
-    PROFILE_START(timer);
-    if (!RoundedCorners) { PROFILE_END_VAR(timer, "helpers_x11:Linux_DrawRoundedBackground"); return; }
-    if (CornerRadius <= 0) { PROFILE_END_VAR(timer, "helpers_x11:Linux_DrawRoundedBackground"); return; }
-    XWindowAttributes attrs;
-    if (!XGetWindowAttributes(dpy, win, &attrs)) { PROFILE_END_VAR(timer, "helpers_x11:Linux_DrawRoundedBackground"); return; }
-    XftDraw* xd = XftDrawCreate(dpy, win, attrs.visual, attrs.colormap);
-    if (!xd) { PROFILE_END_VAR(timer, "helpers_x11:Linux_DrawRoundedBackground"); return; }
-    Linux_FillRoundedRect(dpy, xd, attrs.visual, attrs.colormap, hex, alpha, 0, 0, w, h, CornerRadius);
-    XftDrawDestroy(xd);
-    PROFILE_END_VAR(timer, "helpers_x11:Linux_DrawRoundedBackground");
-}
-
 static unsigned long LerpHex(unsigned long a, unsigned long b, float t) {
     if (t < 0) t = 0; if (t > 1) t = 1;
     unsigned int ar = (a >> 16) & 0xFF, ag = (a >> 8) & 0xFF, ab = a & 0xFF;
