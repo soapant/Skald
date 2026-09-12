@@ -878,7 +878,7 @@ static Pixmap Linux_CreateBackgroundPixmap(Display* dpy, Window win, int w, int 
                 row[x] = a ? (a << 24) | (cr << 16) | (cg << 8) | cb : 0;
             }
         }
-    } else if (ShaderPreset == 3) {
+    } else if (ShaderPreset == 2) {
         unsigned long light = DeriveLighter(base, 1.0f);
         for (int y = 0; y < h; y++) {
             row = (uint32_t*)(img->data + y * img->bytes_per_line);
@@ -890,19 +890,14 @@ static Pixmap Linux_CreateBackgroundPixmap(Display* dpy, Window win, int w, int 
                 row[x] = a ? (a << 24) | (cr << 16) | (cg << 8) | cb : 0;
             }
         }
-    } else if (ShaderPreset == 2) {
+    } else if (ShaderPreset == 3) {
+      //temrporary same thing as 2 as radial was beign fucky
         unsigned long light = DeriveLighter(base, 1.0f);
-        float cx = w * 0.5f, cy = h * 0.35f;
-        float maxDist_sq = cx*cx + cy*cy;
-        if (maxDist_sq < 1) maxDist_sq = 1;
-        float inv_max_dist = 1.0f / sqrtf(maxDist_sq);
         for (int y = 0; y < h; y++) {
             row = (uint32_t*)(img->data + y * img->bytes_per_line);
             for (int x = 0; x < w; x++) {
-                float dx = x - cx, dy = y - cy;
-                float dist = _QT(sqrtf(dx*dx + dy*dy) * inv_max_dist);
-                if (dist > 1) dist = 1;
-                unsigned long col = LerpHex(light, base, _QT(dist * 0.85f));
+                float t = _QT((float)(x + y) / (float)(w + h));
+                unsigned long col = LerpHex(base, light, t * 0.9f);
                 unsigned int cr = (col >> 16) & 0xFF, cg = (col >> 8) & 0xFF, cb = col & 0xFF;
                 unsigned int a = CornerAlpha(x, y, w, h, R, baseAlpha8);
                 row[x] = a ? (a << 24) | (cr << 16) | (cg << 8) | cb : 0;

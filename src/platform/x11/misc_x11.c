@@ -52,7 +52,6 @@ const char* Platform_GetRealUser(void){
     PROFILE_START(timer);
     static char buf[256]={0};
     static bool done=false;
-    if(done) { PROFILE_END_VAR(timer, "misc_x11:Platform_GetRealUser"); return buf[0]?buf:"diggy"; }
     const char* u=getenv("SUDO_USER");
     if(u && u[0] && strcmp(u,"root")!=0){ strncpy(buf,u,sizeof(buf)-1); done=true; PROFILE_END_VAR(timer, "misc_x11:Platform_GetRealUser"); return buf; }
     u=getenv("USER");
@@ -67,14 +66,12 @@ const char* Platform_GetRealUser(void){
     }
     struct passwd* pw=getpwuid(getuid());
     if(pw && pw->pw_name && strcmp(pw->pw_name,"root")!=0){ strncpy(buf,pw->pw_name,sizeof(buf)-1); done=true; PROFILE_END_VAR(timer, "misc_x11:Platform_GetRealUser"); return buf; }
-    strncpy(buf,"diggy",sizeof(buf)-1); done=true; PROFILE_END_VAR(timer, "misc_x11:Platform_GetRealUser"); return buf;
 }
 
 const char* Platform_GetRealHome(void){
     PROFILE_START(timer);
     static char buf[512]={0};
     static bool done=false;
-    if(done) { PROFILE_END_VAR(timer, "misc_x11:Platform_GetRealHome"); return buf[0]?buf:"/home/diggy"; }
     const char* u=Platform_GetRealUser();
     struct passwd* pw=getpwnam(u);
     if(pw && pw->pw_dir){ strncpy(buf,pw->pw_dir,sizeof(buf)-1); done=true; PROFILE_END_VAR(timer, "misc_x11:Platform_GetRealHome"); return buf; }
