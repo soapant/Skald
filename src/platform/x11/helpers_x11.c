@@ -18,6 +18,7 @@
 #include "config.h"
 #include "core/platform.h"
 #include "helpers/hotkey.h"
+#include "platform/draw.h"
 #include "helpers/alias.h"
 #include "helpers/flag.h"
 #include "helpers/file.h"
@@ -475,19 +476,19 @@ void DrawListBoxItemText(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap, 
     char* alias_text = strstr(trunc, " [");
 
     if (alias_text) {
-        XftColor aliasCol;
         int XOffsetAlias = 0;
-        Linux_XftAllocColor(dpy, vis, cmap, rgb_to_hex(COLOR_ALIAS_TEXT), 0xFFFF, &aliasCol);
         eval_xoffset_for_alias(alias_text,strlen(trunc),&XOffsetAlias);
-        draw_wrapped_text(dpy, xd, &aliasCol, font, alias_text, y, "LEFT",XOffsetAlias);
-        XftColorFree(dpy, vis, cmap, &aliasCol);
+        Platform_SetDrawContext(dpy, xd, vis, cmap);
+        Platform_DrawTextRaw(XOffsetAlias, y, alias_text, rgb_to_hex(COLOR_ALIAS_TEXT), font, "LEFT", XOffsetAlias, FontSize);
     }
 
-    char* pos =strchr(trunc,'['); 
+    char* pos = strchr(trunc,'['); 
     if(pos) {
       *pos = 0;
     }
-    draw_wrapped_text(dpy, xd, plain_color, font, trunc, y, "LEFT", XOffset);
+    unsigned long pcol=0; Platform_GetItemColors(idx, lb->populated_count, NULL, NULL, &pcol);
+    Platform_SetDrawContext(dpy, xd, vis, cmap);
+    Platform_DrawTextRaw(XOffset, y, trunc, pcol, font, "LEFT", XOffset, FontSize);
 
     PROFILE_END_VAR(timer, "helpers_x11:DrawListBoxItemText");
 }
