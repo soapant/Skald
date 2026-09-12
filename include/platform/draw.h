@@ -6,7 +6,7 @@
 
 #if defined(_WIN32)
 #include <windows.h>
-bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, FontHandle font, const char *align, int pad);
+bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, FontHandle font, const char *align, int pad,int fontsize);
 void Platform_SetDrawContextWin32(HDC hdc);
 void Platform_GetDrawContextWin32(HDC *out);
 #else
@@ -19,7 +19,7 @@ void Platform_DrawEditBackground(PromptState *state, Display *dpy, XftDraw *xd, 
 void Platform_DrawEditText(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap, FontHandle font);
 void Platform_DrawEditCursor(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap, FontHandle font);
 void Platform_DrawSeparators(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap);
-bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, FontHandle font, const char *align, int pad);
+bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, FontHandle font, const char *align, int pad,int fontsize);
 void Platform_SetDrawContext(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap);
 void Platform_GetDrawContext(Display** dpy, XftDraw** xd, Visual** vis, Colormap* cmap);
 #endif

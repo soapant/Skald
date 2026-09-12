@@ -453,10 +453,10 @@ void DrawSimplePromptUserEditControlOnDraw(Display *dpy, XftDraw* xd, Visual* vi
     Linux_XftAllocColor(dpy, vis, cmap, VimModeTextColor(), 0xFFFF, &vim_text_color);
 
     Platform_SetDrawContext(dpy, xd, vis, cmap);
-    Platform_DrawTextRaw(5, state->height - 40, state->window_title, rgb_to_hex(COLOR_TEXT), font, "LEFT", 5);
-    Platform_DrawTextRaw(5, state->height - 40, g_vim_mode, VimModeTextColor(), font, "RIGHT", 5);
+    Platform_DrawTextRaw(5, state->height - 40, state->window_title, rgb_to_hex(COLOR_TEXT), font, "LEFT", 5,FontSize);
+    Platform_DrawTextRaw(5, state->height - 40, g_vim_mode, VimModeTextColor(), font, "RIGHT", 5,FontSize);
     int centered_x = (state->width - text_width) / 2;
-    Platform_DrawTextRaw(centered_x, 70, state->display_message, rgb_to_hex(COLOR_TEXT), font, "LEFT", centered_x);
+    Platform_DrawTextRaw(centered_x, 70, state->display_message, rgb_to_hex(COLOR_TEXT), font, "LEFT", centered_x,FontSize);
 
     int cursor_x = 0;
     int text_len = strlen(state->user_input);

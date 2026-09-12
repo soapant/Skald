@@ -256,7 +256,7 @@ void Platform_DisplayMessage(const char* message, int centerX, int centerY, int 
         XftDrawStringUtf8(xd, &text_xft_color, xf, drawX, y, (FcChar8*)message, strlen(message));
     } else {
         Platform_SetDrawContext(dpy, xd, visual, cmap);
-        Platform_DrawTextRaw(0, startY, message, text_color, font, "CENTER", 0);
+        Platform_DrawTextRaw(0, startY, message, text_color, font, "CENTER", 0,FontSize);
     }
 
     XFlush(dpy);

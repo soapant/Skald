@@ -220,13 +220,13 @@ static void EditPopup_OnRender(Popup* self) {
     Linux_XftAllocColor(dpy, visual, cmap, rgb_to_hex(COLOR_BG), 0xFFFF, &bg);
     Platform_SetDrawContext(dpy, xd, visual, cmap);
     if (xf) {
-        Platform_DrawTextRaw(5, 5, g_vim_mode, VimModeTextColor(), font, "LEFT", 5);
+        Platform_DrawTextRaw(5, 5, g_vim_mode, VimModeTextColor(), font, "LEFT", 5,FontSize);
     }
     if (data->title && xf) {
         XGlyphInfo ext; XftTextExtentsUtf8(dpy, xf, (FcChar8*)data->title, strlen(data->title), &ext);
         int title_x = data->w - ext.xOff - 10;
         if (title_x < 50) title_x = 50;
-        Platform_DrawTextRaw(title_x, 5, data->title, rgb_to_hex(COLOR_TEXT), font, "LEFT", title_x);
+        Platform_DrawTextRaw(title_x, 5, data->title, rgb_to_hex(COLOR_TEXT), font, "LEFT", title_x,FontSize);
     }
     int cursor_x = 0;
     int text_len = data->text ? strlen(data->text) : 0;
