@@ -451,9 +451,37 @@ bool fl_place_text_raw_impl(const FlTextSpec *spec) {
     FontHandle fh = spec->font;
     return Platform_DrawTextRaw(spec->x, spec->y, spec->text, col, fh, align, spec->pad);
 }
+
 bool fl_place_editbox_raw_impl(const FlEditSpec *spec) { (void)spec; return false; }
-bool fl_place_listbox_raw_impl(const FlListSpec *spec) { (void)spec; return false; }
-bool fl_place_image_raw_impl(const FlImageSpec *spec) { (void)spec; return false; }
 bool fl_place_separator_raw_impl(int x, int y, int w, int h) { (void)x; (void)y; (void)w; (void)h; return false; }
+bool fl_place_image_raw_impl(const FlImageSpec *spec) { (void)spec; return false; }
+
+bool fl_listbox_begin(const FlListSpec *spec) {
+    if (!spec) return false;
+    return fl_listbox_begin_platform(spec);
+}
+bool fl_listbox_next(FlListItemCtx *out) {
+    if (!out) return false;
+    return fl_listbox_next_platform(out);
+}
+void fl_listbox_end(void) {
+    fl_listbox_end_platform();
+}
+bool fl_place_listbox_raw_impl(const FlListSpec *spec) {
+    if (!spec) return false;
+    if (!fl_listbox_begin(spec)) return false;
+    FlListItemCtx ctx;
+    while (fl_listbox_next(&ctx)) {
+        unsigned long col = ctx.selected ? rgb_to_hex(COLOR_TEXT) : 0;
+        if (!ctx.selected) {
+            unsigned long ncol, bcol, pcol;
+            Platform_GetItemColors(ctx.idx, fl_listbox_get_count(), &ncol, &bcol, &pcol);
+            col = pcol;
+        }
+        fl_place_text_raw(.x=ctx.x + 10, .y=ctx.y + 4, .text=ctx.text, .color=col, .align="LEFT", .pad=ctx.x + 10);
+    }
+    fl_listbox_end();
+    return true;
+}
 
 

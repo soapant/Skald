@@ -192,10 +192,19 @@ typedef struct {
 } FlEditSpec;
 
 typedef struct {
+    ListBoxInfo *lb;
     const char **items;
     int count;
     int x; int y; int w; int h;
+    int item_height;
 } FlListSpec;
+
+typedef struct {
+    int idx;
+    bool selected;
+    int x; int y; int w; int h;
+    const char *text;
+} FlListItemCtx;
 
 typedef struct {
     const char *path;
@@ -213,6 +222,11 @@ bool fl_place_separator_raw_impl(int x, int y, int w, int h);
 #define fl_place_listbox_raw(...) fl_place_listbox_raw_impl(&(FlListSpec){__VA_ARGS__})
 #define fl_place_image_raw(...) fl_place_image_raw_impl(&(FlImageSpec){__VA_ARGS__})
 #define fl_place_separator_raw(x,y,w,h) fl_place_separator_raw_impl((x),(y),(w),(h))
+
+bool fl_listbox_begin(const FlListSpec *spec);
+bool fl_listbox_next(FlListItemCtx *out);
+void fl_listbox_end(void);
+#define fl_place_listbox(...) fl_place_listbox_raw(__VA_ARGS__)
 
 // =============================================================================
 // ANCHORED PLACEMENT (preset positions)
