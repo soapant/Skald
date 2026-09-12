@@ -20,9 +20,6 @@ void DrawListBoxItemText(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap, 
 bool CursorBack(size_t* cursor, size_t text_len);
 bool CursorForward(size_t* cursor, size_t text_len);
 void Linux_FillRoundedRect(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap, unsigned long hex, unsigned short alpha16, int x, int y, int w, int h, int radius);
-void Linux_DrawRoundedBorder(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap, unsigned long hex, unsigned short alpha16, int x, int y, int w, int h, int radius);
-void Linux_DrawRoundedBackground(Display* dpy, Window win, int w, int h, unsigned long hex, unsigned short alpha);
-bool Linux_ShouldUseRounded(void);
 void Linux_DrawBackground(Display* dpy, Window win, int w, int h);
 void Linux_DrawBackgroundToDrawable(Display* dpy, Drawable d, int w, int h);
 Pixmap Linux_GetCachedBackground(Display* dpy, Window win, int w, int h);

@@ -24,6 +24,7 @@ extern int  TimeOutForMessages;
 extern bool DoTimeDebugs;
 extern bool RoundedCorners;
 extern int CornerRadius;
+extern int ListboxBorderThickness;
 extern bool EnableShaders;
 extern int ShaderPreset;
 extern bool EnableSelectionShaders;
