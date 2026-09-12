@@ -92,4 +92,7 @@ Popup* SearchPopup_Create(WindowManager* wm, const char* title,
                           EditPopupConfirmCallback on_confirm, void* user_data);
 Popup* MessagePopup_Create(WindowManager* wm, const char* message, int timeout_ms);
 
+void WindowManager_GetMainMonitorGeometry(int *x, int *y, int *w, int *h);
+void WindowManager_GetCenteredPos(int win_w, int win_h, int *out_x, int *out_y);
+
 #endif
