@@ -4,6 +4,7 @@
 #include <commctrl.h>
 #include <shellapi.h>
 #include "config.h"
+#include "platform/draw.h"
 #include "core/common_ui.h"
 #include "core/feature_data.h"
 #include "core/number_shortcut.h"
@@ -547,6 +548,8 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             RECT textRect = pdis->rcItem;
             textRect.left += 10;
           
+            Platform_SetPreRenderStateWin32(textBuffer, &textRect);
+            if (!fl_prerender()) return TRUE;
             if (FlintContext_Get()->prompt_callbacks.render != NULL) {
               FlintContext_Get()->prompt_callbacks.render(pdis->hDC, textBuffer, &textRect, isSelected, pdis->itemID);
             } else {
