@@ -36,12 +36,16 @@ void Platform_GetDrawContext(Display** dpy, XftDraw** xd, Visual** vis, Colormap
     if (vis) *vis = g_draw_vis;
     if (cmap) *cmap = g_draw_cmap;
 }
-bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, FontHandle font, const char *align, int pad) {
+bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, FontHandle font, const char *align, int pad,int fontsize) {
     if (!text || !g_draw_dpy || !g_draw_xd) return false;
     FontHandle fh = font;
     bool needDestroy = false;
     if (!FH_TO_XFT(fh)) {
+        if (fontsize) {
+          fh = Platform_CreateFontOnDisplay(g_draw_dpy, fontsize, UsedFont);
+        } else {
         fh = Platform_CreateFontOnDisplay(g_draw_dpy, FontSize, UsedFont);
+        }
         needDestroy = true;
     }
     if (color == 0) color = rgb_to_hex(COLOR_TEXT);
@@ -107,8 +111,8 @@ void Platform_DrawEditBackground(PromptState *state, Display *dpy, XftDraw *xd, 
     unsigned long window_title_text_color_map;
     eval_window_title_color(state,&window_title_text_color_map);
     Platform_SetDrawContext(dpy, xd, vis, cmap);
-    Platform_DrawTextRaw(5, state->height - 40, state->window_title, window_title_text_color_map, font, "LEFT", 5);
-    Platform_DrawTextRaw(5, state->height - 40, g_vim_mode, VimModeTextColor(), font, "RIGHT", 5);
+    Platform_DrawTextRaw(5, state->height - 40, state->window_title, window_title_text_color_map, font, "LEFT", 5,FontSize);
+    Platform_DrawTextRaw(5, state->height - 40, g_vim_mode, VimModeTextColor(), font, "RIGHT", 5,FontSize);
 }
 void Platform_DrawEditText(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap, FontHandle font) {
     XftFont *xf = FH_TO_XFT(font);
