@@ -461,6 +461,10 @@ bool fl_place_text_raw_impl(const FlTextSpec *spec) {
 bool fl_place_editbox_raw_impl(const FlEditSpec *spec) { (void)spec; return false; }
 bool fl_place_separator_raw_impl(int x, int y, int w, int h) { (void)x; (void)y; (void)w; (void)h; return false; }
 bool fl_place_image_raw_impl(const FlImageSpec *spec) { (void)spec; return false; }
+bool fl_draw_rect(int x, int y, int w, int h, unsigned long color) { (void)x; (void)y; (void)w; (void)h; (void)color; return false; }
+bool fl_draw_line(int x1, int y1, int x2, int y2, unsigned long color) { (void)x1; (void)y1; (void)x2; (void)y2; (void)color; return false; }
+bool fl_draw_circle(int x, int y, int radius, unsigned long color) { (void)x; (void)y; (void)radius; (void)color; return false; }
+bool fl_draw_rounded_rect(int x, int y, int w, int h, int radius, unsigned long color) { (void)x; (void)y; (void)w; (void)h; (void)radius; (void)color; return false; }
 
 bool fl_listbox_begin(const FlListSpec *spec) {
     if (!spec) return false;
