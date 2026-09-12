@@ -253,22 +253,8 @@ bool fl_place_listbox_auto(int w, int h, const char **items, int count);
 bool fl_place_image_auto(int w, int h, const char *path);
 
 // =============================================================================
-// THEME / AUTO-STYLE PASS (slow level)
-// =============================================================================
-// Runs before any render callback. Normie never calls this directly.
-// Platform_PreRender / fl_prerender already handle guards.
-
-void fl_apply_theme(void);
-void fl_apply_theme_to_listbox(void *listbox_handle);
-void fl_apply_theme_to_text(void);
-bool fl_is_rainbow_enabled(void);
-bool fl_is_alternating_enabled(void);
-
-// =============================================================================
 // PRE-RENDER HOOK (global overridable)
 // =============================================================================
-// Core calls fl_prerender() before every render. Default calls Platform_PreRender().
-// User defines their own bool fl_prerender(void) to take over.
 
 bool Platform_PreRender(void);
 bool fl_prerender(void);
@@ -299,8 +285,8 @@ bool fl_draw_rounded_rect(int x, int y, int w, int h, int radius, unsigned long 
 // HELPERS
 // =============================================================================
 
-int fl_text_width(const char *text);
-int fl_text_height(const char *text);
+int fl_get_text_width(const char *text);
+int fl_get_text_height(const char *text);
 bool fl_is_visible(void *widget);
 
 // =============================================================================
@@ -332,12 +318,9 @@ bool fl_register_hotkey_impl(char* hotkey_string,void (*on_hotkey_trigger)(void)
 #define fl_register_hotkey(...) \
     _FL_GET_MACRO(__VA_ARGS__, _FL_HOTKEY_ROUTER_5, _FL_HOTKEY_ROUTER_4, _FL_HOTKEY_ROUTER_3, _FL_HOTKEY_ROUTER_2)(__VA_ARGS__)
 
-// =============================================================================
-// FEATURE EXPORT
-// =============================================================================
-
 #if defined(_WIN32)
 #define FLINT_FEATURE_EXPORT static
+
 #else
 #define FLINT_FEATURE_EXPORT __attribute__((visibility("default")))
 #endif
