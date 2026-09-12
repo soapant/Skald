@@ -238,20 +238,22 @@ LRESULT CALLBACK ListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
         if (itemH > 0) {
           LONG itemsBottom = (LONG)count * itemH;
             if (itemsBottom < rc.bottom) {
-              HBRUSH hBrush;
-                if (ColorfullMode) {
-                  if (!s_bg_colorful_brush) {
-                    s_bg_colorful_brush = CreateSolidBrush(GetRainbowColor(0.02f, 0.55f, GradientBrightness));
-                  }
-                  hBrush = s_bg_colorful_brush;
-                } else {
-                  if (!s_bg_brush) s_bg_brush = CreateSolidBrush(COLOR_BG);
-                    hBrush = s_bg_brush;
-                }
               RECT empty = { rc.left, itemsBottom, rc.right, rc.bottom };
                 HDC hdc = GetDC(hWnd);
                 if (hdc) {
-                  FillRect(hdc, &empty, hBrush);
+                  if (EnableShaders && ShaderPreset != 0) {
+                    int lbW = rc.right - rc.left;
+                    int lbH = rc.bottom - rc.top;
+                    Win32_DrawBackgroundSlice(hdc, &empty, COLOR_BG, lbW, lbH, 0, itemsBottom);
+                  } else if (ColorfullMode) {
+                    if (!s_bg_colorful_brush) {
+                      s_bg_colorful_brush = CreateSolidBrush(GetRainbowColor(0.02f, 0.55f, GradientBrightness));
+                    }
+                    FillRect(hdc, &empty, s_bg_colorful_brush);
+                  } else {
+                    if (!s_bg_brush) s_bg_brush = CreateSolidBrush(COLOR_BG);
+                    FillRect(hdc, &empty, s_bg_brush);
+                  }
                     ReleaseDC(hWnd, hdc);
                 }
             }
@@ -286,7 +288,9 @@ LRESULT CALLBACK SimpleListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, 
         
         RECT rect;
         GetClientRect(hWnd, &rect);
-        if (ColorfullMode) {
+        if (EnableShaders && ShaderPreset != 0) {
+          Win32_DrawBackground(hdc, &rect);
+        } else if (ColorfullMode) {
           if (!s_gradient_ready) {
             for (int i = 0; i < GradientItems; i++) {
               float ft = (float)i / GradientItems;
@@ -486,8 +490,69 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
               }
             s_colorful_ready = true;
           }
-          if (EnableShaders && ShaderPreset != 0) {
-            Win32_DrawSelectionBackground(pdis->hDC, &pdis->rcItem, isSelected ? COLOR_SELECTED_TEXT : COLOR_BG);
+          if (RoundedCorners && CornerRadius > 0) {
+            int R = 6;
+            if (R > CornerRadius) R = CornerRadius;
+            // no surrounding boundary - linux has no boundary around items
+            RECT inner = pdis->rcItem;
+            int innerR = R;
+            if (isSelected) {
+              if (EnableSelectionShaders && SelectionShaderPreset != 0) {
+                Win32_DrawRoundedSelection(pdis->hDC, &inner, COLOR_SELECTED_TEXT, innerR);
+              } else if (EnableShaders && ShaderPreset != 0) {
+                Win32_DrawRoundedSelection(pdis->hDC, &inner, COLOR_SELECTED_TEXT, innerR);
+              } else if (ColorfullMode) {
+                int color_index = pdis->itemID % 100;
+                HBRUSH hBrush = s_colorful_brushes[color_index];
+                // fill inner rounded with colorful
+                int save = SaveDC(pdis->hDC);
+                HRGN rgn = CreateRoundRectRgn(inner.left, inner.top, inner.right+1, inner.bottom+1, innerR*2, innerR*2);
+                SelectClipRgn(pdis->hDC, rgn);
+                FillRect(pdis->hDC, &inner, hBrush);
+                SelectClipRgn(pdis->hDC, NULL);
+                RestoreDC(pdis->hDC, save);
+                DeleteObject(rgn);
+              } else {
+                Win32_FillRoundedRect(pdis->hDC, &inner, COLOR_SELECTED_TEXT, innerR);
+              }
+            } else {
+              if (EnableShaders && ShaderPreset != 0) {
+                RECT lbRc; GetClientRect(pdis->hwndItem, &lbRc);
+                int lbW = lbRc.right - lbRc.left;
+                int lbH = lbRc.bottom - lbRc.top;
+                if (lbW <= 0) lbW = pdis->rcItem.right - pdis->rcItem.left;
+                if (lbH <= 0) lbH = 400;
+                Win32_FillRoundedRectSlice(pdis->hDC, &inner, COLOR_BG, lbW, lbH, inner.left, inner.top, innerR);
+              } else if (ColorfullMode) {
+                int color_index = pdis->itemID % 100;
+                HBRUSH hBrush = s_colorful_brushes[color_index];
+                int save = SaveDC(pdis->hDC);
+                HRGN rgn = CreateRoundRectRgn(inner.left, inner.top, inner.right+1, inner.bottom+1, innerR*2, innerR*2);
+                SelectClipRgn(pdis->hDC, rgn);
+                FillRect(pdis->hDC, &inner, hBrush);
+                SelectClipRgn(pdis->hDC, NULL);
+                RestoreDC(pdis->hDC, save);
+                DeleteObject(rgn);
+              } else {
+                Win32_FillRoundedRect(pdis->hDC, &inner, COLOR_BG, innerR);
+              }
+            }
+          } else if (EnableShaders && ShaderPreset != 0) {
+            if (isSelected) {
+              if (EnableSelectionShaders && SelectionShaderPreset != 0) {
+                Win32_DrawSelectionBackground(pdis->hDC, &pdis->rcItem, COLOR_SELECTED_TEXT);
+              } else {
+                Win32_DrawSelectionBackground(pdis->hDC, &pdis->rcItem, COLOR_SELECTED_TEXT);
+              }
+            } else {
+              // cohesive background slice for unselected
+              RECT lbRc; GetClientRect(pdis->hwndItem, &lbRc);
+              int lbW = lbRc.right - lbRc.left;
+              int lbH = lbRc.bottom - lbRc.top;
+              if (lbW <= 0) lbW = pdis->rcItem.right - pdis->rcItem.left;
+              if (lbH <= 0) lbH = 400;
+              Win32_DrawBackgroundSlice(pdis->hDC, &pdis->rcItem, COLOR_BG, lbW, lbH, pdis->rcItem.left, pdis->rcItem.top);
+            }
           } else if (ColorfullMode) {
             int color_index = pdis->itemID % 100;
               HBRUSH hBrush = s_colorful_brushes[color_index];
@@ -499,7 +564,8 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
               if (!s_bg_brush) s_bg_brush = CreateSolidBrush(COLOR_BG);
               FillRect(pdis->hDC, &pdis->rcItem, s_bg_brush);
             }
-                if (UI_IsListBoxSelected(lb)) {
+          }
+          if (UI_IsListBoxSelected(lb)) {
                   char measureBuffer[512];
                     strncpy(measureBuffer, lb->populated_cache[pdis->itemID], sizeof(measureBuffer) - 1);
                     measureBuffer[sizeof(measureBuffer) - 1] = '\0';
@@ -527,8 +593,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                     }
                   } 
                 } 
-          }
-          
+           
             const char* textBuffer = "";
             if (pdis->itemID < (lb ? lb->populated_count : 0)) {
               int raw = lb->matching_indices[pdis->itemID];
@@ -550,7 +615,8 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
           
             Platform_SetPreRenderStateWin32(textBuffer, &textRect);
             Platform_SetDrawContextWin32(pdis->hDC);
-            if (!fl_prerender()) return TRUE;
+            // temporary
+            // if (!fl_prerender()) return TRUE;
             if (FlintContext_Get()->prompt_callbacks.render != NULL) {
               return TRUE;
             } else {
@@ -606,14 +672,14 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
           if (!s_bg_brush) s_bg_brush = CreateSolidBrush(COLOR_BG);
             FillRect(hdc, &ps.rcPaint, s_bg_brush);
         }
-        {
-            HBRUSH hSep = CreateSolidBrush(COLOR_SEPERATOR);
-            RECT r1 = {0, 60, rect.right, 65};
-            RECT r2 = {0, rect.bottom - 60, rect.right, rect.bottom - 55};
-            FillRect(hdc, &r1, hSep);
-            FillRect(hdc, &r2, hSep);
-            DeleteObject(hSep);
-        }
+        // {
+        //     HBRUSH hSep = CreateSolidBrush(COLOR_SEPERATOR);
+        //     RECT r1 = {0, 60, rect.right, 65};
+        //     RECT r2 = {0, rect.bottom - 60, rect.right, rect.bottom - 55};
+        //     FillRect(hdc, &r1, hSep);
+        //     FillRect(hdc, &r2, hSep);
+        //     DeleteObject(hSep);
+        // }
         if (FlintContext_Get()->prompt_callbacks.render) {
             extern PromptState* Platform_GetWin32PromptState(void);
             PromptState *state = Platform_GetWin32PromptState();
