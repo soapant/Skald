@@ -25,6 +25,36 @@ __attribute__((weak)) bool fl_prerender(void) {
     return Platform_PreRender();
 }
 
+static Display* g_draw_dpy = NULL;
+static XftDraw* g_draw_xd = NULL;
+static Visual* g_draw_vis = NULL;
+static Colormap g_draw_cmap = 0;
+void Platform_SetDrawContext(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap) {
+    g_draw_dpy = dpy; g_draw_xd = xd; g_draw_vis = vis; g_draw_cmap = cmap;
+}
+bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, FontHandle font, const char *align, int pad) {
+    if (!text || !g_draw_dpy || !g_draw_xd) return false;
+    FontHandle fh = font;
+    bool needDestroy = false;
+    if (!FH_TO_XFT(fh)) {
+        fh = Platform_CreateFontOnDisplay(g_draw_dpy, FontSize, UsedFont);
+        needDestroy = true;
+    }
+    if (color == 0) color = rgb_to_hex(COLOR_TEXT);
+    const char *a = align ? align : "CENTER";
+    XftColor col;
+    Linux_XftAllocColor(g_draw_dpy, g_draw_vis, g_draw_cmap, color, 0xFFFF, &col);
+    if (strcmp(a, "CENTER")==0 || strcmp(a, "LEFT")==0 || strcmp(a, "RIGHT")==0) {
+        draw_wrapped_text(g_draw_dpy, g_draw_xd, &col, fh, text, y, (char*)a, pad ? pad : x);
+    } else {
+        XftFont *xf = FH_TO_XFT(fh);
+        if (xf) XftDrawStringUtf8(g_draw_xd, &col, xf, x, y + (xf->ascent), (FcChar8*)text, strlen(text));
+    }
+    XftColorFree(g_draw_dpy, g_draw_vis, g_draw_cmap, &col);
+    if (needDestroy) Platform_DestroyFont(fh);
+    return true;
+}
+
 void Platform_DrawListBackground(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap, int y, int h, bool selected) {
     if (selected) {
         Linux_DrawSelectionBackground(dpy, xd, vis, cmap, 0, y, state->width, h, rgb_to_hex(COLOR_SELECTED_TEXT));
@@ -72,15 +102,9 @@ void Platform_DrawListItem(PromptState *state, Display *dpy, XftDraw *xd, Visual
 void Platform_DrawEditBackground(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap, FontHandle font) {
     unsigned long window_title_text_color_map;
     eval_window_title_color(state,&window_title_text_color_map);
-    XftColor text_color, window_title_text_color, vim_text_color;
-    Linux_XftAllocColor(dpy, vis, cmap, rgb_to_hex(COLOR_TEXT), 0xFFFF, &text_color);
-    Linux_XftAllocColor(dpy, vis, cmap, window_title_text_color_map, 0xFFFF, &window_title_text_color);
-    Linux_XftAllocColor(dpy, vis, cmap, VimModeTextColor(), 0xFFFF, &vim_text_color);
-    draw_wrapped_text(dpy, xd, &window_title_text_color, font,state->window_title,state->height - 40,"LEFT",5);
-    draw_wrapped_text(dpy, xd, &vim_text_color,font,g_vim_mode,state->height - 40,"RIGHT",5);
-    XftColorFree(dpy, vis, cmap, &text_color);
-    XftColorFree(dpy, vis, cmap, &vim_text_color);
-    XftColorFree(dpy, vis, cmap, &window_title_text_color);
+    Platform_SetDrawContext(dpy, xd, vis, cmap);
+    Platform_DrawTextRaw(5, state->height - 40, state->window_title, window_title_text_color_map, font, "LEFT", 5);
+    Platform_DrawTextRaw(5, state->height - 40, g_vim_mode, VimModeTextColor(), font, "RIGHT", 5);
 }
 void Platform_DrawEditText(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap, FontHandle font) {
     XftFont *xf = FH_TO_XFT(font);
