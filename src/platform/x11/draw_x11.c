@@ -8,14 +8,6 @@
 #include <X11/Xft/Xft.h>
 #include <stdlib.h>
 
-void Platform_BeginListDraw(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap) {
-    (void)state; (void)dpy; (void)xd; (void)vis; (void)cmap;
-}
-
-void Platform_EndListDraw(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap) {
-    (void)state; (void)dpy; (void)xd; (void)vis; (void)cmap;
-}
-
 void Platform_DrawListBackground(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap, int y, int h, bool selected) {
     if (selected) {
         Linux_DrawSelectionBackground(dpy, xd, vis, cmap, 0, y, state->width, h, rgb_to_hex(COLOR_SELECTED_TEXT));
@@ -58,13 +50,6 @@ void Platform_DrawListItem(PromptState *state, Display *dpy, XftDraw *xd, Visual
     XftColorFree(dpy, vis, cmap, &ncolor);
     XftColorFree(dpy, vis, cmap, &bcolor);
     XftColorFree(dpy, vis, cmap, &pcolor);
-}
-
-void Platform_BeginEditDraw(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap) {
-    (void)state; (void)dpy; (void)xd; (void)vis; (void)cmap;
-}
-void Platform_EndEditDraw(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap) {
-    (void)state; (void)dpy; (void)xd; (void)vis; (void)cmap;
 }
 
 void Platform_DrawEditBackground(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap, FontHandle font) {
