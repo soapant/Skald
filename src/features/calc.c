@@ -29,9 +29,6 @@ static UnitDef UNITS[] = {
 };
 #define UNIT_COUNT (sizeof(UNITS)/sizeof(UNITS[0]))
 
-
-
-
 static int str_casecmp_n(const char* a, const char* b) {
     while(*a && *b){ int ca=tolower((unsigned char)*a), cb=tolower((unsigned char)*b); if(ca!=cb) return ca-cb; a++; b++; }
     return tolower((unsigned char)*a)-tolower((unsigned char)*b);
@@ -80,9 +77,6 @@ static UnitDef* find_unit_fuzzy(const char* input){
     for(size_t i=0;i<UNIT_COUNT;i++){ int d=levenshtein_ci(s, UNITS[i].canonical); if(d<bestd && d<=2 && strlen(s)>=3){ bestd=d; best=&UNITS[i]; } }
     return best;
 }
-
-
-
 
 void format_number_plain(double num, char* out, size_t max_len){
     if(isnan(num) || isinf(num)){ snprintf(out, max_len, "%g", num); return; }
