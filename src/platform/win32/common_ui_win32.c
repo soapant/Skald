@@ -283,7 +283,7 @@ void SimpleCreateChildControls(WindowHandle hwndParent, HFONT hFont, const char*
 
   FlintContext_Get()->window.hEditControl = WH_FROM_HWND(CreateWindowExA(
       0, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
-      20, 50, layout->w - 40, 40, WH_TO_HWND(hwndParent), (HMENU)IDC_INPUT_BOX, hInstance, NULL
+      20, 20, layout->w - 40, 32, WH_TO_HWND(hwndParent), (HMENU)IDC_INPUT_BOX, hInstance, NULL
       ));
 
   if (WH_TO_HWND(FlintContext_Get()->window.hEditControl) == NULL) return;
@@ -296,7 +296,7 @@ void SimpleCreateChildControls(WindowHandle hwndParent, HFONT hFont, const char*
     FlintContext_Get()->window.hListBox = WH_FROM_HWND(CreateWindowExA(
         0, "LISTBOX", "",
         WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOSEL,
-        20, 105, layout->w - 40, layout->h - 115, WH_TO_HWND(hwndParent), (HMENU)IDC_LIST_BOX, hInstance, NULL
+        20, 70, layout->w - 40, layout->h - 130, WH_TO_HWND(hwndParent), (HMENU)IDC_LIST_BOX, hInstance, NULL
         ));
 
     if (WH_TO_HWND(FlintContext_Get()->window.hListBox) == NULL) return;
@@ -356,7 +356,7 @@ void CreateChildControls(WindowHandle hwndParent, HFONT hFont, const char* list[
 
   FlintContext_Get()->window.hEditControl = WH_FROM_HWND(CreateWindowExA(
       0, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
-      20, 50, layout->w - 40, 40, WH_TO_HWND(hwndParent), (HMENU)IDC_INPUT_BOX, hInstance, NULL
+      20, 20, layout->w - 40, 32, WH_TO_HWND(hwndParent), (HMENU)IDC_INPUT_BOX, hInstance, NULL
       ));
   if (WH_TO_HWND(FlintContext_Get()->window.hEditControl) == NULL) {
     return;
@@ -370,7 +370,7 @@ void CreateChildControls(WindowHandle hwndParent, HFONT hFont, const char* list[
     FlintContext_Get()->window.hListBox = WH_FROM_HWND(CreateWindowExA(
         0, "LISTBOX", "",
         WS_CHILD | WS_VISIBLE | LBS_NODATA | LBS_OWNERDRAWFIXED,
-        20, 105, layout->w - 40, layout->h - 115, WH_TO_HWND(hwndParent), (HMENU)IDC_LIST_BOX, hInstance, NULL
+        20, 70, layout->w - 40, layout->h - 130, WH_TO_HWND(hwndParent), (HMENU)IDC_LIST_BOX, hInstance, NULL
         ));
 
     if (WH_TO_HWND(FlintContext_Get()->window.hListBox) == NULL) {

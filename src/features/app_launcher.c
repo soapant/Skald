@@ -1,4 +1,7 @@
 #include "core/flapi.h"
+#if defined(_WIN32)
+#include <windows.h>
+#endif
 
 typedef struct {
     int vk_code;
@@ -90,35 +93,35 @@ void initialize_app_cache(void) {
 #else
     char* allowed[] = {"desktop",NULL};
 #endif
-    s_apps.count = 0;
+    ListOfFiles tmp = {0};
     for (int i = 0; i < (int)ARRAY_LEN(ListOfProgramPaths); i++) {
         if (!ListOfProgramPaths[i] || ListOfProgramPaths[i][0] == '\0') continue;
-        fl_get_all_files_from_dir(ListOfProgramPaths[i], allowed, &s_apps, (char**)ListOfShitToIgnore);
+        fl_get_all_files_from_dir(ListOfProgramPaths[i], allowed, &tmp, (char**)ListOfShitToIgnore);
     }
-    for (size_t i = 0; i < s_apps.count; ) {
+    for (size_t i = 0; i < tmp.count; ) {
         bool skip = false;
         char display_name[256] = {0};
         bool has_display = false;
-        if (strstr(s_apps.items[i].path, ".desktop")) {
+        if (strstr(tmp.items[i].path, ".desktop")) {
             bool nodisplay=false;
-            if (fl_parse_desktop_file(s_apps.items[i].path, display_name, sizeof(display_name), &nodisplay)) has_display=true;
+            if (fl_parse_desktop_file(tmp.items[i].path, display_name, sizeof(display_name), &nodisplay)) has_display=true;
             if (nodisplay) skip=true;
         }
         if (skip) {
-            for (size_t k = i; k + 1 < s_apps.count; k++) s_apps.items[k] = s_apps.items[k+1];
-            s_apps.count--;
+            for (size_t k = i; k + 1 < tmp.count; k++) tmp.items[k] = tmp.items[k+1];
+            tmp.count--;
             continue;
         }
         if (has_display && display_name[0]) {
-            snprintf(s_apps.items[i].name, sizeof(s_apps.items[i].name), "%s", display_name);
+            snprintf(tmp.items[i].name, sizeof(tmp.items[i].name), "%s", display_name);
         }
         i++;
     }
-    for (size_t i = 0; i < s_apps.count; i++) {
-        for (size_t j = i + 1; j < s_apps.count; ) {
-            if (fl_string_match_insensitive(s_apps.items[i].name, s_apps.items[j].name)) {
-                for (size_t k = j; k + 1 < s_apps.count; k++) s_apps.items[k] = s_apps.items[k+1];
-                s_apps.count--;
+    for (size_t i = 0; i < tmp.count; i++) {
+        for (size_t j = i + 1; j < tmp.count; ) {
+            if (fl_string_match_insensitive(tmp.items[i].name, tmp.items[j].name)) {
+                for (size_t k = j; k + 1 < tmp.count; k++) tmp.items[k] = tmp.items[k+1];
+                tmp.count--;
             } else {
                 j++;
             }
@@ -127,31 +130,43 @@ void initialize_app_cache(void) {
     
 #if defined(_WIN32)
     for (int shortcut_idx = 0; shortcut_idx < SYSTEM_SHORTCUT_COUNT; shortcut_idx++) {
-        if (s_apps.count >= MAX_APPS) break;
+        if (tmp.count >= MAX_APPS) break;
         
         bool found = false;
-        for (size_t app_idx = 0; app_idx < s_apps.count; app_idx++) {
-            if (fl_string_match_insensitive(s_apps.items[app_idx].path, SystemShortcuts[shortcut_idx].path)) {
-                strncpy(s_apps.items[app_idx].name, SystemShortcuts[shortcut_idx].name, sizeof(s_apps.items[app_idx].name) - 1);
-                s_apps.items[app_idx].name[sizeof(s_apps.items[app_idx].name) - 1] = '\0';
+        for (size_t app_idx = 0; app_idx < tmp.count; app_idx++) {
+            if (fl_string_match_insensitive(tmp.items[app_idx].path, SystemShortcuts[shortcut_idx].path)) {
+                strncpy(tmp.items[app_idx].name, SystemShortcuts[shortcut_idx].name, sizeof(tmp.items[app_idx].name) - 1);
+                tmp.items[app_idx].name[sizeof(tmp.items[app_idx].name) - 1] = '\0';
                 found = true;
                 break;
             }
         }
         if (!found) {
-            if (s_apps.count >= s_apps.capacity) {
-                s_apps.capacity = s_apps.capacity == 0 ? 10 : s_apps.capacity * 2;
-                s_apps.items = realloc(s_apps.items, s_apps.capacity * sizeof(FileItem));
+            if (tmp.count >= tmp.capacity) {
+                tmp.capacity = tmp.capacity == 0 ? 10 : tmp.capacity * 2;
+                tmp.items = realloc(tmp.items, tmp.capacity * sizeof(FileItem));
             }
-            strncpy(s_apps.items[s_apps.count].name, SystemShortcuts[shortcut_idx].name, sizeof(s_apps.items[s_apps.count].name) - 1);
-            s_apps.items[s_apps.count].name[sizeof(s_apps.items[s_apps.count].name) - 1] = '\0';
+            strncpy(tmp.items[tmp.count].name, SystemShortcuts[shortcut_idx].name, sizeof(tmp.items[tmp.count].name) - 1);
+            tmp.items[tmp.count].name[sizeof(tmp.items[tmp.count].name) - 1] = '\0';
             
-            strncpy(s_apps.items[s_apps.count].path, SystemShortcuts[shortcut_idx].path, sizeof(s_apps.items[s_apps.count].path) - 1);
-            s_apps.items[s_apps.count].path[sizeof(s_apps.items[s_apps.count].path) - 1] = '\0';
+            strncpy(tmp.items[tmp.count].path, SystemShortcuts[shortcut_idx].path, sizeof(tmp.items[tmp.count].path) - 1);
+            tmp.items[tmp.count].path[sizeof(tmp.items[tmp.count].path) - 1] = '\0';
             
-            s_apps.count++;
+            tmp.count++;
         }
     }
+#endif
+#if defined(_WIN32)
+    static CRITICAL_SECTION g_apps_cs;
+    static bool g_apps_cs_inited = false;
+    if (!g_apps_cs_inited) { InitializeCriticalSection(&g_apps_cs); g_apps_cs_inited = true; }
+    EnterCriticalSection(&g_apps_cs);
+    if (s_apps.items) free(s_apps.items);
+    s_apps = tmp;
+    LeaveCriticalSection(&g_apps_cs);
+#else
+    if (s_apps.items) free(s_apps.items);
+    s_apps = tmp;
 #endif
     rebuild_icon_cache();
 }
@@ -322,8 +337,24 @@ void TriggerAppLauncher(void) {
            .render = applauncher_render);
 }
 
+#if defined(_WIN32)
+#include <windows.h>
+static DWORD WINAPI app_launcher_bg_init(LPVOID p) {
+    (void)p;
+    initialize_app_cache();
+    return 0;
+}
+FLINT_FEATURE_INIT {
+    // Windows: app cache scans StartMenu + System32 + D:\Projects which is 5s cold - do async so startup not blocked
+    HANDLE h = CreateThread(NULL, 0, app_launcher_bg_init, NULL, 0, NULL);
+    if (h) CloseHandle(h);
+    fl_register_hotkey("Alt+E", TriggerAppLauncher);
+    fl_register_feature("App Launcher", TriggerAppLauncher);
+}
+#else
 FLINT_FEATURE_INIT {
     initialize_app_cache();
     fl_register_hotkey("Alt+E", TriggerAppLauncher);
     fl_register_feature("App Launcher", TriggerAppLauncher);
 }
+#endif
