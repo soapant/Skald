@@ -2,6 +2,7 @@
 
 void copy_seifisbad(void) {
     fl_copy_to_clipboard("seifisbad@gmail.com");
+    SubjectiveMessageDisplay("seifisbad@gmail.com",140,1,COLOR_TEXT);
 }
 void copy_password(void) {
     fl_copy_to_clipboard("i_am_retarded1");
