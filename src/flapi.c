@@ -232,8 +232,13 @@ void fl_register_feature(const char* name, void (*cb)(void)) {
 }
 void fl_register_feature_with_icon(const char* name, void (*cb)(void), const char* icon_path) {
     if (!name || !cb) return;
+    for (int i=0;i<g_feature_reg_count;i++) if (strcmp(g_feature_regs[i].name, name)==0) {
+        g_feature_regs[i].cb = cb;
+        if (icon_path) strncpy(g_feature_regs[i].icon, icon_path, sizeof(g_feature_regs[i].icon)-1);
+        else g_feature_regs[i].icon[0]='\0';
+        return;
+    }
     if (g_feature_reg_count >= MaxFeatures) return;
-    for (int i=0;i<g_feature_reg_count;i++) if (strcmp(g_feature_regs[i].name, name)==0) return;
     strncpy(g_feature_regs[g_feature_reg_count].name, name, sizeof(g_feature_regs[g_feature_reg_count].name)-1);
     g_feature_regs[g_feature_reg_count].cb = cb;
     if (icon_path) strncpy(g_feature_regs[g_feature_reg_count].icon, icon_path, sizeof(g_feature_regs[g_feature_reg_count].icon)-1);

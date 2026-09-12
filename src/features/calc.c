@@ -370,7 +370,7 @@ void calculator_render_callback(PromptState *state) {
     strncpy(g_calc_last_result, result, sizeof(g_calc_last_result)-1);
     int cx = 0;
     int cy = state->height / 2 - 40;
-    fl_place_text_raw(.x=cx, .y=cy, .text=g_calc_last_result, .align="CENTER", .pad=cx);
+    fl_place_text_raw(.x=cx, .y=40, .text=g_calc_last_result, .align="CENTER", .pad=cx);
     fl_place_text_raw(.x=cx, .y=cy+36, .text="↵ copy  ^↵ use  ⇥ flip", .align="CENTER", .pad=cx);
 }
 

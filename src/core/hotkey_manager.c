@@ -14,6 +14,12 @@ static int g_hotkey_count = 0;
 static int g_hotkey_capacity = 0;
 
 bool hotkey_register_internal(HotkeyBinding binding) {
+    for (int i=0;i<g_hotkey_count;i++) {
+        if (g_hotkeys[i].vk_code == binding.vk_code && g_hotkeys[i].modifiers == binding.modifiers) {
+            g_hotkeys[i] = binding;
+            return true;
+        }
+    }
     if (g_hotkey_count >= g_hotkey_capacity) {
         int new_cap = g_hotkey_capacity == 0 ? 16 : g_hotkey_capacity * 2;
         HotkeyBinding* new_arr = realloc(g_hotkeys, new_cap * sizeof(HotkeyBinding));
