@@ -282,6 +282,7 @@ Popup* EditPopup_Create(WindowManager* wm, const char* initial_text,
     if (!data) { PROFILE_END_VAR(timer, "window_manager:EditPopup_Create"); return NULL; }
     int h = 100;
     int w = 1000;
+    WindowManager_GetCenteredPos(w, h, &x, &y);
     
     data->base.vtable = &g_edit_popup_vtable;
     data->base.manager = wm;

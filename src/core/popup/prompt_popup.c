@@ -379,16 +379,14 @@ Popup* PromptPopup_Create(WindowManager* wm, const PromptSpec* spec) {
     PROFILE_START(timer);
     if (!wm || !spec) { PROFILE_END_VAR(timer, "window_manager:PromptPopup_Create"); return NULL; }
     
-    int screen_width = 1920;
-    int screen_height = 1080;
     int layout_w = 900;
     int layout_h = 95 + (spec->count > 0 ? (spec->count * spec->item_height) : 0);
     
     if (layout_h < spec->height) layout_h = spec->height;
     if (layout_h > spec->width) layout_h = spec->width;
     
-    int x = (screen_width - layout_w) / 2;
-    int y = (screen_height - layout_h) / 2;
+    int x, y;
+    WindowManager_GetCenteredPos(layout_w, layout_h, &x, &y);
     
     PromptPopupData* data = calloc(1, sizeof(PromptPopupData));
     if (!data) { PROFILE_END_VAR(timer, "window_manager:PromptPopup_Create"); return NULL; }

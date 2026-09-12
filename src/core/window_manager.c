@@ -37,6 +37,7 @@
 #include <X11/Xatom.h>
 #include <X11/keysym.h>
 #include <X11/Xft/Xft.h>
+#include <X11/extensions/Xrandr.h>
 #include <unistd.h>
 #include <stdatomic.h>
 #include "platform/x11/display.h"
@@ -303,14 +304,61 @@ void WindowManager_PopPopup(WindowManager* wm) {
     }
     popup->visible = false;
     popup->manager = NULL;
+#if !defined(_WIN32)
     if (wm->popup_count == 0) {
         Platform_DismissMessage();
     }
+#endif
 }
 
 Popup* WindowManager_GetTopPopup(WindowManager* wm) {
     if (!wm || wm->popup_count == 0) return NULL;
     return wm->popups[wm->popup_count - 1];
+}
+
+void WindowManager_GetMainMonitorGeometry(int *ox, int *oy, int *ow, int *oh) {
+    int x = 3840, y = 0, w = 1920, h = 1080;
+#if !defined(_WIN32)
+    Display *dpy = NULL;
+    WindowManager *wm = WindowManager_Get();
+    if (wm) dpy = wm->display;
+    if (!dpy) dpy = get_display();
+    if (dpy) {
+        Window root = DefaultRootWindow(dpy);
+        XRRScreenResources *res = XRRGetScreenResourcesCurrent(dpy, root);
+        if (res) {
+            long best = -1;
+            int bx = 3840, by = 0, bw = 1920, bh = 1080;
+            bool found_main = false;
+            for (int c = 0; c < res->ncrtc; c++) {
+                XRRCrtcInfo *ci = XRRGetCrtcInfo(dpy, res, res->crtcs[c]);
+                if (!ci || ci->noutput == 0 || ci->width == 0) { if (ci) XRRFreeCrtcInfo(ci); continue; }
+                if (ci->x == 3840 && ci->y == 0 && ci->width == 1920) {
+                    bx = ci->x; by = ci->y; bw = ci->width; bh = ci->height;
+                    found_main = true;
+                    XRRFreeCrtcInfo(ci);
+                    break;
+                }
+                long area = (long)ci->width * ci->height;
+                if (area > best) { best = area; bx = ci->x; by = ci->y; bw = ci->width; bh = ci->height; }
+                XRRFreeCrtcInfo(ci);
+            }
+            XRRFreeScreenResources(res);
+            if (found_main || best >= 0) { x = bx; y = by; w = bw; h = bh; }
+        }
+    }
+#endif
+    if (ox) *ox = x;
+    if (oy) *oy = y;
+    if (ow) *ow = w;
+    if (oh) *oh = h;
+}
+
+void WindowManager_GetCenteredPos(int win_w, int win_h, int *out_x, int *out_y) {
+    int mox, moy, mow, moh;
+    WindowManager_GetMainMonitorGeometry(&mox, &moy, &mow, &moh);
+    if (out_x) *out_x = mox + (mow - win_w) / 2;
+    if (out_y) *out_y = moy + (moh - win_h) / 2;
 }
 
 void WindowManager_ProcessEvents(WindowManager* wm) {

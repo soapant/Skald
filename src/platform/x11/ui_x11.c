@@ -41,6 +41,7 @@
 #include "platform/x11/drawing.h"
 #include "platform/x11/window_factory.h"
 #include "platform/x11/input.h"
+#include "core/window_manager.h"
 
 
 extern int pending_hotkey_vk;
@@ -195,33 +196,8 @@ void Platform_DisplayMessage(const char* message, int centerX, int centerY, int 
     unsigned long bg_color = rgb_to_hex(COLOR_BG);
     unsigned long text_color = rgb_to_hex(color);
 
-    int mox = 3840, moy = 0, mow = 1920, moh = 1080;
-    int rx = 3840 + 960, ry = 540;
-    {
-        Window root = DefaultRootWindow(dpy);
-        XRRScreenResources *res = XRRGetScreenResourcesCurrent(dpy, root);
-        if (res) {
-            long best = -1;
-            for (int c = 0; c < res->ncrtc; c++) {
-                XRRCrtcInfo *ci = XRRGetCrtcInfo(dpy, res, res->crtcs[c]);
-                if (!ci || ci->noutput == 0 || ci->width == 0) { if (ci) XRRFreeCrtcInfo(ci); continue; }
-                long area = (long)ci->width * ci->height;
-                if (ci->x == 3840 && ci->y == 0 && ci->width == 1920) {
-                    mox = ci->x; moy = ci->y; mow = ci->width; moh = ci->height;
-                    rx = mox + mow/2; ry = moy + moh/2;
-                    XRRFreeCrtcInfo(ci);
-                    break;
-                }
-                if (area > best) {
-                    best = area;
-                    mox = ci->x; moy = ci->y; mow = ci->width; moh = ci->height;
-                    rx = mox + mow/2; ry = moy + moh/2;
-                }
-                XRRFreeCrtcInfo(ci);
-            }
-            XRRFreeScreenResources(res);
-        }
-    }
+    int mox, moy, mow, moh;
+    WindowManager_GetMainMonitorGeometry(&mox, &moy, &mow, &moh);
     int px = mox + (int)((centerX / 1920.0) * mow);
     int py = moy + (int)((centerY / 1080.0) * moh);
     if (centerY > 900) {
