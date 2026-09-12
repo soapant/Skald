@@ -13,6 +13,7 @@
 #include "core/window_manager.h"
 #include "core/flapi.h"
 #include "core/flapi_platform.h"
+#include "platform/draw.h"
 #include "core/hotkey_manager.h"
 
 
@@ -442,5 +443,17 @@ bool fl_focus_window_by_title(char* title) {
   if (!title) return false;
   return Platform_FocusWindow(title);
 }
+
+bool fl_place_text_raw_impl(const FlTextSpec *spec) {
+    if (!spec || !spec->text) return false;
+    unsigned long col = spec->color ? spec->color : rgb_to_hex(COLOR_TEXT);
+    const char *align = spec->align ? spec->align : "CENTER";
+    FontHandle fh = spec->font;
+    return Platform_DrawTextRaw(spec->x, spec->y, spec->text, col, fh, align, spec->pad);
+}
+bool fl_place_editbox_raw_impl(const FlEditSpec *spec) { (void)spec; return false; }
+bool fl_place_listbox_raw_impl(const FlListSpec *spec) { (void)spec; return false; }
+bool fl_place_image_raw_impl(const FlImageSpec *spec) { (void)spec; return false; }
+bool fl_place_separator_raw_impl(int x, int y, int w, int h) { (void)x; (void)y; (void)w; (void)h; return false; }
 
 

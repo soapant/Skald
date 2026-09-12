@@ -1,4 +1,5 @@
-make a preset for the not plugged in to ||[Misc]|[DontForget] i totally forgot i  really make the clipboard ||[Cprogram]|[DontForget]|[Feature]
+make a preset for the not plugged in to ||[Misc]|[DontForget]
+i totally forgot i  really make the clipboard ||[Cprogram]|[DontForget]|[Feature]
 add a debug menu to show data about the feature||[Cprogram]|[DontForget]
 settings ui||[Cprogram]|[NotImplemetedYet]
 / filtering||[Cprogram]|[NotImplemetedYet]
