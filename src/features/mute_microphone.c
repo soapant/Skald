@@ -76,7 +76,6 @@ void TriggerMuteState(void) {
 }
 
 FLINT_FEATURE_INIT {
-fl_register_hotkey("Alt+Shift+P", TriggerMuteState);
-
+    // fl_register_hotkey("Alt+Shift+P", TriggerMuteState);
     fl_register_feature("Mute Microphone", TriggerMuteState);
 }
