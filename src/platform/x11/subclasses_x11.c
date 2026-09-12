@@ -507,8 +507,10 @@ bool Linux_RenderPromptUser(Display *dpy, Window *win, PromptState *state) {
     XWindowAttributes attrs;
     if (!XGetWindowAttributes(dpy, *win, &attrs)) {
         Linux_DrawBackground(dpy, *win, w, h);
+        Platform_SetDrawContext(dpy, NULL, NULL, 0);
         if (FlintContext_Get()->prompt_callbacks.render != NULL) {
-          FlintContext_Get()->prompt_callbacks.render(dpy,win,state);
+          Platform_SetDrawContext(dpy, NULL, NULL, 0);
+          FlintContext_Get()->prompt_callbacks.render(state);
         } else {
           if (state->has_listbox) DrawPromptUserListBox(dpy,win,state);
         }
@@ -522,8 +524,9 @@ bool Linux_RenderPromptUser(Display *dpy, Window *win, PromptState *state) {
     Pixmap dbl = XCreatePixmap(dpy, *win, w, h, depth);
     if (!dbl) {
         Linux_DrawBackground(dpy, *win, w, h);
+        Platform_SetDrawContext(dpy, NULL, NULL, 0);
         if (FlintContext_Get()->prompt_callbacks.render != NULL) {
-          FlintContext_Get()->prompt_callbacks.render(dpy,win,state);
+          FlintContext_Get()->prompt_callbacks.render(state);
         } else {
           if (state->has_listbox) DrawPromptUserListBox(dpy,win,state);
         }
@@ -535,8 +538,9 @@ bool Linux_RenderPromptUser(Display *dpy, Window *win, PromptState *state) {
     if (!xdDbl) {
         XFreePixmap(dpy, dbl);
         Linux_DrawBackground(dpy, *win, w, h);
+        Platform_SetDrawContext(dpy, NULL, NULL, 0);
         if (FlintContext_Get()->prompt_callbacks.render != NULL) {
-          FlintContext_Get()->prompt_callbacks.render(dpy,win,state);
+          FlintContext_Get()->prompt_callbacks.render(state);
         } else {
           if (state->has_listbox) DrawPromptUserListBox(dpy,win,state);
         }
@@ -555,8 +559,7 @@ bool Linux_RenderPromptUser(Display *dpy, Window *win, PromptState *state) {
     }
     Platform_SetDrawContext(dpy, xdDbl, vis, cmap);
     if (FlintContext_Get()->prompt_callbacks.render != NULL) {
-        Window dbl_win = (Window)dbl;
-        FlintContext_Get()->prompt_callbacks.render(dpy, &dbl_win, state);
+        FlintContext_Get()->prompt_callbacks.render(state);
         DrawPromptUserEditControlOnDraw(dpy, xdDbl, vis, cmap, state);
     } else {
         if (state->has_listbox) {

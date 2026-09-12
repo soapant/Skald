@@ -54,13 +54,8 @@ typedef void (*RefreshCallback)(const char* filter, WindowHandle hListBox, ListB
 typedef bool (*EnterCallback)(const char* selection, ListBoxInfo* lb);
 typedef bool (*CtrlEnterCallback)(const char* selection, ListBoxInfo* lb);
 typedef void (*TabCallback)(ListBoxInfo* lb);
-#if defined(_WIN32)
-typedef void (*RenderCallback)(HDC hdc, const char* text, RECT* rect, BOOL is_selected, int itemIndex);
-typedef void (*AliasCallback)(HDC hdc, const char* text, RECT* rect, BOOL is_selected, int itemIndex);
-#else
-typedef void (*RenderCallback)(Display *dpy, Window *win, PromptState *state);
+typedef void (*RenderCallback)(PromptState *state);
 typedef void (*AliasCallback)(void* hdc, const char* text, void* rect, bool is_selected, int itemIndex);
-#endif
 typedef void (*EditCallback)(const char* selection, ListBoxInfo* lb);
 typedef void (*FilterCallback)(const char* item,const char* filter);
 typedef void (*CopyCallback)(const char* selection,int true_index,int type);

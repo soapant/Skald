@@ -371,6 +371,17 @@ int fl_listbox_get_count(void) {
     return g_fl_list_lb ? g_fl_list_lb->populated_count : 0;
 }
 
+unsigned long fl_listbox_get_current_standard_color(void) {
+    if (!g_fl_list_lb || g_fl_list_cur == 0) return 0;
+    int idx = g_fl_list_lb->view_offset + g_fl_list_cur - 1;
+    if (idx < 0 || idx >= g_fl_list_lb->populated_count) return 0;
+    bool sel = (idx == g_fl_list_lb->selected_index);
+    if (sel) return rgb_to_hex(COLOR_TEXT);
+    unsigned long ncol, bcol, pcol;
+    Platform_GetItemColors(idx, g_fl_list_lb->populated_count, &ncol, &bcol, &pcol);
+    return pcol;
+}
+
 char* fl_search_file_in_dir_platform(const char* directory, const char* search_string,char* output_path) {
     PROFILE_START(timer);
     if (!directory || !search_string || strlen(search_string) == 0) { PROFILE_END_VAR(timer, "flapi_x11:fl_search_file_in_dir_platform"); return NULL; }
