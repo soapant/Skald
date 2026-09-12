@@ -50,6 +50,10 @@ void SimpleCreateChildControls(WindowHandle hwndParent, HFONT hFont, const char*
 void Win32_ApplyRoundedCorners(HWND hwnd, int w, int h);
 void Win32_DrawBackground(HDC hdc, RECT* rc);
 void Win32_DrawSelectionBackground(HDC hdc, RECT* rc, COLORREF base);
+void Win32_DrawBackgroundSlice(HDC hdc, RECT* rc, COLORREF base, int containerW, int containerH, int offsetX, int offsetY);
+void Win32_FillRoundedRect(HDC hdc, RECT* rc, COLORREF col, int radius);
+void Win32_FillRoundedRectSlice(HDC hdc, RECT* rc, COLORREF base, int containerW, int containerH, int offsetX, int offsetY, int radius);
+void Win32_DrawRoundedSelection(HDC hdc, RECT* rc, COLORREF base, int radius);
 #else
 #include "core/window_manager.h"
 static inline bool IsPopupActive(WindowHandle hPopupWnd) {
