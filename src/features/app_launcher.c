@@ -17,6 +17,7 @@ const char* ListOfShitToIgnore[] = {
   "dll",
   "gtnh 2.8",
   ".h",
+  ".c",
   "yazi",
   "obj",
   "build",
@@ -26,7 +27,6 @@ const char* ListOfProgramPaths[] = {
 #if defined(_WIN32)
     "{APPDATA}/Microsoft/Windows/Start Menu",
     "{PROGRAMDATA}/Microsoft/Windows/Start Menu/Programs",
-    "{DEV}",
     "{MISC}",
     "{SystemRoot}/System32/",             
     "shell:AppsFolder",
@@ -36,7 +36,6 @@ const char* ListOfProgramPaths[] = {
     "/home/diggy/.local/share/applications",
     "/usr/bin",
     "/home/diggy/.local/bin",
-    "/home/diggy/Programming",
     "/home/diggy/miscellaneous",
 #endif
 };
@@ -345,7 +344,6 @@ static DWORD WINAPI app_launcher_bg_init(LPVOID p) {
     return 0;
 }
 FLINT_FEATURE_INIT {
-    // Windows: app cache scans StartMenu + System32 + D:\Projects which is 5s cold - do async so startup not blocked
     HANDLE h = CreateThread(NULL, 0, app_launcher_bg_init, NULL, 0, NULL);
     if (h) CloseHandle(h);
     fl_register_hotkey("Alt+E", TriggerAppLauncher);
