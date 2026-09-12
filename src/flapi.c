@@ -444,9 +444,15 @@ bool fl_focus_window_by_title(char* title) {
   return Platform_FocusWindow(title);
 }
 
+unsigned long fl_listbox_get_current_standard_color(void);
+
 bool fl_place_text_raw_impl(const FlTextSpec *spec) {
     if (!spec || !spec->text) return false;
-    unsigned long col = spec->color ? spec->color : rgb_to_hex(COLOR_TEXT);
+    unsigned long col = spec->color;
+    if (col == 0) {
+        unsigned long cur = fl_listbox_get_current_standard_color();
+        col = cur ? cur : rgb_to_hex(COLOR_TEXT);
+    }
     const char *align = spec->align ? spec->align : "CENTER";
     FontHandle fh = spec->font;
     return Platform_DrawTextRaw(spec->x, spec->y, spec->text, col, fh, align, spec->pad);
@@ -472,13 +478,7 @@ bool fl_place_listbox_raw_impl(const FlListSpec *spec) {
     if (!fl_listbox_begin(spec)) return false;
     FlListItemCtx ctx;
     while (fl_listbox_next(&ctx)) {
-        unsigned long col = ctx.selected ? rgb_to_hex(COLOR_TEXT) : 0;
-        if (!ctx.selected) {
-            unsigned long ncol, bcol, pcol;
-            Platform_GetItemColors(ctx.idx, fl_listbox_get_count(), &ncol, &bcol, &pcol);
-            col = pcol;
-        }
-        fl_place_text_raw(.x=ctx.x + 10, .y=ctx.y + 4, .text=ctx.text, .color=col, .align="LEFT", .pad=ctx.x + 10);
+        fl_place_text_raw(.x=ctx.x + 10, .y=ctx.y + 4, .text=ctx.text, .align="LEFT", .pad=ctx.x + 10);
     }
     fl_listbox_end();
     return true;
