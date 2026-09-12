@@ -101,7 +101,7 @@ void Platform_DrawListItem(PromptState *state, Display *dpy, XftDraw *xd, Visual
     Linux_XftAllocColor(dpy, vis, cmap, ncol, 0xFFFF, &ncolor);
     Linux_XftAllocColor(dpy, vis, cmap, bcol, 0xFFFF, &bcolor);
     Linux_XftAllocColor(dpy, vis, cmap, pcol, 0xFFFF, &pcolor);
-    DrawListBoxItemText(dpy, xd, vis, cmap, font, &ncolor, &bcolor, &pcolor, lb, (char*)icon_path, idx, y, text_x);
+    DrawListBoxItemText(dpy, xd, vis, cmap, font, &ncolor, &bcolor, &pcolor, lb,(char*)icon_path, idx, y, text_x);
     XftColorFree(dpy, vis, cmap, &ncolor);
     XftColorFree(dpy, vis, cmap, &bcolor);
     XftColorFree(dpy, vis, cmap, &pcolor);
