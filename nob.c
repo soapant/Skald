@@ -13,7 +13,7 @@
 #endif
 
 #if defined(_WIN32)
-     #define CC_FLAGS "-std=gnu17", "-DCOBJMACROS", "-I", "include", "-MMD", "-MP",,"-g","-O3","-Wall","-Wextra","-Wno-unused-parameter","-Wno-sign-compare","-Wno-discarded-qualifiers"
+     #define CC_FLAGS "-std=gnu17", "-DCOBJMACROS", "-I", "include", "-MMD", "-MP","-g","-O3","-Wall","-Wextra","-Wno-unused-parameter","-Wno-sign-compare","-Wno-discarded-qualifiers"
      #define LINK_FLAGS "-lcomctl32", "-lgdiplus", "-lgdi32", "-lshlwapi", "-lshell32", "-lwinmm", "-lole32", "-luuid", "-lmsimg32", "-ldbghelp", "-ldwmapi", "-lpsapi", "-lcrypt32", "-lcomdlg32", "-ladvapi32", "-ldxva2","-user32","-lwinhttp"
 #else
      #define CC_FLAGS "-I", "include", "-I/usr/include/freetype2", "-MMD", "-MP","-g","-O3","-Wall","-Wextra","-Wno-unused-parameter","-Wno-sign-compare","-Wno-discarded-qualifiers"
@@ -29,6 +29,7 @@ static bool collect_source(Nob_Walk_Entry entry) {
         if (nob_sv_ends_with_cstr(path, ".c")) {
 #if defined(_WIN32)
             if (nob_sv_ends_with_cstr(path, "_x11.c")) return true;
+            if (nob_sv_ends_with_cstr(path, "wm.c")) return true;
 #else
             if (nob_sv_ends_with_cstr(path, "_win32.c")) return true;
 #endif
