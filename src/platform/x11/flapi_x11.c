@@ -347,14 +347,13 @@ bool fl_listbox_next_platform(FlListItemCtx *out) {
     int y = g_fl_list_y0 + g_fl_list_cur * g_fl_list_itemH;
     bool sel = (idx == g_fl_list_lb->selected_index);
     if (RoundedCorners && CornerRadius>0) {
-        int R=6;
+        int R=6; int t=ListboxBorderThickness; if(t<1) t=1; if(t>4) t=4;
         int bx = g_fl_list_spec.x + 1;
         int bw = (g_fl_list_spec.w ? g_fl_list_spec.w : 650) - 2;
-        Linux_DrawRoundedBorder(g_fl_list_dpy, g_fl_list_xd, g_fl_list_vis, g_fl_list_cmap, rgb_to_hex(COLOR_SEPERATOR), OpacityAlpha16(), bx, y+1, bw, g_fl_list_itemH-2, R);
         if (sel) {
-            Linux_FillRoundedRect(g_fl_list_dpy, g_fl_list_xd, g_fl_list_vis, g_fl_list_cmap, rgb_to_hex(COLOR_SELECTED_TEXT), OpacityAlpha16(), bx+1, y+2, bw-2, g_fl_list_itemH-4, R-1);
+            Linux_FillRoundedRect(g_fl_list_dpy, g_fl_list_xd, g_fl_list_vis, g_fl_list_cmap, rgb_to_hex(COLOR_SELECTED_TEXT), OpacityAlpha16(), bx+t, y+1+t, bw-2*t, g_fl_list_itemH-2-2*t, R-1);
         } else if (!EnableShaders || ShaderPreset==0) {
-            Linux_FillRoundedRect(g_fl_list_dpy, g_fl_list_xd, g_fl_list_vis, g_fl_list_cmap, rgb_to_hex(COLOR_BG), OpacityAlpha16(), bx+1, y+2, bw-2, g_fl_list_itemH-4, R-1);
+            Linux_FillRoundedRect(g_fl_list_dpy, g_fl_list_xd, g_fl_list_vis, g_fl_list_cmap, rgb_to_hex(COLOR_BG), OpacityAlpha16(), bx+t, y+1+t, bw-2*t, g_fl_list_itemH-2-2*t, R-1);
         }
     } else {
         PromptState tmp = {0};
