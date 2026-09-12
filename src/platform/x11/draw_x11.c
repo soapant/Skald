@@ -15,9 +15,7 @@ void Platform_SetPreRenderState(PromptState *state) { g_prerender_state = state;
 
 bool Platform_PreRender(void) {
     PromptState *state = g_prerender_state;
-    if (!state || !state->has_listbox) return false;
-    ListBoxInfo *lb = &state->listbox;
-    if (!lb->populated_count) return false;
+    if (!state) return false;
     return true;
 }
 
