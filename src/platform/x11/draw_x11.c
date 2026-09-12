@@ -5,8 +5,25 @@
 #include "platform/x11/display.h"
 #include "helpers/ui.h"
 #include "core/timer.h"
+#include "core/context.h"
+#include "core/window_manager.h"
 #include <X11/Xft/Xft.h>
 #include <stdlib.h>
+
+static PromptState *g_prerender_state = NULL;
+void Platform_SetPreRenderState(PromptState *state) { g_prerender_state = state; }
+
+bool Platform_PreRender(void) {
+    PromptState *state = g_prerender_state;
+    if (!state || !state->has_listbox) return false;
+    ListBoxInfo *lb = &state->listbox;
+    if (!lb->populated_count) return false;
+    return true;
+}
+
+__attribute__((weak)) bool fl_prerender(void) {
+    return Platform_PreRender();
+}
 
 void Platform_DrawListBackground(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap, int y, int h, bool selected) {
     if (selected) {

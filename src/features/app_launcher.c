@@ -386,9 +386,7 @@ int applauncher_get_icon_size_for_item(const char* item_name) {
 #include "core/window_manager.h"
 #include "platform/x11/drawing.h"
 void applauncher_render(Display* dpy, Window* win, PromptState* state) {
-    if (!state || !state->has_listbox) return;
     ListBoxInfo *lb = &state->listbox;
-    if (!lb->populated_count) return;
     XWindowAttributes attrs; Visual* vis=NULL; Colormap cmap=0;
     if (XGetWindowAttributes(dpy, *win, &attrs)) { vis=attrs.visual; cmap=attrs.colormap; }
     else { vis=DefaultVisual(dpy, DefaultScreen(dpy)); cmap=DefaultColormap(dpy, DefaultScreen(dpy)); }
@@ -441,8 +439,6 @@ void applauncher_render(Display* dpy, Window* win, PromptState* state) {
 #include <shellapi.h>
 #include "config.h"
 void applauncher_render(HDC hdc, const char* text, RECT* rect, BOOL is_selected, int itemIndex) {
-    if (!text || !rect) return;
-    UI_RedrawBackground(hdc, rect, is_selected);
     int iconSize = IconSize;
     if (iconSize < 16) iconSize = 16;
     if (iconSize > 32) iconSize = 32;

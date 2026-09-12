@@ -30,6 +30,7 @@
 #include <sys/time.h>
 #include <string.h>
 #include "core/timer.h"
+#include "platform/draw.h"
 
 
 extern int pending_hotkey_vk;
@@ -498,6 +499,8 @@ void DrawPromptUserListBox(Display *dpy,Window* win,PromptState *state) {
 }
 
 bool Linux_RenderPromptUser(Display *dpy, Window *win, PromptState *state) {
+    Platform_SetPreRenderState(state);
+    if (!fl_prerender()) return true;
     int w = state->width;
     int h = state->height;
     XWindowAttributes attrs;
