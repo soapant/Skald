@@ -338,13 +338,64 @@ void Platform_SaveRegionToPNG(int x1, int y1, int x2, int y2, const char* fullPa
 }
 
 FontHandle Platform_CreateFont(int size, const char* face_name) {
-    return FH_FROM_HFONT(CreateFontA(
-        size, 0, 0, 0, FW_NORMAL,
+    // size is pixel height - use negative for char height (DPI independent), fallback if face not found
+    int h = -size;
+    // try to ensure font file is loaded if bundled (resources/*.ttf)
+    static bool s_font_loaded = false;
+    if (!s_font_loaded) {
+        s_font_loaded = true;
+        WIN32_FIND_DATAA fd;
+        HANDLE hFind = FindFirstFileA("resources\\*.ttf", &fd);
+        if (hFind != INVALID_HANDLE_VALUE) {
+            do {
+                char path[MAX_PATH]; snprintf(path, sizeof(path), "resources\\%s", fd.cFileName);
+                AddFontResourceExA(path, FR_PRIVATE, 0);
+            } while (FindNextFileA(hFind, &fd));
+            FindClose(hFind);
+        }
+        hFind = FindFirstFileA("data\\*.ttf", &fd);
+        if (hFind != INVALID_HANDLE_VALUE) {
+            do {
+                char path[MAX_PATH]; snprintf(path, sizeof(path), "data\\%s", fd.cFileName);
+                AddFontResourceExA(path, FR_PRIVATE, 0);
+            } while (FindNextFileA(hFind, &fd));
+            FindClose(hFind);
+        }
+    }
+    HFONT hf = CreateFontA(
+        h, 0, 0, 0, FW_NORMAL,
         FALSE, FALSE, FALSE,
         DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
         CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE,
         face_name
-        ));
+        );
+    // fallback to Cascadia/Consolas if requested nerd font not found (CreateFont still succeeds but face will be substituted)
+    // verify by checking actual face via GetTextFace
+    if (hf) {
+        HDC hdc = GetDC(NULL);
+        HFONT old = (HFONT)SelectObject(hdc, hf);
+        char actual[64] = {0};
+        GetTextFaceA(hdc, sizeof(actual), actual);
+        SelectObject(hdc, old);
+        ReleaseDC(NULL, hdc);
+        if (actual[0] && face_name && _stricmp(actual, face_name) != 0) {
+            // requested face not matched - try common nerd/mono fallbacks before default
+            const char* fallbacks[] = {"Cascadia Code", "Cascadia Mono", "Consolas", "Segoe UI", NULL};
+            for (int i=0; fallbacks[i]; i++) {
+                if (_stricmp(actual, fallbacks[i])==0) break; // already fallback
+                HFONT hf2 = CreateFontA(h, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, fallbacks[i]);
+                if (hf2) {
+                    HDC hdc2 = GetDC(NULL);
+                    HFONT old2 = (HFONT)SelectObject(hdc2, hf2);
+                    char act2[64]={0}; GetTextFaceA(hdc2, sizeof(act2), act2);
+                    SelectObject(hdc2, old2); ReleaseDC(NULL, hdc2);
+                    if (_stricmp(act2, fallbacks[i])==0) { DeleteObject(hf); hf = hf2; break; }
+                    DeleteObject(hf2);
+                }
+            }
+        }
+    }
+    return FH_FROM_HFONT(hf);
 }
 
 void Platform_DestroyFont(FontHandle font) {

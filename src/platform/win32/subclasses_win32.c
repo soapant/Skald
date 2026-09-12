@@ -391,11 +391,11 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         }
     }
     case WM_CREATE: {
-      if (!FlintContext_Get()->g_hMainFont) {
-        FlintContext_Get()->g_hMainFont = CreateFontA(FontSize, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
-                                  DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-                                  CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, UsedFont);
+      if (FlintContext_Get()->g_hMainFont) {
+        DeleteObject(FlintContext_Get()->g_hMainFont);
+        FlintContext_Get()->g_hMainFont = NULL;
       }
+      FlintContext_Get()->g_hMainFont = FH_TO_HFONT(Platform_CreateFont(FontSize, UsedFont));
       if (only_once) selection_feature = FlintContext_Get()->window.current_feature;
         only_once = false;
           break;
