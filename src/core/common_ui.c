@@ -123,9 +123,6 @@ void PopulateListBox(ListBoxInfo* lb, WindowHandle hListBox, const char* filter,
 
   if (!lb) return;
   PROFILE_START(timer_alias);
-#if defined(_WIN32)
-  if (WH_TO_HWND(FlintContext_Get()->window.hListBox) == NULL) return;
-#endif
   if (SequenceIsWaiting()) return;
   if (!filter) filter = "";
   BuildAliasDisplayItems(items, item_count);
@@ -162,7 +159,6 @@ void PopulateListBox(ListBoxInfo* lb, WindowHandle hListBox, const char* filter,
       lb->last_filter_valid &&
       strlen(clean_filter) > strlen(lb->last_filter) &&
       Platform_StringStartsWithCaseInsensitive(clean_filter, lb->last_filter)) {
-
     use_previous = 1;
     prev_count = lb->last_filter_full_count;
   }
@@ -189,10 +185,10 @@ void PopulateListBox(ListBoxInfo* lb, WindowHandle hListBox, const char* filter,
         if (Platform_StringStartsWithCaseInsensitive(FlintContext_Get()->window.current_feature,"center")) {
           match = FuzzyMatchWithTypo(search_text, clean_filter);
         } else {
-          if (Platform_StringStartsWithCaseInsensitive(search_text, clean_filter)) match = true;
+          if (Platform_StringContainsCaseInsensitive(search_text, clean_filter)) match = true;
           else {
             const char* alias = get_alias_for_item(items[idx]);
-            if (alias && Platform_StringStartsWithCaseInsensitive(alias, clean_filter)) match = true;
+            if (alias && Platform_StringContainsCaseInsensitive(alias, clean_filter)) match = true;
           }
         }
       }
@@ -224,10 +220,10 @@ void PopulateListBox(ListBoxInfo* lb, WindowHandle hListBox, const char* filter,
         if (Platform_StringStartsWithCaseInsensitive(FlintContext_Get()->window.current_feature,"center")) {
           match = FuzzyMatchWithTypo(search_text, clean_filter);
         } else {
-          if (Platform_StringStartsWithCaseInsensitive(search_text, clean_filter)) match = true;
+          if (Platform_StringContainsCaseInsensitive(search_text, clean_filter)) match = true;
           else {
             const char* alias = get_alias_for_item(items[i]);
-            if (alias && Platform_StringStartsWithCaseInsensitive(alias, clean_filter)) match = true;
+            if (alias && Platform_StringContainsCaseInsensitive(alias, clean_filter)) match = true;
           }
         }
       }

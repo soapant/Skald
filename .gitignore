@@ -2,10 +2,6 @@
 *.o
 *.err
 *.d
-/build/obj
-/build/bundle
-/nohup.out
-/build/myprogram
 /tags
 /build
 /data
