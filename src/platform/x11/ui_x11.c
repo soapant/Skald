@@ -222,16 +222,15 @@ void Platform_DisplayMessage(const char* message, int centerX, int centerY, int 
     int textW = 0, textH = 0;
     Platform_GetTextExtents(font, message, maxWidth - 30, &textW, &textH);
 
-    int text_len = strlen(message);
-    int internalWrappedMaxWidth = (FontSize * text_len) * 1.5;
-
-    int winWidth = internalWrappedMaxWidth;
+    int padding = 30;
+    int winWidth = textW + padding + 10;
     if (winWidth > maxWidth) winWidth = maxWidth;
-    
-    if (textW + 40 > winWidth) winWidth = textW + 40;
+    if (winWidth > maxWidth) winWidth = maxWidth;
 
-    int winHeight = maxHeight;
-    if (textH + 20 > winHeight) winHeight = textH + 20;
+    int winHeight = textH + 20;
+    if (winHeight < 40) winHeight = 40;
+    if (winHeight > maxHeight && textH > maxHeight) winHeight = textH + 20;
+    if (winHeight > 600) winHeight = 600;
 
     unsigned long bg_color = rgb_to_hex(COLOR_BG);
     unsigned long text_color = rgb_to_hex(color);
@@ -277,20 +276,16 @@ void Platform_DisplayMessage(const char* message, int centerX, int centerY, int 
     }
     Linux_DrawBackground(dpy, win, winWidth, winHeight);
 
+    XFlush(dpy);
     struct pollfd pfd = { .fd = ConnectionNumber(dpy), .events = POLLIN };
-    while (poll(&pfd, 1, 300) > 0) {
-        XEvent ev;
-        if (XCheckWindowEvent(dpy, win, ExposureMask, &ev)) {
-            break;
-        }
-    }
+    poll(&pfd, 1, 10);
+    while (XCheckWindowEvent(dpy, win, ExposureMask, &(XEvent){0})) { }
 
     int startY = (winHeight - textH) / 2;
-
-
-    if (textW < winWidth && textW > 0) {
-        XftFont* xf = FH_TO_XFT(font);
-        int y = startY + xf->ascent;
+    XftFont* xf = FH_TO_XFT(font);
+    int lineH = xf ? xf->ascent + xf->descent : FontSize + 4;
+    if (textH <= lineH + 2 && textW < winWidth && textW > 0) {
+        int y = startY + (xf ? xf->ascent : FontSize);
         int drawX = (winWidth - textW) / 2;
         if (drawX < 0) drawX = 0;
         XftDrawStringUtf8(xd, &text_xft_color, xf, drawX, y, (FcChar8*)message, strlen(message));

@@ -23,7 +23,7 @@ bool draw_background = true;
 
 void SubjectiveMessageDisplay(const char* buffer,int msg_height,int timeout,ColorRef color) {
     if (MessagesEnabled) {
-        if (WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) != NULL) {
+        if (IsPopupActive(WH_NULL)) {
           MSG_TOP(buffer,msg_height,timeout,color);
         }else {
           MSG_MIDDLE_BOTTOM(buffer,msg_height / 2,timeout,color);
