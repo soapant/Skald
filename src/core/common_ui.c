@@ -1,4 +1,4 @@
-#include "core/context.h"
+﻿#include "core/context.h"
 #include "core/modal.h"
 #include "config.h"
 #include "core/platform.h"
@@ -386,3 +386,4 @@ ColorRef GetRainbowColor(float t, float s, float v) {
     return COLOR_TEXT;
   }
 }
+

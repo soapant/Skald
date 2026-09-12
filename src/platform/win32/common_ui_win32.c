@@ -407,13 +407,18 @@ void CreateChildControls(WindowHandle hwndParent, HFONT hFont, const char* list[
                 } else {
                     lb->populated_cache[i][0] = '\0';
                 }
+                lb->matching_indices[i] = i;
             }
+            BuildAliasDisplayItems(list, count);
         } else {
             lb->populated_count = 0;
             lb->total_matches = 0;
             lb->last_items = NULL;
             lb->last_item_count = 0;
             lb->selected_index = -1;
+            for (int i=0;i<MAX_ITEMS;i++) lb->matching_indices[i]=i;
+            BuildAliasDisplayItems(NULL, 0);
+            printf("[CreateChildControls] list NULL count=%d lb_count=0\n", count); fflush(stdout);
         }
     }
     SendMessageA(WH_TO_HWND(FlintContext_Get()->window.hListBox), LB_SETCOUNT, (lb ? lb->populated_count : count), 0);
