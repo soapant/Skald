@@ -303,6 +303,9 @@ void WindowManager_PopPopup(WindowManager* wm) {
     }
     popup->visible = false;
     popup->manager = NULL;
+    if (wm->popup_count == 0) {
+        Platform_DismissMessage();
+    }
 }
 
 Popup* WindowManager_GetTopPopup(WindowManager* wm) {
