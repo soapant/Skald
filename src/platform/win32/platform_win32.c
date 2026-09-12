@@ -369,8 +369,6 @@ FontHandle Platform_CreateFont(int size, const char* face_name) {
         CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE,
         face_name
         );
-    // fallback to Cascadia/Consolas if requested nerd font not found (CreateFont still succeeds but face will be substituted)
-    // verify by checking actual face via GetTextFace
     if (hf) {
         HDC hdc = GetDC(NULL);
         HFONT old = (HFONT)SelectObject(hdc, hf);
@@ -379,7 +377,6 @@ FontHandle Platform_CreateFont(int size, const char* face_name) {
         SelectObject(hdc, old);
         ReleaseDC(NULL, hdc);
         if (actual[0] && face_name && _stricmp(actual, face_name) != 0) {
-            // requested face not matched - try common nerd/mono fallbacks before default
             const char* fallbacks[] = {"Cascadia Code", "Cascadia Mono", "Consolas", "Segoe UI", NULL};
             for (int i=0; fallbacks[i]; i++) {
                 if (_stricmp(actual, fallbacks[i])==0) break; // already fallback
