@@ -30,6 +30,7 @@ bool fl_get_all_files_from_dir(const char* dir_path, char** list_of_allowed_exte
 
     return fl_get_all_files_from_dir_platform(dir_path, list_of_allowed_extensions, list_of_files, list_of_names_to_ignore);
 }
+
 char* fl_search_file_in_dir(const char* directory, const char* search_string,char* output_path){
     if (!directory) return NULL;
 
