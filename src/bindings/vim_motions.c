@@ -23,7 +23,6 @@
 void HandleEnterNormal(VimContext* ctx) { 
     (void)ctx;
     SetMode(MODE_NORMAL); 
-    printf("[VIM] Entered NORMAL mode\n");
 }
 
 void HandleEnterInsertOut(VimContext* ctx) { 
@@ -31,7 +30,6 @@ void HandleEnterInsertOut(VimContext* ctx) {
     int pos = Vim_GetCursor(ctx);
     Vim_SetCursor(ctx, pos + 1);
     SetMode(MODE_INSERT); 
-    printf("[VIM] Entered INSERT mode\n");
 }
 
 void HandleEnterInsertIn(VimContext* ctx) { 
@@ -39,13 +37,11 @@ void HandleEnterInsertIn(VimContext* ctx) {
     int pos = Vim_GetCursor(ctx);
     Vim_SetCursor(ctx, pos);
     SetMode(MODE_INSERT); 
-    printf("[VIM] Entered INSERT mode\n");
 }
 
 void HandleEnterVisual(VimContext* ctx) { 
     (void)ctx;
     SetMode(MODE_VISUAL); 
-    printf("[VIM] Entered VISUAL mode\n");
 }
 
 void HandleMoveLeft(VimContext* ctx) {
@@ -104,20 +100,17 @@ void HandleDeleteCharInsert(VimContext* ctx) {
 void HandleDeleteCharNormal(VimContext* ctx) {
     if (!ctx) return;
     DeleteCharUnderCursor(ctx);
-    printf("[VIM] Deleted character under cursor\n");
 }
 
 void HandleDeleteLine(VimContext* ctx) {
     if (!ctx) return;
     Vim_SetText(ctx, "");
-    printf("[VIM] Deleted Entire Search Box \n");
 }
 
 void HandleDeleteLineInsert(VimContext* ctx) {
     if (!ctx) return;
     Vim_SetText(ctx, "");
     SetMode(MODE_INSERT);
-    printf("[VIM] Deleted Entire Search Box & Switched to Insert\n");
 }
 
 void HandleMoveListboxStart(VimContext* ctx) {
@@ -162,8 +155,6 @@ void HandleYankLine(VimContext* ctx) {
     textBuffer[strcspn(textBuffer, "\r\n")] = '\0';
     if (strlen(textBuffer) > 0) {
         Platform_CopyToClipboard(textBuffer);
-    } else {
-      printf("[VIM] Yank failed: Search box is currently empty.\n");
     }
 }
 

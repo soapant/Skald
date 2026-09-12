@@ -336,6 +336,14 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
         WindowManager_PushPopup(wm, popup);
         return true;
       }
+    if (wParam == 'V') {
+      if (ctrl_pressed) {
+        char* text = Platform_GetLastClipboardEntry();
+        strncpy(state->filter, text, sizeof(state->filter) - 1);
+        state->filter[sizeof(state->filter) - 1] = '\0';  
+        state->cursor = strlen(state->filter);            
+      }
+    }
 
     PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandlePromptKey");
     return false;
