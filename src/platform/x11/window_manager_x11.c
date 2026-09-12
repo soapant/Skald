@@ -172,7 +172,6 @@ void Linux_ProcessXEvent(Display* dpy, XEvent* ev, WindowManager* wm) {
     PROFILE_START(timer);
     Popup* top = WindowManager_GetTopPopup(wm);
     if (!top) { PROFILE_END_VAR(timer, "window_manager_x11:Linux_ProcessXEvent"); return; }
-
     switch (ev->type) {
         case KeyPress:
             Linux_HandleKeyPress(dpy, &ev->xkey, wm);
