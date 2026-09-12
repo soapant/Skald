@@ -467,11 +467,11 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
   if (nCode == HC_ACTION && (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN)) {
     KBDLLHOOKSTRUCT* pKeyInfo = (KBDLLHOOKSTRUCT*)lParam;
 
-    bool alt_down   = (pKeyInfo->flags & LLKHF_ALTDOWN) || (GetKeyState(VK_MENU) & 0x8000);
-    bool ctrl_down  = (GetKeyState(VK_CONTROL) & 0x8000);
-    bool shift_down = (GetKeyState(VK_SHIFT) & 0x8000) || 
-      (GetKeyState(VK_LSHIFT) & 0x8000) || 
-      (GetKeyState(VK_RSHIFT) & 0x8000);
+    bool alt_down   = (pKeyInfo->flags & LLKHF_ALTDOWN) || (GetAsyncKeyState(VK_MENU) & 0x8000);
+    bool ctrl_down  = (GetAsyncKeyState(VK_CONTROL) & 0x8000);
+    bool shift_down = (GetAsyncKeyState(VK_SHIFT) & 0x8000) || 
+      (GetAsyncKeyState(VK_LSHIFT) & 0x8000) || 
+      (GetAsyncKeyState(VK_RSHIFT) & 0x8000);
 
     double seconds = Platform_GetUniversalTimeSeconds();
     if (seconds >= 300) {
