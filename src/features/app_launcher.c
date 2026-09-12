@@ -1,4 +1,5 @@
 ﻿#include "core/flapi.h"
+#include "platform/draw.h"
 #if defined(_WIN32)
 #include <windows.h>
 #include <shellapi.h>
@@ -88,7 +89,6 @@ static HICON win_load_icon_for_path(const char* path, int size) {
     DWORD flags = SHGFI_ICON | (size <= 16 ? SHGFI_SMALLICON : SHGFI_LARGEICON);
     if (SHGetFileInfoA(path, 0, &shfi, sizeof(shfi), flags)) return shfi.hIcon;
     if (SHGetFileInfoA(path, FILE_ATTRIBUTE_NORMAL, &shfi, sizeof(shfi), flags | SHGFI_USEFILEATTRIBUTES)) return shfi.hIcon;
-    // fallback: try large if small failed and vice versa
     DWORD alt = SHGFI_ICON | (size <= 16 ? SHGFI_LARGEICON : SHGFI_SMALLICON);
     if (SHGetFileInfoA(path, 0, &shfi, sizeof(shfi), alt)) return shfi.hIcon;
     if (SHGetFileInfoA(path, FILE_ATTRIBUTE_NORMAL, &shfi, sizeof(shfi), alt | SHGFI_USEFILEATTRIBUTES)) return shfi.hIcon;
@@ -407,7 +407,7 @@ void applauncher_render(Display* dpy, Window* win, PromptState* state) {
     if(lb->view_offset<0) lb->view_offset=0;
     if(lb->view_offset+visible>lb->populated_count) lb->view_offset=lb->populated_count-visible;
     if(lb->view_offset<0) lb->view_offset=0;
-    XftColor bgc,fcoltext,fcolalternate,fcolrainbow;
+    XftColor bgc,fcoltext,fcolalternate;
     if(!EnableShaders || ShaderPreset==0) Linux_XftAllocColor(dpy,vis,cmap,rgb_to_hex(COLOR_BG),OpacityAlpha16(),&bgc);
     Linux_XftAllocColor(dpy,vis,cmap,rgb_to_hex(COLOR_TEXT),0xFFFF,&fcoltext);
     Linux_XftAllocColor(dpy,vis,cmap,rgb_to_hex(COLOR_ALTERNATE),0xFFFF,&fcolalternate);
@@ -415,16 +415,20 @@ void applauncher_render(Display* dpy, Window* win, PromptState* state) {
         int idx=lb->view_offset+i; int y=y0+i*itemH; bool sel=(idx==lb->selected_index);
         if(sel) Linux_DrawSelectionBackground(dpy,xd,vis,cmap,0,y,state->width,itemH,rgb_to_hex(COLOR_SELECTED_TEXT));
         else if(!EnableShaders || ShaderPreset==0) XftDrawRect(xd,&bgc,0,y,state->width,itemH);
-        float _t=(lb&&lb->populated_count>1)?(float)idx/(float)(lb->populated_count-1):(float)idx/(float)GradientItems;
-        Linux_XftAllocColor(dpy,vis,cmap,rgb_to_hex(GetRainbowColor(_t,0.55f,GradientBrightness)),0xFFFF,&fcolrainbow);
-        XftColor *num_color=&fcoltext,*body_color=&fcoltext,*plain_color=&fcolrainbow;
+        unsigned long ncol, bcol, pcol;
+        Platform_GetItemColors(idx, lb->populated_count, &ncol, &bcol, &pcol);
+        XftColor ncolor, bcolor, pcolor;
+        Linux_XftAllocColor(dpy,vis,cmap, ncol, 0xFFFF, &ncolor);
+        Linux_XftAllocColor(dpy,vis,cmap, bcol, 0xFFFF, &bcolor);
+        Linux_XftAllocColor(dpy,vis,cmap, pcol, 0xFFFF, &pcolor);
+        XftColor *num_color=&ncolor,*body_color=&bcolor,*plain_color=&pcolor;
         int text_x=45;
-        if(RainbowText) num_color=body_color=plain_color=&fcolrainbow;
-        else if(AlternatingText && idx%2==0) num_color=body_color=plain_color=&fcolalternate;
         const char* item_text = (idx>=0 && idx < lb->populated_count) ? lb->populated_cache[idx] : "";
         const char* icon_path = applauncher_get_icon_for_item(item_text);
         DrawListBoxItemText(dpy,xd,vis,cmap,font,num_color,body_color,plain_color,lb,(char*)icon_path,idx,y,text_x);
-        XftColorFree(dpy,vis,cmap,&fcolrainbow);
+        XftColorFree(dpy,vis,cmap,&ncolor);
+        XftColorFree(dpy,vis,cmap,&bcolor);
+        XftColorFree(dpy,vis,cmap,&pcolor);
     }
     if(!EnableShaders || ShaderPreset==0) XftColorFree(dpy,vis,cmap,&bgc);
     XftColorFree(dpy,vis,cmap,&fcoltext);
@@ -449,7 +453,6 @@ void applauncher_render(HDC hdc, const char* text, RECT* rect, BOOL is_selected,
     if (text) {
         APPS_LOCK();
         for (size_t i=0;i<s_apps.count && i < s_hicon_count;i++) if (fl_string_match_insensitive(s_apps.items[i].name, text)) { hIcon = s_hicons[i]; if(hIcon) { /* cached */ } else if(i < s_app_icon_count && s_app_icons[i]) { strncpy(iconPathBuf, s_app_icons[i], sizeof(iconPathBuf)-1); iconPathForFallback=iconPathBuf; } else if(s_apps.items[i].path[0]) { strncpy(iconPathBuf, s_apps.items[i].path, sizeof(iconPathBuf)-1); iconPathForFallback=iconPathBuf; } break; }
-        // if not found in cache (maybe cache not built yet), try direct lookup via s_apps
         if(!hIcon && !iconPathForFallback) {
             for(size_t i=0;i<s_apps.count;i++) if(fl_string_match_insensitive(s_apps.items[i].name, text)) { strncpy(iconPathBuf, s_apps.items[i].path, sizeof(iconPathBuf)-1); iconPathForFallback=iconPathBuf; break; }
             if(!iconPathForFallback) {

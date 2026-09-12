@@ -431,109 +431,13 @@ void DrawSimplePromptUserEditControlOnDraw(Display *dpy, XftDraw* xd, Visual* vi
 }
 
 void DrawPromptUserEditControlOnDraw(Display *dpy, XftDraw* xd, Visual* vis, Colormap cmap, PromptState *state) {
-    FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
-    XftFont* xf = FH_TO_XFT(font);
-
-    unsigned long window_title_text_color_map;
-    eval_window_title_color(state,&window_title_text_color_map);
-
-    XftColor text_color, window_title_text_color, vim_text_color,seperator_color;
-    Linux_XftAllocColor(dpy, vis, cmap, rgb_to_hex(COLOR_TEXT), 0xFFFF, &text_color);
-    Linux_XftAllocColor(dpy, vis, cmap, rgb_to_hex(COLOR_SEPERATOR), 0xFFFF, &seperator_color);
-    Linux_XftAllocColor(dpy, vis, cmap, window_title_text_color_map, 0xFFFF, &window_title_text_color);
-    Linux_XftAllocColor(dpy, vis, cmap, VimModeTextColor(), 0xFFFF, &vim_text_color);
-
-
-    draw_wrapped_text(dpy, xd, &window_title_text_color, font,state->window_title,state->height - 40,"LEFT",5);
-    draw_wrapped_text(dpy, xd, &vim_text_color,font,g_vim_mode,state->height - 40,"RIGHT",5);
-
-    int cursor_x = 0;
-    int text_len = strlen(state->filter);
-    int scroll = Linux_UpdateEditScrollOffset(dpy, xf, state->filter, text_len, state->cursor, state->width, state->scroll_offset, &cursor_x);
-    state->scroll_offset = scroll;
-    int draw_x = 20 - scroll;
-    int draw_y = 20 + (xf ? xf->ascent : FontSize);
-    if (xf && text_len > 0) {
-        XftDrawStringUtf8(xd, &text_color, xf, draw_x, draw_y, (FcChar8*)state->filter, text_len);
-    }
-    Linux_DrawEditCursor(xd, &text_color, cursor_x, scroll, state->width);
-    XftDrawRect(xd, &seperator_color,0,60,state->width,5);
-    XftDrawRect(xd, &seperator_color,0,state->height - 60,state->width,5);
-
-    XftColorFree(dpy, vis, cmap, &text_color);
-    XftColorFree(dpy, vis, cmap, &vim_text_color);
-    XftColorFree(dpy, vis, cmap, &window_title_text_color);
+    void Core_DrawEditBox(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap);
+    Core_DrawEditBox(state, dpy, xd, vis, cmap);
 }
 
 void DrawPromptUserListBoxOnDraw(Display *dpy, XftDraw* xd, Visual* vis, Colormap cmap, PromptState *state) {
-      if (!state->has_listbox) return;
-      ListBoxInfo *lb = &state->listbox;
-      FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
-
-      int y0 = 70;
-      int itemH = FontSize + 14;
-      if (!lb->populated_count) return;
-      int visible = (state->height - y0 - 40) / itemH;
-      if (visible < 1) visible = 1;
-      if (visible > lb->populated_count) visible = lb->populated_count;
-
-      if (lb->selected_index >= 0) {
-        if (lb->selected_index < lb->view_offset + PaddingForScrolling)
-          lb->view_offset = lb->selected_index - PaddingForScrolling;
-        else if (lb->selected_index >= lb->view_offset + visible - PaddingForScrolling)
-          lb->view_offset = lb->selected_index - visible + PaddingForScrolling + 1;
-      }
-      if (lb->view_offset < 0) lb->view_offset = 0;
-      if (lb->view_offset + visible > lb->populated_count)
-        lb->view_offset = lb->populated_count - visible;
-      if (lb->view_offset < 0) lb->view_offset = 0;
-
-      XftColor bgc, fcoltext, fcolalternate, fcolrainbow;
-      if (!EnableShaders || ShaderPreset == 0) {
-          Linux_XftAllocColor(dpy, vis, cmap, rgb_to_hex(COLOR_BG), OpacityAlpha16(), &bgc);
-      }
-      Linux_XftAllocColor(dpy, vis, cmap, rgb_to_hex(COLOR_TEXT), 0xFFFF, &fcoltext);
-      Linux_XftAllocColor(dpy, vis, cmap, rgb_to_hex(COLOR_ALTERNATE), 0xFFFF, &fcolalternate);
-
-      for (int i = 0; i < visible; i++) {
-        int idx = lb->view_offset + i;
-        int y = y0 + i * itemH;
-        bool sel = (idx == lb->selected_index);
-
-        if (sel) {
-            Linux_DrawSelectionBackground(dpy, xd, vis, cmap, 0, y, state->width, itemH, rgb_to_hex(COLOR_SELECTED_TEXT));
-        } else {
-            if (!EnableShaders || ShaderPreset == 0) {
-                XftDrawRect(xd, &bgc, 0, y, state->width, itemH);
-            }
-        }
-
-        float _t = (lb && lb->populated_count>1) ? (float)idx/(float)(lb->populated_count-1) : (float)idx/(float)GradientItems;
-        Linux_XftAllocColor(dpy, vis, cmap, rgb_to_hex(GetRainbowColor(_t, 0.55f, GradientBrightness)), 0xFFFF, &fcolrainbow);
-
-        XftColor *num_color = &fcoltext;
-        XftColor *body_color = &fcoltext;
-        XftColor *plain_color = &fcolrainbow;
-        int text_x = 45;
-        if (RainbowText) {
-            num_color = body_color = plain_color = &fcolrainbow;
-        } else if (AlternatingText) {
-            if (idx % 2 == 0) {
-                num_color = body_color = plain_color = &fcolalternate;
-            }
-        }
-
-        const char* icon_path = NULL;
-
-        DrawListBoxItemText(dpy, xd, vis, cmap, font, num_color, body_color, plain_color, lb,icon_path,idx, y, text_x);
-
-        XftColorFree(dpy, vis, cmap, &fcolrainbow);
-      }
-      if (!EnableShaders || ShaderPreset == 0) {
-          XftColorFree(dpy, vis, cmap, &bgc);
-      }
-      XftColorFree(dpy, vis, cmap, &fcoltext);
-      XftColorFree(dpy, vis, cmap, &fcolalternate);
+    void Core_DrawListBox(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap);
+    Core_DrawListBox(state, dpy, xd, vis, cmap);
 }
 
 void DrawSimplePromptUserEditControl(Display *dpy, Window *win, SimplePromptState *state) {
