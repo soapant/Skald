@@ -336,14 +336,31 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
         WindowManager_PushPopup(wm, popup);
         return true;
       }
-    if (wParam == 'V') {
-      if (ctrl_pressed) {
-        char* text = Platform_GetLastClipboardEntry();
-        strncpy(state->filter, text, sizeof(state->filter) - 1);
-        state->filter[sizeof(state->filter) - 1] = '\0';  
-        state->cursor = strlen(state->filter);            
-      }
-    }
+     if (wParam == 'V' && ctrl_pressed) {                                                                  
+       char *clip = Platform_GetLastClipboardEntry();                                                      
+       if (!clip) return true;                                                                             
+       clip[strcspn(clip, "\r\n")] = '\0';
+       if (clip[0] == '\0') { free(clip); return true; }                                                   
+                                                                                                           
+       size_t cur_len = strlen(state->filter);                                                             
+       size_t clip_len = strlen(clip);                                                                     
+       size_t avail = sizeof(state->filter) - cur_len - 1;                                                 
+       if (clip_len > avail) clip_len = avail;                                                            
+       if (clip_len > 0) {                                                                               
+         memmove(state->filter + state->cursor + clip_len,                                              
+                 state->filter + state->cursor,                                                        
+                 cur_len - state->cursor + 1);                                                        
+         memcpy(state->filter + state->cursor, clip, clip_len);                                      
+         state->cursor += clip_len;                                                                 
+       }                                                                                           
+                                                                                                  
+       free(clip);                                                                               
+
+       if (FlintContext_Get()->prompt_callbacks.refresh) {
+         FlintContext_Get()->prompt_callbacks.refresh(state->filter, FlintContext_Get()->window.hListBox, &state->listbox);
+       }
+       return true;                                                                                                                                
+     }                                                                                                                                             
 
     PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandlePromptKey");
     return false;
