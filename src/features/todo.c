@@ -388,8 +388,7 @@ void todo_render_callback(Display *dpy, Window *win, PromptState *state) {
         char tags[10][64];
         int tag_count = 0;
         ParseTodoLine(text_buf, main_text, tags, &tag_count);
-        unsigned long fg_raw = rgb_to_hex(GetRainbowColor((float)(ctx.idx % GradientItems) / (float)GradientItems, 0.85f, GradientBrightness));
-        fl_place_text_raw(.x=ctx.x + 10, .y=ctx.y + 4, .text=main_text, .color=fg_raw, .align="LEFT", .pad=10);
+        fl_place_text_raw(.x=ctx.x + 10, .y=ctx.y + 4, .text=main_text,.align="LEFT", .pad=10);
         if (tag_count > 0) {
             if (tag_count == 1) {
                 int y_offset = 0;
@@ -413,61 +412,27 @@ void todo_render_callback(Display *dpy, Window *win, PromptState *state) {
 #endif
 #if defined(_WIN32)
 void todo_render_callback_impl(HDC hdc, const char* text, RECT* rect, BOOL is_selected, int itemIndex) {
+    Platform_SetDrawContextWin32(hdc);
     char main_text[512] = {0};
     char tags[10][64];
     int tag_count = 0;
-    
     ParseTodoLine(text, main_text, tags, &tag_count);
-    
-    RECT textRect = *rect;
-    textRect.left += 10;
-    textRect.top += 4;
-    textRect.bottom -= 30;
-    if (!is_selected) {
-        SetTextColor(hdc, GetRainbowColor((float)(itemIndex % GradientItems) / (float)GradientItems, 0.85f, GradientBrightness));
-    }
-    
-    HFONT hOldFont = (HFONT)SelectObject(hdc, FlintContext_Get()->g_hMainFont);
-    DrawTextA(hdc, main_text, -1, &textRect, DT_SINGLELINE | DT_VCENTER);
-    
+    fl_place_text_raw(.x=rect->left + 10, .y=rect->top + 4, .text=main_text,.align="LEFT", .pad=10);
     if (tag_count == 1) {
-        RECT tagRect = *rect;
-        tagRect.left += 14;
-        tagRect.top += 28;
-        tagRect.bottom -= 4;
-        
-        HFONT hOldTagFont = (HFONT)SelectObject(hdc, FlintContext_Get()->g_hMainFont);
-        
         int y_offset = 0;
         for (int i = 0; i < tag_count; i++) {
-            SetTextColor(hdc, GetTagColor(tags[i]));
-            RECT singleTagRect = tagRect;
-            singleTagRect.top += y_offset;
-            DrawTextA(hdc, tags[i], -1, &singleTagRect, DT_LEFT | DT_TOP);
+            unsigned long tag_rgb = GetTagColor(tags[i]);
+            fl_place_text_raw(.x=rect->left + 14, .y=rect->top + 28 + y_offset, .text=tags[i], .color=tag_rgb, .align="LEFT", .pad=14);
             y_offset += 18;
         }
-        
-        SelectObject(hdc, hOldTagFont);
     } else {
-        RECT tagRect = *rect;
-        tagRect.left += 14;
-        tagRect.top += 28;
-        
-        HFONT hOldTagFont = (HFONT)SelectObject(hdc, FlintContext_Get()->g_hMainFont);
-        
         int x_offset = 0;
         for (int i = 0; i < tag_count; i++) {
-            SetTextColor(hdc, GetTagColor(tags[i]));
-            RECT singleTagRect = tagRect;
-            singleTagRect.left += x_offset;
-            DrawTextA(hdc, tags[i], -1, &singleTagRect, DT_LEFT | DT_TOP);
+            unsigned long tag_rgb = GetTagColor(tags[i]);
+            fl_place_text_raw(.x=rect->left + 14 + x_offset, .y=rect->top + 28, .text=tags[i], .color=tag_rgb, .align="LEFT", .pad=14 + x_offset);
             x_offset += strlen(tags[i]) * 12;
         }
-        
-        SelectObject(hdc, hOldTagFont);
     }
-    
-    SelectObject(hdc, hOldFont);
 }
 
 void todo_render_callback(HDC hdc, const char* text, RECT* rect, BOOL is_selected, int itemIndex) {
