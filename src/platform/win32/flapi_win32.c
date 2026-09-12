@@ -115,10 +115,82 @@ bool fl_launch_with_args_as_admin_platform(const char* path, const char* args) {
     return ShellExecuteExA(&sei);
 }
 
-bool fl_listbox_begin_platform(const FlListSpec *spec) { (void)spec; return false; }
-bool fl_listbox_next_platform(FlListItemCtx *out) { (void)out; return false; }
-void fl_listbox_end_platform(void) {}
-int fl_listbox_get_count(void) { return 0; }
+#include "platform/draw.h"
+#include "config.h"
+
+static FlListSpec g_fl_list_spec;
+static ListBoxInfo *g_fl_list_lb;
+static int g_fl_list_y0, g_fl_list_itemH, g_fl_list_visible, g_fl_list_cur;
+static HDC g_fl_list_hdc;
+static HFONT g_fl_list_font;
+static bool g_fl_list_font_owned;
+
+bool fl_listbox_begin_platform(const FlListSpec *spec) {
+    if (!spec) return false;
+    ListBoxInfo *lb = spec->lb;
+    if (!lb) {
+        if (!spec->items || spec->count <= 0) return false;
+        return false;
+    }
+    if (!lb->populated_count) return false;
+    Platform_GetDrawContextWin32(&g_fl_list_hdc);
+    if (!g_fl_list_hdc) return false;
+    g_fl_list_spec = *spec;
+    g_fl_list_lb = lb;
+    g_fl_list_itemH = spec->item_height ? spec->item_height : FontSize + 14;
+    g_fl_list_y0 = spec->y ? spec->y : 70;
+    int list_h = spec->h ? spec->h : 400;
+    int visible = list_h / g_fl_list_itemH;
+    if (visible < 1) visible = 1;
+    if (visible > lb->populated_count) visible = lb->populated_count;
+    if (lb->selected_index >= 0) {
+        if (lb->selected_index < lb->view_offset + PaddingForScrolling)
+            lb->view_offset = lb->selected_index - PaddingForScrolling;
+        else if (lb->selected_index >= lb->view_offset + visible - PaddingForScrolling)
+            lb->view_offset = lb->selected_index - visible + PaddingForScrolling + 1;
+    }
+    if (lb->view_offset < 0) lb->view_offset = 0;
+    if (lb->view_offset + visible > lb->populated_count)
+        lb->view_offset = lb->populated_count - visible;
+    if (lb->view_offset < 0) lb->view_offset = 0;
+    g_fl_list_visible = visible;
+    g_fl_list_cur = 0;
+    g_fl_list_font = (HFONT)GetStockObject(DEFAULT_GUI_FONT);
+    g_fl_list_font_owned = false;
+    return true;
+}
+
+bool fl_listbox_next_platform(FlListItemCtx *out) {
+    if (!out || !g_fl_list_lb) return false;
+    if (g_fl_list_cur >= g_fl_list_visible) return false;
+    int idx = g_fl_list_lb->view_offset + g_fl_list_cur;
+    if (idx < 0 || idx >= g_fl_list_lb->populated_count) return false;
+    int y = g_fl_list_y0 + g_fl_list_cur * g_fl_list_itemH;
+    bool sel = (idx == g_fl_list_lb->selected_index);
+    RECT rc = { g_fl_list_spec.x, y, g_fl_list_spec.x + (g_fl_list_spec.w ? g_fl_list_spec.w : 900), y + g_fl_list_itemH };
+    HBRUSH br = CreateSolidBrush(sel ? COLOR_SELECTED_TEXT : COLOR_BG);
+    FillRect(g_fl_list_hdc, &rc, br);
+    DeleteObject(br);
+    out->idx = idx;
+    out->selected = sel;
+    out->x = g_fl_list_spec.x;
+    out->y = y;
+    out->w = g_fl_list_spec.w;
+    out->h = g_fl_list_itemH;
+    out->text = g_fl_list_lb->populated_cache[idx];
+    g_fl_list_cur++;
+    return true;
+}
+
+void fl_listbox_end_platform(void) {
+    g_fl_list_lb = NULL;
+    g_fl_list_visible = 0;
+    g_fl_list_cur = 0;
+}
+
+int fl_listbox_get_count(void) {
+    return g_fl_list_lb ? g_fl_list_lb->populated_count : 0;
+}
 
 char* fl_search_file_in_dir_platform(const char* directory, const char* search_string,char* output_path) {
     char search_path[MAX_PATH];
