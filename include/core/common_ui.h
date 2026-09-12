@@ -38,7 +38,8 @@ void CalculateWindowMetrics(int count, WindowLayout* layout,int height , int wid
 
 
 #if defined(_WIN32)
-static inline bool IsPopupActive() {
+static inline bool IsPopupActive(WindowHandle hPopupWnd) {
+  (void)hPopupWnd;
   return WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) != NULL && IsWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd));
 }
 void ForceWindowFocus(WindowHandle hwndTarget, WindowHandle hwndInput);
