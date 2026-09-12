@@ -160,47 +160,6 @@ static void replace_msg_window(MsgWindow* m) {
     PROFILE_END_VAR(timer, "ui_x11:replace_msg_window");
 }
 
-bool Linux_GetMainMonitorGeometry(Display* dpy, int* ox, int* oy, int* ow, int* oh) {
-    PROFILE_START(timer);
-    Window root = DefaultRootWindow(dpy);
-    XRRScreenResources* res = XRRGetScreenResourcesCurrent(dpy, root);
-    if (!res) { PROFILE_END_VAR(timer, "ui_x11:Linux_GetMainMonitorGeometry"); return false; }
-    RROutput primary = XRRGetOutputPrimary(dpy, root);
-
-    int fx = -1, fy = -1;
-    Window fw = None; int revert;
-    XGetInputFocus(dpy, &fw, &revert);
-    if (fw != None && fw != PointerRoot) {
-        XWindowAttributes a;
-        int wx = 0, wy = 0; Window child;
-        if (XGetWindowAttributes(dpy, fw, &a) &&
-            XTranslateCoordinates(dpy, fw, root, a.width / 2, a.height / 2, &wx, &wy, &child)) {
-            fx = wx; fy = wy;
-        }
-    }
-
-    bool found = false;
-    long best_score = -1;
-    for (int c = 0; c < res->ncrtc; c++) {
-        XRRCrtcInfo* ci = XRRGetCrtcInfo(dpy, res, res->crtcs[c]);
-        if (!ci || ci->noutput == 0 || ci->width == 0) { if (ci) XRRFreeCrtcInfo(ci); continue; }
-        long score = (long)ci->width * (long)ci->height;      
-        bool contains_focus = (fx >= ci->x && fx < ci->x + ci->width &&
-                               fy >= ci->y && fy < ci->y + ci->height);
-        if (contains_focus) score += 1000000000L;             
-        else if (primary != None && ci->outputs[0] == primary) score += 500000000L;
-        if (score > best_score) {
-            best_score = score;
-            *ox = ci->x; *oy = ci->y; *ow = ci->width; *oh = ci->height;
-            found = true;
-        }
-        XRRFreeCrtcInfo(ci);
-    }
-    XRRFreeScreenResources(res);
-    PROFILE_END_VAR(timer, "ui_x11:Linux_GetMainMonitorGeometry");
-    return found;
-}
-
 void Platform_DisplayMessage(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, int timeout, ColorRef color) {
     PROFILE_START(timer);
     Display* dpy = get_display();
@@ -236,12 +195,10 @@ void Platform_DisplayMessage(const char* message, int centerX, int centerY, int 
     unsigned long text_color = rgb_to_hex(color);
 
     int mox = 0, moy = 0, mow = 1920, moh = 1080;
-    bool have_mon = Linux_GetMainMonitorGeometry(dpy, &mox, &moy, &mow, &moh);
     int px = mox + (int)((centerX / 1920.0) * mow);
     int py = moy + (int)((centerY / 1080.0) * moh);
     int topLeftX = px - (winWidth / 2);
     int topLeftY = py - (winHeight / 2);
-    (void)have_mon;
     if (topLeftX < mox) topLeftX = mox;
     if (topLeftY < moy) topLeftY = moy;
     if (topLeftX + winWidth > mox + mow) topLeftX = mox + mow - winWidth;
