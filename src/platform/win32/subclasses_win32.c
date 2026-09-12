@@ -549,6 +549,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             textRect.left += 10;
           
             Platform_SetPreRenderStateWin32(textBuffer, &textRect);
+            Platform_SetDrawContextWin32(pdis->hDC);
             if (!fl_prerender()) return TRUE;
             if (FlintContext_Get()->prompt_callbacks.render != NULL) {
               FlintContext_Get()->prompt_callbacks.render(pdis->hDC, textBuffer, &textRect, isSelected, pdis->itemID);
