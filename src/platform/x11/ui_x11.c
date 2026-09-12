@@ -184,6 +184,7 @@ void Platform_DisplayMessage(const char* message, int centerX, int centerY, int 
     int padding = 30;
     int winWidth = textW + padding + 10;
     if (winWidth > maxWidth) winWidth = maxWidth;
+    if (winWidth < 320) winWidth = 320;
     if (winWidth > maxWidth) winWidth = maxWidth;
 
     int winHeight = textH + 20;
@@ -194,9 +195,39 @@ void Platform_DisplayMessage(const char* message, int centerX, int centerY, int 
     unsigned long bg_color = rgb_to_hex(COLOR_BG);
     unsigned long text_color = rgb_to_hex(color);
 
-    int mox = 0, moy = 0, mow = 1920, moh = 1080;
+    int mox = 3840, moy = 0, mow = 1920, moh = 1080;
+    int rx = 3840 + 960, ry = 540;
+    {
+        Window root = DefaultRootWindow(dpy);
+        XRRScreenResources *res = XRRGetScreenResourcesCurrent(dpy, root);
+        if (res) {
+            long best = -1;
+            for (int c = 0; c < res->ncrtc; c++) {
+                XRRCrtcInfo *ci = XRRGetCrtcInfo(dpy, res, res->crtcs[c]);
+                if (!ci || ci->noutput == 0 || ci->width == 0) { if (ci) XRRFreeCrtcInfo(ci); continue; }
+                long area = (long)ci->width * ci->height;
+                if (ci->x == 3840 && ci->y == 0 && ci->width == 1920) {
+                    mox = ci->x; moy = ci->y; mow = ci->width; moh = ci->height;
+                    rx = mox + mow/2; ry = moy + moh/2;
+                    XRRFreeCrtcInfo(ci);
+                    break;
+                }
+                if (area > best) {
+                    best = area;
+                    mox = ci->x; moy = ci->y; mow = ci->width; moh = ci->height;
+                    rx = mox + mow/2; ry = moy + moh/2;
+                }
+                XRRFreeCrtcInfo(ci);
+            }
+            XRRFreeScreenResources(res);
+        }
+    }
     int px = mox + (int)((centerX / 1920.0) * mow);
     int py = moy + (int)((centerY / 1080.0) * moh);
+    if (centerY > 900) {
+        px = mox + mow / 2;
+        py = moy + moh - 80;
+    }
     int topLeftX = px - (winWidth / 2);
     int topLeftY = py - (winHeight / 2);
     if (topLeftX < mox) topLeftX = mox;
