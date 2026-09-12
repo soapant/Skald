@@ -26,28 +26,75 @@ bool Platform_LaunchTerminalAtPath(const char* working_dir, const char* extra_ar
 
 char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
     if (command == NULL || strlen(command) == 0) return NULL;
-    
-    char clean_cmd[512];
-    strncpy(clean_cmd, command, sizeof(clean_cmd) - 1);
-    clean_cmd[sizeof(clean_cmd) - 1] = '\0';
-
-    char temp_file[MAX_PATH];
-    GetTempPathA(MAX_PATH, temp_file);
-    strcat(temp_file, "temp_cmd.sh");
-
-    FILE* f = fopen(temp_file, "w");
-    if (f) {
-        fprintf(f, "#!/bin/%s\n",UsedShell);
-        fprintf(f, "%s\n", clean_cmd);
-        fclose(f);
+    if (open_terminal) {
+        char clean_cmd[512];
+        strncpy(clean_cmd, command, sizeof(clean_cmd) - 1);
+        clean_cmd[sizeof(clean_cmd) - 1] = '\0';
+        char temp_file[MAX_PATH];
+        GetTempPathA(MAX_PATH, temp_file);
+        strcat(temp_file, "temp_cmd.sh");
+        FILE* f = fopen(temp_file, "w");
+        if (f) {
+            fprintf(f, "#!/bin/%s\n",UsedShell);
+            fprintf(f, "%s\n", clean_cmd);
+            fclose(f);
+        }
+        char terminal_exe[512];
+        snprintf(terminal_exe, sizeof(terminal_exe), "%s.exe", UsedTerminal);
+        char args[2048];
+        snprintf(args, sizeof(args), "-e %s \"%s\"",UsedShell,temp_file);
+        ShellExecuteA(NULL, "open", terminal_exe, args, NULL, SW_SHOWNORMAL);
+        return strdup("");
     }
-
-    char terminal_exe[512];
-    snprintf(terminal_exe, sizeof(terminal_exe), "%s.exe", UsedTerminal);
-    
-    char args[2048];
-    snprintf(args, sizeof(args), "-e %s \"%s\"",UsedShell,temp_file);
-    ShellExecuteA(NULL, "open", terminal_exe, args, NULL, SW_SHOWNORMAL);
+    // capture mode: run cmd /c <command> and collect output
+    SECURITY_ATTRIBUTES sa;
+    sa.nLength = sizeof(SECURITY_ATTRIBUTES);
+    sa.bInheritHandle = TRUE;
+    sa.lpSecurityDescriptor = NULL;
+    HANDLE hRead, hWrite;
+    if (!CreatePipe(&hRead, &hWrite, &sa, 0)) return strdup("");
+    SetHandleInformation(hRead, HANDLE_FLAG_INHERIT, 0);
+    STARTUPINFOA si = {0};
+    si.cb = sizeof(STARTUPINFOA);
+    si.hStdOutput = hWrite;
+    si.hStdError = hWrite;
+    si.dwFlags = STARTF_USESTDHANDLES;
+    PROCESS_INFORMATION pi = {0};
+    char cmdLine[4096];
+    snprintf(cmdLine, sizeof(cmdLine), "cmd /c %s", command);
+    BOOL ok = CreateProcessA(NULL, cmdLine, NULL, NULL, TRUE, CREATE_NO_WINDOW, NULL, NULL, &si, &pi);
+    CloseHandle(hWrite);
+    if (!ok) {
+        CloseHandle(hRead);
+        return strdup("");
+    }
+    // wait up to 10s for gcc
+    WaitForSingleObject(pi.hProcess, 10000);
+    char* out = NULL;
+    size_t cap = 8192;
+    size_t len = 0;
+    out = (char*)malloc(cap);
+    if (!out) {
+        CloseHandle(hRead);
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);
+        return strdup("");
+    }
+    DWORD bytesRead = 0;
+    while (ReadFile(hRead, out + len, (DWORD)(cap - len - 1), &bytesRead, NULL) && bytesRead > 0) {
+        len += bytesRead;
+        if (len + 1024 > cap) {
+            cap *= 2;
+            char* n = (char*)realloc(out, cap);
+            if (!n) break;
+            out = n;
+        }
+    }
+    out[len] = '\0';
+    CloseHandle(hRead);
+    CloseHandle(pi.hProcess);
+    CloseHandle(pi.hThread);
+    return out;
 }
 
 bool Platform_LaunchFileManagerAtPath(char* path,char* args) {
@@ -424,6 +471,8 @@ typedef struct { char path[256]; char file[256]; FILETIME lastWrite; bool inited
 static CWatch g_c_watches[MAX_C_WATCH];
 static int g_c_watch_count = 0;
 static char g_c_watch_dir[256] = {0};
+static char g_last_c_file[256] = {0};
+static DWORD g_last_c_tick = 0;
 
 char* Platform_WatchForCFileChanges(const char* dir_path, void (*callback)(void)) {
     if (!dir_path) return NULL;
@@ -464,7 +513,14 @@ char* Platform_WatchForCFileChanges(const char* dir_path, void (*callback)(void)
             if (strcmp(g_c_watches[i].path, watch_dir) == 0 && strcmp(g_c_watches[i].file, fd.cFileName) == 0) {
                 found = true;
                 if (CompareFileTime(&fd.ftLastWriteTime, &g_c_watches[i].lastWrite) != 0) {
+                    DWORD now = GetTickCount();
+                    bool debounce = (strcmp(g_last_c_file, fd.cFileName)==0 && (now - g_last_c_tick) < 1500);
                     g_c_watches[i].lastWrite = fd.ftLastWriteTime;
+                    if (debounce) {
+                        break;
+                    }
+                    strncpy(g_last_c_file, fd.cFileName, sizeof(g_last_c_file)-1);
+                    g_last_c_tick = now;
                     if (callback) callback();
                     char* ret = _strdup(fd.cFileName);
                     FindClose(hFind);
@@ -479,6 +535,12 @@ char* Platform_WatchForCFileChanges(const char* dir_path, void (*callback)(void)
             g_c_watches[g_c_watch_count].lastWrite = fd.ftLastWriteTime;
             g_c_watches[g_c_watch_count].inited = true;
             g_c_watch_count++;
+            DWORD now = GetTickCount();
+            if (strcmp(g_last_c_file, fd.cFileName)==0 && (now - g_last_c_tick) < 1500) {
+                break;
+            }
+            strncpy(g_last_c_file, fd.cFileName, sizeof(g_last_c_file)-1);
+            g_last_c_tick = now;
             if (callback) callback();
             char* ret = _strdup(fd.cFileName);
             FindClose(hFind);
@@ -492,6 +554,8 @@ char* Platform_WatchForCFileChanges(const char* dir_path, void (*callback)(void)
 void Platform_CleanupDirWatchers(void) {
     g_c_watch_count = 0;
     g_c_watch_dir[0] = '\0';
+    g_last_c_file[0] = '\0';
+    g_last_c_tick = 0;
 }
 
 bool Platform_ClickAtPos(int x,int y) {
@@ -594,23 +658,34 @@ int Platform_GetIconSize(char* icon_path) {
 
 bool Platform_BuildFeature(const char* src, const char* out) {
     if (!src || !out) return false;
+    // ensure import lib exists
+    if (GetFileAttributesA("build/main.lib.a") == INVALID_FILE_ATTRIBUTES) {
+        fprintf(stderr, "[BUILD] build/main.lib.a missing, need to build main first\n");
+        return false;
+    }
     char tmp[512];
     snprintf(tmp, sizeof(tmp), "%s.tmp", out);
-    char cmd[1024];
-    snprintf(cmd, sizeof(cmd), "gcc -I include -DCOBJMACROS -O2 -shared -o %s %s build/main.a 2>&1", tmp, src);
+    char cmd[2048];
+    snprintf(cmd, sizeof(cmd),
+        "gcc -I include -DCOBJMACROS -O2 -shared -o \"%s\" \"%s\" \"build/main.lib.a\" -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldbghelp -ldwmapi -lpsapi -lcrypt32 -lcomdlg32 -ladvapi32 -ldxva2 -luser32 -lwinhttp 2>&1",
+        tmp, src);
     char* outStr = Platform_RunTerminalCommand(cmd, false);
     bool ok = false;
     if (outStr) {
-        if (strlen(outStr)==0 || !strstr(outStr, "error:")) ok = true;
+        if (strlen(outStr)==0 || (!strstr(outStr, "error:") && !strstr(outStr, "undefined reference") && !strstr(outStr, "failed"))) ok = true;
         else fprintf(stderr, "[BUILD] %s\n", outStr);
         free(outStr);
     } else {
         ok = true;
     }
     if (!ok) { remove(tmp); return false; }
+    // dll may be locked if still loaded - caller should have unloaded first; try remove then move
     remove(out);
     if (rename(tmp, out) != 0) {
-        MoveFileExA(tmp, out, MOVEFILE_REPLACE_EXISTING);
+        if (!MoveFileExA(tmp, out, MOVEFILE_REPLACE_EXISTING)) {
+            fprintf(stderr, "[BUILD] failed to move %s -> %s\n", tmp, out);
+            return false;
+        }
     }
     return true;
 }

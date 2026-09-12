@@ -33,7 +33,17 @@ static bool collect_source(Nob_Walk_Entry entry) {
 #else
             if (nob_sv_ends_with_cstr(path, "_win32.c")) return true;
 #endif
-            if (nob_sv_starts_with(path, nob_sv_from_cstr("src/features/"))) {
+            bool is_feature = false;
+            if (nob_sv_starts_with(path, nob_sv_from_cstr("src/features/")) ||
+                nob_sv_starts_with(path, nob_sv_from_cstr("src\\features\\"))) {
+                // keep notification_getter in main (directly referenced by main.c)
+                if (nob_sv_ends_with_cstr(path, "notification_getter.c")) {
+                    is_feature = false;
+                } else {
+                    is_feature = true;
+                }
+            }
+            if (is_feature) {
                 nob_da_append(&feature_sources, strdup(path.data));
             } else {
                 nob_da_append(&sources, strdup(path.data));
@@ -325,29 +335,38 @@ int main(int argc, char** argv) {
     }
 
     if (!nob_mkdir_if_not_exists("build/features")) return 1;
-    for (size_t i = 0; i < feature_sources.count; ++i) {
-        const char* src = feature_sources.items[i];
-        const char* so = feature_so_path(src);
-        if (!nob_file_exists(so) || nob_needs_rebuild1(so, src) != 0) {
+
+    bool any_compiled = false;
+    if (!compile_all(&any_compiled)) return 1;
+
+    const char* output = CONSOLE_OUTPUT;
+    bool needs_link = any_compiled || !nob_file_exists(output) ||
+        nob_needs_rebuild(output, (const char**)to_build.items, to_build.count) != 0;
+    if (!needs_link) {
+        nob_log(NOB_INFO, "No changes, skipping link");
+        // still ensure stale features are built
+        for (size_t i = 0; i < feature_sources.count; ++i) {
+            const char* src = feature_sources.items[i];
+            const char* so = feature_so_path(src);
+            bool need_so = !nob_file_exists(so) || nob_needs_rebuild1(so, src) != 0;
+#if defined(_WIN32)
+            if (nob_file_exists("build/main.lib.a") && nob_needs_rebuild1(so, "build/main.lib.a") != 0) need_so = true;
+#endif
+            if (!need_so) continue;
             Nob_Cmd fcmd = {0};
             nob_cc(&fcmd);
             nob_cc_flags(&fcmd);
+#if defined(_WIN32)
+            nob_cmd_append(&fcmd, CC_FLAGS, "-shared", "-o", so, src, "build/main.lib.a", LINK_FLAGS);
+#else
             nob_cmd_append(&fcmd, CC_FLAGS, "-fPIC", "-shared", "-o", so, src);
+#endif
             if (!nob_cmd_run(&fcmd)) {
                 nob_log(NOB_ERROR, "Failed to build feature %s", so);
                 return 1;
             }
             nob_log(NOB_INFO, "Built feature %s", so);
         }
-    }
-
-    bool any_compiled = false;
-    if (!compile_all(&any_compiled)) return 1;
-
-    const char* output = CONSOLE_OUTPUT;
-    if (!any_compiled && nob_file_exists(output) &&
-        nob_needs_rebuild(output, (const char**)to_build.items, to_build.count) == 0) {
-        nob_log(NOB_INFO, "No changes, skipping link");
         if (do_run) {
             stop_running_instance();
             Nob_Cmd cmd = {0};
@@ -369,10 +388,36 @@ int main(int argc, char** argv) {
     for (size_t i = 0; i < objs.count; ++i) {
         nob_cmd_append(&cmd, objs.items[i]);
     }
+#if defined(_WIN32)
+    nob_cmd_append(&cmd, "-Wl,--export-all-symbols", "-Wl,--out-implib,build/main.lib.a");
+#endif
     nob_cmd_append(&cmd, LINK_FLAGS);
     if (!nob_cmd_run(&cmd)) {
         nob_log(NOB_ERROR, "Failed to link %s", output);
         return 1;
+    }
+    // build features after main link (Windows needs import lib)
+    for (size_t i = 0; i < feature_sources.count; ++i) {
+        const char* src = feature_sources.items[i];
+        const char* so = feature_so_path(src);
+        bool need_so = !nob_file_exists(so) || nob_needs_rebuild1(so, src) != 0;
+#if defined(_WIN32)
+        if (nob_file_exists("build/main.lib.a") && nob_needs_rebuild1(so, "build/main.lib.a") != 0) need_so = true;
+#endif
+        if (!need_so) continue;
+        Nob_Cmd fcmd = {0};
+        nob_cc(&fcmd);
+        nob_cc_flags(&fcmd);
+#if defined(_WIN32)
+        nob_cmd_append(&fcmd, CC_FLAGS, "-shared", "-o", so, src, "build/main.lib.a", LINK_FLAGS);
+#else
+        nob_cmd_append(&fcmd, CC_FLAGS, "-fPIC", "-shared", "-o", so, src);
+#endif
+        if (!nob_cmd_run(&fcmd)) {
+            nob_log(NOB_ERROR, "Failed to build feature %s", so);
+            return 1;
+        }
+        nob_log(NOB_INFO, "Built feature %s", so);
     }
     {
         Nob_Cmd chmod = {0};
