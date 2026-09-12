@@ -219,7 +219,7 @@ static void EditPopup_OnRender(Popup* self) {
     xd = Linux_CreateXftDraw(dpy, self->handle.xid);
     Linux_XftAllocColor(dpy, visual, cmap, rgb_to_hex(COLOR_BG), 0xFFFF, &bg);
     Platform_SetDrawContext(dpy, xd, visual, cmap);
-    if (xf) {
+    if (xf && VimModeText ) {
         Platform_DrawTextRaw(5, 5, g_vim_mode, VimModeTextColor(), font, "LEFT", 5,FontSize);
     }
     if (data->title && xf) {

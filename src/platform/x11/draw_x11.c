@@ -111,8 +111,8 @@ void Platform_DrawEditBackground(PromptState *state, Display *dpy, XftDraw *xd, 
     unsigned long window_title_text_color_map;
     eval_window_title_color(state,&window_title_text_color_map);
     Platform_SetDrawContext(dpy, xd, vis, cmap);
-    Platform_DrawTextRaw(5, state->height - 40, state->window_title, window_title_text_color_map, font, "LEFT", 5,FontSize);
-    Platform_DrawTextRaw(5, state->height - 40, g_vim_mode, VimModeTextColor(), font, "RIGHT", 5,FontSize);
+    if (WindowTitleText) Platform_DrawTextRaw(5, state->height - 40, state->window_title, window_title_text_color_map, font, "LEFT", 5,FontSize);
+    if (VimModeText) Platform_DrawTextRaw(5, state->height - 40, g_vim_mode, VimModeTextColor(), font, "RIGHT", 5,FontSize);
 }
 void Platform_DrawEditText(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap, FontHandle font) {
     XftFont *xf = FH_TO_XFT(font);
