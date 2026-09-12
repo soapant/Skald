@@ -166,13 +166,8 @@ void live_evaluate(const char* input, char* out_result, size_t max_len) {
         char source_unit[64] = {0};
         if (sscanf(clean, "%lf %63s", &val, source_unit) == 2) {
             for (size_t i = 0; i < CONVERSION_COUNT; i++) {
-#if defined(_WIN32)
                 if (Platform_StringContainsCaseInsensitive(source_unit, CONVERSIONS[i].from_unit) &&
                     Platform_StringContainsCaseInsensitive(target_unit, CONVERSIONS[i].to_unit)) {
-#else
-                if (Platform_StringContainsCaseInsensitive(source_unit, CONVERSIONS[i].from_unit) &&
-                    Platform_StringContainsCaseInsensitive(target_unit, CONVERSIONS[i].to_unit)) {
-#endif
                     snprintf(out_result, max_len, "= %.4g %s", val * CONVERSIONS[i].factor, CONVERSIONS[i].to_unit);
                     has_last_op = false;
                     return;
@@ -363,25 +358,25 @@ void get_flip_expression(char* out, size_t max_len) {
 
 
 
-void calculator_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
-    if (!lb) return;
-    
-    char result_buffer[256] = {0};
-    if (filter && strlen(filter) > 0) {
-        live_evaluate(filter, result_buffer, sizeof(result_buffer));
-    } else {
-        strncpy(result_buffer, "Waiting for expression...", sizeof(result_buffer) - 1);
-    }
-    
-    const char* items[1] = { result_buffer };
+static char g_calc_last_result[256] = {0};
 
-    BuildAliasDisplayItems(items, 1);
-    PopulateListBox(lb, FlintContext_Get()->window.hListBox, NULL, items, 1,NULL);
+void calculator_render_callback(PromptState *state) {
+    char result[256] = {0};
+    if (state->filter && strlen(state->filter) > 0) {
+        live_evaluate(state->filter, result, sizeof(result));
+    } else {
+        strncpy(result, "Waiting for expression...", sizeof(result) - 1);
+    }
+    strncpy(g_calc_last_result, result, sizeof(g_calc_last_result)-1);
+    int cx = 0;
+    int cy = state->height / 2 - 40;
+    fl_place_text_raw(.x=cx, .y=cy, .text=g_calc_last_result, .align="CENTER", .pad=cx);
+    fl_place_text_raw(.x=cx, .y=cy+36, .text="↵ copy  ^↵ use  ⇥ flip", .align="CENTER", .pad=cx);
 }
 
 bool calculator_enter_callback(const char* selection, ListBoxInfo* lb) {
-    char* result = lb->populated_cache[0];
-    fl_copy_to_clipboard(result);
+    (void)selection; (void)lb;
+    fl_copy_to_clipboard(g_calc_last_result);
     return true;
 }
 
@@ -411,23 +406,22 @@ void calculator_tab_callback(ListBoxInfo* lb) {
 }
 
 bool calculator_ctrlenter_callback(const char* selection, ListBoxInfo* lb) {
-    char* result = lb->populated_cache[0] + 2;
-    UI_SetText(FlintContext_Get()->window.hEditControl, result);
-    int len = strlen(result);
+    (void)selection; (void)lb;
+    const char *src = g_calc_last_result;
+    if (src[0]=='=' && src[1]==' ') src+=2;
+    UI_SetText(FlintContext_Get()->window.hEditControl, src);
+    int len = strlen(src);
     UI_SetCursorPosition(FlintContext_Get()->window.hEditControl, len);
     return false;
 }
 
 void TriggerCalculator(void) {
-    const char* default_msg[1] = { "Enter operation (e.g. 5 x 5 or 10 hours in minutes)" };
-
-    PROMPT(.title = "🧮 Calculator", .items = default_msg, .count = 1,
+    PROMPT(.title = "🧮 Calculator",
            .height = 920, .width = 650, .item_height = 32,
-           .refresh = calculator_refresh_callback,
+           .render = calculator_render_callback,
            .enter = calculator_enter_callback,
            .ctrl_enter = calculator_ctrlenter_callback,
            .tab = calculator_tab_callback);
-  
 }
 
 FLINT_FEATURE_INIT {

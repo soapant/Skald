@@ -104,7 +104,6 @@ void initialize_app_cache(void) {
             }
         }
     }
-    
 #if defined(_WIN32)
     for (int shortcut_idx = 0; shortcut_idx < SYSTEM_SHORTCUT_COUNT; shortcut_idx++) {
         if (tmp.count >= MAX_APPS) break;
@@ -136,6 +135,7 @@ void initialize_app_cache(void) {
     if (s_apps.items) free(s_apps.items);
     s_apps = tmp;
 }
+
 void launch_app_by_name(const char* display_name) {
     char path_copy[512] = {0};
     bool found = false;
@@ -216,21 +216,6 @@ void applauncher_copy_callback(const char* selection,int true_index,int type) {
     }
     fl_copy_to_clipboard(text);
 }
-
-// void applauncher_render(PromptState *state) {
-//     ListBoxInfo *lb = &state->listbox;
-//     FlListSpec spec = {
-//         .lb = lb,
-//         .x = 0, .y = 70, .w = state->width, .h = state->height - 70 - 40,
-//         .item_height = FontSize + 14
-//     };
-//     if (!fl_listbox_begin(&spec)) return;
-//     FlListItemCtx ctx;
-//     while (fl_listbox_next(&ctx)) {
-//         fl_place_text_raw(.x=ctx.x + 45, .y=ctx.y + 4, .text=ctx.text, .align="LEFT", .pad=45);
-//     }
-//     fl_listbox_end();
-// }
 
 void TriggerAppLauncher(void) {
     for (size_t i = 0; i < ARRAY_LEN(ListOfProgramPaths); i++) {
