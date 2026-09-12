@@ -39,6 +39,7 @@
 #include <X11/Xft/Xft.h>
 #include "platform/x11/display.h"
 #include "platform/x11/drawing.h"
+#include "platform/draw.h"
 #include "platform/x11/window_factory.h"
 #include "platform/x11/input.h"
 #include "core/window_manager.h"
@@ -254,7 +255,8 @@ void Platform_DisplayMessage(const char* message, int centerX, int centerY, int 
         if (drawX < 0) drawX = 0;
         XftDrawStringUtf8(xd, &text_xft_color, xf, drawX, y, (FcChar8*)message, strlen(message));
     } else {
-        draw_wrapped_text(dpy, xd,&text_xft_color, font, message,startY,"CENTER",0);
+        Platform_SetDrawContext(dpy, xd, visual, cmap);
+        Platform_DrawTextRaw(0, startY, message, text_color, font, "CENTER", 0);
     }
 
     XFlush(dpy);

@@ -172,12 +172,47 @@ typedef enum {
 // RAW PLACEMENT (pixel-perfect)
 // =============================================================================
 // x,y,w,h are absolute popup coords. No magic.
+// Macro trick like PROMPT — unspecified fields default (color=COLOR_TEXT, font=default, align="CENTER")
 
-bool fl_place_text_raw(int x, int y, const char *text);
-bool fl_place_editbox_raw(int x, int y, int w, int h, const char *buffer);
-bool fl_place_listbox_raw(int x, int y, int w, int h, const char **items, int count);
-bool fl_place_image_raw(int x, int y, int w, int h, const char *path);
-bool fl_place_separator_raw(int x, int y, int w, int h);
+typedef struct {
+    const char *text;
+    int x;
+    int y;
+    unsigned long color;
+    FontHandle font;
+    const char *align;
+    int pad;
+} FlTextSpec;
+
+typedef struct {
+    const char *buffer;
+    int x; int y; int w; int h;
+    unsigned long color;
+    FontHandle font;
+} FlEditSpec;
+
+typedef struct {
+    const char **items;
+    int count;
+    int x; int y; int w; int h;
+} FlListSpec;
+
+typedef struct {
+    const char *path;
+    int x; int y; int w; int h;
+} FlImageSpec;
+
+bool fl_place_text_raw_impl(const FlTextSpec *spec);
+bool fl_place_editbox_raw_impl(const FlEditSpec *spec);
+bool fl_place_listbox_raw_impl(const FlListSpec *spec);
+bool fl_place_image_raw_impl(const FlImageSpec *spec);
+bool fl_place_separator_raw_impl(int x, int y, int w, int h);
+
+#define fl_place_text_raw(...) fl_place_text_raw_impl(&(FlTextSpec){__VA_ARGS__})
+#define fl_place_editbox_raw(...) fl_place_editbox_raw_impl(&(FlEditSpec){__VA_ARGS__})
+#define fl_place_listbox_raw(...) fl_place_listbox_raw_impl(&(FlListSpec){__VA_ARGS__})
+#define fl_place_image_raw(...) fl_place_image_raw_impl(&(FlImageSpec){__VA_ARGS__})
+#define fl_place_separator_raw(x,y,w,h) fl_place_separator_raw_impl((x),(y),(w),(h))
 
 // =============================================================================
 // ANCHORED PLACEMENT (preset positions)

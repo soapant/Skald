@@ -42,6 +42,7 @@
 #include "platform/x11/display.h"
 #include "platform/x11/drawing.h"
 #include "platform/x11/window_factory.h"
+#include "platform/draw.h"
 extern int WindowManager_RunLinux(WindowManager* wm);
 extern void WindowManager_ProcessEventsLinux(WindowManager* wm);
 extern void WindowManager_QuitLinux(WindowManager* wm);
@@ -217,14 +218,15 @@ static void EditPopup_OnRender(Popup* self) {
     Linux_DrawBackground(dpy, self->handle.xid, data->w, data->h);
     xd = Linux_CreateXftDraw(dpy, self->handle.xid);
     Linux_XftAllocColor(dpy, visual, cmap, rgb_to_hex(COLOR_BG), 0xFFFF, &bg);
+    Platform_SetDrawContext(dpy, xd, visual, cmap);
     if (xf) {
-        draw_wrapped_text(dpy, xd, &vim_col, font, g_vim_mode, 5, "LEFT", 5);
+        Platform_DrawTextRaw(5, 5, g_vim_mode, VimModeTextColor(), font, "LEFT", 5);
     }
     if (data->title && xf) {
         XGlyphInfo ext; XftTextExtentsUtf8(dpy, xf, (FcChar8*)data->title, strlen(data->title), &ext);
         int title_x = data->w - ext.xOff - 10;
         if (title_x < 50) title_x = 50;
-        draw_wrapped_text(dpy, xd, &title_col, font, data->title, 5, "LEFT", title_x);
+        Platform_DrawTextRaw(title_x, 5, data->title, rgb_to_hex(COLOR_TEXT), font, "LEFT", title_x);
     }
     int cursor_x = 0;
     int text_len = data->text ? strlen(data->text) : 0;

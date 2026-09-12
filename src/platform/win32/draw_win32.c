@@ -16,6 +16,28 @@ __attribute__((weak)) bool fl_prerender(void) {
     return Platform_PreRender();
 }
 
+static HDC g_draw_hdc = NULL;
+void Platform_SetDrawContextWin32(HDC hdc) { g_draw_hdc = hdc; }
+bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, FontHandle font, const char *align, int pad) {
+    if (!text || !g_draw_hdc) return false;
+    if (color == 0) color = COLOR_TEXT;
+    const char *a = align ? align : "CENTER";
+    HFONT hfont = font.hfont ? font.hfont : (FlintContext_Get()->g_hMainFont ? FlintContext_Get()->g_hMainFont : NULL);
+    HFONT old = NULL;
+    if (hfont) old = (HFONT)SelectObject(g_draw_hdc, hfont);
+    SetBkMode(g_draw_hdc, TRANSPARENT);
+    SetTextColor(g_draw_hdc, color);
+    RECT rc = {x, y, x+800, y+40};
+    UINT fmt = DT_SINGLELINE | DT_VCENTER;
+    if (strcmp(a,"CENTER")==0) fmt |= DT_CENTER;
+    else if (strcmp(a,"RIGHT")==0) fmt |= DT_RIGHT;
+    else fmt |= DT_LEFT;
+    if (pad) rc.left += pad;
+    DrawTextA(g_draw_hdc, text, -1, &rc, fmt);
+    if (old) SelectObject(g_draw_hdc, old);
+    return true;
+}
+
 void Platform_GetItemColors(int idx, int count, unsigned long *num_color, unsigned long *body_color, unsigned long *plain_color) {
     unsigned long col_text = COLOR_TEXT;
     unsigned long col_alt = COLOR_ALTERNATE;

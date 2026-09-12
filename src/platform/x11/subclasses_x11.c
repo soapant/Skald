@@ -406,10 +406,11 @@ void DrawSimplePromptUserEditControlOnDraw(Display *dpy, XftDraw* xd, Visual* vi
     Linux_XftAllocColor(dpy, vis, cmap, rgb_to_hex(COLOR_SEPERATOR), 0xFFFF, &seperator_color);
     Linux_XftAllocColor(dpy, vis, cmap, VimModeTextColor(), 0xFFFF, &vim_text_color);
 
-    draw_wrapped_text(dpy, xd, &text_color, font, state->window_title, state->height - 40, "LEFT", 5);
-    draw_wrapped_text(dpy, xd, &vim_text_color, font, g_vim_mode, state->height - 40, "RIGHT", 5);
+    Platform_SetDrawContext(dpy, xd, vis, cmap);
+    Platform_DrawTextRaw(5, state->height - 40, state->window_title, rgb_to_hex(COLOR_TEXT), font, "LEFT", 5);
+    Platform_DrawTextRaw(5, state->height - 40, g_vim_mode, VimModeTextColor(), font, "RIGHT", 5);
     int centered_x = (state->width - text_width) / 2;
-    draw_wrapped_text(dpy, xd, &text_color, font, state->display_message, 70, "LEFT", centered_x);
+    Platform_DrawTextRaw(centered_x, 70, state->display_message, rgb_to_hex(COLOR_TEXT), font, "LEFT", centered_x);
 
     int cursor_x = 0;
     int text_len = strlen(state->user_input);
@@ -552,6 +553,7 @@ bool Linux_RenderPromptUser(Display *dpy, Window *win, PromptState *state) {
     } else {
         Linux_DrawBackgroundToDrawable(dpy, dbl, w, h);
     }
+    Platform_SetDrawContext(dpy, xdDbl, vis, cmap);
     if (FlintContext_Get()->prompt_callbacks.render != NULL) {
         Window dbl_win = (Window)dbl;
         FlintContext_Get()->prompt_callbacks.render(dpy, &dbl_win, state);
@@ -562,6 +564,7 @@ bool Linux_RenderPromptUser(Display *dpy, Window *win, PromptState *state) {
         }
         DrawPromptUserEditControlOnDraw(dpy, xdDbl, vis, cmap, state);
     }
+    Platform_SetDrawContext(NULL,NULL,NULL,0);
     Linux_ClearDblVisual();
     GC gc = XCreateGC(dpy, *win, 0, NULL);
     XCopyArea(dpy, dbl, *win, gc, 0, 0, w, h, 0, 0);

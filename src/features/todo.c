@@ -450,40 +450,23 @@ void todo_render_callback(Display *dpy, Window *win, PromptState *state) {
         ParseTodoLine(text_buf, main_text, tags, &tag_count);
 
         unsigned long fg_raw = rgb_to_hex(GetRainbowColor((float)(idx % GradientItems) / (float)GradientItems, 0.85f, GradientBrightness));
-        
-        XRenderColor rcf = { (fg_raw >> 16 & 0xFF) * 0x101, (fg_raw >> 8 & 0xFF) * 0x101, (fg_raw & 0xFF) * 0x101, 0xFFFF };
-        XftColor fg_color;
-        XftColorAllocValue(dpy, vis, cmap, &rcf, &fg_color);
-
         int XOffset = 10;
-        draw_wrapped_text(dpy, xd, &fg_color, font, main_text, y + 4, "LEFT",XOffset);
-        XftColorFree(dpy, vis, cmap, &fg_color);
+        fl_place_text_raw(.x=XOffset, .y=y + 4, .text=main_text, .color=fg_raw, .font=font, .align="LEFT", .pad=XOffset);
 
         if (tag_count > 0) {
             if (tag_count == 1) {
                 int y_offset = 0;
                 for (int t = 0; t < tag_count; t++) {
                     unsigned long tag_rgb = rgb_to_hex(GetTagColor(tags[t]));
-                    XRenderColor rct = { (tag_rgb >> 16 & 0xFF) * 0x101, (tag_rgb >> 8 & 0xFF) * 0x101, (tag_rgb & 0xFF) * 0x101, 0xFFFF };
-                    XftColor tag_col;
-                    XftColorAllocValue(dpy, vis, cmap, &rct, &tag_col);
-
-                    draw_wrapped_text(dpy, xd, &tag_col, font, tags[t], y + 28 + y_offset, "LEFT", 14);
-                    XftColorFree(dpy, vis, cmap, &tag_col);
+                    fl_place_text_raw(.x=14, .y=y + 28 + y_offset, .text=tags[t], .color=tag_rgb, .font=font, .align="LEFT", .pad=14);
                     y_offset += 18;
                 }
             } else {
                 int x_offset = 0;
                 for (int t = 0; t < tag_count; t++) {
                     unsigned long tag_rgb = rgb_to_hex(GetTagColor(tags[t]));
-                    XRenderColor rct = { (tag_rgb >> 16 & 0xFF) * 0x101, (tag_rgb >> 8 & 0xFF) * 0x101, (tag_rgb & 0xFF) * 0x101, 0xFFFF };
-                    XftColor tag_col;
-                    XftColorAllocValue(dpy, vis, cmap, &rct, &tag_col);
-
-                    draw_wrapped_text(dpy, xd, &tag_col, font, tags[t], y + 28, "LEFT", 14 + x_offset);
-                    
-                    x_offset += strlen(tags[t]) * 12; 
-                    XftColorFree(dpy, vis, cmap, &tag_col);
+                    fl_place_text_raw(.x=14 + x_offset, .y=y + 28, .text=tags[t], .color=tag_rgb, .font=font, .align="LEFT", .pad=14 + x_offset);
+                    x_offset += strlen(tags[t]) * 12;
                 }
             }
         }

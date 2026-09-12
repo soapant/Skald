@@ -18,6 +18,7 @@
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
       "-Wno-discarded-qualifiers",
+      "-Wno-stringop-truncation",
       "-c",
       "src/main.c"
     ]
@@ -41,6 +42,7 @@
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
       "-Wno-discarded-qualifiers",
+      "-Wno-stringop-truncation",
       "-c",
       "src/core/context.c"
     ]
@@ -64,6 +66,7 @@
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
       "-Wno-discarded-qualifiers",
+      "-Wno-stringop-truncation",
       "-c",
       "src/core/helpers.c"
     ]
@@ -87,6 +90,7 @@
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
       "-Wno-discarded-qualifiers",
+      "-Wno-stringop-truncation",
       "-c",
       "src/core/window_manager.c"
     ]
@@ -110,6 +114,7 @@
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
       "-Wno-discarded-qualifiers",
+      "-Wno-stringop-truncation",
       "-c",
       "src/core/number_shortcut.c"
     ]
@@ -133,6 +138,7 @@
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
       "-Wno-discarded-qualifiers",
+      "-Wno-stringop-truncation",
       "-c",
       "src/core/prompt_controller.c"
     ]
@@ -156,6 +162,7 @@
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
       "-Wno-discarded-qualifiers",
+      "-Wno-stringop-truncation",
       "-c",
       "src/core/feature_loader.c"
     ]
@@ -179,6 +186,7 @@
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
       "-Wno-discarded-qualifiers",
+      "-Wno-stringop-truncation",
       "-c",
       "src/core/edit_renderer.c"
     ]
@@ -202,6 +210,7 @@
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
       "-Wno-discarded-qualifiers",
+      "-Wno-stringop-truncation",
       "-c",
       "src/core/popup/message_popup.c"
     ]
@@ -225,6 +234,7 @@
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
       "-Wno-discarded-qualifiers",
+      "-Wno-stringop-truncation",
       "-c",
       "src/core/popup/search_popup.c"
     ]
@@ -248,6 +258,7 @@
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
       "-Wno-discarded-qualifiers",
+      "-Wno-stringop-truncation",
       "-c",
       "src/core/popup/simple_prompt_popup.c"
     ]
@@ -271,6 +282,7 @@
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
       "-Wno-discarded-qualifiers",
+      "-Wno-stringop-truncation",
       "-c",
       "src/core/popup/edit_popup.c"
     ]
@@ -294,6 +306,7 @@
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
       "-Wno-discarded-qualifiers",
+      "-Wno-stringop-truncation",
       "-c",
       "src/core/popup/prompt_popup.c"
     ]
@@ -317,6 +330,7 @@
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
       "-Wno-discarded-qualifiers",
+      "-Wno-stringop-truncation",
       "-c",
       "src/core/hashmap.c"
     ]
@@ -340,6 +354,7 @@
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
       "-Wno-discarded-qualifiers",
+      "-Wno-stringop-truncation",
       "-c",
       "src/core/feature_data.c"
     ]
@@ -363,6 +378,7 @@
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
       "-Wno-discarded-qualifiers",
+      "-Wno-stringop-truncation",
       "-c",
       "src/core/helpers_file.c"
     ]
@@ -386,6 +402,7 @@
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
       "-Wno-discarded-qualifiers",
+      "-Wno-stringop-truncation",
       "-c",
       "src/core/helpers_text.c"
     ]
@@ -409,6 +426,7 @@
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
       "-Wno-discarded-qualifiers",
+      "-Wno-stringop-truncation",
       "-c",
       "src/core/hotkey_manager.c"
     ]
@@ -432,6 +450,7 @@
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
       "-Wno-discarded-qualifiers",
+      "-Wno-stringop-truncation",
       "-c",
       "src/core/vim.c"
     ]
@@ -455,6 +474,7 @@
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
       "-Wno-discarded-qualifiers",
+      "-Wno-stringop-truncation",
       "-c",
       "src/core/timer.c"
     ]
@@ -478,6 +498,7 @@
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
       "-Wno-discarded-qualifiers",
+      "-Wno-stringop-truncation",
       "-c",
       "src/core/history.c"
     ]
@@ -501,6 +522,7 @@
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
       "-Wno-discarded-qualifiers",
+      "-Wno-stringop-truncation",
       "-c",
       "src/core/listbox_renderer.c"
     ]
@@ -524,6 +546,7 @@
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
       "-Wno-discarded-qualifiers",
+      "-Wno-stringop-truncation",
       "-c",
       "src/core/modal.c"
     ]
@@ -547,6 +570,7 @@
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
       "-Wno-discarded-qualifiers",
+      "-Wno-stringop-truncation",
       "-c",
       "src/core/helpers_color.c"
     ]
@@ -570,6 +594,7 @@
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
       "-Wno-discarded-qualifiers",
+      "-Wno-stringop-truncation",
       "-c",
       "src/core/common_ui.c"
     ]
@@ -593,6 +618,7 @@
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
       "-Wno-discarded-qualifiers",
+      "-Wno-stringop-truncation",
       "-c",
       "src/core/helpers_history.c"
     ]
@@ -616,6 +642,7 @@
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
       "-Wno-discarded-qualifiers",
+      "-Wno-stringop-truncation",
       "-c",
       "src/config.c"
     ]
@@ -639,6 +666,7 @@
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
       "-Wno-discarded-qualifiers",
+      "-Wno-stringop-truncation",
       "-c",
       "src/bindings/vim_bindings.c"
     ]
@@ -662,6 +690,7 @@
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
       "-Wno-discarded-qualifiers",
+      "-Wno-stringop-truncation",
       "-c",
       "src/bindings/bindings.c"
     ]
@@ -685,6 +714,7 @@
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
       "-Wno-discarded-qualifiers",
+      "-Wno-stringop-truncation",
       "-c",
       "src/bindings/vim_helpers.c"
     ]
@@ -708,6 +738,7 @@
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
       "-Wno-discarded-qualifiers",
+      "-Wno-stringop-truncation",
       "-c",
       "src/bindings/vim_motions.c"
     ]
@@ -731,6 +762,7 @@
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
       "-Wno-discarded-qualifiers",
+      "-Wno-stringop-truncation",
       "-c",
       "src/flapi.c"
     ]
@@ -754,6 +786,7 @@
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
       "-Wno-discarded-qualifiers",
+      "-Wno-stringop-truncation",
       "-c",
       "src/features/notification_getter.c"
     ]
@@ -777,6 +810,7 @@
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
       "-Wno-discarded-qualifiers",
+      "-Wno-stringop-truncation",
       "-c",
       "src/platform/x11/ui_x11.c"
     ]
@@ -800,6 +834,7 @@
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
       "-Wno-discarded-qualifiers",
+      "-Wno-stringop-truncation",
       "-c",
       "src/platform/x11/lib_x11.c"
     ]
@@ -823,6 +858,7 @@
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
       "-Wno-discarded-qualifiers",
+      "-Wno-stringop-truncation",
       "-c",
       "src/platform/x11/subclasses_x11.c"
     ]
@@ -846,6 +882,7 @@
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
       "-Wno-discarded-qualifiers",
+      "-Wno-stringop-truncation",
       "-c",
       "src/platform/x11/draw_x11.c"
     ]
@@ -869,6 +906,7 @@
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
       "-Wno-discarded-qualifiers",
+      "-Wno-stringop-truncation",
       "-c",
       "src/platform/x11/window_manager_x11.c"
     ]
@@ -892,6 +930,7 @@
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
       "-Wno-discarded-qualifiers",
+      "-Wno-stringop-truncation",
       "-c",
       "src/platform/x11/platform_x11.c"
     ]
@@ -915,6 +954,7 @@
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
       "-Wno-discarded-qualifiers",
+      "-Wno-stringop-truncation",
       "-c",
       "src/platform/x11/helpers_x11.c"
     ]
@@ -938,6 +978,7 @@
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
       "-Wno-discarded-qualifiers",
+      "-Wno-stringop-truncation",
       "-c",
       "src/platform/x11/flapi_x11.c"
     ]
@@ -961,6 +1002,7 @@
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
       "-Wno-discarded-qualifiers",
+      "-Wno-stringop-truncation",
       "-c",
       "src/platform/x11/input_x11.c"
     ]
@@ -984,6 +1026,7 @@
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
       "-Wno-discarded-qualifiers",
+      "-Wno-stringop-truncation",
       "-c",
       "src/platform/x11/display_x11.c"
     ]
@@ -1007,6 +1050,7 @@
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
       "-Wno-discarded-qualifiers",
+      "-Wno-stringop-truncation",
       "-c",
       "src/platform/x11/misc_x11.c"
     ]
@@ -1030,6 +1074,7 @@
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
       "-Wno-discarded-qualifiers",
+      "-Wno-stringop-truncation",
       "-c",
       "src/platform/wm/wm.c"
     ]
@@ -1053,6 +1098,7 @@
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
       "-Wno-discarded-qualifiers",
+      "-Wno-stringop-truncation",
       "-c",
       "src/platform/wm/hyprland_wm.c"
     ]
@@ -1076,6 +1122,7 @@
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
       "-Wno-discarded-qualifiers",
+      "-Wno-stringop-truncation",
       "-c",
       "src/platform/wm/x11_wm.c"
     ]
@@ -1099,6 +1146,7 @@
       "-Wno-unused-parameter",
       "-Wno-sign-compare",
       "-Wno-discarded-qualifiers",
+      "-Wno-stringop-truncation",
       "-c",
       "src/platform/wm/sway_wm.c"
     ]
