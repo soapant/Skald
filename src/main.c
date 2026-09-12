@@ -45,11 +45,6 @@ static void free_history_list(void* v) {
 }
 
 int main() {
-  if (DoTimeDebugs) {
-    FILE* tf = fopen("time_logs.txt", "w");
-    if (tf) { fprintf(tf, "=== Flint time_logs started ===\n"); fclose(tf); }
-    atexit(TimerBufferFlush);
-  }
 #if !defined(_WIN32)
   {
     int lock_fd = open("/tmp/flint.lock", O_RDWR | O_CREAT, 0666);
