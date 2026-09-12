@@ -9,6 +9,7 @@
 #include "core/number_shortcut.h"
 #include "core/types.h"
 #include "platform/subclasses.h"
+#include "platform/draw.h"
 #include "wingdi.h"
 #include "config.h"
 #include "core/platform.h"
@@ -551,14 +552,9 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             } else {
               HFONT hOldMainFont = (HFONT)SelectObject(pdis->hDC, FlintContext_Get()->g_hMainFont);
                 if (!isSelected) {
-                    if (RainbowText) {
-                        float _t = (lb && lb->populated_count>1) ? (float)pdis->itemID/(float)(lb->populated_count-1) : 0;
-                        SetTextColor(pdis->hDC, GetRainbowColor(_t, 0.85f, GradientBrightness));
-                    } else if (AlternatingText && (pdis->itemID % 2 == 0)) {
-                        SetTextColor(pdis->hDC, COLOR_ALTERNATE);
-                    } else {
-                        SetTextColor(pdis->hDC, COLOR_TEXT);
-                    }
+                    unsigned long ncol, bcol, pcol;
+                    Platform_GetItemColors(pdis->itemID, lb ? lb->populated_count : 0, &ncol, &bcol, &pcol);
+                    SetTextColor(pdis->hDC, ncol);
                 } else {
                     SetTextColor(pdis->hDC, COLOR_TEXT);
                 }
