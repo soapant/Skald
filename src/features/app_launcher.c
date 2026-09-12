@@ -67,134 +67,10 @@ const PathEntry SystemShortcuts[] = {
 #define MAX_APPS 2048
 
 ListOfFiles s_apps = {0};
-#if defined(_WIN32)
-static CRITICAL_SECTION g_apps_cs;
-static bool g_apps_cs_inited = false;
-static void apps_lock_init(void) { if (!g_apps_cs_inited) { InitializeCriticalSection(&g_apps_cs); g_apps_cs_inited = true; } }
-#define APPS_LOCK() do { apps_lock_init(); EnterCriticalSection(&g_apps_cs); } while(0)
-#define APPS_UNLOCK() LeaveCriticalSection(&g_apps_cs)
-#else
-#define APPS_LOCK() do {} while(0)
-#define APPS_UNLOCK() do {} while(0)
-#endif
 static char* s_app_icons[MAX_APPS] = {0};
 static size_t s_app_icon_count = 0;
-#if defined(_WIN32)
-static HICON s_hicons[MAX_APPS] = {0};
-static size_t s_hicon_count = 0;
-static HICON win_load_icon_for_path(const char* path, int size) {
-    if (!path || !path[0]) return NULL;
-    SHFILEINFOA shfi = {0};
-    DWORD flags = SHGFI_ICON | (size <= 16 ? SHGFI_SMALLICON : SHGFI_LARGEICON);
-    if (SHGetFileInfoA(path, 0, &shfi, sizeof(shfi), flags)) return shfi.hIcon;
-    if (SHGetFileInfoA(path, FILE_ATTRIBUTE_NORMAL, &shfi, sizeof(shfi), flags | SHGFI_USEFILEATTRIBUTES)) return shfi.hIcon;
-    DWORD alt = SHGFI_ICON | (size <= 16 ? SHGFI_LARGEICON : SHGFI_SMALLICON);
-    if (SHGetFileInfoA(path, 0, &shfi, sizeof(shfi), alt)) return shfi.hIcon;
-    if (SHGetFileInfoA(path, FILE_ATTRIBUTE_NORMAL, &shfi, sizeof(shfi), alt | SHGFI_USEFILEATTRIBUTES)) return shfi.hIcon;
-    return NULL;
-}
-#endif
 
-static void free_icon_cache(void) {
-    APPS_LOCK();
-    for (size_t i = 0; i < s_app_icon_count; i++) {
-        free(s_app_icons[i]);
-        s_app_icons[i] = NULL;
-    }
-    s_app_icon_count = 0;
-#if defined(_WIN32)
-    for (size_t i = 0; i < s_hicon_count; i++) {
-        if (s_hicons[i]) DestroyIcon(s_hicons[i]);
-        s_hicons[i] = NULL;
-    }
-    s_hicon_count = 0;
-#endif
-    APPS_UNLOCK();
-}
-
-static void rebuild_icon_cache(void) {
-    size_t n; APPS_LOCK(); n = s_apps.count < MAX_APPS ? s_apps.count : MAX_APPS; APPS_UNLOCK();
-    char* new_icons[MAX_APPS]={0};
-#if defined(_WIN32)
-    HICON new_hicons[MAX_APPS]={0};
-    int wantSize = IconSize;
-    if (wantSize < 16) wantSize = 16;
-    if (wantSize > 48) wantSize = 48;
-#endif
-    for (size_t i=0;i<n;i++) {
-        const char* p=NULL; APPS_LOCK(); if(i < s_apps.count) p=s_apps.items[i].path; APPS_UNLOCK();
-        if(p) {
-            new_icons[i]=fl_get_icon_path((char*)p);
-            const char* iconSrc = new_icons[i] ? new_icons[i] : p;
-#if defined(_WIN32)
-            new_hicons[i]=win_load_icon_for_path(iconSrc, wantSize);
-#endif
-        }
-    }
-    APPS_LOCK();
-    for(size_t i=0;i<s_app_icon_count;i++){ free(s_app_icons[i]); s_app_icons[i]=NULL; }
-#if defined(_WIN32)
-    for(size_t i=0;i<s_hicon_count;i++){ if(s_hicons[i]) DestroyIcon(s_hicons[i]); s_hicons[i]=NULL; }
-    s_hicon_count=0;
-#endif
-    s_app_icon_count=0;
-    for(size_t i=0;i<n;i++) s_app_icons[i]=new_icons[i];
-    s_app_icon_count=n;
-#if defined(_WIN32)
-    for(size_t i=0;i<n;i++) s_hicons[i]=new_hicons[i];
-    s_hicon_count=n;
-#endif
-    APPS_UNLOCK();
-}
-
-#if defined(_WIN32)
-static const char* kAppCachePath = "data/app_cache_win.txt";
-static bool load_app_cache_from_file(void) {
-    FILE* f = fopen(kAppCachePath, "r");
-    if (!f) return false;
-    ListOfFiles tmp = {0};
-    char line[1024];
-    while (fgets(line, sizeof(line), f) && tmp.count < MAX_APPS) {
-        line[strcspn(line, "\r\n")] = '\0';
-        char* sep = strchr(line, '|');
-        if (!sep) continue;
-        *sep = '\0';
-        const char* name = line;
-        const char* path = sep+1;
-        if (tmp.count >= tmp.capacity) {
-            tmp.capacity = tmp.capacity==0?256:tmp.capacity*2;
-            FileItem* ni = realloc(tmp.items, tmp.capacity*sizeof(FileItem));
-            if (!ni) { fclose(f); if(tmp.items) free(tmp.items); return false; }
-            tmp.items = ni;
-        }
-        strncpy(tmp.items[tmp.count].name, name, sizeof(tmp.items[tmp.count].name)-1);
-        tmp.items[tmp.count].name[sizeof(tmp.items[tmp.count].name)-1]='\0';
-        strncpy(tmp.items[tmp.count].path, path, sizeof(tmp.items[tmp.count].path)-1);
-        tmp.items[tmp.count].path[sizeof(tmp.items[tmp.count].path)-1]='\0';
-        tmp.count++;
-    }
-    fclose(f);
-    if (tmp.count==0) { if(tmp.items) free(tmp.items); return false; }
-    APPS_LOCK();
-    if (s_apps.items) free(s_apps.items);
-    s_apps = tmp;
-    APPS_UNLOCK();
-    rebuild_icon_cache();
-    return true;
-}
-static void save_app_cache_to_file(void) {
-    FILE* f = fopen(kAppCachePath, "w");
-    if (!f) return;
-    APPS_LOCK();
-    for (size_t i=0;i<s_apps.count;i++) fprintf(f, "%s|%s\n", s_apps.items[i].name, s_apps.items[i].path);
-    APPS_UNLOCK();
-    fclose(f);
-}
-#endif
 void initialize_app_cache(void) {
-#if defined(_WIN32)
-    if (s_apps.count==0 && load_app_cache_from_file()) return;
-#endif
 #if defined(_WIN32)
     char* allowed[] = {"lnk", "exe", "url", NULL};
 #else
@@ -263,16 +139,12 @@ void initialize_app_cache(void) {
         }
     }
 #endif
-    APPS_LOCK();
     if (s_apps.items) free(s_apps.items);
     s_apps = tmp;
-    APPS_UNLOCK();
-    rebuild_icon_cache();
 }
 void launch_app_by_name(const char* display_name) {
     char path_copy[512] = {0};
     bool found = false;
-    APPS_LOCK();
     for (size_t i = 0; i < s_apps.count; i++) {
         if (fl_string_match_insensitive(display_name,s_apps.items[i].name)) {
             strncpy(path_copy, s_apps.items[i].path, sizeof(path_copy)-1);
@@ -280,14 +152,12 @@ void launch_app_by_name(const char* display_name) {
             break;
         }
     }
-    APPS_UNLOCK();
     if (found) fl_launch_with_args(path_copy, NULL);
 }
 
 void launch_app_as_admin(const char* display_name) {
     char path_copy[512] = {0};
     bool found = false;
-    APPS_LOCK();
     for (size_t i = 0; i < s_apps.count; i++) {
         if (fl_string_match_insensitive(s_apps.items[i].name, display_name)) {
             strncpy(path_copy, s_apps.items[i].path, sizeof(path_copy)-1);
@@ -295,7 +165,6 @@ void launch_app_as_admin(const char* display_name) {
             break;
         }
     }
-    APPS_UNLOCK();
     if (found) fl_launch_with_args_as_admin(path_copy, NULL);
 }
 
@@ -311,7 +180,7 @@ bool applauncher_ctrlenter_callback(const char* selection, ListBoxInfo* lb) {
 
 void applauncher_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
     size_t cnt = 0;
-    APPS_LOCK(); cnt = s_apps.count; APPS_UNLOCK();
+    cnt = s_apps.count;
     if (cnt == 0) {
         PopulateListBox(lb, FlintContext_Get()->window.hListBox, filter, NULL, 0, NULL);
         return;
@@ -319,19 +188,16 @@ void applauncher_refresh_callback(const char* filter, WindowHandle hListBox, Lis
     if (cnt > 2048) {
         const char** names = (const char**)malloc(cnt * sizeof(char*));
         if (!names) return;
-        APPS_LOCK();
         for (size_t i = 0; i < cnt && i < s_apps.count; i++) names[i] = s_apps.items[i].name;
-        APPS_UNLOCK();
         PopulateListBox(lb, FlintContext_Get()->window.hListBox, filter, names, (int)cnt, NULL);
         free(names);
         return;
     }
     const char* names[2048];
-    APPS_LOCK();
     for (size_t i = 0; i < cnt && i < s_apps.count; i++) names[i] = s_apps.items[i].name;
-    APPS_UNLOCK();
     PopulateListBox(lb, FlintContext_Get()->window.hListBox, filter, names, (int)cnt, NULL);
 }
+
 void applauncher_copy_callback(const char* selection,int true_index,int type) {
     char* text = (char*)selection;
     switch(type) {
@@ -349,9 +215,7 @@ void applauncher_copy_callback(const char* selection,int true_index,int type) {
       }
       case 1: {
         char pc[512]={0}; bool ok=false;
-        APPS_LOCK();
         if (true_index >= 0 && (size_t)true_index < s_apps.count) { strncpy(pc, s_apps.items[true_index].path, sizeof(pc)-1); ok=true; }
-        APPS_UNLOCK();
         if (ok) { char* dup=_strdup(pc); if(dup){ fl_copy_to_clipboard(dup); free(dup); return; } }
         break;
       }
@@ -359,46 +223,26 @@ void applauncher_copy_callback(const char* selection,int true_index,int type) {
     fl_copy_to_clipboard(text);
 }
 
-const char* applauncher_get_icon_for_item(const char* item_name) {
-    const char* ret=NULL;
-    APPS_LOCK();
-    for (size_t i=0;i<s_apps.count && i < MAX_APPS;i++) if (fl_string_match_insensitive(s_apps.items[i].name, item_name)) {
-        ret = s_app_icons[i]; break;
-    }
-    APPS_UNLOCK();
-    return ret;
-}
-
-void applauncher_free_icon_path(const char* p) {
-    (void)p;
-}
-
-int applauncher_get_icon_size_for_item(const char* item_name) {
-    const char* p = applauncher_get_icon_for_item(item_name);
-    return fl_get_icon_size(p);
-}
-
-
-void applauncher_render(PromptState *state) {
-    ListBoxInfo *lb = &state->listbox;
-    FlListSpec spec = {
-        .lb = lb,
-        .x = 0, .y = 70, .w = state->width, .h = state->height - 70 - 40,
-        .item_height = FontSize + 14
-    };
-    if (!fl_listbox_begin(&spec)) return;
-    FlListItemCtx ctx;
-    while (fl_listbox_next(&ctx)) {
-        fl_place_text_raw(.x=ctx.x + 45, .y=ctx.y + 4, .text=ctx.text, .align="LEFT", .pad=45);
-    }
-    fl_listbox_end();
-}
+// void applauncher_render(PromptState *state) {
+//     ListBoxInfo *lb = &state->listbox;
+//     FlListSpec spec = {
+//         .lb = lb,
+//         .x = 0, .y = 70, .w = state->width, .h = state->height - 70 - 40,
+//         .item_height = FontSize + 14
+//     };
+//     if (!fl_listbox_begin(&spec)) return;
+//     FlListItemCtx ctx;
+//     while (fl_listbox_next(&ctx)) {
+//         fl_place_text_raw(.x=ctx.x + 45, .y=ctx.y + 4, .text=ctx.text, .align="LEFT", .pad=45);
+//     }
+//     fl_listbox_end();
+// }
 
 void TriggerAppLauncher(void) {
     for (size_t i = 0; i < ARRAY_LEN(ListOfProgramPaths); i++) {
         fl_on_dir_changed(ListOfProgramPaths[i], initialize_app_cache);
     }
-    int _cnt=0; APPS_LOCK(); _cnt=(int)s_apps.count; APPS_UNLOCK();
+    int _cnt=0; _cnt=(int)s_apps.count;
     int ih = IconSize + 8;
     if (ih < 32) ih = 32;
     if (ih > 48) ih = 48;
@@ -408,34 +252,11 @@ void TriggerAppLauncher(void) {
            .enter = applauncher_enter_callback,
            .ctrl_enter = applauncher_ctrlenter_callback,
            .copy = applauncher_copy_callback,
-           .render = applauncher_render);
+           );
 }
 
-#if defined(_WIN32)
-#include <windows.h>
-static DWORD WINAPI app_launcher_bg_init(LPVOID p) {
-    (void)p;
-    initialize_app_cache();
-    return 0;
-}
-FLINT_FEATURE_INIT {
-    HANDLE h = CreateThread(NULL, 0, app_launcher_bg_init, NULL, 0, NULL);
-    if (h) CloseHandle(h);
-    fl_register_hotkey("Alt+E", TriggerAppLauncher);
-    fl_register_feature("App Launcher", TriggerAppLauncher);
-}
-#else
 FLINT_FEATURE_INIT {
     initialize_app_cache();
     fl_register_hotkey("Alt+E", TriggerAppLauncher);
     fl_register_feature("App Launcher", TriggerAppLauncher);
 }
-#endif
-
-
-
-
-
-
-
-
