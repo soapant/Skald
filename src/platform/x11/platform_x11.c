@@ -1274,3 +1274,19 @@ int Platform_CopyToClipboard(const char* text) {
     PROFILE_END_VAR(timer, "flapi_x11:fl_copy_into_clipboard_platform");
     return (status == 0) ? 1 : 0;
 }
+
+bool Platform_BuildFeature(const char* src, const char* out) {
+    if (!src || !out) return false;
+    char cmd[1024];
+    snprintf(cmd, sizeof(cmd), "gcc -I include -I/usr/include/freetype2 -w -g -fPIC -shared -o %s %s 2>&1", out, src);
+    char* outStr = Platform_RunTerminalCommand(cmd, false);
+    bool ok = false;
+    if (outStr) {
+        if (strlen(outStr)==0 || !strstr(outStr, "error:")) ok = true;
+        else fprintf(stderr, "[BUILD] %s\n", outStr);
+        free(outStr);
+    } else {
+        ok = true;
+    }
+    return ok;
+}

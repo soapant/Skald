@@ -132,6 +132,22 @@ void FeatureLoader_Reload(const char* name) {
     return;
 }
 
+void FeatureLoader_Unload(const char* name) {
+    if (!name) return;
+    for (int i=0;i<g_feature_count;i++) {
+        if (strcmp(g_features[i].name, name)==0) {
+            typedef void (*ShutdownFn)(void);
+            ShutdownFn shut = (ShutdownFn)Platform_GetSymbol(g_features[i].handle, "FlintFeatureShutdown");
+            if (shut) shut();
+            Platform_UnloadLibrary(g_features[i].handle);
+            for (int k=i;k+1<g_feature_count;k++) g_features[k]=g_features[k+1];
+            g_feature_count--;
+            printf("[FEATURE] unloaded %s\n", name);
+            return;
+        }
+    }
+}
+
 void FeatureLoader_ReloadAll(void) {
     PROFILE_START(timer1);
 

@@ -591,3 +591,26 @@ int Platform_GetIconSize(char* icon_path) {
     if (strstr(icon_path, "32x32")) return 32;
     else return 32;
 }
+
+bool Platform_BuildFeature(const char* src, const char* out) {
+    if (!src || !out) return false;
+    char tmp[512];
+    snprintf(tmp, sizeof(tmp), "%s.tmp", out);
+    char cmd[1024];
+    snprintf(cmd, sizeof(cmd), "gcc -I include -DCOBJMACROS -O2 -shared -o %s %s build/main.a 2>&1", tmp, src);
+    char* outStr = Platform_RunTerminalCommand(cmd, false);
+    bool ok = false;
+    if (outStr) {
+        if (strlen(outStr)==0 || !strstr(outStr, "error:")) ok = true;
+        else fprintf(stderr, "[BUILD] %s\n", outStr);
+        free(outStr);
+    } else {
+        ok = true;
+    }
+    if (!ok) { remove(tmp); return false; }
+    remove(out);
+    if (rename(tmp, out) != 0) {
+        MoveFileExA(tmp, out, MOVEFILE_REPLACE_EXISTING);
+    }
+    return true;
+}
