@@ -370,9 +370,7 @@ void todo_copy_callback(const char* selection,int true_index,int type) {
     fl_copy_to_clipboard(buffer);
 }
 
-#if !defined(_WIN32)
-void todo_render_callback(Display *dpy, Window *win, PromptState *state) {
-    (void)dpy; (void)win;
+void todo_render_callback(PromptState *state) {
     ListBoxInfo *lb = &state->listbox;
     FlListSpec spec = {
         .lb = lb,
@@ -388,7 +386,7 @@ void todo_render_callback(Display *dpy, Window *win, PromptState *state) {
         char tags[10][64];
         int tag_count = 0;
         ParseTodoLine(text_buf, main_text, tags, &tag_count);
-        fl_place_text_raw(.x=ctx.x + 10, .y=ctx.y + 4, .text=main_text,.align="LEFT", .pad=10);
+        fl_place_text_raw(.x=ctx.x + 10, .y=ctx.y + 4,.text=main_text,.align="LEFT", .pad=10);
         if (tag_count > 0) {
             if (tag_count == 1) {
                 int y_offset = 0;
@@ -409,36 +407,6 @@ void todo_render_callback(Display *dpy, Window *win, PromptState *state) {
     }
     fl_listbox_end();
 }
-#endif
-#if defined(_WIN32)
-void todo_render_callback_impl(HDC hdc, const char* text, RECT* rect, BOOL is_selected, int itemIndex) {
-    Platform_SetDrawContextWin32(hdc);
-    char main_text[512] = {0};
-    char tags[10][64];
-    int tag_count = 0;
-    ParseTodoLine(text, main_text, tags, &tag_count);
-    fl_place_text_raw(.x=rect->left + 10, .y=rect->top + 4, .text=main_text,.align="LEFT", .pad=10);
-    if (tag_count == 1) {
-        int y_offset = 0;
-        for (int i = 0; i < tag_count; i++) {
-            unsigned long tag_rgb = GetTagColor(tags[i]);
-            fl_place_text_raw(.x=rect->left + 14, .y=rect->top + 28 + y_offset, .text=tags[i], .color=tag_rgb, .align="LEFT", .pad=14);
-            y_offset += 18;
-        }
-    } else {
-        int x_offset = 0;
-        for (int i = 0; i < tag_count; i++) {
-            unsigned long tag_rgb = GetTagColor(tags[i]);
-            fl_place_text_raw(.x=rect->left + 14 + x_offset, .y=rect->top + 28, .text=tags[i], .color=tag_rgb, .align="LEFT", .pad=14 + x_offset);
-            x_offset += strlen(tags[i]) * 12;
-        }
-    }
-}
-
-void todo_render_callback(HDC hdc, const char* text, RECT* rect, BOOL is_selected, int itemIndex) {
-    todo_render_callback_impl(hdc, text, rect, is_selected, itemIndex);
-}
-#endif
 
 void todo_edit_callback(const char* selection, ListBoxInfo* lb) {
     fl_edit_text_popup(selection, "Edit Todo", 960, 540, TODO_FILE_PATH, lb, todo_refresh_callback);

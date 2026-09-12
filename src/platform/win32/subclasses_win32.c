@@ -552,7 +552,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             Platform_SetDrawContextWin32(pdis->hDC);
             if (!fl_prerender()) return TRUE;
             if (FlintContext_Get()->prompt_callbacks.render != NULL) {
-              FlintContext_Get()->prompt_callbacks.render(pdis->hDC, textBuffer, &textRect, isSelected, pdis->itemID);
+              return TRUE;
             } else {
               HFONT hOldMainFont = (HFONT)SelectObject(pdis->hDC, FlintContext_Get()->g_hMainFont);
                 if (!isSelected) {
@@ -613,6 +613,14 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             FillRect(hdc, &r1, hSep);
             FillRect(hdc, &r2, hSep);
             DeleteObject(hSep);
+        }
+        if (FlintContext_Get()->prompt_callbacks.render) {
+            extern PromptState* Platform_GetWin32PromptState(void);
+            PromptState *state = Platform_GetWin32PromptState();
+            if (state) {
+                Platform_SetDrawContextWin32(hdc);
+                FlintContext_Get()->prompt_callbacks.render(state);
+            }
         }
       if (g_vim_mode != NULL) {
         wchar_t wmode[256];

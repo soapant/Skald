@@ -1,5 +1,4 @@
 ﻿#include "core/flapi.h"
-#include "platform/draw.h"
 #if defined(_WIN32)
 #include <windows.h>
 #include <shellapi.h>
@@ -380,110 +379,20 @@ int applauncher_get_icon_size_for_item(const char* item_name) {
 }
 
 
-#if !defined(_WIN32)
-#include <X11/Xlib.h>
-#include <X11/Xft/Xft.h>
-#include "core/window_manager.h"
-#include "platform/x11/drawing.h"
-void applauncher_render(Display* dpy, Window* win, PromptState* state) {
+void applauncher_render(PromptState *state) {
     ListBoxInfo *lb = &state->listbox;
-    XWindowAttributes attrs; Visual* vis=NULL; Colormap cmap=0;
-    if (XGetWindowAttributes(dpy, *win, &attrs)) { vis=attrs.visual; cmap=attrs.colormap; }
-    else { vis=DefaultVisual(dpy, DefaultScreen(dpy)); cmap=DefaultColormap(dpy, DefaultScreen(dpy)); }
-    XftDraw* xd = XftDrawCreate(dpy, *win, vis, cmap);
-    if (!xd) return;
-    Linux_DrawBackground(dpy, *win, state->width, state->height);
-    FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
-    int y0=70; int itemH=FontSize+14;
-    int visible=(state->height - y0 - 40)/itemH;
-    if(visible<1) visible=1;
-    if(visible>lb->populated_count) visible=lb->populated_count;
-    if(lb->selected_index>=0){
-        if(lb->selected_index < lb->view_offset+PaddingForScrolling) lb->view_offset=lb->selected_index-PaddingForScrolling;
-        else if(lb->selected_index >= lb->view_offset+visible-PaddingForScrolling) lb->view_offset=lb->selected_index-visible+PaddingForScrolling+1;
+    FlListSpec spec = {
+        .lb = lb,
+        .x = 0, .y = 70, .w = state->width, .h = state->height - 70 - 40,
+        .item_height = FontSize + 14
+    };
+    if (!fl_listbox_begin(&spec)) return;
+    FlListItemCtx ctx;
+    while (fl_listbox_next(&ctx)) {
+        fl_place_text_raw(.x=ctx.x + 45, .y=ctx.y + 4, .text=ctx.text, .align="LEFT", .pad=45);
     }
-    if(lb->view_offset<0) lb->view_offset=0;
-    if(lb->view_offset+visible>lb->populated_count) lb->view_offset=lb->populated_count-visible;
-    if(lb->view_offset<0) lb->view_offset=0;
-    XftColor bgc,fcoltext,fcolalternate;
-    if(!EnableShaders || ShaderPreset==0) Linux_XftAllocColor(dpy,vis,cmap,rgb_to_hex(COLOR_BG),OpacityAlpha16(),&bgc);
-    Linux_XftAllocColor(dpy,vis,cmap,rgb_to_hex(COLOR_TEXT),0xFFFF,&fcoltext);
-    Linux_XftAllocColor(dpy,vis,cmap,rgb_to_hex(COLOR_ALTERNATE),0xFFFF,&fcolalternate);
-    for(int i=0;i<visible;i++){
-        int idx=lb->view_offset+i; int y=y0+i*itemH; bool sel=(idx==lb->selected_index);
-        if(sel) Linux_DrawSelectionBackground(dpy,xd,vis,cmap,0,y,state->width,itemH,rgb_to_hex(COLOR_SELECTED_TEXT));
-        else if(!EnableShaders || ShaderPreset==0) XftDrawRect(xd,&bgc,0,y,state->width,itemH);
-        unsigned long ncol, bcol, pcol;
-        Platform_GetItemColors(idx, lb->populated_count, &ncol, &bcol, &pcol);
-        XftColor ncolor, bcolor, pcolor;
-        Linux_XftAllocColor(dpy,vis,cmap, ncol, 0xFFFF, &ncolor);
-        Linux_XftAllocColor(dpy,vis,cmap, bcol, 0xFFFF, &bcolor);
-        Linux_XftAllocColor(dpy,vis,cmap, pcol, 0xFFFF, &pcolor);
-        XftColor *num_color=&ncolor,*body_color=&bcolor,*plain_color=&pcolor;
-        int text_x=45;
-        const char* item_text = (idx>=0 && idx < lb->populated_count) ? lb->populated_cache[idx] : "";
-        const char* icon_path = applauncher_get_icon_for_item(item_text);
-        DrawListBoxItemText(dpy,xd,vis,cmap,font,num_color,body_color,plain_color,lb,(char*)icon_path,idx,y,text_x);
-        XftColorFree(dpy,vis,cmap,&ncolor);
-        XftColorFree(dpy,vis,cmap,&bcolor);
-        XftColorFree(dpy,vis,cmap,&pcolor);
-    }
-    if(!EnableShaders || ShaderPreset==0) XftColorFree(dpy,vis,cmap,&bgc);
-    XftColorFree(dpy,vis,cmap,&fcoltext);
-    XftColorFree(dpy,vis,cmap,&fcolalternate);
-    Platform_DestroyFont(font);
-    XftDrawDestroy(xd);
+    fl_listbox_end();
 }
-#else
-#include <windows.h>
-#include <shellapi.h>
-#include "config.h"
-void applauncher_render(HDC hdc, const char* text, RECT* rect, BOOL is_selected, int itemIndex) {
-    int iconSize = IconSize;
-    if (iconSize < 16) iconSize = 16;
-    if (iconSize > 32) iconSize = 32;
-    HICON hIcon = NULL;
-    bool needDestroy = false;
-    char iconPathBuf[MAX_PATH]={0};
-    const char* iconPathForFallback=NULL;
-    if (text) {
-        APPS_LOCK();
-        for (size_t i=0;i<s_apps.count && i < s_hicon_count;i++) if (fl_string_match_insensitive(s_apps.items[i].name, text)) { hIcon = s_hicons[i]; if(hIcon) { /* cached */ } else if(i < s_app_icon_count && s_app_icons[i]) { strncpy(iconPathBuf, s_app_icons[i], sizeof(iconPathBuf)-1); iconPathForFallback=iconPathBuf; } else if(s_apps.items[i].path[0]) { strncpy(iconPathBuf, s_apps.items[i].path, sizeof(iconPathBuf)-1); iconPathForFallback=iconPathBuf; } break; }
-        if(!hIcon && !iconPathForFallback) {
-            for(size_t i=0;i<s_apps.count;i++) if(fl_string_match_insensitive(s_apps.items[i].name, text)) { strncpy(iconPathBuf, s_apps.items[i].path, sizeof(iconPathBuf)-1); iconPathForFallback=iconPathBuf; break; }
-            if(!iconPathForFallback) {
-                const char* p = applauncher_get_icon_for_item(text);
-                if(p) { strncpy(iconPathBuf, p, sizeof(iconPathBuf)-1); iconPathForFallback=iconPathBuf; }
-            }
-        }
-        APPS_UNLOCK();
-        if(!hIcon && iconPathForFallback && iconPathForFallback[0]) {
-            SHFILEINFOA shfi={0};
-            if(SHGetFileInfoA(iconPathForFallback,0,&shfi,sizeof(shfi),SHGFI_ICON|SHGFI_LARGEICON)) { hIcon=shfi.hIcon; needDestroy=true; }
-            else if(SHGetFileInfoA(iconPathForFallback,FILE_ATTRIBUTE_NORMAL,&shfi,sizeof(shfi),SHGFI_ICON|SHGFI_LARGEICON|SHGFI_USEFILEATTRIBUTES)) { hIcon=shfi.hIcon; needDestroy=true; }
-            else if(SHGetFileInfoA(iconPathForFallback,0,&shfi,sizeof(shfi),SHGFI_ICON|SHGFI_SMALLICON)) { hIcon=shfi.hIcon; needDestroy=true; }
-            else if(SHGetFileInfoA(iconPathForFallback,FILE_ATTRIBUTE_NORMAL,&shfi,sizeof(shfi),SHGFI_ICON|SHGFI_SMALLICON|SHGFI_USEFILEATTRIBUTES)) { hIcon=shfi.hIcon; needDestroy=true; }
-        }
-    }
-    RECT textRect = *rect;
-    if (hIcon) {
-        int y = rect->top + ((rect->bottom - rect->top) - iconSize) / 2;
-        int oldMode = SetStretchBltMode(hdc, HALFTONE);
-        SetBrushOrgEx(hdc, 0, 0, NULL);
-        DrawIconEx(hdc, rect->left + 6, y, hIcon, iconSize, iconSize, 0, NULL, DI_NORMAL);
-        SetStretchBltMode(hdc, oldMode);
-        if(needDestroy) DestroyIcon(hIcon);
-        textRect.left += iconSize + 12;
-    } else {
-        textRect.left += 10;
-    }
-    HFONT hOldFont = (HFONT)SelectObject(hdc, FlintContext_Get()->g_hMainFont);
-    SetBkMode(hdc, TRANSPARENT);
-    SetTextColor(hdc, COLOR_TEXT);
-    DrawTextA(hdc, text, -1, &textRect, DT_SINGLELINE | DT_VCENTER | DT_LEFT);
-    SelectObject(hdc, hOldFont);
-}
-#endif
 
 void TriggerAppLauncher(void) {
     for (size_t i = 0; i < ARRAY_LEN(ListOfProgramPaths); i++) {

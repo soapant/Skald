@@ -17,6 +17,9 @@ char* Platform_SearchPopup(void) { return NULL; }
 
 #include <gdiplus.h>
 
+static PromptState *g_win32_prompt_state = NULL;
+PromptState* Platform_GetWin32PromptState(void) { return g_win32_prompt_state; }
+
 void Platform_WaitForKeypressAsync(KeyCallback callback) {
   FlintContext_Get()->g_waiting_for_key = true;
   FlintContext_Get()->g_key_callback = callback;
@@ -48,12 +51,20 @@ char* Platform_PromptUser(const PromptSpec* spec) {
   FlintContext_Get()->window.output_buffer[0] = '\0';
   PROFILE_START(timer);
 
+  if (g_win32_prompt_state) { free(g_win32_prompt_state); g_win32_prompt_state = NULL; }
+  PromptState *win_state = NULL;
   ListBoxInfo* lb_ptr = NULL;
   bool has_listbox = (count >= 0);
   if (has_listbox) {
-    lb_ptr = (ListBoxInfo*)calloc(1, sizeof(ListBoxInfo));
-    if (!lb_ptr) return NULL;
+    win_state = (PromptState*)calloc(1, sizeof(PromptState));
+    if (!win_state) return NULL;
+    win_state->width = width;
+    win_state->height = height;
+    win_state->has_listbox = true;
+    win_state->window_title = (char*)window_title;
+    lb_ptr = &win_state->listbox;
     ListBoxInfo_Init(lb_ptr);
+    g_win32_prompt_state = win_state;
   }
 
   if (FlintContext_Get()->g_item_index_map) {
@@ -116,8 +127,12 @@ char* Platform_PromptUser(const PromptSpec* spec) {
   PROFILE_START(timer1);
 
   CreateChildControls(FlintContext_Get()->window.hPopupWnd, hCustomFont, window_list, count, &layout, lb_ptr);
+  if (render_callback) {
+    if (WH_TO_HWND(FlintContext_Get()->window.hListBox)) ShowWindow(WH_TO_HWND(FlintContext_Get()->window.hListBox), SW_HIDE);
+  }
   if (!window_list && refresh_callback && has_listbox && lb_ptr) {
       refresh_callback("", FlintContext_Get()->window.hListBox, lb_ptr);
+      if (g_win32_prompt_state) g_win32_prompt_state->listbox = *lb_ptr;
   }
 
   PROFILE_END_VAR(timer1, "CreateChildControl");
@@ -192,7 +207,8 @@ char* Platform_PromptUser(const PromptSpec* spec) {
 
 
   DeleteObject(hCustomFont); 
-  if (lb_ptr) free(lb_ptr);
+  if (g_win32_prompt_state) { free(g_win32_prompt_state); g_win32_prompt_state = NULL; lb_ptr = NULL; }
+  else if (lb_ptr) free(lb_ptr);
   FlintContext_Get()->window.selection_complete = false;
   FlintContext_Get()->prompt_callbacks.refresh = NULL;
   FlintContext_Get()->prompt_callbacks.enter = NULL;
