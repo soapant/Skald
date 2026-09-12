@@ -699,12 +699,35 @@ char* Platform_GetActiveWindowTitle(void) {
     return fgTitle;
 }
 char* Platform_GetIconPath(char* app_path) {
-  (void)app_path; return NULL;
+  if (!app_path || !app_path[0]) return NULL;
+  char expanded[MAX_PATH];
+  const char* src = app_path;
+  if (Platform_ExpandPath(app_path, expanded, sizeof(expanded))) {
+      if (expanded[0]) src = expanded;
+  }
+  if (strncmp(src, "shell:", 6)==0) return NULL;
+  if (GetFileAttributesA(src) != INVALID_FILE_ATTRIBUTES) {
+      return _strdup(src);
+  }
+  char full[MAX_PATH];
+  if (SearchPathA(NULL, src, NULL, MAX_PATH, full, NULL) && GetFileAttributesA(full) != INVALID_FILE_ATTRIBUTES) {
+      return _strdup(full);
+  }
+  if (!strchr(src, '.')) {
+      char withExe[MAX_PATH]; snprintf(withExe, sizeof(withExe), "%s.exe", src);
+      if (SearchPathA(NULL, withExe, NULL, MAX_PATH, full, NULL) && GetFileAttributesA(full) != INVALID_FILE_ATTRIBUTES) {
+          return _strdup(full);
+      }
+  }
+  return NULL;
   }
 int Platform_GetIconSize(char* icon_path) {
-    if (!icon_path) return 32;
-    if (strstr(icon_path, "32x32")) return 32;
-    else return 32;
+    (void)icon_path;
+    extern const int IconSize;
+    int s = IconSize;
+    if (s < 16) s = 16;
+    if (s > 32) s = 32;
+    return s;
 }
 
 bool Platform_BuildFeature(const char* src, const char* out) {
