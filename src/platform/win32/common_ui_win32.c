@@ -525,10 +525,13 @@ void SimpleCreateChildControls(WindowHandle hwndParent, HFONT hFont, const char*
   SetWindowSubclass(WH_TO_HWND(FlintContext_Get()->window.hEditControl), SimpleEditSubclassProc, 0, 0);
 
   if (count > 0) {
+    int bottomMargin = (WindowTitleText || VimModeText) ? 60 : 12;
+    int listH = layout->h - 70 - bottomMargin;
+    if (listH < 0) listH = 0;
     FlintContext_Get()->window.hListBox = WH_FROM_HWND(CreateWindowExA(
-        0, "LISTBOX", "",
+        WS_EX_COMPOSITED, "LISTBOX", "",
         WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOSEL,
-        20, 70, layout->w - 40, layout->h - 130, WH_TO_HWND(hwndParent), (HMENU)IDC_LIST_BOX, hInstance, NULL
+        20, 70, layout->w - 40, listH, WH_TO_HWND(hwndParent), (HMENU)IDC_LIST_BOX, hInstance, NULL
         ));
 
     if (WH_TO_HWND(FlintContext_Get()->window.hListBox) == NULL) return;
@@ -599,10 +602,13 @@ void CreateChildControls(WindowHandle hwndParent, HFONT hFont, const char* list[
   SetWindowSubclass(WH_TO_HWND(FlintContext_Get()->window.hEditControl), EditSubclassProc, 0, 0);
 
   if (count >= 0) {
+    int bottomMargin = (WindowTitleText || VimModeText) ? 60 : 12;
+    int listH = layout->h - 70 - bottomMargin;
+    if (listH < 0) listH = 0;
     FlintContext_Get()->window.hListBox = WH_FROM_HWND(CreateWindowExA(
-        0, "LISTBOX", "",
+        WS_EX_COMPOSITED, "LISTBOX", "",
         WS_CHILD | WS_VISIBLE | LBS_NODATA | LBS_OWNERDRAWFIXED,
-        20, 70, layout->w - 40, layout->h - 130, WH_TO_HWND(hwndParent), (HMENU)IDC_LIST_BOX, hInstance, NULL
+        20, 70, layout->w - 40, listH, WH_TO_HWND(hwndParent), (HMENU)IDC_LIST_BOX, hInstance, NULL
         ));
 
     if (WH_TO_HWND(FlintContext_Get()->window.hListBox) == NULL) {
