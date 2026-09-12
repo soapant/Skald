@@ -1,8 +1,4 @@
 ﻿#include "core/flapi.h"
-#if defined(_WIN32)
-#include <windows.h>
-#include <shellapi.h>
-#endif
 
 typedef struct {
     int vk_code;
@@ -67,8 +63,6 @@ const PathEntry SystemShortcuts[] = {
 #define MAX_APPS 2048
 
 ListOfFiles s_apps = {0};
-static char* s_app_icons[MAX_APPS] = {0};
-static size_t s_app_icon_count = 0;
 
 void initialize_app_cache(void) {
 #if defined(_WIN32)

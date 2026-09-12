@@ -336,31 +336,30 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
         WindowManager_PushPopup(wm, popup);
         return true;
       }
-     if (wParam == 'V' && ctrl_pressed) {                                                                  
-       char *clip = Platform_GetLastClipboardEntry();                                                      
-       if (!clip) return true;                                                                             
-       clip[strcspn(clip, "\r\n")] = '\0';
-       if (clip[0] == '\0') { free(clip); return true; }                                                   
-                                                                                                           
-       size_t cur_len = strlen(state->filter);                                                             
-       size_t clip_len = strlen(clip);                                                                     
-       size_t avail = sizeof(state->filter) - cur_len - 1;                                                 
-       if (clip_len > avail) clip_len = avail;                                                            
-       if (clip_len > 0) {                                                                               
-         memmove(state->filter + state->cursor + clip_len,                                              
-                 state->filter + state->cursor,                                                        
-                 cur_len - state->cursor + 1);                                                        
-         memcpy(state->filter + state->cursor, clip, clip_len);                                      
-         state->cursor += clip_len;                                                                 
-       }                                                                                           
-                                                                                                  
-       free(clip);                                                                               
+     if (wParam == 'V' && ctrl_pressed) {
+        char *clip = Platform_GetLastClipboardEntry(); 
+        if (!clip) return true; 
+        clip[strcspn(clip, "\r\n")] = '\0';
+        if (clip[0] == '\0') { free(clip); return true; } 
 
-       if (FlintContext_Get()->prompt_callbacks.refresh) {
-         FlintContext_Get()->prompt_callbacks.refresh(state->filter, FlintContext_Get()->window.hListBox, &state->listbox);
-       }
-       return true;                                                                                                                                
-     }                                                                                                                                             
+        size_t cur_len = strlen(state->filter);  
+        size_t clip_len = strlen(clip); 
+        size_t avail = sizeof(state->filter) - cur_len - 1;
+        if (clip_len > avail) clip_len = avail; 
+        if (clip_len > 0) {
+          memmove(state->filter + state->cursor + clip_len,
+                  state->filter + state->cursor,  
+                  cur_len - state->cursor + 1); 
+          memcpy(state->filter + state->cursor, clip, clip_len);
+          state->cursor += clip_len;
+        }
+        free(clip);                                                                               
+
+        if (FlintContext_Get()->prompt_callbacks.refresh) {
+          FlintContext_Get()->prompt_callbacks.refresh(state->filter, FlintContext_Get()->window.hListBox, &state->listbox);
+        }
+        return true;
+      }
 
     PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandlePromptKey");
     return false;
@@ -409,6 +408,28 @@ bool Linux_HandleSimplePromptKey(const XEvent* ev,SimplePromptState *state) {
     if (wParam == VK_RETURN) {
       FlintContext_Get()->window.selection_complete = true;
       PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandleSimplePromptKey");
+      return true;
+    }
+
+    if (wParam == 'V' && ctrl_pressed) {
+      char *clip = Platform_GetLastClipboardEntry(); 
+      if (!clip) return true; 
+      clip[strcspn(clip, "\r\n")] = '\0';
+      if (clip[0] == '\0') { free(clip); return true; } 
+
+      size_t cur_len = strlen(state->user_input);  
+      size_t clip_len = strlen(clip); 
+      size_t avail = sizeof(state->user_input) - cur_len - 1;
+      if (clip_len > avail) clip_len = avail; 
+      if (clip_len > 0) {
+        memmove(state->user_input + state->cursor + clip_len,
+                state->user_input + state->cursor,  
+                cur_len - state->cursor + 1); 
+        memcpy(state->user_input + state->cursor, clip, clip_len);
+        state->cursor += clip_len;
+      }
+      free(clip);                                                                               
+
       return true;
     }
     PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandleSimplePromptKey");
