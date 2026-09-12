@@ -17,7 +17,7 @@ void DeleteCharUnderCursor(VimContext* ctx) {
     if (pos < len) {
         memmove(&text[pos], &text[pos + 1], len - pos);
         Vim_SetText(ctx, text);
-        Vim_SetCursor(ctx, pos);
+        Vim_SetCursor(ctx, pos - 1);
     }
 }
 

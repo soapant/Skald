@@ -212,7 +212,7 @@ int Linux_UpdateEditScrollOffset(Display* dpy, XftFont* xf, const char* text, in
 
 void Linux_DrawEditCursor(XftDraw* xd, XftColor* color, int cursor_x, int scroll, int width) {
     PROFILE_START(timer);
-    int cursor_draw_x = 22 + cursor_x - scroll;
+    int cursor_draw_x = 20 + cursor_x - scroll;
     if (cursor_draw_x < 20) cursor_draw_x = 20;
     if (cursor_draw_x > width - 10) cursor_draw_x = width - 10;
     if (IsInsertMode()) {
