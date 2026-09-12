@@ -167,10 +167,28 @@ bool fl_listbox_next_platform(FlListItemCtx *out) {
     if (idx < 0 || idx >= g_fl_list_lb->populated_count) return false;
     int y = g_fl_list_y0 + g_fl_list_cur * g_fl_list_itemH;
     bool sel = (idx == g_fl_list_lb->selected_index);
-    RECT rc = { g_fl_list_spec.x, y, g_fl_list_spec.x + (g_fl_list_spec.w ? g_fl_list_spec.w : 900), y + g_fl_list_itemH };
-    HBRUSH br = CreateSolidBrush(sel ? COLOR_SELECTED_TEXT : COLOR_BG);
-    FillRect(g_fl_list_hdc, &rc, br);
-    DeleteObject(br);
+    if (RoundedCorners && CornerRadius>0) {
+        int R=6;
+        int bx = g_fl_list_spec.x + 1;
+        int bw = (g_fl_list_spec.w ? g_fl_list_spec.w : 650) - 2;
+        HPEN penB = CreatePen(PS_SOLID, 1, COLOR_SEPERATOR);
+        HBRUSH brNull = (HBRUSH)GetStockObject(NULL_BRUSH);
+        HPEN oldPen = (HPEN)SelectObject(g_fl_list_hdc, penB);
+        HBRUSH oldBr = (HBRUSH)SelectObject(g_fl_list_hdc, brNull);
+        RoundRect(g_fl_list_hdc, bx, y+1, bx+bw, y+g_fl_list_itemH-1, R*2, R*2);
+        SelectObject(g_fl_list_hdc, oldPen); SelectObject(g_fl_list_hdc, oldBr); DeleteObject(penB);
+        HBRUSH inner = CreateSolidBrush(sel ? COLOR_SELECTED_TEXT : COLOR_BG);
+        HPEN pen2 = CreatePen(PS_SOLID, 1, sel ? COLOR_SELECTED_TEXT : COLOR_BG);
+        oldPen = (HPEN)SelectObject(g_fl_list_hdc, pen2);
+        oldBr = (HBRUSH)SelectObject(g_fl_list_hdc, inner);
+        RoundRect(g_fl_list_hdc, bx+1, y+2, bx+bw-1, y+g_fl_list_itemH-2, (R-1)*2, (R-1)*2);
+        SelectObject(g_fl_list_hdc, oldPen); SelectObject(g_fl_list_hdc, oldBr); DeleteObject(pen2); DeleteObject(inner);
+    } else {
+        RECT rc = { g_fl_list_spec.x, y, g_fl_list_spec.x + (g_fl_list_spec.w ? g_fl_list_spec.w : 900), y + g_fl_list_itemH };
+        HBRUSH br = CreateSolidBrush(sel ? COLOR_SELECTED_TEXT : COLOR_BG);
+        FillRect(g_fl_list_hdc, &rc, br);
+        DeleteObject(br);
+    }
     out->idx = idx;
     out->selected = sel;
     out->x = g_fl_list_spec.x;
