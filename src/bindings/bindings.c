@@ -17,14 +17,6 @@
 
 bool CheckVimMotion(int pressed_vk, int modifiers, MotionAction* out_action, const char** out_sequence, int* out_typed_count) {
     if (!EnableVimMode) return false;
-    WindowManager* wm = WindowManager_Get();
-    Popup* top = NULL;
-    if (wm) top = WindowManager_GetTopPopup(wm);
-    if (!top) {
-        // Windows Platform_PromptUser uses direct CreateWindowEx not WM stack - fallback to global hPopupWnd
-        if (!(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) && IsWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd)))) return false;
-    }
-    
     bool ctrl_held = (modifiers & HOTKEY_MOD_CTRL) != 0;
     bool shift_held = (modifiers & HOTKEY_MOD_SHIFT) != 0;
     
