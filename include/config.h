@@ -14,8 +14,8 @@
 #define COLOR_TIP               RGB(0, 160, 0)
 
 extern bool Tray;
-extern bool EnableVimMode;
 extern bool RememberLastIndex;
+extern bool EnableVimMode;
 extern bool KeepSelectionAfterClose;
 extern bool MessageAfterEachHotkey;
 extern bool AllowOtherFeatureTogglesInFeature;
@@ -56,7 +56,9 @@ extern const bool FullTextNeedsKeyPress;
 extern const bool MessagesEnabled;
 extern const bool RainbowText;
 extern const bool ColoredVimModeText;
+extern const bool WindowTitleText;
 extern const bool AlternatingText;
+extern const bool VimModeText;
 extern const int GradientItems;
 extern const float GradientBrightness;
 
