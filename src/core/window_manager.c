@@ -98,18 +98,15 @@ static void* feature_watcher_thread(void* arg) {
             if (base) base++; else base = buf;
             char* dot = strrchr(base, '.');
             if (dot) *dot = '\0';
-            char cmd[1024];
-            snprintf(cmd, sizeof(cmd), "gcc -I include -I/usr/include/freetype2 -w -g -fPIC -shared -o build/features/%s.so src/features/%s.c 2>&1", base, base);
-            printf("[WATCHER] recompiling %s -> %s\n", buf, cmd); fflush(stdout);
-            char* out = Platform_RunTerminalCommand(cmd,false);
-            if (out) {
-                if (strlen(out)==0 || !strstr(out, "error:")) {
-                    printf("[WATCHER] reload %s\n", base); fflush(stdout);
-                    FeatureLoader_Reload(base);
-                } else {
-                    fprintf(stderr, "[WATCHER] compile failed for %s: %s\n", base, out);
-                }
-                free(out);
+            char src[512], dll[512];
+            snprintf(src, sizeof(src), "src/features/%s.c", base);
+            snprintf(dll, sizeof(dll), "build/features/%s.so", base);
+            printf("[WATCHER] recompiling %s -> %s\n", src, dll); fflush(stdout);
+            if (Platform_BuildFeature(src, dll)) {
+                printf("[WATCHER] reload %s\n", base); fflush(stdout);
+                FeatureLoader_Reload(base);
+            } else {
+                fprintf(stderr, "[WATCHER] compile failed for %s\n", base);
             }
         }
         for (int i=0;i<5;i++) {
@@ -127,13 +124,12 @@ static DWORD WINAPI feature_watcher_thread_win(LPVOID arg) {
         if (filename) {
             printf("Changed file: %s\n", filename);
             fflush(stdout);
-            char* base = strrchr(filename, '/');
-            if (!base) base = strrchr(filename, '\\');
-            if (base) base++; else base = filename;
-            char* dot = strrchr(base, '.');
-            if (dot) *dot = '\0';
-
-            FeatureLoader_Reload(base);
+            char* out = Platform_RunTerminalCommand("cmd /c nob 2>&1", false);
+            if (out) {
+                printf("[WATCHER] rebuild: %s\n", out);
+                free(out);
+            }
+            printf("[WATCHER] %s changed - rebuilt, restart manually\n", filename);
             free(filename);
         }
         for (int i=0;i<5;i++) {
