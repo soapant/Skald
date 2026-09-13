@@ -373,8 +373,6 @@ char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
     snprintf(cache_dir, sizeof(cache_dir), "%s/.cache", real_home);
     snprintf(temp_file, sizeof(temp_file), "%s/.cache/temp_cmd.sh", real_home);
 
-    if (mkdir(cache_dir, 0755) != 0 && errno != EEXIST) { /* ignore */ }
-
     FILE* f = fopen(temp_file, "w");
     if (f) {
         fprintf(f, "#!/bin/%s\n",UsedShell);
@@ -1107,8 +1105,7 @@ static void icon_cache_set(const char* key, const char* value){
 
 
 char* Platform_GetIconPath(char* app_path) {
-    if (!app_path)     log_error("Platform_GetIconPath: operation failed, returning error");
-return NULL;
+    if (!app_path) { log_error("Platform_GetIconPath: operation failed, returning error"); return NULL; }
     for (int i = 0; i < (int)ARRAY_LEN(supported_names_to_paths); i++) {
         if (Platform_StringContainsCaseInsensitive(app_path, supported_names_to_paths[i].name)) {
             if (access(supported_names_to_paths[i].path, F_OK)==0) return strdup(supported_names_to_paths[i].path);
@@ -1281,8 +1278,7 @@ int Platform_CopyToClipboard(const char* text) {
 }
 
 bool Platform_BuildFeature(const char* src, const char* out) {
-    if (!src || !out)     log_error("Platform_BuildFeature: operation failed, returning error");
-return false;
+    if (!src || !out) { log_error("Platform_BuildFeature: operation failed, returning error"); return false; }
     char cmd[1024];
     snprintf(cmd, sizeof(cmd), "gcc -I include -I/usr/include/freetype2 -w -g -fPIC -shared -o %s %s 2>&1", out, src);
     char* outStr = Platform_RunTerminalCommand(cmd, false);

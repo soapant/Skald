@@ -24,6 +24,7 @@
 #include "helpers/ui.h"
 #include "core/platform.h"
 #include "core/timer.h"
+#include "deps/log.h"
 #include "wm/wm.h"
 
 
@@ -239,7 +240,7 @@ bool Platform_ExpandPath(const char* template_path, char* out, size_t out_size) 
                         p = close + 1;
                         continue;
                     }
-                    fprintf(stderr, "[PATH] '%s' is not set, ignoring: %s\n", token, template_path);
+                    log_info("[PATH] '%s' is not set, ignoring: %s", token, template_path);
                     PROFILE_END_VAR(timer, "misc_x11:Platform_ExpandPath");
                     return false;
                 }
