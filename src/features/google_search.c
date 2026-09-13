@@ -44,12 +44,21 @@ bool google_enter_callback(const char* selection, ListBoxInfo* lb) {
     return true;
 }
 
+bool google_ctrlenter_callback(const char* selection, ListBoxInfo* lb) {
+    if (!UI_IsListBoxSelected(lb)) {
+        fl_append_unique_line(GoogleHistoryFile, selection);
+    }
+    fl_launch_browser(selection);
+    return true;
+}
+
 void TriggerGoogleSearch(void) {
     const char* items[MAX_FILE_LINES];
     int n = fl_load_file_list(GoogleHistoryFile, items, MAX_FILE_LINES);
     PROMPT(.title = "🔍 Google", .items = items,
            .refresh = google_refresh_callback,
            .enter = google_enter_callback,
+           .ctrl_enter = google_ctrlenter_callback,
            .edit = google_edit_callback);
     fl_free_file_list(items, n);
 }
