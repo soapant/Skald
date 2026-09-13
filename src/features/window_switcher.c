@@ -289,8 +289,8 @@ static void TriggerWindowSwitcher() {
         ui_list[i] = g_switcher_windows[i].title;
     }
     
-    PROMPT(.title = "🪟 Switcher", .items = ui_list, .count = g_switcher_count,
-           .height = 920, .width = 650, .item_height = 32,
+    PROMPT(.title = "🪟 Switcher", .items = ui_list,
+           .height = 920, .width = 650,
            .refresh = switcher_refresh_callback,
            .enter = switcher_enter_callback,
            .copy = switcher_copy_callback);

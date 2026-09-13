@@ -51,3 +51,4 @@ what is a determenistic program
 love forever love is freedom you come forever you and me 
 how long has raycast been developed
 arch linux pacman list all explicitly installed packages 
+how do i install this libmupdf.so.28.0:

@@ -417,8 +417,8 @@ void TriggerTodo(void) {
     int count = fl_load_file_list(TODO_FILE_PATH, ui_list, 100);
 
     PROMPT(
-        .title = "📝 Todo", .items = ui_list, .count = count,
-        .height = 920, .width = 650, .item_height = 56,
+        .title = "📝 Todo", .items = ui_list,
+        .height = 920, .width = 650,
         .refresh = todo_refresh_callback,
         .enter = todo_enter_callback,
         .ctrl_enter = todo_ctrlenter_callback,

@@ -45,8 +45,8 @@ void TriggerProcessKiller(void) {
         list_items[i] = PK_LIST[i];
     }
 
-    PROMPT(.title = "💀 ProcessKiller", .items = list_items, .count = PK_COUNT,
-           .height = 920, .width = 650, .item_height = 32,
+    PROMPT(.title = "💀 ProcessKiller", .items = list_items,
+           .height = 920, .width = 650,
            .refresh = pk_refresh_callback,
            .enter = pk_enter_callback);
     free(list_items);
