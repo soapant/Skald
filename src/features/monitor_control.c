@@ -45,8 +45,7 @@ void SetMonitorBright(int brightness) {
 
 void TriggerMonitorControl(void) {
     const char* prompt = "Enter Brightness(1, 100)";
-    char* input = SIMPLE_PROMPT(.prompt = prompt, .title = "⏱️ MonitorControl",
-                                .height = 920, .width = 650);
+    char* input = SIMPLE_PROMPT(.prompt = prompt, .title = "⏱️ MonitorControl");
 
     if (input && input[0] != '\0') {
         SetMonitorBright(atoi(input));

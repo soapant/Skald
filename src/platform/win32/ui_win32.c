@@ -28,8 +28,6 @@ void Platform_WaitForKeypressAsync(KeyCallback callback) {
 char* Platform_PromptUser(const PromptSpec* spec) {
   const char** window_list = spec->items;
   const char* window_title = spec->title;
-  int height = spec->height;
-  int width = spec->width;
   int count = 0;
   if (window_list) {
     for (count = 0; count < 8192 && window_list[count]; count++) {}
@@ -61,8 +59,8 @@ char* Platform_PromptUser(const PromptSpec* spec) {
   if (has_listbox) {
     win_state = (PromptState*)calloc(1, sizeof(PromptState));
     if (!win_state) return NULL;
-    win_state->width = width;
-    win_state->height = height;
+    win_state->width = 900;
+    win_state->height = 640;
     win_state->has_listbox = true;
     win_state->window_title = (char*)window_title;
     lb_ptr = &win_state->listbox;
@@ -107,7 +105,7 @@ char* Platform_PromptUser(const PromptSpec* spec) {
   }
 
   WindowLayout layout;
-  CalculateWindowMetrics(0, &layout, height, width, item_height);
+  CalculateWindowMetrics(0, &layout, 640, 900, item_height);
   if (win_state) {
     win_state->width = layout.w;
     win_state->height = layout.h;
@@ -239,8 +237,6 @@ char* Platform_PromptUser(const PromptSpec* spec) {
 char* Platform_SimplePromptUser(const SimplePromptSpec* spec) {
   const char* prompt = spec->prompt;
   const char* window_title = spec->title;
-  int height = spec->height;
-  int width = spec->width;
   int item_height = 32;
 
   HINSTANCE hInstance = GetModuleHandle(NULL);
@@ -256,7 +252,7 @@ char* Platform_SimplePromptUser(const SimplePromptSpec* spec) {
   SetMode(MODE_INSERT);
 
   WindowLayout layout;
-  CalculateWindowMetrics(1, &layout, height, width, item_height);
+  CalculateWindowMetrics(1, &layout, 640, 900, item_height);
 
   HFONT hCustomFont = CreateCustomNerdFont(FontSize, UsedFont);
 

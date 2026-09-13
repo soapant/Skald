@@ -46,7 +46,6 @@ void TriggerProcessKiller(void) {
     }
 
     PROMPT(.title = "💀 ProcessKiller", .items = list_items,
-           .height = 920, .width = 650,
            .refresh = pk_refresh_callback,
            .enter = pk_enter_callback);
     free(list_items);

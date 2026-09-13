@@ -452,7 +452,6 @@ bool calculator_ctrlenter_callback(const char* selection, ListBoxInfo* lb) {
 
 void TriggerCalculator(void) {
     PROMPT(.title = "🧮 Calculator",
-           .height = 920, .width = 650,
            .render = calculator_render_callback,
            .enter = calculator_enter_callback,
            .ctrl_enter = calculator_ctrlenter_callback,

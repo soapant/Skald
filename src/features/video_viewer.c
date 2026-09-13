@@ -112,7 +112,6 @@ void video_prompt(void) {
         initial_items[i] = video_files.items[i].name;
     }
     PROMPT(.title = "🎥 Viewer", .items = initial_items,
-           .height = 920, .width = 650,
            .refresh = video_refresh_callback,
            .enter = video_enter_callback);
 

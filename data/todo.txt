@@ -20,3 +20,5 @@ get services to appear in the process killer too||[Cprogram]|[DontForget]
 add some file openere like app launcher buyt with files||[Cprogram]|[DontForget]
 do erroring a bit better as it took me a bit to realize i had my terminal on foot whilst i was on windows||[Cprogram]
 figure out some way of saying ok this config is for linux this is for windows in the easiest way possible||[Cprogram]
+some things need to be better handled internally like offsets of y and x of text changing depending on the font size||[Cprogram] 
+
