@@ -130,6 +130,23 @@ char* fl_adb_reboot();
 bool fl_string_match_insensitive(char* needle,char* haystack);
 
 // =============================================================================
+// STRING UTILITIES (all returned char* are heap-allocated, caller must free())
+// =============================================================================
+
+char* fl_string_cut_at(const char* str, char delim);
+char* fl_string_cut_before(const char* str, char delim);
+char* fl_string_cut_after(const char* str, char delim);
+char* fl_string_between(const char* str, char open, char close);
+char* fl_string_inside(const char* str, char delim);
+char* fl_string_trim(const char* str);
+char* fl_string_to_lower(const char* str);
+char* fl_string_to_upper(const char* str);
+bool fl_string_starts_with(const char* str, const char* prefix);
+bool fl_string_ends_with(const char* str, const char* suffix);
+char* fl_string_replace(const char* str, const char* from, const char* to);
+char* fl_string_slice(const char* str, int start, int end);
+
+// =============================================================================
 // POPUPS / UI
 // =============================================================================
 

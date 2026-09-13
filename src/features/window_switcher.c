@@ -26,7 +26,11 @@ void window_switcher_refresh_callback(const char* filter, WindowHandle hListBox,
     fl_free_window_list(&list_of_names);
 }
 bool window_switcher_enter_callback(const char* selection, ListBoxInfo* lb) {
-    if (UI_IsListBoxSelected(lb)) fl_focus_window_by_title(selection);
+    if (UI_IsListBoxSelected(lb)) {
+      char* output = fl_string_inside(selection,'(');
+      fl_focus_window_by_title(output);
+      free(output);
+    }
     return true;
 }
 void TriggerWindowSwitcher(void) {
