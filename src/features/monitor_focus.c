@@ -95,6 +95,5 @@ void TriggerMonitorFocusSide() {
 
 FLINT_FEATURE_INIT {
 
-
     fl_register_feature("monitor_focus", TriggerMonitorFocusMain);
 }

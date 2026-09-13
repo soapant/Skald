@@ -17,9 +17,6 @@
 #include "core/common_ui.h"
 
 int g_refresh_count = 0;
-#if !defined(_WIN32)
-bool draw_background = true;
-#endif
 
 void SubjectiveMessageDisplay(const char* buffer,int msg_height,int timeout,ColorRef color) {
     if (MessagesEnabled) {

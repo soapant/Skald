@@ -34,7 +34,6 @@ static FlintContext g_ctx = {
     .g_waiting_for_key = false,
     .g_key_pressed = 0,
     .g_key_callback = NULL,
-    .draw_background = true,
 #endif
 };
 
