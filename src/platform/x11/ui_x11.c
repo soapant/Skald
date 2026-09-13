@@ -132,6 +132,7 @@ void Platform_DismissMessage(void) {
         destroy_msg_window(old);
     }
     pthread_mutex_unlock(&g_msg_mtx);
+    log_info("Platform_DismissMessage completed");
     PROFILE_END_VAR(timer, "ui_x11:Platform_DismissMessage");
 }
 
@@ -276,25 +277,29 @@ void Platform_DisplayMessage(const char* message, int centerX, int centerY, int 
     pthread_t tid;
     pthread_create(&tid, NULL, msg_destroy_thread, m);
     pthread_detach(tid);
+    log_info("Platform_DisplayMessage completed for '%s'", message ? message : "");
     PROFILE_END_VAR(timer, "ui_x11:Platform_DisplayMessage");
 }
 
 void Platform_SettingsPopUp(void) {
     PROFILE_START(timer);
     log_warn("not implemented yet");
-    PROFILE_END_VAR(timer, "ui_x11:Platform_SettingsPopUp");
+        log_info("Platform_SettingsPopUp completed");
+PROFILE_END_VAR(timer, "ui_x11:Platform_SettingsPopUp");
 }
 
 char* Platform_SearchPopup(void) {
     PROFILE_START(timer);
     log_warn("not implemented yet");
-    PROFILE_END_VAR(timer, "ui_x11:Platform_SearchPopup");
+        log_info("Platform_SearchPopup completed");
+PROFILE_END_VAR(timer, "ui_x11:Platform_SearchPopup");
     return NULL;
 }
 
 int Platform_InitializeTrayIcon(void) {
     PROFILE_START(timer);
-    PROFILE_END_VAR(timer, "ui_x11:Platform_InitializeTrayIcon");
+        log_info("Platform_InitializeTrayIcon completed");
+PROFILE_END_VAR(timer, "ui_x11:Platform_InitializeTrayIcon");
         log_error("operation failed, returning error");
 return -1;
 }
@@ -426,16 +431,19 @@ void Platform_RunHotKeyMessageLoop(void) {
     }
     free(fds);
     destroy_uinput();
-    PROFILE_END_VAR(timer, "ui_x11:Platform_RunHotKeyMessageLoop");
+        log_info("Platform_RunHotKeyMessageLoop completed");
+PROFILE_END_VAR(timer, "ui_x11:Platform_RunHotKeyMessageLoop");
 }
 
 
 void Platform_InitUI(void) {
     PROFILE_START(timer);
+    log_info("Platform_InitUI completed");
     PROFILE_END_VAR(timer, "ui_x11:Platform_InitUI");
 }
 
 void Platform_ShutdownUI(void) {
     PROFILE_START(timer);
-    PROFILE_END_VAR(timer, "ui_x11:Platform_ShutdownUI");
+        log_info("Platform_ShutdownUI completed");
+PROFILE_END_VAR(timer, "ui_x11:Platform_ShutdownUI");
 }
