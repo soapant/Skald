@@ -11,12 +11,12 @@ int  TimeOutForMessages = 1;
 bool DoTimeDebugs = false;
 bool RoundedCorners = true;
 int CornerRadius = 14;
-int ListboxBorderThickness = 2;
+int ListboxBorderThickness = 1;
 bool EnableShaders = true;
 int ShaderPreset = 1;
 bool EnableSelectionShaders = true;
 int SelectionShaderPreset = 3;
-float ShaderIntensity = 0.10f;
+float ShaderIntensity = 0.30f;
 float ShaderSmoothness = 100.0f;
 
 char* EditPopUpPos = "middle";

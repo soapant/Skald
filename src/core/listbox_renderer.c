@@ -41,17 +41,12 @@ void Core_DrawListBox(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis
         int y = y0 + i * itemH;
         bool sel = (idx == lb->selected_index);
         if (RoundedCorners && CornerRadius>0) {
-            int R=6; int t=ListboxBorderThickness; if(t<1) t=1; if(t>4) t=4;
-            int bx=1, bw=state->width-2;
-            // Draw outer to seal 2px corner gap that showed window bg as white
-            Linux_FillRoundedRect(dpy, xd, vis, cmap, rgb_to_hex(COLOR_BG), OpacityAlpha16(), bx, y, bw, itemH, R);
+            int R=6; int t=ListboxBorderThickness; if(t<1) t=1; if(t>20) t=20;
+            int bx=4, bw=state->width-8;
             if (sel) {
                 Linux_FillRoundedRect(dpy, xd, vis, cmap, rgb_to_hex(COLOR_SELECTED_TEXT), OpacityAlpha16(), bx+t, y+1+t, bw-2*t, itemH-2-2*t, R-1);
             } else if (!EnableShaders || ShaderPreset==0) {
                 Linux_FillRoundedRect(dpy, xd, vis, cmap, rgb_to_hex(COLOR_BG), OpacityAlpha16(), bx+t, y+1+t, bw-2*t, itemH-2-2*t, R-1);
-            } else {
-                // shader non-sel: keep inner transparent to show window shader, outer already seals gap
-                // punch inner back to transparent by overdrawing with window bg? leave as outer (solid) for now to avoid white
             }
         } else {
             Platform_DrawListBackground(state, dpy, xd, vis, cmap, y, itemH, sel);
@@ -101,8 +96,8 @@ void Core_DrawListBox(PromptState *state, void *hdc) {
         bool sel = (idx == lb->selected_index);
         if (RoundedCorners && CornerRadius > 0) {
             int R = 6; if (R > CornerRadius) R = CornerRadius;
-            int t = ListboxBorderThickness; if (t < 1) t = 1; if (t > 4) t = 4;
-            int bx = 1, bw = state->width - 2;
+            int t = ListboxBorderThickness; if(t<1) t=1; if(t>20) t=20;
+            int bx = 4, bw = state->width - 8;
             RECT rcItem = {bx, y, bx + bw, y + itemH};
             if (EnableShaders && ShaderPreset != 0) {
                 Win32_DrawBackgroundSlice(hdcReal, &rcItem, COLOR_BG, state->width, state->height, rcItem.left, rcItem.top);
