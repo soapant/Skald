@@ -107,7 +107,8 @@ bool fl_query_browser(const char* query);
 bool fl_launch_browser_in_a_new_window(char* url);
 char* fl_get_zoxide_match(char* query);
 bool fl_focus_window_by_title(char* title);
-WindowList fl_get_all_active_windows();
+WindowList fl_get_all_window_titles();
+WindowList fl_get_all_window_names();
 
 // =============================================================================
 // WATCH / ADB / MISC
