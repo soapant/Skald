@@ -60,8 +60,14 @@ char* paste_x11(char* content) {
 }
 
 bool focus_window_title_x11(char* title) {
-  return Platform_RunTerminalCommand("wmctrl -a \"firefox\"",false);
+    //temrpoary i think thius is an extenral dependency i can only test once i get x11 and i3 owrking 
+    char command[512];
+    snprintf(command, sizeof(command),
+             "id=$(xwininfo -root -children | grep -i \"%s\" | awk '{print $1}' | head -n 1); "
+             "[ -n \"$id\" ] && xprop -root -f _NET_ACTIVE_WINDOW 32a -set _NET_ACTIVE_WINDOW \"$id\"", 
+             title);
 
+    return Platform_RunTerminalCommand(command, false);
 }
 
 WindowList get_window_names_x11() {
