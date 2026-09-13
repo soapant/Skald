@@ -40,11 +40,12 @@ bool focus_window_title_hyprland(char* title) {
   if (!title) return false;
   
   char cmd[512];
-  snprintf(cmd, sizeof(cmd), "hyprctl dispatch focuswindow title:%s",title);
+  snprintf(cmd, sizeof(cmd), "hyprctl dispatch focuswindow 'title:%s'", title);
+
 
     if (!succeded_hypr(Platform_RunTerminalCommand(cmd, false))) {
         if (title[0] != '\0') {
-            snprintf(cmd, sizeof(cmd), "hyprctl dispatch focuswindow title:%c%s", 
+            snprintf(cmd, sizeof(cmd), "hyprctl dispatch focuswindow 'title:%c%s'",
                      toupper((unsigned char)title[0]), 
                      &title[1]);
             if (succeded_hypr(Platform_RunTerminalCommand(cmd, false))) {
