@@ -23,4 +23,3 @@ parsingo f the hotkey string is incorrect when two or moe blacklist are there it
 do the wholei nternet and bluetooth thing for both windows and linux that will require some deps on linux ofc ||[Flint] 
 split populatelistbox bitch ||[Flint]
 you can probably remove simple promptuser as promptuser can do the exact same thing for a bit more work ||[Flint]
-maybe see about doing memory allocation / freeing internally so user doesnth ave to care although this is C ||[Flint]
