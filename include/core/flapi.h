@@ -329,17 +329,36 @@ bool fl_register_hotkey_impl(char* hotkey_string,void (*on_hotkey_trigger)(void)
 #define _FL_HOTKEY_ROUTER_3(hk, tr, s1)          _FL_HOTKEY_EXPAND(hk, tr, NULL, 0, s1)
 
 #define _FL_HOTKEY_ROUTER_4(hk, tr, arg3, arg4) \
-    _Generic((arg3) + 0, \
+    _Generic((arg3), \
         int: _FL_HOTKEY_EXPAND(hk, tr, NULL, _FL_AS_BOOL(arg3), _FL_AS_STR(arg4)), \
-        default: _FL_HOTKEY_EXPAND(hk, tr, _FL_AS_COND(arg3), false, _FL_AS_STR(arg4)) \
+        char*: _FL_HOTKEY_EXPAND(hk, tr, NULL, 0, arg3, arg4), \
+        const char*: _FL_HOTKEY_EXPAND(hk, tr, NULL, 0, arg3, arg4), \
+        default: _Generic((arg3), \
+            bool(*)(void): _FL_HOTKEY_EXPAND(hk, tr, _FL_AS_COND(arg3), false, _FL_AS_STR(arg4)), \
+            default: _FL_HOTKEY_EXPAND(hk, tr, NULL, 0, arg3, arg4) \
+        ) \
     )
 
-#define _FL_HOTKEY_ROUTER_5(hk, tr, cond, wl, s1) _FL_HOTKEY_EXPAND(hk, tr, cond, wl, s1)
+#define _FL_HOTKEY_ROUTER_5(hk, tr, arg3, arg4, arg5) \
+    _Generic((arg3), \
+        int: _FL_HOTKEY_EXPAND(hk, tr, NULL, _FL_AS_BOOL(arg3), _FL_AS_STR(arg4), _FL_AS_STR(arg5)), \
+        char*: _FL_HOTKEY_EXPAND(hk, tr, NULL, 0, arg3, arg4, arg5), \
+        const char*: _FL_HOTKEY_EXPAND(hk, tr, NULL, 0, arg3, arg4, arg5), \
+        default: _FL_HOTKEY_EXPAND(hk, tr, _FL_AS_COND(arg3), _FL_AS_BOOL(arg4), _FL_AS_STR(arg5)) \
+    )
 
-#define _FL_GET_MACRO(_1, _2, _3, _4, _5, NAME, ...) NAME
+#define _FL_HOTKEY_ROUTER_6(hk, tr, arg3, arg4, arg5, arg6) \
+    _Generic((arg3), \
+        int: _FL_HOTKEY_EXPAND(hk, tr, NULL, _FL_AS_BOOL(arg3), _FL_AS_STR(arg4), _FL_AS_STR(arg5), _FL_AS_STR(arg6)), \
+        char*: _FL_HOTKEY_EXPAND(hk, tr, NULL, 0, arg3, arg4, arg5, arg6), \
+        const char*: _FL_HOTKEY_EXPAND(hk, tr, NULL, 0, arg3, arg4, arg5, arg6), \
+        default: _FL_HOTKEY_EXPAND(hk, tr, _FL_AS_COND(arg3), _FL_AS_BOOL(arg4), _FL_AS_STR(arg5), _FL_AS_STR(arg6)) \
+    )
+
+#define _FL_GET_MACRO(_1, _2, _3, _4, _5, _6, NAME, ...) NAME
 
 #define fl_register_hotkey(...) \
-    _FL_GET_MACRO(__VA_ARGS__, _FL_HOTKEY_ROUTER_5, _FL_HOTKEY_ROUTER_4, _FL_HOTKEY_ROUTER_3, _FL_HOTKEY_ROUTER_2)(__VA_ARGS__)
+    _FL_GET_MACRO(__VA_ARGS__, _FL_HOTKEY_ROUTER_6, _FL_HOTKEY_ROUTER_5, _FL_HOTKEY_ROUTER_4, _FL_HOTKEY_ROUTER_3, _FL_HOTKEY_ROUTER_2)(__VA_ARGS__)
 
 #if defined(_WIN32)
 #define FLINT_FEATURE_EXPORT static
