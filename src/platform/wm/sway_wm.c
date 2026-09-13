@@ -2,7 +2,6 @@
 #include "deps/log.h"
 #include "core/platform.h"
 #include "config.h"
-#include "core/platform.h"
 #include "helpers/hotkey.h"
 #include "helpers/alias.h"
 #include "helpers/flag.h"

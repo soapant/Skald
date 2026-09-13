@@ -2,7 +2,19 @@
 #include "deps/log.h"
 #include "platform/x11/display.h"
 #include <X11/Xlib.h>
+#include <ctype.h>
 #include <string.h>
+#include "core/platform.h"
+#include "config.h"
+#include "helpers/hotkey.h"
+#include "helpers/alias.h"
+#include "helpers/flag.h"
+#include "helpers/file.h"
+#include "helpers/ui.h"
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <ctype.h>
 
 static int _x11_err = 0;
 static int _x11_err_handler(Display *dpy, XErrorEvent *ev) { (void)dpy; (void)ev; _x11_err = 1; return 0; }
@@ -53,6 +65,52 @@ bool focus_window_title_x11(char* title) {
 }
 
 WindowList get_list_of_windows_x11() {
+   char* output = Platform_RunTerminalCommand("wmctrl -x -l", false);
+   
+   WindowList list = { .windows = NULL, .count = 0 };
+   char buffer[256]; 
+   
+   if (output == NULL || strlen(output) == 0) {
+       return list; 
+   }
 
+   StringList lines = String_Split(output, "\n");
+   for (size_t i = 0; i < lines.count; i++) {
+       
+       char hex_id[32];
+       char desktop_num[16];
+       char class_string[128];
+
+       
+       if (sscanf(lines.items[i], "%s %s %s", hex_id, desktop_num, class_string) == 3) {
+           
+           
+           char *dot = strchr(class_string, '.');
+           if (dot) {
+               *dot = '\0'; 
+           }
+           
+           
+           strncpy(buffer, class_string, sizeof(buffer) - 1);
+           buffer[sizeof(buffer) - 1] = '\0';
+
+           
+           if (strcmp(buffer, "N/A") == 0 || strlen(buffer) == 0) continue;
+
+          
+           buffer[0] = toupper((unsigned char)buffer[0]);
+           
+           char** temp = realloc(list.windows, (list.count + 1) * sizeof(char*));
+           if (temp == NULL) {
+               break; 
+           }
+           list.windows = temp;
+           
+           list.windows[list.count] = strdup(buffer);
+           list.count++;
+       }
+   }
+   
+   return list;
 }
 

@@ -427,7 +427,6 @@ void Platform_DestroyFont(FontHandle font) {
     if (FH_TO_HFONT(font)) {
         DeleteObject(FH_TO_HFONT(font));
     }
-    log_info("Platform_DestroyFont font=%p", (void*)font);;
 }
 
 void Platform_GetTextExtents(FontHandle font, const char* text, int maxWidth, int* outWidth, int* outHeight) {
@@ -444,7 +443,6 @@ void Platform_GetTextExtents(FontHandle font, const char* text, int maxWidth, in
     DeleteDC(hdc);
     *outWidth = rect.right;
     *outHeight = rect.bottom;
-    log_info("Platform_GetTextExtents font=%p text='%s' maxWidth=%d outWidth=%d outHeight=%d", (void*)font, text ? text : "", maxWidth, outWidth, outHeight);;
 }
 
 long Platform_GetFileSize(char *filepath) {
@@ -663,7 +661,7 @@ typedef struct {
     HWND found_hwnd;
 } FindWindowData;
 
-BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam) {
+static BOOL CALLBACK EnumWindowsProcTitle(HWND hwnd, LPARAM lParam) {
     FindWindowData* data = (FindWindowData*)lParam;
     
     if (!IsWindowVisible(hwnd)) {
@@ -673,7 +671,7 @@ BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam) {
     char window_title[256];
     GetWindowTextA(hwnd, window_title, sizeof(window_title));
     
-    if (Platform_StringContainsCaseInsensitive(window_title, data->target_title) != NULL) {
+    if (Platform_StringContainsCaseInsensitive(window_title, data->target_title)) {
         data->found_hwnd = hwnd;
         return FALSE;
     }
@@ -691,7 +689,7 @@ bool Platform_FocusWindow(const char* title) {
         data.target_title = title;
         data.found_hwnd = NULL;
         
-        EnumWindows(EnumWindowsProc, (LPARAM)&data);
+        EnumWindows(EnumWindowsProcTitle, (LPARAM)&data);
         hwnd = data.found_hwnd;
     }
     
@@ -794,4 +792,38 @@ bool Platform_BuildFeature(const char* src, const char* out) {
     }
     log_info("Platform_BuildFeature src='%s' out='%s'", src ? src : "", out ? out : "");;
     return true;
+}
+
+static BOOL CALLBACK EnumWindowsProcAll(HWND hwnd, LPARAM lParam) {
+    WindowList *list = (WindowList *)lParam;
+
+    if (!IsWindowVisible(hwnd)) {
+        return TRUE;
+    }
+
+    char class_name[256];
+    if (GetClassNameA(hwnd, class_name, sizeof(class_name)) > 0) {
+        
+        if (strcmp(class_name, "Progman") == 0 || strcmp(class_name, "WorkerW") == 0) {
+            return TRUE;
+        }
+
+        class_name[0] = toupper((unsigned char)class_name[0]);
+
+        char **temp = realloc(list->windows, (list->count + 1) * sizeof(char *));
+        if (temp != NULL) {
+            list->windows = temp;
+            list->windows[list->count] = strdup(class_name);
+            list->count++;
+        }
+    }
+
+    return TRUE;
+}
+WindowList Platform_GetListOfActiveWindows() {
+    WindowList list = { .windows = NULL, .count = 0 };
+
+    EnumWindows(EnumWindowsProcAll, (LPARAM)&list);
+
+    return list;
 }

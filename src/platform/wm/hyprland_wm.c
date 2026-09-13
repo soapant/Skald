@@ -56,5 +56,37 @@ bool focus_window_title_hyprland(char* title) {
 }
 
 WindowList get_list_of_windows_hyprland() {
+   char* output = Platform_RunTerminalCommand("hyprctl clients -j", false);
+   
+   WindowList list = { .windows = NULL, .count = 0 };
+   char buffer[50];
+   
+   if (output == NULL || strlen(output) == 0) {
+       return list; 
+   }
 
+   StringList lines = String_Split(output, "\n");
+   for (size_t i = 0; i < lines.count; i++) {
+       char *match = strstr(lines.items[i], "\"class\"");
+       
+       if (match) {
+           if (sscanf(match, "\"class\": \"%[^\"]\"", buffer) == 1) {
+               
+               if (strlen(buffer) == 0) continue;
+
+               buffer[0] = toupper((unsigned char)buffer[0]);
+               
+               char** temp = realloc(list.windows, (list.count + 1) * sizeof(char*));
+               if (temp == NULL) {
+                   break; 
+               }
+               list.windows = temp;
+               
+               list.windows[list.count] = strdup(buffer);
+               list.count++;
+           }
+       }
+   }
+   
+   return list;
 }
