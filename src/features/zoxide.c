@@ -21,8 +21,8 @@ static bool zoxide_enter(const char* selection, ListBoxInfo* lb) {
 static void TriggerZoxide(void) {
     const char* items[MAX_FILE_LINES];
     int n = fl_load_file_list(TerminalZoxideFilePath, items, MAX_FILE_LINES);
-    PROMPT(.title = "⌨️ Zoxide", .items = items, .count = n,
-           .height = 920, .width = 650, .item_height = 32,
+    PROMPT(.title = "⌨️ Zoxide", .items = items,
+           .height = 920, .width = 650,
            .refresh = zoxide_refresh, .enter = zoxide_enter, .edit = zoxide_edit);
     fl_free_file_list(items, n);
 }
@@ -52,8 +52,8 @@ static void TriggerTextEditorZoxide(void) {
     int n = fl_load_file_list(TextEditorZoxideFilePath, items, MAX_FILE_LINES);
     char buffer[100];
     snprintf(buffer,sizeof(buffer),"📂 %s",UsedTextEditor);
-    PROMPT(.title = buffer, .items = items, .count = n,
-           .height = 920, .width = 650, .item_height = 32,
+    PROMPT(.title = buffer, .items = items,
+           .height = 920, .width = 650,
            .refresh = text_editor_refresh, .enter = text_editor_enter, .edit = text_editor_edit);
     fl_free_file_list(items, n);
 }
@@ -81,8 +81,8 @@ static void yazi_edit(const char* selection, ListBoxInfo* lb) {
 static void TriggerYaziZoxide(void) {
     const char* items[MAX_FILE_LINES];
     int n = fl_load_file_list(YaziZoxideFilePath, items, MAX_FILE_LINES);
-    PROMPT(.title = "📂 Yazi", .items = items, .count = n,
-           .height = 920, .width = 650, .item_height = 32,
+    PROMPT(.title = "📂 Yazi", .items = items,
+           .height = 920, .width = 650,
            .refresh = yazi_refresh, .enter = yazi_enter, .edit = yazi_edit);
     fl_free_file_list(items, n);
 }
@@ -108,8 +108,8 @@ static void file_manager_edit(const char* selection, ListBoxInfo* lb) {
 static void TriggerFileManager(void) {
     const char* items[MAX_FILE_LINES];
     int n = fl_load_file_list(FileManagerZoxideFilePath, items, MAX_FILE_LINES);
-    PROMPT(.title = "📁 FileManager", .items = items, .count = n,
-           .height = 920, .width = 650, .item_height = 32,
+    PROMPT(.title = "📁 FileManager", .items = items,
+           .height = 920, .width = 650,
            .refresh = file_manager_refresh, .enter = file_manager_enter, .edit = file_manager_edit);
     fl_free_file_list(items, n);
 }
