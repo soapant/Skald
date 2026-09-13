@@ -298,10 +298,9 @@ PROFILE_END_VAR(timer, "ui_x11:Platform_SearchPopup");
 
 int Platform_InitializeTrayIcon(void) {
     PROFILE_START(timer);
-        log_info("Platform_InitializeTrayIcon completed");
-PROFILE_END_VAR(timer, "ui_x11:Platform_InitializeTrayIcon");
-        log_error("operation failed, returning error");
-return -1;
+    log_info("Platform_InitializeTrayIcon completed");
+    PROFILE_END_VAR(timer, "ui_x11:Platform_InitializeTrayIcon");
+    return -1;
 }
 
 

@@ -1,8 +1,4 @@
 #include "core/flapi.h"
-#if !defined(_WIN32)
-#include "platform/x11/drawing.h"
-#include "platform/x11/window_factory.h"
-#endif
 
 typedef struct {
     const char* alias;

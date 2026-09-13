@@ -71,13 +71,14 @@ static void HandleMinecraftRotate(void) {
 }
 
 FLINT_FEATURE_INIT {
-    fl_register_hotkey("Alt+Ctrl+V", HandleFactorioMakeTag,WHITELIST,"Factorio");
-    fl_register_hotkey("Alt+Ctrl+B", HandleFactorioSearchFactory,WHITELIST,"Factorio");
-    fl_register_hotkey("Alt+Shift+C",HandleMinecraftCopy, WHITELIST,"Minecraft");
-    fl_register_hotkey("Alt+Shift+V",HandleMinecraftPaste, WHITELIST,"Minecraft");
-    fl_register_hotkey("Alt+Shift+Z",HandleMinecraftUndo, WHITELIST,"Minecraft");
-    fl_register_hotkey("Alt+Shift+Q",HandleMinecraftUp, WHITELIST,"Minecraft");
-    fl_register_hotkey("Alt+Shift+R",HandleMinecraftRotate,WHITELIST,"Minecraft");
+  // temporary
+    // fl_register_hotkey("Alt+Ctrl+V", HandleFactorioMakeTag,WHITELIST,"Factorio");
+    // fl_register_hotkey("Alt+Ctrl+B", HandleFactorioSearchFactory,WHITELIST,"Factorio");
+    // fl_register_hotkey("Alt+Shift+C",HandleMinecraftCopy, WHITELIST,"Minecraft");
+    // fl_register_hotkey("Alt+Shift+V",HandleMinecraftPaste, WHITELIST,"Minecraft");
+    // fl_register_hotkey("Alt+Shift+Z",HandleMinecraftUndo, WHITELIST,"Minecraft");
+    // fl_register_hotkey("Alt+Shift+Q",HandleMinecraftUp, WHITELIST,"Minecraft");
+    // fl_register_hotkey("Alt+Shift+R",HandleMinecraftRotate,WHITELIST,"Minecraft");
 
     fl_register_feature("HandleFactorioMakeTag", HandleFactorioMakeTag);
 }

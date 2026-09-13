@@ -6,4 +6,5 @@ bool get_title_x11(char *buffer, int buffer_size);
 char* get_clipboard_entry_x11();
 char* paste_x11(char* content);
 bool focus_window_title_x11(char* title);
+WindowList get_list_of_windows_x11();
 #endif

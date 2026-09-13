@@ -72,6 +72,11 @@ typedef struct {
 } MonitorWindowData;
 
 typedef struct {
+    char** windows;
+    int count;
+} WindowList;
+
+typedef struct {
 #if defined(_WIN32)
     HMONITOR targetMonitor;
 #else
