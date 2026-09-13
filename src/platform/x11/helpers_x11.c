@@ -196,7 +196,7 @@ int Linux_UpdateEditScrollOffset(Display* dpy, XftFont* xf, const char* text, in
         text_w = textExt.xOff;
     }
     int scroll = prev_scroll;
-    int margin = 20;
+    int margin = 0;
     if (cursor_x - scroll > visible_w - margin) scroll = cursor_x - visible_w + margin;
     if (cursor_x - scroll < margin) scroll = cursor_x - margin;
     if (scroll < 0) scroll = 0;
@@ -213,8 +213,7 @@ int Linux_UpdateEditScrollOffset(Display* dpy, XftFont* xf, const char* text, in
 
 void Linux_DrawEditCursor(XftDraw* xd, XftColor* color, int cursor_x, int scroll, int width) {
     PROFILE_START(timer);
-    int cursor_draw_x = 20 + cursor_x - scroll;
-    if (cursor_draw_x < 20) cursor_draw_x = 20;
+    int cursor_draw_x = 14 + cursor_x - scroll;
     if (cursor_draw_x > width - 10) cursor_draw_x = width - 10;
     if (IsInsertMode()) {
         XftDrawRect(xd, color, cursor_draw_x, 27, 2, FontSize);
