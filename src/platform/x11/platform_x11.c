@@ -1358,3 +1358,7 @@ bool Platform_BuildFeature(const char* src, const char* out) {
     log_info("Platform_BuildFeature src='%s' out='%s'", src ? src : "", out ? out : "");;
     return ok;
 }
+
+WindowList Platform_GetListOfActiveWindows() {
+  return Wm_GetListOfActiveWindows();
+}
