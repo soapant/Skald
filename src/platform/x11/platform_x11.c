@@ -97,8 +97,8 @@ static bool x11_daemon_exec_with_x11_env(char* const argv[], const char* display
 
 bool Platform_LaunchTerminalAtPath(const char* working_dir, const char* extra_args){
     PROFILE_START(timer);
-    if(!working_dir) { log_error("working_dir is NULL"); PROFILE_END_VAR(timer, "platform_x11:Platform_LaunchTerminalAtPath"); return false; }
-    if (!UsedTerminal || !UsedTerminal[0]) { log_error("UsedTerminal not configured"); PROFILE_END_VAR(timer, "platform_x11:Platform_LaunchTerminalAtPath"); return false; }
+    if(!working_dir) { log_error("working_dir is NULL extra_args='%s'", extra_args ? extra_args : "null"); PROFILE_END_VAR(timer, "platform_x11:Platform_LaunchTerminalAtPath"); return false; }
+    if (!UsedTerminal || !UsedTerminal[0]) { log_error("UsedTerminal not configured working_dir='%s' extra_args='%s'", working_dir ? working_dir : "null", extra_args ? extra_args : "null"); PROFILE_END_VAR(timer, "platform_x11:Platform_LaunchTerminalAtPath"); return false; }
 
     const char* real_user = Platform_GetRealUser();
     const char* display = Platform_GetSessionDisplay();
@@ -169,7 +169,7 @@ bool Platform_LaunchTerminalAtPath(const char* working_dir, const char* extra_ar
     } else if (WIFEXITED(st) && WEXITSTATUS(st)!=0) {
         log_warn("terminal '%s' exited with status %d", UsedTerminal, WEXITSTATUS(st));
     }
-    log_info("Platform_LaunchTerminalAtPath completed");
+    log_info("Platform_LaunchTerminalAtPath At Path %s",working_dir);
 
     PROFILE_END_VAR(timer, "platform_x11:Platform_LaunchTerminalAtPath");
     return true;
@@ -185,7 +185,7 @@ static bool daemon_spawn_sudo_env(const char* real_user, const char* display, co
 
 bool Platform_ShellExecuteWithVerb(const char* path, const char* verb, bool async) {
     PROFILE_START(timer);
-    if (!path) { log_error("path is NULL"); PROFILE_END_VAR(timer, "platform_x11:Platform_ShellExecuteWithVerb"); return false; }
+    if (!path) { log_error("path is NULL verb='%s' async=%d", verb ? verb : "null", async); PROFILE_END_VAR(timer, "platform_x11:Platform_ShellExecuteWithVerb"); return false; }
     (void)verb;
     const char* real_user = Platform_GetRealUser();
     const char* display = Platform_GetSessionDisplay();
@@ -227,7 +227,7 @@ bool Platform_ShellExecuteWithVerb(const char* path, const char* verb, bool asyn
         char* const argv[] = {"xdg-open", (char*)path, NULL};
         bool ok = x11_daemon_exec_with_x11_env(argv, display, xauthority, runtime_dir);
         if (!ok) { log_error("daemon_exec failed for '%s'", path); }
-        log_info("Platform_ShellExecuteWithVerb completed");
+        log_info("Platform_ShellExecuteWithVerb At Path %s ",path);
 
         PROFILE_END_VAR(timer, "platform_x11:Platform_ShellExecuteWithVerb");
         return ok;
@@ -272,7 +272,7 @@ static Window FindWindowByTitle(Display* dpy, const char* title) {
 bool Platform_SendX11Command(const char* window_title, const char* atom_name, long command) {
     PROFILE_START(timer);
     Display* dpy = get_display();
-    if (!dpy) { log_error("no X11 display"); PROFILE_END_VAR(timer, "platform_x11:Platform_SendX11Command"); return false; }
+    if (!dpy) { log_error("no X11 display window_title='%s' atom_name='%s' command=%ld", window_title ? window_title : "null", atom_name ? atom_name : "null", command); PROFILE_END_VAR(timer, "platform_x11:Platform_SendX11Command"); return false; }
 
     Window win = FindWindowByTitle(dpy, window_title);
     bool ok = false;
@@ -288,7 +288,7 @@ bool Platform_SendX11Command(const char* window_title, const char* atom_name, lo
             ok = true;
         }
     }
-    log_info("Platform_SendX11Command completed");
+    log_info("Platform_SendX11Command Title %s Command %s ",window_title,command);
 
     PROFILE_END_VAR(timer, "platform_x11:Platform_SendX11Command");
     return ok;
@@ -297,7 +297,7 @@ bool Platform_SendX11Command(const char* window_title, const char* atom_name, lo
 bool Platform_SetX11Property(const char* window_title, const char* atom_name, long value) {
     PROFILE_START(timer);
     Display* dpy = get_display();
-    if (!dpy) { log_error("no X11 display"); PROFILE_END_VAR(timer, "platform_x11:Platform_SetX11Property"); return false; }
+    if (!dpy) { log_error("no X11 display window_title='%s' atom_name='%s' value=%ld", window_title ? window_title : "null", atom_name ? atom_name : "null", value); PROFILE_END_VAR(timer, "platform_x11:Platform_SetX11Property"); return false; }
 
     Window win = FindWindowByTitle(dpy, window_title);
     bool ok = false;
@@ -307,7 +307,7 @@ bool Platform_SetX11Property(const char* window_title, const char* atom_name, lo
         XFlush(dpy);
         ok = true;
     }
-    log_info("Platform_SetX11Property completed");
+    log_info("Platform_SetX11Property Title %s value %i ",window_title,value);
 
     PROFILE_END_VAR(timer, "platform_x11:Platform_SetX11Property");
     return ok;
@@ -316,7 +316,7 @@ bool Platform_SetX11Property(const char* window_title, const char* atom_name, lo
 bool Platform_SetX11StringProperty(const char* window_title, const char* atom_name, const char* value) {
     PROFILE_START(timer);
     Display* dpy = get_display();
-    if (!dpy) { log_error("no X11 display"); PROFILE_END_VAR(timer, "platform_x11:Platform_SetX11StringProperty"); return false; }
+    if (!dpy) { log_error("no X11 display window_title='%s' atom_name='%s' value='%s'", window_title ? window_title : "null", atom_name ? atom_name : "null", value ? value : "null"); PROFILE_END_VAR(timer, "platform_x11:Platform_SetX11StringProperty"); return false; }
 
     Window win = FindWindowByTitle(dpy, window_title);
     bool ok = false;
@@ -326,7 +326,7 @@ bool Platform_SetX11StringProperty(const char* window_title, const char* atom_na
         XFlush(dpy);
         ok = true;
     }
-    log_info("Platform_SetX11StringProperty completed");
+    log_info("Platform_SetX11StringProperty Title %s value %i",window_title,value);
 
     PROFILE_END_VAR(timer, "platform_x11:Platform_SetX11StringProperty");
     return ok;
@@ -341,7 +341,7 @@ char* Platform_RunCommandAndGetOutput(char* command) {
     char* output = malloc(cap);
 
     if (output == NULL) {
-        log_error("malloc failed");
+        log_error("malloc failed command='%s'", command ? command : "null");
 
         PROFILE_END_VAR(timer, "platform_x11:Platform_RunCommandAndGetOutput");
         return NULL;
@@ -376,7 +376,7 @@ char* Platform_RunCommandAndGetOutput(char* command) {
 
     pclose(fp);
     output[total_size] = '\0';
-    log_info("Platform_RunCommandAndGetOutput completed");
+    log_info("Platform_RunCommandAndGetOutput command='%s'", command ? command : "");;
 
     PROFILE_END_VAR(timer, "platform_x11:Platform_RunCommandAndGetOutput");
     return output;
@@ -384,7 +384,7 @@ char* Platform_RunCommandAndGetOutput(char* command) {
 
 char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
     PROFILE_START(timer);
-    if (command == NULL || strlen(command) == 0) { log_error("command is NULL or empty"); PROFILE_END_VAR(timer, "platform_x11:Platform_RunTerminalCommand"); return NULL; }
+    if (command == NULL || strlen(command) == 0) { log_error("command is NULL or empty open_terminal=%d", open_terminal); PROFILE_END_VAR(timer, "platform_x11:Platform_RunTerminalCommand"); return NULL; }
 
     const char* real_user = Platform_GetRealUser();
     const char* real_home = Platform_GetRealHome();
@@ -434,7 +434,7 @@ char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
 bool Platform_LaunchFileManagerAtPath(char* path,char* args) {
      PROFILE_START(timer);
      bool ret = Platform_ShellExecuteWithVerb(path, "open", true);
-     log_info("Platform_LaunchFileManagerAtPath completed");
+     log_info("Platform_LaunchFileManagerAtPath path='%s' args='%s'", path ? path : "", args ? args : "");;
 
      PROFILE_END_VAR(timer, "platform_x11:Platform_LaunchFileManagerAtPath");
      return ret;
@@ -552,7 +552,7 @@ bool Platform_LaunchApp(const char* path) {
         } else if(pid>0){
             int st=0; waitpid(pid,&st,0);
             if(WIFEXITED(st) && WEXITSTATUS(st)!=0 && exec_line[0]){
-                log_error("gtk-launch failed for %s, trying direct Exec: %s", app_id, exec_line);
+                log_error("gtk-launch failed for %s, trying direct Exec: %s path='%s'", app_id, exec_line, path ? path : "null");
                 if(is_terminal){
                     char extra2[2048];
                     snprintf(extra2, sizeof(extra2), "-e sh -c '%s; exec ${SHELL:-/bin/sh}'", exec_line);
@@ -572,7 +572,7 @@ bool Platform_LaunchApp(const char* path) {
                             execl("/bin/sh","sh","-c",exec_line,(char*)NULL);
                         }
                         _exit(127);
-                    } else if(pid3>0){ int st2=0; waitpid(pid3,&st2,0); bool ok2 = WIFEXITED(st2) && WEXITSTATUS(st2)==0; if (!ok2) { log_error("direct Exec failed for '%s' status=%d", exec_line, WIFEXITED(st2)?WEXITSTATUS(st2):-1); } PROFILE_END_VAR(timer, "platform_x11:Platform_LaunchApp"); return ok2; }
+                    } else if(pid3>0){ int st2=0; waitpid(pid3,&st2,0); bool ok2 = WIFEXITED(st2) && WEXITSTATUS(st2)==0; if (!ok2) { log_error("direct Exec failed for '%s' status=%d path='%s'", exec_line, WIFEXITED(st2)?WEXITSTATUS(st2):-1, path ? path : "null"); } PROFILE_END_VAR(timer, "platform_x11:Platform_LaunchApp"); return ok2; }
                 }
             }
 
@@ -598,7 +598,7 @@ bool Platform_LaunchApp(const char* path) {
             char* const argv[] = {"sh","-c",expanded,NULL};
             bool ok = x11_daemon_exec_with_x11_env(argv, display, xauthority, runtime_dir);
             if (!ok) { log_error("daemon_exec failed for '%s'", expanded); }
-            log_info("Platform_LaunchApp completed");
+            log_info("Platform_LaunchApp path='%s'", path ? path : "");;
 
             PROFILE_END_VAR(timer, "platform_x11:Platform_LaunchApp");
             return ok;
@@ -617,7 +617,7 @@ bool Platform_LaunchAppAsAdmin(const char* path) {
     path = expanded;
 
     pid_t pid = fork();
-    if (pid < 0) { log_error("operation failed"); PROFILE_END_VAR(timer, "platform_x11:Platform_LaunchAppAsAdmin"); return false; }
+    if (pid < 0) { log_error("operation failed path='%s'", path ? path : "null"); PROFILE_END_VAR(timer, "platform_x11:Platform_LaunchAppAsAdmin"); return false; }
 
     if (pid == 0) {
         char *args[] = {"pkexec", (char*)path, NULL};
@@ -630,7 +630,7 @@ bool Platform_LaunchAppAsAdmin(const char* path) {
         exit(1); 
     }
 
-    log_info("Platform_LaunchAppAsAdmin completed");
+    log_info("Platform_LaunchAppAsAdmin path='%s'", path ? path : "");;
 
 
     PROFILE_END_VAR(timer, "platform_x11:Platform_LaunchAppAsAdmin");
@@ -715,7 +715,7 @@ char* Platform_QueryZoxidePath(const char* query) {
         return NULL;
     }
 
-    log_info("Platform_QueryZoxidePath completed");
+    log_info("Platform_QueryZoxidePath query='%s'", query ? query : "");;
 
 
     PROFILE_END_VAR(timer, "platform_x11:Platform_QueryZoxidePath");
@@ -809,7 +809,7 @@ FontHandle Platform_CreateFontOnDisplay(Display* dpy, int size, const char* face
     g_cached_font_dpy = dpy;
     g_cached_font_size = size;
     g_cached_font_name = face_name;
-    log_info("Platform_CreateFontOnDisplay completed");
+    log_info("Platform_CreateFontOnDisplay dpy=%p size=%d face_name='%s'", dpy, size, face_name ? face_name : "");;
 
     PROFILE_END_VAR(timer, "platform_x11:Platform_CreateFontOnDisplay");
     return g_cached_font;
@@ -832,7 +832,7 @@ FontHandle Platform_CreateFont(int size, const char* face_name) {
     FontHandle fh = Platform_CreateFontOnDisplay(dpy, size, face_name);
 
     pthread_mutex_unlock(&g_font_mtx); 
-    log_info("Platform_CreateFont completed");
+    log_info("Platform_CreateFont size=%d face_name='%s'", size, face_name ? face_name : "");;
  
     PROFILE_END_VAR(timer, "platform_x11:Platform_CreateFont");
     return fh;
@@ -848,7 +848,7 @@ void Platform_DestroyFont(FontHandle font) {
         }
         XftFontClose(FH_TO_DPY(font), FH_TO_XFT(font));
     }
-    log_info("Platform_DestroyFont completed");
+    log_info("Platform_DestroyFont");
 }
 
 static int xft_text_width(Display* dpy, XftFont* xf, const char* text, int len) {
@@ -864,7 +864,7 @@ void Platform_GetTextExtents(FontHandle font, const char* text, int maxWidth, in
     if (!FH_TO_XFT(font) || !text) {
         *outWidth = 0;
         *outHeight = 0;
-        log_info("Platform_GetTextExtents completed");
+        log_info("Platform_GetTextExtents text='%s' maxWidth=%d", text ? text : "", maxWidth);
 
         PROFILE_END_VAR(timer, "platform_x11:Platform_GetTextExtents");
         return;
@@ -910,7 +910,7 @@ long Platform_GetFileSize(char *filepath) {
     long size = ftell(fp);
 
     fclose(fp);
-    log_info("Platform_GetFileSize completed");
+    log_info("Platform_GetFileSize filepath=%p", filepath);;
 
     PROFILE_END_VAR(timer, "platform_x11:Platform_GetFileSize");
     return size;
@@ -929,7 +929,7 @@ static int g_instant_count = 0;
 
 char* Platform_RegisterDirWatcher(const char* dir_path, void (*callback)(void)) {
     PROFILE_START(timer);
-    if (!dir_path) { log_error("returned NULL"); PROFILE_END_VAR(timer, "platform_x11:Platform_RegisterDirWatcher"); return NULL; }
+    if (!dir_path) { log_error("returned NULL dir_path='%s'", dir_path ? dir_path : "null"); PROFILE_END_VAR(timer, "platform_x11:Platform_RegisterDirWatcher"); return NULL; }
 
     for (int i = 0; i < g_instant_count; i++) {
         if (strcmp(g_instant_watches[i].root_path, dir_path) == 0) {
@@ -953,8 +953,6 @@ char* Platform_RegisterDirWatcher(const char* dir_path, void (*callback)(void)) 
                         char *found_name = malloc(event->len + 1);
                         if (found_name) {
                             strcpy(found_name, event->name);
-                            log_info("Platform_RegisterDirWatcher completed");
-
                             PROFILE_END_VAR(timer, "platform_x11:Platform_RegisterDirWatcher");
                             return found_name;
                         }
@@ -963,19 +961,13 @@ char* Platform_RegisterDirWatcher(const char* dir_path, void (*callback)(void)) 
                     char* generic_name = malloc(32);
                     if (generic_name) {
                         strcpy(generic_name, "modified_resource");
-                        log_info("Platform_RegisterDirWatcher completed");
-
                         PROFILE_END_VAR(timer, "platform_x11:Platform_RegisterDirWatcher");
                         return generic_name;
                     }
-                    log_info("Platform_RegisterDirWatcher completed");
-
                     PROFILE_END_VAR(timer, "platform_x11:Platform_RegisterDirWatcher");
                     return NULL;
                 }
             }
-            log_info("Platform_RegisterDirWatcher completed");
-
             PROFILE_END_VAR(timer, "platform_x11:Platform_RegisterDirWatcher");
             return NULL; 
         }
@@ -996,9 +988,7 @@ char* Platform_RegisterDirWatcher(const char* dir_path, void (*callback)(void)) 
         }
     }
 
-    log_info("Platform_RegisterDirWatcher completed");
-
-
+    log_info("Platform_RegisterDirWatcher dir_path='%s'", dir_path ? dir_path : "");
     PROFILE_END_VAR(timer, "platform_x11:Platform_RegisterDirWatcher");
     return NULL;
 }
@@ -1015,7 +1005,7 @@ void Platform_CleanupDirWatchers(void) {
 
 char* Platform_WatchForCFileChanges(const char* dir_path, void (*callback)(void)) {
     PROFILE_START(timer);
-    if (!dir_path) { log_error("returned NULL"); PROFILE_END_VAR(timer, "platform_x11:Platform_WatchForCFileChanges"); return NULL; }
+    if (!dir_path) { log_error("returned NULL dir_path='%s'", dir_path ? dir_path : "null"); PROFILE_END_VAR(timer, "platform_x11:Platform_WatchForCFileChanges"); return NULL; }
 
     for (int i = 0; i < g_instant_count; i++) {
         if (strcmp(g_instant_watches[i].root_path, dir_path) == 0) {
@@ -1178,7 +1168,7 @@ static void icon_cache_set(const char* key, const char* value){
 
 
 char* Platform_GetIconPath(char* app_path) {
-    if (!app_path) { log_error("operation failed, returning error"); return NULL; }
+    if (!app_path) { log_error("operation failed, returning error app_path='%s'", app_path ? app_path : "null"); return NULL; }
     for (int i = 0; i < (int)ARRAY_LEN(supported_names_to_paths); i++) {
         if (Platform_StringContainsCaseInsensitive(app_path, supported_names_to_paths[i].name)) {
             if (access(supported_names_to_paths[i].path, F_OK)==0) return strdup(supported_names_to_paths[i].path);
@@ -1273,7 +1263,7 @@ char* Platform_GetIconPath(char* app_path) {
     }
     snprintf(pix,sizeof(pix),"resources/Placeholder.png");
     if(access(pix,F_OK)==0) return strdup(pix);
-    log_info("Platform_GetIconPath completed");
+    log_info("Platform_GetIconPath app_path='%s'", app_path ? app_path : "");;
     return strdup(bare[0] ? bare : "placeholder");
 }
 
@@ -1347,13 +1337,13 @@ int Platform_CopyToClipboard(const char* text) {
     fprintf(pipe, "%s", text);
     
     status = pclose(pipe);
-    log_info("Platform_CopyToClipboard completed");
+    log_info("Platform_CopyToClipboard text='%s'", text ? text : "");;
     PROFILE_END_VAR(timer, "flapi_x11:fl_copy_into_clipboard_platform");
     return (status == 0) ? 1 : 0;
 }
 
 bool Platform_BuildFeature(const char* src, const char* out) {
-    if (!src || !out) { log_error("operation failed, returning error"); return false; }
+    if (!src || !out) { log_error("operation failed, returning error src='%s' out='%s'", src ? src : "null", out ? out : "null"); return false; }
     char cmd[1024];
     snprintf(cmd, sizeof(cmd), "gcc -I include -I/usr/include/freetype2 -w -g -fPIC -shared -o %s %s 2>&1", out, src);
     char* outStr = Platform_RunTerminalCommand(cmd, false);
@@ -1365,6 +1355,6 @@ bool Platform_BuildFeature(const char* src, const char* out) {
     } else {
         ok = true;
     }
-    log_info("Platform_BuildFeature completed");
+    log_info("Platform_BuildFeature src='%s' out='%s'", src ? src : "", out ? out : "");;
     return ok;
 }

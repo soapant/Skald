@@ -54,7 +54,7 @@ static bool ResolvePathToken(const char* token, char* out, size_t out_size) {
 }
 
 bool Platform_ExpandPath(const char* template_path, char* out, size_t out_size) {
-    if (template_path == NULL || out_size == 0) { log_error("operation failed, returning error"); return false; }
+    if (template_path == NULL || out_size == 0) { log_error("operation failed, returning error template_path='%s' out='%s' out_size=%d", template_path ? template_path : "null", out ? out : "null", out_size); return false; }
 
     size_t o = 0;
     const char* p = template_path;
@@ -85,7 +85,7 @@ bool Platform_ExpandPath(const char* template_path, char* out, size_t out_size) 
         out[o++] = *p++;
     }
     out[o] = '\0';
-log_info("Platform_ExpandPath completed");
+log_info("Platform_ExpandPath template_path='%s' out='%s' out_size=%d", template_path ? template_path : "", out ? out : "", out_size);;
     return true;
 }
 
@@ -142,7 +142,7 @@ int Platform_FileAppend(MappedFile *mf, const char *text) {
     SetFilePointerEx(mf->hFile, fs, NULL, FILE_BEGIN);
     SetEndOfFile(mf->hFile);
 
-log_info("Platform_FileAppend completed");
+log_info("Platform_FileAppend mf=%p text=%p", mf, text);;
     return 1;
 }
 
@@ -168,7 +168,7 @@ void Platform_FileClose(MappedFile *mf) {
         CloseHandle(mf->hFile);
         mf->hFile = INVALID_HANDLE_VALUE;
     }
-log_info("Platform_FileClose completed");
+log_info("Platform_FileClose mf=%p", mf);;
 }
 
 Line* Platform_FileGetLines(MappedFile *mf, size_t *outLineCount) {
@@ -199,7 +199,7 @@ Line* Platform_FileGetLines(MappedFile *mf, size_t *outLineCount) {
         }
     }
     *outLineCount = count;
-log_info("Platform_FileGetLines completed");
+log_info("Platform_FileGetLines mf=%p outLineCount=%d", mf, outLineCount);;
     return list;
 }
 
@@ -265,7 +265,7 @@ char** Platform_FileGetStrings(MappedFile *mf, size_t *outLineCount, NewlineInfo
     *outLineCount = count;
     *outNewlines = newlines;
     *outNewlineCount = newlineCount;
-log_info("Platform_FileGetStrings completed");
+log_info("Platform_FileGetStrings mf=%p outLineCount=%d outNewlines=%p outNewlineCount=%d", mf, outLineCount, outNewlines, outNewlineCount);;
     return stringList;
 }
 
@@ -275,18 +275,18 @@ void Platform_CleanUpFile(MappedFile *mf, NewlineInfo *newlines, size_t newlineC
         mf->pBuffer[newlines[i].index] = newlines[i].original;
     }
     free(newlines);
-log_info("Platform_CleanUpFile completed");
+log_info("Platform_CleanUpFile mf=%p newlines=%p newlineCount=%d", mf, newlines, newlineCount);;
 }
 
 bool Platform_StringContainsCaseInsensitive(const char* haystack, const char* needle) {
-    if (!haystack || !needle) { log_error("operation failed, returning error"); return false; }
-log_info("Platform_StringContainsCaseInsensitive completed");
+    if (!haystack || !needle) { log_error("operation failed, returning error haystack='%s' needle='%s'", haystack ? haystack : "null", needle ? needle : "null"); return false; }
+log_info("Platform_StringContainsCaseInsensitive haystack='%s' needle='%s'", haystack ? haystack : "", needle ? needle : "");;
     return StrStrIA(haystack, needle) != NULL;
 }
 
 bool Platform_StringStartsWithCaseInsensitive(const char* str, const char* prefix) {
-    if (!str || !prefix) { log_error("operation failed, returning error"); return false; }
-log_info("Platform_StringStartsWithCaseInsensitive completed");
+    if (!str || !prefix) { log_error("operation failed, returning error str='%s' prefix='%s'", str ? str : "null", prefix ? prefix : "null"); return false; }
+log_info("Platform_StringStartsWithCaseInsensitive str='%s' prefix='%s'", str ? str : "", prefix ? prefix : "");;
     return StrStrIA(str, prefix) == str;
 }
 
@@ -311,16 +311,16 @@ int Platform_CollectRunningProcesses(char process_list[][128], int max_count) {
         } while (Process32Next(hSnapshot, &pe));
     }
     CloseHandle(hSnapshot);
-log_info("Platform_CollectRunningProcesses completed");
+    log_info("Platform_CollectRunningProcesses max_count=%d count=%d", max_count, count);
     return count;
 }
 
 bool Platform_TerminateProcessByName(const char* exe_name) {
-    if (!exe_name || !*exe_name) { log_error("operation failed, returning error"); return false; }
+    if (!exe_name || !*exe_name) { log_error("operation failed, returning error exe_name='%s'", exe_name ? exe_name : "null"); return false; }
     char cmd[512];
     snprintf(cmd, sizeof(cmd), "taskkill /f /im \"%s*\"", exe_name);
     Platform_RunTerminalCommand(cmd, false);
-log_info("Platform_TerminateProcessByName completed");
+log_info("Platform_TerminateProcessByName exe_name='%s'", exe_name ? exe_name : "");;
     return true;
 }
 
@@ -407,7 +407,7 @@ int Platform_ReplaceLineInMappedFile(MappedFile* mf, int line_index, const char*
 
     free(lines);
     free(new_buffer);
-log_info("Platform_ReplaceLineInMappedFile completed");
+log_info("Platform_ReplaceLineInMappedFile mf=%p line_index=%d new_text='%s'", mf, line_index, new_text ? new_text : "");;
     return 1;
 }
 
@@ -420,12 +420,12 @@ bool Platform_LaunchBrowserAtUrl(char* url, bool new_window) {
         snprintf(command, sizeof(command), "start \"\" \"%s\"", url);
     }
     
-log_info("Platform_LaunchBrowserAtUrl completed");
+log_info("Platform_LaunchBrowserAtUrl url='%s' new_window=%d", url ? url : "", new_window);;
     return Platform_RunTerminalCommand(command,false);
 }
 
 bool Platform_QueryBrowser(char* query) {
-    if (!query || !query[0]) { log_error("operation failed, returning error"); return false; }
+    if (!query || !query[0]) { log_error("operation failed, returning error query='%s'", query ? query : "null"); return false; }
     
     char encoded_query[2048] = {0};
     char* src = query;
@@ -456,7 +456,7 @@ bool Platform_QueryBrowser(char* query) {
     
     char command[4096];
     snprintf(command, sizeof(command), "start \"\" \"%s\"", url);
-log_info("Platform_QueryBrowser completed");
+log_info("Platform_QueryBrowser query='%s'", query ? query : "");;
     return Platform_RunTerminalCommand(command,false);
 }
 
@@ -496,7 +496,7 @@ log_info("Platform_GetLastClipboardEntry completed");
 }
 
 bool Platform_PasteContent(char* content) {
-    if (!content || !content[0]) { log_error("operation failed, returning error"); return false; }
+    if (!content || !content[0]) { log_error("operation failed, returning error content='%s'", content ? content : "null"); return false; }
 
     size_t len = strlen(content);
     INPUT* inputs = (INPUT*)calloc(len, sizeof(INPUT));
@@ -533,6 +533,6 @@ bool Platform_PasteContent(char* content) {
     }
 
     free(inputs);
-log_info("Platform_PasteContent completed");
+log_info("Platform_PasteContent content='%s'", content ? content : "");;
     return success;
 }

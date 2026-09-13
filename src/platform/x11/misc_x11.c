@@ -372,7 +372,7 @@ int Platform_FileAppend(MappedFile *mf, const char *text) {
     }
     mf->fileSize = sb.st_size;
 
-        log_info("Platform_FileAppend completed");
+        log_info("Platform_FileAppend mf=%p text=%p", mf, text);;
 PROFILE_END_VAR(timer, "misc_x11:Platform_FileAppend");
     return 1;
 }
@@ -392,7 +392,7 @@ void Platform_FileClose(MappedFile *mf) {
     }
 
     mf->fileSize = 0;
-        log_info("Platform_FileClose completed");
+        log_info("Platform_FileClose mf=%p", mf);;
 PROFILE_END_VAR(timer, "misc_x11:Platform_FileClose");
 }
 
@@ -464,7 +464,7 @@ Line* Platform_FileGetLines(MappedFile *mf, size_t *outLineCount) {
     munmap(pBuffer, mf->fileSize);
 
     *outLineCount = count;
-        log_info("Platform_FileGetLines completed");
+        log_info("Platform_FileGetLines mf=%p outLineCount=%d", mf, outLineCount);;
 PROFILE_END_VAR(timer, "misc_x11:Platform_FileGetLines");
     return list;
 }
@@ -580,7 +580,7 @@ char** Platform_FileGetStrings(MappedFile *mf, size_t *outLineCount, NewlineInfo
     *outLineCount = count;
     *outNewlines = newlines;
     *outNewlineCount = newlineCount;
-        log_info("Platform_FileGetStrings completed");
+        log_info("Platform_FileGetStrings mf=%p outLineCount=%d outNewlines=%p outNewlineCount=%d", mf, outLineCount, outNewlines, outNewlineCount);;
 PROFILE_END_VAR(timer, "misc_x11:Platform_FileGetStrings");
     return stringList;
 }
@@ -596,7 +596,7 @@ void Platform_CleanUpFile(MappedFile *mf, NewlineInfo *newlines, size_t newlineC
     if (newlines) {
         free(newlines);
     }
-    log_info("Platform_CleanUpFile completed");
+    log_info("Platform_CleanUpFile mf=%p newlines=%p newlineCount=%d", mf, newlines, newlineCount);;
 PROFILE_END_VAR(timer, "misc_x11:Platform_CleanUpFile");
 }
 
@@ -686,7 +686,7 @@ int Platform_ReplaceLineInMappedFile(MappedFile* mf, int line_index, const char*
     free(transfer_buf);
 
     mf->fileSize = new_size;
-        log_info("Platform_ReplaceLineInMappedFile completed");
+        log_info("Platform_ReplaceLineInMappedFile mf=%p line_index=%d new_text='%s'", mf, line_index, new_text ? new_text : "");;
 PROFILE_END_VAR(timer, "misc_x11:Platform_ReplaceLineInMappedFile");
     return 1;
 }
@@ -736,8 +736,8 @@ int Platform_CollectRunningProcesses(char process_list[][128], int max_count) {
         }
     }
     closedir(proc);
-        log_info("Platform_CollectRunningProcesses completed");
-PROFILE_END_VAR(timer, "misc_x11:Platform_CollectRunningProcesses");
+    log_info("Platform_CollectRunningProcesses max_count=%d count=%d", max_count, count);
+    PROFILE_END_VAR(timer, "misc_x11:Platform_CollectRunningProcesses");
     return count;
 }
 
@@ -754,7 +754,7 @@ bool Platform_TerminateProcessByName(const char* exe_name) {
     char cmd[1024];
     snprintf(cmd, sizeof(cmd), "sh -c 'pkill -9 \"%s\" 2>/dev/null; pkill -9 -f \"%s\" 2>/dev/null; pkill -9 -f \"build/[f]lint\" 2>/dev/null; pkill \"%s\" 2>/dev/null; killall -9 \"%s\" 2>/dev/null; killall -9 -r \"%s\" 2>/dev/null; killall \"%s\" 2>/dev/null' &", tmp, tmp, tmp, tmp, tmp, tmp);
 
-        log_info("Platform_TerminateProcessByName completed");
+        log_info("Platform_TerminateProcessByName exe_name='%s'", exe_name ? exe_name : "");;
 PROFILE_END_VAR(timer, "misc_x11:Platform_TerminateProcessByName");
     return Platform_RunTerminalCommand(cmd,false);
 }
@@ -793,7 +793,7 @@ bool Platform_LaunchBrowserAtUrl(char* url,bool new_window) {
     PROFILE_END_VAR(timer, "misc_x11:Platform_LaunchBrowserAtUrl");
     return Platform_RunTerminalCommand(command,false);
     }
-        log_info("Platform_LaunchBrowserAtUrl completed");
+        log_info("Platform_LaunchBrowserAtUrl url='%s' new_window=%d", url ? url : "", new_window);;
 PROFILE_END_VAR(timer, "misc_x11:Platform_LaunchBrowserAtUrl");
 }
 
@@ -868,7 +868,7 @@ bool Platform_QueryBrowser(char* query) {
                  display, xauthority, runtime_dir, UsedBrowser, url);
     }
     
-        log_info("Platform_QueryBrowser completed");
+        log_info("Platform_QueryBrowser query='%s'", query ? query : "");;
 PROFILE_END_VAR(timer, "misc_x11:Platform_QueryBrowser");
     return Platform_RunTerminalCommand(command,false);
 }
@@ -879,6 +879,6 @@ log_info("Platform_GetLastClipboardEntry completed");
 }
 
 bool Platform_PasteContent(char* content) {
-log_info("Platform_PasteContent completed");
+log_info("Platform_PasteContent content='%s'", content ? content : "");;
   return Wm_Paste(content);
 }
