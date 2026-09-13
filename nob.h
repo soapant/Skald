@@ -1345,7 +1345,15 @@ NOBDEF bool nob_cmd_run_opt(Nob_Cmd *cmd, Nob_Cmd_Opt opt)
                     break;
                 }
             }
-            if (!waited) continue;
+            if (!waited) {
+#ifdef _WIN32
+                Sleep(1);
+#else
+                struct timespec ts = {0, 1000000};
+                nanosleep(&ts, NULL);
+#endif
+                continue;
+            }
         }
     }
 
@@ -1464,13 +1472,23 @@ NOBDEF bool nob_chain_end_opt(Nob_Chain *chain, Nob_Chain_End_Opt opt)
 
         if (opt.async && max_procs > 0) {
             while (opt.async->count >= max_procs) {
+                bool _waited = false;
                 for (size_t i = 0; i < opt.async->count; ++i) {
                     int ret = nob__proc_wait_async(opt.async->items[i], 1);
                     if (ret < 0) nob_return_defer(false);
                     if (ret) {
                         nob_da_remove_unordered(opt.async, i);
+                        _waited = true;
                         break;
                     }
+                }
+                if (!_waited) {
+#ifdef _WIN32
+                    Sleep(1);
+#else
+                    struct timespec ts = {0, 1000000};
+                    nanosleep(&ts, NULL);
+#endif
                 }
             }
         }
@@ -1688,7 +1706,7 @@ NOBDEF Nob_Fd nob_fd_open_for_read(const char *path)
     Nob_Fd result = CreateFile(
                     path,
                     GENERIC_READ,
-                    0,
+                    FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE,
                     &saAttr,
                     OPEN_EXISTING,
                     FILE_ATTRIBUTE_READONLY,
@@ -2473,7 +2491,7 @@ NOBDEF int nob_needs_rebuild(const char *output_path, const char **input_paths, 
 #ifdef _WIN32
     BOOL bSuccess;
 
-    HANDLE output_path_fd = CreateFile(output_path, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_READONLY, NULL);
+    HANDLE output_path_fd = CreateFile(output_path, GENERIC_READ, FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_READONLY, NULL);
     if (output_path_fd == INVALID_HANDLE_VALUE) {
 
         if (GetLastError() == ERROR_FILE_NOT_FOUND) return 1;
@@ -2490,7 +2508,7 @@ NOBDEF int nob_needs_rebuild(const char *output_path, const char **input_paths, 
 
     for (size_t i = 0; i < input_paths_count; ++i) {
         const char *input_path = input_paths[i];
-        HANDLE input_path_fd = CreateFile(input_path, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_READONLY, NULL);
+        HANDLE input_path_fd = CreateFile(input_path, GENERIC_READ, FILE_SHARE_READ|FILE_SHARE_WRITE|FILE_SHARE_DELETE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_READONLY, NULL);
         if (input_path_fd == INVALID_HANDLE_VALUE) {
 
             nob_log(NOB_ERROR, "Could not open file %s: %s", input_path, nob_win32_error_message(GetLastError()));
