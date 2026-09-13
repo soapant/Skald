@@ -123,7 +123,7 @@ void Platform_DrawEditText(PromptState *state, Display *dpy, XftDraw *xd, Visual
     int text_len = strlen(state->filter);
     int scroll = Linux_UpdateEditScrollOffset(dpy, xf, state->filter, text_len, state->cursor, state->width, state->scroll_offset, &cursor_x);
     state->scroll_offset = scroll;
-    int draw_x = 20 - scroll;
+    int draw_x = 14 - scroll;
     int draw_y = 20 + (xf ? xf->ascent : FontSize);
     if (xf && text_len > 0) {
         XftDrawStringUtf8(xd, &text_color, xf, draw_x, draw_y, (FcChar8*)state->filter, text_len);
