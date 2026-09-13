@@ -137,7 +137,6 @@ static DWORD WINAPI feature_watcher_thread_win(LPVOID arg) {
             snprintf(src, sizeof(src), "src/features/%s.c", base);
             snprintf(dll, sizeof(dll), "build/features/%s%s", base, Platform_LibExtension());
             log_info("recompiling %s -> %s", src, dll); fflush(stdout);
-            // unload to release file lock before rebuilding
             FeatureLoader_Unload(base);
             if (Platform_BuildFeature(src, dll)) {
                 log_info("reload %s", base); fflush(stdout);
@@ -145,7 +144,7 @@ static DWORD WINAPI feature_watcher_thread_win(LPVOID arg) {
             } else {
                 log_error("compile failed for %s", base);
             }
-            Sleep(1200); // debounce - avoid double trigger from editor atomic save
+            Sleep(2000); // temporary maybe we could make configurable just a delay between checks for hot reloading
         } else {
             for (int i=0;i<5;i++) {
                 if (InterlockedCompareExchange(&g_watcher_stop_win, 0, 0)!=0 || (wm && wm->watcher_stop)) break;
@@ -234,7 +233,8 @@ void WindowManager_Destroy(WindowManager* wm) {
     
     if (g_window_manager == wm) g_window_manager = NULL;
     free(wm);
-    PROFILE_END_VAR(timer, "window_manager:WindowManager_Destroy");
+        log_info("WindowManager_Destroy completed");
+PROFILE_END_VAR(timer, "window_manager:WindowManager_Destroy");
 }
 
 WindowManager* WindowManager_Get(void) {
@@ -373,6 +373,7 @@ char* WindowManager_ShowPrompt(WindowManager* wm, const PromptSpec* spec) {
 #if defined(_WIN32)
     extern char* Platform_PromptUser(const PromptSpec* spec);
     char* res = Platform_PromptUser(spec);
+    log_info("WindowManager_ShowPrompt completed (win32)");
     PROFILE_END_VAR(timer, "window_manager:WindowManager_ShowPrompt");
     return res;
 #else
@@ -397,6 +398,7 @@ char* WindowManager_ShowPrompt(WindowManager* wm, const PromptSpec* spec) {
     if (dpy) { XFlush(dpy); XSync(dpy, False); }
     FlintContext* _c = FlintContext_Get();
 
+    log_info("WindowManager_ShowPrompt completed for feature='%s'", _c->window.current_feature ? _c->window.current_feature : "");
     PROFILE_END_VAR(timer, "window_manager:WindowManager_ShowPrompt");
     return _c->window.output_buffer[0] ? _c->window.output_buffer : NULL;
 #endif
@@ -432,11 +434,9 @@ char* WindowManager_ShowSimplePrompt(WindowManager* wm, const SimplePromptSpec* 
     }
     if (dpy) { XFlush(dpy); XSync(dpy, False); }
     FlintContext* _c2 = FlintContext_Get();
+    log_info("WindowManager_ShowSimplePrompt completed");
     PROFILE_END_VAR(timer, "window_manager:WindowManager_ShowSimplePrompt");
     return _c2->window.output_buffer[0] ? _c2->window.output_buffer : NULL;
 #endif
     PROFILE_END_VAR(timer, "window_manager:WindowManager_ShowSimplePrompt");
 }
-
-
-

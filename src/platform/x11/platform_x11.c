@@ -169,6 +169,8 @@ bool Platform_LaunchTerminalAtPath(const char* working_dir, const char* extra_ar
     } else if (WIFEXITED(st) && WEXITSTATUS(st)!=0) {
         log_warn("terminal '%s' exited with status %d", UsedTerminal, WEXITSTATUS(st));
     }
+    log_info("Platform_LaunchTerminalAtPath completed");
+
     PROFILE_END_VAR(timer, "platform_x11:Platform_LaunchTerminalAtPath");
     return true;
 }
@@ -197,6 +199,7 @@ bool Platform_ShellExecuteWithVerb(const char* path, const char* verb, bool asyn
             snprintf(command, sizeof(command),
                      "sudo -u %s DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s xdg-open \"%s\" > /dev/null 2>&1",
                      real_user, display, xauthority, runtime_dir, path);
+
             PROFILE_END_VAR(timer, "platform_x11:Platform_ShellExecuteWithVerb");
             return Platform_RunTerminalCommand(command,false);
         } else {
@@ -204,6 +207,7 @@ bool Platform_ShellExecuteWithVerb(const char* path, const char* verb, bool asyn
             snprintf(command, sizeof(command),
                      "DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s xdg-open \"%s\" > /dev/null 2>&1",
                      display, xauthority, runtime_dir, path);
+
             PROFILE_END_VAR(timer, "platform_x11:Platform_ShellExecuteWithVerb");
             return  Platform_RunTerminalCommand(command,false);
         }
@@ -216,12 +220,15 @@ bool Platform_ShellExecuteWithVerb(const char* path, const char* verb, bool asyn
         char* const argv[] = {"sudo","-u", (char*)real_user, "env", disp_env, xauth_env, runtime_env, "xdg-open", (char*)path, NULL};
         bool ok = daemon_spawn_sudo_env(real_user, display, xauthority, runtime_dir, argv);
         if (!ok) { log_error("daemon_spawn failed for '%s'", path); }
+
         PROFILE_END_VAR(timer, "platform_x11:Platform_ShellExecuteWithVerb");
         return ok;
     } else {
         char* const argv[] = {"xdg-open", (char*)path, NULL};
         bool ok = x11_daemon_exec_with_x11_env(argv, display, xauthority, runtime_dir);
         if (!ok) { log_error("daemon_exec failed for '%s'", path); }
+        log_info("Platform_ShellExecuteWithVerb completed");
+
         PROFILE_END_VAR(timer, "platform_x11:Platform_ShellExecuteWithVerb");
         return ok;
     }
@@ -281,6 +288,8 @@ bool Platform_SendX11Command(const char* window_title, const char* atom_name, lo
             ok = true;
         }
     }
+    log_info("Platform_SendX11Command completed");
+
     PROFILE_END_VAR(timer, "platform_x11:Platform_SendX11Command");
     return ok;
 }
@@ -298,6 +307,8 @@ bool Platform_SetX11Property(const char* window_title, const char* atom_name, lo
         XFlush(dpy);
         ok = true;
     }
+    log_info("Platform_SetX11Property completed");
+
     PROFILE_END_VAR(timer, "platform_x11:Platform_SetX11Property");
     return ok;
 }
@@ -315,6 +326,8 @@ bool Platform_SetX11StringProperty(const char* window_title, const char* atom_na
         XFlush(dpy);
         ok = true;
     }
+    log_info("Platform_SetX11StringProperty completed");
+
     PROFILE_END_VAR(timer, "platform_x11:Platform_SetX11StringProperty");
     return ok;
 }
@@ -329,6 +342,7 @@ char* Platform_RunCommandAndGetOutput(char* command) {
 
     if (output == NULL) {
         log_error("malloc failed");
+
         PROFILE_END_VAR(timer, "platform_x11:Platform_RunCommandAndGetOutput");
         return NULL;
     }
@@ -337,6 +351,7 @@ char* Platform_RunCommandAndGetOutput(char* command) {
     if (fp == NULL) {
         log_error("popen failed for command");
         free(output);
+
         PROFILE_END_VAR(timer, "platform_x11:Platform_RunCommandAndGetOutput");
         return strdup("");
     }
@@ -349,6 +364,7 @@ char* Platform_RunCommandAndGetOutput(char* command) {
             if (!new_output) {
                 free(output);
                 pclose(fp);
+
                 PROFILE_END_VAR(timer, "platform_x11:Platform_RunCommandAndGetOutput");
                 return strdup("");
             }
@@ -360,6 +376,8 @@ char* Platform_RunCommandAndGetOutput(char* command) {
 
     pclose(fp);
     output[total_size] = '\0';
+    log_info("Platform_RunCommandAndGetOutput completed");
+
     PROFILE_END_VAR(timer, "platform_x11:Platform_RunCommandAndGetOutput");
     return output;
 }
@@ -373,6 +391,7 @@ char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
 
     if (!open_terminal) {
         char* result = Platform_RunCommandAndGetOutput(command);
+        log_info("ran terminal command '%s' open_terminal=%d", command, open_terminal);
         PROFILE_END_VAR(timer, "platform_x11:Platform_RunTerminalCommand");
         return result;
     }
@@ -407,6 +426,7 @@ char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
              UsedShell, UsedShell, temp_file, UsedShell);
 
     Platform_LaunchTerminalAtPath(real_home, extra);
+    log_info("ran terminal command '%s' open_terminal=%d", command, open_terminal);
     PROFILE_END_VAR(timer, "platform_x11:Platform_RunTerminalCommand");
     return strdup("");
 }
@@ -414,6 +434,8 @@ char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
 bool Platform_LaunchFileManagerAtPath(char* path,char* args) {
      PROFILE_START(timer);
      bool ret = Platform_ShellExecuteWithVerb(path, "open", true);
+     log_info("Platform_LaunchFileManagerAtPath completed");
+
      PROFILE_END_VAR(timer, "platform_x11:Platform_LaunchFileManagerAtPath");
      return ret;
 }
@@ -491,6 +513,7 @@ bool Platform_LaunchApp(const char* path) {
             if(wd) { PROFILE_END_VAR(timer, "platform_x11:Platform_LaunchApp"); return Platform_LaunchTerminalAtPath(wd, extra); }
             else {
                 const char* home = Platform_GetRealHome();
+
                 PROFILE_END_VAR(timer, "platform_x11:Platform_LaunchApp");
                 return Platform_LaunchTerminalAtPath(home, extra);
             }
@@ -533,6 +556,7 @@ bool Platform_LaunchApp(const char* path) {
                 if(is_terminal){
                     char extra2[2048];
                     snprintf(extra2, sizeof(extra2), "-e sh -c '%s; exec ${SHELL:-/bin/sh}'", exec_line);
+
                     PROFILE_END_VAR(timer, "platform_x11:Platform_LaunchApp");
                     return Platform_LaunchTerminalAtPath(Platform_GetRealHome(), extra2);
                 } else {
@@ -551,9 +575,11 @@ bool Platform_LaunchApp(const char* path) {
                     } else if(pid3>0){ int st2=0; waitpid(pid3,&st2,0); bool ok2 = WIFEXITED(st2) && WEXITSTATUS(st2)==0; if (!ok2) { log_error("direct Exec failed for '%s' status=%d", exec_line, WIFEXITED(st2)?WEXITSTATUS(st2):-1); } PROFILE_END_VAR(timer, "platform_x11:Platform_LaunchApp"); return ok2; }
                 }
             }
+
             PROFILE_END_VAR(timer, "platform_x11:Platform_LaunchApp");
             return true;
         }
+
         PROFILE_END_VAR(timer, "platform_x11:Platform_LaunchApp");
         return false;
     } else {
@@ -565,12 +591,15 @@ bool Platform_LaunchApp(const char* path) {
             char* const argv[] = {"sudo","-u",(char*)real_user,"env",disp_env,xauth_env,runtime_env,"sh","-c",expanded,NULL};
             bool ok = daemon_spawn_sudo_env(real_user, display, xauthority, runtime_dir, argv);
             if (!ok) { log_error("daemon_spawn failed for '%s'", expanded); }
+
             PROFILE_END_VAR(timer, "platform_x11:Platform_LaunchApp");
             return ok;
         } else {
             char* const argv[] = {"sh","-c",expanded,NULL};
             bool ok = x11_daemon_exec_with_x11_env(argv, display, xauthority, runtime_dir);
             if (!ok) { log_error("daemon_exec failed for '%s'", expanded); }
+            log_info("Platform_LaunchApp completed");
+
             PROFILE_END_VAR(timer, "platform_x11:Platform_LaunchApp");
             return ok;
         }
@@ -601,6 +630,9 @@ bool Platform_LaunchAppAsAdmin(const char* path) {
         exit(1); 
     }
 
+    log_info("Platform_LaunchAppAsAdmin completed");
+
+
     PROFILE_END_VAR(timer, "platform_x11:Platform_LaunchAppAsAdmin");
     return true;
 }
@@ -609,7 +641,7 @@ bool Platform_IsCtrlPressed(void) {
     PROFILE_START(timer);
     Display *display = get_display();
     if (!display) {
-        log_error("operation failed"); PROFILE_END_VAR(timer, "platform_x11:Platform_IsCtrlPressed");
+ PROFILE_END_VAR(timer, "platform_x11:Platform_IsCtrlPressed");
         return false; 
     }
 
@@ -620,6 +652,7 @@ bool Platform_IsCtrlPressed(void) {
     XQueryPointer(display, DefaultRootWindow(display), 
                   &root, &child, &root_x, &root_y, &win_x, &win_y, &mask);
 
+
     PROFILE_END_VAR(timer, "platform_x11:Platform_IsCtrlPressed");
     return (mask & ControlMask) != 0;
 }
@@ -628,6 +661,7 @@ char* Platform_QueryZoxidePath(const char* query) {
     PROFILE_START(timer);
     if (!query) {
         log_error("query is NULL");
+
         PROFILE_END_VAR(timer, "platform_x11:Platform_QueryZoxidePath");
         return NULL;
     }
@@ -660,7 +694,7 @@ char* Platform_QueryZoxidePath(const char* query) {
     FILE *pipe = popen(command, "r");
     if (!pipe) {
         perror("Zoxide Debug -> popen failed");
-        log_error("returned NULL"); PROFILE_END_VAR(timer, "platform_x11:Platform_QueryZoxidePath");
+ PROFILE_END_VAR(timer, "platform_x11:Platform_QueryZoxidePath");
         return NULL;
     }
 
@@ -676,9 +710,13 @@ char* Platform_QueryZoxidePath(const char* query) {
         char buffer[256];
         snprintf(buffer, sizeof(buffer), "Query {%s} Doesnt Have A Zoxide Path", query);
         SubjectiveMessageDisplay(buffer, 140, TimeOutForMessages, COLOR_ERROR);
+
         PROFILE_END_VAR(timer, "platform_x11:Platform_QueryZoxidePath");
         return NULL;
     }
+
+    log_info("Platform_QueryZoxidePath completed");
+
 
     PROFILE_END_VAR(timer, "platform_x11:Platform_QueryZoxidePath");
     return strdup(temp_path);
@@ -719,7 +757,7 @@ void Platform_SaveRegionToPNG(int x1, int y1, int x2, int y2, const char* fullPa
 void Platform_WaitForKeypressAsync(KeyCallback callback) {
     PROFILE_START(timer);
     (void)callback;
-    log_warn("not implemented yet on Linux");
+    log_warn("not implemented yet");
     PROFILE_END_VAR(timer, "platform_x11:Platform_WaitForKeypressAsync");
 }
 
@@ -735,6 +773,7 @@ FontHandle Platform_CreateFontOnDisplay(Display* dpy, int size, const char* face
     if (!dpy) { PROFILE_END_VAR(timer, "platform_x11:Platform_CreateFontOnDisplay"); return FH_NULL; }
 
     if (g_cached_font_dpy == dpy && g_cached_font_size == size && g_cached_font_name == face_name && FH_TO_XFT(g_cached_font)) {
+
         PROFILE_END_VAR(timer, "platform_x11:Platform_CreateFontOnDisplay");
         return g_cached_font;
     }
@@ -770,6 +809,8 @@ FontHandle Platform_CreateFontOnDisplay(Display* dpy, int size, const char* face
     g_cached_font_dpy = dpy;
     g_cached_font_size = size;
     g_cached_font_name = face_name;
+    log_info("Platform_CreateFontOnDisplay completed");
+
     PROFILE_END_VAR(timer, "platform_x11:Platform_CreateFontOnDisplay");
     return g_cached_font;
 }
@@ -783,6 +824,7 @@ FontHandle Platform_CreateFont(int size, const char* face_name) {
     Display* dpy = get_display();
     if (!dpy) {
         pthread_mutex_unlock(&g_font_mtx);
+
         PROFILE_END_VAR(timer, "platform_x11:Platform_CreateFont");
         return FH_NULL;
     }
@@ -790,6 +832,8 @@ FontHandle Platform_CreateFont(int size, const char* face_name) {
     FontHandle fh = Platform_CreateFontOnDisplay(dpy, size, face_name);
 
     pthread_mutex_unlock(&g_font_mtx); 
+    log_info("Platform_CreateFont completed");
+ 
     PROFILE_END_VAR(timer, "platform_x11:Platform_CreateFont");
     return fh;
 }
@@ -804,6 +848,7 @@ void Platform_DestroyFont(FontHandle font) {
         }
         XftFontClose(FH_TO_DPY(font), FH_TO_XFT(font));
     }
+    log_info("Platform_DestroyFont completed");
 }
 
 static int xft_text_width(Display* dpy, XftFont* xf, const char* text, int len) {
@@ -819,6 +864,8 @@ void Platform_GetTextExtents(FontHandle font, const char* text, int maxWidth, in
     if (!FH_TO_XFT(font) || !text) {
         *outWidth = 0;
         *outHeight = 0;
+        log_info("Platform_GetTextExtents completed");
+
         PROFILE_END_VAR(timer, "platform_x11:Platform_GetTextExtents");
         return;
     }
@@ -852,7 +899,7 @@ long Platform_GetFileSize(char *filepath) {
     PROFILE_START(timer);
     FILE *fp = fopen(filepath, "rb"); 
     if (fp == NULL) {
-        log_error("returned -1"); PROFILE_END_VAR(timer, "platform_x11:Platform_GetFileSize");
+ PROFILE_END_VAR(timer, "platform_x11:Platform_GetFileSize");
         return -1; 
     }
 
@@ -863,6 +910,8 @@ long Platform_GetFileSize(char *filepath) {
     long size = ftell(fp);
 
     fclose(fp);
+    log_info("Platform_GetFileSize completed");
+
     PROFILE_END_VAR(timer, "platform_x11:Platform_GetFileSize");
     return size;
 }
@@ -904,6 +953,8 @@ char* Platform_RegisterDirWatcher(const char* dir_path, void (*callback)(void)) 
                         char *found_name = malloc(event->len + 1);
                         if (found_name) {
                             strcpy(found_name, event->name);
+                            log_info("Platform_RegisterDirWatcher completed");
+
                             PROFILE_END_VAR(timer, "platform_x11:Platform_RegisterDirWatcher");
                             return found_name;
                         }
@@ -912,13 +963,19 @@ char* Platform_RegisterDirWatcher(const char* dir_path, void (*callback)(void)) 
                     char* generic_name = malloc(32);
                     if (generic_name) {
                         strcpy(generic_name, "modified_resource");
+                        log_info("Platform_RegisterDirWatcher completed");
+
                         PROFILE_END_VAR(timer, "platform_x11:Platform_RegisterDirWatcher");
                         return generic_name;
                     }
+                    log_info("Platform_RegisterDirWatcher completed");
+
                     PROFILE_END_VAR(timer, "platform_x11:Platform_RegisterDirWatcher");
                     return NULL;
                 }
             }
+            log_info("Platform_RegisterDirWatcher completed");
+
             PROFILE_END_VAR(timer, "platform_x11:Platform_RegisterDirWatcher");
             return NULL; 
         }
@@ -938,6 +995,9 @@ char* Platform_RegisterDirWatcher(const char* dir_path, void (*callback)(void)) 
             }
         }
     }
+
+    log_info("Platform_RegisterDirWatcher completed");
+
 
     PROFILE_END_VAR(timer, "platform_x11:Platform_RegisterDirWatcher");
     return NULL;
@@ -981,6 +1041,7 @@ char* Platform_WatchForCFileChanges(const char* dir_path, void (*callback)(void)
                             char *found_name = malloc(event->len + 1);
                             if (found_name) {
                                 strcpy(found_name, event->name);
+
                                 PROFILE_END_VAR(timer, "platform_x11:Platform_WatchForCFileChanges");
                                 return found_name;
                             }
@@ -1212,6 +1273,7 @@ char* Platform_GetIconPath(char* app_path) {
     }
     snprintf(pix,sizeof(pix),"resources/Placeholder.png");
     if(access(pix,F_OK)==0) return strdup(pix);
+    log_info("Platform_GetIconPath completed");
     return strdup(bare[0] ? bare : "placeholder");
 }
 
@@ -1285,6 +1347,7 @@ int Platform_CopyToClipboard(const char* text) {
     fprintf(pipe, "%s", text);
     
     status = pclose(pipe);
+    log_info("Platform_CopyToClipboard completed");
     PROFILE_END_VAR(timer, "flapi_x11:fl_copy_into_clipboard_platform");
     return (status == 0) ? 1 : 0;
 }
@@ -1302,5 +1365,6 @@ bool Platform_BuildFeature(const char* src, const char* out) {
     } else {
         ok = true;
     }
+    log_info("Platform_BuildFeature completed");
     return ok;
 }
