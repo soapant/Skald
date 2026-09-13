@@ -405,11 +405,8 @@ void todo_edit_callback(const char* selection, ListBoxInfo* lb) {
 }
 
 void TriggerTodo(void) {
-    const char* ui_list[100];
-    int count = fl_load_file_list(TODO_FILE_PATH, ui_list, 100);
-
     PROMPT(
-        .title = "📝 Todo", .items = ui_list,
+        .title = "📝 Todo",
         .refresh = todo_refresh_callback,
         .enter = todo_enter_callback,
         .ctrl_enter = todo_ctrlenter_callback,

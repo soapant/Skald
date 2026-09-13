@@ -11,8 +11,7 @@ bool window_switcher_enter_callback(const char* selection, ListBoxInfo* lb) {
     return true;
 }
 void TriggerWindowSwitcher(void) {
-  WindowList list = fl_get_all_window_titles();
-  PROMPT(.title = "🎵 WindowSwitcher", .items = (const char**)list.windows,
+  PROMPT(.title = "🎵 WindowSwitcher",
            .refresh = window_switcher_refresh_callback,
            .enter = window_switcher_enter_callback);
 }

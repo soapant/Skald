@@ -16,8 +16,9 @@ static void TriggerControl(void) {
     const char* names[128]; void (*cbs[128])(void);
     int n= fl_get_feature_list(names,cbs,128);
     g_sel[0]=0;
-    PROMPT(.title="⚡ Control", .items=names, .refresh=control_refresh, .enter=control_enter);
-    if (!g_sel[0]) return;
+    PROMPT(.title="⚡ Control",
+           .refresh=control_refresh,
+           .enter=control_enter);
     for (int i=0;i<n;i++) if (strcmp(g_sel,names[i])==0 && cbs[i]) { cbs[i](); return; }
 }
 

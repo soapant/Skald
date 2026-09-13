@@ -109,17 +109,9 @@ void music_cmd_2(void) {
 #endif
 }
 void music_prompt(void) {
-    s_music_files.count = 0;
-    fl_get_all_files_from_dir(MusicPath, allowed_audio_formats, &s_music_files, NULL);
-    const char** initial_items = (const char**)malloc(s_music_files.count * sizeof(char*));
-    if (!initial_items) return;
-    for (size_t i = 0; i < s_music_files.count; i++) {
-        initial_items[i] = s_music_files.items[i].name;
-    }
-    PROMPT(.title = "🎵 Player", .items = initial_items,
+    PROMPT(.title = "🎵 Player",
            .refresh = music_refresh_callback,
            .enter = music_enter_callback);
-    free((void*)initial_items);
 }
 
 FLINT_FEATURE_INIT {
