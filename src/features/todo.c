@@ -45,7 +45,7 @@ const TagFormatConfig TODO_TAG_FORMAT = {
     X("-n", "Note:")
 
 #define TODO_CONFIG_MASTER \
-    X("-pc", "Cprogram",         "Cprogram",         RGB(137, 180, 250), true) \
+    X("-pf", "Flint",         "Flint",         RGB(137, 180, 250), true) \
     X("-ph", "HeaderC",          "HeaderC",          RGB(148, 226, 183), true) \
     X("-pm", "MinecraftModpack", "MinecraftModpack", RGB(250, 179, 135), true) \
     X("-pb", "CocBot",           "CocBot",           RGB(249, 226, 175), true) \
@@ -264,7 +264,6 @@ void AddTodoToFile(const char* text) {
         int existing_tag_count = 0;
         ParseTodoLine(lines[i], existing_clean, existing_tags, &existing_tag_count);
         if (strcmp(existing_clean, clean_text) == 0) {
-            fl_free_file_list(lines, count);
             return;
         }
     }
@@ -287,7 +286,6 @@ void AddTodoToFile(const char* text) {
     for (int i = 0; i < count; i++) to_write[i] = lines[i];
     to_write[count] = new_entry;
     fl_write_to_file(TODO_FILE_PATH, to_write, count + 1);
-    fl_free_file_list(lines, count);
 }
 
 void RemoveTodoItemFromFile(const char* item_to_remove) {
@@ -320,7 +318,6 @@ void RemoveTodoItemFromFile(const char* item_to_remove) {
         kept[kept_count++] = lines[i];
     }
     fl_write_to_file(TODO_FILE_PATH, kept, kept_count);
-    fl_free_file_list(lines, count);
 }
 
 void todo_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
@@ -328,7 +325,6 @@ void todo_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInf
     int todo_count = fl_load_file_list(TODO_FILE_PATH, items, 100);
 
     PopulateListBox(lb, FlintContext_Get()->window.hListBox, filter, items, todo_count, NULL);
-    fl_free_file_list(items, todo_count);
 }
 
 bool todo_enter_callback(const char* selection, ListBoxInfo* lb) {
@@ -421,7 +417,6 @@ void TriggerTodo(void) {
         .render = todo_render_callback,
         .edit = todo_edit_callback);
 
-    fl_free_file_list(ui_list, count);
 }
 
 FLINT_FEATURE_INIT {
