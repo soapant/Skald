@@ -14,8 +14,7 @@
 #include "core/window_manager.h"
 
 
-char* Platform_SearchPopup(void) { log_error("Platform_SearchPopup: operation failed, returning error");
-return NULL; }
+char* Platform_SearchPopup(void) { log_error("Platform_SearchPopup: operation failed, returning error"); return NULL; }
 
 #include <gdiplus.h>
 
@@ -60,8 +59,7 @@ char* Platform_PromptUser(const PromptSpec* spec) {
   bool has_listbox = (window_list || spec->refresh);
   if (has_listbox) {
     win_state = (PromptState*)calloc(1, sizeof(PromptState));
-    if (!win_state)     log_error("Platform_PromptUser: operation failed, returning error");
-return NULL;
+    if (!win_state) { log_error("Platform_PromptUser: operation failed, returning error"); return NULL; }
     win_state->width = 900;
     win_state->height = 640;
     win_state->has_listbox = true;
