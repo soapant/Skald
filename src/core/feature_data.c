@@ -48,24 +48,6 @@ struct feature_data* GetFeatureData(const char* name) {
     return data;
 }
 
-void AddSelectionToData(char* selection, const char* feature_name, struct feature_data* data) {
-    (void)feature_name;
-    if (!data || !selection) return;
-    if (data->selection_count >= 2048) {
-        fprintf(stderr, "[feature_data] selection overflow for '%s' (cap 2048), dropping oldest\n", data->name ? data->name : "(null)");
-        free((void*)data->last_selections[0]);
-        memmove(&data->last_selections[0], &data->last_selections[1], sizeof(data->last_selections[0]) * 2047);
-        data->selection_count = 2047;
-    }
-    char* dup = _strdup(selection);
-    if (!dup) return;
-    data->last_selections[data->selection_count] = dup;
-    data->selection_count++;
-    for (int i = 0; i < data->selection_count; i++) {
-        printf("ADDED STRING %s TO SELECTIONDATA\n", data->last_selections[i]);
-    }
-}
-
 struct feature_data* GetCurrentFeatureData(void) {
     if (!g_current_feature_name) return NULL;
     return GetFeatureData(g_current_feature_name);
