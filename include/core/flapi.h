@@ -65,6 +65,9 @@ bool fl_remove_line(const char* path, const char* line);
 bool fl_remove_line_contains(const char* path, const char* substr);
 bool fl_parse_desktop_file(const char* path, char* out_name, size_t n, bool* out_nodisplay);
 char* fl_get_icon_path(const char* app_path_path);
+bool fl_free_file_list(const char* list[], int count);
+bool fl_free_list(const char* list[], int count);
+bool fl_free_window_list(WindowList *list);
 bool fl_append_to_file(const char* filepath, const char* line);
 bool fl_write_to_file(const char* filepath, const char* lines[], int count);
 

@@ -6,6 +6,7 @@ void google_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxI
     const char* items[MAX_FILE_LINES];
     int n = fl_load_file_list(GoogleHistoryFile, items, MAX_FILE_LINES);
     PopulateListBox(lb, FlintContext_Get()->window.hListBox, filter, items, n, NULL);
+    fl_free_file_list(items, n);
 }
 
 static void edit_confirm(const char* new_text, void* user_data) {
