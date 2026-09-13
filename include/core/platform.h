@@ -22,6 +22,7 @@ bool Platform_StringStartsWithCaseInsensitive(const char* str, const char* prefi
 int Platform_CollectRunningProcesses(char process_list[][128], int max_count);
 bool Platform_TerminateProcessByName(const char* exe_name);
 bool Platform_FocusWindow(const char* window_name);
+WindowList Platform_GetListOfActiveWindows();
 bool Platform_ClickAtPos(int x,int y);
 bool Platform_QueryBrowser(char* query);
 char* Platform_GetLastClipboardEntry();

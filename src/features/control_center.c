@@ -1,7 +1,4 @@
 #include "core/flapi.h"
-#include "config.h"
-#include <string.h>
-#include <stdio.h>
 
 static char g_sel[256]={0};
 

@@ -49,4 +49,10 @@ char* paste_x11(char* content) {
 
 bool focus_window_title_x11(char* title) {
   return Platform_RunTerminalCommand("wmctrl -a \"firefox\"",false);
+
 }
+
+WindowList get_list_of_windows_x11() {
+
+}
+

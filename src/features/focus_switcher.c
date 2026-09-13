@@ -264,14 +264,5 @@ static WindowHandle FindAnyWindow(const char* titles[], int count) {
 #endif
 }
 
-static bool IsBlacklisted(const char* title, const char* blacklist[], int count) {
-    for (int i = 0; i < count; i++) {
-        if (Platform_StringContainsCaseInsensitive(title, blacklist[i])) {
-            return true;
-        }
-    }
-    return false;
-}
-
 FLINT_FEATURE_INIT {
 }
