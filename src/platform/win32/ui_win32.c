@@ -366,7 +366,6 @@ void Platform_CreateDisplayMessageWindow(const char* message, int centerX, int c
       );
 
   if (hPopupWnd == NULL) {
-    log_error("ERROR: CreateWindowExA failed. GetLastError: %lu message='%s' centerX=%d centerY=%d maxWidth=%d maxHeight=%d timeout=%d color=%d", GetLastError(, message ? message : "null", centerX, centerY, maxWidth, maxHeight, timeout, color));
     Platform_DestroyFont(pWndData->hFont);
     free(pWndData);
     return;
