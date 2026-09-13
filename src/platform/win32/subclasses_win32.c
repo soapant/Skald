@@ -217,12 +217,10 @@ LRESULT CALLBACK SimpleEditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPAR
 
 LRESULT CALLBACK ListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData){
   static HBRUSH s_bg_brush = NULL;
-    static HBRUSH s_bg_colorful_brush = NULL;
     switch (uMsg) {
     case WM_NCDESTROY:
                       RemoveWindowSubclass(hWnd, ListBoxSubclassProc, uIdSubclass);
                         if (s_bg_brush) { DeleteObject(s_bg_brush); s_bg_brush = NULL; }
-                          if (s_bg_colorful_brush) { DeleteObject(s_bg_colorful_brush); s_bg_colorful_brush = NULL; }
                             break;
     case WM_ERASEBKGND:
                        return TRUE;
@@ -249,9 +247,6 @@ LRESULT CALLBACK ListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
       if (EnableShaders && ShaderPreset != 0 && winW > 0 && winH > 0) {
         RECT full = rc;
         Win32_DrawBackgroundSlice(memDC, &full, COLOR_BG, winW, winH, lbOrigin.x, lbOrigin.y);
-      } else if (ColorfullMode) {
-        if (!s_bg_colorful_brush) s_bg_colorful_brush = CreateSolidBrush(GetRainbowColor(0.02f, 0.55f, GradientBrightness));
-        FillRect(memDC, &rc, s_bg_colorful_brush);
       } else {
         if (!s_bg_brush) s_bg_brush = CreateSolidBrush(COLOR_BG);
         FillRect(memDC, &rc, s_bg_brush);
@@ -272,9 +267,6 @@ LRESULT CALLBACK ListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
                 int gx = lbOrigin.x + empty.left;
                 int gy = lbOrigin.y + empty.top;
                 Win32_DrawBackgroundSlice(memDC, &empty, COLOR_BG, winW, winH, gx, gy);
-              } else if (ColorfullMode) {
-                if (!s_bg_colorful_brush) s_bg_colorful_brush = CreateSolidBrush(GetRainbowColor(0.02f, 0.55f, GradientBrightness));
-                FillRect(memDC, &empty, s_bg_colorful_brush);
               } else {
                 if (!s_bg_brush) s_bg_brush = CreateSolidBrush(COLOR_BG);
                 FillRect(memDC, &empty, s_bg_brush);
@@ -285,9 +277,6 @@ LRESULT CALLBACK ListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
           if (EnableShaders && ShaderPreset != 0 && winW > 0 && winH > 0) {
             RECT full = rc;
             Win32_DrawBackgroundSlice(memDC, &full, COLOR_BG, winW, winH, lbOrigin.x, lbOrigin.y);
-          } else if (ColorfullMode) {
-            if (!s_bg_colorful_brush) s_bg_colorful_brush = CreateSolidBrush(GetRainbowColor(0.02f, 0.55f, GradientBrightness));
-            FillRect(memDC, &rc, s_bg_colorful_brush);
           } else {
             if (!s_bg_brush) s_bg_brush = CreateSolidBrush(COLOR_BG);
             FillRect(memDC, &rc, s_bg_brush);
@@ -338,22 +327,6 @@ LRESULT CALLBACK SimpleListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, 
           if (hParent) { ClientToScreen(hWnd, &lbOrigin); ScreenToClient(hParent, &lbOrigin); }
           if (winW > 0 && winH > 0) Win32_DrawBackgroundSlice(hdc, &rect, COLOR_BG, winW, winH, lbOrigin.x, lbOrigin.y);
           else Win32_DrawBackground(hdc, &rect);
-        } else if (ColorfullMode) {
-          if (!s_gradient_ready) {
-            for (int i = 0; i < GradientItems; i++) {
-              float ft = (float)i / GradientItems;
-                s_gradient_brushes[i] = CreateSolidBrush(GetRainbowColor(ft, 0.55f, GradientBrightness));
-            }
-            s_gradient_ready = true;
-          }
-          int h = rect.bottom - rect.top;
-            int bandH = max(1, h / 32);
-            for (int y = 0; y < h; y += bandH) {
-              int colorIndex = (int)(((float)y / (float)h) * 32.0f);
-                if (colorIndex > 31) colorIndex = 31;
-                  RECT band = {rect.left, rect.top + y, rect.right, rect.top + min(y + bandH, h)};
-                    FillRect(hdc, &band, s_gradient_brushes[colorIndex]);
-            }
         } else {
           if (!s_bg_brush) s_bg_brush = CreateSolidBrush(COLOR_BG);
             FillRect(hdc, &rect, s_bg_brush);
@@ -403,12 +376,10 @@ void RequestInitialNavigation(int index) {
 LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
   ListBoxInfo* lb = GetLBForPopupWindow(hwnd);
   static HBRUSH s_bg_brush = NULL;
-    static HBRUSH s_bg_colorful_brush = NULL;
     static HBRUSH s_bg_gradient_brushes[128] = {0};
     static bool s_bg_gradient_ready = false;
     static HBRUSH s_sel_brush = NULL;
-    static HBRUSH s_colorful_brushes[MAX_VISIBLE_ITEMS + 40] = {0};
-    static bool s_colorful_ready = false;
+
     
     switch (msg) {
     case WM_ACTIVATE: {
@@ -429,20 +400,11 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     case WM_CTLCOLORLISTBOX: {
       HDC hdc = (HDC)wParam;
         SetTextColor(hdc, COLOR_TEXT);
-        if (ColorfullMode) {
-          COLORREF bg = GetRainbowColor(0.02f, 0.55f, GradientBrightness);
-            SetBkColor(hdc, bg);
-            if (!s_bg_colorful_brush) {
-              s_bg_colorful_brush = CreateSolidBrush(bg);
-            }
-          return (LRESULT)s_bg_colorful_brush;
-        } else {
-          SetBkColor(hdc, COLOR_BG);
-            if (!s_bg_brush) {
-              s_bg_brush = CreateSolidBrush(COLOR_BG);
-            }
-          return (LRESULT)s_bg_brush;
-        }
+        SetBkColor(hdc, COLOR_BG);
+          if (!s_bg_brush) {
+            s_bg_brush = CreateSolidBrush(COLOR_BG);
+          }
+        return (LRESULT)s_bg_brush;
     }
     case WM_CREATE: {
       if (FlintContext_Get()->g_hMainFont) {
@@ -512,32 +474,6 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             if (pdis->itemID >= (lb ? lb->populated_count : 0)) {
               return TRUE;
             }
-           if (!s_colorful_ready) {
-            s_sel_brush = CreateSolidBrush(COLOR_SELECTED_TEXT);
-              for (int i = 0; i < MAX_VISIBLE_ITEMS + 40; i++) {
-                float t = (float)i / (float)(MAX_VISIBLE_ITEMS + 40);
-                  float hue = t * 240.0f;
-                  float h = hue / 60.0f;
-                  float s = 0.85f;
-                  float v = GradientBrightness;
-                  int j = (int)h;
-                  float f = h - j;
-                  float p = v * (1 - s);
-                  float q = v * (1 - s * f);
-                  float t_val = v * (1 - s * (1 - f));
-                  float r, g, b;
-                  switch (j) {
-                  case 0: r = v; g = t_val; b = p; break;
-                  case 1: r = q; g = v; b = p; break;
-                  case 2: r = p; g = v; b = t_val; break;
-                  case 3: r = p; g = q; b = v; break;
-                  case 4: r = t_val; g = p; b = v; break;
-                  default: r = v; g = p; b = q; break;
-                  }
-                s_colorful_brushes[i] = CreateSolidBrush(RGB((BYTE)(r * 255), (BYTE)(g * 255), (BYTE)(b * 255)));
-              }
-            s_colorful_ready = true;
-          }
           if (RoundedCorners && CornerRadius > 0) {
             int R = 6;
             if (R > CornerRadius) R = CornerRadius;
@@ -557,10 +493,6 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
               int gy = lbOrigin2.y + pdis->rcItem.top;
               if (EnableShaders && ShaderPreset != 0 && winW > 0 && winH > 0) {
                 Win32_DrawBackgroundSlice(pdis->hDC, &pdis->rcItem, COLOR_BG, winW, winH, gx, gy);
-              } else if (!ColorfullMode) {
-                HBRUSH br = CreateSolidBrush(COLOR_BG);
-                FillRect(pdis->hDC, &pdis->rcItem, br);
-                DeleteObject(br);
               }
             }
             if (isSelected) {
@@ -568,16 +500,6 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 Win32_DrawRoundedSelection(pdis->hDC, &inner, COLOR_SELECTED_TEXT, innerR);
               } else if (EnableShaders && ShaderPreset != 0) {
                 Win32_DrawRoundedSelection(pdis->hDC, &inner, COLOR_SELECTED_TEXT, innerR);
-              } else if (ColorfullMode) {
-                int color_index = pdis->itemID % 100;
-                HBRUSH hBrush = s_colorful_brushes[color_index];
-                int save = SaveDC(pdis->hDC);
-                HRGN rgn = CreateRoundRectRgn(inner.left, inner.top, inner.right+1, inner.bottom+1, innerR*2, innerR*2);
-                SelectClipRgn(pdis->hDC, rgn);
-                FillRect(pdis->hDC, &inner, hBrush);
-                SelectClipRgn(pdis->hDC, NULL);
-                RestoreDC(pdis->hDC, save);
-                DeleteObject(rgn);
               } else {
                 Win32_FillRoundedRect(pdis->hDC, &inner, COLOR_SELECTED_TEXT, innerR);
               }
@@ -594,16 +516,6 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 if (winW <= 0) winW = pdis->rcItem.right - pdis->rcItem.left;
                 if (winH <= 0) winH = 400;
                 Win32_FillRoundedRectSlice(pdis->hDC, &inner, COLOR_BG, winW, winH, globalX, globalY, innerR);
-              } else if (ColorfullMode) {
-                int color_index = pdis->itemID % 100;
-                HBRUSH hBrush = s_colorful_brushes[color_index];
-                int save = SaveDC(pdis->hDC);
-                HRGN rgn = CreateRoundRectRgn(inner.left, inner.top, inner.right+1, inner.bottom+1, innerR*2, innerR*2);
-                SelectClipRgn(pdis->hDC, rgn);
-                FillRect(pdis->hDC, &inner, hBrush);
-                SelectClipRgn(pdis->hDC, NULL);
-                RestoreDC(pdis->hDC, save);
-                DeleteObject(rgn);
               } else {
                 Win32_FillRoundedRect(pdis->hDC, &inner, COLOR_BG, innerR);
               }
@@ -628,10 +540,6 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
               if (winH <= 0) winH = 400;
               Win32_DrawBackgroundSlice(pdis->hDC, &pdis->rcItem, COLOR_BG, winW, winH, globalX, globalY);
             }
-          } else if (ColorfullMode) {
-            int color_index = pdis->itemID % 100;
-              HBRUSH hBrush = s_colorful_brushes[color_index];
-              FillRect(pdis->hDC, &pdis->rcItem, hBrush);
           } else {
             if (isSelected) {
               FillRect(pdis->hDC, &pdis->rcItem, s_sel_brush);
@@ -727,22 +635,6 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         GetClientRect(hwnd, &rect);
         if (EnableShaders && ShaderPreset != 0) {
           Win32_DrawBackground(hdc, &rect);
-        } else if (ColorfullMode) {
-          if (!s_bg_gradient_ready) {
-            for (int i = 0; i < 128; i++) {
-              float ft = (float)i / 128.0f;
-                s_bg_gradient_brushes[i] = CreateSolidBrush(GetRainbowColor(ft, 0.55f, GradientBrightness));
-            }
-            s_bg_gradient_ready = true;
-          }
-          int h = rect.bottom - rect.top;
-            int bandH = max(1, h / 128);
-            for (int y = 0; y < h; y += bandH) {
-              int colorIndex = (int)(((float)y / (float)h) * 128.0f);
-                if (colorIndex > 127) colorIndex = 127;
-                  RECT band = {rect.left, rect.top + y, rect.right, rect.top + min(y + bandH, h)};
-                    FillRect(hdc, &band, s_bg_gradient_brushes[colorIndex]);
-            }
         } else {
           if (!s_bg_brush) s_bg_brush = CreateSolidBrush(COLOR_BG);
             FillRect(hdc, &ps.rcPaint, s_bg_brush);
@@ -864,10 +756,6 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
           }
         }
       if (s_sel_brush) { DeleteObject(s_sel_brush); s_sel_brush = NULL; }
-        for (int i = 0; i < MAX_VISIBLE_ITEMS + 40; i++) {
-          if (s_colorful_brushes[i]) { DeleteObject(s_colorful_brushes[i]); s_colorful_brushes[i] = NULL; }
-        }
-        s_colorful_ready = false;
         rainbow_init = false;
     }
     default:
