@@ -264,14 +264,15 @@ void AddTodoToFile(const char* text) {
         int existing_tag_count = 0;
         ParseTodoLine(lines[i], existing_clean, existing_tags, &existing_tag_count);
         if (strcmp(existing_clean, clean_text) == 0) {
+            fl_free_file_list(lines, count);
             return;
         }
     }
-    
+
     char new_entry[512];
     new_entry[0] = '\0';
     strncpy(new_entry, clean_text, sizeof(new_entry) - 1);
-    
+
     if (tag_count > 0) {
         strcat(new_entry, TODO_ENTRY_DELIMITER);
         for (int i = 0; i < tag_count; i++) {
@@ -281,11 +282,12 @@ void AddTodoToFile(const char* text) {
             }
         }
     }
-    
+
     const char* to_write[101];
     for (int i = 0; i < count; i++) to_write[i] = lines[i];
     to_write[count] = new_entry;
     fl_write_to_file(TODO_FILE_PATH, to_write, count + 1);
+    fl_free_file_list(lines, count);
 }
 
 void RemoveTodoItemFromFile(const char* item_to_remove) {
@@ -313,11 +315,13 @@ void RemoveTodoItemFromFile(const char* item_to_remove) {
         if (delim) *delim = '\0';
         if (strcmp(compare_text, clean_item) == 0) {
             printf("[TODO-MGR] Dropped file line item: \"%s\"\n", item_to_remove);
+            free((void*)lines[i]);
             continue;
         }
         kept[kept_count++] = lines[i];
     }
     fl_write_to_file(TODO_FILE_PATH, kept, kept_count);
+    fl_free_file_list(kept, kept_count);
 }
 
 void todo_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
@@ -325,6 +329,7 @@ void todo_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInf
     int todo_count = fl_load_file_list(TODO_FILE_PATH, items, 100);
 
     PopulateListBox(lb, FlintContext_Get()->window.hListBox, filter, items, todo_count, NULL);
+    fl_free_file_list(items, todo_count);
 }
 
 bool todo_enter_callback(const char* selection, ListBoxInfo* lb) {

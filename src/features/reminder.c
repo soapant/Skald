@@ -149,6 +149,7 @@ void reminder_refresh_callback(const char* filter, WindowHandle hListBox, ListBo
     const char* items[MAX_FILE_LINES];
     int n = fl_load_file_list(ReminderHistoryFilePath, items, MAX_FILE_LINES);
     PopulateListBox(lb, FlintContext_Get()->window.hListBox, filter, items, n, NULL);
+    fl_free_file_list(items, n);
 }
 
 
