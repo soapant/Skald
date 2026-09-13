@@ -89,7 +89,6 @@ static inline bool ListBoxInfo_IsSelected(ListBoxInfo *lb) {
 typedef struct {
     const char* title;
     const char** items;
-    int height, width;
     RefreshCallback refresh;
     EnterCallback enter;
     CtrlEnterCallback ctrl_enter;
@@ -104,7 +103,6 @@ typedef struct {
 typedef struct {
     const char* prompt;
     const char* title;
-    int height, width;
 } SimplePromptSpec;
 
 typedef struct WindowManager WindowManager;
