@@ -22,6 +22,7 @@ extern bool AllowOtherFeatureTogglesInFeature;
 extern bool ModePersistsThroughFeatures;
 extern int  TimeOutForMessages;
 extern bool DoTimeDebugs;
+extern bool DebugMode;
 extern bool RoundedCorners;
 extern int CornerRadius;
 extern int ListboxBorderThickness;

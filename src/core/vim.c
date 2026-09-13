@@ -1,4 +1,5 @@
 #include "core/vim.h"
+#include "deps/log.h"
 #include "core/context.h"
 #include "core/modal.h"
 #include "core/common_ui.h"
@@ -226,7 +227,7 @@ static void CALLBACK SequenceTimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, D
     if (seq_state.waiting) {
         seq_state.waiting = false;
         seq_state.timed_out = true;
-        printf("[SEQ-DEBUG] Timer expired! Sequence: '%s'\n", seq_state.keys);
+        log_info("[SEQ-DEBUG] Timer expired! Sequence: '%s'", seq_state.keys);
     }
     seq_state.timer_id = 0;
 }

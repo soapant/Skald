@@ -1,4 +1,5 @@
 #include <windows.h>
+#include "deps/log.h"
 #include "core/context.h"
 #include "core/modal.h"
 #include <commctrl.h>
@@ -117,7 +118,7 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
               FlintContext_Get()->prompt_callbacks.tab(lb);
             }
           for (int i = 0;i < data->selection_count;++i) {
-            printf("%s \n",data->last_selections[i]);
+            log_info("%s ", data->last_selections[i]);
           }
           return 0;
         }
@@ -1012,7 +1013,7 @@ LRESULT CALLBACK EditPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
     }
     
       if (wParam == VK_ESCAPE) {
-        printf("[EditPopup] Escape pressed\n");
+        log_info("[EditPopup] Escape pressed");
           data->result = NULL;
           DestroyWindow(GetParent(hWnd));
           UI_Redraw(lb, FlintContext_Get()->window.hListBox);
@@ -1022,7 +1023,7 @@ LRESULT CALLBACK EditPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
       if (GetKeyState(VK_SHIFT) & 0x8000) {
         return DefSubclassProc(hWnd, uMsg, wParam, lParam);
       }
-      printf("[EditPopup] Enter pressed\n");
+      log_info("[EditPopup] Enter pressed");
         char buffer[2048] = {0};
         GetWindowTextA(WH_TO_HWND(data->hEdit), buffer, sizeof(buffer) - 1);
         data->result = _strdup(buffer);
@@ -1048,7 +1049,7 @@ LRESULT CALLBACK SearchPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LP
       if (GetKeyState(VK_SHIFT) & 0x8000) {
         return DefSubclassProc(hWnd, uMsg, wParam, lParam);
       }
-      printf("[SearchPopup] Enter pressed\n");
+      log_info("[SearchPopup] Enter pressed");
         char buffer[2048] = {0};
         DestroyWindow(GetParent(hWnd));
         UI_Redraw(lb, FlintContext_Get()->window.hListBox);

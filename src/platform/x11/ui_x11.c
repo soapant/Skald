@@ -1,4 +1,5 @@
 #include "core/context.h"
+#include "deps/log.h"
 #include "core/modal.h"
 #include "config.h"
 #include "core/modal.h"
@@ -166,14 +167,14 @@ void Platform_DisplayMessage(const char* message, int centerX, int centerY, int 
     PROFILE_START(timer);
     Display* dpy = get_display();
     if (!dpy) {
-        fprintf(stderr, "[PLATFORM] Platform_DisplayMessage: no X11 display\n");
+        log_error("[PLATFORM] Platform_DisplayMessage: no X11 display");
         PROFILE_END_VAR(timer, "ui_x11:Platform_DisplayMessage");
         return;
     }
 
     FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
     if (!FH_TO_XFT(font)) {
-        fprintf(stderr, "[PLATFORM] Platform_DisplayMessage: font load failed\n");
+        log_error("[PLATFORM] Platform_DisplayMessage: font load failed");
         PROFILE_END_VAR(timer, "ui_x11:Platform_DisplayMessage");
         return;
     }
@@ -280,13 +281,13 @@ void Platform_DisplayMessage(const char* message, int centerX, int centerY, int 
 
 void Platform_SettingsPopUp(void) {
     PROFILE_START(timer);
-    fprintf(stderr, "[PLATFORM] Platform_SettingsPopUp not implemented yet\n");
+    log_warn("[PLATFORM] Platform_SettingsPopUp not implemented yet");
     PROFILE_END_VAR(timer, "ui_x11:Platform_SettingsPopUp");
 }
 
 char* Platform_SearchPopup(void) {
     PROFILE_START(timer);
-    fprintf(stderr, "[PLATFORM] Platform_SearchPopup not implemented yet\n");
+    log_warn("[PLATFORM] Platform_SearchPopup not implemented yet");
     PROFILE_END_VAR(timer, "ui_x11:Platform_SearchPopup");
     return NULL;
 }
@@ -294,7 +295,8 @@ char* Platform_SearchPopup(void) {
 int Platform_InitializeTrayIcon(void) {
     PROFILE_START(timer);
     PROFILE_END_VAR(timer, "ui_x11:Platform_InitializeTrayIcon");
-    return -1;
+        log_error("Platform_InitializeTrayIcon: operation failed, returning error");
+return -1;
 }
 
 
@@ -314,13 +316,13 @@ void Platform_RunHotKeyMessageLoop(void) {
     } else {
         g_x11_uinput_fd = init_uinput();
         if (g_x11_uinput_fd < 0) {
-            fprintf(stderr, "[SYSTEM] continuing without uinput (no swallow)\n");
+            log_warn("[SYSTEM] continuing without uinput (no swallow)");
         }
     }
 
     ScanAndHookKeyboards();
     if (g_x11_keyboard_count == 0) {
-        fprintf(stderr, "[ERROR] No structural keyboard nodes located under /dev/input/\n");
+        log_error("[ERROR] No structural keyboard nodes located under /dev/input/");
         destroy_uinput();
         PROFILE_END_VAR(timer, "ui_x11:Platform_RunHotKeyMessageLoop");
         return;
@@ -405,7 +407,7 @@ void Platform_RunHotKeyMessageLoop(void) {
                         } else {
                             static bool warned = false;
                             if (!warned) {
-                                fprintf(stderr, "[WARN] grabbed but no uinput - key %d lost. Check /dev/uinput perms (need input group or ACL)\n", ev.code);
+                                log_warn("[WARN] grabbed but no uinput - key %d lost. Check /dev/uinput perms (need input group or ACL)", ev.code);
                                 warned = true;
                             }
                         }

@@ -2,6 +2,7 @@
 #define UI_X11_H
 
 #include "core/types.h"
+#include "deps/log.h"
 #include "core/platform.h"
 #include "core/window_manager.h"
 

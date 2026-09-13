@@ -1,4 +1,5 @@
 #include "platform/x11/display.h"
+#include "deps/log.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <dirent.h>
@@ -13,8 +14,7 @@ int x11_error_handler(Display *d, XErrorEvent *e) {
     PROFILE_START(timer);
     char error_text[256];
     XGetErrorText(d, e->error_code, error_text, sizeof(error_text));
-    fprintf(stderr, "[X11 Error] Request Code: %d, Error Code: %d (%s), Resource ID: %lu, Serial: %lu\n",
-            e->request_code, e->error_code, error_text, e->resourceid, e->serial);
+    log_error("[X11 Error] Request Code: %d, Error Code: %d (%s), Resource ID: %lu, Serial: %lu", e->request_code, e->error_code, error_text, e->resourceid, e->serial);
     PROFILE_END_VAR(timer, "display_x11:x11_error_handler");
     return 0; 
 }
@@ -55,7 +55,7 @@ bool init_display(void) {
 
     g_display = OpenBestDisplay();
     if (g_display == NULL) {
-        fprintf(stderr, "[X11] Failed to open X11 display.\n");
+        log_error("[X11] Failed to open X11 display.");
         PROFILE_END_VAR(timer, "display_x11:init_display");
         return false;
     }

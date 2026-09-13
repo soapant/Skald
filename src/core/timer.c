@@ -1,4 +1,5 @@
 #include "core/timer.h"
+#include "deps/log.h"
 #include "config.h"
 #include <stdio.h>
 #include <string.h>
@@ -25,6 +26,6 @@ void TimerEnd(WinTimer t, const char* operation_name) {
     } else {
       snprintf(line, sizeof(line), "[ TIMER] %-25s : %8.2f s\n", operation_name, elapsed_us / 1000000.0);
     }
-    if (line[0] != '\0') printf("%s",line);
+    log_info("%s", line);
   }
 }

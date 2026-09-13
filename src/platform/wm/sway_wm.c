@@ -1,4 +1,5 @@
 #include "wm/sway_wm.h"
+#include "deps/log.h"
 #include "core/platform.h"
 #include "config.h"
 #include "core/platform.h"
