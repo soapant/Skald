@@ -494,8 +494,15 @@ bool fl_place_listbox_raw_impl(const FlListSpec *spec) {
     return true;
 }
 
-WindowList fl_get_all_active_windows() {
-  return Platform_GetListOfActiveWindows();
+WindowList fl_get_all_window_titles() {
+  WindowList l = Platform_GetWindowTitles();
+  log_info("fl_get_all_window_titles count=%d", l.count);
+  return l;
+}
+WindowList fl_get_all_window_names() {
+  WindowList l = Platform_GetWindowNames();
+  log_info("fl_get_all_window_names count=%d", l.count);
+  return l;
 }
 
 

@@ -6,7 +6,8 @@ bool get_title_sway(char *buffer, int buffer_size);
 char* get_clipboard_entry_sway();
 char* paste_sway(char* content);
 bool focus_window_title_sway(char* title);
-WindowList get_list_of_windows_sway();
+WindowList get_window_titles_sway();
+WindowList get_window_names_sway();
 
 #endif
 

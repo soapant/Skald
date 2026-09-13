@@ -1,4 +1,5 @@
 #include <windows.h>
+#include <psapi.h>
 #include "deps/log.h"
 #include <fileapi.h>
 #include <handleapi.h>
@@ -796,20 +797,11 @@ bool Platform_BuildFeature(const char* src, const char* out) {
 
 static BOOL CALLBACK EnumWindowsProcAll(HWND hwnd, LPARAM lParam) {
     WindowList *list = (WindowList *)lParam;
-
-    if (!IsWindowVisible(hwnd)) {
-        return TRUE;
-    }
-
+    if (!IsWindowVisible(hwnd)) return TRUE;
     char class_name[256];
     if (GetClassNameA(hwnd, class_name, sizeof(class_name)) > 0) {
-        
-        if (strcmp(class_name, "Progman") == 0 || strcmp(class_name, "WorkerW") == 0) {
-            return TRUE;
-        }
-
+        if (strcmp(class_name, "Progman") == 0 || strcmp(class_name, "WorkerW") == 0) return TRUE;
         class_name[0] = toupper((unsigned char)class_name[0]);
-
         char **temp = realloc(list->windows, (list->count + 1) * sizeof(char *));
         if (temp != NULL) {
             list->windows = temp;
@@ -817,13 +809,52 @@ static BOOL CALLBACK EnumWindowsProcAll(HWND hwnd, LPARAM lParam) {
             list->count++;
         }
     }
-
     return TRUE;
 }
-WindowList Platform_GetListOfActiveWindows() {
+static BOOL CALLBACK EnumWindowsProcTitles(HWND hwnd, LPARAM lParam) {
+    WindowList *list = (WindowList *)lParam;
+    if (!IsWindowVisible(hwnd)) return TRUE;
+    char title[512];
+    if (GetWindowTextA(hwnd, title, sizeof(title)) > 0) {
+        if (strlen(title)==0) return TRUE;
+        char **temp = realloc(list->windows, (list->count + 1) * sizeof(char *));
+        if (temp != NULL) {
+            list->windows = temp;
+            list->windows[list->count] = strdup(title);
+            list->count++;
+        }
+    }
+    return TRUE;
+}
+static BOOL CALLBACK EnumWindowsProcNames(HWND hwnd, LPARAM lParam) {
+    WindowList *list = (WindowList *)lParam;
+    if (!IsWindowVisible(hwnd)) return TRUE;
+    DWORD pid=0; GetWindowThreadProcessId(hwnd, &pid);
+    if (pid==0) return TRUE;
+    HANDLE h = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, pid);
+    if (!h) return TRUE;
+    char exe[MAX_PATH];
+    DWORD len = GetModuleBaseNameA(h, NULL, exe, sizeof(exe));
+    CloseHandle(h);
+    if (len==0) return TRUE;
+    char **temp = realloc(list->windows, (list->count + 1) * sizeof(char *));
+    if (temp != NULL) {
+        list->windows = temp;
+        list->windows[list->count] = strdup(exe);
+        list->count++;
+    }
+    return TRUE;
+}
+WindowList Platform_GetWindowTitles() {
     WindowList list = { .windows = NULL, .count = 0 };
-
-    EnumWindows(EnumWindowsProcAll, (LPARAM)&list);
-
+    EnumWindows(EnumWindowsProcTitles, (LPARAM)&list);
+    log_info("Platform_GetWindowTitles count=%d", list.count);
     return list;
 }
+WindowList Platform_GetWindowNames() {
+    WindowList list = { .windows = NULL, .count = 0 };
+    EnumWindows(EnumWindowsProcNames, (LPARAM)&list);
+    log_info("Platform_GetWindowNames count=%d", list.count);
+    return list;
+}
+WindowList Platform_GetListOfActiveWindows() { return Platform_GetWindowNames(); }
