@@ -66,7 +66,6 @@ typedef struct {
     bool g_waiting_for_key;
     int g_key_pressed;
     KeyCallback g_key_callback;
-    bool draw_background;
 #endif
 } FlintContext;
 
