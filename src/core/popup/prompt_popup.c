@@ -100,8 +100,9 @@ static void PromptPopup_OnShow(Popup* self) {
     data->state->cursor = 0;
     data->state->width = data->w;
     data->state->height = data->h;
-    const char* p = strchr(data->spec.title, ' ');
-    data->state->window_title = (char*)(p ? p+1 : data->spec.title);
+    const char* title = data->spec.title ? data->spec.title : "Flint";
+    const char* p = strchr(title, ' ');
+    data->state->window_title = (char*)(p ? p+1 : title);
     data->state->filter[0] = '\0';
     if (data->spec.items || data->spec.refresh) {
       data->state->has_listbox = true;
@@ -132,8 +133,8 @@ static void PromptPopup_OnShow(Popup* self) {
     ctx2->prompt_callbacks.edit = data->spec.edit;
     ctx2->prompt_callbacks.filter = data->spec.filter;
     ctx2->prompt_callbacks.help = data->spec.help;
-    ctx2->window.current_feature = (char*)(p ? p+1 : data->spec.title);
-    ctx2->window.title = data->spec.title;
+    ctx2->window.current_feature = (char*)(p ? p+1 : title);
+    ctx2->window.title = title;
     ctx2->window.callbacks = ctx2->prompt_callbacks;
     SetCurrentFeatureName(ctx2->window.current_feature);
     History_ResetCursor(ctx2->window.current_feature);
