@@ -27,7 +27,7 @@ void Platform_WaitForKeypressAsync(KeyCallback callback) {
 
 char* Platform_PromptUser(const PromptSpec* spec) {
   const char** window_list = spec->items;
-  const char* window_title = spec->title;
+  const char* window_title = spec->title ? spec->title : "Flint";
   int count = 0;
   if (window_list) {
     for (count = 0; count < 8192 && window_list[count]; count++) {}
@@ -236,7 +236,7 @@ char* Platform_PromptUser(const PromptSpec* spec) {
 
 char* Platform_SimplePromptUser(const SimplePromptSpec* spec) {
   const char* prompt = spec->prompt;
-  const char* window_title = spec->title;
+  const char* window_title = spec->title ? spec->title : "Flint";
   int item_height = 32;
 
   HINSTANCE hInstance = GetModuleHandle(NULL);

@@ -92,9 +92,10 @@ static void SimplePromptPopup_OnShow(Popup* self) {
     data->state->cursor = 0;
     data->state->width = data->w;
     data->state->height = data->h;
-    const char* p = strchr(data->spec.title, ' ');
-    data->state->window_title = (char*)(p ? p+1 : data->spec.title);
-    if (!data->state->window_title) data->state->window_title = (char*)data->spec.title;
+    const char* title = data->spec.title ? data->spec.title : "Flint";
+    const char* p = strchr(title, ' ');
+    data->state->window_title = (char*)(p ? p+1 : title);
+    if (!data->state->window_title) data->state->window_title = (char*)title;
     self->user_data = data->state;
     
     SetMode(MODE_INSERT);
