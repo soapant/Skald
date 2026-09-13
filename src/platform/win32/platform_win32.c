@@ -26,8 +26,7 @@ bool Platform_LaunchTerminalAtPath(const char* working_dir, const char* extra_ar
 }
 
 char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
-    if (command == NULL || strlen(command) == 0)     log_error("Platform_RunTerminalCommand: operation failed, returning error");
-return NULL;
+    if (command == NULL || strlen(command) == 0) { log_error("Platform_RunTerminalCommand: operation failed, returning error"); return NULL; }
     if (open_terminal) {
         char clean_cmd[512];
         strncpy(clean_cmd, command, sizeof(clean_cmd) - 1);
@@ -182,8 +181,7 @@ bool Platform_ShellExecuteWithVerb(const char* path, const char* verb, bool asyn
 }
 
 bool Platform_LaunchApp(const char* path) {
-    if (!path)     log_error("Platform_LaunchApp: operation failed, returning error");
-return false;
+    if (!path) { log_error("Platform_LaunchApp: operation failed, returning error"); return false; }
 
     char expanded[MAX_PATH];
     if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) return false;
@@ -191,8 +189,7 @@ return false;
 }
 
 bool Platform_LaunchAppAsAdmin(const char* path) {
-    if (!path)     log_error("Platform_LaunchAppAsAdmin: operation failed, returning error");
-return false;
+    if (!path) { log_error("Platform_LaunchAppAsAdmin: operation failed, returning error"); return false; }
 
     char expanded[MAX_PATH];
     if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) return false;
@@ -656,8 +653,7 @@ BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam) {
 }
 
 bool Platform_FocusWindow(const char* title) {
-    if (!title || !title[0])     log_error("Platform_FocusWindow: operation failed, returning error");
-return false;
+    if (!title || !title[0]) { log_error("Platform_FocusWindow: operation failed, returning error"); return false; }
     
     HWND hwnd = FindWindowA(NULL, title);
     
@@ -703,8 +699,7 @@ char* Platform_GetActiveWindowTitle(void) {
     return fgTitle;
 }
 char* Platform_GetIconPath(char* app_path) {
-  if (!app_path || !app_path[0])   log_error("Platform_GetIconPath: operation failed, returning error");
-return NULL;
+  if (!app_path || !app_path[0]) { log_error("Platform_GetIconPath: operation failed, returning error"); return NULL; }
   char expanded[MAX_PATH];
   const char* src = app_path;
   if (Platform_ExpandPath(app_path, expanded, sizeof(expanded))) {
