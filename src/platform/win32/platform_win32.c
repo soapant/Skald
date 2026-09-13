@@ -20,8 +20,8 @@
 #include <gdiplus.h>
 
 bool Platform_LaunchTerminalAtPath(const char* working_dir, const char* extra_args){
-      if (!working_dir) { log_error("working_dir is NULL"); return false; }
-      if (!UsedTerminal || !UsedTerminal[0]) { log_error("UsedTerminal not configured"); return false; }
+      if (!working_dir) { log_error("working_dir is NULL extra_args='%s'", extra_args ? extra_args : "null"); return false; }
+      if (!UsedTerminal || !UsedTerminal[0]) { log_error("UsedTerminal not configured working_dir='%s' extra_args='%s'", working_dir ? working_dir : "null", extra_args ? extra_args : "null"); return false; }
       char terminal[512];
       snprintf(terminal,sizeof(terminal),"%s.exe",UsedTerminal);
       HINSTANCE res = ShellExecuteA(NULL, "open", terminal, extra_args, working_dir, SW_SHOWNORMAL);
@@ -29,12 +29,12 @@ bool Platform_LaunchTerminalAtPath(const char* working_dir, const char* extra_ar
           log_error("ShellExecute failed for terminal '%s' (extra_args='%s', dir='%s') err=%ld - check UsedTerminal config (foot vs alacritty, ensure .exe exists in PATH)", terminal, extra_args ? extra_args : "", working_dir, (long)(intptr_t)res);
           return false;
       }
-log_info("Platform_LaunchTerminalAtPath completed");
+log_info("Platform_LaunchTerminalAtPath working_dir='%s' extra_args='%s'", working_dir ? working_dir : "", extra_args ? extra_args : "");;
       return true;
 }
 
 char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
-    if (command == NULL || strlen(command) == 0) { log_error("operation failed, returning error"); return NULL; }
+    if (command == NULL || strlen(command) == 0) { log_error("operation failed, returning error command='%s' open_terminal=%d", command ? command : "null", open_terminal); return NULL; }
     if (open_terminal) {
         char clean_cmd[512];
         strncpy(clean_cmd, command, sizeof(clean_cmd) - 1);
@@ -104,14 +104,14 @@ char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
 }
 
 bool Platform_LaunchFileManagerAtPath(char* path,char* args) {
-    if (!path || !path[0]) { log_error("path is NULL"); return false; }
+    if (!path || !path[0]) { log_error("path is NULL args='%s'", args ? args : "null"); return false; }
     char buffer[100];
     snprintf(buffer,sizeof(buffer),"%s.exe",UsedFileManager);
     HINSTANCE res = ShellExecuteA(NULL, "open", buffer, path ? path : "", NULL, SW_SHOWNORMAL);
     if ((intptr_t)res <= 32) { log_error("ShellExecute failed for filemanager '%s' path='%s' err=%ld", buffer, path, (long)(intptr_t)res); return false; }
     //temporarily not being used
     (void)args;
-log_info("Platform_LaunchFileManagerAtPath completed");
+log_info("Platform_LaunchFileManagerAtPath path='%s' args='%s'", path ? path : "", args ? args : "");;
     return true;
 }
 
@@ -133,7 +133,7 @@ char* Platform_QueryZoxidePath(const char* query) {
     HANDLE hReadPipe, hWritePipe;
 
     if (!CreatePipe(&hReadPipe, &hWritePipe, &sa, 0)) {
-                log_error("operation failed, returning error");
+                log_error("operation failed, returning error query='%s'", query ? query : "null");
 return NULL;
     }
 
@@ -178,12 +178,12 @@ return NULL;
     }
     if (strlen(path) == 0) return NULL;
     char* dup = _strdup(path);
-log_info("Platform_QueryZoxidePath completed");
+log_info("Platform_QueryZoxidePath query='%s'", query ? query : "");;
     return dup;
 }
 
 bool Platform_ShellExecuteWithVerb(const char* path, const char* verb, bool async) {
-    if (!path || !path[0]) { log_error("path is NULL/empty"); return false; }
+    if (!path || !path[0]) { log_error("path is NULL/empty verb='%s' async=%d", verb ? verb : "null", async); return false; }
     SHELLEXECUTEINFOA sei = {0};
     sei.cbSize = sizeof(SHELLEXECUTEINFOA);
     sei.fMask = (async ? SEE_MASK_FLAG_NO_UI | SEE_MASK_ASYNCOK : SEE_MASK_FLAG_NO_UI);
@@ -195,7 +195,7 @@ bool Platform_ShellExecuteWithVerb(const char* path, const char* verb, bool asyn
         log_error("ShellExecuteEx failed for '%s' verb='%s' err=%lu", path, verb ? verb : "open", GetLastError());
         return false;
     }
-log_info("Platform_ShellExecuteWithVerb completed");
+log_info("Platform_ShellExecuteWithVerb path='%s' verb='%s' async=%d", path ? path : "", verb ? verb : "", async);;
     return true;
 }
 
@@ -204,7 +204,7 @@ bool Platform_LaunchApp(const char* path) {
     char expanded[MAX_PATH];
     if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) { log_error("Platform_ExpandPath failed for '%s'", path); return false; }
     if (!Platform_ShellExecuteWithVerb(expanded, "open", true)) { log_error("ShellExecute failed for '%s' (expanded '%s')", path, expanded); return false; }
-log_info("Platform_LaunchApp completed");
+log_info("Platform_LaunchApp path='%s'", path ? path : "");;
     return true;
 }
 
@@ -213,7 +213,7 @@ bool Platform_LaunchAppAsAdmin(const char* path) {
     char expanded[MAX_PATH];
     if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) { log_error("Platform_ExpandPath failed for '%s'", path); return false; }
     if (!Platform_ShellExecuteWithVerb(expanded, "runas", true)) { log_error("ShellExecute (runas) failed for '%s' (expanded '%s')", path, expanded); return false; }
-log_info("Platform_LaunchAppAsAdmin completed");
+log_info("Platform_LaunchAppAsAdmin path='%s'", path ? path : "");;
     return true;
 }
 
@@ -238,7 +238,7 @@ void Platform_ModifyUniversalTimer(double seconds_to_add) {
     LONGLONG ms_offset = (LONGLONG)(seconds_to_add * 1000.0);
     g_timer_start_ms -= ms_offset; 
     log_info("Modified baseline by %.2f seconds.", seconds_to_add);
-log_info("Platform_ModifyUniversalTimer completed");
+log_info("Platform_ModifyUniversalTimer seconds_to_add=%p", seconds_to_add);;
 }
 
 double Platform_GetUniversalTimeSeconds() {
@@ -314,7 +314,7 @@ int Platform_CopyToClipboard(const char* text) {
     SubjectiveMessageDisplay(buffer,140,TimeOutForMessages,COLOR_TEXT);
     CloseClipboard();
     
-log_info("Platform_CopyToClipboard completed");
+log_info("Platform_CopyToClipboard text='%s'", text ? text : "");;
     return 1;
 }
 
@@ -363,7 +363,7 @@ void Platform_SaveRegionToPNG(int x1, int y1, int x2, int y2, const char* fullPa
     DeleteObject(hBitmap);
     DeleteDC(hMemoryDC);
     ReleaseDC(NULL, hScreenDC);
-    log_info("Platform_SaveRegionToPNG completed");
+    log_info("Platform_SaveRegionToPNG x1=%d y1=%d x2=%d y2=%d fullPath='%s'", x1, y1, x2, y2, fullPath ? fullPath : "");;
 }
 
 FontHandle Platform_CreateFont(int size, const char* face_name) {
@@ -419,7 +419,7 @@ FontHandle Platform_CreateFont(int size, const char* face_name) {
             }
         }
     }
-    log_info("Platform_CreateFont completed");
+    log_info("Platform_CreateFont size=%d face_name='%s'", size, face_name ? face_name : "");;
     return FH_FROM_HFONT(hf);
 }
 
@@ -427,7 +427,7 @@ void Platform_DestroyFont(FontHandle font) {
     if (FH_TO_HFONT(font)) {
         DeleteObject(FH_TO_HFONT(font));
     }
-    log_info("Platform_DestroyFont completed");
+    log_info("Platform_DestroyFont font=%p", (void*)font);;
 }
 
 void Platform_GetTextExtents(FontHandle font, const char* text, int maxWidth, int* outWidth, int* outHeight) {
@@ -444,13 +444,13 @@ void Platform_GetTextExtents(FontHandle font, const char* text, int maxWidth, in
     DeleteDC(hdc);
     *outWidth = rect.right;
     *outHeight = rect.bottom;
-    log_info("Platform_GetTextExtents completed");
+    log_info("Platform_GetTextExtents font=%p text='%s' maxWidth=%d outWidth=%d outHeight=%d", (void*)font, text ? text : "", maxWidth, outWidth, outHeight);;
 }
 
 long Platform_GetFileSize(char *filepath) {
     FILE *fp = fopen(filepath, "rb"); 
     if (fp == NULL) {
-        log_error("operation failed, returning error");
+        log_error("operation failed, returning error filepath='%s'", filepath ? filepath : "null");
           return -1; 
     }
 
@@ -459,7 +459,7 @@ long Platform_GetFileSize(char *filepath) {
     long size = ftell(fp);
 
     fclose(fp);
-    log_info("Platform_GetFileSize completed");
+    log_info("Platform_GetFileSize filepath=%p", filepath);;
     return size;
 }
 
@@ -655,7 +655,7 @@ bool Platform_ClickAtPos(int x,int y) {
     inputs[2].mi.dwFlags = MOUSEEVENTF_LEFTUP;
 
     SendInput(3, inputs, sizeof(INPUT));
-    log_info("Platform_ClickAtPos completed");
+    log_info("Platform_ClickAtPos x=%d y=%d", x, y);;
 }
 
 typedef struct {
@@ -682,7 +682,7 @@ BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam) {
 }
 
 bool Platform_FocusWindow(const char* title) {
-    if (!title || !title[0]) { log_error("operation failed, returning error"); return false; }
+    if (!title || !title[0]) { log_error("operation failed, returning error title='%s'", title ? title : "null"); return false; }
     
     HWND hwnd = FindWindowA(NULL, title);
     
@@ -713,7 +713,7 @@ bool Platform_FocusWindow(const char* title) {
     fwi.dwTimeout = 0;
     FlashWindowEx(&fwi);
     
-    log_info("Platform_FocusWindow completed");
+    log_info("Platform_FocusWindow title='%s'", title ? title : "");;
     return true;
 }
 
@@ -730,7 +730,7 @@ char* Platform_GetActiveWindowTitle(void) {
     return fgTitle;
 }
 char* Platform_GetIconPath(char* app_path) {
-  if (!app_path || !app_path[0]) { log_error("operation failed, returning error"); return NULL; }
+  if (!app_path || !app_path[0]) { log_error("operation failed, returning error app_path='%s'", app_path ? app_path : "null"); return NULL; }
   char expanded[MAX_PATH];
   const char* src = app_path;
   if (Platform_ExpandPath(app_path, expanded, sizeof(expanded))) {
@@ -750,7 +750,7 @@ char* Platform_GetIconPath(char* app_path) {
           return _strdup(full);
       }
   }
-  log_info("Platform_GetIconPath completed");
+  log_info("Platform_GetIconPath app_path='%s'", app_path ? app_path : "");;
   return NULL;
 }
 int Platform_GetIconSize(char* icon_path) {
@@ -759,7 +759,7 @@ int Platform_GetIconSize(char* icon_path) {
     int s = IconSize;
     if (s < 16) s = 16;
     if (s > 32) s = 32;
-    log_info("Platform_GetIconSize completed");
+    log_info("Platform_GetIconSize icon_path='%s'", icon_path ? icon_path : "");;
     return s;
 }
 
@@ -792,6 +792,6 @@ bool Platform_BuildFeature(const char* src, const char* out) {
             return false;
         }
     }
-    log_info("Platform_BuildFeature completed");
+    log_info("Platform_BuildFeature src='%s' out='%s'", src ? src : "", out ? out : "");;
     return true;
 }
