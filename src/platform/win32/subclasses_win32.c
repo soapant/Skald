@@ -75,7 +75,6 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
       
         if (wParam == VK_RETURN) {
           bool ctrl_pressed = (GetKeyState(VK_CONTROL) & 0x8000);
-            struct feature_data* data = GetFeatureData(FlintContext_Get()->window.current_feature);
             FlintContext_Get()->window.output_buffer[0] = '\0';
             if (UI_IsListBoxSelected(lb)) {
               if (lb && lb->selected_index >=0 && lb->selected_index < lb->populated_count) strncpy(FlintContext_Get()->window.output_buffer, lb->populated_cache[lb->selected_index], sizeof(FlintContext_Get()->window.output_buffer) - 1);
@@ -88,13 +87,11 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
                 FlintContext_Get()->window.hDisplayMessage = WH_NULL;
             }
           if (ctrl_pressed) {
-            AddSelectionToData(FlintContext_Get()->window.output_buffer,FlintContext_Get()->window.current_feature,data);
               if (FlintContext_Get()->prompt_callbacks.ctrl_enter != NULL) {
                 FlintContext_Get()->prompt_callbacks.ctrl_enter(FlintContext_Get()->window.output_buffer, lb);
               }
             return 0;
           } else {
-            AddSelectionToData(FlintContext_Get()->window.output_buffer,FlintContext_Get()->window.current_feature,data);
               if (FlintContext_Get()->prompt_callbacks.enter != NULL) {
                 FlintContext_Get()->prompt_callbacks.enter(FlintContext_Get()->window.output_buffer, lb);
               }
@@ -243,7 +240,6 @@ LRESULT CALLBACK ListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
         return DefSubclassProc(hWnd, uMsg, wParam, lParam);
       }
       HBITMAP oldBmp = (HBITMAP)SelectObject(memDC, memBmp);
-      // Fill background with continuous window gradient to avoid black gaps and flicker
       HWND hParent = GetParent(hWnd);
       RECT winRc; GetClientRect(hParent ? hParent : hWnd, &winRc);
       int winW = winRc.right - winRc.left;
@@ -260,10 +256,7 @@ LRESULT CALLBACK ListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
         if (!s_bg_brush) s_bg_brush = CreateSolidBrush(COLOR_BG);
         FillRect(memDC, &rc, s_bg_brush);
       }
-      // Let listbox draw its items into memory DC (owner-draw WM_DRAWITEM will be sent to parent)
       SendMessage(hWnd, WM_PRINTCLIENT, (WPARAM)memDC, PRF_CLIENT);
-      // Fix black tail/empty: default LISTBOX WM_PRINTCLIENT fills background with COLOR_BG (black) via WM_CTLCOLORLISTBOX,
-      // overwriting our cohesive gradient. Re-apply gradient slice for the empty area below last item (or whole if empty).
       {
         int itemH = (int)SendMessageA(hWnd, LB_GETITEMHEIGHT, 0, 0);
         int count = (int)SendMessageA(hWnd, LB_GETCOUNT, 0, 0);
@@ -272,12 +265,9 @@ LRESULT CALLBACK ListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
           if (itemsBottom < 0) itemsBottom = 0;
           if (itemsBottom < rc.bottom) {
             RECT empty = { rc.left, itemsBottom, rc.right, rc.bottom };
-            // Only repaint if empty intersects paint rect (avoid overdraw)
             RECT inter;
             if (empty.top < ps.rcPaint.bottom && empty.bottom > ps.rcPaint.top) {
               if (!IntersectRect(&inter, &empty, &ps.rcPaint)) inter = empty;
-              // Use full empty rect for cohesive slice, but clip via intersect if needed
-              // For simplicity repaint the whole tail on memDC; BitBlt will clip to ps.rcPaint anyway
               if (EnableShaders && ShaderPreset != 0 && winW > 0 && winH > 0) {
                 int gx = lbOrigin.x + empty.left;
                 int gy = lbOrigin.y + empty.top;
@@ -292,7 +282,6 @@ LRESULT CALLBACK ListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
             }
           }
         } else if (count == 0) {
-          // Fallback when item height unknown but list empty: ensure not black
           if (EnableShaders && ShaderPreset != 0 && winW > 0 && winH > 0) {
             RECT full = rc;
             Win32_DrawBackgroundSlice(memDC, &full, COLOR_BG, winW, winH, lbOrigin.x, lbOrigin.y);
@@ -557,7 +546,6 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             inner.left += t; inner.top += t + 1; inner.right -= t; inner.bottom -= t + 1;
             if (inner.right <= inner.left || inner.bottom <= inner.top) { inner = pdis->rcItem; t = 0; }
             int innerR = R - 1; if (innerR < 0) innerR = 0;
-            // Pre-fill entire item rect with window background to avoid black triangles between rounded items and make background continuous
             {
               RECT winRc; GetClientRect(hwnd, &winRc);
               int winW = winRc.right - winRc.left;
@@ -583,7 +571,6 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
               } else if (ColorfullMode) {
                 int color_index = pdis->itemID % 100;
                 HBRUSH hBrush = s_colorful_brushes[color_index];
-                // fill inner rounded with colorful
                 int save = SaveDC(pdis->hDC);
                 HRGN rgn = CreateRoundRectRgn(inner.left, inner.top, inner.right+1, inner.bottom+1, innerR*2, innerR*2);
                 SelectClipRgn(pdis->hDC, rgn);
@@ -629,7 +616,6 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 Win32_DrawSelectionBackground(pdis->hDC, &pdis->rcItem, COLOR_SELECTED_TEXT);
               }
             } else {
-              // cohesive background slice for unselected - continuous with main window
               RECT winRc; GetClientRect(hwnd, &winRc);
               int winW = winRc.right - winRc.left;
               int winH = winRc.bottom - winRc.top;
@@ -761,6 +747,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
           if (!s_bg_brush) s_bg_brush = CreateSolidBrush(COLOR_BG);
             FillRect(hdc, &ps.rcPaint, s_bg_brush);
         }
+      // also temporary
         // {
         //     HBRUSH hSep = CreateSolidBrush(COLOR_SEPERATOR);
         //     RECT r1 = {0, 60, rect.right, 65};

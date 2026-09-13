@@ -66,7 +66,6 @@ void Core_DrawListBox(PromptState *state, void *hdc) {
     if (!state || !state->has_listbox || !hdc) { PROFILE_END_VAR(timer, "listbox_renderer:Core_DrawListBox"); return; }
     ListBoxInfo *lb = &state->listbox;
     HDC hdcReal = (HDC)hdc;
-    // Even if empty, parent background already drawn; just return (avoid black)
     if (!lb->populated_count) { PROFILE_END_VAR(timer, "listbox_renderer:Core_DrawListBox"); return; }
     int y0 = 70;
     int itemH = FontSize + 14;
@@ -95,13 +94,11 @@ void Core_DrawListBox(PromptState *state, void *hdc) {
         int idx = lb->view_offset + i;
         int y = y0 + i * itemH;
         bool sel = (idx == lb->selected_index);
-        // Background - cohesive with window gradient when shaders enabled
         if (RoundedCorners && CornerRadius > 0) {
             int R = 6; if (R > CornerRadius) R = CornerRadius;
             int t = ListboxBorderThickness; if (t < 1) t = 1; if (t > 4) t = 4;
             int bx = 1, bw = state->width - 2;
             RECT rcItem = {bx, y, bx + bw, y + itemH};
-            // Pre-fill full item rect with window background to avoid black gaps between rounded items
             if (EnableShaders && ShaderPreset != 0) {
                 Win32_DrawBackgroundSlice(hdcReal, &rcItem, COLOR_BG, state->width, state->height, rcItem.left, rcItem.top);
             } else if (!ColorfullMode) {
@@ -168,7 +165,6 @@ void Core_DrawListBox(PromptState *state, void *hdc) {
                 }
             }
         }
-        // Text
         const char* text = "";
         if (idx >= 0 && idx < lb->populated_count) {
             int raw = lb->matching_indices[idx];
