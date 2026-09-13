@@ -143,12 +143,23 @@ WindowList get_window_titles_sway() {
    WindowList list = { .windows = NULL, .count = 0 };
    char buffer[512];
    if (!output) return list;
+   //temporary hardcoding of sway things like root i3 and numbers because being fucky wucky
    StringList lines = String_Split(output, "\n");
    for (size_t i = 0; i < lines.count; i++) {
        char *match = strstr(lines.items[i], "\"name\"");
        if (match) {
-           if (sscanf(match, "\"name\": \"%[^\"]\"", buffer) == 1) {
-               if (buffer[0]=='\0' || strcmp(buffer,"null")==0) continue;
+           if (sscanf(match, "\"name\": \"%511[^\"]\"", buffer) == 1) {
+               if (buffer[0] == '\0' || strcmp(buffer, "null") == 0 || strcmp(buffer,"root") == 0 || Platform_StringContainsCaseInsensitive(buffer,"i3")) continue;
+               bool has_digit = false;
+               for (int j = 0; buffer[j] != '\0'; j++) {
+                   if (isdigit((unsigned char)buffer[j])) {
+                       has_digit = true;
+                       break; 
+                   }
+               }
+
+               if (has_digit & strlen(buffer) < 10) continue;
+
                char** temp = realloc(list.windows, (list.count + 1) * sizeof(char*));
                if (temp == NULL) break;
                list.windows = temp;
@@ -161,4 +172,3 @@ WindowList get_window_titles_sway() {
    free(output);
    return list;
 }
-WindowList get_list_of_windows_sway() { return get_window_names_sway(); }
