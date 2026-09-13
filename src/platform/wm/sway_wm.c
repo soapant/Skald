@@ -89,19 +89,28 @@ bool focus_window_title_sway(char* title) {
     *dst = '\0';
     
     char cmd[512];
-    snprintf(cmd, sizeof(cmd), "swaymsg '[title=\"%s\"] focus'", escaped_title);
 
-    if (!succeded_sway(Platform_RunTerminalCommand(cmd, false))) {
-        if (escaped_title[0] != '\0') {
-            snprintf(cmd, sizeof(cmd), "swaymsg '[title=\"%c%s\"] focus'", 
-                     toupper((unsigned char)escaped_title[0]), 
-                     &escaped_title[1]);
-            if (succeded_sway(Platform_RunTerminalCommand(cmd, false))) {
-                return true;
-            }
-        }
-        return false;
+    snprintf(cmd, sizeof(cmd), "swaymsg '[title=\"%s\"] focus'", escaped_title);
+    if (succeded_sway(Platform_RunTerminalCommand(cmd, false))) return true;
+
+    snprintf(cmd, sizeof(cmd), "swaymsg '[app_id=\"%s\"] focus'", escaped_title);
+    if (succeded_sway(Platform_RunTerminalCommand(cmd, false))) return true;
+
+    if (escaped_title[0] != '\0') {
+        snprintf(cmd, sizeof(cmd), "swaymsg '[title=\"%c%s\"] focus'", 
+                 toupper((unsigned char)escaped_title[0]), 
+                 &escaped_title[1]);
+        if (succeded_sway(Platform_RunTerminalCommand(cmd, false))) return true;
     }
+
+    if (escaped_title[0] != '\0') {
+        snprintf(cmd, sizeof(cmd), "swaymsg '[app_id=\"%c%s\"] focus'", 
+                 toupper((unsigned char)escaped_title[0]), 
+                 &escaped_title[1]);
+        if (succeded_sway(Platform_RunTerminalCommand(cmd, false))) return true;
+    }
+
+    return false;
 }
 
 WindowList get_list_of_windows_sway() {
