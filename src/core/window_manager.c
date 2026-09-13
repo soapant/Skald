@@ -101,12 +101,12 @@ static void* feature_watcher_thread(void* arg) {
             char src[512], dll[512];
             snprintf(src, sizeof(src), "src/features/%s.c", base);
             snprintf(dll, sizeof(dll), "build/features/%s.so", base);
-            log_info("[WATCHER] recompiling %s -> %s", src, dll); fflush(stdout);
+            log_info("recompiling %s -> %s", src, dll); fflush(stdout);
             if (Platform_BuildFeature(src, dll)) {
-                log_info("[WATCHER] reload %s", base); fflush(stdout);
+                log_info("reload %s", base); fflush(stdout);
                 FeatureLoader_Reload(base);
             } else {
-                log_error("[WATCHER] compile failed for %s", base);
+                log_error("compile failed for %s", base);
             }
         }
         for (int i=0;i<5;i++) {
@@ -136,14 +136,14 @@ static DWORD WINAPI feature_watcher_thread_win(LPVOID arg) {
             char src[512], dll[512];
             snprintf(src, sizeof(src), "src/features/%s.c", base);
             snprintf(dll, sizeof(dll), "build/features/%s%s", base, Platform_LibExtension());
-            log_info("[WATCHER] recompiling %s -> %s", src, dll); fflush(stdout);
+            log_info("recompiling %s -> %s", src, dll); fflush(stdout);
             // unload to release file lock before rebuilding
             FeatureLoader_Unload(base);
             if (Platform_BuildFeature(src, dll)) {
-                log_info("[WATCHER] reload %s", base); fflush(stdout);
+                log_info("reload %s", base); fflush(stdout);
                 FeatureLoader_Reload(base);
             } else {
-                log_error("[WATCHER] compile failed for %s", base);
+                log_error("compile failed for %s", base);
             }
             Sleep(1200); // debounce - avoid double trigger from editor atomic save
         } else {

@@ -20,13 +20,20 @@
 #include <gdiplus.h>
 
 bool Platform_LaunchTerminalAtPath(const char* working_dir, const char* extra_args){
+      if (!working_dir) { log_error("working_dir is NULL"); return false; }
+      if (!UsedTerminal || !UsedTerminal[0]) { log_error("UsedTerminal not configured"); return false; }
       char terminal[512];
       snprintf(terminal,sizeof(terminal),"%s.exe",UsedTerminal);
-      ShellExecuteA(NULL, "open", terminal, NULL, working_dir, SW_SHOWNORMAL);
+      HINSTANCE res = ShellExecuteA(NULL, "open", terminal, extra_args, working_dir, SW_SHOWNORMAL);
+      if ((intptr_t)res <= 32) {
+          log_error("ShellExecute failed for terminal '%s' (extra_args='%s', dir='%s') err=%ld - check UsedTerminal config (foot vs alacritty, ensure .exe exists in PATH)", terminal, extra_args ? extra_args : "", working_dir, (long)(intptr_t)res);
+          return false;
+      }
+      return true;
 }
 
 char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
-    if (command == NULL || strlen(command) == 0) { log_error("Platform_RunTerminalCommand: operation failed, returning error"); return NULL; }
+    if (command == NULL || strlen(command) == 0) { log_error("operation failed, returning error"); return NULL; }
     if (open_terminal) {
         char clean_cmd[512];
         strncpy(clean_cmd, command, sizeof(clean_cmd) - 1);
@@ -44,16 +51,16 @@ char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
         snprintf(terminal_exe, sizeof(terminal_exe), "%s.exe", UsedTerminal);
         char args[2048];
         snprintf(args, sizeof(args), "-e %s \"%s\"",UsedShell,temp_file);
-        ShellExecuteA(NULL, "open", terminal_exe, args, NULL, SW_SHOWNORMAL);
+        HINSTANCE res2 = ShellExecuteA(NULL, "open", terminal_exe, args, NULL, SW_SHOWNORMAL);
+        if ((intptr_t)res2 <= 32) { log_error("Platform_RunTerminalCommand(open_terminal): ShellExecute failed for '%s' args='%s' err=%ld - check UsedTerminal", terminal_exe, args, (long)(intptr_t)res2); }
         return strdup("");
     }
-    // capture mode: run cmd /c <command> and collect output
     SECURITY_ATTRIBUTES sa;
     sa.nLength = sizeof(SECURITY_ATTRIBUTES);
     sa.bInheritHandle = TRUE;
     sa.lpSecurityDescriptor = NULL;
     HANDLE hRead, hWrite;
-    if (!CreatePipe(&hRead, &hWrite, &sa, 0)) return strdup("");
+    if (!CreatePipe(&hRead, &hWrite, &sa, 0)) { log_error("CreatePipe failed err=%lu", GetLastError()); return strdup(""); }
     SetHandleInformation(hRead, HANDLE_FLAG_INHERIT, 0);
     STARTUPINFOA si = {0};
     si.cb = sizeof(STARTUPINFOA);
@@ -65,10 +72,7 @@ char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
     snprintf(cmdLine, sizeof(cmdLine), "cmd /c %s", command);
     BOOL ok = CreateProcessA(NULL, cmdLine, NULL, NULL, TRUE, CREATE_NO_WINDOW, NULL, NULL, &si, &pi);
     CloseHandle(hWrite);
-    if (!ok) {
-        CloseHandle(hRead);
-        return strdup("");
-    }
+    if (!ok) { log_error("CreateProcess failed for '%s' err=%lu", cmdLine, GetLastError()); CloseHandle(hRead); return strdup(""); }
     // wait up to 10s for gcc
     WaitForSingleObject(pi.hProcess, 10000);
     char* out = NULL;
@@ -99,9 +103,13 @@ char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
 }
 
 bool Platform_LaunchFileManagerAtPath(char* path,char* args) {
+    if (!path || !path[0]) { log_error("path is NULL"); return false; }
     char buffer[100];
     snprintf(buffer,sizeof(buffer),"%s.exe",UsedFileManager);
-    ShellExecuteA(NULL, "open",buffer, path, NULL, SW_SHOWNORMAL);
+    HINSTANCE res = ShellExecuteA(NULL, "open", buffer, path ? path : "", NULL, SW_SHOWNORMAL);
+    if ((intptr_t)res <= 32) { log_error("ShellExecute failed for filemanager '%s' path='%s' err=%ld", buffer, path, (long)(intptr_t)res); return false; }
+    (void)args;
+    return true;
 }
 
 char* Platform_QueryZoxidePath(const char* query) {
@@ -122,7 +130,7 @@ char* Platform_QueryZoxidePath(const char* query) {
     HANDLE hReadPipe, hWritePipe;
 
     if (!CreatePipe(&hReadPipe, &hWritePipe, &sa, 0)) {
-                log_error("Platform_QueryZoxidePath: operation failed, returning error");
+                log_error("operation failed, returning error");
 return NULL;
     }
 
@@ -171,29 +179,35 @@ return NULL;
 }
 
 bool Platform_ShellExecuteWithVerb(const char* path, const char* verb, bool async) {
+    if (!path || !path[0]) { log_error("path is NULL/empty"); return false; }
     SHELLEXECUTEINFOA sei = {0};
     sei.cbSize = sizeof(SHELLEXECUTEINFOA);
     sei.fMask = (async ? SEE_MASK_FLAG_NO_UI | SEE_MASK_ASYNCOK : SEE_MASK_FLAG_NO_UI);
     sei.lpVerb = verb ? verb : "open";
     sei.lpFile = path;
     sei.nShow = SW_SHOWNORMAL;
-    return ShellExecuteExA(&sei);
+    BOOL ok = ShellExecuteExA(&sei);
+    if (!ok) {
+        log_error("ShellExecuteEx failed for '%s' verb='%s' err=%lu", path, verb ? verb : "open", GetLastError());
+        return false;
+    }
+    return true;
 }
 
 bool Platform_LaunchApp(const char* path) {
-    if (!path) { log_error("Platform_LaunchApp: operation failed, returning error"); return false; }
-
+    if (!path) { log_error("path is NULL"); return false; }
     char expanded[MAX_PATH];
-    if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) return false;
-    return Platform_ShellExecuteWithVerb(expanded, "open", true);
+    if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) { log_error("Platform_ExpandPath failed for '%s'", path); return false; }
+    if (!Platform_ShellExecuteWithVerb(expanded, "open", true)) { log_error("ShellExecute failed for '%s' (expanded '%s')", path, expanded); return false; }
+    return true;
 }
 
 bool Platform_LaunchAppAsAdmin(const char* path) {
-    if (!path) { log_error("Platform_LaunchAppAsAdmin: operation failed, returning error"); return false; }
-
+    if (!path) { log_error("path is NULL"); return false; }
     char expanded[MAX_PATH];
-    if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) return false;
-    return Platform_ShellExecuteWithVerb(expanded, "runas", true);
+    if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) { log_error("Platform_ExpandPath failed for '%s'", path); return false; }
+    if (!Platform_ShellExecuteWithVerb(expanded, "runas", true)) { log_error("ShellExecute (runas) failed for '%s' (expanded '%s')", path, expanded); return false; }
+    return true;
 }
 
 bool Platform_IsCtrlPressed(void) {
@@ -213,7 +227,7 @@ void Platform_ResetUniversalTimer() {
 void Platform_ModifyUniversalTimer(double seconds_to_add) {
     LONGLONG ms_offset = (LONGLONG)(seconds_to_add * 1000.0);
     g_timer_start_ms -= ms_offset; 
-    log_info("[TIMER] Modified baseline by %.2f seconds.", seconds_to_add);
+    log_info("Modified baseline by %.2f seconds.", seconds_to_add);
 }
 
 double Platform_GetUniversalTimeSeconds() {
@@ -422,14 +436,11 @@ void Platform_GetTextExtents(FontHandle font, const char* text, int maxWidth, in
 long Platform_GetFileSize(char *filepath) {
     FILE *fp = fopen(filepath, "rb"); 
     if (fp == NULL) {
-                log_error("Platform_GetFileSize: operation failed, returning error");
+                log_error("operation failed, returning error");
 return -1; 
     }
 
-    if (fseek(fp, 0L, SEEK_END) != 0) {
-        fclose(fp);
-        return -1;
-    }
+    if (fseek(fp, 0L, SEEK_END) != 0) { log_error("fseek failed for '%s' err=%s", filepath, strerror(errno)); fclose(fp); return -1; }
 
     long size = ftell(fp);
 
@@ -653,7 +664,7 @@ BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam) {
 }
 
 bool Platform_FocusWindow(const char* title) {
-    if (!title || !title[0]) { log_error("Platform_FocusWindow: operation failed, returning error"); return false; }
+    if (!title || !title[0]) { log_error("operation failed, returning error"); return false; }
     
     HWND hwnd = FindWindowA(NULL, title);
     
@@ -699,7 +710,7 @@ char* Platform_GetActiveWindowTitle(void) {
     return fgTitle;
 }
 char* Platform_GetIconPath(char* app_path) {
-  if (!app_path || !app_path[0]) { log_error("Platform_GetIconPath: operation failed, returning error"); return NULL; }
+  if (!app_path || !app_path[0]) { log_error("operation failed, returning error"); return NULL; }
   char expanded[MAX_PATH];
   const char* src = app_path;
   if (Platform_ExpandPath(app_path, expanded, sizeof(expanded))) {
@@ -734,7 +745,7 @@ bool Platform_BuildFeature(const char* src, const char* out) {
     if (!src || !out) return false;
     // ensure import lib exists
     if (GetFileAttributesA("build/main.lib.a") == INVALID_FILE_ATTRIBUTES) {
-        log_error("[BUILD] build/main.lib.a missing, need to build main first");
+        log_error("build/main.lib.a missing, need to build main first");
         return false;
     }
     char tmp[512];
@@ -747,7 +758,7 @@ bool Platform_BuildFeature(const char* src, const char* out) {
     bool ok = false;
     if (outStr) {
         if (strlen(outStr)==0 || (!strstr(outStr, "error:") && !strstr(outStr, "undefined reference") && !strstr(outStr, "failed"))) ok = true;
-        log_info("[BUILD] %s", outStr);
+        log_info("%s", outStr);
         free(outStr);
     } else {
         ok = true;
@@ -757,7 +768,7 @@ bool Platform_BuildFeature(const char* src, const char* out) {
     remove(out);
     if (rename(tmp, out) != 0) {
         if (!MoveFileExA(tmp, out, MOVEFILE_REPLACE_EXISTING)) {
-            log_error("[BUILD] failed to move %s -> %s", tmp, out);
+            log_error("failed to move %s -> %s", tmp, out);
             return false;
         }
     }

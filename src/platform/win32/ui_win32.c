@@ -14,7 +14,7 @@
 #include "core/window_manager.h"
 
 
-char* Platform_SearchPopup(void) { log_error("Platform_SearchPopup: operation failed, returning error"); return NULL; }
+char* Platform_SearchPopup(void) { log_error("operation failed, returning error"); return NULL; }
 
 #include <gdiplus.h>
 
@@ -59,7 +59,7 @@ char* Platform_PromptUser(const PromptSpec* spec) {
   bool has_listbox = (window_list || spec->refresh);
   if (has_listbox) {
     win_state = (PromptState*)calloc(1, sizeof(PromptState));
-    if (!win_state) { log_error("Platform_PromptUser: operation failed, returning error"); return NULL; }
+    if (!win_state) { log_error("operation failed, returning error"); return NULL; }
     win_state->width = 900;
     win_state->height = 640;
     win_state->has_listbox = true;
@@ -160,8 +160,8 @@ char* Platform_PromptUser(const PromptSpec* spec) {
 
   PROFILE_END_VAR(timer3, "Focus");
 
-  log_info("[DEBUG-UI] Entering local message modal loop...");
-  log_info("[%lu] Entering modal loop", GetTickCount());
+  log_info("Entering local message modal loop...");
+  log_info("Entering modal loop", GetTickCount());
   MSG msg;
   int loop_counter = 0;
   UI_PreparePopupPump();
@@ -175,7 +175,7 @@ char* Platform_PromptUser(const PromptSpec* spec) {
       break; 
     }
   }
-  log_info("[DEBUG-UI] Left local loop. Processed %d messages.", loop_counter);
+  log_info("Left local loop. Processed %d messages.", loop_counter);
 
   if (WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) != NULL && IsWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd))) {
     KillTimer(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), 999);
@@ -184,7 +184,7 @@ char* Platform_PromptUser(const PromptSpec* spec) {
   }
   ResetNumberShortcutState();
 
-  log_info("[DEBUG-UI] Flushing trailing queue entries...");
+  log_info("Flushing trailing queue entries...");
   while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
     TranslateMessage(&msg);
     DispatchMessage(&msg);
@@ -231,7 +231,7 @@ char* Platform_PromptUser(const PromptSpec* spec) {
     FlintContext_Get()->g_item_index_map = NULL;
   }
 
-  log_info("[DEBUG-UI] Returning from Platform_PromptUser. Buffer Length: %zu", strlen(FlintContext_Get()->window.output_buffer));
+  log_info("Returning from Platform_PromptUser. Buffer Length: %zu", strlen(FlintContext_Get()->window.output_buffer));
   return (strlen(FlintContext_Get()->window.output_buffer) > 0) ? FlintContext_Get()->window.output_buffer : NULL;
 }
 
@@ -271,7 +271,7 @@ char* Platform_SimplePromptUser(const SimplePromptSpec* spec) {
     if (err == 1407) {
     }
     DeleteObject(hCustomFont);
-        log_error("Platform_SimplePromptUser: operation failed, returning error");
+        log_error("operation failed, returning error");
 return NULL;
   }
   Win32_ApplyRoundedCorners(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), layout.w, layout.h);
@@ -309,7 +309,7 @@ return NULL;
 
   DeleteObject(hCustomFont); 
   FlintContext_Get()->window.selection_complete = false;
-  log_info("[DEBUG-UI] Returning from Platform_SimplePromptUser. Buffer %s", FlintContext_Get()->window.output_buffer);
+  log_info("Returning from Platform_SimplePromptUser. Buffer %s", FlintContext_Get()->window.output_buffer);
   return (strlen(FlintContext_Get()->window.output_buffer) > 0) ? FlintContext_Get()->window.output_buffer : NULL;
 }
 
@@ -361,7 +361,7 @@ void Platform_CreateDisplayMessageWindow(const char* message, int centerX, int c
       );
 
   if (hPopupWnd == NULL) {
-    log_error("[DEBUG-UI] ERROR: CreateWindowExA failed. GetLastError: %lu", GetLastError());
+    log_error("ERROR: CreateWindowExA failed. GetLastError: %lu", GetLastError());
     Platform_DestroyFont(pWndData->hFont);
     free(pWndData);
     return;
@@ -450,7 +450,7 @@ int Platform_InitializeTrayIcon() {
     wc.lpszClassName = "TrayAppClass";
 
     if (!RegisterClass(&wc)) {
-            log_error("Platform_InitializeTrayIcon: operation failed, returning error");
+            log_error("operation failed, returning error");
 return -1;
     }
 
@@ -591,7 +591,7 @@ void Platform_RunHotKeyMessageLoop() {
 
   FlintContext_Get()->hKeyboardHook = SetWindowsHookEx(WH_KEYBOARD_LL, LowLevelKeyboardProc, hInstance, 0);
   if (!FlintContext_Get()->hKeyboardHook) {
-    log_error("[ERROR] Failed to install keyboard hook! Error: %lu", GetLastError());
+    log_error("Failed to install keyboard hook! Error: %lu", GetLastError());
     return;
   }
 
@@ -623,9 +623,9 @@ void Platform_InitUI() {
   wc.lpszClassName = "QuickSwitcherModalClass";
 
   if (RegisterClassA(&wc)) {
-    log_info("[SYSTEM-BOOT] QuickSwitcherModalClass registered successfully with OS.");
+    log_info("QuickSwitcherModalClass registered successfully with OS.");
   } else {
-    log_error("[SYSTEM-BOOT] CRITICAL WARNING: Failed to register window class! Error: %lu", GetLastError());
+    log_error("CRITICAL WARNING: Failed to register window class! Error: %lu", GetLastError());
   }
 
   WNDCLASSA wcFade = {0};

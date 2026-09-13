@@ -54,7 +54,7 @@ static bool ResolvePathToken(const char* token, char* out, size_t out_size) {
 }
 
 bool Platform_ExpandPath(const char* template_path, char* out, size_t out_size) {
-    if (template_path == NULL || out_size == 0) { log_error("Platform_ExpandPath: operation failed, returning error"); return false; }
+    if (template_path == NULL || out_size == 0) { log_error("operation failed, returning error"); return false; }
 
     size_t o = 0;
     const char* p = template_path;
@@ -77,7 +77,7 @@ bool Platform_ExpandPath(const char* template_path, char* out, size_t out_size) 
                         p = close + 1;
                         continue;
                     }
-                    log_info("[PATH] '%s' is not set, ignoring: %s", token, template_path);
+                    log_info("'%s' is not set, ignoring: %s", token, template_path);
                     return false;
                 }
             }
@@ -273,12 +273,12 @@ void Platform_CleanUpFile(MappedFile *mf, NewlineInfo *newlines, size_t newlineC
 }
 
 bool Platform_StringContainsCaseInsensitive(const char* haystack, const char* needle) {
-    if (!haystack || !needle) { log_error("Platform_StringContainsCaseInsensitive: operation failed, returning error"); return false; }
+    if (!haystack || !needle) { log_error("operation failed, returning error"); return false; }
     return StrStrIA(haystack, needle) != NULL;
 }
 
 bool Platform_StringStartsWithCaseInsensitive(const char* str, const char* prefix) {
-    if (!str || !prefix) { log_error("Platform_StringStartsWithCaseInsensitive: operation failed, returning error"); return false; }
+    if (!str || !prefix) { log_error("operation failed, returning error"); return false; }
     return StrStrIA(str, prefix) == str;
 }
 
@@ -307,7 +307,7 @@ int Platform_CollectRunningProcesses(char process_list[][128], int max_count) {
 }
 
 bool Platform_TerminateProcessByName(const char* exe_name) {
-    if (!exe_name || !*exe_name) { log_error("Platform_TerminateProcessByName: operation failed, returning error"); return false; }
+    if (!exe_name || !*exe_name) { log_error("operation failed, returning error"); return false; }
     char cmd[512];
     snprintf(cmd, sizeof(cmd), "taskkill /f /im \"%s*\"", exe_name);
     Platform_RunTerminalCommand(cmd, false);
@@ -413,7 +413,7 @@ bool Platform_LaunchBrowserAtUrl(char* url, bool new_window) {
 }
 
 bool Platform_QueryBrowser(char* query) {
-    if (!query || !query[0]) { log_error("Platform_QueryBrowser: operation failed, returning error"); return false; }
+    if (!query || !query[0]) { log_error("operation failed, returning error"); return false; }
     
     char encoded_query[2048] = {0};
     char* src = query;
@@ -450,7 +450,7 @@ bool Platform_QueryBrowser(char* query) {
 char* Platform_GetLastClipboardEntry(void) {
     char* result = NULL;
 
-    if (!OpenClipboard(NULL)) { log_error("Platform_GetLastClipboardEntry: operation failed, returning error"); return NULL; }
+    if (!OpenClipboard(NULL)) { log_error("operation failed, returning error"); return NULL; }
 
     HANDLE hClipData = GetClipboardData(CF_UNICODETEXT);
     if (hClipData == NULL) {
@@ -482,7 +482,7 @@ char* Platform_GetLastClipboardEntry(void) {
 }
 
 bool Platform_PasteContent(char* content) {
-    if (!content || !content[0]) { log_error("Platform_PasteContent: operation failed, returning error"); return false; }
+    if (!content || !content[0]) { log_error("operation failed, returning error"); return false; }
 
     size_t len = strlen(content);
     INPUT* inputs = (INPUT*)calloc(len, sizeof(INPUT));
