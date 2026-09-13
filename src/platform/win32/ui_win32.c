@@ -25,7 +25,7 @@ PromptState* Platform_GetWin32PromptState(void) { return g_win32_prompt_state; }
 void Platform_WaitForKeypressAsync(KeyCallback callback) {
   FlintContext_Get()->g_waiting_for_key = true;
   FlintContext_Get()->g_key_callback = callback;
-log_info("Platform_WaitForKeypressAsync completed");
+log_info("Platform_WaitForKeypressAsync callback=%p", callback);;
 }
 
 char* Platform_PromptUser(const PromptSpec* spec) {
@@ -61,7 +61,7 @@ char* Platform_PromptUser(const PromptSpec* spec) {
   bool has_listbox = (window_list || spec->refresh);
   if (has_listbox) {
     win_state = (PromptState*)calloc(1, sizeof(PromptState));
-    if (!win_state) { log_error("operation failed, returning error"); return NULL; }
+    if (!win_state) { log_error("operation failed, returning error spec=%p", spec); return NULL; }
     win_state->width = 900;
     win_state->height = 640;
     win_state->has_listbox = true;
@@ -160,7 +160,7 @@ char* Platform_PromptUser(const PromptSpec* spec) {
   ForceWindowFocus(FlintContext_Get()->window.hPopupWnd, FlintContext_Get()->window.hEditControl);
 
 
-    log_info("Platform_PromptUser completed");
+    log_info("Platform_PromptUser spec=%p", spec);;
 PROFILE_END_VAR(timer3, "Focus");
 
   log_info("Entering local message modal loop...");
@@ -274,7 +274,7 @@ char* Platform_SimplePromptUser(const SimplePromptSpec* spec) {
     if (err == 1407) {
     }
     DeleteObject(hCustomFont);
-        log_error("operation failed, returning error");
+        log_error("operation failed, returning error spec=%p", spec);
 return NULL;
   }
   Win32_ApplyRoundedCorners(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), layout.w, layout.h);
@@ -313,7 +313,7 @@ return NULL;
   DeleteObject(hCustomFont); 
   FlintContext_Get()->window.selection_complete = false;
   log_info("Returning from Platform_SimplePromptUser. Buffer %s", FlintContext_Get()->window.output_buffer);
-log_info("Platform_SimplePromptUser completed");
+log_info("Platform_SimplePromptUser spec=%p", spec);;
   return (strlen(FlintContext_Get()->window.output_buffer) > 0) ? FlintContext_Get()->window.output_buffer : NULL;
 }
 
@@ -324,7 +324,7 @@ void Platform_DisplayMessage(const char* message, int centerX, int centerY, int 
     return;
   }
   Platform_CreateDisplayMessageWindow(message, centerX, centerY, maxWidth, maxHeight, timeout, color);
-log_info("Platform_DisplayMessage completed");
+log_info("Platform_DisplayMessage message='%s' centerX=%d centerY=%d maxWidth=%d maxHeight=%d timeout=%d color=%p", message ? message : "", centerX, centerY, maxWidth, maxHeight, timeout, color);;
 }
 
 void Platform_CreateDisplayMessageWindow(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, int timeout, ColorRef color) {
@@ -366,7 +366,7 @@ void Platform_CreateDisplayMessageWindow(const char* message, int centerX, int c
       );
 
   if (hPopupWnd == NULL) {
-    log_error("ERROR: CreateWindowExA failed. GetLastError: %lu", GetLastError());
+    log_error("ERROR: CreateWindowExA failed. GetLastError: %lu message='%s' centerX=%d centerY=%d maxWidth=%d maxHeight=%d timeout=%d color=%d", GetLastError(, message ? message : "null", centerX, centerY, maxWidth, maxHeight, timeout, color));
     Platform_DestroyFont(pWndData->hFont);
     free(pWndData);
     return;
@@ -379,8 +379,7 @@ void Platform_CreateDisplayMessageWindow(const char* message, int centerX, int c
   UpdateWindow(hPopupWnd);
 
   SetTimer(hPopupWnd, 999, 50, NULL);
-
-log_info("Platform_CreateDisplayMessageWindow completed");
+  log_info("Platform_CreateDisplayMessageWindow message='%s' centerX=%d centerY=%d maxWidth=%d maxHeight=%d timeout=%d", message ? message : "", centerX, centerY, maxWidth, maxHeight, timeout);
   return; 
 }
 

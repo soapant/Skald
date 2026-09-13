@@ -168,14 +168,14 @@ void Platform_DisplayMessage(const char* message, int centerX, int centerY, int 
     PROFILE_START(timer);
     Display* dpy = get_display();
     if (!dpy) {
-        log_error("no X11 display");
+        log_error("no X11 display message='%s' centerX=%d centerY=%d maxWidth=%d maxHeight=%d timeout=%d color=%u", message ? message : "null", centerX, centerY, maxWidth, maxHeight, timeout, color);
         PROFILE_END_VAR(timer, "ui_x11:Platform_DisplayMessage");
         return;
     }
 
     FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
     if (!FH_TO_XFT(font)) {
-        log_error("font load failed");
+        log_error("font load failed message='%s' centerX=%d centerY=%d maxWidth=%d maxHeight=%d timeout=%d color=%d", message ? message : "null", centerX, centerY, maxWidth, maxHeight, timeout, color);
         PROFILE_END_VAR(timer, "ui_x11:Platform_DisplayMessage");
         return;
     }
