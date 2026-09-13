@@ -330,9 +330,7 @@ void reminder_edit_callback(const char* selection, ListBoxInfo* lb) {
 }
 
 void TriggerReminder(void) {
-    const char* items[MAX_FILE_LINES];
-    int n = fl_load_file_list(ReminderHistoryFilePath, items, MAX_FILE_LINES);
-    PROMPT(.title = "⏱️ Reminder", .items = items,
+    PROMPT(.title = "⏱️ Reminder",
            .refresh = reminder_refresh_callback,
            .enter = reminder_enter_callback,
            .edit = reminder_edit_callback);

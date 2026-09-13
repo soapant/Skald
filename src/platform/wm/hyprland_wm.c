@@ -35,8 +35,7 @@ bool succeded_hypr(char* output) {
     if (!output) { log_error("output is NULL"); return false; }
     StringList lines = String_Split(output, "\n");
     for (size_t i = 0; i < lines.count; i++) {
-      if (Platform_StringContainsCaseInsensitive(lines.items[i],"\"error\"")) {
-        log_error("output='%s'", output ? output : "null");
+      if (Platform_StringContainsCaseInsensitive(lines.items[i],"running")) {
         return false;
       }
     }

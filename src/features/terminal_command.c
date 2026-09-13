@@ -45,9 +45,7 @@ bool terminal_enter_callback(const char* selection, ListBoxInfo* lb) {
 }
 
 void TriggerTerminalCommand(void) {
-    const char* items[MAX_FILE_LINES];
-    int n = fl_load_file_list(TerminalHistoryFilePath, items, MAX_FILE_LINES);
-    PROMPT(.title = "⌨️ Terminal", .items = items,
+    PROMPT(.title = "⌨️ Terminal",
            .refresh = terminal_refresh_callback,
            .enter = terminal_enter_callback,
            .edit = terminal_edit_callback);
