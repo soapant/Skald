@@ -494,4 +494,8 @@ bool fl_place_listbox_raw_impl(const FlListSpec *spec) {
     return true;
 }
 
+WindowList fl_get_list_of_active_windows() {
+  return Platform_GetListOfActiveWindows();
+}
+
 

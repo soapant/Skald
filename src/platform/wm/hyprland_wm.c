@@ -54,3 +54,7 @@ bool focus_window_title_hyprland(char* title) {
         return false;
     }
 }
+
+WindowList get_list_of_windows_hyprland() {
+
+}

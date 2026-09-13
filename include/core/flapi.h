@@ -19,6 +19,7 @@
 #include "helpers/flag.h"
 #include "helpers/file.h"
 #include "helpers/ui.h"
+#include "types/window.h"
 
 #define MAX_PATH 260
 
@@ -106,6 +107,7 @@ bool fl_query_browser(const char* query);
 bool fl_launch_browser_in_a_new_window(char* url);
 char* fl_get_zoxide_match(char* query);
 bool fl_focus_window_by_title(char* title);
+WindowList fl_get_list_of_active_windows();
 
 // =============================================================================
 // WATCH / ADB / MISC

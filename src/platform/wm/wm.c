@@ -56,3 +56,19 @@ char* Wm_Paste(char* content) {
     
     return NULL;
 }
+
+WindowList Wm_GetListOfActiveWindows() {
+    WindowList result;
+    
+    result = get_list_of_windows_hyprland();
+    if (result.windows != NULL) return result;
+    
+    result = get_list_of_windows_sway();
+    if (result.windows != NULL) return result;
+    
+    result = get_list_of_windows_x11();
+    if (result.windows != NULL) return result;
+    
+    WindowList empty = { .windows = NULL, .count = 0 };
+    return empty;
+}

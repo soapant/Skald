@@ -103,5 +103,32 @@ bool focus_window_title_sway(char* title) {
         }
         return false;
     }
+}
 
+WindowList get_list_of_windows_sway() {
+   char* output = Platform_RunTerminalCommand("swaymsg -t get_tree", false);
+   
+   WindowList list = { .windows = NULL, .count = 0 };
+   char buffer[50];
+   
+   StringList lines = String_Split(output, "\n");
+   for (size_t i = 0; i < lines.count; i++) {
+       char *match = strstr(lines.items[i], "\"app_id\"");
+       if (match) {
+           if (sscanf(match, "\"app_id\": \"%[^\"]\"", buffer) == 1) {
+               
+               buffer[0] = toupper((unsigned char)buffer[0]);
+               char** temp = realloc(list.windows, (list.count + 1) * sizeof(char*));
+               if (temp == NULL) {
+                   break; 
+               }
+               list.windows = temp;
+               
+               list.windows[list.count] = strdup(buffer);
+               list.count++;
+           }
+       }
+   }
+   
+   return list;
 }
