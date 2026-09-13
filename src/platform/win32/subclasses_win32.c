@@ -262,6 +262,49 @@ LRESULT CALLBACK ListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
       }
       // Let listbox draw its items into memory DC (owner-draw WM_DRAWITEM will be sent to parent)
       SendMessage(hWnd, WM_PRINTCLIENT, (WPARAM)memDC, PRF_CLIENT);
+      // Fix black tail/empty: default LISTBOX WM_PRINTCLIENT fills background with COLOR_BG (black) via WM_CTLCOLORLISTBOX,
+      // overwriting our cohesive gradient. Re-apply gradient slice for the empty area below last item (or whole if empty).
+      {
+        int itemH = (int)SendMessageA(hWnd, LB_GETITEMHEIGHT, 0, 0);
+        int count = (int)SendMessageA(hWnd, LB_GETCOUNT, 0, 0);
+        if (itemH > 0 && count >= 0) {
+          LONG itemsBottom = (LONG)count * itemH;
+          if (itemsBottom < 0) itemsBottom = 0;
+          if (itemsBottom < rc.bottom) {
+            RECT empty = { rc.left, itemsBottom, rc.right, rc.bottom };
+            // Only repaint if empty intersects paint rect (avoid overdraw)
+            RECT inter;
+            if (empty.top < ps.rcPaint.bottom && empty.bottom > ps.rcPaint.top) {
+              if (!IntersectRect(&inter, &empty, &ps.rcPaint)) inter = empty;
+              // Use full empty rect for cohesive slice, but clip via intersect if needed
+              // For simplicity repaint the whole tail on memDC; BitBlt will clip to ps.rcPaint anyway
+              if (EnableShaders && ShaderPreset != 0 && winW > 0 && winH > 0) {
+                int gx = lbOrigin.x + empty.left;
+                int gy = lbOrigin.y + empty.top;
+                Win32_DrawBackgroundSlice(memDC, &empty, COLOR_BG, winW, winH, gx, gy);
+              } else if (ColorfullMode) {
+                if (!s_bg_colorful_brush) s_bg_colorful_brush = CreateSolidBrush(GetRainbowColor(0.02f, 0.55f, GradientBrightness));
+                FillRect(memDC, &empty, s_bg_colorful_brush);
+              } else {
+                if (!s_bg_brush) s_bg_brush = CreateSolidBrush(COLOR_BG);
+                FillRect(memDC, &empty, s_bg_brush);
+              }
+            }
+          }
+        } else if (count == 0) {
+          // Fallback when item height unknown but list empty: ensure not black
+          if (EnableShaders && ShaderPreset != 0 && winW > 0 && winH > 0) {
+            RECT full = rc;
+            Win32_DrawBackgroundSlice(memDC, &full, COLOR_BG, winW, winH, lbOrigin.x, lbOrigin.y);
+          } else if (ColorfullMode) {
+            if (!s_bg_colorful_brush) s_bg_colorful_brush = CreateSolidBrush(GetRainbowColor(0.02f, 0.55f, GradientBrightness));
+            FillRect(memDC, &rc, s_bg_colorful_brush);
+          } else {
+            if (!s_bg_brush) s_bg_brush = CreateSolidBrush(COLOR_BG);
+            FillRect(memDC, &rc, s_bg_brush);
+          }
+        }
+      }
       BitBlt(hdc, ps.rcPaint.left, ps.rcPaint.top, ps.rcPaint.right - ps.rcPaint.left, ps.rcPaint.bottom - ps.rcPaint.top, memDC, ps.rcPaint.left, ps.rcPaint.top, SRCCOPY);
       SelectObject(memDC, oldBmp);
       DeleteObject(memBmp);
