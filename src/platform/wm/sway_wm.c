@@ -17,7 +17,7 @@ bool get_title_sway(char *buffer, int buffer_size) {
     buffer[0] = '\0';
     if (!getenv("SWAYSOCK") && !getenv("I3SOCK")) return false;
     char *command_output = Platform_RunTerminalCommand(
-        "sh -c \"swaymsg -t get_tree | jq '.. | objects | select(.focused? == true)'\"",
+        "swaymsg -t get_tree --raw | grep -A 40 '\"focused\": true'",
         false
     );
     if (!command_output) return false;
@@ -27,7 +27,7 @@ bool get_title_sway(char *buffer, int buffer_size) {
     char *app_id = NULL;
     for (size_t i = 0; i < lines.count; i++) {
         if (!lines.items[i]) continue;
-        if (!name && Platform_StringContainsCaseInsensitive(lines.items[i], "\"name\"")) {
+        if (!name && Platform_StringContainsCaseInsensitive(lines.items[i], "\"name\"")){
             name = lines.items[i];
         } else if (Platform_StringContainsCaseInsensitive(lines.items[i], "\"app_id\"")) {
             app_id = lines.items[i];

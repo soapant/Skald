@@ -14,7 +14,6 @@ is unicode hexadecimnal
 pypy for python
 great sword true combos brawhalal
 waht is the largest ocean in the world
-https://github.com/raysan5/raylib/wiki
 neon greend rgb
 vk code for backspace in windows api c
 fastest best window packaage for python windows 
@@ -58,5 +57,4 @@ what is tomlplusplus on arch linux
 what is wofi used for 
 what is tmp in vms
 github.com/soapant/Flint
-https:\\github.com/soapant/Flint
 search
