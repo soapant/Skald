@@ -20,10 +20,10 @@ static int _x11_err = 0;
 static int _x11_err_handler(Display *dpy, XErrorEvent *ev) { (void)dpy; (void)ev; _x11_err = 1; return 0; }
 
 bool get_title_x11(char *buffer, int buffer_size) {
-    if (!buffer || buffer_size <= 0) return false;
+    if (!buffer || buffer_size <= 0) { log_error("buffer='%s' buffer_size=%d", buffer ? buffer : "null", buffer_size); return false; }
     buffer[0] = '\0';
     Display *display = get_display();
-    if (!display) return false;
+    if (!display) { log_error("display is NULL buffer='%s' buffer_size=%d", buffer ? buffer : "null", buffer_size); return false; }
     Window focus = None;
     int revert_to = 0;
     _x11_err = 0;
@@ -31,6 +31,7 @@ bool get_title_x11(char *buffer, int buffer_size) {
     XGetInputFocus(display, &focus, &revert_to);
     XSync(display, False);
     if (_x11_err || focus == None || focus == PointerRoot) {
+        log_error("focus is NULL or PointerRoot buffer='%s' buffer_size=%d", buffer ? buffer : "null", buffer_size);
         XSetErrorHandler(old);
         return false;
     }
@@ -40,6 +41,7 @@ bool get_title_x11(char *buffer, int buffer_size) {
     XSync(display, False);
     XSetErrorHandler(old);
     if (_x11_err || !ok || !name) {
+        log_error("XFetchName failed buffer='%s' buffer_size=%d", buffer ? buffer : "null", buffer_size);
         if (name) XFree(name);
         return false;
     }
@@ -50,31 +52,38 @@ bool get_title_x11(char *buffer, int buffer_size) {
 }
 
 char* get_clipboard_entry_x11() {
-  return Platform_RunTerminalCommand("xclip -o -selection clipboard",false);
+  char* out = Platform_RunTerminalCommand("xclip -o -selection clipboard",false);
+  if (!out) log_error("xclip failed");
+  return out;
 }
 
 char* paste_x11(char* content) {
+  if (!content) { log_error("content is NULL"); return NULL; }
   char buffer[100];
   snprintf(buffer,sizeof(buffer),"xdotool %s",content);
-  return Platform_RunTerminalCommand(buffer,false);
+  char* out = Platform_RunTerminalCommand(buffer,false);
+  if (!out) log_error("content='%s'", content ? content : "null");
+  return out;
 }
 
 bool focus_window_title_x11(char* title) {
-    //temrpoary i think thius is an extenral dependency i can only test once i get x11 and i3 owrking 
+    if (!title) { log_error("title is NULL"); return false; }
     char command[512];
     snprintf(command, sizeof(command),
              "id=$(xwininfo -root -children | grep -i \"%s\" | awk '{print $1}' | head -n 1); "
              "[ -n \"$id\" ] && xprop -root -f _NET_ACTIVE_WINDOW 32a -set _NET_ACTIVE_WINDOW \"$id\"", 
              title);
-
-    return Platform_RunTerminalCommand(command, false);
+    char* out = Platform_RunTerminalCommand(command, false);
+    if (!out) { log_error("title='%s'", title ? title : "null"); return false; }
+    free(out);
+    return true;
 }
 
 WindowList get_window_names_x11() {
    char* output = Platform_RunTerminalCommand("wmctrl -x -l", false);
    WindowList list = { .windows = NULL, .count = 0 };
    char buffer[256]; 
-   if (output == NULL || strlen(output) == 0) return list;
+   if (output == NULL || strlen(output) == 0) { log_error("output is NULL or empty"); return list; }
    StringList lines = String_Split(output, "\n");
    for (size_t i = 0; i < lines.count; i++) {
        char hex_id[32];
@@ -101,7 +110,7 @@ WindowList get_window_names_x11() {
 WindowList get_window_titles_x11() {
    char* output = Platform_RunTerminalCommand("wmctrl -l", false);
    WindowList list = { .windows = NULL, .count = 0 };
-   if (output == NULL || strlen(output) == 0) return list;
+   if (output == NULL || strlen(output) == 0) { log_error("output is NULL or empty"); return list; }
    StringList lines = String_Split(output, "\n");
    for (size_t i = 0; i < lines.count; i++) {
        char *line = lines.items[i];

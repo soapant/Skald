@@ -13,15 +13,15 @@
 #include <ctype.h>
 
 bool get_title_sway(char *buffer, int buffer_size) {
-    if (!buffer || buffer_size <= 0) return false;
+    if (!buffer || buffer_size <= 0) { log_error("buffer='%s' buffer_size=%d", buffer ? buffer : "null", buffer_size); return false; }
     buffer[0] = '\0';
-    if (!getenv("SWAYSOCK") && !getenv("I3SOCK")) return false;
+    if (!getenv("SWAYSOCK") && !getenv("I3SOCK")) { log_error("SWAYSOCK and I3SOCK not set buffer='%s' buffer_size=%d", buffer ? buffer : "null", buffer_size); return false; }
     char *command_output = Platform_RunTerminalCommand(
         "swaymsg -t get_tree --raw | grep -A 40 '\"focused\": true'",
         false
     );
-    if (!command_output) return false;
-    if (command_output[0] == '\0') { free(command_output); return false; }
+    if (!command_output) { log_error("command_output is NULL buffer='%s' buffer_size=%d", buffer ? buffer : "null", buffer_size); return false; }
+    if (command_output[0] == '\0') { log_error("command_output empty buffer='%s' buffer_size=%d", buffer ? buffer : "null", buffer_size); free(command_output); return false; }
     StringList lines = String_Split(command_output, "\n");
     char *name = NULL;
     char *app_id = NULL;
@@ -40,7 +40,7 @@ bool get_title_sway(char *buffer, int buffer_size) {
     size_t alen = strlen(app_id);
     size_t size = nlen + alen + 2;
     char *output_name = malloc(size);
-    if (!output_name) { StringList_Free(&lines); free(command_output); return false; }
+    if (!output_name) { log_error("malloc failed size=%d buffer='%s' buffer_size=%d", (int)size, buffer ? buffer : "null", buffer_size); StringList_Free(&lines); free(command_output); return false; }
     output_name[0] = '\0';
     if (nlen) strncpy(output_name, name, size-1);
     if (alen) strncat(output_name, app_id, size-1 - strlen(output_name));
@@ -53,18 +53,25 @@ bool get_title_sway(char *buffer, int buffer_size) {
 }
 
 char* get_clipboard_entry_sway() {
-  return Platform_RunTerminalCommand("wl-paste",false);
+  char* out = Platform_RunTerminalCommand("wl-paste",false);
+  if (!out) log_error("wl-paste failed");
+  return out;
 }
 
 char* paste_sway(char* content) {
+  if (!content) { log_error("content is NULL"); return NULL; }
   char buffer[100];
   snprintf(buffer,sizeof(buffer),"wtype %s",content);
-  return Platform_RunTerminalCommand(buffer,false);
+  char* out = Platform_RunTerminalCommand(buffer,false);
+  if (!out) log_error("content='%s'", content ? content : "null");
+  return out;
 }
 bool succeded_sway(char* output) {
+    if (!output) { log_error("output is NULL"); return false; }
     StringList lines = String_Split(output, "\n");
     for (size_t i = 0; i < lines.count; i++) {
       if (Platform_StringContainsCaseInsensitive(lines.items[i],"\"error\"")) {
+        log_error("output='%s'", output ? output : "null");
         return false;
       }
     }
@@ -72,7 +79,7 @@ bool succeded_sway(char* output) {
 }
 
 bool focus_window_title_sway(char* title) {
-    if (!title) return false;
+    if (!title) { log_error("title is NULL"); return false; }
 
     char escaped_title[512];
     title[0] = tolower(title[0]);
@@ -110,7 +117,7 @@ bool focus_window_title_sway(char* title) {
                  &escaped_title[1]);
         if (succeded_sway(Platform_RunTerminalCommand(cmd, false))) return true;
     }
-
+    log_error("title='%s'", title ? title : "null");
     return false;
 }
 
@@ -118,7 +125,7 @@ WindowList get_window_names_sway() {
    char* output = Platform_RunTerminalCommand("swaymsg -t get_tree", false);
    WindowList list = { .windows = NULL, .count = 0 };
    char buffer[256];
-   if (!output) return list;
+   if (!output) { log_error("output is NULL"); return list; }
    StringList lines = String_Split(output, "\n");
    for (size_t i = 0; i < lines.count; i++) {
        char *match = strstr(lines.items[i], "\"app_id\"");
@@ -142,7 +149,7 @@ WindowList get_window_titles_sway() {
    char* output = Platform_RunTerminalCommand("swaymsg -t get_tree", false);
    WindowList list = { .windows = NULL, .count = 0 };
    char buffer[512];
-   if (!output) return list;
+   if (!output) { log_error("output is NULL"); return list; }
    //temporary hardcoding of sway things like root i3 and numbers because being fucky wucky
    StringList lines = String_Split(output, "\n");
    for (size_t i = 0; i < lines.count; i++) {
