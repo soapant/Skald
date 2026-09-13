@@ -48,7 +48,6 @@ void TriggerGoogleSearch(void) {
     const char* items[MAX_FILE_LINES];
     int n = fl_load_file_list(GoogleHistoryFile, items, MAX_FILE_LINES);
     PROMPT(.title = "🔍 Google", .items = items,
-           .height = 920, .width = 650,
            .refresh = google_refresh_callback,
            .enter = google_enter_callback,
            .edit = google_edit_callback);

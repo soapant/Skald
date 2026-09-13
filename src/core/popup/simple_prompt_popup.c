@@ -261,9 +261,6 @@ Popup* SimplePromptPopup_Create(WindowManager* wm, const SimplePromptSpec* spec)
     int layout_w = 900;
     int layout_h = 640;
     
-    if (layout_h < spec->height) layout_h = spec->height;
-    if (layout_h > spec->width) layout_h = spec->width;
-    
     int x, y;
     WindowManager_GetCenteredPos(layout_w, layout_h, &x, &y);
     

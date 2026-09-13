@@ -225,12 +225,10 @@ void TriggerAppLauncher(void) {
     if (ih < 32) ih = 32;
     if (ih > 48) ih = 48;
     PROMPT(.title = "🚀 AppLauncher", .items = NULL,
-           .height = 920, .width = 650,
            .refresh = applauncher_refresh_callback,
            .enter = applauncher_enter_callback,
            .ctrl_enter = applauncher_ctrlenter_callback,
-           .copy = applauncher_copy_callback,
-           );
+           .copy = applauncher_copy_callback);
 }
 
 FLINT_FEATURE_INIT {
