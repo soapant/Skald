@@ -105,6 +105,10 @@ char* Platform_PromptUser(const PromptSpec* spec) {
 
   WindowLayout layout;
   CalculateWindowMetrics(count, &layout, height, width, item_height);
+  if (win_state) {
+    win_state->width = layout.w;
+    win_state->height = layout.h;
+  }
 
   HFONT hCustomFont = CreateCustomNerdFont(FontSize, UsedFont);
 

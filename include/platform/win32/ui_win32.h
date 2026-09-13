@@ -29,6 +29,11 @@ static inline void UI_SetSelection(ListBoxInfo* lb, WindowHandle hList, int inde
     }
   }
 
+  if (FlintContext_Get()->prompt_callbacks.render != NULL || !IsWindowVisible(WH_TO_HWND(hList))) {
+    HWND hPopup = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
+    if (hPopup && IsWindow(hPopup)) InvalidateRect(hPopup, NULL, FALSE);
+    return;
+  }
   if (hasInvalid) {
     RedrawWindow(WH_TO_HWND(hList), &invalidRect, NULL, RDW_INVALIDATE);
   }
@@ -84,12 +89,20 @@ static inline void UI_NavigateTo(ListBoxInfo* lb, WindowHandle hListBox, int ind
   if (count <= 0) {
     lb->selected_index = -1;
     UI_LB_SetCaretIndex(hListBox, -1, FALSE);
+    if (FlintContext_Get()->prompt_callbacks.render != NULL || !IsWindowVisible(WH_TO_HWND(hListBox))) {
+      HWND hPopup = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
+      if (hPopup && IsWindow(hPopup)) InvalidateRect(hPopup, NULL, FALSE);
+    }
     return;
   }
   if (index >= count) index = count - 1;
   if (index == -1) {
     lb->selected_index = -1;
     UI_LB_SetCaretIndex(hListBox, -1, FALSE);
+    if (FlintContext_Get()->prompt_callbacks.render != NULL || !IsWindowVisible(WH_TO_HWND(hListBox))) {
+      HWND hPopup = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
+      if (hPopup && IsWindow(hPopup)) InvalidateRect(hPopup, NULL, FALSE);
+    }
     return;
   }
 
@@ -142,6 +155,16 @@ static inline void UI_NavigateTo(ListBoxInfo* lb, WindowHandle hListBox, int ind
     } else {
       UnionRect(&invalidRect, &invalidRect, &itemRect);
     }
+  }
+
+  // For custom render (todo, calc etc.) listbox is hidden (SW_HIDE) and drawing is done on popup via fl_listbox_next.
+  // RedrawWindow on hidden listbox does nothing, so invalidate popup instead.
+  if (FlintContext_Get()->prompt_callbacks.render != NULL || !IsWindowVisible(WH_TO_HWND(hListBox))) {
+    HWND hPopup = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
+    if (hPopup && IsWindow(hPopup)) {
+      InvalidateRect(hPopup, NULL, FALSE);
+    }
+    return;
   }
 
   if (hasInvalid) {
