@@ -184,7 +184,7 @@ unsigned long VimModeTextColor(void) {
 
 int Linux_UpdateEditScrollOffset(Display* dpy, XftFont* xf, const char* text, int text_len, int cursor, int width, int prev_scroll, int* out_cursor_x) {
     PROFILE_START(timer);
-    int visible_w = width - 40;
+    int visible_w = width - 28;
     int cursor_x = 0;
     int text_w = 0;
     if (xf) {
