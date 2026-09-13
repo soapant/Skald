@@ -75,6 +75,7 @@ bool focus_window_title_sway(char* title) {
     if (!title) return false;
 
     char escaped_title[512];
+    title[0] = tolower(title[0]);
     char* src = title;
     char* dst = escaped_title;
     while (*src && (dst - escaped_title) < sizeof(escaped_title) - 1) {
