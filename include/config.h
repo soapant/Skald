@@ -34,7 +34,6 @@ extern float ShaderSmoothness;
 extern char* EditPopUpPos;
 extern int EditPopUpWidthMin;
 extern int PageUpDownLen;
-extern bool ColorfullMode;
 extern float WindowOpacity;
 extern const char* UsedFont;
 extern const int FontSize;

@@ -101,7 +101,7 @@ void Core_DrawListBox(PromptState *state, void *hdc) {
             RECT rcItem = {bx, y, bx + bw, y + itemH};
             if (EnableShaders && ShaderPreset != 0) {
                 Win32_DrawBackgroundSlice(hdcReal, &rcItem, COLOR_BG, state->width, state->height, rcItem.left, rcItem.top);
-            } else if (!ColorfullMode) {
+            } else {
                 HBRUSH br = CreateSolidBrush(COLOR_BG);
                 FillRect(hdcReal, &rcItem, br);
                 DeleteObject(br);
@@ -112,32 +112,12 @@ void Core_DrawListBox(PromptState *state, void *hdc) {
             if (sel) {
                 if (EnableSelectionShaders && SelectionShaderPreset != 0) Win32_DrawRoundedSelection(hdcReal, &inner, COLOR_SELECTED_TEXT, innerR);
                 else if (EnableShaders && ShaderPreset != 0) Win32_DrawRoundedSelection(hdcReal, &inner, COLOR_SELECTED_TEXT, innerR);
-                else if (ColorfullMode) {
-                    HBRUSH br = CreateSolidBrush(GetRainbowColor((float)(idx % 100) / 100.0f, 0.55f, GradientBrightness));
-                    int save = SaveDC(hdcReal);
-                    HRGN rgn = CreateRoundRectRgn(inner.left, inner.top, inner.right + 1, inner.bottom + 1, innerR * 2, innerR * 2);
-                    SelectClipRgn(hdcReal, rgn);
-                    FillRect(hdcReal, &inner, br);
-                    SelectClipRgn(hdcReal, NULL);
-                    RestoreDC(hdcReal, save);
-                    DeleteObject(rgn);
-                    DeleteObject(br);
-                } else {
+                else {
                     Win32_FillRoundedRect(hdcReal, &inner, COLOR_SELECTED_TEXT, innerR);
                 }
             } else {
                 if (EnableShaders && ShaderPreset != 0) {
                     Win32_FillRoundedRectSlice(hdcReal, &inner, COLOR_BG, state->width, state->height, inner.left, inner.top, innerR);
-                } else if (ColorfullMode) {
-                    HBRUSH br = CreateSolidBrush(GetRainbowColor((float)(idx % 100) / 100.0f, 0.55f, GradientBrightness));
-                    int save = SaveDC(hdcReal);
-                    HRGN rgn = CreateRoundRectRgn(inner.left, inner.top, inner.right + 1, inner.bottom + 1, innerR * 2, innerR * 2);
-                    SelectClipRgn(hdcReal, rgn);
-                    FillRect(hdcReal, &inner, br);
-                    SelectClipRgn(hdcReal, NULL);
-                    RestoreDC(hdcReal, save);
-                    DeleteObject(rgn);
-                    DeleteObject(br);
                 } else {
                     Win32_FillRoundedRect(hdcReal, &inner, COLOR_BG, innerR);
                 }
@@ -154,10 +134,6 @@ void Core_DrawListBox(PromptState *state, void *hdc) {
             } else {
                 if (EnableShaders && ShaderPreset != 0) {
                     Win32_DrawBackgroundSlice(hdcReal, &rc, COLOR_BG, state->width, state->height, rc.left, rc.top);
-                } else if (ColorfullMode) {
-                    HBRUSH br = CreateSolidBrush(GetRainbowColor((float)(idx % 100) / 100.0f, 0.55f, GradientBrightness));
-                    FillRect(hdcReal, &rc, br);
-                    DeleteObject(br);
                 } else {
                     HBRUSH br = CreateSolidBrush(COLOR_BG);
                     FillRect(hdcReal, &rc, br);
