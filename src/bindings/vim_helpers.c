@@ -1,4 +1,5 @@
 #include "core/context.h"
+#include "deps/log.h"
 #include "core/modal.h"
 #include "bindings/vim_helpers.h"
 #include "core/common_ui.h"
@@ -101,7 +102,7 @@ void DeleteInsideDelimiter(VimContext* ctx, char open_char, char close_char, boo
         }
     }
     if (start == -1 || end == -1 || start >= end - 1) {
-        printf("[DEBUG] No valid delimiters found!\n");
+        log_info("[DEBUG] No valid delimiters found!");
         return;
     }
     int delete_start = start + 1;

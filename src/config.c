@@ -9,6 +9,7 @@ bool AllowOtherFeatureTogglesInFeature = false;
 bool ModePersistsThroughFeatures = false;
 int  TimeOutForMessages = 1;
 bool DoTimeDebugs = false;
+bool DebugMode = true;
 bool RoundedCorners = true;
 int CornerRadius = 14;
 int ListboxBorderThickness = 1;

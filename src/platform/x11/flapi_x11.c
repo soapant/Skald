@@ -1,4 +1,5 @@
 #include "core/flapi.h"
+#include "deps/log.h"
 #include "core/platform.h"
 #include "core/flapi_platform.h"
 #include "platform/draw.h"

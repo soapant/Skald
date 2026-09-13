@@ -1,4 +1,5 @@
 #include "core/context.h"
+#include "deps/log.h"
 #include "core/modal.h"
 #include "config.h"
 #include <ctype.h>
@@ -17,9 +18,9 @@
 #include "core/window_manager.h"
 
 int ReplaceLineInFile(const char* filepath, int line_index, const char* new_text) {
-    fprintf(stderr, "[REPLACE] file='%s' idx=%d new='%s'\n", filepath ? filepath : "(null)", line_index, new_text ? new_text : "(null)");
+    log_info("[REPLACE] file='%s' idx=%d new='%s'", filepath ? filepath : "(null)", line_index, new_text ? new_text : "(null)");
     if (!filepath || !new_text || line_index < 0) {
-        fprintf(stderr, "[REPLACE] early return 0\n");
+        log_info("[REPLACE] early return 0");
         return 0;
     }
     FILE* f = fopen(filepath, "r");

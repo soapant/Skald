@@ -1,4 +1,5 @@
 #include "wm/x11_wm.h"
+#include "deps/log.h"
 #include "platform/x11/display.h"
 #include <X11/Xlib.h>
 #include <string.h>
