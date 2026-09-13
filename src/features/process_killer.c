@@ -31,24 +31,12 @@ void pk_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo*
         items[i] = PK_LIST[i];
     }
     PopulateListBox(lb, FlintContext_Get()->window.hListBox, filter, items, PK_COUNT, NULL);
-    free(items);
 }
 void TriggerProcessKiller(void) {
     collect_running_processes();
-
-    const char** list_items = (const char**)malloc(PK_COUNT * sizeof(char*));
-    if (!list_items) {
-        return;
-    }
-
-    for (int i = 0; i < PK_COUNT; i++) {
-        list_items[i] = PK_LIST[i];
-    }
-
-    PROMPT(.title = "💀 ProcessKiller", .items = list_items,
+    PROMPT(.title = "💀 ProcessKiller",
            .refresh = pk_refresh_callback,
            .enter = pk_enter_callback);
-    free(list_items);
 }
 
 FLINT_FEATURE_INIT {

@@ -11,17 +11,19 @@ char* Wm_GetActiveWindowTitle(void) {
     
     buffer[0] = '\0'; 
     
-    if (get_title_hyprland(buffer, sizeof(buffer))) {
-        return buffer;
-    }
-    if (get_title_sway(buffer, sizeof(buffer))) {
-        return buffer;
-    }
-    if (get_title_x11(buffer, sizeof(buffer))) {
-        return buffer;
+    if (getenv("WAYLAND_DISPLAY")) {
+        if (get_title_hyprland(buffer, sizeof(buffer))) {
+            return buffer;
+        }
+        if (get_title_sway(buffer, sizeof(buffer))) {
+            return buffer;
+        }
+    } else {
+        if (get_title_x11(buffer, sizeof(buffer))) {
+            return buffer;
+        }
     }
     log_error("Coulnt Get Active Window Title");
-    
     return NULL;
 }
 

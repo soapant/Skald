@@ -52,9 +52,7 @@ bool google_ctrlenter_callback(const char* selection, ListBoxInfo* lb) {
 }
 
 void TriggerGoogleSearch(void) {
-    const char* items[MAX_FILE_LINES];
-    int n = fl_load_file_list(GoogleHistoryFile, items, MAX_FILE_LINES);
-    PROMPT(.title = "🔍 Google", .items = items,
+    PROMPT(.title = "🔍 Google",
            .refresh = google_refresh_callback,
            .enter = google_enter_callback,
            .ctrl_enter = google_ctrlenter_callback,
