@@ -79,6 +79,4 @@ FLINT_FEATURE_INIT {
     // fl_register_hotkey("Alt+Shift+Z",HandleMinecraftUndo, WHITELIST,"Minecraft");
     // fl_register_hotkey("Alt+Shift+Q",HandleMinecraftUp, WHITELIST,"Minecraft");
     // fl_register_hotkey("Alt+Shift+R",HandleMinecraftRotate,WHITELIST,"Minecraft");
-
-    fl_register_feature("HandleFactorioMakeTag", HandleFactorioMakeTag);
 }

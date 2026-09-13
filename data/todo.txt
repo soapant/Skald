@@ -22,4 +22,3 @@ some things need to be better handled internally like offsets of y and x of text
 parsingo f the hotkey string is incorrect when two or moe blacklist are there it thinks the hotkey condition is some stirng idk||[Cprogram]
 do the wholei nternet and bluetooth thing for both windows and linux that will require some deps on linux ofc ||[Cprogram] 
 
-

@@ -11,6 +11,4 @@ void toggle_messenger_speaker(void) {
 FLINT_FEATURE_INIT {
     fl_register_hotkey("Alt+Shift+M", mute_messenger_call);
     fl_register_hotkey("Alt+Shift+S", toggle_messenger_speaker);
-
-    fl_register_feature("ADB", mute_messenger_call);
 }
