@@ -22,6 +22,7 @@ static void TriggerControl(void) {
 }
 
 FLINT_FEATURE_INIT {
-    fl_register_hotkey((char*)ControlHotkey, TriggerControl);
-    fl_register_feature("Control Center", TriggerControl);
+    // temporary
+    // fl_register_hotkey((char*)ControlHotkey, TriggerControl);
+    // fl_register_feature("Control Center", TriggerControl);
 }

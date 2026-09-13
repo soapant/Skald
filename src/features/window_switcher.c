@@ -1,13 +1,34 @@
 #include "core/flapi.h"
 
-// static const char* focus_blacklist_games[] = {"CrosshairX"};
-// static const char* games_windows[] = {"Brawlhalla","Fortnite","RocketLeague","Factorio","Minecraft"};
-// static const char* focus_blacklist_browsers[] = {"CrosshairX"};
-// static const char* browsers_windows[] = {"Zen","Chrome"};
-// static const char* focus_blacklist_coding[] = {"CrosshairX"};
-// static const char* coding_windows[] = {"Neovide","vim"};
-// static const char* focus_blacklist_terminal[] = {"CrosshairX"};
-// static const char* terminal_windows[] = {"alacritty","pwsh","foot"};
+char* games_windows[] = {"Brawlhalla", "Fortnite", "RocketLeague", "Factorio", "Minecraft"};
+char* browsers_windows[] = {"Zen", "Chrome"};
+char* coding_windows[] = {"Neovide", "vim"};
+char* terminal_windows[] = {"alacritty", "pwsh", "foot"};
+
+void FocusGameWindows(void) {
+    for (int i = 0; i < ARRAY_LEN(games_windows); i++) {
+        if (fl_focus_window_by_title(games_windows[i])) return;
+    }
+}
+
+void FocusBrowserWindows(void) {
+    for (int i = 0; i < ARRAY_LEN(browsers_windows); i++) {
+        if (fl_focus_window_by_title(browsers_windows[i])) return;
+    }
+}
+
+void FocusCodingWindows(void) {
+    for (int i = 0; i < ARRAY_LEN(coding_windows); i++) {
+        if (fl_focus_window_by_title(coding_windows[i])) return;
+    }
+}
+
+void FocusTerminalWindows(void) {
+    for (int i = 0; i < ARRAY_LEN(terminal_windows); i++) {
+        if (fl_focus_window_by_title(terminal_windows[i])) return;
+    }
+}
+
 
 
 void window_switcher_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
@@ -36,5 +57,5 @@ void TriggerWindowSwitcher(void) {
 }
 
 FLINT_FEATURE_INIT {
-  fl_register_hotkey("Ctrl+Shift+Space",TriggerWindowSwitcher);
+  fl_register_hotkey("Alt+Space",TriggerWindowSwitcher);
 }
