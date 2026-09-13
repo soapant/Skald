@@ -57,18 +57,25 @@ char* Wm_Paste(char* content) {
     return NULL;
 }
 
-WindowList Wm_GetListOfActiveWindows() {
+WindowList Wm_GetWindowTitles() {
     WindowList result;
-    
-    result = get_list_of_windows_hyprland();
+    result = get_window_titles_hyprland();
     if (result.windows != NULL) return result;
-    
-    result = get_list_of_windows_sway();
+    result = get_window_titles_sway();
     if (result.windows != NULL) return result;
-    
-    result = get_list_of_windows_x11();
+    result = get_window_titles_x11();
     if (result.windows != NULL) return result;
-    
+    WindowList empty = { .windows = NULL, .count = 0 };
+    return empty;
+}
+WindowList Wm_GetWindowNames() {
+    WindowList result;
+    result = get_window_names_hyprland();
+    if (result.windows != NULL) return result;
+    result = get_window_names_sway();
+    if (result.windows != NULL) return result;
+    result = get_window_names_x11();
+    if (result.windows != NULL) return result;
     WindowList empty = { .windows = NULL, .count = 0 };
     return empty;
 }

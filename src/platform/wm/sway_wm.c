@@ -114,30 +114,51 @@ bool focus_window_title_sway(char* title) {
     return false;
 }
 
-WindowList get_list_of_windows_sway() {
+WindowList get_window_names_sway() {
    char* output = Platform_RunTerminalCommand("swaymsg -t get_tree", false);
-   
    WindowList list = { .windows = NULL, .count = 0 };
-   char buffer[50];
-   
+   char buffer[256];
+   if (!output) return list;
    StringList lines = String_Split(output, "\n");
    for (size_t i = 0; i < lines.count; i++) {
        char *match = strstr(lines.items[i], "\"app_id\"");
        if (match) {
            if (sscanf(match, "\"app_id\": \"%[^\"]\"", buffer) == 1) {
-               
+               if (buffer[0]=='\0') continue;
                buffer[0] = toupper((unsigned char)buffer[0]);
                char** temp = realloc(list.windows, (list.count + 1) * sizeof(char*));
-               if (temp == NULL) {
-                   break; 
-               }
+               if (temp == NULL) break;
                list.windows = temp;
-               
                list.windows[list.count] = strdup(buffer);
                list.count++;
            }
        }
    }
-   
+   StringList_Free(&lines);
+   free(output);
    return list;
 }
+WindowList get_window_titles_sway() {
+   char* output = Platform_RunTerminalCommand("swaymsg -t get_tree", false);
+   WindowList list = { .windows = NULL, .count = 0 };
+   char buffer[512];
+   if (!output) return list;
+   StringList lines = String_Split(output, "\n");
+   for (size_t i = 0; i < lines.count; i++) {
+       char *match = strstr(lines.items[i], "\"name\"");
+       if (match) {
+           if (sscanf(match, "\"name\": \"%[^\"]\"", buffer) == 1) {
+               if (buffer[0]=='\0' || strcmp(buffer,"null")==0) continue;
+               char** temp = realloc(list.windows, (list.count + 1) * sizeof(char*));
+               if (temp == NULL) break;
+               list.windows = temp;
+               list.windows[list.count] = strdup(buffer);
+               list.count++;
+           }
+       }
+   }
+   StringList_Free(&lines);
+   free(output);
+   return list;
+}
+WindowList get_list_of_windows_sway() { return get_window_names_sway(); }
