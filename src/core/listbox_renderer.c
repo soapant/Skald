@@ -41,7 +41,7 @@ void Core_DrawListBox(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis
         int y = y0 + i * itemH;
         bool sel = (idx == lb->selected_index);
         if (RoundedCorners && CornerRadius>0) {
-            int R=6; int t=ListboxBorderThickness; if(t<1) t=1; if(t>20) t=20;
+            int R=6; int t=ListboxBorderThickness;
             int bx=4, bw=state->width-8;
             if (sel) {
                 Linux_FillRoundedRect(dpy, xd, vis, cmap, rgb_to_hex(COLOR_SELECTED_TEXT), OpacityAlpha16(), bx+t, y+1+t, bw-2*t, itemH-2-2*t, R-1);
@@ -96,7 +96,7 @@ void Core_DrawListBox(PromptState *state, void *hdc) {
         bool sel = (idx == lb->selected_index);
         if (RoundedCorners && CornerRadius > 0) {
             int R = 6; if (R > CornerRadius) R = CornerRadius;
-            int t = ListboxBorderThickness; if(t<1) t=1; if(t>20) t=20;
+            int t = ListboxBorderThickness;
             int bx = 4, bw = state->width - 8;
             RECT rcItem = {bx, y, bx + bw, y + itemH};
             if (EnableShaders && ShaderPreset != 0) {
