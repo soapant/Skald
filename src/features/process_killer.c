@@ -31,6 +31,7 @@ void pk_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo*
         items[i] = PK_LIST[i];
     }
     PopulateListBox(lb, FlintContext_Get()->window.hListBox, filter, items, PK_COUNT, NULL);
+    free(items);
 }
 void TriggerProcessKiller(void) {
     collect_running_processes();

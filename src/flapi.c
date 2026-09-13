@@ -77,6 +77,24 @@ int fl_load_file_list(const char* filepath, const char* out[], int max) {
     fclose(f);
     return count;
 }
+bool fl_free_list(const char* list[], int count) {
+    if (!list || count <= 0) return false;
+    for (int i = 0; i < count; i++) free((void*)list[i]);
+    return true;
+}
+bool fl_free_file_list(const char* list[], int count) {
+    return fl_free_list(list, count);
+}
+bool fl_free_window_list(WindowList *list) {
+    if (!list) return false;
+    if (list->windows) {
+        for (int i = 0; i < list->count; i++) free(list->windows[i]);
+        free(list->windows);
+        list->windows = NULL;
+        list->count = 0;
+    }
+    return true;
+}
 
 bool fl_append_to_file(const char* filepath, const char* line) {
     if (!filepath || !line) return false;
@@ -163,6 +181,7 @@ bool fl_append_unique_line(const char* path, const char* line) {
     if (!path || !line) return false;
     const char* items[1024]; int n = fl_load_file_list(path, items, 1024);
     bool ok = fl_append_to_file(path, line);
+    fl_free_file_list(items, n);
     return ok;
 }
 bool fl_remove_line(const char* path, const char* line) {

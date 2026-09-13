@@ -1,10 +1,29 @@
 #include "core/flapi.h"
 
 void window_switcher_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
-    WindowList list = fl_get_all_window_titles();
-    const char** items = (const char**)malloc(list.count * sizeof(char*));
-    for (size_t i = 0; i < list.count; i++) items[i] = list.windows[i];
-    PopulateListBox(lb, FlintContext_Get()->window.hListBox, filter, items,list.count, NULL);
+    WindowList list_of_titles = fl_get_all_window_titles();
+    WindowList list_of_names = fl_get_all_window_names();
+
+    int count = list_of_titles.count;
+    if (list_of_names.count < count) count = list_of_names.count;
+    const char** items = NULL;
+    if (count > 0) items = (const char**)malloc(count * sizeof(char*));
+
+    for (int i = 0; i < count; i++) {
+        char* buffer = malloc(256);
+        snprintf(buffer, 256, "%s (%s)",
+                 list_of_titles.windows[i],
+                 list_of_names.windows[i]);
+        items[i] = buffer;
+    }
+
+    PopulateListBox(lb, FlintContext_Get()->window.hListBox, filter, items, count, NULL);
+    if (items) {
+        for (int i = 0; i < count; i++) free((void*)items[i]);
+        free(items);
+    }
+    fl_free_window_list(&list_of_titles);
+    fl_free_window_list(&list_of_names);
 }
 bool window_switcher_enter_callback(const char* selection, ListBoxInfo* lb) {
     if (UI_IsListBoxSelected(lb)) fl_focus_window_by_title(selection);
