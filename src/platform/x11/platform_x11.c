@@ -1359,6 +1359,14 @@ bool Platform_BuildFeature(const char* src, const char* out) {
     return ok;
 }
 
-WindowList Platform_GetListOfActiveWindows() {
-  return Wm_GetListOfActiveWindows();
+WindowList Platform_GetWindowTitles() {
+  WindowList l = Wm_GetWindowTitles();
+  log_info("Platform_GetWindowTitles count=%d", l.count);
+  return l;
 }
+WindowList Platform_GetWindowNames() {
+  WindowList l = Wm_GetWindowNames();
+  log_info("Platform_GetWindowNames count=%d", l.count);
+  return l;
+}
+WindowList Platform_GetListOfActiveWindows() { return Platform_GetWindowNames(); }
