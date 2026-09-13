@@ -762,6 +762,12 @@ PROFILE_END_VAR(timer, "misc_x11:Platform_TerminateProcessByName");
 bool Platform_LaunchBrowserAtUrl(char* url,bool new_window) {
     PROFILE_START(timer);
     char command[2048];
+    char full_url[2048];
+    if (strncmp(url, "http", 7) == 0 || strncmp(url, "https", 8) == 0) {
+        snprintf(full_url, sizeof(full_url), "%s", url);
+    } else {
+        snprintf(full_url, sizeof(full_url), "https://%s", url);
+    }
     const char* real_user = Platform_GetRealUser();
     const char* display = getenv("DISPLAY");
     if (!display) display = ":0";
@@ -775,26 +781,26 @@ bool Platform_LaunchBrowserAtUrl(char* url,bool new_window) {
       if (Platform_IsRunningAsRoot()) {
           snprintf(command, sizeof(command), 
                    "sudo -u %s DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s %s --new-window \"%s\" > /dev/null 2>&1 &",
-                   real_user, display, xauthority, runtime_dir, UsedBrowser, url);
+                   real_user, display, xauthority, runtime_dir, UsedBrowser, full_url);
       } else {
           snprintf(command, sizeof(command), 
                    "DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s %s --new-window \"%s\" > /dev/null 2>&1 &",
-                   display, xauthority, runtime_dir, UsedBrowser, url);
+                   display, xauthority, runtime_dir, UsedBrowser, full_url);
       }
       
-      PROFILE_END_VAR(timer, "misc_x11:Platform_LaunchBrowserAtUrl");
+      PROFILE_END_VAR(timer, "misc_x11:Platform_LaunchBrowserAtfull_url");
       return Platform_RunTerminalCommand(command,false);
     } else {
     if (Platform_IsRunningAsRoot()) {
-        snprintf(command, sizeof(command), "sudo -u %s DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s xdg-open \"%s\" > /dev/null 2>&1 &", real_user, display, xauthority, runtime_dir, url);
+        snprintf(command, sizeof(command), "sudo -u %s DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s xdg-open \"%s\" > /dev/null 2>&1 &", real_user, display, xauthority, runtime_dir, full_url);
     } else {
-        snprintf(command, sizeof(command), "DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s xdg-open \"%s\" > /dev/null 2>&1 &", display, xauthority, runtime_dir, url);
+        snprintf(command, sizeof(command), "DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s xdg-open \"%s\" > /dev/null 2>&1 &", display, xauthority, runtime_dir, full_url);
     }
-    PROFILE_END_VAR(timer, "misc_x11:Platform_LaunchBrowserAtUrl");
+    PROFILE_END_VAR(timer, "misc_x11:Platform_LaunchBrowserAtfull_url");
     return Platform_RunTerminalCommand(command,false);
     }
-        log_info("Platform_LaunchBrowserAtUrl url='%s' new_window=%d", url ? url : "", new_window);;
-PROFILE_END_VAR(timer, "misc_x11:Platform_LaunchBrowserAtUrl");
+    log_info("Platform_LaunchBrowserAtfull_url full_url='%s' new_window=%d", full_url ? full_url : "", new_window);;
+    PROFILE_END_VAR(timer, "misc_x11:Platform_LaunchBrowserAtfull_url");
 }
 
 bool Platform_QueryBrowser(char* query) {
