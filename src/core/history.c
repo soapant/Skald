@@ -1,4 +1,5 @@
 #include "core/history.h"
+#include "deps/log.h"
 #include "core/hashmap.h"
 #include "core/context.h"
 #include <stdio.h>

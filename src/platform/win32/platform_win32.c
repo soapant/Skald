@@ -1,4 +1,5 @@
 #include <windows.h>
+#include "deps/log.h"
 #include <fileapi.h>
 #include <handleapi.h>
 #include <stdio.h>
@@ -25,7 +26,8 @@ bool Platform_LaunchTerminalAtPath(const char* working_dir, const char* extra_ar
 }
 
 char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
-    if (command == NULL || strlen(command) == 0) return NULL;
+    if (command == NULL || strlen(command) == 0)     log_error("Platform_RunTerminalCommand: operation failed, returning error");
+return NULL;
     if (open_terminal) {
         char clean_cmd[512];
         strncpy(clean_cmd, command, sizeof(clean_cmd) - 1);
@@ -121,7 +123,8 @@ char* Platform_QueryZoxidePath(const char* query) {
     HANDLE hReadPipe, hWritePipe;
 
     if (!CreatePipe(&hReadPipe, &hWritePipe, &sa, 0)) {
-        return NULL;
+                log_error("Platform_QueryZoxidePath: operation failed, returning error");
+return NULL;
     }
 
     SetHandleInformation(hReadPipe, HANDLE_FLAG_INHERIT, 0);
@@ -179,7 +182,8 @@ bool Platform_ShellExecuteWithVerb(const char* path, const char* verb, bool asyn
 }
 
 bool Platform_LaunchApp(const char* path) {
-    if (!path) return false;
+    if (!path)     log_error("Platform_LaunchApp: operation failed, returning error");
+return false;
 
     char expanded[MAX_PATH];
     if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) return false;
@@ -187,7 +191,8 @@ bool Platform_LaunchApp(const char* path) {
 }
 
 bool Platform_LaunchAppAsAdmin(const char* path) {
-    if (!path) return false;
+    if (!path)     log_error("Platform_LaunchAppAsAdmin: operation failed, returning error");
+return false;
 
     char expanded[MAX_PATH];
     if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) return false;
@@ -211,7 +216,7 @@ void Platform_ResetUniversalTimer() {
 void Platform_ModifyUniversalTimer(double seconds_to_add) {
     LONGLONG ms_offset = (LONGLONG)(seconds_to_add * 1000.0);
     g_timer_start_ms -= ms_offset; 
-    printf("[TIMER] Modified baseline by %.2f seconds.\n", seconds_to_add);
+    log_info("[TIMER] Modified baseline by %.2f seconds.", seconds_to_add);
 }
 
 double Platform_GetUniversalTimeSeconds() {
@@ -420,7 +425,8 @@ void Platform_GetTextExtents(FontHandle font, const char* text, int maxWidth, in
 long Platform_GetFileSize(char *filepath) {
     FILE *fp = fopen(filepath, "rb"); 
     if (fp == NULL) {
-        return -1; 
+                log_error("Platform_GetFileSize: operation failed, returning error");
+return -1; 
     }
 
     if (fseek(fp, 0L, SEEK_END) != 0) {
@@ -650,7 +656,8 @@ BOOL CALLBACK EnumWindowsProc(HWND hwnd, LPARAM lParam) {
 }
 
 bool Platform_FocusWindow(const char* title) {
-    if (!title || !title[0]) return false;
+    if (!title || !title[0])     log_error("Platform_FocusWindow: operation failed, returning error");
+return false;
     
     HWND hwnd = FindWindowA(NULL, title);
     
@@ -696,7 +703,8 @@ char* Platform_GetActiveWindowTitle(void) {
     return fgTitle;
 }
 char* Platform_GetIconPath(char* app_path) {
-  if (!app_path || !app_path[0]) return NULL;
+  if (!app_path || !app_path[0])   log_error("Platform_GetIconPath: operation failed, returning error");
+return NULL;
   char expanded[MAX_PATH];
   const char* src = app_path;
   if (Platform_ExpandPath(app_path, expanded, sizeof(expanded))) {
@@ -731,7 +739,7 @@ bool Platform_BuildFeature(const char* src, const char* out) {
     if (!src || !out) return false;
     // ensure import lib exists
     if (GetFileAttributesA("build/main.lib.a") == INVALID_FILE_ATTRIBUTES) {
-        fprintf(stderr, "[BUILD] build/main.lib.a missing, need to build main first\n");
+        log_error("[BUILD] build/main.lib.a missing, need to build main first");
         return false;
     }
     char tmp[512];
@@ -744,7 +752,7 @@ bool Platform_BuildFeature(const char* src, const char* out) {
     bool ok = false;
     if (outStr) {
         if (strlen(outStr)==0 || (!strstr(outStr, "error:") && !strstr(outStr, "undefined reference") && !strstr(outStr, "failed"))) ok = true;
-        else fprintf(stderr, "[BUILD] %s\n", outStr);
+        log_info("[BUILD] %s", outStr);
         free(outStr);
     } else {
         ok = true;
@@ -754,7 +762,7 @@ bool Platform_BuildFeature(const char* src, const char* out) {
     remove(out);
     if (rename(tmp, out) != 0) {
         if (!MoveFileExA(tmp, out, MOVEFILE_REPLACE_EXISTING)) {
-            fprintf(stderr, "[BUILD] failed to move %s -> %s\n", tmp, out);
+            log_error("[BUILD] failed to move %s -> %s", tmp, out);
             return false;
         }
     }

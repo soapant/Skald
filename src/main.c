@@ -1,4 +1,5 @@
 #include "core/context.h"
+#include "deps/log.h"
 #include "core/modal.h"
 #include "core/types.h"
 #include "config.h"
@@ -49,13 +50,11 @@ int main() {
   {
     int lock_fd = open("/tmp/flint.lock", O_RDWR | O_CREAT, 0666);
     if (lock_fd < 0) {
-      fprintf(stderr, "[SYSTEM] Cannot open singleton lock /tmp/flint.lock (%s).\n"
-                      "If it is owned by another user, remove it: sudo rm /tmp/flint.lock\n",
-              strerror(errno));
+      log_error("[SYSTEM] Cannot open singleton lock /tmp/flint.lock (%s). If it is owned by another user, remove it: sudo rm /tmp/flint.lock", strerror(errno));
       return 1;
     }
     if (flock(lock_fd, LOCK_EX | LOCK_NB) != 0) {
-      fprintf(stderr, "[SYSTEM] Another instance is already running. Exiting.\n");
+      log_info("[SYSTEM] Another instance is already running. Exiting.");
       close(lock_fd);
       return 1;
     }
@@ -66,14 +65,14 @@ int main() {
   {
     HANDLE mtx = CreateMutexA(NULL, TRUE, "flint_single_instance_mutex");
     if (mtx && GetLastError() == ERROR_ALREADY_EXISTS) {
-      fprintf(stderr, "[SYSTEM] Another instance is already running. Exiting.\n");
+      log_info("[SYSTEM] Another instance is already running. Exiting.");
       return 1;
     }
   }
 #endif
 #if !defined(_WIN32)
   if (!init_display()) {
-    fprintf(stderr, "[SYSTEM] Continuing without X11 display (headless mode)\n");
+    log_info("[SYSTEM] Continuing without X11 display (headless mode)");
   }
 #endif
 #if defined(_WIN32)
@@ -114,7 +113,7 @@ int main() {
   
   WindowManager* wm = WindowManager_Create();
   if (!wm) {
-      fprintf(stderr, "[SYSTEM] Failed to create WindowManager\n");
+      log_error("[SYSTEM] Failed to create WindowManager");
       return 1;
   }
   

@@ -1,4 +1,5 @@
 ﻿#include "core/context.h"
+#include "deps/log.h"
 #include "core/modal.h"
 #include "config.h"
 #include "core/platform.h"

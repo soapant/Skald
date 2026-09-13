@@ -1,4 +1,5 @@
 #include <windows.h>
+#include "deps/log.h"
 #include <shlwapi.h>
 #include "core/flapi.h"
 #include "core/platform.h"

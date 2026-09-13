@@ -1,4 +1,5 @@
 #include "core/context.h"
+#include "deps/log.h"
 #include "core/modal.h"
 #include "core/window_manager.h"
 #include "core/platform.h"
@@ -78,8 +79,7 @@ void SavePerFeatureState(const char* feature, EditorMode mode, int last_index) {
 #endif
 
 static void on_c_file_changed(void) {
-    printf("A .c file was modified!\n");
-    fflush(stdout);
+    log_info("A .c file was modified!");
 }
 
 #if !defined(_WIN32)
@@ -88,8 +88,7 @@ static void* feature_watcher_thread(void* arg) {
     while (!atomic_load(&g_watcher_stop) && !(wm && wm->watcher_stop)) {
         char* filename = Platform_WatchForCFileChanges(FeaturePath, on_c_file_changed);
         if (filename) {
-            printf("Changed file: %s\n", filename);
-            fflush(stdout);
+            log_info("Changed file: %s", filename);
             char buf[256];
             strncpy(buf, filename, sizeof(buf)-1);
             buf[sizeof(buf)-1]='\0';
@@ -102,12 +101,12 @@ static void* feature_watcher_thread(void* arg) {
             char src[512], dll[512];
             snprintf(src, sizeof(src), "src/features/%s.c", base);
             snprintf(dll, sizeof(dll), "build/features/%s.so", base);
-            printf("[WATCHER] recompiling %s -> %s\n", src, dll); fflush(stdout);
+            log_info("[WATCHER] recompiling %s -> %s", src, dll); fflush(stdout);
             if (Platform_BuildFeature(src, dll)) {
-                printf("[WATCHER] reload %s\n", base); fflush(stdout);
+                log_info("[WATCHER] reload %s", base); fflush(stdout);
                 FeatureLoader_Reload(base);
             } else {
-                fprintf(stderr, "[WATCHER] compile failed for %s\n", base);
+                log_error("[WATCHER] compile failed for %s", base);
             }
         }
         for (int i=0;i<5;i++) {
@@ -124,8 +123,7 @@ static DWORD WINAPI feature_watcher_thread_win(LPVOID arg) {
     while (InterlockedCompareExchange(&g_watcher_stop_win, 0, 0)==0 && !(wm && wm->watcher_stop)) {
         char* filename = Platform_WatchForCFileChanges(FeaturePath, on_c_file_changed);
         if (filename) {
-            printf("Changed file: %s\n", filename);
-            fflush(stdout);
+            log_info("Changed file: %s", filename);
             char buf[256];
             strncpy(buf, filename, sizeof(buf)-1);
             buf[sizeof(buf)-1]='\0';
@@ -138,14 +136,14 @@ static DWORD WINAPI feature_watcher_thread_win(LPVOID arg) {
             char src[512], dll[512];
             snprintf(src, sizeof(src), "src/features/%s.c", base);
             snprintf(dll, sizeof(dll), "build/features/%s%s", base, Platform_LibExtension());
-            printf("[WATCHER] recompiling %s -> %s\n", src, dll); fflush(stdout);
+            log_info("[WATCHER] recompiling %s -> %s", src, dll); fflush(stdout);
             // unload to release file lock before rebuilding
             FeatureLoader_Unload(base);
             if (Platform_BuildFeature(src, dll)) {
-                printf("[WATCHER] reload %s\n", base); fflush(stdout);
+                log_info("[WATCHER] reload %s", base); fflush(stdout);
                 FeatureLoader_Reload(base);
             } else {
-                fprintf(stderr, "[WATCHER] compile failed for %s\n", base);
+                log_error("[WATCHER] compile failed for %s", base);
             }
             Sleep(1200); // debounce - avoid double trigger from editor atomic save
         } else {

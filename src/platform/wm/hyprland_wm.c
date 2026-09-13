@@ -1,4 +1,5 @@
 #include "wm/hyprland_wm.h"
+#include "deps/log.h"
 #include "config.h"
 #include "core/platform.h"
 #include "helpers/hotkey.h"

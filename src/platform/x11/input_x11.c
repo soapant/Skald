@@ -1,5 +1,6 @@
 #define _GNU_SOURCE
 #include "platform/x11/input.h"
+#include "deps/log.h"
 #include "core/timer.h"
 #include "core/hotkey_manager.h"
 #include "config.h"
@@ -50,7 +51,7 @@ int x11_init_uinput(void) {
     int fd = open("/dev/uinput", O_WRONLY | O_NONBLOCK);
     if (fd < 0) fd = open("/dev/input/uinput", O_WRONLY | O_NONBLOCK);
     if (fd < 0) {
-        fprintf(stderr, "[UINPUT] open failed: %s (swallow disabled)\n", strerror(errno));
+        log_error("[UINPUT] open failed: %s (swallow disabled)", strerror(errno));
         PROFILE_END_VAR(timer, "input:x11_init_uinput");
         return -1;
     }
@@ -76,7 +77,7 @@ int x11_init_uinput(void) {
         if (ioctl(fd, UI_DEV_CREATE) < 0) { perror("[UINPUT] UI_DEV_CREATE legacy"); close(fd); PROFILE_END_VAR(timer, "input:x11_init_uinput"); return -1; }
     }
     usleep(150 * 1000);
-    fprintf(stderr, "[UINPUT] virtual keyboard created (fd=%d)\n", fd);
+    log_info("[UINPUT] virtual keyboard created (fd=%d)", fd);
     PROFILE_END_VAR(timer, "input:x11_init_uinput");
     return fd;
 }
@@ -198,7 +199,7 @@ bool x11_handle_global_key(int key_code, int value) {
         g_x11_shift_held = (value != 0);
     }
     double seconds = Platform_GetUniversalTimeSeconds();
-    if (seconds >= 300) { Platform_ResetUniversalTimer(); printf("SUPPOSED TO CLEAR FILE\n"); }
+    if (seconds >= 300) { Platform_ResetUniversalTimer(); log_info("SUPPOSED TO CLEAR FILE"); }
     if (value != 1) { PROFILE_END_VAR(timer, "input:x11_handle_global_key"); return false; }
     int pressed_vk = ConvertLinuxKeyToWindowsVK(key_code);
     int modifiers = HOTKEY_MOD_NONE;

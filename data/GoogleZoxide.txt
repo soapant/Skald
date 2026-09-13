@@ -52,3 +52,8 @@ love forever love is freedom you come forever you and me
 how long has raycast been developed
 arch linux pacman list all explicitly installed packages 
 how do i install this libmupdf.so.28.0:
+what is edk2-ovmf
+pacman check if some pacjage is a dependency of another 
+what is tomlplusplus on arch linux 
+what is wofi used for 
+what is tmp in vms
