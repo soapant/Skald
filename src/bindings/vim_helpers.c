@@ -102,7 +102,7 @@ void DeleteInsideDelimiter(VimContext* ctx, char open_char, char close_char, boo
         }
     }
     if (start == -1 || end == -1 || start >= end - 1) {
-        log_info("[DEBUG] No valid delimiters found!");
+        log_info("No valid delimiters found!");
         return;
     }
     int delete_start = start + 1;

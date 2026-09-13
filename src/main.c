@@ -50,11 +50,11 @@ int main() {
   {
     int lock_fd = open("/tmp/flint.lock", O_RDWR | O_CREAT, 0666);
     if (lock_fd < 0) {
-      log_error("[SYSTEM] Cannot open singleton lock /tmp/flint.lock (%s). If it is owned by another user, remove it: sudo rm /tmp/flint.lock", strerror(errno));
+      log_error("Cannot open singleton lock /tmp/flint.lock (%s). If it is owned by another user, remove it: sudo rm /tmp/flint.lock", strerror(errno));
       return 1;
     }
     if (flock(lock_fd, LOCK_EX | LOCK_NB) != 0) {
-      log_info("[SYSTEM] Another instance is already running. Exiting.");
+      log_info("Another instance is already running. Exiting.");
       close(lock_fd);
       return 1;
     }
@@ -65,14 +65,14 @@ int main() {
   {
     HANDLE mtx = CreateMutexA(NULL, TRUE, "flint_single_instance_mutex");
     if (mtx && GetLastError() == ERROR_ALREADY_EXISTS) {
-      log_info("[SYSTEM] Another instance is already running. Exiting.");
+      log_info("Another instance is already running. Exiting.");
       return 1;
     }
   }
 #endif
 #if !defined(_WIN32)
   if (!init_display()) {
-    log_info("[SYSTEM] Continuing without X11 display (headless mode)");
+    log_info("Continuing without X11 display (headless mode)");
   }
 #endif
 #if defined(_WIN32)
@@ -113,7 +113,7 @@ int main() {
   
   WindowManager* wm = WindowManager_Create();
   if (!wm) {
-      log_error("[SYSTEM] Failed to create WindowManager");
+      log_error("Failed to create WindowManager");
       return 1;
   }
   

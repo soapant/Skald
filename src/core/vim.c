@@ -227,7 +227,7 @@ static void CALLBACK SequenceTimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, D
     if (seq_state.waiting) {
         seq_state.waiting = false;
         seq_state.timed_out = true;
-        log_info("[SEQ-DEBUG] Timer expired! Sequence: '%s'", seq_state.keys);
+        log_info("Timer expired! Sequence: '%s'", seq_state.keys);
     }
     seq_state.timer_id = 0;
 }

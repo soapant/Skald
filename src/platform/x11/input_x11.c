@@ -51,7 +51,7 @@ int x11_init_uinput(void) {
     int fd = open("/dev/uinput", O_WRONLY | O_NONBLOCK);
     if (fd < 0) fd = open("/dev/input/uinput", O_WRONLY | O_NONBLOCK);
     if (fd < 0) {
-        log_error("[UINPUT] open failed: %s (swallow disabled)", strerror(errno));
+        log_error("open failed: %s (swallow disabled)", strerror(errno));
         PROFILE_END_VAR(timer, "input:x11_init_uinput");
         return -1;
     }
@@ -77,7 +77,7 @@ int x11_init_uinput(void) {
         if (ioctl(fd, UI_DEV_CREATE) < 0) { perror("[UINPUT] UI_DEV_CREATE legacy"); close(fd); PROFILE_END_VAR(timer, "input:x11_init_uinput"); return -1; }
     }
     usleep(150 * 1000);
-    log_info("[UINPUT] virtual keyboard created (fd=%d)", fd);
+    log_info("virtual keyboard created (fd=%d)", fd);
     PROFILE_END_VAR(timer, "input:x11_init_uinput");
     return fd;
 }

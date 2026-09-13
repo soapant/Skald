@@ -210,13 +210,13 @@ int WindowManager_RunLinux(WindowManager* wm) {
     } else {
         g_x11_uinput_fd = init_uinput();
         if (g_x11_uinput_fd < 0) {
-            log_warn("[SYSTEM] continuing without uinput (no swallow)");
+            log_warn("continuing without uinput (no swallow)");
         }
     }
 
     ScanAndHookKeyboards();
     if (g_x11_keyboard_count == 0) {
-        log_error("[ERROR] No structural keyboard nodes located under /dev/input/");
+        log_error("No structural keyboard nodes located under /dev/input/");
         destroy_uinput();
         PROFILE_END_VAR(timer, "window_manager_x11:WindowManager_RunLinux");
         return -1;
@@ -332,7 +332,7 @@ int WindowManager_RunLinux(WindowManager* wm) {
                         } else {
                             static bool warned = false;
                             if (!warned) {
-                                log_warn("[WARN] grabbed but no uinput - key %d lost. Check /dev/uinput perms (need input group or ACL)", ev.code);
+                                log_warn("grabbed but no uinput - key %d lost. Check /dev/uinput perms (need input group or ACL)", ev.code);
                                 warned = true;
                             }
                         }
