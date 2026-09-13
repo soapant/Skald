@@ -489,6 +489,7 @@ void UpdateTextCaret(WindowHandle hwndEditControl)
 }
 
 void CalculateWindowMetrics(int count, WindowLayout* layout,int height , int width,int item_height) {
+  (void)count; (void)item_height;
   POINT ptPrimary = { 0, 0 };
   HMONITOR hMonitor = MonitorFromPoint(ptPrimary, MONITOR_DEFAULTTOPRIMARY);
 
@@ -500,9 +501,9 @@ void CalculateWindowMetrics(int count, WindowLayout* layout,int height , int wid
   int monitorHeight = mi.rcMonitor.bottom - mi.rcMonitor.top;
 
   layout->w = 900;
-  layout->item_height = item_height;
+  layout->item_height = 32;
 
-  layout->h = 95 + (count > 0 ? (count * layout->item_height) : 0);
+  layout->h = 640;
 
   if (layout->h < height) layout->h = height;
   if (layout->h > width) layout->h = width;

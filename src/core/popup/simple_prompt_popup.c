@@ -259,7 +259,7 @@ Popup* SimplePromptPopup_Create(WindowManager* wm, const SimplePromptSpec* spec)
     if (!wm || !spec) { PROFILE_END_VAR(timer, "window_manager:SimplePromptPopup_Create"); return NULL; }
     
     int layout_w = 900;
-    int layout_h = 95 + (1 > 0 ? (1 * spec->item_height) : 0);
+    int layout_h = 640;
     
     if (layout_h < spec->height) layout_h = spec->height;
     if (layout_h > spec->width) layout_h = spec->width;

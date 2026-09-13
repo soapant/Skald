@@ -221,12 +221,11 @@ void TriggerAppLauncher(void) {
     for (size_t i = 0; i < ARRAY_LEN(ListOfProgramPaths); i++) {
         fl_on_dir_changed(ListOfProgramPaths[i], initialize_app_cache);
     }
-    int _cnt=0; _cnt=(int)s_apps.count;
     int ih = IconSize + 8;
     if (ih < 32) ih = 32;
     if (ih > 48) ih = 48;
-    PROMPT(.title = "🚀 AppLauncher", .items = NULL, .count = _cnt,
-           .height = 920, .width = 650, .item_height = ih,
+    PROMPT(.title = "🚀 AppLauncher", .items = NULL,
+           .height = 920, .width = 650,
            .refresh = applauncher_refresh_callback,
            .enter = applauncher_enter_callback,
            .ctrl_enter = applauncher_ctrlenter_callback,

@@ -28,10 +28,13 @@ void Platform_WaitForKeypressAsync(KeyCallback callback) {
 char* Platform_PromptUser(const PromptSpec* spec) {
   const char** window_list = spec->items;
   const char* window_title = spec->title;
-  int count = spec->count;
   int height = spec->height;
   int width = spec->width;
-  int item_height = spec->item_height;
+  int count = 0;
+  if (window_list) {
+    for (count = 0; count < 8192 && window_list[count]; count++) {}
+  }
+  int item_height = 32;
   RefreshCallback refresh_callback = spec->refresh;
   EnterCallback enter_callback = spec->enter;
   CtrlEnterCallback ctrl_enter_callback = spec->ctrl_enter;
@@ -54,7 +57,7 @@ char* Platform_PromptUser(const PromptSpec* spec) {
   if (g_win32_prompt_state) { free(g_win32_prompt_state); g_win32_prompt_state = NULL; }
   PromptState *win_state = NULL;
   ListBoxInfo* lb_ptr = NULL;
-  bool has_listbox = (count >= 0);
+  bool has_listbox = (window_list || spec->refresh);
   if (has_listbox) {
     win_state = (PromptState*)calloc(1, sizeof(PromptState));
     if (!win_state) return NULL;
@@ -104,7 +107,7 @@ char* Platform_PromptUser(const PromptSpec* spec) {
   }
 
   WindowLayout layout;
-  CalculateWindowMetrics(count, &layout, height, width, item_height);
+  CalculateWindowMetrics(0, &layout, height, width, item_height);
   if (win_state) {
     win_state->width = layout.w;
     win_state->height = layout.h;
@@ -238,7 +241,7 @@ char* Platform_SimplePromptUser(const SimplePromptSpec* spec) {
   const char* window_title = spec->title;
   int height = spec->height;
   int width = spec->width;
-  int item_height = spec->item_height;
+  int item_height = 32;
 
   HINSTANCE hInstance = GetModuleHandle(NULL);
   FlintContext_Get()->window.selection_complete = false;

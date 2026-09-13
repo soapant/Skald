@@ -72,8 +72,8 @@ void TriggerForgetFull(void) {
     const char* ui_list[100];
     int count = fl_load_file_list(FORGETFULL_FILE_PATH, ui_list, 100);
 
-    PROMPT(.title = "📁 ForgetFull", .items = ui_list, .count = count,
-           .height = 920, .width = 650, .item_height = 32,
+    PROMPT(.title = "📁 ForgetFull", .items = ui_list,
+           .height = 920, .width = 650,
            .refresh = forgetfull_refresh_callback,
            .enter = forgetfull_enter_callback,
            .ctrl_enter = forgetfull_ctrlenter_callback,

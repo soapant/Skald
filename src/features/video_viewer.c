@@ -111,8 +111,8 @@ void video_prompt(void) {
     for (size_t i = 0; i < video_files.count; i++) {
         initial_items[i] = video_files.items[i].name;
     }
-    PROMPT(.title = "🎥 Viewer", .items = initial_items, .count = (int)video_files.count,
-           .height = 920, .width = 650, .item_height = 32,
+    PROMPT(.title = "🎥 Viewer", .items = initial_items,
+           .height = 920, .width = 650,
            .refresh = video_refresh_callback,
            .enter = video_enter_callback);
 

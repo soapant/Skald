@@ -96,14 +96,18 @@ static void PromptPopup_OnShow(Popup* self) {
     if (!data->state) { PROFILE_END_VAR(timer, "window_manager:PromptPopup_OnShow"); return; }
     
     data->state->items = (char**)data->spec.items;
-    data->state->item_count = data->spec.count;
+    data->state->item_count = 0;
     data->state->cursor = 0;
     data->state->width = data->w;
     data->state->height = data->h;
     const char* p = strchr(data->spec.title, ' ');
     data->state->window_title = (char*)(p ? p+1 : data->spec.title);
     data->state->filter[0] = '\0';
-    data->state->has_listbox = (data->spec.count >= 0);
+    if (data->spec.items || data->spec.refresh) {
+      data->state->has_listbox = true;
+    } else {
+      data->state->has_listbox = false;
+    }
     ListBoxInfo_Init(&data->state->listbox);
     data->state->listbox.selected_index = -1;
     extern EditorMode g_last_mode;
@@ -380,7 +384,7 @@ Popup* PromptPopup_Create(WindowManager* wm, const PromptSpec* spec) {
     if (!wm || !spec) { PROFILE_END_VAR(timer, "window_manager:PromptPopup_Create"); return NULL; }
     
     int layout_w = 900;
-    int layout_h = 95 + (spec->count > 0 ? (spec->count * spec->item_height) : 0);
+    int layout_h = 640;
     
     if (layout_h < spec->height) layout_h = spec->height;
     if (layout_h > spec->width) layout_h = spec->width;

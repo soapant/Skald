@@ -47,8 +47,8 @@ bool google_enter_callback(const char* selection, ListBoxInfo* lb) {
 void TriggerGoogleSearch(void) {
     const char* items[MAX_FILE_LINES];
     int n = fl_load_file_list(GoogleHistoryFile, items, MAX_FILE_LINES);
-    PROMPT(.title = "🔍 Google", .items = items, .count = n,
-           .height = 920, .width = 650, .item_height = 32,
+    PROMPT(.title = "🔍 Google", .items = items,
+           .height = 920, .width = 650,
            .refresh = google_refresh_callback,
            .enter = google_enter_callback,
            .edit = google_edit_callback);
