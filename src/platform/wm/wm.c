@@ -2,6 +2,7 @@
 #include "wm/sway_wm.h"
 #include "wm/hyprland_wm.h"
 #include "wm/x11_wm.h"
+#include "deps/log.h"
 #include <string.h>
 #include <stdlib.h>
 
@@ -56,15 +57,13 @@ char* Wm_GetClipboardLastEntry(void) {
 }
 char* Wm_Paste(char* content) {
     char* result;
-    
     if (getenv("WAYLAND_DISPLAY")) {
         if ((result = paste_hyprland(content))) return result;
         if ((result = paste_sway(content))) return result;
     } else {
         if ((result = paste_x11(content))) return result;
     }
-    log_error("Paste Didnt Work");
-    
+    log_error("content='%s'", content ? content : "null");
     return NULL;
 }
 

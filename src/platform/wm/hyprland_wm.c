@@ -11,25 +11,32 @@
 #include <stdio.h>
 #include <ctype.h>
 bool get_title_hyprland(char *buffer, int buffer_size) {
-    (void)buffer; (void)buffer_size;
+    log_error("buffer='%s' buffer_size=%d", buffer ? buffer : "null", buffer_size);
     return false;
 }
 
 char* get_clipboard_entry_hyprland() {
-  return Platform_RunTerminalCommand("wl-paste",false);
+  char* out = Platform_RunTerminalCommand("wl-paste",false);
+  if (!out) log_error("wl-paste failed");
+  return out;
 }
 
 char* paste_hyprland(char* content) {
+  if (!content) { log_error("content is NULL"); return NULL; }
   char buffer[100];
   snprintf(buffer,sizeof(buffer),"wtype %s",content);
-  return Platform_RunTerminalCommand(buffer,false);
+  char* out = Platform_RunTerminalCommand(buffer,false);
+  if (!out) log_error("content='%s'", content ? content : "null");
+  return out;
 }
 
 
 bool succeded_hypr(char* output) {
+    if (!output) { log_error("output is NULL"); return false; }
     StringList lines = String_Split(output, "\n");
     for (size_t i = 0; i < lines.count; i++) {
       if (Platform_StringContainsCaseInsensitive(lines.items[i],"\"error\"")) {
+        log_error("output='%s'", output ? output : "null");
         return false;
       }
     }
@@ -37,30 +44,28 @@ bool succeded_hypr(char* output) {
 }
 
 bool focus_window_title_hyprland(char* title) {
-  if (!title) return false;
-  
+  if (!title) { log_error("title is NULL"); return false; }
   char cmd[512];
   snprintf(cmd, sizeof(cmd), "hyprctl dispatch focuswindow 'title:%s'", title);
-
-
-    if (!succeded_hypr(Platform_RunTerminalCommand(cmd, false))) {
-        if (title[0] != '\0') {
-            snprintf(cmd, sizeof(cmd), "hyprctl dispatch focuswindow 'title:%c%s'",
-                     toupper((unsigned char)title[0]), 
-                     &title[1]);
-            if (succeded_hypr(Platform_RunTerminalCommand(cmd, false))) {
-                return true;
-            }
-        }
-        return false;
-    }
+  char* out = Platform_RunTerminalCommand(cmd, false);
+  if (succeded_hypr(out)) { free(out); return true; }
+  free(out);
+  if (title[0] != '\0') {
+      snprintf(cmd, sizeof(cmd), "hyprctl dispatch focuswindow 'title:%c%s'",
+               toupper((unsigned char)title[0]), &title[1]);
+      out = Platform_RunTerminalCommand(cmd, false);
+      if (succeded_hypr(out)) { free(out); return true; }
+      free(out);
+  }
+  log_error("title='%s'", title ? title : "null");
+  return false;
 }
 
 WindowList get_window_names_hyprland() {
    char* output = Platform_RunTerminalCommand("hyprctl clients -j", false);
    WindowList list = { .windows = NULL, .count = 0 };
    char buffer[512];
-   if (output == NULL || strlen(output) == 0) return list;
+   if (output == NULL || strlen(output) == 0) { log_error("output is NULL or empty"); return list; }
    StringList lines = String_Split(output, "\n");
    for (size_t i = 0; i < lines.count; i++) {
        char *match = strstr(lines.items[i], "\"class\"");
@@ -84,7 +89,7 @@ WindowList get_window_titles_hyprland() {
    char* output = Platform_RunTerminalCommand("hyprctl clients -j", false);
    WindowList list = { .windows = NULL, .count = 0 };
    char buffer[512];
-   if (output == NULL || strlen(output) == 0) return list;
+   if (output == NULL || strlen(output) == 0) { log_error("output is NULL or empty"); return list; }
    StringList lines = String_Split(output, "\n");
    for (size_t i = 0; i < lines.count; i++) {
        char *match = strstr(lines.items[i], "\"title\"");
