@@ -350,7 +350,6 @@ void PopulateListBox(ListBoxInfo* lb, WindowHandle hListBox, const char* filter,
 
   log_info("PopulateListBox completed for filter='%s'", filter ? filter : "");
   PROFILE_END_VAR(timer_total, "PopulateListBox TOTAL");
-  free(items);
 }
 
 ColorRef GetRainbowColor(float t, float s, float v) {
