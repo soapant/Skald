@@ -374,7 +374,7 @@ void todo_render_callback(PromptState *state) {
     ListBoxInfo *lb = &state->listbox;
     FlListSpec spec = {
         .lb = lb,
-        .x = 0, .y = 70, .w = state->width, .h = state->height - 70 - 40,
+        .x = 0, .y = 70, .w = state->width, .h = state->height - 50,
         .item_height = FontSize + 36
     };
     if (!fl_listbox_begin(&spec)) return;
@@ -418,7 +418,6 @@ void TriggerTodo(void) {
 
     PROMPT(
         .title = "📝 Todo", .items = ui_list,
-        .height = 920, .width = 650,
         .refresh = todo_refresh_callback,
         .enter = todo_enter_callback,
         .ctrl_enter = todo_ctrlenter_callback,

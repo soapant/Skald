@@ -290,7 +290,6 @@ static void TriggerWindowSwitcher() {
     }
     
     PROMPT(.title = "🪟 Switcher", .items = ui_list,
-           .height = 920, .width = 650,
            .refresh = switcher_refresh_callback,
            .enter = switcher_enter_callback,
            .copy = switcher_copy_callback);

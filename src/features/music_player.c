@@ -117,7 +117,6 @@ void music_prompt(void) {
         initial_items[i] = s_music_files.items[i].name;
     }
     PROMPT(.title = "🎵 Player", .items = initial_items,
-           .height = 920, .width = 650,
            .refresh = music_refresh_callback,
            .enter = music_enter_callback);
     free((void*)initial_items);

@@ -7,8 +7,7 @@ static int img_region_step = 0;
 
 static void TriggerScreenshot(WindowHandle hPopupWnd,bool open_screenshot) {
     const char* name_prompt = "Enter image name...";
-    char* raw_name = SIMPLE_PROMPT(.prompt = name_prompt, .title = "📷 Screenshot",
-                                   .height = 920, .width = 650);
+    char* raw_name = SIMPLE_PROMPT(.prompt = name_prompt, .title = "📷 Screenshot");
 
     if (raw_name != NULL && strlen(raw_name) > 0) {
         char final_file_path[512];
