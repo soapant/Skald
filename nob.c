@@ -253,7 +253,10 @@ static bool compile_all(bool* any_compiled) {
 
     bool ok = true;
     Nob_Procs procs = {0};
-    size_t max_procs = (size_t)nob_nprocs() + 1;
+    size_t _nprocs = (size_t)nob_nprocs();
+    if (_nprocs == 0) _nprocs = 6;
+    size_t max_procs = _nprocs + 1;
+    nob_log(NOB_INFO, "Compiling %zu files with %zu parallel jobs (nprocs=%zu)", to_build.count, max_procs, _nprocs);
 
     for (size_t i = 0; i < to_build.count; ++i) {
         Nob_Cmd cmd = {0};
@@ -344,28 +347,41 @@ int main(int argc, char** argv) {
         nob_needs_rebuild(output, (const char**)to_build.items, to_build.count) != 0;
     if (!needs_link) {
         nob_log(NOB_INFO, "No changes, skipping link");
-        // still ensure stale features are built
-        for (size_t i = 0; i < feature_sources.count; ++i) {
-            const char* src = feature_sources.items[i];
-            const char* so = feature_so_path(src);
-            bool need_so = !nob_file_exists(so) || nob_needs_rebuild1(so, src) != 0;
+        // still ensure stale features are built (parallel)
+        {
+            Nob_Procs fprocs = {0};
+            size_t _fmax = (size_t)nob_nprocs();
+            if (_fmax == 0) _fmax = 6;
+            _fmax += 1;
+            bool fok = true;
+            for (size_t i = 0; i < feature_sources.count; ++i) {
+                const char* src = feature_sources.items[i];
+                const char* so = feature_so_path(src);
+                bool need_so = !nob_file_exists(so) || nob_needs_rebuild1(so, src) != 0;
 #if defined(_WIN32)
-            if (nob_file_exists("build/main.lib.a") && nob_needs_rebuild1(so, "build/main.lib.a") != 0) need_so = true;
+                if (nob_file_exists("build/main.lib.a") && nob_needs_rebuild1(so, "build/main.lib.a") != 0) need_so = true;
 #endif
-            if (!need_so) continue;
-            Nob_Cmd fcmd = {0};
-            nob_cc(&fcmd);
-            nob_cc_flags(&fcmd);
+                if (!need_so) continue;
+                Nob_Cmd fcmd = {0};
+                nob_cc(&fcmd);
+                nob_cc_flags(&fcmd);
 #if defined(_WIN32)
-            nob_cmd_append(&fcmd, CC_FLAGS, "-shared", "-o", so, src, "build/main.lib.a", LINK_FLAGS);
+                nob_cmd_append(&fcmd, CC_FLAGS, "-shared", "-o", so, src, "build/main.lib.a", LINK_FLAGS);
 #else
-            nob_cmd_append(&fcmd, CC_FLAGS, "-fPIC", "-shared", "-o", so, src);
+                nob_cmd_append(&fcmd, CC_FLAGS, "-fPIC", "-shared", "-o", so, src);
 #endif
-            if (!nob_cmd_run(&fcmd)) {
-                nob_log(NOB_ERROR, "Failed to build feature %s", so);
-                return 1;
+                if (!nob_cmd_run(&fcmd, .async = &fprocs, .max_procs = _fmax)) {
+                    nob_log(NOB_ERROR, "Failed to start feature %s", so);
+                    fok = false;
+                }
             }
-            nob_log(NOB_INFO, "Built feature %s", so);
+            if (!nob_procs_wait_and_reset(&fprocs)) fok = false;
+            if (!fok) return 1;
+            // log built features (best effort)
+            for (size_t i = 0; i < feature_sources.count; ++i) {
+                const char* so = feature_so_path(feature_sources.items[i]);
+                if (nob_file_exists(so)) nob_log(NOB_INFO, "Built feature %s", so);
+            }
         }
         if (do_run) {
             stop_running_instance();
@@ -396,28 +412,40 @@ int main(int argc, char** argv) {
         nob_log(NOB_ERROR, "Failed to link %s", output);
         return 1;
     }
-    // build features after main link (Windows needs import lib)
-    for (size_t i = 0; i < feature_sources.count; ++i) {
-        const char* src = feature_sources.items[i];
-        const char* so = feature_so_path(src);
-        bool need_so = !nob_file_exists(so) || nob_needs_rebuild1(so, src) != 0;
+    // build features after main link (Windows needs import lib) - parallel
+    {
+        Nob_Procs fprocs = {0};
+        size_t _fmax2 = (size_t)nob_nprocs();
+        if (_fmax2 == 0) _fmax2 = 6;
+        _fmax2 += 1;
+        bool fok = true;
+        for (size_t i = 0; i < feature_sources.count; ++i) {
+            const char* src = feature_sources.items[i];
+            const char* so = feature_so_path(src);
+            bool need_so = !nob_file_exists(so) || nob_needs_rebuild1(so, src) != 0;
 #if defined(_WIN32)
-        if (nob_file_exists("build/main.lib.a") && nob_needs_rebuild1(so, "build/main.lib.a") != 0) need_so = true;
+            if (nob_file_exists("build/main.lib.a") && nob_needs_rebuild1(so, "build/main.lib.a") != 0) need_so = true;
 #endif
-        if (!need_so) continue;
-        Nob_Cmd fcmd = {0};
-        nob_cc(&fcmd);
-        nob_cc_flags(&fcmd);
+            if (!need_so) continue;
+            Nob_Cmd fcmd = {0};
+            nob_cc(&fcmd);
+            nob_cc_flags(&fcmd);
 #if defined(_WIN32)
-        nob_cmd_append(&fcmd, CC_FLAGS, "-shared", "-o", so, src, "build/main.lib.a", LINK_FLAGS);
+            nob_cmd_append(&fcmd, CC_FLAGS, "-shared", "-o", so, src, "build/main.lib.a", LINK_FLAGS);
 #else
-        nob_cmd_append(&fcmd, CC_FLAGS, "-fPIC", "-shared", "-o", so, src);
+            nob_cmd_append(&fcmd, CC_FLAGS, "-fPIC", "-shared", "-o", so, src);
 #endif
-        if (!nob_cmd_run(&fcmd)) {
-            nob_log(NOB_ERROR, "Failed to build feature %s", so);
-            return 1;
+            if (!nob_cmd_run(&fcmd, .async = &fprocs, .max_procs = _fmax2)) {
+                nob_log(NOB_ERROR, "Failed to start feature %s", so);
+                fok = false;
+            }
         }
-        nob_log(NOB_INFO, "Built feature %s", so);
+        if (!nob_procs_wait_and_reset(&fprocs)) fok = false;
+        if (!fok) return 1;
+        for (size_t i = 0; i < feature_sources.count; ++i) {
+            const char* so = feature_so_path(feature_sources.items[i]);
+            if (nob_file_exists(so)) nob_log(NOB_INFO, "Built feature %s", so);
+        }
     }
     {
         Nob_Cmd chmod = {0};
