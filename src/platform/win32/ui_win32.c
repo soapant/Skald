@@ -14,7 +14,8 @@
 #include "core/window_manager.h"
 
 
-char* Platform_SearchPopup(void) { log_error("operation failed, returning error"); return NULL; }
+char* Platform_SearchPopup(void) { log_error("operation failed, returning error"); return NULL; log_info("Platform_SearchPopup completed");
+}
 
 #include <gdiplus.h>
 
@@ -24,6 +25,7 @@ PromptState* Platform_GetWin32PromptState(void) { return g_win32_prompt_state; }
 void Platform_WaitForKeypressAsync(KeyCallback callback) {
   FlintContext_Get()->g_waiting_for_key = true;
   FlintContext_Get()->g_key_callback = callback;
+log_info("Platform_WaitForKeypressAsync completed");
 }
 
 char* Platform_PromptUser(const PromptSpec* spec) {
@@ -158,7 +160,8 @@ char* Platform_PromptUser(const PromptSpec* spec) {
   ForceWindowFocus(FlintContext_Get()->window.hPopupWnd, FlintContext_Get()->window.hEditControl);
 
 
-  PROFILE_END_VAR(timer3, "Focus");
+    log_info("Platform_PromptUser completed");
+PROFILE_END_VAR(timer3, "Focus");
 
   log_info("Entering local message modal loop...");
   log_info("Entering modal loop", GetTickCount());
@@ -310,6 +313,7 @@ return NULL;
   DeleteObject(hCustomFont); 
   FlintContext_Get()->window.selection_complete = false;
   log_info("Returning from Platform_SimplePromptUser. Buffer %s", FlintContext_Get()->window.output_buffer);
+log_info("Platform_SimplePromptUser completed");
   return (strlen(FlintContext_Get()->window.output_buffer) > 0) ? FlintContext_Get()->window.output_buffer : NULL;
 }
 
@@ -320,6 +324,7 @@ void Platform_DisplayMessage(const char* message, int centerX, int centerY, int 
     return;
   }
   Platform_CreateDisplayMessageWindow(message, centerX, centerY, maxWidth, maxHeight, timeout, color);
+log_info("Platform_DisplayMessage completed");
 }
 
 void Platform_CreateDisplayMessageWindow(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, int timeout, ColorRef color) {
@@ -375,6 +380,7 @@ void Platform_CreateDisplayMessageWindow(const char* message, int centerX, int c
 
   SetTimer(hPopupWnd, 999, 50, NULL);
 
+log_info("Platform_CreateDisplayMessageWindow completed");
   return; 
 }
 
@@ -439,6 +445,7 @@ void Platform_SettingsPopUp() {
   }
 
   DeleteObject(hCustomFont); 
+log_info("Platform_SettingsPopUp completed");
 }
 
 int Platform_InitializeTrayIcon() {
@@ -466,6 +473,7 @@ return -1;
       return -1;
     }
   }
+log_info("Platform_InitializeTrayIcon completed");
   return 0;
 }
 
@@ -602,6 +610,7 @@ void Platform_RunHotKeyMessageLoop() {
   }
 
   if (FlintContext_Get()->hKeyboardHook) UnhookWindowsHookEx(FlintContext_Get()->hKeyboardHook);
+log_info("Platform_RunHotKeyMessageLoop completed");
 }
 
 static ULONG_PTR g_gdiplusToken = 0;
@@ -661,6 +670,7 @@ void Platform_InitUI() {
    RegisterClassA(&settingsPopupWc);
 
    FlintContext_Get()->hKeyboardHook = SetWindowsHookExA(WH_KEYBOARD_LL, LowLevelKeyboardProc, GetModuleHandle(NULL), 0);
+log_info("Platform_InitUI completed");
 }
 
 void Platform_ShutdownUI() {
@@ -671,7 +681,5 @@ void Platform_ShutdownUI() {
   if (g_gdiplusToken != 0) {
     GdiplusShutdown(g_gdiplusToken);
   }
+log_info("Platform_ShutdownUI completed");
 }
-
-
-

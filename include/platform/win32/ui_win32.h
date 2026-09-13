@@ -157,8 +157,6 @@ static inline void UI_NavigateTo(ListBoxInfo* lb, WindowHandle hListBox, int ind
     }
   }
 
-  // For custom render (todo, calc etc.) listbox is hidden (SW_HIDE) and drawing is done on popup via fl_listbox_next.
-  // RedrawWindow on hidden listbox does nothing, so invalidate popup instead.
   if (FlintContext_Get()->prompt_callbacks.render != NULL || !IsWindowVisible(WH_TO_HWND(hListBox))) {
     HWND hPopup = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
     if (hPopup && IsWindow(hPopup)) {

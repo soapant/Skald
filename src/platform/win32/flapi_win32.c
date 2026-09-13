@@ -177,7 +177,6 @@ bool fl_listbox_next_platform(FlListItemCtx *out) {
         RECT inner = {bx+t, y+1+t, bx+bw-t, y+g_fl_list_itemH-1-t};
         int innerR = R-1; if (innerR < 0) innerR = 0;
         if (inner.right <= inner.left || inner.bottom <= inner.top) { inner = (RECT){bx, y, bx+bw, y+g_fl_list_itemH}; innerR = R; }
-        // Pre-fill full item rect with window background to avoid black gaps (continuous background)
         {
             RECT fullRc = {bx, y, bx+bw, y+g_fl_list_itemH};
             if (EnableShaders && ShaderPreset != 0) {
@@ -206,7 +205,6 @@ bool fl_listbox_next_platform(FlListItemCtx *out) {
                 if (hWin) { GetClientRect(hWin, &winRc); winW = winRc.right - winRc.left; winH = winRc.bottom - winRc.top; if (winW<=0) winW=bw; if(winH<=0) winH=g_fl_list_visible * g_fl_list_itemH; }
                 int offsetX = inner.left;
                 int offsetY = inner.top;
-                // inner is already in window coords, use window container for continuous gradient
                 Win32_FillRoundedRectSlice(g_fl_list_hdc, &inner, COLOR_BG, winW, winH, offsetX, offsetY, innerR);
             } else {
                 Win32_FillRoundedRect(g_fl_list_hdc, &inner, COLOR_BG, innerR);

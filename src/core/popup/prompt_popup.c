@@ -275,7 +275,6 @@ static void PromptPopup_OnKey(Popup* self, int vk_code, bool pressed, int modifi
             filter_copy[sizeof(filter_copy) - 1] = '\0';
             sel = filter_copy;
         }
-        // persist to per-feature history (empty sel ignored inside)
         const char* feat = FlintContext_Get()->window.current_feature;
         if (feat && sel && sel[0]) History_Add(feat, sel);
         bool should_close = false;

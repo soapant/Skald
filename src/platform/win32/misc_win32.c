@@ -85,6 +85,7 @@ bool Platform_ExpandPath(const char* template_path, char* out, size_t out_size) 
         out[o++] = *p++;
     }
     out[o] = '\0';
+log_info("Platform_ExpandPath completed");
     return true;
 }
 
@@ -141,6 +142,7 @@ int Platform_FileAppend(MappedFile *mf, const char *text) {
     SetFilePointerEx(mf->hFile, fs, NULL, FILE_BEGIN);
     SetEndOfFile(mf->hFile);
 
+log_info("Platform_FileAppend completed");
     return 1;
 }
 
@@ -166,6 +168,7 @@ void Platform_FileClose(MappedFile *mf) {
         CloseHandle(mf->hFile);
         mf->hFile = INVALID_HANDLE_VALUE;
     }
+log_info("Platform_FileClose completed");
 }
 
 Line* Platform_FileGetLines(MappedFile *mf, size_t *outLineCount) {
@@ -196,6 +199,7 @@ Line* Platform_FileGetLines(MappedFile *mf, size_t *outLineCount) {
         }
     }
     *outLineCount = count;
+log_info("Platform_FileGetLines completed");
     return list;
 }
 
@@ -261,6 +265,7 @@ char** Platform_FileGetStrings(MappedFile *mf, size_t *outLineCount, NewlineInfo
     *outLineCount = count;
     *outNewlines = newlines;
     *outNewlineCount = newlineCount;
+log_info("Platform_FileGetStrings completed");
     return stringList;
 }
 
@@ -270,15 +275,18 @@ void Platform_CleanUpFile(MappedFile *mf, NewlineInfo *newlines, size_t newlineC
         mf->pBuffer[newlines[i].index] = newlines[i].original;
     }
     free(newlines);
+log_info("Platform_CleanUpFile completed");
 }
 
 bool Platform_StringContainsCaseInsensitive(const char* haystack, const char* needle) {
     if (!haystack || !needle) { log_error("operation failed, returning error"); return false; }
+log_info("Platform_StringContainsCaseInsensitive completed");
     return StrStrIA(haystack, needle) != NULL;
 }
 
 bool Platform_StringStartsWithCaseInsensitive(const char* str, const char* prefix) {
     if (!str || !prefix) { log_error("operation failed, returning error"); return false; }
+log_info("Platform_StringStartsWithCaseInsensitive completed");
     return StrStrIA(str, prefix) == str;
 }
 
@@ -303,6 +311,7 @@ int Platform_CollectRunningProcesses(char process_list[][128], int max_count) {
         } while (Process32Next(hSnapshot, &pe));
     }
     CloseHandle(hSnapshot);
+log_info("Platform_CollectRunningProcesses completed");
     return count;
 }
 
@@ -311,6 +320,7 @@ bool Platform_TerminateProcessByName(const char* exe_name) {
     char cmd[512];
     snprintf(cmd, sizeof(cmd), "taskkill /f /im \"%s*\"", exe_name);
     Platform_RunTerminalCommand(cmd, false);
+log_info("Platform_TerminateProcessByName completed");
     return true;
 }
 
@@ -397,6 +407,7 @@ int Platform_ReplaceLineInMappedFile(MappedFile* mf, int line_index, const char*
 
     free(lines);
     free(new_buffer);
+log_info("Platform_ReplaceLineInMappedFile completed");
     return 1;
 }
 
@@ -409,6 +420,7 @@ bool Platform_LaunchBrowserAtUrl(char* url, bool new_window) {
         snprintf(command, sizeof(command), "start \"\" \"%s\"", url);
     }
     
+log_info("Platform_LaunchBrowserAtUrl completed");
     return Platform_RunTerminalCommand(command,false);
 }
 
@@ -444,6 +456,7 @@ bool Platform_QueryBrowser(char* query) {
     
     char command[4096];
     snprintf(command, sizeof(command), "start \"\" \"%s\"", url);
+log_info("Platform_QueryBrowser completed");
     return Platform_RunTerminalCommand(command,false);
 }
 
@@ -478,6 +491,7 @@ char* Platform_GetLastClipboardEntry(void) {
     GlobalUnlock(hClipData);
     CloseClipboard();
 
+log_info("Platform_GetLastClipboardEntry completed");
     return result;
 }
 
@@ -519,5 +533,6 @@ bool Platform_PasteContent(char* content) {
     }
 
     free(inputs);
+log_info("Platform_PasteContent completed");
     return success;
 }
