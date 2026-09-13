@@ -312,14 +312,8 @@ void PopulateListBox(ListBoxInfo* lb, WindowHandle hListBox, const char* filter,
       }
     } else if (total_matches != 0 && strlen(filter) > 0) {
       UI_SetSelection(lb, FlintContext_Get()->window.hListBox, 0);
-#if defined(_WIN32)
-      FlintContext_Get()->draw_background = false;
-#endif
     } else {
       UI_SetSelection(lb, FlintContext_Get()->window.hListBox, -1);
-#if defined(_WIN32)
-      FlintContext_Get()->draw_background = true;
-#endif
     }
     if (total_matches == 0) {
       if (WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage) != NULL) {
@@ -351,14 +345,12 @@ void PopulateListBox(ListBoxInfo* lb, WindowHandle hListBox, const char* filter,
   lb->last_item_count = item_count;
   lb->total_matches = total_matches;
   if (total_matches != old_count) {
-#if defined(_WIN32)
-    FlintContext_Get()->draw_background = true;
-#endif
   }
   PROFILE_END_VAR(timer_cleanup, "  PopulateListBox - Cleanup");
 
   log_info("PopulateListBox completed for filter='%s'", filter ? filter : "");
   PROFILE_END_VAR(timer_total, "PopulateListBox TOTAL");
+  free(items);
 }
 
 ColorRef GetRainbowColor(float t, float s, float v) {
