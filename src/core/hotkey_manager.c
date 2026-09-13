@@ -33,6 +33,7 @@ bool hotkey_register_internal(HotkeyBinding binding) {
 
 bool hotkey_process(int vk_code, int modifiers) {
     char* title = Platform_GetActiveWindowTitle();
+    printf("%s \n",title);
     for (int i = 0; i < g_hotkey_count; i++) {
         HotkeyBinding* b = &g_hotkeys[i];
         
