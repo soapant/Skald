@@ -16,8 +16,8 @@ bool EnableShaders = true;
 int ShaderPreset = 1;
 bool EnableSelectionShaders = true;
 int SelectionShaderPreset = 3;
-float ShaderIntensity = 0.30f;
-float ShaderSmoothness = 10000.0f;
+float ShaderIntensity = 0.10f;
+float ShaderSmoothness = 100.0f;
 
 char* EditPopUpPos = "middle";
 int EditPopUpWidthMin = 400;
