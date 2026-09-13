@@ -88,7 +88,6 @@ static inline float Win32_Dither(int x, int y) {
   return ((bayer[(y & 3)*4 + (x & 3)] / 16.0f) - 0.5f) * 1.2f;
 }
 
-// ---- fast DIB gradient helper with caching for slices ----
 static HBITMAP g_bgCacheBmp = NULL;
 static HDC g_bgCacheDC = NULL;
 static int g_bgCacheW = 0, g_bgCacheH = 0;
@@ -193,13 +192,11 @@ static void Win32_EnsureBgCache(HDC refDC, int containerW, int containerH, COLOR
   }
   HDC memDC = CreateCompatibleDC(refDC);
   HBITMAP old = (HBITMAP)SelectObject(memDC, hBmp);
-  // keep DC for blitting slices
   g_bgCacheBmp = hBmp;
   g_bgCacheDC = memDC;
   g_bgCacheW = containerW; g_bgCacheH = containerH;
   g_bgCacheBase = base; g_bgCachePreset = preset;
   g_bgCacheGamma = gamma; g_bgCacheIntensity = intensity;
-  // old is NULL, no need to restore
 }
 
 static void Win32_DrawGradientDIB(HDC hdc, RECT* rc, COLORREF base, int preset, int containerW, int containerH, int offsetX, int offsetY) {
@@ -207,7 +204,6 @@ static void Win32_DrawGradientDIB(HDC hdc, RECT* rc, COLORREF base, int preset, 
   int h = rc->bottom - rc->top;
   if (w <= 0 || h <= 0) return;
   if (preset == 1 || preset == 2 || preset == 3 || preset == 4) {
-    // for slice, use cache of full container and BitBlt slice
     if (containerW > 0 && containerH > 0 && (containerW != w || containerH != h || offsetX != 0 || offsetY != 0)) {
       Win32_EnsureBgCache(hdc, containerW, containerH, base, preset);
       if (g_bgCacheDC && g_bgCacheBmp) {
@@ -216,7 +212,6 @@ static void Win32_DrawGradientDIB(HDC hdc, RECT* rc, COLORREF base, int preset, 
       }
     }
   }
-  // fallback: create DIB for this rc directly (for full or selection)
   BITMAPINFO bmi = {0};
   bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
   bmi.bmiHeader.biWidth = w;
@@ -366,7 +361,6 @@ void Win32_DrawSelectionBackground(HDC hdc, RECT* rc, COLORREF base) {
 
 }
 
-// Cohesive background slice: draws the window's background gradient sampled at offset within container
 void Win32_DrawBackgroundSlice(HDC hdc, RECT* rc, COLORREF base, int containerW, int containerH, int offsetX, int offsetY) {
   int preset = ShaderPreset;
   if (!EnableShaders || preset == 0) {

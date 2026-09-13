@@ -29,6 +29,7 @@ bool Platform_LaunchTerminalAtPath(const char* working_dir, const char* extra_ar
           log_error("ShellExecute failed for terminal '%s' (extra_args='%s', dir='%s') err=%ld - check UsedTerminal config (foot vs alacritty, ensure .exe exists in PATH)", terminal, extra_args ? extra_args : "", working_dir, (long)(intptr_t)res);
           return false;
       }
+log_info("Platform_LaunchTerminalAtPath completed");
       return true;
 }
 
@@ -73,7 +74,6 @@ char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
     BOOL ok = CreateProcessA(NULL, cmdLine, NULL, NULL, TRUE, CREATE_NO_WINDOW, NULL, NULL, &si, &pi);
     CloseHandle(hWrite);
     if (!ok) { log_error("CreateProcess failed for '%s' err=%lu", cmdLine, GetLastError()); CloseHandle(hRead); return strdup(""); }
-    // wait up to 10s for gcc
     WaitForSingleObject(pi.hProcess, 10000);
     char* out = NULL;
     size_t cap = 8192;
@@ -99,6 +99,7 @@ char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
     CloseHandle(hRead);
     CloseHandle(pi.hProcess);
     CloseHandle(pi.hThread);
+    log_info("ran terminal command '%s' open_terminal=%d", command, open_terminal);
     return out;
 }
 
@@ -108,7 +109,9 @@ bool Platform_LaunchFileManagerAtPath(char* path,char* args) {
     snprintf(buffer,sizeof(buffer),"%s.exe",UsedFileManager);
     HINSTANCE res = ShellExecuteA(NULL, "open", buffer, path ? path : "", NULL, SW_SHOWNORMAL);
     if ((intptr_t)res <= 32) { log_error("ShellExecute failed for filemanager '%s' path='%s' err=%ld", buffer, path, (long)(intptr_t)res); return false; }
+    //temporarily not being used
     (void)args;
+log_info("Platform_LaunchFileManagerAtPath completed");
     return true;
 }
 
@@ -175,6 +178,7 @@ return NULL;
     }
     if (strlen(path) == 0) return NULL;
     char* dup = _strdup(path);
+log_info("Platform_QueryZoxidePath completed");
     return dup;
 }
 
@@ -191,6 +195,7 @@ bool Platform_ShellExecuteWithVerb(const char* path, const char* verb, bool asyn
         log_error("ShellExecuteEx failed for '%s' verb='%s' err=%lu", path, verb ? verb : "open", GetLastError());
         return false;
     }
+log_info("Platform_ShellExecuteWithVerb completed");
     return true;
 }
 
@@ -199,6 +204,7 @@ bool Platform_LaunchApp(const char* path) {
     char expanded[MAX_PATH];
     if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) { log_error("Platform_ExpandPath failed for '%s'", path); return false; }
     if (!Platform_ShellExecuteWithVerb(expanded, "open", true)) { log_error("ShellExecute failed for '%s' (expanded '%s')", path, expanded); return false; }
+log_info("Platform_LaunchApp completed");
     return true;
 }
 
@@ -207,10 +213,12 @@ bool Platform_LaunchAppAsAdmin(const char* path) {
     char expanded[MAX_PATH];
     if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) { log_error("Platform_ExpandPath failed for '%s'", path); return false; }
     if (!Platform_ShellExecuteWithVerb(expanded, "runas", true)) { log_error("ShellExecute (runas) failed for '%s' (expanded '%s')", path, expanded); return false; }
+log_info("Platform_LaunchAppAsAdmin completed");
     return true;
 }
 
 bool Platform_IsCtrlPressed(void) {
+log_info("Platform_IsCtrlPressed completed");
     return (GetKeyState(VK_CONTROL) & 0x8000) != 0;
 }
 
@@ -218,16 +226,19 @@ static ULONGLONG g_timer_start_ms = 0;
 
 void Platform_StartUniversalTimer() {
     g_timer_start_ms = GetTickCount64();
+log_info("Platform_StartUniversalTimer completed");
 }
 
 void Platform_ResetUniversalTimer() {
     g_timer_start_ms = GetTickCount64();
+log_info("Platform_ResetUniversalTimer completed");
 }
 
 void Platform_ModifyUniversalTimer(double seconds_to_add) {
     LONGLONG ms_offset = (LONGLONG)(seconds_to_add * 1000.0);
     g_timer_start_ms -= ms_offset; 
     log_info("Modified baseline by %.2f seconds.", seconds_to_add);
+log_info("Platform_ModifyUniversalTimer completed");
 }
 
 double Platform_GetUniversalTimeSeconds() {
@@ -303,6 +314,7 @@ int Platform_CopyToClipboard(const char* text) {
     SubjectiveMessageDisplay(buffer,140,TimeOutForMessages,COLOR_TEXT);
     CloseClipboard();
     
+log_info("Platform_CopyToClipboard completed");
     return 1;
 }
 
@@ -351,12 +363,11 @@ void Platform_SaveRegionToPNG(int x1, int y1, int x2, int y2, const char* fullPa
     DeleteObject(hBitmap);
     DeleteDC(hMemoryDC);
     ReleaseDC(NULL, hScreenDC);
+    log_info("Platform_SaveRegionToPNG completed");
 }
 
 FontHandle Platform_CreateFont(int size, const char* face_name) {
-    // size is pixel height - use negative for char height (DPI independent), fallback if face not found
     int h = -size;
-    // try to ensure font file is loaded if bundled (resources/*.ttf)
     static bool s_font_loaded = false;
     if (!s_font_loaded) {
         s_font_loaded = true;
@@ -395,7 +406,7 @@ FontHandle Platform_CreateFont(int size, const char* face_name) {
         if (actual[0] && face_name && _stricmp(actual, face_name) != 0) {
             const char* fallbacks[] = {"Cascadia Code", "Cascadia Mono", "Consolas", "Segoe UI", NULL};
             for (int i=0; fallbacks[i]; i++) {
-                if (_stricmp(actual, fallbacks[i])==0) break; // already fallback
+                if (_stricmp(actual, fallbacks[i])==0) break; 
                 HFONT hf2 = CreateFontA(h, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, fallbacks[i]);
                 if (hf2) {
                     HDC hdc2 = GetDC(NULL);
@@ -408,6 +419,7 @@ FontHandle Platform_CreateFont(int size, const char* face_name) {
             }
         }
     }
+    log_info("Platform_CreateFont completed");
     return FH_FROM_HFONT(hf);
 }
 
@@ -415,6 +427,7 @@ void Platform_DestroyFont(FontHandle font) {
     if (FH_TO_HFONT(font)) {
         DeleteObject(FH_TO_HFONT(font));
     }
+    log_info("Platform_DestroyFont completed");
 }
 
 void Platform_GetTextExtents(FontHandle font, const char* text, int maxWidth, int* outWidth, int* outHeight) {
@@ -431,13 +444,14 @@ void Platform_GetTextExtents(FontHandle font, const char* text, int maxWidth, in
     DeleteDC(hdc);
     *outWidth = rect.right;
     *outHeight = rect.bottom;
+    log_info("Platform_GetTextExtents completed");
 }
 
 long Platform_GetFileSize(char *filepath) {
     FILE *fp = fopen(filepath, "rb"); 
     if (fp == NULL) {
-                log_error("operation failed, returning error");
-return -1; 
+        log_error("operation failed, returning error");
+          return -1; 
     }
 
     if (fseek(fp, 0L, SEEK_END) != 0) { log_error("fseek failed for '%s' err=%s", filepath, strerror(errno)); fclose(fp); return -1; }
@@ -445,6 +459,7 @@ return -1;
     long size = ftell(fp);
 
     fclose(fp);
+    log_info("Platform_GetFileSize completed");
     return size;
 }
 
@@ -525,6 +540,7 @@ char* Platform_RegisterDirWatcher(const char* dir_path, void (*callback)(void)) 
     }
 
     free(args);
+    log_info("Registering Directory Watcher");
     return NULL;
 }
 
@@ -618,6 +634,7 @@ void Platform_CleanupDirWatchers(void) {
     g_c_watch_dir[0] = '\0';
     g_last_c_file[0] = '\0';
     g_last_c_tick = 0;
+    log_info("Platform_CleanupDirWatchers completed");
 }
 
 bool Platform_ClickAtPos(int x,int y) {
@@ -638,6 +655,7 @@ bool Platform_ClickAtPos(int x,int y) {
     inputs[2].mi.dwFlags = MOUSEEVENTF_LEFTUP;
 
     SendInput(3, inputs, sizeof(INPUT));
+    log_info("Platform_ClickAtPos completed");
 }
 
 typedef struct {
@@ -695,6 +713,7 @@ bool Platform_FocusWindow(const char* title) {
     fwi.dwTimeout = 0;
     FlashWindowEx(&fwi);
     
+    log_info("Platform_FocusWindow completed");
     return true;
 }
 
@@ -707,6 +726,7 @@ char* Platform_GetActiveWindowTitle(void) {
     } else {
         fgTitle[0] = '\0';
     }
+    log_info("Platform_GetActiveWindowTitle completed");
     return fgTitle;
 }
 char* Platform_GetIconPath(char* app_path) {
@@ -730,20 +750,21 @@ char* Platform_GetIconPath(char* app_path) {
           return _strdup(full);
       }
   }
+  log_info("Platform_GetIconPath completed");
   return NULL;
-  }
+}
 int Platform_GetIconSize(char* icon_path) {
     (void)icon_path;
     extern const int IconSize;
     int s = IconSize;
     if (s < 16) s = 16;
     if (s > 32) s = 32;
+    log_info("Platform_GetIconSize completed");
     return s;
 }
 
 bool Platform_BuildFeature(const char* src, const char* out) {
     if (!src || !out) return false;
-    // ensure import lib exists
     if (GetFileAttributesA("build/main.lib.a") == INVALID_FILE_ATTRIBUTES) {
         log_error("build/main.lib.a missing, need to build main first");
         return false;
@@ -764,7 +785,6 @@ bool Platform_BuildFeature(const char* src, const char* out) {
         ok = true;
     }
     if (!ok) { remove(tmp); return false; }
-    // dll may be locked if still loaded - caller should have unloaded first; try remove then move
     remove(out);
     if (rename(tmp, out) != 0) {
         if (!MoveFileExA(tmp, out, MOVEFILE_REPLACE_EXISTING)) {
@@ -772,5 +792,6 @@ bool Platform_BuildFeature(const char* src, const char* out) {
             return false;
         }
     }
+    log_info("Platform_BuildFeature completed");
     return true;
 }

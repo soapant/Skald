@@ -91,6 +91,7 @@ bool FeatureLoader_LoadAllFromDir(const char* dir) {
     }
     closedir(d);
     FL_UNLOCK();
+log_info("FeatureLoader_LoadAllFromDir completed");
     return true;
 }
 
@@ -98,7 +99,6 @@ bool FeatureLoader_Init(void) {
     FL_LOCK();
     g_feature_count = 0;
     FL_UNLOCK();
-    // LoadAll takes its own lock, so do not hold across
     bool has_build = FeatureLoader_LoadAllFromDir("build/features");
     if (!has_build) {
         FeatureLoader_LoadAllFromDir("features");
@@ -109,6 +109,7 @@ bool FeatureLoader_Init(void) {
     int cnt = g_feature_count;
     FL_UNLOCK();
     log_info("init done, %d features loaded (hot reload dir: build/features)", cnt);
+log_info("FeatureLoader_Init completed");
     return true;
 }
 
@@ -124,6 +125,7 @@ void FeatureLoader_Shutdown(void) {
     }
     g_feature_count = 0;
     FL_UNLOCK();
+log_info("FeatureLoader_Shutdown completed");
 }
 
 void FeatureLoader_Reload(const char* name) {
@@ -139,10 +141,8 @@ void FeatureLoader_Reload(const char* name) {
             FL_UNLOCK();
             Sleep(100);
             FL_LOCK();
-            // re-check still same index after unlock
             if (i >= g_feature_count || strcmp(g_features[i].name, name)!=0) {
                 FL_UNLOCK();
-                // fall through to load_single path
                 char file2[MaxFeatures];
                 snprintf(file2, sizeof(file2), "%s%s", name, Platform_LibExtension());
                 FL_LOCK();
@@ -166,10 +166,10 @@ void FeatureLoader_Reload(const char* name) {
     }
     char file[MaxFeatures];
     snprintf(file, sizeof(file), "%s%s", name, Platform_LibExtension());
-    // load_single expects lock held
     bool ok = load_single("build/features", file);
     (void)ok;
     FL_UNLOCK();
+log_info("FeatureLoader_Reload completed");
     return;
 }
 
@@ -190,6 +190,7 @@ void FeatureLoader_Unload(const char* name) {
         }
     }
     FL_UNLOCK();
+log_info("FeatureLoader_Unload completed");
 }
 
 void FeatureLoader_ReloadAll(void) {
@@ -198,5 +199,6 @@ void FeatureLoader_ReloadAll(void) {
     FeatureLoader_Shutdown();
     FeatureLoader_Init();
 
-    PROFILE_END_VAR(timer1, "Hot Reload");
+        log_info("FeatureLoader_ReloadAll completed");
+PROFILE_END_VAR(timer1, "Hot Reload");
 }

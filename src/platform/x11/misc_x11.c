@@ -66,7 +66,8 @@ const char* Platform_GetRealUser(void){
         if (spw && spw->pw_name) { strncpy(buf,spw->pw_name,sizeof(buf)-1); done=true; PROFILE_END_VAR(timer, "misc_x11:Platform_GetRealUser"); return buf; }
     }
     struct passwd* pw=getpwuid(getuid());
-    if(pw && pw->pw_name && strcmp(pw->pw_name,"root")!=0){ strncpy(buf,pw->pw_name,sizeof(buf)-1); done=true; PROFILE_END_VAR(timer, "misc_x11:Platform_GetRealUser"); return buf; }
+    if(pw && pw->pw_name && strcmp(pw->pw_name,"root")!=0){ strncpy(buf,pw->pw_name,sizeof(buf)-1); done=true;     log_info("Platform_GetRealUser completed");
+PROFILE_END_VAR(timer, "misc_x11:Platform_GetRealUser"); return buf; }
 }
 
 const char* Platform_GetRealHome(void){
@@ -80,12 +81,14 @@ const char* Platform_GetRealHome(void){
     if(pw && pw->pw_dir){ strncpy(buf,pw->pw_dir,sizeof(buf)-1); done=true; PROFILE_END_VAR(timer, "misc_x11:Platform_GetRealHome"); return buf; }
     const char* h=getenv("HOME");
     if(h && h[0]){ strncpy(buf,h,sizeof(buf)-1); done=true; PROFILE_END_VAR(timer, "misc_x11:Platform_GetRealHome"); return buf; }
-    snprintf(buf,sizeof(buf),"/home/%s",u); done=true; PROFILE_END_VAR(timer, "misc_x11:Platform_GetRealHome"); return buf;
+    snprintf(buf,sizeof(buf),"/home/%s",u); done=true;     log_info("Platform_GetRealHome completed");
+PROFILE_END_VAR(timer, "misc_x11:Platform_GetRealHome"); return buf;
 }
 
 bool Platform_IsRunningAsRoot(void){
     PROFILE_START(timer);
-    PROFILE_END_VAR(timer, "misc_x11:Platform_IsRunningAsRoot"); return getuid()==0;
+        log_info("Platform_IsRunningAsRoot completed");
+PROFILE_END_VAR(timer, "misc_x11:Platform_IsRunningAsRoot"); return getuid()==0;
 }
 
 
@@ -118,7 +121,8 @@ const char* Platform_GetSessionDisplay(void){
         closedir(d);
     }
     done=true;
-    PROFILE_END_VAR(timer, "misc_x11:Platform_GetSessionDisplay");
+        log_info("Platform_GetSessionDisplay completed");
+PROFILE_END_VAR(timer, "misc_x11:Platform_GetSessionDisplay");
     return buf[0]?buf:":0";
 }
 
@@ -134,7 +138,8 @@ const char* Platform_GetSessionXAuthority(void){
     snprintf(buf,sizeof(buf),"%s/.Xauthority",Platform_GetRealHome());
     if(access(buf,R_OK)==0){ done=true; PROFILE_END_VAR(timer, "misc_x11:Platform_GetSessionXAuthority"); return buf; }
     buf[0]='\0'; done=true;
-    PROFILE_END_VAR(timer, "misc_x11:Platform_GetSessionXAuthority");
+        log_info("Platform_GetSessionXAuthority completed");
+PROFILE_END_VAR(timer, "misc_x11:Platform_GetSessionXAuthority");
     return "";
 }
 
@@ -150,7 +155,8 @@ const char* Platform_GetRuntimeDir(void){
     struct passwd* pw=getpwnam(u);
     if(pw){ snprintf(buf,sizeof(buf),"/run/user/%d",(int)pw->pw_uid); done=true; PROFILE_END_VAR(timer, "misc_x11:Platform_GetRuntimeDir"); return buf; }
     snprintf(buf,sizeof(buf),"/run/user/%d",(int)getuid()); done=true;
-    PROFILE_END_VAR(timer, "misc_x11:Platform_GetRuntimeDir");
+        log_info("Platform_GetRuntimeDir completed");
+PROFILE_END_VAR(timer, "misc_x11:Platform_GetRuntimeDir");
     return buf[0]?buf:"/run/user/1000";
 }
 
@@ -366,7 +372,8 @@ int Platform_FileAppend(MappedFile *mf, const char *text) {
     }
     mf->fileSize = sb.st_size;
 
-    PROFILE_END_VAR(timer, "misc_x11:Platform_FileAppend");
+        log_info("Platform_FileAppend completed");
+PROFILE_END_VAR(timer, "misc_x11:Platform_FileAppend");
     return 1;
 }
 
@@ -385,7 +392,8 @@ void Platform_FileClose(MappedFile *mf) {
     }
 
     mf->fileSize = 0;
-    PROFILE_END_VAR(timer, "misc_x11:Platform_FileClose");
+        log_info("Platform_FileClose completed");
+PROFILE_END_VAR(timer, "misc_x11:Platform_FileClose");
 }
 
 Line* Platform_FileGetLines(MappedFile *mf, size_t *outLineCount) {
@@ -456,7 +464,8 @@ Line* Platform_FileGetLines(MappedFile *mf, size_t *outLineCount) {
     munmap(pBuffer, mf->fileSize);
 
     *outLineCount = count;
-    PROFILE_END_VAR(timer, "misc_x11:Platform_FileGetLines");
+        log_info("Platform_FileGetLines completed");
+PROFILE_END_VAR(timer, "misc_x11:Platform_FileGetLines");
     return list;
 }
 
@@ -571,7 +580,8 @@ char** Platform_FileGetStrings(MappedFile *mf, size_t *outLineCount, NewlineInfo
     *outLineCount = count;
     *outNewlines = newlines;
     *outNewlineCount = newlineCount;
-    PROFILE_END_VAR(timer, "misc_x11:Platform_FileGetStrings");
+        log_info("Platform_FileGetStrings completed");
+PROFILE_END_VAR(timer, "misc_x11:Platform_FileGetStrings");
     return stringList;
 }
 
@@ -586,7 +596,8 @@ void Platform_CleanUpFile(MappedFile *mf, NewlineInfo *newlines, size_t newlineC
     if (newlines) {
         free(newlines);
     }
-    PROFILE_END_VAR(timer, "misc_x11:Platform_CleanUpFile");
+    log_info("Platform_CleanUpFile completed");
+PROFILE_END_VAR(timer, "misc_x11:Platform_CleanUpFile");
 }
 
 bool Platform_StringContainsCaseInsensitive(const char* haystack, const char* needle) {
@@ -675,7 +686,8 @@ int Platform_ReplaceLineInMappedFile(MappedFile* mf, int line_index, const char*
     free(transfer_buf);
 
     mf->fileSize = new_size;
-    PROFILE_END_VAR(timer, "misc_x11:Platform_ReplaceLineInMappedFile");
+        log_info("Platform_ReplaceLineInMappedFile completed");
+PROFILE_END_VAR(timer, "misc_x11:Platform_ReplaceLineInMappedFile");
     return 1;
 }
 
@@ -724,7 +736,8 @@ int Platform_CollectRunningProcesses(char process_list[][128], int max_count) {
         }
     }
     closedir(proc);
-    PROFILE_END_VAR(timer, "misc_x11:Platform_CollectRunningProcesses");
+        log_info("Platform_CollectRunningProcesses completed");
+PROFILE_END_VAR(timer, "misc_x11:Platform_CollectRunningProcesses");
     return count;
 }
 
@@ -741,7 +754,8 @@ bool Platform_TerminateProcessByName(const char* exe_name) {
     char cmd[1024];
     snprintf(cmd, sizeof(cmd), "sh -c 'pkill -9 \"%s\" 2>/dev/null; pkill -9 -f \"%s\" 2>/dev/null; pkill -9 -f \"build/[f]lint\" 2>/dev/null; pkill \"%s\" 2>/dev/null; killall -9 \"%s\" 2>/dev/null; killall -9 -r \"%s\" 2>/dev/null; killall \"%s\" 2>/dev/null' &", tmp, tmp, tmp, tmp, tmp, tmp);
 
-    PROFILE_END_VAR(timer, "misc_x11:Platform_TerminateProcessByName");
+        log_info("Platform_TerminateProcessByName completed");
+PROFILE_END_VAR(timer, "misc_x11:Platform_TerminateProcessByName");
     return Platform_RunTerminalCommand(cmd,false);
 }
 
@@ -779,7 +793,8 @@ bool Platform_LaunchBrowserAtUrl(char* url,bool new_window) {
     PROFILE_END_VAR(timer, "misc_x11:Platform_LaunchBrowserAtUrl");
     return Platform_RunTerminalCommand(command,false);
     }
-    PROFILE_END_VAR(timer, "misc_x11:Platform_LaunchBrowserAtUrl");
+        log_info("Platform_LaunchBrowserAtUrl completed");
+PROFILE_END_VAR(timer, "misc_x11:Platform_LaunchBrowserAtUrl");
 }
 
 bool Platform_QueryBrowser(char* query) {
@@ -853,14 +868,17 @@ bool Platform_QueryBrowser(char* query) {
                  display, xauthority, runtime_dir, UsedBrowser, url);
     }
     
-    PROFILE_END_VAR(timer, "misc_x11:Platform_QueryBrowser");
+        log_info("Platform_QueryBrowser completed");
+PROFILE_END_VAR(timer, "misc_x11:Platform_QueryBrowser");
     return Platform_RunTerminalCommand(command,false);
 }
 
 char* Platform_GetLastClipboardEntry() {
+log_info("Platform_GetLastClipboardEntry completed");
   return Wm_GetClipboardLastEntry();
 }
 
 bool Platform_PasteContent(char* content) {
+log_info("Platform_PasteContent completed");
   return Wm_Paste(content);
 }
