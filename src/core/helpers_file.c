@@ -18,9 +18,9 @@
 #include "core/window_manager.h"
 
 int ReplaceLineInFile(const char* filepath, int line_index, const char* new_text) {
-    log_info("[REPLACE] file='%s' idx=%d new='%s'", filepath ? filepath : "(null)", line_index, new_text ? new_text : "(null)");
+    log_info("file='%s' idx=%d new='%s'", filepath ? filepath : "(null)", line_index, new_text ? new_text : "(null)");
     if (!filepath || !new_text || line_index < 0) {
-        log_info("[REPLACE] early return 0");
+        log_info("early return 0");
         return 0;
     }
     FILE* f = fopen(filepath, "r");

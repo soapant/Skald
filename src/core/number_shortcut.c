@@ -42,10 +42,10 @@ static void ExecuteNumberShortcut(int number, bool close_popup) {
             should_close = _c->prompt_callbacks.enter(_c->window.output_buffer, g_num_shortcut_state.lb);
         }
         _c->window.selection_complete = should_close;
-        log_info("[NUM-SHORTCUT] Selected item %d: %s (close=%d)",
+        log_info("Selected item %d: %s (close=%d)",
                index + 1, _c->window.output_buffer, close_popup);
     } else {
-        log_info("[NUM-SHORTCUT] Item %d doesn't exist (only %d items)",
+        log_info("Item %d doesn't exist (only %d items)",
                index + 1, count);
     }
 
@@ -60,7 +60,7 @@ static void CALLBACK NumberShortcutTimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEv
         if (number == 0) {
             number = 10;
         }
-        log_info("[NUM-SHORTCUT] Timer expired - executing single digit: %d", number);
+        log_info("Timer expired - executing single digit: %d", number);
         ExecuteNumberShortcut(number, g_num_shortcut_state.close_popup);
     }
     g_num_shortcut_state.state = 0;
@@ -87,7 +87,7 @@ bool HandleNumberShortcut(int wParam, WindowHandle hListBox, WindowHandle hEditC
         }
         g_num_shortcut_state.timer_id = SetTimer(NULL, 0, NUMBER_SHORTCUT_DELAY_MS, NumberShortcutTimerProc);
 #endif
-        log_info("[NUM-SHORTCUT] Waiting for second digit... (first=%d)", digit);
+        log_info("Waiting for second digit... (first=%d)", digit);
         return true;
     } else if (g_num_shortcut_state.state == 1) {
         int combined_number = (g_num_shortcut_state.first_digit * 10) + digit;
@@ -98,7 +98,7 @@ bool HandleNumberShortcut(int wParam, WindowHandle hListBox, WindowHandle hEditC
             g_num_shortcut_state.timer_id = 0;
         }
 #endif
-        log_info("[NUM-SHORTCUT] Two-digit number: %d", combined_number);
+        log_info("Two-digit number: %d", combined_number);
         ExecuteNumberShortcut(combined_number, g_num_shortcut_state.close_popup);
         return true;
     }

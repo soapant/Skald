@@ -658,7 +658,7 @@ void CreateChildControls(WindowHandle hwndParent, HFONT hFont, const char* list[
             lb->selected_index = -1;
             for (int i=0;i<MAX_ITEMS;i++) lb->matching_indices[i]=i;
             BuildAliasDisplayItems(NULL, 0);
-            log_info("[CreateChildControls] list NULL count=%d lb_count=0", count);
+            log_info("list NULL count=%d lb_count=0", count);
         }
     }
     SendMessageA(WH_TO_HWND(FlintContext_Get()->window.hListBox), LB_SETCOUNT, (lb ? lb->populated_count : count), 0);

@@ -60,9 +60,9 @@ static bool load_single(const char* dir, const char* filename) {
     LibHandle h = Platform_LoadLibrary(full);
     if (!h) {
 #ifndef _WIN32
-        log_error("[FEATURE] dlopen %s failed: %s", full, dlerror());
+        log_error("dlopen %s failed: %s", full, dlerror());
 #else
-        log_error("[FEATURE] LoadLibrary %s failed", full);
+        log_error("LoadLibrary %s failed", full);
 #endif
         return false;
     }
@@ -108,7 +108,7 @@ bool FeatureLoader_Init(void) {
     FL_LOCK();
     int cnt = g_feature_count;
     FL_UNLOCK();
-    log_info("[FEATURE] init done, %d features loaded (hot reload dir: build/features)", cnt);
+    log_info("init done, %d features loaded (hot reload dir: build/features)", cnt);
     return true;
 }
 
@@ -159,7 +159,7 @@ void FeatureLoader_Reload(const char* name) {
             if (!init) init = (InitFn)Platform_GetSymbol(h, "FlintFeatureReload");
             if (init) init();
             g_features[i].handle = h;
-            log_info("[FEATURE] reloaded %s", name);
+            log_info("reloaded %s", name);
             FL_UNLOCK();
             return;
         }
@@ -184,7 +184,7 @@ void FeatureLoader_Unload(const char* name) {
             Platform_UnloadLibrary(g_features[i].handle);
             for (int k=i;k+1<g_feature_count;k++) g_features[k]=g_features[k+1];
             g_feature_count--;
-            log_info("[FEATURE] unloaded %s", name);
+            log_info("unloaded %s", name);
             FL_UNLOCK();
             return;
         }

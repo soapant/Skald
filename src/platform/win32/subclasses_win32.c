@@ -1013,7 +1013,7 @@ LRESULT CALLBACK EditPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
     }
     
       if (wParam == VK_ESCAPE) {
-        log_info("[EditPopup] Escape pressed");
+        log_info("Escape pressed");
           data->result = NULL;
           DestroyWindow(GetParent(hWnd));
           UI_Redraw(lb, FlintContext_Get()->window.hListBox);
@@ -1023,7 +1023,7 @@ LRESULT CALLBACK EditPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
       if (GetKeyState(VK_SHIFT) & 0x8000) {
         return DefSubclassProc(hWnd, uMsg, wParam, lParam);
       }
-      log_info("[EditPopup] Enter pressed");
+      log_info("Enter pressed");
         char buffer[2048] = {0};
         GetWindowTextA(WH_TO_HWND(data->hEdit), buffer, sizeof(buffer) - 1);
         data->result = _strdup(buffer);
@@ -1049,7 +1049,7 @@ LRESULT CALLBACK SearchPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LP
       if (GetKeyState(VK_SHIFT) & 0x8000) {
         return DefSubclassProc(hWnd, uMsg, wParam, lParam);
       }
-      log_info("[SearchPopup] Enter pressed");
+      log_info("Enter pressed");
         char buffer[2048] = {0};
         DestroyWindow(GetParent(hWnd));
         UI_Redraw(lb, FlintContext_Get()->window.hListBox);

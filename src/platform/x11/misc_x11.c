@@ -240,7 +240,7 @@ bool Platform_ExpandPath(const char* template_path, char* out, size_t out_size) 
                         p = close + 1;
                         continue;
                     }
-                    log_info("[PATH] '%s' is not set, ignoring: %s", token, template_path);
+                    log_info("'%s' is not set, ignoring: %s", token, template_path);
                     PROFILE_END_VAR(timer, "misc_x11:Platform_ExpandPath");
                     return false;
                 }
