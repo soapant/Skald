@@ -22,3 +22,4 @@ do erroring a bit better as it took me a bit to realize i had my terminal on foo
 figure out some way of saying ok this config is for linux this is for windows in the easiest way possible||[Cprogram]
 some things need to be better handled internally like offsets of y and x of text changing depending on the font size||[Cprogram] 
 parsingo f the hotkey string is incorrect when two or moe blacklist are there it thinks the hotkey condition is some stirng idk||[Cprogram]
+make the trial and error of the wms smarter maybe determine user wm before hand ||[Cprogram]
