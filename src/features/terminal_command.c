@@ -6,7 +6,6 @@ void terminal_refresh_callback(const char* filter, WindowHandle hListBox, ListBo
     const char* items[MAX_FILE_LINES];
     int n = fl_load_file_list(TerminalHistoryFilePath, items, MAX_FILE_LINES);
     PopulateListBox(lb, FlintContext_Get()->window.hListBox, filter, items, n, NULL);
-    fl_free_file_list(items, n);
 }
 
 static void edit_confirm(const char* new_text, void* user_data) {
@@ -52,7 +51,6 @@ void TriggerTerminalCommand(void) {
            .refresh = terminal_refresh_callback,
            .enter = terminal_enter_callback,
            .edit = terminal_edit_callback);
-    fl_free_file_list(items, n);
 }
 
 FLINT_FEATURE_INIT {

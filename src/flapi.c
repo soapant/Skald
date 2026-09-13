@@ -123,12 +123,6 @@ bool fl_write_to_file(const char* filepath, const char* lines[], int count) {
     return true;
 }
 
-bool fl_free_file_list(const char* list[], int count) {
-    if (!list || count <= 0) return false;
-    for (int i = 0; i < count; i++) free((void*)list[i]);
-    return true;
-}
-
 char* fl_read_file_to_string(const char* path, size_t* out_len) {
     if (!path) return NULL;
     char expanded[MAX_PATH];
@@ -168,9 +162,7 @@ bool fl_file_exists(const char* path) {
 bool fl_append_unique_line(const char* path, const char* line) {
     if (!path || !line) return false;
     const char* items[1024]; int n = fl_load_file_list(path, items, 1024);
-    for (int i=0;i<n;i++) if (strcmp(items[i], line)==0) { fl_free_file_list(items, n); return false; }
     bool ok = fl_append_to_file(path, line);
-    fl_free_file_list(items, n);
     return ok;
 }
 bool fl_remove_line(const char* path, const char* line) {
@@ -414,7 +406,6 @@ void fl_edit_confirm_callback(const char* new_text, void* user_data) {
         data->new_text = (char*)new_text;
         EditCallback_Handle(data, data->refresh_cb);
     }
-    free(data);
 }
 
 bool fl_edit_text_popup(const char* initial_text, const char* title, int x, int y, const char* filepath, ListBoxInfo* lb, RefreshCallback refresh) {

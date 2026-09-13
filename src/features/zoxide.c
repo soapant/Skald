@@ -5,7 +5,6 @@ static void zoxide_refresh(const char* filter, WindowHandle hListBox, ListBoxInf
     const char* items[MAX_FILE_LINES];
     int n = fl_load_file_list(TerminalZoxideFilePath, items, MAX_FILE_LINES);
     PopulateListBox(lb, FlintContext_Get()->window.hListBox, filter, items, n, NULL);
-    fl_free_file_list(items, n);
 }
 static void zoxide_edit(const char* selection, ListBoxInfo* lb) {
     fl_edit_text_popup(selection, "Edit Zoxide", 960, 540, TerminalZoxideFilePath, lb, zoxide_refresh);
@@ -23,7 +22,6 @@ static void TriggerZoxide(void) {
     int n = fl_load_file_list(TerminalZoxideFilePath, items, MAX_FILE_LINES);
     PROMPT(.title = "⌨️ Zoxide", .items = items,
            .refresh = zoxide_refresh, .enter = zoxide_enter, .edit = zoxide_edit);
-    fl_free_file_list(items, n);
 }
 
 const char* TextEditorZoxideFilePath = "data/NvimZoxide.txt";
@@ -31,7 +29,6 @@ static void text_editor_refresh(const char* filter, WindowHandle hListBox, ListB
     const char* items[MAX_FILE_LINES];
     int n = fl_load_file_list(TextEditorZoxideFilePath, items, MAX_FILE_LINES);
     PopulateListBox(lb, FlintContext_Get()->window.hListBox, filter, items, n, NULL);
-    fl_free_file_list(items, n);
 }
 static bool text_editor_enter(const char* selection, ListBoxInfo* lb) {
     char* path = fl_get_zoxide_match((char*)selection);
@@ -53,7 +50,6 @@ static void TriggerTextEditorZoxide(void) {
     snprintf(buffer,sizeof(buffer),"📂 %s",UsedTextEditor);
     PROMPT(.title = buffer, .items = items,
            .refresh = text_editor_refresh, .enter = text_editor_enter, .edit = text_editor_edit);
-    fl_free_file_list(items, n);
 }
 
 const char* YaziZoxideFilePath = "data/YaziZoxide.txt";
@@ -61,7 +57,6 @@ static void yazi_refresh(const char* filter, WindowHandle hListBox, ListBoxInfo*
     const char* items[MAX_FILE_LINES];
     int n = fl_load_file_list(YaziZoxideFilePath, items, MAX_FILE_LINES);
     PopulateListBox(lb, FlintContext_Get()->window.hListBox, filter, items, n, NULL);
-    fl_free_file_list(items, n);
 }
 static bool yazi_enter(const char* selection, ListBoxInfo* lb) {
     char* path = fl_get_zoxide_match((char*)selection);
@@ -81,7 +76,6 @@ static void TriggerYaziZoxide(void) {
     int n = fl_load_file_list(YaziZoxideFilePath, items, MAX_FILE_LINES);
     PROMPT(.title = "📂 Yazi", .items = items,
            .refresh = yazi_refresh, .enter = yazi_enter, .edit = yazi_edit);
-    fl_free_file_list(items, n);
 }
 
 const char* FileManagerZoxideFilePath = "data/FileManagerZoxide.txt";
@@ -89,7 +83,6 @@ static void file_manager_refresh(const char* filter, WindowHandle hListBox, List
     const char* items[MAX_FILE_LINES];
     int n = fl_load_file_list(FileManagerZoxideFilePath, items, MAX_FILE_LINES);
     PopulateListBox(lb, FlintContext_Get()->window.hListBox, filter, items, n, NULL);
-    fl_free_file_list(items, n);
 }
 static bool file_manager_enter(const char* selection, ListBoxInfo* lb) {
     char* path = fl_get_zoxide_match((char*)selection);
@@ -107,7 +100,6 @@ static void TriggerFileManager(void) {
     int n = fl_load_file_list(FileManagerZoxideFilePath, items, MAX_FILE_LINES);
     PROMPT(.title = "📁 FileManager", .items = items,
            .refresh = file_manager_refresh, .enter = file_manager_enter, .edit = file_manager_edit);
-    fl_free_file_list(items, n);
 }
 
 FLINT_FEATURE_INIT {

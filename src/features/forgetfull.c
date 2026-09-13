@@ -5,7 +5,6 @@ void forgetfull_refresh_callback(const char* filter, WindowHandle hListBox, List
     int forgetfull_count = fl_load_file_list(FORGETFULL_FILE_PATH, items, 100);
 
     PopulateListBox(lb, FlintContext_Get()->window.hListBox, filter, items, forgetfull_count, NULL);
-    fl_free_file_list(items, forgetfull_count);
 }
 
 bool forgetfull_enter_callback(const char* selection, ListBoxInfo* lb) {
@@ -77,7 +76,6 @@ void TriggerForgetFull(void) {
            .enter = forgetfull_enter_callback,
            .ctrl_enter = forgetfull_ctrlenter_callback,
            .edit = forgetfull_edit_callback);
-    fl_free_file_list(ui_list, count);
 }
 
 FLINT_FEATURE_INIT {
