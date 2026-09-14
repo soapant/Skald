@@ -240,23 +240,36 @@ PROFILE_END_VAR(timer3, "Focus");
 
 char* Platform_SimplePromptUser(const SimplePromptSpec* spec) {
   const char* prompt = spec->prompt;
-  const char* window_title = spec->title ? spec->title : "Flint";
   int item_height = 32;
 
   HINSTANCE hInstance = GetModuleHandle(NULL);
   FlintContext_Get()->window.selection_complete = false;
   FlintContext_Get()->window.output_buffer[0] = '\0';
-  FlintContext_Get()->window.title = window_title;
-  {
-    const char* p = strchr(window_title, ' ');
-    FlintContext_Get()->window.current_feature = (char*)(p ? p+1 : window_title);
-  }
   SetCurrentFeatureName(FlintContext_Get()->window.current_feature);
 
   SetMode(MODE_INSERT);
 
+  int w = spec->w ? spec->w : 900;
+  int h = spec->h ? spec->h : 640;
+  int x = spec->x;
+  int y = spec->y;
+  if (!x || !y) {
+    POINT ptPrimary = {0, 0};
+    HMONITOR hMon = MonitorFromPoint(ptPrimary, MONITOR_DEFAULTTOPRIMARY);
+    MONITORINFO mi = {0};
+    mi.cbSize = sizeof(MONITORINFO);
+    GetMonitorInfoA(hMon, &mi);
+    int monW = mi.rcMonitor.right - mi.rcMonitor.left;
+    int monH = mi.rcMonitor.bottom - mi.rcMonitor.top;
+    if (!x) x = mi.rcMonitor.left + (monW - w) / 2;
+    if (!y) y = mi.rcMonitor.top + (monH - h) / 2;
+  }
   WindowLayout layout;
-  CalculateWindowMetrics(1, &layout, 640, 900, item_height);
+  layout.w = w;
+  layout.h = h;
+  layout.x = x;
+  layout.y = y;
+  layout.item_height = item_height;
 
   HFONT hCustomFont = CreateCustomNerdFont(FontSize, UsedFont);
 
