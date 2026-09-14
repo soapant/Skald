@@ -381,7 +381,7 @@ char* WindowManager_ShowPrompt(WindowManager* wm, const PromptSpec* spec) {
     if (!popup) { PROFILE_END_VAR(timer, "window_manager:WindowManager_ShowPrompt"); return NULL; }
     Display* dpy = wm->display;
     XEvent ev;
-    while (wm->running && wm->popup_count > 0) {
+    while (wm->running && popup->manager) {
         if (XPending(dpy) > 0) {
             XNextEvent(dpy, &ev);
             Linux_ProcessXEvent(dpy, &ev, wm);
@@ -418,12 +418,28 @@ char* WindowManager_ShowSimplePrompt(WindowManager* wm, const SimplePromptSpec* 
     if (!popup) { PROFILE_END_VAR(timer, "window_manager:WindowManager_ShowSimplePrompt"); return NULL; }
     Display* dpy = wm->display;
     XEvent ev;
-    while (wm->running && wm->popup_count > 0) {
+    while (wm->running && popup->manager) {
         if (XPending(dpy) > 0) {
             XNextEvent(dpy, &ev);
             Linux_ProcessXEvent(dpy, &ev, wm);
         } else {
             usleep(1000);
+        }
+    }
+    if (wm->popup_count > 0) {
+        Popup *top = WindowManager_GetTopPopup(wm);
+        if (top && top->handle.xid) {
+            Display *d2 = dpy ? dpy : get_display();
+            if (d2) {
+                int (*old)(Display*, XErrorEvent*) = XSetErrorHandler(NULL);
+                extern int x11_error_handler(Display*, XErrorEvent*);
+                old = XSetErrorHandler(x11_error_handler);
+                XSetInputFocus(d2, top->handle.xid, RevertToParent, CurrentTime);
+                XSync(d2, False);
+                XSetErrorHandler(old);
+                XFlush(d2);
+                if (top->vtable && top->vtable->on_render) top->vtable->on_render(top);
+            }
         }
     }
     if (popup->manager == NULL) {

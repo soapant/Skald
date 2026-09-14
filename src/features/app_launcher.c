@@ -163,6 +163,7 @@ void launch_app_as_admin(const char* display_name) {
 }
 bool applauncher_enter_callback(const char* selection, ListBoxInfo* lb) {
     char* input = fl_popup(.title="Testing", .w=500, .h=100);
+    printf("GOT INPUT %s \n",input);
     launch_app_by_name(selection);
     return true;
 }
