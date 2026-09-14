@@ -1,6 +1,4 @@
 #include "core/flapi.h"
-#include <string.h>
-#include <stdlib.h>
 
 void window_switcher_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
     WindowList list_of_titles = fl_get_all_window_titles();
@@ -16,6 +14,7 @@ void window_switcher_refresh_callback(const char* filter, WindowHandle hListBox,
         snprintf(buffer, 256, "%s (%s)",
                  list_of_titles.windows[i],
                  list_of_names.windows[i]);
+        printf("%s \n",buffer);
         items[i] = buffer;
     }
 
@@ -27,7 +26,7 @@ void window_switcher_refresh_callback(const char* filter, WindowHandle hListBox,
 
 bool window_switcher_enter_callback(const char* selection, ListBoxInfo* lb) {
     if (UI_IsListBoxSelected(lb)) {
-      char* output = fl_string_cut_before(selection,'(');
+      char* output = fl_string_inside(selection,'(');
       fl_focus_window_by_title(output);
       free(output);
     }
