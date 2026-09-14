@@ -30,12 +30,8 @@ static bool collect_source(Nob_Walk_Entry entry) {
 #if defined(_WIN32)
             if (nob_sv_ends_with_cstr(path, "_x11.c")) return true;
             if (nob_sv_ends_with_cstr(path, "wm.c")) return true;
-            if (nob_sv_starts_with(path, nob_sv_from_cstr("src/platform/x11/")) ||
-                nob_sv_starts_with(path, nob_sv_from_cstr("src\\platform\\x11\\"))) return true;
 #else
             if (nob_sv_ends_with_cstr(path, "_win32.c")) return true;
-            if (nob_sv_starts_with(path, nob_sv_from_cstr("src/platform/win32/")) ||
-                nob_sv_starts_with(path, nob_sv_from_cstr("src\\platform\\win32\\"))) return true;
 #endif
             bool is_feature = false;
             if (nob_sv_starts_with(path, nob_sv_from_cstr("src/features/")) ||
