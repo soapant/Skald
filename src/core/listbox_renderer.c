@@ -151,7 +151,13 @@ void Core_DrawListBox(PromptState *state, void *hdc) {
         }
         if (!sel) {
             unsigned long ncol, bcol, pcol;
-            Platform_GetItemColors(idx, lb->populated_count, &ncol, &bcol, &pcol);
+            int orig_idx = idx;
+            int orig_cnt = lb->populated_count;
+            if (idx >= 0 && idx < lb->populated_count) {
+                orig_idx = lb->matching_indices[idx];
+                orig_cnt = lb->last_item_count > 0 ? lb->last_item_count : lb->populated_count;
+            }
+            Platform_GetItemColors(orig_idx, orig_cnt, &ncol, &bcol, &pcol);
             SetTextColor(hdcReal, ncol);
         } else {
             SetTextColor(hdcReal, COLOR_TEXT);

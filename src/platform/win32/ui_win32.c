@@ -29,6 +29,7 @@ log_info("Platform_WaitForKeypressAsync callback=%p", callback);;
 }
 
 char* Platform_PromptUser(const PromptSpec* spec) {
+  if (!spec) { log_error("Platform_PromptUser null spec"); return NULL; }
   const char** window_list = spec->items;
   const char* window_title = spec->title ? spec->title : "Flint";
   int count = 0;
@@ -124,7 +125,9 @@ char* Platform_PromptUser(const PromptSpec* spec) {
 
   if (WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) == NULL) {
     DeleteObject(hCustomFont);
-    if (lb_ptr) free(lb_ptr);
+    if (win_state) free(win_state);
+    else if (lb_ptr) free(lb_ptr);
+    if (g_win32_prompt_state == win_state) g_win32_prompt_state = NULL;
     return NULL;
   }
   SetWindowLongPtrA(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), GWLP_USERDATA, (LONG_PTR)(lb_ptr));
@@ -215,8 +218,9 @@ PROFILE_END_VAR(timer3, "Focus");
   }
 
 
-  DeleteObject(hCustomFont); 
+  DeleteObject(hCustomFont);
   if (g_win32_prompt_state) { free(g_win32_prompt_state); g_win32_prompt_state = NULL; lb_ptr = NULL; }
+  else if (win_state) { free(win_state); win_state = NULL; lb_ptr = NULL; }
   else if (lb_ptr) free(lb_ptr);
   FlintContext_Get()->window.selection_complete = false;
   FlintContext_Get()->prompt_callbacks.refresh = NULL;
@@ -239,6 +243,7 @@ PROFILE_END_VAR(timer3, "Focus");
 }
 
 char* Platform_SimplePromptUser(const SimplePromptSpec* spec) {
+  if (!spec) { log_error("Platform_SimplePromptUser null spec"); return NULL; }
   const char* prompt = spec->prompt;
   int item_height = 32;
 
@@ -247,6 +252,9 @@ char* Platform_SimplePromptUser(const SimplePromptSpec* spec) {
   WindowHandle saved_hListBox = FlintContext_Get()->window.hListBox;
   WindowHandle saved_hEditControl = FlintContext_Get()->window.hEditControl;
   WindowHandle saved_gActive = FlintContext_Get()->window.g_ActiveEditControl;
+  PromptState *saved_state = g_win32_prompt_state;
+  char *saved_title = FlintContext_Get()->window.title;
+  char *saved_feature = FlintContext_Get()->window.current_feature;
   FlintContext_Get()->window.selection_complete = false;
   FlintContext_Get()->window.output_buffer[0] = '\0';
   SetCurrentFeatureName(FlintContext_Get()->window.current_feature);
@@ -278,8 +286,8 @@ char* Platform_SimplePromptUser(const SimplePromptSpec* spec) {
   HFONT hCustomFont = CreateCustomNerdFont(FontSize, UsedFont);
 
   FlintContext_Get()->window.hPopupWnd = WH_FROM_HWND(CreateWindowExA(
-      WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED, 
-      "QuickSwitcherModalClass", NULL, WS_POPUP | WS_CLIPCHILDREN, 
+      WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED | WS_EX_COMPOSITED,
+      "QuickSwitcherModalClass", NULL, WS_POPUP | WS_CLIPCHILDREN,
       layout.x, layout.y, layout.w, layout.h, NULL, NULL, hInstance, NULL
       ));
 
@@ -325,8 +333,17 @@ return NULL;
   FlintContext_Get()->window.hListBox = saved_hListBox;
   FlintContext_Get()->window.hEditControl = saved_hEditControl;
   FlintContext_Get()->window.g_ActiveEditControl = saved_gActive;
+  g_win32_prompt_state = saved_state;
+  FlintContext_Get()->window.title = saved_title;
+  FlintContext_Get()->window.current_feature = saved_feature;
   if (WH_TO_HWND(saved_hPopupWnd) != NULL && IsWindow(WH_TO_HWND(saved_hPopupWnd))) {
     ForceWindowFocus(saved_hPopupWnd, saved_hEditControl);
+    InvalidateRect(WH_TO_HWND(saved_hPopupWnd), NULL, TRUE);
+    UpdateWindow(WH_TO_HWND(saved_hPopupWnd));
+    if (WH_TO_HWND(saved_hListBox) != NULL) {
+      InvalidateRect(WH_TO_HWND(saved_hListBox), NULL, TRUE);
+      UpdateWindow(WH_TO_HWND(saved_hListBox));
+    }
   }
 
   while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
@@ -696,6 +713,8 @@ log_info("Platform_InitUI completed");
 }
 
 void Platform_ShutdownUI() {
+  extern void Win32_FreeBgCache(void);
+  Win32_FreeBgCache();
   if (FlintContext_Get()->hKeyboardHook) {
     UnhookWindowsHookEx(FlintContext_Get()->hKeyboardHook);
     FlintContext_Get()->hKeyboardHook = NULL;
