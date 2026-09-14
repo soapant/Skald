@@ -103,7 +103,21 @@ typedef struct {
 typedef struct {
     const char* prompt;
     const char* title;
+    const char* initial_text;
+    int x;
+    int y;
+    int w;
+    int h;
 } SimplePromptSpec;
+
+typedef struct {
+    const char* initial_text;
+    const char* title;
+    int x;
+    int y;
+    int w;
+    int h;
+} FlPopupSpec;
 
 typedef struct WindowManager WindowManager;
 WindowManager* WindowManager_Get(void);

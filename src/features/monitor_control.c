@@ -47,13 +47,12 @@ void TriggerMonitorControl(void) {
     const char* prompt = "Enter Brightness(1, 100)";
     char* input = SIMPLE_PROMPT(.prompt = prompt, .title = "⏱️ MonitorControl");
 
-    if (input && input[0] != '\0') {
-        SetMonitorBright(atoi(input));
-    }
+    // if (input && input[0] != '\0') {
+    //     SetMonitorBright(atoi(input));
+    // }
 }
 
 FLINT_FEATURE_INIT {
-
-
-    fl_register_feature("Monitor Control", TriggerMonitorControl);
+    fl_register_hotkey("Alt+C",TriggerMonitorControl);
+    // fl_register_feature("Monitor Control", TriggerMonitorControl);
 }
