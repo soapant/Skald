@@ -11,16 +11,13 @@
 #include "core/number_shortcut.h"
 #include "core/types.h"
 #include "platform/subclasses.h"
-#include "platform/draw.h"
 #include "wingdi.h"
-#include "config.h"
 #include "core/platform.h"
 #include "helpers/hotkey.h"
 #include "helpers/alias.h"
 #include "helpers/flag.h"
 #include "helpers/file.h"
 #include "helpers/ui.h"
-#include "core/platform.h"
 #include "platform/win32/popup_helpers.h"
 
 LRESULT CALLBACK DisplayMessageProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
