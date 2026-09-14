@@ -102,7 +102,6 @@ typedef struct {
 
 typedef struct {
     const char* prompt;
-    const char* title;
     const char* initial_text;
     int x;
     int y;
