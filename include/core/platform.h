@@ -82,7 +82,7 @@ bool Platform_IsRemapActive(void);
 FontHandle Platform_CreateFontOnDisplay(Display* dpy, int size, const char* face_name);
 bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state);
 bool Linux_HandleSimplePromptKey(const XEvent* ev,SimplePromptState *state);
-bool Linux_RenderPromptUser(Display *dpy, Window *win, PromptState* state);
+bool Linux_RenderPromptUser(Display *dpy, Window *win, PromptState *state);
 bool Linux_RenderSimplePromptUser(Display *dpy, Window *win, SimplePromptState *state);
 void Platform_DismissMessage(void);
 bool Platform_SendX11Command(const char* window_title, const char* atom_name, long command);
@@ -91,6 +91,8 @@ bool Platform_SetX11StringProperty(const char* window_title, const char* atom_na
 const char* Platform_GetSessionDisplay(void);
 const char* Platform_GetSessionXAuthority(void);
 const char* Platform_GetRuntimeDir(void);
+typedef struct Popup Popup;
+void Platform_ProcessNestedEvents(WindowManager* wm, Popup* popup);
 #endif
 
 #endif
