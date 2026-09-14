@@ -25,15 +25,9 @@ void window_switcher_refresh_callback(const char* filter, WindowHandle hListBox,
 
 bool window_switcher_enter_callback(const char* selection, ListBoxInfo* lb) {
     if (UI_IsListBoxSelected(lb)) {
-      char* cut = fl_string_cut_before(selection,'{');
-      char* title = cut ? fl_string_trim(cut) : NULL;
-      free(cut);
-      if (title) {
-          fl_focus_window_by_title(title);
-          free(title);
-      } else if (selection) {
-          fl_focus_window_by_title((char*)selection);
-      }
+      char* title = fl_string_cut_before(selection,'{');
+      fl_focus_window_by_title(title);
+      free(title);
     }
     return true;
 }
