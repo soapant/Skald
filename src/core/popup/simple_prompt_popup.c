@@ -260,13 +260,12 @@ static const PopupVTable g_simple_prompt_popup_vtable = {
 Popup* SimplePromptPopup_Create(WindowManager* wm, const SimplePromptSpec* spec) {
     PROFILE_START(timer);
     if (!wm || !spec) { PROFILE_END_VAR(timer, "window_manager:SimplePromptPopup_Create"); return NULL; }
+    int w,h;
+
+    w = spec->w ? spec->w : 900;
+    h = spec->h ? spec->h : 640;
     
-    int layout_w = spec->w ? spec->w : 900;
-    int layout_h = spec->h ? spec->h : 640;
-    
-    int x, y;
-    if (spec->x || spec->y) { x = spec->x; y = spec->y; }
-    else WindowManager_GetCenteredPos(layout_w, layout_h, &x, &y);
+    if (!spec->x || !spec->y) WindowManager_GetCenteredPos(w, h, &spec->x, &spec->y);
     
     SimplePromptPopupData* data = calloc(1, sizeof(SimplePromptPopupData));
     if (!data) { PROFILE_END_VAR(timer, "window_manager:SimplePromptPopup_Create"); return NULL; }
@@ -275,7 +274,7 @@ Popup* SimplePromptPopup_Create(WindowManager* wm, const SimplePromptSpec* spec)
     data->base.manager = wm;
     data->base.type = POPUP_SIMPLE;
     data->spec = *spec;
-    data->x = x; data->y = y; data->w = layout_w; data->h = layout_h;
+    data->x = spec->x; data->y = spec->y; data->w = w; data->h = h;
     
     PROFILE_END_VAR(timer, "window_manager:SimplePromptPopup_Create");
     return WindowManager_PushPopup(wm, (Popup*)data);
