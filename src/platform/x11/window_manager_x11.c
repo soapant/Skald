@@ -294,8 +294,8 @@ int WindowManager_RunLinux(WindowManager* wm) {
                                 if (ev.value == 0) g_x11_shift_held = false;
                                 else g_x11_shift_held = true;
                             }
-                        }
-                        if (ev.type != EV_KEY) {
+                            if (grabbed && g_x11_uinput_fd >= 0) uinput_emit(&ev);
+                        } else {
                             if (grabbed && g_x11_uinput_fd >= 0) uinput_emit(&ev);
                         }
                         continue;

@@ -208,6 +208,7 @@ int x11_vk_to_linux_key(int vk) {
 
 bool x11_handle_global_key(int key_code, int value) {
     PROFILE_START(timer);
+    log_warn("x11_handle_global_key code=%d val=%d ctrl=%d alt=%d shift=%d", key_code, value, g_x11_ctrl_held, g_x11_alt_held, g_x11_shift_held);
     if (key_code == KEY_LEFTCTRL || key_code == KEY_RIGHTCTRL) {
         g_x11_ctrl_held = (value != 0);
     } else if (key_code == KEY_LEFTALT || key_code == KEY_RIGHTALT) {
@@ -223,11 +224,14 @@ bool x11_handle_global_key(int key_code, int value) {
     if (g_x11_alt_held) modifiers |= HOTKEY_MOD_ALT;
     if (g_x11_shift_held) modifiers |= HOTKEY_MOD_SHIFT;
     if (g_x11_ctrl_held) modifiers |= HOTKEY_MOD_CTRL;
+    log_warn("x11_handle_global_key vk=%d mods=%d", pressed_vk, modifiers);
     if (hotkey_process(pressed_vk, modifiers)) {
+        log_warn("x11_handle_global_key HOTKEY MATCH vk=%d mods=%d", pressed_vk, modifiers);
         if (value == 1) { pending_hotkey_vk = pressed_vk; pending_hotkey_mod = modifiers; struct timeval tv; gettimeofday(&tv,NULL); pending_hotkey_timeMs = tv.tv_sec*1000 + tv.tv_usec/1000; }
         PROFILE_END_VAR(timer, "input:x11_handle_global_key");
         return true;
     }
+    log_warn("x11_handle_global_key no match vk=%d mods=%d", pressed_vk, modifiers);
     PROFILE_END_VAR(timer, "input:x11_handle_global_key");
     return false;
 }
