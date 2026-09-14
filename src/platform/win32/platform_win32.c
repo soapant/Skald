@@ -19,6 +19,7 @@
 #include "config.h"
 #include <shellapi.h>
 #include <gdiplus.h>
+#include <ctype.h>
 
 bool Platform_LaunchTerminalAtPath(const char* working_dir, const char* extra_args){
       if (!working_dir) { log_error("working_dir is NULL extra_args='%s'", extra_args ? extra_args : "null"); return false; }
@@ -664,46 +665,71 @@ typedef struct {
 
 static BOOL CALLBACK EnumWindowsProcTitle(HWND hwnd, LPARAM lParam) {
     FindWindowData* data = (FindWindowData*)lParam;
-    
+
     if (!IsWindowVisible(hwnd)) {
-        return TRUE; 
+        return TRUE;
     }
-    
-    char window_title[256];
-    GetWindowTextA(hwnd, window_title, sizeof(window_title));
-    
+
+    char window_title[512];
+    if (GetWindowTextA(hwnd, window_title, sizeof(window_title)) == 0) return TRUE;
+    if (window_title[0] == '\0') return TRUE;
+
     if (Platform_StringContainsCaseInsensitive(window_title, data->target_title)) {
         data->found_hwnd = hwnd;
         return FALSE;
     }
-    
+
     return TRUE;
 }
 
 bool Platform_FocusWindow(const char* title) {
     if (!title || !title[0]) { log_error("operation failed, returning error title='%s'", title ? title : "null"); return false; }
-    
-    HWND hwnd = FindWindowA(NULL, title);
-    
+
+    // trim leading/trailing whitespace – window_switcher "Title (exe)" leaves "Title "
+    char trimmed[512];
+    const char* s = title;
+    while (*s && isspace((unsigned char)*s)) s++;
+    const char* e = s + strlen(s);
+    while (e > s && isspace((unsigned char)*(e - 1))) e--;
+    size_t len = (size_t)(e - s);
+    if (len == 0) return false;
+    if (len >= sizeof(trimmed)) len = sizeof(trimmed) - 1;
+    memcpy(trimmed, s, len);
+    trimmed[len] = '\0';
+
+    HWND hwnd = FindWindowA(NULL, trimmed);
+
     if (hwnd == NULL) {
         FindWindowData data;
-        data.target_title = title;
+        data.target_title = trimmed;
         data.found_hwnd = NULL;
-        
+
         EnumWindows(EnumWindowsProcTitle, (LPARAM)&data);
         hwnd = data.found_hwnd;
     }
-    
+
     if (hwnd == NULL) {
+        log_error("Platform_FocusWindow no window for '%s' (trimmed '%s')", title, trimmed);
         return false;
     }
-    
-    if (IsIconic(hwnd)) {
-        ShowWindow(hwnd, SW_RESTORE);
-    }
-    
+
+    if (IsIconic(hwnd)) ShowWindow(hwnd, SW_RESTORE);
+    ShowWindow(hwnd, SW_SHOW);
+    SetWindowPos(hwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
+
+    HWND fg = GetForegroundWindow();
+    DWORD fgTid = fg ? GetWindowThreadProcessId(fg, NULL) : 0;
+    DWORD targetTid = GetWindowThreadProcessId(hwnd, NULL);
+    DWORD curTid = GetCurrentThreadId();
+    if (fgTid && fgTid != curTid) AttachThreadInput(fgTid, curTid, TRUE);
+    if (targetTid && targetTid != curTid) AttachThreadInput(targetTid, curTid, TRUE);
+    AllowSetForegroundWindow(ASFW_ANY);
     SetForegroundWindow(hwnd);
-    
+    SetActiveWindow(hwnd);
+    BringWindowToTop(hwnd);
+    if (fgTid && fgTid != curTid) AttachThreadInput(fgTid, curTid, FALSE);
+    if (targetTid && targetTid != curTid) AttachThreadInput(targetTid, curTid, FALSE);
+
     FLASHWINFO fwi;
     fwi.cbSize = sizeof(FLASHWINFO);
     fwi.hwnd = hwnd;
@@ -711,8 +737,8 @@ bool Platform_FocusWindow(const char* title) {
     fwi.uCount = 3;
     fwi.dwTimeout = 0;
     FlashWindowEx(&fwi);
-    
-    log_info("Platform_FocusWindow title='%s'", title ? title : "");;
+
+    log_info("Platform_FocusWindow title='%s' trimmed='%s' hwnd=%p", title ? title : "", trimmed, hwnd);
     return true;
 }
 
