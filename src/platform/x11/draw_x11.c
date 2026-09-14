@@ -116,9 +116,8 @@ void Platform_DrawEditBackground(PromptState *state, Display *dpy, XftDraw *xd, 
 }
 void Platform_DrawEditText(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap, FontHandle font) {
     XftFont *xf = FH_TO_XFT(font);
-    XftColor text_color, seperator_color;
+    XftColor text_color;
     Linux_XftAllocColor(dpy, vis, cmap, rgb_to_hex(COLOR_TEXT), 0xFFFF, &text_color);
-    Linux_XftAllocColor(dpy, vis, cmap, rgb_to_hex(COLOR_SEPERATOR), 0xFFFF, &seperator_color);
     int cursor_x = 0;
     int text_len = strlen(state->filter);
     int scroll = Linux_UpdateEditScrollOffset(dpy, xf, state->filter, text_len, state->cursor, state->width, state->scroll_offset, &cursor_x);
@@ -129,7 +128,6 @@ void Platform_DrawEditText(PromptState *state, Display *dpy, XftDraw *xd, Visual
         XftDrawStringUtf8(xd, &text_color, xf, draw_x, draw_y, (FcChar8*)state->filter, text_len);
     }
     XftColorFree(dpy, vis, cmap, &text_color);
-    XftColorFree(dpy, vis, cmap, &seperator_color);
 }
 void Platform_DrawEditCursor(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap, FontHandle font) {
     XftFont *xf = FH_TO_XFT(font);
@@ -139,13 +137,4 @@ void Platform_DrawEditCursor(PromptState *state, Display *dpy, XftDraw *xd, Visu
     Linux_UpdateEditScrollOffset(dpy, xf, state->filter, strlen(state->filter), state->cursor, state->width, state->scroll_offset, &cursor_x);
     Linux_DrawEditCursor(xd, &text_color, cursor_x, state->scroll_offset, state->width);
     XftColorFree(dpy, vis, cmap, &text_color);
-}
-void Platform_DrawSeparators(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap) {
-    (void)state;
-    XftColor seperator_color;
-    Linux_XftAllocColor(dpy, vis, cmap, rgb_to_hex(COLOR_SEPERATOR), 0xFFFF, &seperator_color);
-    // temporary i think
-    // XftDrawRect(xd, &seperator_color,0,60,state->width,5);
-    // XftDrawRect(xd, &seperator_color,0,state->height - 60,state->width,5);
-    XftColorFree(dpy, vis, cmap, &seperator_color);
 }
