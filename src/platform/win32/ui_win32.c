@@ -12,6 +12,7 @@
 #include "helpers/flag.h"
 #include "core/common_ui.h"
 #include "core/window_manager.h"
+#include "core/remap_manager.h"
 
 
 char* Platform_SearchPopup(void) { log_error("operation failed, returning error"); return NULL; log_info("Platform_SearchPopup completed");
@@ -537,7 +538,18 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
     return CallNextHookEx(NULL, nCode, wParam, lParam);
   }
 
-  if (nCode == HC_ACTION && (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN)) {
+  if (nCode == HC_ACTION) {
+    KBDLLHOOKSTRUCT* _rk = (KBDLLHOOKSTRUCT*)lParam;
+    if (_rk->flags & LLKHF_INJECTED) return CallNextHookEx(NULL, nCode, wParam, lParam);
+    bool _isDown = (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN);
+    bool _isUp = (wParam == WM_KEYUP || wParam == WM_SYSKEYUP);
+    if (_isDown || _isUp) {
+        int _vk = (int)_rk->vkCode;
+        int _val = _isDown ? 1 : 0;
+        if (remap_should_swallow_vk(_vk, _val)) { log_warn("ui_win32: remap swalowed vk=%d val=%d", _vk, _val); return 1; }
+        else { if (_vk==VK_LSHIFT||_vk==VK_RMENU||_vk=='W'||_vk=='A'||_vk=='S'||_vk=='D'||_vk=='I'||_vk=='U') log_warn("ui_win32: remap NOT swallowed vk=%d val=%d", _vk, _val); }
+    }
+    if (nCode == HC_ACTION && (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN)) {
     KBDLLHOOKSTRUCT* pKeyInfo = (KBDLLHOOKSTRUCT*)lParam;
 
     bool alt_down   = (pKeyInfo->flags & LLKHF_ALTDOWN) || (GetAsyncKeyState(VK_MENU) & 0x8000);
@@ -629,6 +641,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
     PROFILE_END_VAR(timer4, "CheckVimMotion");
 
 
+  }
   }
   return CallNextHookEx(NULL, nCode, wParam, lParam);
 }
