@@ -41,6 +41,32 @@ static bool rainbow_init = false;
 #define WM_PREVIEW_SELECTION (WM_APP + 1)
 
 LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
+  if (msg == WM_ERASEBKGND) {
+    HDC hdc = (HDC)wParam;
+    RECT rc; GetClientRect(hwnd, &rc);
+    HWND hParent = GetParent(hwnd);
+    if (hParent && IsWindow(hParent)) {
+      RECT winRc; GetClientRect(hParent, &winRc);
+      int winW = winRc.right - winRc.left;
+      int winH = winRc.bottom - winRc.top;
+      POINT pt = {0,0};
+      ClientToScreen(hwnd, &pt);
+      ScreenToClient(hParent, &pt);
+      if (EnableShaders && ShaderPreset != 0 && winW > 0 && winH > 0) {
+        Win32_DrawBackgroundSlice(hdc, &rc, COLOR_BG, winW, winH, pt.x, pt.y);
+      } else {
+        HBRUSH br = CreateSolidBrush(COLOR_BG);
+        FillRect(hdc, &rc, br);
+        DeleteObject(br);
+      }
+    } else {
+      HBRUSH br = CreateSolidBrush(COLOR_BG);
+      RECT rc2; GetClientRect(hwnd, &rc2);
+      FillRect(hdc, &rc2, br);
+      DeleteObject(br);
+    }
+    return 1;
+  }
   ListBoxInfo* lb = GetLBFromChild(hwnd);
   HWND hParent = GetParent(hwnd);
     HWND hListBox = GetDlgItem(hParent, IDC_LIST_BOX);
@@ -141,8 +167,44 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
         if (ctrl_pressed) {
           UI_SetText(FlintContext_Get()->window.hEditControl,"");
             UI_Redraw(lb, FlintContext_Get()->window.hListBox);
+            InvalidateRect(hwnd, NULL, TRUE);
             return 0;
+        } else {
+          char buf[512] = {0};
+          GetWindowTextA(hwnd, buf, sizeof(buf));
+          DWORD selStart = 0, selEnd = 0;
+          SendMessageA(hwnd, EM_GETSEL, (WPARAM)&selStart, (WPARAM)&selEnd);
+          int len = (int)strlen(buf);
+          if (selStart != selEnd) {
+            memmove(buf + selStart, buf + selEnd, len - selEnd + 1);
+            SetWindowTextA(hwnd, buf);
+            SendMessageA(hwnd, EM_SETSEL, selStart, selStart);
+          } else if (selStart > 0) {
+            memmove(buf + selStart - 1, buf + selStart, len - selStart + 1);
+            SetWindowTextA(hwnd, buf);
+            SendMessageA(hwnd, EM_SETSEL, selStart - 1, selStart - 1);
+          }
+          InvalidateRect(hwnd, NULL, TRUE);
+          return 0;
         }
+      }
+      if (wParam == VK_DELETE) {
+        char buf[512] = {0};
+        GetWindowTextA(hwnd, buf, sizeof(buf));
+        DWORD selStart = 0, selEnd = 0;
+        SendMessageA(hwnd, EM_GETSEL, (WPARAM)&selStart, (WPARAM)&selEnd);
+        int len = (int)strlen(buf);
+        if (selStart != selEnd) {
+          memmove(buf + selStart, buf + selEnd, len - selEnd + 1);
+          SetWindowTextA(hwnd, buf);
+          SendMessageA(hwnd, EM_SETSEL, selStart, selStart);
+        } else if (selStart < (DWORD)len) {
+          memmove(buf + selStart, buf + selStart + 1, len - selStart);
+          SetWindowTextA(hwnd, buf);
+          SendMessageA(hwnd, EM_SETSEL, selStart, selStart);
+        }
+        InvalidateRect(hwnd, NULL, TRUE);
+        return 0;
       }
       if (wParam == COPY_SELECTION_KEY) {
         bool ctrl_pressed = (GetKeyState(VK_CONTROL) & 0x8000);
@@ -184,7 +246,7 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
       }
     } 
   if (msg == WM_CHAR) {
-    if (wParam == 0x7F) {
+    if (wParam == 0x08 || wParam == 0x7F) {
       return 0; 
     }
   }
@@ -193,6 +255,32 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
 } 
 
 LRESULT CALLBACK SimpleEditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
+  if (msg == WM_ERASEBKGND) {
+    HDC hdc = (HDC)wParam;
+    RECT rc; GetClientRect(hwnd, &rc);
+    HWND hPar = GetParent(hwnd);
+    if (hPar && IsWindow(hPar)) {
+      RECT winRc; GetClientRect(hPar, &winRc);
+      int winW = winRc.right - winRc.left;
+      int winH = winRc.bottom - winRc.top;
+      POINT pt = {0,0};
+      ClientToScreen(hwnd, &pt);
+      ScreenToClient(hPar, &pt);
+      if (EnableShaders && ShaderPreset != 0 && winW > 0 && winH > 0) {
+        Win32_DrawBackgroundSlice(hdc, &rc, COLOR_BG, winW, winH, pt.x, pt.y);
+      } else {
+        HBRUSH br = CreateSolidBrush(COLOR_BG);
+        FillRect(hdc, &rc, br);
+        DeleteObject(br);
+      }
+    } else {
+      HBRUSH br = CreateSolidBrush(COLOR_BG);
+      RECT rc2; GetClientRect(hwnd, &rc2);
+      FillRect(hdc, &rc2, br);
+      DeleteObject(br);
+    }
+    return 1;
+  }
   HWND hParent = GetParent(hwnd);
     HWND hListBox = GetDlgItem(hParent, IDC_LIST_BOX);
     HWND hEditControl = hwnd;
@@ -224,10 +312,32 @@ LRESULT CALLBACK SimpleEditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPAR
         if (wParam == VK_BACK) {
           if (ctrl_pressed) {
             UI_SetText(FlintContext_Get()->window.hEditControl,"");
+              InvalidateRect(hwnd, NULL, TRUE);
               return 0;
+          } else {
+            char buf[512] = {0};
+            GetWindowTextA(hwnd, buf, sizeof(buf));
+            DWORD s=0,e=0; SendMessageA(hwnd, EM_GETSEL, (WPARAM)&s, (WPARAM)&e);
+            int len=(int)strlen(buf);
+            if (s!=e) { memmove(buf+s, buf+e, len-e+1); SetWindowTextA(hwnd, buf); SendMessageA(hwnd, EM_SETSEL, s, s); }
+            else if (s>0) { memmove(buf+s-1, buf+s, len-s+1); SetWindowTextA(hwnd, buf); SendMessageA(hwnd, EM_SETSEL, s-1, s-1); }
+            InvalidateRect(hwnd, NULL, TRUE);
+            return 0;
           }
         }
+        if (wParam == VK_DELETE) {
+          char buf[512]={0}; GetWindowTextA(hwnd, buf, sizeof(buf));
+          DWORD s=0,e=0; SendMessageA(hwnd, EM_GETSEL, (WPARAM)&s, (WPARAM)&e);
+          int len=(int)strlen(buf);
+          if (s!=e) { memmove(buf+s, buf+e, len-e+1); SetWindowTextA(hwnd, buf); SendMessageA(hwnd, EM_SETSEL, s, s); }
+          else if (s < (DWORD)len) { memmove(buf+s, buf+s+1, len-s); SetWindowTextA(hwnd, buf); SendMessageA(hwnd, EM_SETSEL, s, s); }
+          InvalidateRect(hwnd, NULL, TRUE);
+          return 0;
+        }
     } 
+  if (msg == WM_CHAR) {
+    if (wParam == 0x08 || wParam == 0x7F) return 0;
+  }
   return DefSubclassProc(hwnd, msg, wParam, lParam);
 } 
 
@@ -412,15 +522,31 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         }
         break;
     }
-    case WM_CTLCOLOREDIT:
-    case WM_CTLCOLORLISTBOX: {
+    case WM_CTLCOLOREDIT: {
       HDC hdc = (HDC)wParam;
+      if (EnableShaders && ShaderPreset != 0) {
+        SetTextColor(hdc, COLOR_TEXT);
+        SetBkMode(hdc, TRANSPARENT);
+        return (LRESULT)GetStockObject(NULL_BRUSH);
+      } else {
         SetTextColor(hdc, COLOR_TEXT);
         SetBkColor(hdc, COLOR_BG);
-          if (!s_bg_brush) {
-            s_bg_brush = CreateSolidBrush(COLOR_BG);
-          }
+        if (!s_bg_brush) s_bg_brush = CreateSolidBrush(COLOR_BG);
         return (LRESULT)s_bg_brush;
+      }
+    }
+    case WM_CTLCOLORLISTBOX: {
+      HDC hdc = (HDC)wParam;
+      if (EnableShaders && ShaderPreset != 0) {
+        SetTextColor(hdc, COLOR_TEXT);
+        SetBkMode(hdc, TRANSPARENT);
+        return (LRESULT)GetStockObject(NULL_BRUSH);
+      } else {
+        SetTextColor(hdc, COLOR_TEXT);
+        SetBkColor(hdc, COLOR_BG);
+        if (!s_bg_brush) s_bg_brush = CreateSolidBrush(COLOR_BG);
+        return (LRESULT)s_bg_brush;
+      }
     }
     case WM_CREATE: {
       if (FlintContext_Get()->g_hMainFont) {
@@ -964,6 +1090,32 @@ LRESULT CALLBACK SettingsPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 }
 
 LRESULT CALLBACK SettingsEditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
+  if (msg == WM_ERASEBKGND) {
+    HDC hdc = (HDC)wParam;
+    RECT rc; GetClientRect(hwnd, &rc);
+    HWND hPar = GetParent(hwnd);
+    if (hPar && IsWindow(hPar)) {
+      RECT winRc; GetClientRect(hPar, &winRc);
+      int winW = winRc.right - winRc.left;
+      int winH = winRc.bottom - winRc.top;
+      POINT pt = {0,0};
+      ClientToScreen(hwnd, &pt);
+      ScreenToClient(hPar, &pt);
+      if (EnableShaders && ShaderPreset != 0 && winW > 0 && winH > 0) {
+        Win32_DrawBackgroundSlice(hdc, &rc, COLOR_BG, winW, winH, pt.x, pt.y);
+      } else {
+        HBRUSH br = CreateSolidBrush(COLOR_BG);
+        FillRect(hdc, &rc, br);
+        DeleteObject(br);
+      }
+    } else {
+      HBRUSH br = CreateSolidBrush(COLOR_BG);
+      RECT rc2; GetClientRect(hwnd, &rc2);
+      FillRect(hdc, &rc2, br);
+      DeleteObject(br);
+    }
+    return 1;
+  }
   ListBoxInfo* lb = GetLBFromChild(hwnd);
   HWND hEditControl = hwnd;
     
@@ -986,8 +1138,26 @@ LRESULT CALLBACK SettingsEditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LP
       if (wParam == VK_BACK) {
         if (ctrl_pressed) {
           UI_SetText(FlintContext_Get()->window.hEditControl,"");
+            InvalidateRect(hwnd, NULL, TRUE);
             return 0;
+        } else {
+          char buf[512]={0}; GetWindowTextA(hwnd, buf, sizeof(buf));
+          DWORD s=0,e=0; SendMessageA(hwnd, EM_GETSEL, (WPARAM)&s, (WPARAM)&e);
+          int len=(int)strlen(buf);
+          if (s!=e) { memmove(buf+s, buf+e, len-e+1); SetWindowTextA(hwnd, buf); SendMessageA(hwnd, EM_SETSEL, s, s); }
+          else if (s>0) { memmove(buf+s-1, buf+s, len-s+1); SetWindowTextA(hwnd, buf); SendMessageA(hwnd, EM_SETSEL, s-1, s-1); }
+          InvalidateRect(hwnd, NULL, TRUE);
+          return 0;
         }
+      }
+      if (wParam == VK_DELETE) {
+        char buf[512]={0}; GetWindowTextA(hwnd, buf, sizeof(buf));
+        DWORD s=0,e=0; SendMessageA(hwnd, EM_GETSEL, (WPARAM)&s, (WPARAM)&e);
+        int len=(int)strlen(buf);
+        if (s!=e) { memmove(buf+s, buf+e, len-e+1); SetWindowTextA(hwnd, buf); SendMessageA(hwnd, EM_SETSEL, s, s); }
+        else if (s < (DWORD)len) { memmove(buf+s, buf+s+1, len-s); SetWindowTextA(hwnd, buf); SendMessageA(hwnd, EM_SETSEL, s, s); }
+        InvalidateRect(hwnd, NULL, TRUE);
+        return 0;
       }
       if (wParam == VK_DOWN) {
         if (ctrl_pressed) {
@@ -1002,10 +1172,39 @@ LRESULT CALLBACK SettingsEditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LP
         }
       }
     } 
+  if (msg == WM_CHAR) {
+    if (wParam == 0x08 || wParam == 0x7F) return 0;
+  }
   return DefSubclassProc(hwnd, msg, wParam, lParam);
 } 
 
 LRESULT CALLBACK EditPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
+  if (uMsg == WM_ERASEBKGND) {
+    HDC hdc = (HDC)wParam;
+    RECT rc; GetClientRect(hWnd, &rc);
+    HWND hPar = GetParent(hWnd);
+    if (hPar && IsWindow(hPar)) {
+      RECT winRc; GetClientRect(hPar, &winRc);
+      int winW = winRc.right - winRc.left;
+      int winH = winRc.bottom - winRc.top;
+      POINT pt = {0,0};
+      ClientToScreen(hWnd, &pt);
+      ScreenToClient(hPar, &pt);
+      if (EnableShaders && ShaderPreset != 0 && winW > 0 && winH > 0) {
+        Win32_DrawBackgroundSlice(hdc, &rc, COLOR_BG, winW, winH, pt.x, pt.y);
+      } else {
+        HBRUSH br = CreateSolidBrush(COLOR_BG);
+        FillRect(hdc, &rc, br);
+        DeleteObject(br);
+      }
+    } else {
+      HBRUSH br = CreateSolidBrush(COLOR_BG);
+      RECT rc2; GetClientRect(hWnd, &rc2);
+      FillRect(hdc, &rc2, br);
+      DeleteObject(br);
+    }
+    return 1;
+  }
   ListBoxInfo* lb = GetLBFromChild(hWnd);
   
   if (!lb && WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) && IsWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd))) lb = GetLBFromPopup(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd));
@@ -1038,11 +1237,64 @@ LRESULT CALLBACK EditPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
         
         return 0;
     }
+    if (wParam == VK_BACK) {
+      bool ctrl = (GetKeyState(VK_CONTROL) & 0x8000);
+      if (ctrl) { SetWindowTextA(hWnd, ""); InvalidateRect(hWnd, NULL, TRUE); return 0; }
+      char buf[2048]={0}; GetWindowTextA(hWnd, buf, sizeof(buf));
+      DWORD s=0,e=0; SendMessageA(hWnd, EM_GETSEL, (WPARAM)&s, (WPARAM)&e);
+      int len=(int)strlen(buf);
+      if (s!=e) { memmove(buf+s, buf+e, len-e+1); SetWindowTextA(hWnd, buf); SendMessageA(hWnd, EM_SETSEL, s, s); }
+      else if (s>0) {
+        if (s>=2 && buf[s-1]=='\n' && buf[s-2]=='\r') { memmove(buf+s-2, buf+s, len-s+1); SetWindowTextA(hWnd, buf); SendMessageA(hWnd, EM_SETSEL, s-2, s-2); }
+        else { memmove(buf+s-1, buf+s, len-s+1); SetWindowTextA(hWnd, buf); SendMessageA(hWnd, EM_SETSEL, s-1, s-1); }
+      }
+      InvalidateRect(hWnd, NULL, TRUE);
+      return 0;
+    }
+    if (wParam == VK_DELETE) {
+      char buf[2048]={0}; GetWindowTextA(hWnd, buf, sizeof(buf));
+      DWORD s=0,e=0; SendMessageA(hWnd, EM_GETSEL, (WPARAM)&s, (WPARAM)&e);
+      int len=(int)strlen(buf);
+      if (s!=e) { memmove(buf+s, buf+e, len-e+1); SetWindowTextA(hWnd, buf); SendMessageA(hWnd, EM_SETSEL, s, s); }
+      else if (s < (DWORD)len) {
+        if (s+1 < (DWORD)len && buf[s]=='\r' && buf[s+1]=='\n') { memmove(buf+s, buf+s+2, len-s-1); SetWindowTextA(hWnd, buf); SendMessageA(hWnd, EM_SETSEL, s, s); }
+        else { memmove(buf+s, buf+s+1, len-s); SetWindowTextA(hWnd, buf); SendMessageA(hWnd, EM_SETSEL, s, s); }
+      }
+      InvalidateRect(hWnd, NULL, TRUE);
+      return 0;
+    }
   }
+  if (uMsg == WM_CHAR && (wParam == 0x08 || wParam == 0x7F)) return 0;
   return DefSubclassProc(hWnd, uMsg, wParam, lParam);
 }
 
 LRESULT CALLBACK SearchPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
+  if (uMsg == WM_ERASEBKGND) {
+    HDC hdc = (HDC)wParam;
+    RECT rc; GetClientRect(hWnd, &rc);
+    HWND hPar = GetParent(hWnd);
+    if (hPar && IsWindow(hPar)) {
+      RECT winRc; GetClientRect(hPar, &winRc);
+      int winW = winRc.right - winRc.left;
+      int winH = winRc.bottom - winRc.top;
+      POINT pt = {0,0};
+      ClientToScreen(hWnd, &pt);
+      ScreenToClient(hPar, &pt);
+      if (EnableShaders && ShaderPreset != 0 && winW > 0 && winH > 0) {
+        Win32_DrawBackgroundSlice(hdc, &rc, COLOR_BG, winW, winH, pt.x, pt.y);
+      } else {
+        HBRUSH br = CreateSolidBrush(COLOR_BG);
+        FillRect(hdc, &rc, br);
+        DeleteObject(br);
+      }
+    } else {
+      HBRUSH br = CreateSolidBrush(COLOR_BG);
+      RECT rc2; GetClientRect(hWnd, &rc2);
+      FillRect(hdc, &rc2, br);
+      DeleteObject(br);
+    }
+    return 1;
+  }
   ListBoxInfo* lb = GetLBFromChild(hWnd);
   if (!lb && WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) && IsWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd))) lb = GetLBFromPopup(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd));
   if (uMsg == WM_KEYDOWN) {
@@ -1061,7 +1313,34 @@ LRESULT CALLBACK SearchPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LP
         UI_Redraw(lb, FlintContext_Get()->window.hListBox);
         return 0;
     }
+    if (wParam == VK_BACK) {
+      bool ctrl = (GetKeyState(VK_CONTROL) & 0x8000);
+      if (ctrl) { SetWindowTextA(hWnd, ""); InvalidateRect(hWnd, NULL, TRUE); return 0; }
+      char buf[2048]={0}; GetWindowTextA(hWnd, buf, sizeof(buf));
+      DWORD s=0,e=0; SendMessageA(hWnd, EM_GETSEL, (WPARAM)&s, (WPARAM)&e);
+      int len=(int)strlen(buf);
+      if (s!=e) { memmove(buf+s, buf+e, len-e+1); SetWindowTextA(hWnd, buf); SendMessageA(hWnd, EM_SETSEL, s, s); }
+      else if (s>0) {
+        if (s>=2 && buf[s-1]=='\n' && buf[s-2]=='\r') { memmove(buf+s-2, buf+s, len-s+1); SetWindowTextA(hWnd, buf); SendMessageA(hWnd, EM_SETSEL, s-2, s-2); }
+        else { memmove(buf+s-1, buf+s, len-s+1); SetWindowTextA(hWnd, buf); SendMessageA(hWnd, EM_SETSEL, s-1, s-1); }
+      }
+      InvalidateRect(hWnd, NULL, TRUE);
+      return 0;
+    }
+    if (wParam == VK_DELETE) {
+      char buf[2048]={0}; GetWindowTextA(hWnd, buf, sizeof(buf));
+      DWORD s=0,e=0; SendMessageA(hWnd, EM_GETSEL, (WPARAM)&s, (WPARAM)&e);
+      int len=(int)strlen(buf);
+      if (s!=e) { memmove(buf+s, buf+e, len-e+1); SetWindowTextA(hWnd, buf); SendMessageA(hWnd, EM_SETSEL, s, s); }
+      else if (s < (DWORD)len) {
+        if (s+1 < (DWORD)len && buf[s]=='\r' && buf[s+1]=='\n') { memmove(buf+s, buf+s+2, len-s-1); SetWindowTextA(hWnd, buf); SendMessageA(hWnd, EM_SETSEL, s, s); }
+        else { memmove(buf+s, buf+s+1, len-s); SetWindowTextA(hWnd, buf); SendMessageA(hWnd, EM_SETSEL, s, s); }
+      }
+      InvalidateRect(hWnd, NULL, TRUE);
+      return 0;
+    }
   }
+  if (uMsg == WM_CHAR && (wParam == 0x08 || wParam == 0x7F)) return 0;
   return DefSubclassProc(hWnd, uMsg, wParam, lParam);
 }
 
@@ -1106,13 +1385,19 @@ LRESULT CALLBACK EditPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
         
     case WM_CTLCOLOREDIT: {
       HDC hdc = (HDC)wParam;
+      if (EnableShaders && ShaderPreset != 0) {
+        SetTextColor(hdc, COLOR_TEXT);
+        SetBkMode(hdc, TRANSPARENT);
+        return (LRESULT)GetStockObject(NULL_BRUSH);
+      } else {
         SetTextColor(hdc, COLOR_TEXT);
         SetBkColor(hdc, COLOR_BG);
         static HBRUSH hBrush = NULL;
         if (!hBrush) hBrush = CreateSolidBrush(COLOR_BG);
-          return (LRESULT)hBrush;
+        return (LRESULT)hBrush;
+      }
     }
-          
+           
     case WM_PAINT: {
       PAINTSTRUCT ps;
         HDC hdc = BeginPaint(hwnd, &ps);
@@ -1216,11 +1501,17 @@ LRESULT CALLBACK SearchPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPar
         
     case WM_CTLCOLOREDIT: {
       HDC hdc = (HDC)wParam;
+      if (EnableShaders && ShaderPreset != 0) {
+        SetTextColor(hdc, COLOR_TEXT);
+        SetBkMode(hdc, TRANSPARENT);
+        return (LRESULT)GetStockObject(NULL_BRUSH);
+      } else {
         SetTextColor(hdc, COLOR_TEXT);
         SetBkColor(hdc, COLOR_BG);
         static HBRUSH hBrush = NULL;
         if (!hBrush) hBrush = CreateSolidBrush(COLOR_BG);
-          return (LRESULT)hBrush;
+        return (LRESULT)hBrush;
+      }
     }
           
     case WM_PAINT: {
