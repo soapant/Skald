@@ -14,7 +14,6 @@ void window_switcher_refresh_callback(const char* filter, WindowHandle hListBox,
         snprintf(buffer, 256, "%s (%s)",
                  list_of_titles.windows[i],
                  list_of_names.windows[i]);
-        printf("%s \n",buffer);
         items[i] = buffer;
     }
 
@@ -26,9 +25,15 @@ void window_switcher_refresh_callback(const char* filter, WindowHandle hListBox,
 
 bool window_switcher_enter_callback(const char* selection, ListBoxInfo* lb) {
     if (UI_IsListBoxSelected(lb)) {
-      char* output = fl_string_inside(selection,'(');
-      fl_focus_window_by_title(output);
-      free(output);
+      char* cut = fl_string_cut_before(selection,'(');
+      char* title = cut ? fl_string_trim(cut) : NULL;
+      free(cut);
+      if (title) {
+          fl_focus_window_by_title(title);
+          free(title);
+      } else if (selection) {
+          fl_focus_window_by_title((char*)selection);
+      }
     }
     return true;
 }
