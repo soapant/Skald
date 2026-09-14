@@ -11,7 +11,7 @@ void window_switcher_refresh_callback(const char* filter, WindowHandle hListBox,
 
     for (int i = 0; i < count; i++) {
         char* buffer = malloc(256);
-        snprintf(buffer, 256, "%s (%s)",
+        snprintf(buffer, 256, "%s {%s}",
                  list_of_titles.windows[i],
                  list_of_names.windows[i]);
         items[i] = buffer;
@@ -25,7 +25,7 @@ void window_switcher_refresh_callback(const char* filter, WindowHandle hListBox,
 
 bool window_switcher_enter_callback(const char* selection, ListBoxInfo* lb) {
     if (UI_IsListBoxSelected(lb)) {
-      char* cut = fl_string_cut_before(selection,'(');
+      char* cut = fl_string_cut_before(selection,'{');
       char* title = cut ? fl_string_trim(cut) : NULL;
       free(cut);
       if (title) {
