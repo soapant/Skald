@@ -1,18 +1,13 @@
-#if !defined(_WIN32)
 #include "core/context.h"
-#include "core/modal.h"
 #include "core/modal.h"
 #include "config.h"
 #include "platform/x11/drawing.h"
-#include "core/platform.h"
-#include "config.h"
 #include "core/platform.h"
 #include "helpers/hotkey.h"
 #include "helpers/alias.h"
 #include "helpers/flag.h"
 #include "helpers/file.h"
 #include "helpers/ui.h"
-#include "helpers/flag.h"
 #include "core/common_ui.h"
 #include "core/vim.h"
 #include "platform/x11/input.h"
@@ -26,7 +21,6 @@
 #include <X11/keysym.h>
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
-#include <X11/Xlib.h>
 #include <X11/Xft/Xft.h>
 #include <sys/time.h>
 #include <string.h>
@@ -160,4 +154,3 @@ bool Linux_RenderPromptUser(Display *dpy, Window *win, PromptState *state) {
     return true;
 }
 
-#endif // _WIN32
