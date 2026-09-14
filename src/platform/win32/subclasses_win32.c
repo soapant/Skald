@@ -41,32 +41,52 @@ static bool rainbow_init = false;
 #define WM_PREVIEW_SELECTION (WM_APP + 1)
 
 LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
-  if (msg == WM_ERASEBKGND) {
-    HDC hdc = (HDC)wParam;
+  if (msg == WM_PAINT) {
+    PAINTSTRUCT ps;
+    HDC hdc = BeginPaint(hwnd, &ps);
     RECT rc; GetClientRect(hwnd, &rc);
-    HWND hParent = GetParent(hwnd);
-    if (hParent && IsWindow(hParent)) {
-      RECT winRc; GetClientRect(hParent, &winRc);
+    if (rc.right <= 0 || rc.bottom <= 0) { EndPaint(hwnd, &ps); return 0; }
+    HDC memDC = CreateCompatibleDC(hdc);
+    HBITMAP memBmp = CreateCompatibleBitmap(hdc, rc.right, rc.bottom);
+    if (!memDC || !memBmp) {
+      if (memDC) DeleteDC(memDC);
+      if (memBmp) DeleteObject(memBmp);
+      EndPaint(hwnd, &ps);
+      return DefSubclassProc(hwnd, msg, wParam, lParam);
+    }
+    HBITMAP oldBmp = (HBITMAP)SelectObject(memDC, memBmp);
+    HWND hPar = GetParent(hwnd);
+    if (hPar && IsWindow(hPar)) {
+      RECT winRc; GetClientRect(hPar, &winRc);
       int winW = winRc.right - winRc.left;
       int winH = winRc.bottom - winRc.top;
       POINT pt = {0,0};
       ClientToScreen(hwnd, &pt);
-      ScreenToClient(hParent, &pt);
+      ScreenToClient(hPar, &pt);
       if (EnableShaders && ShaderPreset != 0 && winW > 0 && winH > 0) {
-        Win32_DrawBackgroundSlice(hdc, &rc, COLOR_BG, winW, winH, pt.x, pt.y);
+        Win32_DrawBackgroundSlice(memDC, &rc, COLOR_BG, winW, winH, pt.x, pt.y);
       } else {
         HBRUSH br = CreateSolidBrush(COLOR_BG);
-        FillRect(hdc, &rc, br);
+        FillRect(memDC, &rc, br);
         DeleteObject(br);
       }
     } else {
       HBRUSH br = CreateSolidBrush(COLOR_BG);
-      RECT rc2; GetClientRect(hwnd, &rc2);
-      FillRect(hdc, &rc2, br);
+      FillRect(memDC, &rc, br);
       DeleteObject(br);
     }
-    return 1;
+    // let edit draw text to memDC
+    SendMessage(hwnd, WM_PRINTCLIENT, (WPARAM)memDC, PRF_CLIENT);
+    // fallback if WM_PRINTCLIENT didn't draw (some edit versions)
+    // we also try DefSubclassProc with HDC param replaced? keep as SendMessage
+    BitBlt(hdc, ps.rcPaint.left, ps.rcPaint.top, ps.rcPaint.right - ps.rcPaint.left, ps.rcPaint.bottom - ps.rcPaint.top, memDC, ps.rcPaint.left, ps.rcPaint.top, SRCCOPY);
+    SelectObject(memDC, oldBmp);
+    DeleteObject(memBmp);
+    DeleteDC(memDC);
+    EndPaint(hwnd, &ps);
+    return 0;
   }
+  if (msg == WM_ERASEBKGND) return 1;
   ListBoxInfo* lb = GetLBFromChild(hwnd);
   HWND hParent = GetParent(hwnd);
     (void)GetDlgItem(hParent, IDC_LIST_BOX);
@@ -255,9 +275,20 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
 } 
 
 LRESULT CALLBACK SimpleEditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
-  if (msg == WM_ERASEBKGND) {
-    HDC hdc = (HDC)wParam;
+  if (msg == WM_PAINT) {
+    PAINTSTRUCT ps;
+    HDC hdc = BeginPaint(hwnd, &ps);
     RECT rc; GetClientRect(hwnd, &rc);
+    if (rc.right <= 0 || rc.bottom <= 0) { EndPaint(hwnd, &ps); return 0; }
+    HDC memDC = CreateCompatibleDC(hdc);
+    HBITMAP memBmp = CreateCompatibleBitmap(hdc, rc.right, rc.bottom);
+    if (!memDC || !memBmp) {
+      if (memDC) DeleteDC(memDC);
+      if (memBmp) DeleteObject(memBmp);
+      EndPaint(hwnd, &ps);
+      return DefSubclassProc(hwnd, msg, wParam, lParam);
+    }
+    HBITMAP oldBmp = (HBITMAP)SelectObject(memDC, memBmp);
     HWND hPar = GetParent(hwnd);
     if (hPar && IsWindow(hPar)) {
       RECT winRc; GetClientRect(hPar, &winRc);
@@ -267,20 +298,26 @@ LRESULT CALLBACK SimpleEditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPAR
       ClientToScreen(hwnd, &pt);
       ScreenToClient(hPar, &pt);
       if (EnableShaders && ShaderPreset != 0 && winW > 0 && winH > 0) {
-        Win32_DrawBackgroundSlice(hdc, &rc, COLOR_BG, winW, winH, pt.x, pt.y);
+        Win32_DrawBackgroundSlice(memDC, &rc, COLOR_BG, winW, winH, pt.x, pt.y);
       } else {
         HBRUSH br = CreateSolidBrush(COLOR_BG);
-        FillRect(hdc, &rc, br);
+        FillRect(memDC, &rc, br);
         DeleteObject(br);
       }
     } else {
       HBRUSH br = CreateSolidBrush(COLOR_BG);
-      RECT rc2; GetClientRect(hwnd, &rc2);
-      FillRect(hdc, &rc2, br);
+      FillRect(memDC, &rc, br);
       DeleteObject(br);
     }
-    return 1;
+    SendMessage(hwnd, WM_PRINTCLIENT, (WPARAM)memDC, PRF_CLIENT);
+    BitBlt(hdc, ps.rcPaint.left, ps.rcPaint.top, ps.rcPaint.right - ps.rcPaint.left, ps.rcPaint.bottom - ps.rcPaint.top, memDC, ps.rcPaint.left, ps.rcPaint.top, SRCCOPY);
+    SelectObject(memDC, oldBmp);
+    DeleteObject(memBmp);
+    DeleteDC(memDC);
+    EndPaint(hwnd, &ps);
+    return 0;
   }
+  if (msg == WM_ERASEBKGND) return 1;
   HWND hParent = GetParent(hwnd);
     (void)GetDlgItem(hParent, IDC_LIST_BOX);
     (void)hwnd;
@@ -566,16 +603,18 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     case WM_COMMAND: {
       int wmId   = LOWORD(wParam);
         int wmEvent = HIWORD(wParam);
-        
-        if (wmId == IDC_INPUT_BOX || wmId == EN_CHANGE) {
-          if (GetKeyState(VK_UP) & 0x8000 || 
-              GetKeyState(VK_DOWN) & 0x8000 || 
+        if (wmId == IDC_INPUT_BOX && wmEvent == EN_CHANGE) {
+          if (GetKeyState(VK_UP) & 0x8000 ||
+              GetKeyState(VK_DOWN) & 0x8000 ||
               GetKeyState(VK_RETURN) & 0x8000 ||
-              GetKeyState(VK_ESCAPE) & 0x8000) 
+              GetKeyState(VK_ESCAPE) & 0x8000)
           {
             break;
           }
-          
+            if (WH_TO_HWND(FlintContext_Get()->window.hEditControl) != NULL && IsWindow(WH_TO_HWND(FlintContext_Get()->window.hEditControl))) {
+              InvalidateRect(WH_TO_HWND(FlintContext_Get()->window.hEditControl), NULL, TRUE);
+              UpdateWindow(WH_TO_HWND(FlintContext_Get()->window.hEditControl));
+            }
             if (WH_TO_HWND(FlintContext_Get()->window.hEditControl) != NULL && WH_TO_HWND(FlintContext_Get()->window.hListBox) != NULL) {
               UI_Redraw(lb, FlintContext_Get()->window.hListBox);
             }
@@ -1084,9 +1123,20 @@ LRESULT CALLBACK SettingsPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 }
 
 LRESULT CALLBACK SettingsEditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
-  if (msg == WM_ERASEBKGND) {
-    HDC hdc = (HDC)wParam;
+  if (msg == WM_PAINT) {
+    PAINTSTRUCT ps;
+    HDC hdc = BeginPaint(hwnd, &ps);
     RECT rc; GetClientRect(hwnd, &rc);
+    if (rc.right <= 0 || rc.bottom <= 0) { EndPaint(hwnd, &ps); return 0; }
+    HDC memDC = CreateCompatibleDC(hdc);
+    HBITMAP memBmp = CreateCompatibleBitmap(hdc, rc.right, rc.bottom);
+    if (!memDC || !memBmp) {
+      if (memDC) DeleteDC(memDC);
+      if (memBmp) DeleteObject(memBmp);
+      EndPaint(hwnd, &ps);
+      return DefSubclassProc(hwnd, msg, wParam, lParam);
+    }
+    HBITMAP oldBmp = (HBITMAP)SelectObject(memDC, memBmp);
     HWND hPar = GetParent(hwnd);
     if (hPar && IsWindow(hPar)) {
       RECT winRc; GetClientRect(hPar, &winRc);
@@ -1096,20 +1146,26 @@ LRESULT CALLBACK SettingsEditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LP
       ClientToScreen(hwnd, &pt);
       ScreenToClient(hPar, &pt);
       if (EnableShaders && ShaderPreset != 0 && winW > 0 && winH > 0) {
-        Win32_DrawBackgroundSlice(hdc, &rc, COLOR_BG, winW, winH, pt.x, pt.y);
+        Win32_DrawBackgroundSlice(memDC, &rc, COLOR_BG, winW, winH, pt.x, pt.y);
       } else {
         HBRUSH br = CreateSolidBrush(COLOR_BG);
-        FillRect(hdc, &rc, br);
+        FillRect(memDC, &rc, br);
         DeleteObject(br);
       }
     } else {
       HBRUSH br = CreateSolidBrush(COLOR_BG);
-      RECT rc2; GetClientRect(hwnd, &rc2);
-      FillRect(hdc, &rc2, br);
+      FillRect(memDC, &rc, br);
       DeleteObject(br);
     }
-    return 1;
+    SendMessage(hwnd, WM_PRINTCLIENT, (WPARAM)memDC, PRF_CLIENT);
+    BitBlt(hdc, ps.rcPaint.left, ps.rcPaint.top, ps.rcPaint.right - ps.rcPaint.left, ps.rcPaint.bottom - ps.rcPaint.top, memDC, ps.rcPaint.left, ps.rcPaint.top, SRCCOPY);
+    SelectObject(memDC, oldBmp);
+    DeleteObject(memBmp);
+    DeleteDC(memDC);
+    EndPaint(hwnd, &ps);
+    return 0;
   }
+  if (msg == WM_ERASEBKGND) return 1;
   ListBoxInfo* lb = GetLBFromChild(hwnd);
   (void)hwnd;
     
@@ -1175,9 +1231,20 @@ LRESULT CALLBACK SettingsEditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LP
 } 
 
 LRESULT CALLBACK EditPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
-  if (uMsg == WM_ERASEBKGND) {
-    HDC hdc = (HDC)wParam;
+  if (uMsg == WM_PAINT) {
+    PAINTSTRUCT ps;
+    HDC hdc = BeginPaint(hWnd, &ps);
     RECT rc; GetClientRect(hWnd, &rc);
+    if (rc.right <= 0 || rc.bottom <= 0) { EndPaint(hWnd, &ps); return 0; }
+    HDC memDC = CreateCompatibleDC(hdc);
+    HBITMAP memBmp = CreateCompatibleBitmap(hdc, rc.right, rc.bottom);
+    if (!memDC || !memBmp) {
+      if (memDC) DeleteDC(memDC);
+      if (memBmp) DeleteObject(memBmp);
+      EndPaint(hWnd, &ps);
+      return DefSubclassProc(hWnd, uMsg, wParam, lParam);
+    }
+    HBITMAP oldBmp = (HBITMAP)SelectObject(memDC, memBmp);
     HWND hPar = GetParent(hWnd);
     if (hPar && IsWindow(hPar)) {
       RECT winRc; GetClientRect(hPar, &winRc);
@@ -1187,20 +1254,26 @@ LRESULT CALLBACK EditPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
       ClientToScreen(hWnd, &pt);
       ScreenToClient(hPar, &pt);
       if (EnableShaders && ShaderPreset != 0 && winW > 0 && winH > 0) {
-        Win32_DrawBackgroundSlice(hdc, &rc, COLOR_BG, winW, winH, pt.x, pt.y);
+        Win32_DrawBackgroundSlice(memDC, &rc, COLOR_BG, winW, winH, pt.x, pt.y);
       } else {
         HBRUSH br = CreateSolidBrush(COLOR_BG);
-        FillRect(hdc, &rc, br);
+        FillRect(memDC, &rc, br);
         DeleteObject(br);
       }
     } else {
       HBRUSH br = CreateSolidBrush(COLOR_BG);
-      RECT rc2; GetClientRect(hWnd, &rc2);
-      FillRect(hdc, &rc2, br);
+      FillRect(memDC, &rc, br);
       DeleteObject(br);
     }
-    return 1;
+    SendMessage(hWnd, WM_PRINTCLIENT, (WPARAM)memDC, PRF_CLIENT);
+    BitBlt(hdc, ps.rcPaint.left, ps.rcPaint.top, ps.rcPaint.right - ps.rcPaint.left, ps.rcPaint.bottom - ps.rcPaint.top, memDC, ps.rcPaint.left, ps.rcPaint.top, SRCCOPY);
+    SelectObject(memDC, oldBmp);
+    DeleteObject(memBmp);
+    DeleteDC(memDC);
+    EndPaint(hWnd, &ps);
+    return 0;
   }
+  if (uMsg == WM_ERASEBKGND) return 1;
   ListBoxInfo* lb = GetLBFromChild(hWnd);
   
   if (!lb && WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) && IsWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd))) lb = GetLBFromPopup(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd));
@@ -1265,9 +1338,20 @@ LRESULT CALLBACK EditPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 }
 
 LRESULT CALLBACK SearchPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
-  if (uMsg == WM_ERASEBKGND) {
-    HDC hdc = (HDC)wParam;
+  if (uMsg == WM_PAINT) {
+    PAINTSTRUCT ps;
+    HDC hdc = BeginPaint(hWnd, &ps);
     RECT rc; GetClientRect(hWnd, &rc);
+    if (rc.right <= 0 || rc.bottom <= 0) { EndPaint(hWnd, &ps); return 0; }
+    HDC memDC = CreateCompatibleDC(hdc);
+    HBITMAP memBmp = CreateCompatibleBitmap(hdc, rc.right, rc.bottom);
+    if (!memDC || !memBmp) {
+      if (memDC) DeleteDC(memDC);
+      if (memBmp) DeleteObject(memBmp);
+      EndPaint(hWnd, &ps);
+      return DefSubclassProc(hWnd, uMsg, wParam, lParam);
+    }
+    HBITMAP oldBmp = (HBITMAP)SelectObject(memDC, memBmp);
     HWND hPar = GetParent(hWnd);
     if (hPar && IsWindow(hPar)) {
       RECT winRc; GetClientRect(hPar, &winRc);
@@ -1277,20 +1361,26 @@ LRESULT CALLBACK SearchPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LP
       ClientToScreen(hWnd, &pt);
       ScreenToClient(hPar, &pt);
       if (EnableShaders && ShaderPreset != 0 && winW > 0 && winH > 0) {
-        Win32_DrawBackgroundSlice(hdc, &rc, COLOR_BG, winW, winH, pt.x, pt.y);
+        Win32_DrawBackgroundSlice(memDC, &rc, COLOR_BG, winW, winH, pt.x, pt.y);
       } else {
         HBRUSH br = CreateSolidBrush(COLOR_BG);
-        FillRect(hdc, &rc, br);
+        FillRect(memDC, &rc, br);
         DeleteObject(br);
       }
     } else {
       HBRUSH br = CreateSolidBrush(COLOR_BG);
-      RECT rc2; GetClientRect(hWnd, &rc2);
-      FillRect(hdc, &rc2, br);
+      FillRect(memDC, &rc, br);
       DeleteObject(br);
     }
-    return 1;
+    SendMessage(hWnd, WM_PRINTCLIENT, (WPARAM)memDC, PRF_CLIENT);
+    BitBlt(hdc, ps.rcPaint.left, ps.rcPaint.top, ps.rcPaint.right - ps.rcPaint.left, ps.rcPaint.bottom - ps.rcPaint.top, memDC, ps.rcPaint.left, ps.rcPaint.top, SRCCOPY);
+    SelectObject(memDC, oldBmp);
+    DeleteObject(memBmp);
+    DeleteDC(memDC);
+    EndPaint(hWnd, &ps);
+    return 0;
   }
+  if (uMsg == WM_ERASEBKGND) return 1;
   ListBoxInfo* lb = GetLBFromChild(hWnd);
   if (!lb && WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) && IsWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd))) lb = GetLBFromPopup(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd));
   if (uMsg == WM_KEYDOWN) {
