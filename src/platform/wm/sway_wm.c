@@ -78,43 +78,72 @@ bool succeded_sway(char* output) {
     return true;
 }
 
+static bool sway_focus_by_con_id(int con_id) {
+    char cmd[128];
+    snprintf(cmd, sizeof(cmd), "swaymsg [con_id=%d] focus", con_id);
+    char *out = Platform_RunTerminalCommand(cmd, false);
+    bool ok = succeded_sway(out);
+    free(out);
+    return ok;
+}
+static bool sway_json_string(const char *at, char *out, size_t cap, const char *limit);
+static bool sway_name_for_pid(const char *json, const char *pid_pos, const char *next_pid, char *out, size_t cap);
+
 bool focus_window_title_sway(char* title) {
-    if (!title) { log_error("title is NULL"); return false; }
+    if (!title || !*title) { log_error("title is NULL"); return false; }
+    while (*title && (iscntrl((unsigned char)*title) || isspace((unsigned char)*title))) title++;
+    char *end = title + strlen(title);
+    while (end > title && (iscntrl((unsigned char)end[-1]) || isspace((unsigned char)end[-1]))) *--end = '\0';
+    if (!*title) { log_error("title empty after trim"); return false; }
 
-    char escaped_title[512];
-    title[0] = tolower(title[0]);
-    char* src = title;
-    char* dst = escaped_title;
-    while (*src && (dst - escaped_title) < sizeof(escaped_title) - 1) {
-        if (*src == '"') {
-            *dst++ = '\\';
-            *dst++ = '"';
-        } else {
-            *dst++ = *src;
+    char *json = Platform_RunTerminalCommand("swaymsg -t get_tree", false);
+    if (json) {
+        for (char *p = json; (p = strstr(p, "\"pid\":")); p += 6) {
+            char *next = strstr(p + 6, "\"pid\":");
+            char name[512] = {0};
+            if (!sway_name_for_pid(json, p, next, name, sizeof(name))) continue;
+            char *a = name;
+            while (*a && (iscntrl((unsigned char)*a) || isspace((unsigned char)*a))) a++;
+            char *b = a + strlen(a);
+            while (b > a && (iscntrl((unsigned char)b[-1]) || isspace((unsigned char)b[-1]))) *--b = '\0';
+            if (!strcmp(a, title) || !strcasecmp(a, title)) {
+                char *id_pos = NULL;
+                const char *search = p - 4000;
+                if (search < json) search = json;
+                const char *last_id = NULL;
+                const char *cur = search;
+                while ((cur = strstr(cur, "\"id\":")) && cur < p) { last_id = cur; cur += 5; }
+                if (last_id) {
+                    int con_id = atoi(last_id + 5);
+                    if (con_id) {
+                        free(json);
+                        if (sway_focus_by_con_id(con_id)) return true;
+                        return false;
+                    }
+                }
+            }
         }
-        src++;
-    }
-    *dst = '\0';
-    
-    char cmd[512];
-
-    snprintf(cmd, sizeof(cmd), "swaymsg '[title=\"%s\"] focus'", escaped_title);
-    if (succeded_sway(Platform_RunTerminalCommand(cmd, false))) return true;
-
-    snprintf(cmd, sizeof(cmd), "swaymsg '[app_id=\"%s\"] focus'", escaped_title);
-    if (succeded_sway(Platform_RunTerminalCommand(cmd, false))) return true;
-
-    if (escaped_title[0] != '\0') {
-        snprintf(cmd, sizeof(cmd), "swaymsg '[title=\"%c%s\"] focus'", 
-                 toupper((unsigned char)escaped_title[0]), 
-                 &escaped_title[1]);
-        if (succeded_sway(Platform_RunTerminalCommand(cmd, false))) return true;
+        free(json);
     }
 
-    if (escaped_title[0] != '\0') {
-        snprintf(cmd, sizeof(cmd), "swaymsg '[app_id=\"%c%s\"] focus'", 
-                 toupper((unsigned char)escaped_title[0]), 
-                 &escaped_title[1]);
+    char escaped[1024];
+    char *s = title, *d = escaped;
+    while (*s && d - escaped < (int)sizeof(escaped)-2) {
+        if (*s == '"' || *s == '\\') { *d++ = '\\'; *d++ = *s++; }
+        else *d++ = *s++;
+    }
+    *d = '\0';
+    char cmd[1200];
+    snprintf(cmd, sizeof(cmd), "swaymsg '[title=\"%s\"] focus'", escaped);
+    if (succeded_sway(Platform_RunTerminalCommand(cmd, false))) return true;
+    char low[1024]; strncpy(low, escaped, sizeof(low)-1); low[sizeof(low)-1]='\0';
+    if (low[0]) low[0] = tolower((unsigned char)low[0]);
+    snprintf(cmd, sizeof(cmd), "swaymsg '[title=\"%s\"] focus'", low);
+    if (succeded_sway(Platform_RunTerminalCommand(cmd, false))) return true;
+    if (escaped[0]) {
+        char up[1024]; strncpy(up, escaped, sizeof(up)-1); up[sizeof(up)-1]='\0';
+        up[0] = toupper((unsigned char)up[0]);
+        snprintf(cmd, sizeof(cmd), "swaymsg '[title=\"%s\"] focus'", up);
         if (succeded_sway(Platform_RunTerminalCommand(cmd, false))) return true;
     }
     log_error("title='%s'", title ? title : "null");
