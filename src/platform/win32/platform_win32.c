@@ -656,6 +656,7 @@ bool Platform_ClickAtPos(int x,int y) {
 
     SendInput(3, inputs, sizeof(INPUT));
     log_info("Platform_ClickAtPos x=%d y=%d", x, y);;
+    return true;
 }
 
 typedef struct {

@@ -263,8 +263,14 @@ unsigned long fl_listbox_get_current_standard_color(void) {
     if (idx < 0 || idx >= g_fl_list_lb->populated_count) return 0;
     bool sel = (idx == g_fl_list_lb->selected_index);
     if (sel) return COLOR_TEXT;
+    int orig_idx = idx;
+    int orig_cnt = g_fl_list_lb->populated_count;
+    if (idx >= 0 && idx < g_fl_list_lb->populated_count) {
+        orig_idx = g_fl_list_lb->matching_indices[idx];
+        orig_cnt = g_fl_list_lb->last_item_count > 0 ? g_fl_list_lb->last_item_count : g_fl_list_lb->populated_count;
+    }
     unsigned long ncol, bcol, pcol;
-    Platform_GetItemColors(idx, g_fl_list_lb->populated_count, &ncol, &bcol, &pcol);
+    Platform_GetItemColors(orig_idx, orig_cnt, &ncol, &bcol, &pcol);
     return pcol;
 }
 
@@ -285,7 +291,7 @@ char* fl_search_file_in_dir_platform(const char* directory, const char* search_s
         if (find_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
             continue;
         }
-        if (Platform_StringContainsCaseInsensitive(find_data.cFileName, search_string) != NULL) {
+        if (Platform_StringContainsCaseInsensitive(find_data.cFileName, search_string)) {
             snprintf(found_path, sizeof(found_path), "%s\\%s", directory, find_data.cFileName);
             FindClose(hFind);
             return found_path;

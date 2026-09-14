@@ -96,7 +96,7 @@ static int g_bgCachePreset = -1;
 static float g_bgCacheGamma = -1;
 static float g_bgCacheIntensity = -1;
 
-static void Win32_FreeBgCache(void) {
+void Win32_FreeBgCache(void) {
   if (g_bgCacheDC) { DeleteDC(g_bgCacheDC); g_bgCacheDC = NULL; }
   if (g_bgCacheBmp) { DeleteObject(g_bgCacheBmp); g_bgCacheBmp = NULL; }
   g_bgCacheW = g_bgCacheH = 0;
@@ -305,7 +305,9 @@ static void Win32_DrawGradientDIB(HDC hdc, RECT* rc, COLORREF base, int preset, 
       for (int x = 0; x < w; x++) {
         float t = tBase * 0.85f;
         COLORREF col = LerpColor(base, light, t);
-        unsigned int n = HashNoiseWin(x, y);
+        unsigned int gx = (containerW > 0 && containerH > 0) ? (unsigned int)(offsetX + x) : (unsigned int)x;
+        unsigned int gy = (containerW > 0 && containerH > 0) ? (unsigned int)(offsetY + y) : (unsigned int)y;
+        unsigned int n = HashNoiseWin((int)gx, (int)gy);
         int delta = (int)(n & 0x1F) - 16;
         delta = (int)(delta * ShaderIntensity * 0.5f);
         int r = GetRValue(col) + delta, g = GetGValue(col) + delta, b = GetBValue(col) + delta;
