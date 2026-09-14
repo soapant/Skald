@@ -380,14 +380,8 @@ char* WindowManager_ShowPrompt(WindowManager* wm, const PromptSpec* spec) {
     Popup* popup = PromptPopup_Create(wm, spec);
     if (!popup) { PROFILE_END_VAR(timer, "window_manager:WindowManager_ShowPrompt"); return NULL; }
     Display* dpy = wm->display;
-    XEvent ev;
     while (wm->running && popup->manager) {
-        if (XPending(dpy) > 0) {
-            XNextEvent(dpy, &ev);
-            Linux_ProcessXEvent(dpy, &ev, wm);
-        } else {
-            usleep(1000);
-        }
+        Platform_ProcessNestedEvents(wm, popup);
     }
     if (popup->manager == NULL) {
         if (popup->vtable && popup->vtable->destroy) popup->vtable->destroy(popup);
@@ -417,14 +411,8 @@ char* WindowManager_ShowSimplePrompt(WindowManager* wm, const SimplePromptSpec* 
     Popup* popup = SimplePromptPopup_Create(wm, spec);
     if (!popup) { PROFILE_END_VAR(timer, "window_manager:WindowManager_ShowSimplePrompt"); return NULL; }
     Display* dpy = wm->display;
-    XEvent ev;
     while (wm->running && popup->manager) {
-        if (XPending(dpy) > 0) {
-            XNextEvent(dpy, &ev);
-            Linux_ProcessXEvent(dpy, &ev, wm);
-        } else {
-            usleep(1000);
-        }
+        Platform_ProcessNestedEvents(wm, popup);
     }
     if (wm->popup_count > 0) {
         Popup *top = WindowManager_GetTopPopup(wm);

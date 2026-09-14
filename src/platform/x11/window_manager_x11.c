@@ -399,6 +399,123 @@ void WindowManager_ProcessEventsLinux(WindowManager* wm) {
     PROFILE_END_VAR(timer, "window_manager_x11:WindowManager_ProcessEventsLinux");
 }
 
+void Platform_ProcessNestedEvents(WindowManager* wm, Popup* popup) {
+    PROFILE_START(timer);
+    if (!wm || !wm->display) { PROFILE_END_VAR(timer, "platform:Platform_ProcessNestedEvents"); return; }
+    
+    Display* dpy = wm->display;
+    XEvent ev;
+    
+    while (XPending(dpy) > 0) {
+        XNextEvent(dpy, &ev);
+        Linux_ProcessXEvent(dpy, &ev, wm);
+    }
+    
+    extern int g_x11_keyboard_count;
+    extern X11Keyboard g_x11_keyboards[];
+    extern bool g_x11_device_grabbed[];
+    extern int g_x11_uinput_fd;
+    
+    if (g_x11_keyboard_count > 0 && g_x11_uinput_fd >= 0) {
+        struct pollfd fds[g_x11_keyboard_count + 1];
+        fds[0].fd = ConnectionNumber(dpy);
+        fds[0].events = POLLIN;
+        
+        for (int i = 0; i < g_x11_keyboard_count; i++) {
+            fds[i + 1].fd = g_x11_keyboards[i].fd;
+            fds[i + 1].events = POLLIN;
+        }
+        
+        int poll_res = poll(fds, g_x11_keyboard_count + 1, 500);
+        if (poll_res > 0) {
+            for (int i = 0; i < g_x11_keyboard_count; i++) {
+                if (fds[i + 1].revents & POLLIN) {
+                    struct input_event ev;
+                    bool grabbed = g_x11_device_grabbed[i];
+                    while (read(fds[i + 1].fd, &ev, sizeof(struct input_event)) > 0) {
+                        Popup* top_for_hotkey = WindowManager_GetTopPopup(wm);
+                        if (top_for_hotkey) {
+                            if (ev.type == EV_KEY) {
+                                if (ev.code == KEY_LEFTCTRL || ev.code == KEY_RIGHTCTRL) {
+                                    if (ev.value == 0) g_x11_ctrl_held = false;
+                                    else if (ev.value == 1 || ev.value == 2) g_x11_ctrl_held = true;
+                                } else if (ev.code == KEY_LEFTALT || ev.code == KEY_RIGHTALT) {
+                                    if (ev.value == 0) g_x11_alt_held = false;
+                                    else if (ev.value == 1 || ev.value == 2) g_x11_alt_held = true;
+                                } else if (ev.code == KEY_LEFTSHIFT || ev.code == KEY_RIGHTSHIFT) {
+                                    if (ev.value == 0) g_x11_shift_held = false;
+                                    else if (ev.value == 1 || ev.value == 2) g_x11_shift_held = true;
+                                }
+                                if (ev.code == KEY_LEFTCTRL || ev.code == KEY_RIGHTCTRL) {
+                                    if (ev.value == 0) g_x11_ctrl_held = false;
+                                    else g_x11_ctrl_held = true;
+                                } else if (ev.code == KEY_LEFTALT || ev.code == KEY_RIGHTALT) {
+                                    if (ev.value == 0) g_x11_alt_held = false;
+                                    else g_x11_alt_held = true;
+                                } else if (ev.code == KEY_LEFTSHIFT || ev.code == KEY_RIGHTSHIFT) {
+                                    if (ev.value == 0) g_x11_shift_held = false;
+                                    else g_x11_shift_held = true;
+                                }
+                                if (grabbed && g_x11_uinput_fd >= 0) uinput_emit(&ev);
+                            } else {
+                                if (grabbed && g_x11_uinput_fd >= 0) uinput_emit(&ev);
+                            }
+                            continue;
+                        }
+                        
+                        if (ev.type != EV_KEY) {
+                            if (grabbed && g_x11_uinput_fd >= 0) uinput_emit(&ev);
+                            continue;
+                        }
+                        
+                        if (remap_should_swallow_linux_key(ev.code, ev.value)) {
+                            log_warn("platform: nested remap swallowed code=%d val=%d", ev.code, ev.value);
+                            if (ev.value == 1 && ev.code <= KEY_MAX) g_x11_suppress_release[ev.code] = true;
+                            continue;
+                        }
+                        
+                        struct timeval now;
+                        gettimeofday(&now, NULL);
+                        long age_ms = (now.tv_sec - ev.time.tv_sec) * 1000L
+                                    + (now.tv_usec - ev.time.tv_usec) / 1000L;
+                        const long HOTKEY_STALE_EVENT_MS = 200;
+                        if (age_ms > HOTKEY_STALE_EVENT_MS) {
+                            bool is_modifier = (ev.code == KEY_LEFTALT || ev.code == KEY_RIGHTALT ||
+                                                ev.code == KEY_LEFTCTRL || ev.code == KEY_RIGHTCTRL ||
+                                                ev.code == KEY_LEFTSHIFT || ev.code == KEY_RIGHTSHIFT ||
+                                                ev.code == KEY_LEFTMETA || ev.code == KEY_RIGHTMETA);
+                            if (!is_modifier) {
+                                if (ev.value == 1 && !grabbed) {
+                                    if (HandleGlobalKeyEvent(ev.code, ev.value)) {
+                                        continue;
+                                    }
+                                }
+                                if (grabbed && g_x11_uinput_fd >= 0) uinput_emit(&ev);
+                                continue;
+                            }
+                            if (ev.value == 1) {
+                                if (grabbed && g_x11_uinput_fd >= 0) uinput_emit(&ev);
+                                continue;
+                            }
+                        }
+                        
+                        if (ev.value == 0 && ev.code <= KEY_MAX && g_x11_suppress_release[ev.code]) {
+                            g_x11_suppress_release[ev.code] = false;
+                            continue;
+                        }
+                        if (ev.value == 2 && ev.code <= KEY_MAX && g_x11_suppress_release[ev.code]) {
+                            continue;
+                        }
+                    }
+                    
+                    if (grabbed && g_x11_uinput_fd >= 0) uinput_emit(&ev);
+                }
+            }
+        }
+    }
+    PROFILE_END_VAR(timer, "platform:Platform_ProcessNestedEvents");
+}
+
 void WindowManager_QuitLinux(WindowManager* wm) {
     PROFILE_START(timer);
     if (wm) wm->running = false;
