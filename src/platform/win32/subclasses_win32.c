@@ -748,7 +748,13 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
               HFONT hOldMainFont = (HFONT)SelectObject(pdis->hDC, FlintContext_Get()->g_hMainFont);
                 if (!isSelected) {
                     unsigned long ncol, bcol, pcol;
-                    Platform_GetItemColors(pdis->itemID, lb ? lb->populated_count : 0, &ncol, &bcol, &pcol);
+                    int orig_idx = pdis->itemID;
+                    int orig_cnt = lb ? lb->populated_count : 0;
+                    if (lb && pdis->itemID >= 0 && pdis->itemID < lb->populated_count) {
+                      orig_idx = lb->matching_indices[pdis->itemID];
+                      orig_cnt = lb->last_item_count > 0 ? lb->last_item_count : lb->populated_count;
+                    }
+                    Platform_GetItemColors(orig_idx, orig_cnt, &ncol, &bcol, &pcol);
                     SetTextColor(pdis->hDC, ncol);
                 } else {
                     SetTextColor(pdis->hDC, COLOR_TEXT);

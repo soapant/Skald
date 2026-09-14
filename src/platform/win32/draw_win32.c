@@ -40,9 +40,10 @@ bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, F
 }
 
 void Platform_GetItemColors(int idx, int count, unsigned long *num_color, unsigned long *body_color, unsigned long *plain_color) {
+    (void)count;
     unsigned long col_text = COLOR_TEXT;
     unsigned long col_alt = COLOR_ALTERNATE;
-    float t = (count > 1) ? (float)idx / (float)(count - 1) : (float)idx / (float)GradientItems;
+    float t = (GradientItems > 1) ? (float)(idx % GradientItems) / (float)(GradientItems - 1) : 0;
     unsigned long col_rainbow = GetRainbowColor(t, 0.85f, GradientBrightness);
     unsigned long n = col_text, b = col_text, p = col_rainbow;
     if (RainbowText) {
