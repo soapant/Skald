@@ -640,15 +640,6 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
           if (!s_bg_brush) s_bg_brush = CreateSolidBrush(COLOR_BG);
             FillRect(hdc, &ps.rcPaint, s_bg_brush);
         }
-      // also temporary
-        // {
-        //     HBRUSH hSep = CreateSolidBrush(COLOR_SEPERATOR);
-        //     RECT r1 = {0, 60, rect.right, 65};
-        //     RECT r2 = {0, rect.bottom - 60, rect.right, rect.bottom - 55};
-        //     FillRect(hdc, &r1, hSep);
-        //     FillRect(hdc, &r2, hSep);
-        //     DeleteObject(hSep);
-        // }
         if (FlintContext_Get()->prompt_callbacks.render) {
             extern PromptState* Platform_GetWin32PromptState(void);
             PromptState *state = Platform_GetWin32PromptState();

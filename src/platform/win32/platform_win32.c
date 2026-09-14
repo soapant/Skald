@@ -685,7 +685,6 @@ static BOOL CALLBACK EnumWindowsProcTitle(HWND hwnd, LPARAM lParam) {
 bool Platform_FocusWindow(const char* title) {
     if (!title || !title[0]) { log_error("operation failed, returning error title='%s'", title ? title : "null"); return false; }
 
-    // trim leading/trailing whitespace – window_switcher "Title (exe)" leaves "Title "
     char trimmed[512];
     const char* s = title;
     while (*s && isspace((unsigned char)*s)) s++;
@@ -885,7 +884,6 @@ static BOOL CALLBACK EnumWindowsProcTitles(HWND hwnd, LPARAM lParam) {
     WindowList *list = (WindowList *)lParam;
     WindowList dummy = {0};
     WinPair p = { list, &dummy };
-    // reuse pair logic but only keep title
     if (!IsWindowVisible(hwnd)) return TRUE;
     char cls[256];
     if (GetClassNameA(hwnd, cls, sizeof(cls)) > 0 && (strcmp(cls, "Progman")==0 || strcmp(cls, "WorkerW")==0)) return TRUE;
@@ -901,7 +899,6 @@ static BOOL CALLBACK EnumWindowsProcTitles(HWND hwnd, LPARAM lParam) {
     if(len==0 || !exe[0]) return TRUE;
     char **t=realloc(list->windows,(list->count+1)*sizeof(char*));
     if(t){ list->windows=t; list->windows[list->count++]=strdup(title); }
-    // free dummy if any (should stay empty)
     for(int i=0;i<dummy.count;i++) free(dummy.windows[i]);
     free(dummy.windows);
     return TRUE;
