@@ -4,6 +4,7 @@
 #include "core/types.h"
 #include <X11/Xlib.h>
 #include <X11/Xft/Xft.h>
+#include "platform/x11/input_helpers.h"
 
 bool Linux_HandlePromptKey(const XEvent* ev, PromptState* state);
 bool Linux_HandleSimplePromptKey(const XEvent* ev, SimplePromptState* state);
