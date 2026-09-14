@@ -79,6 +79,7 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
             FlintContext_Get()->window.output_buffer[0] = '\0';
             if (UI_IsListBoxSelected(lb)) {
               if (lb && lb->selected_index >=0 && lb->selected_index < lb->populated_count) strncpy(FlintContext_Get()->window.output_buffer, lb->populated_cache[lb->selected_index], sizeof(FlintContext_Get()->window.output_buffer) - 1);
+              FlintContext_Get()->window.output_buffer[sizeof(FlintContext_Get()->window.output_buffer)-1] = '\0';
             } else {
               GetWindowTextA(hwnd, FlintContext_Get()->window.output_buffer, sizeof(FlintContext_Get()->window.output_buffer));
             }
@@ -88,16 +89,30 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
                 FlintContext_Get()->window.hDisplayMessage = WH_NULL;
             }
           if (ctrl_pressed) {
+              bool should_close = false;
               if (FlintContext_Get()->prompt_callbacks.ctrl_enter != NULL) {
-                FlintContext_Get()->prompt_callbacks.ctrl_enter(FlintContext_Get()->window.output_buffer, lb);
+                char sel_copy[256];
+                strncpy(sel_copy, FlintContext_Get()->window.output_buffer, sizeof(sel_copy)-1);
+                sel_copy[sizeof(sel_copy)-1] = '\0';
+                should_close = FlintContext_Get()->prompt_callbacks.ctrl_enter(sel_copy, lb);
+              } else {
+                should_close = false;
               }
+              if (should_close) FlintContext_Get()->window.selection_complete = true;
+              else if (WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) != NULL) ForceWindowFocus(FlintContext_Get()->window.hPopupWnd, FlintContext_Get()->window.hEditControl);
             return 0;
           } else {
+              bool should_close = false;
               if (FlintContext_Get()->prompt_callbacks.enter != NULL) {
-                FlintContext_Get()->prompt_callbacks.enter(FlintContext_Get()->window.output_buffer, lb);
+                char sel_copy[256];
+                strncpy(sel_copy, FlintContext_Get()->window.output_buffer, sizeof(sel_copy)-1);
+                sel_copy[sizeof(sel_copy)-1] = '\0';
+                should_close = FlintContext_Get()->prompt_callbacks.enter(sel_copy, lb);
+              } else {
+                should_close = true;
               }
-            
-              FlintContext_Get()->window.selection_complete = true; 
+              if (should_close) FlintContext_Get()->window.selection_complete = true;
+              else if (WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) != NULL) ForceWindowFocus(FlintContext_Get()->window.hPopupWnd, FlintContext_Get()->window.hEditControl);
               return 0;
           }
         }
