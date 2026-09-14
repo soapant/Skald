@@ -39,6 +39,7 @@
 #include "platform/x11/input.h"
 #include "core/timer.h"
 #include "core/history.h"
+#include "core/remap_manager.h"
 
 
 extern bool HandleGlobalKeyEvent(int key_code, int value);
@@ -215,6 +216,26 @@ int WindowManager_RunLinux(WindowManager* wm) {
     }
 
     ScanAndHookKeyboards();
+
+    // Remap requires uinput + grab even on Wayland/Sway; force if bindings exist
+    if (remap_has_bindings()) {
+        if (g_x11_uinput_fd < 0) {
+            log_warn("remap forcing uinput init despite use_grab=%d", use_grab);
+            g_x11_uinput_fd = init_uinput();
+            if (g_x11_uinput_fd >= 0) log_warn("remap uinput forced fd=%d", g_x11_uinput_fd);
+            else log_warn("remap uinput force failed, fallback XTest will be used");
+        }
+        for (int i=0;i<g_x11_keyboard_count;i++) {
+            if (!g_x11_device_grabbed[i]) {
+                if (ioctl(g_x11_keyboards[i].fd, EVIOCGRAB, 1)==0) {
+                    g_x11_device_grabbed[i]=true;
+                    log_warn("remap grabbed keyboard %d path=%s", i, g_x11_keyboards[i].path);
+                } else {
+                    log_warn("remap grab failed for %s: %s (run with correct perms / input group)", g_x11_keyboards[i].path, strerror(errno));
+                }
+            }
+        }
+    }
     if (g_x11_keyboard_count == 0) {
         log_error("No structural keyboard nodes located under /dev/input/");
         destroy_uinput();
@@ -283,6 +304,17 @@ int WindowManager_RunLinux(WindowManager* wm) {
                     if (ev.type != EV_KEY) {
                         if (grabbed && g_x11_uinput_fd >= 0) uinput_emit(&ev);
                         continue;
+                    }
+
+                    if (remap_should_swallow_linux_key(ev.code, ev.value)) {
+                        log_warn("window_manager_x11: remap swallowed code=%d val=%d grabbed=%d uinput=%d", ev.code, ev.value, grabbed, g_x11_uinput_fd);
+                        if (ev.value == 1 && ev.code <= KEY_MAX) g_x11_suppress_release[ev.code] = true;
+                        continue;
+                    } else {
+                        // log only for remap candidates to avoid spam
+                        if (ev.code == KEY_LEFTSHIFT || ev.code == KEY_RIGHTALT || ev.code == KEY_W || ev.code == KEY_A || ev.code == KEY_S || ev.code == KEY_D || ev.code == KEY_I || ev.code == KEY_U) {
+                            log_warn("window_manager_x11: remap NOT swallowed code=%d val=%d", ev.code, ev.value);
+                        }
                     }
 
                     struct timeval now;

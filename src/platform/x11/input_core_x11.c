@@ -108,16 +108,33 @@ void x11_scan_keyboards(void) {
             int fd = open(full_path, O_RDONLY | O_NONBLOCK);
             if (fd < 0) continue;
             unsigned long ev_bits[EV_MAX / 8 + 1] = {0};
-            if (ioctl(fd, EVIOCGBIT(0, sizeof(ev_bits)), ev_bits) >= 0) {
-                if (ev_bits[0] & (1 << EV_KEY)) {
-                    g_x11_keyboards[g_x11_keyboard_count].fd = fd;
-                    strncpy(g_x11_keyboards[g_x11_keyboard_count].path, full_path, 255);
-                    g_x11_keyboard_count++;
-                } else close(fd);
-            } else close(fd);
+            unsigned long keybits[(KEY_MAX/8+sizeof(unsigned long)-1)/sizeof(unsigned long)+1] = {0};
+            struct input_id id;
+            bool is_kb = false;
+            if (ioctl(fd, EVIOCGBIT(0, sizeof(ev_bits)), ev_bits) >= 0 &&
+                (ev_bits[0] & (1UL << EV_KEY)) &&
+                ioctl(fd, EVIOCGBIT(EV_KEY, sizeof(keybits)), keybits) >= 0 &&
+                ioctl(fd, EVIOCGID, &id) >= 0) {
+                if (id.vendor == 0x1234 && id.product == 0x5678) {
+                    close(fd);
+                    continue;
+                }
+                keybits[0] &= ~1UL;
+                int nwords = (0xFF + 1 + (int)(sizeof(unsigned long)*8)-1)/(int)(sizeof(unsigned long)*8);
+                for (int i=0;i<nwords;i++) if (keybits[i]) { is_kb = true; break; }
+            }
+            if (is_kb) {
+                g_x11_keyboards[g_x11_keyboard_count].fd = fd;
+                strncpy(g_x11_keyboards[g_x11_keyboard_count].path, full_path, 255);
+                g_x11_keyboard_count++;
+                log_warn("x11_scan_keyboards grabbed keyboard %s fd=%d", full_path, fd);
+            } else {
+                close(fd);
+            }
         }
     }
     closedir(dir);
+    log_warn("x11_scan_keyboards found %d keyboards", g_x11_keyboard_count);
     PROFILE_END_VAR(timer, "input:x11_scan_keyboards");
 }
 
