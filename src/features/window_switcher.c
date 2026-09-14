@@ -18,13 +18,11 @@ void window_switcher_refresh_callback(const char* filter, WindowHandle hListBox,
     }
 
     PopulateListBox(lb, FlintContext_Get()->window.hListBox, filter, items, count, NULL);
-    if (items) {
-        for (int i = 0; i < count; i++) free((void*)items[i]);
-        free(items);
-    }
+    fl_free_list(items,count);
     fl_free_window_list(&list_of_titles);
     fl_free_window_list(&list_of_names);
 }
+
 bool window_switcher_enter_callback(const char* selection, ListBoxInfo* lb) {
     if (UI_IsListBoxSelected(lb)) {
       char* output = fl_string_inside(selection,'(');
@@ -33,6 +31,7 @@ bool window_switcher_enter_callback(const char* selection, ListBoxInfo* lb) {
     }
     return true;
 }
+
 void TriggerWindowSwitcher(void) {
   PROMPT(.title = "🎵 WindowSwitcher",
            .refresh = window_switcher_refresh_callback,
@@ -40,5 +39,5 @@ void TriggerWindowSwitcher(void) {
 }
 
 FLINT_FEATURE_INIT {
-  fl_register_hotkey("Alt+Space",TriggerWindowSwitcher,"Fortnie","Segfault");
+  fl_register_hotkey("Alt+Space",TriggerWindowSwitcher);
 }
