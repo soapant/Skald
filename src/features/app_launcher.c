@@ -161,8 +161,8 @@ void launch_app_as_admin(const char* display_name) {
     }
     if (found) fl_launch_with_args_as_admin(path_copy, NULL);
 }
-
 bool applauncher_enter_callback(const char* selection, ListBoxInfo* lb) {
+    char* input = fl_popup(.title="Testing", .w=500, .h=100);
     launch_app_by_name(selection);
     return true;
 }
@@ -173,12 +173,8 @@ bool applauncher_ctrlenter_callback(const char* selection, ListBoxInfo* lb) {
 }
 
 void applauncher_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
-    size_t cnt = 0;
-    cnt = s_apps.count;
-    if (cnt == 0) {
-        PopulateListBox(lb, FlintContext_Get()->window.hListBox, filter, NULL, 0, NULL);
-        return;
-    }
+    size_t cnt = s_apps.count;
+    
     if (cnt > 2048) {
         const char** names = (const char**)malloc(cnt * sizeof(char*));
         if (!names) return;
@@ -229,7 +225,7 @@ void TriggerAppLauncher(void) {
 }
 
 FLINT_FEATURE_INIT {
-    // initialize_app_cache();
+    initialize_app_cache();
     fl_register_hotkey("Alt+E", TriggerAppLauncher);
     fl_register_feature("App Launcher", TriggerAppLauncher);
 }

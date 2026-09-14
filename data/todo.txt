@@ -21,3 +21,4 @@ some things need to be better handled internally like offsets of y and x of text
 do the wholei nternet and bluetooth thing for both windows and linux that will require some deps on linux ofc ||[Flint] 
 split populatelistbox bitch ||[Flint]
 you can probably remove simple promptuser as promptuser can do the exact same thing for a bit more work ||[Flint]
+make a wrapper via the program of taking screenshots||[Flint]
