@@ -286,7 +286,7 @@ char* Platform_SimplePromptUser(const SimplePromptSpec* spec) {
   HFONT hCustomFont = CreateCustomNerdFont(FontSize, UsedFont);
 
   FlintContext_Get()->window.hPopupWnd = WH_FROM_HWND(CreateWindowExA(
-      WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED | WS_EX_COMPOSITED,
+      WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED,
       "QuickSwitcherModalClass", NULL, WS_POPUP | WS_CLIPCHILDREN,
       layout.x, layout.y, layout.w, layout.h, NULL, NULL, hInstance, NULL
       ));

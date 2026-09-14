@@ -446,16 +446,6 @@ LRESULT CALLBACK SimpleListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, 
         HDC hdc = BeginPaint(hWnd, &ps);
         RECT rect;
         GetClientRect(hWnd, &rect);
-        if (rect.right <= 0 || rect.bottom <= 0) { EndPaint(hWnd, &ps); return 0; }
-        HDC memDC = CreateCompatibleDC(hdc);
-        HBITMAP memBmp = CreateCompatibleBitmap(hdc, rect.right, rect.bottom);
-        if (!memDC || !memBmp) {
-          if (memDC) DeleteDC(memDC);
-          if (memBmp) DeleteObject(memBmp);
-          EndPaint(hWnd, &ps);
-          return 0;
-        }
-        HBITMAP oldBmp = (HBITMAP)SelectObject(memDC, memBmp);
         if (EnableShaders && ShaderPreset != 0) {
           HWND hParent = GetParent(hWnd);
           RECT winRc; GetClientRect(hParent ? hParent : hWnd, &winRc);
@@ -463,11 +453,11 @@ LRESULT CALLBACK SimpleListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, 
           int winH = winRc.bottom - winRc.top;
           POINT lbOrigin = {0,0};
           if (hParent) { ClientToScreen(hWnd, &lbOrigin); ScreenToClient(hParent, &lbOrigin); }
-          if (winW > 0 && winH > 0) Win32_DrawBackgroundSlice(memDC, &rect, COLOR_BG, winW, winH, lbOrigin.x, lbOrigin.y);
-          else Win32_DrawBackground(memDC, &rect);
+          if (winW > 0 && winH > 0) Win32_DrawBackgroundSlice(hdc, &rect, COLOR_BG, winW, winH, lbOrigin.x, lbOrigin.y);
+          else Win32_DrawBackground(hdc, &rect);
         } else {
           if (!s_bg_brush) s_bg_brush = CreateSolidBrush(COLOR_BG);
-            FillRect(memDC, &rect, s_bg_brush);
+            FillRect(hdc, &rect, s_bg_brush);
         }
         int textLen = UI_LB_GetTextLen(WH_FROM_HWND(hWnd));
         if (textLen > 0 && textLen < 512) {
@@ -475,22 +465,18 @@ LRESULT CALLBACK SimpleListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, 
             UI_LB_GetText(WH_FROM_HWND(hWnd), 0, textBuffer);
             HFONT hFont = UI_GetFont(WH_FROM_HWND(hWnd));
             HFONT hOldFont = NULL;
-            if (hFont) hOldFont = (HFONT)SelectObject(memDC, hFont);
-                SetBkMode(memDC, TRANSPARENT);
-                SetTextColor(memDC, COLOR_TEXT);
+            if (hFont) hOldFont = (HFONT)SelectObject(hdc, hFont);
+                SetBkMode(hdc, TRANSPARENT);
+                SetTextColor(hdc, COLOR_TEXT);
                 int itemHeight = UI_LB_GetItemHeight(WH_FROM_HWND(hWnd));
                 if (itemHeight <= 0) itemHeight = 40;
                     RECT textRect = rect;
                     textRect.left = 0;
                     textRect.right = rect.right;
                     textRect.bottom = textRect.top + itemHeight;
-                    DrawTextA(memDC, textBuffer, -1, &textRect, DT_SINGLELINE | DT_VCENTER | DT_CENTER);
-                    if (hOldFont) SelectObject(memDC, hOldFont);
+                    DrawTextA(hdc, textBuffer, -1, &textRect, DT_SINGLELINE | DT_VCENTER | DT_CENTER);
+                    if (hOldFont) SelectObject(hdc, hOldFont);
         }
-        BitBlt(hdc, ps.rcPaint.left, ps.rcPaint.top, ps.rcPaint.right - ps.rcPaint.left, ps.rcPaint.bottom - ps.rcPaint.top, memDC, ps.rcPaint.left, ps.rcPaint.top, SRCCOPY);
-        SelectObject(memDC, oldBmp);
-        DeleteObject(memBmp);
-        DeleteDC(memDC);
         EndPaint(hWnd, &ps);
         return 0;
     }
@@ -790,59 +776,49 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         HDC hdc = BeginPaint(hwnd, &ps);
         RECT rect;
         GetClientRect(hwnd, &rect);
-        if (rect.right <= 0 || rect.bottom <= 0) { EndPaint(hwnd, &ps); break; }
-        HDC memDC = CreateCompatibleDC(hdc);
-        HBITMAP memBmp = CreateCompatibleBitmap(hdc, rect.right, rect.bottom);
-        if (!memDC || !memBmp) {
-          if (memDC) DeleteDC(memDC);
-          if (memBmp) DeleteObject(memBmp);
-          EndPaint(hwnd, &ps);
-          break;
-        }
-        HBITMAP oldBmp = (HBITMAP)SelectObject(memDC, memBmp);
         if (EnableShaders && ShaderPreset != 0) {
-          Win32_DrawBackground(memDC, &rect);
+          Win32_DrawBackground(hdc, &rect);
         } else {
           if (!s_bg_brush) s_bg_brush = CreateSolidBrush(COLOR_BG);
-            FillRect(memDC, &rect, s_bg_brush);
+            FillRect(hdc, &ps.rcPaint, s_bg_brush);
         }
         if (FlintContext_Get()->prompt_callbacks.render) {
             extern PromptState* Platform_GetWin32PromptState(void);
             PromptState *state = Platform_GetWin32PromptState();
             if (state) {
-                Platform_SetDrawContextWin32(memDC);
+                Platform_SetDrawContextWin32(hdc);
                 FlintContext_Get()->prompt_callbacks.render(state);
             }
         }
       if (g_vim_mode != NULL && VimModeText) {
         wchar_t wmode[256];
           MultiByteToWideChar(CP_UTF8, 0, g_vim_mode, -1, wmode, 256);
-          HFONT hOldFont = (HFONT)SelectObject(memDC, FlintContext_Get()->g_hMainFont);
-          SetBkMode(memDC, TRANSPARENT);
+          HFONT hOldFont = (HFONT)SelectObject(hdc, FlintContext_Get()->g_hMainFont);
+          SetBkMode(hdc, TRANSPARENT);
           if (g_current_mode == MODE_NORMAL) {
-            SetTextColor(memDC,COLOR_NORMAL_MODE_TEXT);
+            SetTextColor(hdc,COLOR_NORMAL_MODE_TEXT);
           } else if (g_current_mode == MODE_INSERT) {
-            SetTextColor(memDC,COLOR_INSERT_MODE_TEXT);
+            SetTextColor(hdc,COLOR_INSERT_MODE_TEXT);
           } else {
-            SetTextColor(memDC,COLOR_VISUAL_MODE_TEXT);
+            SetTextColor(hdc,COLOR_VISUAL_MODE_TEXT);
           }
           SIZE sz;
-          GetTextExtentPoint32W(memDC, wmode, (int)wcslen(wmode), &sz);
+          GetTextExtentPoint32W(hdc, wmode, (int)wcslen(wmode), &sz);
           RECT modeRect;
           modeRect.left = rect.right - sz.cx - 20;
           modeRect.top = rect.bottom - sz.cy - 10;
           modeRect.right = rect.right - 10;
           modeRect.bottom = modeRect.top + sz.cy;
-          DrawTextW(memDC, wmode, -1, &modeRect, DT_LEFT);
-          SelectObject(memDC, hOldFont);
+          DrawTextW(hdc, wmode, -1, &modeRect, DT_LEFT);
+          SelectObject(hdc, hOldFont);
       }
       if (FlintContext_Get()->window.title != NULL && strlen(FlintContext_Get()->window.title) > 0 && WindowTitleText) {
         wchar_t wtitle[256];
           MultiByteToWideChar(CP_UTF8, 0, FlintContext_Get()->window.title, -1, wtitle, 256);
-          HFONT hOldFont = (HFONT)SelectObject(memDC, FlintContext_Get()->g_hMainFont);
-          SetBkMode(memDC, TRANSPARENT);
+          HFONT hOldFont = (HFONT)SelectObject(hdc, FlintContext_Get()->g_hMainFont);
+          SetBkMode(hdc, TRANSPARENT);
           SIZE sz;
-          GetTextExtentPoint32W(memDC, wtitle, (int)wcslen(wtitle), &sz);
+          GetTextExtentPoint32W(hdc, wtitle, (int)wcslen(wtitle), &sz);
           RECT titleRect;
           titleRect.left = 15;
           titleRect.top = rect.bottom - sz.cy - 10;
@@ -868,14 +844,10 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
           } else {
             titleColor = RGB(255, 0, 0);
           }
-          SetTextColor(memDC, titleColor);
-          DrawTextW(memDC, wtitle, -1, &titleRect, DT_LEFT | DT_TOP);
-          SelectObject(memDC, hOldFont);
+          SetTextColor(hdc, titleColor);
+          DrawTextW(hdc, wtitle, -1, &titleRect, DT_LEFT | DT_TOP);
+          SelectObject(hdc, hOldFont);
       }
-        BitBlt(hdc, ps.rcPaint.left, ps.rcPaint.top, ps.rcPaint.right - ps.rcPaint.left, ps.rcPaint.bottom - ps.rcPaint.top, memDC, ps.rcPaint.left, ps.rcPaint.top, SRCCOPY);
-        SelectObject(memDC, oldBmp);
-        DeleteObject(memBmp);
-        DeleteDC(memDC);
         EndPaint(hwnd, &ps);
         break;
     }
