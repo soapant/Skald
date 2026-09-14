@@ -124,58 +124,113 @@ bool focus_window_title_sway(char* title) {
 WindowList get_window_names_sway() {
    char* output = Platform_RunTerminalCommand("swaymsg -t get_tree", false);
    WindowList list = { .windows = NULL, .count = 0 };
-   char buffer[256];
    if (!output) { log_error("output is NULL"); return list; }
-   StringList lines = String_Split(output, "\n");
-   for (size_t i = 0; i < lines.count; i++) {
-       char *match = strstr(lines.items[i], "\"app_id\"");
-       if (match) {
-           if (sscanf(match, "\"app_id\": \"%[^\"]\"", buffer) == 1) {
-               if (buffer[0]=='\0') continue;
-               buffer[0] = toupper((unsigned char)buffer[0]);
-               char** temp = realloc(list.windows, (list.count + 1) * sizeof(char*));
-               if (temp == NULL) break;
-               list.windows = temp;
-               list.windows[list.count] = strdup(buffer);
-               list.count++;
+   if (output[0]=='\0') { log_error("output is NULL or empty"); free(output); return list; }
+   char *p = output;
+   while (1) {
+       char *pid_pos = strstr(p, "\"pid\":");
+       if (!pid_pos) break;
+       char *app_pos = strstr(pid_pos, "\"app_id\":");
+       char *next_pid = strstr(pid_pos + 6, "\"pid\":");
+       char buf[256] = {0};
+       bool found = false;
+       if (app_pos && (!next_pid || app_pos < next_pid)) {
+           if (strstr(app_pos, "\"app_id\": \"") == app_pos) {
+               char *s = app_pos + 11;
+               char *e = strchr(s, '"');
+               if (e && (size_t)(e - s) < sizeof(buf)-1) {
+                   memcpy(buf, s, e - s);
+                   buf[e - s] = '\0';
+                   found = true;
+               }
+           } else if (strstr(app_pos, "\"app_id\": null") == app_pos) {
+               char *cls = strstr(pid_pos, "\"class\": \"");
+               if (cls && (!next_pid || cls < next_pid)) {
+                   char *s = cls + 10;
+                   char *e = strchr(s, '"');
+                   if (e && (size_t)(e - s) < sizeof(buf)-1) {
+                       memcpy(buf, s, e - s);
+                       buf[e - s] = '\0';
+                       found = true;
+                   }
+               }
            }
        }
+       if (!found) {
+           char *cls = strstr(pid_pos, "\"class\": \"");
+           if (cls && (!next_pid || cls < next_pid)) {
+               char *s = cls + 10;
+               char *e = strchr(s, '"');
+               if (e && (size_t)(e - s) < sizeof(buf)-1) {
+                   memcpy(buf, s, e - s);
+                   buf[e - s] = '\0';
+                   found = true;
+               }
+           }
+       }
+       if (found && buf[0]) {
+           buf[0] = toupper((unsigned char)buf[0]);
+           char **tmp = realloc(list.windows, (list.count + 1) * sizeof(char*));
+           if (!tmp) break;
+           list.windows = tmp;
+           list.windows[list.count++] = strdup(buf);
+       }
+       p = pid_pos + 6;
    }
-   StringList_Free(&lines);
    free(output);
    return list;
 }
 WindowList get_window_titles_sway() {
    char* output = Platform_RunTerminalCommand("swaymsg -t get_tree", false);
    WindowList list = { .windows = NULL, .count = 0 };
-   char buffer[512];
    if (!output) { log_error("output is NULL"); return list; }
-   //temporary hardcoding of sway things like root i3 and numbers because being fucky wucky
-   StringList lines = String_Split(output, "\n");
-   for (size_t i = 0; i < lines.count; i++) {
-       char *match = strstr(lines.items[i], "\"name\"");
-       if (match) {
-           if (sscanf(match, "\"name\": \"%511[^\"]\"", buffer) == 1) {
-               if (buffer[0] == '\0' || strcmp(buffer, "null") == 0 || strcmp(buffer,"root") == 0 || Platform_StringContainsCaseInsensitive(buffer,"i3")) continue;
-               bool has_digit = false;
-               for (int j = 0; buffer[j] != '\0'; j++) {
-                   if (isdigit((unsigned char)buffer[j])) {
-                       has_digit = true;
-                       break; 
-                   }
+   if (output[0]=='\0') { log_error("output is NULL or empty"); free(output); return list; }
+   char *p = output;
+   while (1) {
+       char *pid_pos = strstr(p, "\"pid\":");
+       if (!pid_pos) break;
+       char *next_pid = strstr(pid_pos + 6, "\"pid\":");
+       char *name_key = "\"name\": \"";
+       char *search_start = pid_pos - 2500;
+       if (search_start < output) search_start = output;
+       char *last_name = NULL;
+       char *tmp = search_start;
+       while ((tmp = strstr(tmp, name_key)) && tmp < pid_pos) {
+           last_name = tmp;
+           tmp += 9;
+       }
+       if (last_name) {
+           char *s = last_name + 9;
+           char *e = strchr(s, '"');
+           size_t len = 0;
+           if (e) len = e - s;
+           if (e) {
+               char *esc = strstr(s, "\\\"");
+               if (esc && esc < e) {
+                   char *real = strstr(s, "\",");
+                   if (real) e = real;
                }
-
-               if (has_digit & strlen(buffer) < 10) continue;
-
-               char** temp = realloc(list.windows, (list.count + 1) * sizeof(char*));
-               if (temp == NULL) break;
-               list.windows = temp;
-               list.windows[list.count] = strdup(buffer);
-               list.count++;
+           }
+           if (e && len > 0 && len < 512) {
+               char buf[512];
+               size_t out = 0;
+               for (size_t i = 0; i < len && out < sizeof(buf)-1; i++) {
+                   if (s[i]=='\\' && i+1 < len) {
+                       if (s[i+1]=='/' || s[i+1]=='"') { buf[out++] = s[i+1]; i++; }
+                       else buf[out++] = s[i];
+                   } else buf[out++] = s[i];
+               }
+               buf[out]='\0';
+               if (buf[0] && strcmp(buf,"null")!=0) {
+                   char **t2 = realloc(list.windows, (list.count + 1) * sizeof(char*));
+                   if (!t2) break;
+                   list.windows = t2;
+                   list.windows[list.count++] = strdup(buf);
+               }
            }
        }
+       p = pid_pos + 6;
    }
-   StringList_Free(&lines);
    free(output);
    return list;
 }
