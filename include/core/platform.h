@@ -75,6 +75,9 @@ bool Platform_IsRunningAsRoot(void);
 bool Platform_LaunchTerminalAtPath(const char* working_dir, const char* extra_args);
 bool Platform_LaunchBrowserAtUrl(char* url,bool new_window);
 
+void Platform_EmitKey(int vk_code, int down);
+bool Platform_IsRemapActive(void);
+
 #if !defined(_WIN32)
 FontHandle Platform_CreateFontOnDisplay(Display* dpy, int size, const char* face_name);
 bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state);

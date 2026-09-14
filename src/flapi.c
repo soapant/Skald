@@ -235,6 +235,12 @@ bool fl_register_hotkey_impl(char* hotkey_string,void (*on_hotkey_trigger)(void)
     return hotkey_register_internal(binding);
 }
 
+#include "core/remap_manager.h"
+bool fl_register_remapping(const char* src, const char* dst) {
+    if (!src || !dst) return false;
+    return remap_register_internal(src, dst);
+}
+
 typedef struct { char name[128]; void (*cb)(void); char icon[512]; } FeatureReg;
 static FeatureReg g_feature_regs[1000];
 static int g_feature_reg_count = 0;

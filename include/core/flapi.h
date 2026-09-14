@@ -321,6 +321,12 @@ bool fl_is_visible(void *widget);
 
 bool fl_register_hotkey_impl(char* hotkey_string,void (*on_hotkey_trigger)(void),bool (*optional_condition_for_hotkey)(void),bool whitelist,const char** optional_blacklistedwindows);
 
+// =============================================================================
+// REMAP
+// =============================================================================
+
+bool fl_register_remapping(const char* src, const char* dst);
+
 #define _FL_HOTKEY_EXPAND(hotkey, trigger, cond, whitelist, ...) \
     fl_register_hotkey_impl(hotkey, trigger, cond, whitelist, (const char*[]){__VA_ARGS__, NULL})
 
