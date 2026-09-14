@@ -280,7 +280,6 @@ log_info("Platform_CleanUpFile mf=%p newlines=%p newlineCount=%d", mf, newlines,
 
 bool Platform_StringContainsCaseInsensitive(const char* haystack, const char* needle) {
     if (!haystack || !needle) { log_error("operation failed, returning error haystack='%s' needle='%s'", haystack ? haystack : "null", needle ? needle : "null"); return false; }
-log_info("Platform_StringContainsCaseInsensitive haystack='%s' needle='%s'", haystack ? haystack : "", needle ? needle : "");;
     return StrStrIA(haystack, needle) != NULL;
 }
 
