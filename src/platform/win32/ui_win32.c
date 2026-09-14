@@ -243,6 +243,10 @@ char* Platform_SimplePromptUser(const SimplePromptSpec* spec) {
   int item_height = 32;
 
   HINSTANCE hInstance = GetModuleHandle(NULL);
+  WindowHandle saved_hPopupWnd = FlintContext_Get()->window.hPopupWnd;
+  WindowHandle saved_hListBox = FlintContext_Get()->window.hListBox;
+  WindowHandle saved_hEditControl = FlintContext_Get()->window.hEditControl;
+  WindowHandle saved_gActive = FlintContext_Get()->window.g_ActiveEditControl;
   FlintContext_Get()->window.selection_complete = false;
   FlintContext_Get()->window.output_buffer[0] = '\0';
   SetCurrentFeatureName(FlintContext_Get()->window.current_feature);
@@ -312,10 +316,17 @@ return NULL;
     }
   }
 
-  if (WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) != NULL && IsWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd))) {
-    KillTimer(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), 999);
-    DestroyWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd));
-    FlintContext_Get()->window.hPopupWnd = WH_NULL;
+  HWND hInnerWnd = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
+  if (hInnerWnd != NULL && IsWindow(hInnerWnd)) {
+    KillTimer(hInnerWnd, 999);
+    DestroyWindow(hInnerWnd);
+  }
+  FlintContext_Get()->window.hPopupWnd = saved_hPopupWnd;
+  FlintContext_Get()->window.hListBox = saved_hListBox;
+  FlintContext_Get()->window.hEditControl = saved_hEditControl;
+  FlintContext_Get()->window.g_ActiveEditControl = saved_gActive;
+  if (WH_TO_HWND(saved_hPopupWnd) != NULL && IsWindow(WH_TO_HWND(saved_hPopupWnd))) {
+    ForceWindowFocus(saved_hPopupWnd, saved_hEditControl);
   }
 
   while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
