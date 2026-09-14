@@ -459,6 +459,6 @@ void TriggerCalculator(void) {
 }
 
 FLINT_FEATURE_INIT {
-    fl_register_hotkey("Alt+C", TriggerCalculator);
+    fl_register_hotkey("Alt+C", TriggerCalculator,"Fortnite");
     fl_register_feature("Calculator", TriggerCalculator);
 }

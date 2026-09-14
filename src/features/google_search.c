@@ -61,6 +61,6 @@ void TriggerGoogleSearch(void) {
 }
 
 FLINT_FEATURE_INIT {
-    fl_register_hotkey("Alt+G", TriggerGoogleSearch);
+    fl_register_hotkey("Alt+G", TriggerGoogleSearch,"Fortnite");
     fl_register_feature("Google Search", TriggerGoogleSearch);
 }
