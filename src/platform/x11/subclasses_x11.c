@@ -447,9 +447,8 @@ void DrawSimplePromptUserEditControlOnDraw(Display *dpy, XftDraw* xd, Visual* vi
     else ext.xOff = 0;
     int text_width = ext.xOff;
 
-    XftColor text_color, vim_text_color, seperator_color;
+    XftColor text_color, vim_text_color;
     Linux_XftAllocColor(dpy, vis, cmap, rgb_to_hex(COLOR_TEXT), 0xFFFF, &text_color);
-    Linux_XftAllocColor(dpy, vis, cmap, rgb_to_hex(COLOR_SEPERATOR), 0xFFFF, &seperator_color);
     Linux_XftAllocColor(dpy, vis, cmap, VimModeTextColor(), 0xFFFF, &vim_text_color);
 
     Platform_SetDrawContext(dpy, xd, vis, cmap);
@@ -462,17 +461,14 @@ void DrawSimplePromptUserEditControlOnDraw(Display *dpy, XftDraw* xd, Visual* vi
     int text_len = strlen(state->user_input);
     int scroll = Linux_UpdateEditScrollOffset(dpy, xf, state->user_input, text_len, state->cursor, state->width, state->scroll_offset, &cursor_x);
     state->scroll_offset = scroll;
-    int draw_x = 20 - scroll;
+    int draw_x = 14 - scroll;
     int draw_y = 20 + (xf ? xf->ascent : FontSize);
     if (xf && text_len > 0) {
         XftDrawStringUtf8(xd, &text_color, xf, draw_x, draw_y, (FcChar8*)state->user_input, text_len);
     }
     Linux_DrawEditCursor(xd, &text_color, cursor_x, scroll, state->width);
-    XftDrawRect(xd, &seperator_color,0,60,state->width,5);
-    XftDrawRect(xd, &seperator_color,0,state->height - 60,state->width,5);
 
     XftColorFree(dpy, vis, cmap, &text_color);
-    XftColorFree(dpy, vis, cmap, &seperator_color);
     XftColorFree(dpy, vis, cmap, &vim_text_color);
     Platform_DestroyFont(font);
     PROFILE_END_VAR(timer, "subclasses_x11:DrawSimplePromptUserEditControlOnDraw");

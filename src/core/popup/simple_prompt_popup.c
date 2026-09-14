@@ -88,8 +88,14 @@ static void SimplePromptPopup_OnShow(Popup* self) {
     if (!data->state) { PROFILE_END_VAR(timer, "window_manager:SimplePromptPopup_OnShow"); return; }
     
     data->state->display_message = (char*)data->spec.prompt;
-    data->state->user_input[0] = '\0';
-    data->state->cursor = 0;
+    if (data->spec.initial_text) {
+        strncpy(data->state->user_input, data->spec.initial_text, sizeof(data->state->user_input)-1);
+        data->state->user_input[sizeof(data->state->user_input)-1] = '\0';
+        data->state->cursor = strlen(data->state->user_input);
+    } else {
+        data->state->user_input[0] = '\0';
+        data->state->cursor = 0;
+    }
     data->state->width = data->w;
     data->state->height = data->h;
     const char* title = data->spec.title ? data->spec.title : "Flint";
@@ -259,11 +265,12 @@ Popup* SimplePromptPopup_Create(WindowManager* wm, const SimplePromptSpec* spec)
     PROFILE_START(timer);
     if (!wm || !spec) { PROFILE_END_VAR(timer, "window_manager:SimplePromptPopup_Create"); return NULL; }
     
-    int layout_w = 900;
-    int layout_h = 640;
+    int layout_w = spec->w ? spec->w : 900;
+    int layout_h = spec->h ? spec->h : 640;
     
     int x, y;
-    WindowManager_GetCenteredPos(layout_w, layout_h, &x, &y);
+    if (spec->x || spec->y) { x = spec->x; y = spec->y; }
+    else WindowManager_GetCenteredPos(layout_w, layout_h, &x, &y);
     
     SimplePromptPopupData* data = calloc(1, sizeof(SimplePromptPopupData));
     if (!data) { PROFILE_END_VAR(timer, "window_manager:SimplePromptPopup_Create"); return NULL; }

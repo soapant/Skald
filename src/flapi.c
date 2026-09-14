@@ -667,6 +667,25 @@ bool fl_focus_window_by_title(char* title) {
   return Platform_FocusWindow(title);
 }
 
+char* fl_popup_impl(const FlPopupSpec *spec) {
+    const char *initial = spec && spec->initial_text ? spec->initial_text : "";
+    const char *title = spec && spec->title ? spec->title : "Flint";
+    int x = spec ? spec->x : 0;
+    int y = spec ? spec->y : 0;
+    int w = spec ? spec->w : 0;
+    int h = spec ? spec->h : 0;
+    SimplePromptSpec s = {0};
+    s.prompt = NULL;
+    s.title = title;
+    s.initial_text = initial;
+    s.x = x; s.y = y; s.w = w; s.h = h;
+    WindowManager *wm = WindowManager_Get();
+    if (!wm) return NULL;
+    char *res = WindowManager_ShowSimplePrompt(wm, &s);
+    if (!res) return NULL;
+    return strdup(res);
+}
+
 unsigned long fl_listbox_get_current_standard_color(void);
 
 bool fl_place_text_raw_impl(const FlTextSpec *spec) {

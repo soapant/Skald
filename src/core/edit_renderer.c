@@ -13,7 +13,6 @@ void Core_DrawEditBox(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis
     Platform_DrawEditBackground(state, dpy, xd, vis, cmap, font);
     Platform_DrawEditText(state, dpy, xd, vis, cmap, font);
     Platform_DrawEditCursor(state, dpy, xd, vis, cmap, font);
-    Platform_DrawSeparators(state, dpy, xd, vis, cmap);
     Platform_DestroyFont(font);
     PROFILE_END_VAR(timer, "edit_renderer:Core_DrawEditBox");
 }
