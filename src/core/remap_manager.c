@@ -201,6 +201,10 @@ void remap_update_phys(int vk_code, int value) {
     g_phys_vk[vk_code] = (value != 0);
 }
 
+void remap_reset(void) {
+    for (int i=0;i<256;i++) { g_phys_vk[i]=0; g_virt_vk[i]=0; }
+}
+
 static bool is_mod_held(int mod) {
     if (mod & HOTKEY_MOD_CTRL) {
         if (g_phys_vk[VK_LCONTROL] || g_phys_vk[VK_RCONTROL] || g_phys_vk[VK_CONTROL]) return true;

@@ -4,6 +4,7 @@
 #include "core/window_manager.h"
 #include "core/platform.h"
 #include "core/common_ui.h"
+#include "core/remap_manager.h"
 #include "core/modal.h"
 #include "core/feature_data.h"
 #include "core/vim.h"
@@ -305,6 +306,11 @@ void WindowManager_PopPopup(WindowManager* wm) {
 #if !defined(_WIN32)
     if (wm->popup_count == 0) {
         Platform_DismissMessage();
+        extern bool g_x11_suppress_release[];
+        for (int i=0;i<768;i++) g_x11_suppress_release[i]=false;
+        remap_reset();
+        extern bool g_x11_ctrl_held, g_x11_alt_held, g_x11_shift_held;
+        g_x11_ctrl_held=false; g_x11_alt_held=false; g_x11_shift_held=false;
     }
 #endif
 }
