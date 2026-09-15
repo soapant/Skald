@@ -326,6 +326,10 @@ bool fl_register_hotkey_impl(char* hotkey_string,void (*on_hotkey_trigger)(void)
 // =============================================================================
 
 bool fl_register_remapping(const char* src, const char* dst);
+// =============================================================================
+// AUDIO
+// =============================================================================
+void fl_toggle_play_pause(void);
 
 #define _FL_HOTKEY_EXPAND(hotkey, trigger, cond, whitelist, ...) \
     fl_register_hotkey_impl(hotkey, trigger, cond, whitelist, (const char*[]){__VA_ARGS__, NULL})

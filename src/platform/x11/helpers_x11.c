@@ -5,8 +5,8 @@
 #include <ctype.h>
 #include <stdlib.h>
 #include <math.h>
-#if !defined(_WIN32)
 #include <X11/Xlib.h>
+#include "platform/x11/audio_x11.h"
 #include <X11/keysym.h>
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
@@ -14,7 +14,6 @@
 #include <X11/extensions/shape.h>
 #include <unistd.h>
 #include <png.h>
-#endif
 #include <stdint.h>
 #include "config.h"
 #include "core/platform.h"
@@ -31,8 +30,6 @@
 #include "deps/nanosvg.h"
 #define NANOSVGRAST_IMPLEMENTATION
 #include "deps/nanosvgrast.h"
-
-#if !defined(_WIN32)
 
 static Pixmap g_bgPixmap = None;
 static int g_bgW = 0, g_bgH = 0;
@@ -1238,4 +1235,24 @@ XftDraw* Linux_CreateXftDraw(Display* dpy, Window win) {
     return XftDrawCreate(dpy, win, DefaultVisual(dpy, screen), DefaultColormap(dpy, screen));
 }
 
-#endif
+gchar* FindPlayerBusName(GDBusConnection *conn) {
+    GVariant *reply = g_dbus_connection_call_sync(conn,
+        "org.freedesktop.DBus", "/org/freedesktop/DBus", "org.freedesktop.DBus",
+        "ListNames", NULL, G_VARIANT_TYPE("(as)"), G_DBUS_CALL_FLAGS_NONE, -1, NULL, NULL);
+    
+    gchar* player_name = NULL;
+    if (reply) {
+        GVariantIter *iter;
+        const gchar *name;
+        g_variant_get(reply, "(as)", &iter);
+        while (g_variant_iter_next(iter, "&s", &name)) {
+            if (g_str_has_prefix(name, "org.mpris.MediaPlayer2.")) {
+                player_name = g_strdup(name);
+                break;
+            }
+        }
+        g_variant_iter_free(iter);
+        g_variant_unref(reply);
+    }
+    return player_name;
+}
