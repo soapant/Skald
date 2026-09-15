@@ -207,38 +207,113 @@ int x11_vk_to_linux_key(int vk) {
     return 0;
 }
 
+void x11_sync_held_from_phys(void) {
+    int m = remap_current_mods();
+    g_x11_ctrl_held = (m & HOTKEY_MOD_CTRL) != 0;
+    g_x11_alt_held = (m & HOTKEY_MOD_ALT) != 0;
+    g_x11_shift_held = (m & HOTKEY_MOD_SHIFT) != 0;
+}
+
+void x11_clear_suppress(void) {
+    for (int i=0;i<=KEY_MAX;i++) g_x11_suppress_release[i]=false;
+}
+
+bool x11_is_suppressed(int linux_code) {
+    if (linux_code<0 || linux_code>KEY_MAX) return false;
+    return g_x11_suppress_release[linux_code];
+}
+
+void x11_set_suppress(int linux_code, bool v) {
+    if (linux_code<0 || linux_code>KEY_MAX) return;
+    g_x11_suppress_release[linux_code]=v;
+}
+
 bool x11_handle_global_key(int key_code, int value) {
     PROFILE_START(timer);
+    remap_update_phys(ConvertLinuxKeyToWindowsVK(key_code), value);
+    x11_sync_held_from_phys();
     log_info("x11_handle_global_key code=%d val=%d ctrl=%d alt=%d shift=%d", key_code, value, g_x11_ctrl_held, g_x11_alt_held, g_x11_shift_held);
     log_warn("x11_handle_global_key code=%d val=%d ctrl=%d alt=%d shift=%d", key_code, value, g_x11_ctrl_held, g_x11_alt_held, g_x11_shift_held);
-    if (key_code == KEY_LEFTCTRL || key_code == KEY_RIGHTCTRL) {
-        g_x11_ctrl_held = (value != 0);
-    } else if (key_code == KEY_LEFTALT || key_code == KEY_RIGHTALT) {
-        g_x11_alt_held = (value != 0);
-    } else if (key_code == KEY_LEFTSHIFT || key_code == KEY_RIGHTSHIFT) {
-        g_x11_shift_held = (value != 0);
-    }
-    remap_update_phys(ConvertLinuxKeyToWindowsVK(key_code), value);
     double seconds = Platform_GetUniversalTimeSeconds();
     if (seconds >= 300) { Platform_ResetUniversalTimer(); log_info("SUPPOSED TO CLEAR FILE"); }
     if (value != 1) { PROFILE_END_VAR(timer, "input:x11_handle_global_key"); return false; }
     int pressed_vk = ConvertLinuxKeyToWindowsVK(key_code);
-    int modifiers = HOTKEY_MOD_NONE;
-    if (g_x11_alt_held) modifiers |= HOTKEY_MOD_ALT;
-    if (g_x11_shift_held) modifiers |= HOTKEY_MOD_SHIFT;
-    if (g_x11_ctrl_held) modifiers |= HOTKEY_MOD_CTRL;
+    int modifiers = remap_current_mods();
     log_info("x11_handle_global_key vk=%d mods=%d", pressed_vk, modifiers);
     log_warn("x11_handle_global_key vk=%d mods=%d", pressed_vk, modifiers);
     if (hotkey_process(pressed_vk, modifiers)) {
         log_info("x11_handle_global_key HOTKEY MATCH vk=%d mods=%d", pressed_vk, modifiers);
         log_warn("x11_handle_global_key HOTKEY MATCH vk=%d mods=%d", pressed_vk, modifiers);
-        if (value == 1) { pending_hotkey_vk = pressed_vk; pending_hotkey_mod = modifiers; struct timeval tv; gettimeofday(&tv,NULL); pending_hotkey_timeMs = tv.tv_sec*1000 + tv.tv_usec/1000; }
+        pending_hotkey_vk = pressed_vk; pending_hotkey_mod = modifiers; struct timeval tv; gettimeofday(&tv,NULL); pending_hotkey_timeMs = tv.tv_sec*1000 + tv.tv_usec/1000;
         PROFILE_END_VAR(timer, "input:x11_handle_global_key");
         return true;
     }
     log_info("x11_handle_global_key no match vk=%d mods=%d", pressed_vk, modifiers);
     log_warn("x11_handle_global_key no match vk=%d mods=%d", pressed_vk, modifiers);
     PROFILE_END_VAR(timer, "input:x11_handle_global_key");
+    return false;
+}
+
+bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed) {
+    PROFILE_START(timer);
+    if (!ev) { PROFILE_END_VAR(timer, "input:x11_handle_evdev"); return false; }
+    if (ev->type != EV_KEY) {
+        if (grabbed && g_x11_uinput_fd >= 0) x11_uinput_emit(ev);
+        PROFILE_END_VAR(timer, "input:x11_handle_evdev");
+        return false;
+    }
+    int code = ev->code;
+    int val = ev->value;
+    if (code < 0 || code > KEY_MAX) {
+        if (grabbed && g_x11_uinput_fd >= 0) x11_uinput_emit(ev);
+        PROFILE_END_VAR(timer, "input:x11_handle_evdev");
+        return false;
+    }
+    if (remap_should_swallow_linux_key(code, val)) {
+        x11_sync_held_from_phys();
+        if (val == 1) x11_set_suppress(code, true);
+        else if (val == 0) x11_set_suppress(code, false);
+        log_info("x11_handle_evdev remap swallowed code=%d val=%d popup=%d", code, val, has_popup);
+        log_warn("x11_handle_evdev remap swallowed code=%d val=%d popup=%d", code, val, has_popup);
+        PROFILE_END_VAR(timer, "input:x11_handle_evdev");
+        return true;
+    }
+    if (val != 2) {
+        remap_update_phys(ConvertLinuxKeyToWindowsVK(code), val);
+        x11_sync_held_from_phys();
+    }
+    if (val == 0 && x11_is_suppressed(code)) { x11_set_suppress(code, false); PROFILE_END_VAR(timer, "input:x11_handle_evdev"); return true; }
+    if (val == 2 && x11_is_suppressed(code)) { PROFILE_END_VAR(timer, "input:x11_handle_evdev"); return true; }
+    if (has_popup) {
+        if (grabbed && g_x11_uinput_fd >= 0) x11_uinput_emit(ev);
+        PROFILE_END_VAR(timer, "input:x11_handle_evdev");
+        return false;
+    }
+    struct timeval now; gettimeofday(&now, NULL);
+    long age_ms = (now.tv_sec - ev->time.tv_sec)*1000L + (now.tv_usec - ev->time.tv_usec)/1000L;
+    const long HOTKEY_STALE_EVENT_MS = 200;
+    if (age_ms > HOTKEY_STALE_EVENT_MS) {
+        bool is_mod = (code==KEY_LEFTALT||code==KEY_RIGHTALT||code==KEY_LEFTCTRL||code==KEY_RIGHTCTRL||code==KEY_LEFTSHIFT||code==KEY_RIGHTSHIFT||code==KEY_LEFTMETA||code==KEY_RIGHTMETA);
+        if (!is_mod) {
+            if (val==1 && !grabbed) {
+                if (x11_handle_global_key(code, val)) { x11_set_suppress(code, true); PROFILE_END_VAR(timer, "input:x11_handle_evdev"); return true; }
+            }
+            if (grabbed && g_x11_uinput_fd>=0) x11_uinput_emit(ev);
+            PROFILE_END_VAR(timer, "input:x11_handle_evdev");
+            return false;
+        }
+        if (val==1) { if (grabbed && g_x11_uinput_fd>=0) x11_uinput_emit(ev); PROFILE_END_VAR(timer, "input:x11_handle_evdev"); return false; }
+    }
+    if (x11_handle_global_key(code, val)) {
+        if (val==1) x11_set_suppress(code, true);
+        PROFILE_END_VAR(timer, "input:x11_handle_evdev");
+        return true;
+    }
+    if (grabbed) {
+        if (g_x11_uinput_fd >= 0) x11_uinput_emit(ev);
+        else { static bool warned=false; if(!warned){ log_warn("grabbed but no uinput - key %d lost", code); warned=true; } }
+    }
+    PROFILE_END_VAR(timer, "input:x11_handle_evdev");
     return false;
 }
 

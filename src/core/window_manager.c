@@ -45,6 +45,7 @@
 #include "platform/x11/display.h"
 #include "platform/x11/drawing.h"
 #include "platform/x11/window_factory.h"
+#include "platform/x11/input.h"
 extern int WindowManager_RunLinux(WindowManager* wm);
 extern void WindowManager_ProcessEventsLinux(WindowManager* wm);
 extern void WindowManager_QuitLinux(WindowManager* wm);
@@ -306,11 +307,9 @@ void WindowManager_PopPopup(WindowManager* wm) {
 #if !defined(_WIN32)
     if (wm->popup_count == 0) {
         Platform_DismissMessage();
-        extern bool g_x11_suppress_release[];
-        for (int i=0;i<768;i++) g_x11_suppress_release[i]=false;
+        x11_clear_suppress();
         remap_reset();
-        extern bool g_x11_ctrl_held, g_x11_alt_held, g_x11_shift_held;
-        g_x11_ctrl_held=false; g_x11_alt_held=false; g_x11_shift_held=false;
+        x11_sync_held_from_phys();
     }
 #endif
 }

@@ -24,10 +24,16 @@ void HandleSettingsTrigger(void) {
 void HandleMediaPlayPause(void) {
   fl_toggle_play_pause();
 }
+void HandleScreenshotArea(void) {
+  fl_run_terminal_command("grimshot copy area");
+}
 
 FLINT_FEATURE_INIT {
     fl_register_hotkey("Alt+Shift+K", HandleKillMyProgram);
     fl_register_hotkey("Alt+Shift+T", HandleShowCurrentTime);
     fl_register_hotkey("Alt+D", HandleSettingsTrigger);
     fl_register_hotkey("Alt+Shift+N", HandleShowCurrentBatteryPercentage);
-    fl_register_hotkey("RShift",HandleMediaPlayPause); }
+    fl_register_hotkey("Ctrl+Shift+N", HandleScreenshotArea);
+    fl_register_hotkey("RShift",HandleMediaPlayPause); 
+}
+

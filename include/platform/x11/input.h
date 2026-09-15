@@ -24,6 +24,12 @@ extern bool g_x11_ctrl_held;
 extern bool g_x11_alt_held;
 extern bool g_x11_shift_held;
 
+void x11_sync_held_from_phys(void);
+void x11_clear_suppress(void);
+bool x11_is_suppressed(int linux_code);
+void x11_set_suppress(int linux_code, bool v);
+bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed);
+
 bool x11_should_use_grab(void);
 int x11_init_uinput(void);
 void x11_destroy_uinput(void);
