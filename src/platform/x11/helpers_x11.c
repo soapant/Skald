@@ -716,29 +716,13 @@ void Linux_FillRoundedRect(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap
         int oy0 = (corner < 2) ? y : y + h - radius;
         for (int dy = 0; dy < radius; dy++) {
             for (int dx = 0; dx < radius; dx++) {
-                float fx = (corner % 2 == 0) ? (radius - dx - 0.5f) : (dx + 0.5f);
-                float fy = (corner < 2) ? (radius - dy - 0.5f) : (dy + 0.5f);
-
-                float ddx = (corner % 2 == 0) ? (radius - dx - 0.5f) : (dx + 0.5f - radius);
-
                 float px = ox0 + dx + 0.5f;
                 float py = oy0 + dy + 0.5f;
                 float ddx2 = px - (cx + 0.5f);
                 float ddy2 = py - (cy + 0.5f);
                 float dist = sqrtf(ddx2*ddx2 + ddy2*ddy2);
-                if (dist >= radius + 0.5f) continue;
-                float coverage = 1.0f;
-                if (dist > radius - 0.5f) coverage = (radius + 0.5f - dist);
-                if (coverage <= 0) continue;
-                if (coverage >= 1.0f) {
-                    XftDrawRect(xd, &solid, ox0 + dx, oy0 + dy, 1, 1);
-                } else {
-                    unsigned short a = (unsigned short)(alpha16 * coverage + 0.5f);
-                    XftColor ac;
-                    Linux_XftAllocColor(dpy, vis, cmap, hex, a, &ac);
-                    XftDrawRect(xd, &ac, ox0 + dx, oy0 + dy, 1, 1);
-                    XftColorFree(dpy, vis, cmap, &ac);
-                }
+                if (dist >= radius) continue;
+                XftDrawRect(xd, &solid, ox0 + dx, oy0 + dy, 1, 1);
             }
         }
     }
