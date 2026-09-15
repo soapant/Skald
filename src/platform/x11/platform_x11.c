@@ -1363,9 +1363,10 @@ WindowList Platform_GetWindowTitles() {
   log_info("Platform_GetWindowTitles count=%d", l.count);
   return l;
 }
+
 WindowList Platform_GetWindowNames() {
   WindowList l = Wm_GetWindowNames();
   log_info("Platform_GetWindowNames count=%d", l.count);
   return l;
 }
-WindowList Platform_GetListOfActiveWindows() { return Platform_GetWindowNames(); }
+
