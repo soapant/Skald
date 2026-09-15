@@ -301,3 +301,17 @@ char* fl_search_file_in_dir_platform(const char* directory, const char* search_s
     FindClose(hFind);
     return NULL;
 }
+#define VK_MEDIA_PLAY_PAUSE 0xB3
+
+void fl_toggle_play_pause_platform(void) {
+    INPUT input[2] = {0};
+
+    input[0].type = INPUT_KEYBOARD;
+    input[0].ki.wVk = VK_MEDIA_PLAY_PAUSE;
+
+    input[1].type = INPUT_KEYBOARD;
+    input[1].ki.wVk = VK_MEDIA_PLAY_PAUSE;
+    input[1].ki.dwFlags = KEYEVENTF_KEYUP;
+
+    SendInput(2, input, sizeof(INPUT));
+}
