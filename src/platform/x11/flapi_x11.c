@@ -353,9 +353,9 @@ bool fl_listbox_next_platform(FlListItemCtx *out) {
         int bx = g_fl_list_spec.x + 1;
         int bw = (g_fl_list_spec.w ? g_fl_list_spec.w : 650) - 2;
         if (sel) {
-            Linux_FillRoundedRect(g_fl_list_dpy, g_fl_list_xd, g_fl_list_vis, g_fl_list_cmap, rgb_to_hex(COLOR_SELECTED_TEXT), OpacityAlpha16(), bx+t, y+1+t, bw-2*t, g_fl_list_itemH-2-2*t, R-1);
+            Linux_FillRoundedRect(g_fl_list_dpy, g_fl_list_xd, g_fl_list_vis, g_fl_list_cmap, rgb_to_hex(COLOR_SELECTED_TEXT), 0xFFFF, bx+t, y+1+t, bw-2*t, g_fl_list_itemH-2-2*t, R-1);
         } else if (!EnableShaders || ShaderPreset==0) {
-            Linux_FillRoundedRect(g_fl_list_dpy, g_fl_list_xd, g_fl_list_vis, g_fl_list_cmap, rgb_to_hex(COLOR_BG), OpacityAlpha16(), bx+t, y+1+t, bw-2*t, g_fl_list_itemH-2-2*t, R-1);
+            Linux_FillRoundedRect(g_fl_list_dpy, g_fl_list_xd, g_fl_list_vis, g_fl_list_cmap, rgb_to_hex(COLOR_BG), 0xFFFF, bx+t, y+1+t, bw-2*t, g_fl_list_itemH-2-2*t, R-1);
         }
     } else {
         PromptState tmp = {0};

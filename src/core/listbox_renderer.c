@@ -44,9 +44,9 @@ void Core_DrawListBox(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis
             int R=6; int t=ListboxBorderThickness;
             int bx=4, bw=state->width-8;
             if (sel) {
-                Linux_FillRoundedRect(dpy, xd, vis, cmap, rgb_to_hex(COLOR_SELECTED_TEXT), OpacityAlpha16(), bx+t, y+1+t, bw-2*t, itemH-2-2*t, R-1);
+                Linux_FillRoundedRect(dpy, xd, vis, cmap, rgb_to_hex(COLOR_SELECTED_TEXT), 0xFFFF, bx+t, y+1+t, bw-2*t, itemH-2-2*t, R-1);
             } else if (!EnableShaders || ShaderPreset==0) {
-                Linux_FillRoundedRect(dpy, xd, vis, cmap, rgb_to_hex(COLOR_BG), OpacityAlpha16(), bx+t, y+1+t, bw-2*t, itemH-2-2*t, R-1);
+                Linux_FillRoundedRect(dpy, xd, vis, cmap, rgb_to_hex(COLOR_BG), 0xFFFF, bx+t, y+1+t, bw-2*t, itemH-2-2*t, R-1);
             }
         } else {
             Platform_DrawListBackground(state, dpy, xd, vis, cmap, y, itemH, sel);
