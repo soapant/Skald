@@ -30,5 +30,4 @@ FLINT_FEATURE_INIT {
     fl_register_hotkey("Alt+Shift+T", HandleShowCurrentTime);
     fl_register_hotkey("Alt+D", HandleSettingsTrigger);
     fl_register_hotkey("Alt+Shift+N", HandleShowCurrentBatteryPercentage);
-    fl_register_hotkey("Ctrl+N",HandleMediaPlayPause);
-}
+    fl_register_hotkey("RShift",HandleMediaPlayPause); }

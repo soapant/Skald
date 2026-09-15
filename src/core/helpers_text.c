@@ -148,7 +148,23 @@ HotkeyBinding convert_into_hotkey_binding(char* hotkey_string, void (*on_hotkey_
 
     char* token = strtok(buffer, "+");
     while (token != NULL) {
-        if (Platform_StringContainsCaseInsensitive(token, "Ctrl") || Platform_StringContainsCaseInsensitive(token, "Control")) {
+        if (strcasecmp(token, "RShift") == 0 || strcasecmp(token, "RightShift") == 0) {
+            out_key = VK_RSHIFT;
+        } else if (strcasecmp(token, "LShift") == 0 || strcasecmp(token, "LeftShift") == 0) {
+            out_key = VK_LSHIFT;
+        } else if (strcasecmp(token, "RCtrl") == 0 || strcasecmp(token, "RightCtrl") == 0 || strcasecmp(token, "RControl") == 0 || strcasecmp(token, "RightControl") == 0) {
+            out_key = VK_RCONTROL;
+        } else if (strcasecmp(token, "LCtrl") == 0 || strcasecmp(token, "LeftCtrl") == 0 || strcasecmp(token, "LControl") == 0 || strcasecmp(token, "LeftControl") == 0) {
+            out_key = VK_LCONTROL;
+        } else if (strcasecmp(token, "RAlt") == 0 || strcasecmp(token, "RightAlt") == 0 || strcasecmp(token, "RMenu") == 0) {
+            out_key = VK_RMENU;
+        } else if (strcasecmp(token, "LAlt") == 0 || strcasecmp(token, "LeftAlt") == 0 || strcasecmp(token, "LMenu") == 0) {
+            out_key = VK_LMENU;
+        } else if (strcasecmp(token, "RWin") == 0 || strcasecmp(token, "RightWin") == 0 || strcasecmp(token, "RSuper") == 0 || strcasecmp(token, "RightSuper") == 0 || strcasecmp(token, "RMeta") == 0) {
+            out_key = VK_RWIN;
+        } else if (strcasecmp(token, "LWin") == 0 || strcasecmp(token, "LeftWin") == 0 || strcasecmp(token, "LSuper") == 0 || strcasecmp(token, "LeftSuper") == 0 || strcasecmp(token, "LMeta") == 0) {
+            out_key = VK_LWIN;
+        } else if (Platform_StringContainsCaseInsensitive(token, "Ctrl") || Platform_StringContainsCaseInsensitive(token, "Control")) {
             out_modifiers |= HOTKEY_MOD_CTRL;
         } else if (Platform_StringContainsCaseInsensitive(token, "Shift")) {
             out_modifiers |= HOTKEY_MOD_SHIFT;
