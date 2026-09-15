@@ -945,4 +945,3 @@ WindowList Platform_GetWindowNames() {
     log_info("Platform_GetWindowNames count=%d", names.count);
     return names;
 }
-WindowList Platform_GetListOfActiveWindows() { return Platform_GetWindowNames(); }
