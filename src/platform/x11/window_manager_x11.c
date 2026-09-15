@@ -217,7 +217,6 @@ int WindowManager_RunLinux(WindowManager* wm) {
 
     ScanAndHookKeyboards();
 
-    // Remap requires uinput + grab even on Wayland/Sway; force if bindings exist
     if (remap_has_bindings()) {
         if (g_x11_uinput_fd < 0) {
             log_warn("remap forcing uinput init despite use_grab=%d", use_grab);
@@ -311,10 +310,10 @@ int WindowManager_RunLinux(WindowManager* wm) {
                         if (ev.value == 1 && ev.code <= KEY_MAX) g_x11_suppress_release[ev.code] = true;
                         continue;
                     } else {
-                        // log only for remap candidates to avoid spam
                         if (ev.code == KEY_LEFTSHIFT || ev.code == KEY_RIGHTALT || ev.code == KEY_W || ev.code == KEY_A || ev.code == KEY_S || ev.code == KEY_D || ev.code == KEY_I || ev.code == KEY_U) {
                             log_warn("window_manager_x11: remap NOT swallowed code=%d val=%d", ev.code, ev.value);
                         }
+                        remap_update_phys(ConvertLinuxKeyToWindowsVK(ev.code), ev.value);
                     }
 
                     struct timeval now;
