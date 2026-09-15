@@ -58,3 +58,5 @@ what is wofi used for
 what is tmp in vms
 github.com/soapant/Flint
 search
+is nmcli on evry linux distro
+c add two strings together

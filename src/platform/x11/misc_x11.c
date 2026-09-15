@@ -750,7 +750,6 @@ bool Platform_TerminateProcessByName(const char* exe_name) {
     char *ext = strrchr(tmp, '.');
     if (ext && strcmp(ext, ".exe") == 0) *ext = '\0';
 
-
     char cmd[1024];
     snprintf(cmd, sizeof(cmd), "sh -c 'pkill -9 \"%s\" 2>/dev/null; pkill -9 -f \"%s\" 2>/dev/null; pkill -9 -f \"build/[f]lint\" 2>/dev/null; pkill \"%s\" 2>/dev/null; killall -9 \"%s\" 2>/dev/null; killall -9 -r \"%s\" 2>/dev/null; killall \"%s\" 2>/dev/null' &", tmp, tmp, tmp, tmp, tmp, tmp);
 

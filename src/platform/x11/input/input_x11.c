@@ -27,6 +27,7 @@
 #include "core/timer.h"
 #include "platform/draw.h"
 #include "platform/x11/input_helpers.h"
+#include "core/remap_manager.h"
 
 extern int pending_hotkey_vk;
 extern int pending_hotkey_mod;
@@ -96,9 +97,10 @@ int Linux_KeysymToWindowsVK(KeySym keysym) {
 
 void ReadModifiers(const XEvent* ev, bool* ctrl_pressed, bool* shift_pressed, bool* alt_pressed) {
     PROFILE_START(timer);
-    *ctrl_pressed = ((ev->xkey.state & ControlMask) != 0) || g_x11_ctrl_held;
-    *shift_pressed = ((ev->xkey.state & ShiftMask) != 0) || g_x11_shift_held;
-    *alt_pressed = ((ev->xkey.state & Mod1Mask) != 0) || g_x11_alt_held;
+    int m = remap_current_mods();
+    *ctrl_pressed = ((ev->xkey.state & ControlMask) != 0) || (m & HOTKEY_MOD_CTRL);
+    *shift_pressed = ((ev->xkey.state & ShiftMask) != 0) || (m & HOTKEY_MOD_SHIFT);
+    *alt_pressed = ((ev->xkey.state & Mod1Mask) != 0) || (m & HOTKEY_MOD_ALT);
     PROFILE_END_VAR(timer, "subclasses_x11:ReadModifiers");
 }
 

@@ -78,6 +78,14 @@ bool Platform_LaunchBrowserAtUrl(char* url,bool new_window);
 void Platform_EmitKey(int vk_code, int down);
 bool Platform_IsRemapActive(void);
 
+bool Platform_TryAcquireSingleInstance(void);
+bool Platform_InitDisplaySafe(void);
+void Platform_CleanupDisplaySafe(void);
+void Platform_InitMainThreadContext(void);
+void Platform_FixWorkingDirectory(void);
+void Platform_CleanupPlatformResources(void);
+void Platform_StartNotificationDaemon(void);
+
 #if !defined(_WIN32)
 FontHandle Platform_CreateFontOnDisplay(Display* dpy, int size, const char* face_name);
 bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state);

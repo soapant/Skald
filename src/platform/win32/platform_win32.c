@@ -945,3 +945,72 @@ WindowList Platform_GetWindowNames() {
     log_info("Platform_GetWindowNames count=%d", names.count);
     return names;
 }
+
+static HANDLE g_singleton_mtx = NULL;
+
+bool Platform_TryAcquireSingleInstance(void) {
+    g_singleton_mtx = CreateMutexA(NULL, TRUE, "flint_single_instance_mutex");
+    if (g_singleton_mtx && GetLastError() == ERROR_ALREADY_EXISTS) {
+        log_info("Another instance is already running. Exiting.");
+        CloseHandle(g_singleton_mtx);
+        g_singleton_mtx = NULL;
+        return false;
+    }
+    return true;
+}
+
+bool Platform_InitDisplaySafe(void) {
+    return true;
+}
+
+void Platform_CleanupDisplaySafe(void) {
+}
+
+void Platform_InitMainThreadContext(void) {
+    FlintContext_Get()->g_main_thread_id = GetCurrentThreadId();
+}
+
+void Platform_FixWorkingDirectory(void) {
+    char buf[MAX_PATH];
+    DWORD len = GetModuleFileNameA(NULL, buf, MAX_PATH);
+    if (len > 0 && len < MAX_PATH) {
+        char* slash = strrchr(buf, '\\');
+        if (slash) *slash = '\0';
+        for (int depth = 0; depth < 4; ++depth) {
+            char probe[MAX_PATH];
+            snprintf(probe, sizeof(probe), "%s\\data", buf);
+            DWORD attr = GetFileAttributesA(probe);
+            if (attr != INVALID_FILE_ATTRIBUTES && (attr & FILE_ATTRIBUTE_DIRECTORY)) {
+                SetCurrentDirectoryA(buf);
+                break;
+            }
+            slash = strrchr(buf, '\\');
+            if (!slash) break;
+            *slash = '\0';
+        }
+    }
+}
+
+void Platform_CleanupPlatformResources(void) {
+    FlintContext* ctx = FlintContext_Get();
+    if (ctx->g_hNumFont) {
+        DeleteObject(ctx->g_hNumFont);
+        ctx->g_hNumFont = NULL;
+    }
+    if (ctx->g_hMainFont) {
+        DeleteObject(ctx->g_hMainFont);
+        ctx->g_hMainFont = NULL;
+    }
+}
+
+static void Platform_OnNotificationReceived(const char* text) {
+    SubjectiveMessageDisplay(text, 140, TimeOutForMessages, COLOR_TEXT);
+}
+
+void Platform_StartNotificationDaemon(void) {
+    extern const wchar_t* HttpUrlForNotis;
+    extern void StartNtfyDaemon(const wchar_t* topic, void (*callback)(const char*));
+    if (HttpUrlForNotis) {
+        StartNtfyDaemon(HttpUrlForNotis, Platform_OnNotificationReceived);
+    }
+}

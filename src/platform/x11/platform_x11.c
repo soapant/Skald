@@ -37,6 +37,8 @@
 #include <linux/uinput.h>
 #include <linux/input.h>
 #include <errno.h>
+#include <sys/file.h>
+#include <fontconfig/fontconfig.h>
 #include "platform/x11/drawing.h"
 #include "wm/wm.h"
 #if __has_include(<X11/extensions/XTest.h>)
@@ -1368,5 +1370,51 @@ WindowList Platform_GetWindowNames() {
   WindowList l = Wm_GetWindowNames();
   log_info("Platform_GetWindowNames count=%d", l.count);
   return l;
+}
+
+static int g_singleton_lock_fd = -1;
+
+bool Platform_TryAcquireSingleInstance(void) {
+    g_singleton_lock_fd = open("/tmp/flint.lock", O_RDWR | O_CREAT, 0666);
+    if (g_singleton_lock_fd < 0) {
+        log_error("Cannot open singleton lock /tmp/flint.lock (%s). If it is owned by another user, remove it: sudo rm /tmp/flint.lock", strerror(errno));
+        return false;
+    }
+    if (flock(g_singleton_lock_fd, LOCK_EX | LOCK_NB) != 0) {
+        log_info("Another instance is already running. Exiting.");
+        close(g_singleton_lock_fd);
+        g_singleton_lock_fd = -1;
+        return false;
+    }
+    fcntl(g_singleton_lock_fd, F_SETFD, FD_CLOEXEC);
+    return true;
+}
+
+bool Platform_InitDisplaySafe(void) {
+    if (!init_display()) {
+        log_info("Continuing without X11 display (headless mode)");
+        return false;
+    }
+    return true;
+}
+
+void Platform_CleanupDisplaySafe(void) {
+    cleanup_display();
+}
+
+void Platform_InitMainThreadContext(void) {
+}
+
+void Platform_FixWorkingDirectory(void) {
+}
+
+void Platform_CleanupPlatformResources(void) {
+    extern void CleanupPerFeatureVimMap(void);
+    CleanupPerFeatureVimMap();
+    extern void FcFini(void);
+    FcFini();
+}
+
+void Platform_StartNotificationDaemon(void) {
 }
 
