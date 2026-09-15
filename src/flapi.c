@@ -745,4 +745,8 @@ WindowList fl_get_all_window_names() {
   return l;
 }
 
+void fl_toggle_play_pause(void) {
+  fl_toggle_play_pause_platform();
+  return;
+}
 

@@ -12,5 +12,6 @@ bool fl_listbox_begin_platform(const FlListSpec *spec);
 bool fl_listbox_next_platform(FlListItemCtx *out);
 void fl_listbox_end_platform(void);
 int fl_listbox_get_count(void);
+void fl_toggle_play_pause_platform(void);
 
 #endif
