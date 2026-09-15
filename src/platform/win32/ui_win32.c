@@ -545,23 +545,14 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
     if (! _popupActive && WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) && IsWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd))) _popupActive = true;
     KBDLLHOOKSTRUCT* _rk = (KBDLLHOOKSTRUCT*)lParam;
     if (_rk->flags & LLKHF_INJECTED) return CallNextHookEx(NULL, nCode, wParam, lParam);
-    if (! _popupActive) {
+    {
         bool _isDown = (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN);
         bool _isUp = (wParam == WM_KEYUP || wParam == WM_SYSKEYUP);
         if (_isDown || _isUp) {
             int _vk = (int)_rk->vkCode;
             int _val = _isDown ? 1 : 0;
-            remap_update_phys(_vk, _val);
             if (remap_should_swallow_vk(_vk, _val)) { log_warn("ui_win32: remap swalowed vk=%d val=%d", _vk, _val); return 1; }
             else { if (_vk==VK_LSHIFT||_vk==VK_RMENU||_vk=='W'||_vk=='A'||_vk=='S'||_vk=='D'||_vk=='I'||_vk=='U') log_warn("ui_win32: remap NOT swallowed vk=%d val=%d", _vk, _val); }
-        }
-    } else {
-        bool _isDown = (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN);
-        bool _isUp = (wParam == WM_KEYUP || wParam == WM_SYSKEYUP);
-        if (_isDown || _isUp) {
-            int _vk = (int)_rk->vkCode;
-            int _val = _isDown ? 1 : 0;
-            remap_update_phys(_vk, _val);
         }
     }
     if (nCode == HC_ACTION && (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN)) {
