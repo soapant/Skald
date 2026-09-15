@@ -551,11 +551,11 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
         if (_isDown || _isUp) {
             int _vk = (int)_rk->vkCode;
             int _val = _isDown ? 1 : 0;
+            remap_update_phys(_vk, _val);
             if (remap_should_swallow_vk(_vk, _val)) { log_warn("ui_win32: remap swalowed vk=%d val=%d", _vk, _val); return 1; }
             else { if (_vk==VK_LSHIFT||_vk==VK_RMENU||_vk=='W'||_vk=='A'||_vk=='S'||_vk=='D'||_vk=='I'||_vk=='U') log_warn("ui_win32: remap NOT swallowed vk=%d val=%d", _vk, _val); }
         }
     } else {
-        // when popup active, still update phys for remap to keep state consistent but don't swallow
         bool _isDown = (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN);
         bool _isUp = (wParam == WM_KEYUP || wParam == WM_SYSKEYUP);
         if (_isDown || _isUp) {

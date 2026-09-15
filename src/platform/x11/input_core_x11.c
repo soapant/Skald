@@ -211,10 +211,13 @@ bool x11_handle_global_key(int key_code, int value) {
     log_warn("x11_handle_global_key code=%d val=%d ctrl=%d alt=%d shift=%d", key_code, value, g_x11_ctrl_held, g_x11_alt_held, g_x11_shift_held);
     if (key_code == KEY_LEFTCTRL || key_code == KEY_RIGHTCTRL) {
         g_x11_ctrl_held = (value != 0);
+        remap_update_phys(ConvertLinuxKeyToWindowsVK(key_code), value);
     } else if (key_code == KEY_LEFTALT || key_code == KEY_RIGHTALT) {
         g_x11_alt_held = (value != 0);
+        remap_update_phys(ConvertLinuxKeyToWindowsVK(key_code), value);
     } else if (key_code == KEY_LEFTSHIFT || key_code == KEY_RIGHTSHIFT) {
         g_x11_shift_held = (value != 0);
+        remap_update_phys(ConvertLinuxKeyToWindowsVK(key_code), value);
     }
     double seconds = Platform_GetUniversalTimeSeconds();
     if (seconds >= 300) { Platform_ResetUniversalTimer(); log_info("SUPPOSED TO CLEAR FILE"); }

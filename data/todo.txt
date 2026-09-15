@@ -22,5 +22,4 @@ do the wholei nternet and bluetooth thing for both windows and linux that will r
 split populatelistbox bitch ||[Flint]
 you can probably remove simple promptuser as promptuser can do the exact same thing for a bit more work ||[Flint]
 make a wrapper via the program of taking screenshots||[Flint]
-fix remapping bug bitch ass nigga||[Flint]
-
+you cant shift l for some reason ||[Flint]

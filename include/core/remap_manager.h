@@ -5,7 +5,6 @@
 
 bool remap_register_internal(const char* src, const char* dst);
 bool remap_handle_vk(int vk_code, int value);
-void remap_sync(void);
 void remap_update_phys(int vk_code, int value);
 bool remap_should_swallow_linux_key(int linux_code, int value);
 bool remap_should_swallow_vk(int vk_code, int value);

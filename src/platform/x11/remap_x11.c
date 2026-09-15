@@ -11,7 +11,6 @@
 
 void Platform_EmitKey(int vk_code, int down) {
     int linux_code = x11_vk_to_linux_key(vk_code);
-    // handle left/right specifics that x11_vk_to_linux_key may not cover fully
     if (!linux_code) {
         if (vk_code == VK_LCONTROL) linux_code = KEY_LEFTCTRL;
         else if (vk_code == VK_RCONTROL) linux_code = KEY_RIGHTCTRL;
