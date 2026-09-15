@@ -104,6 +104,8 @@ static void PromptPopup_OnShow(Popup* self) {
     const char* p = strchr(title, ' ');
     data->state->window_title = (char*)(p ? p+1 : title);
     data->state->filter[0] = '\0';
+    FlintContext_Get()->window.filter[0] = '\0';
+    FlintContext_Get()->window.filter_cursor = 0;
     if (data->spec.items || data->spec.refresh) {
       data->state->has_listbox = true;
     } else {
@@ -207,8 +209,7 @@ static void PromptPopup_OnKey(Popup* self, int vk_code, bool pressed, int modifi
     }
     if (vk_code == VK_UP) {
         if (ctrl_pressed) {
-            VimContext ctx = Vim_FromState(data->state);
-            SetCursorToStartOfText(&ctx);
+            SetCursorToStartOfText(FlintContext_Get());
         } else if (data->state->has_listbox) {
             if (data->state->listbox.selected_index == -1) {
                 char hist[512];
@@ -231,8 +232,7 @@ static void PromptPopup_OnKey(Popup* self, int vk_code, bool pressed, int modifi
     }
     if (vk_code == VK_DOWN) {
         if (ctrl_pressed) {
-            VimContext ctx = Vim_FromState(data->state);
-            SetCursorToEndOfText(&ctx);
+            SetCursorToEndOfText(FlintContext_Get());
         } else if (data->state->has_listbox) {
             UI_NavigateDown(&data->state->listbox, FlintContext_Get()->window.hListBox);
         }
@@ -248,14 +248,12 @@ static void PromptPopup_OnKey(Popup* self, int vk_code, bool pressed, int modifi
         return;
     }
     if (vk_code == VK_HOME) {
-        VimContext ctx = Vim_FromState(data->state);
-        SetCursorToStartOfText(&ctx);
+        SetCursorToStartOfText(FlintContext_Get());
         PROFILE_END_VAR(timer, "window_manager:PromptPopup_OnKey");
         return;
     }
     if (vk_code == VK_END) {
-        VimContext ctx = Vim_FromState(data->state);
-        SetCursorToEndOfText(&ctx);
+        SetCursorToEndOfText(FlintContext_Get());
         PROFILE_END_VAR(timer, "window_manager:PromptPopup_OnKey");
         return;
     }
