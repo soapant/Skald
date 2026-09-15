@@ -5,7 +5,7 @@ void HandleKillMyProgram(void) {
     fl_terminate_process_by_name("main.exe");
 }
 void HandleShowCurrentTime(void) {
-  char* output = fl_run_terminal_command("date now");
+  char* output = fl_run_terminal_command("date");
   if (output) {
     SubjectiveMessageDisplay(output,140,3,COLOR_TEXT);
   }
