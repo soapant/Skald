@@ -222,6 +222,7 @@ static bool is_mod_held(int mod) {
 }
 
 static bool binding_active(RemapBinding* b) {
+    if (b->src_mods==0 && b->src_vk_count==0) return false;
     if (b->src_mods & HOTKEY_MOD_CTRL) { if (! (g_phys_vk[VK_LCONTROL] || g_phys_vk[VK_RCONTROL])) return false; }
     if (b->src_mods & HOTKEY_MOD_ALT) { if (! (g_phys_vk[VK_LMENU] || g_phys_vk[VK_RMENU])) return false; }
     if (b->src_mods & HOTKEY_MOD_SHIFT) { if (! (g_phys_vk[VK_LSHIFT] || g_phys_vk[VK_RSHIFT])) return false; }

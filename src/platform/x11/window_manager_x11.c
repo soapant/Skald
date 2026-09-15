@@ -224,15 +224,19 @@ int WindowManager_RunLinux(WindowManager* wm) {
             if (g_x11_uinput_fd >= 0) log_warn("remap uinput forced fd=%d", g_x11_uinput_fd);
             else log_warn("remap uinput force failed, fallback XTest will be used");
         }
-        for (int i=0;i<g_x11_keyboard_count;i++) {
-            if (!g_x11_device_grabbed[i]) {
-                if (ioctl(g_x11_keyboards[i].fd, EVIOCGRAB, 1)==0) {
-                    g_x11_device_grabbed[i]=true;
-                    log_warn("remap grabbed keyboard %d path=%s", i, g_x11_keyboards[i].path);
-                } else {
-                    log_warn("remap grab failed for %s: %s (run with correct perms / input group)", g_x11_keyboards[i].path, strerror(errno));
+        if (g_x11_uinput_fd >= 0) {
+            for (int i=0;i<g_x11_keyboard_count;i++) {
+                if (!g_x11_device_grabbed[i]) {
+                    if (ioctl(g_x11_keyboards[i].fd, EVIOCGRAB, 1)==0) {
+                        g_x11_device_grabbed[i]=true;
+                        log_warn("remap grabbed keyboard %d path=%s", i, g_x11_keyboards[i].path);
+                    } else {
+                        log_warn("remap grab failed for %s: %s (run with correct perms / input group)", g_x11_keyboards[i].path, strerror(errno));
+                    }
                 }
             }
+        } else {
+            log_warn("remap grab skipped: no uinput, not grabbing to avoid bricking");
         }
     }
     if (g_x11_keyboard_count == 0) {
@@ -293,8 +297,15 @@ int WindowManager_RunLinux(WindowManager* wm) {
                                 if (ev.value == 0) g_x11_shift_held = false;
                                 else g_x11_shift_held = true;
                             }
-                            int vk_tmp = ConvertLinuxKeyToWindowsVK(ev.code);
-                            if (vk_tmp) remap_update_phys(vk_tmp, ev.value);
+                            if (remap_should_swallow_linux_key(ev.code, ev.value)) {
+                                if (ev.code <= KEY_MAX) {
+                                    if (ev.value == 1) g_x11_suppress_release[ev.code] = true;
+                                    else if (ev.value == 0) g_x11_suppress_release[ev.code] = false;
+                                }
+                                continue;
+                            }
+                            if (ev.value == 0 && ev.code <= KEY_MAX && g_x11_suppress_release[ev.code]) { g_x11_suppress_release[ev.code] = false; continue; }
+                            if (ev.value == 2 && ev.code <= KEY_MAX && g_x11_suppress_release[ev.code]) continue;
                             if (grabbed && g_x11_uinput_fd >= 0) uinput_emit(&ev);
                         } else {
                             if (grabbed && g_x11_uinput_fd >= 0) uinput_emit(&ev);
@@ -310,7 +321,10 @@ int WindowManager_RunLinux(WindowManager* wm) {
                     if (remap_should_swallow_linux_key(ev.code, ev.value)) {
                         log_info("window_manager_x11: remap swallowed code=%d val=%d grabbed=%d uinput=%d", ev.code, ev.value, grabbed, g_x11_uinput_fd);
                         log_warn("window_manager_x11: remap swallowed code=%d val=%d grabbed=%d uinput=%d", ev.code, ev.value, grabbed, g_x11_uinput_fd);
-                        if (ev.value == 1 && ev.code <= KEY_MAX) g_x11_suppress_release[ev.code] = true;
+                        if (ev.code <= KEY_MAX) {
+                            if (ev.value == 1) g_x11_suppress_release[ev.code] = true;
+                            else if (ev.value == 0) g_x11_suppress_release[ev.code] = false;
+                        }
                         continue;
                     } else {
                         if (ev.code == KEY_LEFTSHIFT || ev.code == KEY_RIGHTALT || ev.code == KEY_W || ev.code == KEY_A || ev.code == KEY_S || ev.code == KEY_D || ev.code == KEY_I || ev.code == KEY_U) {
@@ -459,8 +473,15 @@ void Platform_ProcessNestedEvents(WindowManager* wm, Popup* popup) {
                                     if (ev.value == 0) g_x11_shift_held = false;
                                     else g_x11_shift_held = true;
                                 }
-                                int vk_tmp2 = ConvertLinuxKeyToWindowsVK(ev.code);
-                                if (vk_tmp2) remap_update_phys(vk_tmp2, ev.value);
+                                if (remap_should_swallow_linux_key(ev.code, ev.value)) {
+                                    if (ev.code <= KEY_MAX) {
+                                        if (ev.value == 1) g_x11_suppress_release[ev.code] = true;
+                                        else if (ev.value == 0) g_x11_suppress_release[ev.code] = false;
+                                    }
+                                    continue;
+                                }
+                                if (ev.value == 0 && ev.code <= KEY_MAX && g_x11_suppress_release[ev.code]) { g_x11_suppress_release[ev.code] = false; continue; }
+                                if (ev.value == 2 && ev.code <= KEY_MAX && g_x11_suppress_release[ev.code]) continue;
                                 if (grabbed && g_x11_uinput_fd >= 0) uinput_emit(&ev);
                             } else {
                                 if (grabbed && g_x11_uinput_fd >= 0) uinput_emit(&ev);
