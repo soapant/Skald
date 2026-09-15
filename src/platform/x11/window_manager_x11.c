@@ -293,6 +293,8 @@ int WindowManager_RunLinux(WindowManager* wm) {
                                 if (ev.value == 0) g_x11_shift_held = false;
                                 else g_x11_shift_held = true;
                             }
+                            int vk_tmp = ConvertLinuxKeyToWindowsVK(ev.code);
+                            if (vk_tmp) remap_update_phys(vk_tmp, ev.value);
                             if (grabbed && g_x11_uinput_fd >= 0) uinput_emit(&ev);
                         } else {
                             if (grabbed && g_x11_uinput_fd >= 0) uinput_emit(&ev);
@@ -306,11 +308,13 @@ int WindowManager_RunLinux(WindowManager* wm) {
                     }
 
                     if (remap_should_swallow_linux_key(ev.code, ev.value)) {
+                        log_info("window_manager_x11: remap swallowed code=%d val=%d grabbed=%d uinput=%d", ev.code, ev.value, grabbed, g_x11_uinput_fd);
                         log_warn("window_manager_x11: remap swallowed code=%d val=%d grabbed=%d uinput=%d", ev.code, ev.value, grabbed, g_x11_uinput_fd);
                         if (ev.value == 1 && ev.code <= KEY_MAX) g_x11_suppress_release[ev.code] = true;
                         continue;
                     } else {
                         if (ev.code == KEY_LEFTSHIFT || ev.code == KEY_RIGHTALT || ev.code == KEY_W || ev.code == KEY_A || ev.code == KEY_S || ev.code == KEY_D || ev.code == KEY_I || ev.code == KEY_U) {
+                            log_info("window_manager_x11: remap NOT swallowed code=%d val=%d", ev.code, ev.value);
                             log_warn("window_manager_x11: remap NOT swallowed code=%d val=%d", ev.code, ev.value);
                         }
                         remap_update_phys(ConvertLinuxKeyToWindowsVK(ev.code), ev.value);
@@ -455,6 +459,8 @@ void Platform_ProcessNestedEvents(WindowManager* wm, Popup* popup) {
                                     if (ev.value == 0) g_x11_shift_held = false;
                                     else g_x11_shift_held = true;
                                 }
+                                int vk_tmp2 = ConvertLinuxKeyToWindowsVK(ev.code);
+                                if (vk_tmp2) remap_update_phys(vk_tmp2, ev.value);
                                 if (grabbed && g_x11_uinput_fd >= 0) uinput_emit(&ev);
                             } else {
                                 if (grabbed && g_x11_uinput_fd >= 0) uinput_emit(&ev);
