@@ -92,9 +92,14 @@ static void SimplePromptPopup_OnShow(Popup* self) {
         strncpy(data->state->user_input, data->spec.initial_text, sizeof(data->state->user_input)-1);
         data->state->user_input[sizeof(data->state->user_input)-1] = '\0';
         data->state->cursor = strlen(data->state->user_input);
+        strncpy(FlintContext_Get()->window.filter, data->spec.initial_text, sizeof(FlintContext_Get()->window.filter)-1);
+        FlintContext_Get()->window.filter[sizeof(FlintContext_Get()->window.filter)-1]='\0';
+        FlintContext_Get()->window.filter_cursor = data->state->cursor;
     } else {
         data->state->user_input[0] = '\0';
         data->state->cursor = 0;
+        FlintContext_Get()->window.filter[0]='\0';
+        FlintContext_Get()->window.filter_cursor=0;
     }
     data->state->width = data->w;
     data->state->height = data->h;
@@ -134,51 +139,49 @@ static void SimplePromptPopup_OnKey(Popup* self, int vk_code, bool pressed, int 
         return;
     }
     if (vk_code == VK_BACK) {
-        VimContext ctx = Vim_FromSimpleState(data->state);
-        int pos = Vim_GetCursor(&ctx);
-        if (ctrl_pressed) { Vim_SetText(&ctx, ""); }
+        FlintContext* fctx = FlintContext_Get();
+        int pos = Vim_GetCursor(fctx);
+        if (ctrl_pressed) { Vim_SetText(fctx, ""); }
         else if (pos > 0) {
-            char buf[512]; Vim_GetText(&ctx, buf, sizeof(buf));
+            char buf[512]; Vim_GetText(fctx, buf, sizeof(buf));
             int len = strlen(buf);
             memmove(buf + pos - 1, buf + pos, len - pos + 1);
-            Vim_SetText(&ctx, buf);
-            Vim_SetCursor(&ctx, pos - 1);
+            Vim_SetText(fctx, buf);
+            Vim_SetCursor(fctx, pos - 1);
         }
         PROFILE_END_VAR(timer, "window_manager:SimplePromptPopup_OnKey");
         return;
     }
     if (vk_code == VK_LEFT) {
-        VimContext ctx = Vim_FromSimpleState(data->state);
-        int pos = Vim_GetCursor(&ctx);
-        if (pos > 0) Vim_SetCursor(&ctx, pos - 1);
+        FlintContext* fctx = FlintContext_Get();
+        int pos = Vim_GetCursor(fctx);
+        if (pos > 0) Vim_SetCursor(fctx, pos - 1);
         PROFILE_END_VAR(timer, "window_manager:SimplePromptPopup_OnKey");
         return;
     }
     if (vk_code == VK_RIGHT) {
-        VimContext ctx = Vim_FromSimpleState(data->state);
-        int pos = Vim_GetCursor(&ctx);
-        char buf[512]; Vim_GetText(&ctx, buf, sizeof(buf));
-        if (pos < (int)strlen(buf)) Vim_SetCursor(&ctx, pos + 1);
+        FlintContext* fctx = FlintContext_Get();
+        int pos = Vim_GetCursor(fctx);
+        char buf[512]; Vim_GetText(fctx, buf, sizeof(buf));
+        if (pos < (int)strlen(buf)) Vim_SetCursor(fctx, pos + 1);
         PROFILE_END_VAR(timer, "window_manager:SimplePromptPopup_OnKey");
         return;
     }
     if (vk_code == VK_HOME) {
-        VimContext ctx = Vim_FromSimpleState(data->state);
-        Vim_SetCursor(&ctx, 0);
+        Vim_SetCursor(FlintContext_Get(), 0);
         PROFILE_END_VAR(timer, "window_manager:SimplePromptPopup_OnKey");
         return;
     }
     if (vk_code == VK_END) {
-        VimContext ctx = Vim_FromSimpleState(data->state);
-        char buf[512]; Vim_GetText(&ctx, buf, sizeof(buf));
-        Vim_SetCursor(&ctx, strlen(buf));
+        FlintContext* fctx2 = FlintContext_Get();
+        char buf[512]; Vim_GetText(fctx2, buf, sizeof(buf));
+        Vim_SetCursor(fctx2, strlen(buf));
         PROFILE_END_VAR(timer, "window_manager:SimplePromptPopup_OnKey");
         return;
     }
     if (vk_code == VK_RETURN) {
         FlintContext* _c = FlintContext_Get();
-        char buf[512]; VimContext ctx = Vim_FromSimpleState(data->state);
-        Vim_GetText(&ctx, buf, sizeof(buf));
+        char buf[512]; Vim_GetText(_c, buf, sizeof(buf));
         strncpy(_c->window.output_buffer, buf, sizeof(_c->window.output_buffer)-1);
         _c->window.output_buffer[sizeof(_c->window.output_buffer)-1]='\0';
         _c->window.selection_complete = true;
@@ -188,17 +191,17 @@ static void SimplePromptPopup_OnKey(Popup* self, int vk_code, bool pressed, int 
     }
     if (vk_code >= 32 && vk_code <= 126) {
         if (IsInsertMode()) {
-            VimContext ctx = Vim_FromSimpleState(data->state);
-            char buf[512]; Vim_GetText(&ctx, buf, sizeof(buf));
-            int pos = Vim_GetCursor(&ctx);
+            FlintContext* fctx3 = FlintContext_Get();
+            char buf[512]; Vim_GetText(fctx3, buf, sizeof(buf));
+            int pos = Vim_GetCursor(fctx3);
             size_t n = strlen(buf);
             if (n < sizeof(buf)-1) {
                 if (pos < 0) pos=0;
                 if ((size_t)pos > n) pos=n;
                 memmove(buf + pos + 1, buf + pos, n - pos + 1);
                 buf[pos] = (char)vk_code;
-                Vim_SetText(&ctx, buf);
-                Vim_SetCursor(&ctx, pos + 1);
+                Vim_SetText(fctx3, buf);
+                Vim_SetCursor(fctx3, pos + 1);
             }
         }
         PROFILE_END_VAR(timer, "window_manager:SimplePromptPopup_OnKey");

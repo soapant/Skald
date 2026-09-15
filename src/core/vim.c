@@ -13,214 +13,95 @@
 
 SequenceState seq_state = {0};
 
-static PromptState* GetActivePromptState(void) {
-    WindowManager* wm = WindowManager_Get();
-    if (!wm) return NULL;
-    Popup* top = WindowManager_GetTopPopup(wm);
-    if (!top || !top->user_data) return NULL;
-    if (top->type != POPUP_PROMPT) return NULL;
-    return (PromptState*)top->user_data;
-}
-
-static SimplePromptState* GetActiveSimplePromptState(void) {
-    WindowManager* wm = WindowManager_Get();
-    if (!wm) return NULL;
-    Popup* top = WindowManager_GetTopPopup(wm);
-    if (!top || !top->user_data) return NULL;
-    if (top->type != POPUP_SIMPLE) return NULL;
-    return (SimplePromptState*)top->user_data;
-}
-
-static WMEditPopupData* GetActiveEditPopupState(void) {
+ListBoxInfo* Vim_GetListBox(FlintContext* ctx) {
+    (void)ctx;
     WindowManager* wm = WindowManager_Get();
     if (!wm) return NULL;
     Popup* top = WindowManager_GetTopPopup(wm);
     if (!top) return NULL;
-    if (top->type != POPUP_EDIT) return NULL;
-    return (WMEditPopupData*)top;
-}
-
-void Vim_GetText(VimContext* ctx, char* buf, size_t cap) {
-    if (!ctx || !buf || cap==0) return;
-    buf[0]='\0';
-    WMEditPopupData* wm_edit = GetActiveEditPopupState();
-    if (wm_edit) {
-        strncpy(buf, wm_edit->text, cap-1);
-        buf[cap-1]='\0';
-        return;
+    if (top->type == POPUP_PROMPT && top->user_data) {
+        PromptState* s = (PromptState*)top->user_data;
+        if (s && s->has_listbox) return &s->listbox;
     }
-    if (ctx->edit_state) {
-        strncpy(buf, ctx->edit_state->user_input, cap-1);
-        buf[cap-1]='\0';
-    } else if (ctx->state) {
-        strncpy(buf, ctx->state->filter, cap-1);
-        buf[cap-1]='\0';
-    } else if (ctx->simple_state) {
-        strncpy(buf, ctx->simple_state->user_input, cap-1);
-        buf[cap-1]='\0';
-    } else {
-#if defined(_WIN32)
-        if (WH_TO_HWND(ctx->hEdit)) GetWindowTextA(WH_TO_HWND(ctx->hEdit), buf, (int)cap);
-#else
-        UI_GetCurrentText(ctx->hEdit, buf);
-#endif
-    }
-}
-
-void Vim_SetText(VimContext* ctx, const char* text) {
-    if (!ctx || !text) return;
-    WMEditPopupData* wm_edit = GetActiveEditPopupState();
-    if (wm_edit) {
-        strncpy(wm_edit->text, text, wm_edit->text_capacity-1);
-        wm_edit->text[wm_edit->text_capacity-1]='\0';
-        wm_edit->cursor = strlen(wm_edit->text);
-        return;
-    }
-    if (ctx->edit_state) {
-        strncpy(ctx->edit_state->user_input, text, sizeof(ctx->edit_state->user_input)-1);
-        ctx->edit_state->user_input[sizeof(ctx->edit_state->user_input)-1]='\0';
-        ctx->edit_state->cursor = strlen(ctx->edit_state->user_input);
-    } else if (ctx->state) {
-        strncpy(ctx->state->filter, text, sizeof(ctx->state->filter)-1);
-        ctx->state->filter[sizeof(ctx->state->filter)-1]='\0';
-        ctx->state->cursor = (int)strlen(ctx->state->filter);
-        FlintContext* _c = FlintContext_Get();
-        if (_c && _c->prompt_callbacks.refresh) _c->prompt_callbacks.refresh(ctx->state->filter, ctx->hListBox, ctx->lb);
-    } else if (ctx->simple_state) {
-        strncpy(ctx->simple_state->user_input, text, sizeof(ctx->simple_state->user_input)-1);
-        ctx->simple_state->user_input[sizeof(ctx->simple_state->user_input)-1]='\0';
-        ctx->simple_state->cursor = (int)strlen(ctx->simple_state->user_input);
-    } else {
-        UI_SetText(ctx->hEdit, (char*)text);
-    }
-}
-
-int Vim_GetCursor(VimContext* ctx) {
-    WMEditPopupData* wm_edit = GetActiveEditPopupState();
-    if (wm_edit) return wm_edit->cursor;
-    if (!ctx) return 0;
-    if (ctx->edit_state) return (int)ctx->edit_state->cursor;
-    if (ctx->state) return ctx->state->cursor;
-    if (ctx->simple_state) return ctx->simple_state->cursor;
-    uint32_t s=0,e=0;
-    UI_Edit_GetSel(ctx->hEdit, &s, &e);
-    return (int)s;
-}
-
-void Vim_SetCursor(VimContext* ctx, int pos) {
-    WMEditPopupData* wm_edit = GetActiveEditPopupState();
-    if (wm_edit) {
-        int len = wm_edit->text ? (int)strlen(wm_edit->text) : 0;
-        if (pos<0) pos=0;
-        if (pos>len) pos=len;
-        wm_edit->cursor = pos;
-        return;
-    }
-    if (!ctx) return;
-    if (ctx->edit_state) {
-        int len = (int)strlen(ctx->edit_state->user_input);
-        if (pos<0) pos=0;
-        if (pos>len) pos=len;
-        ctx->edit_state->cursor = pos;
-    } else if (ctx->state) {
-        int len = (int)strlen(ctx->state->filter);
-        if (pos<0) pos=0;
-        if (pos>len) pos=len;
-        ctx->state->cursor = pos;
-    } else if (ctx->simple_state) {
-        int len = (int)strlen(ctx->simple_state->user_input);
-        if (pos<0) pos=0;
-        if (pos>len) pos=len;
-        ctx->simple_state->cursor = pos;
-    } else {
-        UI_SetCursorPosition(ctx->hEdit, pos);
-    }
+    return NULL;
 }
 
 VimContext Vim_FromGlobals(void) {
     VimContext ctx = {0};
+    FlintContext* fc = FlintContext_Get();
+    ctx.hListBox = fc->window.hListBox;
+    ctx.hEdit = fc->window.g_ActiveEditControl;
+    ctx.lb = Vim_GetListBox(fc);
+    return ctx;
+}
+
+void Vim_GetText(FlintContext* ctx, char* buf, size_t cap) {
+    if (!ctx || !buf || cap==0) return;
+    strncpy(buf, ctx->window.filter, cap-1);
+    buf[cap-1]='\0';
+}
+
+static void SyncFilterToActiveState(FlintContext* ctx) {
+    WindowManager* wm = WindowManager_Get();
+    if (!wm) return;
+    Popup* top = WindowManager_GetTopPopup(wm);
+    if (!top || !top->user_data) return;
+    if (top->type == POPUP_PROMPT) {
+        PromptState* s = (PromptState*)top->user_data;
+        strncpy(s->filter, ctx->window.filter, sizeof(s->filter)-1);
+        s->filter[sizeof(s->filter)-1]='\0';
+        s->cursor = ctx->window.filter_cursor;
+    } else if (top->type == POPUP_SIMPLE) {
+        SimplePromptState* s = (SimplePromptState*)top->user_data;
+        strncpy(s->user_input, ctx->window.filter, sizeof(s->user_input)-1);
+        s->user_input[sizeof(s->user_input)-1]='\0';
+        s->cursor = ctx->window.filter_cursor;
+    }
+}
+
+void Vim_SetText(FlintContext* ctx, const char* text) {
+    if (!ctx || !text) return;
+    strncpy(ctx->window.filter, text, sizeof(ctx->window.filter)-1);
+    ctx->window.filter[sizeof(ctx->window.filter)-1]='\0';
+    ctx->window.filter_cursor = (int)strlen(ctx->window.filter);
+    SyncFilterToActiveState(ctx);
+    if (ctx->prompt_callbacks.refresh) {
+        ListBoxInfo* lb = Vim_GetListBox(ctx);
+        ctx->prompt_callbacks.refresh(ctx->window.filter, ctx->window.hListBox, lb);
+    }
 #if defined(_WIN32)
-    ctx.hEdit = FlintContext_Get()->window.g_ActiveEditControl;
-    ctx.hListBox = FlintContext_Get()->window.hListBox;
-    if (WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) && IsWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd))) {
-        ctx.lb = (ListBoxInfo*)GetWindowLongPtrA(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), GWLP_USERDATA);
+    if (WH_TO_HWND(ctx->window.hEditControl)) {
+        SetWindowTextA(WH_TO_HWND(ctx->window.hEditControl), ctx->window.filter);
     }
-    ctx.state = NULL;
-    ctx.simple_state = NULL;
-    if (!ctx.lb) {
-        PromptState* prompt = GetActivePromptState();
-        if (prompt) {
-            ctx.lb = prompt->has_listbox ? &prompt->listbox : NULL;
-            ctx.state = prompt;
-        } else {
-            SimplePromptState* simple = GetActiveSimplePromptState();
-            ctx.simple_state = simple;
-            ctx.lb = NULL;
-        }
-    }
-#else
-    WMEditPopupData* wm_edit = GetActiveEditPopupState();
-    if (wm_edit) {
-        VimContext ctx2 = {0};
-        ctx2.hListBox = FlintContext_Get()->window.hListBox;
-        ctx2.hEdit = FlintContext_Get()->window.g_ActiveEditControl;
-        return ctx2;
-    }
-    PromptState* prompt = GetActivePromptState();
-    if (prompt) {
-        ctx.state = prompt;
-        ctx.lb = prompt->has_listbox ? &prompt->listbox : NULL;
-        ctx.hListBox = FlintContext_Get()->window.hListBox;
-        ctx.hEdit = FlintContext_Get()->window.g_ActiveEditControl;
-    } else {
-        SimplePromptState* simple = GetActiveSimplePromptState();
-        if (simple) {
-            ctx.simple_state = simple;
-            ctx.lb = NULL;
-            ctx.hListBox = FlintContext_Get()->window.hListBox;
-            ctx.hEdit = FlintContext_Get()->window.g_ActiveEditControl;
-        } else {
-            ctx.lb = NULL;
-            ctx.hListBox = FlintContext_Get()->window.hListBox;
-            ctx.hEdit = FlintContext_Get()->window.g_ActiveEditControl;
-        }
+    if (WH_TO_HWND(ctx->window.g_ActiveEditControl)) {
+        SetWindowTextA(WH_TO_HWND(ctx->window.g_ActiveEditControl), ctx->window.filter);
     }
 #endif
-    return ctx;
 }
 
-VimContext Vim_FromState(PromptState* state) {
-    VimContext ctx = {0};
-    ctx.state = state;
-    if (state) {
-        ctx.lb = state->has_listbox ? &state->listbox : NULL;
-        ctx.hListBox = FlintContext_Get()->window.hListBox;
-        ctx.hEdit = FlintContext_Get()->window.g_ActiveEditControl;
+int Vim_GetCursor(FlintContext* ctx) {
+    if (!ctx) return 0;
+    int len = (int)strlen(ctx->window.filter);
+    if (ctx->window.filter_cursor <0) return 0;
+    if (ctx->window.filter_cursor > len) return len;
+    return ctx->window.filter_cursor;
+}
+
+void Vim_SetCursor(FlintContext* ctx, int pos) {
+    if (!ctx) return;
+    int len = (int)strlen(ctx->window.filter);
+    if (pos<0) pos=0;
+    if (pos>len) pos=len;
+    ctx->window.filter_cursor = pos;
+    SyncFilterToActiveState(ctx);
+#if defined(_WIN32)
+    HWND hEdit = WH_TO_HWND(ctx->window.hEditControl);
+    if (!hEdit) hEdit = WH_TO_HWND(ctx->window.g_ActiveEditControl);
+    if (hEdit) {
+        SendMessageA(hEdit, EM_SETSEL, (WPARAM)pos, (LPARAM)pos);
     }
-    return ctx;
+#endif
 }
-
-VimContext Vim_FromSimpleState(SimplePromptState* state) {
-    VimContext ctx = {0};
-    ctx.simple_state = state;
-    ctx.lb = NULL;
-    ctx.hListBox = FlintContext_Get()->window.hListBox;
-    ctx.hEdit = FlintContext_Get()->window.g_ActiveEditControl;
-    return ctx;
-}
-
-VimContext Vim_FromEditState(SimplePromptState* state) {
-    VimContext ctx = {0};
-    ctx.edit_state = state;
-    ctx.lb = NULL;
-    ctx.hListBox = FlintContext_Get()->window.hListBox;
-    ctx.hEdit = FlintContext_Get()->window.g_ActiveEditControl;
-    return ctx;
-}
-
-
-
-
 
 #if defined(_WIN32)
 static void CALLBACK SequenceTimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime) {
@@ -270,10 +151,8 @@ int SequenceTypedCount(void) {
 bool SequenceMatches(const char* pattern) {
     int seq_len = seq_state.len;
     int pat_len = strlen(pattern);
-
     if (seq_len != pat_len) return false;
     if (seq_len == 0) return false;
-
     for (int i = 0; i < seq_len; i++) {
         if (tolower((unsigned char)pattern[i]) != tolower((unsigned char)seq_state.keys[i])) {
             return false;
@@ -285,43 +164,67 @@ bool SequenceMatches(const char* pattern) {
 bool SequenceStartsWith(const char* pattern) {
     int seq_len = seq_state.len;
     int pat_len = strlen(pattern);
-
-    if (seq_len > pat_len) {
-        return false;
-    }
-    if (seq_len == 0) {
-        return false;
-    }
-
+    if (seq_len > pat_len) return false;
+    if (seq_len == 0) return false;
     for (int i = 0; i < seq_len; i++) {
         char pattern_char = tolower((unsigned char)pattern[i]);
         char seq_char = tolower((unsigned char)seq_state.keys[i]);
-        if (pattern_char != seq_char) {
-            return false;
-        }
+        if (pattern_char != seq_char) return false;
     }
     return true;
 }
 
 void SequenceStartTimer(void) {
 #if defined(_WIN32)
-    if (seq_state.timer_id != 0) {
-        KillTimer(NULL, seq_state.timer_id);
-    }
+    if (seq_state.timer_id != 0) KillTimer(NULL, seq_state.timer_id);
     seq_state.timer_id = SetTimer(NULL, 0, SEQUENCE_TIMEOUT_MS, SequenceTimerProc);
 #endif
 }
 
-bool SequenceIsWaiting(void) {
-    return seq_state.waiting;
-}
+bool SequenceIsWaiting(void) { return seq_state.waiting; }
+bool SequenceTimedOut(void) { return seq_state.timed_out; }
 
-bool SequenceTimedOut(void) {
-    return seq_state.timed_out;
-}
-
-void DeleteLastTypedChar(VimContext* ctx) {
+void DeleteLastTypedChar(FlintContext* ctx) {
     if (!ctx) return;
+    // Try to delete from active prompt state if it holds the typed char (for insert JK)
+    WindowManager* wm = WindowManager_Get();
+    Popup* top = wm ? WindowManager_GetTopPopup(wm) : NULL;
+    if (top && top->user_data && top->type == POPUP_PROMPT) {
+        PromptState* s = (PromptState*)top->user_data;
+        int len = (int)strlen(s->filter);
+        int cur = s->cursor;
+        if (cur > 0 && len > 0) {
+            int del = cur - 1;
+            memmove(s->filter + del, s->filter + del + 1, len - del);
+            s->cursor = del;
+            // sync to unified filter
+            strncpy(ctx->window.filter, s->filter, sizeof(ctx->window.filter)-1);
+            ctx->window.filter[sizeof(ctx->window.filter)-1]='\0';
+            ctx->window.filter_cursor = s->cursor;
+            if (ctx->prompt_callbacks.refresh) {
+                ListBoxInfo* lb = Vim_GetListBox(ctx);
+                ctx->prompt_callbacks.refresh(ctx->window.filter, ctx->window.hListBox, lb);
+            }
+#if defined(_WIN32)
+            if (WH_TO_HWND(ctx->window.hEditControl)) SetWindowTextA(WH_TO_HWND(ctx->window.hEditControl), ctx->window.filter);
+#endif
+            return;
+        }
+    }
+    if (top && top->user_data && top->type == POPUP_SIMPLE) {
+        SimplePromptState* s = (SimplePromptState*)top->user_data;
+        int len = (int)strlen(s->user_input);
+        int cur = s->cursor;
+        if (cur > 0 && len > 0) {
+            int del = cur - 1;
+            memmove(s->user_input + del, s->user_input + del + 1, len - del);
+            s->cursor = del;
+            strncpy(ctx->window.filter, s->user_input, sizeof(ctx->window.filter)-1);
+            ctx->window.filter[sizeof(ctx->window.filter)-1]='\0';
+            ctx->window.filter_cursor = s->cursor;
+            return;
+        }
+    }
     char text[512];
     Vim_GetText(ctx, text, sizeof(text));
     int len = (int)strlen(text);
@@ -329,6 +232,16 @@ void DeleteLastTypedChar(VimContext* ctx) {
     if (cursor_pos == 0 || len == 0) return;
     int delete_pos = cursor_pos - 1;
     memmove(&text[delete_pos], &text[delete_pos + 1], len - delete_pos);
-    Vim_SetText(ctx, text);
-    Vim_SetCursor(ctx, delete_pos);
+    strncpy(ctx->window.filter, text, sizeof(ctx->window.filter)-1);
+    ctx->window.filter[sizeof(ctx->window.filter)-1]='\0';
+    ctx->window.filter_cursor = delete_pos;
+    SyncFilterToActiveState(ctx);
+    if (ctx->prompt_callbacks.refresh) {
+        ListBoxInfo* lb = Vim_GetListBox(ctx);
+        ctx->prompt_callbacks.refresh(ctx->window.filter, ctx->window.hListBox, lb);
+    }
+#if defined(_WIN32)
+    if (WH_TO_HWND(ctx->window.hEditControl)) SetWindowTextA(WH_TO_HWND(ctx->window.hEditControl), ctx->window.filter);
+    if (WH_TO_HWND(ctx->window.g_ActiveEditControl)) SetWindowTextA(WH_TO_HWND(ctx->window.g_ActiveEditControl), ctx->window.filter);
+#endif
 }

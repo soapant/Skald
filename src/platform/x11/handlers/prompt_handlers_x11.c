@@ -94,10 +94,7 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
     }
     if (wParam == VK_UP) {
       if (ctrl_pressed) {
-        if (state) {
-          VimContext ctx = Vim_FromState(state);
-          SetCursorToStartOfText(&ctx);
-        }
+        SetCursorToStartOfText(FlintContext_Get());
         PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandlePromptKey");
         return true;
       }
@@ -121,10 +118,7 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
     }
     if (wParam == VK_DOWN) {
       if (ctrl_pressed) {
-        if (state) {
-          VimContext ctx = Vim_FromState(state);
-          SetCursorToEndOfText(&ctx);
-        }
+        SetCursorToEndOfText(FlintContext_Get());
         PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandlePromptKey");
         return true;
       }
@@ -141,18 +135,12 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
       return true;
     }
     if (wParam == VK_HOME) {
-      if (state) {
-        VimContext ctx = Vim_FromState(state);
-        SetCursorToStartOfText(&ctx);
-      }
+      SetCursorToStartOfText(FlintContext_Get());
       PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandlePromptKey");
       return true;
     }
     if (wParam == VK_END) {
-      if (state) {
-        VimContext ctx = Vim_FromState(state);
-        SetCursorToEndOfText(&ctx);
-      }
+      SetCursorToEndOfText(FlintContext_Get());
       PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandlePromptKey");
       return true;
     }
