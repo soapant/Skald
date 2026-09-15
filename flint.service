@@ -1,34 +1,26 @@
 [Unit]
 Description=Custom keyboard remapper
-# FIX: Was `After=multi-user.target` + WantedBy=multi-user.target as a SYSTEM service.
-# That runs as root before the graphical session, with no DISPLAY/WAYLAND_DISPLAY/XAUTHORITY/XDG_RUNTIME_DIR
-# and wrong WorkingDirectory. Result: `Authorization required` / `Failed to open X11 display`,
-# and hotkeys reading /dev/input as root cannot forward to the user's Wayland session.
-# This must be a USER service: ~/.config/systemd/user/flint.service
-After=graphical-session.target
-PartOf=graphical-session.target
+After=default.target graphical-session.target
 Wants=graphical-session.target
+PartOf=graphical-session.target
 
 [Service]
 Type=simple
 WorkingDirectory=/home/diggy/Programming/Projects/Flint
 ExecStart=/home/diggy/Programming/Projects/Flint/build/flint
-# Inherit Wayland/X11 env from user manager. Ensure after login you run:
-#   systemctl --user import-environment DISPLAY WAYLAND_DISPLAY XDG_RUNTIME_DIR XAUTHORITY
 PassEnvironment=DISPLAY WAYLAND_DISPLAY XDG_RUNTIME_DIR XAUTHORITY WAYLAND_DISPLAY
 Environment=XDG_RUNTIME_DIR=%t
 Environment=WAYLAND_DISPLAY=wayland-1
 Environment=DISPLAY=:0
-# Fallback for foot (Wayland-native, fails without WAYLAND_DISPLAY). Manager often has no WAYLAND_DISPLAY
-# until import-environment runs, so provide sane defaults. Foot itself ignores -e, other terms need it.
-Restart=on-failure
-RestartSec=2
+ExecStartPre=/bin/sh -c 'for i in 1 2 3 4 5 6 7 8 9 10; do [ -S /run/user/%U/wayland-1 ] || [ -S /tmp/.X11-unix/X0 ] || [ -S /run/user/%U/wayland-0 ] && break; sleep 0.5; done; exit 0'
+Restart=always
+RestartSec=3
+StartLimitIntervalSec=0
 KillMode=process
 TimeoutStopSec=5
 
 [Install]
 WantedBy=default.target
-WantedBy=graphical-session.target
 
 # NOTE: There must be exactly ONE copy of this unit installed.
 # If an OLD root-level unit also exists (/etc/systemd/system/flint.service),
