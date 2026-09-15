@@ -12,11 +12,10 @@ static void zoxide_edit(const char* selection, ListBoxInfo* lb) {
 }
 static bool zoxide_enter(const char* selection, ListBoxInfo* lb) {
     char* path = fl_get_zoxide_match((char*)selection);
-    if (path) {
-        fl_launch_terminal_at_path(path, NULL);
-        if (!UI_IsListBoxSelected(lb)) fl_append_unique_line(TerminalZoxideFilePath, selection);
-        free(path);
-    }
+    if (!path) return false;
+    fl_launch_terminal_at_path(path, NULL);
+    if (!UI_IsListBoxSelected(lb)) fl_append_unique_line(TerminalZoxideFilePath, selection);
+    free(path);
     return true;
 }
 static void TriggerZoxide(void) {
@@ -36,13 +35,12 @@ static void text_editor_refresh(const char* filter, WindowHandle hListBox, ListB
 }
 static bool text_editor_enter(const char* selection, ListBoxInfo* lb) {
     char* path = fl_get_zoxide_match((char*)selection);
-    if (path) {
-        char cmd_args[512];
-        snprintf(cmd_args, sizeof(cmd_args), "-e %s \"%s\"", UsedTextEditor, path);
-        fl_launch_terminal_at_path(path, cmd_args);
-        if (!UI_IsListBoxSelected(lb)) fl_append_unique_line(TextEditorZoxideFilePath, selection);
-        free(path);
-    }
+    if (!path) return false;
+    char cmd_args[512];
+    snprintf(cmd_args, sizeof(cmd_args), "-e %s \"%s\"", UsedTextEditor, path);
+    fl_launch_terminal_at_path(path, cmd_args);
+    if (!UI_IsListBoxSelected(lb)) fl_append_unique_line(TextEditorZoxideFilePath, selection);
+    free(path);
     return true;
 }
 static void text_editor_edit(const char* selection, ListBoxInfo* lb) {
@@ -67,13 +65,12 @@ static void yazi_refresh(const char* filter, WindowHandle hListBox, ListBoxInfo*
 }
 static bool yazi_enter(const char* selection, ListBoxInfo* lb) {
     char* path = fl_get_zoxide_match((char*)selection);
-    if (path) {
-        char cmd_args[512];
-        snprintf(cmd_args, sizeof(cmd_args), "-e yazi \"%s\"", path);
-        fl_launch_terminal_at_path(path, cmd_args);
-        if (!UI_IsListBoxSelected(lb)) fl_append_unique_line(YaziZoxideFilePath, selection);
-        free(path);
-    }
+    if (!path) return false;
+    char cmd_args[512];
+    snprintf(cmd_args, sizeof(cmd_args), "-e yazi \"%s\"", path);
+    fl_launch_terminal_at_path(path, cmd_args);
+    if (!UI_IsListBoxSelected(lb)) fl_append_unique_line(YaziZoxideFilePath, selection);
+    free(path);
     return true;
 }
 static void yazi_edit(const char* selection, ListBoxInfo* lb) { 
@@ -96,10 +93,11 @@ static void file_manager_refresh(const char* filter, WindowHandle hListBox, List
 }
 static bool file_manager_enter(const char* selection, ListBoxInfo* lb) {
     char* path = fl_get_zoxide_match((char*)selection);
+    if (!path) return false;
     if (fl_launch_file_manager_at_path(path,NULL)) {
         if (!UI_IsListBoxSelected(lb)) fl_append_unique_line(FileManagerZoxideFilePath, selection);
-        free(path);
     }
+    free(path);
     return true;
 }
 static void file_manager_edit(const char* selection, ListBoxInfo* lb) { 
