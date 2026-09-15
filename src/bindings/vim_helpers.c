@@ -9,7 +9,7 @@
 #include <windows.h>
 #endif
 
-void DeleteCharUnderCursor(VimContext* ctx) {
+void DeleteCharUnderCursor(FlintContext* ctx) {
     if (!ctx) return;
     char text[512];
     Vim_GetText(ctx, text, sizeof(text));
@@ -18,36 +18,38 @@ void DeleteCharUnderCursor(VimContext* ctx) {
     if (pos < len) {
         memmove(&text[pos], &text[pos + 1], len - pos);
         Vim_SetText(ctx, text);
-        Vim_SetCursor(ctx, pos - 1);
+        Vim_SetCursor(ctx, pos);
     }
 }
 
-void GoToFirstListBoxItem(VimContext* ctx) {
-    if (!ctx || !ctx->lb) return;
-    UI_SetSelection(ctx->lb, ctx->hListBox, 0);
-    UI_LB_SetTopIndex(ctx->hListBox,0);
+void GoToFirstListBoxItem(FlintContext* ctx) {
+    ListBoxInfo* lb = Vim_GetListBox(ctx);
+    if (!lb) return;
+    UI_SetSelection(lb, ctx->window.hListBox, 0);
+    UI_LB_SetTopIndex(ctx->window.hListBox,0);
 }
 
-void GoToLastListBoxItem(VimContext* ctx) {
-    if (!ctx || !ctx->lb) return;
-    int lastIndex = ctx->lb->populated_count - 1;
-    UI_SetSelection(ctx->lb, ctx->hListBox, lastIndex);
-    UI_LB_SetCaretIndex(ctx->hListBox, lastIndex, false);
+void GoToLastListBoxItem(FlintContext* ctx) {
+    ListBoxInfo* lb = Vim_GetListBox(ctx);
+    if (!lb) return;
+    int lastIndex = lb->populated_count - 1;
+    UI_SetSelection(lb, ctx->window.hListBox, lastIndex);
+    UI_LB_SetCaretIndex(ctx->window.hListBox, lastIndex, false);
 }
 
-void SetCursorToStartOfText(VimContext* ctx) {
+void SetCursorToStartOfText(FlintContext* ctx) {
     if (!ctx) return;
 #if defined(_WIN32)
-    SetFocus(WH_TO_HWND(ctx->hEdit));
+    SetFocus(WH_TO_HWND(ctx->window.g_ActiveEditControl));
 #endif
     Vim_SetCursor(ctx, 0);
 }
 
-void SetCursorToEndOfText(VimContext* ctx) {
+void SetCursorToEndOfText(FlintContext* ctx) {
     if (!ctx) return;
 #if defined(_WIN32)
-    SetFocus(WH_TO_HWND(ctx->hEdit));
-    int len = GetWindowTextLengthA(WH_TO_HWND(ctx->hEdit));
+    SetFocus(WH_TO_HWND(ctx->window.g_ActiveEditControl));
+    int len = (int)strlen(ctx->window.filter);
     Vim_SetCursor(ctx, len);
     return;
 #endif
@@ -56,7 +58,7 @@ void SetCursorToEndOfText(VimContext* ctx) {
     Vim_SetCursor(ctx, (int)strlen(text));
 }
 
-void DeleteInsideDelimiter(VimContext* ctx, char open_char, char close_char, bool keep_mode) {
+void DeleteInsideDelimiter(FlintContext* ctx, char open_char, char close_char, bool keep_mode) {
     if (!ctx) return;
     char text[512];
     Vim_GetText(ctx, text, sizeof(text));
@@ -113,7 +115,7 @@ void DeleteInsideDelimiter(VimContext* ctx, char open_char, char close_char, boo
     if (keep_mode) SetMode(MODE_INSERT); else SetMode(MODE_NORMAL);
 }
 
-void DeleteInnerWord(VimContext* ctx, bool keep_mode) {
+void DeleteInnerWord(FlintContext* ctx, bool keep_mode) {
     if (!ctx) return;
     char text[512];
     Vim_GetText(ctx, text, sizeof(text));

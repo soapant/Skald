@@ -710,7 +710,6 @@ char* Platform_QueryZoxidePath(const char* query) {
         char buffer[256];
         snprintf(buffer, sizeof(buffer), "Query {%s} Doesnt Have A Zoxide Path", query);
         SubjectiveMessageDisplay(buffer, 140, TimeOutForMessages, COLOR_ERROR);
-
         PROFILE_END_VAR(timer, "platform_x11:Platform_QueryZoxidePath");
         return NULL;
     }

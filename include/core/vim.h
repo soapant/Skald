@@ -1,6 +1,7 @@
 #ifndef VIM_H
 #define VIM_H
 #include "core/types.h"
+#include "core/context.h"
 #include <stddef.h>
 #include <stdbool.h>
 
@@ -14,19 +15,14 @@ typedef struct {
     ListBoxInfo* lb;
     WindowHandle hListBox;
     WindowHandle hEdit;
-    PromptState* state;
-    SimplePromptState* simple_state;
-    SimplePromptState* edit_state;
 } VimContext;
 
-void Vim_GetText(VimContext* ctx, char* buf, size_t cap);
-void Vim_SetText(VimContext* ctx, const char* text);
-int Vim_GetCursor(VimContext* ctx);
-void Vim_SetCursor(VimContext* ctx, int pos);
+void Vim_GetText(FlintContext* ctx, char* buf, size_t cap);
+void Vim_SetText(FlintContext* ctx, const char* text);
+int Vim_GetCursor(FlintContext* ctx);
+void Vim_SetCursor(FlintContext* ctx, int pos);
 VimContext Vim_FromGlobals(void);
-VimContext Vim_FromState(PromptState* state);
-VimContext Vim_FromSimpleState(SimplePromptState* state);
-VimContext Vim_FromEditState(SimplePromptState* state);
+ListBoxInfo* Vim_GetListBox(FlintContext* ctx);
 
 
 void SequenceAddKey(char key, bool was_typed);
@@ -39,6 +35,6 @@ void SequenceStartTimer(void);
 bool SequenceIsWaiting(void);
 bool SequenceTimedOut(void);
 
-void DeleteLastTypedChar(VimContext* ctx);
+void DeleteLastTypedChar(FlintContext* ctx);
 
 #endif

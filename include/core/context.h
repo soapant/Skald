@@ -36,6 +36,8 @@ typedef struct {
     EditPopupData* g_EditData;
     bool selection_complete;
     char output_buffer[256];
+    char filter[1024];
+    int filter_cursor;
     char* current_feature;
     const char* title;
     int last_index;
