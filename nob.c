@@ -36,12 +36,7 @@ static bool collect_source(Nob_Walk_Entry entry) {
             bool is_feature = false;
             if (nob_sv_starts_with(path, nob_sv_from_cstr("src/features/")) ||
                 nob_sv_starts_with(path, nob_sv_from_cstr("src\\features\\"))) {
-                // keep notification_getter in main (directly referenced by main.c)
-                if (nob_sv_ends_with_cstr(path, "notification_getter.c")) {
-                    is_feature = false;
-                } else {
                     is_feature = true;
-                }
             }
             if (is_feature) {
                 nob_da_append(&feature_sources, strdup(path.data));
@@ -347,7 +342,6 @@ int main(int argc, char** argv) {
         nob_needs_rebuild(output, (const char**)to_build.items, to_build.count) != 0;
     if (!needs_link) {
         nob_log(NOB_INFO, "No changes, skipping link");
-        // still ensure stale features are built (parallel)
         {
             Nob_Procs fprocs = {0};
             size_t _fmax = (size_t)nob_nprocs();
@@ -377,7 +371,6 @@ int main(int argc, char** argv) {
             }
             if (!nob_procs_wait_and_reset(&fprocs)) fok = false;
             if (!fok) return 1;
-            // log built features (best effort)
             for (size_t i = 0; i < feature_sources.count; ++i) {
                 const char* so = feature_so_path(feature_sources.items[i]);
                 if (nob_file_exists(so)) nob_log(NOB_INFO, "Built feature %s", so);
@@ -412,7 +405,6 @@ int main(int argc, char** argv) {
         nob_log(NOB_ERROR, "Failed to link %s", output);
         return 1;
     }
-    // build features after main link (Windows needs import lib) - parallel
     {
         Nob_Procs fprocs = {0};
         size_t _fmax2 = (size_t)nob_nprocs();

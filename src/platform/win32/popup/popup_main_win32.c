@@ -55,10 +55,7 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
       FillRect(memDC, &rc, br);
       DeleteObject(br);
     }
-    // let edit draw text to memDC
     SendMessage(hwnd, WM_PRINTCLIENT, (WPARAM)memDC, PRF_CLIENT);
-    // fallback if WM_PRINTCLIENT didn't draw (some edit versions)
-    // we also try DefSubclassProc with HDC param replaced? keep as SendMessage
     BitBlt(hdc, ps.rcPaint.left, ps.rcPaint.top, ps.rcPaint.right - ps.rcPaint.left, ps.rcPaint.bottom - ps.rcPaint.top, memDC, ps.rcPaint.left, ps.rcPaint.top, SRCCOPY);
     SelectObject(memDC, oldBmp);
     DeleteObject(memBmp);

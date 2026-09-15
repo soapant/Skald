@@ -29,7 +29,6 @@ static int g_virt_vk[256] = {0};
 
 static int vk_from_token(const char* tok) {
     if (!tok || !tok[0]) return 0;
-    // single char
     if (strlen(tok) == 1) {
         char c = tok[0];
         if ((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')) return toupper((unsigned char)c);
@@ -73,7 +72,6 @@ static int vk_from_token(const char* tok) {
     if (strcasecmp(tok, "F10") == 0) return VK_F1+9;
     if (strcasecmp(tok, "F11") == 0) return VK_F1+10;
     if (strcasecmp(tok, "F12") == 0) return VK_F1+11;
-    // Left/Right specific already handled outside, fallback single char
     if (strlen(tok) == 1) return toupper((unsigned char)tok[0]);
     return 0;
 }
@@ -189,10 +187,6 @@ static bool binding_active(RemapBinding* b) {
     return true;
 }
 
-void remap_sync(void) {
-    // Deprecated - now handled via transition emits in remap_handle_vk
-}
-
 bool remap_handle_vk(int vk_code, int value) {
     if (vk_code<0 || vk_code>=256) return false;
     if (value==2) return false;
@@ -205,19 +199,13 @@ bool remap_handle_vk(int vk_code, int value) {
     bool active_after[64]={0};
     for (int i=0;i<g_remap_count;i++) active_after[i]=binding_active(&g_remaps[i]);
 
-    // handle transitions: emit releases/presses for src/dst
     for (int i=0;i<g_remap_count;i++) {
         RemapBinding* b=&g_remaps[i];
         bool before = active_before[i];
         bool after = active_after[i];
         if (!before && after) {
-            // became active -> suppress src, emit dst
-            // suppress src specific
             for (int k=0;k<b->src_vk_count;k++) {
                 int sv = b->src_vks[k];
-                // src was physically down, but we need to ensure app doesn't see it;
-                // if this sv is the trigger vk itself, we haven't emitted it via original path (swallowed), so no need to release;
-                // for other src members that were already emitted via original path (mods pressed earlier), we need to release them now
                 if (sv != vk_code) {
                     Platform_EmitKey(sv, 0);
                     g_virt_vk[sv]=0;
@@ -239,20 +227,17 @@ bool remap_handle_vk(int vk_code, int value) {
                 if (g_phys_vk[VK_LWIN]) { Platform_EmitKey(VK_LWIN, 0); g_virt_vk[VK_LWIN]=0; }
                 if (g_phys_vk[VK_RWIN]) { Platform_EmitKey(VK_RWIN, 0); g_virt_vk[VK_RWIN]=0; }
             }
-            // emit dst mods first then vk
             if (b->dst_mods & HOTKEY_MOD_CTRL) { Platform_EmitKey(VK_LCONTROL, 1); g_virt_vk[VK_LCONTROL]=1; }
             if (b->dst_mods & HOTKEY_MOD_SHIFT) { Platform_EmitKey(VK_LSHIFT, 1); g_virt_vk[VK_LSHIFT]=1; }
             if (b->dst_mods & HOTKEY_MOD_ALT) { Platform_EmitKey(VK_LMENU, 1); g_virt_vk[VK_LMENU]=1; }
             if (b->dst_mods & HOTKEY_MOD_SUPER) { Platform_EmitKey(VK_LWIN, 1); g_virt_vk[VK_LWIN]=1; }
             if (b->dst_vk) { Platform_EmitKey(b->dst_vk, 1); g_virt_vk[b->dst_vk]=1; }
         } else if (before && !after) {
-            // became inactive -> release dst, re-press src if still phys held
             if (b->dst_vk) { Platform_EmitKey(b->dst_vk, 0); g_virt_vk[b->dst_vk]=0; }
             if (b->dst_mods & HOTKEY_MOD_CTRL) { Platform_EmitKey(VK_LCONTROL, 0); g_virt_vk[VK_LCONTROL]=0; }
             if (b->dst_mods & HOTKEY_MOD_SHIFT) { Platform_EmitKey(VK_LSHIFT, 0); g_virt_vk[VK_LSHIFT]=0; }
             if (b->dst_mods & HOTKEY_MOD_ALT) { Platform_EmitKey(VK_LMENU, 0); g_virt_vk[VK_LMENU]=0; }
             if (b->dst_mods & HOTKEY_MOD_SUPER) { Platform_EmitKey(VK_LWIN, 0); g_virt_vk[VK_LWIN]=0; }
-            // re-press src mods that are still physically held (they were suppressed)
             if (b->src_mods & HOTKEY_MOD_CTRL) {
                 if (g_phys_vk[VK_LCONTROL]) { Platform_EmitKey(VK_LCONTROL, 1); g_virt_vk[VK_LCONTROL]=1; }
                 if (g_phys_vk[VK_RCONTROL]) { Platform_EmitKey(VK_RCONTROL, 1); g_virt_vk[VK_RCONTROL]=1; }
@@ -269,8 +254,6 @@ bool remap_handle_vk(int vk_code, int value) {
                 if (g_phys_vk[VK_LWIN]) { Platform_EmitKey(VK_LWIN, 1); g_virt_vk[VK_LWIN]=1; }
                 if (g_phys_vk[VK_RWIN]) { Platform_EmitKey(VK_RWIN, 1); g_virt_vk[VK_RWIN]=1; }
             }
-            // note: specific src vks that are still phys held will be re-emitted via original path? They were swallowed while active, so need to re-emit if still held
-            // But they will naturally be re-emitted when next sync? Simpler to not re-emit specifics here, as they will be handled on next phys update if needed
         }
     }
 
