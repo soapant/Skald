@@ -113,9 +113,45 @@ static bool parse_mods_and_vks(const char* str, int* out_mods, int* out_vks, int
         } else if (strcasecmp(token, "RightSuper")==0 || strcasecmp(token, "RWin")==0 || strcasecmp(token, "RSuper")==0) {
             out_vks[(*out_count)++] = VK_RWIN;
         } else {
-            int vk = vk_from_token(token);
+            int vk = 0;
+            bool need_shift = false;
+            if (strlen(token) == 1) {
+                char c = token[0];
+                switch (c) {
+                    case '!': vk = '1'; need_shift = true; break;
+                    case '@': vk = '2'; need_shift = true; break;
+                    case '#': vk = '3'; need_shift = true; break;
+                    case '$': vk = '4'; need_shift = true; break;
+                    case '%': vk = '5'; need_shift = true; break;
+                    case '^': vk = '6'; need_shift = true; break;
+                    case '&': vk = '7'; need_shift = true; break;
+                    case '*': vk = '8'; need_shift = true; break;
+                    case '(': vk = '9'; need_shift = true; break;
+                    case ')': vk = '0'; need_shift = true; break;
+                    case '_': vk = VK_OEM_MINUS; need_shift = true; break;
+                    case '+': vk = VK_OEM_PLUS; need_shift = true; break;
+                    case '~': vk = VK_OEM_3; need_shift = true; break;
+                    case '`': vk = VK_OEM_3; need_shift = false; break;
+                    case '{': vk = VK_OEM_4; need_shift = true; break;
+                    case '}': vk = VK_OEM_6; need_shift = true; break;
+                    case ':': vk = VK_OEM_1; need_shift = true; break;
+                    case '"': vk = VK_OEM_7; need_shift = true; break;
+                    case '<': vk = VK_OEM_COMMA; need_shift = true; break;
+                    case '>': vk = VK_OEM_PERIOD; need_shift = true; break;
+                    case '?': vk = VK_OEM_2; need_shift = true; break;
+                    case '|': vk = 0xDC; need_shift = true; break;
+                    case '\\': vk = 0xDC; need_shift = false; break;
+                    default: vk = 0; break;
+                }
+            }
             if (vk) {
+                if (need_shift) *out_mods |= HOTKEY_MOD_SHIFT;
                 if (*out_count < MAX_SRC_VKS) out_vks[(*out_count)++] = vk;
+            } else {
+                vk = vk_from_token(token);
+                if (vk) {
+                    if (*out_count < MAX_SRC_VKS) out_vks[(*out_count)++] = vk;
+                }
             }
         }
         token = strtok(NULL, "+");
