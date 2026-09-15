@@ -34,13 +34,23 @@ bool hotkey_register_internal(HotkeyBinding binding) {
 
 bool hotkey_process(int vk_code, int modifiers) {
     char* title = Platform_GetActiveWindowTitle();
+    int eff_modifiers = modifiers;
+    if (vk_code == VK_LSHIFT || vk_code == VK_RSHIFT || vk_code == VK_SHIFT) eff_modifiers &= ~HOTKEY_MOD_SHIFT;
+    else if (vk_code == VK_LCONTROL || vk_code == VK_RCONTROL || vk_code == VK_CONTROL) eff_modifiers &= ~HOTKEY_MOD_CTRL;
+    else if (vk_code == VK_LMENU || vk_code == VK_RMENU || vk_code == VK_MENU) eff_modifiers &= ~HOTKEY_MOD_ALT;
+    else if (vk_code == VK_LWIN || vk_code == VK_RWIN) eff_modifiers &= ~HOTKEY_MOD_SUPER;
     for (int i = 0; i < g_hotkey_count; i++) {
         HotkeyBinding* b = &g_hotkeys[i];
         
         if (b->vk_code != vk_code) {
             continue;
         }
-        if (b->modifiers != modifiers) {
+        int b_eff = b->modifiers;
+        if (b->vk_code == VK_LSHIFT || b->vk_code == VK_RSHIFT || b->vk_code == VK_SHIFT) b_eff &= ~HOTKEY_MOD_SHIFT;
+        else if (b->vk_code == VK_LCONTROL || b->vk_code == VK_RCONTROL || b->vk_code == VK_CONTROL) b_eff &= ~HOTKEY_MOD_CTRL;
+        else if (b->vk_code == VK_LMENU || b->vk_code == VK_RMENU || b->vk_code == VK_MENU) b_eff &= ~HOTKEY_MOD_ALT;
+        else if (b->vk_code == VK_LWIN || b->vk_code == VK_RWIN) b_eff &= ~HOTKEY_MOD_SUPER;
+        if (b_eff != eff_modifiers) {
             continue;
         }
 
