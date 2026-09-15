@@ -20,9 +20,15 @@ void HandleShowCurrentBatteryPercentage(void) {
 void HandleSettingsTrigger(void) {
     Platform_SettingsPopUp();
 }
+
+void HandleMediaPlayPause(void) {
+  fl_toggle_play_pause();
+}
+
 FLINT_FEATURE_INIT {
     fl_register_hotkey("Alt+Shift+K", HandleKillMyProgram);
     fl_register_hotkey("Alt+Shift+T", HandleShowCurrentTime);
     fl_register_hotkey("Alt+D", HandleSettingsTrigger);
     fl_register_hotkey("Alt+Shift+N", HandleShowCurrentBatteryPercentage);
+    fl_register_hotkey("Ctrl+N",HandleMediaPlayPause);
 }

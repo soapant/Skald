@@ -8,7 +8,8 @@ FLINT_FEATURE_INIT {
     fl_register_remapping("Ctrl+Alt+S", "Down");
     fl_register_remapping("Ctrl+Alt+D", "Right");
 
-    fl_register_remapping("Ctrl+I", "Shift+Grave");
-    fl_register_remapping("Ctrl+U", "Shift+Backslash");
+    fl_register_remapping("Ctrl+I", "~");
+    fl_register_remapping("Ctrl+U", "|");
 
 }
+
