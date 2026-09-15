@@ -21,54 +21,61 @@
 #include <windows.h>
 #endif
 
-void HandleEnterNormal(VimContext* ctx) { 
+void HandleEnterNormal(FlintContext* ctx) { 
     (void)ctx;
     SetMode(MODE_NORMAL); 
 }
 
-void HandleEnterInsertOut(VimContext* ctx) { 
+void HandleEnterInsertOut(FlintContext* ctx) { 
     if (!ctx) return;
     int pos = Vim_GetCursor(ctx);
     Vim_SetCursor(ctx, pos + 1);
     SetMode(MODE_INSERT); 
 }
 
-void HandleEnterInsertIn(VimContext* ctx) { 
+void HandleEnterInsertIn(FlintContext* ctx) { 
     if (!ctx) return;
     int pos = Vim_GetCursor(ctx);
     Vim_SetCursor(ctx, pos);
     SetMode(MODE_INSERT); 
 }
 
-void HandleEnterVisual(VimContext* ctx) { 
+void HandleEnterVisual(FlintContext* ctx) { 
     (void)ctx;
     SetMode(MODE_VISUAL); 
 }
 
-void HandleMoveLeft(VimContext* ctx) {
+void HandleMoveLeft(FlintContext* ctx) {
     if (!ctx) return;
     int pos = Vim_GetCursor(ctx);
     if (pos > 0) Vim_SetCursor(ctx, pos - 1);
 }
 
-void HandleEnter(VimContext* ctx) {
+void HandleEnter(FlintContext* ctx) {
     if (!ctx) return;
-    if (ctx->lb && UI_IsListBoxSelected(ctx->lb)) {
-        int pos = Vim_GetCursor(ctx);
-        Vim_SetCursor(ctx, pos + 1);
-    } else {
-        int pos = Vim_GetCursor(ctx);
-        char text[512];
-        Vim_GetText(ctx, text, sizeof(text));
-        int len = (int)strlen(text);
-        if (pos < len) Vim_SetCursor(ctx, pos + 1);
+    ListBoxInfo* lb = Vim_GetListBox(ctx);
+    if (lb && UI_IsListBoxSelected(lb)) {
+        const char* sel = lb->populated_cache[lb->selected_index];
+        if (ctx->prompt_callbacks.enter) {
+            bool should_close = ctx->prompt_callbacks.enter(sel, lb);
+            ctx->window.selection_complete = should_close;
+        } else {
+            ctx->window.selection_complete = true;
+        }
+        return;
     }
+    int pos = Vim_GetCursor(ctx);
+    char text[512];
+    Vim_GetText(ctx, text, sizeof(text));
+    int len = (int)strlen(text);
+    if (pos < len) Vim_SetCursor(ctx, pos + 1);
 }
-void HandleMoveUp(VimContext* ctx) {
-    if (!ctx || !ctx->lb) return;
-    UI_NavigateUp(ctx->lb, ctx->hListBox);
+void HandleMoveUp(FlintContext* ctx) {
+    ListBoxInfo* lb = Vim_GetListBox(ctx);
+    if (!ctx || !lb) return;
+    UI_NavigateUp(lb, ctx->window.hListBox);
 }
-void HandleMoveRight(VimContext* ctx) {
+void HandleMoveRight(FlintContext* ctx) {
     if (!ctx) return;
     int pos = Vim_GetCursor(ctx);
     char text[512];
@@ -77,70 +84,70 @@ void HandleMoveRight(VimContext* ctx) {
     if (pos < len) Vim_SetCursor(ctx, pos + 1);
 }
 
-void HandleMoveDown(VimContext* ctx) {
-    if (!ctx || !ctx->lb) return;
-    UI_NavigateDown(ctx->lb, ctx->hListBox);
+void HandleMoveDown(FlintContext* ctx) {
+    ListBoxInfo* lb = Vim_GetListBox(ctx);
+    if (!ctx || !lb) return;
+    UI_NavigateDown(lb, ctx->window.hListBox);
 }
 
-void HandlePersistentDelete(VimContext* ctx) {
-    if (!ctx || !ctx->lb) return;
-    if (!UI_IsListBoxSelected(ctx->lb)) return;
-    FlintContext* _c = FlintContext_Get();
-    if (_c->prompt_callbacks.ctrl_enter != NULL && ctx->lb) {
-        const char* txt = ctx->lb->populated_cache[ctx->lb->selected_index];
-        bool should_close = _c->prompt_callbacks.ctrl_enter(txt, ctx->lb);
-        _c->window.selection_complete = should_close;
+void HandlePersistentDelete(FlintContext* ctx) {
+    ListBoxInfo* lb = Vim_GetListBox(ctx);
+    if (!ctx || !lb) return;
+    if (!UI_IsListBoxSelected(lb)) return;
+    if (ctx->prompt_callbacks.ctrl_enter != NULL) {
+        const char* txt = lb->populated_cache[lb->selected_index];
+        bool should_close = ctx->prompt_callbacks.ctrl_enter(txt, lb);
+        ctx->window.selection_complete = should_close;
     }
 }
 
-void HandleDeleteCharInsert(VimContext* ctx) {
+void HandleDeleteCharInsert(FlintContext* ctx) {
     DeleteCharUnderCursor(ctx);
     HandleEnterInsertIn(ctx); 
 }
 
-void HandleDeleteCharNormal(VimContext* ctx) {
+void HandleDeleteCharNormal(FlintContext* ctx) {
     if (!ctx) return;
     DeleteCharUnderCursor(ctx);
 }
 
-void HandleDeleteLine(VimContext* ctx) {
+void HandleDeleteLine(FlintContext* ctx) {
     if (!ctx) return;
     Vim_SetText(ctx, "");
 }
 
-void HandleDeleteLineInsert(VimContext* ctx) {
+void HandleDeleteLineInsert(FlintContext* ctx) {
     if (!ctx) return;
     Vim_SetText(ctx, "");
     SetMode(MODE_INSERT);
 }
 
-void HandleMoveListboxStart(VimContext* ctx) {
+void HandleMoveListboxStart(FlintContext* ctx) {
     GoToFirstListBoxItem(ctx);
 }
-void HandleMoveListboxEnd(VimContext* ctx) {
+void HandleMoveListboxEnd(FlintContext* ctx) {
     GoToLastListBoxItem(ctx);
 }
-void HandleMoveLineEnd(VimContext* ctx) {
+void HandleMoveLineEnd(FlintContext* ctx) {
   SetCursorToEndOfText(ctx);
 }
-void HandleMoveLineStart(VimContext* ctx) {
+void HandleMoveLineStart(FlintContext* ctx) {
   SetCursorToStartOfText(ctx);
 }
 
-void HandleEnterInsertInStart(VimContext* ctx) {
+void HandleEnterInsertInStart(FlintContext* ctx) {
   SetCursorToStartOfText(ctx);
   HandleEnterInsertIn(ctx);
 }
 
-void HandleEnterInsertOutEnd(VimContext* ctx) {
+void HandleEnterInsertOutEnd(FlintContext* ctx) {
   SetCursorToEndOfText(ctx);
   HandleEnterInsertOut(ctx);
 }
-void HandleExitWindow(VimContext* ctx) {
+void HandleExitWindow(FlintContext* ctx) {
     (void)ctx;
     WindowManager* wm = WindowManager_Get();
     if (!wm) return;
-    
     Popup* top = WindowManager_GetTopPopup(wm);
     if (top && top->manager->popup_count > 1) {
         SetMode(MODE_NORMAL);
@@ -149,7 +156,7 @@ void HandleExitWindow(VimContext* ctx) {
         FlintContext_Get()->window.selection_complete = true;
     }
 }
-void HandleYankLine(VimContext* ctx) {
+void HandleYankLine(FlintContext* ctx) {
     if (!ctx) return;
     char textBuffer[512] = {0};
     Vim_GetText(ctx, textBuffer, sizeof(textBuffer));
@@ -159,24 +166,24 @@ void HandleYankLine(VimContext* ctx) {
     }
 }
 
-void HandleInsertControlEnter(VimContext* ctx) {
-  if (!ctx || !ctx->lb) return;
+void HandleInsertControlEnter(FlintContext* ctx) {
+  ListBoxInfo* lb = Vim_GetListBox(ctx);
+  if (!ctx || !lb) return;
   char text[256];
-  if (UI_IsListBoxSelected(ctx->lb) && ctx->lb) {
-    snprintf(text,sizeof(text),"%s",ctx->lb->populated_cache[ctx->lb->selected_index]);
+  if (UI_IsListBoxSelected(lb)) {
+    snprintf(text,sizeof(text),"%s",lb->populated_cache[lb->selected_index]);
   } else {
     Vim_GetText(ctx, text, sizeof(text));
   }
-  FlintContext* _c = FlintContext_Get();
-  if (_c->prompt_callbacks.ctrl_enter != NULL) {
-    bool should_close = _c->prompt_callbacks.ctrl_enter(text, ctx->lb);
-    _c->window.selection_complete = should_close;
+  if (ctx->prompt_callbacks.ctrl_enter != NULL) {
+    bool should_close = ctx->prompt_callbacks.ctrl_enter(text, lb);
+    ctx->window.selection_complete = should_close;
   } else {
-    _c->window.selection_complete = false;
+    ctx->window.selection_complete = false;
   }
 }
 
-void HandleMoveWordForward(VimContext* ctx) {
+void HandleMoveWordForward(FlintContext* ctx) {
     if (!ctx) return;
     char text[512];
     Vim_GetText(ctx, text, sizeof(text));
@@ -194,7 +201,7 @@ void HandleMoveWordForward(VimContext* ctx) {
     }
 }
 
-void HandleMoveWordBackward(VimContext* ctx) {
+void HandleMoveWordBackward(FlintContext* ctx) {
     if (!ctx) return;
     char text[512];
     Vim_GetText(ctx, text, sizeof(text));
@@ -218,62 +225,34 @@ void HandleMoveWordBackward(VimContext* ctx) {
       }
     }
 }
-void HandleDeleteSingleQuotesInsert(VimContext* ctx) {
-    DeleteInsideDelimiter(ctx, '\'', '\'', true);
-}
-void HandleDeleteSingleQuotesNormal(VimContext* ctx) {
-    DeleteInsideDelimiter(ctx, '\'', '\'', false);
-}
-
-void HandleDeleteQuotesInsert(VimContext* ctx) {
-    DeleteInsideDelimiter(ctx, '\"', '\"', true);
-}
-void HandleDeleteQuotesNormal(VimContext* ctx) {
-    DeleteInsideDelimiter(ctx, '\"', '\"', false);
-}
-
-void HandleDeleteBracketsInsert(VimContext* ctx) {
-    DeleteInsideDelimiter(ctx, '(', ')', true);
-}
-void HandleDeleteBracketsNormal(VimContext* ctx) {
-    DeleteInsideDelimiter(ctx, '(', ')', false);
-}
-
-void HandleDeleteCurlyBracketsInsert(VimContext* ctx) {
-    DeleteInsideDelimiter(ctx, '{', '}', true);
-}
-void HandleDeleteCurlyBracketsNormal(VimContext* ctx) {
-    DeleteInsideDelimiter(ctx, '{', '}', false);
-}
-
-void HandleDeleteSquareBracketsInsert(VimContext* ctx) {
-    DeleteInsideDelimiter(ctx, '[', ']', true);
-}
-void HandleDeleteSquareBracketsNormal(VimContext* ctx) {
-    DeleteInsideDelimiter(ctx, '[', ']', false);
-}
-void HandleDeleteWordInsert(VimContext* ctx) {
-    DeleteInnerWord(ctx, true);   
-}
-
-void HandleDeleteWordNormal(VimContext* ctx) {
-    DeleteInnerWord(ctx, false); 
-}
-void HandleSendEdit(VimContext* ctx) {
-    (void)ctx;
+void HandleDeleteSingleQuotesInsert(FlintContext* ctx) { DeleteInsideDelimiter(ctx, '\'', '\'', true); }
+void HandleDeleteSingleQuotesNormal(FlintContext* ctx) { DeleteInsideDelimiter(ctx, '\'', '\'', false); }
+void HandleDeleteQuotesInsert(FlintContext* ctx) { DeleteInsideDelimiter(ctx, '\"', '\"', true); }
+void HandleDeleteQuotesNormal(FlintContext* ctx) { DeleteInsideDelimiter(ctx, '\"', '\"', false); }
+void HandleDeleteBracketsInsert(FlintContext* ctx) { DeleteInsideDelimiter(ctx, '(', ')', true); }
+void HandleDeleteBracketsNormal(FlintContext* ctx) { DeleteInsideDelimiter(ctx, '(', ')', false); }
+void HandleDeleteCurlyBracketsInsert(FlintContext* ctx) { DeleteInsideDelimiter(ctx, '{', '}', true); }
+void HandleDeleteCurlyBracketsNormal(FlintContext* ctx) { DeleteInsideDelimiter(ctx, '{', '}', false); }
+void HandleDeleteSquareBracketsInsert(FlintContext* ctx) { DeleteInsideDelimiter(ctx, '[', ']', true); }
+void HandleDeleteSquareBracketsNormal(FlintContext* ctx) { DeleteInsideDelimiter(ctx, '[', ']', false); }
+void HandleDeleteWordInsert(FlintContext* ctx) { DeleteInnerWord(ctx, true); }
+void HandleDeleteWordNormal(FlintContext* ctx) { DeleteInnerWord(ctx, false); }
+void HandleSendEdit(FlintContext* ctx) {
 #if defined(_WIN32)
+    (void)ctx;
     UI_Edit_KeyDown(FlintContext_Get()->window.g_ActiveEditControl,EDIT_TEXT_KEY);
     UI_Edit_KeyUp(FlintContext_Get()->window.g_ActiveEditControl, EDIT_TEXT_KEY);
 #else
     FlintContext* _c = FlintContext_Get();
-    if (_c->prompt_callbacks.edit && ctx && ctx->lb && UI_IsListBoxSelected(ctx->lb)) {
-        const char* sel = ctx->lb->populated_cache[ctx->lb->selected_index];
-        _c->prompt_callbacks.edit(sel, ctx->lb);
+    ListBoxInfo* lb = Vim_GetListBox(_c);
+    if (_c->prompt_callbacks.edit && lb && UI_IsListBoxSelected(lb)) {
+        const char* sel = lb->populated_cache[lb->selected_index];
+        _c->prompt_callbacks.edit(sel, lb);
     }
 #endif
 }
 
-void HandleSendCopyShift(VimContext* ctx) {
+void HandleSendCopyShift(FlintContext* ctx) {
 #if defined(_WIN32)
     (void)ctx;
     UI_Edit_KeyUp(FlintContext_Get()->window.g_ActiveEditControl,VK_SHIFT);
@@ -281,14 +260,14 @@ void HandleSendCopyShift(VimContext* ctx) {
     UI_Edit_KeyUp(FlintContext_Get()->window.g_ActiveEditControl, COPY_SELECTION_KEY);
     UI_Edit_KeyDown(FlintContext_Get()->window.g_ActiveEditControl,VK_SHIFT);
 #else
-    if (!ctx || !ctx->lb) return;
-    const char* sel = UI_IsListBoxSelected(ctx->lb) ? ctx->lb->populated_cache[ctx->lb->selected_index] : "";
-    FlintContext* _c = FlintContext_Get();
-    if (_c->prompt_callbacks.copy) _c->prompt_callbacks.copy(sel, ctx->lb->selected_index, 0);
+    ListBoxInfo* lb = Vim_GetListBox(ctx);
+    if (!lb) return;
+    const char* sel = UI_IsListBoxSelected(lb) ? lb->populated_cache[lb->selected_index] : "";
+    if (ctx->prompt_callbacks.copy) ctx->prompt_callbacks.copy(sel, lb->selected_index, 0);
     else Platform_CopyToClipboard(sel);
 #endif
 }
-void HandleSendCopyControl(VimContext* ctx) {
+void HandleSendCopyControl(FlintContext* ctx) {
 #if defined(_WIN32)
     (void)ctx;
     UI_Edit_KeyUp(FlintContext_Get()->window.g_ActiveEditControl,VK_CONTROL);
@@ -296,78 +275,82 @@ void HandleSendCopyControl(VimContext* ctx) {
     UI_Edit_KeyUp(FlintContext_Get()->window.g_ActiveEditControl, COPY_SELECTION_KEY);
     UI_Edit_KeyDown(FlintContext_Get()->window.g_ActiveEditControl,VK_CONTROL);
 #else
-    if (!ctx || !ctx->lb) return;
-    const char* sel = UI_IsListBoxSelected(ctx->lb) ? ctx->lb->populated_cache[ctx->lb->selected_index] : "";
-    FlintContext* _c = FlintContext_Get();
-    if (_c->prompt_callbacks.copy) _c->prompt_callbacks.copy(sel, ctx->lb->selected_index, 1);
+    ListBoxInfo* lb = Vim_GetListBox(ctx);
+    if (!lb) return;
+    const char* sel = UI_IsListBoxSelected(lb) ? lb->populated_cache[lb->selected_index] : "";
+    if (ctx->prompt_callbacks.copy) ctx->prompt_callbacks.copy(sel, lb->selected_index, 1);
     else Platform_CopyToClipboard(sel);
 #endif
 }
-void HandleCopyToSearch(VimContext* ctx) {
+void HandleCopyToSearch(FlintContext* ctx) {
   if (!ctx) return;
-  if (ctx->lb && UI_IsListBoxSelected(ctx->lb)) {
-    const char* text = ctx->lb->populated_cache[ctx->lb->selected_index];
+  ListBoxInfo* lb = Vim_GetListBox(ctx);
+  if (lb && UI_IsListBoxSelected(lb)) {
+    const char* text = lb->populated_cache[lb->selected_index];
     Vim_SetText(ctx, text);
     Vim_SetCursor(ctx, (int)strlen(text));
   }
 }
-void HandleToggleHistory(VimContext* ctx) {
-  if (!ctx || !ctx->lb) return;
-  if (UI_IsListBoxSelected(ctx->lb)) {
-    UI_SetSelection(ctx->lb, ctx->hListBox, -1);
+void HandleToggleHistory(FlintContext* ctx) {
+  ListBoxInfo* lb = Vim_GetListBox(ctx);
+  if (!ctx || !lb) return;
+  if (UI_IsListBoxSelected(lb)) {
+    UI_SetSelection(lb, ctx->window.hListBox, -1);
   }
-  GetFromHistory(ctx->lb);
+  GetFromHistory(lb);
 }
 
-void HandleShowFullText(VimContext* ctx) {
+void HandleShowFullText(FlintContext* ctx) {
   if (FullTextNeedsKeyPress) {
-      if (ctx && ctx->lb && UI_IsListBoxSelected(ctx->lb)) {
-        SubjectiveMessageDisplay(ctx->lb->populated_cache[ctx->lb->selected_index], 140, 6969,COLOR_TEXT);
+      ListBoxInfo* lb = Vim_GetListBox(ctx);
+      if (lb && UI_IsListBoxSelected(lb)) {
+        SubjectiveMessageDisplay(lb->populated_cache[lb->selected_index], 140, 6969,COLOR_TEXT);
       }
   }
 }
 
 void SearchTextForward(int key) {
-  VimContext ctx = Vim_FromGlobals();
+  FlintContext* ctx = FlintContext_Get();
   char text[512];
-  Vim_GetText(&ctx, text, sizeof(text));
-  int cursor = Vim_GetCursor(&ctx);
+  Vim_GetText(ctx, text, sizeof(text));
+  int cursor = Vim_GetCursor(ctx);
   for (int i = 0; i < (int)strlen(text);i++) {
     if (tolower((unsigned char)text[i]) == tolower((unsigned char)(char)key)) {
       if (i <= cursor ) continue;
-      Vim_SetCursor(&ctx,i);
+      Vim_SetCursor(ctx,i);
       return;
     }
   }
 }
 void SearchTextBackward(int key) {
-  VimContext ctx = Vim_FromGlobals();
+  FlintContext* ctx = FlintContext_Get();
   char text[512];
-  Vim_GetText(&ctx, text, sizeof(text));
-  int cursor = Vim_GetCursor(&ctx);
+  Vim_GetText(ctx, text, sizeof(text));
+  int cursor = Vim_GetCursor(ctx);
   for (int i = 0; i < (int)strlen(text);i++) {
     if (tolower((unsigned char)text[i]) == tolower((unsigned char)(char)key)) {
       if (i >= cursor ) continue;
-      Vim_SetCursor(&ctx,i);
+      Vim_SetCursor(ctx,i);
       return;
     }
   }
 }
 
-void HandleSearchTextForward(VimContext* ctx) {
-  (void)ctx;
-  if (ctx && ctx->lb && UI_IsListBoxSelected(ctx->lb)) return;
+void HandleSearchTextForward(FlintContext* ctx) {
+  ListBoxInfo* lb = Vim_GetListBox(ctx);
+  if (lb && UI_IsListBoxSelected(lb)) return;
   Platform_WaitForKeypressAsync(SearchTextForward);
 }
 
-void HandleSearchTextBackward(VimContext* ctx) {
-  (void)ctx;
-  if (ctx && ctx->lb && UI_IsListBoxSelected(ctx->lb)) return;
+void HandleSearchTextBackward(FlintContext* ctx) {
+  ListBoxInfo* lb = Vim_GetListBox(ctx);
+  if (lb && UI_IsListBoxSelected(lb)) return;
   Platform_WaitForKeypressAsync(SearchTextBackward);
 }
-void HandleDeleteTillEnd(VimContext* ctx) {
+void HandleDeleteTillEnd(FlintContext* ctx) {
   if (!ctx) return;
-  if (ctx->lb && UI_IsListBoxSelected(ctx->lb)) return;
+  ListBoxInfo* lb = Vim_GetListBox(ctx);
+  if (lb && UI_IsListBoxSelected(lb)) return;
   char text[512];
   Vim_GetText(ctx, text, sizeof(text));
   int cursor = Vim_GetCursor(ctx);
@@ -377,23 +360,26 @@ void HandleDeleteTillEnd(VimContext* ctx) {
   Vim_SetText(ctx, text);
   Vim_SetCursor(ctx, cursor);
 }
-void HandlePageUp(VimContext* ctx) {
-  if (!ctx || !ctx->lb) return;
-  int current_sel = ctx->lb->selected_index;
+void HandlePageUp(FlintContext* ctx) {
+  ListBoxInfo* lb = Vim_GetListBox(ctx);
+  if (!ctx || !lb) return;
+  int current_sel = lb->selected_index;
   int wanted_sel = current_sel - PageUpDownLen;
   if (wanted_sel <= 0) wanted_sel = 0;
-  UI_SetSelection(ctx->lb, ctx->hListBox, wanted_sel);
-  UI_LB_SetTopIndex(ctx->hListBox,wanted_sel);
+  UI_SetSelection(lb, ctx->window.hListBox, wanted_sel);
+  UI_LB_SetTopIndex(ctx->window.hListBox,wanted_sel);
 }
-void HandlePageDown(VimContext* ctx) {
-  if (!ctx || !ctx->lb) return;
-  int current_sel = ctx->lb->selected_index;
+void HandlePageDown(FlintContext* ctx) {
+  ListBoxInfo* lb = Vim_GetListBox(ctx);
+  if (!ctx || !lb) return;
+  int current_sel = lb->selected_index;
   int wanted_sel = current_sel + PageUpDownLen;
-  if (wanted_sel >= ctx->lb->total_matches) wanted_sel = ctx->lb->total_matches;
-  UI_SetSelection(ctx->lb, ctx->hListBox, wanted_sel - 1);
-  UI_LB_SetTopIndex(ctx->hListBox,current_sel);
+  if (wanted_sel >= lb->total_matches) wanted_sel = lb->total_matches;
+  UI_SetSelection(lb, ctx->window.hListBox, wanted_sel - 1);
+  UI_LB_SetTopIndex(ctx->window.hListBox,current_sel);
 }
-void HandleNormalEdit(VimContext* ctx) {
-  if (!ctx || !ctx->lb) return;
-  UI_SetSelection(ctx->lb, ctx->hListBox, -1);
+void HandleNormalEdit(FlintContext* ctx) {
+  ListBoxInfo* lb = Vim_GetListBox(ctx);
+  if (!ctx || !lb) return;
+  UI_SetSelection(lb, ctx->window.hListBox, -1);
 }

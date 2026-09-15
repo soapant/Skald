@@ -155,16 +155,18 @@ bool CheckVimMotion(int pressed_vk, int modifiers, MotionAction* out_action, con
 }
 
 void ExecuteMotion(MotionAction action, const char* sequence, int typed_count) {
-    VimContext ctx = Vim_FromGlobals();
+    FlintContext* ctx = FlintContext_Get();
     if (typed_count > 0 && sequence != NULL && strlen(sequence) > 0 && IsInsertMode()) {
-        DeleteLastTypedChar(&ctx);
-        FlintContext* _c = FlintContext_Get();
-        if (ctx.state && _c && _c->prompt_callbacks.refresh) _c->prompt_callbacks.refresh(ctx.state->filter, ctx.hListBox, ctx.lb);
+        DeleteLastTypedChar(ctx);
+        if (ctx->prompt_callbacks.refresh) {
+            ListBoxInfo* lb = Vim_GetListBox(ctx);
+            ctx->prompt_callbacks.refresh(ctx->window.filter, ctx->window.hListBox, lb);
+        }
     }
     for (int i = 0; i < VIM_SEQUENCE_BINDING_COUNT; i++) {
         const SequenceBinding* b = &G_VIM_SEQUENCE_BINDINGS[i];
         if (b->action_id == action && b->handler != NULL) {
-            b->handler(&ctx);
+            b->handler(ctx);
             return;
         }
     }
@@ -172,16 +174,16 @@ void ExecuteMotion(MotionAction action, const char* sequence, int typed_count) {
     for (int i = 0; i < VIM_BINDING_COUNT; i++) {
         const MotionBinding* b = &G_VIM_BINDINGS[i];
         if (b->action_id == action && b->handler != NULL) {
-            b->handler(&ctx);
+            b->handler(ctx);
             return;
         }
     }
     
     if (action == MOTION_ENTER_NORMAL) {
-        HandleEnterNormal(&ctx);
+        HandleEnterNormal(ctx);
     } else if (action == MOTION_ENTER_INSERT_OUT) {
-        HandleEnterInsertOut(&ctx);
+        HandleEnterInsertOut(ctx);
     } else if (action == MOTION_ENTER_VISUAL) {
-        HandleEnterVisual(&ctx);
+        HandleEnterVisual(ctx);
     }
 }
