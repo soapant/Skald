@@ -14,6 +14,7 @@
 #include "core/window_manager.h"
 #include "core/flapi.h"
 #include "core/flapi_platform.h"
+#include "core/hashmap.h"
 #include "platform/draw.h"
 #include "core/hotkey_manager.h"
 #include "core/remap_manager.h"
@@ -242,47 +243,83 @@ bool fl_register_remapping(const char* src, const char* dst) {
 }
 
 typedef struct { char name[128]; void (*cb)(void); char icon[512]; } FeatureReg;
-static FeatureReg g_feature_regs[1000];
-static int g_feature_reg_count = 0;
+static HashMap* g_feature_map = NULL;
+static FeatureReg** g_feature_order = NULL;
+static int g_feature_order_count = 0;
+static int g_feature_order_cap = 0;
+
+static HashMap* ensure_feature_map(void) {
+    if (!g_feature_map) g_feature_map = HashMap_Create(32);
+    return g_feature_map;
+}
 
 void fl_register_feature(const char* name, void (*cb)(void)) {
     fl_register_feature_with_icon(name, cb, NULL);
 }
 void fl_register_feature_with_icon(const char* name, void (*cb)(void), const char* icon_path) {
     if (!name || !cb) return;
-    for (int i=0;i<g_feature_reg_count;i++) if (strcmp(g_feature_regs[i].name, name)==0) {
-        g_feature_regs[i].cb = cb;
-        if (icon_path) strncpy(g_feature_regs[i].icon, icon_path, sizeof(g_feature_regs[i].icon)-1);
-        else g_feature_regs[i].icon[0]='\0';
+    ensure_feature_map();
+    FeatureReg* existing = (FeatureReg*)HashMap_Get(g_feature_map, name);
+    if (existing) {
+        existing->cb = cb;
+        if (icon_path) {
+            strncpy(existing->icon, icon_path, sizeof(existing->icon)-1);
+            existing->icon[sizeof(existing->icon)-1] = '\0';
+        } else {
+            existing->icon[0] = '\0';
+        }
         return;
     }
-    if (g_feature_reg_count >= MaxFeatures) return;
-    strncpy(g_feature_regs[g_feature_reg_count].name, name, sizeof(g_feature_regs[g_feature_reg_count].name)-1);
-    g_feature_regs[g_feature_reg_count].cb = cb;
-    if (icon_path) strncpy(g_feature_regs[g_feature_reg_count].icon, icon_path, sizeof(g_feature_regs[g_feature_reg_count].icon)-1);
-    else g_feature_regs[g_feature_reg_count].icon[0]='\0';
-    g_feature_reg_count++;
+    FeatureReg* reg = (FeatureReg*)calloc(1, sizeof(FeatureReg));
+    if (!reg) return;
+    strncpy(reg->name, name, sizeof(reg->name)-1);
+    reg->name[sizeof(reg->name)-1] = '\0';
+    reg->cb = cb;
+    if (icon_path) {
+        strncpy(reg->icon, icon_path, sizeof(reg->icon)-1);
+        reg->icon[sizeof(reg->icon)-1] = '\0';
+    }
+    HashMap_Put(g_feature_map, reg->name, reg);
+    if (g_feature_order_count >= g_feature_order_cap) {
+        int new_cap = g_feature_order_cap ? g_feature_order_cap * 2 : 32;
+        FeatureReg** new_order = (FeatureReg**)realloc(g_feature_order, new_cap * sizeof(FeatureReg*));
+        if (!new_order) { HashMap_Remove(g_feature_map, reg->name); free(reg); return; }
+        g_feature_order = new_order;
+        g_feature_order_cap = new_cap;
+    }
+    g_feature_order[g_feature_order_count++] = reg;
 }
 
 int fl_get_feature_list(const char** out_names, void (**out_cbs)(void), int max) {
-    int n = g_feature_reg_count < max ? g_feature_reg_count : max;
+    int n = g_feature_order_count < max ? g_feature_order_count : max;
     for (int i=0;i<n;i++) {
-        if (out_names) out_names[i] = g_feature_regs[i].name;
-        if (out_cbs) out_cbs[i] = g_feature_regs[i].cb;
+        if (out_names) out_names[i] = g_feature_order[i]->name;
+        if (out_cbs) out_cbs[i] = g_feature_order[i]->cb;
     }
     return n;
 }
 
 int fl_get_feature_list_with_icons(const char** out_names, void (**out_cbs)(void), const char*** out_icons, int max) {
-    int n = g_feature_reg_count < max ? g_feature_reg_count : max;
-    if (n > 1000) n = 1000;
+    int n = g_feature_order_count < max ? g_feature_order_count : max;
     for (int i=0;i<n;i++) {
-        if (out_names) out_names[i] = g_feature_regs[i].name;
-        if (out_cbs) out_cbs[i] = g_feature_regs[i].cb;
+        if (out_names) out_names[i] = g_feature_order[i]->name;
+        if (out_cbs) out_cbs[i] = g_feature_order[i]->cb;
     }
-    static const char* icon_ptrs[1000];
-    for (int i=0;i<n;i++) icon_ptrs[i] = g_feature_regs[i].icon[0] ? g_feature_regs[i].icon : NULL;
-    if (out_icons) *out_icons = icon_ptrs;
+    static const char** icon_ptrs = NULL;
+    static int icon_ptrs_cap = 0;
+    if (n > icon_ptrs_cap) {
+        const char** new_ptrs = (const char**)realloc(icon_ptrs, n * sizeof(const char*));
+        if (new_ptrs) {
+            icon_ptrs = new_ptrs;
+            icon_ptrs_cap = n;
+        }
+    }
+    if (icon_ptrs) {
+        for (int i=0;i<n;i++) icon_ptrs[i] = g_feature_order[i]->icon[0] ? g_feature_order[i]->icon : NULL;
+        if (out_icons) *out_icons = icon_ptrs;
+    } else {
+        if (out_icons) *out_icons = NULL;
+    }
     return n;
 }
 char* fl_get_icon_path(const char* app_path_path) {

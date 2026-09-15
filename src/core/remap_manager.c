@@ -198,11 +198,32 @@ bool remap_register_internal(const char* src, const char* dst) {
 
 void remap_update_phys(int vk_code, int value) {
     if (vk_code<0 || vk_code>=256) return;
+    if (value==2) return;
     g_phys_vk[vk_code] = (value != 0);
 }
 
 void remap_reset(void) {
-    for (int i=0;i<256;i++) { g_phys_vk[i]=0; g_virt_vk[i]=0; }
+    for (int i=0;i<256;i++) {
+        if (g_virt_vk[i]) {
+            Platform_EmitKey(i, 0);
+            g_virt_vk[i]=0;
+        }
+        g_phys_vk[i]=0;
+    }
+}
+
+int remap_current_mods(void) {
+    int m=0;
+    if (g_phys_vk[VK_LCONTROL] || g_phys_vk[VK_RCONTROL] || g_phys_vk[VK_CONTROL]) m|=HOTKEY_MOD_CTRL;
+    if (g_phys_vk[VK_LMENU] || g_phys_vk[VK_RMENU] || g_phys_vk[VK_MENU]) m|=HOTKEY_MOD_ALT;
+    if (g_phys_vk[VK_LSHIFT] || g_phys_vk[VK_RSHIFT] || g_phys_vk[VK_SHIFT]) m|=HOTKEY_MOD_SHIFT;
+    if (g_phys_vk[VK_LWIN] || g_phys_vk[VK_RWIN]) m|=HOTKEY_MOD_SUPER;
+    return m;
+}
+
+bool remap_is_virt_held(int vk) {
+    if (vk<0||vk>=256) return false;
+    return g_virt_vk[vk];
 }
 
 static bool is_mod_held(int mod) {

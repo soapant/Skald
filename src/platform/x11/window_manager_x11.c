@@ -59,21 +59,16 @@ static int XKeysymToVK(KeySym ks) { return x11_keysym_to_vk(ks); }
 
 static void Linux_HandleKeyPress(Display* dpy, XKeyEvent* ev, WindowManager* wm) {
     PROFILE_START(timer);
-    extern bool g_x11_ctrl_held, g_x11_alt_held, g_x11_shift_held;
-    g_x11_ctrl_held = (ev->state & ControlMask) != 0;
-    g_x11_ctrl_held = g_x11_ctrl_held;
-    g_x11_alt_held = (ev->state & Mod1Mask) != 0;
-    g_x11_alt_held = g_x11_alt_held;
-    g_x11_shift_held = (ev->state & ShiftMask) != 0;
-    g_x11_shift_held = g_x11_shift_held;
-
+    int mods = remap_current_mods();
+    if (ev->state & ControlMask) mods |= HOTKEY_MOD_CTRL;
+    if (ev->state & Mod1Mask) mods |= HOTKEY_MOD_ALT;
+    if (ev->state & ShiftMask) mods |= HOTKEY_MOD_SHIFT;
     KeySym ks;
     char buf[32];
     int len = XLookupString(ev, buf, sizeof(buf), &ks, NULL);
-
-    if (ks == XK_Control_L || ks == XK_Control_R) { g_x11_ctrl_held = true; g_x11_ctrl_held = true; }
-    else if (ks == XK_Alt_L || ks == XK_Alt_R) { g_x11_alt_held = true; g_x11_alt_held = true; }
-    else if (ks == XK_Shift_L || ks == XK_Shift_R) { g_x11_shift_held = true; g_x11_shift_held = true; }
+    if (ks == XK_Control_L || ks == XK_Control_R) mods |= HOTKEY_MOD_CTRL;
+    else if (ks == XK_Alt_L || ks == XK_Alt_R) mods |= HOTKEY_MOD_ALT;
+    else if (ks == XK_Shift_L || ks == XK_Shift_R) mods |= HOTKEY_MOD_SHIFT;
 
     int vk_code = 0;
     if (len == 1 && (unsigned char)buf[0] >= 32 && (unsigned char)buf[0] <= 126) {
@@ -82,10 +77,7 @@ static void Linux_HandleKeyPress(Display* dpy, XKeyEvent* ev, WindowManager* wm)
         vk_code = XKeysymToVK(ks);
     }
     bool pressed = true;
-    int modifiers = 0;
-    if (g_x11_alt_held) modifiers |= HOTKEY_MOD_ALT;
-    if (g_x11_shift_held) modifiers |= HOTKEY_MOD_SHIFT;
-    if (g_x11_ctrl_held) modifiers |= HOTKEY_MOD_CTRL;
+    int modifiers = mods;
 
     Popup* top = WindowManager_GetTopPopup(wm);
     if (!top) { PROFILE_END_VAR(timer, "window_manager_x11:Linux_HandleKeyPress"); return; }
@@ -161,12 +153,7 @@ static void Linux_HandleKeyPress(Display* dpy, XKeyEvent* ev, WindowManager* wm)
 
 static void Linux_HandleKeyRelease(Display* dpy, XKeyEvent* ev) {
     PROFILE_START(timer);
-    int keycode = ev->keycode;
-    KeySym ks = XKeycodeToKeysym(dpy, keycode, 0);
-    extern bool g_x11_ctrl_held, g_x11_alt_held, g_x11_shift_held;
-    if (ks == XK_Control_L || ks == XK_Control_R) { g_x11_ctrl_held = false; g_x11_ctrl_held = false; }
-    else if (ks == XK_Alt_L || ks == XK_Alt_R) { g_x11_alt_held = false; g_x11_alt_held = false; }
-    else if (ks == XK_Shift_L || ks == XK_Shift_R) { g_x11_shift_held = false; g_x11_shift_held = false; }
+    (void)dpy; (void)ev;
     PROFILE_END_VAR(timer, "window_manager_x11:Linux_HandleKeyRelease");
 }
 
@@ -273,119 +260,8 @@ int WindowManager_RunLinux(WindowManager* wm) {
             if (fds[i + 1].revents & POLLIN) {
                 bool grabbed = g_x11_device_grabbed[i];
                 while (read(fds[i + 1].fd, &ev, sizeof(struct input_event)) > 0) {
-                    Popup* top_for_hotkey = WindowManager_GetTopPopup(wm);
-                    if (top_for_hotkey) {
-                        extern bool g_x11_ctrl_held, g_x11_alt_held, g_x11_shift_held;
-                        if (ev.type == EV_KEY) {
-                            if (ev.code == KEY_LEFTCTRL || ev.code == KEY_RIGHTCTRL) {
-                                if (ev.value == 0) g_x11_ctrl_held = false;
-                                else if (ev.value == 1 || ev.value == 2) g_x11_ctrl_held = true;
-                            } else if (ev.code == KEY_LEFTALT || ev.code == KEY_RIGHTALT) {
-                                if (ev.value == 0) g_x11_alt_held = false;
-                                else if (ev.value == 1 || ev.value == 2) g_x11_alt_held = true;
-                            } else if (ev.code == KEY_LEFTSHIFT || ev.code == KEY_RIGHTSHIFT) {
-                                if (ev.value == 0) g_x11_shift_held = false;
-                                else if (ev.value == 1 || ev.value == 2) g_x11_shift_held = true;
-                            }
-                            if (ev.code == KEY_LEFTCTRL || ev.code == KEY_RIGHTCTRL) {
-                                if (ev.value == 0) g_x11_ctrl_held = false;
-                                else g_x11_ctrl_held = true;
-                            } else if (ev.code == KEY_LEFTALT || ev.code == KEY_RIGHTALT) {
-                                if (ev.value == 0) g_x11_alt_held = false;
-                                else g_x11_alt_held = true;
-                            } else if (ev.code == KEY_LEFTSHIFT || ev.code == KEY_RIGHTSHIFT) {
-                                if (ev.value == 0) g_x11_shift_held = false;
-                                else g_x11_shift_held = true;
-                            }
-                            if (remap_should_swallow_linux_key(ev.code, ev.value)) {
-                                if (ev.code <= KEY_MAX) {
-                                    if (ev.value == 1) g_x11_suppress_release[ev.code] = true;
-                                    else if (ev.value == 0) g_x11_suppress_release[ev.code] = false;
-                                }
-                                continue;
-                            }
-                            if (ev.value == 0 && ev.code <= KEY_MAX && g_x11_suppress_release[ev.code]) { g_x11_suppress_release[ev.code] = false; continue; }
-                            if (ev.value == 2 && ev.code <= KEY_MAX && g_x11_suppress_release[ev.code]) continue;
-                            if (grabbed && g_x11_uinput_fd >= 0) uinput_emit(&ev);
-                        } else {
-                            if (grabbed && g_x11_uinput_fd >= 0) uinput_emit(&ev);
-                        }
-                        continue;
-                    }
-                    
-                    if (ev.type != EV_KEY) {
-                        if (grabbed && g_x11_uinput_fd >= 0) uinput_emit(&ev);
-                        continue;
-                    }
-
-                    if (remap_should_swallow_linux_key(ev.code, ev.value)) {
-                        log_info("window_manager_x11: remap swallowed code=%d val=%d grabbed=%d uinput=%d", ev.code, ev.value, grabbed, g_x11_uinput_fd);
-                        log_warn("window_manager_x11: remap swallowed code=%d val=%d grabbed=%d uinput=%d", ev.code, ev.value, grabbed, g_x11_uinput_fd);
-                        if (ev.code <= KEY_MAX) {
-                            if (ev.value == 1) g_x11_suppress_release[ev.code] = true;
-                            else if (ev.value == 0) g_x11_suppress_release[ev.code] = false;
-                        }
-                        continue;
-                    } else {
-                        if (ev.code == KEY_LEFTSHIFT || ev.code == KEY_RIGHTALT || ev.code == KEY_W || ev.code == KEY_A || ev.code == KEY_S || ev.code == KEY_D || ev.code == KEY_I || ev.code == KEY_U) {
-                            log_info("window_manager_x11: remap NOT swallowed code=%d val=%d", ev.code, ev.value);
-                            log_warn("window_manager_x11: remap NOT swallowed code=%d val=%d", ev.code, ev.value);
-                        }
-                        remap_update_phys(ConvertLinuxKeyToWindowsVK(ev.code), ev.value);
-                    }
-
-                    struct timeval now;
-                    gettimeofday(&now, NULL);
-                    long age_ms = (now.tv_sec - ev.time.tv_sec) * 1000L
-                                + (now.tv_usec - ev.time.tv_usec) / 1000L;
-                    if (age_ms > HOTKEY_STALE_EVENT_MS) {
-                        bool is_modifier = (ev.code == KEY_LEFTALT || ev.code == KEY_RIGHTALT ||
-                                            ev.code == KEY_LEFTCTRL || ev.code == KEY_RIGHTCTRL ||
-                                            ev.code == KEY_LEFTSHIFT || ev.code == KEY_RIGHTSHIFT ||
-                                            ev.code == KEY_LEFTMETA || ev.code == KEY_RIGHTMETA);
-                        if (!is_modifier) {
-                            if (ev.value == 1 && !grabbed) {
-                                if (HandleGlobalKeyEvent(ev.code, ev.value)) {
-                                    continue;
-                                }
-                            }
-                            if (grabbed && g_x11_uinput_fd >= 0) uinput_emit(&ev);
-                            continue;
-                        }
-                        if (ev.value == 1) {
-                            if (grabbed && g_x11_uinput_fd >= 0) uinput_emit(&ev);
-                            continue;
-                        }
-                    }
-
-                    if (ev.value == 0 && ev.code <= KEY_MAX && g_x11_suppress_release[ev.code]) {
-                        g_x11_suppress_release[ev.code] = false;
-                        continue;
-                    }
-                    if (ev.value == 2 && ev.code <= KEY_MAX && g_x11_suppress_release[ev.code]) {
-                        continue;
-                    }
-
-                    if (HandleGlobalKeyEvent(ev.code, ev.value)) {
-                        if (ev.value == 1 && ev.code <= KEY_MAX) {
-                            g_x11_suppress_release[ev.code] = true;
-                        } else if (ev.value == 2 && ev.code <= KEY_MAX) {
-                            g_x11_suppress_release[ev.code] = true;
-                        }
-                        continue;
-                    }
-                    
-                    if (grabbed) {
-                        if (g_x11_uinput_fd >= 0) {
-                            uinput_emit(&ev);
-                        } else {
-                            static bool warned = false;
-                            if (!warned) {
-                                log_warn("grabbed but no uinput - key %d lost. Check /dev/uinput perms (need input group or ACL)", ev.code);
-                                warned = true;
-                            }
-                        }
-                    }
+                    bool has_popup = WindowManager_GetTopPopup(wm) != NULL;
+                    x11_handle_evdev(&ev, has_popup, grabbed);
                 }
             }
         }
@@ -450,91 +326,9 @@ void Platform_ProcessNestedEvents(WindowManager* wm, Popup* popup) {
                     struct input_event ev;
                     bool grabbed = g_x11_device_grabbed[i];
                     while (read(fds[i + 1].fd, &ev, sizeof(struct input_event)) > 0) {
-                        Popup* top_for_hotkey = WindowManager_GetTopPopup(wm);
-                        if (top_for_hotkey) {
-                            if (ev.type == EV_KEY) {
-                                if (ev.code == KEY_LEFTCTRL || ev.code == KEY_RIGHTCTRL) {
-                                    if (ev.value == 0) g_x11_ctrl_held = false;
-                                    else if (ev.value == 1 || ev.value == 2) g_x11_ctrl_held = true;
-                                } else if (ev.code == KEY_LEFTALT || ev.code == KEY_RIGHTALT) {
-                                    if (ev.value == 0) g_x11_alt_held = false;
-                                    else if (ev.value == 1 || ev.value == 2) g_x11_alt_held = true;
-                                } else if (ev.code == KEY_LEFTSHIFT || ev.code == KEY_RIGHTSHIFT) {
-                                    if (ev.value == 0) g_x11_shift_held = false;
-                                    else if (ev.value == 1 || ev.value == 2) g_x11_shift_held = true;
-                                }
-                                if (ev.code == KEY_LEFTCTRL || ev.code == KEY_RIGHTCTRL) {
-                                    if (ev.value == 0) g_x11_ctrl_held = false;
-                                    else g_x11_ctrl_held = true;
-                                } else if (ev.code == KEY_LEFTALT || ev.code == KEY_RIGHTALT) {
-                                    if (ev.value == 0) g_x11_alt_held = false;
-                                    else g_x11_alt_held = true;
-                                } else if (ev.code == KEY_LEFTSHIFT || ev.code == KEY_RIGHTSHIFT) {
-                                    if (ev.value == 0) g_x11_shift_held = false;
-                                    else g_x11_shift_held = true;
-                                }
-                                if (remap_should_swallow_linux_key(ev.code, ev.value)) {
-                                    if (ev.code <= KEY_MAX) {
-                                        if (ev.value == 1) g_x11_suppress_release[ev.code] = true;
-                                        else if (ev.value == 0) g_x11_suppress_release[ev.code] = false;
-                                    }
-                                    continue;
-                                }
-                                if (ev.value == 0 && ev.code <= KEY_MAX && g_x11_suppress_release[ev.code]) { g_x11_suppress_release[ev.code] = false; continue; }
-                                if (ev.value == 2 && ev.code <= KEY_MAX && g_x11_suppress_release[ev.code]) continue;
-                                if (grabbed && g_x11_uinput_fd >= 0) uinput_emit(&ev);
-                            } else {
-                                if (grabbed && g_x11_uinput_fd >= 0) uinput_emit(&ev);
-                            }
-                            continue;
-                        }
-                        
-                        if (ev.type != EV_KEY) {
-                            if (grabbed && g_x11_uinput_fd >= 0) uinput_emit(&ev);
-                            continue;
-                        }
-                        
-                        if (remap_should_swallow_linux_key(ev.code, ev.value)) {
-                            log_warn("platform: nested remap swallowed code=%d val=%d", ev.code, ev.value);
-                            if (ev.value == 1 && ev.code <= KEY_MAX) g_x11_suppress_release[ev.code] = true;
-                            continue;
-                        }
-                        
-                        struct timeval now;
-                        gettimeofday(&now, NULL);
-                        long age_ms = (now.tv_sec - ev.time.tv_sec) * 1000L
-                                    + (now.tv_usec - ev.time.tv_usec) / 1000L;
-                        const long HOTKEY_STALE_EVENT_MS = 200;
-                        if (age_ms > HOTKEY_STALE_EVENT_MS) {
-                            bool is_modifier = (ev.code == KEY_LEFTALT || ev.code == KEY_RIGHTALT ||
-                                                ev.code == KEY_LEFTCTRL || ev.code == KEY_RIGHTCTRL ||
-                                                ev.code == KEY_LEFTSHIFT || ev.code == KEY_RIGHTSHIFT ||
-                                                ev.code == KEY_LEFTMETA || ev.code == KEY_RIGHTMETA);
-                            if (!is_modifier) {
-                                if (ev.value == 1 && !grabbed) {
-                                    if (HandleGlobalKeyEvent(ev.code, ev.value)) {
-                                        continue;
-                                    }
-                                }
-                                if (grabbed && g_x11_uinput_fd >= 0) uinput_emit(&ev);
-                                continue;
-                            }
-                            if (ev.value == 1) {
-                                if (grabbed && g_x11_uinput_fd >= 0) uinput_emit(&ev);
-                                continue;
-                            }
-                        }
-                        
-                        if (ev.value == 0 && ev.code <= KEY_MAX && g_x11_suppress_release[ev.code]) {
-                            g_x11_suppress_release[ev.code] = false;
-                            continue;
-                        }
-                        if (ev.value == 2 && ev.code <= KEY_MAX && g_x11_suppress_release[ev.code]) {
-                            continue;
-                        }
+                        bool has_popup = WindowManager_GetTopPopup(wm) != NULL;
+                        x11_handle_evdev(&ev, has_popup, grabbed);
                     }
-                    
-                    if (grabbed && g_x11_uinput_fd >= 0) uinput_emit(&ev);
                 }
             }
         }
