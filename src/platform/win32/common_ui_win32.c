@@ -470,7 +470,8 @@ void UpdateTextCaret(WindowHandle hwndEditControl)
   if (oldFont) SelectObject(hdc, oldFont);
   ReleaseDC(hwnd, hdc);
 
-  int caretHeight = tm.tmHeight > 0 ? tm.tmHeight : FontSize;
+  int caretHeight = 24;
+  if (tm.tmHeight > 0 && tm.tmHeight < caretHeight) caretHeight = tm.tmHeight;
   int caretWidth;
   if (IsInsertMode()) {
     caretWidth = 1;
@@ -481,20 +482,27 @@ void UpdateTextCaret(WindowHandle hwndEditControl)
   DWORD selStart = 0, selEnd = 0;
   SendMessageA(hwnd, EM_GETSEL, (WPARAM)&selStart, (LPARAM)&selEnd);
 
-  POINT pt = {0, 0};
-  BOOL havePos = GetCaretPos(&pt);
-  if (!havePos || (pt.x == 0 && pt.y == 0 && selStart > 0)) {
-    LRESULT coords = SendMessageA(hwnd, EM_POSFROMCHAR, selStart, 0);
-    if (coords != (LRESULT)-1) {
-      pt.x = (short)LOWORD(coords);
-      pt.y = (short)HIWORD(coords);
+  RECT rc;
+  GetClientRect(hwnd, &rc);
+  int centeredY = (rc.bottom - caretHeight) / 2;
+  if (centeredY < 0) centeredY = 0;
+
+  POINT pt = {0, centeredY};
+  BOOL havePos = FALSE;
+  LRESULT coords = SendMessageA(hwnd, EM_POSFROMCHAR, selStart, 0);
+  if (coords != (LRESULT)-1) {
+    pt.x = (short)LOWORD(coords);
+    pt.y = centeredY;
+    havePos = TRUE;
+  } else {
+    POINT cur = {0, 0};
+    if (GetCaretPos(&cur)) {
+      pt.x = cur.x;
+      pt.y = centeredY;
       havePos = TRUE;
     } else if (selStart == 0) {
-      RECT rc;
-      GetClientRect(hwnd, &rc);
       pt.x = 0;
-      pt.y = (rc.bottom - caretHeight) / 2;
-      if (pt.y < 0) pt.y = 0;
+      pt.y = centeredY;
       havePos = TRUE;
     }
   }
