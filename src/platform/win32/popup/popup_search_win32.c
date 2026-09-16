@@ -10,7 +10,7 @@
 #include "core/feature_data.h"
 #include "core/number_shortcut.h"
 #include "core/types.h"
-#include "platform/subclasses.h"
+#include "platform/subclasses_win32.h"
 #include "wingdi.h"
 #include "core/platform.h"
 #include "helpers/hotkey.h"
