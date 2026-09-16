@@ -13,5 +13,9 @@ bool fl_listbox_next_platform(FlListItemCtx *out);
 void fl_listbox_end_platform(void);
 int fl_listbox_get_count(void);
 void fl_toggle_play_pause_platform(void);
+int fl_get_current_volume_platform(void);
+bool fl_set_volume_platform(int volume);
+bool fl_decrement_volume_by_platform(int decrement);
+bool fl_increment_volume_by_platform(int increment);
 
 #endif

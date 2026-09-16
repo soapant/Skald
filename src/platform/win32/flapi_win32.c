@@ -316,3 +316,85 @@ void fl_toggle_play_pause_platform(void) {
     SendInput(2, input, sizeof(INPUT));
 }
 
+int fl_get_current_volume_platform(void) {
+    HRESULT hr;
+    IMMDeviceEnumerator *pEnumerator = NULL;
+    IMMDevice *pDevice = NULL;
+    IAudioEndpointVolume *pVolume = NULL;
+    float currentVolume = 0.0f;
+
+    hr = CoInitialize(NULL);
+    if (FAILED(hr)) return 0;
+
+    hr = CoCreateInstance(&CLSID_MMDeviceEnumerator, NULL, CLSCTX_ALL,
+                          &IID_IMMDeviceEnumerator, (void**)&pEnumerator);
+    if (FAILED(hr)) goto cleanup;
+
+    hr = pEnumerator->lpVtbl->GetDefaultAudioEndpoint(pEnumerator, eRender, eConsole, &pDevice);
+    if (FAILED(hr)) goto cleanup;
+
+    hr = pDevice->lpVtbl->Activate(pDevice, &IID_IAudioEndpointVolume, CLSCTX_ALL, NULL,
+                                   (void**)&pVolume);
+    if (FAILED(hr)) goto cleanup;
+
+    pVolume->lpVtbl->GetMasterVolumeLevelScalar(pVolume, &currentVolume);
+
+cleanup:
+    if (pVolume) pVolume->lpVtbl->Release(pVolume);
+    if (pDevice) pDevice->lpVtbl->Release(pDevice);
+    if (pEnumerator) pEnumerator->lpVtbl->Release(pEnumerator);
+    CoUninitialize();
+
+    return (int)(currentVolume * 100.0f + 0.5f);
+}
+bool fl_set_volume_platform(int volume) {
+    HRESULT hr;
+    IMMDeviceEnumerator *pEnumerator = NULL;
+    IMMDevice *pDevice = NULL;
+    IAudioEndpointVolume *pVolume = NULL;
+    bool success = false;
+
+    hr = CoInitialize(NULL);
+    if (FAILED(hr)) return false;
+
+    hr = CoCreateInstance(&CLSID_MMDeviceEnumerator, NULL, CLSCTX_ALL,
+                          &IID_IMMDeviceEnumerator, (void**)&pEnumerator);
+    if (FAILED(hr)) goto cleanup;
+
+    hr = pEnumerator->lpVtbl->GetDefaultAudioEndpoint(pEnumerator, eRender, eConsole, &pDevice);
+    if (FAILED(hr)) goto cleanup;
+
+    hr = pDevice->lpVtbl->Activate(pDevice, &IID_IAudioEndpointVolume, CLSCTX_ALL, NULL,
+                                   (void**)&pVolume);
+    if (FAILED(hr)) goto cleanup;
+
+    float volume_float = (float)volume / 100.0f;
+
+    hr = pVolume->lpVtbl->SetMasterVolumeLevelScalar(pVolume, volume_float, NULL);
+    if (SUCCEEDED(hr)) {
+        success = true;
+    }
+
+cleanup:
+    if (pVolume) pVolume->lpVtbl->Release(pVolume);
+    if (pDevice) pDevice->lpVtbl->Release(pDevice);
+    if (pEnumerator) pEnumerator->lpVtbl->Release(pEnumerator);
+    CoUninitialize();
+
+    return success;
+}
+bool fl_decrement_volume_by_platform(int decrement) {
+    int current_volume = fl_get_current_volume_platform();
+    
+    int target_volume = current_volume - decrement;
+    
+    return fl_set_volume_platform(target_volume);
+}
+
+bool fl_increment_volume_by_platform(int increment) {
+    int current_volume = fl_get_current_volume_platform();
+    
+    int target_volume = current_volume + increment;
+    
+    return fl_set_volume_platform(target_volume);
+}
