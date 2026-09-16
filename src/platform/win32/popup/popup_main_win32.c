@@ -202,8 +202,11 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
               if (lb && lb->selected_index >=0 && lb->selected_index < lb->populated_count) strncpy(FlintContext_Get()->window.output_buffer, lb->populated_cache[lb->selected_index], sizeof(FlintContext_Get()->window.output_buffer) - 1);
                 FlintContext_Get()->window.output_buffer[sizeof(FlintContext_Get()->window.output_buffer) - 1] = '\0';
             }
+            int true_idx = -1;
+            if (lb && lb->selected_index >= 0 && lb->selected_index < lb->populated_count) true_idx = lb->matching_indices[lb->selected_index];
+            else true_idx = UI_LookupTrueIndex(FlintContext_Get()->window.output_buffer);
             if (FlintContext_Get()->prompt_callbacks.copy != NULL) {
-              FlintContext_Get()->prompt_callbacks.copy(FlintContext_Get()->window.output_buffer, UI_LookupTrueIndex(FlintContext_Get()->window.output_buffer), 0);
+              FlintContext_Get()->prompt_callbacks.copy(FlintContext_Get()->window.output_buffer, true_idx, 0);
             } else {
               Platform_CopyToClipboard(FlintContext_Get()->window.output_buffer);
             }
@@ -212,9 +215,11 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
               if (lb && lb->selected_index >=0 && lb->selected_index < lb->populated_count) strncpy(FlintContext_Get()->window.output_buffer, lb->populated_cache[lb->selected_index], sizeof(FlintContext_Get()->window.output_buffer) - 1);
                 FlintContext_Get()->window.output_buffer[sizeof(FlintContext_Get()->window.output_buffer) - 1] = '\0';
             }
-            
+            int true_idx = -1;
+            if (lb && lb->selected_index >= 0 && lb->selected_index < lb->populated_count) true_idx = lb->matching_indices[lb->selected_index];
+            else true_idx = UI_LookupTrueIndex(FlintContext_Get()->window.output_buffer);
               if (FlintContext_Get()->prompt_callbacks.copy != NULL) {
-                FlintContext_Get()->prompt_callbacks.copy(FlintContext_Get()->window.output_buffer, UI_LookupTrueIndex(FlintContext_Get()->window.output_buffer), 1);
+                FlintContext_Get()->prompt_callbacks.copy(FlintContext_Get()->window.output_buffer, true_idx, 1);
               } else {
                 Platform_CopyToClipboard(FlintContext_Get()->window.output_buffer);
               }

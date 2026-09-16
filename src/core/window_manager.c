@@ -21,6 +21,7 @@
 #include "helpers/helpers_ui.h"
 #include "config.h"
 #include "core/feature_loader.h"
+#include "core/hashmap.h"
 #include <sys/time.h>
 #include <stdlib.h>
 #include <string.h>
@@ -371,6 +372,20 @@ void WindowManager_ProcessEvents(WindowManager* wm) {
 char* WindowManager_ShowPrompt(WindowManager* wm, const PromptSpec* spec) {
     PROFILE_START(timer);
     if (!wm || !spec) { PROFILE_END_VAR(timer, "window_manager:WindowManager_ShowPrompt"); return NULL; }
+    if (FlintContext_Get()->g_item_index_map) {
+        HashMap_Destroy(FlintContext_Get()->g_item_index_map);
+        FlintContext_Get()->g_item_index_map = NULL;
+    }
+    if (spec->items) {
+        int count = 0;
+        for (count = 0; spec->items[count]; count++) {}
+        if (count > 0) {
+            FlintContext_Get()->g_item_index_map = HashMap_Create(count > 32 ? count : 32);
+            for (int i = 0; i < count; i++) {
+                if (spec->items[i]) HashMap_Put(FlintContext_Get()->g_item_index_map, spec->items[i], (void*)(size_t)(i + 1));
+            }
+        }
+    }
 #if defined(_WIN32)
     extern char* Platform_PromptUser(const PromptSpec* spec);
     char* res = Platform_PromptUser(spec);
