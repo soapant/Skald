@@ -3,7 +3,7 @@
 #include "config.h"
 #include "platform/x11/drawing.h"
 #include "platform/x11/display.h"
-#include "helpers/ui.h"
+#include "helpers/helpers_ui.h"
 #include "core/timer.h"
 #include "core/context.h"
 #include "core/window_manager.h"
