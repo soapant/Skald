@@ -372,7 +372,6 @@ void fl_toggle_play_pause(void);
 
 #if defined(_WIN32)
 #define FLINT_FEATURE_EXPORT static
-
 #else
 #define FLINT_FEATURE_EXPORT __attribute__((visibility("default")))
 #endif
