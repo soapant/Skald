@@ -450,35 +450,24 @@ void fl_toggle_play_pause_platform(void) {
 }
 
 int fl_get_current_volume_platform(void) {
-  char* output = Platform_RunTerminalCommand("pw-cli ls Node | awk '/Headphones/ || /Speaker/{print id} {if(/id [0-9]+/) id=$2}' | tr -d ','", false);
-  int audio_id = atoi(output);
-  char cmd[256];
-  snprintf(cmd, sizeof(cmd), "pw-cli enum-params %i Props | grep -A 2 \"channelVolumes\" | awk '/Float/ && /\\./ {print $2}'", audio_id);
-  char* volume_text = Platform_RunTerminalCommand(cmd,false);
-  StringList lines = String_Split(volume_text, "\n");
-    for (int i = 0; i < lines.count; i++) {
-        if (lines.items[i] != NULL && isdigit((unsigned char)lines.items[i][0]) != 0) {
-            return (int)(atof(lines.items[i]) * 100); 
-        }
+    char* output = Platform_RunTerminalCommand("wpctl get-volume @DEFAULT_AUDIO_OUT@ | awk '{print $2}'", false);
+    
+    if (output == NULL || strlen(output) == 0) {
+        return 0;
     }
-  return 0;
+    
+    return (int)(atof(output) * 100);
 }
 
 bool fl_set_volume_platform(int volume) {
-    char* output = Platform_RunTerminalCommand("pw-cli ls Node | awk '/Headphones/ || /Speaker/{print id} {if(/id [0-9]+/) id=$2}' | tr -d ','", false);
-    if (output == NULL || strlen(output) == 0) {
-        return false;
-    }
-    int audio_id = atoi(output);
+    if (volume < 0) volume = 0;
+    if (volume > 100) volume = 100;
 
-    float volume_float = (float)volume / 100.0f;
+    char cmd[128];
+    snprintf(cmd, sizeof(cmd), "wpctl set-volume @DEFAULT_AUDIO_OUT@ %d%%", volume);
 
-    char cmd[256];
-    snprintf(cmd, sizeof(cmd), 
-             "pw-cli set-param %i Props '{ channelVolumes: [ %.2f, %.2f ] }'", 
-             audio_id, volume_float, volume_float);
-
-    return Platform_RunTerminalCommand(cmd, false);
+    Platform_RunTerminalCommand(cmd, false);
+    return true; 
 }
 
 bool fl_decrement_volume_by_platform(int decrement) {
