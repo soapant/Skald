@@ -12,11 +12,11 @@
 #include "platform/subclasses_win32.h"
 #include "wingdi.h"
 #include "core/platform.h"
-#include "helpers/hotkey.h"
-#include "helpers/alias.h"
-#include "helpers/flag.h"
-#include "helpers/file.h"
-#include "helpers/ui.h"
+#include "helpers/helpers_hotkey.h"
+#include "helpers/helpers_alias.h"
+#include "helpers/helpers_flag.h"
+#include "helpers/helpers_file.h"
+#include "helpers/helpers_ui.h"
 #include "platform/win32/popup_helpers.h"
 
 LRESULT CALLBACK SimpleEditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
