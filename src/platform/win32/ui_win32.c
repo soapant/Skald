@@ -4,7 +4,6 @@
 #include "core/modal.h"
 #include "core/types.h"
 #include "core/hotkey_manager.h"
-#include "core/number_shortcut.h"
 #include "core/feature_data.h"
 #include "platform/subclasses_win32.h"
 #include "core/platform.h"
@@ -189,7 +188,6 @@ PROFILE_END_VAR(timer3, "Focus");
     DestroyWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd));
     FlintContext_Get()->window.hPopupWnd = WH_NULL;
   }
-  ResetNumberShortcutState();
 
   log_info("Flushing trailing queue entries...");
   while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
