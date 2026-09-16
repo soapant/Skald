@@ -177,15 +177,12 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
     }
     if (wParam == COPY_SELECTION_KEY) {
       if (shift_pressed || ctrl_pressed) {
-        const char* sel = "";
-        if (state->has_listbox && UI_IsListBoxSelected(&state->listbox)) sel = state->listbox.populated_cache[state->listbox.selected_index];
-        else sel = state->filter;
         int type = shift_pressed ? 0 : 1;
+        int idx = UI_LookupTrueIndex(FlintContext_Get()->window.output_buffer);
         if (FlintContext_Get()->prompt_callbacks.copy) {
-          int idx = UI_IsListBoxSelected(&state->listbox) ? state->listbox.selected_index : -1;
-          FlintContext_Get()->prompt_callbacks.copy(sel, idx, type);
+          FlintContext_Get()->prompt_callbacks.copy(FlintContext_Get()->window.output_buffer,idx,type);
         } else {
-          Platform_CopyToClipboard(sel);
+          Platform_CopyToClipboard(FlintContext_Get()->window.output_buffer);
         }
         return true;
       }
