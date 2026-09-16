@@ -14,7 +14,7 @@
 #include "helpers/file.h"
 #include "helpers/ui.h"
 #include "core/timer.h"
-#include "core/common_ui.h"
+#include "platform/ui.h"
 #include "core/window_manager.h"
 
 int ReplaceLineInFile(const char* filepath, int line_index, const char* new_text) {

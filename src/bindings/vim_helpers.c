@@ -2,7 +2,7 @@
 #include "deps/log.h"
 #include "core/modal.h"
 #include "bindings/vim_helpers.h"
-#include "core/common_ui.h"
+#include "platform/ui.h"
 #include "core/vim.h"
 #include <ctype.h>
 

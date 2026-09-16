@@ -1,6 +1,6 @@
 #include "platform/draw.h"
 #include "config.h"
-#include "core/common_ui.h"
+#include "platform/ui.h"
 #include "core/context.h"
 
 static const char *g_prerender_text = NULL;

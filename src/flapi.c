@@ -10,7 +10,7 @@
 #include "helpers/ui.h"
 #include "config.h"
 #include "core/platform.h"
-#include "core/common_ui.h"
+#include "platform/ui.h"
 #include "core/window_manager.h"
 #include "core/flapi.h"
 #include "core/flapi_platform.h"

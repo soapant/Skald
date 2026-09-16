@@ -3,7 +3,7 @@
 #include "core/modal.h"
 #include "bindings/vim_motions.h"
 #include "bindings/vim_helpers.h"
-#include "core/common_ui.h"
+#include "platform/ui.h"
 #include "core/vim.h"
 #include "core/window_manager.h"
 #include "config.h"

@@ -1,5 +1,5 @@
 #include "platform/draw.h"
-#include "core/common_ui.h"
+#include "platform/ui.h"
 #include "config.h"
 #include "platform/x11/drawing.h"
 #include "platform/x11/display.h"

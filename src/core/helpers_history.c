@@ -13,7 +13,7 @@
 #include "helpers/file.h"
 #include "helpers/ui.h"
 #include "core/timer.h"
-#include "core/common_ui.h"
+#include "platform/ui.h"
 
 
 bool IsWindowBlacklisted(const char* window_title, const char* blacklist[], int count) {

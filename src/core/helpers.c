@@ -10,7 +10,7 @@
 #include "helpers/file.h"
 #include "helpers/ui.h"
 #include "core/timer.h"
-#include "core/common_ui.h"
+#include "platform/ui.h"
 
 void SubjectiveMessageDisplay(const char* buffer,int msg_height,int timeout,ColorRef color) {
     if (MessagesEnabled) {

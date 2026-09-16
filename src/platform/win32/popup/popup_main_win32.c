@@ -6,7 +6,7 @@
 #include <shellapi.h>
 #include "config.h"
 #include "platform/draw.h"
-#include "core/common_ui.h"
+#include "platform/ui.h"
 #include "core/feature_data.h"
 #include "core/types.h"
 #include "platform/subclasses_win32.h"
