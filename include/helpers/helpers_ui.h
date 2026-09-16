@@ -11,7 +11,7 @@ void eval_window_title_color(PromptState * state,unsigned long *window_title_col
 void eval_xoffset_for_alias(char* alias_text,int main_text_lenght,int *xOffsetAlias);
 unsigned short OpacityAlpha16(void);
 
-static char g_alias_display[MAX_ITEMS][512];
+static char g_alias_display[MAX_VISIBLE_ITEMS][512];
 static int g_alias_display_count;
 static bool g_alias_display_active;
 

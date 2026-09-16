@@ -8,9 +8,7 @@
 #include <stdint.h>
 #include <string.h>
 
-#define MAX_VISIBLE_ITEMS 4000
-#define MAX_ITEMS 4000
-#define MAX_MATCHES 4000
+#define MAX_VISIBLE_ITEMS 10000
 #define MAX_SEQUENCE_LEN 8
 #define SEQUENCE_TIMEOUT_MS 500
 
