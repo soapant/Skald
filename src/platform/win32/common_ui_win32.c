@@ -14,6 +14,7 @@
 #include <windows.h>
 #include <commctrl.h>
 #include <shlwapi.h>
+#include <string.h>
 
 HFONT CreateCustomNerdFont(int height, const char* face_name) {
   return FH_TO_HFONT(Platform_CreateFont(height, face_name));
@@ -457,31 +458,63 @@ void Win32_DrawBackground(HDC hdc, RECT* rc) {
 
 void UpdateTextCaret(WindowHandle hwndEditControl)
 {
-  int caretWidth = 1;
-  int caretHeight = FontSize;
+  HWND hwnd = WH_TO_HWND(hwndEditControl);
+  if (!hwnd || !IsWindow(hwnd)) return;
 
+  HDC hdc = GetDC(hwnd);
+  HFONT hFont = (HFONT)SendMessageA(hwnd, WM_GETFONT, 0, 0);
+  HFONT oldFont = hFont ? (HFONT)SelectObject(hdc, hFont) : NULL;
+  TEXTMETRIC tm;
+  memset(&tm, 0, sizeof(tm));
+  GetTextMetrics(hdc, &tm);
+  if (oldFont) SelectObject(hdc, oldFont);
+  ReleaseDC(hwnd, hdc);
+
+  int caretHeight = tm.tmHeight > 0 ? tm.tmHeight : FontSize;
+  int caretWidth;
   if (IsInsertMode()) {
-    caretWidth = 2;
+    caretWidth = 1;
+  } else {
+    caretWidth = tm.tmAveCharWidth > 0 ? tm.tmAveCharWidth : 12;
   }
-  else if (IsNormalMode()) {
-    caretWidth = 12;
-  }
-  else {
-    caretWidth = 12;
+
+  DWORD selStart = 0, selEnd = 0;
+  SendMessageA(hwnd, EM_GETSEL, (WPARAM)&selStart, (LPARAM)&selEnd);
+
+  POINT pt = {0, 0};
+  BOOL havePos = GetCaretPos(&pt);
+  if (!havePos || (pt.x == 0 && pt.y == 0 && selStart > 0)) {
+    LRESULT coords = SendMessageA(hwnd, EM_POSFROMCHAR, selStart, 0);
+    if (coords != (LRESULT)-1) {
+      pt.x = (short)LOWORD(coords);
+      pt.y = (short)HIWORD(coords);
+      havePos = TRUE;
+    } else if (selStart == 0) {
+      RECT rc;
+      GetClientRect(hwnd, &rc);
+      pt.x = 0;
+      pt.y = (rc.bottom - caretHeight) / 2;
+      if (pt.y < 0) pt.y = 0;
+      havePos = TRUE;
+    }
   }
 
   static int lastWidth = -1;
+  static int lastHeight = -1;
   static HWND lastHwnd = NULL;
 
-  if (caretWidth != lastWidth || WH_TO_HWND(hwndEditControl) != lastHwnd) {
+  if (caretWidth != lastWidth || caretHeight != lastHeight || hwnd != lastHwnd) {
     DestroyCaret();
-    CreateCaret(WH_TO_HWND(hwndEditControl), NULL, caretWidth, caretHeight);
-    ShowCaret(WH_TO_HWND(hwndEditControl));
-
+    CreateCaret(hwnd, NULL, caretWidth, caretHeight);
+    if (havePos) SetCaretPos(pt.x, pt.y);
+    ShowCaret(hwnd);
     SetCaretBlinkTime(INFINITE);
-
     lastWidth = caretWidth;
-    lastHwnd = WH_TO_HWND(hwndEditControl);
+    lastHeight = caretHeight;
+    lastHwnd = hwnd;
+  } else if (havePos) {
+    SetCaretPos(pt.x, pt.y);
+    ShowCaret(hwnd);
   }
 }
 
@@ -575,6 +608,7 @@ void ForceWindowFocus(WindowHandle hwndTarget, WindowHandle hwndInput) {
     SetFocus(WH_TO_HWND(hwndInput));
     UI_Edit_UpdateUIState(hwndInput, UIS_CLEAR, UISF_HIDEFOCUS);
     UI_Edit_SetSel(hwndInput, 0, 0);
+    UpdateTextCaret(hwndInput);
   }
 
   if (foregroundThreadID != currentThreadID)

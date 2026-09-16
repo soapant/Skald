@@ -411,6 +411,13 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             break;
           }
             if (WH_TO_HWND(FlintContext_Get()->window.hEditControl) != NULL && IsWindow(WH_TO_HWND(FlintContext_Get()->window.hEditControl))) {
+              char buf[sizeof(FlintContext_Get()->window.filter)];
+              GetWindowTextA(WH_TO_HWND(FlintContext_Get()->window.hEditControl), buf, (int)sizeof(buf));
+              strncpy(FlintContext_Get()->window.filter, buf, sizeof(FlintContext_Get()->window.filter) - 1);
+              FlintContext_Get()->window.filter[sizeof(FlintContext_Get()->window.filter) - 1] = '\0';
+              DWORD s = 0, e = 0;
+              SendMessageA(WH_TO_HWND(FlintContext_Get()->window.hEditControl), EM_GETSEL, (WPARAM)&s, (LPARAM)&e);
+              FlintContext_Get()->window.filter_cursor = (int)s;
               InvalidateRect(WH_TO_HWND(FlintContext_Get()->window.hEditControl), NULL, TRUE);
               UpdateWindow(WH_TO_HWND(FlintContext_Get()->window.hEditControl));
             }
