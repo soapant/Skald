@@ -17,5 +17,7 @@ int fl_get_current_volume_platform(void);
 bool fl_set_volume_platform(int volume);
 bool fl_decrement_volume_by_platform(int decrement);
 bool fl_increment_volume_by_platform(int increment);
+bool fl_increment_volume_by_percent_platform(int increment_percent);
+bool fl_decrement_volume_by_percent_platform(int decrement_percent);
 
 #endif

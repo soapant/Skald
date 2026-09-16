@@ -803,3 +803,10 @@ bool fl_increment_volume_by(int increment) {
 bool fl_decrement_volume_by(int decrement) {
   return fl_decrement_volume_by_platform(decrement);
 }
+bool fl_increment_volume_by_percent(int increment_percent) {
+  return fl_increment_volume_by_percent_platform(increment_percent);
+}
+
+bool fl_decrement_volume_by_percent(int decrement_percent) {
+  return fl_decrement_volume_by_percent_platform(decrement_percent);
+}
