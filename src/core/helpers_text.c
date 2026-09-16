@@ -173,7 +173,13 @@ HotkeyBinding convert_into_hotkey_binding(char* hotkey_string, void (*on_hotkey_
         } else if (Platform_StringContainsCaseInsensitive(token, "Win") || Platform_StringContainsCaseInsensitive(token, "Super") || Platform_StringContainsCaseInsensitive(token, "Meta") ) {
             out_modifiers |= HOTKEY_MOD_SUPER;
         } else {
-            if (Platform_StringContainsCaseInsensitive(token, "Space")) out_key = ' ';
+            if (strcasecmp(token, "LeftBracket") == 0) out_key = VK_OEM_4;
+            else if (strcasecmp(token, "RightBracket") == 0) out_key = VK_OEM_6;
+            else if (token[0] == '[' && token[1] == '\0') out_key = VK_OEM_4;
+            else if (token[0] == ']' && token[1] == '\0') out_key = VK_OEM_6;
+            else if (token[0] == '{' && token[1] == '\0') out_key = VK_OEM_4;
+            else if (token[0] == '}' && token[1] == '\0') out_key = VK_OEM_6;
+            else if (Platform_StringContainsCaseInsensitive(token, "Space")) out_key = ' ';
             else if (Platform_StringContainsCaseInsensitive(token, "Tab")) out_key = '\t';
             else if (Platform_StringContainsCaseInsensitive(token, "Enter") || Platform_StringContainsCaseInsensitive(token, "Return")) out_key = '\n';
             else if (Platform_StringContainsCaseInsensitive(token, "Escape") || Platform_StringContainsCaseInsensitive(token, "Esc")) out_key = 27;

@@ -29,12 +29,10 @@ void ScreenshotArea(void) {
   fl_run_terminal_command("grimshot copy area");
 }
 void IncrementVolume(void) {
-  printf("INCREMENT \n");
   fl_increment_volume_by(5);
 }
 
 void DecrementVolume(void) {
-  printf("DECREMENT \n");
   fl_decrement_volume_by(5);
 }
 

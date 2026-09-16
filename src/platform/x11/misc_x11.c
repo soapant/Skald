@@ -318,6 +318,7 @@ int ConvertLinuxKeyToWindowsVK(int key_code) {
         case KEY_SEMICOLON: PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return VK_OEM_1;
         case KEY_SLASH: PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return VK_OEM_2;
         case KEY_LEFTBRACE: PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return VK_OEM_4;
+        case KEY_RIGHTBRACE: PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return VK_OEM_6;
         case KEY_COMMA: PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return VK_OEM_COMMA;
         case KEY_DOT: PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return VK_OEM_PERIOD;
         case KEY_APOSTROPHE: PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK"); return VK_OEM_7;
