@@ -60,3 +60,4 @@ github.com/soapant/Flint
 search
 is nmcli on evry linux distro
 c add two strings together
+where is trash folder on linux dir
