@@ -34,9 +34,7 @@ typedef struct {
     size_t capacity;
 } ListOfFiles;
 
-typedef struct {
-    size_t r, g, b;
-} FlColor;
+
 
 // =============================================================================
 // CLIPBOARD
@@ -64,7 +62,7 @@ bool fl_parse_desktop_file(const char* path, char* out_name, size_t n, bool* out
 char* fl_get_icon_path(const char* app_path_path);
 bool fl_free_file_list(const char* list[], int count);
 bool fl_free_list(const char* list[], int count);
-bool fl_free_window_list(WindowList *list);
+bool fl_free_window_list(Fl_WindowList *list);
 bool fl_append_to_file(const char* filepath, const char* line);
 bool fl_write_to_file(const char* filepath, const char* lines[], int count);
 
@@ -106,8 +104,8 @@ bool fl_query_browser(const char* query);
 bool fl_launch_browser_in_a_new_window(char* url);
 char* fl_get_zoxide_match(char* query);
 bool fl_focus_window_by_title(char* title);
-WindowList fl_get_all_window_titles();
-WindowList fl_get_all_window_names();
+Fl_WindowList fl_get_all_window_titles();
+Fl_WindowList fl_get_all_window_names();
 
 // =============================================================================
 // WATCH / ADB / MISC
@@ -327,6 +325,12 @@ bool fl_register_remapping(const char* src, const char* dst);
 // AUDIO
 // =============================================================================
 void fl_toggle_play_pause(void);
+
+// =============================================================================
+// WINDOW IO
+// =============================================================================
+
+Fl_Pos fl_get_cursor_pos(void);
 
 #define _FL_HOTKEY_EXPAND(hotkey, trigger, cond, whitelist, ...) \
     fl_register_hotkey_impl(hotkey, trigger, cond, whitelist, (const char*[]){__VA_ARGS__, NULL})

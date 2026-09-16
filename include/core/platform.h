@@ -22,8 +22,8 @@ bool Platform_StringStartsWithCaseInsensitive(const char* str, const char* prefi
 int Platform_CollectRunningProcesses(char process_list[][128], int max_count);
 bool Platform_TerminateProcessByName(const char* exe_name);
 bool Platform_FocusWindow(const char* window_name);
-WindowList Platform_GetWindowTitles();
-WindowList Platform_GetWindowNames();
+Fl_WindowList Platform_GetWindowTitles();
+Fl_WindowList Platform_GetWindowNames();
 bool Platform_ClickAtPos(int x,int y);
 bool Platform_QueryBrowser(char* query);
 char* Platform_GetLastClipboardEntry();
@@ -69,6 +69,7 @@ char* Platform_GetActiveWindowTitle();
 char* Platform_GetIconPath(char* app_path);
 int Platform_GetIconSize(char* icon_path);
 int ConvertLinuxKeyToWindowsVK(int key_code);
+Fl_Pos Platform_GetCursorPos(void);
 const char* Platform_GetRealUser(void);
 const char* Platform_GetRealHome(void);
 bool Platform_IsRunningAsRoot(void);

@@ -69,9 +69,9 @@ char* Wm_Paste(char* content) {
     return NULL;
 }
 
-WindowList Wm_GetWindowTitles() {
-    WindowList result;
-    WindowList empty = { .windows = NULL, .count = 0 };
+Fl_WindowList Wm_GetWindowTitles() {
+    Fl_WindowList result;
+    Fl_WindowList empty = { .windows = NULL, .count = 0 };
     if (getenv("WAYLAND_DISPLAY")) {
         result = get_window_titles_hyprland();
         if (result.windows != NULL) return result;
@@ -84,9 +84,9 @@ WindowList Wm_GetWindowTitles() {
     log_error("GetWindowTitles Didnt Work");
     return empty;
 }
-WindowList Wm_GetWindowNames() {
-    WindowList result;
-    WindowList empty = { .windows = NULL, .count = 0 };
+Fl_WindowList Wm_GetWindowNames() {
+    Fl_WindowList result;
+    Fl_WindowList empty = { .windows = NULL, .count = 0 };
     if (getenv("WAYLAND_DISPLAY")) {
         result = get_window_names_hyprland();
         if (result.windows != NULL) return result;
@@ -95,6 +95,21 @@ WindowList Wm_GetWindowNames() {
     } else {
         result = get_window_names_x11();
         if (result.windows != NULL) return result;
+    }
+    log_error("GetWindowNames Didnt Work");
+    return empty;
+}
+Fl_Pos Wm_GetCursorPosition() {
+    Fl_Pos result;
+    Fl_Pos empty = { .x = 0, .y = 0 };
+    if (getenv("WAYLAND_DISPLAY")) {
+        result = get_cursor_position_hyprland();
+        if (result.x != 0) return result;
+        result = get_cursor_position_sway();
+        if (result.x != 0) return result;
+    } else {
+        result = get_cursor_position_x11();
+        if (result.x != 0) return result;
     }
     log_error("GetWindowNames Didnt Work");
     return empty;

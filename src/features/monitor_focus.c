@@ -1,7 +1,7 @@
 #include "core/flapi.h"
 #if defined(_WIN32)
 static BOOL CALLBACK EnumMonitorWindowsProc(HWND hwnd, LPARAM lParam) {
-    MonitorWindowList* myList = (MonitorWindowList*)lParam;
+    MonitorFl_WindowList* myList = (MonitorFl_WindowList*)lParam;
 
     if (!IsWindowVisible(hwnd) || GetWindowTextLengthA(hwnd) == 0) {
         return TRUE;
@@ -47,7 +47,7 @@ static void ScanWindowsOnMonitor(HMONITOR targetMonitor) {
         return;
     }
 
-    MonitorWindowList myList;
+    MonitorFl_WindowList myList;
     myList.targetMonitor = targetMonitor;
     myList.count = 0;
     myList.capacity = 64;

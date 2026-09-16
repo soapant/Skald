@@ -161,7 +161,7 @@ void TriggerRegionImage(void) {
 }
 
 FLINT_FEATURE_INIT {
-  // temporary
+    // temporary
     // fl_register_hotkey("Alt+Ctrl+Y", TriggerRegionImage);
     // fl_register_hotkey("Alt+Shift+Z", TriggerPosCopy);
     // fl_register_hotkey("Alt+Shift+X", TriggerColorPlain);

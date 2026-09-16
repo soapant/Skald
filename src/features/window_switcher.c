@@ -1,8 +1,8 @@
 #include "core/flapi.h"
 
 void window_switcher_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
-    WindowList list_of_titles = fl_get_all_window_titles();
-    WindowList list_of_names = fl_get_all_window_names();
+    Fl_WindowList list_of_titles = fl_get_all_window_titles();
+    Fl_WindowList list_of_names = fl_get_all_window_names();
 
     int count = list_of_titles.count;
     if (list_of_names.count < count) count = list_of_names.count;
