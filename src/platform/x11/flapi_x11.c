@@ -3,7 +3,7 @@
 #include "core/platform.h"
 #include "core/flapi_platform.h"
 #include "platform/draw.h"
-#include "platform/x11/drawing.h"
+#include "platform/x11/drawing_x11.h"
 #include "platform/x11/audio_x11.h"
 #include "config.h"
 #include <errno.h>

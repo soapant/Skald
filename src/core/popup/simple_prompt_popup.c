@@ -38,9 +38,9 @@
 #include <X11/Xft/Xft.h>
 #include <unistd.h>
 #include <stdatomic.h>
-#include "platform/x11/display.h"
-#include "platform/x11/drawing.h"
-#include "platform/x11/window_factory.h"
+#include "platform/x11/display_x11.h"
+#include "platform/x11/drawing_x11.h"
+#include "platform/x11/window_factory_x11.h"
 extern int WindowManager_RunLinux(WindowManager* wm);
 extern void WindowManager_ProcessEventsLinux(WindowManager* wm);
 extern void WindowManager_QuitLinux(WindowManager* wm);

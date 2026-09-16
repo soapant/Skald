@@ -12,7 +12,7 @@ void Platform_SetPreRenderStateWin32(const char *text, void *rect);
 #else
 #include <X11/Xlib.h>
 #include <X11/Xft/Xft.h>
-#include "platform/x11/display.h"
+#include "platform/x11/display_x11.h"
 void Platform_DrawListBackground(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap, int y, int h, bool selected);
 void Platform_DrawListItem(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap, FontHandle font, ListBoxInfo *lb, int idx, int y, int text_x, const char *icon_path);
 void Platform_DrawEditBackground(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap, FontHandle font);

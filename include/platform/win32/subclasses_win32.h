@@ -2,7 +2,7 @@
 #define SUBCLASSES_WIN32_H
 
 #include "core/types.h"
-#include "platform/win32/popup_helpers.h"
+#include "platform/win32/popup_helpers_win32.h"
 
 LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 LRESULT CALLBACK SettingsEditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);

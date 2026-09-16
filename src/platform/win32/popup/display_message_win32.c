@@ -17,7 +17,7 @@
 #include "helpers/helpers_flag.h"
 #include "helpers/helpers_file.h"
 #include "helpers/helpers_ui.h"
-#include "platform/win32/popup_helpers.h"
+#include "platform/win32/popup_helpers_win32.h"
 
 LRESULT CALLBACK DisplayMessageProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
   FadeWindowData* data = (FadeWindowData*)GetWindowLongPtrA(hwnd, GWLP_USERDATA);

@@ -1,6 +1,6 @@
 #include "wm/x11_wm.h"
 #include "deps/log.h"
-#include "platform/x11/display.h"
+#include "platform/x11/display_x11.h"
 #include <X11/Xlib.h>
 #include <ctype.h>
 #include <string.h>
