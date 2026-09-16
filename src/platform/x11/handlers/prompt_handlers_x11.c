@@ -1,7 +1,7 @@
 #include "core/context.h"
 #include "core/modal.h"
 #include "config.h"
-#include "platform/x11/drawing.h"
+#include "platform/x11/drawing_x11.h"
 #include "core/platform.h"
 #include "helpers/helpers_hotkey.h"
 #include "helpers/helpers_alias.h"
@@ -10,7 +10,7 @@
 #include "helpers/helpers_ui.h"
 #include "platform/ui.h"
 #include "core/vim.h"
-#include "platform/x11/input.h"
+#include "platform/x11/input_x11.h"
 #include "bindings/bindings.h"
 #include "bindings/vim_motions.h"
 #include "bindings/vim_helpers.h"
@@ -25,7 +25,7 @@
 #include <string.h>
 #include "core/timer.h"
 #include "platform/draw.h"
-#include "platform/x11/input_helpers.h"
+#include "platform/x11/input/input_helpers_x11.h"
 #include "platform/x11/ui_x11.h"
 #include "core/window_manager.h"
 #include <stdlib.h>

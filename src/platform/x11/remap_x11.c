@@ -1,5 +1,5 @@
 #include "core/platform.h"
-#include "platform/x11/input.h"
+#include "platform/x11/input_x11.h"
 #include "deps/log.h"
 #include <linux/input.h>
 #include <sys/time.h>
@@ -7,7 +7,7 @@
 #if __has_include(<X11/extensions/XTest.h>)
 #include <X11/extensions/XTest.h>
 #endif
-#include "platform/x11/display.h"
+#include "platform/x11/display_x11.h"
 
 void Platform_EmitKey(int vk_code, int down) {
     int linux_code = x11_vk_to_linux_key(vk_code);

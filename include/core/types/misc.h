@@ -1,13 +1,10 @@
 #ifndef TYPES_MISC_H
 #define TYPES_MISC_H
 
-#if defined(_WIN32)
-#include <windows.h>
-#else
+#if !defined(_WIN32)
 #include <time.h>
 #endif
-#include "core/types/window.h"
-#include "core/types/prompt.h"
+#include "core/types.h"
 
 typedef struct {
 #if defined(_WIN32)

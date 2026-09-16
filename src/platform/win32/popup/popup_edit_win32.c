@@ -17,7 +17,7 @@
 #include "helpers/helpers_flag.h"
 #include "helpers/helpers_file.h"
 #include "helpers/helpers_ui.h"
-#include "platform/win32/popup_helpers.h"
+#include "platform/win32/popup_helpers_win32.h"
 
 LRESULT CALLBACK EditPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
   if (uMsg == WM_PAINT) {

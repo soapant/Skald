@@ -1,5 +1,5 @@
 #define _GNU_SOURCE
-#include "platform/x11/input.h"
+#include "platform/x11/input_x11.h"
 #include "deps/log.h"
 #include "core/timer.h"
 #include "core/hotkey_manager.h"

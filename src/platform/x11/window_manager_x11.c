@@ -35,8 +35,8 @@
 #include <linux/input.h>
 #include <linux/uinput.h>
 #include <errno.h>
-#include "platform/x11/display.h"
-#include "platform/x11/input.h"
+#include "platform/x11/display_x11.h"
+#include "platform/x11/input_x11.h"
 #include "core/timer.h"
 #include "core/history.h"
 #include "core/remap_manager.h"

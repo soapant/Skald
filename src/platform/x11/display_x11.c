@@ -1,4 +1,4 @@
-#include "platform/x11/display.h"
+#include "platform/x11/display_x11.h"
 #include "deps/log.h"
 #include <stdio.h>
 #include <stdlib.h>

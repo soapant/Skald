@@ -3,7 +3,6 @@
 
 #include "core/types.h"
 #include <X11/Xlib.h>
-#include <X11/keysym.h>
 #include <stdbool.h>
 #include <stddef.h>
 

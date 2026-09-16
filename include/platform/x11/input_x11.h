@@ -5,6 +5,8 @@
 #include <linux/input.h>
 #include <X11/keysym.h>
 #include "core/types.h"
+#include <X11/X.h>
+#include <X11/Xlib.h>  
 
 #define X11_MAX_KEYBOARDS 16
 
