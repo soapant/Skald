@@ -113,6 +113,7 @@ static void Linux_HandleKeyPress(Display* dpy, XKeyEvent* ev, WindowManager* wm)
         bool handled = Linux_HandlePromptKey(&xev, state);
         if (!handled && IsInsertMode()) {
             char buf2[32]; KeySym ks2; int len2 = XLookupString(ev, buf2, sizeof(buf2), &ks2, NULL);
+            log_info("Linux_HandleKeyPress prompt insert check mods=%d ks=%lu len2=%d buf2='%.*s' pending=%d", mods, (unsigned long)ks2, len2, len2, buf2, pending_hotkey_vk);
             if (len2 > 0) {
                 extern int pending_hotkey_vk; extern int pending_hotkey_mod; extern long pending_hotkey_timeMs;
                 bool swallow=false;
@@ -120,12 +121,20 @@ static void Linux_HandleKeyPress(Display* dpy, XKeyEvent* ev, WindowManager* wm)
                     struct timeval tv; gettimeofday(&tv,NULL); long now=tv.tv_sec*1000+tv.tv_usec/1000;
                     if (now - pending_hotkey_timeMs < 800) {
                         unsigned char c=(unsigned char)buf2[0];
-                        int vkc=(c>='a'&&c<='z')?(c-'a'+'A'):(c>='A'&&c<='Z')?c:(c==' '?VK_SPACE:0);
+                        int vkc=0;
+                        if (c>='a'&&c<='z') vkc=c-'a'+'A';
+                        else if (c>='A'&&c<='Z') vkc=c;
+                        else if (c==' ') vkc=VK_SPACE;
+                        else if (c=='['||c=='{') vkc=VK_OEM_4;
+                        else if (c==']'||c=='}') vkc=VK_OEM_6;
+                        else if (c==';'||c==':') vkc=VK_OEM_1;
+                        else if (c=='/'||c=='?') vkc=VK_OEM_2;
                         if (vkc!=0 && vkc==pending_hotkey_vk) swallow=true;
                     }
                     pending_hotkey_vk=0;
                     pending_hotkey_mod=0;
                 }
+                if (!swallow && (mods & (HOTKEY_MOD_ALT|HOTKEY_MOD_CTRL))) swallow=true;
                 if (!swallow) {
                     bool is_printable=true;
                     for (int i=0;i<len2;i++) { unsigned char c=(unsigned char)buf2[i]; if (c<0x20||c==0x7F) {is_printable=false;break;}}

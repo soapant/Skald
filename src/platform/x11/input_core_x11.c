@@ -372,6 +372,7 @@ bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed) {
     if (val == 0 && x11_is_suppressed(code)) { x11_set_suppress(code, false); PROFILE_END_VAR(timer, "input:x11_handle_evdev"); return true; }
     if (val == 2 && x11_is_suppressed(code)) { PROFILE_END_VAR(timer, "input:x11_handle_evdev"); return true; }
     if (has_popup) {
+        if (val==1 && x11_handle_global_key(code, val)) { x11_set_suppress(code, true); PROFILE_END_VAR(timer, "input:x11_handle_evdev"); return true; }
         if (grabbed && g_x11_uinput_fd >= 0) x11_uinput_emit(ev);
         PROFILE_END_VAR(timer, "input:x11_handle_evdev");
         return false;
