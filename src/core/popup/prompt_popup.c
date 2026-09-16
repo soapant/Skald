@@ -9,7 +9,6 @@
 #include "bindings/vim_helpers.h"
 #include "bindings/vim_motions.h"
 #include "bindings/bindings.h"
-#include "core/number_shortcut.h"
 #include "core/prompt_controller.h"
 #include "config.h"
 #include "core/platform.h"
@@ -187,14 +186,6 @@ static void PromptPopup_OnKey(Popup* self, int vk_code, bool pressed, int modifi
         if (data->spec.refresh) data->spec.refresh(data->state->filter, FlintContext_Get()->window.hListBox, data->state->has_listbox ? &data->state->listbox : NULL);
         PROFILE_END_VAR(timer, "window_manager:PromptPopup_OnKey");
         return;
-    }
-    
-    if (vk_code >= '0' && vk_code <= '9') {
-        if (ctrl_pressed) {
-            HandleNumberShortcut(vk_code, FlintContext_Get()->window.hListBox, FlintContext_Get()->window.g_ActiveEditControl, data->state->has_listbox ? &data->state->listbox : NULL);
-            PROFILE_END_VAR(timer, "window_manager:PromptPopup_OnKey");
-            return;
-        }
     }
     
     if (vk_code == VK_RIGHT) {

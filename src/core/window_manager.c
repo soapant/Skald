@@ -11,7 +11,6 @@
 #include "bindings/vim_helpers.h"
 #include "bindings/vim_motions.h"
 #include "bindings/bindings.h"
-#include "core/number_shortcut.h"
 #include "core/prompt_controller.h"
 #include "config.h"
 #include "core/platform.h"
