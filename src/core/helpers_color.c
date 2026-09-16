@@ -13,7 +13,7 @@
 #include "helpers/file.h"
 #include "helpers/ui.h"
 #include "core/timer.h"
-#include "core/common_ui.h"
+#include "platform/ui.h"
 
 unsigned long rgb_to_hex(unsigned long win_color) {
     unsigned long r = win_color & 0xFF;          

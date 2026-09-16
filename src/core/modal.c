@@ -2,7 +2,7 @@
 #include "core/modal.h"
 #include "core/modal.h"
 #include "config.h"
-#include "core/common_ui.h"
+#include "platform/ui.h"
 #include "core/window_manager.h"
 #include "core/context.h"
 

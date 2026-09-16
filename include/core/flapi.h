@@ -12,7 +12,7 @@
 #include "core/platform.h"
 #include "core/context.h"
 #include "core/modal.h"
-#include "core/common_ui.h"
+#include "platform/ui.h"
 #include "core/window_manager.h"
 #include "helpers/hotkey.h"
 #include "helpers/alias.h"
