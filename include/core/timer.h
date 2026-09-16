@@ -15,14 +15,6 @@
 
 #define TIMER_LOG_CAP 65536
 
-extern char g_timer_buffer[TIMER_LOG_CAP];
-extern size_t g_timer_buffer_len;
-extern int g_timer_atexit_registered;
-extern int g_timer_file_initialized;
-
-void TimerBufferFlush(void);
-void TimerBufferAppend(const char* line);
-
 static inline WinTimer TimerStart(void) {
   WinTimer t;
 #if defined(_WIN32)
