@@ -123,8 +123,8 @@ static void Linux_HandleKeyPress(Display* dpy, XKeyEvent* ev, WindowManager* wm)
                         int vkc=(c>='a'&&c<='z')?(c-'a'+'A'):(c>='A'&&c<='Z')?c:(c==' '?VK_SPACE:0);
                         if (vkc!=0 && vkc==pending_hotkey_vk) swallow=true;
                     }
-                    if (swallow) pending_hotkey_vk=0;
-                    else if (now - pending_hotkey_timeMs >=800) pending_hotkey_vk=0;
+                    pending_hotkey_vk=0;
+                    pending_hotkey_mod=0;
                 }
                 if (!swallow) {
                     bool is_printable=true;
