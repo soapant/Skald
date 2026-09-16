@@ -14,11 +14,11 @@
 #include "core/modal.h"
 #include "platform/ui.h"
 #include "core/window_manager.h"
-#include "helpers/hotkey.h"
-#include "helpers/alias.h"
-#include "helpers/flag.h"
-#include "helpers/file.h"
-#include "helpers/ui.h"
+#include "helpers/helpers_hotkey.h"
+#include "helpers/helpers_alias.h"
+#include "helpers/helpers_flag.h"
+#include "helpers/helpers_file.h"
+#include "helpers/helpers_ui.h"
 #include "types/window.h"
 
 #define MAX_PATH 260

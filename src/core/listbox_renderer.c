@@ -6,7 +6,7 @@
 #if !defined(_WIN32)
 #include "platform/x11/drawing.h"
 #endif
-#include "helpers/ui.h"
+#include "helpers/helpers_ui.h"
 #include "core/timer.h"
 
 #if !defined(_WIN32)

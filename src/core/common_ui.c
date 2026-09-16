@@ -3,11 +3,11 @@
 #include "core/modal.h"
 #include "config.h"
 #include "core/platform.h"
-#include "helpers/hotkey.h"
-#include "helpers/alias.h"
-#include "helpers/flag.h"
-#include "helpers/file.h"
-#include "helpers/ui.h"
+#include "helpers/helpers_hotkey.h"
+#include "helpers/helpers_alias.h"
+#include "helpers/helpers_flag.h"
+#include "helpers/helpers_file.h"
+#include "helpers/helpers_ui.h"
 #include "platform/ui.h"
 #include "core/vim.h"
 #include "core/platform.h"
@@ -18,11 +18,6 @@
 #else
 #include <shlwapi.h>
 #endif
-
-bool g_add_alias_to_string = true;
-char g_alias_display[MAX_ITEMS][512] = {0};
-int g_alias_display_count = 0;
-bool g_alias_display_active = false;
 
 static bool FuzzyMatch(const char* text, const char* pattern) {
     if (!pattern || !pattern[0]) return true;
