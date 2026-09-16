@@ -27,6 +27,26 @@ static void Win32_SyncFilterFromEdit(FlintContext* ctx) {
     SendMessageA(hEdit, EM_GETSEL, (WPARAM)&s, (LPARAM)&e);
     ctx->window.filter_cursor = (int)s;
 }
+
+static void Win32_ApplyFilterToEdit(FlintContext* ctx) {
+    if (!ctx) return;
+    HWND hEdit = WH_TO_HWND(ctx->window.hEditControl);
+    if (!hEdit) hEdit = WH_TO_HWND(ctx->window.g_ActiveEditControl);
+    if (!hEdit || !IsWindow(hEdit)) return;
+    int pos = ctx->window.filter_cursor;
+    int len = (int)strlen(ctx->window.filter);
+    if (pos < 0) pos = 0;
+    if (pos > len) pos = len;
+    SetWindowTextA(hEdit, ctx->window.filter);
+    SendMessageA(hEdit, EM_SETSEL, (WPARAM)pos, (LPARAM)pos);
+    if (WH_TO_HWND(ctx->window.g_ActiveEditControl) &&
+        WH_TO_HWND(ctx->window.g_ActiveEditControl) != hEdit) {
+        HWND hActive = WH_TO_HWND(ctx->window.g_ActiveEditControl);
+        SetWindowTextA(hActive, ctx->window.filter);
+        SendMessageA(hActive, EM_SETSEL, (WPARAM)pos, (LPARAM)pos);
+    }
+    UpdateTextCaret(WH_FROM_HWND(hEdit));
+}
 #endif
 
 ListBoxInfo* Vim_GetListBox(FlintContext* ctx) {
@@ -118,12 +138,7 @@ void Vim_SetText(FlintContext* ctx, const char* text) {
         ctx->prompt_callbacks.refresh(ctx->window.filter, ctx->window.hListBox, lb);
     }
 #if defined(_WIN32)
-    if (WH_TO_HWND(ctx->window.hEditControl)) {
-        SetWindowTextA(WH_TO_HWND(ctx->window.hEditControl), ctx->window.filter);
-    }
-    if (WH_TO_HWND(ctx->window.g_ActiveEditControl)) {
-        SetWindowTextA(WH_TO_HWND(ctx->window.g_ActiveEditControl), ctx->window.filter);
-    }
+    Win32_ApplyFilterToEdit(ctx);
 #endif
 }
 
@@ -241,6 +256,9 @@ bool SequenceTimedOut(void) { return seq_state.timed_out; }
 
 void DeleteLastTypedChar(FlintContext* ctx) {
     if (!ctx) return;
+#if defined(_WIN32)
+    Win32_SyncFilterFromEdit(ctx);
+#endif
     // Try to delete from active prompt state if it holds the typed char (for insert JK)
     WindowManager* wm = WindowManager_Get();
     Popup* top = wm ? WindowManager_GetTopPopup(wm) : NULL;
@@ -261,7 +279,7 @@ void DeleteLastTypedChar(FlintContext* ctx) {
                 ctx->prompt_callbacks.refresh(ctx->window.filter, ctx->window.hListBox, lb);
             }
 #if defined(_WIN32)
-            if (WH_TO_HWND(ctx->window.hEditControl)) SetWindowTextA(WH_TO_HWND(ctx->window.hEditControl), ctx->window.filter);
+            Win32_ApplyFilterToEdit(ctx);
 #endif
             return;
         }
@@ -277,9 +295,36 @@ void DeleteLastTypedChar(FlintContext* ctx) {
             strncpy(ctx->window.filter, s->user_input, sizeof(ctx->window.filter)-1);
             ctx->window.filter[sizeof(ctx->window.filter)-1]='\0';
             ctx->window.filter_cursor = s->cursor;
+#if defined(_WIN32)
+            Win32_ApplyFilterToEdit(ctx);
+#endif
             return;
         }
     }
+#if defined(_WIN32)
+    {
+        extern PromptState* Platform_GetWin32PromptState(void);
+        PromptState* ws = Platform_GetWin32PromptState();
+        if (ws) {
+            int len = (int)strlen(ctx->window.filter);
+            int cur = ctx->window.filter_cursor;
+            if (cur > 0 && len > 0) {
+                int del = cur - 1;
+                memmove(ctx->window.filter + del, ctx->window.filter + del + 1, len - del);
+                ctx->window.filter_cursor = del;
+                ws->cursor = (size_t)del;
+                strncpy(ws->filter, ctx->window.filter, sizeof(ws->filter)-1);
+                ws->filter[sizeof(ws->filter)-1] = '\0';
+                if (ctx->prompt_callbacks.refresh) {
+                    ListBoxInfo* lb = Vim_GetListBox(ctx);
+                    ctx->prompt_callbacks.refresh(ctx->window.filter, ctx->window.hListBox, lb);
+                }
+                Win32_ApplyFilterToEdit(ctx);
+                return;
+            }
+        }
+    }
+#endif
     char text[512];
     Vim_GetText(ctx, text, sizeof(text));
     int len = (int)strlen(text);
@@ -296,7 +341,6 @@ void DeleteLastTypedChar(FlintContext* ctx) {
         ctx->prompt_callbacks.refresh(ctx->window.filter, ctx->window.hListBox, lb);
     }
 #if defined(_WIN32)
-    if (WH_TO_HWND(ctx->window.hEditControl)) SetWindowTextA(WH_TO_HWND(ctx->window.hEditControl), ctx->window.filter);
-    if (WH_TO_HWND(ctx->window.g_ActiveEditControl)) SetWindowTextA(WH_TO_HWND(ctx->window.g_ActiveEditControl), ctx->window.filter);
+    Win32_ApplyFilterToEdit(ctx);
 #endif
 }
