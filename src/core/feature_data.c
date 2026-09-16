@@ -41,7 +41,7 @@ struct feature_data* GetFeatureData(const char* name) {
         data = malloc(sizeof(struct feature_data));
         if (data) {
             memset(data, 0, sizeof(struct feature_data));
-            data->name = _strdup(name);
+            data->name = strdup(name);
             HashMap_Put(g_feature_data, name, data);
         }
     }
