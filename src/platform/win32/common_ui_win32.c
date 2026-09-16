@@ -635,7 +635,7 @@ void CreateChildControls(WindowHandle hwndParent, HFONT hFont, const char* list[
             lb->last_items = list;
             lb->last_item_count = count;
             lb->selected_index = -1;
-            for (int i = 0; i < count && i < MAX_ITEMS; i++) {
+            for (int i = 0; i < count && i < MAX_VISIBLE_ITEMS; i++) {
                 if (list[i]) {
                     strncpy(lb->populated_cache[i], list[i], 511);
                     lb->populated_cache[i][511] = '\0';
@@ -652,7 +652,7 @@ void CreateChildControls(WindowHandle hwndParent, HFONT hFont, const char* list[
             lb->last_items = NULL;
             lb->last_item_count = 0;
             lb->selected_index = -1;
-            for (int i=0;i<MAX_ITEMS;i++) lb->matching_indices[i]=i;
+            for (int i=0;i<MAX_VISIBLE_ITEMS;i++) lb->matching_indices[i]=i;
             BuildAliasDisplayItems(NULL, 0);
             log_info("list NULL count=%d lb_count=0", count);
         }
