@@ -2,7 +2,7 @@
 #include "deps/log.h"
 #include "core/context.h"
 #include "core/types.h"
-#include "platform/win32/popup_helpers.h"
+#include "platform/win32/popup_helpers_win32.h"
 
 bool only_once = true;
 bool rainbow_init = false;

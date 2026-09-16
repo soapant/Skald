@@ -25,7 +25,7 @@
 #include "helpers/helpers_ui.h"
 #include "core/timer.h"
 #include "platform/ui.h"
-#include "platform/x11/drawing.h"
+#include "platform/x11/drawing_x11.h"
 #define NANOSVG_IMPLEMENTATION
 #include "deps/nanosvg.h"
 #define NANOSVGRAST_IMPLEMENTATION

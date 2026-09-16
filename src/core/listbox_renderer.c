@@ -4,7 +4,7 @@
 #include "config.h"
 #include "platform/draw.h"
 #if !defined(_WIN32)
-#include "platform/x11/drawing.h"
+#include "platform/x11/drawing_x11.h"
 #endif
 #include "helpers/helpers_ui.h"
 #include "core/timer.h"

@@ -19,9 +19,6 @@
 #include "helpers/helpers_flag.h"
 #include "helpers/helpers_file.h"
 #include "helpers/helpers_ui.h"
-#include "types/window.h"
-
-#define MAX_PATH 260
 
 #define WHITELIST 1
 #define BLACKLIST 0
