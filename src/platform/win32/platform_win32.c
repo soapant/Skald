@@ -820,7 +820,7 @@ bool Platform_BuildFeature(const char* src, const char* out) {
 }
 
 static BOOL CALLBACK EnumWindowsProcAll(HWND hwnd, LPARAM lParam) {
-    WindowList *list = (WindowList *)lParam;
+    Fl_WindowList *list = (Fl_WindowList *)lParam;
     if (!IsWindowVisible(hwnd)) return TRUE;
     char class_name[256];
     if (GetClassNameA(hwnd, class_name, sizeof(class_name)) > 0) {
@@ -835,7 +835,7 @@ static BOOL CALLBACK EnumWindowsProcAll(HWND hwnd, LPARAM lParam) {
     }
     return TRUE;
 }
-typedef struct { WindowList *titles; WindowList *names; } WinPair;
+typedef struct { Fl_WindowList *titles; Fl_WindowList *names; } WinPair;
 
 static BOOL CALLBACK EnumWindowsProcPair(HWND hwnd, LPARAM lParam) {
     WinPair *pair = (WinPair*)lParam;
@@ -874,14 +874,14 @@ static BOOL CALLBACK EnumWindowsProcPair(HWND hwnd, LPARAM lParam) {
     return TRUE;
 }
 
-static void win32_collect_pair(WindowList *out_titles, WindowList *out_names) {
+static void win32_collect_pair(Fl_WindowList *out_titles, Fl_WindowList *out_names) {
     WinPair p = { out_titles, out_names };
     EnumWindows(EnumWindowsProcPair, (LPARAM)&p);
 }
 
 static BOOL CALLBACK EnumWindowsProcTitles(HWND hwnd, LPARAM lParam) {
-    WindowList *list = (WindowList *)lParam;
-    WindowList dummy = {0};
+    Fl_WindowList *list = (Fl_WindowList *)lParam;
+    Fl_WindowList dummy = {0};
     WinPair p = { list, &dummy };
     if (!IsWindowVisible(hwnd)) return TRUE;
     char cls[256];
@@ -904,8 +904,8 @@ static BOOL CALLBACK EnumWindowsProcTitles(HWND hwnd, LPARAM lParam) {
 }
 
 static BOOL CALLBACK EnumWindowsProcNames(HWND hwnd, LPARAM lParam) {
-    WindowList *list = (WindowList *)lParam;
-    WindowList dummy={0};
+    Fl_WindowList *list = (Fl_WindowList *)lParam;
+    Fl_WindowList dummy={0};
     WinPair p={&dummy,list};
     if (!IsWindowVisible(hwnd)) return TRUE;
     char cls[256];
@@ -927,16 +927,16 @@ static BOOL CALLBACK EnumWindowsProcNames(HWND hwnd, LPARAM lParam) {
     return TRUE;
 }
 
-WindowList Platform_GetWindowTitles() {
-    WindowList titles={0}, names={0};
+Fl_WindowList Platform_GetWindowTitles() {
+    Fl_WindowList titles={0}, names={0};
     win32_collect_pair(&titles, &names);
     for(int i=0;i<names.count;i++) free(names.windows[i]);
     free(names.windows);
     log_info("Platform_GetWindowTitles count=%d", titles.count);
     return titles;
 }
-WindowList Platform_GetWindowNames() {
-    WindowList titles={0}, names={0};
+Fl_WindowList Platform_GetWindowNames() {
+    Fl_WindowList titles={0}, names={0};
     win32_collect_pair(&titles, &names);
     for(int i=0;i<titles.count;i++) free(titles.windows[i]);
     free(titles.windows);
@@ -1011,6 +1011,16 @@ void Platform_StartNotificationDaemon(void) {
     if (HttpUrlForNotis) {
         StartNtfyDaemon(HttpUrlForNotis, Platform_OnNotificationReceived);
     }
+}
+
+Fl_Pos Platform_GetCursorPos(void) {
+    POINT point;
+    
+    if (GetCursorPos(&point)) {
+        return (Fl_Pos){(int)point.x, (int)point.y};
+    }
+    
+    return (Fl_Pos){0, 0};
 }
 
 int Platform_InitializeTrayIcon(void) { return 0; }

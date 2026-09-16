@@ -1344,14 +1344,14 @@ bool Platform_BuildFeature(const char* src, const char* out) {
     return ok;
 }
 
-WindowList Platform_GetWindowTitles() {
-  WindowList l = Wm_GetWindowTitles();
+Fl_WindowList Platform_GetWindowTitles() {
+  Fl_WindowList l = Wm_GetWindowTitles();
   log_info("Platform_GetWindowTitles count=%d", l.count);
   return l;
 }
 
-WindowList Platform_GetWindowNames() {
-  WindowList l = Wm_GetWindowNames();
+Fl_WindowList Platform_GetWindowNames() {
+  Fl_WindowList l = Wm_GetWindowNames();
   log_info("Platform_GetWindowNames count=%d", l.count);
   return l;
 }
@@ -1410,4 +1410,8 @@ void Platform_DisplayMessage(const char* message, int centerX, int centerY, int 
     (void)message; (void)centerX; (void)centerY; (void)maxWidth; (void)maxHeight; (void)timeout; (void)color;
 }
 void Platform_DismissMessage(void) {}
+
+Fl_Pos Platform_GetCursorPos(void) {
+    return Wm_GetCursorPosition();
+}
 
