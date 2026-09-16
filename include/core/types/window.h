@@ -72,9 +72,17 @@ typedef struct {
 } MonitorWindowData;
 
 typedef struct {
+    size_t r, g, b;
+} Fl_Color;
+
+typedef struct {
+    int x,y;
+} Fl_Pos;
+
+typedef struct {
     char** windows;
     int count;
-} WindowList;
+} Fl_WindowList;
 
 typedef struct {
 #if defined(_WIN32)
@@ -85,7 +93,7 @@ typedef struct {
     int count;
     int capacity;
     MonitorWindowData items[64];
-} MonitorWindowList;
+} MonitorFl_WindowList;
 
 typedef struct {
     int targetIndex;

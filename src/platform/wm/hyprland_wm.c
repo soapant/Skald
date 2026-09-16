@@ -60,9 +60,9 @@ bool focus_window_title_hyprland(char* title) {
   return false;
 }
 
-WindowList get_window_names_hyprland() {
+Fl_WindowList get_window_names_hyprland() {
    char* output = Platform_RunTerminalCommand("hyprctl clients -j", false);
-   WindowList list = { .windows = NULL, .count = 0 };
+   Fl_WindowList list = { .windows = NULL, .count = 0 };
    char buffer[512];
    if (output == NULL || strlen(output) == 0) { log_error("output is NULL or empty"); return list; }
    StringList lines = String_Split(output, "\n");
@@ -84,9 +84,9 @@ WindowList get_window_names_hyprland() {
    free(output);
    return list;
 }
-WindowList get_window_titles_hyprland() {
+Fl_WindowList get_window_titles_hyprland() {
    char* output = Platform_RunTerminalCommand("hyprctl clients -j", false);
-   WindowList list = { .windows = NULL, .count = 0 };
+   Fl_WindowList list = { .windows = NULL, .count = 0 };
    char buffer[512];
    if (output == NULL || strlen(output) == 0) { log_error("output is NULL or empty"); return list; }
    StringList lines = String_Split(output, "\n");
@@ -107,4 +107,9 @@ WindowList get_window_titles_hyprland() {
    free(output);
    return list;
 }
-WindowList get_list_of_windows_hyprland() { return get_window_names_hyprland(); }
+Fl_WindowList get_list_of_windows_hyprland() { return get_window_names_hyprland(); }
+Fl_Pos get_cursor_position_hyprland(void) { 
+  char* output = Platform_RunTerminalCommand("hyprctl -j cursorpos",false);
+  printf("%s \n",output);
+  return (Fl_Pos){0, 0}; 
+}

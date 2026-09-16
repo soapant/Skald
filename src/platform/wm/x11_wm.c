@@ -79,9 +79,9 @@ bool focus_window_title_x11(char* title) {
     return true;
 }
 
-WindowList get_window_names_x11() {
+Fl_WindowList get_window_names_x11() {
    char* output = Platform_RunTerminalCommand("wmctrl -x -l", false);
-   WindowList list = { .windows = NULL, .count = 0 };
+   Fl_WindowList list = { .windows = NULL, .count = 0 };
    char buffer[256]; 
    if (output == NULL || strlen(output) == 0) { log_error("output is NULL or empty"); return list; }
    StringList lines = String_Split(output, "\n");
@@ -107,9 +107,9 @@ WindowList get_window_names_x11() {
    free(output);
    return list;
 }
-WindowList get_window_titles_x11() {
+Fl_WindowList get_window_titles_x11() {
    char* output = Platform_RunTerminalCommand("wmctrl -l", false);
-   WindowList list = { .windows = NULL, .count = 0 };
+   Fl_WindowList list = { .windows = NULL, .count = 0 };
    if (output == NULL || strlen(output) == 0) { log_error("output is NULL or empty"); return list; }
    StringList lines = String_Split(output, "\n");
    for (size_t i = 0; i < lines.count; i++) {
@@ -131,5 +131,29 @@ WindowList get_window_titles_x11() {
    free(output);
    return list;
 }
-WindowList get_list_of_windows_x11() { return get_window_names_x11(); }
+Fl_WindowList get_list_of_windows_x11() { 
+  return get_window_names_x11();
+}
 
+Fl_Pos get_cursor_position_x11(void) { 
+    Display *display;
+    Window root_window;
+    Window window_returned;
+    int root_x = 0, root_y = 0;
+    int win_x, win_y;
+    unsigned int mask_return;
+
+    display = XOpenDisplay(NULL);
+    if (display == NULL) {
+        return (Fl_Pos){0, 0};
+    }
+
+    root_window = DefaultRootWindow(display);
+
+    XQueryPointer(display, root_window, &window_returned, &window_returned,
+                  &root_x, &root_y, &win_x, &win_y, &mask_return);
+
+    XCloseDisplay(display);
+
+    return (Fl_Pos){root_x, root_y};
+}

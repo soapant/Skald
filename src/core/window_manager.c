@@ -143,7 +143,7 @@ static DWORD WINAPI feature_watcher_thread_win(LPVOID arg) {
             } else {
                 log_error("compile failed for %s", base);
             }
-            Sleep(2000); // temporary maybe we could make configurable just a delay between checks for hot reloading
+            Sleep(TimeBetweenHotReload*1000);
         } else {
             for (int i=0;i<5;i++) {
                 if (InterlockedCompareExchange(&g_watcher_stop_win, 0, 0)!=0 || (wm && wm->watcher_stop)) break;

@@ -213,9 +213,9 @@ static bool sway_app_for_pid(const char *pid_pos, const char *next_pid, char *ou
     return false;
 }
 
-WindowList get_window_names_sway() {
+Fl_WindowList get_window_names_sway() {
     char *json = Platform_RunTerminalCommand("swaymsg -t get_tree", false);
-    WindowList list = {0};
+    Fl_WindowList list = {0};
     if (!json || !*json) { log_error("output is NULL or empty"); free(json); return list; }
     for (char *p = json; (p = strstr(p, "\"pid\":")); p += 6) {
         char *next = strstr(p + 6, "\"pid\":");
@@ -232,9 +232,9 @@ WindowList get_window_names_sway() {
     return list;
 }
 
-WindowList get_window_titles_sway() {
+Fl_WindowList get_window_titles_sway() {
     char *json = Platform_RunTerminalCommand("swaymsg -t get_tree", false);
-    WindowList list = {0};
+    Fl_WindowList list = {0};
     if (!json || !*json) { log_error("output is NULL or empty"); free(json); return list; }
     for (char *p = json; (p = strstr(p, "\"pid\":")); p += 6) {
         char *next = strstr(p + 6, "\"pid\":");
@@ -248,4 +248,7 @@ WindowList get_window_titles_sway() {
     }
     free(json);
     return list;
+}
+Fl_Pos get_cursor_position_sway(void) { 
+  return (Fl_Pos){0, 0}; 
 }
