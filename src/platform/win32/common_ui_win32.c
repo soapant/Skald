@@ -470,7 +470,7 @@ void UpdateTextCaret(WindowHandle hwndEditControl)
   if (oldFont) SelectObject(hdc, oldFont);
   ReleaseDC(hwnd, hdc);
 
-  int caretHeight = 24;
+  int caretHeight = 20;
   if (tm.tmHeight > 0 && tm.tmHeight < caretHeight) caretHeight = tm.tmHeight;
   int caretWidth;
   if (IsInsertMode()) {
@@ -484,7 +484,7 @@ void UpdateTextCaret(WindowHandle hwndEditControl)
 
   RECT rc;
   GetClientRect(hwnd, &rc);
-  int centeredY = (rc.bottom - caretHeight) / 2;
+  int centeredY = (rc.bottom - caretHeight) / 2 + 30;
   if (centeredY < 0) centeredY = 0;
 
   POINT pt = {0, centeredY};
