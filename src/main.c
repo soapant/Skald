@@ -33,7 +33,6 @@ int main() {
 
   Platform_StartUniversalTimer();
   Platform_InitializeTrayIcon();
-  Platform_StartNotificationDaemon();
   FlintContext_Get()->feature_history = HashMap_Create(32);
   InitFeatureDataSystem();
   History_Init();

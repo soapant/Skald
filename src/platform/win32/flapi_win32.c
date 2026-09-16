@@ -1,8 +1,12 @@
+#include <initguid.h> 
 #include <windows.h>
 #include "deps/log.h"
 #include <shlwapi.h>
 #include "core/flapi.h"
 #include "core/platform.h"
+#include <mmdeviceapi.h>
+#include <endpointvolume.h>
+
 
 
 void fl_get_all_files_from_dir_platform(const char* dir_path, char** list_of_allowed_extensions, ListOfFiles* list_of_files,char** list_of_names_to_ignore) {
@@ -396,5 +400,17 @@ bool fl_increment_volume_by_platform(int increment) {
     
     int target_volume = current_volume + increment;
     
+    return fl_set_volume_platform(target_volume);
+}
+
+bool fl_decrement_volume_by_percent_platform(int decrement_percent) {
+    int current_volume = fl_get_current_volume_platform();
+    int target_volume = current_volume - (current_volume * decrement_percent / 100);
+    return fl_set_volume_platform(target_volume);
+}
+
+bool fl_increment_volume_by_percent_platform(int increment_percent) {
+    int current_volume = fl_get_current_volume_platform();
+    int target_volume = current_volume + (current_volume * increment_percent / 100);
     return fl_set_volume_platform(target_volume);
 }
