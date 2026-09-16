@@ -37,6 +37,12 @@ struct feature_data {
 };
 
 typedef struct {
+   char* alias;
+   char* text;
+   char* feature;
+} AliasEntry;
+
+typedef struct {
     char* initial_text;
     char* result;
 #if defined(_WIN32)

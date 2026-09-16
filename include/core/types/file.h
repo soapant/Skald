@@ -6,7 +6,7 @@
 #if defined(_WIN32)
 #include <windows.h>
 #endif
-#include "core/types/window.h"
+#include "core/types.h"
 
 #ifndef ARRAY_LEN
 #define ARRAY_LEN(a) (sizeof(a) / sizeof((a)[0]))

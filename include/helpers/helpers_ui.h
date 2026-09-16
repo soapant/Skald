@@ -3,8 +3,7 @@
 
 #include <stdbool.h>
 #include "core/types.h"
-#include "core/types/window.h"
-#include "core/types/color.h"
+#include "core/types.h"
 
 unsigned long rgb_to_hex(unsigned long win_color);
 void eval_window_title_color(PromptState * state,unsigned long *window_title_color);
