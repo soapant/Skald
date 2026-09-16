@@ -60,7 +60,7 @@ int SearchFlagsInText(const char* text, const void* flag_array, int flag_count, 
     if (!text || !flag_array || !matches) return 0;
     
     int match_count = 0;
-    char* text_copy = _strdup(text);
+    char* text_copy = strdup(text);
     if (!text_copy) return 0;
     
     for (int i = 0; text_copy[i]; i++) {

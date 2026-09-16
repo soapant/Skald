@@ -101,7 +101,7 @@ void* HashMap_PutReplace(HashMap* map, const char* key, void* value) {
 
     HashMapEntry* new_entry = malloc(sizeof(HashMapEntry));
     if (!new_entry) return NULL;
-    new_entry->key = _strdup(key);
+    new_entry->key = strdup(key);
     if (!new_entry->key) {
         free(new_entry);
         return NULL;

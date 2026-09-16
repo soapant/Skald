@@ -6,9 +6,6 @@
 #include <stddef.h>
 #include <string.h>
 #include <stdio.h>
-#if !defined(_WIN32)
-#include <sys/time.h>
-#endif
 #include "core/context.h"
 #include "core/modal.h"
 #include "core/types.h"
@@ -45,8 +42,6 @@ void UI_GetCurrentCursorPosition(uint32_t *start, uint32_t *end);
 void UI_Redraw(ListBoxInfo* lb, WindowHandle hListBox);
 void UI_RedrawNow(ListBoxInfo* lb, WindowHandle hListBox);
 void UI_GetParent(WindowHandle hwnd);
-
-#define UI_GetCurrentText(edit, buffer) UI_GetCurrentTextEdit(edit, buffer, sizeof(buffer))
 
 #define UI_DEBOUNCE_MS 0
 #define UI_DEBOUNCE_TIMER_ID 998
