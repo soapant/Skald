@@ -1,4 +1,5 @@
 #include "core/context.h"
+#include "deps/log.h"
 #include "core/modal.h"
 #include "config.h"
 #include <ctype.h>
@@ -25,9 +26,10 @@ bool IsWindowBlacklisted(const char* window_title, const char* blacklist[], int 
 }
 
 int UI_LookupTrueIndex(const char* name) {
+    if (!FlintContext_Get()->g_item_index_map || !name) return -1;
     size_t value = (size_t)HashMap_Get(FlintContext_Get()->g_item_index_map, name);
-    printf("%i \n",value);
-    return value;
+    log_info("UI_LookupTrueIndex name='%s' raw=%zu", name, value);
+    return value > 0 ? (int)(value - 1) : -1;
 }
 
 
