@@ -1,39 +1,51 @@
 #include "core/flapi.h"
 
-void HandleKillMyProgram(void) {
+void KillMyProgram(void) {
     fl_terminate_process_by_name("flint.exe");
     fl_terminate_process_by_name("main.exe");
 }
-void HandleShowCurrentTime(void) {
+void ShowCurrentTime(void) {
   char* output = fl_run_terminal_command("date");
   if (output) {
     SubjectiveMessageDisplay(output,140,3,COLOR_TEXT);
   }
 }
-void HandleShowCurrentBatteryPercentage(void) {
+void ShowCurrentBatteryPercentage(void) {
   char* output = fl_run_terminal_command("cat /sys/class/power_supply/BAT0/capacity");
   if (output) {
     SubjectiveMessageDisplay(output,140,3,COLOR_TEXT);
   }
 }
 
-void HandleSettingsTrigger(void) {
+void SettingsTrigger(void) {
     Platform_SettingsPopUp();
 }
 
-void HandleMediaPlayPause(void) {
+void MediaPlayPause(void) {
   fl_toggle_play_pause();
 }
-void HandleScreenshotArea(void) {
+
+void ScreenshotArea(void) {
   fl_run_terminal_command("grimshot copy area");
+}
+void IncrementVolume(void) {
+  printf("INCREMENT \n");
+  fl_increment_volume_by(5);
+}
+
+void DecrementVolume(void) {
+  printf("DECREMENT \n");
+  fl_decrement_volume_by(5);
 }
 
 FLINT_FEATURE_INIT {
-    fl_register_hotkey("Alt+Shift+K", HandleKillMyProgram);
-    fl_register_hotkey("Alt+Shift+T", HandleShowCurrentTime);
-    fl_register_hotkey("Alt+D", HandleSettingsTrigger);
-    fl_register_hotkey("Alt+Shift+N", HandleShowCurrentBatteryPercentage);
-    fl_register_hotkey("Ctrl+Shift+N", HandleScreenshotArea);
-    fl_register_hotkey("RShift",HandleMediaPlayPause); 
+    fl_register_hotkey("Alt+Shift+K", KillMyProgram);
+    fl_register_hotkey("Alt+Shift+T", ShowCurrentTime);
+    fl_register_hotkey("Alt+D", SettingsTrigger);
+    fl_register_hotkey("Alt+Shift+N", ShowCurrentBatteryPercentage);
+    fl_register_hotkey("Ctrl+Shift+N", ScreenshotArea);
+    fl_register_hotkey("RShift",MediaPlayPause); 
+    fl_register_hotkey("Ctrl+[",IncrementVolume); 
+    fl_register_hotkey("Ctrl+]",DecrementVolume); 
 }
 

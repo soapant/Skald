@@ -322,9 +322,13 @@ bool fl_register_hotkey_impl(char* hotkey_string,void (*on_hotkey_trigger)(void)
 
 bool fl_register_remapping(const char* src, const char* dst);
 // =============================================================================
-// AUDIO
+// AUDIO / VOLUME
 // =============================================================================
 void fl_toggle_play_pause(void);
+int fl_get_current_volume(void);
+bool fl_set_current_volume(int volume);
+bool fl_increment_volume_by(int increment);
+bool fl_decrement_volume_by(int decrement);
 
 // =============================================================================
 // WINDOW IO

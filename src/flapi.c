@@ -790,3 +790,16 @@ void fl_toggle_play_pause(void) {
 Fl_Pos fl_get_cursor_pos(void) {
   return Platform_GetCursorPos();
 }
+int fl_get_current_volume(void) {
+  return fl_get_current_volume_platform();
+}
+bool fl_set_current_volume(int volume) {
+  return fl_set_volume_platform(volume);
+}
+bool fl_increment_volume_by(int increment) {
+  return fl_increment_volume_by_platform(increment);
+}
+
+bool fl_decrement_volume_by(int decrement) {
+  return fl_decrement_volume_by_platform(decrement);
+}
