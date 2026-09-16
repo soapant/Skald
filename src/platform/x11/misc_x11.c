@@ -164,12 +164,7 @@ static bool ResolvePathToken(const char* token, char* out, size_t out_size) {
     PROFILE_START(timer);
     for (unsigned int i = 0; i < PATH_VAR_COUNT; i++) {
         if (strcmp(G_PATH_VARS[i].name, token) == 0) {
-            const char* value =
-#if defined(_WIN32)
-                G_PATH_VARS[i].win32_value;
-#else
-                G_PATH_VARS[i].linux_value;
-#endif
+            const char* value = G_PATH_VARS[i].linux_value;
             if (value == NULL || value[0] == '\0') { PROFILE_END_VAR(timer, "misc_x11:ResolvePathToken"); return false; }
             snprintf(out, out_size, "%s", value);
             PROFILE_END_VAR(timer, "misc_x11:ResolvePathToken");

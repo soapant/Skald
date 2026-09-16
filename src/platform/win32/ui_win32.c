@@ -6,7 +6,7 @@
 #include "core/hotkey_manager.h"
 #include "core/number_shortcut.h"
 #include "core/feature_data.h"
-#include "platform/subclasses.h"
+#include "platform/subclasses_win32.h"
 #include "core/platform.h"
 #include "bindings/bindings.h"
 #include "helpers/flag.h"
