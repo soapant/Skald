@@ -8,7 +8,7 @@
 #define OUTPUT BUILD_FOLDER "/flint_win.exe"
 #define CROSS_CC "x86_64-w64-mingw32-gcc"
 
-#define CC_FLAGS "-std=gnu17", "-DCOBJMACROS", "-DWINVER=0x0601", "-D_WIN32_WINNT=0x0601", "-I/usr/x86_64-w64-mingw32/include", "-I", "include", "-MMD", "-MP","-O3","-Wall","-Wextra"
+#define CC_FLAGS "-std=gnu17", "-DCOBJMACROS", "-DWINVER=0x0601", "-D_WIN32_WINNT=0x0601", "-I/usr/x86_64-w64-mingw32/include", "-I", "include", "-MMD", "-MP","-O3","-Wall","-Wextra","-Wno-sign-compare","-Wno-unused-parameter"
 #define LINK_FLAGS "-lcomctl32", "-lgdiplus", "-lgdi32", "-lshlwapi", "-lshell32", "-lwinmm", "-lole32", "-luuid", "-lmsimg32", "-ldbghelp", "-ldwmapi", "-lpsapi", "-lcrypt32", "-lcomdlg32", "-ladvapi32", "-ldxva2", "-luser32", "-lwinhttp"
 
 static Nob_File_Paths sources = {0};

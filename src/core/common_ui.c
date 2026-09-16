@@ -365,3 +365,7 @@ ColorRef GetRainbowColor(float t, float s, float v) {
     return COLOR_TEXT;
   }
 }
+
+bool UI_IsListBoxSelected(ListBoxInfo* lb) {
+  return lb && lb->selected_index != -1;
+}
