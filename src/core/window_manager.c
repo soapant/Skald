@@ -72,12 +72,13 @@ static volatile LONG g_watcher_stop_win = 0;
 int pending_hotkey_vk = 0;
 int pending_hotkey_mod = 0;
 long pending_hotkey_timeMs = 0;
+#endif
+
 void SavePerFeatureState(const char* feature, EditorMode mode, int last_index) {
     PROFILE_START(timer);
     (void)feature; (void)mode; (void)last_index;
     PROFILE_END_VAR(timer, "window_manager:SavePerFeatureState");
 }
-#endif
 
 #if !defined(_WIN32)
 static void* feature_watcher_thread(void* arg) {
