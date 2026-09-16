@@ -13,16 +13,46 @@
 
 SequenceState seq_state = {0};
 
+#if defined(_WIN32)
+static void Win32_SyncFilterFromEdit(FlintContext* ctx) {
+    if (!ctx) return;
+    HWND hEdit = WH_TO_HWND(ctx->window.g_ActiveEditControl);
+    if (!hEdit) hEdit = WH_TO_HWND(ctx->window.hEditControl);
+    if (!hEdit || !IsWindow(hEdit)) return;
+    char buf[sizeof(ctx->window.filter)];
+    GetWindowTextA(hEdit, buf, (int)sizeof(buf));
+    strncpy(ctx->window.filter, buf, sizeof(ctx->window.filter) - 1);
+    ctx->window.filter[sizeof(ctx->window.filter) - 1] = '\0';
+    DWORD s = 0, e = 0;
+    SendMessageA(hEdit, EM_GETSEL, (WPARAM)&s, (LPARAM)&e);
+    ctx->window.filter_cursor = (int)s;
+}
+#endif
+
 ListBoxInfo* Vim_GetListBox(FlintContext* ctx) {
     (void)ctx;
     WindowManager* wm = WindowManager_Get();
-    if (!wm) return NULL;
-    Popup* top = WindowManager_GetTopPopup(wm);
-    if (!top) return NULL;
-    if (top->type == POPUP_PROMPT && top->user_data) {
-        PromptState* s = (PromptState*)top->user_data;
-        if (s && s->has_listbox) return &s->listbox;
+    if (wm) {
+        Popup* top = WindowManager_GetTopPopup(wm);
+        if (top && top->type == POPUP_PROMPT && top->user_data) {
+            PromptState* s = (PromptState*)top->user_data;
+            if (s && s->has_listbox) return &s->listbox;
+        }
     }
+#if defined(_WIN32)
+    {
+        extern PromptState* Platform_GetWin32PromptState(void);
+        PromptState* ws = Platform_GetWin32PromptState();
+        if (ws && ws->has_listbox) return &ws->listbox;
+    }
+    {
+        HWND hPopup = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
+        if (hPopup && IsWindow(hPopup)) {
+            ListBoxInfo* lb = (ListBoxInfo*)GetWindowLongPtrA(hPopup, GWLP_USERDATA);
+            if (lb) return lb;
+        }
+    }
+#endif
     return NULL;
 }
 
@@ -37,26 +67,44 @@ VimContext Vim_FromGlobals(void) {
 
 void Vim_GetText(FlintContext* ctx, char* buf, size_t cap) {
     if (!ctx || !buf || cap==0) return;
+#if defined(_WIN32)
+    Win32_SyncFilterFromEdit(ctx);
+#endif
     strncpy(buf, ctx->window.filter, cap-1);
     buf[cap-1]='\0';
 }
 
 static void SyncFilterToActiveState(FlintContext* ctx) {
     WindowManager* wm = WindowManager_Get();
-    if (!wm) return;
-    Popup* top = WindowManager_GetTopPopup(wm);
-    if (!top || !top->user_data) return;
-    if (top->type == POPUP_PROMPT) {
-        PromptState* s = (PromptState*)top->user_data;
-        strncpy(s->filter, ctx->window.filter, sizeof(s->filter)-1);
-        s->filter[sizeof(s->filter)-1]='\0';
-        s->cursor = ctx->window.filter_cursor;
-    } else if (top->type == POPUP_SIMPLE) {
-        SimplePromptState* s = (SimplePromptState*)top->user_data;
-        strncpy(s->user_input, ctx->window.filter, sizeof(s->user_input)-1);
-        s->user_input[sizeof(s->user_input)-1]='\0';
-        s->cursor = ctx->window.filter_cursor;
+    if (wm) {
+        Popup* top = WindowManager_GetTopPopup(wm);
+        if (top && top->user_data) {
+            if (top->type == POPUP_PROMPT) {
+                PromptState* s = (PromptState*)top->user_data;
+                strncpy(s->filter, ctx->window.filter, sizeof(s->filter)-1);
+                s->filter[sizeof(s->filter)-1]='\0';
+                s->cursor = ctx->window.filter_cursor;
+                return;
+            } else if (top->type == POPUP_SIMPLE) {
+                SimplePromptState* s = (SimplePromptState*)top->user_data;
+                strncpy(s->user_input, ctx->window.filter, sizeof(s->user_input)-1);
+                s->user_input[sizeof(s->user_input)-1]='\0';
+                s->cursor = ctx->window.filter_cursor;
+                return;
+            }
+        }
     }
+#if defined(_WIN32)
+    {
+        extern PromptState* Platform_GetWin32PromptState(void);
+        PromptState* ws = Platform_GetWin32PromptState();
+        if (ws) {
+            strncpy(ws->filter, ctx->window.filter, sizeof(ws->filter)-1);
+            ws->filter[sizeof(ws->filter)-1] = '\0';
+            ws->cursor = ctx->window.filter_cursor;
+        }
+    }
+#endif
 }
 
 void Vim_SetText(FlintContext* ctx, const char* text) {
@@ -81,6 +129,9 @@ void Vim_SetText(FlintContext* ctx, const char* text) {
 
 int Vim_GetCursor(FlintContext* ctx) {
     if (!ctx) return 0;
+#if defined(_WIN32)
+    Win32_SyncFilterFromEdit(ctx);
+#endif
     int len = (int)strlen(ctx->window.filter);
     if (ctx->window.filter_cursor <0) return 0;
     if (ctx->window.filter_cursor > len) return len;
@@ -89,6 +140,9 @@ int Vim_GetCursor(FlintContext* ctx) {
 
 void Vim_SetCursor(FlintContext* ctx, int pos) {
     if (!ctx) return;
+#if defined(_WIN32)
+    Win32_SyncFilterFromEdit(ctx);
+#endif
     int len = (int)strlen(ctx->window.filter);
     if (pos<0) pos=0;
     if (pos>len) pos=len;
@@ -99,6 +153,7 @@ void Vim_SetCursor(FlintContext* ctx, int pos) {
     if (!hEdit) hEdit = WH_TO_HWND(ctx->window.g_ActiveEditControl);
     if (hEdit) {
         SendMessageA(hEdit, EM_SETSEL, (WPARAM)pos, (LPARAM)pos);
+        UpdateTextCaret(WH_FROM_HWND(hEdit));
     }
 #endif
 }
