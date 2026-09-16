@@ -15,9 +15,9 @@
 typedef struct ListBoxInfo ListBoxInfo;
 
 struct ListBoxInfo {
-    char populated_cache[MAX_ITEMS][512];
+    char populated_cache[MAX_VISIBLE_ITEMS][512];
     int  populated_count;
-    int  matching_indices[MAX_MATCHES];
+    int  matching_indices[MAX_VISIBLE_ITEMS];
     int  total_matches;
     int  selected_index;
     int  view_offset;
@@ -25,7 +25,7 @@ struct ListBoxInfo {
     int  last_item_count;
     char last_filter[256];
     bool last_filter_valid;
-    int  prev_matches[MAX_MATCHES];
+    int  prev_matches[MAX_VISIBLE_ITEMS];
     int  last_filter_full_count;
 };
 
