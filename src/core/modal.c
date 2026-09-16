@@ -5,21 +5,11 @@
 #include "platform/ui.h"
 #include "core/window_manager.h"
 #include "core/context.h"
+#include "core/vim.h"
 
 static const char* g_mode_names[] = { "Normal", "Insert", "Visual" };
 int last_index = 0;
 char* selection_feature = "";
-
-static ListBoxInfo* GetActiveListBoxFromTopPopup(void) {
-    WindowManager* wm = WindowManager_Get();
-    if (!wm) return NULL;
-    Popup* top = WindowManager_GetTopPopup(wm);
-    if (!top || !top->user_data) return NULL;
-    if (top->type != POPUP_PROMPT) return NULL;
-    PromptState* state = (PromptState*)top->user_data;
-    if (state->has_listbox) return &state->listbox;
-    return NULL;
-}
 
 void SetModeWithListBox(EditorMode mode, ListBoxInfo* lb) {
     g_current_mode = mode;
@@ -27,10 +17,10 @@ void SetModeWithListBox(EditorMode mode, ListBoxInfo* lb) {
     FlintContext* ctx = FlintContext_Get();
     if (ctx) { ctx->vim_mode = mode; ctx->vim_mode_str = g_vim_mode; }
     WindowManager* wm = WindowManager_Get();
-    bool in_main = wm ? wm->popup_count == 1 : true;
+    bool in_main = !wm || wm->popup_count <= 1;
 
     if (!lb) {
-        lb = GetActiveListBoxFromTopPopup();
+        lb = Vim_GetListBox(ctx);
     }
 
     if (in_main && IsPopupActive(WH_NULL) && lb) {

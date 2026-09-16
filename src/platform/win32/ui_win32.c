@@ -908,7 +908,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 
     PROFILE_START(timer4);
     if (CheckVimMotion(pressed_vk, modifiers, &vimAction, &matchedSequence, &typedCount)) {
-      ExecuteMotion(vimAction, matchedSequence, typedCount);
+      if (vimAction != MOTION_NONE) ExecuteMotion(vimAction, matchedSequence, typedCount);
       PROFILE_END_VAR(timer4, "ExecuteMotion");
       return 1;
     }
