@@ -1,25 +1,17 @@
-#ifndef HELPERS_HELPERS_UI_H
-#define HELPERS_HELPERS_UI_H
+#ifndef HELPERS_UI_H
+#define HELPERS_UI_H
 
 #include <stdbool.h>
 #include "core/types.h"
 #include "core/types/window.h"
 #include "core/types/color.h"
 
-typedef struct {
-    char **items;
-    size_t count;
-} StringList;
-
-StringList String_Split(const char *string, const char *delimiter);
-void StringList_Free(StringList *list);
 
 unsigned long rgb_to_hex(unsigned long win_color);
 void eval_window_title_color(PromptState * state,unsigned long *window_title_color);
 void eval_xoffset_for_alias(char* alias_text,int main_text_lenght,int *xOffsetAlias);
 unsigned short OpacityAlpha16(void);
 
-static bool g_add_alias_to_string;
 static char g_alias_display[MAX_ITEMS][512];
 static int g_alias_display_count;
 static bool g_alias_display_active;
