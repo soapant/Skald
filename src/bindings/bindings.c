@@ -2,7 +2,7 @@
 #include "core/modal.h"
 #include "bindings/bindings.h"
 #include "bindings/vim_bindings.h"
-#include "core/common_ui.h"
+#include "platform/ui.h"
 #include "core/modal.h"
 #include "core/vim.h"
 #include "core/window_manager.h"

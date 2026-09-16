@@ -8,7 +8,7 @@
 #include "helpers/flag.h"
 #include "helpers/file.h"
 #include "helpers/ui.h"
-#include "core/common_ui.h"
+#include "platform/ui.h"
 #include "core/vim.h"
 #include "core/platform.h"
 #if !defined(_WIN32)

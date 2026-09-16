@@ -13,7 +13,7 @@
 #include "helpers/file.h"
 #include "helpers/ui.h"
 #include "core/timer.h"
-#include "core/common_ui.h"
+#include "platform/ui.h"
 
 int ParseTimeToSeconds(const char* input) {
     if (!input || strlen(input) == 0) return 0;

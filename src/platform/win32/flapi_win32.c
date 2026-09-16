@@ -117,7 +117,7 @@ bool fl_launch_with_args_as_admin_platform(const char* path, const char* args) {
 }
 
 #include "platform/draw.h"
-#include "core/common_ui.h"
+#include "platform/ui.h"
 #include "config.h"
 
 static FlListSpec g_fl_list_spec;

@@ -1,7 +1,7 @@
 #include "core/window_manager.h"
 #include "deps/log.h"
 
-#include "core/common_ui.h"
+#include "platform/ui.h"
 #include "core/modal.h"
 #include "core/vim.h"
 #include "core/platform.h"

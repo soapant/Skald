@@ -9,7 +9,7 @@
 #include "helpers/flag.h"
 #include "helpers/file.h"
 #include "helpers/ui.h"
-#include "core/common_ui.h"
+#include "platform/ui.h"
 #include <math.h>
 #include <windows.h>
 #include <commctrl.h>

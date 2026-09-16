@@ -1,6 +1,6 @@
 #include "core/types.h"
 #include "core/context.h"
-#include "core/common_ui.h"
+#include "platform/ui.h"
 #include "config.h"
 #include "platform/draw.h"
 #if !defined(_WIN32)
