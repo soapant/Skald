@@ -552,7 +552,7 @@ static char g_c_watch_dir[256] = {0};
 static char g_last_c_file[256] = {0};
 static DWORD g_last_c_tick = 0;
 
-char* Platform_WatchForCFileChanges(const char* dir_path, void (*callback)(void)) {
+char* Platform_WatchForCFileChanges(const char* dir_path) {
     if (!dir_path) return NULL;
     const char* watch_dir = dir_path;
     if (!watch_dir || !watch_dir[0]) watch_dir = FeaturePath ? FeaturePath : "src/features";
@@ -599,7 +599,6 @@ char* Platform_WatchForCFileChanges(const char* dir_path, void (*callback)(void)
                     }
                     strncpy(g_last_c_file, fd.cFileName, sizeof(g_last_c_file)-1);
                     g_last_c_tick = now;
-                    if (callback) callback();
                     char* ret = _strdup(fd.cFileName);
                     FindClose(hFind);
                     return ret;
@@ -619,7 +618,6 @@ char* Platform_WatchForCFileChanges(const char* dir_path, void (*callback)(void)
             }
             strncpy(g_last_c_file, fd.cFileName, sizeof(g_last_c_file)-1);
             g_last_c_tick = now;
-            if (callback) callback();
             char* ret = _strdup(fd.cFileName);
             FindClose(hFind);
             return ret;
