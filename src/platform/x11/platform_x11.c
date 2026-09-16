@@ -40,6 +40,8 @@
 #include <sys/file.h>
 #include <fontconfig/fontconfig.h>
 #include "platform/x11/drawing_x11.h"
+#include "platform/x11/env_helpers_x11.h"
+#include "platform/x11/desktop_helpers_x11.h"
 #include "wm/wm.h"
 #if __has_include(<X11/extensions/XTest.h>)
 #include <X11/extensions/XTest.h>
@@ -102,20 +104,9 @@ bool Platform_LaunchTerminalAtPath(const char* working_dir, const char* extra_ar
     if(!working_dir) { log_error("working_dir is NULL extra_args='%s'", extra_args ? extra_args : "null"); PROFILE_END_VAR(timer, "platform_x11:Platform_LaunchTerminalAtPath"); return false; }
     if (!UsedTerminal || !UsedTerminal[0]) { log_error("UsedTerminal not configured working_dir='%s' extra_args='%s'", working_dir ? working_dir : "null", extra_args ? extra_args : "null"); PROFILE_END_VAR(timer, "platform_x11:Platform_LaunchTerminalAtPath"); return false; }
 
-    const char* real_user = Platform_GetRealUser();
-    const char* display = Platform_GetSessionDisplay();
-    const char* xauthority = Platform_GetSessionXAuthority();
-    const char* runtime_dir_raw = Platform_GetRuntimeDir();
-    const char* wayland_display = getenv("WAYLAND_DISPLAY");
-
-    char runtime_dir[256];
-    snprintf(runtime_dir, sizeof(runtime_dir), "%s", runtime_dir_raw ? runtime_dir_raw : "");
-
+    X11SessionEnv env; Env_GetSessionEnv(&env);
     char disp_env[256], xauth_env[512], runtime_env[512], wayland_env[512];
-    snprintf(disp_env, sizeof(disp_env), "DISPLAY=%s", display ? display : "");
-    snprintf(xauth_env, sizeof(xauth_env), "XAUTHORITY=%s", xauthority ? xauthority : "");
-    snprintf(runtime_env, sizeof(runtime_env), "XDG_RUNTIME_DIR=%s", runtime_dir);
-    snprintf(wayland_env, sizeof(wayland_env), "WAYLAND_DISPLAY=%s", wayland_display ? wayland_display : "");
+    Env_BuildEnvStrings(&env, disp_env, xauth_env, runtime_env, wayland_env);
 
     pid_t pid = fork();
     if(pid < 0) { log_error("fork failed: %s", strerror(errno)); PROFILE_END_VAR(timer, "platform_x11:Platform_LaunchTerminalAtPath"); return false; }
@@ -134,25 +125,20 @@ bool Platform_LaunchTerminalAtPath(const char* working_dir, const char* extra_ar
             if(fd > 2) close(fd);
         }
 
-        if(Platform_IsRunningAsRoot()){
+        if(Env_IsRunningAsRoot()){
             if(extra_args && extra_args[0]){
                 char cmd[2048];
                 snprintf(cmd, sizeof(cmd), "%s --working-directory=\"%s\" %s", UsedTerminal, working_dir, extra_args);
-                char* const argv[] = {"sudo","-u",(char*)real_user,"env",disp_env,xauth_env,runtime_env,wayland_env,"sh","-c",cmd,NULL};
+                char* const argv[] = {"sudo","-u",(char*)env.real_user,"env",disp_env,xauth_env,runtime_env,wayland_env,"sh","-c",cmd,NULL};
                 execvp(argv[0], argv);
             } else {
-                char* const argv[] = {"sudo","-u",(char*)real_user,"env",disp_env,xauth_env,runtime_env,wayland_env,(char*)UsedTerminal,"--working-directory",(char*)working_dir,NULL};
+                char* const argv[] = {"sudo","-u",(char*)env.real_user,"env",disp_env,xauth_env,runtime_env,wayland_env,(char*)UsedTerminal,"--working-directory",(char*)working_dir,NULL};
                 execvp(argv[0], argv);
-                char* const argv2[] = {"sudo","-u",(char*)real_user,"env",disp_env,xauth_env,runtime_env,wayland_env,(char*)UsedTerminal,NULL};
+                char* const argv2[] = {"sudo","-u",(char*)env.real_user,"env",disp_env,xauth_env,runtime_env,wayland_env,(char*)UsedTerminal,NULL};
                 execvp(argv2[0], argv2);
             }
         } else {
-            setenv("DISPLAY", display, 1);
-            setenv("XAUTHORITY", xauthority, 1);
-            setenv("XDG_RUNTIME_DIR", runtime_dir, 1);
-            if (wayland_display && wayland_display[0])
-                setenv("WAYLAND_DISPLAY", wayland_display, 1);
-
+            Env_ApplyToCurrentProcess(&env);
             if(extra_args && extra_args[0]){
                 char cmd[2048];
                 snprintf(cmd, sizeof(cmd), "%s --working-directory=\"%s\" %s", UsedTerminal, working_dir, extra_args);

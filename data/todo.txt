@@ -20,3 +20,4 @@ some things need to be better handled internally like offsets of y and x of text
 do the wholei nternet and bluetooth thing for both windows and linux that will require some deps on linux ofc ||[Flint] 
 split populatelistbox bitch ||[Flint]
 ctrl enter with shift l doesnt work i cant be fucked rn||[Flint]
+when doing the api for the index getting probably auto do the whole tru lookup thing if therei s some filter||[Flint]
