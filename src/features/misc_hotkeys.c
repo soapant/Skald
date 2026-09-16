@@ -28,12 +28,21 @@ void MediaPlayPause(void) {
 void ScreenshotArea(void) {
   fl_run_terminal_command("grimshot copy area");
 }
+
+void SaveScreenshotArea(void) {
+  fl_run_terminal_command("grimshot save area /home/diggy/Pictures/screenshot.png");
+}
+
+void OcrRegionAndCopy(void) {
+  fl_run_terminal_command("grimshot save area screenshot.png ; tesseract screenshot.png stdout -l eng | wl-copy ;  rm screenshot.png");
+}
+
 void IncrementVolume(void) {
-  fl_increment_volume_by(30);
+  fl_increment_volume_by_percent(10);
 }
 
 void DecrementVolume(void) {
-  fl_decrement_volume_by(30);
+  fl_decrement_volume_by_percent(10);
 }
 
 FLINT_FEATURE_INIT {
@@ -41,7 +50,9 @@ FLINT_FEATURE_INIT {
     fl_register_hotkey("Alt+Shift+T", ShowCurrentTime);
     fl_register_hotkey("Alt+D", SettingsTrigger);
     fl_register_hotkey("Alt+Shift+N", ShowCurrentBatteryPercentage);
-    fl_register_hotkey("Ctrl+Shift+N", ScreenshotArea);
+    fl_register_hotkey("Ctrl+Shift+X", ScreenshotArea);
+    fl_register_hotkey("Alt+Shift+X", SaveScreenshotArea);
+    fl_register_hotkey("Alt+Shift+C", OcrRegionAndCopy);
     fl_register_hotkey("RShift",MediaPlayPause); 
     fl_register_hotkey("Ctrl+[",IncrementVolume); 
     fl_register_hotkey("Ctrl+]",DecrementVolume); 

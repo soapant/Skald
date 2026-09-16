@@ -329,7 +329,8 @@ int fl_get_current_volume(void);
 bool fl_set_current_volume(int volume);
 bool fl_increment_volume_by(int increment);
 bool fl_decrement_volume_by(int decrement);
-
+bool fl_increment_volume_by_percent(int increment_percent);
+bool fl_decrement_volume_by_percent(int decrement_percent);
 // =============================================================================
 // WINDOW IO
 // =============================================================================
