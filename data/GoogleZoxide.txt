@@ -63,3 +63,5 @@ c add two strings together
 where is trash folder on linux dir
 what does galzanizing other metals mean 
 hydrogenation meaning
+what is pascals triangle
+does wpctl come with pipewire

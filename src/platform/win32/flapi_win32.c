@@ -387,6 +387,7 @@ cleanup:
 
     return success;
 }
+
 bool fl_decrement_volume_by_platform(int decrement) {
     int current_volume = fl_get_current_volume_platform();
     
