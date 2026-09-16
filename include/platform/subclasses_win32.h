@@ -3,9 +3,7 @@
 
 #include "core/types.h"
 
-#if defined(_WIN32)
 #define WM_DISPLAY_MESSAGE (WM_APP + 2)
-#endif
 
 typedef struct {
   const char* message;
@@ -25,7 +23,6 @@ typedef struct {
 } DisplayMessageParams;
 
 
-#if defined(_WIN32)
 LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 LRESULT CALLBACK DisplayMessageProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 LRESULT CALLBACK SettingsPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -36,7 +33,5 @@ LRESULT CALLBACK SearchPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LP
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 void RequestInitialNavigation(int index);
-#endif
-
 
 #endif

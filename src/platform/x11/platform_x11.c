@@ -1004,7 +1004,7 @@ void Platform_CleanupDirWatchers(void) {
     g_instant_count = 0;
 }
 
-char* Platform_WatchForCFileChanges(const char* dir_path, void (*callback)(void)) {
+char* Platform_WatchForCFileChanges(const char* dir_path) {
     PROFILE_START(timer);
     if (!dir_path) { log_error("returned NULL dir_path='%s'", dir_path ? dir_path : "null"); PROFILE_END_VAR(timer, "platform_x11:Platform_WatchForCFileChanges"); return NULL; }
 
@@ -1027,8 +1027,6 @@ char* Platform_WatchForCFileChanges(const char* dir_path, void (*callback)(void)
                         size_t name_len = strlen(name);
                         
                         if (name_len > 2 && strcmp(name + name_len - 2, ".c") == 0) {
-                            if (callback) callback();
-                            
                             char *found_name = malloc(event->len + 1);
                             if (found_name) {
                                 strcpy(found_name, event->name);
