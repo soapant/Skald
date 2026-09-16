@@ -1,16 +1,7 @@
 #ifndef TYPES_PROMPT_H
 #define TYPES_PROMPT_H
 
-#include <stdbool.h>
-#include <stdint.h>
-#include <string.h>
-#include "core/types/window.h"
-#include "core/types/color.h"
-
-#if !defined(_WIN32)
-#include <X11/Xlib.h>
-#include <X11/Xft/Xft.h>
-#endif
+#include "core/types.h"
 
 typedef struct ListBoxInfo ListBoxInfo;
 
