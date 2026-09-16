@@ -15,7 +15,6 @@
 #include "core/timer.h"
 #include "platform/ui.h"
 
-
 bool IsWindowBlacklisted(const char* window_title, const char* blacklist[], int count) {
     for (int i = 0; i < count; i++) {
         if (Platform_StringContainsCaseInsensitive(window_title, blacklist[i])) {
@@ -66,10 +65,6 @@ bool GetFromHistory(ListBoxInfo* lb) {
 }
 
 const char* get_alias_for_item(const char* item) {
-    if (!g_add_alias_to_string) return NULL;
-    if (!FlintContext_Get()->window.current_feature) return NULL;
-    if (!item) return NULL;
-
     for (size_t i = 0; i < ALIAS_ENTRY_COUNT; i++) {
         const char* expanded = Aliases[i].text;
         if (!expanded || expanded[0]=='\0') expanded = Aliases[i].text;
