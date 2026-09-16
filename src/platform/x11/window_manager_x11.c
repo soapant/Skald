@@ -40,6 +40,7 @@
 #include "core/timer.h"
 #include "core/history.h"
 #include "core/remap_manager.h"
+#include "core/hotkey_manager.h"
 
 
 extern bool HandleGlobalKeyEvent(int key_code, int value);
@@ -56,6 +57,28 @@ static void uinput_emit(const struct input_event *ev) { x11_uinput_emit(ev); }
 static void ScanAndHookKeyboards(void) { x11_scan_keyboards(); }
 
 static int XKeysymToVK(KeySym ks) { return x11_keysym_to_vk(ks); }
+
+static void* input_thread_func(void* arg) {
+    WindowManager* wm = (WindowManager*)arg;
+    if (g_x11_keyboard_count == 0) return NULL;
+    struct pollfd *fds = calloc(g_x11_keyboard_count, sizeof(struct pollfd));
+    for (int i=0;i<g_x11_keyboard_count;i++) { fds[i].fd = g_x11_keyboards[i].fd; fds[i].events = POLLIN; }
+    struct input_event ev;
+    while (wm->running) {
+        int r = poll(fds, g_x11_keyboard_count, 100);
+        if (r > 0) {
+            for (int i=0;i<g_x11_keyboard_count;i++) if (fds[i].revents & POLLIN) {
+                bool grabbed = g_x11_device_grabbed[i];
+                while (read(fds[i].fd, &ev, sizeof(ev)) > 0) {
+                    bool has_popup = WindowManager_GetTopPopup(wm) != NULL;
+                    x11_handle_evdev(&ev, has_popup, grabbed);
+                }
+            }
+        }
+    }
+    free(fds);
+    return NULL;
+}
 
 static void Linux_HandleKeyPress(Display* dpy, XKeyEvent* ev, WindowManager* wm) {
     PROFILE_START(timer);
@@ -188,6 +211,7 @@ int WindowManager_RunLinux(WindowManager* wm) {
     PROFILE_START(timer);
     if (!wm) { PROFILE_END_VAR(timer, "window_manager_x11:WindowManager_RunLinux"); return -1; }
     wm->running = true;
+    x11_set_window_manager(wm);
 
     Display* dpy = wm->display;
     if (!dpy) { PROFILE_END_VAR(timer, "window_manager_x11:WindowManager_RunLinux"); return -1; }
@@ -233,46 +257,38 @@ int WindowManager_RunLinux(WindowManager* wm) {
         return -1;
     }
 
-    struct pollfd *fds = calloc(g_x11_keyboard_count + 1, sizeof(struct pollfd));
-    fds[0].fd = ConnectionNumber(dpy);
-    fds[0].events = POLLIN;
-    for (int i = 0; i < g_x11_keyboard_count; i++) {
-        fds[i + 1].fd = g_x11_keyboards[i].fd;
-        fds[i + 1].events = POLLIN;
+    pthread_t input_thr = 0;
+    bool input_started = false;
+    if (g_x11_keyboard_count > 0) {
+        if (pthread_create(&input_thr, NULL, input_thread_func, wm) == 0) input_started = true;
+        else log_error("failed to start input thread");
     }
 
     XEvent xev;
-    struct input_event ev;
-    const long HOTKEY_STALE_EVENT_MS = 200;
-
     while (wm->running) {
-        int poll_res = poll(fds, g_x11_keyboard_count + 1, 500);
+        struct pollfd xfd = { .fd = ConnectionNumber(dpy), .events = POLLIN };
+        int poll_res = poll(&xfd, 1, 50);
         if (poll_res < 0) break;
-
-        if (fds[0].revents & POLLIN) {
+        if (xfd.revents & POLLIN) {
             while (XPending(dpy) > 0) {
                 XNextEvent(dpy, &xev);
                 Linux_ProcessXEvent(dpy, &xev, wm);
             }
         }
-
-        for (int i = 0; i < g_x11_keyboard_count; i++) {
-            if (fds[i + 1].revents & POLLIN) {
-                bool grabbed = g_x11_device_grabbed[i];
-                while (read(fds[i + 1].fd, &ev, sizeof(struct input_event)) > 0) {
-                    bool has_popup = WindowManager_GetTopPopup(wm) != NULL;
-                    x11_handle_evdev(&ev, has_popup, grabbed);
-                }
-            }
-        }
+        hotkey_drain_pending();
     }
+
+    if (input_started) pthread_join(input_thr, NULL);
 
     for (int i = 0; i < g_x11_keyboard_count; i++) {
-        ioctl(g_x11_keyboards[i].fd, EVIOCGRAB, 0);
-        close(g_x11_keyboards[i].fd);
+        if (g_x11_keyboards[i].fd >= 0) {
+            ioctl(g_x11_keyboards[i].fd, EVIOCGRAB, 0);
+            close(g_x11_keyboards[i].fd);
+            g_x11_keyboards[i].fd = -1;
+        }
     }
-    free(fds);
     destroy_uinput();
+    x11_set_window_manager(NULL);
 
     PROFILE_END_VAR(timer, "window_manager_x11:WindowManager_RunLinux");
     return 0;
@@ -295,44 +311,13 @@ void WindowManager_ProcessEventsLinux(WindowManager* wm) {
 void Platform_ProcessNestedEvents(WindowManager* wm, Popup* popup) {
     PROFILE_START(timer);
     if (!wm || !wm->display) { PROFILE_END_VAR(timer, "platform:Platform_ProcessNestedEvents"); return; }
-    
     Display* dpy = wm->display;
     XEvent ev;
-    
     while (XPending(dpy) > 0) {
         XNextEvent(dpy, &ev);
         Linux_ProcessXEvent(dpy, &ev, wm);
     }
-    
-    extern int g_x11_keyboard_count;
-    extern X11Keyboard g_x11_keyboards[];
-    extern bool g_x11_device_grabbed[];
-    extern int g_x11_uinput_fd;
-    
-    if (g_x11_keyboard_count > 0 && g_x11_uinput_fd >= 0) {
-        struct pollfd fds[g_x11_keyboard_count + 1];
-        fds[0].fd = ConnectionNumber(dpy);
-        fds[0].events = POLLIN;
-        
-        for (int i = 0; i < g_x11_keyboard_count; i++) {
-            fds[i + 1].fd = g_x11_keyboards[i].fd;
-            fds[i + 1].events = POLLIN;
-        }
-        
-        int poll_res = poll(fds, g_x11_keyboard_count + 1, 500);
-        if (poll_res > 0) {
-            for (int i = 0; i < g_x11_keyboard_count; i++) {
-                if (fds[i + 1].revents & POLLIN) {
-                    struct input_event ev;
-                    bool grabbed = g_x11_device_grabbed[i];
-                    while (read(fds[i + 1].fd, &ev, sizeof(struct input_event)) > 0) {
-                        bool has_popup = WindowManager_GetTopPopup(wm) != NULL;
-                        x11_handle_evdev(&ev, has_popup, grabbed);
-                    }
-                }
-            }
-        }
-    }
+    hotkey_drain_pending();
     PROFILE_END_VAR(timer, "platform:Platform_ProcessNestedEvents");
 }
 

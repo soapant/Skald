@@ -29,6 +29,8 @@ void x11_clear_suppress(void);
 bool x11_is_suppressed(int linux_code);
 void x11_set_suppress(int linux_code, bool v);
 bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed);
+struct WindowManager;
+void x11_set_window_manager(struct WindowManager *wm);
 
 bool x11_should_use_grab(void);
 int x11_init_uinput(void);
