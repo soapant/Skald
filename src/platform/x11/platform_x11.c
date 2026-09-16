@@ -5,7 +5,7 @@
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 #include <X11/Xft/Xft.h>
-#include "platform/x11/display.h"
+#include "platform/x11/display_x11.h"
 
 #include <sys/stat.h> 
 #include <sys/wait.h>
@@ -39,7 +39,7 @@
 #include <errno.h>
 #include <sys/file.h>
 #include <fontconfig/fontconfig.h>
-#include "platform/x11/drawing.h"
+#include "platform/x11/drawing_x11.h"
 #include "wm/wm.h"
 #if __has_include(<X11/extensions/XTest.h>)
 #include <X11/extensions/XTest.h>
