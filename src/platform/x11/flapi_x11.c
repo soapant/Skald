@@ -450,7 +450,7 @@ void fl_toggle_play_pause_platform(void) {
 }
 
 int fl_get_current_volume_platform(void) {
-    char* output = Platform_RunTerminalCommand("wpctl get-volume @DEFAULT_AUDIO_OUT@ | awk '{print $2}'", false);
+    char* output = Platform_RunTerminalCommand("wpctl get-volume @DEFAULT_AUDIO_SINK@ 2>/dev/null | awk '{print $2}'", false);
     
     if (output == NULL || strlen(output) == 0) {
         return 0;
@@ -463,11 +463,11 @@ bool fl_set_volume_platform(int volume) {
     if (volume < 0) volume = 0;
     if (volume > 100) volume = 100;
 
-    char cmd[128];
-    snprintf(cmd, sizeof(cmd), "wpctl set-volume @DEFAULT_AUDIO_OUT@ %d%%", volume);
+    char cmd[256];
+    snprintf(cmd, sizeof(cmd), "wpctl set-volume @DEFAULT_AUDIO_SINK@ %d%% >/dev/null 2>&1", volume);
 
     Platform_RunTerminalCommand(cmd, false);
-    return true; 
+    return true;
 }
 
 bool fl_decrement_volume_by_platform(int decrement) {
