@@ -5,6 +5,8 @@
 #include "platform/draw.h"
 #include "platform/x11/drawing_x11.h"
 #include "platform/x11/audio_x11.h"
+#include "platform/x11/env_helpers_x11.h"
+#include "platform/x11/desktop_helpers_x11.h"
 #include "config.h"
 #include <errno.h>
 #include <string.h>
@@ -141,38 +143,8 @@ bool fl_launch_with_args_platform(const char* path, const char* args) {
         bool is_terminal = false;
         char exec_line[1024] = {0};
         char workdir[1024] = {0};
-        FILE* df = fopen(path, "r");
-        if (df){
-            char line[1024];
-            while (fgets(line, sizeof(line), df)){
-                char* p=line; while(*p==' '||*p=='\t') p++;
-                if (Platform_StringContainsCaseInsensitive(p, "Terminal=")){
-                    char* v=p+9; while(*v==' '||*v=='\t') v++; v[strcspn(v, "\r\n")]='\0';
-                    if(Platform_StringContainsCaseInsensitive(v, "true") || strcmp(v,"1")==0) is_terminal=true;
-                } else if (Platform_StringContainsCaseInsensitive(p, "Exec=")){
-                    char* v=p+5; while(*v==' '||*v=='\t') v++; v[strcspn(v, "\r\n")]='\0';
-                    strncpy(exec_line, v, sizeof(exec_line)-1);
-                } else if (Platform_StringContainsCaseInsensitive(p, "Path=")){
-                    char* v=p+5; while(*v==' '||*v=='\t') v++; v[strcspn(v, "\r\n")]='\0';
-                    strncpy(workdir, v, sizeof(workdir)-1);
-                }
-            }
-            fclose(df);
-        }
-        if(exec_line[0]){
-            char cleaned[1024]={0}; size_t o=0;
-            for(size_t i=0; exec_line[i] && o<sizeof(cleaned)-1; i++){
-                if(exec_line[i]=='%' && exec_line[i+1]){
-                    char c=exec_line[i+1];
-                    if(c=='f'||c=='F'||c=='u'||c=='U'||c=='i'||c=='c'||c=='k'||c=='v'||c=='m'){ i++; while(exec_line[i+1]==' ') i++; continue; }
-                }
-                cleaned[o++]=exec_line[i];
-            }
-            cleaned[o]='\0';
-            char* s=cleaned; while(*s==' '||*s=='\t') s++;
-            char* e=s+strlen(s)-1; while(e>s && (*e==' '||*e=='\t')) *e--='\0';
-            strncpy(exec_line, s, sizeof(exec_line)-1);
-        }
+        Desktop_Parse(path, exec_line, workdir, &is_terminal);
+        Desktop_CleanExec(exec_line);
         if(is_terminal && exec_line[0]){
             const char* wd = workdir[0] ? workdir : NULL;
             char extra[2048];
@@ -186,31 +158,21 @@ bool fl_launch_with_args_platform(const char* path, const char* args) {
             snprintf(combined, sizeof(combined), "%s %s", exec_line, args);
             strncpy(exec_line, combined, sizeof(exec_line)-1);
         }
-        const char* real_user = Platform_GetRealUser();
-        const char* display = Platform_GetSessionDisplay();
-        const char* xauthority = Platform_GetSessionXAuthority();
-        const char* wayland_display = getenv("WAYLAND_DISPLAY");
-        char runtime_dir[256]; snprintf(runtime_dir, sizeof(runtime_dir), "%s", Platform_GetRuntimeDir());
-        char* filename = strrchr(expanded, '/');
-        filename = filename ? filename + 1 : expanded;
-        char app_id[256]; strncpy(app_id, filename, sizeof(app_id)-1); app_id[sizeof(app_id)-1]='\0';
-        char* ext = strstr(app_id, ".desktop"); if (ext) *ext='\0';
+        X11SessionEnv env; Env_GetSessionEnv(&env);
+        char app_id[256]; Desktop_GetAppId(expanded, app_id);
         char disp_env[256], xauth_env[512], runtime_env[512], wayland_env[512];
-        snprintf(disp_env, sizeof(disp_env), "DISPLAY=%s", display);
-        snprintf(xauth_env, sizeof(xauth_env), "XAUTHORITY=%s", xauthority);
-        snprintf(runtime_env, sizeof(runtime_env), "XDG_RUNTIME_DIR=%s", runtime_dir);
-        snprintf(wayland_env, sizeof(wayland_env), "WAYLAND_DISPLAY=%s", wayland_display ? wayland_display : "");
+        Env_BuildEnvStrings(&env, disp_env, xauth_env, runtime_env, wayland_env);
         pid_t pid = fork();
         if (pid==0){
             setsid(); pid_t pid2=fork(); if(pid2<0) _exit(1); if(pid2>0) _exit(0);
             int fd=open("/dev/null",O_RDWR); if(fd>=0){dup2(fd,0);dup2(fd,1);dup2(fd,2); if(fd>2) close(fd);}
-            if(Platform_IsRunningAsRoot()){
-                char* const argv_sysd[] = {"sudo","-u",(char*)real_user,"env",disp_env,xauth_env,runtime_env,wayland_env,"systemd-run","--user","--scope","gtk-launch",app_id,NULL};
+            if(Env_IsRunningAsRoot()){
+                char* const argv_sysd[] = {"sudo","-u",(char*)env.real_user,"env",disp_env,xauth_env,runtime_env,wayland_env,"systemd-run","--user","--scope","gtk-launch",app_id,NULL};
                 execvp(argv_sysd[0], argv_sysd);
-                char* const argv_fallback[] = {"sudo","-u",(char*)real_user,"env",disp_env,xauth_env,runtime_env,wayland_env,"gtk-launch",app_id,NULL};
+                char* const argv_fallback[] = {"sudo","-u",(char*)env.real_user,"env",disp_env,xauth_env,runtime_env,wayland_env,"gtk-launch",app_id,NULL};
                 execvp(argv_fallback[0], argv_fallback);
             } else {
-                setenv("DISPLAY",display,1); setenv("XAUTHORITY",xauthority,1); setenv("XDG_RUNTIME_DIR",runtime_dir,1); setenv("WAYLAND_DISPLAY", wayland_display ? wayland_display : "", 1);
+                Env_ApplyToCurrentProcess(&env);
                 char* const argv_sysd2[] = {"systemd-run","--user","--scope","gtk-launch",app_id,NULL};
                 execvp(argv_sysd2[0], argv_sysd2);
                 char* const argv_fallback2[] = {"gtk-launch",app_id,NULL};
@@ -227,11 +189,11 @@ bool fl_launch_with_args_platform(const char* path, const char* args) {
                     if(pid3==0){
                         setsid(); pid_t p2=fork(); if(p2<0) _exit(1); if(p2>0) _exit(0);
                         int fd2=open("/dev/null",O_RDWR); if(fd2>=0){dup2(fd2,0);dup2(fd2,1);dup2(fd2,2); if(fd2>2) close(fd2);}
-                        if(Platform_IsRunningAsRoot()){
-                            char* const av2[]={"sudo","-u",(char*)real_user,"env",disp_env,xauth_env,runtime_env,wayland_env,"sh","-c",exec_line,NULL};
+                        if(Env_IsRunningAsRoot()){
+                            char* const av2[]={"sudo","-u",(char*)env.real_user,"env",disp_env,xauth_env,runtime_env,wayland_env,"sh","-c",exec_line,NULL};
                             execvp(av2[0],av2);
                         } else {
-                            setenv("DISPLAY",display,1); setenv("XAUTHORITY",xauthority,1); setenv("XDG_RUNTIME_DIR",runtime_dir,1); setenv("WAYLAND_DISPLAY", wayland_display ? wayland_display : "", 1);
+                            Env_ApplyToCurrentProcess(&env);
                             execl("/bin/sh","sh","-c",exec_line,(char*)NULL);
                         }
                         _exit(127);
@@ -247,25 +209,20 @@ bool fl_launch_with_args_platform(const char* path, const char* args) {
         char cmd[2048];
         if (args && args[0] && strcmp(args,"0")!=0) snprintf(cmd, sizeof(cmd), "\"%s\" %s", path, args);
         else snprintf(cmd, sizeof(cmd), "\"%s\"", path);
-        const char* real_user = Platform_GetRealUser();
-        const char* display = Platform_GetSessionDisplay();
-        const char* xauthority = Platform_GetSessionXAuthority();
-        char runtime_dir[256]; snprintf(runtime_dir, sizeof(runtime_dir), "%s", Platform_GetRuntimeDir());
-        char disp_env[256], xauth_env[512], runtime_env[512];
-        snprintf(disp_env, sizeof(disp_env), "DISPLAY=%s", display);
-        snprintf(xauth_env, sizeof(xauth_env), "XAUTHORITY=%s", xauthority);
-        snprintf(runtime_env, sizeof(runtime_env), "XDG_RUNTIME_DIR=%s", runtime_dir);
-        if(Platform_IsRunningAsRoot()){
-            char* const argv[] = {"sudo","-u",(char*)real_user,"env",disp_env,xauth_env,runtime_env,"sh","-c",cmd,NULL};
-            pid_t pid=fork(); if(pid<0) { PROFILE_END_VAR(timer, "flapi_x11:fl_launch_with_args_platform"); return false; }
-            if(pid==0){ setsid(); pid_t p2=fork(); if(p2<0) _exit(1); if(p2>0) _exit(0); int fd=open("/dev/null",O_RDWR); if(fd>=0){dup2(fd,0);dup2(fd,1);dup2(fd,2); if(fd>2) close(fd);} execvp(argv[0],argv); _exit(127); }
-            int st=0; waitpid(pid,&st,0); PROFILE_END_VAR(timer, "flapi_x11:fl_launch_with_args_platform"); return true;
+        X11SessionEnv env; Env_GetSessionEnv(&env);
+        char disp_env[256], xauth_env[512], runtime_env[512], wayland_env[512];
+        Env_BuildEnvStrings(&env, disp_env, xauth_env, runtime_env, NULL);
+        if(Env_IsRunningAsRoot()){
+            char* const argv[] = {"sudo","-u",(char*)env.real_user,"env",disp_env,xauth_env,runtime_env,"sh","-c",cmd,NULL};
+            if (!Env_DaemonExec(argv)) { PROFILE_END_VAR(timer, "flapi_x11:fl_launch_with_args_platform"); return false; }
+            PROFILE_END_VAR(timer, "flapi_x11:fl_launch_with_args_platform"); return true;
         } else {
+            X11SessionEnv env2 = env;
             pid_t pid=fork(); if(pid<0) { PROFILE_END_VAR(timer, "flapi_x11:fl_launch_with_args_platform"); return false; }
             if(pid==0){
                 setsid(); pid_t pid2=fork(); if(pid2<0) _exit(1); if(pid2>0) _exit(0);
                 int fd=open("/dev/null",O_RDWR); if(fd>=0){dup2(fd,0);dup2(fd,1);dup2(fd,2); if(fd>2) close(fd);}
-                setenv("DISPLAY",display,1); setenv("XAUTHORITY",xauthority,1); setenv("XDG_RUNTIME_DIR",runtime_dir,1);
+                Env_ApplyToCurrentProcess(&env2);
                 execl("/bin/sh","sh","-c",cmd,(char*)NULL);
                 _exit(127);
             }
