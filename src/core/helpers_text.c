@@ -11,7 +11,7 @@
 #include "helpers/helpers_alias.h"
 #include "helpers/helpers_flag.h"
 #include "helpers/helpers_file.h"
-#include "helpers/helpers_ui.h"
+#include "helpers/helpers_text.h"
 #include "core/timer.h"
 #include "platform/ui.h"
 
