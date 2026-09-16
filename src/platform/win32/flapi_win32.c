@@ -315,3 +315,4 @@ void fl_toggle_play_pause_platform(void) {
 
     SendInput(2, input, sizeof(INPUT));
 }
+

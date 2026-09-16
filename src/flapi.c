@@ -87,7 +87,7 @@ bool fl_free_list(const char* list[], int count) {
 bool fl_free_file_list(const char* list[], int count) {
     return fl_free_list(list, count);
 }
-bool fl_free_window_list(WindowList *list) {
+bool fl_free_window_list(Fl_WindowList *list) {
     if (!list) return false;
     if (list->windows) {
         for (int i = 0; i < list->count; i++) free(list->windows[i]);
@@ -771,13 +771,13 @@ bool fl_place_listbox_raw_impl(const FlListSpec *spec) {
     return true;
 }
 
-WindowList fl_get_all_window_titles() {
-  WindowList l = Platform_GetWindowTitles();
+Fl_WindowList fl_get_all_window_titles() {
+  Fl_WindowList l = Platform_GetWindowTitles();
   log_info("fl_get_all_window_titles count=%d", l.count);
   return l;
 }
-WindowList fl_get_all_window_names() {
-  WindowList l = Platform_GetWindowNames();
+Fl_WindowList fl_get_all_window_names() {
+  Fl_WindowList l = Platform_GetWindowNames();
   log_info("fl_get_all_window_names count=%d", l.count);
   return l;
 }
@@ -787,3 +787,6 @@ void fl_toggle_play_pause(void) {
   return;
 }
 
+Fl_Pos fl_get_cursor_pos(void) {
+  return Platform_GetCursorPos();
+}
