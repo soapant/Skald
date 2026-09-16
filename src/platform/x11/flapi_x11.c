@@ -135,16 +135,21 @@ bool fl_get_all_files_from_dir_platform(const char* dir_path, char** list_of_all
 
 bool fl_launch_with_args_platform(const char* path, const char* args) {
     PROFILE_START(timer);
+    log_info("fl_launch path='%s' args='%s'", path ? path : "null", args ? args : "null");
     if (!path) { PROFILE_END_VAR(timer, "flapi_x11:fl_launch_with_args_platform"); return false; }
     char expanded[1024];
     if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) { PROFILE_END_VAR(timer, "flapi_x11:fl_launch_with_args_platform"); return false; }
+    log_info("fl_launch expanded='%s'", expanded);
     path = expanded;
     if (strstr(path, ".desktop") != NULL) {
+        log_info("fl_launch desktop detected expanded='%s'", expanded);
         bool is_terminal = false;
         char exec_line[1024] = {0};
         char workdir[1024] = {0};
         Desktop_Parse(path, exec_line, workdir, &is_terminal);
+        log_info("Desktop_Parse exec='%s' workdir='%s' is_terminal=%d", exec_line, workdir, is_terminal);
         Desktop_CleanExec(exec_line);
+        log_info("Desktop_CleanExec exec='%s'", exec_line);
         if(is_terminal && exec_line[0]){
             const char* wd = workdir[0] ? workdir : NULL;
             char extra[2048];
@@ -160,6 +165,7 @@ bool fl_launch_with_args_platform(const char* path, const char* args) {
         }
         X11SessionEnv env; Env_GetSessionEnv(&env);
         char app_id[256]; Desktop_GetAppId(expanded, app_id);
+        log_info("gtk-launch try app_id='%s' env user='%s' display='%s'", app_id, env.real_user, env.display);
         char disp_env[256], xauth_env[512], runtime_env[512], wayland_env[512];
         Env_BuildEnvStrings(&env, disp_env, xauth_env, runtime_env, wayland_env);
         pid_t pid = fork();
@@ -179,7 +185,7 @@ bool fl_launch_with_args_platform(const char* path, const char* args) {
                 execvp(argv_fallback2[0], argv_fallback2);
             }
             _exit(127);
-        } else if(pid>0){ int st=0; waitpid(pid,&st,0); if(WIFEXITED(st) && WEXITSTATUS(st)!=0 && exec_line[0]){
+        } else if(pid>0){ int st=0; waitpid(pid,&st,0); log_info("gtk-launch pid %d exit %d WIFEXITED=%d", pid, WIFEXITED(st)?WEXITSTATUS(st):-1, WIFEXITED(st)); if(WIFEXITED(st) && WEXITSTATUS(st)!=0 && exec_line[0]){ log_info("gtk-launch failed, fallback exec_line='%s'", exec_line);
                 if(is_terminal){
                     char extra2[2048]; snprintf(extra2, sizeof(extra2), "-e sh -c '%s; exec'", exec_line,UsedShell);
                     PROFILE_END_VAR(timer, "flapi_x11:fl_launch_with_args_platform");
@@ -197,7 +203,50 @@ bool fl_launch_with_args_platform(const char* path, const char* args) {
                             execl("/bin/sh","sh","-c",exec_line,(char*)NULL);
                         }
                         _exit(127);
-                    } else if(pid3>0){ int st2=0; waitpid(pid3,&st2,0); PROFILE_END_VAR(timer, "flapi_x11:fl_launch_with_args_platform"); return WIFEXITED(st2) && WEXITSTATUS(st2)==0; }
+                    } else if(pid3>0){ int st2=0; waitpid(pid3,&st2,0); log_info("exec_line pid3 %d exit %d", pid3, WIFEXITED(st2)?WEXITSTATUS(st2):-1); if (WIFEXITED(st2) && WEXITSTATUS(st2)==0) { PROFILE_END_VAR(timer, "flapi_x11:fl_launch_with_args_platform"); return true; }
+                        log_info("exec_line failed, dir fallback try");
+                        char desktop_dir[1024]; strncpy(desktop_dir, expanded, sizeof(desktop_dir)-1); desktop_dir[sizeof(desktop_dir)-1]='\0'; char* slash = strrchr(desktop_dir, '/'); if (slash) *slash='\0'; else strcpy(desktop_dir, ".");
+                        char dir_candidate[1024]; snprintf(dir_candidate, sizeof(dir_candidate), "%s/%s", desktop_dir, app_id);
+                        char dir_cmd[2048];
+                        if (access(dir_candidate, X_OK)==0) snprintf(dir_cmd, sizeof(dir_cmd), "cd \"%s\" && ./%s &", desktop_dir, app_id);
+                        else snprintf(dir_cmd, sizeof(dir_cmd), "cd \"%s\" && ./%s &", desktop_dir, app_id);
+                        log_info("dir fallback desktop_dir='%s' app_id='%s' candidate='%s' access_X=%d access_F=%d cmd='%s'", desktop_dir, app_id, dir_candidate, access(dir_candidate,X_OK), access(dir_candidate,F_OK), dir_cmd);
+                        bool dir_exists = (access(dir_candidate, X_OK)==0) || (access(dir_candidate, F_OK)==0);
+                        if (dir_exists) {
+                            log_info("dir fallback launching '%s'", dir_cmd);
+                            X11SessionEnv env3 = env;
+                            char disp3[256], xauth3[512], runtime3[512];
+                            Env_BuildEnvStrings(&env3, disp3, xauth3, runtime3, NULL);
+                            if (Env_IsRunningAsRoot()) {
+                                char* const argv3[] = {"sudo","-u",(char*)env3.real_user,"env",disp3,xauth3,runtime3,"sh","-c",dir_cmd,NULL};
+                                Env_DaemonExec(argv3);
+                            } else {
+                                char* const argv3[] = {"sh","-c",dir_cmd,NULL};
+                                Env_DaemonExecWithEnv(argv3, &env3);
+                            }
+                            PROFILE_END_VAR(timer, "flapi_x11:fl_launch_with_args_platform"); return true;
+                        }
+                        PROFILE_END_VAR(timer, "flapi_x11:fl_launch_with_args_platform"); return false;
+                    }
+                }
+            }
+            if (strstr(expanded, "/miscellaneous/") != NULL) {
+                char desktop_dir2[1024]; strncpy(desktop_dir2, expanded, sizeof(desktop_dir2)-1); desktop_dir2[sizeof(desktop_dir2)-1]='\0'; char* slash2 = strrchr(desktop_dir2, '/'); if (slash2) *slash2='\0'; else strcpy(desktop_dir2, ".");
+                char dir_candidate2[1024]; snprintf(dir_candidate2, sizeof(dir_candidate2), "%s/%s", desktop_dir2, app_id);
+                if (access(dir_candidate2, X_OK)==0) {
+                    log_info("miscellaneous fallback dir_candidate='%s'", dir_candidate2);
+                    char dir_cmd2[2048]; snprintf(dir_cmd2, sizeof(dir_cmd2), "cd \"%s\" && ./%s &", desktop_dir2, app_id);
+                    X11SessionEnv env4 = env;
+                    char disp4[256], xauth4[512], runtime4[512];
+                    Env_BuildEnvStrings(&env4, disp4, xauth4, runtime4, NULL);
+                    if (Env_IsRunningAsRoot()) {
+                        char* const argv4[] = {"sudo","-u",(char*)env4.real_user,"env",disp4,xauth4,runtime4,"sh","-c",dir_cmd2,NULL};
+                        Env_DaemonExec(argv4);
+                    } else {
+                        char* const argv4[] = {"sh","-c",dir_cmd2,NULL};
+                        Env_DaemonExecWithEnv(argv4, &env4);
+                    }
+                    PROFILE_END_VAR(timer, "flapi_x11:fl_launch_with_args_platform"); return true;
                 }
             }
             PROFILE_END_VAR(timer, "flapi_x11:fl_launch_with_args_platform");
