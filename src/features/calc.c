@@ -427,7 +427,7 @@ bool calculator_enter_callback(const char* selection, ListBoxInfo* lb) {
 
 void calculator_tab_callback(ListBoxInfo* lb) {
     char current_input[256] = {0};
-    UI_GetCurrentText(FlintContext_Get()->window.hEditControl,current_input);
+    UI_GetCurrentTextEdit(FlintContext_Get()->window.hEditControl,current_input,sizeof(current_input));
     char a_str[64] = {0}; char op_str[4] = {0}; char b_str[64] = {0};
     if (sscanf(current_input, "%63s %3s %63s", a_str, op_str, b_str) == 3) {
         char flipped[256]; snprintf(flipped, sizeof(flipped), "%s %s %s", b_str, op_str, a_str);

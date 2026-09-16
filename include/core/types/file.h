@@ -8,18 +8,6 @@
 #endif
 #include "core/types.h"
 
-#ifndef ARRAY_LEN
-#define ARRAY_LEN(a) (sizeof(a) / sizeof((a)[0]))
-#endif
-
-#if !defined(MAX_PATH)
-#define MAX_PATH 260
-#endif
-
-#if !defined(_strdup) && !defined(_WIN32)
-#define _strdup strdup
-#endif
-
 typedef struct {
 #if defined(_WIN32)
     HANDLE hFile;

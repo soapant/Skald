@@ -221,7 +221,7 @@ LRESULT CALLBACK SettingsEditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LP
       if (wParam == VK_DOWN) {
         if (ctrl_pressed) {
           char text[256];
-          UI_GetCurrentText(FlintContext_Get()->window.hEditControl, text);
+          UI_GetCurrentTextEdit(FlintContext_Get()->window.hEditControl, text,sizeof(text));
           UI_SetCursorPosition(FlintContext_Get()->window.hEditControl,strlen(text));
         }
       }
