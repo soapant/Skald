@@ -10,6 +10,7 @@
 #include "helpers/helpers_ui.h"
 #include "platform/ui.h"
 #include "core/vim.h"
+#include "core/hashmap.h"
 #include "core/platform.h"
 #if !defined(_WIN32)
 #include <strings.h>
@@ -306,6 +307,14 @@ void PopulateListBox(ListBoxInfo* lb, WindowHandle hListBox, const char* filter,
   if (SequenceIsWaiting()) return;
   if (!filter) filter = "";
   BuildAliasDisplayItems(items, item_count);
+  if (items && item_count > 0) {
+    if (FlintContext_Get()->g_item_index_map) {
+      HashMap_Destroy(FlintContext_Get()->g_item_index_map);
+      FlintContext_Get()->g_item_index_map = NULL;
+    }
+    FlintContext_Get()->g_item_index_map = HashMap_Create(item_count > 32 ? item_count : 32);
+    for (int i = 0; i < item_count; i++) if (items[i]) HashMap_Put(FlintContext_Get()->g_item_index_map, items[i], (void*)(size_t)(i + 1));
+  }
   PROFILE_END_VAR(timer_alias, "PopulateListBox - Aliases");
 
   PROFILE_START(timer_total);
