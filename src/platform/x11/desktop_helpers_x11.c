@@ -15,17 +15,17 @@ bool Desktop_Parse(const char* desktop_path, char exec_line[1024], char workdir[
     while (fgets(line, sizeof(line), df)) {
         char* p = line;
         while (*p == ' ' || *p == '\t') p++;
-        if (Platform_StringContainsCaseInsensitive(p, "Terminal=")) {
+        if (Platform_StringStartsWithCaseInsensitive(p, "Terminal=")) {
             char* v = p + 9;
             while (*v == ' ' || *v == '\t') v++;
             v[strcspn(v, "\r\n")] = '\0';
             if (is_terminal && (Platform_StringContainsCaseInsensitive(v, "true") || strcmp(v, "1") == 0)) *is_terminal = true;
-        } else if (Platform_StringContainsCaseInsensitive(p, "Exec=")) {
+        } else if (Platform_StringStartsWithCaseInsensitive(p, "Exec=")) {
             char* v = p + 5;
             while (*v == ' ' || *v == '\t') v++;
             v[strcspn(v, "\r\n")] = '\0';
             if (exec_line) strncpy(exec_line, v, 1024 - 1);
-        } else if (Platform_StringContainsCaseInsensitive(p, "Path=")) {
+        } else if (Platform_StringStartsWithCaseInsensitive(p, "Path=")) {
             char* v = p + 5;
             while (*v == ' ' || *v == '\t') v++;
             v[strcspn(v, "\r\n")] = '\0';
