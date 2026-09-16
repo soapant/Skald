@@ -2,7 +2,7 @@
 #define WINDOW_PLATFORM_H
 
 #include <stdbool.h>
-#include "core/types/window.h"
+#include "core/types.h"
 
 
 char* Wm_GetActiveWindowTitle();
