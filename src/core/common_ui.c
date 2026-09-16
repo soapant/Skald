@@ -93,7 +93,7 @@ void BuildAliasDisplayItems(const char** items, int count) {
   g_alias_display_active = false;
   g_alias_display_count = 0;
   if (!items || count <= 0) return;
-  if (count > MAX_ITEMS) count = MAX_ITEMS;
+  if (count > MAX_VISIBLE_ITEMS) count = MAX_VISIBLE_ITEMS;
   for (int i = 0; i < count; i++) {
     g_alias_display[i][0] = '\0';
     if (!items[i]) continue;
@@ -166,7 +166,7 @@ void PopulateListBox(ListBoxInfo* lb, WindowHandle hListBox, const char* filter,
   } else if (use_previous && prev_count > 0) {
     int* prev_matches = lb->prev_matches;
 
-    for (int i = 0; i < prev_count && total_matches < MAX_MATCHES; i++) {
+    for (int i = 0; i < prev_count && total_matches < MAX_VISIBLE_ITEMS; i++) {
       int idx = prev_matches[i];
       if (!items[idx]) continue;
 
@@ -196,7 +196,7 @@ void PopulateListBox(ListBoxInfo* lb, WindowHandle hListBox, const char* filter,
     }
   } else {
     bool empty_filter = (clean_filter[0] == '\0');
-    for (int i = 0; i < item_count && total_matches < MAX_MATCHES; i++) {
+    for (int i = 0; i < item_count && total_matches < MAX_VISIBLE_ITEMS; i++) {
       if (!items[i]) continue;
 
       if (empty_filter) {
@@ -232,7 +232,7 @@ void PopulateListBox(ListBoxInfo* lb, WindowHandle hListBox, const char* filter,
   }
   PROFILE_END_VAR(timer_filter, "  PopulateListBox - Filtering");
   if (clean_filter[0] != '\0' && total_matches > 1) {
-      int scores[MAX_MATCHES];
+      int scores[MAX_VISIBLE_ITEMS];
       for (int i=0;i<total_matches;i++) {
           int idx = lb->matching_indices[i];
           const char* txt = items[idx];

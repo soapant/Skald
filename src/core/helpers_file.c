@@ -56,7 +56,7 @@ int ReplaceLineInFile(const char* filepath, int line_index, const char* new_text
 
 void WriteToCacheIndex(ListBoxInfo* lb, int index, const char* text) {
     if (!lb) return;
-    if (index < 0 || index >= MAX_ITEMS || !text) return;
+    if (index < 0 || index >= MAX_VISIBLE_ITEMS || !text) return;
     
     strncpy(lb->populated_cache[index], text, sizeof(lb->populated_cache[index]) - 1);
     lb->populated_cache[index][sizeof(lb->populated_cache[index]) - 1] = '\0';
