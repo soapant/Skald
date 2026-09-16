@@ -79,15 +79,11 @@ void SavePerFeatureState(const char* feature, EditorMode mode, int last_index) {
 }
 #endif
 
-static void on_c_file_changed(void) {
-    log_info("A .c file was modified!");
-}
-
 #if !defined(_WIN32)
 static void* feature_watcher_thread(void* arg) {
     WindowManager* wm = (WindowManager*)arg;
     while (!atomic_load(&g_watcher_stop) && !(wm && wm->watcher_stop)) {
-        char* filename = Platform_WatchForCFileChanges(FeaturePath, on_c_file_changed);
+        char* filename = Platform_WatchForCFileChanges(FeaturePath);
         if (filename) {
             log_info("Changed file: %s", filename);
             char buf[256];
@@ -122,7 +118,7 @@ static void* feature_watcher_thread(void* arg) {
 static DWORD WINAPI feature_watcher_thread_win(LPVOID arg) {
     WindowManager* wm = (WindowManager*)arg;
     while (InterlockedCompareExchange(&g_watcher_stop_win, 0, 0)==0 && !(wm && wm->watcher_stop)) {
-        char* filename = Platform_WatchForCFileChanges(FeaturePath, on_c_file_changed);
+        char* filename = Platform_WatchForCFileChanges(FeaturePath);
         if (filename) {
             log_info("Changed file: %s", filename);
             char buf[256];
