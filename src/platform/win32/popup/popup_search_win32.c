@@ -8,7 +8,6 @@
 #include "platform/draw.h"
 #include "core/common_ui.h"
 #include "core/feature_data.h"
-#include "core/number_shortcut.h"
 #include "core/types.h"
 #include "platform/subclasses_win32.h"
 #include "wingdi.h"

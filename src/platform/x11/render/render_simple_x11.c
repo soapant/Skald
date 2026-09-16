@@ -14,7 +14,6 @@
 #include "bindings/bindings.h"
 #include "bindings/vim_motions.h"
 #include "bindings/vim_helpers.h"
-#include "core/number_shortcut.h"
 #include "core/history.h"
 #include <X11/X.h>
 #include <X11/Xlib.h>

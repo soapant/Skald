@@ -2,10 +2,6 @@
 #include "core/modal.h"
 #include "config.h"
 #include <ctype.h>
-#if defined(_WIN32)
-#include <shellapi.h>
-#include <shlwapi.h>
-#endif
 #include "config.h"
 #include "core/platform.h"
 #include "helpers/hotkey.h"
@@ -15,8 +11,6 @@
 #include "helpers/ui.h"
 #include "core/timer.h"
 #include "core/common_ui.h"
-
-int g_refresh_count = 0;
 
 void SubjectiveMessageDisplay(const char* buffer,int msg_height,int timeout,ColorRef color) {
     if (MessagesEnabled) {

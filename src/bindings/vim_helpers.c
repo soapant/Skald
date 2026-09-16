@@ -5,9 +5,6 @@
 #include "core/common_ui.h"
 #include "core/vim.h"
 #include <ctype.h>
-#if defined(_WIN32)
-#include <windows.h>
-#endif
 
 void DeleteCharUnderCursor(FlintContext* ctx) {
     if (!ctx) return;
@@ -39,20 +36,11 @@ void GoToLastListBoxItem(FlintContext* ctx) {
 
 void SetCursorToStartOfText(FlintContext* ctx) {
     if (!ctx) return;
-#if defined(_WIN32)
-    SetFocus(WH_TO_HWND(ctx->window.g_ActiveEditControl));
-#endif
     Vim_SetCursor(ctx, 0);
 }
 
 void SetCursorToEndOfText(FlintContext* ctx) {
     if (!ctx) return;
-#if defined(_WIN32)
-    SetFocus(WH_TO_HWND(ctx->window.g_ActiveEditControl));
-    int len = (int)strlen(ctx->window.filter);
-    Vim_SetCursor(ctx, len);
-    return;
-#endif
     char text[512];
     Vim_GetText(ctx, text, sizeof(text));
     Vim_SetCursor(ctx, (int)strlen(text));

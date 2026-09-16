@@ -8,7 +8,6 @@
 #include "platform/draw.h"
 #include "core/common_ui.h"
 #include "core/feature_data.h"
-#include "core/number_shortcut.h"
 #include "core/types.h"
 #include "platform/subclasses_win32.h"
 #include "wingdi.h"
@@ -76,14 +75,6 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
           return DefSubclassProc(hwnd, msg, wParam, lParam);
         }
       
-        if (wParam >= '0' && wParam <= '9') {
-          if (ctrl_pressed) {
-            HandleNumberShortcut(wParam, FlintContext_Get()->window.hListBox, FlintContext_Get()->window.hEditControl, lb);
-              return 0;
-          }
-        }
-      
-        
         if (!ctrl_pressed) {
           if (wParam == VK_UP || wParam == VK_DOWN) {
             if (WH_TO_HWND(FlintContext_Get()->window.hListBox) != NULL) {

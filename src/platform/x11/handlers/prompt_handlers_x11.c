@@ -14,7 +14,6 @@
 #include "bindings/bindings.h"
 #include "bindings/vim_motions.h"
 #include "bindings/vim_helpers.h"
-#include "core/number_shortcut.h"
 #include "core/history.h"
 #include <X11/X.h>
 #include <X11/Xlib.h>
@@ -71,13 +70,6 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
         return true;
       } else {
         FlintContext_Get()->window.selection_complete = true;
-        PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandlePromptKey");
-        return true;
-      }
-    }
-    if (wParam >= '0' && wParam <= '9') {
-      if (ctrl_pressed) {
-        HandleNumberShortcut(wParam, FlintContext_Get()->window.hListBox, FlintContext_Get()->window.g_ActiveEditControl,&state->listbox);
         PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandlePromptKey");
         return true;
       }
