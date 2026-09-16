@@ -1014,15 +1014,3 @@ Fl_Pos Platform_GetCursorPos(void) {
     
     return (Fl_Pos){0, 0};
 }
-
-int Platform_InitializeTrayIcon(void) { return 0; }
-void Platform_InitUI(void) {}
-void Platform_ShutdownUI(void) {}
-void Platform_DisplayMessage(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, int timeout, ColorRef color) { (void)message; (void)centerX; (void)centerY; (void)maxWidth; (void)maxHeight; (void)timeout; (void)color; }
-void Platform_DismissMessage(void) {}
-char* Platform_PromptUser(const PromptSpec* spec) { (void)spec; return NULL; }
-char* Platform_SimplePromptUser(const SimplePromptSpec* spec) { (void)spec; return NULL; }
-void Platform_WaitForKeypressAsync(KeyCallback cb) { (void)cb; }
-void Platform_SettingsPopUp(void) {}
-PromptState* Platform_GetWin32PromptState(void) { return NULL; }
-void Platform_CreateDisplayMessageWindow(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, int timeout, ColorRef color) { (void)message; (void)centerX; (void)centerY; (void)maxWidth; (void)maxHeight; (void)timeout; (void)color; }

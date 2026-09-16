@@ -25,4 +25,4 @@ probably should make the termianl command history file literally use the one fro
 do the sway for the get mouse pos ||[Flint]
 for some reason alias text isnt showing in the item||[DontForget]
 volume is werid as fuck it can go more than 100 idk if that is supposed to happen||[DontForget]
-
+there are duplicate subclasses_win32.h||[DontForget]
