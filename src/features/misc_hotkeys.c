@@ -29,11 +29,11 @@ void ScreenshotArea(void) {
   fl_run_terminal_command("grimshot copy area");
 }
 void IncrementVolume(void) {
-  fl_increment_volume_by(5);
+  fl_increment_volume_by(30);
 }
 
 void DecrementVolume(void) {
-  fl_decrement_volume_by(5);
+  fl_decrement_volume_by(30);
 }
 
 FLINT_FEATURE_INIT {
