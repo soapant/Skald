@@ -25,7 +25,7 @@
 #include <string.h>
 #include "core/timer.h"
 #include "platform/draw.h"
-#include "platform/x11/input/input_helpers_x11.h"
+#include "platform/x11/input_x11.h"
 #include "platform/x11/ui_x11.h"
 #include "core/window_manager.h"
 #include <stdlib.h>
