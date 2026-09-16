@@ -209,7 +209,6 @@ void applauncher_copy_callback(const char* selection,int true_index,int type) {
         break;
       }
     }
-    printf("%s \n",text);
     fl_copy_to_clipboard(text);
 }
 
