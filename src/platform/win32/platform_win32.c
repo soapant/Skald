@@ -1005,14 +1005,6 @@ static void Platform_OnNotificationReceived(const char* text) {
     SubjectiveMessageDisplay(text, 140, TimeOutForMessages, COLOR_TEXT);
 }
 
-void Platform_StartNotificationDaemon(void) {
-    extern const wchar_t* HttpUrlForNotis;
-    extern void StartNtfyDaemon(const wchar_t* topic, void (*callback)(const char*));
-    if (HttpUrlForNotis) {
-        StartNtfyDaemon(HttpUrlForNotis, Platform_OnNotificationReceived);
-    }
-}
-
 Fl_Pos Platform_GetCursorPos(void) {
     POINT point;
     
