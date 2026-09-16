@@ -8,11 +8,39 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#if !defined(_WIN32)
+#include <pthread.h>
+#endif
 #include "core/platform.h"
 
 static HotkeyBinding* g_hotkeys = NULL;
 static int g_hotkey_count = 0;
 static int g_hotkey_capacity = 0;
+
+#if !defined(_WIN32)
+static HotkeyCallback g_pending_q[64];
+static int g_pending_head = 0;
+static int g_pending_tail = 0;
+static pthread_mutex_t g_q_mtx = PTHREAD_MUTEX_INITIALIZER;
+static void hotkey_enqueue(HotkeyCallback fn) {
+    pthread_mutex_lock(&g_q_mtx);
+    int nxt = (g_pending_tail + 1) % 64;
+    if (nxt != g_pending_head) { g_pending_q[g_pending_tail] = fn; g_pending_tail = nxt; }
+    pthread_mutex_unlock(&g_q_mtx);
+}
+void hotkey_drain_pending(void) {
+    while (1) {
+        HotkeyCallback fn = NULL;
+        pthread_mutex_lock(&g_q_mtx);
+        if (g_pending_head != g_pending_tail) { fn = g_pending_q[g_pending_head]; g_pending_head = (g_pending_head + 1) % 64; }
+        pthread_mutex_unlock(&g_q_mtx);
+        if (!fn) break;
+        fn();
+    }
+}
+#else
+void hotkey_drain_pending(void) {}
+#endif
 
 bool hotkey_register_internal(HotkeyBinding binding) {
     for (int i=0;i<g_hotkey_count;i++) {
@@ -105,7 +133,12 @@ bool hotkey_process(int vk_code, int modifiers) {
             }
         }
 
-        b->hotkey_callback();
+        HotkeyCallback cb = b->hotkey_callback;
+#if !defined(_WIN32)
+        hotkey_enqueue(cb);
+#else
+        cb();
+#endif
         return true; 
     }
 

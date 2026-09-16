@@ -27,7 +27,7 @@
 ## Rules
 - Never Commit Any Changes Or Use Any Git Feature like diff pull push unless user specified (i.e debugging broken code or if the user says to commit after changes and push)
 -- when the user says some feature does not work read the files related to that if you can find the issue fix it if you can add log_info in areast where you think the issue  and propmt the user to enable debugging to test the user will give back the entire debug log
--- do not add random comments in the middle of functions under any circumstance
+-- do not add random comments in the middle of functions under any circumstance and never run the program unless specified by the user
 
 ## Communication
 
