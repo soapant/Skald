@@ -326,11 +326,6 @@ void PopulateListBox(ListBoxInfo* lb, WindowHandle hListBox, const char* filter,
     }
   }
 
-  if (total_matches != old_count || clean_filter[0] != '\0') {
-#if defined(_WIN32)
-    InvalidateRect(WH_TO_HWND(FlintContext_Get()->window.hListBox), NULL, FALSE);
-#endif
-  }
   PROFILE_END_VAR(timer_ui, "  PopulateListBox - UI update");
 
   PROFILE_START(timer_cleanup);
