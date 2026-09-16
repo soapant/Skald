@@ -203,12 +203,13 @@ void applauncher_copy_callback(const char* selection,int true_index,int type) {
         break;
       }
       case 1: {
-        char pc[512]={0}; bool ok=false;
-        if (true_index >= 0 && (size_t)true_index < s_apps.count) { strncpy(pc, s_apps.items[true_index].path, sizeof(pc)-1); ok=true; }
-        if (ok) { char* dup=_strdup(pc); if(dup){ fl_copy_to_clipboard(dup); free(dup); return; } }
+        char buffer[512];
+        strncpy(buffer, s_apps.items[true_index].path, sizeof(buffer) - 1);
+        text = strdup(buffer);
         break;
       }
     }
+    printf("%s \n",text);
     fl_copy_to_clipboard(text);
 }
 
