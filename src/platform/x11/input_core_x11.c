@@ -199,6 +199,14 @@ void x11_scan_keyboards(void) {
                     close(fd);
                     continue;
                 }
+                if (ev_bits[0] & (1UL << EV_REL)) {
+                    close(fd);
+                    continue;
+                }
+                if (ev_bits[0] & (1UL << EV_ABS)) {
+                    close(fd);
+                    continue;
+                }
                 keybits[0] &= ~1UL;
                 int nwords = (0xFF + 1 + (int)(sizeof(unsigned long)*8)-1)/(int)(sizeof(unsigned long)*8);
                 for (int i=0;i<nwords;i++) if (keybits[i]) { is_kb = true; break; }

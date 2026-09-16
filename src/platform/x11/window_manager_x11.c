@@ -229,25 +229,30 @@ int WindowManager_RunLinux(WindowManager* wm) {
     ScanAndHookKeyboards();
 
     if (remap_has_bindings()) {
-        if (g_x11_uinput_fd < 0) {
-            log_warn("remap forcing uinput init despite use_grab=%d", use_grab);
-            g_x11_uinput_fd = init_uinput();
-            if (g_x11_uinput_fd >= 0) log_warn("remap uinput forced fd=%d", g_x11_uinput_fd);
-            else log_warn("remap uinput force failed, fallback XTest will be used");
-        }
-        if (g_x11_uinput_fd >= 0) {
-            for (int i=0;i<g_x11_keyboard_count;i++) {
-                if (!g_x11_device_grabbed[i]) {
-                    if (ioctl(g_x11_keyboards[i].fd, EVIOCGRAB, 1)==0) {
-                        g_x11_device_grabbed[i]=true;
-                        log_warn("remap grabbed keyboard %d path=%s", i, g_x11_keyboards[i].path);
-                    } else {
-                        log_warn("remap grab failed for %s: %s (run with correct perms / input group)", g_x11_keyboards[i].path, strerror(errno));
+        if (!use_grab) {
+            log_warn("remap bindings present but use_grab=0 (Wayland/Hyprland) -> skipping uinput/grab to avoid stealing input");
+            if (g_x11_uinput_fd >= 0) { destroy_uinput(); g_x11_uinput_fd = -1; }
+        } else {
+            if (g_x11_uinput_fd < 0) {
+                log_warn("remap forcing uinput init despite use_grab=%d", use_grab);
+                g_x11_uinput_fd = init_uinput();
+                if (g_x11_uinput_fd >= 0) log_warn("remap uinput forced fd=%d", g_x11_uinput_fd);
+                else log_warn("remap uinput force failed, fallback XTest will be used");
+            }
+            if (g_x11_uinput_fd >= 0) {
+                for (int i=0;i<g_x11_keyboard_count;i++) {
+                    if (!g_x11_device_grabbed[i]) {
+                        if (ioctl(g_x11_keyboards[i].fd, EVIOCGRAB, 1)==0) {
+                            g_x11_device_grabbed[i]=true;
+                            log_warn("remap grabbed keyboard %d path=%s", i, g_x11_keyboards[i].path);
+                        } else {
+                            log_warn("remap grab failed for %s: %s (run with correct perms / input group)", g_x11_keyboards[i].path, strerror(errno));
+                        }
                     }
                 }
+            } else {
+                log_warn("remap grab skipped: no uinput, not grabbing to avoid bricking");
             }
-        } else {
-            log_warn("remap grab skipped: no uinput, not grabbing to avoid bricking");
         }
     }
     if (g_x11_keyboard_count == 0) {
