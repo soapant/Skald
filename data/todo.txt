@@ -24,3 +24,5 @@ when doing the api for the index getting probably auto do the whole tru lookup t
 probably should make the termianl command history file literally use the one from the user shell ||[Flint]
 do the sway for the get mouse pos ||[Flint]
 for some reason alias text isnt showing in the item||[DontForget]
+volume is werid as fuck it can go more than 100 idk if that is supposed to happen||[DontForget]
+
