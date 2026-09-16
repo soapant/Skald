@@ -22,6 +22,8 @@
 #include <linux/uinput.h>
 #include <errno.h>
 #include <X11/keysym.h>
+#include <signal.h>
+#include <pthread.h>
 
 X11Keyboard g_x11_keyboards[X11_MAX_KEYBOARDS];
 int g_x11_keyboard_count = 0;
@@ -32,6 +34,7 @@ bool g_x11_device_grabbed[X11_MAX_KEYBOARDS] = {0};
 bool g_x11_ctrl_held = false;
 bool g_x11_alt_held = false;
 bool g_x11_shift_held = false;
+pthread_mutex_t g_input_mtx = PTHREAD_MUTEX_INITIALIZER;
 
 extern int pending_hotkey_vk;
 extern int pending_hotkey_mod;
@@ -47,10 +50,85 @@ bool x11_should_use_grab(void) {
     return true;
 }
 
+static struct WindowManager *g_x11_wm = NULL;
+void x11_set_window_manager(struct WindowManager *wm) { g_x11_wm = wm; }
+
+static void x11_force_cleanup(void);
+static void x11_install_cleanup_handlers(void);
+static volatile sig_atomic_t g_x11_cleanup_done = 0;
+
+static void x11_sig_handler(int sig) {
+    (void)sig;
+    x11_force_cleanup();
+    signal(sig, SIG_DFL);
+    raise(sig);
+}
+
+static void x11_term_handler(int sig) {
+    (void)sig;
+    x11_force_cleanup();
+    if (g_x11_wm) {
+        extern void WindowManager_QuitLinux(struct WindowManager *wm);
+        WindowManager_QuitLinux(g_x11_wm);
+    }
+    _exit(0);
+}
+
+static void x11_force_cleanup(void) {
+    if (g_x11_cleanup_done) return;
+    g_x11_cleanup_done = 1;
+    for (int i=0;i<g_x11_keyboard_count;i++) {
+        if (g_x11_keyboards[i].fd >= 0) {
+            ioctl(g_x11_keyboards[i].fd, EVIOCGRAB, 0);
+        }
+    }
+    for (int i=0;i<256;i++) {
+        extern bool remap_is_virt_held(int vk);
+        if (remap_is_virt_held(i)) Platform_EmitKey(i, 0);
+    }
+    remap_reset();
+    x11_clear_suppress();
+    if (g_x11_uinput_fd >= 0) {
+        ioctl(g_x11_uinput_fd, UI_DEV_DESTROY);
+        close(g_x11_uinput_fd);
+        g_x11_uinput_fd = -1;
+    }
+    for (int i=0;i<g_x11_keyboard_count;i++) {
+        if (g_x11_keyboards[i].fd >= 0) {
+            close(g_x11_keyboards[i].fd);
+            g_x11_keyboards[i].fd = -1;
+        }
+    }
+}
+
+static void x11_atexit_handler(void) { x11_force_cleanup(); }
+
+static void x11_install_cleanup_handlers(void) {
+    static bool installed = false;
+    if (installed) return;
+    installed = true;
+    atexit(x11_atexit_handler);
+    struct sigaction sa;
+    memset(&sa, 0, sizeof(sa));
+    sa.sa_handler = x11_term_handler;
+    sigemptyset(&sa.sa_mask);
+    sigaction(SIGTERM, &sa, NULL);
+    sigaction(SIGINT, &sa, NULL);
+    sigaction(SIGHUP, &sa, NULL);
+    sigaction(SIGQUIT, &sa, NULL);
+    sa.sa_handler = x11_sig_handler;
+    sigaction(SIGSEGV, &sa, NULL);
+    sigaction(SIGABRT, &sa, NULL);
+    sigaction(SIGBUS, &sa, NULL);
+    sigaction(SIGFPE, &sa, NULL);
+    sigaction(SIGILL, &sa, NULL);
+}
+
 int x11_init_uinput(void) {
     PROFILE_START(timer);
-    int fd = open("/dev/uinput", O_WRONLY | O_NONBLOCK);
-    if (fd < 0) fd = open("/dev/input/uinput", O_WRONLY | O_NONBLOCK);
+    x11_install_cleanup_handlers();
+    int fd = open("/dev/uinput", O_WRONLY | O_NONBLOCK | O_CLOEXEC);
+    if (fd < 0) fd = open("/dev/input/uinput", O_WRONLY | O_NONBLOCK | O_CLOEXEC);
     if (fd < 0) {
         log_error("open failed: %s (swallow disabled)", strerror(errno));
         PROFILE_END_VAR(timer, "input:x11_init_uinput");
@@ -100,13 +178,14 @@ void x11_uinput_emit(const struct input_event *ev) {
 
 void x11_scan_keyboards(void) {
     PROFILE_START(timer);
+    x11_install_cleanup_handlers();
     DIR *dir = opendir("/dev/input");
     if (!dir) { PROFILE_END_VAR(timer, "input:x11_scan_keyboards"); return; }
     struct dirent *entry;
     while ((entry = readdir(dir)) != NULL && g_x11_keyboard_count < X11_MAX_KEYBOARDS) {
         if (strncmp(entry->d_name, "event", 5) == 0) {
             char full_path[256]; snprintf(full_path, sizeof(full_path), "/dev/input/%s", entry->d_name);
-            int fd = open(full_path, O_RDONLY | O_NONBLOCK);
+            int fd = open(full_path, O_RDONLY | O_NONBLOCK | O_CLOEXEC);
             if (fd < 0) continue;
             unsigned long ev_bits[EV_MAX / 8 + 1] = {0};
             unsigned long keybits[(KEY_MAX/8+sizeof(unsigned long)-1)/sizeof(unsigned long)+1] = {0};
