@@ -1414,4 +1414,5 @@ void Platform_DismissMessage(void) {}
 Fl_Pos Platform_GetCursorPos(void) {
     return Wm_GetCursorPosition();
 }
+void Platform_SettingsPopUp(void) {}
 
