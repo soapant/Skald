@@ -46,13 +46,9 @@ const TagFormatConfig TODO_TAG_FORMAT = {
 
 #define TODO_CONFIG_MASTER \
     X("-pf", "Flint",         "Flint",         RGB(137, 180, 250), true) \
-    X("-ph", "HeaderC",          "HeaderC",          RGB(148, 226, 183), true) \
     X("-pm", "MinecraftModpack", "MinecraftModpack", RGB(250, 179, 135), true) \
     X("-pb", "CocBot",           "CocBot",           RGB(249, 226, 175), true) \
-    X("-pp", "MusicPlayer",      "MusicPlayer",      RGB(209, 106, 175), true) \
-    X("-pv", "VideoViewer",      "VideoViewer",      RGB(219, 226, 105), true) \
-    X("-pd", "Ded",              "Ded",              RGB(19,  226, 105), true) \
-    X("-pi", "IndieGame",     "IndieGame",     RGB(19,  26, 105), true) \
+    X("-pi", "IndieGame",        "IndieGame",     RGB(19,  26, 105), true) \
     X("-m",  NULL,               "Misc",             RGB(225, 225, 225), false) \
     X("-l",  NULL,               "Learning",         RGB(166, 227, 161), false) \
     X("-b",  NULL,               "Bored",            RGB(203, 166, 247), false) \
@@ -63,9 +59,10 @@ const TagFormatConfig TODO_TAG_FORMAT = {
     X("-f",  NULL,               "Fun",              RGB(210, 9,   102), false) \
     X("-r",  NULL,               "Research",         RGB(235, 60,  235), false) \
     X("-u",  NULL,               "Urgent",           RGB(255, 0,   35),  false) \
-    X("-ne", NULL,               "NotImplemetedYet", RGB(155, 255, 35),  false) \
+    X("-ne", NULL,               "NotImplementedYet", RGB(155, 255, 35),  false) \
     X("-ft", NULL,               "Feature",          RGB(250, 205, 102), false) \
-    X("-c",  NULL,               "Change",           RGB(150, 105, 12),  false)
+    X("-c",  NULL,               "Change",           RGB(150, 105, 12),  false) \
+    X("-fl",  NULL,              "FlApi",            RGB(10, 105, 12),  false)
 
 #define X(flag, label) {flag, label},
 const TodoAliasEntry TODO_ALIAS_DICT[] = {
