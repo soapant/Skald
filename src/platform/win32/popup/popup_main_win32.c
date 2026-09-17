@@ -241,6 +241,15 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
           UI_SetCursorPosition(FlintContext_Get()->window.hEditControl,1);
         }
       }
+
+      if (ctrl_pressed) {
+        if (wParam == VK_OEM_MINUS) {
+          FontSize -= 1;
+        } 
+        if (wParam == VK_OEM_PLUS) {
+          FontSize += 1;
+        } 
+      }
     } 
   if (msg == WM_CHAR) {
     if (wParam == 0x08 || wParam == 0x7F) {
