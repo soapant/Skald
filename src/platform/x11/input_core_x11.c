@@ -159,7 +159,6 @@ int x11_init_uinput(void) {
         if (write(fd, &uud, sizeof(uud)) != sizeof(uud)) perror("[UINPUT] write uud");
         if (ioctl(fd, UI_DEV_CREATE) < 0) { perror("[UINPUT] UI_DEV_CREATE legacy"); close(fd); PROFILE_END_VAR(timer, "input:x11_init_uinput"); return -1; }
     }
-    usleep(150 * 1000);
     log_info("virtual keyboard created (fd=%d)", fd);
     PROFILE_END_VAR(timer, "input:x11_init_uinput");
     return fd;
