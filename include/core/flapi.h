@@ -1,5 +1,7 @@
 #ifndef FLAPI_H
 #define FLAPI_H
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wint-conversion"
 
 #include <stdbool.h>
 #include <stddef.h>
