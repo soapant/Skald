@@ -61,3 +61,17 @@ void Platform_GetItemColors(int idx, int count, unsigned long *num_color, unsign
     if (body_color) *body_color = b;
     if (plain_color) *plain_color = p;
 }
+
+bool Platform_DrawRectRaw(int x, int y, int w, int h, unsigned long color) {
+    RECT rect;
+    rect.left = x;
+    rect.top = y;
+    rect.right = x + w;
+    rect.bottom = y + h;
+
+    HBRUSH hBrush = CreateSolidBrush(color);
+
+    FillRect(g_draw_hdc, &rect, hBrush);
+
+    DeleteObject(hBrush);
+}
