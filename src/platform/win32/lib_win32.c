@@ -13,4 +13,6 @@ void* Platform_GetSymbol(LibHandle lib, const char* name) {
 void Platform_UnloadLibrary(LibHandle lib) {
     if (lib) FreeLibrary((HMODULE)lib);
 }
-const char* Platform_LibExtension(void) { return ".dll"; }
+const char* Platform_LibExtension(void) {
+  return ".dll"; 
+}

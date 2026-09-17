@@ -89,7 +89,9 @@ void format_number_plain(double num, char* out, size_t max_len){
     }
 }
 
-void format_number_with_suffix(double num, char* out, size_t max_len){ format_number_plain(num,out,max_len); }
+void format_number_with_suffix(double num, char* out, size_t max_len){
+  format_number_plain(num,out,max_len);
+}
 
 double parse_number_with_suffix(const char* str) {
     char cleaned[64];
@@ -125,7 +127,9 @@ void trim_trailinspaces(char* str) {
 
 
 
-static int precedence(char op){ if(op=='*'||op=='/') return 2; if(op=='+'||op=='-') return 1; return 0; }
+static int precedence(char op) {
+  if(op=='*'||op=='/') return 2; if(op=='+'||op=='-') return 1; return 0; 
+}
 static bool apply_op(double* vals, int* vtop, char* ops, int* otop, bool* ok){
     if(*vtop<1 || *otop<0) { *ok=false; return false; }
     double b=vals[(*vtop)--];
