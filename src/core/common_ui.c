@@ -20,6 +20,10 @@
 #include <shlwapi.h>
 #endif
 
+char g_alias_display[MAX_VISIBLE_ITEMS][512];
+int g_alias_display_count = 0;
+bool g_alias_display_active = false;
+
 static bool FuzzyMatch(const char* text, const char* pattern) {
     if (!pattern || !pattern[0]) return true;
     if (!text || !text[0]) return false;
