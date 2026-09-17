@@ -159,7 +159,9 @@ static bool parse_mods_and_vks(const char* str, int* out_mods, int* out_vks, int
     return true;
 }
 
-bool remap_has_bindings(void) { return g_remap_count>0; }
+bool remap_has_bindings(void) {
+  return g_remap_count>0; 
+}
 
 bool remap_register_internal(const char* src, const char* dst) {
     if (!src || !dst) return false;
