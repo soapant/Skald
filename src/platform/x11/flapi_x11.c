@@ -501,7 +501,13 @@ bool fl_increment_volume_by_percent_platform(int increment_percent) {
     int target_volume = current_volume + (current_volume * increment_percent / 100);
     return fl_set_volume_platform(target_volume);
 }
-bool fl_type_string_platform(const char *s){
+#include "platform/input_state.h"
+bool fl_is_key_down_platform(int vk){ return Platform_IsKeyDown(vk); }
+bool fl_is_key_pressed_platform(int vk){ return Platform_WasKeyPressed(vk); }
+bool fl_is_key_released_platform(int vk){ return Platform_WasKeyReleased(vk); }
+bool fl_is_key_held_platform(int vk){ return Platform_IsKeyDown(vk); }
+void fl_on_key_platform(void (*cb)(int vk, bool down, int mods, void *ud), void *ud){ Platform_SetKeyCallback(cb,ud); }
+bool fl_type_text_platform(const char *s){
  if(!s) return false;
  remap_reset();
  Platform_EmitKey(VK_LCONTROL,0); Platform_EmitKey(VK_RCONTROL,0);

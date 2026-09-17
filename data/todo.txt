@@ -24,5 +24,7 @@ the program buffers like a mofo at startup on the windows vm||[Flint]
 maybe i can do the !snippet thing so its not just a hotkey but more||[Flint]
 make the throwaway ai chat thingy somehow without making the program heavy idk should be just some api calls||[Flint]
 uninstall applications might be good or uninstall things in general although idk if that will need sudo ||[Flint]
-
-
+do time in city time conversions etc etc for the calculator||[Flint]
+better the api for flag getting remove the reminder flag system api that is uses it fucking sucks ||[Flint]
+do the monkey type type thing as that is very useful for me ||[Flint]
+woah it seems i can search for menu things in apps without looking at them see if that is only a mac thing ||[Flint]
