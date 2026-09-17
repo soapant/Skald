@@ -5,6 +5,7 @@
 #include "deps/log.h"
 #include "platform/x11/display_x11.h"
 #include "platform/x11/input_x11.h"
+#include "platform/input_state.h"
 #include "core/remap_manager.h"
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
@@ -40,6 +41,7 @@ void Platform_WM_OnPopEmpty(WindowManager* wm) {
     x11_clear_suppress();
     remap_reset();
     x11_sync_held_from_phys();
+    Platform_InputState_Clear();
 }
 
 void Platform_WM_GetMonitorGeometry(int *ox, int *oy, int *ow, int *oh) {

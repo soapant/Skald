@@ -811,7 +811,13 @@ bool fl_decrement_volume_by_percent(int decrement_percent) {
   return fl_decrement_volume_by_percent_platform(decrement_percent);
 }
 
-bool fl_type_string(const char *s) {
+bool fl_type_text(const char *s) {
   if (!s) return false;
-  return fl_type_string_platform(s);
+  return fl_type_text_platform(s);
 }
+
+bool fl_is_key_down(int vk){ return fl_is_key_down_platform(vk); }
+bool fl_is_key_pressed(int vk){ return fl_is_key_pressed_platform(vk); }
+bool fl_is_key_released(int vk){ return fl_is_key_released_platform(vk); }
+bool fl_is_key_held(int vk){ return fl_is_key_held_platform(vk); }
+void fl_on_key(void (*cb)(int vk, bool down, int mods, void *ud), void *ud){ fl_on_key_platform(cb,ud); }
