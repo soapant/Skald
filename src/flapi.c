@@ -729,7 +729,7 @@ char* fl_popup_impl(const FlPopupSpec *spec) {
 
 unsigned long fl_listbox_get_current_standard_color(void);
 
-bool fl_place_text_raw_impl(const FlTextSpec *spec) {
+bool fl_place_text_impl(const FlTextSpec *spec) {
     if (!spec || !spec->text) return false;
     unsigned long col = spec->color;
     if (col == 0) {
@@ -741,13 +741,14 @@ bool fl_place_text_raw_impl(const FlTextSpec *spec) {
     return Platform_DrawTextRaw(spec->x, spec->y, spec->text, col, fh, align, spec->pad,spec->fontsize);
 }
 
-bool fl_place_editbox_raw_impl(const FlEditSpec *spec) {
-  (void)spec; return false; 
+bool fl_place_editbox_impl(const FlEditSpec *spec) {
+  if (!spec) return false;
+  return fl_place_editbox_platform(spec);
 }
-bool fl_place_separator_raw_impl(int x, int y, int w, int h) {
+bool fl_place_separator_impl(int x, int y, int w, int h) {
   (void)x; (void)y; (void)w; (void)h; return false; 
 }
-bool fl_place_image_raw_impl(const FlImageSpec *spec) {
+bool fl_place_image_impl(const FlImageSpec *spec) {
   (void)spec; return false; 
 }
 bool fl_draw_rect(int x, int y, int w, int h, unsigned long color) {
@@ -774,12 +775,12 @@ bool fl_listbox_next(FlListItemCtx *out) {
 void fl_listbox_end(void) {
     fl_listbox_end_platform();
 }
-bool fl_place_listbox_raw_impl(const FlListSpec *spec) {
+bool fl_place_listbox_impl(const FlListSpec *spec) {
     if (!spec) return false;
     if (!fl_listbox_begin(spec)) return false;
     FlListItemCtx ctx;
     while (fl_listbox_next(&ctx)) {
-        fl_place_text_raw(.x=ctx.x + 10, .y=ctx.y + 4, .text=ctx.text, .align="LEFT", .pad=ctx.x + 10);
+        fl_place_text(.x=ctx.x + 10, .y=ctx.y + 4, .text=ctx.text, .align="LEFT", .pad=ctx.x + 10);
     }
     fl_listbox_end();
     return true;

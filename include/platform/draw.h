@@ -22,6 +22,7 @@ void Platform_DrawSeparators(PromptState *state, Display *dpy, XftDraw *xd, Visu
 void Platform_SetDrawContext(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap);
 void Platform_GetDrawContext(Display** dpy, XftDraw** xd, Visual** vis, Colormap* cmap);
 void Platform_SetPreRenderState(PromptState *state);
+PromptState* Platform_GetPreRenderStatePtr(void);
 #endif
 bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, FontHandle font, const char *align, int pad,int fontsize);
 void Platform_GetItemColors(int idx, int count, unsigned long *num_color, unsigned long *body_color, unsigned long *plain_color);

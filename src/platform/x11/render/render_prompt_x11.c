@@ -25,6 +25,7 @@
 #include <string.h>
 #include "core/timer.h"
 #include "platform/draw.h"
+#include "core/flapi_platform.h"
 
 void DrawPromptUserEditControlOnDraw(Display *dpy, XftDraw* xd, Visual* vis, Colormap cmap, PromptState *state) {
     void Core_DrawEditBox(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap);
@@ -84,12 +85,13 @@ bool Linux_RenderPromptUser(Display *dpy, Window *win, PromptState *state) {
         Linux_DrawBackground(dpy, *win, w, h);
         Platform_SetDrawContext(dpy, NULL, NULL, 0);
         if (FlintContext_Get()->prompt_callbacks.render != NULL) {
+          fl_editbox_reset_placed();
           Platform_SetDrawContext(dpy, NULL, NULL, 0);
           FlintContext_Get()->prompt_callbacks.render(state);
         } else {
           if (state->has_listbox) DrawPromptUserListBox(dpy,win,state);
+          DrawPromptUserEditControl(dpy, win,state);
         }
-        DrawPromptUserEditControl(dpy, win,state);
         XFlush(dpy);
         return true;
     }
@@ -101,11 +103,12 @@ bool Linux_RenderPromptUser(Display *dpy, Window *win, PromptState *state) {
         Linux_DrawBackground(dpy, *win, w, h);
         Platform_SetDrawContext(dpy, NULL, NULL, 0);
         if (FlintContext_Get()->prompt_callbacks.render != NULL) {
+          fl_editbox_reset_placed();
           FlintContext_Get()->prompt_callbacks.render(state);
         } else {
           if (state->has_listbox) DrawPromptUserListBox(dpy,win,state);
+          DrawPromptUserEditControl(dpy, win,state);
         }
-        DrawPromptUserEditControl(dpy, win,state);
         XFlush(dpy);
         return true;
     }
@@ -115,11 +118,12 @@ bool Linux_RenderPromptUser(Display *dpy, Window *win, PromptState *state) {
         Linux_DrawBackground(dpy, *win, w, h);
         Platform_SetDrawContext(dpy, NULL, NULL, 0);
         if (FlintContext_Get()->prompt_callbacks.render != NULL) {
+          fl_editbox_reset_placed();
           FlintContext_Get()->prompt_callbacks.render(state);
         } else {
           if (state->has_listbox) DrawPromptUserListBox(dpy,win,state);
+          DrawPromptUserEditControl(dpy, win,state);
         }
-        DrawPromptUserEditControl(dpy, win,state);
         XFlush(dpy);
         return true;
     }
@@ -134,8 +138,8 @@ bool Linux_RenderPromptUser(Display *dpy, Window *win, PromptState *state) {
     }
     Platform_SetDrawContext(dpy, xdDbl, vis, cmap);
     if (FlintContext_Get()->prompt_callbacks.render != NULL) {
+        fl_editbox_reset_placed();
         FlintContext_Get()->prompt_callbacks.render(state);
-        DrawPromptUserEditControlOnDraw(dpy, xdDbl, vis, cmap, state);
     } else {
         if (state->has_listbox) {
             DrawPromptUserListBoxOnDraw(dpy, xdDbl, vis, cmap, state);

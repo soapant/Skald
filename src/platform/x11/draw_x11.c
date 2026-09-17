@@ -20,6 +20,9 @@ bool Platform_PreRender(void) {
     if (!state) return false;
     return true;
 }
+PromptState* Platform_GetPreRenderStatePtr(void) {
+    return g_prerender_state;
+}
 
 __attribute__((weak)) bool fl_prerender(void) {
     return Platform_PreRender();
