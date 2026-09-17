@@ -20,7 +20,7 @@
 #include "helpers/helpers_ui.h"
 #include "helpers/helpers_hotkey.h"
 #include "platform/ui.h"
-#include "platform/subclasses_win32.h"
+#include "platform/win32/subclasses_win32.h"
 #include "platform/win32/common_ui_win32.h"
 #include "platform/win32/popup_helpers_win32.h"
 
