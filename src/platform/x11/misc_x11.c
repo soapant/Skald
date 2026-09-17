@@ -758,7 +758,7 @@ bool Platform_LaunchBrowserAtUrl(char* url,bool new_window) {
     PROFILE_START(timer);
     char command[2048];
     char full_url[2048];
-    if (strncmp(url, "http", 7) == 0 || strncmp(url, "https", 8) == 0) {
+    if (Platform_StringStartsWithCaseInsensitive(url,"https://")) {
         snprintf(full_url, sizeof(full_url), "%s", url);
     } else {
         snprintf(full_url, sizeof(full_url), "https://%s", url);
