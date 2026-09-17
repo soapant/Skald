@@ -810,3 +810,8 @@ bool fl_increment_volume_by_percent(int increment_percent) {
 bool fl_decrement_volume_by_percent(int decrement_percent) {
   return fl_decrement_volume_by_percent_platform(decrement_percent);
 }
+
+bool fl_type_string(const char *s) {
+  if (!s) return false;
+  return fl_type_string_platform(s);
+}

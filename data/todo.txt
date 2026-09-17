@@ -21,3 +21,8 @@ ctrl enter with shift l doesnt work i cant be fucked rn||[Flint]
 when doing the api for the index getting probably auto do the whole tru lookup thing if there is some filter||[Flint]
 probably should make the termianl command history file literally use the one from the user shell ||[Flint]
 the program buffers like a mofo at startup on the windows vm||[Flint]
+maybe i can do the !snippet thing so its not just a hotkey but more||[Flint]
+make the throwaway ai chat thingy somehow without making the program heavy idk should be just some api calls||[Flint]
+uninstall applications might be good or uninstall things in general although idk if that will need sudo ||[Flint]
+
+
