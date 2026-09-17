@@ -25,7 +25,6 @@ extern int CornerRadius;
 extern int ListboxBorderThickness;
 extern bool EnableShaders;
 extern int ShaderPreset;
-extern bool EnableSelectionShaders;
 extern int SelectionShaderPreset;
 extern float ShaderIntensity;
 extern float ShaderSmoothness;
