@@ -66,11 +66,5 @@ char Platform_GetPressedChar(void){
    }
   }
  }
- for(int i=0;i<256;i++){
-  if(g_pressed[i]){
-   g_pressed[i]=false;
-   if(i>=32 && i<=126) return (char)i;
-  }
- }
  return 0;
 }
