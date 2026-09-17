@@ -20,5 +20,4 @@ do the wholei nternet and bluetooth thing for both windows and linux that will r
 ctrl enter with shift l doesnt work i cant be fucked rn||[Flint]
 when doing the api for the index getting probably auto do the whole tru lookup thing if there is some filter||[Flint]
 probably should make the termianl command history file literally use the one from the user shell ||[Flint]
-for some reason alias text isnt showing in the item||[DontForget]|[Flint]
 the program buffers like a mofo at startup on the windows vm||[Flint]
