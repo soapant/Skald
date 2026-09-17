@@ -27,3 +27,4 @@ uninstall applications might be good or uninstall things in general although idk
 do time in city time conversions etc etc for the calculator||[Flint]
 better the api for flag getting remove the reminder flag system api that is uses it fucking sucks ||[Flint]
 do the monkey type type thing as that is very useful for me ||[Flint]
+vim motinos still act like it even with no editbox so hte widnow needs to be esc twice||[Flint]
