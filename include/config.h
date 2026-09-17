@@ -9,9 +9,6 @@
 #define COPY_SELECTION_KEY  'Y'
 #define COMMAND_MODE_KEY        VK_OEM_1
 #define SEARCH_PROGRAM_KEY      VK_OEM_2
-#define COLOR_ERROR             RGB(180, 0, 0) 
-#define COLOR_NORMAL            RGB(200, 200, 0) 
-#define COLOR_TIP               RGB(0, 160, 0)
 
 extern bool Tray;
 extern bool RememberLastIndex;
