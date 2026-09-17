@@ -48,3 +48,29 @@ void Platform_SetKeyCallback(void (*cb)(int vk, bool down, int mods, void *ud), 
 void Platform_InputState_Clear(void){
  for(int i=0;i<256;i++){ g_down[i]=false; g_pressed[i]=false; g_released[i]=false; }
 }
+int Platform_GetPressedKey(void){
+ for(int i=0;i<256;i++){
+  if(g_pressed[i]){
+   g_pressed[i]=false;
+   return i;
+  }
+ }
+ return 0;
+}
+char Platform_GetPressedChar(void){
+ for(int i=0;i<256;i++){
+  if(g_pressed[i]){
+   if((i>=32 && i<=126) || (i>='A' && i<='Z') || (i>='0' && i<='9')){
+    g_pressed[i]=false;
+    return (char)i;
+   }
+  }
+ }
+ for(int i=0;i<256;i++){
+  if(g_pressed[i]){
+   g_pressed[i]=false;
+   if(i>=32 && i<=126) return (char)i;
+  }
+ }
+ return 0;
+}

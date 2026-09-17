@@ -595,6 +595,12 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
     if (needDestroy) Platform_DestroyFont(fh);
     return true;
 }
+int fl_get_key_pressed_platform(void){
+ return Platform_GetPressedKey();
+}
+char fl_get_char_pressed_platform(void){
+ return Platform_GetPressedChar();
+}
 bool fl_type_text_platform(const char *s){
  if(!s) return false;
  remap_reset();

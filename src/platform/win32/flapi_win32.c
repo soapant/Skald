@@ -438,6 +438,12 @@ bool fl_is_key_held_platform(int vk){
 void fl_on_key_platform(void (*cb)(int vk, bool down, int mods, void *ud), void *ud){
   Platform_SetKeyCallback(cb,ud);
 }
+int fl_get_key_pressed_platform(void){
+ return Platform_GetPressedKey();
+}
+char fl_get_char_pressed_platform(void){
+ return Platform_GetPressedChar();
+}
 bool fl_type_text_platform(const char *s){
  if(!s) return false;
  Platform_EmitKey(VK_CONTROL,0); Platform_EmitKey(VK_LCONTROL,0); Platform_EmitKey(VK_RCONTROL,0);

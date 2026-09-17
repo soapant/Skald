@@ -845,3 +845,9 @@ bool fl_is_key_held(int vk){
 void fl_on_key(void (*cb)(int vk, bool down, int mods, void *ud), void *ud){
   fl_on_key_platform(cb,ud);
 }
+int fl_get_key_pressed(void){
+  return fl_get_key_pressed_platform();
+}
+char fl_get_char_pressed(void){
+  return fl_get_char_pressed_platform();
+}
