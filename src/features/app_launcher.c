@@ -212,9 +212,9 @@ void applauncher_copy_callback(const char* selection,int true_index,int type) {
 }
 
 void TriggerAppLauncher(void) {
-    for (size_t i = 0; i < ARRAY_LEN(ListOfProgramPaths); i++) {
-        fl_on_dir_changed(ListOfProgramPaths[i], initialize_app_cache);
-    }
+    // for (size_t i = 0; i < ARRAY_LEN(ListOfProgramPaths); i++) {
+    //     fl_on_dir_changed(ListOfProgramPaths[i], initialize_app_cache);
+    // }
     PROMPT(.title = "🚀 AppLauncher",
            .refresh = applauncher_refresh_callback,
            .enter = applauncher_enter_callback,
@@ -223,7 +223,7 @@ void TriggerAppLauncher(void) {
 }
 
 FLINT_FEATURE_INIT {
-    initialize_app_cache();
+    // initialize_app_cache();
     fl_register_hotkey("Alt+E", TriggerAppLauncher,"Fortnite");
     fl_register_feature("App Launcher", TriggerAppLauncher);
 }
