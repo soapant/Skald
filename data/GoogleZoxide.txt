@@ -68,3 +68,5 @@ does wpctl come with pipewire
 whats that supposed to be about baby 
 can you run an ssh server of an ardiouno
 rust get random number min max
+XftDrawRect params
+windows draw rect at x y w h and color 

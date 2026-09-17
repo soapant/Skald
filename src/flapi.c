@@ -763,7 +763,7 @@ bool fl_place_image_impl(const FlImageSpec *spec) {
   (void)spec; return false; 
 }
 bool fl_draw_rect(int x, int y, int w, int h, unsigned long color) {
-  (void)x; (void)y; (void)w; (void)h; (void)color; return false; 
+  return Platform_DrawRectRaw(x,y,w,h,color);
 }
 bool fl_draw_line(int x1, int y1, int x2, int y2, unsigned long color) {
   (void)x1; (void)y1; (void)x2; (void)y2; (void)color; return false; 
@@ -799,12 +799,10 @@ bool fl_place_listbox_impl(const FlListSpec *spec) {
 
 Fl_WindowList fl_get_all_window_titles() {
   Fl_WindowList l = Platform_GetWindowTitles();
-  log_info("fl_get_all_window_titles count=%d", l.count);
   return l;
 }
 Fl_WindowList fl_get_all_window_names() {
   Fl_WindowList l = Platform_GetWindowNames();
-  log_info("fl_get_all_window_names count=%d", l.count);
   return l;
 }
 
