@@ -18,11 +18,35 @@ void typing_test_tab(ListBoxInfo* lb) {
 }
 
 void typing_test_render(PromptState *state) {
-    int cx = 0;
-    int cy = state->height / 2 - 30;
-    char* text = "You are right, your current API only lets you draw the whole string at once, which is a problem for a typing test. The good news is that there's a standard way to handle this without needing a major API rewrite";
+    int cy = state->height / 2 - 130;
+    static int current_position = -1;
+    static int pos_drawn = 0;
+    char* text = "You are right, your current API";
+
+    int c = tolower(fl_get_char_pressed());
+    int key = fl_get_key_pressed();
+    int current_text = tolower(text[current_position]);
+
+    if (c == current_text) {
+      fl_place_text(.x=current_position * 20, .y=cy,.align="Left",.text=text[current_position],.fontsize=30,.color=RGB(0,255,0));
+      pos_drawn = current_position;
+      current_position++;
+    } else if (c != text[current_position] && c) {
+      fl_place_text(.x=current_position * 20, .y=cy,.align="Left",.text=text[current_position],.fontsize=30,.color=RGB(0,0,255));
+      pos_drawn = current_position;
+      current_position++;
+    }
+    if (key == VK_BACK) {
+      printf("ADHJKWADJKAWJD \n");
+    }
+
     for (int i = 0; i < strlen(text);i++) {
-      fl_place_text(.x=cx + (i * 20), .y=cy,.align="Right",.text=text[i],.fontsize=30);
+      if (pos_drawn != i) {
+        fl_place_text(.x=i * 20, .y=cy,.align="Left",.text=text[i],.fontsize=30);
+      }
+    }
+    if (current_position == strlen(text) + 1) {
+      exit(1);
     }
 }
 

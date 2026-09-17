@@ -504,21 +504,7 @@ bool fl_increment_volume_by_percent_platform(int increment_percent) {
     int target_volume = current_volume + (current_volume * increment_percent / 100);
     return fl_set_volume_platform(target_volume);
 }
-bool fl_is_key_down_platform(int vk){
-  return Platform_IsKeyDown(vk); 
-}
-bool fl_is_key_pressed_platform(int vk){
-  return Platform_WasKeyPressed(vk); 
-}
-bool fl_is_key_released_platform(int vk){
-  return Platform_WasKeyReleased(vk); 
-}
-bool fl_is_key_held_platform(int vk){
-  return Platform_IsKeyDown(vk); 
-}
-void fl_on_key_platform(void (*cb)(int vk, bool down, int mods, void *ud), void *ud){
-  Platform_SetKeyCallback(cb,ud);
-}
+
 static bool g_edit_placed = false;
 void fl_editbox_reset_placed(void) { g_edit_placed = false; }
 bool fl_editbox_was_placed(void) { return g_edit_placed; }
@@ -594,12 +580,6 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
     XftColorFree(dpy,vis,cmap,&col);
     if (needDestroy) Platform_DestroyFont(fh);
     return true;
-}
-int fl_get_key_pressed_platform(void){
- return Platform_GetPressedKey();
-}
-char fl_get_char_pressed_platform(void){
- return Platform_GetPressedChar();
 }
 bool fl_type_text_platform(const char *s){
  if(!s) return false;
