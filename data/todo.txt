@@ -28,4 +28,3 @@ volume is werid as fuck it can go more than 100 idk if that is supposed to happe
 there are duplicate subclasses_win32.h||[DontForget]|[Flint]
 the program buffers like a mofo at startup on the windows vm||[Flint]
 when fulscreen the windwo doesnt auto focus||[Flint]
-volume controls are completely fucekd they just dont work well at all||[Flint]
