@@ -14,6 +14,7 @@
 #include "helpers/helpers_file.h"
 #include "helpers/helpers_ui.h"
 #include "platform/x11/subclasses_x11.h"
+#include "platform/input_state.h"
 #include "core/feature_data.h"
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
@@ -101,6 +102,7 @@ static void Linux_HandleKeyPress(Display* dpy, XKeyEvent* ev, WindowManager* wm)
     }
     bool pressed = true;
     int modifiers = mods;
+    if(vk_code) Platform_InputState_Update(vk_code, true, modifiers);
 
     Popup* top = WindowManager_GetTopPopup(wm);
     if (!top) { PROFILE_END_VAR(timer, "window_manager_x11:Linux_HandleKeyPress"); return; }
@@ -185,7 +187,10 @@ static void Linux_HandleKeyPress(Display* dpy, XKeyEvent* ev, WindowManager* wm)
 
 static void Linux_HandleKeyRelease(Display* dpy, XKeyEvent* ev) {
     PROFILE_START(timer);
-    (void)dpy; (void)ev;
+    KeySym ks; char buf[32]; int len=XLookupString(ev, buf, sizeof(buf), &ks, NULL);
+    int vk=0; if(len==1 && (unsigned char)buf[0]>=32 && (unsigned char)buf[0]<=126) vk=(unsigned char)buf[0]; else vk=XKeysymToVK(ks);
+    int mods=remap_current_mods();
+    if(vk) Platform_InputState_Update(vk, false, mods);
     PROFILE_END_VAR(timer, "window_manager_x11:Linux_HandleKeyRelease");
 }
 

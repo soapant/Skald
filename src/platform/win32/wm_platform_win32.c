@@ -1,4 +1,5 @@
 #include "platform/wm_platform.h"
+#include "platform/input_state.h"
 #include "core/window_manager.h"
 #include <windows.h>
 
@@ -27,6 +28,7 @@ void Platform_WM_ProcessEvents(WindowManager* wm) {
 
 void Platform_WM_OnPopEmpty(WindowManager* wm) {
     (void)wm;
+    Platform_InputState_Clear();
 }
 
 void Platform_WM_GetMonitorGeometry(int *ox, int *oy, int *ow, int *oh) {

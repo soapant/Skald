@@ -1,7 +1,7 @@
 #include "core/flapi.h"
 
 void Testing(void) {
-    fl_type_string("Bitch Ass NIgga");
+    fl_type_text("Bitch Ass NIgga");
 }
 
 
