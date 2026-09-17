@@ -336,7 +336,7 @@ void Win32_DrawSelectionBackground(HDC hdc, RECT* rc, COLORREF base) {
   int w = rc->right - rc->left;
   int h = rc->bottom - rc->top;
   if (w <= 0 || h <= 0) { PROFILE_END_VAR(timer, "WinSel solid"); return; }
-  bool useShader = EnableSelectionShaders && SelectionShaderPreset != 0;
+  bool useShader = EnableShaders && SelectionShaderPreset != 0;
   if (!useShader) {
     if (!EnableShaders || ShaderPreset == 0) {
       name = "sel-solid";
