@@ -20,7 +20,7 @@ void typing_test_tab(ListBoxInfo* lb) {
 void typing_test_render(PromptState *state) {
     int cx = 0;
     int cy = state->height / 2 - 30;
-    fl_place_text_raw(.x=cx, .y=cy, .text="Nothing", .align="CENTER", .pad=cx,.fontsize=30);
+    fl_place_text(.x=cx, .y=cy, .text="Nothing", .align="CENTER", .pad=cx,.fontsize=30);
 }
 
 void TriggerTypingTest(void) {

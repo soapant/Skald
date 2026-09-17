@@ -410,6 +410,7 @@ char* Platform_PromptUser(const PromptSpec* spec) {
   CreateChildControls(FlintContext_Get()->window.hPopupWnd, hCustomFont, window_list, count, &layout, lb_ptr);
   if (render_callback) {
     if (WH_TO_HWND(FlintContext_Get()->window.hListBox)) ShowWindow(WH_TO_HWND(FlintContext_Get()->window.hListBox), SW_HIDE);
+    if (WH_TO_HWND(FlintContext_Get()->window.hEditControl)) ShowWindow(WH_TO_HWND(FlintContext_Get()->window.hEditControl), SW_HIDE);
   }
   if (!window_list && refresh_callback && has_listbox && lb_ptr) {
       refresh_callback("", FlintContext_Get()->window.hListBox, lb_ptr);

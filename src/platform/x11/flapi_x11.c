@@ -23,6 +23,8 @@
 #include <sys/types.h>
 #include "core/timer.h"
 #include "core/remap_manager.h"
+#include "core/window_manager.h"
+#include "core/modal.h"
 #include <ctype.h>
 #include <linux/input.h>
 #include "platform/x11/input_x11.h"
@@ -516,6 +518,82 @@ bool fl_is_key_held_platform(int vk){
 }
 void fl_on_key_platform(void (*cb)(int vk, bool down, int mods, void *ud), void *ud){
   Platform_SetKeyCallback(cb,ud);
+}
+static bool g_edit_placed = false;
+void fl_editbox_reset_placed(void) { g_edit_placed = false; }
+bool fl_editbox_was_placed(void) { return g_edit_placed; }
+bool fl_place_editbox_platform(const FlEditSpec *spec) {
+    if (!spec) return false;
+    g_edit_placed = true;
+    Display *dpy; XftDraw *xd; Visual *vis; Colormap cmap;
+    Platform_GetDrawContext(&dpy,&xd,&vis,&cmap);
+    if (!dpy || !xd) return false;
+    PromptState *state = Platform_GetPreRenderStatePtr();
+    if (!state) {
+        WindowManager* wm = WindowManager_Get();
+        if (wm) {
+            Popup* top = WindowManager_GetTopPopup(wm);
+            if (top && top->user_data && top->type == POPUP_PROMPT) state = (PromptState*)top->user_data;
+        }
+    }
+    const char *buf = spec->buffer;
+    if (!buf) {
+        if (state) buf = state->filter;
+        else buf = "";
+    }
+    int x = spec->x;
+    int y = spec->y;
+    int w = spec->w;
+    int h = spec->h;
+    if (w <= 0) w = state ? state->width : 880;
+    if (h <= 0) h = FontSize + 28;
+    FontHandle fh = spec->font;
+    bool needDestroy = false;
+    if (!FH_TO_XFT(fh)) {
+        fh = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
+        needDestroy = true;
+    }
+    XftFont *xf = FH_TO_XFT(fh);
+    unsigned long bg_hex = rgb_to_hex(COLOR_BG);
+    unsigned long text_hex = spec->color ? spec->color : rgb_to_hex(COLOR_TEXT);
+    if (RoundedCorners && CornerRadius > 0) {
+        Linux_FillRoundedRect(dpy,xd,vis,cmap,bg_hex,0xFFFF,x,y,w,h,6);
+    } else {
+        XftColor bgc;
+        Linux_XftAllocColor(dpy,vis,cmap,bg_hex,0xFFFF,&bgc);
+        XftDrawRect(xd,&bgc,x,y,w,h);
+        XftColorFree(dpy,vis,cmap,&bgc);
+    }
+    XftColor col;
+    Linux_XftAllocColor(dpy,vis,cmap,text_hex,0xFFFF,&col);
+    int text_len = (int)strlen(buf);
+    int cursor = state ? state->cursor : text_len;
+    if (cursor < 0) cursor = 0;
+    if (cursor > text_len) cursor = text_len;
+    int cursor_x = 0;
+    int scroll = 0;
+    if (xf) {
+        scroll = Linux_UpdateEditScrollOffset(dpy,xf,buf,text_len,cursor,w, state ? state->scroll_offset : 0, &cursor_x);
+        if (state) state->scroll_offset = scroll;
+    }
+    int draw_y = y + (xf ? xf->ascent : FontSize) + (h - (xf ? (xf->ascent + xf->descent) : FontSize)) / 2;
+    int draw_x = x + 14 - scroll;
+    if (xf && text_len > 0) {
+        XftDrawStringUtf8(xd,&col,xf,draw_x,draw_y,(FcChar8*)buf,text_len);
+    }
+    int cursor_draw_x = x + 14 + cursor_x - scroll;
+    if (cursor_draw_x < x + 2) cursor_draw_x = x + 2;
+    if (cursor_draw_x > x + w - 4) cursor_draw_x = x + w - 4;
+    int cursor_y = y + (h - FontSize) / 2;
+    if (cursor_y < y + 2) cursor_y = y + 2;
+    if (IsInsertMode()) {
+        XftDrawRect(xd,&col,cursor_draw_x,cursor_y,2,FontSize);
+    } else {
+        XftDrawRect(xd,&col,cursor_draw_x,cursor_y,12,FontSize);
+    }
+    XftColorFree(dpy,vis,cmap,&col);
+    if (needDestroy) Platform_DestroyFont(fh);
+    return true;
 }
 bool fl_type_text_platform(const char *s){
  if(!s) return false;
