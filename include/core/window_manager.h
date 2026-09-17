@@ -43,14 +43,12 @@ struct WindowManager {
     
     #if !defined(_WIN32)
     Display* display;
+    #else
+    void* display;
     #endif
     bool watcher_stop;
-#if !defined(_WIN32)
-    void* watcher_thread; /* pthread_t stored as void* sized */
+    void* watcher_thread;
     bool watcher_running;
-#else
-    void* watcher_thread_win; /* HANDLE */
-#endif
 };
 
 typedef struct {
