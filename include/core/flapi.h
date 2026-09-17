@@ -232,20 +232,20 @@ typedef struct {
     int x; int y; int w; int h;
 } FlImageSpec;
 
-bool fl_place_text_raw_impl(const FlTextSpec *spec);
-bool fl_place_editbox_raw_impl(const FlEditSpec *spec);
-bool fl_place_listbox_raw_impl(const FlListSpec *spec);
-bool fl_place_image_raw_impl(const FlImageSpec *spec);
+bool fl_place_text_impl(const FlTextSpec *spec);
+bool fl_place_editbox_impl(const FlEditSpec *spec);
+bool fl_place_listbox_impl(const FlListSpec *spec);
+bool fl_place_image_impl(const FlImageSpec *spec);
 
-#define fl_place_text_raw(...) fl_place_text_raw_impl(&(FlTextSpec){__VA_ARGS__})
-#define fl_place_editbox_raw(...) fl_place_editbox_raw_impl(&(FlEditSpec){__VA_ARGS__})
-#define fl_place_listbox_raw(...) fl_place_listbox_raw_impl(&(FlListSpec){__VA_ARGS__})
-#define fl_place_image_raw(...) fl_place_image_raw_impl(&(FlImageSpec){__VA_ARGS__})
+#define fl_place_text(...) fl_place_text_impl(&(FlTextSpec){__VA_ARGS__})
+#define fl_place_editbox(...) fl_place_editbox_impl(&(FlEditSpec){__VA_ARGS__})
+#define fl_place_listbox(...) fl_place_listbox_impl(&(FlListSpec){__VA_ARGS__})
+#define fl_place_image(...) fl_place_image_impl(&(FlImageSpec){__VA_ARGS__})
 
 bool fl_listbox_begin(const FlListSpec *spec);
 bool fl_listbox_next(FlListItemCtx *out);
 void fl_listbox_end(void);
-#define fl_place_listbox(...) fl_place_listbox_raw(__VA_ARGS__)
+#define fl_place_listbox(...) fl_place_listbox(__VA_ARGS__)
 
 // =============================================================================
 // ANCHORED PLACEMENT (preset positions)
@@ -262,11 +262,11 @@ bool fl_place_image_anchored(FlAnchor anchor, int offset_x, int offset_y, int w,
 // =============================================================================
 // Stack widgets without calculating y. Gap is space between items.
 
-void fl_layout_begin_column(FlAnchor anchor, int start_x, int start_y, int gap);
-void fl_layout_begin_column_raw(int start_x, int start_y, int gap);
+void fl_layout_begin_column_anchored(FlAnchor anchor, int start_x, int start_y, int gap);
+void fl_layout_begin_column(int start_x, int start_y, int gap);
 void fl_layout_end_column(void);
-void fl_layout_begin_row(FlAnchor anchor, int start_x, int start_y, int gap);
-void fl_layout_begin_row_raw(int start_x, int start_y, int gap);
+void fl_layout_begin_row_anchored(FlAnchor anchor, int start_x, int start_y, int gap);
+void fl_layout_begin_row(int start_x, int start_y, int gap);
 void fl_layout_end_row(void);
 bool fl_place_text_auto(const char *text);
 bool fl_place_editbox_auto(int w, int h, const char *buffer);

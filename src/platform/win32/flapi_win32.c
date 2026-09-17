@@ -7,6 +7,11 @@
 #include "core/platform.h"
 #include <mmdeviceapi.h>
 #include <endpointvolume.h>
+#include "platform/draw.h"
+#include "platform/ui.h"
+#include "core/window_manager.h"
+#include "core/modal.h"
+#include "config.h"
 
 
 
@@ -442,4 +447,75 @@ bool fl_type_text_platform(const char *s){
  Sleep(20);
  for(;*s;s++){ SHORT sc=VkKeyScanA(*s); if(sc==-1){ if(*s=='\n'){ Platform_EmitKey(VK_RETURN,1); Platform_EmitKey(VK_RETURN,0); } else if(*s=='\t'){ Platform_EmitKey(VK_TAB,1); Platform_EmitKey(VK_TAB,0); } continue; } BYTE vk=LOBYTE(sc); BYTE sh=HIBYTE(sc); INPUT ins[4]={0}; int n=0; if(sh&1){ ins[n].type=INPUT_KEYBOARD; ins[n].ki.wVk=VK_SHIFT; n++; } ins[n].type=INPUT_KEYBOARD; ins[n].ki.wVk=vk; n++; ins[n].type=INPUT_KEYBOARD; ins[n].ki.wVk=vk; ins[n].ki.dwFlags=KEYEVENTF_KEYUP; n++; if(sh&1){ ins[n].type=INPUT_KEYBOARD; ins[n].ki.wVk=VK_SHIFT; ins[n].ki.dwFlags=KEYEVENTF_KEYUP; n++; } SendInput(n, ins, sizeof(INPUT)); Sleep(5); }
  return true;
+}
+static bool g_edit_placed_win = false;
+void fl_editbox_reset_placed(void) { g_edit_placed_win = false; }
+bool fl_editbox_was_placed(void) { return g_edit_placed_win; }
+bool fl_place_editbox_platform(const FlEditSpec *spec) {
+    if (!spec) return false;
+    g_edit_placed_win = true;
+    HDC hdc = NULL;
+    Platform_GetDrawContextWin32(&hdc);
+    if (!hdc) return false;
+    extern PromptState* Platform_GetWin32PromptState(void);
+    PromptState *state = Platform_GetWin32PromptState();
+    const char *buf = spec->buffer;
+    if (!buf) {
+        if (state) buf = state->filter;
+        else buf = "";
+    }
+    int x = spec->x;
+    int y = spec->y;
+    int w = spec->w;
+    int h = spec->h;
+    if (w <= 0) w = state ? state->width : 880;
+    if (h <= 0) h = FontSize + 28;
+    RECT rc = {x, y, x + w, y + h};
+    if (RoundedCorners && CornerRadius > 0) {
+        Win32_FillRoundedRect(hdc, &rc, COLOR_BG, 6);
+    } else {
+        HBRUSH br = CreateSolidBrush(COLOR_BG);
+        FillRect(hdc, &rc, br);
+        DeleteObject(br);
+    }
+    HFONT hfont = spec->font.hfont ? spec->font.hfont : (FlintContext_Get()->g_hMainFont ? FlintContext_Get()->g_hMainFont : NULL);
+    HFONT old = NULL;
+    if (hfont) old = (HFONT)SelectObject(hdc, hfont);
+    SetBkMode(hdc, TRANSPARENT);
+    unsigned long text_hex = spec->color ? spec->color : COLOR_TEXT;
+    SetTextColor(hdc, text_hex);
+    int text_len = (int)strlen(buf);
+    int cursor = state ? state->cursor : text_len;
+    if (cursor < 0) cursor = 0;
+    if (cursor > text_len) cursor = text_len;
+    int visible_w = w - 28;
+    int cursor_x = 0;
+    int scroll = state ? state->scroll_offset : 0;
+    if (hfont) {
+        SIZE szCur; GetTextExtentPoint32A(hdc, buf, cursor, &szCur); cursor_x = szCur.cx;
+        SIZE szText; GetTextExtentPoint32A(hdc, buf, text_len, &szText); int text_w = szText.cx;
+        if (cursor_x - scroll > visible_w) scroll = cursor_x - visible_w;
+        if (cursor_x - scroll < 0) scroll = cursor_x;
+        if (scroll < 0) scroll = 0;
+        if (text_w - scroll < visible_w && scroll > 0) { if (text_w < visible_w) scroll = 0; else scroll = text_w - visible_w; }
+        if (state) state->scroll_offset = scroll;
+        RECT textRc = {x + 14 - scroll, y, x + w, y + h};
+        DrawTextA(hdc, buf, -1, &textRc, DT_SINGLELINE | DT_VCENTER | DT_LEFT);
+        int cursor_draw_x = x + 14 + cursor_x - scroll;
+        if (cursor_draw_x < x + 2) cursor_draw_x = x + 2;
+        if (cursor_draw_x > x + w - 4) cursor_draw_x = x + w - 4;
+        int cursor_y = y + (h - FontSize) / 2;
+        if (cursor_y < y + 2) cursor_y = y + 2;
+        HBRUSH cbr = CreateSolidBrush(text_hex);
+        RECT cRc;
+        if (IsInsertMode()) cRc = (RECT){cursor_draw_x, cursor_y, cursor_draw_x+2, cursor_y+FontSize};
+        else cRc = (RECT){cursor_draw_x, cursor_y, cursor_draw_x+12, cursor_y+FontSize};
+        FillRect(hdc, &cRc, cbr);
+        DeleteObject(cbr);
+    } else {
+        RECT textRc = {x + 14 - scroll, y, x + w, y + h};
+        DrawTextA(hdc, buf, -1, &textRc, DT_SINGLELINE | DT_VCENTER | DT_LEFT);
+    }
+    if (old) SelectObject(hdc, old);
+    return true;
 }
