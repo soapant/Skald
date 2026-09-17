@@ -223,6 +223,14 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
         }
         return true;
       }
+    if (ctrl_pressed) {
+      if (wParam == VK_OEM_MINUS) {
+        FontSize -= 1;
+      } 
+      if (wParam == VK_OEM_PLUS) {
+        FontSize += 1;
+      } 
+    }
 
     PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandlePromptKey");
     return false;
