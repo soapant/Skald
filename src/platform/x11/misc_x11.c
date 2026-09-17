@@ -17,6 +17,7 @@
 #include "config.h"
 #include "config.h"
 #include "core/platform.h"
+#include "platform/lib.h"
 #include "helpers/helpers_hotkey.h"
 #include "helpers/helpers_alias.h"
 #include "helpers/helpers_flag.h"
@@ -52,36 +53,35 @@ static uid_t ProbeSessionUid(void){
 const char* Platform_GetRealUser(void){
     PROFILE_START(timer);
     static char buf[256]={0};
-    static bool done=false;
     const char* u=getenv("SUDO_USER");
-    if(u && u[0] && strcmp(u,"root")!=0){ strncpy(buf,u,sizeof(buf)-1); done=true; PROFILE_END_VAR(timer, "misc_x11:Platform_GetRealUser"); return buf; }
+    if(u && u[0] && strcmp(u,"root")!=0){ strncpy(buf,u,sizeof(buf)-1); PROFILE_END_VAR(timer, "misc_x11:Platform_GetRealUser"); return buf; }
     u=getenv("USER");
-    if(u && u[0] && strcmp(u,"root")!=0){ strncpy(buf,u,sizeof(buf)-1); done=true; PROFILE_END_VAR(timer, "misc_x11:Platform_GetRealUser"); return buf; }
+    if(u && u[0] && strcmp(u,"root")!=0){ strncpy(buf,u,sizeof(buf)-1); PROFILE_END_VAR(timer, "misc_x11:Platform_GetRealUser"); return buf; }
     u=getenv("LOGNAME");
-    if(u && u[0] && strcmp(u,"root")!=0){ strncpy(buf,u,sizeof(buf)-1); done=true; PROFILE_END_VAR(timer, "misc_x11:Platform_GetRealUser"); return buf; }
+    if(u && u[0] && strcmp(u,"root")!=0){ strncpy(buf,u,sizeof(buf)-1); PROFILE_END_VAR(timer, "misc_x11:Platform_GetRealUser"); return buf; }
     
     uid_t suid = ProbeSessionUid();
     if (suid != (uid_t)-1) {
         struct passwd* spw = getpwuid(suid);
-        if (spw && spw->pw_name) { strncpy(buf,spw->pw_name,sizeof(buf)-1); done=true; PROFILE_END_VAR(timer, "misc_x11:Platform_GetRealUser"); return buf; }
+        if (spw && spw->pw_name) { strncpy(buf,spw->pw_name,sizeof(buf)-1);  PROFILE_END_VAR(timer, "misc_x11:Platform_GetRealUser"); return buf; }
     }
     struct passwd* pw=getpwuid(getuid());
-    if(pw && pw->pw_name && strcmp(pw->pw_name,"root")!=0){ strncpy(buf,pw->pw_name,sizeof(buf)-1); done=true;     log_info("Platform_GetRealUser completed");
+    if(pw && pw->pw_name && strcmp(pw->pw_name,"root")!=0){ strncpy(buf,pw->pw_name,sizeof(buf)-1);  log_info("Platform_GetRealUser completed");
 PROFILE_END_VAR(timer, "misc_x11:Platform_GetRealUser"); return buf; }
+    return NULL;
 }
 
 const char* Platform_GetRealHome(void){
     PROFILE_START(timer);
     static char buf[512]={0};
-    static bool done=false;
     const char* u=Platform_GetRealUser();
     struct passwd* pw=getpwnam(u);
-    if(pw && pw->pw_dir){ strncpy(buf,pw->pw_dir,sizeof(buf)-1); done=true; PROFILE_END_VAR(timer, "misc_x11:Platform_GetRealHome"); return buf; }
+    if(pw && pw->pw_dir){ strncpy(buf,pw->pw_dir,sizeof(buf)-1); PROFILE_END_VAR(timer, "misc_x11:Platform_GetRealHome"); return buf; }
     pw=getpwuid(getuid());
-    if(pw && pw->pw_dir){ strncpy(buf,pw->pw_dir,sizeof(buf)-1); done=true; PROFILE_END_VAR(timer, "misc_x11:Platform_GetRealHome"); return buf; }
+    if(pw && pw->pw_dir){ strncpy(buf,pw->pw_dir,sizeof(buf)-1); PROFILE_END_VAR(timer, "misc_x11:Platform_GetRealHome"); return buf; }
     const char* h=getenv("HOME");
-    if(h && h[0]){ strncpy(buf,h,sizeof(buf)-1); done=true; PROFILE_END_VAR(timer, "misc_x11:Platform_GetRealHome"); return buf; }
-    snprintf(buf,sizeof(buf),"/home/%s",u); done=true;     log_info("Platform_GetRealHome completed");
+    if(h && h[0]){ strncpy(buf,h,sizeof(buf)-1); PROFILE_END_VAR(timer, "misc_x11:Platform_GetRealHome"); return buf; }
+    snprintf(buf,sizeof(buf),"/home/%s",u); log_info("Platform_GetRealHome completed");
 PROFILE_END_VAR(timer, "misc_x11:Platform_GetRealHome"); return buf;
 }
 
@@ -96,10 +96,8 @@ PROFILE_END_VAR(timer, "misc_x11:Platform_IsRunningAsRoot"); return getuid()==0;
 const char* Platform_GetSessionDisplay(void){
     PROFILE_START(timer);
     static char buf[64]={0};
-    static bool done=false;
-    if(done) { PROFILE_END_VAR(timer, "misc_x11:Platform_GetSessionDisplay"); return buf[0]?buf:":0"; }
     const char* env=getenv("DISPLAY");
-    if(env && env[0]){ snprintf(buf,sizeof(buf),"%s",env); done=true; PROFILE_END_VAR(timer, "misc_x11:Platform_GetSessionDisplay"); return buf; }
+    if(env && env[0]){ snprintf(buf,sizeof(buf),"%s",env);PROFILE_END_VAR(timer, "misc_x11:Platform_GetSessionDisplay"); return buf; }
     DIR* d = opendir("/tmp/.X11-unix");
     if (d) {
         struct dirent* e;
@@ -120,7 +118,6 @@ const char* Platform_GetSessionDisplay(void){
         }
         closedir(d);
     }
-    done=true;
         log_info("Platform_GetSessionDisplay completed");
 PROFILE_END_VAR(timer, "misc_x11:Platform_GetSessionDisplay");
     return buf[0]?buf:":0";
@@ -131,13 +128,11 @@ PROFILE_END_VAR(timer, "misc_x11:Platform_GetSessionDisplay");
 const char* Platform_GetSessionXAuthority(void){
     PROFILE_START(timer);
     static char buf[512]={0};
-    static bool done=false;
-    if(done) { PROFILE_END_VAR(timer, "misc_x11:Platform_GetSessionXAuthority"); return buf[0]?buf:""; }
     const char* xa=getenv("XAUTHORITY");
-    if(xa && xa[0]){ snprintf(buf,sizeof(buf),"%s",xa); done=true; PROFILE_END_VAR(timer, "misc_x11:Platform_GetSessionXAuthority"); return buf; }
+    if(xa && xa[0]){ snprintf(buf,sizeof(buf),"%s",xa);PROFILE_END_VAR(timer, "misc_x11:Platform_GetSessionXAuthority"); return buf; }
     snprintf(buf,sizeof(buf),"%s/.Xauthority",Platform_GetRealHome());
-    if(access(buf,R_OK)==0){ done=true; PROFILE_END_VAR(timer, "misc_x11:Platform_GetSessionXAuthority"); return buf; }
-    buf[0]='\0'; done=true;
+    if(access(buf,R_OK)==0){ PROFILE_END_VAR(timer, "misc_x11:Platform_GetSessionXAuthority"); return buf; }
+    buf[0]='\0';
         log_info("Platform_GetSessionXAuthority completed");
 PROFILE_END_VAR(timer, "misc_x11:Platform_GetSessionXAuthority");
     return "";
@@ -147,14 +142,12 @@ PROFILE_END_VAR(timer, "misc_x11:Platform_GetSessionXAuthority");
 const char* Platform_GetRuntimeDir(void){
     PROFILE_START(timer);
     static char buf[256]={0};
-    static bool done=false;
-    if(done) { PROFILE_END_VAR(timer, "misc_x11:Platform_GetRuntimeDir"); return buf[0]?buf:"/run/user/1000"; }
     const char* rt=getenv("XDG_RUNTIME_DIR");
-    if(rt && rt[0]){ snprintf(buf,sizeof(buf),"%s",rt); done=true; PROFILE_END_VAR(timer, "misc_x11:Platform_GetRuntimeDir"); return buf; }
+    if(rt && rt[0]){ snprintf(buf,sizeof(buf),"%s",rt); PROFILE_END_VAR(timer, "misc_x11:Platform_GetRuntimeDir"); return buf; }
     const char* u=Platform_GetRealUser();
     struct passwd* pw=getpwnam(u);
-    if(pw){ snprintf(buf,sizeof(buf),"/run/user/%d",(int)pw->pw_uid); done=true; PROFILE_END_VAR(timer, "misc_x11:Platform_GetRuntimeDir"); return buf; }
-    snprintf(buf,sizeof(buf),"/run/user/%d",(int)getuid()); done=true;
+    if(pw){ snprintf(buf,sizeof(buf),"/run/user/%d",(int)pw->pw_uid); PROFILE_END_VAR(timer, "misc_x11:Platform_GetRuntimeDir"); return buf; }
+    snprintf(buf,sizeof(buf),"/run/user/%d",(int)getuid());
         log_info("Platform_GetRuntimeDir completed");
 PROFILE_END_VAR(timer, "misc_x11:Platform_GetRuntimeDir");
     return buf[0]?buf:"/run/user/1000";
@@ -794,7 +787,7 @@ bool Platform_LaunchBrowserAtUrl(char* url,bool new_window) {
     PROFILE_END_VAR(timer, "misc_x11:Platform_LaunchBrowserAtfull_url");
     return Platform_RunTerminalCommand(command,false);
     }
-    log_info("Platform_LaunchBrowserAtfull_url full_url='%s' new_window=%d", full_url ? full_url : "", new_window);;
+    log_info("Platform_LaunchBrowserAtfull_url full_url='%s' new_window=%d",full_url, new_window);;
     PROFILE_END_VAR(timer, "misc_x11:Platform_LaunchBrowserAtfull_url");
 }
 
