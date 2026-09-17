@@ -28,7 +28,7 @@ void typing_test_render(PromptState *state) {
     int text_len = strlen(text);
 
     static int current_position = 0;
-    static int char_states[100] = {0};
+    static int char_states[1000] = {0};
 
     if (current_position < text_len) {
         int c = tolower(fl_get_char_pressed());
