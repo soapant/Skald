@@ -23,12 +23,5 @@ bool fl_increment_volume_by_platform(int increment);
 bool fl_increment_volume_by_percent_platform(int increment_percent);
 bool fl_decrement_volume_by_percent_platform(int decrement_percent);
 bool fl_type_text_platform(const char *s);
-bool fl_is_key_down_platform(int vk);
-bool fl_is_key_pressed_platform(int vk);
-bool fl_is_key_released_platform(int vk);
-bool fl_is_key_held_platform(int vk);
-void fl_on_key_platform(void (*cb)(int vk, bool down, int mods, void *ud), void *ud);
-int fl_get_key_pressed_platform(void);
-char fl_get_char_pressed_platform(void);
 
 #endif

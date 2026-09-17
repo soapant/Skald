@@ -9,6 +9,7 @@
 #include "helpers/helpers_flag.h"
 #include "helpers/helpers_file.h"
 #include "helpers/helpers_ui.h"
+#include "platform/input_state.h"
 #include "config.h"
 #include "core/platform.h"
 #include "platform/ui.h"
@@ -841,23 +842,23 @@ bool fl_type_text(const char *s) {
 }
 
 bool fl_is_key_down(int vk){
-  return fl_is_key_down_platform(vk); 
+  return Platform_IsKeyDown(vk); 
 }
 bool fl_is_key_pressed(int vk){
-  return fl_is_key_pressed_platform(vk); 
+  return Platform_WasKeyPressed(vk); 
 }
 bool fl_is_key_released(int vk){
-  return fl_is_key_released_platform(vk); 
+  return Platform_WasKeyReleased(vk); 
 }
 bool fl_is_key_held(int vk){
-  return fl_is_key_held_platform(vk); 
+  return Platform_IsKeyDown(vk); 
 }
 void fl_on_key(void (*cb)(int vk, bool down, int mods, void *ud), void *ud){
-  fl_on_key_platform(cb,ud);
+  Platform_SetKeyCallback(cb,ud);
 }
 int fl_get_key_pressed(void){
-  return fl_get_key_pressed_platform();
+  return Platform_GetPressedKey();
 }
 char fl_get_char_pressed(void){
-  return fl_get_char_pressed_platform();
+  return Platform_GetPressedChar();
 }
