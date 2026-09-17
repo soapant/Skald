@@ -39,7 +39,8 @@ void hotkey_drain_pending(void) {
     }
 }
 #else
-void hotkey_drain_pending(void) {}
+void hotkey_drain_pending(void) {
+}
 #endif
 
 bool hotkey_register_internal(HotkeyBinding binding) {

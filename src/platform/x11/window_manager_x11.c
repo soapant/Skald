@@ -50,14 +50,26 @@ int pending_hotkey_vk = 0;
 int pending_hotkey_mod = 0;
 long pending_hotkey_timeMs = 0;
 
-static bool should_use_grab(void) { return x11_should_use_grab(); }
+static bool should_use_grab(void) {
+  return x11_should_use_grab(); 
+}
 
-static int init_uinput(void) { return x11_init_uinput(); }
-static void destroy_uinput(void) { x11_destroy_uinput(); }
-static void uinput_emit(const struct input_event *ev) { x11_uinput_emit(ev); }
-static void ScanAndHookKeyboards(void) { x11_scan_keyboards(); }
+static int init_uinput(void) {
+  return x11_init_uinput(); 
+}
+static void destroy_uinput(void) {
+  x11_destroy_uinput(); 
+}
+static void uinput_emit(const struct input_event *ev) {
+  x11_uinput_emit(ev); 
+}
+static void ScanAndHookKeyboards(void) {
+  x11_scan_keyboards(); 
+}
 
-static int XKeysymToVK(KeySym ks) { return x11_keysym_to_vk(ks); }
+static int XKeysymToVK(KeySym ks) {
+  return x11_keysym_to_vk(ks); 
+}
 
 static void* input_thread_func(void* arg) {
     WindowManager* wm = (WindowManager*)arg;

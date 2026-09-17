@@ -418,11 +418,21 @@ bool fl_increment_volume_by_percent_platform(int increment_percent) {
 }
 
 #include "platform/input_state.h"
-bool fl_is_key_down_platform(int vk){ return Platform_IsKeyDown(vk); }
-bool fl_is_key_pressed_platform(int vk){ return Platform_WasKeyPressed(vk); }
-bool fl_is_key_released_platform(int vk){ return Platform_WasKeyReleased(vk); }
-bool fl_is_key_held_platform(int vk){ return Platform_IsKeyDown(vk); }
-void fl_on_key_platform(void (*cb)(int vk, bool down, int mods, void *ud), void *ud){ Platform_SetKeyCallback(cb,ud); }
+bool fl_is_key_down_platform(int vk){
+  return Platform_IsKeyDown(vk); 
+}
+bool fl_is_key_pressed_platform(int vk){
+  return Platform_WasKeyPressed(vk); 
+}
+bool fl_is_key_released_platform(int vk){
+  return Platform_WasKeyReleased(vk); 
+}
+bool fl_is_key_held_platform(int vk){
+  return Platform_IsKeyDown(vk); 
+}
+void fl_on_key_platform(void (*cb)(int vk, bool down, int mods, void *ud), void *ud){
+  Platform_SetKeyCallback(cb,ud);
+}
 bool fl_type_text_platform(const char *s){
  if(!s) return false;
  Platform_EmitKey(VK_CONTROL,0); Platform_EmitKey(VK_LCONTROL,0); Platform_EmitKey(VK_RCONTROL,0);

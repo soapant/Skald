@@ -11,7 +11,9 @@
 #include <stdlib.h>
 
 static PromptState *g_prerender_state = NULL;
-void Platform_SetPreRenderState(PromptState *state) { g_prerender_state = state; }
+void Platform_SetPreRenderState(PromptState *state) {
+  g_prerender_state = state; 
+}
 
 bool Platform_PreRender(void) {
     PromptState *state = g_prerender_state;

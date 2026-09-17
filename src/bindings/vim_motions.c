@@ -219,18 +219,38 @@ void HandleMoveWordBackward(FlintContext* ctx) {
       }
     }
 }
-void HandleDeleteSingleQuotesInsert(FlintContext* ctx) { DeleteInsideDelimiter(ctx, '\'', '\'', true); }
-void HandleDeleteSingleQuotesNormal(FlintContext* ctx) { DeleteInsideDelimiter(ctx, '\'', '\'', false); }
-void HandleDeleteQuotesInsert(FlintContext* ctx) { DeleteInsideDelimiter(ctx, '\"', '\"', true); }
-void HandleDeleteQuotesNormal(FlintContext* ctx) { DeleteInsideDelimiter(ctx, '\"', '\"', false); }
-void HandleDeleteBracketsInsert(FlintContext* ctx) { DeleteInsideDelimiter(ctx, '(', ')', true); }
-void HandleDeleteBracketsNormal(FlintContext* ctx) { DeleteInsideDelimiter(ctx, '(', ')', false); }
+void HandleDeleteSingleQuotesInsert(FlintContext* ctx) {
+  DeleteInsideDelimiter(ctx, '\'', '\'', true); 
+}
+void HandleDeleteSingleQuotesNormal(FlintContext* ctx) {
+  DeleteInsideDelimiter(ctx, '\'', '\'', false); 
+}
+void HandleDeleteQuotesInsert(FlintContext* ctx) {
+  DeleteInsideDelimiter(ctx, '\"', '\"', true); 
+}
+void HandleDeleteQuotesNormal(FlintContext* ctx) {
+  DeleteInsideDelimiter(ctx, '\"', '\"', false); 
+}
+void HandleDeleteBracketsInsert(FlintContext* ctx) {
+  DeleteInsideDelimiter(ctx, '(', ')', true); 
+}
+void HandleDeleteBracketsNormal(FlintContext* ctx) {
+  DeleteInsideDelimiter(ctx, '(', ')', false); 
+}
 void HandleDeleteCurlyBracketsInsert(FlintContext* ctx) { DeleteInsideDelimiter(ctx, '{', '}', true); }
 void HandleDeleteCurlyBracketsNormal(FlintContext* ctx) { DeleteInsideDelimiter(ctx, '{', '}', false); }
-void HandleDeleteSquareBracketsInsert(FlintContext* ctx) { DeleteInsideDelimiter(ctx, '[', ']', true); }
-void HandleDeleteSquareBracketsNormal(FlintContext* ctx) { DeleteInsideDelimiter(ctx, '[', ']', false); }
-void HandleDeleteWordInsert(FlintContext* ctx) { DeleteInnerWord(ctx, true); }
-void HandleDeleteWordNormal(FlintContext* ctx) { DeleteInnerWord(ctx, false); }
+void HandleDeleteSquareBracketsInsert(FlintContext* ctx) {
+  DeleteInsideDelimiter(ctx, '[', ']', true); 
+}
+void HandleDeleteSquareBracketsNormal(FlintContext* ctx) {
+  DeleteInsideDelimiter(ctx, '[', ']', false); 
+}
+void HandleDeleteWordInsert(FlintContext* ctx) {
+  DeleteInnerWord(ctx, true); 
+}
+void HandleDeleteWordNormal(FlintContext* ctx) {
+  DeleteInnerWord(ctx, false); 
+}
 void HandleSendEdit(FlintContext* ctx) {
     //temporary no idea if this works on windows 
     FlintContext* _c = FlintContext_Get();

@@ -51,7 +51,9 @@ bool x11_should_use_grab(void) {
 }
 
 static struct WindowManager *g_x11_wm = NULL;
-void x11_set_window_manager(struct WindowManager *wm) { g_x11_wm = wm; }
+void x11_set_window_manager(struct WindowManager *wm) {
+  g_x11_wm = wm; 
+}
 
 static void x11_force_cleanup(void);
 static void x11_install_cleanup_handlers(void);
@@ -101,7 +103,9 @@ static void x11_force_cleanup(void) {
     }
 }
 
-static void x11_atexit_handler(void) { x11_force_cleanup(); }
+static void x11_atexit_handler(void) {
+  x11_force_cleanup(); 
+}
 
 static void x11_install_cleanup_handlers(void) {
     static bool installed = false;
