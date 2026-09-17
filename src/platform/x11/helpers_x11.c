@@ -1113,7 +1113,7 @@ void Linux_DrawBackground(Display* dpy, Window win, int w, int h) {
 
 void Linux_DrawSelectionBackground(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap, int x, int y, int w, int h, unsigned long baseHex) {
     if (w <= 0 || h <= 0) return;
-    if (!EnableSelectionShaders || SelectionShaderPreset == 0) {
+    if (!EnableShaders || SelectionShaderPreset == 0) {
         XftColor c; Linux_XftAllocColor(dpy, vis, cmap, baseHex, OpacityAlpha16(), &c);
         XftDrawRect(xd, &c, x, y, w, h);
         XftColorFree(dpy, vis, cmap, &c);
