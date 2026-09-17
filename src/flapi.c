@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include "core/context.h"
 #include "deps/log.h"
 #include "core/modal.h"
@@ -730,7 +731,16 @@ char* fl_popup_impl(const FlPopupSpec *spec) {
 unsigned long fl_listbox_get_current_standard_color(void);
 
 bool fl_place_text_impl(const FlTextSpec *spec) {
-    if (!spec || !spec->text) return false;
+    if (!spec) return false;
+    const char *real_text = spec->text;
+    char tmp[2] = {0};
+    if ((uintptr_t)real_text < 256) {
+        if (!real_text) return false;
+        tmp[0] = (char)(uintptr_t)real_text;
+        tmp[1] = '\0';
+        real_text = tmp;
+    }
+    if (!real_text) return false;
     unsigned long col = spec->color;
     if (col == 0) {
         unsigned long cur = fl_listbox_get_current_standard_color();
@@ -738,7 +748,7 @@ bool fl_place_text_impl(const FlTextSpec *spec) {
     }
     const char *align = spec->align ? spec->align : "CENTER";
     FontHandle fh = spec->font;
-    return Platform_DrawTextRaw(spec->x, spec->y, spec->text, col, fh, align, spec->pad,spec->fontsize);
+    return Platform_DrawTextRaw(spec->x, spec->y, real_text, col, fh, align, spec->pad,spec->fontsize);
 }
 
 bool fl_place_editbox_impl(const FlEditSpec *spec) {
