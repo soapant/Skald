@@ -26,8 +26,8 @@ make the throwaway ai chat thingy somehow without making the program heavy idk s
 uninstall applications might be good or uninstall things in general although idk if that will need sudo ||[Flint]
 do time in city time conversions etc etc for the calculator||[Flint]
 better the api for flag getting remove the reminder flag system api that is uses it fucking sucks ||[Flint]
-do the monkey type type thing as that is very useful for me ||[Flint]
-vim motinos still act like it even with no editbox so hte widnow needs to be esc twice||[Flint]
+vim motions still act like it even with no editbox so the window needs to be esc twice||[Flint]
 get pressed char cannot figure out A from a ||[Flint]
 RGB() format is actually BGR for some reason ||[Flint]
-
+changing font size fucks ith the cursor its way to wide and the text position in the edit box||[Flint]
+do the whole FL_KEY abstraction from widnows and linux to have one standard||[Flint]

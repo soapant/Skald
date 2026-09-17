@@ -54,7 +54,7 @@ FLINT_FEATURE_INIT {
     fl_register_hotkey("Alt+Shift+X", SaveScreenshotArea);
     fl_register_hotkey("Alt+Shift+C", OcrRegionAndCopy);
     fl_register_hotkey("RShift",MediaPlayPause); 
-    fl_register_hotkey("Ctrl+[",IncrementVolume); 
-    fl_register_hotkey("Ctrl+]",DecrementVolume); 
+    fl_register_hotkey("Ctrl+]",IncrementVolume); 
+    fl_register_hotkey("Ctrl+[",DecrementVolume); 
 }
 
