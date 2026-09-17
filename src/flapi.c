@@ -826,7 +826,6 @@ bool fl_decrement_volume_by_percent(int decrement_percent) {
 }
 
 bool fl_type_text(const char *s) {
-  if (!s) return false;
   return fl_type_text_platform(s);
 }
 
