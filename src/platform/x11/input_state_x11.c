@@ -7,7 +7,9 @@ static bool g_released[256] = {0};
 static void (*g_cb)(int vk, bool down, int mods, void *ud) = NULL;
 static void *g_ud = NULL;
 
-static int norm_vk(int vk){ if(vk>='a'&&vk<='z') return vk-'a'+'A'; return vk; }
+static int norm_vk(int vk) {
+  if(vk>='a'&&vk<='z') return vk-'a'+'A'; return vk; 
+}
 void Platform_InputState_Update(int vk, bool down, int mods){
  vk=norm_vk(vk);
  if(vk<0||vk>=256) return;

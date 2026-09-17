@@ -251,8 +251,12 @@ void SequenceStartTimer(void) {
 #endif
 }
 
-bool SequenceIsWaiting(void) { return seq_state.waiting; }
-bool SequenceTimedOut(void) { return seq_state.timed_out; }
+bool SequenceIsWaiting(void) {
+  return seq_state.waiting; 
+}
+bool SequenceTimedOut(void) {
+  return seq_state.timed_out; 
+}
 
 void DeleteLastTypedChar(FlintContext* ctx) {
     if (!ctx) return;

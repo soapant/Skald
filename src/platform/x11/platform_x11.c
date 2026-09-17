@@ -1392,7 +1392,8 @@ void Platform_InitMainThreadContext(void) {
 void Platform_FixWorkingDirectory(void) {
 }
 
-void CleanupPerFeatureVimMap(void) {}
+void CleanupPerFeatureVimMap(void) {
+}
 
 void Platform_CleanupPlatformResources(void) {
     CleanupPerFeatureVimMap();
@@ -1403,16 +1404,22 @@ void Platform_CleanupPlatformResources(void) {
 void Platform_StartNotificationDaemon(void) {
 }
 
-int Platform_InitializeTrayIcon(void) { return 0; }
-void Platform_InitUI(void) {}
-void Platform_ShutdownUI(void) {}
+int Platform_InitializeTrayIcon(void) {
+  return 0; 
+}
+void Platform_InitUI(void) {
+}
+void Platform_ShutdownUI(void) {
+}
 void Platform_DisplayMessage(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, int timeout, ColorRef color) {
     (void)message; (void)centerX; (void)centerY; (void)maxWidth; (void)maxHeight; (void)timeout; (void)color;
 }
-void Platform_DismissMessage(void) {}
+void Platform_DismissMessage(void) {
+}
 
 Fl_Pos Platform_GetCursorPos(void) {
     return Wm_GetCursorPosition();
 }
-void Platform_SettingsPopUp(void) {}
+void Platform_SettingsPopUp(void) {
+}
 

@@ -17,7 +17,9 @@
 #include <ctype.h>
 
 static int _x11_err = 0;
-static int _x11_err_handler(Display *dpy, XErrorEvent *ev) { (void)dpy; (void)ev; _x11_err = 1; return 0; }
+static int _x11_err_handler(Display *dpy, XErrorEvent *ev) {
+  (void)dpy; (void)ev; _x11_err = 1; return 0; 
+}
 
 bool get_title_x11(char *buffer, int buffer_size) {
     if (!buffer || buffer_size <= 0) { log_error("buffer='%s' buffer_size=%d", buffer ? buffer : "null", buffer_size); return false; }
