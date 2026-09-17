@@ -540,16 +540,7 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
         needDestroy = true;
     }
     XftFont *xf = FH_TO_XFT(fh);
-    unsigned long bg_hex = rgb_to_hex(COLOR_BG);
     unsigned long text_hex = spec->color ? spec->color : rgb_to_hex(COLOR_TEXT);
-    if (RoundedCorners && CornerRadius > 0) {
-        Linux_FillRoundedRect(dpy,xd,vis,cmap,bg_hex,0xFFFF,x,y,w,h,6);
-    } else {
-        XftColor bgc;
-        Linux_XftAllocColor(dpy,vis,cmap,bg_hex,0xFFFF,&bgc);
-        XftDrawRect(xd,&bgc,x,y,w,h);
-        XftColorFree(dpy,vis,cmap,&bgc);
-    }
     XftColor col;
     Linux_XftAllocColor(dpy,vis,cmap,text_hex,0xFFFF,&col);
     int text_len = (int)strlen(buf);
@@ -581,6 +572,7 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
     if (needDestroy) Platform_DestroyFont(fh);
     return true;
 }
+
 bool fl_type_text_platform(const char *s){
  if(!s) return false;
  remap_reset();
