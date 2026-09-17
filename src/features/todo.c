@@ -371,6 +371,7 @@ void todo_render_callback(PromptState *state) {
         .x = 0, .y = 70, .w = state->width, .h = state->height - 50,
         .item_height = FontSize + 36
     };
+    fl_place_editbox();
     if (!fl_listbox_begin(&spec)) return;
     FlListItemCtx ctx;
     while (fl_listbox_next(&ctx)) {
