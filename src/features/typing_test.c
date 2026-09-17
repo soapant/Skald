@@ -18,6 +18,9 @@ void typing_test_tab(ListBoxInfo* lb) {
 }
 
 void typing_test_render(PromptState *state) {
+    int cx = 0;
+    int cy = state->height / 2 - 30;
+    fl_place_text_raw(.x=cx, .y=cy, .text="Nothing", .align="CENTER", .pad=cx,.fontsize=30);
 }
 
 void TriggerTypingTest(void) {
@@ -31,6 +34,6 @@ void TriggerTypingTest(void) {
 }
 
 FLINT_FEATURE_INIT {
-    fl_register_hotkey("Alt+Shift+T", TriggerTypingTest);
+    fl_register_hotkey("Alt+B", TriggerTypingTest);
     fl_register_feature("Typing Test", TriggerTypingTest);
 }

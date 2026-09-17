@@ -47,7 +47,7 @@ void {func}(void) {{
 }}
 
 FLINT_FEATURE_INIT {{
-    fl_register_hotkey("Alt+Shift+{hotkey}", {func});
+    fl_register_hotkey("HOTKEY", {func});
     fl_register_feature("{title}", {func});
 }}
 '''
