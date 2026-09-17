@@ -763,10 +763,7 @@ bool fl_place_image_impl(const FlImageSpec *spec) {
   (void)spec; return false; 
 }
 bool fl_draw_rect(int x, int y, int w, int h, unsigned long color) {
-  return Platform_DrawRectRaw(x,y,w,h,color,false);
-}
-bool fl_draw_rect_transparent(int x, int y, int w, int h, unsigned long color) {
-  return Platform_DrawRectRaw(x,y,w,h,color,true);
+  return Platform_DrawRectRaw(x,y,w,h,color);
 }
 
 bool fl_draw_line(int x1, int y1, int x2, int y2, unsigned long color) {
