@@ -37,7 +37,7 @@ void typing_test_render(PromptState *state) {
       current_position++;
     }
     if (key == VK_BACK) {
-      printf("ADHJKWADJKAWJD \n");
+      current_position--;
     }
 
     for (int i = 0; i < strlen(text);i++) {
