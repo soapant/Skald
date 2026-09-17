@@ -336,6 +336,7 @@ bool fl_decrement_volume_by_percent(int decrement_percent);
 // =============================================================================
 
 Fl_Pos fl_get_cursor_pos(void);
+bool fl_type_string(const char *s);
 
 #define _FL_HOTKEY_EXPAND(hotkey, trigger, cond, whitelist, ...) \
     fl_register_hotkey_impl(hotkey, trigger, cond, whitelist, (const char*[]){__VA_ARGS__, NULL})

@@ -29,11 +29,6 @@ void Platform_EmitKey(int vk_code, int down) {
         else if (vk_code == VK_SPACE) linux_code = KEY_SPACE;
         else if (vk_code == VK_TAB) linux_code = KEY_TAB;
         else if (vk_code == VK_ESCAPE) linux_code = KEY_ESC;
-        else if (vk_code >= 'A' && vk_code <= 'Z') linux_code = KEY_A + (vk_code - 'A');
-        else if (vk_code >= '0' && vk_code <= '9') {
-            if (vk_code == '0') linux_code = KEY_0;
-            else linux_code = KEY_1 + (vk_code - '1');
-        }
     }
     if (!linux_code) { log_warn("Platform_EmitKey no linux_code for vk=%d", vk_code); return; }
     log_warn("Platform_EmitKey vk=%d linux=%d down=%d uinput_fd=%d", vk_code, linux_code, down, g_x11_uinput_fd);

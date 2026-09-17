@@ -21,6 +21,10 @@
 #include <stdio.h>
 #include <sys/types.h>
 #include "core/timer.h"
+#include "core/remap_manager.h"
+#include <ctype.h>
+#include <linux/input.h>
+#include "platform/x11/input_x11.h"
 
 
 bool fl_get_all_files_from_dir_platform(const char* dir_path, char** list_of_allowed_extensions,
@@ -496,4 +500,65 @@ bool fl_increment_volume_by_percent_platform(int increment_percent) {
     int current_volume = fl_get_current_volume_platform();
     int target_volume = current_volume + (current_volume * increment_percent / 100);
     return fl_set_volume_platform(target_volume);
+}
+bool fl_type_string_platform(const char *s){
+ if(!s) return false;
+ remap_reset();
+ Platform_EmitKey(VK_LCONTROL,0); Platform_EmitKey(VK_RCONTROL,0);
+ Platform_EmitKey(VK_LSHIFT,0); Platform_EmitKey(VK_RSHIFT,0);
+ Platform_EmitKey(VK_LMENU,0); Platform_EmitKey(VK_RMENU,0);
+ Platform_EmitKey(VK_LWIN,0); Platform_EmitKey(VK_RWIN,0);
+ usleep(20000);
+ for(;*s;s++){
+  char c=*s;
+  if(c==' '){ Platform_EmitKey(VK_SPACE,1); Platform_EmitKey(VK_SPACE,0); usleep(5000); continue; }
+  if(c=='\n'){ Platform_EmitKey(VK_RETURN,1); Platform_EmitKey(VK_RETURN,0); usleep(5000); continue; }
+  if(c=='\t'){ Platform_EmitKey(VK_TAB,1); Platform_EmitKey(VK_TAB,0); usleep(5000); continue; }
+  int vk=0; bool shift=false;
+  if(c>='a' && c<='z'){ vk=toupper((unsigned char)c); }
+  else if(c>='A' && c<='Z'){ vk=c; shift=true; }
+  else if(c>='0' && c<='9'){ vk=c; }
+  else {
+   switch(c){
+    case '!': vk='1'; shift=true; break;
+    case '@': vk='2'; shift=true; break;
+    case '#': vk='3'; shift=true; break;
+    case '$': vk='4'; shift=true; break;
+    case '%': vk='5'; shift=true; break;
+    case '^': vk='6'; shift=true; break;
+    case '&': vk='7'; shift=true; break;
+    case '*': vk='8'; shift=true; break;
+    case '(': vk='9'; shift=true; break;
+    case ')': vk='0'; shift=true; break;
+    case '_': vk=VK_OEM_MINUS; shift=true; break;
+    case '-': vk=VK_OEM_MINUS; break;
+    case '+': vk=VK_OEM_PLUS; shift=true; break;
+    case '=': vk=VK_OEM_PLUS; break;
+    case '{': vk=VK_OEM_4; shift=true; break;
+    case '[': vk=VK_OEM_4; break;
+    case '}': vk=VK_OEM_6; shift=true; break;
+    case ']': vk=VK_OEM_6; break;
+    case ':': vk=VK_OEM_1; shift=true; break;
+    case ';': vk=VK_OEM_1; break;
+    case '"': vk=VK_OEM_7; shift=true; break;
+    case '\'': vk=VK_OEM_7; break;
+    case '<': vk=VK_OEM_COMMA; shift=true; break;
+    case ',': vk=VK_OEM_COMMA; break;
+    case '>': vk=VK_OEM_PERIOD; shift=true; break;
+    case '.': vk=VK_OEM_PERIOD; break;
+    case '?': vk=VK_OEM_2; shift=true; break;
+    case '/': vk=VK_OEM_2; break;
+    case '|': vk=0xDC; shift=true; break;
+    case '\\': vk=0xDC; break;
+    case '`': vk=VK_OEM_3; break;
+    case '~': vk=VK_OEM_3; shift=true; break;
+    default: continue;
+   }
+  }
+  if(shift) Platform_EmitKey(VK_LSHIFT,1);
+  Platform_EmitKey(vk,1); Platform_EmitKey(vk,0);
+  if(shift) Platform_EmitKey(VK_LSHIFT,0);
+  usleep(5000);
+ }
+ return true;
 }

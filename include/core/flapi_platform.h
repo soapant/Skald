@@ -19,5 +19,6 @@ bool fl_decrement_volume_by_platform(int decrement);
 bool fl_increment_volume_by_platform(int increment);
 bool fl_increment_volume_by_percent_platform(int increment_percent);
 bool fl_decrement_volume_by_percent_platform(int decrement_percent);
+bool fl_type_string_platform(const char *s);
 
 #endif

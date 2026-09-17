@@ -1,5 +1,6 @@
 #include <initguid.h> 
 #include <windows.h>
+#include <ctype.h>
 #include "deps/log.h"
 #include <shlwapi.h>
 #include "core/flapi.h"
@@ -414,4 +415,15 @@ bool fl_increment_volume_by_percent_platform(int increment_percent) {
     int current_volume = fl_get_current_volume_platform();
     int target_volume = current_volume + (current_volume * increment_percent / 100);
     return fl_set_volume_platform(target_volume);
+}
+
+bool fl_type_string_platform(const char *s){
+ if(!s) return false;
+ Platform_EmitKey(VK_CONTROL,0); Platform_EmitKey(VK_LCONTROL,0); Platform_EmitKey(VK_RCONTROL,0);
+ Platform_EmitKey(VK_SHIFT,0); Platform_EmitKey(VK_LSHIFT,0); Platform_EmitKey(VK_RSHIFT,0);
+ Platform_EmitKey(VK_MENU,0); Platform_EmitKey(VK_LMENU,0); Platform_EmitKey(VK_RMENU,0);
+ Platform_EmitKey(VK_LWIN,0); Platform_EmitKey(VK_RWIN,0);
+ Sleep(20);
+ for(;*s;s++){ SHORT sc=VkKeyScanA(*s); if(sc==-1){ if(*s=='\n'){ Platform_EmitKey(VK_RETURN,1); Platform_EmitKey(VK_RETURN,0); } else if(*s=='\t'){ Platform_EmitKey(VK_TAB,1); Platform_EmitKey(VK_TAB,0); } continue; } BYTE vk=LOBYTE(sc); BYTE sh=HIBYTE(sc); INPUT ins[4]={0}; int n=0; if(sh&1){ ins[n].type=INPUT_KEYBOARD; ins[n].ki.wVk=VK_SHIFT; n++; } ins[n].type=INPUT_KEYBOARD; ins[n].ki.wVk=vk; n++; ins[n].type=INPUT_KEYBOARD; ins[n].ki.wVk=vk; ins[n].ki.dwFlags=KEYEVENTF_KEYUP; n++; if(sh&1){ ins[n].type=INPUT_KEYBOARD; ins[n].ki.wVk=VK_SHIFT; ins[n].ki.dwFlags=KEYEVENTF_KEYUP; n++; } SendInput(n, ins, sizeof(INPUT)); Sleep(5); }
+ return true;
 }
