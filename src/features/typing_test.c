@@ -36,6 +36,7 @@ void typing_test_render(PromptState *state) {
       pos_drawn = current_position;
       current_position++;
     }
+
     if (key == VK_BACK) {
       current_position--;
     }
@@ -45,9 +46,11 @@ void typing_test_render(PromptState *state) {
         fl_place_text(.x=i * 20, .y=cy,.align="Left",.text=text[i],.fontsize=30);
       }
     }
+
     if (current_position == strlen(text) + 1) {
       exit(1);
     }
+    fl_draw_rect(current_position * 20,cy + 10,20,30,COLOR_TEXT);
 }
 
 void TriggerTypingTest(void) {
