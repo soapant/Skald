@@ -50,7 +50,7 @@ void typing_test_render(PromptState *state) {
     if (current_position == strlen(text) + 1) {
       exit(1);
     }
-    fl_draw_rect(current_position * 20,cy + 10,20,30,COLOR_TEXT);
+    fl_draw_rect(current_position * 20,cy + 10,1,30,COLOR_TEXT);
 }
 
 void TriggerTypingTest(void) {
