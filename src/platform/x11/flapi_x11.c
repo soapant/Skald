@@ -3,6 +3,7 @@
 #include "core/platform.h"
 #include "core/flapi_platform.h"
 #include "platform/draw.h"
+#include "platform/input_state.h"
 #include "platform/x11/drawing_x11.h"
 #include "platform/x11/audio_x11.h"
 #include "platform/x11/env_helpers_x11.h"
@@ -501,7 +502,6 @@ bool fl_increment_volume_by_percent_platform(int increment_percent) {
     int target_volume = current_volume + (current_volume * increment_percent / 100);
     return fl_set_volume_platform(target_volume);
 }
-#include "platform/input_state.h"
 bool fl_is_key_down_platform(int vk){
   return Platform_IsKeyDown(vk); 
 }
@@ -524,12 +524,11 @@ bool fl_type_text_platform(const char *s){
  Platform_EmitKey(VK_LSHIFT,0); Platform_EmitKey(VK_RSHIFT,0);
  Platform_EmitKey(VK_LMENU,0); Platform_EmitKey(VK_RMENU,0);
  Platform_EmitKey(VK_LWIN,0); Platform_EmitKey(VK_RWIN,0);
- usleep(20000);
  for(;*s;s++){
   char c=*s;
-  if(c==' '){ Platform_EmitKey(VK_SPACE,1); Platform_EmitKey(VK_SPACE,0); usleep(5000); continue; }
-  if(c=='\n'){ Platform_EmitKey(VK_RETURN,1); Platform_EmitKey(VK_RETURN,0); usleep(5000); continue; }
-  if(c=='\t'){ Platform_EmitKey(VK_TAB,1); Platform_EmitKey(VK_TAB,0); usleep(5000); continue; }
+  if(c==' '){ Platform_EmitKey(VK_SPACE,1); Platform_EmitKey(VK_SPACE,0); continue; }
+  if(c=='\n'){ Platform_EmitKey(VK_RETURN,1); Platform_EmitKey(VK_RETURN,0); continue; }
+  if(c=='\t'){ Platform_EmitKey(VK_TAB,1); Platform_EmitKey(VK_TAB,0);continue; }
   int vk=0; bool shift=false;
   if(c>='a' && c<='z'){ vk=toupper((unsigned char)c); }
   else if(c>='A' && c<='Z'){ vk=c; shift=true; }
@@ -574,7 +573,6 @@ bool fl_type_text_platform(const char *s){
   if(shift) Platform_EmitKey(VK_LSHIFT,1);
   Platform_EmitKey(vk,1); Platform_EmitKey(vk,0);
   if(shift) Platform_EmitKey(VK_LSHIFT,0);
-  usleep(5000);
  }
  return true;
 }
