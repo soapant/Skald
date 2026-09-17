@@ -22,7 +22,7 @@ void typing_test_render(PromptState *state) {
     int cy = state->height / 2 - 30;
     char* text = "You are right, your current API only lets you draw the whole string at once, which is a problem for a typing test. The good news is that there's a standard way to handle this without needing a major API rewrite";
     for (int i = 0; i < strlen(text);i++) {
-      fl_place_text(.x=cx, .y=cy, .text=text[i], .align="CENTER", .pad=cx,.fontsize=30);
+      fl_place_text(.x=cx + (i * 20), .y=cy,.align="Right",.text=text[i],.fontsize=30);
     }
 }
 
