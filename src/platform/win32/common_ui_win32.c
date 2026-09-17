@@ -470,13 +470,13 @@ void UpdateTextCaret(WindowHandle hwndEditControl)
   if (oldFont) SelectObject(hdc, oldFont);
   ReleaseDC(hwnd, hdc);
 
-  int caretHeight = 20;
+  int caretHeight = 24;
   if (tm.tmHeight > 0 && tm.tmHeight < caretHeight) caretHeight = tm.tmHeight;
   int caretWidth;
   if (IsInsertMode()) {
-    caretWidth = 1;
+    caretWidth = 2;
   } else {
-    caretWidth = tm.tmAveCharWidth > 0 ? tm.tmAveCharWidth : 12;
+    caretWidth = tm.tmAveCharWidth > 0 ? tm.tmAveCharWidth : 8;
   }
 
   DWORD selStart = 0, selEnd = 0;
@@ -484,8 +484,7 @@ void UpdateTextCaret(WindowHandle hwndEditControl)
 
   RECT rc;
   GetClientRect(hwnd, &rc);
-  int centeredY = (rc.bottom - caretHeight) / 2 + 30;
-  if (centeredY < 0) centeredY = 0;
+  int centeredY = (rc.bottom - caretHeight) / 2;
 
   POINT pt = {0, centeredY};
   BOOL havePos = FALSE;
