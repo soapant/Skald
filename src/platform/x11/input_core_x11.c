@@ -269,7 +269,15 @@ int x11_keysym_to_vk(KeySym ks) {
 }
 
 int x11_vk_to_linux_key(int vk) {
-    if (vk >= 'A' && vk <= 'Z') return KEY_A + (vk - 'A');
+    switch(vk){
+        case 'A': return KEY_A; case 'B': return KEY_B; case 'C': return KEY_C; case 'D': return KEY_D;
+        case 'E': return KEY_E; case 'F': return KEY_F; case 'G': return KEY_G; case 'H': return KEY_H;
+        case 'I': return KEY_I; case 'J': return KEY_J; case 'K': return KEY_K; case 'L': return KEY_L;
+        case 'M': return KEY_M; case 'N': return KEY_N; case 'O': return KEY_O; case 'P': return KEY_P;
+        case 'Q': return KEY_Q; case 'R': return KEY_R; case 'S': return KEY_S; case 'T': return KEY_T;
+        case 'U': return KEY_U; case 'V': return KEY_V; case 'W': return KEY_W; case 'X': return KEY_X;
+        case 'Y': return KEY_Y; case 'Z': return KEY_Z;
+    }
     if (vk >= '0' && vk <= '9') return KEY_1 + (vk - '1');
     if (vk == '0') return KEY_0;
     if (vk == VK_SPACE) return KEY_SPACE;
