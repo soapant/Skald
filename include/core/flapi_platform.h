@@ -28,5 +28,7 @@ bool fl_is_key_pressed_platform(int vk);
 bool fl_is_key_released_platform(int vk);
 bool fl_is_key_held_platform(int vk);
 void fl_on_key_platform(void (*cb)(int vk, bool down, int mods, void *ud), void *ud);
+int fl_get_key_pressed_platform(void);
+char fl_get_char_pressed_platform(void);
 
 #endif

@@ -245,7 +245,6 @@ bool fl_place_image_impl(const FlImageSpec *spec);
 bool fl_listbox_begin(const FlListSpec *spec);
 bool fl_listbox_next(FlListItemCtx *out);
 void fl_listbox_end(void);
-#define fl_place_listbox(...) fl_place_listbox(__VA_ARGS__)
 
 // =============================================================================
 // ANCHORED PLACEMENT (preset positions)
@@ -342,6 +341,8 @@ bool fl_is_key_pressed(int vk);
 bool fl_is_key_released(int vk);
 bool fl_is_key_held(int vk);
 void fl_on_key(void (*cb)(int vk, bool down, int mods, void *ud), void *ud);
+int fl_get_key_pressed(void);
+char fl_get_char_pressed(void);
 
 #define _FL_HOTKEY_EXPAND(hotkey, trigger, cond, whitelist, ...) \
     fl_register_hotkey_impl(hotkey, trigger, cond, whitelist, (const char*[]){__VA_ARGS__, NULL})
