@@ -540,7 +540,7 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
         needDestroy = true;
     }
     XftFont *xf = FH_TO_XFT(fh);
-    unsigned long text_hex = spec->color ? spec->color : rgb_to_hex(COLOR_TEXT);
+    unsigned long text_hex = spec->color ? rgb_to_hex(spec->color) : rgb_to_hex(COLOR_TEXT);
     int text_len = (int)strlen(buf);
     int cursor = state ? state->cursor : text_len;
     if (cursor < 0) cursor = 0;

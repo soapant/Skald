@@ -746,6 +746,8 @@ bool fl_place_text_impl(const FlTextSpec *spec) {
     if (col == 0) {
         unsigned long cur = fl_listbox_get_current_standard_color();
         col = cur ? cur : rgb_to_hex(COLOR_TEXT);
+    }else {
+        col = rgb_to_hex(col);
     }
     const char *align = spec->align ? spec->align : "CENTER";
     FontHandle fh = spec->font;

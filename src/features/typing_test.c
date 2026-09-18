@@ -56,7 +56,7 @@ void typing_test_render(PromptState *state) {
         if (char_states[i] == CHAR_CORRECT) {
             fl_place_text(.x=i * 20, .y=cy, .align="Left", .text=text[i], .fontsize=30, .color=RGB(0,255,0));
         } else if (char_states[i] == CHAR_WRONG)  {
-            fl_place_text(.x=i * 20, .y=cy, .align="Left", .text=text[i], .fontsize=30, .color=RGB(0,0,255));
+            fl_place_text(.x=i * 20, .y=cy, .align="Left", .text=text[i], .fontsize=30, .color=RGB(255,0,0));
         } else {
             fl_place_text(.x=i * 20, .y=cy, .align="Left", .text=text[i], .fontsize=30);
         }
