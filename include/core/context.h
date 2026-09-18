@@ -59,16 +59,6 @@ typedef struct {
     WinTimer g_timer;
     char* SelectionData[2048];
     int SelectionDataCount;
-#if defined(_WIN32)
-    uint32_t main_thread_id;
-    HFONT g_hNumFont;
-    HFONT hMainFont;
-    HHOOK hKeyboardHook;
-    int g_timeout;
-    bool g_waiting_for_key;
-    int g_key_pressed;
-    KeyCallback g_key_callback;
-#endif
 } FlintContext;
 
 FlintContext* FlintContext_Get(void);

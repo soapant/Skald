@@ -1,4 +1,5 @@
 #include <windows.h>
+#include "platform/win32/win32_state.h"
 #include "deps/log.h"
 #include "core/context.h"
 #include "core/modal.h"
@@ -28,8 +29,8 @@ LRESULT CALLBACK SettingsPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
   }
     
   case WM_CREATE: {
-    if (!FlintContext_Get()->hMainFont) {
-      FlintContext_Get()->hMainFont = CreateFontA(FontSize, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+    if (!g_win32_hMainFont) {
+      g_win32_hMainFont = CreateFontA(FontSize, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
                                 DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
                                 CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, UsedFont);
     }
@@ -62,7 +63,7 @@ LRESULT CALLBACK SettingsPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
       GetClientRect(hwnd, &rect);
       
       
-      HFONT hOldFont = (HFONT)SelectObject(hdc, FlintContext_Get()->hMainFont);
+      HFONT hOldFont = (HFONT)SelectObject(hdc, g_win32_hMainFont);
       
       HBRUSH hBgBrush = CreateSolidBrush(COLOR_BG);
       FillRect(hdc, &rect, hBgBrush);

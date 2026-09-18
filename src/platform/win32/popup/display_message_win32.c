@@ -18,6 +18,7 @@
 #include "helpers/helpers_file.h"
 #include "helpers/helpers_ui.h"
 #include "platform/win32/popup_helpers_win32.h"
+#include "platform/win32/win32_state.h"
 
 LRESULT CALLBACK DisplayMessageProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
   FadeWindowData* data = (FadeWindowData*)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
@@ -72,12 +73,12 @@ LRESULT CALLBACK DisplayMessageProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
     }
     case WM_TIMER: {
       if (wParam == 999 && data) {
-        if (FlintContext_Get()->g_timeout == 6969) {
+        if (g_win32_timeout == 6969) {
           return 0;
         }
         
-          if (FlintContext_Get()->g_timeout > 0) {
-            FlintContext_Get()->g_timeout--;
+          if (g_win32_timeout > 0) {
+            g_win32_timeout--;
               return 0; 
           }
         

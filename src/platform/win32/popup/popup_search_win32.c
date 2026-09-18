@@ -1,4 +1,5 @@
 #include <windows.h>
+#include "platform/win32/win32_state.h"
 #include "deps/log.h"
 #include "core/context.h"
 #include "core/modal.h"
@@ -176,7 +177,7 @@ LRESULT CALLBACK SearchPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPar
           wchar_t wmode[256];
             MultiByteToWideChar(CP_UTF8, 0, g_vim_mode, -1, wmode, 256);
             
-            HFONT hOldFont = (HFONT)SelectObject(hdc, FlintContext_Get()->hMainFont);
+            HFONT hOldFont = (HFONT)SelectObject(hdc, g_win32_hMainFont);
             SetBkMode(hdc, TRANSPARENT);
             
             COLORREF modeColor;

@@ -59,6 +59,7 @@ void Core_DrawListBox(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis
 }
 #else
 #include <windows.h>
+#include "platform/win32/win32_state.h"
 void Core_DrawListBox(PromptState *state, void *hdc) {
     PROFILE_START(timer);
     if (!state || !state->has_listbox || !hdc) { PROFILE_END_VAR(timer, "listbox_renderer:Core_DrawListBox"); return; }
@@ -83,7 +84,7 @@ void Core_DrawListBox(PromptState *state, void *hdc) {
         lb->view_offset = lb->populated_count - visible;
     if (lb->view_offset < 0) lb->view_offset = 0;
 
-    HFONT hFont = FlintContext_Get()->hMainFont;
+    HFONT hFont = g_win32_hMainFont;
     HFONT hOldFont = NULL;
     if (hFont) hOldFont = (HFONT)SelectObject(hdcReal, hFont);
     SetBkMode(hdcReal, TRANSPARENT);
