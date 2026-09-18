@@ -128,7 +128,9 @@ void trim_trailinspaces(char* str) {
 
 
 static int precedence(char op) {
-  if(op=='*'||op=='/') return 2; if(op=='+'||op=='-') return 1; return 0; 
+  if(op=='*'||op=='/'||op=='^') return 2;
+  if(op=='+'||op=='-') return 1; 
+  return 0; 
 }
 static bool apply_op(double* vals, int* vtop, char* ops, int* otop, bool* ok){
     if(*vtop<1 || *otop<0) { *ok=false; return false; }
@@ -140,6 +142,7 @@ static bool apply_op(double* vals, int* vtop, char* ops, int* otop, bool* ok){
         case '+': r=a+b; break;
         case '-': r=a-b; break;
         case '*': r=a*b; break;
+        case '^': r=pow(a,b); break;
         case '/': if(b==0){ *ok=false; return false; } r=a/b; break;
         default: *ok=false; return false;
     }
@@ -182,7 +185,7 @@ static double evaluate_expression(const char* expr, bool* out_ok){
                 
                 
                 char nxt = (j+1<n)?clean[j+1]:'\0';
-                if(nxt=='\0' || isspace((unsigned char)nxt) || strchr("+-*/()", nxt)){
+                if(nxt=='\0' || isspace((unsigned char)nxt) || strchr("+-*^/()", nxt)){
                     j++;
                 }
             }
@@ -197,7 +200,7 @@ static double evaluate_expression(const char* expr, bool* out_ok){
             expect_number=false;
             i=j; continue;
         }
-        if(strchr("+-*/", clean[i])){
+        if(strchr("+-^*/", clean[i])){
             char cur=clean[i];
             while(otop>=0 && ops[otop]!='(' && precedence(ops[otop])>=precedence(cur)){
                 if(!apply_op(vals,&vtop,ops,&otop,&ok)) break;
@@ -386,6 +389,7 @@ void get_flip_display(char* out, size_t max_len) {
         case '+': result = flipped_a + flipped_b; break;
         case '-': result = flipped_a - flipped_b; break;
         case '*': result = flipped_a * flipped_b; break;
+        case '^': result = pow(flipped_a,flipped_b); break;
         case '/': if (flipped_b != 0) result = flipped_a / flipped_b; else { strncpy(out, "Error: Div by 0 in flipped", max_len); return; } break;
         default: strncpy(out, "Unknown operator", max_len); return;
     }
