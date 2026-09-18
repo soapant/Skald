@@ -1,7 +1,11 @@
 #include "core/flapi.h"
 
+void nigga(void) {
+  printf("AKJDAWKDJWAKD \n");
+}
+
 void Testing(void) {
-    fl_type_text("Bitch Ass NIgga");
+  fl_run_after_time(3,nigga);
 }
 
 

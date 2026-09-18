@@ -30,4 +30,4 @@ when you hot reload config make sure things like changing fontsize actually stay
 embed the window monitor into this program as a feature might be good ||[Flint]|[Feature]|[Maybe]
 api the timer and everything in reminder feature ||[Flint]|[FlApi]
 persistent feature state that doesn't require the user to write to a file themselves ||[Flint]|[Feature]|[FlApi]
-do the whole Fl_Key to replace the platform based vk code||[Flint]|[DontForget]
+remove all drawtexta etc to the platform functio s like you did for x11||[Flint]

@@ -23,5 +23,6 @@ bool fl_increment_volume_by_platform(int increment);
 bool fl_increment_volume_by_percent_platform(int increment_percent);
 bool fl_decrement_volume_by_percent_platform(int decrement_percent);
 bool fl_type_text_platform(const char *s);
+void fl_run_after_time_platform(double seconds, void (*callback)(void));
 
 #endif
