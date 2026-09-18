@@ -630,3 +630,40 @@ bool fl_type_text_platform(const char *s){
  }
  return true;
 }
+
+typedef struct {
+    double seconds;
+    void (*callback)(void);
+} TimerPayload;
+
+static void* TimerThread(void* arg) {
+    TimerPayload* payload = (TimerPayload*)arg;
+    if (!payload) return NULL;
+
+    useconds_t micros = (useconds_t)(payload->seconds * 1000000.0);
+    usleep(micros);
+
+    if (payload->callback) {
+        payload->callback();
+    }
+
+    free(payload);
+    return NULL;
+}
+
+void fl_run_after_time_platform(double seconds, void (*callback)(void)) {
+    if (!callback || seconds < 0) return;
+
+    TimerPayload* payload = (TimerPayload*)malloc(sizeof(TimerPayload));
+    if (!payload) return;
+    payload->seconds = seconds;
+    payload->callback = callback;
+
+    pthread_t thread;
+    if (pthread_create(&thread, NULL, TimerThread, payload) != 0) {
+        free(payload);
+        return;
+    }
+
+    pthread_detach(thread);
+}

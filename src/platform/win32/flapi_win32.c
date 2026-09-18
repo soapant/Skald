@@ -503,3 +503,40 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
     if (old) SelectObject(hdc, old);
     return true;
 }
+
+typedef struct {
+    void (*callback)(void);
+} TimerPayload;
+
+VOID CALLBACK TimerTrampoline(PVOID lpParam, BOOLEAN TimerOrWaitFired) {
+    TimerPayload* payload = (TimerPayload*)lpParam;
+    if (payload) {
+        if (payload->callback) {
+            payload->callback();
+        }
+        free(payload);
+    }
+}
+
+void fl_run_after_time_platform(double seconds, void (*callback)(void)) {
+    if (!callback || seconds < 0) return;
+
+    TimerPayload* payload = (TimerPayload*)malloc(sizeof(TimerPayload));
+    if (!payload) return;
+    payload->callback = callback;
+
+    DWORD delay_ms = (DWORD)(seconds * 1000.0);
+    HANDLE hTimer = NULL;
+    if (!CreateTimerQueueTimer(
+            &hTimer,
+            NULL,
+            TimerTrampoline,
+            payload,
+            delay_ms,
+            0,  
+            WT_EXECUTEONLYONCE
+        )) {
+        free(payload);
+        return; 
+    }
+}

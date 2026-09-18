@@ -866,3 +866,6 @@ int fl_get_key_pressed(void){
 char fl_get_char_pressed(void){
   return Platform_GetPressedChar();
 }
+void fl_run_after_time(double seconds, void (*callback)(void)) {
+    return fl_run_after_time_platform(seconds,callback);
+}
