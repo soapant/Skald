@@ -71,3 +71,4 @@ rust get random number min max
 XftDrawRect params
 windows draw rect at x y w h and color 
 waht does diamagnetic on an element mean 
+where are terminal apps stores on linux
