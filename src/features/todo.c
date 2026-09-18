@@ -1,10 +1,6 @@
 #include "core/flapi.h"
 
-typedef struct {
-    const char* alias;
-    const char* alias_label;
-} TodoAliasEntry;
-
+typedef struct { char dummy[1]; } TodoAliasEntry;
 typedef struct {
     const char* flag;
     const char* internal_name;
@@ -40,10 +36,6 @@ const TagFormatConfig TODO_TAG_FORMAT = {
 };
 #define TODO_TAG_FORMAT TODO_TAG_FORMAT
 
-#define TODO_ALIAS_MASTER \
-    X("-p", "Project:") \
-    X("-n", "Note:")
-
 #define TODO_CONFIG_MASTER \
     X("-pf", "Flint",         "Flint",         RGB(137, 180, 250), true) \
     X("-pm", "MinecraftModpack", "MinecraftModpack", RGB(250, 179, 135), true) \
@@ -64,18 +56,6 @@ const TagFormatConfig TODO_TAG_FORMAT = {
     X("-c",  NULL,               "Change",           RGB(150, 105, 12),  false) \
     X("-fl",  NULL,              "FlApi",            RGB(10, 105, 12),  false)
 
-#define X(flag, label) {flag, label},
-const TodoAliasEntry TODO_ALIAS_DICT[] = {
-    TODO_ALIAS_MASTER
-};
-const size_t TODO_ALIAS_DICT_COUNT = ARRAY_LEN(TODO_ALIAS_DICT);
-#undef X
-#define X(flag, label) {flag, NULL},
-const GenericFlagEntry TODO_ALIAS_FLAGS[] = {
-    TODO_ALIAS_MASTER
-};
-const size_t TODO_ALIAS_FLAGS_COUNT = ARRAY_LEN(TODO_ALIAS_FLAGS);
-#undef X
 #define X(flag, internal, label, color, is_alias) {flag, NULL},
 const GenericFlagEntry TODO_CONFIG_FLAGS[] = {
     TODO_CONFIG_MASTER
@@ -99,11 +79,6 @@ ColorRef GetTagColor(const char* tag_text) {
             }
         }
     }
-    for (size_t i = 0; i < TODO_ALIAS_DICT_COUNT; i++) {
-        if (strstr(tag_text, TODO_ALIAS_DICT[i].alias) != NULL) {
-            return COLOR_TEXT;
-        }
-    }
     return COLOR_TEXT;
 }
 
@@ -115,84 +90,42 @@ void ParseTodoInput(const char* input, TodoAliasEntry* alias_out, TodoConfigEntr
     clean_text[0] = '\0';
     *tag_count = 0;
     
-    char input_copy[512];
-    strncpy(input_copy, input, sizeof(input_copy) - 1);
-    input_copy[sizeof(input_copy) - 1] = '\0';
-    
-    FoundFlag alias_matches[10];
-    int alias_match_count = SearchFlagsInText(input_copy, TODO_ALIAS_FLAGS, TODO_ALIAS_FLAGS_COUNT, sizeof(GenericFlagEntry), alias_matches, 10);
-    
-    for (int i = 0; i < alias_match_count && *tag_count < 10; i++) {
-        char* param = GetFlagParameter(input_copy, alias_matches[i].index);
-        if (param && strlen(param) > 0) {
-            int alias_idx = -1;
-            for (size_t j = 0; j < TODO_ALIAS_DICT_COUNT; j++) {
-                if (strcmp(alias_matches[i].flag, TODO_ALIAS_DICT[j].alias) == 0) {
-                    alias_idx = j;
-                    break;
-                }
-            }
-            if (alias_idx >= 0) {
-                snprintf(tags_out[*tag_count], 64, "%s%s %s%s", 
-                    TODO_TAG_OPEN, TODO_ALIAS_DICT[alias_idx].alias_label, param, TODO_TAG_CLOSE);
-                (*tag_count)++;
-            }
-        }
-    }
-    
-    FoundFlag config_matches[10];
-    int config_match_count = SearchFlagsInText(input_copy, TODO_CONFIG_FLAGS, TODO_CONFIG_FLAGS_COUNT, sizeof(GenericFlagEntry), config_matches, 10);
-    
-    for (int i = 0; i < config_match_count && *tag_count < 10; i++) {
+    Fl_FlagList flist = fl_parse_flags(input);
+    for (size_t i = 0; i < flist.count && *tag_count < 10; i++) {
+        Fl_Flag *f = &flist.flags[i];
         for (size_t j = 0; j < TODO_CONFIG_FLAGS_COUNT; j++) {
-            if (strcmp(config_matches[i].flag, TODO_CONFIG_FLAGS[j].flag) == 0) {
+            const char *flag = TODO_CONFIG_FLAGS[j].flag;
+            const char *bare = flag[0]=='-' ? flag+1 : flag;
+            if (bare[0]=='-' && bare[1]) bare++;
+            if (strcmp(f->name, bare) == 0) {
                 if (TODO_DICT[j].tag_label) {
-                    snprintf(tags_out[*tag_count], 64, "%s%s%s", 
+                    snprintf(tags_out[*tag_count], 64, "%s%s%s",
                         TODO_TAG_OPEN, TODO_DICT[j].tag_label, TODO_TAG_CLOSE);
                     (*tag_count)++;
                 }
-                if (config_out && TODO_DICT[j].is_alias) {
-                    char* param = GetFlagParameter(input_copy, config_matches[i].index);
-                    if (param && strlen(param) > 0) {
-                        memcpy((void*)config_out->internal_name, TODO_DICT[j].internal_name, sizeof(config_out->internal_name) - 1);
-                        snprintf(tags_out[*tag_count], 64, "%s%s %s%s", 
-                            TODO_TAG_OPEN, TODO_DICT[j].internal_name, param, TODO_TAG_CLOSE);
-                        (*tag_count)++;
-                    }
-                }
                 break;
             }
         }
     }
-    
+    char input_copy[512];
+    strncpy(input_copy, input, sizeof(input_copy)-1);
+    input_copy[sizeof(input_copy)-1]='\0';
     char clean[512] = {0};
     char* token = strtok(input_copy, " ");
     bool first = true;
-    
+
     while (token != NULL) {
         bool is_flag = false;
-        
-        for (size_t i = 0; i < TODO_ALIAS_FLAGS_COUNT; i++) {
-            if (strcmp(token, TODO_ALIAS_FLAGS[i].flag) == 0) {
-                is_flag = true;
-                token = strtok(NULL, " ");
-                break;
-            }
+        bool flag_has_val = false;
+        for (size_t i = 0; i < flist.count; i++) {
+            Fl_Flag *f = &flist.flags[i];
+            char withdash[68]; snprintf(withdash, sizeof(withdash), "-%s", f->name);
+            char withdash2[68]; snprintf(withdash2, sizeof(withdash2), "--%s", f->name);
+            if (strcmp(token, withdash) == 0 || strcmp(token, withdash2) == 0) { is_flag = true; flag_has_val = f->has_value; break; }
         }
-        
-        if (!is_flag) {
-            for (size_t i = 0; i < TODO_CONFIG_FLAGS_COUNT; i++) {
-                if (strcmp(token, TODO_CONFIG_FLAGS[i].flag) == 0) {
-                    is_flag = true;
-                    if (TODO_DICT[i].is_alias) {
-                        token = strtok(NULL, " ");
-                    }
-                    break;
-                }
-            }
-        }
-        
-        if (!is_flag && token[0] != '-') {
+        if (is_flag) {
+            if (flag_has_val) token = strtok(NULL, " ");
+        } else if (token[0] != '-') {
             if (first) {
                 strcpy(clean, token);
                 first = false;
@@ -204,7 +137,7 @@ void ParseTodoInput(const char* input, TodoAliasEntry* alias_out, TodoConfigEntr
         
         token = strtok(NULL, " ");
     }
-    
+    fl_free_flags(&flist);
     strncpy(clean_text, clean, 511);
     clean_text[511] = '\0';
 }
