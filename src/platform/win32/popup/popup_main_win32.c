@@ -394,11 +394,11 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
       }
     }
     case WM_CREATE: {
-      if (FlintContext_Get()->g_hMainFont) {
-        DeleteObject(FlintContext_Get()->g_hMainFont);
-        FlintContext_Get()->g_hMainFont = NULL;
+      if (FlintContext_Get()->hMainFont) {
+        DeleteObject(FlintContext_Get()->hMainFont);
+        FlintContext_Get()->hMainFont = NULL;
       }
-      FlintContext_Get()->g_hMainFont = FH_TO_HFONT(Platform_CreateFont(FontSize, UsedFont));
+      FlintContext_Get()->hMainFont = FH_TO_HFONT(Platform_CreateFont(FontSize, UsedFont));
       if (only_once) selection_feature = FlintContext_Get()->window.current_feature;
         only_once = false;
           break;
@@ -601,7 +601,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             if (FlintContext_Get()->prompt_callbacks.render != NULL) {
               return TRUE;
             } else {
-              HFONT hOldMainFont = (HFONT)SelectObject(pdis->hDC, FlintContext_Get()->g_hMainFont);
+              HFONT hOldMainFont = (HFONT)SelectObject(pdis->hDC, FlintContext_Get()->hMainFont);
                 if (!isSelected) {
                     unsigned long ncol, bcol, pcol;
                     int orig_idx = (int)pdis->itemID;
@@ -655,7 +655,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
       if (g_vim_mode != NULL && VimModeText) {
         wchar_t wmode[256];
           MultiByteToWideChar(CP_UTF8, 0, g_vim_mode, -1, wmode, 256);
-          HFONT hOldFont = (HFONT)SelectObject(hdc, FlintContext_Get()->g_hMainFont);
+          HFONT hOldFont = (HFONT)SelectObject(hdc, FlintContext_Get()->hMainFont);
           SetBkMode(hdc, TRANSPARENT);
           if (g_current_mode == MODE_NORMAL) {
             SetTextColor(hdc,COLOR_NORMAL_MODE_TEXT);
@@ -677,7 +677,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
       if (FlintContext_Get()->window.title != NULL && strlen(FlintContext_Get()->window.title) > 0 && WindowTitleText) {
         wchar_t wtitle[256];
           MultiByteToWideChar(CP_UTF8, 0, FlintContext_Get()->window.title, -1, wtitle, 256);
-          HFONT hOldFont = (HFONT)SelectObject(hdc, FlintContext_Get()->g_hMainFont);
+          HFONT hOldFont = (HFONT)SelectObject(hdc, FlintContext_Get()->hMainFont);
           SetBkMode(hdc, TRANSPARENT);
           SIZE sz;
           GetTextExtentPoint32W(hdc, wtitle, (int)wcslen(wtitle), &sz);

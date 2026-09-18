@@ -901,7 +901,7 @@ void Platform_CleanupDisplaySafe(void) {
 }
 
 void Platform_InitMainThreadContext(void) {
-    FlintContext_Get()->g_main_thread_id = GetCurrentThreadId();
+    FlintContext_Get()->main_thread_id = GetCurrentThreadId();
 }
 
 void Platform_FixWorkingDirectory(void) {
@@ -931,9 +931,9 @@ void Platform_CleanupPlatformResources(void) {
         DeleteObject(ctx->g_hNumFont);
         ctx->g_hNumFont = NULL;
     }
-    if (ctx->g_hMainFont) {
-        DeleteObject(ctx->g_hMainFont);
-        ctx->g_hMainFont = NULL;
+    if (ctx->hMainFont) {
+        DeleteObject(ctx->hMainFont);
+        ctx->hMainFont = NULL;
     }
 }
 

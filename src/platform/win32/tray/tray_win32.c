@@ -89,9 +89,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         DeleteObject(FlintContext_Get()->g_hNumFont);
           FlintContext_Get()->g_hNumFont = NULL;
       }
-    if (FlintContext_Get()->g_hMainFont) {
-      DeleteObject(FlintContext_Get()->g_hMainFont);
-        FlintContext_Get()->g_hMainFont = NULL;
+    if (FlintContext_Get()->hMainFont) {
+      DeleteObject(FlintContext_Get()->hMainFont);
+        FlintContext_Get()->hMainFont = NULL;
     }
     PostQuitMessage(0);
       break;

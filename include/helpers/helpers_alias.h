@@ -2,7 +2,6 @@
 #define HELPERS_ALIAS_H
 
 #include "core/types.h"
-#include "core/hashmap.h"
 
 typedef struct {
     char* item_name;
@@ -15,7 +14,6 @@ typedef struct {
     int count;
 } AliasMatchList;
 
-extern HashMap* history_indices;
 int UI_LookupTrueIndex(const char* name);
 bool GetFromHistory(ListBoxInfo* lb);
 const char* get_alias_for_item(const char* item);

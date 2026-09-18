@@ -462,7 +462,7 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
         FillRect(hdc, &rc, br);
         DeleteObject(br);
     }
-    HFONT hfont = spec->font.hfont ? spec->font.hfont : (FlintContext_Get()->g_hMainFont ? FlintContext_Get()->g_hMainFont : NULL);
+    HFONT hfont = spec->font.hfont ? spec->font.hfont : (FlintContext_Get()->hMainFont ? FlintContext_Get()->hMainFont : NULL);
     HFONT old = NULL;
     if (hfont) old = (HFONT)SelectObject(hdc, hfont);
     SetBkMode(hdc, TRANSPARENT);
