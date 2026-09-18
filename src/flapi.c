@@ -869,3 +869,12 @@ char fl_get_char_pressed(void){
 void fl_run_after_time(double seconds, void (*callback)(void)) {
     return fl_run_after_time_platform(seconds,callback);
 }
+bool fl_is_window_active(char* title) {
+  Fl_WindowList l = Platform_GetWindowTitles();
+  for (int i = 0; i < l.count;i++) {
+      if (Platform_StringContainsCaseInsensitive(l.windows[i],title)) {
+        return true;
+      }
+  }
+  return false;
+}

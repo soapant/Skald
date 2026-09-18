@@ -107,8 +107,6 @@ bool fl_query_browser(const char* query);
 bool fl_launch_browser_in_a_new_window(char* url);
 char* fl_get_zoxide_match(char* query);
 bool fl_focus_window_by_title(char* title);
-Fl_WindowList fl_get_all_window_titles();
-Fl_WindowList fl_get_all_window_names();
 
 // =============================================================================
 // ADB
@@ -347,6 +345,16 @@ bool fl_decrement_volume_by_percent(int decrement_percent);
 void fl_run_after_time(double seconds, void (*callback)(void));
 char* fl_on_dir_changed(char* dir_path,void(callback)(void));
 bool fl_string_match_insensitive(char* needle,char* haystack);
+
+// =============================================================================
+// WINDOW
+// =============================================================================
+// 
+
+Fl_WindowList fl_get_all_window_titles();
+Fl_WindowList fl_get_all_window_names();
+bool fl_is_window_active(char* title);
+
 
 Fl_Pos fl_get_cursor_pos(void);
 bool fl_type_text(const char *s);
