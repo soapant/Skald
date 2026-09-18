@@ -1231,50 +1231,19 @@ char* Platform_GetIconPath(char* app_path) {
     return strdup(bare[0] ? bare : "placeholder");
 }
 
-extern char *clipboard_text;
-extern Atom clipboard_atom;
-extern Atom targets_atom;
-extern Atom utf8_string_atom;
+#include "platform/x11/clipboard_x11.h"
+#include "platform/x11/clipboard_wayland_x11.h"
 
 int Platform_CopyToClipboard(const char *text) {
-    if (!text)
-        return 0;
-
-    Display *dpy = get_display();
-    Window window = DefaultRootWindow(dpy);
-
-    if (!dpy || !window)
-        return 0;
-
-    if (!clipboard_atom) {
-        clipboard_atom = XInternAtom(dpy, "CLIPBOARD", False);
-        targets_atom = XInternAtom(dpy, "TARGETS", False);
-        utf8_string_atom = XInternAtom(dpy, "UTF8_STRING", False);
+    if (!text) return 0;
+    if (Wayland_ClipboardAvailable()) {
+        int wr = Wayland_ClipboardSetText(text);
+        log_info("Platform_CopyToClipboard wayland=%d", wr);
+        return wr;
     }
-
-    free(clipboard_text);
-    clipboard_text = strdup(text);
-
-    if (!clipboard_text)
-        return 0;
-
-    XSetSelectionOwner(
-        dpy,
-        clipboard_atom,
-        window,
-        CurrentTime
-    );
-
-    XFlush(dpy);
-
-    Window owner = XGetSelectionOwner(dpy, clipboard_atom);
-    if (!owner) {
-        free(clipboard_text);
-        clipboard_text = NULL;
-        return 0;
-    }
-
-    return 1;
+    int xr = Linux_ClipboardSetText(text);
+    log_info("Platform_CopyToClipboard x11=%d", xr);
+    return xr;
 }
 
 
@@ -1338,6 +1307,8 @@ bool Platform_InitDisplaySafe(void) {
 }
 
 void Platform_CleanupDisplaySafe(void) {
+    Wayland_ClipboardShutdown();
+    Linux_ClipboardShutdown();
     cleanup_display();
 }
 
@@ -1346,7 +1317,6 @@ void Platform_InitMainThreadContext(void) {
 
 void Platform_FixWorkingDirectory(void) {
 }
-
 void CleanupPerFeatureVimMap(void) {
 }
 
