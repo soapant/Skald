@@ -1261,6 +1261,36 @@
   },
   {
     "directory": "/home/diggy/Programming/Projects/Flint",
+    "file": "src/platform/x11/clipboard_x11.c",
+    "arguments": [
+      "gcc",
+      "-Wall",
+      "-Wextra",
+      "-I",
+      "include",
+      "-I/usr/include/freetype2",
+      "-I/usr/include/glib-2.0",
+      "-I/usr/lib/glib-2.0/include",
+      "-I/usr/include/gio-unix-2.0",
+      "-MMD",
+      "-MP",
+      "-g",
+      "-O3",
+      "-Wall",
+      "-Wextra",
+      "-Wno-unused-parameter",
+      "-Wno-sign-compare",
+      "-Wno-discarded-qualifiers",
+      "-Wno-stringop-truncation",
+      "-Wno-sign-compare",
+      "-Wno-unused-parameter",
+      "-Wno-misleading-indentation",
+      "-c",
+      "src/platform/x11/clipboard_x11.c"
+    ]
+  },
+  {
+    "directory": "/home/diggy/Programming/Projects/Flint",
     "file": "src/platform/x11/window_manager_x11.c",
     "arguments": [
       "gcc",
@@ -1587,6 +1617,36 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/platform/x11/misc_x11.c"
+    ]
+  },
+  {
+    "directory": "/home/diggy/Programming/Projects/Flint",
+    "file": "src/platform/x11/clipboard_wayland_x11.c",
+    "arguments": [
+      "gcc",
+      "-Wall",
+      "-Wextra",
+      "-I",
+      "include",
+      "-I/usr/include/freetype2",
+      "-I/usr/include/glib-2.0",
+      "-I/usr/lib/glib-2.0/include",
+      "-I/usr/include/gio-unix-2.0",
+      "-MMD",
+      "-MP",
+      "-g",
+      "-O3",
+      "-Wall",
+      "-Wextra",
+      "-Wno-unused-parameter",
+      "-Wno-sign-compare",
+      "-Wno-discarded-qualifiers",
+      "-Wno-stringop-truncation",
+      "-Wno-sign-compare",
+      "-Wno-unused-parameter",
+      "-Wno-misleading-indentation",
+      "-c",
+      "src/platform/x11/clipboard_wayland_x11.c"
     ]
   },
   {
