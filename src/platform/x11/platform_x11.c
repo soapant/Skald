@@ -403,8 +403,6 @@ char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
         }
     }
 
-    const char* display = Platform_GetSessionDisplay();
-    const char* xauthority = Platform_GetSessionXAuthority();
     char runtime_dir[256];
     snprintf(runtime_dir,sizeof(runtime_dir),"%s",Platform_GetRuntimeDir());
     char extra[1024];
@@ -1233,79 +1231,79 @@ char* Platform_GetIconPath(char* app_path) {
     return strdup(bare[0] ? bare : "placeholder");
 }
 
+int Platform_WaylandCopyToClipboard(const char* text) {
+  return 0;
+}
 
-int Platform_CopyToClipboard(const char* text) {
-    PROFILE_START(timer);
-    int status = 0;
-    size_t len = strlen(text);
+extern char *clipboard_text;
+extern Atom clipboard_atom;
+extern Atom targets_atom;
+extern Atom utf8_string_atom;
 
-    char buffer[256];
-    char cmd[256];
+int Platform_X11CopyToClipboard(const char *text) {
+    if (!text)
+        return 0;
 
-    const char *wayland_display = getenv("WAYLAND_DISPLAY");
-    const char *runtime_dir = getenv("XDG_RUNTIME_DIR");
-    if ((!wayland_display || !wayland_display[0]) || (!runtime_dir || !runtime_dir[0])) {
-        static char found_display[64];
-        static char found_runtime[256];
-        found_display[0] = '\0';
-        found_runtime[0] = '\0';
-        DIR *dir = opendir("/run/user");
-        if (dir) {
-            struct dirent *e;
-            while ((e = readdir(dir)) != NULL) {
-                if (e->d_name[0] == '.') continue;
-                char udir[256];
-                snprintf(udir, sizeof(udir), "/run/user/%s", e->d_name);
-                DIR *sub = opendir(udir);
-                if (!sub) continue;
-                struct dirent *f;
-                while ((f = readdir(sub)) != NULL) {
-                    if (strncmp(f->d_name, "wayland-", 8) == 0) {
-                        snprintf(found_display, sizeof(found_display), "%s", f->d_name);
-                        snprintf(found_runtime, sizeof(found_runtime), "%s", udir);
-                        break;
-                    }
-                }
-                closedir(sub);
-                if (found_display[0] != '\0') break;
-            }
-            closedir(dir);
-        }
-        if (!wayland_display || !wayland_display[0])
-            wayland_display = found_display[0] != '\0' ? found_display : NULL;
-        if (!runtime_dir || !runtime_dir[0])
-            runtime_dir = found_runtime[0] != '\0' ? found_runtime : NULL;
+    Display *dpy = get_display();
+    Window window = DefaultRootWindow(dpy);
+
+    if (!dpy || !window)
+        return 0;
+
+    if (!clipboard_atom) {
+        clipboard_atom = XInternAtom(dpy, "CLIPBOARD", False);
+        targets_atom = XInternAtom(dpy, "TARGETS", False);
+        utf8_string_atom = XInternAtom(dpy, "UTF8_STRING", False);
     }
 
-    if (wayland_display != NULL && wayland_display[0] != '\0' &&
-        runtime_dir != NULL && runtime_dir[0] != '\0') {
-        snprintf(cmd, sizeof(cmd), "XDG_RUNTIME_DIR=%s WAYLAND_DISPLAY=%s wl-copy",
-                 runtime_dir, wayland_display);
-    } else {
-        snprintf(cmd, sizeof(cmd), "xclip -selection clipboard");
-    }
+    free(clipboard_text);
+    clipboard_text = strdup(text);
 
-    FILE *pipe = popen(cmd, "w");
-    if (!pipe) {
-        pipe = popen("xclip -selection clipboard", "w");
-        if (!pipe) {
-            pipe = popen("xsel --clipboard --input", "w");
-        }
-    }
+    if (!clipboard_text)
+        return 0;
 
-    if (!pipe) {
-        log_error("Error: Failed to find a valid Linux clipboard manager.");
-        PROFILE_END_VAR(timer, "flapi_x11:fl_copy_into_clipboard_platform");
+    XSetSelectionOwner(
+        dpy,
+        clipboard_atom,
+        window,
+        CurrentTime
+    );
+
+    XFlush(dpy);
+
+    if (XGetSelectionOwner(dpy, clipboard_atom) != window) {
+        free(clipboard_text);
+        clipboard_text = NULL;
         return 0;
     }
 
-    size_t len2 = strlen(text);
-    fprintf(pipe, "%s", text);
-    
-    status = pclose(pipe);
-    log_info("Platform_CopyToClipboard text='%s'", text ? text : "");;
-    PROFILE_END_VAR(timer, "flapi_x11:fl_copy_into_clipboard_platform");
-    return (status == 0) ? 1 : 0;
+    return 1;
+}
+
+
+int Platform_CopyToClipboard(const char* text)
+{
+    PROFILE_START(timer);
+
+    int result;
+
+    const char* wayland_display = getenv("WAYLAND_DISPLAY");
+    const char* x11_display = getenv("DISPLAY");
+
+    if (wayland_display && wayland_display[0] != '\0') {
+        result = Platform_WaylandCopyToClipboard(text);
+    }
+    else if (x11_display && x11_display[0] != '\0') {
+        result = Platform_X11CopyToClipboard(text);
+    }
+    else {
+        log_error("No supported display server detected.");
+        result = 0;
+    }
+
+    PROFILE_END_VAR(timer, "Platform_CopyToClipboard");
+
+    return result;
 }
 
 bool Platform_BuildFeature(const char* src, const char* out) {
