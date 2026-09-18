@@ -207,16 +207,9 @@ static void EditPopup_OnRender(Popup* self) {
     int screen = DefaultScreen(dpy);
     Visual* visual = DefaultVisual(dpy, screen);
     Colormap cmap = DefaultColormap(dpy, screen);
-    XftColor bg, fg, title_col, vim_col;
-    Linux_XftAllocColor(dpy, visual, cmap, rgb_to_hex(COLOR_BG), 0xFFFF, &bg);
-    Linux_XftAllocColor(dpy, visual, cmap, rgb_to_hex(COLOR_TEXT), 0xFFFF, &fg);
-    Linux_XftAllocColor(dpy, visual, cmap, rgb_to_hex(COLOR_TEXT), 0xFFFF, &title_col);
-    Linux_XftAllocColor(dpy, visual, cmap, VimModeTextColor(), 0xFFFF, &vim_col);
-    XftColorFree(dpy, visual, cmap, &bg);
     XftDrawDestroy(xd);
     Linux_DrawBackground(dpy, self->handle.xid, data->w, data->h);
     xd = Linux_CreateXftDraw(dpy, self->handle.xid);
-    Linux_XftAllocColor(dpy, visual, cmap, rgb_to_hex(COLOR_BG), 0xFFFF, &bg);
     Platform_SetDrawContext(dpy, xd, visual, cmap);
     if (xf && VimModeText ) {
         Platform_DrawTextRaw(5, 5, g_vim_mode, VimModeTextColor(), font, "LEFT", 5,FontSize);
@@ -233,17 +226,20 @@ static void EditPopup_OnRender(Popup* self) {
     if (xf) {
         scroll = Linux_UpdateEditScrollOffset(dpy, xf, data->text ? data->text : "", text_len, data->cursor, data->w, 0, &cursor_x);
     }
-    if (xf && text_len > 0) {
-        XGlyphInfo ext;
-        XftTextExtentsUtf8(dpy, xf, (FcChar8*)data->text, text_len, &ext);
+    if (text_len > 0) {
         int draw_x = 10 - scroll;
-        int draw_y = 40 + xf->ascent;
-        XftDrawStringUtf8(xd, &fg, xf, draw_x, draw_y, (FcChar8*)data->text, text_len);
+        Platform_DrawTextRaw(draw_x, 40, data->text, rgb_to_hex(COLOR_TEXT), font, "", 0, 0);
     }
-    XftColorFree(dpy, visual, cmap, &bg);
-    XftColorFree(dpy, visual, cmap, &fg);
-    XftColorFree(dpy, visual, cmap, &title_col);
-    XftColorFree(dpy, visual, cmap, &vim_col);
+    {
+        int cursor_draw_x = 10 + cursor_x - scroll;
+        if (cursor_draw_x < 2) cursor_draw_x = 2;
+        if (cursor_draw_x > data->w - 4) cursor_draw_x = data->w - 4;
+        if (IsInsertMode()) {
+            Platform_DrawRectRaw(cursor_draw_x, 40, 2, FontSize, rgb_to_hex(COLOR_TEXT));
+        } else {
+            Platform_DrawRectRaw(cursor_draw_x, 40, 12, FontSize, rgb_to_hex(COLOR_TEXT));
+        }
+    }
     XftDrawDestroy(xd);
     Platform_DestroyFont(font);
     XFlush(dpy);
