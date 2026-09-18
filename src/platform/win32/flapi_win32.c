@@ -202,7 +202,7 @@ bool fl_listbox_next_platform(FlListItemCtx *out) {
             }
         }
         if (sel) {
-            if (EnableShaders && SelectionShaderPreset != 0) {
+            if (EnableShaders && ShaderPreset != 0) {
                 Win32_DrawRoundedSelection(g_fl_list_hdc, &inner, COLOR_SELECTED_TEXT, innerR);
             } else {
                 Win32_FillRoundedRect(g_fl_list_hdc, &inner, COLOR_SELECTED_TEXT, innerR);
@@ -223,7 +223,7 @@ bool fl_listbox_next_platform(FlListItemCtx *out) {
     } else {
         RECT rc = { g_fl_list_spec.x, y, g_fl_list_spec.x + (g_fl_list_spec.w ? g_fl_list_spec.w : 900), y + g_fl_list_itemH };
         if (sel) {
-            if (EnableShaders && SelectionShaderPreset != 0) {
+            if (EnableShaders && ShaderPreset != 0) {
                 Win32_DrawSelectionBackground(g_fl_list_hdc, &rc, COLOR_SELECTED_TEXT);
             } else {
                 HBRUSH br = CreateSolidBrush(COLOR_SELECTED_TEXT);
