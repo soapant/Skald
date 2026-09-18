@@ -69,7 +69,7 @@ LRESULT CALLBACK SimpleEditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPAR
     bool ctrl_pressed = (GetKeyState(VK_CONTROL) & 0x8000);
     
     if (msg == WM_KEYDOWN) {
-      FlintContext_Get()->window.g_ActiveEditControl = FlintContext_Get()->window.hEditControl;
+      FlintContext_Get()->window.hActiveEditControl = FlintContext_Get()->window.hEditControl;
         if (wParam == VK_CONTROL || wParam == VK_SHIFT || wParam == VK_MENU) {
           return DefSubclassProc(hwnd, msg, wParam, lParam);
         }
