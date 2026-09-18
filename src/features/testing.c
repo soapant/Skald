@@ -1,11 +1,7 @@
 #include "core/flapi.h"
 
-void nigga(void) {
-  printf("AKJDAWKDJWAKD \n");
-}
 
 void Testing(void) {
-  fl_run_after_time(3,nigga);
 }
 
 
