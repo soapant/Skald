@@ -30,6 +30,7 @@ char* Platform_GetLastClipboardEntry();
 bool Platform_PasteContent(char* content);
 int Platform_CopyToClipboard(const char* text);
 char* Platform_QueryZoxidePath(const char* query);
+char* Platform_GetWorkingDir();
 char Platform_GetLastChar(MappedFile *file);
 void *Platform_FeatureWatcherThread(void* arg);
 

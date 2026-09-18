@@ -360,15 +360,23 @@ bool fl_decrement_volume_by_percent(int decrement_percent);
 void fl_run_after_time(double seconds, void (*callback)(void));
 char* fl_on_dir_changed(char* dir_path,void(callback)(void));
 bool fl_string_match_insensitive(char* needle,char* haystack);
+char* fl_get_working_dir();
 
 // =============================================================================
 // WINDOW
 // =============================================================================
-// 
 
 Fl_WindowList fl_get_all_window_titles();
 Fl_WindowList fl_get_all_window_names();
 bool fl_is_window_active(char* title);
+
+// =============================================================================
+// SCREENSHOT
+// =============================================================================
+
+void fl_screenshot_copy_area(void);
+void fl_ocr_area_to_clipboard(void);
+void fl_screenshot_save_area(char* save_path);
 
 
 Fl_Pos fl_get_cursor_pos(void);
