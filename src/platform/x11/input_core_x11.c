@@ -404,6 +404,7 @@ bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed) {
         if (g_x11_uinput_fd >= 0) x11_uinput_emit(ev);
         else { static bool warned=false; if(!warned){ log_warn("grabbed but no uinput - key %d lost", code); warned=true; } }
     }
+
     PROFILE_END_VAR(timer, "input:x11_handle_evdev");
     return false;
 }
