@@ -26,15 +26,15 @@ void MediaPlayPause(void) {
 }
 
 void ScreenshotArea(void) {
-  fl_run_terminal_command("grimshot copy area");
+  fl_screenshot_copy_area();
 }
 
 void SaveScreenshotArea(void) {
-  fl_run_terminal_command("grimshot save area /home/diggy/Pictures/screenshot.png");
+  fl_screenshot_save_area("/home/diggy/Pictures/screenshot.png");
 }
 
 void OcrRegionAndCopy(void) {
-  fl_run_terminal_command("grimshot save area screenshot.png ; tesseract screenshot.png stdout -l eng | wl-copy ;  rm screenshot.png");
+  fl_ocr_area_to_clipboard();
 }
 
 void IncrementVolume(void) {
