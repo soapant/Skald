@@ -13,8 +13,7 @@ bool DebugMode = false;
 bool RoundedCorners = true;
 int CornerRadius = 14;
 bool EnableShaders = true;
-int ShaderPreset = 2;
-int SelectionShaderPreset = 3;
+int ShaderPreset = 1;
 float ShaderIntensity = 0.25f;
 int TimeBetweenHotReload = 2;
 

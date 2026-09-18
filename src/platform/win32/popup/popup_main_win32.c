@@ -492,7 +492,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
               }
             }
             if (isSelected) {
-              if (EnableShaders && SelectionShaderPreset != 0) {
+              if (EnableShaders && ShaderPreset != 0) {
                 Win32_DrawRoundedSelection(pdis->hDC, &inner, COLOR_SELECTED_TEXT, innerR);
               } else if (EnableShaders && ShaderPreset != 0) {
                 Win32_DrawRoundedSelection(pdis->hDC, &inner, COLOR_SELECTED_TEXT, innerR);
@@ -519,7 +519,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
           } else if (EnableShaders && ShaderPreset != 0) {
             if (isSelected) {
               //temporary there are no selection shaders for windows it seems
-              if (EnableShaders && SelectionShaderPreset != 0) {
+              if (EnableShaders && ShaderPreset != 0) {
                 Win32_DrawSelectionBackground(pdis->hDC, &pdis->rcItem, COLOR_SELECTED_TEXT);
               } else {
                 Win32_DrawSelectionBackground(pdis->hDC, &pdis->rcItem, COLOR_SELECTED_TEXT);

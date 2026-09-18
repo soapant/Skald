@@ -1114,7 +1114,7 @@ void Linux_DrawBackground(Display* dpy, Window win, int w, int h) {
 
 void Linux_DrawSelectionBackground(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap, int x, int y, int w, int h, unsigned long baseHex) {
     if (w <= 0 || h <= 0) return;
-    if (!EnableShaders || SelectionShaderPreset == 0) {
+    if (!EnableShaders) {
         XftColor c; Linux_XftAllocColor(dpy, vis, cmap, baseHex, OpacityAlpha16(), &c);
         XftDrawRect(xd, &c, x, y, w, h);
         XftColorFree(dpy, vis, cmap, &c);
@@ -1123,7 +1123,7 @@ void Linux_DrawSelectionBackground(Display* dpy, XftDraw* xd, Visual* vis, Color
     unsigned long light = DeriveLighter(baseHex, 1.0f);
     unsigned short alpha = OpacityAlpha16();
 
-    if (SelectionShaderPreset == 1) {
+    if (ShaderPreset == 1) {
         for (int yy = 0; yy < h; yy++) {
             float t = h > 1 ? (float)yy / (float)(h - 1) : 0;
             unsigned long col = LerpHex(baseHex, light, t * 0.9f);
@@ -1131,7 +1131,7 @@ void Linux_DrawSelectionBackground(Display* dpy, XftDraw* xd, Visual* vis, Color
             XftDrawRect(xd, &c, x, y + yy, w, 1);
             XftColorFree(dpy, vis, cmap, &c);
         }
-    } else if (SelectionShaderPreset == 3) {
+    } else if (ShaderPreset == 3) {
         for (int yy = 0; yy < h; yy++) {
             for (int xx = 0; xx < w; xx++) {
                 float t = (w + h > 0) ? ((float)xx + (float)yy) / (float)(w + h) : 0;
@@ -1141,7 +1141,7 @@ void Linux_DrawSelectionBackground(Display* dpy, XftDraw* xd, Visual* vis, Color
                 XftColorFree(dpy, vis, cmap, &c);
             }
         }
-    } else if (SelectionShaderPreset == 2) {
+    } else if (ShaderPreset == 2) {
         float cx = w * 0.5f, cy = h * 0.35f;
         float maxDist = sqrtf(cx*cx + cy*cy);
         if (maxDist < 1) maxDist = 1;
@@ -1156,7 +1156,7 @@ void Linux_DrawSelectionBackground(Display* dpy, XftDraw* xd, Visual* vis, Color
                 XftColorFree(dpy, vis, cmap, &c);
             }
         }
-    } else if (SelectionShaderPreset == 4) {
+    } else if (ShaderPreset == 4) {
         for (int yy = 0; yy < h; yy++) {
             float tBase = h > 1 ? (float)yy / (float)(h - 1) : 0;
             for (int xx = 0; xx < w; xx++) {
