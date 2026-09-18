@@ -11,6 +11,7 @@
 #include "config.h"
 #include "core/platform.h"
 #include "helpers/helpers_hotkey.h"
+#include "platform/win32/win32_state.h"
 #include "helpers/helpers_alias.h"
 #include "helpers/helpers_flag.h"
 #include "helpers/helpers_file.h"
@@ -901,7 +902,7 @@ void Platform_CleanupDisplaySafe(void) {
 }
 
 void Platform_InitMainThreadContext(void) {
-    FlintContext_Get()->main_thread_id = GetCurrentThreadId();
+    g_win32_main_thread_id = GetCurrentThreadId();
 }
 
 void Platform_FixWorkingDirectory(void) {
@@ -926,14 +927,9 @@ void Platform_FixWorkingDirectory(void) {
 }
 
 void Platform_CleanupPlatformResources(void) {
-    FlintContext* ctx = FlintContext_Get();
-    if (ctx->g_hNumFont) {
-        DeleteObject(ctx->g_hNumFont);
-        ctx->g_hNumFont = NULL;
-    }
-    if (ctx->hMainFont) {
-        DeleteObject(ctx->hMainFont);
-        ctx->hMainFont = NULL;
+    if (g_win32_hMainFont) {
+        DeleteObject(g_win32_hMainFont);
+        g_win32_hMainFont = NULL;
     }
 }
 
