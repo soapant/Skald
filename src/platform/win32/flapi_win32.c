@@ -181,7 +181,7 @@ bool fl_listbox_next_platform(FlListItemCtx *out) {
     bool sel = (idx == g_fl_list_lb->selected_index);
     if (RoundedCorners && CornerRadius>0) {
         int R=6; if (R > CornerRadius) R = CornerRadius;
-        int t = ListboxBorderThickness; if (t < 1) t = 1; if (t > 4) t = 4;
+        int t = 1;
         int bx = g_fl_list_spec.x;
         int bw = (g_fl_list_spec.w ? g_fl_list_spec.w : 650);
         RECT inner = {bx+t, y+1+t, bx+bw-t, y+g_fl_list_itemH-1-t};
