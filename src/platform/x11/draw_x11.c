@@ -140,6 +140,9 @@ void Platform_DrawEditCursor(PromptState *state, Display *dpy, XftDraw *xd, Visu
 }
 bool Platform_DrawRectRaw(int x, int y, int w, int h, unsigned long color) {
     XftColor col;
-    Linux_XftAllocColor(g_draw_dpy, g_draw_vis, g_draw_cmap, rgb_to_hex(color), OpacityAlpha16(), &col);
+    unsigned long hex = rgb_to_hex(color);
+    Linux_XftAllocColor(g_draw_dpy, g_draw_vis, g_draw_cmap, hex, OpacityAlpha16(), &col);
     XftDrawRect(g_draw_xd, &col, x, y, w, h);
+    XftColorFree(g_draw_dpy, g_draw_vis, g_draw_cmap, &col);
+    return true;
 }
