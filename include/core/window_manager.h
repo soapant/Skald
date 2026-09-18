@@ -74,8 +74,6 @@ Popup* WindowManager_PushPopup(WindowManager* wm, Popup* popup);
 void WindowManager_PopPopup(WindowManager* wm);
 Popup* WindowManager_GetTopPopup(WindowManager* wm);
 
-void WindowManager_ProcessEvents(WindowManager* wm);
-
 char* WindowManager_ShowPrompt(WindowManager* wm, const PromptSpec* spec);
 char* WindowManager_ShowSimplePrompt(WindowManager* wm, const SimplePromptSpec* spec);
 
