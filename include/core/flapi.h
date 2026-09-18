@@ -298,10 +298,17 @@ bool fl_draw_image(void *image, int x, int y, int w, int h);
 // BASIC UI DRAWING (stubs for now, platform does logic later)
 // =============================================================================
 
-bool fl_draw_rect(int x, int y, int w, int h, unsigned long color);
+typedef struct {
+    int x; int y; int w; int h;
+    unsigned long color;
+} FlRectSpec;
+
+bool fl_draw_rect_impl(const FlRectSpec *spec);
 bool fl_draw_line(int x1, int y1, int x2, int y2, unsigned long color);
 bool fl_draw_circle(int x, int y, int radius, unsigned long color);
 bool fl_draw_rounded_rect(int x, int y, int w, int h, int radius, unsigned long color);
+
+#define fl_draw_rect(...) fl_draw_rect_impl(&(FlRectSpec){__VA_ARGS__})
 
 // =============================================================================
 // HELPERS

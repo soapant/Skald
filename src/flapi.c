@@ -764,8 +764,11 @@ bool fl_place_separator_impl(int x, int y, int w, int h) {
 bool fl_place_image_impl(const FlImageSpec *spec) {
   (void)spec; return false; 
 }
-bool fl_draw_rect(int x, int y, int w, int h, unsigned long color) {
-  return Platform_DrawRectRaw(x,y,w,h,color);
+bool fl_draw_rect_impl(const FlRectSpec *spec) {
+  if (!spec) return false;
+  unsigned long col = spec->color;
+  if (col == 0) col = COLOR_TEXT;
+  return Platform_DrawRectRaw(spec->x, spec->y, spec->w, spec->h, col);
 }
 
 bool fl_draw_line(int x1, int y1, int x2, int y2, unsigned long color) {
