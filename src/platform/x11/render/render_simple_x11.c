@@ -55,10 +55,13 @@ void DrawSimplePromptUserEditControlOnDraw(Display *dpy, XftDraw* xd, Visual* vi
         int cursor_draw_x = 14 + cursor_x - scroll;
         if (cursor_draw_x < 2) cursor_draw_x = 2;
         if (cursor_draw_x > state->width - 4) cursor_draw_x = state->width - 4;
+        int textH = xf ? xf->ascent + xf->descent : FontSize;
+        int cursor_y = 20 + (textH - FontSize)/2;
+        if (cursor_y < 20) cursor_y = 20;
         if (IsInsertMode()) {
-            Platform_DrawRectRaw(cursor_draw_x, 27, 2, FontSize, rgb_to_hex(COLOR_TEXT));
+            Platform_DrawRectRaw(cursor_draw_x, cursor_y, 2, FontSize, rgb_to_hex(COLOR_TEXT));
         } else {
-            Platform_DrawRectRaw(cursor_draw_x, 27, 12, FontSize, rgb_to_hex(COLOR_TEXT));
+            Platform_DrawRectRaw(cursor_draw_x, cursor_y, 12, FontSize, rgb_to_hex(COLOR_TEXT));
         }
     }
     Platform_DestroyFont(font);

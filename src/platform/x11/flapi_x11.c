@@ -333,7 +333,7 @@ bool fl_listbox_begin_platform(const FlListSpec *spec) {
     g_fl_list_spec = *spec;
     g_fl_list_lb = lb;
     g_fl_list_itemH = spec->item_height ? spec->item_height : FontSize + 14;
-    g_fl_list_y0 = spec->y ? spec->y : 70;
+    g_fl_list_y0 = spec->y ? spec->y : (FontSize + 28) + 10;
     int list_h = spec->h ? spec->h : 400;
     int visible = list_h / g_fl_list_itemH;
     if (visible < 1) visible = 1;
