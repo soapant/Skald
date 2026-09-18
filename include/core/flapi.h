@@ -375,8 +375,10 @@ bool fl_is_window_active(char* title);
 // =============================================================================
 
 void fl_screenshot_copy_area(void);
+void fl_screenshot_copy(void);
 void fl_ocr_area_to_clipboard(void);
 void fl_screenshot_save_area(char* save_path);
+void fl_screenshot_save(char* save_path);
 
 
 Fl_Pos fl_get_cursor_pos(void);

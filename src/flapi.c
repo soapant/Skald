@@ -1012,12 +1012,34 @@ void fl_screenshot_copy_area(void) {
     fl_run_terminal_command(cmd);
 }
 
+void fl_screenshot_copy(void) {
+    char cmd[512];
+    char* wd = fl_get_working_dir();
+    
+    snprintf(cmd, sizeof(cmd), 
+             "%s/external/grim -t png - | wl-copy",
+             wd, wd);
+    
+    fl_run_terminal_command(cmd);
+}
+
 void fl_screenshot_save_area(char* save_path) {
     char cmd[512];
     char* wd = fl_get_working_dir();
     
     snprintf(cmd, sizeof(cmd),
-             "%s/external/grim -g \"$(%s/external/slurp)\" %S.png",
+             "%s/external/grim -g \"$(%s/external/slurp)\" %s.png",
+             wd, wd,save_path);
+    
+    fl_run_terminal_command(cmd);
+}
+
+void fl_screenshot_save(char* save_path) {
+    char cmd[512];
+    char* wd = fl_get_working_dir();
+    
+    snprintf(cmd, sizeof(cmd),
+             "%s/external/grim %s.png",
              wd, wd,save_path);
     
     fl_run_terminal_command(cmd);
