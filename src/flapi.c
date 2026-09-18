@@ -997,3 +997,39 @@ bool fl_is_window_active(char* title) {
   }
   return false;
 }
+char* fl_get_working_dir() {
+    return Platform_GetWorkingDir();
+}
+
+void fl_screenshot_copy_area(void) {
+    char cmd[512];
+    char* wd = fl_get_working_dir();
+    
+    snprintf(cmd, sizeof(cmd), 
+             "%s/external/grim -g \"$(%s/external/slurp)\" -t png - | wl-copy",
+             wd, wd);
+    
+    fl_run_terminal_command(cmd);
+}
+
+void fl_screenshot_save_area(char* save_path) {
+    char cmd[512];
+    char* wd = fl_get_working_dir();
+    
+    snprintf(cmd, sizeof(cmd),
+             "%s/external/grim -g \"$(%s/external/slurp)\" %S.png",
+             wd, wd,save_path);
+    
+    fl_run_terminal_command(cmd);
+}
+
+void fl_ocr_area_to_clipboard(void) {
+    char cmd[512];
+    char* wd = fl_get_working_dir();
+    
+    snprintf(cmd, sizeof(cmd),
+             "%s/external/grim -g \"$(%s/external/slurp)\" -t png - | tesseract stdin stdout -l eng | wl-copy",
+             wd, wd);
+    
+    fl_run_terminal_command(cmd);
+}

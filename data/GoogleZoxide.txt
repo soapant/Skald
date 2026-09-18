@@ -72,3 +72,6 @@ XftDrawRect params
 windows draw rect at x y w h and color 
 waht does diamagnetic on an element mean 
 where are terminal apps stores on linux
+what are smart potiners
+what does homogeneous mean
+what is a Midrex furnace

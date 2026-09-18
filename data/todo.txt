@@ -31,3 +31,7 @@ embed the window monitor into this program as a feature might be good ||[Flint]|
 api the timer and everything in reminder feature ||[Flint]|[FlApi]
 persistent feature state that doesn't require the user to write to a file themselves ||[Flint]|[Feature]|[FlApi]
 remove all drawtexta etc to the platform functio s like you did for x11||[Flint]
+do text wrapping for fl_place_text||[Flint]
+make a preset for windows / apps opened maybe with their positions too||[Flint]|[Fun]
+if you can get the ai thing make a hotkey to give it text from clipboard and returns a reply through display message||[Flint]|[DontForget]|[Fun]
+on windows the space between tags in todo is fucked||[Flint]

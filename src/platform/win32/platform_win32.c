@@ -946,3 +946,7 @@ Fl_Pos Platform_GetCursorPos(void) {
     
     return (Fl_Pos){0, 0};
 }
+
+char* Platform_GetWorkingDir() {
+  return Platform_RunTerminalCommand("cd",false);
+}
