@@ -107,7 +107,6 @@ Fl_WindowList get_window_titles_hyprland() {
    free(output);
    return list;
 }
-Fl_WindowList get_list_of_windows_hyprland() { return get_window_names_hyprland(); }
 
 Fl_Pos get_cursor_position_hyprland(void) { 
   char* output = Platform_RunTerminalCommand("hyprctl -j cursorpos", false);

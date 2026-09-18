@@ -76,15 +76,6 @@ ListBoxInfo* Vim_GetListBox(FlintContext* ctx) {
     return NULL;
 }
 
-VimContext Vim_FromGlobals(void) {
-    VimContext ctx = {0};
-    FlintContext* fc = FlintContext_Get();
-    ctx.hListBox = fc->window.hListBox;
-    ctx.hEdit = fc->window.g_ActiveEditControl;
-    ctx.lb = Vim_GetListBox(fc);
-    return ctx;
-}
-
 void Vim_GetText(FlintContext* ctx, char* buf, size_t cap) {
     if (!ctx || !buf || cap==0) return;
 #if defined(_WIN32)
@@ -208,10 +199,6 @@ void SequenceReset(void) {
         seq_state.timer_id = 0;
     }
 #endif
-}
-
-int SequenceLen(void) {
-    return seq_state.len;
 }
 
 int SequenceTypedCount(void) {

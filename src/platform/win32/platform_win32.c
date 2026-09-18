@@ -819,22 +819,6 @@ bool Platform_BuildFeature(const char* src, const char* out) {
     return true;
 }
 
-static BOOL CALLBACK EnumWindowsProcAll(HWND hwnd, LPARAM lParam) {
-    Fl_WindowList *list = (Fl_WindowList *)lParam;
-    if (!IsWindowVisible(hwnd)) return TRUE;
-    char class_name[256];
-    if (GetClassNameA(hwnd, class_name, sizeof(class_name)) > 0) {
-        if (strcmp(class_name, "Progman") == 0 || strcmp(class_name, "WorkerW") == 0) return TRUE;
-        class_name[0] = toupper((unsigned char)class_name[0]);
-        char **temp = realloc(list->windows, (list->count + 1) * sizeof(char *));
-        if (temp != NULL) {
-            list->windows = temp;
-            list->windows[list->count] = strdup(class_name);
-            list->count++;
-        }
-    }
-    return TRUE;
-}
 typedef struct { Fl_WindowList *titles; Fl_WindowList *names; } WinPair;
 
 static BOOL CALLBACK EnumWindowsProcPair(HWND hwnd, LPARAM lParam) {
@@ -877,54 +861,6 @@ static BOOL CALLBACK EnumWindowsProcPair(HWND hwnd, LPARAM lParam) {
 static void win32_collect_pair(Fl_WindowList *out_titles, Fl_WindowList *out_names) {
     WinPair p = { out_titles, out_names };
     EnumWindows(EnumWindowsProcPair, (LPARAM)&p);
-}
-
-static BOOL CALLBACK EnumWindowsProcTitles(HWND hwnd, LPARAM lParam) {
-    Fl_WindowList *list = (Fl_WindowList *)lParam;
-    Fl_WindowList dummy = {0};
-    WinPair p = { list, &dummy };
-    if (!IsWindowVisible(hwnd)) return TRUE;
-    char cls[256];
-    if (GetClassNameA(hwnd, cls, sizeof(cls)) > 0 && (strcmp(cls, "Progman")==0 || strcmp(cls, "WorkerW")==0)) return TRUE;
-    char title[512];
-    if (GetWindowTextA(hwnd, title, sizeof(title))==0 || !title[0]) return TRUE;
-    DWORD pid=0; GetWindowThreadProcessId(hwnd,&pid); if(!pid) return TRUE;
-    HANDLE h=OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION,FALSE,pid);
-    if(!h) h=OpenProcess(PROCESS_QUERY_INFORMATION|PROCESS_VM_READ,FALSE,pid);
-    if(!h) return TRUE;
-    char exe[MAX_PATH]={0}; char path[MAX_PATH]={0}; DWORD sz=sizeof(path); DWORD len=0;
-    if(QueryFullProcessImageNameA(h,0,path,&sz)) { char *b=strrchr(path,'\\'); if(b) strncpy(exe,b+1,sizeof(exe)-1); else strncpy(exe,path,sizeof(exe)-1); len=strlen(exe); } else len=GetModuleBaseNameA(h,NULL,exe,sizeof(exe));
-    CloseHandle(h);
-    if(len==0 || !exe[0]) return TRUE;
-    char **t=realloc(list->windows,(list->count+1)*sizeof(char*));
-    if(t){ list->windows=t; list->windows[list->count++]=strdup(title); }
-    for(int i=0;i<dummy.count;i++) free(dummy.windows[i]);
-    free(dummy.windows);
-    return TRUE;
-}
-
-static BOOL CALLBACK EnumWindowsProcNames(HWND hwnd, LPARAM lParam) {
-    Fl_WindowList *list = (Fl_WindowList *)lParam;
-    Fl_WindowList dummy={0};
-    WinPair p={&dummy,list};
-    if (!IsWindowVisible(hwnd)) return TRUE;
-    char cls[256];
-    if (GetClassNameA(hwnd, cls, sizeof(cls)) >0 && (strcmp(cls,"Progman")==0||strcmp(cls,"WorkerW")==0)) return TRUE;
-    char title[512];
-    if(GetWindowTextA(hwnd,title,sizeof(title))==0 || !title[0]) return TRUE;
-    DWORD pid=0; GetWindowThreadProcessId(hwnd,&pid); if(!pid) return TRUE;
-    HANDLE h=OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION,FALSE,pid);
-    if(!h) h=OpenProcess(PROCESS_QUERY_INFORMATION|PROCESS_VM_READ,FALSE,pid);
-    if(!h) return TRUE;
-    char exe[MAX_PATH]={0}; char path[MAX_PATH]={0}; DWORD sz=sizeof(path); DWORD len=0;
-    if(QueryFullProcessImageNameA(h,0,path,&sz)){ char *b=strrchr(path,'\\'); if(b) strncpy(exe,b+1,sizeof(exe)-1); else strncpy(exe,path,sizeof(exe)-1); len=strlen(exe);} else len=GetModuleBaseNameA(h,NULL,exe,sizeof(exe));
-    CloseHandle(h);
-    if(len==0||!exe[0]) return TRUE;
-    char **t=realloc(list->windows,(list->count+1)*sizeof(char*));
-    if(t){ list->windows=t; list->windows[list->count++]=strdup(exe); }
-    for(int i=0;i<dummy.count;i++) free(dummy.windows[i]);
-    free(dummy.windows);
-    return TRUE;
 }
 
 Fl_WindowList Platform_GetWindowTitles() {
