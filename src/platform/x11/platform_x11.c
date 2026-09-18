@@ -1408,3 +1408,14 @@ Fl_Pos Platform_GetCursorPos(void) {
 void Platform_SettingsPopUp(void) {
 }
 
+char* Platform_GetWorkingDir(void) {
+    char* raw = Platform_RunTerminalCommand("pwd", false);
+    if (!raw) return NULL;
+    
+    size_t len = strlen(raw);
+    while (len > 0 && (raw[len - 1] == '\n' || raw[len - 1] == '\r')) {
+        raw[--len] = '\0';
+    }
+    
+    return raw;
+}
