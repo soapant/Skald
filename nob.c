@@ -373,7 +373,6 @@ int main(int argc, char** argv) {
             if (!fok) return 1;
             for (size_t i = 0; i < feature_sources.count; ++i) {
                 const char* so = feature_so_path(feature_sources.items[i]);
-                if (nob_file_exists(so)) nob_log(NOB_INFO, "Built feature %s", so);
             }
         }
         if (do_run) {
