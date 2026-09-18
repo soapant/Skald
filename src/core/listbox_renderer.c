@@ -17,8 +17,8 @@ void Core_DrawListBox(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis
     ListBoxInfo *lb = &state->listbox;
     if (!lb->populated_count) { Platform_DestroyFont(font); PROFILE_END_VAR(timer, "listbox_renderer:Core_DrawListBox"); return; }
 
-    int y0 = 70;
     int itemH = FontSize + 14;
+    int y0 = (FontSize + 28) + 10;
     int yOffset = 40;
     if (!WindowTitleText && !VimModeText) yOffset = 0;
     int visible = (state->height - y0 - yOffset) / itemH;
@@ -65,8 +65,8 @@ void Core_DrawListBox(PromptState *state, void *hdc) {
     ListBoxInfo *lb = &state->listbox;
     HDC hdcReal = (HDC)hdc;
     if (!lb->populated_count) { PROFILE_END_VAR(timer, "listbox_renderer:Core_DrawListBox"); return; }
-    int y0 = 70;
     int itemH = FontSize + 14;
+    int y0 = (FontSize + 28) + 10;
     int yOffset = 40;
     if (!WindowTitleText && !VimModeText) yOffset = 0;
     int visible = (state->height - y0 - yOffset) / itemH;

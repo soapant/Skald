@@ -31,9 +31,9 @@ void typing_test_render(PromptState *state) {
     static int char_states[1000] = {0};
 
     if (current_position < text_len) {
-        int c = tolower(fl_get_char_pressed());
+        int c = fl_get_char_pressed();
         int key = fl_get_key_pressed();
-        int current_text = tolower(text[current_position]);
+        int current_text = text[current_position];
 
         if (key == VK_BACK) {
             if (current_position > 0) {

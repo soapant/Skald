@@ -213,10 +213,11 @@ void Linux_DrawEditCursor(XftDraw* xd, XftColor* color, int cursor_x, int scroll
     PROFILE_START(timer);
     int cursor_draw_x = 14 + cursor_x - scroll;
     if (cursor_draw_x > width - 10) cursor_draw_x = width - 10;
+    int cursor_y = 20;
     if (IsInsertMode()) {
-        XftDrawRect(xd, color, cursor_draw_x, 27, 2, FontSize);
+        XftDrawRect(xd, color, cursor_draw_x, cursor_y, 2, FontSize);
     } else {
-        XftDrawRect(xd, color, cursor_draw_x, 27, 12, FontSize);
+        XftDrawRect(xd, color, cursor_draw_x, cursor_y, 12, FontSize);
     }
     PROFILE_END_VAR(timer, "helpers_x11:Linux_DrawEditCursor");
 }
