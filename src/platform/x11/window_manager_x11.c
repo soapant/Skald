@@ -37,14 +37,13 @@
 #include <linux/uinput.h>
 #include <errno.h>
 #include "platform/x11/display_x11.h"
+#include "platform/x11/clipboard_x11.h"
 #include "platform/x11/input_x11.h"
 #include "core/timer.h"
 #include "core/history.h"
 #include "core/remap_manager.h"
 #include "core/hotkey_manager.h"
 
-
-extern bool HandleGlobalKeyEvent(int key_code, int value);
 
 int pending_hotkey_vk = 0;
 int pending_hotkey_mod = 0;
@@ -112,6 +111,7 @@ static void Linux_HandleKeyPress(Display* dpy, XKeyEvent* ev, WindowManager* wm)
     bool pressed = true;
     int modifiers = mods;
     if(vk_code) Platform_InputState_Update(vk_code, true, modifiers);
+
 
     Popup* top = WindowManager_GetTopPopup(wm);
     if (!top) { PROFILE_END_VAR(timer, "window_manager_x11:Linux_HandleKeyPress"); return; }
@@ -194,86 +194,6 @@ static void Linux_HandleKeyPress(Display* dpy, XKeyEvent* ev, WindowManager* wm)
     PROFILE_END_VAR(timer, "window_manager_x11:Linux_HandleKeyPress");
 }
 
-char *clipboard_text = NULL;
-Atom clipboard_atom;
-Atom targets_atom;
-Atom utf8_string_atom;
-
-static void Linux_ClipboardUpdate(XEvent *event) {
-
-    Display *dpy = get_display();
-
-    if (!clipboard_text)
-        return;
-
-    if (event->type != SelectionRequest)
-        return;
-
-    XSelectionRequestEvent *request = &event->xselectionrequest;
-
-    XEvent response = {0};
-
-    response.xselection.type = SelectionNotify;
-    response.xselection.display = request->display;
-    response.xselection.requestor = request->requestor;
-    response.xselection.selection = request->selection;
-    response.xselection.target = request->target;
-    response.xselection.property = None;
-    response.xselection.time = request->time;
-
-    if (request->target == targets_atom) {
-        Atom targets[] = {
-            targets_atom,
-            utf8_string_atom,
-            XA_STRING
-        };
-
-        XChangeProperty(
-            dpy,
-            request->requestor,
-            request->property,
-            XA_ATOM,
-            32,
-            PropModeReplace,
-            (unsigned char *)targets,
-            sizeof(targets) / sizeof(targets[0])
-        );
-
-        response.xselection.property = request->property;
-    }
-
-    else if (request->target == utf8_string_atom ||
-             request->target == XA_STRING) {
-
-        Atom type = request->target == utf8_string_atom
-                  ? utf8_string_atom
-                  : XA_STRING;
-
-        XChangeProperty(
-            dpy,
-            request->requestor,
-            request->property,
-            type,
-            8,
-            PropModeReplace,
-            (unsigned char *)clipboard_text,
-            strlen(clipboard_text)
-        );
-
-        response.xselection.property = request->property;
-    }
-
-    XSendEvent(
-        dpy,
-        request->requestor,
-        False,
-        0,
-        &response
-    );
-
-    XFlush(dpy);
-}
-
 static void Linux_HandleKeyRelease(Display* dpy, XKeyEvent* ev) {
     PROFILE_START(timer);
     KeySym ks; char buf[32]; int len=XLookupString(ev, buf, sizeof(buf), &ks, NULL);
@@ -285,7 +205,7 @@ static void Linux_HandleKeyRelease(Display* dpy, XKeyEvent* ev) {
 
 void Linux_ProcessXEvent(Display* dpy, XEvent* ev, WindowManager* wm) {
     PROFILE_START(timer);
-
+    if (Linux_ClipboardHandleEvent(dpy, ev)) { PROFILE_END_VAR(timer, "window_manager_x11:Linux_ProcessXEvent"); return; }
     Popup* top = WindowManager_GetTopPopup(wm);
     if (!top) { PROFILE_END_VAR(timer, "window_manager_x11:Linux_ProcessXEvent"); return; }
     switch (ev->type) {
