@@ -1,0 +1,96 @@
+#ifndef FLAPI_INPUT_H
+#define FLAPI_INPUT_H
+
+#include "core/types/keys.h"
+
+#define FL_KEY_BACKSPACE VK_BACK
+#define FL_KEY_TAB VK_TAB
+#define FL_KEY_ENTER VK_RETURN
+#define FL_KEY_RETURN VK_RETURN
+#define FL_KEY_SHIFT VK_SHIFT
+#define FL_KEY_CONTROL VK_CONTROL
+#define FL_KEY_MENU VK_MENU
+#define FL_KEY_ESCAPE VK_ESCAPE
+#define FL_KEY_SPACE VK_SPACE
+#define FL_KEY_LEFT VK_LEFT
+#define FL_KEY_UP VK_UP
+#define FL_KEY_RIGHT VK_RIGHT
+#define FL_KEY_DOWN VK_DOWN
+#define FL_KEY_LWIN VK_LWIN
+#define FL_KEY_RWIN VK_RWIN
+#define FL_KEY_COMMA VK_OEM_COMMA
+#define FL_KEY_PERIOD VK_OEM_PERIOD
+#define FL_KEY_SEMICOLON VK_OEM_1
+#define FL_KEY_SLASH     VK_OEM_2
+#define FL_KEY_GRAVE     VK_OEM_3
+#define FL_KEY_LBRACKET  VK_OEM_4
+#define FL_KEY_BACKSLASH VK_OEM_5
+#define FL_KEY_RBRACKET  VK_OEM_6
+#define FL_KEY_APOSTROPHE VK_OEM_7
+#define FL_KEY_MINUS VK_OEM_MINUS
+#define FL_KEY_PLUS VK_OEM_PLUS
+#define FL_KEY_LSHIFT VK_LSHIFT
+#define FL_KEY_RSHIFT VK_RSHIFT
+#define FL_KEY_DELETE VK_DELETE
+#define FL_KEY_HOME VK_HOME
+#define FL_KEY_END VK_END
+#define FL_KEY_PRIOR VK_PRIOR
+#define FL_KEY_NEXT VK_NEXT
+#define FL_KEY_INSERT VK_INSERT
+#define FL_KEY_CAPSLOCK VK_CAPITAL
+#define FL_KEY_F1 VK_F1
+#define FL_KEY_F2 (VK_F1+1)
+#define FL_KEY_F3 (VK_F1+2)
+#define FL_KEY_F4 (VK_F1+3)
+#define FL_KEY_F5 (VK_F1+4)
+#define FL_KEY_F6 (VK_F1+5)
+#define FL_KEY_F7 (VK_F1+6)
+#define FL_KEY_F8 (VK_F1+7)
+#define FL_KEY_F9 (VK_F1+8)
+#define FL_KEY_F10 (VK_F1+9)
+#define FL_KEY_F11 (VK_F1+10)
+#define FL_KEY_F12 (VK_F1+11)
+#define FL_KEY_LCONTROL VK_LCONTROL
+#define FL_KEY_RCONTROL VK_RCONTROL
+#define FL_KEY_LMENU VK_LMENU
+#define FL_KEY_RMENU VK_RMENU
+
+#define FL_KEY_A 0x41
+#define FL_KEY_B 0x42
+#define FL_KEY_C 0x43
+#define FL_KEY_D 0x44
+#define FL_KEY_E 0x45
+#define FL_KEY_F 0x46
+#define FL_KEY_G 0x47
+#define FL_KEY_H 0x48
+#define FL_KEY_I 0x49
+#define FL_KEY_J 0x4A
+#define FL_KEY_K 0x4B
+#define FL_KEY_L 0x4C
+#define FL_KEY_M 0x4D
+#define FL_KEY_N 0x4E
+#define FL_KEY_O 0x4F
+#define FL_KEY_P 0x50
+#define FL_KEY_Q 0x51
+#define FL_KEY_R 0x52
+#define FL_KEY_S 0x53
+#define FL_KEY_T 0x54
+#define FL_KEY_U 0x55
+#define FL_KEY_V 0x56
+#define FL_KEY_W 0x57
+#define FL_KEY_X 0x58
+#define FL_KEY_Y 0x59
+#define FL_KEY_Z 0x5A
+
+#define FL_KEY_0 0x30
+#define FL_KEY_1 0x31
+#define FL_KEY_2 0x32
+#define FL_KEY_3 0x33
+#define FL_KEY_4 0x34
+#define FL_KEY_5 0x35
+#define FL_KEY_6 0x36
+#define FL_KEY_7 0x37
+#define FL_KEY_8 0x38
+#define FL_KEY_9 0x39
+
+#endif

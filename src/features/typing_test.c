@@ -35,7 +35,7 @@ void typing_test_render(PromptState *state) {
         int key = fl_get_key_pressed();
         int current_text = text[current_position];
 
-        if (key == VK_BACK) {
+        if (key == FL_KEY_BACKSPACE) {
             if (current_position > 0) {
                 current_position--;
                 char_states[current_position] = CHAR_UNTYPED;
