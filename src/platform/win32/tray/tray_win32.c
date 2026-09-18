@@ -18,6 +18,7 @@
 #include "helpers/helpers_file.h"
 #include "helpers/helpers_ui.h"
 #include "platform/win32/popup_helpers_win32.h"
+#include "platform/win32/win32_state.h"
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
   switch (msg) {
@@ -85,13 +86,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
       nid.hWnd = hwnd;
       nid.uID = ID_TRAY_ICON;
       Shell_NotifyIcon(NIM_DELETE, &nid);
-      if (FlintContext_Get()->g_hNumFont) {
-        DeleteObject(FlintContext_Get()->g_hNumFont);
-          FlintContext_Get()->g_hNumFont = NULL;
-      }
-    if (FlintContext_Get()->hMainFont) {
-      DeleteObject(FlintContext_Get()->hMainFont);
-        FlintContext_Get()->hMainFont = NULL;
+    if (g_win32_hMainFont) {
+      DeleteObject(g_win32_hMainFont);
+        g_win32_hMainFont = NULL;
     }
     PostQuitMessage(0);
       break;
