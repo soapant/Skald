@@ -37,10 +37,6 @@ void DrawSimplePromptUserEditControlOnDraw(Display *dpy, XftDraw* xd, Visual* vi
     else ext.xOff = 0;
     int text_width = ext.xOff;
 
-    XftColor text_color, vim_text_color;
-    Linux_XftAllocColor(dpy, vis, cmap, rgb_to_hex(COLOR_TEXT), 0xFFFF, &text_color);
-    Linux_XftAllocColor(dpy, vis, cmap, VimModeTextColor(), 0xFFFF, &vim_text_color);
-
     Platform_SetDrawContext(dpy, xd, vis, cmap);
     Platform_DrawTextRaw(5, state->height - 40, state->window_title, rgb_to_hex(COLOR_TEXT), font, "LEFT", 5,FontSize);
     if (VimModeText) Platform_DrawTextRaw(5, state->height - 40, g_vim_mode, VimModeTextColor(), font, "RIGHT", 5,FontSize);
@@ -52,14 +48,19 @@ void DrawSimplePromptUserEditControlOnDraw(Display *dpy, XftDraw* xd, Visual* vi
     int scroll = Linux_UpdateEditScrollOffset(dpy, xf, state->user_input, text_len, state->cursor, state->width, state->scroll_offset, &cursor_x);
     state->scroll_offset = scroll;
     int draw_x = 14 - scroll;
-    int draw_y = 20 + (xf ? xf->ascent : FontSize);
-    if (xf && text_len > 0) {
-        XftDrawStringUtf8(xd, &text_color, xf, draw_x, draw_y, (FcChar8*)state->user_input, text_len);
+    if (text_len > 0) {
+        Platform_DrawTextRaw(draw_x, 20, state->user_input, rgb_to_hex(COLOR_TEXT), font, "", 0, 0);
     }
-    Linux_DrawEditCursor(xd, &text_color, cursor_x, scroll, state->width);
-
-    XftColorFree(dpy, vis, cmap, &text_color);
-    XftColorFree(dpy, vis, cmap, &vim_text_color);
+    {
+        int cursor_draw_x = 14 + cursor_x - scroll;
+        if (cursor_draw_x < 2) cursor_draw_x = 2;
+        if (cursor_draw_x > state->width - 4) cursor_draw_x = state->width - 4;
+        if (IsInsertMode()) {
+            Platform_DrawRectRaw(cursor_draw_x, 27, 2, FontSize, rgb_to_hex(COLOR_TEXT));
+        } else {
+            Platform_DrawRectRaw(cursor_draw_x, 27, 12, FontSize, rgb_to_hex(COLOR_TEXT));
+        }
+    }
     Platform_DestroyFont(font);
     PROFILE_END_VAR(timer, "subclasses_x11:DrawSimplePromptUserEditControlOnDraw");
 }

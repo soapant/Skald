@@ -541,8 +541,6 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
     }
     XftFont *xf = FH_TO_XFT(fh);
     unsigned long text_hex = spec->color ? spec->color : rgb_to_hex(COLOR_TEXT);
-    XftColor col;
-    Linux_XftAllocColor(dpy,vis,cmap,text_hex,0xFFFF,&col);
     int text_len = (int)strlen(buf);
     int cursor = state ? state->cursor : text_len;
     if (cursor < 0) cursor = 0;
@@ -555,8 +553,9 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
     }
     int draw_y = y + (xf ? xf->ascent : FontSize) + (h - (xf ? (xf->ascent + xf->descent) : FontSize)) / 2;
     int draw_x = x + 14 - scroll;
-    if (xf && text_len > 0) {
-        XftDrawStringUtf8(xd,&col,xf,draw_x,draw_y,(FcChar8*)buf,text_len);
+    Platform_SetDrawContext(dpy, xd, vis, cmap);
+    if (text_len > 0) {
+        Platform_DrawTextRaw(draw_x, draw_y, (char*)buf, text_hex, fh, NULL, 0, 0);
     }
     int cursor_draw_x = x + 14 + cursor_x - scroll;
     if (cursor_draw_x < x + 2) cursor_draw_x = x + 2;
@@ -564,11 +563,10 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
     int cursor_y = y + (h - FontSize) / 2;
     if (cursor_y < y + 2) cursor_y = y + 2;
     if (IsInsertMode()) {
-        XftDrawRect(xd,&col,cursor_draw_x,cursor_y,2,FontSize);
+        Platform_DrawRectRaw(cursor_draw_x,cursor_y,2,FontSize,text_hex);
     } else {
-        XftDrawRect(xd,&col,cursor_draw_x,cursor_y,12,FontSize);
+        Platform_DrawRectRaw(cursor_draw_x,cursor_y,12,FontSize,text_hex);
     }
-    XftColorFree(dpy,vis,cmap,&col);
     if (needDestroy) Platform_DestroyFont(fh);
     return true;
 }
