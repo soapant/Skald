@@ -18,6 +18,8 @@ static void* feature_watcher_thread(void* arg) {
     while (!atomic_load(&g_watcher_stop) && !(wm && wm->watcher_stop)) {
         char* filename = Platform_WatchForCFileChanges(FeaturePath);
         if (filename) {
+            usleep(200000);
+            Platform_WatchForCFileChanges(FeaturePath);
             log_info("Changed file: %s", filename);
             char buf[256];
             strncpy(buf, filename, sizeof(buf)-1);

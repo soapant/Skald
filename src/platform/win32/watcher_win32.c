@@ -16,6 +16,8 @@ static DWORD WINAPI feature_watcher_thread_win(LPVOID arg) {
     while (InterlockedCompareExchange(&g_watcher_stop_win, 0, 0)==0 && !(wm && wm->watcher_stop)) {
         char* filename = Platform_WatchForCFileChanges(FeaturePath);
         if (filename) {
+            Sleep(200);
+            Platform_WatchForCFileChanges(FeaturePath);
             log_info("Changed file: %s", filename);
             char buf[256];
             strncpy(buf, filename, sizeof(buf)-1);
