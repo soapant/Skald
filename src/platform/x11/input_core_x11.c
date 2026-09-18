@@ -330,24 +330,16 @@ bool x11_handle_global_key(int key_code, int value) {
     PROFILE_START(timer);
     remap_update_phys(ConvertLinuxKeyToWindowsVK(key_code), value);
     x11_sync_held_from_phys();
-    log_info("x11_handle_global_key code=%d val=%d ctrl=%d alt=%d shift=%d", key_code, value, g_x11_ctrl_held, g_x11_alt_held, g_x11_shift_held);
-    log_warn("x11_handle_global_key code=%d val=%d ctrl=%d alt=%d shift=%d", key_code, value, g_x11_ctrl_held, g_x11_alt_held, g_x11_shift_held);
     double seconds = Platform_GetUniversalTimeSeconds();
     if (seconds >= 300) { Platform_ResetUniversalTimer(); log_info("SUPPOSED TO CLEAR FILE"); }
     if (value != 1) { PROFILE_END_VAR(timer, "input:x11_handle_global_key"); return false; }
     int pressed_vk = ConvertLinuxKeyToWindowsVK(key_code);
     int modifiers = remap_current_mods();
-    log_info("x11_handle_global_key vk=%d mods=%d", pressed_vk, modifiers);
-    log_warn("x11_handle_global_key vk=%d mods=%d", pressed_vk, modifiers);
     if (hotkey_process(pressed_vk, modifiers)) {
-        log_info("x11_handle_global_key HOTKEY MATCH vk=%d mods=%d", pressed_vk, modifiers);
-        log_warn("x11_handle_global_key HOTKEY MATCH vk=%d mods=%d", pressed_vk, modifiers);
         pending_hotkey_vk = pressed_vk; pending_hotkey_mod = modifiers; struct timeval tv; gettimeofday(&tv,NULL); pending_hotkey_timeMs = tv.tv_sec*1000 + tv.tv_usec/1000;
         PROFILE_END_VAR(timer, "input:x11_handle_global_key");
         return true;
     }
-    log_info("x11_handle_global_key no match vk=%d mods=%d", pressed_vk, modifiers);
-    log_warn("x11_handle_global_key no match vk=%d mods=%d", pressed_vk, modifiers);
     PROFILE_END_VAR(timer, "input:x11_handle_global_key");
     return false;
 }
