@@ -12,7 +12,6 @@ bool DoTimeDebugs = false;
 bool DebugMode = false;
 bool RoundedCorners = true;
 int CornerRadius = 14;
-int ListboxBorderThickness = 1;
 bool EnableShaders = true;
 int ShaderPreset = 2;
 int SelectionShaderPreset = 3;

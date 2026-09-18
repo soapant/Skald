@@ -71,13 +71,6 @@ bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, F
 void Platform_DrawListBackground(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap, int y, int h, bool selected) {
     if (selected) {
         Linux_DrawSelectionBackground(dpy, xd, vis, cmap, 0, y, state->width, h, rgb_to_hex(COLOR_SELECTED_TEXT));
-    } else {
-        if (!EnableShaders || ShaderPreset == 0) {
-            XftColor bgc;
-            Linux_XftAllocColor(dpy, vis, cmap, rgb_to_hex(COLOR_BG), OpacityAlpha16(), &bgc);
-            XftDrawRect(xd, &bgc, 0, y, state->width, h);
-            XftColorFree(dpy, vis, cmap, &bgc);
-        }
     }
 }
 
