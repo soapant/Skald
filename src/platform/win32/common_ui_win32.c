@@ -525,8 +525,7 @@ void UpdateTextCaret(WindowHandle hwndEditControl)
   }
 }
 
-void CalculateWindowMetrics(int count, WindowLayout* layout,int height , int width,int item_height) {
-  (void)count; (void)item_height;
+void CalculateWindowMetrics(WindowLayout* layout,int height , int width,int item_height) {
   POINT ptPrimary = { 0, 0 };
   HMONITOR hMonitor = MonitorFromPoint(ptPrimary, MONITOR_DEFAULTTOPRIMARY);
 
@@ -538,7 +537,7 @@ void CalculateWindowMetrics(int count, WindowLayout* layout,int height , int wid
   int monitorHeight = mi.rcMonitor.bottom - mi.rcMonitor.top;
 
   layout->w = 900;
-  layout->item_height = 32;
+  layout->item_height = item_height;
 
   layout->h = 640;
 
@@ -548,7 +547,7 @@ void CalculateWindowMetrics(int count, WindowLayout* layout,int height , int wid
   layout->x = mi.rcMonitor.left + (monitorWidth - layout->w) / 2;
   layout->y = mi.rcMonitor.top + (monitorHeight - layout->h) / 2;
 }
-void SimpleCreateChildControls(WindowHandle hwndParent, HFONT hFont, const char* string, int count, const WindowLayout* layout) {
+void SimpleCreateChildControls(WindowHandle hwndParent, HFONT hFont, const char* string,int count,const WindowLayout* layout) {
   HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtrA(WH_TO_HWND(hwndParent), GWLP_HINSTANCE);
 
   FlintContext_Get()->window.hEditControl = WH_FROM_HWND(CreateWindowExA(
@@ -562,33 +561,31 @@ void SimpleCreateChildControls(WindowHandle hwndParent, HFONT hFont, const char*
   UI_Edit_SetFont(FlintContext_Get()->window.hEditControl, hFont);
   SetWindowSubclass(WH_TO_HWND(FlintContext_Get()->window.hEditControl), SimpleEditSubclassProc, 0, 0);
 
-  if (count > 0) {
-    int bottomMargin = (WindowTitleText || VimModeText) ? 60 : 12;
-    int listH = layout->h - 70 - bottomMargin;
-    if (listH < 0) listH = 0;
-    FlintContext_Get()->window.hListBox = WH_FROM_HWND(CreateWindowExA(
-        WS_EX_COMPOSITED, "LISTBOX", "",
-        WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOSEL,
-        20, 70, layout->w - 40, listH, WH_TO_HWND(hwndParent), (HMENU)IDC_LIST_BOX, hInstance, NULL
-        ));
+  int bottomMargin = (WindowTitleText || VimModeText) ? 60 : 12;
+  int listH = layout->h - 70 - bottomMargin;
+  if (listH < 0) listH = 0;
+  FlintContext_Get()->window.hListBox = WH_FROM_HWND(CreateWindowExA(
+      WS_EX_COMPOSITED, "LISTBOX", "",
+      WS_CHILD | WS_VISIBLE | WS_VSCROLL | LBS_NOSEL,
+      20, 70, layout->w - 40, listH, WH_TO_HWND(hwndParent), (HMENU)IDC_LIST_BOX, hInstance, NULL
+      ));
 
-    if (WH_TO_HWND(FlintContext_Get()->window.hListBox) == NULL) return;
+  if (WH_TO_HWND(FlintContext_Get()->window.hListBox) == NULL) return;
 
-    SetWindowSubclass(WH_TO_HWND(FlintContext_Get()->window.hListBox), SimpleListBoxSubclassProc, 0, 0);
-    UI_LB_SetFont(FlintContext_Get()->window.hListBox, hFont);
-    UI_LB_SetItemHeight(FlintContext_Get()->window.hListBox, layout->item_height);
+  SetWindowSubclass(WH_TO_HWND(FlintContext_Get()->window.hListBox), SimpleListBoxSubclassProc, 0, 0);
+  UI_LB_SetFont(FlintContext_Get()->window.hListBox, hFont);
+  UI_LB_SetItemHeight(FlintContext_Get()->window.hListBox, layout->item_height);
 
-    HDC hdc = GetDC(WH_TO_HWND(FlintContext_Get()->window.hListBox));
-    if (!hdc) return;
-    HFONT hOldFont = (HFONT)SelectObject(hdc, hFont);
+  HDC hdc = GetDC(WH_TO_HWND(FlintContext_Get()->window.hListBox));
+  if (!hdc) return;
+  HFONT hOldFont = (HFONT)SelectObject(hdc, hFont);
 
-    SendMessage(WH_TO_HWND(FlintContext_Get()->window.hListBox), LB_ADDSTRING, 0, (LPARAM)string);
-    SendMessage(WH_TO_HWND(FlintContext_Get()->window.hListBox), LB_SETCURSEL, (WPARAM)-1, 0);
-    UpdateWindow(WH_TO_HWND(FlintContext_Get()->window.hListBox));
+  SendMessage(WH_TO_HWND(FlintContext_Get()->window.hListBox), LB_ADDSTRING, 0, (LPARAM)string);
+  SendMessage(WH_TO_HWND(FlintContext_Get()->window.hListBox), LB_SETCURSEL, (WPARAM)-1, 0);
+  UpdateWindow(WH_TO_HWND(FlintContext_Get()->window.hListBox));
 
-    SelectObject(hdc, hOldFont);
-    ReleaseDC(WH_TO_HWND(FlintContext_Get()->window.hListBox), hdc);
-  }
+  SelectObject(hdc, hOldFont);
+  ReleaseDC(WH_TO_HWND(FlintContext_Get()->window.hListBox), hdc);
 }
 
 void ForceWindowFocus(WindowHandle hwndTarget, WindowHandle hwndInput) {
