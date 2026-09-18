@@ -274,12 +274,6 @@ void UI_Redraw(ListBoxInfo* lb, WindowHandle hListBox) {
     UI_RedrawNow(lb, hListBox);
 }
 
-void UI_RedrawBackground(HDC hdc, RECT* rc, BOOL is_selected) {
-    HBRUSH hBgBrush = CreateSolidBrush(is_selected ? COLOR_SELECTED_TEXT : COLOR_BG);
-    FillRect(hdc, rc, hBgBrush);
-    DeleteObject(hBgBrush);
-}
-
 void UI_GetParent(WindowHandle hwnd) {
     SendMessageA(GetParent(WH_TO_HWND(hwnd)), WM_COMMAND, MAKEWPARAM(IDC_INPUT_BOX, EN_CHANGE), (LPARAM)WH_TO_HWND(FlintContext_Get()->window.hEditControl));
 }

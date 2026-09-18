@@ -133,10 +133,6 @@ void WindowManager_GetCenteredPos(int win_w, int win_h, int *out_x, int *out_y) 
     if (out_y) *out_y = moy + (moh - win_h) / 2;
 }
 
-void WindowManager_ProcessEvents(WindowManager* wm) {
-    Platform_WM_ProcessEvents(wm);
-}
-
 char* WindowManager_ShowPrompt(WindowManager* wm, const PromptSpec* spec) {
     PROFILE_START(timer);
     if (!wm || !spec) { PROFILE_END_VAR(timer, "window_manager:WindowManager_ShowPrompt"); return NULL; }

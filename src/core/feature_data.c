@@ -48,11 +48,6 @@ struct feature_data* GetFeatureData(const char* name) {
     return data;
 }
 
-struct feature_data* GetCurrentFeatureData(void) {
-    if (!g_current_feature_name) return NULL;
-    return GetFeatureData(g_current_feature_name);
-}
-
 void SetCurrentFeatureName(const char* name) {
     g_current_feature_name = name;
 }

@@ -21,13 +21,11 @@ void Vim_GetText(FlintContext* ctx, char* buf, size_t cap);
 void Vim_SetText(FlintContext* ctx, const char* text);
 int Vim_GetCursor(FlintContext* ctx);
 void Vim_SetCursor(FlintContext* ctx, int pos);
-VimContext Vim_FromGlobals(void);
 ListBoxInfo* Vim_GetListBox(FlintContext* ctx);
 
 
 void SequenceAddKey(char key, bool was_typed);
 void SequenceReset(void);
-int SequenceLen(void);
 int SequenceTypedCount(void);
 bool SequenceMatches(const char* pattern);
 bool SequenceStartsWith(const char* pattern);

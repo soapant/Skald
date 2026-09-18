@@ -408,10 +408,4 @@ bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed) {
     return false;
 }
 
-void x11_cleanup_keyboards(void) {
-    for (int i = 0; i < g_x11_keyboard_count; i++) {
-        ioctl(g_x11_keyboards[i].fd, EVIOCGRAB, 0);
-        close(g_x11_keyboards[i].fd);
-    }
-    g_x11_keyboard_count = 0;
-}
+

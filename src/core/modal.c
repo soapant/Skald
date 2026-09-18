@@ -50,9 +50,6 @@ void SetMode(EditorMode mode) {
     SetModeWithListBox(mode, NULL);
 }
 
-EditorMode GetMode(void) {
-    return g_current_mode;
-}
 bool IsNormalMode(void) {
     return g_current_mode == MODE_NORMAL;
 }

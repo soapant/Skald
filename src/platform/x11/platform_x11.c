@@ -1054,25 +1054,6 @@ bool Platform_FocusWindow(const char* title) {
   return Wm_FocusByTitle(title);
 }
 
-static int vk_to_linux_key(int vk) {
-    if (vk >= 'A' && vk <= 'Z') return KEY_A + (vk - 'A');
-    if (vk >= '0' && vk <= '9') return KEY_1 + (vk - '1');
-    if (vk == '0') return KEY_0;
-    if (vk == VK_SPACE) return KEY_SPACE;
-    if (vk == VK_RETURN) return KEY_ENTER;
-    if (vk == VK_BACK) return KEY_BACKSPACE;
-    if (vk == VK_TAB) return KEY_TAB;
-    if (vk == VK_ESCAPE) return KEY_ESC;
-    if (vk == VK_OEM_1) return KEY_SEMICOLON;
-    if (vk == VK_OEM_2) return KEY_SLASH;
-    if (vk == VK_OEM_4) return KEY_LEFTBRACE;
-    if (vk == VK_OEM_6) return KEY_RIGHTBRACE;
-    if (vk == VK_OEM_COMMA) return KEY_COMMA;
-    if (vk == VK_OEM_PERIOD) return KEY_DOT;
-    if (vk == VK_OEM_7) return KEY_APOSTROPHE;
-    return 0;
-}
-
 char* Platform_GetActiveWindowTitle() {
   return Wm_GetActiveWindowTitle();
 }

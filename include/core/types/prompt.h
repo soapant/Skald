@@ -68,13 +68,7 @@ static inline const char* ListBoxInfo_GetSelectedText(ListBoxInfo *lb) {
     return lb->populated_cache[lb->selected_index];
 }
 
-static inline int ListBoxInfo_GetCount(ListBoxInfo *lb) {
-    return lb ? lb->populated_count : 0;
-}
 
-static inline bool ListBoxInfo_IsSelected(ListBoxInfo *lb) {
-    return lb && lb->selected_index != -1;
-}
 
 
 typedef struct {

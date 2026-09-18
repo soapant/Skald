@@ -60,9 +60,6 @@ static int init_uinput(void) {
 static void destroy_uinput(void) {
   x11_destroy_uinput(); 
 }
-static void uinput_emit(const struct input_event *ev) {
-  x11_uinput_emit(ev); 
-}
 static void ScanAndHookKeyboards(void) {
   x11_scan_keyboards(); 
 }
