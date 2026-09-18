@@ -66,7 +66,7 @@ void typing_test_render(PromptState *state) {
         exit(1); 
     }
 
-    fl_draw_rect(current_position * 20, cy + 10, 1, 30, COLOR_TEXT);
+    fl_draw_rect(.x=current_position * 20, .y=cy + 10, .w=1, .h=30);
 }
 
 void TriggerTypingTest(void) {
