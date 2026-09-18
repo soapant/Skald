@@ -29,7 +29,7 @@ bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, F
     if (!text || !g_draw_hdc) return false;
     if (color == 0) color = COLOR_TEXT;
     const char *a = align ? align : "CENTER";
-    HFONT hfont = font.hfont ? font.hfont : (FlintContext_Get()->g_hMainFont ? FlintContext_Get()->g_hMainFont : NULL);
+    HFONT hfont = font.hfont ? font.hfont : (FlintContext_Get()->hMainFont ? FlintContext_Get()->hMainFont : NULL);
     HFONT old = NULL;
     if (hfont) old = (HFONT)SelectObject(g_draw_hdc, hfont);
     SetBkMode(g_draw_hdc, TRANSPARENT);

@@ -83,7 +83,7 @@ void Core_DrawListBox(PromptState *state, void *hdc) {
         lb->view_offset = lb->populated_count - visible;
     if (lb->view_offset < 0) lb->view_offset = 0;
 
-    HFONT hFont = FlintContext_Get()->g_hMainFont;
+    HFONT hFont = FlintContext_Get()->hMainFont;
     HFONT hOldFont = NULL;
     if (hFont) hOldFont = (HFONT)SelectObject(hdcReal, hFont);
     SetBkMode(hdcReal, TRANSPARENT);

@@ -28,8 +28,8 @@ LRESULT CALLBACK SettingsPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
   }
     
   case WM_CREATE: {
-    if (!FlintContext_Get()->g_hMainFont) {
-      FlintContext_Get()->g_hMainFont = CreateFontA(FontSize, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+    if (!FlintContext_Get()->hMainFont) {
+      FlintContext_Get()->hMainFont = CreateFontA(FontSize, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
                                 DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
                                 CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, UsedFont);
     }
@@ -62,7 +62,7 @@ LRESULT CALLBACK SettingsPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
       GetClientRect(hwnd, &rect);
       
       
-      HFONT hOldFont = (HFONT)SelectObject(hdc, FlintContext_Get()->g_hMainFont);
+      HFONT hOldFont = (HFONT)SelectObject(hdc, FlintContext_Get()->hMainFont);
       
       HBRUSH hBgBrush = CreateSolidBrush(COLOR_BG);
       FillRect(hdc, &rect, hBgBrush);

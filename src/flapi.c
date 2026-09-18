@@ -16,7 +16,6 @@
 #include "core/window_manager.h"
 #include "core/flapi.h"
 #include "core/flapi_platform.h"
-#include "core/hashmap.h"
 #include "platform/draw.h"
 #include "core/hotkey_manager.h"
 #include "core/remap_manager.h"
@@ -243,14 +242,15 @@ bool fl_register_remapping(const char* src, const char* dst) {
     return remap_register_internal(src, dst);
 }
 
+typedef struct { char *key; void *value; } FlintMapEnt;
 typedef struct { char name[128]; void (*cb)(void); char icon[512]; } FeatureReg;
-static HashMap* g_feature_map = NULL;
+static FlintMap* g_feature_map = NULL;
 static FeatureReg** g_feature_order = NULL;
 static int g_feature_order_count = 0;
 static int g_feature_order_cap = 0;
 
-static HashMap* ensure_feature_map(void) {
-    if (!g_feature_map) g_feature_map = HashMap_Create(32);
+static FlintMap* ensure_feature_map(void) {
+    if (!g_feature_map) { g_feature_map = NULL; sh_new_strdup(g_feature_map); }
     return g_feature_map;
 }
 
@@ -260,7 +260,8 @@ void fl_register_feature(const char* name, void (*cb)(void)) {
 void fl_register_feature_with_icon(const char* name, void (*cb)(void), const char* icon_path) {
     if (!name || !cb) return;
     ensure_feature_map();
-    FeatureReg* existing = (FeatureReg*)HashMap_Get(g_feature_map, name);
+    ptrdiff_t idx = shgeti(g_feature_map, (char*)name);
+    FeatureReg* existing = idx >= 0 ? (FeatureReg*)g_feature_map[idx].value : NULL;
     if (existing) {
         existing->cb = cb;
         if (icon_path) {
@@ -280,11 +281,11 @@ void fl_register_feature_with_icon(const char* name, void (*cb)(void), const cha
         strncpy(reg->icon, icon_path, sizeof(reg->icon)-1);
         reg->icon[sizeof(reg->icon)-1] = '\0';
     }
-    HashMap_Put(g_feature_map, reg->name, reg);
+    shput(g_feature_map, reg->name, reg);
     if (g_feature_order_count >= g_feature_order_cap) {
         int new_cap = g_feature_order_cap ? g_feature_order_cap * 2 : 32;
         FeatureReg** new_order = (FeatureReg**)realloc(g_feature_order, new_cap * sizeof(FeatureReg*));
-        if (!new_order) { HashMap_Remove(g_feature_map, reg->name); free(reg); return; }
+        if (!new_order) { shdel(g_feature_map, reg->name); free(reg); return; }
         g_feature_order = new_order;
         g_feature_order_cap = new_cap;
     }

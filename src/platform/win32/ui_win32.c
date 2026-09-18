@@ -9,7 +9,6 @@
 #include "core/modal.h"
 #include "core/types.h"
 #include "core/vim.h"
-#include "core/hashmap.h"
 #include "core/hotkey_manager.h"
 #include "core/feature_data.h"
 #include "core/platform.h"
@@ -313,7 +312,6 @@ char* Platform_PromptUser(const PromptSpec* spec) {
 
   {
     const char* p = strchr(window_title, ' ');
-    TimerEnd(FlintContext_Get()->g_timer, p ? p+1 : window_title);
   }
   HINSTANCE hInstance = GetModuleHandle(NULL);
   FlintContext_Get()->window.selection_complete = false;
@@ -336,15 +334,16 @@ char* Platform_PromptUser(const PromptSpec* spec) {
     g_win32_prompt_state = win_state;
   }
 
-  if (FlintContext_Get()->g_item_index_map) {
-    HashMap_Destroy(FlintContext_Get()->g_item_index_map);
-    FlintContext_Get()->g_item_index_map = NULL;
+  if (FlintContext_Get()->item_index_map) {
+    shfree(FlintContext_Get()->item_index_map);
+    FlintContext_Get()->item_index_map = NULL;
   }
   if (window_list && count > 0) {
-    FlintContext_Get()->g_item_index_map = HashMap_Create(count);
+    FlintContext_Get()->item_index_map = NULL;
+    sh_new_strdup(FlintContext_Get()->item_index_map);
     for (int i = 0; i < count; i++) {
       if (window_list[i]) {
-        HashMap_Put(FlintContext_Get()->g_item_index_map, window_list[i], (void*)(size_t)(i + 1));
+        shput(FlintContext_Get()->item_index_map, window_list[i], (void*)(size_t)(i + 1));
       }
     }
   }
@@ -497,9 +496,9 @@ PROFILE_END_VAR(timer3, "Focus");
   FlintContext_Get()->prompt_callbacks.filter = NULL;
   FlintContext_Get()->prompt_callbacks.help = NULL;
 
-  if (FlintContext_Get()->g_item_index_map) {
-    HashMap_Destroy(FlintContext_Get()->g_item_index_map);
-    FlintContext_Get()->g_item_index_map = NULL;
+  if (FlintContext_Get()->item_index_map) {
+    shfree(FlintContext_Get()->item_index_map);
+    FlintContext_Get()->item_index_map = NULL;
   }
 
   log_info("Returning from Platform_PromptUser. Buffer Length: %zu", strlen(FlintContext_Get()->window.output_buffer));
@@ -623,7 +622,7 @@ log_info("Platform_SimplePromptUser spec=%p", spec);;
 }
 
 void Platform_DisplayMessage(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, int timeout, ColorRef color) {
-  if (WH_TO_HWND(FlintContext_Get()->window.hGlobalTrayWnd) != NULL && GetCurrentThreadId() != FlintContext_Get()->g_main_thread_id) {
+  if (WH_TO_HWND(FlintContext_Get()->window.hGlobalTrayWnd) != NULL && GetCurrentThreadId() != FlintContext_Get()->main_thread_id) {
     DisplayMessageParams params = { message, centerX, centerY, maxWidth, maxHeight, timeout, color };
     SendMessageA(WH_TO_HWND(FlintContext_Get()->window.hGlobalTrayWnd), WM_DISPLAY_MESSAGE, 0, (LPARAM)&params);
     return;

@@ -1,3 +1,4 @@
+#define STB_DS_IMPLEMENTATION
 #include "core/context.h"
 #include "deps/log.h"
 #include "core/modal.h"
@@ -28,7 +29,8 @@ int main() {
 
   Platform_StartUniversalTimer();
   Platform_InitializeTrayIcon();
-  FlintContext_Get()->feature_history = HashMap_Create(32);
+  FlintContext_Get()->feature_history = NULL;
+  sh_new_strdup(FlintContext_Get()->feature_history);
   InitFeatureDataSystem();
   History_Init();
   Platform_InitUI();
@@ -54,16 +56,18 @@ int main() {
 
   FlintContext* _ctx = FlintContext_Get();
   if (_ctx->feature_history) {
-    HashMap_DestroyWith(_ctx->feature_history, free_history_list);
+    for (ptrdiff_t i = 0; i < shlen(_ctx->feature_history); i++) free_history_list(_ctx->feature_history[i].value);
+    shfree(_ctx->feature_history);
     _ctx->feature_history = NULL;
   }
   if (_ctx->history_indices) {
-    HashMap_DestroyWith(_ctx->history_indices, free);
+    for (ptrdiff_t i = 0; i < shlen(_ctx->history_indices); i++) free(_ctx->history_indices[i].value);
+    shfree(_ctx->history_indices);
     _ctx->history_indices = NULL;
   }
-  if (_ctx->g_item_index_map) {
-    HashMap_Destroy(_ctx->g_item_index_map);
-    _ctx->g_item_index_map = NULL;
+  if (_ctx->item_index_map) {
+    shfree(_ctx->item_index_map);
+    _ctx->item_index_map = NULL;
   }
 
   return 0;
