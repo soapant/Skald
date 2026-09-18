@@ -285,6 +285,7 @@ static void Linux_HandleKeyRelease(Display* dpy, XKeyEvent* ev) {
 
 void Linux_ProcessXEvent(Display* dpy, XEvent* ev, WindowManager* wm) {
     PROFILE_START(timer);
+
     Popup* top = WindowManager_GetTopPopup(wm);
     if (!top) { PROFILE_END_VAR(timer, "window_manager_x11:Linux_ProcessXEvent"); return; }
     switch (ev->type) {
@@ -306,14 +307,12 @@ void Linux_ProcessXEvent(Display* dpy, XEvent* ev, WindowManager* wm) {
                 top->vtable->on_focus_lost(top);
             }
             break;
-        case SelectionRequest:
-           Linux_ClipboardUpdate(ev);
-           break;
     }
     PROFILE_END_VAR(timer, "window_manager_x11:Linux_ProcessXEvent");
 }
 
 int WindowManager_RunLinux(WindowManager* wm) {
+    XEvent xev;
     PROFILE_START(timer);
     if (!wm) { PROFILE_END_VAR(timer, "window_manager_x11:WindowManager_RunLinux"); return -1; }
     wm->running = true;
@@ -370,7 +369,7 @@ int WindowManager_RunLinux(WindowManager* wm) {
         else log_error("failed to start input thread");
     }
 
-    XEvent xev;
+
     while (wm->running) {
         struct pollfd xfd = { .fd = ConnectionNumber(dpy), .events = POLLIN };
         int poll_res = poll(&xfd, 1, 50);
@@ -406,6 +405,7 @@ void WindowManager_ProcessEventsLinux(WindowManager* wm) {
     
     Display* dpy = wm->display;
     XEvent ev;
+
     
     while (XPending(dpy) > 0) {
         XNextEvent(dpy, &ev);
