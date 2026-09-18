@@ -133,15 +133,37 @@ void FeatureLoader_Reload(const char* name) {
     FL_LOCK();
     for (int i=0;i<g_feature_count;i++) {
         if (strcmp(g_features[i].name, name)==0) {
+            char path_copy[512];
+            strncpy(path_copy, g_features[i].path, sizeof(path_copy)-1);
+            path_copy[sizeof(path_copy)-1]='\0';
+            LibHandle old = g_features[i].handle;
+            LibHandle h = Platform_LoadLibrary(path_copy);
+            if (!h) {
+#ifndef _WIN32
+                log_error("reload %s failed: %s (keeping old)", name, dlerror());
+#else
+                log_error("reload %s failed (keeping old)", name);
+#endif
+                FL_UNLOCK(); return;
+            }
+            typedef void (*InitFn)(void);
+            InitFn init = (InitFn)Platform_GetSymbol(h, "FlintFeatureInit");
+            if (!init) init = (InitFn)Platform_GetSymbol(h, "FlintFeatureReload");
+            if (!init) {
+                log_error("reload %s: no init symbol, keeping old", name);
+                Platform_UnloadLibrary(h);
+                FL_UNLOCK(); return;
+            }
             typedef void (*ShutdownFn)(void);
-            ShutdownFn shut = (ShutdownFn)Platform_GetSymbol(g_features[i].handle, "FlintFeatureShutdown");
+            ShutdownFn shut = (ShutdownFn)Platform_GetSymbol(old, "FlintFeatureShutdown");
             if (shut) shut();
-            Platform_UnloadLibrary(g_features[i].handle);
+            Platform_UnloadLibrary(old);
 #ifdef _WIN32
             FL_UNLOCK();
             Sleep(100);
             FL_LOCK();
             if (i >= g_feature_count || strcmp(g_features[i].name, name)!=0) {
+                Platform_UnloadLibrary(h);
                 FL_UNLOCK();
                 char file2[MaxFeatures];
                 snprintf(file2, sizeof(file2), "%s%s", name, Platform_LibExtension());
@@ -152,13 +174,9 @@ void FeatureLoader_Reload(const char* name) {
                 return;
             }
 #endif
-            LibHandle h = Platform_LoadLibrary(g_features[i].path);
-            if (!h) { FL_UNLOCK(); return; }
-            typedef void (*InitFn)(void);
-            InitFn init = (InitFn)Platform_GetSymbol(h, "FlintFeatureInit");
-            if (!init) init = (InitFn)Platform_GetSymbol(h, "FlintFeatureReload");
-            if (init) init();
+            init();
             g_features[i].handle = h;
+            strncpy(g_features[i].path, path_copy, sizeof(g_features[i].path)-1);
             log_info("reloaded %s", name);
             FL_UNLOCK();
             return;

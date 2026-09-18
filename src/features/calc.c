@@ -429,7 +429,6 @@ void calculator_render_callback(PromptState *state) {
 }
 
 bool calculator_enter_callback(const char* selection, ListBoxInfo* lb) {
-    (void)selection; (void)lb;
     fl_copy_to_clipboard(g_calc_last_result);
     return true;
 }
@@ -444,8 +443,6 @@ void calculator_tab_callback(ListBoxInfo* lb) {
         int len = strlen(flipped); UI_SetCursorPosition(FlintContext_Get()->window.hEditControl,len);
         UI_GetParent(FlintContext_Get()->window.hEditControl);
         printf("[CALCULATOR] Flipped: %s\n", flipped);
-    } else {
-        printf("[CALCULATOR] Cannot flip: not a valid operation\n");
     }
 }
 

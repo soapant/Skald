@@ -1329,19 +1329,23 @@ int Platform_CopyToClipboard(const char* text) {
 
 bool Platform_BuildFeature(const char* src, const char* out) {
     if (!src || !out) { log_error("operation failed, returning error src='%s' out='%s'", src ? src : "null", out ? out : "null"); return false; }
+    char tmp[1024];
+    snprintf(tmp, sizeof(tmp), "%s.tmp.%d", out, (int)getpid());
     char cmd[1024];
-    snprintf(cmd, sizeof(cmd), "gcc -I include -I/usr/include/freetype2 -w -g -fPIC -shared -o %s %s 2>&1", out, src);
+    snprintf(cmd, sizeof(cmd), "gcc -I include -I/usr/include/freetype2 -w -g -fPIC -shared -o %s %s 2>&1", tmp, src);
     char* outStr = Platform_RunTerminalCommand(cmd, false);
     bool ok = false;
     if (outStr) {
-        if (strlen(outStr)==0 || !strstr(outStr, "error:")) ok = true;
+        if (strlen(outStr)==0 || (!strstr(outStr, "error:") && !strstr(outStr, "undefined reference") && !strstr(outStr, "failed"))) ok = true;
         log_info("%s", outStr);
         free(outStr);
     } else {
         ok = true;
     }
+    if (!ok) { unlink(tmp); return false; }
+    if (rename(tmp, out) != 0) { unlink(tmp); log_error("rename %s -> %s failed: %s", tmp, out, strerror(errno)); return false; }
     log_info("Platform_BuildFeature src='%s' out='%s'", src ? src : "", out ? out : "");;
-    return ok;
+    return true;
 }
 
 Fl_WindowList Platform_GetWindowTitles() {

@@ -265,8 +265,6 @@ static bool binding_active(RemapBinding* b) {
 bool remap_handle_vk(int vk_code, int value) {
     if (vk_code<0 || vk_code>=256) return false;
     if (value==2) return false;
-    log_info("remap_handle_vk vk=%d val=%d physBefore LCtrl=%d RCtrl=%d LShift=%d RShift=%d LAlt=%d RAlt=%d LWin=%d RWin=%d", vk_code, value, g_phys_vk[VK_LCONTROL], g_phys_vk[VK_RCONTROL], g_phys_vk[VK_LSHIFT], g_phys_vk[VK_RSHIFT], g_phys_vk[VK_LMENU], g_phys_vk[VK_RMENU], g_phys_vk[VK_LWIN], g_phys_vk[VK_RWIN]);
-    log_warn("remap_handle_vk vk=%d val=%d physBefore LCtrl=%d RCtrl=%d LShift=%d RAlt=%d", vk_code, value, g_phys_vk[VK_LCONTROL], g_phys_vk[VK_RCONTROL], g_phys_vk[VK_LSHIFT], g_phys_vk[VK_RMENU]);
     bool active_before[64]={0};
     for (int i=0;i<g_remap_count;i++) active_before[i]=binding_active(&g_remaps[i]);
 
