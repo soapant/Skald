@@ -438,11 +438,14 @@ int main(int argc, char** argv) {
             if (nob_file_exists(so)) nob_log(NOB_INFO, "Built feature %s", so);
         }
     }
+
+#if !defined(_WIN32)
     {
         Nob_Cmd chmod = {0};
         nob_cmd_append(&chmod, "chmod", "+x", output);
         nob_cmd_run(&chmod);
     }
+#endif
     stop_running_instance();
 #if !defined(_WIN32)
     {
@@ -455,7 +458,6 @@ int main(int argc, char** argv) {
         nob_cmd_run(&rpath);
     }
 #endif
-
     if (do_run) {
         Nob_Cmd run = {0};
         nob_cmd_append(&run, output);
