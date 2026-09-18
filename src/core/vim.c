@@ -16,7 +16,7 @@ SequenceState seq_state = {0};
 #if defined(_WIN32)
 static void Win32_SyncFilterFromEdit(FlintContext* ctx) {
     if (!ctx) return;
-    HWND hEdit = WH_TO_HWND(ctx->window.g_ActiveEditControl);
+    HWND hEdit = WH_TO_HWND(ctx->window.hActiveEditControl);
     if (!hEdit) hEdit = WH_TO_HWND(ctx->window.hEditControl);
     if (!hEdit || !IsWindow(hEdit)) return;
     char buf[sizeof(ctx->window.filter)];
@@ -31,7 +31,7 @@ static void Win32_SyncFilterFromEdit(FlintContext* ctx) {
 static void Win32_ApplyFilterToEdit(FlintContext* ctx) {
     if (!ctx) return;
     HWND hEdit = WH_TO_HWND(ctx->window.hEditControl);
-    if (!hEdit) hEdit = WH_TO_HWND(ctx->window.g_ActiveEditControl);
+    if (!hEdit) hEdit = WH_TO_HWND(ctx->window.hActiveEditControl);
     if (!hEdit || !IsWindow(hEdit)) return;
     int pos = ctx->window.filter_cursor;
     int len = (int)strlen(ctx->window.filter);
@@ -39,9 +39,9 @@ static void Win32_ApplyFilterToEdit(FlintContext* ctx) {
     if (pos > len) pos = len;
     SetWindowTextA(hEdit, ctx->window.filter);
     SendMessageA(hEdit, EM_SETSEL, (WPARAM)pos, (LPARAM)pos);
-    if (WH_TO_HWND(ctx->window.g_ActiveEditControl) &&
-        WH_TO_HWND(ctx->window.g_ActiveEditControl) != hEdit) {
-        HWND hActive = WH_TO_HWND(ctx->window.g_ActiveEditControl);
+    if (WH_TO_HWND(ctx->window.hActiveEditControl) &&
+        WH_TO_HWND(ctx->window.hActiveEditControl) != hEdit) {
+        HWND hActive = WH_TO_HWND(ctx->window.hActiveEditControl);
         SetWindowTextA(hActive, ctx->window.filter);
         SendMessageA(hActive, EM_SETSEL, (WPARAM)pos, (LPARAM)pos);
     }
@@ -156,7 +156,7 @@ void Vim_SetCursor(FlintContext* ctx, int pos) {
     SyncFilterToActiveState(ctx);
 #if defined(_WIN32)
     HWND hEdit = WH_TO_HWND(ctx->window.hEditControl);
-    if (!hEdit) hEdit = WH_TO_HWND(ctx->window.g_ActiveEditControl);
+    if (!hEdit) hEdit = WH_TO_HWND(ctx->window.hActiveEditControl);
     if (hEdit) {
         SendMessageA(hEdit, EM_SETSEL, (WPARAM)pos, (LPARAM)pos);
         UpdateTextCaret(WH_FROM_HWND(hEdit));

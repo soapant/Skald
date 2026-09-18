@@ -141,7 +141,7 @@ LRESULT CALLBACK SearchPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPar
             UI_Edit_SetFont(FlintContext_Get()->window.g_hSearchPopup,hFont);
             UI_Edit_SetSel(FlintContext_Get()->window.g_hSearchPopup,0,0);
             SetFocus(WH_TO_HWND(FlintContext_Get()->window.g_hSearchPopup));
-            FlintContext_Get()->window.g_ActiveEditControl = FlintContext_Get()->window.g_hSearchPopup;
+            FlintContext_Get()->window.hActiveEditControl = FlintContext_Get()->window.g_hSearchPopup;
             
             SetWindowLongPtrA(WH_TO_HWND(FlintContext_Get()->window.g_hSearchPopup), GWLP_USERDATA,1);
             SetWindowSubclass(WH_TO_HWND(FlintContext_Get()->window.g_hSearchPopup), SearchPopupSubclassProc, 0,1);
@@ -212,7 +212,7 @@ LRESULT CALLBACK SearchPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPar
     }
             
     case WM_DESTROY: {
-      FlintContext_Get()->window.g_ActiveEditControl = FlintContext_Get()->window.hEditControl;
+      FlintContext_Get()->window.hActiveEditControl = FlintContext_Get()->window.hEditControl;
         DeleteObject(hFont);
         SetWindowLongPtrA(hwnd, GWLP_USERDATA, 0);
         ForceWindowFocus(FlintContext_Get()->window.hPopupWnd, FlintContext_Get()->window.hEditControl);

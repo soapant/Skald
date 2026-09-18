@@ -177,7 +177,7 @@ LRESULT CALLBACK SettingsEditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LP
   (void)hwnd;
     
     if (msg == WM_KEYDOWN) {
-      FlintContext_Get()->window.g_ActiveEditControl = FlintContext_Get()->window.hEditControl;
+      FlintContext_Get()->window.hActiveEditControl = FlintContext_Get()->window.hEditControl;
         bool ctrl_pressed = (GetKeyState(VK_CONTROL) & 0x8000);
         if (wParam == VK_CONTROL || wParam == VK_SHIFT) {
           return DefSubclassProc(hwnd, msg, wParam, lParam);

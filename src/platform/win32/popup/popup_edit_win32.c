@@ -157,7 +157,7 @@ LRESULT CALLBACK EditPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
             UI_Edit_SetFont(data->hEdit,data->hFont);
               UI_Edit_SetSel(data->hEdit,0,0);
               SetFocus(WH_TO_HWND(data->hEdit));
-              FlintContext_Get()->window.g_ActiveEditControl = data->hEdit;
+              FlintContext_Get()->window.hActiveEditControl = data->hEdit;
               
               SetWindowLongPtrA(WH_TO_HWND(data->hEdit), GWLP_USERDATA, (LONG_PTR)data);
               SetWindowSubclass(WH_TO_HWND(data->hEdit), EditPopupSubclassProc, 0, (DWORD_PTR)data);
@@ -228,7 +228,7 @@ LRESULT CALLBACK EditPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
     }
             
     case WM_DESTROY: {
-      FlintContext_Get()->window.g_ActiveEditControl = FlintContext_Get()->window.hEditControl;
+      FlintContext_Get()->window.hActiveEditControl = FlintContext_Get()->window.hEditControl;
         if (data) {
           if (data->initial_text) { free((void*)data->initial_text); data->initial_text = NULL; }
             if (data->hFont) { DeleteObject(data->hFont); data->hFont = NULL; }

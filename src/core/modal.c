@@ -40,8 +40,8 @@ void SetModeWithListBox(EditorMode mode, ListBoxInfo* lb) {
     if (WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) && IsWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd))) {
         InvalidateRect(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), NULL, TRUE);
     }
-    if (WH_TO_HWND(FlintContext_Get()->window.g_ActiveEditControl) != NULL) {
-        UpdateTextCaret(FlintContext_Get()->window.g_ActiveEditControl);
+    if (WH_TO_HWND(FlintContext_Get()->window.hActiveEditControl) != NULL) {
+        UpdateTextCaret(FlintContext_Get()->window.hActiveEditControl);
     }
 #endif
 }
