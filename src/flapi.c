@@ -866,6 +866,132 @@ int fl_get_key_pressed(void){
 char fl_get_char_pressed(void){
   return Platform_GetPressedChar();
 }
+
+bool fl_is_flag_prefix(char c) { return c == '-' || c == '/'; }
+
+size_t fl_extract_flag_name(char *p, char *out, size_t cap) {
+    size_t n = 0;
+    while (p[n] && !isspace((unsigned char)p[n]) && p[n] != '=') n++;
+    if (n >= cap) n = cap - 1;
+    memcpy(out, p, n); out[n] = '\0';
+    return n;
+}
+
+bool fl_extract_quoted(char **pp, char *out, size_t cap) {
+    char *p = *pp;
+    char q = *p++;
+    char *s = p;
+    while (*p && *p != q) p++;
+    size_t len = p - s;
+    if (len >= cap) len = cap - 1;
+    memcpy(out, s, len); out[len] = '\0';
+    if (*p == q) p++;
+    *pp = p;
+    return true;
+}
+bool fl_extract_value(char **pp, char *out, size_t cap) {
+    char *p = *pp;
+    if (*p == '"' || *p == '\'') return fl_extract_quoted(pp, out, cap);
+    char *s = p;
+    while (*p && !isspace((unsigned char)*p)) p++;
+    size_t len = p - s;
+    if (len >= cap) len = cap - 1;
+    memcpy(out, s, len); out[len] = '\0';
+    *pp = p;
+    return len > 0;
+}
+bool fl_next_is_flag(char *p) {
+    while (*p && isspace((unsigned char)*p)) p++;
+    return *p == '-' || *p == '/';
+}
+Fl_FlagList fl_parse_flags(const char* input) {
+    Fl_FlagList out = {0};
+    if (!input || !*input) return out;
+    char *copy = strdup(input);
+    if (!copy) return out;
+    size_t cap = 8;
+    Fl_Flag *arr = (Fl_Flag*)calloc(cap, sizeof(Fl_Flag));
+    if (!arr) { free(copy); return out; }
+    char *p = copy;
+    while (*p) {
+        while (*p && isspace((unsigned char)*p)) p++;
+        if (!*p) break;
+        if (!fl_is_flag_prefix(*p)) { while (*p && !isspace((unsigned char)*p)) p++; continue; }
+        p++; if (*p == '-') p++;
+        char name[64] = {0};
+        size_t nlen = fl_extract_flag_name(p, name, sizeof(name));
+        p += nlen;
+        char valbuf[256] = {0};
+        bool has_val = false;
+        if (*p == '=') { p++; has_val = fl_extract_value(&p, valbuf, sizeof(valbuf)); }
+        else {
+            char *save = p;
+            while (*p && isspace((unsigned char)*p)) p++;
+            if (*p && !fl_is_flag_prefix(*p)) {
+                has_val = fl_extract_value(&p, valbuf, sizeof(valbuf));
+                if (has_val && fl_next_is_flag(p)) { has_val = false; p = save; while (*p && isspace((unsigned char)*p)) p++; }
+            }
+        }
+        if (out.count >= cap) {
+            cap *= 2;
+            Fl_Flag *narr = (Fl_Flag*)realloc(arr, cap * sizeof(Fl_Flag));
+            if (!narr) break;
+            arr = narr;
+        }
+        Fl_Flag *f = &arr[out.count++];
+        memset(f, 0, sizeof(*f));
+        strncpy(f->name, name, sizeof(f->name)-1);
+        if (has_val) { strncpy(f->value, valbuf, sizeof(f->value)-1); f->has_value = true; }
+    }
+    free(copy);
+    out.flags = arr;
+    if (out.count == 0) { free(arr); out.flags = NULL; }
+    return out;
+}
+
+void fl_free_flags(Fl_FlagList* list) {
+    if (!list) return;
+    free(list->flags);
+    list->flags = NULL;
+    list->count = 0;
+}
+
+int fl_time_unit_mult(const char *unit) {
+    if (!unit || !*unit) return 1;
+    if (strcmp(unit,"ms")==0 || strcmp(unit,"millis")==0) return 0;
+    if (strcmp(unit,"s")==0 || strcmp(unit,"sec")==0 || strcmp(unit,"secs")==0 || strcmp(unit,"second")==0) return 1;
+    if (strcmp(unit,"m")==0 || strcmp(unit,"min")==0 || strcmp(unit,"mins")==0 || strcmp(unit,"minute")==0) return 60;
+    if (strcmp(unit,"h")==0 || strcmp(unit,"hr")==0 || strcmp(unit,"hrs")==0 || strcmp(unit,"hour")==0) return 3600;
+    if (strcmp(unit,"d")==0 || strcmp(unit,"day")==0 || strcmp(unit,"days")==0) return 86400;
+    if (strcmp(unit,"w")==0 || strcmp(unit,"week")==0 || strcmp(unit,"weeks")==0) return 604800;
+    if (strcmp(unit,"mo")==0 || strcmp(unit,"month")==0 || strcmp(unit,"months")==0) return 2592000;
+    if (strcmp(unit,"y")==0 || strcmp(unit,"yr")==0 || strcmp(unit,"year")==0) return 31536000;
+    return 1;
+}
+
+int fl_parse_time(const char* time_str) {
+    if (!time_str || !*time_str) return 0;
+    int total = 0;
+    const char *p = time_str;
+    while (*p) {
+        while (*p && isspace((unsigned char)*p)) p++;
+        if (!*p) break;
+        char *end = NULL;
+        long num = strtol(p, &end, 10);
+        if (end == p) { p++; continue; }
+        p = end;
+        while (*p && isspace((unsigned char)*p)) p++;
+        char unit[16] = {0};
+        int ui = 0;
+        while (*p && isalpha((unsigned char)*p) && ui < 15) unit[ui++] = tolower((unsigned char)*p++);
+        unit[ui]='\0';
+        int mult = fl_time_unit_mult(unit);
+        if (mult == 0) total += num / 1000;
+        else total += num * mult;
+    }
+    return total;
+}
+
 void fl_run_after_time(double seconds, void (*callback)(void)) {
     return fl_run_after_time_platform(seconds,callback);
 }

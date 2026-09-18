@@ -315,6 +315,21 @@ int fl_get_text_width(const char *text);
 int fl_get_text_height(const char *text);
 bool fl_is_visible(void *widget);
 
+typedef struct {
+    char name[64];
+    char value[256];
+    bool has_value;
+} Fl_Flag;
+
+typedef struct {
+    Fl_Flag* flags;
+    size_t count;
+} Fl_FlagList;
+
+Fl_FlagList fl_parse_flags(const char* input);
+void fl_free_flags(Fl_FlagList* list);
+int fl_parse_time(const char* time_str);
+
 // =============================================================================
 // HOTKEY MACROS DONT LOOK AT 
 // =============================================================================
