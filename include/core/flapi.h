@@ -111,10 +111,9 @@ Fl_WindowList fl_get_all_window_titles();
 Fl_WindowList fl_get_all_window_names();
 
 // =============================================================================
-// WATCH / ADB / MISC
+// ADB
 // =============================================================================
 
-char* fl_on_dir_changed(char* dir_path,void(callback)(void));
 char* fl_adb_tap(int x,int y);
 char* fl_adb_type_text(char* text);
 char* fl_adb_get_devices();
@@ -125,7 +124,6 @@ char* fl_adb_clear_app_data(char* app_name);
 char* fl_adb_get_file(char* filepath,char* output_file_path);
 char* fl_adb_put_file(char* filepath,char* output_file_path);
 char* fl_adb_reboot();
-bool fl_string_match_insensitive(char* needle,char* haystack);
 
 // =============================================================================
 // STRING UTILITIES (all returned char* are heap-allocated, caller must free())
@@ -333,6 +331,7 @@ bool fl_register_remapping(const char* src, const char* dst);
 // =============================================================================
 // AUDIO / VOLUME
 // =============================================================================
+
 void fl_toggle_play_pause(void);
 int fl_get_current_volume(void);
 bool fl_set_current_volume(int volume);
@@ -340,9 +339,14 @@ bool fl_increment_volume_by(int increment);
 bool fl_decrement_volume_by(int decrement);
 bool fl_increment_volume_by_percent(int increment_percent);
 bool fl_decrement_volume_by_percent(int decrement_percent);
+
 // =============================================================================
-// WINDOW IO
+// MISC
 // =============================================================================
+
+void fl_run_after_time(double seconds, void (*callback)(void));
+char* fl_on_dir_changed(char* dir_path,void(callback)(void));
+bool fl_string_match_insensitive(char* needle,char* haystack);
 
 Fl_Pos fl_get_cursor_pos(void);
 bool fl_type_text(const char *s);
