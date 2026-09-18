@@ -12,7 +12,6 @@ extern char* selection_feature;
 
 void SetMode(EditorMode mode);
 void SetModeWithListBox(EditorMode mode, ListBoxInfo* lb);
-EditorMode GetMode(void);
 bool IsNormalMode(void);
 bool IsInsertMode(void);
 bool IsVisualMode(void);

@@ -133,9 +133,6 @@ Fl_WindowList get_window_titles_x11() {
    free(output);
    return list;
 }
-Fl_WindowList get_list_of_windows_x11() { 
-  return get_window_names_x11();
-}
 
 Fl_Pos get_cursor_position_x11(void) { 
     Display *display;

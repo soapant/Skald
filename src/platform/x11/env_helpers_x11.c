@@ -82,7 +82,4 @@ bool Env_DaemonExecWithEnv(char* const argv[], const X11SessionEnv* env) {
     return true;
 }
 
-bool Env_DaemonExecSudoEnv(char* const argv[], const X11SessionEnv* env) {
-    (void)env;
-    return Env_DaemonExec(argv);
-}
+

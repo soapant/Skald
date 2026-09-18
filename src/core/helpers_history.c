@@ -16,15 +16,6 @@
 #include "core/timer.h"
 #include "platform/ui.h"
 
-bool IsWindowBlacklisted(const char* window_title, const char* blacklist[], int count) {
-    for (int i = 0; i < count; i++) {
-        if (Platform_StringContainsCaseInsensitive(window_title, blacklist[i])) {
-            return true;
-        }
-    }
-    return false;
-}
-
 int UI_LookupTrueIndex(const char* name) {
     if (!FlintContext_Get()->g_item_index_map || !name) return -1;
     size_t value = (size_t)HashMap_Get(FlintContext_Get()->g_item_index_map, name);

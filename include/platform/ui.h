@@ -68,7 +68,6 @@ void UI_Edit_UpdateUIState(WindowHandle hEdit, UINT action, UINT uiFlags);
 void UI_FlushPendingInput(void);
 void UI_PreparePopupPump(void);
 bool UI_ShouldSkipPopupKey(const void* msg);
-void UI_RedrawBackground(HDC hdc, RECT* rc, BOOL is_selected);
 #endif
 
 #endif

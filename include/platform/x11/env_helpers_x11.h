@@ -18,6 +18,5 @@ bool Env_IsRunningAsRoot(void);
 
 bool Env_DaemonExec(char* const argv[]);
 bool Env_DaemonExecWithEnv(char* const argv[], const X11SessionEnv* env);
-bool Env_DaemonExecSudoEnv(char* const argv[], const X11SessionEnv* env);
 
 #endif

@@ -21,7 +21,6 @@
 #include "core/hotkey_manager.h"
 #include "core/remap_manager.h"
 
-
 bool fl_copy_to_clipboard(const char* text) {
     if (text == NULL) return 0;
     return Platform_CopyToClipboard(text);
@@ -581,11 +580,6 @@ char* fl_string_slice(const char* str, int start, int end) {
     out[n] = '\0';
     return out;
 }
-bool fl_launch_browser_window(char* url) {
-    if (!url) return false;
-    return Platform_LaunchBrowserAtUrl(url,true);
-}
-
 bool fl_launch_browser(char* url) {
     if (!url) return false;
     return Platform_LaunchBrowserAtUrl(url,false);
@@ -757,9 +751,6 @@ bool fl_place_text_impl(const FlTextSpec *spec) {
 bool fl_place_editbox_impl(const FlEditSpec *spec) {
   if (!spec) return false;
   return fl_place_editbox_platform(spec);
-}
-bool fl_place_separator_impl(int x, int y, int w, int h) {
-  (void)x; (void)y; (void)w; (void)h; return false; 
 }
 bool fl_place_image_impl(const FlImageSpec *spec) {
   (void)spec; return false; 
@@ -995,6 +986,7 @@ int fl_parse_time(const char* time_str) {
 void fl_run_after_time(double seconds, void (*callback)(void)) {
     return fl_run_after_time_platform(seconds,callback);
 }
+
 bool fl_is_window_active(char* title) {
   Fl_WindowList l = Platform_GetWindowTitles();
   for (int i = 0; i < l.count;i++) {
