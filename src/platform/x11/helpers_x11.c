@@ -808,7 +808,7 @@ static Pixmap Linux_CreateBackgroundPixmap(Display* dpy, Window win, int w, int 
     uint32_t *row, *pxrow;
     unsigned int r = (base >> 16) & 0xFF, g = (base >> 8) & 0xFF, b = base & 0xFF;
     unsigned long pixel = hasAlpha ? (baseAlpha8 << 24) | (r << 16) | (g << 8) | b : (r << 16) | (g << 8) | b;
-    float _smooth = ShaderSmoothness; if (_smooth < 0.1f) _smooth = 0.1f; if (_smooth > 10.0f) _smooth = 10.0f;
+    float _smooth = 10;
     float _gamma = 2.0f - _smooth * 0.14f; if (_gamma < 0.45f) _gamma = 0.45f; if (_gamma > 2.2f) _gamma = 2.2f;
     static const int _bayer4x4[16] = {0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5};
     #define _DITHER(x,y) (((_bayer4x4[((y)&3)*4 + ((x)&3)] / 16.0f) - 0.5f) * 1.2f)
@@ -927,7 +927,7 @@ Pixmap Linux_GetCachedBackground(Display* dpy, Window win, int w, int h) {
     unsigned long base = rgb_to_hex(COLOR_BG);
     int preset = ShaderPreset;
     float intensity = ShaderIntensity;
-    float smoothness = ShaderSmoothness;
+    float smoothness = 1;
     int radius = CornerRadius;
     bool rounded = RoundedCorners;
     if (g_bgPixmap != None && g_bgDpy == dpy && g_bgW == w && g_bgH == h && g_bgBase == base && g_bgPreset == preset && g_bgIntensity == intensity && g_bgSmoothness == smoothness && g_bgRadius == radius && g_bgRounded == rounded) {
@@ -956,7 +956,7 @@ void Linux_DrawBackgroundToDrawable(Display* dpy, Drawable drw, int w, int h) {
     unsigned long base = rgb_to_hex(COLOR_BG);
     int preset = ShaderPreset;
     float intensity = ShaderIntensity;
-    float smoothness = ShaderSmoothness;
+    float smoothness = 1;
     int radius = CornerRadius;
     bool rounded = RoundedCorners;
     Pixmap cached = None;
@@ -984,7 +984,7 @@ void Linux_DrawBackgroundToDrawable(Display* dpy, Drawable drw, int w, int h) {
     if (!img->data) { XDestroyImage(img); return; }
     unsigned int r = (base >> 16) & 0xFF, g = (base >> 8) & 0xFF, b = base & 0xFF;
     unsigned long fill = hasAlpha ? (baseAlpha8 << 24) | (r << 16) | (g << 8) | b : (r << 16) | (g << 8) | b;
-    float _smooth2 = ShaderSmoothness; if (_smooth2 < 0.1f) _smooth2 = 0.1f; if (_smooth2 > 10.0f) _smooth2 = 10.0f;
+    float _smooth2 = 10;
     float _gamma2 = 2.0f - _smooth2 * 0.14f; if (_gamma2 < 0.45f) _gamma2 = 0.45f; if (_gamma2 > 2.2f) _gamma2 = 2.2f;
     static const int _bayer2[16] = {0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5};
     #define _DITHER2(x,y) (((_bayer2[((y)&3)*4 + ((x)&3)] / 16.0f) - 0.5f) * 1.2f)
