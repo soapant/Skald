@@ -558,7 +558,7 @@ void SimpleCreateChildControls(WindowHandle hwndParent, HFONT hFont, const char*
 
   if (WH_TO_HWND(FlintContext_Get()->window.hEditControl) == NULL) return;
 
-  FlintContext_Get()->window.g_ActiveEditControl = FlintContext_Get()->window.hEditControl;
+  FlintContext_Get()->window.hActiveEditControl = FlintContext_Get()->window.hEditControl;
   UI_Edit_SetFont(FlintContext_Get()->window.hEditControl, hFont);
   SetWindowSubclass(WH_TO_HWND(FlintContext_Get()->window.hEditControl), SimpleEditSubclassProc, 0, 0);
 
@@ -636,7 +636,7 @@ void CreateChildControls(WindowHandle hwndParent, HFONT hFont, const char* list[
     return;
   }
 
-  FlintContext_Get()->window.g_ActiveEditControl = FlintContext_Get()->window.hEditControl;
+  FlintContext_Get()->window.hActiveEditControl = FlintContext_Get()->window.hEditControl;
   UI_Edit_SetFont(FlintContext_Get()->window.hEditControl, hFont);
   SetWindowSubclass(WH_TO_HWND(FlintContext_Get()->window.hEditControl), EditSubclassProc, 0, 0);
 
@@ -718,7 +718,7 @@ void SettingsCreateChildControls(WindowHandle hwndParent, HFONT hFont,const Wind
 
   if (WH_TO_HWND(FlintContext_Get()->window.hEditControl) == NULL) return;
 
-  FlintContext_Get()->window.g_ActiveEditControl = FlintContext_Get()->window.hEditControl;
+  FlintContext_Get()->window.hActiveEditControl = FlintContext_Get()->window.hEditControl;
   UI_Edit_SetFont(FlintContext_Get()->window.hEditControl, hFont);
   SetWindowSubclass(WH_TO_HWND(FlintContext_Get()->window.hEditControl), SettingsEditSubclassProc, 0, 0);
 }

@@ -33,7 +33,7 @@ typedef struct {
     WindowHandle hSettings;
     WindowHandle g_hEditPopup;
     WindowHandle g_hSearchPopup;
-    WindowHandle g_ActiveEditControl;
+    WindowHandle hActiveEditControl;
     EditPopupData* g_EditData;
     bool selection_complete;
     char output_buffer[256];

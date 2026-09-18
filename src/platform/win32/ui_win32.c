@@ -229,7 +229,7 @@ void UI_SetCursorPosition(WindowHandle ctrl, int position) {
 }
 
 void UI_GetCurrentCursorPosition(uint32_t *start, uint32_t *end) {
-    if (start && end) UI_Edit_GetSel(FlintContext_Get()->window.g_ActiveEditControl, start, end);
+    if (start && end) UI_Edit_GetSel(FlintContext_Get()->window.hActiveEditControl, start, end);
 }
 
 void UI_RedrawNow(ListBoxInfo* lb, WindowHandle hListBox) {
@@ -514,7 +514,7 @@ char* Platform_SimplePromptUser(const SimplePromptSpec* spec) {
   WindowHandle saved_hPopupWnd = FlintContext_Get()->window.hPopupWnd;
   WindowHandle saved_hListBox = FlintContext_Get()->window.hListBox;
   WindowHandle saved_hEditControl = FlintContext_Get()->window.hEditControl;
-  WindowHandle saved_gActive = FlintContext_Get()->window.g_ActiveEditControl;
+  WindowHandle saved_gActive = FlintContext_Get()->window.hActiveEditControl;
   PromptState *saved_state = g_win32_prompt_state;
   const char *saved_title = FlintContext_Get()->window.title;
   char *saved_feature = FlintContext_Get()->window.current_feature;
@@ -595,7 +595,7 @@ return NULL;
   FlintContext_Get()->window.hPopupWnd = saved_hPopupWnd;
   FlintContext_Get()->window.hListBox = saved_hListBox;
   FlintContext_Get()->window.hEditControl = saved_hEditControl;
-  FlintContext_Get()->window.g_ActiveEditControl = saved_gActive;
+  FlintContext_Get()->window.hActiveEditControl = saved_gActive;
   g_win32_prompt_state = saved_state;
   FlintContext_Get()->window.title = saved_title;
   FlintContext_Get()->window.current_feature = saved_feature;
