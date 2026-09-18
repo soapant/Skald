@@ -7,7 +7,6 @@
 #include "platform/wm_platform.h"
 #include "core/feature_data.h"
 #include "core/vim.h"
-#include "core/hashmap.h"
 #include "config.h"
 #include <stdlib.h>
 #include <string.h>
@@ -136,17 +135,18 @@ void WindowManager_GetCenteredPos(int win_w, int win_h, int *out_x, int *out_y) 
 char* WindowManager_ShowPrompt(WindowManager* wm, const PromptSpec* spec) {
     PROFILE_START(timer);
     if (!wm || !spec) { PROFILE_END_VAR(timer, "window_manager:WindowManager_ShowPrompt"); return NULL; }
-    if (FlintContext_Get()->g_item_index_map) {
-        HashMap_Destroy(FlintContext_Get()->g_item_index_map);
-        FlintContext_Get()->g_item_index_map = NULL;
+    if (FlintContext_Get()->item_index_map) {
+        shfree(FlintContext_Get()->item_index_map);
+        FlintContext_Get()->item_index_map = NULL;
     }
     if (spec->items) {
         int count = 0;
         for (count = 0; spec->items[count]; count++) {}
         if (count > 0) {
-            FlintContext_Get()->g_item_index_map = HashMap_Create(count > 32 ? count : 32);
+            FlintContext_Get()->item_index_map = NULL;
+            sh_new_strdup(FlintContext_Get()->item_index_map);
             for (int i = 0; i < count; i++) {
-                if (spec->items[i]) HashMap_Put(FlintContext_Get()->g_item_index_map, spec->items[i], (void*)(size_t)(i + 1));
+                if (spec->items[i]) shput(FlintContext_Get()->item_index_map, (char*)spec->items[i], (void*)(size_t)(i + 1));
             }
         }
     }

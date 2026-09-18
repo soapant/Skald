@@ -1,6 +1,5 @@
 #include "core/history.h"
 #include "deps/log.h"
-#include "core/hashmap.h"
 #include "core/context.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,7 +14,7 @@ typedef struct {
     int cursor;
 } HistoryList;
 
-static HashMap* g_history = NULL;
+static FlintMap* g_history = NULL;
 
 static void free_history_list(void* v) {
     HistoryList* hl = (HistoryList*)v;
@@ -27,8 +26,9 @@ static void free_history_list(void* v) {
 
 static HistoryList* get_or_create(const char* feature) {
     if (!feature || !feature[0]) return NULL;
-    if (!g_history) g_history = HashMap_Create(32);
-    HistoryList* hl = (HistoryList*)HashMap_Get(g_history, feature);
+    if (!g_history) { g_history = NULL; sh_new_strdup(g_history); }
+    ptrdiff_t idx = shgeti(g_history, (char*)feature);
+    HistoryList* hl = idx >= 0 ? (HistoryList*)g_history[idx].value : NULL;
     if (!hl) {
         hl = calloc(1, sizeof(HistoryList));
         if (!hl) return NULL;
@@ -37,20 +37,22 @@ static HistoryList* get_or_create(const char* feature) {
         if (!hl->items) { free(hl); return NULL; }
         hl->count = 0;
         hl->cursor = -1;
-        HashMap_Put(g_history, feature, hl);
+        shput(g_history, (char*)feature, hl);
     }
     return hl;
 }
 
 static HistoryList* get_existing(const char* feature) {
     if (!g_history || !feature) return NULL;
-    return (HistoryList*)HashMap_Get(g_history, feature);
+    ptrdiff_t idx = shgeti(g_history, (char*)feature);
+    return idx >= 0 ? (HistoryList*)g_history[idx].value : NULL;
 }
 
 void History_Init(void) {
     if (g_history) return;
-    g_history = HashMap_Create(32);
+    g_history = NULL; sh_new_strdup(g_history);
     FILE* f = fopen(HISTORY_FILE, "r");
+    if (!f) return;
     char line[1024];
     char current_feature[256] = {0};
     while (fgets(line, sizeof(line), f)) {
@@ -74,13 +76,9 @@ void History_Init(void) {
     }
     fclose(f);
     if (!g_history) return;
-    for (int i = 0; i < g_history->size; i++) {
-        HashMapEntry* e = g_history->buckets[i];
-        while (e) {
-            HistoryList* hl = (HistoryList*)e->value;
-            if (hl) hl->cursor = -1;
-            e = e->next;
-        }
+    for (ptrdiff_t i = 0; i < shlen(g_history); i++) {
+        HistoryList* hl = (HistoryList*)g_history[i].value;
+        if (hl) hl->cursor = -1;
     }
 }
 
@@ -88,22 +86,19 @@ void History_Shutdown(void) {
     if (!g_history) return;
     FILE* f = fopen(HISTORY_FILE, "w");
     if (f) {
-        for (int i = 0; i < g_history->size; i++) {
-            HashMapEntry* e = g_history->buckets[i];
-            while (e) {
-                HistoryList* hl = (HistoryList*)e->value;
-                if (hl && hl->count > 0) {
-                    fprintf(f, "===FEATURE:%s===\n", e->key);
-                    for (int k = hl->count - 1; k >= 0; k--) {
-                        if (hl->items[k]) fprintf(f, "%s\n", hl->items[k]);
-                    }
+        for (ptrdiff_t i = 0; i < shlen(g_history); i++) {
+            HistoryList* hl = (HistoryList*)g_history[i].value;
+            if (hl && hl->count > 0) {
+                fprintf(f, "===FEATURE:%s===\n", g_history[i].key);
+                for (int k = hl->count - 1; k >= 0; k--) {
+                    if (hl->items[k]) fprintf(f, "%s\n", hl->items[k]);
                 }
-                e = e->next;
             }
         }
         fclose(f);
     }
-    HashMap_DestroyWith(g_history, free_history_list);
+    for (ptrdiff_t i = 0; i < shlen(g_history); i++) free_history_list(g_history[i].value);
+    shfree(g_history);
     g_history = NULL;
 }
 
@@ -194,6 +189,9 @@ int History_Count(const char* feature) {
 
 void History_Clear(const char* feature) {
     if (!g_history || !feature) return;
-    HistoryList* hl = (HistoryList*)HashMap_Remove(g_history, feature);
+    ptrdiff_t idx = shgeti(g_history, (char*)feature);
+    if (idx < 0) return;
+    HistoryList* hl = (HistoryList*)g_history[idx].value;
+    shdel(g_history, (char*)feature);
     if (hl) free_history_list(hl);
 }

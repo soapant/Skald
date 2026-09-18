@@ -2,7 +2,6 @@
 #define FEATURE_DATA_H
 
 #include "core/types.h"
-#include "core/hashmap.h"
 
 struct feature_data* GetFeatureData(const char* name);
 void InitFeatureDataSystem(void);

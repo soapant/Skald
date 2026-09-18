@@ -17,17 +17,20 @@
 #include "platform/ui.h"
 
 int UI_LookupTrueIndex(const char* name) {
-    if (!FlintContext_Get()->g_item_index_map || !name) return -1;
-    size_t value = (size_t)HashMap_Get(FlintContext_Get()->g_item_index_map, name);
+    if (!FlintContext_Get()->item_index_map || !name) return -1;
+    ptrdiff_t idx = shgeti(FlintContext_Get()->item_index_map, (char*)name);
+    size_t value = idx >= 0 ? (size_t)FlintContext_Get()->item_index_map[idx].value : 0;
     log_info("UI_LookupTrueIndex name='%s' raw=%zu", name, value);
     return value > 0 ? (int)(value - 1) : -1;
 }
 
 
 bool GetFromHistory(ListBoxInfo* lb) {
-    char** HistoryList = (char**)HashMap_Get(FlintContext_Get()->feature_history, FlintContext_Get()->window.current_feature);
+    ptrdiff_t hidx = shgeti(FlintContext_Get()->feature_history, FlintContext_Get()->window.current_feature);
+    char** HistoryList = hidx >= 0 ? (char**)FlintContext_Get()->feature_history[hidx].value : NULL;
     if (HistoryList) {
-        int* idx_ptr = (int*)HashMap_Get(FlintContext_Get()->history_indices, FlintContext_Get()->window.current_feature);
+        ptrdiff_t pidx = shgeti(FlintContext_Get()->history_indices, FlintContext_Get()->window.current_feature);
+        int* idx_ptr = pidx >= 0 ? (int*)FlintContext_Get()->history_indices[pidx].value : NULL;
         int idx = idx_ptr ? *idx_ptr : 0;
         
         int count = 0;
@@ -45,10 +48,10 @@ bool GetFromHistory(ListBoxInfo* lb) {
             if (!idx_ptr) {
                 idx_ptr = malloc(sizeof(int));
                 if (!idx_ptr) return true;
-                if (!FlintContext_Get()->history_indices) FlintContext_Get()->history_indices = HashMap_Create(32);
+                if (!FlintContext_Get()->history_indices) { FlintContext_Get()->history_indices = NULL; sh_new_strdup(FlintContext_Get()->history_indices); }
                 if (!FlintContext_Get()->history_indices) { free(idx_ptr); return true; }
-                HashMap_Put(FlintContext_Get()->history_indices, FlintContext_Get()->window.current_feature, idx_ptr);
-                if (!HashMap_Get(FlintContext_Get()->history_indices, FlintContext_Get()->window.current_feature)) { free(idx_ptr); return true; }
+                shput(FlintContext_Get()->history_indices, FlintContext_Get()->window.current_feature, idx_ptr);
+                if (shgeti(FlintContext_Get()->history_indices, FlintContext_Get()->window.current_feature) < 0) { free(idx_ptr); return true; }
             }
             *idx_ptr = idx;
             return true;
