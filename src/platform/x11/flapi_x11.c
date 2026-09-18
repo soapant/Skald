@@ -551,11 +551,11 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
         scroll = Linux_UpdateEditScrollOffset(dpy,xf,buf,text_len,cursor,w, state ? state->scroll_offset : 0, &cursor_x);
         if (state) state->scroll_offset = scroll;
     }
-    int draw_y = y + (xf ? xf->ascent : FontSize) + (h - (xf ? (xf->ascent + xf->descent) : FontSize)) / 2;
     int draw_x = x + 14 - scroll;
+    int y_raw = y + (h - (xf ? (xf->ascent + xf->descent) : FontSize)) / 2;
     Platform_SetDrawContext(dpy, xd, vis, cmap);
     if (text_len > 0) {
-        Platform_DrawTextRaw(draw_x, draw_y, (char*)buf, text_hex, fh, NULL, 0, 0);
+        Platform_DrawTextRaw(draw_x, y_raw, (char*)buf, text_hex, fh, "", 0, 0);
     }
     int cursor_draw_x = x + 14 + cursor_x - scroll;
     if (cursor_draw_x < x + 2) cursor_draw_x = x + 2;
