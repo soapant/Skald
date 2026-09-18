@@ -26,7 +26,6 @@ extern bool EnableShaders;
 extern int ShaderPreset;
 extern int SelectionShaderPreset;
 extern float ShaderIntensity;
-extern float ShaderSmoothness;
 extern char* EditPopUpPos;
 extern int EditPopUpWidthMin;
 extern int PageUpDownLen;

@@ -78,7 +78,7 @@ static unsigned int HashNoiseWin(int x, int y) {
   return h & 0xFF;
 }
 static float Win32_ComputeGamma(void) {
-  float s = ShaderSmoothness;
+  float s = 1;
   if (s < 0.1f) s = 0.1f; if (s > 10.0f) s = 10.0f;
   float g = 2.0f - s * 0.14f;
   if (g < 0.45f) g = 0.45f; if (g > 2.2f) g = 2.2f;
