@@ -22,7 +22,6 @@ extern bool DoTimeDebugs;
 extern bool DebugMode;
 extern bool RoundedCorners;
 extern int CornerRadius;
-extern int ListboxBorderThickness;
 extern bool EnableShaders;
 extern int ShaderPreset;
 extern int SelectionShaderPreset;

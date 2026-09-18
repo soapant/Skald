@@ -473,7 +473,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
           if (RoundedCorners && CornerRadius > 0) {
             int R = 6;
             if (R > CornerRadius) R = CornerRadius;
-            int t = ListboxBorderThickness; if (t < 1) t = 1; if (t > 4) t = 4;
+            int t = 1;
             RECT inner = pdis->rcItem;
             inner.left += t; inner.top += t + 1; inner.right -= t; inner.bottom -= t + 1;
             if (inner.right <= inner.left || inner.bottom <= inner.top) { inner = pdis->rcItem; t = 0; }

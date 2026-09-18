@@ -36,5 +36,4 @@ embed the window monitor into this program as a feature might be good ||[Flint]|
 api the timer and everything in reminder feature ||[Flint]|[FlApi]
 persistent feature state that doesn't require the user to write to a file themselves ||[Flint]|[Feature]|[FlApi]
 listbox items backgrounds are not transparent when shaders are disabled||[Flint]|[Bug]
-add powers to the calculator||[Flint]
 the fucking flapi platform functions dont use the platfrom_ abstracted functions ||[Flint]
