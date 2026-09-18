@@ -114,27 +114,29 @@ void Platform_DrawEditBackground(PromptState *state, Display *dpy, XftDraw *xd, 
 }
 void Platform_DrawEditText(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap, FontHandle font) {
     XftFont *xf = FH_TO_XFT(font);
-    XftColor text_color;
-    Linux_XftAllocColor(dpy, vis, cmap, rgb_to_hex(COLOR_TEXT), 0xFFFF, &text_color);
     int cursor_x = 0;
     int text_len = strlen(state->filter);
     int scroll = Linux_UpdateEditScrollOffset(dpy, xf, state->filter, text_len, state->cursor, state->width, state->scroll_offset, &cursor_x);
     state->scroll_offset = scroll;
     int draw_x = 14 - scroll;
-    int draw_y = 20 + (xf ? xf->ascent : FontSize);
-    if (xf && text_len > 0) {
-        XftDrawStringUtf8(xd, &text_color, xf, draw_x, draw_y, (FcChar8*)state->filter, text_len);
+    if (text_len > 0) {
+        Platform_SetDrawContext(dpy, xd, vis, cmap);
+        Platform_DrawTextRaw(draw_x, 20, state->filter, rgb_to_hex(COLOR_TEXT), font, "", 0, 0);
     }
-    XftColorFree(dpy, vis, cmap, &text_color);
 }
 void Platform_DrawEditCursor(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap, FontHandle font) {
     XftFont *xf = FH_TO_XFT(font);
-    XftColor text_color;
-    Linux_XftAllocColor(dpy, vis, cmap, rgb_to_hex(COLOR_TEXT), 0xFFFF, &text_color);
     int cursor_x = 0;
     Linux_UpdateEditScrollOffset(dpy, xf, state->filter, strlen(state->filter), state->cursor, state->width, state->scroll_offset, &cursor_x);
-    Linux_DrawEditCursor(xd, &text_color, cursor_x, state->scroll_offset, state->width);
-    XftColorFree(dpy, vis, cmap, &text_color);
+    Platform_SetDrawContext(dpy, xd, vis, cmap);
+    int cursor_draw_x = 14 + cursor_x - state->scroll_offset;
+    if (cursor_draw_x < 2) cursor_draw_x = 2;
+    if (cursor_draw_x > state->width - 4) cursor_draw_x = state->width - 4;
+    if (IsInsertMode()) {
+        Platform_DrawRectRaw(cursor_draw_x, 27, 2, FontSize, rgb_to_hex(COLOR_TEXT));
+    } else {
+        Platform_DrawRectRaw(cursor_draw_x, 27, 12, FontSize, rgb_to_hex(COLOR_TEXT));
+    }
 }
 bool Platform_DrawRectRaw(int x, int y, int w, int h, unsigned long color) {
     XftColor col;
