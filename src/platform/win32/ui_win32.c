@@ -311,9 +311,6 @@ char* Platform_PromptUser(const PromptSpec* spec) {
   FilterCallback filter_callback = spec->filter;
   HelpCallback help_callback = spec->help;
 
-  {
-    const char* p = strchr(window_title, ' ');
-  }
   HINSTANCE hInstance = GetModuleHandle(NULL);
   FlintContext_Get()->window.selection_complete = false;
   FlintContext_Get()->window.output_buffer[0] = '\0';
@@ -373,7 +370,7 @@ char* Platform_PromptUser(const PromptSpec* spec) {
   }
 
   WindowLayout layout;
-  CalculateWindowMetrics(0, &layout, 640, 900, item_height);
+  CalculateWindowMetrics(&layout, 640, 900, item_height);
   if (win_state) {
     win_state->width = layout.w;
     win_state->height = layout.h;
@@ -575,12 +572,10 @@ return NULL;
   ForceWindowFocus(FlintContext_Get()->window.hPopupWnd, FlintContext_Get()->window.hEditControl);
 
   MSG msg;
-  int loop_counter = 0;
   UI_PreparePopupPump();
   while (!FlintContext_Get()->window.selection_complete) {
     if (GetMessage(&msg, NULL, 0, 0)) {
       if (UI_ShouldSkipPopupKey(&msg)) continue;
-      loop_counter++;
       TranslateMessage(&msg);
       DispatchMessage(&msg);
     } else {
@@ -696,7 +691,7 @@ void Platform_SettingsPopUp() {
   SetMode(MODE_INSERT);
 
   WindowLayout layout;
-  CalculateWindowMetrics(1, &layout, height, width, item_height);
+  CalculateWindowMetrics(&layout, height, width, item_height);
 
   HFONT hCustomFont = CreateCustomNerdFont(FontSize, UsedFont);
 
@@ -880,8 +875,6 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
       }
     }
     PROFILE_END_VAR(timer2, "HelpScreenCheck");
-
-    int matchedDelay = 0;
 
     MotionAction vimAction = MOTION_NONE;
     const char* matchedSequence = NULL;
