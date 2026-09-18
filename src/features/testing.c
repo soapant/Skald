@@ -2,7 +2,7 @@
 
 
 void Testing(void) {
-  fl_copy_area();
+  fl_copy_to_clipboard("TEXT");
 }
 
 

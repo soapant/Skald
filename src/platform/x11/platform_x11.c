@@ -1231,16 +1231,12 @@ char* Platform_GetIconPath(char* app_path) {
     return strdup(bare[0] ? bare : "placeholder");
 }
 
-int Platform_WaylandCopyToClipboard(const char* text) {
-  return 0;
-}
-
 extern char *clipboard_text;
 extern Atom clipboard_atom;
 extern Atom targets_atom;
 extern Atom utf8_string_atom;
 
-int Platform_X11CopyToClipboard(const char *text) {
+int Platform_CopyToClipboard(const char *text) {
     if (!text)
         return 0;
 
@@ -1271,7 +1267,8 @@ int Platform_X11CopyToClipboard(const char *text) {
 
     XFlush(dpy);
 
-    if (XGetSelectionOwner(dpy, clipboard_atom) != window) {
+    Window owner = XGetSelectionOwner(dpy, clipboard_atom);
+    if (!owner) {
         free(clipboard_text);
         clipboard_text = NULL;
         return 0;
@@ -1280,31 +1277,6 @@ int Platform_X11CopyToClipboard(const char *text) {
     return 1;
 }
 
-
-int Platform_CopyToClipboard(const char* text)
-{
-    PROFILE_START(timer);
-
-    int result;
-
-    const char* wayland_display = getenv("WAYLAND_DISPLAY");
-    const char* x11_display = getenv("DISPLAY");
-
-    if (wayland_display && wayland_display[0] != '\0') {
-        result = Platform_WaylandCopyToClipboard(text);
-    }
-    else if (x11_display && x11_display[0] != '\0') {
-        result = Platform_X11CopyToClipboard(text);
-    }
-    else {
-        log_error("No supported display server detected.");
-        result = 0;
-    }
-
-    PROFILE_END_VAR(timer, "Platform_CopyToClipboard");
-
-    return result;
-}
 
 bool Platform_BuildFeature(const char* src, const char* out) {
     if (!src || !out) { log_error("operation failed, returning error src='%s' out='%s'", src ? src : "null", out ? out : "null"); return false; }
