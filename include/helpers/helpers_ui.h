@@ -25,6 +25,6 @@ void PopulateListBox(ListBoxInfo* lb, WindowHandle hListBox, const char* filter,
 ColorRef GetRainbowColor(float t, float s, float v);
 bool UI_IsListBoxSelected(ListBoxInfo* lb);
 void UpdateTextCaret(WindowHandle hwndEditControl);
-void CalculateWindowMetrics(int count, WindowLayout* layout,int height , int width,int item_height);
+void CalculateWindowMetrics(WindowLayout* layout,int height , int width,int item_height);
 
 #endif
