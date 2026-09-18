@@ -27,7 +27,6 @@ uninstall applications might be good or uninstall things in general although idk
 do time in city time conversions etc etc for the calculator ||[Flint]|[Feature]
 vim motions still act like it even with no editbox so the window needs to be esc twice ||[Flint]|[Bug]
 get pressed char cannot figure out A from a ||[Flint]|[Bug]
-RGB() format is actually BGR for some reason ||[Flint]|[Bug]
 changing font size fucks with the cursor its way too wide and the text position in the edit box ||[Flint]|[Bug]
 do the whole FL_KEY abstraction from windows and linux to have one standard ||[Flint]|[FlApi]|[Change]
 when you hot reload config make sure things like changing fontsize actually stay on restart ||[Flint]|[Bug]
