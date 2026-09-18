@@ -13,6 +13,7 @@
 #include "core/feature_data.h"
 #include "core/platform.h"
 #include "core/window_manager.h"
+#include "platform/win32/win32_state.h"
 #include "core/remap_manager.h"
 #include "core/timer.h"
 #include "bindings/bindings.h"
@@ -286,8 +287,8 @@ static PromptState *g_win32_prompt_state = NULL;
 PromptState* Platform_GetWin32PromptState(void) { return g_win32_prompt_state; }
 
 void Platform_WaitForKeypressAsync(KeyCallback callback) {
-  FlintContext_Get()->g_waiting_for_key = true;
-  FlintContext_Get()->g_key_callback = callback;
+  g_win32_waiting_for_key = true;
+  g_win32_key_callback = callback;
 log_info("Platform_WaitForKeypressAsync callback=%p", callback);;
 }
 
@@ -622,7 +623,7 @@ log_info("Platform_SimplePromptUser spec=%p", spec);;
 }
 
 void Platform_DisplayMessage(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, int timeout, ColorRef color) {
-  if (WH_TO_HWND(FlintContext_Get()->window.hGlobalTrayWnd) != NULL && GetCurrentThreadId() != FlintContext_Get()->main_thread_id) {
+  if (WH_TO_HWND(FlintContext_Get()->window.hGlobalTrayWnd) != NULL && GetCurrentThreadId() != g_win32_main_thread_id) {
     DisplayMessageParams params = { message, centerX, centerY, maxWidth, maxHeight, timeout, color };
     SendMessageA(WH_TO_HWND(FlintContext_Get()->window.hGlobalTrayWnd), WM_DISPLAY_MESSAGE, 0, (LPARAM)&params);
     return;
@@ -658,7 +659,7 @@ void Platform_CreateDisplayMessageWindow(const char* message, int centerX, int c
   pWndData->hFont = msgFont;
   pWndData->alpha = WindowOpacity;
   pWndData->color = color;
-  FlintContext_Get()->g_timeout = timeout * 20;
+  g_win32_timeout = timeout * 20;
 
   int topLeftX = centerX - (winWidth / 2);
   int topLeftY = centerY - (winHeight / 2);
@@ -889,10 +890,10 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
     PROFILE_START(timer3);
 
     if (IsNormalMode()) {
-      if (FlintContext_Get()->g_waiting_for_key) {
-        FlintContext_Get()->g_waiting_for_key = false;
-        if (FlintContext_Get()->g_key_callback) {
-          FlintContext_Get()->g_key_callback(pKeyInfo->vkCode);
+      if (g_win32_waiting_for_key) {
+        g_win32_waiting_for_key = false;
+        if (g_win32_key_callback) {
+          g_win32_key_callback(pKeyInfo->vkCode);
           PROFILE_END_VAR(timer3, "KeyCallback");
         }
         return 1;
@@ -917,8 +918,8 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 void Platform_RunHotKeyMessageLoop() {
   HINSTANCE hInstance = GetModuleHandle(NULL);
 
-  FlintContext_Get()->hKeyboardHook = SetWindowsHookEx(WH_KEYBOARD_LL, LowLevelKeyboardProc, hInstance, 0);
-  if (!FlintContext_Get()->hKeyboardHook) {
+  g_win32_hKeyboardHook = SetWindowsHookEx(WH_KEYBOARD_LL, LowLevelKeyboardProc, hInstance, 0);
+  if (!g_win32_hKeyboardHook) {
     log_error("Failed to install keyboard hook! Error: %lu", GetLastError());
     return;
   }
@@ -929,7 +930,7 @@ void Platform_RunHotKeyMessageLoop() {
     DispatchMessage(&msg);
   }
 
-  if (FlintContext_Get()->hKeyboardHook) UnhookWindowsHookEx(FlintContext_Get()->hKeyboardHook);
+  if (g_win32_hKeyboardHook) UnhookWindowsHookEx(g_win32_hKeyboardHook);
 log_info("Platform_RunHotKeyMessageLoop completed");
 }
 
@@ -989,16 +990,16 @@ void Platform_InitUI() {
    settingsPopupWc.lpszClassName = "SettingsPopupClass";
    RegisterClassA(&settingsPopupWc);
 
-   FlintContext_Get()->hKeyboardHook = SetWindowsHookExA(WH_KEYBOARD_LL, LowLevelKeyboardProc, GetModuleHandle(NULL), 0);
+   g_win32_hKeyboardHook = SetWindowsHookExA(WH_KEYBOARD_LL, LowLevelKeyboardProc, GetModuleHandle(NULL), 0);
 log_info("Platform_InitUI completed");
 }
 
 void Platform_ShutdownUI() {
   extern void Win32_FreeBgCache(void);
   Win32_FreeBgCache();
-  if (FlintContext_Get()->hKeyboardHook) {
-    UnhookWindowsHookEx(FlintContext_Get()->hKeyboardHook);
-    FlintContext_Get()->hKeyboardHook = NULL;
+  if (g_win32_hKeyboardHook) {
+    UnhookWindowsHookEx(g_win32_hKeyboardHook);
+    g_win32_hKeyboardHook = NULL;
   }
   if (g_gdiplusToken != 0) {
     GdiplusShutdown(g_gdiplusToken);

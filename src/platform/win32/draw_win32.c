@@ -1,4 +1,5 @@
 #include "platform/draw.h"
+#include "platform/win32/win32_state.h"
 #include "config.h"
 #include "platform/ui.h"
 #include "core/context.h"
@@ -29,7 +30,7 @@ bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, F
     if (!text || !g_draw_hdc) return false;
     if (color == 0) color = COLOR_TEXT;
     const char *a = align ? align : "CENTER";
-    HFONT hfont = font.hfont ? font.hfont : (FlintContext_Get()->hMainFont ? FlintContext_Get()->hMainFont : NULL);
+    HFONT hfont = font.hfont ? font.hfont : (g_win32_hMainFont ? g_win32_hMainFont : NULL);
     HFONT old = NULL;
     if (hfont) old = (HFONT)SelectObject(g_draw_hdc, hfont);
     SetBkMode(g_draw_hdc, TRANSPARENT);
