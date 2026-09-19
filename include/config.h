@@ -40,7 +40,6 @@ extern bool CloseOnLossOfFocus;
 extern const char* UsedTerminal;
 extern const char* UsedShell;
 extern const char* UsedFileManager;
-extern const char* UsedTextEditor;
 extern const char* UsedBrowser;
 extern const char* UsedSearchEngine;
 extern const char* ImageEditorPath;
