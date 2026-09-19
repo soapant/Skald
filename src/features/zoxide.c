@@ -1,5 +1,8 @@
 #include "core/flapi.h"
 
+
+const char* TextEditor = "nvim";
+
 const char* TerminalZoxideFilePath = "TerminalZoxide.txt";
 static void zoxide_refresh(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
     const char* items[MAX_FILE_LINES];
@@ -42,9 +45,9 @@ static void text_editor_refresh(const char* filter, WindowHandle hListBox, ListB
 static bool text_editor_enter(const char* selection, ListBoxInfo* lb) {
     char* path = fl_get_zoxide_match((char*)selection);
     if (!path) return false;
-    char cmd_args[512];
-    snprintf(cmd_args, sizeof(cmd_args), "-e %s \"%s\"", UsedTextEditor, path);
-    fl_launch_terminal_at_path(path, cmd_args);
+     char cmd_args[512];
+     snprintf(cmd_args, sizeof(cmd_args), "-e %s \"%s\"", TextEditor, path);
+     fl_launch_terminal_at_path(path, cmd_args);
     if (!UI_IsListBoxSelected(lb)) fl_append_unique_line(TextEditorZoxideFilePath, selection);
     free(path);
     return true;
@@ -61,9 +64,7 @@ static void text_editor_edit(const char* selection, ListBoxInfo* lb) {
 static void TriggerTextEditorZoxide(void) {
     const char* items[MAX_FILE_LINES];
     int n = fl_load_file_list(TextEditorZoxideFilePath, items, MAX_FILE_LINES);
-    char buffer[100];
-    snprintf(buffer,sizeof(buffer),"📂 %s",UsedTextEditor);
-    PROMPT(.title = buffer, .items = items,
+    PROMPT(.title = "TextEditor", .items = items,
            .refresh = text_editor_refresh, .enter = text_editor_enter, .edit = text_editor_edit);
     fl_free_file_list(items, n);
 }
