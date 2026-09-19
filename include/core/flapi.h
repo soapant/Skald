@@ -148,6 +148,9 @@ typedef struct {
     const char* title;
     int x;
     int y;
+    int w;
+    int h;
+    const char* align;
     ListBoxInfo* lb;
     int* out_index;
 } FlEditPopupSpec;

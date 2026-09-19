@@ -194,7 +194,7 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
 
     if (wParam == COMMAND_MODE_KEY) {
         WindowManager* wm = WindowManager_Get();
-        Popup* popup = EditPopup_Create(wm,"", "Command Mode", 960, 540,command_confirm,state);
+        Popup* popup = EditPopup_Create(wm,"", "Command Mode", 960, 540, 1000, 100, "LEFT", command_confirm,state);
         WindowManager_PushPopup(wm, popup);
         return true;
       }

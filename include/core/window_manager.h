@@ -57,6 +57,7 @@ typedef struct {
     int text_capacity;
     int cursor;
     char* title;
+    char* align;
     EditPopupConfirmCallback on_confirm;
     void* user_data;
     int x, y, w, h;
@@ -78,8 +79,8 @@ char* WindowManager_ShowPrompt(WindowManager* wm, const PromptSpec* spec);
 char* WindowManager_ShowSimplePrompt(WindowManager* wm, const SimplePromptSpec* spec);
 
 
-Popup* EditPopup_Create(WindowManager* wm, const char* initial_text, 
-                        const char* title, int x, int y,
+Popup* EditPopup_Create(WindowManager* wm, const char* initial_text,
+                        const char* title, int x, int y, int w, int h, const char* align,
                         EditPopupConfirmCallback on_confirm, void* user_data);
 Popup* PromptPopup_Create(WindowManager* wm, const PromptSpec* spec);
 Popup* SimplePromptPopup_Create(WindowManager* wm, const SimplePromptSpec* spec);
