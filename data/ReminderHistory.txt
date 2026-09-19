@@ -1,2 +1,0 @@
--trw 2s -f zen
--trw 2s -dt nigga

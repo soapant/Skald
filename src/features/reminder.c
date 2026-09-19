@@ -32,6 +32,6 @@ void TriggerReminder(void) {
 }
 
 FLINT_FEATURE_INIT {
-    fl_register_hotkey("Alt+R", TriggerReminder);
+    fl_register_hotkey("Alt+S", TriggerReminder);
     fl_register_feature("Reminder", TriggerReminder);
 }
