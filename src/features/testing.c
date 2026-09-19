@@ -2,7 +2,7 @@
 
 
 void Testing(void) {
-  fl_copy_to_clipboard("TEXT");
+  printf("%s \n",fl_get_last_clipboard_entry());
 }
 
 
