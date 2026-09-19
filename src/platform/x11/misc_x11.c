@@ -26,6 +26,8 @@
 #include "core/timer.h"
 #include "deps/log.h"
 #include "wm/wm.h"
+#include "platform/x11/clipboard_x11.h"
+#include "platform/x11/clipboard_wayland_x11.h"
 
 
 static uid_t ProbeSessionUid(void){
@@ -867,8 +869,11 @@ PROFILE_END_VAR(timer, "misc_x11:Platform_QueryBrowser");
 }
 
 char* Platform_GetClipboardEntry() {
-log_info("Platform_GetClipboardEntry completed");
-  return Wm_GetClipboardLastEntry();
+    char* out = NULL;
+    if (Wayland_ClipboardAvailable()) out = Wayland_ClipboardGetText();
+    else out = Linux_ClipboardGetText();
+    log_info("Platform_GetClipboardEntry len=%d", out ? (int)strlen(out) : -1);
+    return out;
 }
 
 bool Platform_PasteContent(char* content) {

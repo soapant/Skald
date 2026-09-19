@@ -4,7 +4,6 @@
 #include "core/platform.h"
 #include "core/types.h"
 bool get_title_x11(char *buffer, int buffer_size);
-char* get_clipboard_entry_x11();
 char* paste_x11(char* content);
 bool focus_window_title_x11(char* title);
 Fl_WindowList get_window_titles_x11();

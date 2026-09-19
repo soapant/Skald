@@ -51,12 +51,6 @@ bool get_title_sway(char *buffer, int buffer_size) {
     return buffer[0] != '\0';
 }
 
-char* get_clipboard_entry_sway() {
-  char* out = Platform_RunTerminalCommand("wl-paste",false);
-  if (!out) log_error("wl-paste failed");
-  return out;
-}
-
 char* paste_sway(char* content) {
   if (!content) { log_error("content is NULL"); return NULL; }
   char buffer[100];

@@ -5,6 +5,7 @@
 #include <X11/Xatom.h>
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #define CLIP_INCR_THRESHOLD (256u * 1024u)
 #define CLIP_INCR_CHUNK (64u * 1024u)
@@ -226,4 +227,134 @@ void Linux_ClipboardShutdown(void) {
     g_clip_png = NULL;
     g_clip_png_len = 0;
     log_info("clipboard owner stopped");
+}
+
+typedef struct {
+    Window win;
+    Atom selection;
+    Atom property;
+} ClipReadWait;
+
+static Bool ClipReadNotifyPred(Display *dpy, XEvent *ev, XPointer arg) {
+    (void)dpy;
+    ClipReadWait *w = (ClipReadWait *)arg;
+    if (ev->type == SelectionNotify)
+        return ev->xselection.requestor == w->win && ev->xselection.selection == w->selection;
+    return False;
+}
+
+static Bool ClipReadPropPred(Display *dpy, XEvent *ev, XPointer arg) {
+    (void)dpy;
+    ClipReadWait *w = (ClipReadWait *)arg;
+    if (ev->type == PropertyNotify)
+        return ev->xproperty.window == w->win && ev->xproperty.atom == w->property && ev->xproperty.state == PropertyNewValue;
+    return False;
+}
+
+static int ClipReadWaitEvent(Display *dpy, XEvent *ev, Bool (*pred)(Display *, XEvent *, XPointer), ClipReadWait *w, int tries) {
+    for (int i = 0; i < tries; i++) {
+        if (XCheckIfEvent(dpy, ev, pred, (XPointer)w)) return 1;
+        usleep(5000);
+    }
+    return 0;
+}
+
+static char *ClipReadProperty(Display *dpy, Window win, Atom prop, size_t *out_len) {
+    Atom actual = None;
+    int format = 0;
+    unsigned long nitems = 0;
+    unsigned long after = 0;
+    unsigned char *data = NULL;
+    if (XGetWindowProperty(dpy, win, prop, 0, (~0L), True, AnyPropertyType, &actual, &format, &nitems, &after, &data) != Success)
+        return NULL;
+    if (actual == g_clip_incr) {
+        if (data) XFree(data);
+        return NULL;
+    }
+    if (!data) return NULL;
+    char *out = malloc(nitems + 1);
+    if (!out) {
+        XFree(data);
+        return NULL;
+    }
+    memcpy(out, data, nitems);
+    out[nitems] = '\0';
+    if (out_len) *out_len = (size_t)nitems;
+    XFree(data);
+    return out;
+}
+
+static char *ClipReadIncr(Display *dpy, Window win, Atom prop, ClipReadWait *w) {
+    size_t cap = 65536;
+    size_t len = 0;
+    char *out = malloc(cap);
+    if (!out) return NULL;
+    XEvent ev;
+    for (;;) {
+        if (!ClipReadWaitEvent(dpy, &ev, ClipReadPropPred, w, 400)) break;
+        Atom actual = None;
+        int format = 0;
+        unsigned long nitems = 0;
+        unsigned long after = 0;
+        unsigned char *data = NULL;
+        if (XGetWindowProperty(dpy, win, prop, 0, (~0L), True, AnyPropertyType, &actual, &format, &nitems, &after, &data) != Success)
+            break;
+        if (!data || nitems == 0) {
+            if (data) XFree(data);
+            break;
+        }
+        if (len + nitems + 1 > cap) {
+            size_t ncap = (len + nitems + 1) * 2;
+            char *n = realloc(out, ncap);
+            if (!n) {
+                XFree(data);
+                free(out);
+                return NULL;
+            }
+            out = n;
+            cap = ncap;
+        }
+        memcpy(out + len, data, nitems);
+        len += nitems;
+        XFree(data);
+    }
+    out[len] = '\0';
+    return out;
+}
+
+static char *ClipReadTarget(Display *dpy, Window win, Atom target) {
+    Atom prop = XInternAtom(dpy, "FLINT_CLIP_READ", False);
+    XSelectInput(dpy, win, PropertyChangeMask);
+    XConvertSelection(dpy, g_clip_clipboard, target, prop, win, CurrentTime);
+    XFlush(dpy);
+    ClipReadWait w = { win, g_clip_clipboard, prop };
+    XEvent ev;
+    if (!ClipReadWaitEvent(dpy, &ev, ClipReadNotifyPred, &w, 200)) return NULL;
+    if (ev.xselection.property == None) return NULL;
+    Atom actual = None;
+    int format = 0;
+    unsigned long nitems = 0;
+    unsigned long after = 0;
+    unsigned char *data = NULL;
+    if (XGetWindowProperty(dpy, win, prop, 0, 1, False, AnyPropertyType, &actual, &format, &nitems, &after, &data) != Success)
+        return NULL;
+    if (data) XFree(data);
+    if (actual == g_clip_incr) {
+        XDeleteProperty(dpy, win, prop);
+        XFlush(dpy);
+        return ClipReadIncr(dpy, win, prop, &w);
+    }
+    return ClipReadProperty(dpy, win, prop, NULL);
+}
+
+char *Linux_ClipboardGetText(void) {
+    Linux_ClipboardEnsureStarted();
+    Display *dpy = get_display();
+    if (!dpy || g_clip_win == None) return NULL;
+    if (XGetSelectionOwner(dpy, g_clip_clipboard) == g_clip_win && g_clip_text)
+        return strdup(g_clip_text);
+    char *out = ClipReadTarget(dpy, g_clip_win, g_clip_utf8);
+    if (!out) out = ClipReadTarget(dpy, g_clip_win, XA_STRING);
+    log_info("clipboard read len=%d", out ? (int)strlen(out) : -1);
+    return out;
 }

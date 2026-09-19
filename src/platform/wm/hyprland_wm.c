@@ -14,12 +14,6 @@ bool get_title_hyprland(char *buffer, int buffer_size) {
     return false;
 }
 
-char* get_clipboard_entry_hyprland() {
-  char* out = Platform_RunTerminalCommand("wl-paste",false);
-  if (!out) log_error("wl-paste failed");
-  return out;
-}
-
 char* paste_hyprland(char* content) {
   if (!content) { log_error("content is NULL"); return NULL; }
   char buffer[100];
