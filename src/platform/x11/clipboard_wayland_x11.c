@@ -109,6 +109,8 @@ static uint32_t g_mgr_ver = 0;
 static uint32_t g_seat_name = 0;
 static int g_mgr_bind_ver = 0;
 static char *g_wl_text = NULL;
+static unsigned char *g_wl_png = NULL;
+static size_t g_wl_png_len = 0;
 static bool g_wl_running = false;
 static bool g_wl_ready = false;
 static bool g_wl_dead = false;
@@ -175,21 +177,35 @@ static void src_send(void *data, struct wl_proxy *src, const char *mime, int fd)
     (void)src;
     pthread_mutex_lock(&g_wl_text_lock);
     char *text = g_wl_text ? strdup(g_wl_text) : NULL;
-    pthread_mutex_unlock(&g_wl_text_lock);
-    size_t total = 0;
-    if (text) {
-        size_t n = strlen(text);
-        size_t off = 0;
-        while (off < n) {
-            ssize_t w = write(fd, text + off, n - off);
-            if (w <= 0) break;
-            off += (size_t)w;
+    unsigned char *png = NULL;
+    size_t png_len = 0;
+    if (g_wl_png && g_wl_png_len > 0) {
+        png = malloc(g_wl_png_len);
+        if (png) {
+            memcpy(png, g_wl_png, g_wl_png_len);
+            png_len = g_wl_png_len;
         }
-        total = off;
-        free(text);
     }
+    pthread_mutex_unlock(&g_wl_text_lock);
+    const unsigned char *buf = NULL;
+    size_t n = 0;
+    if (mime && strcmp(mime, "image/png") == 0) {
+        buf = png;
+        n = png_len;
+    } else {
+        buf = (const unsigned char *)text;
+        n = text ? strlen(text) : 0;
+    }
+    size_t off = 0;
+    while (off < n) {
+        ssize_t w = write(fd, buf + off, n - off);
+        if (w <= 0) break;
+        off += (size_t)w;
+    }
+    free(text);
+    free(png);
     close(fd);
-    log_info("wayland clipboard served mime=%s bytes=%d", mime ? mime : "?", (int)total);
+    log_info("wayland clipboard served mime=%s bytes=%d", mime ? mime : "?", (int)off);
 }
 
 static void src_cancelled(void *data, struct wl_proxy *src) {
@@ -367,8 +383,15 @@ static bool wl_setup(void) {
 
 static struct wl_proxy *wl_make_source(void) {
     struct wl_proxy *src = wl.proxy_marshal_constructor(g_wl_manager, 0, &g_iface_source, NULL);
-    const char *mimes[] = { "text/plain;charset=utf-8", "text/plain", "TEXT", "STRING", "UTF8_STRING" };
-    for (int i = 0; i < 5; i++) wl.proxy_marshal_flags(src, 0, NULL, 0, 0, mimes[i]);
+    pthread_mutex_lock(&g_wl_text_lock);
+    bool has_text = g_wl_text != NULL;
+    bool has_png = g_wl_png != NULL && g_wl_png_len > 0;
+    pthread_mutex_unlock(&g_wl_text_lock);
+    if (has_text) {
+        const char *mimes[] = { "text/plain;charset=utf-8", "text/plain", "TEXT", "STRING", "UTF8_STRING" };
+        for (int i = 0; i < 5; i++) wl.proxy_marshal_flags(src, 0, NULL, 0, 0, mimes[i]);
+    }
+    if (has_png) wl.proxy_marshal_flags(src, 0, NULL, 0, 0, "image/png");
     wl.proxy_add_listener(src, (void (**)(void))g_src_listener, NULL);
     return src;
 }
@@ -385,6 +408,22 @@ bool Wayland_ClipboardAvailable(void) {
     return getenv("WAYLAND_DISPLAY") != NULL;
 }
 
+static void wl_publish_locked(void) {
+    wl_drop_source(&g_wl_source);
+    wl_drop_source(&g_wl_psource);
+    pthread_mutex_lock(&g_wl_text_lock);
+    bool has_any = g_wl_text != NULL || (g_wl_png != NULL && g_wl_png_len > 0);
+    pthread_mutex_unlock(&g_wl_text_lock);
+    if (!has_any) return;
+    g_wl_source = wl_make_source();
+    wl.proxy_marshal_flags(g_wl_device, 0, NULL, 0, 0, g_wl_source);
+    if (g_mgr_bind_ver >= 2) {
+        g_wl_psource = wl_make_source();
+        wl.proxy_marshal_flags(g_wl_device, 2, NULL, 0, 0, g_wl_psource);
+    }
+    wl.display_flush(g_wl_dpy);
+}
+
 int Wayland_ClipboardSetText(const char *text) {
     if (!text) return 0;
     log_info("wayland clipboard set req len=%d", (int)strlen(text));
@@ -395,17 +434,31 @@ int Wayland_ClipboardSetText(const char *text) {
     pthread_mutex_unlock(&g_wl_text_lock);
     if (!g_wl_text) return 0;
     pthread_mutex_lock(&g_wl_lock);
-    wl_drop_source(&g_wl_source);
-    wl_drop_source(&g_wl_psource);
-    g_wl_source = wl_make_source();
-    wl.proxy_marshal_flags(g_wl_device, 0, NULL, 0, 0, g_wl_source);
-    if (g_mgr_bind_ver >= 2) {
-        g_wl_psource = wl_make_source();
-        wl.proxy_marshal_flags(g_wl_device, 2, NULL, 0, 0, g_wl_psource);
-    }
-    wl.display_flush(g_wl_dpy);
+    wl_publish_locked();
     pthread_mutex_unlock(&g_wl_lock);
     log_info("wayland clipboard set done");
+    return 1;
+}
+
+int Wayland_ClipboardSetImage(const unsigned char *png, size_t len) {
+    if (!png || len == 0) return 0;
+    log_info("wayland clipboard set req png len=%d", (int)len);
+    if (!wl_setup()) return 0;
+    pthread_mutex_lock(&g_wl_text_lock);
+    free(g_wl_png);
+    g_wl_png = malloc(len);
+    if (g_wl_png) {
+        memcpy(g_wl_png, png, len);
+        g_wl_png_len = len;
+    } else {
+        g_wl_png_len = 0;
+    }
+    pthread_mutex_unlock(&g_wl_text_lock);
+    if (!g_wl_png) return 0;
+    pthread_mutex_lock(&g_wl_lock);
+    wl_publish_locked();
+    pthread_mutex_unlock(&g_wl_lock);
+    log_info("wayland clipboard set image done");
     return 1;
 }
 
@@ -441,6 +494,9 @@ void Wayland_ClipboardShutdown(void) {
     pthread_mutex_lock(&g_wl_text_lock);
     free(g_wl_text);
     g_wl_text = NULL;
+    free(g_wl_png);
+    g_wl_png = NULL;
+    g_wl_png_len = 0;
     pthread_mutex_unlock(&g_wl_text_lock);
     g_wl_ready = false;
     log_info("wayland clipboard stopped");

@@ -6,13 +6,25 @@
 #include <string.h>
 #include <stdlib.h>
 
+#define CLIP_INCR_THRESHOLD (256u * 1024u)
+#define CLIP_INCR_CHUNK (64u * 1024u)
+
 static Window g_clip_win = None;
 static char *g_clip_text = NULL;
+static unsigned char *g_clip_png = NULL;
+static size_t g_clip_png_len = 0;
 static Atom g_clip_clipboard = None;
 static Atom g_clip_primary = None;
 static Atom g_clip_targets = None;
 static Atom g_clip_utf8 = None;
 static Atom g_clip_timestamp = None;
+static Atom g_clip_png_atom = None;
+static Atom g_clip_incr = None;
+
+static bool g_incr_active = false;
+static Window g_incr_req = None;
+static Atom g_incr_prop = None;
+static size_t g_incr_off = 0;
 
 void Linux_ClipboardEnsureStarted(void) {
     Display *dpy = get_display();
@@ -34,10 +46,19 @@ void Linux_ClipboardEnsureStarted(void) {
     g_clip_targets = XInternAtom(dpy, "TARGETS", False);
     g_clip_utf8 = XInternAtom(dpy, "UTF8_STRING", False);
     g_clip_timestamp = XInternAtom(dpy, "TIMESTAMP", False);
+    g_clip_png_atom = XInternAtom(dpy, "image/png", False);
+    g_clip_incr = XInternAtom(dpy, "INCR", False);
     XMapWindow(dpy, win);
     XFlush(dpy);
     g_clip_win = win;
     log_info("clipboard owner window started win=%lu", (unsigned long)win);
+}
+
+static void Linux_ClipboardAbortIncr(void) {
+    g_incr_active = false;
+    g_incr_req = None;
+    g_incr_prop = None;
+    g_incr_off = 0;
 }
 
 static void Linux_ClipboardServeRequest(Display *dpy, XSelectionRequestEvent *req) {
@@ -55,25 +76,43 @@ static void Linux_ClipboardServeRequest(Display *dpy, XSelectionRequestEvent *re
         XFlush(dpy);
         return;
     }
-    char *text = g_clip_text ? strdup(g_clip_text) : NULL;
     char *tname = XGetAtomName(dpy, req->target);
-    char *sname = XGetAtomName(dpy, req->selection);
-    log_info("clipboard serve sel=%s target=%s(%lu) prop=%lu text=%s", sname ? sname : "?", tname ? tname : "?", (unsigned long)req->target, (unsigned long)prop, text ? text : "(null)");
+    log_info("clipboard serve target=%s(%lu) prop=%lu text=%s png=%d", tname ? tname : "?",
+        (unsigned long)req->target, (unsigned long)prop, g_clip_text ? "yes" : "no", (int)g_clip_png_len);
     if (tname) XFree(tname);
-    if (sname) XFree(sname);
-    if (!text) {
-        XSendEvent(dpy, req->requestor, False, 0, &resp);
-        XFlush(dpy);
-        return;
-    }
     if (req->target == g_clip_targets) {
-        Atom list[] = { g_clip_targets, g_clip_utf8, XA_STRING, g_clip_timestamp };
-        XChangeProperty(dpy, req->requestor, prop, XA_ATOM, 32, PropModeReplace, (unsigned char*)list, 4);
+        Atom list[8];
+        int n = 0;
+        list[n++] = g_clip_targets;
+        list[n++] = g_clip_timestamp;
+        if (g_clip_text) {
+            list[n++] = g_clip_utf8;
+            list[n++] = XA_STRING;
+        }
+        if (g_clip_png) list[n++] = g_clip_png_atom;
+        XChangeProperty(dpy, req->requestor, prop, XA_ATOM, 32, PropModeReplace, (unsigned char*)list, n);
         resp.xselection.property = prop;
-    } else if (req->target == g_clip_utf8 || req->target == XA_STRING) {
+    } else if ((req->target == g_clip_utf8 || req->target == XA_STRING) && g_clip_text) {
         Atom type = (req->target == g_clip_utf8) ? g_clip_utf8 : XA_STRING;
-        XChangeProperty(dpy, req->requestor, prop, type, 8, PropModeReplace, (unsigned char*)text, strlen(text));
+        XChangeProperty(dpy, req->requestor, prop, type, 8, PropModeReplace, (unsigned char*)g_clip_text, strlen(g_clip_text));
         resp.xselection.property = prop;
+    } else if (req->target == g_clip_png_atom && g_clip_png) {
+        if (g_clip_png_len > CLIP_INCR_THRESHOLD) {
+            Linux_ClipboardAbortIncr();
+            XSelectInput(dpy, req->requestor, PropertyChangeMask);
+            long total = (long)g_clip_png_len;
+            XChangeProperty(dpy, req->requestor, prop, g_clip_incr, 32, PropModeReplace, (unsigned char*)&total, 1);
+            XFlush(dpy);
+            g_incr_active = true;
+            g_incr_req = req->requestor;
+            g_incr_prop = prop;
+            g_incr_off = 0;
+            log_info("clipboard INCR start total=%d", (int)g_clip_png_len);
+            resp.xselection.property = prop;
+        } else {
+            XChangeProperty(dpy, req->requestor, prop, g_clip_png_atom, 8, PropModeReplace, g_clip_png, (int)g_clip_png_len);
+            resp.xselection.property = prop;
+        }
     } else if (req->target == g_clip_timestamp) {
         unsigned long tm = (unsigned long)req->time;
         XChangeProperty(dpy, req->requestor, prop, XA_INTEGER, 32, PropModeReplace, (unsigned char*)&tm, 1);
@@ -81,8 +120,29 @@ static void Linux_ClipboardServeRequest(Display *dpy, XSelectionRequestEvent *re
     } else {
         log_info("clipboard unsupported target=%lu", (unsigned long)req->target);
     }
-    free(text);
     XSendEvent(dpy, req->requestor, False, 0, &resp);
+    XFlush(dpy);
+}
+
+static void Linux_ClipboardServeIncr(Display *dpy, XPropertyEvent *pev) {
+    if (!g_incr_active || !g_clip_png) {
+        Linux_ClipboardAbortIncr();
+        return;
+    }
+    if (pev->window != g_incr_req || pev->atom != g_incr_prop || pev->state != PropertyDelete) return;
+    size_t remaining = g_clip_png_len - g_incr_off;
+    if (remaining > 0) {
+        size_t n = remaining > CLIP_INCR_CHUNK ? CLIP_INCR_CHUNK : remaining;
+        XChangeProperty(dpy, g_incr_req, g_incr_prop, g_clip_png_atom, 8, PropModeReplace, g_clip_png + g_incr_off, (int)n);
+        g_incr_off += n;
+        log_info("clipboard INCR chunk off=%d/%d", (int)g_incr_off, (int)g_clip_png_len);
+    } else {
+        if (g_clip_png_len > 0 && (g_clip_png_len % CLIP_INCR_CHUNK) == 0) {
+            XChangeProperty(dpy, g_incr_req, g_incr_prop, g_clip_png_atom, 8, PropModeReplace, NULL, 0);
+        }
+        log_info("clipboard INCR done");
+        Linux_ClipboardAbortIncr();
+    }
     XFlush(dpy);
 }
 
@@ -93,19 +153,37 @@ bool Linux_ClipboardHandleEvent(Display *dpy, XEvent *ev) {
         Linux_ClipboardServeRequest(dpy, &ev->xselectionrequest);
         return true;
     }
+    if (ev->type == PropertyNotify) {
+        if (g_incr_active) {
+            Linux_ClipboardServeIncr(dpy, &ev->xproperty);
+            return true;
+        }
+        return false;
+    }
     if (ev->type == SelectionClear) {
         if (ev->xselectionclear.selection == g_clip_clipboard || ev->xselectionclear.selection == g_clip_primary) {
             char *sname = XGetAtomName(dpy, ev->xselectionclear.selection);
             log_info("clipboard lost ownership sel=%s", sname ? sname : "?");
             if (sname) XFree(sname);
-            if (ev->xselectionclear.selection == g_clip_clipboard) {
-                free(g_clip_text);
-                g_clip_text = NULL;
-            }
+            Linux_ClipboardAbortIncr();
+            free(g_clip_text);
+            g_clip_text = NULL;
+            free(g_clip_png);
+            g_clip_png = NULL;
+            g_clip_png_len = 0;
             return true;
         }
     }
     return false;
+}
+
+static int Linux_ClipboardTakeOwnership(Display *dpy) {
+    XSetSelectionOwner(dpy, g_clip_clipboard, g_clip_win, CurrentTime);
+    XSetSelectionOwner(dpy, g_clip_primary, g_clip_win, CurrentTime);
+    XFlush(dpy);
+    Window owner = XGetSelectionOwner(dpy, g_clip_clipboard);
+    log_info("clipboard owner=%lu win=%lu", (unsigned long)owner, (unsigned long)g_clip_win);
+    return owner == g_clip_win;
 }
 
 int Linux_ClipboardSetText(const char *text) {
@@ -117,26 +195,35 @@ int Linux_ClipboardSetText(const char *text) {
     free(g_clip_text);
     g_clip_text = strdup(text);
     if (!g_clip_text) return 0;
-    XSetSelectionOwner(dpy, g_clip_clipboard, g_clip_win, CurrentTime);
-    XSetSelectionOwner(dpy, g_clip_primary, g_clip_win, CurrentTime);
     XStoreBytes(dpy, text, (int)strlen(text));
     XFlush(dpy);
-    Window owner = XGetSelectionOwner(dpy, g_clip_clipboard);
-    Window owner_p = XGetSelectionOwner(dpy, g_clip_primary);
-    log_info("clipboard set text='%s' owner=%lu win=%lu primary=%lu", text, (unsigned long)owner, (unsigned long)g_clip_win, (unsigned long)owner_p);
-    if (owner != g_clip_win) {
-        free(g_clip_text);
-        g_clip_text = NULL;
-        return 0;
-    }
-    return 1;
+    return Linux_ClipboardTakeOwnership(dpy);
+}
+
+int Linux_ClipboardSetImage(const unsigned char *png, size_t len) {
+    if (!png || len == 0) return 0;
+    log_info("clipboard set req png len=%d", (int)len);
+    Linux_ClipboardEnsureStarted();
+    Display *dpy = get_display();
+    if (!dpy || g_clip_win == None) return 0;
+    Linux_ClipboardAbortIncr();
+    free(g_clip_png);
+    g_clip_png = malloc(len);
+    if (!g_clip_png) return 0;
+    memcpy(g_clip_png, png, len);
+    g_clip_png_len = len;
+    return Linux_ClipboardTakeOwnership(dpy);
 }
 
 void Linux_ClipboardShutdown(void) {
     Display *dpy = get_display();
     if (dpy && g_clip_win != None) XDestroyWindow(dpy, g_clip_win);
     g_clip_win = None;
+    Linux_ClipboardAbortIncr();
     free(g_clip_text);
     g_clip_text = NULL;
+    free(g_clip_png);
+    g_clip_png = NULL;
+    g_clip_png_len = 0;
     log_info("clipboard owner stopped");
 }

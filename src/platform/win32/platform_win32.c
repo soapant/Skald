@@ -321,6 +321,13 @@ log_info("Platform_CopyToClipboard text='%s'", text ? text : "");;
     return 1;
 }
 
+int Platform_CopyImageToClipboard(const unsigned char* png, size_t len) {
+    (void)png;
+    (void)len;
+    log_info("Platform_CopyImageToClipboard not implemented yet");
+    return 0;
+}
+
 void Platform_SaveRegionToPNG(int x1, int y1, int x2, int y2, const char* fullPath) {
     int width = abs(x2 - x1);
     int height = abs(y2 - y1);
