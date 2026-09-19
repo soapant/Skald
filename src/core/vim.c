@@ -81,6 +81,16 @@ void Vim_GetText(FlintContext* ctx, char* buf, size_t cap) {
 #if defined(_WIN32)
     Win32_SyncFilterFromEdit(ctx);
 #endif
+    WindowManager* wm = WindowManager_Get();
+    Popup* top = wm ? WindowManager_GetTopPopup(wm) : NULL;
+    if (top && top->type == POPUP_EDIT) {
+        WMEditPopupData* e = (WMEditPopupData*)top;
+        if (e->text) {
+            strncpy(buf, e->text, cap-1);
+            buf[cap-1]='\0';
+            return;
+        }
+    }
     strncpy(buf, ctx->window.filter, cap-1);
     buf[cap-1]='\0';
 }
@@ -120,6 +130,17 @@ static void SyncFilterToActiveState(FlintContext* ctx) {
 
 void Vim_SetText(FlintContext* ctx, const char* text) {
     if (!ctx || !text) return;
+    WindowManager* wm = WindowManager_Get();
+    Popup* top = wm ? WindowManager_GetTopPopup(wm) : NULL;
+    if (top && top->type == POPUP_EDIT) {
+        WMEditPopupData* e = (WMEditPopupData*)top;
+        if (e->text && e->text_capacity > 1) {
+            strncpy(e->text, text, e->text_capacity - 1);
+            e->text[e->text_capacity - 1] = '\0';
+            e->cursor = (int)strlen(e->text);
+        }
+        return;
+    }
     strncpy(ctx->window.filter, text, sizeof(ctx->window.filter)-1);
     ctx->window.filter[sizeof(ctx->window.filter)-1]='\0';
     ctx->window.filter_cursor = (int)strlen(ctx->window.filter);
@@ -138,6 +159,17 @@ int Vim_GetCursor(FlintContext* ctx) {
 #if defined(_WIN32)
     Win32_SyncFilterFromEdit(ctx);
 #endif
+    WindowManager* wm = WindowManager_Get();
+    Popup* top = wm ? WindowManager_GetTopPopup(wm) : NULL;
+    if (top && top->type == POPUP_EDIT) {
+        WMEditPopupData* e = (WMEditPopupData*)top;
+        if (e->text) {
+            int len = (int)strlen(e->text);
+            if (e->cursor < 0) return 0;
+            if (e->cursor > len) return len;
+            return e->cursor;
+        }
+    }
     int len = (int)strlen(ctx->window.filter);
     if (ctx->window.filter_cursor <0) return 0;
     if (ctx->window.filter_cursor > len) return len;
@@ -149,6 +181,18 @@ void Vim_SetCursor(FlintContext* ctx, int pos) {
 #if defined(_WIN32)
     Win32_SyncFilterFromEdit(ctx);
 #endif
+    WindowManager* wm = WindowManager_Get();
+    Popup* top = wm ? WindowManager_GetTopPopup(wm) : NULL;
+    if (top && top->type == POPUP_EDIT) {
+        WMEditPopupData* e = (WMEditPopupData*)top;
+        if (e->text) {
+            int len = (int)strlen(e->text);
+            if (pos < 0) pos = 0;
+            if (pos > len) pos = len;
+            e->cursor = pos;
+        }
+        return;
+    }
     int len = (int)strlen(ctx->window.filter);
     if (pos<0) pos=0;
     if (pos>len) pos=len;
@@ -253,6 +297,19 @@ void DeleteLastTypedChar(FlintContext* ctx) {
     // Try to delete from active prompt state if it holds the typed char (for insert JK)
     WindowManager* wm = WindowManager_Get();
     Popup* top = wm ? WindowManager_GetTopPopup(wm) : NULL;
+    if (top && top->type == POPUP_EDIT) {
+        WMEditPopupData* e = (WMEditPopupData*)top;
+        if (e->text) {
+            int elen = (int)strlen(e->text);
+            int ecur = e->cursor;
+            if (ecur > elen) ecur = elen;
+            if (ecur > 0 && elen > 0) {
+                memmove(e->text + ecur - 1, e->text + ecur, elen - ecur + 1);
+                e->cursor = ecur - 1;
+            }
+        }
+        return;
+    }
     if (top && top->user_data && top->type == POPUP_PROMPT) {
         PromptState* s = (PromptState*)top->user_data;
         int len = (int)strlen(s->filter);
