@@ -21,42 +21,14 @@ bool forgetfull_enter_callback(const char* selection, ListBoxInfo* lb) {
     UI_Redraw(lb, FlintContext_Get()->window.hListBox);
     return true;
 }
-void forgetfull_edit_confirm_callback(const char* new_text, void* user_data) {
-    EditCallbackData* data = (EditCallbackData*)user_data;
-    if (new_text && data) {
-        data->new_text = (char*)new_text;
-        EditCallback_Handle(data, forgetfull_refresh_callback);
-    }
-    free(data);
-}
-
 void forgetfull_edit_callback(const char* selection, ListBoxInfo* lb) {
-    int idx = lb ? lb->selected_index : -1;
-    int true_idx = (lb && idx >= 0 && idx < lb->populated_count) ? lb->matching_indices[idx] : idx;
-    
-    WindowManager* wm = WindowManager_Get();
-    if (!wm) return;
-    
-    
-    EditCallbackData* data = calloc(1, sizeof(EditCallbackData));
-    if (!data) return;
-    
-    data->filepath = FORGETFULL_FILE_PATH;
-    data->lb = lb;
-    data->selected_index = idx;
-    data->true_index = true_idx;
-    data->new_text = NULL;
-    data->restore_selection = true;
-    data->hListBox = FlintContext_Get()->window.hListBox;
-    data->hEditControl = FlintContext_Get()->window.hEditControl;
-    
-    Popup* popup = EditPopup_Create(wm, selection, "Edit ForgetFull", 960, 540,
-                                    forgetfull_edit_confirm_callback, data);
-    if (popup) {
-        WindowManager_PushPopup(wm, popup);
-    } else {
-        free(data);
-    }
+    int idx = -1;
+    char* edited = fl_edit_text_popup(selection, "Edit ForgetFull", 960, 540, lb, &idx);
+    if (!edited) return;
+    if (idx >= 0) fl_replace_line_in_file(FORGETFULL_FILE_PATH, idx, edited);
+    free(edited);
+    forgetfull_refresh_callback("", FlintContext_Get()->window.hListBox, lb);
+    UI_Redraw(lb, FlintContext_Get()->window.hListBox);
 }
 
 bool forgetfull_ctrlenter_callback(const char* selection, ListBoxInfo* lb) {

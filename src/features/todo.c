@@ -339,7 +339,13 @@ void todo_render_callback(PromptState *state) {
 }
 
 void todo_edit_callback(const char* selection, ListBoxInfo* lb) {
-    fl_edit_text_popup(selection, "Edit Todo", 960, 540, TODO_FILE_PATH, lb, todo_refresh_callback);
+    int idx = -1;
+    char* edited = fl_edit_text_popup(selection, "Edit Todo", 960, 540, lb, &idx);
+    if (!edited) return;
+    if (idx >= 0) fl_replace_line_in_file(TODO_FILE_PATH, idx, edited);
+    free(edited);
+    todo_refresh_callback("", FlintContext_Get()->window.hListBox, lb);
+    UI_Redraw(lb, FlintContext_Get()->window.hListBox);
 }
 
 void TriggerTodo(void) {

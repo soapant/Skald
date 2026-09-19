@@ -47,6 +47,7 @@
 #include <X11/extensions/XTest.h>
 #endif
 #define NOB_IMPLEMENTATION
+#define NOB_NO_ECHO
 #include "../../../nob.h"
 
 
