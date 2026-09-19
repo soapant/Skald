@@ -6,6 +6,7 @@
 - **DO NOT** modify `nob.c` or move files without asking. If a fix requires it, stop and tell the user. Renaming to keep `_x11.c`/`_win32.c` suffix is the minimal move.
 - **DO NOT** create new `*.md`/`README` unless asked. `AGENTS.md` is the exception.
 - **DO** verify with build: `./nob` + `./nob_linux_window_build` must both `Built Successfully`/`Done: build/flint_win.exe`.
+- Feature `.so` files rebuild on header changes via depfiles (`nob.c` `stale_with_dep` + `-MF build/features/*.d`). If structs shared across the `.so` boundary change and features act stale, delete `build/features/*.so` and rebuild.
 
 ## Platform Split (strict)
 

@@ -65,6 +65,16 @@ static const char* feature_so_path(const char* src) {
     return nob_temp_sprintf("build/features/%s%s", no_ext, ext);
 }
 
+static const char* feature_dep_path(const char* src) {
+    const char* base = nob_path_name(src);
+    size_t len = strlen(base);
+    char* no_ext = malloc(len+1);
+    strcpy(no_ext, base);
+    char* dot = strrchr(no_ext, '.');
+    if (dot) *dot = '\0';
+    return nob_temp_sprintf("build/features/%s.d", no_ext);
+}
+
 static const char* obj_path(const char* src) {
     return nob_temp_sprintf(OBJ_FOLDER "/%s.o", nob_path_name(src));
 }
@@ -143,12 +153,12 @@ static bool is_space(char c) {
     return c == ' ' || c == '\t' || c == '\r' || c == '\n';
 }
 
-static bool stale(const char* src, const char* obj) {
+static bool stale_with_dep(const char* src, const char* obj, const char* dep_file_path) {
     if (!nob_file_exists(obj)) return true;
     if (nob_needs_rebuild1(obj, src) != 0) return true;
 
     Nob_String_Builder dep = {0};
-    if (!nob_read_entire_file(dep_path(src), &dep)) return true;
+    if (!nob_read_entire_file(dep_file_path, &dep)) return true;
 
     Nob_String_View sv = nob_sv_from_parts(dep.items, dep.count);
     size_t i = 0;
@@ -175,6 +185,10 @@ static bool stale(const char* src, const char* obj) {
         if (nob_needs_rebuild1(obj, dep_file) != 0) return true;
     }
     return false;
+}
+
+static bool stale(const char* src, const char* obj) {
+    return stale_with_dep(src, obj, dep_path(src));
 }
 
 static Nob_File_Paths to_build = {0};
@@ -351,7 +365,7 @@ int main(int argc, char** argv) {
             for (size_t i = 0; i < feature_sources.count; ++i) {
                 const char* src = feature_sources.items[i];
                 const char* so = feature_so_path(src);
-                bool need_so = !nob_file_exists(so) || nob_needs_rebuild1(so, src) != 0;
+                bool need_so = !nob_file_exists(so) || stale_with_dep(src, so, feature_dep_path(src));
 #if defined(_WIN32)
                 if (nob_file_exists("build/main.lib.a") && nob_needs_rebuild1(so, "build/main.lib.a") != 0) need_so = true;
 #endif
@@ -362,7 +376,7 @@ int main(int argc, char** argv) {
 #if defined(_WIN32)
                 nob_cmd_append(&fcmd, CC_FLAGS, "-shared", "-o", so, src, "build/main.lib.a", LINK_FLAGS);
 #else
-                nob_cmd_append(&fcmd, CC_FLAGS, "-fPIC", "-shared", "-o", so, src);
+                nob_cmd_append(&fcmd, CC_FLAGS, "-fPIC", "-shared", "-o", so, src, "-MF", feature_dep_path(src));
 #endif
                 if (!nob_cmd_run(&fcmd, .async = &fprocs, .max_procs = _fmax)) {
                     nob_log(NOB_ERROR, "Failed to start feature %s", so);
@@ -413,7 +427,7 @@ int main(int argc, char** argv) {
         for (size_t i = 0; i < feature_sources.count; ++i) {
             const char* src = feature_sources.items[i];
             const char* so = feature_so_path(src);
-            bool need_so = !nob_file_exists(so) || nob_needs_rebuild1(so, src) != 0;
+            bool need_so = !nob_file_exists(so) || stale_with_dep(src, so, feature_dep_path(src));
 #if defined(_WIN32)
             if (nob_file_exists("build/main.lib.a") && nob_needs_rebuild1(so, "build/main.lib.a") != 0) need_so = true;
 #endif
@@ -424,7 +438,7 @@ int main(int argc, char** argv) {
 #if defined(_WIN32)
             nob_cmd_append(&fcmd, CC_FLAGS, "-shared", "-o", so, src, "build/main.lib.a", LINK_FLAGS);
 #else
-            nob_cmd_append(&fcmd, CC_FLAGS, "-fPIC", "-shared", "-o", so, src);
+            nob_cmd_append(&fcmd, CC_FLAGS, "-fPIC", "-shared", "-o", so, src, "-MF", feature_dep_path(src));
 #endif
             if (!nob_cmd_run(&fcmd, .async = &fprocs, .max_procs = _fmax2)) {
                 nob_log(NOB_ERROR, "Failed to start feature %s", so);
