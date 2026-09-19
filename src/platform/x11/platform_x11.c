@@ -1246,6 +1246,18 @@ int Platform_CopyToClipboard(const char *text) {
     return xr;
 }
 
+int Platform_CopyImageToClipboard(const unsigned char *png, size_t len) {
+    if (!png || len == 0) return 0;
+    if (Wayland_ClipboardAvailable()) {
+        int wr = Wayland_ClipboardSetImage(png, len);
+        log_info("Platform_CopyImageToClipboard wayland=%d", wr);
+        return wr;
+    }
+    int xr = Linux_ClipboardSetImage(png, len);
+    log_info("Platform_CopyImageToClipboard x11=%d", xr);
+    return xr;
+}
+
 
 bool Platform_BuildFeature(const char* src, const char* out) {
     if (!src || !out) { log_error("operation failed, returning error src='%s' out='%s'", src ? src : "null", out ? out : "null"); return false; }

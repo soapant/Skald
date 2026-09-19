@@ -29,6 +29,7 @@ bool Platform_QueryBrowser(char* query);
 char* Platform_GetLastClipboardEntry();
 bool Platform_PasteContent(char* content);
 int Platform_CopyToClipboard(const char* text);
+int Platform_CopyImageToClipboard(const unsigned char* png, size_t len);
 char* Platform_QueryZoxidePath(const char* query);
 char* Platform_GetWorkingDir();
 char Platform_GetLastChar(MappedFile *file);
