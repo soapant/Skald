@@ -9,31 +9,14 @@ void google_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxI
     fl_free_file_list(items, n);
 }
 
-static void edit_confirm(const char* new_text, void* user_data) {
-    EditCallbackData* data = (EditCallbackData*)user_data;
-    if (new_text && data) {
-        data->new_text = (char*)new_text;
-        EditCallback_Handle(data, google_refresh_callback);
-    }
-    free(data);
-}
 void google_edit_callback(const char* selection, ListBoxInfo* lb) {
-    int idx = lb ? lb->selected_index : -1;
-    int true_idx = (lb && idx >= 0 && idx < lb->populated_count) ? lb->matching_indices[idx] : idx;
-    WindowManager* wm = WindowManager_Get();
-    EditCallbackData* data = calloc(1, sizeof(EditCallbackData));
-    if (!data) return;
-    data->filepath = GoogleHistoryFile;
-    data->lb = lb;
-    data->selected_index = idx;
-    data->true_index = true_idx;
-    data->new_text = NULL;
-    data->restore_selection = true;
-    data->hListBox = FlintContext_Get()->window.hListBox;
-    data->hEditControl = FlintContext_Get()->window.hEditControl;
-    data->refresh_cb = google_refresh_callback;
-    Popup* popup = EditPopup_Create(wm, selection, "Edit Google", 960, 540, edit_confirm, data);
-    WindowManager_PushPopup(wm, popup);
+    int idx = -1;
+    char* edited = fl_edit_text_popup(selection, "Edit Google", 960, 540, lb, &idx);
+    if (!edited) return;
+    if (idx >= 0) fl_replace_line_in_file(GoogleHistoryFile, idx, edited);
+    free(edited);
+    google_refresh_callback("", FlintContext_Get()->window.hListBox, lb);
+    UI_Redraw(lb, FlintContext_Get()->window.hListBox);
 }
 
 bool google_enter_callback(const char* selection, ListBoxInfo* lb) {

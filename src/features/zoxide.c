@@ -8,7 +8,13 @@ static void zoxide_refresh(const char* filter, WindowHandle hListBox, ListBoxInf
     fl_free_file_list(items, n);
 }
 static void zoxide_edit(const char* selection, ListBoxInfo* lb) {
-    fl_edit_text_popup(selection, "Edit Zoxide", 960, 540, TerminalZoxideFilePath, lb, zoxide_refresh);
+    int idx = -1;
+    char* edited = fl_edit_text_popup(selection, "Edit Zoxide", 960, 540, lb, &idx);
+    if (!edited) return;
+    if (idx >= 0) fl_replace_line_in_file(TerminalZoxideFilePath, idx, edited);
+    free(edited);
+    zoxide_refresh("", FlintContext_Get()->window.hListBox, lb);
+    UI_Redraw(lb, FlintContext_Get()->window.hListBox);
 }
 static bool zoxide_enter(const char* selection, ListBoxInfo* lb) {
     char* path = fl_get_zoxide_match((char*)selection);
@@ -44,7 +50,13 @@ static bool text_editor_enter(const char* selection, ListBoxInfo* lb) {
     return true;
 }
 static void text_editor_edit(const char* selection, ListBoxInfo* lb) {
-    fl_edit_text_popup(selection, "Edit TextEditor", 960, 540, TextEditorZoxideFilePath, lb, text_editor_refresh);
+    int idx = -1;
+    char* edited = fl_edit_text_popup(selection, "Edit TextEditor", 960, 540, lb, &idx);
+    if (!edited) return;
+    if (idx >= 0) fl_replace_line_in_file(TextEditorZoxideFilePath, idx, edited);
+    free(edited);
+    text_editor_refresh("", FlintContext_Get()->window.hListBox, lb);
+    UI_Redraw(lb, FlintContext_Get()->window.hListBox);
 }
 static void TriggerTextEditorZoxide(void) {
     const char* items[MAX_FILE_LINES];
@@ -73,8 +85,14 @@ static bool yazi_enter(const char* selection, ListBoxInfo* lb) {
     free(path);
     return true;
 }
-static void yazi_edit(const char* selection, ListBoxInfo* lb) { 
-  fl_edit_text_popup(selection, "Edit Yazi", 960, 540, YaziZoxideFilePath, lb, yazi_refresh);
+static void yazi_edit(const char* selection, ListBoxInfo* lb) {
+    int idx = -1;
+    char* edited = fl_edit_text_popup(selection, "Edit Yazi", 960, 540, lb, &idx);
+    if (!edited) return;
+    if (idx >= 0) fl_replace_line_in_file(YaziZoxideFilePath, idx, edited);
+    free(edited);
+    yazi_refresh("", FlintContext_Get()->window.hListBox, lb);
+    UI_Redraw(lb, FlintContext_Get()->window.hListBox);
 }
 static void TriggerYaziZoxide(void) {
     const char* items[MAX_FILE_LINES];
@@ -100,8 +118,14 @@ static bool file_manager_enter(const char* selection, ListBoxInfo* lb) {
     free(path);
     return true;
 }
-static void file_manager_edit(const char* selection, ListBoxInfo* lb) { 
-  fl_edit_text_popup(selection, "Edit FileManager", 960, 540, FileManagerZoxideFilePath, lb, file_manager_refresh);
+static void file_manager_edit(const char* selection, ListBoxInfo* lb) {
+    int idx = -1;
+    char* edited = fl_edit_text_popup(selection, "Edit FileManager", 960, 540, lb, &idx);
+    if (!edited) return;
+    if (idx >= 0) fl_replace_line_in_file(FileManagerZoxideFilePath, idx, edited);
+    free(edited);
+    file_manager_refresh("", FlintContext_Get()->window.hListBox, lb);
+    UI_Redraw(lb, FlintContext_Get()->window.hListBox);
 }
 static void TriggerFileManager(void) {
     const char* items[MAX_FILE_LINES];
