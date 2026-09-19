@@ -852,7 +852,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
             if (hPopup && IsWindow(hPopup)) {
               lb = (ListBoxInfo*)GetWindowLongPtrA(hPopup, GWLP_USERDATA);
             }
-            Popup* popup = EditPopup_Create(wm, "", "Command Mode", 960, 540, win_command_confirm, lb);
+            Popup* popup = EditPopup_Create(wm, "", "Command Mode", 960, 540, 1000, 100, "LEFT", win_command_confirm, lb);
             if (popup) WindowManager_PushPopup(wm, popup);
           }
           return 1;

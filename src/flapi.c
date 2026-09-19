@@ -717,6 +717,9 @@ char* fl_edit_text_popup_impl(const FlEditPopupSpec* spec) {
     const char* title = spec->title ? spec->title : "";
     int x = spec->x ? spec->x : 960;
     int y = spec->y ? spec->y : 540;
+    int w = spec->w > 0 ? spec->w : 1000;
+    int h = spec->h > 0 ? spec->h : 100;
+    const char* align = spec->align ? spec->align : "LEFT";
     ListBoxInfo* lb = spec ? spec->lb : NULL;
     int* out_index = spec ? spec->out_index : NULL;
     if (out_index) *out_index = -1;
@@ -727,7 +730,7 @@ char* fl_edit_text_popup_impl(const FlEditPopupSpec* spec) {
     WindowManager* wm = WindowManager_Get();
     if (!wm) return NULL;
     char* result = NULL;
-    Popup* popup = EditPopup_Create(wm, initial_text, title, x, y, fl_edit_blocking_confirm, &result);
+    Popup* popup = EditPopup_Create(wm, initial_text, title, x, y, w, h, align, fl_edit_blocking_confirm, &result);
     if (!popup) return NULL;
     WindowManager_PushPopup(wm, popup);
     while (wm->running && popup->manager) {
