@@ -90,24 +90,3 @@ static const PopupVTable g_message_popup_vtable = {
     .destroy = MessagePopup_Destroy
 };
 
-Popup* MessagePopup_Create(WindowManager* wm, const char* message, int timeout_ms) {
-    PROFILE_START(timer);
-    MessagePopupData* data = calloc(1, sizeof(MessagePopupData));
-    if (!data) { PROFILE_END_VAR(timer, "window_manager:MessagePopup_Create"); return NULL; }
-    
-    data->base.vtable = &g_message_popup_vtable;
-    data->base.manager = wm;
-    data->message = strdup(message);
-    data->timeout_ms = timeout_ms;
-    
-    #if !defined(_WIN32)
-    Display* dpy = wm->display;
-    data->base.handle.xid = Linux_CreateDisplayMessageWindow(dpy, 0, 0, 400, 100);
-    #endif
-    
-    PROFILE_END_VAR(timer, "window_manager:MessagePopup_Create");
-    return WindowManager_PushPopup(wm, (Popup*)data);
-}
-
-
-
