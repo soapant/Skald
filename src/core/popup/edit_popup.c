@@ -199,17 +199,33 @@ static void EditPopup_OnRender(Popup* self) {
 #if !defined(_WIN32)
     Display* dpy = get_display();
     if (!dpy) { PROFILE_END_VAR(timer, "window_manager:EditPopup_OnRender"); return; }
-    XftDraw* xd = Linux_CreateXftDraw(dpy, self->handle.xid);
-    if (!xd) { PROFILE_END_VAR(timer, "window_manager:EditPopup_OnRender"); return; }
+    XWindowAttributes attrs;
+    if (!XGetWindowAttributes(dpy, self->handle.xid, &attrs)) { PROFILE_END_VAR(timer, "window_manager:EditPopup_OnRender"); return; }
+    Visual* vis = attrs.visual;
+    int depth = attrs.depth;
+    Colormap cmap = attrs.colormap;
+    Pixmap dbl = XCreatePixmap(dpy, self->handle.xid, data->w, data->h, depth);
+    XftDraw* xd = dbl ? XftDrawCreate(dpy, dbl, vis, cmap) : NULL;
+    bool buffered = (dbl && xd);
+    if (buffered) {
+        Linux_SetDblVisual(dpy, vis, cmap, depth);
+        Pixmap bg = Linux_GetCachedBackground(dpy, self->handle.xid, data->w, data->h);
+        if (bg) {
+            GC gc = XCreateGC(dpy, dbl, 0, NULL);
+            XCopyArea(dpy, bg, dbl, gc, 0, 0, data->w, data->h, 0, 0);
+            XFreeGC(dpy, gc);
+        } else {
+            Linux_DrawBackgroundToDrawable(dpy, dbl, data->w, data->h);
+        }
+    } else {
+        if (dbl) { XFreePixmap(dpy, dbl); dbl = None; }
+        Linux_DrawBackground(dpy, self->handle.xid, data->w, data->h);
+        xd = Linux_CreateXftDraw(dpy, self->handle.xid);
+        if (!xd) { PROFILE_END_VAR(timer, "window_manager:EditPopup_OnRender"); return; }
+    }
     FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
     XftFont* xf = FH_TO_XFT(font);
-    int screen = DefaultScreen(dpy);
-    Visual* visual = DefaultVisual(dpy, screen);
-    Colormap cmap = DefaultColormap(dpy, screen);
-    XftDrawDestroy(xd);
-    Linux_DrawBackground(dpy, self->handle.xid, data->w, data->h);
-    xd = Linux_CreateXftDraw(dpy, self->handle.xid);
-    Platform_SetDrawContext(dpy, xd, visual, cmap);
+    Platform_SetDrawContext(dpy, xd, vis, cmap);
     if (xf && VimModeText ) {
         Platform_DrawTextRaw(5, 5, g_vim_mode, VimModeTextColor(), font, "LEFT", 5,FontSize);
     }
@@ -233,13 +249,24 @@ static void EditPopup_OnRender(Popup* self) {
         int cursor_draw_x = 10 + cursor_x - scroll;
         if (cursor_draw_x < 2) cursor_draw_x = 2;
         if (cursor_draw_x > data->w - 4) cursor_draw_x = data->w - 4;
+        int textH = xf ? xf->ascent + xf->descent : FontSize;
+        int cursor_y = 40 + (textH - FontSize) / 2;
+        if (cursor_y < 40) cursor_y = 40;
         if (IsInsertMode()) {
-            Platform_DrawRectRaw(cursor_draw_x, 40, 2, FontSize, rgb_to_hex(COLOR_TEXT));
+            Platform_DrawRectRaw(cursor_draw_x, cursor_y, 2, FontSize, rgb_to_hex(COLOR_TEXT));
         } else {
-            Platform_DrawRectRaw(cursor_draw_x, 40, 12, FontSize, rgb_to_hex(COLOR_TEXT));
+            Platform_DrawRectRaw(cursor_draw_x, cursor_y, 12, FontSize, rgb_to_hex(COLOR_TEXT));
         }
     }
+    Platform_SetDrawContext(NULL, NULL, NULL, 0);
+    if (buffered) {
+        Linux_ClearDblVisual();
+        GC gc = XCreateGC(dpy, self->handle.xid, 0, NULL);
+        XCopyArea(dpy, dbl, self->handle.xid, gc, 0, 0, data->w, data->h, 0, 0);
+        XFreeGC(dpy, gc);
+    }
     XftDrawDestroy(xd);
+    if (dbl) XFreePixmap(dpy, dbl);
     Platform_DestroyFont(font);
     XFlush(dpy);
 #endif
