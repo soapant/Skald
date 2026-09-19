@@ -23,6 +23,12 @@ int ReplaceLineInFile(const char* filepath, int line_index, const char* new_text
         log_info("early return 0");
         return 0;
     }
+    char full[MAX_PATH];
+    if (!Platform_ResolveDataPath(filepath, full, sizeof(full))) {
+        log_info("early return 0");
+        return 0;
+    }
+    filepath = full;
     FILE* f = fopen(filepath, "r");
     if (!f) {
         return 0;

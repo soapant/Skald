@@ -1,6 +1,6 @@
 #include "core/flapi.h"
 
-const char* GoogleHistoryFile = "data/GoogleZoxide.txt";
+const char* GoogleHistoryFile = "GoogleZoxide.txt";
 
 void google_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
     const char* items[MAX_FILE_LINES];

@@ -1,5 +1,7 @@
 #include "core/flapi.h"
 
+#define TODO_FILE_PATH "todo.txt"
+
 typedef struct { char dummy[1]; } TodoAliasEntry;
 typedef struct {
     const char* flag;

@@ -5,7 +5,6 @@
 #include <stddef.h>
 
 #define HISTORY_MAX_PER_FEATURE 100
-#define HISTORY_FILE "data/history.txt"
 
 void History_Init(void);
 void History_Shutdown(void);
