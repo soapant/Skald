@@ -6,7 +6,6 @@
 #include "helpers/helpers_hotkey.h"
 #include "helpers/helpers_alias.h"
 #include "helpers/helpers_flag.h"
-#include "helpers/helpers_file.h"
 #include "helpers/helpers_ui.h"
 #include "platform/ui.h"
 #include "core/vim.h"
