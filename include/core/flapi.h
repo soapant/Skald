@@ -143,7 +143,17 @@ char* fl_string_slice(const char* str, int start, int end);
 // POPUPS / UI
 // =============================================================================
 
-char* fl_edit_text_popup(const char* initial_text, const char* title, int x, int y, ListBoxInfo* lb, int* out_index);
+typedef struct {
+    const char* initial_text;
+    const char* title;
+    int x;
+    int y;
+    ListBoxInfo* lb;
+    int* out_index;
+} FlEditPopupSpec;
+
+char* fl_edit_text_popup_impl(const FlEditPopupSpec* spec);
+#define fl_edit_text_popup(...) fl_edit_text_popup_impl(&(FlEditPopupSpec){__VA_ARGS__})
 bool fl_replace_line_in_file(const char* filepath, int line_index, const char* new_text);
 
 char* fl_popup_impl(const FlPopupSpec *spec);
