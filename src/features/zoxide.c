@@ -9,7 +9,7 @@ static void zoxide_refresh(const char* filter, WindowHandle hListBox, ListBoxInf
 }
 static void zoxide_edit(const char* selection, ListBoxInfo* lb) {
     int idx = -1;
-    char* edited = fl_edit_text_popup(.initial_text = selection, .title = "Edit Zoxide", .x = 960, .y = 540, .lb = lb, .out_index = &idx);
+    char* edited = fl_edit_text_popup(.initial_text = selection,.lb = lb, .out_index = &idx);
     if (!edited) return;
     if (idx >= 0) fl_replace_line_in_file(TerminalZoxideFilePath, idx, edited);
     free(edited);
@@ -51,7 +51,7 @@ static bool text_editor_enter(const char* selection, ListBoxInfo* lb) {
 }
 static void text_editor_edit(const char* selection, ListBoxInfo* lb) {
     int idx = -1;
-    char* edited = fl_edit_text_popup(.initial_text = selection, .title = "Edit TextEditor", .x = 960, .y = 540, .lb = lb, .out_index = &idx);
+    char* edited = fl_edit_text_popup(.initial_text = selection,.lb = lb, .out_index = &idx);
     if (!edited) return;
     if (idx >= 0) fl_replace_line_in_file(TextEditorZoxideFilePath, idx, edited);
     free(edited);
@@ -87,7 +87,7 @@ static bool yazi_enter(const char* selection, ListBoxInfo* lb) {
 }
 static void yazi_edit(const char* selection, ListBoxInfo* lb) {
     int idx = -1;
-    char* edited = fl_edit_text_popup(.initial_text = selection, .title = "Edit Yazi", .x = 960, .y = 540, .lb = lb, .out_index = &idx);
+    char* edited = fl_edit_text_popup(.initial_text = selection,.lb = lb, .out_index = &idx);
     if (!edited) return;
     if (idx >= 0) fl_replace_line_in_file(YaziZoxideFilePath, idx, edited);
     free(edited);
@@ -120,7 +120,7 @@ static bool file_manager_enter(const char* selection, ListBoxInfo* lb) {
 }
 static void file_manager_edit(const char* selection, ListBoxInfo* lb) {
     int idx = -1;
-    char* edited = fl_edit_text_popup(.initial_text = selection,.x = 960, .y = 540, .lb = lb, .out_index = &idx);
+    char* edited = fl_edit_text_popup(.initial_text = selection,.lb = lb, .out_index = &idx);
     if (!edited) return;
     if (idx >= 0) fl_replace_line_in_file(FileManagerZoxideFilePath, idx, edited);
     free(edited);
