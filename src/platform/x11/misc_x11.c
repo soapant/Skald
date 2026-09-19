@@ -321,18 +321,6 @@ int ConvertLinuxKeyToWindowsVK(int key_code) {
     PROFILE_END_VAR(timer, "misc_x11:ConvertLinuxKeyToWindowsVK");
 }
 
-char Platform_GetLastChar(MappedFile *file) {
-    PROFILE_START(timer);
-    char lastChar = '\0';
-
-    lseek(file->fd, -1, SEEK_END);
-
-    read(file->fd, &lastChar, 1);
-
-    PROFILE_END_VAR(timer, "misc_x11:Platform_GetLastChar");
-    return lastChar;
-}
-
 int Platform_FileAppend(MappedFile *mf, const char *text) {
     PROFILE_START(timer);
     if (mf == NULL || text == NULL) {

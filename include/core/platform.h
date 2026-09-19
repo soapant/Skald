@@ -32,7 +32,6 @@ int Platform_CopyToClipboard(const char* text);
 int Platform_CopyImageToClipboard(const unsigned char* png, size_t len);
 char* Platform_QueryZoxidePath(const char* query);
 char* Platform_GetWorkingDir();
-char Platform_GetLastChar(MappedFile *file);
 void *Platform_FeatureWatcherThread(void* arg);
 
 int Platform_FileAppend(MappedFile *mf, const char *text);
