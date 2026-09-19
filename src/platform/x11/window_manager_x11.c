@@ -11,7 +11,6 @@
 #include "helpers/helpers_hotkey.h"
 #include "helpers/helpers_alias.h"
 #include "helpers/helpers_flag.h"
-#include "helpers/helpers_file.h"
 #include "helpers/helpers_ui.h"
 #include "platform/x11/subclasses_x11.h"
 #include "platform/input_state.h"
