@@ -10,6 +10,7 @@ void Linux_ClipboardEnsureStarted(void);
 void Linux_ClipboardShutdown(void);
 int Linux_ClipboardSetText(const char *text);
 int Linux_ClipboardSetImage(const unsigned char *png, size_t len);
+char* Linux_ClipboardGetText(void);
 bool Linux_ClipboardHandleEvent(Display *dpy, XEvent *ev);
 
 #endif

@@ -52,12 +52,6 @@ bool get_title_x11(char *buffer, int buffer_size) {
     return buffer[0] != '\0';
 }
 
-char* get_clipboard_entry_x11() {
-  char* out = Platform_RunTerminalCommand("xclip -o -selection clipboard",false);
-  if (!out) log_error("xclip failed");
-  return out;
-}
-
 char* paste_x11(char* content) {
   if (!content) { log_error("content is NULL"); return NULL; }
   char buffer[100];
