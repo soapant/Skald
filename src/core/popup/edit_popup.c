@@ -303,6 +303,7 @@ Popup* EditPopup_Create(WindowManager* wm, const char* initial_text,
     PROFILE_START(timer);
     EditPopupDataInternal* data = calloc(1, sizeof(EditPopupDataInternal));
     if (!data) { PROFILE_END_VAR(timer, "window_manager:EditPopup_Create"); return NULL; }
+    //temporarily hardcoded
     int h = 100;
     int w = 1000;
     WindowManager_GetCenteredPos(w, h, &x, &y);
@@ -310,7 +311,7 @@ Popup* EditPopup_Create(WindowManager* wm, const char* initial_text,
     data->base.vtable = &g_edit_popup_vtable;
     data->base.manager = wm;
     data->base.type = POPUP_EDIT;
-    data->title = title ? strdup(title) : strdup("Edit");
+    data->title = title;
     data->text_capacity = 1024;
     data->text = calloc(data->text_capacity, 1);
     if (initial_text) {
@@ -327,7 +328,7 @@ Popup* EditPopup_Create(WindowManager* wm, const char* initial_text,
     data->base.handle.xid = Linux_CreateEditPopupWindow(dpy, x, y, w, h);
     #else
     HINSTANCE hInst = GetModuleHandle(NULL);
-    HWND hwnd = CreateWindowExA(WS_EX_TOPMOST | WS_EX_TOOLWINDOW, "EditPopupClass", title ? title : "Edit", WS_POPUP, x, y, w, h, NULL, NULL, hInst, data);
+    HWND hwnd = CreateWindowExA(WS_EX_TOPMOST | WS_EX_TOOLWINDOW, "EditPopupClass", title, WS_POPUP, x, y, w, h, NULL, NULL, hInst, data);
     if (!hwnd) {
         free(data->text);
         free(data->title);
