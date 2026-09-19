@@ -40,6 +40,12 @@ void IncrementVolume(void) {
 void DecrementVolume(void) {
   fl_decrement_volume_by_percent(10);
 }
+void GoogleMeaning(void) {
+  char *clip = fl_get_last_clipboard_entry();
+  char search[300];
+  snprintf(search,sizeof(search),"what is %s",clip);
+  fl_query_browser(search);
+}
 
 FLINT_FEATURE_INIT {
     fl_register_hotkey("Alt+Shift+K", KillMyProgram);
@@ -48,6 +54,7 @@ FLINT_FEATURE_INIT {
     fl_register_hotkey("Alt+Shift+N", ShowCurrentBatteryPercentage);
     fl_register_hotkey("Ctrl+Shift+X", ScreenshotArea);
     fl_register_hotkey("Alt+Shift+C", OcrRegionAndCopy);
+    fl_register_hotkey("Alt+Shift+G", GoogleMeaning);
     fl_register_hotkey("RShift",MediaPlayPause); 
     fl_register_hotkey("Ctrl+]",IncrementVolume); 
     fl_register_hotkey("Ctrl+[",DecrementVolume); 
