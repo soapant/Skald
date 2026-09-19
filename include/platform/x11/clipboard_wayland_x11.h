@@ -7,6 +7,7 @@
 bool Wayland_ClipboardAvailable(void);
 int Wayland_ClipboardSetText(const char *text);
 int Wayland_ClipboardSetImage(const unsigned char *png, size_t len);
+char* Wayland_ClipboardGetText(void);
 void Wayland_ClipboardShutdown(void);
 
 #endif

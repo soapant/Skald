@@ -111,6 +111,10 @@ static int g_mgr_bind_ver = 0;
 static char *g_wl_text = NULL;
 static unsigned char *g_wl_png = NULL;
 static size_t g_wl_png_len = 0;
+static struct wl_proxy *g_wl_offer = NULL;
+static bool g_wl_has_selection = false;
+static char g_wl_offer_mimes[8][64];
+static int g_wl_offer_mime_count = 0;
 static bool g_wl_running = false;
 static bool g_wl_ready = false;
 static bool g_wl_dead = false;
@@ -141,17 +145,42 @@ static void (*g_reg_listener[])(void) = {
     (void (*)(void))reg_global_remove,
 };
 
+static void offer_mime(void *data, struct wl_proxy *offer, const char *mime) {
+    (void)data;
+    (void)offer;
+    if (!mime) return;
+    pthread_mutex_lock(&g_wl_text_lock);
+    if (g_wl_offer_mime_count < 8) {
+        strncpy(g_wl_offer_mimes[g_wl_offer_mime_count], mime, sizeof(g_wl_offer_mimes[0]) - 1);
+        g_wl_offer_mimes[g_wl_offer_mime_count][sizeof(g_wl_offer_mimes[0]) - 1] = '\0';
+        g_wl_offer_mime_count++;
+    }
+    pthread_mutex_unlock(&g_wl_text_lock);
+}
+
+static void (*g_offer_listener[])(void) = {
+    (void (*)(void))offer_mime,
+};
+
 static void dev_data_offer(void *data, struct wl_proxy *dev, struct wl_proxy *offer) {
     (void)data;
     (void)dev;
-    wl.proxy_marshal_flags(offer, 1, NULL, 0, 0);
-    wl.proxy_destroy(offer);
+    if (g_wl_offer && g_wl_offer != offer) {
+        wl.proxy_marshal_flags(g_wl_offer, 1, NULL, 0, 0);
+        wl.proxy_destroy(g_wl_offer);
+    }
+    g_wl_offer = offer;
+    g_wl_has_selection = false;
+    pthread_mutex_lock(&g_wl_text_lock);
+    g_wl_offer_mime_count = 0;
+    pthread_mutex_unlock(&g_wl_text_lock);
+    wl.proxy_add_listener(offer, (void (**)(void))g_offer_listener, NULL);
 }
 
 static void dev_selection(void *data, struct wl_proxy *dev, struct wl_proxy *offer) {
     (void)data;
     (void)dev;
-    (void)offer;
+    g_wl_has_selection = offer != NULL;
 }
 
 static void dev_finished(void *data, struct wl_proxy *dev) {
@@ -462,6 +491,74 @@ int Wayland_ClipboardSetImage(const unsigned char *png, size_t len) {
     return 1;
 }
 
+static const char *wl_pick_mime_locked(void) {
+    static const char *prefs[] = { "text/plain;charset=utf-8", "text/plain", "UTF8_STRING", "STRING", "TEXT" };
+    for (size_t p = 0; p < sizeof(prefs) / sizeof(prefs[0]); p++) {
+        for (int i = 0; i < g_wl_offer_mime_count; i++) {
+            if (strcmp(g_wl_offer_mimes[i], prefs[p]) == 0) return prefs[p];
+        }
+    }
+    return NULL;
+}
+
+char *Wayland_ClipboardGetText(void) {
+    if (!wl_setup()) return NULL;
+    pthread_mutex_lock(&g_wl_lock);
+    struct wl_proxy *offer = (g_wl_offer && g_wl_has_selection) ? g_wl_offer : NULL;
+    pthread_mutex_lock(&g_wl_text_lock);
+    const char *pick = offer ? wl_pick_mime_locked() : NULL;
+    char mime[64] = {0};
+    if (pick) strncpy(mime, pick, sizeof(mime) - 1);
+    pthread_mutex_unlock(&g_wl_text_lock);
+    if (!offer || !mime[0]) {
+        pthread_mutex_unlock(&g_wl_lock);
+        return NULL;
+    }
+    int fds[2] = {-1, -1};
+    if (pipe(fds) != 0) {
+        pthread_mutex_unlock(&g_wl_lock);
+        return NULL;
+    }
+    wl.proxy_marshal_flags(offer, 0, NULL, 0, 0, mime, fds[1]);
+    wl.display_flush(g_wl_dpy);
+    pthread_mutex_unlock(&g_wl_lock);
+    close(fds[1]);
+    size_t cap = 8192;
+    size_t len = 0;
+    char *out = malloc(cap);
+    if (!out) {
+        close(fds[0]);
+        return NULL;
+    }
+    for (;;) {
+        struct pollfd pfd = { fds[0], POLLIN, 0 };
+        int r = poll(&pfd, 1, 500);
+        if (r <= 0) break;
+        if (len + 4096 + 1 > cap) {
+            size_t ncap = (len + 4096 + 1) * 2;
+            char *n = realloc(out, ncap);
+            if (!n) {
+                free(out);
+                close(fds[0]);
+                return NULL;
+            }
+            out = n;
+            cap = ncap;
+        }
+        ssize_t got = read(fds[0], out + len, 4096);
+        if (got <= 0) break;
+        len += (size_t)got;
+    }
+    close(fds[0]);
+    if (len == 0) {
+        free(out);
+        return NULL;
+    }
+    out[len] = '\0';
+    log_info("wayland clipboard read len=%d", (int)len);
+    return out;
+}
+
 void Wayland_ClipboardShutdown(void) {
     if (!g_wl_ready && !g_wl_handle) return;
     g_wl_running = false;
@@ -473,6 +570,12 @@ void Wayland_ClipboardShutdown(void) {
         pthread_mutex_lock(&g_wl_lock);
         wl_drop_source(&g_wl_source);
         wl_drop_source(&g_wl_psource);
+        if (g_wl_offer) {
+            wl.proxy_marshal_flags(g_wl_offer, 1, NULL, 0, 0);
+            wl.proxy_destroy(g_wl_offer);
+            g_wl_offer = NULL;
+        }
+        g_wl_has_selection = false;
         if (g_wl_device) {
             wl.proxy_marshal_flags(g_wl_device, 1, NULL, 0, 0);
             wl.proxy_destroy(g_wl_device);

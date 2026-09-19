@@ -45,18 +45,6 @@ bool Wm_FocusByTitle(const char *title) {
     return NULL;
 }
 
-char* Wm_GetClipboardLastEntry(void) {
-    char* result;
-    
-    if (getenv("WAYLAND_DISPLAY")) {
-        if ((result = get_clipboard_entry_hyprland())) return result;
-        if ((result = get_clipboard_entry_sway())) return result;
-    } else {
-    if ((result = get_clipboard_entry_x11())) return result;
-    }
-    log_error("COuldnt Get Last Cliboard Entry");
-    return NULL;
-}
 char* Wm_Paste(char* content) {
     char* result;
     if (getenv("WAYLAND_DISPLAY")) {
