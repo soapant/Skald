@@ -1,6 +1,6 @@
 #include "core/flapi.h"
 
-const char* TerminalHistoryFilePath = "data/TerminalHistory.txt";
+const char* TerminalHistoryFilePath = "TerminalHistory.txt";
 
 void terminal_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
     const char* items[MAX_FILE_LINES];

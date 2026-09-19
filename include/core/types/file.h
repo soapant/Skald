@@ -36,12 +36,4 @@ typedef struct {
 } WinPromptState;
 #endif
 
-#if defined(_WIN32)
-#define DATA_DIR "data\\"
-#else
-#define DATA_DIR "data/"
-#endif
-#define TODO_FILE_PATH DATA_DIR "todo.txt"
-#define FORGETFULL_FILE_PATH DATA_DIR "forgetfull.txt"
-
 #endif

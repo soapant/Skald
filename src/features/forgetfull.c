@@ -1,5 +1,7 @@
 #include "core/flapi.h"
 
+#define FORGETFULL_FILE_PATH "forgetfull.txt"
+
 void forgetfull_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
     const char* items[100];
     int forgetfull_count = fl_load_file_list(FORGETFULL_FILE_PATH, items, 100);
