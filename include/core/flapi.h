@@ -5,6 +5,7 @@
 
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 #include <ctype.h>
 #include <string.h>
 #include <stdio.h>
@@ -46,6 +47,31 @@ bool fl_copy_to_clipboard(const char* text);
 bool fl_paste_from_clipboard();
 bool fl_paste(char* content);
 char* fl_get_last_clipboard_entry();
+
+typedef enum {
+    FL_CLIPBOARD_TEXT,
+    FL_CLIPBOARD_IMAGE,
+} FlClipboardType;
+
+typedef struct {
+    FlClipboardType type;
+    uint64_t timestamp;
+    char* text;
+    char* image_path;
+    uint32_t image_width;
+    uint32_t image_height;
+} FlClipboardEntry;
+
+typedef struct {
+    FlClipboardEntry* entries;
+    size_t count;
+    size_t capacity;
+} FlClipboardHistory;
+
+size_t fl_clipboard_history_count(void);
+const FlClipboardEntry* fl_clipboard_history_get(size_t index);
+const FlClipboardEntry* fl_clipboard_latest(void);
+void fl_clipboard_clear_history(void);
 
 // =============================================================================
 // FILES / FILESYSTEM
