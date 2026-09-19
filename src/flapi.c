@@ -800,6 +800,15 @@ char* fl_adb_reboot() {
 
 }
 char* fl_get_last_clipboard_entry() {
+    char* current = Platform_GetClipboardEntry();
+    if (current) {
+        if (current[0]) {
+            const FlClipboardEntry* latest = fl_clipboard_latest();
+            if (!latest || latest->type != FL_CLIPBOARD_TEXT || !latest->text || strcmp(latest->text, current) != 0)
+                fl_clipboard_push_text(current);
+        }
+        free(current);
+    }
     for (size_t i = g_fl_clipboard_history.count; i > 0; i--) {
         const FlClipboardEntry* e = &g_fl_clipboard_history.entries[i - 1];
         if (e->type == FL_CLIPBOARD_TEXT && e->text) return strdup(e->text);
