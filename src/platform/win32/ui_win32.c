@@ -29,10 +29,6 @@ bool IsPopupActive(WindowHandle hPopupWnd) {
     return WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) != NULL && IsWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd));
 }
 
-void* GetActivePopupUserData(void) {
-    return NULL;
-}
-
 void UI_SetSelection(ListBoxInfo* lb, WindowHandle hList, int index) {
     if (!lb) return;
     int old_sel = lb->selected_index;
@@ -59,19 +55,8 @@ void UI_SetSelection(ListBoxInfo* lb, WindowHandle hList, int index) {
     if (hasInvalid) RedrawWindow(WH_TO_HWND(hList), &invalidRect, NULL, RDW_INVALIDATE);
 }
 
-int UI_GetCount(ListBoxInfo* lb, WindowHandle hList) {
-    (void)hList;
-    if (!lb) return 0;
-    return lb->populated_count;
-}
-
 void UI_SetHorizontalExtent(WindowHandle hList, int width) {
     SendMessageA(WH_TO_HWND(hList), LB_SETHORIZONTALEXTENT, width, 0);
-}
-
-void UI_SetItemCount(ListBoxInfo* lb, WindowHandle hList, int count) {
-    if (lb) lb->populated_count = count;
-    SendMessageA(WH_TO_HWND(hList), LB_SETCOUNT, count, 0);
 }
 
 void UI_LB_SetCount(ListBoxInfo* lb, WindowHandle hList, int count) {
@@ -209,14 +194,6 @@ void UI_Edit_GetSel(WindowHandle hEdit, uint32_t* start, uint32_t* end) {
     SendMessageA(WH_TO_HWND(hEdit), EM_GETSEL, (WPARAM)start, (LPARAM)end);
 }
 
-void UI_Edit_KeyDown(WindowHandle hEdit, int vk) {
-    SendMessageA(WH_TO_HWND(hEdit), WM_KEYDOWN, vk, 0);
-}
-
-void UI_Edit_KeyUp(WindowHandle hEdit, int vk) {
-    SendMessageA(WH_TO_HWND(hEdit), WM_KEYUP, vk, 0);
-}
-
 void UI_GetCurrentTextEdit(WindowHandle edit, char* buffer, size_t cap) {
     GetWindowTextA(WH_TO_HWND(edit), buffer, (int)cap);
 }
@@ -227,10 +204,6 @@ void UI_SetText(WindowHandle hEdit, char* text) {
 
 void UI_SetCursorPosition(WindowHandle ctrl, int position) {
     UI_Edit_SetSel(ctrl, position, position);
-}
-
-void UI_GetCurrentCursorPosition(uint32_t *start, uint32_t *end) {
-    if (start && end) UI_Edit_GetSel(FlintContext_Get()->window.hActiveEditControl, start, end);
 }
 
 void UI_RedrawNow(ListBoxInfo* lb, WindowHandle hListBox) {

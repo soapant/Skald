@@ -12,33 +12,14 @@ bool IsPopupActive(WindowHandle hPopupWnd) {
     return wm && wm->popup_count > 0;
 }
 
-void* GetActivePopupUserData(void) {
-    WindowManager* wm = WindowManager_Get();
-    if (!wm) return NULL;
-    Popup* top = WindowManager_GetTopPopup(wm);
-    if (!top) return NULL;
-    return top->user_data;
-}
-
 void UI_SetSelection(ListBoxInfo* lb, WindowHandle hList, int index) {
     (void)hList;
     if (!lb) return;
     lb->selected_index = index;
 }
 
-int UI_GetCount(ListBoxInfo* lb, WindowHandle hList) {
-    (void)hList;
-    if (!lb) return 0;
-    return lb->populated_count;
-}
-
 void UI_SetHorizontalExtent(WindowHandle hList, int width) {
     (void)hList; (void)width;
-}
-
-void UI_SetItemCount(ListBoxInfo* lb, WindowHandle hList, int count) {
-    (void)hList;
-    if (lb) lb->populated_count = count;
 }
 
 void UI_LB_SetCount(ListBoxInfo* lb, WindowHandle hList, int count) {
@@ -134,14 +115,6 @@ void UI_Edit_GetSel(WindowHandle hEdit, uint32_t* start, uint32_t* end) {
     if (end) *end = 0;
 }
 
-void UI_Edit_KeyDown(WindowHandle hEdit, int vk) {
-    (void)hEdit; (void)vk;
-}
-
-void UI_Edit_KeyUp(WindowHandle hEdit, int vk) {
-    (void)hEdit; (void)vk;
-}
-
 void UI_GetCurrentTextEdit(WindowHandle edit, char* buffer, size_t cap) {
     (void)edit;
     if (!buffer || cap == 0) return;
@@ -218,11 +191,6 @@ void UI_SetCursorPosition(WindowHandle ctrl, int position) {
         if (position > len) position = len;
         ed->cursor = position;
     }
-}
-
-void UI_GetCurrentCursorPosition(uint32_t *start, uint32_t *end) {
-    if (start) *start = 0;
-    if (end) *end = 0;
 }
 
 void UI_RedrawNow(ListBoxInfo* lb, WindowHandle hListBox) {
