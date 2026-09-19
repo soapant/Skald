@@ -238,15 +238,30 @@ static void EditPopup_OnRender(Popup* self) {
     int cursor_x = 0;
     int text_len = data->text ? strlen(data->text) : 0;
     int scroll = 0;
+    int text_w = 0;
     if (xf) {
         scroll = Linux_UpdateEditScrollOffset(dpy, xf, data->text ? data->text : "", text_len, data->cursor, data->w, 0, &cursor_x);
+        if (text_len > 0) {
+            XGlyphInfo textExt;
+            XftTextExtentsUtf8(dpy, xf, (FcChar8*)data->text, text_len, &textExt);
+            text_w = textExt.xOff;
+        }
+    }
+    int draw_x = 10 - scroll;
+    int cursor_draw_x = 10 + cursor_x - scroll;
+    if (text_w > 0 && text_w <= data->w - 20 && data->align) {
+        if (strcmp(data->align, "CENTER") == 0) {
+            draw_x = (data->w - text_w) / 2;
+            cursor_draw_x = draw_x + cursor_x;
+        } else if (strcmp(data->align, "RIGHT") == 0) {
+            draw_x = data->w - 10 - text_w;
+            cursor_draw_x = draw_x + cursor_x;
+        }
     }
     if (text_len > 0) {
-        int draw_x = 10 - scroll;
         Platform_DrawTextRaw(draw_x, 40, data->text, rgb_to_hex(COLOR_TEXT), font, "", 0, 0);
     }
     {
-        int cursor_draw_x = 10 + cursor_x - scroll;
         if (cursor_draw_x < 2) cursor_draw_x = 2;
         if (cursor_draw_x > data->w - 4) cursor_draw_x = data->w - 4;
         int textH = xf ? xf->ascent + xf->descent : FontSize;
@@ -278,6 +293,7 @@ static void EditPopup_Destroy(Popup* self) {
     EditPopupDataInternal* data = (EditPopupDataInternal*)self;
     free(data->text);
     free(data->title);
+    free(data->align);
     #if !defined(_WIN32)
     Display* dpy = get_display();
     if (dpy) XDestroyWindow(dpy, self->handle.xid);
@@ -298,20 +314,28 @@ static const PopupVTable g_edit_popup_vtable = {
 };
 
 Popup* EditPopup_Create(WindowManager* wm, const char* initial_text,
-                        const char* title, int x, int y,
+                        const char* title, int x, int y, int w, int h, const char* align,
                         EditPopupConfirmCallback on_confirm, void* user_data) {
     PROFILE_START(timer);
     EditPopupDataInternal* data = calloc(1, sizeof(EditPopupDataInternal));
     if (!data) { PROFILE_END_VAR(timer, "window_manager:EditPopup_Create"); return NULL; }
-    //temporarily hardcoded
-    int h = 100;
-    int w = 1000;
+    if (w <= 0) w = 1000;
+    if (h <= 0) h = 100;
+    if (!align) align = "LEFT";
     WindowManager_GetCenteredPos(w, h, &x, &y);
     
     data->base.vtable = &g_edit_popup_vtable;
     data->base.manager = wm;
     data->base.type = POPUP_EDIT;
-    data->title = title;
+    data->title = title ? strdup(title) : strdup("");
+    data->align = align ? strdup(align) : strdup("LEFT");
+    if (!data->title || !data->align) {
+        free(data->title);
+        free(data->align);
+        free(data);
+        PROFILE_END_VAR(timer, "window_manager:EditPopup_Create");
+        return NULL;
+    }
     data->text_capacity = 1024;
     data->text = calloc(data->text_capacity, 1);
     if (initial_text) {
@@ -332,6 +356,7 @@ Popup* EditPopup_Create(WindowManager* wm, const char* initial_text,
     if (!hwnd) {
         free(data->text);
         free(data->title);
+        free(data->align);
         free(data);
         PROFILE_END_VAR(timer, "window_manager:EditPopup_Create");
         return NULL;
