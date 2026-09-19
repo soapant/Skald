@@ -21,6 +21,8 @@
 #include <shellapi.h>
 #include <gdiplus.h>
 #include <ctype.h>
+#define NOB_IMPLEMENTATION
+#include "../../../nob.h"
 
 bool Platform_LaunchTerminalAtPath(const char* working_dir, const char* extra_args){
       if (!working_dir) { log_error("working_dir is NULL extra_args='%s'", extra_args ? extra_args : "null"); return false; }
@@ -940,10 +942,6 @@ void Platform_CleanupPlatformResources(void) {
     }
 }
 
-static void Platform_OnNotificationReceived(const char* text) {
-    SubjectiveMessageDisplay(text, 140, TimeOutForMessages, COLOR_TEXT);
-}
-
 Fl_Pos Platform_GetCursorPos(void) {
     POINT point;
     
@@ -956,4 +954,10 @@ Fl_Pos Platform_GetCursorPos(void) {
 
 char* Platform_GetWorkingDir() {
   return Platform_RunTerminalCommand("cd",false);
+}
+
+void Platform_InitDataFolder() {
+    char dir_path[200];
+    snprintf(dir_path,sizeof(dir_path),"%s\\AppData\\Roaming\\Flint",Platform_GetRealHome);
+    nob_mkdir_if_not_exists(dir_path);
 }

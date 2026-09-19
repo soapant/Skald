@@ -46,8 +46,8 @@
 #if __has_include(<X11/extensions/XTest.h>)
 #include <X11/extensions/XTest.h>
 #endif
-
-
+#define NOB_IMPLEMENTATION
+#include "../../../nob.h"
 
 
 static bool x11_daemon_exec(char* const argv[]) {
@@ -1370,4 +1370,10 @@ char* Platform_GetWorkingDir(void) {
     }
     
     return raw;
+}
+
+void Platform_InitDataFolder() {
+    char dir_path[200];
+    snprintf(dir_path,sizeof(dir_path),"%s/.local/share/flint",Platform_GetRealHome);
+    nob_mkdir_if_not_exists(dir_path);
 }
