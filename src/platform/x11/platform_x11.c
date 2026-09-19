@@ -1373,7 +1373,7 @@ char* Platform_GetWorkingDir(void) {
 }
 
 void Platform_InitDataFolder() {
-    char dir_path[200];
-    snprintf(dir_path,sizeof(dir_path),"%s/.local/share/flint",Platform_GetRealHome);
+    char dir_path[300];
+    snprintf(dir_path,sizeof(dir_path),"%s/.local/share/flint",Platform_GetRealHome());
     nob_mkdir_if_not_exists(dir_path);
 }

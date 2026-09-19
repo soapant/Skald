@@ -958,6 +958,6 @@ char* Platform_GetWorkingDir() {
 
 void Platform_InitDataFolder() {
     char dir_path[200];
-    snprintf(dir_path,sizeof(dir_path),"%s\\AppData\\Roaming\\Flint",Platform_GetRealHome);
+    snprintf(dir_path,sizeof(dir_path),"%s\\AppData\\Roaming\\Flint",Platform_GetRealHome());
     nob_mkdir_if_not_exists(dir_path);
 }
