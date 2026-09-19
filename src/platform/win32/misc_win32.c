@@ -84,10 +84,6 @@ log_info("Platform_ExpandPath template_path='%s' out='%s' out_size=%d", template
 }
 
 
-char Platform_GetLastChar(MappedFile *file) {
-    return file->pBuffer[file->fileSize - 1];
-}
-
 int Platform_FileAppend(MappedFile *mf, const char *text) {
     if (!mf || !text) return 0;
 
