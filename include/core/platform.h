@@ -26,7 +26,7 @@ Fl_WindowList Platform_GetWindowTitles();
 Fl_WindowList Platform_GetWindowNames();
 bool Platform_ClickAtPos(int x,int y);
 bool Platform_QueryBrowser(char* query);
-char* Platform_GetLastClipboardEntry();
+char* Platform_GetClipboardEntry();
 bool Platform_PasteContent(char* content);
 int Platform_CopyToClipboard(const char* text);
 int Platform_CopyImageToClipboard(const unsigned char* png, size_t len);

@@ -473,7 +473,7 @@ log_info("Platform_QueryBrowser query='%s'", query ? query : "");;
     return Platform_RunTerminalCommand(command,false);
 }
 
-char* Platform_GetLastClipboardEntry(void) {
+char* Platform_GetClipboardEntry(void) {
     char* result = NULL;
 
     if (!OpenClipboard(NULL)) { log_error("operation failed, returning error"); return NULL; }
@@ -504,7 +504,7 @@ char* Platform_GetLastClipboardEntry(void) {
     GlobalUnlock(hClipData);
     CloseClipboard();
 
-log_info("Platform_GetLastClipboardEntry completed");
+log_info("Platform_GetClipboardEntry completed");
     return result;
 }
 
