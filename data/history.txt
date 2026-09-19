@@ -1,3 +1,0 @@
-===FEATURE:App Launcher===
-code
-firefox
