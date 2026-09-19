@@ -246,7 +246,6 @@ void RemoveTodoItemFromFile(const char* item_to_remove) {
         char* delim = strstr(compare_text, TODO_ENTRY_DELIMITER);
         if (delim) *delim = '\0';
         if (strcmp(compare_text, clean_item) == 0) {
-            printf("[TODO-MGR] Dropped file line item: \"%s\"\n", item_to_remove);
             free((void*)lines[i]);
             continue;
         }
