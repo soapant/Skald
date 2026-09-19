@@ -714,9 +714,9 @@ static void fl_edit_blocking_confirm(const char* text, void* user_data) {
 
 char* fl_edit_text_popup_impl(const FlEditPopupSpec* spec) {
     const char* initial_text = spec ? spec->initial_text : NULL;
-    const char* title = spec && spec->title ? spec->title : "";
-    int x = spec ? spec->x : 0;
-    int y = spec ? spec->y : 0;
+    const char* title = spec->title ? spec->title : "";
+    int x = spec->x ? spec->x : 960;
+    int y = spec->y ? spec->y : 540;
     ListBoxInfo* lb = spec ? spec->lb : NULL;
     int* out_index = spec ? spec->out_index : NULL;
     if (out_index) *out_index = -1;
