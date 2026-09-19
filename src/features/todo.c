@@ -340,7 +340,7 @@ void todo_render_callback(PromptState *state) {
 
 void todo_edit_callback(const char* selection, ListBoxInfo* lb) {
     int idx = -1;
-    char* edited = fl_edit_text_popup(.initial_text = selection, .title = "Edit Todo", .x = 960, .y = 540, .lb = lb, .out_index = &idx);
+    char* edited = fl_edit_text_popup(.initial_text = selection,.lb = lb, .out_index = &idx);
     if (!edited) return;
     if (idx >= 0) fl_replace_line_in_file(TODO_FILE_PATH, idx, edited);
     free(edited);

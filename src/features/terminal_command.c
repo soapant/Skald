@@ -11,7 +11,7 @@ void terminal_refresh_callback(const char* filter, WindowHandle hListBox, ListBo
 
 void terminal_edit_callback(const char* selection, ListBoxInfo* lb) {
     int idx = -1;
-    char* edited = fl_edit_text_popup(.initial_text = selection, .title = "Edit Terminal", .x = 960, .y = 540, .lb = lb, .out_index = &idx);
+    char* edited = fl_edit_text_popup(.initial_text = selection,.lb = lb, .out_index = &idx);
     if (!edited) return;
     if (idx >= 0) fl_replace_line_in_file(TerminalHistoryFilePath, idx, edited);
     free(edited);
