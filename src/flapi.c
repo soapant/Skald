@@ -25,6 +25,38 @@ bool fl_copy_to_clipboard(const char* text) {
     return Platform_CopyToClipboard(text);
 }
 
+static const unsigned char FL_PNG_MAGIC[8] = { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
+
+bool fl_copy_image_to_clipboard(const unsigned char* png, size_t len) {
+    if (png == NULL || len < 8) return 0;
+    if (memcmp(png, FL_PNG_MAGIC, 8) != 0) return 0;
+    return Platform_CopyImageToClipboard(png, len);
+}
+
+static bool fl_clipboard_set_png_path(const char* path) {
+    FILE* f = fopen(path, "rb");
+    if (!f) return 0;
+    fseek(f, 0, SEEK_END);
+    long n = ftell(f);
+    fseek(f, 0, SEEK_SET);
+    if (n <= 0 || n > (32 * 1024 * 1024)) {
+        fclose(f);
+        return 0;
+    }
+    unsigned char* buf = malloc((size_t)n);
+    if (!buf) {
+        fclose(f);
+        return 0;
+    }
+    size_t got = fread(buf, 1, (size_t)n, f);
+    fclose(f);
+    bool ok = 0;
+    if (got == (size_t)n) ok = fl_copy_image_to_clipboard(buf, (size_t)n);
+    free(buf);
+    remove(path);
+    return ok;
+}
+
 bool fl_get_all_files_from_dir(const char* dir_path, char** list_of_allowed_extensions, ListOfFiles* list_of_files,char** list_of_names_to_ignore) {
     if (!dir_path || !list_of_files) return false;
 
@@ -1004,23 +1036,29 @@ char* fl_get_working_dir() {
 void fl_screenshot_copy_area(void) {
     char cmd[512];
     char* wd = fl_get_working_dir();
-    
-    snprintf(cmd, sizeof(cmd), 
-             "%s/external/grim -g \"$(%s/external/slurp)\" -t png - | wl-copy",
-             wd, wd);
-    
+    char path[MAX_PATH];
+
+    snprintf(path, sizeof(path), "%s/flint_clip.png", wd ? wd : ".");
+    snprintf(cmd, sizeof(cmd),
+             "%s/external/grim -g \"$(%s/external/slurp)\" -t png %s",
+             wd, wd, path);
+
     fl_run_terminal_command(cmd);
+    fl_clipboard_set_png_path(path);
 }
 
 void fl_screenshot_copy(void) {
     char cmd[512];
     char* wd = fl_get_working_dir();
-    
-    snprintf(cmd, sizeof(cmd), 
-             "%s/external/grim -t png - | wl-copy",
-             wd, wd);
-    
+    char path[MAX_PATH];
+
+    snprintf(path, sizeof(path), "%s/flint_clip.png", wd ? wd : ".");
+    snprintf(cmd, sizeof(cmd),
+             "%s/external/grim -t png %s",
+             wd, path);
+
     fl_run_terminal_command(cmd);
+    fl_clipboard_set_png_path(path);
 }
 
 void fl_screenshot_save_area(char* save_path) {
@@ -1048,10 +1086,18 @@ void fl_screenshot_save(char* save_path) {
 void fl_ocr_area_to_clipboard(void) {
     char cmd[512];
     char* wd = fl_get_working_dir();
-    
+
     snprintf(cmd, sizeof(cmd),
-             "%s/external/grim -g \"$(%s/external/slurp)\" -t png - | tesseract stdin stdout -l eng | wl-copy",
+             "%s/external/grim -g \"$(%s/external/slurp)\" -t png - | tesseract stdin stdout -l eng",
              wd, wd);
-    
-    fl_run_terminal_command(cmd);
+
+    char* out = Platform_RunTerminalCommand(cmd, false);
+    if (!out || !out[0]) {
+        free(out);
+        return;
+    }
+    size_t n = strlen(out);
+    while (n > 0 && (out[n - 1] == '\n' || out[n - 1] == '\r')) out[--n] = '\0';
+    if (out[0]) Platform_CopyToClipboard(out);
+    free(out);
 }
