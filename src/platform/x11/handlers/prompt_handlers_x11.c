@@ -198,8 +198,8 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
         WindowManager_PushPopup(wm, popup);
         return true;
       }
-     if (wParam == 'V' && ctrl_pressed) {
-        char *clip = Platform_GetLastClipboardEntry();
+      if (wParam == 'V' && ctrl_pressed) {
+        char *clip = Platform_GetClipboardEntry();
         if (!clip) return true;
         clip[strcspn(clip, "\r\n")] = '\0';
         if (clip[0] == '\0') { free(clip); return true; }
@@ -282,7 +282,7 @@ bool Linux_HandleSimplePromptKey(const XEvent* ev,SimplePromptState *state) {
     }
 
     if (wParam == 'V' && ctrl_pressed) {
-      char *clip = Platform_GetLastClipboardEntry();
+      char *clip = Platform_GetClipboardEntry();
       if (!clip) return true;
       clip[strcspn(clip, "\r\n")] = '\0';
       if (clip[0] == '\0') { free(clip); return true; }

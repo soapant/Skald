@@ -800,10 +800,14 @@ char* fl_adb_reboot() {
 
 }
 char* fl_get_last_clipboard_entry() {
-   return Platform_GetLastClipboardEntry();
+    for (size_t i = g_fl_clipboard_history.count; i > 0; i--) {
+        const FlClipboardEntry* e = &g_fl_clipboard_history.entries[i - 1];
+        if (e->type == FL_CLIPBOARD_TEXT && e->text) return strdup(e->text);
+    }
+    return NULL;
 }
 bool fl_paste_from_clipboard() {
-   char* content = Platform_GetLastClipboardEntry();
+    char* content = Platform_GetClipboardEntry();
    return Platform_PasteContent(content);
 }
 

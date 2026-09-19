@@ -866,8 +866,8 @@ PROFILE_END_VAR(timer, "misc_x11:Platform_QueryBrowser");
     return Platform_RunTerminalCommand(command,false);
 }
 
-char* Platform_GetLastClipboardEntry() {
-log_info("Platform_GetLastClipboardEntry completed");
+char* Platform_GetClipboardEntry() {
+log_info("Platform_GetClipboardEntry completed");
   return Wm_GetClipboardLastEntry();
 }
 
