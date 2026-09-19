@@ -82,7 +82,6 @@ bool Platform_LaunchTerminalAtPath(const char* working_dir, const char* extra_ar
 bool Platform_LaunchBrowserAtUrl(char* url,bool new_window);
 
 void Platform_EmitKey(int vk_code, int down);
-bool Platform_IsRemapActive(void);
 
 bool Platform_TryAcquireSingleInstance(void);
 bool Platform_InitDisplaySafe(void);

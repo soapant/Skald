@@ -13,7 +13,3 @@ void Platform_EmitKey(int vk_code, int down) {
     }
     SendInput(1, &inp, sizeof(INPUT));
 }
-
-bool Platform_IsRemapActive(void) {
-    return false;
-}

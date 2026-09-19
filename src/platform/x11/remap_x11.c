@@ -84,7 +84,3 @@ void Platform_EmitKey(int vk_code, int down) {
 #endif
     }
 }
-
-bool Platform_IsRemapActive(void) {
-    return false;
-}

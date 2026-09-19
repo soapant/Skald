@@ -372,45 +372,6 @@ void flip_last_operation(char* out_result, size_t max_len) {
     snprintf(out_result, max_len, "FLIP: %s %c %s = %s", a_formatted, last_op, b_formatted, result_formatted);
 }
 
-void get_flip_info(char* out, size_t max_len) {
-    if (!has_last_op || !is_flipped) { strncpy(out, "Press Tab to flip", max_len); return; }
-    char a_formatted[32], b_formatted[32], result_formatted[32];
-    format_number_plain(last_b, a_formatted, sizeof(a_formatted));
-    format_number_plain(last_a, b_formatted, sizeof(b_formatted));
-    format_number_plain(flipped_result, result_formatted, sizeof(result_formatted));
-    snprintf(out, max_len, "↕ %s %c %s = %s", a_formatted, last_op, b_formatted, result_formatted);
-}
-
-void get_flip_display(char* out, size_t max_len) {
-    if (!has_last_op) { strncpy(out, "No operation to flip", max_len); return; }
-    if (last_b == 0 && last_op == '/') { strncpy(out, "Cannot flip: division by zero", max_len); return; }
-    double flipped_a = last_b; double flipped_b = last_a; double result = 0.0;
-    switch (last_op) {
-        case '+': result = flipped_a + flipped_b; break;
-        case '-': result = flipped_a - flipped_b; break;
-        case '*': result = flipped_a * flipped_b; break;
-        case '^': result = pow(flipped_a,flipped_b); break;
-        case '/': if (flipped_b != 0) result = flipped_a / flipped_b; else { strncpy(out, "Error: Div by 0 in flipped", max_len); return; } break;
-        default: strncpy(out, "Unknown operator", max_len); return;
-    }
-    flipped_result = result; is_flipped = true;
-    char a_formatted[32], b_formatted[32], result_formatted[32];
-    format_number_plain(flipped_a, a_formatted, sizeof(a_formatted));
-    format_number_plain(flipped_b, b_formatted, sizeof(b_formatted));
-    format_number_plain(result, result_formatted, sizeof(result_formatted));
-    snprintf(out, max_len, "↕ %s %c %s = %s", a_formatted, last_op, b_formatted, result_formatted);
-}
-
-void get_flip_expression(char* out, size_t max_len) {
-    if (!has_last_op) { strncpy(out, "", max_len); return; }
-    char a_formatted[32], b_formatted[32];
-    format_number_plain(last_b, a_formatted, sizeof(a_formatted));
-    format_number_plain(last_a, b_formatted, sizeof(b_formatted));
-    snprintf(out, max_len, "%s %c %s", a_formatted, last_op, b_formatted);
-}
-
-
-
 static char g_calc_last_result[256] = {0};
 
 void calculator_render_callback(PromptState *state) {
