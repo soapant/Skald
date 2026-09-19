@@ -1,6 +1,8 @@
 #include "core/history.h"
 #include "deps/log.h"
 #include "core/context.h"
+#include "core/platform.h"
+#include "config.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -51,7 +53,9 @@ static HistoryList* get_existing(const char* feature) {
 void History_Init(void) {
     if (g_history) return;
     g_history = NULL; sh_new_strdup(g_history);
-    FILE* f = fopen(HISTORY_FILE, "r");
+    char hf[MAX_PATH];
+    if (!Platform_GetFeaturePath("core", "history.txt", hf, sizeof(hf))) return;
+    FILE* f = fopen(hf, "r");
     if (!f) return;
     char line[1024];
     char current_feature[256] = {0};
@@ -84,7 +88,9 @@ void History_Init(void) {
 
 void History_Shutdown(void) {
     if (!g_history) return;
-    FILE* f = fopen(HISTORY_FILE, "w");
+    char hf[MAX_PATH];
+    FILE* f = NULL;
+    if (Platform_GetFeaturePath("core", "history.txt", hf, sizeof(hf))) f = fopen(hf, "w");
     if (f) {
         for (ptrdiff_t i = 0; i < shlen(g_history); i++) {
             HistoryList* hl = (HistoryList*)g_history[i].value;

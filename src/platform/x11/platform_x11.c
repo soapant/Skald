@@ -1085,18 +1085,18 @@ NameToPath supported_names_to_paths[] =  {
   {"xdg-desktop-portal-gtk","/home/diggy/Programming/Projects/Flint/resources/xdg-desktop-portal-gtk.png"},
 };
 
-#define ICON_CACHE_FILE "data/icon_cache.txt"
 #define MAX_ICON_CACHE 1024
 static struct { char key[512]; char value[1024]; } g_icon_cache[MAX_ICON_CACHE];
 static int g_icon_cache_count=0;
 static bool g_icon_cache_loaded=false;
+static bool icon_cache_path(char* out, size_t n) {
+    return Platform_GetFeaturePath("core", "icon_cache.txt", out, n);
+}
 static void icon_cache_load(void){
     if(g_icon_cache_loaded) return; g_icon_cache_loaded=true;
-    FILE* f=fopen(ICON_CACHE_FILE,"r");
-    if(!f){
-        char alt[1024]; const char* h=Platform_GetRealHome(); if(!h||!h[0]) h=getenv("HOME");
-        if(h){ snprintf(alt,sizeof(alt),"%s/Programming/Projects/Flint/data/icon_cache.txt",h); f=fopen(alt,"r"); }
-    }
+    char cf[1024];
+    FILE* f=NULL;
+    if (icon_cache_path(cf, sizeof(cf))) f=fopen(cf,"r");
     if(!f) return;
     char line[1536];
     while(fgets(line,sizeof(line),f) && g_icon_cache_count<MAX_ICON_CACHE){
@@ -1120,12 +1120,10 @@ static void icon_cache_set(const char* key, const char* value){
     strncpy(g_icon_cache[g_icon_cache_count].key, key, sizeof(g_icon_cache[0].key)-1);
     strncpy(g_icon_cache[g_icon_cache_count].value, value, sizeof(g_icon_cache[0].value)-1);
     g_icon_cache_count++;
-    FILE* f=fopen(ICON_CACHE_FILE,"a");
-    if(!f){
-        char alt[1024]; const char* h=Platform_GetRealHome(); if(!h||!h[0]) h=getenv("HOME");
-        if(h){ snprintf(alt,sizeof(alt),"%s/Programming/Projects/Flint/data/icon_cache.txt",h); f=fopen(alt,"a"); }
-        if(!f) return;
-    }
+    char cf[1024];
+    FILE* f=NULL;
+    if (icon_cache_path(cf, sizeof(cf))) f=fopen(cf,"a");
+    if(!f) return;
     fprintf(f,"%s=%s\n",key,value);
     fclose(f);
 }
@@ -1349,7 +1347,6 @@ void Platform_InitUI(void) {
 void Platform_ShutdownUI(void) {
 }
 void Platform_DisplayMessage(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, int timeout, ColorRef color) {
-    (void)message; (void)centerX; (void)centerY; (void)maxWidth; (void)maxHeight; (void)timeout; (void)color;
 }
 void Platform_DismissMessage(void) {
 }
@@ -1376,4 +1373,37 @@ void Platform_InitDataFolder() {
     char dir_path[300];
     snprintf(dir_path,sizeof(dir_path),"%s/.local/share/flint",Platform_GetRealHome());
     nob_mkdir_if_not_exists(dir_path);
+}
+
+bool Platform_GetFeaturePath(const char* feature, const char* name, char* out, size_t out_len) {
+    if (!feature || !feature[0] || !name || !name[0] || !out || out_len == 0) return false;
+    char dir_path[512];
+    snprintf(dir_path,sizeof(dir_path),"%s/.local/share/flint",Platform_GetRealHome());
+    nob_mkdir_if_not_exists(dir_path);
+    char feat_path[600];
+    snprintf(feat_path,sizeof(feat_path),"%s/%s",dir_path,feature);
+    nob_mkdir_if_not_exists(feat_path);
+    snprintf(out,out_len,"%s/%s",feat_path,name);
+    return true;
+}
+
+bool Platform_ResolveDataPath(const char* name, char* out, size_t out_len) {
+    if (!name || !name[0] || !out || out_len == 0) return false;
+    for (const char* p = name; *p; p++) {
+        if (*p == '/' || *p == '\\') return false;
+    }
+    if (strstr(name, "..")) return false;
+    const char* feat = FlintContext_Get()->window.current_feature;
+    if (!feat || !feat[0]) return false;
+    char safe[128];
+    size_t w = 0;
+    for (const char* p = feat; *p && w + 1 < sizeof(safe); p++) {
+        char c = *p;
+        if (c >= 'A' && c <= 'Z') safe[w++] = (char)(c + 32);
+        else if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-' || c == '_') safe[w++] = c;
+        else if (c == ' ') safe[w++] = '-';
+    }
+    safe[w] = '\0';
+    if (w == 0 || strcmp(safe, ".") == 0 || strcmp(safe, "..") == 0) return false;
+    return Platform_GetFeaturePath(safe, name, out, out_len);
 }

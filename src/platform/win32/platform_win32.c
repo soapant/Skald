@@ -961,3 +961,36 @@ void Platform_InitDataFolder() {
     snprintf(dir_path,sizeof(dir_path),"%s\\AppData\\Roaming\\Flint",Platform_GetRealHome());
     nob_mkdir_if_not_exists(dir_path);
 }
+
+bool Platform_GetFeaturePath(const char* feature, const char* name, char* out, size_t out_len) {
+    if (!feature || !feature[0] || !name || !name[0] || !out || out_len == 0) return false;
+    char dir_path[256];
+    snprintf(dir_path,sizeof(dir_path),"%s\\AppData\\Roaming\\Flint",Platform_GetRealHome());
+    nob_mkdir_if_not_exists(dir_path);
+    char feat_path[320];
+    snprintf(feat_path,sizeof(feat_path),"%s\\%s",dir_path,feature);
+    nob_mkdir_if_not_exists(feat_path);
+    snprintf(out,out_len,"%s\\%s",feat_path,name);
+    return true;
+}
+
+bool Platform_ResolveDataPath(const char* name, char* out, size_t out_len) {
+    if (!name || !name[0] || !out || out_len == 0) return false;
+    for (const char* p = name; *p; p++) {
+        if (*p == '/' || *p == '\\') return false;
+    }
+    if (strstr(name, "..")) return false;
+    const char* feat = FlintContext_Get()->window.current_feature;
+    if (!feat || !feat[0]) return false;
+    char safe[128];
+    size_t w = 0;
+    for (const char* p = feat; *p && w + 1 < sizeof(safe); p++) {
+        char c = *p;
+        if (c >= 'A' && c <= 'Z') safe[w++] = (char)(c + 32);
+        else if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-' || c == '_') safe[w++] = c;
+        else if (c == ' ') safe[w++] = '-';
+    }
+    safe[w] = '\0';
+    if (w == 0 || strcmp(safe, ".") == 0 || strcmp(safe, "..") == 0) return false;
+    return Platform_GetFeaturePath(safe, name, out, out_len);
+}

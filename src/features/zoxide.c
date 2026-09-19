@@ -1,6 +1,6 @@
 #include "core/flapi.h"
 
-const char* TerminalZoxideFilePath = "data/TerminalZoxide.txt";
+const char* TerminalZoxideFilePath = "TerminalZoxide.txt";
 static void zoxide_refresh(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
     const char* items[MAX_FILE_LINES];
     int n = fl_load_file_list(TerminalZoxideFilePath, items, MAX_FILE_LINES);
@@ -26,7 +26,7 @@ static void TriggerZoxide(void) {
     fl_free_file_list(items, n);
 }
 
-const char* TextEditorZoxideFilePath = "data/NvimZoxide.txt";
+const char* TextEditorZoxideFilePath = "NvimZoxide.txt";
 static void text_editor_refresh(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
     const char* items[MAX_FILE_LINES];
     int n = fl_load_file_list(TextEditorZoxideFilePath, items, MAX_FILE_LINES);
@@ -56,7 +56,7 @@ static void TriggerTextEditorZoxide(void) {
     fl_free_file_list(items, n);
 }
 
-const char* YaziZoxideFilePath = "data/YaziZoxide.txt";
+const char* YaziZoxideFilePath = "YaziZoxide.txt";
 static void yazi_refresh(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
     const char* items[MAX_FILE_LINES];
     int n = fl_load_file_list(YaziZoxideFilePath, items, MAX_FILE_LINES);
@@ -84,7 +84,7 @@ static void TriggerYaziZoxide(void) {
     fl_free_file_list(items, n);
 }
 
-const char* FileManagerZoxideFilePath = "data/FileManagerZoxide.txt";
+const char* FileManagerZoxideFilePath = "FileManagerZoxide.txt";
 static void file_manager_refresh(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
     const char* items[MAX_FILE_LINES];
     int n = fl_load_file_list(FileManagerZoxideFilePath, items, MAX_FILE_LINES);

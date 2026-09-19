@@ -93,6 +93,9 @@ bool fl_launch_with_args_as_admin(const char* path, const char* args) {
 
 int fl_load_file_list(const char* filepath, const char* out[], int max) {
     if (!filepath || !out || max <= 0) return 0;
+    char full[MAX_PATH];
+    if (!Platform_ResolveDataPath(filepath, full, sizeof(full))) return 0;
+    filepath = full;
     FILE* f = fopen(filepath, "r");
     if (!f) return 0;
     int count = 0;
@@ -132,6 +135,9 @@ bool fl_free_window_list(Fl_WindowList *list) {
 
 bool fl_append_to_file(const char* filepath, const char* line) {
     if (!filepath || !line) return false;
+    char full[MAX_PATH];
+    if (!Platform_ResolveDataPath(filepath, full, sizeof(full))) return false;
+    filepath = full;
     FILE* f = fopen(filepath, "a");
     if (!f) {
         f = fopen(filepath, "w");
@@ -165,6 +171,9 @@ bool fl_write_to_file(const char* filepath, const char* lines[], int count) {
     if (!filepath) return false;
     if (count < 0) return false;
     if (count > 0 && !lines) return false;
+    char full[MAX_PATH];
+    if (!Platform_ResolveDataPath(filepath, full, sizeof(full))) return false;
+    filepath = full;
     FILE* f = fopen(filepath, "w");
     if (!f) return false;
     for (int i = 0; i < count; i++) {
