@@ -23,6 +23,7 @@ int main() {
   if (!Platform_TryAcquireSingleInstance()) {
       return 1;
   }
+  Platform_InitDataFolder();
   Platform_InitMainThreadContext();
   Platform_FixWorkingDirectory();
   Platform_InitDisplaySafe();

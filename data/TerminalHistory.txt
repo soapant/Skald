@@ -15591,3 +15591,5 @@ sudo gdb ./build/main
 ./nob ; sudo build/main
 vnstat
 reboot
+reboot
+poweroff

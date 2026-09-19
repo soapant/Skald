@@ -60,6 +60,7 @@ void Platform_SettingsPopUp(void);
 int Platform_InitializeTrayIcon(void);
 void Platform_RunHotKeyMessageLoop(void);
 void Platform_InitUI(void);
+void Platform_InitDataFolder(void);
 void Platform_ShutdownUI(void);
 char* Platform_RunTerminalCommand(char* command,bool open_terminal);
 bool Platform_LaunchFileManagerAtPath(char* path,char* args);
