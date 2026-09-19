@@ -144,8 +144,8 @@ char* fl_string_slice(const char* str, int start, int end);
 // POPUPS / UI
 // =============================================================================
 
-bool fl_edit_text_popup(const char* initial_text, const char* title, int x, int y, const char* filepath, ListBoxInfo* lb, RefreshCallback refresh);
-void fl_edit_confirm_callback(const char* new_text, void* user_data);
+char* fl_edit_text_popup(const char* initial_text, const char* title, int x, int y, ListBoxInfo* lb, int* out_index);
+bool fl_replace_line_in_file(const char* filepath, int line_index, const char* new_text);
 
 char* fl_popup_impl(const FlPopupSpec *spec);
 #define fl_popup(...) fl_popup_impl(&(FlPopupSpec){__VA_ARGS__})

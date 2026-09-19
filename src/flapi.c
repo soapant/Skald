@@ -16,6 +16,7 @@
 #include "core/window_manager.h"
 #include "core/flapi.h"
 #include "core/flapi_platform.h"
+#include "platform/wm_platform.h"
 #include "platform/draw.h"
 #include "core/hotkey_manager.h"
 #include "core/remap_manager.h"
@@ -707,40 +708,56 @@ bool fl_paste(char* content) {
    return Platform_PasteContent(content);
 }
 
-void fl_edit_confirm_callback(const char* new_text, void* user_data) {
-    EditCallbackData* data = (EditCallbackData*)user_data;
-    if (new_text && data) {
-        data->new_text = (char*)new_text;
-        EditCallback_Handle(data, data->refresh_cb);
-    }
+static void fl_edit_blocking_confirm(const char* text, void* user_data) {
+    char** out = (char**)user_data;
+    if (out && text) *out = strdup(text);
 }
 
-bool fl_edit_text_popup(const char* initial_text, const char* title, int x, int y, const char* filepath, ListBoxInfo* lb, RefreshCallback refresh) {
+char* fl_edit_text_popup(const char* initial_text, const char* title, int x, int y, ListBoxInfo* lb, int* out_index) {
+    if (out_index) *out_index = -1;
+    if (!lb) return NULL;
     if (!title) title = "Edit";
     if (!initial_text) initial_text = "";
-    if (!lb) return false;
     int idx = lb->selected_index;
     int true_idx = (idx >= 0 && idx < lb->populated_count) ? lb->matching_indices[idx] : idx;
     WindowManager* wm = WindowManager_Get();
-    if (!wm) return false;
-    EditCallbackData* data = (EditCallbackData*)calloc(1, sizeof(EditCallbackData));
-    if (!data) return false;
-    data->filepath = filepath;
-    data->lb = lb;
-    data->selected_index = idx;
-    data->true_index = true_idx;
-    data->new_text = NULL;
-    data->restore_selection = true;
-    data->hListBox = FlintContext_Get()->window.hListBox;
-    data->hEditControl = FlintContext_Get()->window.hEditControl;
-    data->refresh_cb = refresh;
-    Popup* popup = EditPopup_Create(wm, initial_text, title, x, y, fl_edit_confirm_callback, data);
-    if (!popup) {
-        free(data);
+    if (!wm) return NULL;
+    char* result = NULL;
+    Popup* popup = EditPopup_Create(wm, initial_text, title, x, y, fl_edit_blocking_confirm, &result);
+    if (!popup) return NULL;
+    WindowManager_PushPopup(wm, popup);
+    while (wm->running && popup->manager) {
+        Platform_WM_ProcessEvents(wm);
+    }
+    if (popup->manager == NULL) {
+        if (popup->vtable && popup->vtable->destroy) popup->vtable->destroy(popup);
+    } else {
+        WindowManager_PopPopup(wm);
+        if (popup->vtable && popup->vtable->destroy) popup->vtable->destroy(popup);
+    }
+    if (!result) return NULL;
+    if (out_index) *out_index = true_idx;
+    return result;
+}
+
+bool fl_replace_line_in_file(const char* filepath, int line_index, const char* new_text) {
+    if (!filepath || !new_text || line_index < 0) return false;
+    const char* items[MAX_FILE_LINES];
+    int n = fl_load_file_list(filepath, items, MAX_FILE_LINES);
+    if (line_index >= n) {
+        fl_free_file_list(items, n);
         return false;
     }
-    WindowManager_PushPopup(wm, popup);
-    return true;
+    free((void*)items[line_index]);
+    items[line_index] = NULL;
+    items[line_index] = strdup(new_text);
+    if (!items[line_index]) {
+        fl_free_file_list(items, n);
+        return false;
+    }
+    bool ok = fl_write_to_file(filepath, items, n);
+    fl_free_file_list(items, n);
+    return ok;
 }
 
 bool fl_focus_window_by_title(char* title) {
