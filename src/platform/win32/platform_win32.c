@@ -22,6 +22,7 @@
 #include <gdiplus.h>
 #include <ctype.h>
 #define NOB_IMPLEMENTATION
+#define NOB_NO_ECHO
 #include "../../../nob.h"
 
 bool Platform_LaunchTerminalAtPath(const char* working_dir, const char* extra_args){
