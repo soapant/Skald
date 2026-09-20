@@ -56,3 +56,9 @@ void Platform_EditPopupDestroyWindow(Popup* self) {
     if (hwnd && IsWindow(hwnd)) DestroyWindow(hwnd);
     PROFILE_END_VAR(timer, "window_manager:Platform_EditPopupDestroyWindow");
 }
+
+bool Platform_EditPopupOnKey(Popup* self, const PopupKeyEvent* key) {
+    (void)self;
+    (void)key;
+    return false;
+}

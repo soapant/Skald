@@ -44,6 +44,10 @@ static void EditPopup_OnRender(Popup* self) {
     PROFILE_END_VAR(timer, "window_manager:EditPopup_OnRender");
 }
 
+static bool EditPopup_OnKey(Popup* self, const PopupKeyEvent* key) {
+    return Platform_EditPopupOnKey(self, key);
+}
+
 static void EditPopup_Destroy(Popup* self) {
     PROFILE_START(timer);
     EditPopupDataInternal* data = (EditPopupDataInternal*)self;
@@ -59,6 +63,7 @@ static const PopupVTable g_edit_popup_vtable = {
     .on_show = EditPopup_OnShow,
     .on_hide = EditPopup_OnHide,
     .on_render = EditPopup_OnRender,
+    .on_key = EditPopup_OnKey,
     .destroy = EditPopup_Destroy
 };
 

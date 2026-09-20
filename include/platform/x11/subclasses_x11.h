@@ -6,8 +6,7 @@
 #include <X11/Xlib.h>
 #include <X11/Xft/Xft.h>
 
-bool Linux_HandlePromptKey(const XEvent* ev, PromptState* state);
-bool Linux_HandleEditPopupKey(const XEvent* ev, WMEditPopupData* ed);
+bool Linux_RenderPromptUser(Display* dpy, Window* win, PromptState* state);
 void DrawPromptUserEditControl(Display* dpy, Window* win, PromptState* state);
 void DrawPromptUserListBox(Display* dpy, Window* win, PromptState* state);
 void DrawPromptUserEditControlOnDraw(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap, PromptState *state);

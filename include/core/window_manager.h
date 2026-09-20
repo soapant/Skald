@@ -10,9 +10,19 @@ typedef struct WindowManager WindowManager;
 typedef void (*EditPopupConfirmCallback)(const char* text, void* user_data);
 
 typedef struct {
+    int vk;
+    bool ctrl;
+    bool shift;
+    bool alt;
+    char text[32];
+    int text_len;
+} PopupKeyEvent;
+
+typedef struct {
     void (*on_show)(Popup* self);
     void (*on_hide)(Popup* self);
     void (*on_render)(Popup* self);
+    bool (*on_key)(Popup* self, const PopupKeyEvent* key);
     void (*on_focus_lost)(Popup* self);
     void (*destroy)(Popup* self);
 } PopupVTable;
