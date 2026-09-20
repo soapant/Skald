@@ -63,16 +63,21 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
         PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandlePromptKey");
         return true;
     }
-    if (wParam == VK_ESCAPE) {
-      if (IsInsertMode()) {
-        SetMode(MODE_NORMAL);
-        PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandlePromptKey");
-        return true;
-      } else {
-        FlintContext_Get()->window.selection_complete = true;
-        PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandlePromptKey");
-        return true;
-      }
+
+    if (FlintContext_Get()->prompt_callbacks.refresh) {
+        if (wParam == VK_ESCAPE) {
+            if (IsInsertMode()) {
+                SetMode(MODE_NORMAL);
+            } else {
+                FlintContext_Get()->window.selection_complete = true;
+            }
+            return true;
+        }
+    } else {
+        if (wParam == VK_ESCAPE) {
+            FlintContext_Get()->window.selection_complete = true;
+            return true;
+        }
     }
     if (wParam == VK_RIGHT) {
       CursorForward(&state->cursor, strlen(state->filter));
