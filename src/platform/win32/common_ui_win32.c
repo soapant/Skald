@@ -490,7 +490,7 @@ void UpdateTextCaret(WindowHandle hwndEditControl)
   LRESULT coords = SendMessageA(hwnd, EM_POSFROMCHAR, selStart, 0);
   if (coords != (LRESULT)-1) {
     pt.x = (short)LOWORD(coords);
-    pt.y = centeredY;
+    pt.y = (short)HIWORD(coords);
     havePos = TRUE;
   } else {
     POINT cur = {0, 0};
