@@ -385,8 +385,8 @@ void calculator_render_callback(PromptState *state) {
     strncpy(g_calc_last_result, result, sizeof(g_calc_last_result)-1);
     int cx = 0;
     int cy = state->height / 2 - 30;
-    fl_place_text(.x=cx, .y=cy, .text=g_calc_last_result, .align="CENTER", .pad=cx,.fontsize=30);
-    fl_place_text(.x=cx, .y=cy+36, .text="Enter: copy  Ctrl+Enter: use  Tab: flip", .align="CENTER", .pad=cx,.fontsize=30);
+    fl_draw_text(.x=cx, .y=cy, .text=g_calc_last_result, .align="CENTER", .pad=cx,.fontsize=30);
+    fl_draw_text(.x=cx, .y=cy+36, .text="Enter: copy  Ctrl+Enter: use  Tab: flip", .align="CENTER", .pad=cx,.fontsize=30);
 }
 
 bool calculator_enter_callback(const char* selection, ListBoxInfo* lb) {

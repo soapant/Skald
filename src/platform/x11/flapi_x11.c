@@ -667,3 +667,19 @@ void fl_run_after_time_platform(double seconds, void (*callback)(void)) {
 
     pthread_detach(thread);
 }
+
+FlTimer fl_start_timer_platform(void) {
+    FlTimer t = {0};
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    t.ticks = (uint64_t)ts.tv_sec * 1000000000ULL + (uint64_t)ts.tv_nsec;
+    return t;
+}
+
+double fl_end_timer_platform(FlTimer t) {
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    uint64_t now = (uint64_t)ts.tv_sec * 1000000000ULL + (uint64_t)ts.tv_nsec;
+    if (now < t.ticks) return 0.0;
+    return (double)(now - t.ticks) / 1000000.0;
+}

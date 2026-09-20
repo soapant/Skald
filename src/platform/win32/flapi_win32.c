@@ -541,3 +541,23 @@ void fl_run_after_time_platform(double seconds, void (*callback)(void)) {
         return; 
     }
 }
+
+FlTimer fl_start_timer_platform(void) {
+    FlTimer t = {0};
+    LARGE_INTEGER c;
+    QueryPerformanceCounter(&c);
+    t.ticks = (uint64_t)c.QuadPart;
+    return t;
+}
+
+double fl_end_timer_platform(FlTimer t) {
+    LARGE_INTEGER now;
+    LARGE_INTEGER freq;
+    QueryPerformanceCounter(&now);
+    QueryPerformanceFrequency(&freq);
+    if (freq.QuadPart == 0) return 0.0;
+    uint64_t start = t.ticks;
+    uint64_t end = (uint64_t)now.QuadPart;
+    if (end < start) return 0.0;
+    return (double)(end - start) * 1000.0 / (double)freq.QuadPart;
+}
