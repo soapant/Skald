@@ -7,6 +7,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <ctype.h>
+#include <time.h>
 #if defined(_WIN32)
 #include <windows.h>
 #endif
@@ -208,16 +209,20 @@ void Vim_SetCursor(FlintContext* ctx, int pos) {
 #endif
 }
 
-#if defined(_WIN32)
-static void CALLBACK SequenceTimerProc(HWND hwnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime) {
-    if (seq_state.waiting) {
+static long long Sequence_NowMs(void) {
+    struct timespec ts;
+    timespec_get(&ts, TIME_UTC);
+    return (long long)ts.tv_sec * 1000LL + (long long)ts.tv_nsec / 1000000LL;
+}
+
+static void SequenceCheckExpiry(void) {
+    if (seq_state.waiting && seq_state.deadline_ms != 0 && Sequence_NowMs() >= seq_state.deadline_ms) {
         seq_state.waiting = false;
         seq_state.timed_out = true;
+        seq_state.deadline_ms = 0;
         log_info("Timer expired! Sequence: '%s'", seq_state.keys);
     }
-    seq_state.timer_id = 0;
 }
-#endif
 
 void SequenceAddKey(char key, bool was_typed) {
     if (seq_state.len < MAX_SEQUENCE_LEN - 1) {
@@ -237,12 +242,7 @@ void SequenceReset(void) {
     seq_state.typed_count = 0;
     seq_state.waiting = false;
     seq_state.timed_out = false;
-#if defined(_WIN32)
-    if (seq_state.timer_id != 0) {
-        KillTimer(NULL, seq_state.timer_id);
-        seq_state.timer_id = 0;
-    }
-#endif
+    seq_state.deadline_ms = 0;
 }
 
 int SequenceTypedCount(void) {
@@ -276,17 +276,16 @@ bool SequenceStartsWith(const char* pattern) {
 }
 
 void SequenceStartTimer(void) {
-#if defined(_WIN32)
-    if (seq_state.timer_id != 0) KillTimer(NULL, seq_state.timer_id);
-    seq_state.timer_id = SetTimer(NULL, 0, SEQUENCE_TIMEOUT_MS, SequenceTimerProc);
-#endif
+    seq_state.deadline_ms = Sequence_NowMs() + SEQUENCE_TIMEOUT_MS;
 }
 
 bool SequenceIsWaiting(void) {
-  return seq_state.waiting; 
+    SequenceCheckExpiry();
+    return seq_state.waiting;
 }
 bool SequenceTimedOut(void) {
-  return seq_state.timed_out; 
+    SequenceCheckExpiry();
+    return seq_state.timed_out;
 }
 
 void DeleteLastTypedChar(FlintContext* ctx) {
