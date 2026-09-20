@@ -259,7 +259,6 @@ typedef struct {
 
 int fl_measure_text_wrapped_impl(const FlMeasureSpec *spec);
 #define fl_measure_text_wrapped(...) fl_measure_text_wrapped_impl(&(FlMeasureSpec){__VA_ARGS__})
-int fl_font_line_height(int fontsize);
 
 typedef struct {
     const char *buffer;

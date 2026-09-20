@@ -1,4 +1,5 @@
 #include "platform/draw.h"
+#include "core/platform.h"
 #include "platform/ui.h"
 #include "config.h"
 #include "platform/x11/drawing_x11.h"
@@ -250,7 +251,7 @@ bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, F
     const char *a = align ? align : "CENTER";
     XftColor col;
     Linux_XftAllocColor(g_draw_dpy, g_draw_vis, g_draw_cmap, color, 0xFFFF, &col);
-    if (strcmp(a, "CENTER")==0 || strcmp(a, "LEFT")==0 || strcmp(a, "RIGHT")==0) {
+    if (Platform_StringContainsCaseInsensitive(a, "CENTER") || Platform_StringContainsCaseInsensitive(a, "LEFT") || Platform_StringContainsCaseInsensitive(a, "RIGHT")) {
         draw_wrapped_text(g_draw_dpy, g_draw_xd, &col, fh, text, y, (char*)a, pad ? pad : x);
     } else {
         XftFont *xf = FH_TO_XFT(fh);
@@ -298,15 +299,6 @@ int Platform_MeasureTextWidth(const char* text, int len, int fontsize) {
     XGlyphInfo ext;
     XftTextExtentsUtf8(g_draw_dpy, xf, (FcChar8*)text, len, &ext);
     return ext.xOff;
-}
-
-int Platform_MeasureLineHeight(int fontsize) {
-    if (fontsize <= 0) fontsize = FontSize;
-    if (g_draw_dpy) {
-        XftFont* xf = LineFont(g_draw_dpy, fontsize);
-        if (xf) return xf->ascent + xf->descent;
-    }
-    return fontsize + fontsize / 3;
 }
 
 bool Platform_DrawTextLine(int x, int y, const char* text, int len, unsigned long color, int fontsize) {
