@@ -180,6 +180,9 @@ static void Linux_HandleKeyPress(Display* dpy, XKeyEvent* ev, WindowManager* wm)
         PROFILE_END_VAR(timer, "window_manager_x11:Linux_HandleKeyPress");
         return;
     }
+    else if (top->type == POPUP_EDIT) {
+      Linux_HandleEditPopupKey(&xev);
+    }
 
     Popup* top_before = top;
     Popup* top_after = WindowManager_GetTopPopup(wm);
