@@ -1,4 +1,5 @@
 #include "platform/draw.h"
+#include "core/platform.h"
 #include "platform/win32/win32_state.h"
 #include "config.h"
 #include "platform/ui.h"
@@ -37,8 +38,8 @@ bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, F
     SetTextColor(g_draw_hdc, color);
     RECT rc = {x, y, x+800, y+40};
     UINT fmt = DT_SINGLELINE | DT_VCENTER;
-    if (strcmp(a,"CENTER")==0) fmt |= DT_CENTER;
-    else if (strcmp(a,"RIGHT")==0) fmt |= DT_RIGHT;
+    if (Platform_StringContainsCaseInsensitive(a,"CENTER")) fmt |= DT_CENTER;
+    else if (Platform_StringContainsCaseInsensitive(a,"RIGHT")) fmt |= DT_RIGHT;
     else fmt |= DT_LEFT;
     if (pad) rc.left += pad;
     DrawTextA(g_draw_hdc, text, -1, &rc, fmt);
@@ -53,15 +54,6 @@ int Platform_MeasureTextWidth(const char* text, int len, int fontsize) {
     sz.cx = 0;
     GetTextExtentPoint32A(g_draw_hdc, text, len, &sz);
     return sz.cx;
-}
-
-int Platform_MeasureLineHeight(int fontsize) {
-    if (fontsize <= 0) fontsize = FontSize;
-    if (g_draw_hdc) {
-        TEXTMETRICA tm;
-        if (GetTextMetricsA(g_draw_hdc, &tm)) return tm.tmHeight;
-    }
-    return fontsize + fontsize / 3;
 }
 
 bool Platform_DrawTextLine(int x, int y, const char* text, int len, unsigned long color, int fontsize) {

@@ -130,10 +130,10 @@ void Platform_EditPopupRender(Popup* self) {
     int cursor_draw_x = 10 + cursor_x - scroll;
     int draw_y = data->h / 2 - 10;
     if (text_w > 0 && text_w <= data->w - 20 && data->align) {
-        if (strcmp(data->align, "CENTER") == 0) {
+        if (Platform_StringContainsCaseInsensitive(data->align, "CENTER")) {
             draw_x = (data->w - text_w) / 2;
             cursor_draw_x = draw_x + cursor_x;
-        } else if (strcmp(data->align, "RIGHT") == 0) {
+        } else if (Platform_StringContainsCaseInsensitive(data->align, "RIGHT")) {
             draw_x = data->w - 10 - text_w;
             cursor_draw_x = draw_x + cursor_x;
         }
