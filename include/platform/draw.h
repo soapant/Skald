@@ -26,7 +26,6 @@ PromptState* Platform_GetPreRenderStatePtr(void);
 bool Platform_DrawRectRaw(int x, int y, int w, int h, unsigned long color);
 bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, FontHandle font, const char *align, int pad,int fontsize);
 int Platform_MeasureTextWidth(const char *text, int len, int fontsize);
-int Platform_MeasureLineHeight(int fontsize);
 bool Platform_DrawTextLine(int x, int y, const char *text, int len, unsigned long color, int fontsize);
 void Platform_GetItemColors(int idx, int count, unsigned long *num_color, unsigned long *body_color, unsigned long *plain_color);
 bool Platform_PreRender(void);

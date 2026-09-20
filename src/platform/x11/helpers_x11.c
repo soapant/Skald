@@ -103,10 +103,10 @@ void draw_wrapped_text(Display* dpy, XftDraw* xd, XftColor* color, FontHandle fo
     int alignment = 0;
 
     if (centered_to != NULL) {
-        if (strstr(centered_to, "CENTER") != NULL) {
+        if (Platform_StringContainsCaseInsensitive(centered_to, "CENTER")) {
             alignment = 1;
             maxWidth = 870;
-        } else if (strstr(centered_to, "RIGHT") != NULL) {
+        } else if (Platform_StringContainsCaseInsensitive(centered_to, "RIGHT")) {
             alignment = 2;
             maxWidth = 900;
         } else {

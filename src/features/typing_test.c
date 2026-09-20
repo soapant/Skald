@@ -51,7 +51,7 @@ void typing_test_render(PromptState *state) {
     char* text = "thats kind of bullshit imagine a game like that imagine you are on your pc then a game installs itself";
     int text_len = strlen(text);
     int fontsize = 30;
-    int line_height = fl_font_line_height(fontsize);
+    int line_height = fontsize + 12;
 
     if (typing_test_position < text_len) {
         int c = fl_get_char_pressed();
@@ -126,7 +126,7 @@ void typing_test_render(PromptState *state) {
     }
     if (draw_cursor) {
       fl_draw_rect(.x = positions[typing_test_position].x,
-                   .y = positions[typing_test_position].y + (line_height - fontsize) / 2,
+                   .y = positions[typing_test_position].y + 6,
                    .w = 1, .h = fontsize);
     }
 }
