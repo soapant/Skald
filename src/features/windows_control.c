@@ -39,6 +39,7 @@ void TriggerBlueToothToggle(void) {
 }
 
 FLINT_FEATURE_INIT {
-    fl_register_hotkey("Alt+Shift+W", TriggerWifiToggle);
-    fl_register_hotkey("Alt+Shift+B", TriggerBlueToothToggle);
+    // temporary maybe
+    // fl_register_hotkey("Alt+Shift+W", TriggerWifiToggle);
+    // fl_register_hotkey("Alt+Shift+B", TriggerBlueToothToggle);
 }
