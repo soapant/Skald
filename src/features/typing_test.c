@@ -1,19 +1,5 @@
 #include "core/flapi.h"
 
-bool typing_test_enter(const char* selection, ListBoxInfo* lb) {
-    return true;
-}
-
-bool typing_test_ctrl_enter(const char* selection, ListBoxInfo* lb) {
-    return false;
-}
-
-void typing_test_copy(const char* selection, int true_index, int type) {
-}
-
-void typing_test_tab(ListBoxInfo* lb) {
-}
-
 
 #define CHAR_UNTYPED 0
 #define CHAR_CORRECT 1
@@ -30,7 +16,8 @@ static bool session_running = false;
 static double total_typed = 0;
 static double total_correct = 0;
 static bool draw_cursor = true;
-static char typing_test_wpm[200] = {0};
+static char typing_test_wpm[100] = {0};
+static char* text = "";
 
 void typing_test_reset(void) {
     typing_test_position = 0;
@@ -41,21 +28,78 @@ void typing_test_reset(void) {
     last_duration = 0.0;
     total_typed = 0;
     total_correct = 0;
-    draw_cursor = true;
+    draw_cursor = false;
     typing_test_wpm[0] = '\0';
+    text = "";
+}
+
+char* typing_test_get_random_text(void) {
+    static const char* words[] = {
+        "the", "be", "of", "and", "a", "to", "in", "he", "have", "it",
+        "that", "for", "they", "I", "with", "as", "not", "on", "she", "at",
+        "by", "this", "we", "you", "do", "but", "from", "or", "which", "one",
+        "would", "all", "will", "there", "say", "who", "make", "when", "can", "more",
+        "if", "no", "man", "out", "other", "so",
+        "what", "time", "up", "go", "about", "than", "into", "could", "state", "only",
+        "new", "year", "some", "take", "come", "these",
+        "know", "see", "use", "get", "like", "then",
+        "first", "any", "work", "now", "may", "such",
+        "give", "over", "think", "most", "even", "back",
+        "after", "also", "because", "day", "good", "through",
+        "long", "where", "much", "before", "great", "should",
+        "between", "own", "under", "last", "never", "while",
+        "might", "world", "still", "see", "three", "state",
+        "another", "part", "against", "place", "case", "week",
+        "company", "system", "program", "question", "number", "group",
+        "problem", "fact", "become", "interest", "information", "example",
+        "family", "student", "study", "school", "country", "city",
+        "problem", "service", "member", "community", "development", "research",
+        "technology", "education", "government", "business", "health", "environment",
+    };
+    const int num_words = sizeof(words) / sizeof(words[0]);
+    const int target_count = 30;
+
+    int indices[target_count];
+    size_t total_len = 1;
+    for (int i = 0; i < target_count; i++) {
+        indices[i] = rand() % num_words;
+        total_len += strlen(words[indices[i]]);
+        if (i < target_count - 1) total_len += 1;
+    }
+
+    char* result = malloc(total_len);
+    if (!result) return NULL;
+
+    char* p = result;
+    for (int i = 0; i < target_count; i++) {
+        const char* w = words[indices[i]];
+        size_t len = strlen(w);
+        memcpy(p, w, len);
+        p += len;
+        if (i < target_count - 1) *p++ = ' ';
+    }
+    *p = '\0';
+
+    return result;
+}
+
+
+bool typing_test_enter(const char* selection, ListBoxInfo* lb) {
+    typing_test_reset();
+    text = typing_test_get_random_text();
+    return false;
 }
 
 
 void typing_test_render(PromptState *state) {
     int cy = state->height / 2 - 130;
-    char* text = "thats kind of bullshit imagine a game like that imagine you are on your pc then a game installs itself";
     int text_len = strlen(text);
     int fontsize = 30;
     int line_height = fontsize + 12;
 
+    int c = fl_get_char_pressed();
+    int key = fl_get_key_pressed();
     if (typing_test_position < text_len) {
-        int c = fl_get_char_pressed();
-        int key = fl_get_key_pressed();
         int current_text = text[typing_test_position];
 
         if (key == FL_KEY_BACKSPACE) {
@@ -105,7 +149,7 @@ void typing_test_render(PromptState *state) {
                       .align = "Left", .text = single, .color = col);
     }
 
-    if (typing_test_position == text_len) {
+    if (typing_test_position == text_len || c == 'u') {
         draw_cursor = false;
         if (timer_running) {
             timer_running = false;
@@ -122,7 +166,9 @@ void typing_test_render(PromptState *state) {
 
             snprintf(typing_test_wpm,sizeof(typing_test_wpm),"WPM: %.2f",wpm);
         }
-        fl_draw_text(.y=500,.text=typing_test_wpm);
+        fl_draw_text(.y=500,.text=typing_test_wpm,.fontsize=fontsize);
+        fl_draw_text(.x = 250,.y=600,.text="Press Enter to restart",.fontsize=fontsize - 8,.color=RGB(180,180,180));
+        fl_draw_text(.x = -250,.y=600,.text="Press Escape to exit",.fontsize=fontsize - 8,.color=RGB(180,180,180));
     }
     if (draw_cursor) {
       fl_draw_rect(.x = positions[typing_test_position].x,
@@ -133,14 +179,13 @@ void typing_test_render(PromptState *state) {
 
 void TriggerTypingTest(void) {
     PROMPT(.enter = typing_test_enter,
-           .ctrl_enter = typing_test_ctrl_enter,
-           .copy = typing_test_copy,
-           .tab = typing_test_tab,
            .render = typing_test_render,
            .on_close = typing_test_reset);
 }
 
 FLINT_FEATURE_INIT {
+    srand((unsigned)time(NULL));
+    text = typing_test_get_random_text();
     fl_register_hotkey("Alt+B", TriggerTypingTest);
     fl_register_feature("Typing Test", TriggerTypingTest);
 }
