@@ -171,6 +171,7 @@ void typing_test_render(PromptState *state) {
     }
     fl_draw_text(.x = 250,.y=600,.text="Press Enter to restart",.fontsize=fontsize - 8,.color=RGB(180,180,180));
     fl_draw_text(.x = -250,.y=600,.text="Press Escape to exit",.fontsize=fontsize - 8,.color=RGB(180,180,180));
+    fl_draw_text(.y=0,.text="Typing Speed Test",.fontsize=fontsize - 8,.color=RGB(210,210,210));
     if (draw_cursor) {
       fl_draw_rect(.x = positions[typing_test_position].x,
                    .y = positions[typing_test_position].y + 6,
