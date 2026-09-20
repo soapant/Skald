@@ -228,8 +228,6 @@ typedef enum {
 // =============================================================================
 // RAW PLACEMENT (pixel-perfect)
 // =============================================================================
-// x,y,w,h are absolute popup coords. No magic.
-// Macro trick like PROMPT — unspecified fields default (color=COLOR_TEXT, font=default, align="CENTER")
 
 typedef struct {
     const char *text;
@@ -247,8 +245,21 @@ typedef struct {
     int y;
 } FlCharPos;
 
-int fl_place_text_wrapped_ex(int x, int y, int max_width, int line_height, const char *text, int fontsize, unsigned long color, FlCharPos *out_positions, int max_positions);
-int fl_measure_text_wrapped(int x, int y, int max_width, int line_height, const char *text, int fontsize, FlCharPos *out_positions, int max_positions);
+int fl_draw_text_wrapped_ex(int x, int y, int max_width, int line_height, const char *text, int fontsize, unsigned long color, FlCharPos *out_positions, int max_positions);
+
+typedef struct {
+    int x;
+    int y;
+    int max_width;
+    int line_height;
+    const char *text;
+    int fontsize;
+    FlCharPos *out_positions;
+    int max_positions;
+} FlMeasureSpec;
+
+int fl_measure_text_wrapped_impl(const FlMeasureSpec *spec);
+#define fl_measure_text_wrapped(...) fl_measure_text_wrapped_impl(&(FlMeasureSpec){__VA_ARGS__})
 
 typedef struct {
     const char *buffer;
@@ -277,12 +288,12 @@ typedef struct {
     int x; int y; int w; int h;
 } FlImageSpec;
 
-bool fl_place_text_impl(const FlTextSpec *spec);
+bool fl_draw_text_impl(const FlTextSpec *spec);
 bool fl_place_editbox_impl(const FlEditSpec *spec);
 bool fl_place_listbox_impl(const FlListSpec *spec);
 bool fl_place_image_impl(const FlImageSpec *spec);
 
-#define fl_place_text(...) fl_place_text_impl(&(FlTextSpec){__VA_ARGS__})
+#define fl_draw_text(...) fl_draw_text_impl(&(FlTextSpec){__VA_ARGS__})
 #define fl_place_editbox(...) fl_place_editbox_impl(&(FlEditSpec){__VA_ARGS__})
 #define fl_place_listbox(...) fl_place_listbox_impl(&(FlListSpec){__VA_ARGS__})
 #define fl_place_image(...) fl_place_image_impl(&(FlImageSpec){__VA_ARGS__})
@@ -294,9 +305,8 @@ void fl_listbox_end(void);
 // =============================================================================
 // ANCHORED PLACEMENT (preset positions)
 // =============================================================================
-// Same widgets but x,y calculated from anchor. offset_x/y are fine tuning.
 
-bool fl_place_text_anchored(FlAnchor anchor, int offset_x, int offset_y, const char *text);
+bool fl_draw_text_anchored(FlAnchor anchor, int offset_x, int offset_y, const char *text);
 bool fl_place_editbox_anchored(FlAnchor anchor, int offset_x, int offset_y, int w, int h, const char *buffer);
 bool fl_place_listbox_anchored(FlAnchor anchor, int offset_x, int offset_y, int w, int h, const char **items, int count);
 bool fl_place_image_anchored(FlAnchor anchor, int offset_x, int offset_y, int w, int h, const char *path);
@@ -304,7 +314,6 @@ bool fl_place_image_anchored(FlAnchor anchor, int offset_x, int offset_y, int w,
 // =============================================================================
 // AUTO LAYOUT (column / row math)
 // =============================================================================
-// Stack widgets without calculating y. Gap is space between items.
 
 void fl_layout_begin_column_anchored(FlAnchor anchor, int start_x, int start_y, int gap);
 void fl_layout_begin_column(int start_x, int start_y, int gap);
@@ -312,7 +321,7 @@ void fl_layout_end_column(void);
 void fl_layout_begin_row_anchored(FlAnchor anchor, int start_x, int start_y, int gap);
 void fl_layout_begin_row(int start_x, int start_y, int gap);
 void fl_layout_end_row(void);
-bool fl_place_text_auto(const char *text);
+bool fl_draw_text_auto(const char *text);
 bool fl_place_editbox_auto(int w, int h, const char *buffer);
 bool fl_place_listbox_auto(int w, int h, const char **items, int count);
 bool fl_place_image_auto(int w, int h, const char *path);
@@ -381,12 +390,8 @@ int fl_parse_time(const char* time_str);
 // =============================================================================
 
 bool fl_register_hotkey_impl(char* hotkey_string,void (*on_hotkey_trigger)(void),bool (*optional_condition_for_hotkey)(void),bool whitelist,const char** optional_blacklistedwindows);
-
-// =============================================================================
-// REMAP
-// =============================================================================
-
 bool fl_register_remapping(const char* src, const char* dst);
+
 // =============================================================================
 // AUDIO / VOLUME
 // =============================================================================
@@ -403,6 +408,9 @@ bool fl_decrement_volume_by_percent(int decrement_percent);
 // MISC
 // =============================================================================
 
+typedef struct { uint64_t ticks; } FlTimer;
+FlTimer fl_start_timer(void);
+double fl_end_timer(FlTimer t);
 void fl_run_after_time(double seconds, void (*callback)(void));
 char* fl_on_dir_changed(char* dir_path,void(callback)(void));
 bool fl_string_match_insensitive(char* needle,char* haystack);
