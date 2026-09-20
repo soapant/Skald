@@ -300,6 +300,15 @@ int Platform_MeasureTextWidth(const char* text, int len, int fontsize) {
     return ext.xOff;
 }
 
+int Platform_MeasureLineHeight(int fontsize) {
+    if (fontsize <= 0) fontsize = FontSize;
+    if (g_draw_dpy) {
+        XftFont* xf = LineFont(g_draw_dpy, fontsize);
+        if (xf) return xf->ascent + xf->descent;
+    }
+    return fontsize + fontsize / 3;
+}
+
 bool Platform_DrawTextLine(int x, int y, const char* text, int len, unsigned long color, int fontsize) {
     if (!text || len <= 0 || !g_draw_dpy || !g_draw_xd) return false;
     XftFont* xf = LineFont(g_draw_dpy, fontsize);

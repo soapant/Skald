@@ -1074,6 +1074,11 @@ static void FlWrapNoDraw(void* ctx, int x, int y, const char* s, int n) {
     (void)n;
 }
 
+int fl_font_line_height(int fontsize) {
+    if (fontsize <= 0) fontsize = FontSize;
+    return Platform_MeasureLineHeight(fontsize);
+}
+
 int fl_measure_text_wrapped_impl(const FlMeasureSpec *spec) {
     if (!spec || !spec->text) return 0;
     int fontsize = spec->fontsize;
