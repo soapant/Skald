@@ -53,9 +53,9 @@ void typing_test_render(PromptState *state) {
     }
 
     FlCharPos positions[1000];
-    int count = fl_measure_text_wrapped(0, cy, state->width, line_height, text, FontSize, positions, 1000);
+    fl_measure_text_wrapped(0, cy, state->width, line_height, text, FontSize, positions, 1000);
 
-    for (int i = 0; i < text_len && i < count; i++) {
+    for (int i = 0; i < text_len; i++) {
         unsigned long col;
         if (char_states[i] == CHAR_CORRECT) {
             col = RGB(0, 255, 0);
@@ -72,9 +72,7 @@ void typing_test_render(PromptState *state) {
         exit(1);
     }
 
-    if (current_position < count) {
-        fl_draw_rect(.x = positions[current_position].x, .y = positions[current_position].y + 6, .w = 1, .h = FontSize);
-    }
+    fl_draw_rect(.x = positions[current_position].x, .y = positions[current_position].y + 6, .w = 1, .h = FontSize);
 }
 
 void TriggerTypingTest(void) {
