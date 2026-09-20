@@ -33,3 +33,9 @@ void Platform_PromptPopupDestroyWindow(Popup* self) {
     PROFILE_START(timer);
     PROFILE_END_VAR(timer, "window_manager:Platform_PromptPopupDestroyWindow");
 }
+
+bool Platform_PromptPopupOnKey(Popup* self, const PopupKeyEvent* key) {
+    (void)self;
+    (void)key;
+    return false;
+}
