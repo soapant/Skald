@@ -1,8 +1,5 @@
 #include "core/flapi.h"
 
-void typing_test_refresh(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
-}
-
 bool typing_test_enter(const char* selection, ListBoxInfo* lb) {
     return true;
 }
@@ -135,8 +132,7 @@ void typing_test_render(PromptState *state) {
 }
 
 void TriggerTypingTest(void) {
-    PROMPT(.refresh = typing_test_refresh,
-           .enter = typing_test_enter,
+    PROMPT(.enter = typing_test_enter,
            .ctrl_enter = typing_test_ctrl_enter,
            .copy = typing_test_copy,
            .tab = typing_test_tab,
