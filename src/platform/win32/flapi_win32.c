@@ -477,6 +477,12 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
     int cursor_x = 0;
     int scroll = state ? state->scroll_offset : 0;
     if (hfont) {
+        TEXTMETRIC tm;
+        memset(&tm, 0, sizeof(tm));
+        GetTextMetrics(hdc, &tm);
+        int textH = tm.tmHeight > 0 ? tm.tmHeight : FontSize;
+        if (textH > h - 4) textH = h - 4;
+        if (textH <= 0) textH = FontSize;
         SIZE szCur; GetTextExtentPoint32A(hdc, buf, cursor, &szCur); cursor_x = szCur.cx;
         SIZE szText; GetTextExtentPoint32A(hdc, buf, text_len, &szText); int text_w = szText.cx;
         if (cursor_x - scroll > visible_w) scroll = cursor_x - visible_w;
@@ -489,12 +495,12 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
         int cursor_draw_x = x + 14 + cursor_x - scroll;
         if (cursor_draw_x < x + 2) cursor_draw_x = x + 2;
         if (cursor_draw_x > x + w - 4) cursor_draw_x = x + w - 4;
-        int cursor_y = y + (h - FontSize) / 2;
+        int cursor_y = y + (h - textH) / 2;
         if (cursor_y < y + 2) cursor_y = y + 2;
         HBRUSH cbr = CreateSolidBrush(text_hex);
         RECT cRc;
-        if (IsInsertMode()) cRc = (RECT){cursor_draw_x, cursor_y, cursor_draw_x+2, cursor_y+FontSize};
-        else cRc = (RECT){cursor_draw_x, cursor_y, cursor_draw_x+12, cursor_y+FontSize};
+        if (IsInsertMode()) cRc = (RECT){cursor_draw_x, cursor_y, cursor_draw_x+2, cursor_y+textH};
+        else cRc = (RECT){cursor_draw_x, cursor_y, cursor_draw_x+12, cursor_y+textH};
         FillRect(hdc, &cRc, cbr);
         DeleteObject(cbr);
     } else {
