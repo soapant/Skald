@@ -81,7 +81,7 @@ void Platform_WM_GetMonitorGeometry(int *ox, int *oy, int *ow, int *oh) {
     if (oh) *oh = h;
 }
 
-char* Platform_WM_ShowPrompt(WindowManager* wm, const PromptSpec* spec) {
+char* Platform_PromptUser(WindowManager* wm, const PromptSpec* spec) {
     if (!wm || !spec) return NULL;
     Popup* popup = PromptPopup_Create(wm, spec);
     if (!popup) return NULL;
