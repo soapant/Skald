@@ -910,7 +910,7 @@ char* fl_popup_impl(const FlPopupSpec *spec) {
 
 unsigned long fl_listbox_get_current_standard_color(void);
 
-bool fl_place_text_impl(const FlTextSpec *spec) {
+bool fl_draw_text_impl(const FlTextSpec *spec) {
     if (!spec) return false;
     const char *real_text = spec->text;
     char tmp[2] = {0};
@@ -1067,17 +1067,19 @@ static void FlWrapNoDraw(void* ctx, int x, int y, const char* s, int n) {
     (void)n;
 }
 
-int fl_measure_text_wrapped(int x, int y, int max_width, int line_height, const char* text, int fontsize, FlCharPos* out_positions, int max_positions) {
-    if (!text) return 0;
+int fl_measure_text_wrapped_impl(const FlMeasureSpec *spec) {
+    if (!spec || !spec->text) return 0;
+    int fontsize = spec->fontsize;
     if (fontsize <= 0) fontsize = FontSize;
+    int line_height = spec->line_height;
     if (line_height <= 0) line_height = fontsize + 4;
     FlWrapCtx ctx;
     ctx.color = 0;
     ctx.fontsize = fontsize;
-    return FlWrapLayout(text, x, y, max_width, line_height, FlWrapMeasureThunk, FlWrapNoDraw, &ctx, out_positions, max_positions);
+    return FlWrapLayout(spec->text, spec->x, spec->y, spec->max_width, line_height, FlWrapMeasureThunk, FlWrapNoDraw, &ctx, spec->out_positions, spec->max_positions);
 }
 
-int fl_place_text_wrapped_ex(int x, int y, int max_width, int line_height, const char* text, int fontsize, unsigned long color, FlCharPos* out_positions, int max_positions) {
+int fl_draw_text_wrapped_ex(int x, int y, int max_width, int line_height, const char* text, int fontsize, unsigned long color, FlCharPos* out_positions, int max_positions) {
     if (!text) return 0;
     if (fontsize <= 0) fontsize = FontSize;
     if (line_height <= 0) line_height = fontsize + 4;
@@ -1128,7 +1130,7 @@ bool fl_place_listbox_impl(const FlListSpec *spec) {
     if (!fl_listbox_begin(spec)) return false;
     FlListItemCtx ctx;
     while (fl_listbox_next(&ctx)) {
-        fl_place_text(.x=ctx.x + 10, .y=ctx.y + 4, .text=ctx.text, .align="LEFT", .pad=ctx.x + 10);
+        fl_draw_text(.x=ctx.x + 10, .y=ctx.y + 4, .text=ctx.text, .align="LEFT", .pad=ctx.x + 10);
     }
     fl_listbox_end();
     return true;
@@ -1325,6 +1327,14 @@ int fl_parse_time(const char* time_str) {
 
 void fl_run_after_time(double seconds, void (*callback)(void)) {
     return fl_run_after_time_platform(seconds,callback);
+}
+
+FlTimer fl_start_timer(void) {
+    return fl_start_timer_platform();
+}
+
+double fl_end_timer(FlTimer t) {
+    return fl_end_timer_platform(t);
 }
 
 bool fl_is_window_active(char* title) {

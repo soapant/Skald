@@ -24,15 +24,32 @@ void typing_test_tab(ListBoxInfo* lb) {
 
 static int typing_test_position = 0;
 static int typing_test_states[1000] = {0};
+static FlTimer current_timer;
+static bool timer_running = false;
+static int current_index = 0;
+static double last_duration = 0.0;
+static FlTimer session_timer;
+static bool session_running = false;
+static double total_typed = 0;
+static double total_correct = 0;
+static bool draw_cursor = true;
 
 void typing_test_reset(void) {
     typing_test_position = 0;
     memset(typing_test_states, 0, sizeof(typing_test_states));
+    timer_running = false;
+    session_running = false;
+    current_index = 0;
+    last_duration = 0.0;
+    total_typed = 0;
+    total_correct = 0;
+    draw_cursor = false;
 }
+
 
 void typing_test_render(PromptState *state) {
     int cy = state->height / 2 - 130;
-    char* text = "thats kind of bullshit imagine a game like that imagine you are on your pc then a game installs itself and runs itself and you cant leave then you have to play the game for years just so you can eventually get out of it?  why the fuck is there a space before the text shit did it again mb me";
+    char* text = "thats kind of bullshit imagine a game like that imagine you are on your pc then a game installs itself";
     int text_len = strlen(text);
     int line_height = FontSize + 12;
 
@@ -48,8 +65,22 @@ void typing_test_render(PromptState *state) {
             }
         }
         else if (c != 0) {
+            if (!session_running) {
+                session_timer = fl_start_timer();
+                session_running = true;
+            }
+
+            if (!timer_running) {
+                current_timer = fl_start_timer();
+                timer_running = true;
+            } else {
+                current_timer = fl_start_timer();
+            }
+
+            total_typed++;
             if (c == current_text) {
                 typing_test_states[typing_test_position] = CHAR_CORRECT;
+                total_correct++;
             } else {
                 typing_test_states[typing_test_position] = CHAR_WRONG;
             }
@@ -58,7 +89,7 @@ void typing_test_render(PromptState *state) {
     }
 
     FlCharPos positions[1000];
-    fl_measure_text_wrapped(0, cy, state->width, line_height, text, FontSize, positions, 1000);
+    fl_measure_text_wrapped(.x=0, .y=cy, .max_width=state->width, .line_height=line_height, .text=text, .out_positions=positions, .max_positions=1000);
 
     for (int i = 0; i < text_len; i++) {
         unsigned long col;
@@ -67,17 +98,39 @@ void typing_test_render(PromptState *state) {
         } else if (typing_test_states[i] == CHAR_WRONG) {
             col = RGB(255, 0, 0);
         } else {
-            col = RGB(255,255,255);
+            col = RGB(255, 255, 255);
         }
         char single[2] = { text[i], '\0' };
-        fl_place_text(.x = positions[i].x, .y = positions[i].y, .align = "Left", .text = single, .color = col);
+        fl_draw_text(.x = positions[i].x, .y = positions[i].y,
+                      .align = "Left", .text = single, .color = col);
     }
 
     if (typing_test_position == text_len) {
-        exit(1);
+        draw_cursor = false;
+        char buffer[200];
+        if (timer_running) {
+            timer_running = false;
+        }
+        if (session_running) {
+            session_running = false;
+
+            double elapsed_ms = fl_end_timer(session_timer);
+            double elapsed = elapsed_ms / 1000.0;
+            double minutes = elapsed / 60.0;
+            double accuracy = total_correct / total_typed;
+            double gross_wpm = (total_typed / 5.0) / minutes;
+            double wpm = gross_wpm * accuracy;
+
+            snprintf(buffer,sizeof(buffer),"WPM: %.2f",wpm);
+        }
+        fl_draw_text(.y=500,.text=buffer);
     }
 
-    fl_draw_rect(.x = positions[typing_test_position].x, .y = positions[typing_test_position].y + 6, .w = 1, .h = FontSize);
+    if (draw_cursor) {
+      fl_draw_rect(.x = positions[typing_test_position].x,
+                   .y = positions[typing_test_position].y + 6,
+                   .w = 1, .h = FontSize);
+    }
 }
 
 void TriggerTypingTest(void) {
