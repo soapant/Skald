@@ -306,7 +306,7 @@ char* Platform_PromptUser(WindowManager* wm, const PromptSpec* spec) {
   if (g_win32_prompt_state) { free(g_win32_prompt_state); g_win32_prompt_state = NULL; }
   PromptState *win_state = NULL;
   ListBoxInfo* lb_ptr = NULL;
-  bool has_listbox = (window_list || spec->refresh);
+  bool has_listbox = (window_list || spec->refresh || spec->render);
   if (has_listbox) {
     win_state = (PromptState*)calloc(1, sizeof(PromptState));
     if (!win_state) { log_error("operation failed, returning error spec=%p", spec); return NULL; }

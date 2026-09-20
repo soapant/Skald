@@ -13,6 +13,7 @@
 #include "core/window_manager.h"
 #include "core/modal.h"
 #include "config.h"
+#include "helpers/helpers_ui.h"
 
 
 
@@ -273,7 +274,7 @@ unsigned long fl_listbox_get_current_standard_color(void) {
     int idx = g_fl_list_lb->view_offset + g_fl_list_cur - 1;
     if (idx < 0 || idx >= g_fl_list_lb->populated_count) return 0;
     bool sel = (idx == g_fl_list_lb->selected_index);
-    if (sel) return COLOR_TEXT;
+    if (sel) return rgb_to_hex(COLOR_TEXT);
     int orig_idx = idx;
     int orig_cnt = g_fl_list_lb->populated_count;
     if (idx >= 0 && idx < g_fl_list_lb->populated_count) {
@@ -282,7 +283,7 @@ unsigned long fl_listbox_get_current_standard_color(void) {
     }
     unsigned long ncol, bcol, pcol;
     Platform_GetItemColors(orig_idx, orig_cnt, &ncol, &bcol, &pcol);
-    return pcol;
+    return rgb_to_hex(pcol);
 }
 
 char* fl_search_file_in_dir_platform(const char* directory, const char* search_string,char* output_path) {
