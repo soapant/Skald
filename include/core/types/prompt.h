@@ -60,9 +60,6 @@ static inline const char* ListBoxInfo_GetSelectedText(ListBoxInfo *lb) {
     return lb->populated_cache[lb->selected_index];
 }
 
-
-
-
 typedef struct {
     const char* title;
     const char** items;
@@ -77,16 +74,6 @@ typedef struct {
     HelpCallback help;
     CloseCallback on_close;
 } PromptSpec;
-
-typedef struct {
-    const char* prompt;
-    const char* initial_text;
-    int x;
-    int y;
-    int w;
-    int h;
-    CloseCallback on_close;
-} SimplePromptSpec;
 
 typedef struct {
     const char* initial_text;
