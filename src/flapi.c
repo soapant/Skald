@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include <time.h>
+#include <string.h>
 #include "core/context.h"
 #include "deps/log.h"
 #include "core/modal.h"
@@ -930,6 +931,143 @@ bool fl_place_text_impl(const FlTextSpec *spec) {
     const char *align = spec->align ? spec->align : "CENTER";
     FontHandle fh = spec->font;
     return Platform_DrawTextRaw(spec->x, spec->y, real_text, col, fh, align, spec->pad,spec->fontsize);
+}
+
+typedef int (*FlWrapMeasureFn)(void* ctx, const char* s, int n);
+typedef void (*FlWrapDrawFn)(void* ctx, int x, int y, const char* s, int n);
+typedef struct { unsigned long color; int fontsize; } FlWrapCtx;
+
+static int FlUtf8LeadLen(unsigned char c) {
+    if ((c & 0x80) == 0) return 1;
+    if ((c & 0xE0) == 0xC0) return 2;
+    if ((c & 0xF0) == 0xE0) return 3;
+    if ((c & 0xF8) == 0xF0) return 4;
+    return 1;
+}
+
+static void FlWrapRecord(FlCharPos* out, int maxout, int* count, int x, int y) {
+    int i = *count;
+    (*count)++;
+    if (out && i < maxout) {
+        out[i].x = x;
+        out[i].y = y;
+    }
+}
+
+static int FlWrapPlaceWord(FlWrapMeasureFn measure, FlWrapDrawFn draw, void* ctx, const char* text, int ws, int we, int wx, int rowtop, FlCharPos* out, int maxout, int* count) {
+    int i = ws;
+    while (i < we) {
+        int j = i + FlUtf8LeadLen((unsigned char)text[i]);
+        if (j > we) j = we;
+        int px = wx + measure(ctx, text + ws, i - ws);
+        for (int m = i; m < j; m++) FlWrapRecord(out, maxout, count, px, rowtop);
+        i = j;
+    }
+    draw(ctx, wx, rowtop, text + ws, we - ws);
+    return measure(ctx, text + ws, we - ws);
+}
+
+static int FlWrapLayout(const char* text, int x0, int y0, int max_width, int line_height, FlWrapMeasureFn measure, FlWrapDrawFn draw, void* ctx, FlCharPos* out, int maxout) {
+    int count = 0;
+    int len = (int)strlen(text);
+    int avail = max_width;
+    if (avail < 40) avail = 40;
+    int spaceW = measure(ctx, " ", 1);
+    int row = 0;
+    int p = 0;
+    int lw = 0;
+    bool has = false;
+    while (p < len) {
+        if (text[p] == '\n') {
+            FlWrapRecord(out, maxout, &count, x0, y0 + (row + 1) * line_height);
+            row++;
+            lw = 0;
+            has = false;
+            p++;
+            continue;
+        }
+        int ws = p;
+        while (ws < len && (text[ws] == ' ' || text[ws] == '\t')) ws++;
+        for (int m = p; m < ws; m++) FlWrapRecord(out, maxout, &count, x0 + (has ? lw : 0), y0 + row * line_height);
+        if (ws >= len) break;
+        if (text[ws] == '\n') {
+            p = ws;
+            continue;
+        }
+        int we = ws;
+        while (we < len && text[we] != ' ' && text[we] != '\t' && text[we] != '\n') we++;
+        int ww = measure(ctx, text + ws, we - ws);
+        int rowtop = y0 + row * line_height;
+        if (ww > avail) {
+            if (has) {
+                row++;
+                rowtop = y0 + row * line_height;
+                lw = 0;
+                has = false;
+            }
+            int c = ws;
+            while (c < we) {
+                int lo = 0, hi = we - c;
+                while (lo < hi) {
+                    int mid = (lo + hi + 1) / 2;
+                    if (measure(ctx, text + c, mid) <= avail) lo = mid;
+                    else hi = mid - 1;
+                }
+                int n = lo;
+                while (n > 0 && (((unsigned char)text[c + n] & 0xC0) == 0x80)) n--;
+                if (n <= 0) {
+                    n = FlUtf8LeadLen((unsigned char)text[c]);
+                    if (n > we - c) n = we - c;
+                }
+                if (c + n >= we) {
+                    lw = FlWrapPlaceWord(measure, draw, ctx, text, c, we, x0, rowtop, out, maxout, &count);
+                    has = true;
+                    c = we;
+                    break;
+                }
+                FlWrapPlaceWord(measure, draw, ctx, text, c, c + n, x0, rowtop, out, maxout, &count);
+                row++;
+                rowtop = y0 + row * line_height;
+                c += n;
+            }
+            p = we;
+            continue;
+        }
+        int add = ww + (has ? spaceW : 0);
+        if (has && lw + add > avail) {
+            row++;
+            rowtop = y0 + row * line_height;
+            lw = 0;
+            has = false;
+        }
+        int wx = x0 + (has ? lw + spaceW : 0);
+        int pxw = FlWrapPlaceWord(measure, draw, ctx, text, ws, we, wx, rowtop, out, maxout, &count);
+        lw = has ? lw + spaceW + pxw : pxw;
+        has = true;
+        p = we;
+    }
+    return count;
+}
+
+static int FlWrapMeasureThunk(void* ctx, const char* s, int n) {
+    FlWrapCtx* c = (FlWrapCtx*)ctx;
+    return Platform_MeasureTextWidth(s, n, c->fontsize);
+}
+
+static void FlWrapDrawThunk(void* ctx, int x, int y, const char* s, int n) {
+    FlWrapCtx* c = (FlWrapCtx*)ctx;
+    Platform_DrawTextLine(x, y, s, n, c->color, c->fontsize);
+}
+
+int fl_place_text_wrapped_ex(int x, int y, int max_width, int line_height, const char* text, int fontsize, unsigned long color, FlCharPos* out_positions, int max_positions) {
+    if (!text) return 0;
+    if (fontsize <= 0) fontsize = FontSize;
+    if (line_height <= 0) line_height = fontsize + 4;
+    if (color == 0) color = rgb_to_hex(COLOR_TEXT);
+    FlWrapCtx ctx;
+    ctx.color = color;
+    ctx.fontsize = fontsize;
+    return FlWrapLayout(text, x, y, max_width, line_height, FlWrapMeasureThunk, FlWrapDrawThunk, &ctx, out_positions, max_positions);
 }
 
 bool fl_place_editbox_impl(const FlEditSpec *spec) {
