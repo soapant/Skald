@@ -1,5 +1,6 @@
 #include "core/window_manager.h"
 #include "deps/log.h"
+#include "core/prompt_controller.h"
 
 #include "platform/ui.h"
 #include "core/modal.h"
@@ -300,6 +301,11 @@ int WindowManager_RunLinux(WindowManager* wm) {
             }
         }
         hotkey_drain_pending();
+        if (PromptController_PollSequenceTimeout()) {
+            Popup* top = WindowManager_GetTopPopup(wm);
+            if (top && top->vtable && top->vtable->on_render) top->vtable->on_render(top);
+            XFlush(dpy);
+        }
     }
 
     if (input_started) pthread_join(input_thr, NULL);
