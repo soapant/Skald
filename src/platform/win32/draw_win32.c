@@ -55,6 +55,15 @@ int Platform_MeasureTextWidth(const char* text, int len, int fontsize) {
     return sz.cx;
 }
 
+int Platform_MeasureLineHeight(int fontsize) {
+    if (fontsize <= 0) fontsize = FontSize;
+    if (g_draw_hdc) {
+        TEXTMETRICA tm;
+        if (GetTextMetricsA(g_draw_hdc, &tm)) return tm.tmHeight;
+    }
+    return fontsize + fontsize / 3;
+}
+
 bool Platform_DrawTextLine(int x, int y, const char* text, int len, unsigned long color, int fontsize) {
     (void)fontsize;
     if (!text || len <= 0 || !g_draw_hdc) return false;

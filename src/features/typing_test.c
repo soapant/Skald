@@ -50,7 +50,8 @@ void typing_test_render(PromptState *state) {
     int cy = state->height / 2 - 130;
     char* text = "thats kind of bullshit imagine a game like that imagine you are on your pc then a game installs itself";
     int text_len = strlen(text);
-    int line_height = FontSize + 12;
+    int fontsize = 30;
+    int line_height = fl_font_line_height(fontsize);
 
     if (typing_test_position < text_len) {
         int c = fl_get_char_pressed();
@@ -88,7 +89,7 @@ void typing_test_render(PromptState *state) {
     }
 
     FlCharPos positions[1000];
-    fl_measure_text_wrapped(.x=0, .y=cy, .max_width=state->width, .line_height=line_height, .text=text, .out_positions=positions);
+    fl_measure_text_wrapped(.x=0, .y=cy, .max_width=state->width, .line_height=line_height, .fontsize=fontsize, .text=text, .out_positions=positions);
 
     for (int i = 0; i < text_len; i++) {
         unsigned long col;
@@ -100,8 +101,8 @@ void typing_test_render(PromptState *state) {
             col = RGB(255, 255, 255);
         }
         char single[2] = { text[i], '\0' };
-        fl_draw_text(.x = positions[i].x, .y = positions[i].y,
-                      .align = "Left", .text = single, .color = col);
+        fl_draw_text(.x = positions[i].x, .y = positions[i].y, .fontsize = fontsize,
+                      .align = "LEFT", .text = single, .color = col);
     }
 
     if (typing_test_position == text_len) {
@@ -125,8 +126,8 @@ void typing_test_render(PromptState *state) {
     }
     if (draw_cursor) {
       fl_draw_rect(.x = positions[typing_test_position].x,
-                   .y = positions[typing_test_position].y + 6,
-                   .w = 1, .h = FontSize);
+                   .y = positions[typing_test_position].y + (line_height - fontsize) / 2,
+                   .w = 1, .h = fontsize);
     }
 }
 
