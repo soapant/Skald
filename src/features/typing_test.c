@@ -54,11 +54,11 @@ void typing_test_render(PromptState *state) {
 
     for (int i = 0; i < text_len; i++) {
         if (char_states[i] == CHAR_CORRECT) {
-            fl_place_text(.x=i * 20, .y=cy, .align="Left", .text=text[i], .fontsize=30, .color=RGB(0,255,0));
+            fl_place_text(.x=i * 20, .y=cy - 40, .align="Left", .text=text[i], .fontsize=30, .color=RGB(0,255,0));
         } else if (char_states[i] == CHAR_WRONG)  {
-            fl_place_text(.x=i * 20, .y=cy, .align="Left", .text=text[i], .fontsize=30, .color=RGB(255,0,0));
+            fl_place_text(.x=i * 20, .y=cy - 40, .align="Left", .text=text[i], .fontsize=30, .color=RGB(255,0,0));
         } else {
-            fl_place_text(.x=i * 20, .y=cy, .align="Left", .text=text[i], .fontsize=30);
+            fl_place_text(.x=i * 20, .y=cy - 40, .align="Left", .text=text[i], .fontsize=30);
         }
     }
 
