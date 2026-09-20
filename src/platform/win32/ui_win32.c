@@ -38,21 +38,23 @@ void UI_SetSelection(ListBoxInfo* lb, WindowHandle hList, int index) {
     bool hasInvalid = false;
     RECT itemRect = {0, 0, 0, 0};
     if (old_sel >= 0 && old_sel < lb->populated_count) {
-        SendMessageA(WH_TO_HWND(hList), LB_GETITEMRECT, old_sel, (LPARAM)&itemRect);
-        invalidRect = itemRect;
-        hasInvalid = true;
+        if ((int)SendMessageA(WH_TO_HWND(hList), LB_GETITEMRECT, old_sel, (LPARAM)&itemRect) != LB_ERR) {
+            invalidRect = itemRect;
+            hasInvalid = true;
+        }
     }
     if (index >= 0 && index < lb->populated_count) {
-        SendMessageA(WH_TO_HWND(hList), LB_GETITEMRECT, index, (LPARAM)&itemRect);
-        if (!hasInvalid) { invalidRect = itemRect; hasInvalid = true; }
-        else UnionRect(&invalidRect, &invalidRect, &itemRect);
+        if ((int)SendMessageA(WH_TO_HWND(hList), LB_GETITEMRECT, index, (LPARAM)&itemRect) != LB_ERR) {
+            if (!hasInvalid) { invalidRect = itemRect; hasInvalid = true; }
+            else UnionRect(&invalidRect, &invalidRect, &itemRect);
+        }
     }
     if (FlintContext_Get()->prompt_callbacks.render != NULL || !IsWindowVisible(WH_TO_HWND(hList))) {
         HWND hPopup = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
         if (hPopup && IsWindow(hPopup)) InvalidateRect(hPopup, NULL, FALSE);
         return;
     }
-    if (hasInvalid) RedrawWindow(WH_TO_HWND(hList), &invalidRect, NULL, RDW_INVALIDATE);
+    if (hasInvalid) RedrawWindow(WH_TO_HWND(hList), &invalidRect, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
 }
 
 void UI_SetHorizontalExtent(WindowHandle hList, int width) {
@@ -126,24 +128,35 @@ void UI_NavigateTo(ListBoxInfo* lb, WindowHandle hListBox, int index) {
     if (newTop < 0) newTop = 0;
     if (newTop + visibleCount > count) newTop = count - visibleCount;
     if (newTop < 0) newTop = 0;
-    RECT invalidRect = {0};
-    bool hasInvalid = false;
-    if (newTop != oldTop) { UI_LB_SetTopIndex(hListBox, newTop); hasInvalid = true; }
-    RECT itemRect;
-    if (old_sel >= 0 && old_sel != index && old_sel < lb->populated_count) {
-        SendMessageA(WH_TO_HWND(hListBox), LB_GETITEMRECT, old_sel, (LPARAM)&itemRect);
-        if (!hasInvalid) { invalidRect = itemRect; hasInvalid = true; } else UnionRect(&invalidRect, &invalidRect, &itemRect);
-    }
-    if (index >= 0 && index < lb->populated_count) {
-        SendMessageA(WH_TO_HWND(hListBox), LB_GETITEMRECT, index, (LPARAM)&itemRect);
-        if (!hasInvalid) { invalidRect = itemRect; hasInvalid = true; } else UnionRect(&invalidRect, &invalidRect, &itemRect);
+    if (newTop != oldTop) {
+        SendMessageA(WH_TO_HWND(hListBox), WM_SETREDRAW, FALSE, 0);
+        UI_LB_SetTopIndex(hListBox, newTop);
+        SendMessageA(WH_TO_HWND(hListBox), WM_SETREDRAW, TRUE, 0);
     }
     if (FlintContext_Get()->prompt_callbacks.render != NULL || !IsWindowVisible(WH_TO_HWND(hListBox))) {
         HWND hPopup = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
         if (hPopup && IsWindow(hPopup)) InvalidateRect(hPopup, NULL, FALSE);
         return;
     }
-    if (hasInvalid) RedrawWindow(WH_TO_HWND(hListBox), &invalidRect, NULL, RDW_INVALIDATE);
+    if (newTop != oldTop) {
+        RedrawWindow(WH_TO_HWND(hListBox), NULL, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
+        return;
+    }
+    RECT invalidRect = {0};
+    bool hasInvalid = false;
+    RECT itemRect;
+    if (old_sel >= 0 && old_sel != index && old_sel < lb->populated_count) {
+        if ((int)SendMessageA(WH_TO_HWND(hListBox), LB_GETITEMRECT, old_sel, (LPARAM)&itemRect) != LB_ERR) {
+            invalidRect = itemRect;
+            hasInvalid = true;
+        }
+    }
+    if (index >= 0 && index < lb->populated_count) {
+        if ((int)SendMessageA(WH_TO_HWND(hListBox), LB_GETITEMRECT, index, (LPARAM)&itemRect) != LB_ERR) {
+            if (!hasInvalid) { invalidRect = itemRect; hasInvalid = true; } else UnionRect(&invalidRect, &invalidRect, &itemRect);
+        }
+    }
+    if (hasInvalid) RedrawWindow(WH_TO_HWND(hListBox), &invalidRect, NULL, RDW_INVALIDATE | RDW_UPDATENOW);
 }
 
 void UI_NavigateUp(ListBoxInfo* lb, WindowHandle hListBox) {
