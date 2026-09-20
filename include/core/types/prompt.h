@@ -32,15 +32,6 @@ typedef struct {
      bool        has_listbox;
 } PromptState;
 
-typedef struct {
-     char*       display_message;
-     size_t      cursor;
-     int         scroll_offset;
-     char        user_input[512];
-     int         width, height;
-     char*       window_title;
-} SimplePromptState;
-
 typedef void (*RefreshCallback)(const char* filter, WindowHandle hListBox, ListBoxInfo* lb);
 typedef bool (*EnterCallback)(const char* selection, ListBoxInfo* lb);
 typedef bool (*CtrlEnterCallback)(const char* selection, ListBoxInfo* lb);
@@ -109,9 +100,7 @@ typedef struct {
 typedef struct WindowManager WindowManager;
 WindowManager* WindowManager_Get(void);
 char* WindowManager_ShowPrompt(WindowManager* wm, const PromptSpec* spec);
-char* WindowManager_ShowSimplePrompt(WindowManager* wm, const SimplePromptSpec* spec);
 #define PROMPT(...) ((char*)WindowManager_ShowPrompt(WindowManager_Get(), &(PromptSpec){ __VA_ARGS__ }))
-#define SIMPLE_PROMPT(...) ((char*)WindowManager_ShowSimplePrompt(WindowManager_Get(), &(SimplePromptSpec){ __VA_ARGS__ }))
 
 typedef struct {
     char keys[MAX_SEQUENCE_LEN];
