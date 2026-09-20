@@ -108,7 +108,6 @@ static void Linux_HandleKeyPress(Display* dpy, XKeyEvent* ev, WindowManager* wm)
     } else {
         vk_code = XKeysymToVK(ks);
     }
-    bool pressed = true;
     int modifiers = mods;
     if(vk_code) Platform_InputState_Update(vk_code, true, modifiers);
 
@@ -116,115 +115,21 @@ static void Linux_HandleKeyPress(Display* dpy, XKeyEvent* ev, WindowManager* wm)
     Popup* top = WindowManager_GetTopPopup(wm);
     if (!top) { PROFILE_END_VAR(timer, "window_manager_x11:Linux_HandleKeyPress"); return; }
 
-    if (top->type == POPUP_PROMPT) {
-        PromptState* state = (PromptState*)top->user_data;
-        XEvent xev; memset(&xev,0,sizeof(xev));
-        xev.type = KeyPress;
-        xev.xkey = *ev;
-        bool handled = Linux_HandlePromptKey(&xev, state);
-        if (!handled && IsInsertMode()) {
-            char buf2[32]; KeySym ks2; int len2 = XLookupString(ev, buf2, sizeof(buf2), &ks2, NULL);
-            if (len2 > 0) {
-                extern int pending_hotkey_vk; extern int pending_hotkey_mod; extern long pending_hotkey_timeMs;
-                bool swallow=false;
-                if (pending_hotkey_vk!=0 && len2==1) {
-                    struct timeval tv; gettimeofday(&tv,NULL); long now=tv.tv_sec*1000+tv.tv_usec/1000;
-                    if (now - pending_hotkey_timeMs < 800) {
-                        unsigned char c=(unsigned char)buf2[0];
-                        int vkc=0;
-                        if (c>='a'&&c<='z') vkc=c-'a'+'A';
-                        else if (c>='A'&&c<='Z') vkc=c;
-                        else if (c==' ') vkc=VK_SPACE;
-                        else if (c=='['||c=='{') vkc=VK_OEM_4;
-                        else if (c==']'||c=='}') vkc=VK_OEM_6;
-                        else if (c==';'||c==':') vkc=VK_OEM_1;
-                        else if (c=='/'||c=='?') vkc=VK_OEM_2;
-                        if (vkc!=0 && vkc==pending_hotkey_vk) swallow=true;
-                    }
-                    pending_hotkey_vk=0;
-                    pending_hotkey_mod=0;
-                }
-                if (!swallow && (mods & (HOTKEY_MOD_ALT|HOTKEY_MOD_CTRL))) swallow=true;
-                if (!swallow) {
-                    bool is_printable=true;
-                    for (int i=0;i<len2;i++) { unsigned char c=(unsigned char)buf2[i]; if (c<0x20||c==0x7F) {is_printable=false;break;}}
-                    if (is_printable) {
-                        size_t n=strlen(state->filter);
-                        if (n+len2 < sizeof(state->filter)-1) {
-                            if (state->cursor<0) state->cursor=0;
-                            if ((size_t)state->cursor>n) state->cursor=n;
-                            memmove(state->filter+state->cursor+len2, state->filter+state->cursor, n-state->cursor+1);
-                            memcpy(state->filter+state->cursor, buf2, len2);
-                            state->cursor+=len2;
-                            History_ResetCursor(FlintContext_Get()->window.current_feature);
-                            FlintContext* _c = FlintContext_Get();
-                            if (_c->prompt_callbacks.refresh) _c->prompt_callbacks.refresh(state->filter, FlintContext_Get()->window.hListBox, state->has_listbox ? &state->listbox : NULL);
-                            else if (state && state->listbox.populated_count >=0) {}
-                        }
-                    }
-                }
-            }
-        }
-        FlintContext* _c2 = FlintContext_Get();
-        if (_c2->window.selection_complete) {
-            _c2->window.selection_complete = false;
-            WindowManager_PopPopup(wm);
-            Popup* new_top = WindowManager_GetTopPopup(wm);
-            if (new_top && new_top->vtable && new_top->vtable->on_render) new_top->vtable->on_render(new_top);
-            XFlush(dpy);
-            PROFILE_END_VAR(timer, "window_manager_x11:Linux_HandleKeyPress");
-            return;
-        }
-        if (top->vtable && top->vtable->on_render) top->vtable->on_render(top);
-        XFlush(dpy);
-        PROFILE_END_VAR(timer, "window_manager_x11:Linux_HandleKeyPress");
-        return;
+    PopupKeyEvent key;
+    memset(&key, 0, sizeof(key));
+    key.vk = Linux_KeysymToWindowsVK(ks);
+    key.ctrl = (mods & HOTKEY_MOD_CTRL) != 0;
+    key.shift = (mods & HOTKEY_MOD_SHIFT) != 0;
+    key.alt = (mods & HOTKEY_MOD_ALT) != 0;
+    if (len > 0) {
+        key.text_len = len < (int)sizeof(key.text) ? len : (int)sizeof(key.text);
+        memcpy(key.text, buf, key.text_len);
     }
-    else if (top->type == POPUP_EDIT) {
-        WMEditPopupData* ed = (WMEditPopupData*)top;
-        XEvent xev; memset(&xev,0,sizeof(xev));
-        xev.type = KeyPress;
-        xev.xkey = *ev;
-        bool handled = Linux_HandleEditPopupKey(&xev, ed);
-        if (!handled && ed && ed->text && IsInsertMode()) {
-            char buf2[32]; KeySym ks2; int len2 = XLookupString(ev, buf2, sizeof(buf2), &ks2, NULL);
-            if (len2 > 0) {
-                extern int pending_hotkey_vk; extern int pending_hotkey_mod; extern long pending_hotkey_timeMs;
-                bool swallow = false;
-                if (pending_hotkey_vk != 0 && len2 == 1) {
-                    struct timeval tv; gettimeofday(&tv,NULL); long now = tv.tv_sec*1000+tv.tv_usec/1000;
-                    if (now - pending_hotkey_timeMs < 800) {
-                        unsigned char c = (unsigned char)buf2[0];
-                        int vkc = 0;
-                        if (c >= 'a' && c <= 'z') vkc = c - 'a' + 'A';
-                        else if (c >= 'A' && c <= 'Z') vkc = c;
-                        if (vkc != 0 && vkc == pending_hotkey_vk) swallow = true;
-                    }
-                    pending_hotkey_vk = 0;
-                    pending_hotkey_mod = 0;
-                }
-                if (!swallow && (mods & (HOTKEY_MOD_ALT|HOTKEY_MOD_CTRL))) swallow = true;
-                if (!swallow) {
-                    bool is_printable = true;
-                    for (int i = 0; i < len2; i++) { unsigned char c = (unsigned char)buf2[i]; if (c < 0x20 || c == 0x7F) { is_printable = false; break; } }
-                    if (is_printable) {
-                        size_t cap = ed->text_capacity > 0 ? (size_t)ed->text_capacity : 1024;
-                        size_t n = strlen(ed->text);
-                        if (ed->cursor < 0) ed->cursor = 0;
-                        if ((size_t)ed->cursor > n) ed->cursor = (int)n;
-                        if (n + (size_t)len2 < cap - 1) {
-                            memmove(ed->text + ed->cursor + len2, ed->text + ed->cursor, n - (size_t)ed->cursor + 1);
-                            memcpy(ed->text + ed->cursor, buf2, len2);
-                            ed->cursor += len2;
-                        }
-                    }
-                }
-            }
-        }
-        if (FlintContext_Get()->window.selection_complete) {
-            FlintContext_Get()->window.selection_complete = false;
-            WindowManager_PopPopup(wm);
-        }
+    if (top->vtable && top->vtable->on_key) top->vtable->on_key(top, &key);
+
+    if (FlintContext_Get()->window.selection_complete) {
+        FlintContext_Get()->window.selection_complete = false;
+        WindowManager_PopPopup(wm);
     }
 
     Popup* top_after = WindowManager_GetTopPopup(wm);

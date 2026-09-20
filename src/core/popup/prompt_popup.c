@@ -124,6 +124,10 @@ static void PromptPopup_OnRender(Popup* self) {
     PROFILE_END_VAR(timer, "window_manager:PromptPopup_OnRender");
 }
 
+static bool PromptPopup_OnKey(Popup* self, const PopupKeyEvent* key) {
+    return Platform_PromptPopupOnKey(self, key);
+}
+
 static void PromptPopup_Destroy(Popup* self) {
     PROFILE_START(timer);
     PromptPopupData* data = (PromptPopupData*)self;
@@ -137,6 +141,7 @@ static const PopupVTable g_prompt_popup_vtable = {
     .on_show = PromptPopup_OnShow,
     .on_hide = PromptPopup_OnHide,
     .on_render = PromptPopup_OnRender,
+    .on_key = PromptPopup_OnKey,
     .destroy = PromptPopup_Destroy
 };
 
