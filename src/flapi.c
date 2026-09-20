@@ -1059,6 +1059,24 @@ static void FlWrapDrawThunk(void* ctx, int x, int y, const char* s, int n) {
     Platform_DrawTextLine(x, y, s, n, c->color, c->fontsize);
 }
 
+static void FlWrapNoDraw(void* ctx, int x, int y, const char* s, int n) {
+    (void)ctx;
+    (void)x;
+    (void)y;
+    (void)s;
+    (void)n;
+}
+
+int fl_measure_text_wrapped(int x, int y, int max_width, int line_height, const char* text, int fontsize, FlCharPos* out_positions, int max_positions) {
+    if (!text) return 0;
+    if (fontsize <= 0) fontsize = FontSize;
+    if (line_height <= 0) line_height = fontsize + 4;
+    FlWrapCtx ctx;
+    ctx.color = 0;
+    ctx.fontsize = fontsize;
+    return FlWrapLayout(text, x, y, max_width, line_height, FlWrapMeasureThunk, FlWrapNoDraw, &ctx, out_positions, max_positions);
+}
+
 int fl_place_text_wrapped_ex(int x, int y, int max_width, int line_height, const char* text, int fontsize, unsigned long color, FlCharPos* out_positions, int max_positions) {
     if (!text) return 0;
     if (fontsize <= 0) fontsize = FontSize;

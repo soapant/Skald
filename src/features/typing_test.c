@@ -53,7 +53,7 @@ void typing_test_render(PromptState *state) {
     }
 
     FlCharPos positions[1000];
-    int count = fl_place_text_wrapped_ex(0, cy, state->width, line_height, text, FontSize, COLOR_TEXT, positions, 1000);
+    int count = fl_measure_text_wrapped(0, cy, state->width, line_height, text, FontSize, positions, 1000);
 
     for (int i = 0; i < text_len && i < count; i++) {
         unsigned long col;
@@ -62,10 +62,10 @@ void typing_test_render(PromptState *state) {
         } else if (char_states[i] == CHAR_WRONG) {
             col = RGB(255, 0, 0);
         } else {
-            col = COLOR_TEXT;
+            col = RGB(255,255,255);
         }
         char single[2] = { text[i], '\0' };
-        fl_place_text(.x = positions[i].x, .y = positions[i].y, .align = "Left", .text = single, .fontsize = FontSize, .color = col);
+        fl_place_text(.x = positions[i].x, .y = positions[i].y, .align = "Left", .text = single, .color = col);
     }
 
     if (current_position == text_len) {
