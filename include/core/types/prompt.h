@@ -52,6 +52,7 @@ typedef void (*FilterCallback)(const char* item,const char* filter);
 typedef void (*CopyCallback)(const char* selection,int true_index,int type);
 typedef void (*HelpCallback)();
 typedef void (*KeyCallback)(int vkCode);
+typedef void (*CloseCallback)(void);
 
 static inline void ListBoxInfo_Init(ListBoxInfo *lb) {
     if (!lb) return;
@@ -83,6 +84,7 @@ typedef struct {
     EditCallback edit;
     FilterCallback filter;
     HelpCallback help;
+    CloseCallback on_close;
 } PromptSpec;
 
 typedef struct {
@@ -92,6 +94,7 @@ typedef struct {
     int y;
     int w;
     int h;
+    CloseCallback on_close;
 } SimplePromptSpec;
 
 typedef struct {
