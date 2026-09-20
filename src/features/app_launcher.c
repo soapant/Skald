@@ -161,6 +161,8 @@ void launch_app_as_admin(const char* display_name) {
     if (found) fl_launch_with_args_as_admin(path_copy, NULL);
 }
 bool applauncher_enter_callback(const char* selection, ListBoxInfo* lb) {
+    char* output = fl_popup();
+    printf("%s \n",output);
     launch_app_by_name(selection);
     return true;
 }

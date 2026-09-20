@@ -892,20 +892,27 @@ bool fl_focus_window_by_title(char* title) {
 }
 
 char* fl_popup_impl(const FlPopupSpec *spec) {
-    // const char *initial = spec && spec->initial_text ? spec->initial_text : "";
-    // int x = spec->x ? spec->x : 0;
-    // int y = spec->y ? spec->y : 0;
-    // int w = spec->w ? spec->w : 500;
-    // int h = spec->h ? spec->h : 70;
-    // SimplePromptSpec s = {0};
-    // s.prompt = NULL;
-    // s.initial_text = initial;
-    // s.x = x; s.y = y; s.w = w; s.h = h;
-    // WindowManager *wm = WindowManager_Get();
-    // if (!wm) return NULL;
-    // char *res = WindowManager_ShowSimplePrompt(wm, &s);
-    // if (!res) return NULL;
-    // return strdup(res);
+    const char* initial_text = spec->initial_text ? spec->initial_text : "";
+    int x = spec->x ? spec->x : 0;
+    int y = spec->y ? spec->y : 0;
+    int w = spec->w > 0 ? spec->w : 500;
+    int h = spec->h > 0 ? spec->h : 70;
+    const char* align = "LEFT";
+    WindowManager* wm = WindowManager_Get();
+    char* result = NULL;
+    Popup* popup = EditPopup_Create(wm, initial_text,"", x, y, w, h, align, fl_edit_blocking_confirm, &result);
+
+    WindowManager_PushPopup(wm, popup);
+    while (wm->running && popup->manager) {
+        Platform_WM_ProcessEvents(wm);
+    }
+    if (popup->manager == NULL) {
+        if (popup->vtable && popup->vtable->destroy) popup->vtable->destroy(popup);
+    } else {
+        WindowManager_PopPopup(wm);
+        if (popup->vtable && popup->vtable->destroy) popup->vtable->destroy(popup);
+    }
+    return result;
 }
 
 unsigned long fl_listbox_get_current_standard_color(void);
@@ -1396,7 +1403,7 @@ void fl_screenshot_save(char* save_path) {
     
     snprintf(cmd, sizeof(cmd),
              "%s/external/grim %s.png",
-             wd, wd,save_path);
+             wd,save_path);
     
     fl_run_terminal_command(cmd);
 }
