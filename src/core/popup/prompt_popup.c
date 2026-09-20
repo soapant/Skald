@@ -3,7 +3,6 @@
 #include "core/window_manager.h"
 #include "core/platform.h"
 #include "platform/ui.h"
-#include "core/modal.h"
 #include "core/feature_data.h"
 #include "core/vim.h"
 #include "bindings/vim_helpers.h"
@@ -11,50 +10,20 @@
 #include "bindings/bindings.h"
 #include "core/prompt_controller.h"
 #include "config.h"
-#include "core/platform.h"
 #include "helpers/helpers_hotkey.h"
 #include "helpers/helpers_alias.h"
 #include "helpers/helpers_flag.h"
 #include "helpers/helpers_ui.h"
-#include "config.h"
 #include "core/feature_loader.h"
 #include "core/history.h"
 #include "deps/log.h"
+#include "platform/wm_platform.h"
+#include "core/timer.h"
 #include <sys/time.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#if !defined(_WIN32)
-#include <pthread.h>
-#include <unistd.h>
-#else
-#include <windows.h>
-#endif
 
-#if !defined(_WIN32)
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <X11/Xatom.h>
-#include <X11/keysym.h>
-#include <X11/Xft/Xft.h>
-#include <unistd.h>
-#include <stdatomic.h>
-#include "platform/x11/display_x11.h"
-#include "platform/x11/drawing_x11.h"
-#include "platform/x11/window_factory_x11.h"
-extern int WindowManager_RunLinux(WindowManager* wm);
-extern void WindowManager_ProcessEventsLinux(WindowManager* wm);
-extern void WindowManager_QuitLinux(WindowManager* wm);
-extern void Linux_ProcessXEvent(Display* dpy, XEvent* ev, WindowManager* wm);
-extern void EditBufferBackspace(char* buf, size_t* cursor);
-extern bool EditBufferDeleteChar(char* buf, size_t* cursor);
-#else
-#include <windows.h>
-#include "core/timer.h"
-extern int WindowManager_RunWin32(WindowManager* wm);
-extern void WindowManager_ProcessEventsWin32(WindowManager* wm);
-extern void WindowManager_QuitWin32(WindowManager* wm);
-#endif
 typedef struct {
     Popup base;
     PromptSpec spec;
@@ -69,31 +38,12 @@ static void PromptPopup_OnShow(Popup* self) {
     FlintContext* ctx = FlintContext_Get();
     ctx->window.selection_complete = false;
     ctx->window.output_buffer[0] = '\0';
-    
-    #if !defined(_WIN32)
-    Display* dpy = wm->display;
-    data->base.handle.xid = Linux_CreatePromptWindow(dpy, data->x, data->y, data->w, data->h);
-    XSelectInput(dpy, data->base.handle.xid, KeyPressMask | ExposureMask | FocusChangeMask);
-    XMapWindow(dpy, data->base.handle.xid);
-    XFlush(dpy);
-    XSync(dpy, False);
-    for (int _r=0; _r<20; _r++) {
-        XWindowAttributes _a;
-        if (XGetWindowAttributes(dpy, data->base.handle.xid, &_a) && _a.map_state == IsViewable) break;
-        XSync(dpy, False);
-    }
-    {
-        int (*old)(Display*, XErrorEvent*) = XSetErrorHandler(x11_error_handler);
-        XSetInputFocus(dpy, data->base.handle.xid, RevertToParent, CurrentTime);
-        XSync(dpy, False);
-        XSetErrorHandler(old);
-    }
-    XFlush(dpy);
-    #endif
-    
+
+    Platform_PromptPopupShowWindow(self, data->x, data->y, data->w, data->h);
+
     data->state = calloc(1, sizeof(PromptState));
     if (!data->state) { PROFILE_END_VAR(timer, "window_manager:PromptPopup_OnShow"); return; }
-    
+
     data->state->items = (char**)data->spec.items;
     data->state->item_count = 0;
     data->state->cursor = 0;
@@ -122,7 +72,7 @@ static void PromptPopup_OnShow(Popup* self) {
         SetModeWithListBox(MODE_INSERT, &data->state->listbox);
     }
     self->user_data = data->state;
-    
+
     FlintContext* ctx2 = FlintContext_Get();
     if (!wm->ctx) wm->ctx = ctx2;
     ctx2->prompt_callbacks.refresh = data->spec.refresh;
@@ -146,13 +96,7 @@ static void PromptPopup_OnShow(Popup* self) {
 static void PromptPopup_OnHide(Popup* self) {
     PROFILE_START(timer);
     PromptPopupData* data = (PromptPopupData*)self;
-    #if !defined(_WIN32)
-    Display* dpy = get_display();
-    if (dpy) {
-        XUnmapWindow(dpy, self->handle.xid);
-        XFlush(dpy);
-    }
-    #endif
+    Platform_PromptPopupHideWindow(self);
     extern EditorMode g_last_mode;
     extern void SavePerFeatureState(const char* feature, EditorMode mode, int last_index);
     if (data->state) {
@@ -176,21 +120,14 @@ static void PromptPopup_OnRender(Popup* self) {
     PROFILE_START(timer);
     PromptPopupData* data = (PromptPopupData*)self;
     if (!data->state) { PROFILE_END_VAR(timer, "window_manager:PromptPopup_OnRender"); return; }
-    
-    #if !defined(_WIN32)
-    Display* dpy = ((WindowManager*)self->manager)->display;
-    Linux_RenderPromptUser(dpy, &self->handle.xid, data->state);
-    #endif
+    Platform_PromptPopupRender(self);
     PROFILE_END_VAR(timer, "window_manager:PromptPopup_OnRender");
 }
 
 static void PromptPopup_Destroy(Popup* self) {
     PROFILE_START(timer);
     PromptPopupData* data = (PromptPopupData*)self;
-    #if !defined(_WIN32)
-    Display* dpy = get_display();
-    if (dpy) XDestroyWindow(dpy, self->handle.xid);
-    #endif
+    Platform_PromptPopupDestroyWindow(self);
     free(data->state);
     free(data);
     PROFILE_END_VAR(timer, "window_manager:PromptPopup_Destroy");
@@ -206,23 +143,22 @@ static const PopupVTable g_prompt_popup_vtable = {
 Popup* PromptPopup_Create(WindowManager* wm, const PromptSpec* spec) {
     PROFILE_START(timer);
     if (!wm || !spec) { PROFILE_END_VAR(timer, "window_manager:PromptPopup_Create"); return NULL; }
-    
+
     int layout_w = 900;
     int layout_h = 640;
-    
+
     int x, y;
     WindowManager_GetCenteredPos(layout_w, layout_h, &x, &y);
-    
+
     PromptPopupData* data = calloc(1, sizeof(PromptPopupData));
     if (!data) { PROFILE_END_VAR(timer, "window_manager:PromptPopup_Create"); return NULL; }
-    
+
     data->base.vtable = &g_prompt_popup_vtable;
     data->base.manager = wm;
     data->base.type = POPUP_PROMPT;
     data->spec = *spec;
     data->x = x; data->y = y; data->w = layout_w; data->h = layout_h;
-    
+
     PROFILE_END_VAR(timer, "window_manager:PromptPopup_Create");
     return WindowManager_PushPopup(wm, (Popup*)data);
 }
-
