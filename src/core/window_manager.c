@@ -151,7 +151,7 @@ char* WindowManager_ShowPrompt(WindowManager* wm, const PromptSpec* spec) {
             }
         }
     }
-    char* res = Platform_WM_ShowPrompt(wm, spec);
+    char* res = Platform_PromptUser(wm, spec);
     if (on_close) on_close();
     PROFILE_END_VAR(timer, "window_manager:WindowManager_ShowPrompt");
     return res;
