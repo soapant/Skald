@@ -107,12 +107,6 @@ static void SyncFilterToActiveState(FlintContext* ctx) {
                 s->filter[sizeof(s->filter)-1]='\0';
                 s->cursor = ctx->window.filter_cursor;
                 return;
-            } else if (top->type == POPUP_SIMPLE) {
-                SimplePromptState* s = (SimplePromptState*)top->user_data;
-                strncpy(s->user_input, ctx->window.filter, sizeof(s->user_input)-1);
-                s->user_input[sizeof(s->user_input)-1]='\0';
-                s->cursor = ctx->window.filter_cursor;
-                return;
             }
         }
     }
@@ -329,7 +323,6 @@ void DeleteLastTypedChar(FlintContext* ctx) {
             int del = cur - 1;
             memmove(s->filter + del, s->filter + del + 1, len - del);
             s->cursor = del;
-            // sync to unified filter
             strncpy(ctx->window.filter, s->filter, sizeof(ctx->window.filter)-1);
             ctx->window.filter[sizeof(ctx->window.filter)-1]='\0';
             ctx->window.filter_cursor = s->cursor;
@@ -337,23 +330,6 @@ void DeleteLastTypedChar(FlintContext* ctx) {
                 ListBoxInfo* lb = Vim_GetListBox(ctx);
                 ctx->prompt_callbacks.refresh(ctx->window.filter, ctx->window.hListBox, lb);
             }
-#if defined(_WIN32)
-            Win32_ApplyFilterToEdit(ctx);
-#endif
-            return;
-        }
-    }
-    if (top && top->user_data && top->type == POPUP_SIMPLE) {
-        SimplePromptState* s = (SimplePromptState*)top->user_data;
-        int len = (int)strlen(s->user_input);
-        int cur = s->cursor;
-        if (cur > 0 && len > 0) {
-            int del = cur - 1;
-            memmove(s->user_input + del, s->user_input + del + 1, len - del);
-            s->cursor = del;
-            strncpy(ctx->window.filter, s->user_input, sizeof(ctx->window.filter)-1);
-            ctx->window.filter[sizeof(ctx->window.filter)-1]='\0';
-            ctx->window.filter_cursor = s->cursor;
 #if defined(_WIN32)
             Win32_ApplyFilterToEdit(ctx);
 #endif

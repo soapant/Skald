@@ -53,7 +53,6 @@ void ForceWindowFocus(WindowHandle hwndTarget, WindowHandle hwndInput);
 HFONT CreateCustomNerdFont(int height, const char* face_name);
 void CreateChildControls(WindowHandle hwndParent, HFONT hFont, const char* list[], int count, const WindowLayout* layout, ListBoxInfo* lb);
 void SettingsCreateChildControls(WindowHandle hwndParent, HFONT hFont,const WindowLayout* layout);
-void SimpleCreateChildControls(WindowHandle hwndParent, HFONT hFont, const char* string, int count, const WindowLayout* layout);
 int UI_LB_GetTextLen(WindowHandle hList);
 int UI_LB_GetText(WindowHandle hList, int index, char* buffer);
 void UI_Edit_SetFont(WindowHandle hEdit, HFONT hFont);
