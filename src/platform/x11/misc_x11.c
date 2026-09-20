@@ -858,9 +858,17 @@ PROFILE_END_VAR(timer, "misc_x11:Platform_QueryBrowser");
 
 char* Platform_GetClipboardEntry() {
     char* out = NULL;
-    if (Wayland_ClipboardAvailable()) out = Wayland_ClipboardGetText();
-    else out = Linux_ClipboardGetText();
-    log_info("Platform_GetClipboardEntry len=%d", out ? (int)strlen(out) : -1);
+    if (Wayland_ClipboardAvailable()) {
+        out = Wayland_ClipboardGetText();
+        if (out) {
+            log_info("Platform_GetClipboardEntry wayland len=%d", (int)strlen(out));
+            return out;
+        }
+        log_warn("Platform_GetClipboardEntry wayland null, trying X11 fallback");
+    }
+    out = Linux_ClipboardGetText();
+    if (!out) log_warn("Platform_GetClipboardEntry null wayland=%d", Wayland_ClipboardAvailable());
+    else log_info("Platform_GetClipboardEntry len=%d", (int)strlen(out));
     return out;
 }
 
