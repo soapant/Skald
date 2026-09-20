@@ -45,6 +45,7 @@ void Platform_StartUniversalTimer(void);
 void Platform_ResetUniversalTimer(void);
 void Platform_ModifyUniversalTimer(double seconds_to_add);
 double Platform_GetUniversalTimeSeconds(void);
+long long Platform_GetWallClockMs(void);
 
 void Platform_SaveRegionToPNG(int x1, int y1, int x2, int y2, const char* fullPath);
 

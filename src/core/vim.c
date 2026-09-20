@@ -1,4 +1,5 @@
 #include "core/vim.h"
+#include "core/platform.h"
 #include "deps/log.h"
 #include "core/context.h"
 #include "core/modal.h"
@@ -204,9 +205,7 @@ void Vim_SetCursor(FlintContext* ctx, int pos) {
 }
 
 static long long Sequence_NowMs(void) {
-    struct timespec ts;
-    timespec_get(&ts, TIME_UTC);
-    return (long long)ts.tv_sec * 1000LL + (long long)ts.tv_nsec / 1000000LL;
+    return Platform_GetWallClockMs();
 }
 
 static void SequenceCheckExpiry(void) {

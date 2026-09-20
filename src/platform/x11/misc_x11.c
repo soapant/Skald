@@ -10,6 +10,7 @@
 #include <dirent.h>
 #include <errno.h>
 #include <ctype.h>
+#include <time.h>
 #include <linux/input.h>
 
 #include "core/context.h"
@@ -588,6 +589,12 @@ bool Platform_StringStartsWithCaseInsensitive(const char* str, const char* prefi
     size_t plen = strlen(prefix);
     if (plen == 0) return true;
     return strncasecmp(str, prefix, plen) == 0;
+}
+
+long long Platform_GetWallClockMs(void) {
+    struct timespec ts;
+    clock_gettime(CLOCK_REALTIME, &ts);
+    return (long long)ts.tv_sec * 1000LL + (long long)ts.tv_nsec / 1000000LL;
 }
 
 int Platform_ReplaceLineInMappedFile(MappedFile* mf, int line_index, const char* new_text) {
