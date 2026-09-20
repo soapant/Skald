@@ -87,7 +87,7 @@ char* Platform_WM_ShowPrompt(WindowManager* wm, const PromptSpec* spec) {
     if (!popup) return NULL;
     Display* dpy = wm->display;
     while (wm->running && popup->manager) {
-        Platform_ProcessNestedEvents(wm, popup);
+        Platform_WM_ProcessEvents(wm);
         if (PromptController_PollSequenceTimeout()) {
             Popup* top = WindowManager_GetTopPopup(wm);
             if (top && top->vtable && top->vtable->on_render) top->vtable->on_render(top);
