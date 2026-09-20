@@ -794,7 +794,6 @@ FontHandle Platform_CreateFontOnDisplay(Display* dpy, int size, const char* face
     g_cached_font_dpy = dpy;
     g_cached_font_size = size;
     g_cached_font_name = face_name;
-    log_info("Platform_CreateFontOnDisplay dpy=%p size=%d face_name='%s'", dpy, size, face_name ? face_name : "");;
 
     PROFILE_END_VAR(timer, "platform_x11:Platform_CreateFontOnDisplay");
     return g_cached_font;
@@ -833,7 +832,6 @@ void Platform_DestroyFont(FontHandle font) {
         }
         XftFontClose(FH_TO_DPY(font), FH_TO_XFT(font));
     }
-    log_info("Platform_DestroyFont");
 }
 
 static int xft_text_width(Display* dpy, XftFont* xf, const char* text, int len) {
@@ -961,7 +959,7 @@ char* Platform_RegisterDirWatcher(const char* dir_path, void (*callback)(void)) 
     if (g_instant_count < MAX_WATCHED_DIRS) {
         int fd = inotify_init();
         if (fd >= 0) {
-            int wd = inotify_add_watch(fd, dir_path, IN_MODIFY | IN_ATTRIB | IN_CREATE | IN_DELETE);
+            int wd = inotify_add_watch(fd, dir_path, IN_MODIFY | IN_ATTRIB | IN_CREATE | IN_DELETE | IN_CLOSE_WRITE | IN_MOVED_TO | IN_MOVE_SELF);
             if (wd >= 0) {
                 g_instant_watches[g_instant_count].fd = fd;
                 g_instant_watches[g_instant_count].wd = wd;
@@ -1009,7 +1007,6 @@ char* Platform_WatchForCFileChanges(const char* dir_path) {
                     if (event->len > 0) {
                         const char* name = event->name;
                         size_t name_len = strlen(name);
-                        
                         if (name_len > 2 && strcmp(name + name_len - 2, ".c") == 0) {
                             char *found_name = malloc(event->len + 1);
                             if (found_name) {
@@ -1032,7 +1029,7 @@ char* Platform_WatchForCFileChanges(const char* dir_path) {
     if (g_instant_count < MAX_WATCHED_DIRS) {
         int fd = inotify_init();
         if (fd >= 0) {
-            int wd = inotify_add_watch(fd, dir_path, IN_MODIFY | IN_ATTRIB | IN_CREATE | IN_DELETE);
+            int wd = inotify_add_watch(fd, dir_path, IN_MODIFY | IN_ATTRIB | IN_CREATE | IN_DELETE | IN_CLOSE_WRITE | IN_MOVED_TO | IN_MOVE_SELF);
             if (wd >= 0) {
                 g_instant_watches[g_instant_count].fd = fd;
                 g_instant_watches[g_instant_count].wd = wd;
