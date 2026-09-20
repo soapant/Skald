@@ -1076,7 +1076,8 @@ int fl_measure_text_wrapped_impl(const FlMeasureSpec *spec) {
     FlWrapCtx ctx;
     ctx.color = 0;
     ctx.fontsize = fontsize;
-    return FlWrapLayout(spec->text, spec->x, spec->y, spec->max_width, line_height, FlWrapMeasureThunk, FlWrapNoDraw, &ctx, spec->out_positions, spec->max_positions);
+    int cap = (int)strlen(spec->text) + 1;
+    return FlWrapLayout(spec->text, spec->x, spec->y, spec->max_width, line_height, FlWrapMeasureThunk, FlWrapNoDraw, &ctx, spec->out_positions, cap);
 }
 
 int fl_draw_text_wrapped_ex(int x, int y, int max_width, int line_height, const char* text, int fontsize, unsigned long color, FlCharPos* out_positions, int max_positions) {
