@@ -265,7 +265,8 @@ void Platform_WaitForKeypressAsync(KeyCallback callback) {
 log_info("Platform_WaitForKeypressAsync callback=%p", callback);;
 }
 
-char* Platform_PromptUser(const PromptSpec* spec) {
+char* Platform_PromptUser(WindowManager* wm, const PromptSpec* spec) {
+  (void)wm;
   if (!spec) { log_error("Platform_PromptUser null spec"); return NULL; }
   const char** window_list = spec->items;
   const char* window_title = spec->title ? spec->title : "Flint";
@@ -305,19 +306,6 @@ char* Platform_PromptUser(const PromptSpec* spec) {
     g_win32_prompt_state = win_state;
   }
 
-  if (FlintContext_Get()->item_index_map) {
-    shfree(FlintContext_Get()->item_index_map);
-    FlintContext_Get()->item_index_map = NULL;
-  }
-  if (window_list && count > 0) {
-    FlintContext_Get()->item_index_map = NULL;
-    sh_new_strdup(FlintContext_Get()->item_index_map);
-    for (int i = 0; i < count; i++) {
-      if (window_list[i]) {
-        shput(FlintContext_Get()->item_index_map, window_list[i], (void*)(size_t)(i + 1));
-      }
-    }
-  }
   FlintContext_Get()->prompt_callbacks.refresh = refresh_callback;
   FlintContext_Get()->prompt_callbacks.enter = enter_callback;
   FlintContext_Get()->prompt_callbacks.ctrl_enter = ctrl_enter_callback;

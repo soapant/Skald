@@ -3,7 +3,6 @@
 #include "core/window_manager.h"
 #include <windows.h>
 
-extern char* Platform_PromptUser(const PromptSpec* spec);
 extern int WindowManager_RunWin32(WindowManager* wm);
 extern void WindowManager_QuitWin32(WindowManager* wm);
 extern void WindowManager_ProcessEventsWin32(WindowManager* wm);
@@ -38,10 +37,5 @@ void Platform_WM_GetMonitorGeometry(int *ox, int *oy, int *ow, int *oh) {
     if (oy) *oy = y;
     if (ow) *ow = w;
     if (oh) *oh = h;
-}
-
-char* Platform_WM_ShowPrompt(WindowManager* wm, const PromptSpec* spec) {
-    (void)wm;
-    return Platform_PromptUser(spec);
 }
 
