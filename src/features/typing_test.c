@@ -26,6 +26,7 @@ void typing_test_render(PromptState *state) {
     int cy = state->height / 2 - 130;
     char* text = "thats kind of bullshit imagine a game like that imagine you are on your pc then a game installs itself and runs itself and you cant leave then you have to play the game for years just so you can eventually get out of it?  why the fuck is there a space before the text shit did it again mb me";
     int text_len = strlen(text);
+    int line_height = FontSize + 12;
 
     static int current_position = 0;
     static int char_states[1000] = {0};
@@ -40,38 +41,40 @@ void typing_test_render(PromptState *state) {
                 current_position--;
                 char_states[current_position] = CHAR_UNTYPED;
             }
-        } 
-        else if (c != 0) { 
+        }
+        else if (c != 0) {
             if (c == current_text) {
                 char_states[current_position] = CHAR_CORRECT;
-                current_position++;
             } else {
                 char_states[current_position] = CHAR_WRONG;
-                current_position++;
             }
+            current_position++;
         }
     }
 
-    for (int i = 0; i < text_len; i++) {
+    FlCharPos positions[1000];
+    int count = fl_place_text_wrapped_ex(0, cy, state->width, line_height, text, FontSize, COLOR_TEXT, positions, 1000);
+
+    for (int i = 0; i < text_len && i < count; i++) {
+        unsigned long col;
         if (char_states[i] == CHAR_CORRECT) {
-            fl_place_text(.x=i * FontSize/2, .y=cy, .align="Left", .text=text[i], .color=RGB(0,255,0));
-        } else if (char_states[i] == CHAR_WRONG)  {
-            fl_place_text(.x=i * FontSize/2, .y=cy, .align="Left", .text=text[i], .color=RGB(255,0,0));
+            col = RGB(0, 255, 0);
+        } else if (char_states[i] == CHAR_WRONG) {
+            col = RGB(255, 0, 0);
         } else {
-           fl_place_text(.x=i * FontSize/2, .y=cy, .align="Left", .text=text[i]);
+            col = COLOR_TEXT;
         }
+        char single[2] = { text[i], '\0' };
+        fl_place_text(.x = positions[i].x, .y = positions[i].y, .align = "Left", .text = single, .fontsize = FontSize, .color = col);
     }
 
     if (current_position == text_len) {
-        exit(1); 
+        exit(1);
     }
 
-    int chars_per_line = state->width / 12;
-    int visual_x = (current_position % chars_per_line) * 12;
-    int line_height = FontSize + 12;  
-    int visual_y = cy + 6 + (current_position / chars_per_line) * line_height;
-
-    fl_draw_rect(.x = visual_x, .y = visual_y, .w = 1, .h = FontSize);
+    if (current_position < count) {
+        fl_draw_rect(.x = positions[current_position].x, .y = positions[current_position].y + 6, .w = 1, .h = FontSize);
+    }
 }
 
 void TriggerTypingTest(void) {
