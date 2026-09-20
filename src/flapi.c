@@ -892,20 +892,20 @@ bool fl_focus_window_by_title(char* title) {
 }
 
 char* fl_popup_impl(const FlPopupSpec *spec) {
-    const char *initial = spec && spec->initial_text ? spec->initial_text : "";
-    int x = spec->x ? spec->x : 0;
-    int y = spec->y ? spec->y : 0;
-    int w = spec->w ? spec->w : 500;
-    int h = spec->h ? spec->h : 70;
-    SimplePromptSpec s = {0};
-    s.prompt = NULL;
-    s.initial_text = initial;
-    s.x = x; s.y = y; s.w = w; s.h = h;
-    WindowManager *wm = WindowManager_Get();
-    if (!wm) return NULL;
-    char *res = WindowManager_ShowSimplePrompt(wm, &s);
-    if (!res) return NULL;
-    return strdup(res);
+    // const char *initial = spec && spec->initial_text ? spec->initial_text : "";
+    // int x = spec->x ? spec->x : 0;
+    // int y = spec->y ? spec->y : 0;
+    // int w = spec->w ? spec->w : 500;
+    // int h = spec->h ? spec->h : 70;
+    // SimplePromptSpec s = {0};
+    // s.prompt = NULL;
+    // s.initial_text = initial;
+    // s.x = x; s.y = y; s.w = w; s.h = h;
+    // WindowManager *wm = WindowManager_Get();
+    // if (!wm) return NULL;
+    // char *res = WindowManager_ShowSimplePrompt(wm, &s);
+    // if (!res) return NULL;
+    // return strdup(res);
 }
 
 unsigned long fl_listbox_get_current_standard_color(void);

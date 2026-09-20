@@ -4,7 +4,6 @@
 #include <windows.h>
 
 extern char* Platform_PromptUser(const PromptSpec* spec);
-extern char* Platform_SimplePromptUser(const SimplePromptSpec* spec);
 extern int WindowManager_RunWin32(WindowManager* wm);
 extern void WindowManager_QuitWin32(WindowManager* wm);
 extern void WindowManager_ProcessEventsWin32(WindowManager* wm);
@@ -46,7 +45,3 @@ char* Platform_WM_ShowPrompt(WindowManager* wm, const PromptSpec* spec) {
     return Platform_PromptUser(spec);
 }
 
-char* Platform_WM_ShowSimplePrompt(WindowManager* wm, const SimplePromptSpec* spec) {
-    (void)wm;
-    return Platform_SimplePromptUser(spec);
-}

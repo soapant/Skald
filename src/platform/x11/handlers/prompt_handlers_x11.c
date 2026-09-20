@@ -242,84 +242,75 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
     return false;
 }
 
-bool Linux_HandleSimplePromptKey(const XEvent* ev,SimplePromptState *state) {
-    PROFILE_START(timer);
-    if (ev->type != KeyPress) { PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandleSimplePromptKey"); return false; }
 
-    int wParam = Linux_KeysymToWindowsVK(XLookupKeysym((XKeyEvent*)&ev->xkey, 0));
-    bool ctrl_pressed, shift_pressed, alt_pressed;
-    ReadModifiers(ev, &ctrl_pressed, &shift_pressed, &alt_pressed);
-    if (should_swallow_pending(wParam, (ctrl_pressed?HOTKEY_MOD_CTRL:0)|(shift_pressed?HOTKEY_MOD_SHIFT:0)|(alt_pressed?HOTKEY_MOD_ALT:0))) { PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandleSimplePromptKey"); return true; }
-    if (TryVimMotion(wParam, ctrl_pressed, shift_pressed, alt_pressed)) { PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandleSimplePromptKey"); return true; }
-    if (wParam == VK_BACK) {
-        if (ctrl_pressed) {
-            state->user_input[0] = '\0';
-            state->cursor = 0;
-        } else {
-            EditBufferBackspace(state->user_input, &state->cursor);
-        }
-        PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandleSimplePromptKey");
-        return true;
-    }
-    if (wParam == VK_ESCAPE) {
-      if (IsInsertMode()) {
-        SetMode(MODE_NORMAL);
-        PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandleSimplePromptKey");
-        return true;
-      } else {
-        FlintContext_Get()->window.selection_complete = true;
-        PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandleSimplePromptKey");
-        return true;
-      }
-    }
-    if (wParam == VK_RIGHT) {
-      CursorForward(&state->cursor, strlen(state->user_input));
-      PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandleSimplePromptKey");
-      return true;
-    }
-    if (wParam == VK_LEFT) {
-       CursorBack(&state->cursor, strlen(state->user_input));
-      PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandleSimplePromptKey");
-      return true;
-    }
-    if (wParam == VK_RETURN) {
-      FlintContext_Get()->window.selection_complete = true;
-      PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandleSimplePromptKey");
-      return true;
-    }
-
-    if (wParam == 'V' && ctrl_pressed) {
-      char *clip = Platform_GetClipboardEntry();
-      if (!clip) { log_warn("simple Ctrl+V clipboard null"); return true; }
-      log_info("simple Ctrl+V clip len=%d", (int)strlen(clip));
-      clip[strcspn(clip, "\r\n")] = '\0';
-      if (clip[0] == '\0') { free(clip); return true; }
-
-      size_t cur_len = strlen(state->user_input);
-      size_t clip_len = strlen(clip);
-      size_t avail = sizeof(state->user_input) - cur_len - 1;
-      if (clip_len > avail) clip_len = avail;
-      if (clip_len > 0) {
-        memmove(state->user_input + state->cursor + clip_len,
-                state->user_input + state->cursor,
-                cur_len - state->cursor + 1);
-        memcpy(state->user_input + state->cursor, clip, clip_len);
-        state->cursor += clip_len;
-      }
-      free(clip);
-
-      return true;
-    }
-
-    if (ctrl_pressed) {
-      if (wParam == VK_OEM_MINUS) {
-        FontSize -= 1;
-      } 
-      if (wParam == VK_OEM_PLUS) {
-        FontSize += 1;
-      } 
-    }
-    PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandleSimplePromptKey");
-    return false;
-}
-
+// static void Linux_HandleEditPopupKey(Popup* self, int vk_code, bool pressed, int modifiers) {
+//     PROFILE_START(timer);
+//     if (!pressed) { PROFILE_END_VAR(timer, "window_manager:EditPopup_OnKey"); return; }
+//
+//     EditPopupDataInternal* data = (EditPopupDataInternal*)self;
+//     int vk_upper = (vk_code >= 'a' && vk_code <= 'z') ? vk_code - 32 : vk_code;
+//     bool ctrl = modifiers & HOTKEY_MOD_CTRL;
+//     bool shift = modifiers & HOTKEY_MOD_SHIFT;
+//     bool alt = modifiers & HOTKEY_MOD_ALT;
+//     if (PromptController_ShouldSwallowPending(vk_upper, modifiers)) { PROFILE_END_VAR(timer, "window_manager:EditPopup_OnKey"); return; }
+//     if (PromptController_TryVimMotion(vk_upper, ctrl, shift, alt)) {
+//         if (FlintContext_Get()->window.selection_complete) { data->confirmed=false; WindowManager_PopPopup(self->manager); FlintContext_Get()->window.selection_complete=false; }
+//         PROFILE_END_VAR(timer, "window_manager:EditPopup_OnKey");
+//         return;
+//     }
+//     if (vk_code == VK_ESCAPE) {
+//         if (IsInsertMode()) {
+//             SetMode(MODE_NORMAL);
+//             if (self->vtable && self->vtable->on_render) self->vtable->on_render(self);
+//         } else {
+//             data->confirmed = false;
+//             WindowManager_PopPopup(self->manager);
+//         }
+//         PROFILE_END_VAR(timer, "window_manager:EditPopup_OnKey");
+//         return;
+//     }
+//
+//     if (vk_code == VK_RETURN && !(modifiers & HOTKEY_MOD_SHIFT)) {
+//         data->confirmed = true;
+//         if (data->on_confirm) {
+//             data->on_confirm(data->text, data->user_data);
+//         }
+//         WindowManager_PopPopup(self->manager);
+//         PROFILE_END_VAR(timer, "window_manager:EditPopup_OnKey");
+//         return;
+//     }
+//
+//     if (vk_code == VK_BACK) {
+//         if (data->cursor > 0) {
+//             memmove(data->text + data->cursor - 1, data->text + data->cursor, 
+//                     strlen(data->text) - data->cursor + 1);
+//             data->cursor--;
+//         }
+//     } else if (vk_code == VK_DELETE) {
+//         if (data->cursor < (int)strlen(data->text)) {
+//             memmove(data->text + data->cursor, data->text + data->cursor + 1,
+//                     strlen(data->text) - data->cursor);
+//         }
+//     } else if (vk_code == VK_LEFT) {
+//         if (data->cursor > 0) data->cursor--;
+//     } else if (vk_code == VK_RIGHT) {
+//         if (data->cursor < (int)strlen(data->text)) data->cursor++;
+//     } else if (vk_code == VK_HOME) {
+//         data->cursor = 0;
+//     } else if (vk_code == VK_END) {
+//         data->cursor = strlen(data->text);
+//     } else if (vk_code >= 32 && vk_code <= 126) {
+//         if (!IsInsertMode()) { PROFILE_END_VAR(timer, "window_manager:EditPopup_OnKey"); return; }
+//         if (data->cursor < data->text_capacity - 1) {
+//             memmove(data->text + data->cursor + 1, data->text + data->cursor,
+//                     strlen(data->text) - data->cursor + 1);
+//             data->text[data->cursor] = (char)vk_code;
+//             data->cursor++;
+//         }
+//     }
+//
+//     if (self->vtable && self->vtable->on_render) {
+//         self->vtable->on_render(self);
+//     }
+//     PROFILE_END_VAR(timer, "window_manager:EditPopup_OnKey");
+// }

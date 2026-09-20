@@ -18,7 +18,6 @@ typedef struct {
 } PopupVTable;
 
 typedef enum { POPUP_PROMPT,
-  POPUP_SIMPLE, 
   POPUP_EDIT, 
   POPUP_MESSAGE, 
   POPUP_SEARCH } PopupType;
@@ -75,14 +74,12 @@ void WindowManager_PopPopup(WindowManager* wm);
 Popup* WindowManager_GetTopPopup(WindowManager* wm);
 
 char* WindowManager_ShowPrompt(WindowManager* wm, const PromptSpec* spec);
-char* WindowManager_ShowSimplePrompt(WindowManager* wm, const SimplePromptSpec* spec);
 
 
 Popup* EditPopup_Create(WindowManager* wm, const char* initial_text,
                         const char* title, int x, int y, int w, int h, const char* align,
                         EditPopupConfirmCallback on_confirm, void* user_data);
 Popup* PromptPopup_Create(WindowManager* wm, const PromptSpec* spec);
-Popup* SimplePromptPopup_Create(WindowManager* wm, const SimplePromptSpec* spec);
 Popup* SearchPopup_Create(WindowManager* wm, const char* title,
                           int x, int y, int w, int h,
                           EditPopupConfirmCallback on_confirm, void* user_data);
