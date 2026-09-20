@@ -12,6 +12,7 @@
 #include "helpers/helpers_alias.h"
 #include "helpers/helpers_flag.h"
 #include "helpers/helpers_ui.h"
+#include "deps/log.h"
 #include <ctype.h>
 
 bool CheckVimMotion(int pressed_vk, int modifiers, MotionAction* out_action, const char** out_sequence, int* out_typed_count) {
@@ -39,6 +40,7 @@ bool CheckVimMotion(int pressed_vk, int modifiers, MotionAction* out_action, con
     
     if (in_insert && SequenceIsWaiting()) {
         if (SequenceTimedOut()) {
+            log_info("CheckVimMotion insert timeout fallthrough key='%c'", seq_char);
             SequenceReset();
             return false;
         }
@@ -48,6 +50,7 @@ bool CheckVimMotion(int pressed_vk, int modifiers, MotionAction* out_action, con
         for (int i = 0; i < VIM_SEQUENCE_BINDING_COUNT; i++) {
             const SequenceBinding* b = &G_VIM_SEQUENCE_BINDINGS[i];
             if (b->mode == MODE_INSERT && SequenceMatches(b->sequence)) {
+                log_info("CheckVimMotion insert match seq='%s'", b->sequence);
                 *out_action = b->action_id;
                 *out_sequence = b->sequence;
                 *out_typed_count = SequenceTypedCount();
@@ -67,6 +70,7 @@ bool CheckVimMotion(int pressed_vk, int modifiers, MotionAction* out_action, con
         }
         
         SequenceReset();
+        log_info("CheckVimMotion insert nomatch key='%c'", seq_char);
         return false;
     }
     
@@ -87,6 +91,7 @@ bool CheckVimMotion(int pressed_vk, int modifiers, MotionAction* out_action, con
         if (is_prefix) {
             SequenceAddKey(seq_char, true);
             SequenceStartTimer();
+            log_info("CheckVimMotion insert seqstart key='%c'", seq_char);
             *out_sequence = NULL;
             *out_typed_count = SequenceTypedCount();
             return false;

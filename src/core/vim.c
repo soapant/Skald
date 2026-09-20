@@ -288,6 +288,18 @@ bool SequenceTimedOut(void) {
     return seq_state.timed_out;
 }
 
+bool SequenceHasPendingWait(void) {
+    return seq_state.waiting || seq_state.timed_out;
+}
+
+bool SequenceConsumeTimeout(void) {
+    SequenceCheckExpiry();
+    if (!seq_state.timed_out) return false;
+    log_info("SequenceConsumeTimeout keys='%s'", seq_state.keys);
+    SequenceReset();
+    return true;
+}
+
 void DeleteLastTypedChar(FlintContext* ctx) {
     if (!ctx) return;
 #if defined(_WIN32)

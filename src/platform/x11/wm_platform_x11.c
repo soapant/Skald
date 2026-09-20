@@ -2,6 +2,7 @@
 #include "core/window_manager.h"
 #include "core/context.h"
 #include "core/platform.h"
+#include "core/prompt_controller.h"
 #include "deps/log.h"
 #include "platform/x11/display_x11.h"
 #include "platform/x11/input_x11.h"
@@ -87,6 +88,11 @@ char* Platform_WM_ShowPrompt(WindowManager* wm, const PromptSpec* spec) {
     Display* dpy = wm->display;
     while (wm->running && popup->manager) {
         Platform_ProcessNestedEvents(wm, popup);
+        if (PromptController_PollSequenceTimeout()) {
+            Popup* top = WindowManager_GetTopPopup(wm);
+            if (top && top->vtable && top->vtable->on_render) top->vtable->on_render(top);
+            if (dpy) XFlush(dpy);
+        }
     }
     if (popup->manager == NULL) {
         if (popup->vtable && popup->vtable->destroy) popup->vtable->destroy(popup);
@@ -106,6 +112,11 @@ char* Platform_WM_ShowSimplePrompt(WindowManager* wm, const SimplePromptSpec* sp
     Display* dpy = wm->display;
     while (wm->running && popup->manager) {
         Platform_ProcessNestedEvents(wm, popup);
+        if (PromptController_PollSequenceTimeout()) {
+            Popup* top = WindowManager_GetTopPopup(wm);
+            if (top && top->vtable && top->vtable->on_render) top->vtable->on_render(top);
+            if (dpy) XFlush(dpy);
+        }
     }
     if (wm->popup_count > 0) {
         Popup *top = WindowManager_GetTopPopup(wm);

@@ -1,5 +1,9 @@
 #include "core/prompt_controller.h"
 #include "core/types.h"
+#include "core/context.h"
+#include "core/vim.h"
+#include "core/window_manager.h"
+#include "deps/log.h"
 #include "bindings/bindings.h"
 #include "bindings/vim_motions.h"
 #include "bindings/vim_helpers.h"
@@ -27,6 +31,22 @@ bool PromptController_TryVimMotion(int wParam, bool ctrl, bool shift, bool alt) 
     MotionAction act = MOTION_NONE; const char* seq = NULL; int typed = 0;
     if (CheckVimMotion(wParam, mod, &act, &seq, &typed)) {
         if (act != MOTION_NONE) ExecuteMotion(act, seq, typed);
+        return true;
+    }
+    return false;
+}
+
+bool PromptController_PollSequenceTimeout(void) {
+    if (!SequenceHasPendingWait()) return false;
+    if (!SequenceConsumeTimeout()) return false;
+    log_info("PollSequenceTimeout firing refresh");
+    FlintContext* ctx = FlintContext_Get();
+    if (!ctx || !ctx->prompt_callbacks.refresh) return false;
+    WindowManager* wm = WindowManager_Get();
+    Popup* top = wm ? WindowManager_GetTopPopup(wm) : NULL;
+    if (top && top->type == POPUP_PROMPT && top->user_data) {
+        PromptState* s = (PromptState*)top->user_data;
+        ctx->prompt_callbacks.refresh(s->filter, ctx->window.hListBox, s->has_listbox ? &s->listbox : NULL);
         return true;
     }
     return false;

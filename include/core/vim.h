@@ -32,6 +32,8 @@ bool SequenceStartsWith(const char* pattern);
 void SequenceStartTimer(void);
 bool SequenceIsWaiting(void);
 bool SequenceTimedOut(void);
+bool SequenceHasPendingWait(void);
+bool SequenceConsumeTimeout(void);
 
 void DeleteLastTypedChar(FlintContext* ctx);
 
