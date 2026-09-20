@@ -18,6 +18,7 @@
 #include "helpers/helpers_ui.h"
 #include "config.h"
 #include "core/feature_loader.h"
+#include "deps/log.h"
 #include <sys/time.h>
 #include <stdlib.h>
 #include <string.h>
@@ -187,7 +188,35 @@ static void SimplePromptPopup_OnKey(Popup* self, int vk_code, bool pressed, int 
         PROFILE_END_VAR(timer, "window_manager:SimplePromptPopup_OnKey");
         return;
     }
+    if (vk_upper == 'V' && ctrl_pressed) {
+        char *clip = Platform_GetClipboardEntry();
+        if (!clip) { log_warn("simple popup Ctrl+V clipboard null"); PROFILE_END_VAR(timer, "window_manager:SimplePromptPopup_OnKey"); return; }
+        clip[strcspn(clip, "\r\n")] = '\0';
+        if (clip[0] != '\0') {
+            FlintContext* fctx = FlintContext_Get();
+            char buf[512]; Vim_GetText(fctx, buf, sizeof(buf));
+            int pos = Vim_GetCursor(fctx);
+            size_t n = strlen(buf);
+            size_t clip_len = strlen(clip);
+            if ((size_t)pos > n) pos = (int)n;
+            size_t avail = sizeof(buf) - n - 1;
+            if (clip_len > avail) clip_len = avail;
+            if (clip_len > 0) {
+                char tmp[512];
+                memcpy(tmp, clip, clip_len);
+                tmp[clip_len] = '\0';
+                memmove(buf + pos + clip_len, buf + pos, n - pos + 1);
+                memcpy(buf + pos, tmp, clip_len);
+                Vim_SetText(fctx, buf);
+                Vim_SetCursor(fctx, pos + (int)clip_len);
+            }
+        }
+        free(clip);
+        PROFILE_END_VAR(timer, "window_manager:SimplePromptPopup_OnKey");
+        return;
+    }
     if (vk_code >= 32 && vk_code <= 126) {
+        if (ctrl_pressed || alt_pressed) { PROFILE_END_VAR(timer, "window_manager:SimplePromptPopup_OnKey"); return; }
         if (IsInsertMode()) {
             FlintContext* fctx3 = FlintContext_Get();
             char buf[512]; Vim_GetText(fctx3, buf, sizeof(buf));

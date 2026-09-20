@@ -27,6 +27,7 @@
 #include "platform/x11/input_x11.h"
 #include "platform/x11/ui_x11.h"
 #include "core/window_manager.h"
+#include "deps/log.h"
 #include <stdlib.h>
 
 void HandleCommandExecution(ListBoxInfo* lb, char* string) {
@@ -200,7 +201,8 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
       }
       if (wParam == 'V' && ctrl_pressed) {
         char *clip = Platform_GetClipboardEntry();
-        if (!clip) return true;
+        if (!clip) { log_warn("prompt Ctrl+V clipboard null"); return true; }
+        log_info("prompt Ctrl+V clip len=%d", (int)strlen(clip));
         clip[strcspn(clip, "\r\n")] = '\0';
         if (clip[0] == '\0') { free(clip); return true; }
 
@@ -283,7 +285,8 @@ bool Linux_HandleSimplePromptKey(const XEvent* ev,SimplePromptState *state) {
 
     if (wParam == 'V' && ctrl_pressed) {
       char *clip = Platform_GetClipboardEntry();
-      if (!clip) return true;
+      if (!clip) { log_warn("simple Ctrl+V clipboard null"); return true; }
+      log_info("simple Ctrl+V clip len=%d", (int)strlen(clip));
       clip[strcspn(clip, "\r\n")] = '\0';
       if (clip[0] == '\0') { free(clip); return true; }
 

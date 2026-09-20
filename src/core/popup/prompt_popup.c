@@ -19,6 +19,7 @@
 #include "config.h"
 #include "core/feature_loader.h"
 #include "core/history.h"
+#include "deps/log.h"
 #include <sys/time.h>
 #include <stdlib.h>
 #include <string.h>
@@ -279,7 +280,32 @@ static void PromptPopup_OnKey(Popup* self, int vk_code, bool pressed, int modifi
         return;
     }
     
+    if (vk_upper == 'V' && ctrl_pressed) {
+        char *clip = Platform_GetClipboardEntry();
+        if (!clip) { log_warn("prompt popup Ctrl+V clipboard null"); PROFILE_END_VAR(timer, "window_manager:PromptPopup_OnKey"); return; }
+        clip[strcspn(clip, "\r\n")] = '\0';
+        if (clip[0] != '\0') {
+            size_t n = strlen(data->state->filter);
+            size_t clip_len = strlen(clip);
+            if ((size_t)data->state->cursor > n) data->state->cursor = (int)n;
+            size_t avail = sizeof(data->state->filter) - n - 1;
+            if (clip_len > avail) clip_len = avail;
+            if (clip_len > 0) {
+                memmove(data->state->filter + data->state->cursor + clip_len,
+                        data->state->filter + data->state->cursor,
+                        n - data->state->cursor + 1);
+                memcpy(data->state->filter + data->state->cursor, clip, clip_len);
+                data->state->cursor += (int)clip_len;
+                History_ResetCursor(FlintContext_Get()->window.current_feature);
+                if (data->spec.refresh) data->spec.refresh(data->state->filter, FlintContext_Get()->window.hListBox, data->state->has_listbox ? &data->state->listbox : NULL);
+            }
+        }
+        free(clip);
+        PROFILE_END_VAR(timer, "window_manager:PromptPopup_OnKey");
+        return;
+    }
     if (vk_code >= 32 && vk_code <= 126) {
+        if (ctrl_pressed || alt_pressed) { PROFILE_END_VAR(timer, "window_manager:PromptPopup_OnKey"); return; }
         if (IsInsertMode()) {
             int len = 1;
             char buf[2] = { (char)vk_code, '\0' };
