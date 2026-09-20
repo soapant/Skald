@@ -126,6 +126,7 @@ static void Linux_HandleKeyPress(Display* dpy, XKeyEvent* ev, WindowManager* wm)
         memcpy(key.text, buf, key.text_len);
     }
     if (top->vtable && top->vtable->on_key) top->vtable->on_key(top, &key);
+    log_warn("DBG keypress vk=%d ctrl=%d shift=%d alt=%d text_len=%d top_type=%d", key.vk, key.ctrl, key.shift, key.alt, key.text_len, top->type);
 
     if (FlintContext_Get()->window.selection_complete) {
         FlintContext_Get()->window.selection_complete = false;

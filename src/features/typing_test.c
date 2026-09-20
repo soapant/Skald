@@ -19,19 +19,6 @@ static bool draw_cursor = true;
 static char typing_test_wpm[100] = {0};
 static char* text = "";
 
-void typing_test_reset(void) {
-    typing_test_position = 0;
-    memset(typing_test_states, 0, sizeof(typing_test_states));
-    timer_running = false;
-    session_running = false;
-    current_index = 0;
-    last_duration = 0.0;
-    total_typed = 0;
-    total_correct = 0;
-    draw_cursor = false;
-    typing_test_wpm[0] = '\0';
-    text = "";
-}
 
 char* typing_test_get_random_text(void) {
     static const char* words[] = {
@@ -81,6 +68,20 @@ char* typing_test_get_random_text(void) {
     *p = '\0';
 
     return result;
+}
+
+void typing_test_reset(void) {
+    typing_test_position = 0;
+    memset(typing_test_states, 0, sizeof(typing_test_states));
+    timer_running = false;
+    session_running = false;
+    current_index = 0;
+    last_duration = 0.0;
+    total_typed = 0;
+    total_correct = 0;
+    draw_cursor = true;
+    typing_test_wpm[0] = '\0';
+    text = typing_test_get_random_text();
 }
 
 
@@ -149,7 +150,7 @@ void typing_test_render(PromptState *state) {
                       .align = "Left", .text = single, .color = col);
     }
 
-    if (typing_test_position == text_len || c == 'u') {
+    if (typing_test_position == text_len) {
         draw_cursor = false;
         if (timer_running) {
             timer_running = false;
@@ -167,9 +168,9 @@ void typing_test_render(PromptState *state) {
             snprintf(typing_test_wpm,sizeof(typing_test_wpm),"WPM: %.2f",wpm);
         }
         fl_draw_text(.y=500,.text=typing_test_wpm,.fontsize=fontsize);
-        fl_draw_text(.x = 250,.y=600,.text="Press Enter to restart",.fontsize=fontsize - 8,.color=RGB(180,180,180));
-        fl_draw_text(.x = -250,.y=600,.text="Press Escape to exit",.fontsize=fontsize - 8,.color=RGB(180,180,180));
     }
+    fl_draw_text(.x = 250,.y=600,.text="Press Enter to restart",.fontsize=fontsize - 8,.color=RGB(180,180,180));
+    fl_draw_text(.x = -250,.y=600,.text="Press Escape to exit",.fontsize=fontsize - 8,.color=RGB(180,180,180));
     if (draw_cursor) {
       fl_draw_rect(.x = positions[typing_test_position].x,
                    .y = positions[typing_test_position].y + 6,
