@@ -3,57 +3,22 @@
 #include "core/window_manager.h"
 #include "core/platform.h"
 #include "platform/ui.h"
-#include "core/modal.h"
 #include "core/feature_data.h"
 #include "core/vim.h"
-#include "bindings/vim_helpers.h"
-#include "bindings/vim_motions.h"
-#include "bindings/bindings.h"
 #include "core/prompt_controller.h"
 #include "config.h"
-#include "core/platform.h"
 #include "helpers/helpers_hotkey.h"
 #include "helpers/helpers_alias.h"
 #include "helpers/helpers_flag.h"
 #include "helpers/helpers_ui.h"
-#include "config.h"
 #include "core/feature_loader.h"
+#include "platform/wm_platform.h"
+#include "core/timer.h"
 #include <sys/time.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#if !defined(_WIN32)
-#include <pthread.h>
-#include <unistd.h>
-#else
-#include <windows.h>
-#endif
 
-#if !defined(_WIN32)
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <X11/Xatom.h>
-#include <X11/keysym.h>
-#include <X11/Xft/Xft.h>
-#include <unistd.h>
-#include <stdatomic.h>
-#include "platform/x11/display_x11.h"
-#include "platform/x11/drawing_x11.h"
-#include "platform/x11/window_factory_x11.h"
-#include "platform/draw.h"
-extern int WindowManager_RunLinux(WindowManager* wm);
-extern void WindowManager_ProcessEventsLinux(WindowManager* wm);
-extern void WindowManager_QuitLinux(WindowManager* wm);
-extern void Linux_ProcessXEvent(Display* dpy, XEvent* ev, WindowManager* wm);
-extern void EditBufferBackspace(char* buf, size_t* cursor);
-extern bool EditBufferDeleteChar(char* buf, size_t* cursor);
-#else
-#include <windows.h>
-#include "core/timer.h"
-extern int WindowManager_RunWin32(WindowManager* wm);
-extern void WindowManager_ProcessEventsWin32(WindowManager* wm);
-extern void WindowManager_QuitWin32(WindowManager* wm);
-#endif
 typedef WMEditPopupData EditPopupDataInternal;
 
 static void EditPopup_OnShow(Popup* self) {
@@ -61,27 +26,7 @@ static void EditPopup_OnShow(Popup* self) {
     EditPopupDataInternal* data = (EditPopupDataInternal*)self;
     data->saved_mode = g_current_mode;
     SetMode(MODE_INSERT);
-    #if !defined(_WIN32)
-    Display* dpy = ((WindowManager*)self->manager)->display;
-    XMapWindow(dpy, self->handle.xid);
-    XFlush(dpy);
-    XSync(dpy, False);
-    {
-        int (*old)(Display*, XErrorEvent*) = XSetErrorHandler(x11_error_handler);
-        XSetInputFocus(dpy, self->handle.xid, RevertToParent, CurrentTime);
-        XSync(dpy, False);
-        XSetErrorHandler(old);
-    }
-    XFlush(dpy);
-    #else
-    HWND hwnd = WH_TO_HWND(self->handle);
-    if (hwnd && IsWindow(hwnd)) {
-        ShowWindow(hwnd, SW_SHOW);
-        UpdateWindow(hwnd);
-        SetForegroundWindow(hwnd);
-        SetFocus(hwnd);
-    }
-    #endif
+    Platform_EditPopupShowWindow(self);
     PROFILE_END_VAR(timer, "window_manager:EditPopup_OnShow");
 }
 
@@ -89,131 +34,13 @@ static void EditPopup_OnHide(Popup* self) {
     PROFILE_START(timer);
     EditPopupDataInternal* data = (EditPopupDataInternal*)self;
     SetMode(data->saved_mode);
-    #if !defined(_WIN32)
-    Display* dpy = get_display();
-    if (dpy) { XUnmapWindow(dpy, self->handle.xid); XFlush(dpy); }
-    WindowManager* wm = WindowManager_Get();
-    if (wm) {
-        Popup* top = WindowManager_GetTopPopup(wm);
-        if (top) {
-            Display* d2 = get_display();
-            if (d2) { 
-                XSetInputFocus(d2, top->handle.xid, RevertToParent, CurrentTime); 
-                XFlush(d2); 
-                if (top->vtable && top->vtable->on_render) top->vtable->on_render(top);
-                XFlush(d2);
-            }
-        }
-    }
-    #else
-    HWND hwnd = WH_TO_HWND(self->handle);
-    if (hwnd && IsWindow(hwnd)) ShowWindow(hwnd, SW_HIDE);
-    WindowManager* wm = WindowManager_Get();
-    if (wm) {
-        Popup* top = WindowManager_GetTopPopup(wm);
-        if (top && WH_TO_HWND(top->handle) && IsWindow(WH_TO_HWND(top->handle))) {
-            SetForegroundWindow(WH_TO_HWND(top->handle));
-            SetFocus(WH_TO_HWND(top->handle));
-            if (top->vtable && top->vtable->on_render) top->vtable->on_render(top);
-        }
-    }
-    #endif
+    Platform_EditPopupHideWindow(self);
     PROFILE_END_VAR(timer, "window_manager:EditPopup_OnHide");
 }
 
 static void EditPopup_OnRender(Popup* self) {
     PROFILE_START(timer);
-    EditPopupDataInternal* data = (EditPopupDataInternal*)self;
-#if !defined(_WIN32)
-    Display* dpy = get_display();
-    if (!dpy) { PROFILE_END_VAR(timer, "window_manager:EditPopup_OnRender"); return; }
-    XWindowAttributes attrs;
-    if (!XGetWindowAttributes(dpy, self->handle.xid, &attrs)) { PROFILE_END_VAR(timer, "window_manager:EditPopup_OnRender"); return; }
-    Visual* vis = attrs.visual;
-    int depth = attrs.depth;
-    Colormap cmap = attrs.colormap;
-    Pixmap dbl = XCreatePixmap(dpy, self->handle.xid, data->w, data->h, depth);
-    XftDraw* xd = dbl ? XftDrawCreate(dpy, dbl, vis, cmap) : NULL;
-    bool buffered = (dbl && xd);
-    if (buffered) {
-        Linux_SetDblVisual(dpy, vis, cmap, depth);
-        Pixmap bg = Linux_GetCachedBackground(dpy, self->handle.xid, data->w, data->h);
-        if (bg) {
-            GC gc = XCreateGC(dpy, dbl, 0, NULL);
-            XCopyArea(dpy, bg, dbl, gc, 0, 0, data->w, data->h, 0, 0);
-            XFreeGC(dpy, gc);
-        } else {
-            Linux_DrawBackgroundToDrawable(dpy, dbl, data->w, data->h);
-        }
-    } else {
-        if (dbl) { XFreePixmap(dpy, dbl); dbl = None; }
-        Linux_DrawBackground(dpy, self->handle.xid, data->w, data->h);
-        xd = Linux_CreateXftDraw(dpy, self->handle.xid);
-        if (!xd) { PROFILE_END_VAR(timer, "window_manager:EditPopup_OnRender"); return; }
-    }
-    FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
-    XftFont* xf = FH_TO_XFT(font);
-    Platform_SetDrawContext(dpy, xd, vis, cmap);
-    if (xf && VimModeText) {
-        Platform_DrawTextRaw(5, 5, g_vim_mode, VimModeTextColor(), font, "LEFT", 5,FontSize);
-    }
-    if (data->title && xf) {
-        XGlyphInfo ext; XftTextExtentsUtf8(dpy, xf, (FcChar8*)data->title, strlen(data->title), &ext);
-        int title_x = data->w - ext.xOff - 10;
-        if (title_x < 50) title_x = 50;
-        Platform_DrawTextRaw(title_x, 5, data->title, rgb_to_hex(COLOR_TEXT), font, "LEFT", title_x,FontSize);
-    }
-    int cursor_x = 0;
-    int text_len = data->text ? strlen(data->text) : 0;
-    int scroll = 0;
-    int text_w = 0;
-    if (xf) {
-        scroll = Linux_UpdateEditScrollOffset(dpy, xf, data->text ? data->text : "", text_len, data->cursor, data->w, 0, &cursor_x);
-        if (text_len > 0) {
-            XGlyphInfo textExt;
-            XftTextExtentsUtf8(dpy, xf, (FcChar8*)data->text, text_len, &textExt);
-            text_w = textExt.xOff;
-        }
-    }
-    int draw_x = 10 - scroll;
-    int cursor_draw_x = 10 + cursor_x - scroll;
-    int draw_y = data->h / 2 - 10;
-    if (text_w > 0 && text_w <= data->w - 20 && data->align) {
-        if (strcmp(data->align, "CENTER") == 0) {
-            draw_x = (data->w - text_w) / 2;
-            cursor_draw_x = draw_x + cursor_x;
-        } else if (strcmp(data->align, "RIGHT") == 0) {
-            draw_x = data->w - 10 - text_w;
-            cursor_draw_x = draw_x + cursor_x;
-        }
-    }
-
-    if (text_len > 0) {
-        Platform_DrawTextRaw(draw_x, draw_y, data->text, rgb_to_hex(COLOR_TEXT), font, "", 0, 0);
-    }
-    {
-        if (cursor_draw_x < 2) cursor_draw_x = 2;
-        if (cursor_draw_x > data->w - 4) cursor_draw_x = data->w - 4;
-        int textH = xf ? xf->ascent + xf->descent : FontSize;
-        int cursor_y = draw_y + (textH - FontSize) / 2;
-        if (IsInsertMode()) {
-            Platform_DrawRectRaw(cursor_draw_x, cursor_y, 2, FontSize, rgb_to_hex(COLOR_TEXT));
-        } else {
-            Platform_DrawRectRaw(cursor_draw_x, cursor_y, 12, FontSize, rgb_to_hex(COLOR_TEXT));
-        }
-    }
-    Platform_SetDrawContext(NULL, NULL, NULL, 0);
-    if (buffered) {
-        Linux_ClearDblVisual();
-        GC gc = XCreateGC(dpy, self->handle.xid, 0, NULL);
-        XCopyArea(dpy, dbl, self->handle.xid, gc, 0, 0, data->w, data->h, 0, 0);
-        XFreeGC(dpy, gc);
-    }
-    XftDrawDestroy(xd);
-    if (dbl) XFreePixmap(dpy, dbl);
-    Platform_DestroyFont(font);
-    XFlush(dpy);
-#endif
+    Platform_EditPopupRender(self);
     PROFILE_END_VAR(timer, "window_manager:EditPopup_OnRender");
 }
 
@@ -223,13 +50,7 @@ static void EditPopup_Destroy(Popup* self) {
     free(data->text);
     free(data->title);
     free(data->align);
-    #if !defined(_WIN32)
-    Display* dpy = get_display();
-    if (dpy) XDestroyWindow(dpy, self->handle.xid);
-    #else
-    HWND hwnd = WH_TO_HWND(self->handle);
-    if (hwnd && IsWindow(hwnd)) DestroyWindow(hwnd);
-    #endif
+    Platform_EditPopupDestroyWindow(self);
     free(data);
     PROFILE_END_VAR(timer, "window_manager:EditPopup_Destroy");
 }
@@ -248,7 +69,7 @@ Popup* EditPopup_Create(WindowManager* wm, const char* initial_text,
     EditPopupDataInternal* data = calloc(1, sizeof(EditPopupDataInternal));
     if (!data) { PROFILE_END_VAR(timer, "window_manager:EditPopup_Create"); return NULL; }
     WindowManager_GetCenteredPos(w, h, &x, &y);
-    
+
     data->base.vtable = &g_edit_popup_vtable;
     data->base.manager = wm;
     data->base.type = POPUP_EDIT;
@@ -258,11 +79,16 @@ Popup* EditPopup_Create(WindowManager* wm, const char* initial_text,
         free(data->title);
         free(data->align);
         free(data);
-        PROFILE_END_VAR(timer, "window_manager:EditPopup_Create");
-        return NULL;
+        PROFILE_END_VAR(timer, "window_manager:EditPopup_Create"); return NULL;
     }
     data->text_capacity = 1024;
     data->text = calloc(data->text_capacity, 1);
+    if (!data->text) {
+        free(data->title);
+        free(data->align);
+        free(data);
+        PROFILE_END_VAR(timer, "window_manager:EditPopup_Create"); return NULL;
+    }
     if (initial_text) {
         strncpy(data->text, initial_text, data->text_capacity - 1);
         data->cursor = strlen(data->text);
@@ -271,14 +97,8 @@ Popup* EditPopup_Create(WindowManager* wm, const char* initial_text,
     data->user_data = user_data;
     data->x = x; data->y = y; data->w = w; data->h = h;
     data->confirmed = false;
-    
-    #if !defined(_WIN32)
-    Display* dpy = wm->display;
-    data->base.handle.xid = Linux_CreateEditPopupWindow(dpy, x, y, w, h);
-    #else
-    HINSTANCE hInst = GetModuleHandle(NULL);
-    HWND hwnd = CreateWindowExA(WS_EX_TOPMOST | WS_EX_TOOLWINDOW, "EditPopupClass", title, WS_POPUP, x, y, w, h, NULL, NULL, hInst, data);
-    if (!hwnd) {
+
+    if (!Platform_EditPopupCreateWindow((Popup*)data, x, y, w, h, title)) {
         free(data->text);
         free(data->title);
         free(data->align);
@@ -286,11 +106,7 @@ Popup* EditPopup_Create(WindowManager* wm, const char* initial_text,
         PROFILE_END_VAR(timer, "window_manager:EditPopup_Create");
         return NULL;
     }
-    data->base.handle = WH_FROM_HWND(hwnd);
-    #endif
-    
+
     PROFILE_END_VAR(timer, "window_manager:EditPopup_Create");
     return (Popup*)data;
 }
-
-
