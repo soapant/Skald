@@ -243,203 +243,100 @@ bool Linux_HandlePromptKey(const XEvent* ev,PromptState *state) {
 }
 
 
-static void Linux_HandleEditPopupKey(const XEvent* ev,) {
+bool Linux_HandleEditPopupKey(const XEvent* ev, WMEditPopupData* ed) {
     PROFILE_START(timer);
     if (ev->type != KeyPress) { PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandleEditKey"); return false; }
+    if (!ed || !ed->text) { PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandleEditKey"); return true; }
 
     int wParam = Linux_KeysymToWindowsVK(XLookupKeysym((XKeyEvent*)&ev->xkey, 0));
     bool ctrl_pressed, shift_pressed, alt_pressed;
     ReadModifiers(ev, &ctrl_pressed, &shift_pressed, &alt_pressed);
     if (should_swallow_pending(wParam, (ctrl_pressed?HOTKEY_MOD_CTRL:0)|(shift_pressed?HOTKEY_MOD_SHIFT:0)|(alt_pressed?HOTKEY_MOD_ALT:0))) { PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandleEditKey"); return true; }
     if (TryVimMotion(wParam, ctrl_pressed, shift_pressed, alt_pressed)) { PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandleEditKey"); return true; }
+
+    size_t cap = ed->text_capacity > 0 ? (size_t)ed->text_capacity : 1024;
+    size_t n = strlen(ed->text);
+    if (ed->cursor < 0) ed->cursor = 0;
+    if ((size_t)ed->cursor > n) ed->cursor = (int)n;
+
     if (wParam == VK_BACK) {
         if (ctrl_pressed) {
-            state->filter[0] = '\0';
-            state->cursor = 0;
-        } else {
-            EditBufferBackspace(state->filter, &state->cursor);
+            ed->text[0] = '\0';
+            ed->cursor = 0;
+        } else if (ed->cursor > 0) {
+            size_t del = (size_t)ed->cursor - 1;
+            memmove(ed->text + del, ed->text + del + 1, n - del);
+            ed->cursor--;
         }
-        History_ResetCursor(FlintContext_Get()->window.current_feature);
-        if (FlintContext_Get()->Edit_callbacks.refresh) FlintContext_Get()->Edit_callbacks.refresh(state->filter, FlintContext_Get()->window.hListBox, state->has_listbox ? &state->listbox : NULL);
         PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandleEditKey");
         return true;
     }
-
-    if (FlintContext_Get()->Edit_callbacks.refresh) {
-        if (wParam == VK_ESCAPE) {
-            if (IsInsertMode()) {
-                SetMode(MODE_NORMAL);
-            } else {
-                FlintContext_Get()->window.selection_complete = true;
-            }
-            return true;
-        }
-    } else {
-        if (wParam == VK_ESCAPE) {
+    if (wParam == VK_ESCAPE) {
+        if (IsInsertMode()) {
+            SetMode(MODE_NORMAL);
+        } else {
             FlintContext_Get()->window.selection_complete = true;
-            return true;
         }
-    }
-    if (wParam == VK_RIGHT) {
-      CursorForward(&state->cursor, strlen(state->filter));
-      PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandleEditKey");
-      return true;
+        PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandleEditKey");
+        return true;
     }
     if (wParam == VK_LEFT) {
-       CursorBack(&state->cursor, strlen(state->filter));
-      PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandleEditKey");
-      return true;
-    }
-    if (wParam == VK_UP) {
-      if (ctrl_pressed) {
-        SetCursorToStartOfText(FlintContext_Get());
+        if (ed->cursor > 0) ed->cursor--;
         PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandleEditKey");
         return true;
-      }
-      if (state->has_listbox) {
-        if (state->listbox.selected_index == -1) {
-          char hist[512];
-          const char* feat = FlintContext_Get()->window.current_feature;
-          if (feat && History_CycleUp(feat, hist, sizeof(hist))) {
-            strncpy(state->filter, hist, sizeof(state->filter)-1);
-            state->filter[sizeof(state->filter)-1]='\0';
-            state->cursor = (int)strlen(state->filter);
-            if (FlintContext_Get()->Edit_callbacks.refresh) FlintContext_Get()->Edit_callbacks.refresh(state->filter, FlintContext_Get()->window.hListBox, state->has_listbox ? &state->listbox : NULL);
-            PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandleEditKey");
-            return true;
-          }
-        }
-        UI_NavigateUp(&state->listbox, FlintContext_Get()->window.hListBox);
-      }
-      PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandleEditKey");
-      return true;
     }
-    if (wParam == VK_DOWN) {
-      if (ctrl_pressed) {
-        SetCursorToEndOfText(FlintContext_Get());
+    if (wParam == VK_RIGHT) {
+        if ((size_t)ed->cursor < n) ed->cursor++;
         PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandleEditKey");
         return true;
-      }
-      if (state->has_listbox) UI_NavigateDown(&state->listbox, FlintContext_Get()->window.hListBox);
-      PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandleEditKey");
-      return true;
-    }
-    if (wParam == VK_DELETE) {
-      if (state && EditBufferDeleteChar(state->filter, &state->cursor)) {
-        History_ResetCursor(FlintContext_Get()->window.current_feature);
-        if (FlintContext_Get()->Edit_callbacks.refresh) FlintContext_Get()->Edit_callbacks.refresh(state->filter, FlintContext_Get()->window.hListBox, state->has_listbox ? &state->listbox : NULL);
-      }
-      PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandleEditKey");
-      return true;
     }
     if (wParam == VK_HOME) {
-      SetCursorToStartOfText(FlintContext_Get());
-      PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandleEditKey");
-      return true;
+        ed->cursor = 0;
+        PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandleEditKey");
+        return true;
     }
     if (wParam == VK_END) {
-      SetCursorToEndOfText(FlintContext_Get());
-      PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandleEditKey");
-      return true;
+        ed->cursor = (int)n;
+        PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandleEditKey");
+        return true;
     }
-    if (wParam == VK_TAB) {
-      if (FlintContext_Get()->Edit_callbacks.tab) FlintContext_Get()->Edit_callbacks.tab(&state->listbox);
-      PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandleEditKey");
-      return true;
+    if (wParam == VK_DELETE) {
+        if ((size_t)ed->cursor < n) {
+            memmove(ed->text + ed->cursor, ed->text + ed->cursor + 1, n - (size_t)ed->cursor);
+        }
+        PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandleEditKey");
+        return true;
     }
     if (wParam == VK_RETURN) {
-      bool is_ctrl = ctrl_pressed;
-      const char* sel = NULL;
-      char filter_copy[sizeof(state->filter)];
-      if (state->has_listbox && UI_IsListBoxSelected(&state->listbox)) {
-        sel = state->listbox.populated_cache[state->listbox.selected_index];
-      } else {
-        strncpy(filter_copy, state->filter, sizeof(filter_copy)-1);
-        filter_copy[sizeof(filter_copy)-1]='\0';
-        sel = filter_copy;
-      }
-      const char* feat = FlintContext_Get()->window.current_feature;
-      if (feat && sel && sel[0]) History_Add(feat, sel);
-      if (is_ctrl) {
-        {
-          FlintContext* _c = FlintContext_Get();
-          bool should_close = false;
-          if (_c->Edit_callbacks.ctrl_enter) should_close = _c->Edit_callbacks.ctrl_enter(sel, &state->listbox);
-          else if (_c->Edit_callbacks.enter) should_close = _c->Edit_callbacks.enter(sel, &state->listbox);
-          _c->window.selection_complete = should_close;
-        }
+        if (ed->on_confirm) ed->on_confirm(ed->text, ed->user_data);
+        ed->confirmed = true;
+        FlintContext_Get()->window.selection_complete = true;
         PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandleEditKey");
         return true;
-      } else {
-        {
-          FlintContext* _c2 = FlintContext_Get();
-          bool should_close = true;
-          if (_c2->Edit_callbacks.enter) should_close = _c2->Edit_callbacks.enter(sel, &state->listbox);
-          _c2->window.selection_complete = should_close;
-        }
-        PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandleEditKey");
-        return true;
-      }
     }
-    if (wParam == COPY_SELECTION_KEY) {
-      if (shift_pressed || ctrl_pressed) {
-        int type = shift_pressed ? 0 : 1;
-        int idx = -1;
-        if (state->has_listbox && state->listbox.selected_index >= 0 && state->listbox.selected_index < state->listbox.populated_count) {
-          idx = state->listbox.matching_indices[state->listbox.selected_index];
-        } else {
-          idx = UI_LookupTrueIndex(FlintContext_Get()->window.output_buffer);
-        }
-        if (FlintContext_Get()->Edit_callbacks.copy) {
-          FlintContext_Get()->Edit_callbacks.copy(FlintContext_Get()->window.output_buffer,idx,type);
-        } else {
-          Platform_CopyToClipboard(FlintContext_Get()->window.output_buffer);
-        }
-        return true;
-      }
-    }
-
-    if (wParam == COMMAND_MODE_KEY) {
-        WindowManager* wm = WindowManager_Get();
-        Popup* popup = EditPopup_Create(wm,"", "Command Mode", 960, 540, 1000, 100, "LEFT", command_confirm,state);
-        WindowManager_PushPopup(wm, popup);
-        return true;
-      }
-      if (wParam == 'V' && ctrl_pressed) {
+    if (wParam == 'V' && ctrl_pressed) {
         char *clip = Platform_GetClipboardEntry();
-        if (!clip) { log_warn("Edit Ctrl+V clipboard null"); return true; }
-        log_info("Edit Ctrl+V clip len=%d", (int)strlen(clip));
+        if (!clip) { log_warn("Edit Ctrl+V clipboard null"); PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandleEditKey"); return true; }
         clip[strcspn(clip, "\r\n")] = '\0';
-        if (clip[0] == '\0') { free(clip); return true; }
-
-        size_t cur_len = strlen(state->filter);
+        if (clip[0] == '\0') { free(clip); PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandleEditKey"); return true; }
         size_t clip_len = strlen(clip);
-        size_t avail = sizeof(state->filter) - cur_len - 1;
+        size_t avail = cap > n + 1 ? cap - n - 1 : 0;
         if (clip_len > avail) clip_len = avail;
         if (clip_len > 0) {
-          memmove(state->filter + state->cursor + clip_len,
-                  state->filter + state->cursor,
-                  cur_len - state->cursor + 1);
-          memcpy(state->filter + state->cursor, clip, clip_len);
-          state->cursor += clip_len;
+            memmove(ed->text + ed->cursor + clip_len, ed->text + ed->cursor, n - (size_t)ed->cursor + 1);
+            memcpy(ed->text + ed->cursor, clip, clip_len);
+            ed->cursor += (int)clip_len;
         }
         free(clip);
-
-        if (FlintContext_Get()->Edit_callbacks.refresh) {
-          FlintContext_Get()->Edit_callbacks.refresh(state->filter, FlintContext_Get()->window.hListBox, &state->listbox);
-        }
+        PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandleEditKey");
         return true;
-      }
+    }
     if (ctrl_pressed) {
-      if (wParam == VK_OEM_MINUS) {
-        FontSize -= 1;
-      } 
-      if (wParam == VK_OEM_PLUS) {
-        FontSize += 1;
-      } 
+        if (wParam == VK_OEM_MINUS) FontSize -= 1;
+        if (wParam == VK_OEM_PLUS) FontSize += 1;
+        if (wParam == VK_OEM_MINUS || wParam == VK_OEM_PLUS) { PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandleEditKey"); return true; }
     }
 
     PROFILE_END_VAR(timer, "subclasses_x11:Linux_HandleEditKey");
-
     return false;
 }
