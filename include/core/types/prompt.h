@@ -114,7 +114,7 @@ typedef struct {
     char keys[MAX_SEQUENCE_LEN];
     int len;
     int typed_count;
-    unsigned int timer_id;
+    long long deadline_ms;
     bool waiting;
     bool timed_out;
 } SequenceState;
