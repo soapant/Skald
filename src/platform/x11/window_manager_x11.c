@@ -183,9 +183,6 @@ static void Linux_HandleKeyPress(Display* dpy, XKeyEvent* ev, WindowManager* wm)
     }
 
     Popup* top_before = top;
-    if (top_before && top_before->vtable && top_before->vtable->on_key) {
-        top_before->vtable->on_key(top_before, vk_code, pressed, modifiers);
-    }
     Popup* top_after = WindowManager_GetTopPopup(wm);
     if (top_after && top_after->vtable && top_after->vtable->on_render) {
         top_after->vtable->on_render(top_after);

@@ -144,7 +144,6 @@ void HandleExitWindow(FlintContext* ctx) {
     Popup* top = WindowManager_GetTopPopup(wm);
     if (top && top->manager->popup_count > 1) {
         SetMode(MODE_NORMAL);
-        top->vtable->on_key(top, VK_ESCAPE, true, 0);
     } else {
         FlintContext_Get()->window.selection_complete = true;
     }

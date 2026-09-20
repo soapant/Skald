@@ -121,78 +121,6 @@ static void EditPopup_OnHide(Popup* self) {
     PROFILE_END_VAR(timer, "window_manager:EditPopup_OnHide");
 }
 
-static void EditPopup_OnKey(Popup* self, int vk_code, bool pressed, int modifiers) {
-    PROFILE_START(timer);
-    if (!pressed) { PROFILE_END_VAR(timer, "window_manager:EditPopup_OnKey"); return; }
-    
-    EditPopupDataInternal* data = (EditPopupDataInternal*)self;
-    int vk_upper = (vk_code >= 'a' && vk_code <= 'z') ? vk_code - 32 : vk_code;
-    bool ctrl = modifiers & HOTKEY_MOD_CTRL;
-    bool shift = modifiers & HOTKEY_MOD_SHIFT;
-    bool alt = modifiers & HOTKEY_MOD_ALT;
-    if (PromptController_ShouldSwallowPending(vk_upper, modifiers)) { PROFILE_END_VAR(timer, "window_manager:EditPopup_OnKey"); return; }
-    if (PromptController_TryVimMotion(vk_upper, ctrl, shift, alt)) {
-        if (FlintContext_Get()->window.selection_complete) { data->confirmed=false; WindowManager_PopPopup(self->manager); FlintContext_Get()->window.selection_complete=false; }
-        PROFILE_END_VAR(timer, "window_manager:EditPopup_OnKey");
-        return;
-    }
-    if (vk_code == VK_ESCAPE) {
-        if (IsInsertMode()) {
-            SetMode(MODE_NORMAL);
-            if (self->vtable && self->vtable->on_render) self->vtable->on_render(self);
-        } else {
-            data->confirmed = false;
-            WindowManager_PopPopup(self->manager);
-        }
-        PROFILE_END_VAR(timer, "window_manager:EditPopup_OnKey");
-        return;
-    }
-    
-    if (vk_code == VK_RETURN && !(modifiers & HOTKEY_MOD_SHIFT)) {
-        data->confirmed = true;
-        if (data->on_confirm) {
-            data->on_confirm(data->text, data->user_data);
-        }
-        WindowManager_PopPopup(self->manager);
-        PROFILE_END_VAR(timer, "window_manager:EditPopup_OnKey");
-        return;
-    }
-    
-    if (vk_code == VK_BACK) {
-        if (data->cursor > 0) {
-            memmove(data->text + data->cursor - 1, data->text + data->cursor, 
-                    strlen(data->text) - data->cursor + 1);
-            data->cursor--;
-        }
-    } else if (vk_code == VK_DELETE) {
-        if (data->cursor < (int)strlen(data->text)) {
-            memmove(data->text + data->cursor, data->text + data->cursor + 1,
-                    strlen(data->text) - data->cursor);
-        }
-    } else if (vk_code == VK_LEFT) {
-        if (data->cursor > 0) data->cursor--;
-    } else if (vk_code == VK_RIGHT) {
-        if (data->cursor < (int)strlen(data->text)) data->cursor++;
-    } else if (vk_code == VK_HOME) {
-        data->cursor = 0;
-    } else if (vk_code == VK_END) {
-        data->cursor = strlen(data->text);
-    } else if (vk_code >= 32 && vk_code <= 126) {
-        if (!IsInsertMode()) { PROFILE_END_VAR(timer, "window_manager:EditPopup_OnKey"); return; }
-        if (data->cursor < data->text_capacity - 1) {
-            memmove(data->text + data->cursor + 1, data->text + data->cursor,
-                    strlen(data->text) - data->cursor + 1);
-            data->text[data->cursor] = (char)vk_code;
-            data->cursor++;
-        }
-    }
-    
-    if (self->vtable && self->vtable->on_render) {
-        self->vtable->on_render(self);
-    }
-    PROFILE_END_VAR(timer, "window_manager:EditPopup_OnKey");
-}
-
 static void EditPopup_OnRender(Popup* self) {
     PROFILE_START(timer);
     EditPopupDataInternal* data = (EditPopupDataInternal*)self;
@@ -309,7 +237,6 @@ static void EditPopup_Destroy(Popup* self) {
 static const PopupVTable g_edit_popup_vtable = {
     .on_show = EditPopup_OnShow,
     .on_hide = EditPopup_OnHide,
-    .on_key = EditPopup_OnKey,
     .on_render = EditPopup_OnRender,
     .destroy = EditPopup_Destroy
 };

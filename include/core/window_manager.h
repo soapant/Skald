@@ -12,7 +12,6 @@ typedef void (*EditPopupConfirmCallback)(const char* text, void* user_data);
 typedef struct {
     void (*on_show)(Popup* self);
     void (*on_hide)(Popup* self);
-    void (*on_key)(Popup* self, int vk_code, bool pressed, int modifiers);
     void (*on_render)(Popup* self);
     void (*on_focus_lost)(Popup* self);
     void (*destroy)(Popup* self);

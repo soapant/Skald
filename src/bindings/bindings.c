@@ -20,17 +20,6 @@ bool CheckVimMotion(int pressed_vk, int modifiers, MotionAction* out_action, con
     bool ctrl_held = (modifiers & HOTKEY_MOD_CTRL) != 0;
     bool shift_held = (modifiers & HOTKEY_MOD_SHIFT) != 0;
     
-    if (pressed_vk == VK_ESCAPE) {
-        if (!IsNormalMode()) {
-            SequenceReset();
-            *out_action = MOTION_ENTER_NORMAL;
-            *out_sequence = NULL;
-            *out_typed_count = 0;
-            return true;
-        }
-        return false;
-    }
-    
     char key_char = (char)pressed_vk;
     char seq_char = tolower(key_char);
     
