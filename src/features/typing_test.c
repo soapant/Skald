@@ -54,11 +54,11 @@ void typing_test_render(PromptState *state) {
 
     for (int i = 0; i < text_len; i++) {
         if (char_states[i] == CHAR_CORRECT) {
-            fl_place_text(.x=i * 20, .y=cy - 40, .align="Left", .text=text[i], .fontsize=30, .color=RGB(0,255,0));
+            fl_place_text(.x=i * FontSize/2, .y=cy, .align="Left", .text=text[i], .color=RGB(0,255,0));
         } else if (char_states[i] == CHAR_WRONG)  {
-            fl_place_text(.x=i * 20, .y=cy - 40, .align="Left", .text=text[i], .fontsize=30, .color=RGB(255,0,0));
+            fl_place_text(.x=i * FontSize/2, .y=cy, .align="Left", .text=text[i], .color=RGB(255,0,0));
         } else {
-            fl_place_text(.x=i * 20, .y=cy - 40, .align="Left", .text=text[i], .fontsize=30);
+           fl_place_text(.x=i * FontSize/2, .y=cy, .align="Left", .text=text[i]);
         }
     }
 
@@ -66,7 +66,12 @@ void typing_test_render(PromptState *state) {
         exit(1); 
     }
 
-    fl_draw_rect(.x=current_position * 20, .y=cy + 10, .w=1, .h=30);
+    int chars_per_line = state->width / 12;
+    int visual_x = (current_position % chars_per_line) * 12;
+    int line_height = FontSize + 12;  
+    int visual_y = cy + 6 + (current_position / chars_per_line) * line_height;
+
+    fl_draw_rect(.x = visual_x, .y = visual_y, .w = 1, .h = FontSize);
 }
 
 void TriggerTypingTest(void) {
