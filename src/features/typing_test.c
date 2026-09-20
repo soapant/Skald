@@ -89,7 +89,7 @@ void typing_test_render(PromptState *state) {
     }
 
     FlCharPos positions[1000];
-    fl_measure_text_wrapped(.x=0, .y=cy, .max_width=state->width, .line_height=line_height, .text=text, .out_positions=positions, .max_positions=1000);
+    fl_measure_text_wrapped(.x=0, .y=cy, .max_width=state->width, .line_height=line_height, .text=text, .out_positions=positions);
 
     for (int i = 0; i < text_len; i++) {
         unsigned long col;
