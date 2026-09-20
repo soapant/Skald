@@ -255,7 +255,6 @@ typedef struct {
     const char *text;
     int fontsize;
     FlCharPos *out_positions;
-    int max_positions;
 } FlMeasureSpec;
 
 int fl_measure_text_wrapped_impl(const FlMeasureSpec *spec);
