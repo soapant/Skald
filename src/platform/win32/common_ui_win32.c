@@ -242,7 +242,8 @@ static void Win32_DrawGradientDIB(HDC hdc, RECT* rc, COLORREF base, int preset, 
       t = powf(t, gamma);
       COLORREF col = LerpColor(base, light, t * 0.9f);
       BYTE r = GetRValue(col), g = GetGValue(col), b = GetBValue(col);
-      float d = Win32_Dither(0, y);
+      int dY = (containerW > 0 && containerH > 0) ? (offsetY + y) : y;
+      float d = Win32_Dither(0, dY);
       int nr = (int)(r + d); int ng = (int)(g + d); int nb = (int)(b + d);
       if (nr < 0) nr = 0; if (nr > 255) nr = 255; if (ng < 0) ng = 0; if (ng > 255) ng = 255; if (nb < 0) nb = 0; if (nb > 255) nb = 255;
       uint32_t pix = (uint32_t)nb | ((uint32_t)ng << 8) | ((uint32_t)nr << 16);
@@ -266,7 +267,9 @@ static void Win32_DrawGradientDIB(HDC hdc, RECT* rc, COLORREF base, int preset, 
         t = powf(t, gamma);
         COLORREF col = LerpColor(base, light, t * 0.9f);
         BYTE r = GetRValue(col), g = GetGValue(col), b = GetBValue(col);
-        float d = Win32_Dither(x, y);
+        int dX2 = (containerW > 0 && containerH > 0) ? (offsetX + x) : x;
+        int dY2 = (containerW > 0 && containerH > 0) ? (offsetY + y) : y;
+        float d = Win32_Dither(dX2, dY2);
         int nr = (int)(r + d); int ng = (int)(g + d); int nb = (int)(b + d);
         if (nr < 0) nr = 0; if (nr > 255) nr = 255; if (ng < 0) ng = 0; if (ng > 255) ng = 255; if (nb < 0) nb = 0; if (nb > 255) nb = 255;
         row[x] = (uint32_t)nb | ((uint32_t)ng << 8) | ((uint32_t)nr << 16);
@@ -285,7 +288,9 @@ static void Win32_DrawGradientDIB(HDC hdc, RECT* rc, COLORREF base, int preset, 
         float t = powf(dist, gamma) * 0.85f;
         COLORREF col = LerpColor(light, base, t);
         BYTE r = GetRValue(col), g = GetGValue(col), b = GetBValue(col);
-        float d = Win32_Dither(x, y);
+        int dX3 = (containerW > 0 && containerH > 0) ? (offsetX + x) : x;
+        int dY3 = (containerW > 0 && containerH > 0) ? (offsetY + y) : y;
+        float d = Win32_Dither(dX3, dY3);
         int nr = (int)(r + d); int ng = (int)(g + d); int nb = (int)(b + d);
         if (nr < 0) nr = 0; if (nr > 255) nr = 255; if (ng < 0) ng = 0; if (ng > 255) ng = 255; if (nb < 0) nb = 0; if (nb > 255) nb = 255;
         row[x] = (uint32_t)nb | ((uint32_t)ng << 8) | ((uint32_t)nr << 16);
@@ -311,7 +316,7 @@ static void Win32_DrawGradientDIB(HDC hdc, RECT* rc, COLORREF base, int preset, 
         int delta = (int)(n & 0x1F) - 16;
         delta = (int)(delta * ShaderIntensity * 0.5f);
         int r = GetRValue(col) + delta, g = GetGValue(col) + delta, b = GetBValue(col) + delta;
-        float d = Win32_Dither(x, y);
+        float d = Win32_Dither((int)gx, (int)gy);
         r = (int)(r + d); g = (int)(g + d); b = (int)(b + d);
         if (r < 0) r = 0; if (r > 255) r = 255; if (g < 0) g = 0; if (g > 255) g = 255; if (b < 0) b = 0; if (b > 255) b = 255;
         row[x] = (uint32_t)b | ((uint32_t)g << 8) | ((uint32_t)r << 16);
@@ -448,6 +453,12 @@ void Win32_DrawBackground(HDC hdc, RECT* rc) {
   else if (preset == 2) name = "diagonal";
   else if (preset == 3) name = "radial";
   else if (preset == 4) name = "noise";
+  Win32_EnsureBgCache(hdc, w, h, base, preset);
+  if (g_bgCacheDC && g_bgCacheBmp) {
+    BitBlt(hdc, rc->left, rc->top, w, h, g_bgCacheDC, 0, 0, SRCCOPY);
+    PROFILE_END_VAR(timer, name);
+    return;
+  }
   Win32_DrawGradientDIB(hdc, rc, base, preset, 0, 0, 0, 0);
   PROFILE_END_VAR(timer, name);
   return;
@@ -469,8 +480,11 @@ void UpdateTextCaret(WindowHandle hwndEditControl)
   if (oldFont) SelectObject(hdc, oldFont);
   ReleaseDC(hwnd, hdc);
 
-  int caretHeight = 24;
-  if (tm.tmHeight > 0 && tm.tmHeight < caretHeight) caretHeight = tm.tmHeight;
+  RECT rc;
+  GetClientRect(hwnd, &rc);
+  int caretHeight = tm.tmHeight > 0 ? tm.tmHeight : 24;
+  if (rc.bottom > 0 && caretHeight > rc.bottom) caretHeight = rc.bottom;
+  if (caretHeight <= 0) caretHeight = 24;
   int caretWidth;
   if (IsInsertMode()) {
     caretWidth = 2;
@@ -481,8 +495,6 @@ void UpdateTextCaret(WindowHandle hwndEditControl)
   DWORD selStart = 0, selEnd = 0;
   SendMessageA(hwnd, EM_GETSEL, (WPARAM)&selStart, (LPARAM)&selEnd);
 
-  RECT rc;
-  GetClientRect(hwnd, &rc);
   int centeredY = (rc.bottom - caretHeight) / 2;
 
   POINT pt = {0, centeredY};
@@ -508,19 +520,26 @@ void UpdateTextCaret(WindowHandle hwndEditControl)
   static int lastWidth = -1;
   static int lastHeight = -1;
   static HWND lastHwnd = NULL;
+  static BOOL sCaretShown = FALSE;
 
   if (caretWidth != lastWidth || caretHeight != lastHeight || hwnd != lastHwnd) {
+    if (sCaretShown) HideCaret(hwnd);
     DestroyCaret();
+    sCaretShown = FALSE;
     CreateCaret(hwnd, NULL, caretWidth, caretHeight);
     if (havePos) SetCaretPos(pt.x, pt.y);
     ShowCaret(hwnd);
+    sCaretShown = TRUE;
     SetCaretBlinkTime(INFINITE);
     lastWidth = caretWidth;
     lastHeight = caretHeight;
     lastHwnd = hwnd;
   } else if (havePos) {
     SetCaretPos(pt.x, pt.y);
-    ShowCaret(hwnd);
+    if (!sCaretShown) {
+      ShowCaret(hwnd);
+      sCaretShown = TRUE;
+    }
   }
 }
 

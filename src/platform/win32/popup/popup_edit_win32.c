@@ -74,13 +74,15 @@ LRESULT CALLBACK EditPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
   if (uMsg == WM_PAINT) {
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(hWnd, &ps);
+    HideCaret(hWnd);
     RECT rc; GetClientRect(hWnd, &rc);
-    if (rc.right <= 0 || rc.bottom <= 0) { EndPaint(hWnd, &ps); return 0; }
+    if (rc.right <= 0 || rc.bottom <= 0) { ShowCaret(hWnd); EndPaint(hWnd, &ps); return 0; }
     HDC memDC = CreateCompatibleDC(hdc);
     HBITMAP memBmp = CreateCompatibleBitmap(hdc, rc.right, rc.bottom);
     if (!memDC || !memBmp) {
       if (memDC) DeleteDC(memDC);
       if (memBmp) DeleteObject(memBmp);
+      ShowCaret(hWnd);
       EndPaint(hWnd, &ps);
       return DefSubclassProc(hWnd, uMsg, wParam, lParam);
     }
@@ -110,6 +112,7 @@ LRESULT CALLBACK EditPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
     SelectObject(memDC, oldBmp);
     DeleteObject(memBmp);
     DeleteDC(memDC);
+    ShowCaret(hWnd);
     EndPaint(hWnd, &ps);
     return 0;
   }
