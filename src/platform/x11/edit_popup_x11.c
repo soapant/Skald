@@ -4,17 +4,21 @@
 #include "core/platform.h"
 #include "platform/ui.h"
 #include "core/vim.h"
+#include "core/history.h"
 #include "bindings/vim_helpers.h"
 #include "config.h"
 #include "platform/draw.h"
 #include "platform/wm_platform.h"
+#include "platform/x11/input_x11.h"
 #include "core/timer.h"
+#include "deps/log.h"
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
 #include <X11/keysym.h>
 #include <X11/Xft/Xft.h>
 #include <unistd.h>
+#include <sys/time.h>
 #include <stdatomic.h>
 #include "platform/x11/display_x11.h"
 #include "platform/x11/drawing_x11.h"
@@ -168,4 +172,139 @@ void Platform_EditPopupDestroyWindow(Popup* self) {
     Display* dpy = get_display();
     if (dpy) XDestroyWindow(dpy, self->handle.xid);
     PROFILE_END_VAR(timer, "window_manager:Platform_EditPopupDestroyWindow");
+}
+
+bool Platform_EditPopupOnKey(Popup* self, const PopupKeyEvent* key) {
+    PROFILE_START(timer);
+    WMEditPopupData* ed = (WMEditPopupData*)self;
+    if (!ed || !ed->text) { PROFILE_END_VAR(timer, "edit_popup_x11:Platform_EditPopupOnKey"); return true; }
+
+    int wParam = key->vk;
+    bool ctrl_pressed = key->ctrl;
+    bool shift_pressed = key->shift;
+    bool alt_pressed = key->alt;
+    (void)shift_pressed;
+    (void)alt_pressed;
+    if (should_swallow_pending(wParam, (ctrl_pressed?HOTKEY_MOD_CTRL:0)|(shift_pressed?HOTKEY_MOD_SHIFT:0)|(alt_pressed?HOTKEY_MOD_ALT:0))) { PROFILE_END_VAR(timer, "edit_popup_x11:Platform_EditPopupOnKey"); return true; }
+    if (TryVimMotion(wParam, ctrl_pressed, shift_pressed, alt_pressed)) { PROFILE_END_VAR(timer, "edit_popup_x11:Platform_EditPopupOnKey"); return true; }
+
+    size_t cap = ed->text_capacity > 0 ? (size_t)ed->text_capacity : 1024;
+    size_t n = strlen(ed->text);
+    if (ed->cursor < 0) ed->cursor = 0;
+    if ((size_t)ed->cursor > n) ed->cursor = (int)n;
+
+    if (wParam == VK_BACK) {
+        if (ctrl_pressed) {
+            ed->text[0] = '\0';
+            ed->cursor = 0;
+        } else if (ed->cursor > 0) {
+            size_t del = (size_t)ed->cursor - 1;
+            memmove(ed->text + del, ed->text + del + 1, n - del);
+            ed->cursor--;
+        }
+        PROFILE_END_VAR(timer, "edit_popup_x11:Platform_EditPopupOnKey");
+        return true;
+    }
+    if (wParam == VK_ESCAPE) {
+        if (IsInsertMode()) {
+            SetMode(MODE_NORMAL);
+        } else {
+            FlintContext_Get()->window.selection_complete = true;
+        }
+        PROFILE_END_VAR(timer, "edit_popup_x11:Platform_EditPopupOnKey");
+        return true;
+    }
+    if (wParam == VK_LEFT) {
+        if (ed->cursor > 0) ed->cursor--;
+        PROFILE_END_VAR(timer, "edit_popup_x11:Platform_EditPopupOnKey");
+        return true;
+    }
+    if (wParam == VK_RIGHT) {
+        if ((size_t)ed->cursor < n) ed->cursor++;
+        PROFILE_END_VAR(timer, "edit_popup_x11:Platform_EditPopupOnKey");
+        return true;
+    }
+    if (wParam == VK_HOME) {
+        ed->cursor = 0;
+        PROFILE_END_VAR(timer, "edit_popup_x11:Platform_EditPopupOnKey");
+        return true;
+    }
+    if (wParam == VK_END) {
+        ed->cursor = (int)n;
+        PROFILE_END_VAR(timer, "edit_popup_x11:Platform_EditPopupOnKey");
+        return true;
+    }
+    if (wParam == VK_DELETE) {
+        if ((size_t)ed->cursor < n) {
+            memmove(ed->text + ed->cursor, ed->text + ed->cursor + 1, n - (size_t)ed->cursor);
+        }
+        PROFILE_END_VAR(timer, "edit_popup_x11:Platform_EditPopupOnKey");
+        return true;
+    }
+    if (wParam == VK_RETURN) {
+        if (ed->on_confirm) ed->on_confirm(ed->text, ed->user_data);
+        ed->confirmed = true;
+        FlintContext_Get()->window.selection_complete = true;
+        PROFILE_END_VAR(timer, "edit_popup_x11:Platform_EditPopupOnKey");
+        return true;
+    }
+    if (wParam == 'V' && ctrl_pressed) {
+        char *clip = Platform_GetClipboardEntry();
+        clip[strcspn(clip, "\r\n")] = '\0';
+        if (clip[0] == '\0') { free(clip); PROFILE_END_VAR(timer, "edit_popup_x11:Platform_EditPopupOnKey"); return true; }
+        size_t clip_len = strlen(clip);
+        size_t avail = cap > n + 1 ? cap - n - 1 : 0;
+        if (clip_len > avail) clip_len = avail;
+        if (clip_len > 0) {
+            memmove(ed->text + ed->cursor + clip_len, ed->text + ed->cursor, n - (size_t)ed->cursor + 1);
+            memcpy(ed->text + ed->cursor, clip, clip_len);
+            ed->cursor += (int)clip_len;
+        }
+        free(clip);
+        PROFILE_END_VAR(timer, "edit_popup_x11:Platform_EditPopupOnKey");
+        return true;
+    }
+    if (ctrl_pressed) {
+        if (wParam == VK_OEM_MINUS) FontSize -= 1;
+        if (wParam == VK_OEM_PLUS) FontSize += 1;
+        if (wParam == VK_OEM_MINUS || wParam == VK_OEM_PLUS) { PROFILE_END_VAR(timer, "edit_popup_x11:Platform_EditPopupOnKey"); return true; }
+    }
+
+    if (IsInsertMode() && key->text_len > 0) {
+        bool swallow = false;
+        if (pending_hotkey_vk != 0 && key->text_len == 1) {
+            struct timeval tv; gettimeofday(&tv, NULL);
+            long now = tv.tv_sec * 1000 + tv.tv_usec / 1000;
+            if (now - pending_hotkey_timeMs < 800) {
+                unsigned char c = (unsigned char)key->text[0];
+                int vkc = 0;
+                if (c >= 'a' && c <= 'z') vkc = c - 'a' + 'A';
+                else if (c >= 'A' && c <= 'Z') vkc = c;
+                if (vkc != 0 && vkc == pending_hotkey_vk) swallow = true;
+            }
+            pending_hotkey_vk = 0;
+            pending_hotkey_mod = 0;
+        }
+        if (!swallow && (key->ctrl || key->alt)) swallow = true;
+        if (!swallow) {
+            bool is_printable = true;
+            for (int i = 0; i < key->text_len; i++) { unsigned char c = (unsigned char)key->text[i]; if (c < 0x20 || c == 0x7F) { is_printable = false; break; } }
+            if (is_printable) {
+                size_t cap2 = ed->text_capacity > 0 ? (size_t)ed->text_capacity : 1024;
+                size_t m = strlen(ed->text);
+                if (ed->cursor < 0) ed->cursor = 0;
+                if ((size_t)ed->cursor > m) ed->cursor = (int)m;
+                if (m + (size_t)key->text_len < cap2 - 1) {
+                    memmove(ed->text + ed->cursor + key->text_len, ed->text + ed->cursor, m - (size_t)ed->cursor + 1);
+                    memcpy(ed->text + ed->cursor, key->text, key->text_len);
+                    ed->cursor += key->text_len;
+                }
+                PROFILE_END_VAR(timer, "edit_popup_x11:Platform_EditPopupOnKey");
+                return true;
+            }
+        }
+    }
+
+    PROFILE_END_VAR(timer, "edit_popup_x11:Platform_EditPopupOnKey");
+    return false;
 }

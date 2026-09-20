@@ -1,8 +1,10 @@
 #include <windows.h>
+#include <string.h>
 #include "platform/win32/win32_state.h"
 #include "deps/log.h"
 #include "core/context.h"
 #include "core/modal.h"
+#include "core/window_manager.h"
 #include <commctrl.h>
 #include <shellapi.h>
 #include "config.h"
@@ -18,6 +20,55 @@
 #include "helpers/helpers_flag.h"
 #include "helpers/helpers_ui.h"
 #include "platform/win32/popup_helpers_win32.h"
+
+static bool EditPopupWindow_OnKey(HWND hWnd, EditPopupData* data, ListBoxInfo* lb, const PopupKeyEvent* key) {
+    int wParam = key->vk;
+    if (wParam == VK_ESCAPE) {
+      log_info("Escape pressed");
+        data->result = NULL;
+        DestroyWindow(GetParent(hWnd));
+        UI_Redraw(lb, FlintContext_Get()->window.hListBox);
+        return true;
+    }
+    if (wParam == VK_RETURN) {
+      if (key->shift) {
+        return false;
+      }
+      log_info("Enter pressed");
+        char buffer[2048] = {0};
+        GetWindowTextA(WH_TO_HWND(data->hEdit), buffer, sizeof(buffer) - 1);
+        data->result = _strdup(buffer);
+        DestroyWindow(GetParent(hWnd));
+        UI_Redraw(lb, FlintContext_Get()->window.hListBox);
+        return true;
+    }
+    if (wParam == VK_BACK) {
+      if (key->ctrl) { SetWindowTextA(hWnd, ""); InvalidateRect(hWnd, NULL, TRUE); return true; }
+      char buf[2048]={0}; GetWindowTextA(hWnd, buf, sizeof(buf));
+      DWORD s=0,e=0; SendMessageA(hWnd, EM_GETSEL, (WPARAM)&s, (WPARAM)&e);
+      int len=(int)strlen(buf);
+      if (s!=e) { memmove(buf+s, buf+e, len-e+1); SetWindowTextA(hWnd, buf); SendMessageA(hWnd, EM_SETSEL, s, s); }
+      else if (s>0) {
+        if (s>=2 && buf[s-1]=='\n' && buf[s-2]=='\r') { memmove(buf+s-2, buf+s, len-s+1); SetWindowTextA(hWnd, buf); SendMessageA(hWnd, EM_SETSEL, s-2, s-2); }
+        else { memmove(buf+s-1, buf+s, len-s+1); SetWindowTextA(hWnd, buf); SendMessageA(hWnd, EM_SETSEL, s-1, s-1); }
+      }
+      InvalidateRect(hWnd, NULL, TRUE);
+      return true;
+    }
+    if (wParam == VK_DELETE) {
+      char buf[2048]={0}; GetWindowTextA(hWnd, buf, sizeof(buf));
+      DWORD s=0,e=0; SendMessageA(hWnd, EM_GETSEL, (WPARAM)&s, (WPARAM)&e);
+      int len=(int)strlen(buf);
+      if (s!=e) { memmove(buf+s, buf+e, len-e+1); SetWindowTextA(hWnd, buf); SendMessageA(hWnd, EM_SETSEL, s, s); }
+      else if (s < (DWORD)len) {
+        if (s+1 < (DWORD)len && buf[s]=='\r' && buf[s+1]=='\n') { memmove(buf+s, buf+s+2, len-s-1); SetWindowTextA(hWnd, buf); SendMessageA(hWnd, EM_SETSEL, s, s); }
+        else { memmove(buf+s, buf+s+1, len-s); SetWindowTextA(hWnd, buf); SendMessageA(hWnd, EM_SETSEL, s, s); }
+      }
+      InvalidateRect(hWnd, NULL, TRUE);
+      return true;
+    }
+    return false;
+}
 
 LRESULT CALLBACK EditPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
   if (uMsg == WM_PAINT) {
@@ -74,53 +125,14 @@ LRESULT CALLBACK EditPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
     if (!data || !WH_TO_HWND(data->hEdit)) {
       return DefSubclassProc(hWnd, uMsg, wParam, lParam);
     }
-    
-      if (wParam == VK_ESCAPE) {
-        log_info("Escape pressed");
-          data->result = NULL;
-          DestroyWindow(GetParent(hWnd));
-          UI_Redraw(lb, FlintContext_Get()->window.hListBox);
-          return 0;
-      }
-    if (wParam == VK_RETURN) {
-      if (GetKeyState(VK_SHIFT) & 0x8000) {
-        return DefSubclassProc(hWnd, uMsg, wParam, lParam);
-      }
-      log_info("Enter pressed");
-        char buffer[2048] = {0};
-        GetWindowTextA(WH_TO_HWND(data->hEdit), buffer, sizeof(buffer) - 1);
-        data->result = _strdup(buffer);
-        DestroyWindow(GetParent(hWnd));
-        UI_Redraw(lb, FlintContext_Get()->window.hListBox);
-        
-        return 0;
-    }
-    if (wParam == VK_BACK) {
-      bool ctrl = (GetKeyState(VK_CONTROL) & 0x8000);
-      if (ctrl) { SetWindowTextA(hWnd, ""); InvalidateRect(hWnd, NULL, TRUE); return 0; }
-      char buf[2048]={0}; GetWindowTextA(hWnd, buf, sizeof(buf));
-      DWORD s=0,e=0; SendMessageA(hWnd, EM_GETSEL, (WPARAM)&s, (WPARAM)&e);
-      int len=(int)strlen(buf);
-      if (s!=e) { memmove(buf+s, buf+e, len-e+1); SetWindowTextA(hWnd, buf); SendMessageA(hWnd, EM_SETSEL, s, s); }
-      else if (s>0) {
-        if (s>=2 && buf[s-1]=='\n' && buf[s-2]=='\r') { memmove(buf+s-2, buf+s, len-s+1); SetWindowTextA(hWnd, buf); SendMessageA(hWnd, EM_SETSEL, s-2, s-2); }
-        else { memmove(buf+s-1, buf+s, len-s+1); SetWindowTextA(hWnd, buf); SendMessageA(hWnd, EM_SETSEL, s-1, s-1); }
-      }
-      InvalidateRect(hWnd, NULL, TRUE);
-      return 0;
-    }
-    if (wParam == VK_DELETE) {
-      char buf[2048]={0}; GetWindowTextA(hWnd, buf, sizeof(buf));
-      DWORD s=0,e=0; SendMessageA(hWnd, EM_GETSEL, (WPARAM)&s, (WPARAM)&e);
-      int len=(int)strlen(buf);
-      if (s!=e) { memmove(buf+s, buf+e, len-e+1); SetWindowTextA(hWnd, buf); SendMessageA(hWnd, EM_SETSEL, s, s); }
-      else if (s < (DWORD)len) {
-        if (s+1 < (DWORD)len && buf[s]=='\r' && buf[s+1]=='\n') { memmove(buf+s, buf+s+2, len-s-1); SetWindowTextA(hWnd, buf); SendMessageA(hWnd, EM_SETSEL, s, s); }
-        else { memmove(buf+s, buf+s+1, len-s); SetWindowTextA(hWnd, buf); SendMessageA(hWnd, EM_SETSEL, s, s); }
-      }
-      InvalidateRect(hWnd, NULL, TRUE);
-      return 0;
-    }
+    PopupKeyEvent key;
+    memset(&key, 0, sizeof(key));
+    key.vk = (int)wParam;
+    key.ctrl = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
+    key.shift = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
+    key.alt = (GetKeyState(VK_MENU) & 0x8000) != 0;
+    if (EditPopupWindow_OnKey(hWnd, data, lb, &key)) return 0;
+    return DefSubclassProc(hWnd, uMsg, wParam, lParam);
   }
   if (uMsg == WM_CHAR && (wParam == 0x08 || wParam == 0x7F)) return 0;
   return DefSubclassProc(hWnd, uMsg, wParam, lParam);
