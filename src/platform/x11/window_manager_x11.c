@@ -327,25 +327,11 @@ void WindowManager_ProcessEventsLinux(WindowManager* wm) {
     Display* dpy = wm->display;
     XEvent ev;
 
-    
     while (XPending(dpy) > 0) {
         XNextEvent(dpy, &ev);
         Linux_ProcessXEvent(dpy, &ev, wm);
     }
     PROFILE_END_VAR(timer, "window_manager_x11:WindowManager_ProcessEventsLinux");
-}
-
-void Platform_ProcessNestedEvents(WindowManager* wm, Popup* popup) {
-    PROFILE_START(timer);
-    if (!wm || !wm->display) { PROFILE_END_VAR(timer, "platform:Platform_ProcessNestedEvents"); return; }
-    Display* dpy = wm->display;
-    XEvent ev;
-    while (XPending(dpy) > 0) {
-        XNextEvent(dpy, &ev);
-        Linux_ProcessXEvent(dpy, &ev, wm);
-    }
-    hotkey_drain_pending();
-    PROFILE_END_VAR(timer, "platform:Platform_ProcessNestedEvents");
 }
 
 void WindowManager_QuitLinux(WindowManager* wm) {
