@@ -88,28 +88,30 @@ static inline float Win32_Dither(int x, int y) {
   return ((bayer[(y & 3)*4 + (x & 3)] / 16.0f) - 0.5f) * 1.2f;
 }
 
-static HBITMAP g_bgCacheBmp = NULL;
-static HDC g_bgCacheDC = NULL;
-static int g_bgCacheW = 0, g_bgCacheH = 0;
-static COLORREF g_bgCacheBase = 0;
-static int g_bgCachePreset = -1;
-static float g_bgCacheGamma = -1;
-static float g_bgCacheIntensity = -1;
+typedef struct { HBITMAP bmp; HDC dc; int w; int h; COLORREF base; int preset; float gamma; float intensity; } Win32_GradientCache;
+static Win32_GradientCache g_bgCache = {0};
+static Win32_GradientCache g_selCache = {0};
 
-void Win32_FreeBgCache(void) {
-  if (g_bgCacheDC) { DeleteDC(g_bgCacheDC); g_bgCacheDC = NULL; }
-  if (g_bgCacheBmp) { DeleteObject(g_bgCacheBmp); g_bgCacheBmp = NULL; }
-  g_bgCacheW = g_bgCacheH = 0;
-  g_bgCachePreset = -1;
+static void Win32_FreeGradientCache(Win32_GradientCache* c) {
+  if (!c) return;
+  if (c->dc) { DeleteDC(c->dc); c->dc = NULL; }
+  if (c->bmp) { DeleteObject(c->bmp); c->bmp = NULL; }
+  c->w = c->h = 0;
+  c->preset = -1;
 }
 
-static void Win32_EnsureBgCache(HDC refDC, int containerW, int containerH, COLORREF base, int preset) {
+void Win32_FreeBgCache(void) {
+  Win32_FreeGradientCache(&g_bgCache);
+  Win32_FreeGradientCache(&g_selCache);
+}
+
+static void Win32_EnsureGradientCache(Win32_GradientCache* c, HDC refDC, int containerW, int containerH, COLORREF base, int preset) {
   float gamma = Win32_ComputeGamma();
   float intensity = ShaderIntensity;
-  if (g_bgCacheBmp && g_bgCacheDC && g_bgCacheW == containerW && g_bgCacheH == containerH && g_bgCacheBase == base && g_bgCachePreset == preset && fabsf(g_bgCacheGamma - gamma) < 0.001f && fabsf(g_bgCacheIntensity - intensity) < 0.001f) {
+  if (c->bmp && c->dc && c->w == containerW && c->h == containerH && c->base == base && c->preset == preset && fabsf(c->gamma - gamma) < 0.001f && fabsf(c->intensity - intensity) < 0.001f) {
     return;
   }
-  Win32_FreeBgCache();
+  Win32_FreeGradientCache(c);
   if (containerW <= 0 || containerH <= 0) return;
   BITMAPINFO bmi = {0};
   bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
@@ -192,11 +194,11 @@ static void Win32_EnsureBgCache(HDC refDC, int containerW, int containerH, COLOR
   }
   HDC memDC = CreateCompatibleDC(refDC);
   HBITMAP old = (HBITMAP)SelectObject(memDC, hBmp);
-  g_bgCacheBmp = hBmp;
-  g_bgCacheDC = memDC;
-  g_bgCacheW = containerW; g_bgCacheH = containerH;
-  g_bgCacheBase = base; g_bgCachePreset = preset;
-  g_bgCacheGamma = gamma; g_bgCacheIntensity = intensity;
+  c->bmp = hBmp;
+  c->dc = memDC;
+  c->w = containerW; c->h = containerH;
+  c->base = base; c->preset = preset;
+  c->gamma = gamma; c->intensity = intensity;
 }
 
 static void Win32_DrawGradientDIB(HDC hdc, RECT* rc, COLORREF base, int preset, int containerW, int containerH, int offsetX, int offsetY) {
@@ -205,9 +207,9 @@ static void Win32_DrawGradientDIB(HDC hdc, RECT* rc, COLORREF base, int preset, 
   if (w <= 0 || h <= 0) return;
   if (preset == 1 || preset == 2 || preset == 3 || preset == 4) {
     if (containerW > 0 && containerH > 0 && (containerW != w || containerH != h || offsetX != 0 || offsetY != 0)) {
-      Win32_EnsureBgCache(hdc, containerW, containerH, base, preset);
-      if (g_bgCacheDC && g_bgCacheBmp) {
-        BitBlt(hdc, rc->left, rc->top, w, h, g_bgCacheDC, offsetX, offsetY, SRCCOPY);
+      Win32_EnsureGradientCache(&g_bgCache, hdc, containerW, containerH, base, preset);
+      if (g_bgCache.dc && g_bgCache.bmp) {
+        BitBlt(hdc, rc->left, rc->top, w, h, g_bgCache.dc, offsetX, offsetY, SRCCOPY);
         return;
       }
     }
@@ -362,6 +364,12 @@ void Win32_DrawSelectionBackground(HDC hdc, RECT* rc, COLORREF base) {
   else if (preset == 3) name = "sel-diagonal";
   else if (preset == 2) name = "sel-radial";
   else if (preset == 4) name = "sel-noise";
+  Win32_EnsureGradientCache(&g_selCache, hdc, w, h, base, preset);
+  if (g_selCache.dc && g_selCache.bmp) {
+    BitBlt(hdc, rc->left, rc->top, w, h, g_selCache.dc, 0, 0, SRCCOPY);
+    PROFILE_END_VAR(timer, name);
+    return;
+  }
   Win32_DrawGradientDIB(hdc, rc, base, preset, 0, 0, 0, 0);
   PROFILE_END_VAR(timer, name);
   return;
@@ -453,9 +461,9 @@ void Win32_DrawBackground(HDC hdc, RECT* rc) {
   else if (preset == 2) name = "diagonal";
   else if (preset == 3) name = "radial";
   else if (preset == 4) name = "noise";
-  Win32_EnsureBgCache(hdc, w, h, base, preset);
-  if (g_bgCacheDC && g_bgCacheBmp) {
-    BitBlt(hdc, rc->left, rc->top, w, h, g_bgCacheDC, 0, 0, SRCCOPY);
+  Win32_EnsureGradientCache(&g_bgCache, hdc, w, h, base, preset);
+  if (g_bgCache.dc && g_bgCache.bmp) {
+    BitBlt(hdc, rc->left, rc->top, w, h, g_bgCache.dc, 0, 0, SRCCOPY);
     PROFILE_END_VAR(timer, name);
     return;
   }

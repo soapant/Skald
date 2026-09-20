@@ -405,7 +405,7 @@ FontHandle Platform_CreateFont(int size, const char* face_name) {
         h, 0, 0, 0, FW_NORMAL,
         FALSE, FALSE, FALSE,
         DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-        CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE,
+        ANTIALIASED_QUALITY, DEFAULT_PITCH | FF_DONTCARE,
         face_name
         );
     if (hf) {
@@ -419,7 +419,7 @@ FontHandle Platform_CreateFont(int size, const char* face_name) {
             const char* fallbacks[] = {"Cascadia Code", "Cascadia Mono", "Consolas", "Segoe UI", NULL};
             for (int i=0; fallbacks[i]; i++) {
                 if (_stricmp(actual, fallbacks[i])==0) break; 
-                HFONT hf2 = CreateFontA(h, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, fallbacks[i]);
+                HFONT hf2 = CreateFontA(h, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH | FF_DONTCARE, fallbacks[i]);
                 if (hf2) {
                     HDC hdc2 = GetDC(NULL);
                     HFONT old2 = (HFONT)SelectObject(hdc2, hf2);
