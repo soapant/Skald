@@ -102,7 +102,7 @@ void typing_test_render(PromptState *state) {
         }
         char single[2] = { text[i], '\0' };
         fl_draw_text(.x = positions[i].x, .y = positions[i].y, .fontsize = fontsize,
-                      .align = "LEFT", .text = single, .color = col);
+                      .align = "Left", .text = single, .color = col);
     }
 
     if (typing_test_position == text_len) {
