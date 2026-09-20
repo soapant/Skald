@@ -279,6 +279,15 @@ log_info("Platform_StringStartsWithCaseInsensitive str='%s' prefix='%s'", str ? 
     return StrStrIA(str, prefix) == str;
 }
 
+long long Platform_GetWallClockMs(void) {
+    FILETIME ft;
+    GetSystemTimeAsFileTime(&ft);
+    ULARGE_INTEGER t;
+    t.LowPart = ft.dwLowDateTime;
+    t.HighPart = ft.dwHighDateTime;
+    return (long long)((t.QuadPart - 116444736000000000ULL) / 10000ULL);
+}
+
 int Platform_CollectRunningProcesses(char process_list[][128], int max_count) {
     if (!process_list || max_count <= 0) return 0;
     int count = 0;
