@@ -181,10 +181,52 @@ static void Linux_HandleKeyPress(Display* dpy, XKeyEvent* ev, WindowManager* wm)
         return;
     }
     else if (top->type == POPUP_EDIT) {
-      Linux_HandleEditPopupKey(&xev);
+        WMEditPopupData* ed = (WMEditPopupData*)top;
+        XEvent xev; memset(&xev,0,sizeof(xev));
+        xev.type = KeyPress;
+        xev.xkey = *ev;
+        bool handled = Linux_HandleEditPopupKey(&xev, ed);
+        if (!handled && ed && ed->text && IsInsertMode()) {
+            char buf2[32]; KeySym ks2; int len2 = XLookupString(ev, buf2, sizeof(buf2), &ks2, NULL);
+            if (len2 > 0) {
+                extern int pending_hotkey_vk; extern int pending_hotkey_mod; extern long pending_hotkey_timeMs;
+                bool swallow = false;
+                if (pending_hotkey_vk != 0 && len2 == 1) {
+                    struct timeval tv; gettimeofday(&tv,NULL); long now = tv.tv_sec*1000+tv.tv_usec/1000;
+                    if (now - pending_hotkey_timeMs < 800) {
+                        unsigned char c = (unsigned char)buf2[0];
+                        int vkc = 0;
+                        if (c >= 'a' && c <= 'z') vkc = c - 'a' + 'A';
+                        else if (c >= 'A' && c <= 'Z') vkc = c;
+                        if (vkc != 0 && vkc == pending_hotkey_vk) swallow = true;
+                    }
+                    pending_hotkey_vk = 0;
+                    pending_hotkey_mod = 0;
+                }
+                if (!swallow && (mods & (HOTKEY_MOD_ALT|HOTKEY_MOD_CTRL))) swallow = true;
+                if (!swallow) {
+                    bool is_printable = true;
+                    for (int i = 0; i < len2; i++) { unsigned char c = (unsigned char)buf2[i]; if (c < 0x20 || c == 0x7F) { is_printable = false; break; } }
+                    if (is_printable) {
+                        size_t cap = ed->text_capacity > 0 ? (size_t)ed->text_capacity : 1024;
+                        size_t n = strlen(ed->text);
+                        if (ed->cursor < 0) ed->cursor = 0;
+                        if ((size_t)ed->cursor > n) ed->cursor = (int)n;
+                        if (n + (size_t)len2 < cap - 1) {
+                            memmove(ed->text + ed->cursor + len2, ed->text + ed->cursor, n - (size_t)ed->cursor + 1);
+                            memcpy(ed->text + ed->cursor, buf2, len2);
+                            ed->cursor += len2;
+                        }
+                    }
+                }
+            }
+        }
+        if (FlintContext_Get()->window.selection_complete) {
+            FlintContext_Get()->window.selection_complete = false;
+            WindowManager_PopPopup(wm);
+        }
     }
 
-    Popup* top_before = top;
     Popup* top_after = WindowManager_GetTopPopup(wm);
     if (top_after && top_after->vtable && top_after->vtable->on_render) {
         top_after->vtable->on_render(top_after);
