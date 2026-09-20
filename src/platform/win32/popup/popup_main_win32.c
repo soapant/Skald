@@ -274,7 +274,17 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
       key.ctrl = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
       key.shift = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
       key.alt = (GetKeyState(VK_MENU) & 0x8000) != 0;
-      if (PromptWindow_OnKey(hwnd, &key)) return 0;
+      if (PromptWindow_OnKey(hwnd, &key)) {
+        if (FlintContext_Get()->prompt_callbacks.render != NULL) {
+          HWND hPar = GetParent(hwnd);
+          if (hPar && IsWindow(hPar)) InvalidateRect(hPar, NULL, FALSE);
+        }
+        return 0;
+      }
+      if (FlintContext_Get()->prompt_callbacks.render != NULL) {
+        HWND hPar = GetParent(hwnd);
+        if (hPar && IsWindow(hPar)) InvalidateRect(hPar, NULL, FALSE);
+      }
     }
 
     return DefSubclassProc(hwnd, msg, wParam, lParam);
@@ -364,6 +374,7 @@ LRESULT CALLBACK ListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
   if(msg==WM_KEYDOWN){ int mods=0; if(GetKeyState(VK_CONTROL)&0x8000) mods|=HOTKEY_MOD_CTRL; if(GetKeyState(VK_MENU)&0x8000) mods|=HOTKEY_MOD_ALT; if(GetKeyState(VK_SHIFT)&0x8000) mods|=HOTKEY_MOD_SHIFT; if(GetKeyState(VK_LWIN)&0x8000||GetKeyState(VK_RWIN)&0x8000) mods|=HOTKEY_MOD_SUPER; Platform_InputState_Update((int)wParam,true,mods); }
   if(msg==WM_KEYUP){ int mods=0; if(GetKeyState(VK_CONTROL)&0x8000) mods|=HOTKEY_MOD_CTRL; if(GetKeyState(VK_MENU)&0x8000) mods|=HOTKEY_MOD_ALT; if(GetKeyState(VK_SHIFT)&0x8000) mods|=HOTKEY_MOD_SHIFT; if(GetKeyState(VK_LWIN)&0x8000||GetKeyState(VK_RWIN)&0x8000) mods|=HOTKEY_MOD_SUPER; Platform_InputState_Update((int)wParam,false,mods); }
+  if(msg==WM_KEYDOWN||msg==WM_KEYUP||msg==WM_CHAR){ if(FlintContext_Get()->prompt_callbacks.render != NULL) InvalidateRect(hwnd, NULL, FALSE); }
   ListBoxInfo* lb = GetLBForPopupWindow(hwnd);
   static HBRUSH s_bg_brush = NULL;
     static HBRUSH s_bg_gradient_brushes[128] = {0};
