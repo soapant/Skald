@@ -267,6 +267,51 @@ bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, F
     return true;
 }
 
+static Display* g_line_dpy = NULL;
+static int g_line_size = 0;
+static XftFont* g_line_font = NULL;
+static XftFont* LineFont(Display* dpy, int size) {
+    if (size <= 0) size = FontSize;
+    if (!g_line_font || g_line_dpy != dpy || g_line_size != size) {
+        if (g_line_font && g_line_dpy) XftFontClose(g_line_dpy, g_line_font);
+        g_line_font = NULL;
+        g_line_dpy = NULL;
+        g_line_size = 0;
+        if (!dpy) return NULL;
+        int screen = DefaultScreen(dpy);
+        XftFont* xf = XftFontOpen(dpy, screen, FC_FAMILY, FcTypeString, UsedFont, FC_PIXEL_SIZE, FcTypeDouble, (double)size, NULL);
+        if (!xf) xf = XftFontOpen(dpy, screen, FC_FAMILY, FcTypeString, "sans", FC_PIXEL_SIZE, FcTypeDouble, (double)size, NULL);
+        if (!xf) xf = XftFontOpenName(dpy, screen, "fixed");
+        if (!xf) return NULL;
+        g_line_font = xf;
+        g_line_dpy = dpy;
+        g_line_size = size;
+    }
+    return g_line_font;
+}
+
+int Platform_MeasureTextWidth(const char* text, int len, int fontsize) {
+    if (!text || len <= 0) return 0;
+    if (!g_draw_dpy) return len * (fontsize > 0 ? fontsize : FontSize) / 2;
+    XftFont* xf = LineFont(g_draw_dpy, fontsize);
+    if (!xf) return len * (fontsize > 0 ? fontsize : FontSize) / 2;
+    XGlyphInfo ext;
+    XftTextExtentsUtf8(g_draw_dpy, xf, (FcChar8*)text, len, &ext);
+    return ext.xOff;
+}
+
+bool Platform_DrawTextLine(int x, int y, const char* text, int len, unsigned long color, int fontsize) {
+    if (!text || len <= 0 || !g_draw_dpy || !g_draw_xd) return false;
+    XftFont* xf = LineFont(g_draw_dpy, fontsize);
+    if (!xf) return false;
+    if (color == 0) color = rgb_to_hex(COLOR_TEXT);
+    XftColor col;
+    Linux_XftAllocColor(g_draw_dpy, g_draw_vis, g_draw_cmap, color, 0xFFFF, &col);
+    XftDrawStringUtf8(g_draw_xd, &col, xf, x, y + xf->ascent, (FcChar8*)text, len);
+    XftColorFree(g_draw_dpy, g_draw_vis, g_draw_cmap, &col);
+    return true;
+}
+
 void Platform_DrawListBackground(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap, int y, int h, bool selected) {
     if (selected) {
         Linux_DrawSelectionBackground(dpy, xd, vis, cmap, 0, y, state->width, h, rgb_to_hex(COLOR_SELECTED_TEXT));

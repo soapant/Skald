@@ -243,6 +243,13 @@ typedef struct {
 } FlTextSpec;
 
 typedef struct {
+    int x;
+    int y;
+} FlCharPos;
+
+int fl_place_text_wrapped_ex(int x, int y, int max_width, int line_height, const char *text, int fontsize, unsigned long color, FlCharPos *out_positions, int max_positions);
+
+typedef struct {
     const char *buffer;
     int x; int y; int w; int h;
     unsigned long color;

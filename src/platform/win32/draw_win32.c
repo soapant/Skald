@@ -46,6 +46,25 @@ bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, F
     return true;
 }
 
+int Platform_MeasureTextWidth(const char* text, int len, int fontsize) {
+    if (!text || len <= 0) return 0;
+    if (!g_draw_hdc) return len * (fontsize > 0 ? fontsize : 16) / 2;
+    SIZE sz;
+    sz.cx = 0;
+    GetTextExtentPoint32A(g_draw_hdc, text, len, &sz);
+    return sz.cx;
+}
+
+bool Platform_DrawTextLine(int x, int y, const char* text, int len, unsigned long color, int fontsize) {
+    (void)fontsize;
+    if (!text || len <= 0 || !g_draw_hdc) return false;
+    if (color == 0) color = COLOR_TEXT;
+    SetBkMode(g_draw_hdc, TRANSPARENT);
+    SetTextColor(g_draw_hdc, color);
+    TextOutA(g_draw_hdc, x, y, text, len);
+    return true;
+}
+
 void Platform_GetItemColors(int idx, int count, unsigned long *num_color, unsigned long *body_color, unsigned long *plain_color) {
     (void)count;
     unsigned long col_text = COLOR_TEXT;
