@@ -33,6 +33,7 @@ static bool session_running = false;
 static double total_typed = 0;
 static double total_correct = 0;
 static bool draw_cursor = true;
+static char typing_test_wpm[200] = {0};
 
 void typing_test_reset(void) {
     typing_test_position = 0;
@@ -43,7 +44,8 @@ void typing_test_reset(void) {
     last_duration = 0.0;
     total_typed = 0;
     total_correct = 0;
-    draw_cursor = false;
+    draw_cursor = true;
+    typing_test_wpm[0] = '\0';
 }
 
 
@@ -107,7 +109,6 @@ void typing_test_render(PromptState *state) {
 
     if (typing_test_position == text_len) {
         draw_cursor = false;
-        char buffer[200];
         if (timer_running) {
             timer_running = false;
         }
@@ -121,9 +122,9 @@ void typing_test_render(PromptState *state) {
             double gross_wpm = (total_typed / 5.0) / minutes;
             double wpm = gross_wpm * accuracy;
 
-            snprintf(buffer,sizeof(buffer),"WPM: %.2f",wpm);
+            snprintf(typing_test_wpm,sizeof(typing_test_wpm),"WPM: %.2f",wpm);
         }
-        fl_draw_text(.y=500,.text=buffer);
+        fl_draw_text(.y=500,.text=typing_test_wpm);
     }
 
     if (draw_cursor) {
