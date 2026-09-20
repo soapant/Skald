@@ -24,7 +24,7 @@ void typing_test_tab(ListBoxInfo* lb) {
 
 void typing_test_render(PromptState *state) {
     int cy = state->height / 2 - 130;
-    char* text = "You are right, your current API";
+    char* text = "thats kind of bullshit imagine a game like that imagine you are on your pc then a game installs itself and runs itself and you cant leave then you have to play the game for years just so you can eventually get out of it?  why the fuck is there a space before the text shit did it again mb me";
     int text_len = strlen(text);
 
     static int current_position = 0;
@@ -70,8 +70,7 @@ void typing_test_render(PromptState *state) {
 }
 
 void TriggerTypingTest(void) {
-    PROMPT(.title = "Typing Test",
-           .refresh = typing_test_refresh,
+    PROMPT(.refresh = typing_test_refresh,
            .enter = typing_test_enter,
            .ctrl_enter = typing_test_ctrl_enter,
            .copy = typing_test_copy,
