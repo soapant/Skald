@@ -102,8 +102,6 @@ bool Platform_SetX11StringProperty(const char* window_title, const char* atom_na
 const char* Platform_GetSessionDisplay(void);
 const char* Platform_GetSessionXAuthority(void);
 const char* Platform_GetRuntimeDir(void);
-typedef struct Popup Popup;
-void Platform_ProcessNestedEvents(WindowManager* wm, Popup* popup);
 #endif
 
 #endif

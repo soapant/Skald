@@ -123,7 +123,6 @@ void typing_test_render(PromptState *state) {
         }
         fl_draw_text(.y=500,.text=typing_test_wpm);
     }
-
     if (draw_cursor) {
       fl_draw_rect(.x = positions[typing_test_position].x,
                    .y = positions[typing_test_position].y + 6,

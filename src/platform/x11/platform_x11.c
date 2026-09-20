@@ -1403,3 +1403,4 @@ bool Platform_ResolveDataPath(const char* name, char* out, size_t out_len) {
     if (w == 0 || strcmp(safe, ".") == 0 || strcmp(safe, "..") == 0) return false;
     return Platform_GetFeaturePath(safe, name, out, out_len);
 }
+
