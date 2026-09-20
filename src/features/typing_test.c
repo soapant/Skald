@@ -101,8 +101,8 @@ void typing_test_render(PromptState *state) {
     int text_len = strlen(text);
     int fontsize = 30;
     int line_height = fontsize + 12;
-
     int c = fl_get_char_pressed();
+    printf("%c \n",c);
     int key = fl_get_key_pressed();
     if (typing_test_position < text_len) {
         int current_text = text[typing_test_position];

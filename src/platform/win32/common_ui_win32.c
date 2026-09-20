@@ -593,11 +593,13 @@ void ForceWindowFocus(WindowHandle hwndTarget, WindowHandle hwndInput) {
   SetActiveWindow(WH_TO_HWND(hwndTarget));
   BringWindowToTop(WH_TO_HWND(hwndTarget));
 
-  if (WH_TO_HWND(hwndInput) != NULL) {
+  if (WH_TO_HWND(hwndInput) != NULL && IsWindowVisible(WH_TO_HWND(hwndInput))) {
     SetFocus(WH_TO_HWND(hwndInput));
     UI_Edit_UpdateUIState(hwndInput, UIS_CLEAR, UISF_HIDEFOCUS);
     UI_Edit_SetSel(hwndInput, 0, 0);
     UpdateTextCaret(hwndInput);
+  } else if (WH_TO_HWND(hwndTarget) != NULL && IsWindowVisible(WH_TO_HWND(hwndTarget))) {
+    SetFocus(WH_TO_HWND(hwndTarget));
   }
 
   if (foregroundThreadID != currentThreadID)
