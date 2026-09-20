@@ -124,7 +124,6 @@ static void Linux_HandleKeyPress(Display* dpy, XKeyEvent* ev, WindowManager* wm)
         bool handled = Linux_HandlePromptKey(&xev, state);
         if (!handled && IsInsertMode()) {
             char buf2[32]; KeySym ks2; int len2 = XLookupString(ev, buf2, sizeof(buf2), &ks2, NULL);
-            log_info("Linux_HandleKeyPress prompt insert check mods=%d ks=%lu len2=%d buf2='%.*s' pending=%d", mods, (unsigned long)ks2, len2, len2, buf2, pending_hotkey_vk);
             if (len2 > 0) {
                 extern int pending_hotkey_vk; extern int pending_hotkey_mod; extern long pending_hotkey_timeMs;
                 bool swallow=false;

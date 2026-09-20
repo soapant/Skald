@@ -1188,12 +1188,6 @@ Window Linux_CreatePromptWindow(Display* dpy, int x, int y, int w, int h) {
     PROFILE_END_VAR(timer, "helpers_x11:Linux_CreatePromptWindow");
     return Linux_CreateWindowEx(dpy, x, y, w, h, bg, "colored", "colored", KeyPressMask | ExposureMask | FocusChangeMask);
 }
-Window Linux_CreateSimplePromptWindow(Display* dpy, int x, int y, int w, int h) {
-    PROFILE_START(timer);
-    unsigned long bg = rgb_to_hex(COLOR_BG);
-    PROFILE_END_VAR(timer, "helpers_x11:Linux_CreateSimplePromptWindow");
-    return Linux_CreateWindowEx(dpy, x, y, w, h, bg, "colored", "colored", KeyPressMask | ExposureMask);
-}
 Window Linux_CreateEditPopupWindow(Display* dpy, int x, int y, int w, int h) {
     PROFILE_START(timer);
     unsigned long bg = rgb_to_hex(COLOR_BG);

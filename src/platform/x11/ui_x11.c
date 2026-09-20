@@ -127,11 +127,8 @@ void UI_GetCurrentTextEdit(WindowHandle edit, char* buffer, size_t cap) {
         PromptState* prompt = (PromptState*)top->user_data;
         snprintf(buffer, cap, "%s", prompt->filter);
         buffer[cap-1]='\0';
-    } else if (top->type == POPUP_SIMPLE && top->user_data) {
-        SimplePromptState* simple = (SimplePromptState*)top->user_data;
-        snprintf(buffer, cap, "%s", simple->user_input);
-        buffer[cap-1]='\0';
-    } else if (top->type == POPUP_EDIT) {
+    }
+    else if (top->type == POPUP_EDIT) {
         WMEditPopupData* ed = (WMEditPopupData*)top;
         if (ed && ed->text) snprintf(buffer, cap, "%s", ed->text);
         buffer[cap-1]='\0';
@@ -150,12 +147,8 @@ void UI_SetText(WindowHandle hEdit, char* text) {
         strncpy(prompt->filter, text, sizeof(prompt->filter)-1);
         prompt->filter[sizeof(prompt->filter)-1]='\0';
         prompt->cursor = (int)strlen(prompt->filter);
-    } else if (top->type == POPUP_SIMPLE && top->user_data) {
-        SimplePromptState* simple = (SimplePromptState*)top->user_data;
-        strncpy(simple->user_input, text, sizeof(simple->user_input)-1);
-        simple->user_input[sizeof(simple->user_input)-1]='\0';
-        simple->cursor = (int)strlen(simple->user_input);
-    } else if (top->type == POPUP_EDIT) {
+    }
+    else if (top->type == POPUP_EDIT) {
         WMEditPopupData* ed = (WMEditPopupData*)top;
         if (ed && ed->text) {
             strncpy(ed->text, text, ed->text_capacity-1);
@@ -177,13 +170,8 @@ void UI_SetCursorPosition(WindowHandle ctrl, int position) {
         if (position < 0) position = 0;
         if (position > len) position = len;
         prompt->cursor = position;
-    } else if (top->type == POPUP_SIMPLE && top->user_data) {
-        SimplePromptState* simple = (SimplePromptState*)top->user_data;
-        int len = (int)strlen(simple->user_input);
-        if (position < 0) position = 0;
-        if (position > len) position = len;
-        simple->cursor = position;
-    } else if (top->type == POPUP_EDIT) {
+    }
+    else if (top->type == POPUP_EDIT) {
         WMEditPopupData* ed = (WMEditPopupData*)top;
         if (!ed || !ed->text) return;
         int len = (int)strlen(ed->text);
