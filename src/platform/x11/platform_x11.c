@@ -1231,26 +1231,30 @@ char* Platform_GetIconPath(char* app_path) {
 
 int Platform_CopyToClipboard(const char *text) {
     if (!text) return 0;
+    int wr = 0;
+    int xr = 0;
     if (Wayland_ClipboardAvailable()) {
-        int wr = Wayland_ClipboardSetText(text);
+        wr = Wayland_ClipboardSetText(text);
         log_info("Platform_CopyToClipboard wayland=%d", wr);
-        return wr;
     }
-    int xr = Linux_ClipboardSetText(text);
+    xr = Linux_ClipboardSetText(text);
     log_info("Platform_CopyToClipboard x11=%d", xr);
-    return xr;
+    if (!wr && !xr) log_warn("Platform_CopyToClipboard failed both backends");
+    return (wr || xr);
 }
 
 int Platform_CopyImageToClipboard(const unsigned char *png, size_t len) {
     if (!png || len == 0) return 0;
+    int wr = 0;
+    int xr = 0;
     if (Wayland_ClipboardAvailable()) {
-        int wr = Wayland_ClipboardSetImage(png, len);
+        wr = Wayland_ClipboardSetImage(png, len);
         log_info("Platform_CopyImageToClipboard wayland=%d", wr);
-        return wr;
     }
-    int xr = Linux_ClipboardSetImage(png, len);
+    xr = Linux_ClipboardSetImage(png, len);
     log_info("Platform_CopyImageToClipboard x11=%d", xr);
-    return xr;
+    if (!wr && !xr) log_warn("Platform_CopyImageToClipboard failed both backends");
+    return (wr || xr);
 }
 
 
