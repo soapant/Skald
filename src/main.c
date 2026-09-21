@@ -1,4 +1,5 @@
 #define STB_DS_IMPLEMENTATION
+#include <stdio.h>
 #include "core/context.h"
 #include "deps/log.h"
 #include "core/modal.h"
@@ -21,6 +22,7 @@ static void free_history_list(void* v) {
 
 int main() {
   if (!Platform_TryAcquireSingleInstance()) {
+      fprintf(stderr, "Flint is already running, exiting.\n");
       return 1;
   }
   Platform_InitDataFolder();

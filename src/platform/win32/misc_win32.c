@@ -275,7 +275,6 @@ bool Platform_StringContainsCaseInsensitive(const char* haystack, const char* ne
 
 bool Platform_StringStartsWithCaseInsensitive(const char* str, const char* prefix) {
     if (!str || !prefix) { log_error("operation failed, returning error str='%s' prefix='%s'", str ? str : "null", prefix ? prefix : "null"); return false; }
-log_info("Platform_StringStartsWithCaseInsensitive str='%s' prefix='%s'", str ? str : "", prefix ? prefix : "");;
     return StrStrIA(str, prefix) == str;
 }
 
