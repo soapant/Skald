@@ -200,7 +200,10 @@ bool fl_launch_with_args_as_admin(const char* path, const char* args) {
 int fl_load_file_list(const char* filepath, const char* out[], int max) {
     if (!filepath || !out || max <= 0) return 0;
     char full[MAX_PATH];
-    if (!Platform_ResolveDataPath(filepath, full, sizeof(full))) return 0;
+    if (!Platform_ResolveDataPath(filepath, full, sizeof(full))) {
+        log_warn("fl_load_file_list resolve failed name='%s' feature='%s'", filepath, FlintContext_Get()->window.current_feature ? FlintContext_Get()->window.current_feature : "(null)");
+        return 0;
+    }
     filepath = full;
     FILE* f = fopen(filepath, "r");
     if (!f) return 0;
