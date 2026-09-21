@@ -636,7 +636,6 @@ void CreateChildControls(WindowHandle hwndParent, HFONT hFont, const char* list[
         if (list) {
             lb->populated_count = count;
             lb->total_matches = count;
-            lb->last_items = list;
             lb->last_item_count = count;
             lb->selected_index = -1;
             for (int i = 0; i < count && i < MAX_VISIBLE_ITEMS; i++) {
@@ -653,7 +652,6 @@ void CreateChildControls(WindowHandle hwndParent, HFONT hFont, const char* list[
         } else {
             lb->populated_count = 0;
             lb->total_matches = 0;
-            lb->last_items = NULL;
             lb->last_item_count = 0;
             lb->selected_index = -1;
             for (int i=0;i<MAX_VISIBLE_ITEMS;i++) lb->matching_indices[i]=i;

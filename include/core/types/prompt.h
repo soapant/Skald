@@ -15,12 +15,7 @@ struct ListBoxInfo {
     int  total_matches;
     int  selected_index;
     int  view_offset;
-    const char **last_items;
     int  last_item_count;
-    char last_filter[256];
-    bool last_filter_valid;
-    int  prev_matches[MAX_VISIBLE_ITEMS];
-    int  last_filter_full_count;
 };
 
 typedef struct {
