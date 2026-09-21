@@ -393,7 +393,6 @@ int fl_parse_time(const char* time_str);
 // =============================================================================
 
 bool fl_register_hotkey_impl(char* hotkey_string,void (*on_hotkey_trigger)(void),bool (*optional_condition_for_hotkey)(void),bool whitelist,const char** optional_blacklistedwindows);
-bool fl_register_remapping(const char* src, const char* dst);
 
 // =============================================================================
 // AUDIO / VOLUME
@@ -490,6 +489,41 @@ char fl_get_char_pressed(void);
 
 #define fl_register_hotkey(...) \
     _FL_GET_MACRO(__VA_ARGS__, _FL_HOTKEY_ROUTER_6, _FL_HOTKEY_ROUTER_5, _FL_HOTKEY_ROUTER_4, _FL_HOTKEY_ROUTER_3, _FL_HOTKEY_ROUTER_2)(__VA_ARGS__)
+
+bool fl_register_remapping_impl(const char* src, const char* dst, bool whitelist, const char** windows);
+
+#define _FL_REMAP_EXPAND(src, dst, whitelist, ...) \
+    fl_register_remapping_impl(src, dst, whitelist, (const char*[]){__VA_ARGS__, NULL})
+
+#define _FL_REMAP_ROUTER_2(src, dst)             _FL_REMAP_EXPAND(src, dst, 0, NULL)
+#define _FL_REMAP_ROUTER_3(src, dst, w1)         _FL_REMAP_EXPAND(src, dst, 0, w1)
+
+#define _FL_REMAP_ROUTER_4(src, dst, arg3, arg4) \
+    _Generic((arg3)+0, \
+        int: _FL_REMAP_EXPAND(src, dst, _FL_AS_BOOL(arg3), _FL_AS_STR(arg4)), \
+        char*: _FL_REMAP_EXPAND(src, dst, 0, arg3, arg4), \
+        const char*: _FL_REMAP_EXPAND(src, dst, 0, arg3, arg4), \
+        default: _FL_REMAP_EXPAND(src, dst, 0, arg3, arg4) \
+    )
+
+#define _FL_REMAP_ROUTER_5(src, dst, arg3, arg4, arg5) \
+    _Generic((arg3)+0, \
+        int: _FL_REMAP_EXPAND(src, dst, _FL_AS_BOOL(arg3), _FL_AS_STR(arg4), _FL_AS_STR(arg5)), \
+        char*: _FL_REMAP_EXPAND(src, dst, 0, arg3, arg4, arg5), \
+        const char*: _FL_REMAP_EXPAND(src, dst, 0, arg3, arg4, arg5), \
+        default: _FL_REMAP_EXPAND(src, dst, 0, arg3, arg4, arg5) \
+    )
+
+#define _FL_REMAP_ROUTER_6(src, dst, arg3, arg4, arg5, arg6) \
+    _Generic((arg3)+0, \
+        int: _FL_REMAP_EXPAND(src, dst, _FL_AS_BOOL(arg3), _FL_AS_STR(arg4), _FL_AS_STR(arg5), _FL_AS_STR(arg6)), \
+        char*: _FL_REMAP_EXPAND(src, dst, 0, arg3, arg4, arg5, arg6), \
+        const char*: _FL_REMAP_EXPAND(src, dst, 0, arg3, arg4, arg5, arg6), \
+        default: _FL_REMAP_EXPAND(src, dst, 0, arg3, arg4, arg5, arg6) \
+    )
+
+#define fl_register_remapping(...) \
+    _FL_GET_MACRO(__VA_ARGS__, _FL_REMAP_ROUTER_6, _FL_REMAP_ROUTER_5, _FL_REMAP_ROUTER_4, _FL_REMAP_ROUTER_3, _FL_REMAP_ROUTER_2)(__VA_ARGS__)
 
 #if defined(_WIN32)
 #define FLINT_FEATURE_EXPORT static

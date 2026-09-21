@@ -8,8 +8,13 @@ FLINT_FEATURE_INIT {
     fl_register_remapping("Ctrl+Alt+S", "Down");
     fl_register_remapping("Ctrl+Alt+D", "Right");
 
+
     fl_register_remapping("Ctrl+I", "~");
     fl_register_remapping("Ctrl+U", "|");
 
+    fl_register_remapping("W", "Up",WHITELIST,"feh");
+    fl_register_remapping("A", "Left",WHITELIST,"feh");
+    fl_register_remapping("S", "Down",WHITELIST,"feh");
+    fl_register_remapping("D", "Right",WHITELIST,"feh");
 }
 
