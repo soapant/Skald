@@ -20,7 +20,6 @@ HFONT CreateCustomNerdFont(int height, const char* face_name) {
 }
 
 void Win32_ApplyRoundedCorners(HWND hwnd, int w, int h) {
-  if (!RoundedCorners) return;
   if (!hwnd || !IsWindow(hwnd)) return;
   if (w <= 0 || h <= 0) {
     RECT rc; GetWindowRect(hwnd, &rc);
@@ -33,6 +32,13 @@ void Win32_ApplyRoundedCorners(HWND hwnd, int w, int h) {
   if (dwm) {
     HRESULT (WINAPI *pDwmSetWindowAttribute)(HWND, DWORD, LPCVOID, DWORD) = (void*)GetProcAddress(dwm, "DwmSetWindowAttribute");
     if (pDwmSetWindowAttribute) {
+      const DWORD DWMWA_BORDER_COLOR = 34;
+      COLORREF border = COLOR_BG;
+      pDwmSetWindowAttribute(hwnd, DWMWA_BORDER_COLOR, &border, sizeof(border));
+      if (!RoundedCorners) {
+        FreeLibrary(dwm);
+        return;
+      }
       const int DWMWCP_ROUND = 2;
       const DWORD DWMWA_WINDOW_CORNER_PREFERENCE = 33;
       HRESULT hr = pDwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, &DWMWCP_ROUND, sizeof(DWMWCP_ROUND));
@@ -43,6 +49,7 @@ void Win32_ApplyRoundedCorners(HWND hwnd, int w, int h) {
     }
     FreeLibrary(dwm);
   }
+  if (!RoundedCorners) return;
 
   int radius = CornerRadius;
   if (radius < 0) radius = 0;
