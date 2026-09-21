@@ -42,9 +42,23 @@ void DecrementVolume(void) {
 }
 void GoogleMeaning(void) {
   char *clip = fl_get_last_clipboard_entry();
-  char search[300];
+  char search[50];
   snprintf(search,sizeof(search),"what is %s",clip);
   fl_query_browser(search);
+}
+void OpenFehImage(void) {
+  char *clip = fl_get_last_clipboard_entry();
+  char command[100];
+  snprintf(command,sizeof(command),"feh /home/diggy/Programming/RandomShit/shit/images/%s -g 1920x1080 --zoom 65",clip);
+  fl_run_terminal_command(command);
+}
+
+void copy_seifisbad(void) {
+    fl_copy_to_clipboard("seifisbad@gmail.com");
+    SubjectiveMessageDisplay("seifisbad@gmail.com",140,1,COLOR_TEXT);
+}
+void copy_password(void) {
+    fl_copy_to_clipboard("i_am_retarded1");
 }
 
 FLINT_FEATURE_INIT {
@@ -55,8 +69,11 @@ FLINT_FEATURE_INIT {
     fl_register_hotkey("Ctrl+Shift+X", ScreenshotArea);
     fl_register_hotkey("Alt+Shift+C", OcrRegionAndCopy);
     fl_register_hotkey("Alt+Shift+G", GoogleMeaning);
+    fl_register_hotkey("Alt+Shift+F", OpenFehImage);
     fl_register_hotkey("RShift",MediaPlayPause); 
     fl_register_hotkey("Ctrl+]",IncrementVolume); 
     fl_register_hotkey("Ctrl+[",DecrementVolume); 
+    fl_register_hotkey("Alt+Ctrl+O", copy_seifisbad);
+    fl_register_hotkey("Alt+Ctrl+P", copy_password);
 }
 

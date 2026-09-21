@@ -406,9 +406,9 @@ bool fl_register_hotkey_impl(char* hotkey_string,void (*on_hotkey_trigger)(void)
     return hotkey_register_internal(binding);
 }
 
-bool fl_register_remapping(const char* src, const char* dst) {
+bool fl_register_remapping_impl(const char* src, const char* dst, bool whitelist, const char** windows) {
     if (!src || !dst) return false;
-    return remap_register_internal(src, dst);
+    return remap_register_internal(src, dst, whitelist, windows);
 }
 
 typedef struct { char *key; void *value; } FlintMapEnt;
