@@ -9,6 +9,7 @@
 #include "platform/x11/env_helpers_x11.h"
 #include "platform/x11/desktop_helpers_x11.h"
 #include "helpers/helpers_text.h"
+#include "helpers/helpers_ui.h"
 #include "config.h"
 #include <errno.h>
 #include <string.h>
@@ -313,6 +314,7 @@ bool fl_launch_with_args_as_admin_platform(const char* path, const char* args) {
 static FlListSpec g_fl_list_spec;
 static ListBoxInfo *g_fl_list_lb;
 static int g_fl_list_y0, g_fl_list_itemH, g_fl_list_visible, g_fl_list_cur;
+static int g_fl_list_bx, g_fl_list_bw, g_fl_list_fw;
 static Display *g_fl_list_dpy;
 static XftDraw *g_fl_list_xd;
 static Visual *g_fl_list_vis;
@@ -334,7 +336,27 @@ bool fl_listbox_begin_platform(const FlListSpec *spec) {
     g_fl_list_lb = lb;
     g_fl_list_itemH = spec->item_height ? spec->item_height : FontSize + 14;
     g_fl_list_y0 = spec->y ? spec->y : (FontSize + 28) + 10;
-    int list_h = spec->h ? spec->h : 400;
+    int yOff = (WindowTitleText || VimModeText) ? 40 : 0;
+    int list_h;
+    PromptState *st = Platform_GetPreRenderStatePtr();
+    if (!st) {
+        WindowManager* wmgr = WindowManager_Get();
+        if (wmgr) {
+            Popup* top = WindowManager_GetTopPopup(wmgr);
+            if (top && top->user_data && top->type == POPUP_PROMPT) st = (PromptState*)top->user_data;
+        }
+    }
+    if (spec->h) list_h = spec->h;
+    else list_h = st ? (st->height - g_fl_list_y0 - yOff) : 400;
+    if (!spec->x && !spec->w) {
+        g_fl_list_bx = 4;
+        g_fl_list_bw = (st ? st->width : 880) - 8;
+        g_fl_list_fw = st ? st->width : 900;
+    } else {
+        g_fl_list_bx = spec->x + 1;
+        g_fl_list_bw = (spec->w ? spec->w : 650) - 2;
+        g_fl_list_fw = spec->w ? spec->w : 900;
+    }
     int visible = list_h / g_fl_list_itemH;
     if (visible < 1) visible = 1;
     if (visible > lb->populated_count) visible = lb->populated_count;
@@ -364,8 +386,7 @@ bool fl_listbox_next_platform(FlListItemCtx *out) {
     bool sel = (idx == g_fl_list_lb->selected_index);
     if (RoundedCorners && CornerRadius>0) {
         int R=6; int t=1;
-        int bx = g_fl_list_spec.x + 1;
-        int bw = (g_fl_list_spec.w ? g_fl_list_spec.w : 650) - 2;
+        int bx = g_fl_list_bx, bw = g_fl_list_bw;
         if (sel) {
             Linux_FillRoundedRect(g_fl_list_dpy, g_fl_list_xd, g_fl_list_vis, g_fl_list_cmap, rgb_to_hex(COLOR_SELECTED_TEXT), 0xFFFF, bx+t, y+1+t, bw-2*t, g_fl_list_itemH-2-2*t, R-1);
         } else if (!EnableShaders || ShaderPreset==0) {
@@ -373,8 +394,8 @@ bool fl_listbox_next_platform(FlListItemCtx *out) {
         }
     } else {
         PromptState tmp = {0};
-        tmp.width = g_fl_list_spec.w ? g_fl_list_spec.w : 900;
-        tmp.height = g_fl_list_spec.h ? g_fl_list_spec.h : 400;
+        tmp.width = g_fl_list_fw;
+        tmp.height = g_fl_list_y0 + g_fl_list_visible * g_fl_list_itemH;
         Platform_DrawListBackground(&tmp, g_fl_list_dpy, g_fl_list_xd, g_fl_list_vis, g_fl_list_cmap, y, g_fl_list_itemH, sel);
     }
     out->idx = idx;
@@ -552,7 +573,18 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
         if (state) state->scroll_offset = scroll;
     }
     int draw_x = x + 14 - scroll;
-    int y_raw = y + (h - (xf ? (xf->ascent + xf->descent) : FontSize)) / 2;
+    int textH = xf ? (xf->ascent + xf->descent) : FontSize;
+    int y_raw;
+    int cursor_y;
+    if (spec->y == 0) {
+        y_raw = 20;
+        cursor_y = 20 + (textH - FontSize) / 2;
+        if (cursor_y < 20) cursor_y = 20;
+    } else {
+        y_raw = y + (h - textH) / 2;
+        cursor_y = y + (h - FontSize) / 2;
+        if (cursor_y < y + 2) cursor_y = y + 2;
+    }
     Platform_SetDrawContext(dpy, xd, vis, cmap);
     if (text_len > 0) {
         Platform_DrawTextRaw(draw_x, y_raw, (char*)buf, text_hex, fh, "", 0, 0);
@@ -560,12 +592,22 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
     int cursor_draw_x = x + 14 + cursor_x - scroll;
     if (cursor_draw_x < x + 2) cursor_draw_x = x + 2;
     if (cursor_draw_x > x + w - 4) cursor_draw_x = x + w - 4;
-    int cursor_y = y + (h - FontSize) / 2;
-    if (cursor_y < y + 2) cursor_y = y + 2;
     if (IsInsertMode()) {
         Platform_DrawRectRaw(cursor_draw_x,cursor_y,2,FontSize,text_hex);
     } else {
         Platform_DrawRectRaw(cursor_draw_x,cursor_y,12,FontSize,text_hex);
+    }
+    if (state) {
+        if (WindowTitleText && state->window_title) {
+            unsigned long title_col = 0;
+            eval_window_title_color(state, &title_col);
+            Platform_SetDrawContext(dpy, xd, vis, cmap);
+            Platform_DrawTextRaw(5, state->height - 40, state->window_title, title_col, fh, "LEFT", 5, FontSize);
+        }
+        if (VimModeText) {
+            Platform_SetDrawContext(dpy, xd, vis, cmap);
+            Platform_DrawTextRaw(5, state->height - 40, g_vim_mode, VimModeTextColor(), fh, "RIGHT", 5, FontSize);
+        }
     }
     if (needDestroy) Platform_DestroyFont(fh);
     return true;
