@@ -48,9 +48,9 @@ void GoogleMeaning(void) {
 }
 void OpenFehImage(void) {
   char *clip = fl_get_last_clipboard_entry();
-  char args[256];
-  snprintf(args,sizeof(args),"\"/home/diggy/Programming/RandomShit/shit/images/%s\" -g 1920x1080 --zoom 65",clip ? clip : "");
-  fl_launch_with_args("feh", args);
+  char command[100];
+  snprintf(command,sizeof(command),"feh /home/diggy/Programming/RandomShit/shit/images/%s -g 1920x1080 --zoom 65",clip);
+  fl_run_terminal_command(command);
   fl_sleep(0.5);
   printf("Sending Alt+F hotkey to feh\n");
   fl_send_hotkey("Alt+F");
