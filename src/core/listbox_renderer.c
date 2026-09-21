@@ -133,13 +133,16 @@ void Core_DrawListBox(PromptState *state, void *hdc) {
                 }
             }
         }
+        char composed[1024];
         const char* text = "";
         if (idx >= 0 && idx < lb->populated_count) {
             int raw = lb->matching_indices[idx];
-            if (lb->alias_display_active && raw >= 0 && raw < lb->alias_display_count && lb->alias_display[raw][0] != '\0')
-                text = lb->alias_display[raw];
-            else
+            if (lb->alias_suffix_active && raw >= 0 && raw < lb->alias_suffix_count && lb->alias_suffix[raw]) {
+                snprintf(composed, sizeof(composed), "%s [%s]", lb->populated_cache[idx], lb->alias_suffix[raw]);
+                text = composed;
+            } else {
                 text = lb->populated_cache[idx];
+            }
         }
         if (!sel) {
             unsigned long ncol, bcol, pcol;

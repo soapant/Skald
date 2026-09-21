@@ -224,12 +224,12 @@ void Linux_DrawEditCursor(XftDraw* xd, XftColor* color, int cursor_x, int scroll
 const char* ListBoxItemDisplayText(ListBoxInfo* lb, int idx, char* trunc, size_t trunc_size) {
     PROFILE_START(timer);
     int raw = (idx >= 0 && idx < lb->populated_count) ? lb->matching_indices[idx] : -1;
-    const char* baseText = NULL;
-    if (lb && lb->alias_display_active && raw >= 0 && raw < lb->alias_display_count && lb->alias_display[raw][0] != '\0')
-        baseText = lb->alias_display[raw];
-    else
-        baseText = lb->populated_cache[idx];
-    snprintf(trunc, trunc_size, "%.80s", baseText ? baseText : "");
+    const char* baseText = lb->populated_cache[idx];
+    if (lb && lb->alias_suffix_active && raw >= 0 && raw < lb->alias_suffix_count && lb->alias_suffix[raw]) {
+        snprintf(trunc, trunc_size, "%s [%s]", baseText ? baseText : "", lb->alias_suffix[raw]);
+    } else {
+        snprintf(trunc, trunc_size, "%.80s", baseText ? baseText : "");
+    }
     PROFILE_END_VAR(timer, "helpers_x11:ListBoxItemDisplayText");
     return trunc;
 }
