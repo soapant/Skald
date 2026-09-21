@@ -61,12 +61,13 @@ bool hotkey_register_internal(HotkeyBinding binding) {
 }
 
 bool hotkey_process(int vk_code, int modifiers) {
-    char* title = Platform_GetActiveWindowTitle();
     int eff_modifiers = modifiers;
     if (vk_code == VK_LSHIFT || vk_code == VK_RSHIFT || vk_code == VK_SHIFT) eff_modifiers &= ~HOTKEY_MOD_SHIFT;
     else if (vk_code == VK_LCONTROL || vk_code == VK_RCONTROL || vk_code == VK_CONTROL) eff_modifiers &= ~HOTKEY_MOD_CTRL;
     else if (vk_code == VK_LMENU || vk_code == VK_RMENU || vk_code == VK_MENU) eff_modifiers &= ~HOTKEY_MOD_ALT;
     else if (vk_code == VK_LWIN || vk_code == VK_RWIN) eff_modifiers &= ~HOTKEY_MOD_SUPER;
+    char* title = NULL;
+    bool title_fetched = false;
     for (int i = 0; i < g_hotkey_count; i++) {
         HotkeyBinding* b = &g_hotkeys[i];
         
@@ -91,6 +92,7 @@ bool hotkey_process(int vk_code, int modifiers) {
 
         if (!b->whitelist) {
             if (b->blacklist && b->blacklist_count > 0) {
+                if (!title_fetched) { title = Platform_GetActiveWindowTitle(); title_fetched = true; }
                 bool blacklisted = false;
                 for (int j = 0; j < b->blacklist_count; j++) {
                     if (b->blacklist[j][0] == '\0') {
@@ -115,6 +117,7 @@ bool hotkey_process(int vk_code, int modifiers) {
                 continue;
             }
 
+            if (!title_fetched) { title = Platform_GetActiveWindowTitle(); title_fetched = true; }
             bool whitelisted = false;
             for (int j = 0; j < b->blacklist_count; j++) {
                 if (b->blacklist[j][0] == '\0') {
