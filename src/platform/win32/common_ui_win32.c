@@ -338,42 +338,14 @@ static void Win32_DrawGradientDIB(HDC hdc, RECT* rc, COLORREF base, int preset, 
 
 void Win32_DrawSelectionBackground(HDC hdc, RECT* rc, COLORREF base) {
   PROFILE_START(timer);
-  const char* name = "sel-solid";
   int w = rc->right - rc->left;
   int h = rc->bottom - rc->top;
   if (w <= 0 || h <= 0) { PROFILE_END_VAR(timer, "WinSel solid"); return; }
-  bool useShader = EnableShaders && ShaderPreset != 0;
-  if (!useShader) {
-    if (!EnableShaders || ShaderPreset == 0) {
-      name = "sel-solid";
-      HBRUSH br = CreateSolidBrush(base);
-      FillRect(hdc, rc, br);
-      DeleteObject(br);
-      PROFILE_END_VAR(timer, name);
-      return;
-    } else {
-      HBRUSH br = CreateSolidBrush(base);
-      FillRect(hdc, rc, br);
-      DeleteObject(br);
-      PROFILE_END_VAR(timer, name);
-      return;
-    }
-  }
-  int preset = ShaderPreset;
-  if (preset == 1) name = "sel-vertical";
-  else if (preset == 3) name = "sel-diagonal";
-  else if (preset == 2) name = "sel-radial";
-  else if (preset == 4) name = "sel-noise";
-  Win32_EnsureGradientCache(&g_selCache, hdc, w, h, base, preset);
-  if (g_selCache.dc && g_selCache.bmp) {
-    BitBlt(hdc, rc->left, rc->top, w, h, g_selCache.dc, 0, 0, SRCCOPY);
-    PROFILE_END_VAR(timer, name);
-    return;
-  }
-  Win32_DrawGradientDIB(hdc, rc, base, preset, 0, 0, 0, 0);
-  PROFILE_END_VAR(timer, name);
+  HBRUSH br = CreateSolidBrush(base);
+  FillRect(hdc, rc, br);
+  DeleteObject(br);
+  PROFILE_END_VAR(timer, "sel-solid");
   return;
-
 }
 
 void Win32_DrawBackgroundSlice(HDC hdc, RECT* rc, COLORREF base, int containerW, int containerH, int offsetX, int offsetY) {
