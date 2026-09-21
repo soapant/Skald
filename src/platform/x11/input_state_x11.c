@@ -37,7 +37,7 @@ void Platform_InputState_Update(int vk, bool down, int mods){
    int nxt = (g_char_tail+1)%32;
    if(nxt != g_char_head){ g_char_queue[g_char_tail]=ch; g_char_tail=nxt; }
   }
- } else { if(was){ g_down[nv]=false; g_released[nv]=true; } g_pressed[nv]=false; if(!was) g_released[nv]=false; }
+ } else { if(was){ g_down[nv]=false; g_released[nv]=true; } if(!was) g_released[nv]=false; }
  if(g_cb) g_cb(nv,down,mods,g_ud);
 }
 
