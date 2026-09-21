@@ -52,11 +52,18 @@ bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, F
     if (hfont) old = (HFONT)SelectObject(g_draw_hdc, hfont);
     SetBkMode(g_draw_hdc, TRANSPARENT);
     SetTextColor(g_draw_hdc, color);
+    bool centered = Platform_StringContainsCaseInsensitive(a,"CENTER");
+    bool right = !centered && Platform_StringContainsCaseInsensitive(a,"RIGHT");
+    if (!centered && !right) {
+        int x0 = pad ? pad : x;
+        TextOutA(g_draw_hdc, x0, y, text, (int)strlen(text));
+        if (old) SelectObject(g_draw_hdc, old);
+        return true;
+    }
     RECT rc = {x, y, x+800, y+40};
     UINT fmt = DT_SINGLELINE | DT_VCENTER;
-    if (Platform_StringContainsCaseInsensitive(a,"CENTER")) fmt |= DT_CENTER;
-    else if (Platform_StringContainsCaseInsensitive(a,"RIGHT")) fmt |= DT_RIGHT;
-    else fmt |= DT_LEFT;
+    if (centered) fmt |= DT_CENTER;
+    else fmt |= DT_RIGHT;
     if (pad) rc.left += pad;
     DrawTextA(g_draw_hdc, text, -1, &rc, fmt);
     if (old) SelectObject(g_draw_hdc, old);
