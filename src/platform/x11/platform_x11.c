@@ -408,6 +408,7 @@ char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
     char extra[1024];
 
     snprintf(extra, sizeof(extra),
+
              "%s -c \"%s '%s'; exec %s\"",
              UsedShell, UsedShell, temp_file, UsedShell);
 
