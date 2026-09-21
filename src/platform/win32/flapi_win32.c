@@ -601,3 +601,10 @@ double fl_end_timer_platform(FlTimer t) {
     if (end < start) return 0.0;
     return (double)(end - start) * 1000.0 / (double)freq.QuadPart;
 }
+
+void fl_sleep_platform(double seconds) {
+    if (seconds <= 0) return;
+    double ms = seconds * 1000.0;
+    if (ms > (double)0xFFFFFFFF) ms = (double)0xFFFFFFFF;
+    Sleep((DWORD)ms);
+}

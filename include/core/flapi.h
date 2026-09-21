@@ -441,6 +441,7 @@ void fl_screenshot_save(char* save_path);
 
 Fl_Pos fl_get_cursor_pos(void);
 bool fl_type_text(const char *s);
+void fl_sleep(double seconds);
 bool fl_is_key_down(int vk);
 bool fl_is_key_pressed(int vk);
 bool fl_is_key_released(int vk);

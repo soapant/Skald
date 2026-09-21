@@ -2,7 +2,6 @@
 
 
 void Testing(void) {
-  fl_send_hotkey("Alt+F");
 }
 
 
