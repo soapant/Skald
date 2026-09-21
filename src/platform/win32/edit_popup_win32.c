@@ -3,6 +3,7 @@
 #include "core/window_manager.h"
 #include "core/timer.h"
 #include "platform/wm_platform.h"
+#include "platform/ui.h"
 #include "config.h"
 #include <windows.h>
 
@@ -12,6 +13,7 @@ bool Platform_EditPopupCreateWindow(Popup* self, int x, int y, int w, int h, con
     HINSTANCE hInst = GetModuleHandle(NULL);
     HWND hwnd = CreateWindowExA(WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED, "EditPopupClass", title, WS_POPUP, x, y, w, h, NULL, NULL, hInst, data);
     if (!hwnd) { PROFILE_END_VAR(timer, "window_manager:Platform_EditPopupCreateWindow"); return false; }
+    Win32_ApplyRoundedCorners(hwnd, w, h);
     SetLayeredWindowAttributes(hwnd, 0, (BYTE)WindowOpacity, LWA_ALPHA);
     data->base.handle = WH_FROM_HWND(hwnd);
     PROFILE_END_VAR(timer, "window_manager:Platform_EditPopupCreateWindow");
