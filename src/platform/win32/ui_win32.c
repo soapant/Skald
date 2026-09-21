@@ -841,6 +841,9 @@ void Platform_InitUI() {
    RegisterClassA(&settingsPopupWc);
 
    g_win32_hKeyboardHook = SetWindowsHookExA(WH_KEYBOARD_LL, LowLevelKeyboardProc, GetModuleHandle(NULL), 0);
+
+   FontHandle warm = Platform_CreateFont(FontSize, UsedFont);
+   Platform_DestroyFont(warm);
 log_info("Platform_InitUI completed");
 }
 
