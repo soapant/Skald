@@ -14,7 +14,7 @@ bool RoundedCorners = true;
 int CornerRadius = 14;
 bool EnableShaders = true;
 int ShaderPreset = 1;
-float ShaderIntensity = 0.25f;
+float ShaderIntensity = 0.55f;
 int TimeBetweenHotReload = 2;
 
 char* EditPopUpPos = "middle";
@@ -51,7 +51,7 @@ const unsigned int PATH_VAR_COUNT = ARRAY_LEN(G_PATH_VARS);
 
 const bool FullTextNeedsKeyPress = true;
 const bool MessagesEnabled = true;
-const bool RainbowText = true;
+const bool RainbowText = false;
 const bool AlternatingText = false;
 const bool VimModeText = false;
 const bool WindowTitleText = false;
