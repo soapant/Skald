@@ -219,11 +219,22 @@ void UI_SetCursorPosition(WindowHandle ctrl, int position) {
     UI_Edit_SetSel(ctrl, position, position);
 }
 
+static PromptState *g_win32_prompt_state = NULL;
 void UI_RedrawNow(ListBoxInfo* lb, WindowHandle hListBox) {
     FlintContext* _c = FlintContext_Get();
     if (_c->prompt_callbacks.refresh != NULL) {
         char buffer[MaxFeatures];
         UI_GetCurrentTextEdit(FlintContext_Get()->window.hEditControl, buffer, sizeof(buffer));
+        if (g_win32_prompt_state) {
+            strncpy(g_win32_prompt_state->filter, buffer, sizeof(g_win32_prompt_state->filter) - 1);
+            g_win32_prompt_state->filter[sizeof(g_win32_prompt_state->filter) - 1] = '\0';
+            HWND hEdit = WH_TO_HWND(FlintContext_Get()->window.hEditControl);
+            if (hEdit && IsWindow(hEdit)) {
+                DWORD cs = 0, ce = 0;
+                SendMessageA(hEdit, EM_GETSEL, (WPARAM)&cs, (LPARAM)&ce);
+                g_win32_prompt_state->cursor = (size_t)cs;
+            }
+        }
         _c->prompt_callbacks.refresh(buffer, FlintContext_Get()->window.hListBox, lb);
     }
 }
@@ -269,7 +280,6 @@ char* Platform_SearchPopup(void) { log_error("operation failed, returning error"
 
 #include <gdiplus.h>
 
-static PromptState *g_win32_prompt_state = NULL;
 PromptState* Platform_GetWin32PromptState(void) { return g_win32_prompt_state; }
 
 void Platform_WaitForKeypressAsync(KeyCallback callback) {

@@ -412,6 +412,33 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
       if (FlintContext_Get()->prompt_callbacks.render != NULL) InvalidateRect(hwnd, NULL, FALSE);
       break;
     }
+    case WM_CHAR: {
+      if (wParam >= 32 && FlintContext_Get()->prompt_callbacks.render != NULL && IsInsertMode()) {
+        HWND hEdit = WH_TO_HWND(FlintContext_Get()->window.hEditControl);
+        if (hEdit && IsWindow(hEdit)) {
+          char buf[1024] = {0};
+          GetWindowTextA(hEdit, buf, sizeof(buf));
+          DWORD s = 0, e = 0;
+          SendMessageA(hEdit, EM_GETSEL, (WPARAM)&s, (LPARAM)&e);
+          int len = (int)strlen(buf);
+          if ((int)s > len) s = (DWORD)len;
+          if ((int)e > len) e = (DWORD)len;
+          if (s != e) {
+            memmove(buf + s, buf + e, len - e + 1);
+            len = (int)strlen(buf);
+          }
+          if (len < (int)sizeof(buf) - 2) {
+            memmove(buf + s + 1, buf + s, len - (int)s + 1);
+            buf[s] = (char)wParam;
+            SetWindowTextA(hEdit, buf);
+            SendMessageA(hEdit, EM_SETSEL, s + 1, s + 1);
+          }
+          InvalidateRect(hwnd, NULL, FALSE);
+          return 0;
+        }
+      }
+      break;
+    }
     case WM_ACTIVATE: {
         if (CloseOnLossOfFocus && LOWORD(wParam) == WA_INACTIVE) {
             FlintContext_Get()->window.output_buffer[0] = '\0';
