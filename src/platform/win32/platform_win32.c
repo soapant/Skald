@@ -153,6 +153,48 @@ char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
     return out;
 }
 
+char* Platform_RunCommandAndGetOutput(char* command) {
+    if (command == NULL || strlen(command) == 0) return NULL;
+    SECURITY_ATTRIBUTES sa;
+    sa.nLength = sizeof(SECURITY_ATTRIBUTES);
+    sa.bInheritHandle = TRUE;
+    sa.lpSecurityDescriptor = NULL;
+    HANDLE hRead, hWrite;
+    if (!CreatePipe(&hRead, &hWrite, &sa, 0)) return strdup("");
+    SetHandleInformation(hRead, HANDLE_FLAG_INHERIT, 0);
+    STARTUPINFOA si = {0};
+    si.cb = sizeof(STARTUPINFOA);
+    si.hStdOutput = hWrite;
+    si.hStdError = hWrite;
+    si.dwFlags = STARTF_USESTDHANDLES;
+    PROCESS_INFORMATION pi = {0};
+    char cmdLine[4096];
+    snprintf(cmdLine, sizeof(cmdLine), "cmd /c %s", command);
+    BOOL ok = CreateProcessA(NULL, cmdLine, NULL, NULL, TRUE, CREATE_NO_WINDOW, NULL, NULL, &si, &pi);
+    CloseHandle(hWrite);
+    if (!ok) { CloseHandle(hRead); return strdup(""); }
+    WaitForSingleObject(pi.hProcess, INFINITE);
+    size_t cap = 8192;
+    size_t len = 0;
+    char* out = (char*)malloc(cap);
+    if (!out) { CloseHandle(hRead); CloseHandle(pi.hProcess); CloseHandle(pi.hThread); return strdup(""); }
+    DWORD bytesRead = 0;
+    while (ReadFile(hRead, out + len, (DWORD)(cap - len - 1), &bytesRead, NULL) && bytesRead > 0) {
+        len += bytesRead;
+        if (len + 1024 > cap) {
+            cap *= 2;
+            char* n = (char*)realloc(out, cap);
+            if (!n) break;
+            out = n;
+        }
+    }
+    out[len] = '\0';
+    CloseHandle(hRead);
+    CloseHandle(pi.hProcess);
+    CloseHandle(pi.hThread);
+    return out;
+}
+
 bool Platform_LaunchFileManagerAtPath(char* path,char* args) {
     if (!path || !path[0]) { log_error("path is NULL args='%s'", args ? args : "null"); return false; }
     char buffer[100];
