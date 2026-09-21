@@ -92,27 +92,17 @@ static int FuzzyScore(const char* text, const char* pattern) {
 
 void BuildAliasDisplayItems(ListBoxInfo* lb, const char** items, int count) {
   if (!lb) return;
-  lb->alias_display_active = false;
-  lb->alias_display_count = 0;
+  lb->alias_suffix_active = false;
+  lb->alias_suffix_count = 0;
   if (!items || count <= 0) return;
   if (count > MAX_VISIBLE_ITEMS) count = MAX_VISIBLE_ITEMS;
   for (int i = 0; i < count; i++) {
-    lb->alias_display[i][0] = '\0';
+    lb->alias_suffix[i] = NULL;
     if (!items[i]) continue;
-    size_t len = strlen(items[i]);
-    if (len >= 512) len = 511;
-    memcpy(lb->alias_display[i], items[i], len);
-    lb->alias_display[i][len] = '\0';
-    while (len > 0 && (lb->alias_display[i][len - 1] == '\r' || lb->alias_display[i][len - 1] == '\n')) {
-      lb->alias_display[i][--len] = '\0';
-    }
-    const char* alias = get_alias_for_item(lb->alias_display[i]);
-    if (alias) {
-      snprintf(lb->alias_display[i] + len, (size_t)(512 - len), " [%s]", alias);
-    }
-    lb->alias_display_count = i + 1;
+    lb->alias_suffix[i] = get_alias_for_item(items[i]);
+    lb->alias_suffix_count = i + 1;
   }
-  if (lb->alias_display_count > 0) lb->alias_display_active = true;
+  if (lb->alias_suffix_count > 0) lb->alias_suffix_active = true;
 }
 
 static void Populate_CaptureSelection(ListBoxInfo* lb, char* out_text, size_t out_size, int* out_sel) {
@@ -162,16 +152,22 @@ static bool Populate_ItemMatches(const char* search_text, const char* original_i
   return false;
 }
 
+static const char* AliasComposedText(ListBoxInfo* lb, const char* item, int raw, char* out, size_t out_size) {
+  if (lb && lb->alias_suffix_active && raw >= 0 && raw < lb->alias_suffix_count && lb->alias_suffix[raw] && item) {
+    snprintf(out, out_size, "%.*s [%s]", (int)strcspn(item, "\r\n"), item, lb->alias_suffix[raw]);
+    return out;
+  }
+  return item;
+}
+
 static int Populate_FilterIncremental(ListBoxInfo* lb, const char** items, const char* clean_filter, bool (*filter_match)(const char*, const char*), int prev_count) {
   int total_matches = 0;
   int* prev_matches = lb->prev_matches;
   for (int i = 0; i < prev_count && total_matches < MAX_VISIBLE_ITEMS; i++) {
     int idx = prev_matches[i];
     if (!items[idx]) continue;
-    const char* search_text = items[idx];
-    if (lb->alias_display_active && idx >= 0 && idx < lb->alias_display_count && lb->alias_display[idx][0] != '\0') {
-      search_text = lb->alias_display[idx];
-    }
+    char composed[1024];
+    const char* search_text = AliasComposedText(lb, items[idx], idx, composed, sizeof(composed));
     if (Populate_ItemMatches(search_text, items[idx], clean_filter, filter_match)) {
       lb->matching_indices[total_matches++] = idx;
     }
@@ -188,10 +184,8 @@ static int Populate_FilterFull(ListBoxInfo* lb, const char** items, int item_cou
       lb->matching_indices[total_matches++] = i;
       continue;
     }
-    const char* search_text = items[i];
-    if (lb->alias_display_active && i < lb->alias_display_count && lb->alias_display[i][0] != '\0') {
-      search_text = lb->alias_display[i];
-    }
+    char composed[1024];
+    const char* search_text = AliasComposedText(lb, items[i], i, composed, sizeof(composed));
     if (Populate_ItemMatches(search_text, items[i], clean_filter, filter_match)) {
       lb->matching_indices[total_matches++] = i;
     }
@@ -210,8 +204,8 @@ static void Populate_RankMatches(ListBoxInfo* lb, const char** items, const char
   int scores[MAX_VISIBLE_ITEMS];
   for (int i = 0; i < total_matches; i++) {
     int idx = lb->matching_indices[i];
-    const char* txt = items[idx];
-    if (lb->alias_display_active && idx >= 0 && idx < lb->alias_display_count && lb->alias_display[idx][0] != '\0') txt = lb->alias_display[idx];
+    char composed[1024];
+    const char* txt = AliasComposedText(lb, items[idx], idx, composed, sizeof(composed));
     if (FuzzyMatch(txt, clean_filter)) scores[i] = FuzzyScore(txt, clean_filter);
     else scores[i] = 500 + Levenshtein(txt, clean_filter) * 20;
   }

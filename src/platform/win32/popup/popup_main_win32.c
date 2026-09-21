@@ -624,11 +624,13 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                   } 
                 } 
            
+            char composed[1024];
             const char* textBuffer = "";
             if (pdis->itemID < (lb ? lb->populated_count : 0)) {
               int raw = lb->matching_indices[pdis->itemID];
-                if (lb && lb->alias_display_active && lb->alias_display_count > 0 && raw >= 0 && raw < lb->alias_display_count && lb->alias_display[raw][0] != '\0') {
-                  textBuffer = lb->alias_display[raw];
+                if (lb && lb->alias_suffix_active && lb->alias_suffix_count > 0 && raw >= 0 && raw < lb->alias_suffix_count && lb->alias_suffix[raw]) {
+                  snprintf(composed, sizeof(composed), "%s [%s]", lb->populated_cache[pdis->itemID], lb->alias_suffix[raw]);
+                  textBuffer = composed;
                 } else {
                   textBuffer = lb->populated_cache[pdis->itemID];
                 }
