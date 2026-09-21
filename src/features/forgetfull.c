@@ -3,11 +3,10 @@
 #define FORGETFULL_FILE_PATH "forgetfull.txt"
 
 void forgetfull_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
-    const char* items[100];
-    int forgetfull_count = fl_load_file_list(FORGETFULL_FILE_PATH, items, 100);
+    FlStringList files = fl_load_file_list(FORGETFULL_FILE_PATH);
 
-    PopulateListBox(lb, FlintContext_Get()->window.hListBox, filter, items, forgetfull_count, NULL);
-    fl_free_file_list(items, forgetfull_count);
+    PopulateListBox(lb, FlintContext_Get()->window.hListBox, filter, (const char**)files.items, files.count, NULL);
+    fl_free_file_list(&files);
 }
 
 bool forgetfull_enter_callback(const char* selection, ListBoxInfo* lb) {

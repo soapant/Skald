@@ -225,8 +225,8 @@ const char* ListBoxItemDisplayText(ListBoxInfo* lb, int idx, char* trunc, size_t
     PROFILE_START(timer);
     int raw = (idx >= 0 && idx < lb->populated_count) ? lb->matching_indices[idx] : -1;
     const char* baseText = NULL;
-    if (g_alias_display_active && raw >= 0 && raw < g_alias_display_count && g_alias_display[raw][0] != '\0')
-        baseText = g_alias_display[raw];
+    if (lb && lb->alias_display_active && raw >= 0 && raw < lb->alias_display_count && lb->alias_display[raw][0] != '\0')
+        baseText = lb->alias_display[raw];
     else
         baseText = lb->populated_cache[idx];
     snprintf(trunc, trunc_size, "%.80s", baseText ? baseText : "");

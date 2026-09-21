@@ -18,9 +18,7 @@
 #include <shlwapi.h>
 #endif
 
-char g_alias_display[MAX_VISIBLE_ITEMS][512];
-int g_alias_display_count = 0;
-bool g_alias_display_active = false;
+
 
 static bool FuzzyMatch(const char* text, const char* pattern) {
     if (!pattern || !pattern[0]) return true;
@@ -92,28 +90,29 @@ static int FuzzyScore(const char* text, const char* pattern) {
     return score;
 }
 
-void BuildAliasDisplayItems(const char** items, int count) {
-  g_alias_display_active = false;
-  g_alias_display_count = 0;
+void BuildAliasDisplayItems(ListBoxInfo* lb, const char** items, int count) {
+  if (!lb) return;
+  lb->alias_display_active = false;
+  lb->alias_display_count = 0;
   if (!items || count <= 0) return;
   if (count > MAX_VISIBLE_ITEMS) count = MAX_VISIBLE_ITEMS;
   for (int i = 0; i < count; i++) {
-    g_alias_display[i][0] = '\0';
+    lb->alias_display[i][0] = '\0';
     if (!items[i]) continue;
     size_t len = strlen(items[i]);
     if (len >= 512) len = 511;
-    memcpy(g_alias_display[i], items[i], len);
-    g_alias_display[i][len] = '\0';
-    while (len > 0 && (g_alias_display[i][len - 1] == '\r' || g_alias_display[i][len - 1] == '\n')) {
-      g_alias_display[i][--len] = '\0';
+    memcpy(lb->alias_display[i], items[i], len);
+    lb->alias_display[i][len] = '\0';
+    while (len > 0 && (lb->alias_display[i][len - 1] == '\r' || lb->alias_display[i][len - 1] == '\n')) {
+      lb->alias_display[i][--len] = '\0';
     }
-    const char* alias = get_alias_for_item(g_alias_display[i]);
+    const char* alias = get_alias_for_item(lb->alias_display[i]);
     if (alias) {
-      snprintf(g_alias_display[i] + len, (size_t)(512 - len), " [%s]", alias);
+      snprintf(lb->alias_display[i] + len, (size_t)(512 - len), " [%s]", alias);
     }
-    g_alias_display_count = i + 1;
+    lb->alias_display_count = i + 1;
   }
-  if (g_alias_display_count > 0) g_alias_display_active = true;
+  if (lb->alias_display_count > 0) lb->alias_display_active = true;
 }
 
 static void Populate_CaptureSelection(ListBoxInfo* lb, char* out_text, size_t out_size, int* out_sel) {
@@ -170,8 +169,8 @@ static int Populate_FilterIncremental(ListBoxInfo* lb, const char** items, const
     int idx = prev_matches[i];
     if (!items[idx]) continue;
     const char* search_text = items[idx];
-    if (g_alias_display_active && idx >= 0 && idx < g_alias_display_count && g_alias_display[idx][0] != '\0') {
-      search_text = g_alias_display[idx];
+    if (lb->alias_display_active && idx >= 0 && idx < lb->alias_display_count && lb->alias_display[idx][0] != '\0') {
+      search_text = lb->alias_display[idx];
     }
     if (Populate_ItemMatches(search_text, items[idx], clean_filter, filter_match)) {
       lb->matching_indices[total_matches++] = idx;
@@ -190,8 +189,8 @@ static int Populate_FilterFull(ListBoxInfo* lb, const char** items, int item_cou
       continue;
     }
     const char* search_text = items[i];
-    if (g_alias_display_active && i < g_alias_display_count && g_alias_display[i][0] != '\0') {
-      search_text = g_alias_display[i];
+    if (lb->alias_display_active && i < lb->alias_display_count && lb->alias_display[i][0] != '\0') {
+      search_text = lb->alias_display[i];
     }
     if (Populate_ItemMatches(search_text, items[i], clean_filter, filter_match)) {
       lb->matching_indices[total_matches++] = i;
@@ -212,7 +211,7 @@ static void Populate_RankMatches(ListBoxInfo* lb, const char** items, const char
   for (int i = 0; i < total_matches; i++) {
     int idx = lb->matching_indices[i];
     const char* txt = items[idx];
-    if (g_alias_display_active && idx >= 0 && idx < g_alias_display_count && g_alias_display[idx][0] != '\0') txt = g_alias_display[idx];
+    if (lb->alias_display_active && idx >= 0 && idx < lb->alias_display_count && lb->alias_display[idx][0] != '\0') txt = lb->alias_display[idx];
     if (FuzzyMatch(txt, clean_filter)) scores[i] = FuzzyScore(txt, clean_filter);
     else scores[i] = 500 + Levenshtein(txt, clean_filter) * 20;
   }
@@ -311,7 +310,7 @@ void PopulateListBox(ListBoxInfo* lb, WindowHandle hListBox, const char* filter,
     return;
   }
   if (!filter) filter = "";
-  BuildAliasDisplayItems(items, item_count);
+  BuildAliasDisplayItems(lb, items, item_count);
   if (items && item_count > 0) {
     if (FlintContext_Get()->item_index_map) {
       shfree(FlintContext_Get()->item_index_map);

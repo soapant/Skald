@@ -174,9 +174,9 @@ void ParseTodoLine(const char* line, char* clean_text, char tags_out[][64], int*
 
 void AddTodoToFile(const char* text) {
     if (!text || strlen(text) == 0) return;
-    
-    const char* lines[100];
-    int count = fl_load_file_list(TODO_FILE_PATH, lines, 100);
+
+    FlStringList lines = fl_load_file_list(TODO_FILE_PATH);
+    int count = lines.count;
     
     char input_copy[512];
     strncpy(input_copy, text, sizeof(input_copy) - 1);
@@ -194,9 +194,9 @@ void AddTodoToFile(const char* text) {
         char existing_clean[512];
         char existing_tags[10][64];
         int existing_tag_count = 0;
-        ParseTodoLine(lines[i], existing_clean, existing_tags, &existing_tag_count);
+        ParseTodoLine(lines.items[i], existing_clean, existing_tags, &existing_tag_count);
         if (strcmp(existing_clean, clean_text) == 0) {
-            fl_free_file_list(lines, count);
+            fl_free_file_list(&lines);
             return;
         }
     }
@@ -215,19 +215,20 @@ void AddTodoToFile(const char* text) {
         }
     }
 
-    const char* to_write[101];
-    for (int i = 0; i < count; i++) to_write[i] = lines[i];
-    to_write[count] = new_entry;
-    fl_write_to_file(TODO_FILE_PATH, to_write, count + 1);
-    fl_free_file_list(lines, count);
+    char** grown = (char**)realloc(lines.items, (size_t)(count + 1) * sizeof(char*));
+    if (!grown) { fl_free_file_list(&lines); return; }
+    lines.items = grown;
+    lines.items[count] = new_entry;
+    fl_write_to_file(TODO_FILE_PATH, (const char**)lines.items, count + 1);
+    lines.items[count] = NULL;
+    fl_free_file_list(&lines);
 }
 
 void RemoveTodoItemFromFile(const char* item_to_remove) {
     if (!item_to_remove) return;
-    const char* lines[100];
-    int count = fl_load_file_list(TODO_FILE_PATH, lines, 100);
-    if (count == 0) return;
-    const char* kept[100];
+    FlStringList lines = fl_load_file_list(TODO_FILE_PATH);
+    int count = lines.count;
+    if (count == 0) { fl_free_file_list(&lines); return; }
     int kept_count = 0;
     char clean_item[512];
     strncpy(clean_item, item_to_remove, sizeof(clean_item) - 1);
@@ -237,7 +238,7 @@ void RemoveTodoItemFromFile(const char* item_to_remove) {
     clean_item[strcspn(clean_item, "\r\n")] = '\0';
     for (int i = 0; i < count; i++) {
         char clean_line[512];
-        strncpy(clean_line, lines[i], sizeof(clean_line) - 1);
+        strncpy(clean_line, lines.items[i], sizeof(clean_line) - 1);
         clean_line[sizeof(clean_line) - 1] = '\0';
         clean_line[strcspn(clean_line, "\r\n")] = '\0';
         char compare_text[512];
@@ -246,21 +247,21 @@ void RemoveTodoItemFromFile(const char* item_to_remove) {
         char* delim = strstr(compare_text, TODO_ENTRY_DELIMITER);
         if (delim) *delim = '\0';
         if (strcmp(compare_text, clean_item) == 0) {
-            free((void*)lines[i]);
+            free(lines.items[i]);
             continue;
         }
-        kept[kept_count++] = lines[i];
+        lines.items[kept_count++] = lines.items[i];
     }
-    fl_write_to_file(TODO_FILE_PATH, kept, kept_count);
-    fl_free_file_list(kept, kept_count);
+    fl_write_to_file(TODO_FILE_PATH, (const char**)lines.items, kept_count);
+    for (int i = kept_count; i < count; i++) lines.items[i] = NULL;
+    fl_free_file_list(&lines);
 }
 
 void todo_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
-    const char* items[100];
-    int todo_count = fl_load_file_list(TODO_FILE_PATH, items, 100);
+    FlStringList files = fl_load_file_list(TODO_FILE_PATH);
 
-    PopulateListBox(lb, FlintContext_Get()->window.hListBox, filter, items, todo_count, NULL);
-    fl_free_file_list(items, todo_count);
+    PopulateListBox(lb, FlintContext_Get()->window.hListBox, filter, (const char**)files.items, files.count, NULL);
+    fl_free_file_list(&files);
 }
 
 bool todo_enter_callback(const char* selection, ListBoxInfo* lb) {

@@ -79,7 +79,11 @@ void fl_clipboard_clear_history(void);
 
 char* fl_search_file_in_dir(const char* directory, const char* search_string,char* output_path);
 bool fl_get_all_files_from_dir(const char* dir_path, char** list_of_allowed_extensions, ListOfFiles* list_of_files,char** list_of_names_to_ignore);
-int fl_load_file_list(const char* filepath, const char* out[], int max);
+typedef struct {
+    char** items;
+    int count;
+} FlStringList;
+FlStringList fl_load_file_list(const char* filepath);
 char* fl_read_file_to_string(const char* path, size_t* out_len);
 bool fl_write_string_to_file(const char* path, const char* content);
 bool fl_file_exists(const char* path);
@@ -88,7 +92,7 @@ bool fl_remove_line(const char* path, const char* line);
 bool fl_remove_line_contains(const char* path, const char* substr);
 bool fl_parse_desktop_file(const char* path, char* out_name, size_t n, bool* out_nodisplay);
 char* fl_get_icon_path(const char* app_path_path);
-bool fl_free_file_list(const char* list[], int count);
+void fl_free_file_list(FlStringList* list);
 bool fl_free_list(const char* list[], int count);
 bool fl_free_window_list(Fl_WindowList *list);
 bool fl_append_to_file(const char* filepath, const char* line);
