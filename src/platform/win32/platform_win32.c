@@ -79,7 +79,6 @@ char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
     BOOL ok = CreateProcessA(NULL, cmdLine, NULL, NULL, TRUE, CREATE_NO_WINDOW, NULL, NULL, &si, &pi);
     CloseHandle(hWrite);
     if (!ok) { log_error("CreateProcess failed for '%s' err=%lu", cmdLine, GetLastError()); CloseHandle(hRead); return strdup(""); }
-    WaitForSingleObject(pi.hProcess, 10000);
     char* out = NULL;
     size_t cap = 8192;
     size_t len = 0;
@@ -90,14 +89,60 @@ char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
         CloseHandle(pi.hThread);
         return strdup("");
     }
-    DWORD bytesRead = 0;
-    while (ReadFile(hRead, out + len, (DWORD)(cap - len - 1), &bytesRead, NULL) && bytesRead > 0) {
-        len += bytesRead;
-        if (len + 1024 > cap) {
-            cap *= 2;
-            char* n = (char*)realloc(out, cap);
-            if (!n) break;
-            out = n;
+    ULONGLONG startMs = GetTickCount64();
+    ULONGLONG deadline = startMs + 350;
+    bool got_data = false;
+    bool exited = false;
+    for (;;) {
+        ULONGLONG now = GetTickCount64();
+        if (now >= deadline) break;
+        DWORD waitSlice = (DWORD)(deadline - now);
+        DWORD w = WaitForSingleObject(pi.hProcess, waitSlice);
+        if (w == WAIT_OBJECT_0) exited = true;
+        bool read_any = false;
+        for (;;) {
+            DWORD avail = 0;
+            if (!PeekNamedPipe(hRead, NULL, 0, NULL, &avail, NULL)) break;
+            if (avail == 0) break;
+            if (len + avail + 1 > cap) {
+                size_t ncap = cap;
+                while (len + avail + 1 > ncap) ncap *= 2;
+                char* n = (char*)realloc(out, ncap);
+                if (!n) break;
+                out = n;
+                cap = ncap;
+            }
+            DWORD chunk = avail;
+            if (chunk > (DWORD)(cap - len - 1)) chunk = (DWORD)(cap - len - 1);
+            DWORD bytesRead = 0;
+            if (!ReadFile(hRead, out + len, chunk, &bytesRead, NULL) || bytesRead == 0) break;
+            len += bytesRead;
+            read_any = true;
+        }
+        if (read_any && !got_data) { got_data = true; }
+        if (read_any) { deadline = GetTickCount64() + 5000; }
+        if (exited) {
+            for (;;) {
+                DWORD avail = 0;
+                if (!PeekNamedPipe(hRead, NULL, 0, NULL, &avail, NULL)) break;
+                if (avail == 0) break;
+                if (len + avail + 1 > cap) {
+                    size_t ncap = cap;
+                    while (len + avail + 1 > ncap) ncap *= 2;
+                    char* n = (char*)realloc(out, ncap);
+                    if (!n) break;
+                    out = n;
+                    cap = ncap;
+                }
+                DWORD chunk = avail;
+                if (chunk > (DWORD)(cap - len - 1)) chunk = (DWORD)(cap - len - 1);
+                DWORD bytesRead = 0;
+                if (!ReadFile(hRead, out + len, chunk, &bytesRead, NULL) || bytesRead == 0) break;
+                len += bytesRead;
+            }
+            DWORD avail = 0;
+            if (PeekNamedPipe(hRead, NULL, 0, NULL, &avail, NULL) && avail == 0) break;
+            if (!read_any) break;
         }
     }
     out[len] = '\0';
