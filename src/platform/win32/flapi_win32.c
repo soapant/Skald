@@ -89,6 +89,14 @@ void fl_get_all_files_from_dir_platform(const char* dir_path, char** list_of_all
     FindClose(hFind);
 }
 
+static const char* Win32_HostForSystemFile(const char* path) {
+    const char* dot = strrchr(path, '.');
+    if (!dot) return NULL;
+    if (_stricmp(dot, ".cpl") == 0) return "control.exe";
+    if (_stricmp(dot, ".msc") == 0) return "mmc.exe";
+    return NULL;
+}
+
 bool fl_launch_with_args_platform(const char* path, const char* args) {
     if (!path) return false;
     char expanded[1024];
@@ -101,13 +109,24 @@ bool fl_launch_with_args_platform(const char* path, const char* args) {
     } else {
         snprintf(cmd, sizeof(cmd), "\"%s\"", path);
     }
+    const char* host = Win32_HostForSystemFile(path);
+    if (host) {
+        char hostParams[2048];
+        if (args && args[0] && strcmp(args, "0") != 0) snprintf(hostParams, sizeof(hostParams), "\"%s\" %s", path, args);
+        else snprintf(hostParams, sizeof(hostParams), "\"%s\"", path);
+        HINSTANCE hres = ShellExecuteA(NULL, "open", host, hostParams, NULL, SW_SHOWNORMAL);
+        if ((intptr_t)hres > 32) return true;
+        log_warn("fl_launch host failed host='%s' params='%s' res=%d", host, hostParams, (int)(intptr_t)hres);
+    }
     HINSTANCE res = ShellExecuteA(NULL, "open", path, args && args[0] ? args : NULL, NULL, SW_SHOWNORMAL);
     if ((intptr_t)res > 32) return true;
+    log_warn("fl_launch ShellExecuteA failed path='%s' args='%s' res=%d", path, args ? args : "", (int)(intptr_t)res);
     STARTUPINFOA si = {0}; si.cb = sizeof(si);
     PROCESS_INFORMATION pi = {0};
     if (CreateProcessA(NULL, cmd, NULL, NULL, FALSE, CREATE_NO_WINDOW, NULL, NULL, &si, &pi)) {
         CloseHandle(pi.hProcess); CloseHandle(pi.hThread); return true;
     }
+    log_warn("fl_launch CreateProcessA failed cmd='%s' err=%lu", cmd, GetLastError());
     return false;
 }
 
@@ -117,15 +136,21 @@ bool fl_launch_with_args_as_admin_platform(const char* path, const char* args) {
     extern bool Platform_ExpandPath(const char* t, char* o, size_t s);
     if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) return false;
     path = expanded;
-    char params[1024] = {0};
-    if (args && args[0]) snprintf(params, sizeof(params), "%s", args);
+    char params[2048] = {0};
+    const char* host = Win32_HostForSystemFile(path);
+    if (host) {
+        if (args && args[0]) snprintf(params, sizeof(params), "\"%s\" %s", path, args);
+        else snprintf(params, sizeof(params), "\"%s\"", path);
+    } else if (args && args[0]) snprintf(params, sizeof(params), "%s", args);
     SHELLEXECUTEINFOA sei = {0};
     sei.cbSize = sizeof(sei);
     sei.lpVerb = "runas";
-    sei.lpFile = path;
+    sei.lpFile = host ? host : path;
     sei.lpParameters = params[0] ? params : NULL;
     sei.nShow = SW_SHOWNORMAL;
-    return ShellExecuteExA(&sei);
+    BOOL ok = ShellExecuteExA(&sei);
+    if (!ok) log_warn("fl_launch_admin failed path='%s' err=%lu", path, GetLastError());
+    return ok;
 }
 
 #include "platform/draw.h"
