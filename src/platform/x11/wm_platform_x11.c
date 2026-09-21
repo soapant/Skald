@@ -46,33 +46,62 @@ void Platform_WM_OnPopEmpty(WindowManager* wm) {
 }
 
 void Platform_WM_GetMonitorGeometry(int *ox, int *oy, int *ow, int *oh) {
-    int x = 3840, y = 0, w = 1920, h = 1080;
+    int x = 0, y = 0, w = 1920, h = 1080;
     Display *dpy = NULL;
     WindowManager *wm = WindowManager_Get();
     if (wm) dpy = wm->display;
     if (!dpy) dpy = get_display();
     if (dpy) {
         Window root = DefaultRootWindow(dpy);
+        w = DisplayWidth(dpy, DefaultScreen(dpy));
+        h = DisplayHeight(dpy, DefaultScreen(dpy));
+        int px = 0, py = 0;
+        Window rw = None, cw = None;
+        int rx = 0, ry = 0, wx = 0, wy = 0;
+        unsigned int m = 0;
+        if (XQueryPointer(dpy, root, &rw, &cw, &rx, &ry, &wx, &wy, &m)) { px = rx; py = ry; }
         XRRScreenResources *res = XRRGetScreenResourcesCurrent(dpy, root);
         if (res) {
-            long best = -1;
-            int bx = 3840, by = 0, bw = 1920, bh = 1080;
-            bool found_main = false;
-            for (int c = 0; c < res->ncrtc; c++) {
+            int bx = x, by = y, bw = w, bh = h;
+            bool found = false;
+            for (int c = 0; c < res->ncrtc && !found; c++) {
                 XRRCrtcInfo *ci = XRRGetCrtcInfo(dpy, res, res->crtcs[c]);
-                if (!ci || ci->noutput == 0 || ci->width == 0) { if (ci) XRRFreeCrtcInfo(ci); continue; }
-                if (ci->x == 3840 && ci->y == 0 && ci->width == 1920) {
+                if (!ci || ci->noutput == 0 || ci->width == 0 || ci->height == 0) { if (ci) XRRFreeCrtcInfo(ci); continue; }
+                if (px >= ci->x && px < ci->x + ci->width && py >= ci->y && py < ci->y + ci->height) {
                     bx = ci->x; by = ci->y; bw = ci->width; bh = ci->height;
-                    found_main = true;
-                    XRRFreeCrtcInfo(ci);
-                    break;
+                    found = true;
                 }
-                long area = (long)ci->width * ci->height;
-                if (area > best) { best = area; bx = ci->x; by = ci->y; bw = ci->width; bh = ci->height; }
                 XRRFreeCrtcInfo(ci);
             }
+            if (!found) {
+                RROutput primary = XRRGetOutputPrimary(dpy, root);
+                for (int c = 0; c < res->ncrtc && !found; c++) {
+                    XRRCrtcInfo *ci = XRRGetCrtcInfo(dpy, res, res->crtcs[c]);
+                    if (!ci || ci->noutput == 0 || ci->width == 0 || ci->height == 0) { if (ci) XRRFreeCrtcInfo(ci); continue; }
+                    for (int o = 0; o < ci->noutput; o++) {
+                        if (ci->outputs[o] == primary) {
+                            bx = ci->x; by = ci->y; bw = ci->width; bh = ci->height;
+                            found = true;
+                            break;
+                        }
+                    }
+                    XRRFreeCrtcInfo(ci);
+                }
+            }
+            if (!found) {
+                long best = -1;
+                for (int c = 0; c < res->ncrtc; c++) {
+                    XRRCrtcInfo *ci = XRRGetCrtcInfo(dpy, res, res->crtcs[c]);
+                    if (!ci || ci->noutput == 0 || ci->width == 0 || ci->height == 0) { if (ci) XRRFreeCrtcInfo(ci); continue; }
+                    long area = (long)ci->width * ci->height;
+                    if (area > best) { best = area; bx = ci->x; by = ci->y; bw = ci->width; bh = ci->height; }
+                    XRRFreeCrtcInfo(ci);
+                }
+                if (best >= 0) found = true;
+            }
             XRRFreeScreenResources(res);
-            if (found_main || best >= 0) { x = bx; y = by; w = bw; h = bh; }
+            if (found) { x = bx; y = by; w = bw; h = bh; }
+            log_info("monitor ptr=(%d,%d) geom=(%d,%d %dx%d)", px, py, x, y, w, h);
         }
     }
     if (ox) *ox = x;
