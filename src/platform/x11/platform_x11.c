@@ -825,10 +825,7 @@ FontHandle Platform_CreateFont(int size, const char* face_name) {
 void Platform_DestroyFont(FontHandle font) {
     if (FH_TO_XFT(font)) {
         if (FH_TO_DPY(font) == g_cached_font_dpy && FH_TO_XFT(font) == FH_TO_XFT(g_cached_font)) {
-            g_cached_font = FH_NULL;
-            g_cached_font_dpy = NULL;
-            g_cached_font_size = 0;
-            g_cached_font_name = NULL;
+            return;
         }
         XftFontClose(FH_TO_DPY(font), FH_TO_XFT(font));
     }
