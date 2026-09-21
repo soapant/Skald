@@ -1208,7 +1208,8 @@ bool fl_type_text(const char *s) {
 }
 
 void fl_send_hotkey(const char* hotkey_string) {
-
+  if (!hotkey_string) return;
+  remap_send_combo(hotkey_string);
 }
 
 bool fl_is_key_down(int vk){
