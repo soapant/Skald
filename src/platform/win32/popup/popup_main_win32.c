@@ -90,11 +90,24 @@ static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent* key) {
     }
 
     if (wParam == VK_ESCAPE) {
-        FlintContext_Get()->window.output_buffer[0] = '\0';
-        FlintContext_Get()->window.selection_complete = true;
-        if (WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage) != NULL) {
-            KillTimer(WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage), 999);
-            DestroyWindow(WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage));
+        if (FlintContext_Get()->prompt_callbacks.refresh) {
+            if (IsInsertMode()) {
+                SetModeWithListBox(MODE_NORMAL, lb);
+            } else {
+                FlintContext_Get()->window.output_buffer[0] = '\0';
+                FlintContext_Get()->window.selection_complete = true;
+                if (WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage) != NULL) {
+                    KillTimer(WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage), 999);
+                    DestroyWindow(WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage));
+                }
+            }
+        } else {
+            FlintContext_Get()->window.output_buffer[0] = '\0';
+            FlintContext_Get()->window.selection_complete = true;
+            if (WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage) != NULL) {
+                KillTimer(WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage), 999);
+                DestroyWindow(WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage));
+            }
         }
         return true;
     }
