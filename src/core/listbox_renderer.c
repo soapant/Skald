@@ -109,11 +109,7 @@ void Core_DrawListBox(PromptState *state, void *hdc) {
             int innerR = R - 1; if (innerR < 0) innerR = 0;
             if (inner.right <= inner.left || inner.bottom <= inner.top) { inner = rcItem; innerR = R; }
             if (sel) {
-                if (EnableShaders && ShaderPreset != 0) Win32_DrawRoundedSelection(hdcReal, &inner, COLOR_SELECTED_TEXT, innerR);
-                else if (EnableShaders && ShaderPreset != 0) Win32_DrawRoundedSelection(hdcReal, &inner, COLOR_SELECTED_TEXT, innerR);
-                else {
-                    Win32_FillRoundedRect(hdcReal, &inner, COLOR_SELECTED_TEXT, innerR);
-                }
+                Win32_FillRoundedRect(hdcReal, &inner, COLOR_SELECTED_TEXT, innerR);
             } else {
                 if (EnableShaders && ShaderPreset != 0) {
                     Win32_FillRoundedRectSlice(hdcReal, &inner, COLOR_BG, state->width, state->height, inner.left, inner.top, innerR);
@@ -124,12 +120,9 @@ void Core_DrawListBox(PromptState *state, void *hdc) {
         } else {
             RECT rc = {0, y, state->width, y + itemH};
             if (sel) {
-                if (EnableShaders && ShaderPreset != 0) Win32_DrawSelectionBackground(hdcReal, &rc, COLOR_SELECTED_TEXT);
-                else {
-                    HBRUSH br = CreateSolidBrush(COLOR_SELECTED_TEXT);
-                    FillRect(hdcReal, &rc, br);
-                    DeleteObject(br);
-                }
+                HBRUSH br = CreateSolidBrush(COLOR_SELECTED_TEXT);
+                FillRect(hdcReal, &rc, br);
+                DeleteObject(br);
             } else {
                 if (EnableShaders && ShaderPreset != 0) {
                     Win32_DrawBackgroundSlice(hdcReal, &rc, COLOR_BG, state->width, state->height, rc.left, rc.top);
