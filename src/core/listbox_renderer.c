@@ -136,8 +136,8 @@ void Core_DrawListBox(PromptState *state, void *hdc) {
         const char* text = "";
         if (idx >= 0 && idx < lb->populated_count) {
             int raw = lb->matching_indices[idx];
-            if (g_alias_display_active && raw >= 0 && raw < g_alias_display_count && g_alias_display[raw][0] != '\0')
-                text = g_alias_display[raw];
+            if (lb->alias_display_active && raw >= 0 && raw < lb->alias_display_count && lb->alias_display[raw][0] != '\0')
+                text = lb->alias_display[raw];
             else
                 text = lb->populated_cache[idx];
         }
