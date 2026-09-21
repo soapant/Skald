@@ -627,8 +627,8 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             const char* textBuffer = "";
             if (pdis->itemID < (lb ? lb->populated_count : 0)) {
               int raw = lb->matching_indices[pdis->itemID];
-                if (g_alias_display_active && g_alias_display_count > 0 && raw >= 0 && raw < g_alias_display_count && g_alias_display[raw][0] != '\0') {
-                  textBuffer = g_alias_display[raw];
+                if (lb && lb->alias_display_active && lb->alias_display_count > 0 && raw >= 0 && raw < lb->alias_display_count && lb->alias_display[raw][0] != '\0') {
+                  textBuffer = lb->alias_display[raw];
                 } else {
                   textBuffer = lb->populated_cache[pdis->itemID];
                 }

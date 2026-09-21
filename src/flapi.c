@@ -197,39 +197,58 @@ bool fl_launch_with_args_as_admin(const char* path, const char* args) {
     return fl_launch_with_args_as_admin_platform(expanded, args);
 }
 
-int fl_load_file_list(const char* filepath, const char* out[], int max) {
-    if (!filepath || !out || max <= 0) return 0;
+FlStringList fl_load_file_list(const char* filepath) {
+    FlStringList list = {0};
+    if (!filepath) return list;
     char full[MAX_PATH];
     if (!Platform_ResolveDataPath(filepath, full, sizeof(full))) {
         log_warn("fl_load_file_list resolve failed name='%s' feature='%s'", filepath, FlintContext_Get()->window.current_feature ? FlintContext_Get()->window.current_feature : "(null)");
-        return 0;
+        return list;
     }
     filepath = full;
     FILE* f = fopen(filepath, "r");
-    if (!f) return 0;
-    int count = 0;
+    if (!f) return list;
+    int capacity = 64;
+    list.items = (char**)malloc((size_t)capacity * sizeof(char*));
+    if (!list.items) { fclose(f); return list; }
     char buffer[MAX_FILE_LINE_LENGTH];
-    while (count < max && fgets(buffer, sizeof(buffer), f)) {
+    while (list.count < MAX_FILE_LINES && fgets(buffer, sizeof(buffer), f)) {
         buffer[strcspn(buffer, "\r\n")] = '\0';
         if (buffer[0] == '\0') continue;
-        char* dup = strdup(buffer);
-        if (!dup) {
-            for (int j = 0; j < count; j++) free((void*)out[j]);
-            fclose(f);
-            return 0;
+        if (list.count >= capacity) {
+            int new_cap = capacity * 2;
+            char** grown = (char**)realloc(list.items, (size_t)new_cap * sizeof(char*));
+            if (!grown) break;
+            list.items = grown;
+            capacity = new_cap;
         }
-        out[count++] = dup;
+        char* dup = strdup(buffer);
+        if (!dup) break;
+        list.items[list.count++] = dup;
     }
     fclose(f);
-    return count;
+    if (list.items) {
+        if (list.count >= capacity) {
+            char** grown = (char**)realloc(list.items, ((size_t)capacity + 1) * sizeof(char*));
+            if (grown) { list.items = grown; capacity++; }
+        }
+        if (list.count < capacity) list.items[list.count] = NULL;
+    }
+    return list;
 }
 bool fl_free_list(const char* list[], int count) {
     if (!list || count <= 0) return false;
     for (int i = 0; i < count; i++) free((void*)list[i]);
     return true;
 }
-bool fl_free_file_list(const char* list[], int count) {
-    return fl_free_list(list, count);
+void fl_free_file_list(FlStringList* list) {
+    if (!list) return;
+    if (list->items) {
+        for (int i = 0; i < list->count; i++) free(list->items[i]);
+        free(list->items);
+        list->items = NULL;
+    }
+    list->count = 0;
 }
 bool fl_free_window_list(Fl_WindowList *list) {
     if (!list) return false;
@@ -331,27 +350,27 @@ bool fl_file_exists(const char* path) {
 }
 bool fl_append_unique_line(const char* path, const char* line) {
     if (!path || !line) return false;
-    const char* items[1024]; int n = fl_load_file_list(path, items, 1024);
+    FlStringList files = fl_load_file_list(path);
     bool ok = fl_append_to_file(path, line);
-    fl_free_file_list(items, n);
+    fl_free_file_list(&files);
     return ok;
 }
 bool fl_remove_line(const char* path, const char* line) {
     if (!path || !line) return false;
-    const char* items[1024]; int n = fl_load_file_list(path, items, 1024);
+    FlStringList files = fl_load_file_list(path);
     const char* kept[1024]; int k=0;
-    for (int i=0;i<n;i++) if (strcmp(items[i], line)!=0) kept[k++]=items[i]; else { free((void*)items[i]); items[i]=NULL; }
+    for (int i=0;i<files.count && k<1024;i++) if (strcmp(files.items[i], line)!=0) kept[k++]=files.items[i]; else { free(files.items[i]); files.items[i]=NULL; }
     bool ok = fl_write_to_file(path, kept, k);
-    for (int i=0;i<n;i++) if (items[i]) free((void*)items[i]);
+    fl_free_file_list(&files);
     return ok;
 }
 bool fl_remove_line_contains(const char* path, const char* substr) {
     if (!path || !substr) return false;
-    const char* items[1024]; int n = fl_load_file_list(path, items, 1024);
+    FlStringList files = fl_load_file_list(path);
     const char* kept[1024]; int k=0;
-    for (int i=0;i<n;i++) if (!strstr(items[i], substr)) kept[k++]=items[i]; else { free((void*)items[i]); items[i]=NULL; }
+    for (int i=0;i<files.count && k<1024;i++) if (!strstr(files.items[i], substr)) kept[k++]=files.items[i]; else { free(files.items[i]); files.items[i]=NULL; }
     bool ok = fl_write_to_file(path, kept, k);
-    for (int i=0;i<n;i++) if (items[i]) free((void*)items[i]);
+    fl_free_file_list(&files);
     return ok;
 }
 bool fl_parse_desktop_file(const char* path, char* out_name, size_t n, bool* out_nodisplay) {
@@ -871,21 +890,20 @@ char* fl_edit_text_popup_impl(const FlEditPopupSpec* spec) {
 
 bool fl_replace_line_in_file(const char* filepath, int line_index, const char* new_text) {
     if (!filepath || !new_text || line_index < 0) return false;
-    const char* items[MAX_FILE_LINES];
-    int n = fl_load_file_list(filepath, items, MAX_FILE_LINES);
-    if (line_index >= n) {
-        fl_free_file_list(items, n);
+    FlStringList files = fl_load_file_list(filepath);
+    if (line_index >= files.count) {
+        fl_free_file_list(&files);
         return false;
     }
-    free((void*)items[line_index]);
-    items[line_index] = NULL;
-    items[line_index] = strdup(new_text);
-    if (!items[line_index]) {
-        fl_free_file_list(items, n);
+    free(files.items[line_index]);
+    files.items[line_index] = NULL;
+    files.items[line_index] = strdup(new_text);
+    if (!files.items[line_index]) {
+        fl_free_file_list(&files);
         return false;
     }
-    bool ok = fl_write_to_file(filepath, items, n);
-    fl_free_file_list(items, n);
+    bool ok = fl_write_to_file(filepath, (const char**)files.items, files.count);
+    fl_free_file_list(&files);
     return ok;
 }
 

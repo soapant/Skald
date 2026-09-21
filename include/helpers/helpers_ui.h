@@ -10,11 +10,7 @@ void eval_window_title_color(PromptState * state,unsigned long *window_title_col
 void eval_xoffset_for_alias(char* alias_text,int main_text_lenght,int *xOffsetAlias);
 unsigned short OpacityAlpha16(void);
 
-extern char g_alias_display[MAX_VISIBLE_ITEMS][512];
-extern int g_alias_display_count;
-extern bool g_alias_display_active;
-
-void BuildAliasDisplayItems(const char** items, int count);
+void BuildAliasDisplayItems(ListBoxInfo* lb, const char** items, int count);
 void PopulateListBox(ListBoxInfo* lb, WindowHandle hListBox, const char* filter,
     const char** items, int item_count,
     bool (*filter_match)(const char* item, const char* filter));

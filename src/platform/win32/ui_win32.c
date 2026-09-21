@@ -334,7 +334,7 @@ char* Platform_PromptUser(WindowManager* wm, const PromptSpec* spec) {
     FlintContext_Get()->window.current_feature = (char*)(p ? p+1 : window_title);
   }
   SetCurrentFeatureName(FlintContext_Get()->window.current_feature);
-  BuildAliasDisplayItems(window_list, count);
+  BuildAliasDisplayItems(lb_ptr, window_list, count);
   extern EditorMode g_last_mode;
 
   if (ModePersistsThroughFeatures) {

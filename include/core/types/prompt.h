@@ -7,6 +7,9 @@ typedef struct ListBoxInfo ListBoxInfo;
 
 struct ListBoxInfo {
     char populated_cache[MAX_VISIBLE_ITEMS][512];
+    char alias_display[MAX_VISIBLE_ITEMS][512];
+    int  alias_display_count;
+    bool alias_display_active;
     int  populated_count;
     int  matching_indices[MAX_VISIBLE_ITEMS];
     int  total_matches;
