@@ -538,13 +538,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
               }
             }
             if (isSelected) {
-              if (EnableShaders && ShaderPreset != 0) {
-                Win32_DrawRoundedSelection(pdis->hDC, &inner, COLOR_SELECTED_TEXT, innerR);
-              } else if (EnableShaders && ShaderPreset != 0) {
-                Win32_DrawRoundedSelection(pdis->hDC, &inner, COLOR_SELECTED_TEXT, innerR);
-              } else {
-                Win32_FillRoundedRect(pdis->hDC, &inner, COLOR_SELECTED_TEXT, innerR);
-              }
+              Win32_FillRoundedRect(pdis->hDC, &inner, COLOR_SELECTED_TEXT, innerR);
             } else {
               if (EnableShaders && ShaderPreset != 0) {
                 RECT winRc; GetClientRect(hwnd, &winRc);
@@ -564,12 +558,8 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             }
           } else if (EnableShaders && ShaderPreset != 0) {
             if (isSelected) {
-              //temporary there are no selection shaders for windows it seems
-              if (EnableShaders && ShaderPreset != 0) {
-                Win32_DrawSelectionBackground(pdis->hDC, &pdis->rcItem, COLOR_SELECTED_TEXT);
-              } else {
-                Win32_DrawSelectionBackground(pdis->hDC, &pdis->rcItem, COLOR_SELECTED_TEXT);
-              }
+              if (!s_sel_brush) s_sel_brush = CreateSolidBrush(COLOR_SELECTED_TEXT);
+              FillRect(pdis->hDC, &pdis->rcItem, s_sel_brush);
             } else {
               RECT winRc; GetClientRect(hwnd, &winRc);
               int winW = winRc.right - winRc.left;
