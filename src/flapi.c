@@ -1207,6 +1207,10 @@ bool fl_type_text(const char *s) {
   return fl_type_text_platform(s);
 }
 
+void fl_sleep(double seconds) {
+  fl_sleep_platform(seconds);
+}
+
 void fl_send_hotkey(const char* hotkey_string) {
   if (!hotkey_string) return;
   remap_send_combo(hotkey_string);
