@@ -377,7 +377,7 @@ char* Platform_PromptUser(WindowManager* wm, const PromptSpec* spec) {
     if (WH_TO_HWND(FlintContext_Get()->window.hListBox)) ShowWindow(WH_TO_HWND(FlintContext_Get()->window.hListBox), SW_HIDE);
     if (WH_TO_HWND(FlintContext_Get()->window.hEditControl)) ShowWindow(WH_TO_HWND(FlintContext_Get()->window.hEditControl), SW_HIDE);
   }
-  if (!window_list && refresh_callback && has_listbox && lb_ptr) {
+  if (refresh_callback && has_listbox && lb_ptr) {
       refresh_callback("", FlintContext_Get()->window.hListBox, lb_ptr);
       if (g_win32_prompt_state) g_win32_prompt_state->listbox = *lb_ptr;
   }
