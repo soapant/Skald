@@ -206,7 +206,6 @@ bool Platform_PromptPopupOnKey(Popup* self, const PopupKeyEvent* key) {
       return true;
     }
     if (wParam == VK_RETURN) {
-      log_warn("DBG prompt RETURN has_listbox=%d sel_idx=%d enter_cb=%p", state->has_listbox, state->listbox.selected_index, FlintContext_Get()->prompt_callbacks.enter);
       bool is_ctrl = ctrl_pressed;
       const char* sel = NULL;
       char filter_copy[sizeof(state->filter)];
