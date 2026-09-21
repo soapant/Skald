@@ -507,6 +507,11 @@ char* fl_run_terminal_command(char* command) {
   return Platform_RunTerminalCommand(command,false);
 }
 
+char* fl_run_terminal_command_blocking(char* command) {
+  if (!command) return NULL;
+  return Platform_RunCommandAndGetOutput(command);
+}
+
 char* fl_run_terminal_command_and_open(char* command) {
   if (!command) return NULL;
   return Platform_RunTerminalCommand(command,true);
@@ -1398,7 +1403,7 @@ void fl_screenshot_copy_area(void) {
              "%s/external/grim -g \"$(%s/external/slurp)\" -t png %s",
              wd, wd, path);
 
-    fl_run_terminal_command(cmd);
+    fl_run_terminal_command_blocking(cmd);
     fl_clipboard_set_png_path(path);
 }
 
@@ -1412,7 +1417,7 @@ void fl_screenshot_copy(void) {
              "%s/external/grim -t png %s",
              wd, path);
 
-    fl_run_terminal_command(cmd);
+    fl_run_terminal_command_blocking(cmd);
     fl_clipboard_set_png_path(path);
 }
 
@@ -1423,8 +1428,8 @@ void fl_screenshot_save_area(char* save_path) {
     snprintf(cmd, sizeof(cmd),
              "%s/external/grim -g \"$(%s/external/slurp)\" %s.png",
              wd, wd,save_path);
-    
-    fl_run_terminal_command(cmd);
+
+    fl_run_terminal_command_blocking(cmd);
 }
 
 void fl_screenshot_save(char* save_path) {
@@ -1434,8 +1439,8 @@ void fl_screenshot_save(char* save_path) {
     snprintf(cmd, sizeof(cmd),
              "%s/external/grim %s.png",
              wd,save_path);
-    
-    fl_run_terminal_command(cmd);
+
+    fl_run_terminal_command_blocking(cmd);
 }
 
 void fl_ocr_area_to_clipboard(void) {
@@ -1446,7 +1451,7 @@ void fl_ocr_area_to_clipboard(void) {
              "%s/external/grim -g \"$(%s/external/slurp)\" -t png - | tesseract stdin stdout -l eng",
              wd, wd);
 
-    char* out = Platform_RunTerminalCommand(cmd, false);
+    char* out = fl_run_terminal_command_blocking(cmd);
     if (!out || !out[0]) {
         free(out);
         return;
