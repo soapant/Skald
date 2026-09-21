@@ -10,10 +10,29 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <glob.h>
+
+static void sway_ensure_sock(void) {
+    if (getenv("SWAYSOCK") || getenv("I3SOCK")) return;
+    const char* rtd = getenv("XDG_RUNTIME_DIR");
+    if (!rtd || !rtd[0]) return;
+    char pat[512];
+    snprintf(pat, sizeof(pat), "%s/sway-ipc.*.sock", rtd);
+    glob_t g;
+    memset(&g, 0, sizeof(g));
+    if (glob(pat, 0, NULL, &g) == 0 && g.gl_pathc > 0) {
+        setenv("SWAYSOCK", g.gl_pathv[g.gl_pathc - 1], 1);
+        log_info("discovered SWAYSOCK='%s'", g.gl_pathv[g.gl_pathc - 1]);
+    } else {
+        log_info("no sway socket found pat='%s'", pat);
+    }
+    globfree(&g);
+}
 
 bool get_title_sway(char *buffer, int buffer_size) {
     if (!buffer || buffer_size <= 0) { log_error("buffer='%s' buffer_size=%d", buffer ? buffer : "null", buffer_size); return false; }
     buffer[0] = '\0';
+    sway_ensure_sock();
     if (!getenv("SWAYSOCK") && !getenv("I3SOCK")) { log_error("SWAYSOCK and I3SOCK not set buffer='%s' buffer_size=%d", buffer ? buffer : "null", buffer_size); return false; }
     char *command_output = Platform_RunTerminalCommand(
         "swaymsg -t get_tree --raw | grep -A 40 '\"focused\": true'",
@@ -84,6 +103,7 @@ static bool sway_name_for_pid(const char *json, const char *pid_pos, const char 
 
 bool focus_window_title_sway(char* title) {
     if (!title || !*title) { log_error("title is NULL"); return false; }
+    sway_ensure_sock();
     while (*title && (iscntrl((unsigned char)*title) || isspace((unsigned char)*title))) title++;
     char *end = title + strlen(title);
     while (end > title && (iscntrl((unsigned char)end[-1]) || isspace((unsigned char)end[-1]))) *--end = '\0';
@@ -207,6 +227,7 @@ static bool sway_app_for_pid(const char *pid_pos, const char *next_pid, char *ou
 }
 
 Fl_WindowList get_window_names_sway() {
+    sway_ensure_sock();
     char *json = Platform_RunTerminalCommand("swaymsg -t get_tree", false);
     Fl_WindowList list = {0};
     if (!json || !*json) { log_error("output is NULL or empty"); free(json); return list; }
@@ -226,6 +247,7 @@ Fl_WindowList get_window_names_sway() {
 }
 
 Fl_WindowList get_window_titles_sway() {
+    sway_ensure_sock();
     char *json = Platform_RunTerminalCommand("swaymsg -t get_tree", false);
     Fl_WindowList list = {0};
     if (!json || !*json) { log_error("output is NULL or empty"); free(json); return list; }
