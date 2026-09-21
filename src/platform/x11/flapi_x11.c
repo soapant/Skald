@@ -725,3 +725,11 @@ double fl_end_timer_platform(FlTimer t) {
     if (now < t.ticks) return 0.0;
     return (double)(now - t.ticks) / 1000000.0;
 }
+
+void fl_sleep_platform(double seconds) {
+    if (seconds <= 0) return;
+    struct timespec req;
+    req.tv_sec = (time_t)seconds;
+    req.tv_nsec = (long)((seconds - (double)req.tv_sec) * 1000000000.0);
+    nanosleep(&req, NULL);
+}
