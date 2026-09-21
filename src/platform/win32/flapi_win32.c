@@ -160,6 +160,7 @@ bool fl_launch_with_args_as_admin_platform(const char* path, const char* args) {
 static FlListSpec g_fl_list_spec;
 static ListBoxInfo *g_fl_list_lb;
 static int g_fl_list_y0, g_fl_list_itemH, g_fl_list_visible, g_fl_list_cur;
+static int g_fl_list_bx, g_fl_list_bw, g_fl_list_fw;
 static HDC g_fl_list_hdc;
 static HFONT g_fl_list_font;
 static bool g_fl_list_font_owned;
@@ -176,9 +177,23 @@ bool fl_listbox_begin_platform(const FlListSpec *spec) {
     if (!g_fl_list_hdc) return false;
     g_fl_list_spec = *spec;
     g_fl_list_lb = lb;
-    g_fl_list_itemH = spec->item_height ? spec->item_height : FontSize + 14;
-    g_fl_list_y0 = spec->y ? spec->y : (FontSize + 28) + 10;
-    int list_h = spec->h ? spec->h : 400;
+    extern PromptState* Platform_GetWin32PromptState(void);
+    PromptState *st = Platform_GetWin32PromptState();
+    g_fl_list_itemH = spec->item_height ? spec->item_height : 32;
+    g_fl_list_y0 = spec->y ? spec->y : 70;
+    int bottomMargin = (WindowTitleText || VimModeText) ? 60 : 12;
+    int list_h;
+    if (spec->h) list_h = spec->h;
+    else list_h = st ? (st->height - g_fl_list_y0 - bottomMargin) : 400;
+    if (!spec->x && !spec->w) {
+        g_fl_list_bx = 20;
+        g_fl_list_bw = (st ? st->width - 40 : 650);
+        g_fl_list_fw = st ? st->width - 40 : 900;
+    } else {
+        g_fl_list_bx = spec->x;
+        g_fl_list_bw = spec->w ? spec->w : 650;
+        g_fl_list_fw = spec->w ? spec->w : 900;
+    }
     int visible = list_h / g_fl_list_itemH;
     if (visible < 1) visible = 1;
     if (visible > lb->populated_count) visible = lb->populated_count;
@@ -209,8 +224,8 @@ bool fl_listbox_next_platform(FlListItemCtx *out) {
     if (RoundedCorners && CornerRadius>0) {
         int R=6; if (R > CornerRadius) R = CornerRadius;
         int t = 1;
-        int bx = g_fl_list_spec.x;
-        int bw = (g_fl_list_spec.w ? g_fl_list_spec.w : 650);
+        int bx = g_fl_list_bx;
+        int bw = g_fl_list_bw;
         RECT inner = {bx+t, y+1+t, bx+bw-t, y+g_fl_list_itemH-1-t};
         int innerR = R-1; if (innerR < 0) innerR = 0;
         if (inner.right <= inner.left || inner.bottom <= inner.top) { inner = (RECT){bx, y, bx+bw, y+g_fl_list_itemH}; innerR = R; }
@@ -244,7 +259,7 @@ bool fl_listbox_next_platform(FlListItemCtx *out) {
             }
         }
     } else {
-        RECT rc = { g_fl_list_spec.x, y, g_fl_list_spec.x + (g_fl_list_spec.w ? g_fl_list_spec.w : 900), y + g_fl_list_itemH };
+        RECT rc = { g_fl_list_bx, y, g_fl_list_bx + g_fl_list_bw, y + g_fl_list_itemH };
         if (sel) {
             HBRUSH br = CreateSolidBrush(COLOR_SELECTED_TEXT);
             FillRect(g_fl_list_hdc, &rc, br);
@@ -467,12 +482,13 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
         if (state) buf = state->filter;
         else buf = "";
     }
-    int x = spec->x;
-    int y = spec->y;
+    int x = spec->x ? spec->x : 20;
+    int y = spec->y ? spec->y : 20;
     int w = spec->w;
     int h = spec->h;
-    if (w <= 0) w = state ? state->width : 880;
-    if (h <= 0) h = FontSize + 28;
+    if (w <= 0) w = state ? state->width - 40 : 880;
+    if (w < 40) w = 40;
+    if (h <= 0) h = 32;
     RECT rc = {x, y, x + w, y + h};
     if (RoundedCorners && CornerRadius > 0) {
         Win32_FillRoundedRect(hdc, &rc, COLOR_BG, 6);

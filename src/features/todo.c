@@ -303,7 +303,6 @@ void todo_render_callback(PromptState *state) {
     ListBoxInfo *lb = &state->listbox;
     FlListSpec spec = {
         .lb = lb,
-        .x = 0, .y = 70, .w = state->width, .h = state->height - 50,
         .item_height = FontSize + 36
     };
     fl_place_editbox();
