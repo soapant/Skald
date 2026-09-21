@@ -17,20 +17,8 @@ typedef struct {
 
 struct feature_data {
     char* name;
-    const char** items;
     const char* last_selections[2048];
     int selection_count;
-    int item_count;    
-    RefreshCallback refresh_callback;
-    EnterCallback enter_callback;
-    CtrlEnterCallback ctrl_enter_callback;
-    TabCallback tab_callback;
-    CopyCallback copy_callback;
-    RenderCallback render_callback;
-    EditCallback edit_callback;
-    FilterCallback filter_callback;
-    HelpCallback help_callback;
-    bool (*filter_match)(const char*, const char*);
 };
 
 typedef struct {
