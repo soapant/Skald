@@ -448,18 +448,6 @@ PROFILE_END_VAR(timer3, "Focus");
         free(data->name);
         data->name = new_name;
     }
-    data->items = window_list;
-    data->item_count = count;
-    data->refresh_callback = refresh_callback;
-    data->enter_callback = enter_callback;
-    data->ctrl_enter_callback = ctrl_enter_callback;
-    data->tab_callback = tab_callback;
-    data->copy_callback = copy_callback;
-    data->render_callback = render_callback;
-    data->edit_callback = edit_callback;
-    data->filter_callback = filter_callback;
-    data->help_callback = help_callback;
-    data->filter_match = NULL;
   }
 
 

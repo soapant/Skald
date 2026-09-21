@@ -125,22 +125,6 @@ static void Populate_CleanFilter(const char* filter, char* clean_filter, size_t 
   }
 }
 
-static bool Populate_ShouldUsePrevious(ListBoxInfo* lb, const char** items, int item_count, const char* clean_filter, int* out_prev_count) {
-  int prev_count = 0;
-  bool use_previous = false;
-  if (strlen(clean_filter) > 0 &&
-      lb->last_items == items &&
-      lb->last_item_count == item_count &&
-      lb->last_filter_valid &&
-      strlen(clean_filter) > strlen(lb->last_filter) &&
-      Platform_StringStartsWithCaseInsensitive(clean_filter, lb->last_filter)) {
-    use_previous = true;
-    prev_count = lb->last_filter_full_count;
-  }
-  if (out_prev_count) *out_prev_count = prev_count;
-  return use_previous;
-}
-
 static bool Populate_ItemMatches(const char* search_text, const char* original_item, const char* clean_filter, bool (*filter_match)(const char*, const char*)) {
   if (filter_match) return filter_match(search_text, clean_filter);
   if (Platform_StringStartsWithCaseInsensitive(FlintContext_Get()->window.current_feature, "center")) {
@@ -160,22 +144,7 @@ static const char* AliasComposedText(ListBoxInfo* lb, const char* item, int raw,
   return item;
 }
 
-static int Populate_FilterIncremental(ListBoxInfo* lb, const char** items, const char* clean_filter, bool (*filter_match)(const char*, const char*), int prev_count) {
-  int total_matches = 0;
-  int* prev_matches = lb->prev_matches;
-  for (int i = 0; i < prev_count && total_matches < MAX_VISIBLE_ITEMS; i++) {
-    int idx = prev_matches[i];
-    if (!items[idx]) continue;
-    char composed[1024];
-    const char* search_text = AliasComposedText(lb, items[idx], idx, composed, sizeof(composed));
-    if (Populate_ItemMatches(search_text, items[idx], clean_filter, filter_match)) {
-      lb->matching_indices[total_matches++] = idx;
-    }
-  }
-  return total_matches;
-}
-
-static int Populate_FilterFull(ListBoxInfo* lb, const char** items, int item_count, const char* clean_filter, bool (*filter_match)(const char*, const char*)) {
+static int Populate_Filter(ListBoxInfo* lb, const char** items, int item_count, const char* clean_filter, bool (*filter_match)(const char*, const char*)) {
   int total_matches = 0;
   bool empty_filter = (clean_filter[0] == '\0');
   for (int i = 0; i < item_count && total_matches < MAX_VISIBLE_ITEMS; i++) {
@@ -193,11 +162,7 @@ static int Populate_FilterFull(ListBoxInfo* lb, const char** items, int item_cou
   return total_matches;
 }
 
-static int Populate_Filter(ListBoxInfo* lb, const char** items, int item_count, const char* clean_filter, bool (*filter_match)(const char*, const char*), bool use_previous, int prev_count) {
-  if (use_previous && prev_count == 0) return 0;
-  if (use_previous && prev_count > 0) return Populate_FilterIncremental(lb, items, clean_filter, filter_match, prev_count);
-  return Populate_FilterFull(lb, items, item_count, clean_filter, filter_match);
-}
+
 
 static void Populate_RankMatches(ListBoxInfo* lb, const char** items, const char* clean_filter, int total_matches) {
   if (clean_filter[0] == '\0' || total_matches <= 1) return;
@@ -212,15 +177,6 @@ static void Populate_RankMatches(ListBoxInfo* lb, const char** items, const char
   for (int i = 0; i < total_matches - 1; i++) for (int j = i + 1; j < total_matches; j++) if (scores[j] < scores[i]) {
     int ti = lb->matching_indices[i]; lb->matching_indices[i] = lb->matching_indices[j]; lb->matching_indices[j] = ti;
     int ts = scores[i]; scores[i] = scores[j]; scores[j] = ts;
-  }
-}
-
-static void Populate_SaveHistory(ListBoxInfo* lb, int total_matches, const char* clean_filter) {
-  if (total_matches > 0 && strlen(clean_filter) > 0) {
-    memcpy(lb->prev_matches, lb->matching_indices, total_matches * sizeof(int));
-    lb->last_filter_full_count = total_matches;
-  } else {
-    lb->last_filter_full_count = 0;
   }
 }
 
@@ -280,16 +236,7 @@ static void Populate_UpdateUI(ListBoxInfo* lb, WindowHandle hListBox, int total_
   }
 }
 
-static void Populate_CommitState(ListBoxInfo* lb, const char** items, int item_count, const char* clean_filter, int total_matches, int old_count) {
-  (void)old_count;
-  if (strlen(clean_filter) > 0) {
-    strncpy(lb->last_filter, clean_filter, sizeof(lb->last_filter) - 1);
-    lb->last_filter[sizeof(lb->last_filter) - 1] = '\0';
-    lb->last_filter_valid = true;
-  } else {
-    lb->last_filter_valid = false;
-  }
-  lb->last_items = items;
+static void Populate_CommitState(ListBoxInfo* lb, int item_count, int total_matches) {
   lb->last_item_count = item_count;
   lb->total_matches = total_matches;
 }
@@ -317,7 +264,6 @@ void PopulateListBox(ListBoxInfo* lb, WindowHandle hListBox, const char* filter,
   PROFILE_END_VAR(timer_alias, "PopulateListBox - Aliases");
 
   PROFILE_START(timer_total);
-  int old_count = lb->total_matches;
 
   PROFILE_START(timer_current_sel);
   int current_sel;
@@ -331,19 +277,10 @@ void PopulateListBox(ListBoxInfo* lb, WindowHandle hListBox, const char* filter,
   int total_matches = 0;
   PROFILE_END_VAR(timer_clean_filter, "  PopulateListBox - Clean filter");
 
-  PROFILE_START(timer_inc);
-  int prev_count = 0;
-  bool use_previous = Populate_ShouldUsePrevious(lb, items, item_count, clean_filter, &prev_count);
-  PROFILE_END_VAR(timer_inc, "  PopulateListBox - Incremental check");
-
   PROFILE_START(timer_filter);
-  total_matches = Populate_Filter(lb, items, item_count, clean_filter, filter_match, use_previous, prev_count);
+  total_matches = Populate_Filter(lb, items, item_count, clean_filter, filter_match);
   PROFILE_END_VAR(timer_filter, "  PopulateListBox - Filtering");
   Populate_RankMatches(lb, items, clean_filter, total_matches);
-
-  PROFILE_START(timer_history);
-  Populate_SaveHistory(lb, total_matches, clean_filter);
-  PROFILE_END_VAR(timer_history, "  PopulateListBox - History save");
 
   PROFILE_START(timer_matches);
   PROFILE_START(timer_pool);
@@ -360,7 +297,7 @@ void PopulateListBox(ListBoxInfo* lb, WindowHandle hListBox, const char* filter,
   PROFILE_END_VAR(timer_ui, "  PopulateListBox - UI update");
 
   PROFILE_START(timer_cleanup);
-  Populate_CommitState(lb, items, item_count, clean_filter, total_matches, old_count);
+  Populate_CommitState(lb, item_count, total_matches);
   PROFILE_END_VAR(timer_cleanup, "  PopulateListBox - Cleanup");
 
   log_info("PopulateListBox completed for filter='%s'", filter ? filter : "");
