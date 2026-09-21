@@ -432,6 +432,13 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             buf[s] = (char)wParam;
             SetWindowTextA(hEdit, buf);
             SendMessageA(hEdit, EM_SETSEL, s + 1, s + 1);
+            extern PromptState* Platform_GetWin32PromptState(void);
+            PromptState* st = Platform_GetWin32PromptState();
+            if (st) {
+              strncpy(st->filter, buf, sizeof(st->filter) - 1);
+              st->filter[sizeof(st->filter) - 1] = '\0';
+              st->cursor = (size_t)(s + 1);
+            }
           }
           InvalidateRect(hwnd, NULL, FALSE);
           return 0;
@@ -537,6 +544,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
       if (wParam == UI_DEBOUNCE_TIMER_ID) {
         KillTimer(hwnd, UI_DEBOUNCE_TIMER_ID);
           UI_RedrawNow(lb, FlintContext_Get()->window.hListBox);
+          if (FlintContext_Get()->prompt_callbacks.render != NULL) InvalidateRect(hwnd, NULL, FALSE);
           return 0;
       }
       break;
