@@ -431,7 +431,6 @@ FontHandle Platform_CreateFont(int size, const char* face_name) {
             }
         }
     }
-    log_info("Platform_CreateFont size=%d face_name='%s'", size, face_name ? face_name : "");;
     return FH_FROM_HFONT(hf);
 }
 
@@ -759,7 +758,6 @@ char* Platform_GetActiveWindowTitle(void) {
     } else {
         fgTitle[0] = '\0';
     }
-    log_info("Platform_GetActiveWindowTitle completed");
     return fgTitle;
 }
 char* Platform_GetIconPath(char* app_path) {
