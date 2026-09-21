@@ -9,6 +9,8 @@
 
 #include <sys/stat.h> 
 #include <sys/wait.h>
+#include <poll.h>
+#include <signal.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <string.h>
@@ -370,6 +372,88 @@ char* Platform_RunCommandAndGetOutput(char* command) {
     return output;
 }
 
+static char* Platform_RunCommandDetachedCapture(char* command) {
+    int pfd[2];
+    if (pipe(pfd) != 0) return strdup("");
+    pid_t pid = fork();
+    if (pid < 0) { close(pfd[0]); close(pfd[1]); return strdup(""); }
+    if (pid == 0) {
+        setsid();
+        pid_t pid2 = fork();
+        if (pid2 < 0) _exit(1);
+        if (pid2 > 0) _exit(0);
+        close(pfd[0]);
+        signal(SIGPIPE, SIG_IGN);
+        dup2(pfd[1], STDOUT_FILENO);
+        dup2(pfd[1], STDERR_FILENO);
+        if (pfd[1] > 2) close(pfd[1]);
+        int fd = open("/dev/null", O_RDONLY);
+        if (fd >= 0) { dup2(fd, STDIN_FILENO); if (fd > 2) close(fd); }
+        execl("/bin/sh", "sh", "-c", command, (char*)NULL);
+        _exit(127);
+    }
+    close(pfd[1]);
+    int st = 0;
+    waitpid(pid, &st, 0);
+    size_t cap = 8192;
+    size_t total = 0;
+    char* out = malloc(cap);
+    if (!out) { close(pfd[0]); return strdup(""); }
+    int flags = fcntl(pfd[0], F_GETFL, 0);
+    if (flags >= 0) fcntl(pfd[0], F_SETFL, flags | O_NONBLOCK);
+    struct timespec start;
+    clock_gettime(CLOCK_MONOTONIC, &start);
+    long quiet_ms = 350;
+    long drain_ms = 5000;
+    long deadline = quiet_ms;
+    bool got_data = false;
+    bool eof = false;
+    char buf[4096];
+    while (1) {
+        struct timespec now;
+        clock_gettime(CLOCK_MONOTONIC, &now);
+        long elapsed = (now.tv_sec - start.tv_sec) * 1000L + (now.tv_nsec - start.tv_nsec) / 1000000L;
+        long remain = deadline - elapsed;
+        if (remain <= 0) break;
+        struct pollfd p = { pfd[0], POLLIN | POLLHUP | POLLERR, 0 };
+        int r = poll(&p, 1, (int)remain);
+        if (r < 0) { if (errno == EINTR) continue; break; }
+        if (r == 0) break;
+        ssize_t n;
+        bool read_any = false;
+        while ((n = read(pfd[0], buf, sizeof(buf))) > 0) {
+            read_any = true;
+            if (!got_data) { got_data = true; deadline = elapsed + drain_ms; if (deadline < quiet_ms) deadline = quiet_ms; }
+            while (total + (size_t)n + 1 > cap) {
+                cap *= 2;
+                char* no = realloc(out, cap);
+                if (!no) { free(out); close(pfd[0]); return strdup(""); }
+                out = no;
+            }
+            memcpy(out + total, buf, (size_t)n);
+            total += (size_t)n;
+            clock_gettime(CLOCK_MONOTONIC, &now);
+            elapsed = (now.tv_sec - start.tv_sec) * 1000L + (now.tv_nsec - start.tv_nsec) / 1000000L;
+            if (got_data) deadline = elapsed + drain_ms;
+        }
+        if (n == 0) { eof = true; break; }
+        if (n < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
+            if (p.revents & POLLHUP) { eof = true; }
+            break;
+        }
+        if (!read_any && (p.revents & POLLHUP)) { eof = true; break; }
+    }
+    close(pfd[0]);
+    (void)eof;
+    if (total + 1 > cap) {
+        char* no = realloc(out, total + 1);
+        if (!no) { free(out); return strdup(""); }
+        out = no;
+    }
+    out[total] = '\0';
+    return out;
+}
+
 char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
     PROFILE_START(timer);
     if (command == NULL || strlen(command) == 0) { log_error("command is NULL or empty open_terminal=%d", open_terminal); PROFILE_END_VAR(timer, "platform_x11:Platform_RunTerminalCommand"); return NULL; }
@@ -378,7 +462,7 @@ char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
     const char* real_home = Platform_GetRealHome();
 
     if (!open_terminal) {
-        char* result = Platform_RunCommandAndGetOutput(command);
+        char* result = Platform_RunCommandDetachedCapture(command);
         log_info("ran terminal command '%s' open_terminal=%d", command, open_terminal);
         PROFILE_END_VAR(timer, "platform_x11:Platform_RunTerminalCommand");
         return result;
