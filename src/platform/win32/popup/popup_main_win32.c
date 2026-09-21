@@ -374,7 +374,6 @@ LRESULT CALLBACK ListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
 LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
   if(msg==WM_KEYDOWN){ int mods=0; if(GetKeyState(VK_CONTROL)&0x8000) mods|=HOTKEY_MOD_CTRL; if(GetKeyState(VK_MENU)&0x8000) mods|=HOTKEY_MOD_ALT; if(GetKeyState(VK_SHIFT)&0x8000) mods|=HOTKEY_MOD_SHIFT; if(GetKeyState(VK_LWIN)&0x8000||GetKeyState(VK_RWIN)&0x8000) mods|=HOTKEY_MOD_SUPER; Platform_InputState_Update((int)wParam,true,mods); }
   if(msg==WM_KEYUP){ int mods=0; if(GetKeyState(VK_CONTROL)&0x8000) mods|=HOTKEY_MOD_CTRL; if(GetKeyState(VK_MENU)&0x8000) mods|=HOTKEY_MOD_ALT; if(GetKeyState(VK_SHIFT)&0x8000) mods|=HOTKEY_MOD_SHIFT; if(GetKeyState(VK_LWIN)&0x8000||GetKeyState(VK_RWIN)&0x8000) mods|=HOTKEY_MOD_SUPER; Platform_InputState_Update((int)wParam,false,mods); }
-  if(msg==WM_KEYDOWN||msg==WM_KEYUP||msg==WM_CHAR){ if(FlintContext_Get()->prompt_callbacks.render != NULL) InvalidateRect(hwnd, NULL, FALSE); }
   ListBoxInfo* lb = GetLBForPopupWindow(hwnd);
   static HBRUSH s_bg_brush = NULL;
     static HBRUSH s_bg_gradient_brushes[128] = {0};
@@ -384,6 +383,22 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
     
     switch (msg) {
+    case WM_KEYDOWN: {
+      HWND hEdit = WH_TO_HWND(FlintContext_Get()->window.hEditControl);
+      HWND hKey = (hEdit && IsWindow(hEdit)) ? hEdit : hwnd;
+      PopupKeyEvent pkey;
+      memset(&pkey, 0, sizeof(pkey));
+      pkey.vk = (int)wParam;
+      pkey.ctrl = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
+      pkey.shift = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
+      pkey.alt = (GetKeyState(VK_MENU) & 0x8000) != 0;
+      if (PromptWindow_OnKey(hKey, &pkey)) {
+        if (FlintContext_Get()->prompt_callbacks.render != NULL) InvalidateRect(hwnd, NULL, FALSE);
+        return 0;
+      }
+      if (FlintContext_Get()->prompt_callbacks.render != NULL) InvalidateRect(hwnd, NULL, FALSE);
+      break;
+    }
     case WM_ACTIVATE: {
         if (CloseOnLossOfFocus && LOWORD(wParam) == WA_INACTIVE) {
             FlintContext_Get()->window.output_buffer[0] = '\0';
@@ -668,50 +683,68 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         HDC hdc = BeginPaint(hwnd, &ps);
         RECT rect;
         GetClientRect(hwnd, &rect);
+        HDC paintDC = hdc;
+        HDC memDC = NULL;
+        HBITMAP memBmp = NULL;
+        HBITMAP oldBmp = NULL;
+        bool useRenderBuf = (FlintContext_Get()->prompt_callbacks.render != NULL && rect.right > 0 && rect.bottom > 0);
+        if (useRenderBuf) {
+          memDC = CreateCompatibleDC(hdc);
+          memBmp = CreateCompatibleBitmap(hdc, rect.right, rect.bottom);
+          if (memDC && memBmp) {
+            oldBmp = (HBITMAP)SelectObject(memDC, memBmp);
+            paintDC = memDC;
+          } else {
+            if (memDC) DeleteDC(memDC);
+            if (memBmp) DeleteObject(memBmp);
+            memDC = NULL;
+            useRenderBuf = false;
+          }
+        }
         if (EnableShaders && ShaderPreset != 0) {
-          Win32_DrawBackground(hdc, &rect);
+          Win32_DrawBackground(paintDC, &rect);
         } else {
           if (!s_bg_brush) s_bg_brush = CreateSolidBrush(COLOR_BG);
-            FillRect(hdc, &ps.rcPaint, s_bg_brush);
+            FillRect(paintDC, &ps.rcPaint, s_bg_brush);
         }
         if (FlintContext_Get()->prompt_callbacks.render) {
             extern PromptState* Platform_GetWin32PromptState(void);
             PromptState *state = Platform_GetWin32PromptState();
             if (state) {
                 fl_editbox_reset_placed();
-                Platform_SetDrawContextWin32(hdc);
+                Platform_SetDrawContextWin32(paintDC);
                 FlintContext_Get()->prompt_callbacks.render(state);
             }
         }
       if (g_vim_mode != NULL && VimModeText) {
         wchar_t wmode[256];
           MultiByteToWideChar(CP_UTF8, 0, g_vim_mode, -1, wmode, 256);
-          HFONT hOldFont = (HFONT)SelectObject(hdc, g_win32_hMainFont);
-          SetBkMode(hdc, TRANSPARENT);
+          HFONT hOldFont = (HFONT)SelectObject(paintDC, g_win32_hMainFont);
+          SetBkMode(paintDC, TRANSPARENT);
           if (g_current_mode == MODE_NORMAL) {
-            SetTextColor(hdc,COLOR_NORMAL_MODE_TEXT);
+            SetTextColor(paintDC,COLOR_NORMAL_MODE_TEXT);
           } else if (g_current_mode == MODE_INSERT) {
-            SetTextColor(hdc,COLOR_INSERT_MODE_TEXT);
+            SetTextColor(paintDC,COLOR_INSERT_MODE_TEXT);
           } else {
-            SetTextColor(hdc,COLOR_VISUAL_MODE_TEXT);
+            SetTextColor(paintDC,COLOR_VISUAL_MODE_TEXT);
           }
           SIZE sz;
-          GetTextExtentPoint32W(hdc, wmode, (int)wcslen(wmode), &sz);
+          GetTextExtentPoint32W(paintDC, wmode, (int)wcslen(wmode), &sz);
           RECT modeRect;
           modeRect.left = rect.right - sz.cx - 20;
           modeRect.top = rect.bottom - sz.cy - 10;
           modeRect.right = rect.right - 10;
           modeRect.bottom = modeRect.top + sz.cy;
-          DrawTextW(hdc, wmode, -1, &modeRect, DT_LEFT);
-          SelectObject(hdc, hOldFont);
+          DrawTextW(paintDC, wmode, -1, &modeRect, DT_LEFT);
+          SelectObject(paintDC, hOldFont);
       }
       if (FlintContext_Get()->window.title != NULL && strlen(FlintContext_Get()->window.title) > 0 && WindowTitleText) {
         wchar_t wtitle[256];
           MultiByteToWideChar(CP_UTF8, 0, FlintContext_Get()->window.title, -1, wtitle, 256);
-          HFONT hOldFont = (HFONT)SelectObject(hdc, g_win32_hMainFont);
-          SetBkMode(hdc, TRANSPARENT);
+          HFONT hOldFont = (HFONT)SelectObject(paintDC, g_win32_hMainFont);
+          SetBkMode(paintDC, TRANSPARENT);
           SIZE sz;
-          GetTextExtentPoint32W(hdc, wtitle, (int)wcslen(wtitle), &sz);
+          GetTextExtentPoint32W(paintDC, wtitle, (int)wcslen(wtitle), &sz);
           RECT titleRect;
           titleRect.left = 15;
           titleRect.top = rect.bottom - sz.cy - 10;
@@ -737,10 +770,16 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
           } else {
             titleColor = RGB(255, 0, 0);
           }
-          SetTextColor(hdc, titleColor);
-          DrawTextW(hdc, wtitle, -1, &titleRect, DT_LEFT | DT_TOP);
-          SelectObject(hdc, hOldFont);
+          SetTextColor(paintDC, titleColor);
+          DrawTextW(paintDC, wtitle, -1, &titleRect, DT_LEFT | DT_TOP);
+          SelectObject(paintDC, hOldFont);
       }
+        if (useRenderBuf) {
+          BitBlt(hdc, ps.rcPaint.left, ps.rcPaint.top, ps.rcPaint.right - ps.rcPaint.left, ps.rcPaint.bottom - ps.rcPaint.top, memDC, ps.rcPaint.left, ps.rcPaint.top, SRCCOPY);
+          SelectObject(memDC, oldBmp);
+          DeleteObject(memBmp);
+          DeleteDC(memDC);
+        }
         EndPaint(hwnd, &ps);
         break;
     }
