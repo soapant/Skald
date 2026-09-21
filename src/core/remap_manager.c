@@ -336,11 +336,11 @@ bool remap_handle_vk(int vk_code, int value) {
             if (b->dst_mods & HOTKEY_MOD_SUPER) { Platform_EmitKey(VK_LWIN, 1); g_virt_vk[VK_LWIN]=1; }
             if (b->dst_vk) { Platform_EmitKey(b->dst_vk, 1); g_virt_vk[b->dst_vk]=1; }
         } else if (before && !after) {
-            if (b->dst_vk) { Platform_EmitKey(b->dst_vk, 0); g_virt_vk[b->dst_vk]=0; }
-            if (b->dst_mods & HOTKEY_MOD_CTRL) { Platform_EmitKey(VK_LCONTROL, 0); g_virt_vk[VK_LCONTROL]=0; }
-            if (b->dst_mods & HOTKEY_MOD_SHIFT) { Platform_EmitKey(VK_LSHIFT, 0); g_virt_vk[VK_LSHIFT]=0; }
-            if (b->dst_mods & HOTKEY_MOD_ALT) { Platform_EmitKey(VK_LMENU, 0); g_virt_vk[VK_LMENU]=0; }
-            if (b->dst_mods & HOTKEY_MOD_SUPER) { Platform_EmitKey(VK_LWIN, 0); g_virt_vk[VK_LWIN]=0; }
+            if (b->dst_vk && g_virt_vk[b->dst_vk]) { Platform_EmitKey(b->dst_vk, 0); g_virt_vk[b->dst_vk]=0; }
+            if ((b->dst_mods & HOTKEY_MOD_CTRL) && g_virt_vk[VK_LCONTROL]) { Platform_EmitKey(VK_LCONTROL, 0); g_virt_vk[VK_LCONTROL]=0; }
+            if ((b->dst_mods & HOTKEY_MOD_SHIFT) && g_virt_vk[VK_LSHIFT]) { Platform_EmitKey(VK_LSHIFT, 0); g_virt_vk[VK_LSHIFT]=0; }
+            if ((b->dst_mods & HOTKEY_MOD_ALT) && g_virt_vk[VK_LMENU]) { Platform_EmitKey(VK_LMENU, 0); g_virt_vk[VK_LMENU]=0; }
+            if ((b->dst_mods & HOTKEY_MOD_SUPER) && g_virt_vk[VK_LWIN]) { Platform_EmitKey(VK_LWIN, 0); g_virt_vk[VK_LWIN]=0; }
             if (!allowed[i]) continue;
             if (b->src_mods & HOTKEY_MOD_CTRL) {
                 if (g_phys_vk[VK_LCONTROL]) { Platform_EmitKey(VK_LCONTROL, 1); g_virt_vk[VK_LCONTROL]=1; }
