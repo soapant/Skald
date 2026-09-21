@@ -89,6 +89,46 @@ void format_number_plain(double num, char* out, size_t max_len){
     }
 }
 
+static bool g_calc_show_fraction = false;
+static FlTimer g_calc_last_toggle = {0};
+static bool g_calc_has_toggled = false;
+
+static void format_fraction(double value, char* out, size_t max_len){
+    if(isnan(value) || isinf(value)){ format_number_plain(value, out, max_len); return; }
+    bool neg = value < 0;
+    double a = fabs(value);
+    double frac = a - floor(a);
+    if(frac < 1e-12){
+        snprintf(out, max_len, "%s%lld", neg ? "-" : "", (long long)llround(a));
+        return;
+    }
+    long long p0=0, p1=1, q0=1, q1=0;
+    long long best_n=0, best_d=1;
+    double x = a;
+    for(int i=0;i<32;i++){
+        long long ai = (long long)floor(x);
+        long long p2 = ai*p1+p0, q2 = ai*q1+q0;
+        if(q2 > 1000000) break;
+        best_n = p2; best_d = q2;
+        if(fabs((double)p2/(double)q2 - a) < 1e-9) break;
+        double r = x - (double)ai;
+        if(r < 1e-12) break;
+        x = 1.0/r;
+        p0=p1; p1=p2; q0=q1; q1=q2;
+    }
+    if(best_d == 1) snprintf(out, max_len, "%s%lld", neg ? "-" : "", best_n);
+    else snprintf(out, max_len, "%s%lld/%lld", neg ? "-" : "", best_n, best_d);
+}
+
+static void calc_format_result(double num, char* out, size_t max_len){
+    if(g_calc_show_fraction) format_fraction(num, out, max_len);
+    else format_number_plain(num, out, max_len);
+}
+
+static bool calc_ctrl_down(void){
+    return fl_is_key_down(FL_KEY_CONTROL) || fl_is_key_down(FL_KEY_LCONTROL) || fl_is_key_down(FL_KEY_RCONTROL);
+}
+
 void format_number_with_suffix(double num, char* out, size_t max_len){
   format_number_plain(num,out,max_len);
 }
@@ -162,8 +202,7 @@ static double evaluate_expression(const char* expr, bool* out_ok){
         if(isspace((unsigned char)clean[i])){ i++; continue; }
         if(clean[i]=='('){ ops[++otop]='('; expect_number=true; i++; continue; }
         if(clean[i]==')'){
-            while(otop>=0 && ops[otop]!='('){ if(!apply_op(vals,&vtop,ops,&otop,&ok)) break; }
-            if(otop>=0 && ops[otop]=='(') otop--; else ok=false;
+            while(otop>=0 && ops[otop]!='('){ if(!apply_op(vals,&vtop,ops,&otop,&ok)) break; } if(otop>=0 && ops[otop]=='(') otop--; else ok=false;
             expect_number=false; i++; continue;
         }
         if(expect_number && (clean[i]=='-' || clean[i]=='+')){
@@ -308,7 +347,7 @@ void live_evaluate(const char* input, char* out_result, size_t max_len) {
         UnitDef* toU=find_unit_fuzzy(target_unit);
         if(!fromU || !toU){ strncpy(out_result, "Unknown unit conversion format", max_len); has_last_op=false; return; }
         double result = val * (fromU->to_seconds / toU->to_seconds);
-        char formatted[64]; format_number_plain(result, formatted, sizeof(formatted));
+        char formatted[64]; calc_format_result(result, formatted, sizeof(formatted));
         snprintf(out_result, max_len, "= %s %s", formatted, toU->canonical);
         has_last_op=false;
         
@@ -326,14 +365,14 @@ void live_evaluate(const char* input, char* out_result, size_t max_len) {
         
         
         has_last_op=false; 
-        char formatted[64]; format_number_plain(result, formatted, sizeof(formatted));
+        char formatted[64]; calc_format_result(result, formatted, sizeof(formatted));
         snprintf(out_result, max_len, "= %s", formatted);
         return;
     }
     
     double val = parse_number_with_suffix(clean);
     if (val != 0.0 || (strlen(clean) > 0 && clean[0] == '0')) {
-        char formatted[64]; format_number_plain(val, formatted, sizeof(formatted));
+        char formatted[64]; calc_format_result(val, formatted, sizeof(formatted));
         snprintf(out_result, max_len, "= %s", formatted);
         has_last_op = false;
         return;
@@ -375,6 +414,13 @@ void flip_last_operation(char* out_result, size_t max_len) {
 static char g_calc_last_result[256] = {0};
 
 void calculator_render_callback(PromptState *state) {
+    if (fl_is_key_pressed(FL_KEY_F) && calc_ctrl_down()) {
+        if (!g_calc_has_toggled || fl_end_timer(g_calc_last_toggle) > 300.0) {
+            g_calc_show_fraction = !g_calc_show_fraction;
+            g_calc_last_toggle = fl_start_timer();
+            g_calc_has_toggled = true;
+        }
+    }
     char result[256] = {0};
     if (strlen(state->filter) > 0) {
         live_evaluate(state->filter, result, sizeof(result));
@@ -385,8 +431,8 @@ void calculator_render_callback(PromptState *state) {
     strncpy(g_calc_last_result, result, sizeof(g_calc_last_result)-1);
     int cx = 0;
     int cy = state->height / 2 - 30;
-    fl_draw_text(.x=cx, .y=cy, .text=g_calc_last_result, .align="CENTER", .pad=cx,.fontsize=30);
-    fl_draw_text(.x=cx, .y=cy+36, .text="Enter: copy  Ctrl+Enter: use  Tab: flip", .align="CENTER", .pad=cx,.fontsize=30);
+    fl_draw_text(.x=cx, .y=cy, .text=g_calc_last_result, .align="CENTER", .pad=cx);
+    fl_draw_text(.x=cx, .y=cy+36, .text=g_calc_show_fraction ? "Enter: copy  Ctrl+Enter: use  Tab: flip  Ctrl+F: fraction [on]" : "Enter: copy  Ctrl+Enter: use  Tab: flip  Ctrl+F: fraction [off]", .align="CENTER", .pad=cx);
 }
 
 bool calculator_enter_callback(const char* selection, ListBoxInfo* lb) {
@@ -418,6 +464,9 @@ bool calculator_ctrlenter_callback(const char* selection, ListBoxInfo* lb) {
 }
 
 void TriggerCalculator(void) {
+    g_calc_show_fraction = false;
+    g_calc_has_toggled = false;
+    (void)fl_is_key_pressed(FL_KEY_F);
     PROMPT(.title = "🧮 Calculator",
            .render = calculator_render_callback,
            .enter = calculator_enter_callback,
