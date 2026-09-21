@@ -126,6 +126,7 @@ int fl_get_feature_list_with_icons(const char** out_names, void (**out_cbs)(void
 // =============================================================================
 
 void fl_init_all_hotkeys(void);
+void fl_send_hotkey(const char* hotkey_string);
 
 // =============================================================================
 // BROWSER / ZOXIDE / SYSTEM

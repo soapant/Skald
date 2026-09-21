@@ -1207,6 +1207,10 @@ bool fl_type_text(const char *s) {
   return fl_type_text_platform(s);
 }
 
+void fl_send_hotkey(const char* hotkey_string) {
+
+}
+
 bool fl_is_key_down(int vk){
   return Platform_IsKeyDown(vk); 
 }

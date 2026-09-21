@@ -2,7 +2,7 @@
 
 
 void Testing(void) {
-  printf("%s \n",fl_get_last_clipboard_entry());
+  fl_send_hotkey("Alt+F");
 }
 
 
