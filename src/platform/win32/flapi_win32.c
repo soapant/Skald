@@ -783,3 +783,7 @@ void fl_ocr_area_to_clipboard_platform(void) {
     if (out[0]) { if (Platform_CopyToClipboard(out)) fl_clipboard_history_push_text_platform(out); }
     free(out);
 }
+
+char* fl_query_ai_platform(char* message) {
+  printf("AI query not implemented on Windows platform\n");
+}
