@@ -4,7 +4,7 @@
 #include <pthread.h>
 #endif
 
-#define WM_SAMPLE_SECONDS 3
+#define WM_SAMPLE_SECONDS 1
 #define WM_MAX_TITLE 80
 #define WM_MAX_ROWS 25
 
@@ -98,6 +98,7 @@ void window_monitor_render(PromptState* state) {
 
 void TriggerWindowMonitor(void) {
     PROMPT(.title = "Window Monitor",
+           .tick = true,
            .render = window_monitor_render);
 }
 
