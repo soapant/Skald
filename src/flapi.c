@@ -446,6 +446,11 @@ char* fl_run_terminal_command_and_open(char* command) {
   return Platform_RunTerminalCommand(command,true);
 }
 
+bool fl_launch_detached(char* command) {
+  if (!command) return false;
+  return Platform_LaunchDetached(command);
+}
+
 bool fl_launch_terminal_at_path(char* path,char* args) {
     if (!path) return false;
     char expanded[MAX_PATH];

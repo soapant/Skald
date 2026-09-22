@@ -341,6 +341,10 @@ bool move_active_window_to_monitor_sway(bool right) {
     if (outs && outs[0]) {
         char names[16][64];
         int ox[16];
+        int oy[16];
+        int ow[16];
+        int oh[16];
+        int usable[16];
         int focused[16];
         int n = 0;
         char* p = outs;
@@ -358,13 +362,23 @@ bool move_active_window_to_monitor_sway(bool right) {
             char* next_np = strstr(ne, "\"name\"");
             char* obj_end = next_np ? next_np : outs + strlen(outs);
             int rx = 0;
+            int ry = 0;
+            int rw = 0;
+            int rh = 0;
             char* rk = strstr(np, "\"rect\"");
             if (rk && rk < obj_end) {
                 char* xc = strstr(rk, "\"x\"");
-                if (xc && xc < obj_end) {
-                    char* c2 = strchr(xc + 3, ':');
-                    if (c2 && c2 < obj_end) rx = atoi(c2 + 1);
-                }
+                char* c2 = xc && xc < obj_end ? strchr(xc + 3, ':') : NULL;
+                if (c2 && c2 < obj_end) rx = atoi(c2 + 1);
+                char* yc = xc ? strstr(xc + 3, "\"y\"") : NULL;
+                c2 = yc && yc < obj_end ? strchr(yc + 3, ':') : NULL;
+                if (c2 && c2 < obj_end) ry = atoi(c2 + 1);
+                char* wc = yc ? strstr(yc + 3, "\"width\"") : NULL;
+                c2 = wc && wc < obj_end ? strchr(wc + 7, ':') : NULL;
+                if (c2 && c2 < obj_end) rw = atoi(c2 + 1);
+                char* hc = wc ? strstr(wc + 7, "\"height\"") : NULL;
+                c2 = hc && hc < obj_end ? strchr(hc + 8, ':') : NULL;
+                if (c2 && c2 < obj_end) rh = atoi(c2 + 1);
             }
             int is_focused = 0;
             char* fk = strstr(np, "\"focused\"");
@@ -376,30 +390,80 @@ bool move_active_window_to_monitor_sway(bool right) {
                     is_focused = (strncmp(v, "true", 4) == 0) ? 1 : 0;
                 }
             }
+            int is_usable = 1;
+            char* ak = strstr(np, "\"active\"");
+            if (ak && ak < obj_end) {
+                char* c4 = strchr(ak + 8, ':');
+                if (c4 && c4 < obj_end) {
+                    char* v = c4 + 1;
+                    while (*v == ' ' || *v == '\t') v++;
+                    if (strncmp(v, "false", 5) == 0) is_usable = 0;
+                }
+            }
+            char* dk = strstr(np, "\"dpms\"");
+            if (dk && dk < obj_end) {
+                char* c5 = strchr(dk + 6, ':');
+                if (c5 && c5 < obj_end) {
+                    char* v = c5 + 1;
+                    while (*v == ' ' || *v == '\t') v++;
+                    if (strncmp(v, "false", 5) == 0) is_usable = 0;
+                }
+            }
+            if (rw <= 0 || rh <= 0) is_usable = 0;
             memcpy(names[n], ns, (size_t)(ne - ns));
             names[n][ne - ns] = '\0';
             ox[n] = rx;
+            oy[n] = ry;
+            ow[n] = rw;
+            oh[n] = rh;
+            usable[n] = is_usable;
             focused[n] = is_focused;
             n++;
             p = ne;
         }
         if (n >= 2) {
-            int order[16];
-            for (int i = 0; i < n; i++) order[i] = i;
-            for (int i = 0; i < n - 1; i++) {
-                for (int j = i + 1; j < n; j++) {
-                    if (ox[order[j]] < ox[order[i]]) { int t = order[i]; order[i] = order[j]; order[j] = t; }
-                }
-            }
             int cur = -1;
             for (int i = 0; i < n; i++) {
-                if (focused[order[i]]) { cur = i; break; }
+                if (focused[i] && usable[i]) { cur = i; break; }
             }
-            if (cur < 0) cur = 0;
-            int dst = right ? cur + 1 : cur - 1;
-            if (dst >= 0 && dst < n) {
+            if (cur < 0) {
+                for (int i = 0; i < n; i++) {
+                    if (usable[i]) { cur = i; break; }
+                }
+            }
+            int dst = -1;
+            if (cur >= 0) {
+                int best_overlap = -1;
+                int best_gap = 1 << 30;
+                for (int i = 0; i < n; i++) {
+                    if (i == cur || !usable[i]) continue;
+                    int overlap = 0;
+                    int gap = 0;
+                    if (right) {
+                        if (ox[i] < ox[cur] + ow[cur]) continue;
+                        int top = oy[cur] > oy[i] ? oy[cur] : oy[i];
+                        int bottom = oy[cur] + oh[cur] < oy[i] + oh[i] ? oy[cur] + oh[cur] : oy[i] + oh[i];
+                        overlap = bottom - top;
+                        if (overlap < 0) overlap = 0;
+                        gap = ox[i] - (ox[cur] + ow[cur]);
+                    } else {
+                        if (ox[i] + ow[i] > ox[cur]) continue;
+                        int top = oy[cur] > oy[i] ? oy[cur] : oy[i];
+                        int bottom = oy[cur] + oh[cur] < oy[i] + oh[i] ? oy[cur] + oh[cur] : oy[i] + oh[i];
+                        overlap = bottom - top;
+                        if (overlap < 0) overlap = 0;
+                        gap = ox[cur] - (ox[i] + ow[i]);
+                    }
+                    if (overlap > best_overlap || (overlap == best_overlap && gap < best_gap)) {
+                        best_overlap = overlap;
+                        best_gap = gap;
+                        dst = i;
+                    }
+                }
+            }
+            if (dst >= 0) {
                 char cmd[192];
-                snprintf(cmd, sizeof(cmd), "swaymsg 'move window to output %s; focus output %s'", names[order[dst]], names[order[dst]]);
+                snprintf(cmd, sizeof(cmd), "swaymsg 'move window to output %s; focus output %s'", names[dst], names[dst]);
                 char* out = Platform_RunTerminalCommand(cmd, false);
                 bool ok = succeded_sway(out);
                 free(out);
