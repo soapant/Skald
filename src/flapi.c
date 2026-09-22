@@ -5,7 +5,9 @@
 #include "deps/log.h"
 #include "core/modal.h"
 #include "config.h"
+#if !defined(_WIN32)
 #include <curl/curl.h>
+#endif
 #include "core/platform.h"
 #include "helpers/helpers_hotkey.h"
 #include "helpers/helpers_alias.h"
@@ -1348,6 +1350,11 @@ static size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb, voi
 }
 
 char* fl_send_ai_message(char* message) {
+#if defined(_WIN32)
+    (void)message;
+    return NULL;
+}
+#else
     CURL *curl;
     CURLcode res;
     struct MemoryStruct chunk;
@@ -1447,5 +1454,14 @@ char* fl_send_ai_message(char* message) {
 
     free(chunk.memory);
     return reply;
+}
+#endif
+
+FlTimer fl_profile_start() {
+    return fl_start_timer_platform();
+}
+
+void fl_profile_end(FlTimer timer) {
+    printf("[profile] %f s\n", fl_end_timer_platform(timer) / 1000);
 }
 

@@ -2,10 +2,9 @@
 
 
 void Testing(void) {
-    PROFILE_START(timer);
-    char *reply = fl_send_ai_message("Hello, how are you?");
-    printf("%s \n",reply);
-    PROFILE_END_VAR(timer, "Testing - fl_send_ai_message");
+    FlTimer timer = fl_profile_start();
+    fl_sleep(0.5);
+    fl_profile_end(timer);
 }
 
 
