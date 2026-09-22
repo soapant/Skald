@@ -1131,6 +1131,22 @@ bool Platform_FocusWindow(const char* title) {
   return Wm_FocusByTitle(title);
 }
 
+bool Platform_CloseActiveWindow(void) {
+  return Wm_CloseActiveWindow();
+}
+
+bool Platform_ToggleFullscreenActive(void) {
+  return Wm_ToggleFullscreenActive();
+}
+
+bool Platform_MoveActiveWindowToMonitor(bool right) {
+  return Wm_MoveActiveWindowToMonitor(right);
+}
+
+bool Platform_MinimizeActiveWindow(void) {
+  return Wm_MinimizeActiveWindow();
+}
+
 char* Platform_GetActiveWindowTitle() {
   return Wm_GetActiveWindowTitle();
 }

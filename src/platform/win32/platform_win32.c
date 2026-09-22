@@ -881,6 +881,125 @@ bool Platform_FocusWindow(const char* title) {
     return true;
 }
 
+static HWND Win32_ForegroundTarget(void) {
+    HWND hwnd = GetForegroundWindow();
+    if (!hwnd || !IsWindow(hwnd)) return NULL;
+    char cls[64];
+    cls[0] = '\0';
+    GetClassNameA(hwnd, cls, sizeof(cls));
+    if (strcmp(cls, "QuickSwitcherModalClass") == 0) return NULL;
+    if (strcmp(cls, "DisplayMessageModalClass") == 0) return NULL;
+    if (strcmp(cls, "EditPopupClass") == 0) return NULL;
+    if (strcmp(cls, "SearchPopupClass") == 0) return NULL;
+    if (strcmp(cls, "SettingsPopupClass") == 0) return NULL;
+    return hwnd;
+}
+
+bool Platform_CloseActiveWindow(void) {
+    HWND hwnd = Win32_ForegroundTarget();
+    if (!hwnd) return false;
+    PostMessageA(hwnd, WM_CLOSE, 0, 0);
+    return true;
+}
+
+static BOOL g_win32_fs_active = FALSE;
+static RECT g_win32_fs_rect;
+static LONG g_win32_fs_style;
+static LONG g_win32_fs_exstyle;
+
+bool Platform_ToggleFullscreenActive(void) {
+    HWND hwnd = Win32_ForegroundTarget();
+    if (!hwnd) return false;
+    if (!g_win32_fs_active) {
+        if (IsIconic(hwnd)) ShowWindow(hwnd, SW_RESTORE);
+        g_win32_fs_style = GetWindowLongA(hwnd, GWL_STYLE);
+        g_win32_fs_exstyle = GetWindowLongA(hwnd, GWL_EXSTYLE);
+        GetWindowRect(hwnd, &g_win32_fs_rect);
+        HMONITOR mon = MonitorFromWindow(hwnd, MONITOR_DEFAULTTONEAREST);
+        MONITORINFO mi;
+        mi.cbSize = sizeof(mi);
+        if (!GetMonitorInfoA(mon, &mi)) return false;
+        SetWindowLongA(hwnd, GWL_STYLE, (g_win32_fs_style & ~WS_OVERLAPPEDWINDOW) | WS_POPUP);
+        SetWindowLongA(hwnd, GWL_EXSTYLE, g_win32_fs_exstyle & ~(WS_EX_DLGMODALFRAME | WS_EX_CLIENTEDGE | WS_EX_STATICEDGE | WS_EX_WINDOWEDGE));
+        SetWindowPos(hwnd, HWND_TOP, mi.rcMonitor.left, mi.rcMonitor.top,
+            mi.rcMonitor.right - mi.rcMonitor.left, mi.rcMonitor.bottom - mi.rcMonitor.top,
+            SWP_NOOWNERZORDER | SWP_FRAMECHANGED | SWP_SHOWWINDOW);
+        g_win32_fs_active = TRUE;
+        return true;
+    }
+    SetWindowLongA(hwnd, GWL_STYLE, g_win32_fs_style);
+    SetWindowLongA(hwnd, GWL_EXSTYLE, g_win32_fs_exstyle);
+    SetWindowPos(hwnd, HWND_NOTOPMOST, g_win32_fs_rect.left, g_win32_fs_rect.top,
+        g_win32_fs_rect.right - g_win32_fs_rect.left, g_win32_fs_rect.bottom - g_win32_fs_rect.top,
+        SWP_NOOWNERZORDER | SWP_FRAMECHANGED | SWP_SHOWWINDOW);
+    g_win32_fs_active = FALSE;
+    return true;
+}
+
+typedef struct {
+    RECT rects[16];
+    int count;
+} Win32_MonList;
+
+static BOOL CALLBACK Win32_MonEnum(HMONITOR hMon, HDC hdc, LPRECT rc, LPARAM lp) {
+    (void)hMon; (void)hdc;
+    Win32_MonList* out = (Win32_MonList*)lp;
+    if (!out || out->count >= 16 || !rc) return TRUE;
+    out->rects[out->count++] = *rc;
+    return TRUE;
+}
+
+bool Platform_MoveActiveWindowToMonitor(bool right) {
+    HWND hwnd = Win32_ForegroundTarget();
+    if (!hwnd) return false;
+    if (IsIconic(hwnd)) ShowWindow(hwnd, SW_RESTORE);
+    if (IsZoomed(hwnd)) ShowWindow(hwnd, SW_RESTORE);
+    RECT wr;
+    if (!GetWindowRect(hwnd, &wr)) return false;
+    int cx = wr.left + (wr.right - wr.left) / 2;
+    int cy = wr.top + (wr.bottom - wr.top) / 2;
+    Win32_MonList list;
+    list.count = 0;
+    EnumDisplayMonitors(NULL, NULL, Win32_MonEnum, (LPARAM)&list);
+    if (list.count < 2) return false;
+    for (int i = 0; i < list.count - 1; i++) {
+        for (int j = i + 1; j < list.count; j++) {
+            if (list.rects[j].left < list.rects[i].left) {
+                RECT t = list.rects[i]; list.rects[i] = list.rects[j]; list.rects[j] = t;
+            }
+        }
+    }
+    int cur = 0;
+    for (int i = 0; i < list.count; i++) {
+        if (cx >= list.rects[i].left && cx < list.rects[i].right &&
+            cy >= list.rects[i].top && cy < list.rects[i].bottom) { cur = i; break; }
+        if (list.rects[i].left <= cx) cur = i;
+    }
+    int dst = right ? cur + 1 : cur - 1;
+    if (dst < 0 || dst >= list.count) return false;
+    int w = wr.right - wr.left;
+    int h = wr.bottom - wr.top;
+    int nx = list.rects[dst].left + (cx - list.rects[cur].left);
+    int ny = list.rects[dst].top + (wr.top - list.rects[cur].top);
+    int dw = list.rects[dst].right - list.rects[dst].left;
+    int dh = list.rects[dst].bottom - list.rects[dst].top;
+    if (w > dw) w = dw;
+    if (h > dh) h = dh;
+    if (nx < list.rects[dst].left) nx = list.rects[dst].left;
+    if (ny < list.rects[dst].top) ny = list.rects[dst].top;
+    if (nx + w > list.rects[dst].right) nx = list.rects[dst].right - w;
+    if (ny + h > list.rects[dst].bottom) ny = list.rects[dst].bottom - h;
+    SetWindowPos(hwnd, HWND_TOP, nx, ny, w, h, SWP_SHOWWINDOW);
+    return true;
+}
+
+bool Platform_MinimizeActiveWindow(void) {
+    HWND hwnd = Win32_ForegroundTarget();
+    if (!hwnd) return false;
+    ShowWindow(hwnd, SW_MINIMIZE);
+    return true;
+}
+
 char* Platform_GetActiveWindowTitle(void) {
     static char fgTitle[256];  
     HWND hForeground = GetForegroundWindow();
