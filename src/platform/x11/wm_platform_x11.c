@@ -38,7 +38,6 @@ void Platform_WM_ProcessEvents(WindowManager* wm) {
 
 void Platform_WM_OnPopEmpty(WindowManager* wm) {
     (void)wm;
-    Platform_DismissMessage();
     x11_clear_suppress();
     remap_reset();
     x11_sync_held_from_phys();

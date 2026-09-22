@@ -354,6 +354,7 @@ bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed) {
     }
     int code = ev->code;
     int val = ev->value;
+    if (ev->type == EV_KEY && val != 0) Platform_DismissIndefiniteMessage();
     if (code < 0 || code > KEY_MAX) {
         if (grabbed && g_x11_uinput_fd >= 0) x11_uinput_emit(ev);
         PROFILE_END_VAR(timer, "input:x11_handle_evdev");
