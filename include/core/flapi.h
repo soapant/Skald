@@ -534,6 +534,60 @@ char* fl_query_ai(char* message);
 
 bool fl_register_remapping_impl(const char* src, const char* dst, bool whitelist, const char** windows);
 
+typedef void (*FlSnippetFunc)(void);
+bool fl_register_snippet_impl(const char* trigger, const char* text, FlSnippetFunc fn, bool whitelist, const char** windows);
+
+#define _FL_SNIP_2(tr, tx, fn) fl_register_snippet_impl(tr, tx, fn, 0, NULL)
+#define _FL_SNIPPET_ROUTER_2(tr, x) _Generic((x), \
+    char*: _FL_SNIP_2(tr, (const char*)(x), NULL), \
+    const char*: _FL_SNIP_2(tr, (const char*)(x), NULL), \
+    default: _FL_SNIP_2(tr, NULL, (FlSnippetFunc)(x)))
+
+#define _FL_SNIP_3(tr, tx, fn, s1) fl_register_snippet_impl(tr, tx, fn, 0, (const char*[]){s1, NULL})
+#define _FL_SNIPPET_ROUTER_3(tr, x, s1) _Generic((x), \
+    char*: _FL_SNIP_3(tr, (const char*)(x), NULL, s1), \
+    const char*: _FL_SNIP_3(tr, (const char*)(x), NULL, s1), \
+    default: _FL_SNIP_3(tr, NULL, (FlSnippetFunc)(x), s1))
+
+#define _FL_SNIP_4(tr, tx, fn, arg3, arg4) \
+    _Generic((arg3)+0, \
+        int: fl_register_snippet_impl(tr, tx, fn, _FL_AS_BOOL(arg3), (const char*[]){_FL_AS_STR(arg4), NULL}), \
+        char*: fl_register_snippet_impl(tr, tx, fn, 0, (const char*[]){arg3, arg4, NULL}), \
+        const char*: fl_register_snippet_impl(tr, tx, fn, 0, (const char*[]){arg3, arg4, NULL}), \
+        default: fl_register_snippet_impl(tr, tx, fn, 0, (const char*[]){arg3, arg4, NULL}) \
+    )
+#define _FL_SNIPPET_ROUTER_4(tr, x, arg3, arg4) _Generic((x), \
+    char*: _FL_SNIP_4(tr, (const char*)(x), NULL, arg3, arg4), \
+    const char*: _FL_SNIP_4(tr, (const char*)(x), NULL, arg3, arg4), \
+    default: _FL_SNIP_4(tr, NULL, (FlSnippetFunc)(x), arg3, arg4))
+
+#define _FL_SNIP_5(tr, tx, fn, arg3, arg4, arg5) \
+    _Generic((arg3)+0, \
+        int: fl_register_snippet_impl(tr, tx, fn, _FL_AS_BOOL(arg3), (const char*[]){_FL_AS_STR(arg4), _FL_AS_STR(arg5), NULL}), \
+        char*: fl_register_snippet_impl(tr, tx, fn, 0, (const char*[]){arg3, arg4, arg5, NULL}), \
+        const char*: fl_register_snippet_impl(tr, tx, fn, 0, (const char*[]){arg3, arg4, arg5, NULL}), \
+        default: fl_register_snippet_impl(tr, tx, fn, 0, (const char*[]){arg3, arg4, arg5, NULL}) \
+    )
+#define _FL_SNIPPET_ROUTER_5(tr, x, arg3, arg4, arg5) _Generic((x), \
+    char*: _FL_SNIP_5(tr, (const char*)(x), NULL, arg3, arg4, arg5), \
+    const char*: _FL_SNIP_5(tr, (const char*)(x), NULL, arg3, arg4, arg5), \
+    default: _FL_SNIP_5(tr, NULL, (FlSnippetFunc)(x), arg3, arg4, arg5))
+
+#define _FL_SNIP_6(tr, tx, fn, arg3, arg4, arg5, arg6) \
+    _Generic((arg3)+0, \
+        int: fl_register_snippet_impl(tr, tx, fn, _FL_AS_BOOL(arg3), (const char*[]){_FL_AS_STR(arg4), _FL_AS_STR(arg5), _FL_AS_STR(arg6), NULL}), \
+        char*: fl_register_snippet_impl(tr, tx, fn, 0, (const char*[]){arg3, arg4, arg5, arg6, NULL}), \
+        const char*: fl_register_snippet_impl(tr, tx, fn, 0, (const char*[]){arg3, arg4, arg5, arg6, NULL}), \
+        default: fl_register_snippet_impl(tr, tx, fn, 0, (const char*[]){arg3, arg4, arg5, arg6, NULL}) \
+    )
+#define _FL_SNIPPET_ROUTER_6(tr, x, arg3, arg4, arg5, arg6) _Generic((x), \
+    char*: _FL_SNIP_6(tr, (const char*)(x), NULL, arg3, arg4, arg5, arg6), \
+    const char*: _FL_SNIP_6(tr, (const char*)(x), NULL, arg3, arg4, arg5, arg6), \
+    default: _FL_SNIP_6(tr, NULL, (FlSnippetFunc)(x), arg3, arg4, arg5, arg6))
+
+#define fl_register_snippet(...) \
+    _FL_GET_MACRO(__VA_ARGS__, _FL_SNIPPET_ROUTER_6, _FL_SNIPPET_ROUTER_5, _FL_SNIPPET_ROUTER_4, _FL_SNIPPET_ROUTER_3, _FL_SNIPPET_ROUTER_2)(__VA_ARGS__)
+
 #define _FL_REMAP_EXPAND(src, dst, whitelist, ...) \
     fl_register_remapping_impl(src, dst, whitelist, (const char*[]){__VA_ARGS__, NULL})
 
