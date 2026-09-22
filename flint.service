@@ -3,6 +3,7 @@ Description=Custom keyboard remapper
 After=default.target graphical-session.target
 Wants=graphical-session.target
 PartOf=graphical-session.target
+StartLimitIntervalSec=0
 
 [Service]
 Type=simple
@@ -13,7 +14,6 @@ Environment=XDG_RUNTIME_DIR=%t
 ExecStartPre=/bin/sh -c 'for i in 1 2 3 4 5 6 7 8 9 10; do [ -S /run/user/%U/wayland-1 ] || [ -S /tmp/.X11-unix/X0 ] || [ -S /run/user/%U/wayland-0 ] && break; sleep 0.5; done; exit 0'
 Restart=always
 RestartSec=3
-StartLimitIntervalSec=0
 KillMode=process
 TimeoutStopSec=5
 

@@ -454,6 +454,30 @@ static char* Platform_RunCommandDetachedCapture(char* command) {
     return out;
 }
 
+bool Platform_LaunchDetached(char* command) {
+    if (!command || !command[0]) return false;
+    pid_t pid = fork();
+    if (pid < 0) return false;
+    if (pid == 0) {
+        setsid();
+        pid_t pid2 = fork();
+        if (pid2 < 0) _exit(1);
+        if (pid2 > 0) _exit(0);
+        int fd = open("/dev/null", O_RDWR);
+        if (fd >= 0) {
+            dup2(fd, 0);
+            dup2(fd, 1);
+            dup2(fd, 2);
+            if (fd > 2) close(fd);
+        }
+        execl("/bin/sh", "sh", "-c", command, (char*)NULL);
+        _exit(127);
+    }
+    int st = 0;
+    waitpid(pid, &st, 0);
+    return true;
+}
+
 char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
     PROFILE_START(timer);
     if (command == NULL || strlen(command) == 0) { log_error("command is NULL or empty open_terminal=%d", open_terminal); PROFILE_END_VAR(timer, "platform_x11:Platform_RunTerminalCommand"); return NULL; }
@@ -1412,6 +1436,22 @@ bool Platform_TryAcquireSingleInstance(void) {
 }
 
 bool Platform_InitDisplaySafe(void) {
+    const char* xa = getenv("XAUTHORITY");
+    if (xa && xa[0] && access(xa, R_OK) != 0) unsetenv("XAUTHORITY");
+    const char* xa2 = getenv("XAUTHORITY");
+    if (!xa2 || !xa2[0]) {
+        const char* live = Platform_GetSessionXAuthority();
+        if (live && live[0]) setenv("XAUTHORITY", live, 1);
+    }
+    const char* wd = getenv("WAYLAND_DISPLAY");
+    if (wd && wd[0] && wd[0] != '/') {
+        const char* rtd = getenv("XDG_RUNTIME_DIR");
+        if (!rtd || !rtd[0]) rtd = Platform_GetRuntimeDir();
+        char sock[512];
+        snprintf(sock, sizeof(sock), "%s/%s", rtd ? rtd : "", wd);
+        struct stat st;
+        if (stat(sock, &st) != 0) unsetenv("WAYLAND_DISPLAY");
+    }
     if (!init_display()) {
         log_info("Continuing without X11 display (headless mode)");
         return false;

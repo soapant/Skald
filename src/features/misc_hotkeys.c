@@ -58,10 +58,10 @@ void copy_password(void) {
     fl_copy_to_clipboard("i_am_retarded1");
 }
 void open_terminal(void) {
-    fl_run_terminal_command(UsedTerminal);
+    fl_launch_detached(UsedTerminal);
 }
 void open_browser(void) {
-    fl_run_terminal_command("zen-browser");
+    fl_launch_detached("zen-browser");
 }
 
 void move_active_window_right(void) {

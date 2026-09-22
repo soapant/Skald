@@ -153,6 +153,22 @@ char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
     return out;
 }
 
+bool Platform_LaunchDetached(char* command) {
+    if (!command || !command[0]) return false;
+    char cmdLine[4096];
+    snprintf(cmdLine, sizeof(cmdLine), "cmd /c %s", command);
+    STARTUPINFOA si;
+    memset(&si, 0, sizeof(si));
+    si.cb = sizeof(si);
+    PROCESS_INFORMATION pi;
+    memset(&pi, 0, sizeof(pi));
+    BOOL ok = CreateProcessA(NULL, cmdLine, NULL, NULL, FALSE, CREATE_NO_WINDOW | DETACHED_PROCESS, NULL, NULL, &si, &pi);
+    if (!ok) return false;
+    CloseHandle(pi.hProcess);
+    CloseHandle(pi.hThread);
+    return true;
+}
+
 char* Platform_RunCommandAndGetOutput(char* command) {
     if (command == NULL || strlen(command) == 0) return NULL;
     SECURITY_ATTRIBUTES sa;
