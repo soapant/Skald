@@ -377,6 +377,7 @@ char* Platform_PromptUser(WindowManager* wm, const PromptSpec* spec) {
   }
   SetWindowLongPtrA(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), GWLP_USERDATA, (LONG_PTR)(lb_ptr));
   Win32_ApplyRoundedCorners(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), layout.w, layout.h);
+  if (spec->tick) SetTimer(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), UI_TICK_TIMER_ID, UI_TICK_TIMER_MS, NULL);
 
   PROFILE_END_VAR(timer, "Window Init");
 
@@ -431,6 +432,7 @@ PROFILE_END_VAR(timer3, "Focus");
 
   if (WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) != NULL && IsWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd))) {
     KillTimer(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), 999);
+    KillTimer(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), UI_TICK_TIMER_ID);
     DestroyWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd));
     FlintContext_Get()->window.hPopupWnd = WH_NULL;
   }

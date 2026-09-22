@@ -547,6 +547,10 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
           if (FlintContext_Get()->prompt_callbacks.render != NULL) InvalidateRect(hwnd, NULL, FALSE);
           return 0;
       }
+      if (wParam == UI_TICK_TIMER_ID) {
+          if (FlintContext_Get()->prompt_callbacks.render != NULL) InvalidateRect(hwnd, NULL, FALSE);
+          return 0;
+      }
       break;
     }
     case WM_MEASUREITEM: {
