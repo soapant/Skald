@@ -312,6 +312,9 @@ Fl_Pos get_cursor_position_sway(void) {
 
 bool close_active_window_sway(void) {
     sway_ensure_sock();
+    const char* sock = getenv("SWAYSOCK");
+    if (!sock || !sock[0]) sock = getenv("I3SOCK");
+    if (!sway_sock_live(sock)) return false;
     char* out = Platform_RunTerminalCommand("swaymsg kill", false);
     bool ok = succeded_sway(out);
     free(out);
@@ -320,6 +323,9 @@ bool close_active_window_sway(void) {
 
 bool toggle_fullscreen_active_sway(void) {
     sway_ensure_sock();
+    const char* sock = getenv("SWAYSOCK");
+    if (!sock || !sock[0]) sock = getenv("I3SOCK");
+    if (!sway_sock_live(sock)) return false;
     char* out = Platform_RunTerminalCommand("swaymsg fullscreen toggle", false);
     bool ok = succeded_sway(out);
     free(out);
@@ -328,6 +334,85 @@ bool toggle_fullscreen_active_sway(void) {
 
 bool move_active_window_to_monitor_sway(bool right) {
     sway_ensure_sock();
+    const char* sock = getenv("SWAYSOCK");
+    if (!sock || !sock[0]) sock = getenv("I3SOCK");
+    if (!sway_sock_live(sock)) return false;
+    char* outs = Platform_RunTerminalCommand("swaymsg -t get_outputs", false);
+    if (outs && outs[0]) {
+        char names[16][64];
+        int ox[16];
+        int focused[16];
+        int n = 0;
+        char* p = outs;
+        while (n < 16) {
+            char* np = strstr(p, "\"name\"");
+            if (!np) break;
+            char* colon = strchr(np + 6, ':');
+            if (!colon) break;
+            char* q1 = colon + 1;
+            while (*q1 == ' ' || *q1 == '\t') q1++;
+            if (*q1 != '"') { p = colon + 1; continue; }
+            char* ns = q1 + 1;
+            char* ne = strchr(ns, '"');
+            if (!ne || ne - ns <= 0 || ne - ns >= 64) break;
+            char* next_np = strstr(ne, "\"name\"");
+            char* obj_end = next_np ? next_np : outs + strlen(outs);
+            int rx = 0;
+            char* rk = strstr(np, "\"rect\"");
+            if (rk && rk < obj_end) {
+                char* xc = strstr(rk, "\"x\"");
+                if (xc && xc < obj_end) {
+                    char* c2 = strchr(xc + 3, ':');
+                    if (c2 && c2 < obj_end) rx = atoi(c2 + 1);
+                }
+            }
+            int is_focused = 0;
+            char* fk = strstr(np, "\"focused\"");
+            if (fk && fk < obj_end) {
+                char* c3 = strchr(fk + 9, ':');
+                if (c3 && c3 < obj_end) {
+                    char* v = c3 + 1;
+                    while (*v == ' ' || *v == '\t') v++;
+                    is_focused = (strncmp(v, "true", 4) == 0) ? 1 : 0;
+                }
+            }
+            memcpy(names[n], ns, (size_t)(ne - ns));
+            names[n][ne - ns] = '\0';
+            ox[n] = rx;
+            focused[n] = is_focused;
+            n++;
+            p = ne;
+        }
+        if (n >= 2) {
+            int order[16];
+            for (int i = 0; i < n; i++) order[i] = i;
+            for (int i = 0; i < n - 1; i++) {
+                for (int j = i + 1; j < n; j++) {
+                    if (ox[order[j]] < ox[order[i]]) { int t = order[i]; order[i] = order[j]; order[j] = t; }
+                }
+            }
+            int cur = -1;
+            for (int i = 0; i < n; i++) {
+                if (focused[order[i]]) { cur = i; break; }
+            }
+            if (cur < 0) cur = 0;
+            int dst = right ? cur + 1 : cur - 1;
+            if (dst >= 0 && dst < n) {
+                char cmd[192];
+                snprintf(cmd, sizeof(cmd), "swaymsg 'move window to output %s; focus output %s'", names[order[dst]], names[order[dst]]);
+                char* out = Platform_RunTerminalCommand(cmd, false);
+                bool ok = succeded_sway(out);
+                free(out);
+                free(outs);
+                return ok;
+            }
+            free(outs);
+            return false;
+        }
+        free(outs);
+    } else if (outs) {
+        free(outs);
+    }
     char cmd[64];
     snprintf(cmd, sizeof(cmd), "swaymsg move window to output %s", right ? "right" : "left");
     char* out = Platform_RunTerminalCommand(cmd, false);
@@ -338,6 +423,9 @@ bool move_active_window_to_monitor_sway(bool right) {
 
 bool minimize_active_window_sway(void) {
     sway_ensure_sock();
+    const char* sock = getenv("SWAYSOCK");
+    if (!sock || !sock[0]) sock = getenv("I3SOCK");
+    if (!sway_sock_live(sock)) return false;
     char* out = Platform_RunTerminalCommand("swaymsg move scratchpad", false);
     bool ok = succeded_sway(out);
     free(out);
