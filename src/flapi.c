@@ -21,6 +21,7 @@
 #include "platform/draw.h"
 #include "core/hotkey_manager.h"
 #include "core/remap_manager.h"
+#include "core/snippet_manager.h"
 #include "deps/stb_ds.h"
 
 static const unsigned char FL_PNG_MAGIC[8] = { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
@@ -320,6 +321,23 @@ bool fl_register_hotkey_impl(char* hotkey_string,void (*on_hotkey_trigger)(void)
 bool fl_register_remapping_impl(const char* src, const char* dst, bool whitelist, const char** windows) {
     if (!src || !dst) return false;
     return remap_register_internal(src, dst, whitelist, windows);
+}
+
+static void fl_snippet_fire(int idx, int del) {
+    const SnippetBinding* b = snippet_get_binding(idx);
+    if (!b || !b->trigger) return;
+    for (int i = 0; i < del; i++) {
+        Platform_EmitKey(VK_BACK, 1);
+        Platform_EmitKey(VK_BACK, 0);
+    }
+    if (b->text) fl_type_text(b->text);
+    else if (b->func) b->func();
+}
+
+bool fl_register_snippet_impl(const char* trigger, const char* text, FlSnippetFunc fn, bool whitelist, const char** windows) {
+    if (!trigger || (!text && !fn)) return false;
+    snippet_set_fire_fn(fl_snippet_fire);
+    return snippet_register_internal(trigger, text, fn, whitelist, windows);
 }
 
 typedef struct { char *key; void *value; } FlintMapEnt;

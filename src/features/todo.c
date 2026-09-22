@@ -303,7 +303,7 @@ void todo_render_callback(PromptState *state) {
     ListBoxInfo *lb = &state->listbox;
     FlListSpec spec = {
         .lb = lb,
-        .item_height = FontSize + 36
+        .item_height = FontSize + 40
     };
     fl_place_editbox();
     if (!fl_listbox_begin(&spec)) return;

@@ -13,6 +13,7 @@
 #include "core/feature_data.h"
 #include "core/platform.h"
 #include "core/window_manager.h"
+#include "core/snippet_manager.h"
 #include "platform/win32/win32_state.h"
 #include "core/remap_manager.h"
 #include "core/timer.h"
@@ -763,6 +764,13 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 
 
   }
+  }
+  if (nCode == HC_ACTION && (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN)) {
+    WindowManager* wmx = WindowManager_Get();
+    if (!wmx || !WindowManager_GetTopPopup(wmx)) {
+      KBDLLHOOKSTRUCT* rk = (KBDLLHOOKSTRUCT*)lParam;
+      if (snippet_feed_vk((int)rk->vkCode, 1, true)) return 1;
+    }
   }
   return CallNextHookEx(NULL, nCode, wParam, lParam);
 }
