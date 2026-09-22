@@ -439,6 +439,9 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
               st->filter[sizeof(st->filter) - 1] = '\0';
               st->cursor = (size_t)(s + 1);
             }
+            strncpy(FlintContext_Get()->window.filter, buf, sizeof(FlintContext_Get()->window.filter) - 1);
+            FlintContext_Get()->window.filter[sizeof(FlintContext_Get()->window.filter) - 1] = '\0';
+            FlintContext_Get()->window.filter_cursor = (int)(s + 1);
           }
           InvalidateRect(hwnd, NULL, FALSE);
           return 0;
