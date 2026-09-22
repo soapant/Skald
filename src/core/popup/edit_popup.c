@@ -73,6 +73,8 @@ Popup* EditPopup_Create(WindowManager* wm, const char* initial_text,
     PROFILE_START(timer);
     EditPopupDataInternal* data = calloc(1, sizeof(EditPopupDataInternal));
     if (!data) { PROFILE_END_VAR(timer, "window_manager:EditPopup_Create"); return NULL; }
+    w = (int)(w * Platform_GetUIScale());
+    h = (int)(h * Platform_GetUIScale());
     WindowManager_GetCenteredPos(w, h, &x, &y);
 
     data->base.vtable = &g_edit_popup_vtable;

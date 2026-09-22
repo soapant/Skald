@@ -37,6 +37,7 @@ WindowManager* WindowManager_Create(void) {
         PROFILE_END_VAR(timer, "window_manager:WindowManager_Create");
         return NULL;
     }
+    Platform_ApplyUIScale();
     wm->ctx = FlintContext_Get();
     wm->watcher_stop = false;
     g_window_manager = wm;
