@@ -39,6 +39,8 @@ void UI_GetParent(WindowHandle hwnd);
 
 #define UI_DEBOUNCE_MS 0
 #define UI_DEBOUNCE_TIMER_ID 998
+#define UI_TICK_TIMER_ID 997
+#define UI_TICK_TIMER_MS 1000
 
 #if defined(_WIN32)
 #include <windows.h>
