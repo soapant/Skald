@@ -415,6 +415,8 @@ bool fl_decrement_volume_by_percent(int decrement_percent);
 typedef struct { uint64_t ticks; } FlTimer;
 FlTimer fl_start_timer(void);
 double fl_end_timer(FlTimer t);
+FlTimer fl_profile_start(void);
+void fl_profile_end(FlTimer timer);
 void fl_run_after_time(double seconds, void (*callback)(void));
 char* fl_on_dir_changed(char* dir_path,void(callback)(void));
 bool fl_string_match_insensitive(char* needle,char* haystack);
