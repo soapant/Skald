@@ -3,7 +3,8 @@
 
 void Testing(void) {
     FlTimer timer = fl_profile_start();
-    fl_sleep(0.5);
+    char *reply = fl_query_ai("implement a simple linked list in C");
+    printf("%s \n",reply);
     fl_profile_end(timer);
 }
 

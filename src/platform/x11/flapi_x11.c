@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/types.h>
+#include <curl/curl.h>
 #include "core/timer.h"
 #include "core/remap_manager.h"
 #include "core/window_manager.h"
@@ -943,4 +944,129 @@ void fl_ocr_area_to_clipboard_platform() {
     if (out[0]) { if (Platform_CopyToClipboard(out)) fl_clipboard_history_push_text_platform(out); }
     free(out);
 
+}
+
+struct MemoryStruct {
+    char *memory;
+    size_t size;
+};
+
+static size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp) {
+    size_t realsize = size * nmemb;
+    struct MemoryStruct *mem = (struct MemoryStruct *)userp;
+
+    char *ptr = realloc(mem->memory, mem->size + realsize + 1);
+    if(!ptr) {
+        printf("Not enough memory (realloc returned NULL)\n");
+        return 0;
+    }
+
+    mem->memory = ptr;
+    memcpy(&(mem->memory[mem->size]), contents, realsize);
+    mem->size += realsize;
+    mem->memory[mem->size] = 0;
+
+    return realsize;
+}
+
+char* fl_query_ai_platform(char* message) {
+    CURL *curl;
+    CURLcode res;
+    struct MemoryStruct chunk;
+    struct curl_slist *headers = NULL;
+
+    chunk.memory = malloc(1);
+    chunk.size = 0;
+
+    curl = curl_easy_init();
+    if(!curl) {
+        free(chunk.memory);
+        return NULL;
+    }
+    
+
+    curl_easy_setopt(curl, CURLOPT_URL, "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions");
+
+    char auth_header[512];
+    snprintf(auth_header, sizeof(auth_header), "Authorization: Bearer AIzaSyBK3HqLpO3KleMNv1cj5Oc2iOv51WXYpGo");
+    headers = curl_slist_append(headers, auth_header);
+    headers = curl_slist_append(headers, "Content-Type: application/json");
+
+    char *escaped_message = malloc(strlen(message) * 2 + 1);
+    if (escaped_message) {
+        char *out = escaped_message;
+        for (const char *in = message; *in; in++) {
+            if (*in == '"' || *in == '\\') *out++ = '\\';
+            if (*in == '\n') {
+                *out++ = '\\';
+                *out++ = 'n';
+            } else {
+                *out++ = *in;
+            }
+        }
+        *out = '\0';
+    } else {
+        free(chunk.memory);
+        curl_slist_free_all(headers);
+        curl_easy_cleanup(curl);
+        return NULL;
+    }
+
+    char json_payload[4096];
+    snprintf(json_payload, sizeof(json_payload),
+             "{\"model\":\"gemini-3.5-flash-lite\",\"messages\":[{\"role\":\"user\",\"content\":\"%s\"}]}",
+             escaped_message);
+    free(escaped_message);
+
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, json_payload);
+
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteMemoryCallback);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&chunk);
+
+    res = curl_easy_perform(curl);
+
+    curl_easy_cleanup(curl);
+    curl_slist_free_all(headers);
+
+    if(res != CURLE_OK) {
+        fprintf(stderr, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+        free(chunk.memory);
+        return NULL;
+    }
+
+    const char *reply_start = strstr(chunk.memory, "\"content\":\"");
+    if (!reply_start) {
+        fprintf(stderr, "Could not find content in response: %s\n", chunk.memory);
+        free(chunk.memory);
+        return NULL;
+    }
+    reply_start += strlen("\"content\":\"");
+
+    const char *reply_end = reply_start;
+    while (*reply_end) {
+        if (*reply_end == '\\' && *(reply_end + 1) != '\0') {
+            reply_end += 2;
+        } else if (*reply_end == '"') {
+            break;
+        } else {
+            reply_end++;
+        }
+    }
+
+    if (reply_end == reply_start) {
+        free(chunk.memory);
+        return NULL;
+    }
+
+    size_t reply_len = reply_end - reply_start;
+    char *reply = malloc(reply_len + 1);
+    if (reply) {
+        memcpy(reply, reply_start, reply_len);
+        reply[reply_len] = '\0';
+    }
+
+    free(chunk.memory);
+    return reply;
 }
