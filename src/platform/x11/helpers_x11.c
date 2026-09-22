@@ -644,6 +644,21 @@ Window Linux_CreateWindowExOR(Display* dpy, int x, int y, int w, int h, unsigned
         Atom wm_type = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE", False);
         Atom wm_type_dialog = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE_DIALOG", False);
         XChangeProperty(dpy, win, wm_type, XA_ATOM, 32, PropModeReplace, (unsigned char*)&wm_type_dialog, 1);
+        Atom motif_atom = XInternAtom(dpy, "_MOTIF_WM_HINTS", False);
+        if (motif_atom != None) {
+            struct { unsigned long flags; unsigned long functions; unsigned long decorations; long input_mode; unsigned long status; } motif;
+            motif.flags = 2;
+            motif.functions = 0;
+            motif.decorations = 0;
+            motif.input_mode = 0;
+            motif.status = 0;
+            XChangeProperty(dpy, win, motif_atom, motif_atom, 32, PropModeReplace, (unsigned char*)&motif, 5);
+        }
+        Atom wm_state = XInternAtom(dpy, "_NET_WM_STATE", False);
+        Atom state_skip_taskbar = XInternAtom(dpy, "_NET_WM_STATE_SKIP_TASKBAR", False);
+        Atom state_skip_pager = XInternAtom(dpy, "_NET_WM_STATE_SKIP_PAGER", False);
+        Atom states[2] = {state_skip_taskbar, state_skip_pager};
+        XChangeProperty(dpy, win, wm_state, XA_ATOM, 32, PropModeReplace, (unsigned char*)states, 2);
     } else if (res_name && strcmp(res_name, "flashtext")==0) {
         Atom wm_type = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE", False);
         Atom wm_type_note = XInternAtom(dpy, "_NET_WM_WINDOW_TYPE_NOTIFICATION", False);
