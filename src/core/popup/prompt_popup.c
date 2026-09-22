@@ -167,3 +167,10 @@ Popup* PromptPopup_Create(WindowManager* wm, const PromptSpec* spec) {
     PROFILE_END_VAR(timer, "window_manager:PromptPopup_Create");
     return WindowManager_PushPopup(wm, (Popup*)data);
 }
+
+bool WindowManager_TopPopupWantsTick(WindowManager* wm) {
+    Popup* top = WindowManager_GetTopPopup(wm);
+    if (!top || top->type != POPUP_PROMPT) return false;
+    PromptPopupData* data = (PromptPopupData*)top;
+    return data->spec.tick;
+}
