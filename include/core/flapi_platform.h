@@ -3,7 +3,6 @@
 
 #include "core/flapi.h"
 
-
 bool fl_get_all_files_from_dir_platform(const char* dir_path, char** list_of_allowed_extensions, ListOfFiles* list_of_files, char** list_of_names_to_ignore);
 char* fl_search_file_in_dir_platform(const char* directory, const char* search_string,char* output_path);
 bool fl_launch_with_args_platform(const char* path, const char* args);
@@ -27,5 +26,16 @@ void fl_run_after_time_platform(double seconds, void (*callback)(void));
 FlTimer fl_start_timer_platform(void);
 double fl_end_timer_platform(FlTimer t);
 void fl_sleep_platform(double seconds);
+bool fl_clipboard_history_push_text_platform(const char* text);
+bool fl_clipboard_history_push_image_platform(const char* path, unsigned int w, unsigned int h);
+bool fl_clipboard_set_png_path_platform(const char* path);
+size_t fl_clipboard_history_count_platform(void);
+const FlClipboardEntry* fl_clipboard_history_get_platform(size_t index);
+void fl_clipboard_clear_history_platform(void);
+void fl_screenshot_copy_area_platform(void);
+void fl_screenshot_copy_platform(void);
+void fl_screenshot_save_area_platform(char* save_path);
+void fl_screenshot_save_platform(char* save_path);
+void fl_ocr_area_to_clipboard_platform();
 
 #endif

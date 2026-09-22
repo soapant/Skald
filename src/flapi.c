@@ -24,50 +24,6 @@
 
 static const unsigned char FL_PNG_MAGIC[8] = { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
 
-#define FL_CLIPBOARD_HISTORY_MAX 64
-
-static FlClipboardHistory g_fl_clipboard_history = {0};
-
-static void fl_clipboard_entry_free(FlClipboardEntry* e) {
-    if (!e) return;
-    free(e->text);
-    e->text = NULL;
-    free(e->image_path);
-    e->image_path = NULL;
-}
-
-static bool fl_clipboard_history_push(FlClipboardEntry e) {
-    FlClipboardHistory* h = &g_fl_clipboard_history;
-    if (h->count >= FL_CLIPBOARD_HISTORY_MAX) {
-        fl_clipboard_entry_free(&h->entries[0]);
-        memmove(h->entries, h->entries + 1, (h->count - 1) * sizeof(h->entries[0]));
-        h->count--;
-    }
-    if (h->count >= h->capacity) {
-        size_t ncap = h->capacity ? h->capacity * 2 : 16;
-        if (ncap > FL_CLIPBOARD_HISTORY_MAX) ncap = FL_CLIPBOARD_HISTORY_MAX;
-        FlClipboardEntry* n = realloc(h->entries, ncap * sizeof(*n));
-        if (!n) {
-            fl_clipboard_entry_free(&e);
-            return false;
-        }
-        h->entries = n;
-        h->capacity = ncap;
-    }
-    h->entries[h->count++] = e;
-    return true;
-}
-
-static bool fl_clipboard_push_text(const char* text) {
-    FlClipboardEntry e = {0};
-    e.type = FL_CLIPBOARD_TEXT;
-    e.timestamp = (uint64_t)time(NULL);
-    e.text = text ? strdup(text) : NULL;
-    if (text && !e.text) return false;
-    if (!fl_clipboard_history_push(e)) return false;
-    return true;
-}
-
 static void fl_clipboard_png_dims(const unsigned char* png, size_t len, uint32_t* out_w, uint32_t* out_h) {
     if (out_w) *out_w = 0;
     if (out_h) *out_h = 0;
@@ -80,45 +36,28 @@ static void fl_clipboard_png_dims(const unsigned char* png, size_t len, uint32_t
     if (out_h) *out_h = h;
 }
 
-static bool fl_clipboard_push_image(const char* path, uint32_t w, uint32_t h) {
-    FlClipboardEntry e = {0};
-    e.type = FL_CLIPBOARD_IMAGE;
-    e.timestamp = (uint64_t)time(NULL);
-    e.image_path = path ? strdup(path) : NULL;
-    if (path && !e.image_path) return false;
-    e.image_width = w;
-    e.image_height = h;
-    if (!fl_clipboard_history_push(e)) return false;
-    return true;
-}
-
 size_t fl_clipboard_history_count(void) {
-    return g_fl_clipboard_history.count;
+    return fl_clipboard_history_count_platform();
 }
 
 const FlClipboardEntry* fl_clipboard_history_get(size_t index) {
-    if (index >= g_fl_clipboard_history.count) return NULL;
-    return &g_fl_clipboard_history.entries[index];
+    return fl_clipboard_history_get_platform(index);
 }
 
 const FlClipboardEntry* fl_clipboard_latest(void) {
-    if (g_fl_clipboard_history.count == 0) return NULL;
-    return &g_fl_clipboard_history.entries[g_fl_clipboard_history.count - 1];
+    size_t n = fl_clipboard_history_count_platform();
+    if (n == 0) return NULL;
+    return fl_clipboard_history_get_platform(n - 1);
 }
 
 void fl_clipboard_clear_history(void) {
-    for (size_t i = 0; i < g_fl_clipboard_history.count; i++)
-        fl_clipboard_entry_free(&g_fl_clipboard_history.entries[i]);
-    free(g_fl_clipboard_history.entries);
-    g_fl_clipboard_history.entries = NULL;
-    g_fl_clipboard_history.count = 0;
-    g_fl_clipboard_history.capacity = 0;
+    fl_clipboard_clear_history_platform();
 }
 
 bool fl_copy_to_clipboard(const char* text) {
     if (text == NULL) return 0;
     bool ok = Platform_CopyToClipboard(text);
-    if (ok) fl_clipboard_push_text(text);
+    if (ok) fl_clipboard_history_push_text_platform(text);
     return ok;
 }
 
@@ -129,37 +68,8 @@ bool fl_copy_image_to_clipboard(const unsigned char* png, size_t len) {
     if (ok) {
         uint32_t w = 0, h = 0;
         fl_clipboard_png_dims(png, len, &w, &h);
-        fl_clipboard_push_image(NULL, w, h);
+        fl_clipboard_history_push_image_platform(NULL, w, h);
     }
-    return ok;
-}
-
-static bool fl_clipboard_set_png_path(const char* path) {
-    FILE* f = fopen(path, "rb");
-    if (!f) return 0;
-    fseek(f, 0, SEEK_END);
-    long n = ftell(f);
-    fseek(f, 0, SEEK_SET);
-    if (n <= 0 || n > (32 * 1024 * 1024)) {
-        fclose(f);
-        return 0;
-    }
-    unsigned char* buf = malloc((size_t)n);
-    if (!buf) {
-        fclose(f);
-        return 0;
-    }
-    size_t got = fread(buf, 1, (size_t)n, f);
-    fclose(f);
-    bool ok = 0;
-    if (got == (size_t)n && memcmp(buf, FL_PNG_MAGIC, 8) == 0) {
-        uint32_t w = 0, h = 0;
-        fl_clipboard_png_dims(buf, (size_t)n, &w, &h);
-        ok = Platform_CopyImageToClipboard(buf, (size_t)n);
-        if (ok) fl_clipboard_push_image(path, w, h);
-    }
-    free(buf);
-    remove(path);
     return ok;
 }
 
@@ -833,12 +743,12 @@ char* fl_get_last_clipboard_entry() {
         if (current[0]) {
             const FlClipboardEntry* latest = fl_clipboard_latest();
             if (!latest || latest->type != FL_CLIPBOARD_TEXT || !latest->text || strcmp(latest->text, current) != 0)
-                fl_clipboard_push_text(current);
+                fl_clipboard_history_push_text_platform(current);
         }
         free(current);
     }
-    for (size_t i = g_fl_clipboard_history.count; i > 0; i--) {
-        const FlClipboardEntry* e = &g_fl_clipboard_history.entries[i - 1];
+    for (size_t i = fl_clipboard_history_count_platform(); i > 0; i--) {
+        const FlClipboardEntry* e = fl_clipboard_history_get_platform(i - 1);
         if (e->type == FL_CLIPBOARD_TEXT && e->text) return strdup(e->text);
     }
     return NULL;
@@ -1394,70 +1304,21 @@ char* fl_get_working_dir() {
 }
 
 void fl_screenshot_copy_area(void) {
-    char cmd[512];
-    char* wd = fl_get_working_dir();
-    char path[MAX_PATH];
-
-    snprintf(path, sizeof(path), "%s/flint_clip.png", wd ? wd : ".");
-    snprintf(cmd, sizeof(cmd),
-             "%s/external/grim -g \"$(%s/external/slurp)\" -t png %s",
-             wd, wd, path);
-
-    fl_run_terminal_command_blocking(cmd);
-    fl_clipboard_set_png_path(path);
+    return fl_screenshot_copy_area_platform();
 }
 
 void fl_screenshot_copy(void) {
-    char cmd[512];
-    char* wd = fl_get_working_dir();
-    char path[MAX_PATH];
-
-    snprintf(path, sizeof(path), "%s/flint_clip.png", wd ? wd : ".");
-    snprintf(cmd, sizeof(cmd),
-             "%s/external/grim -t png %s",
-             wd, path);
-
-    fl_run_terminal_command_blocking(cmd);
-    fl_clipboard_set_png_path(path);
+    return fl_screenshot_copy_platform();
 }
 
 void fl_screenshot_save_area(char* save_path) {
-    char cmd[512];
-    char* wd = fl_get_working_dir();
-    
-    snprintf(cmd, sizeof(cmd),
-             "%s/external/grim -g \"$(%s/external/slurp)\" %s.png",
-             wd, wd,save_path);
-
-    fl_run_terminal_command_blocking(cmd);
+    return fl_screenshot_save_area_platform(save_path);
 }
 
 void fl_screenshot_save(char* save_path) {
-    char cmd[512];
-    char* wd = fl_get_working_dir();
-    
-    snprintf(cmd, sizeof(cmd),
-             "%s/external/grim %s.png",
-             wd,save_path);
-
-    fl_run_terminal_command_blocking(cmd);
+    return fl_screenshot_save_platform(save_path);
 }
 
 void fl_ocr_area_to_clipboard(void) {
-    char cmd[512];
-    char* wd = fl_get_working_dir();
-
-    snprintf(cmd, sizeof(cmd),
-             "%s/external/grim -g \"$(%s/external/slurp)\" -t png - | tesseract stdin stdout -l eng",
-             wd, wd);
-
-    char* out = fl_run_terminal_command_blocking(cmd);
-    if (!out || !out[0]) {
-        free(out);
-        return;
-    }
-    size_t n = strlen(out);
-    while (n > 0 && (out[n - 1] == '\n' || out[n - 1] == '\r')) out[--n] = '\0';
-    if (out[0]) fl_copy_to_clipboard(out);
-    free(out);
+    return fl_ocr_area_to_clipboard_platform();
 }

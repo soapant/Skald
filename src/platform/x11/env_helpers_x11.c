@@ -1,11 +1,18 @@
 #include "platform/x11/env_helpers_x11.h"
 #include "core/platform.h"
+#include "deps/log.h"
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
 #include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
+
+static bool env_sock_live(const char* path) {
+    struct stat st;
+    return path && path[0] && stat(path, &st) == 0;
+}
 
 void Env_GetSessionEnv(X11SessionEnv* out) {
     if (!out) return;
@@ -14,6 +21,17 @@ void Env_GetSessionEnv(X11SessionEnv* out) {
     out->xauthority = Platform_GetSessionXAuthority();
     out->runtime_dir = Platform_GetRuntimeDir();
     out->wayland_display = getenv("WAYLAND_DISPLAY");
+    if (out->wayland_display && out->wayland_display[0]) {
+        char sock[512];
+        sock[0] = '\0';
+        const char* rtd = (out->runtime_dir && out->runtime_dir[0]) ? out->runtime_dir : getenv("XDG_RUNTIME_DIR");
+        if (out->wayland_display[0] == '/') snprintf(sock, sizeof(sock), "%s", out->wayland_display);
+        else if (rtd && rtd[0]) snprintf(sock, sizeof(sock), "%s/%s", rtd, out->wayland_display);
+        if (!env_sock_live(sock)) {
+            log_info("dropping dead WAYLAND_DISPLAY='%s'", out->wayland_display);
+            out->wayland_display = NULL;
+        }
+    }
 }
 
 void Env_BuildEnvStrings(const X11SessionEnv* env, char disp_env[256], char xauth_env[512], char runtime_env[512], char wayland_env[512]) {
@@ -29,6 +47,7 @@ void Env_ApplyToCurrentProcess(const X11SessionEnv* env) {
     if (env->xauthority) setenv("XAUTHORITY", env->xauthority, 1);
     if (env->runtime_dir) setenv("XDG_RUNTIME_DIR", env->runtime_dir, 1);
     if (env->wayland_display && env->wayland_display[0]) setenv("WAYLAND_DISPLAY", env->wayland_display, 1);
+    else unsetenv("WAYLAND_DISPLAY");
 }
 
 bool Env_IsRunningAsRoot(void) {

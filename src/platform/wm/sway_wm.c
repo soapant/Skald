@@ -11,9 +11,18 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <glob.h>
+#include <sys/stat.h>
+
+static bool sway_sock_live(const char* path) {
+    struct stat st;
+    return path && path[0] && stat(path, &st) == 0;
+}
 
 static void sway_ensure_sock(void) {
-    if (getenv("SWAYSOCK") || getenv("I3SOCK")) return;
+    const char* cur = getenv("SWAYSOCK");
+    if (!cur || !cur[0]) cur = getenv("I3SOCK");
+    if (sway_sock_live(cur)) return;
+    if (cur) unsetenv(getenv("SWAYSOCK") && getenv("SWAYSOCK")[0] ? "SWAYSOCK" : "I3SOCK");
     const char* rtd = getenv("XDG_RUNTIME_DIR");
     if (!rtd || !rtd[0]) return;
     char pat[512];

@@ -1,9 +1,5 @@
 #include "core/flapi.h"
 
-void KillMyProgram(void) {
-    fl_terminate_process_by_name("flint.exe");
-    fl_terminate_process_by_name("main.exe");
-}
 void ShowCurrentTime(void) {
   char* output = fl_run_terminal_command("date");
   if (output) {
@@ -63,7 +59,6 @@ void copy_password(void) {
 }
 
 FLINT_FEATURE_INIT {
-    fl_register_hotkey("Alt+Shift+K", KillMyProgram);
     fl_register_hotkey("Alt+Shift+T", ShowCurrentTime);
     fl_register_hotkey("Alt+D", SettingsTrigger);
     fl_register_hotkey("Alt+Shift+N", ShowCurrentBatteryPercentage);
