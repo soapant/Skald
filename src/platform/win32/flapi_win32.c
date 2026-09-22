@@ -787,3 +787,58 @@ void fl_ocr_area_to_clipboard_platform(void) {
 char* fl_query_ai_platform(char* message) {
   printf("AI query not implemented on Windows platform\n");
 }
+
+typedef struct {
+    void* (*fn)(void*);
+    void* arg;
+} FlWinThreadStart;
+
+static DWORD WINAPI fl_win_thread_entry(LPVOID p) {
+    FlWinThreadStart* s = (FlWinThreadStart*)p;
+    void* (*fn)(void*) = s->fn;
+    void* arg = s->arg;
+    free(s);
+    fn(arg);
+    return 0;
+}
+
+void* fl_thread_create_platform(void* (*fn)(void*), void* arg) {
+    if (!fn) return NULL;
+    FlWinThreadStart* s = malloc(sizeof(*s));
+    if (!s) return NULL;
+    s->fn = fn;
+    s->arg = arg;
+    HANDLE h = CreateThread(NULL, 0, fl_win_thread_entry, s, 0, NULL);
+    if (!h) { free(s); return NULL; }
+    return (void*)h;
+}
+
+void fl_thread_join_platform(void* thread) {
+    if (!thread) return;
+    WaitForSingleObject((HANDLE)thread, INFINITE);
+    CloseHandle((HANDLE)thread);
+}
+
+void* fl_mutex_create_platform(void) {
+    CRITICAL_SECTION* cs = malloc(sizeof(*cs));
+    if (!cs) return NULL;
+    InitializeCriticalSection(cs);
+    return cs;
+}
+
+void fl_mutex_destroy_platform(void* mutex) {
+    if (!mutex) return;
+    CRITICAL_SECTION* cs = (CRITICAL_SECTION*)mutex;
+    DeleteCriticalSection(cs);
+    free(cs);
+}
+
+void fl_mutex_lock_platform(void* mutex) {
+    if (!mutex) return;
+    EnterCriticalSection((CRITICAL_SECTION*)mutex);
+}
+
+void fl_mutex_unlock_platform(void* mutex) {
+    if (!mutex) return;
+    LeaveCriticalSection((CRITICAL_SECTION*)mutex);
+}

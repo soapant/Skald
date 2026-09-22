@@ -1127,6 +1127,35 @@ void fl_sleep(double seconds) {
   fl_sleep_platform(seconds);
 }
 
+FlThread fl_thread_create(FlThreadFunc fn, void* arg) {
+  if (!fn) return NULL;
+  return (FlThread)fl_thread_create_platform((void* (*)(void*))fn, arg);
+}
+
+void fl_thread_join(FlThread thread) {
+  if (!thread) return;
+  fl_thread_join_platform((void*)thread);
+}
+
+FlMutex fl_mutex_create(void) {
+  return (FlMutex)fl_mutex_create_platform();
+}
+
+void fl_mutex_destroy(FlMutex mutex) {
+  if (!mutex) return;
+  fl_mutex_destroy_platform((void*)mutex);
+}
+
+void fl_mutex_lock(FlMutex mutex) {
+  if (!mutex) return;
+  fl_mutex_lock_platform((void*)mutex);
+}
+
+void fl_mutex_unlock(FlMutex mutex) {
+  if (!mutex) return;
+  fl_mutex_unlock_platform((void*)mutex);
+}
+
 void fl_send_hotkey(const char* hotkey_string) {
   if (!hotkey_string) return;
   remap_send_combo(hotkey_string);

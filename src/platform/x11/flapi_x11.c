@@ -28,6 +28,7 @@
 #include "core/modal.h"
 #include <ctype.h>
 #include <time.h>
+#include <pthread.h>
 #include <linux/input.h>
 #include "platform/x11/input_x11.h"
 
@@ -1069,4 +1070,43 @@ char* fl_query_ai_platform(char* message) {
 
     free(chunk.memory);
     return reply;
+}
+
+void* fl_thread_create_platform(void* (*fn)(void*), void* arg) {
+    if (!fn) return NULL;
+    pthread_t* t = malloc(sizeof(*t));
+    if (!t) return NULL;
+    if (pthread_create(t, NULL, fn, arg) != 0) { free(t); return NULL; }
+    return t;
+}
+
+void fl_thread_join_platform(void* thread) {
+    if (!thread) return;
+    pthread_t* t = (pthread_t*)thread;
+    pthread_join(*t, NULL);
+    free(t);
+}
+
+void* fl_mutex_create_platform(void) {
+    pthread_mutex_t* m = malloc(sizeof(*m));
+    if (!m) return NULL;
+    if (pthread_mutex_init(m, NULL) != 0) { free(m); return NULL; }
+    return m;
+}
+
+void fl_mutex_destroy_platform(void* mutex) {
+    if (!mutex) return;
+    pthread_mutex_t* m = (pthread_mutex_t*)mutex;
+    pthread_mutex_destroy(m);
+    free(m);
+}
+
+void fl_mutex_lock_platform(void* mutex) {
+    if (!mutex) return;
+    pthread_mutex_lock((pthread_mutex_t*)mutex);
+}
+
+void fl_mutex_unlock_platform(void* mutex) {
+    if (!mutex) return;
+    pthread_mutex_unlock((pthread_mutex_t*)mutex);
 }
