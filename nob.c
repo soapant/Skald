@@ -15,10 +15,10 @@
 
 #if defined(_WIN32)
      #define CC_FLAGS "-std=gnu17", "-DCOBJMACROS", "-I", "include", "-MMD", "-MP","-O3","-Wall","-Wextra","-Wno-unused-parameter","-Wno-sign-compare","-Wno-discarded-qualifiers","-Wno-stringop-truncation","-Wno-sign-compare","-Wno-unused-parameter","-Wno-misleading-indentation"
-     #define LINK_FLAGS "-lcomctl32", "-lgdiplus", "-lgdi32", "-lshlwapi", "-lshell32", "-lwinmm", "-lole32", "-luuid", "-lmsimg32", "-ldwmapi", "-lpsapi", "-lcrypt32", "-lcomdlg32", "-ladvapi32", "-ldxva2","-user32","-lole32", "-luser32", "-lgdi32"
+     #define LINK_FLAGS "-lcomctl32", "-lgdiplus", "-lgdi32", "-lshlwapi", "-lshell32", "-lwinmm", "-lole32", "-luuid", "-lmsimg32", "-ldwmapi", "-lpsapi", "-lcrypt32", "-lcomdlg32", "-ladvapi32", "-ldxva2","-user32","-lole32", "-luser32", "-lgdi32","-lcurl"
 #else
      #define CC_FLAGS "-I", "include", "-I/usr/include/freetype2","-I/usr/include/glib-2.0","-I/usr/lib/glib-2.0/include","-I/usr/include/gio-unix-2.0","-MMD", "-MP","-O3","-Wall","-Wextra","-Wno-unused-parameter","-Wno-sign-compare","-Wno-discarded-qualifiers","-Wno-stringop-truncation","-Wno-sign-compare","-Wno-unused-parameter","-Wno-misleading-indentation"
-     #define LINK_FLAGS "-lX11", "-lXft", "-lfontconfig", "-lXrender", "-lXrandr", "-lXext", "-lXtst", "-lm", "-ldl", "-lpng", "-Wl,--export-dynamic","-lgio-2.0","-lglib-2.0","-lgobject-2.0"
+     #define LINK_FLAGS "-lX11", "-lXft", "-lfontconfig", "-lXrender", "-lXrandr", "-lXext", "-lXtst", "-lm", "-ldl", "-lpng", "-Wl,--export-dynamic","-lgio-2.0","-lglib-2.0","-lgobject-2.0","-lcurl"
 #endif
 
 static Nob_File_Paths sources = {0};

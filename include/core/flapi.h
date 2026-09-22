@@ -451,6 +451,8 @@ void fl_on_key(void (*cb)(int vk, bool down, int mods, void *ud), void *ud);
 int fl_get_key_pressed(void);
 char fl_get_char_pressed(void);
 
+char* fl_send_ai_message(char* message);
+
 #define _FL_HOTKEY_EXPAND(hotkey, trigger, cond, whitelist, ...) \
     fl_register_hotkey_impl(hotkey, trigger, cond, whitelist, (const char*[]){__VA_ARGS__, NULL})
 
