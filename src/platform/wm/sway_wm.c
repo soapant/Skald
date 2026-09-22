@@ -309,3 +309,37 @@ Fl_WindowList get_window_titles_sway() {
 Fl_Pos get_cursor_position_sway(void) { 
   return (Fl_Pos){0, 0}; 
 }
+
+bool close_active_window_sway(void) {
+    sway_ensure_sock();
+    char* out = Platform_RunTerminalCommand("swaymsg kill", false);
+    bool ok = succeded_sway(out);
+    free(out);
+    return ok;
+}
+
+bool toggle_fullscreen_active_sway(void) {
+    sway_ensure_sock();
+    char* out = Platform_RunTerminalCommand("swaymsg fullscreen toggle", false);
+    bool ok = succeded_sway(out);
+    free(out);
+    return ok;
+}
+
+bool move_active_window_to_monitor_sway(bool right) {
+    sway_ensure_sock();
+    char cmd[64];
+    snprintf(cmd, sizeof(cmd), "swaymsg move window to output %s", right ? "right" : "left");
+    char* out = Platform_RunTerminalCommand(cmd, false);
+    bool ok = succeded_sway(out);
+    free(out);
+    return ok;
+}
+
+bool minimize_active_window_sway(void) {
+    sway_ensure_sock();
+    char* out = Platform_RunTerminalCommand("swaymsg move scratchpad", false);
+    bool ok = succeded_sway(out);
+    free(out);
+    return ok;
+}

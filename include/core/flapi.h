@@ -138,6 +138,10 @@ bool fl_query_browser(const char* query);
 bool fl_launch_browser_in_a_new_window(char* url);
 char* fl_get_zoxide_match(char* query);
 bool fl_focus_window_by_title(char* title);
+bool fl_close_active_window(void);
+bool fl_toggle_fullscreen_active(void);
+bool fl_move_active_window_to_monitor(bool right);
+bool fl_toggle_minimized_active(void);
 
 // =============================================================================
 // ADB

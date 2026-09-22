@@ -10,8 +10,6 @@ WorkingDirectory=/home/diggy/Programming/Projects/Flint
 ExecStart=/home/diggy/Programming/Projects/Flint/build/flint
 PassEnvironment=DISPLAY WAYLAND_DISPLAY XDG_RUNTIME_DIR XAUTHORITY WAYLAND_DISPLAY SWAYSOCK I3SOCK
 Environment=XDG_RUNTIME_DIR=%t
-Environment=WAYLAND_DISPLAY=wayland-1
-Environment=DISPLAY=:0
 ExecStartPre=/bin/sh -c 'for i in 1 2 3 4 5 6 7 8 9 10; do [ -S /run/user/%U/wayland-1 ] || [ -S /tmp/.X11-unix/X0 ] || [ -S /run/user/%U/wayland-0 ] && break; sleep 0.5; done; exit 0'
 Restart=always
 RestartSec=3

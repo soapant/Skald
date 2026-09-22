@@ -3,6 +3,8 @@
 #include "platform/x11/display_x11.h"
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
+#include <X11/Xatom.h>
+#include <X11/extensions/Xrandr.h>
 #include <ctype.h>
 #include <string.h>
 #include "core/platform.h"
@@ -181,4 +183,158 @@ Fl_Pos get_cursor_position_x11(void) {
     XCloseDisplay(display);
 
     return (Fl_Pos){root_x, root_y};
+}
+
+static Window x11_focused_window(Display* display) {
+    Window focus = None;
+    int revert_to = 0;
+    _x11_err = 0;
+    XErrorHandler old = XSetErrorHandler(_x11_err_handler);
+    XGetInputFocus(display, &focus, &revert_to);
+    XSync(display, False);
+    XSetErrorHandler(old);
+    if (_x11_err || focus == None || focus == PointerRoot) return None;
+    return focus;
+}
+
+bool close_active_window_x11(void) {
+    Display* display = get_display();
+    if (!display) return false;
+    Window focus = x11_focused_window(display);
+    if (focus == None) return false;
+    Atom close_atom = XInternAtom(display, "_NET_CLOSE_WINDOW", False);
+    XEvent ev;
+    memset(&ev, 0, sizeof(ev));
+    ev.xclient.type = ClientMessage;
+    ev.xclient.window = focus;
+    ev.xclient.message_type = close_atom;
+    ev.xclient.format = 32;
+    ev.xclient.data.l[0] = CurrentTime;
+    ev.xclient.data.l[1] = 2;
+    _x11_err = 0;
+    XErrorHandler old = XSetErrorHandler(_x11_err_handler);
+    XSendEvent(display, DefaultRootWindow(display), False, SubstructureRedirectMask | SubstructureNotifyMask, &ev);
+    XSync(display, False);
+    XSetErrorHandler(old);
+    if (_x11_err) {
+        XKillClient(display, focus);
+        XSync(display, False);
+    }
+    return true;
+}
+
+bool toggle_fullscreen_active_x11(void) {
+    Display* display = get_display();
+    if (!display) return false;
+    Window focus = x11_focused_window(display);
+    if (focus == None) return false;
+    Atom state_atom = XInternAtom(display, "_NET_WM_STATE", False);
+    Atom fs_atom = XInternAtom(display, "_NET_WM_STATE_FULLSCREEN", False);
+    XEvent ev;
+    memset(&ev, 0, sizeof(ev));
+    ev.xclient.type = ClientMessage;
+    ev.xclient.window = focus;
+    ev.xclient.message_type = state_atom;
+    ev.xclient.format = 32;
+    ev.xclient.data.l[0] = 2;
+    ev.xclient.data.l[1] = (long)fs_atom;
+    ev.xclient.data.l[2] = 0;
+    ev.xclient.data.l[3] = 1;
+    _x11_err = 0;
+    XErrorHandler old = XSetErrorHandler(_x11_err_handler);
+    XSendEvent(display, DefaultRootWindow(display), False, SubstructureRedirectMask | SubstructureNotifyMask, &ev);
+    XSync(display, False);
+    XSetErrorHandler(old);
+    return _x11_err == 0;
+}
+
+bool move_active_window_to_monitor_x11(bool right) {
+    Display* display = get_display();
+    if (!display) return false;
+    Window focus = x11_focused_window(display);
+    if (focus == None) return false;
+    Window root = DefaultRootWindow(display);
+    XRRScreenResources* res = XRRGetScreenResourcesCurrent(display, root);
+    if (!res) return false;
+    int n = 0;
+    int* ox = NULL;
+    int* ow = NULL;
+    int* oy = NULL;
+    int* oh = NULL;
+    for (int c = 0; c < res->ncrtc; c++) {
+        XRRCrtcInfo* ci = XRRGetCrtcInfo(display, res, res->crtcs[c]);
+        if (!ci || ci->noutput == 0 || ci->width == 0 || ci->height == 0) { if (ci) XRRFreeCrtcInfo(ci); continue; }
+        int* nox = realloc(ox, (size_t)(n + 1) * sizeof(int));
+        int* noy = realloc(oy, (size_t)(n + 1) * sizeof(int));
+        int* now = realloc(ow, (size_t)(n + 1) * sizeof(int));
+        int* noh = realloc(oh, (size_t)(n + 1) * sizeof(int));
+        if (!nox || !noy || !now || !noh) {
+            free(nox ? nox : ox); free(noy ? noy : oy); free(now ? now : ow); free(noh ? noh : oh);
+            ox = NULL; oy = NULL; ow = NULL; oh = NULL;
+            XRRFreeCrtcInfo(ci);
+            break;
+        }
+        ox = nox; oy = noy; ow = now; oh = noh;
+        ox[n] = ci->x; oy[n] = ci->y; ow[n] = (int)ci->width; oh[n] = (int)ci->height;
+        n++;
+        XRRFreeCrtcInfo(ci);
+    }
+    XRRFreeScreenResources(res);
+    if (n < 2) { free(ox); free(oy); free(ow); free(oh); return false; }
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = i + 1; j < n; j++) {
+            if (ox[j] < ox[i]) {
+                int t = ox[i]; ox[i] = ox[j]; ox[j] = t;
+                t = oy[i]; oy[i] = oy[j]; oy[j] = t;
+                t = ow[i]; ow[i] = ow[j]; ow[j] = t;
+                t = oh[i]; oh[i] = oh[j]; oh[j] = t;
+            }
+        }
+    }
+    XWindowAttributes attr;
+    _x11_err = 0;
+    XErrorHandler old = XSetErrorHandler(_x11_err_handler);
+    int got = XGetWindowAttributes(display, focus, &attr);
+    XSync(display, False);
+    XSetErrorHandler(old);
+    if (_x11_err || !got) { free(ox); free(oy); free(ow); free(oh); return false; }
+    int cx = attr.x + attr.width / 2;
+    int cur = 0;
+    for (int i = 0; i < n; i++) {
+        if (cx >= ox[i] && cx < ox[i] + ow[i]) { cur = i; break; }
+        if (ox[i] <= cx) cur = i;
+    }
+    int dst = right ? cur + 1 : cur - 1;
+    if (dst < 0 || dst >= n) { free(ox); free(oy); free(ow); free(oh); return false; }
+    int rel_x = attr.x - ox[cur];
+    int rel_y = attr.y - oy[cur];
+    int nx = ox[dst] + rel_x;
+    int ny = oy[dst] + rel_y;
+    if (nx < ox[dst]) nx = ox[dst];
+    if (ny < oy[dst]) ny = oy[dst];
+    if (nx + attr.width > ox[dst] + ow[dst]) nx = ox[dst] + ow[dst] - attr.width;
+    if (ny + attr.height > oy[dst] + oh[dst]) ny = oy[dst] + oh[dst] - attr.height;
+    if (nx < ox[dst]) nx = ox[dst];
+    if (ny < oy[dst]) ny = oy[dst];
+    _x11_err = 0;
+    old = XSetErrorHandler(_x11_err_handler);
+    XMoveWindow(display, focus, nx, ny);
+    XRaiseWindow(display, focus);
+    XSync(display, False);
+    XSetErrorHandler(old);
+    free(ox); free(oy); free(ow); free(oh);
+    return _x11_err == 0;
+}
+
+bool minimize_active_window_x11(void) {
+    Display* display = get_display();
+    if (!display) return false;
+    Window focus = x11_focused_window(display);
+    if (focus == None) return false;
+    _x11_err = 0;
+    XErrorHandler old = XSetErrorHandler(_x11_err_handler);
+    XIconifyWindow(display, focus, DefaultScreen(display));
+    XSync(display, False);
+    XSetErrorHandler(old);
+    return _x11_err == 0;
 }

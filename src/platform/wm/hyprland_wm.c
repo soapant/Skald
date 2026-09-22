@@ -127,3 +127,33 @@ Fl_Pos get_cursor_position_hyprland(void) {
   free(output);
   return (Fl_Pos){x_val, y_val}; 
 }
+
+bool close_active_window_hyprland(void) {
+  char* out = Platform_RunTerminalCommand("hyprctl dispatch killactive", false);
+  bool ok = succeded_hypr(out);
+  free(out);
+  return ok;
+}
+
+bool toggle_fullscreen_active_hyprland(void) {
+  char* out = Platform_RunTerminalCommand("hyprctl dispatch fullscreen 0", false);
+  bool ok = succeded_hypr(out);
+  free(out);
+  return ok;
+}
+
+bool move_active_window_to_monitor_hyprland(bool right) {
+  char cmd[64];
+  snprintf(cmd, sizeof(cmd), "hyprctl dispatch movewindow mon:%c", right ? 'r' : 'l');
+  char* out = Platform_RunTerminalCommand(cmd, false);
+  bool ok = succeded_hypr(out);
+  free(out);
+  return ok;
+}
+
+bool minimize_active_window_hyprland(void) {
+  char* out = Platform_RunTerminalCommand("hyprctl dispatch movetoworkspacesilent special", false);
+  bool ok = succeded_hypr(out);
+  free(out);
+  return ok;
+}

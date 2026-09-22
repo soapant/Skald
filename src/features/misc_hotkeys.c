@@ -57,6 +57,28 @@ void copy_seifisbad(void) {
 void copy_password(void) {
     fl_copy_to_clipboard("i_am_retarded1");
 }
+void open_terminal(void) {
+    fl_run_terminal_command(UsedTerminal);
+}
+void open_browser(void) {
+    fl_run_terminal_command("zen-browser");
+}
+
+void move_active_window_right(void) {
+    fl_move_active_window_to_monitor(true);
+}
+void move_active_window_left(void) {
+    fl_move_active_window_to_monitor(false);
+}
+void close_active_window(void) {
+    fl_close_active_window();
+}
+void toggle_fullscreen(void) {
+    fl_toggle_fullscreen_active();
+}
+void toggle_minimized(void) {
+    fl_toggle_minimized_active();
+}
 
 FLINT_FEATURE_INIT {
     fl_register_hotkey("Alt+Shift+T", ShowCurrentTime);
@@ -71,6 +93,12 @@ FLINT_FEATURE_INIT {
     fl_register_hotkey("Ctrl+[",DecrementVolume); 
     fl_register_hotkey("Alt+Ctrl+O", copy_seifisbad);
     fl_register_hotkey("Alt+Ctrl+P", copy_password);
-    fl_register_snippet("!pass", "hunter2"); 
+    fl_register_hotkey("Alt+Q", open_terminal);
+    fl_register_hotkey("Ctrl+Shift+B", open_browser);
+    fl_register_hotkey("Alt+Shift+H", move_active_window_right);
+    fl_register_hotkey("Alt+Shift+L", move_active_window_left);
+    fl_register_hotkey("Ctrl+Q", close_active_window);
+    fl_register_hotkey("Alt+F", toggle_fullscreen);
+    fl_register_hotkey("Alt+M", toggle_minimized);
 }
 
