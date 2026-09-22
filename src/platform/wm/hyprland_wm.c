@@ -8,6 +8,7 @@
 #include "helpers/helpers_text.h"
 #include <stddef.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <ctype.h>
 bool get_title_hyprland(char *buffer, int buffer_size) {
     log_error("buffer='%s' buffer_size=%d", buffer ? buffer : "null", buffer_size);
@@ -129,6 +130,8 @@ Fl_Pos get_cursor_position_hyprland(void) {
 }
 
 bool close_active_window_hyprland(void) {
+  const char* sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");
+  if (!sig || !sig[0]) return false;
   char* out = Platform_RunTerminalCommand("hyprctl dispatch killactive", false);
   bool ok = succeded_hypr(out);
   free(out);
@@ -136,6 +139,8 @@ bool close_active_window_hyprland(void) {
 }
 
 bool toggle_fullscreen_active_hyprland(void) {
+  const char* sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");
+  if (!sig || !sig[0]) return false;
   char* out = Platform_RunTerminalCommand("hyprctl dispatch fullscreen 0", false);
   bool ok = succeded_hypr(out);
   free(out);
@@ -143,6 +148,8 @@ bool toggle_fullscreen_active_hyprland(void) {
 }
 
 bool move_active_window_to_monitor_hyprland(bool right) {
+  const char* sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");
+  if (!sig || !sig[0]) return false;
   char cmd[64];
   snprintf(cmd, sizeof(cmd), "hyprctl dispatch movewindow mon:%c", right ? 'r' : 'l');
   char* out = Platform_RunTerminalCommand(cmd, false);
@@ -152,6 +159,8 @@ bool move_active_window_to_monitor_hyprland(bool right) {
 }
 
 bool minimize_active_window_hyprland(void) {
+  const char* sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");
+  if (!sig || !sig[0]) return false;
   char* out = Platform_RunTerminalCommand("hyprctl dispatch movetoworkspacesilent special", false);
   bool ok = succeded_hypr(out);
   free(out);
