@@ -591,6 +591,13 @@ Window Linux_CreateWindowEx(Display* dpy, int x, int y, int w, int h, unsigned l
 
 static void Linux_ApplyShapeRounded(Display* dpy, Window win, int w, int h, int radius);
 
+static bool Linux_HasCompositor(Display* dpy, int screen) {
+    char sel[32];
+    snprintf(sel, sizeof(sel), "_NET_WM_CM_S%d", screen);
+    Atom a = XInternAtom(dpy, sel, False);
+    return XGetSelectionOwner(dpy, a) != None;
+}
+
 Window Linux_CreateWindowExOR(Display* dpy, int x, int y, int w, int h, unsigned long bg_color, const char* res_name, const char* res_class, long event_mask, bool override_redirect) {
     PROFILE_START(timer);
     int screen = DefaultScreen(dpy);
@@ -661,7 +668,7 @@ Window Linux_CreateWindowExOR(Display* dpy, int x, int y, int w, int h, unsigned
     XSetWMHints(dpy, win, hints);
     XFree(hints);
     XSelectInput(dpy, win, event_mask);
-    if (RoundedCorners && !use_argb) {
+    if (RoundedCorners && (!use_argb || !Linux_HasCompositor(dpy, screen))) {
         Linux_ApplyShapeRounded(dpy, win, w, h, CornerRadius);
     }
     PROFILE_END_VAR(timer, "helpers_x11:Linux_CreateWindowExOR");
