@@ -411,10 +411,55 @@ log_info("Platform_CopyToClipboard text='%s'", text ? text : "");;
 }
 
 int Platform_CopyImageToClipboard(const unsigned char* png, size_t len) {
-    (void)png;
-    (void)len;
-    log_info("Platform_CopyImageToClipboard not implemented yet");
-    return 0;
+    if (!png || len == 0) return 0;
+    char tmp[MAX_PATH];
+    GetTempPathA(MAX_PATH, tmp);
+    strcat(tmp, "flint_clip_up.png");
+    FILE* f = fopen(tmp, "wb");
+    if (!f) return 0;
+    size_t w = fwrite(png, 1, len, f);
+    fclose(f);
+    if (w != len) { remove(tmp); return 0; }
+    wchar_t wtmp[512];
+    MultiByteToWideChar(CP_ACP, 0, tmp, -1, wtmp, 512);
+    GpBitmap* bmp = NULL;
+    if (GdipCreateBitmapFromFile(wtmp, &bmp) != 0 || !bmp) { remove(tmp); return 0; }
+    HBITMAP hbm = NULL;
+    if (GdipCreateHBITMAPFromBitmap((GpImage*)bmp, &hbm, 0) != 0 || !hbm) { GdipDisposeImage((GpImage*)bmp); remove(tmp); return 0; }
+    GdipDisposeImage((GpImage*)bmp);
+    remove(tmp);
+    BITMAP bm;
+    memset(&bm, 0, sizeof(bm));
+    if (GetObjectA(hbm, sizeof(bm), &bm) == 0) { DeleteObject(hbm); return 0; }
+    int width = bm.bmWidth;
+    int height = abs(bm.bmHeight);
+    if (width <= 0 || height <= 0) { DeleteObject(hbm); return 0; }
+    int stride = ((width * 32 + 31) / 32) * 4;
+    size_t img = (size_t)stride * (size_t)height;
+    HGLOBAL hDib = GlobalAlloc(GMEM_MOVEABLE, sizeof(BITMAPINFOHEADER) + img);
+    if (!hDib) { DeleteObject(hbm); return 0; }
+    BITMAPINFOHEADER* hdr = (BITMAPINFOHEADER*)GlobalLock(hDib);
+    if (!hdr) { GlobalFree(hDib); DeleteObject(hbm); return 0; }
+    memset(hdr, 0, sizeof(*hdr));
+    hdr->biSize = sizeof(*hdr);
+    hdr->biWidth = width;
+    hdr->biHeight = bm.bmHeight;
+    hdr->biPlanes = 1;
+    hdr->biBitCount = 32;
+    hdr->biCompression = BI_RGB;
+    hdr->biSizeImage = (DWORD)img;
+    HDC hdc = GetDC(NULL);
+    int lines = GetDIBits(hdc, hbm, 0, (UINT)height, (BYTE*)hdr + sizeof(*hdr), (BITMAPINFO*)hdr, DIB_RGB_COLORS);
+    ReleaseDC(NULL, hdc);
+    GlobalUnlock(hDib);
+    DeleteObject(hbm);
+    if (lines == 0) { GlobalFree(hDib); return 0; }
+    if (!OpenClipboard(NULL)) { GlobalFree(hDib); return 0; }
+    EmptyClipboard();
+    if (!SetClipboardData(CF_DIB, hDib)) { CloseClipboard(); GlobalFree(hDib); return 0; }
+    CloseClipboard();
+    log_info("Platform_CopyImageToClipboard ok %dx%d", width, height);
+    return 1;
 }
 
 void Platform_SaveRegionToPNG(int x1, int y1, int x2, int y2, const char* fullPath) {
