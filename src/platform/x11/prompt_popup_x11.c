@@ -108,6 +108,7 @@ bool Platform_PromptPopupOnKey(Popup* self, const PopupKeyEvent* key) {
     bool ctrl_pressed = key->ctrl;
     bool shift_pressed = key->shift;
     bool alt_pressed = key->alt;
+    log_info("prompt key wParam=%d shift=%d ctrl=%d alt=%d insert=%d", wParam, shift_pressed, ctrl_pressed, alt_pressed, IsInsertMode());
     if (should_swallow_pending(wParam, (ctrl_pressed?HOTKEY_MOD_CTRL:0)|(shift_pressed?HOTKEY_MOD_SHIFT:0)|(alt_pressed?HOTKEY_MOD_ALT:0))) { PROFILE_END_VAR(timer, "prompt_popup_x11:Platform_PromptPopupOnKey"); return true; }
     if (TryVimMotion(wParam, ctrl_pressed, shift_pressed, alt_pressed)) { PROFILE_END_VAR(timer, "prompt_popup_x11:Platform_PromptPopupOnKey"); return true; }
     if (wParam == VK_BACK) {
@@ -257,7 +258,7 @@ bool Platform_PromptPopupOnKey(Popup* self, const PopupKeyEvent* key) {
       }
     }
 
-    if (wParam == COMMAND_MODE_KEY) {
+    if (wParam == COMMAND_MODE_KEY && shift_pressed) {
         WindowManager* wm = WindowManager_Get();
         Popup* popup = EditPopup_Create(wm,"", "Command Mode", 960, 540, 1000, 100, "LEFT", command_confirm,state);
         WindowManager_PushPopup(wm, popup);

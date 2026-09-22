@@ -113,6 +113,7 @@ static void Linux_HandleKeyPress(Display* dpy, XKeyEvent* ev, WindowManager* wm)
     }
     int modifiers = mods;
     if(vk_code) Platform_InputState_Update(vk_code, true, modifiers);
+    log_info("xkey ks=0x%lx len=%d buf0=%d vk=%d mods=%d state=0x%x", (unsigned long)ks, len, len > 0 ? (int)(unsigned char)buf[0] : -1, vk_code, modifiers, ev->state);
 
 
     Popup* top = WindowManager_GetTopPopup(wm);
@@ -216,20 +217,16 @@ int WindowManager_RunLinux(WindowManager* wm) {
                     bool have_held = ioctl(g_x11_keyboards[i].fd, EVIOCGKEY(sizeof(held)), held) >= 0;
                     if (ioctl(g_x11_keyboards[i].fd, EVIOCGRAB, 1)==0) {
                         g_x11_device_grabbed[i]=true;
-                        log_warn("remap grabbed keyboard %d path=%s", i, g_x11_keyboards[i].path);
 #if __has_include(<X11/extensions/XTest.h>)
                         if (have_held && dpy) {
                             for (int k = 0; k <= KEY_MAX; k++) {
                                 if (held[k / (8 * (int)sizeof(unsigned long))] & (1UL << (k % (8 * (int)sizeof(unsigned long))))) {
                                     XTestFakeKeyEvent(dpy, (unsigned int)(k + 8), False, CurrentTime);
-                                    log_info("grab release code=%d kc=%d", k, k + 8);
                                 }
                             }
                             XFlush(dpy);
                         }
 #endif
-                    } else {
-                        log_warn("remap grab failed for %s: %s (run with correct perms / input group)", g_x11_keyboards[i].path, strerror(errno));
                     }
                 }
             }
