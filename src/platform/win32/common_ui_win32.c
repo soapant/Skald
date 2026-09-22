@@ -33,7 +33,7 @@ void Win32_ApplyRoundedCorners(HWND hwnd, int w, int h) {
     HRESULT (WINAPI *pDwmSetWindowAttribute)(HWND, DWORD, LPCVOID, DWORD) = (void*)GetProcAddress(dwm, "DwmSetWindowAttribute");
     if (pDwmSetWindowAttribute) {
       const DWORD DWMWA_BORDER_COLOR = 34;
-      COLORREF border = COLOR_BG;
+      COLORREF border = 0xFFFFFFFE;
       pDwmSetWindowAttribute(hwnd, DWMWA_BORDER_COLOR, &border, sizeof(border));
       if (!RoundedCorners) {
         FreeLibrary(dwm);
@@ -531,8 +531,9 @@ void UpdateTextCaret(WindowHandle hwndEditControl)
 }
 
 void CalculateWindowMetrics(WindowLayout* layout,int height , int width,int item_height) {
-  POINT ptPrimary = { 0, 0 };
-  HMONITOR hMonitor = MonitorFromPoint(ptPrimary, MONITOR_DEFAULTTOPRIMARY);
+  POINT pt = { 0, 0 };
+  GetCursorPos(&pt);
+  HMONITOR hMonitor = MonitorFromPoint(pt, MONITOR_DEFAULTTONEAREST);
 
   MONITORINFO mi = {0};
   mi.cbSize = sizeof(MONITORINFO);
@@ -551,6 +552,9 @@ void CalculateWindowMetrics(WindowLayout* layout,int height , int width,int item
 
   layout->x = mi.rcMonitor.left + (monitorWidth - layout->w) / 2;
   layout->y = mi.rcMonitor.top + (monitorHeight - layout->h) / 2;
+  log_info("CalculateWindowMetrics cursor=(%ld,%ld) mon=(%ld,%ld %ldx%ld) layout=(%d,%d %dx%d)",
+      pt.x, pt.y, mi.rcMonitor.left, mi.rcMonitor.top, monitorWidth, monitorHeight,
+      layout->x, layout->y, layout->w, layout->h);
 }
 void ForceWindowFocus(WindowHandle hwndTarget, WindowHandle hwndInput) {
   ShowWindow(WH_TO_HWND(hwndTarget), SW_SHOW);

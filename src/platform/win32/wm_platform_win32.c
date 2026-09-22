@@ -2,6 +2,7 @@
 #include "platform/input_state.h"
 #include "core/window_manager.h"
 #include "core/remap_manager.h"
+#include "deps/log.h"
 #include <windows.h>
 
 extern int WindowManager_RunWin32(WindowManager* wm);
@@ -35,6 +36,23 @@ void Platform_WM_GetMonitorGeometry(int *ox, int *oy, int *ow, int *oh) {
     int x = 0, y = 0, w = GetSystemMetrics(SM_CXSCREEN), h = GetSystemMetrics(SM_CYSCREEN);
     if (!w) w = 1920;
     if (!h) h = 1080;
+    POINT pt = { 0, 0 };
+    if (GetCursorPos(&pt)) {
+        HMONITOR mon = MonitorFromPoint(pt, MONITOR_DEFAULTTONEAREST);
+        if (mon) {
+            MONITORINFO mi;
+            mi.cbSize = sizeof(mi);
+            if (GetMonitorInfoA(mon, &mi)) {
+                x = mi.rcWork.left;
+                y = mi.rcWork.top;
+                w = mi.rcWork.right - mi.rcWork.left;
+                h = mi.rcWork.bottom - mi.rcWork.top;
+            }
+        }
+    }
+    if (!w) w = 1920;
+    if (!h) h = 1080;
+    log_info("Platform_WM_GetMonitorGeometry cursor=(%ld,%ld) mon=(%d,%d %dx%d)", pt.x, pt.y, x, y, w, h);
     if (ox) *ox = x;
     if (oy) *oy = y;
     if (ow) *ow = w;
