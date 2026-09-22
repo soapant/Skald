@@ -117,3 +117,43 @@ Fl_Pos Wm_GetCursorPosition() {
     log_error("GetWindowNames Didnt Work");
     return empty;
 }
+
+bool Wm_CloseActiveWindow(void) {
+    if (getenv("WAYLAND_DISPLAY")) {
+        if (close_active_window_hyprland()) return true;
+        if (close_active_window_sway()) return true;
+    }
+    if (close_active_window_x11()) return true;
+    log_error("CloseActiveWindow Didnt Work");
+    return false;
+}
+
+bool Wm_ToggleFullscreenActive(void) {
+    if (getenv("WAYLAND_DISPLAY")) {
+        if (toggle_fullscreen_active_hyprland()) return true;
+        if (toggle_fullscreen_active_sway()) return true;
+    }
+    if (toggle_fullscreen_active_x11()) return true;
+    log_error("ToggleFullscreenActive Didnt Work");
+    return false;
+}
+
+bool Wm_MoveActiveWindowToMonitor(bool right) {
+    if (getenv("WAYLAND_DISPLAY")) {
+        if (move_active_window_to_monitor_hyprland(right)) return true;
+        if (move_active_window_to_monitor_sway(right)) return true;
+    }
+    if (move_active_window_to_monitor_x11(right)) return true;
+    log_error("MoveActiveWindowToMonitor Didnt Work");
+    return false;
+}
+
+bool Wm_MinimizeActiveWindow(void) {
+    if (getenv("WAYLAND_DISPLAY")) {
+        if (minimize_active_window_hyprland()) return true;
+        if (minimize_active_window_sway()) return true;
+    }
+    if (minimize_active_window_x11()) return true;
+    log_error("MinimizeActiveWindow Didnt Work");
+    return false;
+}

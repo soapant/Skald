@@ -846,6 +846,22 @@ bool fl_focus_window_by_title(char* title) {
   return Platform_FocusWindow(title);
 }
 
+bool fl_close_active_window(void) {
+  return Platform_CloseActiveWindow();
+}
+
+bool fl_toggle_fullscreen_active(void) {
+  return Platform_ToggleFullscreenActive();
+}
+
+bool fl_move_active_window_to_monitor(bool right) {
+  return Platform_MoveActiveWindowToMonitor(right);
+}
+
+bool fl_toggle_minimized_active(void) {
+  return Platform_MinimizeActiveWindow();
+}
+
 char* fl_popup_impl(const FlPopupSpec *spec) {
     const char* initial_text = spec->initial_text ? spec->initial_text : "";
     int x = spec->x ? spec->x : 0;
