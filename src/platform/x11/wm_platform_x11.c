@@ -115,8 +115,16 @@ char* Platform_PromptUser(WindowManager* wm, const PromptSpec* spec) {
     Popup* popup = PromptPopup_Create(wm, spec);
     if (!popup) return NULL;
     Display* dpy = wm->display;
+    long long last_tick = 0;
     while (wm->running && popup->manager) {
         Platform_WM_ProcessEvents(wm);
+        long long now = Platform_GetWallClockMs();
+        if (now - last_tick >= 1000 && WindowManager_TopPopupWantsTick(wm)) {
+            last_tick = now;
+            Popup* top = WindowManager_GetTopPopup(wm);
+            if (top && top->vtable && top->vtable->on_render) top->vtable->on_render(top);
+            if (dpy) XFlush(dpy);
+        }
         if (PromptController_PollSequenceTimeout()) {
             Popup* top = WindowManager_GetTopPopup(wm);
             if (top && top->vtable && top->vtable->on_render) top->vtable->on_render(top);
