@@ -762,6 +762,10 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
     PROFILE_START(timer4);
     if (CheckVimMotion(pressed_vk, modifiers, &vimAction, &matchedSequence, &typedCount)) {
       if (vimAction != MOTION_NONE) ExecuteMotion(vimAction, matchedSequence, typedCount);
+      if (FlintContext_Get()->prompt_callbacks.render != NULL) {
+        HWND hPopup = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
+        if (hPopup && IsWindow(hPopup)) InvalidateRect(hPopup, NULL, FALSE);
+      }
       PROFILE_END_VAR(timer4, "ExecuteMotion");
       return 1;
     }

@@ -18,6 +18,16 @@ SequenceState seq_state = {0};
 #if defined(_WIN32)
 static void Win32_SyncFilterFromEdit(FlintContext* ctx) {
     if (!ctx) return;
+    if (ctx->prompt_callbacks.render != NULL) {
+        extern PromptState* Platform_GetWin32PromptState(void);
+        PromptState* ws = Platform_GetWin32PromptState();
+        if (ws) {
+            strncpy(ctx->window.filter, ws->filter, sizeof(ctx->window.filter) - 1);
+            ctx->window.filter[sizeof(ctx->window.filter) - 1] = '\0';
+            ctx->window.filter_cursor = (int)ws->cursor;
+            return;
+        }
+    }
     HWND hEdit = WH_TO_HWND(ctx->window.hActiveEditControl);
     if (!hEdit) hEdit = WH_TO_HWND(ctx->window.hEditControl);
     if (!hEdit || !IsWindow(hEdit)) return;
@@ -48,6 +58,10 @@ static void Win32_ApplyFilterToEdit(FlintContext* ctx) {
         SendMessageA(hActive, EM_SETSEL, (WPARAM)pos, (LPARAM)pos);
     }
     UpdateTextCaret(WH_FROM_HWND(hEdit));
+    if (ctx->prompt_callbacks.render != NULL) {
+        HWND hPopup = WH_TO_HWND(ctx->window.hPopupWnd);
+        if (hPopup && IsWindow(hPopup)) InvalidateRect(hPopup, NULL, FALSE);
+    }
 }
 #endif
 
@@ -200,6 +214,10 @@ void Vim_SetCursor(FlintContext* ctx, int pos) {
     if (hEdit) {
         SendMessageA(hEdit, EM_SETSEL, (WPARAM)pos, (LPARAM)pos);
         UpdateTextCaret(WH_FROM_HWND(hEdit));
+    }
+    if (ctx->prompt_callbacks.render != NULL) {
+        HWND hPopup = WH_TO_HWND(ctx->window.hPopupWnd);
+        if (hPopup && IsWindow(hPopup)) InvalidateRect(hPopup, NULL, FALSE);
     }
 #endif
 }
