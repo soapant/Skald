@@ -109,6 +109,7 @@ bool fl_launch_file_manager_at_path(char* path,char* args);
 char* fl_run_terminal_command(char* command);
 char* fl_run_terminal_command_blocking(char* command);
 char* fl_run_terminal_command_and_open(char* command);
+bool fl_launch_detached(char* command);
 int fl_collect_running_processes(char process_list[][128], int max_count);
 bool fl_terminate_process_by_name(const char* exe_name);
 int fl_get_icon_size(const char* icon_path);
