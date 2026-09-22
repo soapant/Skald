@@ -700,7 +700,7 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 
     if (shift_down && !IsInsertMode() && WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) != NULL) {
       if (WH_TO_HWND(FlintContext_Get()->window.g_hEditPopup) == NULL) {
-        if (pressed_vk == COMMAND_MODE_KEY) {
+        if (pressed_vk == COMMAND_MODE_KEY && shift_down) {
           SetMode(MODE_INSERT);
           WindowManager* wm = WindowManager_Get();
           if (wm) {

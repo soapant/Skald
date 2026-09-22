@@ -88,6 +88,27 @@ int Linux_KeysymToWindowsVK(KeySym keysym) {
         case XK_grave: PROFILE_END_VAR(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_OEM_3;
         case XK_minus: PROFILE_END_VAR(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_OEM_MINUS;
         case XK_equal: PROFILE_END_VAR(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_OEM_PLUS;
+        case XK_colon: PROFILE_END_VAR(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return VK_OEM_1;
+        case XK_less: PROFILE_END_VAR(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return '<';
+        case XK_greater: PROFILE_END_VAR(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return '>';
+        case XK_question: PROFILE_END_VAR(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return '?';
+        case XK_quotedbl: PROFILE_END_VAR(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return '"';
+        case XK_braceleft: PROFILE_END_VAR(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return '{';
+        case XK_braceright: PROFILE_END_VAR(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return '}';
+        case XK_asciitilde: PROFILE_END_VAR(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return '~';
+        case XK_underscore: PROFILE_END_VAR(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return '_';
+        case XK_plus: PROFILE_END_VAR(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return '+';
+        case XK_exclam: PROFILE_END_VAR(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return '!';
+        case XK_at: PROFILE_END_VAR(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return '@';
+        case XK_numbersign: PROFILE_END_VAR(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return '#';
+        case XK_dollar: PROFILE_END_VAR(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return '$';
+        case XK_percent: PROFILE_END_VAR(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return '%';
+        case XK_asciicircum: PROFILE_END_VAR(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return '^';
+        case XK_ampersand: PROFILE_END_VAR(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return '&';
+        case XK_asterisk: PROFILE_END_VAR(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return '*';
+        case XK_parenleft: PROFILE_END_VAR(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return '(';
+        case XK_parenright: PROFILE_END_VAR(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return ')';
+        case XK_bar: PROFILE_END_VAR(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return '|';
         default: PROFILE_END_VAR(timer, "subclasses_x11:Linux_KeysymToWindowsVK"); return 0;
     }
     PROFILE_END_VAR(timer, "subclasses_x11:Linux_KeysymToWindowsVK");

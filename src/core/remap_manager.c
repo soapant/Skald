@@ -182,7 +182,7 @@ static bool remap_window_allowed(RemapBinding* b, const char* title) {
         }
         return true;
     }
-    if (!title) { log_info("whitelist deny title=NULL"); return false; }
+    if (!title) { return false; }
     for (int j = 0; j < b->window_count; j++) {
         if (b->windows[j] && b->windows[j][0] && Platform_StringContainsCaseInsensitive(title, b->windows[j])) return true;
     }
