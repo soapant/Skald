@@ -149,8 +149,8 @@ Popup* PromptPopup_Create(WindowManager* wm, const PromptSpec* spec) {
     PROFILE_START(timer);
     if (!wm || !spec) { PROFILE_END_VAR(timer, "window_manager:PromptPopup_Create"); return NULL; }
 
-    int layout_w = 900;
-    int layout_h = 640;
+    int layout_w = (int)(900 * Platform_GetUIScale());
+    int layout_h = (int)(640 * Platform_GetUIScale());
 
     int x, y;
     WindowManager_GetCenteredPos(layout_w, layout_h, &x, &y);

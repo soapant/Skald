@@ -78,6 +78,8 @@ char* Platform_GetIconPath(char* app_path);
 int Platform_GetIconSize(char* icon_path);
 int ConvertLinuxKeyToWindowsVK(int key_code);
 Fl_Pos Platform_GetCursorPos(void);
+void Platform_ApplyUIScale(void);
+float Platform_GetUIScale(void);
 const char* Platform_GetRealUser(void);
 const char* Platform_GetRealHome(void);
 bool Platform_IsRunningAsRoot(void);
