@@ -21,6 +21,7 @@
 #include "platform/draw.h"
 #include "core/hotkey_manager.h"
 #include "core/remap_manager.h"
+#include "deps/stb_ds.h"
 
 static const unsigned char FL_PNG_MAGIC[8] = { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
 
@@ -1290,6 +1291,18 @@ double fl_end_timer(FlTimer t) {
     return fl_end_timer_platform(t);
 }
 
+char* fl_get_active_window_title(void) {
+  char* title = Platform_GetActiveWindowTitle();
+  if (!title || !title[0]) return NULL;
+  return strdup(title);
+}
+
+char* fl_get_active_window_app_id(void) {
+  char* id = Platform_GetActiveWindowAppId();
+  if (!id || !id[0]) return NULL;
+  return strdup(id);
+}
+
 bool fl_is_window_active(char* title) {
   Fl_WindowList l = Platform_GetWindowTitles();
   for (int i = 0; i < l.count;i++) {
@@ -1301,6 +1314,55 @@ bool fl_is_window_active(char* title) {
 }
 char* fl_get_working_dir() {
     return Platform_GetWorkingDir();
+}
+
+void fl_hashmap_init(FlHashMap** map) {
+    if (!map) return;
+    sh_new_strdup(*map);
+}
+
+void fl_hashmap_free(FlHashMap** map) {
+    if (!map) return;
+    shfree(*map);
+}
+
+void fl_hashmap_put(FlHashMap** map, const char* key, long value) {
+    if (!map || !key) return;
+    shput(*map, (char*)key, value);
+}
+
+void fl_hashmap_add(FlHashMap** map, const char* key, long delta) {
+    if (!map || !key) return;
+    ptrdiff_t idx = shgeti(*map, (char*)key);
+    if (idx >= 0) (*map)[idx].value += delta;
+    else shput(*map, (char*)key, delta);
+}
+
+long fl_hashmap_get(FlHashMap* map, const char* key, long def) {
+    if (!map || !key) return def;
+    ptrdiff_t idx = shgeti(map, (char*)key);
+    if (idx < 0) return def;
+    return map[idx].value;
+}
+
+bool fl_hashmap_has(FlHashMap* map, const char* key) {
+    if (!map || !key) return false;
+    return shgeti(map, (char*)key) >= 0;
+}
+
+bool fl_hashmap_del(FlHashMap** map, const char* key) {
+    if (!map || !*map || !key) return false;
+    return shdel(*map, (char*)key) != 0;
+}
+
+size_t fl_hashmap_len(FlHashMap* map) {
+    if (!map) return 0;
+    return shlenu(map);
+}
+
+const FlHashMap* fl_hashmap_at(FlHashMap* map, size_t index) {
+    if (!map || index >= shlenu(map)) return NULL;
+    return &map[index];
 }
 
 void fl_screenshot_copy_area(void) {

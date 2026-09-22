@@ -14,6 +14,12 @@ bool get_title_hyprland(char *buffer, int buffer_size) {
     return false;
 }
 
+bool get_app_id_hyprland(char *buffer, int buffer_size) {
+    (void)buffer;
+    (void)buffer_size;
+    return false;
+}
+
 char* paste_hyprland(char* content) {
   if (!content) { log_error("content is NULL"); return NULL; }
   char buffer[100];

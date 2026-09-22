@@ -79,6 +79,39 @@ bool get_title_sway(char *buffer, int buffer_size) {
     return buffer[0] != '\0';
 }
 
+bool get_app_id_sway(char *buffer, int buffer_size) {
+    if (!buffer || buffer_size <= 0) return false;
+    buffer[0] = '\0';
+    sway_ensure_sock();
+    if (!getenv("SWAYSOCK") && !getenv("I3SOCK")) return false;
+    char *command_output = Platform_RunTerminalCommand(
+        "swaymsg -t get_tree --raw | grep -A 40 '\"focused\": true'",
+        false
+    );
+    if (!command_output || command_output[0] == '\0') { free(command_output); return false; }
+    bool ok = false;
+    StringList lines = String_Split(command_output, "\n");
+    for (size_t i = 0; i < lines.count; i++) {
+        if (!lines.items[i]) continue;
+        const char* p = strstr(lines.items[i], "\"app_id\"");
+        if (!p) continue;
+        p = strchr(p, ':');
+        if (!p) continue;
+        p++;
+        while (*p && (isspace((unsigned char)*p) || *p == '"')) p++;
+        size_t n = 0;
+        while (p[n] && p[n] != '"' && p[n] != ',' && n < (size_t)(buffer_size - 1)) n++;
+        if (n == 0 || (n == 4 && strncmp(p, "null", 4) == 0)) continue;
+        memcpy(buffer, p, n);
+        buffer[n] = '\0';
+        ok = true;
+        break;
+    }
+    StringList_Free(&lines);
+    free(command_output);
+    return ok;
+}
+
 char* paste_sway(char* content) {
   if (!content) { log_error("content is NULL"); return NULL; }
   char buffer[100];

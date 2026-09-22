@@ -1208,6 +1208,10 @@ static void icon_cache_set(const char* key, const char* value){
 }
 
 
+char* Platform_GetActiveWindowAppId(void) {
+  return Wm_GetActiveWindowAppId();
+}
+
 char* Platform_GetIconPath(char* app_path) {
     if (!app_path) { log_error("operation failed, returning error app_path='%s'", app_path ? app_path : "null"); return NULL; }
     for (int i = 0; i < (int)ARRAY_LEN(supported_names_to_paths); i++) {
