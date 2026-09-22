@@ -22,6 +22,9 @@
 #include <X11/keysym.h>
 #include <X11/Xft/Xft.h>
 #include <X11/extensions/Xrandr.h>
+#if __has_include(<X11/extensions/XTest.h>)
+#include <X11/extensions/XTest.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -209,9 +212,22 @@ int WindowManager_RunLinux(WindowManager* wm) {
         if (g_x11_uinput_fd >= 0) {
             for (int i=0;i<g_x11_keyboard_count;i++) {
                 if (!g_x11_device_grabbed[i]) {
+                    unsigned long held[(KEY_MAX + 8) / 8] = {0};
+                    bool have_held = ioctl(g_x11_keyboards[i].fd, EVIOCGKEY(sizeof(held)), held) >= 0;
                     if (ioctl(g_x11_keyboards[i].fd, EVIOCGRAB, 1)==0) {
                         g_x11_device_grabbed[i]=true;
                         log_warn("remap grabbed keyboard %d path=%s", i, g_x11_keyboards[i].path);
+#if __has_include(<X11/extensions/XTest.h>)
+                        if (have_held && dpy) {
+                            for (int k = 0; k <= KEY_MAX; k++) {
+                                if (held[k / (8 * (int)sizeof(unsigned long))] & (1UL << (k % (8 * (int)sizeof(unsigned long))))) {
+                                    XTestFakeKeyEvent(dpy, (unsigned int)(k + 8), False, CurrentTime);
+                                    log_info("grab release code=%d kc=%d", k, k + 8);
+                                }
+                            }
+                            XFlush(dpy);
+                        }
+#endif
                     } else {
                         log_warn("remap grab failed for %s: %s (run with correct perms / input group)", g_x11_keyboards[i].path, strerror(errno));
                     }

@@ -757,7 +757,7 @@ void fl_screenshot_save_area_platform(char* save_path) {
     if (!save_path) return;
     char path[MAX_PATH];
     snprintf(path, sizeof(path), "%s.png", save_path);
-    log_info("area select not implemented, capturing primary monitor");
+    printf("area select not implemented, capturing primary monitor");
     fl_win32_capture_primary(path);
 }
 
