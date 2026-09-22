@@ -870,9 +870,15 @@ void fl_screenshot_copy_platform(void) {
     char path[MAX_PATH];
 
     snprintf(path, sizeof(path), "%s/flint_clip.png", wd ? wd : ".");
-    snprintf(cmd, sizeof(cmd),
-             "%s/external/grim -t png %s",
+    if (getenv("WAYLAND_DISPLAY")) {
+        snprintf(cmd, sizeof(cmd),
+                 "%s/external/grim -t png %s",
+                 wd, path);
+    } else {
+          snprintf(cmd, sizeof(cmd),
+             "%s/external/scrot -s %s",
              wd, path);
+    }
 
     free(Platform_RunCommandAndGetOutput(cmd));
     fl_clipboard_set_png_path_platform(path);
@@ -882,9 +888,15 @@ void fl_screenshot_save_area_platform(char* save_path) {
     char cmd[512];
     char* wd = Platform_GetWorkingDir();
     
-    snprintf(cmd, sizeof(cmd),
-             "%s/external/grim -g \"$(%s/external/slurp)\" %s.png",
-             wd, wd,save_path);
+    if (getenv("WAYLAND_DISPLAY")) {
+      snprintf(cmd, sizeof(cmd),
+               "%s/external/grim -g \"$(%s/external/slurp)\" %s.png",
+               wd, wd,save_path);
+    } else {
+      snprintf(cmd, sizeof(cmd),
+                "%s/external/scrot -s %s.png",
+                wd,save_path);
+    }
 
     free(Platform_RunCommandAndGetOutput(cmd));
 }
@@ -892,20 +904,35 @@ void fl_screenshot_save_platform(char* save_path) {
     char cmd[512];
     char* wd = Platform_GetWorkingDir();
     
-    snprintf(cmd, sizeof(cmd),
-             "%s/external/grim %s.png",
-             wd,save_path);
+    if (getenv("WAYLAND_DISPLAY")) {
+      snprintf(cmd, sizeof(cmd),
+               "%s/external/grim %s.png",
+               wd,save_path);
+    } else {
+      snprintf(cmd, sizeof(cmd),
+                "%s/external/scrot %s.png",
+                wd,save_path);
+    }
 
     free(Platform_RunCommandAndGetOutput(cmd));
 }
+
 void fl_ocr_area_to_clipboard_platform() {
     char cmd[512];
     char* wd = Platform_GetWorkingDir();
 
-    snprintf(cmd, sizeof(cmd),
-             "%s/external/grim -g \"$(%s/external/slurp)\" -t png - | tesseract stdin stdout -l eng",
-             wd, wd);
+    if (getenv("WAYLAND_DISPLAY")) {
+        snprintf(cmd, sizeof(cmd),
+                 "%s/external/grim -g \"$(%s/external/slurp)\" -t png - | tesseract stdin stdout -l eng",
+                 wd, wd);
+    } else {
+          char temp_path[MAX_PATH];
+          snprintf(temp_path, sizeof(temp_path), "/tmp/flint_ocr_%d.png", getpid());
 
+          snprintf(cmd, sizeof(cmd),
+                   "%s/external/scrot -s %s && tesseract %s stdout -l eng; rm -f %s",
+                   wd, temp_path, temp_path, temp_path);
+    }
     char* out = Platform_RunCommandAndGetOutput(cmd);
     if (!out || !out[0]) {
         free(out);
