@@ -423,6 +423,20 @@ bool fl_string_match_insensitive(char* needle,char* haystack);
 char* fl_get_working_dir();
 
 // =============================================================================
+// THREADS / SYNC (opaque handles, joinable threads)
+// =============================================================================
+
+typedef void* FlThread;
+typedef void* FlMutex;
+typedef void* (*FlThreadFunc)(void* arg);
+FlThread fl_thread_create(FlThreadFunc fn, void* arg);
+void fl_thread_join(FlThread thread);
+FlMutex fl_mutex_create(void);
+void fl_mutex_destroy(FlMutex mutex);
+void fl_mutex_lock(FlMutex mutex);
+void fl_mutex_unlock(FlMutex mutex);
+
+// =============================================================================
 // HASHMAP (string -> long, backed by stb_ds; keys are copied)
 // =============================================================================
 

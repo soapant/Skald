@@ -1,9 +1,5 @@
 #include "core/flapi.h"
 
-#if !defined(_WIN32)
-#include <pthread.h>
-#endif
-
 #define WM_SAMPLE_SECONDS 1
 #define WM_MAX_TITLE 80
 #define WM_MAX_ROWS 25
@@ -12,26 +8,19 @@ static FlHashMap* g_wm_map = NULL;
 static bool g_wm_running = false;
 static bool g_wm_inited = false;
 static char g_wm_last[WM_MAX_TITLE + 1] = {0};
-#if !defined(_WIN32)
-static pthread_t g_wm_thread;
-static pthread_mutex_t g_wm_lock = PTHREAD_MUTEX_INITIALIZER;
-#endif
+static FlThread g_wm_thread = NULL;
+static FlMutex g_wm_lock = NULL;
 
 static void wm_track(const char* title) {
     if (!title || !title[0]) return;
     char short_title[WM_MAX_TITLE + 1];
     strncpy(short_title, title, WM_MAX_TITLE);
     short_title[WM_MAX_TITLE] = '\0';
-#if !defined(_WIN32)
-    pthread_mutex_lock(&g_wm_lock);
-#endif
+    fl_mutex_lock(g_wm_lock);
     fl_hashmap_add(&g_wm_map, short_title, WM_SAMPLE_SECONDS);
-#if !defined(_WIN32)
-    pthread_mutex_unlock(&g_wm_lock);
-#endif
+    fl_mutex_unlock(g_wm_lock);
 }
 
-#if !defined(_WIN32)
 static void* wm_sampler(void* arg) {
     (void)arg;
     while (g_wm_running) {
@@ -48,7 +37,6 @@ static void* wm_sampler(void* arg) {
     }
     return NULL;
 }
-#endif
 
 static void wm_format_time(long total, char* out, size_t cap) {
     long h = total / 3600;
@@ -69,9 +57,7 @@ static int wm_cmp_desc(const void* a, const void* b) {
 
 void window_monitor_render(PromptState* state) {
     fl_draw_text(.text = "Window Monitor", .fontsize = 22);
-#if !defined(_WIN32)
-    pthread_mutex_lock(&g_wm_lock);
-#endif
+    fl_mutex_lock(g_wm_lock);
     size_t total = fl_hashmap_len(g_wm_map);
     FlHashMap* rows = NULL;
     if (total > 0) {
@@ -81,9 +67,7 @@ void window_monitor_render(PromptState* state) {
             if (e) rows[i] = *e;
         }
     }
-#if !defined(_WIN32)
-    pthread_mutex_unlock(&g_wm_lock);
-#endif
+    fl_mutex_unlock(g_wm_lock);
     if (total > 0) qsort(rows, total, sizeof(rows[0]), wm_cmp_desc);
     size_t n = total > WM_MAX_ROWS ? WM_MAX_ROWS : total;
     int y = 60;
@@ -109,9 +93,9 @@ void TriggerWindowMonitor(void) {
 
 FLINT_FEATURE_EXPORT void FlintFeatureShutdown(void) {
     g_wm_running = false;
-#if !defined(_WIN32)
-    if (g_wm_inited) pthread_join(g_wm_thread, NULL);
-#endif
+    if (g_wm_inited) fl_thread_join(g_wm_thread);
+    fl_mutex_destroy(g_wm_lock);
+    g_wm_lock = NULL;
     g_wm_inited = false;
 }
 
@@ -119,16 +103,9 @@ FLINT_FEATURE_INIT {
     if (g_wm_inited) return;
     g_wm_inited = true;
     fl_hashmap_init(&g_wm_map);
+    g_wm_lock = fl_mutex_create();
     g_wm_running = true;
-#if !defined(_WIN32)
-    pthread_create(&g_wm_thread, NULL, wm_sampler, NULL);
-#else
-    char* id = fl_get_active_window_app_id();
-    if (id) {
-        wm_track(id);
-        free(id);
-    }
-#endif
+    g_wm_thread = fl_thread_create(wm_sampler, NULL);
     fl_register_hotkey("Alt+Shift+W", TriggerWindowMonitor);
     fl_register_feature("Window Monitor", TriggerWindowMonitor);
 }
