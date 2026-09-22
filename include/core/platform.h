@@ -73,6 +73,7 @@ char* Platform_WatchForCFileChanges(const char* dir_path);
 void Platform_CleanupDirWatchers(void);
 bool Platform_BuildFeature(const char* src, const char* out);
 char* Platform_GetActiveWindowTitle();
+char* Platform_GetActiveWindowAppId();
 char* Platform_GetIconPath(char* app_path);
 int Platform_GetIconSize(char* icon_path);
 int ConvertLinuxKeyToWindowsVK(int key_code);

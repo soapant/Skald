@@ -423,11 +423,32 @@ bool fl_string_match_insensitive(char* needle,char* haystack);
 char* fl_get_working_dir();
 
 // =============================================================================
+// HASHMAP (string -> long, backed by stb_ds; keys are copied)
+// =============================================================================
+
+typedef struct {
+    char* key;
+    long value;
+} FlHashMap;
+
+void fl_hashmap_init(FlHashMap** map);
+void fl_hashmap_free(FlHashMap** map);
+void fl_hashmap_put(FlHashMap** map, const char* key, long value);
+void fl_hashmap_add(FlHashMap** map, const char* key, long delta);
+long fl_hashmap_get(FlHashMap* map, const char* key, long def);
+bool fl_hashmap_has(FlHashMap* map, const char* key);
+bool fl_hashmap_del(FlHashMap** map, const char* key);
+size_t fl_hashmap_len(FlHashMap* map);
+const FlHashMap* fl_hashmap_at(FlHashMap* map, size_t index);
+
+// =============================================================================
 // WINDOW
 // =============================================================================
 
 Fl_WindowList fl_get_all_window_titles();
 Fl_WindowList fl_get_all_window_names();
+char* fl_get_active_window_title(void);
+char* fl_get_active_window_app_id(void);
 bool fl_is_window_active(char* title);
 
 // =============================================================================
