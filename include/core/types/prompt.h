@@ -71,6 +71,7 @@ typedef struct {
     FilterCallback filter;
     HelpCallback help;
     CloseCallback on_close;
+    bool tick;
 } PromptSpec;
 
 typedef struct {
