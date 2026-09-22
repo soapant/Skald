@@ -2,6 +2,7 @@
 #include "deps/log.h"
 #include "platform/x11/display_x11.h"
 #include <X11/Xlib.h>
+#include <X11/Xutil.h>
 #include <ctype.h>
 #include <string.h>
 #include "core/platform.h"
@@ -49,6 +50,38 @@ bool get_title_x11(char *buffer, int buffer_size) {
     strncpy(buffer, name, buffer_size - 1);
     buffer[buffer_size - 1] = '\0';
     XFree(name);
+    return buffer[0] != '\0';
+}
+
+bool get_app_id_x11(char *buffer, int buffer_size) {
+    if (!buffer || buffer_size <= 0) return false;
+    buffer[0] = '\0';
+    Display *display = get_display();
+    if (!display) return false;
+    Window focus = None;
+    int revert_to = 0;
+    _x11_err = 0;
+    XErrorHandler old = XSetErrorHandler(_x11_err_handler);
+    XGetInputFocus(display, &focus, &revert_to);
+    XSync(display, False);
+    if (_x11_err || focus == None || focus == PointerRoot) {
+        XSetErrorHandler(old);
+        return false;
+    }
+    XClassHint* ch = XAllocClassHint();
+    _x11_err = 0;
+    int ok = ch ? XGetClassHint(display, focus, ch) : 0;
+    XSync(display, False);
+    XSetErrorHandler(old);
+    if (_x11_err || !ok || !ch || !ch->res_class || !ch->res_class[0]) {
+        if (ch) XFree(ch);
+        return false;
+    }
+    strncpy(buffer, ch->res_class, buffer_size - 1);
+    buffer[buffer_size - 1] = '\0';
+    if (ch->res_name) XFree(ch->res_name);
+    if (ch->res_class) XFree(ch->res_class);
+    XFree(ch);
     return buffer[0] != '\0';
 }
 

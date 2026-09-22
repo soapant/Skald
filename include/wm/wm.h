@@ -6,6 +6,7 @@
 
 
 char* Wm_GetActiveWindowTitle();
+char* Wm_GetActiveWindowAppId();
 bool Wm_FocusByTitle(const char *title);
 char* Wm_Paste(char* content);
 Fl_WindowList Wm_GetWindowTitles(void);

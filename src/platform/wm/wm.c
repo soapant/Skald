@@ -4,6 +4,7 @@
 #include "wm/x11_wm.h"
 #include "deps/log.h"
 #include <string.h>
+#include <strings.h>
 #include <stdlib.h>
 
 char* Wm_GetActiveWindowTitle(void) {
@@ -13,16 +14,35 @@ char* Wm_GetActiveWindowTitle(void) {
     
     if (getenv("WAYLAND_DISPLAY")) {
         if (get_title_hyprland(buffer, sizeof(buffer))) {
-            return buffer;
+        if (buffer[0] != '\0' && strcasecmp(buffer, "colored") != 0) return buffer;
         }
         if (get_title_sway(buffer, sizeof(buffer))) {
-            return buffer;
+        if (buffer[0] != '\0' && strcasecmp(buffer, "colored") != 0) return buffer;
         }
     }
     if (get_title_x11(buffer, sizeof(buffer))) {
-        return buffer;
+    if (buffer[0] != '\0' && strcasecmp(buffer, "colored") != 0) return buffer;
     }
     log_error("Coulnt Get Active Window Title");
+    return NULL;
+}
+
+char* Wm_GetActiveWindowAppId(void) {
+    static char buffer[1024];
+
+    buffer[0] = '\0';
+
+    if (getenv("WAYLAND_DISPLAY")) {
+        if (get_app_id_hyprland(buffer, sizeof(buffer))) {
+        if (buffer[0] != '\0' && strcasecmp(buffer, "colored") != 0) return buffer;
+        }
+        if (get_app_id_sway(buffer, sizeof(buffer))) {
+        if (buffer[0] != '\0' && strcasecmp(buffer, "colored") != 0) return buffer;
+        }
+    }
+    if (get_app_id_x11(buffer, sizeof(buffer))) {
+    if (buffer[0] != '\0' && strcasecmp(buffer, "colored") != 0) return buffer;
+    }
     return NULL;
 }
 

@@ -4,6 +4,7 @@
 #include "core/platform.h"
 #include "core/types.h"
 bool get_title_sway(char *buffer, int buffer_size);
+bool get_app_id_sway(char *buffer, int buffer_size);
 char* paste_sway(char* content);
 bool focus_window_title_sway(char* title);
 Fl_WindowList get_window_titles_sway();

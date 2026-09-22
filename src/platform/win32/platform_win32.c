@@ -892,6 +892,30 @@ char* Platform_GetActiveWindowTitle(void) {
     }
     return fgTitle;
 }
+
+char* Platform_GetActiveWindowAppId(void) {
+    static char appId[256];
+    appId[0] = '\0';
+    HWND hForeground = GetForegroundWindow();
+    if (hForeground == NULL) return appId;
+    DWORD pid = 0;
+    GetWindowThreadProcessId(hForeground, &pid);
+    if (pid == 0) return appId;
+    HANDLE h = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid);
+    if (!h) return appId;
+    char exe[MAX_PATH];
+    DWORD sz = sizeof(exe);
+    if (QueryFullProcessImageNameA(h, 0, exe, &sz) && sz > 0) {
+        const char* base = strrchr(exe, '\\');
+        base = base ? base + 1 : exe;
+        strncpy(appId, base, sizeof(appId) - 1);
+        appId[sizeof(appId) - 1] = '\0';
+        size_t n = strlen(appId);
+        if (n > 4 && _stricmp(appId + n - 4, ".exe") == 0) appId[n - 4] = '\0';
+    }
+    CloseHandle(h);
+    return appId;
+}
 char* Platform_GetIconPath(char* app_path) {
   if (!app_path || !app_path[0]) { log_error("operation failed, returning error app_path='%s'", app_path ? app_path : "null"); return NULL; }
   char expanded[MAX_PATH];
