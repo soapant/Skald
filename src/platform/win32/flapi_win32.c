@@ -182,16 +182,16 @@ bool fl_listbox_begin_platform(const FlListSpec *spec) {
     g_fl_list_lb = lb;
     extern PromptState* Platform_GetWin32PromptState(void);
     PromptState *st = Platform_GetWin32PromptState();
-    g_fl_list_itemH = spec->item_height ? spec->item_height : 32;
-    g_fl_list_y0 = spec->y ? spec->y : 70;
-    int bottomMargin = (WindowTitleText || VimModeText) ? 60 : 12;
+    g_fl_list_itemH = spec->item_height ? spec->item_height : FontSize + 14;
+    g_fl_list_y0 = spec->y ? spec->y : (FontSize + 28) + 10;
+    int bottomMargin = (WindowTitleText || VimModeText) ? 40 : 0;
     int list_h;
     if (spec->h) list_h = spec->h;
     else list_h = st ? (st->height - g_fl_list_y0 - bottomMargin) : 400;
     if (!spec->x && !spec->w) {
-        g_fl_list_bx = 20;
-        g_fl_list_bw = (st ? st->width - 40 : 650);
-        g_fl_list_fw = st ? st->width - 40 : 900;
+        g_fl_list_bx = 4;
+        g_fl_list_bw = (st ? st->width : 880) - 8;
+        g_fl_list_fw = st ? st->width : 900;
     } else {
         g_fl_list_bx = spec->x;
         g_fl_list_bw = spec->w ? spec->w : 650;
