@@ -10,4 +10,8 @@ bool focus_window_title_hyprland(char* title);
 Fl_WindowList get_window_titles_hyprland();
 Fl_WindowList get_window_names_hyprland();
 Fl_Pos get_cursor_position_hyprland(void);
+bool close_active_window_hyprland(void);
+bool toggle_fullscreen_active_hyprland(void);
+bool move_active_window_to_monitor_hyprland(bool right);
+bool minimize_active_window_hyprland(void);
 #endif
