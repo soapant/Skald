@@ -57,21 +57,18 @@ void UI_NavigateTo(ListBoxInfo* lb, WindowHandle hListBox, int index) {
     if (!lb) return;
     int count = lb->populated_count;
     if (count <= 0) {
-        if (lb->selected_index != -1) Platform_DismissMessage();
         lb->selected_index = -1;
         UI_LB_SetCaretIndex(FlintContext_Get()->window.hListBox, -1, false);
         return;
     }
     if (index >= count) index = count - 1;
     if (index == -1) {
-        if (lb->selected_index != -1) Platform_DismissMessage();
         lb->selected_index = -1;
         UI_LB_SetCaretIndex(FlintContext_Get()->window.hListBox, -1, false);
         return;
     }
     int old_sel = lb->selected_index;
     if (old_sel == index) return;
-    Platform_DismissMessage();
     int oldTop = UI_LB_GetTopIndex(FlintContext_Get()->window.hListBox);
     lb->selected_index = index;
     UI_LB_SetCaretIndex(FlintContext_Get()->window.hListBox, index, false);

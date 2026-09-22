@@ -23,6 +23,7 @@
 
 static Window g_msg_win = None;
 static unsigned long g_msg_gen = 0;
+static bool g_msg_indefinite = false;
 
 typedef struct {
     Display *dpy;
@@ -42,7 +43,7 @@ static void *MsgDismissThread(void *arg) {
     if (dpy && win != None && gen == g_msg_gen && g_msg_win == win) {
         XDestroyWindow(dpy, win);
         XFlush(dpy);
-        if (gen == g_msg_gen) g_msg_win = None;
+        if (gen == g_msg_gen) { g_msg_win = None; g_msg_indefinite = false; }
     }
     return NULL;
 }
@@ -237,6 +238,7 @@ void Platform_DisplayMessage(const char* message, int centerX, int centerY, int 
     XMapWindow(dpy, win);
     XFlush(dpy);
     Linux_DisplayMessageDraw(dpy, win, message, (unsigned long)color, winW, winH);
+    g_msg_indefinite = !(timeout != 6969 && timeout > 0);
     if (timeout != 6969 && timeout > 0) {
         MsgDismissPayload *p = malloc(sizeof(*p));
         if (p) {
@@ -256,10 +258,16 @@ void Platform_DisplayMessage(const char* message, int centerX, int centerY, int 
 
 void Platform_DismissMessage(void) {
     g_msg_gen++;
+    g_msg_indefinite = false;
     Display *dpy = get_display();
     if (!dpy || g_msg_win == None) return;
     XDestroyWindow(dpy, g_msg_win);
     g_msg_win = None;
     XFlush(dpy);
+}
+
+void Platform_DismissIndefiniteMessage(void) {
+    if (!g_msg_indefinite || g_msg_win == None) return;
+    Platform_DismissMessage();
 }
 #endif
