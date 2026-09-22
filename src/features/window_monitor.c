@@ -11,6 +11,7 @@
 static FlHashMap* g_wm_map = NULL;
 static bool g_wm_running = false;
 static bool g_wm_inited = false;
+static char g_wm_last[WM_MAX_TITLE + 1] = {0};
 #if !defined(_WIN32)
 static pthread_t g_wm_thread;
 static pthread_mutex_t g_wm_lock = PTHREAD_MUTEX_INITIALIZER;
@@ -36,8 +37,12 @@ static void* wm_sampler(void* arg) {
     while (g_wm_running) {
         char* id = fl_get_active_window_app_id();
         if (id) {
+            strncpy(g_wm_last, id, WM_MAX_TITLE);
+            g_wm_last[WM_MAX_TITLE] = '\0';
             wm_track(id);
             free(id);
+        } else if (g_wm_last[0]) {
+            wm_track(g_wm_last);
         }
         fl_sleep(WM_SAMPLE_SECONDS);
     }
