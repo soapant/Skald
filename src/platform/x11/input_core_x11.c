@@ -4,6 +4,7 @@
 #include "core/timer.h"
 #include "core/hotkey_manager.h"
 #include "core/remap_manager.h"
+#include "core/snippet_manager.h"
 #include "config.h"
 #include "core/platform.h"
 #include "helpers/helpers_hotkey.h"
@@ -388,7 +389,10 @@ bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed) {
             if (val==1 && !grabbed) {
                 if (x11_handle_global_key(code, val)) { x11_set_suppress(code, true); PROFILE_END_VAR(timer, "input:x11_handle_evdev"); return true; }
             }
-            if (grabbed && g_x11_uinput_fd>=0) x11_uinput_emit(ev);
+            if (grabbed && g_x11_uinput_fd>=0) {
+                if (snippet_feed_vk(ConvertLinuxKeyToWindowsVK(code), val, true)) { PROFILE_END_VAR(timer, "input:x11_handle_evdev"); return false; }
+                x11_uinput_emit(ev);
+            }
             PROFILE_END_VAR(timer, "input:x11_handle_evdev");
             return false;
         }
@@ -400,8 +404,14 @@ bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed) {
         return true;
     }
     if (grabbed) {
-        if (g_x11_uinput_fd >= 0) x11_uinput_emit(ev);
+        if (g_x11_uinput_fd >= 0) {
+            if (snippet_feed_vk(ConvertLinuxKeyToWindowsVK(code), val, true)) { PROFILE_END_VAR(timer, "input:x11_handle_evdev"); return false; }
+            x11_uinput_emit(ev);
+        }
         else { static bool warned=false; if(!warned){ log_warn("grabbed but no uinput - key %d lost", code); warned=true; } }
+    }
+    else {
+        snippet_feed_vk(ConvertLinuxKeyToWindowsVK(code), val, false);
     }
 
     PROFILE_END_VAR(timer, "input:x11_handle_evdev");

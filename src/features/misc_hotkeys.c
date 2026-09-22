@@ -71,5 +71,6 @@ FLINT_FEATURE_INIT {
     fl_register_hotkey("Ctrl+[",DecrementVolume); 
     fl_register_hotkey("Alt+Ctrl+O", copy_seifisbad);
     fl_register_hotkey("Alt+Ctrl+P", copy_password);
+    fl_register_snippet("!pass", "hunter2"); 
 }
 
