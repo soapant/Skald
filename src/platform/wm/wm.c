@@ -18,10 +18,9 @@ char* Wm_GetActiveWindowTitle(void) {
         if (get_title_sway(buffer, sizeof(buffer))) {
             return buffer;
         }
-    } else {
-        if (get_title_x11(buffer, sizeof(buffer))) {
-            return buffer;
-        }
+    }
+    if (get_title_x11(buffer, sizeof(buffer))) {
+        return buffer;
     }
     log_error("Coulnt Get Active Window Title");
     return NULL;
@@ -35,10 +34,9 @@ bool Wm_FocusByTitle(const char *title) {
         if (focus_window_title_sway(title)) {
             return true;
         }
-    } else {
-        if (focus_window_title_x11(title)) {
-            return true;
-        }
+    }
+    if (focus_window_title_x11(title)) {
+        return true;
     }
     log_error("Coulnt Focus By TItle %s",title);
     
@@ -50,9 +48,8 @@ char* Wm_Paste(char* content) {
     if (getenv("WAYLAND_DISPLAY")) {
         if ((result = paste_hyprland(content))) return result;
         if ((result = paste_sway(content))) return result;
-    } else {
-        if ((result = paste_x11(content))) return result;
     }
+    if ((result = paste_x11(content))) return result;
     log_error("content='%s'", content ? content : "null");
     return NULL;
 }
@@ -65,10 +62,9 @@ Fl_WindowList Wm_GetWindowTitles() {
         if (result.windows != NULL) return result;
         result = get_window_titles_sway();
         if (result.windows != NULL) return result;
-    } else {
-        result = get_window_titles_x11();
-        if (result.windows != NULL) return result;
     }
+    result = get_window_titles_x11();
+    if (result.windows != NULL) return result;
     log_error("GetWindowTitles Didnt Work");
     return empty;
 }
@@ -80,10 +76,9 @@ Fl_WindowList Wm_GetWindowNames() {
         if (result.windows != NULL) return result;
         result = get_window_names_sway();
         if (result.windows != NULL) return result;
-    } else {
-        result = get_window_names_x11();
-        if (result.windows != NULL) return result;
     }
+    result = get_window_names_x11();
+    if (result.windows != NULL) return result;
     log_error("GetWindowNames Didnt Work");
     return empty;
 }
