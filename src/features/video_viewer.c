@@ -16,7 +16,7 @@ void video_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxIn
     const char** items = (const char**)malloc(video_files.count * sizeof(char*));
     if (!items) return;
     for (size_t i = 0; i < video_files.count; i++) {
-        items[i] = video_files.items[i].name;
+        items[i] = video_files.files[i].name;
     }
     PopulateListBox(lb, FlintContext_Get()->window.hListBox, filter, items, (int)video_files.count, NULL);
     free(items);
@@ -25,8 +25,8 @@ void video_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxIn
 bool video_enter_callback(const char* selection, ListBoxInfo* lb) {
     char* result = NULL;
     for (size_t i = 0; i < video_files.count; i++) {
-        if (strcmp(video_files.items[i].name, selection) == 0) {
-            result = video_files.items[i].path;
+        if (strcmp(video_files.files[i].name, selection) == 0) {
+            result = video_files.files[i].path;
             break;
         }
     }
@@ -34,8 +34,8 @@ bool video_enter_callback(const char* selection, ListBoxInfo* lb) {
         ListOfFiles tmp = {0};
         fl_get_all_files_from_dir(VideosPath, allowed_video_formats, &tmp, NULL);
         for (size_t i = 0; i < tmp.count; i++) {
-            if (strcmp(tmp.items[i].name, selection) == 0) {
-                result = tmp.items[i].path;
+            if (strcmp(tmp.files[i].name, selection) == 0) {
+                result = tmp.files[i].path;
                 break;
             }
         }
@@ -45,7 +45,7 @@ bool video_enter_callback(const char* selection, ListBoxInfo* lb) {
             found_path[sizeof(found_path)-1] = '\0';
             result = found_path;
         }
-        free(tmp.items);
+        free(tmp.files);
     }
     if (!result) return true;
 #if defined(_WIN32)

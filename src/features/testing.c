@@ -2,7 +2,6 @@
 
 
 void Testing(void) {
-  printf("%s \n",getenv("TERMINAL"));
 }
 
 

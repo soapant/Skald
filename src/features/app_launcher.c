@@ -78,25 +78,25 @@ void initialize_app_cache(void) {
         bool skip = false;
         char display_name[256] = {0};
         bool has_display = false;
-        if (strstr(tmp.items[i].path, ".desktop")) {
+        if (strstr(tmp.files[i].path, ".desktop")) {
             bool nodisplay=false;
-            if (fl_parse_desktop_file(tmp.items[i].path, display_name, sizeof(display_name), &nodisplay)) has_display=true;
+            if (fl_parse_desktop_file(tmp.files[i].path, display_name, sizeof(display_name), &nodisplay)) has_display=true;
             if (nodisplay) skip=true;
         }
         if (skip) {
-            for (size_t k = i; k + 1 < tmp.count; k++) tmp.items[k] = tmp.items[k+1];
+            for (size_t k = i; k + 1 < tmp.count; k++) tmp.files[k] = tmp.files[k+1];
             tmp.count--;
             continue;
         }
         if (has_display && display_name[0]) {
-            snprintf(tmp.items[i].name, sizeof(tmp.items[i].name), "%s", display_name);
+            snprintf(tmp.files[i].name, sizeof(tmp.files[i].name), "%s", display_name);
         }
         i++;
     }
     for (size_t i = 0; i < tmp.count; i++) {
         for (size_t j = i + 1; j < tmp.count; ) {
-            if (fl_string_match_insensitive(tmp.items[i].name, tmp.items[j].name)) {
-                for (size_t k = j; k + 1 < tmp.count; k++) tmp.items[k] = tmp.items[k+1];
+            if (fl_string_match_insensitive(tmp.files[i].name, tmp.files[j].name)) {
+                for (size_t k = j; k + 1 < tmp.count; k++) tmp.files[k] = tmp.files[k+1];
                 tmp.count--;
             } else {
                 j++;
@@ -109,9 +109,9 @@ void initialize_app_cache(void) {
         
         bool found = false;
         for (size_t app_idx = 0; app_idx < tmp.count; app_idx++) {
-            if (fl_string_match_insensitive(tmp.items[app_idx].path, SystemShortcuts[shortcut_idx].path)) {
-                strncpy(tmp.items[app_idx].name, SystemShortcuts[shortcut_idx].name, sizeof(tmp.items[app_idx].name) - 1);
-                tmp.items[app_idx].name[sizeof(tmp.items[app_idx].name) - 1] = '\0';
+            if (fl_string_match_insensitive(tmp.files[app_idx].path, SystemShortcuts[shortcut_idx].path)) {
+                strncpy(tmp.files[app_idx].name, SystemShortcuts[shortcut_idx].name, sizeof(tmp.files[app_idx].name) - 1);
+                tmp.files[app_idx].name[sizeof(tmp.files[app_idx].name) - 1] = '\0';
                 found = true;
                 break;
             }
@@ -119,19 +119,19 @@ void initialize_app_cache(void) {
         if (!found) {
             if (tmp.count >= tmp.capacity) {
                 tmp.capacity = tmp.capacity == 0 ? 10 : tmp.capacity * 2;
-                tmp.items = realloc(tmp.items, tmp.capacity * sizeof(FileItem));
+                tmp.files = realloc(tmp.files, tmp.capacity * sizeof(FileItem));
             }
-            strncpy(tmp.items[tmp.count].name, SystemShortcuts[shortcut_idx].name, sizeof(tmp.items[tmp.count].name) - 1);
-            tmp.items[tmp.count].name[sizeof(tmp.items[tmp.count].name) - 1] = '\0';
+            strncpy(tmp.files[tmp.count].name, SystemShortcuts[shortcut_idx].name, sizeof(tmp.files[tmp.count].name) - 1);
+            tmp.files[tmp.count].name[sizeof(tmp.files[tmp.count].name) - 1] = '\0';
             
-            strncpy(tmp.items[tmp.count].path, SystemShortcuts[shortcut_idx].path, sizeof(tmp.items[tmp.count].path) - 1);
-            tmp.items[tmp.count].path[sizeof(tmp.items[tmp.count].path) - 1] = '\0';
+            strncpy(tmp.files[tmp.count].path, SystemShortcuts[shortcut_idx].path, sizeof(tmp.files[tmp.count].path) - 1);
+            tmp.files[tmp.count].path[sizeof(tmp.files[tmp.count].path) - 1] = '\0';
             
             tmp.count++;
         }
     }
 #endif
-    if (s_apps.items) free(s_apps.items);
+    if (s_apps.files) free(s_apps.files);
     s_apps = tmp;
 }
 
@@ -139,8 +139,8 @@ void launch_app_by_name(const char* display_name) {
     char path_copy[512] = {0};
     bool found = false;
     for (size_t i = 0; i < s_apps.count; i++) {
-        if (fl_string_match_insensitive(display_name,s_apps.items[i].name)) {
-            strncpy(path_copy, s_apps.items[i].path, sizeof(path_copy)-1);
+        if (fl_string_match_insensitive(display_name,s_apps.files[i].name)) {
+            strncpy(path_copy, s_apps.files[i].path, sizeof(path_copy)-1);
             found = true;
             break;
         }
@@ -152,8 +152,8 @@ void launch_app_as_admin(const char* display_name) {
     char path_copy[512] = {0};
     bool found = false;
     for (size_t i = 0; i < s_apps.count; i++) {
-        if (fl_string_match_insensitive(s_apps.items[i].name, display_name)) {
-            strncpy(path_copy, s_apps.items[i].path, sizeof(path_copy)-1);
+        if (fl_string_match_insensitive(s_apps.files[i].name, display_name)) {
+            strncpy(path_copy, s_apps.files[i].path, sizeof(path_copy)-1);
             found = true;
             break;
         }
@@ -176,13 +176,13 @@ void applauncher_refresh_callback(const char* filter, WindowHandle hListBox, Lis
     if (cnt > 2048) {
         const char** names = (const char**)malloc(cnt * sizeof(char*));
         if (!names) return;
-        for (size_t i = 0; i < cnt && i < s_apps.count; i++) names[i] = s_apps.items[i].name;
+        for (size_t i = 0; i < cnt && i < s_apps.count; i++) names[i] = s_apps.files[i].name;
         PopulateListBox(lb, FlintContext_Get()->window.hListBox, filter, names, (int)cnt, NULL);
         free(names);
         return;
     }
     const char* names[2048];
-    for (size_t i = 0; i < cnt && i < s_apps.count; i++) names[i] = s_apps.items[i].name;
+    for (size_t i = 0; i < cnt && i < s_apps.count; i++) names[i] = s_apps.files[i].name;
     PopulateListBox(lb, FlintContext_Get()->window.hListBox, filter, names, (int)cnt, NULL);
 }
 
@@ -203,7 +203,7 @@ void applauncher_copy_callback(const char* selection,int true_index,int type) {
       }
       case 1: {
         char buffer[512];
-        strncpy(buffer, s_apps.items[true_index].path, sizeof(buffer) - 1);
+        strncpy(buffer, s_apps.files[true_index].path, sizeof(buffer) - 1);
         text = strdup(buffer);
         break;
       }

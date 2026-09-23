@@ -14,7 +14,7 @@ void music_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxIn
     const char** items = (const char**)malloc(s_music_files.count * sizeof(char*));
     if (!items) return;
     for (size_t i = 0; i < s_music_files.count; i++) {
-        items[i] = s_music_files.items[i].name;
+        items[i] = s_music_files.files[i].name;
     }
     PopulateListBox(lb, FlintContext_Get()->window.hListBox, filter, items, (int)s_music_files.count, NULL);
     free(items);
@@ -23,8 +23,8 @@ void music_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxIn
 bool music_enter_callback(const char* selection, ListBoxInfo* lb) {
     char* result = NULL;
     for (size_t i = 0; i < s_music_files.count; i++) {
-        if (strcmp(s_music_files.items[i].name, selection) == 0) {
-            result = s_music_files.items[i].path;
+        if (strcmp(s_music_files.files[i].name, selection) == 0) {
+            result = s_music_files.files[i].path;
             break;
         }
     }
@@ -32,8 +32,8 @@ bool music_enter_callback(const char* selection, ListBoxInfo* lb) {
         ListOfFiles tmp = {0};
         fl_get_all_files_from_dir(MusicPath, allowed_audio_formats, &tmp, NULL);
         for (size_t i = 0; i < tmp.count; i++) {
-            if (strcmp(tmp.items[i].name, selection) == 0) {
-                result = tmp.items[i].path;
+            if (strcmp(tmp.files[i].name, selection) == 0) {
+                result = tmp.files[i].path;
                 break;
             }
         }
@@ -43,7 +43,7 @@ bool music_enter_callback(const char* selection, ListBoxInfo* lb) {
             found_path[sizeof(found_path)-1] = '\0';
             result = found_path;
         }
-        free(tmp.items);
+        free(tmp.files);
     }
     
     if (!result) return true;
