@@ -1160,6 +1160,22 @@ bool Platform_MoveActiveWindowToMonitor(bool right) {
   return Wm_MoveActiveWindowToMonitor(right);
 }
 
+bool Platform_MoveActiveWindowLeft(void) {
+  return Wm_MoveActiveWindowLeft();
+}
+
+bool Platform_MoveActiveWindowRight(void) {
+  return Wm_MoveActiveWindowRight();
+}
+
+bool Platform_FocusWindowLeft(void) {
+  return Wm_FocusWindowLeft();
+}
+
+bool Platform_FocusWindowRight(void) {
+  return Wm_FocusWindowRight();
+}
+
 bool Platform_MinimizeActiveWindow(void) {
   return Wm_MinimizeActiveWindow();
 }

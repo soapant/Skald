@@ -65,10 +65,16 @@ void open_browser(void) {
 }
 
 void move_active_window_right(void) {
-    fl_move_active_window_to_monitor(true);
+    fl_move_active_window_right();
 }
 void move_active_window_left(void) {
-    fl_move_active_window_to_monitor(false);
+    fl_move_active_window_left();
+}
+void focus_window_right(void) {
+    fl_focus_window_right();
+}
+void focus_window_left(void) {
+    fl_focus_window_left();
 }
 void close_active_window(void) {
     fl_close_active_window();
@@ -97,6 +103,8 @@ FLINT_FEATURE_INIT {
     fl_register_hotkey("Ctrl+Shift+B", open_browser);
     fl_register_hotkey("Alt+Shift+L", move_active_window_right);
     fl_register_hotkey("Alt+Shift+H", move_active_window_left);
+    fl_register_hotkey("Alt+Shift+O", focus_window_right);
+    fl_register_hotkey("Alt+Shift+I", focus_window_left);
     fl_register_hotkey("Ctrl+Q", close_active_window);
     fl_register_hotkey("Alt+F", toggle_fullscreen);
     fl_register_hotkey("Alt+M", toggle_minimized);
