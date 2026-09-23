@@ -19,7 +19,7 @@
 #include <string.h>
 #include <time.h>
 
-bool fl_get_all_files_from_dir_platform(const char* dir_path, char** list_of_allowed_extensions, ListOfFiles* list_of_files,char** list_of_names_to_ignore) {
+bool Platform_GetAllFilesFromDir(const char* dir_path, char** list_of_allowed_extensions, ListOfFiles* list_of_files,char** list_of_names_to_ignore) {
 
     char search_path[MAX_PATH];
     snprintf(search_path, sizeof(search_path), "%s\\*", dir_path);
@@ -47,7 +47,7 @@ bool fl_get_all_files_from_dir_platform(const char* dir_path, char** list_of_all
                 }
             }
             if (!should_ignore) {
-                fl_get_all_files_from_dir_platform(full_path, list_of_allowed_extensions, list_of_files, list_of_names_to_ignore);
+                Platform_GetAllFilesFromDir(full_path, list_of_allowed_extensions, list_of_files, list_of_names_to_ignore);
             }
         } else {
             bool allowed = true;
