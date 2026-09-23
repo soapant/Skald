@@ -822,6 +822,10 @@ char* fl_edit_text_popup_impl(const FlEditPopupSpec* spec) {
         WindowManager_PopPopup(wm);
         if (popup->vtable && popup->vtable->destroy) popup->vtable->destroy(popup);
     }
+    if (lb && idx >= 0) {
+        int keep_idx = idx < lb->populated_count ? idx : lb->populated_count - 1;
+        if (keep_idx >= 0) lb->selected_index = keep_idx;
+    }
     if (!result) return NULL;
     if (out_index) *out_index = true_idx;
     return result;
