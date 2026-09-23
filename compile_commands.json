@@ -22,6 +22,7 @@
       "-Wno-sign-compare",
       "-Wno-unused-parameter",
       "-Wno-misleading-indentation",
+      "-mwindows",
       "-c",
       "src/bindings/bindings.c"
     ]
@@ -49,6 +50,7 @@
       "-Wno-sign-compare",
       "-Wno-unused-parameter",
       "-Wno-misleading-indentation",
+      "-mwindows",
       "-c",
       "src/bindings/vim_bindings.c"
     ]
@@ -76,6 +78,7 @@
       "-Wno-sign-compare",
       "-Wno-unused-parameter",
       "-Wno-misleading-indentation",
+      "-mwindows",
       "-c",
       "src/bindings/vim_helpers.c"
     ]
@@ -103,6 +106,7 @@
       "-Wno-sign-compare",
       "-Wno-unused-parameter",
       "-Wno-misleading-indentation",
+      "-mwindows",
       "-c",
       "src/bindings/vim_motions.c"
     ]
@@ -130,8 +134,37 @@
       "-Wno-sign-compare",
       "-Wno-unused-parameter",
       "-Wno-misleading-indentation",
+      "-mwindows",
       "-c",
       "src/config.c"
+    ]
+  },
+  {
+    "directory": "C:/Projects/Flint",
+    "file": "src/config_resolve.c",
+    "arguments": [
+      "gcc",
+      "-Wall",
+      "-Wextra",
+      "-std=gnu17",
+      "-DCOBJMACROS",
+      "-I",
+      "include",
+      "-MMD",
+      "-MP",
+      "-O3",
+      "-Wall",
+      "-Wextra",
+      "-Wno-unused-parameter",
+      "-Wno-sign-compare",
+      "-Wno-discarded-qualifiers",
+      "-Wno-stringop-truncation",
+      "-Wno-sign-compare",
+      "-Wno-unused-parameter",
+      "-Wno-misleading-indentation",
+      "-mwindows",
+      "-c",
+      "src/config_resolve.c"
     ]
   },
   {
@@ -157,6 +190,7 @@
       "-Wno-sign-compare",
       "-Wno-unused-parameter",
       "-Wno-misleading-indentation",
+      "-mwindows",
       "-c",
       "src/core/common_ui.c"
     ]
@@ -184,6 +218,7 @@
       "-Wno-sign-compare",
       "-Wno-unused-parameter",
       "-Wno-misleading-indentation",
+      "-mwindows",
       "-c",
       "src/core/context.c"
     ]
@@ -211,6 +246,7 @@
       "-Wno-sign-compare",
       "-Wno-unused-parameter",
       "-Wno-misleading-indentation",
+      "-mwindows",
       "-c",
       "src/core/edit_renderer.c"
     ]
@@ -238,6 +274,7 @@
       "-Wno-sign-compare",
       "-Wno-unused-parameter",
       "-Wno-misleading-indentation",
+      "-mwindows",
       "-c",
       "src/core/feature_data.c"
     ]
@@ -265,6 +302,7 @@
       "-Wno-sign-compare",
       "-Wno-unused-parameter",
       "-Wno-misleading-indentation",
+      "-mwindows",
       "-c",
       "src/core/feature_loader.c"
     ]
@@ -292,6 +330,7 @@
       "-Wno-sign-compare",
       "-Wno-unused-parameter",
       "-Wno-misleading-indentation",
+      "-mwindows",
       "-c",
       "src/core/helpers.c"
     ]
@@ -319,6 +358,7 @@
       "-Wno-sign-compare",
       "-Wno-unused-parameter",
       "-Wno-misleading-indentation",
+      "-mwindows",
       "-c",
       "src/core/helpers_color.c"
     ]
@@ -346,6 +386,7 @@
       "-Wno-sign-compare",
       "-Wno-unused-parameter",
       "-Wno-misleading-indentation",
+      "-mwindows",
       "-c",
       "src/core/helpers_history.c"
     ]
@@ -373,6 +414,7 @@
       "-Wno-sign-compare",
       "-Wno-unused-parameter",
       "-Wno-misleading-indentation",
+      "-mwindows",
       "-c",
       "src/core/helpers_text.c"
     ]
@@ -400,6 +442,7 @@
       "-Wno-sign-compare",
       "-Wno-unused-parameter",
       "-Wno-misleading-indentation",
+      "-mwindows",
       "-c",
       "src/core/history.c"
     ]
@@ -427,6 +470,7 @@
       "-Wno-sign-compare",
       "-Wno-unused-parameter",
       "-Wno-misleading-indentation",
+      "-mwindows",
       "-c",
       "src/core/hotkey_manager.c"
     ]
@@ -454,6 +498,7 @@
       "-Wno-sign-compare",
       "-Wno-unused-parameter",
       "-Wno-misleading-indentation",
+      "-mwindows",
       "-c",
       "src/core/listbox_renderer.c"
     ]
@@ -481,6 +526,7 @@
       "-Wno-sign-compare",
       "-Wno-unused-parameter",
       "-Wno-misleading-indentation",
+      "-mwindows",
       "-c",
       "src/core/modal.c"
     ]
@@ -508,6 +554,7 @@
       "-Wno-sign-compare",
       "-Wno-unused-parameter",
       "-Wno-misleading-indentation",
+      "-mwindows",
       "-c",
       "src/core/popup/edit_popup.c"
     ]
@@ -535,6 +582,7 @@
       "-Wno-sign-compare",
       "-Wno-unused-parameter",
       "-Wno-misleading-indentation",
+      "-mwindows",
       "-c",
       "src/core/popup/prompt_popup.c"
     ]
@@ -562,6 +610,7 @@
       "-Wno-sign-compare",
       "-Wno-unused-parameter",
       "-Wno-misleading-indentation",
+      "-mwindows",
       "-c",
       "src/core/popup/search_popup.c"
     ]
@@ -589,6 +638,7 @@
       "-Wno-sign-compare",
       "-Wno-unused-parameter",
       "-Wno-misleading-indentation",
+      "-mwindows",
       "-c",
       "src/core/prompt_controller.c"
     ]
@@ -616,6 +666,7 @@
       "-Wno-sign-compare",
       "-Wno-unused-parameter",
       "-Wno-misleading-indentation",
+      "-mwindows",
       "-c",
       "src/core/remap_manager.c"
     ]
@@ -643,6 +694,7 @@
       "-Wno-sign-compare",
       "-Wno-unused-parameter",
       "-Wno-misleading-indentation",
+      "-mwindows",
       "-c",
       "src/core/snippet_manager.c"
     ]
@@ -670,6 +722,7 @@
       "-Wno-sign-compare",
       "-Wno-unused-parameter",
       "-Wno-misleading-indentation",
+      "-mwindows",
       "-c",
       "src/core/timer.c"
     ]
@@ -697,6 +750,7 @@
       "-Wno-sign-compare",
       "-Wno-unused-parameter",
       "-Wno-misleading-indentation",
+      "-mwindows",
       "-c",
       "src/core/vim.c"
     ]
@@ -724,6 +778,7 @@
       "-Wno-sign-compare",
       "-Wno-unused-parameter",
       "-Wno-misleading-indentation",
+      "-mwindows",
       "-c",
       "src/core/window_manager.c"
     ]
@@ -751,6 +806,7 @@
       "-Wno-sign-compare",
       "-Wno-unused-parameter",
       "-Wno-misleading-indentation",
+      "-mwindows",
       "-c",
       "src/deps/log.c"
     ]
@@ -778,6 +834,7 @@
       "-Wno-sign-compare",
       "-Wno-unused-parameter",
       "-Wno-misleading-indentation",
+      "-mwindows",
       "-c",
       "src/flapi.c"
     ]
@@ -805,6 +862,7 @@
       "-Wno-sign-compare",
       "-Wno-unused-parameter",
       "-Wno-misleading-indentation",
+      "-mwindows",
       "-c",
       "src/main.c"
     ]
@@ -832,8 +890,37 @@
       "-Wno-sign-compare",
       "-Wno-unused-parameter",
       "-Wno-misleading-indentation",
+      "-mwindows",
       "-c",
       "src/platform/win32/common_ui_win32.c"
+    ]
+  },
+  {
+    "directory": "C:/Projects/Flint",
+    "file": "src/platform/win32/default_apps_win32.c",
+    "arguments": [
+      "gcc",
+      "-Wall",
+      "-Wextra",
+      "-std=gnu17",
+      "-DCOBJMACROS",
+      "-I",
+      "include",
+      "-MMD",
+      "-MP",
+      "-O3",
+      "-Wall",
+      "-Wextra",
+      "-Wno-unused-parameter",
+      "-Wno-sign-compare",
+      "-Wno-discarded-qualifiers",
+      "-Wno-stringop-truncation",
+      "-Wno-sign-compare",
+      "-Wno-unused-parameter",
+      "-Wno-misleading-indentation",
+      "-mwindows",
+      "-c",
+      "src/platform/win32/default_apps_win32.c"
     ]
   },
   {
@@ -859,6 +946,7 @@
       "-Wno-sign-compare",
       "-Wno-unused-parameter",
       "-Wno-misleading-indentation",
+      "-mwindows",
       "-c",
       "src/platform/win32/draw_win32.c"
     ]
@@ -886,6 +974,7 @@
       "-Wno-sign-compare",
       "-Wno-unused-parameter",
       "-Wno-misleading-indentation",
+      "-mwindows",
       "-c",
       "src/platform/win32/edit_popup_win32.c"
     ]
@@ -913,6 +1002,7 @@
       "-Wno-sign-compare",
       "-Wno-unused-parameter",
       "-Wno-misleading-indentation",
+      "-mwindows",
       "-c",
       "src/platform/win32/flapi_win32.c"
     ]
@@ -940,6 +1030,7 @@
       "-Wno-sign-compare",
       "-Wno-unused-parameter",
       "-Wno-misleading-indentation",
+      "-mwindows",
       "-c",
       "src/platform/win32/helpers/popup_helpers_win32.c"
     ]
@@ -967,6 +1058,7 @@
       "-Wno-sign-compare",
       "-Wno-unused-parameter",
       "-Wno-misleading-indentation",
+      "-mwindows",
       "-c",
       "src/platform/win32/input_state_win32.c"
     ]
@@ -994,6 +1086,7 @@
       "-Wno-sign-compare",
       "-Wno-unused-parameter",
       "-Wno-misleading-indentation",
+      "-mwindows",
       "-c",
       "src/platform/win32/lib_win32.c"
     ]
@@ -1021,6 +1114,7 @@
       "-Wno-sign-compare",
       "-Wno-unused-parameter",
       "-Wno-misleading-indentation",
+      "-mwindows",
       "-c",
       "src/platform/win32/misc_win32.c"
     ]
@@ -1048,6 +1142,7 @@
       "-Wno-sign-compare",
       "-Wno-unused-parameter",
       "-Wno-misleading-indentation",
+      "-mwindows",
       "-c",
       "src/platform/win32/platform_win32.c"
     ]
@@ -1075,6 +1170,7 @@
       "-Wno-sign-compare",
       "-Wno-unused-parameter",
       "-Wno-misleading-indentation",
+      "-mwindows",
       "-c",
       "src/platform/win32/popup/display_message_win32.c"
     ]
@@ -1102,6 +1198,7 @@
       "-Wno-sign-compare",
       "-Wno-unused-parameter",
       "-Wno-misleading-indentation",
+      "-mwindows",
       "-c",
       "src/platform/win32/popup/popup_edit_win32.c"
     ]
@@ -1129,6 +1226,7 @@
       "-Wno-sign-compare",
       "-Wno-unused-parameter",
       "-Wno-misleading-indentation",
+      "-mwindows",
       "-c",
       "src/platform/win32/popup/popup_main_win32.c"
     ]
@@ -1156,6 +1254,7 @@
       "-Wno-sign-compare",
       "-Wno-unused-parameter",
       "-Wno-misleading-indentation",
+      "-mwindows",
       "-c",
       "src/platform/win32/popup/popup_search_win32.c"
     ]
@@ -1183,6 +1282,7 @@
       "-Wno-sign-compare",
       "-Wno-unused-parameter",
       "-Wno-misleading-indentation",
+      "-mwindows",
       "-c",
       "src/platform/win32/popup/popup_settings_win32.c"
     ]
@@ -1210,6 +1310,7 @@
       "-Wno-sign-compare",
       "-Wno-unused-parameter",
       "-Wno-misleading-indentation",
+      "-mwindows",
       "-c",
       "src/platform/win32/prompt_popup_win32.c"
     ]
@@ -1237,6 +1338,7 @@
       "-Wno-sign-compare",
       "-Wno-unused-parameter",
       "-Wno-misleading-indentation",
+      "-mwindows",
       "-c",
       "src/platform/win32/remap_win32.c"
     ]
@@ -1264,8 +1366,37 @@
       "-Wno-sign-compare",
       "-Wno-unused-parameter",
       "-Wno-misleading-indentation",
+      "-mwindows",
       "-c",
       "src/platform/win32/tray/tray_win32.c"
+    ]
+  },
+  {
+    "directory": "C:/Projects/Flint",
+    "file": "src/platform/win32/ui_scale_win32.c",
+    "arguments": [
+      "gcc",
+      "-Wall",
+      "-Wextra",
+      "-std=gnu17",
+      "-DCOBJMACROS",
+      "-I",
+      "include",
+      "-MMD",
+      "-MP",
+      "-O3",
+      "-Wall",
+      "-Wextra",
+      "-Wno-unused-parameter",
+      "-Wno-sign-compare",
+      "-Wno-discarded-qualifiers",
+      "-Wno-stringop-truncation",
+      "-Wno-sign-compare",
+      "-Wno-unused-parameter",
+      "-Wno-misleading-indentation",
+      "-mwindows",
+      "-c",
+      "src/platform/win32/ui_scale_win32.c"
     ]
   },
   {
@@ -1291,6 +1422,7 @@
       "-Wno-sign-compare",
       "-Wno-unused-parameter",
       "-Wno-misleading-indentation",
+      "-mwindows",
       "-c",
       "src/platform/win32/ui_win32.c"
     ]
@@ -1318,6 +1450,7 @@
       "-Wno-sign-compare",
       "-Wno-unused-parameter",
       "-Wno-misleading-indentation",
+      "-mwindows",
       "-c",
       "src/platform/win32/watcher_win32.c"
     ]
@@ -1345,6 +1478,7 @@
       "-Wno-sign-compare",
       "-Wno-unused-parameter",
       "-Wno-misleading-indentation",
+      "-mwindows",
       "-c",
       "src/platform/win32/win32_state_win32.c"
     ]
@@ -1372,6 +1506,7 @@
       "-Wno-sign-compare",
       "-Wno-unused-parameter",
       "-Wno-misleading-indentation",
+      "-mwindows",
       "-c",
       "src/platform/win32/window_manager_win32.c"
     ]
@@ -1399,6 +1534,7 @@
       "-Wno-sign-compare",
       "-Wno-unused-parameter",
       "-Wno-misleading-indentation",
+      "-mwindows",
       "-c",
       "src/platform/win32/wm_platform_win32.c"
     ]

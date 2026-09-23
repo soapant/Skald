@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "core/platform.h"
+#include "config.h"
 
 char default_apps_win32[DEFAULT_APP_COUNT][256];
 
@@ -33,11 +34,57 @@ const char* terminal_name_from_guid(const char* console_guid,const char* termina
     if (strstr(console_guid,  "B23D10C0-E52E-411E-9D5B-C09FDF709C7D")) {
         return "Legacy Console Host";
     }
-    return "Let Windows Decide";
+    return NULL;
 }
 
 const char* default_apps_win32_progid(const char* subkey, int slot) {
     return default_apps_win32_read_sz(subkey, "ProgId", slot);
+}
+const char* get_default_terminal() {
+    ListOfFiles files = {0};
+    Platform_GetAllFilesFromDir("C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs", NULL, &files, NULL);
+    const char* possible_terminals[] = {
+        "Alacritty",
+        "WezTerm",
+        "Tabby",
+        "Warp",
+        "Ghostty",
+        "Hyper",
+        "Yaw",
+        "Wave Terminal",
+        "Fluent Terminal",
+        "Rio",
+        "Tilix (via WSL)",
+
+        "Windows Console Host (conhost.exe)",
+        "Cmder",
+        "ConEmu",
+        "PuTTY",
+        "MobaXterm",
+        "Git Bash Terminal (mintty)",
+        "SecureCRT",
+        "Xshell",
+        "ZOC Terminal",
+        "KiTTY",
+
+        "PowerShell (Modern pwsh)",
+        "Windows PowerShell (Classic v5.1)",
+        "Command Prompt (cmd.exe)",
+        "WSL (Windows Subsystem for Linux)",
+        "Nushell",
+        "Git Bash (bash)",
+        "Cygwin",
+        "MSYS2"
+    };
+    for (int j = 0; j < ARRAY_LEN(possible_terminals);j++) {
+        for (int i =0;i < files.count;i++) {
+          if (Platform_StringContainsCaseInsensitive(files.files[i].name,possible_terminals[j])) {
+            char *name = files.files[i].name;
+            name[0] = tolower(name[0]);
+            return name;
+          }
+        }
+    }
 }
 
 const char* Platform_GetDefaultTerminal(void) {
@@ -72,6 +119,9 @@ const char* Platform_GetDefaultTerminal(void) {
     RegCloseKey(hKey);
 
     const char* name = terminal_name_from_guid(console_guid, terminal_guid);
+    if (!name) {
+      name = get_default_terminal();
+    }
     snprintf(default_apps_win32[slot],
              sizeof(default_apps_win32[slot]),
              "%s", name);
