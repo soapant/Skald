@@ -1476,10 +1476,6 @@ void fl_ocr_area_to_clipboard(void) {
 }
 
 
-char* fl_query_ai(char* message) {
-    return fl_query_ai_platform(message);
-}
-
 FlTimer fl_profile_start() {
     return fl_start_timer_platform();
 }

@@ -784,10 +784,6 @@ void fl_ocr_area_to_clipboard_platform(void) {
     free(out);
 }
 
-char* fl_query_ai_platform(char* message) {
-  printf("AI query not implemented on Windows platform\n");
-}
-
 typedef struct {
     void* (*fn)(void*);
     void* arg;
