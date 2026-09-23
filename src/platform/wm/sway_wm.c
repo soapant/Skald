@@ -310,6 +310,68 @@ Fl_Pos get_cursor_position_sway(void) {
   return (Fl_Pos){0, 0}; 
 }
 
+static int sway_json_depth(const char* base, const char* pos) {
+    int depth = 0;
+    int in_str = 0;
+    int esc = 0;
+    for (const char* s = base; s < pos; s++) {
+        if (esc) { esc = 0; continue; }
+        if (*s == '\\' && in_str) { esc = 1; continue; }
+        if (*s == '"') { in_str = !in_str; continue; }
+        if (in_str) continue;
+        if (*s == '{' || *s == '[') depth++;
+        else if (*s == '}' || *s == ']') depth--;
+    }
+    return depth;
+}
+
+static char* sway_find_key(const char* base, const char* from, const char* end, const char* key, int want_depth) {
+    size_t kl = strlen(key);
+    char* q = (char*)from;
+    while (q && (q = strstr(q, key)) != NULL && q < end) {
+        if (sway_json_depth(base, q) == want_depth) return q;
+        q += kl;
+    }
+    return NULL;
+}
+
+static int sway_key_bool3(const char* base, const char* from, const char* end, const char* key, int depth) {
+    char* k = sway_find_key(base, from, end, key, depth);
+    if (!k) return -1;
+    char* c = strchr(k + strlen(key), ':');
+    if (!c || c >= end) return -1;
+    char* v = c + 1;
+    while (v < end && (*v == ' ' || *v == '\t')) v++;
+    if (v + 4 <= end && strncmp(v, "true", 4) == 0) return 1;
+    if (v + 5 <= end && strncmp(v, "false", 5) == 0) return 0;
+    return -1;
+}
+
+static int sway_key_int(const char* base, const char* from, const char* end, const char* key, int depth) {
+    char* k = sway_find_key(base, from, end, key, depth);
+    if (!k) return 0;
+    char* c = strchr(k + strlen(key), ':');
+    if (!c || c >= end) return 0;
+    return atoi(c + 1);
+}
+
+static int sway_key_str(const char* base, const char* from, const char* end, const char* key, int depth, char* out, size_t cap) {
+    char* k = sway_find_key(base, from, end, key, depth);
+    if (!k) return 0;
+    char* c = strchr(k + strlen(key), ':');
+    if (!c || c >= end) return 0;
+    char* q = c + 1;
+    while (q < end && (*q == ' ' || *q == '\t')) q++;
+    if (q >= end || *q != '"') return 0;
+    char* e = strchr(q + 1, '"');
+    if (!e || e >= end) return 0;
+    size_t len = (size_t)(e - (q + 1));
+    if (len == 0 || len >= cap) return 0;
+    memcpy(out, q + 1, len);
+    out[len] = '\0';
+    return 1;
+}
+
 bool close_active_window_sway(void) {
     sway_ensure_sock();
     const char* sock = getenv("SWAYSOCK");
@@ -339,6 +401,7 @@ bool move_active_window_to_monitor_sway(bool right) {
     if (!sway_sock_live(sock)) return false;
     char* outs = Platform_RunTerminalCommand("swaymsg -t get_outputs", false);
     if (outs && outs[0]) {
+        char* doc_end = outs + strlen(outs);
         char names[16][64];
         int ox[16];
         int oy[16];
@@ -349,77 +412,37 @@ bool move_active_window_to_monitor_sway(bool right) {
         int n = 0;
         char* p = outs;
         while (n < 16) {
-            char* np = strstr(p, "\"name\"");
+            char* np = sway_find_key(outs, p, doc_end, "\"name\"", 2);
             if (!np) break;
-            char* colon = strchr(np + 6, ':');
-            if (!colon) break;
-            char* q1 = colon + 1;
-            while (*q1 == ' ' || *q1 == '\t') q1++;
-            if (*q1 != '"') { p = colon + 1; continue; }
-            char* ns = q1 + 1;
-            char* ne = strchr(ns, '"');
-            if (!ne || ne - ns <= 0 || ne - ns >= 64) break;
-            char* next_np = strstr(ne, "\"name\"");
-            char* obj_end = next_np ? next_np : outs + strlen(outs);
+            char oname[64];
+            if (!sway_key_str(outs, np, doc_end, "\"name\"", 2, oname, sizeof(oname))) {
+                p = np + 6;
+                continue;
+            }
             int rx = 0;
             int ry = 0;
             int rw = 0;
             int rh = 0;
-            char* rk = strstr(np, "\"rect\"");
-            if (rk && rk < obj_end) {
-                char* xc = strstr(rk, "\"x\"");
-                char* c2 = xc && xc < obj_end ? strchr(xc + 3, ':') : NULL;
-                if (c2 && c2 < obj_end) rx = atoi(c2 + 1);
-                char* yc = xc ? strstr(xc + 3, "\"y\"") : NULL;
-                c2 = yc && yc < obj_end ? strchr(yc + 3, ':') : NULL;
-                if (c2 && c2 < obj_end) ry = atoi(c2 + 1);
-                char* wc = yc ? strstr(yc + 3, "\"width\"") : NULL;
-                c2 = wc && wc < obj_end ? strchr(wc + 7, ':') : NULL;
-                if (c2 && c2 < obj_end) rw = atoi(c2 + 1);
-                char* hc = wc ? strstr(wc + 7, "\"height\"") : NULL;
-                c2 = hc && hc < obj_end ? strchr(hc + 8, ':') : NULL;
-                if (c2 && c2 < obj_end) rh = atoi(c2 + 1);
-            }
-            int is_focused = 0;
-            char* fk = strstr(np, "\"focused\"");
-            if (fk && fk < obj_end) {
-                char* c3 = strchr(fk + 9, ':');
-                if (c3 && c3 < obj_end) {
-                    char* v = c3 + 1;
-                    while (*v == ' ' || *v == '\t') v++;
-                    is_focused = (strncmp(v, "true", 4) == 0) ? 1 : 0;
-                }
+            char* rk = sway_find_key(outs, p, doc_end, "\"rect\"", 2);
+            if (rk) {
+                rx = sway_key_int(outs, rk, doc_end, "\"x\"", 3);
+                ry = sway_key_int(outs, rk, doc_end, "\"y\"", 3);
+                rw = sway_key_int(outs, rk, doc_end, "\"width\"", 3);
+                rh = sway_key_int(outs, rk, doc_end, "\"height\"", 3);
             }
             int is_usable = 1;
-            char* ak = strstr(np, "\"active\"");
-            if (ak && ak < obj_end) {
-                char* c4 = strchr(ak + 8, ':');
-                if (c4 && c4 < obj_end) {
-                    char* v = c4 + 1;
-                    while (*v == ' ' || *v == '\t') v++;
-                    if (strncmp(v, "false", 5) == 0) is_usable = 0;
-                }
-            }
-            char* dk = strstr(np, "\"dpms\"");
-            if (dk && dk < obj_end) {
-                char* c5 = strchr(dk + 6, ':');
-                if (c5 && c5 < obj_end) {
-                    char* v = c5 + 1;
-                    while (*v == ' ' || *v == '\t') v++;
-                    if (strncmp(v, "false", 5) == 0) is_usable = 0;
-                }
-            }
+            if (sway_key_bool3(outs, np, doc_end, "\"active\"", 2) == 0) is_usable = 0;
+            if (sway_key_bool3(outs, np, doc_end, "\"dpms\"", 2) == 0) is_usable = 0;
             if (rw <= 0 || rh <= 0) is_usable = 0;
-            memcpy(names[n], ns, (size_t)(ne - ns));
-            names[n][ne - ns] = '\0';
+            memcpy(names[n], oname, sizeof(names[n]));
             ox[n] = rx;
             oy[n] = ry;
             ow[n] = rw;
             oh[n] = rh;
             usable[n] = is_usable;
-            focused[n] = is_focused;
+            focused[n] = (sway_key_bool3(outs, np, doc_end, "\"focused\"", 2) == 1) ? 1 : 0;
             n++;
-            p = ne;
+            p = np + 6;
         }
         if (n >= 2) {
             int cur = -1;
