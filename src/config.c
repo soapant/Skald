@@ -73,10 +73,16 @@ static void config_resolve_one(const char** var, DefaultAppKind kind) {
     if (!var || (*var && (*var)[0])) return;
     const char* id = Platform_GetDefaultApp(kind);
     if (!id || !id[0]) return;
-    char exe[512];
-    if (!Platform_ResolveDesktopExec(id, exe, sizeof(exe)) || !exe[0]) return;
-    char* copy = strdup(exe);
-    if (copy) *var = copy;
+    size_t n = strlen(id);
+    if (n > 8 && strcmp(id + n - 8, ".desktop") == 0) {
+        char exe[512];
+        if (!Platform_ResolveDesktopExec(id, exe, sizeof(exe)) || !exe[0]) return;
+        char* copy = strdup(exe);
+        if (copy) *var = copy;
+    } else {
+        char* copy = strdup(id);
+        if (copy) *var = copy;
+    }
 }
 
 void Config_ResolveDefaultApps(void) {

@@ -103,7 +103,6 @@ static bool x11_daemon_exec_with_x11_env(char* const argv[], const char* display
 
 bool Platform_LaunchTerminalAtPath(const char* working_dir, const char* extra_args){
     PROFILE_START(timer);
-    printf("%s \n",UsedTerminal);
     if(!working_dir) { log_error("working_dir is NULL extra_args='%s'", extra_args ? extra_args : "null"); PROFILE_END_VAR(timer, "platform_x11:Platform_LaunchTerminalAtPath"); return false; }
     if (!UsedTerminal || !UsedTerminal[0]) { log_error("UsedTerminal not configured working_dir='%s' extra_args='%s'", working_dir ? working_dir : "null", extra_args ? extra_args : "null"); PROFILE_END_VAR(timer, "platform_x11:Platform_LaunchTerminalAtPath"); return false; }
 
