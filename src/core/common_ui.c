@@ -222,6 +222,8 @@ static void Populate_UpdateUI(ListBoxInfo* lb, WindowHandle hListBox, int total_
     }
   } else if (total_matches != 0 && strlen(filter) > 0) {
     UI_SetSelection(lb, hListBox, 0);
+  } else if (lb->selected_index >= 0) {
+    UI_NavigateTo(lb, hListBox, lb->selected_index);
   } else {
     UI_SetSelection(lb, hListBox, -1);
   }

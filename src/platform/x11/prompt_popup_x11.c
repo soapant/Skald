@@ -319,7 +319,6 @@ bool Platform_PromptPopupOnKey(Popup* self, const PopupKeyEvent* key) {
             pending_hotkey_mod = 0;
         }
         if (!trigger_press && !swallow && (key->ctrl || key->alt)) swallow = true;
-        log_info("prompt text wParam=%d trigger=%d swallow=%d filter='%s'", wParam, trigger_press ? 1 : 0, swallow ? 1 : 0, state->filter);
         if (!swallow) {
             bool is_printable = true;
             for (int i = 0; i < key->text_len; i++) { unsigned char c = (unsigned char)key->text[i]; if (c < 0x20 || c == 0x7F) { is_printable = false; break; } }
