@@ -25,6 +25,7 @@
 #include "core/timer.h"
 #include "platform/ui.h"
 #include "platform/x11/drawing_x11.h"
+#include "wm/niri_wm.h"
 #define NANOSVG_IMPLEMENTATION
 #include "deps/nanosvg.h"
 #define NANOSVGRAST_IMPLEMENTATION
@@ -682,6 +683,16 @@ Window Linux_CreateWindowExOR(Display* dpy, int x, int y, int w, int h, unsigned
     if (res_name && strcmp(res_name, "flashtext")==0) hints->input = False;
     XSetWMHints(dpy, win, hints);
     XFree(hints);
+    if (override_redirect && niri_is_active()) {
+        XSizeHints* sh = XAllocSizeHints();
+        sh->flags = PMinSize | PMaxSize;
+        sh->min_width = w;
+        sh->min_height = h;
+        sh->max_width = w;
+        sh->max_height = h;
+        XSetWMNormalHints(dpy, win, sh);
+        XFree(sh);
+    }
     XSelectInput(dpy, win, event_mask);
     if (RoundedCorners && (!use_argb || !Linux_HasCompositor(dpy, screen))) {
         Linux_ApplyShapeRounded(dpy, win, w, h, CornerRadius);
@@ -1144,12 +1155,20 @@ Window Linux_CreatePromptWindow(Display* dpy, int x, int y, int w, int h) {
     PROFILE_START(timer);
     unsigned long bg = rgb_to_hex(COLOR_BG);
     PROFILE_END_VAR(timer, "helpers_x11:Linux_CreatePromptWindow");
+    if (niri_is_active()) {
+        log_error("niri override_redirect prompt w=%d h=%d", w, h);
+        return Linux_CreateWindowExOR(dpy, x, y, w, h, bg, "colored", "colored", KeyPressMask | ExposureMask | FocusChangeMask, true);
+    }
     return Linux_CreateWindowEx(dpy, x, y, w, h, bg, "colored", "colored", KeyPressMask | ExposureMask | FocusChangeMask);
 }
 Window Linux_CreateEditPopupWindow(Display* dpy, int x, int y, int w, int h) {
     PROFILE_START(timer);
     unsigned long bg = rgb_to_hex(COLOR_BG);
     PROFILE_END_VAR(timer, "helpers_x11:Linux_CreateEditPopupWindow");
+    if (niri_is_active()) {
+        log_error("niri override_redirect edit w=%d h=%d", w, h);
+        return Linux_CreateWindowExOR(dpy, x, y, w, h, bg, "colored", "colored", KeyPressMask | ExposureMask | FocusChangeMask, true);
+    }
     return Linux_CreateWindowEx(dpy, x, y, w, h, bg, "colored", "colored", KeyPressMask | ExposureMask | FocusChangeMask);
 }
 Window Linux_CreateDisplayMessageWindow(Display* dpy, int x, int y, int w, int h) {
