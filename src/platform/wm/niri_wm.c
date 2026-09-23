@@ -120,6 +120,10 @@ char* paste_niri(char* content) {
 bool focus_window_title_niri(char* title) {
     if (!title || !*title) return false;
     if (!niri_is_active()) return false;
+    while (*title && (iscntrl((unsigned char)*title) || isspace((unsigned char)*title))) title++;
+    char *end = title + strlen(title);
+    while (end > title && (iscntrl((unsigned char)end[-1]) || isspace((unsigned char)end[-1]))) *--end = '\0';
+    if (!*title) return false;
     char* json = Platform_RunTerminalCommand("niri msg --json windows", false);
     if (!json || !json[0]) { free(json); return false; }
     int target = -1;
