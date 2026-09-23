@@ -130,8 +130,9 @@ PROFILE_END_VAR(timer, "misc_x11:Platform_GetSessionDisplay");
 const char* Platform_GetSessionXAuthority(void){
     PROFILE_START(timer);
     static char buf[512]={0};
+    struct stat xst;
     const char* xa=getenv("XAUTHORITY");
-    if(xa && xa[0] && access(xa,R_OK)==0){ snprintf(buf,sizeof(buf),"%s",xa);PROFILE_END_VAR(timer, "misc_x11:Platform_GetSessionXAuthority"); return buf; }
+    if(xa && xa[0] && stat(xa,&xst)==0 && xst.st_size>0 && access(xa,R_OK)==0){ snprintf(buf,sizeof(buf),"%s",xa);PROFILE_END_VAR(timer, "misc_x11:Platform_GetSessionXAuthority"); return buf; }
     char rtd[256];
     const char* rt=getenv("XDG_RUNTIME_DIR");
     if(rt && rt[0]) snprintf(rtd,sizeof(rtd),"%s",rt);
@@ -147,14 +148,14 @@ const char* Platform_GetSessionXAuthority(void){
             snprintf(path, sizeof(path), "%s/%s", rtd, e->d_name);
             struct stat st;
             if (stat(path, &st) != 0) continue;
-            if (access(path, R_OK) != 0) continue;
+            if (st.st_size == 0 || access(path, R_OK) != 0) continue;
             if (st.st_mtime >= best_mtime) { best_mtime = st.st_mtime; snprintf(best, sizeof(best), "%s", path); }
         }
         closedir(d);
         if (best[0]) { snprintf(buf,sizeof(buf),"%s",best);PROFILE_END_VAR(timer, "misc_x11:Platform_GetSessionXAuthority"); return buf; }
     }
     snprintf(buf,sizeof(buf),"%s/.Xauthority",Platform_GetRealHome());
-    if(access(buf,R_OK)==0){ PROFILE_END_VAR(timer, "misc_x11:Platform_GetSessionXAuthority"); return buf; }
+    if(stat(buf,&xst)==0 && xst.st_size>0 && access(buf,R_OK)==0){ PROFILE_END_VAR(timer, "misc_x11:Platform_GetSessionXAuthority"); return buf; }
     buf[0]='\0';
         log_info("Platform_GetSessionXAuthority completed");
 PROFILE_END_VAR(timer, "misc_x11:Platform_GetSessionXAuthority");
