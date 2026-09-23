@@ -1,12 +1,13 @@
+#include "platform/default_apps.h"
 #include "core/platform.h"
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-static char g_default_apps_x11[DEFAULT_APP_COUNT][256];
+char g_default_apps_x11[DEFAULT_APP_COUNT][256];
 
-static const char* default_apps_x11_run(const char* command, int slot) {
+const char* default_apps_x11_run(const char* command, int slot) {
     char* out = Platform_RunTerminalCommand((char*)command, false);
     g_default_apps_x11[slot][0] = '\0';
     if (out) {
@@ -26,7 +27,7 @@ const char* Platform_GetDefaultApp(DefaultAppKind kind) {
     return g_default_apps_x11[kind];
 }
 
-static int default_apps_x11_exec_token(const char* line, char* out, size_t cap) {
+int default_apps_x11_exec_token(const char* line, char* out, size_t cap) {
     const char* p = line + 5;
     while (*p == ' ' || *p == '\t') p++;
     int quoted = (*p == '"');

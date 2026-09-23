@@ -43,6 +43,5 @@ void fl_screenshot_copy_platform(void);
 void fl_screenshot_save_area_platform(char* save_path);
 void fl_screenshot_save_platform(char* save_path);
 void fl_ocr_area_to_clipboard_platform();
-char* fl_query_ai_platform(char* message);
 
 #endif
