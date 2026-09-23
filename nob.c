@@ -6,15 +6,14 @@
 #define BUILD_FOLDER "build"
 #define OBJ_FOLDER BUILD_FOLDER "/obj"
 #if defined(_WIN32)
-#define CONSOLE_OUTPUT BUILD_FOLDER "/main.exe"
-#define ACTUAL_OUTPUT BUILD_FOLDER "/flint.exe"
+#define CONSOLE_OUTPUT BUILD_FOLDER "/flint.exe"
 #else
 #define CONSOLE_OUTPUT BUILD_FOLDER "/flint"
 #endif
 
 
 #if defined(_WIN32)
-     #define CC_FLAGS "-std=gnu17", "-DCOBJMACROS", "-I", "include", "-MMD", "-MP","-O3","-Wall","-Wextra","-Wno-unused-parameter","-Wno-sign-compare","-Wno-discarded-qualifiers","-Wno-stringop-truncation","-Wno-sign-compare","-Wno-unused-parameter","-Wno-misleading-indentation"
+     #define CC_FLAGS "-std=gnu17", "-DCOBJMACROS", "-I", "include", "-MMD", "-MP","-O3","-Wall","-Wextra","-Wno-unused-parameter","-Wno-sign-compare","-Wno-discarded-qualifiers","-Wno-stringop-truncation","-Wno-sign-compare","-Wno-unused-parameter","-Wno-misleading-indentation","-mwindows"
      #define LINK_FLAGS "-lcomctl32", "-lgdiplus", "-lgdi32", "-lshlwapi", "-lshell32", "-lwinmm", "-lole32", "-luuid", "-lmsimg32", "-ldwmapi", "-lpsapi", "-lcrypt32", "-lcomdlg32", "-ladvapi32", "-ldxva2","-user32","-lole32", "-luser32", "-lgdi32","-lcurl"
 #else
      #define CC_FLAGS "-I", "include", "-I/usr/include/freetype2","-I/usr/include/glib-2.0","-I/usr/lib/glib-2.0/include","-I/usr/include/gio-unix-2.0","-MMD", "-MP","-O3","-Wall","-Wextra","-Wno-unused-parameter","-Wno-sign-compare","-Wno-discarded-qualifiers","-Wno-stringop-truncation","-Wno-sign-compare","-Wno-unused-parameter","-Wno-misleading-indentation"
@@ -326,8 +325,10 @@ int main(int argc, char** argv) {
     NOB_GO_REBUILD_URSELF_PLUS(argc, argv, "nob.h");
 
     int do_run = 0;
+    int do_actual = 0;
     for (int i=1;i<argc;i++){
         if (strcmp(argv[i], "-run")==0) do_run=1;
+        if (strcmp(argv[i], "-actual")==0) do_actual=1;
     }
 
     if (!nob_mkdir_if_not_exists(BUILD_FOLDER)) return 1;
@@ -348,11 +349,18 @@ int main(int argc, char** argv) {
     }
 
     if (!nob_mkdir_if_not_exists("build/features")) return 1;
+#if defined(_WIN32)
+    if (!nob_mkdir_if_not_exists("build/debug")) return 1;
+#endif
 
     bool any_compiled = false;
     if (!compile_all(&any_compiled)) return 1;
 
+#if defined(_WIN32)
+    const char* output = do_actual ? "build/flint.exe" : "build/debug/flint.exe";
+#else
     const char* output = CONSOLE_OUTPUT;
+#endif
     bool needs_link = any_compiled || !nob_file_exists(output) ||
         nob_needs_rebuild(output, (const char**)to_build.items, to_build.count) != 0;
     if (!needs_link) {
@@ -412,6 +420,7 @@ int main(int argc, char** argv) {
         nob_cmd_append(&cmd, objs.items[i]);
     }
 #if defined(_WIN32)
+    if (do_actual) nob_cmd_append(&cmd, "-mwindows");
     nob_cmd_append(&cmd, "-Wl,--export-all-symbols", "-Wl,--out-implib,build/main.lib.a");
 #endif
     nob_cmd_append(&cmd, LINK_FLAGS);
