@@ -2,7 +2,7 @@
 
 
 void Testing(void) {
-  fl_screenshot_open_area("/tmp/screenshot.png");
+  printf("%s \n",getenv("TERMINAL"));
 }
 
 
