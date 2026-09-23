@@ -1,4 +1,3 @@
-#include "platform/default_apps.h"
 #include "core/platform.h"
 #include <ctype.h>
 #include <stdio.h>
@@ -16,13 +15,62 @@ const char* default_apps_x11_run(const char* command, int slot) {
     }
     return g_default_apps_x11[slot];
 }
+const char* get_default_terminal_x11(int slot) {
+    char* list_of_common_terminals[] = {
+        "ptyxis",
+        "gnome-console",
+        "kgx",
+        "gnome-terminal",
+        "konsole",
+        "xfce4-terminal",
+        "mate-terminal",
+        "lxterminal",
+        "qterminal",
+        "yakuake",
+        "st",
+        "stterm",
+        "sakura",
+        "zutty",
+        "urxvt",
+        "rxvt-unicode",
+        "xterm",
+        "alacritty",
+        "kitty",
+        "foot",
+        "wezterm",
+        "terminator",
+        "tilix",
+        "x-terminal-emulator",
+    };
+    g_default_apps_x11[slot][0] = '\0';
+    char* out = "";
+    out = getenv("TERMINAL") ? getenv("TERMINAL") : NULL;
+
+    if (!out) {
+      out = Platform_RunTerminalCommand("gsettings get org.gnome.desktop.default-applications.terminal exec",false);
+      // Remove quotes from the output temporary
+    }
+    if (!out) {
+
+    }
+
+    if (out) {
+        sscanf(out, "%255s", g_default_apps_x11[slot]);
+        free(out);
+        return g_default_apps_x11[slot];
+    }else {
+      //temporary
+      printf("Could not find default terminal");
+      exit(1);
+    }
+}
 
 const char* Platform_GetDefaultApp(DefaultAppKind kind) {
     if (kind < 0 || kind >= DEFAULT_APP_COUNT) return "";
     if (kind == DEFAULT_BROWSER) return default_apps_x11_run("xdg-settings get default-web-browser", DEFAULT_BROWSER);
     if (kind == DEFAULT_IMAGE_VIEWER) return default_apps_x11_run("xdg-mime query default image/png", DEFAULT_IMAGE_VIEWER);
     if (kind == DEFAULT_VIDEO_PLAYER) return default_apps_x11_run("xdg-mime query default video/mp4", DEFAULT_VIDEO_PLAYER);
-    if (kind == DEFAULT_TERMINAL )    return default_apps_x11_run("xdg-mime query default video/mp4", DEFAULT_VIDEO_PLAYER);
+    if (kind == DEFAULT_TERMINAL )    return default_apps_x11_run("xdg-mime query default video/mp4", DEFAULT_TERMINAL);
     g_default_apps_x11[kind][0] = '\0';
     return g_default_apps_x11[kind];
 }
