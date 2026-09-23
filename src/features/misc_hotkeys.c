@@ -42,11 +42,11 @@ void GoogleMeaning(void) {
   snprintf(search,sizeof(search),"what is %s",clip);
   fl_query_browser(search);
 }
-void OpenFehImage(void) {
+void OpenImage(void) {
   char *clip = fl_get_last_clipboard_entry();
-  char command[100];
-  snprintf(command,sizeof(command),"feh /home/diggy/Programming/RandomShit/shit/images/%s -g 1920x1080 --zoom 65",clip);
-  fl_run_terminal_command(command);
+  char path[512];
+  snprintf(path,sizeof(path),"/home/diggy/Programming/RandomShit/shit/images/%s",clip);
+  fl_open_image(path);
   fl_send_hotkey("Alt+F");
 }
 
@@ -87,7 +87,7 @@ FLINT_FEATURE_INIT {
     fl_register_hotkey("Ctrl+Shift+X", ScreenshotArea);
     fl_register_hotkey("Alt+Shift+C", OcrRegionAndCopy);
     fl_register_hotkey("Alt+Shift+G", GoogleMeaning);
-    fl_register_hotkey("Alt+Shift+F", OpenFehImage);
+    fl_register_hotkey("Alt+Shift+F", OpenImage);
     fl_register_hotkey("RShift",MediaPlayPause); 
     fl_register_hotkey("Ctrl+]",IncrementVolume); 
     fl_register_hotkey("Ctrl+[",DecrementVolume); 

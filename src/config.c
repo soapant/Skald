@@ -1,5 +1,9 @@
 #include "config.h"
 
+#include <stdlib.h>
+#include <string.h>
+#include "core/platform.h"
+
 bool Tray = true;
 bool EnableVimMode = true;
 bool RememberLastIndex = true;
@@ -28,11 +32,13 @@ const int IconSize = 32;
 const int MaxFeatures = 130;
 const int VimFontSize = 18;
 const int PaddingForScrolling = 3;
-const char* UsedTerminal = "foot";
-const char* UsedShell = "nu";
-const char* UsedFileManager = "thunar";
+const char* UsedTerminal = "";
+const char* UsedShell = "";
+const char* UsedFileManager = "";
 // const char* UsedFileManager = "explorer";
-const char* UsedBrowser = "zen-browser";
+const char* UsedBrowser = "";
+const char* UsedImageViewer = "";
+const char* UsedVideoPlayer = "";
 const char* UsedSearchEngine = "google";
 const char* ImageEditorPath =  "{APPDATA}/Microsoft/Windows/Start Menu/Programs/Scoop Apps/PicView.lnk";
 const char* FeaturePath = "src/features";
@@ -64,3 +70,21 @@ const AliasEntry Aliases[] = {
   {"brw","Brawlhalla","AppLauncher"},
 };
 const size_t ALIAS_ENTRY_COUNT = ARRAY_LEN(Aliases);
+
+static void config_resolve_one(const char** var, DefaultAppKind kind) {
+    if (!var || (*var && (*var)[0])) return;
+    const char* id = Platform_GetDefaultApp(kind);
+    if (!id || !id[0]) return;
+    char exe[512];
+    if (!Platform_ResolveDesktopExec(id, exe, sizeof(exe)) || !exe[0]) return;
+    char* copy = strdup(exe);
+    if (copy) *var = copy;
+}
+
+void Config_ResolveDefaultApps(void) {
+    config_resolve_one(&UsedBrowser, DEFAULT_BROWSER);
+    config_resolve_one(&UsedTerminal, DEFAULT_TERMINAL);
+    config_resolve_one(&UsedShell, DEFAULT_SHELL);
+    config_resolve_one(&UsedImageViewer, DEFAULT_IMAGE_VIEWER);
+    config_resolve_one(&UsedVideoPlayer, DEFAULT_VIDEO_PLAYER);
+}
