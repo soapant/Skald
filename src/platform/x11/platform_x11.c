@@ -17,6 +17,7 @@
 #include <dirent.h>
 #include <sys/socket.h>
 #include <sys/un.h>
+#include <glob.h>
 #include <png.h>
 #include <ctype.h>
 #include "core/platform.h"
@@ -480,7 +481,6 @@ bool Platform_LaunchDetached(char* command) {
 
 char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
     PROFILE_START(timer);
-    if (command == NULL || strlen(command) == 0) { log_error("command is NULL or empty open_terminal=%d", open_terminal); PROFILE_END_VAR(timer, "platform_x11:Platform_RunTerminalCommand"); return NULL; }
 
     const char* real_user = Platform_GetRealUser();
     const char* real_home = Platform_GetRealHome();
@@ -1444,6 +1444,29 @@ bool Platform_InitDisplaySafe(void) {
         snprintf(sock, sizeof(sock), "%s/%s", rtd ? rtd : "", wd);
         struct stat st;
         if (stat(sock, &st) != 0) unsetenv("WAYLAND_DISPLAY");
+    }
+    if (!getenv("WAYLAND_DISPLAY") || !getenv("WAYLAND_DISPLAY")[0]) {
+        const char* rtd2 = Platform_GetRuntimeDir();
+        if (rtd2 && rtd2[0]) {
+            char pat[512];
+            snprintf(pat, sizeof(pat), "%s/wayland-*", rtd2);
+            glob_t g;
+            memset(&g, 0, sizeof(g));
+            if (glob(pat, 0, NULL, &g) == 0) {
+                for (size_t i = 0; i < g.gl_pathc; i++) {
+                    const char* base = strrchr(g.gl_pathv[i], '/');
+                    base = base ? base + 1 : g.gl_pathv[i];
+                    size_t bl = strlen(base);
+                    if (bl > 5 && strcmp(base + bl - 5, ".lock") == 0) continue;
+                    struct stat st2;
+                    if (stat(g.gl_pathv[i], &st2) == 0) {
+                        setenv("WAYLAND_DISPLAY", base, 1);
+                        break;
+                    }
+                }
+            }
+            globfree(&g);
+        }
     }
     if (!init_display()) {
         log_info("Continuing without X11 display (headless mode)");
