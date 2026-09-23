@@ -516,5 +516,13 @@ bool minimize_active_window_sway(void) {
     char* out = Platform_RunTerminalCommand("swaymsg move scratchpad", false);
     bool ok = succeded_sway(out);
     free(out);
+    if (ok) return true;
+    out = Platform_RunTerminalCommand("swaymsg scratchpad show", false);
+    ok = succeded_sway(out);
+    free(out);
+    if (ok) {
+        out = Platform_RunTerminalCommand("swaymsg floating disable", false);
+        free(out);
+    }
     return ok;
 }
