@@ -85,6 +85,8 @@ bool Platform_ToggleFullscreenActive(void);
 bool Platform_MoveActiveWindowToMonitor(bool right);
 bool Platform_MinimizeActiveWindow(void);
 bool Platform_LaunchDetached(char* command);
+const char* Platform_GetDefaultApp(DefaultAppKind kind);
+bool Platform_ResolveDesktopExec(const char* desktop_id, char* out, size_t out_size);
 const char* Platform_GetRealUser(void);
 const char* Platform_GetRealHome(void);
 bool Platform_IsRunningAsRoot(void);
