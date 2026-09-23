@@ -26,6 +26,17 @@ typedef struct {
     size_t length;
 } Line;
 
+typedef struct {
+    char name[256];
+    char path[MAX_PATH];
+} FileItem;
+
+typedef struct {
+    FileItem* items;
+    size_t count;
+    size_t capacity;
+} ListOfFiles;
+
 #if defined(_WIN32)
 typedef struct {
      ListBoxInfo listbox;
