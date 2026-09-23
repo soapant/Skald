@@ -1449,6 +1449,20 @@ void fl_screenshot_save(char* save_path) {
     return fl_screenshot_save_platform(save_path);
 }
 
+void fl_screenshot_open(char* save_path) {
+    fl_screenshot_save_platform(save_path);
+    char cmd[200];
+    snprintf(cmd,sizeof(cmd),"feh %s",save_path);
+    fl_run_terminal_command(cmd);
+}
+
+void fl_screenshot_open_area(char* save_path) {
+    fl_screenshot_save_area_platform(save_path);
+    char cmd[200];
+    snprintf(cmd,sizeof(cmd),"feh %s",save_path);
+    fl_run_terminal_command(cmd);
+}
+
 void fl_ocr_area_to_clipboard(void) {
     return fl_ocr_area_to_clipboard_platform();
 }
