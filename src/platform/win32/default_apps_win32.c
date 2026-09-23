@@ -1,11 +1,12 @@
+#include "platform/default_apps.h"
 #include <windows.h>
 #include <stdio.h>
 #include <string.h>
 #include "core/platform.h"
 
-static char g_default_apps_win32[DEFAULT_APP_COUNT][256];
+char g_default_apps_win32[DEFAULT_APP_COUNT][256];
 
-static const char* default_apps_win32_progid(const char* subkey, int slot) {
+const char* default_apps_win32_progid(const char* subkey, int slot) {
     g_default_apps_win32[slot][0] = '\0';
     DWORD size = sizeof(g_default_apps_win32[slot]);
     if (RegGetValueA(HKEY_CURRENT_USER, subkey, "ProgId", RRF_RT_REG_SZ, NULL, g_default_apps_win32[slot], &size) != ERROR_SUCCESS) {
