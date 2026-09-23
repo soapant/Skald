@@ -670,7 +670,11 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
         if (_isDown || _isUp) {
             int _vk = (int)_rk->vkCode;
             int _val = _isDown ? 1 : 0;
-            if (remap_should_swallow_vk(_vk, _val)) { return 1; }
+            if (remap_should_swallow_vk(_vk, _val)) {
+                char* _t = Platform_GetActiveWindowTitle();
+                log_info("hook swallow=remap vk=0x%X val=%d title='%s'", _vk, _val, _t ? _t : "");
+                return 1;
+            }
         }
     }
     if (nCode == HC_ACTION && (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN)) {
@@ -702,6 +706,8 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
 
     PROFILE_START(timer);
     if (! _popupActive && hotkey_process(pressed_vk, modifiers)) {
+      char* _t2 = Platform_GetActiveWindowTitle();
+      log_info("hook swallow=hotkey vk=0x%X mods=%d title='%s'", pressed_vk, modifiers, _t2 ? _t2 : "");
       return 1;
     }
     PROFILE_END_VAR(timer, "ProcessHotkey");
@@ -715,10 +721,12 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
           g_win32_key_callback(pKeyInfo->vkCode);
           PROFILE_END_VAR(timer3, "KeyCallback");
         }
+        log_info("hook swallow=waiting_for_key vk=0x%X", pKeyInfo->vkCode);
         return 1;
-      }       
+      }
     }
     PROFILE_END_VAR(timer3, "NormalModeCheck");
+
 
   }
 
@@ -727,7 +735,10 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
     WindowManager* wmx = WindowManager_Get();
     if (!wmx || !WindowManager_GetTopPopup(wmx)) {
       KBDLLHOOKSTRUCT* rk = (KBDLLHOOKSTRUCT*)lParam;
-      if (snippet_feed_vk((int)rk->vkCode, 1, true)) return 1;
+      if (snippet_feed_vk((int)rk->vkCode, 1, true)) {
+        log_info("hook swallow=snippet vk=0x%X", (int)rk->vkCode);
+        return 1;
+      }
     }
   }
   return CallNextHookEx(NULL, nCode, wParam, lParam);
