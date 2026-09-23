@@ -29,6 +29,7 @@ X11Keyboard g_x11_keyboards[X11_MAX_KEYBOARDS];
 int g_x11_keyboard_count = 0;
 int g_x11_uinput_fd = -1;
 bool g_x11_suppress_release[KEY_MAX + 1] = {0};
+static long g_x11_suppress_ms[KEY_MAX + 1] = {0};
 bool g_x11_device_grabbed[X11_MAX_KEYBOARDS] = {0};
 
 bool g_x11_ctrl_held = false;
@@ -313,17 +314,31 @@ void x11_sync_held_from_phys(void) {
 }
 
 void x11_clear_suppress(void) {
-    for (int i=0;i<=KEY_MAX;i++) g_x11_suppress_release[i]=false;
+    for (int i=0;i<=KEY_MAX;i++) { g_x11_suppress_release[i]=false; g_x11_suppress_ms[i]=0; }
+}
+
+static long x11_now_ms(void) {
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    return tv.tv_sec*1000L + tv.tv_usec/1000L;
 }
 
 bool x11_is_suppressed(int linux_code) {
     if (linux_code<0 || linux_code>KEY_MAX) return false;
-    return g_x11_suppress_release[linux_code];
+    if (!g_x11_suppress_release[linux_code]) return false;
+    long now = x11_now_ms();
+    if (now - g_x11_suppress_ms[linux_code] > 5000) {
+        g_x11_suppress_release[linux_code]=false;
+        g_x11_suppress_ms[linux_code]=0;
+        return false;
+    }
+    return true;
 }
 
 void x11_set_suppress(int linux_code, bool v) {
     if (linux_code<0 || linux_code>KEY_MAX) return;
     g_x11_suppress_release[linux_code]=v;
+    g_x11_suppress_ms[linux_code]= v ? x11_now_ms() : 0;
 }
 
 bool x11_handle_global_key(int key_code, int value) {
