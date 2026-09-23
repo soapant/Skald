@@ -148,6 +148,46 @@ bool Wm_MoveActiveWindowToMonitor(bool right) {
     return false;
 }
 
+bool Wm_MoveActiveWindowLeft(void) {
+    if (getenv("WAYLAND_DISPLAY")) {
+        if (move_active_window_left_hyprland()) return true;
+        if (move_active_window_left_sway()) return true;
+    }
+    if (move_active_window_left_x11()) return true;
+    log_error("MoveActiveWindowLeft Didnt Work");
+    return false;
+}
+
+bool Wm_MoveActiveWindowRight(void) {
+    if (getenv("WAYLAND_DISPLAY")) {
+        if (move_active_window_right_hyprland()) return true;
+        if (move_active_window_right_sway()) return true;
+    }
+    if (move_active_window_right_x11()) return true;
+    log_error("MoveActiveWindowRight Didnt Work");
+    return false;
+}
+
+bool Wm_FocusWindowLeft(void) {
+    if (getenv("WAYLAND_DISPLAY")) {
+        if (focus_window_left_hyprland()) return true;
+        if (focus_window_left_sway()) return true;
+    }
+    if (focus_window_left_x11()) return true;
+    log_error("FocusWindowLeft Didnt Work");
+    return false;
+}
+
+bool Wm_FocusWindowRight(void) {
+    if (getenv("WAYLAND_DISPLAY")) {
+        if (focus_window_right_hyprland()) return true;
+        if (focus_window_right_sway()) return true;
+    }
+    if (focus_window_right_x11()) return true;
+    log_error("FocusWindowRight Didnt Work");
+    return false;
+}
+
 bool Wm_MinimizeActiveWindow(void) {
     if (getenv("WAYLAND_DISPLAY")) {
         if (minimize_active_window_hyprland()) return true;

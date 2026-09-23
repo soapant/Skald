@@ -327,6 +327,144 @@ bool move_active_window_to_monitor_x11(bool right) {
     return _x11_err == 0;
 }
 
+bool move_active_window_left_x11(void) {
+    return move_active_window_to_monitor_x11(false);
+}
+
+bool move_active_window_right_x11(void) {
+    return move_active_window_to_monitor_x11(true);
+}
+
+bool focus_window_left_x11(void) {
+    Display* display = get_display();
+    if (!display) return false;
+    Window focus = x11_focused_window(display);
+    if (focus == None) return false;
+    Window root = DefaultRootWindow(display);
+    XWindowAttributes fattr;
+    _x11_err = 0;
+    XErrorHandler old = XSetErrorHandler(_x11_err_handler);
+    int got = XGetWindowAttributes(display, focus, &fattr);
+    XSync(display, False);
+    XSetErrorHandler(old);
+    if (_x11_err || !got) return false;
+    int fcx = fattr.x + fattr.width / 2;
+    int fcy = fattr.y + fattr.height / 2;
+    Window rroot = None;
+    Window parent = None;
+    Window* children = NULL;
+    unsigned int nchildren = 0;
+    _x11_err = 0;
+    old = XSetErrorHandler(_x11_err_handler);
+    int ok = XQueryTree(display, root, &rroot, &parent, &children, &nchildren);
+    XSync(display, False);
+    XSetErrorHandler(old);
+    if (_x11_err || !ok || !children) {
+        if (children) XFree(children);
+        return false;
+    }
+    Window best = None;
+    int best_gap = 1 << 30;
+    int best_vdist = 1 << 30;
+    for (unsigned int i = 0; i < nchildren; i++) {
+        Window w = children[i];
+        if (w == focus) continue;
+        XWindowAttributes attr;
+        _x11_err = 0;
+        old = XSetErrorHandler(_x11_err_handler);
+        int g = XGetWindowAttributes(display, w, &attr);
+        XSync(display, False);
+        XSetErrorHandler(old);
+        if (_x11_err || !g) continue;
+        if (attr.map_state != IsViewable) continue;
+        if (attr.width <= 0 || attr.height <= 0) continue;
+        int cx = attr.x + attr.width / 2;
+        int cy = attr.y + attr.height / 2;
+        if (cx >= fcx) continue;
+        int gap = fcx - cx;
+        int vdist = cy >= fcy ? cy - fcy : fcy - cy;
+        if (gap < best_gap || (gap == best_gap && vdist < best_vdist)) {
+            best_gap = gap;
+            best_vdist = vdist;
+            best = w;
+        }
+    }
+    XFree(children);
+    if (best == None) return false;
+    _x11_err = 0;
+    old = XSetErrorHandler(_x11_err_handler);
+    XRaiseWindow(display, best);
+    XSetInputFocus(display, best, RevertToParent, CurrentTime);
+    XSync(display, False);
+    XSetErrorHandler(old);
+    return _x11_err == 0;
+}
+
+bool focus_window_right_x11(void) {
+    Display* display = get_display();
+    if (!display) return false;
+    Window focus = x11_focused_window(display);
+    if (focus == None) return false;
+    Window root = DefaultRootWindow(display);
+    XWindowAttributes fattr;
+    _x11_err = 0;
+    XErrorHandler old = XSetErrorHandler(_x11_err_handler);
+    int got = XGetWindowAttributes(display, focus, &fattr);
+    XSync(display, False);
+    XSetErrorHandler(old);
+    if (_x11_err || !got) return false;
+    int fcx = fattr.x + fattr.width / 2;
+    int fcy = fattr.y + fattr.height / 2;
+    Window rroot = None;
+    Window parent = None;
+    Window* children = NULL;
+    unsigned int nchildren = 0;
+    _x11_err = 0;
+    old = XSetErrorHandler(_x11_err_handler);
+    int ok = XQueryTree(display, root, &rroot, &parent, &children, &nchildren);
+    XSync(display, False);
+    XSetErrorHandler(old);
+    if (_x11_err || !ok || !children) {
+        if (children) XFree(children);
+        return false;
+    }
+    Window best = None;
+    int best_gap = 1 << 30;
+    int best_vdist = 1 << 30;
+    for (unsigned int i = 0; i < nchildren; i++) {
+        Window w = children[i];
+        if (w == focus) continue;
+        XWindowAttributes attr;
+        _x11_err = 0;
+        old = XSetErrorHandler(_x11_err_handler);
+        int g = XGetWindowAttributes(display, w, &attr);
+        XSync(display, False);
+        XSetErrorHandler(old);
+        if (_x11_err || !g) continue;
+        if (attr.map_state != IsViewable) continue;
+        if (attr.width <= 0 || attr.height <= 0) continue;
+        int cx = attr.x + attr.width / 2;
+        int cy = attr.y + attr.height / 2;
+        if (cx <= fcx) continue;
+        int gap = cx - fcx;
+        int vdist = cy >= fcy ? cy - fcy : fcy - cy;
+        if (gap < best_gap || (gap == best_gap && vdist < best_vdist)) {
+            best_gap = gap;
+            best_vdist = vdist;
+            best = w;
+        }
+    }
+    XFree(children);
+    if (best == None) return false;
+    _x11_err = 0;
+    old = XSetErrorHandler(_x11_err_handler);
+    XRaiseWindow(display, best);
+    XSetInputFocus(display, best, RevertToParent, CurrentTime);
+    XSync(display, False);
+    XSetErrorHandler(old);
+    return _x11_err == 0;
+}
+
 bool minimize_active_window_x11(void) {
     Display* display = get_display();
     if (!display) return false;
