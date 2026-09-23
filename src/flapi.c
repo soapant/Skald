@@ -867,6 +867,22 @@ bool fl_move_active_window_to_monitor(bool right) {
   return Platform_MoveActiveWindowToMonitor(right);
 }
 
+bool fl_move_active_window_left(void) {
+  return Platform_MoveActiveWindowLeft();
+}
+
+bool fl_move_active_window_right(void) {
+  return Platform_MoveActiveWindowRight();
+}
+
+bool fl_focus_window_left(void) {
+  return Platform_FocusWindowLeft();
+}
+
+bool fl_focus_window_right(void) {
+  return Platform_FocusWindowRight();
+}
+
 bool fl_toggle_minimized_active(void) {
   return Platform_MinimizeActiveWindow();
 }

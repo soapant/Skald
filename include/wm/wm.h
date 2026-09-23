@@ -15,6 +15,10 @@ Fl_Pos Wm_GetCursorPosition(void);
 bool Wm_CloseActiveWindow(void);
 bool Wm_ToggleFullscreenActive(void);
 bool Wm_MoveActiveWindowToMonitor(bool right);
+bool Wm_MoveActiveWindowLeft(void);
+bool Wm_MoveActiveWindowRight(void);
+bool Wm_FocusWindowLeft(void);
+bool Wm_FocusWindowRight(void);
 bool Wm_MinimizeActiveWindow(void);
 
 #endif

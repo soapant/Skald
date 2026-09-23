@@ -526,3 +526,33 @@ bool minimize_active_window_sway(void) {
     }
     return ok;
 }
+
+bool focus_window_left_sway(void) {
+    sway_ensure_sock();
+    const char* sock = getenv("SWAYSOCK");
+    if (!sock || !sock[0]) sock = getenv("I3SOCK");
+    if (!sway_sock_live(sock)) return false;
+    char* out = Platform_RunTerminalCommand("swaymsg focus left", false);
+    bool ok = succeded_sway(out);
+    free(out);
+    return ok;
+}
+
+bool focus_window_right_sway(void) {
+    sway_ensure_sock();
+    const char* sock = getenv("SWAYSOCK");
+    if (!sock || !sock[0]) sock = getenv("I3SOCK");
+    if (!sway_sock_live(sock)) return false;
+    char* out = Platform_RunTerminalCommand("swaymsg focus right", false);
+    bool ok = succeded_sway(out);
+    free(out);
+    return ok;
+}
+
+bool move_active_window_left_sway(void) {
+    return move_active_window_to_monitor_sway(false);
+}
+
+bool move_active_window_right_sway(void) {
+    return move_active_window_to_monitor_sway(true);
+}

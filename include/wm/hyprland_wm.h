@@ -13,5 +13,9 @@ Fl_Pos get_cursor_position_hyprland(void);
 bool close_active_window_hyprland(void);
 bool toggle_fullscreen_active_hyprland(void);
 bool move_active_window_to_monitor_hyprland(bool right);
+bool move_active_window_left_hyprland(void);
+bool move_active_window_right_hyprland(void);
+bool focus_window_left_hyprland(void);
+bool focus_window_right_hyprland(void);
 bool minimize_active_window_hyprland(void);
 #endif

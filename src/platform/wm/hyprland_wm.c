@@ -170,3 +170,29 @@ bool minimize_active_window_hyprland(void) {
   free(out);
   return ok;
 }
+
+bool focus_window_left_hyprland(void) {
+  const char* sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");
+  if (!sig || !sig[0]) return false;
+  char* out = Platform_RunTerminalCommand("hyprctl dispatch movefocus l", false);
+  bool ok = succeded_hypr(out);
+  free(out);
+  return ok;
+}
+
+bool focus_window_right_hyprland(void) {
+  const char* sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");
+  if (!sig || !sig[0]) return false;
+  char* out = Platform_RunTerminalCommand("hyprctl dispatch movefocus r", false);
+  bool ok = succeded_hypr(out);
+  free(out);
+  return ok;
+}
+
+bool move_active_window_left_hyprland(void) {
+  return move_active_window_to_monitor_hyprland(false);
+}
+
+bool move_active_window_right_hyprland(void) {
+  return move_active_window_to_monitor_hyprland(true);
+}
