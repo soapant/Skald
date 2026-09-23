@@ -103,6 +103,7 @@ static bool x11_daemon_exec_with_x11_env(char* const argv[], const char* display
 
 bool Platform_LaunchTerminalAtPath(const char* working_dir, const char* extra_args){
     PROFILE_START(timer);
+    printf("%s \n",UsedTerminal);
     if(!working_dir) { log_error("working_dir is NULL extra_args='%s'", extra_args ? extra_args : "null"); PROFILE_END_VAR(timer, "platform_x11:Platform_LaunchTerminalAtPath"); return false; }
     if (!UsedTerminal || !UsedTerminal[0]) { log_error("UsedTerminal not configured working_dir='%s' extra_args='%s'", working_dir ? working_dir : "null", extra_args ? extra_args : "null"); PROFILE_END_VAR(timer, "platform_x11:Platform_LaunchTerminalAtPath"); return false; }
 
@@ -786,25 +787,18 @@ char* Platform_QueryZoxidePath(const char* query) {
                  real_home, real_home, real_home, real_home, clean_query);
     }
 
-    FILE *pipe = popen(command, "r");
-    if (!pipe) {
-        perror("Zoxide Debug -> popen failed");
+    char* out = Platform_RunTerminalCommand(command, false);
+    if (!out) {
  PROFILE_END_VAR(timer, "platform_x11:Platform_QueryZoxidePath");
         return NULL;
     }
+    out[strcspn(out, "\r\n")] = '\0';
 
-    char temp_path[1024];
-    temp_path[0] = '\0';
-    if (fgets(temp_path, sizeof(temp_path) - 1, pipe) != NULL) {
-        temp_path[strcspn(temp_path, "\r\n")] = '\0';
-    }
-
-    int pclose_res = pclose(pipe);
-
-    if (pclose_res != 0 || strstr(temp_path, "no match found") || strlen(temp_path) == 0) {
+    if (strstr(out, "no match found") || strlen(out) == 0) {
         char buffer[256];
         snprintf(buffer, sizeof(buffer), "Query {%s} Doesnt Have A Zoxide Path", query);
         SubjectiveMessageDisplay(buffer, 140, TimeOutForMessages, COLOR_ERROR);
+        free(out);
         PROFILE_END_VAR(timer, "platform_x11:Platform_QueryZoxidePath");
         return NULL;
     }
@@ -813,7 +807,7 @@ char* Platform_QueryZoxidePath(const char* query) {
 
 
     PROFILE_END_VAR(timer, "platform_x11:Platform_QueryZoxidePath");
-    return strdup(temp_path);
+    return out;
 }
 
 void Platform_StartUniversalTimer(void) {
