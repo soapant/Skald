@@ -3,6 +3,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <pwd.h>
+#include <unistd.h>
+
+const char* get_login_shell(void) {
+    struct passwd* pw = getpwuid(getuid());
+    if (!pw || !pw->pw_shell || !pw->pw_shell[0]) {
+        return NULL;
+    }
+    return pw->pw_shell; 
+}
 
 char default_apps_x11[DEFAULT_APP_COUNT][256];
 
@@ -121,12 +131,22 @@ const char* get_default_terminal(int slot) {
     return default_apps_x11[slot];
 }
 
+const char* get_default_shell(int slot) {
+    //temporary maybe in future just use the terminal config or somethign idk
+    default_apps_x11[slot][0] = '\0';
+    const char* shell = getenv("SHELL");
+    const char* name = strrchr(shell, '/') ? strrchr(shell, '/') + 1 : shell;
+    snprintf(default_apps_x11[slot], sizeof(default_apps_x11[slot]), "%s", name);
+    return default_apps_x11[slot];
+}
+
 const char* Platform_GetDefaultApp(DefaultAppKind kind) {
     if (kind < 0 || kind >= DEFAULT_APP_COUNT) return "";
     if (kind == DEFAULT_BROWSER) return default_apps_x11_run("xdg-settings get default-web-browser", DEFAULT_BROWSER);
     if (kind == DEFAULT_IMAGE_VIEWER) return default_apps_x11_run("xdg-mime query default image/png", DEFAULT_IMAGE_VIEWER);
     if (kind == DEFAULT_VIDEO_PLAYER) return default_apps_x11_run("xdg-mime query default video/mp4", DEFAULT_VIDEO_PLAYER);
     if (kind == DEFAULT_TERMINAL )    return get_default_terminal(DEFAULT_TERMINAL);
+    if (kind == DEFAULT_SHELL )       return get_default_shell(DEFAULT_SHELL);
     default_apps_x11[kind][0] = '\0';
     return default_apps_x11[kind];
 }
