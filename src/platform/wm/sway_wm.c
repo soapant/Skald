@@ -32,8 +32,6 @@ static void sway_ensure_sock(void) {
     if (glob(pat, 0, NULL, &g) == 0 && g.gl_pathc > 0) {
         setenv("SWAYSOCK", g.gl_pathv[g.gl_pathc - 1], 1);
         log_info("discovered SWAYSOCK='%s'", g.gl_pathv[g.gl_pathc - 1]);
-    } else {
-        log_info("no sway socket found pat='%s'", pat);
     }
     globfree(&g);
 }
