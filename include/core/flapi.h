@@ -26,17 +26,6 @@
 #define WHITELIST 1
 #define BLACKLIST 0
 
-typedef struct {
-    char name[256];
-    char path[MAX_PATH];
-} FileItem;
-
-typedef struct {
-    FileItem* items;
-    size_t count;
-    size_t capacity;
-} ListOfFiles;
-
 
 
 // =============================================================================

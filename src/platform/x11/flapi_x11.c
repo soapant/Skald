@@ -33,19 +33,19 @@
 #include "platform/x11/input_x11.h"
 
 
-bool fl_get_all_files_from_dir_platform(const char* dir_path, char** list_of_allowed_extensions,
+bool Platform_GetAllFilesFromDir(const char* dir_path, char** list_of_allowed_extensions,
                                         ListOfFiles* list_of_files, char** list_of_names_to_ignore) {
     PROFILE_START(timer);
 
     if (!dir_path || !list_of_files) {
-        PROFILE_END_VAR(timer, "flapi_x11:fl_get_all_files_from_dir_platform");
+        PROFILE_END_VAR(timer, "flapi_x11:Platform_GetAllFilesFromDir");
         return false;
     }
 
     DIR* dir = opendir(dir_path);
     if (!dir) {
         perror("opendir");
-        PROFILE_END_VAR(timer, "flapi_x11:fl_get_all_files_from_dir_platform");
+        PROFILE_END_VAR(timer, "flapi_x11:Platform_GetAllFilesFromDir");
         return false;
     }
 
@@ -80,7 +80,7 @@ bool fl_get_all_files_from_dir_platform(const char* dir_path, char** list_of_all
                 }
             }
             if (!should_ignore) {
-                fl_get_all_files_from_dir_platform(full_path, list_of_allowed_extensions,
+                Platform_GetAllFilesFromDir(full_path, list_of_allowed_extensions,
                                                    list_of_files, list_of_names_to_ignore);
             }
         } else {
@@ -106,7 +106,7 @@ bool fl_get_all_files_from_dir_platform(const char* dir_path, char** list_of_all
                     FileItem* new_items = realloc(list_of_files->items, new_capacity * sizeof(FileItem));
                     if (!new_items) {
                         closedir(dir);
-                        PROFILE_END_VAR(timer, "flapi_x11:fl_get_all_files_from_dir_platform");
+                        PROFILE_END_VAR(timer, "flapi_x11:Platform_GetAllFilesFromDir");
                         return false;
                     }
                     list_of_files->items    = new_items;
@@ -140,7 +140,7 @@ bool fl_get_all_files_from_dir_platform(const char* dir_path, char** list_of_all
     }
 
     closedir(dir);
-    PROFILE_END_VAR(timer, "flapi_x11:fl_get_all_files_from_dir_platform");
+    PROFILE_END_VAR(timer, "flapi_x11:Platform_GetAllFilesFromDir");
     return true;
 }
 
