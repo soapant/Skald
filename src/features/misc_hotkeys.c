@@ -95,8 +95,8 @@ FLINT_FEATURE_INIT {
     fl_register_hotkey("Alt+Ctrl+P", copy_password);
     fl_register_hotkey("Alt+Q", open_terminal);
     fl_register_hotkey("Ctrl+Shift+B", open_browser);
-    fl_register_hotkey("Alt+Shift+H", move_active_window_right);
-    fl_register_hotkey("Alt+Shift+L", move_active_window_left);
+    fl_register_hotkey("Alt+Shift+L", move_active_window_right);
+    fl_register_hotkey("Alt+Shift+H", move_active_window_left);
     fl_register_hotkey("Ctrl+Q", close_active_window);
     fl_register_hotkey("Alt+F", toggle_fullscreen);
     fl_register_hotkey("Alt+M", toggle_minimized);
