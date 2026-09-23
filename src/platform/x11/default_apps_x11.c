@@ -126,6 +126,7 @@ const char* get_default_terminal(int slot) {
     if (!term) {
       exit(1);
     }
+    printf("%s \n",term);
 
     snprintf(default_apps_x11[slot], sizeof(default_apps_x11[slot]), "%s", term);
     return default_apps_x11[slot];

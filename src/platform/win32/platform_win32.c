@@ -215,74 +215,34 @@ bool Platform_LaunchFileManagerAtPath(char* path,char* args) {
     if (!path || !path[0]) { log_error("path is NULL args='%s'", args ? args : "null"); return false; }
     //temporarily not being used and just doiung explorere on widnwos no diea if this is the right way to do it but it works for now
     HINSTANCE res = ShellExecuteA(NULL, "open", "explorer.exe", path ? path : "", NULL, SW_SHOWNORMAL);
-    if ((intptr_t)res <= 32) { log_error("ShellExecute failed for filemanager '%s' path='%s' err=%ld", buffer, path, (long)(intptr_t)res); return false; }
+    if ((intptr_t)res <= 32) { log_error("ShellExecute failed for filemanager path='%s' err=%ld", path, (long)(intptr_t)res); return false; }
     (void)args;
 log_info("Platform_LaunchFileManagerAtPath path='%s' args='%s'", path ? path : "", args ? args : "");;
     return true;
 }
 
 char* Platform_QueryZoxidePath(const char* query) {
-    char path[1024];
-    path[0] = '\0';
-
+    if (!query || !query[0]) return NULL;
     char clean_query[512];
     strncpy(clean_query, query, sizeof(clean_query) - 1);
     clean_query[sizeof(clean_query) - 1] = '\0';
     clean_query[strcspn(clean_query, "\r\n")] = '\0';
-
-    char command[512];
+    char command[1024];
     snprintf(command, sizeof(command), "zoxide query %s", clean_query);
-
-    SECURITY_ATTRIBUTES sa = { sizeof(SECURITY_ATTRIBUTES), NULL, TRUE };
-    HANDLE hReadPipe, hWritePipe;
-
-    if (!CreatePipe(&hReadPipe, &hWritePipe, &sa, 0)) {
-                log_error("operation failed, returning error query='%s'", query ? query : "null");
-return NULL;
-    }
-
-    SetHandleInformation(hReadPipe, HANDLE_FLAG_INHERIT, 0);
-
-    STARTUPINFOA si = {0};
-    si.cb = sizeof(STARTUPINFOA);
-    si.hStdOutput = hWritePipe;
-    si.hStdError = hWritePipe;
-    si.dwFlags |= STARTF_USESTDHANDLES;
-
-    PROCESS_INFORMATION pi = {0};
-
-    if (CreateProcessA(NULL, command, NULL, NULL, TRUE, CREATE_NO_WINDOW, NULL, NULL, &si, &pi)) {
-        CloseHandle(hWritePipe);
-
-        DWORD wait_res = WaitForSingleObject(pi.hProcess, 5000); 
-
-        if (wait_res == WAIT_TIMEOUT) {
-            TerminateProcess(pi.hProcess, 0);
-        }
-
-        DWORD bytesRead = 0;
-        if (ReadFile(hReadPipe, path, sizeof(path) - 1, &bytesRead, NULL)) {
-            path[bytesRead] = '\0';
-            path[strcspn(path, "\r\n")] = '\0';
-        }
-
-        CloseHandle(pi.hProcess);
-        CloseHandle(pi.hThread);
-    } else {
-        CloseHandle(hWritePipe);
-    }
-
-    CloseHandle(hReadPipe);
-    if (strstr(path, "no match found")) {
+    char* out = Platform_RunTerminalCommand(command, false);
+    if (!out || !out[0]) { free(out); return NULL; }
+    size_t n = strlen(out);
+    while (n > 0 && (out[n - 1] == '\n' || out[n - 1] == '\r')) out[--n] = '\0';
+    if (strstr(out, "no match found")) {
         char buffer[256];
-        snprintf(buffer,sizeof(buffer),"Query {%s} Doesnt Have A Zoxide Path",query);
-        SubjectiveMessageDisplay(buffer,140,TimeOutForMessages,COLOR_ERROR);
+        snprintf(buffer, sizeof(buffer), "Query {%s} Doesnt Have A Zoxide Path", query);
+        SubjectiveMessageDisplay(buffer, 140, TimeOutForMessages, COLOR_ERROR);
+        free(out);
         return NULL;
     }
-    if (strlen(path) == 0) return NULL;
-    char* dup = _strdup(path);
-log_info("Platform_QueryZoxidePath query='%s'", query ? query : "");;
-    return dup;
+    if (!out[0]) { free(out); return NULL; }
+    log_info("Platform_QueryZoxidePath query='%s'", query ? query : "");
+    return out;
 }
 
 bool Platform_ShellExecuteWithVerb(const char* path, const char* verb, bool async) {
