@@ -1770,6 +1770,35 @@
   },
   {
     "directory": "/home/diggy/Programming/Projects/Flint",
+    "file": "src/platform/wm/kwin_wm.c",
+    "arguments": [
+      "gcc",
+      "-Wall",
+      "-Wextra",
+      "-I",
+      "include",
+      "-I/usr/include/freetype2",
+      "-I/usr/include/glib-2.0",
+      "-I/usr/lib/glib-2.0/include",
+      "-I/usr/include/gio-unix-2.0",
+      "-MMD",
+      "-MP",
+      "-O3",
+      "-Wall",
+      "-Wextra",
+      "-Wno-unused-parameter",
+      "-Wno-sign-compare",
+      "-Wno-discarded-qualifiers",
+      "-Wno-stringop-truncation",
+      "-Wno-sign-compare",
+      "-Wno-unused-parameter",
+      "-Wno-misleading-indentation",
+      "-c",
+      "src/platform/wm/kwin_wm.c"
+    ]
+  },
+  {
+    "directory": "/home/diggy/Programming/Projects/Flint",
     "file": "src/platform/wm/sway_wm.c",
     "arguments": [
       "gcc",
