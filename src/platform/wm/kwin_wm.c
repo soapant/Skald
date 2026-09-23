@@ -11,7 +11,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <pthread.h>
 #include <sys/stat.h>
+
+static pthread_mutex_t g_kwin_mtx = PTHREAD_MUTEX_INITIALIZER;
 
 bool kwin_is_active(void) {
     const char* v = getenv("KDE_SESSION_VERSION");
@@ -48,7 +51,7 @@ static char* kwin_qdbus_call(const char* args) {
     return Platform_RunTerminalCommand(cmd, false);
 }
 
-static bool kwin_run_script(const char* body) {
+static bool kwin_run_script_inner(const char* body) {
     FILE* f = fopen("/tmp/flint_kwin_do.js", "w");
     if (!f) return false;
     fputs(body, f);
@@ -74,12 +77,19 @@ static bool kwin_run_script(const char* body) {
     return ok;
 }
 
+static bool kwin_run_script(const char* body) {
+    pthread_mutex_lock(&g_kwin_mtx);
+    bool ok = kwin_run_script_inner(body);
+    pthread_mutex_unlock(&g_kwin_mtx);
+    return ok;
+}
+
 static unsigned g_kwin_qid = 0;
 static char g_kwin_qexpr[512] = {0};
 static char* g_kwin_qpayload = NULL;
 static long long g_kwin_qat = 0;
 
-static char* kwin_eval_print(const char* expr) {
+static char* kwin_eval_print_inner(const char* expr) {
     long long now = Platform_GetWallClockMs();
     if (g_kwin_qpayload && now - g_kwin_qat < 500 && !strcmp(g_kwin_qexpr, expr)) return g_kwin_qpayload;
     char marker[32];
@@ -111,7 +121,21 @@ static char* kwin_eval_print(const char* expr) {
     if (out3) free(out3);
     char cmd[256];
     snprintf(cmd, sizeof(cmd), "journalctl --user -o cat --since=\"-30s\" 2>/dev/null | grep -a \"%s\" | tail -1", marker);
-    char* log = Platform_RunTerminalCommand(cmd, false);
+    char* log = NULL;
+    for (int attempt = 0; attempt < 8; attempt++) {
+        if (attempt > 0) {
+            struct timespec ts;
+            ts.tv_sec = 0;
+            ts.tv_nsec = 100 * 1000 * 1000;
+            nanosleep(&ts, NULL);
+        }
+        char* got = Platform_RunTerminalCommand(cmd, false);
+        if (got && got[0] && strstr(got, marker)) {
+            log = got;
+            break;
+        }
+        if (got) free(got);
+    }
     if (!log || !log[0]) {
         if (log) free(log);
         return NULL;
@@ -132,6 +156,14 @@ static char* kwin_eval_print(const char* expr) {
     return g_kwin_qpayload;
 }
 
+static char* kwin_eval_print(const char* expr) {
+    pthread_mutex_lock(&g_kwin_mtx);
+    char* r = kwin_eval_print_inner(expr);
+    char* out = r ? strdup(r) : NULL;
+    pthread_mutex_unlock(&g_kwin_mtx);
+    return out;
+}
+
 static size_t kwin_copy_field(const char* src, char stop, char* dst, size_t cap) {
     size_t o = 0;
     for (const char* p = src; *p && *p != stop && o + 1 < cap; p++) {
@@ -148,8 +180,9 @@ bool get_title_kwin(char *buffer, int buffer_size) {
     buffer[0] = '\0';
     if (!kwin_is_active()) return false;
     char* payload = kwin_eval_print("(workspace.activeWindow ? workspace.activeWindow.caption : \"\")");
-    if (!payload || !payload[0]) return false;
+    if (!payload || !payload[0]) { if (payload) free(payload); return false; }
     kwin_copy_field(payload, 0, buffer, (size_t)buffer_size);
+    free(payload);
     return buffer[0] != '\0';
 }
 
@@ -158,8 +191,9 @@ bool get_app_id_kwin(char *buffer, int buffer_size) {
     buffer[0] = '\0';
     if (!kwin_is_active()) return false;
     char* payload = kwin_eval_print("(workspace.activeWindow ? workspace.activeWindow.resourceClass : \"\")");
-    if (!payload || !payload[0]) return false;
+    if (!payload || !payload[0]) { if (payload) free(payload); return false; }
     kwin_copy_field(payload, 0, buffer, (size_t)buffer_size);
+    free(payload);
     return buffer[0] != '\0';
 }
 
@@ -211,8 +245,8 @@ bool focus_window_title_kwin(char* title) {
 Fl_WindowList get_window_titles_kwin() {
     Fl_WindowList list = {0};
     if (!kwin_is_active()) return list;
-    char* payload = kwin_eval_print("var __ws=workspace.stackingOrder;var __o=\"\";for(var i=0;i<__ws.length;i++){__o+=__ws[i].caption+\"\\x1f\";}__o");
-    if (!payload || !payload[0]) return list;
+    char* payload = kwin_eval_print("(function(){var __ws=workspace.stackingOrder;var __o=\"\";for(var i=0;i<__ws.length;i++){__o+=__ws[i].caption+\"\\x1f\";}return __o;})()");
+    if (!payload || !payload[0]) { if (payload) free(payload); return list; }
     const char* p = payload;
     while (*p) {
         char buf[1024];
@@ -230,14 +264,15 @@ Fl_WindowList get_window_titles_kwin() {
         list.windows = tmp;
         list.windows[list.count++] = strdup(buf);
     }
+    free(payload);
     return list;
 }
 
 Fl_WindowList get_window_names_kwin() {
     Fl_WindowList list = {0};
     if (!kwin_is_active()) return list;
-    char* payload = kwin_eval_print("var __ws=workspace.stackingOrder;var __o=\"\";for(var i=0;i<__ws.length;i++){__o+=__ws[i].resourceClass+\"\\x1f\";}__o");
-    if (!payload || !payload[0]) return list;
+    char* payload = kwin_eval_print("(function(){var __ws=workspace.stackingOrder;var __o=\"\";for(var i=0;i<__ws.length;i++){__o+=__ws[i].resourceClass+\"\\x1f\";}return __o;})()");
+    if (!payload || !payload[0]) { if (payload) free(payload); return list; }
     const char* p = payload;
     while (*p) {
         char buf[1024];
@@ -256,6 +291,7 @@ Fl_WindowList get_window_names_kwin() {
         list.windows = tmp;
         list.windows[list.count++] = strdup(buf);
     }
+    free(payload);
     return list;
 }
 
