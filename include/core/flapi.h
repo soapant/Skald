@@ -480,6 +480,9 @@ void fl_ocr_area_to_clipboard(void);
 bool fl_copy_image_to_clipboard(const unsigned char* png, size_t len);
 void fl_screenshot_save_area(char* save_path);
 void fl_screenshot_save(char* save_path);
+void fl_screenshot_open(char* save_path);
+void fl_screenshot_open_area(char* save_path);
+
 
 
 Fl_Pos fl_get_cursor_pos(void);
