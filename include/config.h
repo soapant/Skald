@@ -39,7 +39,6 @@ extern const int PaddingForScrolling;
 extern bool CloseOnLossOfFocus;
 extern const char* UsedTerminal;
 extern const char* UsedShell;
-extern const char* UsedFileManager;
 extern const char* UsedBrowser;
 extern const char* UsedImageViewer;
 extern const char* UsedVideoPlayer;

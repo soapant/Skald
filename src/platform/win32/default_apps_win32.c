@@ -36,10 +36,6 @@ const char* terminal_name_from_guid(const char* console_guid,const char* termina
     return "Let Windows Decide";
 }
 
-
-
-
-
 const char* default_apps_win32_progid(const char* subkey, int slot) {
     return default_apps_win32_read_sz(subkey, "ProgId", slot);
 }
