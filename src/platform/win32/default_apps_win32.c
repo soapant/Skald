@@ -3,7 +3,7 @@
 #include <string.h>
 #include "core/platform.h"
 
-static char g_default_apps_win32[FL_DEFAULT_APP_COUNT][256];
+static char g_default_apps_win32[DEFAULT_APP_COUNT][256];
 
 static const char* default_apps_win32_progid(const char* subkey, int slot) {
     g_default_apps_win32[slot][0] = '\0';
@@ -14,11 +14,11 @@ static const char* default_apps_win32_progid(const char* subkey, int slot) {
     return g_default_apps_win32[slot];
 }
 
-const char* Platform_GetDefaultApp(Fl_DefaultAppKind kind) {
-    if (kind < 0 || kind >= FL_DEFAULT_APP_COUNT) return "";
-    if (kind == FL_DEFAULT_BROWSER) return default_apps_win32_progid("Software\\Microsoft\\Windows\\Shell\\Associations\\UrlAssociations\\http\\UserChoice", FL_DEFAULT_BROWSER);
-    if (kind == FL_DEFAULT_IMAGE_VIEWER) return default_apps_win32_progid("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\.png\\UserChoice", FL_DEFAULT_IMAGE_VIEWER);
-    if (kind == FL_DEFAULT_VIDEO_PLAYER) return default_apps_win32_progid("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\.mp4\\UserChoice", FL_DEFAULT_VIDEO_PLAYER);
+const char* Platform_GetDefaultApp(DefaultAppKind kind) {
+    if (kind < 0 || kind >= DEFAULT_APP_COUNT) return "";
+    if (kind == DEFAULT_BROWSER) return default_apps_win32_progid("Software\\Microsoft\\Windows\\Shell\\Associations\\UrlAssociations\\http\\UserChoice", DEFAULT_BROWSER);
+    if (kind == DEFAULT_IMAGE_VIEWER) return default_apps_win32_progid("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\.png\\UserChoice", DEFAULT_IMAGE_VIEWER);
+    if (kind == DEFAULT_VIDEO_PLAYER) return default_apps_win32_progid("Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\.mp4\\UserChoice", DEFAULT_VIDEO_PLAYER);
     g_default_apps_win32[kind][0] = '\0';
     return g_default_apps_win32[kind];
 }

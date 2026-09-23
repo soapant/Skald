@@ -9,16 +9,10 @@ static char g_default_apps_x11[DEFAULT_APP_COUNT][256];
 static const char* default_apps_x11_run(const char* command, int slot) {
     char* out = Platform_RunTerminalCommand((char*)command, false);
     g_default_apps_x11[slot][0] = '\0';
-    if (!out) return g_default_apps_x11[slot];
-    size_t n = strlen(out);
-    while (n > 0 && isspace((unsigned char)out[n - 1])) n--;
-    size_t s = 0;
-    while (s < n && isspace((unsigned char)out[s])) s++;
-    if (n > s && n - s < sizeof(g_default_apps_x11[slot])) {
-        memcpy(g_default_apps_x11[slot], out + s, n - s);
-        g_default_apps_x11[slot][n - s] = '\0';
+    if (out) {
+        sscanf(out, "%255s", g_default_apps_x11[slot]);
+        free(out);
     }
-    free(out);
     return g_default_apps_x11[slot];
 }
 
@@ -27,6 +21,7 @@ const char* Platform_GetDefaultApp(DefaultAppKind kind) {
     if (kind == DEFAULT_BROWSER) return default_apps_x11_run("xdg-settings get default-web-browser", DEFAULT_BROWSER);
     if (kind == DEFAULT_IMAGE_VIEWER) return default_apps_x11_run("xdg-mime query default image/png", DEFAULT_IMAGE_VIEWER);
     if (kind == DEFAULT_VIDEO_PLAYER) return default_apps_x11_run("xdg-mime query default video/mp4", DEFAULT_VIDEO_PLAYER);
+    if (kind == DEFAULT_TERMINAL )    return default_apps_x11_run("xdg-mime query default video/mp4", DEFAULT_VIDEO_PLAYER);
     g_default_apps_x11[kind][0] = '\0';
     return g_default_apps_x11[kind];
 }
