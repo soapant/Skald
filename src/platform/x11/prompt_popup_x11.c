@@ -109,7 +109,6 @@ bool Platform_PromptPopupOnKey(Popup* self, const PopupKeyEvent* key) {
     bool shift_pressed = key->shift;
     bool alt_pressed = key->alt;
     log_info("prompt key wParam=%d shift=%d ctrl=%d alt=%d insert=%d", wParam, shift_pressed, ctrl_pressed, alt_pressed, IsInsertMode());
-    if (should_swallow_pending(wParam, (ctrl_pressed?HOTKEY_MOD_CTRL:0)|(shift_pressed?HOTKEY_MOD_SHIFT:0)|(alt_pressed?HOTKEY_MOD_ALT:0))) { PROFILE_END_VAR(timer, "prompt_popup_x11:Platform_PromptPopupOnKey"); return true; }
     if (TryVimMotion(wParam, ctrl_pressed, shift_pressed, alt_pressed)) { PROFILE_END_VAR(timer, "prompt_popup_x11:Platform_PromptPopupOnKey"); return true; }
     if (wParam == VK_BACK) {
         if (ctrl_pressed) {
@@ -300,6 +299,7 @@ bool Platform_PromptPopupOnKey(Popup* self, const PopupKeyEvent* key) {
 
     if (IsInsertMode() && key->text_len > 0) {
         bool swallow = false;
+        bool trigger_press = false;
         if (pending_hotkey_vk != 0 && key->text_len == 1) {
             struct timeval tv; gettimeofday(&tv, NULL);
             long now = tv.tv_sec * 1000 + tv.tv_usec / 1000;
@@ -313,12 +313,13 @@ bool Platform_PromptPopupOnKey(Popup* self, const PopupKeyEvent* key) {
                 else if (c == ']' || c == '}') vkc = VK_OEM_6;
                 else if (c == ';' || c == ':') vkc = VK_OEM_1;
                 else if (c == '/' || c == '?') vkc = VK_OEM_2;
-                if (vkc != 0 && vkc == pending_hotkey_vk) swallow = true;
+                if (vkc != 0 && vkc == pending_hotkey_vk) trigger_press = true;
             }
             pending_hotkey_vk = 0;
             pending_hotkey_mod = 0;
         }
-        if (!swallow && (key->ctrl || key->alt)) swallow = true;
+        if (!trigger_press && !swallow && (key->ctrl || key->alt)) swallow = true;
+        log_info("prompt text wParam=%d trigger=%d swallow=%d filter='%s'", wParam, trigger_press ? 1 : 0, swallow ? 1 : 0, state->filter);
         if (!swallow) {
             bool is_printable = true;
             for (int i = 0; i < key->text_len; i++) { unsigned char c = (unsigned char)key->text[i]; if (c < 0x20 || c == 0x7F) { is_printable = false; break; } }
