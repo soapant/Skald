@@ -29,6 +29,7 @@ int main() {
   Platform_InitMainThreadContext();
   Platform_FixWorkingDirectory();
   Platform_InitDisplaySafe();
+  Config_ResolveDefaultApps();
 
   Platform_StartUniversalTimer();
   Platform_InitializeTrayIcon();

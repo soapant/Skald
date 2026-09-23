@@ -39,6 +39,15 @@ typedef struct {
     WindowHandle hEdit;
 } EditPopupData;
 
+typedef enum {
+    DEFAULT_BROWSER,
+    DEFAULT_IMAGE_VIEWER,
+    DEFAULT_VIDEO_PLAYER,
+    DEFAULT_TERMINAL,
+    DEFAULT_SHELL,
+    DEFAULT_APP_COUNT
+} DefaultAppKind;
+
 
 #define MIDDLE_POS 960, 540, 1000, 300
 #define TOP_POS 960, 540, 1000, 300

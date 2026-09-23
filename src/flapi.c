@@ -867,6 +867,18 @@ bool fl_toggle_minimized_active(void) {
   return Platform_MinimizeActiveWindow();
 }
 
+const char* fl_get_default_app(DefaultAppKind kind) {
+  return Platform_GetDefaultApp(kind);
+}
+
+bool fl_open_image(char* image_path) {
+  if (!image_path || !image_path[0]) return false;
+  char cmd[1024];
+  if (UsedImageViewer && UsedImageViewer[0]) snprintf(cmd, sizeof(cmd), "%s \"%s\"", UsedImageViewer, image_path);
+  else snprintf(cmd, sizeof(cmd), "xdg-open \"%s\"", image_path);
+  return fl_launch_detached(cmd);
+}
+
 char* fl_popup_impl(const FlPopupSpec *spec) {
     const char* initial_text = spec->initial_text ? spec->initial_text : "";
     int x = spec->x ? spec->x : 0;
@@ -1451,16 +1463,12 @@ void fl_screenshot_save(char* save_path) {
 
 void fl_screenshot_open(char* save_path) {
     fl_screenshot_save_platform(save_path);
-    char cmd[200];
-    snprintf(cmd,sizeof(cmd),"feh %s",save_path);
-    fl_run_terminal_command(cmd);
+    fl_open_image(save_path);
 }
 
 void fl_screenshot_open_area(char* save_path) {
     fl_screenshot_save_area_platform(save_path);
-    char cmd[200];
-    snprintf(cmd,sizeof(cmd),"feh %s",save_path);
-    fl_run_terminal_command(cmd);
+    fl_open_image(save_path);
 }
 
 void fl_ocr_area_to_clipboard(void) {

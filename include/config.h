@@ -41,6 +41,8 @@ extern const char* UsedTerminal;
 extern const char* UsedShell;
 extern const char* UsedFileManager;
 extern const char* UsedBrowser;
+extern const char* UsedImageViewer;
+extern const char* UsedVideoPlayer;
 extern const char* UsedSearchEngine;
 extern const char* ImageEditorPath;
 extern const char* FeaturePath;
@@ -75,6 +77,8 @@ extern const size_t ALIAS_ENTRY_COUNT;
 
 #define MAX_FILE_LINES 10000
 #define MAX_FILE_LINE_LENGTH 1024
+
+void Config_ResolveDefaultApps(void);
 
 
 #define ARRAY_LEN(a) (sizeof(a) / sizeof((a)[0]))
