@@ -68,10 +68,10 @@ bool Platform_GetAllFilesFromDir(const char* dir_path, char** list_of_allowed_ex
             if (allowed) {
                 if (list_of_files->count >= list_of_files->capacity) {
                     list_of_files->capacity = list_of_files->capacity == 0 ? 10 : list_of_files->capacity * 2;
-                    list_of_files->items = realloc(list_of_files->items, list_of_files->capacity * sizeof(FileItem));
+                    list_of_files->files = realloc(list_of_files->files, list_of_files->capacity * sizeof(FileItem));
                 }
 
-                FileItem* item = &list_of_files->items[list_of_files->count];
+                FileItem* item = &list_of_files->files[list_of_files->count];
                 strncpy(item->path, full_path, sizeof(item->path) - 1);
                 item->path[sizeof(item->path) - 1] = '\0';
 

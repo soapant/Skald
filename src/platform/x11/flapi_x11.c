@@ -103,17 +103,17 @@ bool Platform_GetAllFilesFromDir(const char* dir_path, char** list_of_allowed_ex
                 if (list_of_files->count >= list_of_files->capacity) {
                     size_t new_capacity = list_of_files->capacity == 0 ? 10 : list_of_files->capacity * 2;
 
-                    FileItem* new_items = realloc(list_of_files->items, new_capacity * sizeof(FileItem));
+                    FileItem* new_items = realloc(list_of_files->files, new_capacity * sizeof(FileItem));
                     if (!new_items) {
                         closedir(dir);
                         PROFILE_END_VAR(timer, "flapi_x11:Platform_GetAllFilesFromDir");
                         return false;
                     }
-                    list_of_files->items    = new_items;
+                    list_of_files->files    = new_items;
                     list_of_files->capacity = new_capacity;
                 }
 
-                FileItem* item = &list_of_files->items[list_of_files->count];
+                FileItem* item = &list_of_files->files[list_of_files->count];
 
                 size_t plen = strlen(full_path);
                 if (plen >= sizeof(item->path)) plen = sizeof(item->path) - 1;

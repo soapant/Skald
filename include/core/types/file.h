@@ -32,7 +32,7 @@ typedef struct {
 } FileItem;
 
 typedef struct {
-    FileItem* items;
+    FileItem* files;
     size_t count;
     size_t capacity;
 } ListOfFiles;
