@@ -15,18 +15,68 @@ const char* default_apps_x11_run(const char* command, int slot) {
     }
     return g_default_apps_x11[slot];
 }
-const char* get_default_terminal_x11(int slot) {
-    char* list_of_common_terminals[] = {
+
+const char* find_terminal_in_desktop_files(const char* const* names, size_t count) {
+    ListOfFiles files = {0};
+    Platform_GetAllFilesFromDir("/usr/share/applications", NULL, &files, NULL);
+
+    const char* found = NULL;
+
+    for (size_t j = 0; j < count && !found; j++) {
+        const char* term = names[j];
+        for (int i = 0; i < files.count; i++) {
+            const char* desktop_file = files.files[i].name;
+
+            if (Platform_StringContainsCaseInsensitive(desktop_file, term)) {
+                found = term;
+                break;
+            }
+        }
+    }
+
+    return found;
+}
+
+
+const char* get_default_terminal_wayland(void) {
+    const char* const candidates[] = {
         "ptyxis",
         "gnome-console",
-        "kgx",
+        "foot",
         "gnome-terminal",
         "konsole",
+        "alacritty",
+        "kitty",
+        "wezterm",
         "xfce4-terminal",
         "mate-terminal",
         "lxterminal",
         "qterminal",
         "yakuake",
+    };
+    size_t n = sizeof(candidates) / sizeof(candidates[0]);
+    const char* out;
+    if (!out) {
+      out = find_terminal_in_desktop_files(candidates, n);
+    }
+    return out ? out : NULL;
+}
+
+
+const char* get_default_terminal_x11(void) {
+    const char* const candidates[] = {
+        "gnome-terminal",
+        "konsole",
+        "alacritty",
+        "kitty",
+        "wezterm",
+        "xfce4-terminal",
+        "mate-terminal",
+        "lxterminal",
+        "qterminal",
+        "yakuake",
+        "terminator",
+        "tilix",
         "st",
         "stterm",
         "sakura",
@@ -34,35 +84,41 @@ const char* get_default_terminal_x11(int slot) {
         "urxvt",
         "rxvt-unicode",
         "xterm",
-        "alacritty",
-        "kitty",
-        "foot",
-        "wezterm",
-        "terminator",
-        "tilix",
         "x-terminal-emulator",
     };
+    size_t n = sizeof(candidates) / sizeof(candidates[0]);
+    const char* out;
+    out = Platform_RunTerminalCommand("gsettings get org.gnome.desktop.default-applications.terminal exec",false);
+    // Remove quotes from the output temporary
+    if (!out) {
+      out = find_terminal_in_desktop_files(candidates, n);
+    }
+    return out ? out : NULL;
+}
+
+
+const char* get_default_terminal(int slot) {
     g_default_apps_x11[slot][0] = '\0';
-    char* out = "";
-    out = getenv("TERMINAL") ? getenv("TERMINAL") : NULL;
 
-    if (!out) {
-      out = Platform_RunTerminalCommand("gsettings get org.gnome.desktop.default-applications.terminal exec",false);
-      // Remove quotes from the output temporary
-    }
-    if (!out) {
+    const char* term = NULL;
 
+    const char* env = getenv("TERMINAL");
+    if (env && env[0]) {
+        term = env;
     }
 
-    if (out) {
-        sscanf(out, "%255s", g_default_apps_x11[slot]);
-        free(out);
-        return g_default_apps_x11[slot];
-    }else {
-      //temporary
-      printf("Could not find default terminal");
+    if (!term) {
+        bool is_wayland = getenv("WAYLAND_DISPLAY") != NULL;
+        term = is_wayland ? get_default_terminal_wayland()
+                          : get_default_terminal_x11();
+    }
+
+    if (!term) {
       exit(1);
     }
+
+    snprintf(g_default_apps_x11[slot], sizeof(g_default_apps_x11[slot]), "%s", term);
+    return g_default_apps_x11[slot];
 }
 
 const char* Platform_GetDefaultApp(DefaultAppKind kind) {
@@ -70,7 +126,7 @@ const char* Platform_GetDefaultApp(DefaultAppKind kind) {
     if (kind == DEFAULT_BROWSER) return default_apps_x11_run("xdg-settings get default-web-browser", DEFAULT_BROWSER);
     if (kind == DEFAULT_IMAGE_VIEWER) return default_apps_x11_run("xdg-mime query default image/png", DEFAULT_IMAGE_VIEWER);
     if (kind == DEFAULT_VIDEO_PLAYER) return default_apps_x11_run("xdg-mime query default video/mp4", DEFAULT_VIDEO_PLAYER);
-    if (kind == DEFAULT_TERMINAL )    return default_apps_x11_run("xdg-mime query default video/mp4", DEFAULT_TERMINAL);
+    if (kind == DEFAULT_TERMINAL )    return get_default_terminal(DEFAULT_TERMINAL);
     g_default_apps_x11[kind][0] = '\0';
     return g_default_apps_x11[kind];
 }
