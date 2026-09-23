@@ -4,16 +4,16 @@
 #include <stdlib.h>
 #include <string.h>
 
-char g_default_apps_x11[DEFAULT_APP_COUNT][256];
+char default_apps_x11[DEFAULT_APP_COUNT][256];
 
 const char* default_apps_x11_run(const char* command, int slot) {
     char* out = Platform_RunTerminalCommand((char*)command, false);
-    g_default_apps_x11[slot][0] = '\0';
+    default_apps_x11[slot][0] = '\0';
     if (out) {
-        sscanf(out, "%255s", g_default_apps_x11[slot]);
+        sscanf(out, "%255s", default_apps_x11[slot]);
         free(out);
     }
-    return g_default_apps_x11[slot];
+    return default_apps_x11[slot];
 }
 
 const char* find_terminal_in_desktop_files(const char* const* names, size_t count) {
@@ -98,7 +98,7 @@ const char* get_default_terminal_x11(void) {
 
 
 const char* get_default_terminal(int slot) {
-    g_default_apps_x11[slot][0] = '\0';
+    default_apps_x11[slot][0] = '\0';
 
     const char* term = NULL;
 
@@ -117,8 +117,8 @@ const char* get_default_terminal(int slot) {
       exit(1);
     }
 
-    snprintf(g_default_apps_x11[slot], sizeof(g_default_apps_x11[slot]), "%s", term);
-    return g_default_apps_x11[slot];
+    snprintf(default_apps_x11[slot], sizeof(default_apps_x11[slot]), "%s", term);
+    return default_apps_x11[slot];
 }
 
 const char* Platform_GetDefaultApp(DefaultAppKind kind) {
@@ -127,8 +127,8 @@ const char* Platform_GetDefaultApp(DefaultAppKind kind) {
     if (kind == DEFAULT_IMAGE_VIEWER) return default_apps_x11_run("xdg-mime query default image/png", DEFAULT_IMAGE_VIEWER);
     if (kind == DEFAULT_VIDEO_PLAYER) return default_apps_x11_run("xdg-mime query default video/mp4", DEFAULT_VIDEO_PLAYER);
     if (kind == DEFAULT_TERMINAL )    return get_default_terminal(DEFAULT_TERMINAL);
-    g_default_apps_x11[kind][0] = '\0';
-    return g_default_apps_x11[kind];
+    default_apps_x11[kind][0] = '\0';
+    return default_apps_x11[kind];
 }
 
 int default_apps_x11_exec_token(const char* line, char* out, size_t cap) {
@@ -151,8 +151,8 @@ bool Platform_ResolveDesktopExec(const char* desktop_id, char* out, size_t out_s
     if (strchr(desktop_id, '/')) return false;
     out[0] = '\0';
     char dirs[1024];
-    const char* data_home = getenv("XDG_DATA_HOME");
-    const char* data_dirs = getenv("XDG_DATA_DIRS");
+    const char* data_home = getenv("XDDATA_HOME");
+    const char* data_dirs = getenv("XDDATA_DIRS");
     if (!data_dirs || !data_dirs[0]) data_dirs = "/usr/local/share:/usr/share";
     if (data_home && data_home[0]) snprintf(dirs, sizeof(dirs), "%s:%s", data_home, data_dirs);
     else snprintf(dirs, sizeof(dirs), "%s/.local/share:%s", getenv("HOME") ? getenv("HOME") : "/root", data_dirs);

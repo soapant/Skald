@@ -3,25 +3,25 @@
 #include <string.h>
 #include "core/platform.h"
 
-char g_default_apps_win32[DEFAULT_APP_COUNT][256];
+char default_apps_win32[DEFAULT_APP_COUNT][256];
 
 const char* default_apps_win32_read_sz(const char* subkey,
                                               const char* value_name,
                                               int slot) {
-    g_default_apps_win32[slot][0] = '\0';
+    default_apps_win32[slot][0] = '\0';
 
-    DWORD size = (DWORD)sizeof(g_default_apps_win32[slot]);
+    DWORD size = (DWORD)sizeof(default_apps_win32[slot]);
     LONG rc = RegGetValueA(HKEY_CURRENT_USER,
                            subkey,
                            value_name,
                            RRF_RT_REG_SZ,
                            NULL,
-                           g_default_apps_win32[slot],
+                           default_apps_win32[slot],
                            &size);
     if (rc != ERROR_SUCCESS) {
-        g_default_apps_win32[slot][0] = '\0';
+        default_apps_win32[slot][0] = '\0';
     }
-    return g_default_apps_win32[slot];
+    return default_apps_win32[slot];
 }
 
 const char* terminal_name_from_guid(const char* console_guid,const char* terminal_guid) {
@@ -46,7 +46,7 @@ const char* default_apps_win32_progid(const char* subkey, int slot) {
 
 const char* Platform_GetDefaultTerminal(void) {
     int slot = DEFAULT_TERMINAL;
-    g_default_apps_win32[slot][0] = '\0';
+    default_apps_win32[slot][0] = '\0';
 
     HKEY hKey = NULL;
     if (RegOpenKeyExA(HKEY_CURRENT_USER,
@@ -54,10 +54,10 @@ const char* Platform_GetDefaultTerminal(void) {
                       0,
                       KEY_READ,
                       &hKey) != ERROR_SUCCESS) {
-        snprintf(g_default_apps_win32[slot],
-                 sizeof(g_default_apps_win32[slot]),
+        snprintf(default_apps_win32[slot],
+                 sizeof(default_apps_win32[slot]),
                  "Let Windows Decide");
-        return g_default_apps_win32[slot];
+        return default_apps_win32[slot];
     }
 
     char console_guid[256]  = {0};
@@ -76,10 +76,10 @@ const char* Platform_GetDefaultTerminal(void) {
     RegCloseKey(hKey);
 
     const char* name = terminal_name_from_guid(console_guid, terminal_guid);
-    snprintf(g_default_apps_win32[slot],
-             sizeof(g_default_apps_win32[slot]),
+    snprintf(default_apps_win32[slot],
+             sizeof(default_apps_win32[slot]),
              "%s", name);
-    return g_default_apps_win32[slot];
+    return default_apps_win32[slot];
 }
 
 const char* Platform_GetDefaultApp(DefaultAppKind kind) {
@@ -108,8 +108,8 @@ const char* Platform_GetDefaultApp(DefaultAppKind kind) {
             return Platform_GetDefaultTerminal();
 
         default:
-            g_default_apps_win32[kind][0] = '\0';
-            return g_default_apps_win32[kind];
+            default_apps_win32[kind][0] = '\0';
+            return default_apps_win32[kind];
     }
 }
 
