@@ -211,22 +211,41 @@ int WindowManager_RunLinux(WindowManager* wm) {
             else log_warn("remap uinput force failed, fallback XTest will be used");
         }
         if (g_x11_uinput_fd >= 0) {
+            x11_clear_suppress();
+            remap_reset();
+            Platform_InputState_Clear();
+            x11_sync_held_from_phys();
             for (int i=0;i<g_x11_keyboard_count;i++) {
                 if (!g_x11_device_grabbed[i]) {
-                    unsigned long held[(KEY_MAX + 8) / 8] = {0};
-                    bool have_held = ioctl(g_x11_keyboards[i].fd, EVIOCGKEY(sizeof(held)), held) >= 0;
+                    struct input_event drain_ev;
+                    while (read(g_x11_keyboards[i].fd, &drain_ev, sizeof(drain_ev)) > 0) {}
                     if (ioctl(g_x11_keyboards[i].fd, EVIOCGRAB, 1)==0) {
                         g_x11_device_grabbed[i]=true;
-#if __has_include(<X11/extensions/XTest.h>)
-                        if (have_held && dpy) {
+                        unsigned long held[(KEY_MAX + 8) / 8] = {0};
+                        bool have_held = ioctl(g_x11_keyboards[i].fd, EVIOCGKEY(sizeof(held)), held) >= 0;
+                        if (have_held) {
                             for (int k = 0; k <= KEY_MAX; k++) {
                                 if (held[k / (8 * (int)sizeof(unsigned long))] & (1UL << (k % (8 * (int)sizeof(unsigned long))))) {
-                                    XTestFakeKeyEvent(dpy, (unsigned int)(k + 8), False, CurrentTime);
+                                    struct input_event rel_ev;
+                                    memset(&rel_ev, 0, sizeof(rel_ev));
+                                    gettimeofday(&rel_ev.time, NULL);
+                                    rel_ev.type = EV_KEY;
+                                    rel_ev.code = k;
+                                    rel_ev.value = 0;
+                                    x11_uinput_emit(&rel_ev);
                                 }
                             }
-                            XFlush(dpy);
-                        }
+#if __has_include(<X11/extensions/XTest.h>)
+                            if (dpy) {
+                                for (int k = 0; k <= KEY_MAX; k++) {
+                                    if (held[k / (8 * (int)sizeof(unsigned long))] & (1UL << (k % (8 * (int)sizeof(unsigned long))))) {
+                                        XTestFakeKeyEvent(dpy, (unsigned int)(k + 8), False, CurrentTime);
+                                    }
+                                }
+                                XFlush(dpy);
+                            }
 #endif
+                        }
                     }
                 }
             }
