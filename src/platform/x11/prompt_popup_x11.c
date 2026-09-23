@@ -256,6 +256,10 @@ bool Platform_PromptPopupOnKey(Popup* self, const PopupKeyEvent* key) {
         return true;
       }
     }
+    if (wParam == HELP_SCREEN_KEY && ctrl_pressed) {
+      if (FlintContext_Get()->prompt_callbacks.help) FlintContext_Get()->prompt_callbacks.help();
+      return true;
+    }
 
     if (wParam == COMMAND_MODE_KEY && shift_pressed) {
         WindowManager* wm = WindowManager_Get();
