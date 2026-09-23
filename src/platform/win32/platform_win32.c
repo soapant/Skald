@@ -921,6 +921,68 @@ static BOOL CALLBACK Win32_MonEnum(HMONITOR hMon, HDC hdc, LPRECT rc, LPARAM lp)
     return TRUE;
 }
 
+typedef struct {
+    int fcx;
+    int fcy;
+    HWND best;
+    int best_gap;
+    int best_vdist;
+} Win32_FocusSearch;
+
+static BOOL CALLBACK Win32_FocusEnumLeft(HWND hwnd, LPARAM lp) {
+    Win32_FocusSearch* s = (Win32_FocusSearch*)lp;
+    if (!s) return TRUE;
+    if (hwnd == GetForegroundWindow()) return TRUE;
+    if (!IsWindowVisible(hwnd)) return TRUE;
+    if (IsIconic(hwnd)) return TRUE;
+    char title[256];
+    if (GetWindowTextA(hwnd, title, sizeof(title)) == 0) return TRUE;
+    if (title[0] == '\0') return TRUE;
+    RECT wr;
+    if (!GetWindowRect(hwnd, &wr)) return TRUE;
+    int w = wr.right - wr.left;
+    int h = wr.bottom - wr.top;
+    if (w <= 0 || h <= 0) return TRUE;
+    int cx = wr.left + w / 2;
+    int cy = wr.top + h / 2;
+    if (cx >= s->fcx) return TRUE;
+    int gap = s->fcx - cx;
+    int vdist = cy >= s->fcy ? cy - s->fcy : s->fcy - cy;
+    if (gap < s->best_gap || (gap == s->best_gap && vdist < s->best_vdist)) {
+        s->best_gap = gap;
+        s->best_vdist = vdist;
+        s->best = hwnd;
+    }
+    return TRUE;
+}
+
+static BOOL CALLBACK Win32_FocusEnumRight(HWND hwnd, LPARAM lp) {
+    Win32_FocusSearch* s = (Win32_FocusSearch*)lp;
+    if (!s) return TRUE;
+    if (hwnd == GetForegroundWindow()) return TRUE;
+    if (!IsWindowVisible(hwnd)) return TRUE;
+    if (IsIconic(hwnd)) return TRUE;
+    char title[256];
+    if (GetWindowTextA(hwnd, title, sizeof(title)) == 0) return TRUE;
+    if (title[0] == '\0') return TRUE;
+    RECT wr;
+    if (!GetWindowRect(hwnd, &wr)) return TRUE;
+    int w = wr.right - wr.left;
+    int h = wr.bottom - wr.top;
+    if (w <= 0 || h <= 0) return TRUE;
+    int cx = wr.left + w / 2;
+    int cy = wr.top + h / 2;
+    if (cx <= s->fcx) return TRUE;
+    int gap = cx - s->fcx;
+    int vdist = cy >= s->fcy ? cy - s->fcy : s->fcy - cy;
+    if (gap < s->best_gap || (gap == s->best_gap && vdist < s->best_vdist)) {
+        s->best_gap = gap;
+        s->best_vdist = vdist;
+        s->best = hwnd;
+    }
+    return TRUE;
+}
+
 bool Platform_MoveActiveWindowToMonitor(bool right) {
     HWND hwnd = Win32_ForegroundTarget();
     if (!hwnd) return false;
@@ -962,6 +1024,52 @@ bool Platform_MoveActiveWindowToMonitor(bool right) {
     if (nx + w > list.rects[dst].right) nx = list.rects[dst].right - w;
     if (ny + h > list.rects[dst].bottom) ny = list.rects[dst].bottom - h;
     SetWindowPos(hwnd, HWND_TOP, nx, ny, w, h, SWP_SHOWWINDOW);
+    return true;
+}
+
+bool Platform_MoveActiveWindowLeft(void) {
+    return Platform_MoveActiveWindowToMonitor(false);
+}
+
+bool Platform_MoveActiveWindowRight(void) {
+    return Platform_MoveActiveWindowToMonitor(true);
+}
+
+bool Platform_FocusWindowLeft(void) {
+    HWND fg = Win32_ForegroundTarget();
+    if (!fg) fg = GetForegroundWindow();
+    if (!fg) return false;
+    RECT fr;
+    if (!GetWindowRect(fg, &fr)) return false;
+    Win32_FocusSearch s;
+    s.fcx = fr.left + (fr.right - fr.left) / 2;
+    s.fcy = fr.top + (fr.bottom - fr.top) / 2;
+    s.best = NULL;
+    s.best_gap = 1 << 30;
+    s.best_vdist = 1 << 30;
+    EnumWindows(Win32_FocusEnumLeft, (LPARAM)&s);
+    if (!s.best) return false;
+    if (IsIconic(s.best)) ShowWindow(s.best, SW_RESTORE);
+    SetForegroundWindow(s.best);
+    return true;
+}
+
+bool Platform_FocusWindowRight(void) {
+    HWND fg = Win32_ForegroundTarget();
+    if (!fg) fg = GetForegroundWindow();
+    if (!fg) return false;
+    RECT fr;
+    if (!GetWindowRect(fg, &fr)) return false;
+    Win32_FocusSearch s;
+    s.fcx = fr.left + (fr.right - fr.left) / 2;
+    s.fcy = fr.top + (fr.bottom - fr.top) / 2;
+    s.best = NULL;
+    s.best_gap = 1 << 30;
+    s.best_vdist = 1 << 30;
+    EnumWindows(Win32_FocusEnumRight, (LPARAM)&s);
+    if (!s.best) return false;
+    if (IsIconic(s.best)) ShowWindow(s.best, SW_RESTORE);
+    SetForegroundWindow(s.best);
     return true;
 }
 
