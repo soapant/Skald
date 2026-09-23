@@ -185,7 +185,6 @@ bool Platform_EditPopupOnKey(Popup* self, const PopupKeyEvent* key) {
     bool alt_pressed = key->alt;
     (void)shift_pressed;
     (void)alt_pressed;
-    if (should_swallow_pending(wParam, (ctrl_pressed?HOTKEY_MOD_CTRL:0)|(shift_pressed?HOTKEY_MOD_SHIFT:0)|(alt_pressed?HOTKEY_MOD_ALT:0))) { PROFILE_END_VAR(timer, "edit_popup_x11:Platform_EditPopupOnKey"); return true; }
     if (TryVimMotion(wParam, ctrl_pressed, shift_pressed, alt_pressed)) { PROFILE_END_VAR(timer, "edit_popup_x11:Platform_EditPopupOnKey"); return true; }
 
     size_t cap = ed->text_capacity > 0 ? (size_t)ed->text_capacity : 1024;
@@ -272,6 +271,7 @@ bool Platform_EditPopupOnKey(Popup* self, const PopupKeyEvent* key) {
 
     if (IsInsertMode() && key->text_len > 0) {
         bool swallow = false;
+        bool trigger_press = false;
         if (pending_hotkey_vk != 0 && key->text_len == 1) {
             struct timeval tv; gettimeofday(&tv, NULL);
             long now = tv.tv_sec * 1000 + tv.tv_usec / 1000;
@@ -280,12 +280,12 @@ bool Platform_EditPopupOnKey(Popup* self, const PopupKeyEvent* key) {
                 int vkc = 0;
                 if (c >= 'a' && c <= 'z') vkc = c - 'a' + 'A';
                 else if (c >= 'A' && c <= 'Z') vkc = c;
-                if (vkc != 0 && vkc == pending_hotkey_vk) swallow = true;
+                if (vkc != 0 && vkc == pending_hotkey_vk) trigger_press = true;
             }
             pending_hotkey_vk = 0;
             pending_hotkey_mod = 0;
         }
-        if (!swallow && (key->ctrl || key->alt)) swallow = true;
+        if (!trigger_press && !swallow && (key->ctrl || key->alt)) swallow = true;
         if (!swallow) {
             bool is_printable = true;
             for (int i = 0; i < key->text_len; i++) { unsigned char c = (unsigned char)key->text[i]; if (c < 0x20 || c == 0x7F) { is_printable = false; break; } }
