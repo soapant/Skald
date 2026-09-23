@@ -213,19 +213,15 @@ char* Platform_RunCommandAndGetOutput(char* command) {
 
 bool Platform_LaunchFileManagerAtPath(char* path,char* args) {
     if (!path || !path[0]) { log_error("path is NULL args='%s'", args ? args : "null"); return false; }
-    char buffer[100];
-    snprintf(buffer,sizeof(buffer),"%s.exe",UsedFileManager);
-    HINSTANCE res = ShellExecuteA(NULL, "open", buffer, path ? path : "", NULL, SW_SHOWNORMAL);
+    //temporarily not being used and just doiung explorere on widnwos no diea if this is the right way to do it but it works for now
+    HINSTANCE res = ShellExecuteA(NULL, "open", "explorer.exe", path ? path : "", NULL, SW_SHOWNORMAL);
     if ((intptr_t)res <= 32) { log_error("ShellExecute failed for filemanager '%s' path='%s' err=%ld", buffer, path, (long)(intptr_t)res); return false; }
-    //temporarily not being used
     (void)args;
 log_info("Platform_LaunchFileManagerAtPath path='%s' args='%s'", path ? path : "", args ? args : "");;
     return true;
 }
 
 char* Platform_QueryZoxidePath(const char* query) {
-    DWORD start_time = GetTickCount();
-
     char path[1024];
     path[0] = '\0';
 
@@ -255,7 +251,6 @@ return NULL;
 
     PROCESS_INFORMATION pi = {0};
 
-    DWORD proc_start = GetTickCount();
     if (CreateProcessA(NULL, command, NULL, NULL, TRUE, CREATE_NO_WINDOW, NULL, NULL, &si, &pi)) {
         CloseHandle(hWritePipe);
 
