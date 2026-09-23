@@ -182,8 +182,7 @@ bool FeatureLoader_Init(void) {
     FL_LOCK();
     g_feature_count = 0;
     FL_UNLOCK();
-    bool has_build = FeatureLoader_LoadAllFromDir("build/features");
-    FeatureLoader_LoadAllFromDir("features");
+    FeatureLoader_LoadAllFromDir("build/features");
     FL_LOCK();
     int cnt = g_feature_count;
     FL_UNLOCK();
