@@ -65,7 +65,7 @@ const char* get_default_terminal_wayland(void) {
         "yakuake",
     };
     size_t n = sizeof(candidates) / sizeof(candidates[0]);
-    const char* out;
+    const char* out = NULL;
     if (!out) {
       out = find_terminal_in_desktop_files(candidates, n);
     }
@@ -118,13 +118,13 @@ const char* get_default_terminal(int slot) {
     }
 
     if (!term) {
-        bool is_wayland = getenv("WAYLAND_DISPLAY") != NULL;
+        bool is_wayland = getenv("WAYLAND_DISPLAY") != NULL || getenv("SWAYSOCK") != NULL || getenv("I3SOCK") != NULL;
         term = is_wayland ? get_default_terminal_wayland()
                           : get_default_terminal_x11();
     }
 
     if (!term) {
-      exit(1);
+      return NULL;
     }
 
     snprintf(default_apps_x11[slot], sizeof(default_apps_x11[slot]), "%s", term);
@@ -171,8 +171,8 @@ bool Platform_ResolveDesktopExec(const char* desktop_id, char* out, size_t out_s
     if (strchr(desktop_id, '/')) return false;
     out[0] = '\0';
     char dirs[1024];
-    const char* data_home = getenv("XDDATA_HOME");
-    const char* data_dirs = getenv("XDDATA_DIRS");
+    const char* data_home = getenv("XDG_DATA_HOME");
+    const char* data_dirs = getenv("XDG_DATA_DIRS");
     if (!data_dirs || !data_dirs[0]) data_dirs = "/usr/local/share:/usr/share";
     if (data_home && data_home[0]) snprintf(dirs, sizeof(dirs), "%s:%s", data_home, data_dirs);
     else snprintf(dirs, sizeof(dirs), "%s/.local/share:%s", getenv("HOME") ? getenv("HOME") : "/root", data_dirs);
