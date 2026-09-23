@@ -19,6 +19,7 @@
 #include <ctype.h>
 
 static int _x11_err = 0;
+static Window _x11_last_min = None;
 static int _x11_err_handler(Display *dpy, XErrorEvent *ev) {
   (void)dpy; (void)ev; _x11_err = 1; return 0; 
 }
@@ -330,10 +331,23 @@ bool minimize_active_window_x11(void) {
     Display* display = get_display();
     if (!display) return false;
     Window focus = x11_focused_window(display);
-    if (focus == None) return false;
+    if (focus != None) {
+        _x11_err = 0;
+        XErrorHandler old = XSetErrorHandler(_x11_err_handler);
+        XIconifyWindow(display, focus, DefaultScreen(display));
+        XSync(display, False);
+        XSetErrorHandler(old);
+        if (_x11_err == 0) _x11_last_min = focus;
+        return _x11_err == 0;
+    }
+    if (_x11_last_min == None) return false;
+    Window target = _x11_last_min;
+    _x11_last_min = None;
     _x11_err = 0;
     XErrorHandler old = XSetErrorHandler(_x11_err_handler);
-    XIconifyWindow(display, focus, DefaultScreen(display));
+    XMapWindow(display, target);
+    XRaiseWindow(display, target);
+    XSetInputFocus(display, target, RevertToParent, CurrentTime);
     XSync(display, False);
     XSetErrorHandler(old);
     return _x11_err == 0;

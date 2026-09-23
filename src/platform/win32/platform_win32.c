@@ -919,6 +919,7 @@ bool Platform_CloseActiveWindow(void) {
 }
 
 static BOOL g_win32_fs_active = FALSE;
+static HWND g_win32_last_min = NULL;
 static RECT g_win32_fs_rect;
 static LONG g_win32_fs_style;
 static LONG g_win32_fs_exstyle;
@@ -1011,9 +1012,25 @@ bool Platform_MoveActiveWindowToMonitor(bool right) {
 
 bool Platform_MinimizeActiveWindow(void) {
     HWND hwnd = Win32_ForegroundTarget();
-    if (!hwnd) return false;
-    ShowWindow(hwnd, SW_MINIMIZE);
-    return true;
+    if (hwnd && !IsIconic(hwnd)) {
+        ShowWindow(hwnd, SW_MINIMIZE);
+        g_win32_last_min = hwnd;
+        return true;
+    }
+    if (hwnd && IsIconic(hwnd)) {
+        ShowWindow(hwnd, SW_RESTORE);
+        SetForegroundWindow(hwnd);
+        if (g_win32_last_min == hwnd) g_win32_last_min = NULL;
+        return true;
+    }
+    if (g_win32_last_min && IsWindow(g_win32_last_min) && IsIconic(g_win32_last_min)) {
+        ShowWindow(g_win32_last_min, SW_RESTORE);
+        SetForegroundWindow(g_win32_last_min);
+        g_win32_last_min = NULL;
+        return true;
+    }
+    g_win32_last_min = NULL;
+    return false;
 }
 
 char* Platform_GetActiveWindowTitle(void) {

@@ -164,5 +164,9 @@ bool minimize_active_window_hyprland(void) {
   char* out = Platform_RunTerminalCommand("hyprctl dispatch movetoworkspacesilent special", false);
   bool ok = succeded_hypr(out);
   free(out);
+  if (ok) return true;
+  out = Platform_RunTerminalCommand("hyprctl dispatch togglespecialworkspace", false);
+  ok = succeded_hypr(out);
+  free(out);
   return ok;
 }
