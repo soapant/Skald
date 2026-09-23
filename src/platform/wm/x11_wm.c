@@ -115,6 +115,7 @@ Fl_WindowList get_window_names_x11() {
    Fl_WindowList list = { .windows = NULL, .count = 0 };
    char buffer[256]; 
    if (output == NULL || strlen(output) == 0) { log_error("output is NULL or empty"); return list; }
+   if (strstr(output, "command not found") || strstr(output, ": not found")) { log_error("output is shell error"); free(output); return list; }
    StringList lines = String_Split(output, "\n");
    for (size_t i = 0; i < lines.count; i++) {
        char hex_id[32];
@@ -142,6 +143,7 @@ Fl_WindowList get_window_titles_x11() {
    char* output = Platform_RunTerminalCommand("wmctrl -l", false);
    Fl_WindowList list = { .windows = NULL, .count = 0 };
    if (output == NULL || strlen(output) == 0) { log_error("output is NULL or empty"); return list; }
+   if (strstr(output, "command not found") || strstr(output, ": not found")) { log_error("output is shell error"); free(output); return list; }
    StringList lines = String_Split(output, "\n");
    for (size_t i = 0; i < lines.count; i++) {
        char *line = lines.items[i];
