@@ -1,9 +1,5 @@
 #include "config.h"
 
-#include <stdlib.h>
-#include <string.h>
-#include "core/platform.h"
-
 bool Tray = true;
 bool EnableVimMode = true;
 bool RememberLastIndex = true;
@@ -20,16 +16,16 @@ bool EnableShaders = true;
 int ShaderPreset = 1;
 float ShaderIntensity = 0.55f;
 int TimeBetweenHotReload = 2;
+float WindowOpacity = 235.0;
 
 char* EditPopUpPos = "middle";
 int EditPopUpWidthMin = 400;
 int PageUpDownLen = 6;
-float WindowOpacity = 235.0;
 
 const char* UsedFont =  "0xProto Nerd Font";
 int FontSize = 20;
 const int IconSize = 32;
-const int MaxFeatures = 130;
+const int MaxFeatures = 1000;
 const int VimFontSize = 18;
 const int PaddingForScrolling = 3;
 const char* UsedTerminal = "";
@@ -38,7 +34,6 @@ const char* UsedBrowser = "";
 const char* UsedImageViewer = "";
 const char* UsedVideoPlayer = "";
 const char* UsedSearchEngine = "google";
-const char* ImageEditorPath =  "{APPDATA}/Microsoft/Windows/Start Menu/Programs/Scoop Apps/PicView.lnk";
 const char* FeaturePath = "src/features";
 const char* IconPath = "{MISC}/switch_window.ico";
 const char* ControlHotkey = "Alt+Space";
@@ -68,27 +63,3 @@ const AliasEntry Aliases[] = {
   {"brw","Brawlhalla","AppLauncher"},
 };
 const size_t ALIAS_ENTRY_COUNT = ARRAY_LEN(Aliases);
-
-static void config_resolve_one(const char** var, DefaultAppKind kind) {
-    if (!var || (*var && (*var)[0])) return;
-    const char* id = Platform_GetDefaultApp(kind);
-    if (!id || !id[0]) return;
-    size_t n = strlen(id);
-    if (n > 8 && strcmp(id + n - 8, ".desktop") == 0) {
-        char exe[512];
-        if (!Platform_ResolveDesktopExec(id, exe, sizeof(exe)) || !exe[0]) return;
-        char* copy = strdup(exe);
-        if (copy) *var = copy;
-    } else {
-        char* copy = strdup(id);
-        if (copy) *var = copy;
-    }
-}
-
-void Config_ResolveDefaultApps(void) {
-    config_resolve_one(&UsedBrowser, DEFAULT_BROWSER);
-    config_resolve_one(&UsedTerminal, DEFAULT_TERMINAL);
-    config_resolve_one(&UsedShell, DEFAULT_SHELL);
-    config_resolve_one(&UsedImageViewer, DEFAULT_IMAGE_VIEWER);
-    config_resolve_one(&UsedVideoPlayer, DEFAULT_VIDEO_PLAYER);
-}
