@@ -202,6 +202,11 @@ static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent* key) {
         return false;
     }
 
+    if (wParam == HELP_SCREEN_KEY && ctrl_pressed) {
+      if (FlintContext_Get()->prompt_callbacks.help) FlintContext_Get()->prompt_callbacks.help();
+      return true;
+    }
+
     if (wParam == VK_DOWN) {
         if (ctrl_pressed) {
             char text[256];
