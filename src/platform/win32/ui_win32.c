@@ -706,45 +706,6 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
     }
     PROFILE_END_VAR(timer, "ProcessHotkey");
 
-    if (shift_down && !IsInsertMode() && WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) != NULL) {
-      if (WH_TO_HWND(FlintContext_Get()->window.g_hEditPopup) == NULL) {
-        if (pressed_vk == COMMAND_MODE_KEY && shift_down) {
-          SetMode(MODE_INSERT);
-          WindowManager* wm = WindowManager_Get();
-          if (wm) {
-            ListBoxInfo* lb = NULL;
-            HWND hPopup = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
-            if (hPopup && IsWindow(hPopup)) {
-              lb = (ListBoxInfo*)GetWindowLongPtrA(hPopup, GWLP_USERDATA);
-            }
-            Popup* popup = EditPopup_Create(wm, "", "Command Mode", 960, 540, 1000, 100, "LEFT", win_command_confirm, lb);
-            if (popup) WindowManager_PushPopup(wm, popup);
-          }
-          return 1;
-        }
-      }
-    }
-    if (WH_TO_HWND(FlintContext_Get()->window.g_hSearchPopup) == NULL && WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) != NULL && IsNormalMode()) {
-      if (pressed_vk == SEARCH_PROGRAM_KEY) {
-        Platform_SearchPopup();
-      }
-    }
-
-    PROFILE_START(timer2);
-    if (ctrl_down) {
-      if (pressed_vk == HELP_SCREEN_KEY) {
-        if (FlintContext_Get()->prompt_callbacks.help != NULL) {
-          FlintContext_Get()->prompt_callbacks.help();
-          PROFILE_END_VAR(timer2, "HelpScreen");
-        }
-      }
-    }
-    PROFILE_END_VAR(timer2, "HelpScreenCheck");
-
-    MotionAction vimAction = MOTION_NONE;
-    const char* matchedSequence = NULL;
-    int typedCount = 0;
-
     PROFILE_START(timer3);
 
     if (IsNormalMode()) {
@@ -759,20 +720,8 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
     }
     PROFILE_END_VAR(timer3, "NormalModeCheck");
 
-    PROFILE_START(timer4);
-    if (CheckVimMotion(pressed_vk, modifiers, &vimAction, &matchedSequence, &typedCount)) {
-      if (vimAction != MOTION_NONE) ExecuteMotion(vimAction, matchedSequence, typedCount);
-      if (FlintContext_Get()->prompt_callbacks.render != NULL) {
-        HWND hPopup = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
-        if (hPopup && IsWindow(hPopup)) InvalidateRect(hPopup, NULL, FALSE);
-      }
-      PROFILE_END_VAR(timer4, "ExecuteMotion");
-      return 1;
-    }
-    PROFILE_END_VAR(timer4, "CheckVimMotion");
-
-
   }
+
   }
   if (nCode == HC_ACTION && (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN)) {
     WindowManager* wmx = WindowManager_Get();
@@ -782,25 +731,6 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
     }
   }
   return CallNextHookEx(NULL, nCode, wParam, lParam);
-}
-
-void Platform_RunHotKeyMessageLoop() {
-  HINSTANCE hInstance = GetModuleHandle(NULL);
-
-  g_win32_hKeyboardHook = SetWindowsHookEx(WH_KEYBOARD_LL, LowLevelKeyboardProc, hInstance, 0);
-  if (!g_win32_hKeyboardHook) {
-    log_error("Failed to install keyboard hook! Error: %lu", GetLastError());
-    return;
-  }
-
-  MSG msg;
-  while (GetMessage(&msg, NULL, 0, 0) > 0) {
-    TranslateMessage(&msg);
-    DispatchMessage(&msg);
-  }
-
-  if (g_win32_hKeyboardHook) UnhookWindowsHookEx(g_win32_hKeyboardHook);
-log_info("Platform_RunHotKeyMessageLoop completed");
 }
 
 static ULONG_PTR g_gdiplusToken = 0;

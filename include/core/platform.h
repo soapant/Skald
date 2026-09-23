@@ -58,7 +58,6 @@ void Platform_DestroyFont(FontHandle font);
 void Platform_GetTextExtents(FontHandle font, const char* text, int maxWidth, int* outWidth, int* outHeight);
 void Platform_SettingsPopUp(void);
 int Platform_InitializeTrayIcon(void);
-void Platform_RunHotKeyMessageLoop(void);
 void Platform_InitUI(void);
 void Platform_InitDataFolder(void);
 bool Platform_GetFeaturePath(const char* feature, const char* name, char* out, size_t out_len);
