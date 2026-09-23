@@ -43,7 +43,6 @@ extern const char* UsedBrowser;
 extern const char* UsedImageViewer;
 extern const char* UsedVideoPlayer;
 extern const char* UsedSearchEngine;
-extern const char* ImageEditorPath;
 extern const char* FeaturePath;
 extern const char* IconPath;
 extern const char* ControlHotkey;
