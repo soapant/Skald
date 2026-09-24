@@ -312,16 +312,6 @@ bool fl_parse_desktop_file(const char* path, char* out_name, size_t n, bool* out
     return found;
 }
 
-
-bool fl_register_hotkey_impl(char* hotkey_string,void (*on_hotkey_trigger)(void),bool (*optional_condition_for_hotkey)(void),bool whitelist,const char** optional_blacklistedwindows) {
-    HotkeyBinding binding = convert_into_hotkey_binding(hotkey_string,
-                                                        on_hotkey_trigger,
-                                                        optional_condition_for_hotkey,
-                                                        optional_blacklistedwindows,
-                                                        whitelist);
-    return hotkey_register_internal(binding);
-}
-
 bool fl_register_remapping_impl(const char* src, const char* dst, bool whitelist, const char** windows) {
     if (!src || !dst) return false;
     return remap_register_internal(src, dst, whitelist, windows);
@@ -372,6 +362,7 @@ void fl_register_feature_with_icon(const char* name, void (*cb)(void), const cha
         } else {
             existing->icon[0] = '\0';
         }
+        hotkey_mark_feature_toggles(cb);
         return;
     }
     FeatureReg* reg = (FeatureReg*)calloc(1, sizeof(FeatureReg));
@@ -392,6 +383,22 @@ void fl_register_feature_with_icon(const char* name, void (*cb)(void), const cha
         g_feature_order_cap = new_cap;
     }
     g_feature_order[g_feature_order_count++] = reg;
+    hotkey_mark_feature_toggles(cb);
+}
+
+bool fl_register_hotkey_impl(char* hotkey_string,void (*on_hotkey_trigger)(void),bool (*optional_condition_for_hotkey)(void),bool whitelist,const char** optional_blacklistedwindows) {
+    HotkeyBinding binding = convert_into_hotkey_binding(hotkey_string,
+                                                        on_hotkey_trigger,
+                                                        optional_condition_for_hotkey,
+                                                        optional_blacklistedwindows,
+                                                        whitelist);
+    binding.is_feature_toggle = false;
+    if (on_hotkey_trigger && g_feature_map) {
+        for (int i = 0; i < g_feature_order_count; i++) {
+            if (g_feature_order[i] && g_feature_order[i]->cb == on_hotkey_trigger) { binding.is_feature_toggle = true; break; }
+        }
+    }
+    return hotkey_register_internal(binding);
 }
 
 int fl_get_feature_list(const char** out_names, void (**out_cbs)(void), int max) {
