@@ -1607,3 +1607,23 @@ bool Platform_ResolveDataPath(const char* name, char* out, size_t out_len) {
     return Platform_GetFeaturePath(safe, name, out, out_len);
 }
 
+bool Platform_WriteTempFile(const char* name, const void* data, size_t len, char* out_path, size_t out_len) {
+    if (!name || !name[0] || !out_path || out_len == 0) return false;
+    if (!data && len > 0) return false;
+    for (const char* p = name; *p; p++) {
+        if (*p == '/' || *p == '\\') return false;
+    }
+    if (strstr(name, "..")) return false;
+    const char* dir = getenv("TMPDIR");
+    if (!dir || !dir[0]) dir = "/tmp";
+    snprintf(out_path, out_len, "%s/%s", dir, name);
+    out_path[out_len - 1] = '\0';
+    FILE* f = fopen(out_path, "wb");
+    if (!f) return false;
+    bool ok = true;
+    if (len > 0 && fwrite(data, 1, len, f) != len) ok = false;
+    if (fclose(f) != 0) ok = false;
+    if (!ok) remove(out_path);
+    return ok;
+}
+

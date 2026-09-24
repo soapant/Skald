@@ -224,6 +224,10 @@ bool fl_write_to_file(const char* filepath, const char* lines[], int count) {
     return true;
 }
 
+bool fl_write_temp_file(const char* name, const void* data, size_t len, char* out_path, size_t out_len) {
+    return Platform_WriteTempFile(name, data, len, out_path, out_len);
+}
+
 char* fl_read_file_to_string(const char* path, size_t* out_len) {
     if (!path) return NULL;
     char expanded[MAX_PATH];
