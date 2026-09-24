@@ -62,6 +62,7 @@ void Platform_InitUI(void);
 void Platform_InitDataFolder(void);
 bool Platform_GetFeaturePath(const char* feature, const char* name, char* out, size_t out_len);
 bool Platform_ResolveDataPath(const char* name, char* out, size_t out_len);
+bool Platform_WriteTempFile(const char* name, const void* data, size_t len, char* out_path, size_t out_len);
 void Platform_ShutdownUI(void);
 char* Platform_RunTerminalCommand(char* command,bool open_terminal);
 char* Platform_RunCommandAndGetOutput(char* command);
