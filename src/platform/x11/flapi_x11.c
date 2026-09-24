@@ -1,5 +1,5 @@
 #include "core/flapi_platform.h"
-#include "wm/kwin_wm.h"
+#include "wm/wm.h"
 #include "deps/log.h"
 #include "core/platform.h"
 #include "platform/draw.h"
@@ -854,7 +854,7 @@ bool fl_clipboard_set_png_path_platform(const char* path) {
 }
 
 void fl_screenshot_copy_area_platform(void) {
-    if (kwin_is_active()) { screenshot_copy_area_kwin(); return; }
+    if (Wm_ScreenshotCopyArea()) return;
     char cmd[512];
     char* wd = Platform_GetWorkingDir();
     char path[MAX_PATH];
@@ -876,7 +876,7 @@ void fl_screenshot_copy_area_platform(void) {
 }
 
 void fl_screenshot_copy_platform(void) {
-    if (kwin_is_active()) { screenshot_copy_kwin(); return; }
+    if (Wm_ScreenshotCopy()) return;
     char cmd[512];
     char* wd = Platform_GetWorkingDir();
     char path[MAX_PATH];
@@ -897,7 +897,7 @@ void fl_screenshot_copy_platform(void) {
 }
 
 void fl_screenshot_save_area_platform(char* save_path) {
-    if (kwin_is_active()) { screenshot_save_area_kwin(save_path); return; }
+    if (Wm_ScreenshotSaveArea(save_path)) return;
     char cmd[512];
     char* wd = Platform_GetWorkingDir();
     
@@ -914,7 +914,7 @@ void fl_screenshot_save_area_platform(char* save_path) {
     free(Platform_RunCommandAndGetOutput(cmd));
 }
 void fl_screenshot_save_platform(char* save_path) {
-    if (kwin_is_active()) { screenshot_save_kwin(save_path); return; }
+    if (Wm_ScreenshotSave(save_path)) return;
     char cmd[512];
     char* wd = Platform_GetWorkingDir();
     
@@ -932,7 +932,8 @@ void fl_screenshot_save_platform(char* save_path) {
 }
 
 void fl_ocr_area_to_clipboard_platform() {
-    if (kwin_is_active()) { ocr_area_to_clipboard_kwin(); return; }
+    char* out = Wm_OcrArea();
+    if (!out) {
     char cmd[512];
     char* wd = Platform_GetWorkingDir();
 
@@ -948,7 +949,8 @@ void fl_ocr_area_to_clipboard_platform() {
                    "%s/external/scrot -s %s && tesseract %s stdout -l eng; rm -f %s",
                    wd, temp_path, temp_path, temp_path);
     }
-    char* out = Platform_RunCommandAndGetOutput(cmd);
+    out = Platform_RunCommandAndGetOutput(cmd);
+    }
     if (!out || !out[0]) {
         free(out);
         return;
