@@ -49,6 +49,8 @@ const SequenceBinding G_VIM_SEQUENCE_BINDINGS[] = {
     { "YY",  MOTION_YANK_LINE,                     HandleYankLine,                   false, MODE_NORMAL, VIM_SCOPE_ALL },
     { "DIW", MOTION_DELETE_WORD_NORMAL,            HandleDeleteWordNormal,           false, MODE_NORMAL, VIM_SCOPE_ALL },
     { "CIW", MOTION_DELETE_WORD_INSERT,            HandleDeleteWordInsert,           false, MODE_NORMAL, VIM_SCOPE_ALL },
+    { "DW",  MOTION_DELETE_WORD_NORMAL,            HandleDeleteWordNormal,           false, MODE_NORMAL, VIM_SCOPE_ALL },
+    { "CW",  MOTION_DELETE_WORD_INSERT,            HandleDeleteWordInsert,           false, MODE_NORMAL, VIM_SCOPE_ALL },
     { "CIQ", MOTION_DELETE_QUOTES_NORMAL,          HandleDeleteQuotesNormal,         false, MODE_NORMAL, VIM_SCOPE_ALL },
     { "DIQ", MOTION_DELETE_QUOTES_INSERT,          HandleDeleteQuotesInsert,         false, MODE_NORMAL, VIM_SCOPE_ALL },
     { "CIU", MOTION_DELETE_SINGLE_QUOTES_INSERT,   HandleDeleteSingleQuotesInsert,   false, MODE_NORMAL, VIM_SCOPE_ALL },
