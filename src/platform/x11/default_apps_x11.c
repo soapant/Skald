@@ -6,7 +6,7 @@
 #include <pwd.h>
 #include <unistd.h>
 
-const char* get_login_shell(void) {
+const char* x11_get_login_shell(void) {
     struct passwd* pw = getpwuid(getuid());
     if (!pw || !pw->pw_shell || !pw->pw_shell[0]) {
         return NULL;
@@ -16,7 +16,7 @@ const char* get_login_shell(void) {
 
 char default_apps_x11[DEFAULT_APP_COUNT][256];
 
-const char* default_apps_x11_run(const char* command, int slot) {
+const char* x11_default_apps_run(const char* command, int slot) {
     char* out = Platform_RunTerminalCommand((char*)command, false);
     default_apps_x11[slot][0] = '\0';
     if (out) {
@@ -26,7 +26,7 @@ const char* default_apps_x11_run(const char* command, int slot) {
     return default_apps_x11[slot];
 }
 
-const char* find_terminal_in_desktop_files(const char* const* names, size_t count) {
+const char* x11_find_terminal_in_desktop_files(const char* const* names, size_t count) {
     ListOfFiles files = {0};
     Platform_GetAllFilesFromDir("/usr/share/applications", NULL, &files, NULL);
 
@@ -48,7 +48,7 @@ const char* find_terminal_in_desktop_files(const char* const* names, size_t coun
 }
 
 
-const char* get_default_terminal_wayland(void) {
+const char* x11_get_default_terminal_wayland(void) {
     const char* const candidates[] = {
         "ptyxis",
         "gnome-console",
@@ -67,13 +67,13 @@ const char* get_default_terminal_wayland(void) {
     size_t n = sizeof(candidates) / sizeof(candidates[0]);
     const char* out = NULL;
     if (!out) {
-      out = find_terminal_in_desktop_files(candidates, n);
+      out = x11_find_terminal_in_desktop_files(candidates, n);
     }
     return out ? out : NULL;
 }
 
 
-const char* get_default_terminal_x11(void) {
+const char* x11_get_default_terminal_x11(void) {
     const char* const candidates[] = {
         "gnome-terminal",
         "konsole",
@@ -101,7 +101,7 @@ const char* get_default_terminal_x11(void) {
     out = Platform_RunTerminalCommand("gsettings get org.gnome.desktop.default-applications.terminal exec",false);
     // Remove quotes from the output temporary
     if (!out) {
-      out = find_terminal_in_desktop_files(candidates, n);
+      out = x11_find_terminal_in_desktop_files(candidates, n);
     }
     return out ? out : NULL;
 }
@@ -119,8 +119,8 @@ const char* get_default_terminal(int slot) {
 
     if (!term) {
         bool is_wayland = getenv("WAYLAND_DISPLAY") != NULL || getenv("SWAYSOCK") != NULL || getenv("I3SOCK") != NULL;
-        term = is_wayland ? get_default_terminal_wayland()
-                          : get_default_terminal_x11();
+        term = is_wayland ? x11_get_default_terminal_wayland()
+                          : x11_get_default_terminal_x11();
     }
 
     if (!term) {
@@ -131,7 +131,7 @@ const char* get_default_terminal(int slot) {
     return default_apps_x11[slot];
 }
 
-const char* get_default_shell(int slot) {
+const char* x11_get_default_shell(int slot) {
     //temporary maybe in future just use the terminal config or somethign idk
     default_apps_x11[slot][0] = '\0';
     const char* shell = getenv("SHELL");
@@ -142,16 +142,16 @@ const char* get_default_shell(int slot) {
 
 const char* Platform_GetDefaultApp(DefaultAppKind kind) {
     if (kind < 0 || kind >= DEFAULT_APP_COUNT) return "";
-    if (kind == DEFAULT_BROWSER) return default_apps_x11_run("xdg-settings get default-web-browser", DEFAULT_BROWSER);
-    if (kind == DEFAULT_IMAGE_VIEWER) return default_apps_x11_run("xdg-mime query default image/png", DEFAULT_IMAGE_VIEWER);
-    if (kind == DEFAULT_VIDEO_PLAYER) return default_apps_x11_run("xdg-mime query default video/mp4", DEFAULT_VIDEO_PLAYER);
+    if (kind == DEFAULT_BROWSER) return x11_default_apps_run("xdg-settings get default-web-browser", DEFAULT_BROWSER);
+    if (kind == DEFAULT_IMAGE_VIEWER) return x11_default_apps_run("xdg-mime query default image/png", DEFAULT_IMAGE_VIEWER);
+    if (kind == DEFAULT_VIDEO_PLAYER) return x11_default_apps_run("xdg-mime query default video/mp4", DEFAULT_VIDEO_PLAYER);
     if (kind == DEFAULT_TERMINAL )    return get_default_terminal(DEFAULT_TERMINAL);
-    if (kind == DEFAULT_SHELL )       return get_default_shell(DEFAULT_SHELL);
+    if (kind == DEFAULT_SHELL )       return x11_get_default_shell(DEFAULT_SHELL);
     default_apps_x11[kind][0] = '\0';
     return default_apps_x11[kind];
 }
 
-int default_apps_x11_exec_token(const char* line, char* out, size_t cap) {
+int x11_default_apps_exec_token(const char* line, char* out, size_t cap) {
     const char* p = line + 5;
     while (*p == ' ' || *p == '\t') p++;
     int quoted = (*p == '"');
@@ -186,7 +186,7 @@ bool Platform_ResolveDesktopExec(const char* desktop_id, char* out, size_t out_s
         bool found = false;
         while (fgets(line, sizeof(line), f)) {
             if (strncmp(line, "Exec=", 5) == 0) {
-                found = default_apps_x11_exec_token(line, out, out_size);
+                found = x11_default_apps_exec_token(line, out, out_size);
                 break;
             }
         }

@@ -160,16 +160,16 @@ static int MsgWrapText(Display *dpy, XftFont *xf, const char *text, int maxW, Ms
     return count;
 }
 
-static void Linux_DisplayMessageDraw(Display *dpy, Window win, const char *message, unsigned long color, int w, int h) {
+static void x11_display_message_draw(Display *dpy, Window win, const char *message, unsigned long color, int w, int h) {
     XWindowAttributes attrs;
     if (!XGetWindowAttributes(dpy, win, &attrs)) return;
-    Pixmap bg = Linux_GetCachedBackground(dpy, win, w, h);
+    Pixmap bg = x11_get_cached_background(dpy, win, w, h);
     if (bg) {
         GC gc = XCreateGC(dpy, win, 0, NULL);
         XCopyArea(dpy, bg, win, gc, 0, 0, w, h, 0, 0);
         XFreeGC(dpy, gc);
     } else {
-        Linux_DrawBackgroundToDrawable(dpy, win, w, h);
+        x11_draw_background_to_drawable(dpy, win, w, h);
     }
     XftDraw *xd = XftDrawCreate(dpy, win, attrs.visual, attrs.colormap);
     if (!xd) return;
@@ -177,7 +177,7 @@ static void Linux_DisplayMessageDraw(Display *dpy, Window win, const char *messa
     XftFont *xf = FH_TO_XFT(font);
     if (xf && message) {
         XftColor col;
-        Linux_XftAllocColor(dpy, attrs.visual, attrs.colormap, rgb_to_hex(color), 0xFFFF, &col);
+        x11_xft_alloc_color(dpy, attrs.visual, attrs.colormap, rgb_to_hex(color), 0xFFFF, &col);
         MsgLine lines[MSG_MAX_LINES];
         int nlines = MsgWrapText(dpy, xf, message, w - 30, lines, MSG_MAX_LINES);
         int lineH = xf->ascent + xf->descent;
@@ -232,12 +232,12 @@ void Platform_DisplayMessage(const char* message, int centerX, int centerY, int 
     int cy = moy + moh / 2 + (centerY - 540);
     int x = cx - winW / 2;
     int y = cy - winH / 2;
-    Window win = Linux_CreateDisplayMessageWindow(dpy, x, y, winW, winH);
+    Window win = x11_create_display_message_window(dpy, x, y, winW, winH);
     if (!win) return;
     g_msg_win = win;
     XMapWindow(dpy, win);
     XFlush(dpy);
-    Linux_DisplayMessageDraw(dpy, win, message, (unsigned long)color, winW, winH);
+    x11_display_message_draw(dpy, win, message, (unsigned long)color, winW, winH);
     g_msg_indefinite = !(timeout != 6969 && timeout > 0);
     if (timeout != 6969 && timeout > 0) {
         MsgDismissPayload *p = malloc(sizeof(*p));

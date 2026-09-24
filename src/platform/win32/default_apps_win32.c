@@ -6,7 +6,7 @@
 
 char default_apps_win32[DEFAULT_APP_COUNT][256];
 
-const char* default_apps_win32_read_sz(const char* subkey,
+const char* win32_default_apps_read_sz(const char* subkey,
                                               const char* value_name,
                                               int slot) {
     default_apps_win32[slot][0] = '\0';
@@ -25,7 +25,7 @@ const char* default_apps_win32_read_sz(const char* subkey,
     return default_apps_win32[slot];
 }
 
-const char* terminal_name_from_guid(const char* console_guid,const char* terminal_guid) {
+const char* win32_terminal_name_from_guid(const char* console_guid,const char* terminal_guid) {
 
     if (strstr(console_guid,  "2EACA947-7F5F-4CFA-BA87-8F7FBEEFBE69") ||
         strstr(terminal_guid, "E12CFF52-A866-4C77-9A90-F570A7AA2C6B")) {
@@ -37,8 +37,8 @@ const char* terminal_name_from_guid(const char* console_guid,const char* termina
     return NULL;
 }
 
-const char* default_apps_win32_progid(const char* subkey, int slot) {
-    return default_apps_win32_read_sz(subkey, "ProgId", slot);
+const char* win32_default_apps_progid(const char* subkey, int slot) {
+    return win32_default_apps_read_sz(subkey, "ProgId", slot);
 }
 const char* get_default_terminal() {
     ListOfFiles files = {0};
@@ -118,7 +118,7 @@ const char* Platform_GetDefaultTerminal(void) {
 
     RegCloseKey(hKey);
 
-    const char* name = terminal_name_from_guid(console_guid, terminal_guid);
+    const char* name = win32_terminal_name_from_guid(console_guid, terminal_guid);
     if (!name) {
       name = get_default_terminal();
     }
@@ -133,19 +133,19 @@ const char* Platform_GetDefaultApp(DefaultAppKind kind) {
 
     switch (kind) {
         case DEFAULT_BROWSER:
-            return default_apps_win32_progid(
+            return win32_default_apps_progid(
                 "Software\\Microsoft\\Windows\\Shell\\Associations"
                 "\\UrlAssociations\\http\\UserChoice",
                 DEFAULT_BROWSER);
 
         case DEFAULT_IMAGE_VIEWER:
-            return default_apps_win32_progid(
+            return win32_default_apps_progid(
                 "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer"
                 "\\FileExts\\.png\\UserChoice",
                 DEFAULT_IMAGE_VIEWER);
 
         case DEFAULT_VIDEO_PLAYER:
-            return default_apps_win32_progid(
+            return win32_default_apps_progid(
                 "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer"
                 "\\FileExts\\.mp4\\UserChoice",
                 DEFAULT_VIDEO_PLAYER);
