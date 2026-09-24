@@ -1,5 +1,6 @@
 #include "config.h"
 #include "core/platform.h"
+#include "core/feature_loader.h"
 #include "helpers/helpers_hotkey.h"
 #include "helpers/helpers_alias.h"
 #include "helpers/helpers_flag.h"
@@ -34,7 +35,9 @@ void hotkey_drain_pending(void) {
         if (g_pending_head != g_pending_tail) { fn = g_pending_q[g_pending_head]; g_pending_head = (g_pending_head + 1) % 64; }
         pthread_mutex_unlock(&g_q_mtx);
         if (!fn) break;
+        FeatureLoader_Lock();
         fn();
+        FeatureLoader_Unlock();
     }
 }
 #else
@@ -84,7 +87,9 @@ bool hotkey_process(int vk_code, int modifiers) {
         }
 
         if (b->hotkey_condition) {
+            FeatureLoader_Lock();
             bool cond_pass = b->hotkey_condition();
+            FeatureLoader_Unlock();
             if (!cond_pass) {
                 continue;
             }
@@ -140,7 +145,9 @@ bool hotkey_process(int vk_code, int modifiers) {
 #if !defined(_WIN32)
         hotkey_enqueue(cb);
 #else
+        FeatureLoader_Lock();
         cb();
+        FeatureLoader_Unlock();
 #endif
         return true; 
     }
