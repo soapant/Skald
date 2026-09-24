@@ -6,6 +6,7 @@
 #include <X11/Xatom.h>
 #include <X11/extensions/Xrandr.h>
 #include <ctype.h>
+#include <strings.h>
 #include <string.h>
 #include "core/platform.h"
 #include "config.h"
@@ -127,6 +128,7 @@ Fl_WindowList get_window_names_x11() {
            strncpy(buffer, class_string, sizeof(buffer) - 1);
            buffer[sizeof(buffer) - 1] = '\0';
            if (strcmp(buffer, "N/A") == 0 || strlen(buffer) == 0) continue;
+           if (!strcasecmp(buffer, "window") || !strcasecmp(buffer, "colored")) continue;
            buffer[0] = toupper((unsigned char)buffer[0]);
            char** temp = realloc(list.windows, (list.count + 1) * sizeof(char*));
            if (temp == NULL) break;
@@ -154,6 +156,7 @@ Fl_WindowList get_window_titles_x11() {
        char *title = line + off;
        while (*title==' ' || *title=='\t') title++;
        if (strlen(title)==0) continue;
+       if (!strcasecmp(title, "window") || !strcasecmp(title, "colored")) continue;
        char** temp = realloc(list.windows, (list.count + 1) * sizeof(char*));
        if (temp == NULL) break;
        list.windows = temp;

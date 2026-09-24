@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <glob.h>
+#include <strings.h>
 #include <sys/stat.h>
 
 static bool sway_sock_live(const char* path) {
@@ -276,6 +277,7 @@ Fl_WindowList get_window_names_sway() {
         char buf[256];
         if (!sway_app_for_pid(p, next, buf, sizeof(buf))) continue;
         if (!buf[0] || !strcmp(buf, "null")) continue;
+        if (!strcasecmp(buf, "window") || !strcasecmp(buf, "colored")) continue;
         buf[0] = toupper((unsigned char)buf[0]);
         char **tmp = realloc(list.windows, (list.count + 1) * sizeof(char*));
         if (!tmp) break;
@@ -296,6 +298,7 @@ Fl_WindowList get_window_titles_sway() {
         char buf[512];
         if (!sway_name_for_pid(json, p, next, buf, sizeof(buf))) continue;
         if (!buf[0] || !strcmp(buf, "null")) continue;
+        if (!strcasecmp(buf, "window") || !strcasecmp(buf, "colored")) continue;
         char **tmp = realloc(list.windows, (list.count + 1) * sizeof(char*));
         if (!tmp) break;
         list.windows = tmp;

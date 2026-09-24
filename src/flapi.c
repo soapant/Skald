@@ -1153,8 +1153,7 @@ bool fl_place_listbox_impl(const FlListSpec *spec) {
 }
 
 Fl_WindowList fl_get_all_window_titles() {
-  Fl_WindowList l = Platform_GetWindowTitles();
-  return l;
+   return Platform_GetWindowTitles();
 }
 Fl_WindowList fl_get_all_window_names() {
   Fl_WindowList l = Platform_GetWindowNames();

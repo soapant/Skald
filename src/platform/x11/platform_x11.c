@@ -1415,15 +1415,11 @@ bool Platform_BuildFeature(const char* src, const char* out) {
 }
 
 Fl_WindowList Platform_GetWindowTitles() {
-  Fl_WindowList l = Wm_GetWindowTitles();
-  log_info("Platform_GetWindowTitles count=%d", l.count);
-  return l;
+ return Wm_GetWindowTitles();
 }
 
 Fl_WindowList Platform_GetWindowNames() {
-  Fl_WindowList l = Wm_GetWindowNames();
-  log_info("Platform_GetWindowNames count=%d", l.count);
-  return l;
+  return Wm_GetWindowNames();
 }
 
 static int g_singleton_lock_fd = -1;

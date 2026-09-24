@@ -12,6 +12,7 @@
 #include <ctype.h>
 #include <string.h>
 #include <glob.h>
+#include <strings.h>
 #include <time.h>
 #include <sys/stat.h>
 
@@ -171,6 +172,7 @@ Fl_WindowList get_window_names_hyprland() {
        if (match) {
            if (sscanf(match, "\"class\": \"%[^\"]\"", buffer) == 1) {
                if (strlen(buffer) == 0) continue;
+                if (!strcasecmp(buffer, "window") || !strcasecmp(buffer, "colored")) continue;
                buffer[0] = toupper((unsigned char)buffer[0]);
                char** temp = realloc(list.windows, (list.count + 1) * sizeof(char*));
                if (temp == NULL) break;
@@ -196,6 +198,7 @@ Fl_WindowList get_window_titles_hyprland() {
        if (match) {
            if (sscanf(match, "\"title\": \"%[^\"]\"", buffer) == 1) {
                if (strlen(buffer) == 0) continue;
+                if (!strcasecmp(buffer, "window") || !strcasecmp(buffer, "colored")) continue;
                char** temp = realloc(list.windows, (list.count + 1) * sizeof(char*));
                if (temp == NULL) break;
                list.windows = temp;
