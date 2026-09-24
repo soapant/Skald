@@ -226,7 +226,7 @@ static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent* key) {
     if (ctrl_pressed) {
         if (wParam == VK_OEM_MINUS) FontSize -= 1;
         if (wParam == VK_OEM_PLUS) FontSize += 1;
-        if (wParam == VK_OEM_MINUS || wParam == VK_OEM_PLUS) return true;
+        if (wParam == VK_OEM_MINUS || wParam == VK_OEM_PLUS) { Config_Save(); return true; }
     }
 
     return false;

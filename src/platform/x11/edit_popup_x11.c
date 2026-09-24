@@ -266,7 +266,7 @@ bool Platform_EditPopupOnKey(Popup* self, const PopupKeyEvent* key) {
     if (ctrl_pressed) {
         if (wParam == VK_OEM_MINUS) FontSize -= 1;
         if (wParam == VK_OEM_PLUS) FontSize += 1;
-        if (wParam == VK_OEM_MINUS || wParam == VK_OEM_PLUS) { PROFILE_END_VAR(timer, "edit_popup_x11:Platform_EditPopupOnKey"); return true; }
+        if (wParam == VK_OEM_MINUS || wParam == VK_OEM_PLUS) { Config_Save(); PROFILE_END_VAR(timer, "edit_popup_x11:Platform_EditPopupOnKey"); return true; }
     }
 
     if (IsInsertMode() && key->text_len > 0) {
