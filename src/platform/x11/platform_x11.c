@@ -340,7 +340,7 @@ char* Platform_RunCommandAndGetOutput(char* command) {
 
     fp = popen(command, "r");
     if (fp == NULL) {
-        log_error("popen failed for command");
+        log_error("popen failed cmd='%s' err=%d", command ? command : "null", errno);
         free(output);
 
         PROFILE_END_VAR(timer, "platform_x11:Platform_RunCommandAndGetOutput");
@@ -367,6 +367,7 @@ char* Platform_RunCommandAndGetOutput(char* command) {
 
     pclose(fp);
     output[total_size] = '\0';
+    if (total_size == 0) log_error("popen empty cmd='%s'", command ? command : "");
     log_info("Platform_RunCommandAndGetOutput command='%s'", command ? command : "");;
 
     PROFILE_END_VAR(timer, "platform_x11:Platform_RunCommandAndGetOutput");
@@ -375,9 +376,9 @@ char* Platform_RunCommandAndGetOutput(char* command) {
 
 static char* Platform_RunCommandDetachedCapture(char* command) {
     int pfd[2];
-    if (pipe(pfd) != 0) return strdup("");
+    if (pipe(pfd) != 0) { log_error("pipe failed cmd='%s' err=%d", command ? command : "null", errno); return strdup(""); }
     pid_t pid = fork();
-    if (pid < 0) { close(pfd[0]); close(pfd[1]); return strdup(""); }
+    if (pid < 0) { log_error("fork failed cmd='%s' err=%d", command ? command : "null", errno); close(pfd[0]); close(pfd[1]); return strdup(""); }
     if (pid == 0) {
         setsid();
         pid_t pid2 = fork();
@@ -452,6 +453,7 @@ static char* Platform_RunCommandDetachedCapture(char* command) {
         out = no;
     }
     out[total] = '\0';
+    if (total == 0) log_error("capture empty cmd='%s' eof=%d", command ? command : "null", eof);
     return out;
 }
 
@@ -1441,6 +1443,11 @@ bool Platform_TryAcquireSingleInstance(void) {
 }
 
 bool Platform_InitDisplaySafe(void) {
+    const char* dd = getenv("DISPLAY");
+    if (!dd || !dd[0]) {
+        const char* live = Platform_GetSessionDisplay();
+        if (live && live[0]) setenv("DISPLAY", live, 1);
+    }
     const char* xa = getenv("XAUTHORITY");
     if (xa && xa[0] && access(xa, R_OK) != 0) unsetenv("XAUTHORITY");
     const char* xa2 = getenv("XAUTHORITY");
