@@ -248,3 +248,39 @@ bool Wm_MinimizeActiveWindow(void) {
     log_error("MinimizeActiveWindow Didnt Work");
     return false;
 }
+
+bool Wm_ScreenshotCopyArea(void) {
+    if (getenv("WAYLAND_DISPLAY")) {
+        if (screenshot_copy_area_kwin()) return true;
+    }
+    return false;
+}
+
+bool Wm_ScreenshotCopy(void) {
+    if (getenv("WAYLAND_DISPLAY")) {
+        if (screenshot_copy_kwin()) return true;
+    }
+    return false;
+}
+
+bool Wm_ScreenshotSaveArea(char* save_path) {
+    if (getenv("WAYLAND_DISPLAY")) {
+        if (screenshot_save_area_kwin(save_path)) return true;
+    }
+    return false;
+}
+
+bool Wm_ScreenshotSave(char* save_path) {
+    if (getenv("WAYLAND_DISPLAY")) {
+        if (screenshot_save_kwin(save_path)) return true;
+    }
+    return false;
+}
+
+char* Wm_OcrArea(void) {
+    if (getenv("WAYLAND_DISPLAY")) {
+        char* out = ocr_area_kwin();
+        if (out) return out;
+    }
+    return NULL;
+}
