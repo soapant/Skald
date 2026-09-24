@@ -1,6 +1,7 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 #include <string.h>
+#include <stddef.h>
 #include <wchar.h>
 #include "core/types.h"
 
@@ -32,10 +33,10 @@ extern int TimeBetweenHotReload;
 extern float WindowOpacity;
 extern int FontSize;
 extern const char* UsedFont;
-extern const int IconSize;
-extern const int MaxFeatures;
-extern const int VimFontSize;
-extern const int PaddingForScrolling;
+extern int IconSize;
+extern int MaxFeatures;
+extern int VimFontSize;
+extern int PaddingForScrolling;
 extern bool CloseOnLossOfFocus;
 extern const char* UsedTerminal;
 extern const char* UsedShell;
@@ -46,15 +47,30 @@ extern const char* UsedSearchEngine;
 extern const char* FeaturePath;
 extern const char* IconPath;
 extern const char* ControlHotkey;
-extern const bool FullTextNeedsKeyPress;
-extern const bool MessagesEnabled;
-extern const bool RainbowText;
-extern const bool ColoredVimModeText;
-extern const bool WindowTitleText;
-extern const bool AlternatingText;
-extern const bool VimModeText;
-extern const int GradientItems;
-extern const float GradientBrightness;
+extern bool FullTextNeedsKeyPress;
+extern bool MessagesEnabled;
+extern bool RainbowText;
+extern bool ColoredVimModeText;
+extern bool WindowTitleText;
+extern bool AlternatingText;
+extern bool VimModeText;
+extern int GradientItems;
+extern float GradientBrightness;
+
+extern ColorRef COLOR_BG;
+extern ColorRef COLOR_TEXT;
+extern ColorRef COLOR_ALTERNATE;
+extern ColorRef COLOR_SELECTED_TEXT;
+extern ColorRef COLOR_ALIAS_TEXT;
+extern ColorRef COLOR_ERROR;
+extern ColorRef COLOR_NORMAL;
+extern ColorRef COLOR_TIP;
+extern ColorRef COLOR_INSERT_MODE;
+extern ColorRef COLOR_NORMAL_MODE;
+extern ColorRef COLOR_VISUAL_MODE;
+#define COLOR_INSERT_MODE_TEXT (ColoredVimModeText ? COLOR_INSERT_MODE : COLOR_TEXT)
+#define COLOR_NORMAL_MODE_TEXT (ColoredVimModeText ? COLOR_NORMAL_MODE : COLOR_TEXT)
+#define COLOR_VISUAL_MODE_TEXT (ColoredVimModeText ? COLOR_VISUAL_MODE : COLOR_TEXT)
 
 typedef struct {
     const char* path;
@@ -67,17 +83,16 @@ typedef struct {
     const char* linux_value;
 } PathVar;
 
-extern const PathVar G_PATH_VARS[];
-extern const unsigned int PATH_VAR_COUNT;
+extern const PathVar* G_PATH_VARS;
+extern unsigned int PATH_VAR_COUNT;
 
-extern const AliasEntry Aliases[];
-extern const size_t ALIAS_ENTRY_COUNT;
+extern const AliasEntry* Aliases;
+extern size_t ALIAS_ENTRY_COUNT;
 
 #define MAX_FILE_LINES 10000
 #define MAX_FILE_LINE_LENGTH 1024
 
 void Config_ResolveDefaultApps(void);
-
 
 #define ARRAY_LEN(a) (sizeof(a) / sizeof((a)[0]))
 

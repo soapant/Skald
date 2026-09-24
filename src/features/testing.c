@@ -2,7 +2,6 @@
 
 
 void Testing(void) {
-  fl_run_terminal_command("feh /home/diggy/Pictures/wallpaper.jpg");
 }
 
 

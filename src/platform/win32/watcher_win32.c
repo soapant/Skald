@@ -8,8 +8,21 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <sys/stat.h>
 
 static volatile LONG g_watcher_stop_win = 0;
+static time_t g_cfg_mtime_win = 0;
+
+static void config_watcher_poll_win(void) {
+    struct stat st;
+    if (stat("config/config.c", &st) != 0) return;
+    if (g_cfg_mtime_win == 0) { g_cfg_mtime_win = st.st_mtime; return; }
+    if (st.st_mtime == g_cfg_mtime_win) return;
+    g_cfg_mtime_win = st.st_mtime;
+    Sleep(200);
+    log_info("config changed, rebuilding");
+    Config_Reload();
+}
 
 static DWORD WINAPI feature_watcher_thread_win(LPVOID arg) {
     WindowManager* wm = (WindowManager*)arg;
@@ -44,6 +57,7 @@ static DWORD WINAPI feature_watcher_thread_win(LPVOID arg) {
             for (int i=0;i<5;i++) {
                 if (InterlockedCompareExchange(&g_watcher_stop_win, 0, 0)!=0 || (wm && wm->watcher_stop)) break;
                 Sleep(100);
+                config_watcher_poll_win();
             }
         }
     }

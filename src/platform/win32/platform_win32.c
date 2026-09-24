@@ -1157,7 +1157,7 @@ char* Platform_GetIconPath(char* app_path) {
 }
 int Platform_GetIconSize(char* icon_path) {
     (void)icon_path;
-    extern const int IconSize;
+    extern int IconSize;
     int s = IconSize;
     if (s < 16) s = 16;
     if (s > 32) s = 32;

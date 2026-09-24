@@ -10,8 +10,21 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <sys/stat.h>
 
 static _Atomic bool g_watcher_stop = false;
+static time_t g_cfg_mtime = 0;
+
+static void config_watcher_poll(void) {
+    struct stat st;
+    if (stat("config/config.c", &st) != 0) return;
+    if (g_cfg_mtime == 0) { g_cfg_mtime = st.st_mtime; return; }
+    if (st.st_mtime == g_cfg_mtime) return;
+    g_cfg_mtime = st.st_mtime;
+    usleep(200000);
+    log_info("config changed, rebuilding");
+    Config_Reload();
+}
 
 static void* feature_watcher_thread(void* arg) {
     WindowManager* wm = (WindowManager*)arg;
@@ -44,6 +57,7 @@ static void* feature_watcher_thread(void* arg) {
         for (int i=0;i<5;i++) {
             if (atomic_load(&g_watcher_stop) || (wm && wm->watcher_stop)) break;
             usleep(100000);
+            config_watcher_poll();
         }
     }
     return NULL;
