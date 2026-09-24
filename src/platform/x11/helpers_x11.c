@@ -1159,7 +1159,23 @@ Window Linux_CreatePromptWindow(Display* dpy, int x, int y, int w, int h) {
         log_error("niri override_redirect prompt w=%d h=%d", w, h);
         return Linux_CreateWindowExOR(dpy, x, y, w, h, bg, "colored", "colored", KeyPressMask | ExposureMask | FocusChangeMask, true);
     }
-    return Linux_CreateWindowEx(dpy, x, y, w, h, bg, "colored", "colored", KeyPressMask | ExposureMask | FocusChangeMask);
+    Window win = Linux_CreateWindowEx(dpy, x, y, w, h, bg, "colored", "colored", KeyPressMask | ExposureMask | FocusChangeMask);
+    Window focus_win = None;
+    int revert_to = 0;
+    XGetInputFocus(dpy, &focus_win, &revert_to);
+    if (focus_win != None && focus_win != PointerRoot && focus_win != win) XSetTransientForHint(dpy, win, focus_win);
+    char unique_title[64];
+    snprintf(unique_title, sizeof(unique_title), "flint-%lu-%d", (unsigned long)win, (int)getpid());
+    XStoreName(dpy, win, unique_title);
+    XSizeHints* sh = XAllocSizeHints();
+    sh->flags = PMinSize | PMaxSize;
+    sh->min_width = w;
+    sh->min_height = h;
+    sh->max_width = w;
+    sh->max_height = h;
+    XSetWMNormalHints(dpy, win, sh);
+    XFree(sh);
+    return win;
 }
 Window Linux_CreateEditPopupWindow(Display* dpy, int x, int y, int w, int h) {
     PROFILE_START(timer);
@@ -1169,7 +1185,23 @@ Window Linux_CreateEditPopupWindow(Display* dpy, int x, int y, int w, int h) {
         log_error("niri override_redirect edit w=%d h=%d", w, h);
         return Linux_CreateWindowExOR(dpy, x, y, w, h, bg, "colored", "colored", KeyPressMask | ExposureMask | FocusChangeMask, true);
     }
-    return Linux_CreateWindowEx(dpy, x, y, w, h, bg, "colored", "colored", KeyPressMask | ExposureMask | FocusChangeMask);
+    Window win = Linux_CreateWindowEx(dpy, x, y, w, h, bg, "colored", "colored", KeyPressMask | ExposureMask | FocusChangeMask);
+    Window focus_win = None;
+    int revert_to = 0;
+    XGetInputFocus(dpy, &focus_win, &revert_to);
+    if (focus_win != None && focus_win != PointerRoot && focus_win != win) XSetTransientForHint(dpy, win, focus_win);
+    char unique_title[64];
+    snprintf(unique_title, sizeof(unique_title), "flint-%lu-%d", (unsigned long)win, (int)getpid());
+    XStoreName(dpy, win, unique_title);
+    XSizeHints* sh = XAllocSizeHints();
+    sh->flags = PMinSize | PMaxSize;
+    sh->min_width = w;
+    sh->min_height = h;
+    sh->max_width = w;
+    sh->max_height = h;
+    XSetWMNormalHints(dpy, win, sh);
+    XFree(sh);
+    return win;
 }
 Window Linux_CreateDisplayMessageWindow(Display* dpy, int x, int y, int w, int h) {
     PROFILE_START(timer);
