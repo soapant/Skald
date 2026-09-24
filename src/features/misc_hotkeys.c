@@ -13,10 +13,6 @@ void ShowCurrentBatteryPercentage(void) {
   }
 }
 
-void SettingsTrigger(void) {
-    Platform_SettingsPopUp();
-}
-
 void MediaPlayPause(void) {
   fl_toggle_play_pause();
 }
@@ -88,7 +84,6 @@ void toggle_minimized(void) {
 
 FLINT_FEATURE_INIT {
     fl_register_hotkey("Alt+Shift+T", ShowCurrentTime);
-    fl_register_hotkey("Alt+D", SettingsTrigger);
     fl_register_hotkey("Alt+Shift+N", ShowCurrentBatteryPercentage);
     fl_register_hotkey("Ctrl+Shift+X", ScreenshotArea);
     fl_register_hotkey("Alt+Shift+C", OcrRegionAndCopy);
