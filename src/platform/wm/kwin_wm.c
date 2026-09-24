@@ -95,6 +95,7 @@ static int g_kwin_q_id = -1;
 static char g_kwin_q_name[64] = {0};
 static unsigned g_kwin_q_seq = 0;
 static bool g_kwin_q_legacy_cleared = false;
+static long long g_kwin_q_load_tried_at = 0;
 
 static const char g_kwin_q_body[] =
     "(function(){"
@@ -107,7 +108,25 @@ static const char g_kwin_q_body[] =
     "print(\"FLINTQC \"+(workspace.activeWindow?cc(workspace.activeWindow):\"\"));"
     "})();";
 
+static bool kwin_q_verify(void) {
+    char args[128];
+    snprintf(args, sizeof(args), "org.kde.KWin /Scripting/Script%d org.kde.kwin.Script.run", g_kwin_q_id);
+    char* rout = kwin_qdbus_call(args);
+    if (rout) free(rout);
+    struct timespec ts;
+    ts.tv_sec = 0;
+    ts.tv_nsec = 150 * 1000 * 1000;
+    nanosleep(&ts, NULL);
+    char* log = Platform_RunTerminalCommand("journalctl --user -o cat --since=\"-5s\" 2>/dev/null | grep -a -e \"FLINTQR \" -e \"FLINTQA \" -e \"FLINTQC \" | tail -6", false);
+    bool ok = log && log[0] && (strstr(log, "FLINTQR ") || strstr(log, "FLINTQA "));
+    if (log) free(log);
+    return ok;
+}
+
 static bool kwin_q_load(void) {
+    long long now = Platform_GetWallClockMs();
+    if (now - g_kwin_q_load_tried_at < 2000 && g_kwin_q_load_tried_at != 0) return false;
+    g_kwin_q_load_tried_at = now;
     if (!g_kwin_q_legacy_cleared) {
         g_kwin_q_legacy_cleared = true;
         char* leg = kwin_qdbus_call("org.kde.KWin /Scripting org.kde.kwin.Scripting.unloadScript flintq");
@@ -124,27 +143,35 @@ static bool kwin_q_load(void) {
     if (!f) return false;
     fputs(g_kwin_q_body, f);
     fclose(f);
-    snprintf(g_kwin_q_name, sizeof(g_kwin_q_name), "flintq_%d_%u", (int)getpid(), ++g_kwin_q_seq);
-    char load[256];
-    snprintf(load, sizeof(load), "org.kde.KWin /Scripting org.kde.kwin.Scripting.loadScript /tmp/flint_kwin_q.js %s", g_kwin_q_name);
-    char* out = kwin_qdbus_call(load);
-    if (!out || kwin_has_error(out)) {
-        log_error("kwin q load failed out='%s'", out ? out : "null");
-        if (out) free(out);
-        g_kwin_q_loaded = false;
-        g_kwin_q_name[0] = '\0';
-        return false;
+    for (int round = 0; round < 3; round++) {
+        snprintf(g_kwin_q_name, sizeof(g_kwin_q_name), "flintq_%d_%u", (int)getpid(), ++g_kwin_q_seq);
+        char load[256];
+        snprintf(load, sizeof(load), "org.kde.KWin /Scripting org.kde.kwin.Scripting.loadScript /tmp/flint_kwin_q.js %s", g_kwin_q_name);
+        char* out = kwin_qdbus_call(load);
+        if (!out || kwin_has_error(out)) {
+            log_error("kwin q load failed out='%s'", out ? out : "null");
+            if (out) free(out);
+            continue;
+        }
+        g_kwin_q_id = atoi(out);
+        free(out);
+        if (g_kwin_q_id < 0) {
+            log_error("kwin q load bad id");
+            continue;
+        }
+        if (kwin_q_verify()) {
+            g_kwin_q_loaded = true;
+            return true;
+        }
+        log_error("kwin q verify failed id=%d round=%d", g_kwin_q_id, round);
+        char ucmd[128];
+        snprintf(ucmd, sizeof(ucmd), "org.kde.KWin /Scripting org.kde.kwin.Scripting.unloadScript %s", g_kwin_q_name);
+        char* uo = kwin_qdbus_call(ucmd);
+        if (uo) free(uo);
     }
-    g_kwin_q_id = atoi(out);
-    free(out);
-    if (g_kwin_q_id < 0) {
-        log_error("kwin q load bad id");
-        g_kwin_q_loaded = false;
-        g_kwin_q_name[0] = '\0';
-        return false;
-    }
-    g_kwin_q_loaded = true;
-    return true;
+    g_kwin_q_loaded = false;
+    g_kwin_q_name[0] = '\0';
+    return false;
 }
 
 static void kwin_snap_store(const char* blob) {
@@ -212,6 +239,7 @@ static bool kwin_snapshot_locked(void) {
             else log_error("kwin journal no marker attempt=%d bytes=%d head='%.80s'", attempt, (int)strlen(log), log);
             if (log) free(log);
         }
+        g_kwin_q_loaded = false;
         return g_kwin_records != NULL;
     }
     return g_kwin_records != NULL;
