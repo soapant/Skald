@@ -858,9 +858,16 @@ void fl_screenshot_copy_area_platform(void) {
     char path[MAX_PATH];
 
     snprintf(path, sizeof(path), "%s/flint_clip.png", wd ? wd : ".");
+
+    if (getenv("WAYLAND_DISPLAY")) {
     snprintf(cmd, sizeof(cmd),
              "%s/external/grim -g \"$(%s/external/slurp)\" -t png %s",
              wd, wd, path);
+    } else {
+      snprintf(cmd, sizeof(cmd),
+         "%s/external/scrot -s %s",
+         wd, path);
+    }
 
     free(Platform_RunCommandAndGetOutput(cmd));
     fl_clipboard_set_png_path_platform(path);
@@ -878,7 +885,7 @@ void fl_screenshot_copy_platform(void) {
                  wd, path);
     } else {
           snprintf(cmd, sizeof(cmd),
-             "%s/external/scrot -s %s",
+             "%s/external/scrot %s",
              wd, path);
     }
 
