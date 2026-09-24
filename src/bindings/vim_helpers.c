@@ -129,6 +129,10 @@ void DeleteInnerWord(FlintContext* ctx, bool keep_mode) {
     }
     if (word_start == cursor && word_end == cursor) return;
     if (word_start > word_end) { int temp = word_start; word_start = word_end; word_end = temp; }
+    if (word_start > 0 && word_end < len && text[word_start - 1] == ' ' && text[word_end] == ' ') {
+        word_end++;
+        if (word_end > len) word_end = len;
+    }
     if (word_start >= 0 && word_end <= len && word_start < word_end) {
         memmove(&text[word_start], &text[word_end], len - word_end + 1);
         Vim_SetText(ctx, text);
