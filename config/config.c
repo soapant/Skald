@@ -60,7 +60,7 @@ void ConfigApply(void) {
     GradientItems = 30;
     GradientBrightness = 1.0f;
     CloseOnLossOfFocus = false;
-    COLOR_BG = RGB(40, 40, 40);
+    COLOR_BG = RGB(30, 30, 30);
     COLOR_TEXT = RGB(255, 255, 255);
     COLOR_ALTERNATE = RGB(57, 255, 20);
     COLOR_SELECTED_TEXT = RGB(0, 0, 0);
