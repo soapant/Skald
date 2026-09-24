@@ -29,6 +29,7 @@ int main() {
   Platform_InitMainThreadContext();
   Platform_FixWorkingDirectory();
   Platform_InitDisplaySafe();
+  Config_Load();
   Config_ResolveDefaultApps();
 
   Platform_StartUniversalTimer();
@@ -51,6 +52,7 @@ int main() {
   WindowManager_Destroy(wm);
 
   FeatureLoader_Shutdown();
+  Config_Unload();
   Platform_ShutdownUI();
   Platform_CleanupDisplaySafe();
 

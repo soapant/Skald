@@ -18,16 +18,5 @@ typedef uint32_t ColorRef;
 #ifndef RGB
 #define RGB(r, g, b)  ((unsigned long)(((unsigned char)(r)|((unsigned short)((unsigned char)(g))<<8))|(((unsigned long)(unsigned char)(b))<<16)))
 #endif
-#define COLOR_BG      RGB(40,40,40)   
-#define COLOR_TEXT    RGB(255, 255, 255)
-#define COLOR_ALTERNATE RGB(57, 255, 20)
-#define COLOR_SELECTED_TEXT     RGB(0,0,0)
-#define COLOR_ALIAS_TEXT        COLOR_TEXT
-#define COLOR_INSERT_MODE_TEXT (ColoredVimModeText ? RGB(50, 255, 50) : COLOR_TEXT)
-#define COLOR_NORMAL_MODE_TEXT (ColoredVimModeText ? RGB(100, 255, 255) : COLOR_TEXT)
-#define COLOR_VISUAL_MODE_TEXT (ColoredVimModeText ? RGB(200, 3, 222) : COLOR_TEXT)
-#define COLOR_ERROR             RGB(180, 0, 0) 
-#define COLOR_NORMAL            RGB(200, 200, 0) 
-#define COLOR_TIP               RGB(0, 160, 0)
 
 #endif
