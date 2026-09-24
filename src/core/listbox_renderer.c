@@ -44,7 +44,7 @@ void Core_DrawListBox(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis
             int R=6; int t=1;
             int bx=4, bw=state->width-8;
             if (sel) {
-                Linux_FillRoundedRect(dpy, xd, vis, cmap, rgb_to_hex(COLOR_SELECTED_TEXT), 0xFFFF, bx+t, y+1+t, bw-2*t, itemH-2-2*t, R-1);
+                x11_fill_rounded_rect(dpy, xd, vis, cmap, rgb_to_hex(COLOR_SELECTED_TEXT), 0xFFFF, bx+t, y+1+t, bw-2*t, itemH-2-2*t, R-1);
             }
         } else {
             Platform_DrawListBackground(state, dpy, xd, vis, cmap, y, itemH, sel);
@@ -99,7 +99,7 @@ void Core_DrawListBox(PromptState *state, void *hdc) {
             int bx = 4, bw = state->width - 8;
             RECT rcItem = {bx, y, bx + bw, y + itemH};
             if (EnableShaders && ShaderPreset != 0) {
-                Win32_DrawBackgroundSlice(hdcReal, &rcItem, COLOR_BG, state->width, state->height, rcItem.left, rcItem.top);
+                win32_draw_background_slice(hdcReal, &rcItem, COLOR_BG, state->width, state->height, rcItem.left, rcItem.top);
             } else {
                 HBRUSH br = CreateSolidBrush(COLOR_BG);
                 FillRect(hdcReal, &rcItem, br);
@@ -109,12 +109,12 @@ void Core_DrawListBox(PromptState *state, void *hdc) {
             int innerR = R - 1; if (innerR < 0) innerR = 0;
             if (inner.right <= inner.left || inner.bottom <= inner.top) { inner = rcItem; innerR = R; }
             if (sel) {
-                Win32_FillRoundedRect(hdcReal, &inner, COLOR_SELECTED_TEXT, innerR);
+                win32_fill_rounded_rect(hdcReal, &inner, COLOR_SELECTED_TEXT, innerR);
             } else {
                 if (EnableShaders && ShaderPreset != 0) {
-                    Win32_FillRoundedRectSlice(hdcReal, &inner, COLOR_BG, state->width, state->height, inner.left, inner.top, innerR);
+                    win32_fill_rounded_rect_slice(hdcReal, &inner, COLOR_BG, state->width, state->height, inner.left, inner.top, innerR);
                 } else {
-                    Win32_FillRoundedRect(hdcReal, &inner, COLOR_BG, innerR);
+                    win32_fill_rounded_rect(hdcReal, &inner, COLOR_BG, innerR);
                 }
             }
         } else {
@@ -125,7 +125,7 @@ void Core_DrawListBox(PromptState *state, void *hdc) {
                 DeleteObject(br);
             } else {
                 if (EnableShaders && ShaderPreset != 0) {
-                    Win32_DrawBackgroundSlice(hdcReal, &rc, COLOR_BG, state->width, state->height, rc.left, rc.top);
+                    win32_draw_background_slice(hdcReal, &rc, COLOR_BG, state->width, state->height, rc.left, rc.top);
                 } else {
                     HBRUSH br = CreateSolidBrush(COLOR_BG);
                     FillRect(hdcReal, &rc, br);

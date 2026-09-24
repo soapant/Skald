@@ -19,7 +19,7 @@ HFONT CreateCustomNerdFont(int height, const char* face_name) {
   return FH_TO_HFONT(Platform_CreateFont(height, face_name));
 }
 
-void Win32_ApplyRoundedCorners(HWND hwnd, int w, int h) {
+void win32_apply_rounded_corners(HWND hwnd, int w, int h) {
   if (!hwnd || !IsWindow(hwnd)) return;
   if (w <= 0 || h <= 0) {
     RECT rc; GetWindowRect(hwnd, &rc);
@@ -83,23 +83,23 @@ static unsigned int HashNoiseWin(int x, int y) {
   h = (h ^ (h >> 13)) * 1274126177U;
   return h & 0xFF;
 }
-static float Win32_ComputeGamma(void) {
+static float win32_compute_gamma(void) {
   float s = 1;
   if (s < 0.1f) s = 0.1f; if (s > 10.0f) s = 10.0f;
   float g = 2.0f - s * 0.14f;
   if (g < 0.45f) g = 0.45f; if (g > 2.2f) g = 2.2f;
   return g;
 }
-static inline float Win32_Dither(int x, int y) {
+static inline float win32_dither(int x, int y) {
   static const int bayer[16] = {0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5};
   return ((bayer[(y & 3)*4 + (x & 3)] / 16.0f) - 0.5f) * 1.2f;
 }
 
-typedef struct { HBITMAP bmp; HDC dc; int w; int h; COLORREF base; int preset; float gamma; float intensity; } Win32_GradientCache;
-static Win32_GradientCache g_bgCache = {0};
-static Win32_GradientCache g_selCache = {0};
+typedef struct { HBITMAP bmp; HDC dc; int w; int h; COLORREF base; int preset; float gamma; float intensity; } win32_gradient_cache;
+static win32_gradient_cache g_bgCache = {0};
+static win32_gradient_cache g_selCache = {0};
 
-static void Win32_FreeGradientCache(Win32_GradientCache* c) {
+static void win32_free_gradient_cache(win32_gradient_cache* c) {
   if (!c) return;
   if (c->dc) { DeleteDC(c->dc); c->dc = NULL; }
   if (c->bmp) { DeleteObject(c->bmp); c->bmp = NULL; }
@@ -107,18 +107,18 @@ static void Win32_FreeGradientCache(Win32_GradientCache* c) {
   c->preset = -1;
 }
 
-void Win32_FreeBgCache(void) {
-  Win32_FreeGradientCache(&g_bgCache);
-  Win32_FreeGradientCache(&g_selCache);
+void win32_free_bg_cache(void) {
+  win32_free_gradient_cache(&g_bgCache);
+  win32_free_gradient_cache(&g_selCache);
 }
 
-static void Win32_EnsureGradientCache(Win32_GradientCache* c, HDC refDC, int containerW, int containerH, COLORREF base, int preset) {
-  float gamma = Win32_ComputeGamma();
+static void win32_ensure_gradient_cache(win32_gradient_cache* c, HDC refDC, int containerW, int containerH, COLORREF base, int preset) {
+  float gamma = win32_compute_gamma();
   float intensity = ShaderIntensity;
   if (c->bmp && c->dc && c->w == containerW && c->h == containerH && c->base == base && c->preset == preset && fabsf(c->gamma - gamma) < 0.001f && fabsf(c->intensity - intensity) < 0.001f) {
     return;
   }
-  Win32_FreeGradientCache(c);
+  win32_free_gradient_cache(c);
   if (containerW <= 0 || containerH <= 0) return;
   BITMAPINFO bmi = {0};
   bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
@@ -138,7 +138,7 @@ static void Win32_EnsureGradientCache(Win32_GradientCache* c, HDC refDC, int con
       t = powf(t, gamma);
       COLORREF col = LerpColor(base, light, t * 0.9f);
       BYTE r = GetRValue(col), g = GetGValue(col), b = GetBValue(col);
-      float d = Win32_Dither(0, y);
+      float d = win32_dither(0, y);
       int nr = (int)(r + d); int ng = (int)(g + d); int nb = (int)(b + d);
       if (nr < 0) nr = 0; if (nr > 255) nr = 255; if (ng < 0) ng = 0; if (ng > 255) ng = 255; if (nb < 0) nb = 0; if (nb > 255) nb = 255;
       uint32_t pix = (uint32_t)nb | ((uint32_t)ng << 8) | ((uint32_t)nr << 16);
@@ -154,7 +154,7 @@ static void Win32_EnsureGradientCache(Win32_GradientCache* c, HDC refDC, int con
         t = powf(t, gamma);
         COLORREF col = LerpColor(base, light, t * 0.9f);
         BYTE r = GetRValue(col), g = GetGValue(col), b = GetBValue(col);
-        float d = Win32_Dither(x, y);
+        float d = win32_dither(x, y);
         int nr = (int)(r + d); int ng = (int)(g + d); int nb = (int)(b + d);
         if (nr < 0) nr = 0; if (nr > 255) nr = 255; if (ng < 0) ng = 0; if (ng > 255) ng = 255; if (nb < 0) nb = 0; if (nb > 255) nb = 255;
         row[x] = (uint32_t)nb | ((uint32_t)ng << 8) | ((uint32_t)nr << 16);
@@ -171,7 +171,7 @@ static void Win32_EnsureGradientCache(Win32_GradientCache* c, HDC refDC, int con
         float t = powf(dist, gamma) * 0.85f;
         COLORREF col = LerpColor(light, base, t);
         BYTE r = GetRValue(col), g = GetGValue(col), b = GetBValue(col);
-        float d = Win32_Dither(x, y);
+        float d = win32_dither(x, y);
         int nr = (int)(r + d); int ng = (int)(g + d); int nb = (int)(b + d);
         if (nr < 0) nr = 0; if (nr > 255) nr = 255; if (ng < 0) ng = 0; if (ng > 255) ng = 255; if (nb < 0) nb = 0; if (nb > 255) nb = 255;
         row[x] = (uint32_t)nb | ((uint32_t)ng << 8) | ((uint32_t)nr << 16);
@@ -189,7 +189,7 @@ static void Win32_EnsureGradientCache(Win32_GradientCache* c, HDC refDC, int con
         int delta = (int)(n & 0x1F) - 16;
         delta = (int)(delta * ShaderIntensity * 0.5f);
         int r = GetRValue(col) + delta, g = GetGValue(col) + delta, b = GetBValue(col) + delta;
-        float d = Win32_Dither(x, y);
+        float d = win32_dither(x, y);
         r = (int)(r + d); g = (int)(g + d); b = (int)(b + d);
         if (r < 0) r = 0; if (r > 255) r = 255; if (g < 0) g = 0; if (g > 255) g = 255; if (b < 0) b = 0; if (b > 255) b = 255;
         row[x] = (uint32_t)b | ((uint32_t)g << 8) | ((uint32_t)r << 16);
@@ -208,13 +208,13 @@ static void Win32_EnsureGradientCache(Win32_GradientCache* c, HDC refDC, int con
   c->gamma = gamma; c->intensity = intensity;
 }
 
-static void Win32_DrawGradientDIB(HDC hdc, RECT* rc, COLORREF base, int preset, int containerW, int containerH, int offsetX, int offsetY) {
+static void win32_draw_gradient_dib(HDC hdc, RECT* rc, COLORREF base, int preset, int containerW, int containerH, int offsetX, int offsetY) {
   int w = rc->right - rc->left;
   int h = rc->bottom - rc->top;
   if (w <= 0 || h <= 0) return;
   if (preset == 1 || preset == 2 || preset == 3 || preset == 4) {
     if (containerW > 0 && containerH > 0 && (containerW != w || containerH != h || offsetX != 0 || offsetY != 0)) {
-      Win32_EnsureGradientCache(&g_bgCache, hdc, containerW, containerH, base, preset);
+      win32_ensure_gradient_cache(&g_bgCache, hdc, containerW, containerH, base, preset);
       if (g_bgCache.dc && g_bgCache.bmp) {
         BitBlt(hdc, rc->left, rc->top, w, h, g_bgCache.dc, offsetX, offsetY, SRCCOPY);
         return;
@@ -238,7 +238,7 @@ static void Win32_DrawGradientDIB(HDC hdc, RECT* rc, COLORREF base, int preset, 
   }
   uint32_t* pixels = (uint32_t*)bits;
   COLORREF light = DeriveLighterWin(base, 1.0f);
-  float gamma = Win32_ComputeGamma();
+  float gamma = win32_compute_gamma();
   if (preset == 1) {
     for (int y = 0; y < h; y++) {
       float t;
@@ -252,7 +252,7 @@ static void Win32_DrawGradientDIB(HDC hdc, RECT* rc, COLORREF base, int preset, 
       COLORREF col = LerpColor(base, light, t * 0.9f);
       BYTE r = GetRValue(col), g = GetGValue(col), b = GetBValue(col);
       int dY = (containerW > 0 && containerH > 0) ? (offsetY + y) : y;
-      float d = Win32_Dither(0, dY);
+      float d = win32_dither(0, dY);
       int nr = (int)(r + d); int ng = (int)(g + d); int nb = (int)(b + d);
       if (nr < 0) nr = 0; if (nr > 255) nr = 255; if (ng < 0) ng = 0; if (ng > 255) ng = 255; if (nb < 0) nb = 0; if (nb > 255) nb = 255;
       uint32_t pix = (uint32_t)nb | ((uint32_t)ng << 8) | ((uint32_t)nr << 16);
@@ -278,7 +278,7 @@ static void Win32_DrawGradientDIB(HDC hdc, RECT* rc, COLORREF base, int preset, 
         BYTE r = GetRValue(col), g = GetGValue(col), b = GetBValue(col);
         int dX2 = (containerW > 0 && containerH > 0) ? (offsetX + x) : x;
         int dY2 = (containerW > 0 && containerH > 0) ? (offsetY + y) : y;
-        float d = Win32_Dither(dX2, dY2);
+        float d = win32_dither(dX2, dY2);
         int nr = (int)(r + d); int ng = (int)(g + d); int nb = (int)(b + d);
         if (nr < 0) nr = 0; if (nr > 255) nr = 255; if (ng < 0) ng = 0; if (ng > 255) ng = 255; if (nb < 0) nb = 0; if (nb > 255) nb = 255;
         row[x] = (uint32_t)nb | ((uint32_t)ng << 8) | ((uint32_t)nr << 16);
@@ -299,7 +299,7 @@ static void Win32_DrawGradientDIB(HDC hdc, RECT* rc, COLORREF base, int preset, 
         BYTE r = GetRValue(col), g = GetGValue(col), b = GetBValue(col);
         int dX3 = (containerW > 0 && containerH > 0) ? (offsetX + x) : x;
         int dY3 = (containerW > 0 && containerH > 0) ? (offsetY + y) : y;
-        float d = Win32_Dither(dX3, dY3);
+        float d = win32_dither(dX3, dY3);
         int nr = (int)(r + d); int ng = (int)(g + d); int nb = (int)(b + d);
         if (nr < 0) nr = 0; if (nr > 255) nr = 255; if (ng < 0) ng = 0; if (ng > 255) ng = 255; if (nb < 0) nb = 0; if (nb > 255) nb = 255;
         row[x] = (uint32_t)nb | ((uint32_t)ng << 8) | ((uint32_t)nr << 16);
@@ -325,7 +325,7 @@ static void Win32_DrawGradientDIB(HDC hdc, RECT* rc, COLORREF base, int preset, 
         int delta = (int)(n & 0x1F) - 16;
         delta = (int)(delta * ShaderIntensity * 0.5f);
         int r = GetRValue(col) + delta, g = GetGValue(col) + delta, b = GetBValue(col) + delta;
-        float d = Win32_Dither((int)gx, (int)gy);
+        float d = win32_dither((int)gx, (int)gy);
         r = (int)(r + d); g = (int)(g + d); b = (int)(b + d);
         if (r < 0) r = 0; if (r > 255) r = 255; if (g < 0) g = 0; if (g > 255) g = 255; if (b < 0) b = 0; if (b > 255) b = 255;
         row[x] = (uint32_t)b | ((uint32_t)g << 8) | ((uint32_t)r << 16);
@@ -343,7 +343,7 @@ static void Win32_DrawGradientDIB(HDC hdc, RECT* rc, COLORREF base, int preset, 
   DeleteObject(hBmp);
 }
 
-void Win32_DrawSelectionBackground(HDC hdc, RECT* rc, COLORREF base) {
+void win32_draw_selection_background(HDC hdc, RECT* rc, COLORREF base) {
   PROFILE_START(timer);
   int w = rc->right - rc->left;
   int h = rc->bottom - rc->top;
@@ -355,7 +355,7 @@ void Win32_DrawSelectionBackground(HDC hdc, RECT* rc, COLORREF base) {
   return;
 }
 
-void Win32_DrawBackgroundSlice(HDC hdc, RECT* rc, COLORREF base, int containerW, int containerH, int offsetX, int offsetY) {
+void win32_draw_background_slice(HDC hdc, RECT* rc, COLORREF base, int containerW, int containerH, int offsetX, int offsetY) {
   int preset = ShaderPreset;
   if (!EnableShaders || preset == 0) {
     HBRUSH br = CreateSolidBrush(base);
@@ -363,12 +363,12 @@ void Win32_DrawBackgroundSlice(HDC hdc, RECT* rc, COLORREF base, int containerW,
     DeleteObject(br);
     return;
   }
-  Win32_DrawGradientDIB(hdc, rc, base, preset, containerW, containerH, offsetX, offsetY);
+  win32_draw_gradient_dib(hdc, rc, base, preset, containerW, containerH, offsetX, offsetY);
   return;
 
 }
 
-void Win32_FillRoundedRect(HDC hdc, RECT* rc, COLORREF col, int radius) {
+void win32_fill_rounded_rect(HDC hdc, RECT* rc, COLORREF col, int radius) {
   if (!RoundedCorners || radius <= 0) {
     HBRUSH br = CreateSolidBrush(col);
     FillRect(hdc, rc, br);
@@ -388,9 +388,9 @@ void Win32_FillRoundedRect(HDC hdc, RECT* rc, COLORREF col, int radius) {
   DeleteObject(rgn);
 }
 
-void Win32_FillRoundedRectSlice(HDC hdc, RECT* rc, COLORREF base, int containerW, int containerH, int offsetX, int offsetY, int radius) {
+void win32_fill_rounded_rect_slice(HDC hdc, RECT* rc, COLORREF base, int containerW, int containerH, int offsetX, int offsetY, int radius) {
   if (!RoundedCorners || radius <= 0) {
-    Win32_DrawBackgroundSlice(hdc, rc, base, containerW, containerH, offsetX, offsetY);
+    win32_draw_background_slice(hdc, rc, base, containerW, containerH, offsetX, offsetY);
     return;
   }
   if (radius > (rc->right - rc->left)/2) radius = (rc->right - rc->left)/2;
@@ -398,15 +398,15 @@ void Win32_FillRoundedRectSlice(HDC hdc, RECT* rc, COLORREF base, int containerW
   int save = SaveDC(hdc);
   HRGN rgn = CreateRoundRectRgn(rc->left, rc->top, rc->right+1, rc->bottom+1, radius*2, radius*2);
   SelectClipRgn(hdc, rgn);
-  Win32_DrawBackgroundSlice(hdc, rc, base, containerW, containerH, offsetX, offsetY);
+  win32_draw_background_slice(hdc, rc, base, containerW, containerH, offsetX, offsetY);
   SelectClipRgn(hdc, NULL);
   RestoreDC(hdc, save);
   DeleteObject(rgn);
 }
 
-void Win32_DrawRoundedSelection(HDC hdc, RECT* rc, COLORREF base, int radius) {
+void win32_draw_rounded_selection(HDC hdc, RECT* rc, COLORREF base, int radius) {
   if (!RoundedCorners || radius <= 0) {
-    Win32_DrawSelectionBackground(hdc, rc, base);
+    win32_draw_selection_background(hdc, rc, base);
     return;
   }
   if (radius > (rc->right - rc->left)/2) radius = (rc->right - rc->left)/2;
@@ -414,13 +414,13 @@ void Win32_DrawRoundedSelection(HDC hdc, RECT* rc, COLORREF base, int radius) {
   int save = SaveDC(hdc);
   HRGN rgn = CreateRoundRectRgn(rc->left, rc->top, rc->right+1, rc->bottom+1, radius*2, radius*2);
   SelectClipRgn(hdc, rgn);
-  Win32_DrawSelectionBackground(hdc, rc, base);
+  win32_draw_selection_background(hdc, rc, base);
   SelectClipRgn(hdc, NULL);
   RestoreDC(hdc, save);
   DeleteObject(rgn);
 }
 
-void Win32_DrawBackground(HDC hdc, RECT* rc) {
+void win32_draw_background(HDC hdc, RECT* rc) {
   PROFILE_START(timer);
   const char* name = "solid";
   int w = rc->right - rc->left;
@@ -440,13 +440,13 @@ void Win32_DrawBackground(HDC hdc, RECT* rc) {
   else if (preset == 2) name = "diagonal";
   else if (preset == 3) name = "radial";
   else if (preset == 4) name = "noise";
-  Win32_EnsureGradientCache(&g_bgCache, hdc, w, h, base, preset);
+  win32_ensure_gradient_cache(&g_bgCache, hdc, w, h, base, preset);
   if (g_bgCache.dc && g_bgCache.bmp) {
     BitBlt(hdc, rc->left, rc->top, w, h, g_bgCache.dc, 0, 0, SRCCOPY);
     PROFILE_END_VAR(timer, name);
     return;
   }
-  Win32_DrawGradientDIB(hdc, rc, base, preset, 0, 0, 0, 0);
+  win32_draw_gradient_dib(hdc, rc, base, preset, 0, 0, 0, 0);
   PROFILE_END_VAR(timer, name);
   return;
 

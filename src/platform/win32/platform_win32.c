@@ -8,10 +8,15 @@
 #include <stdlib.h>
 #include "core/context.h"
 #include "core/modal.h"
+#include "core/vim.h"
 #include "config.h"
 #include "core/platform.h"
 #include "helpers/helpers_hotkey.h"
 #include "platform/win32/win32_state.h"
+#include "platform/win32/subclasses_win32.h"
+#include "platform/win32/common_ui_win32.h"
+#include "platform/win32/input_core_win32.h"
+#include "platform/ui.h"
 #include "helpers/helpers_alias.h"
 #include "helpers/helpers_flag.h"
 #include "helpers/helpers_ui.h"
@@ -313,124 +318,6 @@ double Platform_GetUniversalTimeSeconds() {
     
     ULONGLONG elapsed_ms = current_ms - g_timer_start_ms;
     return (double)elapsed_ms / 1000.0;
-}
-
-int Platform_CopyToClipboard(const char* text) {
-    if (text == NULL) return 0;
-
-    size_t len = strlen(text);
-    if (len == 0) return 0;
-
-    char* clean_text = (char*)malloc(len + 1);
-    if (clean_text == NULL) return 0;
-
-    size_t write_idx = 0;
-    for (size_t i = 0; i < len; i++) {
-        if (text[i] != '\r') {
-            clean_text[write_idx++] = text[i];
-        }
-    }
-    clean_text[write_idx] = '\0';
-
-    len = write_idx;
-    if (len == 0) {
-        free(clean_text);
-        return 0;
-    }
-
-    HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, len + 1);
-    if (hMem == NULL) {
-        free(clean_text);
-        return 0;
-    }
-
-    char* pMem = (char*)GlobalLock(hMem);
-    if (pMem == NULL) {
-        GlobalFree(hMem);
-        free(clean_text);
-        return 0;
-    }
-    
-    memcpy(pMem, clean_text, len + 1); 
-    GlobalUnlock(hMem);
-    free(clean_text);
-
-    if (!OpenClipboard(NULL)) {
-        GlobalFree(hMem);
-        return 0;
-    }
-
-    if (!EmptyClipboard()) {
-        GlobalFree(hMem);
-        CloseClipboard();
-        return 0;
-    }
-
-    if (SetClipboardData(CF_TEXT, hMem) == NULL) {
-        GlobalFree(hMem);
-        CloseClipboard();
-        return 0;
-    }
-    char buffer[256];
-    
-    snprintf(buffer,sizeof(buffer),"Copied %s",text);
-    SubjectiveMessageDisplay(buffer,140,TimeOutForMessages,COLOR_TEXT);
-    CloseClipboard();
-    
-log_info("Platform_CopyToClipboard text='%s'", text ? text : "");;
-    return 1;
-}
-
-int Platform_CopyImageToClipboard(const unsigned char* png, size_t len) {
-    if (!png || len == 0) return 0;
-    char tmp[MAX_PATH];
-    GetTempPathA(MAX_PATH, tmp);
-    strcat(tmp, "flint_clip_up.png");
-    FILE* f = fopen(tmp, "wb");
-    if (!f) return 0;
-    size_t w = fwrite(png, 1, len, f);
-    fclose(f);
-    if (w != len) { remove(tmp); return 0; }
-    wchar_t wtmp[512];
-    MultiByteToWideChar(CP_ACP, 0, tmp, -1, wtmp, 512);
-    GpBitmap* bmp = NULL;
-    if (GdipCreateBitmapFromFile(wtmp, &bmp) != 0 || !bmp) { remove(tmp); return 0; }
-    HBITMAP hbm = NULL;
-    if (GdipCreateHBITMAPFromBitmap((GpImage*)bmp, &hbm, 0) != 0 || !hbm) { GdipDisposeImage((GpImage*)bmp); remove(tmp); return 0; }
-    GdipDisposeImage((GpImage*)bmp);
-    remove(tmp);
-    BITMAP bm;
-    memset(&bm, 0, sizeof(bm));
-    if (GetObjectA(hbm, sizeof(bm), &bm) == 0) { DeleteObject(hbm); return 0; }
-    int width = bm.bmWidth;
-    int height = abs(bm.bmHeight);
-    if (width <= 0 || height <= 0) { DeleteObject(hbm); return 0; }
-    int stride = ((width * 32 + 31) / 32) * 4;
-    size_t img = (size_t)stride * (size_t)height;
-    HGLOBAL hDib = GlobalAlloc(GMEM_MOVEABLE, sizeof(BITMAPINFOHEADER) + img);
-    if (!hDib) { DeleteObject(hbm); return 0; }
-    BITMAPINFOHEADER* hdr = (BITMAPINFOHEADER*)GlobalLock(hDib);
-    if (!hdr) { GlobalFree(hDib); DeleteObject(hbm); return 0; }
-    memset(hdr, 0, sizeof(*hdr));
-    hdr->biSize = sizeof(*hdr);
-    hdr->biWidth = width;
-    hdr->biHeight = bm.bmHeight;
-    hdr->biPlanes = 1;
-    hdr->biBitCount = 32;
-    hdr->biCompression = BI_RGB;
-    hdr->biSizeImage = (DWORD)img;
-    HDC hdc = GetDC(NULL);
-    int lines = GetDIBits(hdc, hbm, 0, (UINT)height, (BYTE*)hdr + sizeof(*hdr), (BITMAPINFO*)hdr, DIB_RGB_COLORS);
-    ReleaseDC(NULL, hdc);
-    GlobalUnlock(hDib);
-    DeleteObject(hbm);
-    if (lines == 0) { GlobalFree(hDib); return 0; }
-    if (!OpenClipboard(NULL)) { GlobalFree(hDib); return 0; }
-    EmptyClipboard();
-    if (!SetClipboardData(CF_DIB, hDib)) { CloseClipboard(); GlobalFree(hDib); return 0; }
-    CloseClipboard();
-    log_info("Platform_CopyImageToClipboard ok %dx%d", width, height);
-    return 1;
 }
 
 void Platform_SaveRegionToPNG(int x1, int y1, int x2, int y2, const char* fullPath) {
@@ -852,7 +739,7 @@ bool Platform_FocusWindow(const char* title) {
     return true;
 }
 
-static HWND Win32_ForegroundTarget(void) {
+static HWND win32_foreground_target(void) {
     HWND hwnd = GetForegroundWindow();
     if (!hwnd || !IsWindow(hwnd)) return NULL;
     char cls[64];
@@ -867,7 +754,7 @@ static HWND Win32_ForegroundTarget(void) {
 }
 
 bool Platform_CloseActiveWindow(void) {
-    HWND hwnd = Win32_ForegroundTarget();
+    HWND hwnd = win32_foreground_target();
     if (!hwnd) return false;
     PostMessageA(hwnd, WM_CLOSE, 0, 0);
     return true;
@@ -880,7 +767,7 @@ static LONG g_win32_fs_style;
 static LONG g_win32_fs_exstyle;
 
 bool Platform_ToggleFullscreenActive(void) {
-    HWND hwnd = Win32_ForegroundTarget();
+    HWND hwnd = win32_foreground_target();
     if (!hwnd) return false;
     if (!g_win32_fs_active) {
         if (IsIconic(hwnd)) ShowWindow(hwnd, SW_RESTORE);
@@ -911,11 +798,11 @@ bool Platform_ToggleFullscreenActive(void) {
 typedef struct {
     RECT rects[16];
     int count;
-} Win32_MonList;
+} win32_mon_list;
 
-static BOOL CALLBACK Win32_MonEnum(HMONITOR hMon, HDC hdc, LPRECT rc, LPARAM lp) {
+static BOOL CALLBACK win32_mon_enum(HMONITOR hMon, HDC hdc, LPRECT rc, LPARAM lp) {
     (void)hMon; (void)hdc;
-    Win32_MonList* out = (Win32_MonList*)lp;
+    win32_mon_list* out = (win32_mon_list*)lp;
     if (!out || out->count >= 16 || !rc) return TRUE;
     out->rects[out->count++] = *rc;
     return TRUE;
@@ -927,10 +814,10 @@ typedef struct {
     HWND best;
     int best_gap;
     int best_vdist;
-} Win32_FocusSearch;
+} win32_focus_search;
 
-static BOOL CALLBACK Win32_FocusEnumLeft(HWND hwnd, LPARAM lp) {
-    Win32_FocusSearch* s = (Win32_FocusSearch*)lp;
+static BOOL CALLBACK win32_focus_enum_left(HWND hwnd, LPARAM lp) {
+    win32_focus_search* s = (win32_focus_search*)lp;
     if (!s) return TRUE;
     if (hwnd == GetForegroundWindow()) return TRUE;
     if (!IsWindowVisible(hwnd)) return TRUE;
@@ -956,8 +843,8 @@ static BOOL CALLBACK Win32_FocusEnumLeft(HWND hwnd, LPARAM lp) {
     return TRUE;
 }
 
-static BOOL CALLBACK Win32_FocusEnumRight(HWND hwnd, LPARAM lp) {
-    Win32_FocusSearch* s = (Win32_FocusSearch*)lp;
+static BOOL CALLBACK win32_focus_enum_right(HWND hwnd, LPARAM lp) {
+    win32_focus_search* s = (win32_focus_search*)lp;
     if (!s) return TRUE;
     if (hwnd == GetForegroundWindow()) return TRUE;
     if (!IsWindowVisible(hwnd)) return TRUE;
@@ -984,7 +871,7 @@ static BOOL CALLBACK Win32_FocusEnumRight(HWND hwnd, LPARAM lp) {
 }
 
 bool Platform_MoveActiveWindowToMonitor(bool right) {
-    HWND hwnd = Win32_ForegroundTarget();
+    HWND hwnd = win32_foreground_target();
     if (!hwnd) return false;
     if (IsIconic(hwnd)) ShowWindow(hwnd, SW_RESTORE);
     if (IsZoomed(hwnd)) ShowWindow(hwnd, SW_RESTORE);
@@ -992,9 +879,9 @@ bool Platform_MoveActiveWindowToMonitor(bool right) {
     if (!GetWindowRect(hwnd, &wr)) return false;
     int cx = wr.left + (wr.right - wr.left) / 2;
     int cy = wr.top + (wr.bottom - wr.top) / 2;
-    Win32_MonList list;
+    win32_mon_list list;
     list.count = 0;
-    EnumDisplayMonitors(NULL, NULL, Win32_MonEnum, (LPARAM)&list);
+    EnumDisplayMonitors(NULL, NULL, win32_mon_enum, (LPARAM)&list);
     if (list.count < 2) return false;
     for (int i = 0; i < list.count - 1; i++) {
         for (int j = i + 1; j < list.count; j++) {
@@ -1036,18 +923,18 @@ bool Platform_MoveActiveWindowRight(void) {
 }
 
 bool Platform_FocusWindowLeft(void) {
-    HWND fg = Win32_ForegroundTarget();
+    HWND fg = win32_foreground_target();
     if (!fg) fg = GetForegroundWindow();
     if (!fg) return false;
     RECT fr;
     if (!GetWindowRect(fg, &fr)) return false;
-    Win32_FocusSearch s;
+    win32_focus_search s;
     s.fcx = fr.left + (fr.right - fr.left) / 2;
     s.fcy = fr.top + (fr.bottom - fr.top) / 2;
     s.best = NULL;
     s.best_gap = 1 << 30;
     s.best_vdist = 1 << 30;
-    EnumWindows(Win32_FocusEnumLeft, (LPARAM)&s);
+    EnumWindows(win32_focus_enum_left, (LPARAM)&s);
     if (!s.best) return false;
     if (IsIconic(s.best)) ShowWindow(s.best, SW_RESTORE);
     SetForegroundWindow(s.best);
@@ -1055,18 +942,18 @@ bool Platform_FocusWindowLeft(void) {
 }
 
 bool Platform_FocusWindowRight(void) {
-    HWND fg = Win32_ForegroundTarget();
+    HWND fg = win32_foreground_target();
     if (!fg) fg = GetForegroundWindow();
     if (!fg) return false;
     RECT fr;
     if (!GetWindowRect(fg, &fr)) return false;
-    Win32_FocusSearch s;
+    win32_focus_search s;
     s.fcx = fr.left + (fr.right - fr.left) / 2;
     s.fcy = fr.top + (fr.bottom - fr.top) / 2;
     s.best = NULL;
     s.best_gap = 1 << 30;
     s.best_vdist = 1 << 30;
-    EnumWindows(Win32_FocusEnumRight, (LPARAM)&s);
+    EnumWindows(win32_focus_enum_right, (LPARAM)&s);
     if (!s.best) return false;
     if (IsIconic(s.best)) ShowWindow(s.best, SW_RESTORE);
     SetForegroundWindow(s.best);
@@ -1074,7 +961,7 @@ bool Platform_FocusWindowRight(void) {
 }
 
 bool Platform_MinimizeActiveWindow(void) {
-    HWND hwnd = Win32_ForegroundTarget();
+    HWND hwnd = win32_foreground_target();
     if (hwnd && !IsIconic(hwnd)) {
         ShowWindow(hwnd, SW_MINIMIZE);
         g_win32_last_min = hwnd;
@@ -1410,4 +1297,179 @@ bool Platform_WriteTempFile(const char* name, const void* data, size_t len, char
     if (fclose(f) != 0) ok = false;
     if (!ok) remove(out_path);
     return ok;
+}
+
+void Platform_SettingsPopUp() {
+  HINSTANCE hInstance = GetModuleHandle(NULL);
+  int height = 700;
+  int width = 900;
+  int item_height = 32;
+
+  SetMode(MODE_INSERT);
+
+  WindowLayout layout;
+  CalculateWindowMetrics(&layout, height, width, item_height);
+
+  HFONT hCustomFont = CreateCustomNerdFont(FontSize, UsedFont);
+
+  FlintContext_Get()->window.hPopupWnd = WH_FROM_HWND(CreateWindowExA(
+      WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED | WS_EX_COMPOSITED,
+      "SettingsPopupClass", NULL, WS_POPUP | WS_CLIPCHILDREN, 
+      510, 210, width, height, NULL, NULL, hInstance, NULL
+      ));
+
+  if (WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) == NULL) {
+    DWORD err = GetLastError();
+    log_error("CreateWindowExA failed: %lu", err);
+    DeleteObject(hCustomFont);
+    return;
+  }
+  win32_apply_rounded_corners(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), width, height);
+
+  FlintContext_Get()->window.hSettings = FlintContext_Get()->window.hPopupWnd;
+  SetTimer(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), 999, 50, NULL);
+
+  SettingsCreateChildControls(FlintContext_Get()->window.hPopupWnd, hCustomFont,&layout);
+
+  SetLayeredWindowAttributes(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), 0, (BYTE)WindowOpacity, LWA_ALPHA);
+
+  ForceWindowFocus(FlintContext_Get()->window.hPopupWnd, FlintContext_Get()->window.hEditControl);
+
+  MSG msg;
+  UI_PreparePopupPump();
+  while (!FlintContext_Get()->window.selection_complete) {
+    if (GetMessage(&msg, NULL, 0, 0)) {
+      if (UI_ShouldSkipPopupKey(&msg)) continue;
+      TranslateMessage(&msg);
+      DispatchMessage(&msg);
+    } else {
+      break; 
+    }
+  }
+
+  if (WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) != NULL && IsWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd))) { 
+    KillTimer(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), 999);
+    DestroyWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd));
+    FlintContext_Get()->window.hPopupWnd = WH_NULL;
+  }
+  FlintContext_Get()->window.hSettings = WH_NULL;
+
+  while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+    TranslateMessage(&msg);
+    DispatchMessage(&msg);
+  }
+
+  DeleteObject(hCustomFont); 
+log_info("Platform_SettingsPopUp completed");
+}
+
+int Platform_InitializeTrayIcon() {
+  HINSTANCE hInstance = GetModuleHandle(NULL);
+  if (Tray) {
+    WNDCLASS wc = {0};
+    wc.lpfnWndProc = WndProc;
+    wc.hInstance = hInstance;
+    wc.lpszClassName = "TrayAppClass";
+
+    if (!RegisterClass(&wc)) {
+            log_error("operation failed, returning error");
+return -1;
+    }
+
+    FlintContext_Get()->window.hGlobalTrayWnd = WH_FROM_HWND(CreateWindowExA(
+        WS_EX_TOOLWINDOW,
+        wc.lpszClassName, "TrayApp", 
+        WS_POPUP, 
+        0, 0, 0, 0, 
+        NULL, NULL, hInstance, NULL
+        ));
+
+    if (WH_TO_HWND(FlintContext_Get()->window.hGlobalTrayWnd) == NULL) {
+      return -1;
+    }
+  }
+log_info("Platform_InitializeTrayIcon completed");
+  return 0;
+}
+
+static ULONG_PTR g_gdiplusToken = 0;
+
+void Platform_InitUI() {
+  struct GdiplusStartupInput gdiplusStartupInput;
+  gdiplusStartupInput.GdiplusVersion = 1;
+  gdiplusStartupInput.DebugEventCallback = NULL;
+  gdiplusStartupInput.SuppressBackgroundThread = FALSE;
+  gdiplusStartupInput.SuppressExternalCodecs = FALSE;
+  GdiplusStartup(&g_gdiplusToken, &gdiplusStartupInput, NULL);
+
+
+  WNDCLASSA wc = {0};
+  wc.lpfnWndProc = PopupWndProc;
+  wc.hInstance = GetModuleHandle(NULL);
+  wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+  wc.hbrBackground = GetStockObject(NULL_BRUSH);
+  wc.lpszClassName = "QuickSwitcherModalClass";
+
+  if (RegisterClassA(&wc)) {
+    log_info("QuickSwitcherModalClass registered successfully with OS.");
+  } else {
+    log_error("CRITICAL WARNING: Failed to register window class! Error: %lu", GetLastError());
+  }
+
+  WNDCLASSA wcFade = {0};
+  wcFade.lpfnWndProc = DisplayMessageProc;
+  wcFade.hInstance = GetModuleHandle(NULL);
+  wcFade.hCursor = LoadCursor(NULL, IDC_ARROW);
+  wcFade.hbrBackground = (HBRUSH)(COLOR_BACKGROUND + 1); 
+  wcFade.lpszClassName = "DisplayMessageModalClass";
+  RegisterClassA(&wcFade);
+
+  WNDCLASSA editPopupWc = {0};
+  editPopupWc.lpfnWndProc = EditPopupProc;
+  editPopupWc.hInstance = GetModuleHandle(NULL);
+  editPopupWc.hCursor = LoadCursor(NULL, IDC_ARROW);
+  editPopupWc.hbrBackground = CreateSolidBrush(COLOR_BG);
+  editPopupWc.lpszClassName = "EditPopupClass";
+  RegisterClassA(&editPopupWc);
+
+  WNDCLASSA searchPopupWc = {0};
+  searchPopupWc.lpfnWndProc = SearchPopupProc;
+  searchPopupWc.hInstance = GetModuleHandle(NULL);
+  searchPopupWc.hCursor = LoadCursor(NULL, IDC_ARROW);
+  searchPopupWc.hbrBackground = CreateSolidBrush(COLOR_BG);
+  searchPopupWc.lpszClassName = "SearchPopupClass";
+  RegisterClassA(&searchPopupWc);
+
+   WNDCLASSA settingsPopupWc = {0};
+   settingsPopupWc.lpfnWndProc = SettingsPopupProc;
+   settingsPopupWc.hInstance = GetModuleHandle(NULL);
+   settingsPopupWc.hCursor = LoadCursor(NULL, IDC_ARROW);
+   settingsPopupWc.hbrBackground = CreateSolidBrush(COLOR_BG);
+   settingsPopupWc.lpszClassName = "SettingsPopupClass";
+   RegisterClassA(&settingsPopupWc);
+
+   g_win32_hKeyboardHook = SetWindowsHookExA(WH_KEYBOARD_LL, win32_handle_global_key, GetModuleHandle(NULL), 0);
+
+   FontHandle warm = Platform_CreateFont(FontSize, UsedFont);
+   Platform_DestroyFont(warm);
+log_info("Platform_InitUI completed");
+}
+
+void Platform_ShutdownUI() {
+  extern void win32_free_bg_cache(void);
+  win32_free_bg_cache();
+  if (g_win32_hKeyboardHook) {
+    UnhookWindowsHookEx(g_win32_hKeyboardHook);
+    g_win32_hKeyboardHook = NULL;
+  }
+  if (g_gdiplusToken != 0) {
+    GdiplusShutdown(g_gdiplusToken);
+  }
+log_info("Platform_ShutdownUI completed");
+}
+
+void Platform_WaitForKeypressAsync(KeyCallback callback) {
+  g_win32_waiting_for_key = true;
+  g_win32_key_callback = callback;
+log_info("Platform_WaitForKeypressAsync callback=%p", callback);;
 }

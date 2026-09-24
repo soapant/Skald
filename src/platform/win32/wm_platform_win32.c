@@ -4,10 +4,25 @@
 #include "core/remap_manager.h"
 #include "deps/log.h"
 #include <windows.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include "config.h"
+#include "core/context.h"
+#include "core/modal.h"
+#include "core/types.h"
+#include "core/vim.h"
+#include "core/feature_data.h"
+#include "core/timer.h"
+#include "helpers/helpers_ui.h"
+#include "platform/ui.h"
+#include "platform/win32/common_ui_win32.h"
+#include "platform/win32/popup_helpers_win32.h"
 
 extern int WindowManager_RunWin32(WindowManager* wm);
 extern void WindowManager_QuitWin32(WindowManager* wm);
 extern void WindowManager_ProcessEventsWin32(WindowManager* wm);
+#include "platform/win32/win32_state.h"
 
 bool Platform_WM_InitDisplay(WindowManager* wm) {
     (void)wm;
@@ -59,3 +74,200 @@ void Platform_WM_GetMonitorGeometry(int *ox, int *oy, int *ow, int *oh) {
     if (oh) *oh = h;
 }
 
+
+char* Platform_PromptUser(WindowManager* wm, const PromptSpec* spec) {
+  (void)wm;
+  if (!spec) { log_error("Platform_PromptUser null spec"); return NULL; }
+  const char** window_list = spec->items;
+  const char* window_title = spec->title ? spec->title : "Flint";
+  int count = 0;
+  if (window_list) {
+    for (count = 0; count < 8192 && window_list[count]; count++) {}
+  }
+  int item_height = 32;
+  RefreshCallback refresh_callback = spec->refresh;
+  EnterCallback enter_callback = spec->enter;
+  CtrlEnterCallback ctrl_enter_callback = spec->ctrl_enter;
+  TabCallback tab_callback = spec->tab;
+  CopyCallback copy_callback = spec->copy;
+  RenderCallback render_callback = spec->render;
+  EditCallback edit_callback = spec->edit;
+  FilterCallback filter_callback = spec->filter;
+  HelpCallback help_callback = spec->help;
+
+  HINSTANCE hInstance = GetModuleHandle(NULL);
+  FlintContext_Get()->window.selection_complete = false;
+  FlintContext_Get()->window.output_buffer[0] = '\0';
+  PROFILE_START(timer);
+
+  if (g_win32_prompt_state) { free(g_win32_prompt_state); g_win32_prompt_state = NULL; }
+  PromptState *win_state = NULL;
+  ListBoxInfo* lb_ptr = NULL;
+  bool has_listbox = (window_list || spec->refresh || spec->render);
+  if (has_listbox) {
+    win_state = (PromptState*)calloc(1, sizeof(PromptState));
+    if (!win_state) { log_error("operation failed, returning error spec=%p", spec); return NULL; }
+    win_state->width = 900;
+    win_state->height = 640;
+    win_state->has_listbox = true;
+    win_state->window_title = (char*)window_title;
+    lb_ptr = &win_state->listbox;
+    ListBoxInfo_Init(lb_ptr);
+    g_win32_prompt_state = win_state;
+  }
+
+  FlintContext_Get()->prompt_callbacks.refresh = refresh_callback;
+  FlintContext_Get()->prompt_callbacks.enter = enter_callback;
+  FlintContext_Get()->prompt_callbacks.ctrl_enter = ctrl_enter_callback;
+  FlintContext_Get()->prompt_callbacks.tab = tab_callback;
+  FlintContext_Get()->prompt_callbacks.copy = copy_callback;
+  FlintContext_Get()->prompt_callbacks.render = render_callback;
+  FlintContext_Get()->prompt_callbacks.edit = edit_callback;
+  FlintContext_Get()->prompt_callbacks.filter = filter_callback;
+  FlintContext_Get()->prompt_callbacks.help = help_callback;
+  FlintContext_Get()->window.title = window_title;
+  {
+    const char* p = strchr(window_title, ' ');
+    const char* name = window_title;
+    if (p) {
+        int has_high = 0;
+        for (const char* q = window_title; q < p; q++) {
+            if ((unsigned char)*q >= 0x80) { has_high = 1; break; }
+        }
+        if (has_high) name = p + 1;
+    }
+    FlintContext_Get()->window.current_feature = (char*)name;
+  }
+  SetCurrentFeatureName(FlintContext_Get()->window.current_feature);
+  BuildAliasDisplayItems(lb_ptr, window_list, count);
+  extern EditorMode g_last_mode;
+
+  if (ModePersistsThroughFeatures) {
+    SetModeWithListBox(g_last_mode, lb_ptr);
+  } else {
+    SetModeWithListBox(MODE_INSERT, lb_ptr);
+  }
+
+  WindowLayout layout;
+  CalculateWindowMetrics(&layout, 640, 900, item_height);
+  if (win_state) {
+    win_state->width = layout.w;
+    win_state->height = layout.h;
+  }
+
+  HFONT hCustomFont = CreateCustomNerdFont(FontSize, UsedFont);
+
+  FlintContext_Get()->window.hPopupWnd = WH_FROM_HWND(CreateWindowExA(
+      WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED | WS_EX_COMPOSITED,
+      "QuickSwitcherModalClass", NULL, WS_POPUP | WS_CLIPCHILDREN,
+      layout.x, layout.y, layout.w, layout.h, NULL, NULL, hInstance, NULL
+      ));
+
+  if (WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) == NULL) {
+    DeleteObject(hCustomFont);
+    if (win_state) free(win_state);
+    else if (lb_ptr) free(lb_ptr);
+    if (g_win32_prompt_state == win_state) g_win32_prompt_state = NULL;
+    return NULL;
+  }
+  SetWindowLongPtrA(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), GWLP_USERDATA, (LONG_PTR)(lb_ptr));
+  win32_apply_rounded_corners(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), layout.w, layout.h);
+  if (spec->tick) SetTimer(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), UI_TICK_TIMER_ID, UI_TICK_TIMER_MS, NULL);
+
+  PROFILE_END_VAR(timer, "Window Init");
+
+  PROFILE_START(timer1);
+
+  CreateChildControls(FlintContext_Get()->window.hPopupWnd, hCustomFont, window_list, count, &layout, lb_ptr);
+  if (render_callback) {
+    if (WH_TO_HWND(FlintContext_Get()->window.hListBox)) ShowWindow(WH_TO_HWND(FlintContext_Get()->window.hListBox), SW_HIDE);
+    if (WH_TO_HWND(FlintContext_Get()->window.hEditControl)) ShowWindow(WH_TO_HWND(FlintContext_Get()->window.hEditControl), SW_HIDE);
+  }
+  if (refresh_callback && has_listbox && lb_ptr) {
+      refresh_callback("", FlintContext_Get()->window.hListBox, lb_ptr);
+      if (g_win32_prompt_state) g_win32_prompt_state->listbox = *lb_ptr;
+  }
+
+  PROFILE_END_VAR(timer1, "CreateChildControl");
+
+  PROFILE_START(timer2);
+
+  SetLayeredWindowAttributes(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), 0, (BYTE)WindowOpacity, LWA_ALPHA);
+
+  PROFILE_END_VAR(timer2, "WindowBs");
+
+  PROFILE_START(timer3);
+
+  if (IsNormalMode() && RememberLastIndex && last_index >= 0 && has_listbox) {
+    RequestInitialNavigation(last_index);
+  }
+
+  ForceWindowFocus(FlintContext_Get()->window.hPopupWnd, FlintContext_Get()->window.hEditControl);
+
+
+    log_info("Platform_PromptUser spec=%p", spec);;
+PROFILE_END_VAR(timer3, "Focus");
+
+  log_info("Entering local message modal loop...");
+  log_info("Entering modal loop", GetTickCount());
+  MSG msg;
+  int loop_counter = 0;
+  UI_PreparePopupPump();
+  while (!FlintContext_Get()->window.selection_complete) {
+    if (GetMessage(&msg, NULL, 0, 0)) {
+      if (UI_ShouldSkipPopupKey(&msg)) continue;
+      TranslateMessage(&msg);
+      DispatchMessage(&msg);
+      loop_counter++;
+    } else {
+      break; 
+    }
+  }
+  log_info("Left local loop. Processed %d messages.", loop_counter);
+
+  if (WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) != NULL && IsWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd))) {
+    KillTimer(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), 999);
+    KillTimer(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), UI_TICK_TIMER_ID);
+    DestroyWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd));
+    FlintContext_Get()->window.hPopupWnd = WH_NULL;
+  }
+
+  log_info("Flushing trailing queue entries...");
+  while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+    TranslateMessage(&msg);
+    DispatchMessage(&msg);
+  }
+
+  struct feature_data* data = GetFeatureData(FlintContext_Get()->window.current_feature);
+  if (data) {
+    char* new_name = _strdup(FlintContext_Get()->window.current_feature);
+    if (new_name) {
+        free(data->name);
+        data->name = new_name;
+    }
+  }
+
+
+  DeleteObject(hCustomFont);
+  if (g_win32_prompt_state) { free(g_win32_prompt_state); g_win32_prompt_state = NULL; lb_ptr = NULL; }
+  else if (win_state) { free(win_state); win_state = NULL; lb_ptr = NULL; }
+  else if (lb_ptr) free(lb_ptr);
+  FlintContext_Get()->window.selection_complete = false;
+  FlintContext_Get()->prompt_callbacks.refresh = NULL;
+  FlintContext_Get()->prompt_callbacks.enter = NULL;
+  FlintContext_Get()->prompt_callbacks.ctrl_enter = NULL;
+  FlintContext_Get()->prompt_callbacks.tab = NULL;
+  FlintContext_Get()->prompt_callbacks.copy = NULL;
+  FlintContext_Get()->prompt_callbacks.render = NULL;
+  FlintContext_Get()->prompt_callbacks.edit = NULL;
+  FlintContext_Get()->prompt_callbacks.filter = NULL;
+  FlintContext_Get()->prompt_callbacks.help = NULL;
+
+  if (FlintContext_Get()->item_index_map) {
+    shfree(FlintContext_Get()->item_index_map);
+    FlintContext_Get()->item_index_map = NULL;
+  }
+
+  log_info("Returning from Platform_PromptUser. Buffer Length: %zu", strlen(FlintContext_Get()->window.output_buffer));
+  return (strlen(FlintContext_Get()->window.output_buffer) > 0) ? FlintContext_Get()->window.output_buffer : NULL;
+}

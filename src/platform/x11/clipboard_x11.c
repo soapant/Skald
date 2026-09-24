@@ -27,7 +27,7 @@ static Window g_incr_req = None;
 static Atom g_incr_prop = None;
 static size_t g_incr_off = 0;
 
-void Linux_ClipboardEnsureStarted(void) {
+void x11_clipboard_ensure_started(void) {
     Display *dpy = get_display();
     if (!dpy) {
         log_error("clipboard no main display");
@@ -55,14 +55,14 @@ void Linux_ClipboardEnsureStarted(void) {
     log_info("clipboard owner window started win=%lu", (unsigned long)win);
 }
 
-static void Linux_ClipboardAbortIncr(void) {
+static void x11_clipboard_abort_incr(void) {
     g_incr_active = false;
     g_incr_req = None;
     g_incr_prop = None;
     g_incr_off = 0;
 }
 
-static void Linux_ClipboardServeRequest(Display *dpy, XSelectionRequestEvent *req) {
+static void x11_clipboard_serve_request(Display *dpy, XSelectionRequestEvent *req) {
     XEvent resp = {0};
     resp.xselection.type = SelectionNotify;
     resp.xselection.display = req->display;
@@ -99,7 +99,7 @@ static void Linux_ClipboardServeRequest(Display *dpy, XSelectionRequestEvent *re
         resp.xselection.property = prop;
     } else if (req->target == g_clip_png_atom && g_clip_png) {
         if (g_clip_png_len > CLIP_INCR_THRESHOLD) {
-            Linux_ClipboardAbortIncr();
+            x11_clipboard_abort_incr();
             XSelectInput(dpy, req->requestor, PropertyChangeMask);
             long total = (long)g_clip_png_len;
             XChangeProperty(dpy, req->requestor, prop, g_clip_incr, 32, PropModeReplace, (unsigned char*)&total, 1);
@@ -125,9 +125,9 @@ static void Linux_ClipboardServeRequest(Display *dpy, XSelectionRequestEvent *re
     XFlush(dpy);
 }
 
-static void Linux_ClipboardServeIncr(Display *dpy, XPropertyEvent *pev) {
+static void x11_clipboard_serve_incr(Display *dpy, XPropertyEvent *pev) {
     if (!g_incr_active || !g_clip_png) {
-        Linux_ClipboardAbortIncr();
+        x11_clipboard_abort_incr();
         return;
     }
     if (pev->window != g_incr_req || pev->atom != g_incr_prop || pev->state != PropertyDelete) return;
@@ -142,21 +142,21 @@ static void Linux_ClipboardServeIncr(Display *dpy, XPropertyEvent *pev) {
             XChangeProperty(dpy, g_incr_req, g_incr_prop, g_clip_png_atom, 8, PropModeReplace, NULL, 0);
         }
         log_info("clipboard INCR done");
-        Linux_ClipboardAbortIncr();
+        x11_clipboard_abort_incr();
     }
     XFlush(dpy);
 }
 
-bool Linux_ClipboardHandleEvent(Display *dpy, XEvent *ev) {
+bool x11_clipboard_handle_event(Display *dpy, XEvent *ev) {
     if (!dpy || !ev) return false;
     if (ev->type == SelectionRequest) {
         log_info("clipboard got SelectionRequest");
-        Linux_ClipboardServeRequest(dpy, &ev->xselectionrequest);
+        x11_clipboard_serve_request(dpy, &ev->xselectionrequest);
         return true;
     }
     if (ev->type == PropertyNotify) {
         if (g_incr_active) {
-            Linux_ClipboardServeIncr(dpy, &ev->xproperty);
+            x11_clipboard_serve_incr(dpy, &ev->xproperty);
             return true;
         }
         return false;
@@ -166,7 +166,7 @@ bool Linux_ClipboardHandleEvent(Display *dpy, XEvent *ev) {
             char *sname = XGetAtomName(dpy, ev->xselectionclear.selection);
             log_info("clipboard lost ownership sel=%s", sname ? sname : "?");
             if (sname) XFree(sname);
-            Linux_ClipboardAbortIncr();
+            x11_clipboard_abort_incr();
             free(g_clip_text);
             g_clip_text = NULL;
             free(g_clip_png);
@@ -178,7 +178,7 @@ bool Linux_ClipboardHandleEvent(Display *dpy, XEvent *ev) {
     return false;
 }
 
-static int Linux_ClipboardTakeOwnership(Display *dpy) {
+static int x11_clipboard_take_ownership(Display *dpy) {
     XSetSelectionOwner(dpy, g_clip_clipboard, g_clip_win, CurrentTime);
     XSetSelectionOwner(dpy, g_clip_primary, g_clip_win, CurrentTime);
     XFlush(dpy);
@@ -187,10 +187,10 @@ static int Linux_ClipboardTakeOwnership(Display *dpy) {
     return owner == g_clip_win;
 }
 
-int Linux_ClipboardSetText(const char *text) {
+int x11_clipboard_set_text(const char *text) {
     if (!text) return 0;
     log_info("clipboard set req text='%s'", text);
-    Linux_ClipboardEnsureStarted();
+    x11_clipboard_ensure_started();
     Display *dpy = get_display();
     if (!dpy || g_clip_win == None) return 0;
     char* nt = strdup(text);
@@ -202,16 +202,16 @@ int Linux_ClipboardSetText(const char *text) {
     g_clip_png_len = 0;
     XStoreBytes(dpy, text, (int)strlen(text));
     XFlush(dpy);
-    return Linux_ClipboardTakeOwnership(dpy);
+    return x11_clipboard_take_ownership(dpy);
 }
 
-int Linux_ClipboardSetImage(const unsigned char *png, size_t len) {
+int x11_clipboard_set_image(const unsigned char *png, size_t len) {
     if (!png || len == 0) return 0;
     log_info("clipboard set req png len=%d", (int)len);
-    Linux_ClipboardEnsureStarted();
+    x11_clipboard_ensure_started();
     Display *dpy = get_display();
     if (!dpy || g_clip_win == None) return 0;
-    Linux_ClipboardAbortIncr();
+    x11_clipboard_abort_incr();
     unsigned char* np = malloc(len);
     if (!np) return 0;
     memcpy(np, png, len);
@@ -220,14 +220,14 @@ int Linux_ClipboardSetImage(const unsigned char *png, size_t len) {
     g_clip_png_len = len;
     free(g_clip_text);
     g_clip_text = NULL;
-    return Linux_ClipboardTakeOwnership(dpy);
+    return x11_clipboard_take_ownership(dpy);
 }
 
-void Linux_ClipboardShutdown(void) {
+void x11_clipboard_shutdown(void) {
     Display *dpy = get_display();
     if (dpy && g_clip_win != None) XDestroyWindow(dpy, g_clip_win);
     g_clip_win = None;
-    Linux_ClipboardAbortIncr();
+    x11_clipboard_abort_incr();
     free(g_clip_text);
     g_clip_text = NULL;
     free(g_clip_png);
@@ -354,8 +354,8 @@ static char *ClipReadTarget(Display *dpy, Window win, Atom target) {
     return ClipReadProperty(dpy, win, prop, NULL);
 }
 
-char *Linux_ClipboardGetText(void) {
-    Linux_ClipboardEnsureStarted();
+char *x11_clipboard_get_text(void) {
+    x11_clipboard_ensure_started();
     Display *dpy = get_display();
     if (!dpy || g_clip_win == None) return NULL;
     if (XGetSelectionOwner(dpy, g_clip_clipboard) == g_clip_win && g_clip_text)

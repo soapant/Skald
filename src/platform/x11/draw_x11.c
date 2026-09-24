@@ -109,7 +109,7 @@ static void RawLine_Flush(void) {
         if (k >= nu) ucols[nu++] = g_raw_cells[i].color;
     }
     XftColor xcols[64];
-    for (int k = 0; k < nu; k++) Linux_XftAllocColor(dpy, vis, cmap, ucols[k], 0xFFFF, &xcols[k]);
+    for (int k = 0; k < nu; k++) x11_xft_alloc_color(dpy, vis, cmap, ucols[k], 0xFFFF, &xcols[k]);
     int row = 0;
     int p = 0;
     int ls = 0;
@@ -220,7 +220,7 @@ static bool RawRect_Map(int x, int y, int w, int h, unsigned long color) {
     if (idx < 0) idx = 0;
     if (idx >= g_raw_map_count) idx = g_raw_map_count - 1;
     XftColor rc;
-    Linux_XftAllocColor(g_draw_dpy, g_draw_vis, g_draw_cmap, color, 0xFFFF, &rc);
+    x11_xft_alloc_color(g_draw_dpy, g_draw_vis, g_draw_cmap, color, 0xFFFF, &rc);
     XftDrawRect(g_draw_xd, &rc, g_raw_map_x[idx] + (x - (g_raw_map_x0 + idx * g_raw_map_pitch)), g_raw_map_top[idx] + (y - g_raw_map_y), w, h);
     XftColorFree(g_draw_dpy, g_draw_vis, g_draw_cmap, &rc);
     return true;
@@ -250,7 +250,7 @@ bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, F
     if (color == 0) color = rgb_to_hex(COLOR_TEXT);
     const char *a = align ? align : "CENTER";
     XftColor col;
-    Linux_XftAllocColor(g_draw_dpy, g_draw_vis, g_draw_cmap, color, 0xFFFF, &col);
+    x11_xft_alloc_color(g_draw_dpy, g_draw_vis, g_draw_cmap, color, 0xFFFF, &col);
     if (Platform_StringContainsCaseInsensitive(a, "CENTER") || Platform_StringContainsCaseInsensitive(a, "LEFT") || Platform_StringContainsCaseInsensitive(a, "RIGHT")) {
         draw_wrapped_text(g_draw_dpy, g_draw_xd, &col, fh, text, y, (char*)a, pad ? pad : x);
     } else {
@@ -307,7 +307,7 @@ bool Platform_DrawTextLine(int x, int y, const char* text, int len, unsigned lon
     if (!xf) return false;
     if (color == 0) color = rgb_to_hex(COLOR_TEXT);
     XftColor col;
-    Linux_XftAllocColor(g_draw_dpy, g_draw_vis, g_draw_cmap, color, 0xFFFF, &col);
+    x11_xft_alloc_color(g_draw_dpy, g_draw_vis, g_draw_cmap, color, 0xFFFF, &col);
     XftDrawStringUtf8(g_draw_xd, &col, xf, x, y + xf->ascent, (FcChar8*)text, len);
     XftColorFree(g_draw_dpy, g_draw_vis, g_draw_cmap, &col);
     return true;
@@ -315,7 +315,7 @@ bool Platform_DrawTextLine(int x, int y, const char* text, int len, unsigned lon
 
 void Platform_DrawListBackground(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap, int y, int h, bool selected) {
     if (selected) {
-        Linux_DrawSelectionBackground(dpy, xd, vis, cmap, 0, y, state->width, h, rgb_to_hex(COLOR_SELECTED_TEXT));
+        x11_draw_selection_background(dpy, xd, vis, cmap, 0, y, state->width, h, rgb_to_hex(COLOR_SELECTED_TEXT));
     }
 }
 
@@ -341,9 +341,9 @@ void Platform_DrawListItem(PromptState *state, Display *dpy, XftDraw *xd, Visual
     unsigned long ncol, bcol, pcol;
     Platform_GetItemColors(idx, lb->populated_count, &ncol, &bcol, &pcol);
     XftColor ncolor, bcolor, pcolor;
-    Linux_XftAllocColor(dpy, vis, cmap, ncol, 0xFFFF, &ncolor);
-    Linux_XftAllocColor(dpy, vis, cmap, bcol, 0xFFFF, &bcolor);
-    Linux_XftAllocColor(dpy, vis, cmap, pcol, 0xFFFF, &pcolor);
+    x11_xft_alloc_color(dpy, vis, cmap, ncol, 0xFFFF, &ncolor);
+    x11_xft_alloc_color(dpy, vis, cmap, bcol, 0xFFFF, &bcolor);
+    x11_xft_alloc_color(dpy, vis, cmap, pcol, 0xFFFF, &pcolor);
     DrawListBoxItemText(dpy, xd, vis, cmap, font, &ncolor, &bcolor, &pcolor, lb,(char*)icon_path, idx, y, text_x);
     XftColorFree(dpy, vis, cmap, &ncolor);
     XftColorFree(dpy, vis, cmap, &bcolor);
@@ -361,7 +361,7 @@ void Platform_DrawEditText(PromptState *state, Display *dpy, XftDraw *xd, Visual
     XftFont *xf = FH_TO_XFT(font);
     int cursor_x = 0;
     int text_len = strlen(state->filter);
-    int scroll = Linux_UpdateEditScrollOffset(dpy, xf, state->filter, text_len, state->cursor, state->width, state->scroll_offset, &cursor_x);
+    int scroll = x11_update_edit_scroll_offset(dpy, xf, state->filter, text_len, state->cursor, state->width, state->scroll_offset, &cursor_x);
     state->scroll_offset = scroll;
     int draw_x = 14 - scroll;
     if (text_len > 0) {
@@ -372,7 +372,7 @@ void Platform_DrawEditText(PromptState *state, Display *dpy, XftDraw *xd, Visual
 void Platform_DrawEditCursor(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap, FontHandle font) {
     XftFont *xf = FH_TO_XFT(font);
     int cursor_x = 0;
-    Linux_UpdateEditScrollOffset(dpy, xf, state->filter, strlen(state->filter), state->cursor, state->width, state->scroll_offset, &cursor_x);
+    x11_update_edit_scroll_offset(dpy, xf, state->filter, strlen(state->filter), state->cursor, state->width, state->scroll_offset, &cursor_x);
     Platform_SetDrawContext(dpy, xd, vis, cmap);
     int cursor_draw_x = 14 + cursor_x - state->scroll_offset;
     if (cursor_draw_x < 2) cursor_draw_x = 2;
@@ -389,7 +389,7 @@ void Platform_DrawEditCursor(PromptState *state, Display *dpy, XftDraw *xd, Visu
 bool Platform_DrawRectRaw(int x, int y, int w, int h, unsigned long color) {
     if (RawRect_Map(x, y, w, h, color)) return true;
     XftColor col;
-    Linux_XftAllocColor(g_draw_dpy, g_draw_vis, g_draw_cmap, color, OpacityAlpha16(), &col);
+    x11_xft_alloc_color(g_draw_dpy, g_draw_vis, g_draw_cmap, color, OpacityAlpha16(), &col);
     XftDrawRect(g_draw_xd, &col, x, y, w, h);
     XftColorFree(g_draw_dpy, g_draw_vis, g_draw_cmap, &col);
     return true;

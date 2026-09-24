@@ -1374,7 +1374,7 @@ int Platform_CopyToClipboard(const char *text) {
         wr = Wayland_ClipboardSetText(text);
         log_info("Platform_CopyToClipboard wayland=%d", wr);
     }
-    xr = Linux_ClipboardSetText(text);
+    xr = x11_clipboard_set_text(text);
     log_info("Platform_CopyToClipboard x11=%d", xr);
     if (!wr && !xr) log_warn("Platform_CopyToClipboard failed both backends");
     return (wr || xr);
@@ -1388,7 +1388,7 @@ int Platform_CopyImageToClipboard(const unsigned char *png, size_t len) {
         wr = Wayland_ClipboardSetImage(png, len);
         log_info("Platform_CopyImageToClipboard wayland=%d", wr);
     }
-    xr = Linux_ClipboardSetImage(png, len);
+    xr = x11_clipboard_set_image(png, len);
     log_info("Platform_CopyImageToClipboard x11=%d", xr);
     if (!wr && !xr) log_warn("Platform_CopyImageToClipboard failed both backends");
     return (wr || xr);
@@ -1496,7 +1496,7 @@ bool Platform_InitDisplaySafe(void) {
 
 void Platform_CleanupDisplaySafe(void) {
     Wayland_ClipboardShutdown();
-    Linux_ClipboardShutdown();
+    x11_clipboard_shutdown();
     cleanup_display();
 }
 
