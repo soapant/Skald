@@ -1,4 +1,5 @@
 #include "core/flapi_platform.h"
+#include "wm/kwin_wm.h"
 #include "deps/log.h"
 #include "core/platform.h"
 #include "platform/draw.h"
@@ -853,6 +854,7 @@ bool fl_clipboard_set_png_path_platform(const char* path) {
 }
 
 void fl_screenshot_copy_area_platform(void) {
+    if (kwin_is_active()) { screenshot_copy_area_kwin(); return; }
     char cmd[512];
     char* wd = Platform_GetWorkingDir();
     char path[MAX_PATH];
@@ -874,6 +876,7 @@ void fl_screenshot_copy_area_platform(void) {
 }
 
 void fl_screenshot_copy_platform(void) {
+    if (kwin_is_active()) { screenshot_copy_kwin(); return; }
     char cmd[512];
     char* wd = Platform_GetWorkingDir();
     char path[MAX_PATH];
@@ -894,6 +897,7 @@ void fl_screenshot_copy_platform(void) {
 }
 
 void fl_screenshot_save_area_platform(char* save_path) {
+    if (kwin_is_active()) { screenshot_save_area_kwin(save_path); return; }
     char cmd[512];
     char* wd = Platform_GetWorkingDir();
     
@@ -910,6 +914,7 @@ void fl_screenshot_save_area_platform(char* save_path) {
     free(Platform_RunCommandAndGetOutput(cmd));
 }
 void fl_screenshot_save_platform(char* save_path) {
+    if (kwin_is_active()) { screenshot_save_kwin(save_path); return; }
     char cmd[512];
     char* wd = Platform_GetWorkingDir();
     
@@ -927,6 +932,7 @@ void fl_screenshot_save_platform(char* save_path) {
 }
 
 void fl_ocr_area_to_clipboard_platform() {
+    if (kwin_is_active()) { ocr_area_to_clipboard_kwin(); return; }
     char cmd[512];
     char* wd = Platform_GetWorkingDir();
 
