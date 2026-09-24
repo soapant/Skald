@@ -149,7 +149,10 @@ LRESULT CALLBACK EditPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
     if (EditPopupWindow_OnKey(hWnd, data, lb, &key)) return 0;
     return DefSubclassProc(hWnd, uMsg, wParam, lParam);
   }
-  if (uMsg == WM_CHAR && (wParam == 0x08 || wParam == 0x7F)) return 0;
+  if (uMsg == WM_CHAR) {
+    if (IsNormalMode()) return 0;
+    if (wParam == 0x08 || wParam == 0x7F) return 0;
+  }
   return DefSubclassProc(hWnd, uMsg, wParam, lParam);
 }
 

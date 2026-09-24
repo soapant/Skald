@@ -293,6 +293,7 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
   }
   if (msg == WM_ERASEBKGND) return 1;
     if (msg == WM_CHAR) {
+      if (IsNormalMode()) return 0;
       if (wParam == 0x08 || wParam == 0x7F) return 0;
       return DefSubclassProc(hwnd, msg, wParam, lParam);
     }
