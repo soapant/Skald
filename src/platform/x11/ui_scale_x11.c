@@ -5,8 +5,8 @@
 #include <X11/Xresource.h>
 #include <stdlib.h>
 
-static float g_ui_scale = 0.0f;
-static int g_ui_scale_applied = 0;
+static float ui_scale = 0.0f;
+static int ui_scale_applied = 0;
 
 static float ui_scale_detect(void) {
     const char* ov = getenv("FLINT_SCALE");
@@ -63,13 +63,13 @@ static float ui_scale_detect(void) {
 }
 
 float Platform_GetUIScale(void) {
-    if (g_ui_scale <= 0.0f) g_ui_scale = ui_scale_detect();
-    return g_ui_scale;
+    if (ui_scale <= 0.0f) ui_scale = ui_scale_detect();
+    return ui_scale;
 }
 
 void Platform_ApplyUIScale(void) {
-    if (g_ui_scale_applied) return;
-    g_ui_scale_applied = 1;
+    if (ui_scale_applied) return;
+    ui_scale_applied = 1;
     float s = Platform_GetUIScale();
     if (s > 1.0f) FontSize = (int)(FontSize * s + 0.5f);
 }
