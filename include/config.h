@@ -93,6 +93,11 @@ extern size_t ALIAS_ENTRY_COUNT;
 #define MAX_FILE_LINE_LENGTH 1024
 
 void Config_ResolveDefaultApps(void);
+bool Config_Load(void);
+bool Config_Reload(void);
+void Config_Unload(void);
+void Config_Save(void);
+void Config_PollWatcher(void);
 
 #define ARRAY_LEN(a) (sizeof(a) / sizeof((a)[0]))
 

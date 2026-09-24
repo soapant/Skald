@@ -52,6 +52,7 @@ int main() {
   WindowManager_Destroy(wm);
 
   FeatureLoader_Shutdown();
+  Config_Save();
   Config_Unload();
   Platform_ShutdownUI();
   Platform_CleanupDisplaySafe();
