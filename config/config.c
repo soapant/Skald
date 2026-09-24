@@ -1,19 +1,20 @@
 #include "config.h"
 
+// <flint-config-generated>
 static const PathVar user_path_vars[] = {
-    {"DEV",          "D:\\Projects",                    "/home/diggy/Programming/Projects"},
-    {"MISC",         "D:\\retard games\\miscellaneous", "/home/diggy/miscellaneous"},
-    {"MUSIC",        "D:\\Music",                       "/home/diggy/Music"},
-    {"VIDEOS",       "D:\\videos",                      "/home/diggy/Videos"},
-    {"PROGRAMDATA",  "C:\\ProgramData",                 ""},
-    {"SystemRoot",   "C:\\Windows",                     ""},
+    {"DEV", "D:\\Projects", "/home/diggy/Programming/Projects"},
+    {"MISC", "D:\\retard games\\miscellaneous", "/home/diggy/miscellaneous"},
+    {"MUSIC", "D:\\Music", "/home/diggy/Music"},
+    {"VIDEOS", "D:\\videos", "/home/diggy/Videos"},
+    {"PROGRAMDATA", "C:\\ProgramData", ""},
+    {"SystemRoot", "C:\\Windows", ""},
 };
 
 static const AliasEntry user_aliases[] = {
-  {"brw","Brawlhalla","AppLauncher"},
+    {"brw", "Brawlhalla", "AppLauncher"},
 };
 
-void FlintConfigApply(void) {
+void ConfigApply(void) {
     Tray = true;
     EnableVimMode = true;
     RememberLastIndex = true;
@@ -28,23 +29,23 @@ void FlintConfigApply(void) {
     CornerRadius = 14;
     EnableShaders = true;
     ShaderPreset = 1;
-    ShaderIntensity = 0.15f;
+    ShaderIntensity = 0.55f;
     TimeBetweenHotReload = 2;
-    WindowOpacity = 235.0;
+    WindowOpacity = 235.0f;
     EditPopUpPos = "middle";
     EditPopUpWidthMin = 400;
     PageUpDownLen = 6;
     UsedFont = "0xProto Nerd Font";
-    FontSize = 20;
+    FontSize = 21;
     IconSize = 32;
     MaxFeatures = 1000;
     VimFontSize = 18;
     PaddingForScrolling = 3;
-    UsedTerminal = "";
+    UsedTerminal = "foot";
     UsedShell = "nu";
     UsedBrowser = "zen-browser";
     UsedImageViewer = "feh";
-    UsedVideoPlayer = "";
+    UsedVideoPlayer = "mpv";
     UsedSearchEngine = "google";
     FeaturePath = "src/features";
     IconPath = "{MISC}/switch_window.ico";
@@ -59,11 +60,11 @@ void FlintConfigApply(void) {
     GradientItems = 30;
     GradientBrightness = 1.0f;
     CloseOnLossOfFocus = false;
-    COLOR_BG = RGB(30, 30, 30);
+    COLOR_BG = RGB(40, 40, 40);
     COLOR_TEXT = RGB(255, 255, 255);
     COLOR_ALTERNATE = RGB(57, 255, 20);
     COLOR_SELECTED_TEXT = RGB(0, 0, 0);
-    COLOR_ALIAS_TEXT = COLOR_TEXT;
+    COLOR_ALIAS_TEXT = RGB(255, 255, 255);
     COLOR_ERROR = RGB(180, 0, 0);
     COLOR_NORMAL = RGB(200, 200, 0);
     COLOR_TIP = RGB(0, 160, 0);
@@ -71,7 +72,8 @@ void FlintConfigApply(void) {
     COLOR_NORMAL_MODE = RGB(100, 255, 255);
     COLOR_VISUAL_MODE = RGB(200, 3, 222);
     G_PATH_VARS = user_path_vars;
-    PATH_VAR_COUNT = ARRAY_LEN(user_path_vars);
+    PATH_VAR_COUNT = 6;
     Aliases = user_aliases;
-    ALIAS_ENTRY_COUNT = ARRAY_LEN(user_aliases);
+    ALIAS_ENTRY_COUNT = 1;
 }
+// </flint-config-generated>

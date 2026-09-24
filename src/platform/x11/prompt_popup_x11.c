@@ -295,9 +295,11 @@ bool Platform_PromptPopupOnKey(Popup* self, const PopupKeyEvent* key) {
     if (ctrl_pressed) {
       if (wParam == VK_OEM_MINUS) {
         FontSize -= 1;
+        Config_Save();
       }
       if (wParam == VK_OEM_PLUS) {
         FontSize += 1;
+        Config_Save();
       }
     }
 
