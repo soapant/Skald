@@ -132,7 +132,7 @@ TEST(dw_from_middle) {
     HandleDeleteWordNormal(vctx());
     char buf[64];
     vgettext(buf, sizeof(buf));
-    ASSERT_EQ_STR(buf, "hello  test");
+    ASSERT_EQ_STR(buf, "hello test");
     ASSERT_TRUE(IsNormalMode());
 }
 
