@@ -193,9 +193,13 @@ int Linux_ClipboardSetText(const char *text) {
     Linux_ClipboardEnsureStarted();
     Display *dpy = get_display();
     if (!dpy || g_clip_win == None) return 0;
+    char* nt = strdup(text);
+    if (!nt) return 0;
     free(g_clip_text);
-    g_clip_text = strdup(text);
-    if (!g_clip_text) return 0;
+    g_clip_text = nt;
+    free(g_clip_png);
+    g_clip_png = NULL;
+    g_clip_png_len = 0;
     XStoreBytes(dpy, text, (int)strlen(text));
     XFlush(dpy);
     return Linux_ClipboardTakeOwnership(dpy);
@@ -208,11 +212,14 @@ int Linux_ClipboardSetImage(const unsigned char *png, size_t len) {
     Display *dpy = get_display();
     if (!dpy || g_clip_win == None) return 0;
     Linux_ClipboardAbortIncr();
+    unsigned char* np = malloc(len);
+    if (!np) return 0;
+    memcpy(np, png, len);
     free(g_clip_png);
-    g_clip_png = malloc(len);
-    if (!g_clip_png) return 0;
-    memcpy(g_clip_png, png, len);
+    g_clip_png = np;
     g_clip_png_len = len;
+    free(g_clip_text);
+    g_clip_text = NULL;
     return Linux_ClipboardTakeOwnership(dpy);
 }
 
