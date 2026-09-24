@@ -458,10 +458,16 @@ int Wayland_ClipboardSetText(const char *text) {
     log_info("wayland clipboard set req len=%d", (int)strlen(text));
     if (!wl_setup()) return 0;
     pthread_mutex_lock(&g_wl_text_lock);
-    free(g_wl_text);
-    g_wl_text = strdup(text);
+    char* nt = strdup(text);
+    if (nt) {
+        free(g_wl_text);
+        g_wl_text = nt;
+        free(g_wl_png);
+        g_wl_png = NULL;
+        g_wl_png_len = 0;
+    }
     pthread_mutex_unlock(&g_wl_text_lock);
-    if (!g_wl_text) return 0;
+    if (!nt) return 0;
     pthread_mutex_lock(&g_wl_lock);
     wl_publish_locked();
     pthread_mutex_unlock(&g_wl_lock);
@@ -473,17 +479,16 @@ int Wayland_ClipboardSetImage(const unsigned char *png, size_t len) {
     if (!png || len == 0) return 0;
     log_info("wayland clipboard set req png len=%d", (int)len);
     if (!wl_setup()) return 0;
+    unsigned char* np = malloc(len);
+    if (np) memcpy(np, png, len);
+    if (!np) return 0;
     pthread_mutex_lock(&g_wl_text_lock);
     free(g_wl_png);
-    g_wl_png = malloc(len);
-    if (g_wl_png) {
-        memcpy(g_wl_png, png, len);
-        g_wl_png_len = len;
-    } else {
-        g_wl_png_len = 0;
-    }
+    g_wl_png = np;
+    g_wl_png_len = len;
+    free(g_wl_text);
+    g_wl_text = NULL;
     pthread_mutex_unlock(&g_wl_text_lock);
-    if (!g_wl_png) return 0;
     pthread_mutex_lock(&g_wl_lock);
     wl_publish_locked();
     pthread_mutex_unlock(&g_wl_lock);
