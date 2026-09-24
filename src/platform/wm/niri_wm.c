@@ -163,6 +163,7 @@ Fl_WindowList get_window_titles_niri() {
         niri_copy_json_string(tpos + 9, buf, sizeof(buf));
         p = tpos + 9;
         if (!buf[0]) continue;
+        if (!strcasecmp(buf, "window") || !strcasecmp(buf, "colored")) continue;
         char** tmp = realloc(list.windows, (size_t)(list.count + 1) * sizeof(char*));
         if (!tmp) break;
         list.windows = tmp;
@@ -185,6 +186,7 @@ Fl_WindowList get_window_names_niri() {
         niri_copy_json_string(tpos + 10, buf, sizeof(buf));
         p = tpos + 10;
         if (!buf[0]) continue;
+        if (!strcasecmp(buf, "window") || !strcasecmp(buf, "colored")) continue;
         buf[0] = toupper((unsigned char)buf[0]);
         char** tmp = realloc(list.windows, (size_t)(list.count + 1) * sizeof(char*));
         if (!tmp) break;

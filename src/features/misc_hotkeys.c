@@ -44,9 +44,9 @@ void GoogleMeaning(void) {
 }
 void OpenImage(void) {
   char *clip = fl_get_last_clipboard_entry();
-  char path[512];
-  snprintf(path,sizeof(path),"/home/diggy/Programming/RandomShit/shit/images/%s",clip);
-  fl_open_image(path);
+  char cmd[512];
+  snprintf(cmd,sizeof(cmd)," feh /home/diggy/Programming/RandomShit/shit/images/%s --zoom 65",clip);
+  fl_run_terminal_command(cmd);
   fl_send_hotkey("Alt+F");
 }
 

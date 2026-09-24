@@ -132,6 +132,7 @@ Fl_WindowList Wm_GetWindowNames() {
     log_error("GetWindowNames Didnt Work");
     return empty;
 }
+
 Fl_Pos Wm_GetCursorPosition() {
     Fl_Pos result;
     Fl_Pos empty = { .x = 0, .y = 0 };
