@@ -37,7 +37,6 @@ static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent* key) {
     ListBoxInfo* lb = GetLBFromChild(hwnd);
 
     if (PromptController_TryVimMotion(wParam, ctrl_pressed, shift_pressed, key->alt)) {
-        UI_Redraw(lb, FlintContext_Get()->window.hListBox);
         if (FlintContext_Get()->prompt_callbacks.render != NULL) {
             HWND hPar = GetParent(hwnd);
             if (hPar && IsWindow(hPar)) InvalidateRect(hPar, NULL, FALSE);
