@@ -8,6 +8,7 @@
 #define EDIT_TEXT_KEY       'E'
 #define HELP_SCREEN_KEY     'H'
 #define COPY_SELECTION_KEY  'Y'
+#define SETTINGS_KEY        'D'
 #define COMMAND_MODE_KEY        VK_OEM_1
 #define SEARCH_PROGRAM_KEY      VK_OEM_2
 
