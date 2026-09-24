@@ -19,10 +19,10 @@ bool move_active_window_right_kwin(void);
 bool focus_window_left_kwin(void);
 bool focus_window_right_kwin(void);
 bool minimize_active_window_kwin(void);
-void screenshot_copy_area_kwin(void);
-void screenshot_copy_kwin(void);
-void screenshot_save_area_kwin(char* save_path);
-void screenshot_save_kwin(char* save_path);
-void ocr_area_to_clipboard_kwin(void);
+bool screenshot_copy_area_kwin(void);
+bool screenshot_copy_kwin(void);
+bool screenshot_save_area_kwin(char* save_path);
+bool screenshot_save_kwin(char* save_path);
+char* ocr_area_kwin(void);
 
 #endif
