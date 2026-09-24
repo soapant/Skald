@@ -391,9 +391,9 @@ bool fl_listbox_next_platform(FlListItemCtx *out) {
         int R=6; int t=1;
         int bx = g_fl_list_bx, bw = g_fl_list_bw;
         if (sel) {
-            Linux_FillRoundedRect(g_fl_list_dpy, g_fl_list_xd, g_fl_list_vis, g_fl_list_cmap, rgb_to_hex(COLOR_SELECTED_TEXT), 0xFFFF, bx+t, y+1+t, bw-2*t, g_fl_list_itemH-2-2*t, R-1);
+            x11_fill_rounded_rect(g_fl_list_dpy, g_fl_list_xd, g_fl_list_vis, g_fl_list_cmap, rgb_to_hex(COLOR_SELECTED_TEXT), 0xFFFF, bx+t, y+1+t, bw-2*t, g_fl_list_itemH-2-2*t, R-1);
         } else if (!EnableShaders || ShaderPreset==0) {
-            Linux_FillRoundedRect(g_fl_list_dpy, g_fl_list_xd, g_fl_list_vis, g_fl_list_cmap, rgb_to_hex(COLOR_BG), 0xFFFF, bx+t, y+1+t, bw-2*t, g_fl_list_itemH-2-2*t, R-1);
+            x11_fill_rounded_rect(g_fl_list_dpy, g_fl_list_xd, g_fl_list_vis, g_fl_list_cmap, rgb_to_hex(COLOR_BG), 0xFFFF, bx+t, y+1+t, bw-2*t, g_fl_list_itemH-2-2*t, R-1);
         }
     } else {
         PromptState tmp = {0};
@@ -572,7 +572,7 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
     int cursor_x = 0;
     int scroll = 0;
     if (xf) {
-        scroll = Linux_UpdateEditScrollOffset(dpy,xf,buf,text_len,cursor,w, state ? state->scroll_offset : 0, &cursor_x);
+        scroll = x11_update_edit_scroll_offset(dpy,xf,buf,text_len,cursor,w, state ? state->scroll_offset : 0, &cursor_x);
         if (state) state->scroll_offset = scroll;
     }
     int draw_x = x + 14 - scroll;

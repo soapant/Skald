@@ -33,7 +33,7 @@ bool Platform_EditPopupCreateWindow(Popup* self, int x, int y, int w, int h, con
     PROFILE_START(timer);
     WindowManager* wm = (WindowManager*)self->manager;
     Display* dpy = wm ? wm->display : NULL;
-    ((WMEditPopupData*)self)->base.handle.xid = Linux_CreateEditPopupWindow(dpy, x, y, w, h);
+    ((WMEditPopupData*)self)->base.handle.xid = x11_create_edit_popup_window(dpy, x, y, w, h);
     PROFILE_END_VAR(timer, "window_manager:Platform_EditPopupCreateWindow");
     return true;
 }
@@ -105,19 +105,19 @@ void Platform_EditPopupRender(Popup* self) {
     XftDraw* xd = dbl ? XftDrawCreate(dpy, dbl, vis, cmap) : NULL;
     bool buffered = (dbl && xd);
     if (buffered) {
-        Linux_SetDblVisual(dpy, vis, cmap, depth);
-        Pixmap bg = Linux_GetCachedBackground(dpy, self->handle.xid, data->w, data->h);
+        x11_set_dbl_visual(dpy, vis, cmap, depth);
+        Pixmap bg = x11_get_cached_background(dpy, self->handle.xid, data->w, data->h);
         if (bg) {
             GC gc = XCreateGC(dpy, dbl, 0, NULL);
             XCopyArea(dpy, bg, dbl, gc, 0, 0, data->w, data->h, 0, 0);
             XFreeGC(dpy, gc);
         } else {
-            Linux_DrawBackgroundToDrawable(dpy, dbl, data->w, data->h);
+            x11_draw_background_to_drawable(dpy, dbl, data->w, data->h);
         }
     } else {
         if (dbl) { XFreePixmap(dpy, dbl); dbl = None; }
-        Linux_DrawBackground(dpy, self->handle.xid, data->w, data->h);
-        xd = Linux_CreateXftDraw(dpy, self->handle.xid);
+        x11_draw_background(dpy, self->handle.xid, data->w, data->h);
+        xd = x11_create_xft_draw(dpy, self->handle.xid);
         if (!xd) { PROFILE_END_VAR(timer, "window_manager:Platform_EditPopupRender"); return; }
     }
     FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
@@ -137,7 +137,7 @@ void Platform_EditPopupRender(Popup* self) {
     int scroll = 0;
     int text_w = 0;
     if (xf) {
-        scroll = Linux_UpdateEditScrollOffset(dpy, xf, data->text ? data->text : "", text_len, data->cursor, data->w, 0, &cursor_x);
+        scroll = x11_update_edit_scroll_offset(dpy, xf, data->text ? data->text : "", text_len, data->cursor, data->w, 0, &cursor_x);
         if (text_len > 0) {
             XGlyphInfo textExt;
             XftTextExtentsUtf8(dpy, xf, (FcChar8*)data->text, text_len, &textExt);
@@ -173,7 +173,7 @@ void Platform_EditPopupRender(Popup* self) {
     }
     Platform_SetDrawContext(NULL, NULL, NULL, 0);
     if (buffered) {
-        Linux_ClearDblVisual();
+        x11_clear_dbl_visual();
         GC gc = XCreateGC(dpy, self->handle.xid, 0, NULL);
         XCopyArea(dpy, dbl, self->handle.xid, gc, 0, 0, data->w, data->h, 0, 0);
         XFreeGC(dpy, gc);

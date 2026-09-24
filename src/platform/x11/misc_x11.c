@@ -895,7 +895,7 @@ char* Platform_GetClipboardEntry() {
         }
         log_warn("Platform_GetClipboardEntry wayland null, trying X11 fallback");
     }
-    out = Linux_ClipboardGetText();
+    out = x11_clipboard_get_text();
     if (!out) log_warn("Platform_GetClipboardEntry null wayland=%d", Wayland_ClipboardAvailable());
     else log_info("Platform_GetClipboardEntry len=%d", (int)strlen(out));
     return out;

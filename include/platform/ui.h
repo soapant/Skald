@@ -44,13 +44,13 @@ void UI_GetParent(WindowHandle hwnd);
 
 #if defined(_WIN32)
 #include <windows.h>
-void Win32_ApplyRoundedCorners(HWND hwnd, int w, int h);
-void Win32_DrawBackground(HDC hdc, RECT* rc);
-void Win32_DrawSelectionBackground(HDC hdc, RECT* rc, COLORREF base);
-void Win32_DrawBackgroundSlice(HDC hdc, RECT* rc, COLORREF base, int containerW, int containerH, int offsetX, int offsetY);
-void Win32_FillRoundedRect(HDC hdc, RECT* rc, COLORREF col, int radius);
-void Win32_FillRoundedRectSlice(HDC hdc, RECT* rc, COLORREF base, int containerW, int containerH, int offsetX, int offsetY, int radius);
-void Win32_DrawRoundedSelection(HDC hdc, RECT* rc, COLORREF base, int radius);
+void win32_apply_rounded_corners(HWND hwnd, int w, int h);
+void win32_draw_background(HDC hdc, RECT* rc);
+void win32_draw_selection_background(HDC hdc, RECT* rc, COLORREF base);
+void win32_draw_background_slice(HDC hdc, RECT* rc, COLORREF base, int containerW, int containerH, int offsetX, int offsetY);
+void win32_fill_rounded_rect(HDC hdc, RECT* rc, COLORREF col, int radius);
+void win32_fill_rounded_rect_slice(HDC hdc, RECT* rc, COLORREF base, int containerW, int containerH, int offsetX, int offsetY, int radius);
+void win32_draw_rounded_selection(HDC hdc, RECT* rc, COLORREF base, int radius);
 void ForceWindowFocus(WindowHandle hwndTarget, WindowHandle hwndInput);
 HFONT CreateCustomNerdFont(int height, const char* face_name);
 void CreateChildControls(WindowHandle hwndParent, HFONT hFont, const char* list[], int count, const WindowLayout* layout, ListBoxInfo* lb);

@@ -153,7 +153,7 @@ LRESULT CALLBACK SettingsEditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LP
       ClientToScreen(hwnd, &pt);
       ScreenToClient(hPar, &pt);
       if (EnableShaders && ShaderPreset != 0 && winW > 0 && winH > 0) {
-        Win32_DrawBackgroundSlice(memDC, &rc, COLOR_BG, winW, winH, pt.x, pt.y);
+        win32_draw_background_slice(memDC, &rc, COLOR_BG, winW, winH, pt.x, pt.y);
       } else {
         HBRUSH br = CreateSolidBrush(COLOR_BG);
         FillRect(memDC, &rc, br);
