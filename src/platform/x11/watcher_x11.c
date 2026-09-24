@@ -14,13 +14,16 @@
 
 static _Atomic bool g_watcher_stop = false;
 static time_t g_cfg_mtime = 0;
+static long long g_cfg_change_at = 0;
 
 static void config_watcher_poll(void) {
     struct stat st;
     if (stat("config/config.c", &st) != 0) return;
     if (g_cfg_mtime == 0) { g_cfg_mtime = st.st_mtime; return; }
-    if (st.st_mtime == g_cfg_mtime) return;
-    g_cfg_mtime = st.st_mtime;
+    if (st.st_mtime != g_cfg_mtime) { g_cfg_mtime = st.st_mtime; g_cfg_change_at = Platform_GetWallClockMs(); return; }
+    if (g_cfg_change_at == 0) return;
+    if (Platform_GetWallClockMs() - g_cfg_change_at < 1000) return;
+    g_cfg_change_at = 0;
     usleep(200000);
     log_info("config changed, rebuilding");
     Config_Reload();
