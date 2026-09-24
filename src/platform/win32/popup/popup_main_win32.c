@@ -24,6 +24,8 @@
 #include "core/flapi_platform.h"
 #include "core/prompt_controller.h"
 
+static bool s_swallow_next_char = false;
+
 static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent* key) {
     int wParam = key->vk;
     bool ctrl_pressed = key->ctrl;
@@ -292,6 +294,7 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
   }
   if (msg == WM_ERASEBKGND) return 1;
     if (msg == WM_CHAR) {
+      if (s_swallow_next_char) { s_swallow_next_char = false; return 0; }
       if (IsNormalMode()) return 0;
       if (wParam == 0x08 || wParam == 0x7F) return 0;
       return DefSubclassProc(hwnd, msg, wParam, lParam);
@@ -303,7 +306,10 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
       key.ctrl = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
       key.shift = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
       key.alt = (GetKeyState(VK_MENU) & 0x8000) != 0;
+      bool was_normal = IsNormalMode();
       if (PromptWindow_OnKey(hwnd, &key)) {
+        if (was_normal && wParam >= 0x20 && wParam <= 0x7E) s_swallow_next_char = true;
+        else if ((wParam >= 'A' && wParam <= 'Z') || (wParam >= '0' && wParam <= '9')) s_swallow_next_char = true;
         if (FlintContext_Get()->prompt_callbacks.render != NULL) {
           HWND hPar = GetParent(hwnd);
           if (hPar && IsWindow(hPar)) InvalidateRect(hPar, NULL, FALSE);
