@@ -119,20 +119,56 @@ static void Populate_CaptureSelection(ListBoxInfo* lb, char* out_text, size_t ou
 
 static void Populate_CleanFilter(const char* filter, char* clean_filter, size_t size) {
   clean_filter[0] = '\0';
-  if (filter) {
-    strncpy(clean_filter, filter, size - 1);
-    clean_filter[size - 1] = '\0';
+  if (!filter) return;
+  while (*filter && isspace((unsigned char)*filter)) filter++;
+  size_t j = 0;
+  bool last_was_space = false;
+  for (size_t i = 0; filter[i] && j + 1 < size; i++) {
+    char c = filter[i];
+    if (isspace((unsigned char)c)) {
+      if (!last_was_space) {
+        clean_filter[j++] = ' ';
+        last_was_space = true;
+      }
+    } else {
+      clean_filter[j++] = c;
+      last_was_space = false;
+    }
   }
+  while (j > 0 && clean_filter[j - 1] == ' ') j--;
+  clean_filter[j] = '\0';
+}
+
+static void NormalizeForMatch(const char* src, char* dst, size_t dst_size) {
+  if (!src || !dst || dst_size == 0) { if (dst && dst_size) dst[0]='\0'; return; }
+  while (*src && isspace((unsigned char)*src)) src++;
+  size_t j = 0;
+  bool last_was_space = false;
+  for (size_t i = 0; src[i] && j + 1 < dst_size; i++) {
+    char c = src[i];
+    if (isspace((unsigned char)c)) {
+      if (!last_was_space) { dst[j++] = ' '; last_was_space = true; }
+    } else { dst[j++] = c; last_was_space = false; }
+  }
+  while (j > 0 && dst[j - 1] == ' ') j--;
+  dst[j] = '\0';
 }
 
 static bool Populate_ItemMatches(const char* search_text, const char* original_item, const char* clean_filter, bool (*filter_match)(const char*, const char*)) {
   if (filter_match) return filter_match(search_text, clean_filter);
+  char norm_search[1024];
+  char norm_alias[512];
+  NormalizeForMatch(search_text, norm_search, sizeof(norm_search));
   if (Platform_StringStartsWithCaseInsensitive(FlintContext_Get()->window.current_feature, "center")) {
-    return FuzzyMatchWithTypo(search_text, clean_filter);
+    return FuzzyMatchWithTypo(norm_search, clean_filter);
   }
-  if (Platform_StringContainsCaseInsensitive(search_text, clean_filter)) return true;
+  if (Platform_StringContainsCaseInsensitive(norm_search, clean_filter)) return true;
   const char* alias = get_alias_for_item(original_item);
-  if (alias && Platform_StringContainsCaseInsensitive(alias, clean_filter)) return true;
+  if (alias) {
+    NormalizeForMatch(alias, norm_alias, sizeof(norm_alias));
+    if (Platform_StringContainsCaseInsensitive(norm_alias, clean_filter)) return true;
+    if (Platform_StringContainsCaseInsensitive(norm_search, clean_filter)) return true;
+  }
   return false;
 }
 
