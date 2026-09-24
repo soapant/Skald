@@ -1349,6 +1349,31 @@ bool Platform_ResolveDataPath(const char* name, char* out, size_t out_len) {
         if (*p == '/' || *p == '\\') return false;
     }
     if (strstr(name, "..")) return false;
+    const char* dot = strrchr(name, '.');
+    size_t stemlen = dot ? (size_t)(dot - name) : strlen(name);
+    if (stemlen > 0 && stemlen < 64) {
+        int stemok = 1;
+        for (size_t i = 0; i < stemlen; i++) {
+            char c = name[i];
+            if (c >= 'A' && c <= 'Z') continue;
+            if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-' || c == '_') continue;
+            stemok = 0;
+            break;
+        }
+        if (stemok) {
+            char stem[64];
+            for (size_t i = 0; i < stemlen; i++) {
+                char c = name[i];
+                stem[i] = (c >= 'A' && c <= 'Z') ? (char)(c + 32) : c;
+            }
+            stem[stemlen] = '\0';
+            char dir_path[256];
+            snprintf(dir_path, sizeof(dir_path), "%s\\AppData\\Roaming\\Flint\\%s", Platform_GetRealHome(), stem);
+            if (GetFileAttributesA(dir_path) != INVALID_FILE_ATTRIBUTES) {
+                return Platform_GetFeaturePath(stem, name, out, out_len);
+            }
+        }
+    }
     const char* feat = FlintContext_Get()->window.current_feature;
     if (!feat || !feat[0]) return false;
     char safe[128];
@@ -1357,7 +1382,7 @@ bool Platform_ResolveDataPath(const char* name, char* out, size_t out_len) {
         char c = *p;
         if (c >= 'A' && c <= 'Z') safe[w++] = (char)(c + 32);
         else if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-' || c == '_') safe[w++] = c;
-        else if (c == ' ') safe[w++] = '-';
+        else if (c == ' ') safe[w++] = '_';
     }
     safe[w] = '\0';
     if (w == 0 || strcmp(safe, ".") == 0 || strcmp(safe, "..") == 0) return false;

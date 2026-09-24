@@ -31,6 +31,16 @@ typedef struct {
     int x, y, w, h;
 } PromptPopupData;
 
+static const char* prompt_feature_name(const char* title) {
+    if (!title || !title[0]) return title;
+    const char* p = strchr(title, ' ');
+    if (!p) return title;
+    for (const char* q = title; q < p; q++) {
+        if ((unsigned char)*q >= 0x80) return p + 1;
+    }
+    return title;
+}
+
 static void PromptPopup_OnShow(Popup* self) {
     PROFILE_START(timer);
     PromptPopupData* data = (PromptPopupData*)self;
@@ -50,8 +60,7 @@ static void PromptPopup_OnShow(Popup* self) {
     data->state->width = data->w;
     data->state->height = data->h;
     const char* title = data->spec.title ? data->spec.title : "Flint";
-    const char* p = strchr(title, ' ');
-    data->state->window_title = (char*)(p ? p+1 : title);
+    data->state->window_title = (char*)prompt_feature_name(title);
     data->state->filter[0] = '\0';
     FlintContext_Get()->window.filter[0] = '\0';
     FlintContext_Get()->window.filter_cursor = 0;
@@ -84,7 +93,7 @@ static void PromptPopup_OnShow(Popup* self) {
     ctx2->prompt_callbacks.edit = data->spec.edit;
     ctx2->prompt_callbacks.filter = data->spec.filter;
     ctx2->prompt_callbacks.help = data->spec.help;
-    ctx2->window.current_feature = (char*)(p ? p+1 : title);
+    ctx2->window.current_feature = (char*)prompt_feature_name(title);
     ctx2->window.title = title;
     ctx2->window.callbacks = ctx2->prompt_callbacks;
     SetCurrentFeatureName(ctx2->window.current_feature);
