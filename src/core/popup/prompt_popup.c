@@ -112,6 +112,7 @@ static void PromptPopup_OnHide(Popup* self) {
         if (ModePersistsThroughFeatures && feat) {
             SavePerFeatureState(feat, g_current_mode, last_index);
         }
+        _c3->window.current_feature = NULL;
     }
     PROFILE_END_VAR(timer, "window_manager:PromptPopup_OnHide");
 }
