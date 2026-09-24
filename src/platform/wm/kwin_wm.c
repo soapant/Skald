@@ -84,117 +84,151 @@ static bool kwin_run_script(const char* body) {
     return ok;
 }
 
-static unsigned g_kwin_qid = 0;
-static char g_kwin_qexpr[512] = {0};
-static char* g_kwin_qpayload = NULL;
-static long long g_kwin_qat = 0;
+static char* g_kwin_records = NULL;
+static char* g_kwin_active_title = NULL;
+static char* g_kwin_active_class = NULL;
+static long long g_kwin_snap_at = 0;
+static bool g_kwin_q_loaded = false;
+static int g_kwin_q_id = -1;
 
-static char* kwin_eval_print_inner(const char* expr) {
-    long long now = Platform_GetWallClockMs();
-    if (g_kwin_qpayload && now - g_kwin_qat < 500 && !strcmp(g_kwin_qexpr, expr)) return g_kwin_qpayload;
-    char marker[32];
-    snprintf(marker, sizeof(marker), "FLINTQ%u", ++g_kwin_qid);
-    char body[4096];
-    snprintf(body, sizeof(body), "print(\"%s \" + (%s));", marker, expr);
-    FILE* f = fopen("/tmp/flint_kwin_q.js", "w");
-    if (!f) return NULL;
-    fputs(body, f);
-    fclose(f);
+static const char g_kwin_q_body[] =
+    "(function(){"
+    "function cf(w){try{var v=w.caption;if(!v)return \"\";return String(v).replace(/[\\r\\n]+/g,\" \");}catch(e){return \"\";}}"
+    "function cc(w){try{var v=w.resourceClass;if(!v)return \"\";return String(v).replace(/[\\r\\n]+/g,\" \");}catch(e){return \"\";}}"
+    "var ws=workspace.stackingOrder;var o=\"\";"
+    "for(var i=0;i<ws.length;i++){if(o){o+=\"\\x1f\";}o+=cf(ws[i])+\"\\x1e\"+cc(ws[i]);}"
+    "print(\"FLINTQR \"+o);"
+    "print(\"FLINTQA \"+(workspace.activeWindow?cf(workspace.activeWindow):\"\"));"
+    "print(\"FLINTQC \"+(workspace.activeWindow?cc(workspace.activeWindow):\"\"));"
+    "})();";
+
+static bool kwin_q_load(void) {
     char* pre = kwin_qdbus_call("org.kde.KWin /Scripting org.kde.kwin.Scripting.unloadScript flintq");
     if (pre) free(pre);
+    FILE* f = fopen("/tmp/flint_kwin_q.js", "w");
+    if (!f) return false;
+    fputs(g_kwin_q_body, f);
+    fclose(f);
     char* out = kwin_qdbus_call("org.kde.KWin /Scripting org.kde.kwin.Scripting.loadScript /tmp/flint_kwin_q.js flintq");
     if (!out || kwin_has_error(out)) {
+        log_error("kwin q load failed out='%s'", out ? out : "null");
         if (out) free(out);
-        return NULL;
+        g_kwin_q_loaded = false;
+        return false;
     }
-    int id = atoi(out);
+    g_kwin_q_id = atoi(out);
     free(out);
-    char args[128];
-    snprintf(args, sizeof(args), "org.kde.KWin /Scripting/Script%d org.kde.kwin.Script.run", id);
-    char* out2 = kwin_qdbus_call(args);
-    if (!out2 || kwin_has_error(out2)) {
-        if (out2) free(out2);
-        return NULL;
-    }
-    free(out2);
-    char* out3 = kwin_qdbus_call("org.kde.KWin /Scripting org.kde.kwin.Scripting.unloadScript flintq");
-    if (out3) free(out3);
-    char cmd[256];
-    snprintf(cmd, sizeof(cmd), "journalctl --user -o cat --since=\"-30s\" 2>/dev/null | grep -a \"%s\" | tail -1", marker);
-    char* log = NULL;
-    for (int attempt = 0; attempt < 8; attempt++) {
-        if (attempt > 0) {
-            struct timespec ts;
-            ts.tv_sec = 0;
-            ts.tv_nsec = 100 * 1000 * 1000;
-            nanosleep(&ts, NULL);
-        }
-        char* got = Platform_RunTerminalCommand(cmd, false);
-        if (got && got[0] && strstr(got, marker)) {
-            log = got;
-            break;
-        }
-        if (got) free(got);
-    }
-    if (!log || !log[0]) {
-        if (log) free(log);
-        return NULL;
-    }
-    char* start = strstr(log, marker);
-    if (!start) { free(log); return NULL; }
-    start += strlen(marker);
-    if (*start == ' ') start++;
-    size_t n = strlen(start);
-    while (n > 0 && (start[n-1] == '\n' || start[n-1] == '\r')) start[--n] = '\0';
-    free(g_kwin_qpayload);
-    g_kwin_qpayload = strdup(start);
-    free(log);
-    if (!g_kwin_qpayload) return NULL;
-    strncpy(g_kwin_qexpr, expr, sizeof(g_kwin_qexpr)-1);
-    g_kwin_qexpr[sizeof(g_kwin_qexpr)-1] = '\0';
-    g_kwin_qat = now;
-    return g_kwin_qpayload;
+    g_kwin_q_loaded = true;
+    return true;
 }
 
-static char* kwin_eval_print(const char* expr) {
-    pthread_mutex_lock(&g_kwin_mtx);
-    char* r = kwin_eval_print_inner(expr);
-    char* out = r ? strdup(r) : NULL;
-    pthread_mutex_unlock(&g_kwin_mtx);
-    return out;
+static void kwin_snap_store(const char* blob) {
+    char* rec = NULL;
+    char* at = NULL;
+    char* ac = NULL;
+    const char* p = blob;
+    while (*p) {
+        const char* eol = strchr(p, '\n');
+        size_t len = eol ? (size_t)(eol - p) : strlen(p);
+        const char* val = NULL;
+        size_t vlen = 0;
+        char which = 0;
+        if (len > 8 && !strncmp(p, "FLINTQR ", 8)) { which = 'r'; val = p + 8; vlen = len - 8; }
+        else if (len > 8 && !strncmp(p, "FLINTQA ", 8)) { which = 'a'; val = p + 8; vlen = len - 8; }
+        else if (len > 8 && !strncmp(p, "FLINTQC ", 8)) { which = 'c'; val = p + 8; vlen = len - 8; }
+        if (which) {
+            while (vlen > 0 && (val[vlen - 1] == '\r' || val[vlen - 1] == '\n')) vlen--;
+            char* v = malloc(vlen + 1);
+            if (v) {
+                memcpy(v, val, vlen);
+                v[vlen] = '\0';
+                if (which == 'r') { free(rec); rec = v; }
+                else if (which == 'a') { free(at); at = v; }
+                else { free(ac); ac = v; }
+            }
+        }
+        p = eol ? eol + 1 : p + len;
+    }
+    if (rec) { free(g_kwin_records); g_kwin_records = rec; }
+    if (at) { free(g_kwin_active_title); g_kwin_active_title = at; }
+    if (ac) { free(g_kwin_active_class); g_kwin_active_class = ac; }
 }
 
-static size_t kwin_copy_field(const char* src, char stop, char* dst, size_t cap) {
+static bool kwin_snapshot_locked(void) {
+    long long now = Platform_GetWallClockMs();
+    if (g_kwin_records && now - g_kwin_snap_at < 500) return true;
+    for (int tries = 0; tries < 2; tries++) {
+        if (!g_kwin_q_loaded && !kwin_q_load()) return false;
+        char args[128];
+        snprintf(args, sizeof(args), "org.kde.KWin /Scripting/Script%d org.kde.kwin.Script.run", g_kwin_q_id);
+        char* rout = kwin_qdbus_call(args);
+        bool ok = rout && !kwin_has_error(rout);
+        if (!ok) log_error("kwin q run failed id=%d out='%s'", g_kwin_q_id, rout ? rout : "null");
+        if (rout) free(rout);
+        if (!ok) {
+            g_kwin_q_loaded = false;
+            continue;
+        }
+        for (int attempt = 0; attempt < 3; attempt++) {
+            if (attempt > 0) {
+                struct timespec ts;
+                ts.tv_sec = 0;
+                ts.tv_nsec = 50 * 1000 * 1000;
+                nanosleep(&ts, NULL);
+            }
+            char* log = Platform_RunTerminalCommand("journalctl --user -o cat --since=\"-30s\" 2>/dev/null | grep -a -e \"FLINTQR \" -e \"FLINTQA \" -e \"FLINTQC \" | tail -6", false);
+            if (log && log[0] && (strstr(log, "FLINTQR ") || strstr(log, "FLINTQA "))) {
+                kwin_snap_store(log);
+                free(log);
+                g_kwin_snap_at = Platform_GetWallClockMs();
+                return g_kwin_records != NULL;
+            }
+            if (!log || !log[0]) log_error("kwin journal empty attempt=%d", attempt);
+            else log_error("kwin journal no marker attempt=%d bytes=%d head='%.80s'", attempt, (int)strlen(log), log);
+            if (log) free(log);
+        }
+        return g_kwin_records != NULL;
+    }
+    return g_kwin_records != NULL;
+}
+
+static bool kwin_skip_caption(const char* cap) {
+    if (!cap || !cap[0]) return true;
+    if (!strncmp(cap, "flint-", 6)) return true;
+    if (!strcasecmp(cap, "window") || !strcasecmp(cap, "colored")) return true;
+    return false;
+}
+
+static void kwin_clean_copy(const char* src, size_t n, char* dst, size_t cap) {
     size_t o = 0;
-    for (const char* p = src; *p && *p != stop && o + 1 < cap; p++) {
-        unsigned char c = (unsigned char)*p;
+    for (size_t i = 0; i < n && o + 1 < cap; i++) {
+        unsigned char c = (unsigned char)src[i];
         if (c < 0x20) continue;
-        dst[o++] = *p;
+        dst[o++] = (char)c;
     }
     dst[o] = '\0';
-    return o;
 }
 
 bool get_title_kwin(char *buffer, int buffer_size) {
     if (!buffer || buffer_size <= 0) return false;
     buffer[0] = '\0';
     if (!kwin_is_active()) return false;
-    char* payload = kwin_eval_print("(workspace.activeWindow ? workspace.activeWindow.caption : \"\")");
-    if (!payload || !payload[0]) { if (payload) free(payload); return false; }
-    kwin_copy_field(payload, 0, buffer, (size_t)buffer_size);
-    free(payload);
-    return buffer[0] != '\0';
+    pthread_mutex_lock(&g_kwin_mtx);
+    bool ok = kwin_snapshot_locked() && g_kwin_active_title && g_kwin_active_title[0];
+    if (ok) kwin_clean_copy(g_kwin_active_title, strlen(g_kwin_active_title), buffer, (size_t)buffer_size);
+    pthread_mutex_unlock(&g_kwin_mtx);
+    return ok && buffer[0] != '\0';
 }
 
 bool get_app_id_kwin(char *buffer, int buffer_size) {
     if (!buffer || buffer_size <= 0) return false;
     buffer[0] = '\0';
     if (!kwin_is_active()) return false;
-    char* payload = kwin_eval_print("(workspace.activeWindow ? workspace.activeWindow.resourceClass : \"\")");
-    if (!payload || !payload[0]) { if (payload) free(payload); return false; }
-    kwin_copy_field(payload, 0, buffer, (size_t)buffer_size);
-    free(payload);
-    return buffer[0] != '\0';
+    pthread_mutex_lock(&g_kwin_mtx);
+    bool ok = kwin_snapshot_locked() && g_kwin_active_class && g_kwin_active_class[0];
+    if (ok) kwin_clean_copy(g_kwin_active_class, strlen(g_kwin_active_class), buffer, (size_t)buffer_size);
+    pthread_mutex_unlock(&g_kwin_mtx);
+    return ok && buffer[0] != '\0';
 }
 
 char* paste_kwin(char* content) {
@@ -245,55 +279,60 @@ bool focus_window_title_kwin(char* title) {
 Fl_WindowList get_window_titles_kwin() {
     Fl_WindowList list = {0};
     if (!kwin_is_active()) return list;
-    char* payload = kwin_eval_print("(function(){var __ws=workspace.stackingOrder;var __o=\"\";for(var i=0;i<__ws.length;i++){__o+=__ws[i].caption+\"\\x1f\";}return __o;})()");
-    if (!payload || !payload[0]) { if (payload) free(payload); return list; }
-    const char* p = payload;
-    while (*p) {
-        char buf[1024];
-        size_t o = 0;
-        while (*p && *p != '\x1f' && o + 1 < sizeof(buf)) {
-            unsigned char c = (unsigned char)*p++;
-            if (c < 0x20) continue;
-            buf[o++] = (char)c;
-        }
-        if (*p == '\x1f') p++;
-        buf[o] = '\0';
-        if (!buf[0]) continue;
-        if (!strcasecmp(buf, "window") || !strcasecmp(buf, "colored")) continue;
-        char** tmp = realloc(list.windows, (size_t)(list.count + 1) * sizeof(char*));
-        if (!tmp) break;
-        list.windows = tmp;
-        list.windows[list.count++] = strdup(buf);
+    pthread_mutex_lock(&g_kwin_mtx);
+    if (!kwin_snapshot_locked() || !g_kwin_records) {
+        pthread_mutex_unlock(&g_kwin_mtx);
+        return list;
     }
-    free(payload);
+    const char* p = g_kwin_records;
+    while (*p) {
+        const char* rend = strchr(p, '\x1f');
+        size_t rlen = rend ? (size_t)(rend - p) : strlen(p);
+        const char* sep = memchr(p, '\x1e', rlen);
+        size_t clen = sep ? (size_t)(sep - p) : rlen;
+        char cap[1024];
+        kwin_clean_copy(p, clen, cap, sizeof(cap));
+        if (!kwin_skip_caption(cap)) {
+            char** tmp = realloc(list.windows, (size_t)(list.count + 1) * sizeof(char*));
+            if (!tmp) break;
+            list.windows = tmp;
+            list.windows[list.count++] = strdup(cap);
+        }
+        p = rend ? rend + 1 : p + rlen;
+    }
+    pthread_mutex_unlock(&g_kwin_mtx);
     return list;
 }
 
 Fl_WindowList get_window_names_kwin() {
     Fl_WindowList list = {0};
     if (!kwin_is_active()) return list;
-    char* payload = kwin_eval_print("(function(){var __ws=workspace.stackingOrder;var __o=\"\";for(var i=0;i<__ws.length;i++){__o+=__ws[i].resourceClass+\"\\x1f\";}return __o;})()");
-    if (!payload || !payload[0]) { if (payload) free(payload); return list; }
-    const char* p = payload;
-    while (*p) {
-        char buf[1024];
-        size_t o = 0;
-        while (*p && *p != '\x1f' && o + 1 < sizeof(buf)) {
-            unsigned char c = (unsigned char)*p++;
-            if (c < 0x20) continue;
-            buf[o++] = (char)c;
-        }
-        if (*p == '\x1f') p++;
-        buf[o] = '\0';
-        if (!buf[0]) continue;
-        if (!strcasecmp(buf, "window") || !strcasecmp(buf, "colored")) continue;
-        buf[0] = toupper((unsigned char)buf[0]);
-        char** tmp = realloc(list.windows, (size_t)(list.count + 1) * sizeof(char*));
-        if (!tmp) break;
-        list.windows = tmp;
-        list.windows[list.count++] = strdup(buf);
+    pthread_mutex_lock(&g_kwin_mtx);
+    if (!kwin_snapshot_locked() || !g_kwin_records) {
+        pthread_mutex_unlock(&g_kwin_mtx);
+        return list;
     }
-    free(payload);
+    const char* p = g_kwin_records;
+    while (*p) {
+        const char* rend = strchr(p, '\x1f');
+        size_t rlen = rend ? (size_t)(rend - p) : strlen(p);
+        const char* sep = memchr(p, '\x1e', rlen);
+        size_t clen = sep ? (size_t)(sep - p) : rlen;
+        char cap[1024];
+        kwin_clean_copy(p, clen, cap, sizeof(cap));
+        if (!kwin_skip_caption(cap)) {
+            char buf[1024];
+            if (sep) kwin_clean_copy(sep + 1, rlen - clen - 1, buf, sizeof(buf));
+            else buf[0] = '\0';
+            if (buf[0]) buf[0] = toupper((unsigned char)buf[0]);
+            char** tmp = realloc(list.windows, (size_t)(list.count + 1) * sizeof(char*));
+            if (!tmp) break;
+            list.windows = tmp;
+            list.windows[list.count++] = strdup(buf);
+        }
+        p = rend ? rend + 1 : p + rlen;
+    }
+    pthread_mutex_unlock(&g_kwin_mtx);
     return list;
 }
 
