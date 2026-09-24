@@ -12,13 +12,16 @@
 
 static volatile LONG g_watcher_stop_win = 0;
 static time_t g_cfg_mtime_win = 0;
+static long long g_cfg_change_at_win = 0;
 
 static void config_watcher_poll_win(void) {
     struct stat st;
     if (stat("config/config.c", &st) != 0) return;
     if (g_cfg_mtime_win == 0) { g_cfg_mtime_win = st.st_mtime; return; }
-    if (st.st_mtime == g_cfg_mtime_win) return;
-    g_cfg_mtime_win = st.st_mtime;
+    if (st.st_mtime != g_cfg_mtime_win) { g_cfg_mtime_win = st.st_mtime; g_cfg_change_at_win = Platform_GetWallClockMs(); return; }
+    if (g_cfg_change_at_win == 0) return;
+    if (Platform_GetWallClockMs() - g_cfg_change_at_win < 1000) return;
+    g_cfg_change_at_win = 0;
     Sleep(200);
     log_info("config changed, rebuilding");
     Config_Reload();

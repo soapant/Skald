@@ -110,8 +110,16 @@ static void sweep_retired_libs(void) {
 
 #if !defined(_WIN32)
 #include <pthread.h>
-static pthread_mutex_t g_fl_mutex = PTHREAD_MUTEX_INITIALIZER;
-#define FL_LOCK() pthread_mutex_lock(&g_fl_mutex)
+static pthread_mutex_t g_fl_mutex;
+static pthread_once_t g_fl_once = PTHREAD_ONCE_INIT;
+static void fl_mutex_init(void) {
+    pthread_mutexattr_t attr;
+    pthread_mutexattr_init(&attr);
+    pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+    pthread_mutex_init(&g_fl_mutex, &attr);
+    pthread_mutexattr_destroy(&attr);
+}
+#define FL_LOCK() do { pthread_once(&g_fl_once, fl_mutex_init); pthread_mutex_lock(&g_fl_mutex); } while (0)
 #define FL_UNLOCK() pthread_mutex_unlock(&g_fl_mutex)
 #else
 static CRITICAL_SECTION g_fl_cs;
@@ -312,9 +320,33 @@ log_info("FeatureLoader_Unload completed");
 void FeatureLoader_ReloadAll(void) {
     PROFILE_START(timer1);
 
-    FeatureLoader_Shutdown();
+    FL_LOCK();
+    for (int i = 0; i < g_feature_count; i++) {
+        if (g_features[i].handle) {
+            typedef void (*ShutdownFn)(void);
+            ShutdownFn shut = (ShutdownFn)Platform_GetSymbol(g_features[i].handle, "FlintFeatureShutdown");
+            if (shut) shut();
+            retire_old_lib(g_features[i].handle, g_features[i].uniq);
+            g_features[i].handle = 0;
+            g_features[i].uniq[0] = '\0';
+        }
+    }
+    g_feature_count = 0;
+    sweep_retired_libs();
+    FL_UNLOCK();
     FeatureLoader_Init();
+    FL_LOCK();
+    sweep_retired_libs();
+    FL_UNLOCK();
 
         log_info("FeatureLoader_ReloadAll completed");
 PROFILE_END_VAR(timer1, "Hot Reload");
+}
+
+void FeatureLoader_Lock(void) {
+    FL_LOCK();
+}
+
+void FeatureLoader_Unlock(void) {
+    FL_UNLOCK();
 }
