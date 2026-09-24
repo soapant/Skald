@@ -342,7 +342,15 @@ char* Platform_PromptUser(WindowManager* wm, const PromptSpec* spec) {
   FlintContext_Get()->window.title = window_title;
   {
     const char* p = strchr(window_title, ' ');
-    FlintContext_Get()->window.current_feature = (char*)(p ? p+1 : window_title);
+    const char* name = window_title;
+    if (p) {
+        int has_high = 0;
+        for (const char* q = window_title; q < p; q++) {
+            if ((unsigned char)*q >= 0x80) { has_high = 1; break; }
+        }
+        if (has_high) name = p + 1;
+    }
+    FlintContext_Get()->window.current_feature = (char*)name;
   }
   SetCurrentFeatureName(FlintContext_Get()->window.current_feature);
   BuildAliasDisplayItems(lb_ptr, window_list, count);
