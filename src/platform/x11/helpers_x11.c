@@ -480,8 +480,8 @@ void DrawListBoxItemText(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap, 
         Platform_DrawTextRaw(XOffsetAlias, y, alias_text, rgb_to_hex(COLOR_ALIAS_TEXT), font, "LEFT", XOffsetAlias, FontSize);
     }
 
-    char* pos = strchr(trunc,'['); 
-    if(pos) {
+    char* pos = strstr(trunc, " [");
+    if (pos) {
       *pos = 0;
     }
     unsigned long pcol=0; Platform_GetItemColors(idx, lb->populated_count, NULL, NULL, &pcol);
