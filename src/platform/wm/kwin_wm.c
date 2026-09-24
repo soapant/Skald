@@ -13,6 +13,7 @@
 #include <ctype.h>
 #include <pthread.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 static pthread_mutex_t g_kwin_mtx = PTHREAD_MUTEX_INITIALIZER;
 
@@ -90,6 +91,9 @@ static char* g_kwin_active_class = NULL;
 static long long g_kwin_snap_at = 0;
 static bool g_kwin_q_loaded = false;
 static int g_kwin_q_id = -1;
+static char g_kwin_q_name[64] = {0};
+static unsigned g_kwin_q_seq = 0;
+static bool g_kwin_q_legacy_cleared = false;
 
 static const char g_kwin_q_body[] =
     "(function(){"
@@ -103,21 +107,41 @@ static const char g_kwin_q_body[] =
     "})();";
 
 static bool kwin_q_load(void) {
-    char* pre = kwin_qdbus_call("org.kde.KWin /Scripting org.kde.kwin.Scripting.unloadScript flintq");
-    if (pre) free(pre);
+    if (!g_kwin_q_legacy_cleared) {
+        g_kwin_q_legacy_cleared = true;
+        char* leg = kwin_qdbus_call("org.kde.KWin /Scripting org.kde.kwin.Scripting.unloadScript flintq");
+        if (leg) free(leg);
+    }
+    if (g_kwin_q_name[0]) {
+        char cmd[128];
+        snprintf(cmd, sizeof(cmd), "org.kde.KWin /Scripting org.kde.kwin.Scripting.unloadScript %s", g_kwin_q_name);
+        char* pre = kwin_qdbus_call(cmd);
+        if (pre) free(pre);
+        g_kwin_q_name[0] = '\0';
+    }
     FILE* f = fopen("/tmp/flint_kwin_q.js", "w");
     if (!f) return false;
     fputs(g_kwin_q_body, f);
     fclose(f);
-    char* out = kwin_qdbus_call("org.kde.KWin /Scripting org.kde.kwin.Scripting.loadScript /tmp/flint_kwin_q.js flintq");
+    snprintf(g_kwin_q_name, sizeof(g_kwin_q_name), "flintq_%d_%u", (int)getpid(), ++g_kwin_q_seq);
+    char load[256];
+    snprintf(load, sizeof(load), "org.kde.KWin /Scripting org.kde.kwin.Scripting.loadScript /tmp/flint_kwin_q.js %s", g_kwin_q_name);
+    char* out = kwin_qdbus_call(load);
     if (!out || kwin_has_error(out)) {
         log_error("kwin q load failed out='%s'", out ? out : "null");
         if (out) free(out);
         g_kwin_q_loaded = false;
+        g_kwin_q_name[0] = '\0';
         return false;
     }
     g_kwin_q_id = atoi(out);
     free(out);
+    if (g_kwin_q_id < 0) {
+        log_error("kwin q load bad id");
+        g_kwin_q_loaded = false;
+        g_kwin_q_name[0] = '\0';
+        return false;
+    }
     g_kwin_q_loaded = true;
     return true;
 }
@@ -162,7 +186,7 @@ static bool kwin_snapshot_locked(void) {
         char args[128];
         snprintf(args, sizeof(args), "org.kde.KWin /Scripting/Script%d org.kde.kwin.Script.run", g_kwin_q_id);
         char* rout = kwin_qdbus_call(args);
-        bool ok = rout && !kwin_has_error(rout);
+        bool ok = rout && !kwin_has_error(rout) && (rout[0] == '\0' || !strstr(rout, "false"));
         if (!ok) log_error("kwin q run failed id=%d out='%s'", g_kwin_q_id, rout ? rout : "null");
         if (rout) free(rout);
         if (!ok) {
@@ -176,7 +200,7 @@ static bool kwin_snapshot_locked(void) {
                 ts.tv_nsec = 50 * 1000 * 1000;
                 nanosleep(&ts, NULL);
             }
-            char* log = Platform_RunTerminalCommand("journalctl --user -o cat --since=\"-30s\" 2>/dev/null | grep -a -e \"FLINTQR \" -e \"FLINTQA \" -e \"FLINTQC \" | tail -6", false);
+            char* log = Platform_RunTerminalCommand("journalctl --user -o cat --since=\"-5s\" 2>/dev/null | grep -a -e \"FLINTQR \" -e \"FLINTQA \" -e \"FLINTQC \" | tail -6", false);
             if (log && log[0] && (strstr(log, "FLINTQR ") || strstr(log, "FLINTQA "))) {
                 kwin_snap_store(log);
                 free(log);

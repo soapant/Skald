@@ -24,7 +24,7 @@ void ConfigApply(void) {
     ModePersistsThroughFeatures = false;
     TimeOutForMessages = 1;
     DoTimeDebugs = false;
-    DebugMode = false;
+    DebugMode = true;
     RoundedCorners = true;
     CornerRadius = 14;
     EnableShaders = true;
@@ -41,7 +41,7 @@ void ConfigApply(void) {
     MaxFeatures = 1000;
     VimFontSize = 18;
     PaddingForScrolling = 3;
-    UsedTerminal = "foot";
+    UsedTerminal = "";
     UsedShell = "nu";
     UsedBrowser = "zen-browser";
     UsedImageViewer = "feh";
