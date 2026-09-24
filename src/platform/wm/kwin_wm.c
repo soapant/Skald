@@ -2,7 +2,6 @@
 #include "deps/log.h"
 #include "config.h"
 #include "core/platform.h"
-#include "core/flapi_platform.h"
 #include "helpers/helpers_hotkey.h"
 #include "helpers/helpers_alias.h"
 #include "helpers/helpers_flag.h"
@@ -435,61 +434,41 @@ bool minimize_active_window_kwin(void) {
     return kwin_run_script("workspace.slotWindowMinimize();");
 }
 
-static void kwin_shot_to_clipboard(const char* path) {
-    FILE* f = fopen(path, "rb");
-    if (!f) { log_error("shot missing path='%s'", path ? path : "null"); return; }
-    fseek(f, 0, SEEK_END);
-    long n = ftell(f);
-    fseek(f, 0, SEEK_SET);
-    if (n <= 0 || n > 32 * 1024 * 1024) { fclose(f); return; }
-    unsigned char* buf = malloc((size_t)n);
-    if (!buf) { fclose(f); return; }
-    size_t got = fread(buf, 1, (size_t)n, f);
-    fclose(f);
-    if (got == (size_t)n) Platform_CopyImageToClipboard(buf, (size_t)n);
-    free(buf);
-    remove(path);
+bool screenshot_copy_area_kwin(void) {
+    if (!kwin_is_active()) return false;
+    free(Platform_RunTerminalCommand("spectacle -b -n -r -c", false));
+    return true;
 }
 
-void screenshot_copy_area_kwin(void) {
-    if (!kwin_is_active()) return;
-    char path[128];
-    snprintf(path, sizeof(path), "/tmp/flint_shot_%d.png", (int)getpid());
-    char cmd[256];
-    snprintf(cmd, sizeof(cmd), "spectacle -b -n -r -o \"%s\"", path);
-    free(Platform_RunTerminalCommand(cmd, false));
-    kwin_shot_to_clipboard(path);
-}
-
-void screenshot_copy_kwin(void) {
-    if (!kwin_is_active()) return;
+bool screenshot_copy_kwin(void) {
+    if (!kwin_is_active()) return false;
     free(Platform_RunTerminalCommand("spectacle -b -n -c", false));
+    return true;
 }
 
-void screenshot_save_area_kwin(char* save_path) {
-    if (!kwin_is_active() || !save_path || !save_path[0]) return;
+bool screenshot_save_area_kwin(char* save_path) {
+    if (!kwin_is_active() || !save_path || !save_path[0]) return false;
     char cmd[1024];
     snprintf(cmd, sizeof(cmd), "spectacle -b -n -r -o \"%s\"", save_path);
     free(Platform_RunTerminalCommand(cmd, false));
+    return true;
 }
 
-void screenshot_save_kwin(char* save_path) {
-    if (!kwin_is_active() || !save_path || !save_path[0]) return;
+bool screenshot_save_kwin(char* save_path) {
+    if (!kwin_is_active() || !save_path || !save_path[0]) return false;
     char cmd[1024];
     snprintf(cmd, sizeof(cmd), "spectacle -b -n -o \"%s\"", save_path);
     free(Platform_RunTerminalCommand(cmd, false));
+    return true;
 }
 
-void ocr_area_to_clipboard_kwin(void) {
-    if (!kwin_is_active()) return;
+char* ocr_area_kwin(void) {
+    if (!kwin_is_active()) return NULL;
     char path[128];
     snprintf(path, sizeof(path), "/tmp/flint_ocr_%d.png", (int)getpid());
     char cmd[1024];
     snprintf(cmd, sizeof(cmd), "spectacle -b -n -r -o \"%s\" && tesseract \"%s\" stdout -l eng; rm -f \"%s\"", path, path, path);
     char* out = Platform_RunTerminalCommand(cmd, false);
-    if (!out || !out[0]) { free(out); return; }
-    size_t n = strlen(out);
-    while (n > 0 && (out[n - 1] == '\n' || out[n - 1] == '\r')) out[--n] = '\0';
-    if (out[0]) { if (Platform_CopyToClipboard(out)) fl_clipboard_history_push_text_platform(out); }
-    free(out);
+    if (!out || !out[0]) { free(out); return NULL; }
+    return out;
 }

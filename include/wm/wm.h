@@ -20,5 +20,10 @@ bool Wm_MoveActiveWindowRight(void);
 bool Wm_FocusWindowLeft(void);
 bool Wm_FocusWindowRight(void);
 bool Wm_MinimizeActiveWindow(void);
+bool Wm_ScreenshotCopyArea(void);
+bool Wm_ScreenshotCopy(void);
+bool Wm_ScreenshotSaveArea(char* save_path);
+bool Wm_ScreenshotSave(char* save_path);
+char* Wm_OcrArea(void);
 
 #endif
