@@ -1,6 +1,7 @@
 #include "config.h"
 #include "core/platform.h"
 #include "core/feature_loader.h"
+#include "core/window_manager.h"
 #include "helpers/helpers_hotkey.h"
 #include "helpers/helpers_alias.h"
 #include "helpers/helpers_flag.h"
@@ -19,22 +20,28 @@ static int g_hotkey_capacity = 0;
 
 #if !defined(_WIN32)
 static HotkeyCallback g_pending_q[64];
+static bool g_pending_toggle[64];
 static int g_pending_head = 0;
 static int g_pending_tail = 0;
 static pthread_mutex_t g_q_mtx = PTHREAD_MUTEX_INITIALIZER;
-static void hotkey_enqueue(HotkeyCallback fn) {
+static void hotkey_enqueue(HotkeyCallback fn, bool is_toggle) {
     pthread_mutex_lock(&g_q_mtx);
     int nxt = (g_pending_tail + 1) % 64;
-    if (nxt != g_pending_head) { g_pending_q[g_pending_tail] = fn; g_pending_tail = nxt; }
+    if (nxt != g_pending_head) { g_pending_q[g_pending_tail] = fn; g_pending_toggle[g_pending_tail] = is_toggle; g_pending_tail = nxt; }
     pthread_mutex_unlock(&g_q_mtx);
 }
 void hotkey_drain_pending(void) {
     while (1) {
         HotkeyCallback fn = NULL;
+        bool is_toggle = false;
         pthread_mutex_lock(&g_q_mtx);
-        if (g_pending_head != g_pending_tail) { fn = g_pending_q[g_pending_head]; g_pending_head = (g_pending_head + 1) % 64; }
+        if (g_pending_head != g_pending_tail) { fn = g_pending_q[g_pending_head]; is_toggle = g_pending_toggle[g_pending_head]; g_pending_head = (g_pending_head + 1) % 64; }
         pthread_mutex_unlock(&g_q_mtx);
         if (!fn) break;
+        if (is_toggle && !AllowOtherFeatureTogglesInFeature) {
+            WindowManager* dwm = WindowManager_Get();
+            if (dwm && dwm->popup_count > 0) continue;
+        }
         FeatureLoader_Lock();
         fn();
         FeatureLoader_Unlock();
@@ -45,10 +52,25 @@ void hotkey_drain_pending(void) {
 }
 #endif
 
+void hotkey_mark_feature_toggles(HotkeyCallback cb) {
+    if (!cb) return;
+    for (int i = 0; i < g_hotkey_count; i++) {
+        if (g_hotkeys[i].hotkey_callback == cb) g_hotkeys[i].is_feature_toggle = true;
+    }
+}
+
+static bool hotkey_toggle_blocked(HotkeyBinding* b) {
+    if (!b || !b->is_feature_toggle || AllowOtherFeatureTogglesInFeature) return false;
+    WindowManager* wm = WindowManager_Get();
+    return wm && wm->popup_count > 0;
+}
+
 bool hotkey_register_internal(HotkeyBinding binding) {
     for (int i=0;i<g_hotkey_count;i++) {
         if (g_hotkeys[i].vk_code == binding.vk_code && g_hotkeys[i].modifiers == binding.modifiers) {
+            bool keep_toggle = g_hotkeys[i].is_feature_toggle || binding.is_feature_toggle;
             g_hotkeys[i] = binding;
+            g_hotkeys[i].is_feature_toggle = keep_toggle;
             return true;
         }
     }
@@ -87,6 +109,7 @@ bool hotkey_process(int vk_code, int modifiers) {
         }
 
         if (b->hotkey_condition) {
+            if (hotkey_toggle_blocked(b)) return true;
             FeatureLoader_Lock();
             bool cond_pass = b->hotkey_condition();
             FeatureLoader_Unlock();
@@ -142,9 +165,11 @@ bool hotkey_process(int vk_code, int modifiers) {
         }
 
         HotkeyCallback cb = b->hotkey_callback;
+        bool blocked = hotkey_toggle_blocked(b);
 #if !defined(_WIN32)
-        hotkey_enqueue(cb);
+        if (!blocked) hotkey_enqueue(cb, b->is_feature_toggle);
 #else
+        if (blocked) return true;
         FeatureLoader_Lock();
         cb();
         FeatureLoader_Unlock();
