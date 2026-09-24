@@ -22,11 +22,18 @@
 
 static Nob_File_Paths sources = {0};
 static Nob_File_Paths feature_sources = {0};
+static Nob_File_Paths test_sources = {0};
 
 static bool collect_source(Nob_Walk_Entry entry) {
     if (entry.type == NOB_FILE_REGULAR) {
         Nob_String_View path = nob_sv_from_cstr(entry.path);
         if (nob_sv_ends_with_cstr(path, ".c")) {
+            if (nob_sv_starts_with(path, nob_sv_from_cstr("tests/")) ||
+                nob_sv_starts_with(path, nob_sv_from_cstr("tests\\"))) {
+                const char* base = nob_path_name(path.data);
+                if (strncmp(base, "test_", 5) == 0) nob_da_append(&test_sources, strdup(path.data));
+                return true;
+            }
 #if defined(_WIN32)
             if (nob_sv_ends_with_cstr(path, "_x11.c")) return true;
             if (nob_sv_ends_with_cstr(path, "wm.c")) return true;
@@ -321,20 +328,86 @@ static void stop_running_instance(void) {
     }
 }
 
+static bool run_tests(void) {
+    if (!nob_mkdir_if_not_exists("build/tests")) return false;
+    if (test_sources.count == 0) {
+        nob_log(NOB_INFO, "No tests found in tests/");
+        return true;
+    }
+    const char* support_obj = NULL;
+    if (nob_file_exists("tests/support.c")) {
+        support_obj = "build/tests/support.o";
+        Nob_Cmd scmd = {0};
+        nob_cc(&scmd);
+        nob_cmd_append(&scmd, "-I", "include", "-I", "tests", "-O2", "-c", "tests/support.c", "-o", support_obj);
+        nob_log(NOB_INFO, "Building test support %s", support_obj);
+        if (!nob_cmd_run(&scmd)) {
+            nob_log(NOB_ERROR, "Failed to build test support");
+            return false;
+        }
+    }
+    size_t failed = 0;
+    for (size_t t = 0; t < test_sources.count; ++t) {
+        const char* src = test_sources.items[t];
+        const char* base = nob_path_name(src);
+        char name[128];
+        snprintf(name, sizeof(name), "%s", base);
+        char* dot = strrchr(name, '.');
+        if (dot) *dot = '\0';
+        const char* out = nob_temp_sprintf("build/tests/%s", name);
+        Nob_Cmd cmd = {0};
+        nob_cc(&cmd);
+        nob_cmd_append(&cmd, "-I", "include", "-I", "tests", "-O2", "-Wall", src);
+        if (support_obj) nob_cmd_append(&cmd, support_obj);
+        for (size_t i = 0; i < sources.count; ++i) {
+            if (strcmp(sources.items[i], "src/main.c") == 0) continue;
+            nob_cmd_append(&cmd, obj_path(sources.items[i]));
+        }
+        nob_cmd_append(&cmd, LINK_FLAGS, "-o", out);
+        nob_log(NOB_INFO, "Building test %s", out);
+        if (!nob_cmd_run(&cmd)) {
+            nob_log(NOB_ERROR, "Failed to build test %s", src);
+            failed++;
+            continue;
+        }
+        Nob_Cmd run = {0};
+        nob_cmd_append(&run, out);
+        nob_log(NOB_INFO, "Running test %s", out);
+        if (!nob_cmd_run(&run)) {
+            nob_log(NOB_ERROR, "Test FAILED: %s", out);
+            failed++;
+        } else {
+            nob_log(NOB_INFO, "Test passed: %s", out);
+        }
+    }
+    if (failed > 0) {
+        nob_log(NOB_ERROR, "%zu test(s) failed", failed);
+        return false;
+    }
+    nob_log(NOB_INFO, "All tests passed (%zu suite(s))", test_sources.count);
+    return true;
+}
+
 int main(int argc, char** argv) {
     NOB_GO_REBUILD_URSELF_PLUS(argc, argv, "nob.h");
 
     int do_run = 0;
     int do_actual = 0;
+    int do_test = 0;
     for (int i=1;i<argc;i++){
         if (strcmp(argv[i], "-run")==0) do_run=1;
         if (strcmp(argv[i], "-actual")==0) do_actual=1;
+        if (strcmp(argv[i], "-test")==0) do_test=1;
     }
 
     if (!nob_mkdir_if_not_exists(BUILD_FOLDER)) return 1;
     if (!nob_mkdir_if_not_exists(OBJ_FOLDER)) return 1;
     if (!nob_walk_dir(SRC_FOLDER, collect_source)) {
         nob_log(NOB_ERROR, "Failed to walk " SRC_FOLDER);
+        return 1;
+    }
+    if (!nob_walk_dir("tests", collect_source)) {
+        nob_log(NOB_ERROR, "Failed to walk tests");
         return 1;
     }
 
@@ -405,6 +478,7 @@ int main(int argc, char** argv) {
             nob_log(NOB_INFO, "Started %s", output);
             if (!nob_cmd_run_async_and_reset(&cmd)) return 1;
         }
+        if (do_test && !run_tests()) return 1;
         return 0;
     }
 
@@ -489,6 +563,7 @@ int main(int argc, char** argv) {
         nob_log(NOB_INFO, "Started %s", output);
     }
     nob_log(NOB_INFO,"Built Successfully");
+    if (do_test && !run_tests()) return 1;
 
     return 0;
 }
