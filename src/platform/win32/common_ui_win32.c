@@ -492,13 +492,27 @@ void UpdateTextCaret(WindowHandle hwndEditControl)
     pt.y = (short)HIWORD(coords);
     havePos = TRUE;
   } else {
-    POINT cur = {0, 0};
-    if (GetCaretPos(&cur)) {
-      pt.x = cur.x;
+    char buf[512];
+    GetWindowTextA(hwnd, buf, sizeof(buf));
+    int len = (int)strlen(buf);
+    if ((int)selStart > len) selStart = (DWORD)len;
+    if (selStart == 0) {
+      pt.x = 2;
       pt.y = centeredY;
       havePos = TRUE;
-    } else if (selStart == 0) {
-      pt.x = 0;
+    } else {
+      HDC hdc2 = GetDC(hwnd);
+      HFONT hFont2 = (HFONT)SendMessageA(hwnd, WM_GETFONT, 0, 0);
+      HFONT old2 = hFont2 ? (HFONT)SelectObject(hdc2, hFont2) : NULL;
+      char tmp[512];
+      int copy = (int)selStart < (int)sizeof(tmp)-1 ? (int)selStart : (int)sizeof(tmp)-1;
+      memcpy(tmp, buf, copy);
+      tmp[copy] = '\0';
+      SIZE sz = {0};
+      GetTextExtentPoint32A(hdc2, tmp, copy, &sz);
+      if (old2) SelectObject(hdc2, old2);
+      ReleaseDC(hwnd, hdc2);
+      pt.x = sz.cx + 2;
       pt.y = centeredY;
       havePos = TRUE;
     }
