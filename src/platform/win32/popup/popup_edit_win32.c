@@ -96,7 +96,7 @@ LRESULT CALLBACK EditPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
       ClientToScreen(hWnd, &pt);
       ScreenToClient(hPar, &pt);
       if (EnableShaders && ShaderPreset != 0 && winW > 0 && winH > 0) {
-        Win32_DrawBackgroundSlice(memDC, &rc, COLOR_BG, winW, winH, pt.x, pt.y);
+        win32_draw_background_slice(memDC, &rc, COLOR_BG, winW, winH, pt.x, pt.y);
       } else {
         HBRUSH br = CreateSolidBrush(COLOR_BG);
         FillRect(memDC, &rc, br);
@@ -200,7 +200,7 @@ LRESULT CALLBACK EditPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
         HDC hdc = BeginPaint(hwnd, &ps);
         RECT rect;
         GetClientRect(hwnd, &rect);
-        if (EnableShaders && ShaderPreset != 0) Win32_DrawBackground(hdc, &rect);
+        if (EnableShaders && ShaderPreset != 0) win32_draw_background(hdc, &rect);
         else { HBRUSH hBgBrush = CreateSolidBrush(COLOR_BG); FillRect(hdc, &rect, hBgBrush); DeleteObject(hBgBrush); }
         
         if (g_vim_mode != NULL && VimModeText) {

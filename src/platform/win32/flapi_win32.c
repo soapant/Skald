@@ -92,7 +92,7 @@ bool Platform_GetAllFilesFromDir(const char* dir_path, char** list_of_allowed_ex
     return true;
 }
 
-static const char* Win32_HostForSystemFile(const char* path) {
+static const char* win32_host_for_system_file(const char* path) {
     const char* dot = strrchr(path, '.');
     if (!dot) return NULL;
     if (_stricmp(dot, ".cpl") == 0) return "control.exe";
@@ -112,7 +112,7 @@ bool fl_launch_with_args_platform(const char* path, const char* args) {
     } else {
         snprintf(cmd, sizeof(cmd), "\"%s\"", path);
     }
-    const char* host = Win32_HostForSystemFile(path);
+    const char* host = win32_host_for_system_file(path);
     if (host) {
         char hostParams[2048];
         if (args && args[0] && strcmp(args, "0") != 0) snprintf(hostParams, sizeof(hostParams), "\"%s\" %s", path, args);
@@ -140,7 +140,7 @@ bool fl_launch_with_args_as_admin_platform(const char* path, const char* args) {
     if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) return false;
     path = expanded;
     char params[2048] = {0};
-    const char* host = Win32_HostForSystemFile(path);
+    const char* host = win32_host_for_system_file(path);
     if (host) {
         if (args && args[0]) snprintf(params, sizeof(params), "\"%s\" %s", path, args);
         else snprintf(params, sizeof(params), "\"%s\"", path);
@@ -239,7 +239,7 @@ bool fl_listbox_next_platform(FlListItemCtx *out) {
                 RECT winRc2 = {0,0, bw, g_fl_list_visible * g_fl_list_itemH};
                 int winW2 = bw, winH2 = g_fl_list_visible * g_fl_list_itemH;
                 if (hWin2) { GetClientRect(hWin2, &winRc2); winW2 = winRc2.right - winRc2.left; winH2 = winRc2.bottom - winRc2.top; if(winW2<=0) winW2=bw; if(winH2<=0) winH2=g_fl_list_visible * g_fl_list_itemH; }
-                Win32_DrawBackgroundSlice(g_fl_list_hdc, &fullRc, COLOR_BG, winW2, winH2, fullRc.left, fullRc.top);
+                win32_draw_background_slice(g_fl_list_hdc, &fullRc, COLOR_BG, winW2, winH2, fullRc.left, fullRc.top);
             } else {
                 HBRUSH br = CreateSolidBrush(COLOR_BG);
                 FillRect(g_fl_list_hdc, &fullRc, br);
@@ -247,7 +247,7 @@ bool fl_listbox_next_platform(FlListItemCtx *out) {
             }
         }
         if (sel) {
-            Win32_FillRoundedRect(g_fl_list_hdc, &inner, COLOR_SELECTED_TEXT, innerR);
+            win32_fill_rounded_rect(g_fl_list_hdc, &inner, COLOR_SELECTED_TEXT, innerR);
         } else {
             if (EnableShaders && ShaderPreset != 0) {
                 HWND hWin = WindowFromDC(g_fl_list_hdc);
@@ -256,9 +256,9 @@ bool fl_listbox_next_platform(FlListItemCtx *out) {
                 if (hWin) { GetClientRect(hWin, &winRc); winW = winRc.right - winRc.left; winH = winRc.bottom - winRc.top; if (winW<=0) winW=bw; if(winH<=0) winH=g_fl_list_visible * g_fl_list_itemH; }
                 int offsetX = inner.left;
                 int offsetY = inner.top;
-                Win32_FillRoundedRectSlice(g_fl_list_hdc, &inner, COLOR_BG, winW, winH, offsetX, offsetY, innerR);
+                win32_fill_rounded_rect_slice(g_fl_list_hdc, &inner, COLOR_BG, winW, winH, offsetX, offsetY, innerR);
             } else {
-                Win32_FillRoundedRect(g_fl_list_hdc, &inner, COLOR_BG, innerR);
+                win32_fill_rounded_rect(g_fl_list_hdc, &inner, COLOR_BG, innerR);
             }
         }
     } else {
@@ -275,7 +275,7 @@ bool fl_listbox_next_platform(FlListItemCtx *out) {
                 if (hWin) { GetClientRect(hWin, &winRc); winW = winRc.right - winRc.left; winH = winRc.bottom - winRc.top; if(winW<=0) winW=900; if(winH<=0) winH=400; }
                 int offsetX = rc.left;
                 int offsetY = rc.top;
-                Win32_DrawBackgroundSlice(g_fl_list_hdc, &rc, COLOR_BG, winW, winH, offsetX, offsetY);
+                win32_draw_background_slice(g_fl_list_hdc, &rc, COLOR_BG, winW, winH, offsetX, offsetY);
             } else {
                 HBRUSH br = CreateSolidBrush(COLOR_BG);
                 FillRect(g_fl_list_hdc, &rc, br);
@@ -494,7 +494,7 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
     if (h <= 0) h = 32;
     RECT rc = {x, y, x + w, y + h};
     if (RoundedCorners && CornerRadius > 0) {
-        Win32_FillRoundedRect(hdc, &rc, COLOR_BG, 6);
+        win32_fill_rounded_rect(hdc, &rc, COLOR_BG, 6);
     } else {
         HBRUSH br = CreateSolidBrush(COLOR_BG);
         FillRect(hdc, &rc, br);

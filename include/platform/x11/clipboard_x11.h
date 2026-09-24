@@ -6,11 +6,11 @@
 typedef struct _XDisplay Display;
 typedef union _XEvent XEvent;
 
-void Linux_ClipboardEnsureStarted(void);
-void Linux_ClipboardShutdown(void);
-int Linux_ClipboardSetText(const char *text);
-int Linux_ClipboardSetImage(const unsigned char *png, size_t len);
-char* Linux_ClipboardGetText(void);
-bool Linux_ClipboardHandleEvent(Display *dpy, XEvent *ev);
+void x11_clipboard_ensure_started(void);
+void x11_clipboard_shutdown(void);
+int x11_clipboard_set_text(const char *text);
+int x11_clipboard_set_image(const unsigned char *png, size_t len);
+char* x11_clipboard_get_text(void);
+bool x11_clipboard_handle_event(Display *dpy, XEvent *ev);
 
 #endif

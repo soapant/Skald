@@ -9,7 +9,7 @@
 static HFONT g_sizeFont = NULL;
 static int g_sizeFontSize = 0;
 
-static HFONT Win32_SizedFont(int size) {
+static HFONT win32_sized_font(int size) {
   if (size <= 0) size = FontSize;
   if (!g_sizeFont || g_sizeFontSize != size) {
     if (g_sizeFont) { DeleteObject(g_sizeFont); g_sizeFont = NULL; g_sizeFontSize = 0; }
@@ -46,7 +46,7 @@ bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, F
     if (color != 0) color = rgb_to_hex(color);
     if (color == 0) color = COLOR_TEXT;
     const char *a = align ? align : "CENTER";
-    HFONT hfont = font.hfont ? font.hfont : Win32_SizedFont(fontsize);
+    HFONT hfont = font.hfont ? font.hfont : win32_sized_font(fontsize);
     if (!hfont) hfont = g_win32_hMainFont;
     HFONT old = NULL;
     if (hfont) old = (HFONT)SelectObject(g_draw_hdc, hfont);
@@ -73,7 +73,7 @@ bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, F
 int Platform_MeasureTextWidth(const char* text, int len, int fontsize) {
     if (!text || len <= 0) return 0;
     if (!g_draw_hdc) return len * (fontsize > 0 ? fontsize : 16) / 2;
-    HFONT hfont = Win32_SizedFont(fontsize);
+    HFONT hfont = win32_sized_font(fontsize);
     HFONT old = hfont ? (HFONT)SelectObject(g_draw_hdc, hfont) : NULL;
     SIZE sz;
     sz.cx = 0;
@@ -86,7 +86,7 @@ bool Platform_DrawTextLine(int x, int y, const char* text, int len, unsigned lon
     if (!text || len <= 0 || !g_draw_hdc) return false;
     if (color != 0) color = rgb_to_hex(color);
     if (color == 0) color = COLOR_TEXT;
-    HFONT hfont = Win32_SizedFont(fontsize);
+    HFONT hfont = win32_sized_font(fontsize);
     HFONT old = hfont ? (HFONT)SelectObject(g_draw_hdc, hfont) : NULL;
     SetBkMode(g_draw_hdc, TRANSPARENT);
     SetTextColor(g_draw_hdc, color);

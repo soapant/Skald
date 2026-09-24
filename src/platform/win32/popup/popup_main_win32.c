@@ -260,7 +260,7 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
       ClientToScreen(hwnd, &pt);
       ScreenToClient(hPar, &pt);
       if (EnableShaders && ShaderPreset != 0 && winW > 0 && winH > 0) {
-        Win32_DrawBackgroundSlice(memDC, &rc, COLOR_BG, winW, winH, pt.x, pt.y);
+        win32_draw_background_slice(memDC, &rc, COLOR_BG, winW, winH, pt.x, pt.y);
       } else {
         HBRUSH br = CreateSolidBrush(COLOR_BG);
         FillRect(memDC, &rc, br);
@@ -339,7 +339,7 @@ LRESULT CALLBACK ListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
       if (hParent) { ClientToScreen(hWnd, &lbOrigin); ScreenToClient(hParent, &lbOrigin); }
       if (EnableShaders && ShaderPreset != 0 && winW > 0 && winH > 0) {
         RECT full = rc;
-        Win32_DrawBackgroundSlice(memDC, &full, COLOR_BG, winW, winH, lbOrigin.x, lbOrigin.y);
+        win32_draw_background_slice(memDC, &full, COLOR_BG, winW, winH, lbOrigin.x, lbOrigin.y);
       } else {
         if (!s_bg_brush) s_bg_brush = CreateSolidBrush(COLOR_BG);
         FillRect(memDC, &rc, s_bg_brush);
@@ -359,7 +359,7 @@ LRESULT CALLBACK ListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
               if (EnableShaders && ShaderPreset != 0 && winW > 0 && winH > 0) {
                 int gx = lbOrigin.x + empty.left;
                 int gy = lbOrigin.y + empty.top;
-                Win32_DrawBackgroundSlice(memDC, &empty, COLOR_BG, winW, winH, gx, gy);
+                win32_draw_background_slice(memDC, &empty, COLOR_BG, winW, winH, gx, gy);
               } else {
                 if (!s_bg_brush) s_bg_brush = CreateSolidBrush(COLOR_BG);
                 FillRect(memDC, &empty, s_bg_brush);
@@ -369,7 +369,7 @@ LRESULT CALLBACK ListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
         } else if (count == 0) {
           if (EnableShaders && ShaderPreset != 0 && winW > 0 && winH > 0) {
             RECT full = rc;
-            Win32_DrawBackgroundSlice(memDC, &full, COLOR_BG, winW, winH, lbOrigin.x, lbOrigin.y);
+            win32_draw_background_slice(memDC, &full, COLOR_BG, winW, winH, lbOrigin.x, lbOrigin.y);
           } else {
             if (!s_bg_brush) s_bg_brush = CreateSolidBrush(COLOR_BG);
             FillRect(memDC, &rc, s_bg_brush);
@@ -594,11 +594,11 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
               int gx = lbOrigin2.x + pdis->rcItem.left;
               int gy = lbOrigin2.y + pdis->rcItem.top;
               if (EnableShaders && ShaderPreset != 0 && winW > 0 && winH > 0) {
-                Win32_DrawBackgroundSlice(pdis->hDC, &pdis->rcItem, COLOR_BG, winW, winH, gx, gy);
+                win32_draw_background_slice(pdis->hDC, &pdis->rcItem, COLOR_BG, winW, winH, gx, gy);
               }
             }
             if (isSelected) {
-              Win32_FillRoundedRect(pdis->hDC, &inner, COLOR_SELECTED_TEXT, innerR);
+              win32_fill_rounded_rect(pdis->hDC, &inner, COLOR_SELECTED_TEXT, innerR);
             } else {
               if (EnableShaders && ShaderPreset != 0) {
                 RECT winRc; GetClientRect(hwnd, &winRc);
@@ -611,9 +611,9 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 int globalY = lbOrigin.y + inner.top;
                 if (winW <= 0) winW = pdis->rcItem.right - pdis->rcItem.left;
                 if (winH <= 0) { RECT tr; GetClientRect(hwnd,&tr); winH = tr.bottom - tr.top; if(winH<=0) winH = pdis->rcItem.bottom - pdis->rcItem.top + 600; }
-                Win32_FillRoundedRectSlice(pdis->hDC, &inner, COLOR_BG, winW, winH, globalX, globalY, innerR);
+                win32_fill_rounded_rect_slice(pdis->hDC, &inner, COLOR_BG, winW, winH, globalX, globalY, innerR);
               } else {
-                Win32_FillRoundedRect(pdis->hDC, &inner, COLOR_BG, innerR);
+                win32_fill_rounded_rect(pdis->hDC, &inner, COLOR_BG, innerR);
               }
             }
           } else if (EnableShaders && ShaderPreset != 0) {
@@ -631,7 +631,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
               int globalY = lbOrigin.y + pdis->rcItem.top;
               if (winW <= 0) winW = pdis->rcItem.right - pdis->rcItem.left;
               if (winH <= 0) { RECT tr2; GetClientRect(hwnd,&tr2); winH = tr2.bottom - tr2.top; if(winH<=0) winH = pdis->rcItem.bottom - pdis->rcItem.top + 600; }
-              Win32_DrawBackgroundSlice(pdis->hDC, &pdis->rcItem, COLOR_BG, winW, winH, globalX, globalY);
+              win32_draw_background_slice(pdis->hDC, &pdis->rcItem, COLOR_BG, winW, winH, globalX, globalY);
             }
           } else {
             if (isSelected) {
@@ -754,7 +754,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
           }
         }
         if (EnableShaders && ShaderPreset != 0) {
-          Win32_DrawBackground(paintDC, &rect);
+          win32_draw_background(paintDC, &rect);
         } else {
           if (!s_bg_brush) s_bg_brush = CreateSolidBrush(COLOR_BG);
             FillRect(paintDC, &ps.rcPaint, s_bg_brush);

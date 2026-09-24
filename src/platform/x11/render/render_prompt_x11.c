@@ -74,14 +74,14 @@ void DrawPromptUserListBox(Display *dpy,Window* win,PromptState *state) {
       PROFILE_END_VAR(timer, "subclasses_x11:DrawPromptUserListBox");
 }
 
-bool Linux_RenderPromptUser(Display *dpy, Window *win, PromptState *state) {
+bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state) {
     Platform_SetPreRenderState(state);
     if (!fl_prerender()) return true;
     int w = state->width;
     int h = state->height;
     XWindowAttributes attrs;
     if (!XGetWindowAttributes(dpy, *win, &attrs)) {
-        Linux_DrawBackground(dpy, *win, w, h);
+        x11_draw_background(dpy, *win, w, h);
         Platform_SetDrawContext(dpy, NULL, NULL, 0);
         if (FlintContext_Get()->prompt_callbacks.render != NULL) {
           fl_editbox_reset_placed();
@@ -99,7 +99,7 @@ bool Linux_RenderPromptUser(Display *dpy, Window *win, PromptState *state) {
     Colormap cmap = attrs.colormap;
     Pixmap dbl = XCreatePixmap(dpy, *win, w, h, depth);
     if (!dbl) {
-        Linux_DrawBackground(dpy, *win, w, h);
+        x11_draw_background(dpy, *win, w, h);
         Platform_SetDrawContext(dpy, NULL, NULL, 0);
         if (FlintContext_Get()->prompt_callbacks.render != NULL) {
           fl_editbox_reset_placed();
@@ -114,7 +114,7 @@ bool Linux_RenderPromptUser(Display *dpy, Window *win, PromptState *state) {
     XftDraw* xdDbl = XftDrawCreate(dpy, dbl, vis, cmap);
     if (!xdDbl) {
         XFreePixmap(dpy, dbl);
-        Linux_DrawBackground(dpy, *win, w, h);
+        x11_draw_background(dpy, *win, w, h);
         Platform_SetDrawContext(dpy, NULL, NULL, 0);
         if (FlintContext_Get()->prompt_callbacks.render != NULL) {
           fl_editbox_reset_placed();
@@ -126,14 +126,14 @@ bool Linux_RenderPromptUser(Display *dpy, Window *win, PromptState *state) {
         XFlush(dpy);
         return true;
     }
-    Linux_SetDblVisual(dpy, vis, cmap, depth);
-    Pixmap bg = Linux_GetCachedBackground(dpy, *win, w, h);
+    x11_set_dbl_visual(dpy, vis, cmap, depth);
+    Pixmap bg = x11_get_cached_background(dpy, *win, w, h);
     if (bg) {
         GC gc = XCreateGC(dpy, dbl, 0, NULL);
         XCopyArea(dpy, bg, dbl, gc, 0, 0, w, h, 0, 0);
         XFreeGC(dpy, gc);
     } else {
-        Linux_DrawBackgroundToDrawable(dpy, dbl, w, h);
+        x11_draw_background_to_drawable(dpy, dbl, w, h);
     }
     Platform_SetDrawContext(dpy, xdDbl, vis, cmap);
     if (FlintContext_Get()->prompt_callbacks.render != NULL) {
@@ -146,7 +146,7 @@ bool Linux_RenderPromptUser(Display *dpy, Window *win, PromptState *state) {
         DrawPromptUserEditControlOnDraw(dpy, xdDbl, vis, cmap, state);
     }
     Platform_SetDrawContext(NULL,NULL,NULL,0);
-    Linux_ClearDblVisual();
+    x11_clear_dbl_visual();
     GC gc = XCreateGC(dpy, *win, 0, NULL);
     XCopyArea(dpy, dbl, *win, gc, 0, 0, w, h, 0, 0);
     XFreeGC(dpy, gc);

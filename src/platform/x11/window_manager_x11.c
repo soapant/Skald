@@ -92,7 +92,7 @@ static void* input_thread_func(void* arg) {
     return NULL;
 }
 
-static void Linux_HandleKeyPress(Display* dpy, XKeyEvent* ev, WindowManager* wm) {
+static void x11_handle_key_press(Display* dpy, XKeyEvent* ev, WindowManager* wm) {
     PROFILE_START(timer);
     int mods = remap_current_mods();
     if (ev->state & ControlMask) mods |= HOTKEY_MOD_CTRL;
@@ -117,11 +117,11 @@ static void Linux_HandleKeyPress(Display* dpy, XKeyEvent* ev, WindowManager* wm)
 
 
     Popup* top = WindowManager_GetTopPopup(wm);
-    if (!top) { PROFILE_END_VAR(timer, "window_manager_x11:Linux_HandleKeyPress"); return; }
+    if (!top) { PROFILE_END_VAR(timer, "window_manager_x11:x11_handle_key_press"); return; }
 
     PopupKeyEvent key;
     memset(&key, 0, sizeof(key));
-    key.vk = Linux_KeysymToWindowsVK(ks);
+    key.vk = x11_keysym_to_windows_vk(ks);
     key.ctrl = (mods & HOTKEY_MOD_CTRL) != 0;
     key.shift = (mods & HOTKEY_MOD_SHIFT) != 0;
     key.alt = (mods & HOTKEY_MOD_ALT) != 0;
@@ -141,29 +141,29 @@ static void Linux_HandleKeyPress(Display* dpy, XKeyEvent* ev, WindowManager* wm)
         top_after->vtable->on_render(top_after);
     }
     XFlush(dpy);
-    PROFILE_END_VAR(timer, "window_manager_x11:Linux_HandleKeyPress");
+    PROFILE_END_VAR(timer, "window_manager_x11:x11_handle_key_press");
 }
 
-static void Linux_HandleKeyRelease(Display* dpy, XKeyEvent* ev) {
+static void x11_handle_key_release(Display* dpy, XKeyEvent* ev) {
     PROFILE_START(timer);
     KeySym ks; char buf[32]; int len=XLookupString(ev, buf, sizeof(buf), &ks, NULL);
     int vk=0; if(len==1 && (unsigned char)buf[0]>=32 && (unsigned char)buf[0]<=126) vk=(unsigned char)buf[0]; else vk=XKeysymToVK(ks);
     int mods=remap_current_mods();
     if(vk) Platform_InputState_Update(vk, false, mods);
-    PROFILE_END_VAR(timer, "window_manager_x11:Linux_HandleKeyRelease");
+    PROFILE_END_VAR(timer, "window_manager_x11:x11_handle_key_release");
 }
 
 void Linux_ProcessXEvent(Display* dpy, XEvent* ev, WindowManager* wm) {
     PROFILE_START(timer);
-    if (Linux_ClipboardHandleEvent(dpy, ev)) { PROFILE_END_VAR(timer, "window_manager_x11:Linux_ProcessXEvent"); return; }
+    if (x11_clipboard_handle_event(dpy, ev)) { PROFILE_END_VAR(timer, "window_manager_x11:Linux_ProcessXEvent"); return; }
     Popup* top = WindowManager_GetTopPopup(wm);
     if (!top) { PROFILE_END_VAR(timer, "window_manager_x11:Linux_ProcessXEvent"); return; }
     switch (ev->type) {
         case KeyPress:
-            Linux_HandleKeyPress(dpy, &ev->xkey, wm);
+            x11_handle_key_press(dpy, &ev->xkey, wm);
             break;
         case KeyRelease:
-            Linux_HandleKeyRelease(dpy, &ev->xkey);
+            x11_handle_key_release(dpy, &ev->xkey);
             break;
         case Expose:
             if (top->vtable && top->vtable->on_render) {

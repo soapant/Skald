@@ -110,7 +110,7 @@ void Platform_StartNotificationDaemon(void);
 
 #if !defined(_WIN32)
 FontHandle Platform_CreateFontOnDisplay(Display* dpy, int size, const char* face_name);
-bool Linux_RenderPromptUser(Display *dpy, Window *win, PromptState *state);
+bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state);
 void Platform_DismissMessage(void);
 void Platform_DismissIndefiniteMessage(void);
 bool Platform_SendX11Command(const char* window_title, const char* atom_name, long command);

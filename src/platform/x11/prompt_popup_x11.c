@@ -42,7 +42,7 @@ bool Platform_PromptPopupShowWindow(Popup* self, int x, int y, int w, int h) {
     WindowManager* wm = (WindowManager*)self->manager;
     Display* dpy = wm ? wm->display : NULL;
     if (!dpy) { PROFILE_END_VAR(timer, "window_manager:Platform_PromptPopupShowWindow"); return false; }
-    self->handle.xid = Linux_CreatePromptWindow(dpy, x, y, w, h);
+    self->handle.xid = x11_create_prompt_window(dpy, x, y, w, h);
     XSelectInput(dpy, self->handle.xid, KeyPressMask | ExposureMask | FocusChangeMask);
     XMapWindow(dpy, self->handle.xid);
     XFlush(dpy);
@@ -97,7 +97,7 @@ void Platform_PromptPopupRender(Popup* self) {
     PROFILE_START(timer);
     WindowManager* wm = (WindowManager*)self->manager;
     Display* dpy = wm ? wm->display : NULL;
-    if (dpy) Linux_RenderPromptUser(dpy, &self->handle.xid, (PromptState*)self->user_data);
+    if (dpy) x11_render_prompt_user(dpy, &self->handle.xid, (PromptState*)self->user_data);
     PROFILE_END_VAR(timer, "window_manager:Platform_PromptPopupRender");
 }
 
