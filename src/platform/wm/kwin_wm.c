@@ -259,6 +259,7 @@ Fl_WindowList get_window_titles_kwin() {
         if (*p == '\x1f') p++;
         buf[o] = '\0';
         if (!buf[0]) continue;
+        if (!strcasecmp(buf, "window") || !strcasecmp(buf, "colored")) continue;
         char** tmp = realloc(list.windows, (size_t)(list.count + 1) * sizeof(char*));
         if (!tmp) break;
         list.windows = tmp;
@@ -285,6 +286,7 @@ Fl_WindowList get_window_names_kwin() {
         if (*p == '\x1f') p++;
         buf[o] = '\0';
         if (!buf[0]) continue;
+        if (!strcasecmp(buf, "window") || !strcasecmp(buf, "colored")) continue;
         buf[0] = toupper((unsigned char)buf[0]);
         char** tmp = realloc(list.windows, (size_t)(list.count + 1) * sizeof(char*));
         if (!tmp) break;
