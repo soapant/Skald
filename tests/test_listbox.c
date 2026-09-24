@@ -6,7 +6,7 @@
 
 TEST(populate_normal_mode_selects_first) {
     SetMode(MODE_NORMAL);
-    ListBoxInfo lb;
+    static ListBoxInfo lb;
     ListBoxInfo_Init(&lb);
     const char* items[] = {"apple", "banana", "apricot"};
     PopulateListBox(&lb, (WindowHandle){0}, "", items, 3, NULL);
@@ -18,7 +18,7 @@ TEST(populate_normal_mode_selects_first) {
 
 TEST(populate_insert_mode_empty_filter_no_selection) {
     SetMode(MODE_INSERT);
-    ListBoxInfo lb;
+    static ListBoxInfo lb;
     ListBoxInfo_Init(&lb);
     const char* items[] = {"apple", "banana", "apricot"};
     PopulateListBox(&lb, (WindowHandle){0}, "", items, 3, NULL);
@@ -28,7 +28,7 @@ TEST(populate_insert_mode_empty_filter_no_selection) {
 }
 
 TEST(populate_filter_narrows) {
-    ListBoxInfo lb;
+    static ListBoxInfo lb;
     ListBoxInfo_Init(&lb);
     const char* items[] = {"apple", "banana", "apricot"};
     PopulateListBox(&lb, (WindowHandle){0}, "ap", items, 3, NULL);
@@ -37,7 +37,7 @@ TEST(populate_filter_narrows) {
 }
 
 TEST(populate_no_match) {
-    ListBoxInfo lb;
+    static ListBoxInfo lb;
     ListBoxInfo_Init(&lb);
     const char* items[] = {"apple", "banana"};
     PopulateListBox(&lb, (WindowHandle){0}, "zzz", items, 2, NULL);
@@ -47,7 +47,7 @@ TEST(populate_no_match) {
 }
 
 TEST(populate_empty_items) {
-    ListBoxInfo lb;
+    static ListBoxInfo lb;
     ListBoxInfo_Init(&lb);
     PopulateListBox(&lb, (WindowHandle){0}, "", NULL, 0, NULL);
     ASSERT_EQ_INT(lb.total_matches, 0);
