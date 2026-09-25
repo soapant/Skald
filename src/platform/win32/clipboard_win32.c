@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include "deps/log.h"
 #include "config.h"
-#include "core/platform.h"
+#include "platform/platform.h"
 #include "helpers/helpers_hotkey.h"
 
 int Platform_CopyToClipboard(const char* text) {

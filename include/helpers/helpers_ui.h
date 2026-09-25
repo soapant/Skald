@@ -10,6 +10,12 @@ void eval_window_title_color(PromptState * state,unsigned long *window_title_col
 void eval_xoffset_for_alias(char* alias_text,int main_text_lenght,int *xOffsetAlias);
 unsigned short OpacityAlpha16(void);
 
+float Color_ShaderGamma(float smoothness);
+float Color_BayerDither(int x, int y);
+unsigned int Color_HashNoise(int x, int y);
+unsigned int Color_Lerp(unsigned int a, unsigned int b, float t);
+void Color_DeriveLighter(unsigned int base, float intensity, unsigned char* out_r, unsigned char* out_g, unsigned char* out_b);
+
 void BuildAliasDisplayItems(ListBoxInfo* lb, const char** items, int count);
 void PopulateListBox(ListBoxInfo* lb, WindowHandle hListBox, const char* filter,
     const char** items, int item_count,

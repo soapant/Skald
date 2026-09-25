@@ -1,5 +1,5 @@
 #include "platform/draw.h"
-#include "core/platform.h"
+#include "platform/platform.h"
 #include "config.h"
 #include "helpers/helpers_ui.h"
 #include "core/timer.h"

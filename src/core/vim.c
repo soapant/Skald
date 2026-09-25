@@ -1,5 +1,5 @@
 #include "core/vim.h"
-#include "core/platform.h"
+#include "platform/platform.h"
 #include "deps/log.h"
 #include "core/context.h"
 #include "platform/ui.h"

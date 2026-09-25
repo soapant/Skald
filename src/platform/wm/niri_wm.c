@@ -1,6 +1,6 @@
 #include "wm/niri_wm.h"
 #include "deps/log.h"
-#include "core/platform.h"
+#include "platform/platform.h"
 #include <string.h>
 #include <strings.h>
 #include <stdio.h>

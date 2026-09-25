@@ -5,7 +5,7 @@
 #include "core/types.h"
 #include "core/vim.h"
 #include "core/hotkey_manager.h"
-#include "core/platform.h"
+#include "platform/platform.h"
 #include "core/window_manager.h"
 #include "core/snippet_manager.h"
 #include "core/remap_manager.h"

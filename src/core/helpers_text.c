@@ -2,7 +2,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "core/platform.h"
+#include "platform/platform.h"
 #include "helpers/helpers_hotkey.h"
 #include "helpers/helpers_text.h"
 

@@ -14,8 +14,8 @@
 
 #include "config.h"
 #include "config.h"
-#include "core/platform.h"
-#include "core/platform.h"
+#include "platform/platform.h"
+#include "platform/platform.h"
 #include "core/timer.h"
 #include "deps/log.h"
 #include "wm/wm.h"

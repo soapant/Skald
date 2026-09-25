@@ -14,7 +14,7 @@
 #include <png.h>
 #include <stdint.h>
 #include "config.h"
-#include "core/platform.h"
+#include "platform/platform.h"
 #include "platform/draw.h"
 #include "helpers/helpers_ui.h"
 #include "platform/x11/audio_x11.h"
@@ -24,6 +24,8 @@
 #include "deps/nanosvg.h"
 #define NANOSVGRAST_IMPLEMENTATION
 #include "deps/nanosvgrast.h"
+
+#define X11_SHADER_SMOOTHNESS 10
 
 static Pixmap g_bgPixmap = None;
 static int g_bgW = 0, g_bgH = 0;
@@ -757,29 +759,15 @@ void x11_fill_rounded_rect(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap
     PROFILE_END_VAR(timer, "helpers_x11:x11_fill_rounded_rect");
 }
 static unsigned long LerpHex(unsigned long a, unsigned long b, float t) {
-    if (t < 0) t = 0; if (t > 1) t = 1;
-    unsigned int ar = (a >> 16) & 0xFF, ag = (a >> 8) & 0xFF, ab = a & 0xFF;
-    unsigned int br = (b >> 16) & 0xFF, bg = (b >> 8) & 0xFF, bb = b & 0xFF;
-    unsigned int rr = (unsigned int)(ar + (br - ar) * t + 0.5f);
-    unsigned int rg = (unsigned int)(ag + (bg - ag) * t + 0.5f);
-    unsigned int rb = (unsigned int)(ab + (bb - ab) * t + 0.5f);
-    return (rr << 16) | (rg << 8) | rb;
+    return Color_Lerp(a, b, t);
 }
 static unsigned long DeriveLighter(unsigned long base, float intensity) {
-    float f = ShaderIntensity;
-    if (f < 0) f = 0; if (f > 1) f = 1;
-    float eff = f * intensity;
-    unsigned int r = (base >> 16) & 0xFF, g = (base >> 8) & 0xFF, b = base & 0xFF;
-    unsigned int nr = r + (unsigned int)((90 - r) * eff + 35 * eff);
-    unsigned int ng = g + (unsigned int)((90 - g) * eff + 35 * eff);
-    unsigned int nb = b + (unsigned int)((140 - b) * eff + 40 * eff);
-    if (nr > 255) nr = 255; if (ng > 255) ng = 255; if (nb > 255) nb = 255;
-    return (nr << 16) | (ng << 8) | nb;
+    unsigned char r, g, b;
+    Color_DeriveLighter((unsigned int)base, intensity, &r, &g, &b);
+    return ((unsigned long)r << 16) | ((unsigned long)g << 8) | (unsigned long)b;
 }
 static unsigned int HashNoise(int x, int y) {
-    unsigned int h = (unsigned int)(x * 374761393U + y * 668265263U);
-    h = (h ^ (h >> 13)) * 1274126177U;
-    return h & 0xFF;
+    return Color_HashNoise(x, y);
 }
 static unsigned int CornerAlpha(int x, int y, int w, int h, int R, unsigned int baseAlpha8) {
     float dx, dy, d_sq, R_plus_sq, R_minus_sq;
@@ -817,40 +805,23 @@ void x11_free_cached_background(void) {
     PROFILE_END_VAR(timer, "helpers_x11:x11_free_cached_background");
 }
 
-static Pixmap x11_create_background_pixmap(Display* dpy, Window win, int w, int h, XWindowAttributes* attrs, unsigned long base, unsigned int baseAlpha8) {
-    Visual* vis = attrs->visual;
-    int depth = attrs->depth;
-    bool hasAlpha = (depth == 32);
-    bool rounded = RoundedCorners && CornerRadius > 0 && hasAlpha;
-    int R = rounded ? CornerRadius : 0;
-    if (R > w/2) R = w/2; if (R > h/2) R = h/2;
-    Pixmap pm = XCreatePixmap(dpy, win, w, h, depth);
-    if (!pm) return None;
-    XImage* img = XCreateImage(dpy, vis, depth, ZPixmap, 0, NULL, w, h, 32, 0);
-    if (!img) { XFreePixmap(dpy, pm); return None; }
-    img->data = (char*)calloc(1, h * img->bytes_per_line);
-    if (!img->data) { XDestroyImage(img); XFreePixmap(dpy, pm); return None; }
-
-    uint32_t *row, *pxrow;
+static void x11_generate_background_pixels(uint32_t* img_data, int bytes_per_line, int w, int h, int R, unsigned int baseAlpha8, unsigned long base, unsigned long fill) {
+    uint32_t *row;
     unsigned int r = (base >> 16) & 0xFF, g = (base >> 8) & 0xFF, b = base & 0xFF;
-    unsigned long pixel = hasAlpha ? (baseAlpha8 << 24) | (r << 16) | (g << 8) | b : (r << 16) | (g << 8) | b;
-    float _smooth = 10;
-    float _gamma = 2.0f - _smooth * 0.14f; if (_gamma < 0.45f) _gamma = 0.45f; if (_gamma > 2.2f) _gamma = 2.2f;
-    static const int _bayer4x4[16] = {0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5};
-    #define _DITHER(x,y) (((_bayer4x4[((y)&3)*4 + ((x)&3)] / 16.0f) - 0.5f) * 1.2f)
+    float _gamma = Color_ShaderGamma(X11_SHADER_SMOOTHNESS);
+    #define _DITHER(x,y) (Color_BayerDither((x),(y)))
     #define _APPLY_DITHER(cr,cg,cb,xx,yy) do { float _d = _DITHER(xx,yy); int _nr = (int)(cr + _d); int _ng = (int)(cg + _d); int _nb = (int)(cb + _d); if (_nr < 0) _nr = 0; if (_nr > 255) _nr = 255; if (_ng < 0) _ng = 0; if (_ng > 255) _ng = 255; if (_nb < 0) _nb = 0; if (_nb > 255) _nb = 255; cr = (unsigned int)_nr; cg = (unsigned int)_ng; cb = (unsigned int)_nb; } while(0)
 
     if (!EnableShaders || ShaderPreset == 0) {
-        unsigned long fill = pixel;
         if (R <= 0) {
-            row = (uint32_t*)img->data;
+            row = (uint32_t*)img_data;
             for (int y = 0; y < h; y++) {
                 for (int x = 0; x < w; x++) row[x] = fill;
-                row = (uint32_t*)((char*)row + img->bytes_per_line);
+                row = (uint32_t*)((char*)row + bytes_per_line);
             }
         } else {
             for (int y = 0; y < h; y++) {
-                row = (uint32_t*)(img->data + y * img->bytes_per_line);
+                row = (uint32_t*)(img_data + y * bytes_per_line);
                 for (int x = 0; x < w; x++) {
                     unsigned int a = CornerAlpha(x, y, w, h, R, baseAlpha8);
                     row[x] = a ? (a << 24) | (r << 16) | (g << 8) | b : 0;
@@ -864,7 +835,7 @@ static Pixmap x11_create_background_pixmap(Display* dpy, Window win, int w, int 
             t = powf(t, _gamma);
             unsigned long col = LerpHex(base, light, t * 0.9f);
             unsigned int cr0 = (col >> 16) & 0xFF, cg0 = (col >> 8) & 0xFF, cb0 = col & 0xFF;
-            row = (uint32_t*)(img->data + y * img->bytes_per_line);
+            row = (uint32_t*)(img_data + y * bytes_per_line);
             for (int x = 0; x < w; x++) {
                 unsigned int cr = cr0, cg = cg0, cb = cb0;
                 _APPLY_DITHER(cr,cg,cb,x,y);
@@ -876,7 +847,7 @@ static Pixmap x11_create_background_pixmap(Display* dpy, Window win, int w, int 
         unsigned long light = DeriveLighter(base, 1.0f);
         float denom = (float)(w + h); if (denom < 1) denom = 1;
         for (int y = 0; y < h; y++) {
-            row = (uint32_t*)(img->data + y * img->bytes_per_line);
+            row = (uint32_t*)(img_data + y * bytes_per_line);
             for (int x = 0; x < w; x++) {
                 float t = (float)(x + y) / denom;
                 t = powf(t, _gamma);
@@ -892,7 +863,7 @@ static Pixmap x11_create_background_pixmap(Display* dpy, Window win, int w, int 
         float cx = w * 0.5f, cy = h * 0.35f;
         float maxDist = sqrtf(cx*cx + cy*cy); if (maxDist < 1) maxDist = 1;
         for (int y = 0; y < h; y++) {
-            row = (uint32_t*)(img->data + y * img->bytes_per_line);
+            row = (uint32_t*)(img_data + y * bytes_per_line);
             for (int x = 0; x < w; x++) {
                 float dx = x - cx, dy = y - cy;
                 float t = sqrtf(dx*dx + dy*dy) / maxDist; if (t > 1) t = 1;
@@ -909,7 +880,7 @@ static Pixmap x11_create_background_pixmap(Display* dpy, Window win, int w, int 
         for (int y = 0; y < h; y++) {
             float tBase = h > 1 ? (float)y / (float)(h - 1) : 0;
             tBase = powf(tBase, _gamma);
-            row = (uint32_t*)(img->data + y * img->bytes_per_line);
+            row = (uint32_t*)(img_data + y * bytes_per_line);
             for (int x = 0; x < w; x++) {
                 float t = tBase * 0.9f;
                 unsigned long col = LerpHex(base, light, t);
@@ -930,7 +901,7 @@ static Pixmap x11_create_background_pixmap(Display* dpy, Window win, int w, int 
         }
     } else {
         for (int y = 0; y < h; y++) {
-            row = (uint32_t*)(img->data + y * img->bytes_per_line);
+            row = (uint32_t*)(img_data + y * bytes_per_line);
             for (int x = 0; x < w; x++) {
                 unsigned int a = CornerAlpha(x, y, w, h, R, baseAlpha8);
                 row[x] = a ? (a << 24) | (r << 16) | (g << 8) | b : 0;
@@ -940,6 +911,26 @@ static Pixmap x11_create_background_pixmap(Display* dpy, Window win, int w, int 
 
     #undef _DITHER
     #undef _APPLY_DITHER
+}
+
+static Pixmap x11_create_background_pixmap(Display* dpy, Window win, int w, int h, XWindowAttributes* attrs, unsigned long base, unsigned int baseAlpha8) {
+    Visual* vis = attrs->visual;
+    int depth = attrs->depth;
+    bool hasAlpha = (depth == 32);
+    bool rounded = RoundedCorners && CornerRadius > 0 && hasAlpha;
+    int R = rounded ? CornerRadius : 0;
+    if (R > w/2) R = w/2; if (R > h/2) R = h/2;
+    Pixmap pm = XCreatePixmap(dpy, win, w, h, depth);
+    if (!pm) return None;
+    XImage* img = XCreateImage(dpy, vis, depth, ZPixmap, 0, NULL, w, h, 32, 0);
+    if (!img) { XFreePixmap(dpy, pm); return None; }
+    img->data = (char*)calloc(1, h * img->bytes_per_line);
+    if (!img->data) { XDestroyImage(img); XFreePixmap(dpy, pm); return None; }
+
+    unsigned int r = (base >> 16) & 0xFF, g = (base >> 8) & 0xFF, b = base & 0xFF;
+    unsigned long fill = hasAlpha ? (baseAlpha8 << 24) | (r << 16) | (g << 8) | b : (r << 16) | (g << 8) | b;
+    x11_generate_background_pixels((uint32_t*)img->data, img->bytes_per_line, w, h, R, baseAlpha8, base, fill);
+
     GC gc = XCreateGC(dpy, pm, 0, NULL);
     XPutImage(dpy, pm, gc, img, 0, 0, 0, 0, w, h);
     XFreeGC(dpy, gc);
@@ -1010,113 +1001,11 @@ void x11_draw_background_to_drawable(Display* dpy, Drawable drw, int w, int h) {
     if (!img->data) { XDestroyImage(img); return; }
     unsigned int r = (base >> 16) & 0xFF, g = (base >> 8) & 0xFF, b = base & 0xFF;
     unsigned long fill = hasAlpha ? (baseAlpha8 << 24) | (r << 16) | (g << 8) | b : (r << 16) | (g << 8) | b;
-    float _smooth2 = 10;
-    float _gamma2 = 2.0f - _smooth2 * 0.14f; if (_gamma2 < 0.45f) _gamma2 = 0.45f; if (_gamma2 > 2.2f) _gamma2 = 2.2f;
-    static const int _bayer2[16] = {0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5};
-    #define _DITHER2(x,y) (((_bayer2[((y)&3)*4 + ((x)&3)] / 16.0f) - 0.5f) * 1.2f)
     GC gc = XCreateGC(dpy, drw, 0, NULL);
-    if (!EnableShaders || ShaderPreset == 0) {
-        if (!rded) {
-            uint32_t *row = (uint32_t*)img->data;
-            for (int y = 0; y < h; y++) {
-                for (int x = 0; x < w; x++) row[x] = fill;
-                row = (uint32_t*)((char*)row + img->bytes_per_line);
-            }
-        } else {
-            for (int y = 0; y < h; y++) {
-                uint32_t *row = (uint32_t*)(img->data + y * img->bytes_per_line);
-                for (int x = 0; x < w; x++) {
-                    unsigned int a = CornerAlpha(x, y, w, h, R, baseAlpha8);
-                    row[x] = a ? (a << 24) | (r << 16) | (g << 8) | b : 0;
-                }
-            }
-        }
-    } else if (ShaderPreset == 1) {
-        unsigned long light = DeriveLighter(base, 1.0f);
-        for (int y = 0; y < h; y++) {
-            float t = h > 1 ? (float)y / (float)(h - 1) : 0;
-            t = powf(t, _gamma2);
-            unsigned long col = LerpHex(base, light, t * 0.9f);
-            unsigned int cr0 = (col >> 16) & 0xFF, cg0 = (col >> 8) & 0xFF, cb0 = col & 0xFF;
-            uint32_t *row = (uint32_t*)(img->data + y * img->bytes_per_line);
-            for (int x = 0; x < w; x++) {
-                unsigned int cr = cr0, cg = cg0, cb = cb0;
-                float d = _DITHER2(x,y); int nr=(int)(cr+d); int ng=(int)(cg+d); int nb=(int)(cb+d);
-                if(nr<0)nr=0; if(nr>255)nr=255; if(ng<0)ng=0; if(ng>255)ng=255; if(nb<0)nb=0; if(nb>255)nb=255;
-                cr=nr; cg=ng; cb=nb;
-                unsigned int a = CornerAlpha(x, y, w, h, R, baseAlpha8);
-                row[x] = a ? (a << 24) | (cr << 16) | (cg << 8) | cb : 0;
-            }
-        }
-    } else if (ShaderPreset == 2) {
-        unsigned long light = DeriveLighter(base, 1.0f);
-        float denom = (float)(w + h); if (denom < 1) denom = 1;
-        for (int y = 0; y < h; y++) {
-            uint32_t *row = (uint32_t*)(img->data + y * img->bytes_per_line);
-            for (int x = 0; x < w; x++) {
-                float t = (float)(x + y) / denom;
-                t = powf(t, _gamma2);
-                unsigned long col = LerpHex(base, light, t * 0.9f);
-                unsigned int cr = (col >> 16) & 0xFF, cg = (col >> 8) & 0xFF, cb = col & 0xFF;
-                float d = _DITHER2(x,y); int nr=(int)(cr+d); int ng=(int)(cg+d); int nb=(int)(cb+d);
-                if(nr<0)nr=0; if(nr>255)nr=255; if(ng<0)ng=0; if(ng>255)ng=255; if(nb<0)nb=0; if(nb>255)nb=255;
-                cr=nr; cg=ng; cb=nb;
-                unsigned int a = CornerAlpha(x, y, w, h, R, baseAlpha8);
-                row[x] = a ? (a << 24) | (cr << 16) | (cg << 8) | cb : 0;
-            }
-        }
-    } else if (ShaderPreset == 3) {
-        unsigned long light = DeriveLighter(base, 1.0f);
-        float cx = w * 0.5f, cy = h * 0.35f; float maxDist = sqrtf(cx*cx + cy*cy); if (maxDist < 1) maxDist = 1;
-        for (int y = 0; y < h; y++) {
-            uint32_t *row = (uint32_t*)(img->data + y * img->bytes_per_line);
-            for (int x = 0; x < w; x++) {
-                float dx = x - cx, dy = y - cy;
-                float t = sqrtf(dx*dx + dy*dy) / maxDist; if (t > 1) t = 1;
-                t = powf(t, _gamma2);
-                unsigned long col = LerpHex(light, base, t * 0.85f);
-                unsigned int cr = (col >> 16) & 0xFF, cg = (col >> 8) & 0xFF, cb = col & 0xFF;
-                float d = _DITHER2(x,y); int nr=(int)(cr+d); int ng=(int)(cg+d); int nb=(int)(cb+d);
-                if(nr<0)nr=0; if(nr>255)nr=255; if(ng<0)ng=0; if(ng>255)ng=255; if(nb<0)nb=0; if(nb>255)nb=255;
-                cr=nr; cg=ng; cb=nb;
-                unsigned int a = CornerAlpha(x, y, w, h, R, baseAlpha8);
-                row[x] = a ? (a << 24) | (cr << 16) | (cg << 8) | cb : 0;
-            }
-        }
-    } else if (ShaderPreset == 4) {
-        unsigned long light = DeriveLighter(base, 1.0f);
-        for (int y = 0; y < h; y++) {
-            float tBase = h > 1 ? (float)y / (float)(h - 1) : 0;
-            tBase = powf(tBase, _gamma2);
-            uint32_t *row = (uint32_t*)(img->data + y * img->bytes_per_line);
-            for (int x = 0; x < w; x++) {
-                float t = tBase * 0.9f;
-                unsigned long col = LerpHex(base, light, t);
-                unsigned int n = HashNoise(x, y);
-                int delta = (int)(n & 0x1F) - 16;
-                delta = (int)(delta * ShaderIntensity * 0.5f);
-                int nr = (int)((col >> 16) & 0xFF) + delta;
-                int ng = (int)((col >> 8) & 0xFF) + delta;
-                int nb = (int)(col & 0xFF) + delta;
-                float d = _DITHER2(x,y); nr=(int)(nr+d); ng=(int)(ng+d); nb=(int)(nb+d);
-                if(nr<0)nr=0; if(nr>255)nr=255; if(ng<0)ng=0; if(ng>255)ng=255; if(nb<0)nb=0; if(nb>255)nb=255;
-                unsigned int a = CornerAlpha(x, y, w, h, R, baseAlpha8);
-                row[x] = a ? ((a << 24) | ((unsigned int)nr << 16) | ((unsigned int)ng << 8) | (unsigned int)nb) : 0;
-            }
-        }
-    } else {
-        for (int y = 0; y < h; y++) {
-            uint32_t *row = (uint32_t*)(img->data + y * img->bytes_per_line);
-            for (int x = 0; x < w; x++) {
-                unsigned int a = CornerAlpha(x, y, w, h, R, baseAlpha8);
-                row[x] = a ? (a << 24) | (r << 16) | (g << 8) | b : 0;
-            }
-        }
-    }
+    x11_generate_background_pixels((uint32_t*)img->data, img->bytes_per_line, w, h, R, baseAlpha8, base, fill);
     XPutImage(dpy, drw, gc, img, 0, 0, 0, 0, w, h);
     XFreeGC(dpy, gc);
     XDestroyImage(img);
-    #undef _DITHER2
 }
 
 void x11_draw_background(Display* dpy, Window win, int w, int h) {

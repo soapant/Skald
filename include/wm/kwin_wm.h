@@ -1,7 +1,7 @@
 #ifndef KWIN_WM_H
 #define KWIN_WM_H
 #include <stdbool.h>
-#include "core/platform.h"
+#include "platform/platform.h"
 #include "core/types.h"
 bool kwin_is_active(void);
 bool get_title_kwin(char *buffer, int buffer_size);

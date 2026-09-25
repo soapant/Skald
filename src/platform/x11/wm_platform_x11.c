@@ -1,7 +1,7 @@
 #include "platform/wm_platform.h"
 #include "core/window_manager.h"
 #include "core/context.h"
-#include "core/platform.h"
+#include "platform/platform.h"
 #include "core/prompt_controller.h"
 #include "deps/log.h"
 #include "platform/x11/input_x11.h"

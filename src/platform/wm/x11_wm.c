@@ -7,7 +7,7 @@
 #include <ctype.h>
 #include <strings.h>
 #include <string.h>
-#include "core/platform.h"
+#include "platform/platform.h"
 #include "helpers/helpers_text.h"
 #include <string.h>
 #include <stdio.h>

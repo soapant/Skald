@@ -1,4 +1,4 @@
-#include "core/platform.h"
+#include "platform/platform.h"
 #include "config.h"
 
 float Platform_GetUIScale(void) {

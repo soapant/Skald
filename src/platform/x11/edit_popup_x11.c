@@ -2,7 +2,7 @@
 #include "core/modal.h"
 #include "core/window_manager.h"
 #include "wm/wm.h"
-#include "core/platform.h"
+#include "platform/platform.h"
 #include "config.h"
 #include "platform/draw.h"
 #include "platform/wm_platform.h"

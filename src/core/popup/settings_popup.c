@@ -1,6 +1,6 @@
 #include "core/context.h"
 #include "core/window_manager.h"
-#include "core/platform.h"
+#include "platform/platform.h"
 #include "platform/wm_platform.h"
 #include "core/timer.h"
 #include <stdlib.h>

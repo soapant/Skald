@@ -1,6 +1,6 @@
 #include "core/snippet_manager.h"
 #include "core/remap_manager.h"
-#include "core/platform.h"
+#include "platform/platform.h"
 #include "core/types/keys.h"
 #include <stdlib.h>
 #include <string.h>

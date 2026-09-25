@@ -14,11 +14,11 @@
 #include "platform/win32/subclasses_win32.h"
 #include "platform/input_state.h"
 #include "wingdi.h"
-#include "core/platform.h"
+#include "platform/platform.h"
 #include "helpers/helpers_alias.h"
 #include "helpers/helpers_ui.h"
 #include "platform/win32/popup_helpers_win32.h"
-#include "core/flapi_platform.h"
+#include "platform/flapi_platform.h"
 #include "core/prompt_controller.h"
 
 static bool s_swallow_next_char = false;
