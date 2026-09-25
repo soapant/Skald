@@ -55,6 +55,7 @@ extern bool AlternatingText;
 extern bool VimModeText;
 extern int GradientItems;
 extern float GradientBrightness;
+extern const char* Theme;
 
 extern ColorRef COLOR_BG;
 extern ColorRef COLOR_CURSOR;
