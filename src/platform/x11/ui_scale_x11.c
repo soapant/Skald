@@ -7,6 +7,7 @@
 
 static float ui_scale = 0.0f;
 static int ui_scale_applied = 0;
+static int base_font_size = 0;
 
 static float ui_scale_detect(void) {
     const char* ov = getenv("FLINT_SCALE");
@@ -67,9 +68,32 @@ float Platform_GetUIScale(void) {
     return ui_scale;
 }
 
+static void ui_scale_apply_locked(void) {
+    float s = Platform_GetUIScale();
+    if (s > 1.0f) FontSize = (int)(base_font_size * s + 0.5f);
+    else FontSize = base_font_size;
+}
+
 void Platform_ApplyUIScale(void) {
     if (ui_scale_applied) return;
     ui_scale_applied = 1;
-    float s = Platform_GetUIScale();
-    if (s > 1.0f) FontSize = (int)(FontSize * s + 0.5f);
+    base_font_size = FontSize;
+    ui_scale_apply_locked();
+}
+
+int Platform_GetUnscaledFontSize(void) {
+    return base_font_size > 0 ? base_font_size : FontSize;
+}
+
+void Platform_AdjustFontSize(int delta) {
+    if (base_font_size <= 0) base_font_size = FontSize;
+    base_font_size += delta;
+    if (base_font_size < 8) base_font_size = 8;
+    if (base_font_size > 48) base_font_size = 48;
+    ui_scale_apply_locked();
+}
+
+void Platform_ResetUIScale(void) {
+    base_font_size = FontSize;
+    ui_scale_apply_locked();
 }
