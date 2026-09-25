@@ -57,16 +57,11 @@ static bool is_flint_popup_class(HWND hwnd) {
         || strcmp(cls, "EditPopupClass")==0 || strcmp(cls, "SearchPopupClass")==0 || strcmp(cls, "SettingsPopupClass")==0;
 }
 
-HWND Platform_GetFlintPrevFg(void) {
-    if (g_prev_fg && IsWindow(g_prev_fg)) return g_prev_fg;
-    return NULL;
-}
-
 bool Platform_PromptPopupShowWindow(Popup* self, int x, int y, int w, int h) {
     (void)self;
     PROFILE_START(timer);
     HWND fg = GetForegroundWindow();
-    if (fg && IsWindow(fg) && !is_flint_popup_class(fg)) g_prev_fg = fg;
+    if (fg && IsWindow(fg)) g_prev_fg = fg;
     else if (!fg || !IsWindow(fg)) g_prev_fg = NULL;
     char _save_title[128] = {0};
     if (g_prev_fg) GetWindowTextA(g_prev_fg, _save_title, sizeof(_save_title));

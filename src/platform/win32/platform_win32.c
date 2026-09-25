@@ -929,7 +929,6 @@ bool Platform_MoveActiveWindowRight(void) {
     return Platform_MoveActiveWindowToMonitor(true);
 }
 
-extern HWND Platform_GetFlintPrevFg(void);
 static bool win32_activate_hwnd(HWND h) {
     if (!h || !IsWindow(h)) return false;
     if (IsIconic(h)) ShowWindow(h, SW_RESTORE);
@@ -951,12 +950,9 @@ static bool win32_activate_hwnd(HWND h) {
 }
 bool Platform_FocusWindowLeft(void) {
     HWND fg = win32_foreground_target();
-    if (!fg) fg = Platform_GetFlintPrevFg();
     if (!fg) fg = GetForegroundWindow();
     char cls[64]={0}; if(fg) GetClassNameA(fg,cls,sizeof(cls));
     if (fg && (strcmp(cls,"QuickSwitcherModalClass")==0||strcmp(cls,"DisplayMessageModalClass")==0||strcmp(cls,"EditPopupClass")==0||strcmp(cls,"SearchPopupClass")==0||strcmp(cls,"SettingsPopupClass")==0)) {
-        HWND prev = Platform_GetFlintPrevFg();
-        if (prev && IsWindow(prev)) fg = prev;
     }
     if (!fg) return false;
     RECT fr;
@@ -974,12 +970,9 @@ bool Platform_FocusWindowLeft(void) {
 
 bool Platform_FocusWindowRight(void) {
     HWND fg = win32_foreground_target();
-    if (!fg) fg = Platform_GetFlintPrevFg();
     if (!fg) fg = GetForegroundWindow();
     char cls[64]={0}; if(fg) GetClassNameA(fg,cls,sizeof(cls));
     if (fg && (strcmp(cls,"QuickSwitcherModalClass")==0||strcmp(cls,"DisplayMessageModalClass")==0||strcmp(cls,"EditPopupClass")==0||strcmp(cls,"SearchPopupClass")==0||strcmp(cls,"SettingsPopupClass")==0)) {
-        HWND prev = Platform_GetFlintPrevFg();
-        if (prev && IsWindow(prev)) fg = prev;
     }
     if (!fg) return false;
     RECT fr;
