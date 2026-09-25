@@ -1,4 +1,5 @@
 #include "core/flapi.h"
+#include "core/flapi_input.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>

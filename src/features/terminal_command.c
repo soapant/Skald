@@ -1,4 +1,8 @@
 #include "core/flapi.h"
+#include "core/context.h"
+#include "helpers/helpers_ui.h"
+#include "platform/ui.h"
+#include <stdlib.h>
 
 const char* TerminalHistoryFilePath = "TerminalHistory.txt";
 
