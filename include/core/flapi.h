@@ -624,7 +624,7 @@ bool fl_register_snippet_impl(const char* trigger, const char* text, FlSnippetFu
     _FL_GET_MACRO(__VA_ARGS__, _FL_REMAP_ROUTER_6, _FL_REMAP_ROUTER_5, _FL_REMAP_ROUTER_4, _FL_REMAP_ROUTER_3, _FL_REMAP_ROUTER_2)(__VA_ARGS__)
 
 #if defined(_WIN32)
-#define FLINT_FEATURE_EXPORT static
+#define FLINT_FEATURE_EXPORT __declspec(dllexport)
 #else
 #define FLINT_FEATURE_EXPORT __attribute__((visibility("default")))
 #endif

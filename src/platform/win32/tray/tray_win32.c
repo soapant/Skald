@@ -71,6 +71,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
       break;
   }
       
+  case WM_APP + 0x42: {
+    Config_Reload();
+    return 0;
+  }
   case WM_DISPLAY_MESSAGE: {
     DisplayMessageParams* p = (DisplayMessageParams*)lParam;
       if (p != NULL) {
