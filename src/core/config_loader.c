@@ -1,4 +1,3 @@
-#include "core/feature_loader.h"
 #include "core/platform.h"
 #include "platform/lib.h"
 #include "config.h"

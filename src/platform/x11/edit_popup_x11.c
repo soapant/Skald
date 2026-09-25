@@ -3,16 +3,11 @@
 #include "core/window_manager.h"
 #include "wm/wm.h"
 #include "core/platform.h"
-#include "platform/ui.h"
-#include "core/vim.h"
-#include "core/history.h"
-#include "bindings/vim_helpers.h"
 #include "config.h"
 #include "platform/draw.h"
 #include "platform/wm_platform.h"
 #include "platform/x11/input_x11.h"
 #include "core/timer.h"
-#include "deps/log.h"
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
@@ -20,10 +15,6 @@
 #include <X11/Xft/Xft.h>
 #include <unistd.h>
 #include <sys/time.h>
-#include <stdatomic.h>
-#include "platform/x11/display_x11.h"
-#include "platform/x11/drawing_x11.h"
-#include "platform/x11/window_factory_x11.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>

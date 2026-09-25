@@ -4,15 +4,12 @@
 #include "core/platform.h"
 #include "core/prompt_controller.h"
 #include "deps/log.h"
-#include "platform/x11/display_x11.h"
 #include "platform/x11/input_x11.h"
 #include "platform/input_state.h"
 #include "core/remap_manager.h"
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 #include <X11/extensions/Xrandr.h>
-#include <string.h>
-#include <stdio.h>
 
 extern int WindowManager_RunLinux(WindowManager* wm);
 extern void WindowManager_QuitLinux(WindowManager* wm);

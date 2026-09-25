@@ -1,18 +1,7 @@
-#include "core/context.h"
-#include "core/modal.h"
 #include "config.h"
-#include <ctype.h>
-#include <string.h>
 #include <stdlib.h>
-#include <stdio.h>
 #include "config.h"
-#include "core/platform.h"
-#include "helpers/helpers_hotkey.h"
-#include "helpers/helpers_alias.h"
-#include "helpers/helpers_flag.h"
 #include "helpers/helpers_ui.h"
-#include "core/timer.h"
-#include "platform/ui.h"
 
 unsigned long rgb_to_hex(unsigned long win_color) {
     unsigned long r = win_color & 0xFF;          

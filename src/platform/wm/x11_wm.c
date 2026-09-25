@@ -1,6 +1,5 @@
 #include "wm/x11_wm.h"
 #include "deps/log.h"
-#include "platform/x11/display_x11.h"
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
@@ -9,10 +8,6 @@
 #include <strings.h>
 #include <string.h>
 #include "core/platform.h"
-#include "config.h"
-#include "helpers/helpers_hotkey.h"
-#include "helpers/helpers_alias.h"
-#include "helpers/helpers_flag.h"
 #include "helpers/helpers_text.h"
 #include <string.h>
 #include <stdio.h>

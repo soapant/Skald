@@ -1,13 +1,10 @@
 #include "core/history.h"
-#include "deps/log.h"
 #include "core/context.h"
 #include "core/platform.h"
-#include "config.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
-#include <errno.h>
 
 typedef struct {
     char** items;

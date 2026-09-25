@@ -6,6 +6,7 @@
 #include "core/window_manager.h"
 #include "core/context.h"
 #include "core/vim.h"
+#include "helpers/helpers_ui.h"
 
 static const char* g_mode_names[] = { "Normal", "Insert", "Visual" };
 int last_index = 0;

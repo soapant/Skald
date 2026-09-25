@@ -1,11 +1,9 @@
 #include "core/remap_manager.h"
 #include "core/types/keys.h"
 #include "core/platform.h"
-#include "helpers/helpers_hotkey.h"
 #include "deps/log.h"
 #include <string.h>
 #include <stdlib.h>
-#include <stdio.h>
 #include <ctype.h>
 #include <strings.h>
 

@@ -1,13 +1,8 @@
 #include "platform/draw.h"
 #include "core/platform.h"
-#include "platform/ui.h"
 #include "config.h"
-#include "platform/x11/drawing_x11.h"
-#include "platform/x11/display_x11.h"
 #include "helpers/helpers_ui.h"
 #include "core/timer.h"
-#include "core/context.h"
-#include "core/window_manager.h"
 #include <X11/Xft/Xft.h>
 #include <stdlib.h>
 

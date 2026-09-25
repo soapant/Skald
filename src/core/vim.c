@@ -2,7 +2,6 @@
 #include "core/platform.h"
 #include "deps/log.h"
 #include "core/context.h"
-#include "core/modal.h"
 #include "platform/ui.h"
 #include "core/window_manager.h"
 #include <string.h>

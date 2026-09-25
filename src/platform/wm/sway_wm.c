@@ -1,10 +1,6 @@
 #include "wm/sway_wm.h"
 #include "deps/log.h"
 #include "core/platform.h"
-#include "config.h"
-#include "helpers/helpers_hotkey.h"
-#include "helpers/helpers_alias.h"
-#include "helpers/helpers_flag.h"
 #include "helpers/helpers_text.h"
 #include <string.h>
 #include <stdio.h>
