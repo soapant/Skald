@@ -189,7 +189,6 @@ TEST(jk_enters_normal_without_typing) {
     char mid[64];
     vgettext(mid, sizeof(mid));
     ASSERT_EQ_STR(mid, "hello");
-    // simulate the 'j' having been typed (since prefix returns false, it would be inserted)
     Vim_SetText(vctx(), "helloj");
     Vim_SetCursor(vctx(), 6);
     bool b = PromptController_TryVimMotion('k', false, false, false);
