@@ -322,6 +322,7 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
       return DefSubclassProc(hwnd, msg, wParam, lParam);
     }
     if (msg == WM_KEYDOWN) {
+      s_swallow_next_char = false;
       PopupKeyEvent key;
       memset(&key, 0, sizeof(key));
       key.vk = (int)wParam;
@@ -441,6 +442,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     
     switch (msg) {
     case WM_KEYDOWN: {
+      s_swallow_next_char = false;
       HWND hEdit = WH_TO_HWND(FlintContext_Get()->window.hEditControl);
       HWND hKey = (hEdit && IsWindow(hEdit)) ? hEdit : hwnd;
       PopupKeyEvent pkey;
@@ -450,6 +452,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
       pkey.shift = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
       pkey.alt = (GetKeyState(VK_MENU) & 0x8000) != 0;
       if (PromptWindow_OnKey(hKey, &pkey)) {
+        s_swallow_next_char = true;
         if (FlintContext_Get()->prompt_callbacks.render != NULL) InvalidateRect(hwnd, NULL, FALSE);
         return 0;
       }
@@ -457,6 +460,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
       break;
     }
     case WM_CHAR: {
+      if (s_swallow_next_char) { s_swallow_next_char = false; return 0; }
       if (wParam >= 32 && FlintContext_Get()->prompt_callbacks.render != NULL && IsInsertMode()) {
         HWND hEdit = WH_TO_HWND(FlintContext_Get()->window.hEditControl);
         if (hEdit && IsWindow(hEdit)) {
