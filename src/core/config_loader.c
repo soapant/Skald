@@ -157,18 +157,34 @@ bool Config_Load(void) {
 }
 
 static long long g_cfg_last_reload_ms = 0;
+#ifdef _WIN32
 static volatile LONG g_cfg_reload_lock = 0;
+#endif
 bool Config_Reload(void) {
     WindowManager* _wm2 = WindowManager_Get();
     if (_wm2 && _wm2->popup_count > 0) return false;
+#ifdef _WIN32
     if (InterlockedCompareExchange(&g_cfg_reload_lock, 1, 0) != 0) return false;
+#endif
     long long now = Platform_GetWallClockMs();
     long long debounce = (long long)TimeBetweenHotReload * 1000;
     if (debounce < 800) debounce = 1000;
-    if (g_cfg_last_reload_ms && now - g_cfg_last_reload_ms < debounce) { InterlockedExchange(&g_cfg_reload_lock, 0); return false; }
-    if (!config_build_load_store()) { InterlockedExchange(&g_cfg_reload_lock, 0); return false; }
+    if (g_cfg_last_reload_ms && now - g_cfg_last_reload_ms < debounce) {
+#ifdef _WIN32
+        InterlockedExchange(&g_cfg_reload_lock, 0);
+#endif
+        return false;
+    }
+    if (!config_build_load_store()) {
+#ifdef _WIN32
+        InterlockedExchange(&g_cfg_reload_lock, 0);
+#endif
+        return false;
+    }
     g_cfg_last_reload_ms = Platform_GetWallClockMs();
+#ifdef _WIN32
     InterlockedExchange(&g_cfg_reload_lock, 0);
+#endif
     return true;
 }
 
