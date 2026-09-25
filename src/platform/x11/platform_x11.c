@@ -482,7 +482,6 @@ char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
 
     if (!open_terminal) {
         char* result = Platform_RunCommandDetachedCapture(command);
-        log_info("ran terminal command '%s' open_terminal=%d", command, open_terminal);
         PROFILE_END_VAR(timer, "platform_x11:Platform_RunTerminalCommand");
         return result;
     }
