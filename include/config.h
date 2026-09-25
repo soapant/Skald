@@ -57,6 +57,7 @@ extern int GradientItems;
 extern float GradientBrightness;
 
 extern ColorRef COLOR_BG;
+extern ColorRef COLOR_CURSOR;
 extern ColorRef COLOR_TEXT;
 extern ColorRef COLOR_ALTERNATE;
 extern ColorRef COLOR_SELECTED_TEXT;

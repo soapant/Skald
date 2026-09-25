@@ -320,7 +320,7 @@ static size_t config_emit_region(char* buf, size_t cap) {
     cfg_put(buf, cap, &off, "    GradientItems = %d;\n", GradientItems);
     cfg_put_float(buf, cap, &off, "GradientBrightness", GradientBrightness);
     cfg_put(buf, cap, &off, "    CloseOnLossOfFocus = %s;\n", CloseOnLossOfFocus ? "true" : "false");
-    ColorRef cols[] = {COLOR_BG, COLOR_TEXT, COLOR_ALTERNATE, COLOR_SELECTED_TEXT, COLOR_ALIAS_TEXT, COLOR_ERROR, COLOR_NORMAL, COLOR_TIP, COLOR_INSERT_MODE, COLOR_NORMAL_MODE, COLOR_VISUAL_MODE};
+    ColorRef cols[] = {COLOR_BG, COLOR_TEXT, COLOR_ALTERNATE, COLOR_SELECTED_TEXT, COLOR_ALIAS_TEXT, COLOR_ERROR, COLOR_NORMAL, COLOR_TIP, COLOR_INSERT_MODE, COLOR_NORMAL_MODE, COLOR_VISUAL_MODE,COLOR_CURSOR};
     const char* names[] = {"COLOR_BG", "COLOR_TEXT", "COLOR_ALTERNATE", "COLOR_SELECTED_TEXT", "COLOR_ALIAS_TEXT", "COLOR_ERROR", "COLOR_NORMAL", "COLOR_TIP", "COLOR_INSERT_MODE", "COLOR_NORMAL_MODE", "COLOR_VISUAL_MODE"};
     for (size_t i = 0; i < sizeof(cols) / sizeof(cols[0]); i++) {
         cfg_put(buf, cap, &off, "    %s = RGB(%u, %u, %u);\n", names[i], cols[i] & 0xFFu, (cols[i] >> 8) & 0xFFu, (cols[i] >> 16) & 0xFFu);
