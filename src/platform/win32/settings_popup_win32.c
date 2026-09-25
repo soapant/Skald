@@ -31,9 +31,7 @@ LRESULT CALLBACK SettingsPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
     
   case WM_CREATE: {
     if (!g_win32_hMainFont) {
-      g_win32_hMainFont = CreateFontA(FontSize, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
-                                DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
-                                CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, UsedFont);
+      g_win32_hMainFont = FH_TO_HFONT(Platform_CreateFont(FontSize, UsedFont));
     }
     break;
   }

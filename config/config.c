@@ -41,10 +41,10 @@ void ConfigApply(void) {
     MaxFeatures = 1000;
     VimFontSize = 18;
     PaddingForScrolling = 3;
-    UsedTerminal = "";
+    UsedTerminal = "alacritty";
     UsedShell = "nu";
     UsedBrowser = "zen";
-    UsedImageViewer = "";
+    UsedImageViewer = "mspaint";
     UsedVideoPlayer = "mpv";
     UsedSearchEngine = "google";
     FeaturePath = "src/features";

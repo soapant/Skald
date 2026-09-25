@@ -235,9 +235,37 @@ static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent* key) {
     }
 
     if (ctrl_pressed) {
-        if (wParam == VK_OEM_MINUS) FontSize -= 1;
-        if (wParam == VK_OEM_PLUS) FontSize += 1;
-        if (wParam == VK_OEM_MINUS || wParam == VK_OEM_PLUS) { Config_Save(); return true; }
+        bool is_minus = (wParam == VK_OEM_MINUS || wParam == VK_SUBTRACT);
+        bool is_plus  = (wParam == VK_OEM_PLUS  || wParam == VK_ADD || wParam == 0xBB || wParam == 0xBD);
+        if (is_minus || is_plus) {
+            int old = FontSize;
+            if (is_minus) FontSize -= 1; else FontSize += 1;
+            if (FontSize < 8) FontSize = 8;
+            if (FontSize > 48) FontSize = 48;
+            if (FontSize != old) {
+                if (g_win32_hMainFont) { DeleteObject(g_win32_hMainFont); g_win32_hMainFont = NULL; }
+                g_win32_hMainFont = FH_TO_HFONT(Platform_CreateFont(FontSize, UsedFont));
+                if (WH_TO_HWND(FlintContext_Get()->window.hEditControl) && IsWindow(WH_TO_HWND(FlintContext_Get()->window.hEditControl))) {
+                    UI_Edit_SetFont(FlintContext_Get()->window.hEditControl, g_win32_hMainFont);
+                }
+                if (WH_TO_HWND(FlintContext_Get()->window.hListBox) && IsWindow(WH_TO_HWND(FlintContext_Get()->window.hListBox))) {
+                    UI_LB_SetFont(FlintContext_Get()->window.hListBox, g_win32_hMainFont);
+                    int newItemH = FontSize + 14;
+                    if (newItemH < 24) newItemH = 24;
+                    if (newItemH > 64) newItemH = 64;
+                    UI_LB_SetItemHeight(FlintContext_Get()->window.hListBox, newItemH);
+                }
+                HWND hPopup = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
+                if (hPopup && IsWindow(hPopup)) {
+                    InvalidateRect(hPopup, NULL, TRUE);
+                    if (WH_TO_HWND(FlintContext_Get()->window.hListBox)) InvalidateRect(WH_TO_HWND(FlintContext_Get()->window.hListBox), NULL, TRUE);
+                    if (WH_TO_HWND(FlintContext_Get()->window.hEditControl)) InvalidateRect(WH_TO_HWND(FlintContext_Get()->window.hEditControl), NULL, TRUE);
+                    UpdateWindow(hPopup);
+                }
+            }
+            Config_Save();
+            return true;
+        }
     }
 
     return false;
