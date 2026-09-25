@@ -6,12 +6,9 @@
 #include <windows.h>
 #include <string.h>
 #include <stdlib.h>
-#include <stdio.h>
 #include "config.h"
 #include "core/context.h"
 #include "core/modal.h"
-#include "core/types.h"
-#include "core/vim.h"
 #include "core/feature_data.h"
 #include "core/timer.h"
 #include "helpers/helpers_ui.h"

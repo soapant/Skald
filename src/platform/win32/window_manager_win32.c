@@ -1,12 +1,5 @@
 #include "core/window_manager.h"
-#include "platform/ui.h"
-#include "core/modal.h"
-#include "core/vim.h"
-#include "core/platform.h"
-#include "platform/win32/subclasses_win32.h"
-#include "core/feature_data.h"
 #include <windows.h>
-#include <stdio.h>
 
 int pending_hotkey_vk = 0;
 int pending_hotkey_mod = 0;
