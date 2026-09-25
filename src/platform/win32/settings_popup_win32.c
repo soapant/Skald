@@ -286,27 +286,6 @@ bool Platform_SettingsPopupOnKey(Popup* self, const PopupKeyEvent* key) {
   return false;
 }
 
-void Platform_SettingsPopUp() {
-  if (!Platform_SettingsPopupShowWindow(NULL, 510, 210, 900, 700)) return;
-  MSG msg;
-  UI_PreparePopupPump();
-  while (!FlintContext_Get()->window.selection_complete) {
-    if (GetMessage(&msg, NULL, 0, 0)) {
-      if (UI_ShouldSkipPopupKey(&msg)) continue;
-      TranslateMessage(&msg);
-      DispatchMessage(&msg);
-    } else {
-      break;
-    }
-  }
-  Platform_SettingsPopupHideWindow(NULL);
-  while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
-    TranslateMessage(&msg);
-    DispatchMessage(&msg);
-  }
-log_info("Platform_SettingsPopUp completed");
-}
-
 void SettingsCreateChildControls(WindowHandle hwndParent, HFONT hFont,const WindowLayout* layout) {
   HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtrA(WH_TO_HWND(hwndParent), GWLP_HINSTANCE);
 

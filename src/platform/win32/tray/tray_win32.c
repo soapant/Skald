@@ -54,7 +54,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
       PostQuitMessage(0);
     }
     if (LOWORD(wParam) == ID_SETTINGS) {
-      Platform_SettingsPopUp();
+      Platform_SettingsPopUp(WindowManager_Get());
     }
     
       break;

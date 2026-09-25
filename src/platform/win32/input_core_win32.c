@@ -74,7 +74,7 @@ LRESULT CALLBACK win32_handle_global_key(int nCode, WPARAM wParam, LPARAM lParam
       return 1;
     }
     if (alt_down && wParam == SETTINGS_KEY) {
-      Platform_SettingsPopUp();
+      Platform_SettingsPopUp(WindowManager_Get());
       return true;
     }
     PROFILE_END_VAR(timer, "ProcessHotkey");
