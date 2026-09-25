@@ -330,8 +330,8 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
       key.alt = (GetKeyState(VK_MENU) & 0x8000) != 0;
       bool was_normal = IsNormalMode();
       if (PromptWindow_OnKey(hwnd, &key)) {
-        if (was_normal && wParam >= 0x20 && wParam <= 0x7E) s_swallow_next_char = true;
-        else if ((wParam >= 'A' && wParam <= 'Z') || (wParam >= '0' && wParam <= '9')) s_swallow_next_char = true;
+        (void)was_normal;
+        s_swallow_next_char = true;
         if (FlintContext_Get()->prompt_callbacks.render != NULL) {
           HWND hPar = GetParent(hwnd);
           if (hPar && IsWindow(hPar)) InvalidateRect(hPar, NULL, FALSE);
