@@ -27,6 +27,12 @@ void Platform_PromptPopupRender(Popup* self);
 void Platform_PromptPopupDestroyWindow(Popup* self);
 bool Platform_PromptPopupOnKey(Popup* self, const PopupKeyEvent* key);
 
+bool Platform_SettingsPopupShowWindow(Popup* self, int x, int y, int w, int h);
+void Platform_SettingsPopupHideWindow(Popup* self);
+void Platform_SettingsPopupRender(Popup* self);
+void Platform_SettingsPopupDestroyWindow(Popup* self);
+bool Platform_SettingsPopupOnKey(Popup* self, const PopupKeyEvent* key);
+
 bool Platform_EditPopupOnKey(Popup* self, const PopupKeyEvent* key);
 
 #endif

@@ -1527,8 +1527,6 @@ void Platform_ShutdownUI(void) {
 Fl_Pos Platform_GetCursorPos(void) {
     return Wm_GetCursorPosition();
 }
-void Platform_SettingsPopUp(void) {
-}
 
 char* Platform_GetWorkingDir(void) {
     char* raw = Platform_RunTerminalCommand("pwd", false);
