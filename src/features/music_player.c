@@ -1,5 +1,64 @@
 #include "core/flapi.h"
 
+#if !defined(_WIN32)
+#include <X11/Xlib.h>
+#include <X11/Xatom.h>
+static Window music_find_window(Display* dpy, Window w, const char* title) {
+    char* name = NULL;
+    if (XFetchName(dpy, w, &name) && name != NULL) {
+        bool match = (strcmp(name, title) == 0);
+        XFree(name);
+        if (match) return w;
+    }
+    Window root, parent, *children = NULL;
+    unsigned int n = 0;
+    if (XQueryTree(dpy, w, &root, &parent, &children, &n)) {
+        for (unsigned int i = 0; i < n; i++) {
+            Window found = music_find_window(dpy, children[i], title);
+            if (found != None) {
+                if (children) XFree(children);
+                return found;
+            }
+        }
+        if (children) XFree(children);
+    }
+    return None;
+}
+static bool music_set_string(const char* window_title, const char* atom_name, const char* value) {
+    Display* dpy = XOpenDisplay(NULL);
+    if (!dpy || !window_title || !value) { if (dpy) XCloseDisplay(dpy); return false; }
+    bool ok = false;
+    Window win = music_find_window(dpy, DefaultRootWindow(dpy), window_title);
+    if (win != None) {
+        XChangeProperty(dpy, win, XInternAtom(dpy, atom_name, False), XA_STRING, 8, PropModeReplace, (const unsigned char*)value, (int)strlen(value));
+        XFlush(dpy);
+        ok = true;
+    }
+    XCloseDisplay(dpy);
+    return ok;
+}
+static bool music_send_command(const char* window_title, const char* atom_name, long command) {
+    Display* dpy = XOpenDisplay(NULL);
+    if (!dpy || !window_title) { if (dpy) XCloseDisplay(dpy); return false; }
+    bool ok = false;
+    Window win = music_find_window(dpy, DefaultRootWindow(dpy), window_title);
+    if (win != None) {
+        XEvent ev = {0};
+        ev.xclient.type = ClientMessage;
+        ev.xclient.window = win;
+        ev.xclient.message_type = XInternAtom(dpy, atom_name, False);
+        ev.xclient.format = 32;
+        ev.xclient.data.l[0] = command;
+        if (XSendEvent(dpy, win, False, NoEventMask, &ev) != 0) {
+            XFlush(dpy);
+            ok = true;
+        }
+    }
+    XCloseDisplay(dpy);
+    return ok;
+}
+#endif
+
 const char* MusicPlayerPath = "{DEV}/Music Player/music_player.exe";
 const char* MusicPath = "{MUSIC}";
 
@@ -63,8 +122,8 @@ bool music_enter_callback(const char* selection, ListBoxInfo* lb) {
         fl_launch_with_args(MusicPlayerPath, quoted_result);
     }
 #else
-    if (Platform_SetX11StringProperty("Music Player", "_MP_TRACK", result) &&
-        Platform_SendX11Command("Music Player", "_MP_TRACK_CHANGED", 1)) {
+    if (music_set_string("Music Player", "_MP_TRACK", result) &&
+        music_send_command("Music Player", "_MP_TRACK_CHANGED", 1)) {
         return true;
     }
     if (strlen(MusicPlayerPath) > 0) {
@@ -81,7 +140,7 @@ void music_cmd_1(void) {
     HWND playerHwnd = FindWindow(NULL, "Music Player");
     if (playerHwnd) PostMessage(playerHwnd, WM_USER + 1, 1, 0);
 #else
-    Platform_SendX11Command("Music Player", "_MP_PLAYER_CMD", 1);
+    music_send_command("Music Player", "_MP_PLAYER_CMD", 1);
 #endif
 }
 void music_cmd_5(void) {
@@ -89,7 +148,7 @@ void music_cmd_5(void) {
     HWND playerHwnd = FindWindow(NULL, "Music Player");
     if (playerHwnd) PostMessage(playerHwnd, WM_USER + 1, 5, 0);
 #else
-    Platform_SendX11Command("Music Player", "_MP_PLAYER_CMD", 5);
+    music_send_command("Music Player", "_MP_PLAYER_CMD", 5);
 #endif
 }
 void music_cmd_6(void) {
@@ -97,7 +156,7 @@ void music_cmd_6(void) {
     HWND playerHwnd = FindWindow(NULL, "Music Player");
     if (playerHwnd) PostMessage(playerHwnd, WM_USER + 1, 6, 0);
 #else
-    Platform_SendX11Command("Music Player", "_MP_PLAYER_CMD", 6);
+    music_send_command("Music Player", "_MP_PLAYER_CMD", 6);
 #endif
 }
 void music_cmd_2(void) {
@@ -105,7 +164,7 @@ void music_cmd_2(void) {
     HWND playerHwnd = FindWindow(NULL, "Music Player");
     if (playerHwnd) PostMessage(playerHwnd, WM_USER + 1, 2, 0);
 #else
-    Platform_SendX11Command("Music Player", "_MP_PLAYER_CMD", 2);
+    music_send_command("Music Player", "_MP_PLAYER_CMD", 2);
 #endif
 }
 void music_prompt(void) {

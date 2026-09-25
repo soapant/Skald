@@ -9,9 +9,7 @@
 #include <unistd.h>
 #include "core/timer.h"
 #include "core/window_manager.h"
-#ifndef _WIN32
-#include <dlfcn.h>
-#else
+#ifdef _WIN32
 #include <windows.h>
 #endif
 
@@ -150,11 +148,7 @@ static bool load_single(const char* dir, const char* filename) {
 
     LibHandle h = Platform_LoadLibrary(full);
     if (!h) {
-#ifndef _WIN32
-        log_error("dlopen %s failed: %s", full, dlerror());
-#else
-        log_error("LoadLibrary %s failed", full);
-#endif
+        log_error("dlopen %s failed: %s", full, Platform_GetLoadError());
         return false;
     }
     typedef void (*InitFn)(void);
@@ -238,11 +232,7 @@ void FeatureLoader_Reload(const char* name) {
             }
             LibHandle h = Platform_LoadLibrary(uniquepath);
             if (!h) {
-#ifndef _WIN32
-                log_error("reload %s failed: %s (keeping old)", name, dlerror());
-#else
-                log_error("reload %s failed (keeping old)", name);
-#endif
+                log_error("reload %s failed: %s (keeping old)", name, Platform_GetLoadError());
                 remove(uniquepath);
                 FL_UNLOCK(); return;
             }

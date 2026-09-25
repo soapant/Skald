@@ -30,6 +30,7 @@
 -- when the user says some feature does not work read the files related to that if you can find the issue fix it if you can add log_info in areast where you think the issue  and propmt the user to enable debugging to test the user will give back the entire debug log
 -- do not add random comments in the middle of functions under any circumstance and never run the program unless specified by the user
 - DO NOT add a new `fl_` API function for a single feature's one-off need; implement that logic in the feature file instead. New `fl_` functions must serve 2+ features (current or planned).
+--DO NOT RUN TESTS UNLESS USER SPECIFED
 
 ## Communication
 

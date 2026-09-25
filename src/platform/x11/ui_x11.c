@@ -194,3 +194,26 @@ void UI_Redraw(ListBoxInfo* lb, WindowHandle hListBox) {
 void UI_GetParent(WindowHandle hwnd) {
     (void)hwnd;
 }
+
+void UI_SyncFilterFromEdit(FlintContext* ctx) {
+    (void)ctx;
+}
+
+void UI_ApplyFilterToEdit(FlintContext* ctx) {
+    (void)ctx;
+}
+
+ListBoxInfo* UI_GetPopupListBox(FlintContext* ctx) {
+    (void)ctx;
+    return NULL;
+}
+
+void UI_SyncEditCursor(FlintContext* ctx, int pos) {
+    (void)ctx;
+    (void)pos;
+}
+
+bool UI_ApplyBackspaceToPopup(FlintContext* ctx) {
+    (void)ctx;
+    return false;
+}

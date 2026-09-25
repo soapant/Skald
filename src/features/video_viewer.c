@@ -2,6 +2,78 @@
 
 #include "core/flapi.h"
 
+#if !defined(_WIN32)
+#include <X11/Xlib.h>
+#include <X11/Xatom.h>
+static Window video_find_window(Display* dpy, Window w, const char* title) {
+    char* name = NULL;
+    if (XFetchName(dpy, w, &name) && name != NULL) {
+        bool match = (strcmp(name, title) == 0);
+        XFree(name);
+        if (match) return w;
+    }
+    Window root, parent, *children = NULL;
+    unsigned int n = 0;
+    if (XQueryTree(dpy, w, &root, &parent, &children, &n)) {
+        for (unsigned int i = 0; i < n; i++) {
+            Window found = video_find_window(dpy, children[i], title);
+            if (found != None) {
+                if (children) XFree(children);
+                return found;
+            }
+        }
+        if (children) XFree(children);
+    }
+    return None;
+}
+static bool video_set_string(const char* window_title, const char* atom_name, const char* value) {
+    Display* dpy = XOpenDisplay(NULL);
+    if (!dpy || !window_title || !value) { if (dpy) XCloseDisplay(dpy); return false; }
+    bool ok = false;
+    Window win = video_find_window(dpy, DefaultRootWindow(dpy), window_title);
+    if (win != None) {
+        XChangeProperty(dpy, win, XInternAtom(dpy, atom_name, False), XA_STRING, 8, PropModeReplace, (const unsigned char*)value, (int)strlen(value));
+        XFlush(dpy);
+        ok = true;
+    }
+    XCloseDisplay(dpy);
+    return ok;
+}
+static bool video_send_command(const char* window_title, const char* atom_name, long command) {
+    Display* dpy = XOpenDisplay(NULL);
+    if (!dpy || !window_title) { if (dpy) XCloseDisplay(dpy); return false; }
+    bool ok = false;
+    Window win = video_find_window(dpy, DefaultRootWindow(dpy), window_title);
+    if (win != None) {
+        XEvent ev = {0};
+        ev.xclient.type = ClientMessage;
+        ev.xclient.window = win;
+        ev.xclient.message_type = XInternAtom(dpy, atom_name, False);
+        ev.xclient.format = 32;
+        ev.xclient.data.l[0] = command;
+        if (XSendEvent(dpy, win, False, NoEventMask, &ev) != 0) {
+            XFlush(dpy);
+            ok = true;
+        }
+    }
+    XCloseDisplay(dpy);
+    return ok;
+}
+static bool video_set_long(const char* window_title, const char* atom_name, long value) {
+    Display* dpy = XOpenDisplay(NULL);
+    if (!dpy || !window_title) { if (dpy) XCloseDisplay(dpy); return false; }
+    bool ok = false;
+    Window win = video_find_window(dpy, DefaultRootWindow(dpy), window_title);
+    if (win != None) {
+        XChangeProperty(dpy, win, XInternAtom(dpy, atom_name, False), XA_INTEGER, 32, PropModeReplace, (unsigned char*)&value, 1);
+        XFlush(dpy);
+        ok = true;
+    }
+    XCloseDisplay(dpy);
+    return ok;
+}
+#endif
+
 const char* VideoViewerPath = "{DEV}/Video Viewer/video_viewer.exe";
 const char* VideosPath = "{VIDEOS}";
 
@@ -63,8 +135,8 @@ bool video_enter_callback(const char* selection, ListBoxInfo* lb) {
         fl_launch_with_args(VideoViewerPath, quoted_result);
     }
 #else
-    if (Platform_SetX11StringProperty("Video Viewer", "_MP_TRACK", result) &&
-        Platform_SendX11Command("Video Viewer", "_MP_TRACK_CHANGED", 1)) {
+    if (video_set_string("Video Viewer", "_MP_TRACK", result) &&
+        video_send_command("Video Viewer", "_MP_TRACK_CHANGED", 1)) {
         return true;
     }
     if (strlen(VideoViewerPath) > 0) {
@@ -80,7 +152,7 @@ void video_cmd_1(void) {
     HWND playerHwnd = FindWindow(NULL, "Video Viewer");
     if (playerHwnd) PostMessage(playerHwnd, WM_USER + 1, 1, 0);
 #else
-    Platform_SetX11Property("Video Viewer", "_MP_CMD", 1);
+    video_set_long("Video Viewer", "_MP_CMD", 1);
 #endif
 }
 void video_cmd_5(void) {
@@ -88,7 +160,7 @@ void video_cmd_5(void) {
     HWND playerHwnd = FindWindow(NULL, "Video Viewer");
     if (playerHwnd) PostMessage(playerHwnd, WM_USER + 1, 5, 0);
 #else
-    Platform_SetX11Property("Video Viewer", "_MP_CMD", 5);
+    video_set_long("Video Viewer", "_MP_CMD", 5);
 #endif
 }
 void video_cmd_6(void) {
@@ -96,7 +168,7 @@ void video_cmd_6(void) {
     HWND playerHwnd = FindWindow(NULL, "Video Viewer");
     if (playerHwnd) PostMessage(playerHwnd, WM_USER + 1, 6, 0);
 #else
-    Platform_SetX11Property("Video Viewer", "_MP_CMD", 6);
+    video_set_long("Video Viewer", "_MP_CMD", 6);
 #endif
 }
 void video_prompt(void) {
