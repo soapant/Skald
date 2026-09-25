@@ -361,6 +361,7 @@ static bool run_tests(void) {
         if (support_obj) nob_cmd_append(&cmd, support_obj);
         for (size_t i = 0; i < sources.count; ++i) {
             if (strcmp(sources.items[i], "src/main.c") == 0) continue;
+            if (strcmp(sources.items[i], "src\\main.c") == 0) continue;
             nob_cmd_append(&cmd, obj_path(sources.items[i]));
         }
         nob_cmd_append(&cmd, LINK_FLAGS, "-o", out);
