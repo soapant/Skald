@@ -872,8 +872,8 @@ bool Platform_QueryBrowser(char* query) {
                  display, xauthority, runtime_dir, UsedBrowser, url);
     }
     
-        log_info("Platform_QueryBrowser query='%s'", query ? query : "");;
-PROFILE_END_VAR(timer, "misc_x11:Platform_QueryBrowser");
+      log_info("Platform_QueryBrowser query='%s'", query ? query : "");;
+    PROFILE_END_VAR(timer, "misc_x11:Platform_QueryBrowser");
     return Platform_RunTerminalCommand(command,false);
 }
 
