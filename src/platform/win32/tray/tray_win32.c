@@ -1,22 +1,11 @@
 #include <windows.h>
-#include "deps/log.h"
-#include "core/context.h"
-#include "core/modal.h"
 #include <commctrl.h>
 #include <shellapi.h>
 #include "config.h"
-#include "platform/draw.h"
-#include "platform/ui.h"
-#include "core/feature_data.h"
 #include "core/types.h"
 #include "platform/win32/subclasses_win32.h"
 #include "wingdi.h"
 #include "core/platform.h"
-#include "helpers/helpers_hotkey.h"
-#include "helpers/helpers_alias.h"
-#include "helpers/helpers_flag.h"
-#include "helpers/helpers_ui.h"
-#include "platform/win32/popup_helpers_win32.h"
 #include "platform/win32/win32_state.h"
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {

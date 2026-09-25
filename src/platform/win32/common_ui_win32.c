@@ -4,9 +4,6 @@
 #include "config.h"
 #include "config.h"
 #include "core/platform.h"
-#include "helpers/helpers_hotkey.h"
-#include "helpers/helpers_alias.h"
-#include "helpers/helpers_flag.h"
 #include "helpers/helpers_ui.h"
 #include "platform/ui.h"
 #include <math.h>
