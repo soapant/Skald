@@ -2,6 +2,7 @@
 #include "deps/log.h"
 #include "core/context.h"
 #include "core/modal.h"
+#include "core/window_manager.h"
 #include <commctrl.h>
 #include <shellapi.h>
 #include "config.h"
@@ -107,6 +108,53 @@ LRESULT CALLBACK DisplayMessageProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
   return DefWindowProcA(hwnd, msg, wParam, lParam);
 }
 
+static FadeWindowData* s_msg_show_data = NULL;
+
+bool Platform_MessagePopupShowWindow(Popup* self, int x, int y, int w, int h) {
+  (void)self;
+  if (!s_msg_show_data) { log_error("Platform_MessagePopupShowWindow null payload"); return false; }
+  HINSTANCE hInstance = GetModuleHandle(NULL);
+  HWND hPopupWnd = CreateWindowExA(
+      WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED | WS_EX_NOACTIVATE,
+      "DisplayMessageModalClass", NULL, WS_POPUP,
+      x, y, w, h, NULL, NULL, hInstance, s_msg_show_data
+      );
+  if (hPopupWnd == NULL) {
+    log_error("CreateWindowExA failed: %lu", GetLastError());
+    return false;
+  }
+  s_msg_show_data = NULL;
+  win32_apply_rounded_corners(hPopupWnd, w, h);
+  SetLayeredWindowAttributes(hPopupWnd, 0, (BYTE)WindowOpacity, LWA_ALPHA);
+  ShowWindow(hPopupWnd, SW_SHOWNOACTIVATE);
+  UpdateWindow(hPopupWnd);
+  SetTimer(hPopupWnd, 999, 50, NULL);
+  return true;
+}
+
+void Platform_MessagePopupHideWindow(Popup* self) {
+  (void)self;
+  HWND hMsg = WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage);
+  if (hMsg != NULL && IsWindow(hMsg)) {
+    DestroyWindow(hMsg);
+    FlintContext_Get()->window.hDisplayMessage = WH_NULL;
+  }
+}
+
+void Platform_MessagePopupRender(Popup* self) {
+  (void)self;
+}
+
+void Platform_MessagePopupDestroyWindow(Popup* self) {
+  Platform_MessagePopupHideWindow(self);
+}
+
+bool Platform_MessagePopupOnKey(Popup* self, const PopupKeyEvent* key) {
+  (void)self;
+  (void)key;
+  return false;
+}
+
 void Platform_DisplayMessage(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, int timeout, ColorRef color) {
   if (WH_TO_HWND(FlintContext_Get()->window.hGlobalTrayWnd) != NULL && GetCurrentThreadId() != g_win32_main_thread_id) {
     DisplayMessageParams params = { message, centerX, centerY, maxWidth, maxHeight, timeout, color };
@@ -118,8 +166,6 @@ log_info("Platform_DisplayMessage message='%s' centerX=%d centerY=%d maxWidth=%d
 }
 
 void Platform_CreateDisplayMessageWindow(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, int timeout, ColorRef color) {
-  HINSTANCE hInstance = GetModuleHandle(NULL);
-
   DestroyWindow(WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage));
   KillTimer(WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage),999);
 
@@ -149,25 +195,14 @@ void Platform_CreateDisplayMessageWindow(const char* message, int centerX, int c
   int topLeftX = centerX - (winWidth / 2);
   int topLeftY = centerY - (winHeight / 2);
 
-  HWND hPopupWnd = CreateWindowExA(
-      WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED | WS_EX_NOACTIVATE, 
-      "DisplayMessageModalClass", NULL, WS_POPUP, 
-      topLeftX, topLeftY, winWidth, winHeight, NULL, NULL, hInstance, pWndData
-      );
-
-  if (hPopupWnd == NULL) {
+  s_msg_show_data = pWndData;
+  if (!Platform_MessagePopupShowWindow(NULL, topLeftX, topLeftY, winWidth, winHeight)) {
+    s_msg_show_data = NULL;
     Platform_DestroyFont(pWndData->hFont);
+    free((void*)pWndData->message);
     free(pWndData);
     return;
   }
-  win32_apply_rounded_corners(hPopupWnd, winWidth, winHeight);
-
-  SetLayeredWindowAttributes(hPopupWnd, 0, (BYTE)pWndData->alpha, LWA_ALPHA);
-
-  ShowWindow(hPopupWnd, SW_SHOWNOACTIVATE);
-  UpdateWindow(hPopupWnd);
-
-  SetTimer(hPopupWnd, 999, 50, NULL);
   log_info("Platform_CreateDisplayMessageWindow message='%s' centerX=%d centerY=%d maxWidth=%d maxHeight=%d timeout=%d", message ? message : "", centerX, centerY, maxWidth, maxHeight, timeout);
-  return; 
+  return;
 }

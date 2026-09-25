@@ -33,6 +33,12 @@ void Platform_SettingsPopupRender(Popup* self);
 void Platform_SettingsPopupDestroyWindow(Popup* self);
 bool Platform_SettingsPopupOnKey(Popup* self, const PopupKeyEvent* key);
 
+bool Platform_MessagePopupShowWindow(Popup* self, int x, int y, int w, int h);
+void Platform_MessagePopupHideWindow(Popup* self);
+void Platform_MessagePopupRender(Popup* self);
+void Platform_MessagePopupDestroyWindow(Popup* self);
+bool Platform_MessagePopupOnKey(Popup* self, const PopupKeyEvent* key);
+
 bool Platform_EditPopupOnKey(Popup* self, const PopupKeyEvent* key);
 
 #endif
