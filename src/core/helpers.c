@@ -1,14 +1,7 @@
 #include "core/context.h"
-#include "core/modal.h"
 #include "config.h"
-#include <ctype.h>
 #include "config.h"
-#include "core/platform.h"
 #include "helpers/helpers_hotkey.h"
-#include "helpers/helpers_alias.h"
-#include "helpers/helpers_flag.h"
-#include "helpers/helpers_ui.h"
-#include "core/timer.h"
 #include "platform/ui.h"
 
 void SubjectiveMessageDisplay(const char* buffer,int msg_height,int timeout,ColorRef color) {

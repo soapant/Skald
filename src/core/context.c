@@ -1,6 +1,4 @@
 #include "core/context.h"
-#include "core/modal.h"
-#include <string.h>
 
 static FlintContext g_ctx = {
     .vim_mode = MODE_INSERT,

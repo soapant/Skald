@@ -1,8 +1,6 @@
 #include "core/timer.h"
-#include "deps/log.h"
 #include "config.h"
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
 
 void TimerEnd(WinTimer t, const char* operation_name) {

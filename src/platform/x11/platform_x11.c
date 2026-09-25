@@ -19,17 +19,12 @@
 #include <sys/un.h>
 #include <glob.h>
 #include <png.h>
-#include <ctype.h>
 #include "core/platform.h"
 #include "config.h"
 #include "config.h"
 #include "core/platform.h"
 #include "helpers/helpers_hotkey.h"
-#include "helpers/helpers_alias.h"
-#include "helpers/helpers_flag.h"
-#include "helpers/helpers_ui.h"
 #include "core/context.h"
-#include "core/modal.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -41,9 +36,7 @@
 #include <errno.h>
 #include <sys/file.h>
 #include <fontconfig/fontconfig.h>
-#include "platform/x11/drawing_x11.h"
 #include "platform/x11/env_helpers_x11.h"
-#include "platform/x11/desktop_helpers_x11.h"
 #include "wm/wm.h"
 #if __has_include(<X11/extensions/XTest.h>)
 #include <X11/extensions/XTest.h>

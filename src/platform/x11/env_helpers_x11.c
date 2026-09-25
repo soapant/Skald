@@ -7,7 +7,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <stdlib.h>
-#include <string.h>
 
 static bool env_sock_live(const char* path) {
     struct stat st;

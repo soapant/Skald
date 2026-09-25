@@ -2,11 +2,9 @@
 #include "deps/log.h"
 #include "core/modal.h"
 #include "config.h"
-#include <ctype.h>
 #include <stdlib.h>
 #include <math.h>
 #include <X11/Xlib.h>
-#include "platform/x11/audio_x11.h"
 #include <X11/keysym.h>
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
@@ -17,14 +15,9 @@
 #include <stdint.h>
 #include "config.h"
 #include "core/platform.h"
-#include "helpers/helpers_hotkey.h"
 #include "platform/draw.h"
-#include "helpers/helpers_alias.h"
-#include "helpers/helpers_flag.h"
 #include "helpers/helpers_ui.h"
 #include "core/timer.h"
-#include "platform/ui.h"
-#include "platform/x11/drawing_x11.h"
 #include "wm/niri_wm.h"
 #define NANOSVG_IMPLEMENTATION
 #include "deps/nanosvg.h"

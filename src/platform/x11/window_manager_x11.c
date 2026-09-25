@@ -2,20 +2,7 @@
 #include "deps/log.h"
 #include "core/prompt_controller.h"
 
-#include "platform/ui.h"
-#include "core/modal.h"
-#include "core/vim.h"
-#include "core/platform.h"
-#include "platform/x11/ui_x11.h"
-#include "config.h"
-#include "core/platform.h"
-#include "helpers/helpers_hotkey.h"
-#include "helpers/helpers_alias.h"
-#include "helpers/helpers_flag.h"
-#include "helpers/helpers_ui.h"
-#include "platform/x11/subclasses_x11.h"
 #include "platform/input_state.h"
-#include "core/feature_data.h"
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
@@ -25,7 +12,6 @@
 #if __has_include(<X11/extensions/XTest.h>)
 #include <X11/extensions/XTest.h>
 #endif
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -38,12 +24,9 @@
 #include <sys/time.h>
 #include <linux/input.h>
 #include <linux/uinput.h>
-#include <errno.h>
-#include "platform/x11/display_x11.h"
 #include "platform/x11/clipboard_x11.h"
 #include "platform/x11/input_x11.h"
 #include "core/timer.h"
-#include "core/history.h"
 #include "core/remap_manager.h"
 #include "core/hotkey_manager.h"
 
