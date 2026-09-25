@@ -45,7 +45,6 @@ log_info("Platform_LaunchTerminalAtPath working_dir='%s' extra_args='%s'", worki
 }
 
 char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
-    if (command == NULL || strlen(command) == 0) { log_error("operation failed, returning error command='%s' open_terminal=%d", command ? command : "null", open_terminal); return NULL; }
     if (open_terminal) {
         char clean_cmd[512];
         strncpy(clean_cmd, command, sizeof(clean_cmd) - 1);
@@ -711,6 +710,14 @@ bool Platform_FocusWindow(const char* title) {
         return false;
     }
 
+    extern void Platform_SetFlintPrevFg(HWND h);
+    HWND hPopup = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
+    if (hPopup && IsWindow(hPopup)) {
+        Platform_SetFlintPrevFg(hwnd);
+        log_info("Platform_FocusWindow deferred via g_prev_fg hwnd=%p title='%s'", hwnd, trimmed);
+        return true;
+    }
+
     if (IsIconic(hwnd)) ShowWindow(hwnd, SW_RESTORE);
     ShowWindow(hwnd, SW_SHOW);
     SetWindowPos(hwnd, HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
@@ -1168,6 +1175,8 @@ static BOOL CALLBACK EnumWindowsProcPair(HWND hwnd, LPARAM lParam) {
     }
     CloseHandle(h);
     if (len == 0 || exe[0] == '\0') return TRUE;
+    if (_stricmp(exe, "SystemSettings.exe")==0) return TRUE;
+    if (_stricmp(exe, "ApplicationFrameHost.exe")==0) return TRUE;
     for (int i=0;i<pair->titles->count;i++) if (pair->titles->windows[i] && _stricmp(pair->titles->windows[i], title)==0) return TRUE;
     char **t1 = realloc(pair->titles->windows, (pair->titles->count + 1) * sizeof(char*));
     char **t2 = realloc(pair->names->windows, (pair->names->count + 1) * sizeof(char*));
