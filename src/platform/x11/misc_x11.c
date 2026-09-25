@@ -8,21 +8,13 @@
 #include <stdlib.h>
 #include <pwd.h>
 #include <dirent.h>
-#include <errno.h>
 #include <ctype.h>
 #include <time.h>
 #include <linux/input.h>
 
-#include "core/context.h"
-#include "core/modal.h"
 #include "config.h"
 #include "config.h"
 #include "core/platform.h"
-#include "platform/lib.h"
-#include "helpers/helpers_hotkey.h"
-#include "helpers/helpers_alias.h"
-#include "helpers/helpers_flag.h"
-#include "helpers/helpers_ui.h"
 #include "core/platform.h"
 #include "core/timer.h"
 #include "deps/log.h"

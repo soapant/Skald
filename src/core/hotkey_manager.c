@@ -3,12 +3,7 @@
 #include "core/feature_loader.h"
 #include "core/window_manager.h"
 #include "helpers/helpers_hotkey.h"
-#include "helpers/helpers_alias.h"
-#include "helpers/helpers_flag.h"
-#include "helpers/helpers_ui.h"
 #include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 #if !defined(_WIN32)
 #include <pthread.h>
 #endif
