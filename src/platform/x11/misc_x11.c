@@ -757,10 +757,32 @@ PROFILE_END_VAR(timer, "misc_x11:Platform_TerminateProcessByName");
     return Platform_RunTerminalCommand(cmd,false);
 }
 
+static bool x11_cmd_exists(const char* cmd) {
+    if (!cmd || !cmd[0]) return false;
+    if (strchr(cmd, '/')) return access(cmd, X_OK) == 0;
+    const char* path = getenv("PATH");
+    if (!path || !path[0]) path = "/usr/bin:/bin:/usr/local/bin";
+    char buf[4096];
+    snprintf(buf, sizeof(buf), "%s", path);
+    char* save = NULL;
+    for (char* dir = strtok_r(buf, ":", &save); dir; dir = strtok_r(NULL, ":", &save)) {
+        char full[4352];
+        snprintf(full, sizeof(full), "%s/%s", dir, cmd);
+        if (access(full, X_OK) == 0) return true;
+    }
+    return false;
+}
+
 bool Platform_LaunchBrowserAtUrl(char* url,bool new_window) {
     PROFILE_START(timer);
     char command[2048];
     char full_url[2048];
+    char browser_tok[512];
+    size_t tok_len = UsedBrowser ? strcspn(UsedBrowser, " \t") : 0;
+    if (tok_len >= sizeof(browser_tok)) tok_len = sizeof(browser_tok) - 1;
+    if (UsedBrowser) memcpy(browser_tok, UsedBrowser, tok_len);
+    browser_tok[tok_len] = '\0';
+    bool have_browser = tok_len > 0 && x11_cmd_exists(browser_tok);
     if (Platform_StringStartsWithCaseInsensitive(url,"https://")) {
         snprintf(full_url, sizeof(full_url), "%s", url);
     } else {
@@ -775,7 +797,7 @@ bool Platform_LaunchBrowserAtUrl(char* url,bool new_window) {
     char runtime_dir[256];
     if (env_runtime) snprintf(runtime_dir, sizeof(runtime_dir), "%s", env_runtime);
     else snprintf(runtime_dir, sizeof(runtime_dir), "/run/user/1000");
-    if (new_window) {
+    if (new_window && have_browser) {
       if (Platform_IsRunningAsRoot()) {
           snprintf(command, sizeof(command), 
                    "sudo -u %s DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s %s --new-window \"%s\" > /dev/null 2>&1 &",
@@ -803,7 +825,13 @@ bool Platform_LaunchBrowserAtUrl(char* url,bool new_window) {
 
 bool Platform_QueryBrowser(char* query) {
     if (!query || !query[0]) return false;
-    
+
+    char browser_tok[512];
+    size_t tok_len = UsedBrowser ? strcspn(UsedBrowser, " \t") : 0;
+    if (tok_len >= sizeof(browser_tok)) tok_len = sizeof(browser_tok) - 1;
+    if (UsedBrowser) memcpy(browser_tok, UsedBrowser, tok_len);
+    browser_tok[tok_len] = '\0';
+    const char* browser = (tok_len > 0 && x11_cmd_exists(browser_tok)) ? UsedBrowser : "xdg-open";
     PROFILE_START(timer);
     char command[2048];
     char url[2048];
@@ -865,11 +893,11 @@ bool Platform_QueryBrowser(char* query) {
     if (Platform_IsRunningAsRoot()) {
         snprintf(command, sizeof(command), 
                  "sudo -u %s DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s %s\"%s\" > /dev/null 2>&1 &",
-                 real_user, display, xauthority, runtime_dir, UsedBrowser, url);
+                 real_user, display, xauthority, runtime_dir, browser, url);
     } else {
         snprintf(command, sizeof(command), 
                  "DISPLAY=%s XAUTHORITY=%s XDG_RUNTIME_DIR=%s %s \"%s\" > /dev/null 2>&1 &",
-                 display, xauthority, runtime_dir, UsedBrowser, url);
+                 display, xauthority, runtime_dir, browser, url);
     }
     
       log_info("Platform_QueryBrowser query='%s'", query ? query : "");;
