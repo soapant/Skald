@@ -43,5 +43,5 @@ void TriggerWindowSwitcher(void) {
 }
 
 FLINT_FEATURE_INIT {
-  fl_register_hotkey("Alt+Space",TriggerWindowSwitcher);
+  fl_register_hotkey("Alt+Space",TriggerWindowSwitcher,"Fortnite");
 }
