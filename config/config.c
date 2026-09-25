@@ -14,7 +14,7 @@ static const AliasEntry user_aliases[] = {
     {"brw", "Brawlhalla", "AppLauncher"},
 };
 
-__declspec(dllexport) void ConfigApply(void) {
+void ConfigApply(void) {
     Tray = true;
     EnableVimMode = true;
     RememberLastIndex = true;
