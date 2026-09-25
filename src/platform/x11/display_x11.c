@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <dirent.h>
-#include <string.h>
 #include "core/timer.h"
 
 static Display* g_display = NULL;
