@@ -2,6 +2,7 @@
 #include "core/platform.h"
 #include "core/feature_loader.h"
 #include "core/window_manager.h"
+#include "deps/log.h"
 #include "helpers/helpers_hotkey.h"
 #include <stdlib.h>
 #if !defined(_WIN32)
@@ -34,12 +35,12 @@ static void hotkey_queue_init(void) {
 static void hotkey_enqueue(HotkeyCallback fn, bool is_toggle) {
     if (!fn) return;
     HOTKEY_Q_LOCK();
-    if (g_pending_head == g_pending_tail) {
-        g_pending_head = (g_pending_head + 1) % HOTKEY_PENDING_MAX;
+    int nxt = (g_pending_tail + 1) % HOTKEY_PENDING_MAX;
+    if (nxt != g_pending_head) {
+        g_pending_q[g_pending_tail] = fn;
+        g_pending_toggle[g_pending_tail] = is_toggle;
+        g_pending_tail = nxt;
     }
-    g_pending_q[g_pending_tail] = fn;
-    g_pending_toggle[g_pending_tail] = is_toggle;
-    g_pending_tail = (g_pending_tail + 1) % HOTKEY_PENDING_MAX;
     HOTKEY_Q_UNLOCK();
 }
 void hotkey_drain_pending(void) {
@@ -58,6 +59,7 @@ void hotkey_drain_pending(void) {
             WindowManager* dwm = WindowManager_Get();
             if (dwm && dwm->popup_count > 0) continue;
         }
+        log_info("hotkey drain run");
         FeatureLoader_Lock();
         fn();
         FeatureLoader_Unlock();
@@ -179,6 +181,7 @@ bool hotkey_process(int vk_code, int modifiers) {
         HotkeyCallback cb = b->hotkey_callback;
         bool blocked = hotkey_toggle_blocked(b);
         if (blocked) return true;
+        log_info("hotkey match vk=0x%X mods=%d enqueue", vk_code, eff_modifiers);
         hotkey_enqueue(cb, b->is_feature_toggle);
         return true;
     }
