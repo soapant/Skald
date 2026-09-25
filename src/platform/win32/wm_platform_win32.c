@@ -95,7 +95,6 @@ char* Platform_PromptUser(WindowManager* wm, const PromptSpec* spec) {
   FilterCallback filter_callback = spec->filter;
   HelpCallback help_callback = spec->help;
 
-  HINSTANCE hInstance = GetModuleHandle(NULL);
   FlintContext_Get()->window.selection_complete = false;
   FlintContext_Get()->window.output_buffer[0] = '\0';
   PROFILE_START(timer);
@@ -157,13 +156,7 @@ char* Platform_PromptUser(WindowManager* wm, const PromptSpec* spec) {
 
   HFONT hCustomFont = CreateCustomNerdFont(FontSize, UsedFont);
 
-  FlintContext_Get()->window.hPopupWnd = WH_FROM_HWND(CreateWindowExA(
-      WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED | WS_EX_COMPOSITED,
-      "QuickSwitcherModalClass", NULL, WS_POPUP | WS_CLIPCHILDREN,
-      layout.x, layout.y, layout.w, layout.h, NULL, NULL, hInstance, NULL
-      ));
-
-  if (WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) == NULL) {
+  if (!Platform_PromptPopupShowWindow(NULL, layout.x, layout.y, layout.w, layout.h)) {
     DeleteObject(hCustomFont);
     if (win_state) free(win_state);
     else if (lb_ptr) free(lb_ptr);
@@ -171,7 +164,6 @@ char* Platform_PromptUser(WindowManager* wm, const PromptSpec* spec) {
     return NULL;
   }
   SetWindowLongPtrA(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), GWLP_USERDATA, (LONG_PTR)(lb_ptr));
-  win32_apply_rounded_corners(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), layout.w, layout.h);
   if (spec->tick) SetTimer(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), UI_TICK_TIMER_ID, UI_TICK_TIMER_MS, NULL);
 
   PROFILE_END_VAR(timer, "Window Init");
@@ -225,12 +217,7 @@ PROFILE_END_VAR(timer3, "Focus");
   }
   log_info("Left local loop. Processed %d messages.", loop_counter);
 
-  if (WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) != NULL && IsWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd))) {
-    KillTimer(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), 999);
-    KillTimer(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), UI_TICK_TIMER_ID);
-    DestroyWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd));
-    FlintContext_Get()->window.hPopupWnd = WH_NULL;
-  }
+  Platform_PromptPopupHideWindow(NULL);
 
   log_info("Flushing trailing queue entries...");
   while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
