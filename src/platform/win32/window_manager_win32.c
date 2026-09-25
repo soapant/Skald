@@ -11,10 +11,16 @@ int WindowManager_RunWin32(WindowManager* wm) {
     wm->running = true;
 
     MSG msg;
-    while (wm->running && GetMessage(&msg, NULL, 0, 0)) {
-        TranslateMessage(&msg);
-        DispatchMessage(&msg);
+    while (wm->running) {
+        bool got = false;
+        while (PeekMessageA(&msg, NULL, 0, 0, PM_REMOVE)) {
+            got = true;
+            if (msg.message == WM_QUIT) { wm->running = false; break; }
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
         hotkey_drain_pending();
+        if (!got) Sleep(10);
     }
 
     return 0;
