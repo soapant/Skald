@@ -1,4 +1,9 @@
 #include "core/flapi.h"
+#include "core/context.h"
+#include "helpers/helpers_ui.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #if !defined(_WIN32)
 #include <X11/Xlib.h>

@@ -1,4 +1,7 @@
 #include "core/flapi.h"
+#include "config.h"
+#include "core/platform.h"
+#include <string.h>
 
 bool IsWifiEnabled(void) {
     char* out = fl_run_terminal_command("netsh interface show interface");

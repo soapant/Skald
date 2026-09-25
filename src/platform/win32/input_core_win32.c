@@ -13,6 +13,7 @@
 #include "bindings/bindings.h"
 #include "platform/win32/win32_state.h"
 #include "platform/win32/input_core_win32.h"
+#include "config.h"
 
 LRESULT CALLBACK win32_handle_global_key(int nCode, WPARAM wParam, LPARAM lParam) {
   if (nCode < 0) {

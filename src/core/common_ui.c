@@ -8,6 +8,7 @@
 #include "platform/ui.h"
 #include "core/vim.h"
 #include "core/platform.h"
+#include "core/timer.h"
 #if !defined(_WIN32)
 #include <strings.h>
 #include <ctype.h>

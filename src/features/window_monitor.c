@@ -1,4 +1,7 @@
 #include "core/flapi.h"
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 
 #define WM_SAMPLE_SECONDS 1
 #define WM_MAX_TITLE 80

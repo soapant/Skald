@@ -1,6 +1,7 @@
 #ifndef TYPES_PROMPT_H
 #define TYPES_PROMPT_H
 
+#include <string.h>
 #include "core/types.h"
 
 typedef struct ListBoxInfo ListBoxInfo;

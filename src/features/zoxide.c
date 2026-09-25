@@ -1,4 +1,9 @@
 #include "core/flapi.h"
+#include "core/context.h"
+#include "helpers/helpers_ui.h"
+#include "platform/ui.h"
+#include <stdio.h>
+#include <stdlib.h>
 
 
 const char* TextEditor = "nvim";
