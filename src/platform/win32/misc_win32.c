@@ -508,7 +508,6 @@ char* Platform_GetClipboardEntry(void) {
     GlobalUnlock(hClipData);
     CloseClipboard();
 
-log_info("Platform_GetClipboardEntry completed");
     return result;
 }
 
