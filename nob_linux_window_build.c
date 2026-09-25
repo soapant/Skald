@@ -12,14 +12,31 @@
 #define LINK_FLAGS "-lcomctl32", "-lgdiplus", "-lgdi32", "-lshlwapi", "-lshell32", "-lwinmm", "-lole32", "-luuid", "-lmsimg32", "-ldwmapi", "-lpsapi", "-lcrypt32", "-lcomdlg32", "-ladvapi32", "-ldxva2", "-luser32", "-lwinhttp"
 
 static Nob_File_Paths sources = {0};
+static Nob_File_Paths feature_sources = {0};
+static Nob_File_Paths test_sources = {0};
 
 static bool collect_source(Nob_Walk_Entry entry) {
     if (entry.type == NOB_FILE_REGULAR) {
         Nob_String_View path = nob_sv_from_cstr(entry.path);
         if (nob_sv_ends_with_cstr(path, ".c")) {
+            if (nob_sv_starts_with(path, nob_sv_from_cstr("tests/")) ||
+                nob_sv_starts_with(path, nob_sv_from_cstr("tests\\"))) {
+                const char* base = nob_path_name(path.data);
+                if (strncmp(base, "test_", 5) == 0) nob_da_append(&test_sources, strdup(path.data));
+                return true;
+            }
             if (nob_sv_ends_with_cstr(path, "_x11.c")) return true;
             if (nob_sv_ends_with_cstr(path, "wm.c")) return true;
-            nob_da_append(&sources, strdup(path.data));
+            bool is_feature = false;
+            if (nob_sv_starts_with(path, nob_sv_from_cstr("src/features/")) ||
+                nob_sv_starts_with(path, nob_sv_from_cstr("src\\features\\"))) {
+                    is_feature = true;
+            }
+            if (is_feature) {
+                nob_da_append(&feature_sources, strdup(path.data));
+            } else {
+                nob_da_append(&sources, strdup(path.data));
+            }
         }
     }
     return true;
@@ -172,14 +189,77 @@ static bool compile_all(bool* any_compiled) {
     return print_failures() && ok;
 }
 
+static bool run_tests_cross(void) {
+    if (!nob_mkdir_if_not_exists("build/win_tests")) return false;
+    if (test_sources.count == 0) {
+        nob_log(NOB_INFO, "No tests found in tests/");
+        return true;
+    }
+    const char* support_obj = NULL;
+    if (nob_file_exists("tests/support.c")) {
+        support_obj = "build/win_tests/support.o";
+        Nob_Cmd scmd = {0};
+        nob_cmd_append(&scmd, CROSS_CC);
+        nob_cmd_append(&scmd, "-I", "include", "-I", "tests", "-O2", "-c", "tests/support.c", "-o", support_obj);
+        nob_log(NOB_INFO, "Building test support %s", support_obj);
+        if (!nob_cmd_run(&scmd)) {
+            nob_log(NOB_ERROR, "Failed to build test support");
+            return false;
+        }
+    }
+    size_t failed = 0;
+    size_t built = 0;
+    for (size_t t = 0; t < test_sources.count; ++t) {
+        const char* src = test_sources.items[t];
+        const char* base = nob_path_name(src);
+        char name[128];
+        snprintf(name, sizeof(name), "%s", base);
+        char* dot = strrchr(name, '.');
+        if (dot) *dot = '\0';
+        const char* out = nob_temp_sprintf("build/win_tests/%s.exe", name);
+        Nob_Cmd cmd = {0};
+        nob_cmd_append(&cmd, CROSS_CC);
+        nob_cmd_append(&cmd, "-I", "include", "-I", "tests", "-O2", "-Wall", src);
+        if (support_obj) nob_cmd_append(&cmd, support_obj);
+        for (size_t i = 0; i < sources.count; ++i) {
+            if (strcmp(sources.items[i], "src/main.c") == 0) continue;
+            if (strcmp(sources.items[i], "src\\main.c") == 0) continue;
+            nob_cmd_append(&cmd, obj_path(sources.items[i]));
+        }
+        nob_cmd_append(&cmd, LINK_FLAGS, "-o", out);
+        nob_log(NOB_INFO, "Building test %s", out);
+        if (!nob_cmd_run(&cmd)) {
+            nob_log(NOB_ERROR, "Failed to build test %s", src);
+            failed++;
+            continue;
+        }
+        built++;
+    }
+    if (failed > 0) {
+        nob_log(NOB_ERROR, "%zu test(s) failed to build", failed);
+        return false;
+    }
+    nob_log(NOB_INFO, "Built %zu test(s), not running (cross build)", built);
+    return true;
+}
+
 int main(int argc, char** argv) {
     NOB_GO_REBUILD_URSELF(argc, argv);
     unset_include_env();
+
+    int do_test = 0;
+    for (int i = 1; i < argc; i++) {
+        if (strcmp(argv[i], "-test") == 0) do_test = 1;
+    }
 
     if (!nob_mkdir_if_not_exists(BUILD_FOLDER)) return 1;
     if (!nob_mkdir_if_not_exists(OBJ_FOLDER)) return 1;
     if (!nob_walk_dir(SRC_FOLDER, collect_source)) {
         nob_log(NOB_ERROR, "Failed to walk " SRC_FOLDER);
+        return 1;
+    }
+    if (!nob_walk_dir("tests", collect_source)) {
+        nob_log(NOB_ERROR, "Failed to walk tests");
         return 1;
     }
 
@@ -193,6 +273,9 @@ int main(int argc, char** argv) {
 
     bool any_compiled = false;
     if (!compile_all(&any_compiled)) return 1;
+
+    if (do_test && !run_tests_cross()) return 1;
+    if (do_test) return 0;
 
     const char* output = OUTPUT;
     if (!any_compiled && nob_file_exists(output) &&
@@ -211,12 +294,39 @@ int main(int argc, char** argv) {
     for (size_t i = 0; i < objs.count; ++i) {
         nob_cmd_append(&cmd, objs.items[i]);
     }
+    nob_cmd_append(&cmd, "-Wl,--export-all-symbols", "-Wl,--out-implib,build/win_obj/main.lib.a");
     nob_cmd_append(&cmd, LINK_FLAGS);
 
     nob_log(NOB_INFO, "Linking %s", output);
     if (!nob_cmd_run(&cmd)) {
         nob_log(NOB_ERROR, "Failed to link %s", output);
         return 1;
+    }
+
+    {
+        if (!nob_mkdir_if_not_exists("build/features")) return 1;
+        for (size_t i = 0; i < feature_sources.count; ++i) {
+            const char* src = feature_sources.items[i];
+            const char* base = nob_path_name(src);
+            size_t len = strlen(base);
+            char* no_ext = malloc(len + 1);
+            strcpy(no_ext, base);
+            char* dot = strrchr(no_ext, '.');
+            if (dot) *dot = '\0';
+            const char* so = nob_temp_sprintf("build/features/%s.dll", no_ext);
+            bool need_so = !nob_file_exists(so) || nob_needs_rebuild1(so, src) != 0;
+            if (nob_file_exists("build/win_obj/main.lib.a") && nob_needs_rebuild1(so, "build/win_obj/main.lib.a") != 0) need_so = true;
+            if (!need_so) continue;
+            Nob_Cmd fcmd = {0};
+            nob_cmd_append(&fcmd, CROSS_CC, CC_FLAGS, "-shared", "-o", so, src, "build/win_obj/main.lib.a", LINK_FLAGS);
+            if (!nob_cmd_run(&fcmd)) {
+                nob_log(NOB_ERROR, "Failed to build feature %s", so);
+                free(no_ext);
+                return 1;
+            }
+            free(no_ext);
+            nob_log(NOB_INFO, "Built feature %s", so);
+        }
     }
 
     nob_log(NOB_INFO, "Done: %s (copy to a Windows machine and run)", output);
