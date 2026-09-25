@@ -256,7 +256,7 @@ static size_t config_emit_region(char* buf, size_t cap) {
         cfg_put(buf, cap, &off, "},\n");
     }
     cfg_put(buf, cap, &off, "};\n\n");
-    cfg_put(buf, cap, &off, "__declspec(dllexport) void ConfigApply(void) {\n");
+    cfg_put(buf, cap, &off, "void ConfigApply(void) {\n");
     cfg_put(buf, cap, &off, "    Tray = %s;\n", Tray ? "true" : "false");
     cfg_put(buf, cap, &off, "    EnableVimMode = %s;\n", EnableVimMode ? "true" : "false");
     cfg_put(buf, cap, &off, "    RememberLastIndex = %s;\n", RememberLastIndex ? "true" : "false");
