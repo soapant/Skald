@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include "platform/x11/display_x11.h"
 
 static int _x11_err = 0;
 static Window _x11_last_min = None;
