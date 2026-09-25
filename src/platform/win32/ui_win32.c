@@ -293,3 +293,103 @@ static void win_command_confirm(const char* text, void* user_data) {
   free(dup);
 }
 
+
+void UI_SyncFilterFromEdit(FlintContext* ctx) {
+    if (!ctx) return;
+    if (ctx->prompt_callbacks.render != NULL) {
+        PromptState* ws = g_win32_prompt_state;
+        if (ws) {
+            strncpy(ctx->window.filter, ws->filter, sizeof(ctx->window.filter) - 1);
+            ctx->window.filter[sizeof(ctx->window.filter) - 1] = '\0';
+            ctx->window.filter_cursor = (int)ws->cursor;
+            return;
+        }
+    }
+    HWND hEdit = WH_TO_HWND(ctx->window.hActiveEditControl);
+    if (!hEdit) hEdit = WH_TO_HWND(ctx->window.hEditControl);
+    if (!hEdit || !IsWindow(hEdit)) return;
+    char buf[sizeof(ctx->window.filter)];
+    GetWindowTextA(hEdit, buf, (int)sizeof(buf));
+    strncpy(ctx->window.filter, buf, sizeof(ctx->window.filter) - 1);
+    ctx->window.filter[sizeof(ctx->window.filter) - 1] = '\0';
+    DWORD se = 0, ee = 0;
+    SendMessageA(hEdit, EM_GETSEL, (WPARAM)&se, (LPARAM)&ee);
+    ctx->window.filter_cursor = (int)se;
+}
+
+void UI_ApplyFilterToEdit(FlintContext* ctx) {
+    if (!ctx) return;
+    PromptState* ws = g_win32_prompt_state;
+    if (ws) {
+        strncpy(ws->filter, ctx->window.filter, sizeof(ws->filter)-1);
+        ws->filter[sizeof(ws->filter)-1] = '\0';
+        ws->cursor = ctx->window.filter_cursor;
+    }
+    HWND hEdit = WH_TO_HWND(ctx->window.hEditControl);
+    if (!hEdit) hEdit = WH_TO_HWND(ctx->window.hActiveEditControl);
+    if (!hEdit || !IsWindow(hEdit)) return;
+    int pos = ctx->window.filter_cursor;
+    int len = (int)strlen(ctx->window.filter);
+    if (pos < 0) pos = 0;
+    if (pos > len) pos = len;
+    SetWindowTextA(hEdit, ctx->window.filter);
+    SendMessageA(hEdit, EM_SETSEL, (WPARAM)pos, (LPARAM)pos);
+    if (WH_TO_HWND(ctx->window.hActiveEditControl) &&
+        WH_TO_HWND(ctx->window.hActiveEditControl) != hEdit) {
+        HWND hActive = WH_TO_HWND(ctx->window.hActiveEditControl);
+        SetWindowTextA(hActive, ctx->window.filter);
+        SendMessageA(hActive, EM_SETSEL, (WPARAM)pos, (LPARAM)pos);
+    }
+    UpdateTextCaret(WH_FROM_HWND(hEdit));
+    if (ctx->prompt_callbacks.render != NULL) {
+        HWND hPopup = WH_TO_HWND(ctx->window.hPopupWnd);
+        if (hPopup && IsWindow(hPopup)) InvalidateRect(hPopup, NULL, FALSE);
+    }
+}
+
+ListBoxInfo* UI_GetPopupListBox(FlintContext* ctx) {
+    (void)ctx;
+    PromptState* ws = g_win32_prompt_state;
+    if (ws && ws->has_listbox) return &ws->listbox;
+    HWND hPopup = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
+    if (hPopup && IsWindow(hPopup)) {
+        ListBoxInfo* lb = (ListBoxInfo*)GetWindowLongPtrA(hPopup, GWLP_USERDATA);
+        if (lb) return lb;
+    }
+    return NULL;
+}
+
+void UI_SyncEditCursor(FlintContext* ctx, int pos) {
+    if (!ctx) return;
+    HWND hEdit = WH_TO_HWND(ctx->window.hEditControl);
+    if (!hEdit) hEdit = WH_TO_HWND(ctx->window.hActiveEditControl);
+    if (hEdit) {
+        SendMessageA(hEdit, EM_SETSEL, (WPARAM)pos, (LPARAM)pos);
+        UpdateTextCaret(WH_FROM_HWND(hEdit));
+    }
+    if (ctx->prompt_callbacks.render != NULL) {
+        HWND hPopup = WH_TO_HWND(ctx->window.hPopupWnd);
+        if (hPopup && IsWindow(hPopup)) InvalidateRect(hPopup, NULL, FALSE);
+    }
+}
+
+bool UI_ApplyBackspaceToPopup(FlintContext* ctx) {
+    if (!ctx) return false;
+    PromptState* ws = g_win32_prompt_state;
+    if (!ws) return false;
+    int len = (int)strlen(ctx->window.filter);
+    int cur = ctx->window.filter_cursor;
+    if (cur <= 0 || len <= 0) return false;
+    int del = cur - 1;
+    memmove(ctx->window.filter + del, ctx->window.filter + del + 1, len - del);
+    ctx->window.filter_cursor = del;
+    ws->cursor = (size_t)del;
+    strncpy(ws->filter, ctx->window.filter, sizeof(ws->filter)-1);
+    ws->filter[sizeof(ws->filter)-1] = '\0';
+    if (ctx->prompt_callbacks.refresh) {
+        ListBoxInfo* lb = Vim_GetListBox(ctx);
+        ctx->prompt_callbacks.refresh(ctx->window.filter, ctx->window.hListBox, lb);
+    }
+    UI_ApplyFilterToEdit(ctx);
+    return true;
+}

@@ -20,3 +20,6 @@ const char* Platform_LibExtension(void) {
     return ".so";
 #endif
 }
+const char* Platform_GetLoadError(void) {
+    return dlerror();
+}
