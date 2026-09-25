@@ -2,9 +2,6 @@
 #include "platform/wm_platform.h"
 #include "core/timer.h"
 
-void Platform_SettingsPopUp(void) {
-}
-
 bool Platform_SettingsPopupShowWindow(Popup* self, int x, int y, int w, int h) {
     (void)self;
     (void)x;
