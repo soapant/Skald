@@ -60,7 +60,7 @@ void ConfigApply(void) {
     GradientItems = 30;
     GradientBrightness = 1.0f;
     CloseOnLossOfFocus = false;
-    Theme = "nord";
+    Theme = "rose-pine";
     COLOR_BG = RGB(25,23,36);
     COLOR_TEXT = RGB(255,255,255);
     COLOR_CURSOR = RGB(82,79,103);
