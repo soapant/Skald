@@ -24,7 +24,7 @@ void ConfigApply(void) {
     ModePersistsThroughFeatures = false;
     TimeOutForMessages = 1;
     DoTimeDebugs = false;
-    DebugMode = true;
+    DebugMode = false;
     RoundedCorners = true;
     CornerRadius = 14;
     EnableShaders = true;
@@ -44,7 +44,7 @@ void ConfigApply(void) {
     UsedTerminal = "";
     UsedShell = "nu";
     UsedBrowser = "zen-browser";
-    UsedImageViewer = "feh";
+    UsedImageViewer = "";
     UsedVideoPlayer = "mpv";
     UsedSearchEngine = "google";
     FeaturePath = "src/features";
