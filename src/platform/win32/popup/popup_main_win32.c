@@ -22,6 +22,7 @@
 #include "helpers/helpers_ui.h"
 #include "platform/win32/popup_helpers_win32.h"
 #include "core/flapi_platform.h"
+#include "core/prompt_controller.h"
 
 static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent* key) {
     int wParam = key->vk;
@@ -32,6 +33,16 @@ static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent* key) {
     if (wParam == VK_CONTROL || wParam == VK_SHIFT || wParam == VK_MENU) return false;
 
     ListBoxInfo* lb = GetLBFromChild(hwnd);
+
+    if (PromptController_TryVimMotion(wParam, ctrl_pressed, shift_pressed, key->alt)) {
+        UI_ApplyFilterToEdit(FlintContext_Get());
+        UI_Redraw(lb, FlintContext_Get()->window.hListBox);
+        if (FlintContext_Get()->prompt_callbacks.render != NULL) {
+            HWND hPar = GetParent(hwnd);
+            if (hPar && IsWindow(hPar)) InvalidateRect(hPar, NULL, FALSE);
+        }
+        return true;
+    }
 
     if (!ctrl_pressed) {
         if (wParam == VK_UP || wParam == VK_DOWN) {

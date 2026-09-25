@@ -14,6 +14,7 @@
 #include "bindings/vim_motions.h"
 #include "bindings/vim_helpers.h"
 #include "core/history.h"
+#include "core/prompt_controller.h"
 #include <X11/X.h>
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
@@ -125,17 +126,8 @@ void ReadModifiers(const XEvent* ev, bool* ctrl_pressed, bool* shift_pressed, bo
 
 bool TryVimMotion(int wParam, bool ctrl_pressed, bool shift_pressed, bool alt_pressed) {
     PROFILE_START(timer);
-    int mod = HOTKEY_MOD_NONE;
-    if (ctrl_pressed) mod |= HOTKEY_MOD_CTRL;
-    if (shift_pressed) mod |= HOTKEY_MOD_SHIFT;
-    if (alt_pressed) mod |= HOTKEY_MOD_ALT;
-    MotionAction act = MOTION_NONE; const char* seq = NULL; int typed = 0;
-    if (CheckVimMotion(wParam, mod, &act, &seq, &typed)) {
-        if (act != MOTION_NONE) ExecuteMotion(act, seq, typed);
-        PROFILE_END_VAR(timer, "subclasses_x11:TryVimMotion");
-        return true;
-    }
+    bool r = PromptController_TryVimMotion(wParam, ctrl_pressed, shift_pressed, alt_pressed);
     PROFILE_END_VAR(timer, "subclasses_x11:TryVimMotion");
-    return false;
+    return r;
 }
 
