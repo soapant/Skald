@@ -937,7 +937,7 @@ void fl_ocr_area_to_clipboard_platform() {
 
     if (getenv("WAYLAND_DISPLAY")) {
         snprintf(cmd, sizeof(cmd),
-                 "%s/external/grim -g \"$(%s/external/slurp)\" -t- | tesseract stdin stdout -l eng",
+                 "%s/external/grim -g \"$(%s/external/slurp)\" - | tesseract stdin stdout -l eng png",
                  wd, wd);
     } else {
           char temp_path[MAX_PATH];
