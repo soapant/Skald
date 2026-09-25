@@ -1449,9 +1449,15 @@ void Platform_InitUI() {
    settingsPopupWc.lpszClassName = "SettingsPopupClass";
    RegisterClassA(&settingsPopupWc);
 
-   g_win32_hKeyboardHook = SetWindowsHookExA(WH_KEYBOARD_LL, win32_handle_global_key, GetModuleHandle(NULL), 0);
+   g_win32_hKeyboardHook = SetWindowsHookExA(WH_KEYBOARD_LL, win32_handle_global_key, NULL, 0);
+   if (!g_win32_hKeyboardHook) {
+     log_warn("WH_KEYBOARD_LL hook FAILED to install err=%lu", GetLastError());
+   } else {
+     log_warn("WH_KEYBOARD_LL hook installed handle=%p", (void*)g_win32_hKeyboardHook);
+   }
 
    FontHandle warm = Platform_CreateFont(FontSize, UsedFont);
+   log_warn("warm font size=%d face='%s' created=%d", FontSize, UsedFont ? UsedFont : "", FH_TO_HFONT(warm) ? 1 : 0);
    Platform_DestroyFont(warm);
 log_info("Platform_InitUI completed");
 }
