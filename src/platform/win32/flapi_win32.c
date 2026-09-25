@@ -189,8 +189,8 @@ bool fl_listbox_begin_platform(const FlListSpec *spec) {
     if (spec->h) list_h = spec->h;
     else list_h = st ? (st->height - g_fl_list_y0 - bottomMargin) : 400;
     if (!spec->x && !spec->w) {
-        g_fl_list_bx = 4;
-        g_fl_list_bw = (st ? st->width : 880) - 8;
+        g_fl_list_bx = 20;
+        g_fl_list_bw = (st ? st->width : 900) - 40;
         g_fl_list_fw = st ? st->width : 900;
     } else {
         g_fl_list_bx = spec->x;
@@ -245,7 +245,7 @@ bool fl_listbox_next_platform(FlListItemCtx *out) {
     }
     out->idx = idx;
     out->selected = sel;
-    out->x = g_fl_list_spec.x;
+    out->x = g_fl_list_bx;
     out->y = y;
     out->w = g_fl_list_spec.w;
     out->h = g_fl_list_itemH;
