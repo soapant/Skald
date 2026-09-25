@@ -673,17 +673,3 @@ void CreateChildControls(WindowHandle hwndParent, HFONT hFont, const char* list[
     UI_SetHorizontalExtent(FlintContext_Get()->window.hListBox, max_width);
   }
 }
-void SettingsCreateChildControls(WindowHandle hwndParent, HFONT hFont,const WindowLayout* layout) {
-  HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtrA(WH_TO_HWND(hwndParent), GWLP_HINSTANCE);
-
-  FlintContext_Get()->window.hEditControl = WH_FROM_HWND(CreateWindowExA(
-      0, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
-      20, 50, layout->w - 40, 40, WH_TO_HWND(hwndParent), (HMENU)IDC_INPUT_BOX, hInstance, NULL
-      ));
-
-  if (WH_TO_HWND(FlintContext_Get()->window.hEditControl) == NULL) return;
-
-  FlintContext_Get()->window.hActiveEditControl = FlintContext_Get()->window.hEditControl;
-  UI_Edit_SetFont(FlintContext_Get()->window.hEditControl, hFont);
-  SetWindowSubclass(WH_TO_HWND(FlintContext_Get()->window.hEditControl), SettingsEditSubclassProc, 0, 0);
-}

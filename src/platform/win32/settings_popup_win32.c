@@ -3,6 +3,7 @@
 #include "deps/log.h"
 #include "core/context.h"
 #include "core/modal.h"
+#include "core/window_manager.h"
 #include <commctrl.h>
 #include <shellapi.h>
 #include "config.h"
@@ -18,6 +19,7 @@
 #include "helpers/helpers_flag.h"
 #include "helpers/helpers_ui.h"
 #include "platform/win32/popup_helpers_win32.h"
+#include "platform/win32/common_ui_win32.h"
 
 LRESULT CALLBACK SettingsPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
   switch (msg) {
@@ -236,3 +238,94 @@ LRESULT CALLBACK SettingsEditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LP
   }
   return DefSubclassProc(hwnd, msg, wParam, lParam);
 } 
+
+static HFONT s_settings_font = NULL;
+
+bool Platform_SettingsPopupShowWindow(Popup* self, int x, int y, int w, int h) {
+  (void)self;
+  HINSTANCE hInstance = GetModuleHandle(NULL);
+  SetMode(MODE_INSERT);
+  WindowLayout layout;
+  CalculateWindowMetrics(&layout, h, w, 32);
+  s_settings_font = CreateCustomNerdFont(FontSize, UsedFont);
+  FlintContext_Get()->window.hPopupWnd = WH_FROM_HWND(CreateWindowExA(
+      WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED | WS_EX_COMPOSITED,
+      "SettingsPopupClass", NULL, WS_POPUP | WS_CLIPCHILDREN,
+      x, y, w, h, NULL, NULL, hInstance, NULL
+      ));
+  if (WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) == NULL) {
+    DWORD err = GetLastError();
+    log_error("CreateWindowExA failed: %lu", err);
+    DeleteObject(s_settings_font);
+    s_settings_font = NULL;
+    return false;
+  }
+  win32_apply_rounded_corners(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), w, h);
+  FlintContext_Get()->window.hSettings = FlintContext_Get()->window.hPopupWnd;
+  SetTimer(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), 999, 50, NULL);
+  SettingsCreateChildControls(FlintContext_Get()->window.hPopupWnd, s_settings_font, &layout);
+  SetLayeredWindowAttributes(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), 0, (BYTE)WindowOpacity, LWA_ALPHA);
+  ForceWindowFocus(FlintContext_Get()->window.hPopupWnd, FlintContext_Get()->window.hEditControl);
+  return true;
+}
+
+void Platform_SettingsPopupHideWindow(Popup* self) {
+  (void)self;
+  if (WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) != NULL && IsWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd))) {
+    KillTimer(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), 999);
+    DestroyWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd));
+    FlintContext_Get()->window.hPopupWnd = WH_NULL;
+  }
+  FlintContext_Get()->window.hSettings = WH_NULL;
+  if (s_settings_font) { DeleteObject(s_settings_font); s_settings_font = NULL; }
+}
+
+void Platform_SettingsPopupRender(Popup* self) {
+  (void)self;
+}
+
+void Platform_SettingsPopupDestroyWindow(Popup* self) {
+  Platform_SettingsPopupHideWindow(self);
+}
+
+bool Platform_SettingsPopupOnKey(Popup* self, const PopupKeyEvent* key) {
+  (void)self;
+  (void)key;
+  return false;
+}
+
+void Platform_SettingsPopUp() {
+  if (!Platform_SettingsPopupShowWindow(NULL, 510, 210, 900, 700)) return;
+  MSG msg;
+  UI_PreparePopupPump();
+  while (!FlintContext_Get()->window.selection_complete) {
+    if (GetMessage(&msg, NULL, 0, 0)) {
+      if (UI_ShouldSkipPopupKey(&msg)) continue;
+      TranslateMessage(&msg);
+      DispatchMessage(&msg);
+    } else {
+      break;
+    }
+  }
+  Platform_SettingsPopupHideWindow(NULL);
+  while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+    TranslateMessage(&msg);
+    DispatchMessage(&msg);
+  }
+log_info("Platform_SettingsPopUp completed");
+}
+
+void SettingsCreateChildControls(WindowHandle hwndParent, HFONT hFont,const WindowLayout* layout) {
+  HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtrA(WH_TO_HWND(hwndParent), GWLP_HINSTANCE);
+
+  FlintContext_Get()->window.hEditControl = WH_FROM_HWND(CreateWindowExA(
+      0, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
+      20, 50, layout->w - 40, 40, WH_TO_HWND(hwndParent), (HMENU)IDC_INPUT_BOX, hInstance, NULL
+      ));
+
+  if (WH_TO_HWND(FlintContext_Get()->window.hEditControl) == NULL) return;
+
+  FlintContext_Get()->window.hActiveEditControl = FlintContext_Get()->window.hEditControl;
+  UI_Edit_SetFont(FlintContext_Get()->window.hEditControl, hFont);
+  SetWindowSubclass(WH_TO_HWND(FlintContext_Get()->window.hEditControl), SettingsEditSubclassProc, 0, 0);
+}
