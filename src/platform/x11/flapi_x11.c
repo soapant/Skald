@@ -5,6 +5,8 @@
 #include "platform/draw.h"
 #include "platform/x11/env_helpers_x11.h"
 #include "platform/x11/desktop_helpers_x11.h"
+#include "platform/x11/drawing_x11.h"
+#include "platform/x11/audio_x11.h"
 #include "helpers/helpers_ui.h"
 #include "config.h"
 #include <string.h>
@@ -26,6 +28,8 @@
 #include <time.h>
 #include <pthread.h>
 #include <linux/input.h>
+#include <glib.h>
+#include <gio/gio.h>
 
 
 bool Platform_GetAllFilesFromDir(const char* dir_path, char** list_of_allowed_extensions,
@@ -961,23 +965,6 @@ struct MemoryStruct {
     size_t size;
 };
 
-static size_t WriteMemoryCallback(void *contents, size_t size, size_t nmemb, void *userp) {
-    size_t realsize = size * nmemb;
-    struct MemoryStruct *mem = (struct MemoryStruct *)userp;
-
-    char *ptr = realloc(mem->memory, mem->size + realsize + 1);
-    if(!ptr) {
-        printf("Not enough memory (realloc returned NULL)\n");
-        return 0;
-    }
-
-    mem->memory = ptr;
-    memcpy(&(mem->memory[mem->size]), contents, realsize);
-    mem->size += realsize;
-    mem->memory[mem->size] = 0;
-
-    return realsize;
-}
 void* fl_thread_create_platform(void* (*fn)(void*), void* arg) {
     if (!fn) return NULL;
     pthread_t* t = malloc(sizeof(*t));
