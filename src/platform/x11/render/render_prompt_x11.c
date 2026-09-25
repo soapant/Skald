@@ -27,13 +27,11 @@
 #include "core/flapi_platform.h"
 
 void DrawPromptUserEditControlOnDraw(Display *dpy, XftDraw* xd, Visual* vis, Colormap cmap, PromptState *state) {
-    void Core_DrawEditBox(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap);
-    Core_DrawEditBox(state, dpy, xd, vis, cmap);
+    Platform_DrawEditBox(state, dpy, xd, vis, cmap);
 }
 
 void DrawPromptUserListBoxOnDraw(Display *dpy, XftDraw* xd, Visual* vis, Colormap cmap, PromptState *state) {
-    void Core_DrawListBox(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap);
-    Core_DrawListBox(state, dpy, xd, vis, cmap);
+    Platform_DrawListBox(state, dpy, xd, vis, cmap);
 }
 
 void DrawPromptUserEditControl(Display *dpy,Window* win,PromptState *state) {

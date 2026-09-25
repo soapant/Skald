@@ -36,6 +36,11 @@ void UI_SetCursorPosition(WindowHandle ctrl, int position);
 void UI_Redraw(ListBoxInfo* lb, WindowHandle hListBox);
 void UI_RedrawNow(ListBoxInfo* lb, WindowHandle hListBox);
 void UI_GetParent(WindowHandle hwnd);
+void UI_SyncFilterFromEdit(FlintContext* ctx);
+void UI_ApplyFilterToEdit(FlintContext* ctx);
+ListBoxInfo* UI_GetPopupListBox(FlintContext* ctx);
+void UI_SyncEditCursor(FlintContext* ctx, int pos);
+bool UI_ApplyBackspaceToPopup(FlintContext* ctx);
 
 #define UI_DEBOUNCE_MS 0
 #define UI_DEBOUNCE_TIMER_ID 998
