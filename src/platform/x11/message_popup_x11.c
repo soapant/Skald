@@ -6,6 +6,11 @@
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
 #include <X11/Xft/Xft.h>
+#include "platform/x11/display_x11.h"
+#include "platform/x11/window_factory_x11.h"
+#include "core/timer.h"
+#include "platform/wm_platform.h"
+#include "config.h"
 
 static Window g_msg_win = None;
 static unsigned long g_msg_gen = 0;

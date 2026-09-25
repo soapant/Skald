@@ -17,6 +17,7 @@
 #include "core/platform.h"
 #include "platform/draw.h"
 #include "helpers/helpers_ui.h"
+#include "platform/x11/audio_x11.h"
 #include "core/timer.h"
 #include "wm/niri_wm.h"
 #define NANOSVG_IMPLEMENTATION

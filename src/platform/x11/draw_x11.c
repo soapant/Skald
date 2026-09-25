@@ -4,7 +4,9 @@
 #include "helpers/helpers_ui.h"
 #include "core/timer.h"
 #include <X11/Xft/Xft.h>
+#include "platform/x11/drawing_x11.h"
 #include <stdlib.h>
+#include "core/modal.h"
 
 static PromptState *g_prerender_state = NULL;
 void Platform_SetPreRenderState(PromptState *state) {
