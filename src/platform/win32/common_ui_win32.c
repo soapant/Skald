@@ -520,19 +520,82 @@ void UpdateTextCaret(WindowHandle hwndEditControl)
   static int lastHeight = -1;
   static HWND lastHwnd = NULL;
   static BOOL sCaretShown = FALSE;
+  static HBITMAP sCaretBitmap = NULL;
+  static COLORREF lastColor = 0xFFFFFFFF;
 
-  if (caretWidth != lastWidth || caretHeight != lastHeight || hwnd != lastHwnd) {
+  COLORREF caretColor = COLOR_CURSOR;
+
+  if (caretWidth != lastWidth || caretHeight != lastHeight ||
+      hwnd != lastHwnd || caretColor != lastColor) {
+
     if (sCaretShown) HideCaret(hwnd);
     DestroyCaret();
     sCaretShown = FALSE;
-    CreateCaret(hwnd, NULL, caretWidth, caretHeight);
+
+    if (sCaretBitmap) {
+      DeleteObject(sCaretBitmap);
+      sCaretBitmap = NULL;
+    }
+
+    int w = caretWidth < 1 ? 1 : caretWidth;
+    int h = caretHeight < 1 ? 1 : caretHeight;
+
+    BITMAPINFO bmi;
+    memset(&bmi, 0, sizeof(bmi));
+    bmi.bmiHeader.biSize        = sizeof(BITMAPINFOHEADER);
+    bmi.bmiHeader.biWidth       = w;
+    bmi.bmiHeader.biHeight      = -h;
+    bmi.bmiHeader.biPlanes      = 1;
+    bmi.bmiHeader.biBitCount    = 1;
+    bmi.bmiHeader.biCompression = BI_RGB;
+
+    int rowBytes = ((w + 31) / 32) * 4;
+
+    BYTE* bits = (BYTE*)calloc(rowBytes * h, 1);
+    if (bits) {
+      BYTE r = GetRValue(caretColor);
+      BYTE g = GetGValue(caretColor);
+      BYTE b = GetBValue(caretColor);
+
+      BOOL rOn = r > 127;
+      BOOL gOn = g > 127;
+      BOOL bOn = b > 127;
+
+      int lum = (r * 299 + g * 587 + b * 114) / 1000;
+      BOOL setBit = lum > 127;
+
+      if (setBit) {
+        for (int y = 0; y < h; y++) {
+          for (int x = 0; x < w; x++) {
+            bits[y * rowBytes + (x / 8)] |= (0x80 >> (x % 8));
+          }
+        }
+      }
+
+      HDC hdcScreen = GetDC(NULL);
+      void* dibBits = NULL;
+      HBITMAP hbm = CreateDIBSection(hdcScreen, &bmi, DIB_RGB_COLORS,
+                                     &dibBits, NULL, 0);
+      if (hbm && dibBits) {
+        memcpy(dibBits, bits, rowBytes * h);
+        sCaretBitmap = hbm;
+      } else if (hbm) {
+        DeleteObject(hbm);
+      }
+      ReleaseDC(NULL, hdcScreen);
+      free(bits);
+    }
+
+    CreateCaret(hwnd, sCaretBitmap, caretWidth, caretHeight);
     if (havePos) SetCaretPos(pt.x, pt.y);
     ShowCaret(hwnd);
     sCaretShown = TRUE;
     SetCaretBlinkTime(INFINITE);
+
     lastWidth = caretWidth;
     lastHeight = caretHeight;
     lastHwnd = hwnd;
+    lastColor = caretColor;
   } else if (havePos) {
     SetCaretPos(pt.x, pt.y);
     if (!sCaretShown) {
