@@ -22,6 +22,8 @@ void Platform_SetDrawContext(Display* dpy, XftDraw* xd, Visual* vis, Colormap cm
 void Platform_GetDrawContext(Display** dpy, XftDraw** xd, Visual** vis, Colormap* cmap);
 void Platform_SetPreRenderState(PromptState *state);
 PromptState* Platform_GetPreRenderStatePtr(void);
+void Platform_DrawEditBox(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap);
+void Platform_DrawListBox(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap);
 #endif
 bool Platform_DrawRectRaw(int x, int y, int w, int h, unsigned long color);
 bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, FontHandle font, const char *align, int pad,int fontsize);
