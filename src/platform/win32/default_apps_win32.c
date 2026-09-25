@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
-#include "core/platform.h"
+#include "platform/platform.h"
 #include "config.h"
 
 char default_apps_win32[DEFAULT_APP_COUNT][256];

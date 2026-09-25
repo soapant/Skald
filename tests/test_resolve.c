@@ -2,7 +2,7 @@
 #include <sys/stat.h>
 #include <stdio.h>
 #include "core/context.h"
-#include "core/platform.h"
+#include "platform/platform.h"
 
 #if defined(_WIN32)
 #include <direct.h>

@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include "core/platform.h"
+#include "platform/platform.h"
 
 static void config_resolve_one(const char** var, DefaultAppKind kind) {
     if (!var || (*var && (*var)[0])) return;

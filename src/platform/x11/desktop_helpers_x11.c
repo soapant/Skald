@@ -1,5 +1,5 @@
 #include "platform/x11/desktop_helpers_x11.h"
-#include "core/platform.h"
+#include "platform/platform.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>

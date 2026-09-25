@@ -1,5 +1,5 @@
 #include "platform/x11/env_helpers_x11.h"
-#include "core/platform.h"
+#include "platform/platform.h"
 #include "deps/log.h"
 #include <stdio.h>
 #include <unistd.h>

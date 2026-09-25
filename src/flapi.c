@@ -5,35 +5,20 @@
 #include "core/context.h"
 #include "deps/log.h"
 #include "config.h"
-#include "core/platform.h"
+#include "platform/platform.h"
 #include "helpers/helpers_hotkey.h"
 #include "helpers/helpers_ui.h"
 #include "platform/input_state.h"
-#include "config.h"
-#include "core/platform.h"
 #include "core/window_manager.h"
+#include "core/clipboard_history.h"
 #include "core/flapi.h"
-#include "core/flapi_platform.h"
+#include "platform/flapi_platform.h"
 #include "platform/wm_platform.h"
 #include "platform/draw.h"
 #include "core/hotkey_manager.h"
 #include "core/remap_manager.h"
 #include "core/snippet_manager.h"
 #include "deps/stb_ds.h"
-
-static const unsigned char FL_PNG_MAGIC[8] = { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A };
-
-static void fl_clipboard_png_dims(const unsigned char* png, size_t len, uint32_t* out_w, uint32_t* out_h) {
-    if (out_w) *out_w = 0;
-    if (out_h) *out_h = 0;
-    if (!png || len < 24) return;
-    if (memcmp(png, FL_PNG_MAGIC, 8) != 0) return;
-    if (memcmp(png + 12, "IHDR", 4) != 0) return;
-    uint32_t w = ((uint32_t)png[16] << 24) | ((uint32_t)png[17] << 16) | ((uint32_t)png[18] << 8) | png[19];
-    uint32_t h = ((uint32_t)png[20] << 24) | ((uint32_t)png[21] << 16) | ((uint32_t)png[22] << 8) | png[23];
-    if (out_w) *out_w = w;
-    if (out_h) *out_h = h;
-}
 
 size_t fl_clipboard_history_count(void) {
     return fl_clipboard_history_count_platform();
@@ -1179,18 +1164,20 @@ bool fl_set_current_volume(int volume) {
   return fl_set_volume_platform(volume);
 }
 bool fl_increment_volume_by(int increment) {
-  return fl_increment_volume_by_platform(increment);
+  return fl_set_current_volume(fl_get_current_volume() + increment);
 }
 
 bool fl_decrement_volume_by(int decrement) {
-  return fl_decrement_volume_by_platform(decrement);
+  return fl_set_current_volume(fl_get_current_volume() - decrement);
 }
 bool fl_increment_volume_by_percent(int increment_percent) {
-  return fl_increment_volume_by_percent_platform(increment_percent);
+  int current_volume = fl_get_current_volume();
+  return fl_set_current_volume(current_volume + (current_volume * increment_percent / 100));
 }
 
 bool fl_decrement_volume_by_percent(int decrement_percent) {
-  return fl_decrement_volume_by_percent_platform(decrement_percent);
+  int current_volume = fl_get_current_volume();
+  return fl_set_current_volume(current_volume - (current_volume * decrement_percent / 100));
 }
 
 bool fl_type_text(const char *s) {

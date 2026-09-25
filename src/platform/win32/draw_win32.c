@@ -1,5 +1,5 @@
 #include "platform/draw.h"
-#include "core/platform.h"
+#include "platform/platform.h"
 #include "platform/win32/win32_state.h"
 #include "config.h"
 #include "platform/ui.h"

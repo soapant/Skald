@@ -3,7 +3,7 @@
 #include "core/modal.h"
 #include "config.h"
 #include "config.h"
-#include "core/platform.h"
+#include "platform/platform.h"
 #include "helpers/helpers_ui.h"
 #include "platform/ui.h"
 #include "core/timer.h"
@@ -12,6 +12,8 @@
 #include <commctrl.h>
 #include <shlwapi.h>
 #include <string.h>
+
+#define WIN32_SHADER_SMOOTHNESS 1
 
 HFONT CreateCustomNerdFont(int height, const char* face_name) {
   return FH_TO_HFONT(Platform_CreateFont(height, face_name));
@@ -56,43 +58,26 @@ void win32_apply_rounded_corners(HWND hwnd, int w, int h) {
   if (rgn) SetWindowRgn(hwnd, rgn, TRUE);
 }
 
+static inline unsigned int win32_to_rgb(COLORREF c) {
+  return ((unsigned int)GetRValue(c) << 16) | ((unsigned int)GetGValue(c) << 8) | (unsigned int)GetBValue(c);
+}
 static COLORREF LerpColor(COLORREF a, COLORREF b, float t) {
-  if (t < 0) t = 0; if (t > 1) t = 1;
-  BYTE ar = GetRValue(a), ag = GetGValue(a), ab = GetBValue(a);
-  BYTE br = GetRValue(b), bg = GetGValue(b), bb = GetBValue(b);
-  BYTE rr = (BYTE)(ar + (br - ar) * t + 0.5f);
-  BYTE rg = (BYTE)(ag + (bg - ag) * t + 0.5f);
-  BYTE rb = (BYTE)(ab + (bb - ab) * t + 0.5f);
-  return RGB(rr, rg, rb);
+  unsigned int mixed = Color_Lerp(win32_to_rgb(a), win32_to_rgb(b), t);
+  return RGB((mixed >> 16) & 0xFF, (mixed >> 8) & 0xFF, mixed & 0xFF);
 }
 static COLORREF DeriveLighterWin(COLORREF base, float intensity) {
-  float f = ShaderIntensity;
-  if (f < 0) f = 0; if (f > 1) f = 1;
-  float eff = f * intensity;
-  if (eff < 0.25f) eff = 0.25f;
-  if (eff > 1) eff = 1;
-  BYTE r = GetRValue(base), g = GetGValue(base), b = GetBValue(base);
-  BYTE nr = (BYTE)(r + (110 - r) * eff + 0.5f);
-  BYTE ng = (BYTE)(g + (110 - g) * eff + 0.5f);
-  BYTE nb = (BYTE)(b + (160 - b) * eff + 0.5f);
-  if (nr > 255) nr = 255; if (ng > 255) ng = 255; if (nb > 255) nb = 255;
-  return RGB(nr, ng, nb);
+  unsigned char r, g, b;
+  Color_DeriveLighter(win32_to_rgb(base), intensity, &r, &g, &b);
+  return RGB(r, g, b);
 }
 static unsigned int HashNoiseWin(int x, int y) {
-  unsigned int h = (unsigned int)(x * 374761393U + y * 668265263U);
-  h = (h ^ (h >> 13)) * 1274126177U;
-  return h & 0xFF;
+  return Color_HashNoise(x, y);
 }
 static float win32_compute_gamma(void) {
-  float s = 1;
-  if (s < 0.1f) s = 0.1f; if (s > 10.0f) s = 10.0f;
-  float g = 2.0f - s * 0.14f;
-  if (g < 0.45f) g = 0.45f; if (g > 2.2f) g = 2.2f;
-  return g;
+  return Color_ShaderGamma(WIN32_SHADER_SMOOTHNESS);
 }
 static inline float win32_dither(int x, int y) {
-  static const int bayer[16] = {0,8,2,10,12,4,14,6,3,11,1,9,15,7,13,5};
-  return ((bayer[(y & 3)*4 + (x & 3)] / 16.0f) - 0.5f) * 1.2f;
+  return Color_BayerDither(x, y);
 }
 
 typedef struct { HBITMAP bmp; HDC dc; int w; int h; COLORREF base; int preset; float gamma; float intensity; } win32_gradient_cache;

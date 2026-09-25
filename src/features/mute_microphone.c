@@ -1,6 +1,6 @@
 #include "core/flapi.h"
 #include "config.h"
-#include "core/platform.h"
+#include "platform/platform.h"
 
 #if defined(_WIN32)
 #include <initguid.h>

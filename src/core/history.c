@@ -1,6 +1,6 @@
 #include "core/history.h"
 #include "core/context.h"
-#include "core/platform.h"
+#include "platform/platform.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

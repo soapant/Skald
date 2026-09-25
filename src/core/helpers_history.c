@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "config.h"
-#include "core/platform.h"
+#include "platform/platform.h"
 #include "helpers/helpers_alias.h"
 #include "platform/ui.h"
 

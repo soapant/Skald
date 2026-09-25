@@ -7,8 +7,8 @@
 #include <string.h>
 #include <stdlib.h>
 #include "config.h"
-#include "core/platform.h"
-#include "core/platform.h"
+#include "platform/platform.h"
+#include "platform/platform.h"
 #include "config.h"
 #include <time.h>
 

@@ -9,12 +9,12 @@
 #include <stdlib.h>
 #include "core/context.h"
 #include "config.h"
-#include "core/platform.h"
+#include "platform/platform.h"
 #include "helpers/helpers_hotkey.h"
 #include "platform/win32/win32_state.h"
 #include "platform/win32/subclasses_win32.h"
 #include "platform/win32/input_core_win32.h"
-#include "core/platform.h"
+#include "platform/platform.h"
 #include "config.h"
 #include <shellapi.h>
 #include <gdiplus.h>

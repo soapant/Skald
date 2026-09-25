@@ -10,7 +10,7 @@
 #include "platform/ui.h"
 #include "platform/win32/subclasses_win32.h"
 #include "wingdi.h"
-#include "core/platform.h"
+#include "platform/platform.h"
 #include "helpers/helpers_ui.h"
 #include "platform/win32/popup_helpers_win32.h"
 #include "platform/win32/common_ui_win32.h"
