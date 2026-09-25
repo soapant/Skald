@@ -47,8 +47,18 @@ log_info("Platform_LaunchTerminalAtPath working_dir='%s' extra_args='%s'", worki
 char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
     if (open_terminal) {
         char clean_cmd[512];
-        strncpy(clean_cmd, command, sizeof(clean_cmd) - 1);
+        strncpy(clean_cmd, command ? command : "", sizeof(clean_cmd) - 1);
         clean_cmd[sizeof(clean_cmd) - 1] = '\0';
+        char *p = clean_cmd;
+        while (*p && isspace((unsigned char)*p)) p++;
+        bool empty = (*p == '\0');
+        char terminal_exe[512];
+        snprintf(terminal_exe, sizeof(terminal_exe), "%s.exe", UsedTerminal);
+        if (empty) {
+            HINSTANCE res2 = ShellExecuteA(NULL, "open", terminal_exe, NULL, NULL, SW_SHOWNORMAL);
+            if ((intptr_t)res2 <= 32) { log_error("Platform_RunTerminalCommand(open_terminal): ShellExecute failed for '%s' err=%ld - check UsedTerminal", terminal_exe, (long)(intptr_t)res2); }
+            return strdup("");
+        }
         char temp_file[MAX_PATH];
         GetTempPathA(MAX_PATH, temp_file);
         strcat(temp_file, "temp_cmd.sh");
@@ -58,8 +68,6 @@ char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
             fprintf(f, "%s\n", clean_cmd);
             fclose(f);
         }
-        char terminal_exe[512];
-        snprintf(terminal_exe, sizeof(terminal_exe), "%s.exe", UsedTerminal);
         char args[2048];
         snprintf(args, sizeof(args), "-e %s \"%s\"",UsedShell,temp_file);
         HINSTANCE res2 = ShellExecuteA(NULL, "open", terminal_exe, args, NULL, SW_SHOWNORMAL);
