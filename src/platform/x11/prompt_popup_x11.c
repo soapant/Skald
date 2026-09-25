@@ -363,3 +363,4 @@ bool Platform_PromptPopupOnKey(Popup* self, const PopupKeyEvent* key) {
     PROFILE_END_VAR(timer, "prompt_popup_x11:Platform_PromptPopupOnKey");
     return false;
 }
+
