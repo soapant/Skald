@@ -14,7 +14,7 @@ static const AliasEntry user_aliases[] = {
     {"brw", "Brawlhalla", "AppLauncher"},
 };
 
-void ConfigApply(void) {
+__declspec(dllexport) void ConfigApply(void) {
     Tray = true;
     EnableVimMode = true;
     RememberLastIndex = true;
@@ -24,7 +24,7 @@ void ConfigApply(void) {
     ModePersistsThroughFeatures = false;
     TimeOutForMessages = 1;
     DoTimeDebugs = false;
-    DebugMode = false;
+    DebugMode = true;
     RoundedCorners = true;
     CornerRadius = 14;
     EnableShaders = true;
@@ -41,11 +41,11 @@ void ConfigApply(void) {
     MaxFeatures = 1000;
     VimFontSize = 18;
     PaddingForScrolling = 3;
-    UsedTerminal = "";
+    UsedTerminal = "alacritty";
     UsedShell = "nu";
-    UsedBrowser = "zen";
-    UsedImageViewer = "";
-    UsedVideoPlayer = "";
+    UsedBrowser = "google Chrome";
+    UsedImageViewer = "mspaint";
+    UsedVideoPlayer = "reset VLC media player preferences and cache files";
     UsedSearchEngine = "google";
     FeaturePath = "src/features";
     IconPath = "{MISC}/switch_window.ico";
@@ -61,11 +61,10 @@ void ConfigApply(void) {
     GradientBrightness = 1.0f;
     CloseOnLossOfFocus = false;
     Theme = "rose-pine";
-    COLOR_BG = RGB(25,23,36);
-    COLOR_TEXT = RGB(255,255,255);
-    COLOR_CURSOR = RGB(82,79,103);
+    COLOR_BG = RGB(25, 23, 36);
+    COLOR_TEXT = RGB(255, 255, 255);
     COLOR_ALTERNATE = RGB(57, 255, 20);
-    COLOR_SELECTED_TEXT = RGB(19,21,23);
+    COLOR_SELECTED_TEXT = RGB(19, 21, 23);
     COLOR_ALIAS_TEXT = RGB(255, 255, 255);
     COLOR_ERROR = RGB(180, 0, 0);
     COLOR_NORMAL = RGB(200, 200, 0);
@@ -73,6 +72,7 @@ void ConfigApply(void) {
     COLOR_INSERT_MODE = RGB(50, 255, 50);
     COLOR_NORMAL_MODE = RGB(100, 255, 255);
     COLOR_VISUAL_MODE = RGB(200, 3, 222);
+    COLOR_CURSOR = RGB(82, 79, 103);
     G_PATH_VARS = user_path_vars;
     PATH_VAR_COUNT = 6;
     Aliases = user_aliases;
