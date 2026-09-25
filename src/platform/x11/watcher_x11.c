@@ -3,7 +3,6 @@
 #include "core/feature_loader.h"
 #include "deps/log.h"
 #include "config.h"
-#include "platform/lib.h"
 #include <stdatomic.h>
 #include <pthread.h>
 #include <unistd.h>

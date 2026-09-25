@@ -2,16 +2,12 @@
 #include <stdio.h>
 #include "core/context.h"
 #include "deps/log.h"
-#include "core/modal.h"
-#include "core/types.h"
 #include "config.h"
 #include "core/platform.h"
 #include "core/feature_data.h"
-#include "core/flapi.h"
 #include "core/feature_loader.h"
 #include "core/window_manager.h"
 #include "core/history.h"
-#include "core/timer.h"
 
 static void free_history_list(void* v) {
   char** list = (char**)v;

@@ -3,15 +3,10 @@
 #include "deps/log.h"
 #include "core/platform.h"
 #include "platform/draw.h"
-#include "platform/input_state.h"
-#include "platform/x11/drawing_x11.h"
-#include "platform/x11/audio_x11.h"
 #include "platform/x11/env_helpers_x11.h"
 #include "platform/x11/desktop_helpers_x11.h"
-#include "helpers/helpers_text.h"
 #include "helpers/helpers_ui.h"
 #include "config.h"
-#include <errno.h>
 #include <string.h>
 #include <unistd.h>
 #include <sys/wait.h>
@@ -31,7 +26,6 @@
 #include <time.h>
 #include <pthread.h>
 #include <linux/input.h>
-#include "platform/x11/input_x11.h"
 
 
 bool Platform_GetAllFilesFromDir(const char* dir_path, char** list_of_allowed_extensions,

@@ -1,25 +1,11 @@
-#include "core/context.h"
-#include "core/modal.h"
-#include "config.h"
-#include "core/platform.h"
-#include "platform/ui.h"
-#include "platform/wm_platform.h"
-#include "helpers/helpers_ui.h"
-#include "core/timer.h"
-#include <string.h>
 #include <stdlib.h>
-#include <stdio.h>
 
-#if !defined(_WIN32)
 #include <pthread.h>
 #include <unistd.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
 #include <X11/Xft/Xft.h>
-#include "platform/x11/display_x11.h"
-#include "platform/x11/drawing_x11.h"
-#include "platform/x11/window_factory_x11.h"
 
 static Window g_msg_win = None;
 static unsigned long g_msg_gen = 0;
@@ -305,4 +291,3 @@ bool Platform_MessagePopupOnKey(Popup* self, const PopupKeyEvent* key) {
     (void)key;
     return false;
 }
-#endif

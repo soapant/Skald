@@ -1,5 +1,4 @@
 #include "core/context.h"
-#include "core/modal.h"
 #include "bindings/vim_bindings.h"
 #include "bindings/vim_motions.h"
 

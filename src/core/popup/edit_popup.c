@@ -2,22 +2,11 @@
 #include "core/modal.h"
 #include "core/window_manager.h"
 #include "core/platform.h"
-#include "platform/ui.h"
-#include "core/feature_data.h"
-#include "core/vim.h"
-#include "core/prompt_controller.h"
-#include "config.h"
-#include "helpers/helpers_hotkey.h"
-#include "helpers/helpers_alias.h"
-#include "helpers/helpers_flag.h"
-#include "helpers/helpers_ui.h"
-#include "core/feature_loader.h"
 #include "platform/wm_platform.h"
 #include "core/timer.h"
 #include <sys/time.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 
 typedef WMEditPopupData EditPopupDataInternal;
 

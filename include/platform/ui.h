@@ -7,12 +7,8 @@
 #include <string.h>
 #include <stdio.h>
 #include "core/context.h"
-#include "core/modal.h"
-#include "core/types.h"
-#include "config.h"
 #include "core/timer.h"
 #include "core/platform.h"
-#include "helpers/helpers_ui.h"
 
 bool IsPopupActive(WindowHandle hPopupWnd);
 

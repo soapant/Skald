@@ -1,5 +1,4 @@
 #include "core/context.h"
-#include "deps/log.h"
 #include "core/modal.h"
 #include "bindings/vim_motions.h"
 #include "bindings/vim_helpers.h"
@@ -10,7 +9,6 @@
 #include "core/platform.h"
 #include "helpers/helpers_hotkey.h"
 #include "helpers/helpers_alias.h"
-#include "helpers/helpers_flag.h"
 #include "helpers/helpers_ui.h"
 #include <ctype.h>
 

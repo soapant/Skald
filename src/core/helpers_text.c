@@ -1,18 +1,10 @@
-#include "core/context.h"
-#include "core/modal.h"
-#include "config.h"
 #include <ctype.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include "config.h"
 #include "core/platform.h"
 #include "helpers/helpers_hotkey.h"
-#include "helpers/helpers_alias.h"
-#include "helpers/helpers_flag.h"
 #include "helpers/helpers_text.h"
-#include "core/timer.h"
-#include "platform/ui.h"
 
 HotkeyBinding convert_into_hotkey_binding(char* hotkey_string, void (*on_hotkey_trigger)(void), 
                                           bool (*optional_condition_for_hotkey)(void), 
