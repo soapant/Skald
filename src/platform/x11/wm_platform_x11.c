@@ -7,6 +7,7 @@
 #include "platform/x11/input_x11.h"
 #include "platform/input_state.h"
 #include "core/remap_manager.h"
+#include "platform/x11/display_x11.h"
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 #include <X11/extensions/Xrandr.h>

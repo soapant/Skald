@@ -1,5 +1,6 @@
 #include "core/platform.h"
 #include "config.h"
+#include "platform/x11/display_x11.h"
 #include <X11/Xlib.h>
 #include <X11/Xresource.h>
 #include <stdlib.h>
