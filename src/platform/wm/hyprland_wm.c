@@ -207,26 +207,21 @@ Fl_WindowList get_window_titles_hyprland() {
    return list;
 }
 
-Fl_Pos get_cursor_position_hyprland(void) { 
+Fl_Pos get_cursor_position_hyprland(void) {
   hypr_ensure_sig();
-  char* output = Platform_RunTerminalCommand("hyprctl -j cursorpos", false);
-  StringList lines = String_Split(output, "\n");
   
+  char* output = Platform_RunTerminalCommand("hyprctl cursorpos", false);
+
   int x_val = 0;
   int y_val = 0;
 
-  for (size_t i = 0; i < lines.count; i++) {
-    if (sscanf(lines.items[i], " \"x\": %d", &x_val) == 1) {
-       continue; 
-    }
-    if (sscanf(lines.items[i], " \"y\": %d", &y_val) == 1) {
-       continue; 
-    }
+  if (sscanf(output, "%d, %d", &x_val, &y_val) != 2) {
+      x_val = 0;
+      y_val = 0;
   }
 
-  StringList_Free(&lines);
   free(output);
-  return (Fl_Pos){x_val, y_val}; 
+  return (Fl_Pos){x_val, y_val};
 }
 
 bool close_active_window_hyprland(void) {
