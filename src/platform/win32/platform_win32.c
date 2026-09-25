@@ -1,5 +1,6 @@
 #include <windows.h>
 #include <psapi.h>
+#include <dwmapi.h>
 #include "deps/log.h"
 #include <fileapi.h>
 #include <handleapi.h>
@@ -394,7 +395,7 @@ FontHandle Platform_CreateFont(int size, const char* face_name) {
     HFONT hf = CreateFontA(
         h, 0, 0, 0, FW_NORMAL,
         FALSE, FALSE, FALSE,
-        DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
+        DEFAULT_CHARSET, OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS,
         ANTIALIASED_QUALITY, DEFAULT_PITCH | FF_DONTCARE,
         face_name
         );
@@ -409,7 +410,7 @@ FontHandle Platform_CreateFont(int size, const char* face_name) {
             const char* fallbacks[] = {"Cascadia Code", "Cascadia Mono", "Consolas", "Segoe UI", NULL};
             for (int i=0; fallbacks[i]; i++) {
                 if (_stricmp(actual, fallbacks[i])==0) break; 
-                HFONT hf2 = CreateFontA(h, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH | FF_DONTCARE, fallbacks[i]);
+                HFONT hf2 = CreateFontA(h, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS, ANTIALIASED_QUALITY, DEFAULT_PITCH | FF_DONTCARE, fallbacks[i]);
                 if (hf2) {
                     HDC hdc2 = GetDC(NULL);
                     HFONT old2 = (HFONT)SelectObject(hdc2, hf2);
@@ -822,6 +823,9 @@ static BOOL CALLBACK win32_focus_enum_left(HWND hwnd, LPARAM lp) {
     if (hwnd == GetForegroundWindow()) return TRUE;
     if (!IsWindowVisible(hwnd)) return TRUE;
     if (IsIconic(hwnd)) return TRUE;
+    char cls[64]; if (GetClassNameA(hwnd, cls, sizeof(cls))>0) if (strcmp(cls,"QuickSwitcherModalClass")==0||strcmp(cls,"DisplayMessageModalClass")==0||strcmp(cls,"EditPopupClass")==0||strcmp(cls,"SearchPopupClass")==0||strcmp(cls,"SettingsPopupClass")==0) return TRUE;
+    { int cloaked=0; HMODULE dwm=GetModuleHandleA("dwmapi.dll"); if(dwm){ HRESULT (WINAPI *p)(HWND,DWORD,PVOID,DWORD)=(void*)GetProcAddress(dwm,"DwmGetWindowAttribute"); if(p && SUCCEEDED(p(hwnd,14,&cloaked,sizeof(cloaked))) && cloaked) return TRUE; } }
+    LONG ex=GetWindowLongA(hwnd,GWL_EXSTYLE); if((ex & WS_EX_TOOLWINDOW) && !(ex & WS_EX_APPWINDOW)) { HWND o=GetWindow(hwnd,GW_OWNER); if(o) return TRUE; }
     char title[256];
     if (GetWindowTextA(hwnd, title, sizeof(title)) == 0) return TRUE;
     if (title[0] == '\0') return TRUE;
@@ -849,6 +853,9 @@ static BOOL CALLBACK win32_focus_enum_right(HWND hwnd, LPARAM lp) {
     if (hwnd == GetForegroundWindow()) return TRUE;
     if (!IsWindowVisible(hwnd)) return TRUE;
     if (IsIconic(hwnd)) return TRUE;
+    char cls[64]; if (GetClassNameA(hwnd, cls, sizeof(cls))>0) if (strcmp(cls,"QuickSwitcherModalClass")==0||strcmp(cls,"DisplayMessageModalClass")==0||strcmp(cls,"EditPopupClass")==0||strcmp(cls,"SearchPopupClass")==0||strcmp(cls,"SettingsPopupClass")==0) return TRUE;
+    { int cloaked=0; HMODULE dwm=GetModuleHandleA("dwmapi.dll"); if(dwm){ HRESULT (WINAPI *p)(HWND,DWORD,PVOID,DWORD)=(void*)GetProcAddress(dwm,"DwmGetWindowAttribute"); if(p && SUCCEEDED(p(hwnd,14,&cloaked,sizeof(cloaked))) && cloaked) return TRUE; } }
+    LONG ex=GetWindowLongA(hwnd,GWL_EXSTYLE); if((ex & WS_EX_TOOLWINDOW) && !(ex & WS_EX_APPWINDOW)) { HWND o=GetWindow(hwnd,GW_OWNER); if(o) return TRUE; }
     char title[256];
     if (GetWindowTextA(hwnd, title, sizeof(title)) == 0) return TRUE;
     if (title[0] == '\0') return TRUE;
@@ -922,9 +929,35 @@ bool Platform_MoveActiveWindowRight(void) {
     return Platform_MoveActiveWindowToMonitor(true);
 }
 
+extern HWND Platform_GetFlintPrevFg(void);
+static bool win32_activate_hwnd(HWND h) {
+    if (!h || !IsWindow(h)) return false;
+    if (IsIconic(h)) ShowWindow(h, SW_RESTORE);
+    ShowWindow(h, SW_SHOW);
+    SetWindowPos(h, HWND_TOP, 0,0,0,0, SWP_NOMOVE|SWP_NOSIZE|SWP_SHOWWINDOW);
+    HWND fg = GetForegroundWindow();
+    DWORD fgTid = fg ? GetWindowThreadProcessId(fg,NULL) : 0;
+    DWORD tTid = GetWindowThreadProcessId(h,NULL);
+    DWORD curTid = GetCurrentThreadId();
+    if (fgTid && fgTid != curTid) AttachThreadInput(fgTid, curTid, TRUE);
+    if (tTid && tTid != curTid) AttachThreadInput(tTid, curTid, TRUE);
+    AllowSetForegroundWindow(ASFW_ANY);
+    SetForegroundWindow(h);
+    SetActiveWindow(h);
+    BringWindowToTop(h);
+    if (fgTid && fgTid != curTid) AttachThreadInput(fgTid, curTid, FALSE);
+    if (tTid && tTid != curTid) AttachThreadInput(tTid, curTid, FALSE);
+    return GetForegroundWindow()==h;
+}
 bool Platform_FocusWindowLeft(void) {
     HWND fg = win32_foreground_target();
+    if (!fg) fg = Platform_GetFlintPrevFg();
     if (!fg) fg = GetForegroundWindow();
+    char cls[64]={0}; if(fg) GetClassNameA(fg,cls,sizeof(cls));
+    if (fg && (strcmp(cls,"QuickSwitcherModalClass")==0||strcmp(cls,"DisplayMessageModalClass")==0||strcmp(cls,"EditPopupClass")==0||strcmp(cls,"SearchPopupClass")==0||strcmp(cls,"SettingsPopupClass")==0)) {
+        HWND prev = Platform_GetFlintPrevFg();
+        if (prev && IsWindow(prev)) fg = prev;
+    }
     if (!fg) return false;
     RECT fr;
     if (!GetWindowRect(fg, &fr)) return false;
@@ -936,14 +969,18 @@ bool Platform_FocusWindowLeft(void) {
     s.best_vdist = 1 << 30;
     EnumWindows(win32_focus_enum_left, (LPARAM)&s);
     if (!s.best) return false;
-    if (IsIconic(s.best)) ShowWindow(s.best, SW_RESTORE);
-    SetForegroundWindow(s.best);
-    return true;
+    return win32_activate_hwnd(s.best);
 }
 
 bool Platform_FocusWindowRight(void) {
     HWND fg = win32_foreground_target();
+    if (!fg) fg = Platform_GetFlintPrevFg();
     if (!fg) fg = GetForegroundWindow();
+    char cls[64]={0}; if(fg) GetClassNameA(fg,cls,sizeof(cls));
+    if (fg && (strcmp(cls,"QuickSwitcherModalClass")==0||strcmp(cls,"DisplayMessageModalClass")==0||strcmp(cls,"EditPopupClass")==0||strcmp(cls,"SearchPopupClass")==0||strcmp(cls,"SettingsPopupClass")==0)) {
+        HWND prev = Platform_GetFlintPrevFg();
+        if (prev && IsWindow(prev)) fg = prev;
+    }
     if (!fg) return false;
     RECT fr;
     if (!GetWindowRect(fg, &fr)) return false;
@@ -955,9 +992,7 @@ bool Platform_FocusWindowRight(void) {
     s.best_vdist = 1 << 30;
     EnumWindows(win32_focus_enum_right, (LPARAM)&s);
     if (!s.best) return false;
-    if (IsIconic(s.best)) ShowWindow(s.best, SW_RESTORE);
-    SetForegroundWindow(s.best);
-    return true;
+    return win32_activate_hwnd(s.best);
 }
 
 bool Platform_MinimizeActiveWindow(void) {
@@ -1093,7 +1128,33 @@ static BOOL CALLBACK EnumWindowsProcPair(HWND hwnd, LPARAM lParam) {
     char cls[256];
     if (GetClassNameA(hwnd, cls, sizeof(cls)) > 0) {
         if (strcmp(cls, "Progman") == 0 || strcmp(cls, "WorkerW") == 0) return TRUE;
+        if (strcmp(cls, "QuickSwitcherModalClass")==0 || strcmp(cls, "DisplayMessageModalClass")==0 || strcmp(cls, "EditPopupClass")==0 || strcmp(cls, "SearchPopupClass")==0 || strcmp(cls, "SettingsPopupClass")==0) return TRUE;
+        if (strcmp(cls, "ApplicationFrameWindow")==0) {
+            int cloaked = 0;
+            HMODULE dwm = GetModuleHandleA("dwmapi.dll");
+            if (dwm) {
+                HRESULT (WINAPI *pDwmGet)(HWND,DWORD,PVOID,DWORD) = (void*)GetProcAddress(dwm, "DwmGetWindowAttribute");
+                if (pDwmGet) pDwmGet(hwnd, 14, &cloaked, sizeof(cloaked));
+            }
+            if (cloaked) return TRUE;
+        }
     }
+    {
+        int cloaked = 0;
+        HMODULE dwm = GetModuleHandleA("dwmapi.dll");
+        if (dwm) {
+            HRESULT (WINAPI *pDwmGet)(HWND,DWORD,PVOID,DWORD) = (void*)GetProcAddress(dwm, "DwmGetWindowAttribute");
+            if (pDwmGet && SUCCEEDED(pDwmGet(hwnd, 14, &cloaked, sizeof(cloaked))) && cloaked) return TRUE;
+        }
+    }
+    LONG ex = GetWindowLongA(hwnd, GWL_EXSTYLE);
+    if ((ex & WS_EX_TOOLWINDOW) && !(ex & WS_EX_APPWINDOW)) {
+        HWND owner = GetWindow(hwnd, GW_OWNER);
+        if (owner) return TRUE;
+    }
+    RECT wr;
+    if (!GetWindowRect(hwnd, &wr)) return TRUE;
+    if (wr.right - wr.left <= 0 || wr.bottom - wr.top <= 0) return TRUE;
     char title[512];
     if (GetWindowTextA(hwnd, title, sizeof(title)) == 0 || title[0] == '\0') return TRUE;
     DWORD pid = 0; GetWindowThreadProcessId(hwnd, &pid);
@@ -1114,6 +1175,7 @@ static BOOL CALLBACK EnumWindowsProcPair(HWND hwnd, LPARAM lParam) {
     }
     CloseHandle(h);
     if (len == 0 || exe[0] == '\0') return TRUE;
+    for (int i=0;i<pair->titles->count;i++) if (pair->titles->windows[i] && _stricmp(pair->titles->windows[i], title)==0) return TRUE;
     char **t1 = realloc(pair->titles->windows, (pair->titles->count + 1) * sizeof(char*));
     char **t2 = realloc(pair->names->windows, (pair->names->count + 1) * sizeof(char*));
     if (!t1 || !t2) { free(t1); free(t2); return TRUE; }
