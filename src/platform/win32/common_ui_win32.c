@@ -521,12 +521,12 @@ void UpdateTextCaret(WindowHandle hwndEditControl)
   static HWND lastHwnd = NULL;
   static BOOL sCaretShown = FALSE;
   static HBITMAP sCaretBitmap = NULL;
-  static COLORREF lastColor = 0xFFFFFFFF;
+  static COLORREF sCaretColor = 0xFFFFFFFF;
 
   COLORREF caretColor = COLOR_CURSOR;
 
   if (caretWidth != lastWidth || caretHeight != lastHeight ||
-      hwnd != lastHwnd || caretColor != lastColor) {
+      hwnd != lastHwnd || caretColor != sCaretColor) {
 
     if (sCaretShown) HideCaret(hwnd);
     DestroyCaret();
@@ -546,45 +546,24 @@ void UpdateTextCaret(WindowHandle hwndEditControl)
     bmi.bmiHeader.biWidth       = w;
     bmi.bmiHeader.biHeight      = -h;
     bmi.bmiHeader.biPlanes      = 1;
-    bmi.bmiHeader.biBitCount    = 1;
+    bmi.bmiHeader.biBitCount    = 32;
     bmi.bmiHeader.biCompression = BI_RGB;
 
-    int rowBytes = ((w + 31) / 32) * 4;
-
-    BYTE* bits = (BYTE*)calloc(rowBytes * h, 1);
-    if (bits) {
-      BYTE r = GetRValue(caretColor);
-      BYTE g = GetGValue(caretColor);
-      BYTE b = GetBValue(caretColor);
-
-      BOOL rOn = r > 127;
-      BOOL gOn = g > 127;
-      BOOL bOn = b > 127;
-
-      int lum = (r * 299 + g * 587 + b * 114) / 1000;
-      BOOL setBit = lum > 127;
-
-      if (setBit) {
-        for (int y = 0; y < h; y++) {
-          for (int x = 0; x < w; x++) {
-            bits[y * rowBytes + (x / 8)] |= (0x80 >> (x % 8));
-          }
-        }
-      }
-
-      HDC hdcScreen = GetDC(NULL);
-      void* dibBits = NULL;
-      HBITMAP hbm = CreateDIBSection(hdcScreen, &bmi, DIB_RGB_COLORS,
-                                     &dibBits, NULL, 0);
-      if (hbm && dibBits) {
-        memcpy(dibBits, bits, rowBytes * h);
-        sCaretBitmap = hbm;
-      } else if (hbm) {
-        DeleteObject(hbm);
-      }
-      ReleaseDC(NULL, hdcScreen);
-      free(bits);
+    HDC hdcScreen = GetDC(NULL);
+    void* dibBits = NULL;
+    HBITMAP hbm = CreateDIBSection(hdcScreen, &bmi, DIB_RGB_COLORS,
+                                   &dibBits, NULL, 0);
+    if (hbm && dibBits) {
+      uint32_t* px = (uint32_t*)dibBits;
+      uint32_t c = (uint32_t)(((caretColor & 0xFF) << 16) |
+                              (caretColor & 0xFF00) |
+                              ((caretColor >> 16) & 0xFF));
+      for (int i = 0; i < w * h; i++) px[i] = c;
+      sCaretBitmap = hbm;
+    } else if (hbm) {
+      DeleteObject(hbm);
     }
+    ReleaseDC(NULL, hdcScreen);
 
     CreateCaret(hwnd, sCaretBitmap, caretWidth, caretHeight);
     if (havePos) SetCaretPos(pt.x, pt.y);
@@ -595,7 +574,7 @@ void UpdateTextCaret(WindowHandle hwndEditControl)
     lastWidth = caretWidth;
     lastHeight = caretHeight;
     lastHwnd = hwnd;
-    lastColor = caretColor;
+    sCaretColor = caretColor;
   } else if (havePos) {
     SetCaretPos(pt.x, pt.y);
     if (!sCaretShown) {
