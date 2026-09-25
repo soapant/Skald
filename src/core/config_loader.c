@@ -185,6 +185,7 @@ bool Config_Reload(void) {
         return false;
     }
     g_cfg_last_reload_ms = Platform_GetWallClockMs();
+    Platform_ResetUIScale();
 #ifdef _WIN32
     InterlockedExchange(&g_cfg_reload_lock, 0);
 #endif
@@ -281,7 +282,7 @@ static size_t config_emit_region(char* buf, size_t cap) {
     cfg_put(buf, cap, &off, "    UsedFont = ");
     cfg_put_escaped(buf, cap, &off, UsedFont);
     cfg_put(buf, cap, &off, ";\n");
-    cfg_put(buf, cap, &off, "    FontSize = %d;\n", FontSize);
+    cfg_put(buf, cap, &off, "    FontSize = %d;\n", Platform_GetUnscaledFontSize());
     cfg_put(buf, cap, &off, "    IconSize = %d;\n", IconSize);
     cfg_put(buf, cap, &off, "    MaxFeatures = %d;\n", MaxFeatures);
     cfg_put(buf, cap, &off, "    VimFontSize = %d;\n", VimFontSize);
