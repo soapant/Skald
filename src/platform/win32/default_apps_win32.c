@@ -163,26 +163,14 @@ const char* Platform_GetDefaultApp(DefaultAppKind kind) {
 
     switch (kind) {
         case DEFAULT_BROWSER:
-            progid = win32_default_apps_progid(
-                "Software\\Microsoft\\Windows\\Shell\\Associations"
-                "\\UrlAssociations\\http\\UserChoice",
-                DEFAULT_BROWSER);
             fallback_name = get_default_browser();
             break;
 
         case DEFAULT_IMAGE_VIEWER:
-            progid = win32_default_apps_progid(
-                "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer"
-                "\\FileExts\\.png\\UserChoice",
-                DEFAULT_IMAGE_VIEWER);
             fallback_name = get_default_image_viewer();
             break;
 
         case DEFAULT_VIDEO_PLAYER:
-            progid = win32_default_apps_progid(
-                "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer"
-                "\\FileExts\\.mp4\\UserChoice",
-                DEFAULT_VIDEO_PLAYER);
             fallback_name = get_default_video_player();
             break;
 
