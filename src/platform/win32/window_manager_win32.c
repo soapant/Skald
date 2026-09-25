@@ -1,4 +1,5 @@
 #include "core/window_manager.h"
+#include "core/hotkey_manager.h"
 #include <windows.h>
 
 int pending_hotkey_vk = 0;
@@ -13,6 +14,7 @@ int WindowManager_RunWin32(WindowManager* wm) {
     while (wm->running && GetMessage(&msg, NULL, 0, 0)) {
         TranslateMessage(&msg);
         DispatchMessage(&msg);
+        hotkey_drain_pending();
     }
 
     return 0;
@@ -26,6 +28,7 @@ void WindowManager_ProcessEventsWin32(WindowManager* wm) {
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
+    hotkey_drain_pending();
 }
 
 void WindowManager_QuitWin32(WindowManager* wm) {

@@ -440,6 +440,15 @@ int main(int argc, char** argv) {
 #endif
     bool needs_link = any_compiled || !nob_file_exists(output) ||
         nob_needs_rebuild(output, (const char**)to_build.items, to_build.count) != 0;
+#if defined(_WIN32)
+    {
+        const char* other = do_actual ? "build/debug/flint.exe" : "build/flint.exe";
+        if (nob_file_exists(other) &&
+            nob_needs_rebuild(other, (const char**)to_build.items, to_build.count) != 0) {
+            needs_link = true;
+        }
+    }
+#endif
     if (!needs_link) {
         nob_log(NOB_INFO, "No changes, skipping link");
         {
