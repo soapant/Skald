@@ -73,7 +73,6 @@ static void hypr_ensure_sig(void) {
     globfree(&g);
 }
 bool get_title_hyprland(char *buffer, int buffer_size) {
-    log_error("buffer='%s' buffer_size=%d", buffer ? buffer : "null", buffer_size);
     return false;
 }
 

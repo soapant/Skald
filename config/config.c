@@ -43,7 +43,7 @@ void ConfigApply(void) {
     PaddingForScrolling = 3;
     UsedTerminal = "";
     UsedShell = "nu";
-    UsedBrowser = "zen";
+    UsedBrowser = "zen-browser";
     UsedImageViewer = "";
     UsedVideoPlayer = "";
     UsedSearchEngine = "google";
