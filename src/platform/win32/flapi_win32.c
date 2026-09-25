@@ -534,7 +534,7 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
         if (cursor_draw_x > x + w - 4) cursor_draw_x = x + w - 4;
         int cursor_y = y + (h - textH) / 2;
         if (cursor_y < y + 2) cursor_y = y + 2;
-        HBRUSH cbr = CreateSolidBrush(text_hex);
+        HBRUSH cbr = CreateSolidBrush(COLOR_CURSOR);
         RECT cRc;
         if (IsInsertMode()) cRc = (RECT){cursor_draw_x, cursor_y, cursor_draw_x+2, cursor_y+textH};
         else cRc = (RECT){cursor_draw_x, cursor_y, cursor_draw_x+12, cursor_y+textH};
