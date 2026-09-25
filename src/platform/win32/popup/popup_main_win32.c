@@ -236,9 +236,7 @@ static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent* key) {
         bool is_plus  = (wParam == VK_OEM_PLUS  || wParam == VK_ADD || wParam == 0xBB || wParam == 0xBD);
         if (is_minus || is_plus) {
             int old = FontSize;
-            if (is_minus) FontSize -= 1; else FontSize += 1;
-            if (FontSize < 8) FontSize = 8;
-            if (FontSize > 48) FontSize = 48;
+            if (is_minus) Platform_AdjustFontSize(-1); else Platform_AdjustFontSize(1);
             if (FontSize != old) {
                 if (g_win32_hMainFont) { DeleteObject(g_win32_hMainFont); g_win32_hMainFont = NULL; }
                 g_win32_hMainFont = FH_TO_HFONT(Platform_CreateFont(FontSize, UsedFont));
@@ -608,7 +606,10 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     case WM_MEASUREITEM: {
       MEASUREITEMSTRUCT* pmis = (MEASUREITEMSTRUCT*)lParam;
         if (pmis->CtlID == IDC_LIST_BOX) {
-          pmis->itemHeight = 40;
+          int h = FontSize + 14;
+          if (h < 24) h = 24;
+          if (h > 64) h = 64;
+          pmis->itemHeight = h;
             return TRUE;
         }
       break;
