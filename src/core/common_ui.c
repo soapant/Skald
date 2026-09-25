@@ -283,8 +283,9 @@ void PopulateListBox(ListBoxInfo* lb, WindowHandle hListBox, const char* filter,
     bool (*filter_match)(const char* item, const char* filter)) {
   if (!lb) return;
   PROFILE_START(timer_alias);
-  if (SequenceIsWaiting()) {
+  if (SequenceHasPendingWait()) {
     log_info("PopulateListBox waiting filter='%s'", filter ? filter : "");
+    return;
   }
   if (!filter) filter = "";
   BuildAliasDisplayItems(lb, items, item_count);

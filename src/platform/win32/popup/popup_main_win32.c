@@ -597,6 +597,9 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
           return 0;
       }
       if (wParam == UI_TICK_TIMER_ID) {
+          if (PromptController_PollSequenceTimeout()) {
+              if (lb && WH_TO_HWND(FlintContext_Get()->window.hListBox) != NULL) UI_Redraw(lb, FlintContext_Get()->window.hListBox);
+          }
           if (FlintContext_Get()->prompt_callbacks.render != NULL) InvalidateRect(hwnd, NULL, FALSE);
           return 0;
       }
