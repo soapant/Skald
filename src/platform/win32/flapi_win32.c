@@ -232,34 +232,8 @@ bool fl_listbox_next_platform(FlListItemCtx *out) {
         RECT inner = {bx+t, y+1+t, bx+bw-t, y+g_fl_list_itemH-1-t};
         int innerR = R-1; if (innerR < 0) innerR = 0;
         if (inner.right <= inner.left || inner.bottom <= inner.top) { inner = (RECT){bx, y, bx+bw, y+g_fl_list_itemH}; innerR = R; }
-        {
-            RECT fullRc = {bx, y, bx+bw, y+g_fl_list_itemH};
-            if (EnableShaders && ShaderPreset != 0) {
-                HWND hWin2 = WindowFromDC(g_fl_list_hdc);
-                RECT winRc2 = {0,0, bw, g_fl_list_visible * g_fl_list_itemH};
-                int winW2 = bw, winH2 = g_fl_list_visible * g_fl_list_itemH;
-                if (hWin2) { GetClientRect(hWin2, &winRc2); winW2 = winRc2.right - winRc2.left; winH2 = winRc2.bottom - winRc2.top; if(winW2<=0) winW2=bw; if(winH2<=0) winH2=g_fl_list_visible * g_fl_list_itemH; }
-                win32_draw_background_slice(g_fl_list_hdc, &fullRc, COLOR_BG, winW2, winH2, fullRc.left, fullRc.top);
-            } else {
-                HBRUSH br = CreateSolidBrush(COLOR_BG);
-                FillRect(g_fl_list_hdc, &fullRc, br);
-                DeleteObject(br);
-            }
-        }
         if (sel) {
             win32_fill_rounded_rect(g_fl_list_hdc, &inner, COLOR_SELECTED_TEXT, innerR);
-        } else {
-            if (EnableShaders && ShaderPreset != 0) {
-                HWND hWin = WindowFromDC(g_fl_list_hdc);
-                RECT winRc = {0,0, bw, g_fl_list_visible * g_fl_list_itemH};
-                int winW = bw, winH = g_fl_list_visible * g_fl_list_itemH;
-                if (hWin) { GetClientRect(hWin, &winRc); winW = winRc.right - winRc.left; winH = winRc.bottom - winRc.top; if (winW<=0) winW=bw; if(winH<=0) winH=g_fl_list_visible * g_fl_list_itemH; }
-                int offsetX = inner.left;
-                int offsetY = inner.top;
-                win32_fill_rounded_rect_slice(g_fl_list_hdc, &inner, COLOR_BG, winW, winH, offsetX, offsetY, innerR);
-            } else {
-                win32_fill_rounded_rect(g_fl_list_hdc, &inner, COLOR_BG, innerR);
-            }
         }
     } else {
         RECT rc = { g_fl_list_bx, y, g_fl_list_bx + g_fl_list_bw, y + g_fl_list_itemH };
@@ -267,20 +241,6 @@ bool fl_listbox_next_platform(FlListItemCtx *out) {
             HBRUSH br = CreateSolidBrush(COLOR_SELECTED_TEXT);
             FillRect(g_fl_list_hdc, &rc, br);
             DeleteObject(br);
-        } else {
-            if (EnableShaders && ShaderPreset != 0) {
-                HWND hWin = WindowFromDC(g_fl_list_hdc);
-                RECT winRc = {0,0,900,400};
-                int winW = 900, winH = 400;
-                if (hWin) { GetClientRect(hWin, &winRc); winW = winRc.right - winRc.left; winH = winRc.bottom - winRc.top; if(winW<=0) winW=900; if(winH<=0) winH=400; }
-                int offsetX = rc.left;
-                int offsetY = rc.top;
-                win32_draw_background_slice(g_fl_list_hdc, &rc, COLOR_BG, winW, winH, offsetX, offsetY);
-            } else {
-                HBRUSH br = CreateSolidBrush(COLOR_BG);
-                FillRect(g_fl_list_hdc, &rc, br);
-                DeleteObject(br);
-            }
         }
     }
     out->idx = idx;
@@ -492,14 +452,6 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
     if (w <= 0) w = state ? state->width - 40 : 880;
     if (w < 40) w = 40;
     if (h <= 0) h = 32;
-    RECT rc = {x, y, x + w, y + h};
-    if (RoundedCorners && CornerRadius > 0) {
-        win32_fill_rounded_rect(hdc, &rc, COLOR_BG, 6);
-    } else {
-        HBRUSH br = CreateSolidBrush(COLOR_BG);
-        FillRect(hdc, &rc, br);
-        DeleteObject(br);
-    }
     HFONT hfont = spec->font.hfont ? spec->font.hfont : (g_win32_hMainFont ? g_win32_hMainFont : NULL);
     HFONT old = NULL;
     if (hfont) old = (HFONT)SelectObject(hdc, hfont);
