@@ -13,25 +13,46 @@ static HotkeyBinding* g_hotkeys = NULL;
 static int g_hotkey_count = 0;
 static int g_hotkey_capacity = 0;
 
-#if !defined(_WIN32)
-static HotkeyCallback g_pending_q[64];
-static bool g_pending_toggle[64];
+#define HOTKEY_PENDING_MAX 64
+static HotkeyCallback g_pending_q[HOTKEY_PENDING_MAX];
+static bool g_pending_toggle[HOTKEY_PENDING_MAX];
 static int g_pending_head = 0;
 static int g_pending_tail = 0;
+#if !defined(_WIN32)
 static pthread_mutex_t g_q_mtx = PTHREAD_MUTEX_INITIALIZER;
+#define HOTKEY_Q_LOCK() pthread_mutex_lock(&g_q_mtx)
+#define HOTKEY_Q_UNLOCK() pthread_mutex_unlock(&g_q_mtx)
+#else
+static CRITICAL_SECTION g_q_cs;
+static LONG g_q_cs_ready = 0;
+static void hotkey_queue_init(void) {
+    if (InterlockedCompareExchange(&g_q_cs_ready, 1, 0) == 0) InitializeCriticalSection(&g_q_cs);
+}
+#define HOTKEY_Q_LOCK() do { hotkey_queue_init(); EnterCriticalSection(&g_q_cs); } while (0)
+#define HOTKEY_Q_UNLOCK() do { hotkey_queue_init(); LeaveCriticalSection(&g_q_cs); } while (0)
+#endif
 static void hotkey_enqueue(HotkeyCallback fn, bool is_toggle) {
-    pthread_mutex_lock(&g_q_mtx);
-    int nxt = (g_pending_tail + 1) % 64;
-    if (nxt != g_pending_head) { g_pending_q[g_pending_tail] = fn; g_pending_toggle[g_pending_tail] = is_toggle; g_pending_tail = nxt; }
-    pthread_mutex_unlock(&g_q_mtx);
+    if (!fn) return;
+    HOTKEY_Q_LOCK();
+    if (g_pending_head == g_pending_tail) {
+        g_pending_head = (g_pending_head + 1) % HOTKEY_PENDING_MAX;
+    }
+    g_pending_q[g_pending_tail] = fn;
+    g_pending_toggle[g_pending_tail] = is_toggle;
+    g_pending_tail = (g_pending_tail + 1) % HOTKEY_PENDING_MAX;
+    HOTKEY_Q_UNLOCK();
 }
 void hotkey_drain_pending(void) {
-    while (1) {
+    for (;;) {
         HotkeyCallback fn = NULL;
         bool is_toggle = false;
-        pthread_mutex_lock(&g_q_mtx);
-        if (g_pending_head != g_pending_tail) { fn = g_pending_q[g_pending_head]; is_toggle = g_pending_toggle[g_pending_head]; g_pending_head = (g_pending_head + 1) % 64; }
-        pthread_mutex_unlock(&g_q_mtx);
+        HOTKEY_Q_LOCK();
+        if (g_pending_head != g_pending_tail) {
+            fn = g_pending_q[g_pending_head];
+            is_toggle = g_pending_toggle[g_pending_head];
+            g_pending_head = (g_pending_head + 1) % HOTKEY_PENDING_MAX;
+        }
+        HOTKEY_Q_UNLOCK();
         if (!fn) break;
         if (is_toggle && !AllowOtherFeatureTogglesInFeature) {
             WindowManager* dwm = WindowManager_Get();
@@ -42,10 +63,6 @@ void hotkey_drain_pending(void) {
         FeatureLoader_Unlock();
     }
 }
-#else
-void hotkey_drain_pending(void) {
-}
-#endif
 
 void hotkey_mark_feature_toggles(HotkeyCallback cb) {
     if (!cb) return;
@@ -161,15 +178,9 @@ bool hotkey_process(int vk_code, int modifiers) {
 
         HotkeyCallback cb = b->hotkey_callback;
         bool blocked = hotkey_toggle_blocked(b);
-#if !defined(_WIN32)
-        if (!blocked) hotkey_enqueue(cb, b->is_feature_toggle);
-#else
         if (blocked) return true;
-        FeatureLoader_Lock();
-        cb();
-        FeatureLoader_Unlock();
-#endif
-        return true; 
+        hotkey_enqueue(cb, b->is_feature_toggle);
+        return true;
     }
 
 
