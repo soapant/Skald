@@ -1,6 +1,7 @@
 #include <stdint.h>
 #include <time.h>
 #include <string.h>
+#include <ctype.h>
 #include "core/context.h"
 #include "deps/log.h"
 #include "config.h"

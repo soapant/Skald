@@ -1,6 +1,7 @@
 #include "platform/ui.h"
 #include "core/window_manager.h"
 #include "core/context.h"
+#include "config.h"
 #include <string.h>
 #include <stdio.h>
 
