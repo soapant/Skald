@@ -81,7 +81,9 @@ char* Platform_PromptUser(WindowManager* wm, const PromptSpec* spec) {
   if (window_list) {
     for (count = 0; count < 8192 && window_list[count]; count++) {}
   }
-  int item_height = 32;
+  int item_height = FontSize + 14;
+  if (item_height < 24) item_height = 24;
+  if (item_height > 64) item_height = 64;
   RefreshCallback refresh_callback = spec->refresh;
   EnterCallback enter_callback = spec->enter;
   CtrlEnterCallback ctrl_enter_callback = spec->ctrl_enter;
