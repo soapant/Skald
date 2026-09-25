@@ -3,6 +3,7 @@
 #include "config.h"
 #include "helpers/helpers_hotkey.h"
 #include "platform/ui.h"
+#include "core/platform.h"
 
 void SubjectiveMessageDisplay(const char* buffer,int msg_height,int timeout,ColorRef color) {
     if (MessagesEnabled) {

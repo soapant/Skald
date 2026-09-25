@@ -11,6 +11,7 @@
 #include "helpers/helpers_alias.h"
 #include "helpers/helpers_ui.h"
 #include <ctype.h>
+#include <stdio.h>
 
 void HandleEnterNormal(FlintContext* ctx) { 
     (void)ctx;

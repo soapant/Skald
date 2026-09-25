@@ -6,6 +6,7 @@
 #include "core/platform.h"
 #include "helpers/helpers_ui.h"
 #include "platform/ui.h"
+#include "core/timer.h"
 #include <math.h>
 #include <windows.h>
 #include <commctrl.h>

@@ -6,22 +6,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include <ctype.h>
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include "core/types.h"
-#include "config.h"
-#include "core/platform.h"
-#include "core/context.h"
-#include "core/modal.h"
-#include "platform/ui.h"
-#include "core/window_manager.h"
-#include "helpers/helpers_hotkey.h"
-#include "core/flapi_input.h"
-#include "helpers/helpers_alias.h"
-#include "helpers/helpers_flag.h"
-#include "helpers/helpers_ui.h"
 
 #define WHITELIST 1
 #define BLACKLIST 0

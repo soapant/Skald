@@ -1,8 +1,6 @@
 #ifndef CONFIG_H
 #define CONFIG_H
-#include <string.h>
 #include <stddef.h>
-#include <wchar.h>
 #include "core/types.h"
 
 #define EDIT_TEXT_KEY       'E'

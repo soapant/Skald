@@ -1,4 +1,9 @@
 #include "core/flapi.h"
+#include "core/context.h"
+#include "helpers/helpers_ui.h"
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
 
 #define CH_FILE "clipboard_history.txt"
 #define CH_MAX_STORED 1000

@@ -2,9 +2,6 @@
 #define HELPERS_HOTKEY_H
 
 #include <stdbool.h>
-#include <string.h>
-#include <stdlib.h>
-#include "core/modal.h"
 #include "core/types.h"
 
 typedef void (*HotkeyCallback)(void);

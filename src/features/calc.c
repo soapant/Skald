@@ -1,4 +1,13 @@
 #include "core/flapi.h"
+#include "config.h"
+#include "core/context.h"
+#include "core/platform.h"
+#include "platform/ui.h"
+#include "core/flapi_input.h"
+#include "helpers/helpers_ui.h"
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 #include <math.h>
 #include <ctype.h>
 

@@ -1,4 +1,8 @@
 #include "core/flapi.h"
+#include "core/context.h"
+#include "helpers/helpers_ui.h"
+#include <stdio.h>
+#include <stdlib.h>
 
 void window_switcher_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
     Fl_WindowList list_of_titles = fl_get_all_window_titles();

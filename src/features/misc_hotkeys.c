@@ -1,4 +1,6 @@
 #include "core/flapi.h"
+#include "config.h"
+#include <stdio.h>
 
 void ShowCurrentTime(void) {
   char* output = fl_run_terminal_command("date");

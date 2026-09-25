@@ -1,4 +1,11 @@
 #include "core/flapi.h"
+#include "config.h"
+#include "core/context.h"
+#include "helpers/helpers_ui.h"
+#include "platform/ui.h"
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 
 #define TODO_FILE_PATH "todo.txt"
 
