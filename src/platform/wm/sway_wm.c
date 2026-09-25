@@ -304,7 +304,19 @@ Fl_WindowList get_window_titles_sway() {
     return list;
 }
 Fl_Pos get_cursor_position_sway(void) { 
-  return (Fl_Pos){0, 0}; 
+  char cmd[200];
+  snprintf(cmd, sizeof(cmd), "%s/external/slurp -p -d ", Platform_GetWorkingDir());
+  
+  char* output = Platform_RunCommandAndGetOutput(cmd);
+
+  char* comma = strchr(output, ',');
+  
+  int x = atoi(output);     
+  int y = atoi(comma + 1); 
+  
+  free(output);
+  
+  return (Fl_Pos){x, y}; 
 }
 
 static int sway_json_depth(const char* base, const char* pos) {
