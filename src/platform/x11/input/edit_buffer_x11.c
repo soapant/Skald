@@ -24,6 +24,7 @@
 #include <string.h>
 #include "core/timer.h"
 #include "platform/draw.h"
+#include "platform/input.h"
 #include "platform/x11/input_x11.h"
 
 void EditBufferBackspace(char* buf, size_t* cursor) {

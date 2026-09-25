@@ -20,9 +20,21 @@
 #include "helpers/helpers_flag.h"
 #include "helpers/helpers_ui.h"
 #include "platform/win32/popup_helpers_win32.h"
+#include "core/prompt_controller.h"
 
 static bool EditPopupWindow_OnKey(HWND hWnd, EditPopupData* data, ListBoxInfo* lb, const PopupKeyEvent* key) {
     int wParam = key->vk;
+    if (PromptController_TryVimMotion(wParam, key->ctrl, key->shift, key->alt)) {
+        WindowManager* wm = WindowManager_Get();
+        Popup* top = wm ? WindowManager_GetTopPopup(wm) : NULL;
+        if (top && top->type == POPUP_EDIT) {
+            WMEditPopupData* e = (WMEditPopupData*)top;
+            if (e->text) SetWindowTextA(hWnd, e->text);
+            SendMessageA(hWnd, EM_SETSEL, (WPARAM)e->cursor, (LPARAM)e->cursor);
+        }
+        InvalidateRect(hWnd, NULL, TRUE);
+        return true;
+    }
     if (wParam == VK_ESCAPE) {
       log_info("Escape pressed");
         data->result = NULL;
