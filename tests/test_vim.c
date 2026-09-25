@@ -4,7 +4,7 @@
 #include "core/modal.h"
 #include "core/vim.h"
 #include "bindings/vim_motions.h"
-#include "platform/x11/input_x11.h"
+#include "platform/input.h"
 
 static FlintContext* vctx(void) { return FlintContext_Get(); }
 

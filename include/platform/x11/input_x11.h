@@ -52,9 +52,6 @@ int x11_keysym_to_windows_vk(KeySym keysym);
 void ReadModifiers(const XEvent* ev, bool* ctrl_pressed, bool* shift_pressed, bool* alt_pressed);
 bool TryVimMotion(int wParam, bool ctrl_pressed, bool shift_pressed, bool alt_pressed);
 
-void EditBufferBackspace(char* buf, size_t* cursor);
-bool EditBufferDeleteChar(char* buf, size_t* cursor);
-
 void HandleCommandExecution(ListBoxInfo* lb, char* string);
 
 #endif

@@ -11,6 +11,7 @@
 #include "core/vim.h"
 #include "core/history.h"
 #include "platform/x11/input_x11.h"
+#include "platform/input.h"
 #include "platform/x11/ui_x11.h"
 #include "platform/draw.h"
 #include "bindings/bindings.h"
