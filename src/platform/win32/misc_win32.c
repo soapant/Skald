@@ -411,15 +411,45 @@ log_info("Platform_ReplaceLineInMappedFile mf=%p line_index=%d new_text='%s'", m
 }
 
 bool Platform_LaunchBrowserAtUrl(char* url, bool new_window) {
-    char command[2048];
-    
-    if (new_window) {
-        snprintf(command, sizeof(command), "start \"\" \"%s\" --new-window \"%s\"",UsedBrowser,url);
-    } else {
-        snprintf(command, sizeof(command), "start \"\" \"%s\"", url);
+    char full_url[2048] = {0};
+    if (!url || !url[0]) full_url[0] = '\0';
+    else if (strstr(url, "://")) snprintf(full_url, sizeof(full_url), "%s", url);
+    else snprintf(full_url, sizeof(full_url), "https://%s", url);
+    if (full_url[0] == '\0') {
+        if (UsedBrowser && UsedBrowser[0]) {
+            char browser_path[MAX_PATH] = {0};
+            char* exe = NULL;
+            if (SearchPathA(NULL, UsedBrowser, ".exe", MAX_PATH, browser_path, NULL) || SearchPathA(NULL, UsedBrowser, NULL, MAX_PATH, browser_path, NULL)) exe = browser_path;
+            else { char with_exe[MAX_PATH]; snprintf(with_exe, sizeof(with_exe), "%s.exe", UsedBrowser); if (SearchPathA(NULL, with_exe, NULL, MAX_PATH, browser_path, NULL)) exe = browser_path; }
+            if (exe && exe[0]) { HINSTANCE r = ShellExecuteA(NULL, "open", exe, NULL, NULL, SW_SHOWNORMAL); if ((intptr_t)r > 32) { log_info("Platform_LaunchBrowserAtUrl via %s (no url)", exe); return true; } }
+            HINSTANCE r2 = ShellExecuteA(NULL, "open", UsedBrowser, NULL, NULL, SW_SHOWNORMAL);
+            if ((intptr_t)r2 > 32) { log_info("Platform_LaunchBrowserAtUrl via UsedBrowser (no url)"); return true; }
+        }
+        HINSTANCE r3 = ShellExecuteA(NULL, "open", "https://www.google.com", NULL, NULL, SW_SHOWNORMAL);
+        if ((intptr_t)r3 > 32) return true;
+        return false;
     }
-    
-log_info("Platform_LaunchBrowserAtUrl url='%s' new_window=%d", url ? url : "", new_window);;
+    if (new_window && UsedBrowser && UsedBrowser[0]) {
+        char browser_path[MAX_PATH] = {0};
+        char* exe = NULL;
+        if (SearchPathA(NULL, UsedBrowser, ".exe", MAX_PATH, browser_path, NULL) || SearchPathA(NULL, UsedBrowser, NULL, MAX_PATH, browser_path, NULL)) exe = browser_path;
+        else { char with_exe[MAX_PATH]; snprintf(with_exe, sizeof(with_exe), "%s.exe", UsedBrowser); if (SearchPathA(NULL, with_exe, NULL, MAX_PATH, browser_path, NULL)) exe = browser_path; }
+        if (exe && exe[0]) {
+            char params[4096];
+            snprintf(params, sizeof(params), "--new-window \"%s\"", full_url);
+            HINSTANCE r = ShellExecuteA(NULL, "open", exe, params, NULL, SW_SHOWNORMAL);
+            if ((intptr_t)r > 32) { log_info("Platform_LaunchBrowserAtUrl via %s new_window url='%s'", exe, full_url); return true; }
+        }
+        char params2[4096];
+        snprintf(params2, sizeof(params2), "--new-window \"%s\"", full_url);
+        HINSTANCE r2 = ShellExecuteA(NULL, "open", UsedBrowser, params2, NULL, SW_SHOWNORMAL);
+        if ((intptr_t)r2 > 32) { log_info("Platform_LaunchBrowserAtUrl via UsedBrowser new_window url='%s'", full_url); return true; }
+    }
+    HINSTANCE r3 = ShellExecuteA(NULL, "open", full_url, NULL, NULL, SW_SHOWNORMAL);
+    if ((intptr_t)r3 > 32) { log_info("Platform_LaunchBrowserAtUrl via default url='%s' new_window=%d", full_url, new_window); return true; }
+    char command[2048];
+    snprintf(command, sizeof(command), "start \"\" \"%s\"", full_url);
+    log_info("Platform_LaunchBrowserAtUrl fallback url='%s' new_window=%d", full_url, new_window);
     return Platform_RunTerminalCommand(command,false);
 }
 
