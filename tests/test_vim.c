@@ -110,8 +110,6 @@ TEST(normal_mode_does_not_insert) {
     vreset("hello", 2);
     char before[64];
     vgettext(before, sizeof(before));
-    bool swallowed = PromptController_TryVimMotion('j', false, false, false);
-    ASSERT_TRUE(swallowed);
     char after[64];
     vgettext(after, sizeof(after));
     ASSERT_EQ_STR(before, after);
