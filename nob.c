@@ -189,7 +189,7 @@ static bool stale_with_dep(const char* src, const char* obj, const char* dep_fil
         if (tok.data[tok.count - 1] == ':') continue; 
 
         char* dep_file = nob_temp_sprintf("%.*s", (int)tok.count, tok.data);
-        if (nob_needs_rebuild1(obj, dep_file) != 0) return true;
+        if (nob_needs_rebuild1(obj, dep_file) != 0) { nob_log(NOB_INFO, "stale %s due to %s", obj, dep_file); return true; }
     }
     return false;
 }
@@ -452,15 +452,12 @@ int main(int argc, char** argv) {
                 const char* src = feature_sources.items[i];
                 const char* so = feature_so_path(src);
                 bool need_so = !nob_file_exists(so) || stale_with_dep(src, so, feature_dep_path(src));
-#if defined(_WIN32)
-                if (nob_file_exists("build/main.lib.a") && nob_needs_rebuild1(so, "build/main.lib.a") != 0) need_so = true;
-#endif
                 if (!need_so) continue;
                 Nob_Cmd fcmd = {0};
                 nob_cc(&fcmd);
                 nob_cc_flags(&fcmd);
 #if defined(_WIN32)
-                nob_cmd_append(&fcmd, CC_FLAGS, "-shared", "-o", so, src, "build/main.lib.a", LINK_FLAGS);
+                nob_cmd_append(&fcmd, CC_FLAGS, "-shared", "-o", so, src, "build/main.lib.a", "-MF", feature_dep_path(src), LINK_FLAGS);
 #else
                 nob_cmd_append(&fcmd, CC_FLAGS, "-fPIC", "-shared", "-o", so, src, "-MF", feature_dep_path(src));
 #endif
@@ -516,15 +513,12 @@ int main(int argc, char** argv) {
             const char* src = feature_sources.items[i];
             const char* so = feature_so_path(src);
             bool need_so = !nob_file_exists(so) || stale_with_dep(src, so, feature_dep_path(src));
-#if defined(_WIN32)
-            if (nob_file_exists("build/main.lib.a") && nob_needs_rebuild1(so, "build/main.lib.a") != 0) need_so = true;
-#endif
             if (!need_so) continue;
             Nob_Cmd fcmd = {0};
             nob_cc(&fcmd);
             nob_cc_flags(&fcmd);
 #if defined(_WIN32)
-            nob_cmd_append(&fcmd, CC_FLAGS, "-shared", "-o", so, src, "build/main.lib.a", LINK_FLAGS);
+            nob_cmd_append(&fcmd, CC_FLAGS, "-shared", "-o", so, src, "build/main.lib.a", "-MF", feature_dep_path(src), LINK_FLAGS);
 #else
             nob_cmd_append(&fcmd, CC_FLAGS, "-fPIC", "-shared", "-o", so, src, "-MF", feature_dep_path(src));
 #endif

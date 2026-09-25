@@ -64,6 +64,7 @@ TEST(image_viewer_open) {
     ASSERT_TRUE(fl_write_temp_file("flinttest.ppm", ppm, sizeof(ppm), img, sizeof(img)));
     char cmd[1024];
     snprintf(cmd, sizeof(cmd), "%s %s", UsedImageViewer, img);
+    printf("%s \n",cmd);
     Platform_LaunchDetached(cmd);
     Fl_WindowList after = {0};
     for (int i = 0; i < 50; i++) {
