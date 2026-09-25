@@ -9,6 +9,10 @@
 #include <stdarg.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#ifdef _WIN32
+#include <windows.h>
+#endif
+#include "core/window_manager.h"
 
 #define CONFIG_SRC "config/config.c"
 #define CONFIG_START_MARK "// <flint-config-generated>"
@@ -47,6 +51,55 @@ static ConfigLib g_cfg_libs[2];
 static int g_cfg_count = 0;
 static int g_cfg_seq = 0;
 
+static char* heap_dup(const char* s) {
+    if (!s) return NULL;
+    size_t n = strlen(s) + 1;
+    char* d = (char*)malloc(n);
+    if (d) memcpy(d, s, n);
+    return d;
+}
+static PathVar* g_heap_path_vars = NULL;
+static AliasEntry* g_heap_aliases = NULL;
+static unsigned int g_heap_path_count = 0;
+static size_t g_heap_alias_count = 0;
+static char *g_heap_used_font = NULL, *g_heap_used_terminal = NULL, *g_heap_used_shell = NULL;
+static char *g_heap_used_browser = NULL, *g_heap_used_imageviewer = NULL, *g_heap_used_videoplayer = NULL;
+static char *g_heap_used_search = NULL, *g_heap_feature_path = NULL, *g_heap_icon_path = NULL;
+static char *g_heap_control_hotkey = NULL, *g_heap_edit_popup_pos = NULL;
+static void heapify_config(void) {
+    char *n_font = heap_dup(UsedFont), *n_term = heap_dup(UsedTerminal), *n_shell = heap_dup(UsedShell);
+    char *n_browser = heap_dup(UsedBrowser), *n_img = heap_dup(UsedImageViewer), *n_vid = heap_dup(UsedVideoPlayer);
+    char *n_search = heap_dup(UsedSearchEngine), *n_feat = heap_dup(FeaturePath), *n_icon = heap_dup(IconPath);
+    char *n_hotk = heap_dup(ControlHotkey), *n_pos = heap_dup(EditPopUpPos);
+    PathVar *n_path = NULL; unsigned n_path_cnt = 0;
+    AliasEntry *n_alias = NULL; size_t n_alias_cnt = 0;
+    if (G_PATH_VARS && PATH_VAR_COUNT) {
+        n_path = (PathVar*)calloc(PATH_VAR_COUNT, sizeof(PathVar));
+        if (n_path) { n_path_cnt = PATH_VAR_COUNT; for (unsigned i=0;i<n_path_cnt;i++){ n_path[i].name=heap_dup(G_PATH_VARS[i].name); n_path[i].win32_value=heap_dup(G_PATH_VARS[i].win32_value); n_path[i].linux_value=heap_dup(G_PATH_VARS[i].linux_value); } }
+    }
+    if (Aliases && ALIAS_ENTRY_COUNT) {
+        n_alias = (AliasEntry*)calloc(ALIAS_ENTRY_COUNT, sizeof(AliasEntry));
+        if (n_alias) { n_alias_cnt = ALIAS_ENTRY_COUNT; for (size_t i=0;i<n_alias_cnt;i++){ n_alias[i].alias=heap_dup(Aliases[i].alias); n_alias[i].text=heap_dup(Aliases[i].text); n_alias[i].feature=heap_dup(Aliases[i].feature); } }
+    }
+    char *old_font=g_heap_used_font, *old_term=g_heap_used_terminal, *old_shell=g_heap_used_shell, *old_browser=g_heap_used_browser, *old_img=g_heap_used_imageviewer, *old_vid=g_heap_used_videoplayer, *old_search=g_heap_used_search, *old_feat=g_heap_feature_path, *old_icon=g_heap_icon_path, *old_hotk=g_heap_control_hotkey, *old_pos=g_heap_edit_popup_pos;
+    PathVar *old_path=g_heap_path_vars; unsigned old_path_cnt=g_heap_path_count;
+    AliasEntry *old_alias=g_heap_aliases; size_t old_alias_cnt=g_heap_alias_count;
+    if (n_font) { UsedFont=n_font; g_heap_used_font=n_font; } else g_heap_used_font=old_font, old_font=NULL;
+    if (n_term) { UsedTerminal=n_term; g_heap_used_terminal=n_term; } else g_heap_used_terminal=old_term, old_term=NULL;
+    if (n_shell) { UsedShell=n_shell; g_heap_used_shell=n_shell; } else g_heap_used_shell=old_shell, old_shell=NULL;
+    if (n_browser) { UsedBrowser=n_browser; g_heap_used_browser=n_browser; } else g_heap_used_browser=old_browser, old_browser=NULL;
+    if (n_img) { UsedImageViewer=n_img; g_heap_used_imageviewer=n_img; } else g_heap_used_imageviewer=old_img, old_img=NULL;
+    if (n_vid) { UsedVideoPlayer=n_vid; g_heap_used_videoplayer=n_vid; } else g_heap_used_videoplayer=old_vid, old_vid=NULL;
+    if (n_search) { UsedSearchEngine=n_search; g_heap_used_search=n_search; } else g_heap_used_search=old_search, old_search=NULL;
+    if (n_feat) { FeaturePath=n_feat; g_heap_feature_path=n_feat; } else g_heap_feature_path=old_feat, old_feat=NULL;
+    if (n_icon) { IconPath=n_icon; g_heap_icon_path=n_icon; } else g_heap_icon_path=old_icon, old_icon=NULL;
+    if (n_hotk) { ControlHotkey=n_hotk; g_heap_control_hotkey=n_hotk; } else g_heap_control_hotkey=old_hotk, old_hotk=NULL;
+    if (n_pos) { EditPopUpPos=n_pos; g_heap_edit_popup_pos=n_pos; } else g_heap_edit_popup_pos=old_pos, old_pos=NULL;
+    if (n_path) { G_PATH_VARS=n_path; g_heap_path_vars=n_path; g_heap_path_count=n_path_cnt; } else { g_heap_path_vars=old_path; g_heap_path_count=old_path_cnt; old_path=NULL; }
+    if (n_alias) { Aliases=n_alias; g_heap_aliases=n_alias; g_heap_alias_count=n_alias_cnt; } else { g_heap_aliases=old_alias; g_heap_alias_count=old_alias_cnt; old_alias=NULL; }
+    (void)old_font; (void)old_term; (void)old_shell; (void)old_browser; (void)old_img; (void)old_vid; (void)old_search; (void)old_feat; (void)old_icon; (void)old_hotk; (void)old_pos;
+    (void)old_path; (void)old_alias;
+}
 static bool config_load_copy(const char* uniq, LibHandle* out) {
     LibHandle h = Platform_LoadLibrary(uniq);
     if (!h) {
@@ -61,6 +114,7 @@ static bool config_load_copy(const char* uniq, LibHandle* out) {
         return false;
     }
     apply();
+    heapify_config();
     *out = h;
     return true;
 }
@@ -103,9 +157,19 @@ bool Config_Load(void) {
     return true;
 }
 
+static long long g_cfg_last_reload_ms = 0;
+static volatile LONG g_cfg_reload_lock = 0;
 bool Config_Reload(void) {
-    if (!config_build_load_store()) return false;
-    FeatureLoader_ReloadAll();
+    WindowManager* _wm2 = WindowManager_Get();
+    if (_wm2 && _wm2->popup_count > 0) return false;
+    if (InterlockedCompareExchange(&g_cfg_reload_lock, 1, 0) != 0) return false;
+    long long now = Platform_GetWallClockMs();
+    long long debounce = (long long)TimeBetweenHotReload * 1000;
+    if (debounce < 800) debounce = 1000;
+    if (g_cfg_last_reload_ms && now - g_cfg_last_reload_ms < debounce) { InterlockedExchange(&g_cfg_reload_lock, 0); return false; }
+    if (!config_build_load_store()) { InterlockedExchange(&g_cfg_reload_lock, 0); return false; }
+    g_cfg_last_reload_ms = Platform_GetWallClockMs();
+    InterlockedExchange(&g_cfg_reload_lock, 0);
     return true;
 }
 
@@ -291,7 +355,12 @@ void Config_Save(void) {
     if (fclose(out) != 0) ok = false;
     free(orig);
     if (!ok) { remove(tmp); log_error("config write failed"); return; }
+#ifdef _WIN32
+    remove(CONFIG_SRC);
+    if (!MoveFileExA(tmp, CONFIG_SRC, MOVEFILE_REPLACE_EXISTING)) { remove(tmp); log_error("config rename failed %lu", GetLastError()); return; }
+#else
     if (rename(tmp, CONFIG_SRC) != 0) { remove(tmp); log_error("config rename failed"); return; }
+#endif
     struct stat st;
     if (stat(CONFIG_SRC, &st) == 0) {
         g_cfg_saved_mtime = (long long)st.st_mtime;
@@ -326,7 +395,19 @@ void Config_PollWatcher(void) {
         return;
     }
     if (g_cfg_change_at == 0) return;
-    if (Platform_GetWallClockMs() - g_cfg_change_at < 1000) return;
+    long long debounce = (long long)TimeBetweenHotReload * 1000;
+    if (debounce < 800) debounce = 1000;
+    if (Platform_GetWallClockMs() - g_cfg_change_at < debounce) return;
+    if (g_cfg_last_reload_ms && Platform_GetWallClockMs() - g_cfg_last_reload_ms < debounce) return;
+    WindowManager* _wm = WindowManager_Get();
+    if (_wm && _wm->popup_count > 0) { g_cfg_change_at = Platform_GetWallClockMs(); return; }
     g_cfg_change_at = 0;
+#ifdef _WIN32
+    HWND tray = NULL;
+    if (FlintContext_Get()) tray = WH_TO_HWND(FlintContext_Get()->window.hGlobalTrayWnd);
+    if (tray && IsWindow(tray)) { PostMessageA(tray, WM_APP + 0x42, 0, 0); }
+    else Config_Reload();
+#else
     Config_Reload();
+#endif
 }
