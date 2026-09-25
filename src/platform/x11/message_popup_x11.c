@@ -7,7 +7,10 @@
 #include <X11/Xatom.h>
 #include <X11/Xft/Xft.h>
 #include "platform/x11/display_x11.h"
+#include "platform/x11/drawing_x11.h"
 #include "platform/x11/window_factory_x11.h"
+#include "core/platform.h"
+#include "helpers/helpers_ui.h"
 #include "core/timer.h"
 #include "platform/wm_platform.h"
 #include "config.h"
