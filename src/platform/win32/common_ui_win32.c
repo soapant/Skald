@@ -69,10 +69,12 @@ static COLORREF DeriveLighterWin(COLORREF base, float intensity) {
   float f = ShaderIntensity;
   if (f < 0) f = 0; if (f > 1) f = 1;
   float eff = f * intensity;
+  if (eff < 0.25f) eff = 0.25f;
+  if (eff > 1) eff = 1;
   BYTE r = GetRValue(base), g = GetGValue(base), b = GetBValue(base);
-  BYTE nr = (BYTE)(r + (90 - r) * eff + 35 * eff + 0.5f);
-  BYTE ng = (BYTE)(g + (90 - g) * eff + 35 * eff + 0.5f);
-  BYTE nb = (BYTE)(b + (140 - b) * eff + 40 * eff + 0.5f);
+  BYTE nr = (BYTE)(r + (110 - r) * eff + 0.5f);
+  BYTE ng = (BYTE)(g + (110 - g) * eff + 0.5f);
+  BYTE nb = (BYTE)(b + (160 - b) * eff + 0.5f);
   if (nr > 255) nr = 255; if (ng > 255) ng = 255; if (nb > 255) nb = 255;
   return RGB(nr, ng, nb);
 }
