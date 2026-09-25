@@ -8,7 +8,7 @@
 #include "platform/ui.h"
 #include "platform/win32/subclasses_win32.h"
 #include "wingdi.h"
-#include "core/platform.h"
+#include "platform/platform.h"
 #include "platform/win32/win32_state.h"
 
 LRESULT CALLBACK DisplayMessageProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {

@@ -6,7 +6,7 @@
 #include "core/vim.h"
 #include "core/window_manager.h"
 #include "config.h"
-#include "core/platform.h"
+#include "platform/platform.h"
 #include "helpers/helpers_hotkey.h"
 #include "helpers/helpers_alias.h"
 #include "helpers/helpers_ui.h"

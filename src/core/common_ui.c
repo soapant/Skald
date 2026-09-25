@@ -1,13 +1,13 @@
-﻿#include "core/context.h"
+#include "core/context.h"
 #include "deps/log.h"
 #include "core/modal.h"
 #include "config.h"
-#include "core/platform.h"
+#include "platform/platform.h"
 #include "helpers/helpers_alias.h"
 #include "helpers/helpers_ui.h"
 #include "platform/ui.h"
 #include "core/vim.h"
-#include "core/platform.h"
+#include "platform/platform.h"
 #include "core/timer.h"
 #if !defined(_WIN32)
 #include <strings.h>

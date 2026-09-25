@@ -1,7 +1,7 @@
 #ifndef NIRI_WM_H
 #define NIRI_WM_H
 #include <stdbool.h>
-#include "core/platform.h"
+#include "platform/platform.h"
 #include "core/types.h"
 bool niri_is_active(void);
 bool get_title_niri(char *buffer, int buffer_size);

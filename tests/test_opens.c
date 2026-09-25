@@ -4,9 +4,9 @@
 #include <string.h>
 #include "config.h"
 #include "core/context.h"
-#include "core/platform.h"
+#include "platform/platform.h"
 #include "core/flapi.h"
-#include "core/flapi_platform.h"
+#include "platform/flapi_platform.h"
 #include "core/remap_manager.h"
 
 TEST(terminal_open) {

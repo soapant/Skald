@@ -1,6 +1,6 @@
 #include "wm/hyprland_wm.h"
 #include "deps/log.h"
-#include "core/platform.h"
+#include "platform/platform.h"
 #include "helpers/helpers_text.h"
 #include <stddef.h>
 #include <stdio.h>

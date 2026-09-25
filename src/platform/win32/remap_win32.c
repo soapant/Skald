@@ -1,4 +1,4 @@
-#include "core/platform.h"
+#include "platform/platform.h"
 #include "deps/log.h"
 #include <windows.h>
 

@@ -6,7 +6,7 @@
 #include "core/remap_manager.h"
 #include "core/snippet_manager.h"
 #include "config.h"
-#include "core/platform.h"
+#include "platform/platform.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

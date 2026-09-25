@@ -8,7 +8,7 @@
 #include <sys/time.h>
 #include "core/timer.h"
 #include "platform/draw.h"
-#include "core/flapi_platform.h"
+#include "platform/flapi_platform.h"
 #include "platform/x11/drawing_x11.h"
 
 void DrawPromptUserEditControlOnDraw(Display *dpy, XftDraw* xd, Visual* vis, Colormap cmap, PromptState *state) {

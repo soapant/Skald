@@ -3,7 +3,7 @@
 #include "core/context.h"
 #include "deps/log.h"
 #include "config.h"
-#include "core/platform.h"
+#include "platform/platform.h"
 #include "core/feature_data.h"
 #include "core/feature_loader.h"
 #include "core/window_manager.h"
