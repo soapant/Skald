@@ -1,6 +1,7 @@
 #include "config.h"
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include "core/platform.h"
 
@@ -18,6 +19,7 @@ static void config_resolve_one(const char** var, DefaultAppKind kind) {
         char* copy = strdup(id);
         if (copy) *var = copy;
     }
+    printf("Got App %s \n",id);
 }
 
 void Config_ResolveDefaultApps(void) {

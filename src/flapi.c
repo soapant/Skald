@@ -898,10 +898,6 @@ bool fl_toggle_minimized_active(void) {
   return Platform_MinimizeActiveWindow();
 }
 
-const char* fl_get_default_app(DefaultAppKind kind) {
-  return Platform_GetDefaultApp(kind);
-}
-
 bool fl_open_image(char* image_path) {
   if (!image_path || !image_path[0]) return false;
   char cmd[1024];
