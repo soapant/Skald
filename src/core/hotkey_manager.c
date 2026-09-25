@@ -1,5 +1,5 @@
 #include "config.h"
-#include "core/platform.h"
+#include "platform/platform.h"
 #include "core/feature_loader.h"
 #include "core/window_manager.h"
 #include "deps/log.h"
@@ -8,7 +8,7 @@
 #if !defined(_WIN32)
 #include <pthread.h>
 #endif
-#include "core/platform.h"
+#include "platform/platform.h"
 
 static HotkeyBinding* g_hotkeys = NULL;
 static int g_hotkey_count = 0;

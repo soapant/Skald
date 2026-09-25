@@ -1,4 +1,4 @@
-#include "core/platform.h"
+#include "platform/platform.h"
 #include "platform/lib.h"
 #include "config.h"
 #include "core/theme.h"

@@ -1,4 +1,4 @@
-#include "core/platform.h"
+#include "platform/platform.h"
 #include "platform/x11/input_x11.h"
 #include "platform/x11/display_x11.h"
 #include "deps/log.h"

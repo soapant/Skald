@@ -1,7 +1,7 @@
 #ifndef X11_WM_H
 #define X11_WM_H
 #include <stdbool.h>
-#include "core/platform.h"
+#include "platform/platform.h"
 #include "core/types.h"
 bool get_title_x11(char *buffer, int buffer_size);
 bool get_app_id_x11(char *buffer, int buffer_size);

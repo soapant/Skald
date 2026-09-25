@@ -19,10 +19,10 @@
 #include <sys/un.h>
 #include <glob.h>
 #include <png.h>
-#include "core/platform.h"
+#include "platform/platform.h"
 #include "config.h"
 #include "config.h"
-#include "core/platform.h"
+#include "platform/platform.h"
 #include "helpers/helpers_hotkey.h"
 #include "core/context.h"
 #include <stdio.h>

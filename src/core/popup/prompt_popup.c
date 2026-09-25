@@ -1,7 +1,7 @@
 #include "core/context.h"
 #include "core/modal.h"
 #include "core/window_manager.h"
-#include "core/platform.h"
+#include "platform/platform.h"
 #include "core/feature_data.h"
 #include "config.h"
 #include "core/history.h"
