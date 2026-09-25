@@ -1,17 +1,12 @@
 #ifndef CORE_TIMER_H
 #define CORE_TIMER_H
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <signal.h>
 #if defined(_WIN32)
 #include <windows.h>
 #else
 #include <time.h>
 #endif
 #include "core/types.h"
-#include "config.h"
 
 #define TIMER_LOG_CAP 65536
 

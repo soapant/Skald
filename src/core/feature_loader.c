@@ -8,6 +8,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include "core/timer.h"
+#include "config.h"
 #include "core/window_manager.h"
 #ifdef _WIN32
 #include <windows.h>

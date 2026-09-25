@@ -3,7 +3,6 @@
 
 #include <stdbool.h>
 #include <stdint.h>
-#include <string.h>
 
 #define MAX_VISIBLE_ITEMS 10000
 #define MAX_SEQUENCE_LEN 8
