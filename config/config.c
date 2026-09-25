@@ -41,11 +41,11 @@ void ConfigApply(void) {
     MaxFeatures = 1000;
     VimFontSize = 18;
     PaddingForScrolling = 3;
-    UsedTerminal = "alacritty";
+    UsedTerminal = "";
     UsedShell = "nu";
     UsedBrowser = "zen";
-    UsedImageViewer = "mspaint";
-    UsedVideoPlayer = "mpv";
+    UsedImageViewer = "";
+    UsedVideoPlayer = "";
     UsedSearchEngine = "google";
     FeaturePath = "src/features";
     IconPath = "{MISC}/switch_window.ico";
