@@ -14,7 +14,7 @@ bool RoundedCorners = true;
 int CornerRadius = 14;
 bool EnableShaders = true;
 int ShaderPreset = 1;
-float ShaderIntensity = 0.001f;
+float ShaderIntensity = 0.55f;
 int TimeBetweenHotReload = 2;
 float WindowOpacity = 235.0;
 
@@ -37,6 +37,7 @@ const char* UsedSearchEngine = "google";
 const char* FeaturePath = "src/features";
 const char* IconPath = "{MISC}/switch_window.ico";
 const char* ControlHotkey = "Alt+Space";
+const char* Theme = "rose-pine";
 
 static const PathVar default_path_vars[] = {
     {"DEV",          "D:\\Projects",                    "/home/diggy/Programming/Projects"},
@@ -60,11 +61,11 @@ int GradientItems = 30;
 float GradientBrightness = 1.0f;
 bool CloseOnLossOfFocus = false;
 
-ColorRef COLOR_BG = RGB(25,22,36);
+ColorRef COLOR_BG = RGB(40, 40, 40);
 ColorRef COLOR_TEXT = RGB(255, 255, 255);
 ColorRef COLOR_ALTERNATE = RGB(57, 255, 20);
-ColorRef COLOR_SELECTED_TEXT = RGB(19,21,23);
-ColorRef COLOR_CURSOR = RGB(82,79,103);
+ColorRef COLOR_SELECTED_TEXT = RGB(0, 0, 0);
+ColorRef COLOR_CURSOR = RGB(255, 255, 255);
 ColorRef COLOR_ALIAS_TEXT = RGB(255, 255, 255);
 ColorRef COLOR_ERROR = RGB(180, 0, 0);
 ColorRef COLOR_NORMAL = RGB(200, 200, 0);
