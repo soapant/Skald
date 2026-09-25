@@ -270,4 +270,39 @@ void Platform_DismissIndefiniteMessage(void) {
     if (!g_msg_indefinite || g_msg_win == None) return;
     Platform_DismissMessage();
 }
+
+bool Platform_MessagePopupShowWindow(Popup* self, int x, int y, int w, int h) {
+    (void)self;
+    (void)x;
+    (void)y;
+    (void)w;
+    (void)h;
+    PROFILE_START(timer);
+    PROFILE_END_VAR(timer, "window_manager:Platform_MessagePopupShowWindow");
+    return true;
+}
+
+void Platform_MessagePopupHideWindow(Popup* self) {
+    (void)self;
+    PROFILE_START(timer);
+    PROFILE_END_VAR(timer, "window_manager:Platform_MessagePopupHideWindow");
+}
+
+void Platform_MessagePopupRender(Popup* self) {
+    (void)self;
+    PROFILE_START(timer);
+    PROFILE_END_VAR(timer, "window_manager:Platform_MessagePopupRender");
+}
+
+void Platform_MessagePopupDestroyWindow(Popup* self) {
+    (void)self;
+    PROFILE_START(timer);
+    PROFILE_END_VAR(timer, "window_manager:Platform_MessagePopupDestroyWindow");
+}
+
+bool Platform_MessagePopupOnKey(Popup* self, const PopupKeyEvent* key) {
+    (void)self;
+    (void)key;
+    return false;
+}
 #endif
