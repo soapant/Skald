@@ -309,13 +309,23 @@ int Platform_CollectRunningProcesses(char process_list[][128], int max_count) {
 }
 
 bool Platform_TerminateProcessByName(const char* exe_name) {
-    if (!exe_name || !*exe_name) { log_error("operation failed, returning error exe_name='%s'", exe_name ? exe_name : "null"); return false; }
+    if (!exe_name || !*exe_name) {
+        log_error("operation failed, returning error exe_name='%s'", exe_name ? exe_name : "null");
+        return false;
+    }
+
     char cmd[512];
-    char *ext = strrchr(exe_name, '.');
-    if (!ext) strcat(exe_name,".exe");
-    snprintf(cmd, sizeof(cmd), "taskkill /f /im \"%s*\"", exe_name);
+    const char *ext = strrchr(exe_name, '.');
+    
+    if (!ext) {
+        snprintf(cmd, sizeof(cmd), "taskkill /f /im \"%s.exe*\"", exe_name);
+    } else {
+        snprintf(cmd, sizeof(cmd), "taskkill /f /im \"%s*\"", exe_name);
+    }
+
     Platform_RunTerminalCommand(cmd, false);
-log_info("Platform_TerminateProcessByName exe_name='%s'", exe_name ? exe_name : "");;
+    log_info("Platform_TerminateProcessByName exe_name='%s'", exe_name);
+    
     return true;
 }
 
