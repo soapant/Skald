@@ -191,14 +191,6 @@ static void win32_ensure_gradient_cache(win32_gradient_cache* c, HDC refDC, int 
   c->w = containerW; c->h = containerH;
   c->base = base; c->preset = preset;
   c->gamma = gamma; c->intensity = intensity;
-  {
-    uint32_t p0 = pixels[0];
-    uint32_t pN = pixels[(containerH - 1) * containerW];
-    log_info("[shader] gen preset=%d %dx%d base=%06X light=%06X gamma=%.3f row0=%02X%02X%02X rowN=%02X%02X%02X",
-             preset, containerW, containerH, (unsigned)base, (unsigned)light, gamma,
-             (p0 >> 16) & 0xFF, (p0 >> 8) & 0xFF, p0 & 0xFF,
-             (pN >> 16) & 0xFF, (pN >> 8) & 0xFF, pN & 0xFF);
-  }
 }
 
 static void win32_draw_gradient_dib(HDC hdc, RECT* rc, COLORREF base, int preset, int containerW, int containerH, int offsetX, int offsetY) {
