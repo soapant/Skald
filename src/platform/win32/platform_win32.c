@@ -1236,25 +1236,48 @@ void Platform_InitMainThreadContext(void) {
     g_win32_main_thread_id = GetCurrentThreadId();
 }
 
+static int win32_dir_exists(const char* path) {
+    DWORD attr = GetFileAttributesA(path);
+    return attr != INVALID_FILE_ATTRIBUTES && (attr & FILE_ATTRIBUTE_DIRECTORY);
+}
+
+static int win32_is_project_root(const char* dir) {
+    char probe[MAX_PATH];
+    snprintf(probe, sizeof(probe), "%s\\config", dir);
+    if (!win32_dir_exists(probe)) return 0;
+    snprintf(probe, sizeof(probe), "%s\\build", dir);
+    if (!win32_dir_exists(probe)) return 0;
+    return 1;
+}
+
 void Platform_FixWorkingDirectory(void) {
     char buf[MAX_PATH];
     DWORD len = GetModuleFileNameA(NULL, buf, MAX_PATH);
-    if (len > 0 && len < MAX_PATH) {
-        char* slash = strrchr(buf, '\\');
-        if (slash) *slash = '\0';
-        for (int depth = 0; depth < 4; ++depth) {
-            char probe[MAX_PATH];
-            snprintf(probe, sizeof(probe), "%s\\data", buf);
-            DWORD attr = GetFileAttributesA(probe);
-            if (attr != INVALID_FILE_ATTRIBUTES && (attr & FILE_ATTRIBUTE_DIRECTORY)) {
-                SetCurrentDirectoryA(buf);
-                break;
-            }
-            slash = strrchr(buf, '\\');
-            if (!slash) break;
-            *slash = '\0';
+    if (len == 0 || len >= MAX_PATH) return;
+    char* slash = strrchr(buf, '\\');
+    if (slash) *slash = '\0';
+    char exe_dir[MAX_PATH];
+    snprintf(exe_dir, sizeof(exe_dir), "%s", buf);
+
+    for (int depth = 0; depth < 6; ++depth) {
+        char probe[MAX_PATH];
+        snprintf(probe, sizeof(probe), "%s\\data", buf);
+        if (win32_dir_exists(probe) || win32_is_project_root(buf)) {
+            if (SetCurrentDirectoryA(buf)) return;
         }
+        slash = strrchr(buf, '\\');
+        if (!slash) break;
+        *slash = '\0';
     }
+
+    char cwd[MAX_PATH];
+    DWORD cwd_len = GetCurrentDirectoryA(sizeof(cwd), cwd);
+    if (cwd_len == 0 || cwd_len >= MAX_PATH || !win32_is_project_root(cwd)) {
+        log_warn("could not locate project root from '%s', staying in '%s'", exe_dir, cwd);
+        SetCurrentDirectoryA(exe_dir);
+    }
+    GetCurrentDirectoryA(sizeof(cwd), cwd);
+    log_info("Platform_FixWorkingDirectory cwd='%s'", cwd);
 }
 
 void Platform_CleanupPlatformResources(void) {
