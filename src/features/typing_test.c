@@ -138,7 +138,7 @@ void typing_test_render(PromptState *state) {
     }
 
     FlCharPos positions[1000];
-    fl_measure_text_wrapped(.x=0, .y=cy, .max_width=state->width, .line_height=line_height, .fontsize=fontsize, .text=text, .out_positions=positions);
+    fl_measure_text_wrapped(.x=0, .y=cy, .max_width=state->width, .line_height=line_height, .fontsize=fontsize + 20, .text=text, .out_positions=positions);
 
     for (int i = 0; i < text_len; i++) {
         unsigned long col;
@@ -150,7 +150,7 @@ void typing_test_render(PromptState *state) {
             col = RGB(255, 255, 255);
         }
         char single[2] = { text[i], '\0' };
-        fl_draw_text(.x = positions[i].x, .y = positions[i].y, .fontsize = fontsize,
+        fl_draw_text(.x = positions[i].x, .y = positions[i].y, .fontsize = fontsize + 20,
                       .align = "Left", .text = single, .color = col);
     }
 
@@ -171,15 +171,15 @@ void typing_test_render(PromptState *state) {
 
             snprintf(typing_test_wpm,sizeof(typing_test_wpm),"WPM: %.2f",wpm);
         }
-        fl_draw_text(.y=500,.text=typing_test_wpm,.fontsize=fontsize);
+        fl_draw_text(.y=600,.x=140,.text=typing_test_wpm,.fontsize=fontsize + 10,.align="Center");
     }
-    fl_draw_text(.x = 250,.y=600,.text="Press Enter to restart",.fontsize=fontsize - 8,.color=RGB(180,180,180));
-    fl_draw_text(.x = -250,.y=600,.text="Press Escape to exit",.fontsize=fontsize - 8,.color=RGB(180,180,180));
-    fl_draw_text(.y=0,.text="Typing Speed Test",.fontsize=fontsize - 8,.color=RGB(210,210,210));
+    fl_draw_text(.x = 550,.y=700,.text="Press Enter to restart",.fontsize=fontsize,.color=RGB(180,180,180),.align="Center");
+    fl_draw_text(.x = -230,.y=700,.text="Press Escape to exit",.fontsize=fontsize,.color=RGB(180,180,180),.align="Center");
+    fl_draw_text(.y=0,.x=150,.text="Typing Speed Test",.fontsize=fontsize,.color=RGB(210,210,210),.align="Center");
     if (draw_cursor) {
       fl_draw_rect(.x = positions[typing_test_position].x,
-                   .y = positions[typing_test_position].y + 6,
-                   .w = 1, .h = fontsize);
+                   .y = positions[typing_test_position].y + fontsize/3,
+                   .w = 1, .h = fontsize + 20);
     }
 }
 
