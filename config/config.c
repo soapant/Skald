@@ -23,13 +23,13 @@ void ConfigApply(void) {
     AllowOtherFeatureTogglesInFeature = false;
     ModePersistsThroughFeatures = false;
     TimeOutForMessages = 1;
-    DoTimeDebugs = false;
+    DoTimeDebugs = true;
     DebugMode = false;
     RoundedCorners = true;
     CornerRadius = 14;
     EnableShaders = true;
     ShaderPreset = 1;
-    ShaderIntensity = 0.1f;
+    ShaderIntensity = 0.2f;
     TimeBetweenHotReload = 2;
     WindowOpacity = 235.0f;
     EditPopUpPos = "middle";

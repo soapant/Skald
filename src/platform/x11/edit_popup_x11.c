@@ -43,21 +43,21 @@ void Platform_EditPopupShowWindow(Popup* self) {
         XSetInputFocus(dpy, self->handle.xid, RevertToParent, CurrentTime);
         XSync(dpy, False);
         XSetErrorHandler(old);
-        for (int _f = 0; _f < 4; _f++) {
+        for (int _f = 0; _f < 2; _f++) {
             Window _fw = None;
             int _rev = 0;
             XGetInputFocus(dpy, &_fw, &_rev);
             if (_fw == self->handle.xid) break;
-            struct timespec _ts = {0, 50 * 1000 * 1000};
-            nanosleep(&_ts, NULL);
             old = XSetErrorHandler(x11_error_handler);
             XSetInputFocus(dpy, self->handle.xid, RevertToParent, CurrentTime);
             XSync(dpy, False);
             XSetErrorHandler(old);
         }
         char* _nm = NULL;
-        if (XFetchName(dpy, self->handle.xid, &_nm) && _nm && _nm[0]) {
-            Wm_FocusByTitle(_nm);
+        if (XFetchName(dpy, self->handle.xid, &_nm) && _nm) {
+            if (!x11_is_own_window_name(_nm)) {
+                Wm_FocusByTitle(_nm);
+            }
             XFree(_nm);
         }
     }

@@ -39,36 +39,36 @@ bool Platform_PromptPopupShowWindow(Popup* self, int x, int y, int w, int h) {
     self->handle.xid = x11_create_prompt_window(dpy, x, y, w, h);
     XSelectInput(dpy, self->handle.xid, KeyPressMask | ExposureMask | FocusChangeMask);
     XMapWindow(dpy, self->handle.xid);
-    XFlush(dpy);
     XSync(dpy, False);
-    for (int _r = 0; _r < 20; _r++) {
+    {
         XWindowAttributes _a;
-        if (XGetWindowAttributes(dpy, self->handle.xid, &_a) && _a.map_state == IsViewable) {
-            log_info("prompt mapped req=(%d,%d %dx%d) actual=(%d,%d %dx%d) tries=%d", x, y, w, h, _a.x, _a.y, _a.width, _a.height, _r);
-            break;
+        if (XGetWindowAttributes(dpy, self->handle.xid, &_a)) {
+            log_info("prompt mapped req=(%d,%d %dx%d) actual=(%d,%d %dx%d) state=%d", x, y, w, h, _a.x, _a.y, _a.width, _a.height, (int)_a.map_state);
+        } else {
+            log_info("prompt mapped req=(%d,%d %dx%d) actual=unknown", x, y, w, h);
         }
-        XSync(dpy, False);
     }
     {
         int (*old)(Display*, XErrorEvent*) = XSetErrorHandler(x11_error_handler);
         XSetInputFocus(dpy, self->handle.xid, RevertToParent, CurrentTime);
         XSync(dpy, False);
         XSetErrorHandler(old);
-        for (int _f = 0; _f < 4; _f++) {
-            Window _fw = None;
-            int _rev = 0;
-            XGetInputFocus(dpy, &_fw, &_rev);
-            if (_fw == self->handle.xid) break;
-            struct timespec _ts = {0, 50 * 1000 * 1000};
-            nanosleep(&_ts, NULL);
+        Window _fw = None;
+        int _rev = 0;
+        XGetInputFocus(dpy, &_fw, &_rev);
+        if (_fw != self->handle.xid) {
             old = XSetErrorHandler(x11_error_handler);
             XSetInputFocus(dpy, self->handle.xid, RevertToParent, CurrentTime);
             XSync(dpy, False);
             XSetErrorHandler(old);
+            XGetInputFocus(dpy, &_fw, &_rev);
         }
+        log_info("prompt focus win=%lu want=%lu ok=%d", (unsigned long)_fw, (unsigned long)self->handle.xid, _fw == self->handle.xid);
         char* _nm = NULL;
-        if (XFetchName(dpy, self->handle.xid, &_nm) && _nm && _nm[0]) {
-            Wm_FocusByTitle(_nm);
+        if (XFetchName(dpy, self->handle.xid, &_nm) && _nm) {
+            if (!x11_is_own_window_name(_nm)) {
+                Wm_FocusByTitle(_nm);
+            }
             XFree(_nm);
         }
     }
@@ -98,7 +98,10 @@ void Platform_PromptPopupRender(Popup* self) {
 void Platform_PromptPopupDestroyWindow(Popup* self) {
     PROFILE_START(timer);
     Display* dpy = get_display();
-    if (dpy) XDestroyWindow(dpy, self->handle.xid);
+    if (dpy) {
+        x11_release_prompt_buffer(dpy, self->handle.xid);
+        XDestroyWindow(dpy, self->handle.xid);
+    }
     PROFILE_END_VAR(timer, "window_manager:Platform_PromptPopupDestroyWindow");
 }
 

@@ -30,6 +30,8 @@ void x11_draw_selection_background(Display* dpy, XftDraw* xd, Visual* vis, Color
 Pixmap x11_get_cached_background(Display* dpy, Window win, int w, int h);
 void x11_draw_background_to_drawable(Display* dpy, Drawable drw, int w, int h);
 void x11_free_cached_background(void);
+void x11_release_prompt_buffer(Display* dpy, Window win);
+bool x11_is_own_window_name(const char* name);
 
 /* FontSize is the Xft em size, NOT a pixel line height. The real line box is
    ascent+descent, which is ~1.6x larger. Any vertical layout must use these
