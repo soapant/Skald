@@ -28,6 +28,20 @@ bool g_x11_suppress_release[KEY_MAX + 1] = {0};
 static long g_x11_suppress_ms[KEY_MAX + 1] = {0};
 bool g_x11_device_grabbed[X11_MAX_KEYBOARDS] = {0};
 
+#define X11_REJECTED_MAX 128
+static int g_x11_rejected_fds[X11_REJECTED_MAX];
+static int g_x11_rejected_count = 0;
+
+static void x11_release_rejected_devices(void) {
+    for (int i = 0; i < g_x11_rejected_count; i++) {
+        if (g_x11_rejected_fds[i] >= 0) {
+            close(g_x11_rejected_fds[i]);
+            g_x11_rejected_fds[i] = -1;
+        }
+    }
+    g_x11_rejected_count = 0;
+}
+
 bool g_x11_ctrl_held = false;
 bool g_x11_alt_held = false;
 bool g_x11_shift_held = false;
@@ -98,6 +112,7 @@ static void x11_force_cleanup(void) {
             g_x11_keyboards[i].fd = -1;
         }
     }
+    x11_release_rejected_devices();
 }
 
 static void x11_atexit_handler(void) {
@@ -179,6 +194,7 @@ void x11_uinput_emit(const struct input_event *ev) {
 void x11_scan_keyboards(void) {
     PROFILE_START(timer);
     x11_install_cleanup_handlers();
+    x11_release_rejected_devices();
     DIR *dir = opendir("/dev/input");
     if (!dir) { PROFILE_END_VAR(timer, "input:x11_scan_keyboards"); return; }
     struct dirent *entry;
@@ -191,38 +207,40 @@ void x11_scan_keyboards(void) {
             unsigned long keybits[(KEY_MAX/8+sizeof(unsigned long)-1)/sizeof(unsigned long)+1] = {0};
             struct input_id id;
             bool is_kb = false;
+            bool reject = false;
             if (ioctl(fd, EVIOCGBIT(0, sizeof(ev_bits)), ev_bits) >= 0 &&
                 (ev_bits[0] & (1UL << EV_KEY)) &&
                 ioctl(fd, EVIOCGBIT(EV_KEY, sizeof(keybits)), keybits) >= 0 &&
                 ioctl(fd, EVIOCGID, &id) >= 0) {
                 if (id.vendor == 0x1234 && id.product == 0x5678) {
-                    close(fd);
-                    continue;
+                    reject = true;
                 }
                 if (ev_bits[0] & (1UL << EV_REL)) {
-                    close(fd);
-                    continue;
+                    reject = true;
                 }
                 if (ev_bits[0] & (1UL << EV_ABS)) {
-                    close(fd);
-                    continue;
+                    reject = true;
                 }
-                keybits[0] &= ~1UL;
-                int nwords = (0xFF + 1 + (int)(sizeof(unsigned long)*8)-1)/(int)(sizeof(unsigned long)*8);
-                for (int i=0;i<nwords;i++) if (keybits[i]) { is_kb = true; break; }
+                if (!reject) {
+                    keybits[0] &= ~1UL;
+                    int nwords = (0xFF + 1 + (int)(sizeof(unsigned long)*8)-1)/(int)(sizeof(unsigned long)*8);
+                    for (int i=0;i<nwords;i++) if (keybits[i]) { is_kb = true; break; }
+                }
             }
             if (is_kb) {
                 g_x11_keyboards[g_x11_keyboard_count].fd = fd;
                 strncpy(g_x11_keyboards[g_x11_keyboard_count].path, full_path, 255);
                 g_x11_keyboard_count++;
                 log_warn("x11_scan_keyboards grabbed keyboard %s fd=%d", full_path, fd);
+            } else if (reject && g_x11_rejected_count < X11_REJECTED_MAX) {
+                g_x11_rejected_fds[g_x11_rejected_count++] = fd;
             } else {
                 close(fd);
             }
         }
     }
     closedir(dir);
-    log_warn("x11_scan_keyboards found %d keyboards", g_x11_keyboard_count);
+    log_warn("x11_scan_keyboards found %d keyboards held=%d", g_x11_keyboard_count, g_x11_rejected_count);
     PROFILE_END_VAR(timer, "input:x11_scan_keyboards");
 }
 
