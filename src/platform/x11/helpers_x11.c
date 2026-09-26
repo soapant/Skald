@@ -821,7 +821,7 @@ static void x11_generate_background_pixels(uint32_t* img_data, int bytes_per_lin
             }
         } else {
             for (int y = 0; y < h; y++) {
-                row = (uint32_t*)(img_data + y * bytes_per_line);
+                row = (uint32_t*)((char*)img_data + y * bytes_per_line);
                 for (int x = 0; x < w; x++) {
                     unsigned int a = CornerAlpha(x, y, w, h, R, baseAlpha8);
                     row[x] = a ? (a << 24) | (r << 16) | (g << 8) | b : 0;
@@ -835,7 +835,7 @@ static void x11_generate_background_pixels(uint32_t* img_data, int bytes_per_lin
             t = powf(t, _gamma);
             unsigned long col = LerpHex(base, light, t * 0.9f);
             unsigned int cr0 = (col >> 16) & 0xFF, cg0 = (col >> 8) & 0xFF, cb0 = col & 0xFF;
-            row = (uint32_t*)(img_data + y * bytes_per_line);
+            row = (uint32_t*)((char*)img_data + y * bytes_per_line);
             for (int x = 0; x < w; x++) {
                 unsigned int cr = cr0, cg = cg0, cb = cb0;
                 _APPLY_DITHER(cr,cg,cb,x,y);
@@ -847,7 +847,7 @@ static void x11_generate_background_pixels(uint32_t* img_data, int bytes_per_lin
         unsigned long light = DeriveLighter(base, 1.0f);
         float denom = (float)(w + h); if (denom < 1) denom = 1;
         for (int y = 0; y < h; y++) {
-            row = (uint32_t*)(img_data + y * bytes_per_line);
+            row = (uint32_t*)((char*)img_data + y * bytes_per_line);
             for (int x = 0; x < w; x++) {
                 float t = (float)(x + y) / denom;
                 t = powf(t, _gamma);
@@ -863,7 +863,7 @@ static void x11_generate_background_pixels(uint32_t* img_data, int bytes_per_lin
         float cx = w * 0.5f, cy = h * 0.35f;
         float maxDist = sqrtf(cx*cx + cy*cy); if (maxDist < 1) maxDist = 1;
         for (int y = 0; y < h; y++) {
-            row = (uint32_t*)(img_data + y * bytes_per_line);
+            row = (uint32_t*)((char*)img_data + y * bytes_per_line);
             for (int x = 0; x < w; x++) {
                 float dx = x - cx, dy = y - cy;
                 float t = sqrtf(dx*dx + dy*dy) / maxDist; if (t > 1) t = 1;
@@ -880,7 +880,7 @@ static void x11_generate_background_pixels(uint32_t* img_data, int bytes_per_lin
         for (int y = 0; y < h; y++) {
             float tBase = h > 1 ? (float)y / (float)(h - 1) : 0;
             tBase = powf(tBase, _gamma);
-            row = (uint32_t*)(img_data + y * bytes_per_line);
+            row = (uint32_t*)((char*)img_data + y * bytes_per_line);
             for (int x = 0; x < w; x++) {
                 float t = tBase * 0.9f;
                 unsigned long col = LerpHex(base, light, t);
@@ -901,7 +901,7 @@ static void x11_generate_background_pixels(uint32_t* img_data, int bytes_per_lin
         }
     } else {
         for (int y = 0; y < h; y++) {
-            row = (uint32_t*)(img_data + y * bytes_per_line);
+            row = (uint32_t*)((char*)img_data + y * bytes_per_line);
             for (int x = 0; x < w; x++) {
                 unsigned int a = CornerAlpha(x, y, w, h, R, baseAlpha8);
                 row[x] = a ? (a << 24) | (r << 16) | (g << 8) | b : 0;
