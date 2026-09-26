@@ -72,6 +72,8 @@ void Color_DeriveLighter(unsigned int base, float intensity, unsigned char* out_
     float f = ShaderIntensity;
     if (f < 0) f = 0; if (f > 1) f = 1;
     float eff = f * intensity;
+    if (eff < 0.25f) eff = 0.25f;
+    if (eff > 1) eff = 1;
     int r = (int)((base >> 16) & 0xFF), g = (int)((base >> 8) & 0xFF), b = (int)(base & 0xFF);
     int nr = r + (int)((90 - r) * eff + 35 * eff);
     int ng = g + (int)((90 - g) * eff + 35 * eff);

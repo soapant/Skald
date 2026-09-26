@@ -2,10 +2,10 @@
 
 // <flint-config-generated>
 static const PathVar user_path_vars[] = {
-    {"DEV", "D:\\Projects", "/home/diggy/Programming/Projects"},
+    {"DEV", "C:\\Programming\\Projects", "/home/diggy/Programming/Projects"},
     {"MISC", "D:\\retard games\\miscellaneous", "/home/diggy/miscellaneous"},
     {"MUSIC", "C:\\Music", "/home/diggy/Music"},
-    {"VIDEOS", "D:\\videos", "/home/diggy/Videos"},
+    {"VIDEOS", "C:\\videos", "/home/diggy/Videos"},
     {"PROGRAMDATA", "C:\\ProgramData", ""},
     {"SystemRoot", "C:\\Windows", ""},
 };
@@ -24,12 +24,12 @@ void ConfigApply(void) {
     ModePersistsThroughFeatures = false;
     TimeOutForMessages = 1;
     DoTimeDebugs = false;
-    DebugMode = false;
+    DebugMode = true;
     RoundedCorners = true;
     CornerRadius = 14;
     EnableShaders = true;
     ShaderPreset = 1;
-    ShaderIntensity = 0.001f;
+    ShaderIntensity = 0.9f;
     TimeBetweenHotReload = 2;
     WindowOpacity = 235.0f;
     EditPopUpPos = "middle";
