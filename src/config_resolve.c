@@ -23,8 +23,13 @@ static void config_resolve_one(const char** var, DefaultAppKind kind) {
 
 void Config_ResolveDefaultApps(void) {
     config_resolve_one(&UsedBrowser, DEFAULT_BROWSER);
+    printf("%s \n",UsedBrowser);
     config_resolve_one(&UsedTerminal, DEFAULT_TERMINAL);
+    printf("%s \n",UsedTerminal);
     config_resolve_one(&UsedShell, DEFAULT_SHELL);
+    printf("%s \n",UsedShell);
     config_resolve_one(&UsedImageViewer, DEFAULT_IMAGE_VIEWER);
+    printf("%s \n",UsedImageViewer);
     config_resolve_one(&UsedVideoPlayer, DEFAULT_VIDEO_PLAYER);
+    printf("%s \n",UsedVideoPlayer);
 }
