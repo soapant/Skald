@@ -207,21 +207,14 @@ void x11_scan_keyboards(void) {
             unsigned long keybits[(KEY_MAX/8+sizeof(unsigned long)-1)/sizeof(unsigned long)+1] = {0};
             struct input_id id;
             bool is_kb = false;
-            bool reject = false;
             if (ioctl(fd, EVIOCGBIT(0, sizeof(ev_bits)), ev_bits) >= 0 &&
                 (ev_bits[0] & (1UL << EV_KEY)) &&
                 ioctl(fd, EVIOCGBIT(EV_KEY, sizeof(keybits)), keybits) >= 0 &&
                 ioctl(fd, EVIOCGID, &id) >= 0) {
-                if (id.vendor == 0x1234 && id.product == 0x5678) {
-                    reject = true;
-                }
-                if (ev_bits[0] & (1UL << EV_REL)) {
-                    reject = true;
-                }
-                if (ev_bits[0] & (1UL << EV_ABS)) {
-                    reject = true;
-                }
-                if (!reject) {
+                bool exclude = (id.vendor == 0x1234 && id.product == 0x5678) ||
+                               (ev_bits[0] & (1UL << EV_REL)) ||
+                               (ev_bits[0] & (1UL << EV_ABS));
+                if (!exclude) {
                     keybits[0] &= ~1UL;
                     int nwords = (0xFF + 1 + (int)(sizeof(unsigned long)*8)-1)/(int)(sizeof(unsigned long)*8);
                     for (int i=0;i<nwords;i++) if (keybits[i]) { is_kb = true; break; }
@@ -232,7 +225,7 @@ void x11_scan_keyboards(void) {
                 strncpy(g_x11_keyboards[g_x11_keyboard_count].path, full_path, 255);
                 g_x11_keyboard_count++;
                 log_warn("x11_scan_keyboards grabbed keyboard %s fd=%d", full_path, fd);
-            } else if (reject && g_x11_rejected_count < X11_REJECTED_MAX) {
+            } else if (g_x11_rejected_count < X11_REJECTED_MAX) {
                 g_x11_rejected_fds[g_x11_rejected_count++] = fd;
             } else {
                 close(fd);
