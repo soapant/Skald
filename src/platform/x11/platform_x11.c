@@ -476,7 +476,6 @@ bool Platform_LaunchDetached(char* command) {
 
 char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
     PROFILE_START(timer);
-    log_warn("RUNCMD '%s'", command ? command : "(null)");
 
     const char* real_user = Platform_GetRealUser();
     const char* real_home = Platform_GetRealHome();
