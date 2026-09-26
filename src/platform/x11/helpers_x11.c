@@ -207,7 +207,8 @@ int x11_update_edit_scroll_offset(Display* dpy, XftFont* xf, const char* text, i
 
 int x11_font_line_height(int ascent, int descent, int font_size) {
     int real = ascent + descent;
-    if (real <= 0) real = font_size > 0 ? font_size : 1;
+    if (real <= 0) real = font_size;
+    real -= 4;
     return real;
 }
 
@@ -221,7 +222,7 @@ int x11_font_list_top(int ascent, int descent, int font_size) {
 
 int x11_font_cursor_y(int ascent, int descent, int font_size, int box_top) {
     int lineH = x11_font_line_height(ascent, descent, font_size);
-    int y = box_top + (lineH - font_size) / 2;
+    int y = box_top + (lineH - font_size) / 2 - 10;
     if (y < box_top) y = box_top;
     return y;
 }
