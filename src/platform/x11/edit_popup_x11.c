@@ -140,7 +140,7 @@ void Platform_EditPopupRender(Popup* self) {
     }
     int draw_x = 10 - scroll;
     int cursor_draw_x = 10 + cursor_x - scroll;
-    int draw_y = data->h / 2 - 10;
+    int draw_y = data->h / 2 - 15;
     if (text_w > 0 && text_w <= data->w - 20 && data->align) {
         if (Platform_StringContainsCaseInsensitive(data->align, "CENTER")) {
             draw_x = (data->w - text_w) / 2;
@@ -158,11 +158,10 @@ void Platform_EditPopupRender(Popup* self) {
         if (cursor_draw_x < 2) cursor_draw_x = 2;
         if (cursor_draw_x > data->w - 4) cursor_draw_x = data->w - 4;
         int textH = FontSize;
-        int cursor_y = x11_font_cursor_y_of(font, draw_y);
         if (IsInsertMode()) {
-            Platform_DrawRectRaw(cursor_draw_x, cursor_y, 2, textH, rgb_to_hex(COLOR_TEXT));
+            Platform_DrawRectRaw(cursor_draw_x, draw_y + 6, 2, textH, rgb_to_hex(COLOR_TEXT));
         } else {
-            Platform_DrawRectRaw(cursor_draw_x, cursor_y, 12, textH, rgb_to_hex(COLOR_TEXT));
+            Platform_DrawRectRaw(cursor_draw_x, draw_y + 6, 12, textH, rgb_to_hex(COLOR_TEXT));
         }
     }
     Platform_SetDrawContext(NULL, NULL, NULL, 0);
