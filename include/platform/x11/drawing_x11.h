@@ -30,6 +30,18 @@ void x11_draw_selection_background(Display* dpy, XftDraw* xd, Visual* vis, Color
 Pixmap x11_get_cached_background(Display* dpy, Window win, int w, int h);
 void x11_draw_background_to_drawable(Display* dpy, Drawable drw, int w, int h);
 void x11_free_cached_background(void);
+
+/* FontSize is the Xft em size, NOT a pixel line height. The real line box is
+   ascent+descent, which is ~1.6x larger. Any vertical layout must use these
+   helpers or text collides with list rows at large sizes. */
+int x11_font_line_height(int ascent, int descent, int font_size);
+int x11_font_row_height(int ascent, int descent, int font_size);
+int x11_font_list_top(int ascent, int descent, int font_size);
+int x11_font_cursor_y(int ascent, int descent, int font_size, int box_top);
+int x11_font_line_height_of(FontHandle font);
+int x11_font_row_height_of(FontHandle font);
+int x11_font_list_top_of(FontHandle font);
+int x11_font_cursor_y_of(FontHandle font, int box_top);
 #endif
 
 #endif
