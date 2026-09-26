@@ -438,17 +438,22 @@ int main(int argc, char** argv) {
 #else
     const char* output = CONSOLE_OUTPUT;
 #endif
+    Nob_File_Paths all_objs = {0};
+    for (size_t i = 0; i < sources.count; ++i) {
+        nob_da_append(&all_objs, strdup(obj_path(sources.items[i])));
+    }
     bool needs_link = any_compiled || !nob_file_exists(output) ||
-        nob_needs_rebuild(output, (const char**)to_build.items, to_build.count) != 0;
+        nob_needs_rebuild(output, (const char**)all_objs.items, all_objs.count) != 0;
 #if defined(_WIN32)
     {
         const char* other = do_actual ? "build/debug/flint.exe" : "build/flint.exe";
         if (nob_file_exists(other) &&
-            nob_needs_rebuild(other, (const char**)to_build.items, to_build.count) != 0) {
+            nob_needs_rebuild(other, (const char**)all_objs.items, all_objs.count) != 0) {
             needs_link = true;
         }
     }
 #endif
+    nob_da_free(all_objs);
     if (!needs_link) {
         nob_log(NOB_INFO, "No changes, skipping link");
         {
