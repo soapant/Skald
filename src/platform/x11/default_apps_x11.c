@@ -76,6 +76,7 @@ const char* x11_get_default_terminal_x11(void) {
     const char* const candidates[] = {
         "gnome-terminal",
         "konsole",
+        "foot",
         "alacritty",
         "kitty",
         "wezterm",
@@ -117,7 +118,12 @@ const char* get_default_terminal(int slot) {
     }
 
     if (!term) {
-        bool is_wayland = getenv("WAYLAND_DISPLAY") != NULL || getenv("SWAYSOCK") != NULL || getenv("I3SOCK") != NULL;
+        const char* st = getenv("XDG_SESSION_TYPE");
+        bool is_wayland = (st && strcmp(st, "wayland") == 0) ||
+                          getenv("WAYLAND_DISPLAY") != NULL ||
+                          getenv("SWAYSOCK") != NULL || getenv("I3SOCK") != NULL ||
+                          getenv("HYPRLAND_INSTANCE_SIGNATURE") != NULL ||
+                          getenv("NIRI_SOCKET") != NULL || getenv("KDE_FULL_SESSION") != NULL;
         term = is_wayland ? x11_get_default_terminal_wayland()
                           : x11_get_default_terminal_x11();
     }
