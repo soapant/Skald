@@ -325,18 +325,16 @@ void todo_render_callback(PromptState *state) {
         fl_draw_text(.x=ctx.x + 10, .y=ctx.y + 4,.color=rgb_to_hex(COLOR_TEXT),.text=main_text, .align="LEFT", .pad=30);
         if (tag_count > 0) {
             if (tag_count == 1) {
-                int y_offset = 0;
                 for (int t = 0; t < tag_count; t++) {
                     unsigned long tag_rgb = rgb_to_hex(GetTagColor(tags[t]));
-                    fl_draw_text(.x=14, .y=ctx.y + 28 + y_offset, .text=tags[t], .color=tag_rgb, .align="LEFT", .pad=14);
-                    y_offset += 18;
+                    fl_draw_text(.x=14, .y=ctx.y + FontSize + 10, .text=tags[t], .color=tag_rgb, .align="LEFT", .pad=14);
                 }
             } else {
                 int x_offset = 0;
                 for (int t = 0; t < tag_count; t++) {
                     unsigned long tag_rgb = rgb_to_hex(GetTagColor(tags[t]));
-                    fl_draw_text(.x=14 + x_offset, .y=ctx.y + 28, .text=tags[t], .color=tag_rgb, .align="LEFT", .pad=14 + x_offset);
-                    x_offset += strlen(tags[t]) * FontSize;
+                    fl_draw_text(.x=14 + x_offset, .y=ctx.y + FontSize + 10, .text=tags[t], .color=tag_rgb, .align="LEFT", .pad=14 + x_offset);
+                    x_offset += strlen(tags[t]) * FontSize / 2 + 30;
                 }
             }
         }
