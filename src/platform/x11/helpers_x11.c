@@ -220,7 +220,7 @@ int x11_font_list_top(int ascent, int descent, int font_size) {
 
 int x11_font_cursor_y(int font_size, int box_top) {
     int lineH = font_size;
-    int y = box_top + (lineH - font_size) / 2 - 10;
+    int y = box_top + (lineH - font_size) / 2;
     if (y < box_top) y = box_top;
     return y;
 }
