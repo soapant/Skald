@@ -232,6 +232,13 @@ static void cfg_put_float(char* buf, size_t cap, size_t* off, const char* name, 
     }
 }
 
+static void cfg_put_str_var(char* buf, size_t cap, size_t* off, const char* name, const char* value) {
+    if (Config_IsAutoResolvedApp(name)) value = "";
+    cfg_put(buf, cap, off, "    %s = ", name);
+    cfg_put_escaped(buf, cap, off, value);
+    cfg_put(buf, cap, off, ";\n");
+}
+
 static size_t config_emit_region(char* buf, size_t cap) {
     size_t off = 0;
     cfg_put(buf, cap, &off, "static const PathVar user_path_vars[] = {\n");
@@ -287,21 +294,11 @@ static size_t config_emit_region(char* buf, size_t cap) {
     cfg_put(buf, cap, &off, "    MaxFeatures = %d;\n", MaxFeatures);
     cfg_put(buf, cap, &off, "    VimFontSize = %d;\n", VimFontSize);
     cfg_put(buf, cap, &off, "    PaddingForScrolling = %d;\n", PaddingForScrolling);
-    cfg_put(buf, cap, &off, "    UsedTerminal = ");
-    cfg_put_escaped(buf, cap, &off, UsedTerminal);
-    cfg_put(buf, cap, &off, ";\n");
-    cfg_put(buf, cap, &off, "    UsedShell = ");
-    cfg_put_escaped(buf, cap, &off, UsedShell);
-    cfg_put(buf, cap, &off, ";\n");
-    cfg_put(buf, cap, &off, "    UsedBrowser = ");
-    cfg_put_escaped(buf, cap, &off, UsedBrowser);
-    cfg_put(buf, cap, &off, ";\n");
-    cfg_put(buf, cap, &off, "    UsedImageViewer = ");
-    cfg_put_escaped(buf, cap, &off, UsedImageViewer);
-    cfg_put(buf, cap, &off, ";\n");
-    cfg_put(buf, cap, &off, "    UsedVideoPlayer = ");
-    cfg_put_escaped(buf, cap, &off, UsedVideoPlayer);
-    cfg_put(buf, cap, &off, ";\n");
+    cfg_put_str_var(buf, cap, &off, "UsedTerminal", UsedTerminal);
+    cfg_put_str_var(buf, cap, &off, "UsedShell", UsedShell);
+    cfg_put_str_var(buf, cap, &off, "UsedBrowser", UsedBrowser);
+    cfg_put_str_var(buf, cap, &off, "UsedImageViewer", UsedImageViewer);
+    cfg_put_str_var(buf, cap, &off, "UsedVideoPlayer", UsedVideoPlayer);
     cfg_put(buf, cap, &off, "    UsedSearchEngine = ");
     cfg_put_escaped(buf, cap, &off, UsedSearchEngine);
     cfg_put(buf, cap, &off, ";\n");

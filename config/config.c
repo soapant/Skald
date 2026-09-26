@@ -23,8 +23,8 @@ void ConfigApply(void) {
     AllowOtherFeatureTogglesInFeature = false;
     ModePersistsThroughFeatures = false;
     TimeOutForMessages = 1;
-    DoTimeDebugs = false;
-    DebugMode = false;
+    DoTimeDebugs = true;
+    DebugMode = true;
     RoundedCorners = true;
     CornerRadius = 14;
     EnableShaders = true;
@@ -41,11 +41,11 @@ void ConfigApply(void) {
     MaxFeatures = 1000;
     VimFontSize = 18;
     PaddingForScrolling = 3;
-    UsedTerminal = "foot";
+    UsedTerminal = "";
     UsedShell = "nu";
-    UsedBrowser = "/opt/zen-browser-bin/zen-bin";
-    UsedImageViewer = "feh";
-    UsedVideoPlayer = "mpv";
+    UsedBrowser = "";
+    UsedImageViewer = "";
+    UsedVideoPlayer = "";
     UsedSearchEngine = "google";
     FeaturePath = "src/features";
     IconPath = "{MISC}/switch_window.ico";
