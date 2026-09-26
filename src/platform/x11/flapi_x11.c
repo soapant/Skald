@@ -528,7 +528,7 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
     int w = spec->w;
     int h = spec->h;
     if (w <= 0) w = state ? state->width : 880;
-    if (h <= 0) h = x11_font_line_height_of(FH_NULL) + 28;
+    if (h <= 0) h = FontSize + 28;
     FontHandle fh = spec->font;
     bool needDestroy = false;
     if (!FH_TO_XFT(fh)) {
@@ -548,16 +548,12 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
         if (state) state->scroll_offset = scroll;
     }
     int draw_x = x + 14 - scroll;
-    int textH = x11_font_line_height_of(fh);
+    int textH = FontSize;
     int y_raw;
     int cursor_y;
     if (spec->y == 0) {
-        y_raw = 20;
+        y_raw = 14;
         cursor_y = x11_font_cursor_y_of(fh, 20);
-    } else {
-        y_raw = y + (h - textH) / 2;
-        cursor_y = y + (h - textH) / 2;
-        if (cursor_y < y + 2) cursor_y = y + 2;
     }
     Platform_SetDrawContext(dpy, xd, vis, cmap);
     if (text_len > 0) {
@@ -567,9 +563,9 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
     if (cursor_draw_x < x + 2) cursor_draw_x = x + 2;
     if (cursor_draw_x > x + w - 4) cursor_draw_x = x + w - 4;
     if (IsInsertMode()) {
-        Platform_DrawRectRaw(cursor_draw_x,cursor_y,2,textH,text_hex);
+        Platform_DrawRectRaw(cursor_draw_x,cursor_y,2,textH,rgb_to_hex(COLOR_CURSOR));
     } else {
-        Platform_DrawRectRaw(cursor_draw_x,cursor_y,12,textH,text_hex);
+        Platform_DrawRectRaw(cursor_draw_x,cursor_y,12,textH,rgb_to_hex(COLOR_CURSOR));
     }
     if (state) {
         if (WindowTitleText && state->window_title) {

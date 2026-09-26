@@ -210,36 +210,24 @@ int x11_update_edit_scroll_offset(Display* dpy, XftFont* xf, const char* text, i
     return scroll;
 }
 
-int x11_font_line_height(int ascent, int descent, int font_size) {
-    int real = ascent + descent;
-    if (real <= 0) real = font_size;
-    real -= 4;
-    return real;
-}
-
-int x11_font_row_height(int ascent, int descent, int font_size) {
-    return x11_font_line_height(ascent, descent, font_size) + 14;
+int x11_font_row_height(int font_size) {
+    return font_size + 14;
 }
 
 int x11_font_list_top(int ascent, int descent, int font_size) {
-    return x11_font_line_height(ascent, descent, font_size) + 28 + 10;
+    return font_size + 38;
 }
 
-int x11_font_cursor_y(int ascent, int descent, int font_size, int box_top) {
-    int lineH = x11_font_line_height(ascent, descent, font_size);
+int x11_font_cursor_y(int font_size, int box_top) {
+    int lineH = font_size;
     int y = box_top + (lineH - font_size) / 2 - 10;
     if (y < box_top) y = box_top;
     return y;
 }
 
-int x11_font_line_height_of(FontHandle font) {
-    XftFont* xf = FH_TO_XFT(font);
-    return x11_font_line_height(xf ? xf->ascent : 0, xf ? xf->descent : 0, FontSize);
-}
-
 int x11_font_row_height_of(FontHandle font) {
     XftFont* xf = FH_TO_XFT(font);
-    return x11_font_row_height(xf ? xf->ascent : 0, xf ? xf->descent : 0, FontSize);
+    return x11_font_row_height(FontSize);
 }
 
 int x11_font_list_top_of(FontHandle font) {
@@ -248,8 +236,7 @@ int x11_font_list_top_of(FontHandle font) {
 }
 
 int x11_font_cursor_y_of(FontHandle font, int box_top) {
-    XftFont* xf = FH_TO_XFT(font);
-    return x11_font_cursor_y(xf ? xf->ascent : 0, xf ? xf->descent : 0, FontSize, box_top);
+    return x11_font_cursor_y(FontSize, box_top);
 }
 
 void x11_draw_edit_cursor(XftDraw* xd, XftColor* color, int cursor_x, int scroll, int width) {
