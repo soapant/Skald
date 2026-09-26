@@ -159,9 +159,9 @@ void Platform_EditPopupRender(Popup* self) {
         if (cursor_draw_x > data->w - 4) cursor_draw_x = data->w - 4;
         int textH = FontSize;
         if (IsInsertMode()) {
-            Platform_DrawRectRaw(cursor_draw_x, draw_y + 6, 2, textH, rgb_to_hex(COLOR_TEXT));
+            Platform_DrawRectRaw(cursor_draw_x, draw_y + 6, 2, textH, rgb_to_hex(COLOR_CURSOR));
         } else {
-            Platform_DrawRectRaw(cursor_draw_x, draw_y + 6, 12, textH, rgb_to_hex(COLOR_TEXT));
+            Platform_DrawRectRaw(cursor_draw_x, draw_y + 6, 12, textH, rgb_to_hex(COLOR_CURSOR));
         }
     }
     Platform_SetDrawContext(NULL, NULL, NULL, 0);
