@@ -1,6 +1,8 @@
 #include "test.h"
 #include "config.h"
+#include "core/theme.h"
 #include "helpers/helpers_ui.h"
+
 
 #define DARK 0x192419u
 
@@ -165,6 +167,34 @@ TEST(gradient_endpoints_are_visibly_distinct) {
     ASSERT_TRUE(derive_delta(DARK, 0.1f) > 5);
 }
 
+TEST(theme_apply_never_overwrites_shader_settings) {
+    static const char* names[] = { "rose-pine", "tokyo-night", "gruvbox", "nord", "dracula" };
+    for (size_t i = 0; i < sizeof(names) / sizeof(names[0]); i++) {
+        Theme = names[i];
+        ShaderIntensity = 0.75f;
+        GradientBrightness = 0.6f;
+        Theme_Apply();
+        ASSERT_EQ_INT((int)(ShaderIntensity * 1000.0f), 750);
+        ASSERT_EQ_INT((int)(GradientBrightness * 1000.0f), 600);
+    }
+}
+
+TEST(theme_apply_still_sets_colors) {
+    Theme = "rose-pine";
+    COLOR_BG = 0;
+    Theme_Apply();
+    ASSERT_EQ_INT(COLOR_BG, RGB(25, 23, 36));
+}
+
+TEST(theme_apply_ignores_unknown_theme) {
+    Theme = "no-such-theme";
+    ShaderIntensity = 0.42f;
+    COLOR_BG = 0x123456;
+    Theme_Apply();
+    ASSERT_EQ_INT((int)(ShaderIntensity * 1000.0f), 420);
+    ASSERT_EQ_INT(COLOR_BG, 0x123456);
+}
+
 int main(void) {
     RUN(lerp_endpoints);
     RUN(lerp_clamps_t);
@@ -183,6 +213,9 @@ int main(void) {
     RUN(bayer_dither_mean_is_near_zero);
     RUN(hash_noise_is_deterministic_and_bounded);
     RUN(gradient_endpoints_are_visibly_distinct);
+    RUN(theme_apply_never_overwrites_shader_settings);
+    RUN(theme_apply_still_sets_colors);
+    RUN(theme_apply_ignores_unknown_theme);
     ShaderIntensity = 0.55f;
     return TEST_SUMMARY() != 0 ? 1 : 0;
 }
