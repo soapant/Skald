@@ -1107,7 +1107,8 @@ bool Platform_BuildFeature(const char* src, const char* out) {
         log_info("%s", outStr);
         free(outStr);
     } else {
-        ok = true;
+        log_error("build produced no output for %s, treating as failure", src);
+        ok = false;
     }
     if (!ok) { remove(tmp); return false; }
     remove(out);

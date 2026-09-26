@@ -171,7 +171,7 @@ bool Config_Reload(void) {
 #endif
     long long now = Platform_GetWallClockMs();
     long long debounce = (long long)TimeBetweenHotReload * 1000;
-    if (debounce < 800) debounce = 1000;
+    if (debounce < 250) debounce = 250;
     if (g_cfg_last_reload_ms && now - g_cfg_last_reload_ms < debounce) {
 #ifdef _WIN32
         InterlockedExchange(&g_cfg_reload_lock, 0);
@@ -418,7 +418,7 @@ void Config_PollWatcher(void) {
     }
     if (g_cfg_change_at == 0) return;
     long long debounce = (long long)TimeBetweenHotReload * 1000;
-    if (debounce < 800) debounce = 1000;
+    if (debounce < 250) debounce = 250;
     if (Platform_GetWallClockMs() - g_cfg_change_at < debounce) return;
     if (g_cfg_last_reload_ms && Platform_GetWallClockMs() - g_cfg_last_reload_ms < debounce) return;
     WindowManager* _wm = WindowManager_Get();
