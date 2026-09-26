@@ -454,9 +454,7 @@ void UpdateTextCaret(WindowHandle hwndEditControl)
 
   RECT rc;
   GetClientRect(hwnd, &rc);
-  int caretHeight = tm.tmHeight > 0 ? tm.tmHeight : 24;
-  if (rc.bottom > 0 && caretHeight > rc.bottom) caretHeight = rc.bottom;
-  if (caretHeight <= 0) caretHeight = 24;
+  int caretHeight = FontSize;
   int caretWidth;
   if (IsInsertMode()) {
     caretWidth = 2;
