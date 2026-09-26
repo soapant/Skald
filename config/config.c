@@ -36,7 +36,7 @@ void ConfigApply(void) {
     EditPopUpWidthMin = 400;
     PageUpDownLen = 6;
     UsedFont = "0xProto Nerd Font";
-    FontSize = 24;
+    FontSize = 19;
     IconSize = 32;
     MaxFeatures = 1000;
     VimFontSize = 18;

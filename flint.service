@@ -20,13 +20,3 @@ TimeoutStopSec=5
 [Install]
 WantedBy=default.target
 
-# NOTE: There must be exactly ONE copy of this unit installed.
-# If an OLD root-level unit also exists (/etc/systemd/system/flint.service),
-# both start on boot -> two instances fighting over /dev/input.
-# Remove it with:
-#   sudo systemctl disable --now flint.service
-#   sudo rm /etc/systemd/system/flint.service
-# The binary itself also refuses to run twice (flock /tmp/flint.lock).
-#
-# Env import after login (needed for DISPLAY/XAUTHORITY so prompts work):
-#   systemctl --user import-environment DISPLAY WAYLAND_DISPLAY XDG_RUNTIME_DIR XAUTHORITY SWAYSOCK I3SOCK
