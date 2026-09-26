@@ -363,7 +363,7 @@ void Platform_DrawEditText(PromptState *state, Display *dpy, XftDraw *xd, Visual
     int draw_x = 14 - scroll;
     if (text_len > 0) {
         Platform_SetDrawContext(dpy, xd, vis, cmap);
-        Platform_DrawTextRaw(draw_x, 20, state->filter, rgb_to_hex(COLOR_TEXT), font, "", 0, 0);
+        Platform_DrawTextRaw(draw_x, 14, state->filter, rgb_to_hex(COLOR_TEXT), font, "", 0, 0);
     }
 }
 void Platform_DrawEditCursor(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap, FontHandle font) {
@@ -374,12 +374,11 @@ void Platform_DrawEditCursor(PromptState *state, Display *dpy, XftDraw *xd, Visu
     int cursor_draw_x = 14 + cursor_x - state->scroll_offset;
     if (cursor_draw_x < 2) cursor_draw_x = 2;
     if (cursor_draw_x > state->width - 4) cursor_draw_x = state->width - 4;
-    int lineH = x11_font_line_height_of(font);
     int cursor_y = x11_font_cursor_y_of(font, 20);
     if (IsInsertMode()) {
-        Platform_DrawRectRaw(cursor_draw_x, cursor_y, 2, lineH, rgb_to_hex(COLOR_CURSOR));
+        Platform_DrawRectRaw(cursor_draw_x, cursor_y, 2, FontSize, rgb_to_hex(COLOR_CURSOR));
     } else {
-        Platform_DrawRectRaw(cursor_draw_x, cursor_y, FontSize / 2 + 2, lineH, rgb_to_hex(COLOR_CURSOR));
+        Platform_DrawRectRaw(cursor_draw_x, cursor_y, FontSize / 2 + 2, FontSize, rgb_to_hex(COLOR_CURSOR));
     }
 }
 bool Platform_DrawRectRaw(int x, int y, int w, int h, unsigned long color) {
@@ -406,7 +405,7 @@ void Platform_GetTextLayoutMetrics(int* line_h, int* row_h, int* list_top) {
     PROFILE_START(timer);
     Display* dpy = get_display();
     FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
-    int lh = x11_font_line_height_of(font);
+    int lh = FontSize;
     int rh = x11_font_row_height_of(font);
     int lt = x11_font_list_top_of(font);
     Platform_DestroyFont(font);
