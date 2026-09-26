@@ -4,7 +4,7 @@
 #include "helpers/helpers_ui.h"
 #include <stdlib.h>
 
-const char* bkp_windows[] = {"Brawlhalla","Fortnite","RocketLeague","Factorio","Steam","Wine"};
+const char* bkp_windows[] = {"Brawlhalla","Fortnite","RocketLeague","Factorio","Steam","Wine","EpicGamesLauncher"};
 
 char PK_LIST[256][128];
 int PK_COUNT = 0;
