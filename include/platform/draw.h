@@ -33,4 +33,9 @@ void Platform_GetItemColors(int idx, int count, unsigned long *num_color, unsign
 bool Platform_PreRender(void);
 bool fl_prerender(void);
 
+/* Vertical layout metrics for the edit box and list, as the draw code actually
+   computes them. line_h is the font's real line box (ascent+descent), which is
+   larger than the em size; row_h and list_top reserve space using it. */
+void Platform_GetTextLayoutMetrics(int* line_h, int* row_h, int* list_top);
+
 #endif
