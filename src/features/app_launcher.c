@@ -66,10 +66,78 @@ const PathEntry SystemShortcuts[] = {
 
 #define SYSTEM_SHORTCUT_COUNT ARRAY_LEN(SystemShortcuts)
 #define MAX_APPS 2048
+#define APPCACHE_FILE "app_launcher_cache.txt"
 
 ListOfFiles s_apps = {0};
 
-void initialize_app_cache(void) {
+static bool app_cache_grow(ListOfFiles* l) {
+    size_t new_cap = l->capacity ? l->capacity * 2 : 64;
+    FileItem* grown = (FileItem*)realloc(l->files, new_cap * sizeof(FileItem));
+    if (!grown) return false;
+    l->files = grown;
+    l->capacity = new_cap;
+    return true;
+}
+
+static void save_app_cache(void) {
+    size_t n = s_apps.count;
+    if (n == 0) return;
+    size_t total = 0;
+    for (size_t i = 0; i < n; i++) {
+        total += strlen(s_apps.files[i].name) + 1;
+        total += strlen(s_apps.files[i].path) + 2;
+    }
+    const char** lines = (const char**)malloc(n * sizeof(char*));
+    char* store = (char*)malloc(total);
+    if (!lines || !store) { free(lines); free(store); return; }
+    size_t off = 0;
+    size_t written = 0;
+    for (size_t i = 0; i < n; i++) {
+        const char* nm = s_apps.files[i].name;
+        const char* pth = s_apps.files[i].path;
+        if (!nm[0] || !pth[0]) continue;
+        int k = snprintf(store + off, total - off, "%s:%s", nm, pth);
+        if (k <= 0 || (size_t)k >= total - off) continue;
+        lines[written++] = store + off;
+        off += (size_t)k + 1;
+    }
+    bool ok = fl_write_to_file(APPCACHE_FILE, lines, (int)written);
+    free(store);
+    free(lines);
+    printf("[app_launcher] cache saved entries=%zu ok=%d\n", written, ok ? 1 : 0);
+}
+
+static bool load_app_cache(void) {
+    FlStringList lines = fl_load_file_list(APPCACHE_FILE);
+    if (!lines.items || lines.count <= 0) {
+        if (lines.items) fl_free_file_list(&lines);
+        return false;
+    }
+    ListOfFiles tmp = {0};
+    for (int i = 0; i < lines.count; i++) {
+        char* entry = lines.items[i];
+        if (!entry) continue;
+        char* colon = strrchr(entry, ':');
+        if (!colon || colon == entry || !colon[1]) continue;
+        *colon = '\0';
+        if (tmp.count >= tmp.capacity && !app_cache_grow(&tmp)) break;
+        strncpy(tmp.files[tmp.count].name, entry, sizeof(tmp.files[tmp.count].name) - 1);
+        tmp.files[tmp.count].name[sizeof(tmp.files[tmp.count].name) - 1] = '\0';
+        strncpy(tmp.files[tmp.count].path, colon + 1, sizeof(tmp.files[tmp.count].path) - 1);
+        tmp.files[tmp.count].path[sizeof(tmp.files[tmp.count].path) - 1] = '\0';
+        tmp.count++;
+    }
+    fl_free_file_list(&lines);
+    if (tmp.count == 0) {
+        free(tmp.files);
+        return false;
+    }
+    if (s_apps.files) free(s_apps.files);
+    s_apps = tmp;
+    return true;
+}
+
+static void scan_app_dirs(void) {
 #if defined(_WIN32)
     char* allowed[] = {"lnk", "exe", "url", NULL};
 #else
@@ -141,6 +209,25 @@ void initialize_app_cache(void) {
     s_apps = tmp;
 }
 
+static bool g_app_cache_ready = false;
+
+void ensure_app_cache(void) {
+    if (g_app_cache_ready) return;
+    g_app_cache_ready = true;
+    if (load_app_cache()) {
+        printf("[app_launcher] cache loaded entries=%zu\n", s_apps.count);
+        return;
+    }
+    scan_app_dirs();
+    save_app_cache();
+}
+
+void rescan_app_cache(void) {
+    g_app_cache_ready = true;
+    scan_app_dirs();
+    save_app_cache();
+}
+
 void launch_app_by_name(const char* display_name) {
     char path_copy[512] = {0};
     bool found = false;
@@ -177,6 +264,7 @@ bool applauncher_ctrlenter_callback(const char* selection, ListBoxInfo* lb) {
 }
 
 void applauncher_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
+    ensure_app_cache();
     size_t cnt = s_apps.count;
     
     if (cnt > 2048) {
@@ -219,7 +307,7 @@ void applauncher_copy_callback(const char* selection,int true_index,int type) {
 
 void TriggerAppLauncher(void) {
     for (size_t i = 0; i < ARRAY_LEN(ListOfProgramPaths); i++) {
-        fl_on_dir_changed(ListOfProgramPaths[i], initialize_app_cache);
+        fl_on_dir_changed(ListOfProgramPaths[i], rescan_app_cache);
     }
     PROMPT(.title = "🚀 AppLauncher",
            .refresh = applauncher_refresh_callback,
@@ -229,7 +317,6 @@ void TriggerAppLauncher(void) {
 }
 
 FLINT_FEATURE_INIT {
-    initialize_app_cache();
     fl_register_hotkey("Alt+E", TriggerAppLauncher,"Fortnite");
     fl_register_feature("App Launcher", TriggerAppLauncher);
 }
