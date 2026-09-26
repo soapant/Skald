@@ -476,6 +476,7 @@ bool Platform_LaunchDetached(char* command) {
 
 char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
     PROFILE_START(timer);
+    log_warn("RUNCMD '%s'", command ? command : "(null)");
 
     const char* real_user = Platform_GetRealUser();
     const char* real_home = Platform_GetRealHome();
@@ -844,24 +845,78 @@ void Platform_WaitForKeypressAsync(KeyCallback callback) {
 
 
 
-static FontHandle g_cached_font = FH_NULL;
-static Display* g_cached_font_dpy = NULL;
-static int g_cached_font_size = 0;
-static const char* g_cached_font_name = NULL;
+#define X11_FONT_CACHE_SLOTS 8
+
+typedef struct {
+    Display* dpy;
+    int size;
+    char* name;
+    XftFont* xft;
+    unsigned long last_used;
+} X11FontSlot;
+
+static X11FontSlot g_font_slots[X11_FONT_CACHE_SLOTS];
+static unsigned long g_font_tick = 0;
+static pthread_mutex_t g_font_cache_mtx = PTHREAD_MUTEX_INITIALIZER;
+
+#define X11_FONT_RETIRED 16
+static Display* g_font_retired_dpy[X11_FONT_RETIRED];
+static XftFont* g_font_retired_xft[X11_FONT_RETIRED];
+static int g_font_retired_next = 0;
+
+static void x11_font_retire(Display* dpy, XftFont* xft) {
+    g_font_retired_dpy[g_font_retired_next] = dpy;
+    g_font_retired_xft[g_font_retired_next] = xft;
+    g_font_retired_next = (g_font_retired_next + 1) % X11_FONT_RETIRED;
+}
+
+static bool x11_font_was_retired(Display* dpy, XftFont* xft) {
+    for (int i = 0; i < X11_FONT_RETIRED; i++) {
+        if (g_font_retired_xft[i] == xft && g_font_retired_dpy[i] == dpy) return true;
+    }
+    return false;
+}
+
+static bool x11_font_slot_matches(const X11FontSlot* s, Display* dpy, int size, const char* face_name) {
+    if (!s->xft || s->dpy != dpy || s->size != size) return false;
+    if (!s->name || !face_name) return s->name == face_name;
+    return strcmp(s->name, face_name) == 0;
+}
+
+static void x11_font_slot_clear(X11FontSlot* s) {
+    if (s->xft) {
+        XftFontClose(s->dpy, s->xft);
+        x11_font_retire(s->dpy, s->xft);
+    }
+    if (s->name) free(s->name);
+    s->dpy = NULL;
+    s->size = 0;
+    s->name = NULL;
+    s->xft = NULL;
+    s->last_used = 0;
+}
+
+static bool x11_font_is_cached(Display* dpy, XftFont* xft) {
+    for (int i = 0; i < X11_FONT_CACHE_SLOTS; i++) {
+        if (g_font_slots[i].xft == xft && g_font_slots[i].dpy == dpy) return true;
+    }
+    return false;
+}
 
 FontHandle Platform_CreateFontOnDisplay(Display* dpy, int size, const char* face_name) {
     PROFILE_START(timer);
     if (!dpy) { PROFILE_END_VAR(timer, "platform_x11:Platform_CreateFontOnDisplay"); return FH_NULL; }
 
-    if (g_cached_font_dpy == dpy && g_cached_font_size == size && g_cached_font_name == face_name && FH_TO_XFT(g_cached_font)) {
+    pthread_mutex_lock(&g_font_cache_mtx);
 
-        PROFILE_END_VAR(timer, "platform_x11:Platform_CreateFontOnDisplay");
-        return g_cached_font;
-    }
-
-    if (FH_TO_XFT(g_cached_font)) {
-        XftFontClose(g_cached_font_dpy, FH_TO_XFT(g_cached_font));
-        g_cached_font = FH_NULL;
+    for (int i = 0; i < X11_FONT_CACHE_SLOTS; i++) {
+        if (x11_font_slot_matches(&g_font_slots[i], dpy, size, face_name)) {
+            g_font_slots[i].last_used = ++g_font_tick;
+            FontHandle hit = { .xfont = g_font_slots[i].xft, .dpy = dpy };
+            pthread_mutex_unlock(&g_font_cache_mtx);
+            PROFILE_END_VAR(timer, "platform_x11:Platform_CreateFontOnDisplay");
+            return hit;
+        }
     }
 
     int screen = DefaultScreen(dpy);
@@ -883,16 +938,36 @@ FontHandle Platform_CreateFontOnDisplay(Display* dpy, int size, const char* face
 
     XUnlockDisplay(dpy);
 
-    if (!xf) { PROFILE_END_VAR(timer, "platform_x11:Platform_CreateFontOnDisplay"); return FH_NULL; }
+    if (!xf) {
+        pthread_mutex_unlock(&g_font_cache_mtx);
+        PROFILE_END_VAR(timer, "platform_x11:Platform_CreateFontOnDisplay");
+        return FH_NULL;
+    }
 
-    g_cached_font.xfont = xf;
-    g_cached_font.dpy = dpy;
-    g_cached_font_dpy = dpy;
-    g_cached_font_size = size;
-    g_cached_font_name = face_name;
+    int slot = -1;
+    unsigned long oldest = ~0UL;
+    for (int i = 0; i < X11_FONT_CACHE_SLOTS; i++) {
+        if (!g_font_slots[i].xft) { slot = i; break; }
+        if (g_font_slots[i].last_used < oldest) { oldest = g_font_slots[i].last_used; slot = i; }
+    }
+    if (slot < 0) {
+        XftFontClose(dpy, xf);
+        pthread_mutex_unlock(&g_font_cache_mtx);
+        PROFILE_END_VAR(timer, "platform_x11:Platform_CreateFontOnDisplay");
+        return FH_NULL;
+    }
+    x11_font_slot_clear(&g_font_slots[slot]);
 
+    g_font_slots[slot].dpy = dpy;
+    g_font_slots[slot].size = size;
+    g_font_slots[slot].name = face_name ? strdup(face_name) : NULL;
+    g_font_slots[slot].xft = xf;
+    g_font_slots[slot].last_used = ++g_font_tick;
+
+    FontHandle made = { .xfont = xf, .dpy = dpy };
+    pthread_mutex_unlock(&g_font_cache_mtx);
     PROFILE_END_VAR(timer, "platform_x11:Platform_CreateFontOnDisplay");
-    return g_cached_font;
+    return made;
 }
 
 pthread_mutex_t g_font_mtx = PTHREAD_MUTEX_INITIALIZER;
@@ -919,12 +994,14 @@ FontHandle Platform_CreateFont(int size, const char* face_name) {
 }
 
 void Platform_DestroyFont(FontHandle font) {
-    if (FH_TO_XFT(font)) {
-        if (FH_TO_DPY(font) == g_cached_font_dpy && FH_TO_XFT(font) == FH_TO_XFT(g_cached_font)) {
-            return;
-        }
-        XftFontClose(FH_TO_DPY(font), FH_TO_XFT(font));
-    }
+    XftFont* xf = FH_TO_XFT(font);
+    if (!xf) return;
+    pthread_mutex_lock(&g_font_cache_mtx);
+    bool cached = x11_font_is_cached(FH_TO_DPY(font), xf);
+    bool retired = cached ? false : x11_font_was_retired(FH_TO_DPY(font), xf);
+    pthread_mutex_unlock(&g_font_cache_mtx);
+    if (cached || retired) return;
+    XftFontClose(FH_TO_DPY(font), xf);
 }
 
 static int xft_text_width(Display* dpy, XftFont* xf, const char* text, int len) {

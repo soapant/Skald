@@ -286,8 +286,7 @@ int WindowManager_RunLinux(WindowManager* wm) {
 }
 
 void WindowManager_ProcessEventsLinux(WindowManager* wm) {
-    PROFILE_START(timer);
-    if (!wm || !wm->display) { PROFILE_END_VAR(timer, "window_manager_x11:WindowManager_ProcessEventsLinux"); return; }
+    if (!wm || !wm->display) return;
     
     Display* dpy = wm->display;
     XEvent ev;
@@ -296,11 +295,8 @@ void WindowManager_ProcessEventsLinux(WindowManager* wm) {
         XNextEvent(dpy, &ev);
         Linux_ProcessXEvent(dpy, &ev, wm);
     }
-    PROFILE_END_VAR(timer, "window_manager_x11:WindowManager_ProcessEventsLinux");
 }
 
 void WindowManager_QuitLinux(WindowManager* wm) {
-    PROFILE_START(timer);
     if (wm) wm->running = false;
-    PROFILE_END_VAR(timer, "window_manager_x11:WindowManager_QuitLinux");
 }

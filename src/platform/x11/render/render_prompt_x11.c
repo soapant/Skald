@@ -11,6 +11,58 @@
 #include "platform/flapi_platform.h"
 #include "platform/x11/drawing_x11.h"
 
+static Display* g_pbuf_dpy = NULL;
+static Window g_pbuf_win = None;
+static int g_pbuf_w = 0;
+static int g_pbuf_h = 0;
+static int g_pbuf_depth = 0;
+static Visual* g_pbuf_vis = NULL;
+static Colormap g_pbuf_cmap = None;
+static Pixmap g_pbuf_pm = None;
+static XftDraw* g_pbuf_xd = NULL;
+
+static void x11_pbuf_drop(void) {
+    if (g_pbuf_xd) { XftDrawDestroy(g_pbuf_xd); g_pbuf_xd = NULL; }
+    if (g_pbuf_pm) {
+        if (g_pbuf_dpy) XFreePixmap(g_pbuf_dpy, g_pbuf_pm);
+        g_pbuf_pm = None;
+    }
+    g_pbuf_dpy = NULL;
+    g_pbuf_win = None;
+    g_pbuf_w = 0;
+    g_pbuf_h = 0;
+    g_pbuf_depth = 0;
+    g_pbuf_vis = NULL;
+    g_pbuf_cmap = None;
+}
+
+void x11_release_prompt_buffer(Display* dpy, Window win) {
+    if (g_pbuf_dpy == dpy && g_pbuf_win == win) x11_pbuf_drop();
+}
+
+static bool x11_pbuf_acquire(Display* dpy, Window win, int w, int h, int depth, Visual* vis, Colormap cmap) {
+    if (g_pbuf_xd && g_pbuf_pm && g_pbuf_dpy == dpy && g_pbuf_win == win &&
+        g_pbuf_w == w && g_pbuf_h == h && g_pbuf_depth == depth &&
+        g_pbuf_vis == vis && g_pbuf_cmap == cmap) {
+        return true;
+    }
+    x11_pbuf_drop();
+    Pixmap pm = XCreatePixmap(dpy, win, w, h, depth);
+    if (!pm) return false;
+    XftDraw* xd = XftDrawCreate(dpy, pm, vis, cmap);
+    if (!xd) { XFreePixmap(dpy, pm); return false; }
+    g_pbuf_dpy = dpy;
+    g_pbuf_win = win;
+    g_pbuf_w = w;
+    g_pbuf_h = h;
+    g_pbuf_depth = depth;
+    g_pbuf_vis = vis;
+    g_pbuf_cmap = cmap;
+    g_pbuf_pm = pm;
+    g_pbuf_xd = xd;
+    return true;
+}
+
 void DrawPromptUserEditControlOnDraw(Display *dpy, XftDraw* xd, Visual* vis, Colormap cmap, PromptState *state) {
     Platform_DrawEditBox(state, dpy, xd, vis, cmap);
 }
@@ -80,8 +132,7 @@ bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state) {
     Visual* vis = attrs.visual;
     int depth = attrs.depth;
     Colormap cmap = attrs.colormap;
-    Pixmap dbl = XCreatePixmap(dpy, *win, w, h, depth);
-    if (!dbl) {
+    if (!x11_pbuf_acquire(dpy, *win, w, h, depth, vis, cmap)) {
         x11_draw_background(dpy, *win, w, h);
         Platform_SetDrawContext(dpy, NULL, NULL, 0);
         if (FlintContext_Get()->prompt_callbacks.render != NULL) {
@@ -94,21 +145,8 @@ bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state) {
         XFlush(dpy);
         return true;
     }
-    XftDraw* xdDbl = XftDrawCreate(dpy, dbl, vis, cmap);
-    if (!xdDbl) {
-        XFreePixmap(dpy, dbl);
-        x11_draw_background(dpy, *win, w, h);
-        Platform_SetDrawContext(dpy, NULL, NULL, 0);
-        if (FlintContext_Get()->prompt_callbacks.render != NULL) {
-          fl_editbox_reset_placed();
-          FlintContext_Get()->prompt_callbacks.render(state);
-        } else {
-          if (state->has_listbox) DrawPromptUserListBox(dpy,win,state);
-          DrawPromptUserEditControl(dpy, win,state);
-        }
-        XFlush(dpy);
-        return true;
-    }
+    Pixmap dbl = g_pbuf_pm;
+    XftDraw* xdDbl = g_pbuf_xd;
     x11_set_dbl_visual(dpy, vis, cmap, depth);
     Pixmap bg = x11_get_cached_background(dpy, *win, w, h);
     if (bg) {
@@ -133,8 +171,6 @@ bool x11_render_prompt_user(Display *dpy, Window *win, PromptState *state) {
     GC gc = XCreateGC(dpy, *win, 0, NULL);
     XCopyArea(dpy, dbl, *win, gc, 0, 0, w, h, 0, 0);
     XFreeGC(dpy, gc);
-    XftDrawDestroy(xdDbl);
-    XFreePixmap(dpy, dbl);
     XFlush(dpy);
     return true;
 }

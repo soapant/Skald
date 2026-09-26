@@ -354,6 +354,7 @@ bool x11_handle_global_key(int key_code, int value) {
 
     if (modifiers == HOTKEY_MOD_ALT && pressed_vk == SETTINGS_KEY) {
       Platform_SettingsPopUp(WindowManager_Get());
+      PROFILE_END_VAR(timer, "input:x11_handle_global_key");
       return true;
     }
     PROFILE_END_VAR(timer, "input:x11_handle_global_key");
