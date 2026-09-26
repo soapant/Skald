@@ -336,8 +336,9 @@ bool fl_listbox_begin_platform(const FlListSpec *spec) {
     if (!g_fl_list_dpy || !g_fl_list_xd) return false;
     g_fl_list_spec = *spec;
     g_fl_list_lb = lb;
-    g_fl_list_itemH = spec->item_height ? spec->item_height : FontSize + 14;
-    g_fl_list_y0 = spec->y ? spec->y : (FontSize + 28) + 10;
+    g_fl_list_font = Platform_CreateFontOnDisplay(g_fl_list_dpy, FontSize, UsedFont);
+    g_fl_list_itemH = spec->item_height ? spec->item_height : x11_font_row_height_of(g_fl_list_font);
+    g_fl_list_y0 = spec->y ? spec->y : x11_font_list_top_of(g_fl_list_font);
     int yOff = (WindowTitleText || VimModeText) ? 40 : 0;
     int list_h;
     PromptState *st = Platform_GetPreRenderStatePtr();
@@ -527,7 +528,7 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
     int w = spec->w;
     int h = spec->h;
     if (w <= 0) w = state ? state->width : 880;
-    if (h <= 0) h = FontSize + 28;
+    if (h <= 0) h = x11_font_line_height_of(FH_NULL) + 28;
     FontHandle fh = spec->font;
     bool needDestroy = false;
     if (!FH_TO_XFT(fh)) {
@@ -547,16 +548,15 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
         if (state) state->scroll_offset = scroll;
     }
     int draw_x = x + 14 - scroll;
-    int textH = xf ? (xf->ascent + xf->descent) : FontSize;
+    int textH = x11_font_line_height_of(fh);
     int y_raw;
     int cursor_y;
     if (spec->y == 0) {
         y_raw = 20;
-        cursor_y = 20 + (textH - FontSize) / 2;
-        if (cursor_y < 20) cursor_y = 20;
+        cursor_y = x11_font_cursor_y_of(fh, 20);
     } else {
         y_raw = y + (h - textH) / 2;
-        cursor_y = y + (h - FontSize) / 2;
+        cursor_y = y + (h - textH) / 2;
         if (cursor_y < y + 2) cursor_y = y + 2;
     }
     Platform_SetDrawContext(dpy, xd, vis, cmap);
@@ -567,9 +567,9 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
     if (cursor_draw_x < x + 2) cursor_draw_x = x + 2;
     if (cursor_draw_x > x + w - 4) cursor_draw_x = x + w - 4;
     if (IsInsertMode()) {
-        Platform_DrawRectRaw(cursor_draw_x,cursor_y,2,FontSize,text_hex);
+        Platform_DrawRectRaw(cursor_draw_x,cursor_y,2,textH,text_hex);
     } else {
-        Platform_DrawRectRaw(cursor_draw_x,cursor_y,12,FontSize,text_hex);
+        Platform_DrawRectRaw(cursor_draw_x,cursor_y,12,textH,text_hex);
     }
     if (state) {
         if (WindowTitleText && state->window_title) {
