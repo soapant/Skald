@@ -238,10 +238,10 @@ int WindowManager_RunLinux(WindowManager* wm) {
     }
     pthread_t input_thr = 0;
     bool input_started = false;
-    if (g_x11_keyboard_count > 0 && use_grab) {
+    if (g_x11_keyboard_count > 0) {
         if (pthread_create(&input_thr, NULL, input_thread_func, wm) == 0) input_started = true;
         else log_error("failed to start input thread");
-    } else if (g_x11_keyboard_count == 0) {
+    } else {
         log_warn("no structural keyboard nodes under /dev/input/, hotkeys will use X11 events only");
     }
 
