@@ -317,7 +317,8 @@ static void Win32_PaintEditCaret(HDC memDC, HWND hwnd) {
   int lineTop;
   if (len <= 0) {
     cx = 2;
-    lineTop = (rc.bottom - tm.tmHeight) / 2;
+    LRESULT emptyPos = SendMessageA(hwnd, EM_POSFROMCHAR, 0, 0);
+    lineTop = (emptyPos != (LRESULT)-1) ? (short)HIWORD(emptyPos) : 0;
   } else {
     LRESULT coords = SendMessageA(hwnd, EM_POSFROMCHAR, q, 0);
     if (coords == (LRESULT)-1) {
