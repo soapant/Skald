@@ -683,6 +683,15 @@ void fl_string_list_free(StringList* list) {
     StringList_Free(list);
 }
 
+void fl_populate_listbox(ListBoxInfo* lb, const char* filter, const char** items, int count) {
+    PopulateListBox(lb, filter, items, count, NULL);
+}
+
+bool fl_is_selected(ListBoxInfo* lb) {
+    if (!lb) return false;
+    return UI_IsListBoxSelected(lb);
+}
+
 char* fl_string_slice(const char* str, int start, int end) {
     if (!str) return NULL;
     int len = (int)strlen(str);

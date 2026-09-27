@@ -21,14 +21,14 @@ void window_switcher_refresh_callback(const char* filter, ListBoxInfo* lb) {
         items[i] = buffer;
     }
 
-    PopulateListBox(lb, filter, items, count, NULL);
+    fl_populate_listbox(lb, filter, items, count);
     fl_free_list(items,count);
     fl_free_window_list(&list_of_titles);
     fl_free_window_list(&list_of_names);
 }
 
 bool window_switcher_enter_callback(const char* selection, ListBoxInfo* lb) {
-    if (UI_IsListBoxSelected(lb)) {
+    if (fl_is_selected(lb)) {
       char* title = fl_string_cut_before(selection,'{');
       fl_focus_window_by_title(title);
       free(title);
