@@ -278,10 +278,11 @@ static void Populate_CommitState(ListBoxInfo* lb, int item_count, int total_matc
   lb->total_matches = total_matches;
 }
 
-void PopulateListBox(ListBoxInfo* lb, WindowHandle hListBox, const char* filter,
+void PopulateListBox(ListBoxInfo* lb, const char* filter,
     const char** items, int item_count,
     bool (*filter_match)(const char* item, const char* filter)) {
   if (!lb) return;
+  WindowHandle hListBox = FlintContext_Get()->window.hListBox;
   PROFILE_START(timer_alias);
   if (SequenceHasPendingWait()) {
     log_info("PopulateListBox waiting filter='%s'", filter ? filter : "");

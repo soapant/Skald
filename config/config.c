@@ -27,7 +27,7 @@ void ConfigApply(void) {
     DebugMode = false;
     RoundedCorners = true;
     CornerRadius = 14;
-    EnableShaders = true;
+    EnableShaders = false;
     ShaderPreset = 1;
     ShaderIntensity = 0.50f;
     ShaderBrightness = 0.55f;

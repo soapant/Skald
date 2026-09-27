@@ -8,7 +8,7 @@ static char g_sel[256]={0};
 
 static void control_refresh(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
     const char* names[MaxFeatures]; int n=fl_get_feature_list(names,NULL,128);
-    PopulateListBox(lb, FlintContext_Get()->window.hListBox, filter, names, n, NULL);
+    PopulateListBox(lb, filter, names, n, NULL);
 }
 static bool control_enter(const char* selection, ListBoxInfo* lb) {
     (void)lb;

@@ -8,7 +8,7 @@ const char* GoogleHistoryFile = "GoogleZoxide.txt";
 
 void google_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
     FlStringList files = fl_load_file_list(GoogleHistoryFile);
-    PopulateListBox(lb, FlintContext_Get()->window.hListBox, filter, (const char**)files.items, files.count, NULL);
+    PopulateListBox(lb, filter, (const char**)files.items, files.count, NULL);
     fl_free_file_list(&files);
 }
 

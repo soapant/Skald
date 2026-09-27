@@ -95,7 +95,7 @@ void video_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxIn
     for (size_t i = 0; i < video_files.count; i++) {
         items[i] = video_files.files[i].name;
     }
-    PopulateListBox(lb, FlintContext_Get()->window.hListBox, filter, items, (int)video_files.count, NULL);
+    PopulateListBox(lb, filter, items, (int)video_files.count, NULL);
     free(items);
 }
 
