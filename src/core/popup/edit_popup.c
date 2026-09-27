@@ -43,6 +43,7 @@ static void EditPopup_Destroy(Popup* self) {
     free(data->text);
     free(data->title);
     free(data->align);
+    free(data->placeholder);
     Platform_EditPopupDestroyWindow(self);
     free(data);
     PROFILE_END_VAR(timer, "window_manager:EditPopup_Destroy");
@@ -55,6 +56,17 @@ static const PopupVTable g_edit_popup_vtable = {
     .on_key = EditPopup_OnKey,
     .destroy = EditPopup_Destroy
 };
+
+void EditPopup_SetPlaceholder(Popup* popup, const char* placeholder) {
+    if (!popup || popup->type != POPUP_EDIT) return;
+    EditPopupDataInternal* data = (EditPopupDataInternal*)popup;
+    if (!data) return;
+    char* np = placeholder ? strdup(placeholder) : NULL;
+    if (placeholder && !np) return;
+    free(data->placeholder);
+    data->placeholder = np;
+    if (data->base.vtable && data->base.vtable->on_render) data->base.vtable->on_render(popup);
+}
 
 Popup* EditPopup_Create(WindowManager* wm, const char* initial_text,
                         const char* title, int x, int y, int w, int h, const char* align,
