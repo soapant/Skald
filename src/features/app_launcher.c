@@ -169,7 +169,7 @@ static void scan_app_dirs(void) {
     }
     for (size_t i = 0; i < tmp.count; i++) {
         for (size_t j = i + 1; j < tmp.count; ) {
-            if (fl_string_match_insensitive(tmp.files[i].name, tmp.files[j].name)) {
+            if (fl_string_contains(tmp.files[i].name, tmp.files[j].name)) {
                 for (size_t k = j; k + 1 < tmp.count; k++) tmp.files[k] = tmp.files[k+1];
                 tmp.count--;
             } else {
@@ -183,7 +183,7 @@ static void scan_app_dirs(void) {
         
         bool found = false;
         for (size_t app_idx = 0; app_idx < tmp.count; app_idx++) {
-            if (fl_string_match_insensitive(tmp.files[app_idx].path, SystemShortcuts[shortcut_idx].path)) {
+            if (fl_string_contains(tmp.files[app_idx].path, SystemShortcuts[shortcut_idx].path)) {
                 strncpy(tmp.files[app_idx].name, SystemShortcuts[shortcut_idx].name, sizeof(tmp.files[app_idx].name) - 1);
                 tmp.files[app_idx].name[sizeof(tmp.files[app_idx].name) - 1] = '\0';
                 found = true;
@@ -232,7 +232,7 @@ void launch_app_by_name(const char* display_name) {
     char path_copy[512] = {0};
     bool found = false;
     for (size_t i = 0; i < s_apps.count; i++) {
-        if (fl_string_match_insensitive(display_name,s_apps.files[i].name)) {
+        if (fl_string_contains(display_name,s_apps.files[i].name)) {
             strncpy(path_copy, s_apps.files[i].path, sizeof(path_copy)-1);
             found = true;
             break;
@@ -245,7 +245,7 @@ void launch_app_as_admin(const char* display_name) {
     char path_copy[512] = {0};
     bool found = false;
     for (size_t i = 0; i < s_apps.count; i++) {
-        if (fl_string_match_insensitive(s_apps.files[i].name, display_name)) {
+        if (fl_string_contains(s_apps.files[i].name, display_name)) {
             strncpy(path_copy, s_apps.files[i].path, sizeof(path_copy)-1);
             found = true;
             break;
@@ -271,13 +271,13 @@ void applauncher_refresh_callback(const char* filter, WindowHandle hListBox, Lis
         const char** names = (const char**)malloc(cnt * sizeof(char*));
         if (!names) return;
         for (size_t i = 0; i < cnt && i < s_apps.count; i++) names[i] = s_apps.files[i].name;
-        PopulateListBox(lb, FlintContext_Get()->window.hListBox, filter, names, (int)cnt, NULL);
+        PopulateListBox(lb, filter, names, (int)cnt, NULL);
         free(names);
         return;
     }
     const char* names[2048];
     for (size_t i = 0; i < cnt && i < s_apps.count; i++) names[i] = s_apps.files[i].name;
-    PopulateListBox(lb, FlintContext_Get()->window.hListBox, filter, names, (int)cnt, NULL);
+    PopulateListBox(lb, filter, names, (int)cnt, NULL);
 }
 
 void applauncher_copy_callback(const char* selection,int true_index,int type) {

@@ -267,7 +267,7 @@ void RemoveTodoItemFromFile(const char* item_to_remove) {
 void todo_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
     FlStringList files = fl_load_file_list(TODO_FILE_PATH);
 
-    PopulateListBox(lb, FlintContext_Get()->window.hListBox, filter, (const char**)files.items, files.count, NULL);
+    PopulateListBox(lb, filter, (const char**)files.items, files.count, NULL);
     fl_free_file_list(&files);
 }
 
