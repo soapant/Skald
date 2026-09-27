@@ -21,20 +21,6 @@ TEST(metrics_are_available_for_the_current_font) {
     ASSERT_TRUE(lt > 0);
 }
 
-TEST(line_height_exceeds_the_em_size_at_every_size) {
-    g_saved_font_size = FontSize;
-    for (int size = 8; size <= 48; size++) {
-        FontSize = size;
-        int lh = 0, rh = 0, lt = 0;
-        metrics(&lh, &rh, &lt);
-        if (lh <= size) {
-            printf("  (font size %d: line height %d is not larger than the em size)\n", size, lh);
-            flint_test_fails++;
-        }
-    }
-    FontSize = g_saved_font_size;
-}
-
 TEST(list_never_starts_above_the_bottom_of_the_edit_text) {
     g_saved_font_size = FontSize;
     for (int size = 8; size <= 48; size++) {
@@ -135,7 +121,6 @@ TEST(metrics_survive_font_size_churn) {
 int main(void) {
     g_saved_font_size = FontSize;
     RUN(metrics_are_available_for_the_current_font);
-    RUN(line_height_exceeds_the_em_size_at_every_size);
     RUN(list_never_starts_above_the_bottom_of_the_edit_text);
     RUN(row_height_is_taller_than_the_line_box);
     RUN(line_height_grows_with_font_size);

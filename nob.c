@@ -1,4 +1,5 @@
 #define NOB_IMPLEMENTATION
+#define NOB_NO_ECHO
 #define NOB_EXPERIMENTAL_DELETE_OLD
 #include "nob.h"
 
@@ -347,6 +348,11 @@ static bool run_tests(void) {
         }
     }
     size_t failed = 0;
+    size_t suite_count = test_sources.count;
+    char (*suite_names)[128] = calloc(suite_count ? suite_count : 1, sizeof(char[128]));
+    bool* suite_ok = calloc(suite_count ? suite_count : 1, sizeof(bool));
+    Nob_Log_Level prev_level = nob_minimal_log_level;
+    nob_minimal_log_level = NOB_ERROR;
     for (size_t t = 0; t < test_sources.count; ++t) {
         const char* src = test_sources.items[t];
         const char* base = nob_path_name(src);
@@ -369,26 +375,38 @@ static bool run_tests(void) {
         }
         nob_cmd_append(&cmd, LINK_FLAGS, "-o", out);
         nob_log(NOB_INFO, "Building test %s", out);
+        snprintf(suite_names[t], sizeof(suite_names[t]), "%s", name);
         if (!nob_cmd_run(&cmd)) {
             nob_log(NOB_ERROR, "Failed to build test %s", src);
+            snprintf(suite_names[t], sizeof(suite_names[t]), "%s (BUILD FAILED)", name);
+            suite_ok[t] = false;
             failed++;
             continue;
         }
         Nob_Cmd run = {0};
         nob_cmd_append(&run, out);
         nob_log(NOB_INFO, "Running test %s", out);
-        if (!nob_cmd_run(&run)) {
-            nob_log(NOB_ERROR, "Test FAILED: %s", out);
-            failed++;
-        } else {
-            nob_log(NOB_INFO, "Test passed: %s", out);
-        }
+        suite_ok[t] = nob_cmd_run(&run);
+        if (!suite_ok[t]) failed++;
     }
+    nob_minimal_log_level = prev_level;
+
+    nob_log(NOB_INFO, "");
+    nob_log(NOB_INFO, "==================== TEST SUMMARY ====================");
+    for (size_t t = 0; t < suite_count; t++) {
+        nob_log(suite_ok[t] ? NOB_INFO : NOB_ERROR, "  %-4s %s",
+                suite_ok[t] ? "PASS" : "FAIL", suite_names[t]);
+    }
+    nob_log(NOB_INFO, "=======================================================");
     if (failed > 0) {
-        nob_log(NOB_ERROR, "%zu test(s) failed", failed);
+        nob_log(NOB_ERROR, "%zu of %zu test suite(s) failed", failed, suite_count);
+        free(suite_names);
+        free(suite_ok);
         return false;
     }
-    nob_log(NOB_INFO, "All tests passed (%zu suite(s))", test_sources.count);
+    nob_log(NOB_INFO, "All %zu test suite(s) passed", suite_count);
+    free(suite_names);
+    free(suite_ok);
     return true;
 }
 
