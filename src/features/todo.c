@@ -308,9 +308,10 @@ void todo_copy_callback(const char* selection,int true_index,int type) {
 
 void todo_render_callback(PromptState *state) {
     ListBoxInfo *lb = &state->listbox;
+    int line_h = fl_get_text_height(NULL);
     FlListSpec spec = {
         .lb = lb,
-        .item_height = FontSize + 40
+        .item_height = line_h * 3
     };
     fl_place_editbox();
     if (!fl_listbox_begin(&spec)) return;
@@ -324,17 +325,18 @@ void todo_render_callback(PromptState *state) {
         ParseTodoLine(text_buf, main_text, tags, &tag_count);
         fl_draw_text(.x=ctx.x + 10, .y=ctx.y + 4,.color=rgb_to_hex(COLOR_TEXT),.text=main_text, .align="LEFT", .pad=14);
         if (tag_count > 0) {
+            int tag_y = ctx.y + line_h + 10;
             if (tag_count == 1) {
                 for (int t = 0; t < tag_count; t++) {
                     unsigned long tag_rgb = rgb_to_hex(GetTagColor(tags[t]));
-                    fl_draw_text(.x=14, .y=ctx.y + FontSize + 10, .text=tags[t], .color=tag_rgb, .align="LEFT", .pad=14);
+                    fl_draw_text(.x=14, .y=tag_y, .text=tags[t], .color=tag_rgb, .align="LEFT", .pad=14);
                 }
             } else {
                 int x_offset = 0;
                 for (int t = 0; t < tag_count; t++) {
                     unsigned long tag_rgb = rgb_to_hex(GetTagColor(tags[t]));
-                    fl_draw_text(.x=14 + x_offset, .y=ctx.y + FontSize + 10, .text=tags[t], .color=tag_rgb, .align="LEFT", .pad=14 + x_offset);
-                    x_offset += strlen(tags[t]) * FontSize / 2 + 30;
+                    fl_draw_text(.x=14 + x_offset, .y=tag_y, .text=tags[t], .color=tag_rgb, .align="LEFT", .pad=14 + x_offset);
+                    x_offset += (int)(strlen(tags[t]) * (float)FontSize / 2.0f) + 30;
                 }
             }
         }
