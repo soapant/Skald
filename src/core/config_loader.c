@@ -165,7 +165,7 @@ static volatile LONG g_cfg_reload_lock = 0;
 #endif
 bool Config_Reload(void) {
     WindowManager* _wm2 = WindowManager_Get();
-    if (_wm2 && _wm2->popup_count > 0) return false;
+    if (_wm2 && _wm2->popup_count > 0) { log_warn("cfg reload blocked: %d popup(s) open", _wm2->popup_count); return false; }
 #ifdef _WIN32
     if (InterlockedCompareExchange(&g_cfg_reload_lock, 1, 0) != 0) return false;
 #endif
@@ -173,17 +173,20 @@ bool Config_Reload(void) {
     long long debounce = (long long)TimeBetweenHotReload * 1000;
     if (debounce < 250) debounce = 250;
     if (g_cfg_last_reload_ms && now - g_cfg_last_reload_ms < debounce) {
+        log_warn("cfg reload blocked: debounce, %lldms since last", (long long)(now - g_cfg_last_reload_ms));
 #ifdef _WIN32
         InterlockedExchange(&g_cfg_reload_lock, 0);
 #endif
         return false;
     }
     if (!config_build_load_store()) {
+        log_warn("cfg reload blocked: build/load failed, keeping old values");
 #ifdef _WIN32
         InterlockedExchange(&g_cfg_reload_lock, 0);
 #endif
         return false;
     }
+    log_warn("cfg reload applied: intensity=%.3f brightness=%.3f preset=%d shaders=%d", (double)ShaderIntensity, (double)ShaderBrightness, ShaderPreset, EnableShaders ? 1 : 0);
     g_cfg_last_reload_ms = Platform_GetWallClockMs();
     Platform_ResetUIScale();
 #ifdef _WIN32
@@ -412,6 +415,7 @@ void Config_PollWatcher(void) {
         g_cfg_base_mtime = mt;
         g_cfg_base_size = sz;
         g_cfg_change_at = Platform_GetWallClockMs();
+        log_warn("cfg change detected mtime=%lld size=%lld", mt, sz);
         return;
     }
     if (g_cfg_change_at == 0) return;
@@ -420,7 +424,7 @@ void Config_PollWatcher(void) {
     if (Platform_GetWallClockMs() - g_cfg_change_at < debounce) return;
     if (g_cfg_last_reload_ms && Platform_GetWallClockMs() - g_cfg_last_reload_ms < debounce) return;
     WindowManager* _wm = WindowManager_Get();
-    if (_wm && _wm->popup_count > 0) { g_cfg_change_at = Platform_GetWallClockMs(); return; }
+    if (_wm && _wm->popup_count > 0) { log_warn("cfg reload deferred: %d popup(s) open", _wm->popup_count); return; }
     g_cfg_change_at = 0;
 #ifdef _WIN32
     HWND tray = NULL;
