@@ -24,14 +24,14 @@ void ConfigApply(void) {
     ModePersistsThroughFeatures = false;
     TimeOutForMessages = 1;
     DoTimeDebugs = false;
-    DebugMode = true;
+    DebugMode = false;
     RoundedCorners = true;
     CornerRadius = 14;
     EnableShaders = true;
     ShaderPreset = 1;
-    ShaderIntensity = 0.3f;
+    ShaderIntensity = 0.15f;
     TimeBetweenHotReload = 2;
-    WindowOpacity = 235.0f;
+    WindowOpacity = 205.0f;
     EditPopUpPos = "middle";
     EditPopUpWidthMin = 400;
     PageUpDownLen = 6;
