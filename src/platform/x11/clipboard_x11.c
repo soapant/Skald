@@ -11,6 +11,9 @@
 #define CLIP_INCR_CHUNK (64u * 1024u)
 
 static Window g_clip_win = None;
+static Display *g_clip_rd_dpy = NULL;
+static Window g_clip_rd_win = None;
+static Atom g_clip_rd_prop = None;
 static char *g_clip_text = NULL;
 static unsigned char *g_clip_png = NULL;
 static size_t g_clip_png_len = 0;
@@ -227,6 +230,12 @@ void x11_clipboard_shutdown(void) {
     Display *dpy = get_display();
     if (dpy && g_clip_win != None) XDestroyWindow(dpy, g_clip_win);
     g_clip_win = None;
+    if (g_clip_rd_dpy) {
+        XCloseDisplay(g_clip_rd_dpy);
+        g_clip_rd_dpy = NULL;
+        g_clip_rd_win = None;
+        g_clip_rd_prop = None;
+    }
     x11_clipboard_abort_incr();
     free(g_clip_text);
     g_clip_text = NULL;
@@ -329,15 +338,60 @@ static char *ClipReadIncr(Display *dpy, Window win, Atom prop, ClipReadWait *w) 
     return out;
 }
 
-static char *ClipReadTarget(Display *dpy, Window win, Atom target) {
-    Atom prop = XInternAtom(dpy, "FLINT_CLIP_READ", False);
+static Display *x11_clipboard_read_display(void) {
+    if (g_clip_rd_dpy) return g_clip_rd_dpy;
+    Display *d = XOpenDisplay(NULL);
+    if (!d) {
+        Display *main_dpy = get_display();
+        if (main_dpy) {
+            char *ds = XDisplayString(main_dpy);
+            if (ds) {
+                d = XOpenDisplay(ds);
+                XFree(ds);
+            }
+        }
+    }
+    if (!d) {
+        log_warn("clipboard read display open failed");
+        return NULL;
+    }
+    Window root = DefaultRootWindow(d);
+    XSetWindowAttributes attrs = {0};
+    attrs.override_redirect = True;
+    g_clip_rd_win = XCreateWindow(d, root, 0, 0, 1, 1, 0, 0, InputOutput, CopyFromParent, CWOverrideRedirect, &attrs);
+    g_clip_rd_prop = XInternAtom(d, "FLINT_CLIP_READ", False);
+    g_clip_incr = XInternAtom(d, "INCR", False);
+    XFlush(d);
+    g_clip_rd_dpy = d;
+    log_info("clipboard read display opened win=%lu", (unsigned long)g_clip_rd_win);
+    return g_clip_rd_dpy;
+}
+
+static char *ClipReadTarget(Atom target) {
+    Display *dpy = x11_clipboard_read_display();
+    if (!dpy || g_clip_rd_win == None) return NULL;
+    Window win = g_clip_rd_win;
+    Atom prop = g_clip_rd_prop;
     XSelectInput(dpy, win, PropertyChangeMask);
     XConvertSelection(dpy, g_clip_clipboard, target, prop, win, CurrentTime);
     XFlush(dpy);
     ClipReadWait w = { win, g_clip_clipboard, prop };
     XEvent ev;
-    if (!ClipReadWaitEvent(dpy, &ev, ClipReadNotifyPred, &w, 200)) return NULL;
-    if (ev.xselection.property == None) return NULL;
+    Window sel_owner = XGetSelectionOwner(dpy, g_clip_clipboard);
+    char *tname = XGetAtomName(dpy, target);
+    if (!ClipReadWaitEvent(dpy, &ev, ClipReadNotifyPred, &w, 200)) {
+        log_warn("clipboard read no SelectionNotify target=%s owner=%lu",
+                 tname ? tname : "?", (unsigned long)sel_owner);
+        if (tname) XFree(tname);
+        return NULL;
+    }
+    if (tname) XFree(tname);
+    if (ev.xselection.property == None) {
+        log_warn("clipboard read refused target=%lu owner=%lu", (unsigned long)target, (unsigned long)sel_owner);
+        return NULL;
+    }
+    log_info("clipboard read got SelectionNotify target=%lu prop=%lu owner=%lu",
+             (unsigned long)target, (unsigned long)ev.xselection.property, (unsigned long)sel_owner);
     Atom actual = None;
     int format = 0;
     unsigned long nitems = 0;
@@ -360,8 +414,12 @@ char *x11_clipboard_get_text(void) {
     if (!dpy || g_clip_win == None) return NULL;
     if (XGetSelectionOwner(dpy, g_clip_clipboard) == g_clip_win && g_clip_text)
         return strdup(g_clip_text);
-    char *out = ClipReadTarget(dpy, g_clip_win, g_clip_utf8);
-    if (!out) out = ClipReadTarget(dpy, g_clip_win, XA_STRING);
+    char *out = ClipReadTarget(g_clip_utf8);
+    if (out) log_info("clipboard read hit target=UTF8_STRING");
+    if (!out) {
+        out = ClipReadTarget(XA_STRING);
+        if (out) log_info("clipboard read hit target=STRING");
+    }
     log_info("clipboard read len=%d", out ? (int)strlen(out) : -1);
     return out;
 }
