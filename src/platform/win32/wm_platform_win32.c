@@ -75,18 +75,6 @@ void Platform_WM_GetMonitorGeometry(int *ox, int *oy, int *ow, int *oh) {
 void Platform_GetTextLayoutMetrics(int* line_h, int* row_h, int* list_top) {
     PROFILE_START(timer);
     int lh = FontSize;
-    HDC dc = GetDC(NULL);
-    if (dc) {
-        HFONT hf = CreateCustomNerdFont(FontSize, UsedFont);
-        HGDIOBJ old = hf ? SelectObject(dc, hf) : NULL;
-        TEXTMETRIC tm;
-        memset(&tm, 0, sizeof(tm));
-        GetTextMetrics(dc, &tm);
-        if (tm.tmHeight > 0) lh = tm.tmHeight;
-        if (old) SelectObject(dc, old);
-        if (hf) DeleteObject(hf);
-        ReleaseDC(NULL, dc);
-    }
     int rh = lh + 14;
     if (rh < 24) rh = 24;
     if (rh > 64) rh = 64;
