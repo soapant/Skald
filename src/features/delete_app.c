@@ -30,8 +30,7 @@ bool delete_app_enter(const char* selection, ListBoxInfo* lb) {
     snprintf(cmd, sizeof(cmd), "pacman -Rns %s", selection);
     char* output = fl_run_terminal_command(cmd);
     if (fl_string_contains(output,"root")) {
-        char* pass = fl_popup(.title="Input Sudo Password");
-        printf("pass=%s \n",pass);
+        char* pass = fl_popup(.placeholder="Input Sudo Password");
     }
 
     return true;

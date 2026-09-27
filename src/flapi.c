@@ -898,6 +898,7 @@ char* fl_popup_impl(const FlPopupSpec *spec) {
     WindowManager* wm = WindowManager_Get();
     char* result = NULL;
     Popup* popup = EditPopup_Create(wm, initial_text,"", x, y, w, h, align, fl_edit_blocking_confirm, &result);
+    if (popup) EditPopup_SetPlaceholder(popup, spec->placeholder);
 
     WindowManager_PushPopup(wm, popup);
     while (wm->running && popup->manager) {
