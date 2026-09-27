@@ -40,10 +40,17 @@ static void kwin_ensure_bus(void) {
     log_error("kwin bus addr='%s'", addr);
 }
 
+static char g_kwin_qdbus[64] = {0};
+
 static char* kwin_qdbus_call(const char* args) {
     kwin_ensure_bus();
+    if (!g_kwin_qdbus[0]) {
+        const char* c = "/usr/bin/qdbus6";
+        if (access(c, X_OK) != 0) c = "/usr/bin/qdbus";
+        snprintf(g_kwin_qdbus, sizeof(g_kwin_qdbus), "%s", c);
+    }
     char cmd[2048];
-    snprintf(cmd, sizeof(cmd), "QDBUS=$(command -v qdbus6 || command -v qdbus); if [ -z \"$QDBUS\" ]; then echo \"error: no qdbus\"; else \"$QDBUS\" %s; fi", args);
+    snprintf(cmd, sizeof(cmd), "%s %s 2>/dev/null || echo error", g_kwin_qdbus, args);
     return Platform_RunTerminalCommand(cmd, false);
 }
 
@@ -91,6 +98,11 @@ static unsigned g_kwin_q_seq = 0;
 static bool g_kwin_q_legacy_cleared = false;
 static long long g_kwin_q_load_tried_at = 0;
 
+/* How long a window snapshot stays usable. The query costs a Script.run plus
+   a journalctl scrape, so a short TTL meant every hotkey paid for a fresh
+   one. Window filters only need the title to be roughly current. */
+#define KWIN_SNAP_TTL_MS 1200
+
 static const char g_kwin_q_body[] =
     "(function(){"
     "function cf(w){try{var v=w.caption;if(!v)return \"\";return String(v).replace(/[\\r\\n]+/g,\" \");}catch(e){return \"\";}}"
@@ -101,21 +113,6 @@ static const char g_kwin_q_body[] =
     "print(\"FLINTQA \"+(workspace.activeWindow?cf(workspace.activeWindow):\"\"));"
     "print(\"FLINTQC \"+(workspace.activeWindow?cc(workspace.activeWindow):\"\"));"
     "})();";
-
-static bool kwin_q_verify(void) {
-    char args[128];
-    snprintf(args, sizeof(args), "org.kde.KWin /Scripting/Script%d org.kde.kwin.Script.run", g_kwin_q_id);
-    char* rout = kwin_qdbus_call(args);
-    if (rout) free(rout);
-    struct timespec ts;
-    ts.tv_sec = 0;
-    ts.tv_nsec = 150 * 1000 * 1000;
-    nanosleep(&ts, NULL);
-    char* log = Platform_RunTerminalCommand("journalctl --user -o cat --since=\"-5s\" 2>/dev/null | grep -a -e \"FLINTQR \" -e \"FLINTQA \" -e \"FLINTQC \" | tail -6", false);
-    bool ok = log && log[0] && (strstr(log, "FLINTQR ") || strstr(log, "FLINTQA "));
-    if (log) free(log);
-    return ok;
-}
 
 static bool kwin_q_load(void) {
     long long now = Platform_GetWallClockMs();
@@ -153,15 +150,13 @@ static bool kwin_q_load(void) {
             log_error("kwin q load bad id");
             continue;
         }
-        if (kwin_q_verify()) {
-            g_kwin_q_loaded = true;
-            return true;
-        }
-        log_error("kwin q verify failed id=%d round=%d", g_kwin_q_id, round);
-        char ucmd[128];
-        snprintf(ucmd, sizeof(ucmd), "org.kde.KWin /Scripting org.kde.kwin.Scripting.unloadScript %s", g_kwin_q_name);
-        char* uo = kwin_qdbus_call(ucmd);
-        if (uo) free(uo);
+        /* loadScript returning a valid id is enough. Verifying here meant a
+           Script.run plus a 150ms sleep plus a journalctl scrape, and then
+           kwin_snapshot_locked immediately did the same run and scrape again.
+           If the script is actually broken the snapshot's own journal retry
+           fails and clears g_kwin_q_loaded, so this self-corrects. */
+        g_kwin_q_loaded = true;
+        return true;
     }
     g_kwin_q_loaded = false;
     g_kwin_q_name[0] = '\0';
@@ -202,7 +197,7 @@ static void kwin_snap_store(const char* blob) {
 
 static bool kwin_snapshot_locked(void) {
     long long now = Platform_GetWallClockMs();
-    if (g_kwin_records && now - g_kwin_snap_at < 500) return true;
+    if (g_kwin_records && now - g_kwin_snap_at < KWIN_SNAP_TTL_MS) return true;
     for (int tries = 0; tries < 2; tries++) {
         if (!g_kwin_q_loaded && !kwin_q_load()) return false;
         char args[128];
