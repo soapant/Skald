@@ -71,7 +71,7 @@ char *allowed_audio_formats[] = {"mp3","ogg","flac", NULL};
 
 ListOfFiles s_music_files = {0};
 
-void music_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
+void music_refresh_callback(const char* filter, ListBoxInfo* lb) {
     s_music_files.count = 0;
     fl_get_all_files_from_dir(MusicPath, allowed_audio_formats, &s_music_files, NULL);
     

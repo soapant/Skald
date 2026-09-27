@@ -146,7 +146,7 @@ void ExecuteMotion(MotionAction action, const char* sequence, int typed_count) {
         DeleteLastTypedChar(ctx);
         if (ctx->prompt_callbacks.refresh) {
             ListBoxInfo* lb = Vim_GetListBox(ctx);
-            ctx->prompt_callbacks.refresh(ctx->window.filter, ctx->window.hListBox, lb);
+            ctx->prompt_callbacks.refresh(ctx->window.filter, lb);
         }
     }
     for (int i = 0; i < VIM_SEQUENCE_BINDING_COUNT; i++) {

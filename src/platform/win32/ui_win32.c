@@ -223,7 +223,7 @@ void UI_RedrawNow(ListBoxInfo* lb, WindowHandle hListBox) {
                 g_win32_prompt_state->cursor = (size_t)cs;
             }
         }
-        _c->prompt_callbacks.refresh(buffer, FlintContext_Get()->window.hListBox, lb);
+        _c->prompt_callbacks.refresh(buffer, lb);
     }
 }
 
@@ -377,7 +377,7 @@ bool UI_ApplyBackspaceToPopup(FlintContext* ctx) {
     ws->filter[sizeof(ws->filter)-1] = '\0';
     if (ctx->prompt_callbacks.refresh) {
         ListBoxInfo* lb = Vim_GetListBox(ctx);
-        ctx->prompt_callbacks.refresh(ctx->window.filter, ctx->window.hListBox, lb);
+        ctx->prompt_callbacks.refresh(ctx->window.filter, lb);
     }
     UI_ApplyFilterToEdit(ctx);
     return true;

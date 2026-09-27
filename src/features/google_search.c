@@ -6,7 +6,7 @@
 
 const char* GoogleHistoryFile = "GoogleZoxide.txt";
 
-void google_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
+void google_refresh_callback(const char* filter, ListBoxInfo* lb) {
     FlStringList files = fl_load_file_list(GoogleHistoryFile);
     PopulateListBox(lb, filter, (const char**)files.items, files.count, NULL);
     fl_free_file_list(&files);
@@ -18,7 +18,7 @@ void google_edit_callback(const char* selection, ListBoxInfo* lb) {
     if (!edited) return;
     if (idx >= 0) fl_replace_line_in_file(GoogleHistoryFile, idx, edited);
     free(edited);
-    google_refresh_callback("", FlintContext_Get()->window.hListBox, lb);
+    google_refresh_callback("", lb);
     UI_Redraw(lb, FlintContext_Get()->window.hListBox);
 }
 
