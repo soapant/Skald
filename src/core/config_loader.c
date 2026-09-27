@@ -279,6 +279,7 @@ static size_t config_emit_region(char* buf, size_t cap) {
     cfg_put(buf, cap, &off, "    EnableShaders = %s;\n", EnableShaders ? "true" : "false");
     cfg_put(buf, cap, &off, "    ShaderPreset = %d;\n", ShaderPreset);
     cfg_put_float(buf, cap, &off, "ShaderIntensity", ShaderIntensity);
+    cfg_put_float(buf, cap, &off, "ShaderBrightness", ShaderBrightness);
     cfg_put(buf, cap, &off, "    TimeBetweenHotReload = %d;\n", TimeBetweenHotReload);
     cfg_put_float(buf, cap, &off, "WindowOpacity", WindowOpacity);
     cfg_put(buf, cap, &off, "    EditPopUpPos = ");
