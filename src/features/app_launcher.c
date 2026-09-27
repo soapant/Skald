@@ -263,7 +263,7 @@ bool applauncher_ctrlenter_callback(const char* selection, ListBoxInfo* lb) {
     return true;
 }
 
-void applauncher_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
+void applauncher_refresh_callback(const char* filter, ListBoxInfo* lb) {
     ensure_app_cache();
     size_t cnt = s_apps.count;
     

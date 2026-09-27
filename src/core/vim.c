@@ -78,7 +78,7 @@ void Vim_SetText(FlintContext* ctx, const char* text) {
     SyncFilterToActiveState(ctx);
     if (ctx->prompt_callbacks.refresh) {
         ListBoxInfo* lb = Vim_GetListBox(ctx);
-        ctx->prompt_callbacks.refresh(ctx->window.filter, ctx->window.hListBox, lb);
+        ctx->prompt_callbacks.refresh(ctx->window.filter, lb);
     }
     UI_ApplyFilterToEdit(ctx);
 }
@@ -247,7 +247,7 @@ void DeleteLastTypedChar(FlintContext* ctx) {
             ctx->window.filter_cursor = s->cursor;
             if (ctx->prompt_callbacks.refresh) {
                 ListBoxInfo* lb = Vim_GetListBox(ctx);
-                ctx->prompt_callbacks.refresh(ctx->window.filter, ctx->window.hListBox, lb);
+                ctx->prompt_callbacks.refresh(ctx->window.filter, lb);
             }
             UI_ApplyFilterToEdit(ctx);
             return;
@@ -267,7 +267,7 @@ void DeleteLastTypedChar(FlintContext* ctx) {
     SyncFilterToActiveState(ctx);
     if (ctx->prompt_callbacks.refresh) {
         ListBoxInfo* lb = Vim_GetListBox(ctx);
-        ctx->prompt_callbacks.refresh(ctx->window.filter, ctx->window.hListBox, lb);
+        ctx->prompt_callbacks.refresh(ctx->window.filter, lb);
     }
     UI_ApplyFilterToEdit(ctx);
 }

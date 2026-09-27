@@ -264,7 +264,7 @@ void RemoveTodoItemFromFile(const char* item_to_remove) {
     fl_free_file_list(&lines);
 }
 
-void todo_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
+void todo_refresh_callback(const char* filter, ListBoxInfo* lb) {
     FlStringList files = fl_load_file_list(TODO_FILE_PATH);
 
     PopulateListBox(lb, filter, (const char**)files.items, files.count, NULL);
@@ -350,7 +350,7 @@ void todo_edit_callback(const char* selection, ListBoxInfo* lb) {
     if (!edited) return;
     if (idx >= 0) fl_replace_line_in_file(TODO_FILE_PATH, idx, edited);
     free(edited);
-    todo_refresh_callback("", FlintContext_Get()->window.hListBox, lb);
+    todo_refresh_callback("", lb);
     UI_Redraw(lb, FlintContext_Get()->window.hListBox);
 }
 

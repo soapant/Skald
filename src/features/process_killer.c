@@ -28,7 +28,7 @@ bool pk_enter_callback(const char* selection, ListBoxInfo* lb) {
     return true;
 }
 
-void pk_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
+void pk_refresh_callback(const char* filter, ListBoxInfo* lb) {
     const char** items = (const char**)malloc(PK_COUNT * sizeof(char*));
     if (!items) return;
     for (int i = 0; i < PK_COUNT; i++) {

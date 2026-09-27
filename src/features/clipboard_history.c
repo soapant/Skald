@@ -137,7 +137,7 @@ static void* ch_sampler(void* arg) {
     return NULL;
 }
 
-void clipboard_history_refresh(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
+void clipboard_history_refresh(const char* filter, ListBoxInfo* lb) {
     fl_mutex_lock(ch_lock);
     int count = ch_count;
     const char** items = NULL;
