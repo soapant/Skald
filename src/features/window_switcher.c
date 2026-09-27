@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void window_switcher_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
+void window_switcher_refresh_callback(const char* filter, ListBoxInfo* lb) {
     Fl_WindowList list_of_titles = fl_get_all_window_titles();
     Fl_WindowList list_of_names = fl_get_all_window_names();
 

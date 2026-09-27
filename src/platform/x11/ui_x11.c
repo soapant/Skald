@@ -182,7 +182,7 @@ void UI_RedrawNow(ListBoxInfo* lb, WindowHandle hListBox) {
     if (_c->prompt_callbacks.refresh != NULL) {
         char buffer[MaxFeatures];
         UI_GetCurrentTextEdit(FlintContext_Get()->window.hEditControl, buffer, sizeof(buffer));
-        _c->prompt_callbacks.refresh(buffer, FlintContext_Get()->window.hListBox, lb);
+        _c->prompt_callbacks.refresh(buffer, lb);
     }
 }
 

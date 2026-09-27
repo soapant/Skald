@@ -7,7 +7,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-void delete_app_refresh(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
+void delete_app_refresh(const char* filter, ListBoxInfo* lb) {
 
     char* output = fl_run_terminal_command("pacman -Qe");
     if (!output) return;

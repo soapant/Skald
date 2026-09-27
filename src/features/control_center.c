@@ -6,7 +6,7 @@
 
 static char g_sel[256]={0};
 
-static void control_refresh(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
+static void control_refresh(const char* filter, ListBoxInfo* lb) {
     const char* names[MaxFeatures]; int n=fl_get_feature_list(names,NULL,128);
     PopulateListBox(lb, filter, names, n, NULL);
 }

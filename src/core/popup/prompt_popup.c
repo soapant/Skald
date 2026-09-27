@@ -85,7 +85,7 @@ static void PromptPopup_OnShow(Popup* self) {
     ctx2->window.callbacks = ctx2->prompt_callbacks;
     SetCurrentFeatureName(ctx2->window.current_feature);
     History_ResetCursor(ctx2->window.current_feature);
-    if (data->spec.refresh) data->spec.refresh(data->state->filter, FlintContext_Get()->window.hListBox, data->state->has_listbox ? &data->state->listbox : NULL);
+    if (data->spec.refresh) data->spec.refresh(data->state->filter, data->state->has_listbox ? &data->state->listbox : NULL);
     PROFILE_END_VAR(timer, "window_manager:PromptPopup_OnShow");
 }
 

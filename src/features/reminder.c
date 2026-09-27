@@ -1,6 +1,6 @@
 #include "core/flapi.h"
 
-void reminder_refresh(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
+void reminder_refresh(const char* filter, ListBoxInfo* lb) {
 }
 
 bool reminder_enter(const char* selection, ListBoxInfo* lb) {

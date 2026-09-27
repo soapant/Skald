@@ -44,7 +44,7 @@ bool PromptController_PollSequenceTimeout(void) {
     Popup* top = wm ? WindowManager_GetTopPopup(wm) : NULL;
     if (top && top->type == POPUP_PROMPT && top->user_data) {
         PromptState* s = (PromptState*)top->user_data;
-        ctx->prompt_callbacks.refresh(s->filter, ctx->window.hListBox, s->has_listbox ? &s->listbox : NULL);
+        ctx->prompt_callbacks.refresh(s->filter, s->has_listbox ? &s->listbox : NULL);
         return true;
     }
     return false;

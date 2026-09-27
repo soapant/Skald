@@ -86,7 +86,7 @@ char *allowed_video_formats[] = {"webm","mp4"};
 
 ListOfFiles video_files = {0};
 
-void video_refresh_callback(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
+void video_refresh_callback(const char* filter, ListBoxInfo* lb) {
     video_files.count = 0;
     fl_get_all_files_from_dir(VideosPath, allowed_video_formats, &video_files, NULL);
     
