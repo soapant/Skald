@@ -327,7 +327,8 @@ void UI_ApplyFilterToEdit(FlintContext* ctx) {
         SetWindowTextA(hActive, ctx->window.filter);
         SendMessageA(hActive, EM_SETSEL, (WPARAM)pos, (LPARAM)pos);
     }
-    UpdateTextCaret(WH_FROM_HWND(hEdit));
+    if (GetFocus() == hEdit) DestroyCaret();
+    InvalidateRect(hEdit, NULL, FALSE);
     if (ctx->prompt_callbacks.render != NULL) {
         HWND hPopup = WH_TO_HWND(ctx->window.hPopupWnd);
         if (hPopup && IsWindow(hPopup)) InvalidateRect(hPopup, NULL, FALSE);
@@ -352,7 +353,8 @@ void UI_SyncEditCursor(FlintContext* ctx, int pos) {
     if (!hEdit) hEdit = WH_TO_HWND(ctx->window.hActiveEditControl);
     if (hEdit) {
         SendMessageA(hEdit, EM_SETSEL, (WPARAM)pos, (LPARAM)pos);
-        UpdateTextCaret(WH_FROM_HWND(hEdit));
+        if (GetFocus() == hEdit) DestroyCaret();
+        InvalidateRect(hEdit, NULL, FALSE);
     }
     if (ctx->prompt_callbacks.render != NULL) {
         HWND hPopup = WH_TO_HWND(ctx->window.hPopupWnd);
