@@ -455,14 +455,21 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
         int cursor_draw_x = x + 14 + cursor_x - scroll;
         if (cursor_draw_x < x + 2) cursor_draw_x = x + 2;
         if (cursor_draw_x > x + w - 4) cursor_draw_x = x + w - 4;
-        int cursor_y = y + (h - textH) / 2;
-        if (cursor_y < y + 2) cursor_y = y + 2;
-        RECT textRc = {x + 14 - scroll, cursor_y, x + w, cursor_y + textH};
+        int text_top = y + (h - textH) / 2;
+        if (text_top < y + 2) text_top = y + 2;
+        int cursorH = FontSize;
+        if (cursorH > h - 4) cursorH = h - 4;
+        if (cursorH <= 0) cursorH = textH;
+        int cursor_y = text_top + (textH - cursorH) / 2 + tm.tmInternalLeading;
+        if (cursor_y < text_top) cursor_y = text_top;
+        if (cursor_y + cursorH > y + h - 2) cursor_y = y + h - 2 - cursorH;
+        log_info("fl_place_editbox tmH=%d il=%d fs=%d box=%d,%d,%d,%d ttop=%d cy=%d ch=%d", tm.tmHeight, tm.tmInternalLeading, FontSize, x, y, w, h, text_top, cursor_y, cursorH);
+        RECT textRc = {x + 14 - scroll, text_top, x + w, text_top + textH};
         DrawTextA(hdc, buf, -1, &textRc, DT_SINGLELINE | DT_TOP | DT_LEFT);
         HBRUSH cbr = CreateSolidBrush(COLOR_CURSOR);
         RECT cRc;
-        if (IsInsertMode()) cRc = (RECT){cursor_draw_x, cursor_y, cursor_draw_x+2, cursor_y+textH};
-        else cRc = (RECT){cursor_draw_x, cursor_y, cursor_draw_x+12, cursor_y+textH};
+        if (IsInsertMode()) cRc = (RECT){cursor_draw_x, cursor_y, cursor_draw_x+2, cursor_y+cursorH};
+        else cRc = (RECT){cursor_draw_x, cursor_y, cursor_draw_x+12, cursor_y+cursorH};
         FillRect(hdc, &cRc, cbr);
         DeleteObject(cbr);
     } else {

@@ -266,21 +266,133 @@ static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent* key) {
     return false;
 }
 
+static void Win32_PaintEditCaret(HDC memDC, HWND hwnd) {
+  if (GetFocus() != hwnd) return;
+  DWORD s = 0, e = 0;
+  SendMessageA(hwnd, EM_GETSEL, (WPARAM)&s, (LPARAM)&e);
+  if (s != e) return;
+  HFONT hFont = (HFONT)SendMessageA(hwnd, WM_GETFONT, 0, 0);
+  HFONT oldFont = hFont ? (HFONT)SelectObject(memDC, hFont) : NULL;
+  TEXTMETRIC tm;
+  memset(&tm, 0, sizeof(tm));
+  GetTextMetrics(memDC, &tm);
+  int emSize = tm.tmAscent - tm.tmInternalLeading + tm.tmDescent;
+  if (emSize <= 0) emSize = FontSize;
+  int inkTop = 0;
+  int inkOk = 0;
+  {
+    GLYPHMETRICS gm;
+    memset(&gm, 0, sizeof(gm));
+    MAT2 mat;
+    memset(&mat, 0, sizeof(mat));
+    mat.eM11.value = 1;
+    mat.eM22.value = 1;
+    if (GetGlyphOutline(memDC, 'x', GGO_METRICS, &gm, 0, NULL, &mat) != GDI_ERROR && gm.gmptGlyphOrigin.y > 0) {
+      inkTop = tm.tmAscent - (int)gm.gmptGlyphOrigin.y;
+      inkOk = 1;
+    } else {
+      inkTop = (emSize * 48 + 50) / 100;
+    }
+    if (inkTop < 0) inkTop = 0;
+  }
+  int xHeight = tm.tmAscent - inkTop;
+  {
+    static HWND loggedHwnd = NULL;
+    static int loggedTick = 0;
+    if (hwnd != loggedHwnd) { loggedHwnd = hwnd; loggedTick = 0; }
+    if (loggedTick < 3) {
+      loggedTick++;
+      log_info("PaintCaret tmH=%d asc=%d desc=%d il=%d em=%d inkOk=%d ink=%d xh=%d", tm.tmHeight, tm.tmAscent, tm.tmDescent, tm.tmInternalLeading, emSize, inkOk, inkTop, xHeight);
+    }
+  }
+  if (oldFont) SelectObject(memDC, oldFont);
+  RECT rc;
+  GetClientRect(hwnd, &rc);
+  char buf[512];
+  GetWindowTextA(hwnd, buf, sizeof(buf));
+  int len = (int)strlen(buf);
+  DWORD q = s;
+  if ((int)q > len) q = (DWORD)len;
+  int cx;
+  int lineTop;
+  if (len <= 0) {
+    cx = 2;
+    lineTop = (rc.bottom - tm.tmHeight) / 2;
+  } else {
+    LRESULT coords = SendMessageA(hwnd, EM_POSFROMCHAR, q, 0);
+    if (coords == (LRESULT)-1) {
+      coords = SendMessageA(hwnd, EM_POSFROMCHAR, (WPARAM)(len - 1), 0);
+      if (coords == (LRESULT)-1) return;
+      HFONT mf = (HFONT)SendMessageA(hwnd, WM_GETFONT, 0, 0);
+      HFONT mo = mf ? (HFONT)SelectObject(memDC, mf) : NULL;
+      char lastc[2] = { buf[len - 1], '\0' };
+      SIZE wsz = {0, 0};
+      GetTextExtentPoint32A(memDC, lastc, 1, &wsz);
+      if (mo) SelectObject(memDC, mo);
+      cx = (short)LOWORD(coords) + wsz.cx;
+      lineTop = (short)HIWORD(coords);
+    } else {
+      int emX = (short)LOWORD(coords);
+      HFONT qf = (HFONT)SendMessageA(hwnd, WM_GETFONT, 0, 0);
+      HFONT qo = qf ? (HFONT)SelectObject(memDC, qf) : NULL;
+      SIZE qs = {0, 0};
+      int qq = (int)q < (int)sizeof(buf)-1 ? (int)q : (int)sizeof(buf)-1;
+      char qtmp[512];
+      memcpy(qtmp, buf, qq);
+      qtmp[qq] = '\0';
+      GetTextExtentPoint32A(memDC, qtmp, qq, &qs);
+      if (qo) SelectObject(memDC, qo);
+      int measX = (int)qs.cx + 2;
+      int slack = tm.tmAveCharWidth > 0 ? tm.tmAveCharWidth : 8;
+      cx = emX;
+      if (cx < 0 || cx > measX + 2 + slack) {
+        log_info("PaintCaret reject emX=%d measX=%d q=%d len=%d", emX, measX, (int)q, len);
+        cx = measX;
+      }
+      lineTop = (short)HIWORD(coords);
+    }
+  }
+  int caretY = lineTop + inkTop;
+  if (caretY < lineTop) caretY = lineTop;
+  int caretH = lineTop + tm.tmAscent + 2 - caretY;
+  if (caretH > FontSize) caretH = FontSize;
+  if (caretH > rc.bottom && rc.bottom > 0) caretH = rc.bottom;
+  if (caretH <= 0) return;
+  if (rc.bottom > 0 && caretY + caretH > rc.bottom) caretY = rc.bottom - caretH;
+  int caretW = 2;
+  if (!IsInsertMode()) caretW = tm.tmAveCharWidth > 0 ? tm.tmAveCharWidth : 8;
+  if (cx < 0) cx = 0;
+  if (cx + caretW > rc.right && rc.right > caretW) cx = rc.right - caretW;
+  HBRUSH cbr = CreateSolidBrush(COLOR_CURSOR);
+  RECT cRc = {cx, caretY, cx + caretW, caretY + caretH};
+  FillRect(memDC, &cRc, cbr);
+  DeleteObject(cbr);
+  {
+    HBRUSH rbr = CreateSolidBrush(RGB(255, 0, 0));
+    RECT rRc = {0, caretY, rc.right, caretY + 1};
+    FillRect(memDC, &rRc, rbr);
+    DeleteObject(rbr);
+    HBRUSH bbr = CreateSolidBrush(RGB(0, 0, 255));
+    RECT bRc = {0, lineTop + tm.tmAscent, rc.right, lineTop + tm.tmAscent + 1};
+    FillRect(memDC, &bRc, bbr);
+    DeleteObject(bbr);
+  }
+}
+
 LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
   if(msg==WM_KEYDOWN){ int mods=0; if(GetKeyState(VK_CONTROL)&0x8000) mods|=HOTKEY_MOD_CTRL; if(GetKeyState(VK_MENU)&0x8000) mods|=HOTKEY_MOD_ALT; if(GetKeyState(VK_SHIFT)&0x8000) mods|=HOTKEY_MOD_SHIFT; if(GetKeyState(VK_LWIN)&0x8000||GetKeyState(VK_RWIN)&0x8000) mods|=HOTKEY_MOD_SUPER; Platform_InputState_Update((int)wParam,true,mods); }
   if(msg==WM_KEYUP){ int mods=0; if(GetKeyState(VK_CONTROL)&0x8000) mods|=HOTKEY_MOD_CTRL; if(GetKeyState(VK_MENU)&0x8000) mods|=HOTKEY_MOD_ALT; if(GetKeyState(VK_SHIFT)&0x8000) mods|=HOTKEY_MOD_SHIFT; if(GetKeyState(VK_LWIN)&0x8000||GetKeyState(VK_RWIN)&0x8000) mods|=HOTKEY_MOD_SUPER; Platform_InputState_Update((int)wParam,false,mods); }
   if (msg == WM_PAINT) {
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(hwnd, &ps);
-    HideCaret(hwnd);
+    if (GetFocus() == hwnd) DestroyCaret();
     RECT rc; GetClientRect(hwnd, &rc);
-    if (rc.right <= 0 || rc.bottom <= 0) { ShowCaret(hwnd); EndPaint(hwnd, &ps); return 0; }
+    if (rc.right <= 0 || rc.bottom <= 0) { EndPaint(hwnd, &ps); return 0; }
     HDC memDC = CreateCompatibleDC(hdc);
     HBITMAP memBmp = CreateCompatibleBitmap(hdc, rc.right, rc.bottom);
     if (!memDC || !memBmp) {
       if (memDC) DeleteDC(memDC);
       if (memBmp) DeleteObject(memBmp);
-      ShowCaret(hwnd);
       EndPaint(hwnd, &ps);
       return DefSubclassProc(hwnd, msg, wParam, lParam);
     }
@@ -306,15 +418,20 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
       DeleteObject(br);
     }
     SendMessage(hwnd, WM_PRINTCLIENT, (WPARAM)memDC, PRF_CLIENT);
+    Win32_PaintEditCaret(memDC, hwnd);
     BitBlt(hdc, ps.rcPaint.left, ps.rcPaint.top, ps.rcPaint.right - ps.rcPaint.left, ps.rcPaint.bottom - ps.rcPaint.top, memDC, ps.rcPaint.left, ps.rcPaint.top, SRCCOPY);
     SelectObject(memDC, oldBmp);
     DeleteObject(memBmp);
     DeleteDC(memDC);
-    ShowCaret(hwnd);
     EndPaint(hwnd, &ps);
     return 0;
   }
   if (msg == WM_ERASEBKGND) return 1;
+  if (msg == WM_SETFOCUS) {
+    LRESULT res = DefSubclassProc(hwnd, msg, wParam, lParam);
+    DestroyCaret();
+    return res;
+  }
     if (msg == WM_CHAR) {
       if (s_swallow_next_char) { s_swallow_next_char = false; return 0; }
       if (IsNormalMode()) return 0;
@@ -345,7 +462,13 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
       }
     }
 
-    return DefSubclassProc(hwnd, msg, wParam, lParam);
+    LRESULT res = DefSubclassProc(hwnd, msg, wParam, lParam);
+    if (msg == WM_KEYDOWN || msg == WM_CHAR || msg == WM_LBUTTONDOWN) {
+      HWND hPar = GetParent(hwnd);
+      if (hPar && IsWindow(hPar)) PostMessageA(hPar, WM_SYNC_TEXT_CARET, 0, 0);
+      InvalidateRect(hwnd, NULL, FALSE);
+    }
+    return res;
 } 
 
 LRESULT CALLBACK ListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData){
@@ -577,6 +700,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
               DWORD s = 0, e = 0;
               SendMessageA(WH_TO_HWND(FlintContext_Get()->window.hEditControl), EM_GETSEL, (WPARAM)&s, (LPARAM)&e);
               FlintContext_Get()->window.filter_cursor = (int)s;
+              PostMessageA(hwnd, WM_SYNC_TEXT_CARET, 0, 0);
               InvalidateRect(WH_TO_HWND(FlintContext_Get()->window.hEditControl), NULL, TRUE);
               UpdateWindow(WH_TO_HWND(FlintContext_Get()->window.hEditControl));
             }
@@ -590,6 +714,11 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         }
       
         break;
+    }
+    case WM_SYNC_TEXT_CARET: {
+      HWND hEdit = WH_TO_HWND(FlintContext_Get()->window.hEditControl);
+      if (hEdit && IsWindow(hEdit) && GetFocus() == hEdit) DestroyCaret();
+      return 0;
     }
     case WM_TIMER: {
       if (wParam == UI_DEBOUNCE_TIMER_ID) {
