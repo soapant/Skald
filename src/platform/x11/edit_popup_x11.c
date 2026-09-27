@@ -153,6 +153,9 @@ void Platform_EditPopupRender(Popup* self) {
 
     if (text_len > 0) {
         Platform_DrawTextRaw(draw_x, draw_y, data->text, rgb_to_hex(COLOR_TEXT), font, "", 0, 0);
+    } else if (data->placeholder && data->placeholder[0]) {
+        unsigned long ph = Color_Lerp(rgb_to_hex(COLOR_BG), rgb_to_hex(COLOR_TEXT), 0.45f);
+        Platform_DrawTextRaw(draw_x, draw_y, data->placeholder, ph, font, "", 0, 0);
     }
     {
         if (cursor_draw_x < 2) cursor_draw_x = 2;
