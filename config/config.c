@@ -24,7 +24,7 @@ void ConfigApply(void) {
     ModePersistsThroughFeatures = false;
     TimeOutForMessages = 1;
     DoTimeDebugs = false;
-    DebugMode = false;
+    DebugMode = true;
     RoundedCorners = true;
     CornerRadius = 14;
     EnableShaders = true;
@@ -60,7 +60,7 @@ void ConfigApply(void) {
     GradientItems = 30;
     GradientBrightness = 1.0f;
     CloseOnLossOfFocus = false;
-    Theme = "gruvbox";
+    Theme = "tokyo-night";
     COLOR_BG = RGB(40, 40, 40);
     COLOR_TEXT = RGB(235, 219, 178);
     COLOR_ALTERNATE = RGB(184, 187, 38);

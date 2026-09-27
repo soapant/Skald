@@ -90,6 +90,70 @@ static const struct wl_interface g_iface_manager = {
     "zwlr_data_control_manager_v1", 2, 3, g_manager_requests, 0, NULL
 };
 
+static const struct wl_interface g_iface_ext_source;
+static const struct wl_interface g_iface_ext_offer;
+static const struct wl_interface g_iface_ext_device;
+static const struct wl_interface g_iface_ext_manager;
+
+static const struct wl_interface *g_ext_src_offer_types[] = { NULL };
+static const struct wl_interface *g_ext_mgr_create_types[] = { &g_iface_ext_source };
+static const struct wl_interface *g_ext_mgr_device_types[] = { &g_iface_ext_device, NULL };
+static const struct wl_interface *g_ext_dev_sel_types[] = { &g_iface_ext_source };
+static const struct wl_interface *g_ext_dev_offer_types[] = { &g_iface_ext_offer };
+static const struct wl_interface *g_ext_dev_psel_types[] = { &g_iface_ext_offer };
+
+static const struct wl_message g_ext_source_requests[] = {
+    { "offer", "s", g_ext_src_offer_types },
+    { "destroy", "", NULL },
+};
+static const struct wl_message g_ext_source_events[] = {
+    { "send", "sh", NULL },
+    { "cancelled", "", NULL },
+};
+static const struct wl_interface g_iface_ext_source = {
+    "ext_data_control_source_v1", 1, 2, g_ext_source_requests, 2, g_ext_source_events
+};
+
+static const struct wl_message g_ext_offer_requests[] = {
+    { "receive", "sh", NULL },
+    { "destroy", "", NULL },
+};
+static const struct wl_message g_ext_offer_events[] = {
+    { "offer", "s", NULL },
+};
+static const struct wl_interface g_iface_ext_offer = {
+    "ext_data_control_offer_v1", 1, 2, g_ext_offer_requests, 1, g_ext_offer_events
+};
+
+static const struct wl_message g_ext_device_requests[] = {
+    { "set_selection", "?o", g_ext_dev_sel_types },
+    { "destroy", "", NULL },
+    { "set_primary_selection", "?o", g_ext_dev_sel_types },
+};
+static const struct wl_message g_ext_device_events[] = {
+    { "data_offer", "n", g_ext_dev_offer_types },
+    { "selection", "?o", g_ext_dev_psel_types },
+    { "finished", "", NULL },
+    { "primary_selection", "?o", g_ext_dev_psel_types },
+};
+static const struct wl_interface g_iface_ext_device = {
+    "ext_data_control_device_v1", 1, 4, g_ext_device_requests, 4, g_ext_device_events
+};
+
+static const struct wl_message g_ext_manager_requests[] = {
+    { "create_data_source", "n", g_ext_mgr_create_types },
+    { "get_data_device", "no", g_ext_mgr_device_types },
+    { "destroy", "", NULL },
+};
+static const struct wl_interface g_iface_ext_manager = {
+    "ext_data_control_manager_v1", 1, 3, g_ext_manager_requests, 0, NULL
+};
+
+static const struct wl_interface *g_use_manager = &g_iface_manager;
+static const struct wl_interface *g_use_device = &g_iface_device;
+static const struct wl_interface *g_use_source = &g_iface_source;
+static const char *g_use_mgr_name = "zwlr_data_control_manager_v1";
+
 static const struct wl_message g_seat_events[] = {
     { "capabilities", "u", NULL },
     { "name", "s", NULL },
@@ -107,6 +171,8 @@ static struct wl_proxy *g_wl_psource = NULL;
 static uint32_t g_mgr_name = 0;
 static uint32_t g_mgr_ver = 0;
 static uint32_t g_seat_name = 0;
+static const char *g_mgr_proto = "none";
+static bool g_mgr_ext = false;
 static int g_mgr_bind_ver = 0;
 static char *g_wl_text = NULL;
 static unsigned char *g_wl_png = NULL;
@@ -129,6 +195,12 @@ static void reg_global(void *data, struct wl_proxy *reg, uint32_t name, const ch
     if (strcmp(iface, "zwlr_data_control_manager_v1") == 0) {
         g_mgr_name = name;
         g_mgr_ver = version;
+        g_mgr_proto = "zwlr";
+    } else if (strcmp(iface, "ext_data_control_manager_v1") == 0) {
+        g_mgr_name = name;
+        g_mgr_ver = version;
+        g_mgr_proto = "ext";
+        g_mgr_ext = true;
     } else if (strcmp(iface, "wl_seat") == 0 && g_seat_name == 0) {
         g_seat_name = name;
     }
@@ -352,18 +424,24 @@ static bool wl_setup(void) {
     if (!g_mgr_name || !g_seat_name) {
         wl.proxy_destroy(reg);
         wl.display_disconnect(dpy);
-        log_warn("wayland compositor lacks zwlr_data_control_manager_v1");
+        log_warn("wayland setup missing global mgr_name=%u mgr_ver=%u seat_name=%u", g_mgr_name, g_mgr_ver, g_seat_name);
         g_wl_dead = true;
         return false;
     }
     g_mgr_bind_ver = g_mgr_ver > 2 ? 2 : (int)g_mgr_ver;
+    if (g_mgr_ext) {
+        g_use_manager = &g_iface_ext_manager;
+        g_use_device = &g_iface_ext_device;
+        g_use_source = &g_iface_ext_source;
+        g_use_mgr_name = "ext_data_control_manager_v1";
+    }
     pthread_mutex_lock(&g_wl_lock);
-    g_wl_manager = wl.proxy_marshal_flags(reg, 0, &g_iface_manager, (uint32_t)g_mgr_bind_ver, 0,
-        g_mgr_name, "zwlr_data_control_manager_v1", (uint32_t)g_mgr_bind_ver, NULL);
+    g_wl_manager = wl.proxy_marshal_flags(reg, 0, g_use_manager, (uint32_t)g_mgr_bind_ver, 0,
+        g_mgr_name, g_use_mgr_name, (uint32_t)g_mgr_bind_ver, NULL);
     struct wl_proxy *seat = wl.proxy_marshal_flags(reg, 0, &g_iface_seat, 1, 0,
         g_seat_name, "wl_seat", 1, NULL);
-    log_info("wayland setup mgr_name=%u mgr_ver=%u seat_name=%u manager=%p seat=%p",
-        g_mgr_name, g_mgr_ver, g_seat_name, (void*)g_wl_manager, (void*)seat);
+    log_info("wayland setup mgr_name=%u mgr_ver=%u proto=%s seat_name=%u manager=%p seat=%p",
+        g_mgr_name, g_mgr_ver, g_mgr_proto, g_seat_name, (void*)g_wl_manager, (void*)seat);
     if (!g_wl_manager || !seat) {
         pthread_mutex_unlock(&g_wl_lock);
         if (seat) wl.proxy_destroy(seat);
@@ -375,7 +453,7 @@ static bool wl_setup(void) {
         g_wl_dead = true;
         return false;
     }
-    g_wl_device = wl.proxy_marshal_constructor(g_wl_manager, 1, &g_iface_device, NULL, seat);
+    g_wl_device = wl.proxy_marshal_constructor(g_wl_manager, 1, g_use_device, NULL, seat);
     if (!g_wl_device) {
         pthread_mutex_unlock(&g_wl_lock);
         wl.proxy_destroy(seat);
@@ -392,6 +470,19 @@ static bool wl_setup(void) {
     wl.display_roundtrip(dpy);
     int werr = wl.display_get_error(dpy);
     log_info("wayland setup proto_err=%d device=%p", werr, (void*)g_wl_device);
+    if (werr != 0) {
+        pthread_mutex_unlock(&g_wl_lock);
+        wl.proxy_destroy(seat);
+        wl.proxy_destroy(g_wl_manager);
+        g_wl_manager = NULL;
+        g_wl_device = NULL;
+        g_wl_seat = NULL;
+        wl.proxy_destroy(reg);
+        wl.display_disconnect(dpy);
+        log_warn("wayland clipboard protocol error %d, disabling", werr);
+        g_wl_dead = true;
+        return false;
+    }
     pthread_mutex_unlock(&g_wl_lock);
     wl.proxy_destroy(reg);
     g_wl_dpy = dpy;
@@ -411,7 +502,7 @@ static bool wl_setup(void) {
 }
 
 static struct wl_proxy *wl_make_source(void) {
-    struct wl_proxy *src = wl.proxy_marshal_constructor(g_wl_manager, 0, &g_iface_source, NULL);
+    struct wl_proxy *src = wl.proxy_marshal_constructor(g_wl_manager, 0, g_use_source, NULL);
     pthread_mutex_lock(&g_wl_text_lock);
     bool has_text = g_wl_text != NULL;
     bool has_png = g_wl_png != NULL && g_wl_png_len > 0;
@@ -517,6 +608,8 @@ char *Wayland_ClipboardGetText(void) {
     pthread_mutex_unlock(&g_wl_text_lock);
     if (!offer || !mime[0]) {
         pthread_mutex_unlock(&g_wl_lock);
+        log_info("wayland read empty offer=%d has_selection=%d mime_count=%d picked='%s'",
+            g_wl_offer ? 1 : 0, g_wl_has_selection ? 1 : 0, g_wl_offer_mime_count, mime);
         return NULL;
     }
     int fds[2] = {-1, -1};
@@ -538,7 +631,8 @@ char *Wayland_ClipboardGetText(void) {
     for (;;) {
         struct pollfd pfd = { fds[0], POLLIN, 0 };
         int r = poll(&pfd, 1, 500);
-        if (r <= 0) break;
+        if (r == 0) { log_info("wayland read poll timeout with %d bytes so far", (int)len); break; }
+        if (r < 0) break;
         if (len + 4096 + 1 > cap) {
             size_t ncap = (len + 4096 + 1) * 2;
             char *n = realloc(out, ncap);
