@@ -1,7 +1,6 @@
 #include "core/flapi.h"
 #include "config.h"
 #include "core/context.h"
-#include "helpers/helpers_text.h"
 #include "helpers/helpers_ui.h"
 #include <stdio.h>
 #include <string.h>
@@ -11,7 +10,7 @@ void delete_app_refresh(const char* filter, ListBoxInfo* lb) {
 
     char* output = fl_run_terminal_command("pacman -Qe");
     if (!output) return;
-    StringList lines = String_Split(output, "\n");
+    FlStringList lines = fl_string_split(output, "\n");
     const char** names = (const char**)malloc(lines.count * sizeof(char*));
     for (size_t i = 0; i < lines.count; i++) {
       char* space = strchr(lines.items[i], ' ');
@@ -25,14 +24,22 @@ void delete_app_refresh(const char* filter, ListBoxInfo* lb) {
 }
 
 bool delete_app_enter(const char* selection, ListBoxInfo* lb) {
-    if (!UI_IsListBoxSelected(lb)) return false;
-    char cmd[1024];
-    snprintf(cmd, sizeof(cmd), "pacman -Rns %s", selection);
-    char* output = fl_run_terminal_command(cmd);
-    if (fl_string_contains(output,"root")) {
-        char* pass = fl_popup(.placeholder="Input Sudo Password");
-    }
-
+    if (!UI_IsListBoxSelected(lb)) {fflush(stdout); return true; }
+    const char* probe[] = { "pacman", "-Rns", "--noconfirm", selection, NULL };
+    int rc = 0;
+    char* output = fl_run_argv(probe, NULL, &rc);
+    if (!output) return true;
+    bool has_root = fl_string_contains(output, "root");
+    bool needs_root = rc != 0 || has_root;
+    free(output);
+    if (!needs_root) { fflush(stdout); return true; }
+    char* pass = fl_popup(.placeholder = "Input Sudo Password");
+    const char* argv[] = { "sudo", "-S", "-k", "pacman", "-Rns", "--noconfirm", selection, NULL };
+    int src = 0;
+    char* res = fl_run_argv(argv, pass, &src);
+    memset(pass, 0, strlen(pass));
+    free(pass);
+    if (res) free(res);
     return true;
 }
 

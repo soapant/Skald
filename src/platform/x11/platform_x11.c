@@ -1465,6 +1465,82 @@ int Platform_CopyImageToClipboard(const unsigned char *png, size_t len) {
 }
 
 
+char* Platform_RunArgvCapture(const char* const argv[], const char* stdin_data, int* out_status) {
+    if (out_status) *out_status = -1;
+    if (!argv || !argv[0]) return NULL;
+    int pin[2] = {-1, -1};
+    if (stdin_data && stdin_data[0]) {
+        if (pipe(pin) != 0) { log_error("Platform_RunArgvCapture pipe failed: %s", strerror(errno)); return NULL; }
+    }
+    int pout[2] = {-1, -1};
+    if (pipe(pout) != 0) {
+        log_error("Platform_RunArgvCapture pipe failed: %s", strerror(errno));
+        if (pin[0] >= 0) { close(pin[0]); close(pin[1]); }
+        return NULL;
+    }
+    pid_t pid = fork();
+    if (pid < 0) {
+        log_error("Platform_RunArgvCapture fork failed: %s", strerror(errno));
+        if (pin[0] >= 0) { close(pin[0]); close(pin[1]); }
+        close(pout[0]); close(pout[1]);
+        return NULL;
+    }
+    if (pid == 0) {
+        setsid();
+        if (pin[0] >= 0) { dup2(pin[0], STDIN_FILENO); close(pin[0]); close(pin[1]); }
+        else {
+            int devnull = open("/dev/null", O_RDONLY);
+            if (devnull >= 0) { dup2(devnull, STDIN_FILENO); if (devnull > 2) close(devnull); }
+        }
+        dup2(pout[1], STDOUT_FILENO);
+        dup2(pout[1], STDERR_FILENO);
+        close(pout[0]); close(pout[1]);
+        signal(SIGPIPE, SIG_DFL);
+        execvp(argv[0], (char* const*)argv);
+        _exit(127);
+    }
+    if (pin[0] >= 0) { close(pin[0]); pin[0] = -1; }
+    close(pout[1]);
+    if (pin[1] >= 0) {
+        signal(SIGPIPE, SIG_IGN);
+        size_t len = strlen(stdin_data);
+        size_t off = 0;
+        while (off < len) {
+            ssize_t w = write(pin[1], stdin_data + off, len - off);
+            if (w <= 0) { log_warn("stdin write stopped off=%d/%d err=%s", (int)off, (int)len, strerror(errno)); break; }
+            off += (size_t)w;
+        }
+        if (len == 0 || stdin_data[len - 1] != '\n') {
+            ssize_t w = write(pin[1], "\n", 1);
+            (void)w;
+        }
+        close(pin[1]);
+        pin[1] = -1;
+        signal(SIGPIPE, SIG_DFL);
+    }
+    size_t cap = 4096, len = 0;
+    char* out = malloc(cap);
+    if (!out) { close(pout[0]); waitpid(pid, NULL, 0); return NULL; }
+    for (;;) {
+        if (len + 1024 + 1 > cap) {
+            size_t ncap = cap * 2;
+            char* n = realloc(out, ncap);
+            if (!n) { free(out); close(pout[0]); waitpid(pid, NULL, 0); return NULL; }
+            out = n;
+            cap = ncap;
+        }
+        ssize_t r = read(pout[0], out + len, 1024);
+        if (r <= 0) break;
+        len += (size_t)r;
+    }
+    close(pout[0]);
+    out[len] = '\0';
+    int st = 0;
+    while (waitpid(pid, &st, 0) < 0 && errno == EINTR) {}
+    if (out_status) *out_status = WIFEXITED(st) ? WEXITSTATUS(st) : -1;
+    return out;
+}
+
 bool Platform_BuildFeature(const char* src, const char* out) {
     if (!src || !out) { log_error("operation failed, returning error src='%s' out='%s'", src ? src : "null", out ? out : "null"); return false; }
     char tmp[1024];
