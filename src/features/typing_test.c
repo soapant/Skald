@@ -147,7 +147,7 @@ void typing_test_render(PromptState *state) {
         } else if (typing_test_states[i] == CHAR_WRONG) {
             col = RGB(255, 0, 0);
         } else {
-            col = RGB(255, 255, 255);
+            col = NULL;
         }
         char single[2] = { text[i], '\0' };
         fl_draw_text(.x = positions[i].x, .y = positions[i].y, .fontsize = fontsize + 20,
