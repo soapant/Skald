@@ -673,18 +673,6 @@ void CreateChildControls(WindowHandle hwndParent, HFONT hFont, const char* list[
 
   FlintContext_Get()->window.hActiveEditControl = FlintContext_Get()->window.hEditControl;
   UI_Edit_SetFont(FlintContext_Get()->window.hEditControl, hFont);
-  {
-    HWND edit = WH_TO_HWND(FlintContext_Get()->window.hEditControl);
-    RECT cr;
-    GetClientRect(edit, &cr);
-    RECT tr;
-    tr.left = 0;
-    tr.top = (cr.bottom - FontSize) / 2;
-    if (tr.top < 0) tr.top = 0;
-    tr.right = cr.right;
-    tr.bottom = cr.bottom;
-    SendMessageA(edit, EM_SETRECT, 0, (LPARAM)&tr);
-  }
   SetWindowSubclass(WH_TO_HWND(FlintContext_Get()->window.hEditControl), EditSubclassProc, 0, 0);
 
   if (count >= 0) {
