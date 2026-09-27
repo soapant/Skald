@@ -66,6 +66,7 @@ bool Platform_WriteTempFile(const char* name, const void* data, size_t len, char
 void Platform_ShutdownUI(void);
 char* Platform_RunTerminalCommand(char* command,bool open_terminal);
 char* Platform_RunCommandAndGetOutput(char* command);
+char* Platform_RunArgvCapture(const char* const argv[], const char* stdin_data, int* out_status);
 bool Platform_LaunchFileManagerAtPath(char* path,char* args);
 long Platform_GetFileSize(char *filepath);
 char* Platform_RegisterDirWatcher(const char* dir_path, void (*callback)(void));
