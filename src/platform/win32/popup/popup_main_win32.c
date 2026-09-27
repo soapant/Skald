@@ -435,9 +435,7 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
       key.ctrl = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
       key.shift = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
       key.alt = (GetKeyState(VK_MENU) & 0x8000) != 0;
-      bool was_normal = IsNormalMode();
       if (PromptWindow_OnKey(hwnd, &key)) {
-        (void)was_normal;
         s_swallow_next_char = true;
         if (FlintContext_Get()->prompt_callbacks.render != NULL) {
           HWND hPar = GetParent(hwnd);

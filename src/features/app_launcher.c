@@ -96,7 +96,7 @@ static void save_app_cache(void) {
         const char* nm = s_apps.files[i].name;
         const char* pth = s_apps.files[i].path;
         if (!nm[0] || !pth[0]) continue;
-        int k = snprintf(store + off, total - off, "%s:%s", nm, pth);
+        int k = snprintf(store + off, total - off, "%s;%s", nm, pth);
         if (k <= 0 || (size_t)k >= total - off) continue;
         lines[written++] = store + off;
         off += (size_t)k + 1;
@@ -117,7 +117,7 @@ static bool load_app_cache(void) {
     for (int i = 0; i < lines.count; i++) {
         char* entry = lines.items[i];
         if (!entry) continue;
-        char* colon = strrchr(entry, ':');
+        char* colon = strrchr(entry, ';');
         if (!colon || colon == entry || !colon[1]) continue;
         *colon = '\0';
         if (tmp.count >= tmp.capacity && !app_cache_grow(&tmp)) break;

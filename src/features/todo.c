@@ -323,7 +323,7 @@ void todo_render_callback(PromptState *state) {
         char tags[10][64];
         int tag_count = 0;
         ParseTodoLine(text_buf, main_text, tags, &tag_count);
-        fl_draw_text(.x=ctx.x + 10, .y=ctx.y + 4,.color=rgb_to_hex(COLOR_TEXT),.text=main_text, .align="LEFT", .pad=14);
+        fl_draw_text(.x=ctx.x + 10, .y=ctx.y + 4,.color=rgb_to_hex(COLOR_TEXT),.text=main_text, .align="LEFT", .pad=25);
         if (tag_count > 0) {
             int tag_y = ctx.y + line_h + 10;
             if (tag_count == 1) {
