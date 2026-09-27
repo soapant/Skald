@@ -12,7 +12,7 @@ FLINT_FEATURE_INIT {
     fl_register_remapping("Ctrl+I", "~");
     fl_register_remapping("Ctrl+U", "|");
 
-    // fl_register_remapping("A", "Left",WHITELIST,"feh");
-    // fl_register_remapping("D", "Right",WHITELIST,"feh");
+    fl_register_remapping("A", "Left",WHITELIST,"feh");
+    fl_register_remapping("D", "Right",WHITELIST,"feh");
 }
 
