@@ -31,7 +31,7 @@ typedef struct {
      bool        has_listbox;
 } PromptState;
 
-typedef void (*RefreshCallback)(const char* filter, WindowHandle hListBox, ListBoxInfo* lb);
+typedef void (*RefreshCallback)(const char* filter, ListBoxInfo* lb);
 typedef bool (*EnterCallback)(const char* selection, ListBoxInfo* lb);
 typedef bool (*CtrlEnterCallback)(const char* selection, ListBoxInfo* lb);
 typedef void (*TabCallback)(ListBoxInfo* lb);
