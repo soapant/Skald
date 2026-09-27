@@ -452,13 +452,13 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
         if (scroll < 0) scroll = 0;
         if (text_w - scroll < visible_w && scroll > 0) { if (text_w < visible_w) scroll = 0; else scroll = text_w - visible_w; }
         if (state) state->scroll_offset = scroll;
-        RECT textRc = {x + 14 - scroll, y, x + w, y + h};
-        DrawTextA(hdc, buf, -1, &textRc, DT_SINGLELINE | DT_VCENTER | DT_LEFT);
         int cursor_draw_x = x + 14 + cursor_x - scroll;
         if (cursor_draw_x < x + 2) cursor_draw_x = x + 2;
         if (cursor_draw_x > x + w - 4) cursor_draw_x = x + w - 4;
         int cursor_y = y + (h - textH) / 2;
         if (cursor_y < y + 2) cursor_y = y + 2;
+        RECT textRc = {x + 14 - scroll, cursor_y, x + w, cursor_y + textH};
+        DrawTextA(hdc, buf, -1, &textRc, DT_SINGLELINE | DT_TOP | DT_LEFT);
         HBRUSH cbr = CreateSolidBrush(COLOR_CURSOR);
         RECT cRc;
         if (IsInsertMode()) cRc = (RECT){cursor_draw_x, cursor_y, cursor_draw_x+2, cursor_y+textH};
