@@ -455,6 +455,10 @@ void UpdateTextCaret(WindowHandle hwndEditControl)
   RECT rc;
   GetClientRect(hwnd, &rc);
   int caretHeight = FontSize;
+  if (caretHeight > rc.bottom && rc.bottom > 0) caretHeight = rc.bottom;
+  if (caretHeight <= 0) caretHeight = 24;
+  int lineTopPad = (tm.tmHeight - FontSize) / 2 + tm.tmInternalLeading;
+  if (lineTopPad < 0) lineTopPad = 0;
   int caretWidth;
   if (IsInsertMode()) {
     caretWidth = 2;
@@ -469,12 +473,37 @@ void UpdateTextCaret(WindowHandle hwndEditControl)
 
   POINT pt = {0, centeredY};
   BOOL havePos = FALSE;
-  LRESULT coords = SendMessageA(hwnd, EM_POSFROMCHAR, selStart, 0);
-  if (coords != (LRESULT)-1) {
+  char ebuf[512];
+  GetWindowTextA(hwnd, ebuf, sizeof(ebuf));
+  int elen = (int)strlen(ebuf);
+  DWORD q = selStart;
+  if ((int)q > elen) q = (DWORD)elen;
+  LRESULT coords = SendMessageA(hwnd, EM_POSFROMCHAR, q, 0);
+  if (coords == (LRESULT)-1 && elen > 0) {
+    coords = SendMessageA(hwnd, EM_POSFROMCHAR, (WPARAM)(elen - 1), 0);
+    if (coords != (LRESULT)-1) {
+      HDC mdc = GetDC(hwnd);
+      HFONT mf = (HFONT)SendMessageA(hwnd, WM_GETFONT, 0, 0);
+      HFONT mo = mf ? (HFONT)SelectObject(mdc, mf) : NULL;
+      SIZE msz = {0, 0};
+      int mcopy = (int)q < (int)sizeof(ebuf)-1 ? (int)q : (int)sizeof(ebuf)-1;
+      GetTextExtentPoint32A(mdc, ebuf, mcopy, &msz);
+      if (mo) SelectObject(mdc, mo);
+      ReleaseDC(hwnd, mdc);
+      pt.x = msz.cx + 2;
+      pt.y = (short)HIWORD(coords) + lineTopPad;
+      if (rc.bottom > 0 && pt.y + caretHeight > rc.bottom) pt.y = rc.bottom - caretHeight;
+      havePos = TRUE;
+      log_info("UpdateTextCaret tail tmH=%d fs=%d rcB=%d rawEM=%d,%d pad=%d pt=%d,%d ch=%d", tm.tmHeight, FontSize, rc.bottom, (short)LOWORD(coords), (short)HIWORD(coords), lineTopPad, pt.x, pt.y, caretHeight);
+    }
+  }
+  if (coords != (LRESULT)-1 && !havePos) {
     pt.x = (short)LOWORD(coords);
-    pt.y = (short)HIWORD(coords);
+    pt.y = (short)HIWORD(coords) + lineTopPad;
+    if (rc.bottom > 0 && pt.y + caretHeight > rc.bottom) pt.y = rc.bottom - caretHeight;
     havePos = TRUE;
-  } else {
+    log_info("UpdateTextCaret tmH=%d asc=%d desc=%d il=%d fs=%d rcB=%d rawEM=%d,%d pad=%d pt=%d,%d ch=%d", tm.tmHeight, tm.tmAscent, tm.tmDescent, tm.tmInternalLeading, FontSize, rc.bottom, (short)LOWORD(coords), (short)HIWORD(coords), lineTopPad, pt.x, pt.y, caretHeight);
+  } else if (!havePos) {
     char buf[512];
     GetWindowTextA(hwnd, buf, sizeof(buf));
     int len = (int)strlen(buf);
