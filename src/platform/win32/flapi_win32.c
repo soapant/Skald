@@ -11,7 +11,6 @@
 #include <endpointvolume.h>
 #include "platform/draw.h"
 #include "platform/ui.h"
-#include "core/window_manager.h"
 #include "core/modal.h"
 #include "config.h"
 #include "helpers/helpers_ui.h"
@@ -403,8 +402,11 @@ bool fl_type_text_platform(const char *s){
  return true;
 }
 static bool g_edit_placed_win = false;
+
 void fl_editbox_reset_placed(void) { g_edit_placed_win = false; }
+
 bool fl_editbox_was_placed(void) { return g_edit_placed_win; }
+
 bool fl_place_editbox_platform(const FlEditSpec *spec) {
     if (!spec) return false;
     g_edit_placed_win = true;
@@ -452,19 +454,16 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
         if (scroll < 0) scroll = 0;
         if (text_w - scroll < visible_w && scroll > 0) { if (text_w < visible_w) scroll = 0; else scroll = text_w - visible_w; }
         if (state) state->scroll_offset = scroll;
-        int cursor_draw_x = x + 14 + cursor_x - scroll;
-        if (cursor_draw_x < x + 2) cursor_draw_x = x + 2;
-        if (cursor_draw_x > x + w - 4) cursor_draw_x = x + w - 4;
+        int cursor_draw_x = x + cursor_x - scroll;
         int text_top = y + (h - textH) / 2;
         if (text_top < y + 2) text_top = y + 2;
         int cursorH = FontSize;
         if (cursorH > h - 4) cursorH = h - 4;
         if (cursorH <= 0) cursorH = textH;
-        int cursor_y = text_top + (textH - cursorH) / 2 + tm.tmInternalLeading;
+        int cursor_y = text_top + (textH - cursorH) / 2;
         if (cursor_y < text_top) cursor_y = text_top;
         if (cursor_y + cursorH > y + h - 2) cursor_y = y + h - 2 - cursorH;
-        log_info("fl_place_editbox tmH=%d il=%d fs=%d box=%d,%d,%d,%d ttop=%d cy=%d ch=%d", tm.tmHeight, tm.tmInternalLeading, FontSize, x, y, w, h, text_top, cursor_y, cursorH);
-        RECT textRc = {x + 14 - scroll, text_top, x + w, text_top + textH};
+        RECT textRc = {x - scroll, text_top, x + w, text_top + textH};
         DrawTextA(hdc, buf, -1, &textRc, DT_SINGLELINE | DT_TOP | DT_LEFT);
         HBRUSH cbr = CreateSolidBrush(COLOR_CURSOR);
         RECT cRc;
