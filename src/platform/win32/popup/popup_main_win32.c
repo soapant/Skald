@@ -352,12 +352,11 @@ static void Win32_PaintEditCaret(HDC memDC, HWND hwnd) {
       lineTop = (short)HIWORD(coords);
     }
   }
-  int caretY = lineTop + inkTop;
-  if (caretY < lineTop) caretY = lineTop;
-  int caretH = lineTop + tm.tmAscent + 2 - caretY;
-  if (caretH > FontSize) caretH = FontSize;
+  int caretH = FontSize;
   if (caretH > rc.bottom && rc.bottom > 0) caretH = rc.bottom;
   if (caretH <= 0) return;
+  int caretY = (lineTop + inkTop + lineTop + tm.tmAscent - caretH) / 2;
+  if (caretY < lineTop) caretY = lineTop;
   if (rc.bottom > 0 && caretY + caretH > rc.bottom) caretY = rc.bottom - caretH;
   int caretW = 2;
   if (!IsInsertMode()) caretW = tm.tmAveCharWidth > 0 ? tm.tmAveCharWidth : 8;
@@ -367,16 +366,6 @@ static void Win32_PaintEditCaret(HDC memDC, HWND hwnd) {
   RECT cRc = {cx, caretY, cx + caretW, caretY + caretH};
   FillRect(memDC, &cRc, cbr);
   DeleteObject(cbr);
-  {
-    HBRUSH rbr = CreateSolidBrush(RGB(255, 0, 0));
-    RECT rRc = {0, caretY, rc.right, caretY + 1};
-    FillRect(memDC, &rRc, rbr);
-    DeleteObject(rbr);
-    HBRUSH bbr = CreateSolidBrush(RGB(0, 0, 255));
-    RECT bRc = {0, lineTop + tm.tmAscent, rc.right, lineTop + tm.tmAscent + 1};
-    FillRect(memDC, &bRc, bbr);
-    DeleteObject(bbr);
-  }
 }
 
 LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
