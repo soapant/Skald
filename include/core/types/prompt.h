@@ -77,6 +77,7 @@ typedef struct {
 
 typedef struct {
     const char* initial_text;
+    const char* placeholder;
     const char* title;
     int x;
     int y;
