@@ -1,6 +1,6 @@
 [
   {
-    "directory": "C:/Users/leg/Programming/Projects/Flint",
+    "directory": "C:/Projects/Flint",
     "file": "src/bindings/bindings.c",
     "arguments": [
       "gcc",
@@ -27,7 +27,7 @@
     ]
   },
   {
-    "directory": "C:/Users/leg/Programming/Projects/Flint",
+    "directory": "C:/Projects/Flint",
     "file": "src/bindings/vim_bindings.c",
     "arguments": [
       "gcc",
@@ -54,7 +54,7 @@
     ]
   },
   {
-    "directory": "C:/Users/leg/Programming/Projects/Flint",
+    "directory": "C:/Projects/Flint",
     "file": "src/bindings/vim_helpers.c",
     "arguments": [
       "gcc",
@@ -81,7 +81,7 @@
     ]
   },
   {
-    "directory": "C:/Users/leg/Programming/Projects/Flint",
+    "directory": "C:/Projects/Flint",
     "file": "src/bindings/vim_motions.c",
     "arguments": [
       "gcc",
@@ -108,7 +108,7 @@
     ]
   },
   {
-    "directory": "C:/Users/leg/Programming/Projects/Flint",
+    "directory": "C:/Projects/Flint",
     "file": "src/config_defaults.c",
     "arguments": [
       "gcc",
@@ -135,7 +135,7 @@
     ]
   },
   {
-    "directory": "C:/Users/leg/Programming/Projects/Flint",
+    "directory": "C:/Projects/Flint",
     "file": "src/config_resolve.c",
     "arguments": [
       "gcc",
@@ -162,7 +162,7 @@
     ]
   },
   {
-    "directory": "C:/Users/leg/Programming/Projects/Flint",
+    "directory": "C:/Projects/Flint",
     "file": "src/core/clipboard_history.c",
     "arguments": [
       "gcc",
@@ -189,7 +189,7 @@
     ]
   },
   {
-    "directory": "C:/Users/leg/Programming/Projects/Flint",
+    "directory": "C:/Projects/Flint",
     "file": "src/core/common_ui.c",
     "arguments": [
       "gcc",
@@ -216,7 +216,7 @@
     ]
   },
   {
-    "directory": "C:/Users/leg/Programming/Projects/Flint",
+    "directory": "C:/Projects/Flint",
     "file": "src/core/config_loader.c",
     "arguments": [
       "gcc",
@@ -243,7 +243,7 @@
     ]
   },
   {
-    "directory": "C:/Users/leg/Programming/Projects/Flint",
+    "directory": "C:/Projects/Flint",
     "file": "src/core/context.c",
     "arguments": [
       "gcc",
@@ -270,7 +270,7 @@
     ]
   },
   {
-    "directory": "C:/Users/leg/Programming/Projects/Flint",
+    "directory": "C:/Projects/Flint",
     "file": "src/core/feature_data.c",
     "arguments": [
       "gcc",
@@ -297,7 +297,7 @@
     ]
   },
   {
-    "directory": "C:/Users/leg/Programming/Projects/Flint",
+    "directory": "C:/Projects/Flint",
     "file": "src/core/feature_loader.c",
     "arguments": [
       "gcc",
@@ -324,7 +324,7 @@
     ]
   },
   {
-    "directory": "C:/Users/leg/Programming/Projects/Flint",
+    "directory": "C:/Projects/Flint",
     "file": "src/core/helpers.c",
     "arguments": [
       "gcc",
@@ -351,7 +351,7 @@
     ]
   },
   {
-    "directory": "C:/Users/leg/Programming/Projects/Flint",
+    "directory": "C:/Projects/Flint",
     "file": "src/core/helpers_color.c",
     "arguments": [
       "gcc",
@@ -378,7 +378,7 @@
     ]
   },
   {
-    "directory": "C:/Users/leg/Programming/Projects/Flint",
+    "directory": "C:/Projects/Flint",
     "file": "src/core/helpers_history.c",
     "arguments": [
       "gcc",
@@ -405,7 +405,7 @@
     ]
   },
   {
-    "directory": "C:/Users/leg/Programming/Projects/Flint",
+    "directory": "C:/Projects/Flint",
     "file": "src/core/helpers_text.c",
     "arguments": [
       "gcc",
@@ -432,7 +432,7 @@
     ]
   },
   {
-    "directory": "C:/Users/leg/Programming/Projects/Flint",
+    "directory": "C:/Projects/Flint",
     "file": "src/core/history.c",
     "arguments": [
       "gcc",
@@ -459,7 +459,7 @@
     ]
   },
   {
-    "directory": "C:/Users/leg/Programming/Projects/Flint",
+    "directory": "C:/Projects/Flint",
     "file": "src/core/hotkey_manager.c",
     "arguments": [
       "gcc",
@@ -486,7 +486,7 @@
     ]
   },
   {
-    "directory": "C:/Users/leg/Programming/Projects/Flint",
+    "directory": "C:/Projects/Flint",
     "file": "src/core/input_state.c",
     "arguments": [
       "gcc",
@@ -513,7 +513,7 @@
     ]
   },
   {
-    "directory": "C:/Users/leg/Programming/Projects/Flint",
+    "directory": "C:/Projects/Flint",
     "file": "src/core/modal.c",
     "arguments": [
       "gcc",
@@ -540,7 +540,7 @@
     ]
   },
   {
-    "directory": "C:/Users/leg/Programming/Projects/Flint",
+    "directory": "C:/Projects/Flint",
     "file": "src/core/popup/edit_popup.c",
     "arguments": [
       "gcc",
@@ -567,7 +567,7 @@
     ]
   },
   {
-    "directory": "C:/Users/leg/Programming/Projects/Flint",
+    "directory": "C:/Projects/Flint",
     "file": "src/core/popup/prompt_popup.c",
     "arguments": [
       "gcc",
@@ -594,7 +594,7 @@
     ]
   },
   {
-    "directory": "C:/Users/leg/Programming/Projects/Flint",
+    "directory": "C:/Projects/Flint",
     "file": "src/core/popup/search_popup.c",
     "arguments": [
       "gcc",
@@ -621,7 +621,7 @@
     ]
   },
   {
-    "directory": "C:/Users/leg/Programming/Projects/Flint",
+    "directory": "C:/Projects/Flint",
     "file": "src/core/popup/settings_popup.c",
     "arguments": [
       "gcc",
@@ -648,7 +648,7 @@
     ]
   },
   {
-    "directory": "C:/Users/leg/Programming/Projects/Flint",
+    "directory": "C:/Projects/Flint",
     "file": "src/core/prompt_controller.c",
     "arguments": [
       "gcc",
@@ -675,7 +675,7 @@
     ]
   },
   {
-    "directory": "C:/Users/leg/Programming/Projects/Flint",
+    "directory": "C:/Projects/Flint",
     "file": "src/core/remap_manager.c",
     "arguments": [
       "gcc",
@@ -702,7 +702,7 @@
     ]
   },
   {
-    "directory": "C:/Users/leg/Programming/Projects/Flint",
+    "directory": "C:/Projects/Flint",
     "file": "src/core/snippet_manager.c",
     "arguments": [
       "gcc",
@@ -729,7 +729,7 @@
     ]
   },
   {
-    "directory": "C:/Users/leg/Programming/Projects/Flint",
+    "directory": "C:/Projects/Flint",
     "file": "src/core/theme.c",
     "arguments": [
       "gcc",
@@ -756,7 +756,7 @@
     ]
   },
   {
-    "directory": "C:/Users/leg/Programming/Projects/Flint",
+    "directory": "C:/Projects/Flint",
     "file": "src/core/timer.c",
     "arguments": [
       "gcc",
@@ -783,7 +783,7 @@
     ]
   },
   {
-    "directory": "C:/Users/leg/Programming/Projects/Flint",
+    "directory": "C:/Projects/Flint",
     "file": "src/core/vim.c",
     "arguments": [
       "gcc",
@@ -810,7 +810,7 @@
     ]
   },
   {
-    "directory": "C:/Users/leg/Programming/Projects/Flint",
+    "directory": "C:/Projects/Flint",
     "file": "src/core/window_manager.c",
     "arguments": [
       "gcc",
@@ -837,7 +837,7 @@
     ]
   },
   {
-    "directory": "C:/Users/leg/Programming/Projects/Flint",
+    "directory": "C:/Projects/Flint",
     "file": "src/deps/log.c",
     "arguments": [
       "gcc",
@@ -864,7 +864,7 @@
     ]
   },
   {
-    "directory": "C:/Users/leg/Programming/Projects/Flint",
+    "directory": "C:/Projects/Flint",
     "file": "src/flapi.c",
     "arguments": [
       "gcc",
@@ -891,7 +891,7 @@
     ]
   },
   {
-    "directory": "C:/Users/leg/Programming/Projects/Flint",
+    "directory": "C:/Projects/Flint",
     "file": "src/main.c",
     "arguments": [
       "gcc",
@@ -918,7 +918,7 @@
     ]
   },
   {
-    "directory": "C:/Users/leg/Programming/Projects/Flint",
+    "directory": "C:/Projects/Flint",
     "file": "src/platform/win32/clipboard_win32.c",
     "arguments": [
       "gcc",
@@ -945,7 +945,7 @@
     ]
   },
   {
-    "directory": "C:/Users/leg/Programming/Projects/Flint",
+    "directory": "C:/Projects/Flint",
     "file": "src/platform/win32/common_ui_win32.c",
     "arguments": [
       "gcc",
@@ -972,7 +972,7 @@
     ]
   },
   {
-    "directory": "C:/Users/leg/Programming/Projects/Flint",
+    "directory": "C:/Projects/Flint",
     "file": "src/platform/win32/default_apps_win32.c",
     "arguments": [
       "gcc",
@@ -999,7 +999,7 @@
     ]
   },
   {
-    "directory": "C:/Users/leg/Programming/Projects/Flint",
+    "directory": "C:/Projects/Flint",
     "file": "src/platform/win32/draw_win32.c",
     "arguments": [
       "gcc",
@@ -1026,7 +1026,7 @@
     ]
   },
   {
-    "directory": "C:/Users/leg/Programming/Projects/Flint",
+    "directory": "C:/Projects/Flint",
     "file": "src/platform/win32/edit_popup_win32.c",
     "arguments": [
       "gcc",
@@ -1053,7 +1053,7 @@
     ]
   },
   {
-    "directory": "C:/Users/leg/Programming/Projects/Flint",
+    "directory": "C:/Projects/Flint",
     "file": "src/platform/win32/flapi_win32.c",
     "arguments": [
       "gcc",
@@ -1080,7 +1080,7 @@
     ]
   },
   {
-    "directory": "C:/Users/leg/Programming/Projects/Flint",
+    "directory": "C:/Projects/Flint",
     "file": "src/platform/win32/helpers/popup_helpers_win32.c",
     "arguments": [
       "gcc",
@@ -1107,7 +1107,7 @@
     ]
   },
   {
-    "directory": "C:/Users/leg/Programming/Projects/Flint",
+    "directory": "C:/Projects/Flint",
     "file": "src/platform/win32/input/edit_buffer_win32.c",
     "arguments": [
       "gcc",
@@ -1134,7 +1134,7 @@
     ]
   },
   {
-    "directory": "C:/Users/leg/Programming/Projects/Flint",
+    "directory": "C:/Projects/Flint",
     "file": "src/platform/win32/input_core_win32.c",
     "arguments": [
       "gcc",
@@ -1161,7 +1161,7 @@
     ]
   },
   {
-    "directory": "C:/Users/leg/Programming/Projects/Flint",
+    "directory": "C:/Projects/Flint",
     "file": "src/platform/win32/lib_win32.c",
     "arguments": [
       "gcc",
@@ -1188,7 +1188,7 @@
     ]
   },
   {
-    "directory": "C:/Users/leg/Programming/Projects/Flint",
+    "directory": "C:/Projects/Flint",
     "file": "src/platform/win32/message_popup_win32.c",
     "arguments": [
       "gcc",
@@ -1215,7 +1215,7 @@
     ]
   },
   {
-    "directory": "C:/Users/leg/Programming/Projects/Flint",
+    "directory": "C:/Projects/Flint",
     "file": "src/platform/win32/misc_win32.c",
     "arguments": [
       "gcc",
@@ -1242,7 +1242,7 @@
     ]
   },
   {
-    "directory": "C:/Users/leg/Programming/Projects/Flint",
+    "directory": "C:/Projects/Flint",
     "file": "src/platform/win32/platform_win32.c",
     "arguments": [
       "gcc",
@@ -1269,7 +1269,7 @@
     ]
   },
   {
-    "directory": "C:/Users/leg/Programming/Projects/Flint",
+    "directory": "C:/Projects/Flint",
     "file": "src/platform/win32/popup/popup_edit_win32.c",
     "arguments": [
       "gcc",
@@ -1296,7 +1296,7 @@
     ]
   },
   {
-    "directory": "C:/Users/leg/Programming/Projects/Flint",
+    "directory": "C:/Projects/Flint",
     "file": "src/platform/win32/popup/popup_main_win32.c",
     "arguments": [
       "gcc",
@@ -1323,7 +1323,7 @@
     ]
   },
   {
-    "directory": "C:/Users/leg/Programming/Projects/Flint",
+    "directory": "C:/Projects/Flint",
     "file": "src/platform/win32/popup/popup_search_win32.c",
     "arguments": [
       "gcc",
@@ -1350,7 +1350,7 @@
     ]
   },
   {
-    "directory": "C:/Users/leg/Programming/Projects/Flint",
+    "directory": "C:/Projects/Flint",
     "file": "src/platform/win32/prompt_popup_win32.c",
     "arguments": [
       "gcc",
@@ -1377,7 +1377,7 @@
     ]
   },
   {
-    "directory": "C:/Users/leg/Programming/Projects/Flint",
+    "directory": "C:/Projects/Flint",
     "file": "src/platform/win32/remap_win32.c",
     "arguments": [
       "gcc",
@@ -1404,7 +1404,7 @@
     ]
   },
   {
-    "directory": "C:/Users/leg/Programming/Projects/Flint",
+    "directory": "C:/Projects/Flint",
     "file": "src/platform/win32/settings_popup_win32.c",
     "arguments": [
       "gcc",
@@ -1431,7 +1431,7 @@
     ]
   },
   {
-    "directory": "C:/Users/leg/Programming/Projects/Flint",
+    "directory": "C:/Projects/Flint",
     "file": "src/platform/win32/tray/tray_win32.c",
     "arguments": [
       "gcc",
@@ -1458,7 +1458,7 @@
     ]
   },
   {
-    "directory": "C:/Users/leg/Programming/Projects/Flint",
+    "directory": "C:/Projects/Flint",
     "file": "src/platform/win32/ui_scale_win32.c",
     "arguments": [
       "gcc",
@@ -1485,7 +1485,7 @@
     ]
   },
   {
-    "directory": "C:/Users/leg/Programming/Projects/Flint",
+    "directory": "C:/Projects/Flint",
     "file": "src/platform/win32/ui_win32.c",
     "arguments": [
       "gcc",
@@ -1512,7 +1512,7 @@
     ]
   },
   {
-    "directory": "C:/Users/leg/Programming/Projects/Flint",
+    "directory": "C:/Projects/Flint",
     "file": "src/platform/win32/watcher_win32.c",
     "arguments": [
       "gcc",
@@ -1539,7 +1539,7 @@
     ]
   },
   {
-    "directory": "C:/Users/leg/Programming/Projects/Flint",
+    "directory": "C:/Projects/Flint",
     "file": "src/platform/win32/win32_state_win32.c",
     "arguments": [
       "gcc",
@@ -1566,7 +1566,7 @@
     ]
   },
   {
-    "directory": "C:/Users/leg/Programming/Projects/Flint",
+    "directory": "C:/Projects/Flint",
     "file": "src/platform/win32/window_manager_win32.c",
     "arguments": [
       "gcc",
@@ -1593,7 +1593,7 @@
     ]
   },
   {
-    "directory": "C:/Users/leg/Programming/Projects/Flint",
+    "directory": "C:/Projects/Flint",
     "file": "src/platform/win32/wm_platform_win32.c",
     "arguments": [
       "gcc",
