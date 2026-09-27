@@ -476,13 +476,15 @@ bool Platform_LaunchDetached(char* command) {
 
 char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
     PROFILE_START(timer);
+    char timer_text[300];
+    snprintf(timer_text,sizeof(timer_text),"platform_x11:Platform_RunTerminalCommand Command:%s",command);
 
     const char* real_user = Platform_GetRealUser();
     const char* real_home = Platform_GetRealHome();
 
     if (!open_terminal) {
         char* result = Platform_RunCommandDetachedCapture(command);
-        PROFILE_END_VAR(timer, "platform_x11:Platform_RunTerminalCommand");
+        PROFILE_END_VAR(timer, timer_text);
         return result;
     }
 
@@ -516,7 +518,7 @@ char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
 
     Platform_LaunchTerminalAtPath(real_home, extra);
     log_info("ran terminal command '%s' open_terminal=%d", command, open_terminal);
-    PROFILE_END_VAR(timer, "platform_x11:Platform_RunTerminalCommand");
+    PROFILE_END_VAR(timer, timer_text);
     return strdup("");
 }
 
