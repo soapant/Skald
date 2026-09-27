@@ -8,6 +8,7 @@
 #include "platform/platform.h"
 #include "helpers/helpers_hotkey.h"
 #include "helpers/helpers_ui.h"
+#include "helpers/helpers_text.h"
 #include "platform/input_state.h"
 #include "core/window_manager.h"
 #include "core/clipboard_history.h"
@@ -429,6 +430,11 @@ char* fl_run_terminal_command(char* command) {
   return Platform_RunTerminalCommand(command,false);
 }
 
+char* fl_run_argv(const char* const argv[], const char* stdin_data, int* out_status) {
+  if (!argv || !argv[0]) return NULL;
+  return Platform_RunArgvCapture(argv, stdin_data, out_status);
+}
+
 char* fl_run_terminal_command_blocking(char* command) {
   if (!command) return NULL;
   return Platform_RunCommandAndGetOutput(command);
@@ -665,6 +671,16 @@ char* fl_string_replace(const char* str, const char* from, const char* to) {
     }
     strcpy(dst, src);
     return out;
+}
+
+StringList fl_string_split(const char* str, const char* delimiter) {
+    StringList empty = {NULL, 0};
+    if (!str || !delimiter || !delimiter[0]) return empty;
+    return String_Split(str, delimiter);
+}
+
+void fl_string_list_free(StringList* list) {
+    StringList_Free(list);
 }
 
 char* fl_string_slice(const char* str, int start, int end) {

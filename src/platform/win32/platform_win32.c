@@ -227,6 +227,59 @@ log_info("Platform_LaunchFileManagerAtPath path='%s' args='%s'", path ? path : "
     return true;
 }
 
+char* Platform_RunArgvCapture(const char* const argv[], const char* stdin_data, int* out_status) {
+    if (out_status) *out_status = -1;
+    if (!argv || !argv[0]) return NULL;
+    SECURITY_ATTRIBUTES sa;
+    sa.nLength = sizeof(sa);
+    sa.lpSecurityDescriptor = NULL;
+    sa.bInheritHandle = TRUE;
+    HANDLE rd = NULL, wr = NULL;
+    if (!CreatePipe(&rd, &wr, &sa, 0)) return NULL;
+    SetHandleInformation(rd, HANDLE_FLAG_INHERIT, 0);
+    STARTUPINFOA si;
+    memset(&si, 0, sizeof(si));
+    si.cb = sizeof(si);
+    si.dwFlags = STARTF_USESTDHANDLES;
+    si.hStdInput = rd;
+    si.hStdOutput = wr;
+    si.hStdError = wr;
+    PROCESS_INFORMATION pi;
+    memset(&pi, 0, sizeof(pi));
+    char cmdline[4096];
+    size_t off = 0;
+    cmdline[0] = '\0';
+    for (int i = 0; argv[i] && i < 128; i++) {
+        size_t need = strlen(argv[i]) * 2 + 3;
+        if (off + need >= sizeof(cmdline)) break;
+        if (i > 0) cmdline[off++] = ' ';
+        cmdline[off++] = '"';
+        for (const char* p = argv[i]; *p; p++) {
+            if (*p == '"' || *p == '\\') cmdline[off++] = '\\';
+            cmdline[off++] = *p;
+        }
+        cmdline[off++] = '"';
+    }
+    cmdline[off] = '\0';
+    CloseHandle(wr);
+    HANDLE child_in = si.hStdInput;
+    BOOL ok = CreateProcessA(NULL, cmdline, NULL, NULL, TRUE, CREATE_NO_WINDOW, NULL, NULL, &si, &pi);
+    CloseHandle(rd);
+    if (!ok) { log_error("Platform_RunArgvCapture CreateProcess failed for '%s'", argv[0]); return NULL; }
+    if (stdin_data && stdin_data[0]) {
+        DWORD written = 0;
+        WriteFile(child_in, stdin_data, (DWORD)strlen(stdin_data), &written, NULL);
+    }
+    CloseHandle(child_in);
+    WaitForSingleObject(pi.hProcess, INFINITE);
+    DWORD code = 0;
+    GetExitCodeProcess(pi.hProcess, &code);
+    if (out_status) *out_status = (int)code;
+    CloseHandle(pi.hThread);
+    CloseHandle(pi.hProcess);
+    return strdup("");
+}
+
 char* Platform_QueryZoxidePath(const char* query) {
     if (!query || !query[0]) return NULL;
     char clean_query[512];

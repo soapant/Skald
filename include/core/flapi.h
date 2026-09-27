@@ -7,9 +7,11 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "core/types.h"
+#include "helpers/helpers_text.h"
 
 #define WHITELIST 1
 #define BLACKLIST 0
+#define FlStringList StringList
 
 
 
@@ -53,10 +55,7 @@ void fl_clipboard_clear_history(void);
 
 char* fl_search_file_in_dir(const char* directory, const char* search_string,char* output_path);
 bool fl_get_all_files_from_dir(const char* dir_path, char** list_of_allowed_extensions, ListOfFiles* list_of_files,char** list_of_names_to_ignore);
-typedef struct {
-    char** items;
-    int count;
-} FlStringList;
+
 FlStringList fl_load_file_list(const char* filepath);
 char* fl_read_file_to_string(const char* path, size_t* out_len);
 bool fl_write_string_to_file(const char* path, const char* content);
@@ -84,6 +83,7 @@ bool fl_launch_file_manager_at_path(char* path,char* args);
 char* fl_run_terminal_command(char* command);
 char* fl_run_terminal_command_blocking(char* command);
 char* fl_run_terminal_command_and_open(char* command);
+char* fl_run_argv(const char* const argv[], const char* stdin_data, int* out_status);
 bool fl_launch_detached(char* command);
 bool fl_open_image(char* image_path);
 int fl_collect_running_processes(char process_list[][128], int max_count);
@@ -155,6 +155,8 @@ bool fl_string_starts_with(const char* str, const char* prefix);
 bool fl_string_ends_with(const char* str, const char* suffix);
 char* fl_string_replace(const char* str, const char* from, const char* to);
 char* fl_string_slice(const char* str, int start, int end);
+FlStringList fl_string_split(const char* str, const char* delimiter);
+void fl_string_list_free(StringList* list);
 
 // =============================================================================
 // POPUPS / UI
