@@ -1109,8 +1109,15 @@ bool fl_draw_rect_impl(const FlRectSpec *spec) {
   return Platform_DrawRectRaw(spec->x, spec->y, spec->w, spec->h, col);
 }
 
+int fl_get_text_height(const char *text) {
+  (void)text;
+  int lh = 0, rh = 0, lt = 0;
+  Platform_GetTextLayoutMetrics(&lh, &rh, &lt);
+  return lh > 0 ? lh : FontSize;
+}
+
 bool fl_draw_line(int x1, int y1, int x2, int y2, unsigned long color) {
-  (void)x1; (void)y1; (void)x2; (void)y2; (void)color; return false; 
+  (void)x1; (void)y1; (void)x2; (void)y2; (void)color; return false;
 }
 bool fl_draw_circle(int x, int y, int radius, unsigned long color) {
   (void)x; (void)y; (void)radius; (void)color; return false; 
