@@ -29,7 +29,6 @@ static bool EditPopupWindow_OnKey(HWND hWnd, EditPopupData* data, ListBoxInfo* l
         return true;
     }
     if (wParam == VK_ESCAPE) {
-      log_info("Escape pressed");
         data->result = NULL;
         DestroyWindow(GetParent(hWnd));
         UI_Redraw(lb, FlintContext_Get()->window.hListBox);
@@ -39,7 +38,6 @@ static bool EditPopupWindow_OnKey(HWND hWnd, EditPopupData* data, ListBoxInfo* l
       if (key->shift) {
         return false;
       }
-      log_info("Enter pressed");
         char buffer[2048] = {0};
         GetWindowTextA(WH_TO_HWND(data->hEdit), buffer, sizeof(buffer) - 1);
         data->result = _strdup(buffer);
