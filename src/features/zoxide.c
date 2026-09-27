@@ -11,7 +11,7 @@ const char* TextEditor = "nvim";
 const char* TerminalZoxideFilePath = "TerminalZoxide.txt";
 static void zoxide_refresh(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
     FlStringList files = fl_load_file_list(TerminalZoxideFilePath);
-    PopulateListBox(lb, FlintContext_Get()->window.hListBox, filter, (const char**)files.items, files.count, NULL);
+    PopulateListBox(lb, filter, (const char**)files.items, files.count, NULL);
     fl_free_file_list(&files);
 }
 static void zoxide_edit(const char* selection, ListBoxInfo* lb) {
@@ -41,7 +41,7 @@ static void TriggerZoxide(void) {
 const char* TextEditorZoxideFilePath = "NvimZoxide.txt";
 static void text_editor_refresh(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
     FlStringList files = fl_load_file_list(TextEditorZoxideFilePath);
-    PopulateListBox(lb, FlintContext_Get()->window.hListBox, filter, (const char**)files.items, files.count, NULL);
+    PopulateListBox(lb, filter, (const char**)files.items, files.count, NULL);
     fl_free_file_list(&files);
 }
 static bool text_editor_enter(const char* selection, ListBoxInfo* lb) {
@@ -73,7 +73,7 @@ static void TriggerTextEditorZoxide(void) {
 const char* YaziZoxideFilePath = "YaziZoxide.txt";
 static void yazi_refresh(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
     FlStringList files = fl_load_file_list(YaziZoxideFilePath);
-    PopulateListBox(lb, FlintContext_Get()->window.hListBox, filter, (const char**)files.items, files.count, NULL);
+    PopulateListBox(lb, filter, (const char**)files.items, files.count, NULL);
     fl_free_file_list(&files);
 }
 static bool yazi_enter(const char* selection, ListBoxInfo* lb) {
@@ -105,7 +105,7 @@ static void TriggerYaziZoxide(void) {
 const char* FileManagerZoxideFilePath = "FileManagerZoxide.txt";
 static void file_manager_refresh(const char* filter, WindowHandle hListBox, ListBoxInfo* lb) {
     FlStringList files = fl_load_file_list(FileManagerZoxideFilePath);
-    PopulateListBox(lb, FlintContext_Get()->window.hListBox, filter, (const char**)files.items, files.count, NULL);
+    PopulateListBox(lb, filter, (const char**)files.items, files.count, NULL);
     fl_free_file_list(&files);
 }
 static bool file_manager_enter(const char* selection, ListBoxInfo* lb) {

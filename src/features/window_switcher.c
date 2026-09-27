@@ -21,7 +21,7 @@ void window_switcher_refresh_callback(const char* filter, WindowHandle hListBox,
         items[i] = buffer;
     }
 
-    PopulateListBox(lb, FlintContext_Get()->window.hListBox, filter, items, count, NULL);
+    PopulateListBox(lb, filter, items, count, NULL);
     fl_free_list(items,count);
     fl_free_window_list(&list_of_titles);
     fl_free_window_list(&list_of_names);

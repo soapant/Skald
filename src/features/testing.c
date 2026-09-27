@@ -1,8 +1,9 @@
 #include "core/flapi.h"
+#include "helpers/helpers_text.h"
+#include <stdio.h>
 
 
 void Testing(void) {
-  fl_get_cursor_pos();
 }
 
 

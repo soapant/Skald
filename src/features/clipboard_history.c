@@ -151,7 +151,7 @@ void clipboard_history_refresh(const char* filter, WindowHandle hListBox, ListBo
         }
     }
     fl_mutex_unlock(ch_lock);
-    PopulateListBox(lb, FlintContext_Get()->window.hListBox, filter, items, count, NULL);
+    PopulateListBox(lb, filter, items, count, NULL);
     fl_free_list(items, count);
 }
 
