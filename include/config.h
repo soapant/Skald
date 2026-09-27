@@ -25,6 +25,7 @@ extern int CornerRadius;
 extern bool EnableShaders;
 extern int ShaderPreset;
 extern float ShaderIntensity;
+extern float ShaderBrightness;
 extern char* EditPopUpPos;
 extern int EditPopUpWidthMin;
 extern int PageUpDownLen;

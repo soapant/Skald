@@ -29,7 +29,8 @@ void ConfigApply(void) {
     CornerRadius = 14;
     EnableShaders = true;
     ShaderPreset = 1;
-    ShaderIntensity = 0.15f;
+    ShaderIntensity = 0.50f;
+    ShaderBrightness = 0.55f;
     TimeBetweenHotReload = 2;
     WindowOpacity = 205.0f;
     EditPopUpPos = "middle";
