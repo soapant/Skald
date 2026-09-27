@@ -157,6 +157,8 @@ char* fl_string_replace(const char* str, const char* from, const char* to);
 char* fl_string_slice(const char* str, int start, int end);
 FlStringList fl_string_split(const char* str, const char* delimiter);
 void fl_string_list_free(StringList* list);
+void fl_populate_listbox(ListBoxInfo* lb, const char* filter, const char** items, int count);
+bool fl_is_selected(ListBoxInfo* lb);
 
 // =============================================================================
 // POPUPS / UI

@@ -95,7 +95,7 @@ void video_refresh_callback(const char* filter, ListBoxInfo* lb) {
     for (size_t i = 0; i < video_files.count; i++) {
         items[i] = video_files.files[i].name;
     }
-    PopulateListBox(lb, filter, items, (int)video_files.count, NULL);
+    fl_populate_listbox(lb, filter, items, (int)video_files.count);
     free(items);
 }
 

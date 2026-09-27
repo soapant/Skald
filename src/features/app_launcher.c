@@ -271,13 +271,13 @@ void applauncher_refresh_callback(const char* filter, ListBoxInfo* lb) {
         const char** names = (const char**)malloc(cnt * sizeof(char*));
         if (!names) return;
         for (size_t i = 0; i < cnt && i < s_apps.count; i++) names[i] = s_apps.files[i].name;
-        PopulateListBox(lb, filter, names, (int)cnt, NULL);
+        fl_populate_listbox(lb, filter, names, (int)cnt);
         free(names);
         return;
     }
     const char* names[2048];
     for (size_t i = 0; i < cnt && i < s_apps.count; i++) names[i] = s_apps.files[i].name;
-    PopulateListBox(lb, filter, names, (int)cnt, NULL);
+    fl_populate_listbox(lb, filter, names, (int)cnt);
 }
 
 void applauncher_copy_callback(const char* selection,int true_index,int type) {

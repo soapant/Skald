@@ -8,7 +8,7 @@ const char* GoogleHistoryFile = "GoogleZoxide.txt";
 
 void google_refresh_callback(const char* filter, ListBoxInfo* lb) {
     FlStringList files = fl_load_file_list(GoogleHistoryFile);
-    PopulateListBox(lb, filter, (const char**)files.items, files.count, NULL);
+    fl_populate_listbox(lb, filter, (const char**)files.items, files.count);
     fl_free_file_list(&files);
 }
 
@@ -23,7 +23,7 @@ void google_edit_callback(const char* selection, ListBoxInfo* lb) {
 }
 
 bool google_enter_callback(const char* selection, ListBoxInfo* lb) {
-    if (!UI_IsListBoxSelected(lb)) {
+    if (!fl_is_selected(lb)) {
         fl_append_unique_line(GoogleHistoryFile, selection);
     }
     fl_query_browser(selection);
@@ -31,7 +31,7 @@ bool google_enter_callback(const char* selection, ListBoxInfo* lb) {
 }
 
 bool google_ctrlenter_callback(const char* selection, ListBoxInfo* lb) {
-    if (!UI_IsListBoxSelected(lb)) {
+    if (!fl_is_selected(lb)) {
         fl_append_unique_line(GoogleHistoryFile, selection);
     }
     fl_launch_browser(selection);

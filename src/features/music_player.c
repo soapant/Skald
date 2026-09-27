@@ -80,7 +80,7 @@ void music_refresh_callback(const char* filter, ListBoxInfo* lb) {
     for (size_t i = 0; i < s_music_files.count; i++) {
         items[i] = s_music_files.files[i].name;
     }
-    PopulateListBox(lb, filter, items, (int)s_music_files.count, NULL);
+    fl_populate_listbox(lb, filter, items, (int)s_music_files.count);
     free(items);
 }
 
