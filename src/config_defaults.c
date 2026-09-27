@@ -15,6 +15,7 @@ int CornerRadius = 14;
 bool EnableShaders = true;
 int ShaderPreset = 1;
 float ShaderIntensity = 0.55f;
+float ShaderBrightness = 0.55f;
 int TimeBetweenHotReload = 2;
 float WindowOpacity = 235.0;
 

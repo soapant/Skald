@@ -25,7 +25,7 @@
 #define NANOSVGRAST_IMPLEMENTATION
 #include "deps/nanosvgrast.h"
 
-#define X11_SHADER_SMOOTHNESS 10
+#define X11_SHADER_SMOOTHNESS 5
 
 static Pixmap g_bgPixmap = None;
 static int g_bgW = 0, g_bgH = 0;
@@ -843,7 +843,7 @@ static void x11_generate_background_pixels(uint32_t* img_data, int bytes_per_lin
     uint32_t *row;
     unsigned int r = (base >> 16) & 0xFF, g = (base >> 8) & 0xFF, b = base & 0xFF;
     float _gamma = Color_ShaderGamma(X11_SHADER_SMOOTHNESS);
-    #define _DITHER(x,y) (Color_BayerDither((x),(y)))
+    #define _DITHER(x,y) (Color_BayerDither((x),(y)) * 2.5f)
     #define _APPLY_DITHER(cr,cg,cb,xx,yy) do { float _d = _DITHER(xx,yy); int _nr = (int)(cr + _d); int _ng = (int)(cg + _d); int _nb = (int)(cb + _d); if (_nr < 0) _nr = 0; if (_nr > 255) _nr = 255; if (_ng < 0) _ng = 0; if (_ng > 255) _ng = 255; if (_nb < 0) _nb = 0; if (_nb > 255) _nb = 255; cr = (unsigned int)_nr; cg = (unsigned int)_ng; cb = (unsigned int)_nb; } while(0)
 
     if (!EnableShaders || ShaderPreset == 0) {
@@ -864,10 +864,11 @@ static void x11_generate_background_pixels(uint32_t* img_data, int bytes_per_lin
         }
     } else if (ShaderPreset == 1) {
         unsigned long light = DeriveLighter(base, 1.0f);
+        float _bright = ShaderBrightness;
         for (int y = 0; y < h; y++) {
             float t = h > 1 ? (float)y / (float)(h - 1) : 0;
             t = powf(t, _gamma);
-            unsigned long col = LerpHex(base, light, t * 0.9f);
+            unsigned long col = LerpHex(base, light, t * 0.9f * _bright);
             unsigned int cr0 = (col >> 16) & 0xFF, cg0 = (col >> 8) & 0xFF, cb0 = col & 0xFF;
             row = (uint32_t*)((char*)img_data + y * bytes_per_line);
             for (int x = 0; x < w; x++) {
