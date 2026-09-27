@@ -267,12 +267,12 @@ void RemoveTodoItemFromFile(const char* item_to_remove) {
 void todo_refresh_callback(const char* filter, ListBoxInfo* lb) {
     FlStringList files = fl_load_file_list(TODO_FILE_PATH);
 
-    PopulateListBox(lb, filter, (const char**)files.items, files.count, NULL);
+    fl_populate_listbox(lb, filter, (const char**)files.items, files.count);
     fl_free_file_list(&files);
 }
 
 bool todo_enter_callback(const char* selection, ListBoxInfo* lb) {
-    if (UI_IsListBoxSelected(lb)) {
+    if (fl_is_selected(lb)) {
         RemoveTodoItemFromFile(selection);
     } 
     else {
@@ -283,7 +283,7 @@ bool todo_enter_callback(const char* selection, ListBoxInfo* lb) {
 }
 
 bool todo_ctrlenter_callback(const char* selection, ListBoxInfo* lb) {
-    if (UI_IsListBoxSelected(lb)) {
+    if (fl_is_selected(lb)) {
         RemoveTodoItemFromFile(selection);
     } else {
         AddTodoToFile(selection);

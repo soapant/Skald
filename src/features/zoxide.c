@@ -11,7 +11,7 @@ const char* TextEditor = "nvim";
 const char* TerminalZoxideFilePath = "TerminalZoxide.txt";
 static void zoxide_refresh(const char* filter, ListBoxInfo* lb) {
     FlStringList files = fl_load_file_list(TerminalZoxideFilePath);
-    PopulateListBox(lb, filter, (const char**)files.items, files.count, NULL);
+    fl_populate_listbox(lb, filter, (const char**)files.items, files.count);
     fl_free_file_list(&files);
 }
 static void zoxide_edit(const char* selection, ListBoxInfo* lb) {
@@ -27,7 +27,7 @@ static bool zoxide_enter(const char* selection, ListBoxInfo* lb) {
     char* path = fl_get_zoxide_match((char*)selection);
     if (!path) return false;
     fl_launch_terminal_at_path(path, NULL);
-    if (!UI_IsListBoxSelected(lb)) fl_append_unique_line(TerminalZoxideFilePath, selection);
+    if (!fl_is_selected(lb)) fl_append_unique_line(TerminalZoxideFilePath, selection);
     free(path);
     return true;
 }
@@ -41,7 +41,7 @@ static void TriggerZoxide(void) {
 const char* TextEditorZoxideFilePath = "NvimZoxide.txt";
 static void text_editor_refresh(const char* filter, ListBoxInfo* lb) {
     FlStringList files = fl_load_file_list(TextEditorZoxideFilePath);
-    PopulateListBox(lb, filter, (const char**)files.items, files.count, NULL);
+    fl_populate_listbox(lb, filter, (const char**)files.items, files.count);
     fl_free_file_list(&files);
 }
 static bool text_editor_enter(const char* selection, ListBoxInfo* lb) {
@@ -50,7 +50,7 @@ static bool text_editor_enter(const char* selection, ListBoxInfo* lb) {
      char cmd_args[512];
      snprintf(cmd_args, sizeof(cmd_args), "-e %s \"%s\"", TextEditor, path);
      fl_launch_terminal_at_path(path, cmd_args);
-    if (!UI_IsListBoxSelected(lb)) fl_append_unique_line(TextEditorZoxideFilePath, selection);
+    if (!fl_is_selected(lb)) fl_append_unique_line(TextEditorZoxideFilePath, selection);
     free(path);
     return true;
 }
@@ -73,7 +73,7 @@ static void TriggerTextEditorZoxide(void) {
 const char* YaziZoxideFilePath = "YaziZoxide.txt";
 static void yazi_refresh(const char* filter, ListBoxInfo* lb) {
     FlStringList files = fl_load_file_list(YaziZoxideFilePath);
-    PopulateListBox(lb, filter, (const char**)files.items, files.count, NULL);
+    fl_populate_listbox(lb, filter, (const char**)files.items, files.count);
     fl_free_file_list(&files);
 }
 static bool yazi_enter(const char* selection, ListBoxInfo* lb) {
@@ -82,7 +82,7 @@ static bool yazi_enter(const char* selection, ListBoxInfo* lb) {
     char cmd_args[512];
     snprintf(cmd_args, sizeof(cmd_args), "-e yazi \"%s\"", path);
     fl_launch_terminal_at_path(path, cmd_args);
-    if (!UI_IsListBoxSelected(lb)) fl_append_unique_line(YaziZoxideFilePath, selection);
+    if (!fl_is_selected(lb)) fl_append_unique_line(YaziZoxideFilePath, selection);
     free(path);
     return true;
 }
@@ -105,14 +105,14 @@ static void TriggerYaziZoxide(void) {
 const char* FileManagerZoxideFilePath = "FileManagerZoxide.txt";
 static void file_manager_refresh(const char* filter, ListBoxInfo* lb) {
     FlStringList files = fl_load_file_list(FileManagerZoxideFilePath);
-    PopulateListBox(lb, filter, (const char**)files.items, files.count, NULL);
+    fl_populate_listbox(lb, filter, (const char**)files.items, files.count);
     fl_free_file_list(&files);
 }
 static bool file_manager_enter(const char* selection, ListBoxInfo* lb) {
     char* path = fl_get_zoxide_match((char*)selection);
     if (!path) return false;
     if (fl_launch_file_manager_at_path(path,NULL)) {
-        if (!UI_IsListBoxSelected(lb)) fl_append_unique_line(FileManagerZoxideFilePath, selection);
+        if (!fl_is_selected(lb)) fl_append_unique_line(FileManagerZoxideFilePath, selection);
     }
     free(path);
     return true;

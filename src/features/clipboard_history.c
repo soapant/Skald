@@ -151,13 +151,13 @@ void clipboard_history_refresh(const char* filter, ListBoxInfo* lb) {
         }
     }
     fl_mutex_unlock(ch_lock);
-    PopulateListBox(lb, filter, items, count, NULL);
+    fl_populate_listbox(lb, filter, items, count);
     fl_free_list(items, count);
 }
 
 bool clipboard_history_enter(const char* selection, ListBoxInfo* lb) {
     (void)selection;
-    if (!UI_IsListBoxSelected(lb)) return true;
+    if (!fl_is_selected(lb)) return true;
     int sel = lb->selected_index;
     if (sel < 0 || sel >= lb->total_matches) return true;
     int idx = lb->matching_indices[sel];

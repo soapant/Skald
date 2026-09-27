@@ -1,15 +1,11 @@
 #include "core/flapi.h"
-#include "config.h"
-#include "core/context.h"
-#include "helpers/helpers_ui.h"
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 
 void delete_app_refresh(const char* filter, ListBoxInfo* lb) {
 
     char* output = fl_run_terminal_command("pacman -Qe");
-    if (!output) return;
     FlStringList lines = fl_string_split(output, "\n");
     const char** names = (const char**)malloc(lines.count * sizeof(char*));
     for (size_t i = 0; i < lines.count; i++) {
@@ -19,12 +15,14 @@ void delete_app_refresh(const char* filter, ListBoxInfo* lb) {
       }
       names[i] = lines.items[i];
     }
-    PopulateListBox(lb, filter, names,lines.count, NULL);
+    fl_populate_listbox(lb, filter, names, (int)lines.count);
     free(names);
+    fl_string_list_free(&lines);
+    free(output);
 }
 
 bool delete_app_enter(const char* selection, ListBoxInfo* lb) {
-    if (!UI_IsListBoxSelected(lb)) {fflush(stdout); return true; }
+    if (!fl_is_selected(lb)) {fflush(stdout); return true; }
     const char* probe[] = { "pacman", "-Rns", "--noconfirm", selection, NULL };
     int rc = 0;
     char* output = fl_run_argv(probe, NULL, &rc);
@@ -34,6 +32,7 @@ bool delete_app_enter(const char* selection, ListBoxInfo* lb) {
     free(output);
     if (!needs_root) { fflush(stdout); return true; }
     char* pass = fl_popup(.placeholder = "Input Sudo Password");
+    if (!pass) return false;
     const char* argv[] = { "sudo", "-S", "-k", "pacman", "-Rns", "--noconfirm", selection, NULL };
     int src = 0;
     char* res = fl_run_argv(argv, pass, &src);
@@ -43,15 +42,10 @@ bool delete_app_enter(const char* selection, ListBoxInfo* lb) {
     return true;
 }
 
-bool delete_app_ctrl_enter(const char* selection, ListBoxInfo* lb) {
-    return false;
-}
-
 void TriggerDeleteApp(void) {
     PROMPT(.title = "Delete App",
            .refresh = delete_app_refresh,
-           .enter = delete_app_enter,
-           .ctrl_enter = delete_app_ctrl_enter);
+           .enter = delete_app_enter);
 }
 
 FLINT_FEATURE_INIT {

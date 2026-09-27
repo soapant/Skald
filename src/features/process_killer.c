@@ -34,7 +34,7 @@ void pk_refresh_callback(const char* filter, ListBoxInfo* lb) {
     for (int i = 0; i < PK_COUNT; i++) {
         items[i] = PK_LIST[i];
     }
-    PopulateListBox(lb, filter, items, PK_COUNT, NULL);
+    fl_populate_listbox(lb, filter, items, PK_COUNT);
     free(items);
 }
 void TriggerProcessKiller(void) {
