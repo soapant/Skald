@@ -3,13 +3,6 @@
 #include <string.h>
 #include <stdlib.h>
 
-typedef struct {
-    int vk_code;
-    int modifiers;
-    const char* exe_name;
-    const char* app_name;  
-} AppHotkey;
-
 const char* ListOfShitToIgnore[] = {
   "node_modules",
   ".git",
@@ -62,7 +55,6 @@ const PathEntry SystemShortcuts[] = {
 };
 
 #define SYSTEM_SHORTCUT_COUNT ARRAY_LEN(SystemShortcuts)
-#define MAX_APPS 2048
 #define APPCACHE_FILE "app_launcher_cache.txt"
 
 ListOfFiles s_apps = {0};
@@ -101,7 +93,6 @@ static void save_app_cache(void) {
     bool ok = fl_write_to_file(APPCACHE_FILE, lines, (int)written);
     free(store);
     free(lines);
-    printf("[app_launcher] cache saved entries=%zu ok=%d\n", written, ok ? 1 : 0);
 }
 
 static bool load_app_cache(void) {
@@ -176,8 +167,6 @@ static void scan_app_dirs(void) {
     }
 #if defined(_WIN32)
     for (int shortcut_idx = 0; shortcut_idx < SYSTEM_SHORTCUT_COUNT; shortcut_idx++) {
-        if (tmp.count >= MAX_APPS) break;
-        
         bool found = false;
         for (size_t app_idx = 0; app_idx < tmp.count; app_idx++) {
             if (fl_string_contains(tmp.files[app_idx].path, SystemShortcuts[shortcut_idx].path)) {
@@ -212,7 +201,6 @@ void ensure_app_cache(void) {
     if (g_app_cache_ready) return;
     g_app_cache_ready = true;
     if (load_app_cache()) {
-        printf("[app_launcher] cache loaded entries=%zu\n", s_apps.count);
         return;
     }
     scan_app_dirs();
