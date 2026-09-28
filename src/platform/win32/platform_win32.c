@@ -517,10 +517,28 @@ long Platform_GetFileSize(char *filepath) {
 }
 
 
+#define MAX_WATCH_ROOTS 32
+
 typedef struct {
-    char dir_path[256];
+    char dir_path[512];
     DirChangeCallback callback;
 } WatcherArgs;
+
+static WatcherArgs g_watch_roots[MAX_WATCH_ROOTS];
+static int g_watch_root_count = 0;
+
+static int watch_root_index_for(const char* dir_path) {
+    for (int i = 0; i < g_watch_root_count; i++) {
+        if (_stricmp(g_watch_roots[i].dir_path, dir_path) == 0) return i;
+    }
+    return -1;
+}
+
+static void watch_normalize_root(const char* in, char* out, size_t out_size) {
+    snprintf(out, out_size, "%s", in ? in : "");
+    size_t n = strlen(out);
+    while (n > 1 && (out[n - 1] == '\\' || out[n - 1] == '/')) out[--n] = '\0';
+}
 
 DWORD WINAPI Platform_WatchWorker(LPVOID arg) {
     WatcherArgs *args = (WatcherArgs*)arg;
@@ -536,11 +554,12 @@ DWORD WINAPI Platform_WatchWorker(LPVOID arg) {
     );
 
     if (hDir == INVALID_HANDLE_VALUE) {
+        log_warn("dir watch open failed root='%s' err=%lu", args->dir_path, GetLastError());
         free(args);
         return 1;
     }
 
-    BYTE buffer[8192];
+    BYTE buffer[64 * 1024];
     DWORD bytesReturned;
 
     while (1) {
@@ -549,7 +568,7 @@ DWORD WINAPI Platform_WatchWorker(LPVOID arg) {
             &buffer,
             sizeof(buffer),
             TRUE,
-            FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_DIR_NAME | FILE_NOTIFY_CHANGE_LAST_WRITE,
+            FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_DIR_NAME | FILE_NOTIFY_CHANGE_SIZE | FILE_NOTIFY_CHANGE_LAST_WRITE,
             &bytesReturned,
             NULL,
             NULL
@@ -559,19 +578,24 @@ DWORD WINAPI Platform_WatchWorker(LPVOID arg) {
             break;
         }
 
-        if (args->callback) {
-            BYTE* p = buffer;
-            while (p < buffer + bytesReturned) {
-                FILE_NOTIFY_INFORMATION* fni = (FILE_NOTIFY_INFORMATION*)p;
-                char name[512] = {0};
-                WideCharToMultiByte(CP_UTF8, 0, fni->FileName, -1, name, sizeof(name) - 1, NULL, NULL);
-                char full[800];
-                snprintf(full, sizeof(full), "%s\\%s", args->dir_path, name);
-                int added = (fni->Action == FILE_ACTION_ADDED) ? 1 : 0;
-                args->callback(full, added);
-                if (fni->NextEntryOffset == 0) break;
-                p += fni->NextEntryOffset;
+        BYTE* p = buffer;
+        while (p < buffer + bytesReturned) {
+            FILE_NOTIFY_INFORMATION* fni = (FILE_NOTIFY_INFORMATION*)p;
+            int added = 1;
+            if (fni->Action == FILE_ACTION_REMOVED || fni->Action == FILE_ACTION_RENAMED_OLD_NAME) {
+                added = 0;
             }
+            if (fni->FileNameLength > 0) {
+                char name[1024] = {0};
+                WideCharToMultiByte(CP_UTF8, 0, fni->FileName, (int)(fni->FileNameLength / sizeof(WCHAR)), name, (int)sizeof(name) - 1, NULL, NULL);
+                if (name[0] && args->callback) {
+                    char full[1536];
+                    snprintf(full, sizeof(full), "%s\\%s", args->dir_path, name);
+                    args->callback(full, added);
+                }
+            }
+            if (fni->NextEntryOffset == 0) break;
+            p += fni->NextEntryOffset;
         }
     }
 
@@ -581,30 +605,52 @@ DWORD WINAPI Platform_WatchWorker(LPVOID arg) {
 }
 
 char* Platform_RegisterDirWatcher(const char* dir_path, DirChangeCallback callback) {
+    if (!dir_path) return NULL;
+
+    char root[512];
+    watch_normalize_root(dir_path, root, sizeof(root));
+    if (!root[0]) return NULL;
+
+    int ri = watch_root_index_for(root);
+    if (ri >= 0) {
+        if (callback) g_watch_roots[ri].callback = callback;
+        return NULL;
+    }
+
+    if (g_watch_root_count >= MAX_WATCH_ROOTS) {
+        log_warn("dir watch registry full root='%s'", root);
+        return NULL;
+    }
+
+    ri = g_watch_root_count++;
+    snprintf(g_watch_roots[ri].dir_path, sizeof(g_watch_roots[ri].dir_path), "%s", root);
+    g_watch_roots[ri].callback = callback;
+
     WatcherArgs *args = malloc(sizeof(WatcherArgs));
     if (!args) {
+        g_watch_root_count--;
         return NULL;
     }
-
-    snprintf(args->dir_path, sizeof(args->dir_path), "%s", dir_path);
-    args->callback = callback;
+    memcpy(args, &g_watch_roots[ri], sizeof(WatcherArgs));
 
     HANDLE hThread = CreateThread(
-        NULL,                   
-        0,                      
-        Platform_WatchWorker,   
-        args,                   
-        0,                      
-        NULL                    
+        NULL,
+        0,
+        Platform_WatchWorker,
+        args,
+        0,
+        NULL
     );
 
-    if (hThread != NULL) {
-        CloseHandle(hThread);
+    if (hThread == NULL) {
+        free(args);
+        g_watch_root_count--;
+        log_warn("Registering Directory Watcher failed root='%s' err=%lu", root, GetLastError());
         return NULL;
     }
 
-    free(args);
-    log_info("Registering Directory Watcher");
+    CloseHandle(hThread);
+    log_info("dir watch registered root='%s'", root);
     return NULL;
 }
 
