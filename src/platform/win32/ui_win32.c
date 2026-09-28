@@ -259,10 +259,6 @@ void UI_Redraw(ListBoxInfo* lb, WindowHandle hListBox) {
     UI_RedrawNow(lb, hListBox);
 }
 
-void UI_GetParent(WindowHandle hwnd) {
-    SendMessageA(GetParent(WH_TO_HWND(hwnd)), WM_COMMAND, MAKEWPARAM(IDC_INPUT_BOX, EN_CHANGE), (LPARAM)WH_TO_HWND(FlintContext_Get()->window.hEditControl));
-}
-
 char* Platform_SearchPopup(void) { log_error("operation failed, returning error"); return NULL; log_info("Platform_SearchPopup completed");
 }
 
