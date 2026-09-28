@@ -104,30 +104,42 @@ static const char* win32_host_for_system_file(const char* path) {
     return NULL;
 }
 
+static bool win32_exec_shell(const char* file, const char* params, const char* working_dir, const char* verb) {
+    SHELLEXECUTEINFOA sei;
+    ZeroMemory(&sei, sizeof(sei));
+    sei.cbSize = sizeof(sei);
+    sei.fMask = SEE_MASK_NOCLOSEPROCESS | SEE_MASK_NOASYNC;
+    sei.lpVerb = verb;
+    sei.lpFile = file;
+    sei.lpParameters = (params && params[0]) ? params : NULL;
+    sei.lpDirectory = working_dir;
+    sei.nShow = SW_SHOWNORMAL;
+    if (!ShellExecuteExA(&sei)) return false;
+    if (sei.hProcess) CloseHandle(sei.hProcess);
+    return true;
+}
+
 bool fl_launch_with_args_platform(const char* path, const char* args) {
     if (!path) return false;
-    char expanded[1024];
-    extern bool Platform_ExpandPath(const char* t, char* o, size_t s);
-    if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) return false;
-    path = expanded;
-    char cmd[2048];
+    char params[2048];
+    params[0] = '\0';
     if (args && args[0] && strcmp(args, "0") != 0) {
-        snprintf(cmd, sizeof(cmd), "\"%s\" %s", path, args);
-    } else {
-        snprintf(cmd, sizeof(cmd), "\"%s\"", path);
+        snprintf(params, sizeof(params), "%s", args);
     }
     const char* host = win32_host_for_system_file(path);
     if (host) {
         char hostParams[2048];
-        if (args && args[0] && strcmp(args, "0") != 0) snprintf(hostParams, sizeof(hostParams), "\"%s\" %s", path, args);
+        hostParams[0] = '\0';
+        if (params[0]) snprintf(hostParams, sizeof(hostParams), "\"%s\" %s", path, params);
         else snprintf(hostParams, sizeof(hostParams), "\"%s\"", path);
-        HINSTANCE hres = ShellExecuteA(NULL, "open", host, hostParams, NULL, SW_SHOWNORMAL);
-        if ((intptr_t)hres > 32) return true;
-        log_warn("fl_launch host failed host='%s' params='%s' res=%d", host, hostParams, (int)(intptr_t)hres);
+        if (win32_exec_shell(host, hostParams, NULL, "open")) return true;
+        log_warn("fl_launch host failed host='%s' params='%s' err=%lu", host, hostParams, GetLastError());
     }
-    HINSTANCE res = ShellExecuteA(NULL, "open", path, args && args[0] ? args : NULL, NULL, SW_SHOWNORMAL);
-    if ((intptr_t)res > 32) return true;
-    log_warn("fl_launch ShellExecuteA failed path='%s' args='%s' res=%d", path, args ? args : "", (int)(intptr_t)res);
+    if (win32_exec_shell(path, params[0] ? params : NULL, NULL, "open")) return true;
+    log_warn("fl_launch ShellExecuteExA failed path='%s' args='%s' err=%lu", path, params, GetLastError());
+    char cmd[2048];
+    if (params[0]) snprintf(cmd, sizeof(cmd), "\"%s\" %s", path, params);
+    else snprintf(cmd, sizeof(cmd), "\"%s\"", path);
     STARTUPINFOA si = {0}; si.cb = sizeof(si);
     PROCESS_INFORMATION pi = {0};
     if (CreateProcessA(NULL, cmd, NULL, NULL, FALSE, CREATE_NO_WINDOW, NULL, NULL, &si, &pi)) {
