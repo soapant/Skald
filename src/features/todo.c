@@ -278,7 +278,6 @@ bool todo_enter_callback(const char* selection, ListBoxInfo* lb) {
     else {
         AddTodoToFile(selection);
     }
-    UI_Redraw(lb, FlintContext_Get()->window.hListBox);
     return true;
 }
 
@@ -289,7 +288,6 @@ bool todo_ctrlenter_callback(const char* selection, ListBoxInfo* lb) {
         AddTodoToFile(selection);
         UI_SetText(FlintContext_Get()->window.hEditControl, "");
     }
-    UI_Redraw(lb, FlintContext_Get()->window.hListBox);
     return false;
 }
 
@@ -351,7 +349,6 @@ void todo_edit_callback(const char* selection, ListBoxInfo* lb) {
     if (idx >= 0) fl_replace_line_in_file(TODO_FILE_PATH, idx, edited);
     free(edited);
     todo_refresh_callback("", lb);
-    UI_Redraw(lb, FlintContext_Get()->window.hListBox);
 }
 
 void TriggerTodo(void) {
