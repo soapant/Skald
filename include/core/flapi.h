@@ -7,7 +7,10 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "core/types.h"
+#include "core/types/prompt.h"
 #include "helpers/helpers_text.h"
+#include "helpers/helpers_ui.h"
+#include "config.h"
 
 #define WHITELIST 1
 #define BLACKLIST 0
@@ -159,6 +162,10 @@ FlStringList fl_string_split(const char* str, const char* delimiter);
 void fl_string_list_free(StringList* list);
 void fl_populate_listbox(ListBoxInfo* lb, const char* filter, const char** items, int count);
 bool fl_is_selected(ListBoxInfo* lb);
+void fl_set_edit_text(const char* text);
+void fl_set_edit_cursor(int position);
+void fl_get_edit_text(char* buffer, size_t cap);
+unsigned long fl_rgb_to_hex(ColorRef color);
 
 // =============================================================================
 // POPUPS / UI

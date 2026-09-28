@@ -451,13 +451,12 @@ bool calculator_enter_callback(const char* selection, ListBoxInfo* lb) {
 
 void calculator_tab_callback(ListBoxInfo* lb) {
     char current_input[256] = {0};
-    UI_GetCurrentTextEdit(FlintContext_Get()->window.hEditControl,current_input,sizeof(current_input));
+    fl_get_edit_text(current_input,sizeof(current_input));
     char a_str[64] = {0}; char op_str[4] = {0}; char b_str[64] = {0};
     if (sscanf(current_input, "%63s %3s %63s", a_str, op_str, b_str) == 3) {
         char flipped[256]; snprintf(flipped, sizeof(flipped), "%s %s %s", b_str, op_str, a_str);
-        UI_SetText(FlintContext_Get()->window.hEditControl,flipped);
-        int len = strlen(flipped); UI_SetCursorPosition(FlintContext_Get()->window.hEditControl,len);
-        UI_GetParent(FlintContext_Get()->window.hEditControl);
+        fl_set_edit_text(flipped);
+        int len = strlen(flipped); fl_set_edit_cursor(len);
         printf("[CALCULATOR] Flipped: %s\n", flipped);
     }
 }
@@ -467,8 +466,8 @@ bool calculator_ctrlenter_callback(const char* selection, ListBoxInfo* lb) {
     const char *src = g_calc_last_result;
     if (src[0]=='=' && src[1]==' ') src+=2;
     
-    UI_SetText(FlintContext_Get()->window.hEditControl, src);
-    int len = strlen(src); UI_SetCursorPosition(FlintContext_Get()->window.hEditControl, len);
+    fl_set_edit_text(src);
+    int len = strlen(src); fl_set_edit_cursor(len);
     return false;
 }
 

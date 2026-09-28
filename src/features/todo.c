@@ -1,8 +1,4 @@
 #include "core/flapi.h"
-#include "config.h"
-#include "core/context.h"
-#include "helpers/helpers_ui.h"
-#include "platform/ui.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -286,7 +282,7 @@ bool todo_ctrlenter_callback(const char* selection, ListBoxInfo* lb) {
         RemoveTodoItemFromFile(selection);
     } else {
         AddTodoToFile(selection);
-        UI_SetText(FlintContext_Get()->window.hEditControl, "");
+        fl_set_edit_text("");
     }
     return false;
 }
