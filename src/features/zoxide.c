@@ -21,7 +21,6 @@ static void zoxide_edit(const char* selection, ListBoxInfo* lb) {
     if (idx >= 0) fl_replace_line_in_file(TerminalZoxideFilePath, idx, edited);
     free(edited);
     zoxide_refresh("", lb);
-    UI_Redraw(lb, FlintContext_Get()->window.hListBox);
 }
 static bool zoxide_enter(const char* selection, ListBoxInfo* lb) {
     char* path = fl_get_zoxide_match((char*)selection);
@@ -61,7 +60,6 @@ static void text_editor_edit(const char* selection, ListBoxInfo* lb) {
     if (idx >= 0) fl_replace_line_in_file(TextEditorZoxideFilePath, idx, edited);
     free(edited);
     text_editor_refresh("", lb);
-    UI_Redraw(lb, FlintContext_Get()->window.hListBox);
 }
 static void TriggerTextEditorZoxide(void) {
     FlStringList files = fl_load_file_list(TextEditorZoxideFilePath);
@@ -93,7 +91,6 @@ static void yazi_edit(const char* selection, ListBoxInfo* lb) {
     if (idx >= 0) fl_replace_line_in_file(YaziZoxideFilePath, idx, edited);
     free(edited);
     yazi_refresh("", lb);
-    UI_Redraw(lb, FlintContext_Get()->window.hListBox);
 }
 static void TriggerYaziZoxide(void) {
     FlStringList files = fl_load_file_list(YaziZoxideFilePath);
@@ -124,7 +121,6 @@ static void file_manager_edit(const char* selection, ListBoxInfo* lb) {
     if (idx >= 0) fl_replace_line_in_file(FileManagerZoxideFilePath, idx, edited);
     free(edited);
     file_manager_refresh("", lb);
-    UI_Redraw(lb, FlintContext_Get()->window.hListBox);
 }
 static void TriggerFileManager(void) {
     FlStringList files = fl_load_file_list(FileManagerZoxideFilePath);
