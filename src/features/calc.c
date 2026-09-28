@@ -1,10 +1,4 @@
 #include "core/flapi.h"
-#include "config.h"
-#include "core/context.h"
-#include "platform/platform.h"
-#include "platform/ui.h"
-#include "core/flapi_input.h"
-#include "helpers/helpers_ui.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -73,7 +67,7 @@ static UnitDef* find_unit_fuzzy(const char* input){
     for(size_t i=0;i<UNIT_COUNT;i++) if(str_equals_ci(s, UNITS[i].canonical)) return &UNITS[i];
     
     for(size_t i=0;i<UNIT_COUNT;i++) for(int j=0;j<UNITS[i].alias_count;j++){
-        if(Platform_StringContainsCaseInsensitive(s, (char*)UNITS[i].aliases[j]) || Platform_StringContainsCaseInsensitive((char*)UNITS[i].aliases[j], s)) return &UNITS[i];
+        if(fl_string_contains(UNITS[i].aliases[j], s) || fl_string_contains(s, UNITS[i].aliases[j])) return &UNITS[i];
     }
     
     UnitDef* best=NULL; int bestd=999;
@@ -457,7 +451,6 @@ void calculator_tab_callback(ListBoxInfo* lb) {
         char flipped[256]; snprintf(flipped, sizeof(flipped), "%s %s %s", b_str, op_str, a_str);
         fl_set_edit_text(flipped);
         int len = strlen(flipped); fl_set_edit_cursor(len);
-        printf("[CALCULATOR] Flipped: %s\n", flipped);
     }
 }
 
