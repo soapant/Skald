@@ -134,7 +134,7 @@ static void scan_app_dirs(void) {
     ListOfFiles tmp = {0};
     for (int i = 0; i < (int)ARRAY_LEN(ListOfProgramPaths); i++) {
         if (!ListOfProgramPaths[i] || ListOfProgramPaths[i][0] == '\0') continue;
-        fl_get_all_files_from_dir(ListOfProgramPaths[i], allowed, &tmp, (char**)ListOfShitToIgnore);
+        fl_get_all_files_from_dir(ListOfProgramPaths[i], allowed, &tmp, (char**)ListOfShitToIgnore, true);
     }
     for (size_t i = 0; i < tmp.count; ) {
         bool skip = false;

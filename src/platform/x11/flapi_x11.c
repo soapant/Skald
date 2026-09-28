@@ -34,7 +34,8 @@
 
 
 bool Platform_GetAllFilesFromDir(const char* dir_path, char** list_of_allowed_extensions,
-                                        ListOfFiles* list_of_files, char** list_of_names_to_ignore) {
+                                        ListOfFiles* list_of_files, char** list_of_names_to_ignore,
+                                        bool strip_extension) {
     PROFILE_START(timer);
 
     if (!dir_path || !list_of_files) {
@@ -81,7 +82,7 @@ bool Platform_GetAllFilesFromDir(const char* dir_path, char** list_of_allowed_ex
             }
             if (!should_ignore) {
                 Platform_GetAllFilesFromDir(full_path, list_of_allowed_extensions,
-                                                   list_of_files, list_of_names_to_ignore);
+                                                   list_of_files, list_of_names_to_ignore, strip_extension);
             }
         } else {
             bool allowed = true;
@@ -128,8 +129,10 @@ bool Platform_GetAllFilesFromDir(const char* dir_path, char** list_of_allowed_ex
                 memcpy(clean_name, entry->d_name, nlen);
                 clean_name[nlen] = '\0';
 
-                char* dot = strrchr(clean_name, '.');
-                if (dot) *dot = '\0';
+                if (strip_extension) {
+                    char* dot = strrchr(clean_name, '.');
+                    if (dot) *dot = '\0';
+                }
 
                 size_t clen = strlen(clean_name);
                 if (clen >= sizeof(item->name)) clen = sizeof(item->name) - 1;
@@ -243,6 +246,7 @@ bool fl_launch_with_args_platform(const char* path, const char* args) {
                     }
                 }
             }
+            //temporary hardcoded fallback
             if (strstr(expanded, "/miscellaneous/") != NULL) {
                 char desktop_dir2[1024]; strncpy(desktop_dir2, expanded, sizeof(desktop_dir2)-1); desktop_dir2[sizeof(desktop_dir2)-1]='\0'; char* slash2 = strrchr(desktop_dir2, '/'); if (slash2) *slash2='\0'; else strcpy(desktop_dir2, ".");
                 char dir_candidate2[1024]; snprintf(dir_candidate2, sizeof(dir_candidate2), "%s/%s", desktop_dir2, app_id);

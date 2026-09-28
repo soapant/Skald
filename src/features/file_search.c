@@ -79,11 +79,12 @@ static bool load_file_cache(void) {
 }
 
 static void scan_app_dirs(void) {
-    char* allowed[] = {"txt","png","pdf","jpg","jpeg","mp3","wav","ogg","c",NULL};
+    char* allowed[] = {"txt","png","pdf","jpg","jpeg","mp3","wav","ogg",NULL};
+
     ListOfFiles tmp = {0};
     for (int i = 0; i < (int)ARRAY_LEN(ListOfFilePaths); i++) {
         if (!ListOfFilePaths[i] || ListOfFilePaths[i][0] == '\0') continue;
-        fl_get_all_files_from_dir(ListOfFilePaths[i], allowed, &tmp,NULL);
+        fl_get_all_files_from_dir(ListOfFilePaths[i], allowed, &tmp, NULL, false);
     }
     for (size_t i = 0; i < tmp.count; ) {
         bool skip = false;

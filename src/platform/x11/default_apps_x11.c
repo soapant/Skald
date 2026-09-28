@@ -27,7 +27,7 @@ const char* x11_default_apps_run(const char* command, int slot) {
 
 const char* x11_find_terminal_in_desktop_files(const char* const* names, size_t count) {
     ListOfFiles files = {0};
-    Platform_GetAllFilesFromDir("/usr/share/applications", NULL, &files, NULL);
+    Platform_GetAllFilesFromDir("/usr/share/applications", NULL, &files, NULL, true);
 
     const char* found = NULL;
 
