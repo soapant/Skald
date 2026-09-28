@@ -6,7 +6,7 @@
 
 const char* ListOfFilePaths[] = {
     #if defined(_WIN32)
-      "C:\\",
+      "C:\\Projects",
     #else 
       "/home/diggy/Programming/Projects",
       "/home/diggy/miscellaneous",
@@ -157,6 +157,7 @@ static void file_cache_add(const char* full_path) {
         if (strcmp(s_files.files[i].path, full_path) == 0) return;
     }
     const char* base = strrchr(full_path, '/');
+    if (!base) base = strrchr(full_path, '\\');
     base = base ? base + 1 : full_path;
     if (!file_ext_allowed(base)) return;
     if (s_files.count >= s_files.capacity && !file_cache_grow(&s_files)) return;
