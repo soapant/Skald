@@ -20,7 +20,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/types.h>
-#include <curl/curl.h>
 #include "core/timer.h"
 #include "core/remap_manager.h"
 #include "core/window_manager.h"

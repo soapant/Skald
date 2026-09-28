@@ -99,6 +99,7 @@ const char* x11_get_default_terminal_x11(void) {
     size_t n = sizeof(candidates) / sizeof(candidates[0]);
     const char* out;
     out = Platform_RunTerminalCommand("gsettings get org.gnome.desktop.default-applications.terminal exec",false);
+    printf("out: %s\n",out);
     // Remove quotes from the output temporary
     if (!out) {
       out = x11_find_terminal_in_desktop_files(candidates, n);

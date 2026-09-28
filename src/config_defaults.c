@@ -41,10 +41,10 @@ const char* ControlHotkey = "Alt+Space";
 const char* Theme = "rose-pine";
 
 static const PathVar default_path_vars[] = {
-    {"DEV",          "D:\\Projects",                    "/home/diggy/Programming/Projects"},
-    {"MISC",         "D:\\retard games\\miscellaneous", "/home/diggy/miscellaneous"},
-    {"MUSIC",        "D:\\Music",                       "/home/diggy/Music"},
-    {"VIDEOS",       "D:\\videos",                      "/home/diggy/Videos"},
+    {"DEV",          "D:\\Projects",                    "/home/dog/Programming/Projects"},
+    {"MISC",         "D:\\retard games\\miscellaneous", "/home/dog/miscellaneous"},
+    {"MUSIC",        "D:\\Music",                       "/home/dog/Music"},
+    {"VIDEOS",       "D:\\videos",                      "/home/dog/Videos"},
     {"PROGRAMDATA",  "C:\\ProgramData",                 ""},
     {"SystemRoot",   "C:\\Windows",                     ""},
 };

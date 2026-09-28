@@ -7,8 +7,8 @@ StartLimitIntervalSec=0
 
 [Service]
 Type=simple
-WorkingDirectory=/home/diggy/Programming/Projects/Flint
-ExecStart=/home/diggy/Programming/Projects/Flint/build/flint
+WorkingDirectory=/home/dog/Programming/Projects/Flint
+ExecStart=/home/dog/Programming/Projects/Flint/build/flint
 PassEnvironment=DISPLAY WAYLAND_DISPLAY XDG_RUNTIME_DIR XAUTHORITY SWAYSOCK I3SOCK HYPRLAND_INSTANCE_SIGNATURE NIRI_SOCKET DBUS_SESSION_BUS_ADDRESS
 Environment=XDG_RUNTIME_DIR=%t
 ExecStartPre=/bin/sh -c 'for i in 1 2 3 4 5 6 7 8 9 10; do [ -S /run/user/%U/wayland-1 ] || [ -S /tmp/.X11-unix/X0 ] || [ -S /run/user/%U/wayland-0 ] && break; sleep 0.5; done; exit 0'

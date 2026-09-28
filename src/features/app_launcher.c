@@ -25,10 +25,10 @@ const char* ListOfProgramPaths[] = {
     "shell:AppsFolder",
 #else
     "/usr/share/applications",
-    "/home/diggy/.local/share/applications",
+    "/home/dog/.local/share/applications",
     "/usr/bin",
-    "/home/diggy/.local/bin",
-    "/home/diggy/miscellaneous",
+    "/home/dog/.local/bin",
+    "/home/dog/miscellaneous",
 #endif
 };
 
