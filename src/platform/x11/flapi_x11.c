@@ -392,8 +392,6 @@ bool fl_listbox_next_platform(FlListItemCtx *out) {
         int bx = g_fl_list_bx, bw = g_fl_list_bw;
         if (sel) {
             x11_fill_rounded_rect(g_fl_list_dpy, g_fl_list_xd, g_fl_list_vis, g_fl_list_cmap, rgb_to_hex(COLOR_SELECTED_TEXT), 0xFFFF, bx+t, y+1+t, bw-2*t, g_fl_list_itemH-2-2*t, R-1);
-        } else if (!EnableShaders || ShaderPreset==0) {
-            x11_fill_rounded_rect(g_fl_list_dpy, g_fl_list_xd, g_fl_list_vis, g_fl_list_cmap, rgb_to_hex(COLOR_BG), 0xFFFF, bx+t, y+1+t, bw-2*t, g_fl_list_itemH-2-2*t, R-1);
         }
     } else {
         PromptState tmp = {0};
