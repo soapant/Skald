@@ -517,11 +517,9 @@ long Platform_GetFileSize(char *filepath) {
 }
 
 
-typedef void (*DirChangedCallback)();
-
 typedef struct {
     char dir_path[256];
-    DirChangedCallback callback;
+    DirChangeCallback callback;
 } WatcherArgs;
 
 DWORD WINAPI Platform_WatchWorker(LPVOID arg) {
@@ -542,7 +540,7 @@ DWORD WINAPI Platform_WatchWorker(LPVOID arg) {
         return 1;
     }
 
-    BYTE buffer[4096];
+    BYTE buffer[8192];
     DWORD bytesReturned;
 
     while (1) {
@@ -551,7 +549,7 @@ DWORD WINAPI Platform_WatchWorker(LPVOID arg) {
             &buffer,
             sizeof(buffer),
             TRUE,
-            FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_DIR_NAME,
+            FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_DIR_NAME | FILE_NOTIFY_CHANGE_LAST_WRITE,
             &bytesReturned,
             NULL,
             NULL
@@ -561,7 +559,20 @@ DWORD WINAPI Platform_WatchWorker(LPVOID arg) {
             break;
         }
 
-        args->callback();
+        if (args->callback) {
+            BYTE* p = buffer;
+            while (p < buffer + bytesReturned) {
+                FILE_NOTIFY_INFORMATION* fni = (FILE_NOTIFY_INFORMATION*)p;
+                char name[512] = {0};
+                WideCharToMultiByte(CP_UTF8, 0, fni->FileName, -1, name, sizeof(name) - 1, NULL, NULL);
+                char full[800];
+                snprintf(full, sizeof(full), "%s\\%s", args->dir_path, name);
+                int added = (fni->Action == FILE_ACTION_ADDED) ? 1 : 0;
+                args->callback(full, added);
+                if (fni->NextEntryOffset == 0) break;
+                p += fni->NextEntryOffset;
+            }
+        }
     }
 
     CloseHandle(hDir);
@@ -569,7 +580,7 @@ DWORD WINAPI Platform_WatchWorker(LPVOID arg) {
     return 0;
 }
 
-char* Platform_RegisterDirWatcher(const char* dir_path, void (*callback)(void)) {
+char* Platform_RegisterDirWatcher(const char* dir_path, DirChangeCallback callback) {
     WatcherArgs *args = malloc(sizeof(WatcherArgs));
     if (!args) {
         return NULL;

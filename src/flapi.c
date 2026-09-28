@@ -741,7 +741,7 @@ bool fl_query_browser(const char* query) {
     return Platform_QueryBrowser(query);
 }
 
-char* fl_on_dir_changed(char* dir_path, void (*callback)(void)) {
+char* fl_on_dir_changed(const char* dir_path, DirChangeCallback callback) {
     if (!dir_path) return NULL;
     return Platform_RegisterDirWatcher(dir_path, callback);
 }
