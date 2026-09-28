@@ -1516,16 +1516,22 @@ int Platform_CopyToClipboard(const char *text) {
     long long t0 = Platform_GetWallClockMs();
     int wr = 0;
     int xr = 0;
+    log_info("COPY BEGIN pid=%d len=%d text='%s' WAYLAND_DISPLAY=%s HYPRLAND_INSTANCE_SIGNATURE=%s",
+        (int)getpid(), (int)strlen(text), text,
+        getenv("WAYLAND_DISPLAY") ? getenv("WAYLAND_DISPLAY") : "(unset)",
+        getenv("HYPRLAND_INSTANCE_SIGNATURE") ? "set" : "(unset)");
     if (Wayland_ClipboardAvailable()) {
         long long tw = Platform_GetWallClockMs();
         wr = Wayland_ClipboardSetText(text);
-        log_info("Platform_CopyToClipboard wayland=%d ms=%lld", wr, Platform_GetWallClockMs() - tw);
+        log_info("COPY step1 wayland ret=%d ms=%lld", wr, Platform_GetWallClockMs() - tw);
+    } else {
+        log_info("COPY step1 wayland SKIPPED (no WAYLAND_DISPLAY)");
     }
     long long tx = Platform_GetWallClockMs();
     xr = x11_clipboard_set_text(text);
-    log_info("Platform_CopyToClipboard x11=%d ms=%lld", xr, Platform_GetWallClockMs() - tx);
+    log_info("COPY step2 x11 ret=%d ms=%lld", xr, Platform_GetWallClockMs() - tx);
     if (!wr && !xr) log_warn("Platform_CopyToClipboard failed both backends");
-    log_info("Platform_CopyToClipboard DONE total_ms=%lld len=%d", Platform_GetWallClockMs() - t0, (int)strlen(text));
+    log_info("COPY END total_ms=%lld len=%d wr=%d xr=%d", Platform_GetWallClockMs() - t0, (int)strlen(text), wr, xr);
     return (wr || xr);
 }
 
