@@ -43,7 +43,7 @@ const char* win32_default_apps_progid(const char* subkey, int slot) {
 
 static const char* scan_start_menu_for_app(const char* const possibilities[], size_t count) {
     ListOfFiles files = {0};
-    Platform_GetAllFilesFromDir("C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs", NULL, &files, NULL);
+    Platform_GetAllFilesFromDir("C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs", NULL, &files, NULL, true);
 
     for (size_t j = 0; j < count; j++) {
         for (int i = 0; i < files.count; i++) {

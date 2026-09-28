@@ -73,7 +73,7 @@ ListOfFiles s_music_files = {0};
 
 void music_refresh_callback(const char* filter, ListBoxInfo* lb) {
     s_music_files.count = 0;
-    fl_get_all_files_from_dir(MusicPath, allowed_audio_formats, &s_music_files, NULL);
+    fl_get_all_files_from_dir(MusicPath, allowed_audio_formats, &s_music_files, NULL, true);
     
     const char** items = (const char**)malloc(s_music_files.count * sizeof(char*));
     if (!items) return;
@@ -94,7 +94,7 @@ bool music_enter_callback(const char* selection, ListBoxInfo* lb) {
     }
     if (!result) {
         ListOfFiles tmp = {0};
-        fl_get_all_files_from_dir(MusicPath, allowed_audio_formats, &tmp, NULL);
+        fl_get_all_files_from_dir(MusicPath, allowed_audio_formats, &tmp, NULL, true);
         for (size_t i = 0; i < tmp.count; i++) {
             if (strcmp(tmp.files[i].name, selection) == 0) {
                 result = tmp.files[i].path;
