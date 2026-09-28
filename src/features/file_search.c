@@ -5,8 +5,12 @@
 #include <stdlib.h>
 
 const char* ListOfFilePaths[] = {
-    "/home/diggy/Programming/Projects",
-    "/home/diggy/miscellaneous",
+    #if defined(_WIN32)
+      "C:\\",
+    #else 
+      "/home/diggy/Programming/Projects",
+      "/home/diggy/miscellaneous",
+    #endif
 };
 
 #define APPCACHE_FILE "file_search_cache.txt"

@@ -22,7 +22,6 @@ const char* ListOfProgramPaths[] = {
     "{APPDATA}/Microsoft/Windows/Start Menu",
     "{PROGRAMDATA}/Microsoft/Windows/Start Menu/Programs",
     "{MISC}",
-    "{SystemRoot}/System32/",             
     "shell:AppsFolder",
 #else
     "/usr/share/applications",
