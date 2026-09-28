@@ -35,7 +35,6 @@ static void cl_trace(const char *what, const char *fmt, ...) {
     va_start(ap, fmt);
     vsnprintf(buf, sizeof(buf), fmt, ap);
     va_end(ap);
-    log_info("CLT#%ld +%ldms tid=%ld %s | %s", n, cl_ms_since() - g_cl_t0, (long)syscall(SYS_gettid), what, buf);
 }
 
 static Window g_clip_win = None;
@@ -62,7 +61,6 @@ void x11_clipboard_ensure_started(void) {
     if (g_cl_t0 == 0) g_cl_t0 = cl_ms_since();
     Display *dpy = get_display();
     if (!dpy) {
-        log_error("clipboard no main display");
         return;
     }
     if (g_clip_win != None) return;
@@ -71,7 +69,6 @@ void x11_clipboard_ensure_started(void) {
     attrs.override_redirect = True;
     Window win = XCreateWindow(dpy, root, 0, 0, 1, 1, 0, 0, InputOutput, CopyFromParent, CWOverrideRedirect, &attrs);
     if (!win) {
-        log_error("clipboard hidden window create failed");
         return;
     }
     g_clip_clipboard = XInternAtom(dpy, "CLIPBOARD", False);
@@ -84,7 +81,6 @@ void x11_clipboard_ensure_started(void) {
     XMapWindow(dpy, win);
     XFlush(dpy);
     g_clip_win = win;
-    log_info("clipboard owner window started win=%lu", (unsigned long)win);
 }
 
 static void x11_clipboard_abort_incr(void) {
@@ -143,7 +139,7 @@ static void x11_clipboard_serve_request(Display *dpy, XSelectionRequestEvent *re
             g_incr_req = req->requestor;
             g_incr_prop = prop;
             g_incr_off = 0;
-            log_info("clipboard INCR start total=%d", (int)g_clip_png_len);
+            
             resp.xselection.property = prop;
         } else {
             XChangeProperty(dpy, req->requestor, prop, g_clip_png_atom, 8, PropModeReplace, g_clip_png, (int)g_clip_png_len);
@@ -154,7 +150,7 @@ static void x11_clipboard_serve_request(Display *dpy, XSelectionRequestEvent *re
         XChangeProperty(dpy, req->requestor, prop, XA_INTEGER, 32, PropModeReplace, (unsigned char*)&tm, 1);
         resp.xselection.property = prop;
     } else {
-        log_info("clipboard unsupported target=%lu", (unsigned long)req->target);
+        
     }
     XSendEvent(dpy, req->requestor, False, 0, &resp);
     XFlush(dpy);
@@ -176,12 +172,12 @@ static void x11_clipboard_serve_incr(Display *dpy, XPropertyEvent *pev) {
         size_t n = remaining > CLIP_INCR_CHUNK ? CLIP_INCR_CHUNK : remaining;
         XChangeProperty(dpy, g_incr_req, g_incr_prop, g_clip_png_atom, 8, PropModeReplace, g_clip_png + g_incr_off, (int)n);
         g_incr_off += n;
-        log_info("clipboard INCR chunk off=%d/%d", (int)g_incr_off, (int)g_clip_png_len);
+        
     } else {
         if (g_clip_png_len > 0 && (g_clip_png_len % CLIP_INCR_CHUNK) == 0) {
             XChangeProperty(dpy, g_incr_req, g_incr_prop, g_clip_png_atom, 8, PropModeReplace, NULL, 0);
         }
-        log_info("clipboard INCR done");
+        
         x11_clipboard_abort_incr();
     }
     XFlush(dpy);
@@ -213,7 +209,7 @@ bool x11_clipboard_handle_event(Display *dpy, XEvent *ev) {
             g_clip_text ? 1 : 0, (int)g_clip_png_len);
         if (ev->xselectionclear.selection == g_clip_clipboard || ev->xselectionclear.selection == g_clip_primary) {
             char *sname = XGetAtomName(dpy, ev->xselectionclear.selection);
-            log_info("clipboard lost ownership sel=%s", sname ? sname : "?");
+            
             if (sname) XFree(sname);
             x11_clipboard_abort_incr();
             free(g_clip_text);
@@ -235,7 +231,7 @@ static int x11_clipboard_take_ownership(Display *dpy) {
     XFlush(dpy);
     Window owner = XGetSelectionOwner(dpy, g_clip_clipboard);
     cl_trace("OWN", "after owner=%lu we_own=%d", (unsigned long)owner, owner == g_clip_win ? 1 : 0);
-    log_info("clipboard owner=%lu win=%lu", (unsigned long)owner, (unsigned long)g_clip_win);
+    
     return owner == g_clip_win;
 }
 
@@ -261,7 +257,7 @@ int x11_clipboard_set_text(const char *text) {
 
 int x11_clipboard_set_image(const unsigned char *png, size_t len) {
     if (!png || len == 0) return 0;
-    log_info("clipboard set req png len=%d", (int)len);
+    
     x11_clipboard_ensure_started();
     Display *dpy = get_display();
     if (!dpy || g_clip_win == None) return 0;
@@ -293,7 +289,7 @@ void x11_clipboard_shutdown(void) {
     free(g_clip_png);
     g_clip_png = NULL;
     g_clip_png_len = 0;
-    log_info("clipboard owner stopped");
+    
 }
 
 typedef struct {
@@ -403,7 +399,7 @@ static Display *x11_clipboard_read_display(void) {
         }
     }
     if (!d) {
-        log_warn("clipboard read display open failed");
+        
         return NULL;
     }
     Window root = DefaultRootWindow(d);
@@ -414,7 +410,7 @@ static Display *x11_clipboard_read_display(void) {
     g_clip_incr = XInternAtom(d, "INCR", False);
     XFlush(d);
     g_clip_rd_dpy = d;
-    log_info("clipboard read display opened win=%lu", (unsigned long)g_clip_rd_win);
+    
     return g_clip_rd_dpy;
 }
 
@@ -477,13 +473,10 @@ char *x11_clipboard_get_text(void) {
         return strdup(g_clip_text);
     }
     char *out = ClipReadTarget(g_clip_utf8);
-    if (out) log_info("clipboard read hit target=UTF8_STRING");
     if (!out) {
         out = ClipReadTarget(XA_STRING);
-        if (out) log_info("clipboard read hit target=STRING");
     }
     if (!out) g_cl_read_fail++;
     cl_trace("GETTEXT", "read#%ld fail_total=%ld len=%d", g_cl_reads, g_cl_read_fail, out ? (int)strlen(out) : -1);
-    log_info("clipboard read len=%d", out ? (int)strlen(out) : -1);
     return out;
 }

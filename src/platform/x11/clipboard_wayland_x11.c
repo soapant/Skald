@@ -37,7 +37,6 @@ static void wl_trace(const char *what, const char *fmt, ...) {
     va_start(ap, fmt);
     vsnprintf(buf, sizeof(buf), fmt, ap);
     va_end(ap);
-    log_info("WLT#%ld tid=%ld %s | %s", n, (long)syscall(SYS_gettid), what, buf);
 }
 
 static int wl_dir_fd_count(const char *pid, const char *want) {
@@ -110,7 +109,7 @@ static void *wl_sampler_func(void *arg) {
         int prev = hypr;
         hypr = wl_find_pid("Hyprland");
         xway = wl_find_pid("Xwayland");
-        if (hypr != prev) { base_hypr = -1; log_info("WLT sampler hyprland pid changed -> %d", hypr); }
+        if (hypr != prev)  base_hypr = -1;
         char spid[32];
         snprintf(spid, sizeof(spid), "%d", self);
         int self_fd = wl_dir_fd_count(spid, NULL);
@@ -130,10 +129,7 @@ static void *wl_sampler_func(void *arg) {
         int x_fd = -1;
         if (xway > 0) { char xp[32]; snprintf(xp, sizeof(xp), "%d", xway); x_fd = wl_dir_fd_count(xp, NULL); }
         if (h_fd > 0) { g_wl_hypr_pid = hypr; g_wl_hypr_fd = h_fd; }
-        if (h_fd > 5000 && h_fd < prev_hypr_fd) {
-            log_warn("WLT ALERT hyprland fd count DROPPED from %d to %d (log restarted?)", prev_hypr_fd, h_fd);
-        }
-        if (h_fd > 20000 && !fired) { fired = true; log_warn("WLT ALERT hyprland fd count %d and climbing - compositor is leaking", h_fd); }
+        if (h_fd > 20000 && !fired) fired = true; 
         prev_hypr_fd = h_fd > 0 ? h_fd : prev_hypr_fd;
         wl_trace("SAMPLE",
             "self_fd=%d(+%d) self_pipe=%d | hypr_pid=%d fds=%d(+%d) pipes=%d rss=%dmb | xwayland_fd=%d | ev=%ld req=%ld send=%ld recv=%ld prepfail=%ld selreq=%ld rcalls=%ld rblocked=%ld readoff=%d",
@@ -149,7 +145,7 @@ static void wl_sampler_start(void) {
     if (started) return;
     started = true;
     pthread_t t;
-    if (pthread_create(&t, NULL, wl_sampler_func, NULL) != 0) log_warn("WLT sampler thread failed");
+    if (pthread_create(&t, NULL, wl_sampler_func, NULL) != 0);
     else wl_trace("SAMPLER", "started");
 }
 
@@ -514,7 +510,6 @@ static void src_send(void *data, struct wl_proxy *src, const char *mime, int fd)
     wl_trace("EV source.send", "done mime=%s bytes=%d writes=%d close_ret=%d abandoned=%d", mime ? mime : "?", (int)off, writes, cerr, gaveup);
     free(text);
     free(png);
-    log_info("wayland clipboard served mime=%s bytes=%d", mime ? mime : "?", (int)off);
 }
 
 static void src_cancelled(void *data, struct wl_proxy *src) {
@@ -526,7 +521,6 @@ static void src_cancelled(void *data, struct wl_proxy *src) {
     if (src == g_wl_psource) g_wl_psource = NULL;
     wl.proxy_marshal_flags(src, 1, NULL, 0, 0);
     wl.proxy_destroy(src);
-    log_info("wayland clipboard source cancelled");
 }
 
 static void (*g_src_listener[])(void) = {
@@ -539,17 +533,14 @@ static bool wl_load(void) {
     dlerror();
     void *h = dlopen("libwayland-client.so.0", RTLD_NOW);
     if (!h) {
-        log_info("wayland dlopen so.0 failed: %s", dlerror());
         dlerror();
         h = dlopen("/usr/lib/libwayland-client.so.0", RTLD_NOW);
     }
     if (!h) {
-        log_info("wayland dlopen abspath failed: %s", dlerror());
         dlerror();
         h = dlopen("libwayland-client.so", RTLD_NOW);
     }
     if (!h) {
-        log_warn("wayland clipboard dlopen failed: %s", dlerror());
         return false;
     }
     struct WlFns t = {0};
@@ -573,7 +564,6 @@ static bool wl_load(void) {
         !t.display_read_events || !t.display_cancel_read ||
         !t.display_get_fd || !t.proxy_add_listener || !t.proxy_marshal_flags ||
         !t.proxy_marshal_constructor || !t.proxy_destroy || !t.display_get_error || !g_wl_registry_iface) {
-        log_warn("wayland clipboard dlsym missing");
         dlclose(h);
         return false;
     }
@@ -584,7 +574,6 @@ static bool wl_load(void) {
 
 static void *wl_thread_func(void *arg) {
     (void)arg;
-    log_info("wayland clipboard thread enter");
     int iter = 0;
     while (g_wl_running) {
         iter++;
@@ -630,7 +619,6 @@ static void *wl_thread_func(void *arg) {
                 iter, dpyfd, r, pfd.revents, re, dp, spin, wl.display_get_error(g_wl_dpy), g_wl_ev_count);
         }
     }
-    log_info("wayland clipboard thread exit");
     return NULL;
 }
 
@@ -638,13 +626,11 @@ static bool wl_setup(void) {
     if (g_wl_ready) return true;
     if (g_wl_dead) { wl_trace("SETUP", "already dead, refusing"); return false; }
     if (!wl_load()) {
-        log_warn("wayland clipboard needs libwayland-client");
         g_wl_dead = true;
         return false;
     }
     struct wl_display *dpy = wl.display_connect(NULL);
     if (!dpy) {
-        log_warn("wayland clipboard connect failed");
         g_wl_dead = true;
         return false;
     }
@@ -656,7 +642,6 @@ static bool wl_setup(void) {
     if (!g_mgr_name || !g_seat_name) {
         wl.proxy_destroy(reg);
         wl.display_disconnect(dpy);
-        log_warn("wayland setup missing global mgr_name=%u mgr_ver=%u seat_name=%u", g_mgr_name, g_mgr_ver, g_seat_name);
         g_wl_dead = true;
         return false;
     }
@@ -672,8 +657,6 @@ static bool wl_setup(void) {
         g_mgr_name, g_use_mgr_name, (uint32_t)g_mgr_bind_ver, NULL);
     struct wl_proxy *seat = wl.proxy_marshal_flags(reg, 0, &g_iface_seat, 1, 0,
         g_seat_name, "wl_seat", 1, NULL);
-    log_info("wayland setup mgr_name=%u mgr_ver=%u proto=%s seat_name=%u manager=%p seat=%p",
-        g_mgr_name, g_mgr_ver, g_mgr_proto, g_seat_name, (void*)g_wl_manager, (void*)seat);
     if (!g_wl_manager || !seat) {
         pthread_mutex_unlock(&g_wl_lock);
         if (seat) wl.proxy_destroy(seat);
@@ -681,7 +664,6 @@ static bool wl_setup(void) {
         g_wl_manager = NULL;
         wl.proxy_destroy(reg);
         wl.display_disconnect(dpy);
-        log_warn("wayland clipboard bind failed");
         g_wl_dead = true;
         return false;
     }
@@ -693,7 +675,6 @@ static bool wl_setup(void) {
         g_wl_manager = NULL;
         wl.proxy_destroy(reg);
         wl.display_disconnect(dpy);
-        log_warn("wayland clipboard device failed");
         g_wl_dead = true;
         return false;
     }
@@ -701,7 +682,6 @@ static bool wl_setup(void) {
     g_wl_seat = seat;
     wl.display_roundtrip(dpy);
     int werr = wl.display_get_error(dpy);
-    log_info("wayland setup proto_err=%d device=%p", werr, (void*)g_wl_device);
     if (werr != 0) {
         pthread_mutex_unlock(&g_wl_lock);
         wl.proxy_destroy(seat);
@@ -711,7 +691,6 @@ static bool wl_setup(void) {
         g_wl_seat = NULL;
         wl.proxy_destroy(reg);
         wl.display_disconnect(dpy);
-        log_warn("wayland clipboard protocol error %d, disabling", werr);
         g_wl_dead = true;
         return false;
     }
@@ -720,7 +699,6 @@ static bool wl_setup(void) {
     g_wl_dpy = dpy;
     g_wl_running = true;
     if (pthread_create(&g_wl_thread, NULL, wl_thread_func, NULL) != 0) {
-        log_error("wayland clipboard thread start failed");
         wl.display_disconnect(dpy);
         g_wl_dpy = NULL;
         g_wl_running = false;
@@ -730,7 +708,6 @@ static bool wl_setup(void) {
     g_wl_thread_started = true;
     g_wl_ready = true;
     wl_sampler_start();
-    log_info("wayland clipboard ready bind_ver=%d", g_mgr_bind_ver);
     wl_trace("SETUP", "READY dpy=%p dpyfd=%d mgr=%p dev=%p seat=%p bind_ver=%d proto=%s",
         (void*)g_wl_dpy, wl.display_get_fd(g_wl_dpy), (void*)g_wl_manager, (void*)g_wl_device,
         (void*)g_wl_seat, g_mgr_bind_ver, g_mgr_proto);
@@ -741,7 +718,6 @@ static bool wl_setup(void) {
         g_wl_read_disabled = true;
         snprintf(g_wl_read_block_reason, sizeof(g_wl_read_block_reason),
             "hyprland pid %ld present (data-control receive crashes it)", g_wl_hypr_pid);
-        log_warn("wayland data-control READ path disabled: %s - using X11 clipboard instead", g_wl_read_block_reason);
     }
     return true;
 }
@@ -834,13 +810,11 @@ int Wayland_ClipboardSetText(const char *text) {
     clock_gettime(CLOCK_MONOTONIC, &ts1);
     t0 = (ts1.tv_sec - ts0.tv_sec) * 1000 + (ts1.tv_nsec - ts0.tv_nsec) / 1000000;
     wl_trace("API SetText", "DONE lock+publish took %lldms", t0);
-    log_info("wayland clipboard set done");
     return 1;
 }
 
 int Wayland_ClipboardSetImage(const unsigned char *png, size_t len) {
     if (!png || len == 0) return 0;
-    log_info("wayland clipboard set req png len=%d", (int)len);
     if (!wl_setup()) return 0;
     unsigned char* np = malloc(len);
     if (np) memcpy(np, png, len);
@@ -855,7 +829,6 @@ int Wayland_ClipboardSetImage(const unsigned char *png, size_t len) {
     pthread_mutex_lock(&g_wl_lock);
     wl_publish_locked();
     pthread_mutex_unlock(&g_wl_lock);
-    log_info("wayland clipboard set image done");
     return 1;
 }
 
@@ -884,8 +857,6 @@ char *Wayland_ClipboardGetText(void) {
         pthread_mutex_unlock(&g_wl_lock);
         wl_trace("API GetText", "NO OFFER offer=%p has_selection=%d mime_count=%d picked='%s' dperr=%d",
             (void*)g_wl_offer, g_wl_has_selection ? 1 : 0, g_wl_offer_mime_count, mime, wl.display_get_error(g_wl_dpy));
-        log_info("wayland read empty offer=%d has_selection=%d mime_count=%d picked='%s'",
-            g_wl_offer ? 1 : 0, g_wl_has_selection ? 1 : 0, g_wl_offer_mime_count, mime);
         return NULL;
     }
     int fds[2] = {-1, -1};
@@ -949,7 +920,6 @@ char *Wayland_ClipboardGetText(void) {
         return NULL;
     }
     out[len] = '\0';
-    log_info("wayland clipboard read len=%d", (int)len);
     return out;
 }
 
@@ -996,5 +966,4 @@ void Wayland_ClipboardShutdown(void) {
     g_wl_png_len = 0;
     pthread_mutex_unlock(&g_wl_text_lock);
     g_wl_ready = false;
-    log_info("wayland clipboard stopped");
 }
