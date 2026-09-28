@@ -47,7 +47,9 @@ static void config_resolve_one(AutoApp* app) {
 
 void Config_ResolveDefaultApps(void) {
     auto_apps_init();
-    for (size_t i = 0; i < ARRAY_LEN(g_auto_apps); i++) config_resolve_one(&g_auto_apps[i]);
+    for (size_t i = 0; i < ARRAY_LEN(g_auto_apps); i++){
+      config_resolve_one(&g_auto_apps[i]);
+    }
 }
 
 bool Config_IsAutoResolvedApp(const char* name) {
