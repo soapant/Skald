@@ -906,18 +906,36 @@ bool Platform_QueryBrowser(char* query) {
 }
 
 char* Platform_GetClipboardEntry() {
+    static long long next_in_ms = 0;
+    static int fail_streak = 0;
+    long long now = Platform_GetWallClockMs();
+    if (fail_streak > 0 && now < next_in_ms) {
+        log_info("Platform_GetClipboardEntry backoff streak=%d wait=%lldms", fail_streak, next_in_ms - now);
+        return NULL;
+    }
     char* out = NULL;
     if (Wayland_ClipboardAvailable()) {
         out = Wayland_ClipboardGetText();
         if (out) {
+            fail_streak = 0;
+            next_in_ms = 0;
             log_info("Platform_GetClipboardEntry wayland len=%d", (int)strlen(out));
             return out;
         }
         log_warn("Platform_GetClipboardEntry wayland null, trying X11 fallback");
     }
     out = x11_clipboard_get_text();
-    if (!out) log_warn("Platform_GetClipboardEntry null wayland=%d", Wayland_ClipboardAvailable());
-    else log_info("Platform_GetClipboardEntry len=%d", (int)strlen(out));
+    if (!out) {
+        fail_streak++;
+        if (fail_streak > 4) fail_streak = 4;
+        next_in_ms = now + (200LL << fail_streak);
+        log_warn("Platform_GetClipboardEntry null wayland=%d streak=%d next_in=%lldms",
+            Wayland_ClipboardAvailable(), fail_streak, 200LL << fail_streak);
+    } else {
+        fail_streak = 0;
+        next_in_ms = 0;
+        log_info("Platform_GetClipboardEntry len=%d", (int)strlen(out));
+    }
     return out;
 }
 

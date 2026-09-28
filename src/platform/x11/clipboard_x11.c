@@ -6,9 +6,37 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <sys/syscall.h>
+#include <time.h>
 
 #define CLIP_INCR_THRESHOLD (256u * 1024u)
 #define CLIP_INCR_CHUNK (64u * 1024u)
+#define CLIP_READ_TRIES 40
+
+static volatile long g_cl_seq = 0;
+static long g_cl_reads = 0;
+static long g_cl_read_fail = 0;
+static long g_cl_selclear = 0;
+
+long g_cl_selreq = 0;
+
+static long cl_ms_since(void) {
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return (long)ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
+}
+
+static long g_cl_t0 = 0;
+
+static void cl_trace(const char *what, const char *fmt, ...) {
+    va_list ap;
+    long n = ++g_cl_seq;
+    char buf[512];
+    va_start(ap, fmt);
+    vsnprintf(buf, sizeof(buf), fmt, ap);
+    va_end(ap);
+    log_info("CLT#%ld +%ldms tid=%ld %s | %s", n, cl_ms_since() - g_cl_t0, (long)syscall(SYS_gettid), what, buf);
+}
 
 static Window g_clip_win = None;
 static Display *g_clip_rd_dpy = NULL;
@@ -31,6 +59,7 @@ static Atom g_incr_prop = None;
 static size_t g_incr_off = 0;
 
 void x11_clipboard_ensure_started(void) {
+    if (g_cl_t0 == 0) g_cl_t0 = cl_ms_since();
     Display *dpy = get_display();
     if (!dpy) {
         log_error("clipboard no main display");
@@ -81,8 +110,11 @@ static void x11_clipboard_serve_request(Display *dpy, XSelectionRequestEvent *re
         return;
     }
     char *tname = XGetAtomName(dpy, req->target);
-    log_info("clipboard serve target=%s(%lu) prop=%lu text=%s png=%d", tname ? tname : "?",
-        (unsigned long)req->target, (unsigned long)prop, g_clip_text ? "yes" : "no", (int)g_clip_png_len);
+    cl_trace("SERVE", "requestor=%lu sel=%s target=%s(%lu) prop_req=%lu time=%lu text=%s png=%d",
+        (unsigned long)req->requestor,
+        req->selection == g_clip_clipboard ? "CLIPBOARD" : (req->selection == g_clip_primary ? "PRIMARY" : "other"),
+        tname ? tname : "?", (unsigned long)req->target, (unsigned long)req->property,
+        (unsigned long)req->time, g_clip_text ? "yes" : "no", (int)g_clip_png_len);
     if (tname) XFree(tname);
     if (req->target == g_clip_targets) {
         Atom list[8];
@@ -126,6 +158,11 @@ static void x11_clipboard_serve_request(Display *dpy, XSelectionRequestEvent *re
     }
     XSendEvent(dpy, req->requestor, False, 0, &resp);
     XFlush(dpy);
+    char *tname2 = XGetAtomName(dpy, req->target);
+    cl_trace("SERVE", "replied requestor=%lu target=%s prop_given=%s refused=%d",
+        (unsigned long)req->requestor, tname2 ? tname2 : "?", resp.xselection.property != None ? "yes" : "NONE",
+        resp.xselection.property == None ? 1 : 0);
+    if (tname2) XFree(tname2);
 }
 
 static void x11_clipboard_serve_incr(Display *dpy, XPropertyEvent *pev) {
@@ -153,7 +190,11 @@ static void x11_clipboard_serve_incr(Display *dpy, XPropertyEvent *pev) {
 bool x11_clipboard_handle_event(Display *dpy, XEvent *ev) {
     if (!dpy || !ev) return false;
     if (ev->type == SelectionRequest) {
-        log_info("clipboard got SelectionRequest");
+        g_cl_selreq++;
+        cl_trace("EVENT", "SelectionRequest n=%ld requestor=%lu sel=%lu target=%lu prop=%lu time=%lu",
+            g_cl_selreq, (unsigned long)ev->xselectionrequest.requestor,
+            (unsigned long)ev->xselectionrequest.selection, (unsigned long)ev->xselectionrequest.target,
+            (unsigned long)ev->xselectionrequest.property, (unsigned long)ev->xselectionrequest.time);
         x11_clipboard_serve_request(dpy, &ev->xselectionrequest);
         return true;
     }
@@ -165,6 +206,11 @@ bool x11_clipboard_handle_event(Display *dpy, XEvent *ev) {
         return false;
     }
     if (ev->type == SelectionClear) {
+        g_cl_selclear++;
+        Window new_owner = XGetSelectionOwner(dpy, ev->xselectionclear.selection);
+        cl_trace("EVENT", "SelectionClear n=%ld sel=%lu new_owner=%lu had_text=%d had_png=%d",
+            g_cl_selclear, (unsigned long)ev->xselectionclear.selection, (unsigned long)new_owner,
+            g_clip_text ? 1 : 0, (int)g_clip_png_len);
         if (ev->xselectionclear.selection == g_clip_clipboard || ev->xselectionclear.selection == g_clip_primary) {
             char *sname = XGetAtomName(dpy, ev->xselectionclear.selection);
             log_info("clipboard lost ownership sel=%s", sname ? sname : "?");
@@ -182,20 +228,23 @@ bool x11_clipboard_handle_event(Display *dpy, XEvent *ev) {
 }
 
 static int x11_clipboard_take_ownership(Display *dpy) {
+    Window prev = XGetSelectionOwner(dpy, g_clip_clipboard);
+    cl_trace("OWN", "before prev_clipboard_owner=%lu our_win=%lu", (unsigned long)prev, (unsigned long)g_clip_win);
     XSetSelectionOwner(dpy, g_clip_clipboard, g_clip_win, CurrentTime);
     XSetSelectionOwner(dpy, g_clip_primary, g_clip_win, CurrentTime);
     XFlush(dpy);
     Window owner = XGetSelectionOwner(dpy, g_clip_clipboard);
+    cl_trace("OWN", "after owner=%lu we_own=%d", (unsigned long)owner, owner == g_clip_win ? 1 : 0);
     log_info("clipboard owner=%lu win=%lu", (unsigned long)owner, (unsigned long)g_clip_win);
     return owner == g_clip_win;
 }
 
 int x11_clipboard_set_text(const char *text) {
     if (!text) return 0;
-    log_info("clipboard set req text='%s'", text);
+    cl_trace("SETTEXT", "begin len=%d text='%s'", (int)strlen(text), text);
     x11_clipboard_ensure_started();
     Display *dpy = get_display();
-    if (!dpy || g_clip_win == None) return 0;
+    if (!dpy || g_clip_win == None) { cl_trace("SETTEXT", "no display/win"); return 0; }
     char* nt = strdup(text);
     if (!nt) return 0;
     free(g_clip_text);
@@ -205,7 +254,9 @@ int x11_clipboard_set_text(const char *text) {
     g_clip_png_len = 0;
     XStoreBytes(dpy, text, (int)strlen(text));
     XFlush(dpy);
-    return x11_clipboard_take_ownership(dpy);
+    int r = x11_clipboard_take_ownership(dpy);
+    cl_trace("SETTEXT", "end ret=%d", r);
+    return r;
 }
 
 int x11_clipboard_set_image(const unsigned char *png, size_t len) {
@@ -369,52 +420,70 @@ static Display *x11_clipboard_read_display(void) {
 
 static char *ClipReadTarget(Atom target) {
     Display *dpy = x11_clipboard_read_display();
-    if (!dpy || g_clip_rd_win == None) return NULL;
+    if (!dpy || g_clip_rd_win == None) { cl_trace("READ", "no read display/win"); return NULL; }
     Window win = g_clip_rd_win;
     Atom prop = g_clip_rd_prop;
+    Window sel_owner = XGetSelectionOwner(dpy, g_clip_clipboard);
+    char *tname = XGetAtomName(dpy, target);
+    char tbuf[64] = {0};
+    if (tname) { strncpy(tbuf, tname, sizeof(tbuf) - 1); XFree(tname); tname = NULL; }
     XSelectInput(dpy, win, PropertyChangeMask);
+    cl_trace("READ", "ConvertSelection target=%s sel_owner=%lu (our_win=%lu same=%d) win=%lu prop=%lu",
+        tbuf, (unsigned long)sel_owner, (unsigned long)g_clip_win,
+        sel_owner == g_clip_win ? 1 : 0, (unsigned long)win, (unsigned long)prop);
     XConvertSelection(dpy, g_clip_clipboard, target, prop, win, CurrentTime);
     XFlush(dpy);
     ClipReadWait w = { win, g_clip_clipboard, prop };
     XEvent ev;
-    Window sel_owner = XGetSelectionOwner(dpy, g_clip_clipboard);
-    char *tname = XGetAtomName(dpy, target);
-    if (!ClipReadWaitEvent(dpy, &ev, ClipReadNotifyPred, &w, 200)) {
-        if (tname) XFree(tname);
+    if (!ClipReadWaitEvent(dpy, &ev, ClipReadNotifyPred, &w, CLIP_READ_TRIES)) {
+        cl_trace("READ", "TIMEOUT waiting SelectionNotify after %d*5ms target=%s sel_owner=%lu",
+            CLIP_READ_TRIES, tbuf, (unsigned long)sel_owner);
         return NULL;
     }
-    if (tname) XFree(tname);
     if (ev.xselection.property == None) {
+        cl_trace("READ", "REFUSED property=None target=%lu sel_owner=%lu time=%lu",
+            (unsigned long)target, (unsigned long)sel_owner, (unsigned long)ev.xselection.time);
         return NULL;
     }
+    cl_trace("READ", "got SelectionNotify property=%lu waiting for data", (unsigned long)ev.xselection.property);
     Atom actual = None;
     int format = 0;
     unsigned long nitems = 0;
     unsigned long after = 0;
     unsigned char *data = NULL;
-    if (XGetWindowProperty(dpy, win, prop, 0, 1, False, AnyPropertyType, &actual, &format, &nitems, &after, &data) != Success)
+    if (XGetWindowProperty(dpy, win, prop, 0, 1, False, AnyPropertyType, &actual, &format, &nitems, &after, &data) != Success) {
+        cl_trace("READ", "XGetWindowProperty FAILED");
         return NULL;
+    }
     if (data) XFree(data);
     if (actual == g_clip_incr) {
+        cl_trace("READ", "INCR detected, draining");
         XDeleteProperty(dpy, win, prop);
         XFlush(dpy);
         return ClipReadIncr(dpy, win, prop, &w);
     }
-    return ClipReadProperty(dpy, win, prop, NULL);
+    char *res = ClipReadProperty(dpy, win, prop, NULL);
+    cl_trace("READ", "result target=%lu len=%d", (unsigned long)target, res ? (int)strlen(res) : -1);
+    return res;
 }
 
 char *x11_clipboard_get_text(void) {
+    g_cl_reads++;
     x11_clipboard_ensure_started();
     Display *dpy = get_display();
-    if (!dpy || g_clip_win == None) return NULL;
-    if (XGetSelectionOwner(dpy, g_clip_clipboard) == g_clip_win && g_clip_text)
+    if (!dpy || g_clip_win == None) { cl_trace("GETTEXT", "no display, read#%ld", g_cl_reads); return NULL; }
+    if (XGetSelectionOwner(dpy, g_clip_clipboard) == g_clip_win && g_clip_text) {
+        cl_trace("GETTEXT", "read#%ld served from own memory len=%d", g_cl_reads, (int)strlen(g_clip_text));
         return strdup(g_clip_text);
+    }
     char *out = ClipReadTarget(g_clip_utf8);
     if (out) log_info("clipboard read hit target=UTF8_STRING");
     if (!out) {
         out = ClipReadTarget(XA_STRING);
         if (out) log_info("clipboard read hit target=STRING");
     }
+    if (!out) g_cl_read_fail++;
+    cl_trace("GETTEXT", "read#%ld fail_total=%ld len=%d", g_cl_reads, g_cl_read_fail, out ? (int)strlen(out) : -1);
     log_info("clipboard read len=%d", out ? (int)strlen(out) : -1);
     return out;
 }
