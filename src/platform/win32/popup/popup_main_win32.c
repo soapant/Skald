@@ -70,6 +70,8 @@ static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent* key) {
         }
         if (ctrl_down) {
             bool should_close = false;
+            HWND popup_wnd = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
+            if (popup_wnd != NULL) ShowWindow(popup_wnd, SW_HIDE);
             if (FlintContext_Get()->prompt_callbacks.ctrl_enter != NULL) {
                 char sel_copy[256];
                 strncpy(sel_copy, FlintContext_Get()->window.output_buffer, sizeof(sel_copy) - 1);
@@ -78,11 +80,17 @@ static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent* key) {
             } else {
                 should_close = false;
             }
-            if (should_close) FlintContext_Get()->window.selection_complete = true;
-            else if (WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) != NULL) ForceWindowFocus(FlintContext_Get()->window.hPopupWnd, FlintContext_Get()->window.hEditControl);
+            if (should_close) {
+                FlintContext_Get()->window.selection_complete = true;
+            } else {
+                if (popup_wnd != NULL) ShowWindow(popup_wnd, SW_SHOW);
+                if (WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) != NULL) ForceWindowFocus(FlintContext_Get()->window.hPopupWnd, FlintContext_Get()->window.hEditControl);
+            }
             return true;
         } else {
             bool should_close = false;
+            HWND popup_wnd = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
+            if (popup_wnd != NULL) ShowWindow(popup_wnd, SW_HIDE);
             if (FlintContext_Get()->prompt_callbacks.enter != NULL) {
                 char sel_copy[256];
                 strncpy(sel_copy, FlintContext_Get()->window.output_buffer, sizeof(sel_copy) - 1);
@@ -91,8 +99,12 @@ static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent* key) {
             } else {
                 should_close = true;
             }
-            if (should_close) FlintContext_Get()->window.selection_complete = true;
-            else if (WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) != NULL) ForceWindowFocus(FlintContext_Get()->window.hPopupWnd, FlintContext_Get()->window.hEditControl);
+            if (should_close) {
+                FlintContext_Get()->window.selection_complete = true;
+            } else {
+                if (popup_wnd != NULL) ShowWindow(popup_wnd, SW_SHOW);
+                if (WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) != NULL) ForceWindowFocus(FlintContext_Get()->window.hPopupWnd, FlintContext_Get()->window.hEditControl);
+            }
             return true;
         }
     }
