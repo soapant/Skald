@@ -190,10 +190,6 @@ void UI_Redraw(ListBoxInfo* lb, WindowHandle hListBox) {
     UI_RedrawNow(lb, FlintContext_Get()->window.hListBox);
 }
 
-void UI_GetParent(WindowHandle hwnd) {
-    (void)hwnd;
-}
-
 void UI_SyncFilterFromEdit(FlintContext* ctx) {
     (void)ctx;
 }

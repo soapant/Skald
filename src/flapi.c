@@ -10,6 +10,7 @@
 #include "helpers/helpers_ui.h"
 #include "helpers/helpers_text.h"
 #include "platform/input_state.h"
+#include "platform/ui.h"
 #include "core/window_manager.h"
 #include "core/clipboard_history.h"
 #include "core/flapi.h"
@@ -690,6 +691,30 @@ void fl_populate_listbox(ListBoxInfo* lb, const char* filter, const char** items
 bool fl_is_selected(ListBoxInfo* lb) {
     if (!lb) return false;
     return UI_IsListBoxSelected(lb);
+}
+
+void fl_set_edit_text(const char* text) {
+    FlintContext* ctx = FlintContext_Get();
+    if (!ctx) return;
+    UI_SetText(ctx->window.hEditControl, text ? text : "");
+}
+
+void fl_set_edit_cursor(int position) {
+    FlintContext* ctx = FlintContext_Get();
+    if (!ctx) return;
+    UI_SetCursorPosition(ctx->window.hEditControl, position);
+}
+
+void fl_get_edit_text(char* buffer, size_t cap) {
+    if (!buffer || cap == 0) return;
+    buffer[0] = '\0';
+    FlintContext* ctx = FlintContext_Get();
+    if (!ctx) return;
+    UI_GetCurrentTextEdit(ctx->window.hEditControl, buffer, cap);
+}
+
+unsigned long fl_rgb_to_hex(ColorRef color) {
+    return rgb_to_hex(color);
 }
 
 char* fl_string_slice(const char* str, int start, int end) {
