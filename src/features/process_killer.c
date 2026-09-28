@@ -1,7 +1,4 @@
 #include "core/flapi.h"
-#include "config.h"
-#include "core/context.h"
-#include "helpers/helpers_ui.h"
 #include <stdlib.h>
 
 const char* bkp_windows[] = {"Brawlhalla","Fortnite","RocketLeague","Factorio","Steam","Wine","EpicGamesLauncher"};

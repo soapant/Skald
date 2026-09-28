@@ -1,8 +1,4 @@
-#define VIDEO_VIEWER_H
-
 #include "core/flapi.h"
-#include "core/context.h"
-#include "helpers/helpers_ui.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>

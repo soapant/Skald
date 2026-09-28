@@ -1,5 +1,4 @@
 #include "core/flapi.h"
-#include "core/flapi_input.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -47,6 +46,8 @@ char* typing_test_get_random_text(void) {
         "family", "student", "study", "school", "country", "city",
         "problem", "service", "member", "community", "development", "research",
         "technology", "education", "government", "business", "health", "environment",
+        "computer", "internet", "phone", "tablet", "tv", "camera",
+        "car", "bike", "boat", "plane", "train", "bus",
     };
     const int num_words = sizeof(words) / sizeof(words[0]);
     const int target_count = 30;

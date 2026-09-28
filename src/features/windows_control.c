@@ -1,6 +1,4 @@
 #include "core/flapi.h"
-#include "config.h"
-#include "platform/platform.h"
 #include <string.h>
 
 bool IsWifiEnabled(void) {

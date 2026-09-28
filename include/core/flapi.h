@@ -10,6 +10,7 @@
 #include "core/types/prompt.h"
 #include "helpers/helpers_text.h"
 #include "helpers/helpers_ui.h"
+#include "core/flapi_input.h"
 #include "config.h"
 
 #define WHITELIST 1
@@ -415,7 +416,7 @@ FlTimer fl_profile_start(void);
 void fl_profile_end(FlTimer timer);
 void fl_run_after_time(double seconds, void (*callback)(void));
 char* fl_on_dir_changed(char* dir_path,void(callback)(void));
-bool fl_string_contains(char* needle,char* haystack);
+bool fl_string_contains(const char* needle, const char* haystack);
 char* fl_get_working_dir();
 
 // =============================================================================
