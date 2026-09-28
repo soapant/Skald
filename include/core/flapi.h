@@ -415,7 +415,7 @@ double fl_end_timer(FlTimer t);
 FlTimer fl_profile_start(void);
 void fl_profile_end(FlTimer timer);
 void fl_run_after_time(double seconds, void (*callback)(void));
-char* fl_on_dir_changed(char* dir_path,void(callback)(void));
+char* fl_on_dir_changed(const char* dir_path, DirChangeCallback callback);
 bool fl_string_contains(const char* needle, const char* haystack);
 char* fl_get_working_dir();
 

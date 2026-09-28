@@ -1,6 +1,7 @@
 #include "core/flapi.h"
 #include <stdio.h>
 #include <string.h>
+#include <strings.h>
 #include <stdlib.h>
 
 const char* ListOfFilePaths[] = {
@@ -126,10 +127,57 @@ void ensure_file_cache(void) {
     save_file_cache();
 }
 
-void rescan_file_cache(void) {
+static const char* g_file_exts[] = {"txt","png","pdf","jpg","jpeg","mp3","wav","ogg","c",NULL};
+
+static bool file_ext_allowed(const char* name) {
+    const char* dot = strrchr(name, '.');
+    if (!dot || !dot[1]) return false;
+    for (int i = 0; g_file_exts[i]; i++) {
+        if (strcasecmp(dot + 1, g_file_exts[i]) == 0) return true;
+    }
+    return false;
+}
+
+static void file_cache_drop(const char* full_path) {
+    for (size_t i = 0; i < s_files.count; i++) {
+        if (strcmp(s_files.files[i].path, full_path) == 0) {
+            for (size_t k = i; k + 1 < s_files.count; k++) s_files.files[k] = s_files.files[k + 1];
+            s_files.count--;
+            return;
+        }
+    }
+}
+
+static void file_cache_add(const char* full_path) {
+    for (size_t i = 0; i < s_files.count; i++) {
+        if (strcmp(s_files.files[i].path, full_path) == 0) return;
+    }
+    const char* base = strrchr(full_path, '/');
+    base = base ? base + 1 : full_path;
+    if (!file_ext_allowed(base)) return;
+    if (s_files.count >= s_files.capacity && !file_cache_grow(&s_files)) return;
+    FileItem* it = &s_files.files[s_files.count];
+    snprintf(it->path, sizeof(it->path), "%s", full_path);
+    snprintf(it->name, sizeof(it->name), "%s", base);
+    s_files.count++;
+}
+
+static void file_cache_on_change(const char* full_path, int added) {
+    if (!full_path || !g_file_cache_ready) return;
+    size_t before = s_files.count;
+    if (added) file_cache_add(full_path);
+    else file_cache_drop(full_path);
+    if (s_files.count != before) {
+        save_file_cache();
+        printf("[file_search] incremental %s '%s' count=%zu->%zu\n",
+               added ? "add" : "del", full_path, before, s_files.count);
+        fflush(stdout);
+    }
+}
+
+void rescan_file_cache(const char* full_path, int added) {
     g_file_cache_ready = true;
-    scan_app_dirs();
-    save_file_cache();
+    file_cache_on_change(full_path, added);
 }
 
 void open_file_by_name(const char* display_name) {

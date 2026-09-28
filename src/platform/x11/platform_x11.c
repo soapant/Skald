@@ -1070,148 +1070,223 @@ long Platform_GetFileSize(char *filepath) {
     return size;
 }
 
-#define MAX_WATCHED_DIRS 128
+#define MAX_WATCH_ROOTS 32
+#define MAX_WATCH_PATHS 8192
+#define WATCH_MAX_DEPTH 24
+
+typedef void (*DirChangeCallback)(const char* full_path, int added);
 
 typedef struct {
     int fd;
-    int wd;
+    int path_count;
     char root_path[256];
-} InstantWatch;
+    DirChangeCallback callback;
+} WatchRoot;
 
-static InstantWatch g_instant_watches[MAX_WATCHED_DIRS];
-static int g_instant_count = 0;
+typedef struct {
+    int wd;
+    int root_index;
+    char path[512];
+} WatchPathEntry;
 
-char* Platform_RegisterDirWatcher(const char* dir_path, void (*callback)(void)) {
-    PROFILE_START(timer);
-    if (!dir_path) { log_error("returned NULL dir_path='%s'", dir_path ? dir_path : "null"); PROFILE_END_VAR(timer, "platform_x11:Platform_RegisterDirWatcher"); return NULL; }
+static WatchRoot g_watch_roots[MAX_WATCH_ROOTS];
+static int g_watch_root_count = 0;
+static WatchPathEntry g_watch_paths[MAX_WATCH_PATHS];
+static int g_watch_path_count = 0;
+static int g_cfile_fd = -1;
+static char g_cfile_root[256] = {0};
 
-    for (int i = 0; i < g_instant_count; i++) {
-        if (strcmp(g_instant_watches[i].root_path, dir_path) == 0) {
-            int fd = g_instant_watches[i].fd;
-            char buffer[1024 * (sizeof(struct inotify_event) + 16)];
-            
-            int flags = fcntl(fd, F_GETFL, 0);
-            fcntl(fd, F_SETFL, flags | O_NONBLOCK);
-
-            int length = read(fd, buffer, sizeof(buffer));
-            if (length > 0) {
-                int j = 0;
-                while (j < length) {
-                    struct inotify_event *event = (struct inotify_event *)&buffer[j];
-                    
-                    if (callback) {
-                        callback();
-                    }
-
-                    if (event->len > 0) {
-                        char *found_name = malloc(event->len + 1);
-                        if (found_name) {
-                            strcpy(found_name, event->name);
-                            PROFILE_END_VAR(timer, "platform_x11:Platform_RegisterDirWatcher");
-                            return found_name;
-                        }
-                    }
-
-                    char* generic_name = malloc(32);
-                    if (generic_name) {
-                        strcpy(generic_name, "modified_resource");
-                        PROFILE_END_VAR(timer, "platform_x11:Platform_RegisterDirWatcher");
-                        return generic_name;
-                    }
-                    PROFILE_END_VAR(timer, "platform_x11:Platform_RegisterDirWatcher");
-                    return NULL;
-                }
-            }
-            PROFILE_END_VAR(timer, "platform_x11:Platform_RegisterDirWatcher");
-            return NULL; 
+static void watch_record_path(int wd, int root_index, const char* abs_path) {
+    for (int i = 0; i < g_watch_path_count; i++) {
+        if (g_watch_paths[i].wd == wd) {
+            snprintf(g_watch_paths[i].path, sizeof(g_watch_paths[i].path), "%s", abs_path);
+            g_watch_paths[i].root_index = root_index;
+            return;
         }
     }
+    if (g_watch_path_count >= MAX_WATCH_PATHS) return;
+    g_watch_paths[g_watch_path_count].wd = wd;
+    g_watch_paths[g_watch_path_count].root_index = root_index;
+    snprintf(g_watch_paths[g_watch_path_count].path, sizeof(g_watch_paths[g_watch_path_count].path), "%s", abs_path);
+    g_watch_path_count++;
+}
 
-    if (g_instant_count < MAX_WATCHED_DIRS) {
-        int fd = inotify_init();
-        if (fd >= 0) {
-            int wd = inotify_add_watch(fd, dir_path, IN_MODIFY | IN_ATTRIB | IN_CREATE | IN_DELETE | IN_CLOSE_WRITE | IN_MOVED_TO | IN_MOVE_SELF);
-            if (wd >= 0) {
-                g_instant_watches[g_instant_count].fd = fd;
-                g_instant_watches[g_instant_count].wd = wd;
-                snprintf(g_instant_watches[g_instant_count].root_path, 256, "%s", dir_path);
-                g_instant_count++;
-            } else {
-                close(fd);
-            }
-        }
+static const WatchPathEntry* watch_find_path(int wd) {
+    for (int i = 0; i < g_watch_path_count; i++) {
+        if (g_watch_paths[i].wd == wd) return &g_watch_paths[i];
     }
-
-    log_info("Platform_RegisterDirWatcher dir_path='%s'", dir_path ? dir_path : "");
-    PROFILE_END_VAR(timer, "platform_x11:Platform_RegisterDirWatcher");
     return NULL;
 }
 
-void Platform_CleanupDirWatchers(void) {
-    for (int i=0;i<g_instant_count;i++) {
-        if (g_instant_watches[i].fd >= 0) {
-            close(g_instant_watches[i].fd);
-            g_instant_watches[i].fd = -1;
+static void watch_forget_path(int wd) {
+    for (int i = 0; i < g_watch_path_count; i++) {
+        if (g_watch_paths[i].wd == wd) {
+            g_watch_paths[i] = g_watch_paths[g_watch_path_count - 1];
+            g_watch_path_count--;
+            return;
         }
     }
-    g_instant_count = 0;
+}
+
+static int watch_add_tree(int root_index, int fd, const char* abs_path, int depth) {
+    if (depth > WATCH_MAX_DEPTH) return 0;
+    int added = 0;
+    int wd = inotify_add_watch(fd, abs_path,
+        IN_CREATE | IN_DELETE | IN_CLOSE_WRITE | IN_MOVED_TO | IN_MOVED_FROM | IN_DELETE_SELF | IN_IGNORED);
+    if (wd >= 0) {
+        watch_record_path(wd, root_index, abs_path);
+        added++;
+    }
+    DIR* d = opendir(abs_path);
+    if (!d) return added;
+    struct dirent* e;
+    while ((e = readdir(d)) != NULL) {
+        if (e->d_name[0] == '.') continue;
+        char child[512];
+        snprintf(child, sizeof(child), "%s/%s", abs_path, e->d_name);
+        struct stat st;
+        if (stat(child, &st) != 0) continue;
+        if (!S_ISDIR(st.st_mode)) continue;
+        added += watch_add_tree(root_index, fd, child, depth + 1);
+    }
+    closedir(d);
+    return added;
+}
+
+static int watch_root_index_for(const char* dir_path) {
+    for (int i = 0; i < g_watch_root_count; i++) {
+        if (strcmp(g_watch_roots[i].root_path, dir_path) == 0) return i;
+    }
+    return -1;
+}
+
+char* Platform_RegisterDirWatcher(const char* dir_path, DirChangeCallback callback) {
+    PROFILE_START(timer);
+    if (!dir_path) { log_error("returned NULL dir_path='%s'", dir_path ? dir_path : "null"); PROFILE_END_VAR(timer, "platform_x11:Platform_RegisterDirWatcher"); return NULL; }
+
+    int ri = watch_root_index_for(dir_path);
+    if (ri < 0) {
+        if (g_watch_root_count >= MAX_WATCH_ROOTS) {
+            PROFILE_END_VAR(timer, "platform_x11:Platform_RegisterDirWatcher");
+            return NULL;
+        }
+        int fd = inotify_init1(IN_NONBLOCK | IN_CLOEXEC);
+        if (fd < 0) {
+            PROFILE_END_VAR(timer, "platform_x11:Platform_RegisterDirWatcher");
+            return NULL;
+        }
+        ri = g_watch_root_count++;
+        g_watch_roots[ri].fd = fd;
+        g_watch_roots[ri].path_count = 0;
+        g_watch_roots[ri].callback = callback;
+        snprintf(g_watch_roots[ri].root_path, sizeof(g_watch_roots[ri].root_path), "%s", dir_path);
+        int n = watch_add_tree(ri, fd, dir_path, 0);
+        g_watch_roots[ri].path_count = n;
+        log_info("dir watch registered root='%s' dirs=%d", dir_path, n);
+        PROFILE_END_VAR(timer, "platform_x11:Platform_RegisterDirWatcher");
+        return NULL;
+    }
+
+    if (callback) g_watch_roots[ri].callback = callback;
+    int fd = g_watch_roots[ri].fd;
+    char buffer[64 * 1024];
+    char* last_name = NULL;
+    for (;;) {
+        int length = read(fd, buffer, sizeof(buffer));
+        if (length <= 0) break;
+        int j = 0;
+        while (j < length) {
+            struct inotify_event* event = (struct inotify_event*)&buffer[j];
+            j += sizeof(struct inotify_event) + event->len;
+            if (event->mask & IN_IGNORED) {
+                watch_forget_path(event->wd);
+                continue;
+            }
+            if (event->len == 0) continue;
+            const WatchPathEntry* pe = watch_find_path(event->wd);
+            if (!pe) continue;
+            char full[640];
+            snprintf(full, sizeof(full), "%s/%s", pe->path, event->name);
+            if (event->mask & IN_ISDIR) {
+                if (event->mask & (IN_CREATE | IN_MOVED_TO)) {
+                    struct stat st;
+                    if (stat(full, &st) == 0 && S_ISDIR(st.st_mode)) {
+                        watch_add_tree(ri, fd, full, 1);
+                    }
+                }
+                continue;
+            }
+            int added = (event->mask & (IN_CREATE | IN_MOVED_TO | IN_CLOSE_WRITE)) ? 1 : 0;
+            if (g_watch_roots[ri].callback) g_watch_roots[ri].callback(full, added);
+            free(last_name);
+            last_name = strdup(event->name);
+        }
+    }
+    PROFILE_END_VAR(timer, "platform_x11:Platform_RegisterDirWatcher");
+    return last_name;
+}
+
+void Platform_CleanupDirWatchers(void) {
+    for (int i = 0; i < g_watch_root_count; i++) {
+        if (g_watch_roots[i].fd >= 0) {
+            close(g_watch_roots[i].fd);
+            g_watch_roots[i].fd = -1;
+        }
+    }
+    g_watch_root_count = 0;
+    g_watch_path_count = 0;
+    if (g_cfile_fd >= 0) {
+        close(g_cfile_fd);
+        g_cfile_fd = -1;
+    }
+    g_cfile_root[0] = '\0';
 }
 
 char* Platform_WatchForCFileChanges(const char* dir_path) {
     PROFILE_START(timer);
     if (!dir_path) { log_error("returned NULL dir_path='%s'", dir_path ? dir_path : "null"); PROFILE_END_VAR(timer, "platform_x11:Platform_WatchForCFileChanges"); return NULL; }
 
-    for (int i = 0; i < g_instant_count; i++) {
-        if (strcmp(g_instant_watches[i].root_path, dir_path) == 0) {
-            int fd = g_instant_watches[i].fd;
-            char buffer[1024 * (sizeof(struct inotify_event) + 16)];
-            
-            int flags = fcntl(fd, F_GETFL, 0);
-            fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+    if (g_cfile_fd < 0 || strcmp(g_cfile_root, dir_path) != 0) {
+        if (g_cfile_fd >= 0) {
+            close(g_cfile_fd);
+            g_cfile_fd = -1;
+        }
+        int fd = inotify_init1(IN_NONBLOCK | IN_CLOEXEC);
+        if (fd < 0) {
+            PROFILE_END_VAR(timer, "platform_x11:Platform_WatchForCFileChanges");
+            return NULL;
+        }
+        int wd = inotify_add_watch(fd, dir_path, IN_MODIFY | IN_ATTRIB | IN_CREATE | IN_DELETE | IN_CLOSE_WRITE | IN_MOVED_TO | IN_MOVE_SELF);
+        if (wd < 0) {
+            close(fd);
+            PROFILE_END_VAR(timer, "platform_x11:Platform_WatchForCFileChanges");
+            return NULL;
+        }
+        g_cfile_fd = fd;
+        snprintf(g_cfile_root, sizeof(g_cfile_root), "%s", dir_path);
+        PROFILE_END_VAR(timer, "platform_x11:Platform_WatchForCFileChanges");
+        return NULL;
+    }
 
-            int length = read(fd, buffer, sizeof(buffer));
-            if (length > 0) {
-                int j = 0;
-                while (j < length) {
-                    struct inotify_event *event = (struct inotify_event *)&buffer[j];
-                    
-                    if (event->len > 0) {
-                        const char* name = event->name;
-                        size_t name_len = strlen(name);
-                        if (name_len > 2 && strcmp(name + name_len - 2, ".c") == 0) {
-                            char *found_name = malloc(event->len + 1);
-                            if (found_name) {
-                                strcpy(found_name, event->name);
-
-                                PROFILE_END_VAR(timer, "platform_x11:Platform_WatchForCFileChanges");
-                                return found_name;
-                            }
-                        }
-                    }
-                    
-                    j += sizeof(struct inotify_event) + event->len;
+    char buffer[8 * 1024];
+    int length = read(g_cfile_fd, buffer, sizeof(buffer));
+    if (length > 0) {
+        int j = 0;
+        while (j < length) {
+            struct inotify_event* event = (struct inotify_event*)&buffer[j];
+            j += sizeof(struct inotify_event) + event->len;
+            if (event->len == 0) continue;
+            const char* name = event->name;
+            size_t name_len = strlen(name);
+            if (name_len > 2 && strcmp(name + name_len - 2, ".c") == 0) {
+                char* found_name = strdup(event->name);
+                if (found_name) {
+                    PROFILE_END_VAR(timer, "platform_x11:Platform_WatchForCFileChanges");
+                    return found_name;
                 }
             }
-            PROFILE_END_VAR(timer, "platform_x11:Platform_WatchForCFileChanges");
-            return NULL; 
         }
     }
-
-    if (g_instant_count < MAX_WATCHED_DIRS) {
-        int fd = inotify_init();
-        if (fd >= 0) {
-            int wd = inotify_add_watch(fd, dir_path, IN_MODIFY | IN_ATTRIB | IN_CREATE | IN_DELETE | IN_CLOSE_WRITE | IN_MOVED_TO | IN_MOVE_SELF);
-            if (wd >= 0) {
-                g_instant_watches[g_instant_count].fd = fd;
-                g_instant_watches[g_instant_count].wd = wd;
-                snprintf(g_instant_watches[g_instant_count].root_path, 256, "%s", dir_path);
-                g_instant_count++;
-            } else {
-                close(fd);
-            }
-        }
-    }
-
     PROFILE_END_VAR(timer, "platform_x11:Platform_WatchForCFileChanges");
     return NULL;
 }
@@ -1438,15 +1513,19 @@ char* Platform_GetIconPath(char* app_path) {
 
 int Platform_CopyToClipboard(const char *text) {
     if (!text) return 0;
+    long long t0 = Platform_GetWallClockMs();
     int wr = 0;
     int xr = 0;
     if (Wayland_ClipboardAvailable()) {
+        long long tw = Platform_GetWallClockMs();
         wr = Wayland_ClipboardSetText(text);
-        log_info("Platform_CopyToClipboard wayland=%d", wr);
+        log_info("Platform_CopyToClipboard wayland=%d ms=%lld", wr, Platform_GetWallClockMs() - tw);
     }
+    long long tx = Platform_GetWallClockMs();
     xr = x11_clipboard_set_text(text);
-    log_info("Platform_CopyToClipboard x11=%d", xr);
+    log_info("Platform_CopyToClipboard x11=%d ms=%lld", xr, Platform_GetWallClockMs() - tx);
     if (!wr && !xr) log_warn("Platform_CopyToClipboard failed both backends");
+    log_info("Platform_CopyToClipboard DONE total_ms=%lld len=%d", Platform_GetWallClockMs() - t0, (int)strlen(text));
     return (wr || xr);
 }
 
