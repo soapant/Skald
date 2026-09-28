@@ -64,13 +64,8 @@ int Platform_CopyToClipboard(const char* text) {
         CloseClipboard();
         return 0;
     }
-    char buffer[256];
-    
-    snprintf(buffer,sizeof(buffer),"Copied %s",text);
-    SubjectiveMessageDisplay(buffer,140,TimeOutForMessages,COLOR_TEXT);
     CloseClipboard();
     
-log_info("Platform_CopyToClipboard text='%s'", text ? text : "");;
     return 1;
 }
 
