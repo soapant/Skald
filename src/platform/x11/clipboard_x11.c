@@ -380,18 +380,13 @@ static char *ClipReadTarget(Atom target) {
     Window sel_owner = XGetSelectionOwner(dpy, g_clip_clipboard);
     char *tname = XGetAtomName(dpy, target);
     if (!ClipReadWaitEvent(dpy, &ev, ClipReadNotifyPred, &w, 200)) {
-        log_warn("clipboard read no SelectionNotify target=%s owner=%lu",
-                 tname ? tname : "?", (unsigned long)sel_owner);
         if (tname) XFree(tname);
         return NULL;
     }
     if (tname) XFree(tname);
     if (ev.xselection.property == None) {
-        log_warn("clipboard read refused target=%lu owner=%lu", (unsigned long)target, (unsigned long)sel_owner);
         return NULL;
     }
-    log_info("clipboard read got SelectionNotify target=%lu prop=%lu owner=%lu",
-             (unsigned long)target, (unsigned long)ev.xselection.property, (unsigned long)sel_owner);
     Atom actual = None;
     int format = 0;
     unsigned long nitems = 0;
