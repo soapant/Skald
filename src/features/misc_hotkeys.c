@@ -43,7 +43,7 @@ void GoogleMeaning(void) {
 void OpenImage(void) {
   char *clip = fl_get_last_clipboard_entry();
   char cmd[512];
-  snprintf(cmd,sizeof(cmd)," feh /home/diggy/Programming/RandomShit/shit/images/%s --zoom 65",clip);
+  snprintf(cmd,sizeof(cmd)," feh /home/dog/Programming/RandomShit/shit/images/%s --zoom 65",clip);
   fl_run_terminal_command(cmd);
   fl_send_hotkey("Alt+F");
 }
