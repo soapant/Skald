@@ -19,7 +19,7 @@
 #include <string.h>
 #include <time.h>
 
-bool Platform_GetAllFilesFromDir(const char* dir_path, char** list_of_allowed_extensions, ListOfFiles* list_of_files,char** list_of_names_to_ignore) {
+bool Platform_GetAllFilesFromDir(const char* dir_path, char** list_of_allowed_extensions, ListOfFiles* list_of_files,char** list_of_names_to_ignore, bool strip_extension) {
 
     char search_path[MAX_PATH];
     snprintf(search_path, sizeof(search_path), "%s\\*", dir_path);
@@ -47,7 +47,7 @@ bool Platform_GetAllFilesFromDir(const char* dir_path, char** list_of_allowed_ex
                 }
             }
             if (!should_ignore) {
-                Platform_GetAllFilesFromDir(full_path, list_of_allowed_extensions, list_of_files, list_of_names_to_ignore);
+                Platform_GetAllFilesFromDir(full_path, list_of_allowed_extensions, list_of_files, list_of_names_to_ignore, strip_extension);
             }
         } else {
             bool allowed = true;
@@ -80,8 +80,10 @@ bool Platform_GetAllFilesFromDir(const char* dir_path, char** list_of_allowed_ex
                 char clean_name[256];
                 strncpy(clean_name, find_data.cFileName, sizeof(clean_name) - 1);
                 clean_name[sizeof(clean_name) - 1] = '\0';
-                char* dot = strrchr(clean_name, '.');
-                if (dot) *dot = '\0';
+                if (strip_extension) {
+                    char* dot = strrchr(clean_name, '.');
+                    if (dot) *dot = '\0';
+                }
                 strncpy(item->name, clean_name, sizeof(item->name) - 1);
                 item->name[sizeof(item->name) - 1] = '\0';
 

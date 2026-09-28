@@ -59,14 +59,14 @@ bool fl_copy_image_to_clipboard(const unsigned char* png, size_t len) {
     return ok;
 }
 
-bool fl_get_all_files_from_dir(const char* dir_path, char** list_of_allowed_extensions, ListOfFiles* list_of_files,char** list_of_names_to_ignore) {
+bool fl_get_all_files_from_dir(const char* dir_path, char** list_of_allowed_extensions, ListOfFiles* list_of_files,char** list_of_names_to_ignore, bool strip_extension) {
     if (!dir_path || !list_of_files) return false;
 
     char expanded_dir[MAX_PATH];
     if (!Platform_ExpandPath(dir_path, expanded_dir, sizeof(expanded_dir))) return false;
     dir_path = expanded_dir;
 
-    return Platform_GetAllFilesFromDir(dir_path, list_of_allowed_extensions, list_of_files, list_of_names_to_ignore);
+    return Platform_GetAllFilesFromDir(dir_path, list_of_allowed_extensions, list_of_files, list_of_names_to_ignore, strip_extension);
 }
 
 char* fl_search_file_in_dir(const char* directory, const char* search_string,char* output_path){

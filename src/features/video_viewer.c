@@ -84,7 +84,7 @@ ListOfFiles video_files = {0};
 
 void video_refresh_callback(const char* filter, ListBoxInfo* lb) {
     video_files.count = 0;
-    fl_get_all_files_from_dir(VideosPath, allowed_video_formats, &video_files, NULL);
+    fl_get_all_files_from_dir(VideosPath, allowed_video_formats, &video_files, NULL, true);
     
     const char** items = (const char**)malloc(video_files.count * sizeof(char*));
     if (!items) return;
@@ -105,7 +105,7 @@ bool video_enter_callback(const char* selection, ListBoxInfo* lb) {
     }
     if (!result) {
         ListOfFiles tmp = {0};
-        fl_get_all_files_from_dir(VideosPath, allowed_video_formats, &tmp, NULL);
+        fl_get_all_files_from_dir(VideosPath, allowed_video_formats, &tmp, NULL, true);
         for (size_t i = 0; i < tmp.count; i++) {
             if (strcmp(tmp.files[i].name, selection) == 0) {
                 result = tmp.files[i].path;
