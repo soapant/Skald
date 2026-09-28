@@ -19,7 +19,6 @@ void terminal_edit_callback(const char* selection, ListBoxInfo* lb) {
     if (idx >= 0) fl_replace_line_in_file(TerminalHistoryFilePath, idx, edited);
     free(edited);
     terminal_refresh_callback("", lb);
-    UI_Redraw(lb, FlintContext_Get()->window.hListBox);
 }
 
 bool terminal_enter_callback(const char* selection, ListBoxInfo* lb) {
