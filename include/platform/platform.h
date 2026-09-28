@@ -69,7 +69,7 @@ char* Platform_RunCommandAndGetOutput(char* command);
 char* Platform_RunArgvCapture(const char* const argv[], const char* stdin_data, int* out_status);
 bool Platform_LaunchFileManagerAtPath(char* path,char* args);
 long Platform_GetFileSize(char *filepath);
-char* Platform_RegisterDirWatcher(const char* dir_path, void (*callback)(void));
+char* Platform_RegisterDirWatcher(const char* dir_path, DirChangeCallback callback);
 char* Platform_WatchForCFileChanges(const char* dir_path);
 void Platform_CleanupDirWatchers(void);
 bool Platform_BuildFeature(const char* src, const char* out);
