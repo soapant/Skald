@@ -57,7 +57,9 @@ bool Platform_GetAllFilesFromDir(const char* dir_path, char** list_of_allowed_ex
                 if (ext) {
                     ext++;
                     for (int i = 0; list_of_allowed_extensions[i] != NULL; i++) {
-                        if (Platform_StringContainsCaseInsensitive(ext, list_of_allowed_extensions[i])) {
+                        const char* want = list_of_allowed_extensions[i];
+                        if (want && want[0] == '.') want++;
+                        if (Platform_StringContainsCaseInsensitive(ext, want)) {
                             allowed = true;
                             break;
                         }
