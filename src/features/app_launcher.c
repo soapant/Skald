@@ -1,6 +1,7 @@
 ﻿#include "core/flapi.h"
 #include <stdio.h>
 #include <string.h>
+#include <strings.h>
 #include <stdlib.h>
 
 const char* ListOfShitToIgnore[] = {
@@ -207,10 +208,63 @@ void ensure_app_cache(void) {
     save_app_cache();
 }
 
-void rescan_app_cache(void) {
+static bool app_ext_allowed(const char* name) {
+#if defined(_WIN32)
+    static const char* exts[] = {"lnk", "exe", "url", NULL};
+#else
+    static const char* exts[] = {"desktop", NULL};
+#endif
+    const char* dot = strrchr(name, '.');
+    if (!dot || !dot[1]) return false;
+    for (int i = 0; exts[i]; i++) {
+        if (strcasecmp(dot + 1, exts[i]) == 0) return true;
+    }
+    return false;
+}
+
+static void app_cache_drop(const char* full_path) {
+    for (size_t i = 0; i < s_apps.count; i++) {
+        if (strcmp(s_apps.files[i].path, full_path) == 0) {
+            for (size_t k = i; k + 1 < s_apps.count; k++) s_apps.files[k] = s_apps.files[k + 1];
+            s_apps.count--;
+            return;
+        }
+    }
+}
+
+static void app_cache_add(const char* full_path) {
+    for (size_t i = 0; i < s_apps.count; i++) {
+        if (strcmp(s_apps.files[i].path, full_path) == 0) return;
+    }
+    const char* base = strrchr(full_path, '/');
+    if (!base) base = strrchr(full_path, '\\');
+    base = base ? base + 1 : full_path;
+    if (!app_ext_allowed(base)) return;
+    size_t before = s_apps.count;
+    ListOfFiles tmp = {0};
+    fl_get_all_files_from_dir(full_path, NULL, &tmp, NULL, true);
+    if (tmp.count > 0) {
+        if (s_apps.count >= s_apps.capacity && !app_cache_grow(&s_apps)) { free(tmp.files); return; }
+        s_apps.files[s_apps.count++] = tmp.files[0];
+        tmp.count = 0;
+    }
+    if (tmp.files) free(tmp.files);
+    if (s_apps.count != before) {
+        save_app_cache();
+        printf("[app_launcher] incremental add '%s' count=%zu\n", base, s_apps.count);
+        fflush(stdout);
+    }
+}
+
+static void app_cache_on_change(const char* full_path, int added) {
+    if (!full_path || !g_app_cache_ready) return;
+    if (added) app_cache_add(full_path);
+    else app_cache_drop(full_path);
+}
+
+void rescan_app_cache(const char* full_path, int added) {
     g_app_cache_ready = true;
-    scan_app_dirs();
-    save_app_cache();
+    app_cache_on_change(full_path, added);
 }
 
 void launch_app_by_name(const char* display_name) {
