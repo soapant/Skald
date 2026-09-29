@@ -138,10 +138,9 @@ static void x11_handle_key_release(Display* dpy, XKeyEvent* ev) {
 }
 
 void Linux_ProcessXEvent(Display* dpy, XEvent* ev, WindowManager* wm) {
-    PROFILE_START(timer);
-    if (x11_clipboard_handle_event(dpy, ev)) { PROFILE_END_VAR(timer, "window_manager_x11:Linux_ProcessXEvent"); return; }
+    if (x11_clipboard_handle_event(dpy, ev)) return; 
     Popup* top = WindowManager_GetTopPopup(wm);
-    if (!top) { PROFILE_END_VAR(timer, "window_manager_x11:Linux_ProcessXEvent"); return; }
+    if (!top) return;
     switch (ev->type) {
         case KeyPress:
             x11_handle_key_press(dpy, &ev->xkey, wm);
@@ -162,7 +161,6 @@ void Linux_ProcessXEvent(Display* dpy, XEvent* ev, WindowManager* wm) {
             }
             break;
     }
-    PROFILE_END_VAR(timer, "window_manager_x11:Linux_ProcessXEvent");
 }
 
 int WindowManager_RunLinux(WindowManager* wm) {

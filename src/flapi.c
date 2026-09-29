@@ -3,6 +3,7 @@
 #include <string.h>
 #include <ctype.h>
 #include "core/context.h"
+#include "core/timer.h"
 #include "deps/log.h"
 #include "config.h"
 #include "platform/platform.h"
@@ -80,10 +81,13 @@ char* fl_search_file_in_dir(const char* directory, const char* search_string,cha
 }
 
 bool fl_launch_with_args(const char* path, const char* args) {
-    if (!path) return false;
+    PROFILE_START(_pt);
+    if (!path) { PROFILE_END_VAR(_pt, "api:fl_launch_with_args"); return false; }
     char expanded[MAX_PATH];
-    if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) return false;
-    return fl_launch_with_args_platform(expanded, args);
+    if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) { PROFILE_END_VAR(_pt, "api:fl_launch_with_args"); return false; }
+    bool r = fl_launch_with_args_platform(expanded, args);
+    PROFILE_END_VAR(_pt, "api:fl_launch_with_args");
+    return r;
 }
 
 bool fl_launch_with_args_as_admin(const char* path, const char* args) {
@@ -427,8 +431,11 @@ int fl_get_icon_size(const char* icon_path) {
 }
 
 char* fl_run_terminal_command(char* command) {
-  if (!command) return NULL;
-  return Platform_RunTerminalCommand(command,false);
+  PROFILE_START(_pt);
+  if (!command) { PROFILE_END_VAR(_pt, "api:fl_run_terminal_command"); return NULL; }
+  char* r = Platform_RunTerminalCommand(command,false);
+  PROFILE_END_VAR(_pt, "api:fl_run_terminal_command");
+  return r;
 }
 
 char* fl_run_argv(const char* const argv[], const char* stdin_data, int* out_status) {
@@ -442,27 +449,41 @@ char* fl_run_terminal_command_blocking(char* command) {
 }
 
 char* fl_run_terminal_command_and_open(char* command) {
-  if (!command) return NULL;
-  return Platform_RunTerminalCommand(command,true);
+  PROFILE_START(_pt);
+  if (!command) { PROFILE_END_VAR(_pt, "api:fl_run_terminal_command_and_open"); return NULL; }
+  char* r = Platform_RunTerminalCommand(command,true);
+  PROFILE_END_VAR(_pt, "api:fl_run_terminal_command_and_open");
+  return r;
 }
 
 bool fl_launch_detached(char* command) {
-  if (!command) return false;
-  return Platform_LaunchDetached(command);
+  PROFILE_START(_pt);
+  if (!command) { PROFILE_END_VAR(_pt, "api:fl_launch_detached"); return false; }
+  bool r = Platform_LaunchDetached(command);
+  PROFILE_END_VAR(_pt, "api:fl_launch_detached");
+  return r;
 }
 
 bool fl_launch_terminal_at_path(char* path,char* args) {
-    if (!path) return false;
+  PROFILE_START(_pt);
+  bool r = false;
+  if (!path) { PROFILE_END_VAR(_pt, "api:fl_launch_terminal_at_path"); return false; }
     char expanded[MAX_PATH];
-    if (!Platform_ExpandPath(path, expanded, sizeof(expanded)))return false;
-    return Platform_LaunchTerminalAtPath(expanded,args);
+    if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) { PROFILE_END_VAR(_pt, "api:fl_launch_terminal_at_path"); return false; }
+    r = Platform_LaunchTerminalAtPath(expanded,args);
+  PROFILE_END_VAR(_pt, "api:fl_launch_terminal_at_path");
+  return r;
 }
 
 bool fl_launch_file_manager_at_path(char* path,char* args) {
-    if (!path) return false;
+  PROFILE_START(_pt);
+  bool r = false;
+  if (!path) { PROFILE_END_VAR(_pt, "api:fl_launch_file_manager_at_path"); return false; }
     char expanded[MAX_PATH];
-    if (!Platform_ExpandPath(path, expanded, sizeof(expanded)))return false;
-    return Platform_LaunchFileManagerAtPath(expanded,args);
+    if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) { PROFILE_END_VAR(_pt, "api:fl_launch_file_manager_at_path"); return false; }
+    r = Platform_LaunchFileManagerAtPath(expanded,args);
+  PROFILE_END_VAR(_pt, "api:fl_launch_file_manager_at_path");
+  return r;
 }
 
 char* fl_get_zoxide_match(char* query) {
@@ -733,8 +754,11 @@ char* fl_string_slice(const char* str, int start, int end) {
     return out;
 }
 bool fl_launch_browser(char* url) {
-    if (!url) return false;
-    return Platform_LaunchBrowserAtUrl(url,false);
+    PROFILE_START(_pt);
+    if (!url) { PROFILE_END_VAR(_pt, "api:fl_launch_browser"); return false; }
+    bool r = Platform_LaunchBrowserAtUrl(url,false);
+    PROFILE_END_VAR(_pt, "api:fl_launch_browser");
+    return r;
 }
 bool fl_query_browser(const char* query) {
     if (!query) return false;
