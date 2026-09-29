@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include "core/modal.h"
 
-static PromptState *g_prerender_state = NULL;
+static __thread PromptState *g_prerender_state = NULL;
 void Platform_SetPreRenderState(PromptState *state) {
   g_prerender_state = state; 
 }
@@ -26,32 +26,32 @@ __attribute__((weak)) bool fl_prerender(void) {
     return Platform_PreRender();
 }
 
-static Display* g_draw_dpy = NULL;
-static XftDraw* g_draw_xd = NULL;
-static Visual* g_draw_vis = NULL;
-static Colormap g_draw_cmap = 0;
+static __thread Display* g_draw_dpy = NULL;
+static __thread XftDraw* g_draw_xd = NULL;
+static __thread Visual* g_draw_vis = NULL;
+static __thread Colormap g_draw_cmap = 0;
 #define RAW_LINE_CAP 4096
 typedef struct { char ch; unsigned long color; } RawCell;
-static RawCell g_raw_cells[RAW_LINE_CAP];
-static char g_raw_text[RAW_LINE_CAP + 1];
-static int g_raw_map_x[RAW_LINE_CAP];
-static int g_raw_map_top[RAW_LINE_CAP];
-static int g_raw_count = 0;
-static int g_raw_y = 0;
-static int g_raw_x0 = 0;
-static int g_raw_pitch = 0;
-static int g_raw_fontsize = 0;
-static FontHandle g_raw_font;
-static bool g_raw_font_owned = false;
-static Display* g_raw_dpy = NULL;
-static XftDraw* g_raw_xd = NULL;
-static Visual* g_raw_vis = NULL;
-static Colormap g_raw_cmap = 0;
-static int g_raw_map_count = 0;
-static int g_raw_map_y = 0;
-static int g_raw_map_x0 = 0;
-static int g_raw_map_pitch = 0;
-static XftDraw* g_raw_map_xd = NULL;
+static __thread RawCell g_raw_cells[RAW_LINE_CAP];
+static __thread char g_raw_text[RAW_LINE_CAP + 1];
+static __thread int g_raw_map_x[RAW_LINE_CAP];
+static __thread int g_raw_map_top[RAW_LINE_CAP];
+static __thread int g_raw_count = 0;
+static __thread int g_raw_y = 0;
+static __thread int g_raw_x0 = 0;
+static __thread int g_raw_pitch = 0;
+static __thread int g_raw_fontsize = 0;
+static __thread FontHandle g_raw_font;
+static __thread bool g_raw_font_owned = false;
+static __thread Display* g_raw_dpy = NULL;
+static __thread XftDraw* g_raw_xd = NULL;
+static __thread Visual* g_raw_vis = NULL;
+static __thread Colormap g_raw_cmap = 0;
+static __thread int g_raw_map_count = 0;
+static __thread int g_raw_map_y = 0;
+static __thread int g_raw_map_x0 = 0;
+static __thread int g_raw_map_pitch = 0;
+static __thread XftDraw* g_raw_map_xd = NULL;
 static int RawMeasure(Display* dpy, XftFont* xf, const char* s, int n) {
     XGlyphInfo ext;
     XftTextExtentsUtf8(dpy, xf, (FcChar8*)s, n, &ext);
