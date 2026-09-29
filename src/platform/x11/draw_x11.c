@@ -9,6 +9,32 @@
 #include "core/modal.h"
 
 static __thread PromptState *g_prerender_state = NULL;
+
+static __thread bool g_measuring = false;
+static __thread int g_meas_x0 = 0, g_meas_y0 = 0, g_meas_x1 = 0, g_meas_y1 = 0;
+
+static void measure_reset(void) {
+    g_measuring = false;
+    g_meas_x0 = 0; g_meas_y0 = 0; g_meas_x1 = 0; g_meas_y1 = 0;
+}
+void Platform_BeginMeasure(void) {
+    g_measuring = true;
+    g_meas_x0 = 1 << 30; g_meas_y0 = 1 << 30;
+    g_meas_x1 = -(1 << 30); g_meas_y1 = -(1 << 30);
+}
+void Platform_EndMeasure(int *out_w, int *out_h) {
+    if (out_w) *out_w = (g_meas_x1 > g_meas_x0) ? (g_meas_x1 - g_meas_x0) : 0;
+    if (out_h) *out_h = (g_meas_y1 > g_meas_y0) ? (g_meas_y1 - g_meas_y0) : 0;
+    measure_reset();
+}
+static void measure_track(int x, int y, int w, int h) {
+    if (!g_measuring) return;
+    if (x < g_meas_x0) g_meas_x0 = x;
+    if (y < g_meas_y0) g_meas_y0 = y;
+    if (x + w > g_meas_x1) g_meas_x1 = x + w;
+    if (y + h > g_meas_y1) g_meas_y1 = y + h;
+}
+
 void Platform_SetPreRenderState(PromptState *state) {
   g_prerender_state = state; 
 }
@@ -249,6 +275,20 @@ bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, F
     }
     if (color == 0) color = rgb_to_hex(COLOR_TEXT);
     const char *a = align ? align : "CENTER";
+    if (g_measuring) {
+        XftFont *mf = FH_TO_XFT(fh);
+        int tw = 0;
+        if (mf) {
+            XGlyphInfo ext;
+            XftTextExtentsUtf8(g_draw_dpy, mf, (FcChar8 *)text, (int)strlen(text), &ext);
+            tw = ext.xOff;
+        }
+        int th = mf ? (mf->ascent + mf->descent) : (fontsize > 0 ? fontsize : FontSize);
+        int bx = x;
+        if (Platform_StringContainsCaseInsensitive(a, "CENTER")) bx = x - tw / 2;
+        else if (Platform_StringContainsCaseInsensitive(a, "RIGHT")) bx = x - tw;
+        measure_track(bx, y, tw, th);
+    }
     XftColor col;
     x11_xft_alloc_color(g_draw_dpy, g_draw_vis, g_draw_cmap, color, 0xFFFF, &col);
     if (Platform_StringContainsCaseInsensitive(a, "CENTER") || Platform_StringContainsCaseInsensitive(a, "LEFT") || Platform_StringContainsCaseInsensitive(a, "RIGHT")) {
@@ -385,6 +425,7 @@ void Platform_DrawEditCursor(PromptState *state, Display *dpy, XftDraw *xd, Visu
     }
 }
 bool Platform_DrawRectRaw(int x, int y, int w, int h, unsigned long color) {
+    measure_track(x, y, w, h);
     if (RawRect_Map(x, y, w, h, color)) return true;
     XftColor col;
     x11_xft_alloc_color(g_draw_dpy, g_draw_vis, g_draw_cmap, color, OpacityAlpha16(), &col);
