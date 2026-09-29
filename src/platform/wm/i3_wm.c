@@ -388,14 +388,6 @@ bool move_active_window_to_monitor_i3(bool right) {
     return i3_run(cmd);
 }
 
-bool move_active_window_left_i3(void) {
-    return move_active_window_to_monitor_i3(false);
-}
-
-bool move_active_window_right_i3(void) {
-    return move_active_window_to_monitor_i3(true);
-}
-
 bool focus_window_left_i3(void) {
     if (!i3_ensure_sock()) return false;
     return i3_run("i3-msg focus left");
@@ -405,6 +397,17 @@ bool focus_window_right_i3(void) {
     if (!i3_ensure_sock()) return false;
     return i3_run("i3-msg focus right");
 }
+
+bool move_active_window_left_i3(void) {
+    move_active_window_to_monitor_i3(false);
+    return focus_window_left_i3();
+}
+
+bool move_active_window_right_i3(void) {
+    move_active_window_to_monitor_i3(true);
+    return focus_window_right_i3();
+}
+
 
 bool minimize_active_window_i3(void) {
     if (!i3_ensure_sock()) return false;

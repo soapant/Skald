@@ -217,7 +217,7 @@ int x11_font_row_height(int font_size) {
 }
 
 int x11_font_list_top(int ascent, int descent, int font_size) {
-    return font_size + 38;
+    return font_size + 30;
 }
 
 int x11_font_row_height_of(FontHandle font) {
