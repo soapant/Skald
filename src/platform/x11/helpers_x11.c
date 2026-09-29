@@ -220,13 +220,6 @@ int x11_font_list_top(int ascent, int descent, int font_size) {
     return font_size + 38;
 }
 
-int x11_font_cursor_y(int font_size, int box_top) {
-    int lineH = font_size;
-    int y = box_top + (lineH - font_size) / 2;
-    if (y < box_top) y = box_top;
-    return y;
-}
-
 int x11_font_row_height_of(FontHandle font) {
     XftFont* xf = FH_TO_XFT(font);
     return x11_font_row_height(FontSize);
@@ -237,8 +230,8 @@ int x11_font_list_top_of(FontHandle font) {
     return x11_font_list_top(xf ? xf->ascent : 0, xf ? xf->descent : 0, FontSize);
 }
 
-int x11_font_cursor_y_of(FontHandle font, int box_top) {
-    return x11_font_cursor_y(FontSize, box_top);
+int x11_font_cursor_y_of() {
+    return 17;
 }
 
 void x11_draw_edit_cursor(XftDraw* xd, XftColor* color, int cursor_x, int scroll, int width) {

@@ -556,7 +556,7 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
     int cursor_y;
     if (spec->y == 0) {
         y_raw = 14;
-        cursor_y = x11_font_cursor_y_of(fh, 20);
+        cursor_y = x11_font_cursor_y_of();
     }
     Platform_SetDrawContext(dpy, xd, vis, cmap);
     if (text_len > 0) {
