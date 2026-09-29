@@ -45,6 +45,7 @@ static bool collect_source(Nob_Walk_Entry entry) {
 #else
             if (nob_sv_ends_with_cstr(path, "_win32.c")) return true;
 #endif
+            if (!getenv("WAYLAND_DISPLAY"))  if (nob_sv_ends_with_cstr(path, "_wayland.c")) return true;
             bool is_feature = false;
             if (nob_sv_starts_with(path, nob_sv_from_cstr("src/features/")) ||
                 nob_sv_starts_with(path, nob_sv_from_cstr("src\\features\\"))) {
