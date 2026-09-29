@@ -102,7 +102,7 @@ void typing_test_render(PromptState *state) {
     int cy = state->height / 2 - 130;
     int text_len = strlen(text);
     int fontsize = 30;
-    int line_height = fontsize + 12;
+    int line_height = fontsize + 20;
     int c = fl_get_char_pressed();
     int key = fl_get_key_pressed();
     if (typing_test_position < text_len) {

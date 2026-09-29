@@ -363,7 +363,7 @@ typedef struct {
     int gap;
     int pad;                       
     int fps;
-    ColorRef bg_color;             
+    ColorRef color;             
     FlWidgetRenderFn render;
     int x;
     int y;

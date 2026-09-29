@@ -42,6 +42,40 @@ void get_disk_usage_percentage(char* buf, size_t buflen) {
 #endif
 }
 
+void get_memory_usage_percentage(char* buf, size_t buflen) {
+#if !defined(_WIN32)
+    FILE* f = fopen("/proc/meminfo", "r");
+    if (!f) {
+        snprintf(buf, buflen, "Mem Usage:??%%");
+        return;
+    }
+
+    unsigned long long total_kb = 0;
+    unsigned long long avail_kb = 0;
+
+    char line[256];
+    while (fgets(line, sizeof(line), f)) {
+        if (strncmp(line, "MemTotal:", 9) == 0) {
+            sscanf(line + 9, "%llu", &total_kb);
+        } else if (strncmp(line, "MemAvailable:", 13) == 0) {
+            sscanf(line + 13, "%llu", &avail_kb);
+        }
+        if (total_kb && avail_kb) break;
+    }
+    fclose(f);
+
+    if (total_kb == 0) {
+        snprintf(buf, buflen, "Mem Usage:??%%");
+        return;
+    }
+
+    unsigned long long used_kb = total_kb - avail_kb;
+    snprintf(buf, buflen, "Mem Usage:%llu%%", (used_kb * 100) / total_kb);
+#else
+    snprintf(buf, buflen, "Mem Usage:??%%");
+#endif
+}
+
 static void widgets_disk_usage_render(FlWidgetState *state) {
     char buf[128];
     get_disk_usage_percentage(buf, sizeof(buf));
@@ -50,14 +84,20 @@ static void widgets_disk_usage_render(FlWidgetState *state) {
 }
 
 static void widgets_memory_usage_render(FlWidgetState *state) {
+    char buf[128];
+    get_memory_usage_percentage(buf, sizeof(buf));
+    fl_draw_text(.text = buf, .x = 10, .y = 6, .fontsize = 15,
+                 .color = COLOR_TEXT, .align = "LEFT");
 }
 
 FLINT_FEATURE_INIT {
     fl_widget(.name = "disk_usage",
+              .color = RGB(30,30,30),
               .slot = FL_WIDGET_SLOT_TOP_LEFT,
               .render = widgets_disk_usage_render);
 
     fl_widget(.name = "memory_usage",
+              .color = RGB(30,30,30),
               .slot = FL_WIDGET_SLOT_TOP_LEFT,
               .render = widgets_memory_usage_render);
 }

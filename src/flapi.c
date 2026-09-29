@@ -1791,8 +1791,8 @@ FlWidget *fl_widget_create(const FlWidgetSpec *spec) {
         g_fl_widgets[g_fl_widget_count++] = widget;
     }
 
-    widget->has_bg = spec->bg_color != 0;
-    widget->bg_hex = widget->has_bg ? rgb_to_hex(spec->bg_color) : 0;
+    widget->has_bg = spec->color != 0;
+    widget->bg_hex = widget->has_bg ? rgb_to_hex(spec->color) : 0;
     widget->auto_w = spec->w <= 0;
     widget->auto_h = spec->h <= 0;
     widget->pad = spec->pad > 0 ? spec->pad : FL_WIDGET_DEFAULT_PAD;
