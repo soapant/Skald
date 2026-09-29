@@ -20,7 +20,7 @@
 #else
      #define CC_FLAGS "-I", "include","-MMD", "-MP","-O3","-Wall","-Wextra","-Wno-unused-parameter","-Wno-sign-compare","-Wno-discarded-qualifiers","-Wno-stringop-truncation","-Wno-sign-compare","-Wno-unused-parameter","-Wno-misleading-indentation"
      #define LINK_FLAGS "-lm", "-ldl", "-Wl,--export-dynamic"
-     #define PKG_CFLAGS_PKGS_STR "x11 xft fontconfig freetype2 glib-2.0 gio-unix-2.0 libpng xext xrandr xrender xtst xi wayland-client"
+     #define PKG_CFLAGS_PKGS_STR "x11 xft fontconfig freetype2 glib-2.0 gio-unix-2.0 libpng xext xrandr xrender xtst xi"
      #define PKG_LIBS_PKGS_STR   "x11 xft fontconfig libpng xext xrandr xrender xtst xi gio-2.0 gobject-2.0 glib-2.0"
 #endif
 
@@ -238,6 +238,14 @@ static void append_dep_cflags(Nob_Cmd* cmd) { (void)cmd; }
 static void append_dep_ldflags(Nob_Cmd* cmd) { (void)cmd; }
 #endif
 
+static void append_wayland_session_flags(Nob_Cmd* cmd) {
+#if !defined(_WIN32)
+    if (getenv("WAYLAND_DISPLAY")) nob_cmd_append(cmd, "-DFLINT_WAYLAND_SESSION");
+#else
+    (void)cmd;
+#endif
+}
+
 
 static void write_json_string(FILE* f, const char* s) {
     fputc('"', f);
@@ -276,6 +284,7 @@ static bool write_compile_commands(void) {
         Nob_Cmd cmd = {0};
         nob_cc(&cmd);
         nob_cc_flags(&cmd);
+        append_wayland_session_flags(&cmd);
         nob_cmd_append(&cmd, CC_FLAGS, "-c", sources.items[i]);
         append_dep_cflags(&cmd);
 
@@ -424,6 +433,7 @@ static bool compile_all(bool* any_compiled) {
         Nob_Cmd cmd = {0};
         nob_cc(&cmd);
         nob_cc_flags(&cmd);
+        append_wayland_session_flags(&cmd);
         nob_cmd_append(&cmd, CC_FLAGS, "-c", to_build.items[i], "-o", obj_path(to_build.items[i]));
         append_dep_cflags(&cmd);
         if (!nob_cmd_run(&cmd, .async = &procs, .max_procs = max_procs,

@@ -20,7 +20,7 @@
 #include "deps/log.h"
 #include "wm/wm.h"
 #include "platform/x11/clipboard_x11.h"
-#include "platform/x11/clipboard_wayland_x11.h"
+#include "platform/x11/clipboard_backend_x11.h"
 
 
 static uid_t ProbeSessionUid(void){
@@ -914,8 +914,8 @@ char* Platform_GetClipboardEntry() {
         return NULL;
     }
     char* out = NULL;
-    if (Wayland_ClipboardAvailable()) {
-        out = Wayland_ClipboardGetText();
+    if (Platform_ClipboardAvailable()) {
+        out = Platform_ClipboardGetText();
         if (out) {
             fail_streak = 0;
             next_in_ms = 0;
@@ -930,7 +930,7 @@ char* Platform_GetClipboardEntry() {
         if (fail_streak > 4) fail_streak = 4;
         next_in_ms = now + (200LL << fail_streak);
         log_warn("Platform_GetClipboardEntry null wayland=%d streak=%d next_in=%lldms",
-            Wayland_ClipboardAvailable(), fail_streak, 200LL << fail_streak);
+            Platform_ClipboardAvailable(), fail_streak, 200LL << fail_streak);
     } else {
         fail_streak = 0;
         next_in_ms = 0;
