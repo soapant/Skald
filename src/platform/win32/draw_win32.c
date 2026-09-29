@@ -6,8 +6,8 @@
 #include "core/context.h"
 #include "helpers/helpers_ui.h"
 
-static HFONT g_sizeFont = NULL;
-static int g_sizeFontSize = 0;
+static __thread HFONT g_sizeFont = NULL;
+static __thread int g_sizeFontSize = 0;
 
 static HFONT win32_sized_font(int size) {
   if (size <= 0) size = FontSize;
@@ -19,8 +19,8 @@ static HFONT win32_sized_font(int size) {
   return g_sizeFont;
 }
 
-static const char *g_prerender_text = NULL;
-static void *g_prerender_rect = NULL;
+static __thread const char *g_prerender_text = NULL;
+static __thread void *g_prerender_rect = NULL;
 void Platform_SetPreRenderStateWin32(const char *text, void *rect) {
   g_prerender_text = text; g_prerender_rect = rect; 
 }
@@ -34,7 +34,7 @@ __attribute__((weak)) bool fl_prerender(void) {
     return Platform_PreRender();
 }
 
-static HDC g_draw_hdc = NULL;
+static __thread HDC g_draw_hdc = NULL;
 void Platform_SetDrawContextWin32(HDC hdc) {
   g_draw_hdc = hdc; 
 }
