@@ -17,33 +17,8 @@
 #define BLACKLIST 0
 #define FlStringList StringList
 
-// =============================================================================
-// WIDGETS
-// =============================================================================
-
-#define FL_WIDGET_MAX 32
-#define FL_WIDGET_NAME_MAX 64
-#define FL_WIDGET_DEFAULT_GAP 10
-
-struct FlWidget {
-    char name[FL_WIDGET_NAME_MAX];
-    int w;
-    int h;
-    int gap;
-    int fps;
-    int slot;
-    int order;
-    int seq;
-    bool order_set;
-    bool free_pos;
-    int x;
-    int y;
-    bool mapped;
-    PlatformWidget *win;
-    FlWidgetRenderFn render;
-    unsigned long frame;
-    FlTimer created_at;
-};
+typedef struct { uint64_t ticks; } FlTimer;
+typedef struct PlatformWidget PlatformWidget;
 
 
 
@@ -400,6 +375,30 @@ typedef struct {
     int y;
 } FlWidgetSpec;
 
+#define FL_WIDGET_MAX 32
+#define FL_WIDGET_NAME_MAX 64
+#define FL_WIDGET_DEFAULT_GAP 10
+
+struct FlWidget {
+    char name[FL_WIDGET_NAME_MAX];
+    int w;
+    int h;
+    int gap;
+    int fps;
+    int slot;
+    int order;
+    int seq;
+    bool order_set;
+    bool free_pos;
+    int x;
+    int y;
+    bool mapped;
+    PlatformWidget *win;
+    FlWidgetRenderFn render;
+    unsigned long frame;
+    FlTimer created_at;
+};
+
 FlWidget *fl_widget_create(const FlWidgetSpec *spec);
 #define fl_widget(...) fl_widget_create(&(FlWidgetSpec){__VA_ARGS__})
 bool fl_widget_is_valid(FlWidget *widget);
@@ -488,7 +487,6 @@ bool fl_decrement_volume_by_percent(int decrement_percent);
 // MISC
 // =============================================================================
 
-typedef struct { uint64_t ticks; } FlTimer;
 FlTimer fl_start_timer(void);
 double fl_end_timer(FlTimer t);
 FlTimer fl_profile_start(void);

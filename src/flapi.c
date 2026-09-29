@@ -1676,6 +1676,7 @@ FlWidget *fl_widget_create(const FlWidgetSpec *spec) {
         widget = (FlWidget *)calloc(1, sizeof(*widget));
         if (!widget) return NULL;
         snprintf(widget->name, FL_WIDGET_NAME_MAX, "%s", spec->name);
+        widget->seq = g_fl_widget_seq++;
         g_fl_widgets[g_fl_widget_count++] = widget;
     }
 
