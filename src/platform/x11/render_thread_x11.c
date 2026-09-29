@@ -156,7 +156,6 @@ bool Platform_RenderThread_EnsureStarted(int fps) {
         return false;
     }
     g_rt_running = true;
-    log_info("render thread started on own display fps=%d", g_rt_fps);
     return true;
 }
 
@@ -176,7 +175,6 @@ void Platform_RenderThread_Stop(void) {
     g_rt_count = 0;
     g_rt_pending_count = 0;
     pthread_mutex_unlock(&g_rt_lock);
-    log_info("render thread stopped");
 }
 
 bool Platform_RenderThread_AddFrameCallback(Platform_RenderFrameFn fn, void *ud) {
