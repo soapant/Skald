@@ -4,6 +4,7 @@
 
 #define RT_MAX_CALLBACKS 16
 #define RT_IDLE_SLEEP_MS 20
+#define RT_DEFAULT_FPS 1
 
 typedef struct {
     Platform_RenderFrameFn fn;
@@ -16,7 +17,7 @@ static BOOL g_rt_lock_ready = FALSE;
 static RtCallback g_rt_callbacks[RT_MAX_CALLBACKS];
 static int g_rt_count = 0;
 static volatile LONG g_rt_quit = 0;
-static int g_rt_fps = 60;
+static int g_rt_fps = RT_DEFAULT_FPS;
 
 void *Platform_RenderThread_Display(void) {
     return NULL;
@@ -51,7 +52,7 @@ static DWORD WINAPI rt_thread_func(LPVOID arg) {
         if (n == 0) {
             Sleep(RT_IDLE_SLEEP_MS);
         } else {
-            int fps = g_rt_fps > 0 ? g_rt_fps : 60;
+            int fps = g_rt_fps > 0 ? g_rt_fps : RT_DEFAULT_FPS;
             Sleep((DWORD)(1000 / fps));
         }
     }
