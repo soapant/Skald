@@ -636,9 +636,9 @@ Window x11_create_window_ex_or(Display* dpy, int x, int y, int w, int h, unsigne
     int depth = 0;
     Colormap cmap = 0;
     bool use_argb = false;
-    static Colormap cached_cmap = None;
-    static Visual* cached_visual = NULL;
-    static int cached_screen = -1;
+    static __thread Colormap cached_cmap = None;
+    static __thread Visual* cached_visual = NULL;
+    static __thread int cached_screen = -1;
     if (XMatchVisualInfo(dpy, screen, 32, TrueColor, &vinfo)) {
         visual = vinfo.visual;
         depth = 32;
