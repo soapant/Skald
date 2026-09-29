@@ -378,16 +378,16 @@ bool fl_launch_with_args_as_admin_platform(const char* path, const char* args) {
     return true;
 }
 
-static FlListSpec g_fl_list_spec;
-static ListBoxInfo *g_fl_list_lb;
-static int g_fl_list_y0, g_fl_list_itemH, g_fl_list_visible, g_fl_list_cur;
-static int g_fl_list_bx, g_fl_list_bw, g_fl_list_fw;
-static Display *g_fl_list_dpy;
-static XftDraw *g_fl_list_xd;
-static Visual *g_fl_list_vis;
-static Colormap g_fl_list_cmap;
-static FontHandle g_fl_list_font;
-static bool g_fl_list_font_owned;
+static __thread FlListSpec g_fl_list_spec;
+static __thread ListBoxInfo *g_fl_list_lb;
+static __thread int g_fl_list_y0, g_fl_list_itemH, g_fl_list_visible, g_fl_list_cur;
+static __thread int g_fl_list_bx, g_fl_list_bw, g_fl_list_fw;
+static __thread Display *g_fl_list_dpy;
+static __thread XftDraw *g_fl_list_xd;
+static __thread Visual *g_fl_list_vis;
+static __thread Colormap g_fl_list_cmap;
+static __thread FontHandle g_fl_list_font;
+static __thread bool g_fl_list_font_owned;
 
 bool fl_listbox_begin_platform(const FlListSpec *spec) {
     if (!spec) return false;
