@@ -10,6 +10,15 @@
 
 static __thread PromptState *g_prerender_state = NULL;
 
+static __thread unsigned long g_draw_bg_override = 0;
+
+void Platform_SetDrawBgColor(unsigned long hex) {
+    g_draw_bg_override = hex;
+}
+unsigned long Platform_GetDrawBgColor(void) {
+    return g_draw_bg_override;
+}
+
 static __thread bool g_measuring = false;
 static __thread int g_meas_x0 = 0, g_meas_y0 = 0, g_meas_x1 = 0, g_meas_y1 = 0;
 
