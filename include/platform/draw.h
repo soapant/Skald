@@ -9,6 +9,8 @@
 void Platform_SetDrawContextWin32(HDC hdc);
 void Platform_SetDrawBgColor(unsigned long hex);
 unsigned long Platform_GetDrawBgColor(void);
+void Platform_SetTransparentWindow(bool on);
+bool Platform_GetTransparentWindow(void);
 void Platform_GetDrawContextWin32(HDC *out);
 void Platform_SetPreRenderStateWin32(const char *text, void *rect);
 void Platform_BeginMeasure(void);
@@ -27,6 +29,8 @@ void Platform_GetDrawContext(Display** dpy, XftDraw** xd, Visual** vis, Colormap
 void Platform_FlushDraw(void);
 void Platform_SetDrawBgColor(unsigned long hex);
 unsigned long Platform_GetDrawBgColor(void);
+void Platform_SetTransparentWindow(bool on);
+bool Platform_GetTransparentWindow(void);
 void Platform_SetPreRenderState(PromptState *state);
 PromptState* Platform_GetPreRenderStatePtr(void);
 void Platform_BeginMeasure(void);

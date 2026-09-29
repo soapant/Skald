@@ -11,6 +11,14 @@
 static __thread PromptState *g_prerender_state = NULL;
 
 static __thread unsigned long g_draw_bg_override = 0;
+static __thread bool g_transparent_window = false;
+
+void Platform_SetTransparentWindow(bool on) {
+    g_transparent_window = on;
+}
+bool Platform_GetTransparentWindow(void) {
+    return g_transparent_window;
+}
 
 void Platform_SetDrawBgColor(unsigned long hex) {
     g_draw_bg_override = hex;
