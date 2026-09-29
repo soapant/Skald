@@ -7,6 +7,7 @@
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
 #include <X11/keysym.h>
+#include <X11/XKBlib.h>
 #include <X11/Xft/Xft.h>
 #include <X11/extensions/Xrandr.h>
 #if __has_include(<X11/extensions/XTest.h>)
@@ -235,6 +236,11 @@ int WindowManager_RunLinux(WindowManager* wm) {
         } else {
             log_warn("remap grab skipped: no uinput, not grabbing to avoid bricking");
         }
+    }
+    if (dpy) {
+        usleep(300000);
+        XkbSetAutoRepeatRate(dpy, XkbUseCoreKbd, 300, 33);
+        XSync(dpy, False);
     }
     pthread_t input_thr = 0;
     bool input_started = false;
