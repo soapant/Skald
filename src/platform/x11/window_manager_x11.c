@@ -27,6 +27,7 @@
 #include <linux/uinput.h>
 #include "platform/x11/clipboard_x11.h"
 #include "platform/x11/input_x11.h"
+#include "platform/render_thread.h"
 #include "core/timer.h"
 #include "core/remap_manager.h"
 #include "core/hotkey_manager.h"
@@ -278,6 +279,7 @@ int WindowManager_RunLinux(WindowManager* wm) {
         }
     }
     destroy_uinput();
+    Platform_RenderThread_Stop();
     x11_set_window_manager(NULL);
 
     PROFILE_END_VAR(timer, "window_manager_x11:WindowManager_RunLinux");
