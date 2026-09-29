@@ -58,7 +58,6 @@ bool Platform_RenderThread_EnsureStarted(int fps) {
         log_warn("render thread: CreateThread failed, widget frames disabled");
         return false;
     }
-    log_info("render thread started fps=%d", g_rt_fps);
     return true;
 }
 
@@ -75,7 +74,6 @@ void Platform_RenderThread_Stop(void) {
         g_rt_pending_count = 0;
         LeaveCriticalSection(&g_rt_lock);
     }
-    log_info("render thread stopped");
 }
 
 bool Platform_RenderThread_AddFrameCallback(Platform_RenderFrameFn fn, void *ud) {

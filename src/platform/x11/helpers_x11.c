@@ -27,22 +27,25 @@
 
 #define X11_SHADER_SMOOTHNESS 5
 
-static __thread Pixmap g_bgPixmap = None;
-static __thread int g_bgW = 0, g_bgH = 0;
-static __thread unsigned long g_bgBase = 0;
-static __thread int g_bgPreset = -1;
-static __thread float g_bgIntensity = -1.0f;
-static __thread float g_bgBrightness = -1.0f;
-static __thread int g_bgShaders = -1;
-static __thread float g_bgSmoothness = -1.0f;
-static __thread int g_bgRadius = -1;
-static __thread bool g_bgRounded = false;
-static __thread Display* g_bgDpy = NULL;
+#define BG_SLOT_COUNT 4
+
+typedef struct {
+    bool used;
+    Pixmap pm;
+    Display* dpy;
+    int w, h;
+    unsigned long base;
+    int preset, shaders, radius;
+    float intensity, brightness, smoothness;
+    bool rounded;
+} BgSlot;
+
+static __thread BgSlot g_bg_slots[BG_SLOT_COUNT];
+static __thread int g_bg_slot_next = 0;
 static __thread Visual* g_dblVisual = NULL;
 static __thread Colormap g_dblColormap = None;
 static __thread int g_dblDepth = 0;
 static __thread Display* g_dblDpy = NULL;
-static __thread int g_bgDepth = 0;
 
 void x11_set_dbl_visual(Display* dpy, Visual* vis, Colormap cmap, int depth) {
     PROFILE_START(timer);
@@ -822,21 +825,15 @@ static unsigned int CornerAlpha(int x, int y, int w, int h, int R, unsigned int 
 
 void x11_free_cached_background(void) {
     PROFILE_START(timer);
-    if (g_bgPixmap != None && g_bgDpy) {
-        XFreePixmap(g_bgDpy, g_bgPixmap);
-        g_bgPixmap = None;
+    for (int i = 0; i < BG_SLOT_COUNT; i++) {
+        if (g_bg_slots[i].used && g_bg_slots[i].pm != None && g_bg_slots[i].dpy) {
+            XFreePixmap(g_bg_slots[i].dpy, g_bg_slots[i].pm);
+        }
+        g_bg_slots[i].used = false;
+        g_bg_slots[i].pm = None;
+        g_bg_slots[i].dpy = NULL;
     }
-    g_bgW = g_bgH = 0;
-    g_bgBase = 0;
-    g_bgPreset = -1;
-    g_bgIntensity = -1.0f;
-    g_bgBrightness = -1.0f;
-    g_bgShaders = -1;
-    g_bgSmoothness = -1.0f;
-    g_bgRadius = -1;
-    g_bgRounded = false;
-    g_bgDpy = NULL;
-    g_bgDepth = 0;
+    g_bg_slot_next = 0;
     PROFILE_END_VAR(timer, "helpers_x11:x11_free_cached_background");
 }
 
@@ -949,6 +946,41 @@ static void x11_generate_background_pixels(uint32_t* img_data, int bytes_per_lin
     #undef _APPLY_DITHER
 }
 
+typedef struct {
+    unsigned long base;
+    int preset, shaders, radius;
+    float intensity, brightness, smoothness;
+    bool rounded;
+    int w, h;
+} BgKey;
+
+static bool bg_slot_matches(const BgSlot* slot, const BgKey* k) {
+    return slot->used && slot->dpy != NULL && slot->base == k->base
+        && slot->preset == k->preset && slot->shaders == k->shaders && slot->radius == k->radius
+        && slot->rounded == k->rounded && slot->intensity == k->intensity
+        && slot->brightness == k->brightness && slot->smoothness == k->smoothness
+        && slot->w == k->w && slot->h == k->h;
+}
+
+static Pixmap bg_cache_find(Display* dpy, const BgKey* k) {
+    for (int i = 0; i < BG_SLOT_COUNT; i++) {
+        if (g_bg_slots[i].dpy == dpy && bg_slot_matches(&g_bg_slots[i], k)) return g_bg_slots[i].pm;
+    }
+    return None;
+}
+
+static void bg_cache_store(Display* dpy, Pixmap pm, const BgKey* k) {
+    BgSlot* slot = &g_bg_slots[g_bg_slot_next];
+    g_bg_slot_next = (g_bg_slot_next + 1) % BG_SLOT_COUNT;
+    if (slot->used && slot->pm != None) XFreePixmap(slot->dpy, slot->pm);
+    slot->used = true;
+    slot->pm = pm;
+    slot->dpy = dpy;
+    slot->w = k->w; slot->h = k->h; slot->base = k->base; slot->preset = k->preset;
+    slot->shaders = k->shaders; slot->radius = k->radius; slot->rounded = k->rounded;
+    slot->intensity = k->intensity; slot->brightness = k->brightness; slot->smoothness = k->smoothness;
+}
+
 static Pixmap x11_create_background_pixmap(Display* dpy, Window win, int w, int h, XWindowAttributes* attrs, unsigned long base, unsigned int baseAlpha8) {
     Visual* vis = attrs->visual;
     int depth = attrs->depth;
@@ -987,24 +1019,17 @@ Pixmap x11_get_cached_background(Display* dpy, Window win, int w, int h) {
     int radius = CornerRadius;
     bool rounded = RoundedCorners;
     if ((!EnableShaders || ShaderPreset == 0) && !(rounded && radius > 0)) {
-        if (g_bgPixmap != None) {
-            XFreePixmap(g_bgDpy, g_bgPixmap);
-            g_bgPixmap = None;
-            g_bgW = g_bgH = 0;
-        }
         PROFILE_END_VAR(timer, "helpers_x11:x11_get_cached_background");
         return None;
     }
-    if (g_bgPixmap != None && g_bgDpy == dpy && g_bgW == w && g_bgH == h && g_bgBase == base && g_bgPreset == preset && g_bgIntensity == intensity && g_bgBrightness == brightness && g_bgShaders == shaders && g_bgSmoothness == smoothness && g_bgRadius == radius && g_bgRounded == rounded) {
-        log_info("bg cache HIT intensity=%.3f brightness=%.3f preset=%d shaders=%d", (double)intensity, (double)brightness, preset, shaders);
+    BgKey k;
+    k.base = base; k.preset = preset; k.shaders = shaders; k.radius = radius;
+    k.rounded = rounded; k.intensity = intensity; k.brightness = brightness;
+    k.smoothness = smoothness; k.w = w; k.h = h;
+    Pixmap hit = bg_cache_find(dpy, &k);
+    if (hit) {
         PROFILE_END_VAR(timer, "helpers_x11:x11_get_cached_background");
-        return g_bgPixmap;
-    }
-    log_info("bg cache MISS intensity=%.3f brightness=%.3f preset=%d shaders=%d (cached brightness=%.3f)", (double)intensity, (double)brightness, preset, shaders, (double)g_bgBrightness);
-    if (g_bgPixmap != None) {
-        XFreePixmap(g_bgDpy, g_bgPixmap);
-        g_bgPixmap = None;
-        g_bgW = g_bgH = 0;
+        return hit;
     }
     XWindowAttributes attrs;
     if (!XGetWindowAttributes(dpy, win, &attrs)) { PROFILE_END_VAR(timer, "helpers_x11:x11_get_cached_background"); return None; }
@@ -1012,10 +1037,9 @@ Pixmap x11_get_cached_background(Display* dpy, Window win, int w, int h) {
     if (baseAlpha8 > 255) baseAlpha8 = 255;
     Pixmap pm = x11_create_background_pixmap(dpy, win, w, h, &attrs, base, baseAlpha8);
     if (!pm) { PROFILE_END_VAR(timer, "helpers_x11:x11_get_cached_background"); return None; }
-    g_bgPixmap = pm;
-    g_bgW = w; g_bgH = h; g_bgBase = base; g_bgPreset = preset; g_bgIntensity = intensity; g_bgBrightness = brightness; g_bgShaders = shaders; g_bgSmoothness = smoothness; g_bgRadius = radius; g_bgRounded = rounded; g_bgDpy = dpy; g_bgDepth = attrs.depth;
+    bg_cache_store(dpy, pm, &k);
     PROFILE_END_VAR(timer, "helpers_x11:x11_get_cached_background");
-    return g_bgPixmap;
+    return pm;
 }
 
 void x11_draw_background_to_drawable(Display* dpy, Drawable drw, int w, int h) {
@@ -1029,10 +1053,11 @@ void x11_draw_background_to_drawable(Display* dpy, Drawable drw, int w, int h) {
     float smoothness = 1;
     int radius = CornerRadius;
     bool rounded = RoundedCorners;
-    Pixmap cached = None;
-    if (g_bgPixmap != None && g_bgDpy == dpy && g_bgW == w && g_bgH == h && g_bgBase == base && g_bgPreset == preset && g_bgIntensity == intensity && g_bgBrightness == brightness && g_bgShaders == shaders && g_bgSmoothness == smoothness && g_bgRadius == radius && g_bgRounded == rounded) {
-        cached = g_bgPixmap;
-    }
+    BgKey k;
+    k.base = base; k.preset = preset; k.shaders = shaders; k.radius = radius;
+    k.rounded = rounded; k.intensity = intensity; k.brightness = brightness;
+    k.smoothness = smoothness; k.w = w; k.h = h;
+    Pixmap cached = bg_cache_find(dpy, &k);
     if (cached != None) {
         GC gc = XCreateGC(dpy, drw, 0, NULL);
         XCopyArea(dpy, cached, drw, gc, 0, 0, w, h, 0, 0);
