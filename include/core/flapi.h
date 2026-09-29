@@ -397,6 +397,7 @@ struct FlWidget {
     FlWidgetRenderFn render;
     unsigned long frame;
     FlTimer created_at;
+    char *owner;
 };
 
 FlWidget *fl_widget_create(const FlWidgetSpec *spec);
