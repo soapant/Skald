@@ -284,6 +284,7 @@ bool todo_ctrlenter_callback(const char* selection, ListBoxInfo* lb) {
         AddTodoToFile(selection);
         fl_set_edit_text("");
     }
+    todo_refresh_callback("", lb);
     return false;
 }
 
