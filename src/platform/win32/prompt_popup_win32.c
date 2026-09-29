@@ -140,8 +140,6 @@ void Platform_PromptPopupHideWindow(Popup* self) {
 
 void Platform_PromptPopupRender(Popup* self) {
     (void)self;
-    PROFILE_START(timer);
-    PROFILE_END_VAR(timer, "window_manager:Platform_PromptPopupRender");
 }
 
 void Platform_PromptPopupDestroyWindow(Popup* self) {
