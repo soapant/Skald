@@ -1,5 +1,6 @@
 #include <pthread.h>
 #include <unistd.h>
+#include <time.h>
 #include <string.h>
 #include <X11/Xlib.h>
 #include "platform/render_thread.h"
@@ -7,6 +8,7 @@
 
 #define RT_MAX_CALLBACKS 16
 #define RT_IDLE_SLEEP_US 20000
+#define RT_DEFAULT_FPS 1
 
 typedef struct {
     Platform_RenderFrameFn fn;
@@ -19,8 +21,15 @@ static RtCallback g_rt_callbacks[RT_MAX_CALLBACKS];
 static int g_rt_count = 0;
 static volatile bool g_rt_running = false;
 static volatile bool g_rt_quit = false;
-static int g_rt_fps = 60;
+static int g_rt_fps = RT_DEFAULT_FPS;
 static Display *g_rt_dpy = NULL;
+
+static void rt_sleep_us(long us) {
+    struct timespec ts;
+    ts.tv_sec = (time_t)(us / 1000000L);
+    ts.tv_nsec = (long)(us % 1000000L) * 1000L;
+    nanosleep(&ts, NULL);
+}
 
 void *Platform_RenderThread_Display(void) {
     return (void *)g_rt_dpy;
@@ -50,10 +59,10 @@ static void *rt_thread_func(void *arg) {
             if (snap[i].fn) snap[i].fn(snap[i].ud);
         }
         if (n == 0) {
-            usleep(RT_IDLE_SLEEP_US);
+            rt_sleep_us(RT_IDLE_SLEEP_US);
         } else {
-            int fps = g_rt_fps > 0 ? g_rt_fps : 60;
-            usleep((useconds_t)(1000000 / fps));
+            int fps = g_rt_fps > 0 ? g_rt_fps : RT_DEFAULT_FPS;
+            rt_sleep_us(1000000L / fps);
         }
     }
     return NULL;
