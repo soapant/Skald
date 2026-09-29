@@ -3,6 +3,7 @@
 #include "deps/log.h"
 
 #define RT_MAX_CALLBACKS 16
+#define RT_MAX_PENDING 16
 #define RT_IDLE_SLEEP_MS 20
 #define RT_DEFAULT_FPS 1
 
@@ -13,11 +14,44 @@ typedef struct {
 
 static HANDLE g_rt_thread = NULL;
 static CRITICAL_SECTION g_rt_lock;
+static CONDITION_VARIABLE g_rt_cond;
 static BOOL g_rt_lock_ready = FALSE;
 static RtCallback g_rt_callbacks[RT_MAX_CALLBACKS];
+static RtCallback g_rt_pending[RT_MAX_PENDING];
 static int g_rt_count = 0;
+static int g_rt_pending_count = 0;
 static volatile LONG g_rt_quit = 0;
 static int g_rt_fps = RT_DEFAULT_FPS;
+
+static void rt_run_pending(void) {
+    RtCallback pend[RT_MAX_PENDING];
+    int pn = 0;
+    EnterCriticalSection(&g_rt_lock);
+    pn = g_rt_pending_count;
+    if (pn > 0) {
+        CopyMemory(pend, g_rt_pending, sizeof(RtCallback) * (SIZE_T)pn);
+        g_rt_pending_count = 0;
+    }
+    LeaveCriticalSection(&g_rt_lock);
+    for (int i = 0; i < pn; i++) {
+        if (pend[i].fn) pend[i].fn(pend[i].ud);
+    }
+}
+
+bool Platform_RenderThread_Post(Platform_RenderFrameFn fn, void *ud) {
+    if (!fn || !g_rt_thread) return false;
+    EnterCriticalSection(&g_rt_lock);
+    if (g_rt_pending_count >= RT_MAX_PENDING) {
+        LeaveCriticalSection(&g_rt_lock);
+        return false;
+    }
+    g_rt_pending[g_rt_pending_count].fn = fn;
+    g_rt_pending[g_rt_pending_count].ud = ud;
+    g_rt_pending_count++;
+    WakeConditionVariable(&g_rt_cond);
+    LeaveCriticalSection(&g_rt_lock);
+    return true;
+}
 
 void *Platform_RenderThread_Display(void) {
     return NULL;
@@ -40,21 +74,22 @@ static DWORD WINAPI rt_thread_func(LPVOID arg) {
     while (!g_rt_quit) {
         RtCallback snap[RT_MAX_CALLBACKS];
         int n = 0;
-        if (g_rt_lock_ready) {
-            EnterCriticalSection(&g_rt_lock);
-            n = g_rt_count;
-            if (n > 0) CopyMemory(snap, g_rt_callbacks, sizeof(RtCallback) * (SIZE_T)n);
-            LeaveCriticalSection(&g_rt_lock);
-        }
+        EnterCriticalSection(&g_rt_lock);
+        n = g_rt_count;
+        if (n > 0) CopyMemory(snap, g_rt_callbacks, sizeof(RtCallback) * (SIZE_T)n);
+        LeaveCriticalSection(&g_rt_lock);
         for (int i = 0; i < n; i++) {
             if (snap[i].fn) snap[i].fn(snap[i].ud);
         }
-        if (n == 0) {
-            Sleep(RT_IDLE_SLEEP_MS);
-        } else {
-            int fps = g_rt_fps > 0 ? g_rt_fps : RT_DEFAULT_FPS;
-            Sleep((DWORD)(1000 / fps));
+        rt_run_pending();
+
+        DWORD wait_ms = (n == 0) ? (DWORD)RT_IDLE_SLEEP_MS
+                                 : (DWORD)(1000 / (g_rt_fps > 0 ? g_rt_fps : RT_DEFAULT_FPS));
+        EnterCriticalSection(&g_rt_lock);
+        if (!g_rt_quit && g_rt_pending_count == 0) {
+            SleepConditionVariableCS(&g_rt_cond, &g_rt_lock, wait_ms);
         }
+        LeaveCriticalSection(&g_rt_lock);
     }
     return 0;
 }
@@ -64,6 +99,7 @@ bool Platform_RenderThread_EnsureStarted(int fps) {
     if (g_rt_thread) return true;
     if (!g_rt_lock_ready) {
         InitializeCriticalSection(&g_rt_lock);
+        InitializeConditionVariable(&g_rt_cond);
         g_rt_lock_ready = TRUE;
     }
     g_rt_quit = 0;
@@ -79,12 +115,14 @@ bool Platform_RenderThread_EnsureStarted(int fps) {
 void Platform_RenderThread_Stop(void) {
     if (!g_rt_thread) return;
     InterlockedExchange(&g_rt_quit, 1);
+    WakeConditionVariable(&g_rt_cond);
     WaitForSingleObject(g_rt_thread, INFINITE);
     CloseHandle(g_rt_thread);
     g_rt_thread = NULL;
     if (g_rt_lock_ready) {
         EnterCriticalSection(&g_rt_lock);
         g_rt_count = 0;
+        g_rt_pending_count = 0;
         LeaveCriticalSection(&g_rt_lock);
     }
     log_info("render thread stopped");
