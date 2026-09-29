@@ -1597,6 +1597,33 @@ static FlWidget *fl_widget_find_by_name(const char *name) {
 
 static void fl_widget_relayout(void);
 
+static void fl_widget_apply_measured_size(void *ud) {
+    FlWidget *widget = (FlWidget *)ud;
+    if (!widget || widget->dead) return;
+    if (!Platform_Widget_IsValid(widget->win)) return;
+    Platform_Widget_Resize(widget->win, widget->w, widget->h);
+    fl_widget_relayout();
+}
+
+static void fl_widget_resize_to_content(FlWidget *widget) {
+    Platform_BeginMeasure();
+    FlWidgetState st;
+    st.width = widget->w;
+    st.height = widget->h;
+    st.frame = widget->frame;
+    st.elapsed = 0.0;
+    widget->render(&st);
+    int mw = 0, mh = 0;
+    Platform_EndMeasure(&mw, &mh);
+
+    int nw = (widget->auto_w && mw > 0) ? mw + widget->pad : widget->w;
+    int nh = (widget->auto_h && mh > 0) ? mh + widget->pad : widget->h;
+    if (nw == widget->w && nh == widget->h) return;
+    widget->w = nw;
+    widget->h = nh;
+    Platform_RenderThread_Post(fl_widget_apply_measured_size, widget);
+}
+
 static void fl_widget_render_frame(void *ud);
 
 static void fl_widget_measure_and_fit(void *ud) {
@@ -1695,6 +1722,7 @@ static void fl_widget_render_frame(void *ud) {
     st.elapsed = fl_end_timer_platform(widget->created_at);
     widget->frame++;
     widget->render(&st);
+    if (widget->auto_w || widget->auto_h) fl_widget_resize_to_content(widget);
 }
 
 static void fl_widget_attach_window(void *ud) {
