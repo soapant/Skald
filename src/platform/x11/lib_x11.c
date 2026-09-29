@@ -1,6 +1,20 @@
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
 #include "platform/lib.h"
 #include <stddef.h>
+#include <stdio.h>
 #include <dlfcn.h>
+
+bool Platform_GetModuleOwnerPath(void *addr, char *out, size_t n) {
+    if (!out || n == 0) return false;
+    out[0] = '\0';
+    if (!addr) return false;
+    Dl_info info;
+    if (!dladdr(addr, &info) || !info.dli_fname) return false;
+    snprintf(out, n, "%s", info.dli_fname);
+    return out[0] != '\0';
+}
 
 LibHandle Platform_LoadLibrary(const char* path) {
     if (!path) return NULL;

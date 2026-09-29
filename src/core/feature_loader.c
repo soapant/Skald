@@ -10,6 +10,7 @@
 #include "core/timer.h"
 #include "config.h"
 #include "core/window_manager.h"
+#include "core/widget_registry.h"
 #ifdef _WIN32
 #include <windows.h>
 #endif
@@ -51,13 +52,14 @@ static int g_feature_count = 0;
 typedef struct {
     LibHandle handle;
     char uniq[512];
+    char owner[512];
     Popup* pins[MAX_PINS];
     int npins;
 } RetiredLib;
 static RetiredLib g_retired[MAX_RETIRED];
 static int g_retired_count = 0;
 
-static void retire_old_lib(LibHandle handle, const char* uniq) {
+static void retire_old_lib(LibHandle handle, const char* uniq, const char* owner) {
     if (!handle) return;
     WindowManager* wm = WindowManager_Get();
     RetiredLib r;
@@ -66,6 +68,11 @@ static void retire_old_lib(LibHandle handle, const char* uniq) {
     if (uniq && uniq[0]) {
         strncpy(r.uniq, uniq, sizeof(r.uniq) - 1);
         r.uniq[sizeof(r.uniq) - 1] = '\0';
+    }
+    r.owner[0] = '\0';
+    if (owner && owner[0]) {
+        strncpy(r.owner, owner, sizeof(r.owner) - 1);
+        r.owner[sizeof(r.owner) - 1] = '\0';
     }
     r.npins = 0;
     if (wm && wm->popup_count > MAX_PINS) {
@@ -88,7 +95,9 @@ static void sweep_retired_libs(void) {
     int n = 0;
     for (int i = 0; i < g_retired_count; i++) {
         bool alive = false;
-        if (wm && g_retired[i].npins >= 0) {
+        if (g_retired[i].owner[0] && fl_widget_owner_active(g_retired[i].owner)) {
+            alive = true;
+        } else if (wm && g_retired[i].npins >= 0) {
             for (int a = 0; a < g_retired[i].npins && !alive; a++) {
                 for (int b = 0; b < wm->popup_count; b++) {
                     if (wm->popups[b] == g_retired[i].pins[a]) { alive = true; break; }
@@ -201,6 +210,7 @@ void FeatureLoader_Shutdown(void) {
             typedef void (*ShutdownFn)(void);
             ShutdownFn shut = (ShutdownFn)Platform_GetSymbol(g_features[i].handle, "FlintFeatureShutdown");
             if (shut) shut();
+            fl_widget_purge_owner(NULL, g_features[i].path);
             Platform_UnloadLibrary(g_features[i].handle);
             if (g_features[i].uniq[0]) remove(g_features[i].uniq);
         }
@@ -249,7 +259,15 @@ void FeatureLoader_Reload(const char* name) {
             typedef void (*ShutdownFn)(void);
             ShutdownFn shut = (ShutdownFn)Platform_GetSymbol(old, "FlintFeatureShutdown");
             if (shut) shut();
-            retire_old_lib(old, g_features[i].uniq);
+            char retire_owner[512];
+            retire_owner[0] = '\0';
+            if (g_features[i].uniq[0]) {
+                strncpy(retire_owner, g_features[i].uniq, sizeof(retire_owner)-1);
+            } else {
+                strncpy(retire_owner, g_features[i].path, sizeof(retire_owner)-1);
+            }
+            retire_owner[sizeof(retire_owner)-1] = '\0';
+            retire_old_lib(old, g_features[i].uniq, retire_owner);
 #ifdef _WIN32
             FL_UNLOCK();
             Sleep(100);
@@ -273,6 +291,8 @@ void FeatureLoader_Reload(const char* name) {
             g_features[i].path[sizeof(g_features[i].path)-1] = '\0';
             strncpy(g_features[i].uniq, uniquepath, sizeof(g_features[i].uniq)-1);
             g_features[i].uniq[sizeof(g_features[i].uniq)-1] = '\0';
+            fl_widget_purge_owner(retire_owner, path_copy);
+            sweep_retired_libs();
             log_info("reloaded %s", name);
             FL_UNLOCK();
             return;
@@ -295,7 +315,18 @@ void FeatureLoader_Unload(const char* name) {
             typedef void (*ShutdownFn)(void);
             ShutdownFn shut = (ShutdownFn)Platform_GetSymbol(g_features[i].handle, "FlintFeatureShutdown");
             if (shut) shut();
-            retire_old_lib(g_features[i].handle, g_features[i].uniq);
+            {
+                char loaded[512];
+                loaded[0] = '\0';
+                if (g_features[i].uniq[0]) {
+                    strncpy(loaded, g_features[i].uniq, sizeof(loaded)-1);
+                } else {
+                    strncpy(loaded, g_features[i].path, sizeof(loaded)-1);
+                }
+                loaded[sizeof(loaded)-1] = '\0';
+                fl_widget_purge_owner(loaded, g_features[i].path);
+                retire_old_lib(g_features[i].handle, g_features[i].uniq, loaded);
+            }
             sweep_retired_libs();
             for (int k=i;k+1<g_feature_count;k++) g_features[k]=g_features[k+1];
             g_feature_count--;
@@ -317,7 +348,17 @@ void FeatureLoader_ReloadAll(void) {
             typedef void (*ShutdownFn)(void);
             ShutdownFn shut = (ShutdownFn)Platform_GetSymbol(g_features[i].handle, "FlintFeatureShutdown");
             if (shut) shut();
-            retire_old_lib(g_features[i].handle, g_features[i].uniq);
+            {
+                char loaded[512];
+                loaded[0] = '\0';
+                if (g_features[i].uniq[0]) {
+                    strncpy(loaded, g_features[i].uniq, sizeof(loaded)-1);
+                } else {
+                    strncpy(loaded, g_features[i].path, sizeof(loaded)-1);
+                }
+                loaded[sizeof(loaded)-1] = '\0';
+                retire_old_lib(g_features[i].handle, g_features[i].uniq, loaded);
+            }
             g_features[i].handle = 0;
             g_features[i].uniq[0] = '\0';
         }
@@ -327,6 +368,9 @@ void FeatureLoader_ReloadAll(void) {
     FL_UNLOCK();
     FeatureLoader_Init();
     FL_LOCK();
+    for (int i = 0; i < g_retired_count; i++) {
+        if (g_retired[i].owner[0]) fl_widget_purge_owner(g_retired[i].owner, NULL);
+    }
     sweep_retired_libs();
     FL_UNLOCK();
 

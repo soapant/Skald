@@ -27,3 +27,21 @@ const char* Platform_GetLoadError(void) {
   }
   return buf;
 }
+
+bool Platform_GetModuleOwnerPath(void *addr, char *out, size_t n) {
+    if (!out || n == 0) return false;
+    out[0] = '\0';
+    if (!addr) return false;
+    HMODULE mod = NULL;
+    if (!GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                            (LPCSTR)addr, &mod)) {
+        return false;
+    }
+    DWORD got = GetModuleFileNameA(mod, out, (DWORD)n);
+    if (got == 0) {
+        out[0] = '\0';
+        return false;
+    }
+    out[n - 1] = '\0';
+    return out[0] != '\0';
+}
