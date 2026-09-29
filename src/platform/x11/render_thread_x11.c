@@ -25,6 +25,9 @@ static int g_rt_count = 0;
 static int g_rt_pending_count = 0;
 static volatile bool g_rt_running = false;
 static volatile bool g_rt_quit = false;
+static pthread_mutex_t g_rt_sync_lock = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t g_rt_sync_cond = PTHREAD_COND_INITIALIZER;
+static unsigned long g_rt_sync_seq = 0;
 static int g_rt_fps = RT_DEFAULT_FPS;
 static Display *g_rt_dpy = NULL;
 
@@ -103,6 +106,30 @@ static void *rt_thread_func(void *arg) {
         pthread_mutex_unlock(&g_rt_lock);
     }
     return NULL;
+}
+
+static void rt_sync_mark(void *ud) {
+    (void)ud;
+    pthread_mutex_lock(&g_rt_sync_lock);
+    g_rt_sync_seq++;
+    pthread_cond_broadcast(&g_rt_sync_cond);
+    pthread_mutex_unlock(&g_rt_sync_lock);
+}
+
+void Platform_RenderThread_Sync(void) {
+    if (!g_rt_running) return;
+    pthread_mutex_lock(&g_rt_sync_lock);
+    unsigned long start = g_rt_sync_seq;
+    pthread_mutex_unlock(&g_rt_sync_lock);
+    if (!Platform_RenderThread_Post(rt_sync_mark, NULL)) return;
+    struct timespec deadline;
+    clock_gettime(CLOCK_REALTIME, &deadline);
+    deadline.tv_sec += 2;
+    pthread_mutex_lock(&g_rt_sync_lock);
+    while (g_rt_sync_seq == start) {
+        if (pthread_cond_timedwait(&g_rt_sync_cond, &g_rt_sync_lock, &deadline) != 0) break;
+    }
+    pthread_mutex_unlock(&g_rt_sync_lock);
 }
 
 bool Platform_RenderThread_EnsureStarted(int fps) {

@@ -22,6 +22,31 @@ static int g_rt_count = 0;
 static int g_rt_pending_count = 0;
 static volatile LONG g_rt_quit = 0;
 static int g_rt_fps = RT_DEFAULT_FPS;
+static CRITICAL_SECTION g_rt_sync_lock;
+static CONDITION_VARIABLE g_rt_sync_cond;
+static BOOL g_rt_sync_lock_ready = FALSE;
+static unsigned long g_rt_sync_seq = 0;
+
+static void rt_sync_mark(void *ud) {
+    (void)ud;
+    EnterCriticalSection(&g_rt_sync_lock);
+    g_rt_sync_seq++;
+    WakeConditionVariable(&g_rt_sync_cond);
+    LeaveCriticalSection(&g_rt_sync_lock);
+}
+
+void Platform_RenderThread_Sync(void) {
+    if (!g_rt_thread || !g_rt_sync_lock_ready) return;
+    EnterCriticalSection(&g_rt_sync_lock);
+    unsigned long start = g_rt_sync_seq;
+    LeaveCriticalSection(&g_rt_sync_lock);
+    if (!Platform_RenderThread_Post(rt_sync_mark, NULL)) return;
+    EnterCriticalSection(&g_rt_sync_lock);
+    while (g_rt_sync_seq == start) {
+        if (!SleepConditionVariableCS(&g_rt_sync_cond, &g_rt_sync_lock, 2000)) break;
+    }
+    LeaveCriticalSection(&g_rt_sync_lock);
+}
 
 static void rt_run_pending(void) {
     RtCallback pend[RT_MAX_PENDING];
@@ -101,6 +126,11 @@ bool Platform_RenderThread_EnsureStarted(int fps) {
         InitializeCriticalSection(&g_rt_lock);
         InitializeConditionVariable(&g_rt_cond);
         g_rt_lock_ready = TRUE;
+    }
+    if (!g_rt_sync_lock_ready) {
+        InitializeCriticalSection(&g_rt_sync_lock);
+        InitializeConditionVariable(&g_rt_sync_cond);
+        g_rt_sync_lock_ready = TRUE;
     }
     g_rt_quit = 0;
     g_rt_thread = CreateThread(NULL, 0, rt_thread_func, NULL, 0, NULL);
