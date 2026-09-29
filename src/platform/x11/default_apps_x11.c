@@ -4,6 +4,8 @@
 #include <string.h>
 #include <pwd.h>
 #include <unistd.h>
+#include <sys/stat.h>
+#include <ctype.h>
 
 const char* x11_get_login_shell(void) {
     struct passwd* pw = getpwuid(getuid());
@@ -25,25 +27,43 @@ const char* x11_default_apps_run(const char* command, int slot) {
     return default_apps_x11[slot];
 }
 
-const char* x11_find_terminal_in_desktop_files(const char* const* names, size_t count) {
+static const char* match_in_applications_dir(const char* dir, const char* const* names, size_t count) {
+    struct stat st;
+    if (stat(dir, &st) != 0 || !S_ISDIR(st.st_mode)) return NULL;
     ListOfFiles files = {0};
-    Platform_GetAllFilesFromDir("/usr/share/applications", NULL, &files, NULL, true);
-
+    Platform_GetAllFilesFromDir(dir, NULL, &files, NULL, true);
     const char* found = NULL;
-
-    for (size_t j = 0; j < count && !found; j++) {
-        const char* term = names[j];
-        for (int i = 0; i < files.count; i++) {
-            const char* desktop_file = files.files[i].name;
-
-            if (Platform_StringContainsCaseInsensitive(desktop_file, term)) {
-                found = term;
+    for (size_t i = 0; i < files.count && !found; i++) {
+        for (size_t j = 0; j < count; j++) {
+            if (Platform_StringContainsCaseInsensitive(files.files[i].name, names[j])) {
+                found = names[j];
                 break;
             }
         }
     }
-
+    free(files.files);
     return found;
+}
+
+const char* x11_find_terminal_in_desktop_files(const char* const* names, size_t count) {
+    char dir[1024];
+    const char* home = getenv("HOME");
+    if (home && home[0]) {
+        snprintf(dir, sizeof(dir), "%s/.local/share/applications", home);
+        const char* hit = match_in_applications_dir(dir, names, count);
+        if (hit) return hit;
+    }
+    const char* data_dirs = getenv("XDG_DATA_DIRS");
+    if (!data_dirs || !data_dirs[0]) data_dirs = "/usr/local/share:/usr/share";
+    char buf[4096];
+    snprintf(buf, sizeof(buf), "%s", data_dirs);
+    char* save = buf;
+    for (char* tok = strtok_r(buf, ":", &save); tok; tok = strtok_r(NULL, ":", &save)) {
+        snprintf(dir, sizeof(dir), "%s/applications", tok);
+        const char* hit = match_in_applications_dir(dir, names, count);
+        if (hit) return hit;
+    }
+    return match_in_applications_dir("/usr/share/applications", names, count);
 }
 
 
@@ -97,14 +117,26 @@ const char* x11_get_default_terminal_x11(void) {
         "x-terminal-emulator",
     };
     size_t n = sizeof(candidates) / sizeof(candidates[0]);
-    const char* out;
-    out = Platform_RunTerminalCommand("gsettings get org.gnome.desktop.default-applications.terminal exec",false);
-    printf("out: %s\n",out);
-    // Remove quotes from the output temporary
-    if (!out) {
-      out = x11_find_terminal_in_desktop_files(candidates, n);
+    const char* out = Platform_RunTerminalCommand("gsettings get org.gnome.desktop.default-applications.terminal exec",false);
+    char trimmed[256];
+    trimmed[0] = '\0';
+    if (out) {
+        const char* p = out;
+        while (*p == ' ' || *p == '\n' || *p == '\r' || *p == '\t') p++;
+        if (*p == '\'') p++;
+        snprintf(trimmed, sizeof(trimmed), "%s", p);
+        char* end = trimmed + strlen(trimmed);
+        while (end > trimmed && (end[-1] == '\'' || end[-1] == ' ' || end[-1] == '\n' || end[-1] == '\r')) *--end = '\0';
+        free(out);
+        if (strchr(trimmed, ' ') || strchr(trimmed, '/') || strchr(trimmed, ':')) {
+            trimmed[0] = '\0';
+        }
+        for (size_t i = 0; trimmed[0]; i++) {
+            if (!isprint((unsigned char)trimmed[i])) trimmed[0] = '\0';
+        }
     }
-    return out ? out : NULL;
+    if (trimmed[0]) return trimmed;
+    return x11_find_terminal_in_desktop_files(candidates, n);
 }
 
 
