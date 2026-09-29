@@ -179,6 +179,16 @@ void Platform_Widget_Move(PlatformWidget *widget, int x, int y) {
     SetWindowPos(widget->hwnd, HWND_TOPMOST, x, y, 0, 0, SWP_NOSIZE | SWP_NOACTIVATE);
 }
 
+void Platform_Widget_Resize(PlatformWidget *widget, int w, int h) {
+    if (!widget || widget->dead) return;
+    if (w <= 0 || h <= 0) return;
+    if (!widget->hwnd || !IsWindow(widget->hwnd)) return;
+    if (widget->w == w && widget->h == h) return;
+    widget->w = w;
+    widget->h = h;
+    SetWindowPos(widget->hwnd, HWND_TOPMOST, widget->x, widget->y, w, h, SWP_NOACTIVATE);
+}
+
 int Platform_Widget_Width(const PlatformWidget *widget) {
     return widget ? widget->w : 0;
 }

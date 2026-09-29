@@ -13,6 +13,7 @@ void Platform_Widget_SetFrameCallback(PlatformWidget *widget, Platform_RenderFra
 void Platform_Widget_Show(PlatformWidget *widget);
 void Platform_Widget_Hide(PlatformWidget *widget);
 void Platform_Widget_Move(PlatformWidget *widget, int x, int y);
+void Platform_Widget_Resize(PlatformWidget *widget, int w, int h);
 int Platform_Widget_Width(const PlatformWidget *widget);
 int Platform_Widget_Height(const PlatformWidget *widget);
 
