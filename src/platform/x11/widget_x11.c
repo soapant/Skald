@@ -25,6 +25,7 @@ struct PlatformWidget {
     int fps;
     unsigned long bg_hex;
     bool has_bg;
+    bool no_bg;
 };
 
 static void widget_frame(void *ud) {
@@ -34,14 +35,20 @@ static void widget_frame(void *ud) {
     if (!dpy || widget->win == None) return;
     if (widget->w <= 0 || widget->h <= 0) return;
 
-    Platform_SetDrawBgColor(widget->has_bg ? widget->bg_hex : 0);
-    Pixmap bg = x11_get_cached_background(dpy, widget->win, widget->w, widget->h);
-    if (bg) {
-        GC gc = XCreateGC(dpy, widget->win, 0, NULL);
-        XCopyArea(dpy, bg, widget->win, gc, 0, 0, widget->w, widget->h, 0, 0);
-        XFreeGC(dpy, gc);
+    if (widget->no_bg) {
+        GC tgc = XCreateGC(dpy, widget->win, 0, NULL);
+        XSetForeground(dpy, tgc, 0);
+        XFillRectangle(dpy, widget->win, tgc, 0, 0, widget->w, widget->h);
+        XFreeGC(dpy, tgc);
     } else {
-        x11_draw_background_to_drawable(dpy, widget->win, widget->w, widget->h);
+        Pixmap bg = x11_get_cached_background(dpy, widget->win, widget->w, widget->h);
+        if (bg) {
+            GC gc = XCreateGC(dpy, widget->win, 0, NULL);
+            XCopyArea(dpy, bg, widget->win, gc, 0, 0, widget->w, widget->h, 0, 0);
+            XFreeGC(dpy, gc);
+        } else {
+            x11_draw_background_to_drawable(dpy, widget->win, widget->w, widget->h);
+        }
     }
 
     if (!widget->xd) {
@@ -60,7 +67,7 @@ static void widget_frame(void *ud) {
     XFlush(dpy);
 }
 
-PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps) {
+PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps, bool no_bg) {
     if (w <= 0 || h <= 0) return NULL;
     if (!Platform_RenderThread_EnsureStarted(fps)) return NULL;
     Display *dpy = (Display *)Platform_RenderThread_Display();
@@ -77,8 +84,11 @@ PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps) {
     widget->w = w;
     widget->h = h;
     widget->fps = fps;
+    widget->no_bg = no_bg;
 
+    Platform_SetTransparentWindow(no_bg);
     widget->win = x11_create_display_message_window(dpy, x, y, w, h);
+    Platform_SetTransparentWindow(false);
     if (!widget->win) {
         free(widget);
         return NULL;
@@ -155,6 +165,11 @@ void Platform_Widget_Move(PlatformWidget *widget, int x, int y) {
     widget->y = y;
     XMoveWindow(widget->dpy, widget->win, x, y);
     XFlush(widget->dpy);
+}
+
+void Platform_Widget_SetNoBg(PlatformWidget *widget, bool no_bg) {
+    if (!widget || widget->dead) return;
+    widget->no_bg = no_bg;
 }
 
 void Platform_Widget_SetBgColor(PlatformWidget *widget, unsigned long hex) {
