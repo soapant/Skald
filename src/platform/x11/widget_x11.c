@@ -35,6 +35,7 @@ static void widget_frame(void *ud) {
     if (!dpy || widget->win == None) return;
     if (widget->w <= 0 || widget->h <= 0) return;
 
+    Platform_SetDrawBgColor(widget->has_bg ? widget->bg_hex : 0);
     if (widget->no_bg) {
         GC tgc = XCreateGC(dpy, widget->win, 0, NULL);
         XSetForeground(dpy, tgc, 0);
