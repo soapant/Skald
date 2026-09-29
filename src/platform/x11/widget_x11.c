@@ -150,6 +150,17 @@ void Platform_Widget_Move(PlatformWidget *widget, int x, int y) {
     XFlush(widget->dpy);
 }
 
+void Platform_Widget_Resize(PlatformWidget *widget, int w, int h) {
+    if (!widget || widget->dead) return;
+    if (w <= 0 || h <= 0) return;
+    if (!widget->dpy || widget->win == None) return;
+    if (widget->w == w && widget->h == h) return;
+    widget->w = w;
+    widget->h = h;
+    XMoveResizeWindow(widget->dpy, widget->win, widget->x, widget->y, w, h);
+    XFlush(widget->dpy);
+}
+
 int Platform_Widget_Width(const PlatformWidget *widget) {
     return widget ? widget->w : 0;
 }

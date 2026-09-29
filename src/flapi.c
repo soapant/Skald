@@ -1599,6 +1599,35 @@ static void fl_widget_relayout(void);
 
 static void fl_widget_render_frame(void *ud);
 
+static void fl_widget_relayout(void);
+
+static void fl_widget_measure_and_fit(void *ud) {
+    FlWidget *widget = (FlWidget *)ud;
+    if (!widget || widget->dead) return;
+    if (!widget->render || !Platform_Widget_IsValid(widget->win)) return;
+
+    Platform_BeginMeasure();
+    FlWidgetState st;
+    st.width = widget->w;
+    st.height = widget->h;
+    st.frame = 0;
+    st.elapsed = 0.0;
+    widget->render(&st);
+    int mw = 0, mh = 0;
+    Platform_EndMeasure(&mw, &mh);
+
+    int nw = widget->w;
+    int nh = widget->h;
+    if (widget->auto_w && mw > 0) nw = mw + widget->pad;
+    if (widget->auto_h && mh > 0) nh = mh + widget->pad;
+    if (nw == widget->w && nh == widget->h) return;
+    widget->w = nw;
+    widget->h = nh;
+    Platform_Widget_Resize(widget->win, nw, nh);
+    fl_widget_relayout();
+    log_info("fl_widget '%s' auto-sized to %dx%d (content %dx%d)", widget->name, nw, nh, mw, mh);
+}
+
 static void fl_widget_owner_path(void *addr, char *out, size_t n) {
     Platform_GetModuleOwnerPath(addr, out, n);
 }
@@ -1618,7 +1647,6 @@ static void fl_widget_destroy_window(void *ud) {
     }
     widget->win = NULL;
 }
-
 void fl_widget_purge_owner(const char *path_a, const char *path_b) {
     if ((!path_a || !path_a[0]) && (!path_b || !path_b[0])) return;
 
@@ -1626,6 +1654,7 @@ void fl_widget_purge_owner(const char *path_a, const char *path_b) {
         FlWidget *w = g_fl_widgets[i];
         if (!w) continue;
         if (!fl_widget_owner_matches(w, path_a, path_b)) continue;
+        w->dead = true;
         Platform_RenderThread_RemoveFrameCallback(fl_widget_render_frame, w);
         Platform_RenderThread_Post(fl_widget_destroy_window, w);
         log_info("fl_widget '%s' purged (owner unloaded)", w->name);
@@ -1725,11 +1754,6 @@ FlWidget *fl_widget_create(const FlWidgetSpec *spec) {
         log_warn("fl_widget_create: name is required");
         return NULL;
     }
-    if (spec->w <= 0 || spec->h <= 0) {
-        log_warn("fl_widget_create '%s': invalid size %dx%d", spec->name, spec->w, spec->h);
-        return NULL;
-    }
-
     FlWidget *widget = fl_widget_find_by_name(spec->name);
     bool fresh = (widget == NULL);
     if (fresh) {
@@ -1749,8 +1773,11 @@ FlWidget *fl_widget_create(const FlWidgetSpec *spec) {
         g_fl_widgets[g_fl_widget_count++] = widget;
     }
 
-    widget->w = spec->w;
-    widget->h = spec->h;
+    widget->auto_w = spec->w <= 0;
+    widget->auto_h = spec->h <= 0;
+    widget->pad = spec->pad > 0 ? spec->pad : FL_WIDGET_DEFAULT_PAD;
+    widget->w = widget->auto_w ? FL_WIDGET_PROVISIONAL_W : spec->w;
+    widget->h = widget->auto_h ? FL_WIDGET_PROVISIONAL_H : spec->h;
     widget->gap = spec->gap > 0 ? spec->gap : FL_WIDGET_DEFAULT_GAP;
     widget->fps = spec->fps ? spec->fps : 1;
     widget->slot = (spec->slot >= FL_WIDGET_SLOT_TOP_LEFT && spec->slot <= FL_WIDGET_SLOT_BOTTOM_RIGHT) ? spec->slot : FL_WIDGET_SLOT_BOTTOM_LEFT;
@@ -1780,6 +1807,9 @@ FlWidget *fl_widget_create(const FlWidgetSpec *spec) {
     if (!Platform_Widget_IsValid(widget->win)) {
         log_warn("fl_widget_create '%s': window creation failed", spec->name);
         return NULL;
+    }
+    if (widget->auto_w || widget->auto_h) {
+        Platform_RenderThread_Post(fl_widget_measure_and_fit, widget);
     }
     log_info("fl_widget '%s' %s slot=%d order=%d(%d) fps=%d at %d,%d %dx%d",
              spec->name, fresh ? "created" : "took over", widget->slot,
