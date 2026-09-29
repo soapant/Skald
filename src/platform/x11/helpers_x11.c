@@ -1040,6 +1040,11 @@ void x11_draw_background_to_drawable(Display* dpy, Drawable drw, int w, int h) {
     int screen = DefaultScreen(dpy);
     Visual* vis = DefaultVisual(dpy, screen);
     int depth = DefaultDepth(dpy, screen);
+    Colormap cmap = DefaultColormap(dpy, screen);
+    if (!x11_get_drawable_visual(dpy, drw, &vis, &cmap, &depth)) {
+        vis = DefaultVisual(dpy, screen);
+        depth = DefaultDepth(dpy, screen);
+    }
     bool hasAlpha = (depth == 32);
     bool rded = rounded && radius > 0 && hasAlpha;
     int R = rded ? radius : 0;

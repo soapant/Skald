@@ -1752,7 +1752,7 @@ FlWidget *fl_widget_create(const FlWidgetSpec *spec) {
     widget->w = spec->w;
     widget->h = spec->h;
     widget->gap = spec->gap > 0 ? spec->gap : FL_WIDGET_DEFAULT_GAP;
-    widget->fps = spec->fps;
+    widget->fps = spec->fps ? spec->fps : 1;
     widget->slot = (spec->slot >= FL_WIDGET_SLOT_TOP_LEFT && spec->slot <= FL_WIDGET_SLOT_BOTTOM_RIGHT) ? spec->slot : FL_WIDGET_SLOT_BOTTOM_LEFT;
     widget->order = spec->order;
     widget->order_set = spec->order > 0;
