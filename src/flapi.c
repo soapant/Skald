@@ -25,6 +25,8 @@
 #include "core/snippet_manager.h"
 #include "platform/widget.h"
 #include "platform/render_thread.h"
+#include "platform/lib.h"
+#include "core/widget_registry.h"
 #include "deps/stb_ds.h"
 
 size_t fl_clipboard_history_count(void) {
@@ -1593,6 +1595,68 @@ static FlWidget *fl_widget_find_by_name(const char *name) {
     return NULL;
 }
 
+static void fl_widget_relayout(void);
+
+static void fl_widget_render_frame(void *ud);
+
+static void fl_widget_owner_path(void *addr, char *out, size_t n) {
+    Platform_GetModuleOwnerPath(addr, out, n);
+}
+
+static bool fl_widget_owner_matches(const FlWidget *widget, const char *a, const char *b) {
+    if (!widget->owner) return false;
+    if (a && a[0] && strcmp(widget->owner, a) == 0) return true;
+    if (b && b[0] && strcmp(widget->owner, b) == 0) return true;
+    return false;
+}
+
+static void fl_widget_destroy_window(void *ud) {
+    FlWidget *widget = (FlWidget *)ud;
+    if (!widget) return;
+    if (Platform_Widget_IsValid(widget->win)) {
+        Platform_Widget_Destroy(widget->win);
+    }
+    widget->win = NULL;
+}
+
+void fl_widget_purge_owner(const char *path_a, const char *path_b) {
+    if ((!path_a || !path_a[0]) && (!path_b || !path_b[0])) return;
+
+    for (int i = 0; i < g_fl_widget_count; i++) {
+        FlWidget *w = g_fl_widgets[i];
+        if (!w) continue;
+        if (!fl_widget_owner_matches(w, path_a, path_b)) continue;
+        Platform_RenderThread_RemoveFrameCallback(fl_widget_render_frame, w);
+        Platform_RenderThread_Post(fl_widget_destroy_window, w);
+        log_info("fl_widget '%s' purged (owner unloaded)", w->name);
+    }
+
+    Platform_RenderThread_Sync();
+
+    int n = 0;
+    for (int i = 0; i < g_fl_widget_count; i++) {
+        FlWidget *w = g_fl_widgets[i];
+        if (!w) continue;
+        if (fl_widget_owner_matches(w, path_a, path_b)) {
+            if (w->owner) free(w->owner);
+            free(w);
+            continue;
+        }
+        g_fl_widgets[n++] = w;
+    }
+    g_fl_widget_count = n;
+    if (g_fl_widget_count > 0) fl_widget_relayout();
+}
+
+bool fl_widget_owner_active(const char *path) {
+    if (!path || !path[0]) return false;
+    for (int i = 0; i < g_fl_widget_count; i++) {
+        FlWidget *w = g_fl_widgets[i];
+        if (w && fl_widget_owner_matches(w, path, NULL)) return true;
+    }
+    return false;
+}
+
 static void fl_widget_render_frame(void *ud) {
     FlWidget *widget = (FlWidget *)ud;
     if (!widget || !widget->render) return;
@@ -1677,6 +1741,11 @@ FlWidget *fl_widget_create(const FlWidgetSpec *spec) {
         if (!widget) return NULL;
         snprintf(widget->name, FL_WIDGET_NAME_MAX, "%s", spec->name);
         widget->seq = g_fl_widget_seq++;
+        {
+            char owner_path[512];
+            fl_widget_owner_path(__builtin_return_address(0), owner_path, sizeof(owner_path));
+            if (owner_path[0]) widget->owner = strdup(owner_path);
+        }
         g_fl_widgets[g_fl_widget_count++] = widget;
     }
 
