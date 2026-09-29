@@ -213,11 +213,11 @@ int x11_update_edit_scroll_offset(Display* dpy, XftFont* xf, const char* text, i
 }
 
 int x11_font_row_height(int font_size) {
-    return font_size + 14;
+    return font_size + 12;
 }
 
 int x11_font_list_top(int ascent, int descent, int font_size) {
-    return font_size + 30;
+    return font_size + 38;
 }
 
 int x11_font_row_height_of(FontHandle font) {
@@ -485,6 +485,10 @@ void DrawListBoxItemText(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap, 
     XftFont* xf = FH_TO_XFT(font);
     if (!xf) { PROFILE_END_VAR(timer, "helpers_x11:DrawListBoxItemText"); return; }
     int XOffset = 10;
+    int row_h = x11_font_row_height_of(font);
+    int pad_top = (row_h - (xf->ascent + xf->descent)) / 2;
+    if (pad_top < 0) pad_top = 0;
+    int text_y = y + pad_top;
 
     if (icon_path) {
         int iconX = XOffset;
@@ -502,7 +506,7 @@ void DrawListBoxItemText(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap, 
         int XOffsetAlias = 0;
         eval_xoffset_for_alias(alias_text,strlen(trunc),&XOffsetAlias);
         Platform_SetDrawContext(dpy, xd, vis, cmap);
-        Platform_DrawTextRaw(XOffsetAlias, y, alias_text, rgb_to_hex(COLOR_ALIAS_TEXT), font, "LEFT", XOffsetAlias, FontSize);
+        Platform_DrawTextRaw(XOffsetAlias, text_y, alias_text, rgb_to_hex(COLOR_ALIAS_TEXT), font, "LEFT", XOffsetAlias, FontSize);
     }
 
     char* pos = strstr(trunc, " [");
@@ -511,7 +515,7 @@ void DrawListBoxItemText(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap, 
     }
     unsigned long pcol=0; Platform_GetItemColors(idx, lb->populated_count, NULL, NULL, &pcol);
     Platform_SetDrawContext(dpy, xd, vis, cmap);
-    Platform_DrawTextRaw(XOffset, y, trunc, pcol, font, "LEFT", XOffset, FontSize);
+    Platform_DrawTextRaw(XOffset, text_y, trunc, pcol, font, "LEFT", XOffset, FontSize);
 
     PROFILE_END_VAR(timer, "helpers_x11:DrawListBoxItemText");
 }
