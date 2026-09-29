@@ -137,6 +137,9 @@ bool Platform_LaunchTerminalAtPath(const char* working_dir, const char* extra_ar
             Env_ApplyToCurrentProcess(&env);
             if(extra_args && extra_args[0]){
                 char cmd[2048];
+                //temporary ill get to it later
+                snprintf(cmd, sizeof(cmd), "%s --working-directory=\"%s\" -e %s", UsedTerminal, working_dir, extra_args);
+                execl("/bin/sh", "sh", "-c", cmd, (char*)NULL);
                 snprintf(cmd, sizeof(cmd), "%s --working-directory=\"%s\" %s", UsedTerminal, working_dir, extra_args);
                 execl("/bin/sh", "sh", "-c", cmd, (char*)NULL);
             } else {
