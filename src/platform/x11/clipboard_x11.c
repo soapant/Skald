@@ -480,3 +480,27 @@ char *x11_clipboard_get_text(void) {
     cl_trace("GETTEXT", "read#%ld fail_total=%ld len=%d", g_cl_reads, g_cl_read_fail, out ? (int)strlen(out) : -1);
     return out;
 }
+
+#if !defined(FLINT_WAYLAND_SESSION)
+#include "platform/x11/clipboard_backend_x11.h"
+
+bool Platform_ClipboardAvailable(void) {
+    return true;
+}
+
+int Platform_ClipboardSetText(const char *text) {
+    return x11_clipboard_set_text(text);
+}
+
+int Platform_ClipboardSetImage(const unsigned char *png, size_t len) {
+    return x11_clipboard_set_image(png, len);
+}
+
+char* Platform_ClipboardGetText(void) {
+    return x11_clipboard_get_text();
+}
+
+void Platform_ClipboardShutdown(void) {
+    x11_clipboard_shutdown();
+}
+#endif
