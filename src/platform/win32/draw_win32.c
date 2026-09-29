@@ -105,6 +105,7 @@ bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, F
         if (centered) bx = x - msz.cx / 2;
         else if (right) bx = x - msz.cx;
         measure_track(bx, y, msz.cx, msz.cy);
+        return true;
     }
     if (!centered && !right) {
         int x0 = pad ? pad : x;
@@ -166,6 +167,7 @@ void Platform_GetItemColors(int idx, int count, unsigned long *num_color, unsign
 
 bool Platform_DrawRectRaw(int x, int y, int w, int h, unsigned long color) {
     measure_track(x, y, w, h);
+    if (g_measuring) return true;
     RECT rect;
     rect.left = x;
     rect.top = y;

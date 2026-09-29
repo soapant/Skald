@@ -305,6 +305,7 @@ bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, F
         if (Platform_StringContainsCaseInsensitive(a, "CENTER")) bx = x - tw / 2;
         else if (Platform_StringContainsCaseInsensitive(a, "RIGHT")) bx = x - tw;
         measure_track(bx, y, tw, th);
+        return true;
     }
     XftColor col;
     x11_xft_alloc_color(g_draw_dpy, g_draw_vis, g_draw_cmap, color, 0xFFFF, &col);
@@ -443,6 +444,7 @@ void Platform_DrawEditCursor(PromptState *state, Display *dpy, XftDraw *xd, Visu
 }
 bool Platform_DrawRectRaw(int x, int y, int w, int h, unsigned long color) {
     measure_track(x, y, w, h);
+    if (g_measuring) return true;
     if (RawRect_Map(x, y, w, h, color)) return true;
     XftColor col;
     x11_xft_alloc_color(g_draw_dpy, g_draw_vis, g_draw_cmap, color, OpacityAlpha16(), &col);
