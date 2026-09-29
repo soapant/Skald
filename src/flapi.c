@@ -1,4 +1,6 @@
 #include <stdint.h>
+#include <stdlib.h>
+#include <stdio.h>
 #include <time.h>
 #include <string.h>
 #include <ctype.h>
@@ -21,6 +23,8 @@
 #include "core/hotkey_manager.h"
 #include "core/remap_manager.h"
 #include "core/snippet_manager.h"
+#include "platform/widget.h"
+#include "platform/render_thread.h"
 #include "deps/stb_ds.h"
 
 size_t fl_clipboard_history_count(void) {
@@ -1576,3 +1580,175 @@ void fl_profile_end(FlTimer timer) {
     printf("[profile] %f s\n", fl_end_timer_platform(timer) / 1000);
 }
 
+
+static FlWidget *g_fl_widgets[FL_WIDGET_MAX];
+static int g_fl_widget_count = 0;
+static int g_fl_widget_seq = 0;
+
+static FlWidget *fl_widget_find_by_name(const char *name) {
+    if (!name || !name[0]) return NULL;
+    for (int i = 0; i < g_fl_widget_count; i++) {
+        if (g_fl_widgets[i] && strcmp(g_fl_widgets[i]->name, name) == 0) return g_fl_widgets[i];
+    }
+    return NULL;
+}
+
+static void fl_widget_render_frame(void *ud) {
+    FlWidget *widget = (FlWidget *)ud;
+    if (!widget || !widget->render) return;
+    FlWidgetState st;
+    st.width = widget->w;
+    st.height = widget->h;
+    st.frame = widget->frame;
+    st.elapsed = fl_end_timer_platform(widget->created_at);
+    widget->frame++;
+    widget->render(&st);
+}
+
+static void fl_widget_attach_window(FlWidget *widget, int x, int y) {
+    widget->x = x;
+    widget->y = y;
+    if (!Platform_Widget_IsValid(widget->win)) {
+        widget->win = Platform_Widget_Create(x, y, widget->w, widget->h, widget->fps);
+        if (widget->win) {
+            Platform_Widget_SetFrameCallback(widget->win, fl_widget_render_frame, widget);
+        }
+    } else {
+        Platform_Widget_Move(widget->win, x, y);
+    }
+}
+
+static int fl_widget_sort_key(const FlWidget *widget) {
+    return widget->order_set ? widget->order : widget->seq;
+}
+
+static void fl_widget_relayout(void) {
+    int mx = 0, my = 0, mw = 1920, mh = 1080;
+    Platform_WM_GetMonitorGeometry(&mx, &my, &mw, &mh);
+
+    FlWidget *sorted[FL_WIDGET_MAX];
+    int n = 0;
+    for (int i = 0; i < g_fl_widget_count; i++) {
+        if (g_fl_widgets[i] && !g_fl_widgets[i]->free_pos) sorted[n++] = g_fl_widgets[i];
+    }
+    for (int i = 1; i < n; i++) {
+        FlWidget *key = sorted[i];
+        int k = i - 1;
+        while (k >= 0 && fl_widget_sort_key(sorted[k]) > fl_widget_sort_key(key)) {
+            sorted[k + 1] = sorted[k];
+            k--;
+        }
+        sorted[k + 1] = key;
+    }
+
+    for (int s = 0; s < 4; s++) {
+        bool from_right = (s == FL_WIDGET_SLOT_TOP_RIGHT || s == FL_WIDGET_SLOT_BOTTOM_RIGHT);
+        bool from_top = (s == FL_WIDGET_SLOT_TOP_LEFT || s == FL_WIDGET_SLOT_TOP_RIGHT);
+        int cursor = from_right ? mx + mw : mx;
+        for (int i = 0; i < n; i++) {
+            FlWidget *w = sorted[i];
+            if (w->slot != s) continue;
+            int x = from_right ? cursor - w->w : cursor;
+            int y = from_top ? my : my + mh - w->h;
+            fl_widget_attach_window(w, x, y);
+            cursor += from_right ? -(w->w + w->gap) : (w->w + w->gap);
+        }
+    }
+}
+
+FlWidget *fl_widget_create(const FlWidgetSpec *spec) {
+    if (!spec || !spec->name || !spec->name[0]) {
+        log_warn("fl_widget_create: name is required");
+        return NULL;
+    }
+    if (spec->w <= 0 || spec->h <= 0) {
+        log_warn("fl_widget_create '%s': invalid size %dx%d", spec->name, spec->w, spec->h);
+        return NULL;
+    }
+
+    FlWidget *widget = fl_widget_find_by_name(spec->name);
+    bool fresh = (widget == NULL);
+    if (fresh) {
+        if (g_fl_widget_count >= FL_WIDGET_MAX) {
+            log_warn("fl_widget_create: widget table full");
+            return NULL;
+        }
+        widget = (FlWidget *)calloc(1, sizeof(*widget));
+        if (!widget) return NULL;
+        snprintf(widget->name, FL_WIDGET_NAME_MAX, "%s", spec->name);
+        g_fl_widgets[g_fl_widget_count++] = widget;
+    }
+
+    widget->w = spec->w;
+    widget->h = spec->h;
+    widget->gap = spec->gap > 0 ? spec->gap : FL_WIDGET_DEFAULT_GAP;
+    widget->fps = spec->fps;
+    widget->slot = (spec->slot >= FL_WIDGET_SLOT_TOP_LEFT && spec->slot <= FL_WIDGET_SLOT_BOTTOM_RIGHT) ? spec->slot : FL_WIDGET_SLOT_BOTTOM_LEFT;
+    widget->order = spec->order;
+    widget->order_set = spec->order > 0;
+    widget->render = spec->render;
+    widget->free_pos = (spec->slot == FL_WIDGET_FREE);
+    widget->frame = 0;
+    widget->created_at = fl_start_timer_platform();
+
+    if (widget->free_pos) {
+        int x = spec->x;
+        int y = spec->y;
+        if (x < 0 && y < 0) {
+            int mx = 0, my = 0, mw = 1920, mh = 1080;
+            Platform_WM_GetMonitorGeometry(&mx, &my, &mw, &mh);
+            x = mx + (mw - widget->w) / 2;
+            y = my + (mh - widget->h) / 2;
+        }
+        fl_widget_attach_window(widget, x, y);
+        Platform_Widget_SetFrameCallback(widget->win, fl_widget_render_frame, widget);
+    } else {
+        fl_widget_relayout();
+        Platform_Widget_SetFrameCallback(widget->win, fl_widget_render_frame, widget);
+    }
+
+    if (!Platform_Widget_IsValid(widget->win)) {
+        log_warn("fl_widget_create '%s': window creation failed", spec->name);
+        return NULL;
+    }
+    log_info("fl_widget '%s' %s slot=%d order=%d(%d) fps=%d at %d,%d %dx%d",
+             spec->name, fresh ? "created" : "took over", widget->slot,
+             widget->order, widget->order_set, widget->fps, widget->x, widget->y, widget->w, widget->h);
+    return widget;
+}
+
+bool fl_widget_is_valid(FlWidget *widget) {
+    return widget != NULL;
+}
+
+static void fl_widget_apply_show(void *ud) {
+    FlWidget *widget = (FlWidget *)ud;
+    if (!widget) return;
+    Platform_Widget_Show(widget->win);
+}
+
+static void fl_widget_apply_hide(void *ud) {
+    FlWidget *widget = (FlWidget *)ud;
+    if (!widget) return;
+    Platform_Widget_Hide(widget->win);
+}
+
+void fl_widget_show(FlWidget *widget) {
+    if (!fl_widget_is_valid(widget)) return;
+    if (widget->mapped) return;
+    widget->mapped = true;
+    Platform_RenderThread_Post(fl_widget_apply_show, widget);
+}
+
+void fl_widget_hide(FlWidget *widget) {
+    if (!fl_widget_is_valid(widget)) return;
+    if (!widget->mapped) return;
+    widget->mapped = false;
+    Platform_RenderThread_Post(fl_widget_apply_hide, widget);
+}
+
+void fl_widget_set_render(FlWidget *widget, FlWidgetRenderFn render) {
+    if (!fl_widget_is_valid(widget)) return;
+    widget->render = render;
+    Platform_RenderThread_Post(fl_widget_render_frame, widget);
+}

@@ -7,6 +7,7 @@
 #include "deps/log.h"
 
 #define RT_MAX_CALLBACKS 16
+#define RT_MAX_PENDING 16
 #define RT_IDLE_SLEEP_US 20000
 #define RT_DEFAULT_FPS 1
 
@@ -17,18 +18,44 @@ typedef struct {
 
 static pthread_t g_rt_thread;
 static pthread_mutex_t g_rt_lock = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t g_rt_cond = PTHREAD_COND_INITIALIZER;
 static RtCallback g_rt_callbacks[RT_MAX_CALLBACKS];
+static RtCallback g_rt_pending[RT_MAX_PENDING];
 static int g_rt_count = 0;
+static int g_rt_pending_count = 0;
 static volatile bool g_rt_running = false;
 static volatile bool g_rt_quit = false;
 static int g_rt_fps = RT_DEFAULT_FPS;
 static Display *g_rt_dpy = NULL;
 
-static void rt_sleep_us(long us) {
-    struct timespec ts;
-    ts.tv_sec = (time_t)(us / 1000000L);
-    ts.tv_nsec = (long)(us % 1000000L) * 1000L;
-    nanosleep(&ts, NULL);
+static void rt_run_pending(void) {
+    RtCallback pend[RT_MAX_PENDING];
+    int pn = 0;
+    pthread_mutex_lock(&g_rt_lock);
+    pn = g_rt_pending_count;
+    if (pn > 0) {
+        memcpy(pend, g_rt_pending, sizeof(RtCallback) * (size_t)pn);
+        g_rt_pending_count = 0;
+    }
+    pthread_mutex_unlock(&g_rt_lock);
+    for (int i = 0; i < pn; i++) {
+        if (pend[i].fn) pend[i].fn(pend[i].ud);
+    }
+}
+
+bool Platform_RenderThread_Post(Platform_RenderFrameFn fn, void *ud) {
+    if (!fn || !g_rt_running) return false;
+    pthread_mutex_lock(&g_rt_lock);
+    if (g_rt_pending_count >= RT_MAX_PENDING) {
+        pthread_mutex_unlock(&g_rt_lock);
+        return false;
+    }
+    g_rt_pending[g_rt_pending_count].fn = fn;
+    g_rt_pending[g_rt_pending_count].ud = ud;
+    g_rt_pending_count++;
+    pthread_cond_signal(&g_rt_cond);
+    pthread_mutex_unlock(&g_rt_lock);
+    return true;
 }
 
 void *Platform_RenderThread_Display(void) {
@@ -58,12 +85,22 @@ static void *rt_thread_func(void *arg) {
         for (int i = 0; i < n; i++) {
             if (snap[i].fn) snap[i].fn(snap[i].ud);
         }
-        if (n == 0) {
-            rt_sleep_us(RT_IDLE_SLEEP_US);
-        } else {
-            int fps = g_rt_fps > 0 ? g_rt_fps : RT_DEFAULT_FPS;
-            rt_sleep_us(1000000L / fps);
+        rt_run_pending();
+
+        long us = (n == 0) ? RT_IDLE_SLEEP_US : (1000000L / (g_rt_fps > 0 ? g_rt_fps : RT_DEFAULT_FPS));
+        struct timespec ts;
+        clock_gettime(CLOCK_REALTIME, &ts);
+        ts.tv_sec += (time_t)(us / 1000000L);
+        ts.tv_nsec += (long)(us % 1000000L) * 1000L;
+        if (ts.tv_nsec >= 1000000000L) {
+            ts.tv_sec += 1;
+            ts.tv_nsec -= 1000000000L;
         }
+        pthread_mutex_lock(&g_rt_lock);
+        if (!g_rt_quit && g_rt_pending_count == 0) {
+            pthread_cond_timedwait(&g_rt_cond, &g_rt_lock, &ts);
+        }
+        pthread_mutex_unlock(&g_rt_lock);
     }
     return NULL;
 }
@@ -92,6 +129,9 @@ bool Platform_RenderThread_EnsureStarted(int fps) {
 void Platform_RenderThread_Stop(void) {
     if (!g_rt_running) return;
     g_rt_quit = true;
+    pthread_mutex_lock(&g_rt_lock);
+    pthread_cond_broadcast(&g_rt_cond);
+    pthread_mutex_unlock(&g_rt_lock);
     pthread_join(g_rt_thread, NULL);
     g_rt_running = false;
     if (g_rt_dpy) {
@@ -100,6 +140,7 @@ void Platform_RenderThread_Stop(void) {
     }
     pthread_mutex_lock(&g_rt_lock);
     g_rt_count = 0;
+    g_rt_pending_count = 0;
     pthread_mutex_unlock(&g_rt_lock);
     log_info("render thread stopped");
 }
