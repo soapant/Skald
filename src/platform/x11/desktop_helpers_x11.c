@@ -59,13 +59,3 @@ void Desktop_CleanExec(char exec_line[1024]) {
     strncpy(exec_line, s, 1024 - 1);
 }
 
-bool Desktop_GetAppId(const char* desktop_path, char app_id[256]) {
-    if (!desktop_path || !app_id) return false;
-    const char* filename = strrchr(desktop_path, '/');
-    filename = filename ? filename + 1 : desktop_path;
-    strncpy(app_id, filename, 256 - 1);
-    app_id[255] = '\0';
-    char* ext = strstr(app_id, ".desktop");
-    if (ext) *ext = '\0';
-    return true;
-}
