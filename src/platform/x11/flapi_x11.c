@@ -613,11 +613,12 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
     int draw_x = x + 14 - scroll;
     int textH = FontSize;
     int y_raw;
-    int cursor_y;
     if (spec->y == 0) {
         y_raw = 14;
-        cursor_y = x11_font_cursor_y_of();
+    } else {
+        y_raw = spec->y;
     }
+    int cursor_y = x11_font_cursor_y_of(fh, y_raw);
     Platform_SetDrawContext(dpy, xd, vis, cmap);
     if (text_len > 0) {
         Platform_DrawTextRaw(draw_x, y_raw, (char*)buf, text_hex, fh, "", 0, 0);
