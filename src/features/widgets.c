@@ -8,8 +8,6 @@ static void widgets_test_render(FlWidgetState *state) {
 
 FLINT_FEATURE_INIT {
     fl_widget(.name = "test",
-              .w = 200,
-              .h = 46,
               .slot = FL_WIDGET_SLOT_TOP_LEFT,
               .render = widgets_test_render);
 }
