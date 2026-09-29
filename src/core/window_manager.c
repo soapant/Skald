@@ -130,8 +130,7 @@ void WindowManager_GetCenteredPos(int win_w, int win_h, int *out_x, int *out_y) 
 }
 
 char* WindowManager_ShowPrompt(WindowManager* wm, const PromptSpec* spec) {
-    PROFILE_START(timer);
-    if (!wm || !spec) { PROFILE_END_VAR(timer, "window_manager:WindowManager_ShowPrompt"); return NULL; }
+    if (!wm || !spec) { return NULL; }
     CloseCallback on_close = spec->on_close;
     if (FlintContext_Get()->item_index_map) {
         shfree(FlintContext_Get()->item_index_map);
@@ -150,7 +149,6 @@ char* WindowManager_ShowPrompt(WindowManager* wm, const PromptSpec* spec) {
     }
     char* res = Platform_PromptUser(wm, spec);
     if (on_close) on_close();
-    PROFILE_END_VAR(timer, "window_manager:WindowManager_ShowPrompt");
     return res;
 }
 

@@ -114,11 +114,9 @@ static void PromptPopup_OnHide(Popup* self) {
 }
 
 static void PromptPopup_OnRender(Popup* self) {
-    PROFILE_START(timer);
     PromptPopupData* data = (PromptPopupData*)self;
-    if (!data->state) { PROFILE_END_VAR(timer, "window_manager:PromptPopup_OnRender"); return; }
+    if (!data->state)  return; 
     Platform_PromptPopupRender(self);
-    PROFILE_END_VAR(timer, "window_manager:PromptPopup_OnRender");
 }
 
 static bool PromptPopup_OnKey(Popup* self, const PopupKeyEvent* key) {

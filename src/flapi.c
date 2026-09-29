@@ -1,8 +1,11 @@
 #include <stdint.h>
+#include <stdlib.h>
+#include <stdio.h>
 #include <time.h>
 #include <string.h>
 #include <ctype.h>
 #include "core/context.h"
+#include "core/timer.h"
 #include "deps/log.h"
 #include "config.h"
 #include "platform/platform.h"
@@ -20,6 +23,10 @@
 #include "core/hotkey_manager.h"
 #include "core/remap_manager.h"
 #include "core/snippet_manager.h"
+#include "platform/widget.h"
+#include "platform/render_thread.h"
+#include "platform/lib.h"
+#include "core/widget_registry.h"
 #include "deps/stb_ds.h"
 
 size_t fl_clipboard_history_count(void) {
@@ -80,10 +87,13 @@ char* fl_search_file_in_dir(const char* directory, const char* search_string,cha
 }
 
 bool fl_launch_with_args(const char* path, const char* args) {
-    if (!path) return false;
+    PROFILE_START(_pt);
+    if (!path) { PROFILE_END_VAR(_pt, "api:fl_launch_with_args"); return false; }
     char expanded[MAX_PATH];
-    if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) return false;
-    return fl_launch_with_args_platform(expanded, args);
+    if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) { PROFILE_END_VAR(_pt, "api:fl_launch_with_args"); return false; }
+    bool r = fl_launch_with_args_platform(expanded, args);
+    PROFILE_END_VAR(_pt, "api:fl_launch_with_args");
+    return r;
 }
 
 bool fl_launch_with_args_as_admin(const char* path, const char* args) {
@@ -427,8 +437,11 @@ int fl_get_icon_size(const char* icon_path) {
 }
 
 char* fl_run_terminal_command(char* command) {
-  if (!command) return NULL;
-  return Platform_RunTerminalCommand(command,false);
+  PROFILE_START(_pt);
+  if (!command) { PROFILE_END_VAR(_pt, "api:fl_run_terminal_command"); return NULL; }
+  char* r = Platform_RunTerminalCommand(command,false);
+  PROFILE_END_VAR(_pt, "api:fl_run_terminal_command");
+  return r;
 }
 
 char* fl_run_argv(const char* const argv[], const char* stdin_data, int* out_status) {
@@ -442,27 +455,41 @@ char* fl_run_terminal_command_blocking(char* command) {
 }
 
 char* fl_run_terminal_command_and_open(char* command) {
-  if (!command) return NULL;
-  return Platform_RunTerminalCommand(command,true);
+  PROFILE_START(_pt);
+  if (!command) { PROFILE_END_VAR(_pt, "api:fl_run_terminal_command_and_open"); return NULL; }
+  char* r = Platform_RunTerminalCommand(command,true);
+  PROFILE_END_VAR(_pt, "api:fl_run_terminal_command_and_open");
+  return r;
 }
 
 bool fl_launch_detached(char* command) {
-  if (!command) return false;
-  return Platform_LaunchDetached(command);
+  PROFILE_START(_pt);
+  if (!command) { PROFILE_END_VAR(_pt, "api:fl_launch_detached"); return false; }
+  bool r = Platform_LaunchDetached(command);
+  PROFILE_END_VAR(_pt, "api:fl_launch_detached");
+  return r;
 }
 
 bool fl_launch_terminal_at_path(char* path,char* args) {
-    if (!path) return false;
+  PROFILE_START(_pt);
+  bool r = false;
+  if (!path) { PROFILE_END_VAR(_pt, "api:fl_launch_terminal_at_path"); return false; }
     char expanded[MAX_PATH];
-    if (!Platform_ExpandPath(path, expanded, sizeof(expanded)))return false;
-    return Platform_LaunchTerminalAtPath(expanded,args);
+    if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) { PROFILE_END_VAR(_pt, "api:fl_launch_terminal_at_path"); return false; }
+    r = Platform_LaunchTerminalAtPath(expanded,args);
+  PROFILE_END_VAR(_pt, "api:fl_launch_terminal_at_path");
+  return r;
 }
 
 bool fl_launch_file_manager_at_path(char* path,char* args) {
-    if (!path) return false;
+  PROFILE_START(_pt);
+  bool r = false;
+  if (!path) { PROFILE_END_VAR(_pt, "api:fl_launch_file_manager_at_path"); return false; }
     char expanded[MAX_PATH];
-    if (!Platform_ExpandPath(path, expanded, sizeof(expanded)))return false;
-    return Platform_LaunchFileManagerAtPath(expanded,args);
+    if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) { PROFILE_END_VAR(_pt, "api:fl_launch_file_manager_at_path"); return false; }
+    r = Platform_LaunchFileManagerAtPath(expanded,args);
+  PROFILE_END_VAR(_pt, "api:fl_launch_file_manager_at_path");
+  return r;
 }
 
 char* fl_get_zoxide_match(char* query) {
@@ -733,8 +760,11 @@ char* fl_string_slice(const char* str, int start, int end) {
     return out;
 }
 bool fl_launch_browser(char* url) {
-    if (!url) return false;
-    return Platform_LaunchBrowserAtUrl(url,false);
+    PROFILE_START(_pt);
+    if (!url) { PROFILE_END_VAR(_pt, "api:fl_launch_browser"); return false; }
+    bool r = Platform_LaunchBrowserAtUrl(url,false);
+    PROFILE_END_VAR(_pt, "api:fl_launch_browser");
+    return r;
 }
 bool fl_query_browser(const char* query) {
     if (!query) return false;
@@ -1552,3 +1582,290 @@ void fl_profile_end(FlTimer timer) {
     printf("[profile] %f s\n", fl_end_timer_platform(timer) / 1000);
 }
 
+
+static FlWidget *g_fl_widgets[FL_WIDGET_MAX];
+static int g_fl_widget_count = 0;
+static int g_fl_widget_seq = 0;
+
+static FlWidget *fl_widget_find_by_name(const char *name) {
+    if (!name || !name[0]) return NULL;
+    for (int i = 0; i < g_fl_widget_count; i++) {
+        if (g_fl_widgets[i] && strcmp(g_fl_widgets[i]->name, name) == 0) return g_fl_widgets[i];
+    }
+    return NULL;
+}
+
+static void fl_widget_relayout(void);
+
+static void fl_widget_render_frame(void *ud);
+
+static void fl_widget_measure_and_fit(void *ud) {
+    FlWidget *widget = (FlWidget *)ud;
+    if (!widget || widget->dead) return;
+    if (!widget->render || !Platform_Widget_IsValid(widget->win)) return;
+
+    Platform_BeginMeasure();
+    FlWidgetState st;
+    st.width = widget->w;
+    st.height = widget->h;
+    st.frame = 0;
+    st.elapsed = 0.0;
+    widget->render(&st);
+    int mw = 0, mh = 0;
+    Platform_EndMeasure(&mw, &mh);
+
+    int nw = widget->w;
+    int nh = widget->h;
+    if (widget->auto_w && mw > 0) nw = mw + widget->pad;
+    if (widget->auto_h && mh > 0) nh = mh + widget->pad;
+    if (nw == widget->w && nh == widget->h) {
+        return;
+    }
+    widget->w = nw;
+    widget->h = nh;
+    Platform_Widget_Resize(widget->win, nw, nh);
+    fl_widget_relayout();
+}
+
+static void fl_widget_owner_path(void *addr, char *out, size_t n) {
+    Platform_GetModuleOwnerPath(addr, out, n);
+}
+
+static bool fl_widget_owner_matches(const FlWidget *widget, const char *a, const char *b) {
+    if (!widget->owner) return false;
+    if (a && a[0] && strcmp(widget->owner, a) == 0) return true;
+    if (b && b[0] && strcmp(widget->owner, b) == 0) return true;
+    return false;
+}
+
+static void fl_widget_destroy_window(void *ud) {
+    FlWidget *widget = (FlWidget *)ud;
+    if (!widget) return;
+    if (Platform_Widget_IsValid(widget->win)) {
+        Platform_Widget_Destroy(widget->win);
+    }
+    widget->win = NULL;
+}
+void fl_widget_purge_owner(const char *path_a, const char *path_b) {
+    if ((!path_a || !path_a[0]) && (!path_b || !path_b[0])) return;
+
+    for (int i = 0; i < g_fl_widget_count; i++) {
+        FlWidget *w = g_fl_widgets[i];
+        if (!w) continue;
+        if (!fl_widget_owner_matches(w, path_a, path_b)) continue;
+        w->dead = true;
+        Platform_RenderThread_RemoveFrameCallback(fl_widget_render_frame, w);
+        Platform_RenderThread_Post(fl_widget_destroy_window, w);
+        log_info("fl_widget '%s' purged (owner unloaded)", w->name);
+    }
+
+    Platform_RenderThread_Sync();
+
+    int n = 0;
+    for (int i = 0; i < g_fl_widget_count; i++) {
+        FlWidget *w = g_fl_widgets[i];
+        if (!w) continue;
+        if (fl_widget_owner_matches(w, path_a, path_b)) {
+            if (w->owner) free(w->owner);
+            free(w);
+            continue;
+        }
+        g_fl_widgets[n++] = w;
+    }
+    g_fl_widget_count = n;
+    if (g_fl_widget_count > 0) fl_widget_relayout();
+}
+
+bool fl_widget_owner_active(const char *path) {
+    if (!path || !path[0]) return false;
+    for (int i = 0; i < g_fl_widget_count; i++) {
+        FlWidget *w = g_fl_widgets[i];
+        if (w && fl_widget_owner_matches(w, path, NULL)) return true;
+    }
+    return false;
+}
+
+static void fl_widget_render_frame(void *ud) {
+    FlWidget *widget = (FlWidget *)ud;
+    if (!widget || !widget->render) return;
+    FlWidgetState st;
+    st.width = widget->w;
+    st.height = widget->h;
+    st.frame = widget->frame;
+    st.elapsed = fl_end_timer_platform(widget->created_at);
+    widget->frame++;
+    widget->render(&st);
+}
+
+static void fl_widget_attach_window(void *ud) {
+    FlWidget *widget = (FlWidget *)ud;
+    if (!widget || widget->dead) return;
+    if (!Platform_Widget_IsValid(widget->win)) {
+        Platform_SetDrawBgColor(widget->has_bg ? widget->bg_hex : 0);
+        widget->win = Platform_Widget_Create(widget->x, widget->y, widget->w, widget->h, widget->fps);
+        Platform_SetDrawBgColor(0);
+        if (widget->win) {
+            Platform_Widget_SetBgColor(widget->win, widget->has_bg ? widget->bg_hex : 0);
+            Platform_Widget_SetFrameCallback(widget->win, fl_widget_render_frame, widget);
+        } else {
+        }
+    } else {
+        Platform_Widget_Move(widget->win, widget->x, widget->y);
+    }
+}
+
+static void fl_widget_apply_geometry(FlWidget *widget, int x, int y) {
+    widget->x = x;
+    widget->y = y;
+    if (Platform_RenderThread_IsCurrentThread()) {
+        fl_widget_attach_window(widget);
+        return;
+    }
+    if (!Platform_RenderThread_EnsureStarted(widget->fps)) {
+        return;
+    }
+    if (!Platform_RenderThread_Post(fl_widget_attach_window, widget)) {
+        return;
+    }
+}
+
+static int fl_widget_sort_key(const FlWidget *widget) {
+    return widget->order_set ? widget->order : widget->seq;
+}
+
+static void fl_widget_relayout(void) {
+    int mx = 0, my = 0, mw = 1920, mh = 1080;
+    Platform_WM_GetMonitorGeometry(&mx, &my, &mw, &mh);
+
+    FlWidget *sorted[FL_WIDGET_MAX];
+    int n = 0;
+    for (int i = 0; i < g_fl_widget_count; i++) {
+        if (g_fl_widgets[i] && !g_fl_widgets[i]->free_pos) sorted[n++] = g_fl_widgets[i];
+    }
+    for (int i = 1; i < n; i++) {
+        FlWidget *key = sorted[i];
+        int k = i - 1;
+        while (k >= 0 && fl_widget_sort_key(sorted[k]) > fl_widget_sort_key(key)) {
+            sorted[k + 1] = sorted[k];
+            k--;
+        }
+        sorted[k + 1] = key;
+    }
+
+    for (int s = 0; s < 4; s++) {
+        bool from_right = (s == FL_WIDGET_SLOT_TOP_RIGHT || s == FL_WIDGET_SLOT_BOTTOM_RIGHT);
+        bool from_top = (s == FL_WIDGET_SLOT_TOP_LEFT || s == FL_WIDGET_SLOT_TOP_RIGHT);
+        int cursor = from_right ? mx + mw : mx;
+        for (int i = 0; i < n; i++) {
+            FlWidget *w = sorted[i];
+            if (w->slot != s) continue;
+            int x = from_right ? cursor - w->w : cursor;
+            int y = from_top ? my : my + mh - w->h;
+            fl_widget_apply_geometry(w, x, y);
+            cursor += from_right ? -(w->w + w->gap) : (w->w + w->gap);
+        }
+    }
+}
+
+FlWidget *fl_widget_create(const FlWidgetSpec *spec) {
+    if (!spec || !spec->name || !spec->name[0]) {
+        log_warn("fl_widget_create: name is required");
+        return NULL;
+    }
+    FlWidget *widget = fl_widget_find_by_name(spec->name);
+    bool fresh = (widget == NULL);
+    if (fresh) {
+        if (g_fl_widget_count >= FL_WIDGET_MAX) {
+            log_warn("fl_widget_create: widget table full");
+            return NULL;
+        }
+        widget = (FlWidget *)calloc(1, sizeof(*widget));
+        if (!widget) return NULL;
+        snprintf(widget->name, FL_WIDGET_NAME_MAX, "%s", spec->name);
+        widget->seq = g_fl_widget_seq++;
+        {
+            char owner_path[512];
+            fl_widget_owner_path(__builtin_return_address(0), owner_path, sizeof(owner_path));
+            if (owner_path[0]) widget->owner = strdup(owner_path);
+        }
+        g_fl_widgets[g_fl_widget_count++] = widget;
+    }
+
+    widget->has_bg = spec->bg_color != 0;
+    widget->bg_hex = widget->has_bg ? rgb_to_hex(spec->bg_color) : 0;
+    widget->auto_w = spec->w <= 0;
+    widget->auto_h = spec->h <= 0;
+    widget->pad = spec->pad > 0 ? spec->pad : FL_WIDGET_DEFAULT_PAD;
+    widget->w = widget->auto_w ? FL_WIDGET_PROVISIONAL_W : spec->w;
+    widget->h = widget->auto_h ? FL_WIDGET_PROVISIONAL_H : spec->h;
+    widget->gap = spec->gap > 0 ? spec->gap : FL_WIDGET_DEFAULT_GAP;
+    widget->fps = spec->fps ? spec->fps : 1;
+    widget->slot = (spec->slot >= FL_WIDGET_SLOT_TOP_LEFT && spec->slot <= FL_WIDGET_SLOT_BOTTOM_RIGHT) ? spec->slot : FL_WIDGET_SLOT_BOTTOM_LEFT;
+    widget->order = spec->order;
+    widget->order_set = spec->order > 0;
+    widget->render = spec->render;
+    widget->free_pos = (spec->slot == FL_WIDGET_FREE);
+    widget->frame = 0;
+    widget->created_at = fl_start_timer_platform();
+
+    if (widget->free_pos) {
+        int x = spec->x;
+        int y = spec->y;
+        if (x < 0 && y < 0) {
+            int mx = 0, my = 0, mw = 1920, mh = 1080;
+            Platform_WM_GetMonitorGeometry(&mx, &my, &mw, &mh);
+            x = mx + (mw - widget->w) / 2;
+            y = my + (mh - widget->h) / 2;
+        }
+        fl_widget_apply_geometry(widget, x, y);
+        Platform_Widget_SetFrameCallback(widget->win, fl_widget_render_frame, widget);
+    } else {
+        fl_widget_relayout();
+        Platform_Widget_SetFrameCallback(widget->win, fl_widget_render_frame, widget);
+    }
+
+    if (!Platform_Widget_IsValid(widget->win)) {
+    }
+    if (widget->auto_w || widget->auto_h) {
+        if (Platform_RenderThread_Post(fl_widget_measure_and_fit, widget)) {
+        } else {
+        }
+    }
+    return widget;
+}
+
+bool fl_widget_is_valid(FlWidget *widget) {
+    return widget != NULL;
+}
+
+static void fl_widget_apply_show(void *ud) {
+    FlWidget *widget = (FlWidget *)ud;
+    if (!widget) return;
+    Platform_Widget_Show(widget->win);
+}
+
+static void fl_widget_apply_hide(void *ud) {
+    FlWidget *widget = (FlWidget *)ud;
+    if (!widget) return;
+    Platform_Widget_Hide(widget->win);
+}
+
+void fl_widget_show(FlWidget *widget) {
+    if (!fl_widget_is_valid(widget)) return;
+    if (widget->mapped) return;
+    widget->mapped = true;
+    Platform_RenderThread_Post(fl_widget_apply_show, widget);
+}
+
+void fl_widget_hide(FlWidget *widget) {
+    if (!fl_widget_is_valid(widget)) return;
+    if (!widget->mapped) return;
+    widget->mapped = false;
+    Platform_RenderThread_Post(fl_widget_apply_hide, widget);
+}
+
+void fl_widget_set_render(FlWidget *widget, FlWidgetRenderFn render) {
+    if (!fl_widget_is_valid(widget)) return;
+    widget->render = render;
+    Platform_RenderThread_Post(fl_widget_render_frame, widget);
+}

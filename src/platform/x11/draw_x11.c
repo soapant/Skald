@@ -8,7 +8,42 @@
 #include <stdlib.h>
 #include "core/modal.h"
 
-static PromptState *g_prerender_state = NULL;
+static __thread PromptState *g_prerender_state = NULL;
+
+static __thread unsigned long g_draw_bg_override = 0;
+
+void Platform_SetDrawBgColor(unsigned long hex) {
+    g_draw_bg_override = hex;
+}
+unsigned long Platform_GetDrawBgColor(void) {
+    return g_draw_bg_override;
+}
+
+static __thread bool g_measuring = false;
+static __thread int g_meas_x0 = 0, g_meas_y0 = 0, g_meas_x1 = 0, g_meas_y1 = 0;
+
+static void measure_reset(void) {
+    g_measuring = false;
+    g_meas_x0 = 0; g_meas_y0 = 0; g_meas_x1 = 0; g_meas_y1 = 0;
+}
+void Platform_BeginMeasure(void) {
+    g_measuring = true;
+    g_meas_x0 = 1 << 30; g_meas_y0 = 1 << 30;
+    g_meas_x1 = -(1 << 30); g_meas_y1 = -(1 << 30);
+}
+void Platform_EndMeasure(int *out_w, int *out_h) {
+    if (out_w) *out_w = (g_meas_x1 > g_meas_x0) ? (g_meas_x1 - g_meas_x0) : 0;
+    if (out_h) *out_h = (g_meas_y1 > g_meas_y0) ? (g_meas_y1 - g_meas_y0) : 0;
+    measure_reset();
+}
+static void measure_track(int x, int y, int w, int h) {
+    if (!g_measuring) return;
+    if (x < g_meas_x0) g_meas_x0 = x;
+    if (y < g_meas_y0) g_meas_y0 = y;
+    if (x + w > g_meas_x1) g_meas_x1 = x + w;
+    if (y + h > g_meas_y1) g_meas_y1 = y + h;
+}
+
 void Platform_SetPreRenderState(PromptState *state) {
   g_prerender_state = state; 
 }
@@ -26,32 +61,32 @@ __attribute__((weak)) bool fl_prerender(void) {
     return Platform_PreRender();
 }
 
-static Display* g_draw_dpy = NULL;
-static XftDraw* g_draw_xd = NULL;
-static Visual* g_draw_vis = NULL;
-static Colormap g_draw_cmap = 0;
+static __thread Display* g_draw_dpy = NULL;
+static __thread XftDraw* g_draw_xd = NULL;
+static __thread Visual* g_draw_vis = NULL;
+static __thread Colormap g_draw_cmap = 0;
 #define RAW_LINE_CAP 4096
 typedef struct { char ch; unsigned long color; } RawCell;
-static RawCell g_raw_cells[RAW_LINE_CAP];
-static char g_raw_text[RAW_LINE_CAP + 1];
-static int g_raw_map_x[RAW_LINE_CAP];
-static int g_raw_map_top[RAW_LINE_CAP];
-static int g_raw_count = 0;
-static int g_raw_y = 0;
-static int g_raw_x0 = 0;
-static int g_raw_pitch = 0;
-static int g_raw_fontsize = 0;
-static FontHandle g_raw_font;
-static bool g_raw_font_owned = false;
-static Display* g_raw_dpy = NULL;
-static XftDraw* g_raw_xd = NULL;
-static Visual* g_raw_vis = NULL;
-static Colormap g_raw_cmap = 0;
-static int g_raw_map_count = 0;
-static int g_raw_map_y = 0;
-static int g_raw_map_x0 = 0;
-static int g_raw_map_pitch = 0;
-static XftDraw* g_raw_map_xd = NULL;
+static __thread RawCell g_raw_cells[RAW_LINE_CAP];
+static __thread char g_raw_text[RAW_LINE_CAP + 1];
+static __thread int g_raw_map_x[RAW_LINE_CAP];
+static __thread int g_raw_map_top[RAW_LINE_CAP];
+static __thread int g_raw_count = 0;
+static __thread int g_raw_y = 0;
+static __thread int g_raw_x0 = 0;
+static __thread int g_raw_pitch = 0;
+static __thread int g_raw_fontsize = 0;
+static __thread FontHandle g_raw_font;
+static __thread bool g_raw_font_owned = false;
+static __thread Display* g_raw_dpy = NULL;
+static __thread XftDraw* g_raw_xd = NULL;
+static __thread Visual* g_raw_vis = NULL;
+static __thread Colormap g_raw_cmap = 0;
+static __thread int g_raw_map_count = 0;
+static __thread int g_raw_map_y = 0;
+static __thread int g_raw_map_x0 = 0;
+static __thread int g_raw_map_pitch = 0;
+static __thread XftDraw* g_raw_map_xd = NULL;
 static int RawMeasure(Display* dpy, XftFont* xf, const char* s, int n) {
     XGlyphInfo ext;
     XftTextExtentsUtf8(dpy, xf, (FcChar8*)s, n, &ext);
@@ -226,6 +261,9 @@ void Platform_SetDrawContext(Display* dpy, XftDraw* xd, Visual* vis, Colormap cm
     RawLine_Flush();
     g_draw_dpy = dpy; g_draw_xd = xd; g_draw_vis = vis; g_draw_cmap = cmap;
 }
+void Platform_FlushDraw(void) {
+    RawLine_Flush();
+}
 void Platform_GetDrawContext(Display** dpy, XftDraw** xd, Visual** vis, Colormap* cmap) {
     if (dpy) *dpy = g_draw_dpy;
     if (xd) *xd = g_draw_xd;
@@ -246,6 +284,20 @@ bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, F
     }
     if (color == 0) color = rgb_to_hex(COLOR_TEXT);
     const char *a = align ? align : "CENTER";
+    if (g_measuring) {
+        XftFont *mf = FH_TO_XFT(fh);
+        int tw = 0;
+        if (mf) {
+            XGlyphInfo ext;
+            XftTextExtentsUtf8(g_draw_dpy, mf, (FcChar8 *)text, (int)strlen(text), &ext);
+            tw = ext.xOff;
+        }
+        int th = mf ? (mf->ascent + mf->descent) : (fontsize > 0 ? fontsize : FontSize);
+        int bx = x;
+        if (Platform_StringContainsCaseInsensitive(a, "CENTER")) bx = x - tw / 2;
+        else if (Platform_StringContainsCaseInsensitive(a, "RIGHT")) bx = x - tw;
+        measure_track(bx, y, tw, th);
+    }
     XftColor col;
     x11_xft_alloc_color(g_draw_dpy, g_draw_vis, g_draw_cmap, color, 0xFFFF, &col);
     if (Platform_StringContainsCaseInsensitive(a, "CENTER") || Platform_StringContainsCaseInsensitive(a, "LEFT") || Platform_StringContainsCaseInsensitive(a, "RIGHT")) {
@@ -374,7 +426,7 @@ void Platform_DrawEditCursor(PromptState *state, Display *dpy, XftDraw *xd, Visu
     int cursor_draw_x = 14 + cursor_x - state->scroll_offset;
     if (cursor_draw_x < 2) cursor_draw_x = 2;
     if (cursor_draw_x > state->width - 4) cursor_draw_x = state->width - 4;
-    int cursor_y = x11_font_cursor_y_of(font, 20);
+    int cursor_y = x11_font_cursor_y_of();
     if (IsInsertMode()) {
         Platform_DrawRectRaw(cursor_draw_x, cursor_y, 2, FontSize, rgb_to_hex(COLOR_CURSOR));
     } else {
@@ -382,6 +434,7 @@ void Platform_DrawEditCursor(PromptState *state, Display *dpy, XftDraw *xd, Visu
     }
 }
 bool Platform_DrawRectRaw(int x, int y, int w, int h, unsigned long color) {
+    measure_track(x, y, w, h);
     if (RawRect_Map(x, y, w, h, color)) return true;
     XftColor col;
     x11_xft_alloc_color(g_draw_dpy, g_draw_vis, g_draw_cmap, color, OpacityAlpha16(), &col);

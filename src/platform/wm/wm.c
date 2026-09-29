@@ -1,4 +1,5 @@
 #include "wm/wm.h"
+#include "wm/i3_wm.h"
 #include "wm/kwin_wm.h"
 #include "wm/niri_wm.h"
 #include "wm/sway_wm.h"
@@ -14,6 +15,9 @@ char* Wm_GetActiveWindowTitle(void) {
     
     buffer[0] = '\0'; 
     
+    if (get_title_i3(buffer, sizeof(buffer))) {
+    if (buffer[0] != '\0' && strcasecmp(buffer, "colored") != 0) return buffer;
+    }
     if (getenv("WAYLAND_DISPLAY")) {
         if (get_title_kwin(buffer, sizeof(buffer))) {
         if (buffer[0] != '\0' && strcasecmp(buffer, "colored") != 0) return buffer;
@@ -40,6 +44,9 @@ char* Wm_GetActiveWindowAppId(void) {
 
     buffer[0] = '\0';
 
+    if (get_app_id_i3(buffer, sizeof(buffer))) {
+    if (buffer[0] != '\0' && strcasecmp(buffer, "colored") != 0) return buffer;
+    }
     if (getenv("WAYLAND_DISPLAY")) {
         if (get_app_id_kwin(buffer, sizeof(buffer))) {
         if (buffer[0] != '\0' && strcasecmp(buffer, "colored") != 0) return buffer;
@@ -61,6 +68,9 @@ char* Wm_GetActiveWindowAppId(void) {
 }
 
 bool Wm_FocusByTitle(const char *title) {
+    if (i3_is_active() && focus_window_title_i3((char*)title)) {
+        return true;
+    }
     if (getenv("WAYLAND_DISPLAY")) {
         if (focus_window_title_kwin((char*)title)) {
             return true;
@@ -85,6 +95,7 @@ bool Wm_FocusByTitle(const char *title) {
 
 char* Wm_Paste(char* content) {
     char* result;
+    if (i3_is_active() && (result = paste_i3(content))) return result;
     if (getenv("WAYLAND_DISPLAY")) {
         if ((result = paste_kwin(content))) return result;
         if ((result = paste_niri(content))) return result;
@@ -99,6 +110,10 @@ char* Wm_Paste(char* content) {
 Fl_WindowList Wm_GetWindowTitles() {
     Fl_WindowList result;
     Fl_WindowList empty = { .windows = NULL, .count = 0 };
+    if (i3_is_active()) {
+        result = get_window_titles_i3();
+        if (result.windows != NULL) return result;
+    }
     if (getenv("WAYLAND_DISPLAY")) {
         result = get_window_titles_kwin();
         if (result.windows != NULL) return result;
@@ -117,6 +132,10 @@ Fl_WindowList Wm_GetWindowTitles() {
 Fl_WindowList Wm_GetWindowNames() {
     Fl_WindowList result;
     Fl_WindowList empty = { .windows = NULL, .count = 0 };
+    if (i3_is_active()) {
+        result = get_window_names_i3();
+        if (result.windows != NULL) return result;
+    }
     if (getenv("WAYLAND_DISPLAY")) {
         result = get_window_names_kwin();
         if (result.windows != NULL) return result;
@@ -136,6 +155,10 @@ Fl_WindowList Wm_GetWindowNames() {
 Fl_Pos Wm_GetCursorPosition() {
     Fl_Pos result;
     Fl_Pos empty = { .x = 0, .y = 0 };
+    if (i3_is_active()) {
+        result = get_cursor_position_i3();
+        if (result.x != 0) return result;
+    }
     if (getenv("WAYLAND_DISPLAY")) {
         result = get_cursor_position_kwin();
         if (result.x != 0) return result;
@@ -154,6 +177,7 @@ Fl_Pos Wm_GetCursorPosition() {
 }
 
 bool Wm_CloseActiveWindow(void) {
+    if (i3_is_active() && close_active_window_i3()) return true;
     if (getenv("WAYLAND_DISPLAY")) {
         if (close_active_window_kwin()) return true;
         if (close_active_window_niri()) return true;
@@ -166,6 +190,7 @@ bool Wm_CloseActiveWindow(void) {
 }
 
 bool Wm_ToggleFullscreenActive(void) {
+    if (i3_is_active() && toggle_fullscreen_active_i3()) return true;
     if (getenv("WAYLAND_DISPLAY")) {
         if (toggle_fullscreen_active_kwin()) return true;
         if (toggle_fullscreen_active_niri()) return true;
@@ -178,6 +203,7 @@ bool Wm_ToggleFullscreenActive(void) {
 }
 
 bool Wm_MoveActiveWindowToMonitor(bool right) {
+    if (i3_is_active() && move_active_window_to_monitor_i3(right)) return true;
     if (getenv("WAYLAND_DISPLAY")) {
         if (move_active_window_to_monitor_kwin(right)) return true;
         if (move_active_window_to_monitor_niri(right)) return true;
@@ -190,6 +216,7 @@ bool Wm_MoveActiveWindowToMonitor(bool right) {
 }
 
 bool Wm_MoveActiveWindowLeft(void) {
+    if (i3_is_active() && move_active_window_left_i3()) return true;
     if (getenv("WAYLAND_DISPLAY")) {
         if (move_active_window_left_kwin()) return true;
         if (move_active_window_left_niri()) return true;
@@ -202,6 +229,7 @@ bool Wm_MoveActiveWindowLeft(void) {
 }
 
 bool Wm_MoveActiveWindowRight(void) {
+    if (i3_is_active() && move_active_window_right_i3()) return true;
     if (getenv("WAYLAND_DISPLAY")) {
         if (move_active_window_right_kwin()) return true;
         if (move_active_window_right_niri()) return true;
@@ -214,6 +242,7 @@ bool Wm_MoveActiveWindowRight(void) {
 }
 
 bool Wm_FocusWindowLeft(void) {
+    if (i3_is_active() && focus_window_left_i3()) return true;
     if (getenv("WAYLAND_DISPLAY")) {
         if (focus_window_left_kwin()) return true;
         if (focus_window_left_niri()) return true;
@@ -226,6 +255,7 @@ bool Wm_FocusWindowLeft(void) {
 }
 
 bool Wm_FocusWindowRight(void) {
+    if (i3_is_active() && focus_window_right_i3()) return true;
     if (getenv("WAYLAND_DISPLAY")) {
         if (focus_window_right_kwin()) return true;
         if (focus_window_right_niri()) return true;
@@ -238,6 +268,7 @@ bool Wm_FocusWindowRight(void) {
 }
 
 bool Wm_MinimizeActiveWindow(void) {
+    if (i3_is_active() && minimize_active_window_i3()) return true;
     if (getenv("WAYLAND_DISPLAY")) {
         if (minimize_active_window_kwin()) return true;
         if (minimize_active_window_niri()) return true;

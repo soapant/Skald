@@ -6,8 +6,8 @@
 #include "core/context.h"
 #include "helpers/helpers_ui.h"
 
-static HFONT g_sizeFont = NULL;
-static int g_sizeFontSize = 0;
+static __thread HFONT g_sizeFont = NULL;
+static __thread int g_sizeFontSize = 0;
 
 static HFONT win32_sized_font(int size) {
   if (size <= 0) size = FontSize;
@@ -19,8 +19,8 @@ static HFONT win32_sized_font(int size) {
   return g_sizeFont;
 }
 
-static const char *g_prerender_text = NULL;
-static void *g_prerender_rect = NULL;
+static __thread const char *g_prerender_text = NULL;
+static __thread void *g_prerender_rect = NULL;
 void Platform_SetPreRenderStateWin32(const char *text, void *rect) {
   g_prerender_text = text; g_prerender_rect = rect; 
 }
@@ -34,7 +34,41 @@ __attribute__((weak)) bool fl_prerender(void) {
     return Platform_PreRender();
 }
 
-static HDC g_draw_hdc = NULL;
+static __thread HDC g_draw_hdc = NULL;
+
+static __thread unsigned long g_draw_bg_override = 0;
+
+void Platform_SetDrawBgColor(unsigned long hex) {
+    g_draw_bg_override = hex;
+}
+unsigned long Platform_GetDrawBgColor(void) {
+    return g_draw_bg_override;
+}
+
+static __thread bool g_measuring = false;
+static __thread int g_meas_x0 = 0, g_meas_y0 = 0, g_meas_x1 = 0, g_meas_y1 = 0;
+
+static void measure_reset(void) {
+    g_measuring = false;
+    g_meas_x0 = 0; g_meas_y0 = 0; g_meas_x1 = 0; g_meas_y1 = 0;
+}
+void Platform_BeginMeasure(void) {
+    g_measuring = true;
+    g_meas_x0 = 1 << 30; g_meas_y0 = 1 << 30;
+    g_meas_x1 = -(1 << 30); g_meas_y1 = -(1 << 30);
+}
+void Platform_EndMeasure(int *out_w, int *out_h) {
+    if (out_w) *out_w = (g_meas_x1 > g_meas_x0) ? (g_meas_x1 - g_meas_x0) : 0;
+    if (out_h) *out_h = (g_meas_y1 > g_meas_y0) ? (g_meas_y1 - g_meas_y0) : 0;
+    measure_reset();
+}
+static void measure_track(int x, int y, int w, int h) {
+    if (!g_measuring) return;
+    if (x < g_meas_x0) g_meas_x0 = x;
+    if (y < g_meas_y0) g_meas_y0 = y;
+    if (x + w > g_meas_x1) g_meas_x1 = x + w;
+    if (y + h > g_meas_y1) g_meas_y1 = y + h;
+}
 void Platform_SetDrawContextWin32(HDC hdc) {
   g_draw_hdc = hdc; 
 }
@@ -54,6 +88,16 @@ bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, F
     SetTextColor(g_draw_hdc, color);
     bool centered = Platform_StringContainsCaseInsensitive(a,"CENTER");
     bool right = !centered && Platform_StringContainsCaseInsensitive(a,"RIGHT");
+    if (g_measuring) {
+        SIZE msz;
+        msz.cx = 0;
+        msz.cy = 0;
+        GetTextExtentPoint32A(g_draw_hdc, text, (int)strlen(text), &msz);
+        int bx = x;
+        if (centered) bx = x - msz.cx / 2;
+        else if (right) bx = x - msz.cx;
+        measure_track(bx, y, msz.cx, msz.cy);
+    }
     if (!centered && !right) {
         int x0 = pad ? pad : x;
         TextOutA(g_draw_hdc, x0, y, text, (int)strlen(text));
@@ -113,6 +157,7 @@ void Platform_GetItemColors(int idx, int count, unsigned long *num_color, unsign
 }
 
 bool Platform_DrawRectRaw(int x, int y, int w, int h, unsigned long color) {
+    measure_track(x, y, w, h);
     RECT rect;
     rect.left = x;
     rect.top = y;

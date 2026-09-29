@@ -2,6 +2,7 @@
 #define NOB_NO_ECHO
 #define NOB_EXPERIMENTAL_DELETE_OLD
 #include "nob.h"
+#include <glob.h>
 
 #define SRC_FOLDER "src"
 #define BUILD_FOLDER "build"
@@ -17,8 +18,10 @@
      #define CC_FLAGS "-std=gnu17", "-DCOBJMACROS", "-I", "include", "-MMD", "-MP","-O3","-Wall","-Wextra","-Wno-unused-parameter","-Wno-sign-compare","-Wno-discarded-qualifiers","-Wno-stringop-truncation","-Wno-sign-compare","-Wno-unused-parameter","-Wno-misleading-indentation"
      #define LINK_FLAGS "-lcomctl32", "-lgdiplus", "-lgdi32", "-lshlwapi", "-lshell32", "-lwinmm", "-lole32", "-luuid", "-lmsimg32", "-ldwmapi", "-lpsapi", "-lcrypt32", "-lcomdlg32", "-ladvapi32", "-ldxva2", "-luser32", "-lgdi32"
 #else
-     #define CC_FLAGS "-I", "include", "-I/usr/include/freetype2","-I/usr/include/glib-2.0","-I/usr/lib/glib-2.0/include","-I/usr/include/gio-unix-2.0","-MMD", "-MP","-O3","-Wall","-Wextra","-Wno-unused-parameter","-Wno-sign-compare","-Wno-discarded-qualifiers","-Wno-stringop-truncation","-Wno-sign-compare","-Wno-unused-parameter","-Wno-misleading-indentation"
-     #define LINK_FLAGS "-lX11", "-lXft", "-lfontconfig", "-lXrender", "-lXrandr", "-lXext", "-lXtst", "-lm", "-ldl", "-lpng", "-Wl,--export-dynamic","-lgio-2.0","-lglib-2.0","-lgobject-2.0","-lcurl"
+     #define CC_FLAGS "-I", "include","-MMD", "-MP","-O3","-Wall","-Wextra","-Wno-unused-parameter","-Wno-sign-compare","-Wno-discarded-qualifiers","-Wno-stringop-truncation","-Wno-sign-compare","-Wno-unused-parameter","-Wno-misleading-indentation"
+     #define LINK_FLAGS "-lm", "-ldl", "-Wl,--export-dynamic"
+     #define PKG_CFLAGS_PKGS_STR "x11 xft fontconfig freetype2 glib-2.0 gio-unix-2.0 libpng xext xrandr xrender xtst xi"
+     #define PKG_LIBS_PKGS_STR   "x11 xft fontconfig libpng xext xrandr xrender xtst xi gio-2.0 gobject-2.0 glib-2.0"
 #endif
 
 static Nob_File_Paths sources = {0};
@@ -41,6 +44,7 @@ static bool collect_source(Nob_Walk_Entry entry) {
 #else
             if (nob_sv_ends_with_cstr(path, "_win32.c")) return true;
 #endif
+            if (!getenv("WAYLAND_DISPLAY"))  if (nob_sv_ends_with_cstr(path, "_wayland.c")) return true;
             bool is_feature = false;
             if (nob_sv_starts_with(path, nob_sv_from_cstr("src/features/")) ||
                 nob_sv_starts_with(path, nob_sv_from_cstr("src\\features\\"))) {
@@ -95,6 +99,154 @@ static const char* err_path(const char* src) {
     return nob_temp_sprintf(OBJ_FOLDER "/%s.err", nob_path_name(src));
 }
 
+#if !defined(_WIN32)
+static Nob_File_Paths dep_cflags = {0};
+static Nob_File_Paths dep_ldflags = {0};
+
+static void append_ws_split(Nob_File_Paths* da, const char* s) {
+    if (!s) return;
+    char buf[4096];
+    snprintf(buf, sizeof(buf), "%s", s);
+    char* p = buf;
+    while (*p) {
+        while (*p == ' ' || *p == '\t' || *p == '\n' || *p == '\r') p++;
+        if (!*p) break;
+        char* start = p;
+        while (*p && *p != ' ' && *p != '\t' && *p != '\n' && *p != '\r') p++;
+        if (*p) *p++ = '\0';
+        nob_da_append(da, nob_temp_strdup(start));
+    }
+}
+
+static char* run_capture(const char* cmdline) {
+    FILE* f = popen(cmdline, "r");
+    if (!f) return NULL;
+    static char out[8192];
+    size_t n = fread(out, 1, sizeof(out) - 1, f);
+    out[n] = '\0';
+    pclose(f);
+    return out;
+}
+
+// On NixOS the .pc files of profile packages are not in pkg-config's
+// compiled-in search path and PKG_CONFIG_PATH is normally unset outside a
+// nix-shell. Some packages (xorgproto) ship .pc under share/pkgconfig while
+// others use lib/pkgconfig, and the profile aggregation only merges the
+// latter. So scan the store for whichever dirs actually provide the modules we
+// need and hand those to pkg-config. On non-Nix systems this finds nothing and
+// leaves the normal search path untouched.
+static void augment_pkg_config_path(void) {
+    const char* need[] = {
+        "x11", "xft", "fontconfig", "freetype2", "glib-2.0", "gio-2.0",
+        "gobject-2.0", "libpng", "xext", "xrandr", "xrender", "xtst", "xi",
+        "wayland-client",
+        // transitive requirements pulled in by the above .pc files
+        "xproto", "kbproto", "xextproto", "xcb", "xau", "xdmcp", "sm", "ice",
+        NULL
+    };
+    const char* patterns[] = {
+        "/nix/store/*/lib/pkgconfig", "/nix/store/*/share/pkgconfig", NULL
+    };
+    char found[64][512];
+    size_t found_n = 0;
+    for (int p = 0; patterns[p]; ++p) {
+        glob_t g;
+        memset(&g, 0, sizeof(g));
+        if (glob(patterns[p], 0, NULL, &g) != 0) { globfree(&g); continue; }
+        for (size_t i = 0; i < g.gl_pathc; ++i) {
+            for (int n = 0; need[n]; ++n) {
+                char probe[1024];
+                snprintf(probe, sizeof(probe), "%s/%s.pc", g.gl_pathv[i], need[n]);
+                if (!nob_file_exists(probe)) continue;
+                bool dup = false;
+                for (size_t f = 0; f < found_n; ++f)
+                    if (strcmp(found[f], g.gl_pathv[i]) == 0) { dup = true; break; }
+                if (!dup && found_n < 64) {
+                    snprintf(found[found_n], sizeof(found[0]), "%s", g.gl_pathv[i]);
+                    found_n++;
+                }
+                break;
+            }
+        }
+        globfree(&g);
+    }
+    if (found_n == 0) return;
+    char path[8192];
+    path[0] = '\0';
+    for (size_t f = 0; f < found_n; ++f) {
+        if (path[0]) strncat(path, ":", sizeof(path) - strlen(path) - 1);
+        strncat(path, found[f], sizeof(path) - strlen(path) - 1);
+    }
+    const char* cur = getenv("PKG_CONFIG_PATH");
+    char full[16384];
+    if (cur && cur[0]) snprintf(full, sizeof(full), "%s:%s", path, cur);
+    else snprintf(full, sizeof(full), "%s", path);
+    setenv("PKG_CONFIG_PATH", full, 1);
+    nob_log(NOB_INFO, "pkg-config search dirs: %zu", found_n);
+}
+
+static void discover_dep_flags(void) {
+    char cmdline[512];
+    augment_pkg_config_path();
+    snprintf(cmdline, sizeof(cmdline), "pkg-config --cflags %s 2>/dev/null", PKG_CFLAGS_PKGS_STR);
+    const char* cflags = run_capture(cmdline);
+    if (cflags && cflags[0]) {
+        append_ws_split(&dep_cflags, cflags);
+        nob_log(NOB_INFO, "pkg-config cflags: %zu flag(s)", dep_cflags.count);
+    } else {
+        const char* fb[] = {
+            "-I/usr/include/freetype2", "-I/usr/include/glib-2.0",
+            "-I/usr/lib/glib-2.0/include", "-I/usr/include/gio-unix-2.0",
+            "-I/usr/include/X11", "-I/usr/include/freetype2",
+        };
+        for (size_t i = 0; i < sizeof(fb)/sizeof(fb[0]); i++) nob_da_append(&dep_cflags, nob_temp_strdup(fb[i]));
+        nob_log(NOB_INFO, "pkg-config unavailable, using default include paths");
+    }
+    snprintf(cmdline, sizeof(cmdline), "pkg-config --libs %s 2>/dev/null", PKG_LIBS_PKGS_STR);
+    const char* ldflags = run_capture(cmdline);
+    if (ldflags && ldflags[0]) {
+        append_ws_split(&dep_ldflags, ldflags);
+        for (size_t i = 0; i < dep_ldflags.count; ++i) {
+            const char* it = dep_ldflags.items[i];
+            if (strncmp(it, "-L", 2) == 0 && it[2]) {
+                char rpath[512];
+                snprintf(rpath, sizeof(rpath), "-Wl,-rpath,%s", it + 2);
+                nob_da_append(&dep_ldflags, nob_temp_strdup(rpath));
+            }
+        }
+        nob_log(NOB_INFO, "pkg-config libs: %zu flag(s)", dep_ldflags.count);
+    } else {
+        const char* fb[] = {
+            "-lX11", "-lXft", "-lfontconfig", "-lXrender", "-lXrandr",
+            "-lXext", "-lXtst", "-lpng", "-lgio-2.0", "-lglib-2.0",
+            "-lgobject-2.0",
+        };
+        for (size_t i = 0; i < sizeof(fb)/sizeof(fb[0]); i++)         nob_da_append(&dep_ldflags, nob_temp_strdup(fb[i]));
+        nob_log(NOB_INFO, "pkg-config unavailable, using default link libs");
+    }
+}
+
+static void append_dep_cflags(Nob_Cmd* cmd) {
+    for (size_t i = 0; i < dep_cflags.count; ++i) nob_cmd_append(cmd, dep_cflags.items[i]);
+}
+
+static void append_dep_ldflags(Nob_Cmd* cmd) {
+    for (size_t i = 0; i < dep_ldflags.count; ++i) nob_cmd_append(cmd, dep_ldflags.items[i]);
+}
+#else
+static void append_dep_cflags(Nob_Cmd* cmd) { (void)cmd; }
+static void append_dep_ldflags(Nob_Cmd* cmd) { (void)cmd; }
+#endif
+
+static void append_wayland_session_flags(Nob_Cmd* cmd) {
+#if !defined(_WIN32)
+    if (getenv("WAYLAND_DISPLAY")) nob_cmd_append(cmd, "-DFLINT_WAYLAND_SESSION");
+#else
+    (void)cmd;
+#endif
+}
+
+
 static void write_json_string(FILE* f, const char* s) {
     fputc('"', f);
     for (const char* p = s; *p; ++p) {
@@ -132,7 +284,9 @@ static bool write_compile_commands(void) {
         Nob_Cmd cmd = {0};
         nob_cc(&cmd);
         nob_cc_flags(&cmd);
+        append_wayland_session_flags(&cmd);
         nob_cmd_append(&cmd, CC_FLAGS, "-c", sources.items[i]);
+        append_dep_cflags(&cmd);
 
         fprintf(f, "  {\n");
         fprintf(f, "    \"directory\": ");
@@ -279,7 +433,9 @@ static bool compile_all(bool* any_compiled) {
         Nob_Cmd cmd = {0};
         nob_cc(&cmd);
         nob_cc_flags(&cmd);
+        append_wayland_session_flags(&cmd);
         nob_cmd_append(&cmd, CC_FLAGS, "-c", to_build.items[i], "-o", obj_path(to_build.items[i]));
+        append_dep_cflags(&cmd);
         if (!nob_cmd_run(&cmd, .async = &procs, .max_procs = max_procs,
                          .stderr_path = err_paths.items[i])) {
             
@@ -367,12 +523,14 @@ static bool run_tests(void) {
         Nob_Cmd cmd = {0};
         nob_cc(&cmd);
         nob_cmd_append(&cmd, "-I", "include", "-I", "tests", "-O2", "-Wall", src);
+        append_dep_cflags(&cmd);
         if (support_obj) nob_cmd_append(&cmd, support_obj);
         for (size_t i = 0; i < sources.count; ++i) {
             if (strcmp(sources.items[i], "src/main.c") == 0) continue;
             if (strcmp(sources.items[i], "src\\main.c") == 0) continue;
             nob_cmd_append(&cmd, obj_path(sources.items[i]));
         }
+        append_dep_ldflags(&cmd);
         nob_cmd_append(&cmd, LINK_FLAGS, "-o", out);
         nob_log(NOB_INFO, "Building test %s", out);
         snprintf(suite_names[t], sizeof(suite_names[t]), "%s", name);
@@ -433,6 +591,10 @@ int main(int argc, char** argv) {
         return 1;
     }
 
+#if !defined(_WIN32)
+    discover_dep_flags();
+#endif
+
     write_compile_commands();
 
     for (size_t i = 0; i < sources.count; ++i) {
@@ -492,6 +654,7 @@ int main(int argc, char** argv) {
                 nob_cmd_append(&fcmd, CC_FLAGS, "-shared", "-o", so, src, "build/main.lib.a", "-MF", feature_dep_path(src), LINK_FLAGS);
 #else
                 nob_cmd_append(&fcmd, CC_FLAGS, "-fPIC", "-shared", "-o", so, src, "-MF", feature_dep_path(src));
+                append_dep_cflags(&fcmd);
 #endif
                 if (!nob_cmd_run(&fcmd, .async = &fprocs, .max_procs = _fmax)) {
                     nob_log(NOB_ERROR, "Failed to start feature %s", so);
@@ -530,6 +693,7 @@ int main(int argc, char** argv) {
     if (do_actual) nob_cmd_append(&cmd, "-mwindows");
     nob_cmd_append(&cmd, "-Wl,--export-all-symbols", "-Wl,--out-implib,build/main.lib.a");
 #endif
+    append_dep_ldflags(&cmd);
     nob_cmd_append(&cmd, LINK_FLAGS);
     if (!nob_cmd_run(&cmd)) {
         nob_log(NOB_ERROR, "Failed to link %s", output);
@@ -553,6 +717,7 @@ int main(int argc, char** argv) {
             nob_cmd_append(&fcmd, CC_FLAGS, "-shared", "-o", so, src, "build/main.lib.a", "-MF", feature_dep_path(src), LINK_FLAGS);
 #else
             nob_cmd_append(&fcmd, CC_FLAGS, "-fPIC", "-shared", "-o", so, src, "-MF", feature_dep_path(src));
+            append_dep_cflags(&fcmd);
 #endif
             if (!nob_cmd_run(&fcmd, .async = &fprocs, .max_procs = _fmax2)) {
                 nob_log(NOB_ERROR, "Failed to start feature %s", so);
