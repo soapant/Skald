@@ -226,6 +226,9 @@ void Platform_SetDrawContext(Display* dpy, XftDraw* xd, Visual* vis, Colormap cm
     RawLine_Flush();
     g_draw_dpy = dpy; g_draw_xd = xd; g_draw_vis = vis; g_draw_cmap = cmap;
 }
+void Platform_FlushDraw(void) {
+    RawLine_Flush();
+}
 void Platform_GetDrawContext(Display** dpy, XftDraw** xd, Visual** vis, Colormap* cmap) {
     if (dpy) *dpy = g_draw_dpy;
     if (xd) *xd = g_draw_xd;

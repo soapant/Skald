@@ -20,6 +20,7 @@ void Platform_DrawEditText(PromptState *state, Display *dpy, XftDraw *xd, Visual
 void Platform_DrawEditCursor(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap, FontHandle font);
 void Platform_SetDrawContext(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap);
 void Platform_GetDrawContext(Display** dpy, XftDraw** xd, Visual** vis, Colormap* cmap);
+void Platform_FlushDraw(void);
 void Platform_SetPreRenderState(PromptState *state);
 PromptState* Platform_GetPreRenderStatePtr(void);
 void Platform_DrawEditBox(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap);
