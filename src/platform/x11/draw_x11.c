@@ -426,7 +426,7 @@ void Platform_DrawEditCursor(PromptState *state, Display *dpy, XftDraw *xd, Visu
     int cursor_draw_x = 14 + cursor_x - state->scroll_offset;
     if (cursor_draw_x < 2) cursor_draw_x = 2;
     if (cursor_draw_x > state->width - 4) cursor_draw_x = state->width - 4;
-    int cursor_y = x11_font_cursor_y_of();
+    int cursor_y = x11_font_cursor_y_of(font, 14);
     if (IsInsertMode()) {
         Platform_DrawRectRaw(cursor_draw_x, cursor_y, 2, FontSize, rgb_to_hex(COLOR_CURSOR));
     } else {

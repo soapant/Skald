@@ -233,8 +233,15 @@ int x11_font_list_top_of(FontHandle font) {
     return x11_font_list_top(xf ? xf->ascent : 0, xf ? xf->descent : 0, FontSize);
 }
 
-int x11_font_cursor_y_of() {
-    return 17;
+int x11_font_cursor_y(int ascent, int descent, int font_size, int box_top) {
+    int line_h = ascent + descent;
+    if (line_h <= 0 || font_size <= 0) return box_top;
+    return box_top + (line_h - font_size) / 2;
+}
+
+int x11_font_cursor_y_of(FontHandle font, int box_top) {
+    XftFont* xf = FH_TO_XFT(font);
+    return x11_font_cursor_y(xf ? xf->ascent : 0, xf ? xf->descent : 0, FontSize, box_top);
 }
 
 void x11_draw_edit_cursor(XftDraw* xd, XftColor* color, int cursor_x, int scroll, int width) {
