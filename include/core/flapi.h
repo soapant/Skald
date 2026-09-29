@@ -354,14 +354,6 @@ typedef enum {
     FL_WIDGET_FREE
 } FlWidgetSlot;
 
-/* name is required. Creating a widget whose name already exists takes over the
-   existing one's slot, order and window. Widgets sharing a corner pack side by
-   side, never overlapping; hidden widgets keep their space reserved.
-   order 0 means unset, which falls back to registration sequence. x/y are -1
-   when unset and are only read for FL_WIDGET_FREE, which sits outside the
-   corner layout entirely.
-   The render callback runs on Flint's render thread, not the main thread: guard
-   any feature state it shares with a hotkey or prompt render callback. */
 typedef struct {
     const char *name;
     int w;
@@ -369,8 +361,9 @@ typedef struct {
     int slot;
     int order;
     int gap;
-    int pad;                       // padding added to auto-measured size
+    int pad;                       
     int fps;
+    ColorRef bg_color;             
     FlWidgetRenderFn render;
     int x;
     int y;
@@ -398,6 +391,8 @@ struct FlWidget {
     int y;
     bool auto_w;
     bool auto_h;
+    unsigned long bg_hex;
+    bool has_bg;
     int pad;
     bool dead;
     bool mapped;

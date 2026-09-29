@@ -977,7 +977,8 @@ static Pixmap x11_create_background_pixmap(Display* dpy, Window win, int w, int 
 Pixmap x11_get_cached_background(Display* dpy, Window win, int w, int h) {
     PROFILE_START(timer);
     if (!dpy || w <= 0 || h <= 0) { PROFILE_END_VAR(timer, "helpers_x11:x11_get_cached_background"); return None; }
-    unsigned long base = rgb_to_hex(COLOR_BG);
+    unsigned long base = Platform_GetDrawBgColor();
+    if (!base) base = rgb_to_hex(COLOR_BG);
     int preset = ShaderPreset;
     float intensity = ShaderIntensity;
     float brightness = ShaderBrightness;
@@ -1019,7 +1020,8 @@ Pixmap x11_get_cached_background(Display* dpy, Window win, int w, int h) {
 
 void x11_draw_background_to_drawable(Display* dpy, Drawable drw, int w, int h) {
     if (!dpy || w <= 0 || h <= 0) return;
-    unsigned long base = rgb_to_hex(COLOR_BG);
+    unsigned long base = Platform_GetDrawBgColor();
+    if (!base) base = rgb_to_hex(COLOR_BG);
     int preset = ShaderPreset;
     float intensity = ShaderIntensity;
     float brightness = ShaderBrightness;

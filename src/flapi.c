@@ -1599,8 +1599,6 @@ static void fl_widget_relayout(void);
 
 static void fl_widget_render_frame(void *ud);
 
-static void fl_widget_relayout(void);
-
 static void fl_widget_measure_and_fit(void *ud) {
     FlWidget *widget = (FlWidget *)ud;
     if (!widget || widget->dead) return;
@@ -1698,16 +1696,32 @@ static void fl_widget_render_frame(void *ud) {
     widget->render(&st);
 }
 
-static void fl_widget_attach_window(FlWidget *widget, int x, int y) {
-    widget->x = x;
-    widget->y = y;
+static void fl_widget_attach_window(void *ud) {
+    FlWidget *widget = (FlWidget *)ud;
+    if (!widget || widget->dead) return;
     if (!Platform_Widget_IsValid(widget->win)) {
-        widget->win = Platform_Widget_Create(x, y, widget->w, widget->h, widget->fps);
+        Platform_SetDrawBgColor(widget->has_bg ? widget->bg_hex : 0);
+        widget->win = Platform_Widget_Create(widget->x, widget->y, widget->w, widget->h, widget->fps);
+        Platform_SetDrawBgColor(0);
         if (widget->win) {
+            Platform_Widget_SetBgColor(widget->win, widget->has_bg ? widget->bg_hex : 0);
             Platform_Widget_SetFrameCallback(widget->win, fl_widget_render_frame, widget);
         }
     } else {
-        Platform_Widget_Move(widget->win, x, y);
+        Platform_Widget_Move(widget->win, widget->x, widget->y);
+    }
+}
+
+static void fl_widget_apply_geometry(FlWidget *widget, int x, int y) {
+    widget->x = x;
+    widget->y = y;
+    if (Platform_RenderThread_IsCurrentThread()) {
+        fl_widget_attach_window(widget);
+        return;
+    }
+    if (!Platform_RenderThread_EnsureStarted(widget->fps)) return;
+    if (Platform_RenderThread_Post(fl_widget_attach_window, widget)) {
+        Platform_RenderThread_Sync();
     }
 }
 
@@ -1743,7 +1757,7 @@ static void fl_widget_relayout(void) {
             if (w->slot != s) continue;
             int x = from_right ? cursor - w->w : cursor;
             int y = from_top ? my : my + mh - w->h;
-            fl_widget_attach_window(w, x, y);
+            fl_widget_apply_geometry(w, x, y);
             cursor += from_right ? -(w->w + w->gap) : (w->w + w->gap);
         }
     }
@@ -1773,6 +1787,8 @@ FlWidget *fl_widget_create(const FlWidgetSpec *spec) {
         g_fl_widgets[g_fl_widget_count++] = widget;
     }
 
+    widget->has_bg = spec->bg_color != 0;
+    widget->bg_hex = widget->has_bg ? rgb_to_hex(spec->bg_color) : 0;
     widget->auto_w = spec->w <= 0;
     widget->auto_h = spec->h <= 0;
     widget->pad = spec->pad > 0 ? spec->pad : FL_WIDGET_DEFAULT_PAD;
@@ -1797,7 +1813,7 @@ FlWidget *fl_widget_create(const FlWidgetSpec *spec) {
             x = mx + (mw - widget->w) / 2;
             y = my + (mh - widget->h) / 2;
         }
-        fl_widget_attach_window(widget, x, y);
+        fl_widget_apply_geometry(widget, x, y);
         Platform_Widget_SetFrameCallback(widget->win, fl_widget_render_frame, widget);
     } else {
         fl_widget_relayout();

@@ -13,6 +13,7 @@ bool Platform_RenderThread_AddFrameCallback(Platform_RenderFrameFn fn, void *ud)
 bool Platform_RenderThread_RemoveFrameCallback(Platform_RenderFrameFn fn, void *ud);
 bool Platform_RenderThread_Post(Platform_RenderFrameFn fn, void *ud);
 void Platform_RenderThread_Sync(void);
+bool Platform_RenderThread_IsCurrentThread(void);
 
 void *Platform_RenderThread_Display(void);
 
