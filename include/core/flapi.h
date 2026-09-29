@@ -17,6 +17,34 @@
 #define BLACKLIST 0
 #define FlStringList StringList
 
+// =============================================================================
+// WIDGETS
+// =============================================================================
+
+#define FL_WIDGET_MAX 32
+#define FL_WIDGET_NAME_MAX 64
+#define FL_WIDGET_DEFAULT_GAP 10
+
+struct FlWidget {
+    char name[FL_WIDGET_NAME_MAX];
+    int w;
+    int h;
+    int gap;
+    int fps;
+    int slot;
+    int order;
+    int seq;
+    bool order_set;
+    bool free_pos;
+    int x;
+    int y;
+    bool mapped;
+    PlatformWidget *win;
+    FlWidgetRenderFn render;
+    unsigned long frame;
+    FlTimer created_at;
+};
+
 
 
 // =============================================================================
@@ -327,6 +355,57 @@ bool fl_draw_text_auto(const char *text);
 bool fl_place_editbox_auto(int w, int h, const char *buffer);
 bool fl_place_listbox_auto(int w, int h, const char **items, int count);
 bool fl_place_image_auto(int w, int h, const char *path);
+
+// =============================================================================
+// WIDGETS (persistent windows, drawn on their own render thread)
+// =============================================================================
+
+typedef struct FlWidget FlWidget;
+
+typedef struct {
+    int width;
+    int height;
+    unsigned long frame;
+    double elapsed;
+} FlWidgetState;
+
+typedef void (*FlWidgetRenderFn)(FlWidgetState *state);
+
+typedef enum {
+    FL_WIDGET_SLOT_TOP_LEFT,
+    FL_WIDGET_SLOT_TOP_RIGHT,
+    FL_WIDGET_SLOT_BOTTOM_LEFT,
+    FL_WIDGET_SLOT_BOTTOM_RIGHT,
+    FL_WIDGET_FREE
+} FlWidgetSlot;
+
+/* name is required. Creating a widget whose name already exists takes over the
+   existing one's slot, order and window. Widgets sharing a corner pack side by
+   side, never overlapping; hidden widgets keep their space reserved.
+   order 0 means unset, which falls back to registration sequence. x/y are -1
+   when unset and are only read for FL_WIDGET_FREE, which sits outside the
+   corner layout entirely.
+   The render callback runs on Flint's render thread, not the main thread: guard
+   any feature state it shares with a hotkey or prompt render callback. */
+typedef struct {
+    const char *name;
+    int w;
+    int h;
+    int slot;
+    int order;
+    int gap;
+    int fps;
+    FlWidgetRenderFn render;
+    int x;
+    int y;
+} FlWidgetSpec;
+
+FlWidget *fl_widget_create(const FlWidgetSpec *spec);
+#define fl_widget(...) fl_widget_create(&(FlWidgetSpec){__VA_ARGS__})
+bool fl_widget_is_valid(FlWidget *widget);
+void fl_widget_show(FlWidget *widget);
+void fl_widget_hide(FlWidget *widget);
+void fl_widget_set_render(FlWidget *widget, FlWidgetRenderFn render);
 
 // =============================================================================
 // PRE-RENDER HOOK (global overridable)
