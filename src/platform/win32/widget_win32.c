@@ -133,7 +133,6 @@ PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps) {
         free(widget);
         return NULL;
     }
-    log_info("widget created hwnd=%p at %d,%d %dx%d fps=%d", (void *)widget->hwnd, x, y, w, h, fps);
     return widget;
 }
 
@@ -145,7 +144,6 @@ void Platform_Widget_Destroy(PlatformWidget *widget) {
         DestroyWindow(widget->hwnd);
     }
     widget->hwnd = NULL;
-    log_info("widget destroyed");
     free(widget);
 }
 
