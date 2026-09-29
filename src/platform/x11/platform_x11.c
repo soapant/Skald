@@ -137,6 +137,9 @@ bool Platform_LaunchTerminalAtPath(const char* working_dir, const char* extra_ar
             Env_ApplyToCurrentProcess(&env);
             if(extra_args && extra_args[0]){
                 char cmd[2048];
+                //temporary ill get to it later
+                snprintf(cmd, sizeof(cmd), "%s --working-directory=\"%s\" -e %s", UsedTerminal, working_dir, extra_args);
+                execl("/bin/sh", "sh", "-c", cmd, (char*)NULL);
                 snprintf(cmd, sizeof(cmd), "%s --working-directory=\"%s\" %s", UsedTerminal, working_dir, extra_args);
                 execl("/bin/sh", "sh", "-c", cmd, (char*)NULL);
             } else {
@@ -1355,9 +1358,9 @@ typedef struct {
 } NameToPath;
 
 NameToPath supported_names_to_paths[] =  {
-  {"sway","/home/diggy/Programming/Projects/Flint/resources/Sway.svg"},
-  {"anki","/home/diggy/Programming/Projects/Flint/resources/Anki.png"},
-  {"xdg-desktop-portal-gtk","/home/diggy/Programming/Projects/Flint/resources/xdg-desktop-portal-gtk.png"},
+  {"sway","/home/dog/Programming/Projects/Flint/resources/Sway.svg"},
+  {"anki","/home/dog/Programming/Projects/Flint/resources/Anki.png"},
+  {"xdg-desktop-portal-gtk","/home/dog/Programming/Projects/Flint/resources/xdg-desktop-portal-gtk.png"},
 };
 
 #define MAX_ICON_CACHE 1024
@@ -1509,7 +1512,7 @@ char* Platform_GetIconPath(char* app_path) {
 }
 
 #include "platform/x11/clipboard_x11.h"
-#include "platform/x11/clipboard_wayland_x11.h"
+#include "platform/x11/clipboard_backend_x11.h"
 
 int Platform_CopyToClipboard(const char *text) {
     if (!text) return 0;
@@ -1520,9 +1523,9 @@ int Platform_CopyToClipboard(const char *text) {
         (int)getpid(), (int)strlen(text), text,
         getenv("WAYLAND_DISPLAY") ? getenv("WAYLAND_DISPLAY") : "(unset)",
         getenv("HYPRLAND_INSTANCE_SIGNATURE") ? "set" : "(unset)");
-    if (Wayland_ClipboardAvailable()) {
+    if (Platform_ClipboardAvailable()) {
         long long tw = Platform_GetWallClockMs();
-        wr = Wayland_ClipboardSetText(text);
+        wr = Platform_ClipboardSetText(text);
         log_info("COPY step1 wayland ret=%d ms=%lld", wr, Platform_GetWallClockMs() - tw);
     } else {
         log_info("COPY step1 wayland SKIPPED (no WAYLAND_DISPLAY)");
@@ -1539,8 +1542,8 @@ int Platform_CopyImageToClipboard(const unsigned char *png, size_t len) {
     if (!png || len == 0) return 0;
     int wr = 0;
     int xr = 0;
-    if (Wayland_ClipboardAvailable()) {
-        wr = Wayland_ClipboardSetImage(png, len);
+    if (Platform_ClipboardAvailable()) {
+        wr = Platform_ClipboardSetImage(png, len);
         log_info("Platform_CopyImageToClipboard wayland=%d", wr);
     }
     xr = x11_clipboard_set_image(png, len);
@@ -1726,7 +1729,7 @@ bool Platform_InitDisplaySafe(void) {
 }
 
 void Platform_CleanupDisplaySafe(void) {
-    Wayland_ClipboardShutdown();
+    Platform_ClipboardShutdown();
     x11_clipboard_shutdown();
     cleanup_display();
 }

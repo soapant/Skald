@@ -20,7 +20,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/types.h>
-#include <curl/curl.h>
 #include "core/timer.h"
 #include "core/remap_manager.h"
 #include "core/window_manager.h"
@@ -149,6 +148,98 @@ bool Platform_GetAllFilesFromDir(const char* dir_path, char** list_of_allowed_ex
     return true;
 }
 
+static bool platform_exe_in_path(const char* name) {
+    if (!name || !name[0]) return false;
+    const char* path = getenv("PATH");
+    if (!path || !path[0]) return false;
+    const char* p = path;
+    while (*p) {
+        const char* sep = strchr(p, ':');
+        size_t len = sep ? (size_t)(sep - p) : strlen(p);
+        char cand[1024];
+        if (len == 0) snprintf(cand, sizeof(cand), "./%s", name);
+        else snprintf(cand, sizeof(cand), "%.*s/%s", (int)len, p, name);
+        if (access(cand, X_OK) == 0) return true;
+        if (!sep) break;
+        p = sep + 1;
+    }
+    return false;
+}
+
+static bool platform_resolve_desktop_exec(const char* exec_line, const char* desktop_dir,
+                                          const char* workdir, char* out, size_t out_size) {
+    if (!exec_line || !out || out_size == 0) return false;
+    const char* p = exec_line;
+    while (*p == ' ' || *p == '\t') p++;
+
+    char token[1024];
+    size_t t = 0;
+    if (*p == '"') {
+        p++;
+        while (*p) {
+            if (*p == '\\' && (p[1] == '"' || p[1] == '\\')) p++;
+            else if (*p == '"') { p++; break; }
+            if (t + 1 < sizeof(token)) token[t++] = *p;
+            p++;
+        }
+    } else {
+        while (*p && *p != ' ' && *p != '\t') {
+            if (t + 1 < sizeof(token)) token[t++] = *p;
+            p++;
+        }
+    }
+    token[t] = '\0';
+    while (*p == ' ' || *p == '\t') p++;
+    if (!token[0]) return false;
+
+    const char* base = (workdir && workdir[0]) ? workdir : desktop_dir;
+    char prog[1024];
+    if (strchr(token, '/')) {
+        if (token[0] == '/') snprintf(prog, sizeof(prog), "%s", token);
+        else snprintf(prog, sizeof(prog), "%s/%s", base, token);
+    } else if (platform_exe_in_path(token)) {
+        snprintf(prog, sizeof(prog), "%s", token);
+    } else {
+        snprintf(prog, sizeof(prog), "%s/%s", desktop_dir, token);
+    }
+
+    if (strchr(prog, '/')) {
+        if (access(prog, X_OK) != 0) {
+            log_info("desktop exec resolve: '%s' not executable", prog);
+            return false;
+        }
+    } else if (!platform_exe_in_path(prog)) {
+        return false;
+    }
+
+    char q[2200];
+    size_t n = 0;
+    q[n++] = '\'';
+    for (const char* s = prog; *s && n + 5 < sizeof(q); s++) {
+        if (*s == '\'') { memcpy(q + n, "'\\''", 4); n += 4; }
+        else q[n++] = *s;
+    }
+    q[n++] = '\'';
+    q[n] = '\0';
+
+    snprintf(out, out_size, "%s%s%s", q, p[0] ? " " : "", p);
+    return true;
+}
+
+static int platform_run_status(char* const argv[], const X11SessionEnv* env, bool apply_env) {
+    pid_t pid = fork();
+    if (pid < 0) return -1;
+    if (pid == 0) {
+        if (apply_env && env) Env_ApplyToCurrentProcess(env);
+        execvp(argv[0], argv);
+        _exit(127);
+    }
+    int st = 0;
+    if (waitpid(pid, &st, 0) < 0) return -1;
+    if (!WIFEXITED(st)) return -1;
+    return WEXITSTATUS(st);
+}
+
 bool fl_launch_with_args_platform(const char* path, const char* args) {
     PROFILE_START(timer);
     log_info("fl_launch path='%s' args='%s'", path ? path : "null", args ? args : "null");
@@ -178,99 +269,67 @@ bool fl_launch_with_args_platform(const char* path, const char* args) {
             char combined[2048];
             snprintf(combined, sizeof(combined), "%s %s", exec_line, args);
             strncpy(exec_line, combined, sizeof(exec_line)-1);
+            exec_line[sizeof(exec_line)-1] = '\0';
         }
+        if (!exec_line[0]) {
+            log_warn("desktop '%s' has no usable Exec line", expanded);
+            PROFILE_END_VAR(timer, "flapi_x11:fl_launch_with_args_platform");
+            return false;
+        }
+
+        char desktop_dir[1024] = {0};
+        snprintf(desktop_dir, sizeof(desktop_dir), "%s", expanded);
+        char* dslash = strrchr(desktop_dir, '/');
+        if (dslash) *dslash = '\0';
+        else snprintf(desktop_dir, sizeof(desktop_dir), ".");
+        const char* run_dir = workdir[0] ? workdir : desktop_dir;
+
         X11SessionEnv env; Env_GetSessionEnv(&env);
-        char app_id[256]; Desktop_GetAppId(expanded, app_id);
-        log_info("gtk-launch try app_id='%s' env user='%s' display='%s'", app_id, env.real_user, env.display);
         char disp_env[256], xauth_env[512], runtime_env[512], wayland_env[512];
         Env_BuildEnvStrings(&env, disp_env, xauth_env, runtime_env, wayland_env);
-        pid_t pid = fork();
-        if (pid==0){
-            setsid(); pid_t pid2=fork(); if(pid2<0) _exit(1); if(pid2>0) _exit(0);
-            int fd=open("/dev/null",O_RDWR); if(fd>=0){dup2(fd,0);dup2(fd,1);dup2(fd,2); if(fd>2) close(fd);}
-            if(Env_IsRunningAsRoot()){
-                char* const argv_sysd[] = {"sudo","-u",(char*)env.real_user,"env",disp_env,xauth_env,runtime_env,wayland_env,"systemd-run","--user","--scope","gtk-launch",app_id,NULL};
-                execvp(argv_sysd[0], argv_sysd);
-                char* const argv_fallback[] = {"sudo","-u",(char*)env.real_user,"env",disp_env,xauth_env,runtime_env,wayland_env,"gtk-launch",app_id,NULL};
-                execvp(argv_fallback[0], argv_fallback);
-            } else {
-                Env_ApplyToCurrentProcess(&env);
-                char* const argv_sysd2[] = {"systemd-run","--user","--scope","gtk-launch",app_id,NULL};
-                execvp(argv_sysd2[0], argv_sysd2);
-                char* const argv_fallback2[] = {"gtk-launch",app_id,NULL};
-                execvp(argv_fallback2[0], argv_fallback2);
-            }
-            _exit(127);
-        } else if(pid>0){ int st=0; waitpid(pid,&st,0); log_info("gtk-launch pid %d exit %d WIFEXITED=%d", pid, WIFEXITED(st)?WEXITSTATUS(st):-1, WIFEXITED(st)); if(WIFEXITED(st) && WEXITSTATUS(st)!=0 && exec_line[0]){ log_info("gtk-launch failed, fallback exec_line='%s'", exec_line);
-                if(is_terminal){
-                    char extra2[2048]; snprintf(extra2, sizeof(extra2), "-e sh -c '%s; exec'", exec_line,UsedShell);
-                    PROFILE_END_VAR(timer, "flapi_x11:fl_launch_with_args_platform");
-                    return Platform_LaunchTerminalAtPath(Platform_GetRealHome(), extra2);
-                } else {
-                    pid_t pid3=fork();
-                    if(pid3==0){
-                        setsid(); pid_t p2=fork(); if(p2<0) _exit(1); if(p2>0) _exit(0);
-                        int fd2=open("/dev/null",O_RDWR); if(fd2>=0){dup2(fd2,0);dup2(fd2,1);dup2(fd2,2); if(fd2>2) close(fd2);}
-                        if(Env_IsRunningAsRoot()){
-                            char* const av2[]={"sudo","-u",(char*)env.real_user,"env",disp_env,xauth_env,runtime_env,wayland_env,"sh","-c",exec_line,NULL};
-                            execvp(av2[0],av2);
-                        } else {
-                            Env_ApplyToCurrentProcess(&env);
-                            execl("/bin/sh","sh","-c",exec_line,(char*)NULL);
-                        }
-                        _exit(127);
-                    } else if(pid3>0){ int st2=0; waitpid(pid3,&st2,0); log_info("exec_line pid3 %d exit %d", pid3, WIFEXITED(st2)?WEXITSTATUS(st2):-1); if (WIFEXITED(st2) && WEXITSTATUS(st2)==0) { PROFILE_END_VAR(timer, "flapi_x11:fl_launch_with_args_platform"); return true; }
-                        log_info("exec_line failed, dir fallback try");
-                        char desktop_dir[1024]; strncpy(desktop_dir, expanded, sizeof(desktop_dir)-1); desktop_dir[sizeof(desktop_dir)-1]='\0'; char* slash = strrchr(desktop_dir, '/'); if (slash) *slash='\0'; else strcpy(desktop_dir, ".");
-                        char dir_candidate[1024]; snprintf(dir_candidate, sizeof(dir_candidate), "%s/%s", desktop_dir, app_id);
-                        char dir_cmd[2048];
-                        if (access(dir_candidate, X_OK)==0) snprintf(dir_cmd, sizeof(dir_cmd), "cd \"%s\" && ./%s &", desktop_dir, app_id);
-                        else snprintf(dir_cmd, sizeof(dir_cmd), "cd \"%s\" && ./%s &", desktop_dir, app_id);
-                        log_info("dir fallback desktop_dir='%s' app_id='%s' candidate='%s' access_X=%d access_F=%d cmd='%s'", desktop_dir, app_id, dir_candidate, access(dir_candidate,X_OK), access(dir_candidate,F_OK), dir_cmd);
-                        bool dir_exists = (access(dir_candidate, X_OK)==0) || (access(dir_candidate, F_OK)==0);
-                        if (dir_exists) {
-                            log_info("dir fallback launching '%s'", dir_cmd);
-                            X11SessionEnv env3 = env;
-                            char disp3[256], xauth3[512], runtime3[512];
-                            Env_BuildEnvStrings(&env3, disp3, xauth3, runtime3, NULL);
-                            if (Env_IsRunningAsRoot()) {
-                                char* const argv3[] = {"sudo","-u",(char*)env3.real_user,"env",disp3,xauth3,runtime3,"sh","-c",dir_cmd,NULL};
-                                Env_DaemonExec(argv3);
-                            } else {
-                                char* const argv3[] = {"sh","-c",dir_cmd,NULL};
-                                Env_DaemonExecWithEnv(argv3, &env3);
-                            }
-                            PROFILE_END_VAR(timer, "flapi_x11:fl_launch_with_args_platform"); return true;
-                        }
-                        PROFILE_END_VAR(timer, "flapi_x11:fl_launch_with_args_platform"); return false;
-                    }
-                }
-            }
-            //temporary hardcoded fallback
-            if (strstr(expanded, "/miscellaneous/") != NULL) {
-                char desktop_dir2[1024]; strncpy(desktop_dir2, expanded, sizeof(desktop_dir2)-1); desktop_dir2[sizeof(desktop_dir2)-1]='\0'; char* slash2 = strrchr(desktop_dir2, '/'); if (slash2) *slash2='\0'; else strcpy(desktop_dir2, ".");
-                char dir_candidate2[1024]; snprintf(dir_candidate2, sizeof(dir_candidate2), "%s/%s", desktop_dir2, app_id);
-                if (access(dir_candidate2, X_OK)==0) {
-                    log_info("miscellaneous fallback dir_candidate='%s'", dir_candidate2);
-                    char dir_cmd2[2048]; snprintf(dir_cmd2, sizeof(dir_cmd2), "cd \"%s\" && ./%s &", desktop_dir2, app_id);
-                    X11SessionEnv env4 = env;
-                    char disp4[256], xauth4[512], runtime4[512];
-                    Env_BuildEnvStrings(&env4, disp4, xauth4, runtime4, NULL);
-                    if (Env_IsRunningAsRoot()) {
-                        char* const argv4[] = {"sudo","-u",(char*)env4.real_user,"env",disp4,xauth4,runtime4,"sh","-c",dir_cmd2,NULL};
-                        Env_DaemonExec(argv4);
-                    } else {
-                        char* const argv4[] = {"sh","-c",dir_cmd2,NULL};
-                        Env_DaemonExecWithEnv(argv4, &env4);
-                    }
-                    PROFILE_END_VAR(timer, "flapi_x11:fl_launch_with_args_platform"); return true;
-                }
-            }
+        bool as_root = Env_IsRunningAsRoot();
+        log_info("desktop '%s' exec='%s' workdir='%s' run_dir='%s' as_root=%d", expanded, exec_line, workdir, run_dir, as_root);
+
+        int gio_st;
+        if (as_root) {
+            char* const av_gio[] = {"sudo","-u",(char*)env.real_user,"env",disp_env,xauth_env,runtime_env,wayland_env,"gio","launch",expanded,NULL};
+            gio_st = platform_run_status(av_gio, NULL, false);
+        } else {
+            char* const av_gio2[] = {"gio","launch",expanded,NULL};
+            gio_st = platform_run_status(av_gio2, &env, true);
+        }
+        log_info("gio launch '%s' exit=%d", expanded, gio_st);
+        if (gio_st == 0) {
             PROFILE_END_VAR(timer, "flapi_x11:fl_launch_with_args_platform");
             return true;
         }
+
+        char cmd[4096];
+        if (!platform_resolve_desktop_exec(exec_line, desktop_dir, workdir, cmd, sizeof(cmd))) {
+            log_warn("desktop '%s': cannot resolve Exec '%s' via PATH or desktop dir '%s'", expanded, exec_line, desktop_dir);
+            PROFILE_END_VAR(timer, "flapi_x11:fl_launch_with_args_platform");
+            return false;
+        }
+        char launch_cmd[4608];
+        snprintf(launch_cmd, sizeof(launch_cmd), "cd '%s' && %s", run_dir, cmd);
+        log_info("desktop resolved launch_cmd='%s'", launch_cmd);
+
+        if (as_root) {
+            char* const av_run[] = {"sudo","-u",(char*)env.real_user,"env",disp_env,xauth_env,runtime_env,wayland_env,"sh","-c",launch_cmd,NULL};
+            if (!Env_DaemonExec(av_run)) {
+                PROFILE_END_VAR(timer, "flapi_x11:fl_launch_with_args_platform");
+                return false;
+            }
+        } else {
+            X11SessionEnv env2 = env;
+            char* const av_run2[] = {"sh","-c",launch_cmd,NULL};
+            if (!Env_DaemonExecWithEnv(av_run2, &env2)) {
+                PROFILE_END_VAR(timer, "flapi_x11:fl_launch_with_args_platform");
+                return false;
+            }
+        }
         PROFILE_END_VAR(timer, "flapi_x11:fl_launch_with_args_platform");
-        return false;
+        return true;
     } else {
         char cmd[2048];
         if (args && args[0] && strcmp(args,"0")!=0) snprintf(cmd, sizeof(cmd), "\"%s\" %s", path, args);
@@ -319,16 +378,16 @@ bool fl_launch_with_args_as_admin_platform(const char* path, const char* args) {
     return true;
 }
 
-static FlListSpec g_fl_list_spec;
-static ListBoxInfo *g_fl_list_lb;
-static int g_fl_list_y0, g_fl_list_itemH, g_fl_list_visible, g_fl_list_cur;
-static int g_fl_list_bx, g_fl_list_bw, g_fl_list_fw;
-static Display *g_fl_list_dpy;
-static XftDraw *g_fl_list_xd;
-static Visual *g_fl_list_vis;
-static Colormap g_fl_list_cmap;
-static FontHandle g_fl_list_font;
-static bool g_fl_list_font_owned;
+static __thread FlListSpec g_fl_list_spec;
+static __thread ListBoxInfo *g_fl_list_lb;
+static __thread int g_fl_list_y0, g_fl_list_itemH, g_fl_list_visible, g_fl_list_cur;
+static __thread int g_fl_list_bx, g_fl_list_bw, g_fl_list_fw;
+static __thread Display *g_fl_list_dpy;
+static __thread XftDraw *g_fl_list_xd;
+static __thread Visual *g_fl_list_vis;
+static __thread Colormap g_fl_list_cmap;
+static __thread FontHandle g_fl_list_font;
+static __thread bool g_fl_list_font_owned;
 
 bool fl_listbox_begin_platform(const FlListSpec *spec) {
     if (!spec) return false;
@@ -557,7 +616,7 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
     int cursor_y;
     if (spec->y == 0) {
         y_raw = 14;
-        cursor_y = x11_font_cursor_y_of(fh, 20);
+        cursor_y = x11_font_cursor_y_of();
     }
     Platform_SetDrawContext(dpy, xd, vis, cmap);
     if (text_len > 0) {

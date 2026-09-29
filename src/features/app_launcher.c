@@ -25,10 +25,10 @@ const char* ListOfProgramPaths[] = {
     "shell:AppsFolder",
 #else
     "/usr/share/applications",
-    "/home/diggy/.local/share/applications",
+    "/home/dog/.local/share/applications",
     "/usr/bin",
-    "/home/diggy/.local/bin",
-    "/home/diggy/miscellaneous",
+    "/home/dog/.local/bin",
+    "/home/dog/miscellaneous",
 #endif
 };
 
@@ -90,7 +90,7 @@ static void save_app_cache(void) {
         lines[written++] = store + off;
         off += (size_t)k + 1;
     }
-    bool ok = fl_write_to_file(APPCACHE_FILE, lines, (int)written);
+    fl_write_to_file(APPCACHE_FILE, lines, (int)written);
     free(store);
     free(lines);
 }
@@ -125,6 +125,40 @@ static bool load_app_cache(void) {
     return true;
 }
 
+static const char** g_xdg_paths = NULL;
+static size_t g_xdg_path_count = 0;
+
+static void build_xdg_paths(void) {
+    if (g_xdg_paths) return;
+    g_xdg_paths = calloc(ARRAY_LEN(ListOfProgramPaths) + 16, sizeof(char*));
+    if (!g_xdg_paths) return;
+    for (size_t i = 0; i < ARRAY_LEN(ListOfProgramPaths); i++) g_xdg_paths[i] = ListOfProgramPaths[i];
+    g_xdg_path_count = ARRAY_LEN(ListOfProgramPaths);
+#if !defined(_WIN32)
+    const char* data_dirs = getenv("XDG_DATA_DIRS");
+    if (!data_dirs || !data_dirs[0]) data_dirs = "/usr/local/share:/usr/share";
+    char buf[4096];
+    snprintf(buf, sizeof(buf), "%s", data_dirs);
+    char* save = buf;
+    for (char* tok = strtok_r(buf, ":", &save); tok; tok = strtok_r(NULL, ":", &save)) {
+        char* dir = malloc(strlen(tok) + 16);
+        if (!dir) continue;
+        snprintf(dir, strlen(tok) + 16, "%s/applications", tok);
+        g_xdg_paths[g_xdg_path_count++] = dir;
+    }
+#endif
+}
+
+static size_t app_path_count(void) {
+    build_xdg_paths();
+    return g_xdg_path_count;
+}
+
+static const char* app_path_at(size_t i) {
+    build_xdg_paths();
+    return i < g_xdg_path_count ? g_xdg_paths[i] : NULL;
+}
+
 static void scan_app_dirs(void) {
 #if defined(_WIN32)
     char* allowed[] = {"lnk", "exe", "url", NULL};
@@ -132,26 +166,23 @@ static void scan_app_dirs(void) {
     char* allowed[] = {"desktop",NULL};
 #endif
     ListOfFiles tmp = {0};
-    for (int i = 0; i < (int)ARRAY_LEN(ListOfProgramPaths); i++) {
-        if (!ListOfProgramPaths[i] || ListOfProgramPaths[i][0] == '\0') continue;
-        fl_get_all_files_from_dir(ListOfProgramPaths[i], allowed, &tmp, (char**)ListOfShitToIgnore, true);
+    for (int i = 0; i < (int)app_path_count(); i++) {
+        const char* p = app_path_at((size_t)i);
+        if (!p || p[0] == '\0') continue;
+        fl_get_all_files_from_dir((char*)p, allowed, &tmp, (char**)ListOfShitToIgnore, true);
     }
     for (size_t i = 0; i < tmp.count; ) {
         bool skip = false;
         char display_name[256] = {0};
-        bool has_display = false;
         if (strstr(tmp.files[i].path, ".desktop")) {
             bool nodisplay=false;
-            if (fl_parse_desktop_file(tmp.files[i].path, display_name, sizeof(display_name), &nodisplay)) has_display=true;
+            fl_parse_desktop_file(tmp.files[i].path, display_name, sizeof(display_name), &nodisplay);
             if (nodisplay) skip=true;
         }
         if (skip) {
             for (size_t k = i; k + 1 < tmp.count; k++) tmp.files[k] = tmp.files[k+1];
             tmp.count--;
             continue;
-        }
-        if (has_display && display_name[0]) {
-            snprintf(tmp.files[i].name, sizeof(tmp.files[i].name), "%s", display_name);
         }
         i++;
     }
@@ -344,8 +375,9 @@ void applauncher_copy_callback(const char* selection,int true_index,int type) {
 }
 
 void TriggerAppLauncher(void) {
-    for (size_t i = 0; i < ARRAY_LEN(ListOfProgramPaths); i++) {
-        fl_on_dir_changed(ListOfProgramPaths[i], rescan_app_cache);
+    for (size_t i = 0; i < app_path_count(); i++) {
+        const char* p = app_path_at(i);
+        if (p) fl_on_dir_changed((char*)p, rescan_app_cache);
     }
     PROMPT(.title = "🚀 AppLauncher",
            .refresh = applauncher_refresh_callback,
