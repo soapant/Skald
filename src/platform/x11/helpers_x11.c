@@ -27,22 +27,22 @@
 
 #define X11_SHADER_SMOOTHNESS 5
 
-static Pixmap g_bgPixmap = None;
-static int g_bgW = 0, g_bgH = 0;
-static unsigned long g_bgBase = 0;
-static int g_bgPreset = -1;
-static float g_bgIntensity = -1.0f;
-static float g_bgBrightness = -1.0f;
-static int g_bgShaders = -1;
-static float g_bgSmoothness = -1.0f;
-static int g_bgRadius = -1;
-static bool g_bgRounded = false;
-static Display* g_bgDpy = NULL;
-static Visual* g_dblVisual = NULL;
-static Colormap g_dblColormap = None;
-static int g_dblDepth = 0;
-static Display* g_dblDpy = NULL;
-static int g_bgDepth = 0;
+static __thread Pixmap g_bgPixmap = None;
+static __thread int g_bgW = 0, g_bgH = 0;
+static __thread unsigned long g_bgBase = 0;
+static __thread int g_bgPreset = -1;
+static __thread float g_bgIntensity = -1.0f;
+static __thread float g_bgBrightness = -1.0f;
+static __thread int g_bgShaders = -1;
+static __thread float g_bgSmoothness = -1.0f;
+static __thread int g_bgRadius = -1;
+static __thread bool g_bgRounded = false;
+static __thread Display* g_bgDpy = NULL;
+static __thread Visual* g_dblVisual = NULL;
+static __thread Colormap g_dblColormap = None;
+static __thread int g_dblDepth = 0;
+static __thread Display* g_dblDpy = NULL;
+static __thread int g_bgDepth = 0;
 
 void x11_set_dbl_visual(Display* dpy, Visual* vis, Colormap cmap, int depth) {
     PROFILE_START(timer);
@@ -985,6 +985,15 @@ Pixmap x11_get_cached_background(Display* dpy, Window win, int w, int h) {
     float smoothness = 1;
     int radius = CornerRadius;
     bool rounded = RoundedCorners;
+    if ((!EnableShaders || ShaderPreset == 0) && !(rounded && radius > 0)) {
+        if (g_bgPixmap != None) {
+            XFreePixmap(g_bgDpy, g_bgPixmap);
+            g_bgPixmap = None;
+            g_bgW = g_bgH = 0;
+        }
+        PROFILE_END_VAR(timer, "helpers_x11:x11_get_cached_background");
+        return None;
+    }
     if (g_bgPixmap != None && g_bgDpy == dpy && g_bgW == w && g_bgH == h && g_bgBase == base && g_bgPreset == preset && g_bgIntensity == intensity && g_bgBrightness == brightness && g_bgShaders == shaders && g_bgSmoothness == smoothness && g_bgRadius == radius && g_bgRounded == rounded) {
         log_info("bg cache HIT intensity=%.3f brightness=%.3f preset=%d shaders=%d", (double)intensity, (double)brightness, preset, shaders);
         PROFILE_END_VAR(timer, "helpers_x11:x11_get_cached_background");
@@ -1037,6 +1046,15 @@ void x11_draw_background_to_drawable(Display* dpy, Drawable drw, int w, int h) {
     if (R > w/2) R = w/2; if (R > h/2) R = h/2;
     unsigned int baseAlpha8 = (unsigned int)WindowOpacity;
     if (baseAlpha8 > 255) baseAlpha8 = 255;
+    if ((!EnableShaders || ShaderPreset == 0) && R <= 0) {
+        unsigned int cr = (base >> 16) & 0xFF, cg = (base >> 8) & 0xFF, cb = base & 0xFF;
+        unsigned long solid = hasAlpha ? (baseAlpha8 << 24) | (cr << 16) | (cg << 8) | cb : (cr << 16) | (cg << 8) | cb;
+        GC sgc = XCreateGC(dpy, drw, 0, NULL);
+        XSetForeground(dpy, sgc, solid);
+        XFillRectangle(dpy, drw, sgc, 0, 0, w, h);
+        XFreeGC(dpy, sgc);
+        return;
+    }
     XImage* img = XCreateImage(dpy, vis, depth, ZPixmap, 0, NULL, w, h, 32, 0);
     if (!img) return;
     img->data = (char*)calloc(1, h * img->bytes_per_line);
@@ -1064,6 +1082,8 @@ void x11_draw_background(Display* dpy, Window win, int w, int h) {
         GC gc = XCreateGC(dpy, win, 0, NULL);
         XCopyArea(dpy, bg, win, gc, 0, 0, w, h, 0, 0);
         XFreeGC(dpy, gc);
+    } else {
+        x11_draw_background_to_drawable(dpy, win, w, h);
     }
     (void)presetName;
     PROFILE_END_VAR(timer, "helpers_x11:x11_draw_background");
