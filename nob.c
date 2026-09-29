@@ -2,6 +2,7 @@
 #define NOB_NO_ECHO
 #define NOB_EXPERIMENTAL_DELETE_OLD
 #include "nob.h"
+#include <glob.h>
 
 #define SRC_FOLDER "src"
 #define BUILD_FOLDER "build"
@@ -127,8 +128,66 @@ static char* run_capture(const char* cmdline) {
     return out;
 }
 
+// On NixOS the .pc files of profile packages are not in pkg-config's
+// compiled-in search path and PKG_CONFIG_PATH is normally unset outside a
+// nix-shell. Some packages (xorgproto) ship .pc under share/pkgconfig while
+// others use lib/pkgconfig, and the profile aggregation only merges the
+// latter. So scan the store for whichever dirs actually provide the modules we
+// need and hand those to pkg-config. On non-Nix systems this finds nothing and
+// leaves the normal search path untouched.
+static void augment_pkg_config_path(void) {
+    const char* need[] = {
+        "x11", "xft", "fontconfig", "freetype2", "glib-2.0", "gio-2.0",
+        "gobject-2.0", "libpng", "xext", "xrandr", "xrender", "xtst", "xi",
+        "wayland-client",
+        // transitive requirements pulled in by the above .pc files
+        "xproto", "kbproto", "xextproto", "xcb", "xau", "xdmcp", "sm", "ice",
+        NULL
+    };
+    const char* patterns[] = {
+        "/nix/store/*/lib/pkgconfig", "/nix/store/*/share/pkgconfig", NULL
+    };
+    char found[64][512];
+    size_t found_n = 0;
+    for (int p = 0; patterns[p]; ++p) {
+        glob_t g;
+        memset(&g, 0, sizeof(g));
+        if (glob(patterns[p], 0, NULL, &g) != 0) { globfree(&g); continue; }
+        for (size_t i = 0; i < g.gl_pathc; ++i) {
+            for (int n = 0; need[n]; ++n) {
+                char probe[1024];
+                snprintf(probe, sizeof(probe), "%s/%s.pc", g.gl_pathv[i], need[n]);
+                if (!nob_file_exists(probe)) continue;
+                bool dup = false;
+                for (size_t f = 0; f < found_n; ++f)
+                    if (strcmp(found[f], g.gl_pathv[i]) == 0) { dup = true; break; }
+                if (!dup && found_n < 64) {
+                    snprintf(found[found_n], sizeof(found[0]), "%s", g.gl_pathv[i]);
+                    found_n++;
+                }
+                break;
+            }
+        }
+        globfree(&g);
+    }
+    if (found_n == 0) return;
+    char path[8192];
+    path[0] = '\0';
+    for (size_t f = 0; f < found_n; ++f) {
+        if (path[0]) strncat(path, ":", sizeof(path) - strlen(path) - 1);
+        strncat(path, found[f], sizeof(path) - strlen(path) - 1);
+    }
+    const char* cur = getenv("PKG_CONFIG_PATH");
+    char full[16384];
+    if (cur && cur[0]) snprintf(full, sizeof(full), "%s:%s", path, cur);
+    else snprintf(full, sizeof(full), "%s", path);
+    setenv("PKG_CONFIG_PATH", full, 1);
+    nob_log(NOB_INFO, "pkg-config search dirs: %zu", found_n);
+}
+
 static void discover_dep_flags(void) {
     char cmdline[512];
+    augment_pkg_config_path();
     snprintf(cmdline, sizeof(cmdline), "pkg-config --cflags %s 2>/dev/null", PKG_CFLAGS_PKGS_STR);
     const char* cflags = run_capture(cmdline);
     if (cflags && cflags[0]) {
