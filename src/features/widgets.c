@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "core/flapi.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 char* get_size_string(unsigned long long bytes, char* buf, size_t buflen) {
     const char* units[] = { "B", "KB", "MB", "GB", "TB", "PB", "EB" };
@@ -78,26 +79,40 @@ void get_memory_usage_percentage(char* buf, size_t buflen) {
 
 static void widgets_disk_usage_render(FlWidgetState *state) {
     char buf[128];
+    ColorRef color = RGB(255,255,255);
+    int num = atoi(buf);
+    if (num <= 80) color = RGB(255,0,0);
+    if (num <= 60) color = RGB(255,165,0);
+    if (num <= 40) color = RGB(0,100,0);
+    if (num <= 20) color = RGB(0,150,0);
     get_disk_usage_percentage(buf, sizeof(buf));
     fl_draw_text(.text = buf, .x = 10, .y = 6, .fontsize = 15,
-                 .color = COLOR_TEXT, .align = "LEFT");
+                 .color = color, .align = "LEFT");
 }
 
 static void widgets_memory_usage_render(FlWidgetState *state) {
     char buf[128];
     get_memory_usage_percentage(buf, sizeof(buf));
+    ColorRef color = RGB(255,255,255);
+    int num = atoi(buf);
+    if (num <= 80) color = RGB(255,0,0);
+    if (num <= 60) color = RGB(255,165,0);
+    if (num <= 40) color = RGB(0,100,0);
+    if (num >= 20) color = RGB(0,150,0);
     fl_draw_text(.text = buf, .x = 10, .y = 6, .fontsize = 15,
-                 .color = COLOR_TEXT, .align = "LEFT");
+                 .color = color, .align = "LEFT");
 }
 
 FLINT_FEATURE_INIT {
     fl_widget(.name = "disk_usage",
               .color = RGB(30,30,30),
-              .slot = FL_WIDGET_SLOT_TOP_LEFT,
+              .no_bg = true,
+              .slot = FL_WIDGET_SLOT_BOTTOM_LEFT,
               .render = widgets_disk_usage_render);
 
     fl_widget(.name = "memory_usage",
               .color = RGB(30,30,30),
-              .slot = FL_WIDGET_SLOT_TOP_LEFT,
+              .no_bg = true,
+              .slot = FL_WIDGET_SLOT_BOTTOM_LEFT,
               .render = widgets_memory_usage_render);
 }
