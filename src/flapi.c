@@ -1618,7 +1618,12 @@ static void fl_widget_measure_and_fit(void *ud) {
     int nh = widget->h;
     if (widget->auto_w && mw > 0) nw = mw + widget->pad;
     if (widget->auto_h && mh > 0) nh = mh + widget->pad;
-    if (nw == widget->w && nh == widget->h) return;
+    log_info("fl_widget measure '%s' content=%dx%d auto_w=%d auto_h=%d pad=%d -> %dx%d (was %dx%d)",
+             widget->name, mw, mh, widget->auto_w, widget->auto_h, widget->pad, nw, nh, widget->w, widget->h);
+    if (nw == widget->w && nh == widget->h) {
+        log_info("fl_widget measure '%s' unchanged, skipping relayout", widget->name);
+        return;
+    }
     widget->w = nw;
     widget->h = nh;
     Platform_Widget_Resize(widget->win, nw, nh);
@@ -1700,14 +1705,22 @@ static void fl_widget_attach_window(void *ud) {
     FlWidget *widget = (FlWidget *)ud;
     if (!widget || widget->dead) return;
     if (!Platform_Widget_IsValid(widget->win)) {
+        log_info("fl_widget attach '%s' CREATE at %d,%d %dx%d bg=%s%06lx on rt",
+                 widget->name, widget->x, widget->y, widget->w, widget->h,
+                 widget->has_bg ? "" : "theme:", widget->has_bg ? widget->bg_hex : rgb_to_hex(COLOR_BG));
         Platform_SetDrawBgColor(widget->has_bg ? widget->bg_hex : 0);
         widget->win = Platform_Widget_Create(widget->x, widget->y, widget->w, widget->h, widget->fps);
         Platform_SetDrawBgColor(0);
         if (widget->win) {
             Platform_Widget_SetBgColor(widget->win, widget->has_bg ? widget->bg_hex : 0);
             Platform_Widget_SetFrameCallback(widget->win, fl_widget_render_frame, widget);
+            log_info("fl_widget attach '%s' created win ok", widget->name);
+        } else {
+            log_warn("fl_widget attach '%s' Platform_Widget_Create returned NULL", widget->name);
         }
     } else {
+        log_info("fl_widget attach '%s' MOVE to %d,%d (was %d,%d) %dx%d",
+                 widget->name, widget->x, widget->y, widget->x, widget->y, widget->w, widget->h);
         Platform_Widget_Move(widget->win, widget->x, widget->y);
     }
 }
@@ -1716,13 +1729,19 @@ static void fl_widget_apply_geometry(FlWidget *widget, int x, int y) {
     widget->x = x;
     widget->y = y;
     if (Platform_RenderThread_IsCurrentThread()) {
+        log_info("fl_widget geom '%s' -> %d,%d (direct, on render thread)", widget->name, x, y);
         fl_widget_attach_window(widget);
         return;
     }
-    if (!Platform_RenderThread_EnsureStarted(widget->fps)) return;
-    if (Platform_RenderThread_Post(fl_widget_attach_window, widget)) {
-        Platform_RenderThread_Sync();
+    if (!Platform_RenderThread_EnsureStarted(widget->fps)) {
+        log_warn("fl_widget geom '%s' -> %d,%d EnsureStarted FAILED", widget->name, x, y);
+        return;
     }
+    if (!Platform_RenderThread_Post(fl_widget_attach_window, widget)) {
+        log_warn("fl_widget geom '%s' -> %d,%d Post FAILED (queue full or thread down)", widget->name, x, y);
+        return;
+    }
+    log_info("fl_widget geom '%s' -> %d,%d posted (no sync)", widget->name, x, y);
 }
 
 static int fl_widget_sort_key(const FlWidget *widget) {
@@ -1757,6 +1776,8 @@ static void fl_widget_relayout(void) {
             if (w->slot != s) continue;
             int x = from_right ? cursor - w->w : cursor;
             int y = from_top ? my : my + mh - w->h;
+            log_info("fl_widget layout slot=%d '%s' seq=%d order=%d(%d) x=%d y=%d w=%d h=%d gap=%d",
+                     s, w->name, w->seq, w->order, w->order_set, x, y, w->w, w->h, w->gap);
             fl_widget_apply_geometry(w, x, y);
             cursor += from_right ? -(w->w + w->gap) : (w->w + w->gap);
         }
@@ -1768,6 +1789,9 @@ FlWidget *fl_widget_create(const FlWidgetSpec *spec) {
         log_warn("fl_widget_create: name is required");
         return NULL;
     }
+    log_info("fl_widget_create '%s' w=%d h=%d slot=%d order=%d gap=%d fps=%d bg=%08x rt_started=%d",
+             spec->name, spec->w, spec->h, spec->slot, spec->order, spec->gap, spec->fps,
+             spec->bg_color, Platform_RenderThread_IsRunning());
     FlWidget *widget = fl_widget_find_by_name(spec->name);
     bool fresh = (widget == NULL);
     if (fresh) {
@@ -1821,11 +1845,14 @@ FlWidget *fl_widget_create(const FlWidgetSpec *spec) {
     }
 
     if (!Platform_Widget_IsValid(widget->win)) {
-        log_warn("fl_widget_create '%s': window creation failed", spec->name);
-        return NULL;
+        log_info("fl_widget '%s' window not up yet, render thread will finish it", spec->name);
     }
     if (widget->auto_w || widget->auto_h) {
-        Platform_RenderThread_Post(fl_widget_measure_and_fit, widget);
+        if (Platform_RenderThread_Post(fl_widget_measure_and_fit, widget)) {
+            log_info("fl_widget '%s' auto-size measure posted", spec->name);
+        } else {
+            log_warn("fl_widget '%s' auto-size measure Post FAILED", spec->name);
+        }
     }
     log_info("fl_widget '%s' %s slot=%d order=%d(%d) fps=%d at %d,%d %dx%d",
              spec->name, fresh ? "created" : "took over", widget->slot,

@@ -25,9 +25,6 @@ static int g_rt_count = 0;
 static int g_rt_pending_count = 0;
 static volatile bool g_rt_running = false;
 static volatile bool g_rt_quit = false;
-static pthread_mutex_t g_rt_sync_lock = PTHREAD_MUTEX_INITIALIZER;
-static pthread_cond_t g_rt_sync_cond = PTHREAD_COND_INITIALIZER;
-static unsigned long g_rt_sync_seq = 0;
 static __thread bool g_rt_is_thread = false;
 static int g_rt_fps = RT_DEFAULT_FPS;
 static Display *g_rt_dpy = NULL;
@@ -91,10 +88,10 @@ static void *rt_thread_func(void *arg) {
         n = g_rt_count;
         if (n > 0) memcpy(snap, g_rt_callbacks, sizeof(RtCallback) * (size_t)n);
         pthread_mutex_unlock(&g_rt_lock);
+        rt_run_pending();
         for (int i = 0; i < n; i++) {
             if (snap[i].fn) snap[i].fn(snap[i].ud);
         }
-        rt_run_pending();
 
         long us = (n == 0) ? RT_IDLE_SLEEP_US : (1000000L / (g_rt_fps > 0 ? g_rt_fps : RT_DEFAULT_FPS));
         struct timespec ts;
@@ -114,28 +111,32 @@ static void *rt_thread_func(void *arg) {
     return NULL;
 }
 
+typedef struct { volatile int done; } RtSync;
+
 static void rt_sync_mark(void *ud) {
-    (void)ud;
-    pthread_mutex_lock(&g_rt_sync_lock);
-    g_rt_sync_seq++;
-    pthread_cond_broadcast(&g_rt_sync_cond);
-    pthread_mutex_unlock(&g_rt_sync_lock);
+    RtSync *s = (RtSync *)ud;
+    if (s) s->done = 1;
 }
 
 void Platform_RenderThread_Sync(void) {
     if (!g_rt_running) return;
-    pthread_mutex_lock(&g_rt_sync_lock);
-    unsigned long start = g_rt_sync_seq;
-    pthread_mutex_unlock(&g_rt_sync_lock);
-    if (!Platform_RenderThread_Post(rt_sync_mark, NULL)) return;
+    RtSync s;
+    s.done = 0;
+    if (!Platform_RenderThread_Post(rt_sync_mark, &s)) return;
     struct timespec deadline;
     clock_gettime(CLOCK_REALTIME, &deadline);
-    deadline.tv_sec += 2;
-    pthread_mutex_lock(&g_rt_sync_lock);
-    while (g_rt_sync_seq == start) {
-        if (pthread_cond_timedwait(&g_rt_sync_cond, &g_rt_sync_lock, &deadline) != 0) break;
+    deadline.tv_sec += 5;
+    for (;;) {
+        if (s.done) return;
+        struct timespec now;
+        clock_gettime(CLOCK_REALTIME, &now);
+        if (now.tv_sec > deadline.tv_sec) {
+            log_warn("render thread sync timed out after 5s");
+            return;
+        }
+        struct timespec nap = { 0, 200000 };
+        nanosleep(&nap, NULL);
     }
-    pthread_mutex_unlock(&g_rt_sync_lock);
 }
 
 bool Platform_RenderThread_EnsureStarted(int fps) {

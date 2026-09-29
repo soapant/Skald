@@ -1,9 +1,13 @@
 #include <stdlib.h>
+#include <time.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xft/Xft.h>
 #include "platform/widget.h"
 #include "platform/draw.h"
+#include "platform/ui.h"
+#include "platform/platform.h"
+#include "config.h"
 #include "platform/x11/drawing_x11.h"
 #include "platform/x11/window_factory_x11.h"
 #include "deps/log.h"
@@ -75,7 +79,12 @@ PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps) {
     widget->h = h;
     widget->fps = fps;
 
+    struct timespec t0, t1;
+    clock_gettime(CLOCK_MONOTONIC, &t0);
     widget->win = x11_create_display_message_window(dpy, x, y, w, h);
+    clock_gettime(CLOCK_MONOTONIC, &t1);
+    log_info("widget create_window at %d,%d %dx%d took %ld ms", x, y, w, h,
+             (t1.tv_sec - t0.tv_sec) * 1000 + (t1.tv_nsec - t0.tv_nsec) / 1000000);
     if (!widget->win) {
         free(widget);
         return NULL;
@@ -96,6 +105,8 @@ PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps) {
         free(widget);
         return NULL;
     }
+
+    widget_frame(widget);
     log_info("widget created win=0x%lx at %d,%d %dx%d fps=%d", (unsigned long)widget->win, x, y, w, h, fps);
     return widget;
 }
