@@ -170,6 +170,15 @@ void Platform_Widget_Hide(PlatformWidget *widget) {
     widget->mapped = false;
 }
 
+void Platform_Widget_Move(PlatformWidget *widget, int x, int y) {
+    if (!widget || widget->dead) return;
+    if (!widget->hwnd || !IsWindow(widget->hwnd)) return;
+    if (widget->x == x && widget->y == y) return;
+    widget->x = x;
+    widget->y = y;
+    SetWindowPos(widget->hwnd, HWND_TOPMOST, x, y, 0, 0, SWP_NOSIZE | SWP_NOACTIVATE);
+}
+
 int Platform_Widget_Width(const PlatformWidget *widget) {
     return widget ? widget->w : 0;
 }
