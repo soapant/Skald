@@ -369,6 +369,7 @@ typedef struct {
     int slot;
     int order;
     int gap;
+    int pad;                       // padding added to auto-measured size
     int fps;
     FlWidgetRenderFn render;
     int x;
@@ -378,6 +379,9 @@ typedef struct {
 #define FL_WIDGET_MAX 32
 #define FL_WIDGET_NAME_MAX 64
 #define FL_WIDGET_DEFAULT_GAP 10
+#define FL_WIDGET_DEFAULT_PAD 12
+#define FL_WIDGET_PROVISIONAL_W 160
+#define FL_WIDGET_PROVISIONAL_H 48
 
 struct FlWidget {
     char name[FL_WIDGET_NAME_MAX];
@@ -392,6 +396,10 @@ struct FlWidget {
     bool free_pos;
     int x;
     int y;
+    bool auto_w;
+    bool auto_h;
+    int pad;
+    bool dead;
     bool mapped;
     PlatformWidget *win;
     FlWidgetRenderFn render;

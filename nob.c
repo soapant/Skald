@@ -20,7 +20,6 @@
 #else
      #define CC_FLAGS "-I", "include","-MMD", "-MP","-O3","-Wall","-Wextra","-Wno-unused-parameter","-Wno-sign-compare","-Wno-discarded-qualifiers","-Wno-stringop-truncation","-Wno-sign-compare","-Wno-unused-parameter","-Wno-misleading-indentation"
      #define LINK_FLAGS "-lm", "-ldl", "-Wl,--export-dynamic"
-
      #define PKG_CFLAGS_PKGS_STR "x11 xft fontconfig freetype2 glib-2.0 gio-unix-2.0 libpng xext xrandr xrender xtst xi wayland-client"
      #define PKG_LIBS_PKGS_STR   "x11 xft fontconfig libpng xext xrandr xrender xtst xi gio-2.0 gobject-2.0 glib-2.0"
 #endif
