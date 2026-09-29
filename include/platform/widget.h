@@ -14,6 +14,7 @@ void Platform_Widget_Show(PlatformWidget *widget);
 void Platform_Widget_Hide(PlatformWidget *widget);
 void Platform_Widget_Move(PlatformWidget *widget, int x, int y);
 void Platform_Widget_Resize(PlatformWidget *widget, int w, int h);
+void Platform_Widget_SetBgColor(PlatformWidget *widget, unsigned long hex);
 int Platform_Widget_Width(const PlatformWidget *widget);
 int Platform_Widget_Height(const PlatformWidget *widget);
 

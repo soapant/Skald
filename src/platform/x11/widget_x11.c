@@ -20,6 +20,8 @@ struct PlatformWidget {
     Platform_RenderFrameFn fn;
     void *ud;
     int fps;
+    unsigned long bg_hex;
+    bool has_bg;
 };
 
 static void widget_frame(void *ud) {
@@ -29,6 +31,7 @@ static void widget_frame(void *ud) {
     if (!dpy || widget->win == None) return;
     if (widget->w <= 0 || widget->h <= 0) return;
 
+    Platform_SetDrawBgColor(widget->has_bg ? widget->bg_hex : 0);
     Pixmap bg = x11_get_cached_background(dpy, widget->win, widget->w, widget->h);
     if (bg) {
         GC gc = XCreateGC(dpy, widget->win, 0, NULL);
@@ -50,6 +53,7 @@ static void widget_frame(void *ud) {
     Platform_SetPreRenderState(NULL);
     if (widget->fn) widget->fn(widget->ud);
     Platform_FlushDraw();
+    Platform_SetDrawBgColor(0);
     XFlush(dpy);
 }
 
@@ -148,6 +152,12 @@ void Platform_Widget_Move(PlatformWidget *widget, int x, int y) {
     widget->y = y;
     XMoveWindow(widget->dpy, widget->win, x, y);
     XFlush(widget->dpy);
+}
+
+void Platform_Widget_SetBgColor(PlatformWidget *widget, unsigned long hex) {
+    if (!widget || widget->dead) return;
+    widget->has_bg = hex != 0;
+    widget->bg_hex = hex;
 }
 
 void Platform_Widget_Resize(PlatformWidget *widget, int w, int h) {

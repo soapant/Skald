@@ -18,6 +18,8 @@ struct PlatformWidget {
     Platform_RenderFrameFn fn;
     void *ud;
     int fps;
+    unsigned long bg_hex;
+    bool has_bg;
 };
 
 static LRESULT CALLBACK FlintWidgetProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -37,10 +39,11 @@ static void widget_register_class(void) {
 }
 
 static void widget_paint(PlatformWidget *widget, HDC hdc, RECT *rect) {
+    Platform_SetDrawBgColor(widget->has_bg ? widget->bg_hex : 0);
     if (EnableShaders && ShaderPreset != 0) {
         win32_draw_background(hdc, rect);
     } else {
-        HBRUSH brush = CreateSolidBrush(COLOR_BG);
+        HBRUSH brush = CreateSolidBrush(widget->has_bg ? (COLORREF)widget->bg_hex : (COLORREF)COLOR_BG);
         FillRect(hdc, rect, brush);
         DeleteObject(brush);
     }
@@ -48,6 +51,7 @@ static void widget_paint(PlatformWidget *widget, HDC hdc, RECT *rect) {
     Platform_SetDrawContextWin32(hdc);
     Platform_SetPreRenderStateWin32(NULL, NULL);
     if (widget->fn) widget->fn(widget->ud);
+    Platform_SetDrawBgColor(0);
 }
 
 static LRESULT CALLBACK FlintWidgetProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -177,6 +181,12 @@ void Platform_Widget_Move(PlatformWidget *widget, int x, int y) {
     widget->x = x;
     widget->y = y;
     SetWindowPos(widget->hwnd, HWND_TOPMOST, x, y, 0, 0, SWP_NOSIZE | SWP_NOACTIVATE);
+}
+
+void Platform_Widget_SetBgColor(PlatformWidget *widget, unsigned long hex) {
+    if (!widget || widget->dead) return;
+    widget->has_bg = hex != 0;
+    widget->bg_hex = hex;
 }
 
 void Platform_Widget_Resize(PlatformWidget *widget, int w, int h) {

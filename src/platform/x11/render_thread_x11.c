@@ -28,6 +28,7 @@ static volatile bool g_rt_quit = false;
 static pthread_mutex_t g_rt_sync_lock = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t g_rt_sync_cond = PTHREAD_COND_INITIALIZER;
 static unsigned long g_rt_sync_seq = 0;
+static __thread bool g_rt_is_thread = false;
 static int g_rt_fps = RT_DEFAULT_FPS;
 static Display *g_rt_dpy = NULL;
 
@@ -76,8 +77,13 @@ int Platform_RenderThread_CallbackCount(void) {
     return n;
 }
 
+bool Platform_RenderThread_IsCurrentThread(void) {
+    return g_rt_is_thread;
+}
+
 static void *rt_thread_func(void *arg) {
     (void)arg;
+    g_rt_is_thread = true;
     while (!g_rt_quit) {
         RtCallback snap[RT_MAX_CALLBACKS];
         int n = 0;

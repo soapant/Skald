@@ -26,6 +26,7 @@ static CRITICAL_SECTION g_rt_sync_lock;
 static CONDITION_VARIABLE g_rt_sync_cond;
 static BOOL g_rt_sync_lock_ready = FALSE;
 static unsigned long g_rt_sync_seq = 0;
+static __thread bool g_rt_is_thread = false;
 
 static void rt_sync_mark(void *ud) {
     (void)ud;
@@ -94,8 +95,13 @@ int Platform_RenderThread_CallbackCount(void) {
     return n;
 }
 
+bool Platform_RenderThread_IsCurrentThread(void) {
+    return g_rt_is_thread;
+}
+
 static DWORD WINAPI rt_thread_func(LPVOID arg) {
     (void)arg;
+    g_rt_is_thread = true;
     while (!g_rt_quit) {
         RtCallback snap[RT_MAX_CALLBACKS];
         int n = 0;
