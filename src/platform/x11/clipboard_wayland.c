@@ -1,4 +1,4 @@
-#include "platform/x11/clipboard_wayland_x11.h"
+#include "platform/x11/clipboard_backend_x11.h"
 #include "deps/log.h"
 #include <wayland-client-core.h>
 #include <dlfcn.h>
@@ -752,7 +752,7 @@ static void wl_drop_source(struct wl_proxy **slot) {
     }
 }
 
-bool Wayland_ClipboardAvailable(void) {
+bool Platform_ClipboardAvailable(void) {
     return getenv("WAYLAND_DISPLAY") != NULL;
 }
 
@@ -779,7 +779,7 @@ static void wl_publish_locked(void) {
     wl_trace("REQ publish.end", "flush=%d dperr=%d", fr, wl.display_get_error(g_wl_dpy));
 }
 
-int Wayland_ClipboardSetText(const char *text) {
+int Platform_ClipboardSetText(const char *text) {
     if (!text) return 0;
     wl_trace("API SetText", "len=%d text='%s'", (int)strlen(text), text);
     pthread_mutex_lock(&g_wl_text_lock);
@@ -813,7 +813,7 @@ int Wayland_ClipboardSetText(const char *text) {
     return 1;
 }
 
-int Wayland_ClipboardSetImage(const unsigned char *png, size_t len) {
+int Platform_ClipboardSetImage(const unsigned char *png, size_t len) {
     if (!png || len == 0) return 0;
     if (!wl_setup()) return 0;
     unsigned char* np = malloc(len);
@@ -842,7 +842,7 @@ static const char *wl_pick_mime_locked(void) {
     return NULL;
 }
 
-char *Wayland_ClipboardGetText(void) {
+char *Platform_ClipboardGetText(void) {
     wl_trace("API GetText", "enter offer=%p has_selection=%d mime_count=%d",
         (void*)g_wl_offer, g_wl_has_selection ? 1 : 0, g_wl_offer_mime_count);
     if (!wl_setup()) { wl_trace("API GetText", "setup failed"); return NULL; }
@@ -923,7 +923,7 @@ char *Wayland_ClipboardGetText(void) {
     return out;
 }
 
-void Wayland_ClipboardShutdown(void) {
+void Platform_ClipboardShutdown(void) {
     if (!g_wl_ready && !g_wl_handle) return;
     g_wl_running = false;
     if (g_wl_thread_started) {

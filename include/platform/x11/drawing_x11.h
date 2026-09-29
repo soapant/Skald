@@ -38,7 +38,7 @@ int x11_font_list_top(int ascent, int descent, int font_size);
 int x11_font_cursor_y(int ascent, int descent, int font_size, int box_top);
 int x11_font_row_height_of(FontHandle font);
 int x11_font_list_top_of(FontHandle font);
-int x11_font_cursor_y_of(FontHandle font, int box_top);
+int x11_font_cursor_y_of();
 #endif
 
 #endif

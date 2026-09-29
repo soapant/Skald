@@ -469,25 +469,25 @@ bool focus_window_right_x11(void) {
 bool minimize_active_window_x11(void) {
     Display* display = get_display();
     if (!display) return false;
-    Window focus = x11_focused_window(display);
-    if (focus != None) {
+    if (_x11_last_min != None) {
+        Window target = _x11_last_min;
+        _x11_last_min = None;
         _x11_err = 0;
         XErrorHandler old = XSetErrorHandler(_x11_err_handler);
-        XIconifyWindow(display, focus, DefaultScreen(display));
+        XMapWindow(display, target);
+        XRaiseWindow(display, target);
+        XSetInputFocus(display, target, RevertToParent, CurrentTime);
         XSync(display, False);
         XSetErrorHandler(old);
-        if (_x11_err == 0) _x11_last_min = focus;
-        return _x11_err == 0;
+        if (_x11_err == 0) return true;
     }
-    if (_x11_last_min == None) return false;
-    Window target = _x11_last_min;
-    _x11_last_min = None;
+    Window focus = x11_focused_window(display);
+    if (focus == None) return false;
     _x11_err = 0;
     XErrorHandler old = XSetErrorHandler(_x11_err_handler);
-    XMapWindow(display, target);
-    XRaiseWindow(display, target);
-    XSetInputFocus(display, target, RevertToParent, CurrentTime);
+    XIconifyWindow(display, focus, DefaultScreen(display));
     XSync(display, False);
     XSetErrorHandler(old);
+    if (_x11_err == 0) _x11_last_min = focus;
     return _x11_err == 0;
 }

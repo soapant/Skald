@@ -17,6 +17,9 @@
 #define BLACKLIST 0
 #define FlStringList StringList
 
+typedef struct { uint64_t ticks; } FlTimer;
+typedef struct PlatformWidget PlatformWidget;
+
 
 
 // =============================================================================
@@ -329,6 +332,85 @@ bool fl_place_listbox_auto(int w, int h, const char **items, int count);
 bool fl_place_image_auto(int w, int h, const char *path);
 
 // =============================================================================
+// WIDGETS (persistent windows, drawn on their own render thread)
+// =============================================================================
+
+typedef struct FlWidget FlWidget;
+
+typedef struct {
+    int width;
+    int height;
+    unsigned long frame;
+    double elapsed;
+} FlWidgetState;
+
+typedef void (*FlWidgetRenderFn)(FlWidgetState *state);
+
+typedef enum {
+    FL_WIDGET_SLOT_TOP_LEFT,
+    FL_WIDGET_SLOT_TOP_RIGHT,
+    FL_WIDGET_SLOT_BOTTOM_LEFT,
+    FL_WIDGET_SLOT_BOTTOM_RIGHT,
+    FL_WIDGET_FREE
+} FlWidgetSlot;
+
+typedef struct {
+    const char *name;
+    int w;
+    int h;
+    int slot;
+    int order;
+    int gap;
+    int pad;                       
+    int fps;
+    ColorRef bg_color;             
+    FlWidgetRenderFn render;
+    int x;
+    int y;
+} FlWidgetSpec;
+
+#define FL_WIDGET_MAX 32
+#define FL_WIDGET_NAME_MAX 64
+#define FL_WIDGET_DEFAULT_GAP 10
+#define FL_WIDGET_DEFAULT_PAD 12
+#define FL_WIDGET_PROVISIONAL_W 160
+#define FL_WIDGET_PROVISIONAL_H 48
+
+struct FlWidget {
+    char name[FL_WIDGET_NAME_MAX];
+    int w;
+    int h;
+    int gap;
+    int fps;
+    int slot;
+    int order;
+    int seq;
+    bool order_set;
+    bool free_pos;
+    int x;
+    int y;
+    bool auto_w;
+    bool auto_h;
+    unsigned long bg_hex;
+    bool has_bg;
+    int pad;
+    bool dead;
+    bool mapped;
+    PlatformWidget *win;
+    FlWidgetRenderFn render;
+    unsigned long frame;
+    FlTimer created_at;
+    char *owner;
+};
+
+FlWidget *fl_widget_create(const FlWidgetSpec *spec);
+#define fl_widget(...) fl_widget_create(&(FlWidgetSpec){__VA_ARGS__})
+bool fl_widget_is_valid(FlWidget *widget);
+void fl_widget_show(FlWidget *widget);
+void fl_widget_hide(FlWidget *widget);
+void fl_widget_set_render(FlWidget *widget, FlWidgetRenderFn render);
+
+// =============================================================================
 // PRE-RENDER HOOK (global overridable)
 // =============================================================================
 
@@ -409,7 +491,6 @@ bool fl_decrement_volume_by_percent(int decrement_percent);
 // MISC
 // =============================================================================
 
-typedef struct { uint64_t ticks; } FlTimer;
 FlTimer fl_start_timer(void);
 double fl_end_timer(FlTimer t);
 FlTimer fl_profile_start(void);
