@@ -363,7 +363,8 @@ typedef struct {
     int gap;
     int pad;                       
     int fps;
-    ColorRef color;             
+    ColorRef color;
+    bool no_bg;
     FlWidgetRenderFn render;
     int x;
     int y;
@@ -393,6 +394,7 @@ struct FlWidget {
     bool auto_h;
     unsigned long bg_hex;
     bool has_bg;
+    bool no_bg;
     int pad;
     bool dead;
     bool mapped;

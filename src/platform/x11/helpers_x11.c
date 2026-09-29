@@ -667,7 +667,7 @@ Window x11_create_window_ex_or(Display* dpy, int x, int y, int w, int h, unsigne
         unsigned int r = (bg_color >> 16) & 0xFF;
         unsigned int g = (bg_color >> 8) & 0xFF;
         unsigned int b = bg_color & 0xFF;
-        unsigned int a = RoundedCorners ? 0 : (unsigned int)WindowOpacity;
+        unsigned int a = (RoundedCorners || Platform_GetTransparentWindow()) ? 0 : (unsigned int)WindowOpacity;
         attrs.background_pixel = (a << 24) | (r << 16) | (g << 8) | b;
         attrs.colormap = cmap;
         attrs.border_pixel = 0;
