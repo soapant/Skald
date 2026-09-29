@@ -90,7 +90,7 @@ static void save_app_cache(void) {
         lines[written++] = store + off;
         off += (size_t)k + 1;
     }
-    bool ok = fl_write_to_file(APPCACHE_FILE, lines, (int)written);
+    fl_write_to_file(APPCACHE_FILE, lines, (int)written);
     free(store);
     free(lines);
 }
