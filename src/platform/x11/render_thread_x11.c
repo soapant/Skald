@@ -10,6 +10,7 @@
 #define RT_MAX_PENDING 16
 #define RT_IDLE_SLEEP_US 20000
 #define RT_DEFAULT_FPS 1
+#define RT_MAX_SLEEP_US 16000
 
 typedef struct {
     Platform_RenderFrameFn fn;
@@ -18,8 +19,7 @@ typedef struct {
 
 static pthread_t g_rt_thread;
 static pthread_mutex_t g_rt_lock = PTHREAD_MUTEX_INITIALIZER;
-static pthread_cond_t g_rt_cond = PTHREAD_COND_INITIALIZER;
-static RtCallback g_rt_callbacks[RT_MAX_CALLBACKS];
+static pthread_cond_t g_rt_cond = PTHREAD_COND_INITIALIZER;static RtCallback g_rt_callbacks[RT_MAX_CALLBACKS];
 static RtCallback g_rt_pending[RT_MAX_PENDING];
 static int g_rt_count = 0;
 static int g_rt_pending_count = 0;
@@ -59,6 +59,13 @@ bool Platform_RenderThread_Post(Platform_RenderFrameFn fn, void *ud) {
     return true;
 }
 
+void Platform_RenderThread_Wake(void) {
+    if (!g_rt_running) return;
+    pthread_mutex_lock(&g_rt_lock);
+    pthread_cond_signal(&g_rt_cond);
+    pthread_mutex_unlock(&g_rt_lock);
+}
+
 void *Platform_RenderThread_Display(void) {
     return (void *)g_rt_dpy;
 }
@@ -94,6 +101,7 @@ static void *rt_thread_func(void *arg) {
         }
 
         long us = (n == 0) ? RT_IDLE_SLEEP_US : (1000000L / (g_rt_fps > 0 ? g_rt_fps : RT_DEFAULT_FPS));
+        if (us > RT_MAX_SLEEP_US) us = RT_MAX_SLEEP_US;
         struct timespec ts;
         clock_gettime(CLOCK_REALTIME, &ts);
         ts.tv_sec += (time_t)(us / 1000000L);

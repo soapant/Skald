@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xft/Xft.h>
@@ -28,7 +29,17 @@ struct PlatformWidget {
     unsigned long bg_hex;
     bool has_bg;
     bool no_bg;
+    bool dirty;
+    long long last_draw_ms;
+    int last_draw_w;
+    int last_draw_h;
 };
+
+static long long widget_now_ms(void) {
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return (long long)ts.tv_sec * 1000LL + ts.tv_nsec / 1000000LL;
+}
 
 static void widget_frame(void *ud) {
     PlatformWidget *widget = (PlatformWidget *)ud;
@@ -36,6 +47,15 @@ static void widget_frame(void *ud) {
     Display *dpy = widget->dpy;
     if (!dpy || widget->win == None) return;
     if (widget->w <= 0 || widget->h <= 0) return;
+
+    long long now = widget_now_ms();
+    if (!widget->dirty) {
+        long long interval = widget->fps > 0 ? 1000LL / widget->fps : 1000LL;
+        if (interval < 16) interval = 16;
+        if (now - widget->last_draw_ms < interval) return;
+    }
+    widget->dirty = false;
+    widget->last_draw_ms = now;
 
     Platform_SetDrawBgColor(widget->has_bg ? widget->bg_hex : 0);
     if (widget->no_bg) {
@@ -88,6 +108,10 @@ PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps, bool
     widget->h = h;
     widget->fps = fps;
     widget->no_bg = no_bg;
+    widget->dirty = true;
+    widget->last_draw_ms = 0;
+    widget->last_draw_w = 0;
+    widget->last_draw_h = 0;
 
     Platform_SetTransparentWindow(no_bg);
     widget->win = x11_create_display_message_window(dpy, x, y, w, h);
@@ -173,6 +197,8 @@ void Platform_Widget_Move(PlatformWidget *widget, int x, int y) {
 void Platform_Widget_SetNoBg(PlatformWidget *widget, bool no_bg) {
     if (!widget || widget->dead) return;
     widget->no_bg = no_bg;
+    widget->dirty = true;
+    Platform_RenderThread_Wake();
 }
 
 void Platform_Widget_SetBgColor(PlatformWidget *widget, unsigned long hex) {
@@ -190,6 +216,14 @@ void Platform_Widget_SetBgColor(PlatformWidget *widget, unsigned long hex) {
     attrs.background_pixel = (a << 24) | (r << 16) | (g << 8) | b;
     XChangeWindowAttributes(widget->dpy, widget->win, CWBackPixel, &attrs);
     XFlush(widget->dpy);
+    widget->dirty = true;
+    Platform_RenderThread_Wake();
+}
+
+void Platform_Widget_Invalidate(PlatformWidget *widget) {
+    if (!widget || widget->dead) return;
+    widget->dirty = true;
+    Platform_RenderThread_Wake();
 }
 
 void Platform_Widget_Resize(PlatformWidget *widget, int w, int h) {
@@ -201,6 +235,8 @@ void Platform_Widget_Resize(PlatformWidget *widget, int w, int h) {
     widget->h = h;
     XMoveResizeWindow(widget->dpy, widget->win, widget->x, widget->y, w, h);
     XFlush(widget->dpy);
+    widget->dirty = true;
+    Platform_RenderThread_Wake();
 }
 
 int Platform_Widget_Width(const PlatformWidget *widget) {
