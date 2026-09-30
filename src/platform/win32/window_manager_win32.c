@@ -28,12 +28,15 @@ int WindowManager_RunWin32(WindowManager* wm) {
 
 void WindowManager_ProcessEventsWin32(WindowManager* wm) {
     if (!wm) return;
-    
+
     MSG msg;
+    bool got = false;
     while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+        got = true;
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
+    if (!got) MsgWaitForMultipleObjects(0, NULL, FALSE, 16, QS_ALLINPUT);
     hotkey_drain_pending();
 }
 
