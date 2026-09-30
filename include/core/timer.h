@@ -22,6 +22,7 @@ static inline WinTimer TimerStart(void) {
 }
 
 void TimerEnd(WinTimer t, const char* operation_name);
+void TimerEndAlways(WinTimer t, const char* operation_name);
 
 #define PROFILE_FUNCTION() WinTimer _profile_timer = TimerStart()
 #define PROFILE_END(name) TimerEnd(_profile_timer, (name))
