@@ -1597,54 +1597,33 @@ static FlWidget *fl_widget_find_by_name(const char *name) {
 
 static void fl_widget_relayout(void);
 
-static void fl_widget_resize_to_content(FlWidget *widget) {
-    Platform_BeginMeasure();
+static void fl_widget_render_frame(void *ud) {
+    FlWidget *widget = (FlWidget *)ud;
+    if (!widget || !widget->render) return;
+    widget->frame++;
     FlWidgetState st;
     st.width = widget->w;
     st.height = widget->h;
     st.frame = widget->frame;
-    st.elapsed = 0.0;
-    widget->render(&st);
-    int mw = 0, mh = 0;
-    Platform_EndMeasure(&mw, &mh);
-
-    int nw = (widget->auto_w && mw > 0) ? mw + widget->pad : widget->w;
-    int nh = (widget->auto_h && mh > 0) ? mh + widget->pad : widget->h;
-    if (nw == widget->w && nh == widget->h) return;
-    widget->w = nw;
-    widget->h = nh;
-    if (Platform_Widget_IsValid(widget->win)) Platform_Widget_Resize(widget->win, nw, nh);
-    fl_widget_relayout();
-}
-
-static void fl_widget_render_frame(void *ud);
-
-static void fl_widget_measure_and_fit(void *ud) {
-    FlWidget *widget = (FlWidget *)ud;
-    if (!widget || widget->dead) return;
-    if (!widget->render || !Platform_Widget_IsValid(widget->win)) return;
+    st.elapsed = fl_end_timer_platform(widget->created_at);
 
     Platform_BeginMeasure();
-    FlWidgetState st;
-    st.width = widget->w;
-    st.height = widget->h;
-    st.frame = 0;
-    st.elapsed = 0.0;
     widget->render(&st);
     int mw = 0, mh = 0;
     Platform_EndMeasure(&mw, &mh);
 
-    int nw = widget->w;
-    int nh = widget->h;
-    if (widget->auto_w && mw > 0) nw = mw + widget->pad;
-    if (widget->auto_h && mh > 0) nh = mh + widget->pad;
-    if (nw == widget->w && nh == widget->h) {
-        return;
+    if (widget->auto_w || widget->auto_h) {
+        int nw = (widget->auto_w && mw > 0) ? mw + widget->pad : widget->w;
+        int nh = (widget->auto_h && mh > 0) ? mh + widget->pad : widget->h;
+        if (nw != widget->w || nh != widget->h) {
+            widget->w = nw;
+            widget->h = nh;
+            if (Platform_Widget_IsValid(widget->win)) {
+                Platform_Widget_Resize(widget->win, nw, nh);
+            }
+            fl_widget_relayout();
+        }
     }
-    widget->w = nw;
-    widget->h = nh;
-    Platform_Widget_Resize(widget->win, nw, nh);
-    fl_widget_relayout();
 }
 
 static void fl_widget_owner_path(void *addr, char *out, size_t n) {
@@ -1703,21 +1682,6 @@ bool fl_widget_owner_active(const char *path) {
         if (w && fl_widget_owner_matches(w, path, NULL)) return true;
     }
     return false;
-}
-
-static void fl_widget_render_frame(void *ud) {
-    FlWidget *widget = (FlWidget *)ud;
-    if (!widget || !widget->render) return;
-    FlWidgetState st;
-    st.width = widget->w;
-    st.height = widget->h;
-    st.frame = widget->frame;
-    st.elapsed = fl_end_timer_platform(widget->created_at);
-    widget->frame++;
-    if (widget->auto_w || widget->auto_h) fl_widget_resize_to_content(widget);
-    st.width = widget->w;
-    st.height = widget->h;
-    widget->render(&st);
 }
 
 static void fl_widget_attach_window(void *ud) {
@@ -1850,11 +1814,6 @@ FlWidget *fl_widget_create(const FlWidgetSpec *spec) {
     }
 
     if (!Platform_Widget_IsValid(widget->win)) {
-    }
-    if (widget->auto_w || widget->auto_h) {
-        if (Platform_RenderThread_Post(fl_widget_measure_and_fit, widget)) {
-        } else {
-        }
     }
     return widget;
 }
