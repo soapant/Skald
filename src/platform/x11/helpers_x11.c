@@ -1189,7 +1189,8 @@ Window x11_create_edit_popup_window(Display* dpy, int x, int y, int w, int h) {
 }
 Window x11_create_display_message_window(Display* dpy, int x, int y, int w, int h) {
     PROFILE_START(timer);
-    unsigned long bg = rgb_to_hex(COLOR_BG);
+    unsigned long bg = Platform_GetDrawBgColor();
+    if (!bg) bg = rgb_to_hex(COLOR_BG);
     PROFILE_END_VAR(timer, "helpers_x11:x11_create_display_message_window");
     return x11_create_window_ex_or(dpy, x, y, w, h, bg, "flashtext", "flashtext", ExposureMask, true);
 }
