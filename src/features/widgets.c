@@ -183,26 +183,33 @@ static void widgets_date_and_time_render(FlWidgetState *state) {
                  .color = RGB(220, 220, 220), .align = "LEFT");
 }
 
+static FlWidget* g_disk = NULL;
+static FlWidget* g_mem = NULL;
+static FlWidget* g_cpu = NULL;
+
 void FlipWidgets(void) {
     percentage = !percentage;
+    fl_widget_set_render(g_disk, widgets_disk_usage_render);
+    fl_widget_set_render(g_mem, widgets_memory_usage_render);
+    fl_widget_set_render(g_cpu, widgets_cpu_usage_render);
 }
 
 FLINT_FEATURE_INIT {
-    fl_widget(.name = "disk_usage",
+    g_disk = fl_widget(.name = "disk_usage",
               .color = COLOR,
               .fps = FPS,
               .no_bg = BG,
               .slot = FL_WIDGET_SLOT_BOTTOM_LEFT,
               .render = widgets_disk_usage_render);
 
-    fl_widget(.name = "memory_usage",
+    g_mem = fl_widget(.name = "memory_usage",
               .color = COLOR,
               .fps = FPS,
               .no_bg = BG,
               .slot = FL_WIDGET_SLOT_BOTTOM_LEFT,
               .render = widgets_memory_usage_render);
 
-    fl_widget(.name = "cpu_usage",
+    g_cpu = fl_widget(.name = "cpu_usage",
               .color = COLOR,
               .fps = FPS,
               .no_bg = BG,

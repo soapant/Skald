@@ -1990,6 +1990,8 @@ void fl_widget_set_render(FlWidget *widget, FlWidgetRenderFn render) {
     PROFILE_START(_pt);
     if (!fl_widget_is_valid(widget)) { PROFILE_END_VAR(_pt, "api:fl_widget_set_render"); return; }
     widget->render = render;
-    Platform_RenderThread_Post(fl_widget_render_frame, widget);
+    if (Platform_Widget_IsValid(widget->win)) {
+        Platform_Widget_Invalidate(widget->win);
+    }
     PROFILE_END_VAR(_pt, "api:fl_widget_set_render");
 }

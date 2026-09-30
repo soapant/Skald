@@ -21,6 +21,8 @@ struct PlatformWidget {
     unsigned long bg_hex;
     bool has_bg;
     bool no_bg;
+    bool dirty;
+    DWORD last_draw_ms;
     BITMAPINFO layer_bi;
     HDC layer_dc;
     HBITMAP layer_bmp;
@@ -171,6 +173,14 @@ static void widget_frame(void *ud) {
     if (!widget || widget->dead) return;
     HWND hwnd = widget->hwnd;
     if (!hwnd || !IsWindow(hwnd)) return;
+    DWORD now = GetTickCount();
+    if (!widget->dirty) {
+        DWORD interval = widget->fps > 0 ? (DWORD)(1000 / widget->fps) : 1000;
+        if (interval < 16) interval = 16;
+        if (now - widget->last_draw_ms < interval) return;
+    }
+    widget->dirty = false;
+    widget->last_draw_ms = now;
     InvalidateRect(hwnd, NULL, FALSE);
     UpdateWindow(hwnd);
     MSG msg;
@@ -178,6 +188,12 @@ static void widget_frame(void *ud) {
         TranslateMessage(&msg);
         DispatchMessageA(&msg);
     }
+}
+
+void Platform_Widget_Invalidate(PlatformWidget *widget) {
+    if (!widget || widget->dead) return;
+    widget->dirty = true;
+    Platform_RenderThread_Wake();
 }
 
 PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps, bool no_bg) {
@@ -193,6 +209,8 @@ PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps, bool
     widget->h = h;
     widget->fps = fps;
     widget->no_bg = no_bg;
+    widget->dirty = true;
+    widget->last_draw_ms = 0;
 
     HINSTANCE hInstance = GetModuleHandle(NULL);
     widget->hwnd = CreateWindowExA(
@@ -275,12 +293,14 @@ void Platform_Widget_Move(PlatformWidget *widget, int x, int y) {
 void Platform_Widget_SetNoBg(PlatformWidget *widget, bool no_bg) {
     if (!widget || widget->dead) return;
     widget->no_bg = no_bg;
+    Platform_Widget_Invalidate(widget);
 }
 
 void Platform_Widget_SetBgColor(PlatformWidget *widget, unsigned long hex) {
     if (!widget || widget->dead) return;
     widget->has_bg = hex != 0;
     widget->bg_hex = hex;
+    Platform_Widget_Invalidate(widget);
 }
 
 void Platform_Widget_Resize(PlatformWidget *widget, int w, int h) {
@@ -291,6 +311,7 @@ void Platform_Widget_Resize(PlatformWidget *widget, int w, int h) {
     widget->w = w;
     widget->h = h;
     SetWindowPos(widget->hwnd, HWND_TOPMOST, widget->x, widget->y, w, h, SWP_NOACTIVATE);
+    Platform_Widget_Invalidate(widget);
 }
 
 
