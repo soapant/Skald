@@ -233,8 +233,15 @@ int x11_font_list_top_of(FontHandle font) {
     return x11_font_list_top(xf ? xf->ascent : 0, xf ? xf->descent : 0, FontSize);
 }
 
-int x11_font_cursor_y_of() {
-    return 17;
+int x11_font_cursor_y(int ascent, int descent, int font_size, int box_top) {
+    int line_h = ascent + descent;
+    if (line_h <= 0 || font_size <= 0) return box_top;
+    return box_top + (line_h - font_size) / 2;
+}
+
+int x11_font_cursor_y_of(FontHandle font, int box_top) {
+    XftFont* xf = FH_TO_XFT(font);
+    return x11_font_cursor_y(xf ? xf->ascent : 0, xf ? xf->descent : 0, FontSize, box_top);
 }
 
 void x11_draw_edit_cursor(XftDraw* xd, XftColor* color, int cursor_x, int scroll, int width) {
@@ -660,7 +667,7 @@ Window x11_create_window_ex_or(Display* dpy, int x, int y, int w, int h, unsigne
         unsigned int r = (bg_color >> 16) & 0xFF;
         unsigned int g = (bg_color >> 8) & 0xFF;
         unsigned int b = bg_color & 0xFF;
-        unsigned int a = RoundedCorners ? 0 : (unsigned int)WindowOpacity;
+        unsigned int a = (RoundedCorners || Platform_GetTransparentWindow()) ? 0 : (unsigned int)WindowOpacity;
         attrs.background_pixel = (a << 24) | (r << 16) | (g << 8) | b;
         attrs.colormap = cmap;
         attrs.border_pixel = 0;
@@ -1182,7 +1189,8 @@ Window x11_create_edit_popup_window(Display* dpy, int x, int y, int w, int h) {
 }
 Window x11_create_display_message_window(Display* dpy, int x, int y, int w, int h) {
     PROFILE_START(timer);
-    unsigned long bg = rgb_to_hex(COLOR_BG);
+    unsigned long bg = Platform_GetDrawBgColor();
+    if (!bg) bg = rgb_to_hex(COLOR_BG);
     PROFILE_END_VAR(timer, "helpers_x11:x11_create_display_message_window");
     return x11_create_window_ex_or(dpy, x, y, w, h, bg, "flashtext", "flashtext", ExposureMask, true);
 }
