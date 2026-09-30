@@ -216,5 +216,5 @@ FLINT_FEATURE_INIT {
               .slot = FL_WIDGET_SLOT_BOTTOM_RIGHT,
               .render = widgets_date_and_time_render);
 
-    fl_register_hotkey("Alt+Shift+G", FlipWidgets);
+    fl_register_hotkey("Alt+Shift+S", FlipWidgets);
 }
