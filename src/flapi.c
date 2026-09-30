@@ -1588,6 +1588,22 @@ static int g_fl_widget_count = 0;
 static int g_fl_widget_seq = 0;
 static unsigned g_fl_widget_gen = 1;
 
+static FlTimer g_mon_at;
+static bool g_mon_valid = false;
+static int g_mon_x, g_mon_y, g_mon_w, g_mon_h;
+
+static void fl_widget_monitor_geometry(int *x, int *y, int *w, int *h) {
+    if (!g_mon_valid || fl_end_timer_platform(g_mon_at) > 2000) {
+        Platform_WM_GetMonitorGeometry(&g_mon_x, &g_mon_y, &g_mon_w, &g_mon_h);
+        g_mon_at = fl_start_timer_platform();
+        g_mon_valid = true;
+    }
+    *x = g_mon_x;
+    *y = g_mon_y;
+    *w = g_mon_w;
+    *h = g_mon_h;
+}
+
 unsigned fl_widget_bump_generation(void) {
     return ++g_fl_widget_gen;
 }
@@ -1734,7 +1750,7 @@ static int fl_widget_sort_key(const FlWidget *widget) {
 
 static void fl_widget_relayout(void) {
     int mx = 0, my = 0, mw = 1920, mh = 1080;
-    Platform_WM_GetMonitorGeometry(&mx, &my, &mw, &mh);
+    fl_widget_monitor_geometry(&mx, &my, &mw, &mh);
 
     FlWidget *sorted[FL_WIDGET_MAX];
     int n = 0;
@@ -1818,7 +1834,7 @@ FlWidget *fl_widget_create(const FlWidgetSpec *spec) {
         int y = spec->y;
         if (x < 0 && y < 0) {
             int mx = 0, my = 0, mw = 1920, mh = 1080;
-            Platform_WM_GetMonitorGeometry(&mx, &my, &mw, &mh);
+            fl_widget_monitor_geometry(&mx, &my, &mw, &mh);
             x = mx + (mw - widget->w) / 2;
             y = my + (mh - widget->h) / 2;
         }
