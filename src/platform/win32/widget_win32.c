@@ -145,6 +145,9 @@ static LRESULT CALLBACK FlintWidgetProc(HWND hwnd, UINT msg, WPARAM wParam, LPAR
         SetWindowLongPtrA(hwnd, GWLP_USERDATA, (LONG_PTR)cs->lpCreateParams);
         return DefWindowProcA(hwnd, msg, wParam, lParam);
     }
+    case WM_NCHITTEST: {
+        return HTTRANSPARENT;
+    }
     case WM_PAINT: {
         if (!widget || widget->dead) break;
         PAINTSTRUCT ps;
@@ -214,7 +217,7 @@ PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps, bool
 
     HINSTANCE hInstance = GetModuleHandle(NULL);
     widget->hwnd = CreateWindowExA(
-        WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED | WS_EX_NOACTIVATE,
+        WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED | WS_EX_NOACTIVATE | WS_EX_TRANSPARENT,
         FLINT_WIDGET_CLASS, NULL, WS_POPUP,
         x, y, w, h, NULL, NULL, hInstance, widget
     );
