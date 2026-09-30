@@ -505,7 +505,7 @@ bool fl_terminate_process_by_name(const char* exe_name) {
     if (!exe_name) return false;
     return Platform_TerminateProcessByName(exe_name);
 }
-bool fl_string_contains(const char* needle, const char* haystack) {
+bool fl_string_contains(const char* haystack, const char* needle) {
     if (!needle || !haystack) return false;
     return Platform_StringContainsCaseInsensitive(needle,haystack);
 }
