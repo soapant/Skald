@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <string.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xft/Xft.h>
@@ -7,6 +8,7 @@
 #include "platform/ui.h"
 #include "platform/platform.h"
 #include "config.h"
+#include "helpers/helpers_ui.h"
 #include "platform/x11/drawing_x11.h"
 #include "platform/x11/window_factory_x11.h"
 #include "deps/log.h"
@@ -177,6 +179,17 @@ void Platform_Widget_SetBgColor(PlatformWidget *widget, unsigned long hex) {
     if (!widget || widget->dead) return;
     widget->has_bg = hex != 0;
     widget->bg_hex = hex;
+    if (!widget->dpy || widget->win == None) return;
+    unsigned int a = (RoundedCorners || Platform_GetTransparentWindow()) ? 0 : (unsigned int)WindowOpacity;
+    unsigned long bg = widget->has_bg ? hex : rgb_to_hex(COLOR_BG);
+    unsigned int r = (unsigned int)((bg >> 16) & 0xFF);
+    unsigned int g = (unsigned int)((bg >> 8) & 0xFF);
+    unsigned int b = (unsigned int)(bg & 0xFF);
+    XSetWindowAttributes attrs;
+    memset(&attrs, 0, sizeof(attrs));
+    attrs.background_pixel = (a << 24) | (r << 16) | (g << 8) | b;
+    XChangeWindowAttributes(widget->dpy, widget->win, CWBackPixel, &attrs);
+    XFlush(widget->dpy);
 }
 
 void Platform_Widget_Resize(PlatformWidget *widget, int w, int h) {
