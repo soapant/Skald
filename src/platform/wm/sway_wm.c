@@ -304,8 +304,9 @@ Fl_WindowList get_window_titles_sway() {
     return list;
 }
 Fl_Pos get_cursor_position_sway(void) { 
-  char cmd[200];
-  snprintf(cmd, sizeof(cmd), "%s/external/slurp -p -d ", Platform_GetWorkingDir());
+  char cmd[512];
+  char* wd = Platform_GetWorkingDir();
+  snprintf(cmd, sizeof(cmd), "LD_LIBRARY_PATH=%s/build/bundle:${LD_LIBRARY_PATH:-} %s/external/slurp -p -d ", wd ? wd : ".", wd ? wd : ".");
   
   char* output = Platform_RunCommandAndGetOutput(cmd);
 
