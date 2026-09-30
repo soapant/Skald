@@ -104,6 +104,7 @@ static bool read_cpu(unsigned long long *used_out, unsigned long long *total_out
     unsigned long long d_total = total - prev_total;
     *used_out = busy - prev_busy;
     *total_out = d_total;
+    if (d_total == 0) *used_out = 0;
     prev_busy = busy;
     prev_total = total;
     return d_total > 0;
@@ -126,7 +127,7 @@ static void draw_usage(const char* label, unsigned long long used, unsigned long
     if (total == 0) {
         snprintf(buf, sizeof(buf), "%s??", label);
     } else if (percentage) {
-        snprintf(buf, sizeof(buf), "%s%llu%%", label, (used * 100ULL) / total);
+        snprintf(buf, sizeof(buf), "%s%3llu%%", label, (used * 100ULL) / total);
     } else {
         char used_str[32];
         char total_str[32];
@@ -160,7 +161,7 @@ static void widgets_cpu_usage_render(FlWidgetState *state) {
                      .color = RGB(255, 255, 255), .align = "LEFT");
         return;
     }
-    snprintf(buf, sizeof(buf), "CPU Usage:%llu%%", (used * 100ULL) / total);
+    snprintf(buf, sizeof(buf), "CPU Usage:%3llu%%", (used * 100ULL) / total);
     fl_draw_text(.text = buf, .x = 10, .y = 6, .fontsize = 15,
                  .color = usage_color(used, total), .align = "LEFT");
 }
@@ -199,8 +200,8 @@ FLINT_FEATURE_INIT {
               .render = widgets_cpu_usage_render);
 
     fl_widget(.name = "date_and_time",
-              .color = RGB(1, 1, 1),
-              .fps = 10,
+              .color = RGB(2, 2, 2),
+              .fps = 1,
               .slot = FL_WIDGET_SLOT_BOTTOM_RIGHT,
               .render = widgets_date_and_time_render);
 

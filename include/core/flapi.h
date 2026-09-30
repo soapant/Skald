@@ -403,6 +403,7 @@ struct FlWidget {
     unsigned long frame;
     FlTimer created_at;
     char *owner;
+    unsigned gen;
 };
 
 FlWidget *fl_widget_create(const FlWidgetSpec *spec);

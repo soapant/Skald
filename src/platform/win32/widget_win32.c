@@ -209,16 +209,21 @@ PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps, bool
     win32_apply_rounded_corners(widget->hwnd, w, h);
     if (!widget->no_bg) {
         SetLayeredWindowAttributes(widget->hwnd, 0, (BYTE)WindowOpacity, LWA_ALPHA);
-        ShowWindow(widget->hwnd, SW_SHOWNOACTIVATE);
     }
     SetWindowPos(widget->hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
-    widget->mapped = true;
 
     if (!Platform_RenderThread_AddFrameCallback(widget_frame, widget)) {
         DestroyWindow(widget->hwnd);
         free(widget);
         return NULL;
     }
+
+    widget_frame(widget);
+
+    if (!widget->no_bg) {
+        ShowWindow(widget->hwnd, SW_SHOWNOACTIVATE);
+    }
+    widget->mapped = true;
     return widget;
 }
 
