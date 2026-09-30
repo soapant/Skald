@@ -100,10 +100,6 @@ PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps, bool
         widget->cmap = DefaultColormap(dpy, screen);
     }
 
-    XMapRaised(dpy, widget->win);
-    XFlush(dpy);
-    widget->mapped = true;
-
     if (!Platform_RenderThread_AddFrameCallback(widget_frame, widget)) {
         XDestroyWindow(dpy, widget->win);
         XFlush(dpy);
@@ -112,6 +108,10 @@ PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps, bool
     }
 
     widget_frame(widget);
+
+    XMapRaised(dpy, widget->win);
+    XFlush(dpy);
+    widget->mapped = true;
     return widget;
 }
 

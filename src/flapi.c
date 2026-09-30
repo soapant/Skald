@@ -1586,6 +1586,15 @@ void fl_profile_end(FlTimer timer) {
 static FlWidget *g_fl_widgets[FL_WIDGET_MAX];
 static int g_fl_widget_count = 0;
 static int g_fl_widget_seq = 0;
+static unsigned g_fl_widget_gen = 1;
+
+unsigned fl_widget_bump_generation(void) {
+    return ++g_fl_widget_gen;
+}
+
+unsigned fl_widget_current_generation(void) {
+    return g_fl_widget_gen;
+}
 
 static FlWidget *fl_widget_find_by_name(const char *name) {
     if (!name || !name[0]) return NULL;
@@ -1645,13 +1654,14 @@ static void fl_widget_destroy_window(void *ud) {
     }
     widget->win = NULL;
 }
-void fl_widget_purge_owner(const char *path_a, const char *path_b) {
+void fl_widget_purge_owner(const char *path_a, const char *path_b, unsigned generation) {
     if ((!path_a || !path_a[0]) && (!path_b || !path_b[0])) return;
 
     for (int i = 0; i < g_fl_widget_count; i++) {
         FlWidget *w = g_fl_widgets[i];
         if (!w) continue;
         if (!fl_widget_owner_matches(w, path_a, path_b)) continue;
+        if (w->gen > generation) continue;
         w->dead = true;
         Platform_RenderThread_RemoveFrameCallback(fl_widget_render_frame, w);
         Platform_RenderThread_Post(fl_widget_destroy_window, w);
@@ -1664,7 +1674,7 @@ void fl_widget_purge_owner(const char *path_a, const char *path_b) {
     for (int i = 0; i < g_fl_widget_count; i++) {
         FlWidget *w = g_fl_widgets[i];
         if (!w) continue;
-        if (fl_widget_owner_matches(w, path_a, path_b)) {
+        if (fl_widget_owner_matches(w, path_a, path_b) && w->gen <= generation) {
             if (w->owner) free(w->owner);
             free(w);
             continue;
@@ -1687,18 +1697,19 @@ bool fl_widget_owner_active(const char *path) {
 static void fl_widget_attach_window(void *ud) {
     FlWidget *widget = (FlWidget *)ud;
     if (!widget || widget->dead) return;
+    bool created = false;
     if (!Platform_Widget_IsValid(widget->win)) {
         Platform_SetDrawBgColor(widget->has_bg ? widget->bg_hex : 0);
         widget->win = Platform_Widget_Create(widget->x, widget->y, widget->w, widget->h, widget->fps, widget->no_bg);
         Platform_SetDrawBgColor(0);
-        if (widget->win) {
-            Platform_Widget_SetBgColor(widget->win, widget->has_bg ? widget->bg_hex : 0);
-            Platform_Widget_SetNoBg(widget->win, widget->no_bg);
-            Platform_Widget_SetFrameCallback(widget->win, fl_widget_render_frame, widget);
-        } else {
-        }
+        created = (widget->win != NULL);
     } else {
         Platform_Widget_Move(widget->win, widget->x, widget->y);
+    }
+    if (widget->win) {
+        Platform_Widget_SetBgColor(widget->win, widget->has_bg ? widget->bg_hex : 0);
+        Platform_Widget_SetNoBg(widget->win, widget->no_bg);
+        if (created) Platform_Widget_SetFrameCallback(widget->win, fl_widget_render_frame, widget);
     }
 }
 
@@ -1771,22 +1782,27 @@ FlWidget *fl_widget_create(const FlWidgetSpec *spec) {
         if (!widget) return NULL;
         snprintf(widget->name, FL_WIDGET_NAME_MAX, "%s", spec->name);
         widget->seq = g_fl_widget_seq++;
-        {
-            char owner_path[512];
-            fl_widget_owner_path(__builtin_return_address(0), owner_path, sizeof(owner_path));
-            if (owner_path[0]) widget->owner = strdup(owner_path);
-        }
         g_fl_widgets[g_fl_widget_count++] = widget;
     }
 
+    {
+        char owner_path[512];
+        fl_widget_owner_path(__builtin_return_address(0), owner_path, sizeof(owner_path));
+        if (owner_path[0]) {
+            if (widget->owner) free(widget->owner);
+            widget->owner = strdup(owner_path);
+        }
+    }
+
+    widget->gen = g_fl_widget_gen;
     widget->has_bg = spec->color != 0;
     widget->bg_hex = widget->has_bg ? rgb_to_hex(spec->color) : 0;
-    widget->no_bg = spec->no_bg ? spec->no_bg : false;
+    widget->no_bg = spec->no_bg;
     widget->auto_w = spec->w <= 0;
     widget->auto_h = spec->h <= 0;
     widget->pad = spec->pad > 0 ? spec->pad : FL_WIDGET_DEFAULT_PAD;
-    widget->w = widget->auto_w ? FL_WIDGET_PROVISIONAL_W : spec->w;
-    widget->h = widget->auto_h ? FL_WIDGET_PROVISIONAL_H : spec->h;
+    if (fresh || !widget->auto_w) widget->w = widget->auto_w ? FL_WIDGET_PROVISIONAL_W : spec->w;
+    if (fresh || !widget->auto_h) widget->h = widget->auto_h ? FL_WIDGET_PROVISIONAL_H : spec->h;
     widget->gap = spec->gap > 0 ? spec->gap : FL_WIDGET_DEFAULT_GAP;
     widget->fps = spec->fps ? spec->fps : 1;
     widget->slot = (spec->slot >= FL_WIDGET_SLOT_TOP_LEFT && spec->slot <= FL_WIDGET_SLOT_BOTTOM_RIGHT) ? spec->slot : FL_WIDGET_SLOT_BOTTOM_LEFT;
