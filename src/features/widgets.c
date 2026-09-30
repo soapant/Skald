@@ -200,7 +200,7 @@ FLINT_FEATURE_INIT {
               .render = widgets_cpu_usage_render);
 
     fl_widget(.name = "date_and_time",
-              .color = RGB(2, 2, 2),
+              .color = RGB(1, 1, 1),
               .fps = 1,
               .slot = FL_WIDGET_SLOT_BOTTOM_RIGHT,
               .render = widgets_date_and_time_render);
