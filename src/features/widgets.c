@@ -177,7 +177,7 @@ static void widgets_date_and_time_render(FlWidgetState *state) {
     struct tm* tm = localtime(&t);
     if (!tm) return;
 
-    strftime(buf, sizeof(buf), "%A, %B %d %H:%M:%S", tm);
+    strftime(buf, sizeof(buf), "%A %B %d %H:%M:%S", tm);
 
     fl_draw_text(.text = buf, .x = 10, .y = 6, .fontsize = FONTSIZE,
                  .color = RGB(220, 220, 220), .align = "LEFT");
