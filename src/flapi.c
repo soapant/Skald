@@ -1586,6 +1586,31 @@ void fl_profile_end(FlTimer timer) {
 static FlWidget *g_fl_widgets[FL_WIDGET_MAX];
 static int g_fl_widget_count = 0;
 static int g_fl_widget_seq = 0;
+static unsigned g_fl_widget_gen = 1;
+
+static FlTimer g_mon_at;
+static bool g_mon_valid = false;
+static int g_mon_x, g_mon_y, g_mon_w, g_mon_h;
+
+static void fl_widget_monitor_geometry(int *x, int *y, int *w, int *h) {
+    if (!g_mon_valid || fl_end_timer_platform(g_mon_at) > 2000) {
+        Platform_WM_GetMonitorGeometry(&g_mon_x, &g_mon_y, &g_mon_w, &g_mon_h);
+        g_mon_at = fl_start_timer_platform();
+        g_mon_valid = true;
+    }
+    *x = g_mon_x;
+    *y = g_mon_y;
+    *w = g_mon_w;
+    *h = g_mon_h;
+}
+
+unsigned fl_widget_bump_generation(void) {
+    return ++g_fl_widget_gen;
+}
+
+unsigned fl_widget_current_generation(void) {
+    return g_fl_widget_gen;
+}
 
 static FlWidget *fl_widget_find_by_name(const char *name) {
     if (!name || !name[0]) return NULL;
@@ -1597,34 +1622,33 @@ static FlWidget *fl_widget_find_by_name(const char *name) {
 
 static void fl_widget_relayout(void);
 
-static void fl_widget_render_frame(void *ud);
-
-static void fl_widget_measure_and_fit(void *ud) {
+static void fl_widget_render_frame(void *ud) {
     FlWidget *widget = (FlWidget *)ud;
-    if (!widget || widget->dead) return;
-    if (!widget->render || !Platform_Widget_IsValid(widget->win)) return;
-
-    Platform_BeginMeasure();
+    if (!widget || !widget->render) return;
+    widget->frame++;
     FlWidgetState st;
     st.width = widget->w;
     st.height = widget->h;
-    st.frame = 0;
-    st.elapsed = 0.0;
+    st.frame = widget->frame;
+    st.elapsed = fl_end_timer_platform(widget->created_at);
+
+    Platform_BeginMeasure();
     widget->render(&st);
     int mw = 0, mh = 0;
     Platform_EndMeasure(&mw, &mh);
 
-    int nw = widget->w;
-    int nh = widget->h;
-    if (widget->auto_w && mw > 0) nw = mw + widget->pad;
-    if (widget->auto_h && mh > 0) nh = mh + widget->pad;
-    if (nw == widget->w && nh == widget->h) {
-        return;
+    if (widget->auto_w || widget->auto_h) {
+        int nw = (widget->auto_w && mw > 0) ? mw + widget->pad : widget->w;
+        int nh = (widget->auto_h && mh > 0) ? mh + widget->pad : widget->h;
+        if (nw != widget->w || nh != widget->h) {
+            widget->w = nw;
+            widget->h = nh;
+            if (Platform_Widget_IsValid(widget->win)) {
+                Platform_Widget_Resize(widget->win, nw, nh);
+            }
+            fl_widget_relayout();
+        }
     }
-    widget->w = nw;
-    widget->h = nh;
-    Platform_Widget_Resize(widget->win, nw, nh);
-    fl_widget_relayout();
 }
 
 static void fl_widget_owner_path(void *addr, char *out, size_t n) {
@@ -1646,13 +1670,14 @@ static void fl_widget_destroy_window(void *ud) {
     }
     widget->win = NULL;
 }
-void fl_widget_purge_owner(const char *path_a, const char *path_b) {
+void fl_widget_purge_owner(const char *path_a, const char *path_b, unsigned generation) {
     if ((!path_a || !path_a[0]) && (!path_b || !path_b[0])) return;
 
     for (int i = 0; i < g_fl_widget_count; i++) {
         FlWidget *w = g_fl_widgets[i];
         if (!w) continue;
         if (!fl_widget_owner_matches(w, path_a, path_b)) continue;
+        if (w->gen > generation) continue;
         w->dead = true;
         Platform_RenderThread_RemoveFrameCallback(fl_widget_render_frame, w);
         Platform_RenderThread_Post(fl_widget_destroy_window, w);
@@ -1665,7 +1690,7 @@ void fl_widget_purge_owner(const char *path_a, const char *path_b) {
     for (int i = 0; i < g_fl_widget_count; i++) {
         FlWidget *w = g_fl_widgets[i];
         if (!w) continue;
-        if (fl_widget_owner_matches(w, path_a, path_b)) {
+        if (fl_widget_owner_matches(w, path_a, path_b) && w->gen <= generation) {
             if (w->owner) free(w->owner);
             free(w);
             continue;
@@ -1685,32 +1710,22 @@ bool fl_widget_owner_active(const char *path) {
     return false;
 }
 
-static void fl_widget_render_frame(void *ud) {
-    FlWidget *widget = (FlWidget *)ud;
-    if (!widget || !widget->render) return;
-    FlWidgetState st;
-    st.width = widget->w;
-    st.height = widget->h;
-    st.frame = widget->frame;
-    st.elapsed = fl_end_timer_platform(widget->created_at);
-    widget->frame++;
-    widget->render(&st);
-}
-
 static void fl_widget_attach_window(void *ud) {
     FlWidget *widget = (FlWidget *)ud;
     if (!widget || widget->dead) return;
+    bool created = false;
     if (!Platform_Widget_IsValid(widget->win)) {
         Platform_SetDrawBgColor(widget->has_bg ? widget->bg_hex : 0);
-        widget->win = Platform_Widget_Create(widget->x, widget->y, widget->w, widget->h, widget->fps);
+        widget->win = Platform_Widget_Create(widget->x, widget->y, widget->w, widget->h, widget->fps, widget->no_bg);
         Platform_SetDrawBgColor(0);
-        if (widget->win) {
-            Platform_Widget_SetBgColor(widget->win, widget->has_bg ? widget->bg_hex : 0);
-            Platform_Widget_SetFrameCallback(widget->win, fl_widget_render_frame, widget);
-        } else {
-        }
+        created = (widget->win != NULL);
     } else {
         Platform_Widget_Move(widget->win, widget->x, widget->y);
+    }
+    if (widget->win) {
+        Platform_Widget_SetBgColor(widget->win, widget->has_bg ? widget->bg_hex : 0);
+        Platform_Widget_SetNoBg(widget->win, widget->no_bg);
+        if (created) Platform_Widget_SetFrameCallback(widget->win, fl_widget_render_frame, widget);
     }
 }
 
@@ -1735,7 +1750,7 @@ static int fl_widget_sort_key(const FlWidget *widget) {
 
 static void fl_widget_relayout(void) {
     int mx = 0, my = 0, mw = 1920, mh = 1080;
-    Platform_WM_GetMonitorGeometry(&mx, &my, &mw, &mh);
+    fl_widget_monitor_geometry(&mx, &my, &mw, &mh);
 
     FlWidget *sorted[FL_WIDGET_MAX];
     int n = 0;
@@ -1783,21 +1798,27 @@ FlWidget *fl_widget_create(const FlWidgetSpec *spec) {
         if (!widget) return NULL;
         snprintf(widget->name, FL_WIDGET_NAME_MAX, "%s", spec->name);
         widget->seq = g_fl_widget_seq++;
-        {
-            char owner_path[512];
-            fl_widget_owner_path(__builtin_return_address(0), owner_path, sizeof(owner_path));
-            if (owner_path[0]) widget->owner = strdup(owner_path);
-        }
         g_fl_widgets[g_fl_widget_count++] = widget;
     }
 
-    widget->has_bg = spec->bg_color != 0;
-    widget->bg_hex = widget->has_bg ? rgb_to_hex(spec->bg_color) : 0;
+    {
+        char owner_path[512];
+        fl_widget_owner_path(__builtin_return_address(0), owner_path, sizeof(owner_path));
+        if (owner_path[0]) {
+            if (widget->owner) free(widget->owner);
+            widget->owner = strdup(owner_path);
+        }
+    }
+
+    widget->gen = g_fl_widget_gen;
+    widget->has_bg = spec->color != 0;
+    widget->bg_hex = widget->has_bg ? rgb_to_hex(spec->color) : 0;
+    widget->no_bg = spec->no_bg;
     widget->auto_w = spec->w <= 0;
     widget->auto_h = spec->h <= 0;
     widget->pad = spec->pad > 0 ? spec->pad : FL_WIDGET_DEFAULT_PAD;
-    widget->w = widget->auto_w ? FL_WIDGET_PROVISIONAL_W : spec->w;
-    widget->h = widget->auto_h ? FL_WIDGET_PROVISIONAL_H : spec->h;
+    if (fresh || !widget->auto_w) widget->w = widget->auto_w ? FL_WIDGET_PROVISIONAL_W : spec->w;
+    if (fresh || !widget->auto_h) widget->h = widget->auto_h ? FL_WIDGET_PROVISIONAL_H : spec->h;
     widget->gap = spec->gap > 0 ? spec->gap : FL_WIDGET_DEFAULT_GAP;
     widget->fps = spec->fps ? spec->fps : 1;
     widget->slot = (spec->slot >= FL_WIDGET_SLOT_TOP_LEFT && spec->slot <= FL_WIDGET_SLOT_BOTTOM_RIGHT) ? spec->slot : FL_WIDGET_SLOT_BOTTOM_LEFT;
@@ -1813,7 +1834,7 @@ FlWidget *fl_widget_create(const FlWidgetSpec *spec) {
         int y = spec->y;
         if (x < 0 && y < 0) {
             int mx = 0, my = 0, mw = 1920, mh = 1080;
-            Platform_WM_GetMonitorGeometry(&mx, &my, &mw, &mh);
+            fl_widget_monitor_geometry(&mx, &my, &mw, &mh);
             x = mx + (mw - widget->w) / 2;
             y = my + (mh - widget->h) / 2;
         }
@@ -1825,11 +1846,6 @@ FlWidget *fl_widget_create(const FlWidgetSpec *spec) {
     }
 
     if (!Platform_Widget_IsValid(widget->win)) {
-    }
-    if (widget->auto_w || widget->auto_h) {
-        if (Platform_RenderThread_Post(fl_widget_measure_and_fit, widget)) {
-        } else {
-        }
     }
     return widget;
 }

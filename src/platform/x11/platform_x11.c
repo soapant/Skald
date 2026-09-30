@@ -1082,6 +1082,11 @@ typedef void (*DirChangeCallback)(const char* full_path, int added);
 typedef struct {
     int fd;
     int path_count;
+    int index;
+    bool walking;
+    bool ready;
+    bool thread_started;
+    pthread_t thread;
     char root_path[256];
     DirChangeCallback callback;
 } WatchRoot;
@@ -1096,6 +1101,10 @@ static WatchRoot g_watch_roots[MAX_WATCH_ROOTS];
 static int g_watch_root_count = 0;
 static WatchPathEntry g_watch_paths[MAX_WATCH_PATHS];
 static int g_watch_path_count = 0;
+static pthread_mutex_t g_watch_mtx = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t g_watch_paths_mtx = PTHREAD_MUTEX_INITIALIZER;
+static int g_watch_walking = 0;
+static bool g_watch_quit = false;
 static int g_cfile_fd = -1;
 static char g_cfile_root[256] = {0};
 
@@ -1132,6 +1141,7 @@ static void watch_forget_path(int wd) {
 }
 
 static int watch_add_tree(int root_index, int fd, const char* abs_path, int depth) {
+    if (g_watch_quit) return 0;
     if (depth > WATCH_MAX_DEPTH) return 0;
     int added = 0;
     int wd = inotify_add_watch(fd, abs_path,
@@ -1144,11 +1154,12 @@ static int watch_add_tree(int root_index, int fd, const char* abs_path, int dept
     if (!d) return added;
     struct dirent* e;
     while ((e = readdir(d)) != NULL) {
+        if (g_watch_quit) break;
         if (e->d_name[0] == '.') continue;
         char child[512];
         snprintf(child, sizeof(child), "%s/%s", abs_path, e->d_name);
         struct stat st;
-        if (stat(child, &st) != 0) continue;
+        if (lstat(child, &st) != 0) continue;
         if (!S_ISDIR(st.st_mode)) continue;
         added += watch_add_tree(root_index, fd, child, depth + 1);
     }
@@ -1163,35 +1174,91 @@ static int watch_root_index_for(const char* dir_path) {
     return -1;
 }
 
+static void* watch_register_worker(void* arg) {
+    WatchRoot* root = (WatchRoot*)arg;
+    pthread_mutex_lock(&g_watch_paths_mtx);
+    if (!g_watch_quit && root->fd >= 0) {
+        int n = watch_add_tree(root->index, root->fd, root->root_path, 0);
+        root->path_count = n;
+        log_info("dir watch registered root='%s' dirs=%d", root->root_path, n);
+    }
+    pthread_mutex_unlock(&g_watch_paths_mtx);
+
+    pthread_mutex_lock(&g_watch_mtx);
+    g_watch_walking--;
+    root->walking = false;
+    root->ready = true;
+    pthread_mutex_unlock(&g_watch_mtx);
+    return NULL;
+}
+
 char* Platform_RegisterDirWatcher(const char* dir_path, DirChangeCallback callback) {
     PROFILE_START(timer);
     if (!dir_path) { log_error("returned NULL dir_path='%s'", dir_path ? dir_path : "null"); PROFILE_END_VAR(timer, "platform_x11:Platform_RegisterDirWatcher"); return NULL; }
 
+    pthread_mutex_lock(&g_watch_mtx);
+
     int ri = watch_root_index_for(dir_path);
     if (ri < 0) {
         if (g_watch_root_count >= MAX_WATCH_ROOTS) {
+            pthread_mutex_unlock(&g_watch_mtx);
             PROFILE_END_VAR(timer, "platform_x11:Platform_RegisterDirWatcher");
             return NULL;
         }
         int fd = inotify_init1(IN_NONBLOCK | IN_CLOEXEC);
         if (fd < 0) {
+            pthread_mutex_unlock(&g_watch_mtx);
             PROFILE_END_VAR(timer, "platform_x11:Platform_RegisterDirWatcher");
             return NULL;
         }
         ri = g_watch_root_count++;
         g_watch_roots[ri].fd = fd;
         g_watch_roots[ri].path_count = 0;
+        g_watch_roots[ri].index = ri;
         g_watch_roots[ri].callback = callback;
+        g_watch_roots[ri].walking = true;
+        g_watch_roots[ri].ready = false;
+        g_watch_roots[ri].thread_started = false;
         snprintf(g_watch_roots[ri].root_path, sizeof(g_watch_roots[ri].root_path), "%s", dir_path);
+        g_watch_walking++;
+
+        if (pthread_create(&g_watch_roots[ri].thread, NULL, watch_register_worker, &g_watch_roots[ri]) == 0) {
+            g_watch_roots[ri].thread_started = true;
+            pthread_mutex_unlock(&g_watch_mtx);
+            PROFILE_END_VAR(timer, "platform_x11:Platform_RegisterDirWatcher");
+            return NULL;
+        }
+
+        log_warn("dir watch thread failed, walking inline root='%s'", dir_path);
+        g_watch_walking--;
+        g_watch_roots[ri].walking = false;
+        g_watch_roots[ri].ready = true;
+        pthread_mutex_unlock(&g_watch_mtx);
+
+        pthread_mutex_lock(&g_watch_paths_mtx);
         int n = watch_add_tree(ri, fd, dir_path, 0);
         g_watch_roots[ri].path_count = n;
+        pthread_mutex_unlock(&g_watch_paths_mtx);
         log_info("dir watch registered root='%s' dirs=%d", dir_path, n);
         PROFILE_END_VAR(timer, "platform_x11:Platform_RegisterDirWatcher");
         return NULL;
     }
 
     if (callback) g_watch_roots[ri].callback = callback;
+    bool ready = g_watch_roots[ri].ready;
     int fd = g_watch_roots[ri].fd;
+    pthread_mutex_unlock(&g_watch_mtx);
+
+    if (!ready) {
+        PROFILE_END_VAR(timer, "platform_x11:Platform_RegisterDirWatcher");
+        return NULL;
+    }
+
+    if (pthread_mutex_trylock(&g_watch_paths_mtx) != 0) {
+        PROFILE_END_VAR(timer, "platform_x11:Platform_RegisterDirWatcher");
+        return NULL;
+    }
+
     char buffer[64 * 1024];
     char* last_name = NULL;
     for (;;) {
@@ -1213,7 +1280,7 @@ char* Platform_RegisterDirWatcher(const char* dir_path, DirChangeCallback callba
             if (event->mask & IN_ISDIR) {
                 if (event->mask & (IN_CREATE | IN_MOVED_TO)) {
                     struct stat st;
-                    if (stat(full, &st) == 0 && S_ISDIR(st.st_mode)) {
+                    if (lstat(full, &st) == 0 && S_ISDIR(st.st_mode)) {
                         watch_add_tree(ri, fd, full, 1);
                     }
                 }
@@ -1225,11 +1292,24 @@ char* Platform_RegisterDirWatcher(const char* dir_path, DirChangeCallback callba
             last_name = strdup(event->name);
         }
     }
+    pthread_mutex_unlock(&g_watch_paths_mtx);
     PROFILE_END_VAR(timer, "platform_x11:Platform_RegisterDirWatcher");
     return last_name;
 }
 
 void Platform_CleanupDirWatchers(void) {
+    pthread_mutex_lock(&g_watch_mtx);
+    g_watch_quit = true;
+    pthread_mutex_unlock(&g_watch_mtx);
+
+    for (int i = 0; i < g_watch_root_count; i++) {
+        if (g_watch_roots[i].thread_started) {
+            pthread_join(g_watch_roots[i].thread, NULL);
+            g_watch_roots[i].thread_started = false;
+        }
+    }
+
+    pthread_mutex_lock(&g_watch_mtx);
     for (int i = 0; i < g_watch_root_count; i++) {
         if (g_watch_roots[i].fd >= 0) {
             close(g_watch_roots[i].fd);
@@ -1237,7 +1317,14 @@ void Platform_CleanupDirWatchers(void) {
         }
     }
     g_watch_root_count = 0;
+    g_watch_walking = 0;
+    g_watch_quit = false;
+    pthread_mutex_unlock(&g_watch_mtx);
+
+    pthread_mutex_lock(&g_watch_paths_mtx);
     g_watch_path_count = 0;
+    pthread_mutex_unlock(&g_watch_paths_mtx);
+
     if (g_cfile_fd >= 0) {
         close(g_cfile_fd);
         g_cfile_fd = -1;

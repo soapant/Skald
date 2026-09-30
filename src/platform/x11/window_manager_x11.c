@@ -288,8 +288,12 @@ int WindowManager_RunLinux(WindowManager* wm) {
 
 void WindowManager_ProcessEventsLinux(WindowManager* wm) {
     if (!wm || !wm->display) return;
-    
+
     Display* dpy = wm->display;
+
+    struct pollfd xfd = { .fd = ConnectionNumber(dpy), .events = POLLIN };
+    poll(&xfd, 1, 16);
+
     XEvent ev;
 
     while (XPending(dpy) > 0) {

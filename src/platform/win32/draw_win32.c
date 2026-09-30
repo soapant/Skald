@@ -37,6 +37,14 @@ __attribute__((weak)) bool fl_prerender(void) {
 static __thread HDC g_draw_hdc = NULL;
 
 static __thread unsigned long g_draw_bg_override = 0;
+static __thread bool g_transparent_window = false;
+
+void Platform_SetTransparentWindow(bool on) {
+    g_transparent_window = on;
+}
+bool Platform_GetTransparentWindow(void) {
+    return g_transparent_window;
+}
 
 void Platform_SetDrawBgColor(unsigned long hex) {
     g_draw_bg_override = hex;

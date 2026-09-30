@@ -9,7 +9,7 @@
 #define CROSS_CC "x86_64-w64-mingw32-gcc"
 
 #define CC_FLAGS "-std=gnu17", "-DCOBJMACROS", "-DWINVER=0x0601", "-D_WIN32_WINNT=0x0601", "-I/usr/x86_64-w64-mingw32/include", "-I", "include", "-MMD", "-MP","-O3","-Wall","-Wextra","-Wno-sign-compare","-Wno-unused-parameter"
-#define LINK_FLAGS "-lcomctl32", "-lgdiplus", "-lgdi32", "-lshlwapi", "-lshell32", "-lwinmm", "-lole32", "-luuid", "-lmsimg32", "-ldwmapi", "-lpsapi", "-lcrypt32", "-lcomdlg32", "-ladvapi32", "-ldxva2", "-luser32", "-lwinhttp"
+#define LINK_FLAGS "-lcomctl32", "-lgdiplus", "-lgdi32", "-lshlwapi", "-lshell32", "-lwinmm", "-lole32", "-luuid", "-lmsimg32", "-ldwmapi", "-lpsapi", "-lcrypt32", "-lcomdlg32", "-ladvapi32", "-ldxva2", "-luser32", "-lwinhttp", "-Lbuild/winlibs"
 
 static Nob_File_Paths sources = {0};
 static Nob_File_Paths feature_sources = {0};
@@ -26,6 +26,7 @@ static bool collect_source(Nob_Walk_Entry entry) {
                 return true;
             }
             if (nob_sv_ends_with_cstr(path, "_x11.c")) return true;
+            if (nob_sv_ends_with_cstr(path, "_wayland.c")) return true;
             if (nob_sv_ends_with_cstr(path, "wm.c")) return true;
             bool is_feature = false;
             if (nob_sv_starts_with(path, nob_sv_from_cstr("src/features/")) ||
@@ -254,6 +255,14 @@ int main(int argc, char** argv) {
 
     if (!nob_mkdir_if_not_exists(BUILD_FOLDER)) return 1;
     if (!nob_mkdir_if_not_exists(OBJ_FOLDER)) return 1;
+    if (!nob_mkdir_if_not_exists("build/winlibs")) return 1;
+    {
+        Nob_Cmd sh = {0};
+        nob_cmd_append(&sh, "sh", "-c",
+            "set -- /nix/store/*mcfgthread*mingw32*/lib/libmcfgthread.a; "
+            "[ -f \"$1\" ] && ln -sf \"$1\" build/winlibs/libmcfgthread.a");
+        if (!nob_cmd_run(&sh)) nob_log(NOB_ERROR, "Failed to stage libmcfgthread");
+    }
     if (!nob_walk_dir(SRC_FOLDER, collect_source)) {
         nob_log(NOB_ERROR, "Failed to walk " SRC_FOLDER);
         return 1;

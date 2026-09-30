@@ -20,6 +20,13 @@ struct PlatformWidget {
     int fps;
     unsigned long bg_hex;
     bool has_bg;
+    bool no_bg;
+    BITMAPINFO layer_bi;
+    HDC layer_dc;
+    HBITMAP layer_bmp;
+    HGDIOBJ layer_old;
+    void *layer_bits;
+    int layer_w, layer_h;
 };
 
 static LRESULT CALLBACK FlintWidgetProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -36,6 +43,79 @@ static void widget_register_class(void) {
     if (!RegisterClassA(&wc) && GetLastError() != ERROR_CLASS_ALREADY_EXISTS) {
         log_warn("widget: RegisterClassA failed err=%lu", GetLastError());
     }
+}
+
+static void layer_release(PlatformWidget *widget) {
+    if (widget->layer_dc) {
+        if (widget->layer_old) SelectObject(widget->layer_dc, widget->layer_old);
+        if (widget->layer_bmp) DeleteObject(widget->layer_bmp);
+        DeleteDC(widget->layer_dc);
+    }
+    widget->layer_dc = NULL;
+    widget->layer_bmp = NULL;
+    widget->layer_old = NULL;
+    widget->layer_bits = NULL;
+    widget->layer_w = 0;
+    widget->layer_h = 0;
+}
+
+static bool layer_acquire(PlatformWidget *widget) {
+    if (widget->layer_bits && widget->layer_w == widget->w && widget->layer_h == widget->h) return true;
+    layer_release(widget);
+    memset(&widget->layer_bi, 0, sizeof(widget->layer_bi));
+    widget->layer_bi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    widget->layer_bi.bmiHeader.biWidth = widget->w;
+    widget->layer_bi.bmiHeader.biHeight = -widget->h;
+    widget->layer_bi.bmiHeader.biPlanes = 1;
+    widget->layer_bi.bmiHeader.biBitCount = 32;
+    widget->layer_bi.bmiHeader.biCompression = BI_RGB;
+    HDC screen = GetDC(NULL);
+    if (!screen) return false;
+    HDC dc = CreateCompatibleDC(screen);
+    ReleaseDC(NULL, screen);
+    if (!dc) return false;
+    void *bits = NULL;
+    HBITMAP bmp = CreateDIBSection(dc, &widget->layer_bi, DIB_RGB_COLORS, &bits, NULL, 0);
+    if (!bmp) {
+        DeleteDC(dc);
+        return false;
+    }
+    widget->layer_dc = dc;
+    widget->layer_bmp = bmp;
+    widget->layer_old = SelectObject(dc, bmp);
+    widget->layer_bits = bits;
+    widget->layer_w = widget->w;
+    widget->layer_h = widget->h;
+    return true;
+}
+
+static void widget_paint_layered(PlatformWidget *widget) {
+    if (!layer_acquire(widget)) return;
+    memset(widget->layer_bits, 0, (size_t)widget->w * widget->h * 4);
+    SetBkMode(widget->layer_dc, TRANSPARENT);
+    Platform_SetDrawContextWin32(widget->layer_dc);
+    Platform_SetPreRenderStateWin32(NULL, NULL);
+    if (widget->fn) widget->fn(widget->ud);
+    Platform_SetDrawBgColor(0);
+    GdiFlush();
+    HDC screen = GetDC(NULL);
+    if (!screen) return;
+    POINT dst;
+    dst.x = widget->x;
+    dst.y = widget->y;
+    SIZE size;
+    size.cx = widget->w;
+    size.cy = widget->h;
+    POINT src;
+    src.x = 0;
+    src.y = 0;
+    BLENDFUNCTION blend;
+    blend.BlendOp = AC_SRC_OVER;
+    blend.BlendFlags = 0;
+    blend.SourceConstantAlpha = 255;
+    blend.AlphaFormat = AC_SRC_ALPHA;
+    UpdateLayeredWindow(widget->hwnd, screen, &dst, &size, widget->layer_dc, &src, 0, &blend, ULW_ALPHA);
+    ReleaseDC(NULL, screen);
 }
 
 static void widget_paint(PlatformWidget *widget, HDC hdc, RECT *rect) {
@@ -67,15 +147,18 @@ static LRESULT CALLBACK FlintWidgetProc(HWND hwnd, UINT msg, WPARAM wParam, LPAR
         if (!widget || widget->dead) break;
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(hwnd, &ps);
-        if (hdc) {
+        if (widget->no_bg) {
+            widget_paint_layered(widget);
+        } else if (hdc) {
             RECT rect;
             GetClientRect(hwnd, &rect);
             widget_paint(widget, hdc, &rect);
-            EndPaint(hwnd, &ps);
         }
+        if (hdc) EndPaint(hwnd, &ps);
         return 0;
     }
     case WM_NCDESTROY: {
+        if (widget) layer_release(widget);
         SetWindowLongPtrA(hwnd, GWLP_USERDATA, 0);
         break;
     }
@@ -97,7 +180,7 @@ static void widget_frame(void *ud) {
     }
 }
 
-PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps) {
+PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps, bool no_bg) {
     if (w <= 0 || h <= 0) return NULL;
     if (!Platform_RenderThread_EnsureStarted(fps)) return NULL;
     widget_register_class();
@@ -109,6 +192,7 @@ PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps) {
     widget->w = w;
     widget->h = h;
     widget->fps = fps;
+    widget->no_bg = no_bg;
 
     HINSTANCE hInstance = GetModuleHandle(NULL);
     widget->hwnd = CreateWindowExA(
@@ -123,16 +207,23 @@ PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps) {
     }
 
     win32_apply_rounded_corners(widget->hwnd, w, h);
-    SetLayeredWindowAttributes(widget->hwnd, 0, (BYTE)WindowOpacity, LWA_ALPHA);
-    ShowWindow(widget->hwnd, SW_SHOWNOACTIVATE);
+    if (!widget->no_bg) {
+        SetLayeredWindowAttributes(widget->hwnd, 0, (BYTE)WindowOpacity, LWA_ALPHA);
+    }
     SetWindowPos(widget->hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
-    widget->mapped = true;
 
     if (!Platform_RenderThread_AddFrameCallback(widget_frame, widget)) {
         DestroyWindow(widget->hwnd);
         free(widget);
         return NULL;
     }
+
+    widget_frame(widget);
+
+    if (!widget->no_bg) {
+        ShowWindow(widget->hwnd, SW_SHOWNOACTIVATE);
+    }
+    widget->mapped = true;
     return widget;
 }
 
@@ -181,6 +272,11 @@ void Platform_Widget_Move(PlatformWidget *widget, int x, int y) {
     SetWindowPos(widget->hwnd, HWND_TOPMOST, x, y, 0, 0, SWP_NOSIZE | SWP_NOACTIVATE);
 }
 
+void Platform_Widget_SetNoBg(PlatformWidget *widget, bool no_bg) {
+    if (!widget || widget->dead) return;
+    widget->no_bg = no_bg;
+}
+
 void Platform_Widget_SetBgColor(PlatformWidget *widget, unsigned long hex) {
     if (!widget || widget->dead) return;
     widget->has_bg = hex != 0;
@@ -196,6 +292,7 @@ void Platform_Widget_Resize(PlatformWidget *widget, int w, int h) {
     widget->h = h;
     SetWindowPos(widget->hwnd, HWND_TOPMOST, widget->x, widget->y, w, h, SWP_NOACTIVATE);
 }
+
 
 int Platform_Widget_Width(const PlatformWidget *widget) {
     return widget ? widget->w : 0;
