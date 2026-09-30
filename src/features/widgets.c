@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <time.h>
 #include "core/flapi.h"
 
 #if !defined(_WIN32)
@@ -82,10 +83,16 @@ static bool memory_usage_bytes(unsigned long long *used_out, unsigned long long 
 
 static ColorRef usage_color(unsigned long long used, unsigned long long total) {
     if (total == 0) return RGB(255, 255, 255);
-    unsigned int pct = (unsigned int)((used * 100ULL) / total);
-    if (pct >= 80) return RGB(255, 0, 0);
-    if (pct >= 60) return RGB(255, 165, 0);
-    if (pct >= 40) return RGB(0, 100, 0);
+
+    unsigned int pct = (unsigned int)(((used * 100ULL) + (total / 2ULL)) / total);
+
+    if (pct >= 90.0) return RGB(255, 0, 0);     
+    if (pct >= 80.0) return RGB(255, 69, 0);    
+    if (pct >= 70.0) return RGB(255, 140, 0);   
+    if (pct >= 60.0) return RGB(255, 180, 0);   
+    if (pct >= 50.0) return RGB(255, 220, 0);   
+    if (pct >= 35.0) return RGB(173, 220, 0);   
+    if (pct >= 20.0) return RGB(50, 205, 50);
     return RGB(0, 150, 0);
 }
 
@@ -132,6 +139,69 @@ static void widgets_memory_usage_render(FlWidgetState *state) {
     fl_draw_text(.text = buf, .x = 10, .y = 6, .fontsize = 15,
                  .color = usage_color(used, total), .align = "LEFT");
 }
+int cpu_usage_bytes(unsigned long long *used, unsigned long long *total) {
+    static unsigned long long prev_active = 0;
+    static unsigned long long prev_idle = 0;
+
+    FILE *fp = fopen("/proc/stat", "r");
+    if (!fp) {
+        return 0; 
+    }
+
+    char cpu_label[16];
+    unsigned long long user, nice, system, idle, iowait, irq, softirq, steal;
+
+    if (fscanf(fp, "%s %llu %llu %llu %llu %llu %llu %llu %llu",
+               cpu_label, &user, &nice, &system, &idle, &iowait, &irq, &softirq, &steal) < 9) {
+        fclose(fp);
+        return 0;
+    }
+    fclose(fp);
+
+    unsigned long long active = user + nice + system + irq + softirq + steal;
+    unsigned long long current_idle = idle + iowait;
+    unsigned long long current_total = active + current_idle;
+
+    unsigned long long delta_active = active - prev_active;
+    unsigned long long delta_total = current_total - (prev_active + prev_idle);
+
+    prev_active = active;
+    prev_idle = current_idle;
+
+    if (delta_total == 0) {
+        *used = 0;
+        *total = 100; 
+        return 1;
+    }
+
+    *used = delta_active;
+    *total = delta_total;
+
+    return 1; 
+}
+
+static void widgets_cpu_usage_render(FlWidgetState *state) {
+    char buf[128];
+    unsigned long long used = 0, total = 0;
+    if (!cpu_usage_bytes(&used, &total)) {
+        snprintf(buf, sizeof(buf), "CPU Usage:??");
+        fl_draw_text(.text = buf, .x = 10, .y = 6, .fontsize = 15,
+                     .color = RGB(255, 255, 255), .align = "LEFT");
+        return;
+    }
+    snprintf(buf, sizeof(buf), "CPU Usage:%llu%%", (used * 100ULL) / total);
+    fl_draw_text(.text = buf, .x = 10, .y = 6, .fontsize = 15,
+                 .color = usage_color(used, total), .align = "LEFT");
+}
+
+static void widgets_date_and_time_render(FlWidgetState *state) {
+    char buf[128];
+    time_t t = time(NULL);
+    struct tm *tm = localtime(&t);
+    snprintf(buf, sizeof(buf), "%02d:%02d:%02d", tm->tm_hour, tm->tm_min, tm->tm_sec);
+    fl_draw_text(.text = buf, .x = 10, .y = 6, .fontsize = 15,
+                 .color = RGB(255, 255, 255), .align = "LEFT");
+}
 
 FLINT_FEATURE_INIT {
     fl_widget(.name = "disk_usage",
@@ -145,6 +215,18 @@ FLINT_FEATURE_INIT {
               .fps = 10,
               .slot = FL_WIDGET_SLOT_BOTTOM_LEFT,
               .render = widgets_memory_usage_render);
+
+    fl_widget(.name = "cpu_usage",
+              .color = RGB(1, 1, 1),
+              .fps = 10,
+              .slot = FL_WIDGET_SLOT_BOTTOM_LEFT,
+              .render = widgets_cpu_usage_render);
+
+    fl_widget(.name = "date_and_time",
+              .color = RGB(1, 1, 1),
+              .fps = 1,
+              .slot = FL_WIDGET_SLOT_BOTTOM_RIGHT,
+              .render = widgets_date_and_time_render);
 
     fl_register_hotkey("Alt+Shift+S", FlipWidgets);
 }
