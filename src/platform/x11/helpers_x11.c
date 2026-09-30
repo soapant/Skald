@@ -1187,12 +1187,21 @@ Window x11_create_edit_popup_window(Display* dpy, int x, int y, int w, int h) {
     XFree(sh);
     return win;
 }
+void x11_apply_click_through(Display* dpy, Window win) {
+    PROFILE_START(timer);
+    if (!dpy || win == None) { PROFILE_END_VAR(timer, "helpers_x11:x11_apply_click_through"); return; }
+    XShapeCombineRectangles(dpy, win, ShapeInput, 0, 0, NULL, 0, ShapeSet, Unsorted);
+    PROFILE_END_VAR(timer, "helpers_x11:x11_apply_click_through");
+}
+
 Window x11_create_display_message_window(Display* dpy, int x, int y, int w, int h) {
     PROFILE_START(timer);
     unsigned long bg = Platform_GetDrawBgColor();
     if (!bg) bg = rgb_to_hex(COLOR_BG);
+    Window win = x11_create_window_ex_or(dpy, x, y, w, h, bg, "flashtext", "flashtext", ExposureMask, true);
+    if (win != None) x11_apply_click_through(dpy, win);
     PROFILE_END_VAR(timer, "helpers_x11:x11_create_display_message_window");
-    return x11_create_window_ex_or(dpy, x, y, w, h, bg, "flashtext", "flashtext", ExposureMask, true);
+    return win;
 }
 
 XftDraw* x11_create_xft_draw(Display* dpy, Window win) {
