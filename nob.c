@@ -2,7 +2,9 @@
 #define NOB_NO_ECHO
 #define NOB_EXPERIMENTAL_DELETE_OLD
 #include "nob.h"
+#if !defined(_WIN32)
 #include <glob.h>
+#endif
 
 #define SRC_FOLDER "src"
 #define BUILD_FOLDER "build"
