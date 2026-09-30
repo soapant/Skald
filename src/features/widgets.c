@@ -9,6 +9,11 @@
 #include <sys/statvfs.h>
 #endif
 
+#define COLOR RGB(1, 1, 1)
+#define FPS 1
+#define BG true
+#define FONTSIZE 14
+
 static bool percentage = false;
 
 char* get_size_string(unsigned long long bytes, char* buf, size_t buflen) {
@@ -135,7 +140,7 @@ static void draw_usage(const char* label, unsigned long long used, unsigned long
         get_size_string(total, total_str, sizeof(total_str));
         snprintf(buf, sizeof(buf), "%s%s/%s", label, used_str, total_str);
     }
-    fl_draw_text(.text = buf, .x = 10, .y = 6, .fontsize = 15,
+    fl_draw_text(.text = buf, .x = 10, .y = 6, .fontsize = FONTSIZE,
                  .color = usage_color(used, total), .align = "LEFT");
 }
 
@@ -157,12 +162,12 @@ static void widgets_cpu_usage_render(FlWidgetState *state) {
     char buf[128];
     if (total == 0) {
         snprintf(buf, sizeof(buf), "CPU Usage:??");
-        fl_draw_text(.text = buf, .x = 10, .y = 6, .fontsize = 15,
+        fl_draw_text(.text = buf, .x = 10, .y = 6, .fontsize = FONTSIZE,
                      .color = RGB(255, 255, 255), .align = "LEFT");
         return;
     }
     snprintf(buf, sizeof(buf), "CPU Usage:%3llu%%", (used * 100ULL) / total);
-    fl_draw_text(.text = buf, .x = 10, .y = 6, .fontsize = 15,
+    fl_draw_text(.text = buf, .x = 10, .y = 6, .fontsize = FONTSIZE,
                  .color = usage_color(used, total), .align = "LEFT");
 }
 
@@ -171,8 +176,10 @@ static void widgets_date_and_time_render(FlWidgetState *state) {
     time_t t = time(NULL);
     struct tm* tm = localtime(&t);
     if (!tm) return;
-    strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", tm);
-    fl_draw_text(.text = buf, .x = 10, .y = 6, .fontsize = 15,
+
+    strftime(buf, sizeof(buf), "%A, %B %d %H:%M:%S", tm);
+
+    fl_draw_text(.text = buf, .x = 10, .y = 6, .fontsize = FONTSIZE,
                  .color = RGB(220, 220, 220), .align = "LEFT");
 }
 
@@ -182,26 +189,30 @@ void FlipWidgets(void) {
 
 FLINT_FEATURE_INIT {
     fl_widget(.name = "disk_usage",
-              .color = RGB(1, 1, 1),
-              .fps = 1,
+              .color = COLOR,
+              .fps = FPS,
+              .no_bg = BG,
               .slot = FL_WIDGET_SLOT_BOTTOM_LEFT,
               .render = widgets_disk_usage_render);
 
     fl_widget(.name = "memory_usage",
-              .color = RGB(1, 1, 1),
-              .fps = 1,
+              .color = COLOR,
+              .fps = FPS,
+              .no_bg = BG,
               .slot = FL_WIDGET_SLOT_BOTTOM_LEFT,
               .render = widgets_memory_usage_render);
 
     fl_widget(.name = "cpu_usage",
-              .color = RGB(1, 1, 1),
-              .fps = 1,
+              .color = COLOR,
+              .fps = FPS,
+              .no_bg = BG,
               .slot = FL_WIDGET_SLOT_BOTTOM_LEFT,
               .render = widgets_cpu_usage_render);
 
     fl_widget(.name = "date_and_time",
-              .color = RGB(1, 1, 1),
-              .fps = 1,
+              .color = COLOR,
+              .fps = FPS,
+              .no_bg = BG,
               .slot = FL_WIDGET_SLOT_BOTTOM_RIGHT,
               .render = widgets_date_and_time_render);
 
