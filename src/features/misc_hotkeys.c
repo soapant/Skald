@@ -2,6 +2,8 @@
 #include "config.h"
 #include <stdio.h>
 
+static char current_keyword[256] = "";
+
 void ShowCurrentTime(void) {
   char* output = fl_run_terminal_command("date");
   if (output) {
@@ -40,12 +42,31 @@ void GoogleMeaning(void) {
   snprintf(search,sizeof(search),"what is %s",clip);
   fl_query_browser(search);
 }
+
 void OpenImage(void) {
-  char *clip = fl_get_last_clipboard_entry();
-  char cmd[512];
-  snprintf(cmd,sizeof(cmd)," feh /home/dog/Programming/RandomShit/shit/images/%s --zoom 65",clip);
-  fl_run_terminal_command(cmd);
-  fl_send_hotkey("Alt+F");
+  char cmd[400];
+  snprintf(cmd,sizeof(cmd),"~/Programming/RandomShit/shit/run.sh get_ids.py %s --random",current_keyword);
+  char* output = fl_run_terminal_command(cmd);
+  if (output) {
+      char* title = fl_get_active_window_title();
+      if (!title) title = "";
+      if (fl_string_contains("feh",title)) {
+          fl_close_active_window();
+      }
+      char cmd[512];
+      FlStringList list = fl_string_split(output,"\n");
+      snprintf(cmd,sizeof(cmd),"feh /home/dog/Programming/RandomShit/shit/images/%s --zoom 65",list.items[0]);
+      fl_run_terminal_command(cmd);
+  }
+}
+void get_current_keyword(void) {
+    char *popup_res = fl_popup();
+    if (popup_res) {
+        strncpy(current_keyword, popup_res, sizeof(current_keyword) - 1);
+        current_keyword[sizeof(current_keyword) - 1] = '\0';
+    } else {
+        current_keyword[0] = '\0';
+    }
 }
 
 void copy_seifisbad(void) {
@@ -91,6 +112,7 @@ FLINT_FEATURE_INIT {
     fl_register_hotkey("Alt+Shift+C", OcrRegionAndCopy);
     fl_register_hotkey("Alt+Shift+G", GoogleMeaning);
     fl_register_hotkey("Alt+Shift+F", OpenImage);
+    fl_register_hotkey("Alt+Shift+D", get_current_keyword);
     fl_register_hotkey("RShift",MediaPlayPause); 
     fl_register_hotkey("Ctrl+]",IncrementVolume); 
     fl_register_hotkey("Ctrl+[",DecrementVolume); 
