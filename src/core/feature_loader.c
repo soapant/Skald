@@ -146,6 +146,9 @@ static bool ends_with(const char* str, const char* suffix) {
     return strcmp(str + sl - su, suffix) == 0;
 }
 
+static double g_feature_init_us = 0.0;
+static int g_feature_init_count = 0;
+
 static bool load_single(const char* dir, const char* filename) {
     if (g_feature_count >= MAX_FEATURES) return false;
     char full[1024];
@@ -172,6 +175,10 @@ static bool load_single(const char* dir, const char* filename) {
         char label[96];
         snprintf(label, sizeof(label), "feature_init: %s", name);
         TimerEndAlways(t_load, label);
+        g_feature_init_us += TimerElapsedUs(t_load);
+        g_feature_init_count++;
+    } else {
+        log_warn("feature %s has no FlintFeatureInit/Reload symbol", name);
     }
 
     LoadedFeature *f = &g_features[g_feature_count++];
@@ -199,16 +206,21 @@ log_info("FeatureLoader_LoadAllFromDir completed");
 }
 
 bool FeatureLoader_Init(void) {
-    PROFILE_START(timer);
     FL_LOCK();
     g_feature_count = 0;
     FL_UNLOCK();
+    g_feature_init_us = 0.0;
+    g_feature_init_count = 0;
     FeatureLoader_LoadAllFromDir("build/features");
     FL_LOCK();
     int cnt = g_feature_count;
     FL_UNLOCK();
     log_info("init done, %d features loaded (hot reload dir: build/features)", cnt);
-    PROFILE_END_VAR(timer, "startup:FeatureLoader_Init (all features)");
+    if (DoTimeDebugs) {
+        char label[96];
+        snprintf(label, sizeof(label), "feature_init: TOTAL (%d features)", g_feature_init_count);
+        TimerPrintRaw(g_feature_init_us, label);
+    }
     return true;
 }
 
