@@ -161,7 +161,9 @@ static bool load_single(const char* dir, const char* filename) {
 
     for (int i=0;i<g_feature_count;i++) if (strcmp(g_features[i].name, name)==0) return true;
 
+    PROFILE_START(t_dlopen);
     LibHandle h = Platform_LoadLibrary(full);
+    PROFILE_END_VAR(t_dlopen, "feature_dlopen");
     if (!h) {
         log_error("dlopen %s failed: %s", full, Platform_GetLoadError());
         return false;
