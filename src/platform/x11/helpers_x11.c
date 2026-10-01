@@ -743,19 +743,55 @@ Window x11_create_window_ex_or(Display* dpy, int x, int y, int w, int h, unsigne
 static void x11_apply_shape_rounded(Display* dpy, Window win, int w, int h, int radius) {
     PROFILE_START(timer);
     if (radius <= 0 || w <= 0 || h <= 0) { PROFILE_END_VAR(timer, "helpers_x11:x11_apply_shape_rounded"); return; }
-    Pixmap mask = XCreatePixmap(dpy, win, w, h, 1);
+    Pixmap mask = XCreatePixmap(dpy, win, w, h, 8);
     GC gc = XCreateGC(dpy, mask, 0, NULL);
-    XSetForeground(dpy, gc, 0);
-    XFillRectangle(dpy, mask, gc, 0, 0, w, h);
-    XSetForeground(dpy, gc, 1);
-
-    XFillRectangle(dpy, mask, gc, radius, 0, w - 2*radius, h);
-    XFillRectangle(dpy, mask, gc, 0, radius, w, h - 2*radius);
-
-    XFillArc(dpy, mask, gc, 0, 0, radius*2, radius*2, 0, 360*64);
-    XFillArc(dpy, mask, gc, w - radius*2 -1, 0, radius*2, radius*2, 0, 360*64);
-    XFillArc(dpy, mask, gc, 0, h - radius*2 -1, radius*2, radius*2, 0, 360*64);
-    XFillArc(dpy, mask, gc, w - radius*2 -1, h - radius*2 -1, radius*2, radius*2, 0, 360*64);
+    unsigned char *img = calloc((size_t)w * (size_t)h, 1);
+    if (!img) {
+        XFreePixmap(dpy, mask);
+        XFreeGC(dpy, gc);
+        PROFILE_END_VAR(timer, "helpers_x11:x11_apply_shape_rounded");
+        return;
+    }
+    const float edge_lo = (float)radius - 0.5f;
+    const float edge_hi = (float)radius + 0.5f;
+    const float edge_sq_lo = edge_lo * edge_lo;
+    const float edge_sq_hi = edge_hi * edge_hi;
+    for (int py = 0; py < h; py++) {
+        for (int px = 0; px < w; px++) {
+            int a = 255;
+            bool in_corner_x = (px < radius) || (px >= w - radius);
+            bool in_corner_y = (py < radius) || (py >= h - radius);
+            if (in_corner_x && in_corner_y) {
+                float cx = (px < radius) ? (float)radius : (float)(w - radius - 1);
+                float cy = (py < radius) ? (float)radius : (float)(h - radius - 1);
+                float ddx = px + 0.5f - (cx + 0.5f);
+                float ddy = py + 0.5f - (cy + 0.5f);
+                float d_sq = ddx*ddx + ddy*ddy;
+                if (d_sq >= edge_sq_hi) {
+                    a = 0;
+                } else if (d_sq > edge_sq_lo) {
+                    float d = sqrtf(d_sq);
+                    float cov = edge_hi - d;
+                    if (cov < 0.0f) cov = 0.0f;
+                    if (cov > 1.0f) cov = 1.0f;
+                    a = (int)(cov * 255.0f + 0.5f);
+                }
+            }
+            img[(size_t)py * (size_t)w + (size_t)px] = (unsigned char)a;
+        }
+    }
+    XImage *ximg = XCreateImage(dpy, DefaultVisual(dpy, DefaultScreen(dpy)),
+                                8, ZPixmap, 0, (char *)img, w, h, 32, 0);
+    if (!ximg) {
+        free(img);
+        XFreePixmap(dpy, mask);
+        XFreeGC(dpy, gc);
+        PROFILE_END_VAR(timer, "helpers_x11:x11_apply_shape_rounded");
+        return;
+    }
+    XPutImage(dpy, mask, gc, ximg, 0, 0, 0, 0, w, h);
+    XDestroyImage(ximg);
+    free(img);
     XShapeCombineMask(dpy, win, ShapeBounding, 0, 0, mask, ShapeSet);
     XFreePixmap(dpy, mask);
     XFreeGC(dpy, gc);
@@ -781,6 +817,11 @@ void x11_fill_rounded_rect(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap
     XftDrawRect(xd, &solid, x, y + radius, radius, h - 2*radius);
     XftDrawRect(xd, &solid, x + w - radius, y + radius, radius, h - 2*radius);
 
+    const float edge_lo = (float)radius - 0.5f;
+    const float edge_hi = (float)radius + 0.5f;
+    const float edge_sq_lo = edge_lo * edge_lo;
+    const float edge_sq_hi = edge_hi * edge_hi;
+
     for (int corner = 0; corner < 4; corner++) {
         int cx = (corner % 2 == 0) ? x + radius : x + w - radius - 1;
         int cy = (corner < 2) ? y + radius : y + h - radius - 1;
@@ -792,9 +833,22 @@ void x11_fill_rounded_rect(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap
                 float py = oy0 + dy + 0.5f;
                 float ddx2 = px - (cx + 0.5f);
                 float ddy2 = py - (cy + 0.5f);
-                float dist = sqrtf(ddx2*ddx2 + ddy2*ddy2);
-                if (dist >= radius) continue;
-                XftDrawRect(xd, &solid, ox0 + dx, oy0 + dy, 1, 1);
+                float d_sq = ddx2*ddx2 + ddy2*ddy2;
+                if (d_sq >= edge_sq_hi) continue;
+                unsigned short a;
+                if (d_sq <= edge_sq_lo) {
+                    a = alpha16;
+                } else {
+                    float d = sqrtf(d_sq);
+                    float cov = (edge_hi - d);
+                    if (cov < 0.0f) cov = 0.0f;
+                    if (cov > 1.0f) cov = 1.0f;
+                    a = (unsigned short)((float)alpha16 * cov + 0.5f);
+                }
+                if (a == 0) continue;
+                XftColor px_c = solid;
+                px_c.color.alpha = a;
+                XftDrawRect(xd, &px_c, ox0 + dx, oy0 + dy, 1, 1);
             }
         }
     }
