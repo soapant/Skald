@@ -22,8 +22,7 @@
 #include <string.h>
 #include <stdio.h>
 
-bool Platform_EditPopupCreateWindow(Popup* self, int x, int y, int w, int h, const char* title) {
-    (void)title;
+bool Platform_EditPopupCreateWindow(Popup* self, int x, int y, int w, int h) {
     PROFILE_START(timer);
     WindowManager* wm = (WindowManager*)self->manager;
     Display* dpy = wm ? wm->display : NULL;
@@ -119,12 +118,6 @@ void Platform_EditPopupRender(Popup* self) {
     Platform_SetDrawContext(dpy, xd, vis, cmap);
     if (xf && VimModeText) {
         Platform_DrawTextRaw(5, 5, g_vim_mode, VimModeTextColor(), font, "LEFT", 5,FontSize);
-    }
-    if (data->title && xf) {
-        XGlyphInfo ext; XftTextExtentsUtf8(dpy, xf, (FcChar8*)data->title, strlen(data->title), &ext);
-        int title_x = data->w - ext.xOff - 10;
-        if (title_x < 50) title_x = 50;
-        Platform_DrawTextRaw(title_x, 5, data->title, rgb_to_hex(COLOR_TEXT), font, "LEFT", title_x,FontSize);
     }
     int cursor_x = 0;
     int text_len = data->text ? strlen(data->text) : 0;
