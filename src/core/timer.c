@@ -15,6 +15,10 @@ static double timer_elapsed_us(WinTimer t) {
 #endif
 }
 
+double TimerElapsedUs(WinTimer t) {
+  return timer_elapsed_us(t);
+}
+
 static void timer_print(double elapsed_us, const char* operation_name) {
   char line[256];
   if (elapsed_us < 1000000.0) {
@@ -23,6 +27,11 @@ static void timer_print(double elapsed_us, const char* operation_name) {
     snprintf(line, sizeof(line), "[ TIMER] %-38s : %8.2f s\n", operation_name, elapsed_us / 1000000.0);
   }
   printf("%s", line);
+}
+
+void TimerPrintRaw(double elapsed_us, const char* operation_name) {
+  if (!DoTimeDebugs) return;
+  timer_print(elapsed_us, operation_name);
 }
 
 void TimerEnd(WinTimer t, const char* operation_name) {
