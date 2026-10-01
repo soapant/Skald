@@ -90,7 +90,7 @@ char* WindowManager_ShowPrompt(WindowManager* wm, const PromptSpec* spec);
 
 
 Popup* EditPopup_Create(WindowManager* wm, const char* initial_text,
-                        const char* title, int x, int y, int w, int h, const char* align,
+                        int x, int y, int w, int h, const char* align,
                         EditPopupConfirmCallback on_confirm, void* user_data);
 void EditPopup_SetPlaceholder(Popup* popup, const char* placeholder);
 Popup* PromptPopup_Create(WindowManager* wm, const PromptSpec* spec);

@@ -3,11 +3,19 @@
 #include <string.h>
 #include <stdbool.h>
 #include <time.h>
-#include "core/flapi.h"
 
-#if !defined(_WIN32)
+#if defined(_WIN32)
+#include <windows.h>
+#else
 #include <sys/statvfs.h>
 #endif
+
+#include "core/flapi.h"
+
+#define COLOR RGB(1, 1, 1)
+#define FPS 1
+#define NO_BG true
+#define FONTSIZE 14
 
 static bool percentage = false;
 
@@ -45,7 +53,19 @@ static bool read_disk(unsigned long long *used_out, unsigned long long *total_ou
     *total_out = total;
     return true;
 #else
-    return false;
+    char root[MAX_PATH] = {0};
+    DWORD n = GetCurrentDirectoryA(sizeof(root) - 1, root);
+    if (n == 0 || n < 3) return false;
+    if (root[1] != ':') return false;
+    root[2] = '\\';
+    root[3] = 0;
+
+    ULARGE_INTEGER avail, total, free_total;
+    if (!GetDiskFreeSpaceExA(root, &avail, &total, &free_total)) return false;
+    if (total.QuadPart == 0) return false;
+    *used_out = (unsigned long long)(total.QuadPart - free_total.QuadPart);
+    *total_out = (unsigned long long)total.QuadPart;
+    return true;
 #endif
 }
 
@@ -71,16 +91,17 @@ static bool read_mem(unsigned long long *used_out, unsigned long long *total_out
     *total_out = total_kb * 1024ULL;
     return true;
 #else
-    return false;
+    MEMORYSTATUSEX ms;
+    ms.dwLength = sizeof(ms);
+    if (!GlobalMemoryStatusEx(&ms)) return false;
+    if (ms.ullTotalPhys == 0) return false;
+    *used_out = (unsigned long long)(ms.ullTotalPhys - ms.ullAvailPhys);
+    *total_out = (unsigned long long)ms.ullTotalPhys;
+    return true;
 #endif
 }
 
-static bool read_cpu(unsigned long long *used_out, unsigned long long *total_out) {
-    static unsigned long long prev_busy = 0, prev_total = 0;
-    static bool seeded = false;
-
-    *used_out = 0;
-    *total_out = 0;
+static bool sample_cpu(unsigned long long *busy_out, unsigned long long *total_out) {
 #if !defined(_WIN32)
     FILE* fp = fopen("/proc/stat", "r");
     if (!fp) return false;
@@ -94,6 +115,39 @@ static bool read_cpu(unsigned long long *used_out, unsigned long long *total_out
 
     unsigned long long busy = user + nice + sys + irq + softirq + steal;
     unsigned long long total = busy + idle + iowait;
+    *busy_out = busy;
+    *total_out = total;
+    return true;
+#else
+    FILETIME idle_ft, kernel_ft, user_ft;
+    if (!GetSystemTimes(&idle_ft, &kernel_ft, &user_ft)) return false;
+
+    ULARGE_INTEGER idle, kernel, user;
+    idle.LowPart = idle_ft.dwLowDateTime;
+    idle.HighPart = idle_ft.dwHighDateTime;
+    kernel.LowPart = kernel_ft.dwLowDateTime;
+    kernel.HighPart = kernel_ft.dwHighDateTime;
+    user.LowPart = user_ft.dwLowDateTime;
+    user.HighPart = user_ft.dwHighDateTime;
+
+    unsigned long long busy = (kernel.QuadPart - idle.QuadPart) + user.QuadPart;
+    unsigned long long total = busy + idle.QuadPart;
+    *busy_out = busy;
+    *total_out = total;
+    return true;
+#endif
+}
+
+static bool read_cpu(unsigned long long *used_out, unsigned long long *total_out) {
+    static unsigned long long prev_busy = 0, prev_total = 0;
+    static bool seeded = false;
+
+    *used_out = 0;
+    *total_out = 0;
+
+    unsigned long long busy = 0, total = 0;
+    if (!sample_cpu(&busy, &total)) return false;
+
     if (!seeded) {
         seeded = true;
         prev_busy = busy;
@@ -108,9 +162,6 @@ static bool read_cpu(unsigned long long *used_out, unsigned long long *total_out
     prev_busy = busy;
     prev_total = total;
     return d_total > 0;
-#else
-    return false;
-#endif
 }
 
 static ColorRef usage_color(unsigned long long used, unsigned long long total) {
@@ -135,7 +186,7 @@ static void draw_usage(const char* label, unsigned long long used, unsigned long
         get_size_string(total, total_str, sizeof(total_str));
         snprintf(buf, sizeof(buf), "%s%s/%s", label, used_str, total_str);
     }
-    fl_draw_text(.text = buf, .x = 10, .y = 6, .fontsize = 15,
+    fl_draw_text(.text = buf, .x = 10, .y = 6, .fontsize = FONTSIZE,
                  .color = usage_color(used, total), .align = "LEFT");
 }
 
@@ -157,12 +208,12 @@ static void widgets_cpu_usage_render(FlWidgetState *state) {
     char buf[128];
     if (total == 0) {
         snprintf(buf, sizeof(buf), "CPU Usage:??");
-        fl_draw_text(.text = buf, .x = 10, .y = 6, .fontsize = 15,
+        fl_draw_text(.text = buf, .x = 10, .y = 6, .fontsize = FONTSIZE,
                      .color = RGB(255, 255, 255), .align = "LEFT");
         return;
     }
     snprintf(buf, sizeof(buf), "CPU Usage:%3llu%%", (used * 100ULL) / total);
-    fl_draw_text(.text = buf, .x = 10, .y = 6, .fontsize = 15,
+    fl_draw_text(.text = buf, .x = 10, .y = 6, .fontsize = FONTSIZE,
                  .color = usage_color(used, total), .align = "LEFT");
 }
 
@@ -171,39 +222,52 @@ static void widgets_date_and_time_render(FlWidgetState *state) {
     time_t t = time(NULL);
     struct tm* tm = localtime(&t);
     if (!tm) return;
-    strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", tm);
-    fl_draw_text(.text = buf, .x = 10, .y = 6, .fontsize = 15,
+
+    strftime(buf, sizeof(buf), "%A %B %d %H:%M:%S", tm);
+
+    fl_draw_text(.text = buf, .x = 10, .y = 6, .fontsize = FONTSIZE,
                  .color = RGB(220, 220, 220), .align = "LEFT");
 }
 
+static FlWidget* g_disk = NULL;
+static FlWidget* g_mem = NULL;
+static FlWidget* g_cpu = NULL;
+
 void FlipWidgets(void) {
     percentage = !percentage;
+    fl_widget_set_render(g_disk, widgets_disk_usage_render);
+    fl_widget_set_render(g_mem, widgets_memory_usage_render);
+    fl_widget_set_render(g_cpu, widgets_cpu_usage_render);
 }
 
 FLINT_FEATURE_INIT {
-    fl_widget(.name = "disk_usage",
-              .color = RGB(1, 1, 1),
-              .fps = 1,
+    g_disk = fl_widget(.name = "disk_usage",
+              .color = COLOR,
+              .fps = FPS,
+              .no_bg = NO_BG,
               .slot = FL_WIDGET_SLOT_BOTTOM_LEFT,
               .render = widgets_disk_usage_render);
 
-    fl_widget(.name = "memory_usage",
-              .color = RGB(1, 1, 1),
-              .fps = 1,
+    g_mem = fl_widget(.name = "memory_usage",
+              .color = COLOR,
+              .fps = FPS,
+              .no_bg = NO_BG,
               .slot = FL_WIDGET_SLOT_BOTTOM_LEFT,
               .render = widgets_memory_usage_render);
 
-    fl_widget(.name = "cpu_usage",
-              .color = RGB(1, 1, 1),
-              .fps = 1,
+    g_cpu = fl_widget(.name = "cpu_usage",
+              .color = COLOR,
+              .fps = FPS,
+              .no_bg = NO_BG,
               .slot = FL_WIDGET_SLOT_BOTTOM_LEFT,
               .render = widgets_cpu_usage_render);
 
     fl_widget(.name = "date_and_time",
-              .color = RGB(1, 1, 1),
-              .fps = 1,
+              .color = COLOR,
+              .fps = FPS,
+              .no_bg = NO_BG,
               .slot = FL_WIDGET_SLOT_BOTTOM_RIGHT,
               .render = widgets_date_and_time_render);
 
-    fl_register_hotkey("Alt+Shift+G", FlipWidgets);
+    fl_register_hotkey("Alt+Shift+S", FlipWidgets);
 }

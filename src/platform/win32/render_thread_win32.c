@@ -6,6 +6,7 @@
 #define RT_MAX_PENDING 16
 #define RT_IDLE_SLEEP_MS 20
 #define RT_DEFAULT_FPS 1
+#define RT_MAX_SLEEP_MS 16
 
 typedef struct {
     Platform_RenderFrameFn fn;
@@ -91,6 +92,7 @@ static DWORD WINAPI rt_thread_func(LPVOID arg) {
 
         DWORD wait_ms = (n == 0) ? (DWORD)RT_IDLE_SLEEP_MS
                                  : (DWORD)(1000 / (g_rt_fps > 0 ? g_rt_fps : RT_DEFAULT_FPS));
+        if (wait_ms > RT_MAX_SLEEP_MS) wait_ms = RT_MAX_SLEEP_MS;
         EnterCriticalSection(&g_rt_lock);
         if (!g_rt_quit && g_rt_pending_count == 0) {
             SleepConditionVariableCS(&g_rt_cond, &g_rt_lock, wait_ms);
@@ -105,6 +107,13 @@ typedef struct { volatile LONG done; } RtSync;
 static void rt_sync_mark(void *ud) {
     RtSync *s = (RtSync *)ud;
     if (s) InterlockedExchange(&s->done, 1);
+}
+
+void Platform_RenderThread_Wake(void) {
+    if (!g_rt_lock_ready) return;
+    EnterCriticalSection(&g_rt_lock);
+    WakeConditionVariable(&g_rt_cond);
+    LeaveCriticalSection(&g_rt_lock);
 }
 
 void Platform_RenderThread_Sync(void) {

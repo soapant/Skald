@@ -41,7 +41,6 @@ static void EditPopup_Destroy(Popup* self) {
     PROFILE_START(timer);
     EditPopupDataInternal* data = (EditPopupDataInternal*)self;
     free(data->text);
-    free(data->title);
     free(data->align);
     free(data->placeholder);
     Platform_EditPopupDestroyWindow(self);
@@ -69,7 +68,7 @@ void EditPopup_SetPlaceholder(Popup* popup, const char* placeholder) {
 }
 
 Popup* EditPopup_Create(WindowManager* wm, const char* initial_text,
-                        const char* title, int x, int y, int w, int h, const char* align,
+                        int x, int y, int w, int h, const char* align,
                         EditPopupConfirmCallback on_confirm, void* user_data) {
     PROFILE_START(timer);
     EditPopupDataInternal* data = calloc(1, sizeof(EditPopupDataInternal));
@@ -81,10 +80,8 @@ Popup* EditPopup_Create(WindowManager* wm, const char* initial_text,
     data->base.vtable = &g_edit_popup_vtable;
     data->base.manager = wm;
     data->base.type = POPUP_EDIT;
-    data->title = title ? strdup(title) : strdup("");
     data->align = align ? strdup(align) : strdup("LEFT");
-    if (!data->title || !data->align) {
-        free(data->title);
+    if (!data->align) {
         free(data->align);
         free(data);
         PROFILE_END_VAR(timer, "window_manager:EditPopup_Create"); return NULL;
@@ -92,7 +89,6 @@ Popup* EditPopup_Create(WindowManager* wm, const char* initial_text,
     data->text_capacity = 1024;
     data->text = calloc(data->text_capacity, 1);
     if (!data->text) {
-        free(data->title);
         free(data->align);
         free(data);
         PROFILE_END_VAR(timer, "window_manager:EditPopup_Create"); return NULL;
@@ -106,9 +102,8 @@ Popup* EditPopup_Create(WindowManager* wm, const char* initial_text,
     data->x = x; data->y = y; data->w = w; data->h = h;
     data->confirmed = false;
 
-    if (!Platform_EditPopupCreateWindow((Popup*)data, x, y, w, h, title)) {
+    if (!Platform_EditPopupCreateWindow((Popup*)data, x, y, w, h)) {
         free(data->text);
-        free(data->title);
         free(data->align);
         free(data);
         PROFILE_END_VAR(timer, "window_manager:EditPopup_Create");

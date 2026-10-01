@@ -146,6 +146,9 @@ static bool ends_with(const char* str, const char* suffix) {
     return strcmp(str + sl - su, suffix) == 0;
 }
 
+static double g_feature_init_us = 0.0;
+static int g_feature_init_count = 0;
+
 static bool load_single(const char* dir, const char* filename) {
     if (g_feature_count >= MAX_FEATURES) return false;
     char full[1024];
@@ -163,10 +166,20 @@ static bool load_single(const char* dir, const char* filename) {
         log_error("dlopen %s failed: %s", full, Platform_GetLoadError());
         return false;
     }
+    WinTimer t_load = TimerStart();
     typedef void (*InitFn)(void);
     InitFn init = (InitFn)Platform_GetSymbol(h, "FlintFeatureInit");
     if (!init) init = (InitFn)Platform_GetSymbol(h, "FlintFeatureReload");
-    if (init) init();
+    if (init) {
+        init();
+        char label[96];
+        snprintf(label, sizeof(label), "feature_init: %s", name);
+        TimerEndAlways(t_load, label);
+        g_feature_init_us += TimerElapsedUs(t_load);
+        g_feature_init_count++;
+    } else {
+        log_warn("feature %s has no FlintFeatureInit/Reload symbol", name);
+    }
 
     LoadedFeature *f = &g_features[g_feature_count++];
     strncpy(f->name, name, sizeof(f->name)-1);
@@ -196,12 +209,18 @@ bool FeatureLoader_Init(void) {
     FL_LOCK();
     g_feature_count = 0;
     FL_UNLOCK();
+    g_feature_init_us = 0.0;
+    g_feature_init_count = 0;
     FeatureLoader_LoadAllFromDir("build/features");
     FL_LOCK();
     int cnt = g_feature_count;
     FL_UNLOCK();
     log_info("init done, %d features loaded (hot reload dir: build/features)", cnt);
-log_info("FeatureLoader_Init completed");
+    if (DoTimeDebugs) {
+        char label[96];
+        snprintf(label, sizeof(label), "feature_init: TOTAL (%d features)", g_feature_init_count);
+        TimerPrintRaw(g_feature_init_us, label);
+    }
     return true;
 }
 
@@ -289,7 +308,13 @@ void FeatureLoader_Reload(const char* name) {
             }
 #endif
             fl_widget_bump_generation();
+            WinTimer t_reload = TimerStart();
             init();
+            {
+                char label[96];
+                snprintf(label, sizeof(label), "feature_reload: %s", name);
+                TimerEndAlways(t_reload, label);
+            }
             g_features[i].handle = h;
             strncpy(g_features[i].path, path_copy, sizeof(g_features[i].path)-1);
             g_features[i].path[sizeof(g_features[i].path)-1] = '\0';

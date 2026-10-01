@@ -15,6 +15,7 @@ Window x11_create_window_ex(Display* dpy, int x, int y, int w, int h, unsigned l
 Window x11_create_prompt_window(Display* dpy, int x, int y, int w, int h);
 Window x11_create_edit_popup_window(Display* dpy, int x, int y, int w, int h);
 Window x11_create_display_message_window(Display* dpy, int x, int y, int w, int h);
+void x11_apply_click_through(Display* dpy, Window win);
 XftDraw* x11_create_xft_draw(Display* dpy, Window win);
 #endif
 

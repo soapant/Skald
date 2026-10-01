@@ -733,7 +733,7 @@ Window x11_create_window_ex_or(Display* dpy, int x, int y, int w, int h, unsigne
         XFree(sh);
     }
     XSelectInput(dpy, win, event_mask);
-    if (RoundedCorners && (!use_argb || !x11_has_compositor(dpy, screen))) {
+    if (RoundedCorners && !override_redirect && CornerRadius > 0) {
         x11_apply_shape_rounded(dpy, win, w, h, CornerRadius);
     }
     PROFILE_END_VAR(timer, "helpers_x11:x11_create_window_ex_or");
@@ -781,6 +781,11 @@ void x11_fill_rounded_rect(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap
     XftDrawRect(xd, &solid, x, y + radius, radius, h - 2*radius);
     XftDrawRect(xd, &solid, x + w - radius, y + radius, radius, h - 2*radius);
 
+    const float edge_lo = (float)radius - 0.5f;
+    const float edge_hi = (float)radius + 0.5f;
+    const float edge_sq_lo = edge_lo * edge_lo;
+    const float edge_sq_hi = edge_hi * edge_hi;
+
     for (int corner = 0; corner < 4; corner++) {
         int cx = (corner % 2 == 0) ? x + radius : x + w - radius - 1;
         int cy = (corner < 2) ? y + radius : y + h - radius - 1;
@@ -792,9 +797,22 @@ void x11_fill_rounded_rect(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap
                 float py = oy0 + dy + 0.5f;
                 float ddx2 = px - (cx + 0.5f);
                 float ddy2 = py - (cy + 0.5f);
-                float dist = sqrtf(ddx2*ddx2 + ddy2*ddy2);
-                if (dist >= radius) continue;
-                XftDrawRect(xd, &solid, ox0 + dx, oy0 + dy, 1, 1);
+                float d_sq = ddx2*ddx2 + ddy2*ddy2;
+                if (d_sq >= edge_sq_hi) continue;
+                unsigned short a;
+                if (d_sq <= edge_sq_lo) {
+                    a = alpha16;
+                } else {
+                    float d = sqrtf(d_sq);
+                    float cov = (edge_hi - d);
+                    if (cov < 0.0f) cov = 0.0f;
+                    if (cov > 1.0f) cov = 1.0f;
+                    a = (unsigned short)((float)alpha16 * cov + 0.5f);
+                }
+                if (a == 0) continue;
+                XftColor px_c = solid;
+                px_c.color.alpha = a;
+                XftDrawRect(xd, &px_c, ox0 + dx, oy0 + dy, 1, 1);
             }
         }
     }
@@ -813,21 +831,28 @@ static unsigned int HashNoise(int x, int y) {
     return Color_HashNoise(x, y);
 }
 static unsigned int CornerAlpha(int x, int y, int w, int h, int R, unsigned int baseAlpha8) {
-    float dx, dy, d_sq, R_plus_sq, R_minus_sq;
-    if (x < R && y < R) { dx = R - x - 0.5f; dy = R - y - 0.5f; }
-    else if (x >= w - R && y < R) { dx = x - (w - R) + 0.5f; dy = R - y - 0.5f; }
-    else if (x < R && y >= h - R) { dx = R - x - 0.5f; dy = y - (h - R) + 0.5f; }
-    else if (x >= w - R && y >= h - R) { dx = x - (w - R) + 0.5f; dy = y - (h - R) + 0.5f; }
+    float cx, cy;
+    if (x < R && y < R) { cx = (float)R; cy = (float)R; }
+    else if (x >= w - R && y < R) { cx = (float)(w - R - 1); cy = (float)R; }
+    else if (x < R && y >= h - R) { cx = (float)R; cy = (float)(h - R - 1); }
+    else if (x >= w - R && y >= h - R) { cx = (float)(w - R - 1); cy = (float)(h - R - 1); }
     else return baseAlpha8;
-    d_sq = dx*dx + dy*dy;
-    R_plus_sq = (R + 0.5f) * (R + 0.5f);
-    R_minus_sq = (R - 0.5f) * (R - 0.5f);
-    if (d_sq >= R_plus_sq) return 0;
-    if (d_sq > R_minus_sq) {
-        float d = sqrtf(d_sq);
-        return (unsigned int)(baseAlpha8 * (R + 0.5f - d) + 0.5f);
+
+    const int SS = 4;
+    int inside = 0;
+    for (int sy = 0; sy < SS; sy++) {
+        for (int sx = 0; sx < SS; sx++) {
+            float px = (float)x + ((float)sx + 0.5f) / (float)SS;
+            float py = (float)y + ((float)sy + 0.5f) / (float)SS;
+            float dx = px - (cx + 0.5f);
+            float dy = py - (cy + 0.5f);
+            if (dx*dx + dy*dy <= (float)R * (float)R) inside++;
+        }
     }
-    return baseAlpha8;
+    const int total = SS * SS;
+    if (inside <= 0) return 0;
+    if (inside >= total) return baseAlpha8;
+    return (unsigned int)((float)baseAlpha8 * ((float)inside / (float)total) + 0.5f);
 }
 
 void x11_free_cached_background(void) {
@@ -991,7 +1016,8 @@ static void bg_cache_store(Display* dpy, Pixmap pm, const BgKey* k) {
 static Pixmap x11_create_background_pixmap(Display* dpy, Window win, int w, int h, XWindowAttributes* attrs, unsigned long base, unsigned int baseAlpha8) {
     Visual* vis = attrs->visual;
     int depth = attrs->depth;
-    bool hasAlpha = (depth == 32);
+    if (depth != 32) return None;
+    bool hasAlpha = true;
     bool rounded = RoundedCorners && CornerRadius > 0 && hasAlpha;
     int R = rounded ? CornerRadius : 0;
     if (R > w/2) R = w/2; if (R > h/2) R = h/2;
@@ -1003,7 +1029,7 @@ static Pixmap x11_create_background_pixmap(Display* dpy, Window win, int w, int 
     if (!img->data) { XDestroyImage(img); XFreePixmap(dpy, pm); return None; }
 
     unsigned int r = (base >> 16) & 0xFF, g = (base >> 8) & 0xFF, b = base & 0xFF;
-    unsigned long fill = hasAlpha ? (baseAlpha8 << 24) | (r << 16) | (g << 8) | b : (r << 16) | (g << 8) | b;
+    unsigned long fill = (baseAlpha8 << 24) | (r << 16) | (g << 8) | b;
     x11_generate_background_pixels((uint32_t*)img->data, img->bytes_per_line, w, h, R, baseAlpha8, base, fill);
 
     GC gc = XCreateGC(dpy, pm, 0, NULL);
@@ -1079,15 +1105,15 @@ void x11_draw_background_to_drawable(Display* dpy, Drawable drw, int w, int h) {
         vis = DefaultVisual(dpy, screen);
         depth = DefaultDepth(dpy, screen);
     }
-    bool hasAlpha = (depth == 32);
+bool hasAlpha = (depth == 32);
     bool rded = rounded && radius > 0 && hasAlpha;
     int R = rded ? radius : 0;
     if (R > w/2) R = w/2; if (R > h/2) R = h/2;
     unsigned int baseAlpha8 = (unsigned int)WindowOpacity;
     if (baseAlpha8 > 255) baseAlpha8 = 255;
-    if ((!EnableShaders || ShaderPreset == 0) && R <= 0) {
-        unsigned int cr = (base >> 16) & 0xFF, cg = (base >> 8) & 0xFF, cb = base & 0xFF;
-        unsigned long solid = hasAlpha ? (baseAlpha8 << 24) | (cr << 16) | (cg << 8) | cb : (cr << 16) | (cg << 8) | cb;
+    unsigned int cr0 = (base >> 16) & 0xFF, cg0 = (base >> 8) & 0xFF, cb0 = base & 0xFF;
+    if (!hasAlpha) {
+        unsigned long solid = (cr0 << 16) | (cg0 << 8) | cb0;
         GC sgc = XCreateGC(dpy, drw, 0, NULL);
         XSetForeground(dpy, sgc, solid);
         XFillRectangle(dpy, drw, sgc, 0, 0, w, h);
@@ -1098,8 +1124,8 @@ void x11_draw_background_to_drawable(Display* dpy, Drawable drw, int w, int h) {
     if (!img) return;
     img->data = (char*)calloc(1, h * img->bytes_per_line);
     if (!img->data) { XDestroyImage(img); return; }
-    unsigned int r = (base >> 16) & 0xFF, g = (base >> 8) & 0xFF, b = base & 0xFF;
-    unsigned long fill = hasAlpha ? (baseAlpha8 << 24) | (r << 16) | (g << 8) | b : (r << 16) | (g << 8) | b;
+    unsigned int r = cr0, g = cg0, b = cb0;
+    unsigned long fill = (baseAlpha8 << 24) | (r << 16) | (g << 8) | b;
     GC gc = XCreateGC(dpy, drw, 0, NULL);
     x11_generate_background_pixels((uint32_t*)img->data, img->bytes_per_line, w, h, R, baseAlpha8, base, fill);
     XPutImage(dpy, drw, gc, img, 0, 0, 0, 0, w, h);
@@ -1187,12 +1213,21 @@ Window x11_create_edit_popup_window(Display* dpy, int x, int y, int w, int h) {
     XFree(sh);
     return win;
 }
+void x11_apply_click_through(Display* dpy, Window win) {
+    PROFILE_START(timer);
+    if (!dpy || win == None) { PROFILE_END_VAR(timer, "helpers_x11:x11_apply_click_through"); return; }
+    XShapeCombineRectangles(dpy, win, ShapeInput, 0, 0, NULL, 0, ShapeSet, Unsorted);
+    PROFILE_END_VAR(timer, "helpers_x11:x11_apply_click_through");
+}
+
 Window x11_create_display_message_window(Display* dpy, int x, int y, int w, int h) {
     PROFILE_START(timer);
     unsigned long bg = Platform_GetDrawBgColor();
     if (!bg) bg = rgb_to_hex(COLOR_BG);
+    Window win = x11_create_window_ex_or(dpy, x, y, w, h, bg, "flashtext", "flashtext", ExposureMask, true);
+    if (win != None) x11_apply_click_through(dpy, win);
     PROFILE_END_VAR(timer, "helpers_x11:x11_create_display_message_window");
-    return x11_create_window_ex_or(dpy, x, y, w, h, bg, "flashtext", "flashtext", ExposureMask, true);
+    return win;
 }
 
 XftDraw* x11_create_xft_draw(Display* dpy, Window win) {

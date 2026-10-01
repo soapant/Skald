@@ -2,7 +2,9 @@
 #define NOB_NO_ECHO
 #define NOB_EXPERIMENTAL_DELETE_OLD
 #include "nob.h"
+#if !defined(_WIN32)
 #include <glob.h>
+#endif
 
 #define SRC_FOLDER "src"
 #define BUILD_FOLDER "build"
@@ -746,9 +748,48 @@ int main(int argc, char** argv) {
         Nob_Cmd bundle = {0};
         nob_cmd_append(&bundle, "sh", "-c", "mkdir -p build/bundle && ldd build/flint | grep -o '/[^ ]*\\.so[^ ]*' | xargs -I{} cp -v {} build/bundle/ 2>/dev/null; echo \"Bundled $(ls build/bundle/*.so* 2>/dev/null | wc -l) libs to build/bundle/ (ship with LD_LIBRARY_PATH=./build/bundle)\"");
         nob_cmd_run(&bundle);
-        Nob_Cmd rpath = {0};
-        nob_cmd_append(&rpath, "sh", "-c", "which patchelf >/dev/null 2>&1 && patchelf --set-rpath '$ORIGIN/bundle' build/flint 2>/dev/null && echo \"Patched rpath to \\$ORIGIN/bundle\" || true");
-        nob_cmd_run(&rpath);
+
+        nob_log(NOB_INFO, "Bundling external/ helper deps into build/bundle/");
+        Nob_Cmd extdeps = {0};
+        nob_cmd_append(&extdeps, "sh", "-c",
+            "mkdir -p build/bundle; "
+            "for b in external/*; do "
+            "  [ -x \"$b\" ] || continue; "
+            "  ldd \"$b\" 2>/dev/null | awk '{for(i=1;i<=NF;i++) if($i ~ /^lib.*\\.so/) print $i}'; "
+            "done | sort -u > /tmp/flint_ext_sonames.txt; "
+            "while read -r so; do "
+            "  [ -n \"$so\" ] || continue; "
+            "  [ -e \"build/bundle/$so\" ] && continue; "
+            "  src=$(ldconfig -p 2>/dev/null | awk -v s=\"$so\" '$1==s {print $NF; exit}'); "
+            "  if [ -z \"$src\" ] || [ ! -e \"$src\" ]; then "
+            "    src=$(ls /usr/lib/*/\"$so\" /usr/lib/\"$so\" /usr/lib64/\"$so\" /lib/*/\"$so\" /lib/\"$so\" 2>/dev/null | head -1); "
+            "  fi; "
+            "  if [ -z \"$src\" ] || [ ! -e \"$src\" ]; then "
+            "    src=$(ls /nix/store/*/lib/\"$so\" 2>/dev/null | head -1); "
+            "  fi; "
+            "  if [ -z \"$src\" ] || [ ! -e \"$src\" ]; then "
+            "    for d in $(patchelf --print-rpath build/flint 2>/dev/null | tr ':' ' '); do "
+            "      if [ -e \"$d/$so\" ]; then src=\"$d/$so\"; break; fi; "
+            "    done; "
+            "  fi; "
+            "  if [ -n \"$src\" ] && [ -e \"$src\" ]; then cp -v \"$src\" build/bundle/ 2>/dev/null; "
+            "  else echo \"  unresolved: $so\"; fi; "
+            "done < /tmp/flint_ext_sonames.txt; "
+            "echo \"External helper deps now in build/bundle/ ($(ls build/bundle/*.so* 2>/dev/null | wc -l) total)\"");
+        nob_cmd_run(&extdeps);
+
+        Nob_Cmd extrpath = {0};
+        nob_cmd_append(&extrpath, "sh", "-c",
+            "if command -v patchelf >/dev/null 2>&1; then "
+            "  for b in external/*; do "
+            "    [ -x \"$b\" ] || continue; "
+            "    patchelf --set-rpath '$ORIGIN/../build/bundle' \"$b\" 2>/dev/null; "
+            "  done; "
+            "  echo \"Patched external/ rpath to \\$ORIGIN/../build/bundle\"; "
+            "else "
+            "  echo \"patchelf missing; externals will rely on LD_LIBRARY_PATH\"; "
+            "fi");
+        nob_cmd_run(&extrpath);
     }
 #endif
     if (do_run) {

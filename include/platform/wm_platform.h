@@ -15,7 +15,7 @@ void Platform_WM_OnPopEmpty(WindowManager* wm);
 void Platform_WM_GetMonitorGeometry(int *x, int *y, int *w, int *h);
 char* Platform_PromptUser(WindowManager* wm, const PromptSpec* spec);
 
-bool Platform_EditPopupCreateWindow(Popup* self, int x, int y, int w, int h, const char* title);
+bool Platform_EditPopupCreateWindow(Popup* self, int x, int y, int w, int h);
 void Platform_EditPopupShowWindow(Popup* self);
 void Platform_EditPopupHideWindow(Popup* self);
 void Platform_EditPopupRender(Popup* self);
