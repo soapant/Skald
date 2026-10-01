@@ -1,6 +1,7 @@
 #include <windows.h>
 #include <wingdi.h>
 #include <stdlib.h>
+#include <string.h>
 #include "platform/widget.h"
 #include "platform/draw.h"
 #include "platform/render_thread.h"
@@ -28,6 +29,7 @@ struct PlatformWidget {
     HBITMAP layer_bmp;
     HGDIOBJ layer_old;
     void *layer_bits;
+    void *layer_scratch;
     int layer_w, layer_h;
 };
 
@@ -59,6 +61,10 @@ static void layer_release(PlatformWidget *widget) {
     widget->layer_bits = NULL;
     widget->layer_w = 0;
     widget->layer_h = 0;
+    if (widget->layer_scratch) {
+        free(widget->layer_scratch);
+        widget->layer_scratch = NULL;
+    }
 }
 
 static bool layer_acquire(PlatformWidget *widget) {
@@ -88,18 +94,56 @@ static bool layer_acquire(PlatformWidget *widget) {
     widget->layer_bits = bits;
     widget->layer_w = widget->w;
     widget->layer_h = widget->h;
+    widget->layer_scratch = calloc(1, (size_t)widget->w * (size_t)widget->h * 4);
     return true;
 }
 
-static void widget_paint_layered(PlatformWidget *widget) {
-    if (!layer_acquire(widget)) return;
-    memset(widget->layer_bits, 0, (size_t)widget->w * widget->h * 4);
+static void widget_render_pass(PlatformWidget *widget, bool mask_pass) {
     SetBkMode(widget->layer_dc, TRANSPARENT);
+    Platform_SetDrawMaskPassWin32(mask_pass);
     Platform_SetDrawContextWin32(widget->layer_dc);
     Platform_SetPreRenderStateWin32(NULL, NULL);
     if (widget->fn) widget->fn(widget->ud);
+    Platform_SetDrawMaskPassWin32(false);
     Platform_SetDrawBgColor(0);
     GdiFlush();
+}
+
+static void layer_fill(PlatformWidget *widget, unsigned int argb) {
+    unsigned int *px = (unsigned int *)widget->layer_bits;
+    size_t n = (size_t)widget->layer_w * (size_t)widget->layer_h;
+    for (size_t i = 0; i < n; i++) px[i] = argb;
+}
+
+/* GDI antialiasing blends toward the destination fill and never writes the alpha
+   byte, so coverage is recovered by a second white-on-black pass. The feature
+   render callback is invoked once; only the draw primitives change color. */
+static void widget_paint_layered(PlatformWidget *widget) {
+    if (!layer_acquire(widget)) return;
+    if (!widget->layer_scratch) return;
+
+    layer_fill(widget, 0xFF000000u);
+    widget_render_pass(widget, false);
+    memcpy(widget->layer_scratch, widget->layer_bits, (size_t)widget->layer_w * (size_t)widget->layer_h * 4);
+
+    layer_fill(widget, 0xFF000000u);
+    widget_render_pass(widget, true);
+
+    {
+        unsigned int *color = (unsigned int *)widget->layer_scratch;
+        const unsigned int *mask = (const unsigned int *)widget->layer_bits;
+        unsigned int *out = (unsigned int *)widget->layer_bits;
+        size_t n = (size_t)widget->layer_w * (size_t)widget->layer_h;
+        for (size_t i = 0; i < n; i++) {
+            unsigned int c = color[i];
+            unsigned int m = mask[i];
+            int a = (int)(m & 0xFF);
+            if (a > 255) a = 255;
+            if (a < 0) a = 0;
+            out[i] = (c & 0x00FFFFFFu) | ((unsigned int)a << 24);
+        }
+    }
+
     HDC screen = GetDC(NULL);
     if (!screen) return;
     POINT dst;
@@ -241,9 +285,8 @@ PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps, bool
 
     widget_frame(widget);
 
-    if (!widget->no_bg) {
-        ShowWindow(widget->hwnd, SW_SHOWNOACTIVATE);
-    }
+    ShowWindow(widget->hwnd, SW_SHOWNOACTIVATE);
+    SetWindowPos(widget->hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
     widget->mapped = true;
     return widget;
 }

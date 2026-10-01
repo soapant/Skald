@@ -15,6 +15,7 @@ void Platform_GetDrawContextWin32(HDC *out);
 void Platform_SetPreRenderStateWin32(const char *text, void *rect);
 void Platform_BeginMeasure(void);
 void Platform_EndMeasure(int *out_w, int *out_h);
+void Platform_SetDrawMaskPassWin32(bool on);
 #else
 #include <X11/Xlib.h>
 #include <X11/Xft/Xft.h>
