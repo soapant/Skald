@@ -35,11 +35,6 @@ __attribute__((weak)) bool fl_prerender(void) {
 }
 
 static __thread HDC g_draw_hdc = NULL;
-static __thread bool g_draw_mask_pass = false;
-
-void Platform_SetDrawMaskPassWin32(bool on) {
-  g_draw_mask_pass = on;
-}
 
 static __thread unsigned long g_draw_bg_override = 0;
 static __thread bool g_transparent_window = false;
@@ -98,7 +93,6 @@ bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, F
     HFONT old = NULL;
     if (hfont) old = (HFONT)SelectObject(g_draw_hdc, hfont);
     SetBkMode(g_draw_hdc, TRANSPARENT);
-    if (g_draw_mask_pass) color = 0x00FFFFFFu;
     SetTextColor(g_draw_hdc, color);
     bool centered = Platform_StringContainsCaseInsensitive(a,"CENTER");
     bool right = !centered && Platform_StringContainsCaseInsensitive(a,"RIGHT");
@@ -147,7 +141,6 @@ bool Platform_DrawTextLine(int x, int y, const char* text, int len, unsigned lon
     HFONT hfont = win32_sized_font(fontsize);
     HFONT old = hfont ? (HFONT)SelectObject(g_draw_hdc, hfont) : NULL;
 SetBkMode(g_draw_hdc, TRANSPARENT);
-  if (g_draw_mask_pass) color = 0x00FFFFFFu;
   SetTextColor(g_draw_hdc, color);
   TextOutA(g_draw_hdc, x, y, text, len);
     if (old) SelectObject(g_draw_hdc, old);
@@ -179,7 +172,6 @@ RECT rect;
   rect.right = x + w;
   rect.bottom = y + h;
 
-  if (g_draw_mask_pass) color = 0x00FFFFFFu;
   HBRUSH hBrush = CreateSolidBrush(color);
 
     FillRect(g_draw_hdc, &rect, hBrush);

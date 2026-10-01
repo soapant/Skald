@@ -3,11 +3,14 @@
 #include <string.h>
 #include <stdbool.h>
 #include <time.h>
-#include "core/flapi.h"
 
-#if !defined(_WIN32)
+#if defined(_WIN32)
+#include <windows.h>
+#else
 #include <sys/statvfs.h>
 #endif
+
+#include "core/flapi.h"
 
 #define COLOR RGB(1, 1, 1)
 #define FPS 1
@@ -50,7 +53,19 @@ static bool read_disk(unsigned long long *used_out, unsigned long long *total_ou
     *total_out = total;
     return true;
 #else
-    return false;
+    char root[MAX_PATH] = {0};
+    DWORD n = GetCurrentDirectoryA(sizeof(root) - 1, root);
+    if (n == 0 || n < 3) return false;
+    if (root[1] != ':') return false;
+    root[2] = '\\';
+    root[3] = 0;
+
+    ULARGE_INTEGER avail, total, free_total;
+    if (!GetDiskFreeSpaceExA(root, &avail, &total, &free_total)) return false;
+    if (total.QuadPart == 0) return false;
+    *used_out = (unsigned long long)(total.QuadPart - free_total.QuadPart);
+    *total_out = (unsigned long long)total.QuadPart;
+    return true;
 #endif
 }
 
@@ -76,16 +91,17 @@ static bool read_mem(unsigned long long *used_out, unsigned long long *total_out
     *total_out = total_kb * 1024ULL;
     return true;
 #else
-    return false;
+    MEMORYSTATUSEX ms;
+    ms.dwLength = sizeof(ms);
+    if (!GlobalMemoryStatusEx(&ms)) return false;
+    if (ms.ullTotalPhys == 0) return false;
+    *used_out = (unsigned long long)(ms.ullTotalPhys - ms.ullAvailPhys);
+    *total_out = (unsigned long long)ms.ullTotalPhys;
+    return true;
 #endif
 }
 
-static bool read_cpu(unsigned long long *used_out, unsigned long long *total_out) {
-    static unsigned long long prev_busy = 0, prev_total = 0;
-    static bool seeded = false;
-
-    *used_out = 0;
-    *total_out = 0;
+static bool sample_cpu(unsigned long long *busy_out, unsigned long long *total_out) {
 #if !defined(_WIN32)
     FILE* fp = fopen("/proc/stat", "r");
     if (!fp) return false;
@@ -99,6 +115,39 @@ static bool read_cpu(unsigned long long *used_out, unsigned long long *total_out
 
     unsigned long long busy = user + nice + sys + irq + softirq + steal;
     unsigned long long total = busy + idle + iowait;
+    *busy_out = busy;
+    *total_out = total;
+    return true;
+#else
+    FILETIME idle_ft, kernel_ft, user_ft;
+    if (!GetSystemTimes(&idle_ft, &kernel_ft, &user_ft)) return false;
+
+    ULARGE_INTEGER idle, kernel, user;
+    idle.LowPart = idle_ft.dwLowDateTime;
+    idle.HighPart = idle_ft.dwHighDateTime;
+    kernel.LowPart = kernel_ft.dwLowDateTime;
+    kernel.HighPart = kernel_ft.dwHighDateTime;
+    user.LowPart = user_ft.dwLowDateTime;
+    user.HighPart = user_ft.dwHighDateTime;
+
+    unsigned long long busy = (kernel.QuadPart - idle.QuadPart) + user.QuadPart;
+    unsigned long long total = busy + idle.QuadPart;
+    *busy_out = busy;
+    *total_out = total;
+    return true;
+#endif
+}
+
+static bool read_cpu(unsigned long long *used_out, unsigned long long *total_out) {
+    static unsigned long long prev_busy = 0, prev_total = 0;
+    static bool seeded = false;
+
+    *used_out = 0;
+    *total_out = 0;
+
+    unsigned long long busy = 0, total = 0;
+    if (!sample_cpu(&busy, &total)) return false;
+
     if (!seeded) {
         seeded = true;
         prev_busy = busy;
@@ -113,9 +162,6 @@ static bool read_cpu(unsigned long long *used_out, unsigned long long *total_out
     prev_busy = busy;
     prev_total = total;
     return d_total > 0;
-#else
-    return false;
-#endif
 }
 
 static ColorRef usage_color(unsigned long long used, unsigned long long total) {
