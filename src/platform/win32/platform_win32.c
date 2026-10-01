@@ -1395,6 +1395,10 @@ void Platform_CleanupPlatformResources(void) {
         DeleteObject(g_win32_hMainFont);
         g_win32_hMainFont = NULL;
     }
+    {
+        extern void win32_default_apps_free_cache(void);
+        win32_default_apps_free_cache();
+    }
 }
 
 Fl_Pos Platform_GetCursorPos(void) {
