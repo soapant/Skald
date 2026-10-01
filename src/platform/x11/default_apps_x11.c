@@ -27,22 +27,57 @@ const char* x11_default_apps_run(const char* command, int slot) {
     return default_apps_x11[slot];
 }
 
-static const char* match_in_applications_dir(const char* dir, const char* const* names, size_t count) {
+#define APPDIR_CACHE_SLOTS 8
+static ListOfFiles g_ad_cache[APPDIR_CACHE_SLOTS];
+static char g_ad_path[APPDIR_CACHE_SLOTS][1024];
+static bool g_ad_valid[APPDIR_CACHE_SLOTS];
+
+static ListOfFiles* x11_applications_dir_files(const char* dir) {
+    static int next_slot = 0;
+    for (int i = 0; i < APPDIR_CACHE_SLOTS; i++) {
+        if (g_ad_valid[i] && strcmp(g_ad_path[i], dir) == 0) return &g_ad_cache[i];
+    }
     struct stat st;
     if (stat(dir, &st) != 0 || !S_ISDIR(st.st_mode)) return NULL;
-    ListOfFiles files = {0};
-    Platform_GetAllFilesFromDir(dir, NULL, &files, NULL, true);
+    int slot = next_slot;
+    next_slot = (next_slot + 1) % APPDIR_CACHE_SLOTS;
+    if (g_ad_valid[slot]) {
+        free(g_ad_cache[slot].files);
+        g_ad_cache[slot].files = NULL;
+        g_ad_cache[slot].count = 0;
+        g_ad_cache[slot].capacity = 0;
+    }
+    Platform_GetAllFilesFromDir(dir, NULL, &g_ad_cache[slot], NULL, true);
+    snprintf(g_ad_path[slot], sizeof(g_ad_path[slot]), "%s", dir);
+    g_ad_valid[slot] = true;
+    return &g_ad_cache[slot];
+}
+
+static const char* match_in_applications_dir(const char* dir, const char* const* names, size_t count) {
+    ListOfFiles* files = x11_applications_dir_files(dir);
+    if (!files) return NULL;
     const char* found = NULL;
-    for (size_t i = 0; i < files.count && !found; i++) {
+    for (size_t i = 0; i < files->count && !found; i++) {
         for (size_t j = 0; j < count; j++) {
-            if (Platform_StringContainsCaseInsensitive(files.files[i].name, names[j])) {
+            if (Platform_StringContainsCaseInsensitive(files->files[i].name, names[j])) {
                 found = names[j];
                 break;
             }
         }
     }
-    free(files.files);
     return found;
+}
+
+void x11_default_apps_free_cache(void) {
+    for (int i = 0; i < APPDIR_CACHE_SLOTS; i++) {
+        if (!g_ad_valid[i]) continue;
+        free(g_ad_cache[i].files);
+        g_ad_cache[i].files = NULL;
+        g_ad_cache[i].count = 0;
+        g_ad_cache[i].capacity = 0;
+        g_ad_path[i][0] = '\0';
+        g_ad_valid[i] = false;
+    }
 }
 
 const char* x11_find_terminal_in_desktop_files(const char* const* names, size_t count) {
