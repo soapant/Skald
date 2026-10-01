@@ -24,8 +24,6 @@
       "src/main.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -34,7 +32,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -64,8 +64,6 @@
       "src/config_resolve.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -74,7 +72,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -104,8 +104,6 @@
       "src/deps/log.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -114,7 +112,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -144,8 +144,6 @@
       "src/core/feature_loader.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -154,7 +152,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -184,8 +184,6 @@
       "src/core/modal.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -194,7 +192,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -224,8 +224,6 @@
       "src/core/prompt_controller.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -234,7 +232,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -264,8 +264,6 @@
       "src/core/helpers_history.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -274,7 +272,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -304,8 +304,6 @@
       "src/core/popup/settings_popup.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -314,7 +312,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -344,8 +344,6 @@
       "src/core/popup/prompt_popup.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -354,7 +352,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -384,8 +384,6 @@
       "src/core/popup/edit_popup.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -394,7 +392,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -424,8 +424,6 @@
       "src/core/popup/search_popup.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -434,7 +432,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -464,8 +464,6 @@
       "src/core/config_loader.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -474,7 +472,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -504,8 +504,6 @@
       "src/core/helpers_text.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -514,7 +512,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -544,8 +544,6 @@
       "src/core/remap_manager.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -554,7 +552,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -584,8 +584,6 @@
       "src/core/timer.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -594,7 +592,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -624,8 +624,6 @@
       "src/core/input_state.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -634,7 +632,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -664,8 +664,6 @@
       "src/core/context.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -674,7 +672,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -704,8 +704,6 @@
       "src/core/clipboard_history.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -714,7 +712,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -744,8 +744,6 @@
       "src/core/hotkey_manager.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -754,7 +752,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -784,8 +784,6 @@
       "src/core/window_manager.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -794,7 +792,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -824,8 +824,6 @@
       "src/core/history.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -834,7 +832,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -864,8 +864,6 @@
       "src/core/theme.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -874,7 +872,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -904,8 +904,6 @@
       "src/core/helpers.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -914,7 +912,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -944,8 +944,6 @@
       "src/core/helpers_color.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -954,7 +952,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -984,8 +984,6 @@
       "src/core/snippet_manager.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -994,7 +992,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -1024,8 +1024,6 @@
       "src/core/feature_data.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -1034,7 +1032,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -1064,8 +1064,6 @@
       "src/core/common_ui.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -1074,7 +1072,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -1104,8 +1104,6 @@
       "src/core/vim.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -1114,7 +1112,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -1144,8 +1144,6 @@
       "src/platform/x11/prompt_popup_x11.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -1154,7 +1152,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -1184,8 +1184,6 @@
       "src/platform/x11/lib_x11.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -1194,7 +1192,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -1224,8 +1224,6 @@
       "src/platform/x11/default_apps_x11.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -1234,7 +1232,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -1264,8 +1264,6 @@
       "src/platform/x11/widget_x11.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -1274,7 +1272,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -1304,8 +1304,6 @@
       "src/platform/x11/remap_x11.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -1314,7 +1312,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -1344,8 +1344,6 @@
       "src/platform/x11/watcher_x11.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -1354,7 +1352,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -1384,8 +1384,6 @@
       "src/platform/x11/misc_x11.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -1394,7 +1392,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -1424,8 +1424,6 @@
       "src/platform/x11/display_x11.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -1434,7 +1432,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -1464,8 +1464,6 @@
       "src/platform/x11/helpers_x11.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -1474,7 +1472,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -1504,8 +1504,6 @@
       "src/platform/x11/wm_platform_x11.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -1514,7 +1512,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -1544,8 +1544,6 @@
       "src/platform/x11/clipboard_x11.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -1554,7 +1552,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -1584,8 +1584,6 @@
       "src/platform/x11/render_thread_x11.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -1594,7 +1592,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -1624,8 +1624,6 @@
       "src/platform/x11/desktop_helpers_x11.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -1634,7 +1632,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -1664,8 +1664,6 @@
       "src/platform/x11/ui_scale_x11.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -1674,7 +1672,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -1704,8 +1704,6 @@
       "src/platform/x11/input_core_x11.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -1714,7 +1712,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -1744,8 +1744,6 @@
       "src/platform/x11/env_helpers_x11.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -1754,7 +1752,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -1784,8 +1784,6 @@
       "src/platform/x11/draw_x11.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -1794,7 +1792,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -1824,8 +1824,6 @@
       "src/platform/x11/platform_x11.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -1834,7 +1832,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -1864,8 +1864,6 @@
       "src/platform/x11/message_popup_x11.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -1874,7 +1872,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -1904,8 +1904,6 @@
       "src/platform/x11/input/input_x11.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -1914,7 +1912,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -1944,8 +1944,6 @@
       "src/platform/x11/input/edit_buffer_x11.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -1954,7 +1952,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -1984,8 +1984,6 @@
       "src/platform/x11/render/render_prompt_x11.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -1994,7 +1992,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -2024,8 +2024,6 @@
       "src/platform/x11/settings_popup_x11.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -2034,7 +2032,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -2064,8 +2064,6 @@
       "src/platform/x11/flapi_x11.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -2074,7 +2072,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -2104,8 +2104,6 @@
       "src/platform/x11/edit_popup_x11.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -2114,7 +2112,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -2144,8 +2144,6 @@
       "src/platform/x11/ui_x11.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -2154,7 +2152,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -2184,8 +2184,6 @@
       "src/platform/x11/window_manager_x11.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -2194,7 +2192,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -2224,8 +2224,6 @@
       "src/platform/wm/sway_wm.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -2234,7 +2232,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -2264,8 +2264,6 @@
       "src/platform/wm/niri_wm.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -2274,7 +2272,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -2304,8 +2304,6 @@
       "src/platform/wm/i3_wm.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -2314,7 +2312,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -2344,8 +2344,6 @@
       "src/platform/wm/hyprland_wm.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -2354,7 +2352,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -2384,8 +2384,6 @@
       "src/platform/wm/wm.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -2394,7 +2392,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -2424,8 +2424,6 @@
       "src/platform/wm/kwin_wm.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -2434,7 +2432,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -2464,8 +2464,6 @@
       "src/platform/wm/x11_wm.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -2474,7 +2472,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -2504,8 +2504,6 @@
       "src/config_defaults.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -2514,7 +2512,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -2544,8 +2544,6 @@
       "src/bindings/vim_bindings.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -2554,7 +2552,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -2584,8 +2584,6 @@
       "src/bindings/bindings.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -2594,7 +2592,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -2624,8 +2624,6 @@
       "src/bindings/vim_motions.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -2634,7 +2632,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -2664,8 +2664,6 @@
       "src/bindings/vim_helpers.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -2674,7 +2672,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
@@ -2704,8 +2704,6 @@
       "src/flapi.c",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
-      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
-      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
       "-I/nix/store/cyfcqxzyi1i0x8frrrrxm0yrr6fd1nji-freetype-2.14.3-dev/include/freetype2",
       "-I/nix/store/gak7fcsrc8zq8292liaqi0q1j38fi3bw-glib-2.88.3-dev/include/gio-unix-2.0",
@@ -2714,7 +2712,9 @@
       "-I/nix/store/04nqnwc7dvgxl6ai5wpc89b9x81yx381-glib-2.88.3/lib/glib-2.0/include",
       "-I/nix/store/p9j1nvhbp5wi6i3w3cf08c0sciw3hgx8-libpng-apng-1.6.58-dev/include/libpng16",
       "-I/nix/store/lfafkjvwya0y3hqmr9bnmjv1359ihg03-libxext-1.3.7-dev/include",
+      "-I/nix/store/6cwsypa82vpmklf86l90p0hsmqxdf55a-libxrandr-1.5.5-dev/include",
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
+      "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]

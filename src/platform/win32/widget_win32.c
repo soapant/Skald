@@ -1,6 +1,7 @@
 #include <windows.h>
 #include <wingdi.h>
 #include <stdlib.h>
+#include <string.h>
 #include "platform/widget.h"
 #include "platform/draw.h"
 #include "platform/render_thread.h"
@@ -21,6 +22,8 @@ struct PlatformWidget {
     unsigned long bg_hex;
     bool has_bg;
     bool no_bg;
+    bool dirty;
+    DWORD last_draw_ms;
     BITMAPINFO layer_bi;
     HDC layer_dc;
     HBITMAP layer_bmp;
@@ -28,6 +31,12 @@ struct PlatformWidget {
     void *layer_bits;
     int layer_w, layer_h;
 };
+
+static void layer_fill(PlatformWidget *widget, unsigned int argb) {
+    unsigned int *px = (unsigned int *)widget->layer_bits;
+    size_t n = (size_t)widget->layer_w * (size_t)widget->layer_h;
+    for (size_t i = 0; i < n; i++) px[i] = argb;
+}
 
 static LRESULT CALLBACK FlintWidgetProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
@@ -89,15 +98,34 @@ static bool layer_acquire(PlatformWidget *widget) {
     return true;
 }
 
+/* GDI antialiasing blends toward the destination fill and never writes the alpha
+   byte, so the layer is filled opaque black and rendered once. On the black
+   background each glyph pixel is already coverage-scaled text colour, which is
+   exactly the premultiplied form AC_SRC_ALPHA expects, so the blue channel is a
+   direct coverage readout. Rendering once per frame keeps feature render
+   callbacks (and their per-frame state) intact. */
 static void widget_paint_layered(PlatformWidget *widget) {
     if (!layer_acquire(widget)) return;
-    memset(widget->layer_bits, 0, (size_t)widget->w * widget->h * 4);
+
+    layer_fill(widget, 0xFF000000u);
     SetBkMode(widget->layer_dc, TRANSPARENT);
     Platform_SetDrawContextWin32(widget->layer_dc);
     Platform_SetPreRenderStateWin32(NULL, NULL);
     if (widget->fn) widget->fn(widget->ud);
     Platform_SetDrawBgColor(0);
     GdiFlush();
+
+    {
+        unsigned int *px = (unsigned int *)widget->layer_bits;
+        size_t n = (size_t)widget->layer_w * (size_t)widget->layer_h;
+        for (size_t i = 0; i < n; i++) {
+            int a = (int)(px[i] & 0xFF);
+            if (a > 255) a = 255;
+            if (a < 0) a = 0;
+            px[i] = (px[i] & 0x00FFFFFFu) | ((unsigned int)a << 24);
+        }
+    }
+
     HDC screen = GetDC(NULL);
     if (!screen) return;
     POINT dst;
@@ -143,6 +171,9 @@ static LRESULT CALLBACK FlintWidgetProc(HWND hwnd, UINT msg, WPARAM wParam, LPAR
         SetWindowLongPtrA(hwnd, GWLP_USERDATA, (LONG_PTR)cs->lpCreateParams);
         return DefWindowProcA(hwnd, msg, wParam, lParam);
     }
+    case WM_NCHITTEST: {
+        return HTTRANSPARENT;
+    }
     case WM_PAINT: {
         if (!widget || widget->dead) break;
         PAINTSTRUCT ps;
@@ -171,6 +202,14 @@ static void widget_frame(void *ud) {
     if (!widget || widget->dead) return;
     HWND hwnd = widget->hwnd;
     if (!hwnd || !IsWindow(hwnd)) return;
+    DWORD now = GetTickCount();
+    if (!widget->dirty) {
+        DWORD interval = widget->fps > 0 ? (DWORD)(1000 / widget->fps) : 1000;
+        if (interval < 16) interval = 16;
+        if (now - widget->last_draw_ms < interval) return;
+    }
+    widget->dirty = false;
+    widget->last_draw_ms = now;
     InvalidateRect(hwnd, NULL, FALSE);
     UpdateWindow(hwnd);
     MSG msg;
@@ -178,6 +217,12 @@ static void widget_frame(void *ud) {
         TranslateMessage(&msg);
         DispatchMessageA(&msg);
     }
+}
+
+void Platform_Widget_Invalidate(PlatformWidget *widget) {
+    if (!widget || widget->dead) return;
+    widget->dirty = true;
+    Platform_RenderThread_Wake();
 }
 
 PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps, bool no_bg) {
@@ -193,10 +238,12 @@ PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps, bool
     widget->h = h;
     widget->fps = fps;
     widget->no_bg = no_bg;
+    widget->dirty = true;
+    widget->last_draw_ms = 0;
 
     HINSTANCE hInstance = GetModuleHandle(NULL);
     widget->hwnd = CreateWindowExA(
-        WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED | WS_EX_NOACTIVATE,
+        WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED | WS_EX_NOACTIVATE | WS_EX_TRANSPARENT,
         FLINT_WIDGET_CLASS, NULL, WS_POPUP,
         x, y, w, h, NULL, NULL, hInstance, widget
     );
@@ -220,9 +267,8 @@ PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps, bool
 
     widget_frame(widget);
 
-    if (!widget->no_bg) {
-        ShowWindow(widget->hwnd, SW_SHOWNOACTIVATE);
-    }
+    ShowWindow(widget->hwnd, SW_SHOWNOACTIVATE);
+    SetWindowPos(widget->hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
     widget->mapped = true;
     return widget;
 }
@@ -275,12 +321,14 @@ void Platform_Widget_Move(PlatformWidget *widget, int x, int y) {
 void Platform_Widget_SetNoBg(PlatformWidget *widget, bool no_bg) {
     if (!widget || widget->dead) return;
     widget->no_bg = no_bg;
+    Platform_Widget_Invalidate(widget);
 }
 
 void Platform_Widget_SetBgColor(PlatformWidget *widget, unsigned long hex) {
     if (!widget || widget->dead) return;
     widget->has_bg = hex != 0;
     widget->bg_hex = hex;
+    Platform_Widget_Invalidate(widget);
 }
 
 void Platform_Widget_Resize(PlatformWidget *widget, int w, int h) {
@@ -291,6 +339,7 @@ void Platform_Widget_Resize(PlatformWidget *widget, int w, int h) {
     widget->w = w;
     widget->h = h;
     SetWindowPos(widget->hwnd, HWND_TOPMOST, widget->x, widget->y, w, h, SWP_NOACTIVATE);
+    Platform_Widget_Invalidate(widget);
 }
 
 

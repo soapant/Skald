@@ -177,7 +177,6 @@ unsigned long fl_rgb_to_hex(ColorRef color);
 
 typedef struct {
     const char* initial_text;
-    const char* title;
     int x;
     int y;
     int w;

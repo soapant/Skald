@@ -140,9 +140,9 @@ bool Platform_DrawTextLine(int x, int y, const char* text, int len, unsigned lon
     if (color == 0) color = COLOR_TEXT;
     HFONT hfont = win32_sized_font(fontsize);
     HFONT old = hfont ? (HFONT)SelectObject(g_draw_hdc, hfont) : NULL;
-    SetBkMode(g_draw_hdc, TRANSPARENT);
-    SetTextColor(g_draw_hdc, color);
-    TextOutA(g_draw_hdc, x, y, text, len);
+SetBkMode(g_draw_hdc, TRANSPARENT);
+  SetTextColor(g_draw_hdc, color);
+  TextOutA(g_draw_hdc, x, y, text, len);
     if (old) SelectObject(g_draw_hdc, old);
     return true;
 }
@@ -166,13 +166,13 @@ void Platform_GetItemColors(int idx, int count, unsigned long *num_color, unsign
 
 bool Platform_DrawRectRaw(int x, int y, int w, int h, unsigned long color) {
     measure_track(x, y, w, h);
-    RECT rect;
-    rect.left = x;
-    rect.top = y;
-    rect.right = x + w;
-    rect.bottom = y + h;
+RECT rect;
+  rect.left = x;
+  rect.top = y;
+  rect.right = x + w;
+  rect.bottom = y + h;
 
-    HBRUSH hBrush = CreateSolidBrush(color);
+  HBRUSH hBrush = CreateSolidBrush(color);
 
     FillRect(g_draw_hdc, &rect, hBrush);
 
