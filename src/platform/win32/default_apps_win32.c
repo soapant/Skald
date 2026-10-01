@@ -41,20 +41,47 @@ const char* win32_default_apps_progid(const char* subkey, int slot) {
     return win32_default_apps_read_sz(subkey, "ProgId", slot);
 }
 
-static const char* scan_start_menu_for_app(const char* const possibilities[], size_t count) {
-    ListOfFiles files = {0};
-    Platform_GetAllFilesFromDir("C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs", NULL, &files, NULL, true);
+static ListOfFiles g_sm_files;
+static bool g_sm_scanned = false;
+#define SM_SLOTS 8
+static char g_sm_match[SM_SLOTS][128];
+static bool g_sm_slot_done[SM_SLOTS];
 
+static const char* sm_lookup(int slot, const char* const possibilities[], size_t count) {
+    if (slot < 0 || slot >= SM_SLOTS) return NULL;
+    if (g_sm_slot_done[slot]) return g_sm_match[slot][0] ? g_sm_match[slot] : NULL;
+    g_sm_slot_done[slot] = true;
+
+    if (!g_sm_scanned) {
+        g_sm_scanned = true;
+        Platform_GetAllFilesFromDir("C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs",
+                                    NULL, &g_sm_files, NULL, true);
+    }
     for (size_t j = 0; j < count; j++) {
-        for (int i = 0; i < files.count; i++) {
-            if (Platform_StringContainsCaseInsensitive(files.files[i].name, possibilities[j])) {
-                char* name = files.files[i].name;
+        for (int i = 0; i < g_sm_files.count; i++) {
+            if (Platform_StringContainsCaseInsensitive(g_sm_files.files[i].name, possibilities[j])) {
+                char* name = g_sm_files.files[i].name;
                 name[0] = (char)tolower((unsigned char)name[0]);
-                return name;
+                snprintf(g_sm_match[slot], sizeof(g_sm_match[slot]), "%s", name);
+                return g_sm_match[slot];
             }
         }
     }
     return NULL;
+}
+
+void win32_default_apps_free_cache(void) {
+    if (g_sm_files.files) {
+        free(g_sm_files.files);
+        g_sm_files.files = NULL;
+    }
+    g_sm_files.count = 0;
+    g_sm_files.capacity = 0;
+    g_sm_scanned = false;
+    for (int i = 0; i < SM_SLOTS; i++) {
+        g_sm_match[i][0] = '\0';
+        g_sm_slot_done[i] = false;
+    }
 }
 
 const char* get_default_terminal(void) {
@@ -67,7 +94,7 @@ const char* get_default_terminal(void) {
         "Windows PowerShell "
     };
     
-    const char* found = scan_start_menu_for_app(possible_terminals, ARRAY_LEN(possible_terminals));
+    const char* found = sm_lookup(0, possible_terminals, ARRAY_LEN(possible_terminals));
     return found ? found : "pwsh";
 }
 
@@ -78,7 +105,7 @@ const char* get_default_browser(void) {
         "Pale Moon", "Internet Explorer","Zen"
     };
 
-    const char* found = scan_start_menu_for_app(possible_browsers, ARRAY_LEN(possible_browsers));
+    const char* found = sm_lookup(1, possible_browsers, ARRAY_LEN(possible_browsers));
     return found ? found : "chrome";
 }
 
@@ -89,7 +116,7 @@ const char* get_default_video_player(void) {
         "Windows Media Player"
     };
 
-    const char* found = scan_start_menu_for_app(possible_video_players, ARRAY_LEN(possible_video_players));
+    const char* found = sm_lookup(2, possible_video_players, ARRAY_LEN(possible_video_players));
     return found ? found : "vlc";
 }
 
@@ -100,7 +127,7 @@ const char* get_default_music_player(void) {
         "Clementine", "VLC media player"
     };
 
-    const char* found = scan_start_menu_for_app(possible_music_players, ARRAY_LEN(possible_music_players));
+    const char* found = sm_lookup(3, possible_music_players, ARRAY_LEN(possible_music_players));
     return found ? found : "vlc";
 }
 
@@ -110,7 +137,7 @@ const char* get_default_image_viewer(void) {
         "Honeyview", "ImageGlass", "DigiKam"
     };
 
-    const char* found = scan_start_menu_for_app(possible_image_viewers, ARRAY_LEN(possible_image_viewers));
+    const char* found = sm_lookup(4, possible_image_viewers, ARRAY_LEN(possible_image_viewers));
     return found ? found : "mspaint";
 }
 
