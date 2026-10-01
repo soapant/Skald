@@ -733,7 +733,7 @@ Window x11_create_window_ex_or(Display* dpy, int x, int y, int w, int h, unsigne
         XFree(sh);
     }
     XSelectInput(dpy, win, event_mask);
-    if (RoundedCorners && CornerRadius > 0) {
+    if (RoundedCorners && !override_redirect && CornerRadius > 0) {
         x11_apply_shape_rounded(dpy, win, w, h, CornerRadius);
     }
     PROFILE_END_VAR(timer, "helpers_x11:x11_create_window_ex_or");

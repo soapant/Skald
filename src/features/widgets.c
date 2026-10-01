@@ -14,7 +14,7 @@
 
 #define COLOR RGB(1, 1, 1)
 #define FPS 1
-#define BG true
+#define NO_BG true
 #define FONTSIZE 14
 
 static bool percentage = false;
@@ -244,28 +244,28 @@ FLINT_FEATURE_INIT {
     g_disk = fl_widget(.name = "disk_usage",
               .color = COLOR,
               .fps = FPS,
-              .no_bg = BG,
+              .no_bg = NO_BG,
               .slot = FL_WIDGET_SLOT_BOTTOM_LEFT,
               .render = widgets_disk_usage_render);
 
     g_mem = fl_widget(.name = "memory_usage",
               .color = COLOR,
               .fps = FPS,
-              .no_bg = BG,
+              .no_bg = NO_BG,
               .slot = FL_WIDGET_SLOT_BOTTOM_LEFT,
               .render = widgets_memory_usage_render);
 
     g_cpu = fl_widget(.name = "cpu_usage",
               .color = COLOR,
               .fps = FPS,
-              .no_bg = BG,
+              .no_bg = NO_BG,
               .slot = FL_WIDGET_SLOT_BOTTOM_LEFT,
               .render = widgets_cpu_usage_render);
 
     fl_widget(.name = "date_and_time",
               .color = COLOR,
               .fps = FPS,
-              .no_bg = BG,
+              .no_bg = NO_BG,
               .slot = FL_WIDGET_SLOT_BOTTOM_RIGHT,
               .render = widgets_date_and_time_render);
 
