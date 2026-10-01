@@ -733,7 +733,7 @@ Window x11_create_window_ex_or(Display* dpy, int x, int y, int w, int h, unsigne
         XFree(sh);
     }
     XSelectInput(dpy, win, event_mask);
-    if (RoundedCorners && (!use_argb || !x11_has_compositor(dpy, screen))) {
+    if (RoundedCorners && CornerRadius > 0) {
         x11_apply_shape_rounded(dpy, win, w, h, CornerRadius);
     }
     PROFILE_END_VAR(timer, "helpers_x11:x11_create_window_ex_or");
@@ -743,55 +743,19 @@ Window x11_create_window_ex_or(Display* dpy, int x, int y, int w, int h, unsigne
 static void x11_apply_shape_rounded(Display* dpy, Window win, int w, int h, int radius) {
     PROFILE_START(timer);
     if (radius <= 0 || w <= 0 || h <= 0) { PROFILE_END_VAR(timer, "helpers_x11:x11_apply_shape_rounded"); return; }
-    Pixmap mask = XCreatePixmap(dpy, win, w, h, 8);
+    Pixmap mask = XCreatePixmap(dpy, win, w, h, 1);
     GC gc = XCreateGC(dpy, mask, 0, NULL);
-    unsigned char *img = calloc((size_t)w * (size_t)h, 1);
-    if (!img) {
-        XFreePixmap(dpy, mask);
-        XFreeGC(dpy, gc);
-        PROFILE_END_VAR(timer, "helpers_x11:x11_apply_shape_rounded");
-        return;
-    }
-    const float edge_lo = (float)radius - 0.5f;
-    const float edge_hi = (float)radius + 0.5f;
-    const float edge_sq_lo = edge_lo * edge_lo;
-    const float edge_sq_hi = edge_hi * edge_hi;
-    for (int py = 0; py < h; py++) {
-        for (int px = 0; px < w; px++) {
-            int a = 255;
-            bool in_corner_x = (px < radius) || (px >= w - radius);
-            bool in_corner_y = (py < radius) || (py >= h - radius);
-            if (in_corner_x && in_corner_y) {
-                float cx = (px < radius) ? (float)radius : (float)(w - radius - 1);
-                float cy = (py < radius) ? (float)radius : (float)(h - radius - 1);
-                float ddx = px + 0.5f - (cx + 0.5f);
-                float ddy = py + 0.5f - (cy + 0.5f);
-                float d_sq = ddx*ddx + ddy*ddy;
-                if (d_sq >= edge_sq_hi) {
-                    a = 0;
-                } else if (d_sq > edge_sq_lo) {
-                    float d = sqrtf(d_sq);
-                    float cov = edge_hi - d;
-                    if (cov < 0.0f) cov = 0.0f;
-                    if (cov > 1.0f) cov = 1.0f;
-                    a = (int)(cov * 255.0f + 0.5f);
-                }
-            }
-            img[(size_t)py * (size_t)w + (size_t)px] = (unsigned char)a;
-        }
-    }
-    XImage *ximg = XCreateImage(dpy, DefaultVisual(dpy, DefaultScreen(dpy)),
-                                8, ZPixmap, 0, (char *)img, w, h, 32, 0);
-    if (!ximg) {
-        free(img);
-        XFreePixmap(dpy, mask);
-        XFreeGC(dpy, gc);
-        PROFILE_END_VAR(timer, "helpers_x11:x11_apply_shape_rounded");
-        return;
-    }
-    XPutImage(dpy, mask, gc, ximg, 0, 0, 0, 0, w, h);
-    XDestroyImage(ximg);
-    free(img);
+    XSetForeground(dpy, gc, 0);
+    XFillRectangle(dpy, mask, gc, 0, 0, w, h);
+    XSetForeground(dpy, gc, 1);
+
+    XFillRectangle(dpy, mask, gc, radius, 0, w - 2*radius, h);
+    XFillRectangle(dpy, mask, gc, 0, radius, w, h - 2*radius);
+
+    XFillArc(dpy, mask, gc, 0, 0, radius*2, radius*2, 0, 360*64);
+    XFillArc(dpy, mask, gc, w - radius*2 -1, 0, radius*2, radius*2, 0, 360*64);
+    XFillArc(dpy, mask, gc, 0, h - radius*2 -1, radius*2, radius*2, 0, 360*64);
+    XFillArc(dpy, mask, gc, w - radius*2 -1, h - radius*2 -1, radius*2, radius*2, 0, 360*64);
     XShapeCombineMask(dpy, win, ShapeBounding, 0, 0, mask, ShapeSet);
     XFreePixmap(dpy, mask);
     XFreeGC(dpy, gc);
@@ -867,21 +831,28 @@ static unsigned int HashNoise(int x, int y) {
     return Color_HashNoise(x, y);
 }
 static unsigned int CornerAlpha(int x, int y, int w, int h, int R, unsigned int baseAlpha8) {
-    float dx, dy, d_sq, R_plus_sq, R_minus_sq;
-    if (x < R && y < R) { dx = R - x - 0.5f; dy = R - y - 0.5f; }
-    else if (x >= w - R && y < R) { dx = x - (w - R) + 0.5f; dy = R - y - 0.5f; }
-    else if (x < R && y >= h - R) { dx = R - x - 0.5f; dy = y - (h - R) + 0.5f; }
-    else if (x >= w - R && y >= h - R) { dx = x - (w - R) + 0.5f; dy = y - (h - R) + 0.5f; }
+    float cx, cy;
+    if (x < R && y < R) { cx = (float)R; cy = (float)R; }
+    else if (x >= w - R && y < R) { cx = (float)(w - R - 1); cy = (float)R; }
+    else if (x < R && y >= h - R) { cx = (float)R; cy = (float)(h - R - 1); }
+    else if (x >= w - R && y >= h - R) { cx = (float)(w - R - 1); cy = (float)(h - R - 1); }
     else return baseAlpha8;
-    d_sq = dx*dx + dy*dy;
-    R_plus_sq = (R + 0.5f) * (R + 0.5f);
-    R_minus_sq = (R - 0.5f) * (R - 0.5f);
-    if (d_sq >= R_plus_sq) return 0;
-    if (d_sq > R_minus_sq) {
-        float d = sqrtf(d_sq);
-        return (unsigned int)(baseAlpha8 * (R + 0.5f - d) + 0.5f);
+
+    const int SS = 4;
+    int inside = 0;
+    for (int sy = 0; sy < SS; sy++) {
+        for (int sx = 0; sx < SS; sx++) {
+            float px = (float)x + ((float)sx + 0.5f) / (float)SS;
+            float py = (float)y + ((float)sy + 0.5f) / (float)SS;
+            float dx = px - (cx + 0.5f);
+            float dy = py - (cy + 0.5f);
+            if (dx*dx + dy*dy <= (float)R * (float)R) inside++;
+        }
     }
-    return baseAlpha8;
+    const int total = SS * SS;
+    if (inside <= 0) return 0;
+    if (inside >= total) return baseAlpha8;
+    return (unsigned int)((float)baseAlpha8 * ((float)inside / (float)total) + 0.5f);
 }
 
 void x11_free_cached_background(void) {
@@ -1045,7 +1016,8 @@ static void bg_cache_store(Display* dpy, Pixmap pm, const BgKey* k) {
 static Pixmap x11_create_background_pixmap(Display* dpy, Window win, int w, int h, XWindowAttributes* attrs, unsigned long base, unsigned int baseAlpha8) {
     Visual* vis = attrs->visual;
     int depth = attrs->depth;
-    bool hasAlpha = (depth == 32);
+    if (depth != 32) return None;
+    bool hasAlpha = true;
     bool rounded = RoundedCorners && CornerRadius > 0 && hasAlpha;
     int R = rounded ? CornerRadius : 0;
     if (R > w/2) R = w/2; if (R > h/2) R = h/2;
@@ -1057,7 +1029,7 @@ static Pixmap x11_create_background_pixmap(Display* dpy, Window win, int w, int 
     if (!img->data) { XDestroyImage(img); XFreePixmap(dpy, pm); return None; }
 
     unsigned int r = (base >> 16) & 0xFF, g = (base >> 8) & 0xFF, b = base & 0xFF;
-    unsigned long fill = hasAlpha ? (baseAlpha8 << 24) | (r << 16) | (g << 8) | b : (r << 16) | (g << 8) | b;
+    unsigned long fill = (baseAlpha8 << 24) | (r << 16) | (g << 8) | b;
     x11_generate_background_pixels((uint32_t*)img->data, img->bytes_per_line, w, h, R, baseAlpha8, base, fill);
 
     GC gc = XCreateGC(dpy, pm, 0, NULL);
@@ -1133,15 +1105,15 @@ void x11_draw_background_to_drawable(Display* dpy, Drawable drw, int w, int h) {
         vis = DefaultVisual(dpy, screen);
         depth = DefaultDepth(dpy, screen);
     }
-    bool hasAlpha = (depth == 32);
+bool hasAlpha = (depth == 32);
     bool rded = rounded && radius > 0 && hasAlpha;
     int R = rded ? radius : 0;
     if (R > w/2) R = w/2; if (R > h/2) R = h/2;
     unsigned int baseAlpha8 = (unsigned int)WindowOpacity;
     if (baseAlpha8 > 255) baseAlpha8 = 255;
-    if ((!EnableShaders || ShaderPreset == 0) && R <= 0) {
-        unsigned int cr = (base >> 16) & 0xFF, cg = (base >> 8) & 0xFF, cb = base & 0xFF;
-        unsigned long solid = hasAlpha ? (baseAlpha8 << 24) | (cr << 16) | (cg << 8) | cb : (cr << 16) | (cg << 8) | cb;
+    unsigned int cr0 = (base >> 16) & 0xFF, cg0 = (base >> 8) & 0xFF, cb0 = base & 0xFF;
+    if (!hasAlpha) {
+        unsigned long solid = (cr0 << 16) | (cg0 << 8) | cb0;
         GC sgc = XCreateGC(dpy, drw, 0, NULL);
         XSetForeground(dpy, sgc, solid);
         XFillRectangle(dpy, drw, sgc, 0, 0, w, h);
@@ -1152,8 +1124,8 @@ void x11_draw_background_to_drawable(Display* dpy, Drawable drw, int w, int h) {
     if (!img) return;
     img->data = (char*)calloc(1, h * img->bytes_per_line);
     if (!img->data) { XDestroyImage(img); return; }
-    unsigned int r = (base >> 16) & 0xFF, g = (base >> 8) & 0xFF, b = base & 0xFF;
-    unsigned long fill = hasAlpha ? (baseAlpha8 << 24) | (r << 16) | (g << 8) | b : (r << 16) | (g << 8) | b;
+    unsigned int r = cr0, g = cg0, b = cb0;
+    unsigned long fill = (baseAlpha8 << 24) | (r << 16) | (g << 8) | b;
     GC gc = XCreateGC(dpy, drw, 0, NULL);
     x11_generate_background_pixels((uint32_t*)img->data, img->bytes_per_line, w, h, R, baseAlpha8, base, fill);
     XPutImage(dpy, drw, gc, img, 0, 0, 0, 0, w, h);
