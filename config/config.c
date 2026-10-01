@@ -23,9 +23,9 @@ void ConfigApply(void) {
     AllowOtherFeatureTogglesInFeature = false;
     ModePersistsThroughFeatures = false;
     TimeOutForMessages = 1;
-    DoTimeDebugs = true;
-    DebugMode = true;
-    RoundedCorners = true;
+    DoTimeDebugs = false;
+    DebugMode = false;
+    RoundedCorners = false;
     CornerRadius = 14;
     EnableShaders = false;
     ShaderPreset = 1;
