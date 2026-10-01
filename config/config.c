@@ -24,7 +24,7 @@ void ConfigApply(void) {
     ModePersistsThroughFeatures = false;
     TimeOutForMessages = 1;
     DoTimeDebugs = true;
-    DebugMode = false;
+    DebugMode = true;
     RoundedCorners = true;
     CornerRadius = 14;
     EnableShaders = false;
@@ -61,7 +61,7 @@ void ConfigApply(void) {
     GradientItems = 30;
     GradientBrightness = 1.0f;
     CloseOnLossOfFocus = false;
-    Theme = "gruvbox";
+    Theme = "rose-pine";
     COLOR_BG = RGB(26, 27, 38);
     COLOR_TEXT = RGB(192, 202, 245);
     COLOR_ALTERNATE = RGB(158, 206, 106);
