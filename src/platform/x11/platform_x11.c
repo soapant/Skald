@@ -1831,6 +1831,10 @@ void CleanupPerFeatureVimMap(void) {
 
 void Platform_CleanupPlatformResources(void) {
     CleanupPerFeatureVimMap();
+    {
+        extern void x11_default_apps_free_cache(void);
+        x11_default_apps_free_cache();
+    }
     extern void FcFini(void);
     FcFini();
 }
