@@ -13,6 +13,7 @@
 #include <windows.h>
 #endif
 #include "core/window_manager.h"
+#include "core/timer.h"
 
 #define CONFIG_SRC "config/config.c"
 #define CONFIG_START_MARK "// <flint-config-generated>"
@@ -122,21 +123,40 @@ static bool config_load_copy(const char* uniq, LibHandle* out) {
 }
 
 static bool config_build_load_store(void) {
+    PROFILE_START(timer);
     const char* out = config_out_path();
-    if (!Platform_BuildFeature(CONFIG_SRC, out)) {
-        log_error("config compile failed, keeping current");
-        return false;
+    {
+        PROFILE_START(t_cfgcompile);
+        bool ok = Platform_BuildFeature(CONFIG_SRC, out);
+        PROFILE_END_VAR(t_cfgcompile, "config:compile_config_c");
+        if (!ok) {
+            log_error("config compile failed, keeping current");
+            PROFILE_END_VAR(timer, "config:build_load_store");
+            return false;
+        }
     }
     char uniq[256];
     snprintf(uniq, sizeof(uniq), "build/config.hot%d%s", ++g_cfg_seq, Platform_LibExtension());
-    if (!config_copy_file(out, uniq)) {
-        log_error("config copy failed, keeping current");
-        return false;
+    {
+        PROFILE_START(t_cfgcopy);
+        bool ok = config_copy_file(out, uniq);
+        PROFILE_END_VAR(t_cfgcopy, "config:copy_to_hot");
+        if (!ok) {
+            log_error("config copy failed, keeping current");
+            PROFILE_END_VAR(timer, "config:build_load_store");
+            return false;
+        }
     }
     LibHandle h = 0;
-    if (!config_load_copy(uniq, &h)) {
-        remove(uniq);
-        return false;
+    {
+        PROFILE_START(t_cfgdl);
+        bool ok = config_load_copy(uniq, &h);
+        PROFILE_END_VAR(t_cfgdl, "config:dlopen_apply");
+        if (!ok) {
+            remove(uniq);
+            PROFILE_END_VAR(timer, "config:build_load_store");
+            return false;
+        }
     }
     if (g_cfg_count >= 2) {
         Platform_UnloadLibrary(g_cfg_libs[0].handle);
@@ -148,11 +168,15 @@ static bool config_build_load_store(void) {
     strncpy(g_cfg_libs[g_cfg_count].uniq, uniq, sizeof(g_cfg_libs[g_cfg_count].uniq) - 1);
     g_cfg_libs[g_cfg_count].uniq[sizeof(g_cfg_libs[g_cfg_count].uniq) - 1] = '\0';
     g_cfg_count++;
+    PROFILE_END_VAR(timer, "config:build_load_store TOTAL");
     return true;
 }
 
 bool Config_Load(void) {
-    if (!config_build_load_store()) {
+    PROFILE_START(timer);
+    bool ok = config_build_load_store();
+    PROFILE_END_VAR(timer, "config:Config_Load");
+    if (!ok) {
         log_error("config load failed, running on built-in defaults");
         return false;
     }
