@@ -192,6 +192,20 @@ bool fl_replace_line_in_file(const char* filepath, int line_index, const char* n
 char* fl_popup_impl(const FlPopupSpec *spec);
 #define fl_popup(...) fl_popup_impl(&(FlPopupSpec){__VA_ARGS__})
 
+typedef struct {
+    const char* message;
+    const char* position;
+    int x;
+    int y;
+    int w;
+    int h;
+    int timeout;
+    ColorRef color;
+} FlMessageSpec;
+
+void fl_message_impl(const FlMessageSpec* spec);
+#define fl_message(...) fl_message_impl(&(FlMessageSpec){__VA_ARGS__})
+
 // =============================================================================
 // RAW WINDOW ACCESS (hardcore)
 // =============================================================================

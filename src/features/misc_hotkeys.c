@@ -7,13 +7,13 @@ static char current_keyword[256] = "";
 void ShowCurrentTime(void) {
   char* output = fl_run_terminal_command("date");
   if (output) {
-    SubjectiveMessageDisplay(output,140,3,COLOR_TEXT);
+    fl_message(.message = output);
   }
 }
 void ShowCurrentBatteryPercentage(void) {
   char* output = fl_run_terminal_command("cat /sys/class/power_supply/BAT0/capacity");
   if (output) {
-    SubjectiveMessageDisplay(output,140,3,COLOR_TEXT);
+    fl_message(.message = output);
   }
 }
 
@@ -71,7 +71,6 @@ void get_current_keyword(void) {
 
 void copy_seifisbad(void) {
     fl_copy_to_clipboard("seifisbad@gmail.com");
-    SubjectiveMessageDisplay("seifisbad@gmail.com",140,1,COLOR_TEXT);
 }
 void copy_password(void) {
     fl_copy_to_clipboard("i_am_retarded1");
