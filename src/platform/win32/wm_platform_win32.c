@@ -55,10 +55,10 @@ void Platform_WM_GetMonitorGeometry(int *ox, int *oy, int *ow, int *oh) {
             MONITORINFO mi;
             mi.cbSize = sizeof(mi);
             if (GetMonitorInfoA(mon, &mi)) {
-                x = mi.rcWork.left;
-                y = mi.rcWork.top;
-                w = mi.rcWork.right - mi.rcWork.left;
-                h = mi.rcWork.bottom - mi.rcWork.top;
+                x = mi.rcMonitor.left;
+                y = mi.rcMonitor.top;
+                w = mi.rcMonitor.right - mi.rcMonitor.left;
+                h = mi.rcMonitor.bottom - mi.rcMonitor.top;
             }
         }
     }
