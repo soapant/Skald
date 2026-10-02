@@ -229,6 +229,29 @@ bool Platform_ExpandPath(const char* template_path, char* out, size_t out_size) 
     PROFILE_START(timer);
     if (template_path == NULL || out_size == 0) { PROFILE_END_VAR(timer, "misc_x11:Platform_ExpandPath"); return false; }
 
+    if (template_path[0] == '~' && (template_path[1] == '/' || template_path[1] == '\0')) {
+        const char* home = Platform_GetRealHome();
+        if (home && home[0]) {
+            size_t hn = strlen(home);
+            size_t total = 0;
+            if (hn < out_size) { memcpy(out, home, hn); total = hn; }
+            const char* rest = template_path + 1;
+            while (*rest && total < out_size - 1) out[total++] = *rest++;
+            out[total] = '\0';
+            if (total >= 4) {
+                size_t i = total - 4;
+                if (out[i] == '.' &&
+                    (out[i+1] == 'e' || out[i+1] == 'E') &&
+                    (out[i+2] == 'x' || out[i+2] == 'X') &&
+                    (out[i+3] == 'e' || out[i+3] == 'E')) {
+                    out[i] = '\0';
+                }
+            }
+            PROFILE_END_VAR(timer, "misc_x11:Platform_ExpandPath");
+            return true;
+        }
+    }
+
     size_t o = 0;
     const char* p = template_path;
     while (*p != '\0' && o < out_size - 1) {

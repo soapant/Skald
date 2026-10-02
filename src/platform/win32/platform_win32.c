@@ -317,13 +317,14 @@ bool Platform_ShellExecuteWithVerb(const char* path, const char* verb, bool asyn
         log_error("ShellExecuteEx failed for '%s' verb='%s' err=%lu", path, verb ? verb : "open", GetLastError());
         return false;
     }
-log_info("Platform_ShellExecuteWithVerb path='%s' verb='%s' async=%d", path ? path : "", verb ? verb : "", async);;
+    log_info("Platform_ShellExecuteWithVerb path='%s' verb='%s' async=%d", path ? path : "", verb ? verb : "", async);
     return true;
-}
 
     if (!path) { log_error("path is NULL"); return false; }
+}
+
 bool Platform_IsCtrlPressed(void) {
-log_info("Platform_IsCtrlPressed completed");
+    log_info("Platform_IsCtrlPressed completed");
     return (GetKeyState(VK_CONTROL) & 0x8000) != 0;
 }
 
