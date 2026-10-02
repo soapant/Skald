@@ -6,6 +6,7 @@
 #include "core/context.h"
 #include "helpers/helpers_ui.h"
 #include "core/timer.h"
+#include "deps/log.h"
 #include <stdio.h>
 #include <string.h>
 #include <objidl.h>
@@ -201,6 +202,8 @@ typedef struct {
 
 static Win32ImgSlot g_img_cache[WIN32_IMG_CACHE_SLOTS];
 static ULONGLONG g_img_cache_tick = 0;
+static ULONGLONG g_img_cache_hits = 0;
+static ULONGLONG g_img_cache_misses = 0;
 static CRITICAL_SECTION g_img_cache_cs;
 static BOOL g_img_cache_cs_ready = FALSE;
 
@@ -296,14 +299,17 @@ static HBITMAP win32_load_scaled_bitmap(const char *path, HDC screen, int w, int
     gsi.DebugEventCallback = NULL;
     gsi.SuppressBackgroundThread = FALSE;
     gsi.SuppressExternalCodecs = FALSE;
-    if (GdiplusStartup(&token, &gsi, NULL) != Ok || token == 0) return NULL;
+    GpStatus _st = GdiplusStartup(&token, &gsi, NULL);
+    if (_st != Ok || token == 0) { log_error("img: GdiplusStartup failed st=%d", (int)_st); return NULL; }
 
     wchar_t wpath[MAX_PATH * 2];
     win32_utf8_to_wide(path, wpath, (int)(sizeof(wpath) / sizeof(wchar_t)));
 
     HBITMAP out = NULL;
     GpBitmap *src = NULL;
-    if (GdipCreateBitmapFromFile(wpath, &src) == Ok && src) {
+    GpStatus _fs = GdipCreateBitmapFromFile(wpath, &src);
+    if (_fs != Ok || !src) { log_error("img: GdipCreateBitmapFromFile failed st=%d path=%s", (int)_fs, path); if (src) GdipDisposeImage(src); GdiplusShutdown(token); return NULL; }
+    {
         UINT sw = 0, sh = 0;
         GdipGetImageWidth(src, &sw);
         GdipGetImageHeight(src, &sh);
@@ -341,6 +347,8 @@ static HBITMAP win32_load_scaled_bitmap(const char *path, HDC screen, int w, int
         GdipDisposeImage(src);
     }
     GdiplusShutdown(token);
+    if (!out) log_error("img: load produced no bitmap path=%s %dx%d", path, w, h);
+    else log_warn("img: loaded %s %dx%d (cache miss)", path, w, h);
     return out;
 }
 
@@ -358,9 +366,10 @@ bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
     if (!screen) { PROFILE_END_VAR(timer, "win32:Platform_DrawImageAt"); return false; }
 
     HBITMAP bmp = win32_img_cache_get(path, screen, w, h);
+    if (bmp) g_img_cache_hits++;
     if (!bmp) {
         bmp = win32_load_scaled_bitmap(path, screen, w, h);
-        if (bmp) win32_img_cache_put(path, screen, w, h, bmp);
+        if (bmp) { win32_img_cache_put(path, screen, w, h, bmp); g_img_cache_misses++; }
     }
     bool ok = false;
     if (bmp) {
@@ -379,6 +388,9 @@ bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
         }
     }
     ReleaseDC(NULL, screen);
+    if ((g_img_cache_hits + g_img_cache_misses) % 60 == 0) {
+        log_warn("img: cache hits=%llu misses=%llu", g_img_cache_hits, g_img_cache_misses);
+    }
     PROFILE_END_VAR(timer, "win32:Platform_DrawImageAt");
     return ok;
 }
