@@ -22,7 +22,6 @@ static inline WinTimer TimerStart(void) {
 }
 
 void TimerEnd(WinTimer t, const char* operation_name);
-void TimerEndAlways(WinTimer t, const char* operation_name);
 double TimerElapsedUs(WinTimer t);
 void TimerPrintRaw(double elapsed_us, const char* operation_name);
 
