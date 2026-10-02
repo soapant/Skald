@@ -3,8 +3,6 @@
 #include <stdlib.h>
 
 
-const char* TextEditor = "nvim";
-
 const char* TerminalZoxideFilePath = "TerminalZoxide.txt";
 static void zoxide_refresh(const char* filter, ListBoxInfo* lb) {
     FlStringList files = fl_load_file_list(TerminalZoxideFilePath);
@@ -31,37 +29,6 @@ static void TriggerZoxide(void) {
     FlStringList files = fl_load_file_list(TerminalZoxideFilePath);
     PROMPT(.title = "⌨️ Zoxide", .items = (const char**)files.items,
            .refresh = zoxide_refresh, .enter = zoxide_enter, .edit = zoxide_edit);
-    fl_free_file_list(&files);
-}
-
-const char* TextEditorZoxideFilePath = "NvimZoxide.txt";
-static void text_editor_refresh(const char* filter, ListBoxInfo* lb) {
-    FlStringList files = fl_load_file_list(TextEditorZoxideFilePath);
-    fl_populate_listbox(lb, filter, (const char**)files.items, files.count);
-    fl_free_file_list(&files);
-}
-static bool text_editor_enter(const char* selection, ListBoxInfo* lb) {
-    char* path = fl_get_zoxide_match((char*)selection);
-    if (!path) return false;
-     char cmd_args[512];
-     snprintf(cmd_args, sizeof(cmd_args), "-e %s \"%s\"", TextEditor, path);
-     fl_launch_terminal_at_path(path, cmd_args);
-    if (!fl_is_selected(lb)) fl_append_unique_line(TextEditorZoxideFilePath, selection);
-    free(path);
-    return true;
-}
-static void text_editor_edit(const char* selection, ListBoxInfo* lb) {
-    int idx = -1;
-    char* edited = fl_edit_text_popup(.initial_text = selection,.lb = lb, .out_index = &idx);
-    if (!edited) return;
-    if (idx >= 0) fl_replace_line_in_file(TextEditorZoxideFilePath, idx, edited);
-    free(edited);
-    text_editor_refresh("", lb);
-}
-static void TriggerTextEditorZoxide(void) {
-    FlStringList files = fl_load_file_list(TextEditorZoxideFilePath);
-    PROMPT(.title = "TextEditor", .items = (const char**)files.items,
-           .refresh = text_editor_refresh, .enter = text_editor_enter, .edit = text_editor_edit);
     fl_free_file_list(&files);
 }
 
@@ -128,10 +95,8 @@ static void TriggerFileManager(void) {
 
 FLINT_FEATURE_INIT {
     fl_register_hotkey("Alt+W", TriggerZoxide, "Fortnite");
-    fl_register_hotkey("Alt+I", TriggerTextEditorZoxide, "Fortnite");
     fl_register_hotkey("Alt+R",TriggerFileManager,"Fortnite");
 
     fl_register_feature("Zoxide", TriggerZoxide);
-    fl_register_feature("Zoxide Text Editor", TriggerTextEditorZoxide);
     fl_register_feature("File Manager", TriggerFileManager);
 }
