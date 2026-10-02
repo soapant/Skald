@@ -33,7 +33,6 @@ typedef enum {
     BOTTOM_LEFT,
     BOTTOM_CENTER,
     BOTTOM_RIGHT,
-
     TOP_LEFT_RELATIVE,
     TOP_CENTER_RELATIVE,
     TOP_RIGHT_RELATIVE,
@@ -43,8 +42,7 @@ typedef enum {
     BOTTOM_LEFT_RELATIVE,
     BOTTOM_CENTER_RELATIVE,
     BOTTOM_RIGHT_RELATIVE,
-
-    FL_FREE
+    FREE
 } MessageSlot;
 
 
