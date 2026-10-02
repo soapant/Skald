@@ -270,11 +270,103 @@ const char* ListBoxItemDisplayText(ListBoxInfo* lb, int idx, char* trunc, size_t
     return trunc;
 }
 
-static bool x11_blit_argb(Display* dpy, Drawable drw, Visual* vis, unsigned char* argb, int w, int h, int x, int y) {
-    if (!dpy || !argb || w <= 0 || h <= 0) { free(argb); return false; }
+#define IMG_CACHE_SLOTS 16
+
+static bool x11_blit_argb_owned(Display* dpy, Drawable drw, Visual* vis, unsigned char* argb, int w, int h, int x, int y, bool owns);
+static bool x11_blit_argb(Display* dpy, Drawable drw, Visual* vis, unsigned char* argb, int w, int h, int x, int y);
+static unsigned char* x11_decode_image_argb(const char* path, int* out_w, int* out_h);
+
+typedef struct {
+    char key[512];
+    int w, h;
+    long long mtime;
+    long long size;
+    unsigned char* argb;
+    unsigned long stamp;
+} ImgCacheSlot;
+
+static ImgCacheSlot g_img_cache[IMG_CACHE_SLOTS];
+static unsigned long g_img_cache_tick = 0;
+static pthread_mutex_t g_img_cache_mtx = PTHREAD_MUTEX_INITIALIZER;
+
+void x11_img_cache_free_all(void) {
+    pthread_mutex_lock(&g_img_cache_mtx);
+    for (int i = 0; i < IMG_CACHE_SLOTS; i++) {
+        if (g_img_cache[i].argb) free(g_img_cache[i].argb);
+        memset(&g_img_cache[i], 0, sizeof(g_img_cache[i]));
+    }
+    pthread_mutex_unlock(&g_img_cache_mtx);
+}
+
+static unsigned char* x11_img_cache_get(const char* key, int w, int h, long long mtime, long long size) {
+    for (int i = 0; i < IMG_CACHE_SLOTS; i++) {
+        ImgCacheSlot* s = &g_img_cache[i];
+        if (!s->argb) continue;
+        if (s->w == w && s->h == h && s->mtime == mtime && s->size == size && strcmp(s->key, key) == 0) {
+            s->stamp = ++g_img_cache_tick;
+            return s->argb;
+        }
+    }
+    return NULL;
+}
+
+static void x11_img_cache_put(const char* key, int w, int h, long long mtime, long long size, unsigned char* argb) {
+    if (!argb) return;
+    int slot = -1;
+    unsigned long oldest = ~0UL;
+    for (int i = 0; i < IMG_CACHE_SLOTS; i++) {
+        ImgCacheSlot* s = &g_img_cache[i];
+        if (!s->argb) { slot = i; break; }
+        if (s->stamp < oldest) { oldest = s->stamp; slot = i; }
+    }
+    if (slot < 0) slot = 0;
+    ImgCacheSlot* s = &g_img_cache[slot];
+    if (s->argb) free(s->argb);
+    snprintf(s->key, sizeof(s->key), "%s", key);
+    s->w = w;
+    s->h = h;
+    s->mtime = mtime;
+    s->size = size;
+    s->argb = argb;
+    s->stamp = ++g_img_cache_tick;
+}
+
+bool Platform_DrawImageScaled(Display* dpy, XftDraw* xd, Visual* vis, const char* path, int x, int y, int tw, int th) {
+    PROFILE_START(timer);
+    if (!dpy || !xd || !path || !path[0]) { PROFILE_END_VAR(timer, "helpers_x11:Platform_DrawImageScaled"); return false; }
+    struct stat st;
+    if (stat(path, &st) != 0) { PROFILE_END_VAR(timer, "helpers_x11:Platform_DrawImageScaled"); return false; }
+    if (tw <= 0) tw = IconSize;
+    if (th <= 0) th = IconSize;
+    int cw = tw;
+    int ch = th;
+    unsigned char* argb = NULL;
+    pthread_mutex_lock(&g_img_cache_mtx);
+    argb = x11_img_cache_get(path, cw, ch, (long long)st.st_mtime, (long long)st.st_size);
+    if (argb) {
+        pthread_mutex_unlock(&g_img_cache_mtx);
+        Drawable drw = XftDrawDrawable(xd);
+        bool ok = x11_blit_argb_owned(dpy, drw, vis, argb, cw, ch, x, y, false);
+        PROFILE_END_VAR(timer, "helpers_x11:Platform_DrawImageScaled");
+        return ok;
+    }
+    pthread_mutex_unlock(&g_img_cache_mtx);
+    argb = x11_decode_image_argb(path, &cw, &ch);
+    if (!argb) { PROFILE_END_VAR(timer, "helpers_x11:Platform_DrawImageScaled"); return false; }
+    pthread_mutex_lock(&g_img_cache_mtx);
+    x11_img_cache_put(path, cw, ch, (long long)st.st_mtime, (long long)st.st_size, argb);
+    pthread_mutex_unlock(&g_img_cache_mtx);
+    Drawable drw = XftDrawDrawable(xd);
+    bool ok = x11_blit_argb_owned(dpy, drw, vis, argb, cw, ch, x, y, false);
+    PROFILE_END_VAR(timer, "helpers_x11:Platform_DrawImageScaled");
+    return ok;
+}
+
+static bool x11_blit_argb_owned(Display* dpy, Drawable drw, Visual* vis, unsigned char* argb, int w, int h, int x, int y, bool owns) {
+    if (!dpy || !argb || w <= 0 || h <= 0) { if (owns) free(argb); return false; }
     if (!vis) vis = DefaultVisualOfScreen(DefaultScreenOfDisplay(dpy));
     XImage* img = XCreateImage(dpy, vis, 32, ZPixmap, 0, (char*)argb, w, h, 32, 0);
-    if (!img) { free(argb); return false; }
+    if (!img) { if (owns) free(argb); return false; }
     Pixmap pix = XCreatePixmap(dpy, drw, w, h, 32);
     if (!pix) { XDestroyImage(img); return false; }
     GC gc = XCreateGC(dpy, pix, 0, NULL);
@@ -293,18 +385,19 @@ static bool x11_blit_argb(Display* dpy, Drawable drw, Visual* vis, unsigned char
         if (src) XRenderFreePicture(dpy, src);
         if (dst) XRenderFreePicture(dpy, dst);
     }
-    XDestroyImage(img);
+    if (owns) XDestroyImage(img);
     XFreePixmap(dpy, pix);
     return ok;
 }
 
-bool Platform_DrawImageScaled(Display* dpy, XftDraw* xd, Visual* vis, const char* path, int x, int y, int tw, int th) {
-    if (!dpy || !xd || !path || !path[0]) return false;
-    if (access(path, F_OK) != 0) return false;
-    if (tw <= 0) tw = IconSize;
-    if (th <= 0) th = IconSize;
-    int dst_w = tw;
-    int dst_h = th;
+static bool x11_blit_argb(Display* dpy, Drawable drw, Visual* vis, unsigned char* argb, int w, int h, int x, int y) {
+    return x11_blit_argb_owned(dpy, drw, vis, argb, w, h, x, y, true);
+}
+
+static unsigned char* x11_decode_image_argb(const char* path, int* out_w, int* out_h) {
+    if (!path || !path[0]) return NULL;
+    int dst_w = *out_w;
+    int dst_h = *out_h;
     if (dst_w <= 0) dst_w = 16;
     if (dst_h <= 0) dst_h = 16;
     size_t _plen = strlen(path);
@@ -339,8 +432,9 @@ bool Platform_DrawImageScaled(Display* dpy, XftDraw* xd, Visual* vis, const char
         free(svg_data);
         nsvgDeleteRasterizer(rast);
         nsvgDelete(image);
-        Drawable drw = XftDrawDrawable(xd);
-        return x11_blit_argb(dpy, drw, vis, argb, dst_w, dst_h, x, y);
+        *out_w = dst_w;
+        *out_h = dst_h;
+        return argb;
     }
 
     FILE* fp = fopen(path, "rb");
@@ -465,8 +559,9 @@ bool Platform_DrawImageScaled(Display* dpy, XftDraw* xd, Visual* vis, const char
     }
     free(data);
 
-    Drawable drw = XftDrawDrawable(xd);
-    return x11_blit_argb(dpy, drw, vis, argb, dst_w, dst_h, x, y);
+    *out_w = dst_w;
+    *out_h = dst_h;
+    return argb;
 }
 
 void DrawListBoxItemText(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap, FontHandle font,

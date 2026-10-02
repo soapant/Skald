@@ -1639,6 +1639,10 @@ void Platform_CleanupPlatformResources(void) {
         extern void x11_default_apps_free_cache(void);
         x11_default_apps_free_cache();
     }
+    {
+        extern void x11_img_cache_free_all(void);
+        x11_img_cache_free_all();
+    }
     extern void FcFini(void);
     FcFini();
 }
