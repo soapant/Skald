@@ -40,6 +40,7 @@ static void layer_fill(PlatformWidget *widget, unsigned int argb) {
 }
 
 static LRESULT CALLBACK FlintWidgetProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+static void widget_queue_click(void (*fn)(void));
 
 static void widget_register_class(void) {
     static LONG registered = 0;
@@ -177,7 +178,7 @@ static LRESULT CALLBACK FlintWidgetProc(HWND hwnd, UINT msg, WPARAM wParam, LPAR
         return HTTRANSPARENT;
     }
     case WM_LBUTTONDOWN: {
-        if (widget && widget->on_click) widget->on_click();
+        if (widget && widget->on_click) widget_queue_click(widget->on_click);
         return 0;
     }
     case WM_PAINT: {
@@ -225,9 +226,49 @@ static void widget_frame(void *ud) {
     }
 }
 
-bool Platform_Widget_DispatchClick(long window_id) {
-    (void)window_id;
-    return false;
+#define WCLICK_MAX 32
+static void (*g_wclick[WCLICK_MAX])(void);
+static int g_wclick_head = 0, g_wclick_tail = 0;
+static CRITICAL_SECTION g_wclick_cs;
+static LONG g_wclick_cs_ready = 0;
+
+static void wclick_lock(void) {
+    if (InterlockedCompareExchange(&g_wclick_cs_ready, 1, 0) == 0) {
+        InitializeCriticalSection(&g_wclick_cs);
+    }
+    EnterCriticalSection(&g_wclick_cs);
+}
+static void wclick_unlock(void) {
+    if (InterlockedCompareExchange(&g_wclick_cs_ready, 1, 0) == 0) {
+        InitializeCriticalSection(&g_wclick_cs);
+    }
+    LeaveCriticalSection(&g_wclick_cs);
+}
+
+static void widget_queue_click(void (*fn)(void)) {
+    if (!fn) return;
+    wclick_lock();
+    int next = (g_wclick_tail + 1) % WCLICK_MAX;
+    if (next != g_wclick_head) {
+        g_wclick[g_wclick_tail] = fn;
+        g_wclick_tail = next;
+    }
+    wclick_unlock();
+}
+
+void Platform_Widget_DrainClicks(void) {
+    for (;;) {
+        void (*fn)(void) = NULL;
+        wclick_lock();
+        if (g_wclick_head != g_wclick_tail) {
+            fn = g_wclick[g_wclick_head];
+            g_wclick[g_wclick_head] = NULL;
+            g_wclick_head = (g_wclick_head + 1) % WCLICK_MAX;
+        }
+        wclick_unlock();
+        if (!fn) break;
+        fn();
+    }
 }
 
 void Platform_Widget_Invalidate(PlatformWidget *widget) {
@@ -254,8 +295,10 @@ PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps, bool
     widget->last_draw_ms = 0;
 
     HINSTANCE hInstance = GetModuleHandle(NULL);
+    DWORD exstyle = WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED | WS_EX_NOACTIVATE;
+    if (!on_click) exstyle |= WS_EX_TRANSPARENT;
     widget->hwnd = CreateWindowExA(
-        WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED | WS_EX_NOACTIVATE | WS_EX_TRANSPARENT,
+        exstyle,
         FLINT_WIDGET_CLASS, NULL, WS_POPUP,
         x, y, w, h, NULL, NULL, hInstance, widget
     );

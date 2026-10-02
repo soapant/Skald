@@ -20,5 +20,6 @@ void Platform_Widget_Invalidate(PlatformWidget *widget);
 int Platform_Widget_Width(const PlatformWidget *widget);
 int Platform_Widget_Height(const PlatformWidget *widget);
 bool Platform_Widget_DispatchClick(long window_id);
+void Platform_Widget_DrainClicks(void);
 
 #endif

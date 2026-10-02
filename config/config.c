@@ -45,8 +45,6 @@ void ConfigApply(void) {
     UsedTerminal = "";
     UsedShell = "nu";
     UsedBrowser = "";
-    UsedImageViewer = "";
-    UsedVideoPlayer = "";
     UsedSearchEngine = "google";
     FeaturePath = "src/features";
     IconPath = "{MISC}/switch_window.ico";
