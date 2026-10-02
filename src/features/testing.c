@@ -2,6 +2,7 @@
 
 
 void Testing(void) {
+  fl_launch_with_args("nob.c",NULL);
 }
 
 
