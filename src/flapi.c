@@ -1803,7 +1803,7 @@ static void fl_widget_attach_window(void *ud) {
     bool created = false;
     if (!Platform_Widget_IsValid(widget->win)) {
         Platform_SetDrawBgColor(widget->has_bg ? widget->bg_hex : 0);
-        widget->win = Platform_Widget_Create(widget->x, widget->y, widget->w, widget->h, widget->fps, widget->no_bg);
+        widget->win = Platform_Widget_Create(widget->x, widget->y, widget->w, widget->h, widget->fps, widget->no_bg, widget->on_click);
         Platform_SetDrawBgColor(0);
         created = (widget->win != NULL);
     } else {
@@ -1923,6 +1923,7 @@ FlWidget *fl_widget_create(const FlWidgetSpec *spec) {
     widget->order = spec->order;
     widget->order_set = spec->order > 0;
     widget->render = spec->render;
+    widget->on_click = spec->on_click;
     widget->free_pos = (spec->slot == FL_WIDGET_FREE);
     widget->frame = 0;
     widget->created_at = fl_start_timer_platform();

@@ -364,6 +364,7 @@ typedef struct {
     int fps;
     ColorRef color;
     bool no_bg;
+    void (*on_click)(void);
     FlWidgetRenderFn render;
     int x;
     int y;
@@ -403,6 +404,8 @@ struct FlWidget {
     FlTimer created_at;
     char *owner;
     unsigned gen;
+    void (*on_click)(void);
+    bool clickable;
 };
 
 FlWidget *fl_widget_create(const FlWidgetSpec *spec);

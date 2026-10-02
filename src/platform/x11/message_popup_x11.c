@@ -226,7 +226,7 @@ void Platform_DisplayMessage(const char* message, int centerX, int centerY, int 
     int cy = moy + moh / 2 + (centerY - 540);
     int x = cx - winW / 2;
     int y = cy - winH / 2;
-    Window win = x11_create_display_message_window(dpy, x, y, winW, winH);
+    Window win = x11_create_display_message_window(dpy, x, y, winW, winH, false);
     if (!win) return;
     g_msg_win = win;
     XMapWindow(dpy, win);

@@ -28,6 +28,7 @@
 #include "platform/x11/clipboard_x11.h"
 #include "platform/x11/input_x11.h"
 #include "platform/render_thread.h"
+#include "platform/widget.h"
 #include "core/timer.h"
 #include "core/remap_manager.h"
 #include "core/hotkey_manager.h"
@@ -140,6 +141,9 @@ static void x11_handle_key_release(Display* dpy, XKeyEvent* ev) {
 
 void Linux_ProcessXEvent(Display* dpy, XEvent* ev, WindowManager* wm) {
     if (x11_clipboard_handle_event(dpy, ev)) return; 
+    if (ev->type == ButtonPress && ev->xbutton.button == Button1) {
+        if (Platform_Widget_DispatchClick((long)ev->xbutton.window)) return;
+    }
     Popup* top = WindowManager_GetTopPopup(wm);
     if (!top) return;
     switch (ev->type) {
@@ -252,13 +256,42 @@ int WindowManager_RunLinux(WindowManager* wm) {
 
 
     while (wm->running) {
-        struct pollfd xfd = { .fd = ConnectionNumber(dpy), .events = POLLIN };
-        int poll_res = poll(&xfd, 1, 50);
+        Display* rdpy = (Display*)Platform_RenderThread_Display();
+        struct pollfd xfds[2];
+        int nfds = 0;
+        int main_idx = -1, render_idx = -1;
+        if (rdpy && rdpy != dpy) {
+            main_idx = nfds;
+            xfds[nfds].fd = ConnectionNumber(dpy);
+            xfds[nfds].events = POLLIN;
+            xfds[nfds].revents = 0;
+            nfds++;
+            render_idx = nfds;
+            xfds[nfds].fd = ConnectionNumber(rdpy);
+            xfds[nfds].events = POLLIN;
+            xfds[nfds].revents = 0;
+            nfds++;
+        } else {
+            main_idx = 0;
+            xfds[0].fd = ConnectionNumber(dpy);
+            xfds[0].events = POLLIN;
+            xfds[0].revents = 0;
+            nfds = 1;
+        }
+        int poll_res = poll(xfds, (nfds_t)nfds, 50);
         if (poll_res < 0) break;
-        if (xfd.revents & POLLIN) {
+        if (main_idx >= 0 && (xfds[main_idx].revents & POLLIN)) {
             while (XPending(dpy) > 0) {
                 XNextEvent(dpy, &xev);
                 Linux_ProcessXEvent(dpy, &xev, wm);
+            }
+        }
+        if (render_idx >= 0 && (xfds[render_idx].revents & POLLIN)) {
+            while (XPending(rdpy) > 0) {
+                XNextEvent(rdpy, &xev);
+                if (xev.type == ButtonPress && xev.xbutton.button == Button1) {
+                    Platform_Widget_DispatchClick((long)xev.xbutton.window);
+                }
             }
         }
         hotkey_drain_pending();
@@ -299,6 +332,18 @@ void WindowManager_ProcessEventsLinux(WindowManager* wm) {
     while (XPending(dpy) > 0) {
         XNextEvent(dpy, &ev);
         Linux_ProcessXEvent(dpy, &ev, wm);
+    }
+
+    Display* rdpy = (Display*)Platform_RenderThread_Display();
+    if (rdpy && rdpy != dpy) {
+        struct pollfd rfd = { .fd = ConnectionNumber(rdpy), .events = POLLIN };
+        poll(&rfd, 1, 0);
+        while (XPending(rdpy) > 0) {
+            XNextEvent(rdpy, &ev);
+            if (ev.type == ButtonPress && ev.xbutton.button == Button1) {
+                Platform_Widget_DispatchClick((long)ev.xbutton.window);
+            }
+        }
     }
 }
 

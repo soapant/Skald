@@ -33,7 +33,34 @@ struct PlatformWidget {
     long long last_draw_ms;
     int last_draw_w;
     int last_draw_h;
+    void (*on_click)(void);
 };
+
+#define WIDGET_REG_MAX 32
+static PlatformWidget* s_widgets[WIDGET_REG_MAX];
+
+static void widget_registry_add(PlatformWidget* w) {
+    for (int i = 0; i < WIDGET_REG_MAX; i++) {
+        if (!s_widgets[i]) { s_widgets[i] = w; return; }
+    }
+}
+static void widget_registry_remove(PlatformWidget* w) {
+    for (int i = 0; i < WIDGET_REG_MAX; i++) {
+        if (s_widgets[i] == w) { s_widgets[i] = NULL; return; }
+    }
+}
+
+bool Platform_Widget_DispatchClick(long window_id) {
+    for (int i = 0; i < WIDGET_REG_MAX; i++) {
+        PlatformWidget* w = s_widgets[i];
+        if (!w || w->dead) continue;
+        if ((long)w->win != window_id) continue;
+        if (!w->on_click) return false;
+        w->on_click();
+        return true;
+    }
+    return false;
+}
 
 static long long widget_now_ms(void) {
     struct timespec ts;
@@ -90,7 +117,7 @@ static void widget_frame(void *ud) {
     XFlush(dpy);
 }
 
-PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps, bool no_bg) {
+PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps, bool no_bg, void (*on_click)(void)) {
     if (w <= 0 || h <= 0) return NULL;
     if (!Platform_RenderThread_EnsureStarted(fps)) return NULL;
     Display *dpy = (Display *)Platform_RenderThread_Display();
@@ -108,13 +135,14 @@ PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps, bool
     widget->h = h;
     widget->fps = fps;
     widget->no_bg = no_bg;
+    widget->on_click = on_click;
     widget->dirty = true;
     widget->last_draw_ms = 0;
     widget->last_draw_w = 0;
     widget->last_draw_h = 0;
 
     Platform_SetTransparentWindow(no_bg);
-    widget->win = x11_create_display_message_window(dpy, x, y, w, h);
+    widget->win = x11_create_display_message_window(dpy, x, y, w, h, on_click != NULL);
     Platform_SetTransparentWindow(false);
     if (!widget->win) {
         free(widget);
@@ -138,12 +166,14 @@ PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps, bool
     XMapRaised(dpy, widget->win);
     XFlush(dpy);
     widget->mapped = true;
+    widget_registry_add(widget);
     return widget;
 }
 
 void Platform_Widget_Destroy(PlatformWidget *widget) {
     if (!widget || widget->dead) return;
     widget->dead = true;
+    widget_registry_remove(widget);
     Platform_RenderThread_RemoveFrameCallback(widget_frame, widget);
     Display *dpy = widget->dpy;
     if (dpy && widget->win != None) {
