@@ -140,6 +140,16 @@ static const PopupVTable g_prompt_popup_vtable = {
     .destroy = PromptPopup_Destroy
 };
 
+int PromptPopup_GetBounds(Popup* p, int* x, int* y, int* w, int* h) {
+    if (!p || p->type != POPUP_PROMPT) return 0;
+    PromptPopupData* d = (PromptPopupData*)p;
+    if (x) *x = d->x;
+    if (y) *y = d->y;
+    if (w) *w = d->w;
+    if (h) *h = d->h;
+    return 1;
+}
+
 Popup* PromptPopup_Create(WindowManager* wm, const PromptSpec* spec) {
     PROFILE_START(timer);
     if (!wm || !spec) { PROFILE_END_VAR(timer, "window_manager:PromptPopup_Create"); return NULL; }
