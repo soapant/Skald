@@ -323,20 +323,28 @@ static HBITMAP win32_load_scaled_bitmap(const char *path, HDC screen, int w, int
             bmi.biBitCount = 32;
             bmi.biCompression = BI_RGB;
             HDC mem = CreateCompatibleDC(screen);
+            if (!mem) log_error("img: CreateCompatibleDC failed");
             if (mem) {
                 void *bits = NULL;
                 HBITMAP dib = CreateDIBSection(mem, (BITMAPINFO *)&bmi, DIB_RGB_COLORS, &bits, NULL, 0);
+                if (!dib || !bits) log_error("img: CreateDIBSection failed err=%lu bits=%p", GetLastError(), bits);
                 if (dib && bits) {
                     GpBitmap *dst = NULL;
-                    if (GdipCreateBitmapFromScan0(w, h, 0, PixelFormat32bppARGB, bits, &dst) == Ok && dst) {
+                    GpStatus _ss = GdipCreateBitmapFromScan0(w, h, 0, PixelFormat32bppARGB, bits, &dst);
+                    if (_ss != Ok || !dst) log_error("img: GdipCreateBitmapFromScan0 failed st=%d w=%d h=%d", (int)_ss, w, h);
+                    if (_ss == Ok && dst) {
                         GpGraphics *g = NULL;
-                        if (GdipGetImageGraphicsContext(src, &g) == Ok && g) {
+                        GpStatus _gs = GdipGetImageGraphicsContext(src, &g);
+                        if (_gs != Ok || !g) log_error("img: GdipGetImageGraphicsContext failed st=%d", (int)_gs);
+                        if (_gs == Ok && g) {
                             GdipSetInterpolationMode(g, InterpolationModeHighQualityBicubic);
                             GdipDrawImageRectI(g, dst, 0, 0, w, h);
                             GdipDeleteGraphics(g);
                         }
                         HBITMAP hb = NULL;
-                        if (GdipCreateHBITMAPFromBitmap(dst, &hb, 0) == Ok && hb) out = hb;
+                        GpStatus _hs = GdipCreateHBITMAPFromBitmap(dst, &hb, 0);
+                        if (_hs != Ok || !hb) log_error("img: GdipCreateHBITMAPFromBitmap failed st=%d", (int)_hs);
+                        if (_hs == Ok && hb) out = hb;
                         GdipDisposeImage(dst);
                     }
                     DeleteObject(dib);
