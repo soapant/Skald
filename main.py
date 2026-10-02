@@ -20,4 +20,3 @@ for root, _, files in os.walk("."):
 
 print(f"Total lines: {lines}")
 print(f"Total files: {file_count}")
-print(f"Total lines per file: {int(lines / file_count)}")

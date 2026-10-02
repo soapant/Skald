@@ -37,12 +37,8 @@ void TimerPrintRaw(double elapsed_us, const char* operation_name) {
 void TimerEnd(WinTimer t, const char* operation_name) {
   double elapsed_us = timer_elapsed_us(t);
   if (DoTimeDebugs) {
-    if (elapsed_us < 1000.0) return;
+    if (elapsed_us < 200.0) return;
     timer_print(elapsed_us, operation_name);
   }
 }
 
-void TimerEndAlways(WinTimer t, const char* operation_name) {
-  if (!DoTimeDebugs) return;
-  timer_print(timer_elapsed_us(t), operation_name);
-}
