@@ -34,6 +34,7 @@ extern float WindowOpacity;
 extern int FontSize;
 extern const char* UsedFont;
 extern int IconSize;
+extern int WidgetGap;
 extern int MaxFeatures;
 extern int VimFontSize;
 extern int PaddingForScrolling;

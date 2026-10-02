@@ -26,6 +26,7 @@ int PageUpDownLen = 6;
 const char* UsedFont =  "0xProto Nerd Font";
 int FontSize = 20;
 int IconSize = 32;
+int WidgetGap = 10;
 int MaxFeatures = 1000;
 int VimFontSize = 18;
 int PaddingForScrolling = 3;

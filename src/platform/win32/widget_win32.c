@@ -31,6 +31,8 @@ struct PlatformWidget {
     void *layer_bits;
     int layer_w, layer_h;
     void (*on_click)(void);
+    char name[64];
+    int frame_printed;
 };
 
 static void layer_fill(PlatformWidget *widget, unsigned int argb) {
@@ -117,7 +119,7 @@ static void widget_paint_layered(PlatformWidget *widget) {
     Platform_SetDrawBgColor(0);
     GdiFlush();
 
-    {
+{
         unsigned int *px = (unsigned int *)widget->layer_bits;
         size_t n = (size_t)widget->layer_w * (size_t)widget->layer_h;
         for (size_t i = 0; i < n; i++) {
@@ -125,6 +127,23 @@ static void widget_paint_layered(PlatformWidget *widget) {
             if (a > 255) a = 255;
             if (a < 0) a = 0;
             px[i] = (px[i] & 0x00FFFFFFu) | ((unsigned int)a << 24);
+        }
+        static char dbg_done[8][64];
+        static int dbg_n = 0;
+        int dbg_idx = -1;
+        for (int k = 0; k < dbg_n; k++) if (strcmp(dbg_done[k], widget->name) == 0) dbg_idx = k;
+        if (dbg_idx < 0 && dbg_n < 8) { dbg_idx = dbg_n++; snprintf(dbg_done[dbg_n - 1], 64, "%s", widget->name); }
+        if (dbg_idx >= 0 && widget->frame_printed == 0) {
+            widget->frame_printed = 1;
+            unsigned int nz = 0, maxa = 0;
+            for (size_t i = 0; i < n; i++) {
+                unsigned int a = (px[i] >> 24) & 0xFF;
+                if (a) nz++;
+                if (a > maxa) maxa = a;
+            }
+            log_warn("wgt[%s] layer %dx%d nonzero_alpha=%u/%zu max_alpha=%u px0=%08x px1=%08x",
+                     widget->name, widget->layer_w, widget->layer_h, nz, n, maxa,
+                     n > 0 ? px[0] : 0u, n > 1 ? px[1] : 0u);
         }
     }
 
@@ -277,7 +296,7 @@ void Platform_Widget_Invalidate(PlatformWidget *widget) {
     Platform_RenderThread_Wake();
 }
 
-PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps, bool no_bg, void (*on_click)(void)) {
+PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps, bool no_bg, void (*on_click)(void), const char *name) {
     if (w <= 0 || h <= 0) return NULL;
     if (!Platform_RenderThread_EnsureStarted(fps)) return NULL;
     widget_register_class();
@@ -291,6 +310,7 @@ PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps, bool
     widget->fps = fps;
     widget->no_bg = no_bg;
     widget->on_click = on_click;
+    snprintf(widget->name, sizeof(widget->name), "%s", name ? name : "?");
     widget->dirty = true;
     widget->last_draw_ms = 0;
 
