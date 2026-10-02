@@ -196,7 +196,7 @@ typedef struct {
     FILETIME mtime;
     DWORD size;
     HDC screen;
-    HBITMAP bmp;
+    void* bmp;
     ULONGLONG stamp;
 } Win32ImgSlot;
 
@@ -292,7 +292,7 @@ static void win32_utf8_to_wide(const char *in, wchar_t *out, int out_max) {
     if (n <= 0) { out[0] = 0; return; }
 }
 
-static HBITMAP win32_load_scaled_bitmap(const char *path, HDC screen, int w, int h) {
+static void* win32_load_scaled_bitmap(const char *path, HDC screen, int w, int h) {
     ULONG_PTR token = 0;
     GdiplusStartupInput gsi;
     gsi.GdiplusVersion = 1;
@@ -305,7 +305,7 @@ static HBITMAP win32_load_scaled_bitmap(const char *path, HDC screen, int w, int
     wchar_t wpath[MAX_PATH * 2];
     win32_utf8_to_wide(path, wpath, (int)(sizeof(wpath) / sizeof(wchar_t)));
 
-    HBITMAP out = NULL;
+    GpBitmap *out = NULL;
     GpBitmap *src = NULL;
     GpStatus _fs = GdipCreateBitmapFromFile(wpath, &src);
     if (_fs != Ok || !src) { log_error("img: GdipCreateBitmapFromFile failed st=%d path=%s", (int)_fs, path); if (src) GdipDisposeImage(src); GdiplusShutdown(token); return NULL; }
@@ -329,19 +329,19 @@ static HBITMAP win32_load_scaled_bitmap(const char *path, HDC screen, int w, int
                 HBITMAP dib = CreateDIBSection(mem, (BITMAPINFO *)&bmi, DIB_RGB_COLORS, &bits, NULL, 0);
                 if (!dib || !bits) log_error("img: CreateDIBSection failed err=%lu bits=%p", GetLastError(), bits);
                 if (dib && bits) {
-                    GpBitmap *dst = NULL;
-                    GpStatus _ws = GdipCreateBitmapFromHBITMAP(dib, NULL, &dst);
-                    if (_ws != Ok || !dst) log_error("img: GdipCreateBitmapFromHBITMAP failed st=%d w=%d h=%d", (int)_ws, w, h);
-                    if (_ws == Ok && dst) {
+                    GpBitmap *tmp = NULL;
+                    GpStatus _ws = GdipCreateBitmapFromHBITMAP(dib, NULL, &tmp);
+                    if (_ws != Ok || !tmp) log_error("img: HBITMAP wrap st=%d w=%d h=%d", (int)_ws, w, h);
+                    if (_ws == Ok && tmp) {
                         GpGraphics *g = NULL;
-                        GpStatus _gs = GdipGetImageGraphicsContext(dst, &g);
-                        if (_gs != Ok || !g) log_error("img: GdipGetImageGraphicsContext failed st=%d", (int)_gs);
+                        GpStatus _gs = GdipGetImageGraphicsContext(tmp, &g);
+                        if (_gs != Ok || !g) log_error("img: ctx st=%d", (int)_gs);
                         if (_gs == Ok && g) {
                             GdipSetInterpolationMode(g, InterpolationModeHighQualityBicubic);
-                            GdipDrawImageRectI(g, dst, 0, 0, w, h);
+                            GdipDrawImageRectI(g, tmp, 0, 0, w, h);
                             GdipDeleteGraphics(g);
                         }
-                        GdipDisposeImage(dst);
+                        GdipDisposeImage(tmp);
                         out = dib;
                         dib = NULL;
                     }
@@ -379,18 +379,24 @@ bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
     }
     bool ok = false;
     if (bmp) {
-        HDC mem = CreateCompatibleDC(screen);
-        if (mem) {
-            HGDIOBJ prev = SelectObject(mem, bmp);
-            BLENDFUNCTION bf;
-            bf.BlendOp = AC_SRC_OVER;
-            bf.BlendFlags = 0;
-            bf.SourceConstantAlpha = 255;
-            bf.AlphaFormat = AC_SRC_ALPHA;
-            BOOL blit = AlphaBlend(g_draw_hdc, x, y, w, h, mem, 0, 0, w, h, bf);
-            SelectObject(mem, prev);
-            DeleteDC(mem);
-            ok = blit != FALSE;
+        ULONG_PTR tk = 0;
+        GdiplusStartupInput gsi2;
+        gsi2.GdiplusVersion = 1;
+        gsi2.DebugEventCallback = NULL;
+        gsi2.SuppressBackgroundThread = FALSE;
+        gsi2.SuppressExternalCodecs = FALSE;
+        if (GdiplusStartup(&tk, &gsi2, NULL) == Ok && tk) {
+            GpBitmap *im = NULL;
+            if (GdipCreateBitmapFromHBITMAP(bmp, NULL, &im) == Ok && im) {
+                GpGraphics *g = NULL;
+                if (GdipCreateFromHDC(g_draw_hdc, &g) == Ok && g) {
+                    GdipDrawImageRectI(g, im, x, y, w, h);
+                    GdipDeleteGraphics(g);
+                    ok = true;
+                }
+                GdipDisposeImage(im);
+            }
+            GdiplusShutdown(tk);
         }
     }
     ReleaseDC(NULL, screen);
