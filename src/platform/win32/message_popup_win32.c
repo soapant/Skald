@@ -158,7 +158,7 @@ void Platform_DisplayMessage(const char* message, int centerX, int centerY, int 
 log_info("Platform_DisplayMessage message='%s' centerX=%d centerY=%d maxWidth=%d maxHeight=%d timeout=%d color=%p", message ? message : "", centerX, centerY, maxWidth, maxHeight, timeout, color);;
 }
 
-void Platform_DisplayMessageAnchored(const char* message, int rect_x, int rect_y, int rect_w, int rect_h, int h_slot, int v_slot, int gap, int maxWidth, int maxHeight, int timeout, ColorRef color) {
+void Platform_DisplayMessageAnchored(const char* message, int rect_x, int rect_y, int rect_w, int rect_h, int h_slot, int v_slot, int gap, int outward, int maxWidth, int maxHeight, int timeout, ColorRef color) {
   if (!message || !message[0]) return;
   if (maxWidth <= 0) maxWidth = MSG_AUTO_WRAP_MAX_W;
   if (maxHeight <= 0) maxHeight = MSG_AUTO_WRAP_MAX_H;
@@ -174,12 +174,12 @@ void Platform_DisplayMessageAnchored(const char* message, int rect_x, int rect_y
   if (winHeight > maxHeight) winHeight = maxHeight;
 
   int centerX;
-  if (h_slot == 0) centerX = rect_x + gap + winWidth / 2;
-  else if (h_slot == 2) centerX = rect_x + rect_w - gap - winWidth / 2;
+  if (h_slot == 0) centerX = outward ? rect_x - gap - winWidth / 2 : rect_x + gap + winWidth / 2;
+  else if (h_slot == 2) centerX = outward ? rect_x + rect_w + gap + winWidth / 2 : rect_x + rect_w - gap - winWidth / 2;
   else centerX = rect_x + rect_w / 2;
   int centerY;
-  if (v_slot == 0) centerY = rect_y + gap + winHeight / 2;
-  else if (v_slot == 2) centerY = rect_y + rect_h - gap - winHeight / 2;
+  if (v_slot == 0) centerY = outward ? rect_y - gap - winHeight / 2 : rect_y + gap + winHeight / 2;
+  else if (v_slot == 2) centerY = outward ? rect_y + rect_h + gap + winHeight / 2 : rect_y + rect_h - gap - winHeight / 2;
   else centerY = rect_y + rect_h / 2;
 
   Platform_DisplayMessage(message, centerX, centerY, winWidth, winHeight, timeout, color);
