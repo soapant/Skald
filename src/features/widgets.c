@@ -232,6 +232,10 @@ static void widgets_internet_render(FlWidgetState *state) {
     fl_place_image(.path = "resources/wifi.png",.y=7,.h=FONTSIZE + 6,.w=FONTSIZE + 6);
 }
 
+void on_internet_click(void) {
+    fl_popup();
+}
+
 static FlWidget* g_disk = NULL;
 static FlWidget* g_mem = NULL;
 static FlWidget* g_cpu = NULL;
@@ -275,6 +279,7 @@ FLINT_FEATURE_INIT {
               .color = COLOR,
               .fps = FPS,
               .no_bg = NO_BG,
+              .on_click = on_internet_click,
               .slot = FL_WIDGET_SLOT_BOTTOM_RIGHT,
               .render = widgets_internet_render);
 
