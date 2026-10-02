@@ -13,8 +13,6 @@ typedef struct {
 } NewlineInfo;
 
 bool Platform_ShellExecuteWithVerb(const char* path, const char* verb, bool async);
-bool Platform_LaunchApp(const char* path);
-bool Platform_LaunchAppAsAdmin(const char* path);
 bool Platform_IsCtrlPressed(void);
 bool Platform_ExpandPath(const char* template_path, char* out, size_t out_size);
 bool Platform_StringContainsCaseInsensitive(const char* haystack, const char* needle);
@@ -51,6 +49,7 @@ void Platform_SaveRegionToPNG(int x1, int y1, int x2, int y2, const char* fullPa
 
 void Platform_WaitForKeypressAsync(KeyCallback callback);
 void Platform_DisplayMessage(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, int timeout, ColorRef color);
+void Platform_DisplayMessageAnchored(const char* message, int rect_x, int rect_y, int rect_w, int rect_h, int h_slot, int v_slot, int gap, int outward, int maxWidth, int maxHeight, int timeout, ColorRef color);
 void Platform_CreateDisplayMessageWindow(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, int timeout, ColorRef color);
 FontHandle Platform_CreateFont(int size, const char* face_name);
 

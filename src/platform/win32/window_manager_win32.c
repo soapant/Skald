@@ -1,5 +1,6 @@
 #include "core/window_manager.h"
 #include "core/hotkey_manager.h"
+#include "platform/widget.h"
 #include <windows.h>
 
 int pending_hotkey_vk = 0;
@@ -19,6 +20,7 @@ int WindowManager_RunWin32(WindowManager* wm) {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
+        Platform_Widget_DrainClicks();
         hotkey_drain_pending();
         if (!got) Sleep(10);
     }

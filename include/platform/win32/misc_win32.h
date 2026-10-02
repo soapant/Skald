@@ -12,7 +12,5 @@ const char* Platform_GetRealUser(void);
 const char* Platform_GetRealHome(void);
 bool Platform_IsRunningAsRoot(void);
 bool Platform_ShellExecuteWithVerb(const char* path, const char* verb, bool async);
-bool Platform_LaunchApp(const char* path);
-bool Platform_LaunchAppAsAdmin(const char* path);
 
 #endif

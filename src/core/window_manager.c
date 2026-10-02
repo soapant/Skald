@@ -129,6 +129,26 @@ void WindowManager_GetCenteredPos(int win_w, int win_h, int *out_x, int *out_y) 
     if (out_y) *out_y = moy + (moh - win_h) / 2;
 }
 
+int PromptPopup_GetBounds(Popup* p, int* x, int* y, int* w, int* h);
+
+void WindowManager_GetPromptBounds(int *out_x, int *out_y, int *out_w, int *out_h) {
+    int mox = 0, moy = 0, mow = 0, moh = 0;
+    WindowManager_GetMainMonitorGeometry(&mox, &moy, &mow, &moh);
+    Popup* top = WindowManager_GetTopPopup(NULL);
+    int pw = 0, ph = 0, px = -1, py = -1;
+    if (top && top->type == POPUP_PROMPT) PromptPopup_GetBounds(top, &px, &py, &pw, &ph);
+    if (pw <= 0 || ph <= 0) {
+        pw = (int)(900 * Platform_GetUIScale());
+        ph = (int)(640 * Platform_GetUIScale());
+        px = -1;
+    }
+    if (px < 0 || py < 0) WindowManager_GetCenteredPos(pw, ph, &px, &py);
+    if (out_x) *out_x = px;
+    if (out_y) *out_y = py;
+    if (out_w) *out_w = pw;
+    if (out_h) *out_h = ph;
+}
+
 char* WindowManager_ShowPrompt(WindowManager* wm, const PromptSpec* spec) {
     if (!wm || !spec) { return NULL; }
     CloseCallback on_close = spec->on_close;

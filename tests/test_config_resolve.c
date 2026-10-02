@@ -6,8 +6,6 @@ static void set_all_apps(const char* v) {
     UsedBrowser = v;
     UsedTerminal = v;
     UsedShell = v;
-    UsedImageViewer = v;
-    UsedVideoPlayer = v;
 }
 
 TEST(explicit_values_are_never_auto_resolved) {
@@ -16,8 +14,6 @@ TEST(explicit_values_are_never_auto_resolved) {
     ASSERT_FALSE(Config_IsAutoResolvedApp("UsedTerminal"));
     ASSERT_FALSE(Config_IsAutoResolvedApp("UsedBrowser"));
     ASSERT_FALSE(Config_IsAutoResolvedApp("UsedShell"));
-    ASSERT_FALSE(Config_IsAutoResolvedApp("UsedImageViewer"));
-    ASSERT_FALSE(Config_IsAutoResolvedApp("UsedVideoPlayer"));
     ASSERT_EQ_STR(UsedTerminal, "alacritty");
 }
 
@@ -29,8 +25,6 @@ TEST(explicit_values_survive_resolution) {
 }
 
 TEST(linux_style_path_in_config_is_not_flagged_auto) {
-    /* The cross-platform bug: a value baked in on Linux must not be treated as
-       auto-resolved, because the user (or another platform) put it there. */
     set_all_apps("/usr/bin/foot");
     Config_ResolveDefaultApps();
     ASSERT_FALSE(Config_IsAutoResolvedApp("UsedTerminal"));

@@ -180,3 +180,10 @@ RECT rect;
 
     return true;
 }
+
+bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
+    if (!path || !path[0]) return false;
+    if (w <= 0 || h <= 0) return false;
+    measure_track(x, y, w, h);
+    return false;
+}
