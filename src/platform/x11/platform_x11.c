@@ -24,6 +24,7 @@
 #include "config.h"
 #include "platform/platform.h"
 #include "helpers/helpers_hotkey.h"
+#include "helpers/helpers_ui.h"
 #include "core/context.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -598,7 +599,7 @@ char* Platform_QueryZoxidePath(const char* query) {
     if (strstr(out, "no match found") || strlen(out) == 0) {
         char buffer[256];
         snprintf(buffer, sizeof(buffer), "Query {%s} Doesnt Have A Zoxide Path", query);
-        // SubjectiveMessageDisplay(buffer, 140, TimeOutForMessages, COLOR_ERROR);
+        DisplayMessageAnchored(buffer, "top-center", 140, 100,TimeOutForMessages, COLOR_ERROR);
         free(out);
         PROFILE_END_VAR(timer, "platform_x11:Platform_QueryZoxidePath");
         return NULL;
