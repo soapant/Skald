@@ -119,10 +119,19 @@ static bool config_load_copy(const char* uniq, LibHandle* out) {
     return true;
 }
 
+static bool config_output_is_fresh(const char* out) {
+    struct stat src_st, out_st;
+    if (stat(CONFIG_SRC, &src_st) != 0) return false;
+    if (stat(out, &out_st) != 0) return false;
+    return out_st.st_mtime >= src_st.st_mtime;
+}
+
 static bool config_build_load_store(void) {
     PROFILE_START(timer);
     const char* out = config_out_path();
-    {
+    if (config_output_is_fresh(out)) {
+        log_info("config .so is newer than source, skipping compile");
+    } else {
         PROFILE_START(t_cfgcompile);
         bool ok = Platform_BuildFeature(CONFIG_SRC, out);
         PROFILE_END_VAR(t_cfgcompile, "config:compile_config_c");
@@ -387,6 +396,12 @@ void Config_Save(void) {
     start_eol++;
     size_t head = (size_t)(start_eol - orig);
     size_t tail = got - (size_t)(end - orig);
+    size_t body_len = (size_t)(end - start_eol);
+    if (body_len == n && memcmp(orig + head, region, n) == 0) {
+        free(orig);
+        log_info("config unchanged, not rewriting");
+        return;
+    }
     char tmp[512];
     snprintf(tmp, sizeof(tmp), "%s.tmp.%d", CONFIG_SRC, (int)getpid());
     FILE* out = fopen(tmp, "wb");
