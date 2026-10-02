@@ -92,7 +92,6 @@ char* fl_run_terminal_command_blocking(char* command);
 char* fl_run_terminal_command_and_open(char* command);
 char* fl_run_argv(const char* const argv[], const char* stdin_data, int* out_status);
 bool fl_launch_detached(char* command);
-bool fl_open_image(char* image_path);
 int fl_collect_running_processes(char process_list[][128], int max_count);
 bool fl_terminate_process_by_name(const char* exe_name);
 int fl_get_icon_size(const char* icon_path);
@@ -193,6 +192,22 @@ bool fl_replace_line_in_file(const char* filepath, int line_index, const char* n
 char* fl_popup_impl(const FlPopupSpec *spec);
 #define fl_popup(...) fl_popup_impl(&(FlPopupSpec){__VA_ARGS__})
 
+
+typedef struct {
+    const char* message;
+    MessageSlot slot;
+    int x;
+    int y;
+    int w;
+    int h;
+    int timeout;
+    int prompt_gap;
+    ColorRef color;
+} FlMessageSpec;
+
+void fl_message_impl(const FlMessageSpec* spec);
+#define fl_message(...) fl_message_impl(&(FlMessageSpec){__VA_ARGS__})
+
 // =============================================================================
 // RAW WINDOW ACCESS (hardcore)
 // =============================================================================
@@ -217,17 +232,17 @@ int fl_get_popup_height(void);
 // Used by anchored placement. Raw still exists for pixel control.
 
 typedef enum {
-    FL_TOP_LEFT,
-    FL_TOP_CENTER,
-    FL_TOP_RIGHT,
-    FL_CENTER_LEFT,
-    FL_CENTER,
-    FL_CENTER_RIGHT,
-    FL_BOTTOM_LEFT,
-    FL_BOTTOM_CENTER,
-    FL_BOTTOM_RIGHT,
-    FL_FILL_WIDTH,
-    FL_FILL_HEIGHT
+    FLANCHOR_TOP_LEFT,
+    FLANCHOR_TOP_CENTER,
+    FLANCHOR_TOP_RIGHT,
+    FLANCHOR_CENTER_LEFT,
+    FLANCHOR_CENTER,
+    FLANCHOR_CENTER_RIGHT,
+    FLANCHOR_BOTTOM_LEFT,
+    FLANCHOR_BOTTOM_CENTER,
+    FLANCHOR_BOTTOM_RIGHT,
+    FLANCHOR_FILL_WIDTH,
+    FLANCHOR_FILL_HEIGHT
 } FlAnchor;
 
 // =============================================================================
@@ -364,6 +379,7 @@ typedef struct {
     int fps;
     ColorRef color;
     bool no_bg;
+    void (*on_click)(void);
     FlWidgetRenderFn render;
     int x;
     int y;
@@ -403,6 +419,8 @@ struct FlWidget {
     FlTimer created_at;
     char *owner;
     unsigned gen;
+    void (*on_click)(void);
+    bool clickable;
 };
 
 FlWidget *fl_widget_create(const FlWidgetSpec *spec);

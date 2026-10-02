@@ -5,6 +5,7 @@
 
 typedef struct {
     const char* real_user;
+    const char* real_home;
     const char* display;
     const char* xauthority;
     const char* runtime_dir;

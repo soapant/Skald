@@ -744,6 +744,27 @@ unsigned long fl_rgb_to_hex(ColorRef color) {
     return rgb_to_hex(color);
 }
 
+void fl_message_impl(const FlMessageSpec* spec) {
+    if (!spec || !spec->message || !spec->message[0]) return;
+    if (!MessagesEnabled) return;
+    int w = spec->w > 0 ? spec->w : 0;
+    int h = spec->h > 0 ? spec->h : 0;
+    int timeout = spec->timeout > 0 ? spec->timeout : TimeOutForMessages;
+    ColorRef color = spec->color ? spec->color : COLOR_TEXT;
+    MessageSlot slot = spec->slot;
+    if (slot == AUTO) {
+        if (spec->x != 0 || spec->y != 0) {
+            Platform_DisplayMessage(spec->message, spec->x, spec->y, w, h, timeout, color);
+            return;
+        }
+        slot = IsPopupActive(WH_NULL) ? TOP_CENTER_RELATIVE : BOTTOM_CENTER_RELATIVE;
+    } else if (slot == FREE || spec->x != 0 || spec->y != 0) {
+        Platform_DisplayMessage(spec->message, spec->x, spec->y, w, h, timeout, color);
+        return;
+    }
+    DisplayMessageSlot(spec->message, slot, w, h, spec->prompt_gap, timeout, color);
+}
+
 char* fl_string_slice(const char* str, int start, int end) {
     if (!str) return NULL;
     int len = (int)strlen(str);
@@ -986,14 +1007,6 @@ bool fl_toggle_minimized_active(void) {
   return r;
 }
 
-bool fl_open_image(char* image_path) {
-  if (!image_path || !image_path[0]) return false;
-  char cmd[1024];
-  if (UsedImageViewer && UsedImageViewer[0]) snprintf(cmd, sizeof(cmd), "%s \"%s\"", UsedImageViewer, image_path);
-  else snprintf(cmd, sizeof(cmd), "xdg-open \"%s\"", image_path);
-  return fl_launch_detached(cmd);
-}
-
 char* fl_popup_impl(const FlPopupSpec *spec) {
     const char* initial_text = spec->initial_text ? spec->initial_text : "";
     int x = spec->x ? spec->x : 0;
@@ -1220,9 +1233,12 @@ bool fl_place_editbox_impl(const FlEditSpec *spec) {
 }
 bool fl_place_image_impl(const FlImageSpec *spec) {
   PROFILE_START(_pt);
-  (void)spec;
+  if (!spec || !spec->path || !spec->path[0]) { PROFILE_END_VAR(_pt, "api:fl_place_image"); return false; }
+  int w = spec->w > 0 ? spec->w : 0;
+  int h = spec->h > 0 ? spec->h : 0;
+  bool r = Platform_DrawImageAt(spec->path, spec->x, spec->y, w, h);
   PROFILE_END_VAR(_pt, "api:fl_place_image");
-  return false;
+  return r;
 }
 bool fl_draw_rect_impl(const FlRectSpec *spec) {
   PROFILE_START(_pt);
@@ -1641,12 +1657,12 @@ void fl_screenshot_save(char* save_path) {
 
 void fl_screenshot_open(char* save_path) {
     fl_screenshot_save_platform(save_path);
-    fl_open_image(save_path);
+    fl_launch_with_args(save_path,NULL);
 }
 
 void fl_screenshot_open_area(char* save_path) {
     fl_screenshot_save_area_platform(save_path);
-    fl_open_image(save_path);
+    fl_launch_with_args(save_path,NULL);
 }
 
 void fl_ocr_area_to_clipboard(void) {
@@ -1803,7 +1819,7 @@ static void fl_widget_attach_window(void *ud) {
     bool created = false;
     if (!Platform_Widget_IsValid(widget->win)) {
         Platform_SetDrawBgColor(widget->has_bg ? widget->bg_hex : 0);
-        widget->win = Platform_Widget_Create(widget->x, widget->y, widget->w, widget->h, widget->fps, widget->no_bg);
+        widget->win = Platform_Widget_Create(widget->x, widget->y, widget->w, widget->h, widget->fps, widget->no_bg, widget->on_click);
         Platform_SetDrawBgColor(0);
         created = (widget->win != NULL);
     } else {
@@ -1818,23 +1834,18 @@ static void fl_widget_attach_window(void *ud) {
 }
 
 static void fl_widget_apply_geometry(FlWidget *widget, int x, int y) {
-    PROFILE_START(_pt);
     widget->x = x;
     widget->y = y;
     if (Platform_RenderThread_IsCurrentThread()) {
         fl_widget_attach_window(widget);
-        PROFILE_END_VAR(_pt, "flapi:fl_widget_apply_geometry");
         return;
     }
     if (!Platform_RenderThread_EnsureStarted(widget->fps)) {
-        PROFILE_END_VAR(_pt, "flapi:fl_widget_apply_geometry");
         return;
     }
     if (!Platform_RenderThread_Post(fl_widget_attach_window, widget)) {
-        PROFILE_END_VAR(_pt, "flapi:fl_widget_apply_geometry");
         return;
     }
-    PROFILE_END_VAR(_pt, "flapi:fl_widget_apply_geometry");
 }
 
 static int fl_widget_sort_key(const FlWidget *widget) {
@@ -1923,6 +1934,7 @@ FlWidget *fl_widget_create(const FlWidgetSpec *spec) {
     widget->order = spec->order;
     widget->order_set = spec->order > 0;
     widget->render = spec->render;
+    widget->on_click = spec->on_click;
     widget->free_pos = (spec->slot == FL_WIDGET_FREE);
     widget->frame = 0;
     widget->created_at = fl_start_timer_platform();

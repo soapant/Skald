@@ -176,7 +176,7 @@ static bool load_single(const char* dir, const char* filename) {
         init();
         char label[96];
         snprintf(label, sizeof(label), "feature_init: %s", name);
-        TimerEndAlways(t_load, label);
+        TimerEnd(t_load, label);
         g_feature_init_us += TimerElapsedUs(t_load);
         g_feature_init_count++;
     } else {
@@ -315,7 +315,6 @@ void FeatureLoader_Reload(const char* name) {
             {
                 char label[96];
                 snprintf(label, sizeof(label), "feature_reload: %s", name);
-                TimerEndAlways(t_reload, label);
             }
             g_features[i].handle = h;
             strncpy(g_features[i].path, path_copy, sizeof(g_features[i].path)-1);
