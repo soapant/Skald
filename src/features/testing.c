@@ -2,8 +2,7 @@
 
 
 void Testing(void) {
-  fl_message(.message="nigga",.position="top-left");
-  fl_message(.message="test",.position="top-right");
+  fl_message(.message="nigga nigg aniga dawkj dakwjd kawjdk jawk djwkj",.position="top-left");
 }
 
 

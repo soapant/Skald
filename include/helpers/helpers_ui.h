@@ -29,4 +29,15 @@ bool UI_IsListBoxSelected(ListBoxInfo* lb);
 void UpdateTextCaret(WindowHandle hwndEditControl);
 void CalculateWindowMetrics(WindowLayout* layout,int height , int width,int item_height);
 
+#define MSG_ANCHOR_MAX_W 0
+#define MSG_ANCHOR_MAX_H 100
+
+typedef enum { MSG_ANCHOR_H_CENTER = 0, MSG_ANCHOR_H_LEFT, MSG_ANCHOR_H_RIGHT } MsgAnchorH;
+typedef enum { MSG_ANCHOR_V_CENTER = 0, MSG_ANCHOR_V_TOP, MSG_ANCHOR_V_BOTTOM } MsgAnchorV;
+
+void ParseMessageAnchor(const char* position, MsgAnchorH* h, MsgAnchorV* v);
+bool MessagePositionIsFreehand(const char* position);
+void ResolveMessageCenter(const char* position, int max_w, int max_h, int* out_x, int* out_y);
+void DisplayMessageAnchored(const char* message, const char* position, int max_w, int max_h, int timeout, ColorRef color);
+
 #endif

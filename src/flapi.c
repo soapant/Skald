@@ -744,70 +744,25 @@ unsigned long fl_rgb_to_hex(ColorRef color) {
     return rgb_to_hex(color);
 }
 
-typedef enum {
-    FL_MSG_H_CENTER = 0,
-    FL_MSG_H_LEFT,
-    FL_MSG_H_RIGHT,
-    FL_MSG_V_CENTER = 0,
-    FL_MSG_V_TOP,
-    FL_MSG_V_BOTTOM
-} FlMsgHAnchor, FlMsgVAnchor;
-
-static bool fl_msg_token_matches(const char* pos, const char* token) {
-    size_t n = strlen(token);
-    for (const char* p = pos; *p; p++) {
-        if (*p == ' ' || *p == '-' || *p == '_') continue;
-        if (strncasecmp(p, token, n) != 0) continue;
-        char after = p[n];
-        if (after == '\0' || after == ' ' || after == '-' || after == '_') return true;
-    }
-    return false;
-}
-
-static void fl_msg_parse_anchor(const char* pos, FlMsgHAnchor* h, FlMsgVAnchor* v) {
-    *h = FL_MSG_H_CENTER;
-    *v = FL_MSG_V_CENTER;
-    if (!pos || !pos[0]) return;
-    if (fl_msg_token_matches(pos, "left")) *h = FL_MSG_H_LEFT;
-    else if (fl_msg_token_matches(pos, "right")) *h = FL_MSG_H_RIGHT;
-    if (fl_msg_token_matches(pos, "top")) *v = FL_MSG_V_TOP;
-    else if (fl_msg_token_matches(pos, "bottom")) *v = FL_MSG_V_BOTTOM;
-}
-
 void fl_message_impl(const FlMessageSpec* spec) {
     if (!spec || !spec->message || !spec->message[0]) return;
     if (!MessagesEnabled) return;
     int w = spec->w > 0 ? spec->w : 0;
-    int h = spec->h > 0 ? spec->h : 100;
+    int h = spec->h > 0 ? spec->h : 0;
     int timeout = spec->timeout > 0 ? spec->timeout : TimeOutForMessages;
     ColorRef color = spec->color ? spec->color : COLOR_TEXT;
-    bool freehand = false;
-    FlMsgHAnchor ah;
-    FlMsgVAnchor av;
     const char* pos = spec->position;
+    bool freehand = false;
     if (!pos || !pos[0]) {
         if (spec->x != 0 || spec->y != 0) freehand = true;
         else pos = IsPopupActive(WH_NULL) ? "top" : "bottom-center";
     }
-    if (!freehand && (fl_msg_token_matches(pos, "free") || fl_msg_token_matches(pos, "custom"))) freehand = true;
+    if (!freehand) freehand = MessagePositionIsFreehand(pos);
     if (freehand) {
         Platform_DisplayMessage(spec->message, spec->x, spec->y, w, h, timeout, color);
         return;
     }
-    fl_msg_parse_anchor(pos, &ah, &av);
-    int mox = 0, moy = 0, mow = 0, moh = 0;
-    Platform_WM_GetMonitorGeometry(&mox, &moy, &mow, &moh);
-    if (mow <= 0) mow = 1920;
-    if (moh <= 0) moh = 1080;
-    int cx;
-    if (ah == FL_MSG_H_LEFT) cx = mox + GAP + w / 2;
-    else if (ah == FL_MSG_H_RIGHT) cx = mox + mow - GAP - w / 2;
-    else cx = mox + mow / 2;
-    int cy;
-    if (av == FL_MSG_V_TOP) cy = moy + GAP + h / 2;
-    else if (av == FL_MSG_V_BOTTOM) cy = moy + moh - GAP - h / 2;
-    else cy = moy + moh / 2;
-    Platform_DisplayMessage(spec->message, cx, cy, w, h, timeout, color);
+    DisplayMessageAnchored(spec->message, pos, w, h, timeout, color);
 }
 
 char* fl_string_slice(const char* str, int start, int end) {

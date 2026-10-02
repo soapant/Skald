@@ -14,6 +14,7 @@
 #include "platform/win32/win32_state.h"
 #include "platform/win32/subclasses_win32.h"
 #include "platform/win32/input_core_win32.h"
+#include "helpers/helpers_ui.h"
 #include "platform/platform.h"
 #include "config.h"
 #include <shellapi.h>
@@ -295,7 +296,7 @@ char* Platform_QueryZoxidePath(const char* query) {
     if (strstr(out, "no match found")) {
         char buffer[256];
         snprintf(buffer, sizeof(buffer), "Query {%s} Doesnt Have A Zoxide Path", query);
-        // SubjectiveMessageDisplay(buffer, 140, TimeOutForMessages, COLOR_ERROR);
+        DisplayMessageAnchored(buffer, "top-center", 140, 100,TimeOutForMessages, COLOR_ERROR);
         free(out);
         return NULL;
     }
