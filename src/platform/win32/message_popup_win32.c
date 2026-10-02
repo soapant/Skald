@@ -11,6 +11,9 @@
 #include "platform/platform.h"
 #include "platform/win32/win32_state.h"
 
+#define MSG_AUTO_WRAP_MAX_W 900
+#define MSG_AUTO_WRAP_MAX_H 600
+
 LRESULT CALLBACK DisplayMessageProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
   FadeWindowData* data = (FadeWindowData*)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
     FlintContext_Get()->window.hDisplayMessage = WH_FROM_HWND(hwnd);
@@ -153,6 +156,33 @@ void Platform_DisplayMessage(const char* message, int centerX, int centerY, int 
   }
   Platform_CreateDisplayMessageWindow(message, centerX, centerY, maxWidth, maxHeight, timeout, color);
 log_info("Platform_DisplayMessage message='%s' centerX=%d centerY=%d maxWidth=%d maxHeight=%d timeout=%d color=%p", message ? message : "", centerX, centerY, maxWidth, maxHeight, timeout, color);;
+}
+
+void Platform_DisplayMessageAnchored(const char* message, int rect_x, int rect_y, int rect_w, int rect_h, int h_slot, int v_slot, int gap, int maxWidth, int maxHeight, int timeout, ColorRef color) {
+  if (!message || !message[0]) return;
+  if (maxWidth <= 0) maxWidth = MSG_AUTO_WRAP_MAX_W;
+  if (maxHeight <= 0) maxHeight = MSG_AUTO_WRAP_MAX_H;
+
+  FontHandle msgFont = Platform_CreateFont(FontSize, UsedFont);
+  int textWidth = 0, textHeight = 0;
+  Platform_GetTextExtents(msgFont, message, maxWidth - 30, &textWidth, &textHeight);
+  Platform_DestroyFont(msgFont);
+
+  int winWidth = textWidth + 30;
+  int winHeight = textHeight + 30;
+  if (winWidth > maxWidth) winWidth = maxWidth;
+  if (winHeight > maxHeight) winHeight = maxHeight;
+
+  int centerX;
+  if (h_slot == 0) centerX = rect_x + gap + winWidth / 2;
+  else if (h_slot == 2) centerX = rect_x + rect_w - gap - winWidth / 2;
+  else centerX = rect_x + rect_w / 2;
+  int centerY;
+  if (v_slot == 0) centerY = rect_y + gap + winHeight / 2;
+  else if (v_slot == 2) centerY = rect_y + rect_h - gap - winHeight / 2;
+  else centerY = rect_y + rect_h / 2;
+
+  Platform_DisplayMessage(message, centerX, centerY, winWidth, winHeight, timeout, color);
 }
 
 void Platform_CreateDisplayMessageWindow(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, int timeout, ColorRef color) {

@@ -29,15 +29,38 @@ bool UI_IsListBoxSelected(ListBoxInfo* lb);
 void UpdateTextCaret(WindowHandle hwndEditControl);
 void CalculateWindowMetrics(WindowLayout* layout,int height , int width,int item_height);
 
-#define MSG_ANCHOR_MAX_W 0
-#define MSG_ANCHOR_MAX_H 100
+#define MSG_PROMPT_GAP_DEFAULT 200
+#define MSG_SCREEN_GAP_DEFAULT 20
 
-typedef enum { MSG_ANCHOR_H_CENTER = 0, MSG_ANCHOR_H_LEFT, MSG_ANCHOR_H_RIGHT } MsgAnchorH;
-typedef enum { MSG_ANCHOR_V_CENTER = 0, MSG_ANCHOR_V_TOP, MSG_ANCHOR_V_BOTTOM } MsgAnchorV;
+typedef enum {
+    FL_AUTO = 0,
+    FL_TOP_LEFT,
+    FL_TOP_CENTER,
+    FL_TOP_RIGHT,
+    FL_LEFT,
+    FL_CENTER,
+    FL_RIGHT,
+    FL_BOTTOM_LEFT,
+    FL_BOTTOM_CENTER,
+    FL_BOTTOM_RIGHT,
 
-void ParseMessageAnchor(const char* position, MsgAnchorH* h, MsgAnchorV* v);
-bool MessagePositionIsFreehand(const char* position);
-void ResolveMessageCenter(const char* position, int max_w, int max_h, int* out_x, int* out_y);
-void DisplayMessageAnchored(const char* message, const char* position, int max_w, int max_h, int timeout, ColorRef color);
+    FL_TOP_LEFT_RELATIVE,
+    FL_TOP_CENTER_RELATIVE,
+    FL_TOP_RIGHT_RELATIVE,
+    FL_LEFT_RELATIVE,
+    FL_CENTER_RELATIVE,
+    FL_RIGHT_RELATIVE,
+    FL_BOTTOM_LEFT_RELATIVE,
+    FL_BOTTOM_CENTER_RELATIVE,
+    FL_BOTTOM_RIGHT_RELATIVE,
+
+    FL_FREE
+} FlMessageSlot;
+
+extern int MessagePromptGap;
+extern int MessageScreenGap;
+
+void MessageSlotToRect(FlMessageSlot slot, int prompt_gap, int* out_x, int* out_y, int* out_w, int* out_h, int* out_h_slot, int* out_v_slot, int* out_gap);
+void DisplayMessageSlot(const char* message, FlMessageSlot slot, int max_w, int max_h, int prompt_gap, int timeout, ColorRef color);
 
 #endif

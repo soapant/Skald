@@ -599,7 +599,7 @@ char* Platform_QueryZoxidePath(const char* query) {
     if (strstr(out, "no match found") || strlen(out) == 0) {
         char buffer[256];
         snprintf(buffer, sizeof(buffer), "Query {%s} Doesnt Have A Zoxide Path", query);
-        DisplayMessageAnchored(buffer, "top-center", 140, 100,TimeOutForMessages, COLOR_ERROR);
+        DisplayMessageSlot(buffer, FL_TOP_CENTER_RELATIVE, 0, 0, 0, TimeOutForMessages, COLOR_ERROR);
         free(out);
         PROFILE_END_VAR(timer, "platform_x11:Platform_QueryZoxidePath");
         return NULL;

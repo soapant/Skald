@@ -750,19 +750,20 @@ void fl_message_impl(const FlMessageSpec* spec) {
     int w = spec->w > 0 ? spec->w : 0;
     int h = spec->h > 0 ? spec->h : 0;
     int timeout = spec->timeout > 0 ? spec->timeout : TimeOutForMessages;
+    int gap = spec->prompt_gap > 0 ? spec->prompt_gap : MessagePromptGap;
     ColorRef color = spec->color ? spec->color : COLOR_TEXT;
-    const char* pos = spec->position;
-    bool freehand = false;
-    if (!pos || !pos[0]) {
-        if (spec->x != 0 || spec->y != 0) freehand = true;
-        else pos = IsPopupActive(WH_NULL) ? "top" : "bottom-center";
-    }
-    if (!freehand) freehand = MessagePositionIsFreehand(pos);
-    if (freehand) {
+    FlMessageSlot slot = spec->slot;
+    if (slot == FL_AUTO) {
+        if (spec->x != 0 || spec->y != 0) {
+            Platform_DisplayMessage(spec->message, spec->x, spec->y, w, h, timeout, color);
+            return;
+        }
+        slot = IsPopupActive(WH_NULL) ? FL_TOP_CENTER_RELATIVE : FL_BOTTOM_CENTER_RELATIVE;
+    } else if (slot == FL_FREE || spec->x != 0 || spec->y != 0) {
         Platform_DisplayMessage(spec->message, spec->x, spec->y, w, h, timeout, color);
         return;
     }
-    DisplayMessageAnchored(spec->message, pos, w, h, timeout, color);
+    DisplayMessageSlot(spec->message, slot, w, h, gap, timeout, color);
 }
 
 char* fl_string_slice(const char* str, int start, int end) {
