@@ -1819,7 +1819,7 @@ static void fl_widget_attach_window(void *ud) {
     bool created = false;
     if (!Platform_Widget_IsValid(widget->win)) {
         Platform_SetDrawBgColor(widget->has_bg ? widget->bg_hex : 0);
-        widget->win = Platform_Widget_Create(widget->x, widget->y, widget->w, widget->h, widget->fps, widget->no_bg, widget->on_click);
+        widget->win = Platform_Widget_Create(widget->x, widget->y, widget->w, widget->h, widget->fps, widget->no_bg, widget->on_click, widget->name);
         Platform_SetDrawBgColor(0);
         created = (widget->win != NULL);
     } else {
