@@ -2,7 +2,8 @@
 
 
 void Testing(void) {
-  fl_launch_with_args("~/Programming/Projects/Flint/nob.c",NULL);
+  fl_message(.message="nigga",.position="top-left");
+  fl_message(.message="test",.position="top-right");
 }
 
 

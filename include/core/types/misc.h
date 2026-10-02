@@ -47,41 +47,6 @@ typedef enum {
 } DefaultAppKind;
 
 
-#define MIDDLE_POS 960, 540, 1000, 300
-#define TOP_POS 960, 540, 1000, 300
-#define BOTTOM_POS 960, 540, 1000, 300
-#define LEFT_POS 960, 540, 1000, 300
-#define RIGHT_POS 960, 540, 1000, 300
-
-#define MSG_LEFT(msg, msg_width, timeout, color) \
-    Platform_DisplayMessage((msg), \
-                   (960 - 450 - GAP - ((msg_width) / 2)), \
-                   540, \
-                   (msg_width), 650, (timeout), (color))
-
-#define MSG_RIGHT(msg, msg_width, timeout, color) \
-    Platform_DisplayMessage((msg), \
-                   (960 + 450 + GAP + ((msg_width) / 2)), \
-                   540, \
-                   (msg_width), 650, (timeout), (color))
-
-#define MSG_TOP(msg, msg_height, timeout, color) \
-    Platform_DisplayMessage((msg), \
-                   960, \
-                   (960 - 540  - GAP * 10 - ((msg_height) / 2)), \
-                   900, (msg_height), (timeout), (color))
-
-#define MSG_BOTTOM(msg, msg_height, timeout, color) \
-    Platform_DisplayMessage((msg), \
-                   960, \
-                   (540 + (960 / 2) + GAP + ((msg_height) / 2)), \
-                   900, (msg_height), (timeout), (color))
-#define MSG_MIDDLE_BOTTOM(msg,msg_height,timeout,color) \
-    Platform_DisplayMessage((msg), \
-                   960, \
-                   1080 - msg_height, \
-                   900,(msg_height), (timeout), (color))
-
 #if defined(_WIN32)
 LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
 LRESULT CALLBACK SettingsEditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData);
