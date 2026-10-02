@@ -21,8 +21,6 @@ static void auto_apps_init(void) {
     g_auto_apps[0].var = &UsedBrowser;      g_auto_apps[0].kind = DEFAULT_BROWSER;      g_auto_apps[0].name = "UsedBrowser";      g_auto_apps[0].auto_resolved = false;
     g_auto_apps[1].var = &UsedTerminal;     g_auto_apps[1].kind = DEFAULT_TERMINAL;     g_auto_apps[1].name = "UsedTerminal";     g_auto_apps[1].auto_resolved = false;
     g_auto_apps[2].var = &UsedShell;        g_auto_apps[2].kind = DEFAULT_SHELL;        g_auto_apps[2].name = "UsedShell";        g_auto_apps[2].auto_resolved = false;
-    g_auto_apps[3].var = &UsedImageViewer;  g_auto_apps[3].kind = DEFAULT_IMAGE_VIEWER; g_auto_apps[3].name = "UsedImageViewer";  g_auto_apps[3].auto_resolved = false;
-    g_auto_apps[4].var = &UsedVideoPlayer;  g_auto_apps[4].kind = DEFAULT_VIDEO_PLAYER; g_auto_apps[4].name = "UsedVideoPlayer";  g_auto_apps[4].auto_resolved = false;
 }
 
 static void config_resolve_one(AutoApp* app) {

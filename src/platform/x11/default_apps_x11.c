@@ -216,8 +216,6 @@ const char* x11_get_default_shell(int slot) {
 const char* Platform_GetDefaultApp(DefaultAppKind kind) {
     if (kind < 0 || kind >= DEFAULT_APP_COUNT) return "";
     if (kind == DEFAULT_BROWSER) return x11_default_apps_run("xdg-settings get default-web-browser", DEFAULT_BROWSER);
-    if (kind == DEFAULT_IMAGE_VIEWER) return x11_default_apps_run("xdg-mime query default image/png", DEFAULT_IMAGE_VIEWER);
-    if (kind == DEFAULT_VIDEO_PLAYER) return x11_default_apps_run("xdg-mime query default video/mp4", DEFAULT_VIDEO_PLAYER);
     if (kind == DEFAULT_TERMINAL )    return get_default_terminal(DEFAULT_TERMINAL);
     if (kind == DEFAULT_SHELL )       return x11_get_default_shell(DEFAULT_SHELL);
     default_apps_x11[kind][0] = '\0';
