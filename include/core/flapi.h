@@ -192,9 +192,10 @@ bool fl_replace_line_in_file(const char* filepath, int line_index, const char* n
 char* fl_popup_impl(const FlPopupSpec *spec);
 #define fl_popup(...) fl_popup_impl(&(FlPopupSpec){__VA_ARGS__})
 
+
 typedef struct {
     const char* message;
-    FlMessageSlot slot;
+    MessageSlot slot;
     int x;
     int y;
     int w;

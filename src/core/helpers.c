@@ -11,7 +11,7 @@
 int MessagePromptGap = MSG_PROMPT_GAP_DEFAULT;
 int MessageScreenGap = MSG_SCREEN_GAP_DEFAULT;
 
-void MessageSlotToRect(FlMessageSlot slot, int prompt_gap, int* out_x, int* out_y, int* out_w, int* out_h, int* out_h_slot, int* out_v_slot, int* out_gap, int* out_outward) {
+void MessageSlotToRect(MessageSlot slot, int prompt_gap, int* out_x, int* out_y, int* out_w, int* out_h, int* out_h_slot, int* out_v_slot, int* out_gap, int* out_outward) {
     int h_slot = 1;
     int v_slot = 1;
     int gap = MessageScreenGap;
@@ -21,20 +21,20 @@ void MessageSlotToRect(FlMessageSlot slot, int prompt_gap, int* out_x, int* out_
     WindowManager_GetMainMonitorGeometry(&mox, &moy, &mow, &moh);
     if (mow <= 0) mow = 1920;
     if (moh <= 0) moh = 1080;
-    if (slot >= FL_TOP_LEFT_RELATIVE && slot <= FL_BOTTOM_RIGHT_RELATIVE) {
+    if (slot >= TOP_LEFT_RELATIVE && slot <= BOTTOM_RIGHT_RELATIVE) {
         if (prompt_gap > 0) gap = prompt_gap;
         outward = 1;
         WindowManager_GetPromptBounds(&x, &y, &w, &h);
         if (w <= 0 || h <= 0) { x = mox; y = moy; w = mow; h = moh; }
-        slot = (FlMessageSlot)(slot - FL_TOP_LEFT_RELATIVE + FL_TOP_LEFT);
+        slot = (MessageSlot)(slot - TOP_LEFT_RELATIVE + TOP_LEFT);
     } else {
         x = mox;
         y = moy;
         w = mow;
         h = moh;
     }
-    if (slot >= FL_TOP_LEFT && slot <= FL_BOTTOM_RIGHT) {
-        int idx = slot - FL_TOP_LEFT;
+    if (slot >= TOP_LEFT && slot <= BOTTOM_RIGHT) {
+        int idx = slot - TOP_LEFT;
         h_slot = idx % 3;
         v_slot = idx / 3;
     }
@@ -48,7 +48,7 @@ void MessageSlotToRect(FlMessageSlot slot, int prompt_gap, int* out_x, int* out_
     if (out_outward) *out_outward = outward;
 }
 
-void DisplayMessageSlot(const char* message, FlMessageSlot slot, int max_w, int max_h, int prompt_gap, int timeout, ColorRef color) {
+void DisplayMessageSlot(const char* message, MessageSlot slot, int max_w, int max_h, int prompt_gap, int timeout, ColorRef color) {
     if (!message || !message[0]) return;
     int x = 0, y = 0, w = 0, h = 0, h_slot = 1, v_slot = 1, gap = 0, outward = 0;
     MessageSlotToRect(slot, prompt_gap, &x, &y, &w, &h, &h_slot, &v_slot, &gap, &outward);

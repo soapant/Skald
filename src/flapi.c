@@ -751,13 +751,13 @@ void fl_message_impl(const FlMessageSpec* spec) {
     int h = spec->h > 0 ? spec->h : 0;
     int timeout = spec->timeout > 0 ? spec->timeout : TimeOutForMessages;
     ColorRef color = spec->color ? spec->color : COLOR_TEXT;
-    FlMessageSlot slot = spec->slot;
-    if (slot == FL_AUTO) {
+    MessageSlot slot = spec->slot;
+    if (slot == AUTO) {
         if (spec->x != 0 || spec->y != 0) {
             Platform_DisplayMessage(spec->message, spec->x, spec->y, w, h, timeout, color);
             return;
         }
-        slot = IsPopupActive(WH_NULL) ? FL_TOP_CENTER_RELATIVE : FL_BOTTOM_CENTER_RELATIVE;
+        slot = IsPopupActive(WH_NULL) ? TOP_CENTER_RELATIVE : BOTTOM_CENTER_RELATIVE;
     } else if (slot == FL_FREE || spec->x != 0 || spec->y != 0) {
         Platform_DisplayMessage(spec->message, spec->x, spec->y, w, h, timeout, color);
         return;
