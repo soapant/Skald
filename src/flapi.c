@@ -750,7 +750,6 @@ void fl_message_impl(const FlMessageSpec* spec) {
     int w = spec->w > 0 ? spec->w : 0;
     int h = spec->h > 0 ? spec->h : 0;
     int timeout = spec->timeout > 0 ? spec->timeout : TimeOutForMessages;
-    int gap = spec->prompt_gap > 0 ? spec->prompt_gap : MessagePromptGap;
     ColorRef color = spec->color ? spec->color : COLOR_TEXT;
     FlMessageSlot slot = spec->slot;
     if (slot == FL_AUTO) {
@@ -763,7 +762,7 @@ void fl_message_impl(const FlMessageSpec* spec) {
         Platform_DisplayMessage(spec->message, spec->x, spec->y, w, h, timeout, color);
         return;
     }
-    DisplayMessageSlot(spec->message, slot, w, h, gap, timeout, color);
+    DisplayMessageSlot(spec->message, slot, w, h, spec->prompt_gap, timeout, color);
 }
 
 char* fl_string_slice(const char* str, int start, int end) {

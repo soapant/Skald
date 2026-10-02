@@ -22,8 +22,7 @@ void MessageSlotToRect(FlMessageSlot slot, int prompt_gap, int* out_x, int* out_
     if (mow <= 0) mow = 1920;
     if (moh <= 0) moh = 1080;
     if (slot >= FL_TOP_LEFT_RELATIVE && slot <= FL_BOTTOM_RIGHT_RELATIVE) {
-        if (prompt_gap < 0) prompt_gap = 0;
-        gap = prompt_gap;
+        if (prompt_gap > 0) gap = prompt_gap;
         outward = 1;
         WindowManager_GetPromptBounds(&x, &y, &w, &h);
         if (w <= 0 || h <= 0) { x = mox; y = moy; w = mow; h = moh; }
