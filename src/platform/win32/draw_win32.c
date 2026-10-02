@@ -330,7 +330,7 @@ static HBITMAP win32_load_scaled_bitmap(const char *path, HDC screen, int w, int
                 if (!dib || !bits) log_error("img: CreateDIBSection failed err=%lu bits=%p", GetLastError(), bits);
                 if (dib && bits) {
                     GpBitmap *dst = NULL;
-                    GpStatus _ss = GdipCreateBitmapFromScan0(w, h, 0, PixelFormat32bppARGB, bits, &dst);
+                    GpStatus _ss = GdipCreateBitmapFromScan0(w, h, w * 4, PixelFormat32bppARGB, (BYTE *)bits, &dst);
                     if (_ss != Ok || !dst) log_error("img: GdipCreateBitmapFromScan0 failed st=%d w=%d h=%d", (int)_ss, w, h);
                     if (_ss == Ok && dst) {
                         GpGraphics *g = NULL;
