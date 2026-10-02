@@ -1233,9 +1233,12 @@ bool fl_place_editbox_impl(const FlEditSpec *spec) {
 }
 bool fl_place_image_impl(const FlImageSpec *spec) {
   PROFILE_START(_pt);
-  (void)spec;
+  if (!spec || !spec->path || !spec->path[0]) { PROFILE_END_VAR(_pt, "api:fl_place_image"); return false; }
+  int w = spec->w > 0 ? spec->w : IconSize;
+  int h = spec->h > 0 ? spec->h : IconSize;
+  bool r = Platform_DrawImageAt(spec->path, spec->x, spec->y, w, h);
   PROFILE_END_VAR(_pt, "api:fl_place_image");
-  return false;
+  return r;
 }
 bool fl_draw_rect_impl(const FlRectSpec *spec) {
   PROFILE_START(_pt);
