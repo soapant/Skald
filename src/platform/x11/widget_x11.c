@@ -117,7 +117,8 @@ static void widget_frame(void *ud) {
     XFlush(dpy);
 }
 
-PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps, bool no_bg, void (*on_click)(void)) {
+PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps, bool no_bg, void (*on_click)(void), const char *name) {
+    (void)name;
     if (w <= 0 || h <= 0) return NULL;
     if (!Platform_RenderThread_EnsureStarted(fps)) return NULL;
     Display *dpy = (Display *)Platform_RenderThread_Display();

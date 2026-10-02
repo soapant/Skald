@@ -6,7 +6,7 @@
 
 typedef struct PlatformWidget PlatformWidget;
 
-PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps, bool no_bg, void (*on_click)(void));
+PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps, bool no_bg, void (*on_click)(void), const char *name);
 void Platform_Widget_Destroy(PlatformWidget *widget);
 bool Platform_Widget_IsValid(const PlatformWidget *widget);
 void Platform_Widget_SetFrameCallback(PlatformWidget *widget, Platform_RenderFrameFn fn, void *ud);

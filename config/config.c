@@ -23,7 +23,7 @@ void ConfigApply(void) {
     AllowOtherFeatureTogglesInFeature = false;
     ModePersistsThroughFeatures = false;
     TimeOutForMessages = 1;
-    DoTimeDebugs = true;
+    DoTimeDebugs = false;
     DebugMode = false;
     RoundedCorners = false;
     CornerRadius = 14;
@@ -39,6 +39,7 @@ void ConfigApply(void) {
     UsedFont = "0xProto Nerd Font";
     FontSize = 19;
     IconSize = 32;
+    WidgetGap = 0;
     MaxFeatures = 1000;
     VimFontSize = 18;
     PaddingForScrolling = 3;
