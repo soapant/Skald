@@ -1810,23 +1810,18 @@ static void fl_widget_attach_window(void *ud) {
 }
 
 static void fl_widget_apply_geometry(FlWidget *widget, int x, int y) {
-    PROFILE_START(_pt);
     widget->x = x;
     widget->y = y;
     if (Platform_RenderThread_IsCurrentThread()) {
         fl_widget_attach_window(widget);
-        PROFILE_END_VAR(_pt, "flapi:fl_widget_apply_geometry");
         return;
     }
     if (!Platform_RenderThread_EnsureStarted(widget->fps)) {
-        PROFILE_END_VAR(_pt, "flapi:fl_widget_apply_geometry");
         return;
     }
     if (!Platform_RenderThread_Post(fl_widget_attach_window, widget)) {
-        PROFILE_END_VAR(_pt, "flapi:fl_widget_apply_geometry");
         return;
     }
-    PROFILE_END_VAR(_pt, "flapi:fl_widget_apply_geometry");
 }
 
 static int fl_widget_sort_key(const FlWidget *widget) {
