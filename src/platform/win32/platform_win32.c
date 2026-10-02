@@ -1588,6 +1588,10 @@ log_info("Platform_InitUI completed");
 void Platform_ShutdownUI() {
   extern void win32_free_bg_cache(void);
   win32_free_bg_cache();
+  {
+    extern void win32_img_cache_free_all(void);
+    win32_img_cache_free_all();
+  }
   if (g_win32_hKeyboardHook) {
     UnhookWindowsHookEx(g_win32_hKeyboardHook);
     g_win32_hKeyboardHook = NULL;
