@@ -321,24 +321,7 @@ log_info("Platform_ShellExecuteWithVerb path='%s' verb='%s' async=%d", path ? pa
     return true;
 }
 
-bool Platform_LaunchApp(const char* path) {
     if (!path) { log_error("path is NULL"); return false; }
-    char expanded[MAX_PATH];
-    if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) { log_error("Platform_ExpandPath failed for '%s'", path); return false; }
-    if (!Platform_ShellExecuteWithVerb(expanded, "open", true)) { log_error("ShellExecute failed for '%s' (expanded '%s')", path, expanded); return false; }
-log_info("Platform_LaunchApp path='%s'", path ? path : "");;
-    return true;
-}
-
-bool Platform_LaunchAppAsAdmin(const char* path) {
-    if (!path) { log_error("path is NULL"); return false; }
-    char expanded[MAX_PATH];
-    if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) { log_error("Platform_ExpandPath failed for '%s'", path); return false; }
-    if (!Platform_ShellExecuteWithVerb(expanded, "runas", true)) { log_error("ShellExecute (runas) failed for '%s' (expanded '%s')", path, expanded); return false; }
-log_info("Platform_LaunchAppAsAdmin path='%s'", path ? path : "");;
-    return true;
-}
-
 bool Platform_IsCtrlPressed(void) {
 log_info("Platform_IsCtrlPressed completed");
     return (GetKeyState(VK_CONTROL) & 0x8000) != 0;
