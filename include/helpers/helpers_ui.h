@@ -29,7 +29,7 @@ bool UI_IsListBoxSelected(ListBoxInfo* lb);
 void UpdateTextCaret(WindowHandle hwndEditControl);
 void CalculateWindowMetrics(WindowLayout* layout,int height , int width,int item_height);
 
-#define MSG_PROMPT_GAP_DEFAULT 200
+#define MSG_PROMPT_GAP_DEFAULT 0
 #define MSG_SCREEN_GAP_DEFAULT 20
 
 typedef enum {
@@ -60,7 +60,7 @@ typedef enum {
 extern int MessagePromptGap;
 extern int MessageScreenGap;
 
-void MessageSlotToRect(FlMessageSlot slot, int prompt_gap, int* out_x, int* out_y, int* out_w, int* out_h, int* out_h_slot, int* out_v_slot, int* out_gap);
+void MessageSlotToRect(FlMessageSlot slot, int prompt_gap, int* out_x, int* out_y, int* out_w, int* out_h, int* out_h_slot, int* out_v_slot, int* out_gap, int* out_outward);
 void DisplayMessageSlot(const char* message, FlMessageSlot slot, int max_w, int max_h, int prompt_gap, int timeout, ColorRef color);
 
 #endif

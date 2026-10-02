@@ -11,10 +11,11 @@
 int MessagePromptGap = MSG_PROMPT_GAP_DEFAULT;
 int MessageScreenGap = MSG_SCREEN_GAP_DEFAULT;
 
-void MessageSlotToRect(FlMessageSlot slot, int prompt_gap, int* out_x, int* out_y, int* out_w, int* out_h, int* out_h_slot, int* out_v_slot, int* out_gap) {
+void MessageSlotToRect(FlMessageSlot slot, int prompt_gap, int* out_x, int* out_y, int* out_w, int* out_h, int* out_h_slot, int* out_v_slot, int* out_gap, int* out_outward) {
     int h_slot = 1;
     int v_slot = 1;
     int gap = MessageScreenGap;
+    int outward = 0;
     int x = 0, y = 0, w = 0, h = 0;
     int mox = 0, moy = 0, mow = 0, moh = 0;
     WindowManager_GetMainMonitorGeometry(&mox, &moy, &mow, &moh);
@@ -23,6 +24,7 @@ void MessageSlotToRect(FlMessageSlot slot, int prompt_gap, int* out_x, int* out_
     if (slot >= FL_TOP_LEFT_RELATIVE && slot <= FL_BOTTOM_RIGHT_RELATIVE) {
         if (prompt_gap < 0) prompt_gap = 0;
         gap = prompt_gap;
+        outward = 1;
         WindowManager_GetPromptBounds(&x, &y, &w, &h);
         if (w <= 0 || h <= 0) { x = mox; y = moy; w = mow; h = moh; }
         slot = (FlMessageSlot)(slot - FL_TOP_LEFT_RELATIVE + FL_TOP_LEFT);
@@ -44,13 +46,14 @@ void MessageSlotToRect(FlMessageSlot slot, int prompt_gap, int* out_x, int* out_
     if (out_h_slot) *out_h_slot = h_slot;
     if (out_v_slot) *out_v_slot = v_slot;
     if (out_gap) *out_gap = gap;
+    if (out_outward) *out_outward = outward;
 }
 
 void DisplayMessageSlot(const char* message, FlMessageSlot slot, int max_w, int max_h, int prompt_gap, int timeout, ColorRef color) {
     if (!message || !message[0]) return;
-    int x = 0, y = 0, w = 0, h = 0, h_slot = 1, v_slot = 1, gap = 0;
-    MessageSlotToRect(slot, prompt_gap, &x, &y, &w, &h, &h_slot, &v_slot, &gap);
-    Platform_DisplayMessageAnchored(message, x, y, w, h, h_slot, v_slot, gap, max_w, max_h, timeout, color);
+    int x = 0, y = 0, w = 0, h = 0, h_slot = 1, v_slot = 1, gap = 0, outward = 0;
+    MessageSlotToRect(slot, prompt_gap, &x, &y, &w, &h, &h_slot, &v_slot, &gap, &outward);
+    Platform_DisplayMessageAnchored(message, x, y, w, h, h_slot, v_slot, gap, outward, max_w, max_h, timeout, color);
 }
 
 EditorMode g_last_mode = MODE_INSERT;

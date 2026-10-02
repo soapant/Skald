@@ -282,7 +282,7 @@ void Platform_DisplayMessage(const char* message, int centerX, int centerY, int 
     MsgPresent(dpy, message, x, y, winW, winH, timeout, color);
 }
 
-void Platform_DisplayMessageAnchored(const char* message, int rect_x, int rect_y, int rect_w, int rect_h, int h_slot, int v_slot, int gap, int maxWidth, int maxHeight, int timeout, ColorRef color) {
+void Platform_DisplayMessageAnchored(const char* message, int rect_x, int rect_y, int rect_w, int rect_h, int h_slot, int v_slot, int gap, int outward, int maxWidth, int maxHeight, int timeout, ColorRef color) {
     if (!message || !message[0]) return;
     Display *dpy = get_display();
     if (!dpy) return;
@@ -309,12 +309,12 @@ void Platform_DisplayMessageAnchored(const char* message, int rect_x, int rect_y
     if (winW > maxWidth) winW = maxWidth;
     if (winH > maxHeight) winH = maxHeight;
     int x;
-    if (h_slot == 0) x = rect_x + gap;
-    else if (h_slot == 2) x = rect_x + rect_w - gap - winW;
+    if (h_slot == 0) x = outward ? rect_x - gap - winW : rect_x + gap;
+    else if (h_slot == 2) x = outward ? rect_x + rect_w + gap : rect_x + rect_w - gap - winW;
     else x = rect_x + (rect_w - winW) / 2;
     int y;
-    if (v_slot == 0) y = rect_y + gap;
-    else if (v_slot == 2) y = rect_y + rect_h - gap - winH;
+    if (v_slot == 0) y = outward ? rect_y - gap - winH : rect_y + gap;
+    else if (v_slot == 2) y = outward ? rect_y + rect_h + gap : rect_y + rect_h - gap - winH;
     else y = rect_y + (rect_h - winH) / 2;
     MsgPresent(dpy, message, x, y, winW, winH, timeout, color);
 }
