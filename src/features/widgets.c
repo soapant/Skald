@@ -229,6 +229,10 @@ static void widgets_date_and_time_render(FlWidgetState *state) {
                  .color = RGB(220, 220, 220), .align = "LEFT");
 }
 
+void on_click(void) {
+    fl_popup();
+}
+
 static FlWidget* g_disk = NULL;
 static FlWidget* g_mem = NULL;
 static FlWidget* g_cpu = NULL;
@@ -266,6 +270,7 @@ FLINT_FEATURE_INIT {
               .color = COLOR,
               .fps = FPS,
               .no_bg = NO_BG,
+              .on_click = on_click,
               .slot = FL_WIDGET_SLOT_BOTTOM_RIGHT,
               .render = widgets_date_and_time_render);
 
