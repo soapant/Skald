@@ -366,10 +366,10 @@ bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
     if (w <= 0) w = 16;
     if (h <= 0) h = 16;
     measure_track(x, y, w, h);
-    if (!g_draw_hdc) { PROFILE_END_VAR(timer, "win32:Platform_DrawImageAt"); return false; }
+    if (!g_draw_hdc) { log_error("img: no draw context (g_draw_hdc NULL)"); PROFILE_END_VAR(timer, "win32:Platform_DrawImageAt"); return false; }
 
     HDC screen = GetDC(NULL);
-    if (!screen) { PROFILE_END_VAR(timer, "win32:Platform_DrawImageAt"); return false; }
+    if (!screen) { log_error("img: GetDC(NULL) failed"); PROFILE_END_VAR(timer, "win32:Platform_DrawImageAt"); return false; }
 
     HBITMAP bmp = win32_img_cache_get(path, screen, w, h);
     if (bmp) g_img_cache_hits++;
@@ -385,12 +385,22 @@ bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
         gsi2.DebugEventCallback = NULL;
         gsi2.SuppressBackgroundThread = FALSE;
         gsi2.SuppressExternalCodecs = FALSE;
-        if (GdiplusStartup(&tk, &gsi2, NULL) == Ok && tk) {
+        GpStatus _s2 = GdiplusStartup(&tk, &gsi2, NULL);
+        if (_s2 != Ok || !tk) {
+            log_error("img: draw GdiplusStartup st=%d", (int)_s2);
+        } else {
             GpBitmap *im = NULL;
-            if (GdipCreateBitmapFromHBITMAP(bmp, NULL, &im) == Ok && im) {
+            GpStatus _w2 = GdipCreateBitmapFromHBITMAP(bmp, NULL, &im);
+            if (_w2 != Ok || !im) {
+                log_error("img: draw HBITMAP wrap st=%d", (int)_w2);
+            } else {
                 GpGraphics *g = NULL;
-                if (GdipCreateFromHDC(g_draw_hdc, &g) == Ok && g) {
-                    GdipDrawImageRectI(g, im, x, y, w, h);
+                GpStatus _h2 = GdipCreateFromHDC(g_draw_hdc, &g);
+                if (_h2 != Ok || !g) {
+                    log_error("img: GdipCreateFromHDC st=%d hdc=%p", (int)_h2, (void *)g_draw_hdc);
+                } else {
+                    GpStatus _d2 = GdipDrawImageRectI(g, im, x, y, w, h);
+                    if (_d2 != Ok) log_error("img: GdipDrawImageRectI st=%d at %d,%d %dx%d", (int)_d2, x, y, w, h);
                     GdipDeleteGraphics(g);
                     ok = true;
                 }
@@ -400,6 +410,7 @@ bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
         }
     }
     ReleaseDC(NULL, screen);
+    log_warn("img: draw %s ok=%d hdc=%p", path, (int)ok, (void *)g_draw_hdc);
     if ((g_img_cache_hits + g_img_cache_misses) % 60 == 0) {
         log_warn("img: cache hits=%llu misses=%llu", g_img_cache_hits, g_img_cache_misses);
     }
