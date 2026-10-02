@@ -16,6 +16,7 @@ static bool env_sock_live(const char* path) {
 void Env_GetSessionEnv(X11SessionEnv* out) {
     if (!out) return;
     out->real_user = Platform_GetRealUser();
+    out->real_home = Platform_GetRealHome();
     out->display = Platform_GetSessionDisplay();
     out->xauthority = Platform_GetSessionXAuthority();
     out->runtime_dir = Platform_GetRuntimeDir();
@@ -47,6 +48,17 @@ void Env_ApplyToCurrentProcess(const X11SessionEnv* env) {
     if (env->runtime_dir) setenv("XDG_RUNTIME_DIR", env->runtime_dir, 1);
     if (env->wayland_display && env->wayland_display[0]) setenv("WAYLAND_DISPLAY", env->wayland_display, 1);
     else unsetenv("WAYLAND_DISPLAY");
+    if (env->real_user && env->real_user[0]) setenv("USER", env->real_user, 1);
+    if (env->real_user && env->real_user[0]) setenv("LOGNAME", env->real_user, 1);
+    if (env->real_home && env->real_home[0]) setenv("HOME", env->real_home, 1);
+    const char* cfg = getenv("XDG_CONFIG_HOME");
+    if (!cfg || !cfg[0]) {
+        if (env->real_home && env->real_home[0]) {
+            char buf[1024];
+            snprintf(buf, sizeof(buf), "%s/.config", env->real_home);
+            setenv("XDG_CONFIG_HOME", buf, 1);
+        }
+    }
 }
 
 bool Env_IsRunningAsRoot(void) {
