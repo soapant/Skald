@@ -194,12 +194,13 @@ char* fl_popup_impl(const FlPopupSpec *spec);
 
 typedef struct {
     const char* message;
-    const char* position;
+    FlMessageSlot slot;
     int x;
     int y;
     int w;
     int h;
     int timeout;
+    int prompt_gap;
     ColorRef color;
 } FlMessageSpec;
 
@@ -230,17 +231,17 @@ int fl_get_popup_height(void);
 // Used by anchored placement. Raw still exists for pixel control.
 
 typedef enum {
-    FL_TOP_LEFT,
-    FL_TOP_CENTER,
-    FL_TOP_RIGHT,
-    FL_CENTER_LEFT,
-    FL_CENTER,
-    FL_CENTER_RIGHT,
-    FL_BOTTOM_LEFT,
-    FL_BOTTOM_CENTER,
-    FL_BOTTOM_RIGHT,
-    FL_FILL_WIDTH,
-    FL_FILL_HEIGHT
+    FLANCHOR_TOP_LEFT,
+    FLANCHOR_TOP_CENTER,
+    FLANCHOR_TOP_RIGHT,
+    FLANCHOR_CENTER_LEFT,
+    FLANCHOR_CENTER,
+    FLANCHOR_CENTER_RIGHT,
+    FLANCHOR_BOTTOM_LEFT,
+    FLANCHOR_BOTTOM_CENTER,
+    FLANCHOR_BOTTOM_RIGHT,
+    FLANCHOR_FILL_WIDTH,
+    FLANCHOR_FILL_HEIGHT
 } FlAnchor;
 
 // =============================================================================

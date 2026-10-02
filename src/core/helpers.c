@@ -6,79 +6,51 @@
 #include "platform/ui.h"
 #include "platform/platform.h"
 #include "platform/wm_platform.h"
-#include <ctype.h>
-#include <string.h>
+#include "core/window_manager.h"
 
-static bool MsgTokenEqualsAt(const char* p, const char* token, size_t len) {
-    for (size_t i = 0; i < len; i++) {
-        if (tolower((unsigned char)p[i]) != tolower((unsigned char)token[i])) return false;
-    }
-    return true;
-}
+int MessagePromptGap = MSG_PROMPT_GAP_DEFAULT;
+int MessageScreenGap = MSG_SCREEN_GAP_DEFAULT;
 
-static bool MsgHasToken(const char* position, const char* token) {
-    size_t n = strlen(token);
-    for (const char* p = position; *p; p++) {
-        if (*p == ' ' || *p == '-' || *p == '_') continue;
-        if (!MsgTokenEqualsAt(p, token, n)) continue;
-        char after = p[n];
-        if (after == '\0' || after == ' ' || after == '-' || after == '_') return true;
-    }
-    return false;
-}
-
-void ParseMessageAnchor(const char* position, MsgAnchorH* h, MsgAnchorV* v) {
-    *h = MSG_ANCHOR_H_CENTER;
-    *v = MSG_ANCHOR_V_CENTER;
-    if (!position || !position[0]) return;
-    if (MsgHasToken(position, "left")) *h = MSG_ANCHOR_H_LEFT;
-    else if (MsgHasToken(position, "right")) *h = MSG_ANCHOR_H_RIGHT;
-    if (MsgHasToken(position, "top")) *v = MSG_ANCHOR_V_TOP;
-    else if (MsgHasToken(position, "bottom")) *v = MSG_ANCHOR_V_BOTTOM;
-}
-
-bool MessagePositionIsFreehand(const char* position) {
-    if (!position || !position[0]) return false;
-    return MsgHasToken(position, "free") || MsgHasToken(position, "custom");
-}
-
-void ResolveMessageCenter(const char* position, int max_w, int max_h, int* out_x, int* out_y) {
-    int anchor_w = max_w > 0 ? max_w : MSG_ANCHOR_MAX_W;
-    int anchor_h = max_h > 0 ? max_h : MSG_ANCHOR_MAX_H;
-    MsgAnchorH h;
-    MsgAnchorV v;
-    ParseMessageAnchor(position, &h, &v);
+void MessageSlotToRect(FlMessageSlot slot, int prompt_gap, int* out_x, int* out_y, int* out_w, int* out_h, int* out_h_slot, int* out_v_slot, int* out_gap) {
+    int h_slot = 1;
+    int v_slot = 1;
+    int gap = MessageScreenGap;
+    int x = 0, y = 0, w = 0, h = 0;
     int mox = 0, moy = 0, mow = 0, moh = 0;
-    Platform_WM_GetMonitorGeometry(&mox, &moy, &mow, &moh);
+    WindowManager_GetMainMonitorGeometry(&mox, &moy, &mow, &moh);
     if (mow <= 0) mow = 1920;
     if (moh <= 0) moh = 1080;
-    int x;
-    if (h == MSG_ANCHOR_H_LEFT) x = mox + GAP + anchor_w / 2;
-    else if (h == MSG_ANCHOR_H_RIGHT) x = mox + mow - GAP - anchor_w / 2;
-    else x = mox + mow / 2;
-    int y;
-    if (v == MSG_ANCHOR_V_TOP) y = moy + GAP + anchor_h / 2;
-    else if (v == MSG_ANCHOR_V_BOTTOM) y = moy + moh - GAP - anchor_h / 2;
-    else y = moy + moh / 2;
+    if (slot >= FL_TOP_LEFT_RELATIVE && slot <= FL_BOTTOM_RIGHT_RELATIVE) {
+        if (prompt_gap < 0) prompt_gap = 0;
+        gap = prompt_gap;
+        WindowManager_GetPromptBounds(&x, &y, &w, &h);
+        if (w <= 0 || h <= 0) { x = mox; y = moy; w = mow; h = moh; }
+        slot = (FlMessageSlot)(slot - FL_TOP_LEFT_RELATIVE + FL_TOP_LEFT);
+    } else {
+        x = mox;
+        y = moy;
+        w = mow;
+        h = moh;
+    }
+    if (slot >= FL_TOP_LEFT && slot <= FL_BOTTOM_RIGHT) {
+        int idx = slot - FL_TOP_LEFT;
+        h_slot = idx % 3;
+        v_slot = idx / 3;
+    }
     if (out_x) *out_x = x;
     if (out_y) *out_y = y;
+    if (out_w) *out_w = w;
+    if (out_h) *out_h = h;
+    if (out_h_slot) *out_h_slot = h_slot;
+    if (out_v_slot) *out_v_slot = v_slot;
+    if (out_gap) *out_gap = gap;
 }
 
-void DisplayMessageAnchored(const char* message, const char* position, int max_w, int max_h, int timeout, ColorRef color) {
+void DisplayMessageSlot(const char* message, FlMessageSlot slot, int max_w, int max_h, int prompt_gap, int timeout, ColorRef color) {
     if (!message || !message[0]) return;
-    int x = 0;
-    int y = 0;
-    ResolveMessageCenter(position, max_w, max_h, &x, &y);
-    Platform_DisplayMessage(message, x, y, max_w, max_h, timeout, color);
+    int x = 0, y = 0, w = 0, h = 0, h_slot = 1, v_slot = 1, gap = 0;
+    MessageSlotToRect(slot, prompt_gap, &x, &y, &w, &h, &h_slot, &v_slot, &gap);
+    Platform_DisplayMessageAnchored(message, x, y, w, h, h_slot, v_slot, gap, max_w, max_h, timeout, color);
 }
 
-// void SubjectiveMessageDisplay(const char* buffer,int msg_height,int timeout,ColorRef color) {
-//     if (MessagesEnabled) {
-//         if (IsPopupActive(WH_NULL)) {
-//           MSG_TOP(buffer,msg_height,timeout,color);
-//         }else {
-//           MSG_MIDDLE_BOTTOM(buffer,msg_height / 2,timeout,color);
-//         }
-//     }
-// }
 EditorMode g_last_mode = MODE_INSERT;
