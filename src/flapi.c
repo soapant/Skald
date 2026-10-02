@@ -989,8 +989,7 @@ bool fl_toggle_minimized_active(void) {
 bool fl_open_image(char* image_path) {
   if (!image_path || !image_path[0]) return false;
   char cmd[1024];
-  if (UsedImageViewer && UsedImageViewer[0]) snprintf(cmd, sizeof(cmd), "%s \"%s\"", UsedImageViewer, image_path);
-  else snprintf(cmd, sizeof(cmd), "xdg-open \"%s\"", image_path);
+  snprintf(cmd, sizeof(cmd), "xdg-open \"%s\"", image_path);
   return fl_launch_detached(cmd);
 }
 

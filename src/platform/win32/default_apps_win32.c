@@ -109,38 +109,6 @@ const char* get_default_browser(void) {
     return found ? found : "chrome";
 }
 
-const char* get_default_video_player(void) {
-    const char* possible_video_players[] = {
-        "VLC media player", "Media Player", "Movies & TV", "MPC-HC", "MPC-BE",
-        "PotPlayer", "KMPlayer", "GOM Player", "MPV", "5KPlayer", " Kodi",
-        "Windows Media Player"
-    };
-
-    const char* found = sm_lookup(2, possible_video_players, ARRAY_LEN(possible_video_players));
-    return found ? found : "vlc";
-}
-
-const char* get_default_music_player(void) {
-    const char* possible_music_players[] = {
-        "Spotify", "Media Player", "Groove Music", "Foobar2000", "Winamp",
-        "AIMP", "MusicBee", "iTunes", "TIDAL", "Amazon Music", "Apple Music",
-        "Clementine", "VLC media player"
-    };
-
-    const char* found = sm_lookup(3, possible_music_players, ARRAY_LEN(possible_music_players));
-    return found ? found : "vlc";
-}
-
-const char* get_default_image_viewer(void) {
-    const char* possible_image_viewers[] = {
-        "Photos", "Windows Photo Viewer", "IrfanView", "XnView", "FastStone",
-        "Honeyview", "ImageGlass", "DigiKam"
-    };
-
-    const char* found = sm_lookup(4, possible_image_viewers, ARRAY_LEN(possible_image_viewers));
-    return found ? found : "mspaint";
-}
-
 const char* Platform_GetDefaultTerminal(void) {
     int slot = DEFAULT_TERMINAL;
     default_apps_win32[slot][0] = '\0';
@@ -191,14 +159,6 @@ const char* Platform_GetDefaultApp(DefaultAppKind kind) {
     switch (kind) {
         case DEFAULT_BROWSER:
             fallback_name = get_default_browser();
-            break;
-
-        case DEFAULT_IMAGE_VIEWER:
-            fallback_name = get_default_image_viewer();
-            break;
-
-        case DEFAULT_VIDEO_PLAYER:
-            fallback_name = get_default_video_player();
             break;
 
         case DEFAULT_TERMINAL:
