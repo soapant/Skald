@@ -220,12 +220,8 @@ void Platform_DisplayMessage(const char* message, int centerX, int centerY, int 
     Platform_DestroyFont(font);
     int winW = textW + 30;
     int winH = textH + 30;
-    int mox = 0, moy = 0, mow = 1920, moh = 1080;
-    Platform_WM_GetMonitorGeometry(&mox, &moy, &mow, &moh);
-    int cx = mox + mow / 2 + (centerX - 960);
-    int cy = moy + moh / 2 + (centerY - 540);
-    int x = cx - winW / 2;
-    int y = cy - winH / 2;
+    int x = centerX - winW / 2;
+    int y = centerY - winH / 2;
     Window win = x11_create_display_message_window(dpy, x, y, winW, winH, false);
     if (!win) return;
     g_msg_win = win;
