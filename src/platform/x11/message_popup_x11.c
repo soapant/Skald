@@ -69,6 +69,9 @@ static void *MsgDismissThread(void *arg) {
 
 #define MSG_MAX_LINES 64
 
+#define MSG_AUTO_WRAP_MAX_W 900
+#define MSG_AUTO_WRAP_MAX_H 600
+
 typedef struct {
     const char *s;
     int n;
@@ -222,8 +225,8 @@ void Platform_DisplayMessage(const char* message, int centerX, int centerY, int 
     if (!message || !message[0]) return;
     Display *dpy = get_display();
     if (!dpy) return;
-    if (maxWidth <= 0) maxWidth = 900;
-    if (maxHeight <= 0) maxHeight = 140;
+    if (maxWidth <= 0) maxWidth = MSG_AUTO_WRAP_MAX_W;
+    if (maxHeight <= 0) maxHeight = MSG_AUTO_WRAP_MAX_H;
     FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
     XftFont *xf = FH_TO_XFT(font);
     int textW = 0;
@@ -231,7 +234,9 @@ void Platform_DisplayMessage(const char* message, int centerX, int centerY, int 
     MsgLine lines[MSG_MAX_LINES];
     int nlines = 0;
     if (xf) {
-        nlines = MsgWrapText(dpy, xf, message, maxWidth - 30, lines, MSG_MAX_LINES);
+        int wrapW = maxWidth - 30;
+        if (wrapW > MSG_AUTO_WRAP_MAX_W) wrapW = MSG_AUTO_WRAP_MAX_W;
+        nlines = MsgWrapText(dpy, xf, message, wrapW, lines, MSG_MAX_LINES);
         for (int i = 0; i < nlines; i++) {
             if (lines[i].w > textW) textW = lines[i].w;
         }
@@ -240,6 +245,8 @@ void Platform_DisplayMessage(const char* message, int centerX, int centerY, int 
     Platform_DestroyFont(font);
     int winW = textW + 30;
     int winH = textH + 30;
+    if (winW > maxWidth) winW = maxWidth;
+    if (winH > maxHeight) winH = maxHeight;
     int x = centerX - winW / 2;
     int y = centerY - winH / 2;
     Window win = x11_create_display_message_window(dpy, x, y, winW, winH, false);
