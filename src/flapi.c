@@ -986,13 +986,6 @@ bool fl_toggle_minimized_active(void) {
   return r;
 }
 
-bool fl_open_image(char* image_path) {
-  if (!image_path || !image_path[0]) return false;
-  char cmd[1024];
-  snprintf(cmd, sizeof(cmd), "xdg-open \"%s\"", image_path);
-  return fl_launch_detached(cmd);
-}
-
 char* fl_popup_impl(const FlPopupSpec *spec) {
     const char* initial_text = spec->initial_text ? spec->initial_text : "";
     int x = spec->x ? spec->x : 0;
@@ -1640,12 +1633,12 @@ void fl_screenshot_save(char* save_path) {
 
 void fl_screenshot_open(char* save_path) {
     fl_screenshot_save_platform(save_path);
-    fl_open_image(save_path);
+    fl_launch_with_args(save_path,NULL);
 }
 
 void fl_screenshot_open_area(char* save_path) {
     fl_screenshot_save_area_platform(save_path);
-    fl_open_image(save_path);
+    fl_launch_with_args(save_path,NULL);
 }
 
 void fl_ocr_area_to_clipboard(void) {
