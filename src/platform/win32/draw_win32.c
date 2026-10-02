@@ -229,7 +229,7 @@ static void win32_img_stat(const char *path, FILETIME *ft, DWORD *size) {
     *size = (fad.nFileSizeHigh << 16) | fad.nFileSizeLow;
 }
 
-static HBITMAP win32_img_cache_get(const char *path, HDC screen, int w, int h) {
+static void* win32_img_cache_get(const char *path, HDC screen, int w, int h) {
     FILETIME ft;
     DWORD size;
     win32_img_stat(path, &ft, &size);
@@ -249,7 +249,7 @@ static HBITMAP win32_img_cache_get(const char *path, HDC screen, int w, int h) {
     return found;
 }
 
-static void win32_img_cache_put(const char *path, HDC screen, int w, int h, HBITMAP bmp) {
+static void win32_img_cache_put(const char *path, HDC screen, int w, int h, void* bmp) {
     if (!bmp) return;
     FILETIME ft;
     DWORD size;
@@ -265,7 +265,7 @@ static void win32_img_cache_put(const char *path, HDC screen, int w, int h, HBIT
     }
     if (slot < 0) slot = 0;
     Win32ImgSlot *s = &g_img_cache[slot];
-    if (s->bmp && s->screen) DeleteObject(s->bmp);
+    if (s->bmp && s->screen) { ULONG_PTR tk=0; GdiplusStartupInput gs; gs.GdiplusVersion=1; gs.DebugEventCallback=NULL; gs.SuppressBackgroundThread=FALSE; gs.SuppressExternalCodecs=FALSE; if (GdiplusStartup(&tk,&gs,NULL)==Ok&&tk) { GdipDisposeImage((GpBitmap*)s->bmp); GdiplusShutdown(tk);} }
     snprintf(s->key, sizeof(s->key), "%s", path);
     s->w = w;
     s->h = h;
@@ -280,7 +280,7 @@ static void win32_img_cache_put(const char *path, HDC screen, int w, int h, HBIT
 void win32_img_cache_free_all(void) {
     win32_img_cache_lock();
     for (int i = 0; i < WIN32_IMG_CACHE_SLOTS; i++) {
-        if (g_img_cache[i].bmp) DeleteObject(g_img_cache[i].bmp);
+        if (g_img_cache[i].bmp) { ULONG_PTR tk=0; GdiplusStartupInput gs; gs.GdiplusVersion=1; gs.DebugEventCallback=NULL; gs.SuppressBackgroundThread=FALSE; gs.SuppressExternalCodecs=FALSE; if (GdiplusStartup(&tk,&gs,NULL)==Ok&&tk) { GdipDisposeImage((GpBitmap*)g_img_cache[i].bmp); GdiplusShutdown(tk);} }
         memset(&g_img_cache[i], 0, sizeof(g_img_cache[i]));
     }
     win32_img_cache_unlock();
@@ -292,7 +292,7 @@ static void win32_utf8_to_wide(const char *in, wchar_t *out, int out_max) {
     if (n <= 0) { out[0] = 0; return; }
 }
 
-static void* win32_load_scaled_bitmap(const char *path, HDC screen, int w, int h) {
+static void* win32_load_scaled_bitmap(const char *path, int w, int h) {
     ULONG_PTR token = 0;
     GdiplusStartupInput gsi;
     gsi.GdiplusVersion = 1;
@@ -300,7 +300,7 @@ static void* win32_load_scaled_bitmap(const char *path, HDC screen, int w, int h
     gsi.SuppressBackgroundThread = FALSE;
     gsi.SuppressExternalCodecs = FALSE;
     GpStatus _st = GdiplusStartup(&token, &gsi, NULL);
-    if (_st != Ok || token == 0) { log_error("img: GdiplusStartup failed st=%d", (int)_st); return NULL; }
+    if (_st != Ok || token == 0) { log_error("img: GdiplusStartup st=%d", (int)_st); return NULL; }
 
     wchar_t wpath[MAX_PATH * 2];
     win32_utf8_to_wide(path, wpath, (int)(sizeof(wpath) / sizeof(wchar_t)));
@@ -308,53 +308,51 @@ static void* win32_load_scaled_bitmap(const char *path, HDC screen, int w, int h
     GpBitmap *out = NULL;
     GpBitmap *src = NULL;
     GpStatus _fs = GdipCreateBitmapFromFile(wpath, &src);
-    if (_fs != Ok || !src) { log_error("img: GdipCreateBitmapFromFile failed st=%d path=%s", (int)_fs, path); if (src) GdipDisposeImage(src); GdiplusShutdown(token); return NULL; }
-    {
-        UINT sw = 0, sh = 0;
-        GdipGetImageWidth(src, &sw);
-        GdipGetImageHeight(src, &sh);
-        if (sw > 0 && sh > 0) {
-            BITMAPINFOHEADER bmi;
-            memset(&bmi, 0, sizeof(bmi));
-            bmi.biSize = sizeof(BITMAPINFOHEADER);
-            bmi.biWidth = w;
-            bmi.biHeight = -h;
-            bmi.biPlanes = 1;
-            bmi.biBitCount = 32;
-            bmi.biCompression = BI_RGB;
-            HDC mem = CreateCompatibleDC(screen);
-            if (!mem) log_error("img: CreateCompatibleDC failed");
-            if (mem) {
-                void *bits = NULL;
-                HBITMAP dib = CreateDIBSection(mem, (BITMAPINFO *)&bmi, DIB_RGB_COLORS, &bits, NULL, 0);
-                if (!dib || !bits) log_error("img: CreateDIBSection failed err=%lu bits=%p", GetLastError(), bits);
-                if (dib && bits) {
-                    GpBitmap *tmp = NULL;
-                    GpStatus _ws = GdipCreateBitmapFromHBITMAP(dib, NULL, &tmp);
-                    if (_ws != Ok || !tmp) log_error("img: HBITMAP wrap st=%d w=%d h=%d", (int)_ws, w, h);
-                    if (_ws == Ok && tmp) {
-                        GpGraphics *g = NULL;
-                        GpStatus _gs = GdipGetImageGraphicsContext(tmp, &g);
-                        if (_gs != Ok || !g) log_error("img: ctx st=%d", (int)_gs);
-                        if (_gs == Ok && g) {
-                            GdipSetInterpolationMode(g, InterpolationModeHighQualityBicubic);
-                            GdipDrawImageRectI(g, tmp, 0, 0, w, h);
-                            GdipDeleteGraphics(g);
-                        }
-                        GdipDisposeImage(tmp);
-                        out = dib;
-                        dib = NULL;
-                    }
-                }
-                if (dib) DeleteObject(dib);
-                DeleteDC(mem);
-            }
-        }
-        GdipDisposeImage(src);
+    if (_fs != Ok || !src) {
+        log_error("img: FromFile st=%d path=%s", (int)_fs, path);
+        if (src) GdipDisposeImage(src);
+        GdiplusShutdown(token);
+        return NULL;
     }
-    GdiplusShutdown(token);
-    if (!out) log_error("img: load produced no bitmap path=%s %dx%d", path, w, h);
-    else log_warn("img: loaded %s %dx%d (cache miss)", path, w, h);
+    HDC sc = GetDC(NULL);
+    void *raw = NULL;
+    HDC mdc = sc ? CreateCompatibleDC(sc) : NULL;
+    if (mdc) {
+        BITMAPINFOHEADER bi;
+        memset(&bi, 0, sizeof(bi));
+        bi.biSize = sizeof(bi);
+        bi.biWidth = w;
+        bi.biHeight = -h;
+        bi.biPlanes = 1;
+        bi.biBitCount = 32;
+        bi.biCompression = BI_RGB;
+        HBITMAP d = CreateDIBSection(mdc, (BITMAPINFO *)&bi, DIB_RGB_COLORS, &raw, NULL, 0);
+        GpStatus _ws = GdipCreateBitmapFromHBITMAP(d, NULL, &out);
+        UINT ww = 0, hh = 0;
+        if (out) { GdipGetImageWidth(out, &ww); GdipGetImageHeight(out, &hh); }
+        log_error("img: wrap st=%d got %ux%u want %dx%d", (int)_ws, ww, hh, w, h);
+        if (d) DeleteObject(d);
+        DeleteDC(mdc);
+    }
+    if (sc) ReleaseDC(NULL, sc);
+    if (!out) {
+        GdipDisposeImage(src);
+        GdiplusShutdown(token);
+        return NULL;
+    }
+    GpGraphics *g = NULL;
+    GpStatus _gs = GdipGetImageGraphicsContext(out, &g);
+    if (_gs == Ok && g) {
+        GdipSetInterpolationMode(g, InterpolationModeHighQualityBicubic);
+        GdipSetCompositingMode(g, CompositingModeSourceOver);
+        GdipSetSmoothingMode(g, SmoothingModeHighQuality);
+        GdipDrawImageRectI(g, src, 0, 0, w, h);
+        GdipDeleteGraphics(g);
+    } else {
+        log_error("img: ctx st=%d", (int)_gs);
+    }
+    GdipDisposeImage(src);
+    log_warn("img: loaded %s %dx%d (cache miss)", path, w, h);
     return out;
 }
 
@@ -371,10 +369,10 @@ bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
     HDC screen = GetDC(NULL);
     if (!screen) { log_error("img: GetDC(NULL) failed"); PROFILE_END_VAR(timer, "win32:Platform_DrawImageAt"); return false; }
 
-    HBITMAP bmp = win32_img_cache_get(path, screen, w, h);
+    void* bmp = win32_img_cache_get(path, screen, w, h);
     if (bmp) g_img_cache_hits++;
     if (!bmp) {
-        bmp = win32_load_scaled_bitmap(path, screen, w, h);
+        bmp = win32_load_scaled_bitmap(path, w, h);
         if (bmp) { win32_img_cache_put(path, screen, w, h, bmp); g_img_cache_misses++; }
     }
     bool ok = false;
@@ -389,22 +387,15 @@ bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
         if (_s2 != Ok || !tk) {
             log_error("img: draw GdiplusStartup st=%d", (int)_s2);
         } else {
-            GpBitmap *im = NULL;
-            GpStatus _w2 = GdipCreateBitmapFromHBITMAP(bmp, NULL, &im);
-            if (_w2 != Ok || !im) {
-                log_error("img: draw HBITMAP wrap st=%d", (int)_w2);
+            GpGraphics *g = NULL;
+            GpStatus _h2 = GdipCreateFromHDC(g_draw_hdc, &g);
+            if (_h2 != Ok || !g) {
+                log_error("img: GdipCreateFromHDC st=%d hdc=%p", (int)_h2, (void *)g_draw_hdc);
             } else {
-                GpGraphics *g = NULL;
-                GpStatus _h2 = GdipCreateFromHDC(g_draw_hdc, &g);
-                if (_h2 != Ok || !g) {
-                    log_error("img: GdipCreateFromHDC st=%d hdc=%p", (int)_h2, (void *)g_draw_hdc);
-                } else {
-                    GpStatus _d2 = GdipDrawImageRectI(g, im, x, y, w, h);
-                    if (_d2 != Ok) log_error("img: GdipDrawImageRectI st=%d at %d,%d %dx%d", (int)_d2, x, y, w, h);
-                    GdipDeleteGraphics(g);
-                    ok = true;
-                }
-                GdipDisposeImage(im);
+                GpStatus _d2 = GdipDrawImageRectI(g, (GpBitmap *)bmp, x, y, w, h);
+                if (_d2 != Ok) log_error("img: GdipDrawImageRectI st=%d at %d,%d %dx%d", (int)_d2, x, y, w, h);
+                GdipDeleteGraphics(g);
+                ok = true;
             }
             GdiplusShutdown(tk);
         }
