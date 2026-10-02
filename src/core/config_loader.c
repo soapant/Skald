@@ -325,6 +325,7 @@ static size_t config_emit_region(char* buf, size_t cap) {
     cfg_put(buf, cap, &off, ";\n");
     cfg_put(buf, cap, &off, "    FontSize = %d;\n", Platform_GetUnscaledFontSize());
     cfg_put(buf, cap, &off, "    IconSize = %d;\n", IconSize);
+    cfg_put(buf, cap, &off, "    WidgetGap = %d;\n", WidgetGap);
     cfg_put(buf, cap, &off, "    MaxFeatures = %d;\n", MaxFeatures);
     cfg_put(buf, cap, &off, "    VimFontSize = %d;\n", VimFontSize);
     cfg_put(buf, cap, &off, "    PaddingForScrolling = %d;\n", PaddingForScrolling);

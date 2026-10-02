@@ -1879,10 +1879,11 @@ static void fl_widget_relayout(void) {
         for (int i = 0; i < n; i++) {
             FlWidget *w = sorted[i];
             if (w->slot != s) continue;
+            int g = w->gap_override > 0 ? w->gap_override : WidgetGap;
             int x = from_right ? cursor - w->w : cursor;
             int y = from_top ? my : my + mh - w->h;
             fl_widget_apply_geometry(w, x, y);
-            cursor += from_right ? -(w->w + w->gap) : (w->w + w->gap);
+            cursor += from_right ? -(w->w + g) : (w->w + g);
         }
     }
     PROFILE_END_VAR(_pt, "flapi:fl_widget_relayout");
@@ -1928,7 +1929,7 @@ FlWidget *fl_widget_create(const FlWidgetSpec *spec) {
     widget->pad = spec->pad > 0 ? spec->pad : FL_WIDGET_DEFAULT_PAD;
     if (fresh || !widget->auto_w) widget->w = widget->auto_w ? FL_WIDGET_PROVISIONAL_W : spec->w;
     if (fresh || !widget->auto_h) widget->h = widget->auto_h ? FL_WIDGET_PROVISIONAL_H : spec->h;
-    widget->gap = spec->gap > 0 ? spec->gap : FL_WIDGET_DEFAULT_GAP;
+    widget->gap_override = spec->gap > 0 ? spec->gap : 0;
     widget->fps = spec->fps ? spec->fps : 1;
     widget->slot = (spec->slot >= FL_WIDGET_SLOT_TOP_LEFT && spec->slot <= FL_WIDGET_SLOT_BOTTOM_RIGHT) ? spec->slot : FL_WIDGET_SLOT_BOTTOM_LEFT;
     widget->order = spec->order;
