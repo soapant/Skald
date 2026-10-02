@@ -274,6 +274,9 @@ void Platform_FlushDraw(void) {
 }
 bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
     if (!path || !path[0] || !g_draw_dpy || !g_draw_xd) return false;
+    if (w <= 0) w = IconSize;
+    if (h <= 0) h = IconSize;
+    measure_track(x, y, w, h);
     return Platform_DrawImageScaled(g_draw_dpy, g_draw_xd, g_draw_vis, path, x, y, w, h);
 }
 void Platform_GetDrawContext(Display** dpy, XftDraw** xd, Visual** vis, Colormap* cmap) {

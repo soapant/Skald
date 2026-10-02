@@ -229,7 +229,7 @@ static void widgets_date_and_time_render(FlWidgetState *state) {
                  .color = RGB(220, 220, 220), .align = "LEFT");
 }
 static void widgets_internet_render(FlWidgetState *state) {
-    fl_place_image(.path = "resources/wifi.png",.y=20);
+    fl_place_image(.path = "resources/wifi.png",.y=7,.h=20,.w=20);
 }
 
 static FlWidget* g_disk = NULL;
