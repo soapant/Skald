@@ -2,6 +2,7 @@
 
 
 void Testing(void) {
+  fl_message(.message="nigga ", .slot=TOP_LEFT);
 }
 
 

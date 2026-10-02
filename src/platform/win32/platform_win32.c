@@ -14,6 +14,7 @@
 #include "platform/win32/win32_state.h"
 #include "platform/win32/subclasses_win32.h"
 #include "platform/win32/input_core_win32.h"
+#include "helpers/helpers_ui.h"
 #include "platform/platform.h"
 #include "config.h"
 #include <shellapi.h>
@@ -295,7 +296,7 @@ char* Platform_QueryZoxidePath(const char* query) {
     if (strstr(out, "no match found")) {
         char buffer[256];
         snprintf(buffer, sizeof(buffer), "Query {%s} Doesnt Have A Zoxide Path", query);
-        SubjectiveMessageDisplay(buffer, 140, TimeOutForMessages, COLOR_ERROR);
+        DisplayMessageSlot(buffer, TOP_CENTER_RELATIVE, 0, 0, 0, TimeOutForMessages, COLOR_ERROR);
         free(out);
         return NULL;
     }
@@ -317,30 +318,14 @@ bool Platform_ShellExecuteWithVerb(const char* path, const char* verb, bool asyn
         log_error("ShellExecuteEx failed for '%s' verb='%s' err=%lu", path, verb ? verb : "open", GetLastError());
         return false;
     }
-log_info("Platform_ShellExecuteWithVerb path='%s' verb='%s' async=%d", path ? path : "", verb ? verb : "", async);;
+    log_info("Platform_ShellExecuteWithVerb path='%s' verb='%s' async=%d", path ? path : "", verb ? verb : "", async);
     return true;
-}
 
-bool Platform_LaunchApp(const char* path) {
     if (!path) { log_error("path is NULL"); return false; }
-    char expanded[MAX_PATH];
-    if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) { log_error("Platform_ExpandPath failed for '%s'", path); return false; }
-    if (!Platform_ShellExecuteWithVerb(expanded, "open", true)) { log_error("ShellExecute failed for '%s' (expanded '%s')", path, expanded); return false; }
-log_info("Platform_LaunchApp path='%s'", path ? path : "");;
-    return true;
-}
-
-bool Platform_LaunchAppAsAdmin(const char* path) {
-    if (!path) { log_error("path is NULL"); return false; }
-    char expanded[MAX_PATH];
-    if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) { log_error("Platform_ExpandPath failed for '%s'", path); return false; }
-    if (!Platform_ShellExecuteWithVerb(expanded, "runas", true)) { log_error("ShellExecute (runas) failed for '%s' (expanded '%s')", path, expanded); return false; }
-log_info("Platform_LaunchAppAsAdmin path='%s'", path ? path : "");;
-    return true;
 }
 
 bool Platform_IsCtrlPressed(void) {
-log_info("Platform_IsCtrlPressed completed");
+    log_info("Platform_IsCtrlPressed completed");
     return (GetKeyState(VK_CONTROL) & 0x8000) != 0;
 }
 

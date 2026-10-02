@@ -2,6 +2,7 @@
 #include "core/modal.h"
 #include "bindings/vim_motions.h"
 #include "bindings/vim_helpers.h"
+#include "helpers/helpers_ui.h"
 #include "platform/ui.h"
 #include "core/vim.h"
 #include "core/window_manager.h"
@@ -296,7 +297,7 @@ void HandleShowFullText(FlintContext* ctx) {
   if (FullTextNeedsKeyPress) {
       ListBoxInfo* lb = Vim_GetListBox(ctx);
       if (lb && UI_IsListBoxSelected(lb)) {
-        SubjectiveMessageDisplay(lb->populated_cache[lb->selected_index], 140, 6969,COLOR_TEXT);
+        DisplayMessageSlot(lb->populated_cache[lb->selected_index], TOP_CENTER_RELATIVE, 0, 0, 0, 6969, COLOR_TEXT);
       }
   }
 }

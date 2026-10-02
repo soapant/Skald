@@ -331,12 +331,21 @@ bool fl_launch_with_args_platform(const char* path, const char* args) {
         PROFILE_END_VAR(timer, "flapi_x11:fl_launch_with_args_platform");
         return true;
     } else {
-        char cmd[2048];
-        if (args && args[0] && strcmp(args,"0")!=0) snprintf(cmd, sizeof(cmd), "\"%s\" %s", path, args);
-        else snprintf(cmd, sizeof(cmd), "\"%s\"", path);
         X11SessionEnv env; Env_GetSessionEnv(&env);
         char disp_env[256], xauth_env[512], runtime_env[512];
         Env_BuildEnvStrings(&env, disp_env, xauth_env, runtime_env, NULL);
+        struct stat pst;
+        bool is_regular_file = (stat(path, &pst) == 0 && S_ISREG(pst.st_mode));
+        bool is_executable = (access(path, X_OK) == 0);
+        if (is_regular_file && !is_executable) {
+            char* const av_open2[] = {"gio","open",path,NULL};
+            if (!Env_DaemonExecWithEnv(av_open2, &env)) { PROFILE_END_VAR(timer, "flapi_x11:fl_launch_with_args_platform"); return false; }
+            PROFILE_END_VAR(timer, "flapi_x11:fl_launch_with_args_platform");
+            return true;
+        }
+        char cmd[2048];
+        if (args && args[0] && strcmp(args,"0")!=0) snprintf(cmd, sizeof(cmd), "\"%s\" %s", path, args);
+        else snprintf(cmd, sizeof(cmd), "\"%s\"", path);
         if(Env_IsRunningAsRoot()){
             char* const argv[] = {"sudo","-u",(char*)env.real_user,"env",disp_env,xauth_env,runtime_env,"sh","-c",cmd,NULL};
             if (!Env_DaemonExec(argv)) { PROFILE_END_VAR(timer, "flapi_x11:fl_launch_with_args_platform"); return false; }

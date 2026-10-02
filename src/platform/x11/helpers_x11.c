@@ -270,29 +270,153 @@ const char* ListBoxItemDisplayText(ListBoxInfo* lb, int idx, char* trunc, size_t
     return trunc;
 }
 
-static void draw_icon_png(Display* dpy, XftDraw* xd, const char* path,
-                          int x, int y,int size)
-{
-    if (!path || !path[0]) return;
-    if (access(path, F_OK) != 0) return;
-    (void)size;
+#define IMG_CACHE_SLOTS 16
+
+static bool x11_blit_argb_owned(Display* dpy, Drawable drw, Visual* vis, unsigned char* argb, int w, int h, int x, int y, bool owns);
+static bool x11_blit_argb(Display* dpy, Drawable drw, Visual* vis, unsigned char* argb, int w, int h, int x, int y);
+static unsigned char* x11_decode_image_argb(const char* path, int* out_w, int* out_h);
+
+typedef struct {
+    char key[512];
+    int w, h;
+    long long mtime;
+    long long size;
+    unsigned char* argb;
+    unsigned long stamp;
+} ImgCacheSlot;
+
+static ImgCacheSlot g_img_cache[IMG_CACHE_SLOTS];
+static unsigned long g_img_cache_tick = 0;
+static pthread_mutex_t g_img_cache_mtx = PTHREAD_MUTEX_INITIALIZER;
+
+void x11_img_cache_free_all(void) {
+    pthread_mutex_lock(&g_img_cache_mtx);
+    for (int i = 0; i < IMG_CACHE_SLOTS; i++) {
+        if (g_img_cache[i].argb) free(g_img_cache[i].argb);
+        memset(&g_img_cache[i], 0, sizeof(g_img_cache[i]));
+    }
+    pthread_mutex_unlock(&g_img_cache_mtx);
+}
+
+static unsigned char* x11_img_cache_get(const char* key, int w, int h, long long mtime, long long size) {
+    for (int i = 0; i < IMG_CACHE_SLOTS; i++) {
+        ImgCacheSlot* s = &g_img_cache[i];
+        if (!s->argb) continue;
+        if (s->w == w && s->h == h && s->mtime == mtime && s->size == size && strcmp(s->key, key) == 0) {
+            s->stamp = ++g_img_cache_tick;
+            return s->argb;
+        }
+    }
+    return NULL;
+}
+
+static void x11_img_cache_put(const char* key, int w, int h, long long mtime, long long size, unsigned char* argb) {
+    if (!argb) return;
+    int slot = -1;
+    unsigned long oldest = ~0UL;
+    for (int i = 0; i < IMG_CACHE_SLOTS; i++) {
+        ImgCacheSlot* s = &g_img_cache[i];
+        if (!s->argb) { slot = i; break; }
+        if (s->stamp < oldest) { oldest = s->stamp; slot = i; }
+    }
+    if (slot < 0) slot = 0;
+    ImgCacheSlot* s = &g_img_cache[slot];
+    if (s->argb) free(s->argb);
+    snprintf(s->key, sizeof(s->key), "%s", key);
+    s->w = w;
+    s->h = h;
+    s->mtime = mtime;
+    s->size = size;
+    s->argb = argb;
+    s->stamp = ++g_img_cache_tick;
+}
+
+bool Platform_DrawImageScaled(Display* dpy, XftDraw* xd, Visual* vis, const char* path, int x, int y, int tw, int th) {
+    PROFILE_START(timer);
+    if (!dpy || !xd || !path || !path[0]) { PROFILE_END_VAR(timer, "helpers_x11:Platform_DrawImageScaled"); return false; }
+    struct stat st;
+    if (stat(path, &st) != 0) { PROFILE_END_VAR(timer, "helpers_x11:Platform_DrawImageScaled"); return false; }
+    if (tw <= 0) tw = IconSize;
+    if (th <= 0) th = IconSize;
+    int cw = tw;
+    int ch = th;
+    unsigned char* argb = NULL;
+    pthread_mutex_lock(&g_img_cache_mtx);
+    argb = x11_img_cache_get(path, cw, ch, (long long)st.st_mtime, (long long)st.st_size);
+    if (argb) {
+        pthread_mutex_unlock(&g_img_cache_mtx);
+        Drawable drw = XftDrawDrawable(xd);
+        bool ok = x11_blit_argb_owned(dpy, drw, vis, argb, cw, ch, x, y, false);
+        PROFILE_END_VAR(timer, "helpers_x11:Platform_DrawImageScaled");
+        return ok;
+    }
+    pthread_mutex_unlock(&g_img_cache_mtx);
+    argb = x11_decode_image_argb(path, &cw, &ch);
+    if (!argb) { PROFILE_END_VAR(timer, "helpers_x11:Platform_DrawImageScaled"); return false; }
+    pthread_mutex_lock(&g_img_cache_mtx);
+    x11_img_cache_put(path, cw, ch, (long long)st.st_mtime, (long long)st.st_size, argb);
+    pthread_mutex_unlock(&g_img_cache_mtx);
+    Drawable drw = XftDrawDrawable(xd);
+    bool ok = x11_blit_argb_owned(dpy, drw, vis, argb, cw, ch, x, y, false);
+    PROFILE_END_VAR(timer, "helpers_x11:Platform_DrawImageScaled");
+    return ok;
+}
+
+static bool x11_blit_argb_owned(Display* dpy, Drawable drw, Visual* vis, unsigned char* argb, int w, int h, int x, int y, bool owns) {
+    if (!dpy || !argb || w <= 0 || h <= 0) { if (owns) free(argb); return false; }
+    if (!vis) vis = DefaultVisualOfScreen(DefaultScreenOfDisplay(dpy));
+    XImage* img = XCreateImage(dpy, vis, 32, ZPixmap, 0, (char*)argb, w, h, 32, 0);
+    if (!img) { if (owns) free(argb); return false; }
+    Pixmap pix = XCreatePixmap(dpy, drw, w, h, 32);
+    if (!pix) { XDestroyImage(img); return false; }
+    GC gc = XCreateGC(dpy, pix, 0, NULL);
+    XPutImage(dpy, pix, gc, img, 0, 0, 0, 0, w, h);
+    XFreeGC(dpy, gc);
+    XRenderPictFormat* src_fmt = XRenderFindStandardFormat(dpy, PictStandardARGB32);
+    XRenderPictFormat* dst_fmt = XRenderFindVisualFormat(dpy, vis);
+    bool ok = false;
+    if (src_fmt && dst_fmt) {
+        Picture src = XRenderCreatePicture(dpy, pix, src_fmt, 0, NULL);
+        Picture dst = XRenderCreatePicture(dpy, drw, dst_fmt, 0, NULL);
+        if (src && dst) {
+            XRenderComposite(dpy, PictOpOver, src, None, dst, 0, 0, 0, 0, x, y, w, h);
+            ok = true;
+        }
+        if (src) XRenderFreePicture(dpy, src);
+        if (dst) XRenderFreePicture(dpy, dst);
+    }
+    if (owns) XDestroyImage(img);
+    XFreePixmap(dpy, pix);
+    return ok;
+}
+
+static bool x11_blit_argb(Display* dpy, Drawable drw, Visual* vis, unsigned char* argb, int w, int h, int x, int y) {
+    return x11_blit_argb_owned(dpy, drw, vis, argb, w, h, x, y, true);
+}
+
+static unsigned char* x11_decode_image_argb(const char* path, int* out_w, int* out_h) {
+    if (!path || !path[0]) return NULL;
+    int dst_w = *out_w;
+    int dst_h = *out_h;
+    if (dst_w <= 0) dst_w = 16;
+    if (dst_h <= 0) dst_h = 16;
     size_t _plen = strlen(path);
     bool _is_svg = _plen > 4 && Platform_StringContainsCaseInsensitive(path + _plen - 4, ".svg");
     if (_is_svg) {
         NSVGimage* image = nsvgParseFromFile(path, "px", 96.0f);
-        if (!image) return;
-        if (image->width <= 0 || image->height <= 0) { nsvgDelete(image); return; }
+        if (!image) return false;
+        if (image->width <= 0 || image->height <= 0) { nsvgDelete(image); return false; }
         NSVGrasterizer* rast = nsvgCreateRasterizer();
-        if (!rast) { nsvgDelete(image); return; }
-        unsigned char* svg_data = (unsigned char*)calloc((size_t)IconSize * IconSize * 4, 1);
-        if (!svg_data) { nsvgDeleteRasterizer(rast); nsvgDelete(image); return; }
-        float scale = fminf((float)IconSize / image->width, (float)IconSize / image->height);
-        float tx = ((float)IconSize - image->width * scale) * 0.5f;
-        float ty = ((float)IconSize - image->height * scale) * 0.5f;
-        nsvgRasterize(rast, image, tx, ty, scale, svg_data, IconSize, IconSize, IconSize * 4);
-        unsigned char* argb = (unsigned char*)malloc((size_t)IconSize * IconSize * 4);
-        if (!argb) { free(svg_data); nsvgDeleteRasterizer(rast); nsvgDelete(image); return; }
-        for (int i = 0; i < IconSize * IconSize; i++) {
+        if (!rast) { nsvgDelete(image); return false; }
+        unsigned char* svg_data = (unsigned char*)calloc((size_t)dst_w * dst_h * 4, 1);
+        if (!svg_data) { nsvgDeleteRasterizer(rast); nsvgDelete(image); return false; }
+        float scale = fminf((float)dst_w / image->width, (float)dst_h / image->height);
+        float tx = ((float)dst_w - image->width * scale) * 0.5f;
+        float ty = ((float)dst_h - image->height * scale) * 0.5f;
+        nsvgRasterize(rast, image, tx, ty, scale, svg_data, dst_w, dst_h, dst_w * 4);
+        unsigned char* argb = (unsigned char*)malloc((size_t)dst_w * dst_h * 4);
+        if (!argb) { free(svg_data); nsvgDeleteRasterizer(rast); nsvgDelete(image); return false; }
+        for (int i = 0; i < dst_w * dst_h; i++) {
             unsigned char r = svg_data[i*4+0];
             unsigned char g = svg_data[i*4+1];
             unsigned char b = svg_data[i*4+2];
@@ -308,51 +432,30 @@ static void draw_icon_png(Display* dpy, XftDraw* xd, const char* path,
         free(svg_data);
         nsvgDeleteRasterizer(rast);
         nsvgDelete(image);
-        Drawable drw = XftDrawDrawable(xd);
-        Screen* scr = DefaultScreenOfDisplay(dpy);
-        Visual* vis = DefaultVisualOfScreen(scr);
-        XImage* img = XCreateImage(dpy, vis, 32, ZPixmap, 0, (char*)argb, IconSize, IconSize, 32, 0);
-        if (!img) { free(argb); return; }
-        Pixmap pix = XCreatePixmap(dpy, drw, IconSize, IconSize, 32);
-        if (!pix) { XDestroyImage(img); return; }
-        GC gc = XCreateGC(dpy, pix, 0, NULL);
-        XPutImage(dpy, pix, gc, img, 0, 0, 0, 0, IconSize, IconSize);
-        XFreeGC(dpy, gc);
-        XRenderPictFormat* src_fmt = XRenderFindStandardFormat(dpy, PictStandardARGB32);
-        XRenderPictFormat* dst_fmt = XRenderFindVisualFormat(dpy, vis);
-        if (src_fmt && dst_fmt) {
-            Picture src = XRenderCreatePicture(dpy, pix, src_fmt, 0, NULL);
-            Picture dst = XRenderCreatePicture(dpy, drw, dst_fmt, 0, NULL);
-            if (src && dst) {
-                XRenderComposite(dpy, PictOpOver, src, None, dst, 0, 0, 0, 0, x, y, IconSize, IconSize);
-            }
-            if (src) XRenderFreePicture(dpy, src);
-            if (dst) XRenderFreePicture(dpy, dst);
-        }
-        XDestroyImage(img);
-        XFreePixmap(dpy, pix);
-        return;
+        *out_w = dst_w;
+        *out_h = dst_h;
+        return argb;
     }
 
     FILE* fp = fopen(path, "rb");
-    if (!fp) return;
+    if (!fp) return false;
 
     unsigned char sig[8];
     if (fread(sig, 1, 8, fp) != 8 || png_sig_cmp(sig, 0, 8) != 0) {
         fclose(fp);
-        return;
+        return false;
     }
 
     png_structp png = png_create_read_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-    if (!png) { fclose(fp); return; }
+    if (!png) { fclose(fp); return false; }
 
     png_infop info = png_create_info_struct(png);
-    if (!info) { png_destroy_read_struct(&png, NULL, NULL); fclose(fp); return; }
+    if (!info) { png_destroy_read_struct(&png, NULL, NULL); fclose(fp); return false; }
 
     if (setjmp(png_jmpbuf(png))) {
         png_destroy_read_struct(&png, &info, NULL);
         fclose(fp);
-        return;
+        return false;
     }
 
     png_init_io(png, fp);
@@ -368,9 +471,10 @@ static void draw_icon_png(Display* dpy, XftDraw* xd, const char* path,
     if (color_type == PNG_COLOR_TYPE_PALETTE) png_set_palette_to_rgb(png);
     if (color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8) png_set_expand_gray_1_2_4_to_8(png);
     if (png_get_valid(png, info, PNG_INFO_tRNS)) png_set_tRNS_to_alpha(png);
-    if (color_type == PNG_COLOR_TYPE_RGB || color_type == PNG_COLOR_TYPE_PALETTE)
+    if (color_type == PNG_COLOR_TYPE_GRAY || color_type == PNG_COLOR_TYPE_GRAY_ALPHA)
+        png_set_gray_to_rgb(png);
+    if (!(color_type == PNG_COLOR_TYPE_RGB_ALPHA || color_type == PNG_COLOR_TYPE_GRAY_ALPHA))
         png_set_add_alpha(png, 0xFF, PNG_FILLER_AFTER);
-    if (color_type == PNG_COLOR_TYPE_GRAY) png_set_gray_to_rgb(png);
 
     png_read_update_info(png, info);
 
@@ -379,7 +483,7 @@ static void draw_icon_png(Display* dpy, XftDraw* xd, const char* path,
     if (!data) {
         png_destroy_read_struct(&png, &info, NULL);
         fclose(fp);
-        return;
+        return false;
     }
 
     png_bytep* rows = (png_bytep*)malloc(sizeof(png_bytep) * h);
@@ -387,7 +491,7 @@ static void draw_icon_png(Display* dpy, XftDraw* xd, const char* path,
         free(data);
         png_destroy_read_struct(&png, &info, NULL);
         fclose(fp);
-        return;
+        return false;
     }
     for (int i = 0; i < h; i++) rows[i] = data + (size_t)i * row_bytes;
 
@@ -397,12 +501,12 @@ static void draw_icon_png(Display* dpy, XftDraw* xd, const char* path,
     png_destroy_read_struct(&png, &info, NULL);
     free(rows);
 
-    unsigned char* argb = (unsigned char*)malloc((size_t)IconSize * IconSize * 4);
-    if (!argb) { free(data); return; }
+    unsigned char* argb = (unsigned char*)malloc((size_t)dst_w * dst_h * 4);
+    if (!argb) { free(data); return false; }
 
-    for (int dy = 0; dy < IconSize; dy++) {
-        float y0f = (float)dy       * h / IconSize;
-        float y1f = (float)(dy + 1) * h / IconSize;
+    for (int dy = 0; dy < dst_h; dy++) {
+        float y0f = (float)dy       * h / dst_h;
+        float y1f = (float)(dy + 1) * h / dst_h;
 
         int y0 = (int)y0f;
         int y1 = (int)(y1f + 0.5f);
@@ -410,11 +514,11 @@ static void draw_icon_png(Display* dpy, XftDraw* xd, const char* path,
         if (y1 <= y0) y1 = y0 + 1;
         if (y0 >= h) y0 = h - 1;
 
-        unsigned char* dst_row = argb + (size_t)dy * IconSize * 4;
+        unsigned char* dst_row = argb + (size_t)dy * dst_w * 4;
 
-        for (int dx = 0; dx < IconSize; dx++) {
-            float x0f = (float)dx       * w / IconSize;
-            float x1f = (float)(dx + 1) * w / IconSize;
+        for (int dx = 0; dx < dst_w; dx++) {
+            float x0f = (float)dx       * w / dst_w;
+            float x1f = (float)(dx + 1) * w / dst_w;
 
             int x0 = (int)x0f;
             int x1 = (int)(x1f + 0.5f);
@@ -455,37 +559,9 @@ static void draw_icon_png(Display* dpy, XftDraw* xd, const char* path,
     }
     free(data);
 
-    Drawable drw = XftDrawDrawable(xd);
-    Screen* scr  = DefaultScreenOfDisplay(dpy);
-    Visual* vis  = DefaultVisualOfScreen(scr);
-
-    XImage* img = XCreateImage(dpy, vis, 32, ZPixmap, 0, (char*)argb,
-                               IconSize, IconSize, 32, 0);
-    if (!img) { free(argb); return; }
-
-    Pixmap pix = XCreatePixmap(dpy, drw, IconSize, IconSize, 32);
-    if (!pix) { XDestroyImage(img); return; }
-
-    GC gc = XCreateGC(dpy, pix, 0, NULL);
-    XPutImage(dpy, pix, gc, img, 0, 0, 0, 0, IconSize, IconSize);
-    XFreeGC(dpy, gc);
-
-    XRenderPictFormat* src_fmt = XRenderFindStandardFormat(dpy, PictStandardARGB32);
-    XRenderPictFormat* dst_fmt = XRenderFindVisualFormat(dpy, vis);
-
-    if (src_fmt && dst_fmt) {
-        Picture src = XRenderCreatePicture(dpy, pix, src_fmt, 0, NULL);
-        Picture dst = XRenderCreatePicture(dpy, drw, dst_fmt, 0, NULL);
-        if (src && dst) {
-            XRenderComposite(dpy, PictOpOver, src, None, dst,
-                             0, 0, 0, 0, x, y, IconSize, IconSize);
-        }
-        if (src) XRenderFreePicture(dpy, src);
-        if (dst) XRenderFreePicture(dpy, dst);
-    }
-
-    XDestroyImage(img);   /* frees argb via img->data */
-    XFreePixmap(dpy, pix);
+    *out_w = dst_w;
+    *out_h = dst_h;
+    return argb;
 }
 
 void DrawListBoxItemText(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap, FontHandle font,
@@ -504,7 +580,7 @@ void DrawListBoxItemText(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap, 
         int iconX = XOffset;
         int iconY = y + (x11_font_row_height_of(font) - IconSize)/2;
         XOffset += IconSize + XOffset;
-        draw_icon_png(dpy, xd, icon_path, iconX, iconY, IconSize);
+        Platform_DrawImageScaled(dpy, xd, vis, icon_path, iconX, iconY, IconSize, IconSize);
     }
 
     char trunc[512];
@@ -1220,12 +1296,13 @@ void x11_apply_click_through(Display* dpy, Window win) {
     PROFILE_END_VAR(timer, "helpers_x11:x11_apply_click_through");
 }
 
-Window x11_create_display_message_window(Display* dpy, int x, int y, int w, int h) {
+Window x11_create_display_message_window(Display* dpy, int x, int y, int w, int h, bool clickable) {
     PROFILE_START(timer);
     unsigned long bg = Platform_GetDrawBgColor();
     if (!bg) bg = rgb_to_hex(COLOR_BG);
-    Window win = x11_create_window_ex_or(dpy, x, y, w, h, bg, "flashtext", "flashtext", ExposureMask, true);
-    if (win != None) x11_apply_click_through(dpy, win);
+    long mask = ExposureMask | (clickable ? ButtonPressMask : 0L);
+    Window win = x11_create_window_ex_or(dpy, x, y, w, h, bg, "flashtext", "flashtext", mask, true);
+    if (win != None && !clickable) x11_apply_click_through(dpy, win);
     PROFILE_END_VAR(timer, "helpers_x11:x11_create_display_message_window");
     return win;
 }
