@@ -758,7 +758,7 @@ void fl_message_impl(const FlMessageSpec* spec) {
             return;
         }
         slot = IsPopupActive(WH_NULL) ? TOP_CENTER_RELATIVE : BOTTOM_CENTER_RELATIVE;
-    } else if (slot == FL_FREE || spec->x != 0 || spec->y != 0) {
+    } else if (slot == FREE || spec->x != 0 || spec->y != 0) {
         Platform_DisplayMessage(spec->message, spec->x, spec->y, w, h, timeout, color);
         return;
     }
