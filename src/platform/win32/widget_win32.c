@@ -30,6 +30,7 @@ struct PlatformWidget {
     HGDIOBJ layer_old;
     void *layer_bits;
     int layer_w, layer_h;
+    void (*on_click)(void);
 };
 
 static void layer_fill(PlatformWidget *widget, unsigned int argb) {
@@ -172,7 +173,12 @@ static LRESULT CALLBACK FlintWidgetProc(HWND hwnd, UINT msg, WPARAM wParam, LPAR
         return DefWindowProcA(hwnd, msg, wParam, lParam);
     }
     case WM_NCHITTEST: {
+        if (widget && widget->on_click) return HTCLIENT;
         return HTTRANSPARENT;
+    }
+    case WM_LBUTTONDOWN: {
+        if (widget && widget->on_click) widget->on_click();
+        return 0;
     }
     case WM_PAINT: {
         if (!widget || widget->dead) break;
@@ -219,13 +225,18 @@ static void widget_frame(void *ud) {
     }
 }
 
+bool Platform_Widget_DispatchClick(long window_id) {
+    (void)window_id;
+    return false;
+}
+
 void Platform_Widget_Invalidate(PlatformWidget *widget) {
     if (!widget || widget->dead) return;
     widget->dirty = true;
     Platform_RenderThread_Wake();
 }
 
-PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps, bool no_bg) {
+PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps, bool no_bg, void (*on_click)(void)) {
     if (w <= 0 || h <= 0) return NULL;
     if (!Platform_RenderThread_EnsureStarted(fps)) return NULL;
     widget_register_class();
@@ -238,6 +249,7 @@ PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps, bool
     widget->h = h;
     widget->fps = fps;
     widget->no_bg = no_bg;
+    widget->on_click = on_click;
     widget->dirty = true;
     widget->last_draw_ms = 0;
 
