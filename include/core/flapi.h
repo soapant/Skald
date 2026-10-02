@@ -387,7 +387,6 @@ typedef struct {
 
 #define FL_WIDGET_MAX 32
 #define FL_WIDGET_NAME_MAX 64
-#define FL_WIDGET_DEFAULT_GAP 10
 #define FL_WIDGET_DEFAULT_PAD 12
 #define FL_WIDGET_PROVISIONAL_W 160
 #define FL_WIDGET_PROVISIONAL_H 48
@@ -396,7 +395,7 @@ struct FlWidget {
     char name[FL_WIDGET_NAME_MAX];
     int w;
     int h;
-    int gap;
+    int gap_override;
     int fps;
     int slot;
     int order;
