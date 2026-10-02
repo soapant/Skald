@@ -22,6 +22,30 @@ void PopulateListBox(ListBoxInfo* lb, const char* filter,
     bool (*filter_match)(const char* item, const char* filter));
 
 
+typedef enum {
+    AUTO = 0,
+    TOP_LEFT,
+    TOP_CENTER,
+    TOP_RIGHT,
+    LEFT,
+    CENTER,
+    RIGHT,
+    BOTTOM_LEFT,
+    BOTTOM_CENTER,
+    BOTTOM_RIGHT,
+
+    TOP_LEFT_RELATIVE,
+    TOP_CENTER_RELATIVE,
+    TOP_RIGHT_RELATIVE,
+    LEFT_RELATIVE,
+    CENTER_RELATIVE,
+    RIGHT_RELATIVE,
+    BOTTOM_LEFT_RELATIVE,
+    BOTTOM_CENTER_RELATIVE,
+    BOTTOM_RIGHT_RELATIVE,
+
+    FL_FREE
+} MessageSlot;
 
 
 ColorRef GetRainbowColor(float t, float s, float v);
@@ -32,35 +56,11 @@ void CalculateWindowMetrics(WindowLayout* layout,int height , int width,int item
 #define MSG_PROMPT_GAP_DEFAULT 300
 #define MSG_SCREEN_GAP_DEFAULT 20
 
-typedef enum {
-    FL_AUTO = 0,
-    FL_TOP_LEFT,
-    FL_TOP_CENTER,
-    FL_TOP_RIGHT,
-    FL_LEFT,
-    FL_CENTER,
-    FL_RIGHT,
-    FL_BOTTOM_LEFT,
-    FL_BOTTOM_CENTER,
-    FL_BOTTOM_RIGHT,
-
-    FL_TOP_LEFT_RELATIVE,
-    FL_TOP_CENTER_RELATIVE,
-    FL_TOP_RIGHT_RELATIVE,
-    FL_LEFT_RELATIVE,
-    FL_CENTER_RELATIVE,
-    FL_RIGHT_RELATIVE,
-    FL_BOTTOM_LEFT_RELATIVE,
-    FL_BOTTOM_CENTER_RELATIVE,
-    FL_BOTTOM_RIGHT_RELATIVE,
-
-    FL_FREE
-} FlMessageSlot;
 
 extern int MessagePromptGap;
 extern int MessageScreenGap;
 
-void MessageSlotToRect(FlMessageSlot slot, int prompt_gap, int* out_x, int* out_y, int* out_w, int* out_h, int* out_h_slot, int* out_v_slot, int* out_gap, int* out_outward);
-void DisplayMessageSlot(const char* message, FlMessageSlot slot, int max_w, int max_h, int prompt_gap, int timeout, ColorRef color);
+void MessageSlotToRect(MessageSlot slot, int prompt_gap, int* out_x, int* out_y, int* out_w, int* out_h, int* out_h_slot, int* out_v_slot, int* out_gap, int* out_outward);
+void DisplayMessageSlot(const char* message, MessageSlot slot, int max_w, int max_h, int prompt_gap, int timeout, ColorRef color);
 
 #endif
