@@ -18,7 +18,6 @@ typedef struct {
     bool is_feature_toggle;
 } HotkeyBinding;
 
-void SubjectiveMessageDisplay(const char* buffer,int msg_height,int timeout,ColorRef color);
 bool AlwaysEnabled(void);
 bool AlwaysDisabled(void);
 HotkeyBinding convert_into_hotkey_binding(char* hotkey_string,void (*on_hotkey_trigger)(void),bool (*optional_condition_for_hotkey)(void),const char** optional_blacklistedwindows,bool whitelist);

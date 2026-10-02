@@ -104,6 +104,4 @@ typedef struct {
     void (*func)(const char** items, int count);
 } SortOption;
 
-void SubjectiveMessageDisplay(const char* buffer,int msg_height,int timeout,ColorRef color);
-
 #endif
