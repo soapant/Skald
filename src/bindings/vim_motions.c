@@ -297,7 +297,7 @@ void HandleShowFullText(FlintContext* ctx) {
   if (FullTextNeedsKeyPress) {
       ListBoxInfo* lb = Vim_GetListBox(ctx);
       if (lb && UI_IsListBoxSelected(lb)) {
-        DisplayMessageSlot(lb->populated_cache[lb->selected_index], FL_TOP_CENTER_RELATIVE, 0, 0, 0, 6969, COLOR_TEXT);
+        DisplayMessageSlot(lb->populated_cache[lb->selected_index], TOP_CENTER_RELATIVE, 0, 0, 0, 6969, COLOR_TEXT);
       }
   }
 }
