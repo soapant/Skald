@@ -367,7 +367,12 @@ bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
         HDC mem = CreateCompatibleDC(screen);
         if (mem) {
             HGDIOBJ prev = SelectObject(mem, bmp);
-            BOOL blit = StretchBlt(g_draw_hdc, x, y, w, h, mem, 0, 0, w, h, SRCCOPY | HALFTONE);
+            BLENDFUNCTION bf;
+            bf.BlendOp = AC_SRC_OVER;
+            bf.BlendFlags = 0;
+            bf.SourceConstantAlpha = 255;
+            bf.AlphaFormat = AC_SRC_ALPHA;
+            BOOL blit = AlphaBlend(g_draw_hdc, x, y, w, h, mem, 0, 0, w, h, bf);
             SelectObject(mem, prev);
             DeleteDC(mem);
             ok = blit != FALSE;
