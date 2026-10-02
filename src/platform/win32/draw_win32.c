@@ -330,25 +330,23 @@ static HBITMAP win32_load_scaled_bitmap(const char *path, HDC screen, int w, int
                 if (!dib || !bits) log_error("img: CreateDIBSection failed err=%lu bits=%p", GetLastError(), bits);
                 if (dib && bits) {
                     GpBitmap *dst = NULL;
-                    GpStatus _ss = GdipCreateBitmapFromScan0(w, h, w * 4, PixelFormat32bppARGB, (BYTE *)bits, &dst);
-                    if (_ss != Ok || !dst) log_error("img: GdipCreateBitmapFromScan0 failed st=%d w=%d h=%d", (int)_ss, w, h);
-                    if (_ss == Ok && dst) {
+                    GpStatus _ws = GdipCreateBitmapFromHBITMAP(dib, NULL, &dst);
+                    if (_ws != Ok || !dst) log_error("img: GdipCreateBitmapFromHBITMAP failed st=%d w=%d h=%d", (int)_ws, w, h);
+                    if (_ws == Ok && dst) {
                         GpGraphics *g = NULL;
-                        GpStatus _gs = GdipGetImageGraphicsContext(src, &g);
+                        GpStatus _gs = GdipGetImageGraphicsContext(dst, &g);
                         if (_gs != Ok || !g) log_error("img: GdipGetImageGraphicsContext failed st=%d", (int)_gs);
                         if (_gs == Ok && g) {
                             GdipSetInterpolationMode(g, InterpolationModeHighQualityBicubic);
                             GdipDrawImageRectI(g, dst, 0, 0, w, h);
                             GdipDeleteGraphics(g);
                         }
-                        HBITMAP hb = NULL;
-                        GpStatus _hs = GdipCreateHBITMAPFromBitmap(dst, &hb, 0);
-                        if (_hs != Ok || !hb) log_error("img: GdipCreateHBITMAPFromBitmap failed st=%d", (int)_hs);
-                        if (_hs == Ok && hb) out = hb;
                         GdipDisposeImage(dst);
+                        out = dib;
+                        dib = NULL;
                     }
-                    DeleteObject(dib);
                 }
+                if (dib) DeleteObject(dib);
                 DeleteDC(mem);
             }
         }
