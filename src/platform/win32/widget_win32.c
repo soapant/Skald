@@ -117,7 +117,7 @@ static void widget_paint_layered(PlatformWidget *widget) {
     Platform_SetDrawBgColor(0);
     GdiFlush();
 
-    {
+{
         unsigned int *px = (unsigned int *)widget->layer_bits;
         size_t n = (size_t)widget->layer_w * (size_t)widget->layer_h;
         for (size_t i = 0; i < n; i++) {
@@ -125,6 +125,19 @@ static void widget_paint_layered(PlatformWidget *widget) {
             if (a > 255) a = 255;
             if (a < 0) a = 0;
             px[i] = (px[i] & 0x00FFFFFFu) | ((unsigned int)a << 24);
+        }
+        static int dbg = 0;
+        if (!dbg) {
+            dbg = 1;
+            unsigned int nz = 0, maxa = 0;
+            for (size_t i = 0; i < n; i++) {
+                unsigned int a = (px[i] >> 24) & 0xFF;
+                if (a) nz++;
+                if (a > maxa) maxa = a;
+            }
+            log_warn("wgt layer %dx%d nonzero_alpha=%u/%zu max_alpha=%u px0=%08x px1=%08x",
+                     widget->layer_w, widget->layer_h, nz, n, maxa,
+                     n > 0 ? px[0] : 0u, n > 1 ? px[1] : 0u);
         }
     }
 
