@@ -127,8 +127,8 @@ static void widget_paint_layered(PlatformWidget *widget) {
             px[i] = (px[i] & 0x00FFFFFFu) | ((unsigned int)a << 24);
         }
         static int dbg = 0;
-        if (!dbg) {
-            dbg = 1;
+        if (dbg < 40) {
+            dbg++;
             unsigned int nz = 0, maxa = 0;
             for (size_t i = 0; i < n; i++) {
                 unsigned int a = (px[i] >> 24) & 0xFF;
