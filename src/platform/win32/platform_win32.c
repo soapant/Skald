@@ -17,6 +17,7 @@
 #include "helpers/helpers_ui.h"
 #include "platform/platform.h"
 #include "config.h"
+#include "core/timer.h"
 #include <shellapi.h>
 #include <gdiplus.h>
 #include <ctype.h>
@@ -1365,20 +1366,24 @@ void Platform_CleanupPlatformResources(void) {
 }
 
 FlPos Platform_GetCursorPos(void) {
+    PROFILE_START(timer);
     POINT point;
+    FlPos r = (FlPos){0, 0};
     
     if (GetCursorPos(&point)) {
-        return (FlPos){(int)point.x, (int)point.y};
+        r = (FlPos){(int)point.x, (int)point.y};
     }
     
-    return (FlPos){0, 0};
+    PROFILE_END_VAR(timer, "platform_win32:Platform_GetCursorPos");
+    return r;
 }
 
 bool Platform_MoveToPos(int x, int y) {
+    PROFILE_START(timer);
     int screenWidth = GetSystemMetrics(SM_CXSCREEN);
     int screenHeight = GetSystemMetrics(SM_CYSCREEN);
 
-    if (screenWidth <= 0 || screenHeight <= 0) return false;
+    if (screenWidth <= 0 || screenHeight <= 0) { PROFILE_END_VAR(timer, "platform_win32:Platform_MoveToPos"); return false; }
 
     INPUT input = {0};
     input.type = INPUT_MOUSE;
@@ -1386,13 +1391,15 @@ bool Platform_MoveToPos(int x, int y) {
     input.mi.dy = (y * 65535) / screenHeight;
     input.mi.dwFlags = MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE;
 
-    if (SendInput(1, &input, sizeof(INPUT)) != 1) return false;
+    bool ok = (SendInput(1, &input, sizeof(INPUT)) == 1);
 
     log_info("Platform_MoveToPos x=%d y=%d", x, y);
-    return true;
+    PROFILE_END_VAR(timer, "platform_win32:Platform_MoveToPos");
+    return ok;
 }
 
 bool Platform_Click(void) {
+    PROFILE_START(timer);
     INPUT inputs[2] = {0};
 
     inputs[0].type = INPUT_MOUSE;
@@ -1401,10 +1408,11 @@ bool Platform_Click(void) {
     inputs[1].type = INPUT_MOUSE;
     inputs[1].mi.dwFlags = MOUSEEVENTF_LEFTUP;
 
-    if (SendInput(2, inputs, sizeof(INPUT)) != 2) return false;
+    bool ok = (SendInput(2, inputs, sizeof(INPUT)) == 2);
 
     log_info("Platform_Click");
-    return true;
+    PROFILE_END_VAR(timer, "platform_win32:Platform_Click");
+    return ok;
 }
 
 char* Platform_GetWorkingDir() {

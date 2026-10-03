@@ -10,6 +10,7 @@ bool focus_window_title_x11(char* title);
 FlWindowList get_window_titles_x11();
 FlWindowList get_window_names_x11();
 FlPos get_cursor_position_x11(void);
+void x11_wm_cleanup_cursor_display(void);
 bool close_active_window_x11(void);
 bool toggle_fullscreen_active_x11(void);
 bool move_active_window_to_monitor_x11(bool right);
