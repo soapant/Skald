@@ -73,6 +73,7 @@ typedef struct {
     int x, y, w, h;
     bool confirmed;
     int saved_mode;
+    WindowHandle hEdit;
 } WMEditPopupData;
 
 WindowManager* WindowManager_Create(void);
