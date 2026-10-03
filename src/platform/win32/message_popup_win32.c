@@ -14,8 +14,6 @@
 #define MSG_AUTO_WRAP_MAX_W 900
 #define MSG_AUTO_WRAP_MAX_H 600
 
-/* src/platform/x11/message_popup_x11.c is the reference: 15 px text inset per
-   side (wrap width w - 30, window size text + 30) and a 5 px bottom clip. */
 #define MSG_TEXT_INSET_X 15
 #define MSG_TEXT_INSET_Y 15
 #define MSG_BOTTOM_CLIP 5
