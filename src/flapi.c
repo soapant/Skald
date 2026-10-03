@@ -1802,7 +1802,7 @@ static void fl_widget_render_frame(void *ud) {
     FlWidget *widget = (FlWidget *)ud;
     if (!widget || !widget->render) { PROFILE_END_VAR(_pt, "flapi:fl_widget_render_frame"); return; }
     widget->frame++;
-    bool hoverable = (widget->on_hover || widget->on_unhover);
+    bool hoverable = (widget->on_hover != NULL);
     if (hoverable) {
         fl_widget_hover_poll();
         bool inside = (widget->x >= 0x7fffffff) ? false
@@ -1810,11 +1810,7 @@ static void fl_widget_render_frame(void *ud) {
                g_fl_hover_pos.y >= widget->y && g_fl_hover_pos.y < widget->y + widget->h);
         if (inside != widget->hovered) {
             widget->hovered = inside;
-            if (inside) {
-                if (widget->on_hover) widget->on_hover();
-            } else {
-                if (widget->on_unhover) widget->on_unhover();
-            }
+            if (inside && widget->on_hover) widget->on_hover();
         }
     }
     FlWidgetState st;
@@ -2032,7 +2028,6 @@ FlWidget *fl_widget_create(const FlWidgetSpec *spec) {
     widget->render = spec->render;
     widget->on_click = spec->on_click;
     widget->on_hover = spec->on_hover;
-    widget->on_unhover = spec->on_unhover;
     widget->free_pos = (spec->slot == FL_WIDGET_FREE);
     widget->frame = 0;
     widget->created_at = fl_start_timer_platform();
