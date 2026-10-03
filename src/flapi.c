@@ -909,6 +909,7 @@ char* fl_edit_text_popup_impl(const FlEditPopupSpec* spec) {
     while (wm->running && popup->manager) {
         Platform_WM_ProcessEvents(wm);
     }
+    bool was_confirmed = ((WMEditPopupData*)popup)->confirmed;
     if (popup->manager == NULL) {
         if (popup->vtable && popup->vtable->destroy) popup->vtable->destroy(popup);
     } else {
@@ -918,6 +919,10 @@ char* fl_edit_text_popup_impl(const FlEditPopupSpec* spec) {
     if (lb && idx >= 0) {
         int keep_idx = idx < lb->populated_count ? idx : lb->populated_count - 1;
         if (keep_idx >= 0) lb->selected_index = keep_idx;
+    }
+    if (!was_confirmed) {
+        free(result);
+        result = NULL;
     }
     if (!result) return NULL;
     if (out_index) *out_index = true_idx;
@@ -1033,11 +1038,16 @@ char* fl_popup_impl(const FlPopupSpec *spec) {
         }
     }
     log_info("fl_popup EXIT spins=%lld popups=%d", spins, wm->popup_count);
+    bool was_confirmed = ((WMEditPopupData*)popup)->confirmed;
     if (popup->manager == NULL) {
         if (popup->vtable && popup->vtable->destroy) popup->vtable->destroy(popup);
     } else {
         WindowManager_PopPopup(wm);
         if (popup->vtable && popup->vtable->destroy) popup->vtable->destroy(popup);
+    }
+    if (!was_confirmed) {
+        free(result);
+        result = NULL;
     }
     return result;
 }
