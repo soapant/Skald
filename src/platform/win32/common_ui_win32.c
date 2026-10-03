@@ -463,7 +463,7 @@ bool UI_DrawCaret(HDC hdc, HWND hwnd) {
   if (lineBox <= 0) lineBox = FontSize;
   int caretHeight = FontSize;
   if (caretHeight > rc.bottom && rc.bottom > 0) caretHeight = rc.bottom;
-  int caretWidth = IsInsertMode() ? FLINT_CARET_W_INSERT : FlintNormalCaretWidth();
+  int caretWidth = IsInsertMode() ? PROMPT_CARET_W_INSERT : PromptNormalCaretWidth();
 
   int cx = 0;
   int lineTop = 0;
@@ -482,7 +482,7 @@ bool UI_DrawCaret(HDC hdc, HWND hwnd) {
   SIZE tsz;
   memset(&tsz, 0, sizeof(tsz));
   GetTextExtentPoint32A(hdc, text, qi, &tsz);
-  int bias = tm.tmAveCharWidth * FLINT_CARET_X_BIAS_NUM / FLINT_CARET_X_BIAS_DEN;
+  int bias = tm.tmAveCharWidth * PROMPT_CARET_X_BIAS_NUM / PROMPT_CARET_X_BIAS_DEN;
   cx = (int)margins.left + tsz.cx + bias;
 
   {
@@ -522,10 +522,10 @@ void CalculateWindowMetrics(WindowLayout* layout,int height , int width,int item
 
   float ui_scale = Platform_GetUIScale();
 
-  layout->w = (int)(FLINT_PROMPT_W * ui_scale);
+  layout->w = (int)(PROMPT_W * ui_scale);
   layout->item_height = item_height;
 
-  layout->h = (int)(FLINT_PROMPT_H * ui_scale);
+  layout->h = (int)(PROMPT_H * ui_scale);
 
   if (layout->h < height) layout->h = height;
   if (layout->h > width) layout->h = width;
@@ -577,7 +577,7 @@ void CreateChildControls(WindowHandle hwndParent, HFONT hFont, const char* list[
 
   HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtrA(WH_TO_HWND(hwndParent), GWLP_HINSTANCE);
 
-  int lineHeight = FontSize + FLINT_EDIT_H_BONUS;
+  int lineHeight = FontSize + PROMPT_EDIT_H_BONUS;
   HDC metricDC = GetDC(NULL);
   if (metricDC) {
     HDC probe = CreateCompatibleDC(metricDC);
@@ -594,8 +594,8 @@ void CreateChildControls(WindowHandle hwndParent, HFONT hFont, const char* list[
 
   FlintContext_Get()->window.hEditControl = WH_FROM_HWND(CreateWindowExA(
       0, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
-      FLINT_EDIT_INSET, FLINT_EDIT_INSET,
-      layout->w - FLINT_EDIT_SCROLL_PAD, lineHeight,
+      PROMPT_EDIT_INSET, PROMPT_EDIT_INSET,
+      layout->w - PROMPT_EDIT_SCROLL_PAD, lineHeight,
       WH_TO_HWND(hwndParent), (HMENU)IDC_INPUT_BOX, hInstance, NULL
       ));
   if (WH_TO_HWND(FlintContext_Get()->window.hEditControl) == NULL) {
@@ -610,8 +610,8 @@ void CreateChildControls(WindowHandle hwndParent, HFONT hFont, const char* list[
   SetWindowSubclass(WH_TO_HWND(FlintContext_Get()->window.hEditControl), EditSubclassProc, 0, 0);
 
   if (count >= 0) {
-    int listTop = FlintListTop();
-    int listH = layout->h - listTop - FlintListBottomMargin();
+    int listTop = PromptListTop();
+    int listH = layout->h - listTop - PromptListBottomMargin();
     if (listH < 0) listH = 0;
     FlintContext_Get()->window.hListBox = WH_FROM_HWND(CreateWindowExA(
         WS_EX_COMPOSITED, "LISTBOX", "",

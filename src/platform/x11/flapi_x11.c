@@ -414,7 +414,7 @@ bool fl_listbox_begin_platform(const FlListSpec *spec) {
     g_fl_list_font = Platform_CreateFontOnDisplay(g_fl_list_dpy, FontSize, UsedFont);
     g_fl_list_itemH = spec->item_height ? spec->item_height : x11_font_row_height_of(g_fl_list_font);
     g_fl_list_y0 = spec->y ? spec->y : x11_font_list_top_of(g_fl_list_font);
-    int yOff = FlintListBottomMargin();
+    int yOff = PromptListBottomMargin();
     int list_h;
     PromptState *st = Platform_GetPreRenderStatePtr();
     if (!st) {
@@ -425,15 +425,15 @@ bool fl_listbox_begin_platform(const FlListSpec *spec) {
         }
     }
     if (spec->h) list_h = spec->h;
-    else list_h = st ? (st->height - g_fl_list_y0 - yOff) : FLINT_CUSTOM_FALLBACK_LIST_H;
+    else list_h = st ? (st->height - g_fl_list_y0 - yOff) : PROMPT_CUSTOM_FALLBACK_LIST_H;
     if (!spec->x && !spec->w) {
-        g_fl_list_bx = FLINT_SEL_X;
-        g_fl_list_bw = (st ? st->width : FLINT_CUSTOM_FALLBACK_W) - FLINT_SEL_W_SHRINK;
-        g_fl_list_fw = st ? st->width : FLINT_PROMPT_W;
+        g_fl_list_bx = PROMPT_SEL_X;
+        g_fl_list_bw = (st ? st->width : PROMPT_CUSTOM_FALLBACK_W) - PROMPT_SEL_W_SHRINK;
+        g_fl_list_fw = st ? st->width : PROMPT_W;
     } else {
-        g_fl_list_bx = spec->x + FLINT_SEL_INSET;
-        g_fl_list_bw = (spec->w ? spec->w : FLINT_CUSTOM_FALLBACK_LIST_W) - 2;
-        g_fl_list_fw = spec->w ? spec->w : FLINT_PROMPT_W;
+        g_fl_list_bx = spec->x + PROMPT_SEL_INSET;
+        g_fl_list_bw = (spec->w ? spec->w : PROMPT_CUSTOM_FALLBACK_LIST_W) - 2;
+        g_fl_list_fw = spec->w ? spec->w : PROMPT_W;
     }
     int visible = list_h / g_fl_list_itemH;
     if (visible < 1) visible = 1;
@@ -463,10 +463,10 @@ bool fl_listbox_next_platform(FlListItemCtx *out) {
     int y = g_fl_list_y0 + g_fl_list_cur * g_fl_list_itemH;
     bool sel = (idx == g_fl_list_lb->selected_index);
     if (RoundedCorners && CornerRadius>0) {
-        int R=FLINT_SEL_RADIUS; int t=FLINT_SEL_INSET;
+        int R=PROMPT_SEL_RADIUS; int t=PROMPT_SEL_INSET;
         int bx = g_fl_list_bx, bw = g_fl_list_bw;
         if (sel) {
-            x11_fill_rounded_rect(g_fl_list_dpy, g_fl_list_xd, g_fl_list_vis, g_fl_list_cmap, rgb_to_hex(COLOR_SELECTED_TEXT), 0xFFFF, bx+t, y+FLINT_SEL_TOP_INSET+t, bw-2*t, g_fl_list_itemH-2-2*t, R-1);
+            x11_fill_rounded_rect(g_fl_list_dpy, g_fl_list_xd, g_fl_list_vis, g_fl_list_cmap, rgb_to_hex(COLOR_SELECTED_TEXT), 0xFFFF, bx+t, y+PROMPT_SEL_TOP_INSET+t, bw-2*t, g_fl_list_itemH-2-2*t, R-1);
         }
     } else {
         PromptState tmp = {0};
@@ -600,8 +600,8 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
     int y = spec->y;
     int w = spec->w;
     int h = spec->h;
-    if (w <= 0) w = state ? state->width : FLINT_CUSTOM_FALLBACK_W;
-    if (h <= 0) h = FlintCustomEditHeight();
+    if (w <= 0) w = state ? state->width : PROMPT_CUSTOM_FALLBACK_W;
+    if (h <= 0) h = PromptCustomEditHeight();
     FontHandle fh = spec->font;
     bool needDestroy = false;
     if (!FH_TO_XFT(fh)) {
@@ -620,11 +620,11 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
         scroll = x11_update_edit_scroll_offset(dpy,xf,buf,text_len,cursor,w, state ? state->scroll_offset : 0, &cursor_x);
         if (state) state->scroll_offset = scroll;
     }
-    int draw_x = x + FLINT_EDIT_INSET - scroll;
+    int draw_x = x + PROMPT_EDIT_INSET - scroll;
     int textH = FontSize;
     int y_raw;
     if (spec->y == 0) {
-        y_raw = FLINT_EDIT_INSET;
+        y_raw = PROMPT_EDIT_INSET;
     } else {
         y_raw = spec->y;
     }
@@ -633,24 +633,24 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
     if (text_len > 0) {
         Platform_DrawTextRaw(draw_x, y_raw, (char*)buf, text_hex, fh, "", 0, 0);
     }
-    int cursor_draw_x = x + FLINT_EDIT_INSET + cursor_x - scroll;
-    if (cursor_draw_x < x + FLINT_CARET_LO_CLAMP) cursor_draw_x = x + FLINT_CARET_LO_CLAMP;
-    if (cursor_draw_x > x + w - FLINT_CARET_HI_CLAMP) cursor_draw_x = x + w - FLINT_CARET_HI_CLAMP;
+    int cursor_draw_x = x + PROMPT_EDIT_INSET + cursor_x - scroll;
+    if (cursor_draw_x < x + PROMPT_CARET_LO_CLAMP) cursor_draw_x = x + PROMPT_CARET_LO_CLAMP;
+    if (cursor_draw_x > x + w - PROMPT_CARET_HI_CLAMP) cursor_draw_x = x + w - PROMPT_CARET_HI_CLAMP;
     if (IsInsertMode()) {
-        Platform_DrawRectRaw(cursor_draw_x,cursor_y,FLINT_CARET_W_INSERT,textH,rgb_to_hex(COLOR_CURSOR));
+        Platform_DrawRectRaw(cursor_draw_x,cursor_y,PROMPT_CARET_W_INSERT,textH,rgb_to_hex(COLOR_CURSOR));
     } else {
-        Platform_DrawRectRaw(cursor_draw_x,cursor_y,FLINT_EDITPOPUP_CARET_W_NORMAL,textH,rgb_to_hex(COLOR_CURSOR));
+        Platform_DrawRectRaw(cursor_draw_x,cursor_y,PROMPT_EDITPOPUP_CARET_W_NORMAL,textH,rgb_to_hex(COLOR_CURSOR));
     }
     if (state) {
         if (WindowTitleText && state->window_title) {
             unsigned long title_col = 0;
             eval_window_title_color(state, &title_col);
             Platform_SetDrawContext(dpy, xd, vis, cmap);
-            Platform_DrawTextRaw(FLINT_FOOTER_X, state->height - FLINT_FOOTER_Y_FROM_BOTTOM, state->window_title, title_col, fh, "LEFT", FLINT_FOOTER_PAD, FontSize);
+            Platform_DrawTextRaw(PROMPT_FOOTER_X, state->height - PROMPT_FOOTER_Y_FROM_BOTTOM, state->window_title, title_col, fh, "LEFT", PROMPT_FOOTER_PAD, FontSize);
         }
         if (VimModeText) {
             Platform_SetDrawContext(dpy, xd, vis, cmap);
-            Platform_DrawTextRaw(FLINT_FOOTER_X, state->height - FLINT_FOOTER_Y_FROM_BOTTOM, g_vim_mode, VimModeTextColor(), fh, "RIGHT", FLINT_FOOTER_PAD, FontSize);
+            Platform_DrawTextRaw(PROMPT_FOOTER_X, state->height - PROMPT_FOOTER_Y_FROM_BOTTOM, g_vim_mode, VimModeTextColor(), fh, "RIGHT", PROMPT_FOOTER_PAD, FontSize);
         }
     }
     if (needDestroy) Platform_DestroyFont(fh);

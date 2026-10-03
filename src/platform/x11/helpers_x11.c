@@ -189,7 +189,7 @@ unsigned long VimModeTextColor(void) {
 
 int x11_update_edit_scroll_offset(Display* dpy, XftFont* xf, const char* text, int text_len, int cursor, int width, int prev_scroll, int* out_cursor_x) {
     PROFILE_START(timer);
-    int visible_w = width - FLINT_EDIT_SCROLL_PAD;
+    int visible_w = width - PROMPT_EDIT_SCROLL_PAD;
     int cursor_x = 0;
     int text_w = 0;
     if (xf) {
@@ -217,11 +217,11 @@ int x11_update_edit_scroll_offset(Display* dpy, XftFont* xf, const char* text, i
 }
 
 int x11_font_row_height(int font_size) {
-    return font_size + FLINT_ROW_H_BONUS;
+    return font_size + PROMPT_ROW_H_BONUS;
 }
 
 int x11_font_list_top(int ascent, int descent, int font_size) {
-    return font_size + FLINT_LIST_TOP_BONUS;
+    return font_size + PROMPT_LIST_TOP_BONUS;
 }
 
 int x11_font_row_height_of(FontHandle font) {
@@ -247,13 +247,13 @@ int x11_font_cursor_y_of(FontHandle font, int box_top) {
 
 void x11_draw_edit_cursor(XftDraw* xd, XftColor* color, int cursor_x, int scroll, int width) {
     PROFILE_START(timer);
-    int cursor_draw_x = FLINT_EDIT_INSET + cursor_x - scroll;
-    if (cursor_draw_x > width - FLINT_X11_DEADCURSOR_CLAMP) cursor_draw_x = width - FLINT_X11_DEADCURSOR_CLAMP;
-    int cursor_y = FLINT_X11_DEADCURSOR_Y;
+    int cursor_draw_x = PROMPT_EDIT_INSET + cursor_x - scroll;
+    if (cursor_draw_x > width - PROMPT_X11_DEADCURSOR_CLAMP) cursor_draw_x = width - PROMPT_X11_DEADCURSOR_CLAMP;
+    int cursor_y = PROMPT_X11_DEADCURSOR_Y;
     if (IsInsertMode()) {
-        XftDrawRect(xd, color, cursor_draw_x, cursor_y, FLINT_CARET_W_INSERT, FontSize);
+        XftDrawRect(xd, color, cursor_draw_x, cursor_y, PROMPT_CARET_W_INSERT, FontSize);
     } else {
-        XftDrawRect(xd, color, cursor_draw_x, cursor_y, FLINT_EDITPOPUP_CARET_W_NORMAL, FontSize);
+        XftDrawRect(xd, color, cursor_draw_x, cursor_y, PROMPT_EDITPOPUP_CARET_W_NORMAL, FontSize);
     }
     PROFILE_END_VAR(timer, "helpers_x11:x11_draw_edit_cursor");
 }
@@ -571,7 +571,7 @@ void DrawListBoxItemText(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap, 
     PROFILE_START(timer);
     XftFont* xf = FH_TO_XFT(font);
     if (!xf) { PROFILE_END_VAR(timer, "helpers_x11:DrawListBoxItemText"); return; }
-    int XOffset = FLINT_ITEM_TEXT_X;
+    int XOffset = PROMPT_ITEM_TEXT_X;
     int row_h = x11_font_row_height_of(font);
     int pad_top = (row_h - (xf->ascent + xf->descent)) / 2;
     if (pad_top < 0) pad_top = 0;
