@@ -56,6 +56,7 @@ int UI_LB_GetText(WindowHandle hList, int index, char* buffer);
 void UI_Edit_SetFont(WindowHandle hEdit, HFONT hFont);
 HFONT UI_GetFont(WindowHandle hWnd);
 void UI_Edit_UpdateUIState(WindowHandle hEdit, UINT action, UINT uiFlags);
+bool UI_DrawCaret(HDC hdc, HWND hwnd);
 void UI_FlushPendingInput(void);
 void UI_PreparePopupPump(void);
 bool UI_ShouldSkipPopupKey(const void* msg);

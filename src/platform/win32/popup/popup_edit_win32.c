@@ -88,15 +88,14 @@ LRESULT CALLBACK EditPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
   if (uMsg == WM_PAINT) {
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(hWnd, &ps);
-    HideCaret(hWnd);
+    if (GetFocus() == hWnd) DestroyCaret();
     RECT rc; GetClientRect(hWnd, &rc);
-    if (rc.right <= 0 || rc.bottom <= 0) { ShowCaret(hWnd); EndPaint(hWnd, &ps); return 0; }
+    if (rc.right <= 0 || rc.bottom <= 0) { EndPaint(hWnd, &ps); return 0; }
     HDC memDC = CreateCompatibleDC(hdc);
     HBITMAP memBmp = CreateCompatibleBitmap(hdc, rc.right, rc.bottom);
     if (!memDC || !memBmp) {
       if (memDC) DeleteDC(memDC);
       if (memBmp) DeleteObject(memBmp);
-      ShowCaret(hWnd);
       EndPaint(hWnd, &ps);
       return DefSubclassProc(hWnd, uMsg, wParam, lParam);
     }
@@ -121,12 +120,12 @@ LRESULT CALLBACK EditPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
       FillRect(memDC, &rc, br);
       DeleteObject(br);
     }
-    SendMessage(hWnd, WM_PRINTCLIENT, (WPARAM)memDC, PRF_CLIENT);
+SendMessage(hWnd, WM_PRINTCLIENT, (WPARAM)memDC, PRF_CLIENT);
+    if (GetFocus() == hWnd) UI_DrawCaret(memDC, hWnd);
     BitBlt(hdc, ps.rcPaint.left, ps.rcPaint.top, ps.rcPaint.right - ps.rcPaint.left, ps.rcPaint.bottom - ps.rcPaint.top, memDC, ps.rcPaint.left, ps.rcPaint.top, SRCCOPY);
     SelectObject(memDC, oldBmp);
     DeleteObject(memBmp);
     DeleteDC(memDC);
-    ShowCaret(hWnd);
     EndPaint(hWnd, &ps);
     return 0;
   }

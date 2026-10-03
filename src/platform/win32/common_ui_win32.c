@@ -442,161 +442,69 @@ void UpdateTextCaret(WindowHandle hwndEditControl)
 {
   HWND hwnd = WH_TO_HWND(hwndEditControl);
   if (!hwnd || !IsWindow(hwnd)) return;
+  InvalidateRect(hwnd, NULL, FALSE);
+}
 
-  HDC hdc = GetDC(hwnd);
+bool UI_DrawCaret(HDC hdc, HWND hwnd) {
+  if (!hdc || !hwnd || !IsWindow(hwnd)) return false;
+  DWORD selStart = 0, selEnd = 0;
+  SendMessageA(hwnd, EM_GETSEL, (WPARAM)&selStart, (LPARAM)&selEnd);
+  if (selStart != selEnd) return false;
+
   HFONT hFont = (HFONT)SendMessageA(hwnd, WM_GETFONT, 0, 0);
   HFONT oldFont = hFont ? (HFONT)SelectObject(hdc, hFont) : NULL;
   TEXTMETRIC tm;
   memset(&tm, 0, sizeof(tm));
   GetTextMetrics(hdc, &tm);
-  if (oldFont) SelectObject(hdc, oldFont);
-  ReleaseDC(hwnd, hdc);
 
   RECT rc;
   GetClientRect(hwnd, &rc);
-  int bandHeight = tm.tmAscent + tm.tmDescent;
-  if (bandHeight <= 0) bandHeight = FontSize;
-  int caretHeight = bandHeight;
-  if (caretHeight > rc.bottom && rc.bottom > 0) caretHeight = rc.bottom;
-  int lineTopPad = 0;
-  int caretWidth;
-  if (IsInsertMode()) {
-    caretWidth = FLINT_CARET_W_INSERT;
+  int caretHeight = tm.tmAscent + tm.tmDescent;
+  if (caretHeight <= 0) caretHeight = FontSize;
+  if (rc.bottom > 0 && caretHeight > rc.bottom) caretHeight = rc.bottom;
+  int caretWidth = IsInsertMode() ? FLINT_CARET_W_INSERT : FlintNormalCaretWidth();
+
+  int cx = 0;
+  int lineTop = 0;
+  int elen = GetWindowTextLengthA(hwnd);
+  if (elen <= 0) {
+    LRESULT ep = SendMessageA(hwnd, EM_POSFROMCHAR, 0, 0);
+    lineTop = (ep != (LRESULT)-1) ? (short)HIWORD(ep) : 0;
   } else {
-    caretWidth = FlintNormalCaretWidth();
-  }
-
-  DWORD selStart = 0, selEnd = 0;
-  SendMessageA(hwnd, EM_GETSEL, (WPARAM)&selStart, (LPARAM)&selEnd);
-
-  int centeredY = (rc.bottom - caretHeight) / 2;
-  if (centeredY < lineTopPad) centeredY = lineTopPad;
-
-  POINT pt = {0, centeredY};
-  BOOL havePos = FALSE;
-  char ebuf[512];
-  GetWindowTextA(hwnd, ebuf, sizeof(ebuf));
-  int elen = (int)strlen(ebuf);
-  DWORD q = selStart;
-  if ((int)q > elen) q = (DWORD)elen;
-  LRESULT coords = SendMessageA(hwnd, EM_POSFROMCHAR, q, 0);
-  if (coords == (LRESULT)-1 && elen > 0) {
-    coords = SendMessageA(hwnd, EM_POSFROMCHAR, (WPARAM)(elen - 1), 0);
-    if (coords != (LRESULT)-1) {
-      HDC mdc = GetDC(hwnd);
-      HFONT mf = (HFONT)SendMessageA(hwnd, WM_GETFONT, 0, 0);
-      HFONT mo = mf ? (HFONT)SelectObject(mdc, mf) : NULL;
-      SIZE msz = {0, 0};
-      int mcopy = (int)q < (int)sizeof(ebuf)-1 ? (int)q : (int)sizeof(ebuf)-1;
-      GetTextExtentPoint32A(mdc, ebuf, mcopy, &msz);
-      if (mo) SelectObject(mdc, mo);
-      ReleaseDC(hwnd, mdc);
-      pt.x = msz.cx;
-      pt.y = (short)HIWORD(coords) + lineTopPad;
-      if (rc.bottom > 0 && pt.y + caretHeight > rc.bottom) pt.y = rc.bottom - caretHeight;
-      havePos = TRUE;
-      log_info("UpdateTextCaret tail tmH=%d fs=%d rcB=%d rawEM=%d,%d pad=%d pt=%d,%d ch=%d", tm.tmHeight, FontSize, rc.bottom, (short)LOWORD(coords), (short)HIWORD(coords), lineTopPad, pt.x, pt.y, caretHeight);
-    }
-  }
-  if (coords != (LRESULT)-1 && !havePos) {
-    pt.x = (short)LOWORD(coords);
-    pt.y = (short)HIWORD(coords) + lineTopPad;
-    if (rc.bottom > 0 && pt.y + caretHeight > rc.bottom) pt.y = rc.bottom - caretHeight;
-    havePos = TRUE;
-    log_info("UpdateTextCaret tmH=%d asc=%d desc=%d il=%d fs=%d rcB=%d rawEM=%d,%d pad=%d pt=%d,%d ch=%d", tm.tmHeight, tm.tmAscent, tm.tmDescent, tm.tmInternalLeading, FontSize, rc.bottom, (short)LOWORD(coords), (short)HIWORD(coords), lineTopPad, pt.x, pt.y, caretHeight);
-  } else if (!havePos) {
-    char buf[512];
-    GetWindowTextA(hwnd, buf, sizeof(buf));
-    int len = (int)strlen(buf);
-    if ((int)selStart > len) selStart = (DWORD)len;
-    if (selStart == 0) {
-      pt.x = 0;
-      pt.y = centeredY;
-      havePos = TRUE;
+    DWORD q = selStart;
+    if ((int)q > elen) q = (DWORD)elen;
+    LRESULT cr = SendMessageA(hwnd, EM_POSFROMCHAR, q, 0);
+    if (cr == (LRESULT)-1) {
+      cr = SendMessageA(hwnd, EM_POSFROMCHAR, (WPARAM)(elen - 1), 0);
+      if (cr == (LRESULT)-1) { if (oldFont) SelectObject(hdc, oldFont); return false; }
+      char lastc[2] = { 0, 0 };
+      GetWindowTextA(hwnd, lastc, 1);
+      lastc[1] = '\0';
+      SIZE wsz; memset(&wsz, 0, sizeof(wsz));
+      GetTextExtentPoint32A(hdc, lastc, 1, &wsz);
+      cx = (short)LOWORD(cr) + wsz.cx;
+      lineTop = (short)HIWORD(cr);
     } else {
-      HDC hdc2 = GetDC(hwnd);
-      HFONT hFont2 = (HFONT)SendMessageA(hwnd, WM_GETFONT, 0, 0);
-      HFONT old2 = hFont2 ? (HFONT)SelectObject(hdc2, hFont2) : NULL;
-      char tmp[512];
-      int copy = (int)selStart < (int)sizeof(tmp)-1 ? (int)selStart : (int)sizeof(tmp)-1;
-      memcpy(tmp, buf, copy);
-      tmp[copy] = '\0';
-      SIZE sz = {0};
-      GetTextExtentPoint32A(hdc2, tmp, copy, &sz);
-      if (old2) SelectObject(hdc2, old2);
-      ReleaseDC(hwnd, hdc2);
-      pt.x = sz.cx;
-      pt.y = centeredY;
-      havePos = TRUE;
+      cx = (short)LOWORD(cr);
+      lineTop = (short)HIWORD(cr);
     }
   }
+  if (cx < 0) cx = 0;
+  if (cx + caretWidth > rc.right && rc.right > caretWidth) cx = rc.right - caretWidth;
+  int cy = lineTop;
+  if (cy + caretHeight > rc.bottom && rc.bottom > 0) cy = rc.bottom - caretHeight;
+  if (cy < 0) cy = 0;
 
-  static int lastWidth = -1;
-  static int lastHeight = -1;
-  static HWND lastHwnd = NULL;
-  static BOOL sCaretShown = FALSE;
-  static HBITMAP sCaretBitmap = NULL;
-  static COLORREF sCaretColor = 0xFFFFFFFF;
-
-  COLORREF caretColor = COLOR_CURSOR;
-
-  if (caretWidth != lastWidth || caretHeight != lastHeight ||
-      hwnd != lastHwnd || caretColor != sCaretColor) {
-
-    if (sCaretShown) HideCaret(hwnd);
-    DestroyCaret();
-    sCaretShown = FALSE;
-
-    if (sCaretBitmap) {
-      DeleteObject(sCaretBitmap);
-      sCaretBitmap = NULL;
-    }
-
-    int w = caretWidth < 1 ? 1 : caretWidth;
-    int h = caretHeight < 1 ? 1 : caretHeight;
-
-    BITMAPINFO bmi;
-    memset(&bmi, 0, sizeof(bmi));
-    bmi.bmiHeader.biSize        = sizeof(BITMAPINFOHEADER);
-    bmi.bmiHeader.biWidth       = w;
-    bmi.bmiHeader.biHeight      = -h;
-    bmi.bmiHeader.biPlanes      = 1;
-    bmi.bmiHeader.biBitCount    = 32;
-    bmi.bmiHeader.biCompression = BI_RGB;
-
-    HDC hdcScreen = GetDC(NULL);
-    void* dibBits = NULL;
-    HBITMAP hbm = CreateDIBSection(hdcScreen, &bmi, DIB_RGB_COLORS,
-                                   &dibBits, NULL, 0);
-    if (hbm && dibBits) {
-      uint32_t* px = (uint32_t*)dibBits;
-      uint32_t c = (uint32_t)(((caretColor & 0xFF) << 16) |
-                              (caretColor & 0xFF00) |
-                              ((caretColor >> 16) & 0xFF));
-      for (int i = 0; i < w * h; i++) px[i] = c;
-      sCaretBitmap = hbm;
-    } else if (hbm) {
-      DeleteObject(hbm);
-    }
-    ReleaseDC(NULL, hdcScreen);
-
-    CreateCaret(hwnd, sCaretBitmap, caretWidth, caretHeight);
-    if (havePos) SetCaretPos(pt.x, pt.y);
-    ShowCaret(hwnd);
-    sCaretShown = TRUE;
-    SetCaretBlinkTime(INFINITE);
-
-    lastWidth = caretWidth;
-    lastHeight = caretHeight;
-    lastHwnd = hwnd;
-    sCaretColor = caretColor;
-  } else if (havePos) {
-    SetCaretPos(pt.x, pt.y);
-    if (!sCaretShown) {
-      ShowCaret(hwnd);
-      sCaretShown = TRUE;
-    }
-  }
+  RECT cr2;
+  cr2.left = cx;
+  cr2.top = cy;
+  cr2.right = cx + caretWidth;
+  cr2.bottom = cy + caretHeight;
+  HBRUSH br = CreateSolidBrush(COLOR_CURSOR);
+  FillRect(hdc, &cr2, br);
+  DeleteObject(br);
+  if (oldFont) SelectObject(hdc, oldFont);
+  return true;
 }
 
 void CalculateWindowMetrics(WindowLayout* layout,int height , int width,int item_height) {
