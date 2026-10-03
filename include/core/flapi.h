@@ -353,6 +353,7 @@ typedef struct {
     int height;
     unsigned long frame;
     double elapsed;
+    bool hovered;
 } FlWidgetState;
 
 typedef void (*FlWidgetRenderFn)(FlWidgetState *state);
@@ -377,6 +378,8 @@ typedef struct {
     ColorRef color;
     bool no_bg;
     void (*on_click)(void);
+    void (*on_hover)(void);
+    void (*on_unhover)(void);
     FlWidgetRenderFn render;
     int x;
     int y;
@@ -416,7 +419,10 @@ struct FlWidget {
     char *owner;
     unsigned gen;
     void (*on_click)(void);
+    void (*on_hover)(void);
+    void (*on_unhover)(void);
     bool clickable;
+    bool hovered;
 };
 
 FlWidget *fl_widget_create(const FlWidgetSpec *spec);

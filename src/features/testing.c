@@ -3,7 +3,7 @@
 
 
 void Testing(void) {
-  fl_click_at_pos((FlPos){960,540});
+  fl_get_cursor_pos();
 }
 
 
