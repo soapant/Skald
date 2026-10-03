@@ -57,11 +57,12 @@ static bool EditPopupWindow_OnKey(HWND hWnd, WMEditPopupData* data, ListBoxInfo*
     int wParam = key->vk;
     EditPopup_SyncText(data);
     if (wParam == VK_ESCAPE) {
-        if (IsInsertMode()) {
+        if (data->mode == MODE_INSERT) {
             log_info("EDITPOP esc INSERT->NORMAL text=[%s]", data->text ? data->text : "");
             SetMode(MODE_NORMAL);
             SetFocus(WH_TO_HWND(data->hEdit));
             UpdateTextCaret(data->hEdit);
+            InvalidateRect(GetParent(hWnd), NULL, TRUE);
             return true;
         }
         log_info("EDITPOP esc NORMAL->CLOSE text=[%s]", data->text ? data->text : "");
@@ -172,7 +173,7 @@ LRESULT CALLBACK EditPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
         g_swallowsNextChar = false;
         return 0;
     }
-    if (IsNormalMode()) return 0;
+    if (data->mode == MODE_NORMAL) return 0;
     if (uMsg == WM_SYSCHAR) return 0;
     if (wParam == 0x0D || wParam == 0x1B) return 0;
     if (wParam < 0x20 && wParam != 0x08 && wParam != 0x09) return 0;
@@ -279,15 +280,15 @@ LRESULT CALLBACK EditPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
         
         if (g_vim_mode != NULL && VimModeText) {
           wchar_t wmode[256];
-            MultiByteToWideChar(CP_UTF8, 0, g_vim_mode, -1, wmode, 256);
-            
+            MultiByteToWideChar(CP_UTF8, 0, Vim_ModeName(data->mode), -1, wmode, 256);
+
             HFONT hOldFont = (HFONT)SelectObject(hdc, g_win32_hMainFont);
             SetBkMode(hdc, TRANSPARENT);
-            
+
             COLORREF modeColor;
-            if (g_current_mode == MODE_NORMAL) {
+            if (data->mode == MODE_NORMAL) {
               modeColor = COLOR_NORMAL_MODE_TEXT;
-            } else if (g_current_mode == MODE_INSERT) {
+            } else if (data->mode == MODE_INSERT) {
               modeColor = COLOR_INSERT_MODE_TEXT;
             } else {
               modeColor = COLOR_VISUAL_MODE_TEXT;
