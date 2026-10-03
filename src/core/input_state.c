@@ -1,6 +1,11 @@
 #include "platform/input_state.h"
 #include "core/types/keys.h"
 #include <stddef.h>
+#if defined(_WIN32)
+#include <windows.h>
+#else
+#include <pthread.h>
+#endif
 
 static bool g_down[256] = {0};
 static bool g_pressed[256] = {0};
@@ -85,10 +90,74 @@ int Platform_GetPressedKey(void){
  return 0;
 }
 char Platform_GetPressedChar(void){
- if(g_char_head != g_char_tail){
-  char c = g_char_queue[g_char_head];
-  g_char_head = (g_char_head+1)%32;
-  return c;
- }
- return 0;
+  if(g_char_head != g_char_tail){
+   char c = g_char_queue[g_char_head];
+   g_char_head = (g_char_head+1)%32;
+   return c;
+  }
+  return 0;
+}
+
+#define GLOBAL_KEY_RING 512
+
+static PlatformKeyEvent g_gkeys[GLOBAL_KEY_RING];
+static int g_gkey_head = 0, g_gkey_tail = 0;
+static unsigned long g_gkey_dropped = 0;
+#if !defined(_WIN32)
+static pthread_mutex_t g_gkey_mtx = PTHREAD_MUTEX_INITIALIZER;
+#define GKEY_LOCK() pthread_mutex_lock(&g_gkey_mtx)
+#define GKEY_UNLOCK() pthread_mutex_unlock(&g_gkey_mtx)
+#else
+static CRITICAL_SECTION g_gkey_cs;
+static LONG g_gkey_cs_ready = 0;
+static void gkey_lock_init(void) {
+    if (InterlockedCompareExchange(&g_gkey_cs_ready, 1, 0) == 0) InitializeCriticalSection(&g_gkey_cs);
+}
+#define GKEY_LOCK() do { gkey_lock_init(); EnterCriticalSection(&g_gkey_cs); } while (0)
+#define GKEY_UNLOCK() do { gkey_lock_init(); LeaveCriticalSection(&g_gkey_cs); } while (0)
+#endif
+
+void Platform_GlobalKey_Clear(void){
+  GKEY_LOCK();
+  g_gkey_head = g_gkey_tail = 0;
+  g_gkey_dropped = 0;
+  GKEY_UNLOCK();
+}
+
+void Platform_GlobalKey_Push(const PlatformKeyEvent* ev){
+  if(!ev) return;
+  GKEY_LOCK();
+  int nxt = (g_gkey_tail + 1) % GLOBAL_KEY_RING;
+  if(nxt == g_gkey_head){ g_gkey_dropped++; GKEY_UNLOCK(); return; }
+  g_gkeys[g_gkey_tail] = *ev;
+  g_gkey_tail = nxt;
+  GKEY_UNLOCK();
+}
+
+bool Platform_GlobalKey_Pop(PlatformKeyEvent* out){
+  if(!out) return false;
+  bool got = false;
+  GKEY_LOCK();
+  if(g_gkey_head != g_gkey_tail){
+    *out = g_gkeys[g_gkey_head];
+    g_gkey_head = (g_gkey_head + 1) % GLOBAL_KEY_RING;
+    got = true;
+  }
+  GKEY_UNLOCK();
+  return got;
+}
+
+int Platform_GlobalKey_Pending(void){
+  GKEY_LOCK();
+  int n = g_gkey_tail - g_gkey_head;
+  if(n < 0) n += GLOBAL_KEY_RING;
+  GKEY_UNLOCK();
+  return n;
+}
+
+unsigned long Platform_GlobalKey_Dropped(void){
+  GKEY_LOCK();
+  unsigned long d = g_gkey_dropped;
+  GKEY_UNLOCK();
+  return d;
 }

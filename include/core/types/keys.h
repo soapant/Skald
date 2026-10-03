@@ -58,6 +58,9 @@
 #if !defined(VK_OEM_4)
 #define VK_OEM_4 0xDB
 #endif
+#if !defined(VK_OEM_5)
+#define VK_OEM_5 0xDC
+#endif
 #if !defined(VK_OEM_7)
 #define VK_OEM_7 0xDE
 #endif

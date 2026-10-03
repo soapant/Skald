@@ -7,6 +7,7 @@
 #include "core/snippet_manager.h"
 #include "config.h"
 #include "platform/platform.h"
+#include "platform/input_state.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -18,6 +19,9 @@
 #include <linux/uinput.h>
 #include <errno.h>
 #include <X11/keysym.h>
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
+#include "platform/x11/display_x11.h"
 #include <signal.h>
 #include <pthread.h>
 
@@ -357,7 +361,7 @@ bool x11_handle_global_key(int key_code, int value) {
     if (value != 1) { PROFILE_END_VAR(timer, "input:x11_handle_global_key"); return false; }
     int pressed_vk = ConvertLinuxKeyToWindowsVK(key_code);
     int modifiers = remap_current_mods();
-    if (hotkey_process(pressed_vk, modifiers)) {
+    if (pressed_vk && hotkey_process(pressed_vk, modifiers)) {
         pending_hotkey_vk = pressed_vk; pending_hotkey_mod = modifiers; struct timeval tv; gettimeofday(&tv,NULL); pending_hotkey_timeMs = tv.tv_sec*1000 + tv.tv_usec/1000;
         PROFILE_END_VAR(timer, "input:x11_handle_global_key");
         return true;
@@ -400,6 +404,15 @@ bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed) {
     if (val != 2) {
         remap_update_phys(ConvertLinuxKeyToWindowsVK(code), val);
         x11_sync_held_from_phys();
+    }
+    {
+        PlatformKeyEvent gev;
+        gev.vk = ConvertLinuxKeyToWindowsVK(code);
+        gev.scancode = code;
+        gev.mods = remap_current_mods();
+        gev.down = val != 0;
+        gev.repeat = (val == 2);
+        Platform_GlobalKey_Push(&gev);
     }
     if (val == 0 && x11_is_suppressed(code)) { x11_set_suppress(code, false); PROFILE_END_VAR(timer, "input:x11_handle_evdev"); return true; }
     if (val == 2 && x11_is_suppressed(code)) { PROFILE_END_VAR(timer, "input:x11_handle_evdev"); return true; }
@@ -448,3 +461,22 @@ bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed) {
 }
 
 
+
+int Platform_CharForKey(int vk, int scancode, int mods) {
+  (void)vk;
+  Display *dpy = get_display();
+  if (!dpy) return 0;
+  KeySym ks = 0;
+  char buf[32];
+  XKeyEvent xe;
+  memset(&xe, 0, sizeof(xe));
+  xe.type = KeyPress;
+  xe.display = dpy;
+  xe.keycode = (KeyCode)(scancode + 8);
+  if (mods & HOTKEY_MOD_SHIFT) xe.state |= ShiftMask;
+  if (mods & HOTKEY_MOD_CTRL) xe.state |= ControlMask;
+  if (mods & HOTKEY_MOD_ALT) xe.state |= Mod1Mask;
+  int len = XLookupString(&xe, buf, sizeof(buf), &ks, NULL);
+  if (len <= 0) return 0;
+  return (int)(unsigned char)buf[0];
+}

@@ -308,16 +308,16 @@ bool Platform_PromptPopupOnKey(Popup* self, const PopupKeyEvent* key) {
         }
         return true;
       }
-    if (ctrl_pressed) {
-      if (wParam == VK_OEM_MINUS) {
-        Platform_AdjustFontSize(-1);
-        Config_Save();
+      if (ctrl_pressed) {
+        if (wParam == VK_OEM_MINUS) {
+          Platform_AdjustFontSize(-1);
+          Config_Save();
+        }
+        if (wParam == VK_OEM_PLUS) {
+          Platform_AdjustFontSize(1);
+          Config_Save();
+        }
       }
-      if (wParam == VK_OEM_PLUS) {
-        Platform_AdjustFontSize(1);
-        Config_Save();
-      }
-    }
 
     if (IsInsertMode() && key->text_len > 0) {
         bool swallow = false;
