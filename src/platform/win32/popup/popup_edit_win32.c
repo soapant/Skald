@@ -313,6 +313,10 @@ LRESULT CALLBACK EditPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
         return 0;
     }
             
+    case WM_ERASEBKGND: {
+      return 1;
+    }
+
     case WM_DESTROY: {
       FlintContext_Get()->window.hActiveEditControl = FlintContext_Get()->window.hEditControl;
         if (data) {
