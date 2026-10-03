@@ -1008,6 +1008,7 @@ bool fl_toggle_minimized_active(void) {
 }
 
 char* fl_popup_impl(const FlPopupSpec *spec) {
+    if (!spec) return NULL;
     const char* initial_text = spec->initial_text ? spec->initial_text : "";
     int x = spec->x ? spec->x : 0;
     int y = spec->y ? spec->y : 0;
@@ -1015,14 +1016,23 @@ char* fl_popup_impl(const FlPopupSpec *spec) {
     int h = spec->h > 0 ? spec->h : 70;
     const char* align = "LEFT";
     WindowManager* wm = WindowManager_Get();
+    if (!wm) { log_error("fl_popup: no WindowManager"); return NULL; }
     char* result = NULL;
     Popup* popup = EditPopup_Create(wm, initial_text, x, y, w, h, align, fl_edit_blocking_confirm, &result);
-    if (popup) EditPopup_SetPlaceholder(popup, spec->placeholder);
+    if (!popup) { log_error("fl_popup: EditPopup_Create failed w=%d h=%d", w, h); return NULL; }
+    EditPopup_SetPlaceholder(popup, spec->placeholder);
+    log_info("fl_popup ENTER w=%d h=%d scale=%.3f FontSize=%d popups=%d", w, h, (double)Platform_GetUIScale(), FontSize, wm->popup_count);
 
     WindowManager_PushPopup(wm, popup);
+    long long spins = 0;
     while (wm->running && popup->manager) {
         Platform_WM_ProcessEvents(wm);
+        spins++;
+        if (spins % 250 == 0) {
+            log_info("fl_popup SPIN n=%lld running=%d manager=%p popups=%d", spins, (int)wm->running, (void*)popup->manager, wm->popup_count);
+        }
     }
+    log_info("fl_popup EXIT spins=%lld popups=%d", spins, wm->popup_count);
     if (popup->manager == NULL) {
         if (popup->vtable && popup->vtable->destroy) popup->vtable->destroy(popup);
     } else {

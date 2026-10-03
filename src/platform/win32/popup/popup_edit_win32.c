@@ -16,8 +16,52 @@
 #include "platform/win32/popup_helpers_win32.h"
 #include "core/prompt_controller.h"
 
-static bool EditPopupWindow_OnKey(HWND hWnd, EditPopupData* data, ListBoxInfo* lb, const PopupKeyEvent* key) {
+static HFONT g_edit_popup_font = NULL;
+
+static void EditPopup_Close(bool confirmed) {
+    WindowManager* wm = WindowManager_Get();
+    if (!wm) return;
+    Popup* top = WindowManager_GetTopPopup(wm);
+    if (top && top->type == POPUP_EDIT) {
+        WMEditPopupData* ed = (WMEditPopupData*)top;
+        if (confirmed && ed->on_confirm) {
+            char buf[2048] = {0};
+            if (WH_TO_HWND(ed->hEdit)) GetWindowTextA(WH_TO_HWND(ed->hEdit), buf, sizeof(buf) - 1);
+            ed->on_confirm(buf, ed->user_data);
+        }
+        ed->confirmed = confirmed;
+    }
+    FlintContext_Get()->window.selection_complete = true;
+    WindowManager_PopPopup(wm);
+}
+
+static void EditPopup_SyncText(WMEditPopupData* data) {
+    if (!data || !WH_TO_HWND(data->hEdit)) return;
+    char buf[2048] = {0};
+    GetWindowTextA(WH_TO_HWND(data->hEdit), buf, sizeof(buf) - 1);
+    if (data->text && data->text_capacity > 0) {
+        strncpy(data->text, buf, (size_t)data->text_capacity - 1);
+        data->text[data->text_capacity - 1] = '\0';
+    }
+    DWORD s = 0, e = 0;
+    SendMessageA(WH_TO_HWND(data->hEdit), EM_GETSEL, (WPARAM)&s, (LPARAM)&e);
+    data->cursor = (int)s;
+}
+
+static bool EditPopupWindow_OnKey(HWND hWnd, WMEditPopupData* data, ListBoxInfo* lb, const PopupKeyEvent* key) {
     int wParam = key->vk;
+    EditPopup_SyncText(data);
+    if (wParam == VK_ESCAPE) {
+        EditPopup_Close(false);
+        return true;
+    }
+    if (wParam == VK_RETURN) {
+      if (key->shift) {
+        return false;
+    }
+        EditPopup_Close(true);
+        return true;
+    }
     if (PromptController_TryVimMotion(wParam, key->ctrl, key->shift, key->alt)) {
         WindowManager* wm = WindowManager_Get();
         Popup* top = wm ? WindowManager_GetTopPopup(wm) : NULL;
@@ -28,48 +72,6 @@ static bool EditPopupWindow_OnKey(HWND hWnd, EditPopupData* data, ListBoxInfo* l
         }
         InvalidateRect(hWnd, NULL, TRUE);
         return true;
-    }
-    if (wParam == VK_ESCAPE) {
-        data->result = NULL;
-        DestroyWindow(GetParent(hWnd));
-        UI_Redraw(lb, FlintContext_Get()->window.hListBox);
-        return true;
-    }
-    if (wParam == VK_RETURN) {
-      if (key->shift) {
-        return false;
-      }
-        char buffer[2048] = {0};
-        GetWindowTextA(WH_TO_HWND(data->hEdit), buffer, sizeof(buffer) - 1);
-        data->result = _strdup(buffer);
-        DestroyWindow(GetParent(hWnd));
-        UI_Redraw(lb, FlintContext_Get()->window.hListBox);
-        return true;
-    }
-    if (wParam == VK_BACK) {
-      if (key->ctrl) { SetWindowTextA(hWnd, ""); InvalidateRect(hWnd, NULL, TRUE); return true; }
-      char buf[2048]={0}; GetWindowTextA(hWnd, buf, sizeof(buf));
-      DWORD s=0,e=0; SendMessageA(hWnd, EM_GETSEL, (WPARAM)&s, (WPARAM)&e);
-      int len=(int)strlen(buf);
-      if (s!=e) { memmove(buf+s, buf+e, len-e+1); SetWindowTextA(hWnd, buf); SendMessageA(hWnd, EM_SETSEL, s, s); }
-      else if (s>0) {
-        if (s>=2 && buf[s-1]=='\n' && buf[s-2]=='\r') { memmove(buf+s-2, buf+s, len-s+1); SetWindowTextA(hWnd, buf); SendMessageA(hWnd, EM_SETSEL, s-2, s-2); }
-        else { memmove(buf+s-1, buf+s, len-s+1); SetWindowTextA(hWnd, buf); SendMessageA(hWnd, EM_SETSEL, s-1, s-1); }
-      }
-      InvalidateRect(hWnd, NULL, TRUE);
-      return true;
-    }
-    if (wParam == VK_DELETE) {
-      char buf[2048]={0}; GetWindowTextA(hWnd, buf, sizeof(buf));
-      DWORD s=0,e=0; SendMessageA(hWnd, EM_GETSEL, (WPARAM)&s, (WPARAM)&e);
-      int len=(int)strlen(buf);
-      if (s!=e) { memmove(buf+s, buf+e, len-e+1); SetWindowTextA(hWnd, buf); SendMessageA(hWnd, EM_SETSEL, s, s); }
-      else if (s < (DWORD)len) {
-        if (s+1 < (DWORD)len && buf[s]=='\r' && buf[s+1]=='\n') { memmove(buf+s, buf+s+2, len-s-1); SetWindowTextA(hWnd, buf); SendMessageA(hWnd, EM_SETSEL, s, s); }
-        else { memmove(buf+s, buf+s+1, len-s); SetWindowTextA(hWnd, buf); SendMessageA(hWnd, EM_SETSEL, s, s); }
-      }
-      InvalidateRect(hWnd, NULL, TRUE);
-      return true;
     }
     return false;
 }
@@ -124,26 +126,34 @@ LRESULT CALLBACK EditPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
   ListBoxInfo* lb = GetLBFromChild(hWnd);
   
   if (!lb && WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) && IsWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd))) lb = GetLBFromPopup(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd));
-  EditPopupData* data = (EditPopupData*)dwRefData;
-    if (!data || !WH_TO_HWND(data->hEdit)) {
-      data = (EditPopupData*)GetWindowLongPtrA(hWnd, GWLP_USERDATA);
+  EditPopupData* unused_data = (EditPopupData*)dwRefData;
+    WMEditPopupData* data = NULL;
+  if (WH_TO_HWND(FlintContext_Get()->window.hActiveEditControl) == hWnd) {
+      data = (WMEditPopupData*)dwRefData;
+  }
+    if (!data || data->base.type != POPUP_EDIT || !WH_TO_HWND(data->hEdit)) {
+      data = (WMEditPopupData*)GetWindowLongPtrA(GetParent(hWnd), GWLP_USERDATA);
     }
-  if (uMsg == WM_KEYDOWN) {
-    if (!data || !WH_TO_HWND(data->hEdit)) {
+    if (!data || data->base.type != POPUP_EDIT) {
       return DefSubclassProc(hWnd, uMsg, wParam, lParam);
     }
-    PopupKeyEvent key;
-    memset(&key, 0, sizeof(key));
-    key.vk = (int)wParam;
-    key.ctrl = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
-    key.shift = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
-    key.alt = (GetKeyState(VK_MENU) & 0x8000) != 0;
-    if (EditPopupWindow_OnKey(hWnd, data, lb, &key)) return 0;
-    return DefSubclassProc(hWnd, uMsg, wParam, lParam);
+    (void)unused_data;
+  if (uMsg == WM_KEYDOWN || uMsg == WM_SYSKEYDOWN) {
+      PopupKeyEvent key;
+      memset(&key, 0, sizeof(key));
+      key.vk = (int)wParam;
+      key.ctrl = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
+      key.shift = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
+      key.alt = (GetKeyState(VK_MENU) & 0x8000) != 0;
+      if (EditPopupWindow_OnKey(hWnd, data, lb, &key)) return 0;
+      if (uMsg == WM_SYSKEYDOWN) return 0;
+      return DefSubclassProc(hWnd, uMsg, wParam, lParam);
   }
-  if (uMsg == WM_CHAR) {
+  if (uMsg == WM_CHAR || uMsg == WM_SYSCHAR) {
     if (IsNormalMode()) return 0;
+    if (uMsg == WM_SYSCHAR) return 0;
     if (wParam == 0x08 || wParam == 0x7F) return 0;
+    if (wParam < 0x20 && wParam != 0x09) return 0;
   }
   return DefSubclassProc(hWnd, uMsg, wParam, lParam);
 }
@@ -151,26 +161,27 @@ LRESULT CALLBACK EditPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
 LRESULT CALLBACK EditPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
   ListBoxInfo* lb = NULL;
   if (WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) && IsWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd))) lb = GetLBFromPopup(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd));
-  EditPopupData* data = (EditPopupData*)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
-    
+  WMEditPopupData* data = (WMEditPopupData*)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
+
     switch (msg) {
     case WM_NCCREATE: {
       CREATESTRUCTA* cs = (CREATESTRUCTA*)lParam;
         SetWindowLongPtrA(hwnd, GWLP_USERDATA, (LONG_PTR)cs->lpCreateParams);
         return DefWindowProcA(hwnd, msg, wParam, lParam);
     }
-      
+
     case WM_CREATE: {
       if (!data) break;
         HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtrA(hwnd, GWLP_HINSTANCE);
           RECT rect;
           GetClientRect(hwnd, &rect);
 
+        if (!g_edit_popup_font) g_edit_popup_font = CreateCustomNerdFont(FontSize, UsedFont);
           int lineHeight = FontSize + FLINT_EDIT_H_BONUS;
           {
             HDC probe = CreateCompatibleDC(NULL);
             if (probe) {
-              HFONT hOld = data->hFont ? (HFONT)SelectObject(probe, data->hFont) : NULL;
+              HFONT hOld = g_edit_popup_font ? (HFONT)SelectObject(probe, g_edit_popup_font) : NULL;
               TEXTMETRIC tm;
               memset(&tm, 0, sizeof(tm));
               if (GetTextMetrics(probe, &tm) && tm.tmHeight > 0) lineHeight = tm.tmHeight;
@@ -179,26 +190,39 @@ LRESULT CALLBACK EditPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
             }
           }
 
+          int edit_h = lineHeight;
+          int edit_y = (rect.bottom / 2) + FLINT_EDITPOPUP_CENTER_OFFSET_Y;
+          if (edit_y < FLINT_EDITPOPUP_INSET) edit_y = FLINT_EDITPOPUP_INSET;
+          if (edit_y + edit_h > rect.bottom - FLINT_EDITPOPUP_INSET) {
+            edit_h = rect.bottom - FLINT_EDITPOPUP_INSET - edit_y;
+            if (edit_h < 1) edit_h = 1;
+          }
+
           data->hEdit = WH_FROM_HWND(CreateWindowExA(
-                                        0, "EDIT", data->initial_text,
+                                        0, "EDIT", data->text ? data->text : "",
                                         WS_CHILD | WS_VISIBLE | ES_LEFT | ES_AUTOHSCROLL,
                                         FLINT_EDITPOPUP_INSET,
-                                        (rect.bottom / 2) + FLINT_EDITPOPUP_CENTER_OFFSET_Y,
-                                        rect.right - FLINT_EDITPOPUP_INSET * 2, lineHeight,
+                                        edit_y,
+                                        rect.right - FLINT_EDITPOPUP_INSET * 2, edit_h,
                                         hwnd, (HMENU)1001, hInstance, NULL
                                        ));
 
           if (WH_TO_HWND(data->hEdit)) {
             SendMessageA(WH_TO_HWND(data->hEdit), EM_SETMARGINS,
                 EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELONG(0, 0));
-            UI_Edit_SetFont(data->hEdit,data->hFont);
+            UI_Edit_SetFont(data->hEdit, g_edit_popup_font);
               UI_Edit_SetSel(data->hEdit,0,0);
               SetFocus(WH_TO_HWND(data->hEdit));
               FlintContext_Get()->window.hActiveEditControl = data->hEdit;
-              
+
               SetWindowLongPtrA(WH_TO_HWND(data->hEdit), GWLP_USERDATA, (LONG_PTR)data);
               SetWindowSubclass(WH_TO_HWND(data->hEdit), EditPopupSubclassProc, 0, (DWORD_PTR)data);
+              UpdateTextCaret(data->hEdit);
           }
+          log_info("EDITPOP create win=%dx%d client=%dx%d edit=(%d,%d,%d,%d) lineHeight=%d FontSize=%d",
+              data->w, data->h, rect.right, rect.bottom,
+              FLINT_EDITPOPUP_INSET, edit_y, rect.right - FLINT_EDITPOPUP_INSET * 2, edit_h,
+              lineHeight, FontSize);
       break;
     }
         
@@ -263,8 +287,6 @@ LRESULT CALLBACK EditPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
     case WM_DESTROY: {
       FlintContext_Get()->window.hActiveEditControl = FlintContext_Get()->window.hEditControl;
         if (data) {
-          if (data->initial_text) { free((void*)data->initial_text); data->initial_text = NULL; }
-            if (data->hFont) { DeleteObject(data->hFont); data->hFont = NULL; }
               SetWindowLongPtrA(hwnd, GWLP_USERDATA, 0);
         }
         ForceWindowFocus(FlintContext_Get()->window.hPopupWnd, FlintContext_Get()->window.hEditControl);
