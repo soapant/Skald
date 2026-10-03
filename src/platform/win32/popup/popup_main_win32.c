@@ -8,6 +8,7 @@
 #include <commctrl.h>
 #include <shellapi.h>
 #include "config.h"
+#include "core/prompt_geometry.h"
 #include "platform/draw.h"
 #include "platform/ui.h"
 #include "core/feature_data.h"
@@ -257,9 +258,7 @@ static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent* key) {
                 }
                 if (WH_TO_HWND(FlintContext_Get()->window.hListBox) && IsWindow(WH_TO_HWND(FlintContext_Get()->window.hListBox))) {
                     UI_LB_SetFont(FlintContext_Get()->window.hListBox, g_win32_hMainFont);
-                    int newItemH = FontSize + 14;
-                    if (newItemH < 24) newItemH = 24;
-                    if (newItemH > 64) newItemH = 64;
+                    int newItemH = FlintRowHeight();
                     UI_LB_SetItemHeight(FlintContext_Get()->window.hListBox, newItemH);
                 }
                 HWND hPopup = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
@@ -328,7 +327,7 @@ static void Win32_PaintEditCaret(HDC memDC, HWND hwnd) {
   int cx;
   int lineTop;
   if (len <= 0) {
-    cx = 2;
+    cx = 0;
     LRESULT emptyPos = SendMessageA(hwnd, EM_POSFROMCHAR, 0, 0);
     lineTop = (emptyPos != (LRESULT)-1) ? (short)HIWORD(emptyPos) : 0;
   } else {
@@ -355,10 +354,10 @@ static void Win32_PaintEditCaret(HDC memDC, HWND hwnd) {
       qtmp[qq] = '\0';
       GetTextExtentPoint32A(memDC, qtmp, qq, &qs);
       if (qo) SelectObject(memDC, qo);
-      int measX = (int)qs.cx + 2;
+      int measX = (int)qs.cx;
       int slack = tm.tmAveCharWidth > 0 ? tm.tmAveCharWidth : 8;
       cx = emX;
-      if (cx < 0 || cx > measX + 2 + slack) {
+      if (cx < 0 || cx > measX + slack) {
         log_info("PaintCaret reject emX=%d measX=%d q=%d len=%d", emX, measX, (int)q, len);
         cx = measX;
       }
@@ -368,11 +367,11 @@ static void Win32_PaintEditCaret(HDC memDC, HWND hwnd) {
   int caretH = FontSize;
   if (caretH > rc.bottom && rc.bottom > 0) caretH = rc.bottom;
   if (caretH <= 0) return;
-  int caretY = (lineTop + inkTop + lineTop + tm.tmAscent - caretH) / 2;
+  int caretY = (tm.tmAscent + tm.tmDescent - caretH) / 2;
   if (caretY < lineTop) caretY = lineTop;
   if (rc.bottom > 0 && caretY + caretH > rc.bottom) caretY = rc.bottom - caretH;
-  int caretW = 2;
-  if (!IsInsertMode()) caretW = tm.tmAveCharWidth > 0 ? tm.tmAveCharWidth : 8;
+  int caretW = FLINT_CARET_W_INSERT;
+  if (!IsInsertMode()) caretW = FlintNormalCaretWidth();
   if (cx < 0) cx = 0;
   if (cx + caretW > rc.right && rc.right > caretW) cx = rc.right - caretW;
   HBRUSH cbr = CreateSolidBrush(COLOR_CURSOR);
@@ -739,9 +738,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     case WM_MEASUREITEM: {
       MEASUREITEMSTRUCT* pmis = (MEASUREITEMSTRUCT*)lParam;
         if (pmis->CtlID == IDC_LIST_BOX) {
-          int h = FontSize + 14;
-          if (h < 24) h = 24;
-          if (h > 64) h = 64;
+          int h = FlintRowHeight();
           pmis->itemHeight = h;
             return TRUE;
         }
@@ -755,11 +752,14 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
               return TRUE;
             }
           if (RoundedCorners && CornerRadius > 0) {
-            int R = 6;
+            int R = FLINT_SEL_RADIUS;
             if (R > CornerRadius) R = CornerRadius;
-            int t = 1;
+            int t = FLINT_SEL_INSET;
             RECT inner = pdis->rcItem;
-            inner.left += t; inner.top += t + 1; inner.right -= t; inner.bottom -= t + 1;
+            inner.left += FLINT_SEL_X + t;
+            inner.top += FLINT_SEL_TOP_INSET + t;
+            inner.right -= FLINT_SEL_X + t;
+            inner.bottom -= FLINT_SEL_TOP_INSET + t;
             if (inner.right <= inner.left || inner.bottom <= inner.top) { inner = pdis->rcItem; t = 0; }
             int innerR = R - 1; if (innerR < 0) innerR = 0;
             {
@@ -868,7 +868,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             
             SetBkMode(pdis->hDC, TRANSPARENT);
             RECT textRect = pdis->rcItem;
-            textRect.left += 10;
+            textRect.left += FLINT_ITEM_TEXT_X;
           
             Platform_SetPreRenderStateWin32(textBuffer, &textRect);
             Platform_SetDrawContextWin32(pdis->hDC);
@@ -961,11 +961,11 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
           SIZE sz;
           GetTextExtentPoint32W(paintDC, wmode, (int)wcslen(wmode), &sz);
           RECT modeRect;
-          modeRect.left = rect.right - sz.cx - 20;
-          modeRect.top = rect.bottom - sz.cy - 10;
-          modeRect.right = rect.right - 10;
+          modeRect.right = rect.right - FLINT_FOOTER_PAD;
+          modeRect.left = modeRect.right - sz.cx;
+          modeRect.top = rect.bottom - FLINT_FOOTER_Y_FROM_BOTTOM;
           modeRect.bottom = modeRect.top + sz.cy;
-          DrawTextW(paintDC, wmode, -1, &modeRect, DT_LEFT);
+          DrawTextW(paintDC, wmode, -1, &modeRect, DT_LEFT | DT_TOP | DT_SINGLELINE);
           SelectObject(paintDC, hOldFont);
       }
       if (FlintContext_Get()->window.title != NULL && strlen(FlintContext_Get()->window.title) > 0 && WindowTitleText) {
@@ -976,9 +976,9 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
           SIZE sz;
           GetTextExtentPoint32W(paintDC, wtitle, (int)wcslen(wtitle), &sz);
           RECT titleRect;
-          titleRect.left = 15;
-          titleRect.top = rect.bottom - sz.cy - 10;
-          titleRect.right = titleRect.left + sz.cx + 10;
+          titleRect.left = FLINT_FOOTER_X;
+          titleRect.top = rect.bottom - FLINT_FOOTER_Y_FROM_BOTTOM;
+          titleRect.right = titleRect.left + sz.cx + FLINT_FOOTER_PAD;
           titleRect.bottom = titleRect.top + sz.cy;
           COLORREF titleColor;
           if ((lb ? lb->populated_count : 0) < 25) {
