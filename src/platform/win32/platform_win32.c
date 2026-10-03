@@ -1217,7 +1217,7 @@ bool Platform_BuildFeature(const char* src, const char* out) {
     return true;
 }
 
-typedef struct { Fl_WindowList *titles; Fl_WindowList *names; } WinPair;
+typedef struct { FlWindowList *titles; FlWindowList *names; } WinPair;
 
 static BOOL CALLBACK EnumWindowsProcPair(HWND hwnd, LPARAM lParam) {
     WinPair *pair = (WinPair*)lParam;
@@ -1285,21 +1285,21 @@ static BOOL CALLBACK EnumWindowsProcPair(HWND hwnd, LPARAM lParam) {
     return TRUE;
 }
 
-static void win32_collect_pair(Fl_WindowList *out_titles, Fl_WindowList *out_names) {
+static void win32_collect_pair(FlWindowList *out_titles, FlWindowList *out_names) {
     WinPair p = { out_titles, out_names };
     EnumWindows(EnumWindowsProcPair, (LPARAM)&p);
 }
 
-Fl_WindowList Platform_GetWindowTitles() {
-    Fl_WindowList titles={0}, names={0};
+FlWindowList Platform_GetWindowTitles() {
+    FlWindowList titles={0}, names={0};
     win32_collect_pair(&titles, &names);
     for(int i=0;i<names.count;i++) free(names.windows[i]);
     free(names.windows);
     log_info("Platform_GetWindowTitles count=%d", titles.count);
     return titles;
 }
-Fl_WindowList Platform_GetWindowNames() {
-    Fl_WindowList titles={0}, names={0};
+FlWindowList Platform_GetWindowNames() {
+    FlWindowList titles={0}, names={0};
     win32_collect_pair(&titles, &names);
     for(int i=0;i<titles.count;i++) free(titles.windows[i]);
     free(titles.windows);
@@ -1386,14 +1386,14 @@ void Platform_CleanupPlatformResources(void) {
     }
 }
 
-Fl_Pos Platform_GetCursorPos(void) {
+FlPos Platform_GetCursorPos(void) {
     POINT point;
     
     if (GetCursorPos(&point)) {
-        return (Fl_Pos){(int)point.x, (int)point.y};
+        return (FlPos){(int)point.x, (int)point.y};
     }
     
-    return (Fl_Pos){0, 0};
+    return (FlPos){0, 0};
 }
 
 char* Platform_GetWorkingDir() {

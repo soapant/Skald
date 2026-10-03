@@ -1,8 +1,10 @@
 #include "core/flapi.h"
+#include <stdio.h>
 
 
 void Testing(void) {
-  fl_message(.message="nigga ", .slot=TOP_LEFT);
+  FlPos pos = fl_get_cursor_pos();
+  printf("pos=(%d,%d)\n", pos.x, pos.y);
 }
 
 

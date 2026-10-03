@@ -156,7 +156,7 @@ void fl_free_file_list(FlStringList* list) {
     }
     list->count = 0;
 }
-bool fl_free_window_list(Fl_WindowList *list) {
+bool fl_free_window_list(FlWindowList *list) {
     if (!list) return false;
     if (list->windows) {
         for (int i = 0; i < list->count; i++) free(list->windows[i]);
@@ -1324,15 +1324,15 @@ bool fl_place_listbox_impl(const FlListSpec *spec) {
     return true;
 }
 
-Fl_WindowList fl_get_all_window_titles() {
+FlWindowList fl_get_all_window_titles() {
    PROFILE_START(_pt);
-   Fl_WindowList l = Platform_GetWindowTitles();
+   FlWindowList l = Platform_GetWindowTitles();
    PROFILE_END_VAR(_pt, "api:fl_get_all_window_titles");
    return l;
 }
-Fl_WindowList fl_get_all_window_names() {
+FlWindowList fl_get_all_window_names() {
   PROFILE_START(_pt);
-  Fl_WindowList l = Platform_GetWindowNames();
+  FlWindowList l = Platform_GetWindowNames();
   PROFILE_END_VAR(_pt, "api:fl_get_all_window_names");
   return l;
 }
@@ -1342,7 +1342,7 @@ void fl_toggle_play_pause(void) {
   return;
 }
 
-Fl_Pos fl_get_cursor_pos(void) {
+FlPos fl_get_cursor_pos(void) {
   return Platform_GetCursorPos();
 }
 int fl_get_current_volume(void) {
@@ -1617,7 +1617,7 @@ char* fl_get_active_window_app_id(void) {
 
 bool fl_is_window_active(char* title) {
   PROFILE_START(_pt);
-  Fl_WindowList l = Platform_GetWindowTitles();
+  FlWindowList l = Platform_GetWindowTitles();
   for (int i = 0; i < l.count;i++) {
       if (Platform_StringContainsCaseInsensitive(l.windows[i],title)) {
         PROFILE_END_VAR(_pt, "api:fl_is_window_active");

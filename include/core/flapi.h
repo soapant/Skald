@@ -74,7 +74,7 @@ bool fl_parse_desktop_file(const char* path, char* out_name, size_t n, bool* out
 char* fl_get_icon_path(const char* app_path_path);
 void fl_free_file_list(FlStringList* list);
 bool fl_free_list(const char* list[], int count);
-bool fl_free_window_list(Fl_WindowList *list);
+bool fl_free_window_list(FlWindowList *list);
 bool fl_append_to_file(const char* filepath, const char* line);
 bool fl_write_to_file(const char* filepath, const char* lines[], int count);
 bool fl_write_temp_file(const char* name, const void* data, size_t len, char* out_path, size_t out_len);
@@ -213,16 +213,13 @@ void fl_message_impl(const FlMessageSpec* spec);
 // =============================================================================
 // Hardcore dev gets the real handle and does whatever. Flint just hosts popup.
 
-#if !defined(_WIN32)
 void* fl_get_display(void);
 void* fl_get_window(void);
 void* fl_get_xftdraw(void);
 void* fl_get_visual(void);
 unsigned long fl_get_colormap(void);
-#else
 void* fl_get_hdc(void);
 void* fl_get_hwnd(void);
-#endif
 int fl_get_popup_width(void);
 int fl_get_popup_height(void);
 
@@ -435,11 +432,8 @@ void fl_widget_set_render(FlWidget *widget, FlWidgetRenderFn render);
 
 bool Platform_PreRender(void);
 bool fl_prerender(void);
-#if !defined(_WIN32)
 void Platform_SetPreRenderState(PromptState *state);
-#else
 void Platform_SetPreRenderStateWin32(const char *text, void *rect);
-#endif
 
 // =============================================================================
 // IMAGES / ICONS
@@ -556,8 +550,8 @@ const FlHashMap* fl_hashmap_at(FlHashMap* map, size_t index);
 // WINDOW
 // =============================================================================
 
-Fl_WindowList fl_get_all_window_titles();
-Fl_WindowList fl_get_all_window_names();
+FlWindowList fl_get_all_window_titles();
+FlWindowList fl_get_all_window_names();
 char* fl_get_active_window_title(void);
 char* fl_get_active_window_app_id(void);
 bool fl_is_window_active(char* title);
@@ -577,7 +571,7 @@ void fl_screenshot_open_area(char* save_path);
 
 
 
-Fl_Pos fl_get_cursor_pos(void);
+FlPos fl_get_cursor_pos(void);
 bool fl_type_text(const char *s);
 void fl_sleep(double seconds);
 bool fl_is_key_down(int vk);
