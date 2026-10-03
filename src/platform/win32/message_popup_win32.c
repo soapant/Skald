@@ -14,6 +14,12 @@
 #define MSG_AUTO_WRAP_MAX_W 900
 #define MSG_AUTO_WRAP_MAX_H 600
 
+/* src/platform/x11/message_popup_x11.c is the reference: 15 px text inset per
+   side (wrap width w - 30, window size text + 30) and a 5 px bottom clip. */
+#define MSG_TEXT_INSET_X 15
+#define MSG_TEXT_INSET_Y 15
+#define MSG_BOTTOM_CLIP 5
+
 LRESULT CALLBACK DisplayMessageProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
   FadeWindowData* data = (FadeWindowData*)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
     FlintContext_Get()->window.hDisplayMessage = WH_FROM_HWND(hwnd);
@@ -45,19 +51,20 @@ LRESULT CALLBACK DisplayMessageProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
       
         if (data->message) {
           RECT textRect = rect;
-            textRect.left += 15;  
-            textRect.right -= 15;
-            textRect.top += 10;
-            textRect.bottom -= 10;
-            
+            textRect.left += MSG_TEXT_INSET_X;
+            textRect.right -= MSG_TEXT_INSET_X;
+            textRect.top += MSG_TEXT_INSET_Y;
+            textRect.bottom -= MSG_TEXT_INSET_Y;
+
             RECT calcRect = textRect;
             DrawTextA(hdc, data->message, -1, &calcRect, DT_CENTER | DT_WORDBREAK | DT_CALCRECT);
-            
+
             int textHeight = calcRect.bottom - calcRect.top;
             int availableHeight = rect.bottom - rect.top;
             textRect.top = (availableHeight - textHeight) / 2;
             textRect.bottom = textRect.top + textHeight;
-            
+            if (textRect.bottom > rect.bottom - MSG_BOTTOM_CLIP) textRect.bottom = rect.bottom - MSG_BOTTOM_CLIP;
+
             DrawTextA(hdc, data->message, -1, &textRect, DT_CENTER | DT_WORDBREAK);
         }
       

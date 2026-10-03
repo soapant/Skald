@@ -8,6 +8,7 @@
 #include <commctrl.h>
 #include <shellapi.h>
 #include "config.h"
+#include "core/prompt_geometry.h"
 #include "platform/ui.h"
 #include "platform/win32/subclasses_win32.h"
 #include "wingdi.h"
@@ -164,17 +165,32 @@ LRESULT CALLBACK EditPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
         HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtrA(hwnd, GWLP_HINSTANCE);
           RECT rect;
           GetClientRect(hwnd, &rect);
-          
-          int modeHeight = 30;
+
+          int lineHeight = FontSize + FLINT_EDIT_H_BONUS;
+          {
+            HDC probe = CreateCompatibleDC(NULL);
+            if (probe) {
+              HFONT hOld = data->hFont ? (HFONT)SelectObject(probe, data->hFont) : NULL;
+              TEXTMETRIC tm;
+              memset(&tm, 0, sizeof(tm));
+              if (GetTextMetrics(probe, &tm) && tm.tmHeight > 0) lineHeight = tm.tmHeight;
+              if (hOld) SelectObject(probe, hOld);
+              DeleteDC(probe);
+            }
+          }
+
           data->hEdit = WH_FROM_HWND(CreateWindowExA(
                                         0, "EDIT", data->initial_text,
-                                        WS_CHILD | WS_VISIBLE | ES_LEFT | ES_MULTILINE,
-                                        5, modeHeight + 5,
-                                        rect.right - 10, rect.bottom - modeHeight - 10,
+                                        WS_CHILD | WS_VISIBLE | ES_LEFT | ES_AUTOHSCROLL,
+                                        FLINT_EDITPOPUP_INSET,
+                                        (rect.bottom / 2) + FLINT_EDITPOPUP_CENTER_OFFSET_Y,
+                                        rect.right - FLINT_EDITPOPUP_INSET * 2, lineHeight,
                                         hwnd, (HMENU)1001, hInstance, NULL
                                        ));
-          
+
           if (WH_TO_HWND(data->hEdit)) {
+            SendMessageA(WH_TO_HWND(data->hEdit), EM_SETMARGINS,
+                EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELONG(0, 0));
             UI_Edit_SetFont(data->hEdit,data->hFont);
               UI_Edit_SetSel(data->hEdit,0,0);
               SetFocus(WH_TO_HWND(data->hEdit));
@@ -218,30 +234,26 @@ LRESULT CALLBACK EditPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
             
             COLORREF modeColor;
             if (g_current_mode == MODE_NORMAL) {
-              modeColor = RGB(100, 255, 255);
+              modeColor = COLOR_NORMAL_MODE_TEXT;
             } else if (g_current_mode == MODE_INSERT) {
-              modeColor = RGB(50, 255, 50);
+              modeColor = COLOR_INSERT_MODE_TEXT;
             } else {
-              modeColor = RGB(200, 3, 222);
+              modeColor = COLOR_VISUAL_MODE_TEXT;
             }
           SetTextColor(hdc, modeColor);
-            
+
+            SIZE msize;
+            GetTextExtentPoint32W(hdc, wmode, (int)wcslen(wmode), &msize);
+
             RECT modeRect;
-            modeRect.left = 8;
-            modeRect.top = 4;
-            modeRect.right = rect.right - 8;
-            modeRect.bottom = 28;
-            
-            DrawTextW(hdc, wmode, -1, &modeRect, DT_LEFT | DT_TOP);
-            
+            modeRect.left = FLINT_EDITPOPUP_MODE_X;
+            modeRect.top = FLINT_EDITPOPUP_MODE_Y;
+            modeRect.right = rect.right - FLINT_EDITPOPUP_MODE_X;
+            modeRect.bottom = modeRect.top + msize.cy;
+
+            DrawTextW(hdc, wmode, -1, &modeRect, DT_LEFT | DT_TOP | DT_SINGLELINE);
+
             SelectObject(hdc, hOldFont);
-            
-            HPEN hPen = CreatePen(PS_SOLID, 1, RGB(60, 65, 75));
-            HPEN hOldPen = (HPEN)SelectObject(hdc, hPen);
-            MoveToEx(hdc, 5, 30, NULL);
-            LineTo(hdc, rect.right - 5, 30);
-            SelectObject(hdc, hOldPen);
-            DeleteObject(hPen);
         }
       
         EndPaint(hwnd, &ps);
