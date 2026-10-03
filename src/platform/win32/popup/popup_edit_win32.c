@@ -319,7 +319,6 @@ LRESULT CALLBACK EditPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
         }
         ForceWindowFocus(FlintContext_Get()->window.hPopupWnd, FlintContext_Get()->window.hEditControl);
         last_index = lb ? lb->selected_index : -1;
-        SetModeWithListBox(MODE_NORMAL, lb);
         UpdateTextCaret(FlintContext_Get()->window.hEditControl);
         break;
     }
