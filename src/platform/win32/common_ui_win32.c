@@ -2,7 +2,7 @@
 #include "deps/log.h"
 #include "core/modal.h"
 #include "config.h"
-#include "config.h"
+#include "core/prompt_geometry.h"
 #include "platform/platform.h"
 #include "helpers/helpers_ui.h"
 #include "platform/ui.h"
@@ -455,19 +455,20 @@ void UpdateTextCaret(WindowHandle hwndEditControl)
   RECT rc;
   GetClientRect(hwnd, &rc);
   int caretHeight = FontSize;
-  int lineTopPad = (tm.tmHeight - FontSize) / 2 + tm.tmInternalLeading;
+  int lineTopPad = (tm.tmAscent + tm.tmDescent - caretHeight) / 2;
   if (lineTopPad < 0) lineTopPad = 0;
   int caretWidth;
   if (IsInsertMode()) {
-    caretWidth = 2;
+    caretWidth = FLINT_CARET_W_INSERT;
   } else {
-    caretWidth = tm.tmAveCharWidth > 0 ? tm.tmAveCharWidth : 8;
+    caretWidth = FlintNormalCaretWidth();
   }
 
   DWORD selStart = 0, selEnd = 0;
   SendMessageA(hwnd, EM_GETSEL, (WPARAM)&selStart, (LPARAM)&selEnd);
 
-  int centeredY = (rc.bottom - caretHeight) / 2;
+  int centeredY = (tm.tmAscent + tm.tmDescent - caretHeight) / 2;
+  if (centeredY < 0) centeredY = 0;
 
   POINT pt = {0, centeredY};
   BOOL havePos = FALSE;
@@ -488,7 +489,7 @@ void UpdateTextCaret(WindowHandle hwndEditControl)
       GetTextExtentPoint32A(mdc, ebuf, mcopy, &msz);
       if (mo) SelectObject(mdc, mo);
       ReleaseDC(hwnd, mdc);
-      pt.x = msz.cx + 2;
+      pt.x = msz.cx;
       pt.y = (short)HIWORD(coords) + lineTopPad;
       if (rc.bottom > 0 && pt.y + caretHeight > rc.bottom) pt.y = rc.bottom - caretHeight;
       havePos = TRUE;
@@ -507,7 +508,7 @@ void UpdateTextCaret(WindowHandle hwndEditControl)
     int len = (int)strlen(buf);
     if ((int)selStart > len) selStart = (DWORD)len;
     if (selStart == 0) {
-      pt.x = 2;
+      pt.x = 0;
       pt.y = centeredY;
       havePos = TRUE;
     } else {
@@ -522,7 +523,7 @@ void UpdateTextCaret(WindowHandle hwndEditControl)
       GetTextExtentPoint32A(hdc2, tmp, copy, &sz);
       if (old2) SelectObject(hdc2, old2);
       ReleaseDC(hwnd, hdc2);
-      pt.x = sz.cx + 2;
+      pt.x = sz.cx;
       pt.y = centeredY;
       havePos = TRUE;
     }
@@ -608,10 +609,12 @@ void CalculateWindowMetrics(WindowLayout* layout,int height , int width,int item
   int monitorWidth = mi.rcMonitor.right - mi.rcMonitor.left;
   int monitorHeight = mi.rcMonitor.bottom - mi.rcMonitor.top;
 
-  layout->w = 900;
+  float ui_scale = Platform_GetUIScale();
+
+  layout->w = (int)(FLINT_PROMPT_W * ui_scale);
   layout->item_height = item_height;
 
-  layout->h = 640;
+  layout->h = (int)(FLINT_PROMPT_H * ui_scale);
 
   if (layout->h < height) layout->h = height;
   if (layout->h > width) layout->h = width;
@@ -663,26 +666,46 @@ void CreateChildControls(WindowHandle hwndParent, HFONT hFont, const char* list[
 
   HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtrA(WH_TO_HWND(hwndParent), GWLP_HINSTANCE);
 
+  int lineHeight = FontSize + FLINT_EDIT_H_BONUS;
+  HDC metricDC = GetDC(NULL);
+  if (metricDC) {
+    HDC probe = CreateCompatibleDC(metricDC);
+    if (probe) {
+      HFONT hOld = hFont ? (HFONT)SelectObject(probe, hFont) : NULL;
+      TEXTMETRIC tm;
+      memset(&tm, 0, sizeof(tm));
+      if (GetTextMetrics(probe, &tm) && tm.tmHeight > 0) lineHeight = tm.tmHeight;
+      if (hOld) SelectObject(probe, hOld);
+      DeleteDC(probe);
+    }
+    ReleaseDC(NULL, metricDC);
+  }
+
   FlintContext_Get()->window.hEditControl = WH_FROM_HWND(CreateWindowExA(
       0, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
-      20, 20, layout->w - 40, 32, WH_TO_HWND(hwndParent), (HMENU)IDC_INPUT_BOX, hInstance, NULL
+      FLINT_EDIT_INSET, FLINT_EDIT_INSET,
+      layout->w - FLINT_EDIT_SCROLL_PAD, lineHeight,
+      WH_TO_HWND(hwndParent), (HMENU)IDC_INPUT_BOX, hInstance, NULL
       ));
   if (WH_TO_HWND(FlintContext_Get()->window.hEditControl) == NULL) {
     return;
   }
+
+  SendMessageA(WH_TO_HWND(FlintContext_Get()->window.hEditControl), EM_SETMARGINS,
+      EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELONG(0, 0));
 
   FlintContext_Get()->window.hActiveEditControl = FlintContext_Get()->window.hEditControl;
   UI_Edit_SetFont(FlintContext_Get()->window.hEditControl, hFont);
   SetWindowSubclass(WH_TO_HWND(FlintContext_Get()->window.hEditControl), EditSubclassProc, 0, 0);
 
   if (count >= 0) {
-    int bottomMargin = (WindowTitleText || VimModeText) ? 60 : 12;
-    int listH = layout->h - 70 - bottomMargin;
+    int listTop = FlintListTop();
+    int listH = layout->h - listTop - FlintListBottomMargin();
     if (listH < 0) listH = 0;
     FlintContext_Get()->window.hListBox = WH_FROM_HWND(CreateWindowExA(
         WS_EX_COMPOSITED, "LISTBOX", "",
-        WS_CHILD | WS_VISIBLE | LBS_NODATA | LBS_OWNERDRAWFIXED,
-        20, 70, layout->w - 40, listH, WH_TO_HWND(hwndParent), (HMENU)IDC_LIST_BOX, hInstance, NULL
+        WS_CHILD | WS_VISIBLE | LBS_NODATA | LBS_OWNERDRAWFIXED | LBS_NOINTEGRALHEIGHT,
+        0, listTop, layout->w, listH, WH_TO_HWND(hwndParent), (HMENU)IDC_LIST_BOX, hInstance, NULL
         ));
 
     if (WH_TO_HWND(FlintContext_Get()->window.hListBox) == NULL) {
@@ -693,7 +716,7 @@ void CreateChildControls(WindowHandle hwndParent, HFONT hFont, const char* list[
     UI_LB_SetFont(FlintContext_Get()->window.hListBox, hFont);
     UI_LB_SetItemHeight(FlintContext_Get()->window.hListBox, layout->item_height);
 
-    int max_width = layout->w - 40;
+    int max_width = layout->w;
 
     HDC hdc = GetDC(WH_TO_HWND(FlintContext_Get()->window.hListBox));
     if (!hdc) {
