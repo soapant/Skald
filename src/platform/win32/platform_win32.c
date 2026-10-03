@@ -730,28 +730,6 @@ void Platform_CleanupDirWatchers(void) {
     log_info("Platform_CleanupDirWatchers completed");
 }
 
-bool Platform_ClickAtPos(int x,int y) {
-    int screenWidth = GetSystemMetrics(SM_CXSCREEN);
-    int screenHeight = GetSystemMetrics(SM_CYSCREEN);
-
-    INPUT inputs[3] = {0};
-
-    inputs[0].type = INPUT_MOUSE;
-    inputs[0].mi.dx = (x * 65535) / screenWidth;
-    inputs[0].mi.dy = (y * 65535) / screenHeight;
-    inputs[0].mi.dwFlags = MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE;
-
-    inputs[1].type = INPUT_MOUSE;
-    inputs[1].mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
-
-    inputs[2].type = INPUT_MOUSE;
-    inputs[2].mi.dwFlags = MOUSEEVENTF_LEFTUP;
-
-    SendInput(3, inputs, sizeof(INPUT));
-    log_info("Platform_ClickAtPos x=%d y=%d", x, y);;
-    return true;
-}
-
 typedef struct {
     const char* target_title;
     HWND found_hwnd;
@@ -1394,6 +1372,39 @@ FlPos Platform_GetCursorPos(void) {
     }
     
     return (FlPos){0, 0};
+}
+
+bool Platform_MoveToPos(int x, int y) {
+    int screenWidth = GetSystemMetrics(SM_CXSCREEN);
+    int screenHeight = GetSystemMetrics(SM_CYSCREEN);
+
+    if (screenWidth <= 0 || screenHeight <= 0) return false;
+
+    INPUT input = {0};
+    input.type = INPUT_MOUSE;
+    input.mi.dx = (x * 65535) / screenWidth;
+    input.mi.dy = (y * 65535) / screenHeight;
+    input.mi.dwFlags = MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE;
+
+    if (SendInput(1, &input, sizeof(INPUT)) != 1) return false;
+
+    log_info("Platform_MoveToPos x=%d y=%d", x, y);
+    return true;
+}
+
+bool Platform_Click(void) {
+    INPUT inputs[2] = {0};
+
+    inputs[0].type = INPUT_MOUSE;
+    inputs[0].mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
+
+    inputs[1].type = INPUT_MOUSE;
+    inputs[1].mi.dwFlags = MOUSEEVENTF_LEFTUP;
+
+    if (SendInput(2, inputs, sizeof(INPUT)) != 2) return false;
+
+    log_info("Platform_Click");
+    return true;
 }
 
 char* Platform_GetWorkingDir() {

@@ -1661,6 +1661,36 @@ FlPos Platform_GetCursorPos(void) {
     return Wm_GetCursorPosition();
 }
 
+bool Platform_MoveToPos(int x, int y) {
+    Display* dpy = get_display();
+    if (!dpy) return false;
+#if __has_include(<X11/extensions/XTest.h>)
+    XTestFakeMotionEvent(dpy, -1, x, y, CurrentTime);
+    XSync(dpy, False);
+    return true;
+#else
+    XWarpPointer(dpy, None, DefaultRootWindow(dpy), 0, 0, 0, 0, x, y);
+    XFlush(dpy);
+    return true;
+#endif
+}
+
+bool Platform_Click(void) {
+    Display* dpy = get_display();
+    if (!dpy) return false;
+#if __has_include(<X11/extensions/XTest.h>)
+    usleep(60000);
+    XTestFakeButtonEvent(dpy, 1, True, CurrentTime);
+    XSync(dpy, False);
+    usleep(30000);
+    XTestFakeButtonEvent(dpy, 1, False, CurrentTime);
+    XSync(dpy, False);
+    return true;
+#else
+    return false;
+#endif
+}
+
 char* Platform_GetWorkingDir(void) {
     char* raw = Platform_RunTerminalCommand("pwd", false);
     if (!raw) return NULL;
