@@ -164,6 +164,22 @@ FlWindowList get_window_titles_x11() {
    return list;
 }
 
+static Display *_x11_cursor_dpy = NULL;
+
+static Display *_x11_cursor_display(void) {
+    if (_x11_cursor_dpy == NULL) {
+        _x11_cursor_dpy = XOpenDisplay(NULL);
+    }
+    return _x11_cursor_dpy;
+}
+
+void x11_wm_cleanup_cursor_display(void) {
+    if (_x11_cursor_dpy != NULL) {
+        XCloseDisplay(_x11_cursor_dpy);
+        _x11_cursor_dpy = NULL;
+    }
+}
+
 FlPos get_cursor_position_x11(void) { 
     Display *display;
     Window root_window;
@@ -172,7 +188,7 @@ FlPos get_cursor_position_x11(void) {
     int win_x, win_y;
     unsigned int mask_return;
 
-    display = XOpenDisplay(NULL);
+    display = _x11_cursor_display();
     if (display == NULL) {
         return (FlPos){0, 0};
     }
@@ -181,8 +197,6 @@ FlPos get_cursor_position_x11(void) {
 
     XQueryPointer(display, root_window, &window_returned, &window_returned,
                   &root_x, &root_y, &win_x, &win_y, &mask_return);
-
-    XCloseDisplay(display);
 
     return (FlPos){root_x, root_y};
 }

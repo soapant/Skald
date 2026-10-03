@@ -1343,17 +1343,28 @@ void fl_toggle_play_pause(void) {
 }
 
 FlPos fl_get_cursor_pos(void) {
-  return Platform_GetCursorPos();
+  PROFILE_START(_pt);
+  FlPos p = Platform_GetCursorPos();
+  PROFILE_END_VAR(_pt, "flapi:fl_get_cursor_pos");
+  return p;
 }
 bool fl_move_to_pos(FlPos pos) {
-  return Platform_MoveToPos(pos.x, pos.y);
-}
-bool fl_click(void) {
-  return Platform_Click();
+  PROFILE_START(_pt);
+  bool ok = Platform_MoveToPos(pos.x, pos.y);
+  PROFILE_END_VAR(_pt, "flapi:fl_move_to_pos");
+  return ok;
 }
 bool fl_click_at_pos(FlPos pos) {
-  if (!fl_move_to_pos(pos)) return false;
-  return fl_click();
+  PROFILE_START(_pt);
+  bool ok = fl_move_to_pos(pos) && fl_click();
+  PROFILE_END_VAR(_pt, "flapi:fl_click_at_pos");
+  return ok;
+}
+bool fl_click(void) {
+  PROFILE_START(_pt);
+  bool ok = Platform_Click();
+  PROFILE_END_VAR(_pt, "flapi:fl_click");
+  return ok;
 }
 int fl_get_current_volume(void) {
   return fl_get_current_volume_platform();
@@ -1769,16 +1780,49 @@ static FlWidget *fl_widget_find_by_name(const char *name) {
 
 static void fl_widget_relayout(void);
 
+static FlPos g_fl_hover_pos = {0, 0};
+static FlTimer g_fl_hover_at = {0};
+static bool g_fl_hover_valid = false;
+
+static void fl_widget_hover_poll(void) {
+    PROFILE_START(_pt);
+    FlTimer now = fl_start_timer_platform();
+    if (g_fl_hover_valid && fl_end_timer_platform(g_fl_hover_at) < 400.0) {
+        PROFILE_END_VAR(_pt, "flapi:fl_widget_hover_poll");
+        return;
+    }
+    g_fl_hover_pos = fl_get_cursor_pos();
+    g_fl_hover_at = now;
+    g_fl_hover_valid = true;
+    PROFILE_END_VAR(_pt, "flapi:fl_widget_hover_poll");
+}
+
 static void fl_widget_render_frame(void *ud) {
     PROFILE_START(_pt);
     FlWidget *widget = (FlWidget *)ud;
     if (!widget || !widget->render) { PROFILE_END_VAR(_pt, "flapi:fl_widget_render_frame"); return; }
     widget->frame++;
+    bool hoverable = (widget->on_hover || widget->on_unhover);
+    if (hoverable) {
+        fl_widget_hover_poll();
+        bool inside = (widget->x >= 0x7fffffff) ? false
+            : (g_fl_hover_pos.x >= widget->x && g_fl_hover_pos.x < widget->x + widget->w &&
+               g_fl_hover_pos.y >= widget->y && g_fl_hover_pos.y < widget->y + widget->h);
+        if (inside != widget->hovered) {
+            widget->hovered = inside;
+            if (inside) {
+                if (widget->on_hover) widget->on_hover();
+            } else {
+                if (widget->on_unhover) widget->on_unhover();
+            }
+        }
+    }
     FlWidgetState st;
     st.width = widget->w;
     st.height = widget->h;
     st.frame = widget->frame;
     st.elapsed = fl_end_timer_platform(widget->created_at);
+    st.hovered = widget->hovered;
 
     Platform_BeginMeasure();
     widget->render(&st);
@@ -1987,6 +2031,8 @@ FlWidget *fl_widget_create(const FlWidgetSpec *spec) {
     widget->order_set = spec->order > 0;
     widget->render = spec->render;
     widget->on_click = spec->on_click;
+    widget->on_hover = spec->on_hover;
+    widget->on_unhover = spec->on_unhover;
     widget->free_pos = (spec->slot == FL_WIDGET_FREE);
     widget->frame = 0;
     widget->created_at = fl_start_timer_platform();
