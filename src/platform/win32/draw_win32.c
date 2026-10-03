@@ -202,10 +202,30 @@ typedef struct {
 
 static Win32ImgSlot g_img_cache[WIN32_IMG_CACHE_SLOTS];
 static ULONGLONG g_img_cache_tick = 0;
-static ULONGLONG g_img_cache_hits = 0;
-static ULONGLONG g_img_cache_misses = 0;
 static CRITICAL_SECTION g_img_cache_cs;
 static BOOL g_img_cache_cs_ready = FALSE;
+
+static ULONG_PTR g_gdip_token = 0;
+
+static void win32_gdip_ensure(void) {
+    if (g_gdip_token != 0) return;
+    GdiplusStartupInput gsi;
+    gsi.GdiplusVersion = 1;
+    gsi.DebugEventCallback = NULL;
+    gsi.SuppressBackgroundThread = FALSE;
+    gsi.SuppressExternalCodecs = FALSE;
+    GdiplusStartup(&g_gdip_token, &gsi, NULL);
+}
+
+static void win32_gdip_dispose(void *img) {
+    if (img) GdipDisposeImage((GpImage *)img);
+}
+
+static HDC win32_screen_dc(void) {
+    static HDC dc = NULL;
+    if (!dc) dc = GetDC(NULL);
+    return dc;
+}
 
 static void win32_img_cache_lock(void) {
     if (!g_img_cache_cs_ready) {
@@ -265,7 +285,7 @@ static void win32_img_cache_put(const char *path, HDC screen, int w, int h, void
     }
     if (slot < 0) slot = 0;
     Win32ImgSlot *s = &g_img_cache[slot];
-    if (s->bmp && s->screen) { ULONG_PTR tk=0; GdiplusStartupInput gs; gs.GdiplusVersion=1; gs.DebugEventCallback=NULL; gs.SuppressBackgroundThread=FALSE; gs.SuppressExternalCodecs=FALSE; if (GdiplusStartup(&tk,&gs,NULL)==Ok&&tk) { GdipDisposeImage((GpBitmap*)s->bmp); GdiplusShutdown(tk);} }
+    win32_gdip_dispose(s->bmp);
     snprintf(s->key, sizeof(s->key), "%s", path);
     s->w = w;
     s->h = h;
@@ -280,7 +300,7 @@ static void win32_img_cache_put(const char *path, HDC screen, int w, int h, void
 void win32_img_cache_free_all(void) {
     win32_img_cache_lock();
     for (int i = 0; i < WIN32_IMG_CACHE_SLOTS; i++) {
-        if (g_img_cache[i].bmp) { ULONG_PTR tk=0; GdiplusStartupInput gs; gs.GdiplusVersion=1; gs.DebugEventCallback=NULL; gs.SuppressBackgroundThread=FALSE; gs.SuppressExternalCodecs=FALSE; if (GdiplusStartup(&tk,&gs,NULL)==Ok&&tk) { GdipDisposeImage((GpBitmap*)g_img_cache[i].bmp); GdiplusShutdown(tk);} }
+        if (g_img_cache[i].bmp) { win32_gdip_dispose(g_img_cache[i].bmp); }
         memset(&g_img_cache[i], 0, sizeof(g_img_cache[i]));
     }
     win32_img_cache_unlock();
@@ -293,14 +313,8 @@ static void win32_utf8_to_wide(const char *in, wchar_t *out, int out_max) {
 }
 
 static void* win32_load_scaled_bitmap(const char *path, int w, int h) {
-    ULONG_PTR token = 0;
-    GdiplusStartupInput gsi;
-    gsi.GdiplusVersion = 1;
-    gsi.DebugEventCallback = NULL;
-    gsi.SuppressBackgroundThread = FALSE;
-    gsi.SuppressExternalCodecs = FALSE;
-    GpStatus _st = GdiplusStartup(&token, &gsi, NULL);
-    if (_st != Ok || token == 0) { log_error("img: GdiplusStartup st=%d", (int)_st); return NULL; }
+    win32_gdip_ensure();
+    if (g_gdip_token == 0) { log_error("img: GdiplusStartup failed"); return NULL; }
 
     wchar_t wpath[MAX_PATH * 2];
     win32_utf8_to_wide(path, wpath, (int)(sizeof(wpath) / sizeof(wchar_t)));
@@ -311,10 +325,9 @@ static void* win32_load_scaled_bitmap(const char *path, int w, int h) {
     if (_fs != Ok || !src) {
         log_error("img: FromFile st=%d path=%s", (int)_fs, path);
         if (src) GdipDisposeImage(src);
-        GdiplusShutdown(token);
         return NULL;
     }
-    HDC sc = GetDC(NULL);
+    HDC sc = win32_screen_dc();
     void *raw = NULL;
     HDC mdc = sc ? CreateCompatibleDC(sc) : NULL;
     if (mdc) {
@@ -327,17 +340,12 @@ static void* win32_load_scaled_bitmap(const char *path, int w, int h) {
         bi.biBitCount = 32;
         bi.biCompression = BI_RGB;
         HBITMAP d = CreateDIBSection(mdc, (BITMAPINFO *)&bi, DIB_RGB_COLORS, &raw, NULL, 0);
-        GpStatus _ws = GdipCreateBitmapFromHBITMAP(d, NULL, &out);
-        UINT ww = 0, hh = 0;
-        if (out) { GdipGetImageWidth(out, &ww); GdipGetImageHeight(out, &hh); }
-        log_error("img: wrap st=%d got %ux%u want %dx%d", (int)_ws, ww, hh, w, h);
+        GdipCreateBitmapFromHBITMAP(d, NULL, &out);
         if (d) DeleteObject(d);
         DeleteDC(mdc);
     }
-    if (sc) ReleaseDC(NULL, sc);
     if (!out) {
         GdipDisposeImage(src);
-        GdiplusShutdown(token);
         return NULL;
     }
     GpGraphics *g = NULL;
@@ -352,7 +360,6 @@ static void* win32_load_scaled_bitmap(const char *path, int w, int h) {
         log_error("img: ctx st=%d", (int)_gs);
     }
     GdipDisposeImage(src);
-    log_warn("img: loaded %s %dx%d (cache miss)", path, w, h);
     return out;
 }
 
@@ -366,26 +373,19 @@ bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
     measure_track(x, y, w, h);
     if (!g_draw_hdc) { log_error("img: no draw context (g_draw_hdc NULL)"); PROFILE_END_VAR(timer, "win32:Platform_DrawImageAt"); return false; }
 
-    HDC screen = GetDC(NULL);
+    HDC screen = win32_screen_dc();
     if (!screen) { log_error("img: GetDC(NULL) failed"); PROFILE_END_VAR(timer, "win32:Platform_DrawImageAt"); return false; }
 
     void* bmp = win32_img_cache_get(path, screen, w, h);
-    if (bmp) g_img_cache_hits++;
     if (!bmp) {
         bmp = win32_load_scaled_bitmap(path, w, h);
-        if (bmp) { win32_img_cache_put(path, screen, w, h, bmp); g_img_cache_misses++; }
+        if (bmp) win32_img_cache_put(path, screen, w, h, bmp);
     }
     bool ok = false;
     if (bmp) {
-        ULONG_PTR tk = 0;
-        GdiplusStartupInput gsi2;
-        gsi2.GdiplusVersion = 1;
-        gsi2.DebugEventCallback = NULL;
-        gsi2.SuppressBackgroundThread = FALSE;
-        gsi2.SuppressExternalCodecs = FALSE;
-        GpStatus _s2 = GdiplusStartup(&tk, &gsi2, NULL);
-        if (_s2 != Ok || !tk) {
-            log_error("img: draw GdiplusStartup st=%d", (int)_s2);
+        win32_gdip_ensure();
+        if (g_gdip_token == 0) {
+            log_error("img: Gdiplus unavailable");
         } else {
             GpGraphics *g = NULL;
             GpStatus _h2 = GdipCreateFromHDC(g_draw_hdc, &g);
@@ -397,13 +397,7 @@ bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
                 GdipDeleteGraphics(g);
                 ok = true;
             }
-            GdiplusShutdown(tk);
         }
-    }
-    ReleaseDC(NULL, screen);
-    log_warn("img: draw %s ok=%d hdc=%p", path, (int)ok, (void *)g_draw_hdc);
-    if ((g_img_cache_hits + g_img_cache_misses) % 60 == 0) {
-        log_warn("img: cache hits=%llu misses=%llu", g_img_cache_hits, g_img_cache_misses);
     }
     PROFILE_END_VAR(timer, "win32:Platform_DrawImageAt");
     return ok;

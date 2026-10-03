@@ -9,6 +9,8 @@
 #include "core/types.h"
 
 #define TIMER_LOG_CAP 65536
+#define TIMER_BUF_LINES 8192
+#define TIMER_BUF_LINE 256
 
 static inline WinTimer TimerStart(void) {
   WinTimer t;
@@ -22,6 +24,7 @@ static inline WinTimer TimerStart(void) {
 }
 
 void TimerEnd(WinTimer t, const char* operation_name);
+void TimerFlush(void);
 double TimerElapsedUs(WinTimer t);
 void TimerPrintRaw(double elapsed_us, const char* operation_name);
 
