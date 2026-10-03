@@ -1800,7 +1800,7 @@ static void fl_widget_hover_poll(void) {
 static void fl_widget_render_frame(void *ud) {
     PROFILE_START(_pt);
     FlWidget *widget = (FlWidget *)ud;
-    if (!widget || !widget->render) { PROFILE_END_VAR(_pt, "flapi:fl_widget_render_frame"); return; }
+    if (!widget || !widget->render) { PROFILE_END_VAR(_pt, "flapi:widget[null]"); return; }
     widget->frame++;
     bool hoverable = (widget->on_hover != NULL);
     if (hoverable) {
@@ -1837,7 +1837,9 @@ static void fl_widget_render_frame(void *ud) {
             fl_widget_relayout();
         }
     }
-    PROFILE_END_VAR(_pt, "flapi:fl_widget_render_frame");
+    char prof_label[80];
+    snprintf(prof_label, sizeof(prof_label), "flapi:widget[%s]", widget->name);
+    PROFILE_END_VAR(_pt, prof_label);
 }
 
 static void fl_widget_owner_path(void *addr, char *out, size_t n) {
