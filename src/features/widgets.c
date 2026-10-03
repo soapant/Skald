@@ -235,6 +235,9 @@ static void widgets_internet_render(FlWidgetState *state) {
 void on_internet_click(void) {
     fl_popup();
 }
+void on_internet_hover(void) {
+    printf("HOVER\n");
+}
 
 static FlWidget* g_disk = NULL;
 static FlWidget* g_mem = NULL;
@@ -280,6 +283,7 @@ FLINT_FEATURE_INIT {
               .fps = FPS,
               .no_bg = NO_BG,
               .on_click = on_internet_click,
+              .on_hover = on_internet_hover,
               .slot = FL_WIDGET_SLOT_BOTTOM_RIGHT,
               .render = widgets_internet_render);
 
