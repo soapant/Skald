@@ -1345,6 +1345,16 @@ void fl_toggle_play_pause(void) {
 FlPos fl_get_cursor_pos(void) {
   return Platform_GetCursorPos();
 }
+bool fl_move_to_pos(FlPos pos) {
+  return Platform_MoveToPos(pos.x, pos.y);
+}
+bool fl_click(void) {
+  return Platform_Click();
+}
+bool fl_click_at_pos(FlPos pos) {
+  if (!fl_move_to_pos(pos)) return false;
+  return fl_click();
+}
 int fl_get_current_volume(void) {
   return fl_get_current_volume_platform();
 }

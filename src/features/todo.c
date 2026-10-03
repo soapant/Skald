@@ -332,7 +332,7 @@ void todo_render_callback(PromptState *state) {
                 for (int t = 0; t < tag_count; t++) {
                     unsigned long tag_rgb = rgb_to_hex(GetTagColor(tags[t]));
                     fl_draw_text(.x=14 + x_offset, .y=tag_y, .text=tags[t], .color=tag_rgb, .align="LEFT", .pad=x_offset);
-                    x_offset += (int)(strlen(tags[t]) * (float)FontSize / 2.0f) + 30;
+                    x_offset += (int)(strlen(tags[t]) * (float)FontSize / 2.0f) + 34;
                 }
             }
         }

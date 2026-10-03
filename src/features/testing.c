@@ -3,8 +3,7 @@
 
 
 void Testing(void) {
-  FlPos pos = fl_get_cursor_pos();
-  printf("pos=(%d,%d)\n", pos.x, pos.y);
+  fl_click_at_pos((FlPos){960,540});
 }
 
 
