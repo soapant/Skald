@@ -572,6 +572,9 @@ void fl_screenshot_open_area(char* save_path);
 
 
 FlPos fl_get_cursor_pos(void);
+bool fl_move_to_pos(FlPos pos);
+bool fl_click_at_pos(FlPos pos);
+bool fl_click(void);
 bool fl_type_text(const char *s);
 void fl_sleep(double seconds);
 bool fl_is_key_down(int vk);
