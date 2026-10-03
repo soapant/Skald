@@ -459,9 +459,10 @@ bool UI_DrawCaret(HDC hdc, HWND hwnd) {
 
   RECT rc;
   GetClientRect(hwnd, &rc);
-  int caretHeight = tm.tmAscent + tm.tmDescent;
-  if (caretHeight <= 0) caretHeight = FontSize;
-  if (rc.bottom > 0 && caretHeight > rc.bottom) caretHeight = rc.bottom;
+  int lineBox = tm.tmAscent + tm.tmDescent;
+  if (lineBox <= 0) lineBox = FontSize;
+  int caretHeight = FontSize;
+  if (caretHeight > rc.bottom && rc.bottom > 0) caretHeight = rc.bottom;
   int caretWidth = IsInsertMode() ? FLINT_CARET_W_INSERT : FlintNormalCaretWidth();
 
   int cx = 0;
@@ -491,7 +492,7 @@ bool UI_DrawCaret(HDC hdc, HWND hwnd) {
   }
   if (cx < 0) cx = 0;
   if (cx + caretWidth > rc.right && rc.right > caretWidth) cx = rc.right - caretWidth;
-  int cy = lineTop;
+  int cy = lineTop + (lineBox - caretHeight) / 2;
   if (cy + caretHeight > rc.bottom && rc.bottom > 0) cy = rc.bottom - caretHeight;
   if (cy < 0) cy = 0;
 
