@@ -14,7 +14,7 @@ const MotionBinding G_VIM_BINDINGS[] = {
     { 'X',                HOTKEY_MOD_NONE,  MOTION_DELETE_CHAR,            HandleDeleteCharNormal,   MODE_NORMAL, VIM_SCOPE_ALL }, { 'S',                HOTKEY_MOD_NONE,  MOTION_DELETE_CHAR_INSERT,     HandleDeleteCharInsert,   MODE_NORMAL, VIM_SCOPE_ALL },
     { 'H',                HOTKEY_MOD_NONE,  MOTION_MOVE_LEFT,              HandleMoveLeft,           MODE_NORMAL, VIM_SCOPE_ALL },
     { 'L',                HOTKEY_MOD_NONE,  MOTION_ENTER,                  HandleEnter,              MODE_NORMAL, VIM_SCOPE_MODAL },
-    { 'L',                HOTKEY_MOD_NONE,  MOTION_MOVE_RIGHT,             HandleMoveRight,          MODE_NORMAL, VIM_SCOPE_POPUP },
+    { 'L',                HOTKEY_MOD_NONE,  MOTION_MOVE_RIGHT,             HandleMoveRight,          MODE_NORMAL, VIM_SCOPE_ALL },
     { 'L',                HOTKEY_MOD_SHIFT, MOTION_DELETE_CHAR_PERSISTENT, HandlePersistentDelete,   MODE_NORMAL, VIM_SCOPE_MODAL },
     { 'S',                HOTKEY_MOD_SHIFT, MOTION_DELETE_LINE_INSERT,     HandleDeleteLineInsert,   MODE_NORMAL, VIM_SCOPE_ALL },
     { 'G',                HOTKEY_MOD_SHIFT, MOTION_MOVE_LISTBOX_END,       HandleMoveListboxEnd,     MODE_NORMAL, VIM_SCOPE_MODAL },
