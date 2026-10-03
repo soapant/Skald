@@ -467,31 +467,31 @@ bool UI_DrawCaret(HDC hdc, HWND hwnd) {
 
   int cx = 0;
   int lineTop = 0;
-  int elen = GetWindowTextLengthA(hwnd);
-  if (elen <= 0) {
+  struct { DWORD left; DWORD right; } margins;
+  margins.left = 0;
+  margins.right = 0;
+  SendMessageA(hwnd, EM_GETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, (LPARAM)&margins);
+
+  char text[2048] = {0};
+  GetWindowTextA(hwnd, text, (int)sizeof(text) - 1);
+  int tlen = (int)strlen(text);
+  int qi = (int)selStart;
+  if (qi > tlen) qi = tlen;
+  if (qi < 0) qi = 0;
+
+  SIZE tsz;
+  memset(&tsz, 0, sizeof(tsz));
+  GetTextExtentPoint32A(hdc, text, qi, &tsz);
+  int bias = tm.tmAveCharWidth * FLINT_CARET_X_BIAS_NUM / FLINT_CARET_X_BIAS_DEN;
+  cx = (int)margins.left + tsz.cx + bias;
+
+  {
     LRESULT ep = SendMessageA(hwnd, EM_POSFROMCHAR, 0, 0);
     lineTop = (ep != (LRESULT)-1) ? (short)HIWORD(ep) : 0;
-  } else {
-    DWORD q = selStart;
-    if ((int)q > elen) q = (DWORD)elen;
-    LRESULT cr = SendMessageA(hwnd, EM_POSFROMCHAR, q, 0);
-    if (cr == (LRESULT)-1) {
-      cr = SendMessageA(hwnd, EM_POSFROMCHAR, (WPARAM)(elen - 1), 0);
-      if (cr == (LRESULT)-1) { if (oldFont) SelectObject(hdc, oldFont); return false; }
-      char lastc[2] = { 0, 0 };
-      GetWindowTextA(hwnd, lastc, 1);
-      lastc[1] = '\0';
-      SIZE wsz; memset(&wsz, 0, sizeof(wsz));
-      GetTextExtentPoint32A(hdc, lastc, 1, &wsz);
-      cx = (short)LOWORD(cr) + wsz.cx;
-      lineTop = (short)HIWORD(cr);
-    } else {
-      cx = (short)LOWORD(cr);
-      lineTop = (short)HIWORD(cr);
-    }
   }
-  if (cx < 0) cx = 0;
-  if (cx + caretWidth > rc.right && rc.right > caretWidth) cx = rc.right - caretWidth;
+  if (cx < (int)margins.left) cx = (int)margins.left;
+  int rightLimit = rc.right - (int)margins.right;
+  if (cx + caretWidth > rightLimit && rightLimit > caretWidth) cx = rightLimit - caretWidth;
   int cy = lineTop + (lineBox - caretHeight) / 2;
   if (cy + caretHeight > rc.bottom && rc.bottom > 0) cy = rc.bottom - caretHeight;
   if (cy < 0) cy = 0;
