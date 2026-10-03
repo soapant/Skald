@@ -15,5 +15,6 @@ void SetModeWithListBox(EditorMode mode, ListBoxInfo* lb);
 bool IsNormalMode(void);
 bool IsInsertMode(void);
 bool IsVisualMode(void);
+const char* Vim_ModeName(EditorMode mode);
 
 #endif
