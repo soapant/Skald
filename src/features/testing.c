@@ -3,7 +3,6 @@
 
 
 void Testing(void) {
-  fl_get_cursor_pos();
 }
 
 
