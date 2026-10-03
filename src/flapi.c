@@ -1432,6 +1432,34 @@ char fl_get_char_pressed(void){
   return Platform_GetPressedChar();
 }
 
+bool fl_poll_key(FlKeyEvent *out) {
+  if (!out) return false;
+  PlatformKeyEvent ev;
+  if (!Platform_GlobalKey_Pop(&ev)) return false;
+  out->vk = ev.vk;
+  out->scancode = ev.scancode;
+  out->mods = ev.mods;
+  out->down = ev.down;
+  out->repeat = ev.repeat;
+  return true;
+}
+
+int fl_key_queue_len(void) {
+  return Platform_GlobalKey_Pending();
+}
+
+unsigned long fl_key_queue_dropped(void) {
+  return Platform_GlobalKey_Dropped();
+}
+
+void fl_clear_key_queue(void) {
+  Platform_GlobalKey_Clear();
+}
+
+int fl_char_for_key(int vk, int scancode, int mods) {
+  return Platform_CharForKey(vk, scancode, mods);
+}
+
 bool fl_is_flag_prefix(char c) { return c == '-' || c == '/'; }
 
 size_t fl_extract_flag_name(char *p, char *out, size_t cap) {
