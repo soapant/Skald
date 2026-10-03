@@ -445,6 +445,30 @@ void UpdateTextCaret(WindowHandle hwndEditControl)
   InvalidateRect(hwnd, NULL, FALSE);
 }
 
+void UI_DrawEditText(HDC hdc, HWND hwnd) {
+  if (!hdc || !hwnd || !IsWindow(hwnd)) return;
+  char buf[2048] = {0};
+  GetWindowTextA(hwnd, buf, (int)sizeof(buf) - 1);
+  HFONT hFont = (HFONT)SendMessageA(hwnd, WM_GETFONT, 0, 0);
+  HFONT oldFont = hFont ? (HFONT)SelectObject(hdc, hFont) : NULL;
+  SetBkMode(hdc, TRANSPARENT);
+  SetTextColor(hdc, COLOR_TEXT);
+  TEXTMETRIC tm;
+  memset(&tm, 0, sizeof(tm));
+  GetTextMetrics(hdc, &tm);
+  RECT rc;
+  GetClientRect(hwnd, &rc);
+  int y = (rc.bottom - tm.tmHeight) / 2;
+  if (y < 0) y = 0;
+  RECT tr;
+  tr.left = 0;
+  tr.top = y;
+  tr.right = rc.right;
+  tr.bottom = y + tm.tmHeight;
+  DrawTextA(hdc, buf, -1, &tr, DT_SINGLELINE | DT_TOP | DT_LEFT);
+  if (oldFont) SelectObject(hdc, oldFont);
+}
+
 bool UI_DrawCaret(HDC hdc, HWND hwnd) {
   if (!hdc || !hwnd || !IsWindow(hwnd)) return false;
   DWORD selStart = 0, selEnd = 0;
@@ -481,7 +505,7 @@ bool UI_DrawCaret(HDC hdc, HWND hwnd) {
   SIZE szCur;
   memset(&szCur, 0, sizeof(szCur));
   GetTextExtentPoint32A(hdc, buf, cursor, &szCur);
-  int cx = szCur.cx + tm.tmAveCharWidth / PROMPT_CARET_X_BIAS_DEN;
+  int cx = szCur.cx;
 
   if (cx < 0) cx = 0;
   if (cx + caretWidth > rc.right && rc.right > caretWidth) cx = rc.right - caretWidth;
