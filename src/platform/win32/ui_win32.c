@@ -344,18 +344,27 @@ ListBoxInfo* UI_GetPopupListBox(FlintContext* ctx) {
 }
 
 void UI_SyncEditCursor(FlintContext* ctx, int pos) {
-    if (!ctx) return;
-    HWND hEdit = WH_TO_HWND(ctx->window.hEditControl);
-    if (!hEdit) hEdit = WH_TO_HWND(ctx->window.hActiveEditControl);
-    if (hEdit) {
-        SendMessageA(hEdit, EM_SETSEL, (WPARAM)pos, (LPARAM)pos);
-        if (GetFocus() == hEdit) DestroyCaret();
-        InvalidateRect(hEdit, NULL, FALSE);
-    }
-    if (ctx->prompt_callbacks.render != NULL) {
-        HWND hPopup = WH_TO_HWND(ctx->window.hPopupWnd);
-        if (hPopup && IsWindow(hPopup)) InvalidateRect(hPopup, NULL, FALSE);
-    }
+   if (!ctx) return;
+   PromptState* ws = g_win32_prompt_state;
+   if (ws) {
+       strncpy(ws->filter, ctx->window.filter, sizeof(ws->filter)-1);
+       ws->filter[sizeof(ws->filter)-1] = '\0';
+       int len = (int)strlen(ws->filter);
+       if (pos < 0) pos = 0;
+       if (pos > len) pos = len;
+       ws->cursor = pos;
+   }
+   HWND hEdit = WH_TO_HWND(ctx->window.hEditControl);
+   if (!hEdit) hEdit = WH_TO_HWND(ctx->window.hActiveEditControl);
+   if (hEdit) {
+       SendMessageA(hEdit, EM_SETSEL, (WPARAM)pos, (LPARAM)pos);
+       if (GetFocus() == hEdit) DestroyCaret();
+       InvalidateRect(hEdit, NULL, FALSE);
+   }
+   if (ctx->prompt_callbacks.render != NULL) {
+       HWND hPopup = WH_TO_HWND(ctx->window.hPopupWnd);
+       if (hPopup && IsWindow(hPopup)) InvalidateRect(hPopup, NULL, FALSE);
+   }
 }
 
 bool UI_ApplyBackspaceToPopup(FlintContext* ctx) {

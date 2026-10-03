@@ -454,9 +454,11 @@ void UpdateTextCaret(WindowHandle hwndEditControl)
 
   RECT rc;
   GetClientRect(hwnd, &rc);
-  int caretHeight = FontSize;
-  int lineTopPad = (tm.tmAscent + tm.tmDescent - caretHeight) / 2;
-  if (lineTopPad < 0) lineTopPad = 0;
+  int bandHeight = tm.tmAscent + tm.tmDescent;
+  if (bandHeight <= 0) bandHeight = FontSize;
+  int caretHeight = bandHeight;
+  if (caretHeight > rc.bottom && rc.bottom > 0) caretHeight = rc.bottom;
+  int lineTopPad = 0;
   int caretWidth;
   if (IsInsertMode()) {
     caretWidth = FLINT_CARET_W_INSERT;
@@ -467,8 +469,8 @@ void UpdateTextCaret(WindowHandle hwndEditControl)
   DWORD selStart = 0, selEnd = 0;
   SendMessageA(hwnd, EM_GETSEL, (WPARAM)&selStart, (LPARAM)&selEnd);
 
-  int centeredY = (tm.tmAscent + tm.tmDescent - caretHeight) / 2;
-  if (centeredY < 0) centeredY = 0;
+  int centeredY = (rc.bottom - caretHeight) / 2;
+  if (centeredY < lineTopPad) centeredY = lineTopPad;
 
   POINT pt = {0, centeredY};
   BOOL havePos = FALSE;
@@ -501,7 +503,7 @@ void UpdateTextCaret(WindowHandle hwndEditControl)
     pt.y = (short)HIWORD(coords) + lineTopPad;
     if (rc.bottom > 0 && pt.y + caretHeight > rc.bottom) pt.y = rc.bottom - caretHeight;
     havePos = TRUE;
-    log_info("UpdateTextCaret tmH=%d asc=%d desc=%d il=%d fs=%d rcB=%d rawEM=%d,%d pad=%d pt=%d,%d ch=%d", tm.tmHeight, tm.tmAscent, tm.tmDescent, tm.tmInternalLeading, FontSize, rc.bottom, (short)LOWORD(coords), (short)HIWORD(coords), lineTopPad, pt.x, pt.y, caretHeight);
+    log_info("UpdateTextCaret tmH=%d asc=%d desc=%d il=%d fs=%d rcB=%d rawEM=%d,%d pad=%d pt=%d,%d ch=%d cw=%d caretColor=%06X insert=%d", tm.tmHeight, tm.tmAscent, tm.tmDescent, tm.tmInternalLeading, FontSize, rc.bottom, (short)LOWORD(coords), (short)HIWORD(coords), lineTopPad, pt.x, pt.y, caretHeight, caretWidth, (unsigned)COLOR_CURSOR, (int)IsInsertMode());
   } else if (!havePos) {
     char buf[512];
     GetWindowTextA(hwnd, buf, sizeof(buf));
