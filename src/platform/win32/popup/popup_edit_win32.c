@@ -52,6 +52,12 @@ static bool EditPopupWindow_OnKey(HWND hWnd, WMEditPopupData* data, ListBoxInfo*
     int wParam = key->vk;
     EditPopup_SyncText(data);
     if (wParam == VK_ESCAPE) {
+        if (IsInsertMode()) {
+            SetMode(MODE_NORMAL);
+            SetFocus(WH_TO_HWND(data->hEdit));
+            UpdateTextCaret(data->hEdit);
+            return true;
+        }
         EditPopup_Close(false);
         return true;
     }
@@ -152,8 +158,8 @@ LRESULT CALLBACK EditPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
   if (uMsg == WM_CHAR || uMsg == WM_SYSCHAR) {
     if (IsNormalMode()) return 0;
     if (uMsg == WM_SYSCHAR) return 0;
-    if (wParam == 0x08 || wParam == 0x7F) return 0;
-    if (wParam < 0x20 && wParam != 0x09) return 0;
+    if (wParam == 0x0D || wParam == 0x1B) return 0;
+    if (wParam < 0x20 && wParam != 0x08 && wParam != 0x09) return 0;
   }
   return DefSubclassProc(hWnd, uMsg, wParam, lParam);
 }
@@ -211,7 +217,13 @@ LRESULT CALLBACK EditPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
             SendMessageA(WH_TO_HWND(data->hEdit), EM_SETMARGINS,
                 EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELONG(0, 0));
             UI_Edit_SetFont(data->hEdit, g_edit_popup_font);
-              UI_Edit_SetSel(data->hEdit,0,0);
+              int start = data->cursor;
+              if (start < 0) start = 0;
+              if (data->text) {
+                int len = (int)strlen(data->text);
+                if (start > len) start = len;
+              }
+              UI_Edit_SetSel(data->hEdit, start, start);
               SetFocus(WH_TO_HWND(data->hEdit));
               FlintContext_Get()->window.hActiveEditControl = data->hEdit;
 
