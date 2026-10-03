@@ -465,33 +465,26 @@ bool UI_DrawCaret(HDC hdc, HWND hwnd) {
   if (caretHeight > rc.bottom && rc.bottom > 0) caretHeight = rc.bottom;
   int caretWidth = IsInsertMode() ? PROMPT_CARET_W_INSERT : PromptNormalCaretWidth();
 
-  int cx = 0;
+  char buf[2048] = {0};
+  GetWindowTextA(hwnd, buf, (int)sizeof(buf) - 1);
+  int text_len = (int)strlen(buf);
+  int cursor = (int)selStart;
+  if (cursor < 0) cursor = 0;
+  if (cursor > text_len) cursor = text_len;
+
   int lineTop = 0;
-  struct { DWORD left; DWORD right; } margins;
-  margins.left = 0;
-  margins.right = 0;
-  SendMessageA(hwnd, EM_GETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, (LPARAM)&margins);
-
-  char text[2048] = {0};
-  GetWindowTextA(hwnd, text, (int)sizeof(text) - 1);
-  int tlen = (int)strlen(text);
-  int qi = (int)selStart;
-  if (qi > tlen) qi = tlen;
-  if (qi < 0) qi = 0;
-
-  SIZE tsz;
-  memset(&tsz, 0, sizeof(tsz));
-  GetTextExtentPoint32A(hdc, text, qi, &tsz);
-  int bias = tm.tmAveCharWidth * PROMPT_CARET_X_BIAS_NUM / PROMPT_CARET_X_BIAS_DEN;
-  cx = (int)margins.left + tsz.cx + bias;
-
   {
-    LRESULT ep = SendMessageA(hwnd, EM_POSFROMCHAR, 0, 0);
-    lineTop = (ep != (LRESULT)-1) ? (short)HIWORD(ep) : 0;
+    LRESULT q0 = SendMessageA(hwnd, EM_POSFROMCHAR, 0, 0);
+    if (q0 != (LRESULT)-1) lineTop = (short)HIWORD(q0);
   }
-  if (cx < (int)margins.left) cx = (int)margins.left;
-  int rightLimit = rc.right - (int)margins.right;
-  if (cx + caretWidth > rightLimit && rightLimit > caretWidth) cx = rightLimit - caretWidth;
+
+  SIZE szCur;
+  memset(&szCur, 0, sizeof(szCur));
+  GetTextExtentPoint32A(hdc, buf, cursor, &szCur);
+  int cx = szCur.cx + tm.tmAveCharWidth / PROMPT_CARET_X_BIAS_DEN;
+
+  if (cx < 0) cx = 0;
+  if (cx + caretWidth > rc.right && rc.right > caretWidth) cx = rc.right - caretWidth;
   int cy = lineTop + (lineBox - caretHeight) / 2;
   if (cy + caretHeight > rc.bottom && rc.bottom > 0) cy = rc.bottom - caretHeight;
   if (cy < 0) cy = 0;
