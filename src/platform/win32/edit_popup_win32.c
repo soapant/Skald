@@ -29,10 +29,6 @@ void Platform_EditPopupShowWindow(Popup* self) {
     if (hwnd && IsWindow(hwnd)) {
         WindowHandle input = data ? data->hEdit : WH_NULL;
         ForceWindowFocus(self->handle, input);
-        HWND focus = GetFocus();
-        HWND fg = GetForegroundWindow();
-        log_info("EDITPOP focus target=%p input=%p GetFocus=%p foreground=%p foregroundOK=%d",
-            (void*)hwnd, (void*)WH_TO_HWND(input), (void*)focus, (void*)fg, (int)(fg == hwnd));
     }
     PROFILE_END_VAR(timer, "window_manager:Platform_EditPopupShowWindow");
 }

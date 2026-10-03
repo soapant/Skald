@@ -1026,18 +1026,11 @@ char* fl_popup_impl(const FlPopupSpec *spec) {
     Popup* popup = EditPopup_Create(wm, initial_text, x, y, w, h, align, fl_edit_blocking_confirm, &result);
     if (!popup) { log_error("fl_popup: EditPopup_Create failed w=%d h=%d", w, h); return NULL; }
     EditPopup_SetPlaceholder(popup, spec->placeholder);
-    log_info("fl_popup ENTER w=%d h=%d scale=%.3f FontSize=%d popups=%d", w, h, (double)Platform_GetUIScale(), FontSize, wm->popup_count);
 
     WindowManager_PushPopup(wm, popup);
-    long long spins = 0;
     while (wm->running && popup->manager) {
         Platform_WM_ProcessEvents(wm);
-        spins++;
-        if (spins % 250 == 0) {
-            log_info("fl_popup SPIN n=%lld running=%d manager=%p popups=%d", spins, (int)wm->running, (void*)popup->manager, wm->popup_count);
-        }
     }
-    log_info("fl_popup EXIT spins=%lld popups=%d", spins, wm->popup_count);
     bool was_confirmed = ((WMEditPopupData*)popup)->confirmed;
     if (popup->manager == NULL) {
         if (popup->vtable && popup->vtable->destroy) popup->vtable->destroy(popup);

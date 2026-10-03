@@ -503,7 +503,7 @@ void UpdateTextCaret(WindowHandle hwndEditControl)
     pt.y = (short)HIWORD(coords) + lineTopPad;
     if (rc.bottom > 0 && pt.y + caretHeight > rc.bottom) pt.y = rc.bottom - caretHeight;
     havePos = TRUE;
-    log_info("UpdateTextCaret tmH=%d asc=%d desc=%d il=%d fs=%d rcB=%d rawEM=%d,%d pad=%d pt=%d,%d ch=%d cw=%d caretColor=%06X insert=%d", tm.tmHeight, tm.tmAscent, tm.tmDescent, tm.tmInternalLeading, FontSize, rc.bottom, (short)LOWORD(coords), (short)HIWORD(coords), lineTopPad, pt.x, pt.y, caretHeight, caretWidth, (unsigned)COLOR_CURSOR, (int)IsInsertMode());
+    log_info("UpdateTextCaret tmH=%d asc=%d desc=%d il=%d fs=%d rcB=%d rawEM=%d,%d pad=%d pt=%d,%d ch=%d", tm.tmHeight, tm.tmAscent, tm.tmDescent, tm.tmInternalLeading, FontSize, rc.bottom, (short)LOWORD(coords), (short)HIWORD(coords), lineTopPad, pt.x, pt.y, caretHeight);
   } else if (!havePos) {
     char buf[512];
     GetWindowTextA(hwnd, buf, sizeof(buf));

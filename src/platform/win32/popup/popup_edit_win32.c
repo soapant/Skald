@@ -37,10 +37,7 @@ static void EditPopup_Close(bool confirmed) {
 }
 
 static void EditPopup_SyncText(WMEditPopupData* data) {
-    if (!data || !WH_TO_HWND(data->hEdit)) {
-        log_info("EDITPOP sync SKIP data=%p hEdit=%p", (void*)data, data ? (void*)WH_TO_HWND(data->hEdit) : NULL);
-        return;
-    }
+    if (!data || !WH_TO_HWND(data->hEdit)) return;
     char buf[2048] = {0};
     GetWindowTextA(WH_TO_HWND(data->hEdit), buf, sizeof(buf) - 1);
     if (data->text && data->text_capacity > 0) {
@@ -50,7 +47,6 @@ static void EditPopup_SyncText(WMEditPopupData* data) {
     DWORD s = 0, e = 0;
     SendMessageA(WH_TO_HWND(data->hEdit), EM_GETSEL, (WPARAM)&s, (LPARAM)&e);
     data->cursor = (int)s;
-    log_info("EDITPOP sync ctl_len=%d buf=[%s] text_len=%d sel=%d..%d mode=%d", (int)strlen(buf), buf, (int)strlen(data->text ? data->text : ""), (int)s, (int)e, (int)g_current_mode);
 }
 
 static bool EditPopupWindow_OnKey(HWND hWnd, WMEditPopupData* data, ListBoxInfo* lb, const PopupKeyEvent* key) {
@@ -58,14 +54,12 @@ static bool EditPopupWindow_OnKey(HWND hWnd, WMEditPopupData* data, ListBoxInfo*
     EditPopup_SyncText(data);
     if (wParam == VK_ESCAPE) {
         if (data->mode == MODE_INSERT) {
-            log_info("EDITPOP esc INSERT->NORMAL text=[%s]", data->text ? data->text : "");
             SetMode(MODE_NORMAL);
             SetFocus(WH_TO_HWND(data->hEdit));
             UpdateTextCaret(data->hEdit);
             InvalidateRect(GetParent(hWnd), NULL, TRUE);
             return true;
         }
-        log_info("EDITPOP esc NORMAL->CLOSE text=[%s]", data->text ? data->text : "");
         EditPopup_Close(false);
         return true;
     }
@@ -81,7 +75,6 @@ static bool EditPopupWindow_OnKey(HWND hWnd, WMEditPopupData* data, ListBoxInfo*
         Popup* top = wm ? WindowManager_GetTopPopup(wm) : NULL;
         if (top && top->type == POPUP_EDIT) {
             WMEditPopupData* e = (WMEditPopupData*)top;
-            log_info("EDITPOP motion write text=[%s] cursor=%d", e->text ? e->text : "", e->cursor);
             if (e->text) SetWindowTextA(hWnd, e->text);
             SendMessageA(hWnd, EM_SETSEL, (WPARAM)e->cursor, (LPARAM)e->cursor);
         }
@@ -248,10 +241,6 @@ LRESULT CALLBACK EditPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
               SetWindowSubclass(WH_TO_HWND(data->hEdit), EditPopupSubclassProc, 0, (DWORD_PTR)data);
               UpdateTextCaret(data->hEdit);
           }
-          log_info("EDITPOP create win=%dx%d client=%dx%d edit=(%d,%d,%d,%d) lineHeight=%d FontSize=%d",
-              data->w, data->h, rect.right, rect.bottom,
-              FLINT_EDITPOPUP_INSET, edit_y, rect.right - FLINT_EDITPOPUP_INSET * 2, edit_h,
-              lineHeight, FontSize);
       break;
     }
         
