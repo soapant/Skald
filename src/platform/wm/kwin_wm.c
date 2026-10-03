@@ -318,8 +318,8 @@ bool focus_window_title_kwin(char* title) {
     return kwin_run_script(body);
 }
 
-Fl_WindowList get_window_titles_kwin() {
-    Fl_WindowList list = {0};
+FlWindowList get_window_titles_kwin() {
+    FlWindowList list = {0};
     if (!kwin_is_active()) return list;
     pthread_mutex_lock(&g_kwin_mtx);
     if (!kwin_snapshot_locked() || !g_kwin_records) {
@@ -346,8 +346,8 @@ Fl_WindowList get_window_titles_kwin() {
     return list;
 }
 
-Fl_WindowList get_window_names_kwin() {
-    Fl_WindowList list = {0};
+FlWindowList get_window_names_kwin() {
+    FlWindowList list = {0};
     if (!kwin_is_active()) return list;
     pthread_mutex_lock(&g_kwin_mtx);
     if (!kwin_snapshot_locked() || !g_kwin_records) {
@@ -378,19 +378,19 @@ Fl_WindowList get_window_names_kwin() {
     return list;
 }
 
-Fl_Pos get_cursor_position_kwin(void) {
-    if (!kwin_is_active()) return (Fl_Pos){0, 0};
+FlPos get_cursor_position_kwin(void) {
+    if (!kwin_is_active()) return (FlPos){0, 0};
 
     char* dbus_cmd = "qdbus org.kde.KWin /Scripting org.kde.KWin.Scripting.loadScript "
                      "\"\" \"print('CURSOR_POS: ' + workspace.cursorPos.x + ',' + workspace.cursorPos.y);\"";
     
     char* script_id_str = Platform_RunTerminalCommand(dbus_cmd, false);
-    if (script_id_str == NULL) return (Fl_Pos){0, 0};
+    if (script_id_str == NULL) return (FlPos){0, 0};
     
     int script_id = atoi(script_id_str);
     free(script_id_str);
 
-    if (script_id <= 0) return (Fl_Pos){0, 0};
+    if (script_id <= 0) return (FlPos){0, 0};
 
     char run_cmd[128];
     snprintf(run_cmd, sizeof(run_cmd), "qdbus org.kde.KWin /Scripting/Script%d org.kde.KWin.Script.run", script_id);
@@ -414,7 +414,7 @@ Fl_Pos get_cursor_position_kwin(void) {
     }
     free(unload_cmd);
 
-    return (Fl_Pos){x_val, y_val};
+    return (FlPos){x_val, y_val};
 }
 
 bool close_active_window_kwin(void) {
