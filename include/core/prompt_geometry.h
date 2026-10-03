@@ -20,6 +20,14 @@
 #define FLINT_CARET_HI_CLAMP 4
 #define FLINT_CARET_W_INSERT 2
 #define FLINT_CARET_W_NORMAL_BONUS 2
+/* Win32 only: nudges the manually drawn caret along the text baseline.
+   X11 needs no equivalent because it draws from the same Xft metrics it
+   renders the glyphs with. On Win32 the caret x comes from GDI measurement
+   of the control's own font, which lands a fraction of a glyph off the ink
+   edge. Value = fraction of tmAveCharWidth. Flip the sign to move the other
+   way; 0 disables. */
+#define FLINT_CARET_X_BIAS_NUM 1
+#define FLINT_CARET_X_BIAS_DEN 2
 #define FLINT_EDIT_H_BONUS 12
 
 #define FLINT_ROW_H_BONUS 12
