@@ -13,18 +13,20 @@ SequenceState seq_state = {0};
 
 
 ListBoxInfo* Vim_GetListBox(FlintContext* ctx) {
-    (void)ctx;
-    WindowManager* wm = WindowManager_Get();
-    if (wm) {
-        Popup* top = WindowManager_GetTopPopup(wm);
-        if (top && top->type == POPUP_PROMPT && top->user_data) {
-            PromptState* s = (PromptState*)top->user_data;
-            if (s && s->has_listbox) return &s->listbox;
-        }
-    }
-    return UI_GetPopupListBox(ctx);
-    return NULL;
-}
+      (void)ctx;
+      WindowManager* wm = WindowManager_Get();
+      if (wm) {
+          Popup* top = WindowManager_GetTopPopup(wm);
+          if (top) {
+              if (top->type == POPUP_EDIT) return NULL;
+              if (top->type == POPUP_PROMPT && top->user_data) {
+                  PromptState* s = (PromptState*)top->user_data;
+                  if (s && s->has_listbox) return &s->listbox;
+              }
+          }
+      }
+      return UI_GetPopupListBox(ctx);
+  }
 
 void Vim_GetText(FlintContext* ctx, char* buf, size_t cap) {
     if (!ctx || !buf || cap==0) return;
