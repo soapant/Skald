@@ -120,7 +120,7 @@ LRESULT CALLBACK EditPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
       FillRect(memDC, &rc, br);
       DeleteObject(br);
     }
-SendMessage(hWnd, WM_PRINTCLIENT, (WPARAM)memDC, PRF_CLIENT);
+UI_DrawEditText(memDC, hWnd);
     if (GetFocus() == hWnd) UI_DrawCaret(memDC, hWnd);
     BitBlt(hdc, ps.rcPaint.left, ps.rcPaint.top, ps.rcPaint.right - ps.rcPaint.left, ps.rcPaint.bottom - ps.rcPaint.top, memDC, ps.rcPaint.left, ps.rcPaint.top, SRCCOPY);
     SelectObject(memDC, oldBmp);

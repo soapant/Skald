@@ -323,7 +323,7 @@ LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
       FillRect(memDC, &rc, br);
       DeleteObject(br);
     }
-    SendMessage(hwnd, WM_PRINTCLIENT, (WPARAM)memDC, PRF_CLIENT);
+    UI_DrawEditText(memDC, hwnd);
     Win32_PaintEditCaret(memDC, hwnd);
     BitBlt(hdc, ps.rcPaint.left, ps.rcPaint.top, ps.rcPaint.right - ps.rcPaint.left, ps.rcPaint.bottom - ps.rcPaint.top, memDC, ps.rcPaint.left, ps.rcPaint.top, SRCCOPY);
     SelectObject(memDC, oldBmp);
