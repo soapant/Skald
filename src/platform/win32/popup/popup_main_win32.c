@@ -573,8 +573,10 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
       pkey.ctrl = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
       pkey.shift = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
       pkey.alt = (GetKeyState(VK_MENU) & 0x8000) != 0;
-      if (PromptWindow_OnKey(hKey, &pkey)) {
-        s_swallow_next_char = true;
+      s_swallow_next_char = true;
+      bool consumed = PromptWindow_OnKey(hKey, &pkey);
+      if (!consumed) s_swallow_next_char = false;
+      if (consumed) {
         if (FlintContext_Get()->prompt_callbacks.render != NULL) InvalidateRect(hwnd, NULL, FALSE);
         return 0;
       }

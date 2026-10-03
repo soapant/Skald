@@ -17,6 +17,7 @@
 #include "core/prompt_controller.h"
 
 static HFONT g_edit_popup_font = NULL;
+static bool g_swallowsNextChar = false;
 
 static void EditPopup_Close(bool confirmed) {
     WindowManager* wm = WindowManager_Get();
@@ -158,11 +159,19 @@ LRESULT CALLBACK EditPopupSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPAR
       key.ctrl = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
       key.shift = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
       key.alt = (GetKeyState(VK_MENU) & 0x8000) != 0;
-      if (EditPopupWindow_OnKey(hWnd, data, lb, &key)) return 0;
-      if (uMsg == WM_SYSKEYDOWN) return 0;
+      g_swallowsNextChar = true;
+      if (EditPopupWindow_OnKey(hWnd, data, lb, &key)) {
+          return 0;
+      }
+      g_swallowsNextChar = false;
+      if (uMsg == WM_SYSKEYDOWN) { g_swallowsNextChar = true; return 0; }
       return DefSubclassProc(hWnd, uMsg, wParam, lParam);
   }
   if (uMsg == WM_CHAR || uMsg == WM_SYSCHAR) {
+    if (g_swallowsNextChar) {
+        g_swallowsNextChar = false;
+        return 0;
+    }
     if (IsNormalMode()) return 0;
     if (uMsg == WM_SYSCHAR) return 0;
     if (wParam == 0x0D || wParam == 0x1B) return 0;
