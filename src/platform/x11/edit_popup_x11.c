@@ -273,8 +273,8 @@ bool Platform_EditPopupOnKey(Popup* self, const PopupKeyEvent* key) {
         return true;
     }
     if (ctrl_pressed) {
-        if (wParam == VK_OEM_MINUS) Platform_AdjustFontSize(-1);
-        if (wParam == VK_OEM_PLUS) Platform_AdjustFontSize(1);
+        if (wParam == VK_OEM_MINUS) Platform_AdjustFontSize(-1) ; Config_Save(); PROFILE_END_VAR(timer, "edit_popup_x11:Platform_EditPopupOnKey"); return true; 
+        if (wParam == VK_OEM_PLUS) Platform_AdjustFontSize(1) ; Config_Save(); PROFILE_END_VAR(timer, "edit_popup_x11:Platform_EditPopupOnKey"); return true; 
         if (wParam == VK_OEM_MINUS || wParam == VK_OEM_PLUS) { Config_Save(); PROFILE_END_VAR(timer, "edit_popup_x11:Platform_EditPopupOnKey"); return true; }
     }
 

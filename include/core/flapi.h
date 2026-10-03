@@ -588,6 +588,23 @@ void fl_on_key(void (*cb)(int vk, bool down, int mods, void *ud), void *ud);
 int fl_get_key_pressed(void);
 char fl_get_char_pressed(void);
 
+// Global keystroke feed, captured whether or not a prompt is open. The hook
+// thread only writes POD into a fixed ring; features drain it from their own
+// thread, so a slow feature can never stall input.
+typedef struct {
+    int vk;
+    int scancode;
+    int mods;
+    bool down;
+    bool repeat;
+} FlKeyEvent;
+
+bool fl_poll_key(FlKeyEvent *out);
+int fl_key_queue_len(void);
+unsigned long fl_key_queue_dropped(void);
+void fl_clear_key_queue(void);
+int fl_char_for_key(int vk, int scancode, int mods);
+
 #define _FL_HOTKEY_EXPAND(hotkey, trigger, cond, whitelist, ...) \
     fl_register_hotkey_impl(hotkey, trigger, cond, whitelist, (const char*[]){__VA_ARGS__, NULL})
 

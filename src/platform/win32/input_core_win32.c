@@ -1,5 +1,6 @@
 #include <windows.h>
 #include <stdbool.h>
+#include <string.h>
 #include "deps/log.h"
 #include "core/context.h"
 #include "core/types.h"
@@ -10,6 +11,7 @@
 #include "core/snippet_manager.h"
 #include "core/remap_manager.h"
 #include "core/timer.h"
+#include "platform/input_state.h"
 #include "bindings/bindings.h"
 #include "platform/win32/win32_state.h"
 #include "platform/win32/input_core_win32.h"
@@ -33,6 +35,17 @@ LRESULT CALLBACK win32_handle_global_key(int nCode, WPARAM wParam, LPARAM lParam
         if (_isDown || _isUp) {
             int _vk = (int)_rk->vkCode;
             int _val = _isDown ? 1 : 0;
+            PlatformKeyEvent _gev;
+            _gev.vk = _vk;
+            _gev.scancode = (int)_rk->scanCode;
+            _gev.mods = 0;
+            if (GetKeyState(VK_CONTROL) & 0x8000) _gev.mods |= HOTKEY_MOD_CTRL;
+            if (GetKeyState(VK_MENU) & 0x8000) _gev.mods |= HOTKEY_MOD_ALT;
+            if (GetKeyState(VK_SHIFT) & 0x8000) _gev.mods |= HOTKEY_MOD_SHIFT;
+            if (GetKeyState(VK_LWIN) & 0x8000 || GetKeyState(VK_RWIN) & 0x8000) _gev.mods |= HOTKEY_MOD_SUPER;
+            _gev.down = _isDown;
+            _gev.repeat = ((_rk->flags & LLKHF_INJECTED) != 0);
+            Platform_GlobalKey_Push(&_gev);
             if (remap_should_swallow_vk(_vk, _val)) {
                 char* _t = Platform_GetActiveWindowTitle();
                 log_info("hook swallow=remap vk=0x%X val=%d title='%s'", _vk, _val, _t ? _t : "");
@@ -109,4 +122,21 @@ LRESULT CALLBACK win32_handle_global_key(int nCode, WPARAM wParam, LPARAM lParam
     }
   }
   return CallNextHookEx(NULL, nCode, wParam, lParam);
+}
+
+int Platform_CharForKey(int vk, int scancode, int mods) {
+  BYTE state[256];
+  memset(state, 0, sizeof(state));
+  if (mods & HOTKEY_MOD_SHIFT) state[VK_SHIFT] = 0x80;
+  if (mods & HOTKEY_MOD_CTRL) state[VK_CONTROL] = 0x80;
+  if (mods & HOTKEY_MOD_ALT) state[VK_MENU] = 0x80;
+  HKL layout = GetKeyboardLayout(0);
+  wchar_t buf[8];
+  int n = ToUnicodeEx((UINT)vk, (UINT)scancode, state, buf, 8, 0, layout);
+  if (n <= 0) return 0;
+  if (n == 1) return (int)buf[0];
+  char mb[16];
+  int m = WideCharToMultiByte(CP_UTF8, 0, buf, 1, mb, sizeof(mb), NULL, NULL);
+  if (m <= 0) return 0;
+  return (int)(unsigned char)mb[0];
 }
