@@ -107,9 +107,9 @@ bool focus_window_title_x11(char* title) {
     return true;
 }
 
-Fl_WindowList get_window_names_x11() {
+FlWindowList get_window_names_x11() {
    char* output = Platform_RunTerminalCommand("wmctrl -x -l", false);
-   Fl_WindowList list = { .windows = NULL, .count = 0 };
+   FlWindowList list = { .windows = NULL, .count = 0 };
    char buffer[256]; 
    if (output == NULL || strlen(output) == 0) { log_error("output is NULL or empty"); return list; }
    if (strstr(output, "command not found") || strstr(output, ": not found")) { log_error("output is shell error"); free(output); return list; }
@@ -137,9 +137,9 @@ Fl_WindowList get_window_names_x11() {
    free(output);
    return list;
 }
-Fl_WindowList get_window_titles_x11() {
+FlWindowList get_window_titles_x11() {
    char* output = Platform_RunTerminalCommand("wmctrl -l", false);
-   Fl_WindowList list = { .windows = NULL, .count = 0 };
+   FlWindowList list = { .windows = NULL, .count = 0 };
    if (output == NULL || strlen(output) == 0) { log_error("output is NULL or empty"); return list; }
    if (strstr(output, "command not found") || strstr(output, ": not found")) { log_error("output is shell error"); free(output); return list; }
    StringList lines = String_Split(output, "\n");
@@ -164,7 +164,7 @@ Fl_WindowList get_window_titles_x11() {
    return list;
 }
 
-Fl_Pos get_cursor_position_x11(void) { 
+FlPos get_cursor_position_x11(void) { 
     Display *display;
     Window root_window;
     Window window_returned;
@@ -174,7 +174,7 @@ Fl_Pos get_cursor_position_x11(void) {
 
     display = XOpenDisplay(NULL);
     if (display == NULL) {
-        return (Fl_Pos){0, 0};
+        return (FlPos){0, 0};
     }
 
     root_window = DefaultRootWindow(display);
@@ -184,7 +184,7 @@ Fl_Pos get_cursor_position_x11(void) {
 
     XCloseDisplay(display);
 
-    return (Fl_Pos){root_x, root_y};
+    return (FlPos){root_x, root_y};
 }
 
 static Window x11_focused_window(Display* display) {

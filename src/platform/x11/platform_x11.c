@@ -1541,11 +1541,11 @@ bool Platform_BuildFeature(const char* src, const char* out) {
     return true;
 }
 
-Fl_WindowList Platform_GetWindowTitles() {
+FlWindowList Platform_GetWindowTitles() {
  return Wm_GetWindowTitles();
 }
 
-Fl_WindowList Platform_GetWindowNames() {
+FlWindowList Platform_GetWindowNames() {
   return Wm_GetWindowNames();
 }
 
@@ -1657,7 +1657,7 @@ void Platform_InitUI(void) {
 }
 void Platform_ShutdownUI(void) {
 }
-Fl_Pos Platform_GetCursorPos(void) {
+FlPos Platform_GetCursorPos(void) {
     return Wm_GetCursorPosition();
 }
 

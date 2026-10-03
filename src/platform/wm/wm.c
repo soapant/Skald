@@ -107,9 +107,9 @@ char* Wm_Paste(char* content) {
     return NULL;
 }
 
-Fl_WindowList Wm_GetWindowTitles() {
-    Fl_WindowList result;
-    Fl_WindowList empty = { .windows = NULL, .count = 0 };
+FlWindowList Wm_GetWindowTitles() {
+    FlWindowList result;
+    FlWindowList empty = { .windows = NULL, .count = 0 };
     if (i3_is_active()) {
         result = get_window_titles_i3();
         if (result.windows != NULL) return result;
@@ -129,9 +129,9 @@ Fl_WindowList Wm_GetWindowTitles() {
     log_error("GetWindowTitles Didnt Work");
     return empty;
 }
-Fl_WindowList Wm_GetWindowNames() {
-    Fl_WindowList result;
-    Fl_WindowList empty = { .windows = NULL, .count = 0 };
+FlWindowList Wm_GetWindowNames() {
+    FlWindowList result;
+    FlWindowList empty = { .windows = NULL, .count = 0 };
     if (i3_is_active()) {
         result = get_window_names_i3();
         if (result.windows != NULL) return result;
@@ -152,9 +152,9 @@ Fl_WindowList Wm_GetWindowNames() {
     return empty;
 }
 
-Fl_Pos Wm_GetCursorPosition() {
-    Fl_Pos result;
-    Fl_Pos empty = { .x = 0, .y = 0 };
+FlPos Wm_GetCursorPosition() {
+    FlPos result;
+    FlPos empty = { .x = 0, .y = 0 };
     if (i3_is_active()) {
         result = get_cursor_position_i3();
         if (result.x != 0) return result;

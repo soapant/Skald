@@ -7,13 +7,9 @@ static bool g_recording = false;
 static FlThread g_thread = NULL;
 
 static void* recorder_loop(void* arg) {
-  (void)arg;
   while (1) {
-    if (!g_recording) { fl_sleep(0.05); continue; }
     FlKeyEvent e;
     while (fl_poll_key(&e)) {
-      if (!e.down) continue;
-      if (e.repeat) continue;
       printf("mods=%d vk=%d sc=%d\n", e.mods, e.vk, e.scancode);
     }
     fl_sleep(0.1);

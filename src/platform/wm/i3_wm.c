@@ -326,7 +326,7 @@ bool focus_window_title_i3(char* title) {
 
 typedef struct {
     bool names;
-    Fl_WindowList list;
+    FlWindowList list;
 } I3ListBuild;
 
 static void i3_collect_list(const I3Leaf* leaf, void* user) {
@@ -343,8 +343,8 @@ static void i3_collect_list(const I3Leaf* leaf, void* user) {
     b->list.windows[b->list.count++] = strdup(buffer);
 }
 
-static Fl_WindowList i3_build_list(bool names) {
-    Fl_WindowList list = { .windows = NULL, .count = 0 };
+static FlWindowList i3_build_list(bool names) {
+    FlWindowList list = { .windows = NULL, .count = 0 };
     if (!i3_ensure_sock()) return list;
     char* json = NULL;
     if (!i3_get_tree(&json)) return list;
@@ -358,17 +358,17 @@ static Fl_WindowList i3_build_list(bool names) {
     return build.list;
 }
 
-Fl_WindowList get_window_titles_i3() {
+FlWindowList get_window_titles_i3() {
     return i3_build_list(false);
 }
 
-Fl_WindowList get_window_names_i3() {
+FlWindowList get_window_names_i3() {
     return i3_build_list(true);
 }
 
-Fl_Pos get_cursor_position_i3(void) {
-    if (!i3_ensure_sock()) return (Fl_Pos){0, 0};
-    return (Fl_Pos){0, 0};
+FlPos get_cursor_position_i3(void) {
+    if (!i3_ensure_sock()) return (FlPos){0, 0};
+    return (FlPos){0, 0};
 }
 
 bool close_active_window_i3(void) {
