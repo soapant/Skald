@@ -258,7 +258,7 @@ static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent* key) {
                 }
                 if (WH_TO_HWND(FlintContext_Get()->window.hListBox) && IsWindow(WH_TO_HWND(FlintContext_Get()->window.hListBox))) {
                     UI_LB_SetFont(FlintContext_Get()->window.hListBox, g_win32_hMainFont);
-                    int newItemH = FlintRowHeight();
+                    int newItemH = PromptRowHeight();
                     UI_LB_SetItemHeight(FlintContext_Get()->window.hListBox, newItemH);
                 }
                 HWND hPopup = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
@@ -647,7 +647,7 @@ FlintContext_Get()->window.filter_cursor = (int)s;
     case WM_MEASUREITEM: {
       MEASUREITEMSTRUCT* pmis = (MEASUREITEMSTRUCT*)lParam;
         if (pmis->CtlID == IDC_LIST_BOX) {
-          int h = FlintRowHeight();
+          int h = PromptRowHeight();
           pmis->itemHeight = h;
             return TRUE;
         }
@@ -661,14 +661,14 @@ FlintContext_Get()->window.filter_cursor = (int)s;
               return TRUE;
             }
           if (RoundedCorners && CornerRadius > 0) {
-            int R = FLINT_SEL_RADIUS;
+            int R = PROMPT_SEL_RADIUS;
             if (R > CornerRadius) R = CornerRadius;
-            int t = FLINT_SEL_INSET;
+            int t = PROMPT_SEL_INSET;
             RECT inner = pdis->rcItem;
-            inner.left += FLINT_SEL_X + t;
-            inner.top += FLINT_SEL_TOP_INSET + t;
-            inner.right -= FLINT_SEL_X + t;
-            inner.bottom -= FLINT_SEL_TOP_INSET + t;
+            inner.left += PROMPT_SEL_X + t;
+            inner.top += PROMPT_SEL_TOP_INSET + t;
+            inner.right -= PROMPT_SEL_X + t;
+            inner.bottom -= PROMPT_SEL_TOP_INSET + t;
             if (inner.right <= inner.left || inner.bottom <= inner.top) { inner = pdis->rcItem; t = 0; }
             int innerR = R - 1; if (innerR < 0) innerR = 0;
             {
@@ -777,7 +777,7 @@ FlintContext_Get()->window.filter_cursor = (int)s;
             
             SetBkMode(pdis->hDC, TRANSPARENT);
             RECT textRect = pdis->rcItem;
-            textRect.left += FLINT_ITEM_TEXT_X;
+            textRect.left += PROMPT_ITEM_TEXT_X;
           
             Platform_SetPreRenderStateWin32(textBuffer, &textRect);
             Platform_SetDrawContextWin32(pdis->hDC);
@@ -870,9 +870,9 @@ FlintContext_Get()->window.filter_cursor = (int)s;
           SIZE sz;
           GetTextExtentPoint32W(paintDC, wmode, (int)wcslen(wmode), &sz);
           RECT modeRect;
-          modeRect.right = rect.right - FLINT_FOOTER_PAD;
+          modeRect.right = rect.right - PROMPT_FOOTER_PAD;
           modeRect.left = modeRect.right - sz.cx;
-          modeRect.top = rect.bottom - FLINT_FOOTER_Y_FROM_BOTTOM;
+          modeRect.top = rect.bottom - PROMPT_FOOTER_Y_FROM_BOTTOM;
           modeRect.bottom = modeRect.top + sz.cy;
           DrawTextW(paintDC, wmode, -1, &modeRect, DT_LEFT | DT_TOP | DT_SINGLELINE);
           SelectObject(paintDC, hOldFont);
@@ -885,9 +885,9 @@ FlintContext_Get()->window.filter_cursor = (int)s;
           SIZE sz;
           GetTextExtentPoint32W(paintDC, wtitle, (int)wcslen(wtitle), &sz);
           RECT titleRect;
-          titleRect.left = FLINT_FOOTER_X;
-          titleRect.top = rect.bottom - FLINT_FOOTER_Y_FROM_BOTTOM;
-          titleRect.right = titleRect.left + sz.cx + FLINT_FOOTER_PAD;
+          titleRect.left = PROMPT_FOOTER_X;
+          titleRect.top = rect.bottom - PROMPT_FOOTER_Y_FROM_BOTTOM;
+          titleRect.right = titleRect.left + sz.cx + PROMPT_FOOTER_PAD;
           titleRect.bottom = titleRect.top + sz.cy;
           COLORREF titleColor;
           if ((lb ? lb->populated_count : 0) < 25) {

@@ -82,12 +82,12 @@ Before adding a `fl_` symbol, check it is not already in this list.
 - **DO NOT** reintroduce a bare literal for any quantity named in `prompt_geometry.h` on either platform. If a number is missing, add a constant there.
 - **DO NOT** change an X11 geometry value to "fix" a divergence — change the Win32 side. X11's current pixels are the target.
 - Win32 prompt geometry that must match X11, and how it is achieved:
-  - `EDIT` child at `(FLINT_EDIT_INSET, FLINT_EDIT_INSET)`, width `layout->w - FLINT_EDIT_SCROLL_PAD`, height **the font's real `tm.tmHeight`** (not a constant) — this is what makes the caret land on X11's `14 + (ascent+descent-FontSize)/2`. See `common_ui_win32.c` `CreateChildControls`.
+  - `EDIT` child at `(PROMPT_EDIT_INSET, PROMPT_EDIT_INSET)`, width `layout->w - PROMPT_EDIT_SCROLL_PAD`, height **the font's real `tm.tmHeight`** (not a constant) — this is what makes the caret land on X11's `14 + (ascent+descent-FontSize)/2`. See `common_ui_win32.c` `CreateChildControls`.
   - `EM_SETMARGINS` with `EC_LEFTMARGIN|EC_RIGHTMARGIN` and lParam `MAKELONG(0,0)` on both `EDIT` controls. This removes the control's built-in 1–2 px text margin, which is the reason the old code had `+2` fudges in its caret maths. **If you add an offset here, the caret drifts.**
-  - `LISTBOX` child at `x = 0`, `y = FlintListTop()`, `width = layout->w`, `height = layout->h - FlintListTop() - FlintListBottomMargin()`.
+  - `LISTBOX` child at `x = 0`, `y = PromptListTop()`, `width = layout->w`, `height = layout->h - PromptListTop() - PromptListBottomMargin()`.
   - `LISTBOX` **must** carry `LBS_NOINTEGRALHEIGHT`. Without it Windows rounds `LB_SETITEMHEIGHT` to a multiple of the font line height and vertically centres the item block, so row 0 is not at the list top — this was the main cause of the listbox y offset being wrong.
-  - Item text x is `FLINT_ITEM_TEXT_X` relative to the listbox client, which is now popup x 0.
-  - Rounded selection rect insets horizontally by `FLINT_SEL_X` to reproduce X11's `bx=4`.
+  - Item text x is `PROMPT_ITEM_TEXT_X` relative to the listbox client, which is now popup x 0.
+  - Rounded selection rect insets horizontally by `PROMPT_SEL_X` to reproduce X11's `bx=4`.
   - `win32_apply_rounded_corners` is called for the prompt/edit/settings popups but X11 can only shape **non**-override-redirect windows (`helpers_x11.c` `x11_apply_shape_rounded` is gated `!override_redirect`). Widgets and message popups are override-redirect on X11 and therefore never rounded, while Win32 does round them. Inert while `RoundedCorners = false`.
 - `Platform_GetUIScale()` is hardcoded `1.0f` on Win32 (`ui_scale_win32.c`). It is still consumed by `CalculateWindowMetrics` so the sizing logic matches X11, but Windows has no DPI awareness anywhere in the tree — no `LOGPIXELSX`, `MulDiv`, `GetDpiForWindow`, or `SetProcessDpiAwarenessContext`.
 
