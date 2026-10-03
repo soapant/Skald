@@ -192,7 +192,7 @@ LRESULT CALLBACK EditPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
           GetClientRect(hwnd, &rect);
 
         if (!g_edit_popup_font) g_edit_popup_font = CreateCustomNerdFont(FontSize, UsedFont);
-          int lineHeight = FontSize + FLINT_EDIT_H_BONUS;
+          int lineHeight = FontSize + PROMPT_EDIT_H_BONUS;
           {
             HDC probe = CreateCompatibleDC(NULL);
             if (probe) {
@@ -206,19 +206,19 @@ LRESULT CALLBACK EditPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
           }
 
           int edit_h = lineHeight;
-          int edit_y = (rect.bottom / 2) + FLINT_EDITPOPUP_CENTER_OFFSET_Y;
-          if (edit_y < FLINT_EDITPOPUP_INSET) edit_y = FLINT_EDITPOPUP_INSET;
-          if (edit_y + edit_h > rect.bottom - FLINT_EDITPOPUP_INSET) {
-            edit_h = rect.bottom - FLINT_EDITPOPUP_INSET - edit_y;
+          int edit_y = (rect.bottom / 2) + PROMPT_EDITPOPUP_CENTER_OFFSET_Y;
+          if (edit_y < PROMPT_EDITPOPUP_INSET) edit_y = PROMPT_EDITPOPUP_INSET;
+          if (edit_y + edit_h > rect.bottom - PROMPT_EDITPOPUP_INSET) {
+            edit_h = rect.bottom - PROMPT_EDITPOPUP_INSET - edit_y;
             if (edit_h < 1) edit_h = 1;
           }
 
           data->hEdit = WH_FROM_HWND(CreateWindowExA(
                                         0, "EDIT", data->text ? data->text : "",
                                         WS_CHILD | WS_VISIBLE | ES_LEFT | ES_AUTOHSCROLL,
-                                        FLINT_EDITPOPUP_INSET,
+                                        PROMPT_EDITPOPUP_INSET,
                                         edit_y,
-                                        rect.right - FLINT_EDITPOPUP_INSET * 2, edit_h,
+                                        rect.right - PROMPT_EDITPOPUP_INSET * 2, edit_h,
                                         hwnd, (HMENU)1001, hInstance, NULL
                                        ));
 
@@ -287,9 +287,9 @@ LRESULT CALLBACK EditPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
             GetTextExtentPoint32W(hdc, wmode, (int)wcslen(wmode), &msize);
 
             RECT modeRect;
-            modeRect.left = FLINT_EDITPOPUP_MODE_X;
-            modeRect.top = FLINT_EDITPOPUP_MODE_Y;
-            modeRect.right = rect.right - FLINT_EDITPOPUP_MODE_X;
+            modeRect.left = PROMPT_EDITPOPUP_MODE_X;
+            modeRect.top = PROMPT_EDITPOPUP_MODE_Y;
+            modeRect.right = rect.right - PROMPT_EDITPOPUP_MODE_X;
             modeRect.bottom = modeRect.top + msize.cy;
 
             DrawTextW(hdc, wmode, -1, &modeRect, DT_LEFT | DT_TOP | DT_SINGLELINE);

@@ -76,10 +76,10 @@ void Platform_WM_GetMonitorGeometry(int *ox, int *oy, int *ow, int *oh) {
 void Platform_GetTextLayoutMetrics(int* line_h, int* row_h, int* list_top) {
     PROFILE_START(timer);
     int lh = FontSize;
-    int rh = FlintRowHeight();
+    int rh = PromptRowHeight();
     if (line_h) *line_h = lh;
     if (row_h) *row_h = rh;
-    if (list_top) *list_top = FlintListTop();
+    if (list_top) *list_top = PromptListTop();
     PROFILE_END_VAR(timer, "wm_platform_win32:Platform_GetTextLayoutMetrics");
 }
 
@@ -92,7 +92,7 @@ char* Platform_PromptUser(WindowManager* wm, const PromptSpec* spec) {
   if (window_list) {
     for (count = 0; count < 8192 && window_list[count]; count++) {}
   }
-  int item_height = FlintRowHeight();
+  int item_height = PromptRowHeight();
   RefreshCallback refresh_callback = spec->refresh;
   EnterCallback enter_callback = spec->enter;
   CtrlEnterCallback ctrl_enter_callback = spec->ctrl_enter;
