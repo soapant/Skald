@@ -12,6 +12,21 @@ static const char* g_mode_names[] = { "Normal", "Insert", "Visual" };
 int last_index = 0;
 char* selection_feature = "";
 
+const char* Vim_ModeName(EditorMode mode) {
+    if ((int)mode < 0 || (int)mode > 2) return g_mode_names[0];
+    return g_mode_names[mode];
+}
+
+static EditorMode ActiveMode(void) {
+    WindowManager* wm = WindowManager_Get();
+    Popup* top = wm ? WindowManager_GetTopPopup(wm) : NULL;
+    if (top && top->type == POPUP_EDIT) {
+        WMEditPopupData* e = (WMEditPopupData*)top;
+        if (e) return e->mode;
+    }
+    return FlintContext_Get()->vim_mode;
+}
+
 void SetModeWithListBox(EditorMode mode, ListBoxInfo* lb) {
     g_current_mode = mode;
     g_vim_mode = g_mode_names[mode];
@@ -46,17 +61,24 @@ void SetModeWithListBox(EditorMode mode, ListBoxInfo* lb) {
     }
 #endif
 }
-
 void SetMode(EditorMode mode) {
+    WindowManager* wm = WindowManager_Get();
+    Popup* top = wm ? WindowManager_GetTopPopup(wm) : NULL;
+    if (top && top->type == POPUP_EDIT) {
+        WMEditPopupData* e = (WMEditPopupData*)top;
+        if (e) { e->mode = mode; return; }
+    }
     SetModeWithListBox(mode, NULL);
 }
 
 bool IsNormalMode(void) {
-    return g_current_mode == MODE_NORMAL;
+    return ActiveMode() == MODE_NORMAL;
 }
+
 bool IsInsertMode(void) {
-    return g_current_mode == MODE_INSERT;
+    return ActiveMode() == MODE_INSERT;
 }
+
 bool IsVisualMode(void) {
-    return g_current_mode == MODE_VISUAL;
+    return ActiveMode() == MODE_VISUAL;
 }

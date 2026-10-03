@@ -14,15 +14,13 @@ static void EditPopup_OnShow(Popup* self) {
     PROFILE_START(timer);
     EditPopupDataInternal* data = (EditPopupDataInternal*)self;
     data->saved_mode = g_current_mode;
-    SetMode(MODE_INSERT);
+    data->mode = MODE_INSERT;
     Platform_EditPopupShowWindow(self);
     PROFILE_END_VAR(timer, "window_manager:EditPopup_OnShow");
 }
 
 static void EditPopup_OnHide(Popup* self) {
     PROFILE_START(timer);
-    EditPopupDataInternal* data = (EditPopupDataInternal*)self;
-    SetMode(data->saved_mode);
     Platform_EditPopupHideWindow(self);
     PROFILE_END_VAR(timer, "window_manager:EditPopup_OnHide");
 }
