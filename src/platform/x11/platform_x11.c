@@ -1643,6 +1643,10 @@ void Platform_CleanupPlatformResources(void) {
         extern void x11_img_cache_free_all(void);
         x11_img_cache_free_all();
     }
+    {
+        extern void x11_wm_cleanup_cursor_display(void);
+        x11_wm_cleanup_cursor_display();
+    }
     extern void FcFini(void);
     FcFini();
 }
@@ -1658,26 +1662,33 @@ void Platform_InitUI(void) {
 void Platform_ShutdownUI(void) {
 }
 FlPos Platform_GetCursorPos(void) {
-    return Wm_GetCursorPosition();
+    PROFILE_START(timer);
+    FlPos p = Wm_GetCursorPosition();
+    PROFILE_END_VAR(timer, "platform_x11:Platform_GetCursorPos");
+    return p;
 }
 
 bool Platform_MoveToPos(int x, int y) {
+    PROFILE_START(timer);
     Display* dpy = get_display();
-    if (!dpy) return false;
+    if (!dpy) { PROFILE_END_VAR(timer, "platform_x11:Platform_MoveToPos"); return false; }
 #if __has_include(<X11/extensions/XTest.h>)
     XTestFakeMotionEvent(dpy, -1, x, y, CurrentTime);
     XSync(dpy, False);
+    PROFILE_END_VAR(timer, "platform_x11:Platform_MoveToPos");
     return true;
 #else
     XWarpPointer(dpy, None, DefaultRootWindow(dpy), 0, 0, 0, 0, x, y);
-    XFlush(dpy);
+    XSync(dpy, False);
+    PROFILE_END_VAR(timer, "platform_x11:Platform_MoveToPos");
     return true;
 #endif
 }
 
 bool Platform_Click(void) {
+    PROFILE_START(timer);
     Display* dpy = get_display();
-    if (!dpy) return false;
+    if (!dpy) { PROFILE_END_VAR(timer, "platform_x11:Platform_Click"); return false; }
 #if __has_include(<X11/extensions/XTest.h>)
     usleep(60000);
     XTestFakeButtonEvent(dpy, 1, True, CurrentTime);
@@ -1685,8 +1696,10 @@ bool Platform_Click(void) {
     usleep(30000);
     XTestFakeButtonEvent(dpy, 1, False, CurrentTime);
     XSync(dpy, False);
+    PROFILE_END_VAR(timer, "platform_x11:Platform_Click");
     return true;
 #else
+    PROFILE_END_VAR(timer, "platform_x11:Platform_Click");
     return false;
 #endif
 }
