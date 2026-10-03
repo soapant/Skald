@@ -66,7 +66,17 @@ void SetMode(EditorMode mode) {
     Popup* top = wm ? WindowManager_GetTopPopup(wm) : NULL;
     if (top && top->type == POPUP_EDIT) {
         WMEditPopupData* e = (WMEditPopupData*)top;
-        if (e) { e->mode = mode; return; }
+        if (e) {
+            e->mode = mode;
+#if defined(_WIN32)
+            if (WH_TO_HWND(e->hEdit) && IsWindow(WH_TO_HWND(e->hEdit))) {
+                UpdateTextCaret(e->hEdit);
+            }
+            HWND hPopup = WH_TO_HWND(top->handle);
+            if (hPopup && IsWindow(hPopup)) InvalidateRect(hPopup, NULL, TRUE);
+#endif
+            return;
+        }
     }
     SetModeWithListBox(mode, NULL);
 }
