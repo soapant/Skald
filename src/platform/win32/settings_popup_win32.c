@@ -8,6 +8,7 @@
 #include <shellapi.h>
 #include "config.h"
 #include "platform/ui.h"
+#include "platform/draw.h"
 #include "platform/win32/subclasses_win32.h"
 #include "wingdi.h"
 #include "platform/platform.h"
@@ -87,6 +88,13 @@ LRESULT CALLBACK SettingsPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
           DrawTextW(hdc, wmode, -1, &modeRect, DT_LEFT | DT_TOP);
       }
 
+    {
+      Platform_SetDrawContextWin32(hdc);
+      Platform_DrawPromptEditText(g_win32_prompt_state);
+      Platform_DrawPromptEditCursor(g_win32_prompt_state);
+      Platform_SetDrawContextWin32(NULL);
+    }
+
     wchar_t wtitle[256];
     MultiByteToWideChar(CP_UTF8, 0, "Settings", -1, wtitle, 256);
 
@@ -115,6 +123,82 @@ LRESULT CALLBACK SettingsPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
       EndPaint(hwnd, &ps);
       return 0;
   }
+  case WM_KEYDOWN: {
+      bool ctrl_pressed = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
+      if (wParam == VK_CONTROL || wParam == VK_SHIFT) break;
+      if (wParam == VK_ESCAPE) {
+        if (IsInsertMode()) {
+          SetModeWithListBox(MODE_NORMAL, GetLBFromChild(hwnd));
+        } else {
+          DestroyWindow(hwnd);
+          FlintContext_Get()->window.hSettings = WH_NULL;
+          return 0;
+        }
+      }
+      if (wParam == VK_BACK) {
+        if (ctrl_pressed) {
+          UI_SetText("");
+          ListBoxInfo* lbc = GetLBFromChild(hwnd);
+          if (lbc) UI_Redraw(lbc, FlintContext_Get()->window.hListBox);
+        } else {
+          PromptState* ps = g_win32_prompt_state;
+          if (ps) {
+            size_t len = strlen(ps->filter);
+            size_t cur = ps->cursor;
+            if (cur > len) cur = len;
+            if (cur > 0) {
+              memmove(ps->filter + cur - 1, ps->filter + cur, len - cur + 1);
+              ps->cursor = cur - 1;
+            }
+          }
+        }
+        InvalidateRect(hwnd, NULL, TRUE);
+        return 0;
+      }
+      if (wParam == VK_DELETE) {
+        PromptState* ps = g_win32_prompt_state;
+        if (ps) {
+          size_t len = strlen(ps->filter);
+          size_t cur = ps->cursor;
+          if (cur > len) cur = len;
+          if (cur < len) memmove(ps->filter + cur, ps->filter + cur + 1, len - cur);
+        }
+        InvalidateRect(hwnd, NULL, TRUE);
+        return 0;
+      }
+      if (wParam == VK_DOWN && ctrl_pressed) {
+        char text[256];
+        UI_GetCurrentTextEdit(text, sizeof(text));
+        UI_SetCursorPosition((int)strlen(text));
+      }
+      if (wParam == VK_UP && ctrl_pressed) {
+        UI_SetCursorPosition(1);
+      }
+      break;
+  }
+
+  case WM_CHAR: {
+      if (wParam == 0x08 || wParam == 0x7F) return 0;
+      if (wParam >= 0x20 && IsInsertMode()) {
+        PromptState* ps = g_win32_prompt_state;
+        if (ps) {
+          size_t len = strlen(ps->filter);
+          size_t cur = ps->cursor;
+          if (cur > len) cur = len;
+          if (len < sizeof(ps->filter) - 2) {
+            memmove(ps->filter + cur + 1, ps->filter + cur, len - cur + 1);
+            ps->filter[cur] = (char)wParam;
+            ps->cursor = cur + 1;
+          }
+          ListBoxInfo* lbc = GetLBFromChild(hwnd);
+          if (lbc) UI_Redraw(lbc, FlintContext_Get()->window.hListBox);
+          InvalidateRect(hwnd, NULL, FALSE);
+          return 0;
+        }
+      }
+      break;
+  }
+
   case WM_DESTROY: {
       FlintContext_Get()->window.hSettings = WH_NULL;
       break;
@@ -122,114 +206,6 @@ LRESULT CALLBACK SettingsPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
   }
   return DefWindowProcA(hwnd, msg, wParam, lParam);
 }
-
-LRESULT CALLBACK SettingsEditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
-  if (msg == WM_PAINT) {
-    PAINTSTRUCT ps;
-    HDC hdc = BeginPaint(hwnd, &ps);
-    RECT rc; GetClientRect(hwnd, &rc);
-    if (rc.right <= 0 || rc.bottom <= 0) { EndPaint(hwnd, &ps); return 0; }
-    HDC memDC = CreateCompatibleDC(hdc);
-    HBITMAP memBmp = CreateCompatibleBitmap(hdc, rc.right, rc.bottom);
-    if (!memDC || !memBmp) {
-      if (memDC) DeleteDC(memDC);
-      if (memBmp) DeleteObject(memBmp);
-      EndPaint(hwnd, &ps);
-      return DefSubclassProc(hwnd, msg, wParam, lParam);
-    }
-    HBITMAP oldBmp = (HBITMAP)SelectObject(memDC, memBmp);
-    HWND hPar = GetParent(hwnd);
-    if (hPar && IsWindow(hPar)) {
-      RECT winRc; GetClientRect(hPar, &winRc);
-      int winW = winRc.right - winRc.left;
-      int winH = winRc.bottom - winRc.top;
-      POINT pt = {0,0};
-      ClientToScreen(hwnd, &pt);
-      ScreenToClient(hPar, &pt);
-      if (EnableShaders && ShaderPreset != 0 && winW > 0 && winH > 0) {
-        win32_draw_background_slice(memDC, &rc, COLOR_BG, winW, winH, pt.x, pt.y);
-      } else {
-        HBRUSH br = CreateSolidBrush(COLOR_BG);
-        FillRect(memDC, &rc, br);
-        DeleteObject(br);
-      }
-    } else {
-      HBRUSH br = CreateSolidBrush(COLOR_BG);
-      FillRect(memDC, &rc, br);
-      DeleteObject(br);
-    }
-    SendMessage(hwnd, WM_PRINTCLIENT, (WPARAM)memDC, PRF_CLIENT);
-    BitBlt(hdc, ps.rcPaint.left, ps.rcPaint.top, ps.rcPaint.right - ps.rcPaint.left, ps.rcPaint.bottom - ps.rcPaint.top, memDC, ps.rcPaint.left, ps.rcPaint.top, SRCCOPY);
-    SelectObject(memDC, oldBmp);
-    DeleteObject(memBmp);
-    DeleteDC(memDC);
-    EndPaint(hwnd, &ps);
-    return 0;
-  }
-  if (msg == WM_ERASEBKGND) return 1;
-  ListBoxInfo* lb = GetLBFromChild(hwnd);
-  (void)hwnd;
-    
-    if (msg == WM_KEYDOWN) {
-      FlintContext_Get()->window.hActiveEditControl = FlintContext_Get()->window.hEditControl;
-        bool ctrl_pressed = (GetKeyState(VK_CONTROL) & 0x8000);
-        if (wParam == VK_CONTROL || wParam == VK_SHIFT) {
-          return DefSubclassProc(hwnd, msg, wParam, lParam);
-        }
-      
-        if (wParam == VK_ESCAPE) {
-          if (IsInsertMode()) {
-            SetModeWithListBox(MODE_NORMAL, lb);
-          }else {
-            DestroyWindow(GetParent(hwnd));
-              FlintContext_Get()->window.hSettings = WH_NULL;
-              return 1;
-          }
-        }
-      if (wParam == VK_BACK) {
-        if (ctrl_pressed) {
-          UI_SetText("");
-            ListBoxInfo* lbc = GetLBFromChild(hwnd);
-            if (lbc) UI_Redraw(lbc, FlintContext_Get()->window.hListBox);
-            InvalidateRect(hwnd, NULL, TRUE);
-            return 0;
-        } else {
-          char buf[512]={0}; GetWindowTextA(hwnd, buf, sizeof(buf));
-          DWORD s=0,e=0; SendMessageA(hwnd, EM_GETSEL, (WPARAM)&s, (WPARAM)&e);
-          int len=(int)strlen(buf);
-          if (s!=e) { memmove(buf+s, buf+e, len-e+1); SetWindowTextA(hwnd, buf); SendMessageA(hwnd, EM_SETSEL, s, s); }
-          else if (s>0) { memmove(buf+s-1, buf+s, len-s+1); SetWindowTextA(hwnd, buf); SendMessageA(hwnd, EM_SETSEL, s-1, s-1); }
-          InvalidateRect(hwnd, NULL, TRUE);
-          return 0;
-        }
-      }
-      if (wParam == VK_DELETE) {
-        char buf[512]={0}; GetWindowTextA(hwnd, buf, sizeof(buf));
-        DWORD s=0,e=0; SendMessageA(hwnd, EM_GETSEL, (WPARAM)&s, (WPARAM)&e);
-        int len=(int)strlen(buf);
-        if (s!=e) { memmove(buf+s, buf+e, len-e+1); SetWindowTextA(hwnd, buf); SendMessageA(hwnd, EM_SETSEL, s, s); }
-        else if (s < (DWORD)len) { memmove(buf+s, buf+s+1, len-s); SetWindowTextA(hwnd, buf); SendMessageA(hwnd, EM_SETSEL, s, s); }
-        InvalidateRect(hwnd, NULL, TRUE);
-        return 0;
-      }
-      if (wParam == VK_DOWN) {
-        if (ctrl_pressed) {
-          char text[256];
-          UI_GetCurrentTextEdit(text,sizeof(text));
-          UI_SetCursorPosition(strlen(text));
-        }
-      }
-      if (wParam == VK_UP) {
-        if (ctrl_pressed) {
-          UI_SetCursorPosition(1);
-        }
-      }
-    } 
-  if (msg == WM_CHAR) {
-    if (wParam == 0x08 || wParam == 0x7F) return 0;
-  }
-  return DefSubclassProc(hwnd, msg, wParam, lParam);
-} 
 
 static HFONT s_settings_font = NULL;
 
@@ -257,7 +233,7 @@ bool Platform_SettingsPopupShowWindow(Popup* self, int x, int y, int w, int h) {
   SetTimer(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), 999, 50, NULL);
   SettingsCreateChildControls(FlintContext_Get()->window.hPopupWnd, s_settings_font, &layout);
   SetLayeredWindowAttributes(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), 0, (BYTE)WindowOpacity, LWA_ALPHA);
-  ForceWindowFocus(FlintContext_Get()->window.hPopupWnd, FlintContext_Get()->window.hEditControl);
+  ForceWindowFocus(FlintContext_Get()->window.hPopupWnd, WH_NULL);
   return true;
 }
 
@@ -287,16 +263,7 @@ bool Platform_SettingsPopupOnKey(Popup* self, const PopupKeyEvent* key) {
 }
 
 void SettingsCreateChildControls(WindowHandle hwndParent, HFONT hFont,const WindowLayout* layout) {
-  HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtrA(WH_TO_HWND(hwndParent), GWLP_HINSTANCE);
-
-  FlintContext_Get()->window.hEditControl = WH_FROM_HWND(CreateWindowExA(
-      0, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
-      20, 50, layout->w - 40, 40, WH_TO_HWND(hwndParent), (HMENU)IDC_INPUT_BOX, hInstance, NULL
-      ));
-
-  if (WH_TO_HWND(FlintContext_Get()->window.hEditControl) == NULL) return;
-
-  FlintContext_Get()->window.hActiveEditControl = FlintContext_Get()->window.hEditControl;
+  (void)hwndParent;
+  (void)layout;
   UI_Edit_SetFont(hFont);
-  SetWindowSubclass(WH_TO_HWND(FlintContext_Get()->window.hEditControl), SettingsEditSubclassProc, 0, 0);
 }

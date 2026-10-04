@@ -181,7 +181,6 @@ char* Platform_PromptUser(WindowManager* wm, const PromptSpec* spec) {
   CreateChildControls(FlintContext_Get()->window.hPopupWnd, hCustomFont, window_list, count, &layout, lb_ptr);
   if (render_callback) {
     if (WH_TO_HWND(FlintContext_Get()->window.hListBox)) ShowWindow(WH_TO_HWND(FlintContext_Get()->window.hListBox), SW_HIDE);
-    if (WH_TO_HWND(FlintContext_Get()->window.hEditControl)) ShowWindow(WH_TO_HWND(FlintContext_Get()->window.hEditControl), SW_HIDE);
   }
   if (refresh_callback && has_listbox && lb_ptr) {
       refresh_callback("", lb_ptr);
@@ -202,7 +201,7 @@ char* Platform_PromptUser(WindowManager* wm, const PromptSpec* spec) {
     RequestInitialNavigation(last_index);
   }
 
-  ForceWindowFocus(FlintContext_Get()->window.hPopupWnd, FlintContext_Get()->window.hEditControl);
+  ForceWindowFocus(FlintContext_Get()->window.hPopupWnd, WH_NULL);
 
 
     log_info("Platform_PromptUser spec=%p", spec);;

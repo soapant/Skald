@@ -124,11 +124,10 @@ LRESULT CALLBACK EditPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
     }
 
     case WM_DESTROY: {
-      FlintContext_Get()->window.hActiveEditControl = FlintContext_Get()->window.hEditControl;
         if (data) {
               SetWindowLongPtrA(hwnd, GWLP_USERDATA, 0);
         }
-        ForceWindowFocus(FlintContext_Get()->window.hPopupWnd, FlintContext_Get()->window.hEditControl);
+        ForceWindowFocus(FlintContext_Get()->window.hPopupWnd, WH_NULL);
         last_index = lb ? lb->selected_index : -1;
         UpdateTextCaret();
         break;

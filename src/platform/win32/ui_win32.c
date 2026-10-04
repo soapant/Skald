@@ -349,16 +349,11 @@ void UI_SyncFilterFromEdit(FlintContext* ctx) {
             return;
         }
     }
-    HWND hEdit = WH_TO_HWND(ctx->window.hActiveEditControl);
-    if (!hEdit) hEdit = WH_TO_HWND(ctx->window.hEditControl);
-    if (!hEdit || !IsWindow(hEdit)) return;
-    char buf[sizeof(ctx->window.filter)];
-    GetWindowTextA(hEdit, buf, (int)sizeof(buf));
-    strncpy(ctx->window.filter, buf, sizeof(ctx->window.filter) - 1);
+    Win32TextTarget t;
+    if (!win32_resolve_text_target(&t) || !t.text) return;
+    strncpy(ctx->window.filter, t.text, sizeof(ctx->window.filter) - 1);
     ctx->window.filter[sizeof(ctx->window.filter) - 1] = '\0';
-    DWORD se = 0, ee = 0;
-    SendMessageA(hEdit, EM_GETSEL, (WPARAM)&se, (LPARAM)&ee);
-    ctx->window.filter_cursor = (int)se;
+    ctx->window.filter_cursor = win32_target_cursor(&t);
 }
 
 void UI_ApplyFilterToEdit(FlintContext* ctx) {
@@ -369,22 +364,12 @@ void UI_ApplyFilterToEdit(FlintContext* ctx) {
         ws->filter[sizeof(ws->filter)-1] = '\0';
         ws->cursor = ctx->window.filter_cursor;
     }
-    HWND hEdit = WH_TO_HWND(ctx->window.hEditControl);
-    if (!hEdit) hEdit = WH_TO_HWND(ctx->window.hActiveEditControl);
-    if (!hEdit || !IsWindow(hEdit)) return;
     int pos = ctx->window.filter_cursor;
     int len = (int)strlen(ctx->window.filter);
     if (pos < 0) pos = 0;
     if (pos > len) pos = len;
-    SetWindowTextA(hEdit, ctx->window.filter);
-    SendMessageA(hEdit, EM_SETSEL, (WPARAM)pos, (LPARAM)pos);
-    if (WH_TO_HWND(ctx->window.hActiveEditControl) &&
-        WH_TO_HWND(ctx->window.hActiveEditControl) != hEdit) {
-        HWND hActive = WH_TO_HWND(ctx->window.hActiveEditControl);
-        SetWindowTextA(hActive, ctx->window.filter);
-        SendMessageA(hActive, EM_SETSEL, (WPARAM)pos, (LPARAM)pos);
-    }
-    InvalidateRect(hEdit, NULL, FALSE);
+    UI_SetText(ctx->window.filter);
+    UI_SetCursorPosition(pos);
     if (ctx->prompt_callbacks.render != NULL) {
         HWND hPopup = WH_TO_HWND(ctx->window.hPopupWnd);
         if (hPopup && IsWindow(hPopup)) InvalidateRect(hPopup, NULL, FALSE);
@@ -414,17 +399,7 @@ void UI_SyncEditCursor(FlintContext* ctx, int pos) {
        if (pos > len) pos = len;
        ws->cursor = pos;
    }
-HWND hEdit = WH_TO_HWND(ctx->window.hEditControl);
-      if (!hEdit) hEdit = WH_TO_HWND(ctx->window.hActiveEditControl);
-      if (hEdit) {
-          SendMessageA(hEdit, EM_SETSEL, (WPARAM)pos, (LPARAM)pos);
-          InvalidateRect(hEdit, NULL, FALSE);
-      }
-      HWND hActive = WH_TO_HWND(ctx->window.hActiveEditControl);
-      if (hActive && hActive != hEdit && IsWindow(hActive)) {
-          SendMessageA(hActive, EM_SETSEL, (WPARAM)pos, (LPARAM)pos);
-          InvalidateRect(hActive, NULL, FALSE);
-      }
+    UI_SetCursorPosition(pos);
    if (ctx->prompt_callbacks.render != NULL) {
        HWND hPopup = WH_TO_HWND(ctx->window.hPopupWnd);
        if (hPopup && IsWindow(hPopup)) InvalidateRect(hPopup, NULL, FALSE);

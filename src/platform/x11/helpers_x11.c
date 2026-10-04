@@ -1,5 +1,6 @@
 #include "core/context.h"
 #include "deps/log.h"
+#include "core/window_manager.h"
 #include "core/modal.h"
 #include "config.h"
 #include <stdlib.h>
@@ -1332,4 +1333,12 @@ gchar* FindPlayerBusName(GDBusConnection *conn) {
         g_variant_unref(reply);
     }
     return player_name;
+}
+
+void UpdateTextCaret(void) {
+    PROFILE_START(timer);
+    WindowManager* wm = WindowManager_Get();
+    Popup* top = wm ? WindowManager_GetTopPopup(wm) : NULL;
+    if (top && top->vtable && top->vtable->on_render) top->vtable->on_render(top);
+    PROFILE_END_VAR(timer, "helpers_x11:UpdateTextCaret");
 }
