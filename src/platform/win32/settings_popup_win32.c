@@ -156,13 +156,7 @@ LRESULT CALLBACK SettingsPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
         return 0;
       }
       if (wParam == VK_DELETE) {
-        PromptState* ps = g_win32_prompt_state;
-        if (ps) {
-          size_t len = strlen(ps->filter);
-          size_t cur = ps->cursor;
-          if (cur > len) cur = len;
-          if (cur < len) memmove(ps->filter + cur, ps->filter + cur + 1, len - cur);
-        }
+        UI_DeleteForward();
         InvalidateRect(hwnd, NULL, TRUE);
         return 0;
       }
@@ -179,22 +173,11 @@ LRESULT CALLBACK SettingsPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lP
 
   case WM_CHAR: {
       if (wParam == 0x08 || wParam == 0x7F) return 0;
-      if (wParam >= 0x20 && IsInsertMode()) {
-        PromptState* ps = g_win32_prompt_state;
-        if (ps) {
-          size_t len = strlen(ps->filter);
-          size_t cur = ps->cursor;
-          if (cur > len) cur = len;
-          if (len < sizeof(ps->filter) - 2) {
-            memmove(ps->filter + cur + 1, ps->filter + cur, len - cur + 1);
-            ps->filter[cur] = (char)wParam;
-            ps->cursor = cur + 1;
-          }
-          ListBoxInfo* lbc = GetLBFromChild(hwnd);
-          if (lbc) UI_Redraw(lbc, FlintContext_Get()->window.hListBox);
-          InvalidateRect(hwnd, NULL, FALSE);
-          return 0;
-        }
+      if (wParam >= 0x20 && IsInsertMode() && UI_InsertChar((wchar_t)wParam) > 0) {
+        ListBoxInfo* lbc = GetLBFromChild(hwnd);
+        if (lbc) UI_Redraw(lbc, FlintContext_Get()->window.hListBox);
+        InvalidateRect(hwnd, NULL, FALSE);
+        return 0;
       }
       break;
   }

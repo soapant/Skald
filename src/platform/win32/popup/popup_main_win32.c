@@ -166,13 +166,7 @@ static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent* key) {
     }
 
     if (wParam == VK_DELETE) {
-        PromptState* ps = g_win32_prompt_state;
-        if (ps) {
-            size_t len = strlen(ps->filter);
-            size_t cur = ps->cursor;
-            if (cur > len) cur = len;
-            if (cur < len) memmove(ps->filter + cur, ps->filter + cur + 1, len - cur);
-        }
+        UI_DeleteForward();
         InvalidateRect(hwnd, NULL, TRUE);
         return true;
     }
@@ -375,23 +369,17 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     }
 case WM_CHAR: {
       if (s_swallow_next_char) { s_swallow_next_char = false; return 0; }
-      if (wParam >= 32 && FlintContext_Get()->prompt_callbacks.render != NULL && IsInsertMode()) {
-        PromptState* ps = g_win32_prompt_state;
-        if (ps) {
-            size_t len = strlen(ps->filter);
-            size_t cur = ps->cursor;
-            if (cur > len) cur = len;
-            if (len < sizeof(ps->filter) - 2) {
-                memmove(ps->filter + cur + 1, ps->filter + cur, len - cur + 1);
-                ps->filter[cur] = (char)wParam;
-                ps->cursor = cur + 1;
-            }
+      if (FlintContext_Get()->prompt_callbacks.render != NULL && IsInsertMode()) {
+        if (wParam >= 0x20 && UI_InsertChar((wchar_t)wParam) > 0) {
+          PromptState* ps = g_win32_prompt_state;
+          if (ps) {
             strncpy(FlintContext_Get()->window.filter, ps->filter, sizeof(FlintContext_Get()->window.filter) - 1);
             FlintContext_Get()->window.filter[sizeof(FlintContext_Get()->window.filter) - 1] = '\0';
             FlintContext_Get()->window.filter_cursor = (int)ps->cursor;
-            UI_Redraw(lb, FlintContext_Get()->window.hListBox);
-            InvalidateRect(hwnd, NULL, FALSE);
-            return 0;
+          }
+          UI_Redraw(lb, FlintContext_Get()->window.hListBox);
+          InvalidateRect(hwnd, NULL, FALSE);
+          return 0;
         }
       }
       break;
