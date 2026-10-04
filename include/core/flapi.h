@@ -78,6 +78,7 @@ char* fl_search_file_in_dir(const char* directory, const char* search_string,cha
 bool fl_get_all_files_from_dir(const char* dir_path, char** list_of_allowed_extensions, ListOfFiles* list_of_files, char** list_of_names_to_ignore, bool strip_extension);
 
 FlStringList fl_load_file_list(const char* filepath);
+long fl_load_file(const char* filepath, char* buffer, long buffer_size);
 char* fl_read_file_to_string(const char* path, size_t* out_len);
 long fl_read_entire_file(const char* full_path, char* buffer, long buffer_size);
 bool fl_write_string_to_file(const char* path, const char* content);
