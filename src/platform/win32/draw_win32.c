@@ -1,4 +1,6 @@
 #include "platform/draw.h"
+#include "core/prompt_geometry.h"
+#include "core/modal.h"
 #include "platform/platform.h"
 #include "platform/win32/win32_state.h"
 #include "config.h"
@@ -401,4 +403,69 @@ bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
     }
     PROFILE_END_VAR(timer, "win32:Platform_DrawImageAt");
     return ok;
+}
+
+static int win32_update_edit_scroll_offset(HDC hdc, const char* text, int text_len, int cursor, int width, int prev_scroll, int* out_cursor_x) {
+    int visible_w = width - PROMPT_EDIT_SCROLL_PAD;
+    int cursor_x = 0;
+    int text_w = 0;
+    if (text) {
+        if (cursor > 0) cursor_x = Platform_MeasureTextWidth(text, cursor, FontSize);
+        if (text_len > 0) text_w = Platform_MeasureTextWidth(text, text_len, FontSize);
+    }
+    (void)hdc;
+    int scroll = prev_scroll;
+    int margin = 0;
+    if (cursor_x - scroll > visible_w - margin) scroll = cursor_x - visible_w + margin;
+    if (cursor_x - scroll < margin) scroll = cursor_x - margin;
+    if (scroll < 0) scroll = 0;
+    if (text_w - scroll < visible_w && scroll > 0) {
+        if (text_w < visible_w) scroll = 0;
+        else scroll = text_w - visible_w;
+    }
+    if (cursor_x - scroll < 0) scroll = cursor_x;
+    if (cursor_x - scroll > visible_w) scroll = cursor_x - visible_w;
+    if (out_cursor_x) *out_cursor_x = cursor_x;
+    return scroll;
+}
+
+void Platform_DrawPromptEditText(PromptState* state) {
+    PROFILE_START(timer);
+    if (!state || !g_draw_hdc) { PROFILE_END_VAR(timer, "draw_win32:Platform_DrawPromptEditText"); return; }
+    int cursor_x = 0;
+    int text_len = (int)strlen(state->filter);
+    int scroll = win32_update_edit_scroll_offset(g_draw_hdc, state->filter, text_len, (int)state->cursor, state->width, state->scroll_offset, &cursor_x);
+    state->scroll_offset = scroll;
+    if (text_len > 0) {
+        FontHandle font = Platform_CreateFont(FontSize, UsedFont);
+        Platform_DrawTextRaw(PROMPT_EDIT_INSET - scroll, PROMPT_EDIT_INSET, state->filter, rgb_to_hex(COLOR_TEXT), font, "", 0, 0);
+        Platform_DestroyFont(font);
+    }
+    PROFILE_END_VAR(timer, "draw_win32:Platform_DrawPromptEditText");
+}
+
+void Platform_DrawPromptEditCursor(PromptState* state) {
+    PROFILE_START(timer);
+    if (!state || !g_draw_hdc) { PROFILE_END_VAR(timer, "draw_win32:Platform_DrawPromptEditCursor"); return; }
+    int cursor_x = 0;
+    win32_update_edit_scroll_offset(g_draw_hdc, state->filter, (int)strlen(state->filter), (int)state->cursor, state->width, state->scroll_offset, &cursor_x);
+    int cursor_draw_x = PROMPT_EDIT_INSET + cursor_x - state->scroll_offset;
+    if (cursor_draw_x < PROMPT_CARET_LO_CLAMP) cursor_draw_x = PROMPT_CARET_LO_CLAMP;
+    if (cursor_draw_x > state->width - PROMPT_CARET_HI_CLAMP) cursor_draw_x = state->width - PROMPT_CARET_HI_CLAMP;
+    FontHandle font = Platform_CreateFont(FontSize, UsedFont);
+    HFONT oldFont = NULL;
+    TEXTMETRIC tm;
+    memset(&tm, 0, sizeof(tm));
+    if (font.hfont) oldFont = (HFONT)SelectObject(g_draw_hdc, font.hfont);
+    GetTextMetrics(g_draw_hdc, &tm);
+    int line_h = tm.tmAscent + tm.tmDescent;
+    int cursor_y = (line_h <= 0 || FontSize <= 0) ? PROMPT_EDIT_INSET : PROMPT_EDIT_INSET + (line_h - FontSize) / 2;
+    if (oldFont) SelectObject(g_draw_hdc, oldFont);
+    Platform_DestroyFont(font);
+    if (IsInsertMode()) {
+        Platform_DrawRectRaw(cursor_draw_x, cursor_y, PROMPT_CARET_W_INSERT, FontSize, rgb_to_hex(COLOR_CURSOR));
+    } else {
+        Platform_DrawRectRaw(cursor_draw_x, cursor_y, PromptNormalCaretWidth(), FontSize, rgb_to_hex(COLOR_CURSOR));
+    }
+    PROFILE_END_VAR(timer, "draw_win32:Platform_DrawPromptEditCursor");
 }
