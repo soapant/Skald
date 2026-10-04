@@ -2124,3 +2124,12 @@ FlNetStatus fl_net_status(void) {
     return fl_net_status_platform();
 }
 
+int fl_get_active_interface(char out[], size_t max_len) {
+    return fl_get_active_interface_platform(out, max_len);
+}
+
+unsigned long long fl_net_rx_bytes(const char *iface) {
+    return fl_net_rx_bytes_platform(iface);
+}
+
+
