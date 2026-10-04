@@ -9,4 +9,6 @@ typedef struct {
 StringList String_Split(const char *string, const char *delimiter);
 void StringList_Free(StringList *list);
 
+long File_ReadAll(const char *path, char *buffer, long buffer_size);
+
 #endif

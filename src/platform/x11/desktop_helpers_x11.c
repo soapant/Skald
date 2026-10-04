@@ -1,5 +1,6 @@
 #include "platform/x11/desktop_helpers_x11.h"
 #include "platform/platform.h"
+#include "helpers/helpers_text.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -9,10 +10,14 @@ bool Desktop_Parse(const char* desktop_path, char exec_line[1024], char workdir[
     if (workdir) workdir[0] = '\0';
     if (is_terminal) *is_terminal = false;
     if (!desktop_path) return false;
-    FILE* df = fopen(desktop_path, "r");
-    if (!df) return false;
-    char line[1024];
-    while (fgets(line, sizeof(line), df)) {
+    static char content[16384];
+    if (File_ReadAll(desktop_path, content, (long)sizeof(content)) <= 0) return false;
+    char* cur = content;
+    while (*cur) {
+        char* nl = strchr(cur, '\n');
+        if (nl) *nl = '\0';
+        char* line = cur;
+        cur = nl ? nl + 1 : cur + strlen(cur);
         char* p = line;
         while (*p == ' ' || *p == '\t') p++;
         if (Platform_StringStartsWithCaseInsensitive(p, "Terminal=")) {
@@ -32,7 +37,6 @@ bool Desktop_Parse(const char* desktop_path, char exec_line[1024], char workdir[
             if (workdir) strncpy(workdir, v, 1024 - 1);
         }
     }
-    fclose(df);
     return true;
 }
 
