@@ -2108,3 +2108,23 @@ void fl_widget_set_render(FlWidget *widget, FlWidgetRenderFn render) {
     }
     PROFILE_END_VAR(_pt, "api:fl_widget_set_render");
 }
+
+void fl_format_bytes(unsigned long long bytes, char* buf, size_t buflen) {
+    const char* units[] = { "B", "KB", "MB", "GB", "TB", "PB", "EB" };
+    const int   count   = sizeof(units) / sizeof(units[0]);
+
+    double value = (double)bytes;
+    int    i     = 0;
+
+    while (value >= 1024.0 && i < count - 1) {
+        value /= 1024.0;
+        i++;
+    }
+
+    if (i == 0) {
+        snprintf(buf, buflen, "%llu %s", bytes, units[i]);
+    } else {
+        snprintf(buf, buflen, "%.1f %s", value, units[i]);
+    }
+}
+
