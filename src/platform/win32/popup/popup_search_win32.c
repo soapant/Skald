@@ -131,8 +131,8 @@ LRESULT CALLBACK SearchPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPar
                                          hwnd, (HMENU)1001, hInstance, NULL
                                         ));
         if (WH_TO_HWND(FlintContext_Get()->window.g_hSearchPopup) != NULL) {
-            UI_Edit_SetFont(FlintContext_Get()->window.g_hSearchPopup,hFont);
-            UI_Edit_SetSel(FlintContext_Get()->window.g_hSearchPopup,0,0);
+            UI_Edit_SetFont(hFont);
+            UI_Edit_SetSel(0,0);
             SetFocus(WH_TO_HWND(FlintContext_Get()->window.g_hSearchPopup));
             FlintContext_Get()->window.hActiveEditControl = FlintContext_Get()->window.g_hSearchPopup;
             
@@ -210,7 +210,7 @@ LRESULT CALLBACK SearchPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPar
         SetWindowLongPtrA(hwnd, GWLP_USERDATA, 0);
         ForceWindowFocus(FlintContext_Get()->window.hPopupWnd, FlintContext_Get()->window.hEditControl);
         SetModeWithListBox(MODE_NORMAL, lb);
-        UpdateTextCaret(FlintContext_Get()->window.hEditControl);
+        UpdateTextCaret();
         break;
     }
     }

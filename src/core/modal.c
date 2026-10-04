@@ -57,7 +57,7 @@ void SetModeWithListBox(EditorMode mode, ListBoxInfo* lb) {
         InvalidateRect(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), NULL, TRUE);
     }
     if (WH_TO_HWND(FlintContext_Get()->window.hActiveEditControl) != NULL) {
-        UpdateTextCaret(FlintContext_Get()->window.hActiveEditControl);
+        UpdateTextCaret();
     }
 #endif
 }
@@ -70,7 +70,7 @@ void SetMode(EditorMode mode) {
             e->mode = mode;
 #if defined(_WIN32)
             if (WH_TO_HWND(e->hEdit) && IsWindow(WH_TO_HWND(e->hEdit))) {
-                UpdateTextCaret(e->hEdit);
+                UpdateTextCaret();
             }
             HWND hPopup = WH_TO_HWND(top->handle);
             if (hPopup && IsWindow(hPopup)) InvalidateRect(hPopup, NULL, TRUE);

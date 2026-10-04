@@ -438,11 +438,10 @@ void win32_draw_background(HDC hdc, RECT* rc) {
   PROFILE_END_VAR(timer, name);
 }
 
-void UpdateTextCaret(WindowHandle hwndEditControl)
+void UpdateTextCaret(void)
 {
-  HWND hwnd = WH_TO_HWND(hwndEditControl);
-  if (!hwnd || !IsWindow(hwnd)) return;
-  InvalidateRect(hwnd, NULL, FALSE);
+  HWND popup = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
+  if (popup && IsWindow(popup)) InvalidateRect(popup, NULL, FALSE);
 }
 
 void UI_DrawEditText(HDC hdc, HWND hwnd) {
@@ -578,8 +577,8 @@ void ForceWindowFocus(WindowHandle hwndTarget, WindowHandle hwndInput) {
     SendMessageA(WH_TO_HWND(hwndInput), EM_GETSEL, (WPARAM)&selStart, (LPARAM)&selEnd);
     SetFocus(WH_TO_HWND(hwndInput));
     UI_Edit_UpdateUIState(hwndInput, UIS_CLEAR, UISF_HIDEFOCUS);
-    UI_Edit_SetSel(hwndInput, selStart, selEnd);
-    UpdateTextCaret(hwndInput);
+    UI_Edit_SetSel(selStart, selEnd);
+    UpdateTextCaret();
   } else if (WH_TO_HWND(hwndTarget) != NULL && IsWindowVisible(WH_TO_HWND(hwndTarget))) {
     SetFocus(WH_TO_HWND(hwndTarget));
   }
@@ -623,7 +622,7 @@ void CreateChildControls(WindowHandle hwndParent, HFONT hFont, const char* list[
       EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELONG(0, 0));
 
   FlintContext_Get()->window.hActiveEditControl = FlintContext_Get()->window.hEditControl;
-  UI_Edit_SetFont(FlintContext_Get()->window.hEditControl, hFont);
+  UI_Edit_SetFont(hFont);
   SetWindowSubclass(WH_TO_HWND(FlintContext_Get()->window.hEditControl), EditSubclassProc, 0, 0);
 
   if (count >= 0) {
