@@ -29,7 +29,6 @@ static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent* key) {
     bool ctrl_pressed = key->ctrl;
     bool shift_pressed = key->shift;
 
-    FlintContext_Get()->window.hActiveEditControl = FlintContext_Get()->window.hEditControl;
     if (wParam == VK_CONTROL || wParam == VK_SHIFT || wParam == VK_MENU) return false;
 
     ListBoxInfo* lb = GetLBFromChild(hwnd);
@@ -85,7 +84,7 @@ static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent* key) {
                 FlintContext_Get()->window.selection_complete = true;
             } else {
                 if (popup_wnd != NULL) ShowWindow(popup_wnd, SW_SHOW);
-                if (WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) != NULL) ForceWindowFocus(FlintContext_Get()->window.hPopupWnd, FlintContext_Get()->window.hEditControl);
+                if (WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) != NULL) ForceWindowFocus(FlintContext_Get()->window.hPopupWnd, WH_NULL);
             }
             return true;
         } else {
@@ -104,7 +103,7 @@ static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent* key) {
                 FlintContext_Get()->window.selection_complete = true;
             } else {
                 if (popup_wnd != NULL) ShowWindow(popup_wnd, SW_SHOW);
-                if (WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) != NULL) ForceWindowFocus(FlintContext_Get()->window.hPopupWnd, FlintContext_Get()->window.hEditControl);
+                if (WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) != NULL) ForceWindowFocus(FlintContext_Get()->window.hPopupWnd, WH_NULL);
             }
             return true;
         }
@@ -242,9 +241,6 @@ static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent* key) {
             if (FontSize != old) {
                 if (g_win32_hMainFont) { DeleteObject(g_win32_hMainFont); g_win32_hMainFont = NULL; }
                 g_win32_hMainFont = FH_TO_HFONT(Platform_CreateFont(FontSize, UsedFont));
-                if (WH_TO_HWND(FlintContext_Get()->window.hEditControl) && IsWindow(WH_TO_HWND(FlintContext_Get()->window.hEditControl))) {
-                    UI_Edit_SetFont(g_win32_hMainFont);
-                }
                 if (WH_TO_HWND(FlintContext_Get()->window.hListBox) && IsWindow(WH_TO_HWND(FlintContext_Get()->window.hListBox))) {
                     UI_LB_SetFont(FlintContext_Get()->window.hListBox, g_win32_hMainFont);
                     int newItemH = PromptRowHeight();
@@ -254,7 +250,6 @@ static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent* key) {
                 if (hPopup && IsWindow(hPopup)) {
                     InvalidateRect(hPopup, NULL, TRUE);
                     if (WH_TO_HWND(FlintContext_Get()->window.hListBox)) InvalidateRect(WH_TO_HWND(FlintContext_Get()->window.hListBox), NULL, TRUE);
-                    if (WH_TO_HWND(FlintContext_Get()->window.hEditControl)) InvalidateRect(WH_TO_HWND(FlintContext_Get()->window.hEditControl), NULL, TRUE);
                     UpdateWindow(hPopup);
                 }
             }
@@ -361,8 +356,7 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     switch (msg) {
     case WM_KEYDOWN: {
       s_swallow_next_char = false;
-      HWND hEdit = WH_TO_HWND(FlintContext_Get()->window.hEditControl);
-      HWND hKey = (hEdit && IsWindow(hEdit)) ? hEdit : hwnd;
+      HWND hKey = hwnd;
       PopupKeyEvent pkey;
       memset(&pkey, 0, sizeof(pkey));
       pkey.vk = (int)wParam;

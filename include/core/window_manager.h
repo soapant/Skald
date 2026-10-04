@@ -74,7 +74,6 @@ typedef struct {
     bool confirmed;
     int saved_mode;
     EditorMode mode;
-    WindowHandle hEdit;
 } WMEditPopupData;
 
 WindowManager* WindowManager_Create(void);

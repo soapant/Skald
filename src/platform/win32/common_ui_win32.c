@@ -444,86 +444,6 @@ void UpdateTextCaret(void)
   if (popup && IsWindow(popup)) InvalidateRect(popup, NULL, FALSE);
 }
 
-void UI_DrawEditText(HDC hdc, HWND hwnd) {
-  if (!hdc || !hwnd || !IsWindow(hwnd)) return;
-  char buf[2048] = {0};
-  GetWindowTextA(hwnd, buf, (int)sizeof(buf) - 1);
-  HFONT hFont = (HFONT)SendMessageA(hwnd, WM_GETFONT, 0, 0);
-  HFONT oldFont = hFont ? (HFONT)SelectObject(hdc, hFont) : NULL;
-  SetBkMode(hdc, TRANSPARENT);
-  SetTextColor(hdc, COLOR_TEXT);
-  TEXTMETRIC tm;
-  memset(&tm, 0, sizeof(tm));
-  GetTextMetrics(hdc, &tm);
-  RECT rc;
-  GetClientRect(hwnd, &rc);
-  int y = (rc.bottom - tm.tmHeight) / 2;
-  if (y < 0) y = 0;
-  RECT tr;
-  tr.left = 0;
-  tr.top = y;
-  tr.right = rc.right;
-  tr.bottom = y + tm.tmHeight;
-  DrawTextA(hdc, buf, -1, &tr, DT_SINGLELINE | DT_TOP | DT_LEFT);
-  if (oldFont) SelectObject(hdc, oldFont);
-}
-
-bool UI_DrawCaret(HDC hdc, HWND hwnd) {
-  if (!hdc || !hwnd || !IsWindow(hwnd)) return false;
-  DWORD selStart = 0, selEnd = 0;
-  SendMessageA(hwnd, EM_GETSEL, (WPARAM)&selStart, (LPARAM)&selEnd);
-  if (selStart != selEnd) return false;
-
-  HFONT hFont = (HFONT)SendMessageA(hwnd, WM_GETFONT, 0, 0);
-  HFONT oldFont = hFont ? (HFONT)SelectObject(hdc, hFont) : NULL;
-  TEXTMETRIC tm;
-  memset(&tm, 0, sizeof(tm));
-  GetTextMetrics(hdc, &tm);
-
-  RECT rc;
-  GetClientRect(hwnd, &rc);
-  int lineBox = tm.tmAscent + tm.tmDescent;
-  if (lineBox <= 0) lineBox = FontSize;
-  int caretHeight = FontSize;
-  if (caretHeight > rc.bottom && rc.bottom > 0) caretHeight = rc.bottom;
-  int caretWidth = IsInsertMode() ? PROMPT_CARET_W_INSERT : PromptNormalCaretWidth();
-
-  char buf[2048] = {0};
-  GetWindowTextA(hwnd, buf, (int)sizeof(buf) - 1);
-  int text_len = (int)strlen(buf);
-  int cursor = (int)selStart;
-  if (cursor < 0) cursor = 0;
-  if (cursor > text_len) cursor = text_len;
-
-  int lineTop = 0;
-  {
-    LRESULT q0 = SendMessageA(hwnd, EM_POSFROMCHAR, 0, 0);
-    if (q0 != (LRESULT)-1) lineTop = (short)HIWORD(q0);
-  }
-
-  SIZE szCur;
-  memset(&szCur, 0, sizeof(szCur));
-  GetTextExtentPoint32A(hdc, buf, cursor, &szCur);
-  int cx = szCur.cx;
-
-  if (cx < 0) cx = 0;
-  if (cx + caretWidth > rc.right && rc.right > caretWidth) cx = rc.right - caretWidth;
-  int cy = lineTop + (lineBox - caretHeight) / 2;
-  if (cy + caretHeight > rc.bottom && rc.bottom > 0) cy = rc.bottom - caretHeight;
-  if (cy < 0) cy = 0;
-
-  RECT cr2;
-  cr2.left = cx;
-  cr2.top = cy;
-  cr2.right = cx + caretWidth;
-  cr2.bottom = cy + caretHeight;
-  HBRUSH br = CreateSolidBrush(COLOR_CURSOR);
-  FillRect(hdc, &cr2, br);
-  DeleteObject(br);
-  if (oldFont) SelectObject(hdc, oldFont);
-  return true;
-}
-
 void CalculateWindowMetrics(WindowLayout* layout,int height , int width,int item_height) {
   POINT pt = { 0, 0 };
   GetCursorPos(&pt);
@@ -572,16 +492,11 @@ void ForceWindowFocus(WindowHandle hwndTarget, WindowHandle hwndInput) {
   SetActiveWindow(WH_TO_HWND(hwndTarget));
   BringWindowToTop(WH_TO_HWND(hwndTarget));
 
-  if (WH_TO_HWND(hwndInput) != NULL && IsWindowVisible(WH_TO_HWND(hwndInput))) {
-    DWORD selStart = 0, selEnd = 0;
-    SendMessageA(WH_TO_HWND(hwndInput), EM_GETSEL, (WPARAM)&selStart, (LPARAM)&selEnd);
-    SetFocus(WH_TO_HWND(hwndInput));
-    UI_Edit_UpdateUIState(hwndInput, UIS_CLEAR, UISF_HIDEFOCUS);
-    UI_Edit_SetSel(selStart, selEnd);
-    UpdateTextCaret();
-  } else if (WH_TO_HWND(hwndTarget) != NULL && IsWindowVisible(WH_TO_HWND(hwndTarget))) {
+  (void)hwndInput;
+  if (WH_TO_HWND(hwndTarget) != NULL && IsWindowVisible(WH_TO_HWND(hwndTarget))) {
     SetFocus(WH_TO_HWND(hwndTarget));
   }
+  UpdateTextCaret();
 
   if (foregroundThreadID != currentThreadID)
     AttachThreadInput(currentThreadID, foregroundThreadID, FALSE);
