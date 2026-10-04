@@ -945,3 +945,46 @@ void fl_mutex_unlock_platform(void* mutex) {
     if (!mutex) return;
     pthread_mutex_unlock((pthread_mutex_t*)mutex);
 }
+
+FlNetStatus fl_net_status_platform(void) {
+    FILE* f = fopen("/proc/net/route", "r");
+    if (!f) return FL_NET_OFFLINE;
+
+    char iface[32] = {0};
+    char buf[256];
+    int found = 0;
+
+    while (fgets(buf, sizeof(buf), f)) {
+        char cur[32];
+        unsigned long dest, mask;
+        if (sscanf(buf, "%31s %lx %*s %*s %*s %*s %*s %lx", cur, &dest, &mask) == 3) {
+            if (dest == 0 && mask == 0) {
+                strncpy(iface, cur, sizeof(iface) - 1);
+                found = 1;
+                break;
+            }
+        }
+    }
+    fclose(f);
+
+    if (!found) return FL_NET_OFFLINE;
+
+    char sysfs_path[128];
+    snprintf(sysfs_path, sizeof(sysfs_path), "/sys/class/net/%s/carrier", iface);
+
+    f = fopen(sysfs_path, "r");
+    if (!f) return FL_NET_OFFLINE;
+
+    char carrier = (char)fgetc(f);
+    fclose(f);
+
+    if (carrier != '1') return FL_NET_OFFLINE;
+
+    if (strncmp(iface, "en", 2) == 0 || strncmp(iface, "eth", 3) == 0) {
+        return FL_NET_ETHERNET;
+    }
+    if (strncmp(iface, "wl", 2) == 0) {
+        return FL_NET_WIFI;
+    }
+    return FL_NET_OFFLINE;
+}

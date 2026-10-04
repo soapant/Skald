@@ -1240,13 +1240,6 @@ int fl_draw_text_wrapped_ex(int x, int y, int max_width, int line_height, const 
 bool fl_place_editbox_impl(const FlEditSpec *spec) {
   PROFILE_START(_pt);
   if (!spec) { PROFILE_END_VAR(_pt, "api:fl_place_editbox"); return false; }
-  {
-    extern PromptState* Platform_GetWin32PromptState(void);
-    if (Platform_GetWin32PromptState() != NULL) {
-      PROFILE_END_VAR(_pt, "api:fl_place_editbox");
-      return true;
-    }
-  }
   bool r = fl_place_editbox_platform(spec);
   PROFILE_END_VAR(_pt, "api:fl_place_editbox");
   return r;
@@ -2126,5 +2119,8 @@ void fl_format_bytes(unsigned long long bytes, char* buf, size_t buflen) {
     } else {
         snprintf(buf, buflen, "%.1f %s", value, units[i]);
     }
+}
+FlNetStatus fl_net_status(void) {
+    return fl_net_status_platform();
 }
 
