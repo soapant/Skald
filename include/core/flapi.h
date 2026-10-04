@@ -438,6 +438,8 @@ struct FlWidget {
     void (*on_hover)(void);
     bool clickable;
     bool hovered;
+    void *hover_thread;
+    volatile bool hover_running;
 };
 
 FlWidget *fl_widget_create(const FlWidgetSpec *spec);
