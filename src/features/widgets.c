@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <time.h>
+#include "core/flapi.h"
 
 #if defined(_WIN32)
 #include <windows.h>
@@ -10,7 +11,6 @@
 #include <sys/statvfs.h>
 #endif
 
-#include "core/flapi.h"
 
 #define COLOR RGB(1, 1, 1)
 #define FPS 1
@@ -18,27 +18,6 @@
 #define FONTSIZE 14
 
 static bool percentage = false;
-
-char* get_size_string(unsigned long long bytes, char* buf, size_t buflen) {
-    const char* units[] = { "B", "KB", "MB", "GB", "TB", "PB", "EB" };
-    const int   count   = sizeof(units) / sizeof(units[0]);
-
-    double value = (double)bytes;
-    int    i     = 0;
-
-    while (value >= 1024.0 && i < count - 1) {
-        value /= 1024.0;
-        i++;
-    }
-
-    if (i == 0) {
-        snprintf(buf, buflen, "%llu %s", bytes, units[i]);
-    } else {
-        snprintf(buf, buflen, "%.1f %s", value, units[i]);
-    }
-
-    return buf;
-}
 
 static bool read_disk(unsigned long long *used_out, unsigned long long *total_out) {
     *used_out = 0;
@@ -182,8 +161,8 @@ static void draw_usage(const char* label, unsigned long long used, unsigned long
     } else {
         char used_str[32];
         char total_str[32];
-        get_size_string(used, used_str, sizeof(used_str));
-        get_size_string(total, total_str, sizeof(total_str));
+        fl_format_bytes(used, used_str, sizeof(used_str));
+        fl_format_bytes(total, total_str, sizeof(total_str));
         snprintf(buf, sizeof(buf), "%s%s/%s", label, used_str, total_str);
     }
     fl_draw_text(.text = buf, .x = 10, .y = 6, .fontsize = FONTSIZE,
@@ -278,6 +257,7 @@ FLINT_FEATURE_INIT {
               .no_bg = NO_BG,
               .slot = FL_WIDGET_SLOT_BOTTOM_RIGHT,
               .render = widgets_date_and_time_render);
+
     fl_widget(.name = "internet",
               .color = COLOR,
               .fps = FPS,

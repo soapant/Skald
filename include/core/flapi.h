@@ -78,6 +78,7 @@ bool fl_free_window_list(FlWindowList *list);
 bool fl_append_to_file(const char* filepath, const char* line);
 bool fl_write_to_file(const char* filepath, const char* lines[], int count);
 bool fl_write_temp_file(const char* name, const void* data, size_t len, char* out_path, size_t out_len);
+void fl_format_bytes(unsigned long long bytes, char* out_str, size_t out_len);
 
 // =============================================================================
 // LAUNCH / PROCESS
