@@ -1,6 +1,9 @@
+#include <winsock2.h>
+#include <windows.h>
+#include <iphlpapi.h>
+#include <netlistmgr.h>
 #include <initguid.h> 
 #include "platform/win32/win32_state.h"
-#include <windows.h>
 #include <ctype.h>
 #include "deps/log.h"
 #include <shlwapi.h>
@@ -664,4 +667,71 @@ void fl_mutex_lock_platform(void* mutex) {
 void fl_mutex_unlock_platform(void* mutex) {
     if (!mutex) return;
     LeaveCriticalSection((CRITICAL_SECTION*)mutex);
+}
+
+FlNetStatus fl_net_status_platform(void) {
+    HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+    if (FAILED(hr)) return FL_NET_OFFLINE;
+
+    INetworkListManager* nlm = NULL;
+    hr = CoCreateInstance(&CLSID_NetworkListManager, NULL, CLSCTX_ALL,
+                          &IID_INetworkListManager, (void**)&nlm);
+    if (FAILED(hr)) {
+        CoUninitialize();
+        return FL_NET_OFFLINE;
+    }
+
+    VARIANT_BOOL is_connected = VARIANT_FALSE;
+    hr = nlm->lpVtbl->IsConnectedToInternet(nlm, &is_connected);
+    if (FAILED(hr) || is_connected == VARIANT_FALSE) {
+        nlm->lpVtbl->Release(nlm);
+        CoUninitialize();
+        return FL_NET_OFFLINE;
+    }
+
+    FlNetStatus result;
+    IEnumNetworkConnections* conns = NULL;
+    hr = nlm->lpVtbl->GetNetworkConnections(nlm, &conns);
+    if (SUCCEEDED(hr)) {
+        INetworkConnection* conn = NULL;
+        ULONG fetched = 0;
+        while (conns->lpVtbl->Next(conns, 1, &conn, &fetched) == S_OK) {
+            VARIANT_BOOL is_connected_conn = VARIANT_FALSE;
+            conn->lpVtbl->get_IsConnected(conn, &is_connected_conn);
+            if (is_connected_conn == VARIANT_TRUE) {
+                NLM_CONNECTIVITY conn_type;
+                conn->lpVtbl->GetConnectivity(conn, &conn_type);
+                if (conn_type & NLM_CONNECTIVITY_IPV4_INTERNET) {
+                    GUID adapter_id;
+                    conn->lpVtbl->GetAdapterId(conn, &adapter_id);
+                    
+                    ULONG size = 0;
+                    GetAdaptersAddresses(AF_UNSPEC, GAA_FLAG_INCLUDE_ALL_INTERFACES, 
+                                         NULL, NULL, &size);
+                    IP_ADAPTER_ADDRESSES* addrs = (IP_ADAPTER_ADDRESSES*)malloc(size);
+                    if (GetAdaptersAddresses(AF_UNSPEC, 0, NULL, addrs, &size) == NO_ERROR) {
+                        for (IP_ADAPTER_ADDRESSES* a = addrs; a; a = a->Next) {
+                            if (memcmp(&a->AdapterName, &adapter_id, sizeof(GUID)) == 0 ||
+                                (a->IfType == IF_TYPE_IEEE80211)) {
+                                if (a->IfType == IF_TYPE_IEEE80211) {
+                                    result = FL_NET_WIFI;
+                                } else if (a->IfType == IF_TYPE_ETHERNET_CSMACD) {
+                                    result = FL_NET_ETHERNET;
+                                }
+                                break;
+                            }
+                        }
+                    }
+                    free(addrs);
+                }
+            }
+            conn->lpVtbl->Release(conn);
+            conn = NULL;
+        }
+        conns->lpVtbl->Release(conns);
+    }
+
+    nlm->lpVtbl->Release(nlm);
+    CoUninitialize();
+    return result;
 }

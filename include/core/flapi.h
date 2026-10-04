@@ -51,6 +51,18 @@ typedef struct {
     size_t capacity;
 } FlClipboardHistory;
 
+typedef enum {
+    FL_NET_OFFLINE,
+    FL_NET_ETHERNET,
+    FL_NET_WIFI,
+} FlNetStatus;
+
+// =============================================================================
+//  NETWORK
+// =============================================================================
+
+FlNetStatus fl_net_status(void);
+
 size_t fl_clipboard_history_count(void);
 const FlClipboardEntry* fl_clipboard_history_get(size_t index);
 const FlClipboardEntry* fl_clipboard_latest(void);
