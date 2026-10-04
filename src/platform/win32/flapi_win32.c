@@ -700,7 +700,9 @@ int fl_get_active_interface_platform(char out[], size_t max_len) {
     return 0;
 }
 
-unsigned long long fl_net_rx_bytes_platform(const char* iface) {
+unsigned long long fl_net_rx_bytes_platform() {
+    char iface[64];
+    fl_get_active_interface_platform(iface, sizeof(iface));
     MIB_IFTABLE* table = NULL;
     DWORD size = 0;
     

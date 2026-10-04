@@ -2124,24 +2124,23 @@ FlNetStatus fl_net_status(void) {
     return fl_net_status_platform();
 }
 
-int fl_get_active_interface(char out[], size_t max_len) {
-    return fl_get_active_interface_platform(out, max_len);
-}
-
-unsigned long long fl_net_rx_bytes(const char *iface) {
-    return fl_net_rx_bytes_platform(iface);
+unsigned long long fl_net_rx_bytes() {
+    char iface[64];
+    fl_get_active_interface_platform(iface, sizeof(iface));
+    return fl_net_rx_bytes_platform();
 }
 
 
 static void* fl_net_rx_sample_thread(void* arg) {
     FlRxSample* s = (FlRxSample*)arg;
-    s->bytes = fl_net_rx_bytes_platform(s->iface);
+    s->bytes = fl_net_rx_bytes_platform();
     return NULL;
 }
 
-unsigned long long fl_net_rx_bytes_over(const char *iface, double seconds) {
+unsigned long long fl_net_rx_bytes_over(double seconds) {
     if (seconds <= 0) return 0;
-
+    char iface[64];
+    fl_get_active_interface_platform(iface, sizeof(iface));
     FlRxSample before;
     snprintf(before.iface, sizeof(before.iface), "%s", iface ? iface : "");
     before.bytes = 0;
