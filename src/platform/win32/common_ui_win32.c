@@ -593,37 +593,7 @@ void CreateChildControls(WindowHandle hwndParent, HFONT hFont, const char* list[
 
   HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtrA(WH_TO_HWND(hwndParent), GWLP_HINSTANCE);
 
-  int lineHeight = FontSize + PROMPT_EDIT_H_BONUS;
-  HDC metricDC = GetDC(NULL);
-  if (metricDC) {
-    HDC probe = CreateCompatibleDC(metricDC);
-    if (probe) {
-      HFONT hOld = hFont ? (HFONT)SelectObject(probe, hFont) : NULL;
-      TEXTMETRIC tm;
-      memset(&tm, 0, sizeof(tm));
-      if (GetTextMetrics(probe, &tm) && tm.tmHeight > 0) lineHeight = tm.tmHeight;
-      if (hOld) SelectObject(probe, hOld);
-      DeleteDC(probe);
-    }
-    ReleaseDC(NULL, metricDC);
-  }
-
-  FlintContext_Get()->window.hEditControl = WH_FROM_HWND(CreateWindowExA(
-      0, "EDIT", "", WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
-      PROMPT_EDIT_INSET, PROMPT_EDIT_INSET,
-      layout->w - PROMPT_EDIT_SCROLL_PAD, lineHeight,
-      WH_TO_HWND(hwndParent), (HMENU)IDC_INPUT_BOX, hInstance, NULL
-      ));
-  if (WH_TO_HWND(FlintContext_Get()->window.hEditControl) == NULL) {
-    return;
-  }
-
-  SendMessageA(WH_TO_HWND(FlintContext_Get()->window.hEditControl), EM_SETMARGINS,
-      EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELONG(0, 0));
-
-  FlintContext_Get()->window.hActiveEditControl = FlintContext_Get()->window.hEditControl;
   UI_Edit_SetFont(hFont);
-  SetWindowSubclass(WH_TO_HWND(FlintContext_Get()->window.hEditControl), EditSubclassProc, 0, 0);
 
   if (count >= 0) {
     int listTop = PromptListTop();
