@@ -1,4 +1,5 @@
 #include "platform/platform.h"
+#include "helpers/helpers_text.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -263,17 +264,20 @@ bool Platform_ResolveDesktopExec(const char* desktop_id, char* out, size_t out_s
     for (char* d = strtok_r(dirs, ":", &save); d; d = strtok_r(NULL, ":", &save)) {
         char path[1024];
         snprintf(path, sizeof(path), "%s/applications/%s", d, desktop_id);
-        FILE* f = fopen(path, "r");
-        if (!f) continue;
-        char line[1024];
+        static char content[16384];
+        if (File_ReadAll(path, content, (long)sizeof(content)) <= 0) continue;
         bool found = false;
-        while (fgets(line, sizeof(line), f)) {
+        char* cur = content;
+        while (*cur) {
+            char* nl = strchr(cur, '\n');
+            if (nl) *nl = '\0';
+            char* line = cur;
+            cur = nl ? nl + 1 : cur + strlen(cur);
             if (strncmp(line, "Exec=", 5) == 0) {
                 found = x11_default_apps_exec_token(line, out, out_size);
                 break;
             }
         }
-        fclose(f);
         if (found) return true;
         out[0] = '\0';
     }

@@ -183,3 +183,33 @@ void StringList_Free(StringList *list)
     list->count = 0;
 }
 
+
+long File_ReadAll(const char *path, char *buffer, long buffer_size)
+{
+    if (!path || !buffer || buffer_size <= 0)
+        return -1;
+
+    buffer[0] = '\0';
+
+    FILE *f = fopen(path, "rb");
+    if (!f)
+        return -1;
+
+    size_t total = 0;
+
+    while (total < (size_t)buffer_size - 1)
+    {
+        size_t got = fread(buffer + total, 1, (size_t)buffer_size - 1 - total, f);
+
+        if (got == 0)
+            break;
+
+        total += got;
+    }
+
+    fclose(f);
+
+    buffer[total] = '\0';
+
+    return (long)total;
+}
