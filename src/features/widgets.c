@@ -208,14 +208,22 @@ static void widgets_date_and_time_render(FlWidgetState *state) {
                  .color = RGB(220, 220, 220), .align = "LEFT");
 }
 static void widgets_internet_render(FlWidgetState *state) {
-    fl_place_image(.path = "resources/wifi.png",.x=10,.y=7,.h=FONTSIZE + 6,.w=FONTSIZE + 6);
+    FlNetStatus status = fl_net_status();
+    switch (status) {
+        case FL_NET_OFFLINE:
+            fl_place_image(.path = "resources/wifi-not-avail.png", .x = 10, .y = 7, .h = FONTSIZE + 6, .w = FONTSIZE + 6);
+            break;
+        case FL_NET_ETHERNET:
+            fl_place_image(.path = "resources/ethernet.png", .x = 10, .y = 7, .h = FONTSIZE + 6, .w = FONTSIZE + 6);
+            break;
+        case FL_NET_WIFI:
+            fl_place_image(.path = "resources/wifi.png", .x = 10, .y = 7, .h = FONTSIZE + 6, .w = FONTSIZE + 6);
+            break;
+    }
 }
 
-void on_internet_click(void) {
-    fl_popup();
-}
 void on_internet_hover(void) {
-    printf("HOVER\n");
+    fl_popup();
 }
 
 static FlWidget* g_disk = NULL;
@@ -262,7 +270,6 @@ FLINT_FEATURE_INIT {
               .color = COLOR,
               .fps = FPS,
               .no_bg = NO_BG,
-              .on_click = on_internet_click,
               .on_hover = on_internet_hover,
               .slot = FL_WIDGET_SLOT_BOTTOM_RIGHT,
               .render = widgets_internet_render);

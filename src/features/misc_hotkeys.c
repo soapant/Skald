@@ -4,31 +4,6 @@
 
 static char current_keyword[256] = "";
 
-void ShowCurrentTime(void) {
-  char* output = fl_run_terminal_command("date");
-  if (output) {
-    fl_message(.message = output);
-  }
-}
-void ShowCurrentBatteryPercentage(void) {
-  char* output = fl_run_terminal_command("cat /sys/class/power_supply/BAT0/capacity");
-  if (output) {
-    fl_message(.message = output);
-  }
-}
-
-void MediaPlayPause(void) {
-  fl_toggle_play_pause();
-}
-
-void ScreenshotArea(void) {
-  fl_screenshot_copy_area();
-}
-
-void OcrRegionAndCopy(void) {
-  fl_ocr_area_to_clipboard();
-}
-
 void IncrementVolume(void) {
   fl_increment_volume_by_percent(10);
 }
@@ -36,6 +11,7 @@ void IncrementVolume(void) {
 void DecrementVolume(void) {
   fl_decrement_volume_by_percent(10);
 }
+
 void GoogleMeaning(void) {
   char *clip = fl_get_last_clipboard_entry();
   char search[50];
@@ -105,14 +81,12 @@ void toggle_minimized(void) {
 }
 
 FLINT_FEATURE_INIT {
-    fl_register_hotkey("Alt+Shift+T", ShowCurrentTime);
-    // fl_register_hotkey("Alt+Shift+N", ShowCurrentBatteryPercentage);
-    fl_register_hotkey("Ctrl+Shift+X", ScreenshotArea);
-    fl_register_hotkey("Alt+Shift+C", OcrRegionAndCopy);
+    fl_register_hotkey("Ctrl+Shift+X", fl_screenshot_copy_area);
+    fl_register_hotkey("Alt+Shift+C", fl_ocr_area_to_clipboard);
     fl_register_hotkey("Alt+Shift+G", GoogleMeaning);
     fl_register_hotkey("Alt+Shift+F", OpenImage);
     fl_register_hotkey("Alt+Shift+D", get_current_keyword);
-    fl_register_hotkey("RShift",MediaPlayPause); 
+    fl_register_hotkey("RShift",fl_toggle_play_pause); 
     fl_register_hotkey("Ctrl+]",IncrementVolume); 
     fl_register_hotkey("Ctrl+[",DecrementVolume); 
     fl_register_hotkey("Alt+Ctrl+O", copy_seifisbad);
