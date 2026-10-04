@@ -1855,6 +1855,18 @@ bool fl_widget_is_valid(FlWidget *widget) {
     return widget != NULL;
 }
 
+FlPos fl_get_widget_pos(const char *name) {
+    PROFILE_START(_pt);
+    FlPos r = {0, 0};
+    FlWidget *w = fl_widget_find_by_name(name);
+    if (w && w->x < 0x7fffffff) {
+        r.x = w->x + w->w / 2;
+        r.y = w->y + w->h / 2;
+    }
+    PROFILE_END_VAR(_pt, "api:fl_get_widget_pos");
+    return r;
+}
+
 static void fl_widget_apply_show(void *ud) {
     PROFILE_START(_pt);
     FlWidget *widget = (FlWidget *)ud;

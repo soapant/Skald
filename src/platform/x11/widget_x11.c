@@ -100,6 +100,7 @@ static void widget_frame(void *ud) {
             x11_draw_background_to_drawable(dpy, widget->win, widget->w, widget->h);
         }
     }
+    Platform_SetDrawBgColor(0);
 
     if (!widget->xd) {
         widget->xd = x11_create_xft_draw(dpy, widget->win);
@@ -113,7 +114,6 @@ static void widget_frame(void *ud) {
     Platform_SetPreRenderState(NULL);
     if (widget->fn) widget->fn(widget->ud);
     Platform_FlushDraw();
-    Platform_SetDrawBgColor(0);
     XFlush(dpy);
 }
 
@@ -160,6 +160,12 @@ PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps, bool
         XFlush(dpy);
         free(widget);
         return NULL;
+    }
+
+    unsigned long amb = Platform_GetDrawBgColor();
+    if (amb) {
+        widget->has_bg = true;
+        widget->bg_hex = amb;
     }
 
     widget_frame(widget);
