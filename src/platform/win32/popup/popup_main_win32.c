@@ -62,7 +62,7 @@ static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent* key) {
             if (lb && lb->selected_index >= 0 && lb->selected_index < lb->populated_count) strncpy(FlintContext_Get()->window.output_buffer, lb->populated_cache[lb->selected_index], sizeof(FlintContext_Get()->window.output_buffer) - 1);
             FlintContext_Get()->window.output_buffer[sizeof(FlintContext_Get()->window.output_buffer) - 1] = '\0';
         } else {
-            GetWindowTextA(hwnd, FlintContext_Get()->window.output_buffer, sizeof(FlintContext_Get()->window.output_buffer));
+            UI_GetCurrentTextEdit(FlintContext_Get()->window.output_buffer, sizeof(FlintContext_Get()->window.output_buffer));
         }
         if (WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage) != NULL) {
             KillTimer(WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage), 999);
@@ -151,19 +151,15 @@ static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent* key) {
             InvalidateRect(hwnd, NULL, TRUE);
             return true;
         } else {
-            char buf[512] = {0};
-            GetWindowTextA(hwnd, buf, sizeof(buf));
-            DWORD selStart = 0, selEnd = 0;
-            SendMessageA(hwnd, EM_GETSEL, (WPARAM)&selStart, (WPARAM)&selEnd);
-            int len = (int)strlen(buf);
-            if (selStart != selEnd) {
-                memmove(buf + selStart, buf + selEnd, len - selEnd + 1);
-                SetWindowTextA(hwnd, buf);
-                SendMessageA(hwnd, EM_SETSEL, selStart, selStart);
-            } else if (selStart > 0) {
-                memmove(buf + selStart - 1, buf + selStart, len - selStart + 1);
-                SetWindowTextA(hwnd, buf);
-                SendMessageA(hwnd, EM_SETSEL, selStart - 1, selStart - 1);
+            PromptState* ps = g_win32_prompt_state;
+            if (ps) {
+                size_t len = strlen(ps->filter);
+                size_t cur = ps->cursor;
+                if (cur > 0) {
+                    if (cur > len) cur = len;
+                    memmove(ps->filter + cur - 1, ps->filter + cur, len - cur + 1);
+                    ps->cursor = cur - 1;
+                }
             }
             InvalidateRect(hwnd, NULL, TRUE);
             return true;
@@ -171,19 +167,12 @@ static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent* key) {
     }
 
     if (wParam == VK_DELETE) {
-        char buf[512] = {0};
-        GetWindowTextA(hwnd, buf, sizeof(buf));
-        DWORD selStart = 0, selEnd = 0;
-        SendMessageA(hwnd, EM_GETSEL, (WPARAM)&selStart, (WPARAM)&selEnd);
-        int len = (int)strlen(buf);
-        if (selStart != selEnd) {
-            memmove(buf + selStart, buf + selEnd, len - selEnd + 1);
-            SetWindowTextA(hwnd, buf);
-            SendMessageA(hwnd, EM_SETSEL, selStart, selStart);
-        } else if (selStart < (DWORD)len) {
-            memmove(buf + selStart, buf + selStart + 1, len - selStart);
-            SetWindowTextA(hwnd, buf);
-            SendMessageA(hwnd, EM_SETSEL, selStart, selStart);
+        PromptState* ps = g_win32_prompt_state;
+        if (ps) {
+            size_t len = strlen(ps->filter);
+            size_t cur = ps->cursor;
+            if (cur > len) cur = len;
+            if (cur < len) memmove(ps->filter + cur, ps->filter + cur + 1, len - cur);
         }
         InvalidateRect(hwnd, NULL, TRUE);
         return true;
@@ -276,103 +265,6 @@ static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent* key) {
 
     return false;
 }
-
-static void Win32_PaintEditCaret(HDC memDC, HWND hwnd) {
-  if (GetFocus() != hwnd) return;
-  DWORD s = 0, e = 0;
-  SendMessageA(hwnd, EM_GETSEL, (WPARAM)&s, (LPARAM)&e);
-  if (s != e) return;
-  UI_DrawCaret(memDC, hwnd);
-}
-
-LRESULT CALLBACK EditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData) {
-  if(msg==WM_KEYDOWN){ int mods=0; if(GetKeyState(VK_CONTROL)&0x8000) mods|=HOTKEY_MOD_CTRL; if(GetKeyState(VK_MENU)&0x8000) mods|=HOTKEY_MOD_ALT; if(GetKeyState(VK_SHIFT)&0x8000) mods|=HOTKEY_MOD_SHIFT; if(GetKeyState(VK_LWIN)&0x8000||GetKeyState(VK_RWIN)&0x8000) mods|=HOTKEY_MOD_SUPER; Platform_InputState_Update((int)wParam,true,mods); }
-  if(msg==WM_KEYUP){ int mods=0; if(GetKeyState(VK_CONTROL)&0x8000) mods|=HOTKEY_MOD_CTRL; if(GetKeyState(VK_MENU)&0x8000) mods|=HOTKEY_MOD_ALT; if(GetKeyState(VK_SHIFT)&0x8000) mods|=HOTKEY_MOD_SHIFT; if(GetKeyState(VK_LWIN)&0x8000||GetKeyState(VK_RWIN)&0x8000) mods|=HOTKEY_MOD_SUPER; Platform_InputState_Update((int)wParam,false,mods); }
-  if (msg == WM_PAINT) {
-    PAINTSTRUCT ps;
-    HDC hdc = BeginPaint(hwnd, &ps);
-    if (GetFocus() == hwnd) DestroyCaret();
-    RECT rc; GetClientRect(hwnd, &rc);
-    if (rc.right <= 0 || rc.bottom <= 0) { EndPaint(hwnd, &ps); return 0; }
-    HDC memDC = CreateCompatibleDC(hdc);
-    HBITMAP memBmp = CreateCompatibleBitmap(hdc, rc.right, rc.bottom);
-    if (!memDC || !memBmp) {
-      if (memDC) DeleteDC(memDC);
-      if (memBmp) DeleteObject(memBmp);
-      EndPaint(hwnd, &ps);
-      return DefSubclassProc(hwnd, msg, wParam, lParam);
-    }
-    HBITMAP oldBmp = (HBITMAP)SelectObject(memDC, memBmp);
-    HWND hPar = GetParent(hwnd);
-    if (hPar && IsWindow(hPar)) {
-      RECT winRc; GetClientRect(hPar, &winRc);
-      int winW = winRc.right - winRc.left;
-      int winH = winRc.bottom - winRc.top;
-      POINT pt = {0,0};
-      ClientToScreen(hwnd, &pt);
-      ScreenToClient(hPar, &pt);
-      if (EnableShaders && ShaderPreset != 0 && winW > 0 && winH > 0) {
-        win32_draw_background_slice(memDC, &rc, COLOR_BG, winW, winH, pt.x, pt.y);
-      } else {
-        HBRUSH br = CreateSolidBrush(COLOR_BG);
-        FillRect(memDC, &rc, br);
-        DeleteObject(br);
-      }
-    } else {
-      HBRUSH br = CreateSolidBrush(COLOR_BG);
-      FillRect(memDC, &rc, br);
-      DeleteObject(br);
-    }
-    UI_DrawEditText(memDC, hwnd);
-    Win32_PaintEditCaret(memDC, hwnd);
-    BitBlt(hdc, ps.rcPaint.left, ps.rcPaint.top, ps.rcPaint.right - ps.rcPaint.left, ps.rcPaint.bottom - ps.rcPaint.top, memDC, ps.rcPaint.left, ps.rcPaint.top, SRCCOPY);
-    SelectObject(memDC, oldBmp);
-    DeleteObject(memBmp);
-    DeleteDC(memDC);
-    EndPaint(hwnd, &ps);
-    return 0;
-  }
-  if (msg == WM_ERASEBKGND) return 1;
-  if (msg == WM_SETFOCUS) {
-    LRESULT res = DefSubclassProc(hwnd, msg, wParam, lParam);
-        return res;
-  }
-    if (msg == WM_CHAR) {
-      if (s_swallow_next_char) { s_swallow_next_char = false; return 0; }
-      if (IsNormalMode()) return 0;
-      if (wParam == 0x08 || wParam == 0x7F) return 0;
-      return DefSubclassProc(hwnd, msg, wParam, lParam);
-    }
-    if (msg == WM_KEYDOWN) {
-      s_swallow_next_char = false;
-      PopupKeyEvent key;
-      memset(&key, 0, sizeof(key));
-      key.vk = (int)wParam;
-      key.ctrl = (GetKeyState(VK_CONTROL) & 0x8000) != 0;
-      key.shift = (GetKeyState(VK_SHIFT) & 0x8000) != 0;
-      key.alt = (GetKeyState(VK_MENU) & 0x8000) != 0;
-      if (PromptWindow_OnKey(hwnd, &key)) {
-        s_swallow_next_char = true;
-        if (FlintContext_Get()->prompt_callbacks.render != NULL) {
-          HWND hPar = GetParent(hwnd);
-          if (hPar && IsWindow(hPar)) InvalidateRect(hPar, NULL, FALSE);
-        }
-        return 0;
-      }
-      if (FlintContext_Get()->prompt_callbacks.render != NULL) {
-        HWND hPar = GetParent(hwnd);
-        if (hPar && IsWindow(hPar)) InvalidateRect(hPar, NULL, FALSE);
-      }
-    }
-
-    LRESULT res = DefSubclassProc(hwnd, msg, wParam, lParam);
-    if (msg == WM_KEYDOWN || msg == WM_CHAR || msg == WM_LBUTTONDOWN) {
-      HWND hPar = GetParent(hwnd);
-      if (hPar && IsWindow(hPar)) PostMessageA(hPar, WM_SYNC_TEXT_CARET, 0, 0);
-      InvalidateRect(hwnd, NULL, FALSE);
-    }
-    return res;
-} 
 
 LRESULT CALLBACK ListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData){
   static HBRUSH s_bg_brush = NULL;
@@ -487,40 +379,25 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
       if (FlintContext_Get()->prompt_callbacks.render != NULL) InvalidateRect(hwnd, NULL, FALSE);
       break;
     }
-    case WM_CHAR: {
+case WM_CHAR: {
       if (s_swallow_next_char) { s_swallow_next_char = false; return 0; }
       if (wParam >= 32 && FlintContext_Get()->prompt_callbacks.render != NULL && IsInsertMode()) {
-        HWND hEdit = WH_TO_HWND(FlintContext_Get()->window.hEditControl);
-        if (hEdit && IsWindow(hEdit)) {
-          char buf[1024] = {0};
-          GetWindowTextA(hEdit, buf, sizeof(buf));
-          DWORD s = 0, e = 0;
-          SendMessageA(hEdit, EM_GETSEL, (WPARAM)&s, (LPARAM)&e);
-          int len = (int)strlen(buf);
-          if ((int)s > len) s = (DWORD)len;
-          if ((int)e > len) e = (DWORD)len;
-          if (s != e) {
-            memmove(buf + s, buf + e, len - e + 1);
-            len = (int)strlen(buf);
-          }
-          if (len < (int)sizeof(buf) - 2) {
-            memmove(buf + s + 1, buf + s, len - (int)s + 1);
-            buf[s] = (char)wParam;
-            SetWindowTextA(hEdit, buf);
-            SendMessageA(hEdit, EM_SETSEL, s + 1, s + 1);
-            extern PromptState* Platform_GetWin32PromptState(void);
-            PromptState* st = Platform_GetWin32PromptState();
-            if (st) {
-              strncpy(st->filter, buf, sizeof(st->filter) - 1);
-              st->filter[sizeof(st->filter) - 1] = '\0';
-              st->cursor = (size_t)(s + 1);
+        PromptState* ps = g_win32_prompt_state;
+        if (ps) {
+            size_t len = strlen(ps->filter);
+            size_t cur = ps->cursor;
+            if (cur > len) cur = len;
+            if (len < sizeof(ps->filter) - 2) {
+                memmove(ps->filter + cur + 1, ps->filter + cur, len - cur + 1);
+                ps->filter[cur] = (char)wParam;
+                ps->cursor = cur + 1;
             }
-            strncpy(FlintContext_Get()->window.filter, buf, sizeof(FlintContext_Get()->window.filter) - 1);
+            strncpy(FlintContext_Get()->window.filter, ps->filter, sizeof(FlintContext_Get()->window.filter) - 1);
             FlintContext_Get()->window.filter[sizeof(FlintContext_Get()->window.filter) - 1] = '\0';
-            FlintContext_Get()->window.filter_cursor = (int)(s + 1);
-          }
-          InvalidateRect(hwnd, NULL, FALSE);
-          return 0;
+            FlintContext_Get()->window.filter_cursor = (int)ps->cursor;
+            UI_Redraw(lb, FlintContext_Get()->window.hListBox);
+            InvalidateRect(hwnd, NULL, FALSE);
+            return 0;
         }
       }
       break;
@@ -538,19 +415,6 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             FlintContext_Get()->window.selection_complete = true;
         }
         break;
-    }
-    case WM_CTLCOLOREDIT: {
-      HDC hdc = (HDC)wParam;
-      if (EnableShaders && ShaderPreset != 0) {
-        SetTextColor(hdc, COLOR_TEXT);
-        SetBkMode(hdc, TRANSPARENT);
-        return (LRESULT)GetStockObject(NULL_BRUSH);
-      } else {
-        SetTextColor(hdc, COLOR_TEXT);
-        SetBkColor(hdc, COLOR_BG);
-        if (!s_bg_brush) s_bg_brush = CreateSolidBrush(COLOR_BG);
-        return (LRESULT)s_bg_brush;
-      }
     }
     case WM_CTLCOLORLISTBOX: {
       HDC hdc = (HDC)wParam;
@@ -589,44 +453,11 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     case WM_COMMAND: {
       int wmId   = LOWORD(wParam);
         int wmEvent = HIWORD(wParam);
-        if (wmId == IDC_INPUT_BOX && wmEvent == EN_CHANGE) {
-          if (GetKeyState(VK_UP) & 0x8000 ||
-              GetKeyState(VK_DOWN) & 0x8000 ||
-              GetKeyState(VK_RETURN) & 0x8000 ||
-              GetKeyState(VK_ESCAPE) & 0x8000)
-          {
-            break;
-          }
-            if (WH_TO_HWND(FlintContext_Get()->window.hEditControl) != NULL && IsWindow(WH_TO_HWND(FlintContext_Get()->window.hEditControl))) {
-              char buf[sizeof(FlintContext_Get()->window.filter)];
-              GetWindowTextA(WH_TO_HWND(FlintContext_Get()->window.hEditControl), buf, (int)sizeof(buf));
-              strncpy(FlintContext_Get()->window.filter, buf, sizeof(FlintContext_Get()->window.filter) - 1);
-              FlintContext_Get()->window.filter[sizeof(FlintContext_Get()->window.filter) - 1] = '\0';
-DWORD s = 0, e = 0;
-              SendMessageA(WH_TO_HWND(FlintContext_Get()->window.hEditControl), EM_GETSEL, (WPARAM)&s, (WPARAM)&e);
-FlintContext_Get()->window.filter_cursor = (int)s;
-              PostMessageA(hwnd, WM_SYNC_TEXT_CARET, 0, 0);
-              InvalidateRect(WH_TO_HWND(FlintContext_Get()->window.hEditControl), NULL, TRUE);
-              UpdateWindow(WH_TO_HWND(FlintContext_Get()->window.hEditControl));
-            }
-            if (WH_TO_HWND(FlintContext_Get()->window.hEditControl) != NULL && WH_TO_HWND(FlintContext_Get()->window.hListBox) != NULL) {
-              UI_Redraw(lb, FlintContext_Get()->window.hListBox);
-            }
-        }
-      
         if (wmId == IDC_LIST_BOX && wmEvent == LBN_SELCHANGE) {
           break; 
         }
       
         break;
-    }
-    case WM_SYNC_TEXT_CARET: {
-      HWND hEdit = WH_TO_HWND(FlintContext_Get()->window.hEditControl);
-      if (hEdit && IsWindow(hEdit) && GetFocus() == hEdit) {
-        InvalidateRect(hEdit, NULL, FALSE);
-        return 0;
-      }
-      break;
     }
     case WM_TIMER: {
       if (wParam == UI_DEBOUNCE_TIMER_ID) {
@@ -853,6 +684,16 @@ FlintContext_Get()->window.filter_cursor = (int)s;
                 fl_editbox_reset_placed();
                 Platform_SetDrawContextWin32(paintDC);
                 FlintContext_Get()->prompt_callbacks.render(state);
+            }
+        }
+        {
+            extern PromptState* Platform_GetWin32PromptState(void);
+            PromptState *estate = Platform_GetWin32PromptState();
+            if (estate) {
+                Platform_SetDrawContextWin32(paintDC);
+                Platform_DrawPromptEditText(estate);
+                Platform_DrawPromptEditCursor(estate);
+                Platform_SetDrawContextWin32(NULL);
             }
         }
       if (g_vim_mode != NULL && VimModeText) {

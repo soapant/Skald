@@ -39,6 +39,8 @@ void Platform_DrawEditBox(PromptState *state, Display *dpy, XftDraw *xd, Visual 
 void Platform_DrawListBox(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap);
 bool Platform_DrawImageScaled(Display *dpy, XftDraw *xd, Visual *vis, const char *path, int x, int y, int w, int h);
 #endif
+void Platform_DrawPromptEditText(PromptState *state);
+void Platform_DrawPromptEditCursor(PromptState *state);
 bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h);
 bool Platform_DrawRectRaw(int x, int y, int w, int h, unsigned long color);
 bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, FontHandle font, const char *align, int pad,int fontsize);
