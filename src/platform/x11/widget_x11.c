@@ -34,6 +34,7 @@ struct PlatformWidget {
     int last_draw_w;
     int last_draw_h;
     void (*on_click)(void);
+    char name[64];
 };
 
 #define WIDGET_REG_MAX 32
@@ -84,7 +85,6 @@ static void widget_frame(void *ud) {
     widget->dirty = false;
     widget->last_draw_ms = now;
 
-    Platform_SetDrawBgColor(widget->has_bg ? widget->bg_hex : 0);
     if (widget->no_bg) {
         GC tgc = XCreateGC(dpy, widget->win, 0, NULL);
         XSetForeground(dpy, tgc, 0);
@@ -137,6 +137,7 @@ PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps, bool
     widget->fps = fps;
     widget->no_bg = no_bg;
     widget->on_click = on_click;
+    snprintf(widget->name, sizeof(widget->name), "%s", name ? name : "?");
     widget->dirty = true;
     widget->last_draw_ms = 0;
     widget->last_draw_w = 0;
@@ -243,8 +244,8 @@ void Platform_Widget_SetBgColor(PlatformWidget *widget, unsigned long hex) {
     widget->has_bg = hex != 0;
     widget->bg_hex = hex;
     if (!widget->dpy || widget->win == None) return;
-    unsigned int a = (RoundedCorners || Platform_GetTransparentWindow()) ? 0 : (unsigned int)WindowOpacity;
-    unsigned long bg = widget->has_bg ? hex : rgb_to_hex(COLOR_BG);
+    unsigned int a = (RoundedCorners || widget->no_bg) ? 0 : (unsigned int)WindowOpacity;
+    unsigned long bg = widget->no_bg ? 0UL : (widget->has_bg ? hex : rgb_to_hex(COLOR_BG));
     unsigned int r = (unsigned int)((bg >> 16) & 0xFF);
     unsigned int g = (unsigned int)((bg >> 8) & 0xFF);
     unsigned int b = (unsigned int)(bg & 0xFF);
