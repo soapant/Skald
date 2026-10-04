@@ -142,6 +142,17 @@ FlStringList fl_load_file_list(const char* filepath) {
     }
     return list;
 }
+long fl_load_file(const char* filepath, char* buffer, long buffer_size) {
+    if (!filepath || !buffer || buffer_size <= 0) return -1;
+    buffer[0] = '\0';
+    char full[MAX_PATH];
+    if (!Platform_ResolveDataPath(filepath, full, sizeof(full))) {
+        log_warn("fl_load_file resolve failed name='%s' feature='%s'", filepath, FlintContext_Get()->window.current_feature ? FlintContext_Get()->window.current_feature : "(null)");
+        return -1;
+    }
+    return File_ReadAll(full, buffer, buffer_size);
+}
+
 bool fl_free_list(const char* list[], int count) {
     if (!list || count <= 0) return false;
     for (int i = 0; i < count; i++) free((void*)list[i]);
