@@ -359,6 +359,17 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
       pkey.alt = (GetKeyState(VK_MENU) & 0x8000) != 0;
       s_swallow_next_char = true;
       bool consumed = PromptWindow_OnKey(hKey, &pkey);
+      if (wParam == VK_BACK) {
+        PromptState* ps = g_win32_prompt_state;
+        if (ps) {
+          strncpy(FlintContext_Get()->window.filter, ps->filter, sizeof(FlintContext_Get()->window.filter) - 1);
+          FlintContext_Get()->window.filter[sizeof(FlintContext_Get()->window.filter) - 1] = '\0';
+          FlintContext_Get()->window.filter_cursor = (int)ps->cursor;
+          if (FlintContext_Get()->prompt_callbacks.refresh) {
+            FlintContext_Get()->prompt_callbacks.refresh(ps->filter, ps->has_listbox ? &ps->listbox : NULL);
+          }
+        }
+      }
       if (!consumed) s_swallow_next_char = false;
       if (wParam == VK_DELETE) {
         UI_DeleteForward();
