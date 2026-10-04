@@ -112,11 +112,11 @@ static void widget_paint_layered(PlatformWidget *widget) {
     if (!layer_acquire(widget)) return;
 
     layer_fill(widget, 0xFF000000u);
+    Platform_SetDrawBgColor(0);
     SetBkMode(widget->layer_dc, TRANSPARENT);
     Platform_SetDrawContextWin32(widget->layer_dc);
     Platform_SetPreRenderStateWin32(NULL, NULL);
     if (widget->fn) widget->fn(widget->ud);
-    Platform_SetDrawBgColor(0);
     GdiFlush();
 
 {
@@ -176,11 +176,11 @@ static void widget_paint(PlatformWidget *widget, HDC hdc, RECT *rect) {
         FillRect(hdc, rect, brush);
         DeleteObject(brush);
     }
+    Platform_SetDrawBgColor(0);
     SetBkMode(hdc, TRANSPARENT);
     Platform_SetDrawContextWin32(hdc);
     Platform_SetPreRenderStateWin32(NULL, NULL);
     if (widget->fn) widget->fn(widget->ud);
-    Platform_SetDrawBgColor(0);
 }
 
 static LRESULT CALLBACK FlintWidgetProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -338,6 +338,12 @@ PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps, bool
         DestroyWindow(widget->hwnd);
         free(widget);
         return NULL;
+    }
+
+    unsigned long amb = Platform_GetDrawBgColor();
+    if (amb) {
+        widget->has_bg = true;
+        widget->bg_hex = amb;
     }
 
     widget_frame(widget);
