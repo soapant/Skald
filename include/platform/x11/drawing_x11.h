@@ -10,7 +10,7 @@
 #if !defined(_WIN32)
 void draw_wrapped_text(Display* dpy, XftDraw* xd, XftColor* color, FontHandle font, const char* text, int startY,char* centered_to,int xOffset);
 void x11_xft_alloc_color(Display* dpy, Visual* vis, Colormap cmap, unsigned long hex, unsigned short alpha, XftColor* out);
-unsigned long VimModeTextColor(void);
+
 int x11_update_edit_scroll_offset(Display* dpy, XftFont* xf, const char* text, int text_len, int cursor, int width, int prev_scroll, int* out_cursor_x);
 void x11_draw_edit_cursor(XftDraw* xd, XftColor* color, int cursor_x, int scroll, int width);
 const char* ListBoxItemDisplayText(ListBoxInfo* lb, int idx, char* trunc, size_t trunc_size);

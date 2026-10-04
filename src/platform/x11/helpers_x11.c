@@ -179,14 +179,6 @@ void x11_xft_alloc_color(Display* dpy, Visual* vis, Colormap cmap, unsigned long
     PROFILE_END_VAR(timer, "helpers_x11:x11_xft_alloc_color");
 }
 
-unsigned long VimModeTextColor(void) {
-    PROFILE_START(timer);
-    if (g_current_mode == MODE_NORMAL) { PROFILE_END_VAR(timer, "helpers_x11:VimModeTextColor"); return rgb_to_hex(COLOR_NORMAL_MODE_TEXT); }
-    if (g_current_mode == MODE_INSERT) { PROFILE_END_VAR(timer, "helpers_x11:VimModeTextColor"); return rgb_to_hex(COLOR_INSERT_MODE_TEXT); }
-    PROFILE_END_VAR(timer, "helpers_x11:VimModeTextColor");
-    return rgb_to_hex(COLOR_VISUAL_MODE_TEXT);
-}
-
 int x11_update_edit_scroll_offset(Display* dpy, XftFont* xf, const char* text, int text_len, int cursor, int width, int prev_scroll, int* out_cursor_x) {
     PROFILE_START(timer);
     int visible_w = width - PROMPT_EDIT_SCROLL_PAD;

@@ -50,7 +50,7 @@ extern long pending_hotkey_timeMs;
 bool should_swallow_pending(int wParam, int mods);
 int x11_keysym_to_windows_vk(KeySym keysym);
 void ReadModifiers(const XEvent* ev, bool* ctrl_pressed, bool* shift_pressed, bool* alt_pressed);
-bool TryVimMotion(int wParam, bool ctrl_pressed, bool shift_pressed, bool alt_pressed);
+
 
 void HandleCommandExecution(ListBoxInfo* lb, char* string);
 

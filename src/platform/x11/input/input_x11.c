@@ -107,10 +107,3 @@ void ReadModifiers(const XEvent* ev, bool* ctrl_pressed, bool* shift_pressed, bo
     PROFILE_END_VAR(timer, "subclasses_x11:ReadModifiers");
 }
 
-bool TryVimMotion(int wParam, bool ctrl_pressed, bool shift_pressed, bool alt_pressed) {
-    PROFILE_START(timer);
-    bool r = PromptController_TryVimMotion(wParam, ctrl_pressed, shift_pressed, alt_pressed);
-    PROFILE_END_VAR(timer, "subclasses_x11:TryVimMotion");
-    return r;
-}
-
