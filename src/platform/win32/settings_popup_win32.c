@@ -188,7 +188,7 @@ LRESULT CALLBACK SettingsEditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LP
         }
       if (wParam == VK_BACK) {
         if (ctrl_pressed) {
-          UI_SetText(FlintContext_Get()->window.hEditControl,"");
+          UI_SetText("");
             ListBoxInfo* lbc = GetLBFromChild(hwnd);
             if (lbc) UI_Redraw(lbc, FlintContext_Get()->window.hListBox);
             InvalidateRect(hwnd, NULL, TRUE);
@@ -215,13 +215,13 @@ LRESULT CALLBACK SettingsEditSubclassProc(HWND hwnd, UINT msg, WPARAM wParam, LP
       if (wParam == VK_DOWN) {
         if (ctrl_pressed) {
           char text[256];
-          UI_GetCurrentTextEdit(FlintContext_Get()->window.hEditControl, text,sizeof(text));
-          UI_SetCursorPosition(FlintContext_Get()->window.hEditControl,strlen(text));
+          UI_GetCurrentTextEdit(text,sizeof(text));
+          UI_SetCursorPosition(strlen(text));
         }
       }
       if (wParam == VK_UP) {
         if (ctrl_pressed) {
-          UI_SetCursorPosition(FlintContext_Get()->window.hEditControl,1);
+          UI_SetCursorPosition(1);
         }
       }
     } 
@@ -297,6 +297,6 @@ void SettingsCreateChildControls(WindowHandle hwndParent, HFONT hFont,const Wind
   if (WH_TO_HWND(FlintContext_Get()->window.hEditControl) == NULL) return;
 
   FlintContext_Get()->window.hActiveEditControl = FlintContext_Get()->window.hEditControl;
-  UI_Edit_SetFont(FlintContext_Get()->window.hEditControl, hFont);
+  UI_Edit_SetFont(hFont);
   SetWindowSubclass(WH_TO_HWND(FlintContext_Get()->window.hEditControl), SettingsEditSubclassProc, 0, 0);
 }

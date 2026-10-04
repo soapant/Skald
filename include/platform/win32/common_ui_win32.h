@@ -4,7 +4,7 @@
 #include "core/types.h"
 
 HFONT CreateCustomNerdFont(int height, const char* face_name);
-void UpdateTextCaret(WindowHandle hwndEditControl);
+void UpdateTextCaret(void);
 void CalculateWindowMetrics(WindowLayout* layout, int height, int width, int item_height);
 void CalculateSettingsWindowMetrics(WindowLayout* layout, int height, int width, int item_height);
 void ForceWindowFocus(WindowHandle hwndTarget, WindowHandle hwndInput);

@@ -56,7 +56,7 @@ static bool EditPopupWindow_OnKey(HWND hWnd, WMEditPopupData* data, ListBoxInfo*
         if (data->mode == MODE_INSERT) {
             SetMode(MODE_NORMAL);
             SetFocus(WH_TO_HWND(data->hEdit));
-            UpdateTextCaret(data->hEdit);
+            UpdateTextCaret();
             InvalidateRect(GetParent(hWnd), NULL, TRUE);
             return true;
         }
@@ -225,20 +225,20 @@ LRESULT CALLBACK EditPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
           if (WH_TO_HWND(data->hEdit)) {
             SendMessageA(WH_TO_HWND(data->hEdit), EM_SETMARGINS,
                 EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELONG(0, 0));
-            UI_Edit_SetFont(data->hEdit, g_edit_popup_font);
+            UI_Edit_SetFont(g_edit_popup_font);
               int start = data->cursor;
               if (start < 0) start = 0;
               if (data->text) {
                 int len = (int)strlen(data->text);
                 if (start > len) start = len;
               }
-              UI_Edit_SetSel(data->hEdit, start, start);
+              UI_Edit_SetSel(start, start);
               SetFocus(WH_TO_HWND(data->hEdit));
               FlintContext_Get()->window.hActiveEditControl = data->hEdit;
 
               SetWindowLongPtrA(WH_TO_HWND(data->hEdit), GWLP_USERDATA, (LONG_PTR)data);
               SetWindowSubclass(WH_TO_HWND(data->hEdit), EditPopupSubclassProc, 0, (DWORD_PTR)data);
-              UpdateTextCaret(data->hEdit);
+              UpdateTextCaret();
           }
       break;
     }
@@ -312,7 +312,7 @@ LRESULT CALLBACK EditPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
         }
         ForceWindowFocus(FlintContext_Get()->window.hPopupWnd, FlintContext_Get()->window.hEditControl);
         last_index = lb ? lb->selected_index : -1;
-        UpdateTextCaret(FlintContext_Get()->window.hEditControl);
+        UpdateTextCaret();
         break;
     }
     }

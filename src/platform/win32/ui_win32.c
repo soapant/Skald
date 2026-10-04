@@ -6,6 +6,7 @@
 #include "deps/log.h"
 #include "config.h"
 #include "core/context.h"
+#include "core/window_manager.h"
 #include "core/vim.h"
 #include "platform/win32/win32_state.h"
 #include "helpers/helpers_ui.h"
@@ -175,8 +176,98 @@ int UI_LB_GetText(WindowHandle hList, int index, char* buffer) {
     return (int)SendMessageA(WH_TO_HWND(hList), LB_GETTEXT, index, (LPARAM)buffer);
 }
 
-void UI_Edit_SetFont(WindowHandle hEdit, HFONT hFont) {
-    SendMessageA(WH_TO_HWND(hEdit), WM_SETFONT, (WPARAM)hFont, FALSE);
+void UI_Edit_SetFont(HFONT hFont) {
+    (void)hFont;
+}
+
+typedef struct {
+    char* text;
+    size_t capacity;
+    int* cursor_i;
+    size_t* cursor_z;
+} Win32TextTarget;
+
+static int win32_target_cursor(const Win32TextTarget* t) {
+    if (t->cursor_i) return *t->cursor_i;
+    if (t->cursor_z) return (int)*t->cursor_z;
+    return 0;
+}
+
+static void win32_target_set_cursor(const Win32TextTarget* t, int value) {
+    if (t->cursor_i) { *t->cursor_i = value; return; }
+    if (t->cursor_z) { *t->cursor_z = (size_t)value; return; }
+}
+
+static bool win32_resolve_text_target(Win32TextTarget* out) {
+    out->text = NULL;
+    out->capacity = 0;
+    out->cursor_i = NULL;
+    out->cursor_z = NULL;
+    WindowManager* wm = WindowManager_Get();
+    Popup* top = wm ? WindowManager_GetTopPopup(wm) : NULL;
+    if (top && top->type == POPUP_EDIT) {
+        WMEditPopupData* ed = (WMEditPopupData*)top;
+        if (ed && ed->text) {
+            out->text = ed->text;
+            out->capacity = ed->text_capacity > 0 ? (size_t)ed->text_capacity : 1024;
+            out->cursor_i = &ed->cursor;
+            return true;
+        }
+    }
+    if (top && top->type == POPUP_PROMPT && top->user_data) {
+        PromptState* prompt = (PromptState*)top->user_data;
+        out->text = prompt->filter;
+        out->capacity = sizeof(prompt->filter);
+        out->cursor_z = &prompt->cursor;
+        return true;
+    }
+    if (g_win32_prompt_state) {
+        out->text = g_win32_prompt_state->filter;
+        out->capacity = sizeof(g_win32_prompt_state->filter);
+        out->cursor_z = &g_win32_prompt_state->cursor;
+        return true;
+    }
+    return false;
+}
+
+void UI_Edit_SetSel(uint32_t start, uint32_t end) {
+    (void)end;
+    UI_SetCursorPosition((int)start);
+}
+
+void UI_Edit_GetSel(uint32_t* start, uint32_t* end) {
+    Win32TextTarget t;
+    uint32_t cursor = 0;
+    if (win32_resolve_text_target(&t)) cursor = (uint32_t)win32_target_cursor(&t);
+    if (start) *start = cursor;
+    if (end) *end = cursor;
+}
+
+void UI_GetCurrentTextEdit(char* buffer, size_t cap) {
+    if (!buffer || cap == 0) return;
+    buffer[0] = '\0';
+    Win32TextTarget t;
+    if (!win32_resolve_text_target(&t) || !t.text) return;
+    snprintf(buffer, cap, "%s", t.text);
+    buffer[cap-1] = '\0';
+}
+
+void UI_SetText(const char* text) {
+    if (!text) text = "";
+    Win32TextTarget t;
+    if (!win32_resolve_text_target(&t) || !t.text || t.capacity == 0) return;
+    strncpy(t.text, text, t.capacity - 1);
+    t.text[t.capacity-1] = '\0';
+    UI_SetCursorPosition((int)strlen(t.text));
+}
+
+void UI_SetCursorPosition(int position) {
+    Win32TextTarget t;
+    if (!win32_resolve_text_target(&t) || !t.text) return;
+    int len = (int)strlen(t.text);
+    if (position < 0) position = 0;
+    if (position > len) position = len;
+    win32_target_set_cursor(&t, position);
 }
 
 HFONT UI_GetFont(WindowHandle hWnd) {
@@ -187,42 +278,12 @@ void UI_Edit_UpdateUIState(WindowHandle hEdit, unsigned int action, unsigned int
     SendMessageA(WH_TO_HWND(hEdit), WM_UPDATEUISTATE, MAKEWPARAM(action, uiFlags), 0);
 }
 
-void UI_Edit_SetSel(WindowHandle hEdit, uint32_t start, uint32_t end) {
-    SendMessageA(WH_TO_HWND(hEdit), EM_SETSEL, start, end);
-}
-
-void UI_Edit_GetSel(WindowHandle hEdit, uint32_t* start, uint32_t* end) {
-    SendMessageA(WH_TO_HWND(hEdit), EM_GETSEL, (WPARAM)start, (LPARAM)end);
-}
-
-void UI_GetCurrentTextEdit(WindowHandle edit, char* buffer, size_t cap) {
-    GetWindowTextA(WH_TO_HWND(edit), buffer, (int)cap);
-}
-
-void UI_SetText(WindowHandle hEdit, char* text) {
-    SetWindowTextA(WH_TO_HWND(hEdit), text);
-}
-
-void UI_SetCursorPosition(WindowHandle ctrl, int position) {
-    UI_Edit_SetSel(ctrl, position, position);
-}
-
 PromptState *g_win32_prompt_state = NULL;
 void UI_RedrawNow(ListBoxInfo* lb, WindowHandle hListBox) {
     FlintContext* _c = FlintContext_Get();
     if (_c->prompt_callbacks.refresh != NULL) {
         char buffer[MaxFeatures];
-        UI_GetCurrentTextEdit(FlintContext_Get()->window.hEditControl, buffer, sizeof(buffer));
-        if (g_win32_prompt_state) {
-            strncpy(g_win32_prompt_state->filter, buffer, sizeof(g_win32_prompt_state->filter) - 1);
-            g_win32_prompt_state->filter[sizeof(g_win32_prompt_state->filter) - 1] = '\0';
-            HWND hEdit = WH_TO_HWND(FlintContext_Get()->window.hEditControl);
-            if (hEdit && IsWindow(hEdit)) {
-                DWORD cs = 0, ce = 0;
-                SendMessageA(hEdit, EM_GETSEL, (WPARAM)&cs, (LPARAM)&ce);
-                g_win32_prompt_state->cursor = (size_t)cs;
-            }
-        }
+        UI_GetCurrentTextEdit(buffer, sizeof(buffer));
         _c->prompt_callbacks.refresh(buffer, lb);
     }
 }
