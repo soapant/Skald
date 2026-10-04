@@ -2133,3 +2133,35 @@ unsigned long long fl_net_rx_bytes(const char *iface) {
 }
 
 
+static void* fl_net_rx_sample_thread(void* arg) {
+    FlRxSample* s = (FlRxSample*)arg;
+    s->bytes = fl_net_rx_bytes_platform(s->iface);
+    return NULL;
+}
+
+unsigned long long fl_net_rx_bytes_over(const char *iface, double seconds) {
+    if (seconds <= 0) return 0;
+
+    FlRxSample before;
+    snprintf(before.iface, sizeof(before.iface), "%s", iface ? iface : "");
+    before.bytes = 0;
+
+    FlThread t = fl_thread_create(fl_net_rx_sample_thread, &before);
+    if (!t) return 0;
+    fl_thread_join(t);
+
+    fl_sleep(seconds);
+
+    FlRxSample after;
+    snprintf(after.iface, sizeof(after.iface), "%s", iface ? iface : "");
+    after.bytes = 0;
+
+    t = fl_thread_create(fl_net_rx_sample_thread, &after);
+    if (!t) return 0;
+    fl_thread_join(t);
+
+    if (after.bytes < before.bytes) return 0;
+    return after.bytes - before.bytes;
+}
+
+
