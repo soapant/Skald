@@ -198,6 +198,8 @@ static void win32_target_set_cursor(const Win32TextTarget* t, int value) {
     if (t->cursor_z) { *t->cursor_z = (size_t)value; return; }
 }
 
+static wchar_t s_pending_high_surrogate = 0;
+
 static bool win32_resolve_text_target(Win32TextTarget* out) {
     out->text = NULL;
     out->capacity = 0;
@@ -262,12 +264,92 @@ void UI_SetText(const char* text) {
 }
 
 void UI_SetCursorPosition(int position) {
+    s_pending_high_surrogate = 0;
     Win32TextTarget t;
     if (!win32_resolve_text_target(&t) || !t.text) return;
     int len = (int)strlen(t.text);
     if (position < 0) position = 0;
     if (position > len) position = len;
     win32_target_set_cursor(&t, position);
+}
+
+int UI_InsertText(const char* utf8, int len) {
+    Win32TextTarget t;
+    if (!utf8 || len <= 0) return 0;
+    if (!win32_resolve_text_target(&t) || !t.text || t.capacity == 0) return 0;
+    size_t cur = (size_t)win32_target_cursor(&t);
+    size_t have = strlen(t.text);
+    if (cur > have) cur = have;
+    if (have + (size_t)len + 1 > t.capacity) return 0;
+    memmove(t.text + cur + len, t.text + cur, have - cur + 1);
+    memcpy(t.text + cur, utf8, (size_t)len);
+    win32_target_set_cursor(&t, (int)(cur + len));
+    return len;
+}
+
+static int win32_prev_char_len(const char* text, size_t cur) {
+    if (cur == 0) return 0;
+    size_t i = cur - 1;
+    while (i > 0 && ((unsigned char)text[i] & 0xC0) == 0x80) i--;
+    return (int)(cur - i);
+}
+
+static int win32_next_char_len(const char* text, size_t len, size_t cur) {
+    if (cur >= len) return 0;
+    size_t i = cur + 1;
+    while (i < len && ((unsigned char)text[i] & 0xC0) == 0x80) i++;
+    return (int)(i - cur);
+}
+
+void UI_Backspace(void) {
+    s_pending_high_surrogate = 0;
+    Win32TextTarget t;
+    if (!win32_resolve_text_target(&t) || !t.text) return;
+    size_t have = strlen(t.text);
+    size_t cur = (size_t)win32_target_cursor(&t);
+    if (cur > have) cur = have;
+    int n = win32_prev_char_len(t.text, cur);
+    if (n <= 0) return;
+    memmove(t.text + cur - n, t.text + cur, have - cur + 1);
+    win32_target_set_cursor(&t, (int)(cur - n));
+}
+
+void UI_DeleteForward(void) {
+    s_pending_high_surrogate = 0;
+    Win32TextTarget t;
+    if (!win32_resolve_text_target(&t) || !t.text) return;
+    size_t have = strlen(t.text);
+    size_t cur = (size_t)win32_target_cursor(&t);
+    if (cur > have) cur = have;
+    int n = win32_next_char_len(t.text, have, cur);
+    if (n <= 0) return;
+    memmove(t.text + cur, t.text + cur + n, have - cur - n + 1);
+}
+
+int UI_InsertChar(wchar_t wc) {
+    wchar_t pair[2];
+    int pairlen = 0;
+    if (s_pending_high_surrogate) {
+        if (wc >= 0xDC00 && wc <= 0xDFFF) {
+            pair[0] = s_pending_high_surrogate;
+            pair[1] = wc;
+            pairlen = 2;
+            s_pending_high_surrogate = 0;
+        } else {
+            s_pending_high_surrogate = 0;
+            return 0;
+        }
+    } else if (wc >= 0xD800 && wc <= 0xDBFF) {
+        s_pending_high_surrogate = wc;
+        return 0;
+    } else {
+        pair[0] = wc;
+        pairlen = 1;
+    }
+    char utf8[8];
+    int n = WideCharToMultiByte(CP_UTF8, 0, pair, pairlen, utf8, (int)sizeof(utf8), NULL, NULL);
+    if (n <= 0) return 0;
+    return UI_InsertText(utf8, n);
 }
 
 HFONT UI_GetFont(WindowHandle hWnd) {

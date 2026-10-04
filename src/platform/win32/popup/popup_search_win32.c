@@ -105,14 +105,11 @@ LRESULT CALLBACK SearchPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPar
           size_t len = strlen(ps->filter);
           size_t cur = ps->cursor;
           if (cur > len) cur = len;
-          if (cur > 0) {
-            if (cur >= 2 && ps->filter[cur-1] == '\n' && ps->filter[cur-2] == '\r') {
-              memmove(ps->filter + cur - 2, ps->filter + cur, len - cur + 1);
-              ps->cursor = cur - 2;
-            } else {
-              memmove(ps->filter + cur - 1, ps->filter + cur, len - cur + 1);
-              ps->cursor = cur - 1;
-            }
+          if (cur >= 2 && ps->filter[cur-1] == '\n' && ps->filter[cur-2] == '\r') {
+            memmove(ps->filter + cur - 2, ps->filter + cur, len - cur + 1);
+            ps->cursor = cur - 2;
+          } else {
+            UI_Backspace();
           }
         }
         InvalidateRect(hwnd, NULL, TRUE);
@@ -124,12 +121,10 @@ LRESULT CALLBACK SearchPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPar
           size_t len = strlen(ps->filter);
           size_t cur = ps->cursor;
           if (cur > len) cur = len;
-          if (cur < len) {
-            if (cur + 1 < len && ps->filter[cur] == '\r' && ps->filter[cur+1] == '\n') {
-              memmove(ps->filter + cur, ps->filter + cur + 2, len - cur - 1);
-            } else {
-              memmove(ps->filter + cur, ps->filter + cur + 1, len - cur);
-            }
+          if (cur + 1 < len && ps->filter[cur] == '\r' && ps->filter[cur+1] == '\n') {
+            memmove(ps->filter + cur, ps->filter + cur + 2, len - cur - 1);
+          } else {
+            UI_DeleteForward();
           }
         }
         InvalidateRect(hwnd, NULL, TRUE);
@@ -140,21 +135,10 @@ LRESULT CALLBACK SearchPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPar
 
     case WM_CHAR: {
       if (wParam == 0x08 || wParam == 0x7F) return 0;
-      if (wParam >= 0x20 && IsInsertMode()) {
-        PromptState* ps = g_win32_prompt_state;
-        if (ps) {
-          size_t len = strlen(ps->filter);
-          size_t cur = ps->cursor;
-          if (cur > len) cur = len;
-          if (len < sizeof(ps->filter) - 2) {
-            memmove(ps->filter + cur + 1, ps->filter + cur, len - cur + 1);
-            ps->filter[cur] = (char)wParam;
-            ps->cursor = cur + 1;
-          }
-          if (lb) UI_Redraw(lb, FlintContext_Get()->window.hListBox);
-          InvalidateRect(hwnd, NULL, FALSE);
-          return 0;
-        }
+      if (wParam >= 0x20 && IsInsertMode() && UI_InsertChar((wchar_t)wParam) > 0) {
+        if (lb) UI_Redraw(lb, FlintContext_Get()->window.hListBox);
+        InvalidateRect(hwnd, NULL, FALSE);
+        return 0;
       }
       break;
     }
