@@ -261,6 +261,11 @@ void UI_SetText(const char* text) {
     strncpy(t.text, text, t.capacity - 1);
     t.text[t.capacity-1] = '\0';
     UI_SetCursorPosition((int)strlen(t.text));
+    HWND popup = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
+    if (popup && IsWindow(popup)) InvalidateRect(popup, NULL, FALSE);
+    if (WH_TO_HWND(FlintContext_Get()->window.hListBox)) {
+        InvalidateRect(WH_TO_HWND(FlintContext_Get()->window.hListBox), NULL, FALSE);
+    }
 }
 
 void UI_SetCursorPosition(int position) {

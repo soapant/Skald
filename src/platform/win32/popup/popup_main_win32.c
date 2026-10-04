@@ -360,27 +360,38 @@ LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
       s_swallow_next_char = true;
       bool consumed = PromptWindow_OnKey(hKey, &pkey);
       if (!consumed) s_swallow_next_char = false;
-      if (consumed) {
-        if (FlintContext_Get()->prompt_callbacks.render != NULL) InvalidateRect(hwnd, NULL, FALSE);
+      if (wParam == VK_DELETE) {
+        UI_DeleteForward();
+        PromptState* ps = g_win32_prompt_state;
+        if (ps) {
+          strncpy(FlintContext_Get()->window.filter, ps->filter, sizeof(FlintContext_Get()->window.filter) - 1);
+          FlintContext_Get()->window.filter[sizeof(FlintContext_Get()->window.filter) - 1] = '\0';
+          FlintContext_Get()->window.filter_cursor = (int)ps->cursor;
+        }
+        UI_Redraw(lb, FlintContext_Get()->window.hListBox);
+        InvalidateRect(hwnd, NULL, FALSE);
         return 0;
       }
-      if (FlintContext_Get()->prompt_callbacks.render != NULL) InvalidateRect(hwnd, NULL, FALSE);
+      if (consumed) {
+        InvalidateRect(hwnd, NULL, FALSE);
+        return 0;
+      }
+      InvalidateRect(hwnd, NULL, FALSE);
       break;
     }
 case WM_CHAR: {
       if (s_swallow_next_char) { s_swallow_next_char = false; return 0; }
-      if (FlintContext_Get()->prompt_callbacks.render != NULL && IsInsertMode()) {
-        if (wParam >= 0x20 && UI_InsertChar((wchar_t)wParam) > 0) {
-          PromptState* ps = g_win32_prompt_state;
-          if (ps) {
-            strncpy(FlintContext_Get()->window.filter, ps->filter, sizeof(FlintContext_Get()->window.filter) - 1);
-            FlintContext_Get()->window.filter[sizeof(FlintContext_Get()->window.filter) - 1] = '\0';
-            FlintContext_Get()->window.filter_cursor = (int)ps->cursor;
-          }
-          UI_Redraw(lb, FlintContext_Get()->window.hListBox);
-          InvalidateRect(hwnd, NULL, FALSE);
-          return 0;
+      if (wParam == 0x08 || wParam == 0x7F) return 0;
+      if (wParam >= 0x20 && IsInsertMode() && UI_InsertChar((wchar_t)wParam) > 0) {
+        PromptState* ps = g_win32_prompt_state;
+        if (ps) {
+          strncpy(FlintContext_Get()->window.filter, ps->filter, sizeof(FlintContext_Get()->window.filter) - 1);
+          FlintContext_Get()->window.filter[sizeof(FlintContext_Get()->window.filter) - 1] = '\0';
+          FlintContext_Get()->window.filter_cursor = (int)ps->cursor;
         }
+        UI_Redraw(lb, FlintContext_Get()->window.hListBox);
+        InvalidateRect(hwnd, NULL, FALSE);
+        return 0;
       }
       break;
     }

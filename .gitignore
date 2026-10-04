@@ -1,6 +1,2 @@
-# Compiled object files
-*.o
-*.err
-*.d
 /tags
 /build
