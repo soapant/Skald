@@ -3,6 +3,7 @@
 #include "wm/wm.h"
 #include "deps/log.h"
 #include "platform/platform.h"
+#include "helpers/helpers_text.h"
 #include "platform/draw.h"
 #include "platform/x11/env_helpers_x11.h"
 #include "platform/x11/desktop_helpers_x11.h"
@@ -946,24 +947,31 @@ void fl_mutex_unlock_platform(void* mutex) {
 }
 
 int fl_get_active_interface_platform(char out[], size_t max_len) {
-    FILE *f = fopen("/proc/net/route", "r");
-    if (!f) return 0;
-    char buf[256];
+    static char content[16384];
+    if (File_ReadAll("/proc/net/route", content, (long)sizeof(content)) <= 0) return 0;
     int found = 0;
-    if (fgets(buf, sizeof(buf), f)) { 
-        while (fgets(buf, sizeof(buf), f)) {
-            char iface[32];
-            unsigned long dest, mask;
-            if (sscanf(buf, "%31s %lx %*s %*s %*s %*s %*s %lx", iface, &dest, &mask) == 3) {
-                if (dest == 0 && mask == 0) { 
-                    strncpy(out, iface, max_len - 1);
-                    found = 1;
-                    break;
-                }
+    char* cur = content;
+    if (*cur) {
+        char* nl = strchr(cur, '\n');
+        if (nl) *nl = '\0';
+        cur = nl ? nl + 1 : cur + strlen(cur);
+    }
+    while (*cur) {
+        char* nl = strchr(cur, '\n');
+        if (nl) *nl = '\0';
+        char* line = cur;
+        cur = nl ? nl + 1 : cur + strlen(cur);
+        char iface[64];
+        unsigned long dest, mask;
+        if (sscanf(line, "%63s %lx %*s %*s %*s %*s %*s %lx", iface, &dest, &mask) == 3) {
+            if (dest == 0 && mask == 0) {
+                strncpy(out, iface, max_len - 1);
+                out[max_len-1] = '\0';
+                found = 1;
+                break;
             }
         }
     }
-    fclose(f);
     return found;
 }
 unsigned long long fl_net_rx_bytes_platform() {

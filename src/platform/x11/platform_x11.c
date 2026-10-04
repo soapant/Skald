@@ -24,6 +24,7 @@
 #include "config.h"
 #include "platform/platform.h"
 #include "helpers/helpers_hotkey.h"
+#include "helpers/helpers_text.h"
 #include "helpers/helpers_ui.h"
 #include "core/context.h"
 #include <stdio.h>
@@ -1264,18 +1265,23 @@ static bool icon_cache_path(char* out, size_t n) {
 static void icon_cache_load(void){
     if(g_icon_cache_loaded) return; g_icon_cache_loaded=true;
     char cf[1024];
-    FILE* f=NULL;
-    if (icon_cache_path(cf, sizeof(cf))) f=fopen(cf,"r");
-    if(!f) return;
-    char line[1536];
-    while(fgets(line,sizeof(line),f) && g_icon_cache_count<MAX_ICON_CACHE){
+    static char content[MAX_ICON_CACHE * 1600];
+    if (!icon_cache_path(cf, sizeof(cf))) return;
+    if (File_ReadAll(cf, content, (long)sizeof(content)) <= 0) return;
+    char* cur = content;
+    while (*cur && g_icon_cache_count < MAX_ICON_CACHE) {
+        char* nl = strchr(cur, '\n');
+        if (nl) *nl = '\0';
+        char* line = cur;
+        cur = nl ? nl + 1 : cur + strlen(cur);
         line[strcspn(line,"\r\n")]='\0';
         char* eq=strchr(line,'='); if(!eq) continue; *eq='\0';
         strncpy(g_icon_cache[g_icon_cache_count].key, line, sizeof(g_icon_cache[0].key)-1);
+        g_icon_cache[g_icon_cache_count].key[sizeof(g_icon_cache[0].key)-1]='\0';
         strncpy(g_icon_cache[g_icon_cache_count].value, eq+1, sizeof(g_icon_cache[0].value)-1);
+        g_icon_cache[g_icon_cache_count].value[sizeof(g_icon_cache[0].value)-1]='\0';
         if(access(g_icon_cache[g_icon_cache_count].value,F_OK)==0) g_icon_cache_count++;
     }
-    fclose(f);
 }
 static const char* icon_cache_get(const char* key){
     icon_cache_load();

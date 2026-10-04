@@ -240,6 +240,14 @@ char* fl_read_file_to_string(const char* path, size_t* out_len) {
     if (out_len) *out_len = read;
     return buf;
 }
+
+long fl_read_entire_file(const char* full_path, char* buffer, long buffer_size) {
+    if (!full_path || !buffer || buffer_size <= 0) return -1;
+    char expanded[MAX_PATH];
+    if (!Platform_ExpandPath(full_path, expanded, sizeof(expanded))) strncpy(expanded, full_path, sizeof(expanded)-1);
+    expanded[sizeof(expanded)-1] = '\0';
+    return File_ReadAll(expanded, buffer, buffer_size);
+}
 bool fl_write_string_to_file(const char* path, const char* content) {
     if (!path || !content) return false;
     char expanded[MAX_PATH];
