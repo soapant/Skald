@@ -1,6 +1,8 @@
 #include <winsock2.h>
 #include <windows.h>
 #include <iphlpapi.h>
+#include <iptypes.h>
+#include <netioapi.h>
 #include <netlistmgr.h>
 #include <initguid.h> 
 #include "platform/win32/win32_state.h"
@@ -667,6 +669,66 @@ void fl_mutex_lock_platform(void* mutex) {
 void fl_mutex_unlock_platform(void* mutex) {
     if (!mutex) return;
     LeaveCriticalSection((CRITICAL_SECTION*)mutex);
+}
+
+int fl_get_active_interface_platform(char out[], size_t max_len) {
+    ULONG size = 15 * 1024;
+    IP_ADAPTER_ADDRESSES* addrs = (IP_ADAPTER_ADDRESSES*)malloc(size);
+    if (!addrs) return 0;
+
+    DWORD ret = GetAdaptersAddresses(AF_UNSPEC, GAA_FLAG_INCLUDE_GATEWAYS, NULL, addrs, &size);
+    if (ret != NO_ERROR) {
+        free(addrs);
+        return 0;
+    }
+
+    for (IP_ADAPTER_ADDRESSES* a = addrs; a; a = a->Next) {
+        if (a->IfType == IF_TYPE_SOFTWARE_LOOPBACK) continue;
+        if (a->OperStatus != IfOperStatusUp) continue;
+        if (a->FirstGatewayAddress == NULL) continue;
+
+        size_t len = wcslen(a->FriendlyName);
+        if (len >= max_len) len = max_len - 1;
+        wcstombs(out, a->FriendlyName, len);
+        out[len] = '\0';
+        free(addrs);
+        return 1;
+    }
+
+    free(addrs);
+    out[0] = '\0';
+    return 0;
+}
+
+unsigned long long fl_net_rx_bytes_platform(const char* iface) {
+    MIB_IFTABLE* table = NULL;
+    DWORD size = 0;
+    
+    if (GetIfTable(NULL, &size, FALSE) != ERROR_INSUFFICIENT_BUFFER) return 0;
+    
+    table = (MIB_IFTABLE*)malloc(size);
+    if (!table) return 0;
+    
+    if (GetIfTable(table, &size, FALSE) != NO_ERROR) {
+        free(table);
+        return 0;
+    }
+    
+    unsigned long long rx = 0;
+    for (DWORD i = 0; i < table->dwNumEntries; i++) {
+        MIB_IFROW* row = &table->table[i];
+        if (row->dwType == IF_TYPE_SOFTWARE_LOOPBACK) continue;
+        
+        if (iface && iface[0]) {
+            char name[256];
+            wcstombs(name, row->wszName, sizeof(name) - 1);
+            if (strcmp(name, iface) != 0) continue;
+        }
+        rx += row->dwInOctets;
+    }
+    
+    free(table);
+    return rx;
 }
 
 FlNetStatus fl_net_status_platform(void) {

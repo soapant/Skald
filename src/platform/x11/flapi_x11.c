@@ -597,7 +597,6 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
         else buf = "";
     }
     int x = spec->x;
-    int y = spec->y;
     int w = spec->w;
     int h = spec->h;
     if (w <= 0) w = state ? state->width : PROMPT_CUSTOM_FALLBACK_W;
@@ -946,33 +945,60 @@ void fl_mutex_unlock_platform(void* mutex) {
     pthread_mutex_unlock((pthread_mutex_t*)mutex);
 }
 
-FlNetStatus fl_net_status_platform(void) {
-    FILE* f = fopen("/proc/net/route", "r");
-    if (!f) return FL_NET_OFFLINE;
-
-    char iface[32] = {0};
+int fl_get_active_interface_platform(char out[], size_t max_len) {
+    FILE *f = fopen("/proc/net/route", "r");
+    if (!f) return 0;
     char buf[256];
     int found = 0;
-
-    while (fgets(buf, sizeof(buf), f)) {
-        char cur[32];
-        unsigned long dest, mask;
-        if (sscanf(buf, "%31s %lx %*s %*s %*s %*s %*s %lx", cur, &dest, &mask) == 3) {
-            if (dest == 0 && mask == 0) {
-                strncpy(iface, cur, sizeof(iface) - 1);
-                found = 1;
-                break;
+    if (fgets(buf, sizeof(buf), f)) { 
+        while (fgets(buf, sizeof(buf), f)) {
+            char iface[32];
+            unsigned long dest, mask;
+            if (sscanf(buf, "%31s %lx %*s %*s %*s %*s %*s %lx", iface, &dest, &mask) == 3) {
+                if (dest == 0 && mask == 0) { 
+                    strncpy(out, iface, max_len - 1);
+                    found = 1;
+                    break;
+                }
             }
         }
     }
     fclose(f);
+    return found;
+}
+unsigned long long fl_net_rx_bytes_platform(const char *iface) {
+    FILE *f = fopen("/proc/net/dev", "r");
+    if (!f) return 0;
+    char buf[512];
+    unsigned long long rx_bytes = 0;
+    
+    if (fgets(buf, sizeof(buf), f) && fgets(buf, sizeof(buf), f)) {
+        while (fgets(buf, sizeof(buf), f)) {
+            char iface[32];
+            unsigned long long bytes = 0;
+            if (sscanf(buf, " %31[^:]:%llu", iface, &bytes) == 2) {
+                char *trimmed = iface;
+                while(*trimmed == ' ') trimmed++;
+                if (strcmp(trimmed, iface) == 0) {
+                    rx_bytes = bytes;
+                    break;
+                }
+            }
+        }
+    }
+    fclose(f);
+    return rx_bytes;
+}
+
+FlNetStatus fl_net_status_platform(void) {
+    char iface[32] = {0};
+    int found = fl_get_active_interface_platform(iface, sizeof(iface));
 
     if (!found) return FL_NET_OFFLINE;
-
     char sysfs_path[128];
     snprintf(sysfs_path, sizeof(sysfs_path), "/sys/class/net/%s/carrier", iface);
 
-    f = fopen(sysfs_path, "r");
+    FILE* f = fopen(sysfs_path, "r");
     if (!f) return FL_NET_OFFLINE;
 
     char carrier = (char)fgetc(f);

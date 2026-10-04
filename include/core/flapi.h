@@ -62,6 +62,8 @@ typedef enum {
 // =============================================================================
 
 FlNetStatus fl_net_status(void);
+int fl_get_active_interface(char out[], size_t max_len);
+unsigned long long fl_net_rx_bytes(const char *iface);
 
 size_t fl_clipboard_history_count(void);
 const FlClipboardEntry* fl_clipboard_history_get(size_t index);
