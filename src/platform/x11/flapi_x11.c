@@ -967,21 +967,23 @@ int fl_get_active_interface_platform(char out[], size_t max_len) {
     return found;
 }
 unsigned long long fl_net_rx_bytes_platform() {
-    char iface[64];
-    fl_get_active_interface_platform(iface, sizeof(iface));
+    char want[64];
+    if (!fl_get_active_interface_platform(want, sizeof(want)) || !want[0]) return 0;
     FILE *f = fopen("/proc/net/dev", "r");
     if (!f) return 0;
     char buf[512];
     unsigned long long rx_bytes = 0;
-    
+
     if (fgets(buf, sizeof(buf), f) && fgets(buf, sizeof(buf), f)) {
         while (fgets(buf, sizeof(buf), f)) {
-            char iface[32];
+            char name[64];
             unsigned long long bytes = 0;
-            if (sscanf(buf, " %31[^:]:%llu", iface, &bytes) == 2) {
-                char *trimmed = iface;
-                while(*trimmed == ' ') trimmed++;
-                if (strcmp(trimmed, iface) == 0) {
+            if (sscanf(buf, " %63[^:]:%llu", name, &bytes) == 2) {
+                char *trimmed = name;
+                while(*trimmed == ' ' || *trimmed == '\t') trimmed++;
+                char *tail = trimmed + strlen(trimmed);
+                while (tail > trimmed && (tail[-1] == ' ' || tail[-1] == '\t' || tail[-1] == '\n' || tail[-1] == '\r')) *--tail = '\0';
+                if (strcmp(trimmed, want) == 0) {
                     rx_bytes = bytes;
                     break;
                 }

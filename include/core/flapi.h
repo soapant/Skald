@@ -57,11 +57,6 @@ typedef enum {
     FL_NET_WIFI,
 } FlNetStatus;
 
-typedef struct {
-    char iface[64];
-    unsigned long long bytes;
-} FlRxSample;
-
 // =============================================================================
 //  NETWORK
 // =============================================================================
