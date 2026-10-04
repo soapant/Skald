@@ -15,6 +15,7 @@
 #include "config.h"
 #include "config.h"
 #include "platform/platform.h"
+#include "helpers/helpers_text.h"
 #include "platform/platform.h"
 #include "core/timer.h"
 #include "deps/log.h"
@@ -728,30 +729,20 @@ int Platform_CollectRunningProcesses(char process_list[][128], int max_count) {
         if (!isdigit((unsigned char)entry->d_name[0])) continue;
         char comm_path[512];
         snprintf(comm_path, sizeof(comm_path), "/proc/%s/comm", entry->d_name);
-        FILE* f = fopen(comm_path, "r");
-        if (!f) continue;
         char exe[256];
-        if (!fgets(exe, sizeof(exe), f)) { fclose(f); continue; }
-        fclose(f);
+        if (File_ReadAll(comm_path, exe, (long)sizeof(exe)) <= 0) continue;
         size_t len = strlen(exe);
         while (len>0 && (exe[len-1]=='\n' || exe[len-1]=='\r')) exe[--len]='\0';
         if (len==0) continue;
         char stat_path[512];
         snprintf(stat_path, sizeof(stat_path), "/proc/%s/stat", entry->d_name);
-        FILE* fstat = fopen(stat_path, "r");
-        if (fstat) {
-            char stat_buf[1024];
-            if (fgets(stat_buf, sizeof(stat_buf), fstat)) {
-                char* rparen = strrchr(stat_buf, ')');
-                if (rparen) {
-                    int ppid = 0;
-                    if (sscanf(rparen+2, "%*c %d", &ppid)==1 && ppid==2) {
-                        fclose(fstat);
-                        continue;
-                    }
-                }
+        char stat_buf[1024];
+        if (File_ReadAll(stat_path, stat_buf, (long)sizeof(stat_buf)) > 0) {
+            char* rparen = strrchr(stat_buf, ')');
+            if (rparen) {
+                int ppid = 0;
+                if (sscanf(rparen+2, "%*c %d", &ppid)==1 && ppid==2) continue;
             }
-            fclose(fstat);
         }
         bool exists=false;
         for (int i=0;i<count;i++) if (Platform_StringContainsCaseInsensitive(process_list[i], exe)) {exists=true;break;}
