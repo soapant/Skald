@@ -223,15 +223,20 @@ static void widgets_internet_render(FlWidgetState *state) {
     }
 }
 
-void on_internet_hover(void) {
-    FlPos pos = fl_get_widget_pos("internet");
-    fl_message(.message="testing",.x = pos.x, .y = pos.y - FONTSIZE * 4);
-}
-
 static FlWidget* g_disk = NULL;
 static FlWidget* g_mem = NULL;
 static FlWidget* g_cpu = NULL;
 static FlWidget* g_internet = NULL;
+
+void on_internet_hover(void) {
+    FlPos pos = fl_get_widget_pos("internet");
+    fl_message(.message="testing",.x = pos.x, .y = pos.y - FONTSIZE * 4);
+    while (g_internet->hovered) {
+        printf("HOVER\n");
+        fl_sleep(0.1);
+    }
+}
+
 
 void FlipWidgets(void) {
     percentage = !percentage;
@@ -272,7 +277,7 @@ FLINT_FEATURE_INIT {
 
     g_internet = fl_widget(.name = "internet",
               .color = COLOR,
-              .fps = FPS,
+              .fps = 10,
               .no_bg = NO_BG,
               .on_hover = on_internet_hover,
               .slot = FL_WIDGET_SLOT_BOTTOM_RIGHT,

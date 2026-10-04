@@ -1592,6 +1592,13 @@ static void fl_widget_hover_poll(void) {
     PROFILE_END_VAR(_pt, "flapi:fl_widget_hover_poll");
 }
 
+static void *fl_widget_hover_worker(void *ud) {
+    FlWidget *w = (FlWidget *)ud;
+    if (w && w->on_hover) w->on_hover();
+    if (w) w->hover_running = false;
+    return NULL;
+}
+
 static void fl_widget_render_frame(void *ud) {
     PROFILE_START(_pt);
     FlWidget *widget = (FlWidget *)ud;
@@ -1603,10 +1610,12 @@ static void fl_widget_render_frame(void *ud) {
         bool inside = (widget->x >= 0x7fffffff) ? false
             : (g_fl_hover_pos.x >= widget->x && g_fl_hover_pos.x < widget->x + widget->w &&
                g_fl_hover_pos.y >= widget->y && g_fl_hover_pos.y < widget->y + widget->h);
-        if (inside != widget->hovered) {
-            widget->hovered = inside;
-            if (inside && widget->on_hover) widget->on_hover();
+        if (inside && !widget->hovered && widget->on_hover && !widget->hover_running) {
+            widget->hover_running = true;
+            widget->hover_thread = fl_thread_create(fl_widget_hover_worker, widget);
+            if (!widget->hover_thread) widget->hover_running = false;
         }
+        widget->hovered = inside;
     }
     FlWidgetState st;
     st.width = widget->w;
@@ -1651,6 +1660,12 @@ static bool fl_widget_owner_matches(const FlWidget *widget, const char *a, const
 static void fl_widget_destroy_window(void *ud) {
     FlWidget *widget = (FlWidget *)ud;
     if (!widget) return;
+    widget->hovered = false;
+    if (widget->hover_thread) {
+        fl_thread_join(widget->hover_thread);
+        widget->hover_thread = NULL;
+        widget->hover_running = false;
+    }
     if (Platform_Widget_IsValid(widget->win)) {
         Platform_Widget_Destroy(widget->win);
     }
