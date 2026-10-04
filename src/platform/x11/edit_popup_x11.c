@@ -8,6 +8,7 @@
 #include "platform/draw.h"
 #include "platform/wm_platform.h"
 #include "platform/x11/input_x11.h"
+#include "core/prompt_controller.h"
 #include "platform/x11/window_factory_x11.h"
 #include "platform/x11/drawing_x11.h"
 #include "helpers/helpers_ui.h"
@@ -194,7 +195,7 @@ bool Platform_EditPopupOnKey(Popup* self, const PopupKeyEvent* key) {
     bool alt_pressed = key->alt;
     (void)shift_pressed;
     (void)alt_pressed;
-    if (TryVimMotion(wParam, ctrl_pressed, shift_pressed, alt_pressed)) { PROFILE_END_VAR(timer, "edit_popup_x11:Platform_EditPopupOnKey"); return true; }
+    if (PromptController_TryVimMotion(wParam, ctrl_pressed, shift_pressed, alt_pressed)) { PROFILE_END_VAR(timer, "edit_popup_x11:Platform_EditPopupOnKey"); return true; }
 
     size_t cap = ed->text_capacity > 0 ? (size_t)ed->text_capacity : 1024;
     size_t n = strlen(ed->text);

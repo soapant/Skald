@@ -11,6 +11,7 @@
 #include "platform/x11/display_x11.h"
 #include "core/timer.h"
 #include "core/history.h"
+#include "core/prompt_controller.h"
 #include "platform/x11/input_x11.h"
 #include "platform/x11/window_factory_x11.h"
 #include "platform/input.h"
@@ -125,7 +126,7 @@ bool Platform_PromptPopupOnKey(Popup* self, const PopupKeyEvent* key) {
     bool shift_pressed = key->shift;
     bool alt_pressed = key->alt;
     log_info("prompt key wParam=%d shift=%d ctrl=%d alt=%d insert=%d", wParam, shift_pressed, ctrl_pressed, alt_pressed, IsInsertMode());
-    if (TryVimMotion(wParam, ctrl_pressed, shift_pressed, alt_pressed)) { PROFILE_END_VAR(timer, "prompt_popup_x11:Platform_PromptPopupOnKey"); return true; }
+    if (PromptController_TryVimMotion(wParam, ctrl_pressed, shift_pressed, alt_pressed)) { PROFILE_END_VAR(timer, "prompt_popup_x11:Platform_PromptPopupOnKey"); return true; }
     if (wParam == VK_BACK) {
         if (ctrl_pressed) {
             state->filter[0] = '\0';

@@ -15,6 +15,7 @@ float Color_BayerDither(int x, int y);
 unsigned int Color_HashNoise(int x, int y);
 unsigned int Color_Lerp(unsigned int a, unsigned int b, float t);
 void Color_DeriveLighter(unsigned int base, float intensity, unsigned char* out_r, unsigned char* out_g, unsigned char* out_b);
+unsigned long VimModeTextColor(void);
 
 void BuildAliasDisplayItems(ListBoxInfo* lb, const char** items, int count);
 void PopulateListBox(ListBoxInfo* lb, const char* filter,
