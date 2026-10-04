@@ -206,18 +206,40 @@ const char* get_default_terminal(int slot) {
 }
 const char* get_default_browser(int slot) {
     default_apps_x11[slot][0] = '\0';
-    const char* browser = NULL;
 
-    const char* env = getenv("BROWSER");
+    const char *env = getenv("BROWSER");
     if (env && env[0]) {
-        browser = env;
+        snprintf(default_apps_x11[slot], sizeof(default_apps_x11[slot]), "%s", env);
+        return default_apps_x11[slot];
     }
-    if (!browser) {
+
+    StringList l = File_ReadLines("~/.config/mimeapps.list", 65536);
+    for (size_t i = 0; i < l.count; i++) {
+        const char *line = l.items[i];
+        if (!Platform_StringContainsCaseInsensitive(line, "text/html")) continue;
+        char *value = String_CutAfter(line, '=');
+        if (!value) break;
+        char *first = String_CutBefore(value, ';');
+        free(value);
+        if (!first) break;
+        char *trimmed = String_Trim(first);
+        free(first);
+        if (trimmed) {
+            char *stem = String_CutBefore(trimmed, '.');
+            if (stem) {
+                if (stem[0]) snprintf(default_apps_x11[slot], sizeof(default_apps_x11[slot]), "%s", stem);
+                free(stem);
+            }
+            free(trimmed);
+        }
+        break;
     }
-    return browser;
+    StringList_Free(&l);
+
+    return default_apps_x11[slot];
 }
 
-const char* x11_get_default_shell(int slot) {
+const char* get_default_shell(int slot) {
     //temporary maybe in future just use the terminal config or somethign idk
     default_apps_x11[slot][0] = '\0';
     const char* shell = getenv("SHELL");
@@ -230,7 +252,7 @@ const char* Platform_GetDefaultApp(DefaultAppKind kind) {
     if (kind < 0 || kind >= DEFAULT_APP_COUNT) return "";
     if (kind == DEFAULT_BROWSER) return get_default_browser(DEFAULT_BROWSER);
     if (kind == DEFAULT_TERMINAL )    return get_default_terminal(DEFAULT_TERMINAL);
-    if (kind == DEFAULT_SHELL )       return x11_get_default_shell(DEFAULT_SHELL);
+    if (kind == DEFAULT_SHELL )       return get_default_shell(DEFAULT_SHELL);
     default_apps_x11[kind][0] = '\0';
     return default_apps_x11[kind];
 }

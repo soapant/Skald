@@ -191,6 +191,33 @@ long File_ReadAll(const char *path, char *buffer, long buffer_size)
 
     buffer[0] = '\0';
 
+    char expanded[4096];
+
+    if (path[0] == '~' && (path[1] == '/' || path[1] == '\0'))
+    {
+        const char *home = Platform_GetRealHome();
+
+        if (!home || !home[0])
+            return -1;
+
+        size_t total = 0;
+        size_t hn = strlen(home);
+
+        if (hn >= sizeof(expanded))
+            return -1;
+
+        memcpy(expanded, home, hn);
+        total = hn;
+
+        const char *rest = path + 1;
+
+        while (*rest && total < sizeof(expanded) - 1)
+            expanded[total++] = *rest++;
+
+        expanded[total] = '\0';
+        path = expanded;
+    }
+
     FILE *f = fopen(path, "rb");
     if (!f)
         return -1;
@@ -212,4 +239,268 @@ long File_ReadAll(const char *path, char *buffer, long buffer_size)
     buffer[total] = '\0';
 
     return (long)total;
+}
+
+static char String_MatchingClose(char open) {
+    switch (open) {
+        case '(': return ')';
+        case '[': return ']';
+        case '{': return '}';
+        case '<': return '>';
+        case '"': return '"';
+        case '\'': return '\'';
+        case '`': return '`';
+        default: return open;
+    }
+}
+
+char* String_CutAt(const char* str, char delim) {
+    if (!str) return NULL;
+    const char* p = strchr(str, delim);
+    if (!p) return NULL;
+    return strdup(p);
+}
+
+char* String_CutBefore(const char* str, char delim) {
+    if (!str) return NULL;
+    const char* p = strchr(str, delim);
+    if (!p) return strdup(str);
+    size_t len = (size_t)(p - str);
+    char* out = (char*)malloc(len + 1);
+    if (!out) return NULL;
+    memcpy(out, str, len);
+    out[len] = '\0';
+    return out;
+}
+
+char* String_CutAfter(const char* str, char delim) {
+    if (!str) return NULL;
+    const char* p = strchr(str, delim);
+    if (!p) return NULL;
+    return strdup(p + 1);
+}
+
+char* String_Between(const char* str, char open, char close) {
+    if (!str) return NULL;
+    const char* start = strchr(str, open);
+    if (!start) return NULL;
+    start++;
+    if (open == close) {
+        const char* end = strchr(start, close);
+        if (!end) return NULL;
+        size_t len = (size_t)(end - start);
+        char* out = (char*)malloc(len + 1);
+        if (!out) return NULL;
+        memcpy(out, start, len);
+        out[len] = '\0';
+        return out;
+    }
+    int depth = 1;
+    const char* cur = start;
+    while (*cur) {
+        if (*cur == open) depth++;
+        else if (*cur == close) {
+            depth--;
+            if (depth == 0) {
+                size_t len = (size_t)(cur - start);
+                char* out = (char*)malloc(len + 1);
+                if (!out) return NULL;
+                memcpy(out, start, len);
+                out[len] = '\0';
+                return out;
+            }
+        }
+        cur++;
+    }
+    return NULL;
+}
+
+char* String_Inside(const char* str, char delim) {
+    if (!str) return NULL;
+    char close = String_MatchingClose(delim);
+    if (delim == close) {
+        const char* p = str;
+        char* last = NULL;
+        while ((p = strchr(p, delim)) != NULL) {
+            const char* start = p + 1;
+            const char* end = strchr(start, close);
+            if (!end) break;
+            size_t len = (size_t)(end - start);
+            char* cur = (char*)malloc(len + 1);
+            if (!cur) { free(last); return NULL; }
+            memcpy(cur, start, len);
+            cur[len] = '\0';
+            free(last);
+            last = cur;
+            p = end + 1;
+        }
+        return last;
+    } else {
+        const char* p = str;
+        char* last = NULL;
+        while ((p = strchr(p, delim)) != NULL) {
+            const char* start = p + 1;
+            int depth = 1;
+            const char* cur = start;
+            while (*cur) {
+                if (*cur == delim) depth++;
+                else if (*cur == close) {
+                    depth--;
+                    if (depth == 0) break;
+                }
+                cur++;
+            }
+            if (*cur != close) break;
+            size_t len = (size_t)(cur - start);
+            char* cur_out = (char*)malloc(len + 1);
+            if (!cur_out) { free(last); return NULL; }
+            memcpy(cur_out, start, len);
+            cur_out[len] = '\0';
+            free(last);
+            last = cur_out;
+            p = cur + 1;
+        }
+        return last;
+    }
+}
+
+char* String_Trim(const char* str) {
+    if (!str) return NULL;
+    const char* s = str;
+    while (*s && isspace((unsigned char)*s)) s++;
+    const char* e = str + strlen(str);
+    while (e > s && isspace((unsigned char)*(e - 1))) e--;
+    size_t len = (size_t)(e - s);
+    char* out = (char*)malloc(len + 1);
+    if (!out) return NULL;
+    memcpy(out, s, len);
+    out[len] = '\0';
+    return out;
+}
+
+char* String_ToLower(const char* str) {
+    if (!str) return NULL;
+    char* out = strdup(str);
+    if (!out) return NULL;
+    for (char* p = out; *p; p++) *p = (char)tolower((unsigned char)*p);
+    return out;
+}
+
+char* String_ToUpper(const char* str) {
+    if (!str) return NULL;
+    char* out = strdup(str);
+    if (!out) return NULL;
+    for (char* p = out; *p; p++) *p = (char)toupper((unsigned char)*p);
+    return out;
+}
+
+bool String_StartsWith(const char* str, const char* prefix) {
+    if (!str || !prefix) return false;
+    size_t n = strlen(prefix);
+    return strncmp(str, prefix, n) == 0;
+}
+
+bool String_EndsWith(const char* str, const char* suffix) {
+    if (!str || !suffix) return false;
+    size_t ls = strlen(str);
+    size_t lx = strlen(suffix);
+    if (lx > ls) return false;
+    return strcmp(str + ls - lx, suffix) == 0;
+}
+
+char* String_Replace(const char* str, const char* from, const char* to) {
+    if (!str || !from || !to) return NULL;
+    size_t lf = strlen(from);
+    if (lf == 0) return strdup(str);
+    size_t lt = strlen(to);
+    size_t count = 0;
+    const char* p = str;
+    while ((p = strstr(p, from))) { count++; p += lf; }
+    size_t ls = strlen(str);
+    size_t lo = ls + count * (lt - lf);
+    char* out = (char*)malloc(lo + 1);
+    if (!out) return NULL;
+    char* dst = out;
+    const char* src = str;
+    while ((p = strstr(src, from))) {
+        size_t n = (size_t)(p - src);
+        memcpy(dst, src, n); dst += n;
+        memcpy(dst, to, lt); dst += lt;
+        src = p + lf;
+    }
+    strcpy(dst, src);
+    return out;
+}
+
+char* String_Slice(const char* str, int start, int end) {
+    if (!str) return NULL;
+    int len = (int)strlen(str);
+    if (start < 0) start = len + start;
+    if (end < 0) end = len + end;
+    if (start < 0) start = 0;
+    if (end > len) end = len;
+    if (end < start) end = start;
+    size_t n = (size_t)(end - start);
+    char* out = (char*)malloc(n + 1);
+    if (!out) return NULL;
+    memcpy(out, str + start, n);
+    out[n] = '\0';
+    return out;
+}
+
+StringList File_ReadLines(const char *path, long buffer_size)
+{
+    StringList result = {NULL, 0};
+
+    if (!path || buffer_size <= 0)
+        return result;
+
+    char *content = malloc((size_t)buffer_size);
+
+    if (!content)
+        return result;
+
+    if (File_ReadAll(path, content, buffer_size) <= 0)
+    {
+        free(content);
+        return result;
+    }
+
+    StringList all = String_Split(content, "\n");
+
+    free(content);
+
+    if (!all.items)
+        return result;
+
+    size_t kept = 0;
+
+    for (size_t i = 0; i < all.count; i++)
+    {
+        char *line = all.items[i];
+
+        if (!line)
+            continue;
+
+        line[strcspn(line, "\r")] = '\0';
+
+        if (line[0] == '\0')
+        {
+            free(line);
+            continue;
+        }
+
+        all.items[kept++] = line;
+    }
+
+    if (kept == 0)
+    {
+        free(all.items);
+        return result;
+    }
+
+    result.items = all.items;
+    result.count = kept;
+
+    return result;
 }
