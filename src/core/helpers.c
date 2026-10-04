@@ -1,4 +1,6 @@
 #include "core/context.h"
+#include "core/modal.h"
+#include "core/timer.h"
 #include "config.h"
 #include "config.h"
 #include "helpers/helpers_hotkey.h"
@@ -10,6 +12,14 @@
 
 int MessagePromptGap = MSG_PROMPT_GAP_DEFAULT;
 int MessageScreenGap = MSG_SCREEN_GAP_DEFAULT;
+
+unsigned long VimModeTextColor(void) {
+    PROFILE_START(timer);
+    if (g_current_mode == MODE_NORMAL) { PROFILE_END_VAR(timer, "helpers:VimModeTextColor"); return rgb_to_hex(COLOR_NORMAL_MODE_TEXT); }
+    if (g_current_mode == MODE_INSERT) { PROFILE_END_VAR(timer, "helpers:VimModeTextColor"); return rgb_to_hex(COLOR_INSERT_MODE_TEXT); }
+    PROFILE_END_VAR(timer, "helpers:VimModeTextColor");
+    return rgb_to_hex(COLOR_VISUAL_MODE_TEXT);
+}
 
 void MessageSlotToRect(MessageSlot slot, int prompt_gap, int* out_x, int* out_y, int* out_w, int* out_h, int* out_h_slot, int* out_v_slot, int* out_gap, int* out_outward) {
     int h_slot = 1;
