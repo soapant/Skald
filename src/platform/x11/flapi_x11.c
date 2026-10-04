@@ -966,7 +966,9 @@ int fl_get_active_interface_platform(char out[], size_t max_len) {
     fclose(f);
     return found;
 }
-unsigned long long fl_net_rx_bytes_platform(const char *iface) {
+unsigned long long fl_net_rx_bytes_platform() {
+    char iface[64];
+    fl_get_active_interface_platform(iface, sizeof(iface));
     FILE *f = fopen("/proc/net/dev", "r");
     if (!f) return 0;
     char buf[512];

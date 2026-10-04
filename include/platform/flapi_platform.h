@@ -34,6 +34,6 @@ void fl_screenshot_save_platform(char* save_path);
 void fl_ocr_area_to_clipboard_platform();
 FlNetStatus fl_net_status_platform();
 int fl_get_active_interface_platform(char out[], size_t max_len);
-unsigned long long fl_net_rx_bytes_platform(const char *iface);
+unsigned long long fl_net_rx_bytes_platform();
 
 #endif

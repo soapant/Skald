@@ -3,12 +3,8 @@
 
 void Testing(void) {
     FlTimer p = fl_profile_start();
-    FlNetStatus s = fl_net_status();
-    switch(s) {
-        case FL_NET_OFFLINE: printf("Offline\n"); break;
-        case FL_NET_ETHERNET: printf("Ethernet\n"); break;
-        case FL_NET_WIFI: printf("Wi-Fi\n"); break;
-    }
+    unsigned long long rx = fl_net_rx_bytes_over(1.0);
+    printf("%llu\n",rx);
     fl_profile_end(p);
 }
 
