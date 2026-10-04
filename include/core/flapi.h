@@ -57,6 +57,11 @@ typedef enum {
     FL_NET_WIFI,
 } FlNetStatus;
 
+typedef struct {
+    char iface[64];
+    unsigned long long bytes;
+} FlRxSample;
+
 // =============================================================================
 //  NETWORK
 // =============================================================================
@@ -64,6 +69,7 @@ typedef enum {
 FlNetStatus fl_net_status(void);
 int fl_get_active_interface(char out[], size_t max_len);
 unsigned long long fl_net_rx_bytes(const char *iface);
+unsigned long long fl_net_rx_bytes_over(const char *iface, double seconds);
 
 size_t fl_clipboard_history_count(void);
 const FlClipboardEntry* fl_clipboard_history_get(size_t index);
