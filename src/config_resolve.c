@@ -12,7 +12,9 @@ typedef struct {
     bool auto_resolved;
 } AutoApp;
 
-static AutoApp g_auto_apps[5];
+#define AUTO_APP_SLOTS 3
+
+static AutoApp g_auto_apps[AUTO_APP_SLOTS];
 static bool g_auto_apps_ready = false;
 
 static void auto_apps_init(void) {
@@ -53,7 +55,9 @@ void Config_ResolveDefaultApps(void) {
 bool Config_IsAutoResolvedApp(const char* name) {
     auto_apps_init();
     if (!name) return false;
-    for (size_t i = 0; i < ARRAY_LEN(g_auto_apps); i++)
+    for (size_t i = 0; i < ARRAY_LEN(g_auto_apps); i++) {
+        if (!g_auto_apps[i].name) continue;
         if (strcmp(g_auto_apps[i].name, name) == 0) return g_auto_apps[i].auto_resolved;
+    }
     return false;
 }
