@@ -2125,42 +2125,21 @@ FlNetStatus fl_net_status(void) {
 }
 
 unsigned long long fl_net_rx_bytes() {
-    char iface[64];
-    fl_get_active_interface_platform(iface, sizeof(iface));
     return fl_net_rx_bytes_platform();
 }
 
 
-static void* fl_net_rx_sample_thread(void* arg) {
-    FlRxSample* s = (FlRxSample*)arg;
-    s->bytes = fl_net_rx_bytes_platform();
-    return NULL;
-}
-
 unsigned long long fl_net_rx_bytes_over(double seconds) {
     if (seconds <= 0) return 0;
-    char iface[64];
-    fl_get_active_interface_platform(iface, sizeof(iface));
-    FlRxSample before;
-    snprintf(before.iface, sizeof(before.iface), "%s", iface ? iface : "");
-    before.bytes = 0;
 
-    FlThread t = fl_thread_create(fl_net_rx_sample_thread, &before);
-    if (!t) return 0;
-    fl_thread_join(t);
+    unsigned long long before = fl_net_rx_bytes_platform();
+    if (before == 0) return 0;
 
     fl_sleep(seconds);
 
-    FlRxSample after;
-    snprintf(after.iface, sizeof(after.iface), "%s", iface ? iface : "");
-    after.bytes = 0;
-
-    t = fl_thread_create(fl_net_rx_sample_thread, &after);
-    if (!t) return 0;
-    fl_thread_join(t);
-
-    if (after.bytes < before.bytes) return 0;
-    return after.bytes - before.bytes;
+    unsigned long long after = fl_net_rx_bytes_platform();
+    if (after < before) return 0;
+    return after - before;
 }
 
 
