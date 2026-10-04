@@ -146,7 +146,7 @@ static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent* key) {
 
     if (wParam == VK_BACK) {
         if (ctrl_pressed) {
-            UI_SetText(FlintContext_Get()->window.hEditControl, "");
+            UI_SetText("");
             UI_Redraw(lb, FlintContext_Get()->window.hListBox);
             InvalidateRect(hwnd, NULL, TRUE);
             return true;
@@ -231,15 +231,15 @@ static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent* key) {
     if (wParam == VK_DOWN) {
         if (ctrl_pressed) {
             char text[256];
-            UI_GetCurrentTextEdit(FlintContext_Get()->window.hEditControl, text, sizeof(text));
-            UI_SetCursorPosition(FlintContext_Get()->window.hEditControl, strlen(text));
+            UI_GetCurrentTextEdit(text, sizeof(text));
+            UI_SetCursorPosition(strlen(text));
         }
         return true;
     }
 
     if (wParam == VK_UP) {
         if (ctrl_pressed) {
-            UI_SetCursorPosition(FlintContext_Get()->window.hEditControl, 1);
+            UI_SetCursorPosition(1);
         }
         return true;
     }
@@ -254,7 +254,7 @@ static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent* key) {
                 if (g_win32_hMainFont) { DeleteObject(g_win32_hMainFont); g_win32_hMainFont = NULL; }
                 g_win32_hMainFont = FH_TO_HFONT(Platform_CreateFont(FontSize, UsedFont));
                 if (WH_TO_HWND(FlintContext_Get()->window.hEditControl) && IsWindow(WH_TO_HWND(FlintContext_Get()->window.hEditControl))) {
-                    UI_Edit_SetFont(FlintContext_Get()->window.hEditControl, g_win32_hMainFont);
+                    UI_Edit_SetFont(g_win32_hMainFont);
                 }
                 if (WH_TO_HWND(FlintContext_Get()->window.hListBox) && IsWindow(WH_TO_HWND(FlintContext_Get()->window.hListBox))) {
                     UI_LB_SetFont(FlintContext_Get()->window.hListBox, g_win32_hMainFont);

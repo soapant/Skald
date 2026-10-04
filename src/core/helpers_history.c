@@ -33,8 +33,8 @@ bool GetFromHistory(ListBoxInfo* lb) {
         if (count > 0) {
             idx = (idx - 1 + count) % count;
             
-            UI_SetText(FlintContext_Get()->window.hEditControl, HistoryList[idx]);
-            UI_SetCursorPosition(FlintContext_Get()->window.hEditControl,strlen(HistoryList[idx]));
+            UI_SetText(HistoryList[idx]);
+            UI_SetCursorPosition(strlen(HistoryList[idx]));
 
             if (!IsNormalMode()) {
               UI_Redraw(lb, FlintContext_Get()->window.hListBox);

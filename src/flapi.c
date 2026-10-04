@@ -723,13 +723,13 @@ bool fl_is_selected(ListBoxInfo* lb) {
 void fl_set_edit_text(const char* text) {
     FlintContext* ctx = FlintContext_Get();
     if (!ctx) return;
-    UI_SetText(ctx->window.hEditControl, text ? text : "");
+    UI_SetText(text ? text : "");
 }
 
 void fl_set_edit_cursor(int position) {
     FlintContext* ctx = FlintContext_Get();
     if (!ctx) return;
-    UI_SetCursorPosition(ctx->window.hEditControl, position);
+    UI_SetCursorPosition(position);
 }
 
 void fl_get_edit_text(char* buffer, size_t cap) {
@@ -737,7 +737,7 @@ void fl_get_edit_text(char* buffer, size_t cap) {
     buffer[0] = '\0';
     FlintContext* ctx = FlintContext_Get();
     if (!ctx) return;
-    UI_GetCurrentTextEdit(ctx->window.hEditControl, buffer, cap);
+    UI_GetCurrentTextEdit(buffer, cap);
 }
 
 unsigned long fl_rgb_to_hex(ColorRef color) {

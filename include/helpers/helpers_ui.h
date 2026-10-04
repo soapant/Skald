@@ -49,7 +49,7 @@ typedef enum {
 
 ColorRef GetRainbowColor(float t, float s, float v);
 bool UI_IsListBoxSelected(ListBoxInfo* lb);
-void UpdateTextCaret(WindowHandle hwndEditControl);
+void UpdateTextCaret(void);
 void CalculateWindowMetrics(WindowLayout* layout,int height , int width,int item_height);
 
 #define MSG_PROMPT_GAP_DEFAULT 300

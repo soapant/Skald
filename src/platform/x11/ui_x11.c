@@ -101,18 +101,16 @@ void UI_NavigateDown(ListBoxInfo* lb, WindowHandle hListBox) {
     UI_NavigateTo(lb, hListBox, sel);
 }
 
-void UI_Edit_SetSel(WindowHandle hEdit, uint32_t start, uint32_t end) {
-    (void)hEdit; (void)start; (void)end;
+void UI_Edit_SetSel(uint32_t start, uint32_t end) {
+    (void)start; (void)end;
 }
 
-void UI_Edit_GetSel(WindowHandle hEdit, uint32_t* start, uint32_t* end) {
-    (void)hEdit;
+void UI_Edit_GetSel(uint32_t* start, uint32_t* end) {
     if (start) *start = 0;
     if (end) *end = 0;
 }
 
-void UI_GetCurrentTextEdit(WindowHandle edit, char* buffer, size_t cap) {
-    (void)edit;
+void UI_GetCurrentTextEdit(char* buffer, size_t cap) {
     if (!buffer || cap == 0) return;
     buffer[0] = '\0';
     WindowManager* wm = WindowManager_Get();
@@ -131,8 +129,7 @@ void UI_GetCurrentTextEdit(WindowHandle edit, char* buffer, size_t cap) {
     }
 }
 
-void UI_SetText(WindowHandle hEdit, char* text) {
-    (void)hEdit;
+void UI_SetText(const char* text) {
     if (!text) text = "";
     WindowManager* wm = WindowManager_Get();
     if (!wm) return;
@@ -154,8 +151,7 @@ void UI_SetText(WindowHandle hEdit, char* text) {
     }
 }
 
-void UI_SetCursorPosition(WindowHandle ctrl, int position) {
-    (void)ctrl;
+void UI_SetCursorPosition(int position) {
     WindowManager* wm = WindowManager_Get();
     if (!wm) return;
     Popup* top = WindowManager_GetTopPopup(wm);
@@ -181,7 +177,7 @@ void UI_RedrawNow(ListBoxInfo* lb, WindowHandle hListBox) {
     FlintContext* _c = FlintContext_Get();
     if (_c->prompt_callbacks.refresh != NULL) {
         char buffer[MaxFeatures];
-        UI_GetCurrentTextEdit(FlintContext_Get()->window.hEditControl, buffer, sizeof(buffer));
+        UI_GetCurrentTextEdit(buffer, sizeof(buffer));
         _c->prompt_callbacks.refresh(buffer, lb);
     }
 }
