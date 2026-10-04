@@ -12,7 +12,7 @@
 #endif
 
 
-#define COLOR RGB(1, 1, 1)
+#define COLOR RGB(1, 1, 111)
 #define FPS 1
 #define NO_BG true
 #define FONTSIZE 14
@@ -207,6 +207,7 @@ static void widgets_date_and_time_render(FlWidgetState *state) {
     fl_draw_text(.text = buf, .x = 10, .y = 6, .fontsize = FONTSIZE,
                  .color = RGB(220, 220, 220), .align = "LEFT");
 }
+
 static void widgets_internet_render(FlWidgetState *state) {
     FlNetStatus status = fl_net_status();
     switch (status) {
@@ -223,18 +224,21 @@ static void widgets_internet_render(FlWidgetState *state) {
 }
 
 void on_internet_hover(void) {
-    fl_popup();
+    FlPos pos = fl_get_widget_pos("internet");
+    fl_message(.message="testing",.x = pos.x, .y = pos.y - FONTSIZE * 4);
 }
 
 static FlWidget* g_disk = NULL;
 static FlWidget* g_mem = NULL;
 static FlWidget* g_cpu = NULL;
+static FlWidget* g_internet = NULL;
 
 void FlipWidgets(void) {
     percentage = !percentage;
     fl_widget_set_render(g_disk, widgets_disk_usage_render);
     fl_widget_set_render(g_mem, widgets_memory_usage_render);
     fl_widget_set_render(g_cpu, widgets_cpu_usage_render);
+    fl_widget_set_render(g_internet, widgets_internet_render);
 }
 
 FLINT_FEATURE_INIT {
@@ -266,7 +270,7 @@ FLINT_FEATURE_INIT {
               .slot = FL_WIDGET_SLOT_BOTTOM_RIGHT,
               .render = widgets_date_and_time_render);
 
-    fl_widget(.name = "internet",
+    g_internet = fl_widget(.name = "internet",
               .color = COLOR,
               .fps = FPS,
               .no_bg = NO_BG,

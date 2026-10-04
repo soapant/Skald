@@ -443,6 +443,7 @@ struct FlWidget {
 FlWidget *fl_widget_create(const FlWidgetSpec *spec);
 #define fl_widget(...) fl_widget_create(&(FlWidgetSpec){__VA_ARGS__})
 bool fl_widget_is_valid(FlWidget *widget);
+FlPos fl_get_widget_pos(const char *name);
 void fl_widget_show(FlWidget *widget);
 void fl_widget_hide(FlWidget *widget);
 void fl_widget_set_render(FlWidget *widget, FlWidgetRenderFn render);
