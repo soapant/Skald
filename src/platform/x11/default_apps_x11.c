@@ -203,6 +203,18 @@ const char* get_default_terminal(int slot) {
     snprintf(default_apps_x11[slot], sizeof(default_apps_x11[slot]), "%s", term);
     return default_apps_x11[slot];
 }
+const char* get_default_browser(int slot) {
+    default_apps_x11[slot][0] = '\0';
+    const char* browser = NULL;
+
+    const char* env = getenv("BROWSER");
+    if (env && env[0]) {
+        browser = env;
+    }
+    if (!browser) {
+    }
+    return browser;
+}
 
 const char* x11_get_default_shell(int slot) {
     //temporary maybe in future just use the terminal config or somethign idk
@@ -215,7 +227,7 @@ const char* x11_get_default_shell(int slot) {
 
 const char* Platform_GetDefaultApp(DefaultAppKind kind) {
     if (kind < 0 || kind >= DEFAULT_APP_COUNT) return "";
-    if (kind == DEFAULT_BROWSER) return x11_default_apps_run("xdg-settings get default-web-browser", DEFAULT_BROWSER);
+    if (kind == DEFAULT_BROWSER) return get_default_browser(DEFAULT_BROWSER);
     if (kind == DEFAULT_TERMINAL )    return get_default_terminal(DEFAULT_TERMINAL);
     if (kind == DEFAULT_SHELL )       return x11_get_default_shell(DEFAULT_SHELL);
     default_apps_x11[kind][0] = '\0';
