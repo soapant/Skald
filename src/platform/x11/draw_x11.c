@@ -317,7 +317,9 @@ bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, F
     XftColor col;
     x11_xft_alloc_color(g_draw_dpy, g_draw_vis, g_draw_cmap, color, 0xFFFF, &col);
     if (Platform_StringContainsCaseInsensitive(a, "CENTER") || Platform_StringContainsCaseInsensitive(a, "LEFT") || Platform_StringContainsCaseInsensitive(a, "RIGHT")) {
-        draw_wrapped_text(g_draw_dpy, g_draw_xd, &col, fh, text, y, (char*)a, pad ? pad : x);
+        int box = 0;
+        if (pad == 0 && !Platform_StringContainsCaseInsensitive(a, "LEFT")) box = x;
+        draw_wrapped_text(g_draw_dpy, g_draw_xd, &col, fh, text, y, (char*)a, pad ? pad : x, box);
     } else {
         XftFont *xf = FH_TO_XFT(fh);
         int len = (int)strlen(text);
