@@ -560,7 +560,7 @@ void fl_message_impl(const FlMessageSpec* spec) {
     if (!MessagesEnabled) return;
     int w = spec->w > 0 ? spec->w : 0;
     int h = spec->h > 0 ? spec->h : 0;
-    int timeout = spec->timeout > 0 ? spec->timeout : TimeOutForMessages;
+    double timeout = spec->timeout > 0 ? spec->timeout : (double)TimeOutForMessages;
     ColorRef color = spec->color ? spec->color : COLOR_TEXT;
     MessageSlot slot = spec->slot;
     if (slot == AUTO) {
