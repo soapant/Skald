@@ -18,6 +18,9 @@
 #define MSG_TEXT_INSET_Y 15
 #define MSG_BOTTOM_CLIP 5
 
+static int g_win32_msg_w = 0;
+static int g_win32_msg_h = 0;
+
 LRESULT CALLBACK DisplayMessageProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
   FadeWindowData* data = (FadeWindowData*)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
     FlintContext_Get()->window.hDisplayMessage = WH_FROM_HWND(hwnd);
@@ -161,6 +164,60 @@ void Platform_DisplayMessage(const char* message, int centerX, int centerY, int 
   }
   Platform_CreateDisplayMessageWindow(message, centerX, centerY, maxWidth, maxHeight, timeout, color);
 log_info("Platform_DisplayMessage message='%s' centerX=%d centerY=%d maxWidth=%d maxHeight=%d timeout=%g color=%p", message ? message : "", centerX, centerY, maxWidth, maxHeight, timeout, color);;
+}
+
+static char g_hover_key[64] = {0};
+
+void Platform_HoverMessageRelease(const char* key) {
+  if (!key || !key[0]) return;
+  if (strcmp(g_hover_key, key) != 0) return;
+  HWND hw = WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage);
+  if (hw && IsWindow(hw)) {
+    KillTimer(hw, 999);
+    FlintContext_Get()->window.hDisplayMessage = WH_NULL;
+    DestroyWindow(hw);
+  }
+  g_hover_key[0] = '\0';
+}
+
+void Platform_HoverMessage(const char* key, const char* message, int centerX, int centerY, int w, int h, int maxWidth, int maxHeight, ColorRef color) {
+  if (!message || !message[0] || !key || !key[0]) return;
+
+  HWND existing = WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage);
+  if (g_hover_key[0] && strcmp(g_hover_key, key) == 0 && existing && IsWindow(existing)) {
+    SetWindowPos(existing, HWND_TOPMOST, centerX - g_win32_msg_w / 2, centerY - g_win32_msg_h / 2,
+                 g_win32_msg_w, g_win32_msg_h, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_SHOWWINDOW);
+    SetWindowTextA(existing, message);
+    InvalidateRect(existing, NULL, TRUE);
+    return;
+  }
+
+  int winWidth = w;
+  int winHeight = h;
+  if (!(winWidth > 0 && winHeight > 0)) {
+    FontHandle msgFont = Platform_CreateFont(FontSize, UsedFont);
+    int textWidth = 0, textHeight = 0;
+    Platform_GetTextExtents(msgFont, message, maxWidth - 30, &textWidth, &textHeight);
+    winWidth = textWidth + 30;
+    winHeight = textHeight + 30;
+    if (winWidth > maxWidth) winWidth = maxWidth;
+    if (winHeight > maxHeight) winHeight = maxHeight;
+  }
+
+  Platform_HoverMessageRelease(g_hover_key);
+  Platform_CreateDisplayMessageWindow(message, centerX, centerY, maxWidth, maxHeight, 0.0, color);
+  g_win32_msg_w = winWidth;
+  g_win32_msg_h = winHeight;
+  snprintf(g_hover_key, sizeof(g_hover_key), "%s", key);
+
+  HWND hw = WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage);
+  if (hw && IsWindow(hw)) {
+    KillTimer(hw, 999);
+    g_win32_timeout = 0.0;
+    SetWindowPos(hw, HWND_TOPMOST, centerX - winWidth / 2, centerY - winHeight / 2,
+                 winWidth, winHeight, SWP_SHOWWINDOW);
+    InvalidateRect(hw, NULL, TRUE);
+  }
 }
 
 void Platform_DisplayMessageAnchored(const char* message, int rect_x, int rect_y, int rect_w, int rect_h, int h_slot, int v_slot, int gap, int outward, int maxWidth, int maxHeight, double timeout, ColorRef color) {
