@@ -434,7 +434,7 @@ void on_internet_hover(void) {
                .y = pos.y - 170,
                .w = NET_POPUP_W,
                .h = NET_POPUP_H,
-               .color_bg = RGB(240, 20, 40),
+               .color_bg = RGB(1, 1, 1),
                .render = internet_hover_render,
                .hover_key = "internet");
 }

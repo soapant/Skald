@@ -16,6 +16,7 @@
 #include "platform/widget.h"
 #include "platform/draw.h"
 #include "platform/render_thread.h"
+#include "deps/log.h"
 #include "config.h"
 
 #define MSG_MAX_ACTIVE 24
