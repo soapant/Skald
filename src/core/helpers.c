@@ -58,7 +58,7 @@ void MessageSlotToRect(MessageSlot slot, int prompt_gap, int* out_x, int* out_y,
     if (out_outward) *out_outward = outward;
 }
 
-void DisplayMessageSlot(const char* message, MessageSlot slot, int max_w, int max_h, int prompt_gap, int timeout, ColorRef color) {
+void DisplayMessageSlot(const char* message, MessageSlot slot, int max_w, int max_h, int prompt_gap, double timeout, ColorRef color) {
     if (!message || !message[0]) return;
     int x = 0, y = 0, w = 0, h = 0, h_slot = 1, v_slot = 1, gap = 0, outward = 0;
     MessageSlotToRect(slot, prompt_gap, &x, &y, &w, &h, &h_slot, &v_slot, &gap, &outward);

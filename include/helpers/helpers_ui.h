@@ -60,6 +60,6 @@ extern int MessagePromptGap;
 extern int MessageScreenGap;
 
 void MessageSlotToRect(MessageSlot slot, int prompt_gap, int* out_x, int* out_y, int* out_w, int* out_h, int* out_h_slot, int* out_v_slot, int* out_gap, int* out_outward);
-void DisplayMessageSlot(const char* message, MessageSlot slot, int max_w, int max_h, int prompt_gap, int timeout, ColorRef color);
+void DisplayMessageSlot(const char* message, MessageSlot slot, int max_w, int max_h, int prompt_gap, double timeout, ColorRef color);
 
 #endif

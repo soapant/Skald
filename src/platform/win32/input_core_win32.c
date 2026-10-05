@@ -54,7 +54,7 @@ LRESULT CALLBACK win32_handle_global_key(int nCode, WPARAM wParam, LPARAM lParam
         }
     }
     if (nCode == HC_ACTION && (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN)) {
-    if (g_win32_timeout == 6969 && WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage) && IsWindow(WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage))) {
+    if (g_win32_timeout == 6969.0 && WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage) && IsWindow(WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage))) {
       KillTimer(WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage), 999);
       DestroyWindow(WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage));
       FlintContext_Get()->window.hDisplayMessage = WH_NULL;

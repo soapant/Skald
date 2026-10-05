@@ -48,13 +48,20 @@ static void MsgRemoveIndefiniteLocked(Display *dpy) {
 typedef struct {
     Display *dpy;
     Window win;
-    int timeout;
+    double timeout;
 } MsgDismissPayload;
 
 static void *MsgDismissThread(void *arg) {
     MsgDismissPayload *p = (MsgDismissPayload *)arg;
     if (!p) return NULL;
-    if (p->timeout > 0) sleep((unsigned int)p->timeout);
+    if (p->timeout > 0) {
+        struct timespec ts;
+        ts.tv_sec = (time_t)p->timeout;
+        ts.tv_nsec = (long)((p->timeout - (double)ts.tv_sec) * 1000000000.0);
+        if (ts.tv_nsec < 0) ts.tv_nsec = 0;
+        if (ts.tv_nsec > 999999999L) ts.tv_nsec = 999999999L;
+        nanosleep(&ts, NULL);
+    }
     Display *dpy = p->dpy;
     Window win = p->win;
     free(p);
@@ -221,13 +228,13 @@ static void x11_display_message_draw(Display *dpy, Window win, const char *messa
     XFlush(dpy);
 }
 
-static void MsgPresent(Display *dpy, const char *message, int x, int y, int winW, int winH, int timeout, ColorRef color) {
+static void MsgPresent(Display *dpy, const char *message, int x, int y, int winW, int winH, double timeout, ColorRef color) {
     Window win = x11_create_display_message_window(dpy, x, y, winW, winH, false);
     if (!win) return;
     XMapWindow(dpy, win);
     XFlush(dpy);
     x11_display_message_draw(dpy, win, message, (unsigned long)color, winW, winH);
-    bool indefinite = !(timeout != 6969 && timeout > 0);
+    bool indefinite = !(timeout != 6969.0 && timeout > 0.0);
     pthread_mutex_lock(&g_msg_lock);
     if (g_msg_slot_count >= MSG_MAX_ACTIVE) MsgRemoveSlotLocked(dpy, 0);
     g_msg_slots[g_msg_slot_count].win = win;
@@ -251,7 +258,7 @@ static void MsgPresent(Display *dpy, const char *message, int x, int y, int winW
 }
 
 
-void Platform_DisplayMessage(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, int timeout, ColorRef color) {
+void Platform_DisplayMessage(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, double timeout, ColorRef color) {
     if (!message || !message[0]) return;
     Display *dpy = get_display();
     if (!dpy) return;
@@ -282,7 +289,7 @@ void Platform_DisplayMessage(const char* message, int centerX, int centerY, int 
     MsgPresent(dpy, message, x, y, winW, winH, timeout, color);
 }
 
-void Platform_DisplayMessageAnchored(const char* message, int rect_x, int rect_y, int rect_w, int rect_h, int h_slot, int v_slot, int gap, int outward, int maxWidth, int maxHeight, int timeout, ColorRef color) {
+void Platform_DisplayMessageAnchored(const char* message, int rect_x, int rect_y, int rect_w, int rect_h, int h_slot, int v_slot, int gap, int outward, int maxWidth, int maxHeight, double timeout, ColorRef color) {
     if (!message || !message[0]) return;
     Display *dpy = get_display();
     if (!dpy) return;

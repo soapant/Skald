@@ -217,7 +217,7 @@ typedef struct {
     int y;
     int w;
     int h;
-    int timeout;
+    double timeout;
     int prompt_gap;
     ColorRef color;
 } FlMessageSpec;

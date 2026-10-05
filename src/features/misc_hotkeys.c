@@ -1,8 +1,11 @@
 #include "core/flapi.h"
 #include "config.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 static char current_keyword[256] = "";
+static int current_image_id = 0;
+static int previous_image_id = 0;
 
 void IncrementVolume(void) {
   fl_increment_volume_by_percent(10);
@@ -19,7 +22,7 @@ void GoogleMeaning(void) {
   fl_query_browser(search);
 }
 
-void OpenImage(void) {
+void next_image(void) {
   char cmd[400];
   snprintf(cmd,sizeof(cmd),"~/Programming/RandomShit/shit/run.sh get_ids.py %s --random",current_keyword);
   char* output = fl_run_terminal_command(cmd);
@@ -33,8 +36,23 @@ void OpenImage(void) {
       FlStringList list = fl_string_split(output,"\n");
       snprintf(cmd,sizeof(cmd),"feh /home/dog/Programming/RandomShit/shit/images/%s --zoom 65",list.items[0]);
       fl_run_terminal_command(cmd);
+      previous_image_id = current_image_id;
+      current_image_id = atoi(list.items[0]);
   }
 }
+
+void last_image(void) {
+    char* title = fl_get_active_window_title();
+    if (!title) title = "";
+    if (fl_string_contains("feh",title)) {
+        fl_close_active_window();
+    }
+    char cmd[512];
+    snprintf(cmd,sizeof(cmd),"feh /home/dog/Programming/RandomShit/shit/images/%i --zoom 65",previous_image_id);
+    fl_run_terminal_command(cmd);
+}
+
+
 void get_current_keyword(void) {
     char *popup_res = fl_popup();
     if (popup_res) {
@@ -84,7 +102,9 @@ FLINT_FEATURE_INIT {
     fl_register_hotkey("Ctrl+Shift+X", fl_screenshot_copy_area);
     fl_register_hotkey("Alt+Shift+C", fl_ocr_area_to_clipboard);
     fl_register_hotkey("Alt+Shift+G", GoogleMeaning);
-    fl_register_hotkey("Alt+Shift+F", OpenImage);
+    fl_register_hotkey("Alt+Shift+F", next_image);
+    fl_register_hotkey("E", next_image,WHITELIST,"feh");
+    fl_register_hotkey("Q", last_image,WHITELIST,"feh");
     fl_register_hotkey("Alt+Shift+D", get_current_keyword);
     fl_register_hotkey("RShift",fl_toggle_play_pause); 
     fl_register_hotkey("Ctrl+]",IncrementVolume); 
