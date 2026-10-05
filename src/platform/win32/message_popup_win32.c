@@ -72,7 +72,7 @@ LRESULT CALLBACK DisplayMessageProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
     }
     case WM_TIMER: {
       if (wParam == 999 && data) {
-        if (g_win32_timeout == 6969) {
+        if (g_win32_timeout == 6969.0) {
           return 0;
         }
         
@@ -153,17 +153,17 @@ bool Platform_MessagePopupOnKey(Popup* self, const PopupKeyEvent* key) {
   return false;
 }
 
-void Platform_DisplayMessage(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, int timeout, ColorRef color) {
+void Platform_DisplayMessage(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, double timeout, ColorRef color) {
   if (WH_TO_HWND(FlintContext_Get()->window.hGlobalTrayWnd) != NULL && GetCurrentThreadId() != g_win32_main_thread_id) {
     DisplayMessageParams params = { message, centerX, centerY, maxWidth, maxHeight, timeout, color };
     SendMessageA(WH_TO_HWND(FlintContext_Get()->window.hGlobalTrayWnd), WM_DISPLAY_MESSAGE, 0, (LPARAM)&params);
     return;
   }
   Platform_CreateDisplayMessageWindow(message, centerX, centerY, maxWidth, maxHeight, timeout, color);
-log_info("Platform_DisplayMessage message='%s' centerX=%d centerY=%d maxWidth=%d maxHeight=%d timeout=%d color=%p", message ? message : "", centerX, centerY, maxWidth, maxHeight, timeout, color);;
+log_info("Platform_DisplayMessage message='%s' centerX=%d centerY=%d maxWidth=%d maxHeight=%d timeout=%g color=%p", message ? message : "", centerX, centerY, maxWidth, maxHeight, timeout, color);;
 }
 
-void Platform_DisplayMessageAnchored(const char* message, int rect_x, int rect_y, int rect_w, int rect_h, int h_slot, int v_slot, int gap, int outward, int maxWidth, int maxHeight, int timeout, ColorRef color) {
+void Platform_DisplayMessageAnchored(const char* message, int rect_x, int rect_y, int rect_w, int rect_h, int h_slot, int v_slot, int gap, int outward, int maxWidth, int maxHeight, double timeout, ColorRef color) {
   if (!message || !message[0]) return;
   if (maxWidth <= 0) maxWidth = MSG_AUTO_WRAP_MAX_W;
   if (maxHeight <= 0) maxHeight = MSG_AUTO_WRAP_MAX_H;
@@ -190,7 +190,7 @@ void Platform_DisplayMessageAnchored(const char* message, int rect_x, int rect_y
   Platform_DisplayMessage(message, centerX, centerY, winWidth, winHeight, timeout, color);
 }
 
-void Platform_CreateDisplayMessageWindow(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, int timeout, ColorRef color) {
+void Platform_CreateDisplayMessageWindow(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, double timeout, ColorRef color) {
   DestroyWindow(WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage));
   KillTimer(WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage),999);
 
@@ -215,7 +215,7 @@ void Platform_CreateDisplayMessageWindow(const char* message, int centerX, int c
   pWndData->hFont = msgFont;
   pWndData->alpha = WindowOpacity;
   pWndData->color = color;
-  g_win32_timeout = timeout * 20;
+  g_win32_timeout = timeout * 20.0;
 
   int topLeftX = centerX - (winWidth / 2);
   int topLeftY = centerY - (winHeight / 2);
@@ -228,6 +228,6 @@ void Platform_CreateDisplayMessageWindow(const char* message, int centerX, int c
     free(pWndData);
     return;
   }
-  log_info("Platform_CreateDisplayMessageWindow message='%s' centerX=%d centerY=%d maxWidth=%d maxHeight=%d timeout=%d", message ? message : "", centerX, centerY, maxWidth, maxHeight, timeout);
+  log_info("Platform_CreateDisplayMessageWindow message='%s' centerX=%d centerY=%d maxWidth=%d maxHeight=%d timeout=%g", message ? message : "", centerX, centerY, maxWidth, maxHeight, timeout);
   return;
 }
