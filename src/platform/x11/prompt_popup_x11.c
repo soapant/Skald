@@ -227,7 +227,7 @@ bool Platform_PromptPopupOnKey(Popup* self, const PopupKeyEvent* key) {
       const char* sel = NULL;
       char filter_copy[sizeof(state->filter)];
       if (state->has_listbox && UI_IsListBoxSelected(&state->listbox)) {
-        sel = state->listbox.populated_cache[state->listbox.selected_index];
+        sel = ListBoxInfo_Row(&state->listbox, state->listbox.selected_index);
       } else {
         strncpy(filter_copy, state->filter, sizeof(filter_copy)-1);
         filter_copy[sizeof(filter_copy)-1]='\0';
