@@ -3,6 +3,7 @@
 
 void Testing(void) {
     FlTimer p = fl_profile_start();
+    // fl_get_pixel_color(0, 0);
     fl_profile_end(p);
 }
 

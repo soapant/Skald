@@ -109,8 +109,9 @@ static void Populate_CaptureSelection(ListBoxInfo* lb, char* out_text, size_t ou
   if (out_sel) *out_sel = current_sel;
   if (out_text && out_size > 0) {
     out_text[0] = '\0';
-    if (current_sel >= 0 && current_sel < lb->populated_count) {
-      strncpy(out_text, lb->populated_cache[current_sel], out_size - 1);
+    const char* cur = ListBoxInfo_Row(lb, current_sel);
+    if (cur) {
+      strncpy(out_text, cur, out_size - 1);
       out_text[out_size - 1] = '\0';
     }
   }
@@ -228,12 +229,15 @@ static void Populate_EnsureMatches(ListBoxInfo* lb, int item_count, const char* 
 }
 
 static void Populate_BuildCache(ListBoxInfo* lb, const char** items, int total_matches) {
+  if (total_matches > MAX_VISIBLE_ITEMS) total_matches = MAX_VISIBLE_ITEMS;
   lb->populated_count = 0;
+  if (total_matches <= 0) return;
+  if (!ListBoxInfo_EnsureRows(lb, total_matches)) { lb->populated_count = 0; return; }
   for (int i = 0; i < total_matches; i++) {
     int raw_data_index = lb->matching_indices[i];
     if (!items[raw_data_index]) continue;
-    strncpy(lb->populated_cache[lb->populated_count], items[raw_data_index], 511);
-    lb->populated_cache[lb->populated_count][511] = '\0';
+    strncpy(lb->populated_cache[lb->populated_count], items[raw_data_index], LISTBOX_ROW_BYTES - 1);
+    lb->populated_cache[lb->populated_count][LISTBOX_ROW_BYTES - 1] = '\0';
     lb->populated_cache[lb->populated_count][strcspn(lb->populated_cache[lb->populated_count], "\r\n")] = '\0';
     lb->populated_count++;
   }

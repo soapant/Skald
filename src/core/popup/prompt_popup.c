@@ -127,7 +127,10 @@ static void PromptPopup_Destroy(Popup* self) {
     PROFILE_START(timer);
     PromptPopupData* data = (PromptPopupData*)self;
     Platform_PromptPopupDestroyWindow(self);
-    free(data->state);
+    if (data->state) {
+        ListBoxInfo_Free(&data->state->listbox);
+        free(data->state);
+    }
     free(data);
     PROFILE_END_VAR(timer, "window_manager:PromptPopup_Destroy");
 }
