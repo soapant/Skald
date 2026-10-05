@@ -105,11 +105,11 @@ bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, F
     SetTextColor(g_draw_hdc, color);
     bool centered = Platform_StringContainsCaseInsensitive(a,"CENTER");
     bool right = !centered && Platform_StringContainsCaseInsensitive(a,"RIGHT");
+    SIZE msz;
+    msz.cx = 0;
+    msz.cy = 0;
+    GetTextExtentPoint32A(g_draw_hdc, text, (int)strlen(text), &msz);
     if (g_measuring) {
-        SIZE msz;
-        msz.cx = 0;
-        msz.cy = 0;
-        GetTextExtentPoint32A(g_draw_hdc, text, (int)strlen(text), &msz);
         int bx = x;
         if (centered) bx = x - msz.cx / 2;
         else if (right) bx = x - msz.cx;
@@ -121,11 +121,19 @@ bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, F
         if (old) SelectObject(g_draw_hdc, old);
         return true;
     }
-    RECT rc = {x, y, x+800, y+40};
+    int rx;
+    if (pad) {
+        rx = x + 800;
+        if (pad) x += pad;
+    } else if (right) {
+        rx = x;
+    } else {
+        rx = x + msz.cx / 2;
+    }
+    RECT rc = {x, y, rx, y+40};
     UINT fmt = DT_SINGLELINE | DT_VCENTER;
     if (centered) fmt |= DT_CENTER;
     else fmt |= DT_RIGHT;
-    if (pad) rc.left += pad;
     DrawTextA(g_draw_hdc, text, -1, &rc, fmt);
     if (old) SelectObject(g_draw_hdc, old);
     return true;
