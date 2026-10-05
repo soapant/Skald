@@ -623,7 +623,7 @@ void fl_message_impl(const FlMessageSpec* spec) {
             if (ctx) {
                 Platform_HoverWidgetShow(spec->hover_key, fl_hover_popup_frame, ctx,
                                          spec->x, spec->y, ctx->w, ctx->h,
-                                         spec->fps > 0 ? spec->fps : 30,
+                                         spec->fps > 0 ? spec->fps : 1,
                                          spec->no_bg,
                                          spec->color_bg ? fl_rgb_to_hex(spec->color_bg) : 0UL,
                                          fl_hover_popup_ctx_free, ctx);

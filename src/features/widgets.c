@@ -228,10 +228,10 @@ static FlWidget* g_mem = NULL;
 static FlWidget* g_cpu = NULL;
 static FlWidget* g_internet = NULL;
 
-#define NET_POPUP_W 500
+#define NET_POPUP_W 300
 #define NET_POPUP_H 100
 #define NET_ROW_H 26
-#define NET_PAD 18
+#define NET_PAD 16
 #define NET_SAVE_EVERY_SEC 5
 #define NET_STATE_FILE "net_usage.txt"
 
@@ -257,14 +257,6 @@ static void net_localtime(time_t t, struct tm *out) {
 #else
     localtime_r(&t, out);
 #endif
-}
-
-static const char *net_iface_label(FlNetStatus st) {
-    switch (st) {
-        case FL_NET_WIFI:     return "wifi";
-        case FL_NET_ETHERNET: return "ethernet";
-        default:              return "offline";
-    }
 }
 
 static void net_usage_reset_day(NetUsage *u, int day, int month_index) {
@@ -346,52 +338,33 @@ static void net_usage_tick(void) {
 }
 
 static void net_row(int y, const char *label, const char *value, unsigned long color) {
-    fl_draw_text(.text = label, .x = NET_PAD + 26, .y = y,
+    fl_draw_text(.text = label, .x = NET_PAD, .y = y,
                  .fontsize = FONTSIZE, .color = color, .align = "LEFT");
     fl_draw_text(.text = value, .x = NET_POPUP_W - NET_PAD, .y = y,
-                 .fontsize = FONTSIZE, .color = RGB(235, 235, 245), .align = "LEFT");
-}
-
-static void net_bar(int y, double frac, unsigned long color) {
-    int bar_x = NET_PAD + 26;
-    int bar_w = NET_POPUP_W - (NET_PAD * 2) - 26;
-    if (bar_w < 10) return;
-    fl_draw_rect(.x = bar_x, .y = y, .w = bar_w, .h = 6, .color = RGB(45, 45, 60));
-    int fill = (int)((double)bar_w * frac);
-    if (fill < 1) fill = frac > 0.0 ? 1 : 0;
-    if (fill > bar_w) fill = bar_w;
-    if (fill > 0) fl_draw_rect(.x = bar_x, .y = y, .w = fill, .h = 6, .color = color);
+                 .fontsize = FONTSIZE, .color = RGB(235, 235, 245), .align = "RIGHT");
 }
 
 static void internet_hover_render(FlWidgetState *state) {
     net_usage_load();
     net_usage_tick();
 
-    FlNetStatus status = fl_net_status();
-    snprintf(g_net.last_iface, sizeof(g_net.last_iface), "%s", net_iface_label(status));
-
     fl_draw_line(NET_PAD, NET_PAD + 30, NET_POPUP_W - NET_PAD, NET_PAD + 30, RGB(60, 60, 80));
 
-    char today[32], month[32], rate[32], rate_unit[32];
+    char today[32], month[32], rate[32];
     fl_format_bytes(g_net.today_bytes, today, sizeof(today));
     fl_format_bytes(g_net.month_bytes, month, sizeof(month));
 
     double bps = g_net.rate_bps;
     if (bps >= 1000000.0) {
-        snprintf(rate, sizeof(rate), "%.2f", bps / 1048576.0);
-        snprintf(rate_unit, sizeof(rate_unit), "MB/s");
+        snprintf(rate, sizeof(rate), "%.2f MB/s", bps / 1048576.0);
     } else if (bps >= 1000.0) {
-        snprintf(rate, sizeof(rate), "%.1f", bps / 1024.0);
-        snprintf(rate_unit, sizeof(rate_unit), "KB/s");
+        snprintf(rate, sizeof(rate), "%.1f KB/s", bps / 1024.0);
     } else {
-        snprintf(rate, sizeof(rate), "%.0f", bps);
-        snprintf(rate_unit, sizeof(rate_unit), "B/s");
+        snprintf(rate, sizeof(rate), "%.0f B/s", bps);
     }
 
     int y = NET_PAD;
     net_row(y, "rate now", rate, RGB(160, 220, 255));
-    fl_draw_text(.text = rate_unit, .x = NET_POPUP_W - NET_PAD - 32, .y = y,
-                 .fontsize = FONTSIZE, .color = RGB(150, 150, 170), .align = "LEFT");
     y += NET_ROW_H;
 
     net_row(y, "today", today, RGB(200, 200, 220));
@@ -399,10 +372,6 @@ static void internet_hover_render(FlWidgetState *state) {
 
     net_row(y, "this month", month, RGB(200, 200, 220));
     y += NET_ROW_H + 4;
-
-    double frac = g_net.rate_bps / (8.0 * 1024.0 * 1024.0);
-    if (frac > 1.0) frac = 1.0;
-    net_bar(y, frac, RGB(90, 190, 255));
 }
 
 void on_internet_hover(void) {
@@ -457,7 +426,7 @@ FLINT_FEATURE_INIT {
 
     g_internet = fl_widget(.name = "internet",
               .color = COLOR,
-              .fps = 10,
+              .fps = 30,
               .no_bg = NO_BG,
               .on_hover = on_internet_hover,
               .slot = FL_WIDGET_SLOT_BOTTOM_RIGHT,

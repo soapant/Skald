@@ -99,7 +99,7 @@ static int xft_width(Display* dpy, XftFont* xf, const char* text, int len) {
     return ext.xOff;
 }
 
-void draw_wrapped_text(Display* dpy, XftDraw* xd, XftColor* color, FontHandle font, const char* text, int startY, char* centered_to, int xOffset) {
+void draw_wrapped_text(Display* dpy, XftDraw* xd, XftColor* color, FontHandle font, const char* text, int startY, char* centered_to, int xOffset, int boxWidth) {
     PROFILE_START(timer);
     if (!text) { PROFILE_END_VAR(timer, "helpers_x11:draw_wrapped_text"); return; }
     XftFont* xf = FH_TO_XFT(font);
@@ -114,10 +114,10 @@ void draw_wrapped_text(Display* dpy, XftDraw* xd, XftColor* color, FontHandle fo
     if (centered_to != NULL) {
         if (Platform_StringContainsCaseInsensitive(centered_to, "CENTER")) {
             alignment = 1;
-            maxWidth = 870;
+            maxWidth = boxWidth > 0 ? boxWidth : 870;
         } else if (Platform_StringContainsCaseInsensitive(centered_to, "RIGHT")) {
             alignment = 2;
-            maxWidth = 900;
+            maxWidth = boxWidth > 0 ? boxWidth : 900;
         } else {
             alignment = 0;
             maxWidth = FontSize * text_len;
@@ -141,9 +141,9 @@ void draw_wrapped_text(Display* dpy, XftDraw* xd, XftColor* color, FontHandle fo
             int lw = xft_width(dpy, xf, lineStart, word_start - lineStart);
             
             int drawX = 0;
-            if (alignment == 1) drawX = (maxWidth - lw) / 2 + xOffset;
-            else if (alignment == 2) drawX = maxWidth - lw - xOffset;      
-            else                     drawX = xOffset;                      
+            if (alignment == 1)      drawX = boxWidth > 0 ? (maxWidth - lw) / 2 : (maxWidth - lw) / 2 + xOffset;
+            else if (alignment == 2) drawX = boxWidth > 0 ? maxWidth - lw : maxWidth - lw - xOffset;
+            else                     drawX = xOffset;
             
             XftDrawStringUtf8(xd, color, xf, drawX, y, (FcChar8*)lineStart, word_start - lineStart);
             y += lineHeight;
@@ -159,8 +159,8 @@ void draw_wrapped_text(Display* dpy, XftDraw* xd, XftColor* color, FontHandle fo
         int lw = xft_width(dpy, xf, lineStart, p - lineStart);
 
         int drawX = 0;
-        if (alignment == 1)      drawX = xOffset + (maxWidth - lw) / 2;
-        else if (alignment == 2) drawX = maxWidth - lw - xOffset;
+        if (alignment == 1)      drawX = boxWidth > 0 ? (maxWidth - lw) / 2 : xOffset + (maxWidth - lw) / 2;
+        else if (alignment == 2) drawX = boxWidth > 0 ? maxWidth - lw : maxWidth - lw - xOffset;
         else                     drawX = xOffset;
 
         XftDrawStringUtf8(xd, color, xf, drawX, y, (FcChar8*)lineStart, p - lineStart); 
