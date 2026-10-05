@@ -47,9 +47,9 @@ long long Platform_GetWallClockMs(void);
 void Platform_SaveRegionToPNG(int x1, int y1, int x2, int y2, const char* fullPath);
 
 void Platform_WaitForKeypressAsync(KeyCallback callback);
-void Platform_DisplayMessage(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, int timeout, ColorRef color);
-void Platform_DisplayMessageAnchored(const char* message, int rect_x, int rect_y, int rect_w, int rect_h, int h_slot, int v_slot, int gap, int outward, int maxWidth, int maxHeight, int timeout, ColorRef color);
-void Platform_CreateDisplayMessageWindow(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, int timeout, ColorRef color);
+void Platform_DisplayMessage(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, double timeout, ColorRef color);
+void Platform_DisplayMessageAnchored(const char* message, int rect_x, int rect_y, int rect_w, int rect_h, int h_slot, int v_slot, int gap, int outward, int maxWidth, int maxHeight, double timeout, ColorRef color);
+void Platform_CreateDisplayMessageWindow(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, double timeout, ColorRef color);
 FontHandle Platform_CreateFont(int size, const char* face_name);
 
 void Platform_DestroyFont(FontHandle font);
