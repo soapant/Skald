@@ -118,6 +118,7 @@ void Platform_RenderThread_Wake(void) {
 
 void Platform_RenderThread_Sync(void) {
     if (!g_rt_thread) return;
+    if (Platform_RenderThread_IsCurrentThread()) return;
     RtSync s;
     s.done = 0;
     if (!Platform_RenderThread_Post(rt_sync_mark, &s)) return;

@@ -228,14 +228,22 @@ static FlWidget* g_mem = NULL;
 static FlWidget* g_cpu = NULL;
 static FlWidget* g_internet = NULL;
 
+static void internet_hover_render(FlWidgetState *state) {
+    fl_draw_text(.text = "testing",
+                 .x = 20,
+                 .y = 20,
+                 .fontsize = FONTSIZE);
+}
+
 void on_internet_hover(void) {
     FlPos pos = fl_get_widget_pos("internet");
-    fl_message(.message = "testing",                        
-    .x = pos.x,                                  
-    .h = 600,
-    .w = 600,
-    .y = pos.y - FONTSIZE * 4,                   
-    .hover_key = "internet"); 
+    fl_message(.x = pos.x,
+               .y = pos.y - 170,
+               .w = 500,
+               .h = 300,
+               .no_bg = true,
+               .render = internet_hover_render,
+               .hover_key = "internet");
 }
 
 
