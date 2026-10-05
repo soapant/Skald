@@ -15,6 +15,7 @@
 #include "platform/win32/subclasses_win32.h"
 #include "platform/win32/input_core_win32.h"
 #include "helpers/helpers_ui.h"
+#include "platform/lib.h"
 #include "platform/platform.h"
 #include "config.h"
 #include "core/timer.h"
@@ -1172,7 +1173,7 @@ bool Platform_BuildFeature(const char* src, const char* out) {
     snprintf(tmp, sizeof(tmp), "%s.tmp", out);
     char cmd[2048];
     snprintf(cmd, sizeof(cmd),
-        "gcc -I include -DCOBJMACROS -O2 -shared -o \"%s\" \"%s\" \"build/main.lib.a\" -Wl,--export-all-symbols -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldwmapi -lpsapi -lcrypt32 -lcomdlg32 -ladvapi32 -ldxva2 -luser32 -lwinhttp 2>&1",
+        "gcc -I include -DCOBJMACROS -O3 -shared -o \"%s\" \"%s\" \"build/main.lib.a\" -Wl,--export-all-symbols -lcomctl32 -lgdiplus -lgdi32 -lshlwapi -lshell32 -lwinmm -lole32 -luuid -lmsimg32 -ldwmapi -lpsapi -lcrypt32 -lcomdlg32 -ladvapi32 -ldxva2 -luser32 -lwinhttp 2>&1",
         tmp, src);
     char* outStr = Platform_RunCommandAndGetOutput(cmd);
     bool ok = false;
@@ -1437,7 +1438,68 @@ bool Platform_GetFeaturePath(const char* feature, const char* name, char* out, s
     return true;
 }
 
-bool Platform_ResolveDataPath(const char* name, char* out, size_t out_len) {
+static void sanitize_feature_stem(const char *src, char *out, size_t out_len) {
+    if (!out || out_len == 0) return;
+    out[0] = '\0';
+    size_t w = 0;
+    for (const char *p = src; *p && w + 1 < out_len; p++) {
+        char c = *p;
+        if (c >= 'A' && c <= 'Z') out[w++] = (char)(c + 32);
+        else if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-' || c == '_') out[w++] = c;
+        else if (c == ' ') out[w++] = '_';
+    }
+    out[w] = '\0';
+    if (w == 0 || strcmp(out, ".") == 0 || strcmp(out, "..") == 0) out[0] = '\0';
+}
+
+static bool lib_basename_stem(const char *base, char *out, size_t out_len) {
+    char work[256];
+    size_t len = strlen(base);
+    if (len == 0 || len >= sizeof(work)) return false;
+    memcpy(work, base, len + 1);
+    for (;;) {
+        if (len < 4) break;
+        size_t dot_at = 0;
+        for (size_t i = len; i > 0; i--) {
+            if (work[i - 1] == '.') { dot_at = i - 1; break; }
+        }
+        if (dot_at == 0) break;
+        if (_strnicmp(work + dot_at + 1, "hot", 3) != 0) break;
+        bool digits = false;
+        for (size_t i = dot_at + 4; i < len; i++) {
+            if (work[i] < '0' || work[i] > '9') { digits = false; break; }
+            digits = true;
+        }
+        if (!digits) break;
+        len = dot_at;
+        work[len] = '\0';
+    }
+    if (len >= 3 && _strnicmp(work + len - 3, ".so", 3) == 0) len -= 3;
+    else if (len >= 4 && _stricmp(work + len - 4, ".dll") == 0) len -= 4;
+    else if (len >= 5 && _stricmp(work + len - 5, ".dylib") == 0) len -= 5;
+    else return false;
+    if (len == 0 || len >= out_len) return false;
+    memcpy(out, work, len);
+    out[len] = '\0';
+    return true;
+}
+
+static bool feature_stem_from_caller(void *caller, char *out, size_t out_len) {
+    if (!caller || !out || out_len == 0) return false;
+    out[0] = '\0';
+    char mod_path[512];
+    if (!Platform_GetModuleOwnerPath(caller, mod_path, sizeof(mod_path))) return false;
+    const char *base = strrchr(mod_path, '\\');
+    const char *fs = strrchr(mod_path, '/');
+    if (fs && (!base || fs > base)) base = fs;
+    base = base ? base + 1 : mod_path;
+    char stem[128];
+    if (!lib_basename_stem(base, stem, sizeof(stem))) return false;
+    sanitize_feature_stem(stem, out, out_len);
+    return out[0] != '\0';
+}
+
+bool Platform_ResolveDataPath(void *caller, const char* name, char* out, size_t out_len) {
     if (!name || !name[0] || !out || out_len == 0) return false;
     for (const char* p = name; *p; p++) {
         if (*p == '/' || *p == '\\') return false;
@@ -1468,18 +1530,15 @@ bool Platform_ResolveDataPath(const char* name, char* out, size_t out_len) {
             }
         }
     }
+    char from_caller[128];
+    if (feature_stem_from_caller(caller, from_caller, sizeof(from_caller))) {
+        return Platform_GetFeaturePath(from_caller, name, out, out_len);
+    }
     const char* feat = FlintContext_Get()->window.current_feature;
     if (!feat || !feat[0]) return false;
     char safe[128];
-    size_t w = 0;
-    for (const char* p = feat; *p && w + 1 < sizeof(safe); p++) {
-        char c = *p;
-        if (c >= 'A' && c <= 'Z') safe[w++] = (char)(c + 32);
-        else if ((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-' || c == '_') safe[w++] = c;
-        else if (c == ' ') safe[w++] = '_';
-    }
-    safe[w] = '\0';
-    if (w == 0 || strcmp(safe, ".") == 0 || strcmp(safe, "..") == 0) return false;
+    sanitize_feature_stem(feat, safe, sizeof(safe));
+    if (safe[0] == '\0') return false;
     return Platform_GetFeaturePath(safe, name, out, out_len);
 }
 

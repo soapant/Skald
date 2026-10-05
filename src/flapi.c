@@ -107,7 +107,7 @@ FlStringList fl_load_file_list(const char* filepath) {
     FlStringList list = {0};
     if (!filepath) return list;
     char full[MAX_PATH];
-    if (!Platform_ResolveDataPath(filepath, full, sizeof(full))) {
+    if (!Platform_ResolveDataPath(__builtin_return_address(0), filepath, full, sizeof(full))) {
         log_warn("fl_load_file_list resolve failed name='%s' feature='%s'", filepath, FlintContext_Get()->window.current_feature ? FlintContext_Get()->window.current_feature : "(null)");
         return list;
     }
@@ -121,7 +121,7 @@ long fl_load_file(const char* filepath, char* buffer, long buffer_size) {
     if (!filepath || !buffer || buffer_size <= 0) return -1;
     buffer[0] = '\0';
     char full[MAX_PATH];
-    if (!Platform_ResolveDataPath(filepath, full, sizeof(full))) {
+    if (!Platform_ResolveDataPath(__builtin_return_address(0), filepath, full, sizeof(full))) {
         log_warn("fl_load_file resolve failed name='%s' feature='%s'", filepath, FlintContext_Get()->window.current_feature ? FlintContext_Get()->window.current_feature : "(null)");
         return -1;
     }
@@ -156,7 +156,7 @@ bool fl_free_window_list(FlWindowList *list) {
 bool fl_append_to_file(const char* filepath, const char* line) {
     if (!filepath || !line) return false;
     char full[MAX_PATH];
-    if (!Platform_ResolveDataPath(filepath, full, sizeof(full))) return false;
+    if (!Platform_ResolveDataPath(__builtin_return_address(0), filepath, full, sizeof(full))) return false;
     filepath = full;
     FILE* f = fopen(filepath, "a");
     if (!f) {
@@ -192,7 +192,7 @@ bool fl_write_to_file(const char* filepath, const char* lines[], int count) {
     if (count < 0) return false;
     if (count > 0 && !lines) return false;
     char full[MAX_PATH];
-    if (!Platform_ResolveDataPath(filepath, full, sizeof(full))) return false;
+    if (!Platform_ResolveDataPath(__builtin_return_address(0), filepath, full, sizeof(full))) return false;
     filepath = full;
     FILE* f = fopen(filepath, "w");
     if (!f) return false;
@@ -232,9 +232,15 @@ long fl_read_entire_file(const char* full_path, char* buffer, long buffer_size) 
 }
 bool fl_write_string_to_file(const char* path, const char* content) {
     if (!path || !content) return false;
-    char expanded[MAX_PATH];
-    if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) strncpy(expanded, path, sizeof(expanded)-1);
-    FILE* f = fopen(expanded, "w");
+    char full[MAX_PATH];
+    if (Platform_ResolveDataPath(__builtin_return_address(0), path, full, sizeof(full))) {
+        path = full;
+    } else {
+        char expanded[MAX_PATH];
+        if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) strncpy(expanded, path, sizeof(expanded)-1);
+        path = expanded;
+    }
+    FILE* f = fopen(path, "w");
     if (!f) return false;
     fputs(content, f);
     fclose(f);
@@ -610,16 +616,17 @@ void fl_message_impl(const FlMessageSpec* spec) {
     int mw = spec->mw > 0 ? spec->mw : w;
     int mh = spec->mh > 0 ? spec->mh : h;
     double timeout = spec->timeout > 0 ? spec->timeout : (double)TimeOutForMessages;
-    ColorRef color = spec->color ? spec->color : COLOR_TEXT;
+    ColorRef color = spec->color_text ? spec->color_text : COLOR_TEXT;
     if (spec->hover_key && spec->hover_key[0]) {
         if (spec->render) {
             FlHoverPopupCtx *ctx = fl_hover_popup_ctx_new(spec);
             if (ctx) {
-            Platform_HoverWidgetShow(spec->hover_key, fl_hover_popup_frame, ctx,
-                                     spec->x, spec->y, ctx->w, ctx->h,
-                                     spec->fps > 0 ? spec->fps : 30,
-                                     spec->no_bg, spec->bg_hex,
-                                     fl_hover_popup_ctx_free, ctx);
+                Platform_HoverWidgetShow(spec->hover_key, fl_hover_popup_frame, ctx,
+                                         spec->x, spec->y, ctx->w, ctx->h,
+                                         spec->fps > 0 ? spec->fps : 30,
+                                         spec->no_bg,
+                                         spec->color_bg ? fl_rgb_to_hex(spec->color_bg) : 0UL,
+                                         fl_hover_popup_ctx_free, ctx);
             }
             return;
         }

@@ -231,12 +231,12 @@ typedef struct {
     int mh;
     double timeout;
     int prompt_gap;
-    ColorRef color;
+    ColorRef color_text;
     const char* hover_key;
     FlWidgetRenderFn render;
     int fps;
     bool no_bg;
-    unsigned long bg_hex;
+    ColorRef color_bg;
 } FlMessageSpec;
 
 void fl_message_impl(const FlMessageSpec* spec);

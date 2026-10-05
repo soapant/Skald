@@ -14,6 +14,7 @@
 #include "core/timer.h"
 #include "platform/wm_platform.h"
 #include "platform/widget.h"
+#include "platform/draw.h"
 #include "platform/render_thread.h"
 #include "config.h"
 
@@ -335,8 +336,7 @@ void Platform_HoverWidgetHide(const char *key) {
 
 void Platform_HoverWidgetShow(const char *key, void (*render)(void* ud), void* ud, int x, int y,
                               int w, int h, int fps, bool no_bg, unsigned long bg_hex,
-                              void (*release)(void *ud), void *release_ud) {
-    if (!key || !key[0] || w <= 0 || h <= 0) return;
+                              void (*release)(void *ud), void *release_ud) {    if (!key || !key[0] || w <= 0 || h <= 0) return;
 
     pthread_mutex_lock(&g_hover_widget_lock);
     int idx = HoverWidgetFindLocked(key);
@@ -379,7 +379,9 @@ void Platform_HoverWidgetShow(const char *key, void (*render)(void* ud), void* u
     s->x = x; s->y = y; s->w_px = w; s->h_px = h;
     pthread_mutex_unlock(&g_hover_widget_lock);
 
+    Platform_SetDrawBgColor(no_bg ? 0UL : bg_hex);
     PlatformWidget *pw = Platform_Widget_Create(x - w / 2, y - h / 2, w, h, fps, no_bg, NULL, key);
+    Platform_SetDrawBgColor(0);
     if (!pw) {
         if (release) release(release_ud);
         return;
