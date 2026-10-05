@@ -266,7 +266,6 @@ const char* ListBoxItemDisplayText(ListBoxInfo* lb, int idx, char* trunc, size_t
 
 #define IMG_CACHE_SLOTS 16
 
-static bool x11_blit_argb_owned(Display* dpy, Drawable drw, Visual* vis, unsigned char* argb, int w, int h, int x, int y, bool owns);
 static bool x11_blit_argb(Display* dpy, Drawable drw, Visual* vis, unsigned char* argb, int w, int h, int x, int y);
 static unsigned char* x11_decode_image_argb(const char* path, int* out_w, int* out_h);
 
@@ -340,7 +339,7 @@ bool Platform_DrawImageScaled(Display* dpy, XftDraw* xd, Visual* vis, const char
     if (argb) {
         pthread_mutex_unlock(&g_img_cache_mtx);
         Drawable drw = XftDrawDrawable(xd);
-        bool ok = x11_blit_argb_owned(dpy, drw, vis, argb, cw, ch, x, y, false);
+        bool ok = x11_blit_argb(dpy, drw, vis, argb, cw, ch, x, y);
         PROFILE_END_VAR(timer, "helpers_x11:Platform_DrawImageScaled");
         return ok;
     }
@@ -351,20 +350,37 @@ bool Platform_DrawImageScaled(Display* dpy, XftDraw* xd, Visual* vis, const char
     x11_img_cache_put(path, cw, ch, (long long)st.st_mtime, (long long)st.st_size, argb);
     pthread_mutex_unlock(&g_img_cache_mtx);
     Drawable drw = XftDrawDrawable(xd);
-    bool ok = x11_blit_argb_owned(dpy, drw, vis, argb, cw, ch, x, y, false);
+    bool ok = x11_blit_argb(dpy, drw, vis, argb, cw, ch, x, y);
     PROFILE_END_VAR(timer, "helpers_x11:Platform_DrawImageScaled");
     return ok;
 }
 
-static bool x11_blit_argb_owned(Display* dpy, Drawable drw, Visual* vis, unsigned char* argb, int w, int h, int x, int y, bool owns) {
-    if (!dpy || !argb || w <= 0 || h <= 0) { if (owns) free(argb); return false; }
+static bool x11_blit_argb(Display* dpy, Drawable drw, Visual* vis, unsigned char* argb, int w, int h, int x, int y) {
+    if (!dpy || !argb || w <= 0 || h <= 0) return false;
     if (!vis) vis = DefaultVisualOfScreen(DefaultScreenOfDisplay(dpy));
-    XImage* img = XCreateImage(dpy, vis, 32, ZPixmap, 0, (char*)argb, w, h, 32, 0);
-    if (!img) { if (owns) free(argb); return false; }
+    XImage img;
+    memset(&img, 0, sizeof(img));
+    img.width = w;
+    img.height = h;
+    img.xoffset = 0;
+    img.format = ZPixmap;
+    img.data = (char*)argb;
+    img.byte_order = ImageByteOrder(dpy);
+    img.bitmap_unit = BitmapUnit(dpy);
+    img.bitmap_bit_order = BitmapBitOrder(dpy);
+    img.bitmap_pad = 32;
+    img.depth = 32;
+    img.bytes_per_line = w * 4;
+    img.bits_per_pixel = 32;
+    img.red_mask = vis->red_mask;
+    img.green_mask = vis->green_mask;
+    img.blue_mask = vis->blue_mask;
+    img.obdata = NULL;
+    if (!XInitImage(&img)) return false;
     Pixmap pix = XCreatePixmap(dpy, drw, w, h, 32);
-    if (!pix) { XDestroyImage(img); return false; }
+    if (!pix) return false;
     GC gc = XCreateGC(dpy, pix, 0, NULL);
-    XPutImage(dpy, pix, gc, img, 0, 0, 0, 0, w, h);
+    XPutImage(dpy, pix, gc, &img, 0, 0, 0, 0, w, h);
     XFreeGC(dpy, gc);
     XRenderPictFormat* src_fmt = XRenderFindStandardFormat(dpy, PictStandardARGB32);
     XRenderPictFormat* dst_fmt = XRenderFindVisualFormat(dpy, vis);
@@ -379,13 +395,8 @@ static bool x11_blit_argb_owned(Display* dpy, Drawable drw, Visual* vis, unsigne
         if (src) XRenderFreePicture(dpy, src);
         if (dst) XRenderFreePicture(dpy, dst);
     }
-    if (owns) XDestroyImage(img);
     XFreePixmap(dpy, pix);
     return ok;
-}
-
-static bool x11_blit_argb(Display* dpy, Drawable drw, Visual* vis, unsigned char* argb, int w, int h, int x, int y) {
-    return x11_blit_argb_owned(dpy, drw, vis, argb, w, h, x, y, true);
 }
 
 static unsigned char* x11_decode_image_argb(const char* path, int* out_w, int* out_h) {
@@ -1093,10 +1104,11 @@ static Pixmap x11_create_background_pixmap(Display* dpy, Window win, int w, int 
     if (R > w/2) R = w/2; if (R > h/2) R = h/2;
     Pixmap pm = XCreatePixmap(dpy, win, w, h, depth);
     if (!pm) return None;
-    XImage* img = XCreateImage(dpy, vis, depth, ZPixmap, 0, NULL, w, h, 32, 0);
-    if (!img) { XFreePixmap(dpy, pm); return None; }
-    img->data = (char*)calloc(1, h * img->bytes_per_line);
-    if (!img->data) { XDestroyImage(img); XFreePixmap(dpy, pm); return None; }
+    size_t bpl = (((size_t)w * (size_t)depth + 7u) / 8u + 3u) & ~(size_t)3u;
+    char* pixbuf = (char*)calloc(1, bpl * (size_t)h);
+    if (!pixbuf) { XFreePixmap(dpy, pm); return None; }
+    XImage* img = XCreateImage(dpy, vis, depth, ZPixmap, 0, pixbuf, w, h, 32, (int)bpl);
+    if (!img) { free(pixbuf); XFreePixmap(dpy, pm); return None; }
 
     unsigned int r = (base >> 16) & 0xFF, g = (base >> 8) & 0xFF, b = base & 0xFF;
     unsigned long fill = (baseAlpha8 << 24) | (r << 16) | (g << 8) | b;
@@ -1190,10 +1202,11 @@ bool hasAlpha = (depth == 32);
         XFreeGC(dpy, sgc);
         return;
     }
-    XImage* img = XCreateImage(dpy, vis, depth, ZPixmap, 0, NULL, w, h, 32, 0);
-    if (!img) return;
-    img->data = (char*)calloc(1, h * img->bytes_per_line);
-    if (!img->data) { XDestroyImage(img); return; }
+    size_t bpl = (((size_t)w * (size_t)depth + 7u) / 8u + 3u) & ~(size_t)3u;
+    char* pixbuf = (char*)calloc(1, bpl * (size_t)h);
+    if (!pixbuf) return;
+    XImage* img = XCreateImage(dpy, vis, depth, ZPixmap, 0, pixbuf, w, h, 32, (int)bpl);
+    if (!img) { free(pixbuf); return; }
     unsigned int r = cr0, g = cg0, b = cb0;
     unsigned long fill = (baseAlpha8 << 24) | (r << 16) | (g << 8) | b;
     GC gc = XCreateGC(dpy, drw, 0, NULL);
