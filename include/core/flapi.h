@@ -217,9 +217,12 @@ typedef struct {
     int y;
     int w;
     int h;
+    int mw;
+    int mh;
     double timeout;
     int prompt_gap;
     ColorRef color;
+    const char* hover_key;
 } FlMessageSpec;
 
 void fl_message_impl(const FlMessageSpec* spec);

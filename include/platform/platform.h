@@ -50,6 +50,8 @@ void Platform_WaitForKeypressAsync(KeyCallback callback);
 void Platform_DisplayMessage(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, double timeout, ColorRef color);
 void Platform_DisplayMessageAnchored(const char* message, int rect_x, int rect_y, int rect_w, int rect_h, int h_slot, int v_slot, int gap, int outward, int maxWidth, int maxHeight, double timeout, ColorRef color);
 void Platform_CreateDisplayMessageWindow(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, double timeout, ColorRef color);
+void Platform_HoverMessage(const char* key, const char* message, int centerX, int centerY, int w, int h, int maxWidth, int maxHeight, ColorRef color);
+void Platform_HoverMessageRelease(const char* key);
 FontHandle Platform_CreateFont(int size, const char* face_name);
 
 void Platform_DestroyFont(FontHandle font);

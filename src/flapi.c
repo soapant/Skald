@@ -560,20 +560,26 @@ void fl_message_impl(const FlMessageSpec* spec) {
     if (!MessagesEnabled) return;
     int w = spec->w > 0 ? spec->w : 0;
     int h = spec->h > 0 ? spec->h : 0;
+    int mw = spec->mw > 0 ? spec->mw : w;
+    int mh = spec->mh > 0 ? spec->mh : h;
     double timeout = spec->timeout > 0 ? spec->timeout : (double)TimeOutForMessages;
     ColorRef color = spec->color ? spec->color : COLOR_TEXT;
+    if (spec->hover_key && spec->hover_key[0]) {
+        Platform_HoverMessage(spec->hover_key, spec->message, spec->x, spec->y, w, h, mw, mh, color);
+        return;
+    }
     MessageSlot slot = spec->slot;
     if (slot == AUTO) {
         if (spec->x != 0 || spec->y != 0) {
-            Platform_DisplayMessage(spec->message, spec->x, spec->y, w, h, timeout, color);
+            Platform_DisplayMessage(spec->message, spec->x, spec->y, mw, mh, timeout, color);
             return;
         }
         slot = IsPopupActive(WH_NULL) ? TOP_CENTER_RELATIVE : BOTTOM_CENTER_RELATIVE;
     } else if (slot == FREE || spec->x != 0 || spec->y != 0) {
-        Platform_DisplayMessage(spec->message, spec->x, spec->y, w, h, timeout, color);
+        Platform_DisplayMessage(spec->message, spec->x, spec->y, mw, mh, timeout, color);
         return;
     }
-    DisplayMessageSlot(spec->message, slot, w, h, spec->prompt_gap, timeout, color);
+    DisplayMessageSlot(spec->message, slot, mw, mh, spec->prompt_gap, timeout, color);
 }
 bool fl_launch_browser(char* url) {
     PROFILE_START(_pt);
@@ -1616,6 +1622,7 @@ static void fl_widget_render_frame(void *ud) {
             if (!widget->hover_thread) widget->hover_running = false;
         }
         widget->hovered = inside;
+        if (!inside) Platform_HoverMessageRelease(widget->name);
     }
     FlWidgetState st;
     st.width = widget->w;
@@ -1661,6 +1668,7 @@ static void fl_widget_destroy_window(void *ud) {
     FlWidget *widget = (FlWidget *)ud;
     if (!widget) return;
     widget->hovered = false;
+    Platform_HoverMessageRelease(widget->name);
     if (widget->hover_thread) {
         fl_thread_join(widget->hover_thread);
         widget->hover_thread = NULL;
