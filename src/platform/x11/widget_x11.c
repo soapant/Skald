@@ -91,6 +91,7 @@ static void widget_frame(void *ud) {
         XFillRectangle(dpy, widget->win, tgc, 0, 0, widget->w, widget->h);
         XFreeGC(dpy, tgc);
     } else {
+        Platform_SetDrawBgColor(widget->has_bg ? widget->bg_hex : 0);
         Pixmap bg = x11_get_cached_background(dpy, widget->win, widget->w, widget->h);
         if (bg) {
             GC gc = XCreateGC(dpy, widget->win, 0, NULL);
