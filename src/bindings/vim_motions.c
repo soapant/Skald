@@ -14,6 +14,11 @@
 #include <ctype.h>
 #include <stdio.h>
 
+static const char* lb_selected_text(ListBoxInfo* lb) {
+    const char* s = ListBoxInfo_Row(lb, lb ? lb->selected_index : -1);
+    return s ? s : "";
+}
+
 void HandleEnterNormal(FlintContext* ctx) { 
     (void)ctx;
     SetMode(MODE_NORMAL); 
@@ -48,7 +53,7 @@ void HandleEnter(FlintContext* ctx) {
     if (!ctx) return;
     ListBoxInfo* lb = Vim_GetListBox(ctx);
     if (lb && UI_IsListBoxSelected(lb)) {
-        const char* sel = lb->populated_cache[lb->selected_index];
+        const char* sel = lb_selected_text(lb);
         if (ctx->prompt_callbacks.enter) {
             bool should_close = ctx->prompt_callbacks.enter(sel, lb);
             ctx->window.selection_complete = should_close;
@@ -88,7 +93,7 @@ void HandlePersistentDelete(FlintContext* ctx) {
     if (!ctx || !lb) return;
     if (!UI_IsListBoxSelected(lb)) return;
     if (ctx->prompt_callbacks.ctrl_enter != NULL) {
-        const char* txt = lb->populated_cache[lb->selected_index];
+        const char* txt = lb_selected_text(lb);
         bool should_close = ctx->prompt_callbacks.ctrl_enter(txt, lb);
         ctx->window.selection_complete = should_close;
     }
@@ -163,7 +168,7 @@ void HandleInsertControlEnter(FlintContext* ctx) {
   if (!ctx || !lb) return;
   char text[256];
   if (UI_IsListBoxSelected(lb)) {
-    snprintf(text,sizeof(text),"%s",lb->populated_cache[lb->selected_index]);
+    snprintf(text,sizeof(text),"%s",lb_selected_text(lb));
   } else {
     Vim_GetText(ctx, text, sizeof(text));
   }
@@ -254,7 +259,7 @@ void HandleSendEdit(FlintContext* ctx) {
     FlintContext* _c = FlintContext_Get();
     ListBoxInfo* lb = Vim_GetListBox(_c);
     if (_c->prompt_callbacks.edit && lb && UI_IsListBoxSelected(lb)) {
-        const char* sel = lb->populated_cache[lb->selected_index];
+        const char* sel = lb_selected_text(lb);
         _c->prompt_callbacks.edit(sel, lb);
     }
 }
@@ -263,7 +268,7 @@ void HandleSendCopyShift(FlintContext* ctx) {
     //same with this 
     ListBoxInfo* lb = Vim_GetListBox(ctx);
     if (!lb) return;
-    const char* sel = UI_IsListBoxSelected(lb) ? lb->populated_cache[lb->selected_index] : "";
+    const char* sel = UI_IsListBoxSelected(lb) ? lb_selected_text(lb) : "";
     if (ctx->prompt_callbacks.copy) ctx->prompt_callbacks.copy(sel, lb->selected_index, 0);
     else Platform_CopyToClipboard(sel);
 }
@@ -271,7 +276,7 @@ void HandleSendCopyControl(FlintContext* ctx) {
     // same
     ListBoxInfo* lb = Vim_GetListBox(ctx);
     if (!lb) return;
-    const char* sel = UI_IsListBoxSelected(lb) ? lb->populated_cache[lb->selected_index] : "";
+    const char* sel = UI_IsListBoxSelected(lb) ? lb_selected_text(lb) : "";
     if (ctx->prompt_callbacks.copy) ctx->prompt_callbacks.copy(sel, lb->selected_index, 1);
     else Platform_CopyToClipboard(sel);
 }
@@ -279,7 +284,7 @@ void HandleCopyToSearch(FlintContext* ctx) {
   if (!ctx) return;
   ListBoxInfo* lb = Vim_GetListBox(ctx);
   if (lb && UI_IsListBoxSelected(lb)) {
-    const char* text = lb->populated_cache[lb->selected_index];
+    const char* text = lb_selected_text(lb);
     Vim_SetText(ctx, text);
     Vim_SetCursor(ctx, (int)strlen(text));
   }
@@ -297,7 +302,7 @@ void HandleShowFullText(FlintContext* ctx) {
   if (FullTextNeedsKeyPress) {
       ListBoxInfo* lb = Vim_GetListBox(ctx);
       if (lb && UI_IsListBoxSelected(lb)) {
-        DisplayMessageSlot(lb->populated_cache[lb->selected_index], TOP_CENTER_RELATIVE, 0, 0, 0, 6969, COLOR_TEXT);
+        DisplayMessageSlot(lb_selected_text(lb), TOP_CENTER_RELATIVE, 0, 0, 0, 6969, COLOR_TEXT);
       }
   }
 }

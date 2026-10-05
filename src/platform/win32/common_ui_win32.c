@@ -545,16 +545,23 @@ void CreateChildControls(WindowHandle hwndParent, HFONT hFont, const char* list[
             lb->total_matches = count;
             lb->last_item_count = count;
             lb->selected_index = -1;
-            for (int i = 0; i < count && i < MAX_VISIBLE_ITEMS; i++) {
+            if (count > MAX_VISIBLE_ITEMS) count = MAX_VISIBLE_ITEMS;
+            if (!ListBoxInfo_EnsureRows(lb, count)) {
+                lb->populated_count = 0;
+                lb->total_matches = 0;
+                count = 0;
+            }
+            for (int i = 0; i < count; i++) {
                 if (list[i]) {
-                    strncpy(lb->populated_cache[i], list[i], 511);
-                    lb->populated_cache[i][511] = '\0';
+                    strncpy(lb->populated_cache[i], list[i], LISTBOX_ROW_BYTES - 1);
+                    lb->populated_cache[i][LISTBOX_ROW_BYTES - 1] = '\0';
                     lb->populated_cache[i][strcspn(lb->populated_cache[i], "\r\n")] = '\0';
                 } else {
                     lb->populated_cache[i][0] = '\0';
                 }
                 lb->matching_indices[i] = i;
             }
+            lb->populated_count = count;
             BuildAliasDisplayItems(lb, list, count);
         } else {
             lb->populated_count = 0;
