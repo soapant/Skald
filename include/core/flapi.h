@@ -211,6 +211,16 @@ char* fl_popup_impl(const FlPopupSpec *spec);
 
 
 typedef struct {
+    int width;
+    int height;
+    unsigned long frame;
+    double elapsed;
+    bool hovered;
+} FlWidgetState;
+
+typedef void (*FlWidgetRenderFn)(FlWidgetState *state);
+
+typedef struct {
     const char* message;
     MessageSlot slot;
     int x;
@@ -223,6 +233,10 @@ typedef struct {
     int prompt_gap;
     ColorRef color;
     const char* hover_key;
+    FlWidgetRenderFn render;
+    int fps;
+    bool no_bg;
+    unsigned long bg_hex;
 } FlMessageSpec;
 
 void fl_message_impl(const FlMessageSpec* spec);
@@ -367,16 +381,6 @@ bool fl_place_image_auto(int w, int h, const char *path);
 // =============================================================================
 
 typedef struct FlWidget FlWidget;
-
-typedef struct {
-    int width;
-    int height;
-    unsigned long frame;
-    double elapsed;
-    bool hovered;
-} FlWidgetState;
-
-typedef void (*FlWidgetRenderFn)(FlWidgetState *state);
 
 typedef enum {
     FL_WIDGET_SLOT_TOP_LEFT,

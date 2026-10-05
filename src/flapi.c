@@ -555,9 +555,56 @@ unsigned long fl_rgb_to_hex(ColorRef color) {
     return rgb_to_hex(color);
 }
 
+typedef struct {
+    FlWidgetRenderFn render;
+    int w;
+    int h;
+    unsigned long frame;
+    FlTimer created_at;
+    int pad;
+} FlHoverPopupCtx;
+
+static void fl_hover_popup_frame(void *ud) {
+    FlHoverPopupCtx *p = (FlHoverPopupCtx *)ud;
+    if (!p || !p->render) return;
+    p->frame++;
+    FlWidgetState st;
+    st.width = p->w;
+    st.height = p->h;
+    st.frame = p->frame;
+    st.elapsed = fl_end_timer_platform(p->created_at);
+    st.hovered = true;
+    Platform_BeginMeasure();
+    p->render(&st);
+    int mw = 0, mh = 0;
+    Platform_EndMeasure(&mw, &mh);
+    if (mw > 0 && mh > 0) {
+        p->w = mw + p->pad;
+        p->h = mh + p->pad;
+    }
+}
+
+static FlHoverPopupCtx *fl_hover_popup_ctx_new(const FlMessageSpec *spec) {
+    FlHoverPopupCtx *p = (FlHoverPopupCtx *)calloc(1, sizeof(*p));
+    if (!p) return NULL;
+    p->render = spec->render;
+    p->w = spec->w > 0 ? spec->w : FL_WIDGET_PROVISIONAL_W;
+    p->h = spec->h > 0 ? spec->h : FL_WIDGET_PROVISIONAL_H;
+    p->created_at = fl_start_timer_platform();
+    p->pad = FL_WIDGET_DEFAULT_PAD;
+    return p;
+}
+
+static void fl_hover_popup_ctx_free(void *ud) {
+    FlHoverPopupCtx *p = (FlHoverPopupCtx *)ud;
+    if (p) free(p);
+}
+
 void fl_message_impl(const FlMessageSpec* spec) {
-    if (!spec || !spec->message || !spec->message[0]) return;
+    if (!spec || (!spec->message && !spec->render)) return;
     if (!MessagesEnabled) return;
+    bool has_text = spec->message && spec->message[0];
+    if (!has_text && !spec->render) return;
     int w = spec->w > 0 ? spec->w : 0;
     int h = spec->h > 0 ? spec->h : 0;
     int mw = spec->mw > 0 ? spec->mw : w;
@@ -565,6 +612,17 @@ void fl_message_impl(const FlMessageSpec* spec) {
     double timeout = spec->timeout > 0 ? spec->timeout : (double)TimeOutForMessages;
     ColorRef color = spec->color ? spec->color : COLOR_TEXT;
     if (spec->hover_key && spec->hover_key[0]) {
+        if (spec->render) {
+            FlHoverPopupCtx *ctx = fl_hover_popup_ctx_new(spec);
+            if (ctx) {
+            Platform_HoverWidgetShow(spec->hover_key, fl_hover_popup_frame, ctx,
+                                     spec->x, spec->y, ctx->w, ctx->h,
+                                     spec->fps > 0 ? spec->fps : 30,
+                                     spec->no_bg, spec->bg_hex,
+                                     fl_hover_popup_ctx_free, ctx);
+            }
+            return;
+        }
         Platform_HoverMessage(spec->hover_key, spec->message, spec->x, spec->y, w, h, mw, mh, color);
         return;
     }
@@ -1622,7 +1680,10 @@ static void fl_widget_render_frame(void *ud) {
             if (!widget->hover_thread) widget->hover_running = false;
         }
         widget->hovered = inside;
-        if (!inside) Platform_HoverMessageRelease(widget->name);
+        if (!inside) {
+            Platform_HoverMessageRelease(widget->name);
+            Platform_HoverWidgetHide(widget->name);
+        }
     }
     FlWidgetState st;
     st.width = widget->w;
@@ -1669,6 +1730,7 @@ static void fl_widget_destroy_window(void *ud) {
     if (!widget) return;
     widget->hovered = false;
     Platform_HoverMessageRelease(widget->name);
+    Platform_HoverWidgetHide(widget->name);
     if (widget->hover_thread) {
         fl_thread_join(widget->hover_thread);
         widget->hover_thread = NULL;

@@ -13,6 +13,8 @@
 #include "helpers/helpers_ui.h"
 #include "core/timer.h"
 #include "platform/wm_platform.h"
+#include "platform/widget.h"
+#include "platform/render_thread.h"
 #include "config.h"
 
 #define MSG_MAX_ACTIVE 24
@@ -273,6 +275,128 @@ static void MsgPresent(Display *dpy, const char *message, int x, int y, int winW
     }
 }
 
+
+#define HOVER_WIDGET_MAX 8
+
+typedef struct {
+    char key[64];
+    PlatformWidget *w;
+    void (*render)(void *ud);
+    void *ud;
+    void (*release)(void *ud);
+    void *release_ud;
+    int fps;
+    bool no_bg;
+    unsigned long bg_hex;
+    int x, y, w_px, h_px;
+    bool dead;
+} HoverWidgetSlot;
+
+static HoverWidgetSlot g_hover_widgets[HOVER_WIDGET_MAX];
+static pthread_mutex_t g_hover_widget_lock = PTHREAD_MUTEX_INITIALIZER;
+
+static int HoverWidgetFindLocked(const char *key) {
+    for (int i = 0; i < HOVER_WIDGET_MAX; i++) {
+        if (g_hover_widgets[i].w && !g_hover_widgets[i].dead && strcmp(g_hover_widgets[i].key, key) == 0) return i;
+    }
+    return -1;
+}
+
+static int HoverWidgetAllocLocked(const char *key) {
+    for (int i = 0; i < HOVER_WIDGET_MAX; i++) {
+        if (!g_hover_widgets[i].w) return i;
+    }
+    return -1;
+}
+
+static void HoverWidgetFrame(void *ud) {
+    HoverWidgetSlot *s = (HoverWidgetSlot *)ud;
+    if (!s || !s->w || s->dead) return;
+    if (s->render) s->render(s->ud);
+}
+
+void Platform_HoverWidgetHide(const char *key) {
+    if (!key || !key[0]) return;
+    pthread_mutex_lock(&g_hover_widget_lock);
+    int idx = HoverWidgetFindLocked(key);
+    if (idx < 0) { pthread_mutex_unlock(&g_hover_widget_lock); return; }
+    PlatformWidget *w = g_hover_widgets[idx].w;
+    void (*release)(void *) = g_hover_widgets[idx].release;
+    void *release_ud = g_hover_widgets[idx].release_ud;
+    memset(&g_hover_widgets[idx], 0, sizeof(g_hover_widgets[idx]));
+    pthread_mutex_unlock(&g_hover_widget_lock);
+    if (w) {
+        Platform_Widget_SetFrameCallback(w, NULL, NULL);
+        Platform_Widget_Destroy(w);
+    }
+    if (release) release(release_ud);
+    if (!Platform_RenderThread_IsCurrentThread()) Platform_RenderThread_Sync();
+}
+
+void Platform_HoverWidgetShow(const char *key, void (*render)(void* ud), void* ud, int x, int y,
+                              int w, int h, int fps, bool no_bg, unsigned long bg_hex,
+                              void (*release)(void *ud), void *release_ud) {
+    if (!key || !key[0] || w <= 0 || h <= 0) return;
+
+    pthread_mutex_lock(&g_hover_widget_lock);
+    int idx = HoverWidgetFindLocked(key);
+    if (idx >= 0) {
+        HoverWidgetSlot *s = &g_hover_widgets[idx];
+        void (*old_release)(void *) = s->release;
+        void *old_release_ud = s->release_ud;
+        s->render = render;
+        s->ud = ud;
+        s->release = release;
+        s->release_ud = release_ud;
+        bool geom_changed = (s->x != x || s->y != y || s->w_px != w || s->h_px != h);
+        s->x = x; s->y = y; s->w_px = w; s->h_px = h;
+        int ax = x - w / 2;
+        int ay = y - h / 2;
+        PlatformWidget *pw = s->w;
+        void (*prev_release)(void *) = old_release;
+        void *prev_release_ud = old_release_ud;
+        pthread_mutex_unlock(&g_hover_widget_lock);
+        if (geom_changed) {
+            Platform_Widget_Resize(pw, w, h);
+            Platform_Widget_Move(pw, ax, ay);
+        }
+        Platform_Widget_Invalidate(pw);
+        if (prev_release && prev_release != release) prev_release(prev_release_ud);
+        return;
+    }
+    idx = HoverWidgetAllocLocked(key);
+    if (idx < 0) { pthread_mutex_unlock(&g_hover_widget_lock); return; }
+    HoverWidgetSlot *s = &g_hover_widgets[idx];
+    memset(s, 0, sizeof(*s));
+    snprintf(s->key, sizeof(s->key), "%s", key);
+    s->render = render;
+    s->ud = ud;
+    s->release = release;
+    s->release_ud = release_ud;
+    s->fps = fps;
+    s->no_bg = no_bg;
+    s->bg_hex = bg_hex;
+    s->x = x; s->y = y; s->w_px = w; s->h_px = h;
+    pthread_mutex_unlock(&g_hover_widget_lock);
+
+    PlatformWidget *pw = Platform_Widget_Create(x - w / 2, y - h / 2, w, h, fps, no_bg, NULL, key);
+    if (!pw) {
+        if (release) release(release_ud);
+        return;
+    }
+    pthread_mutex_lock(&g_hover_widget_lock);
+    if (HoverWidgetFindLocked(key) < 0) {
+        s->w = pw;
+        pthread_mutex_unlock(&g_hover_widget_lock);
+        Platform_Widget_SetBgColor(pw, no_bg ? 0 : bg_hex);
+        Platform_Widget_SetNoBg(pw, no_bg);
+        Platform_Widget_SetFrameCallback(pw, HoverWidgetFrame, s);
+    } else {
+        pthread_mutex_unlock(&g_hover_widget_lock);
+        Platform_Widget_Destroy(pw);
+        if (release) release(release_ud);
+    }
+}
 
 static void MsgHoverPresent(Display *dpy, const char *key, const char *message,
                             int centerX, int centerY, int winW, int winH, ColorRef color) {
