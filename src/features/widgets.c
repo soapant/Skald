@@ -230,11 +230,12 @@ static FlWidget* g_internet = NULL;
 
 void on_internet_hover(void) {
     FlPos pos = fl_get_widget_pos("internet");
-    while (g_internet->hovered) {
-        printf("HOVER\n");
-        fl_message(.message="testing",.x = pos.x, .y = pos.y - FONTSIZE * 4,.timeout=0.1);
-        fl_sleep(0.1);
-    }
+    fl_message(.message = "testing",                        
+    .x = pos.x,                                  
+    .h = 600,
+    .w = 600,
+    .y = pos.y - FONTSIZE * 4,                   
+    .hover_key = "internet"); 
 }
 
 
