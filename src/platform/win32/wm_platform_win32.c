@@ -107,7 +107,7 @@ char* Platform_PromptUser(WindowManager* wm, const PromptSpec* spec) {
   FlintContext_Get()->window.output_buffer[0] = '\0';
   PROFILE_START(timer);
 
-  if (g_win32_prompt_state) { free(g_win32_prompt_state); g_win32_prompt_state = NULL; }
+  if (g_win32_prompt_state) { ListBoxInfo_Free(&g_win32_prompt_state->listbox); free(g_win32_prompt_state); g_win32_prompt_state = NULL; }
   PromptState *win_state = NULL;
   ListBoxInfo* lb_ptr = NULL;
   bool has_listbox = (window_list || spec->refresh || spec->render);
@@ -243,9 +243,9 @@ PROFILE_END_VAR(timer3, "Focus");
 
 
   DeleteObject(hCustomFont);
-  if (g_win32_prompt_state) { free(g_win32_prompt_state); g_win32_prompt_state = NULL; lb_ptr = NULL; }
-  else if (win_state) { free(win_state); win_state = NULL; lb_ptr = NULL; }
-  else if (lb_ptr) free(lb_ptr);
+  if (g_win32_prompt_state) { ListBoxInfo_Free(&g_win32_prompt_state->listbox); free(g_win32_prompt_state); g_win32_prompt_state = NULL; lb_ptr = NULL; }
+  else if (win_state) { ListBoxInfo_Free(&win_state->listbox); free(win_state); win_state = NULL; lb_ptr = NULL; }
+  else if (lb_ptr) { ListBoxInfo_Free(lb_ptr); free(lb_ptr); }
   FlintContext_Get()->window.selection_complete = false;
   FlintContext_Get()->prompt_callbacks.refresh = NULL;
   FlintContext_Get()->prompt_callbacks.enter = NULL;

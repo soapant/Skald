@@ -253,8 +253,8 @@ void x11_draw_edit_cursor(XftDraw* xd, XftColor* color, int cursor_x, int scroll
 
 const char* ListBoxItemDisplayText(ListBoxInfo* lb, int idx, char* trunc, size_t trunc_size) {
     PROFILE_START(timer);
-    int raw = (idx >= 0 && idx < lb->populated_count) ? lb->matching_indices[idx] : -1;
-    const char* baseText = lb->populated_cache[idx];
+    int raw = (idx >= 0 && lb && idx < lb->populated_count) ? lb->matching_indices[idx] : -1;
+    const char* baseText = lb ? ListBoxInfo_Row(lb, idx) : NULL;
     if (lb && lb->alias_suffix_active && raw >= 0 && raw < lb->alias_suffix_count && lb->alias_suffix[raw]) {
         snprintf(trunc, trunc_size, "%s [%s]", baseText ? baseText : "", lb->alias_suffix[raw]);
     } else {
