@@ -3,12 +3,13 @@
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
+#include <X11/XKBlib.h>
+#include <X11/extensions/XTest.h>
 #include <X11/extensions/Xrandr.h>
 #include <ctype.h>
 #include <strings.h>
 #include <string.h>
 #include "platform/platform.h"
-#include "helpers/helpers_text.h"
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,6 +20,103 @@ static int _x11_err = 0;
 static Window _x11_last_min = None;
 static int _x11_err_handler(Display *dpy, XErrorEvent *ev) {
   (void)dpy; (void)ev; _x11_err = 1; return 0; 
+}
+
+static char* x11_get_text_prop(Display* dpy, Window w) {
+    if (!dpy || w == None) return NULL;
+    Atom utf8 = XInternAtom(dpy, "UTF8_STRING", False);
+    Atom net_name = XInternAtom(dpy, "_NET_WM_NAME", False);
+    Atom wm_name = XInternAtom(dpy, "WM_NAME", False);
+    char* out = NULL;
+    for (int pass = 0; pass < 2 && !out; pass++) {
+        Atom prop = (pass == 0) ? net_name : wm_name;
+        Atom want = (pass == 0) ? utf8 : AnyPropertyType;
+        Atom type = None; int fmt = 0;
+        unsigned long nitems = 0, after = 0; unsigned char* data = NULL;
+        if (XGetWindowProperty(dpy, w, prop, 0, 65536, False, want,
+                               &type, &fmt, &nitems, &after, &data) != Success) continue;
+        if (data) {
+            if (type != None && nitems > 0) {
+                out = (char*)malloc(nitems + 1);
+                if (out) { memcpy(out, data, nitems); out[nitems] = '\0'; }
+            }
+            XFree(data);
+        }
+    }
+    return out;
+}
+
+static char* x11_get_res_class(Display* dpy, Window w) {
+    if (!dpy || w == None) return NULL;
+    XClassHint* ch = XAllocClassHint();
+    if (!ch) return NULL;
+    char* out = NULL;
+    _x11_err = 0;
+    XErrorHandler old = XSetErrorHandler(_x11_err_handler);
+    int ok = XGetClassHint(dpy, w, ch);
+    XSync(dpy, False);
+    XSetErrorHandler(old);
+    if (!_x11_err && ok && ch->res_class && ch->res_class[0]) out = strdup(ch->res_class);
+    if (ch->res_name) XFree(ch->res_name);
+    if (ch->res_class) XFree(ch->res_class);
+    XFree(ch);
+    return out;
+}
+
+static Window* x11_client_list(Display* dpy, int* out_n) {
+    if (out_n) *out_n = 0;
+    if (!dpy) return NULL;
+    Atom a = XInternAtom(dpy, "_NET_CLIENT_LIST", False);
+    Atom type = None; int fmt = 0;
+    unsigned long nitems = 0, after = 0; unsigned char* data = NULL;
+    if (XGetWindowProperty(dpy, DefaultRootWindow(dpy), a, 0, 65536, False, XA_WINDOW,
+                           &type, &fmt, &nitems, &after, &data) != Success) return NULL;
+    Window* out = NULL;
+    if (data) {
+        if (type == XA_WINDOW && nitems > 0) {
+            out = (Window*)malloc(nitems * sizeof(Window));
+            if (out) { memcpy(out, data, nitems * sizeof(Window)); if (out_n) *out_n = (int)nitems; }
+        }
+        XFree(data);
+    }
+    return out;
+}
+
+static bool x11_activate_window(Display* dpy, Window w) {
+    if (!dpy || w == None) return false;
+    _x11_err = 0;
+    XErrorHandler old = XSetErrorHandler(_x11_err_handler);
+    Atom active = XInternAtom(dpy, "_NET_ACTIVE_WINDOW", False);
+    XEvent ev;
+    memset(&ev, 0, sizeof(ev));
+    ev.xclient.type = ClientMessage;
+    ev.xclient.window = w;
+    ev.xclient.message_type = active;
+    ev.xclient.format = 32;
+    ev.xclient.data.l[0] = 2L;
+    ev.xclient.data.l[1] = (long)CurrentTime;
+    XSendEvent(dpy, DefaultRootWindow(dpy), False, SubstructureRedirectMask | SubstructureNotifyMask, &ev);
+    XSync(dpy, False);
+    if (_x11_err) { XSetErrorHandler(old); return false; }
+    XRaiseWindow(dpy, w);
+    XSetInputFocus(dpy, w, RevertToParent, CurrentTime);
+    XSync(dpy, False);
+    XSetErrorHandler(old);
+    return _x11_err == 0;
+}
+
+static int x11_keycode_for(Display* dpy, KeySym ks, int* need_shift) {
+    if (need_shift) *need_shift = 0;
+    for (int kc = 8; kc < 256; kc++) {
+        if (XkbKeycodeToKeysym(dpy, (KeyCode)kc, 0, 0) == ks) return kc;
+    }
+    for (int kc = 8; kc < 256; kc++) {
+        if (XkbKeycodeToKeysym(dpy, (KeyCode)kc, 0, 1) == ks) {
+            if (need_shift) *need_shift = 1;
+            return kc;
+        }
+    }
+    return 0;
 }
 
 bool get_title_x11(char *buffer, int buffer_size) {
@@ -87,81 +185,119 @@ bool get_app_id_x11(char *buffer, int buffer_size) {
 
 char* paste_x11(char* content) {
   if (!content) { log_error("content is NULL"); return NULL; }
-  char buffer[100];
-  snprintf(buffer,sizeof(buffer),"xdotool %s",content);
-  char* out = Platform_RunTerminalCommand(buffer,false);
-  if (!out) log_error("content='%s'", content ? content : "null");
-  return out;
+  Display* dpy = get_display();
+  if (!dpy) { log_error("no display"); return NULL; }
+  int ev_q = 0, er_q = 0, maj = 0, min = 0;
+  if (XTestQueryExtension(dpy, &ev_q, &er_q, &maj, &min) != True) {
+    log_error("XTest extension unavailable, cannot synthesize keystrokes");
+    return NULL;
+  }
+  int shift_unused = 0;
+  int shift_kc = x11_keycode_for(dpy, XK_Shift_L, &shift_unused);
+  int typed = 0;
+  for (const unsigned char* p = (const unsigned char*)content; *p; p++) {
+    KeySym ks;
+    if (*p == '\n') ks = XK_Return;
+    else if (*p == '\t') ks = XK_Tab;
+    else if (*p >= 0x20 && *p <= 0x7E) ks = (KeySym)*p;
+    else { log_warn("paste: skipping unsupported byte 0x%02x", (unsigned)*p); continue; }
+    int need_shift = 0;
+    int kc = x11_keycode_for(dpy, ks, &need_shift);
+    if (!kc) { log_warn("paste: no keycode for keysym 0x%lx", (unsigned long)ks); continue; }
+    if (need_shift && shift_kc) XTestFakeKeyEvent(dpy, (KeyCode)shift_kc, True, CurrentTime);
+    XTestFakeKeyEvent(dpy, (KeyCode)kc, True, CurrentTime);
+    XTestFakeKeyEvent(dpy, (KeyCode)kc, False, CurrentTime);
+    if (need_shift && shift_kc) XTestFakeKeyEvent(dpy, (KeyCode)shift_kc, False, CurrentTime);
+    XFlush(dpy);
+    typed++;
+  }
+  XSync(dpy, False);
+  log_info("paste_x11 typed %d char(s)", typed);
+  return strdup("");
 }
 
 bool focus_window_title_x11(char* title) {
-    if (!title) { log_error("title is NULL"); return false; }
-    char command[512];
-    snprintf(command, sizeof(command),
-             "id=$(xwininfo -root -children | grep -i \"%s\" | awk '{print $1}' | head -n 1); "
-             "[ -n \"$id\" ] && xprop -root -f _NET_ACTIVE_WINDOW 32a -set _NET_ACTIVE_WINDOW \"$id\"", 
-             title);
-    char* out = Platform_RunTerminalCommand(command, false);
-    if (!out) { log_error("title='%s'", title ? title : "null"); return false; }
-    free(out);
-    return true;
+    if (!title || !title[0]) { log_error("title='%s'", title ? title : "null"); return false; }
+    Display* display = get_display();
+    if (!display) return false;
+    int nclients = 0;
+    Window* clients = x11_client_list(display, &nclients);
+    if (!clients || nclients <= 0) {
+        if (clients) free(clients);
+        log_error("focus_window_title_x11: empty client list");
+        return false;
+    }
+    bool found = false;
+    for (int i = 0; i < nclients && !found; i++) {
+        char* wt = x11_get_text_prop(display, clients[i]);
+        if (!wt) continue;
+        if (strcasestr(wt, title)) {
+            if (x11_activate_window(display, clients[i])) found = true;
+        }
+        free(wt);
+    }
+    free(clients);
+    if (!found) log_error("focus_window_title_x11: no match for title='%s'", title);
+    return found;
 }
 
 FlWindowList get_window_names_x11() {
-   char* output = Platform_RunTerminalCommand("wmctrl -x -l", false);
-   FlWindowList list = { .windows = NULL, .count = 0 };
-   char buffer[256]; 
-   if (output == NULL || strlen(output) == 0) { log_error("output is NULL or empty"); return list; }
-   if (strstr(output, "command not found") || strstr(output, ": not found")) { log_error("output is shell error"); free(output); return list; }
-   StringList lines = String_Split(output, "\n");
-   for (size_t i = 0; i < lines.count; i++) {
-       char hex_id[32];
-       char desktop_num[16];
-       char class_string[128];
-       if (sscanf(lines.items[i], "%s %s %s", hex_id, desktop_num, class_string) == 3) {
-           char *dot = strchr(class_string, '.');
-           if (dot) *dot = '\0';
-           strncpy(buffer, class_string, sizeof(buffer) - 1);
-           buffer[sizeof(buffer) - 1] = '\0';
-           if (strcmp(buffer, "N/A") == 0 || strlen(buffer) == 0) continue;
-           if (!strcasecmp(buffer, "window") || !strcasecmp(buffer, "colored")) continue;
-           buffer[0] = toupper((unsigned char)buffer[0]);
-           char** temp = realloc(list.windows, (list.count + 1) * sizeof(char*));
-           if (temp == NULL) break;
-           list.windows = temp;
-           list.windows[list.count] = strdup(buffer);
-           list.count++;
-       }
-   }
-   StringList_Free(&lines);
-   free(output);
-   return list;
+    FlWindowList list = { .windows = NULL, .count = 0 };
+    Display* display = get_display();
+    if (!display) { log_error("no display"); return list; }
+    int nclients = 0;
+    Window* clients = x11_client_list(display, &nclients);
+    if (!clients || nclients <= 0) {
+        if (clients) free(clients);
+        log_error("get_window_names_x11: empty client list");
+        return list;
+    }
+    for (int i = 0; i < nclients; i++) {
+        char* cls = x11_get_res_class(display, clients[i]);
+        if (!cls || !cls[0]) { if (cls) free(cls); continue; }
+        char* dot = strchr(cls, '.');
+        if (dot) *dot = '\0';
+        if (cls[0] == '\0' || !strcasecmp(cls, "N/A") ||
+            !strcasecmp(cls, "window") || !strcasecmp(cls, "colored")) {
+            free(cls);
+            continue;
+        }
+        cls[0] = (char)toupper((unsigned char)cls[0]);
+        char** grown = (char**)realloc(list.windows, (size_t)(list.count + 1) * sizeof(char*));
+        if (!grown) { free(cls); break; }
+        list.windows = grown;
+        list.windows[list.count++] = cls;
+    }
+    free(clients);
+    return list;
 }
+
 FlWindowList get_window_titles_x11() {
-   char* output = Platform_RunTerminalCommand("wmctrl -l", false);
-   FlWindowList list = { .windows = NULL, .count = 0 };
-   if (output == NULL || strlen(output) == 0) { log_error("output is NULL or empty"); return list; }
-   if (strstr(output, "command not found") || strstr(output, ": not found")) { log_error("output is shell error"); free(output); return list; }
-   StringList lines = String_Split(output, "\n");
-   for (size_t i = 0; i < lines.count; i++) {
-       char *line = lines.items[i];
-       if (!line || strlen(line)==0) continue;
-       char hex_id[32]; char desktop[16]; char host[128];
-       int off=0;
-       if (sscanf(line, "%31s %15s %127s %n", hex_id, desktop, host, &off) < 3) continue;
-       char *title = line + off;
-       while (*title==' ' || *title=='\t') title++;
-       if (strlen(title)==0) continue;
-       if (!strcasecmp(title, "window") || !strcasecmp(title, "colored")) continue;
-       char** temp = realloc(list.windows, (list.count + 1) * sizeof(char*));
-       if (temp == NULL) break;
-       list.windows = temp;
-       list.windows[list.count] = strdup(title);
-       list.count++;
-   }
-   StringList_Free(&lines);
-   free(output);
-   return list;
+    FlWindowList list = { .windows = NULL, .count = 0 };
+    Display* display = get_display();
+    if (!display) { log_error("no display"); return list; }
+    int nclients = 0;
+    Window* clients = x11_client_list(display, &nclients);
+    if (!clients || nclients <= 0) {
+        if (clients) free(clients);
+        log_error("get_window_titles_x11: empty client list");
+        return list;
+    }
+    for (int i = 0; i < nclients; i++) {
+        char* wt = x11_get_text_prop(display, clients[i]);
+        if (!wt) continue;
+        while (*wt == ' ' || *wt == '\t') wt++;
+        if (wt[0] == '\0' || !strcasecmp(wt, "window") || !strcasecmp(wt, "colored")) {
+            free(wt);
+            continue;
+        }
+        char** grown = (char**)realloc(list.windows, (size_t)(list.count + 1) * sizeof(char*));
+        if (!grown) { free(wt); break; }
+        list.windows = grown;
+        list.windows[list.count++] = wt;
+    }
+    free(clients);
+    return list;
 }
 
 static Display *_x11_cursor_dpy = NULL;

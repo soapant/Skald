@@ -289,9 +289,9 @@ static void net_usage_load(void) {
         unsigned long long today = 0, month = 0;
         int day = 0, month_index = 0;
         if (sscanf(cursor, "%d %d %llu %llu", &day, &month_index, &today, &month) == 4) {
-            if (day == g_net.today_day && month_index == g_net.month_index) {
-                g_net.today_bytes = today;
+            if (month_index == g_net.month_index) {
                 g_net.month_bytes = month;
+                if (day == g_net.today_day) g_net.today_bytes = today;
             }
         }
         cursor = nl ? nl + 1 : NULL;
@@ -426,7 +426,7 @@ FLINT_FEATURE_INIT {
 
     g_internet = fl_widget(.name = "internet",
               .color = COLOR,
-              .fps = 30,
+              .fps = 10,
               .no_bg = NO_BG,
               .on_hover = on_internet_hover,
               .slot = FL_WIDGET_SLOT_BOTTOM_RIGHT,
