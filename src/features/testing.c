@@ -3,8 +3,7 @@
 
 void Testing(void) {
     FlTimer p = fl_profile_start();
-    FlColor c = fl_get_pixel_color(fl_get_cursor_pos());
-    printf("color=%d,%d,%d\n", c.r, c.g, c.b);
+    fl_get_cursor_pos();
     fl_profile_end(p);
 }
 

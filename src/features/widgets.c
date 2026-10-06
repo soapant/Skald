@@ -426,7 +426,7 @@ FLINT_FEATURE_INIT {
 
     g_internet = fl_widget(.name = "internet",
               .color = COLOR,
-              .fps = 10,
+              .fps = FPS,
               .no_bg = NO_BG,
               .on_hover = on_internet_hover,
               .slot = FL_WIDGET_SLOT_BOTTOM_RIGHT,
