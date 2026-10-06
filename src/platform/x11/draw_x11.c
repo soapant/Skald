@@ -97,9 +97,7 @@ static __thread int g_raw_map_x0 = 0;
 static __thread int g_raw_map_pitch = 0;
 static __thread XftDraw* g_raw_map_xd = NULL;
 static int RawMeasure(Display* dpy, XftFont* xf, const char* s, int n) {
-    XGlyphInfo ext;
-    XftTextExtentsUtf8(dpy, xf, (FcChar8*)s, n, &ext);
-    return ext.xOff;
+    return x11_measure_utf8_fallback(dpy, xf, s, n, 0);
 }
 static void RawEmitLine(Display* dpy, XftDraw* xd, XftFont* xf, XftColor* xcols, unsigned long* ucols, int nu, int ls, int le, int drawX, int baseline, int rowTop) {
     int cx = drawX;
@@ -111,7 +109,7 @@ static void RawEmitLine(Display* dpy, XftDraw* xd, XftFont* xf, XftColor* xcols,
         int k = 0;
         while (k < nu && ucols[k] != g_raw_cells[i].color) k++;
         if (k >= nu) k = 0;
-        XftDrawStringUtf8(xd, &xcols[k], xf, cx, baseline, (FcChar8*)(g_raw_text + i), j - i);
+        x11_draw_utf8_fallback(dpy, xd, &xcols[k], cx, baseline, xf, g_raw_text + i, j - i, 0);
         for (int m = i; m < j; m++) { g_raw_map_x[m] = cx; g_raw_map_top[m] = rowTop; }
         cx += w;
         i = j;
@@ -304,9 +302,7 @@ bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, F
         XftFont *mf = FH_TO_XFT(fh);
         int tw = 0;
         if (mf) {
-            XGlyphInfo ext;
-            XftTextExtentsUtf8(g_draw_dpy, mf, (FcChar8 *)text, (int)strlen(text), &ext);
-            tw = ext.xOff;
+            tw = x11_measure_utf8_fallback(g_draw_dpy, mf, text, (int)strlen(text), fontsize > 0 ? fontsize : FontSize);
         }
         int th = mf ? (mf->ascent + mf->descent) : (fontsize > 0 ? fontsize : FontSize);
         int bx = x;
@@ -327,7 +323,7 @@ bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, F
             needDestroy = false;
         } else {
             RawLine_Flush();
-            if (xf) XftDrawStringUtf8(g_draw_xd, &col, xf, x, y + (xf->ascent), (FcChar8*)text, len);
+            if (xf) x11_draw_utf8_fallback(g_draw_dpy, g_draw_xd, &col, x, y + (xf->ascent), xf, text, len, fontsize > 0 ? fontsize : FontSize);
         }
     }
     XftColorFree(g_draw_dpy, g_draw_vis, g_draw_cmap, &col);
@@ -363,9 +359,7 @@ int Platform_MeasureTextWidth(const char* text, int len, int fontsize) {
     if (!g_draw_dpy) return len * (fontsize > 0 ? fontsize : FontSize) / 2;
     XftFont* xf = LineFont(g_draw_dpy, fontsize);
     if (!xf) return len * (fontsize > 0 ? fontsize : FontSize) / 2;
-    XGlyphInfo ext;
-    XftTextExtentsUtf8(g_draw_dpy, xf, (FcChar8*)text, len, &ext);
-    return ext.xOff;
+    return x11_measure_utf8_fallback(g_draw_dpy, xf, text, len, fontsize > 0 ? fontsize : FontSize);
 }
 
 bool Platform_DrawTextLine(int x, int y, const char* text, int len, unsigned long color, int fontsize) {
@@ -375,7 +369,7 @@ bool Platform_DrawTextLine(int x, int y, const char* text, int len, unsigned lon
     if (color == 0) color = rgb_to_hex(COLOR_TEXT);
     XftColor col;
     x11_xft_alloc_color(g_draw_dpy, g_draw_vis, g_draw_cmap, color, 0xFFFF, &col);
-    XftDrawStringUtf8(g_draw_xd, &col, xf, x, y + xf->ascent, (FcChar8*)text, len);
+    x11_draw_utf8_fallback(g_draw_dpy, g_draw_xd, &col, x, y + xf->ascent, xf, text, len, fontsize > 0 ? fontsize : FontSize);
     XftColorFree(g_draw_dpy, g_draw_vis, g_draw_cmap, &col);
     return true;
 }
