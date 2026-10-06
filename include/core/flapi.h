@@ -20,8 +20,6 @@
 typedef struct { uint64_t ticks; } FlTimer;
 typedef struct PlatformWidget PlatformWidget;
 
-
-
 // =============================================================================
 // CLIPBOARD
 // =============================================================================
