@@ -1675,6 +1675,40 @@ FlPos Platform_GetCursorPos(void) {
     return p;
 }
 
+static unsigned char x11_mask_extract(unsigned long pixel, unsigned long mask) {
+    if (!mask) return 0;
+    int shift = 0;
+    while (!(mask & 1ul)) { mask >>= 1; shift++; }
+    unsigned long bits = 0;
+    for (unsigned long m = mask; m; m >>= 1) bits++;
+    unsigned long v = (pixel >> shift) & ((1ul << bits) - 1ul);
+    if (bits == 0) return 0;
+    if (bits >= 8) return (unsigned char)(v >> (bits - 8));
+    return (unsigned char)((v * 255ul) / ((1ul << bits) - 1ul));
+}
+
+FlColor Platform_GetPixelColor(int x, int y) {
+    PROFILE_START(timer);
+    FlColor out = {0, 0, 0};
+    Display* dpy = get_display();
+    if (!dpy) { PROFILE_END_VAR(timer, "platform_x11:Platform_GetPixelColor"); return out; }
+    Window root = DefaultRootWindow(dpy);
+    XWindowAttributes attr;
+    if (!XGetWindowAttributes(dpy, root, &attr) || !attr.visual) {
+        PROFILE_END_VAR(timer, "platform_x11:Platform_GetPixelColor");
+        return out;
+    }
+    XImage* img = XGetImage(dpy, root, x, y, 1, 1, AllPlanes, ZPixmap);
+    if (!img) { PROFILE_END_VAR(timer, "platform_x11:Platform_GetPixelColor"); return out; }
+    unsigned long pixel = XGetPixel(img, 0, 0);
+    out.r = x11_mask_extract(pixel, attr.visual->red_mask);
+    out.g = x11_mask_extract(pixel, attr.visual->green_mask);
+    out.b = x11_mask_extract(pixel, attr.visual->blue_mask);
+    XDestroyImage(img);
+    PROFILE_END_VAR(timer, "platform_x11:Platform_GetPixelColor");
+    return out;
+}
+
 bool Platform_MoveToPos(int x, int y) {
     PROFILE_START(timer);
     Display* dpy = get_display();

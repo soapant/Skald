@@ -1379,6 +1379,21 @@ FlPos Platform_GetCursorPos(void) {
     return r;
 }
 
+FlColor Platform_GetPixelColor(int x, int y) {
+    PROFILE_START(timer);
+    FlColor out = {0, 0, 0};
+    HDC screen = GetDC(NULL);
+    if (!screen) { PROFILE_END_VAR(timer, "platform_win32:Platform_GetPixelColor"); return out; }
+    COLORREF c = GetPixel(screen, x, y);
+    ReleaseDC(NULL, screen);
+    if (c == CLR_INVALID) { PROFILE_END_VAR(timer, "platform_win32:Platform_GetPixelColor"); return out; }
+    out.r = GetRValue(c);
+    out.g = GetGValue(c);
+    out.b = GetBValue(c);
+    PROFILE_END_VAR(timer, "platform_win32:Platform_GetPixelColor");
+    return out;
+}
+
 bool Platform_MoveToPos(int x, int y) {
     PROFILE_START(timer);
     int screenWidth = GetSystemMetrics(SM_CXSCREEN);
