@@ -349,17 +349,21 @@ void FeatureLoader_Unload(const char* name) {
             typedef void (*ShutdownFn)(void);
             ShutdownFn shut = (ShutdownFn)Platform_GetSymbol(g_features[i].handle, "FlintFeatureShutdown");
             if (shut) shut();
-            {
-                char loaded[512];
-                loaded[0] = '\0';
-                if (g_features[i].uniq[0]) {
-                    strncpy(loaded, g_features[i].uniq, sizeof(loaded)-1);
-                } else {
-                    strncpy(loaded, g_features[i].path, sizeof(loaded)-1);
-                }
-                loaded[sizeof(loaded)-1] = '\0';
-                retire_old_lib(g_features[i].handle, g_features[i].uniq, loaded);
+            char loaded[512];
+            loaded[0] = '\0';
+            if (g_features[i].uniq[0]) {
+                strncpy(loaded, g_features[i].uniq, sizeof(loaded)-1);
+            } else {
+                strncpy(loaded, g_features[i].path, sizeof(loaded)-1);
             }
+            loaded[sizeof(loaded)-1] = '\0';
+            char owner_path[512];
+            strncpy(owner_path, g_features[i].path, sizeof(owner_path)-1);
+            owner_path[sizeof(owner_path)-1] = '\0';
+            retire_old_lib(g_features[i].handle, g_features[i].uniq, loaded);
+            unsigned purge_gen = fl_widget_current_generation();
+            fl_widget_bump_generation();
+            fl_widget_purge_owner(loaded, owner_path, purge_gen);
             sweep_retired_libs();
             for (int k=i;k+1<g_feature_count;k++) g_features[k]=g_features[k+1];
             g_feature_count--;

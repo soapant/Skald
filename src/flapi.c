@@ -1679,7 +1679,7 @@ static void *fl_widget_hover_worker(void *ud) {
 static void fl_widget_render_frame(void *ud) {
     PROFILE_START(_pt);
     FlWidget *widget = (FlWidget *)ud;
-    if (!widget || !widget->render) { PROFILE_END_VAR(_pt, "flapi:widget[null]"); return; }
+    if (!widget || !widget->render || widget->dead) { PROFILE_END_VAR(_pt, "flapi:widget[null]"); return; }
     widget->frame++;
     bool hoverable = (widget->on_hover != NULL);
     if (hoverable) {
@@ -1743,10 +1743,22 @@ static void fl_widget_owner_path(void *addr, char *out, size_t n) {
     Platform_GetModuleOwnerPath(addr, out, n);
 }
 
+static const char* fl_widget_owner_basename(const char* p, char* out, size_t n) {
+    if (!p || !p[0]) { if (n) out[0] = '\0'; return out; }
+    const char* s = p;
+    for (const char* q = p; *q; q++) if (*q == '/' || *q == '\\') s = q + 1;
+    snprintf(out, n, "%s", s);
+    return out;
+}
+
 static bool fl_widget_owner_matches(const FlWidget *widget, const char *a, const char *b) {
     if (!widget->owner) return false;
     if (a && a[0] && strcmp(widget->owner, a) == 0) return true;
     if (b && b[0] && strcmp(widget->owner, b) == 0) return true;
+    char ab[512], bb[512], wb[512];
+    fl_widget_owner_basename(widget->owner, wb, sizeof(wb));
+    if (a && a[0]) { fl_widget_owner_basename(a, ab, sizeof(ab)); if (strcmp(wb, ab) == 0) return true; }
+    if (b && b[0]) { fl_widget_owner_basename(b, bb, sizeof(bb)); if (strcmp(wb, bb) == 0) return true; }
     return false;
 }
 
@@ -1776,6 +1788,8 @@ void fl_widget_purge_owner(const char *path_a, const char *path_b, unsigned gene
         if (!fl_widget_owner_matches(w, path_a, path_b)) continue;
         if (w->gen > generation) continue;
         w->dead = true;
+        Platform_HoverMessageRelease(w->name);
+        Platform_HoverWidgetHide(w->name);
         Platform_RenderThread_RemoveFrameCallback(fl_widget_render_frame, w);
         Platform_RenderThread_Post(fl_widget_destroy_window, w);
         log_info("fl_widget '%s' purged (owner unloaded)", w->name);
