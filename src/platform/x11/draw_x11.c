@@ -30,6 +30,7 @@ unsigned long Platform_GetDrawBgColor(void) {
 
 static __thread bool g_measuring = false;
 static __thread int g_meas_x0 = 0, g_meas_y0 = 0, g_meas_x1 = 0, g_meas_y1 = 0;
+static __thread int g_meas_origin_x = 0, g_meas_origin_y = 0;
 
 static void measure_reset(void) {
     g_measuring = false;
@@ -41,9 +42,23 @@ void Platform_BeginMeasure(void) {
     g_meas_x1 = -(1 << 30); g_meas_y1 = -(1 << 30);
 }
 void Platform_EndMeasure(int *out_w, int *out_h) {
-    if (out_w) *out_w = (g_meas_x1 > g_meas_x0) ? (g_meas_x1 - g_meas_x0) : 0;
-    if (out_h) *out_h = (g_meas_y1 > g_meas_y0) ? (g_meas_y1 - g_meas_y0) : 0;
+    int rw = 0, rh = 0;
+    if (g_meas_x1 > g_meas_x0) rw = g_meas_x1 - g_meas_x0;
+    if (g_meas_y1 > g_meas_y0) rh = g_meas_y1 - g_meas_y0;
+    if (out_w) *out_w = rw;
+    if (out_h) *out_h = rh;
+    g_meas_origin_x = g_meas_x0;
+    g_meas_origin_y = g_meas_y0;
     measure_reset();
+}
+void Platform_GetLastMeasureOrigin(int *out_x, int *out_y) {
+    if (out_x) *out_x = g_meas_origin_x;
+    if (out_y) *out_y = g_meas_origin_y;
+}
+static __thread int g_draw_off_x = 0, g_draw_off_y = 0;
+void Platform_SetDrawOffset(int dx, int dy) {
+    g_draw_off_x = dx;
+    g_draw_off_y = dy;
 }
 static void measure_track(int x, int y, int w, int h) {
     if (!g_measuring) return;

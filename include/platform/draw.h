@@ -15,6 +15,8 @@ void Platform_GetDrawContextWin32(HDC *out);
 void Platform_SetPreRenderStateWin32(const char *text, void *rect);
 void Platform_BeginMeasure(void);
 void Platform_EndMeasure(int *out_w, int *out_h);
+void Platform_GetLastMeasureOrigin(int *out_x, int *out_y);
+void Platform_SetDrawOffset(int dx, int dy);
 #else
 #include <X11/Xlib.h>
 #include <X11/Xft/Xft.h>
@@ -33,6 +35,8 @@ void Platform_SetTransparentWindow(bool on);
 bool Platform_GetTransparentWindow(void);
 void Platform_SetPreRenderState(PromptState *state);
 PromptState* Platform_GetPreRenderStatePtr(void);
+void Platform_GetLastMeasureOrigin(int *out_x, int *out_y);
+void Platform_SetDrawOffset(int dx, int dy);
 void Platform_BeginMeasure(void);
 void Platform_EndMeasure(int *out_w, int *out_h);
 void Platform_DrawEditBox(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap);
