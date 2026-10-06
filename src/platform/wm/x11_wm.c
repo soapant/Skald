@@ -14,10 +14,58 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
+#include <unistd.h>
+#include <glob.h>
+#include <sys/stat.h>
 #include "platform/x11/display_x11.h"
 
 static int _x11_err = 0;
 static Window _x11_last_min = None;
+static int g_ewmh_move_works = -1;
+
+static int g_i3_probe = 0;
+static char g_i3_sock[512];
+
+static bool i3_ensure_sock(void) {
+    if (g_i3_probe != 0) return g_i3_probe == 1;
+    g_i3_probe = -1;
+    const char* cur = getenv("I3SOCK");
+    if (cur && cur[0]) {
+        struct stat st;
+        if (stat(cur, &st) == 0) {
+            snprintf(g_i3_sock, sizeof(g_i3_sock), "%s", cur);
+            g_i3_probe = 1;
+            return true;
+        }
+    }
+    const char* rtd = getenv("XDG_RUNTIME_DIR");
+    if (!rtd || !rtd[0]) return false;
+    char pat[512];
+    snprintf(pat, sizeof(pat), "%s/i3/ipc-socket.*", rtd);
+    glob_t g;
+    memset(&g, 0, sizeof(g));
+    if (glob(pat, 0, NULL, &g) == 0 && g.gl_pathc > 0) {
+        snprintf(g_i3_sock, sizeof(g_i3_sock), "%s", g.gl_pathv[g.gl_pathc - 1]);
+        struct stat st;
+        if (stat(g_i3_sock, &st) == 0) {
+            setenv("I3SOCK", g_i3_sock, 1);
+            g_i3_probe = 1;
+        }
+    }
+    globfree(&g);
+    return g_i3_probe == 1;
+}
+
+static bool i3_move_to_output(bool right) {
+    if (!i3_ensure_sock()) return false;
+    char cmd[128];
+    snprintf(cmd, sizeof(cmd), "i3-msg move container to output %s", right ? "right" : "left");
+    char* out = Platform_RunTerminalCommand(cmd, false);
+    if (!out || out[0] == '\0') { if (out) free(out); return false; }
+    bool ok = !(strstr(out, "\"success\":false") || strstr(out, "\"error\""));
+    free(out);
+    return ok;
+}
 static int _x11_err_handler(Display *dpy, XErrorEvent *ev) {
   (void)dpy; (void)ev; _x11_err = 1; return 0; 
 }
@@ -175,19 +223,16 @@ bool get_title_x11(char *buffer, int buffer_size) {
         XSetErrorHandler(old);
         return false;
     }
-    char *name = NULL;
-    _x11_err = 0;
-    int ok = XFetchName(display, focus, &name);
-    XSync(display, False);
-    XSetErrorHandler(old);
-    if (_x11_err || !ok || !name) {
-        log_error("XFetchName failed buffer='%s' buffer_size=%d", buffer ? buffer : "null", buffer_size);
-        if (name) XFree(name);
+    char *name = x11_get_text_prop(display, focus);
+    if (!name || !name[0]) {
+        log_error("no window title property (win=0x%lx) buffer_size=%d",
+                  (unsigned long)focus, buffer_size);
+        if (name) free(name);
         return false;
     }
     strncpy(buffer, name, buffer_size - 1);
     buffer[buffer_size - 1] = '\0';
-    XFree(name);
+    free(name);
     return buffer[0] != '\0';
 }
 
@@ -249,10 +294,8 @@ char* paste_x11(char* content) {
     XTestFakeKeyEvent(dpy, (KeyCode)kc, False, CurrentTime);
     if (need_shift && shift_kc) XTestFakeKeyEvent(dpy, (KeyCode)shift_kc, False, CurrentTime);
     XFlush(dpy);
-    typed++;
   }
   XSync(dpy, False);
-  log_info("paste_x11 typed %d char(s)", typed);
   return strdup("");
 }
 
@@ -440,6 +483,47 @@ bool toggle_fullscreen_active_x11(void) {
     return _x11_err == 0;
 }
 
+static bool x11_activate_neighbor(bool right) {
+    Display* display = get_display();
+    if (!display) return false;
+    Window focus = x11_focused_window(display);
+    if (focus == None) return false;
+    int fcx = 0, fcy = 0, fw = 0, fh = 0;
+    if (!x11_window_geom(display, focus, &fcx, &fcy, &fw, &fh)) return false;
+    fcx += fw / 2;
+    fcy += fh / 2;
+    int nclients = 0;
+    Window* clients = x11_client_list(display, &nclients);
+    if (!clients || nclients <= 0) {
+        if (clients) free(clients);
+        return false;
+    }
+    Window best = None;
+    int best_gap = 1 << 30;
+    int best_vdist = 1 << 30;
+    for (int i = 0; i < nclients; i++) {
+        Window w = clients[i];
+        if (w == focus || w == None) continue;
+        int x = 0, y = 0, ww = 0, wh = 0;
+        if (!x11_window_geom(display, w, &x, &y, &ww, &wh)) continue;
+        if (ww <= 1 || wh <= 1) continue;
+        int cx = x + ww / 2;
+        int cy = y + wh / 2;
+        if (right) { if (cx <= fcx) continue; }
+        else       { if (cx >= fcx) continue; }
+        int gap = right ? (cx - fcx) : (fcx - cx);
+        int vdist = cy >= fcy ? cy - fcy : fcy - cy;
+        if (gap < best_gap || (gap == best_gap && vdist < best_vdist)) {
+            best_gap = gap;
+            best_vdist = vdist;
+            best = w;
+        }
+    }
+    free(clients);
+    if (best == None) return false;
+    return x11_activate_window(display, best);
+}
+
 bool move_active_window_to_monitor_x11(bool right) {
     Display* display = get_display();
     if (!display) return false;
@@ -493,64 +577,46 @@ bool move_active_window_to_monitor_x11(bool right) {
     if (ny + wh > oy[dst] + oh[dst]) ny = oy[dst] + oh[dst] - wh;
     if (nx < ox[dst]) nx = ox[dst];
     if (ny < oy[dst]) ny = oy[dst];
-    return x11_moveresize_window(display, focus, nx, ny, ww, wh);
+    bool sent = x11_moveresize_window(display, focus, nx, ny, ww, wh);
+    if (g_ewmh_move_works == 1) return sent;
+    if (g_ewmh_move_works == 0) return false;
+    XSync(display, False);
+    usleep(12000);
+    int vx = 0, vy = 0, vw = 0, vh = 0;
+    if (x11_window_geom(display, focus, &vx, &vy, &vw, &vh) && (vx != wx || vy != wy)) {
+        g_ewmh_move_works = 1;
+        return true;
+    }
+    g_ewmh_move_works = 0;
+    return false;
+}
+
+static bool x11_move_dir(bool right) {
+    Display* display = get_display();
+    if (!display) return false;
+    Window before = x11_focused_window(display);
+    bool moved = false;
+    if (g_ewmh_move_works != 0 && move_active_window_to_monitor_x11(right)) moved = true;
+    else if (i3_move_to_output(right)) moved = true;
+    else return x11_activate_neighbor(right);
+    if (before != None) x11_activate_window(display, before);
+    return true;
 }
 
 bool move_active_window_left_x11(void) {
-    return move_active_window_to_monitor_x11(false);
+    return x11_move_dir(false);
 }
 
 bool move_active_window_right_x11(void) {
-    return move_active_window_to_monitor_x11(true);
-}
-
-static bool x11_focus_direction(bool right) {
-    Display* display = get_display();
-    if (!display) return false;
-    Window focus = x11_focused_window(display);
-    if (focus == None) return false;
-    int fcx = 0, fcy = 0, fw = 0, fh = 0;
-    if (!x11_window_geom(display, focus, &fcx, &fcy, &fw, &fh)) return false;
-    fcx += fw / 2;
-    fcy += fh / 2;
-    int nclients = 0;
-    Window* clients = x11_client_list(display, &nclients);
-    if (!clients || nclients <= 0) {
-        if (clients) free(clients);
-        return false;
-    }
-    Window best = None;
-    int best_gap = 1 << 30;
-    int best_vdist = 1 << 30;
-    for (int i = 0; i < nclients; i++) {
-        Window w = clients[i];
-        if (w == focus || w == None) continue;
-        int x = 0, y = 0, ww = 0, wh = 0;
-        if (!x11_window_geom(display, w, &x, &y, &ww, &wh)) continue;
-        if (ww <= 1 || wh <= 1) continue;
-        int cx = x + ww / 2;
-        int cy = y + wh / 2;
-        if (right) { if (cx <= fcx) continue; }
-        else       { if (cx >= fcx) continue; }
-        int gap = right ? (cx - fcx) : (fcx - cx);
-        int vdist = cy >= fcy ? cy - fcy : fcy - cy;
-        if (gap < best_gap || (gap == best_gap && vdist < best_vdist)) {
-            best_gap = gap;
-            best_vdist = vdist;
-            best = w;
-        }
-    }
-    free(clients);
-    if (best == None) return false;
-    return x11_activate_window(display, best);
+    return x11_move_dir(true);
 }
 
 bool focus_window_left_x11(void) {
-    return x11_focus_direction(false);
+    return x11_activate_neighbor(false);
 }
 
 bool focus_window_right_x11(void) {
-    return x11_focus_direction(true);
+    return x11_activate_neighbor(true);
 }
 
 bool minimize_active_window_x11(void) {
