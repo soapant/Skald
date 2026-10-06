@@ -32,7 +32,6 @@ struct PlatformWidget {
     int layer_w, layer_h;
     void (*on_click)(void);
     char name[64];
-    int frame_printed;
 };
 
 static void layer_fill(PlatformWidget *widget, unsigned int argb) {

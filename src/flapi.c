@@ -1705,20 +1705,18 @@ static void fl_widget_render_frame(void *ud) {
     st.elapsed = fl_end_timer_platform(widget->created_at);
     st.hovered = widget->hovered;
 
-    Platform_SetDrawOffset(-widget->origin_x, -widget->origin_y);
+    Platform_SetDrawOffset(-widget->origin_x, 0);
     Platform_BeginMeasure();
     widget->render(&st);
     int mw = 0, mh = 0, mx = 0, my = 0;
     Platform_EndMeasure(&mw, &mh);
     Platform_GetLastMeasureOrigin(&mx, &my);
     mx += widget->origin_x;
-    my += widget->origin_y;
 
     if (widget->origin_x != mx || widget->origin_y != my) {
         widget->origin_x = mx;
         widget->origin_y = my;
         Platform_Widget_Invalidate(widget->win);
-        log_warn("ORIGDBG %s origin moved -> x=%d y=%d (raw_mx=%d raw_my=%d)", widget->name, mx, my, mx - widget->origin_x, my - widget->origin_y);
     }
 
     if (widget->auto_w || widget->auto_h) {
