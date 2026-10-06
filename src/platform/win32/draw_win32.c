@@ -31,6 +31,64 @@ static wchar_t* win32_widen(const char* in, int in_len, int* out_len) {
     return w;
 }
 
+static __thread HDC g_draw_hdc = NULL;
+
+static HFONT win32_sized_font(int size);
+
+static bool win32_text_is_symbolic(const wchar_t* wide, int len) {
+    for (int i = 0; i < len; i++) {
+        unsigned int c = (unsigned int)wide[i];
+        if (c == 0xFE0F || c == 0xFE0E) continue;
+        if (c >= 0xE000 && c <= 0xF8FF) return true;
+        if (c >= 0x1F000) return true;
+        if (c >= 0x2190 && c <= 0x2BFF) return true;
+        if (c >= 0xD800 && c <= 0xDFFF) return true;
+    }
+    return false;
+}
+
+static HFONT win32_symbol_font(int size) {
+    static HFONT font = NULL;
+    static int font_size = 0;
+    if (font && font_size == size) return font;
+    if (font) { DeleteObject(font); font = NULL; font_size = 0; }
+    font = FH_TO_HFONT(Platform_CreateFont(size, "Segoe UI Symbol"));
+    if (!font) font = FH_TO_HFONT(Platform_CreateFont(size, "Segoe UI Emoji"));
+    font_size = size;
+    return font;
+}
+
+#define WIN32_SYMBOL_SIZE_NUM 5
+#define WIN32_SYMBOL_SIZE_DEN 4
+
+static HFONT win32_font_for_text(const wchar_t* wide, int len, int fontsize, HFONT* out_prev, int* out_dy) {
+    HFONT prev = NULL;
+    if (out_dy) *out_dy = 0;
+    if (win32_text_is_symbolic(wide, len)) {
+        HFONT sf = win32_symbol_font(fontsize * WIN32_SYMBOL_SIZE_NUM / WIN32_SYMBOL_SIZE_DEN);
+        if (sf) {
+            HFONT nf = win32_sized_font(fontsize);
+            if (!nf) nf = g_win32_hMainFont;
+            HFONT tmp = nf ? (HFONT)SelectObject(g_draw_hdc, nf) : NULL;
+            TEXTMETRICW ts;
+            ts.tmAscent = 0;
+            if (nf) GetTextMetricsW(g_draw_hdc, &ts);
+            if (tmp) SelectObject(g_draw_hdc, tmp);
+            prev = (HFONT)SelectObject(g_draw_hdc, sf);
+            TEXTMETRICW tb;
+            GetTextMetricsW(g_draw_hdc, &tb);
+            if (out_dy) *out_dy = (ts.tmAscent - tb.tmAscent);
+            if (out_prev) *out_prev = prev;
+            return sf;
+        }
+    }
+    HFONT hfont = win32_sized_font(fontsize);
+    if (!hfont) hfont = g_win32_hMainFont;
+    if (hfont) prev = (HFONT)SelectObject(g_draw_hdc, hfont);
+    if (out_prev) *out_prev = prev;
+    return hfont;
+}
+
 static HFONT win32_sized_font(int size) {
   if (size <= 0) size = FontSize;
   if (!g_sizeFont || g_sizeFontSize != size) {
@@ -55,8 +113,6 @@ bool Platform_PreRender(void) {
 __attribute__((weak)) bool fl_prerender(void) {
     return Platform_PreRender();
 }
-
-static __thread HDC g_draw_hdc = NULL;
 
 static __thread unsigned long g_draw_bg_override = 0;
 static __thread bool g_transparent_window = false;
@@ -110,22 +166,37 @@ bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, F
     if (color != 0) color = rgb_to_hex(color);
     if (color == 0) color = COLOR_TEXT;
     const char *a = align ? align : "CENTER";
-    HFONT hfont = font.hfont ? font.hfont : win32_sized_font(fontsize);
-    if (!hfont) hfont = g_win32_hMainFont;
     HFONT old = NULL;
-    if (hfont) old = (HFONT)SelectObject(g_draw_hdc, hfont);
-    SetBkMode(g_draw_hdc, TRANSPARENT);
-    SetTextColor(g_draw_hdc, color);
-    bool centered = Platform_StringContainsCaseInsensitive(a,"CENTER");
-    bool right = !centered && Platform_StringContainsCaseInsensitive(a,"RIGHT");
     int tlen = (int)strlen(text);
     int wlen = 0;
     wchar_t* wide = win32_widen(text, tlen, &wlen);
     if (!wide) return false;
+    int dy = 0;
+    HFONT hfont = font.hfont ? font.hfont : win32_font_for_text(wide, wlen, fontsize, &old, &dy);
+    if (!hfont) hfont = win32_sized_font(fontsize);
+    if (!hfont) hfont = g_win32_hMainFont;
+    if (!old && hfont) old = (HFONT)SelectObject(g_draw_hdc, hfont);
+    int y_draw = y + dy;
+    SetBkMode(g_draw_hdc, TRANSPARENT);
+    SetTextColor(g_draw_hdc, color);
+    bool centered = Platform_StringContainsCaseInsensitive(a,"CENTER");
+    bool right = !centered && Platform_StringContainsCaseInsensitive(a,"RIGHT");
     SIZE msz;
     msz.cx = 0;
     msz.cy = 0;
-    GetTextExtentPoint32W(g_draw_hdc, wide, wlen, &msz);
+    if (dy != 0) {
+        HFONT nf = win32_sized_font(fontsize);
+        if (!nf) nf = g_win32_hMainFont;
+        if (nf) {
+            HFONT t2 = (HFONT)SelectObject(g_draw_hdc, nf);
+            GetTextExtentPoint32W(g_draw_hdc, wide, wlen, &msz);
+            SelectObject(g_draw_hdc, t2);
+        } else {
+            GetTextExtentPoint32W(g_draw_hdc, wide, wlen, &msz);
+        }
+    } else {
+        GetTextExtentPoint32W(g_draw_hdc, wide, wlen, &msz);
+    }
     if (g_measuring) {
         int bx = x;
         if (centered) bx = x - msz.cx / 2;
@@ -134,7 +205,7 @@ bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, F
     }
     if (!centered && !right) {
         int x0 = pad ? pad : x;
-        TextOutW(g_draw_hdc, x0, y, wide, wlen);
+        TextOutW(g_draw_hdc, x0, y_draw, wide, wlen);
         free(wide);
         if (old) SelectObject(g_draw_hdc, old);
         return true;
@@ -148,7 +219,7 @@ bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, F
     } else {
         rx = x + msz.cx / 2;
     }
-    RECT rc = {x, y, rx, y+40};
+    RECT rc = {x, y_draw, rx, y_draw+40};
     UINT fmt = DT_SINGLELINE | DT_VCENTER;
     if (centered) fmt |= DT_CENTER;
     else fmt |= DT_RIGHT;
@@ -164,8 +235,9 @@ int Platform_MeasureTextWidth(const char* text, int len, int fontsize) {
     int wlen = 0;
     wchar_t* wide = win32_widen(text, len, &wlen);
     if (!wide) return 0;
-    HFONT hfont = win32_sized_font(fontsize);
-    HFONT old = hfont ? (HFONT)SelectObject(g_draw_hdc, hfont) : NULL;
+    HFONT old = NULL;
+    HFONT hfont = win32_font_for_text(wide, wlen, fontsize, &old, NULL);
+    if (!hfont) hfont = win32_sized_font(fontsize);
     SIZE sz;
     sz.cx = 0;
     GetTextExtentPoint32W(g_draw_hdc, wide, wlen, &sz);
