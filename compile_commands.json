@@ -22,6 +22,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/main.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -36,6 +37,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -62,6 +64,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/config_resolve.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -76,6 +79,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -102,6 +106,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/deps/log.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -116,6 +121,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -142,6 +148,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/core/feature_loader.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -156,6 +163,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -182,6 +190,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/core/modal.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -196,6 +205,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -222,6 +232,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/core/prompt_controller.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -236,6 +247,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -262,6 +274,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/core/helpers_history.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -276,6 +289,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -302,6 +316,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/core/popup/settings_popup.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -316,6 +331,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -342,6 +358,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/core/popup/prompt_popup.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -356,6 +373,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -382,6 +400,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/core/popup/edit_popup.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -396,6 +415,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -422,6 +442,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/core/popup/search_popup.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -436,6 +457,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -462,6 +484,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/core/config_loader.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -476,6 +499,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -502,6 +526,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/core/helpers_text.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -516,6 +541,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -542,6 +568,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/core/remap_manager.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -556,6 +583,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -582,6 +610,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/core/timer.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -596,6 +625,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -622,6 +652,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/core/input_state.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -636,6 +667,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -662,6 +694,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/core/context.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -676,6 +709,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -702,6 +736,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/core/clipboard_history.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -716,6 +751,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -742,6 +778,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/core/hotkey_manager.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -756,6 +793,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -782,6 +820,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/core/window_manager.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -796,6 +835,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -822,6 +862,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/core/history.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -836,6 +877,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -862,6 +904,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/core/theme.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -876,6 +919,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -902,6 +946,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/core/helpers.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -916,6 +961,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -942,6 +988,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/core/helpers_color.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -956,6 +1003,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -982,6 +1030,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/core/snippet_manager.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -996,6 +1045,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -1022,6 +1072,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/core/feature_data.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -1036,6 +1087,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -1062,6 +1114,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/core/common_ui.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -1076,6 +1129,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -1102,6 +1156,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/core/vim.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -1116,6 +1171,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -1142,6 +1198,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/platform/x11/prompt_popup_x11.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -1156,6 +1213,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -1182,6 +1240,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/platform/x11/lib_x11.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -1196,6 +1255,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -1222,6 +1282,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/platform/x11/default_apps_x11.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -1236,6 +1297,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -1262,6 +1324,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/platform/x11/widget_x11.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -1276,6 +1339,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -1302,6 +1366,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/platform/x11/remap_x11.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -1316,6 +1381,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -1342,6 +1408,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/platform/x11/watcher_x11.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -1356,6 +1423,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -1382,6 +1450,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/platform/x11/misc_x11.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -1396,6 +1465,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -1422,6 +1492,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/platform/x11/display_x11.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -1436,6 +1507,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -1462,6 +1534,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/platform/x11/helpers_x11.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -1476,6 +1549,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -1502,6 +1576,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/platform/x11/wm_platform_x11.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -1516,6 +1591,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -1542,6 +1618,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/platform/x11/clipboard_x11.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -1556,6 +1633,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -1582,6 +1660,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/platform/x11/render_thread_x11.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -1596,6 +1675,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -1622,6 +1702,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/platform/x11/desktop_helpers_x11.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -1636,6 +1717,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -1662,6 +1744,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/platform/x11/ui_scale_x11.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -1676,6 +1759,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -1702,6 +1786,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/platform/x11/input_core_x11.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -1716,6 +1801,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -1742,6 +1828,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/platform/x11/env_helpers_x11.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -1756,6 +1843,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -1782,6 +1870,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/platform/x11/draw_x11.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -1796,6 +1885,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -1822,6 +1912,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/platform/x11/platform_x11.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -1836,6 +1927,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -1862,6 +1954,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/platform/x11/message_popup_x11.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -1876,6 +1969,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -1902,6 +1996,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/platform/x11/input/input_x11.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -1916,6 +2011,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -1942,6 +2038,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/platform/x11/input/edit_buffer_x11.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -1956,6 +2053,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -1982,6 +2080,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/platform/x11/render/render_prompt_x11.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -1996,6 +2095,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -2022,6 +2122,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/platform/x11/settings_popup_x11.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -2036,6 +2137,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -2062,6 +2164,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/platform/x11/flapi_x11.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -2076,6 +2179,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -2102,6 +2206,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/platform/x11/edit_popup_x11.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -2116,6 +2221,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -2142,6 +2248,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/platform/x11/ui_x11.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -2156,6 +2263,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -2182,6 +2290,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/platform/x11/window_manager_x11.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -2196,6 +2305,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -2222,6 +2332,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/platform/wm/sway_wm.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -2236,6 +2347,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -2262,6 +2374,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/platform/wm/niri_wm.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -2276,6 +2389,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -2302,6 +2416,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/platform/wm/hyprland_wm.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -2316,6 +2431,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -2342,6 +2458,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/platform/wm/wm.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -2356,6 +2473,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -2382,6 +2500,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/platform/wm/kwin_wm.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -2396,6 +2515,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -2422,6 +2542,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/platform/wm/x11_wm.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -2436,6 +2557,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -2462,6 +2584,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/config_defaults.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -2476,6 +2599,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -2502,6 +2626,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/bindings/vim_bindings.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -2516,6 +2641,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -2542,6 +2668,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/bindings/bindings.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -2556,6 +2683,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -2582,6 +2710,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/bindings/vim_motions.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -2596,6 +2725,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -2622,6 +2752,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/bindings/vim_helpers.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -2636,6 +2767,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   },
@@ -2662,6 +2794,7 @@
       "-Wno-misleading-indentation",
       "-c",
       "src/flapi.c",
+      "-D_REENTRANT",
       "-I/nix/store/0jrj3y6ac4fnkbmw9zlxp1gjzycci48d-libxrender-0.9.12-dev/include",
       "-I/nix/store/4b8ygixy97fqpssk3h9jz74wgkwinzmc-fontconfig-2.17.1-dev/include",
       "-I/nix/store/nnxpc4i6f4zgh0qxmkpcbw9djrjh5r9v-libxft-2.3.9-dev/include",
@@ -2676,6 +2809,7 @@
       "-I/nix/store/x1g0q8mcrw0bq9872y6bidsycizjxkyi-libx11-1.8.13-dev/include",
       "-I/nix/store/642q759qw56skyr7xvg27vzw2hcx5jm3-libxtst-1.2.5/include",
       "-I/nix/store/hf0wl74b83c8117xprb5521khq0c6vz7-libxi-1.8.3-dev/include",
+      "-I/nix/store/ps2bd02qpqag0dwyg6z89dd245k2g7nl-libpulseaudio-17.0-dev/include",
       "-I/nix/store/4wpk4zqxl1gqfzy9y9nxnggqqnga93mz-xorgproto-2025.1/include"
     ]
   }
