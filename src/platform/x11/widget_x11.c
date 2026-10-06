@@ -77,10 +77,13 @@ static void widget_frame(void *ud) {
     if (widget->w <= 0 || widget->h <= 0) return;
 
     long long now = widget_now_ms();
+    long long interval = widget->fps > 0 ? 1000LL / widget->fps : 1000LL;
+    if (interval < 16) interval = 16;
+    const char *reason = "fps";
     if (!widget->dirty) {
-        long long interval = widget->fps > 0 ? 1000LL / widget->fps : 1000LL;
-        if (interval < 16) interval = 16;
         if (now - widget->last_draw_ms < interval) return;
+    } else {
+        reason = "DIRTY";
     }
     widget->dirty = false;
     widget->last_draw_ms = now;
