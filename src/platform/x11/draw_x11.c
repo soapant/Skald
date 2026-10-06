@@ -47,8 +47,8 @@ void Platform_EndMeasure(int *out_w, int *out_h) {
     if (g_meas_y1 > g_meas_y0) rh = g_meas_y1 - g_meas_y0;
     if (out_w) *out_w = rw;
     if (out_h) *out_h = rh;
-    g_meas_origin_x = g_meas_x0;
-    g_meas_origin_y = g_meas_y0;
+    g_meas_origin_x = (rw > 0 || rh > 0) ? g_meas_x0 : 0;
+    g_meas_origin_y = (rw > 0 || rh > 0) ? g_meas_y0 : 0;
     measure_reset();
 }
 void Platform_GetLastMeasureOrigin(int *out_x, int *out_y) {
@@ -288,6 +288,8 @@ void Platform_FlushDraw(void) {
 }
 bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
     if (!path || !path[0] || !g_draw_dpy || !g_draw_xd) return false;
+    x += g_draw_off_x;
+    y += g_draw_off_y;
     if (w <= 0) w = IconSize;
     if (h <= 0) h = IconSize;
     measure_track(x, y, w, h);
@@ -301,6 +303,8 @@ void Platform_GetDrawContext(Display** dpy, XftDraw** xd, Visual** vis, Colormap
 }
 bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, FontHandle font, const char *align, int pad,int fontsize) {
     if (!text || !g_draw_dpy || !g_draw_xd) return false;
+    x += g_draw_off_x;
+    y += g_draw_off_y;
     FontHandle fh = font;
     bool needDestroy = false;
     if (!FH_TO_XFT(fh)) {
@@ -379,6 +383,8 @@ int Platform_MeasureTextWidth(const char* text, int len, int fontsize) {
 
 bool Platform_DrawTextLine(int x, int y, const char* text, int len, unsigned long color, int fontsize) {
     if (!text || len <= 0 || !g_draw_dpy || !g_draw_xd) return false;
+    x += g_draw_off_x;
+    y += g_draw_off_y;
     XftFont* xf = LineFont(g_draw_dpy, fontsize);
     if (!xf) return false;
     if (color == 0) color = rgb_to_hex(COLOR_TEXT);
@@ -461,6 +467,8 @@ void Platform_DrawEditCursor(PromptState *state, Display *dpy, XftDraw *xd, Visu
     }
 }
 bool Platform_DrawRectRaw(int x, int y, int w, int h, unsigned long color) {
+    x += g_draw_off_x;
+    y += g_draw_off_y;
     measure_track(x, y, w, h);
     if (RawRect_Map(x, y, w, h, color)) return true;
     XftColor col;
