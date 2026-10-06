@@ -119,31 +119,16 @@ static void widget_paint_layered(PlatformWidget *widget) {
     if (widget->fn) widget->fn(widget->ud);
     GdiFlush();
 
-{
-        unsigned int *px = (unsigned int *)widget->layer_bits;
+    {
+        unsigned int* px = (unsigned int*)widget->layer_bits;
         size_t n = (size_t)widget->layer_w * (size_t)widget->layer_h;
         for (size_t i = 0; i < n; i++) {
-            int a = (int)(px[i] & 0xFF);
-            if (a > 255) a = 255;
-            if (a < 0) a = 0;
-            px[i] = (px[i] & 0x00FFFFFFu) | ((unsigned int)a << 24);
-        }
-        static char dbg_done[8][64];
-        static int dbg_n = 0;
-        int dbg_idx = -1;
-        for (int k = 0; k < dbg_n; k++) if (strcmp(dbg_done[k], widget->name) == 0) dbg_idx = k;
-        if (dbg_idx < 0 && dbg_n < 8) { dbg_idx = dbg_n++; snprintf(dbg_done[dbg_n - 1], 64, "%s", widget->name); }
-        if (dbg_idx >= 0 && widget->frame_printed == 0) {
-            widget->frame_printed = 1;
-            unsigned int nz = 0, maxa = 0;
-            for (size_t i = 0; i < n; i++) {
-                unsigned int a = (px[i] >> 24) & 0xFF;
-                if (a) nz++;
-                if (a > maxa) maxa = a;
-            }
-            log_warn("wgt[%s] layer %dx%d nonzero_alpha=%u/%zu max_alpha=%u px0=%08x px1=%08x",
-                     widget->name, widget->layer_w, widget->layer_h, nz, n, maxa,
-                     n > 0 ? px[0] : 0u, n > 1 ? px[1] : 0u);
+            unsigned int b = px[i] & 0xFFu;
+            unsigned int g = (px[i] >> 8) & 0xFFu;
+            unsigned int r = (px[i] >> 16) & 0xFFu;
+            unsigned int a = b > g ? b : g;
+            if (r > a) a = r;
+            px[i] = (px[i] & 0x00FFFFFFu) | (a << 24);
         }
     }
 

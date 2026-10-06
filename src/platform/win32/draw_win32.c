@@ -132,24 +132,41 @@ unsigned long Platform_GetDrawBgColor(void) {
 }
 
 static __thread bool g_measuring = false;
+static __thread bool g_meas_any = false;
 static __thread int g_meas_x0 = 0, g_meas_y0 = 0, g_meas_x1 = 0, g_meas_y1 = 0;
 
 static void measure_reset(void) {
     g_measuring = false;
+    g_meas_any = false;
     g_meas_x0 = 0; g_meas_y0 = 0; g_meas_x1 = 0; g_meas_y1 = 0;
 }
 void Platform_BeginMeasure(void) {
     g_measuring = true;
-    g_meas_x0 = 1 << 30; g_meas_y0 = 1 << 30;
-    g_meas_x1 = -(1 << 30); g_meas_y1 = -(1 << 30);
+    g_meas_x0 = 0; g_meas_y0 = 0;
+    g_meas_x1 = 0; g_meas_y1 = 0;
+    g_meas_any = false;
 }
 void Platform_EndMeasure(int *out_w, int *out_h) {
-    if (out_w) *out_w = (g_meas_x1 > g_meas_x0) ? (g_meas_x1 - g_meas_x0) : 0;
-    if (out_h) *out_h = (g_meas_y1 > g_meas_y0) ? (g_meas_y1 - g_meas_y0) : 0;
+    if (!g_meas_any) {
+        if (out_w) *out_w = 0;
+        if (out_h) *out_h = 0;
+        measure_reset();
+        return;
+    }
+    if (out_w) *out_w = g_meas_x1;
+    if (out_h) *out_h = g_meas_y1;
     measure_reset();
 }
 static void measure_track(int x, int y, int w, int h) {
     if (!g_measuring) return;
+    if (x < 0) x = 0;
+    if (y < 0) y = 0;
+    if (!g_meas_any) {
+        g_meas_any = true;
+        g_meas_x0 = x; g_meas_y0 = y;
+        g_meas_x1 = x + w; g_meas_y1 = y + h;
+        return;
+    }
     if (x < g_meas_x0) g_meas_x0 = x;
     if (y < g_meas_y0) g_meas_y0 = y;
     if (x + w > g_meas_x1) g_meas_x1 = x + w;
@@ -205,22 +222,26 @@ bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, F
     }
     if (!centered && !right) {
         int x0 = pad ? pad : x;
+        if (g_measuring) measure_track(x0, y, msz.cx, msz.cy);
         TextOutW(g_draw_hdc, x0, y_draw, wide, wlen);
         free(wide);
         if (old) SelectObject(g_draw_hdc, old);
         return true;
     }
-    int rx;
+    int lx, rx;
     if (pad) {
-        rx = x + 800;
+        lx = x;
+        rx = x + msz.cx;
         if (pad) x += pad;
     } else if (right) {
+        lx = x - msz.cx;
         rx = x;
     } else {
+        lx = x - msz.cx / 2;
         rx = x + msz.cx / 2;
     }
-    RECT rc = {x, y_draw, rx, y_draw+40};
-    UINT fmt = DT_SINGLELINE | DT_VCENTER;
+    RECT rc = {lx, y_draw, rx, y_draw + msz.cy};
+    UINT fmt = DT_SINGLELINE;
     if (centered) fmt |= DT_CENTER;
     else fmt |= DT_RIGHT;
     DrawTextW(g_draw_hdc, wide, wlen, &rc, fmt);
