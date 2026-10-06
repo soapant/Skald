@@ -429,6 +429,8 @@ struct FlWidget {
     int y;
     bool auto_w;
     bool auto_h;
+    int origin_x;
+    int origin_y;
     unsigned long bg_hex;
     bool has_bg;
     bool no_bg;

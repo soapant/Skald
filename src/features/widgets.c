@@ -224,7 +224,6 @@ static void widgets_internet_render(FlWidgetState *state) {
             fl_draw_text(.text = "",.x = x, .y = y,.fontsize=fontsize,.align="LEFT");
             break;
     }
-    // fl_draw_text(.text = "nigga",.x = x, .y = y,.fontsize=fontsize,.align="LEFT");
 }
 
 static void widgets_volume_render(FlWidgetState *state) {

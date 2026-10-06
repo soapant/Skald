@@ -39,33 +39,100 @@ static bool win32_text_is_symbolic(const wchar_t* wide, int len) {
     for (int i = 0; i < len; i++) {
         unsigned int c = (unsigned int)wide[i];
         if (c == 0xFE0F || c == 0xFE0E) continue;
-        if (c >= 0xE000 && c <= 0xF8FF) return true;
-        if (c >= 0x1F000) return true;
-        if (c >= 0x2190 && c <= 0x2BFF) return true;
-        if (c >= 0xD800 && c <= 0xDFFF) return true;
+        if (c > 0x7F) return true;
     }
     return false;
 }
 
-static HFONT win32_symbol_font(int size) {
-    static HFONT font = NULL;
-    static int font_size = 0;
-    if (font && font_size == size) return font;
-    if (font) { DeleteObject(font); font = NULL; font_size = 0; }
-    font = FH_TO_HFONT(Platform_CreateFont(size, "Segoe UI Symbol"));
-    if (!font) font = FH_TO_HFONT(Platform_CreateFont(size, "Segoe UI Emoji"));
-    font_size = size;
-    return font;
+static bool win32_font_covers(HFONT f, const wchar_t* wide, int len) {
+    if (!f || !wide || len <= 0) return false;
+    HFONT old = (HFONT)SelectObject(g_draw_hdc, f);
+    bool ok = true;
+    for (int i = 0; i < len; i++) {
+        if (wide[i] < 0x80) continue;
+        if (wide[i] >= 0xD800 && wide[i] <= 0xDBFF) {
+            if (i + 1 < len && wide[i+1] >= 0xDC00 && wide[i+1] <= 0xDFFF) { i++; continue; }
+        }
+        WORD gi = 0xFFFF;
+        DWORD r = GetGlyphIndicesW(g_draw_hdc, wide + i, 1, &gi, 0);
+        if (r == GDI_ERROR || gi == 0xFFFF || gi == 0) { ok = false; break; }
+    }
+    SelectObject(g_draw_hdc, old);
+    return ok;
+}
+
+#define WIN32_SYM_SLOTS 4
+static HFONT g_sym_fonts[WIN32_SYM_SLOTS] = {NULL};
+static int g_sym_sizes[WIN32_SYM_SLOTS] = {0};
+static wchar_t g_sym_cp[WIN32_SYM_SLOTS][8] = {{0}};
+static int g_sym_len[WIN32_SYM_SLOTS] = {0};
+static ULONGLONG g_sym_tick = 0;
+
+static HFONT win32_symbol_font(int size, const wchar_t* wide, int len) {
+    if (len > 8) len = 8;
+    for (int i = 0; i < WIN32_SYM_SLOTS; i++) {
+        if (g_sym_fonts[i] && g_sym_sizes[i] == size && g_sym_len[i] == len &&
+            memcmp(g_sym_cp[i], wide, (size_t)len * sizeof(wchar_t)) == 0)
+            return g_sym_fonts[i];
+    }
+
+    static const char* faces[] = {"Segoe UI Symbol", "Segoe UI Emoji", "Malgun Gothic",
+                                  "Segoe UI", "Arial Unicode MS", NULL};
+    HFONT found = NULL;
+    for (int i = 0; faces[i]; i++) {
+        HFONT f = FH_TO_HFONT(Platform_CreateFont(size, faces[i]));
+        if (!f) continue;
+        if (win32_font_covers(f, wide, len)) { found = f; break; }
+        DeleteObject(f);
+    }
+    if (!found) return NULL;
+
+    int slot = -1;
+    ULONGLONG oldest = ~(ULONGLONG)0;
+    for (int i = 0; i < WIN32_SYM_SLOTS; i++) {
+        if (!g_sym_fonts[i]) { slot = i; break; }
+    }
+    if (slot < 0) {
+        for (int i = 0; i < WIN32_SYM_SLOTS; i++) {
+            if (g_sym_sizes[i] == 0) { slot = i; break; }
+        }
+    }
+    if (slot < 0) {
+        for (int i = 0; i < WIN32_SYM_SLOTS; i++) {
+            ULONGLONG t = (ULONGLONG)g_sym_sizes[i];
+            if (t <= oldest) { oldest = t; slot = i; }
+        }
+    }
+    if (g_sym_fonts[slot]) DeleteObject(g_sym_fonts[slot]);
+    g_sym_fonts[slot] = found;
+    g_sym_sizes[slot] = size;
+    g_sym_len[slot] = len;
+    for (int k = 0; k < len; k++) g_sym_cp[slot][k] = wide[k];
+    g_sym_tick++;
+    return found;
 }
 
 #define WIN32_SYMBOL_SIZE_NUM 5
 #define WIN32_SYMBOL_SIZE_DEN 4
 
+static bool win32_text_needs_boost(const wchar_t* wide, int len) {
+    for (int i = 0; i < len; i++) {
+        unsigned int c = (unsigned int)wide[i];
+        if (c == 0xFE0F || c == 0xFE0E) continue;
+        if (c >= 0x1F000) return true;
+        if (c >= 0xD800 && c <= 0xDFFF) return true;
+        if (c >= 0xE000 && c <= 0xF8FF) return true;
+    }
+    return false;
+}
+
 static HFONT win32_font_for_text(const wchar_t* wide, int len, int fontsize, HFONT* out_prev, int* out_dy) {
     HFONT prev = NULL;
     if (out_dy) *out_dy = 0;
     if (win32_text_is_symbolic(wide, len)) {
-        HFONT sf = win32_symbol_font(fontsize * WIN32_SYMBOL_SIZE_NUM / WIN32_SYMBOL_SIZE_DEN);
+        bool boost = win32_text_needs_boost(wide, len);
+        int want = boost ? (fontsize * WIN32_SYMBOL_SIZE_NUM / WIN32_SYMBOL_SIZE_DEN) : fontsize;
+        HFONT sf = win32_symbol_font(want, wide, len);
         if (sf) {
             HFONT nf = win32_sized_font(fontsize);
             if (!nf) nf = g_win32_hMainFont;
@@ -75,9 +142,11 @@ static HFONT win32_font_for_text(const wchar_t* wide, int len, int fontsize, HFO
             if (nf) GetTextMetricsW(g_draw_hdc, &ts);
             if (tmp) SelectObject(g_draw_hdc, tmp);
             prev = (HFONT)SelectObject(g_draw_hdc, sf);
-            TEXTMETRICW tb;
-            GetTextMetricsW(g_draw_hdc, &tb);
-            if (out_dy) *out_dy = (ts.tmAscent - tb.tmAscent);
+            if (boost) {
+                TEXTMETRICW tb;
+                GetTextMetricsW(g_draw_hdc, &tb);
+                if (out_dy) *out_dy = (ts.tmAscent - tb.tmAscent);
+            }
             if (out_prev) *out_prev = prev;
             return sf;
         }
@@ -133,6 +202,7 @@ unsigned long Platform_GetDrawBgColor(void) {
 
 static __thread bool g_measuring = false;
 static __thread bool g_meas_any = false;
+static __thread int g_meas_origin_x = 0, g_meas_origin_y = 0;
 static __thread int g_meas_x0 = 0, g_meas_y0 = 0, g_meas_x1 = 0, g_meas_y1 = 0;
 
 static void measure_reset(void) {
@@ -142,35 +212,38 @@ static void measure_reset(void) {
 }
 void Platform_BeginMeasure(void) {
     g_measuring = true;
-    g_meas_x0 = 0; g_meas_y0 = 0;
-    g_meas_x1 = 0; g_meas_y1 = 0;
+    g_meas_x0 = 1 << 30; g_meas_y0 = 1 << 30;
+    g_meas_x1 = -(1 << 30); g_meas_y1 = -(1 << 30);
     g_meas_any = false;
 }
 void Platform_EndMeasure(int *out_w, int *out_h) {
-    if (!g_meas_any) {
-        if (out_w) *out_w = 0;
-        if (out_h) *out_h = 0;
-        measure_reset();
-        return;
+    int rw = 0, rh = 0;
+    if (g_meas_any) {
+        rw = (g_meas_x1 > g_meas_x0) ? (g_meas_x1 - g_meas_x0) : 0;
+        rh = (g_meas_y1 > g_meas_y0) ? (g_meas_y1 - g_meas_y0) : 0;
     }
-    if (out_w) *out_w = g_meas_x1;
-    if (out_h) *out_h = g_meas_y1;
+    if (out_w) *out_w = rw;
+    if (out_h) *out_h = rh;
+    g_meas_origin_x = g_meas_x0;
+    g_meas_origin_y = g_meas_y0;
     measure_reset();
+}
+void Platform_GetLastMeasureOrigin(int *out_x, int *out_y) {
+    if (out_x) *out_x = g_meas_origin_x;
+    if (out_y) *out_y = g_meas_origin_y;
+}
+static __thread int g_draw_off_x = 0, g_draw_off_y = 0;
+void Platform_SetDrawOffset(int dx, int dy) {
+    g_draw_off_x = dx;
+    g_draw_off_y = dy;
 }
 static void measure_track(int x, int y, int w, int h) {
     if (!g_measuring) return;
-    if (x < 0) x = 0;
-    if (y < 0) y = 0;
-    if (!g_meas_any) {
-        g_meas_any = true;
-        g_meas_x0 = x; g_meas_y0 = y;
-        g_meas_x1 = x + w; g_meas_y1 = y + h;
-        return;
-    }
     if (x < g_meas_x0) g_meas_x0 = x;
     if (y < g_meas_y0) g_meas_y0 = y;
     if (x + w > g_meas_x1) g_meas_x1 = x + w;
     if (y + h > g_meas_y1) g_meas_y1 = y + h;
+    g_meas_any = true;
 }
 void Platform_SetDrawContextWin32(HDC hdc) {
   g_draw_hdc = hdc; 
@@ -180,6 +253,8 @@ void Platform_GetDrawContextWin32(HDC *out) {
 }
 bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, FontHandle font, const char *align, int pad,int fontsize) {
     if (!text || !g_draw_hdc) return false;
+    x += g_draw_off_x;
+    y += g_draw_off_y;
     if (color != 0) color = rgb_to_hex(color);
     if (color == 0) color = COLOR_TEXT;
     const char *a = align ? align : "CENTER";
