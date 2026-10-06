@@ -11,6 +11,7 @@
 #include <X11/Xatom.h>
 #include <X11/Xft/Xft.h>
 #include <fontconfig/fontconfig.h>
+#include <fontconfig/fcfreetype.h>
 #include <X11/extensions/shape.h>
 #include <unistd.h>
 #include <pthread.h>
@@ -128,10 +129,17 @@ static int x11_utf8_cp(const unsigned char* s, const unsigned char* end, int* cl
 
 static bool x11_font_has(XftFont* f, FcChar32 cp) {
     if (!f || !f->pattern) return false;
-    if (cp < 0x20 || cp == 0x7F) return true;
+    if (cp < 0x21 || cp == 0x7F) return true;
     FcCharSet* cs = NULL;
     if (FcPatternGetCharSet(f->pattern, FC_CHARSET, 0, &cs) != FcResultMatch || !cs) return true;
-    return FcCharSetHasChar(cs, cp);
+    if (!FcCharSetHasChar(cs, cp)) return false;
+    FT_Face face = XftLockFace(f);
+    if (face) {
+        bool ft = FcFreeTypeCharIndex(face, cp) != 0;
+        XftUnlockFace(f);
+        return ft;
+    }
+    return true;
 }
 
 static int x11_font_px(XftFont* xf, int px) {
@@ -142,13 +150,7 @@ static int x11_font_px(XftFont* xf, int px) {
     return FontSize;
 }
 
-static XftFont* x11_fallback_for_locked(Display* dpy, FcChar32 cp, int px) {
-    if (!g_fb_config) g_fb_config = FcInitLoadConfigAndFonts();
-    if (!g_fb_config) return NULL;
-    for (int i = 0; i < X11_FB_CACHE; i++) {
-        if (g_fb_cache[i].f && g_fb_cache[i].dpy == dpy && g_fb_cache[i].cp == cp && g_fb_cache[i].px == px)
-            return g_fb_cache[i].f;
-    }
+static XftFont* x11_open_fallback_at_locked(Display* dpy, FcChar32 cp, int px) {
     XftFont* fb = NULL;
     FcCharSet* cs = FcCharSetCreate();
     FcPattern* pat = FcPatternCreate();
@@ -156,7 +158,7 @@ static XftFont* x11_fallback_for_locked(Display* dpy, FcChar32 cp, int px) {
         FcCharSetAddChar(cs, cp);
         FcPatternAddCharSet(pat, FC_CHARSET, cs);
         FcPatternAddString(pat, FC_FAMILY, (FcChar8*)"sans-serif");
-        FcPatternAddDouble(pat, FC_PIXEL_SIZE, (double)(px > 0 ? px : FontSize));
+        FcPatternAddDouble(pat, FC_PIXEL_SIZE, (double)px);
         FcConfigSubstitute(g_fb_config, pat, FcMatchPattern);
         FcDefaultSubstitute(pat);
         FcResult res = FcResultNoMatch;
@@ -170,6 +172,19 @@ static XftFont* x11_fallback_for_locked(Display* dpy, FcChar32 cp, int px) {
     }
     if (pat) FcPatternDestroy(pat);
     if (cs) FcCharSetDestroy(cs);
+    return fb;
+}
+
+static XftFont* x11_open_fallback_at_locked(Display* dpy, FcChar32 cp, int px);
+
+static XftFont* x11_fallback_for_locked(Display* dpy, FcChar32 cp, int px) {
+    if (!g_fb_config) g_fb_config = FcInitLoadConfigAndFonts();
+    if (!g_fb_config) return NULL;
+    for (int i = 0; i < X11_FB_CACHE; i++) {
+        if (g_fb_cache[i].f && g_fb_cache[i].dpy == dpy && g_fb_cache[i].cp == cp && g_fb_cache[i].px == px)
+            return g_fb_cache[i].f;
+    }
+    XftFont* fb = x11_open_fallback_at_locked(dpy, cp, px > 0 ? px : FontSize);
     if (!fb) return NULL;
     if (g_fb_cache[g_fb_next].f) {
         Display* odpy = g_fb_cache[g_fb_next].dpy;
@@ -219,14 +234,21 @@ int x11_measure_utf8_fallback(Display* dpy, XftFont* xf, const char* s, int n, i
         XftFont* fb = x11_fallback_for(dpy, cp, px);
         if (fb) {
             const unsigned char* fs = p;
-            while (p < end) { int l2 = 1; FcChar32 c2 = x11_utf8_cp(p, end, &l2); if (!x11_font_has(fb, c2)) break; p += l2; }
-            if (p == fs) p += cl;
-            total += xft_width(dpy, fb, (const char*)fs, (int)(p - fs));
+            int covered = 0;
+            while (p < end) { int l2 = 1; FcChar32 c2 = x11_utf8_cp(p, end, &l2); if (!x11_font_has(fb, c2)) break; p += l2; covered += l2; }
+            if (covered > 0) total += xft_width(dpy, fb, (const char*)fs, covered);
+            else p += cl;
         } else {
             p += cl;
         }
     }
     return total;
+}
+
+static double x11_ink_center(Display* dpy, XftFont* f, const char* t, int n) {
+    XGlyphInfo e;
+    XftTextExtentsUtf8(dpy, f, (FcChar8*)t, n, &e);
+    return (double)e.yOff + (double)e.height / 2.0;
 }
 
 int x11_draw_utf8_fallback(Display* dpy, XftDraw* xd, XftColor* color, int x, int y, XftFont* xf, const char* s, int n, int px) {
@@ -246,8 +268,9 @@ int x11_draw_utf8_fallback(Display* dpy, XftDraw* xd, XftColor* color, int x, in
             p += cl;
         }
         if (p > runStart) {
-            XftDrawStringUtf8(xd, color, runFont, cx, y, (FcChar8*)runStart, (int)(p - runStart));
-            cx += xft_width(dpy, runFont, (const char*)runStart, (int)(p - runStart));
+            int rl = (int)(p - runStart);
+            XftDrawStringUtf8(xd, color, runFont, cx, y, (FcChar8*)runStart, rl);
+            cx += xft_width(dpy, runFont, (const char*)runStart, rl);
         }
         if (p >= end) break;
         int cl = 1;
@@ -255,10 +278,14 @@ int x11_draw_utf8_fallback(Display* dpy, XftDraw* xd, XftColor* color, int x, in
         XftFont* fb = x11_fallback_for(dpy, cp, px);
         if (fb) {
             const unsigned char* fs = p;
-            while (p < end) { int l2 = 1; FcChar32 c2 = x11_utf8_cp(p, end, &l2); if (!x11_font_has(fb, c2)) break; p += l2; }
-            if (p == fs) p += cl;
-            XftDrawStringUtf8(xd, color, fb, cx, y, (FcChar8*)fs, (int)(p - fs));
-            cx += xft_width(dpy, fb, (const char*)fs, (int)(p - fs));
+            int covered = 0;
+            while (p < end) { int l2 = 1; FcChar32 c2 = x11_utf8_cp(p, end, &l2); if (!x11_font_has(fb, c2)) break; p += l2; covered += l2; }
+            if (covered > 0) {
+                XftDrawStringUtf8(xd, color, fb, cx, y, (FcChar8*)fs, covered);
+                cx += xft_width(dpy, fb, (const char*)fs, covered);
+            } else {
+                p += cl;
+            }
         } else {
             p += cl;
         }
