@@ -493,10 +493,6 @@ char* fl_get_zoxide_match(char* query) {
   return Platform_QueryZoxidePath(query);
 }
 
-int fl_collect_running_processes(char process_list[][128], int max_count) {
-    return Platform_CollectRunningProcesses(process_list, max_count);
-}
-
 bool fl_terminate_process_by_name(const char* exe_name) {
     if (!exe_name) return false;
     return Platform_TerminateProcessByName(exe_name);
@@ -1714,6 +1710,8 @@ static void fl_widget_render_frame(void *ud) {
     mx += widget->origin_x;
 
     if (widget->origin_x != mx || widget->origin_y != my) {
+        log_info("ORIGDBG %s origin MOVED ox=%d->%d oy=%d->%d", widget->name,
+                 widget->origin_x, mx, widget->origin_y, my);
         widget->origin_x = mx;
         widget->origin_y = my;
         Platform_Widget_Invalidate(widget->win);
@@ -1724,6 +1722,8 @@ static void fl_widget_render_frame(void *ud) {
         int nh = (widget->auto_h && mh > 0) ? mh + widget->pad : widget->h;
         
         if (nw != widget->w || nh != widget->h) {
+            log_info("SIZEDBG %s resize %dx%d -> %dx%d (mw=%d mh=%d)", widget->name,
+                     widget->w, widget->h, nw, nh, mw, mh);
             widget->w = nw;
             widget->h = nh;
             if (Platform_Widget_IsValid(widget->win)) {

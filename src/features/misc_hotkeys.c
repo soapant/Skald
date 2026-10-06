@@ -63,12 +63,6 @@ void get_current_keyword(void) {
     }
 }
 
-void copy_seifisbad(void) {
-    fl_copy_to_clipboard("seifisbad@gmail.com");
-}
-void copy_password(void) {
-    fl_copy_to_clipboard("i_am_retarded1");
-}
 void open_terminal(void) {
     fl_run_terminal_command_and_open("");
 }
@@ -109,8 +103,6 @@ FLINT_FEATURE_INIT {
     fl_register_hotkey("RShift",fl_toggle_play_pause); 
     fl_register_hotkey("Ctrl+]",IncrementVolume); 
     fl_register_hotkey("Ctrl+[",DecrementVolume); 
-    fl_register_hotkey("Alt+Ctrl+O", copy_seifisbad);
-    fl_register_hotkey("Alt+Ctrl+P", copy_password);
     fl_register_hotkey("Alt+Q", open_terminal);
     fl_register_hotkey("Ctrl+Shift+B", open_browser);
     fl_register_hotkey("Alt+Shift+L", move_active_window_right);

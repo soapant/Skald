@@ -409,7 +409,7 @@ static char* Platform_RunCommandDetachedCapture(char* command) {
     long deadline = quiet_ms;
     bool got_data = false;
     bool eof = false;
-    char buf[4096];
+    char buf[16096];
     while (1) {
         struct timespec now;
         clock_gettime(CLOCK_MONOTONIC, &now);
@@ -518,7 +518,6 @@ char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
     char extra[1024];
 
     snprintf(extra, sizeof(extra),
-
              "%s -c \"%s '%s'; exec %s\"",
              UsedShell, UsedShell, temp_file, UsedShell);
 
