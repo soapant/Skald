@@ -341,12 +341,12 @@ typedef struct {
 bool fl_draw_text_impl(const FlTextSpec *spec);
 bool fl_place_editbox_impl(const FlEditSpec *spec);
 bool fl_place_listbox_impl(const FlListSpec *spec);
-bool fl_place_image_impl(const FlImageSpec *spec);
+bool fl_draw_image_impl(const FlImageSpec *spec);
 
 #define fl_draw_text(...) fl_draw_text_impl(&(FlTextSpec){__VA_ARGS__})
+#define fl_draw_image(...) fl_draw_image_impl(&(FlImageSpec){__VA_ARGS__})
 #define fl_place_editbox(...) fl_place_editbox_impl(&(FlEditSpec){__VA_ARGS__})
 #define fl_place_listbox(...) fl_place_listbox_impl(&(FlListSpec){__VA_ARGS__})
-#define fl_place_image(...) fl_place_image_impl(&(FlImageSpec){__VA_ARGS__})
 
 bool fl_listbox_begin(const FlListSpec *spec);
 bool fl_listbox_next(FlListItemCtx *out);
@@ -359,7 +359,7 @@ void fl_listbox_end(void);
 bool fl_draw_text_anchored(FlAnchor anchor, int offset_x, int offset_y, const char *text);
 bool fl_place_editbox_anchored(FlAnchor anchor, int offset_x, int offset_y, int w, int h, const char *buffer);
 bool fl_place_listbox_anchored(FlAnchor anchor, int offset_x, int offset_y, int w, int h, const char **items, int count);
-bool fl_place_image_anchored(FlAnchor anchor, int offset_x, int offset_y, int w, int h, const char *path);
+bool fl_draw_image_anchored(FlAnchor anchor, int offset_x, int offset_y, int w, int h, const char *path);
 
 // =============================================================================
 // AUTO LAYOUT (column / row math)
@@ -374,7 +374,7 @@ void fl_layout_end_row(void);
 bool fl_draw_text_auto(const char *text);
 bool fl_place_editbox_auto(int w, int h, const char *buffer);
 bool fl_place_listbox_auto(int w, int h, const char **items, int count);
-bool fl_place_image_auto(int w, int h, const char *path);
+bool fl_draw_image_auto(int w, int h, const char *path);
 
 // =============================================================================
 // WIDGETS (persistent windows, drawn on their own render thread)
@@ -472,7 +472,6 @@ void Platform_SetPreRenderStateWin32(const char *text, void *rect);
 
 void* fl_load_image(const char *path);
 void fl_free_image(void *image);
-bool fl_draw_image(void *image, int x, int y, int w, int h);
 
 // =============================================================================
 // BASIC UI DRAWING (stubs for now, platform does logic later)

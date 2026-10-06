@@ -210,15 +210,18 @@ static void widgets_date_and_time_render(FlWidgetState *state) {
 
 static void widgets_internet_render(FlWidgetState *state) {
     FlNetStatus status = fl_net_status();
+    int x = 40;
+    int y = 7;
+    int fontsize = FONTSIZE + 1;
     switch (status) {
         case FL_NET_OFFLINE:
-            fl_place_image(.path = "resources/wifi-not-avail.png", .x = 10, .y = 7, .h = FONTSIZE + 6, .w = FONTSIZE + 6);
+            fl_draw_text(.text = "🚫",.x = x, .y = y,.fontsize=fontsize);
             break;
         case FL_NET_ETHERNET:
-            fl_place_image(.path = "resources/ethernet.png", .x = 10, .y = 7, .h = FONTSIZE + 6, .w = FONTSIZE + 6);
+            fl_draw_text(.text = "모",.x = x, .y = y,.fontsize=fontsize);
             break;
         case FL_NET_WIFI:
-            fl_place_image(.path = "resources/wifi.png", .x = 10, .y = 7, .h = FONTSIZE + 6, .w = FONTSIZE + 6);
+            fl_draw_text(.text = "",.x = x, .y = y,.fontsize=fontsize);
             break;
     }
 }
