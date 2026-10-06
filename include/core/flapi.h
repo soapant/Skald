@@ -435,7 +435,7 @@ struct FlWidget {
     bool has_bg;
     bool no_bg;
     int pad;
-    bool dead;
+    volatile bool dead;
     bool mapped;
     PlatformWidget *win;
     FlWidgetRenderFn render;
