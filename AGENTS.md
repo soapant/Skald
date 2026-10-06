@@ -25,8 +25,8 @@ C11 + X11/Wayland/Win32 launcher ("Flint"). Core is platform-agnostic; backends 
 A feature calling one of these gets an undefined symbol at `dlopen` time.
 
 - Raw window access — `flapi.h:217-227`: `fl_get_display`, `fl_get_window`, `fl_get_xftdraw`, `fl_get_visual`, `fl_get_colormap`, `fl_get_hdc`, `fl_get_hwnd`, `fl_get_popup_width`, `fl_get_popup_height`
-- Anchored placement — `flapi.h:328-331`: `fl_draw_text_anchored`, `fl_place_editbox_anchored`, `fl_place_listbox_anchored`, `fl_place_image_anchored`
-- Auto layout — `flapi.h:337-346`: `fl_layout_begin/end_{column,row}[_anchored]`, `fl_draw_text_auto`, `fl_place_editbox_auto`, `fl_place_listbox_auto`, `fl_place_image_auto`
+- Anchored placement — `flapi.h:328-331`: `fl_draw_text_anchored`, `fl_place_editbox_anchored`, `fl_place_listbox_anchored`, `fl_draw_image_anchored`
+- Auto layout — `flapi.h:337-346`: `fl_layout_begin/end_{column,row}[_anchored]`, `fl_draw_text_auto`, `fl_place_editbox_auto`, `fl_place_listbox_auto`, `fl_draw_image_auto`
 - Images — `flapi.h:448-450`: `fl_load_image`, `fl_free_image`, `fl_draw_image`
 - Misc — `flapi.h:112` `fl_init_all_hotkeys`, `flapi.h:121` `fl_launch_browser_in_a_new_window`, `flapi.h:472` `fl_get_text_width`, `flapi.h:474` `fl_is_visible`
 
