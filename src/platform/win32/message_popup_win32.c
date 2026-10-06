@@ -23,6 +23,18 @@
 static int g_win32_msg_w = 0;
 static int g_win32_msg_h = 0;
 
+static wchar_t* msg_widen(const char* in, int* out_len) {
+    if (out_len) *out_len = 0;
+    if (!in || !in[0]) return NULL;
+    int need = MultiByteToWideChar(CP_UTF8, 0, in, -1, NULL, 0);
+    if (need <= 0) return NULL;
+    wchar_t* w = (wchar_t*)malloc((size_t)need * sizeof(wchar_t));
+    if (!w) return NULL;
+    if (MultiByteToWideChar(CP_UTF8, 0, in, -1, w, need) <= 0) { free(w); return NULL; }
+    if (out_len) *out_len = need - 1;
+    return w;
+}
+
 LRESULT CALLBACK DisplayMessageProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
   FadeWindowData* data = (FadeWindowData*)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
     FlintContext_Get()->window.hDisplayMessage = WH_FROM_HWND(hwnd);
@@ -59,16 +71,21 @@ LRESULT CALLBACK DisplayMessageProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
             textRect.top += MSG_TEXT_INSET_Y;
             textRect.bottom -= MSG_TEXT_INSET_Y;
 
-            RECT calcRect = textRect;
-            DrawTextA(hdc, data->message, -1, &calcRect, DT_CENTER | DT_WORDBREAK | DT_CALCRECT);
+            int wlen = 0;
+            wchar_t* wide = msg_widen(data->message, &wlen);
+            if (wide) {
+              RECT calcRect = textRect;
+              DrawTextW(hdc, wide, wlen, &calcRect, DT_CENTER | DT_WORDBREAK | DT_CALCRECT);
 
-            int textHeight = calcRect.bottom - calcRect.top;
-            int availableHeight = rect.bottom - rect.top;
-            textRect.top = (availableHeight - textHeight) / 2;
-            textRect.bottom = textRect.top + textHeight;
-            if (textRect.bottom > rect.bottom - MSG_BOTTOM_CLIP) textRect.bottom = rect.bottom - MSG_BOTTOM_CLIP;
+              int textHeight = calcRect.bottom - calcRect.top;
+              int availableHeight = rect.bottom - rect.top;
+              textRect.top = (availableHeight - textHeight) / 2;
+              textRect.bottom = textRect.top + textHeight;
+              if (textRect.bottom > rect.bottom - MSG_BOTTOM_CLIP) textRect.bottom = rect.bottom - MSG_BOTTOM_CLIP;
 
-            DrawTextA(hdc, data->message, -1, &textRect, DT_CENTER | DT_WORDBREAK);
+              DrawTextW(hdc, wide, wlen, &textRect, DT_CENTER | DT_WORDBREAK);
+              free(wide);
+            }
         }
       
         if (hOldFont) SelectObject(hdc, hOldFont);

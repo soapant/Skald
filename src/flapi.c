@@ -1110,13 +1110,13 @@ bool fl_place_editbox_impl(const FlEditSpec *spec) {
   PROFILE_END_VAR(_pt, "api:fl_place_editbox");
   return r;
 }
-bool fl_place_image_impl(const FlImageSpec *spec) {
+bool fl_draw_image_impl(const FlImageSpec *spec) {
   PROFILE_START(_pt);
-  if (!spec || !spec->path || !spec->path[0]) { PROFILE_END_VAR(_pt, "api:fl_place_image"); return false; }
+  if (!spec || !spec->path || !spec->path[0]) { PROFILE_END_VAR(_pt, "api:fl_draw_image"); return false; }
   int w = spec->w > 0 ? spec->w : 0;
   int h = spec->h > 0 ? spec->h : 0;
   bool r = Platform_DrawImageAt(spec->path, spec->x, spec->y, w, h);
-  PROFILE_END_VAR(_pt, "api:fl_place_image");
+  PROFILE_END_VAR(_pt, "api:fl_draw_image");
   return r;
 }
 bool fl_draw_rect_impl(const FlRectSpec *spec) {

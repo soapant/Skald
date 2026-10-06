@@ -18,6 +18,19 @@
 static __thread HFONT g_sizeFont = NULL;
 static __thread int g_sizeFontSize = 0;
 
+static wchar_t* win32_widen(const char* in, int in_len, int* out_len) {
+    if (out_len) *out_len = 0;
+    if (!in || in_len <= 0) return NULL;
+    int n = MultiByteToWideChar(CP_UTF8, 0, in, in_len, NULL, 0);
+    if (n <= 0) return NULL;
+    wchar_t* w = (wchar_t*)malloc((size_t)n * sizeof(wchar_t) + sizeof(wchar_t));
+    if (!w) return NULL;
+    if (MultiByteToWideChar(CP_UTF8, 0, in, in_len, w, n) <= 0) { free(w); return NULL; }
+    w[n] = 0;
+    if (out_len) *out_len = n;
+    return w;
+}
+
 static HFONT win32_sized_font(int size) {
   if (size <= 0) size = FontSize;
   if (!g_sizeFont || g_sizeFontSize != size) {
@@ -105,10 +118,14 @@ bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, F
     SetTextColor(g_draw_hdc, color);
     bool centered = Platform_StringContainsCaseInsensitive(a,"CENTER");
     bool right = !centered && Platform_StringContainsCaseInsensitive(a,"RIGHT");
+    int tlen = (int)strlen(text);
+    int wlen = 0;
+    wchar_t* wide = win32_widen(text, tlen, &wlen);
+    if (!wide) return false;
     SIZE msz;
     msz.cx = 0;
     msz.cy = 0;
-    GetTextExtentPoint32A(g_draw_hdc, text, (int)strlen(text), &msz);
+    GetTextExtentPoint32W(g_draw_hdc, wide, wlen, &msz);
     if (g_measuring) {
         int bx = x;
         if (centered) bx = x - msz.cx / 2;
@@ -117,7 +134,8 @@ bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, F
     }
     if (!centered && !right) {
         int x0 = pad ? pad : x;
-        TextOutA(g_draw_hdc, x0, y, text, (int)strlen(text));
+        TextOutW(g_draw_hdc, x0, y, wide, wlen);
+        free(wide);
         if (old) SelectObject(g_draw_hdc, old);
         return true;
     }
@@ -134,7 +152,8 @@ bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, F
     UINT fmt = DT_SINGLELINE | DT_VCENTER;
     if (centered) fmt |= DT_CENTER;
     else fmt |= DT_RIGHT;
-    DrawTextA(g_draw_hdc, text, -1, &rc, fmt);
+    DrawTextW(g_draw_hdc, wide, wlen, &rc, fmt);
+    free(wide);
     if (old) SelectObject(g_draw_hdc, old);
     return true;
 }
@@ -142,12 +161,16 @@ bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, F
 int Platform_MeasureTextWidth(const char* text, int len, int fontsize) {
     if (!text || len <= 0) return 0;
     if (!g_draw_hdc) return len * (fontsize > 0 ? fontsize : 16) / 2;
+    int wlen = 0;
+    wchar_t* wide = win32_widen(text, len, &wlen);
+    if (!wide) return 0;
     HFONT hfont = win32_sized_font(fontsize);
     HFONT old = hfont ? (HFONT)SelectObject(g_draw_hdc, hfont) : NULL;
     SIZE sz;
     sz.cx = 0;
-    GetTextExtentPoint32A(g_draw_hdc, text, len, &sz);
+    GetTextExtentPoint32W(g_draw_hdc, wide, wlen, &sz);
     if (old) SelectObject(g_draw_hdc, old);
+    free(wide);
     return sz.cx;
 }
 
@@ -155,12 +178,16 @@ bool Platform_DrawTextLine(int x, int y, const char* text, int len, unsigned lon
     if (!text || len <= 0 || !g_draw_hdc) return false;
     if (color != 0) color = rgb_to_hex(color);
     if (color == 0) color = COLOR_TEXT;
+    int wlen = 0;
+    wchar_t* wide = win32_widen(text, len, &wlen);
+    if (!wide) return false;
     HFONT hfont = win32_sized_font(fontsize);
     HFONT old = hfont ? (HFONT)SelectObject(g_draw_hdc, hfont) : NULL;
-SetBkMode(g_draw_hdc, TRANSPARENT);
-  SetTextColor(g_draw_hdc, color);
-  TextOutA(g_draw_hdc, x, y, text, len);
+    SetBkMode(g_draw_hdc, TRANSPARENT);
+    SetTextColor(g_draw_hdc, color);
+    TextOutW(g_draw_hdc, x, y, wide, wlen);
     if (old) SelectObject(g_draw_hdc, old);
+    free(wide);
     return true;
 }
 
