@@ -82,6 +82,50 @@ static Window* x11_client_list(Display* dpy, int* out_n) {
     return out;
 }
 
+static bool x11_window_geom(Display* dpy, Window w, int* out_x, int* out_y, int* out_w, int* out_h) {
+    if (!dpy || w == None) return false;
+    int gx = 0, gy = 0, abs_x = 0, abs_y = 0;
+    unsigned int gw = 0, gh = 0, border = 0, depth = 0;
+    Window child = None;
+    _x11_err = 0;
+    XErrorHandler old = XSetErrorHandler(_x11_err_handler);
+    int ok = XGetGeometry(dpy, w, &child, &gx, &gy, &gw, &gh, &border, &depth);
+    if (ok) ok = XTranslateCoordinates(dpy, w, DefaultRootWindow(dpy), 0, 0, &abs_x, &abs_y, &child);
+    XSync(dpy, False);
+    XSetErrorHandler(old);
+    if (_x11_err || !ok || gw == 0 || gh == 0) return false;
+    if (out_x) *out_x = abs_x;
+    if (out_y) *out_y = abs_y;
+    if (out_w) *out_w = (int)gw;
+    if (out_h) *out_h = (int)gh;
+    return true;
+}
+
+static bool x11_moveresize_window(Display* dpy, Window w, int x, int y, int cw, int ch) {
+    if (!dpy || w == None) return false;
+    _x11_err = 0;
+    XErrorHandler old = XSetErrorHandler(_x11_err_handler);
+    Atom mrs = XInternAtom(dpy, "_NET_MOVERESIZE_WINDOW", False);
+    XEvent ev;
+    memset(&ev, 0, sizeof(ev));
+    ev.xclient.type = ClientMessage;
+    ev.xclient.window = w;
+    ev.xclient.message_type = mrs;
+    ev.xclient.format = 32;
+    ev.xclient.data.l[0] = (2L << 12) | (1L << 8) | (3L << 4) | (3L << 2) | 10L;
+    ev.xclient.data.l[1] = x;
+    ev.xclient.data.l[2] = y;
+    ev.xclient.data.l[3] = cw;
+    ev.xclient.data.l[4] = ch;
+    XSendEvent(dpy, DefaultRootWindow(dpy), False, SubstructureRedirectMask | SubstructureNotifyMask, &ev);
+    XSync(dpy, False);
+    XSetErrorHandler(old);
+    if (!_x11_err) return true;
+    XMoveResizeWindow(dpy, w, x, y, cw > 0 ? (unsigned)cw : 1, ch > 0 ? (unsigned)ch : 1);
+    XSync(dpy, False);
+    return _x11_err == 0;
+}
+
 static bool x11_activate_window(Display* dpy, Window w) {
     if (!dpy || w == None) return false;
     _x11_err = 0;
@@ -96,10 +140,6 @@ static bool x11_activate_window(Display* dpy, Window w) {
     ev.xclient.data.l[0] = 2L;
     ev.xclient.data.l[1] = (long)CurrentTime;
     XSendEvent(dpy, DefaultRootWindow(dpy), False, SubstructureRedirectMask | SubstructureNotifyMask, &ev);
-    XSync(dpy, False);
-    if (_x11_err) { XSetErrorHandler(old); return false; }
-    XRaiseWindow(dpy, w);
-    XSetInputFocus(dpy, w, RevertToParent, CurrentTime);
     XSync(dpy, False);
     XSetErrorHandler(old);
     return _x11_err == 0;
@@ -409,30 +449,22 @@ bool move_active_window_to_monitor_x11(bool right) {
     XRRScreenResources* res = XRRGetScreenResourcesCurrent(display, root);
     if (!res) return false;
     int n = 0;
-    int* ox = NULL;
-    int* ow = NULL;
-    int* oy = NULL;
-    int* oh = NULL;
-    for (int c = 0; c < res->ncrtc; c++) {
+    int ox[64], oy[64], ow[64], oh[64];
+    for (int c = 0; c < res->ncrtc && n < 64; c++) {
         XRRCrtcInfo* ci = XRRGetCrtcInfo(display, res, res->crtcs[c]);
-        if (!ci || ci->noutput == 0 || ci->width == 0 || ci->height == 0) { if (ci) XRRFreeCrtcInfo(ci); continue; }
-        int* nox = realloc(ox, (size_t)(n + 1) * sizeof(int));
-        int* noy = realloc(oy, (size_t)(n + 1) * sizeof(int));
-        int* now = realloc(ow, (size_t)(n + 1) * sizeof(int));
-        int* noh = realloc(oh, (size_t)(n + 1) * sizeof(int));
-        if (!nox || !noy || !now || !noh) {
-            free(nox ? nox : ox); free(noy ? noy : oy); free(now ? now : ow); free(noh ? noh : oh);
-            ox = NULL; oy = NULL; ow = NULL; oh = NULL;
-            XRRFreeCrtcInfo(ci);
-            break;
-        }
-        ox = nox; oy = noy; ow = now; oh = noh;
-        ox[n] = ci->x; oy[n] = ci->y; ow[n] = (int)ci->width; oh[n] = (int)ci->height;
-        n++;
+        if (!ci) continue;
+        if (ci->noutput == 0 || ci->width == 0 || ci->height == 0) { XRRFreeCrtcInfo(ci); continue; }
+        int cx = ci->x, cy = ci->y, cw = (int)ci->width, chh = (int)ci->height;
         XRRFreeCrtcInfo(ci);
+        bool dup = false;
+        for (int i = 0; i < n; i++) {
+            if (ox[i] == cx && oy[i] == cy && ow[i] == cw && oh[i] == chh) { dup = true; break; }
+        }
+        if (dup) continue;
+        ox[n] = cx; oy[n] = cy; ow[n] = cw; oh[n] = chh; n++;
     }
     XRRFreeScreenResources(res);
-    if (n < 2) { free(ox); free(oy); free(ow); free(oh); return false; }
+    if (n < 2) return false;
     for (int i = 0; i < n - 1; i++) {
         for (int j = i + 1; j < n; j++) {
             if (ox[j] < ox[i]) {
@@ -443,39 +475,25 @@ bool move_active_window_to_monitor_x11(bool right) {
             }
         }
     }
-    XWindowAttributes attr;
-    _x11_err = 0;
-    XErrorHandler old = XSetErrorHandler(_x11_err_handler);
-    int got = XGetWindowAttributes(display, focus, &attr);
-    XSync(display, False);
-    XSetErrorHandler(old);
-    if (_x11_err || !got) { free(ox); free(oy); free(ow); free(oh); return false; }
-    int cx = attr.x + attr.width / 2;
+    int wx = 0, wy = 0, ww = 0, wh = 0;
+    if (!x11_window_geom(display, focus, &wx, &wy, &ww, &wh)) return false;
+    int cx = wx + ww / 2;
     int cur = 0;
     for (int i = 0; i < n; i++) {
         if (cx >= ox[i] && cx < ox[i] + ow[i]) { cur = i; break; }
         if (ox[i] <= cx) cur = i;
     }
     int dst = right ? cur + 1 : cur - 1;
-    if (dst < 0 || dst >= n) { free(ox); free(oy); free(ow); free(oh); return false; }
-    int rel_x = attr.x - ox[cur];
-    int rel_y = attr.y - oy[cur];
-    int nx = ox[dst] + rel_x;
-    int ny = oy[dst] + rel_y;
+    if (dst < 0 || dst >= n) return false;
+    int nx = ox[dst] + (wx - ox[cur]);
+    int ny = oy[dst] + (wy - oy[cur]);
     if (nx < ox[dst]) nx = ox[dst];
     if (ny < oy[dst]) ny = oy[dst];
-    if (nx + attr.width > ox[dst] + ow[dst]) nx = ox[dst] + ow[dst] - attr.width;
-    if (ny + attr.height > oy[dst] + oh[dst]) ny = oy[dst] + oh[dst] - attr.height;
+    if (nx + ww > ox[dst] + ow[dst]) nx = ox[dst] + ow[dst] - ww;
+    if (ny + wh > oy[dst] + oh[dst]) ny = oy[dst] + oh[dst] - wh;
     if (nx < ox[dst]) nx = ox[dst];
     if (ny < oy[dst]) ny = oy[dst];
-    _x11_err = 0;
-    old = XSetErrorHandler(_x11_err_handler);
-    XMoveWindow(display, focus, nx, ny);
-    XRaiseWindow(display, focus);
-    XSync(display, False);
-    XSetErrorHandler(old);
-    free(ox); free(oy); free(ow); free(oh);
-    return _x11_err == 0;
+    return x11_moveresize_window(display, focus, nx, ny, ww, wh);
 }
 
 bool move_active_window_left_x11(void) {
@@ -486,53 +504,35 @@ bool move_active_window_right_x11(void) {
     return move_active_window_to_monitor_x11(true);
 }
 
-bool focus_window_left_x11(void) {
+static bool x11_focus_direction(bool right) {
     Display* display = get_display();
     if (!display) return false;
     Window focus = x11_focused_window(display);
     if (focus == None) return false;
-    Window root = DefaultRootWindow(display);
-    XWindowAttributes fattr;
-    _x11_err = 0;
-    XErrorHandler old = XSetErrorHandler(_x11_err_handler);
-    int got = XGetWindowAttributes(display, focus, &fattr);
-    XSync(display, False);
-    XSetErrorHandler(old);
-    if (_x11_err || !got) return false;
-    int fcx = fattr.x + fattr.width / 2;
-    int fcy = fattr.y + fattr.height / 2;
-    Window rroot = None;
-    Window parent = None;
-    Window* children = NULL;
-    unsigned int nchildren = 0;
-    _x11_err = 0;
-    old = XSetErrorHandler(_x11_err_handler);
-    int ok = XQueryTree(display, root, &rroot, &parent, &children, &nchildren);
-    XSync(display, False);
-    XSetErrorHandler(old);
-    if (_x11_err || !ok || !children) {
-        if (children) XFree(children);
+    int fcx = 0, fcy = 0, fw = 0, fh = 0;
+    if (!x11_window_geom(display, focus, &fcx, &fcy, &fw, &fh)) return false;
+    fcx += fw / 2;
+    fcy += fh / 2;
+    int nclients = 0;
+    Window* clients = x11_client_list(display, &nclients);
+    if (!clients || nclients <= 0) {
+        if (clients) free(clients);
         return false;
     }
     Window best = None;
     int best_gap = 1 << 30;
     int best_vdist = 1 << 30;
-    for (unsigned int i = 0; i < nchildren; i++) {
-        Window w = children[i];
-        if (w == focus) continue;
-        XWindowAttributes attr;
-        _x11_err = 0;
-        old = XSetErrorHandler(_x11_err_handler);
-        int g = XGetWindowAttributes(display, w, &attr);
-        XSync(display, False);
-        XSetErrorHandler(old);
-        if (_x11_err || !g) continue;
-        if (attr.map_state != IsViewable) continue;
-        if (attr.width <= 0 || attr.height <= 0) continue;
-        int cx = attr.x + attr.width / 2;
-        int cy = attr.y + attr.height / 2;
-        if (cx >= fcx) continue;
-        int gap = fcx - cx;
+    for (int i = 0; i < nclients; i++) {
+        Window w = clients[i];
+        if (w == focus || w == None) continue;
+        int x = 0, y = 0, ww = 0, wh = 0;
+        if (!x11_window_geom(display, w, &x, &y, &ww, &wh)) continue;
+        if (ww <= 1 || wh <= 1) continue;
+        int cx = x + ww / 2;
+        int cy = y + wh / 2;
+        if (right) { if (cx <= fcx) continue; }
+        else       { if (cx >= fcx) continue; }
+        int gap = right ? (cx - fcx) : (fcx - cx);
         int vdist = cy >= fcy ? cy - fcy : fcy - cy;
         if (gap < best_gap || (gap == best_gap && vdist < best_vdist)) {
             best_gap = gap;
@@ -540,80 +540,17 @@ bool focus_window_left_x11(void) {
             best = w;
         }
     }
-    XFree(children);
+    free(clients);
     if (best == None) return false;
-    _x11_err = 0;
-    old = XSetErrorHandler(_x11_err_handler);
-    XRaiseWindow(display, best);
-    XSetInputFocus(display, best, RevertToParent, CurrentTime);
-    XSync(display, False);
-    XSetErrorHandler(old);
-    return _x11_err == 0;
+    return x11_activate_window(display, best);
+}
+
+bool focus_window_left_x11(void) {
+    return x11_focus_direction(false);
 }
 
 bool focus_window_right_x11(void) {
-    Display* display = get_display();
-    if (!display) return false;
-    Window focus = x11_focused_window(display);
-    if (focus == None) return false;
-    Window root = DefaultRootWindow(display);
-    XWindowAttributes fattr;
-    _x11_err = 0;
-    XErrorHandler old = XSetErrorHandler(_x11_err_handler);
-    int got = XGetWindowAttributes(display, focus, &fattr);
-    XSync(display, False);
-    XSetErrorHandler(old);
-    if (_x11_err || !got) return false;
-    int fcx = fattr.x + fattr.width / 2;
-    int fcy = fattr.y + fattr.height / 2;
-    Window rroot = None;
-    Window parent = None;
-    Window* children = NULL;
-    unsigned int nchildren = 0;
-    _x11_err = 0;
-    old = XSetErrorHandler(_x11_err_handler);
-    int ok = XQueryTree(display, root, &rroot, &parent, &children, &nchildren);
-    XSync(display, False);
-    XSetErrorHandler(old);
-    if (_x11_err || !ok || !children) {
-        if (children) XFree(children);
-        return false;
-    }
-    Window best = None;
-    int best_gap = 1 << 30;
-    int best_vdist = 1 << 30;
-    for (unsigned int i = 0; i < nchildren; i++) {
-        Window w = children[i];
-        if (w == focus) continue;
-        XWindowAttributes attr;
-        _x11_err = 0;
-        old = XSetErrorHandler(_x11_err_handler);
-        int g = XGetWindowAttributes(display, w, &attr);
-        XSync(display, False);
-        XSetErrorHandler(old);
-        if (_x11_err || !g) continue;
-        if (attr.map_state != IsViewable) continue;
-        if (attr.width <= 0 || attr.height <= 0) continue;
-        int cx = attr.x + attr.width / 2;
-        int cy = attr.y + attr.height / 2;
-        if (cx <= fcx) continue;
-        int gap = cx - fcx;
-        int vdist = cy >= fcy ? cy - fcy : fcy - cy;
-        if (gap < best_gap || (gap == best_gap && vdist < best_vdist)) {
-            best_gap = gap;
-            best_vdist = vdist;
-            best = w;
-        }
-    }
-    XFree(children);
-    if (best == None) return false;
-    _x11_err = 0;
-    old = XSetErrorHandler(_x11_err_handler);
-    XRaiseWindow(display, best);
-    XSetInputFocus(display, best, RevertToParent, CurrentTime);
-    XSync(display, False);
-    XSetErrorHandler(old);
-    return _x11_err == 0;
+    return x11_focus_direction(true);
 }
 
 bool minimize_active_window_x11(void) {
