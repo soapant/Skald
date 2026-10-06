@@ -32,6 +32,7 @@
 #include <linux/input.h>
 #include <glib.h>
 #include <gio/gio.h>
+#include <pulse/pulseaudio.h>
 
 
 bool Platform_GetAllFilesFromDir(const char* dir_path, char** list_of_allowed_extensions,
@@ -554,25 +555,149 @@ void fl_toggle_play_pause_platform(void) {
     g_object_unref(conn);
 }
 
+typedef struct {
+    pa_mainloop *mainloop;
+    char *default_sink_name;
+    int percentage;
+    int set_volume;
+    int setting;
+    int set_ok;
+    int set_issued;
+} FlVolumeState;
+
+static void fl_volume_set_success_cb(pa_context *c, int success, void *userdata) {
+    (void)c;
+    FlVolumeState *state = (FlVolumeState *)userdata;
+    state->set_ok = success;
+    pa_mainloop_quit(state->mainloop, success ? 0 : 1);
+}
+
+static void fl_volume_sink_cb(pa_context *c, const pa_sink_info *i, int eol, void *userdata) {
+    FlVolumeState *state = (FlVolumeState *)userdata;
+    if (eol > 0 || !i) {
+        if (state->setting) {
+            if (!state->set_issued) pa_mainloop_quit(state->mainloop, 1);
+        } else {
+            pa_mainloop_quit(state->mainloop, 0);
+        }
+        return;
+    }
+    if (!state->default_sink_name || !i->name || strcmp(i->name, state->default_sink_name) != 0) {
+        return;
+    }
+    if (state->setting) {
+        unsigned ch = i->volume.channels ? i->volume.channels : 2;
+        pa_cvolume cv;
+        pa_cvolume_set(&cv, ch, (pa_volume_t)((double)state->set_volume / 100.0 * (double)PA_VOLUME_NORM + 0.5));
+        pa_operation *op = pa_context_set_sink_volume_by_name(c, state->default_sink_name, &cv, fl_volume_set_success_cb, state);
+        if (op) {
+            state->set_issued = 1;
+            pa_operation_unref(op);
+        } else {
+            pa_mainloop_quit(state->mainloop, 1);
+        }
+        return;
+    }
+    pa_volume_t avg = pa_cvolume_avg(&i->volume);
+    state->percentage = (int)((double)avg / (double)PA_VOLUME_NORM * 100.0 + 0.5);
+}
+
+static void fl_volume_server_cb(pa_context *c, const pa_server_info *i, void *userdata) {
+    FlVolumeState *state = (FlVolumeState *)userdata;
+    if (!i || !i->default_sink_name) {
+        pa_mainloop_quit(state->mainloop, 1);
+        return;
+    }
+    free(state->default_sink_name);
+    state->default_sink_name = strdup(i->default_sink_name);
+    pa_operation *op = pa_context_get_sink_info_by_name(c, state->default_sink_name, fl_volume_sink_cb, state);
+    if (op) pa_operation_unref(op);
+}
+
+static void fl_volume_state_cb(pa_context *c, void *userdata) {
+    FlVolumeState *state = (FlVolumeState *)userdata;
+    switch (pa_context_get_state(c)) {
+        case PA_CONTEXT_READY: {
+            pa_operation *op = pa_context_get_server_info(c, fl_volume_server_cb, state);
+            if (op) pa_operation_unref(op);
+            break;
+        }
+        case PA_CONTEXT_FAILED:
+        case PA_CONTEXT_TERMINATED:
+            pa_mainloop_quit(state->mainloop, 1);
+            break;
+        default:
+            break;
+    }
+}
+
 int fl_get_current_volume_platform(void) {
-    char* output = Platform_RunTerminalCommand("wpctl get-volume @DEFAULT_AUDIO_SINK@ 2>/dev/null | awk '{print $2}'", false);
-    
-    if (output == NULL || strlen(output) == 0) {
+    FlVolumeState state = {0};
+    state.mainloop = pa_mainloop_new();
+    if (!state.mainloop) return 0;
+
+    pa_mainloop_api *api = pa_mainloop_get_api(state.mainloop);
+    pa_context *context = pa_context_new(api, "Flint");
+    if (!context) {
+        pa_mainloop_free(state.mainloop);
         return 0;
     }
-    
-    return (int)(atof(output) * 100);
+
+    pa_context_set_state_callback(context, fl_volume_state_cb, &state);
+    if (pa_context_connect(context, NULL, PA_CONTEXT_NOFLAGS, NULL) < 0) {
+        pa_context_unref(context);
+        pa_mainloop_free(state.mainloop);
+        return 0;
+    }
+
+    int retval = 0;
+    pa_mainloop_run(state.mainloop, &retval);
+
+    int result = state.percentage;
+    free(state.default_sink_name);
+    pa_context_disconnect(context);
+    pa_context_unref(context);
+    pa_mainloop_free(state.mainloop);
+
+    if (retval != 0) return 0;
+    return result;
 }
 
 bool fl_set_volume_platform(int volume) {
     if (volume < 0) volume = 0;
     if (volume > 100) volume = 100;
 
-    char cmd[256];
-    snprintf(cmd, sizeof(cmd), "wpctl set-volume @DEFAULT_AUDIO_SINK@ %d%% >/dev/null 2>&1", volume);
+    FlVolumeState state = {0};
+    state.set_volume = volume;
+    state.setting = 1;
+    state.mainloop = pa_mainloop_new();
+    if (!state.mainloop) return false;
 
-    Platform_RunTerminalCommand(cmd, false);
-    return true;
+    pa_mainloop_api *api = pa_mainloop_get_api(state.mainloop);
+    pa_context *context = pa_context_new(api, "Flint");
+    if (!context) {
+        pa_mainloop_free(state.mainloop);
+        return false;
+    }
+
+    pa_context_set_state_callback(context, fl_volume_state_cb, &state);
+    if (pa_context_connect(context, NULL, PA_CONTEXT_NOFLAGS, NULL) < 0) {
+        pa_context_unref(context);
+        pa_mainloop_free(state.mainloop);
+        return false;
+    }
+
+    int retval = 0;
+    pa_mainloop_run(state.mainloop, &retval);
+
+    bool ok = (retval == 0) && state.set_ok;
+
+    free(state.default_sink_name);
+    pa_context_disconnect(context);
+    pa_context_unref(context);
+    pa_mainloop_free(state.mainloop);
+
+    return ok;
 }
 
 static bool g_edit_placed = false;

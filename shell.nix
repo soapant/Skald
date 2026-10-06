@@ -23,6 +23,7 @@ pkgs.mkShell {
     libpng
     fontconfig
     wayland
+    pulseaudio
   ];
 
   shellHook = ''
