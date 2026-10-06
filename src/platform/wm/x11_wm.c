@@ -56,15 +56,19 @@ static bool i3_ensure_sock(void) {
     return g_i3_probe == 1;
 }
 
-static bool i3_move_to_output(bool right) {
+static bool i3_exec(const char* command) {
     if (!i3_ensure_sock()) return false;
-    char cmd[128];
-    snprintf(cmd, sizeof(cmd), "i3-msg move container to output %s", right ? "right" : "left");
-    char* out = Platform_RunTerminalCommand(cmd, false);
+    char* out = Platform_RunTerminalCommand((char*)command, false);
     if (!out || out[0] == '\0') { if (out) free(out); return false; }
     bool ok = !(strstr(out, "\"success\":false") || strstr(out, "\"error\""));
     free(out);
     return ok;
+}
+
+static bool i3_move_to_output(bool right) {
+    char cmd[128];
+    snprintf(cmd, sizeof(cmd), "i3-msg move container to output %s", right ? "right" : "left");
+    return i3_exec(cmd);
 }
 static int _x11_err_handler(Display *dpy, XErrorEvent *ev) {
   (void)dpy; (void)ev; _x11_err = 1; return 0; 
@@ -619,6 +623,17 @@ bool focus_window_right_x11(void) {
     return x11_activate_neighbor(true);
 }
 
+static bool x11_is_hidden(Display* dpy, Window w) {
+    XWindowAttributes at;
+    _x11_err = 0;
+    XErrorHandler old = XSetErrorHandler(_x11_err_handler);
+    int ok = XGetWindowAttributes(dpy, w, &at);
+    XSync(dpy, False);
+    XSetErrorHandler(old);
+    if (_x11_err || !ok) return false;
+    return at.map_state == IsUnmapped;
+}
+
 bool minimize_active_window_x11(void) {
     Display* display = get_display();
     if (!display) return false;
@@ -628,11 +643,12 @@ bool minimize_active_window_x11(void) {
         _x11_err = 0;
         XErrorHandler old = XSetErrorHandler(_x11_err_handler);
         XMapWindow(display, target);
-        XRaiseWindow(display, target);
-        XSetInputFocus(display, target, RevertToParent, CurrentTime);
         XSync(display, False);
         XSetErrorHandler(old);
-        if (_x11_err == 0) return true;
+        if (_x11_err == 0) {
+            x11_activate_window(display, target);
+            return true;
+        }
     }
     Window focus = x11_focused_window(display);
     if (focus == None) return false;
@@ -641,6 +657,18 @@ bool minimize_active_window_x11(void) {
     XIconifyWindow(display, focus, DefaultScreen(display));
     XSync(display, False);
     XSetErrorHandler(old);
-    if (_x11_err == 0) _x11_last_min = focus;
-    return _x11_err == 0;
+    if (_x11_err == 0 && x11_is_hidden(display, focus)) {
+        _x11_last_min = focus;
+        return true;
+    }
+    _x11_err = 0;
+    old = XSetErrorHandler(_x11_err_handler);
+    XUnmapWindow(display, focus);
+    XSync(display, False);
+    XSetErrorHandler(old);
+    if (_x11_err == 0 && x11_is_hidden(display, focus)) {
+        _x11_last_min = focus;
+        return true;
+    }
+    return false;
 }
