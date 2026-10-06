@@ -23,6 +23,8 @@ typedef struct {
 static PkProc g_pk[PK_MAX];
 static int g_pk_count = 0;
 static int g_pk_sort = 0;
+static FlTimer g_pk_last_collect;
+static bool g_pk_collect_started = false;
 static char g_pk_rows[PK_MAX][PK_ROW_LEN];
 static const char* g_pk_items[PK_MAX];
 
@@ -195,6 +197,8 @@ static bool pk_enter_callback(const char* selection, ListBoxInfo* lb) {
 }
 
 static void pk_refresh_callback(const char* filter, ListBoxInfo* lb) {
+    g_pk_last_collect = fl_start_timer();
+    g_pk_collect_started = true;
     pk_collect_and_sort();
     fl_populate_listbox(lb, filter, g_pk_items, g_pk_count);
 }
@@ -204,6 +208,18 @@ static void pk_refresh_callback(const char* filter, ListBoxInfo* lb) {
 
 static void pk_render_callback(PromptState* state) {
     if (!state) return;
+
+    double since = g_pk_collect_started ? fl_end_timer(g_pk_last_collect) : 1e9;
+    if (since >= 1000.0) {
+        g_pk_last_collect = fl_start_timer();
+        g_pk_collect_started = true;
+        int keep = state->listbox.selected_index;
+        pk_collect_and_sort();
+        fl_populate_listbox(&state->listbox, state->filter, g_pk_items, g_pk_count);
+        if (keep >= 0 && keep < state->listbox.populated_count) {
+            state->listbox.selected_index = keep;
+        }
+    }
 
     FlKeyEvent ev;
     while (fl_poll_key(&ev)) {
