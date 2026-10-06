@@ -138,8 +138,8 @@ static void widget_paint_layered(PlatformWidget *widget) {
     dst.x = widget->x;
     dst.y = widget->y;
     SIZE size;
-    size.cx = widget->w;
-    size.cy = widget->h;
+    size.cx = widget->layer_w;
+    size.cy = widget->layer_h;
     POINT src;
     src.x = 0;
     src.y = 0;
