@@ -718,45 +718,6 @@ PROFILE_END_VAR(timer, "misc_x11:Platform_ReplaceLineInMappedFile");
     return 1;
 }
 
-int Platform_CollectRunningProcesses(char process_list[][128], int max_count) {
-    PROFILE_START(timer);
-    if (!process_list || max_count <= 0) { PROFILE_END_VAR(timer, "misc_x11:Platform_CollectRunningProcesses"); return 0; }
-    int count = 0;
-    DIR* proc = opendir("/proc");
-    if (!proc) { PROFILE_END_VAR(timer, "misc_x11:Platform_CollectRunningProcesses"); return 0; }
-    struct dirent* entry;
-    while ((entry = readdir(proc)) != NULL && count < max_count) {
-        if (!isdigit((unsigned char)entry->d_name[0])) continue;
-        char comm_path[512];
-        snprintf(comm_path, sizeof(comm_path), "/proc/%s/comm", entry->d_name);
-        char exe[256];
-        if (File_ReadAll(comm_path, exe, (long)sizeof(exe)) <= 0) continue;
-        size_t len = strlen(exe);
-        while (len>0 && (exe[len-1]=='\n' || exe[len-1]=='\r')) exe[--len]='\0';
-        if (len==0) continue;
-        char stat_path[512];
-        snprintf(stat_path, sizeof(stat_path), "/proc/%s/stat", entry->d_name);
-        char stat_buf[1024];
-        if (File_ReadAll(stat_path, stat_buf, (long)sizeof(stat_buf)) > 0) {
-            char* rparen = strrchr(stat_buf, ')');
-            if (rparen) {
-                int ppid = 0;
-                if (sscanf(rparen+2, "%*c %d", &ppid)==1 && ppid==2) continue;
-            }
-        }
-        bool exists=false;
-        for (int i=0;i<count;i++) if (Platform_StringContainsCaseInsensitive(process_list[i], exe)) {exists=true;break;}
-        if (!exists) {
-            strncpy(process_list[count], exe, 127);
-            process_list[count][127]='\0';
-            count++;
-        }
-    }
-    closedir(proc);
-    log_info("Platform_CollectRunningProcesses max_count=%d count=%d", max_count, count);
-    PROFILE_END_VAR(timer, "misc_x11:Platform_CollectRunningProcesses");
-    return count;
-}
 
 bool Platform_TerminateProcessByName(const char* exe_name) {
     PROFILE_START(timer);

@@ -17,7 +17,6 @@ bool Platform_IsCtrlPressed(void);
 bool Platform_ExpandPath(const char* template_path, char* out, size_t out_size);
 bool Platform_StringContainsCaseInsensitive(const char* haystack, const char* needle);
 bool Platform_StringStartsWithCaseInsensitive(const char* str, const char* prefix);
-int Platform_CollectRunningProcesses(char process_list[][128], int max_count);
 bool Platform_TerminateProcessByName(const char* exe_name);
 bool Platform_FocusWindow(const char* window_name);
 FlWindowList Platform_GetWindowTitles();
