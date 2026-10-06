@@ -345,15 +345,18 @@ void fl_toggle_play_pause_platform(void) {
     SendInput(2, input, sizeof(INPUT));
 }
 
-int fl_get_current_volume_platform(void) {
+static int vol_query_raw(void) {
     HRESULT hr;
     IMMDeviceEnumerator *pEnumerator = NULL;
     IMMDevice *pDevice = NULL;
     IAudioEndpointVolume *pVolume = NULL;
     float currentVolume = 0.0f;
 
-    hr = CoInitialize(NULL);
-    if (FAILED(hr)) return 0;
+    hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+    if (hr == RPC_E_CHANGED_MODE) {
+    } else if (FAILED(hr)) {
+        return 0;
+    }
 
     hr = CoCreateInstance(&CLSID_MMDeviceEnumerator, NULL, CLSCTX_ALL,
                           &IID_IMMDeviceEnumerator, (void**)&pEnumerator);
@@ -375,6 +378,28 @@ cleanup:
     CoUninitialize();
 
     return (int)(currentVolume * 100.0f + 0.5f);
+}
+
+#define FL_VOL_TTL_MS 500
+
+int fl_get_current_volume_platform(void) {
+    static CRITICAL_SECTION cs;
+    static BOOL cs_ready = FALSE;
+    static int cached = -1;
+    static DWORD cached_at = 0;
+    static BOOL ever = FALSE;
+
+    if (!cs_ready) { InitializeCriticalSection(&cs); cs_ready = TRUE; }
+    EnterCriticalSection(&cs);
+    DWORD now = GetTickCount();
+    if (!ever || (now - cached_at) >= FL_VOL_TTL_MS) {
+        cached = vol_query_raw();
+        cached_at = now;
+        ever = TRUE;
+    }
+    int out = cached;
+    LeaveCriticalSection(&cs);
+    return out;
 }
 bool fl_set_volume_platform(int volume) {
     HRESULT hr;
@@ -733,69 +758,136 @@ unsigned long long fl_net_rx_bytes_platform() {
     return rx;
 }
 
-FlNetStatus fl_net_status_platform(void) {
+static CRITICAL_SECTION g_net_cs;
+static BOOL g_net_cs_ready = FALSE;
+static INetworkListManager* g_net_nlm = NULL;
+static FlNetStatus g_net_cached = FL_NET_OFFLINE;
+static DWORD g_net_cached_at = 0;
+static DWORD g_net_ever = 0;
+
+#define FL_NET_TTL_MS 5000
+
+static void net_lock(void) {
+    if (!g_net_cs_ready) {
+        InitializeCriticalSection(&g_net_cs);
+        g_net_cs_ready = TRUE;
+    }
+    EnterCriticalSection(&g_net_cs);
+}
+
+static void net_unlock(void) {
+    if (g_net_cs_ready) LeaveCriticalSection(&g_net_cs);
+}
+
+#if defined(__GNUC__)
+#define FL_NET_TLS __thread
+#else
+#define FL_NET_TLS __declspec(thread)
+#endif
+
+static bool net_com_ready(void) {
+    static FL_NET_TLS bool ready = FALSE;
+    if (ready) return true;
     HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
-    if (FAILED(hr)) return FL_NET_OFFLINE;
+    if (hr == RPC_E_CHANGED_MODE) { ready = TRUE; return true; }
+    if (FAILED(hr)) return false;
+    ready = TRUE;
+    return true;
+}
 
-    INetworkListManager* nlm = NULL;
-    hr = CoCreateInstance(&CLSID_NetworkListManager, NULL, CLSCTX_ALL,
-                          &IID_INetworkListManager, (void**)&nlm);
-    if (FAILED(hr)) {
-        CoUninitialize();
-        return FL_NET_OFFLINE;
+static INetworkListManager* net_nlm(void) {
+    net_lock();
+    if (!g_net_nlm && net_com_ready()) {
+        INetworkListManager* nlm = NULL;
+        HRESULT hr = CoCreateInstance(&CLSID_NetworkListManager, NULL, CLSCTX_ALL,
+                                      &IID_INetworkListManager, (void**)&nlm);
+        if (SUCCEEDED(hr)) g_net_nlm = nlm;
     }
+    INetworkListManager* nlm = g_net_nlm;
+    net_unlock();
+    return nlm;
+}
 
-    VARIANT_BOOL is_connected = VARIANT_FALSE;
-    hr = nlm->lpVtbl->IsConnectedToInternet(nlm, &is_connected);
-    if (FAILED(hr) || is_connected == VARIANT_FALSE) {
-        nlm->lpVtbl->Release(nlm);
-        CoUninitialize();
-        return FL_NET_OFFLINE;
-    }
+static void net_guid_to_name(const GUID* g, char* out, size_t out_len) {
+    snprintf(out, out_len,
+             "{%08lX-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}",
+             (unsigned long)g->Data1, (unsigned)g->Data2, (unsigned)g->Data3,
+             g->Data4[0], g->Data4[1], g->Data4[2], g->Data4[3],
+             g->Data4[4], g->Data4[5], g->Data4[6], g->Data4[7]);
+}
 
-    FlNetStatus result;
-    IEnumNetworkConnections* conns = NULL;
-    hr = nlm->lpVtbl->GetNetworkConnections(nlm, &conns);
-    if (SUCCEEDED(hr)) {
-        INetworkConnection* conn = NULL;
-        ULONG fetched = 0;
-        while (conns->lpVtbl->Next(conns, 1, &conn, &fetched) == S_OK) {
-            VARIANT_BOOL is_connected_conn = VARIANT_FALSE;
-            conn->lpVtbl->get_IsConnected(conn, &is_connected_conn);
-            if (is_connected_conn == VARIANT_TRUE) {
-                NLM_CONNECTIVITY conn_type;
-                conn->lpVtbl->GetConnectivity(conn, &conn_type);
-                if (conn_type & NLM_CONNECTIVITY_IPV4_INTERNET) {
-                    GUID adapter_id;
-                    conn->lpVtbl->GetAdapterId(conn, &adapter_id);
-                    
-                    ULONG size = 0;
-                    GetAdaptersAddresses(AF_UNSPEC, GAA_FLAG_INCLUDE_ALL_INTERFACES, 
-                                         NULL, NULL, &size);
-                    IP_ADAPTER_ADDRESSES* addrs = (IP_ADAPTER_ADDRESSES*)malloc(size);
-                    if (GetAdaptersAddresses(AF_UNSPEC, 0, NULL, addrs, &size) == NO_ERROR) {
-                        for (IP_ADAPTER_ADDRESSES* a = addrs; a; a = a->Next) {
-                            if (memcmp(&a->AdapterName, &adapter_id, sizeof(GUID)) == 0 ||
-                                (a->IfType == IF_TYPE_IEEE80211)) {
-                                if (a->IfType == IF_TYPE_IEEE80211) {
-                                    result = FL_NET_WIFI;
-                                } else if (a->IfType == IF_TYPE_ETHERNET_CSMACD) {
-                                    result = FL_NET_ETHERNET;
-                                }
-                                break;
-                            }
-                        }
-                    }
-                    free(addrs);
-                }
-            }
-            conn->lpVtbl->Release(conn);
-            conn = NULL;
+static bool net_adapter_type(const GUID* id, ULONG* out_type) {
+    char want[64];
+    net_guid_to_name(id, want, sizeof(want));
+
+    ULONG size = 0;
+    GetAdaptersAddresses(AF_UNSPEC, 0, NULL, NULL, &size);
+    if (size == 0) return false;
+    IP_ADAPTER_ADDRESSES* addrs = (IP_ADAPTER_ADDRESSES*)malloc(size);
+    if (!addrs) return false;
+    bool found = false;
+    if (GetAdaptersAddresses(AF_UNSPEC, 0, NULL, addrs, &size) == NO_ERROR) {
+        for (IP_ADAPTER_ADDRESSES* a = addrs; a; a = a->Next) {
+            if (_stricmp(a->AdapterName, want) != 0) continue;
+            *out_type = a->IfType;
+            found = true;
+            break;
         }
-        conns->lpVtbl->Release(conns);
     }
+    free(addrs);
+    return found;
+}
 
-    nlm->lpVtbl->Release(nlm);
-    CoUninitialize();
-    return result;
+static void net_refresh(void) {
+    g_net_cached = FL_NET_OFFLINE;
+
+    INetworkListManager* nlm = net_nlm();
+    if (!nlm) return;
+
+    NLM_CONNECTIVITY conn = (NLM_CONNECTIVITY)0;
+    if (FAILED(nlm->lpVtbl->GetConnectivity(nlm, &conn))) return;
+    if (!(conn & (NLM_CONNECTIVITY_IPV4_INTERNET | NLM_CONNECTIVITY_IPV6_INTERNET))) return;
+
+    IEnumNetworkConnections* conns = NULL;
+    if (FAILED(nlm->lpVtbl->GetNetworkConnections(nlm, &conns))) return;
+
+    INetworkConnection* c = NULL;
+    ULONG fetched = 0;
+    bool done = false;
+    while (conns->lpVtbl->Next(conns, 1, &c, &fetched) == S_OK) {
+        VARIANT_BOOL is_conn = VARIANT_FALSE;
+        NLM_CONNECTIVITY ct = (NLM_CONNECTIVITY)0;
+        GUID id;
+        if (SUCCEEDED(c->lpVtbl->get_IsConnected(c, &is_conn)) && is_conn == VARIANT_TRUE &&
+            SUCCEEDED(c->lpVtbl->GetConnectivity(c, &ct)) &&
+            (ct & (NLM_CONNECTIVITY_IPV4_INTERNET | NLM_CONNECTIVITY_IPV6_INTERNET)) &&
+            SUCCEEDED(c->lpVtbl->GetAdapterId(c, &id))) {
+            ULONG t = 0;
+            if (net_adapter_type(&id, &t)) {
+                if (t == IF_TYPE_IEEE80211) g_net_cached = FL_NET_WIFI;
+                else if (t == IF_TYPE_ETHERNET_CSMACD) g_net_cached = FL_NET_ETHERNET;
+                done = true;
+            }
+        }
+        c->lpVtbl->Release(c);
+        c = NULL;
+        if (done) break;
+    }
+    conns->lpVtbl->Release(conns);
+}
+
+FlNetStatus fl_net_status_platform(void) {
+    DWORD now = GetTickCount();
+    net_lock();
+    bool fresh = g_net_ever && (now - g_net_cached_at) < FL_NET_TTL_MS;
+    if (!fresh) {
+        net_unlock();
+        net_refresh();
+        net_lock();
+        g_net_cached_at = GetTickCount();
+        g_net_ever = 1;
+    }
+    FlNetStatus st = g_net_cached;
+    net_unlock();
+    return st;
 }
