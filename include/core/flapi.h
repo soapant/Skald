@@ -603,6 +603,7 @@ void fl_screenshot_open_area(char* save_path);
 
 
 FlPos fl_get_cursor_pos(void);
+FlColor fl_get_pixel_color(FlPos pos);
 bool fl_move_to_pos(FlPos pos);
 bool fl_click_at_pos(FlPos pos);
 bool fl_click(void);

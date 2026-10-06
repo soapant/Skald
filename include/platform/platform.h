@@ -81,6 +81,7 @@ char* Platform_GetIconPath(char* app_path);
 int Platform_GetIconSize(char* icon_path);
 int ConvertLinuxKeyToWindowsVK(int key_code);
 FlPos Platform_GetCursorPos(void);
+FlColor Platform_GetPixelColor(int x, int y);
 bool Platform_MoveToPos(int x, int y);
 bool Platform_Click(void);
 void Platform_ApplyUIScale(void);

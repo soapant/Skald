@@ -74,11 +74,12 @@ typedef struct {
 
 typedef struct {
     size_t r, g, b;
-} Fl_Color;
+} FlColor;
 
 typedef struct {
     int x,y;
 } FlPos;
+
 
 typedef struct {
     char** windows;

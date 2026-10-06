@@ -1214,6 +1214,12 @@ FlPos fl_get_cursor_pos(void) {
   PROFILE_END_VAR(_pt, "flapi:fl_get_cursor_pos");
   return p;
 }
+FlColor fl_get_pixel_color(FlPos pos) {
+  PROFILE_START(_pt);
+  FlColor c = Platform_GetPixelColor(pos.x, pos.y);
+  PROFILE_END_VAR(_pt, "flapi:fl_get_pixel_color");
+  return c;
+}
 bool fl_move_to_pos(FlPos pos) {
   PROFILE_START(_pt);
   bool ok = Platform_MoveToPos(pos.x, pos.y);
