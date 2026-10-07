@@ -108,10 +108,10 @@ static bool layer_acquire(PlatformWidget *widget) {
    exactly the premultiplied form AC_SRC_ALPHA expects, so the blue channel is a
    direct coverage readout. Rendering once per frame keeps feature render
    callbacks (and their per-frame state) intact. */
-static void widget_paint_layered(PlatformWidget *widget) {
+static void widget_push_layered(PlatformWidget *widget, unsigned long bg, unsigned char alpha) {
     if (!layer_acquire(widget)) return;
 
-    layer_fill(widget, 0xFF000000u);
+    layer_fill(widget, bg);
     Platform_SetDrawBgColor(0);
     SetBkMode(widget->layer_dc, TRANSPARENT);
     Platform_SetDrawContextWin32(widget->layer_dc);
@@ -122,13 +122,17 @@ static void widget_paint_layered(PlatformWidget *widget) {
     {
         unsigned int* px = (unsigned int*)widget->layer_bits;
         size_t n = (size_t)widget->layer_w * (size_t)widget->layer_h;
-        for (size_t i = 0; i < n; i++) {
-            unsigned int b = px[i] & 0xFFu;
-            unsigned int g = (px[i] >> 8) & 0xFFu;
-            unsigned int r = (px[i] >> 16) & 0xFFu;
-            unsigned int a = b > g ? b : g;
-            if (r > a) a = r;
-            px[i] = (px[i] & 0x00FFFFFFu) | (a << 24);
+        if (widget->no_bg) {
+            for (size_t i = 0; i < n; i++) {
+                unsigned int b = px[i] & 0xFFu;
+                unsigned int g = (px[i] >> 8) & 0xFFu;
+                unsigned int r = (px[i] >> 16) & 0xFFu;
+                unsigned int a = b > g ? b : g;
+                if (r > a) a = r;
+                px[i] = (px[i] & 0x00FFFFFFu) | (a << 24);
+            }
+        } else {
+            for (size_t i = 0; i < n; i++) px[i] |= 0xFF000000u;
         }
     }
 
@@ -146,26 +150,20 @@ static void widget_paint_layered(PlatformWidget *widget) {
     BLENDFUNCTION blend;
     blend.BlendOp = AC_SRC_OVER;
     blend.BlendFlags = 0;
-    blend.SourceConstantAlpha = 255;
+    blend.SourceConstantAlpha = alpha;
     blend.AlphaFormat = AC_SRC_ALPHA;
     UpdateLayeredWindow(widget->hwnd, screen, &dst, &size, widget->layer_dc, &src, 0, &blend, ULW_ALPHA);
     ReleaseDC(NULL, screen);
 }
 
+static void widget_paint_layered(PlatformWidget *widget) {
+    widget_push_layered(widget, 0xFF000000u, 255);
+}
+
 static void widget_paint(PlatformWidget *widget, HDC hdc, RECT *rect) {
-    Platform_SetDrawBgColor(widget->has_bg ? widget->bg_hex : 0);
-    if (EnableShaders && ShaderPreset != 0) {
-        win32_draw_background(hdc, rect);
-    } else {
-        HBRUSH brush = CreateSolidBrush(widget->has_bg ? (COLORREF)widget->bg_hex : (COLORREF)COLOR_BG);
-        FillRect(hdc, rect, brush);
-        DeleteObject(brush);
-    }
-    Platform_SetDrawBgColor(0);
-    SetBkMode(hdc, TRANSPARENT);
-    Platform_SetDrawContextWin32(hdc);
-    Platform_SetPreRenderStateWin32(NULL, NULL);
-    if (widget->fn) widget->fn(widget->ud);
+    (void)hdc;
+    (void)rect;
+    widget_push_layered(widget, 0xFF000000u | (widget->has_bg ? widget->bg_hex : 0u), (unsigned char)WindowOpacity);
 }
 
 static LRESULT CALLBACK FlintWidgetProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -315,9 +313,6 @@ PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps, bool
     }
 
     win32_apply_rounded_corners(widget->hwnd, w, h);
-    if (!widget->no_bg) {
-        SetLayeredWindowAttributes(widget->hwnd, 0, (BYTE)WindowOpacity, LWA_ALPHA);
-    }
     SetWindowPos(widget->hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
 
     if (!Platform_RenderThread_AddFrameCallback(widget_frame, widget)) {
