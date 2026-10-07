@@ -638,19 +638,6 @@ void fl_get_edit_text(char* buffer, size_t cap) {
     UI_GetCurrentTextEdit(buffer, cap);
 }
 
-unsigned long fl_rgb_to_hex(ColorRef color) {
-    return rgb_to_hex(color);
-}
-
-typedef struct {
-    FlWidgetRenderFn render;
-    int w;
-    int h;
-    unsigned long frame;
-    FlTimer created_at;
-    int pad;
-} FlHoverPopupCtx;
-
 static void fl_hover_popup_frame(void *ud) {
     FlHoverPopupCtx *p = (FlHoverPopupCtx *)ud;
     if (!p || !p->render) return;
@@ -688,14 +675,11 @@ static void fl_hover_popup_ctx_free(void *ud) {
 }
 
 void fl_message_impl(const FlMessageSpec* spec) {
-    if (!spec || (!spec->message && !spec->render)) return;
     if (!MessagesEnabled) return;
-    bool has_text = spec->message && spec->message[0];
-    if (!has_text && !spec->render) return;
     int w = spec->w > 0 ? spec->w : 0;
     int h = spec->h > 0 ? spec->h : 0;
-    int mw = spec->mw > 0 ? spec->mw : w;
-    int mh = spec->mh > 0 ? spec->mh : h;
+    int mw = spec->mw > 0 ? spec->mw : 0;
+    int mh = spec->mh > 0 ? spec->mh : 0;
     double timeout = spec->timeout > 0 ? spec->timeout : (double)TimeOutForMessages;
     ColorRef color = spec->color_text ? spec->color_text : COLOR_TEXT;
     if (spec->hover_key && spec->hover_key[0]) {
@@ -706,23 +690,21 @@ void fl_message_impl(const FlMessageSpec* spec) {
                                          spec->x, spec->y, ctx->w, ctx->h,
                                          spec->fps > 0 ? spec->fps : 1,
                                          spec->no_bg,
-                                         spec->color_bg ? fl_rgb_to_hex(spec->color_bg) : 0UL,
+                                         spec->color_bg ? rgb_to_hex(spec->color_bg) : 0UL,
                                          fl_hover_popup_ctx_free, ctx);
             }
             return;
         }
-        Platform_HoverMessage(spec->hover_key, spec->message, spec->x, spec->y, w, h, mw, mh, color);
+        Platform_HoverMessage(spec->hover_key, spec->message, spec->x, spec->y, w, h, mw, mh, color,spec->no_bg);
         return;
     }
     MessageSlot slot = spec->slot;
     if (slot == AUTO) {
-        if (spec->x != 0 || spec->y != 0) {
-            Platform_DisplayMessage(spec->message, spec->x, spec->y, mw, mh, timeout, color);
-            return;
-        }
         slot = IsPopupActive(WH_NULL) ? TOP_CENTER_RELATIVE : BOTTOM_CENTER_RELATIVE;
+        Platform_DisplayMessage(spec->message, spec->x, spec->y,spec->no_bg,w,h,mw, mh, timeout, color,fl_hover_popup_frame ? spec->render : NULL);
+        return;
     } else if (slot == FREE || spec->x != 0 || spec->y != 0) {
-        Platform_DisplayMessage(spec->message, spec->x, spec->y, mw, mh, timeout, color);
+        Platform_DisplayMessage(spec->message, spec->x, spec->y,spec->no_bg,w,h,mw, mh, timeout, color,fl_hover_popup_frame ? spec->render : NULL);
         return;
     }
     DisplayMessageSlot(spec->message, slot, mw, mh, spec->prompt_gap, timeout, color);
@@ -2065,6 +2047,11 @@ unsigned long long fl_net_rx_bytes_over(double seconds) {
     unsigned long long after = fl_net_rx_bytes_platform();
     if (after < before) return 0;
     return after - before;
+}
+FlRect fl_get_monitor_geometry() {
+    int x, y, w, h;
+    WindowManager_GetMainMonitorGeometry(&x,&y,&w,&h);
+    return (FlRect){x,y,w,h};
 }
 
 
