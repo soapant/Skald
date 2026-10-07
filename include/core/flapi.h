@@ -11,11 +11,16 @@
 #include "helpers/helpers_text.h"
 #include "helpers/helpers_ui.h"
 #include "core/flapi_input.h"
+#include "core/clipboard_history.h"
 #include "config.h"
 
 #define WHITELIST 1
 #define BLACKLIST 0
 #define FlStringList StringList
+#define FL_CLIPBOARD_TEXT CLIPBOARD_TEXT
+#define FL_CLIPBOARD_IMAGE CLIPBOARD_IMAGE
+#define FlClipboardEntry ClipboardEntry
+#define FlClipboardHistory ClipboardHistory
 
 typedef struct { uint64_t ticks; } FlTimer;
 typedef struct PlatformWidget PlatformWidget;
@@ -24,30 +29,13 @@ typedef struct PlatformWidget PlatformWidget;
 // CLIPBOARD
 // =============================================================================
 
+
 bool fl_copy_to_clipboard(const char* text);
+bool fl_copy_file_path(const char* path);
 bool fl_paste_from_clipboard();
 bool fl_paste(char* content);
 char* fl_get_last_clipboard_entry();
 
-typedef enum {
-    FL_CLIPBOARD_TEXT,
-    FL_CLIPBOARD_IMAGE,
-} FlClipboardType;
-
-typedef struct {
-    FlClipboardType type;
-    uint64_t timestamp;
-    char* text;
-    char* image_path;
-    uint32_t image_width;
-    uint32_t image_height;
-} FlClipboardEntry;
-
-typedef struct {
-    FlClipboardEntry* entries;
-    size_t count;
-    size_t capacity;
-} FlClipboardHistory;
 
 typedef enum {
     FL_NET_OFFLINE,
@@ -603,20 +591,6 @@ FlWindowList fl_get_all_window_names();
 char* fl_get_active_window_title(void);
 char* fl_get_active_window_app_id(void);
 bool fl_is_window_active(char* title);
-
-// =============================================================================
-// SCREENSHOT
-// =============================================================================
-
-void fl_screenshot_copy(void);
-bool fl_copy_image_to_clipboard(const unsigned char* png, size_t len);
-bool fl_copy_image_from_path(const char* path);
-void fl_screenshot_save_area(char* save_path);
-void fl_screenshot_save(char* save_path);
-void fl_screenshot_open(char* save_path);
-void fl_screenshot_open_area(char* save_path);
-
-
 
 FlPos fl_get_cursor_pos(void);
 FlColor fl_get_pixel_color(FlPos pos);

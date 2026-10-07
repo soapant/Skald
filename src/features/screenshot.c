@@ -14,6 +14,7 @@ static const char* shot_working_dir(void) {
     return (wd && wd[0]) ? wd : ".";
 }
 
+/* scrot/grim live in build/bundle and link against bundled libs. */
 static void shot_env(char* buf, size_t n) {
     snprintf(buf, n, "LD_LIBRARY_PATH=%s/build/bundle:${LD_LIBRARY_PATH:-} ", shot_working_dir());
 }
@@ -38,7 +39,7 @@ static void pk_screenshot_copy_area(void) {
     }
 
     free(fl_run_terminal_command_blocking(cmd));
-    fl_copy_image_from_path(path);
+    fl_copy_file_path(path);
 }
 
 static void pk_ocr_area_to_clipboard(void) {
@@ -69,11 +70,84 @@ static void pk_ocr_area_to_clipboard(void) {
 
 #else
 
-static void pk_screenshot_copy_area(void) {
+#include <windows.h>
 
+static void pk_capture_to(const char* path) {
+    int cx = GetSystemMetrics(SM_CXSCREEN);
+    int cy = GetSystemMetrics(SM_CYSCREEN);
+    if (cx <= 0 || cy <= 0) return;
+    int width = abs(x2 - x1);
+    int height = abs(y2 - y1);
+    if (width == 0 || height == 0) return;
+
+    HDC hScreenDC = GetDC(NULL);
+    HDC hMemoryDC = CreateCompatibleDC(hScreenDC);
+    HBITMAP hBitmap = CreateCompatibleBitmap(hScreenDC, width, height);
+    HGDIOBJ hOldBitmap = SelectObject(hMemoryDC, hBitmap);
+
+    BitBlt(hMemoryDC, 0, 0, width, height, hScreenDC, (x1 < x2 ? x1 : x2), (y1 < y2 ? y1 : y2), SRCCOPY);
+
+    GpBitmap* pBitmap = NULL;
+    GdipCreateBitmapFromHBITMAP(hBitmap, NULL, &pBitmap);
+
+    if (pBitmap != NULL) {
+        CLSID pngClsid;
+        UINT num = 0, size = 0;
+        GdipGetImageEncodersSize(&num, &size); 
+        
+        ImageCodecInfo* pImageCodecInfo = (ImageCodecInfo*)(malloc(size));
+        if (pImageCodecInfo != NULL) {
+            GdipGetImageEncoders(num, size, pImageCodecInfo); 
+            for (UINT j = 0; j < num; ++j) {
+                if (wcscmp(pImageCodecInfo[j].MimeType, L"image/png") == 0) {
+                    pngClsid = pImageCodecInfo[j].Clsid;
+                    break;
+                }
+            }
+            free(pImageCodecInfo);
+        }
+
+        wchar_t wPath[512];
+        MultiByteToWideChar(CP_ACP, 0, fullPath, -1, wPath, 512);
+
+        GdipSaveImageToFile((GpImage*)pBitmap, wPath, &pngClsid, NULL);
+        
+        GdipDisposeImage((GpImage*)pBitmap);
+    }
+
+    
+    SelectObject(hMemoryDC, hOldBitmap);
+    DeleteObject(hBitmap);
+    DeleteDC(hMemoryDC);
+    ReleaseDC(NULL, hScreenDC);
 }
-static void pk_ocr_area_to_clipboard(void) {
 
+static void pk_screenshot_copy_area(void) {
+    char path[MAX_PATH];
+    char* wd = fl_get_working_dir();
+    snprintf(path, sizeof(path), "%s/flint_clip.png", (wd && wd[0]) ? wd : ".");
+    free(wd);
+    pk_capture_to(path);
+    fl_copy_image_from_path(path);
+}
+
+static void pk_ocr_area_to_clipboard(void) {
+    char png[MAX_PATH];
+    char* wd = fl_get_working_dir();
+    snprintf(png, sizeof(png), "%s/flint_ocr.png", (wd && wd[0]) ? wd : ".");
+    free(wd);
+    pk_capture_to(png);
+
+    char cmd[2 * MAX_PATH + 64];
+    snprintf(cmd, sizeof(cmd), "tesseract \"%s\" stdout -l eng", png);
+    char* out = fl_run_terminal_command_blocking(cmd);
+    remove(png);
+    if (!out || !out[0]) { free(out); return; }
+
+    size_t n = strlen(out);
+    while (n > 0 && (out[n - 1] == '\n' || out[n - 1] == '\r')) out[--n] = '\0';
+    if (out[0]) fl_copy_to_clipboard(out);
+    free(out);
 }
 
 #endif

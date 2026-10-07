@@ -31,40 +31,33 @@
 #include "deps/stb_ds.h"
 
 size_t fl_clipboard_history_count(void) {
-    return fl_clipboard_history_count_platform();
+    return clipboard_history_count_platform();
 }
 
 const FlClipboardEntry* fl_clipboard_history_get(size_t index) {
-    return fl_clipboard_history_get_platform(index);
+    return clipboard_history_get_platform(index);
 }
 
 const FlClipboardEntry* fl_clipboard_latest(void) {
-    size_t n = fl_clipboard_history_count_platform();
+    size_t n = clipboard_history_count_platform();
     if (n == 0) return NULL;
-    return fl_clipboard_history_get_platform(n - 1);
+    return clipboard_history_get_platform(n - 1);
 }
 
 void fl_clipboard_clear_history(void) {
-    fl_clipboard_clear_history_platform();
+    clipboard_clear_history_platform();
 }
 
 bool fl_copy_to_clipboard(const char* text) {
     if (text == NULL) return 0;
     bool ok = Platform_CopyToClipboard(text);
-    if (ok) fl_clipboard_history_push_text_platform(text);
+    if (ok) clipboard_history_push_text_platform(text);
     return ok;
 }
 
-bool fl_copy_image_to_clipboard(const unsigned char* png, size_t len) {
-    if (png == NULL || len < 8) return 0;
-    if (memcmp(png, FL_PNG_MAGIC, 8) != 0) return 0;
-    bool ok = Platform_CopyImageToClipboard(png, len);
-    if (ok) {
-        uint32_t w = 0, h = 0;
-        fl_clipboard_png_dims(png, len, &w, &h);
-        fl_clipboard_history_push_image_platform(NULL, w, h);
-    }
-    return ok;
+bool fl_copy_file_path(const char* path) {
+    if (!path) return false;
+    return clipboard_set_png_path_platform(path);
 }
 
 bool fl_get_all_files_from_dir(const char* dir_path, char** list_of_allowed_extensions, ListOfFiles* list_of_files,char** list_of_names_to_ignore, bool strip_extension) {
@@ -772,12 +765,12 @@ char* fl_get_last_clipboard_entry() {
         if (current[0]) {
             const FlClipboardEntry* latest = fl_clipboard_latest();
             if (!latest || latest->type != FL_CLIPBOARD_TEXT || !latest->text || strcmp(latest->text, current) != 0)
-                fl_clipboard_history_push_text_platform(current);
+                clipboard_history_push_text_platform(current);
         }
         free(current);
     }
-    for (size_t i = fl_clipboard_history_count_platform(); i > 0; i--) {
-        const FlClipboardEntry* e = fl_clipboard_history_get_platform(i - 1);
+    for (size_t i = clipboard_history_count_platform(); i > 0; i--) {
+        const FlClipboardEntry* e = clipboard_history_get_platform(i - 1);
         if (e->type == FL_CLIPBOARD_TEXT && e->text) return strdup(e->text);
     }
     return NULL;
@@ -1616,34 +1609,6 @@ size_t fl_hashmap_len(FlHashMap* map) {
 const FlHashMap* fl_hashmap_at(FlHashMap* map, size_t index) {
     if (!map || index >= shlenu(map)) return NULL;
     return &map[index];
-}
-
-void fl_screenshot_copy(void) {
-    return fl_screenshot_copy_platform();
-}
-
-void fl_screenshot_save_area(char* save_path) {
-    return fl_screenshot_save_area_platform(save_path);
-}
-
-void fl_screenshot_save(char* save_path) {
-    return fl_screenshot_save_platform(save_path);
-}
-
-void fl_screenshot_open(char* save_path) {
-    fl_screenshot_save_platform(save_path);
-    fl_launch_with_args(save_path,NULL);
-}
-
-void fl_screenshot_open_area(char* save_path) {
-    fl_screenshot_save_area_platform(save_path);
-    fl_launch_with_args(save_path,NULL);
-}
-
-
-bool fl_copy_image_from_path(const char* path) {
-    if (!path || !path[0]) return false;
-    return fl_clipboard_set_png_path_platform(path);
 }
 
 FlTimer fl_profile_start() {

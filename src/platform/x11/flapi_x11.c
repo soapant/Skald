@@ -909,69 +909,6 @@ static void ext_env_prefix(char* buf, size_t n) {
 }
 
 
-void fl_screenshot_copy_platform(void) {
-    if (Wm_ScreenshotCopy()) return;
-    char cmd[1024];
-    char env[512];
-    ext_env_prefix(env, sizeof(env));
-    char* wd = Platform_GetWorkingDir();
-    char path[MAX_PATH];
-
-    snprintf(path, sizeof(path), "%s/flint_clip.png", wd ? wd : ".");
-    if (getenv("WAYLAND_DISPLAY")) {
-        snprintf(cmd, sizeof(cmd),
-                 "%s%s/external/grim -t png %s",
-                 env, wd, path);
-    } else {
-          snprintf(cmd, sizeof(cmd),
-             "%s%s/external/scrot %s",
-             env, wd, path);
-    }
-
-    free(Platform_RunCommandAndGetOutput(cmd));
-    fl_clipboard_set_png_path_platform(path);
-}
-
-void fl_screenshot_save_area_platform(char* save_path) {
-    if (Wm_ScreenshotSaveArea(save_path)) return;
-    char cmd[1024];
-    char env[512];
-    ext_env_prefix(env, sizeof(env));
-    char* wd = Platform_GetWorkingDir();
-
-    if (getenv("WAYLAND_DISPLAY")) {
-      snprintf(cmd, sizeof(cmd),
-               "%s%s/external/grim -g \"$(%s/external/slurp)\" %s",
-               env, wd, wd,save_path);
-    } else {
-      snprintf(cmd, sizeof(cmd),
-                "%s%s/external/scrot -s %s",
-                env, wd,save_path);
-    }
-
-    free(Platform_RunCommandAndGetOutput(cmd));
-}
-void fl_screenshot_save_platform(char* save_path) {
-    if (Wm_ScreenshotSave(save_path)) return;
-    char cmd[1024];
-    char env[512];
-    ext_env_prefix(env, sizeof(env));
-    char* wd = Platform_GetWorkingDir();
-
-    if (getenv("WAYLAND_DISPLAY")) {
-      snprintf(cmd, sizeof(cmd),
-               "%s%s/external/grim %s",
-               env, wd,save_path);
-    } else {
-      snprintf(cmd, sizeof(cmd),
-                "%s%s/external/scrot %s",
-                env, wd,save_path);
-    }
-
-    free(Platform_RunCommandAndGetOutput(cmd));
-}
-
-
 struct MemoryStruct {
     char *memory;
     size_t size;
