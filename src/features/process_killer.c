@@ -34,12 +34,31 @@ static const char* pk_sort_label(int mode) {
     return "memory";
 }
 
-#if !defined(_WIN32)
 static bool pk_isspace(char c) { return c == ' ' || c == '\t'; }
 
 static void pk_rtrim(char* s) {
     size_t n = strlen(s);
     while (n > 0 && pk_isspace(s[n - 1])) s[--n] = '\0';
+}
+
+
+static int pk_cmp_mem(const void* a, const void* b) {
+    const PkProc* x = a;
+    const PkProc* y = b;
+    if (x->rss_kb != y->rss_kb) return x->rss_kb < y->rss_kb ? 1 : -1;
+    return strcmp(x->name, y->name);
+}
+
+static int pk_cmp_cpu(const void* a, const void* b) {
+    const PkProc* x = a;
+    const PkProc* y = b;
+    if (x->cpu != y->cpu) return x->cpu < y->cpu ? 1 : -1;
+    if (x->rss_kb != y->rss_kb) return x->rss_kb < y->rss_kb ? 1 : -1;
+    return strcmp(x->name, y->name);
+}
+
+static int pk_cmp_alpha(const void* a, const void* b) {
+    return strcasecmp(((const PkProc*)a)->name, ((const PkProc*)b)->name);
 }
 
 static void pk_parse_line(char* line) {
@@ -82,24 +101,8 @@ static void pk_parse_line(char* line) {
     p->cpu = strtod(cpu_s, NULL);
 }
 
-static int pk_cmp_mem(const void* a, const void* b) {
-    const PkProc* x = a;
-    const PkProc* y = b;
-    if (x->rss_kb != y->rss_kb) return x->rss_kb < y->rss_kb ? 1 : -1;
-    return strcmp(x->name, y->name);
-}
+#if !defined(_WIN32)
 
-static int pk_cmp_cpu(const void* a, const void* b) {
-    const PkProc* x = a;
-    const PkProc* y = b;
-    if (x->cpu != y->cpu) return x->cpu < y->cpu ? 1 : -1;
-    if (x->rss_kb != y->rss_kb) return x->rss_kb < y->rss_kb ? 1 : -1;
-    return strcmp(x->name, y->name);
-}
-
-static int pk_cmp_alpha(const void* a, const void* b) {
-    return strcasecmp(((const PkProc*)a)->name, ((const PkProc*)b)->name);
-}
 
 static void pk_collect_running_processes(void) {
     g_pk_count = 0;
@@ -114,13 +117,118 @@ static void pk_collect_running_processes(void) {
     }
     free(out);
 }
+#else 
+#include <windows.h>
+#include <tlhelp32.h>
+#include <psapi.h>
+
+static int find_or_add_pk_proc(const char* name) {
+    for (int i = 0; i < g_pk_count; i++) {
+        if (strcasecmp(g_pk[i].name, name) == 0) {
+            return i;
+        }
+    }
+    if (g_pk_count >= PK_MAX) return -1;
+    
+    int index = g_pk_count++;
+    snprintf(g_pk[index].name, sizeof(g_pk[index].name), "%s", name);
+    g_pk[index].rss_kb = 0;
+    g_pk[index].cpu = 0.0;
+    return index;
+}
+
+static void pk_collect_running_processes(void) {
+    g_pk_count = 0;
+
+    // Structure arrays to hold values over our delta-time measurement sample 
+    typedef struct { DWORD pid; ULONGLONG cpu_start; } CpuSample;
+    static CpuSample samples[PK_MAX];
+    int sample_count = 0;
+
+    SYSTEM_INFO sysInfo;
+    GetSystemInfo(&sysInfo);
+    DWORD num_cores = sysInfo.dwNumberOfProcessors; // Used to divide total thread weights perfectly
+
+    HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (hSnapshot == INVALID_HANDLE_VALUE) return;
+
+    PROCESSENTRY32 pe32;
+    pe32.dwSize = sizeof(PROCESSENTRY32);
+
+    if (!Process32First(hSnapshot, &pe32)) {
+        CloseHandle(hSnapshot);
+        return;
+    }
+
+    // 1. First Sample Collection: Capture the baseline starting CPU cycles
+    do {
+        HANDLE hProcess = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pe32.th32ProcessID);
+        if (hProcess) {
+            FILETIME ftCreation, ftExit, ftKernel, ftUser;
+            if (GetProcessTimes(hProcess, &ftCreation, &ftExit, &ftKernel, &ftUser) && sample_count < PK_MAX) {
+                ULONGLONG total_ticks = (((ULONGLONG)ftKernel.dwHighDateTime << 32) | ftKernel.dwLowDateTime) +
+                                       (((ULONGLONG)ftUser.dwHighDateTime << 32) | ftUser.dwLowDateTime);
+                samples[sample_count].pid = pe32.th32ProcessID;
+                samples[sample_count].cpu_start = total_ticks;
+                sample_count++;
+            }
+            CloseHandle(hProcess);
+        }
+    } while (Process32Next(hSnapshot, &pe32));
+
+    if (!Process32First(hSnapshot, &pe32)) {
+        CloseHandle(hSnapshot);
+        return;
+    }
+
+    do {
+        HANDLE hProcess = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pe32.th32ProcessID);
+        if (hProcess) {
+            PROCESS_MEMORY_COUNTERS_EX pmc; // Using EX variant to isolate clean private footprint
+            if (GetProcessMemoryInfo(hProcess, (PROCESS_MEMORY_COUNTERS*)&pmc, sizeof(pmc))) {
+                
+                int index = find_or_add_pk_proc(pe32.szExeFile);
+                if (index != -1) {
+                    // Fix: Map exact physical RSS Private Working Set in KB to prevent truncation or half-scale drops
+                    g_pk[index].rss_kb += (unsigned long long)(pmc.PrivateUsage / 1024);
+
+                    FILETIME ftCreation, ftExit, ftKernel, ftUser;
+                    if (GetProcessTimes(hProcess, &ftCreation, &ftExit, &ftKernel, &ftUser)) {
+                        ULONGLONG cpu_end = (((ULONGLONG)ftKernel.dwHighDateTime << 32) | ftKernel.dwLowDateTime) +
+                                            (((ULONGLONG)ftUser.dwHighDateTime << 32) | ftUser.dwLowDateTime);
+                        
+                        // Look up the baseline sample for this matching process PID
+                        for (int s = 0; s < sample_count; s++) {
+                            if (samples[s].pid == pe32.th32ProcessID) {
+                                ULONGLONG delta_ticks = (cpu_end > samples[s].cpu_start) ? (cpu_end - samples[s].cpu_start) : 0;
+                                
+                                // 100ms sleep equates to exactly 1,000,000 FILETIME scale ticks
+                                double process_pct = ((double)delta_ticks / 1000000.0) * 100.0;
+                                g_pk[index].cpu += (process_pct / num_cores);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            CloseHandle(hProcess);
+        }
+    } while (Process32Next(hSnapshot, &pe32));
+
+    CloseHandle(hSnapshot);
+
+    // Dynamic capping bounds
+    for (int i = 0; i < g_pk_count; i++) {
+        if (g_pk[i].cpu > 100.0) g_pk[i].cpu = 100.0;
+    }
+}
+#endif
 
 static void pk_sort(void) {
     if (g_pk_count <= 1) return;
     qsort(g_pk, (size_t)g_pk_count, sizeof(PkProc),
           g_pk_sort == 0 ? pk_cmp_mem : g_pk_sort == 1 ? pk_cmp_cpu : pk_cmp_alpha);
 }
-#endif
 
 static void pk_split_row(const char* row, char* name, size_t name_len,
                          char* mem, size_t mem_len, char* cpu, size_t cpu_len) {
@@ -160,12 +268,8 @@ static void pk_build_rows(void) {
 }
 
 static void pk_collect_and_sort(void) {
-#if defined(_WIN32)
-    g_pk_count = 0;
-#else
     pk_collect_running_processes();
     pk_sort();
-#endif
     pk_build_rows();
 }
 
