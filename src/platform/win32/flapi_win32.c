@@ -586,38 +586,6 @@ void fl_sleep_platform(double seconds) {
     Sleep((DWORD)ms);
 }
 
-static void fl_win32_capture_primary(const char* fullPath) {
-    int cx = GetSystemMetrics(SM_CXSCREEN);
-    int cy = GetSystemMetrics(SM_CYSCREEN);
-    if (cx <= 0 || cy <= 0) return;
-    Platform_SaveRegionToPNG(0, 0, cx, cy, fullPath);
-}
-
-
-void fl_screenshot_copy_platform(void) {
-    char* wd = Platform_GetWorkingDir();
-    char path[MAX_PATH];
-    snprintf(path, sizeof(path), "%s/flint_clip.png", wd ? wd : ".");
-    fl_win32_capture_primary(path);
-    fl_clipboard_set_png_path_platform(path);
-}
-
-void fl_screenshot_save_area_platform(char* save_path) {
-    if (!save_path) return;
-    char path[MAX_PATH];
-    snprintf(path, sizeof(path), "%s.png", save_path);
-    printf("area select not implemented, capturing primary monitor");
-    fl_win32_capture_primary(path);
-}
-
-void fl_screenshot_save_platform(char* save_path) {
-    if (!save_path) return;
-    char path[MAX_PATH];
-    snprintf(path, sizeof(path), "%s.png", save_path);
-    fl_win32_capture_primary(path);
-}
-
-
 typedef struct {
     void* (*fn)(void*);
     void* arg;
