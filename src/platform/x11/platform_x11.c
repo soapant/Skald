@@ -1819,10 +1819,6 @@ static bool feature_stem_from_caller(void *caller, char *out, size_t out_len) {
     char mod_path[512];
     if (!Platform_GetModuleOwnerPath(caller, mod_path, sizeof(mod_path))) return false;
     const char *base = strrchr(mod_path, '/');
-#ifdef _WIN32
-    const char *bs = strrchr(mod_path, '\\');
-    if (bs && (!base || bs > base)) base = bs;
-#endif
     base = base ? base + 1 : mod_path;
     char stem[128];
     if (!lib_basename_stem(base, stem, sizeof(stem))) return false;
