@@ -158,7 +158,7 @@ char* WindowManager_ShowPrompt(WindowManager* wm, const PromptSpec* spec) {
     }
     if (spec->items) {
         int count = 0;
-        for (count = 0; spec->items[count]; count++) {}
+        for (count = 0; count < MAX_VISIBLE_ITEMS && spec->items[count]; count++) {}
         if (count > 0) {
             FlintContext_Get()->item_index_map = NULL;
             sh_new_strdup(FlintContext_Get()->item_index_map);

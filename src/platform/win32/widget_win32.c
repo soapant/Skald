@@ -24,6 +24,7 @@ struct PlatformWidget {
     bool no_bg;
     bool dirty;
     DWORD last_draw_ms;
+    DWORD owner_tid;
     BITMAPINFO layer_bi;
     HDC layer_dc;
     HBITMAP layer_bmp;
@@ -297,6 +298,7 @@ PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps, bool
     snprintf(widget->name, sizeof(widget->name), "%s", name ? name : "?");
     widget->dirty = true;
     widget->last_draw_ms = 0;
+    widget->owner_tid = GetCurrentThreadId();
 
     HINSTANCE hInstance = GetModuleHandle(NULL);
     DWORD exstyle = WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED | WS_EX_NOACTIVATE;
@@ -338,7 +340,8 @@ PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps, bool
     return widget;
 }
 
-void Platform_Widget_Destroy(PlatformWidget *widget) {
+static void widget_destroy_on_owner_thread(void* ud) {
+    PlatformWidget *widget = (PlatformWidget *)ud;
     if (!widget || widget->dead) return;
     widget->dead = true;
     Platform_RenderThread_RemoveFrameCallback(widget_frame, widget);
@@ -347,6 +350,21 @@ void Platform_Widget_Destroy(PlatformWidget *widget) {
     }
     widget->hwnd = NULL;
     free(widget);
+}
+
+void Platform_Widget_Destroy(PlatformWidget *widget) {
+    if (!widget || widget->dead) return;
+    if (widget->owner_tid != GetCurrentThreadId()) {
+        PlatformWidget *copy = (PlatformWidget *)malloc(sizeof(*copy));
+        if (copy) {
+            *copy = *widget;
+            widget->dead = true;
+            if (Platform_RenderThread_Post(widget_destroy_on_owner_thread, copy)) return;
+            free(copy);
+            widget->dead = false;
+        }
+    }
+    widget_destroy_on_owner_thread(widget);
 }
 
 bool Platform_Widget_IsValid(const PlatformWidget *widget) {
