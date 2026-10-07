@@ -195,7 +195,10 @@ FlStringList fl_load_file_list(const char* filepath) {
     }
     long budget = (long)MAX_FILE_LINES * (long)(MAX_FILE_LINE_LENGTH + 2);
     list = File_ReadLines(full, budget);
-    if (list.count > MAX_FILE_LINES) list.count = MAX_FILE_LINES;
+    if (list.count > MAX_FILE_LINES) {
+        list.count = MAX_FILE_LINES;
+        list.items[list.count] = NULL;
+    }
     return list;
 }
 

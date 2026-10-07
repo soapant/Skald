@@ -137,8 +137,10 @@ static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent* key) {
         if (FlintContext_Get()->prompt_callbacks.tab != NULL) {
             FlintContext_Get()->prompt_callbacks.tab(lb);
         }
-        for (int i = 0; i < data->selection_count; ++i) {
-            log_info("%s ", data->last_selections[i]);
+        if (data) {
+            for (int i = 0; i < data->selection_count; ++i) {
+                log_info("%s ", data->last_selections[i]);
+            }
         }
         return true;
     }
