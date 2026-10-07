@@ -593,14 +593,6 @@ static void fl_win32_capture_primary(const char* fullPath) {
     Platform_SaveRegionToPNG(0, 0, cx, cy, fullPath);
 }
 
-void fl_screenshot_copy_area_platform(void) {
-    char* wd = Platform_GetWorkingDir();
-    char path[MAX_PATH];
-    snprintf(path, sizeof(path), "%s/flint_clip.png", wd ? wd : ".");
-    log_info("area select not implemented, capturing primary monitor");
-    fl_win32_capture_primary(path);
-    fl_clipboard_set_png_path_platform(path);
-}
 
 void fl_screenshot_copy_platform(void) {
     char* wd = Platform_GetWorkingDir();
@@ -625,21 +617,6 @@ void fl_screenshot_save_platform(char* save_path) {
     fl_win32_capture_primary(path);
 }
 
-void fl_ocr_area_to_clipboard_platform(void) {
-    char* wd = Platform_GetWorkingDir();
-    char png[MAX_PATH];
-    snprintf(png, sizeof(png), "%s/flint_ocr.png", wd ? wd : ".");
-    fl_win32_capture_primary(png);
-    char cmd[2 * MAX_PATH + 64];
-    snprintf(cmd, sizeof(cmd), "tesseract \"%s\" stdout -l eng", png);
-    char* out = Platform_RunCommandAndGetOutput(cmd);
-    remove(png);
-    if (!out || !out[0]) { free(out); return; }
-    size_t n = strlen(out);
-    while (n > 0 && (out[n - 1] == '\n' || out[n - 1] == '\r')) out[--n] = '\0';
-    if (out[0]) { if (Platform_CopyToClipboard(out)) fl_clipboard_history_push_text_platform(out); }
-    free(out);
-}
 
 typedef struct {
     void* (*fn)(void*);

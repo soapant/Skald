@@ -608,10 +608,9 @@ bool fl_is_window_active(char* title);
 // SCREENSHOT
 // =============================================================================
 
-void fl_screenshot_copy_area(void);
 void fl_screenshot_copy(void);
-void fl_ocr_area_to_clipboard(void);
 bool fl_copy_image_to_clipboard(const unsigned char* png, size_t len);
+bool fl_copy_image_from_path(const char* path);
 void fl_screenshot_save_area(char* save_path);
 void fl_screenshot_save(char* save_path);
 void fl_screenshot_open(char* save_path);
