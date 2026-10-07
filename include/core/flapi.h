@@ -148,6 +148,7 @@ bool fl_move_active_window_right(void);
 bool fl_focus_window_left(void);
 bool fl_focus_window_right(void);
 bool fl_toggle_minimized_active(void);
+FlRect fl_get_monitor_geometry();
 
 // =============================================================================
 // ADB
@@ -177,7 +178,6 @@ bool fl_is_selected(ListBoxInfo* lb);
 void fl_set_edit_text(const char* text);
 void fl_set_edit_cursor(int position);
 void fl_get_edit_text(char* buffer, size_t cap);
-unsigned long fl_rgb_to_hex(ColorRef color);
 
 // =============================================================================
 // POPUPS / UI
@@ -230,6 +230,15 @@ typedef struct {
     bool no_bg;
     ColorRef color_bg;
 } FlMessageSpec;
+
+typedef struct {
+    FlWidgetRenderFn render;
+    int w;
+    int h;
+    unsigned long frame;
+    FlTimer created_at;
+    int pad;
+} FlHoverPopupCtx;
 
 void fl_message_impl(const FlMessageSpec* spec);
 #define fl_message(...) fl_message_impl(&(FlMessageSpec){__VA_ARGS__})
