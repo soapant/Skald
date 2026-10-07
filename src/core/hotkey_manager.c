@@ -4,6 +4,9 @@
 #include "core/window_manager.h"
 #include "deps/log.h"
 #include "helpers/helpers_hotkey.h"
+#include "helpers/helpers_owner.h"
+#include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #if !defined(_WIN32)
 #include <pthread.h>
@@ -17,6 +20,7 @@ static int g_hotkey_capacity = 0;
 #define HOTKEY_PENDING_MAX 64
 static HotkeyCallback g_pending_q[HOTKEY_PENDING_MAX];
 static bool g_pending_toggle[HOTKEY_PENDING_MAX];
+static char g_pending_owner[HOTKEY_PENDING_MAX][OWNER_PATH_MAX];
 static int g_pending_head = 0;
 static int g_pending_tail = 0;
 #if !defined(_WIN32)
@@ -32,13 +36,14 @@ static void hotkey_queue_init(void) {
 #define HOTKEY_Q_LOCK() do { hotkey_queue_init(); EnterCriticalSection(&g_q_cs); } while (0)
 #define HOTKEY_Q_UNLOCK() do { hotkey_queue_init(); LeaveCriticalSection(&g_q_cs); } while (0)
 #endif
-static void hotkey_enqueue(HotkeyCallback fn, bool is_toggle) {
+static void hotkey_enqueue(HotkeyCallback fn, bool is_toggle, const char* owner) {
     if (!fn) return;
     HOTKEY_Q_LOCK();
     int nxt = (g_pending_tail + 1) % HOTKEY_PENDING_MAX;
     if (nxt != g_pending_head) {
         g_pending_q[g_pending_tail] = fn;
         g_pending_toggle[g_pending_tail] = is_toggle;
+        snprintf(g_pending_owner[g_pending_tail], OWNER_PATH_MAX, "%s", owner ? owner : "");
         g_pending_tail = nxt;
     }
     HOTKEY_Q_UNLOCK();
@@ -80,6 +85,11 @@ static bool hotkey_toggle_blocked(HotkeyBinding* b) {
 }
 
 bool hotkey_register_internal(HotkeyBinding binding) {
+    char owner[OWNER_PATH_MAX];
+    Owner_ResolveForFunc((void*)(uintptr_t)binding.hotkey_callback, owner, sizeof(owner));
+    if (!owner[0]) Owner_ResolveForFunc((void*)(uintptr_t)binding.hotkey_condition, owner, sizeof(owner));
+    snprintf(binding.owner, sizeof(binding.owner), "%s", owner);
+
     for (int i=0;i<g_hotkey_count;i++) {
         if (g_hotkeys[i].vk_code == binding.vk_code && g_hotkeys[i].modifiers == binding.modifiers) {
             bool keep_toggle = g_hotkeys[i].is_feature_toggle || binding.is_feature_toggle;
@@ -97,6 +107,33 @@ bool hotkey_register_internal(HotkeyBinding binding) {
     }
     g_hotkeys[g_hotkey_count++] = binding;
     return true;
+}
+
+void hotkey_purge_owner(const char* path_a, const char* path_b) {
+    if ((!path_a || !path_a[0]) && (!path_b || !path_b[0])) return;
+
+    int n = 0;
+    for (int i = 0; i < g_hotkey_count; i++) {
+        if (Owner_ModuleMatches(g_hotkeys[i].owner, path_a, path_b)) {
+            log_info("hotkey vk=0x%X mods=%d purged (owner unloaded)", g_hotkeys[i].vk_code, g_hotkeys[i].modifiers);
+            continue;
+        }
+        g_hotkeys[n++] = g_hotkeys[i];
+    }
+    int dropped = g_hotkey_count - n;
+    g_hotkey_count = n;
+    if (dropped > 0) log_info("hotkey purged %d binding%s", dropped, dropped == 1 ? "" : "s");
+
+    HOTKEY_Q_LOCK();
+    int qn = g_pending_head;
+    while (qn != g_pending_tail) {
+        if (Owner_ModuleMatches(g_pending_owner[qn], path_a, path_b)) {
+            log_info("hotkey pending entry dropped (owner unloaded)");
+            g_pending_q[qn] = NULL;
+        }
+        qn = (qn + 1) % HOTKEY_PENDING_MAX;
+    }
+    HOTKEY_Q_UNLOCK();
 }
 
 bool hotkey_process(int vk_code, int modifiers) {
@@ -187,7 +224,7 @@ bool hotkey_process(int vk_code, int modifiers) {
         bool blocked = hotkey_toggle_blocked(b);
         if (blocked) return true;
         log_info("hotkey match vk=0x%X mods=%d enqueue", vk_code, eff_modifiers);
-        hotkey_enqueue(cb, b->is_feature_toggle);
+        hotkey_enqueue(cb, b->is_feature_toggle, b->owner);
         return true;
     }
 
