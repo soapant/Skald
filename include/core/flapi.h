@@ -225,14 +225,14 @@ typedef struct {
     int prompt_gap;
     ColorRef color_text;
     const char* hover_key;
-    FlWidgetRenderFn render;
+    void (*render)(void);
     int fps;
     bool no_bg;
     ColorRef color_bg;
 } FlMessageSpec;
 
 typedef struct {
-    FlWidgetRenderFn render;
+    void (*render)(void);
     int w;
     int h;
     unsigned long frame;
