@@ -1,0 +1,7 @@
+name = "clipboard_history"
+description = ""
+
+[provides]
+
+[depends]
+

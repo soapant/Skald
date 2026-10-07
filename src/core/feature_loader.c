@@ -10,7 +10,16 @@
 #include "core/timer.h"
 #include "config.h"
 #include "core/window_manager.h"
+/* Declarations only: platform_x11.c / platform_win32.c already emit the nob
+   implementation, so including it here too would collide at link time. */
+#include "../../nob.h"
+/* nob.h ships legacy aliases that collide with this file's own helpers. */
+#undef copy_file
+#undef mkdir_if_not_exists
+#undef read_entire_dir
+#undef copy_directory_recursively
 #include "core/widget_registry.h"
+#include "core/cap_registry.h"
 #ifdef _WIN32
 #include <windows.h>
 #endif
@@ -84,6 +93,7 @@ static void retire_old_lib(LibHandle handle, const char* uniq, const char* owner
     }
     if (g_retired_count >= MAX_RETIRED) {
         log_error("retired lib overflow, force unloading oldest");
+        fl_cap_purge_owner(g_retired[0].owner, NULL);
         Platform_UnloadLibrary(g_retired[0].handle);
         if (g_retired[0].uniq[0]) remove(g_retired[0].uniq);
         for (int k = 0; k + 1 < g_retired_count; k++) g_retired[k] = g_retired[k + 1];
@@ -111,6 +121,7 @@ static void sweep_retired_libs(void) {
         if (alive) {
             g_retired[n++] = g_retired[i];
         } else {
+            fl_cap_purge_owner(g_retired[i].owner, NULL);
             Platform_UnloadLibrary(g_retired[i].handle);
             if (g_retired[i].uniq[0]) remove(g_retired[i].uniq);
         }
@@ -148,6 +159,114 @@ static bool ends_with(const char* str, const char* suffix) {
 
 static double g_feature_init_us = 0.0;
 static int g_feature_init_count = 0;
+
+
+//temporary: manifest dir is hardcoded for now; moves under the feature
+//          marketplace install system later.
+#define FLINT_MANIFEST_DIR "src/features/manifests"
+#define FLINT_MANIFEST_LIST_MAX 32
+
+typedef struct {
+    char name[64];
+    char deps[FLINT_MANIFEST_LIST_MAX][64];
+    int  dep_count;
+    char provides[FLINT_MANIFEST_LIST_MAX][96];
+    int  provide_count;
+    bool valid;
+} FeatureManifest;
+
+static void manifest_trim(char *s) {
+    size_t n = strlen(s);
+    while (n > 0 && (s[n-1] == '\n' || s[n-1] == '\r' || s[n-1] == ' ' || s[n-1] == '\t')) s[--n] = '\0';
+    char *p = s;
+    while (*p == ' ' || *p == '\t') p++;
+    if (p != s) memmove(s, p, strlen(p) + 1);
+}
+
+static void manifest_unquote(char *s) {
+    char *hash = strchr(s, '#');
+    if (hash) { *hash = '\0'; }
+    manifest_trim(s);
+    size_t n = strlen(s);
+    if (n >= 2 && ((s[0] == '"' && s[n-1] == '"') || (s[0] == '\'' && s[n-1] == '\''))) {
+        s[n-1] = '\0';
+        memmove(s, s + 1, n - 1);
+    }
+}
+
+static bool manifest_path(const char *name, char *out, size_t n) {
+    snprintf(out, n, "%s/%s.toml", FLINT_MANIFEST_DIR, name);
+    return true;
+}
+
+static void manifest_write_baseline(const char *name) {
+    char path[512];
+    manifest_path(name, path, sizeof(path));
+    FILE *f = fopen(path, "rb");
+    if (f) { fclose(f); return; }
+
+    nob_mkdir_if_not_exists(FLINT_MANIFEST_DIR);
+    f = fopen(path, "wb");
+    if (!f) return;
+    fprintf(f, "name = \"%s\"\n", name);
+    fprintf(f, "description = \"\"\n\n");
+    fprintf(f, "[provides]\n\n");
+    fprintf(f, "[depends]\n\n");
+    fclose(f);
+    log_info("manifest created for feature '%s'", name);
+}
+
+static void manifest_parse(const char *name, FeatureManifest *m) {
+    memset(m, 0, sizeof(*m));
+    snprintf(m->name, sizeof(m->name), "%s", name);
+
+    char path[512];
+    manifest_path(name, path, sizeof(path));
+    FILE *f = fopen(path, "rb");
+    if (!f) return;
+
+    char line[512];
+    int section = 0; /* 0=none 1=provides 2=depends */
+    while (fgets(line, sizeof(line), f)) {
+        char work[512];
+        snprintf(work, sizeof(work), "%s", line);
+        manifest_trim(work);
+        if (work[0] == '\0' || work[0] == '#') continue;
+
+        if (work[0] == '[') {
+            if (strstr(work, "provides")) section = 1;
+            else if (strstr(work, "depends")) section = 2;
+            else section = 0;
+            continue;
+        }
+
+        char *eq = strchr(work, '=');
+        if (eq) {
+            *eq = '\0';
+            char key[128];
+            snprintf(key, sizeof(key), "%s", work);
+            manifest_trim(key);
+            char val[384];
+            snprintf(val, sizeof(val), "%s", eq + 1);
+            manifest_trim(val);
+            manifest_unquote(val);
+            if (strcmp(key, "name") == 0) snprintf(m->name, sizeof(m->name), "%s", val);
+            else if (strcmp(key, "description") == 0) { /* informational */ }
+            section = 0;
+            continue;
+        }
+
+        manifest_unquote(work);
+        if (work[0] == '\0') continue;
+        if (section == 1 && m->provide_count < FLINT_MANIFEST_LIST_MAX) {
+            snprintf(m->provides[m->provide_count++], sizeof(m->provides[0]), "%s", work);
+        } else if (section == 2 && m->dep_count < FLINT_MANIFEST_LIST_MAX) {
+            snprintf(m->deps[m->dep_count++], sizeof(m->deps[0]), "%s", work);
+        }
+    }
+    fclose(f);
+    m->valid = true;
+}
 
 static bool load_single(const char* dir, const char* filename) {
     if (g_feature_count >= MAX_FEATURES) return false;
@@ -194,18 +313,86 @@ static bool load_single(const char* dir, const char* filename) {
     return true;
 }
 
+static bool load_named(const char *dir, const char *ext, const char *name) {
+    char filename[128];
+    snprintf(filename, sizeof(filename), "%s%s", name, ext);
+    return load_single(dir, filename);
+}
+
 bool FeatureLoader_LoadAllFromDir(const char* dir) {
     FL_LOCK();
     const char* ext = Platform_LibExtension();
     DIR* d = opendir(dir);
     if (!d) { FL_UNLOCK(); return false; }
+
+    char names[MAX_FEATURES][64];
+    int n_names = 0;
     struct dirent* e;
     while ((e = readdir(d)) != NULL) {
         if (e->d_name[0]=='.') continue;
         if (!ends_with(e->d_name, ext)) continue;
-        load_single(dir, e->d_name);
+        if (n_names >= MAX_FEATURES) break;
+
+        char nm[64];
+        snprintf(nm, sizeof(nm), "%s", e->d_name);
+        char* dot = strrchr(nm, '.');
+        if (dot) *dot = '\0';
+        manifest_write_baseline(nm);
+        snprintf(names[n_names++], sizeof(names[0]), "%s", nm);
     }
     closedir(d);
+
+    FeatureManifest* mans = (FeatureManifest*)calloc((size_t)n_names, sizeof(FeatureManifest));
+    bool* loaded = (bool*)calloc((size_t)n_names, sizeof(bool));
+    if (!mans || !loaded) {
+        free(mans); free(loaded); FL_UNLOCK(); return false;
+    }
+    for (int i = 0; i < n_names; i++) manifest_parse(names[i], &mans[i]);
+
+    for (int i = 0; i < n_names; i++) {
+        const char* missing = NULL;
+        for (int k = 0; k < mans[i].dep_count && !missing; k++) {
+            bool found = false;
+            for (int j = 0; j < n_names; j++) {
+                if (strcmp(names[j], mans[i].deps[k]) == 0) { found = true; break; }
+            }
+            if (!found) missing = mans[i].deps[k];
+        }
+        if (missing) {
+            //temporary: hard printf, replaced by a proper install prompt when
+            //          the feature marketplace exists.
+            printf("flint: skipping feature '%s' - missing dependency '%s'\n", names[i], missing);
+            log_warn("feature '%s' skipped, dep '%s' not found", names[i], missing);
+            continue;
+        }
+        loaded[i] = true;
+    }
+
+    for (int pass = 0; pass < n_names; pass++) {
+        bool progress = false;
+        for (int i = 0; i < n_names; i++) {
+            if (!loaded[i]) continue;
+            bool ready = true;
+            for (int k = 0; k < mans[i].dep_count; k++) {
+                for (int j = 0; j < n_names; j++) {
+                    if (strcmp(names[j], mans[i].deps[k]) == 0 && !loaded[j]) { ready = false; break; }
+                }
+                if (!ready) break;
+            }
+            if (!ready) continue;
+            loaded[i] = false;
+            if (load_named(dir, ext, names[i])) progress = true;
+        }
+        if (!progress) {
+            for (int i = 0; i < n_names; i++) {
+                if (loaded[i]) { loaded[i] = false; load_named(dir, ext, names[i]); }
+            }
+            break;
+        }
+    }
+
+    free(mans);
+    free(loaded);
     FL_UNLOCK();
 log_info("FeatureLoader_LoadAllFromDir completed");
     return true;
@@ -237,6 +424,7 @@ void FeatureLoader_Shutdown(void) {
             typedef void (*ShutdownFn)(void);
             ShutdownFn shut = (ShutdownFn)Platform_GetSymbol(g_features[i].handle, "FlintFeatureShutdown");
             if (shut) shut();
+            fl_cap_purge_owner(NULL, g_features[i].path);
             fl_widget_purge_owner(NULL, g_features[i].path, fl_widget_bump_generation());
             Platform_UnloadLibrary(g_features[i].handle);
             if (g_features[i].uniq[0]) remove(g_features[i].uniq);
@@ -325,6 +513,7 @@ void FeatureLoader_Reload(const char* name) {
             g_features[i].path[sizeof(g_features[i].path)-1] = '\0';
             strncpy(g_features[i].uniq, uniquepath, sizeof(g_features[i].uniq)-1);
             g_features[i].uniq[sizeof(g_features[i].uniq)-1] = '\0';
+            fl_cap_purge_owner(retire_owner, path_copy);
             fl_widget_purge_owner(retire_owner, path_copy, retire_gen);
             sweep_retired_libs();
             log_info("reloaded %s", name);
@@ -363,6 +552,7 @@ void FeatureLoader_Unload(const char* name) {
             retire_old_lib(g_features[i].handle, g_features[i].uniq, loaded);
             unsigned purge_gen = fl_widget_current_generation();
             fl_widget_bump_generation();
+            fl_cap_purge_owner(loaded, owner_path);
             fl_widget_purge_owner(loaded, owner_path, purge_gen);
             sweep_retired_libs();
             for (int k=i;k+1<g_feature_count;k++) g_features[k]=g_features[k+1];
@@ -407,7 +597,7 @@ void FeatureLoader_ReloadAll(void) {
     FeatureLoader_Init();
     FL_LOCK();
     for (int i = 0; i < g_retired_count; i++) {
-        if (g_retired[i].owner[0]) fl_widget_purge_owner(g_retired[i].owner, NULL, g_retired[i].owner_gen);
+        if (g_retired[i].owner[0]) { fl_cap_purge_owner(g_retired[i].owner, NULL); fl_widget_purge_owner(g_retired[i].owner, NULL, g_retired[i].owner_gen); }
     }
     sweep_retired_libs();
     FL_UNLOCK();
