@@ -125,12 +125,14 @@ StringList String_Split(const char *string, const char *delimiter)
     }
 
     result.count = delimiter_count + 1;
-    result.items = malloc(result.count * sizeof(char *));
+    result.items = malloc((result.count + 1) * sizeof(char *));
 
     if (!result.items) {
         result.count = 0;
         return result;
     }
+
+    result.items[result.count] = NULL;
 
     size_t delimiter_len = strlen(delimiter);
     const char *start = string;
@@ -501,6 +503,7 @@ StringList File_ReadLines(const char *path, long buffer_size)
 
     result.items = all.items;
     result.count = kept;
+    result.items[kept] = NULL;
 
     return result;
 }
