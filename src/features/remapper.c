@@ -15,9 +15,5 @@ FLINT_FEATURE_INIT {
     fl_register_remapping("A", "Left",WHITELIST,"feh");
     fl_register_remapping("D", "Right",WHITELIST,"feh");
 
-    fl_register_remapping("J", "1",WHITELIST,"anki");
-    fl_register_remapping("K", "2",WHITELIST,"anki");
-    fl_register_remapping("L", "3",WHITELIST,"anki");
-    fl_register_remapping(";", "4",WHITELIST,"anki");
 }
 

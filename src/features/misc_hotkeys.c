@@ -69,7 +69,6 @@ void open_terminal(void) {
 void open_browser(void) {
     fl_launch_browser("");
 }
-
 void move_active_window_right(void) {
     fl_move_active_window_right();
 }
@@ -92,6 +91,28 @@ void toggle_minimized(void) {
     fl_toggle_minimized_active();
 }
 
+void easy(void) {
+  fl_send_hotkey("Space");
+  fl_sleep(0.1);
+  fl_send_hotkey("1");
+}
+
+void medium(void) {
+  fl_send_hotkey("Space");
+  fl_sleep(0.1);
+  fl_send_hotkey("2");
+}
+void hard(void) {
+  fl_send_hotkey("Space");
+  fl_sleep(0.1);
+  fl_send_hotkey("3");
+}
+void fuckme(void) {
+  fl_send_hotkey("Space");
+  fl_sleep(0.1);
+  fl_send_hotkey("4");
+}
+
 FLINT_FEATURE_INIT {
     fl_register_hotkey("Alt+Shift+G", GoogleMeaning);
     fl_register_hotkey("Alt+Shift+F", next_image);
@@ -110,5 +131,9 @@ FLINT_FEATURE_INIT {
     fl_register_hotkey("Ctrl+Q", close_active_window);
     fl_register_hotkey("Alt+F", toggle_fullscreen);
     fl_register_hotkey("Alt+M", toggle_minimized);
+    fl_register_hotkey("J", easy,WHITELIST,"anki");
+    fl_register_hotkey("K", medium,WHITELIST,"anki");
+    fl_register_hotkey("L", hard,WHITELIST,"anki");
+    fl_register_hotkey(";", fuckme,WHITELIST,"anki");
 }
 

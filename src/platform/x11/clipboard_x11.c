@@ -1,8 +1,10 @@
 #include "platform/x11/clipboard_x11.h"
 #include "platform/x11/display_x11.h"
 #include "deps/log.h"
+#include "config.h"
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
+#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -29,12 +31,14 @@ static long cl_ms_since(void) {
 static long g_cl_t0 = 0;
 
 static void cl_trace(const char *what, const char *fmt, ...) {
+    if (!DebugMode) return;
     va_list ap;
     long n = ++g_cl_seq;
     char buf[512];
     va_start(ap, fmt);
     vsnprintf(buf, sizeof(buf), fmt, ap);
     va_end(ap);
+    fprintf(stderr, "[clip %+ldms #%ld] %s %s\n", cl_ms_since() - g_cl_t0, n, what, buf);
 }
 
 static Window g_clip_win = None;
@@ -56,6 +60,7 @@ static bool g_incr_active = false;
 static Window g_incr_req = None;
 static Atom g_incr_prop = None;
 static size_t g_incr_off = 0;
+static long g_incr_old_mask = 0;
 
 void x11_clipboard_ensure_started(void) {
     if (g_cl_t0 == 0) g_cl_t0 = cl_ms_since();
@@ -84,10 +89,15 @@ void x11_clipboard_ensure_started(void) {
 }
 
 static void x11_clipboard_abort_incr(void) {
+    if (g_incr_active && g_incr_req != None && g_incr_old_mask) {
+        Display *adpy = get_display();
+        if (adpy) XSelectInput(adpy, g_incr_req, g_incr_old_mask);
+    }
     g_incr_active = false;
     g_incr_req = None;
     g_incr_prop = None;
     g_incr_off = 0;
+    g_incr_old_mask = 0;
 }
 
 static void x11_clipboard_serve_request(Display *dpy, XSelectionRequestEvent *req) {
@@ -131,7 +141,15 @@ static void x11_clipboard_serve_request(Display *dpy, XSelectionRequestEvent *re
     } else if (req->target == g_clip_png_atom && g_clip_png) {
         if (g_clip_png_len > CLIP_INCR_THRESHOLD) {
             x11_clipboard_abort_incr();
-            XSelectInput(dpy, req->requestor, PropertyChangeMask);
+            XWindowAttributes wa;
+            memset(&wa, 0, sizeof(wa));
+            g_incr_old_mask = 0;
+            if (XGetWindowAttributes(dpy, req->requestor, &wa)) {
+                g_incr_old_mask = (long)wa.your_event_mask;
+                XSelectInput(dpy, req->requestor, g_incr_old_mask | PropertyChangeMask);
+            } else {
+                XSelectInput(dpy, req->requestor, PropertyChangeMask);
+            }
             long total = (long)g_clip_png_len;
             XChangeProperty(dpy, req->requestor, prop, g_clip_incr, 32, PropModeReplace, (unsigned char*)&total, 1);
             XFlush(dpy);
@@ -139,7 +157,7 @@ static void x11_clipboard_serve_request(Display *dpy, XSelectionRequestEvent *re
             g_incr_req = req->requestor;
             g_incr_prop = prop;
             g_incr_off = 0;
-            
+
             resp.xselection.property = prop;
         } else {
             XChangeProperty(dpy, req->requestor, prop, g_clip_png_atom, 8, PropModeReplace, g_clip_png, (int)g_clip_png_len);
@@ -172,12 +190,10 @@ static void x11_clipboard_serve_incr(Display *dpy, XPropertyEvent *pev) {
         size_t n = remaining > CLIP_INCR_CHUNK ? CLIP_INCR_CHUNK : remaining;
         XChangeProperty(dpy, g_incr_req, g_incr_prop, g_clip_png_atom, 8, PropModeReplace, g_clip_png + g_incr_off, (int)n);
         g_incr_off += n;
-        
+        cl_trace("INCR", "sent chunk n=%zu off=%zu remaining=%zu", n, g_incr_off, remaining);
     } else {
-        if (g_clip_png_len > 0 && (g_clip_png_len % CLIP_INCR_CHUNK) == 0) {
-            XChangeProperty(dpy, g_incr_req, g_incr_prop, g_clip_png_atom, 8, PropModeReplace, NULL, 0);
-        }
-        
+        XChangeProperty(dpy, g_incr_req, g_incr_prop, g_clip_png_atom, 8, PropModeReplace, NULL, 0);
+        cl_trace("INCR", "END off=%zu len=%zu terminator sent", g_incr_off, g_clip_png_len);
         x11_clipboard_abort_incr();
     }
     XFlush(dpy);

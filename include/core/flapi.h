@@ -97,24 +97,10 @@ char* fl_run_argv(const char* const argv[], const char* stdin_data, int* out_sta
 bool fl_launch_detached(char* command);
 bool fl_terminate_process_by_name(const char* exe_name);
 
-/* Cross-feature capabilities. A feature publishes a namespaced function
-   pointer from FLINT_FEATURE_INIT; consumers resolve lazily by key and must
-   handle NULL (provider not loaded yet, or owner was hot-reloaded away).
-   Do not call through a cached pointer across a hot reload - re-resolve. */
 #include "core/cap_registry.h"
 #define fl_cap_register(key, fn)  fl_cap_register_abi((key), FL_CAP_ABI_V1, (fn))
 #define fl_cap_resolve(key)       fl_cap_resolve_abi((key), FL_CAP_ABI_V1)
 
-/* Bind a capability to a local, caching the pointer but re-resolving whenever
-   the registry changes, so a hot reload of the provider invalidates it instead
-   of leaving a dangling pointer. Declares `var` as NULL when unavailable, so
-   callers still check it:
-
-     typedef char *(*adb_get_devices_fn)(void);
-     FL_CAP_BIND(get, "adb.get_devices", adb_get_devices_fn);
-     if (!get) return;
-     char *out = get();
-*/
 #define FL_CAP_BIND(var, key, type)                                   \
     static type var##_fn;                                             \
     static unsigned var##_gen;                                        \
@@ -142,6 +128,8 @@ int fl_get_feature_list_with_icons(const char** out_names, void (**out_cbs)(void
 
 void fl_init_all_hotkeys(void);
 void fl_send_hotkey(const char* hotkey_string);
+
+#define fl_send_key fl_send_hotkey
 
 // =============================================================================
 // BROWSER / ZOXIDE / SYSTEM
@@ -607,9 +595,6 @@ void fl_on_key(void (*cb)(int vk, bool down, int mods, void *ud), void *ud);
 int fl_get_key_pressed(void);
 char fl_get_char_pressed(void);
 
-// Global keystroke feed, captured whether or not a prompt is open. The hook
-// thread only writes POD into a fixed ring; features drain it from their own
-// thread, so a slow feature can never stall input.
 typedef struct {
     int vk;
     int scancode;
