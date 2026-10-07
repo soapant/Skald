@@ -2,6 +2,10 @@
 #include "core/remap_manager.h"
 #include "platform/platform.h"
 #include "core/types/keys.h"
+#include "deps/log.h"
+#include "helpers/helpers_owner.h"
+#include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -32,19 +36,34 @@ int snippet_binding_count(void) {
     return g_snippet_count;
 }
 
+static void snippet_free_binding(SnippetBinding* b) {
+    if (!b) return;
+    free(b->trigger);
+    free(b->text);
+    for (int j = 0; j < b->window_count; j++) free(b->windows[j]);
+    free(b->windows);
+    b->trigger = NULL;
+    b->text = NULL;
+    b->windows = NULL;
+    b->window_count = 0;
+}
+
 bool snippet_register_internal(const char* trigger, const char* text, void (*func)(void), bool whitelist, const char** windows) {
     if (!trigger || !trigger[0]) return false;
     if (!text && !func) return false;
+
+    char owner[OWNER_PATH_MAX];
+    Owner_ResolveForFunc((void*)(uintptr_t)func, owner, sizeof(owner));
+
     for (int i = 0; i < g_snippet_count; i++) {
         if (strcmp(g_snippets[i].trigger, trigger) == 0) {
-            free(g_snippets[i].text);
-            for (int j = 0; j < g_snippets[i].window_count; j++) free(g_snippets[i].windows[j]);
-            free(g_snippets[i].windows);
+            snippet_free_binding(&g_snippets[i]);
             g_snippets[i].text = text ? strdup(text) : NULL;
             g_snippets[i].func = func;
             g_snippets[i].whitelist = whitelist;
             g_snippets[i].windows = NULL;
             g_snippets[i].window_count = 0;
+            snprintf(g_snippets[i].owner, sizeof(g_snippets[i].owner), "%s", owner);
             if (windows) {
                 int n = 0;
                 while (windows[n]) n++;
@@ -64,6 +83,7 @@ bool snippet_register_internal(const char* trigger, const char* text, void (*fun
     }
     if (g_snippet_count >= SNIPPET_MAX_BINDINGS) return false;
     SnippetBinding* b = &g_snippets[g_snippet_count];
+    memset(b, 0, sizeof(*b));
     b->trigger = strdup(trigger);
     if (!b->trigger) return false;
     b->text = text ? strdup(text) : NULL;
@@ -72,6 +92,7 @@ bool snippet_register_internal(const char* trigger, const char* text, void (*fun
     b->whitelist = whitelist;
     b->windows = NULL;
     b->window_count = 0;
+    snprintf(b->owner, sizeof(b->owner), "%s", owner);
     if (windows) {
         int n = 0;
         while (windows[n]) n++;
@@ -94,6 +115,27 @@ bool snippet_register_internal(const char* trigger, const char* text, void (*fun
     g_snippet_count++;
     snippet_reset_buffer();
     return true;
+}
+
+void snippet_purge_owner(const char* path_a, const char* path_b) {
+    if ((!path_a || !path_a[0]) && (!path_b || !path_b[0])) return;
+
+    int n = 0;
+    for (int i = 0; i < g_snippet_count; i++) {
+        if (Owner_ModuleMatches(g_snippets[i].owner, path_a, path_b)) {
+            log_info("snippet '%s' purged (owner unloaded)", g_snippets[i].trigger ? g_snippets[i].trigger : "?");
+            snippet_free_binding(&g_snippets[i]);
+            continue;
+        }
+        if (n != i) g_snippets[n] = g_snippets[i];
+        n++;
+    }
+    int dropped = g_snippet_count - n;
+    if (dropped > 0) {
+        memset(&g_snippets[n], 0, (size_t)(g_snippet_count - n) * sizeof(SnippetBinding));
+        g_snippet_count = n;
+        log_info("snippet purged %d binding%s", dropped, dropped == 1 ? "" : "s");
+    }
 }
 
 static bool snippet_window_allowed(const SnippetBinding* b, const char* title) {

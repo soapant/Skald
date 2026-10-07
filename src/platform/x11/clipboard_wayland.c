@@ -1,3 +1,4 @@
+#if defined(FLINT_WAYLAND_SESSION)
 #include "platform/x11/clipboard_backend_x11.h"
 #include "deps/log.h"
 #include <wayland-client-core.h>
@@ -967,3 +968,4 @@ void Platform_ClipboardShutdown(void) {
     pthread_mutex_unlock(&g_wl_text_lock);
     g_wl_ready = false;
 }
+#endif
