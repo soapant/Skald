@@ -481,7 +481,6 @@ char *x11_clipboard_get_text(void) {
     return out;
 }
 
-#if !defined(FLINT_WAYLAND_SESSION)
 #include "platform/x11/clipboard_backend_x11.h"
 
 bool Platform_ClipboardAvailable(void) {
@@ -503,4 +502,3 @@ char* Platform_ClipboardGetText(void) {
 void Platform_ClipboardShutdown(void) {
     x11_clipboard_shutdown();
 }
-#endif

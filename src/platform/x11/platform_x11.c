@@ -638,13 +638,6 @@ double Platform_GetUniversalTimeSeconds(void) {
     return 0.0;
 }
 
-void Platform_SaveRegionToPNG(int x1, int y1, int x2, int y2, const char* fullPath) {
-    PROFILE_START(timer);
-    (void)x1; (void)y1; (void)x2; (void)y2; (void)fullPath;
-    log_warn("not implemented yet");
-    PROFILE_END_VAR(timer, "platform_x11:Platform_SaveRegionToPNG");
-}
-
 void Platform_WaitForKeypressAsync(KeyCallback callback) {
     PROFILE_START(timer);
     (void)callback;

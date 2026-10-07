@@ -32,37 +32,6 @@ static void TriggerZoxide(void) {
     fl_free_file_list(&files);
 }
 
-const char* YaziZoxideFilePath = "YaziZoxide.txt";
-static void yazi_refresh(const char* filter, ListBoxInfo* lb) {
-    FlStringList files = fl_load_file_list(YaziZoxideFilePath);
-    fl_populate_listbox(lb, filter, (const char**)files.items, files.count);
-    fl_free_file_list(&files);
-}
-static bool yazi_enter(const char* selection, ListBoxInfo* lb) {
-    char* path = fl_get_zoxide_match((char*)selection);
-    if (!path) return false;
-    char cmd_args[512];
-    snprintf(cmd_args, sizeof(cmd_args), "-e yazi \"%s\"", path);
-    fl_launch_terminal_at_path(path, cmd_args);
-    if (!fl_is_selected(lb)) fl_append_unique_line(YaziZoxideFilePath, selection);
-    free(path);
-    return true;
-}
-static void yazi_edit(const char* selection, ListBoxInfo* lb) {
-    int idx = -1;
-    char* edited = fl_edit_text_popup(.initial_text = selection,.lb = lb, .out_index = &idx);
-    if (!edited) return;
-    if (idx >= 0) fl_replace_line_in_file(YaziZoxideFilePath, idx, edited);
-    free(edited);
-    yazi_refresh("", lb);
-}
-static void TriggerYaziZoxide(void) {
-    FlStringList files = fl_load_file_list(YaziZoxideFilePath);
-    PROMPT(.title = "📂 Yazi", .items = (const char**)files.items,
-           .refresh = yazi_refresh, .enter = yazi_enter, .edit = yazi_edit);
-    fl_free_file_list(&files);
-}
-
 const char* FileManagerZoxideFilePath = "FileManagerZoxide.txt";
 static void file_manager_refresh(const char* filter, ListBoxInfo* lb) {
     FlStringList files = fl_load_file_list(FileManagerZoxideFilePath);
