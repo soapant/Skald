@@ -77,6 +77,10 @@ typedef struct {
 } FlColor;
 
 typedef struct {
+    int x, y, w, h;
+} FlRect;
+
+typedef struct {
     int x,y;
 } FlPos;
 
