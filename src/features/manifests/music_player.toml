@@ -1,0 +1,7 @@
+name = "music_player"
+description = ""
+
+[provides]
+
+[depends]
+

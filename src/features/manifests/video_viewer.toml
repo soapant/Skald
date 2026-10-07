@@ -1,0 +1,7 @@
+name = "video_viewer"
+description = ""
+
+[provides]
+
+[depends]
+

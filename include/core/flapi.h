@@ -108,6 +108,35 @@ char* fl_run_terminal_command_and_open(char* command);
 char* fl_run_argv(const char* const argv[], const char* stdin_data, int* out_status);
 bool fl_launch_detached(char* command);
 bool fl_terminate_process_by_name(const char* exe_name);
+
+/* Cross-feature capabilities. A feature publishes a namespaced function
+   pointer from FLINT_FEATURE_INIT; consumers resolve lazily by key and must
+   handle NULL (provider not loaded yet, or owner was hot-reloaded away).
+   Do not call through a cached pointer across a hot reload - re-resolve. */
+#include "core/cap_registry.h"
+#define fl_cap_register(key, fn)  fl_cap_register_abi((key), FL_CAP_ABI_V1, (fn))
+#define fl_cap_resolve(key)       fl_cap_resolve_abi((key), FL_CAP_ABI_V1)
+
+/* Bind a capability to a local, caching the pointer but re-resolving whenever
+   the registry changes, so a hot reload of the provider invalidates it instead
+   of leaving a dangling pointer. Declares `var` as NULL when unavailable, so
+   callers still check it:
+
+     typedef char *(*adb_get_devices_fn)(void);
+     FL_CAP_BIND(get, "adb.get_devices", adb_get_devices_fn);
+     if (!get) return;
+     char *out = get();
+*/
+#define FL_CAP_BIND(var, key, type)                                   \
+    static type var##_fn;                                             \
+    static unsigned var##_gen;                                        \
+    type var = NULL;                                                  \
+    if (var##_gen != fl_cap_generation()) {                           \
+        var##_fn = (type)fl_cap_resolve(key);                         \
+        var##_gen = fl_cap_generation();                              \
+    }                                                                 \
+    var = var##_fn
+
 int fl_get_icon_size(const char* icon_path);
 
 // =============================================================================
@@ -148,16 +177,6 @@ bool fl_toggle_minimized_active(void);
 // ADB
 // =============================================================================
 
-char* fl_adb_tap(int x,int y);
-char* fl_adb_type_text(char* text);
-char* fl_adb_get_devices();
-char* fl_adb_install(char* app_path);
-char* fl_adb_uninstall(char* app_name);
-char* fl_adb_force_close(char* app_name);
-char* fl_adb_clear_app_data(char* app_name);
-char* fl_adb_get_file(char* filepath,char* output_file_path);
-char* fl_adb_put_file(char* filepath,char* output_file_path);
-char* fl_adb_reboot();
 
 // =============================================================================
 // STRING UTILITIES (all returned char* are heap-allocated, caller must free())

@@ -17,6 +17,7 @@
 #include "core/window_manager.h"
 #include "core/clipboard_history.h"
 #include "core/flapi.h"
+#include "core/cap_registry.h"
 #include "platform/flapi_platform.h"
 #include "platform/wm_platform.h"
 #include "platform/draw.h"
@@ -101,6 +102,112 @@ bool fl_launch_with_args_as_admin(const char* path, const char* args) {
     char expanded[MAX_PATH];
     if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) return false;
     return fl_launch_with_args_as_admin_platform(expanded, args);
+}
+
+/* ---------------------------------------------------------------- caps ---- */
+
+typedef struct {
+    char key[FL_CAP_KEY_LEN];
+    char owner[512];
+    unsigned abi;
+    void *fn;
+} FlCap;
+
+static FlCap g_caps[FL_CAP_MAX];
+static int g_cap_count = 0;
+static unsigned g_cap_generation = 1;
+
+unsigned fl_cap_generation(void) { return g_cap_generation; }
+
+static void fl_cap_owner_basename(const char *p, char *out, size_t n) {
+    if (!p || !p[0]) { if (n) out[0] = '\0'; return; }
+    const char *s = p;
+    for (const char *q = p; *q; q++) if (*q == '/' || *q == '\\') s = q + 1;
+    snprintf(out, n, "%s", s);
+}
+
+static bool fl_cap_owner_matches(const char *owner, const char *a, const char *b) {
+    if (!owner || !owner[0]) return false;
+    if (a && a[0] && strcmp(owner, a) == 0) return true;
+    if (b && b[0] && strcmp(owner, b) == 0) return true;
+    char ob[512], ab[512], bb[512];
+    fl_cap_owner_basename(owner, ob, sizeof(ob));
+    if (a && a[0]) { fl_cap_owner_basename(a, ab, sizeof(ab)); if (strcmp(ob, ab) == 0) return true; }
+    if (b && b[0]) { fl_cap_owner_basename(b, bb, sizeof(bb)); if (strcmp(ob, bb) == 0) return true; }
+    return false;
+}
+
+void fl_cap_register_abi(const char *key, unsigned abi, void *fn) {
+    if (!key || !key[0] || !fn) return;
+
+    char owner[512];
+    owner[0] = '\0';
+    Platform_GetModuleOwnerPath(fn, owner, sizeof(owner));
+
+    for (int i = 0; i < g_cap_count; i++) {
+        if (strcmp(g_caps[i].key, key) != 0) continue;
+        if (g_caps[i].fn == fn) return;
+        log_info("fl_cap '%s' replaced (was abi=%u now abi=%u)", key, g_caps[i].abi, abi);
+        snprintf(g_caps[i].key, FL_CAP_KEY_LEN, "%s", key);
+        snprintf(g_caps[i].owner, sizeof(g_caps[i].owner), "%s", owner);
+        g_caps[i].abi = abi;
+        g_caps[i].fn = fn;
+        g_cap_generation++;
+        return;
+    }
+
+    if (g_cap_count >= FL_CAP_MAX) {
+        log_error("fl_cap table full, dropping '%s'", key);
+        return;
+    }
+    FlCap *c = &g_caps[g_cap_count++];
+    snprintf(c->key, FL_CAP_KEY_LEN, "%s", key);
+    snprintf(c->owner, sizeof(c->owner), "%s", owner);
+    c->abi = abi;
+    c->fn = fn;
+    g_cap_generation++;
+    log_info("fl_cap '%s' registered abi=%u owner='%s'", key, abi, owner[0] ? owner : "?");
+}
+
+void *fl_cap_resolve_abi(const char *key, unsigned abi) {
+    if (!key || !key[0]) return NULL;
+    for (int i = 0; i < g_cap_count; i++) {
+        if (strcmp(g_caps[i].key, key) != 0) continue;
+        if (g_caps[i].abi != abi) {
+            log_warn("fl_cap '%s' abi mismatch want=%u have=%u", key, abi, g_caps[i].abi);
+            return NULL;
+        }
+        return g_caps[i].fn;
+    }
+    return NULL;
+}
+
+void fl_cap_purge_owner(const char *path_a, const char *path_b) {
+    if ((!path_a || !path_a[0]) && (!path_b || !path_b[0])) return;
+
+    int n = 0;
+    for (int i = 0; i < g_cap_count; i++) {
+        if (fl_cap_owner_matches(g_caps[i].owner, path_a, path_b)) {
+            log_info("fl_cap '%s' purged (owner unloaded)", g_caps[i].key);
+            continue;
+        }
+        g_caps[n++] = g_caps[i];
+    }
+    int dropped = g_cap_count - n;
+    g_cap_count = n;
+    if (dropped > 0) {
+        g_cap_generation++;
+        log_info("fl_cap purged %d entr%s", dropped, dropped == 1 ? "y" : "ies");
+    }
+}
+
+void fl_cap_dump(void) {
+    log_info("fl_cap table: %d entries", g_cap_count);
+    for (int i = 0; i < g_cap_count; i++) {
+        char ob[512];
+        fl_cap_owner_basename(g_caps[i].owner, ob, sizeof(ob));
+        log_info("  '%s' abi=%u fn=%p owner=%s", g_caps[i].key, g_caps[i].abi, g_caps[i].fn, ob);
+    }
 }
 
 FlStringList fl_load_file_list(const char* filepath) {
@@ -659,64 +766,6 @@ char* fl_on_dir_changed(const char* dir_path, DirChangeCallback callback) {
     return Platform_RegisterDirWatcher(dir_path, callback);
 }
 
-char* fl_adb_tap(int x,int y) {
-  char buffer[100];
-  snprintf(buffer,sizeof(buffer),"adb shell input tap %i %i",x,y);
-  return Platform_RunTerminalCommand(buffer,false);
-}
-char* fl_adb_type_text(char* text) {
-  char buffer[100];
-  snprintf(buffer,sizeof(buffer),"adb shell input text %s",text);
-  return Platform_RunTerminalCommand(buffer,false);
-}
-char* fl_adb_get_devices() {
-  char buffer[100];
-  snprintf(buffer,sizeof(buffer),"adb devices");
-  return Platform_RunTerminalCommand(buffer,false);
-}
-
-char* fl_adb_install(char* app_path) {
-  char buffer[100];
-  snprintf(buffer,sizeof(buffer),"adb install %s",app_path);
-  return Platform_RunTerminalCommand(buffer,false);
-
-}
-char* fl_adb_uninstall(char* app_name) {
-  char buffer[100];
-  snprintf(buffer,sizeof(buffer),"adb uninstall %s",app_name);
-  return Platform_RunTerminalCommand(buffer,false);
-
-}
-char* fl_adb_force_close(char* app_name) {
-  char buffer[100];
-  snprintf(buffer,sizeof(buffer),"adb shell am force-stop %s",app_name);
-  return Platform_RunTerminalCommand(buffer,false);
-
-}
-char* fl_adb_clear_app_data(char* app_name) {
-  char buffer[100];
-  snprintf(buffer,sizeof(buffer),"adb shell pm clear %s",app_name);
-  return Platform_RunTerminalCommand(buffer,false);
-}
-char* fl_adb_get_file(char* filepath,char* output_file_path) {
-  char buffer[100];
-  snprintf(buffer,sizeof(buffer),"adb pull %s %s",filepath,output_file_path);
-  return Platform_RunTerminalCommand(buffer,false);
-
-}
-char* fl_adb_put_file(char* filepath,char* output_file_path) {
-  char buffer[100];
-  snprintf(buffer,sizeof(buffer),"adb push %s %s",filepath,output_file_path);
-  return Platform_RunTerminalCommand(buffer,false);
-
-}
-
-char* fl_adb_reboot() {
-  char buffer[100];
-  snprintf(buffer,sizeof(buffer),"adb reboot");
-  return Platform_RunTerminalCommand(buffer,false);
-
-}
 char* fl_get_last_clipboard_entry() {
     char* current = Platform_GetClipboardEntry();
     if (current) {
