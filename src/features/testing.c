@@ -2,8 +2,8 @@
 #include <stdio.h>
 
 void Testing(void) {
+    printf("Testing hotkey triggered!\n");
     FlTimer p = fl_profile_start();
-    fl_get_cursor_pos();
     fl_profile_end(p);
 }
 
