@@ -271,10 +271,10 @@ int x11_keysym_to_vk(KeySym ks) {
         case XK_Super_R: return VK_RWIN;
         case XK_semicolon: case XK_colon: return VK_OEM_1;
         case XK_slash: case XK_question: return VK_OEM_2;
-        case XK_bracketleft: case XK_braceleft: return VK_OEM_4;
         case XK_comma: case XK_less: return VK_OEM_COMMA;
         case XK_period: case XK_greater: return VK_OEM_PERIOD;
         case XK_apostrophe: case XK_quotedbl: return VK_OEM_7;
+        case XK_bracketleft: case XK_braceleft: return VK_OEM_4;
         case XK_bracketright: case XK_braceright: return VK_OEM_6;
         case XK_grave: case XK_asciitilde: return VK_OEM_3;
         case XK_minus: case XK_underscore: return VK_OEM_MINUS;
