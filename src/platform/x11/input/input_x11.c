@@ -62,37 +62,38 @@ int x11_keysym_to_windows_vk(KeySym keysym) {
         case XK_Shift_R: PROFILE_END_VAR(timer, "subclasses_x11:x11_keysym_to_windows_vk"); return VK_RSHIFT;
         case XK_Alt_L: PROFILE_END_VAR(timer, "subclasses_x11:x11_keysym_to_windows_vk"); return VK_LMENU;
         case XK_Alt_R: PROFILE_END_VAR(timer, "subclasses_x11:x11_keysym_to_windows_vk"); return VK_RMENU;
-        case XK_comma: PROFILE_END_VAR(timer, "subclasses_x11:x11_keysym_to_windows_vk"); return VK_OEM_COMMA;
-        case XK_period: PROFILE_END_VAR(timer, "subclasses_x11:x11_keysym_to_windows_vk"); return VK_OEM_PERIOD;
-        case XK_semicolon: PROFILE_END_VAR(timer, "subclasses_x11:x11_keysym_to_windows_vk"); return VK_OEM_1;
-        case XK_slash: PROFILE_END_VAR(timer, "subclasses_x11:x11_keysym_to_windows_vk"); return VK_OEM_2;
-        case XK_apostrophe: PROFILE_END_VAR(timer, "subclasses_x11:x11_keysym_to_windows_vk"); return VK_OEM_7;
-        case XK_bracketleft: PROFILE_END_VAR(timer, "subclasses_x11:x11_keysym_to_windows_vk"); return VK_OEM_4;
-        case XK_bracketright: PROFILE_END_VAR(timer, "subclasses_x11:x11_keysym_to_windows_vk"); return VK_OEM_6;
-        case XK_grave: PROFILE_END_VAR(timer, "subclasses_x11:x11_keysym_to_windows_vk"); return VK_OEM_3;
-        case XK_minus: PROFILE_END_VAR(timer, "subclasses_x11:x11_keysym_to_windows_vk"); return VK_OEM_MINUS;
-        case XK_equal: PROFILE_END_VAR(timer, "subclasses_x11:x11_keysym_to_windows_vk"); return VK_OEM_PLUS;
+        case XK_comma: 
+        case XK_less: PROFILE_END_VAR(timer, "subclasses_x11:x11_keysym_to_windows_vk"); return VK_OEM_COMMA;
+        case XK_period: 
+        case XK_greater: PROFILE_END_VAR(timer, "subclasses_x11:x11_keysym_to_windows_vk"); return VK_OEM_PERIOD;
+        case XK_semicolon: 
         case XK_colon: PROFILE_END_VAR(timer, "subclasses_x11:x11_keysym_to_windows_vk"); return VK_OEM_1;
-        case XK_less: PROFILE_END_VAR(timer, "subclasses_x11:x11_keysym_to_windows_vk"); return '<';
-        case XK_greater: PROFILE_END_VAR(timer, "subclasses_x11:x11_keysym_to_windows_vk"); return '>';
-        case XK_question: PROFILE_END_VAR(timer, "subclasses_x11:x11_keysym_to_windows_vk"); return '?';
-        case XK_quotedbl: PROFILE_END_VAR(timer, "subclasses_x11:x11_keysym_to_windows_vk"); return '"';
-        case XK_braceleft: PROFILE_END_VAR(timer, "subclasses_x11:x11_keysym_to_windows_vk"); return '{';
-        case XK_braceright: PROFILE_END_VAR(timer, "subclasses_x11:x11_keysym_to_windows_vk"); return '}';
-        case XK_asciitilde: PROFILE_END_VAR(timer, "subclasses_x11:x11_keysym_to_windows_vk"); return '~';
-        case XK_underscore: PROFILE_END_VAR(timer, "subclasses_x11:x11_keysym_to_windows_vk"); return '_';
-        case XK_plus: PROFILE_END_VAR(timer, "subclasses_x11:x11_keysym_to_windows_vk"); return '+';
-        case XK_exclam: PROFILE_END_VAR(timer, "subclasses_x11:x11_keysym_to_windows_vk"); return '!';
-        case XK_at: PROFILE_END_VAR(timer, "subclasses_x11:x11_keysym_to_windows_vk"); return '@';
-        case XK_numbersign: PROFILE_END_VAR(timer, "subclasses_x11:x11_keysym_to_windows_vk"); return '#';
-        case XK_dollar: PROFILE_END_VAR(timer, "subclasses_x11:x11_keysym_to_windows_vk"); return '$';
-        case XK_percent: PROFILE_END_VAR(timer, "subclasses_x11:x11_keysym_to_windows_vk"); return '%';
-        case XK_asciicircum: PROFILE_END_VAR(timer, "subclasses_x11:x11_keysym_to_windows_vk"); return '^';
-        case XK_ampersand: PROFILE_END_VAR(timer, "subclasses_x11:x11_keysym_to_windows_vk"); return '&';
-        case XK_asterisk: PROFILE_END_VAR(timer, "subclasses_x11:x11_keysym_to_windows_vk"); return '*';
-        case XK_parenleft: PROFILE_END_VAR(timer, "subclasses_x11:x11_keysym_to_windows_vk"); return '(';
-        case XK_parenright: PROFILE_END_VAR(timer, "subclasses_x11:x11_keysym_to_windows_vk"); return ')';
-        case XK_bar: PROFILE_END_VAR(timer, "subclasses_x11:x11_keysym_to_windows_vk"); return '|';
+        case XK_slash: 
+        case XK_question: PROFILE_END_VAR(timer, "subclasses_x11:x11_keysym_to_windows_vk"); return VK_OEM_2;
+        case XK_apostrophe: 
+        case XK_quotedbl: PROFILE_END_VAR(timer, "subclasses_x11:x11_keysym_to_windows_vk"); return VK_OEM_7;
+        case XK_bracketleft: 
+        case XK_braceleft: PROFILE_END_VAR(timer, "subclasses_x11:x11_keysym_to_windows_vk"); return VK_OEM_4;
+        case XK_bracketright: 
+        case XK_braceright: PROFILE_END_VAR(timer, "subclasses_x11:x11_keysym_to_windows_vk"); return VK_OEM_6;
+        case XK_grave: 
+        case XK_asciitilde: PROFILE_END_VAR(timer, "subclasses_x11:x11_keysym_to_windows_vk"); return VK_OEM_3;
+        case XK_minus: 
+        case XK_underscore: PROFILE_END_VAR(timer, "subclasses_x11:x11_keysym_to_windows_vk"); return VK_OEM_MINUS;
+        case XK_equal: 
+        case XK_plus: PROFILE_END_VAR(timer, "subclasses_x11:x11_keysym_to_windows_vk"); return VK_OEM_PLUS;
+        case XK_backslash:
+        case XK_bar: PROFILE_END_VAR(timer, "subclasses_x11:x11_keysym_to_windows_vk"); return VK_OEM_5;
+        case XK_exclam: PROFILE_END_VAR(timer, "subclasses_x11:x11_keysym_to_windows_vk"); return '1';
+        case XK_at: PROFILE_END_VAR(timer, "subclasses_x11:x11_keysym_to_windows_vk"); return '2';
+        case XK_numbersign: PROFILE_END_VAR(timer, "subclasses_x11:x11_keysym_to_windows_vk"); return '3';
+        case XK_dollar: PROFILE_END_VAR(timer, "subclasses_x11:x11_keysym_to_windows_vk"); return '4';
+        case XK_percent: PROFILE_END_VAR(timer, "subclasses_x11:x11_keysym_to_windows_vk"); return '5';
+        case XK_asciicircum: PROFILE_END_VAR(timer, "subclasses_x11:x11_keysym_to_windows_vk"); return '6';
+        case XK_ampersand: PROFILE_END_VAR(timer, "subclasses_x11:x11_keysym_to_windows_vk"); return '7';
+        case XK_asterisk: PROFILE_END_VAR(timer, "subclasses_x11:x11_keysym_to_windows_vk"); return '8';
+        case XK_parenleft: PROFILE_END_VAR(timer, "subclasses_x11:x11_keysym_to_windows_vk"); return '9';
+        case XK_parenright: PROFILE_END_VAR(timer, "subclasses_x11:x11_keysym_to_windows_vk"); return '0';
         default: PROFILE_END_VAR(timer, "subclasses_x11:x11_keysym_to_windows_vk"); return 0;
     }
     PROFILE_END_VAR(timer, "subclasses_x11:x11_keysym_to_windows_vk");
