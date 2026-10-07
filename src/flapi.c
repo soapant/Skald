@@ -18,6 +18,7 @@
 #include "core/clipboard_history.h"
 #include "core/flapi.h"
 #include "core/cap_registry.h"
+#include "helpers/helpers_owner.h"
 #include "platform/flapi_platform.h"
 #include "platform/wm_platform.h"
 #include "platform/draw.h"
@@ -112,30 +113,11 @@ static unsigned g_cap_generation = 1;
 
 unsigned fl_cap_generation(void) { return g_cap_generation; }
 
-static void fl_cap_owner_basename(const char *p, char *out, size_t n) {
-    if (!p || !p[0]) { if (n) out[0] = '\0'; return; }
-    const char *s = p;
-    for (const char *q = p; *q; q++) if (*q == '/' || *q == '\\') s = q + 1;
-    snprintf(out, n, "%s", s);
-}
-
-static bool fl_cap_owner_matches(const char *owner, const char *a, const char *b) {
-    if (!owner || !owner[0]) return false;
-    if (a && a[0] && strcmp(owner, a) == 0) return true;
-    if (b && b[0] && strcmp(owner, b) == 0) return true;
-    char ob[512], ab[512], bb[512];
-    fl_cap_owner_basename(owner, ob, sizeof(ob));
-    if (a && a[0]) { fl_cap_owner_basename(a, ab, sizeof(ab)); if (strcmp(ob, ab) == 0) return true; }
-    if (b && b[0]) { fl_cap_owner_basename(b, bb, sizeof(bb)); if (strcmp(ob, bb) == 0) return true; }
-    return false;
-}
-
 void fl_cap_register_abi(const char *key, unsigned abi, void *fn) {
     if (!key || !key[0] || !fn) return;
 
-    char owner[512];
-    owner[0] = '\0';
-    Platform_GetModuleOwnerPath(fn, owner, sizeof(owner));
+    char owner[OWNER_PATH_MAX];
+    Owner_ResolveForFunc(fn, owner, sizeof(owner));
 
     for (int i = 0; i < g_cap_count; i++) {
         if (strcmp(g_caps[i].key, key) != 0) continue;
@@ -180,7 +162,7 @@ void fl_cap_purge_owner(const char *path_a, const char *path_b) {
 
     int n = 0;
     for (int i = 0; i < g_cap_count; i++) {
-        if (fl_cap_owner_matches(g_caps[i].owner, path_a, path_b)) {
+        if (Owner_ModuleMatches(g_caps[i].owner, path_a, path_b)) {
             log_info("fl_cap '%s' purged (owner unloaded)", g_caps[i].key);
             continue;
         }
@@ -197,8 +179,8 @@ void fl_cap_purge_owner(const char *path_a, const char *path_b) {
 void fl_cap_dump(void) {
     log_info("fl_cap table: %d entries", g_cap_count);
     for (int i = 0; i < g_cap_count; i++) {
-        char ob[512];
-        fl_cap_owner_basename(g_caps[i].owner, ob, sizeof(ob));
+        char ob[OWNER_PATH_MAX];
+        Owner_ModuleBasename(g_caps[i].owner, ob, sizeof(ob));
         log_info("  '%s' abi=%u fn=%p owner=%s", g_caps[i].key, g_caps[i].abi, g_caps[i].fn, ob);
     }
 }

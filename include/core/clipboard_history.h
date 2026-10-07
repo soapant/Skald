@@ -1,5 +1,6 @@
 #ifndef CLIPBOARD_HISTORY_H
 #define CLIPBOARD_HISTORY_H
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 

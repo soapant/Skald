@@ -131,13 +131,14 @@ void ParseTodoInput(const char* input, TodoAliasEntry* alias_out, TodoConfigEntr
         if (is_flag) {
             if (flag_has_val) token = strtok(NULL, " ");
         } else if (token[0] != '-') {
-            if (first) {
-                strcpy(clean, token);
-                first = false;
-            } else {
-                strcat(clean, " ");
-                strcat(clean, token);
-            }
+            size_t used = strlen(clean);
+            size_t avail = sizeof(clean) - 1 - used;
+            if (!first && avail > 0) { clean[used++] = ' '; avail--; }
+            size_t tlen = strlen(token);
+            if (tlen > avail) tlen = avail;
+            memcpy(clean + used, token, tlen);
+            clean[used + tlen] = '\0';
+            first = false;
         }
         
         token = strtok(NULL, " ");
