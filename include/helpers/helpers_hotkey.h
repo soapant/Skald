@@ -16,12 +16,14 @@ typedef struct {
     HotkeyCallback hotkey_callback;
     HotkeyCondition hotkey_condition;
     bool is_feature_toggle;
+    char owner[512];
 } HotkeyBinding;
 
 bool AlwaysEnabled(void);
 bool AlwaysDisabled(void);
 HotkeyBinding convert_into_hotkey_binding(char* hotkey_string,void (*on_hotkey_trigger)(void),bool (*optional_condition_for_hotkey)(void),const char** optional_blacklistedwindows,bool whitelist);
 void hotkey_mark_feature_toggles(HotkeyCallback cb);
+void hotkey_purge_owner(const char* path_a, const char* path_b);
 
 
 #endif

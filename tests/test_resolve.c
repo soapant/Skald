@@ -36,7 +36,7 @@ TEST(stem_match_null_feature) {
     TEST_MKDIR(dir);
     FlintContext_Get()->window.current_feature = NULL;
     char out[512] = {0};
-    bool ok = Platform_ResolveDataPath("chteststem.txt", out, sizeof(out));
+    bool ok = Platform_ResolveDataPath(__builtin_return_address(0),"chteststem.txt", out, sizeof(out));
     ASSERT_TRUE(ok);
     ASSERT_TRUE(strstr(out, "chteststem" TEST_SEP "chteststem.txt") != NULL);
     TEST_RMDIR(dir);
@@ -48,7 +48,7 @@ TEST(stem_match_stale_feature) {
     TEST_MKDIR(dir);
     FlintContext_Get()->window.current_feature = (char*)"Todo";
     char out[512] = {0};
-    bool ok = Platform_ResolveDataPath("chteststem.txt", out, sizeof(out));
+    bool ok = Platform_ResolveDataPath(__builtin_return_address(0),"chteststem.txt", out, sizeof(out));
     ASSERT_TRUE(ok);
     ASSERT_TRUE(strstr(out, "chteststem" TEST_SEP "chteststem.txt") != NULL);
     TEST_RMDIR(dir);
@@ -60,7 +60,7 @@ TEST(existing_behavior_preserved) {
     TEST_MKDIR(dir);
     FlintContext_Get()->window.current_feature = (char*)"Todo";
     char out[512] = {0};
-    bool ok = Platform_ResolveDataPath("todo.txt", out, sizeof(out));
+    bool ok = Platform_ResolveDataPath(__builtin_return_address(0),"todo.txt", out, sizeof(out));
     ASSERT_TRUE(ok);
     ASSERT_TRUE(strstr(out, "todo" TEST_SEP "todo.txt") != NULL);
     TEST_RMDIR(dir);
@@ -69,7 +69,7 @@ TEST(existing_behavior_preserved) {
 TEST(unknown_still_fails) {
     FlintContext_Get()->window.current_feature = NULL;
     char out[512] = {0};
-    bool ok = Platform_ResolveDataPath("nosuchfeaturexyz.txt", out, sizeof(out));
+    bool ok = Platform_ResolveDataPath(__builtin_return_address(0),"nosuchfeaturexyz.txt", out, sizeof(out));
     ASSERT_FALSE(ok);
 }
 
@@ -79,7 +79,7 @@ TEST(foreground_first_save) {
     TEST_MKDIR(dir);
     FlintContext_Get()->window.current_feature = (char*)"Clipboard History";
     char out[512] = {0};
-    bool ok = Platform_ResolveDataPath("zzfirstsave.txt", out, sizeof(out));
+    bool ok = Platform_ResolveDataPath(__builtin_return_address(0),"zzfirstsave.txt", out, sizeof(out));
     ASSERT_TRUE(ok);
     ASSERT_TRUE(strstr(out, "clipboard_history" TEST_SEP "zzfirstsave.txt") != NULL);
     TEST_RMDIR(dir);
