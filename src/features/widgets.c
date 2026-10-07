@@ -218,7 +218,7 @@ static void widgets_internet_render(FlWidgetState *state) {
             fl_draw_text(.text = "🚫",.x = x, .y = y,.fontsize=fontsize,.align="LEFT");
             break;
         case FL_NET_ETHERNET:
-            fl_draw_text(.text = "모",.x = x, .y = y,.fontsize=fontsize,.align="LEFT");
+            fl_draw_text(.text = "🔌",.x = x, .y = y - 2,.fontsize=fontsize,.align="LEFT");
             break;
         case FL_NET_WIFI:
             fl_draw_text(.text = "",.x = x, .y = y,.fontsize=fontsize,.align="LEFT");
@@ -240,10 +240,10 @@ static void widgets_volume_render(FlWidgetState *state) {
     char pct[8];
     snprintf(pct, sizeof(pct), "%d%%", volume);
 
-    int fontsize = FONTSIZE + 1;
+    int fontsize = FONTSIZE;
     int y = 7;
-    fl_draw_text(.text = emoji, .x = 10, .y = y, .fontsize = fontsize, .align = "LEFT");
-    fl_draw_text(.text = pct, .x = 36, .y = y, .fontsize = fontsize, .align = "LEFT");
+    fl_draw_text(.text = emoji, .x = 10, .y = y - 1, .fontsize = fontsize + 3, .align = "LEFT");
+    fl_draw_text(.text = pct, .x = 36, .y = y + 3, .fontsize = fontsize, .align = "LEFT");
 }
 
 static FlWidget* g_disk = NULL;
