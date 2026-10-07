@@ -205,9 +205,10 @@ static int MsgWrapText(Display *dpy, XftFont *xf, const char *text, int maxW, Ms
     return count;
 }
 
-static void x11_display_message_draw(Display *dpy, Window win, const char *message, unsigned long color, int w, int h, bool no_bg) {
+static void x11_display_message_draw(Display *dpy, Window win, const char *message, unsigned long color, int w, int h, bool no_bg,void (*render)(void)) {
     XWindowAttributes attrs;
     if (!XGetWindowAttributes(dpy, win, &attrs)) return;
+
     if (!no_bg) {
         Pixmap bg = x11_get_cached_background(dpy, win, w, h);
         if (bg) {
@@ -223,10 +224,16 @@ static void x11_display_message_draw(Display *dpy, Window win, const char *messa
 
     XftDraw *xd = XftDrawCreate(dpy, win, attrs.visual, attrs.colormap);
     if (!xd) return;
-    
+
+    Platform_SetDrawContext(dpy, xd, attrs.visual, attrs.colormap);
+
+    if (render != NULL) {
+        render(); 
+    }
+
     FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
     XftFont *xf = FH_TO_XFT(font);
-    if (xf && message) {
+    if (xf && message && message[0] != '\0') {
         XftColor col;
         x11_xft_alloc_color(dpy, attrs.visual, attrs.colormap, rgb_to_hex(color), 0xFFFF, &col);
         MsgLine lines[MSG_MAX_LINES];
@@ -245,21 +252,23 @@ static void x11_display_message_draw(Display *dpy, Window win, const char *messa
         }
         XftColorFree(dpy, attrs.visual, attrs.colormap, &col);
     }
-    XftDrawDestroy(xd);
     Platform_DestroyFont(font);
+
+    Platform_SetDrawContext(NULL, NULL, NULL, 0);
+    XftDrawDestroy(xd);
     XFlush(dpy);
 }
 
-static void MsgPresent(Display *dpy, const char *message, int x, int y, int winW, int winH,bool no_bg,double timeout, ColorRef color) {
+static void MsgPresent(Display *dpy, const char *message, int x, int y, int winW, int winH,bool no_bg,double timeout, ColorRef color,void (*render)(void)) {
     int ax,ay,aw,ah;
     WindowManager_GetMainMonitorGeometry(&ax,&ay,&aw,&ah);
     Platform_SetTransparentWindow(no_bg);
-    Window win = x11_create_display_message_window(dpy, x + ax, y + ay, winW, winH, false);
+    Window win = x11_create_display_message_window(dpy, x + ax, y + ay, winW, winH, false,render);
     Platform_SetTransparentWindow(false);
     if (!win) return;
     XMapWindow(dpy, win);
     XFlush(dpy);
-    x11_display_message_draw(dpy, win, message, (unsigned long)color, winW, winH,no_bg);
+    x11_display_message_draw(dpy, win, message, (unsigned long)color, winW, winH,no_bg,render);
     bool indefinite = !(timeout != 6969.0 && timeout > 0.0);
     pthread_mutex_lock(&g_msg_lock);
     if (g_msg_slot_count >= MSG_MAX_ACTIVE) MsgRemoveSlotLocked(dpy, 0);
@@ -424,17 +433,17 @@ static void MsgHoverPresent(Display *dpy, const char *key, const char *message,
             g_msg_slots[idx].h = winH;
         }
         pthread_mutex_unlock(&g_msg_lock);
-        x11_display_message_draw(dpy, w, message, (unsigned long)color, winW, winH,no_bg);
+        x11_display_message_draw(dpy, w, message, (unsigned long)color, winW, winH,no_bg,NULL);
         return;
     }
     pthread_mutex_unlock(&g_msg_lock);
 
     Window win = x11_create_display_message_window(dpy, centerX - winW / 2, centerY - winH / 2,
-                                                    winW, winH, false);
+                                                    winW, winH, false,NULL);
     if (win == None) return;
     XMapRaised(dpy, win);
     XFlush(dpy);
-    x11_display_message_draw(dpy, win, message, (unsigned long)color, winW, winH,no_bg);
+    x11_display_message_draw(dpy, win, message, (unsigned long)color, winW, winH,no_bg,NULL);
 
     pthread_mutex_lock(&g_msg_lock);
     if (g_msg_slot_count >= MSG_MAX_ACTIVE) MsgRemoveSlotLocked(dpy, 0);
@@ -460,7 +469,7 @@ void Platform_HoverMessageRelease(const char *key) {
     XFlush(dpy);
 }
 
-void Platform_DisplayMessage(const char* message, int centerX, int centerY,bool no_bg,int w, int h, int maxWidth, int maxHeight, double timeout, ColorRef color) {
+void Platform_DisplayMessage(const char* message, int centerX, int centerY, bool no_bg, int w, int h, int maxWidth, int maxHeight, double timeout, ColorRef color, void (*render)(void)) {
     Display *dpy = get_display();
     if (!dpy) return;
 
@@ -500,7 +509,7 @@ void Platform_DisplayMessage(const char* message, int centerX, int centerY,bool 
 
     int x = abs(centerX - winW / 2);
     int y = abs(centerY - winH / 2);
-    MsgPresent(dpy, message, x, y, winW, winH,no_bg,timeout, color);
+    MsgPresent(dpy, message, x, y, winW, winH,no_bg,timeout, color,render);
 }
 
 static void MsgMeasure(Display *dpy, const char *message, int maxWidth, int maxHeight,
