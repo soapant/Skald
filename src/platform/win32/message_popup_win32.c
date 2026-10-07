@@ -1,4 +1,6 @@
 #include <windows.h>
+#include <stdlib.h>
+#include <string.h>
 #include "deps/log.h"
 #include "core/context.h"
 #include "core/window_manager.h"
@@ -218,26 +220,24 @@ static void HoverWidgetFrame(void* ud) {
   if (s->render) s->render(s->ud);
 }
 
-void Platform_HoverWidgetHide(const char* key) {
-  if (!key || !key[0]) return;
-  int idx = HoverWidgetFindLocked(key);
-  if (idx < 0) return;
-  PlatformWidget* w = g_hover_widgets[idx].w;
-  void (*release)(void*) = g_hover_widgets[idx].release;
-  void* release_ud = g_hover_widgets[idx].release_ud;
-  memset(&g_hover_widgets[idx], 0, sizeof(g_hover_widgets[idx]));
-  if (w) {
-    Platform_Widget_SetFrameCallback(w, NULL, NULL);
-    Platform_Widget_Destroy(w);
-  }
-  if (release) release(release_ud);
-  if (!Platform_RenderThread_IsCurrentThread()) Platform_RenderThread_Sync();
-}
+typedef struct {
+  char key[64];
+  void (*render)(void* ud);
+  void* ud;
+  int x, y, w, h, fps;
+  bool no_bg;
+  unsigned long bg_hex;
+  void (*release)(void* ud);
+  void* release_ud;
+  int op;
+} HoverWidgetRequest;
 
-void Platform_HoverWidgetShow(const char* key, void (*render)(void* ud), void* ud, int x, int y,
-                              int w, int h, int fps, bool no_bg, unsigned long bg_hex,
-                              void (*release)(void* ud), void* release_ud) {
-  if (!key || !key[0] || w <= 0 || h <= 0) return;
+#define HOVER_OP_SHOW 1
+#define HOVER_OP_HIDE 2
+
+static void hover_widget_apply(const char* key, void (*render)(void* ud), void* ud,
+                               int x, int y, int w, int h, int fps, bool no_bg,
+                               unsigned long bg_hex, void (*release)(void* ud), void* release_ud) {
   int idx = HoverWidgetFindLocked(key);
   if (idx >= 0) {
     HoverWidgetSlot* s = &g_hover_widgets[idx];
@@ -290,6 +290,74 @@ void Platform_HoverWidgetShow(const char* key, void (*render)(void* ud), void* u
   Platform_Widget_SetBgColor(pw, no_bg ? 0 : bg_hex);
   Platform_Widget_SetNoBg(pw, no_bg);
   Platform_Widget_SetFrameCallback(pw, HoverWidgetFrame, s);
+}
+
+static void hover_widget_hide_apply(const char* key) {
+  int idx = HoverWidgetFindLocked(key);
+  if (idx < 0) return;
+  PlatformWidget* w = g_hover_widgets[idx].w;
+  void (*release)(void*) = g_hover_widgets[idx].release;
+  void* release_ud = g_hover_widgets[idx].release_ud;
+  memset(&g_hover_widgets[idx], 0, sizeof(g_hover_widgets[idx]));
+  if (w) {
+    Platform_Widget_SetFrameCallback(w, NULL, NULL);
+    Platform_Widget_Destroy(w);
+  }
+  if (release) release(release_ud);
+}
+
+static void hover_widget_dispatch(void* ud) {
+  HoverWidgetRequest* r = (HoverWidgetRequest*)ud;
+  if (!r) return;
+  if (r->op == HOVER_OP_HIDE) {
+    hover_widget_hide_apply(r->key);
+  } else {
+    hover_widget_apply(r->key, r->render, r->ud, r->x, r->y, r->w, r->h, r->fps,
+                       r->no_bg, r->bg_hex, r->release, r->release_ud);
+  }
+  free(r);
+}
+
+static bool hover_widget_post(int op, const char* key, void (*render)(void* ud), void* ud,
+                              int x, int y, int w, int h, int fps, bool no_bg,
+                              unsigned long bg_hex, void (*release)(void* ud), void* release_ud) {
+  if (Platform_RenderThread_IsCurrentThread()) {
+    if (op == HOVER_OP_HIDE) hover_widget_hide_apply(key);
+    else hover_widget_apply(key, render, ud, x, y, w, h, fps, no_bg, bg_hex, release, release_ud);
+    return true;
+  }
+  if (!Platform_RenderThread_IsRunning()) return false;
+  HoverWidgetRequest* r = (HoverWidgetRequest*)calloc(1, sizeof(*r));
+  if (!r) return false;
+  snprintf(r->key, sizeof(r->key), "%s", key);
+  r->op = op;
+  r->render = render;
+  r->ud = ud;
+  r->x = x; r->y = y; r->w = w; r->h = h; r->fps = fps;
+  r->no_bg = no_bg;
+  r->bg_hex = bg_hex;
+  r->release = release;
+  r->release_ud = release_ud;
+  if (Platform_RenderThread_Post(hover_widget_dispatch, r)) return true;
+  free(r);
+  return false;
+}
+
+void Platform_HoverWidgetHide(const char* key) {
+  if (!key || !key[0]) return;
+  if (HoverWidgetFindLocked(key) < 0) return;
+  if (!hover_widget_post(HOVER_OP_HIDE, key, NULL, NULL, 0, 0, 0, 0, 0, false, 0, NULL, NULL)) {
+    hover_widget_hide_apply(key);
+  }
+}
+
+void Platform_HoverWidgetShow(const char* key, void (*render)(void* ud), void* ud, int x, int y,
+                              int w, int h, int fps, bool no_bg, unsigned long bg_hex,
+                              void (*release)(void* ud), void* release_ud) {
+  if (!key || !key[0] || w <= 0 || h <= 0) return;
+  if (!hover_widget_post(HOVER_OP_SHOW, key, render, ud, x, y, w, h, fps, no_bg, bg_hex, release, release_ud)) {
+    if (release) release(release_ud);
+  }
 }
 
 void Platform_HoverMessageRelease(const char* key) {
