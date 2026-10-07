@@ -177,7 +177,7 @@ bool Platform_MessagePopupOnKey(Popup* self, const PopupKeyEvent* key) {
   return false;
 }
 
-void Platform_DisplayMessage(const char* message, int centerX, int centerY,bool no_bg,int w,int h,int maxWidth, int maxHeight, double timeout, ColorRef color) {
+void Platform_DisplayMessage(const char* message, int centerX, int centerY, bool no_bg, int w, int h, int maxWidth, int maxHeight, double timeout, ColorRef color, void (*render)(void)) {
   if (WH_TO_HWND(FlintContext_Get()->window.hGlobalTrayWnd) != NULL && GetCurrentThreadId() != g_win32_main_thread_id) {
     DisplayMessageParams params = { message, centerX, centerY, maxWidth, maxHeight, timeout, color };
     SendMessageA(WH_TO_HWND(FlintContext_Get()->window.hGlobalTrayWnd), WM_DISPLAY_MESSAGE, 0, (LPARAM)&params);

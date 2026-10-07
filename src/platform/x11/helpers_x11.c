@@ -1504,10 +1504,12 @@ Window x11_create_display_message_window(Display* dpy, int x, int y, int w, int 
         bg = Platform_GetDrawBgColor();
         if (!bg) bg = rgb_to_hex(COLOR_BG);
     }
+    Platform_SetDrawContext(dpy, NULL, NULL, 0);
     long mask = ExposureMask | (clickable ? ButtonPressMask : 0L);
     Window win = x11_create_window_ex_or(dpy, x, y, w, h, bg, "flashtext", "flashtext", mask, true);
     if (win != None && !clickable) x11_apply_click_through(dpy, win);
     PROFILE_END_VAR(timer, "helpers_x11:x11_create_display_message_window");
+    Platform_SetDrawContext(NULL,NULL,NULL,0);
     return win;
 }
 

@@ -367,7 +367,7 @@ static void net_row(int y, const char *label, const char *value, unsigned long c
                  .fontsize = FONTSIZE, .color = RGB(235, 235, 245), .align = "RIGHT");
 }
 
-static void internet_hover_render(FlWidgetState *state) {
+static void internet_hover_render() {
     net_usage_load();
     net_usage_tick();
 

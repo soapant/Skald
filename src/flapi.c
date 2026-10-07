@@ -649,7 +649,7 @@ static void fl_hover_popup_frame(void *ud) {
     st.elapsed = fl_end_timer_platform(p->created_at);
     st.hovered = true;
     Platform_BeginMeasure();
-    p->render(&st);
+    p->render();
     int mw = 0, mh = 0;
     Platform_EndMeasure(&mw, &mh);
     if (mw > 0 && mh > 0) {
@@ -701,10 +701,10 @@ void fl_message_impl(const FlMessageSpec* spec) {
     MessageSlot slot = spec->slot;
     if (slot == AUTO) {
         slot = IsPopupActive(WH_NULL) ? TOP_CENTER_RELATIVE : BOTTOM_CENTER_RELATIVE;
-        Platform_DisplayMessage(spec->message, spec->x, spec->y,spec->no_bg,w,h,mw, mh, timeout, color,fl_hover_popup_frame ? spec->render : NULL);
+        Platform_DisplayMessage(spec->message, spec->x, spec->y,spec->no_bg,w,h,mw, mh, timeout, color,spec->render ? spec->render : NULL);
         return;
     } else if (slot == FREE || spec->x != 0 || spec->y != 0) {
-        Platform_DisplayMessage(spec->message, spec->x, spec->y,spec->no_bg,w,h,mw, mh, timeout, color,fl_hover_popup_frame ? spec->render : NULL);
+        Platform_DisplayMessage(spec->message, spec->x, spec->y,spec->no_bg,w,h,mw, mh, timeout, color,spec->render ? spec->render : NULL);
         return;
     }
     DisplayMessageSlot(spec->message, slot, mw, mh, spec->prompt_gap, timeout, color);
