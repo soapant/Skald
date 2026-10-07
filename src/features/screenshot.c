@@ -14,7 +14,6 @@ static const char* shot_working_dir(void) {
     return (wd && wd[0]) ? wd : ".";
 }
 
-/* scrot/grim live in build/bundle and link against bundled libs. */
 static void shot_env(char* buf, size_t n) {
     snprintf(buf, n, "LD_LIBRARY_PATH=%s/build/bundle:${LD_LIBRARY_PATH:-} ", shot_working_dir());
 }

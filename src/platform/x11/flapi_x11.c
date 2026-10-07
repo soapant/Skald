@@ -903,12 +903,6 @@ void fl_sleep_platform(double seconds) {
     nanosleep(&req, NULL);
 }
 
-static void ext_env_prefix(char* buf, size_t n) {
-    char* wd = Platform_GetWorkingDir();
-    snprintf(buf, n, "LD_LIBRARY_PATH=%s/build/bundle:${LD_LIBRARY_PATH:-} ", wd ? wd : ".");
-}
-
-
 struct MemoryStruct {
     char *memory;
     size_t size;
