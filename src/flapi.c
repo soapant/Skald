@@ -1618,10 +1618,6 @@ const FlHashMap* fl_hashmap_at(FlHashMap* map, size_t index) {
     return &map[index];
 }
 
-void fl_screenshot_copy_area(void) {
-    return fl_screenshot_copy_area_platform();
-}
-
 void fl_screenshot_copy(void) {
     return fl_screenshot_copy_platform();
 }
@@ -1644,10 +1640,11 @@ void fl_screenshot_open_area(char* save_path) {
     fl_launch_with_args(save_path,NULL);
 }
 
-void fl_ocr_area_to_clipboard(void) {
-    return fl_ocr_area_to_clipboard_platform();
-}
 
+bool fl_copy_image_from_path(const char* path) {
+    if (!path || !path[0]) return false;
+    return fl_clipboard_set_png_path_platform(path);
+}
 
 FlTimer fl_profile_start() {
     return fl_start_timer_platform();

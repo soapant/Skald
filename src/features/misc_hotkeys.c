@@ -93,8 +93,6 @@ void toggle_minimized(void) {
 }
 
 FLINT_FEATURE_INIT {
-    fl_register_hotkey("Ctrl+Shift+X", fl_screenshot_copy_area);
-    fl_register_hotkey("Alt+Shift+C", fl_ocr_area_to_clipboard);
     fl_register_hotkey("Alt+Shift+G", GoogleMeaning);
     fl_register_hotkey("Alt+Shift+F", next_image);
     fl_register_hotkey("E", next_image,WHITELIST,"feh");

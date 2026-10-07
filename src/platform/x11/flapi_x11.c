@@ -908,29 +908,6 @@ static void ext_env_prefix(char* buf, size_t n) {
     snprintf(buf, n, "LD_LIBRARY_PATH=%s/build/bundle:${LD_LIBRARY_PATH:-} ", wd ? wd : ".");
 }
 
-void fl_screenshot_copy_area_platform(void) {
-    if (Wm_ScreenshotCopyArea()) return;
-    char cmd[1024];
-    char env[512];
-    ext_env_prefix(env, sizeof(env));
-    char* wd = Platform_GetWorkingDir();
-    char path[MAX_PATH];
-
-    snprintf(path, sizeof(path), "%s/flint_clip.png", wd ? wd : ".");
-
-    if (getenv("WAYLAND_DISPLAY")) {
-    snprintf(cmd, sizeof(cmd),
-             "%s%s/external/grim -g \"$(%s/external/slurp)\" -t png %s",
-             env, wd, wd, path);
-    } else {
-      snprintf(cmd, sizeof(cmd),
-         "%s%s/external/scrot -s %s",
-         env, wd, path);
-    }
-
-    free(Platform_RunCommandAndGetOutput(cmd));
-    fl_clipboard_set_png_path_platform(path);
-}
 
 void fl_screenshot_copy_platform(void) {
     if (Wm_ScreenshotCopy()) return;
@@ -994,38 +971,6 @@ void fl_screenshot_save_platform(char* save_path) {
     free(Platform_RunCommandAndGetOutput(cmd));
 }
 
-void fl_ocr_area_to_clipboard_platform() {
-    char* out = Wm_OcrArea();
-    if (!out) {
-    char cmd[1024];
-    char env[512];
-    ext_env_prefix(env, sizeof(env));
-    char* wd = Platform_GetWorkingDir();
-
-    if (getenv("WAYLAND_DISPLAY")) {
-        snprintf(cmd, sizeof(cmd),
-                 "%s%s/external/grim -g \"$(%s/external/slurp)\" - | tesseract stdin stdout -l eng png",
-                 env, wd, wd);
-    } else {
-          char temp_path[MAX_PATH];
-          snprintf(temp_path, sizeof(temp_path), "/tmp/flint_ocr_%d", getpid());
-
-          snprintf(cmd, sizeof(cmd),
-                   "%s%s/external/scrot -s %s && tesseract %s stdout -l eng; rm -f %s",
-                   env, wd, temp_path, temp_path, temp_path);
-    }
-    out = Platform_RunCommandAndGetOutput(cmd);
-    }
-    if (!out || !out[0]) {
-        free(out);
-        return;
-    }
-    size_t n = strlen(out);
-    while (n > 0 && (out[n - 1] == '\n' || out[n - 1] == '\r')) out[--n] = '\0';
-    if (out[0]) { if (Platform_CopyToClipboard(out)) fl_clipboard_history_push_text_platform(out); }
-    free(out);
-
-}
 
 struct MemoryStruct {
     char *memory;
