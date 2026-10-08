@@ -765,26 +765,50 @@ static void net_guid_to_name(const GUID* g, char* out, size_t out_len) {
              g->Data4[4], g->Data4[5], g->Data4[6], g->Data4[7]);
 }
 
-static bool net_adapter_type(const GUID* id, ULONG* out_type) {
-    char want[64];
-    net_guid_to_name(id, want, sizeof(want));
+#define FL_NET_ADAPTER_MAX 32
 
+typedef struct {
+    char name[64];
+    ULONG if_type;
+} FlNetAdapterEntry;
+
+typedef struct {
+    int count;
+    FlNetAdapterEntry items[FL_NET_ADAPTER_MAX];
+} FlNetAdapterList;
+
+static void net_adapter_list_load(FlNetAdapterList* list) {
+    list->count = 0;
     ULONG size = 0;
     GetAdaptersAddresses(AF_UNSPEC, 0, NULL, NULL, &size);
-    if (size == 0) return false;
+    if (size == 0) return;
     IP_ADAPTER_ADDRESSES* addrs = (IP_ADAPTER_ADDRESSES*)malloc(size);
-    if (!addrs) return false;
-    bool found = false;
+    if (!addrs) return;
     if (GetAdaptersAddresses(AF_UNSPEC, 0, NULL, addrs, &size) == NO_ERROR) {
         for (IP_ADAPTER_ADDRESSES* a = addrs; a; a = a->Next) {
-            if (_stricmp(a->AdapterName, want) != 0) continue;
-            *out_type = a->IfType;
-            found = true;
-            break;
+            if (list->count >= FL_NET_ADAPTER_MAX) break;
+            FlNetAdapterEntry* e = &list->items[list->count];
+            size_t len = strlen(a->AdapterName);
+            if (len >= sizeof(e->name)) len = sizeof(e->name) - 1;
+            memcpy(e->name, a->AdapterName, len);
+            e->name[len] = '\0';
+            if (!e->name[0]) continue;
+            e->if_type = a->IfType;
+            list->count++;
         }
     }
     free(addrs);
-    return found;
+}
+
+static bool net_adapter_list_type(const FlNetAdapterList* list, const GUID* id, ULONG* out_type) {
+    char want[64];
+    net_guid_to_name(id, want, sizeof(want));
+    for (int i = 0; i < list->count; i++) {
+        if (_stricmp(list->items[i].name, want) != 0) continue;
+        *out_type = list->items[i].if_type;
+        return true;
+    }
+    return false;
 }
 
 static void net_refresh(void) {
@@ -800,6 +824,9 @@ static void net_refresh(void) {
     IEnumNetworkConnections* conns = NULL;
     if (FAILED(nlm->lpVtbl->GetNetworkConnections(nlm, &conns))) return;
 
+    FlNetAdapterList adapters;
+    net_adapter_list_load(&adapters);
+
     INetworkConnection* c = NULL;
     ULONG fetched = 0;
     bool done = false;
@@ -812,7 +839,7 @@ static void net_refresh(void) {
             (ct & (NLM_CONNECTIVITY_IPV4_INTERNET | NLM_CONNECTIVITY_IPV6_INTERNET)) &&
             SUCCEEDED(c->lpVtbl->GetAdapterId(c, &id))) {
             ULONG t = 0;
-            if (net_adapter_type(&id, &t)) {
+            if (net_adapter_list_type(&adapters, &id, &t)) {
                 if (t == IF_TYPE_IEEE80211) g_net_cached = FL_NET_WIFI;
                 else if (t == IF_TYPE_ETHERNET_CSMACD) g_net_cached = FL_NET_ETHERNET;
                 done = true;
