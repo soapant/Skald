@@ -131,7 +131,7 @@ void Platform_RenderThread_Sync(void) {
 }
 
 bool Platform_RenderThread_EnsureStarted(int fps) {
-    if (fps > 0) g_rt_fps = fps;
+    if (fps > g_rt_fps) g_rt_fps = fps;
     if (g_rt_thread) return true;
     if (!g_rt_lock_ready) {
         InitializeCriticalSection(&g_rt_lock);
