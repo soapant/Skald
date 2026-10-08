@@ -657,9 +657,11 @@ int fl_get_active_interface_platform(char out[], size_t max_len) {
         if (a->OperStatus != IfOperStatusUp) continue;
         if (a->FirstGatewayAddress == NULL) continue;
 
-        size_t len = wcslen(a->FriendlyName);
+        const char* id = a->AdapterName;
+        if (!id[0]) continue;
+        size_t len = strlen(id);
         if (len >= max_len) len = max_len - 1;
-        wcstombs(out, a->FriendlyName, len);
+        memcpy(out, id, len);
         out[len] = '\0';
         free(addrs);
         return 1;
@@ -694,7 +696,9 @@ unsigned long long fl_net_rx_bytes_platform() {
         if (iface && iface[0]) {
             char name[256];
             wcstombs(name, row->wszName, sizeof(name) - 1);
-            if (strcmp(name, iface) != 0) continue;
+            name[sizeof(name) - 1] = '\0';
+            const char* guid = strrchr(name, '{');
+            if (!guid || _stricmp(guid, iface) != 0) continue;
         }
         rx += row->dwInOctets;
     }
