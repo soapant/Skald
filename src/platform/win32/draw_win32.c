@@ -303,23 +303,14 @@ bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, F
         if (old) SelectObject(g_draw_hdc, old);
         return true;
     }
-    int lx, rx;
-    if (pad) {
-        lx = x;
-        rx = x + msz.cx;
-        if (pad) x += pad;
-    } else if (right) {
-        lx = x - msz.cx;
-        rx = x;
+    int box = (pad == 0) ? x : 0;
+    int x0;
+    if (centered) {
+        x0 = box > 0 ? (box - msz.cx) / 2 : pad + (PROMPT_WRAP_BOX_CENTER - msz.cx) / 2;
     } else {
-        lx = x - msz.cx / 2;
-        rx = x + msz.cx / 2;
+        x0 = box > 0 ? box - msz.cx : PROMPT_WRAP_BOX_RIGHT - msz.cx - pad;
     }
-    RECT rc = {lx, y_draw, rx, y_draw + msz.cy};
-    UINT fmt = DT_SINGLELINE;
-    if (centered) fmt |= DT_CENTER;
-    else fmt |= DT_RIGHT;
-    DrawTextW(g_draw_hdc, wide, wlen, &rc, fmt);
+    TextOutW(g_draw_hdc, x0, y_draw, wide, wlen);
     free(wide);
     if (old) SelectObject(g_draw_hdc, old);
     return true;
