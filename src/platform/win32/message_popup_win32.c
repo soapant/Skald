@@ -409,7 +409,7 @@ void Platform_HoverMessage(const char* key, const char* message, int centerX, in
   }
 }
 
-void Platform_DisplayMessageAnchored(const char* message, int rect_x, int rect_y, int rect_w, int rect_h, int h_slot, int v_slot, int gap, int outward, int maxWidth, int maxHeight, double timeout, ColorRef color) {
+void Platform_DisplayMessageAnchored(const char* message, int rect_x, int rect_y, int rect_w, int rect_h, int h_slot, int v_slot, int gap, int outward, int maxWidth, int maxHeight, double timeout, ColorRef color,bool no_bg) {
   if (!message || !message[0]) return;
   if (maxWidth <= 0) maxWidth = MSG_AUTO_WRAP_MAX_W;
   if (maxHeight <= 0) maxHeight = MSG_AUTO_WRAP_MAX_H;
@@ -434,7 +434,7 @@ void Platform_DisplayMessageAnchored(const char* message, int rect_x, int rect_y
   else centerY = rect_y + rect_h / 2;
 
   // temporary
-  // Platform_DisplayMessage(message, centerX, centerY, winWidth, winHeight, timeout, color);
+  // Platform_DisplayMessage(message, centerX, centerY,no_bg,winWidth, winHeight, timeout, color,NULL);
 }
 
 void Platform_CreateDisplayMessageWindow(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, double timeout, ColorRef color) {
