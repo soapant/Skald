@@ -226,26 +226,6 @@ static void widgets_internet_render(FlWidgetState *state) {
     }
 }
 
-static void widgets_volume_render(FlWidgetState *state) {
-    int volume = fl_get_current_volume();
-    if (volume < 0) volume = 0;
-    if (volume > 100) volume = 100;
-
-    const char *emoji;
-    if (volume == 0)       emoji = "🔇";
-    else if (volume < 34)  emoji = "🔈";
-    else if (volume < 67)  emoji = "🔉";
-    else                   emoji = "🔊";
-
-    char pct[8];
-    snprintf(pct, sizeof(pct), "%d%%", volume);
-
-    int fontsize = FONTSIZE;
-    int y = 7;
-    fl_draw_text(.text = emoji, .x = 10, .y = y - 1, .fontsize = fontsize + 3, .align = "LEFT");
-    fl_draw_text(.text = pct, .x = FONTSIZE + 20, .y = y + 3, .fontsize = fontsize, .align = "LEFT");
-}
-
 static FlWidget* g_disk = NULL;
 static FlWidget* g_mem = NULL;
 static FlWidget* g_cpu = NULL;
@@ -454,13 +434,6 @@ FLINT_FEATURE_INIT {
               .on_hover = on_internet_hover,
               .slot = FL_WIDGET_SLOT_BOTTOM_RIGHT,
               .render = widgets_internet_render);
-
-    fl_widget(.name = "volume",
-              .color = COLOR,
-              .fps = FPS,
-              .no_bg = NO_BG,
-              .slot = FL_WIDGET_SLOT_BOTTOM_RIGHT,
-              .render = widgets_volume_render);
 
     fl_register_hotkey("Alt+Shift+S", FlipWidgets);
 }

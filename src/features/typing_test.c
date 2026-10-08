@@ -1,4 +1,5 @@
 #include "core/flapi.h"
+#include "config.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -24,7 +25,9 @@ static char typing_test_wpm[100] = {0};
 static char* text = "";
 
 
-char* typing_test_get_random_text(void) {
+static int typing_test_word_count = 30;
+
+char* typing_test_get_random_text(int word_count) {
     static const char* words[] = {
         "the", "be", "of", "and", "a", "to", "in", "he", "have", "it",
         "that", "for", "they", "I", "with", "as", "not", "on", "she", "at",
@@ -50,7 +53,8 @@ char* typing_test_get_random_text(void) {
         "car", "bike", "boat", "plane", "train", "bus",
     };
     const int num_words = sizeof(words) / sizeof(words[0]);
-    const int target_count = 30;
+    int target_count = word_count > 0 ? word_count : 30;
+    if (target_count > num_words) target_count = num_words;
 
     int indices[target_count];
     size_t total_len = 1;
@@ -87,25 +91,54 @@ void typing_test_reset(void) {
     total_correct = 0;
     draw_cursor = true;
     typing_test_wpm[0] = '\0';
-    text = typing_test_get_random_text();
+    text = typing_test_get_random_text(typing_test_word_count);
 }
 
 
 bool typing_test_enter(const char* selection, ListBoxInfo* lb) {
     typing_test_reset();
-    text = typing_test_get_random_text();
+    text = typing_test_get_random_text(typing_test_word_count);
     return false;
 }
 
 
+static int typing_test_measure_lines(FlCharPos* pos, int count, const char* txt,
+                                     int y, int max_width, int line_height, int fs) {
+    fl_measure_text_wrapped(.x=0, .y=y, .max_width=max_width,
+                            .line_height=line_height, .fontsize=fs,
+                            .text=txt, .out_positions=pos);
+    int lines = 0;
+    int last_y = -1000000;
+    for (int i = 0; i < count; i++) {
+        if (pos[i].y != last_y) { lines++; last_y = pos[i].y; }
+    }
+    return lines;
+}
+
 void typing_test_render(PromptState *state) {
-    int cy = state->height / 2 - 130;
-    int text_len = strlen(text);
-    int fontsize = 30;
-    int line_height = fontsize + 20;
+    int base = FontSize;
+    if (base < 8) base = 8;
+    int W = state->width > 0 ? state->width : 900;
+    int H = state->height > 0 ? state->height : 640;
+
+    int body = base * 3 / 2;
+    if (body > H / 3) body = H / 3;
+    if (body < 12) body = 12;
+    int line_height = body + base / 2;
+    int margin = base * 2;
+
+    int title_y = base;
+    int text_y = H / 2 - (base * 4);
+    int hints_y = H - base * 3;
+    int status_y = hints_y - base * 2;
+    int limit_y = status_y - base;
+    if (limit_y <= text_y) limit_y = text_y + body;
+    int avail = limit_y - text_y;
+
+    int text_len = text ? (int)strlen(text) : 0;
     int c = fl_get_char_pressed();
     int key = fl_get_key_pressed();
-    if (typing_test_position < text_len) {
+    if (text && typing_test_position < text_len) {
         int current_text = text[typing_test_position];
 
         if (key == FL_KEY_BACKSPACE) {
@@ -138,24 +171,59 @@ void typing_test_render(PromptState *state) {
         }
     }
 
-    FlCharPos positions[1000];
-    fl_measure_text_wrapped(.x=0, .y=cy, .max_width=state->width, .line_height=line_height, .fontsize=fontsize + 20, .text=text, .out_positions=positions);
-
-    for (int i = 0; i < text_len; i++) {
-        unsigned long col;
-        if (typing_test_states[i] == CHAR_CORRECT) {
-            col = RGB(0, 255, 0);
-        } else if (typing_test_states[i] == CHAR_WRONG) {
-            col = RGB(255, 0, 0);
-        } else {
-            col = NULL;
+    {
+        int lh = body + base / 2;
+        if (lh < 1) lh = 1;
+        int per_line = (W - margin * 2) / (body / 2 + 1);
+        if (per_line < 1) per_line = 1;
+        int max_lines = avail / lh;
+        if (max_lines < 1) max_lines = 1;
+        int words = (max_lines * per_line) / 6;
+        if (words > 30) words = 30;
+        if (words < 6) words = 6;
+        if (words != typing_test_word_count) {
+            typing_test_word_count = words;
+            free(text);
+            text = typing_test_get_random_text(words);
+            text_len = text ? (int)strlen(text) : 0;
+            typing_test_position = 0;
+            draw_cursor = true;
+            memset(typing_test_states, 0, sizeof(typing_test_states));
         }
-        char single[2] = { text[i], '\0' };
-        fl_draw_text(.x = positions[i].x, .y = positions[i].y, .fontsize = fontsize + 20,
-                      .align = "Left", .text = single, .color = col);
     }
 
-    if (typing_test_position == text_len) {
+    FlCharPos* positions = NULL;
+    if (text_len > 0) {
+        positions = (FlCharPos*)malloc(sizeof(FlCharPos) * (size_t)(text_len + 1));
+    }
+
+    if (positions) {
+        memset(positions, 0, sizeof(FlCharPos) * (size_t)(text_len + 1));
+        typing_test_measure_lines(positions, text_len, text, text_y,
+                                 W - margin * 2, line_height, body);
+
+        for (int i = 0; i < text_len; i++) {
+            unsigned long col;
+            if (typing_test_states[i] == CHAR_CORRECT) {
+                col = RGB(0, 255, 0);
+            } else if (typing_test_states[i] == CHAR_WRONG) {
+                col = RGB(255, 0, 0);
+            } else {
+                col = NULL;
+            }
+            char single[2] = { text[i], '\0' };
+            fl_draw_text(.x = positions[i].x + margin, .y = positions[i].y, .fontsize = body,
+                          .align = "Left", .text = single, .color = col);
+        }
+
+        if (draw_cursor && typing_test_position < text_len) {
+            fl_draw_rect(.x = positions[typing_test_position].x + margin,
+                         .y = positions[typing_test_position].y + base / 4,
+                         .w = 1, .h = body);
+        }
+    }
+
+    if (typing_test_position == text_len && text_len > 0) {
         draw_cursor = false;
         if (timer_running) {
             timer_running = false;
@@ -166,22 +234,24 @@ void typing_test_render(PromptState *state) {
             double elapsed_ms = fl_end_timer(session_timer);
             double elapsed = elapsed_ms / 1000.0;
             double minutes = elapsed / 60.0;
-            double accuracy = total_correct / total_typed;
-            double gross_wpm = (total_typed / 5.0) / minutes;
+            double accuracy = total_typed > 0 ? total_correct / total_typed : 0.0;
+            double gross_wpm = (total_typed / 5.0) / (minutes > 0.0001 ? minutes : 0.0001);
             double wpm = gross_wpm * accuracy;
 
             snprintf(typing_test_wpm,sizeof(typing_test_wpm),"WPM: %.2f",wpm);
         }
-        fl_draw_text(.y=600,.x=140,.text=typing_test_wpm,.fontsize=fontsize + 10,.align="Center");
+        if (typing_test_wpm[0]) {
+            fl_draw_text(.x=W,.y=status_y,.text=typing_test_wpm,.fontsize=base,.align="Center");
+        }
     }
-    fl_draw_text(.x = 550,.y=700,.text="Press Enter to restart",.fontsize=fontsize,.color=RGB(180,180,180),.align="Center");
-    fl_draw_text(.x = -230,.y=700,.text="Press Escape to exit",.fontsize=fontsize,.color=RGB(180,180,180),.align="Center");
-    fl_draw_text(.y=0,.x=150,.text="Typing Speed Test",.fontsize=fontsize,.color=RGB(210,210,210),.align="Center");
-    if (draw_cursor) {
-      fl_draw_rect(.x = positions[typing_test_position].x,
-                   .y = positions[typing_test_position].y + fontsize/3,
-                   .w = 1, .h = fontsize + 20);
-    }
+    fl_draw_text(.x = margin,.y=hints_y,.text="Press Enter to restart",
+                 .fontsize=base,.color=RGB(180,180,180),.align="Left");
+    fl_draw_text(.x = W - margin,.y=hints_y,.text="Press Escape to exit",
+                 .fontsize=base,.color=RGB(180,180,180),.align="Right");
+    fl_draw_text(.x = W,.y=title_y,.text="Typing Speed Test",
+                 .fontsize=base,.color=RGB(210,210,210),.align="Center");
+
+    free(positions);
 }
 
 void TriggerTypingTest(void) {
@@ -192,7 +262,7 @@ void TriggerTypingTest(void) {
 
 FLINT_FEATURE_INIT {
     srand((unsigned)time(NULL));
-    text = typing_test_get_random_text();
+    text = typing_test_get_random_text(typing_test_word_count);
     fl_register_hotkey("Alt+B", TriggerTypingTest);
     fl_register_feature("Typing Test", TriggerTypingTest);
 }
