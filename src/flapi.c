@@ -1825,6 +1825,7 @@ static void fl_widget_attach_window(void *ud) {
     if (widget->win) {
         Platform_Widget_SetBgColor(widget->win, widget->has_bg ? widget->bg_hex : 0);
         Platform_Widget_SetNoBg(widget->win, widget->no_bg);
+        Platform_Widget_SetFps(widget->win, widget->fps);
         if (created) Platform_Widget_SetFrameCallback(widget->win, fl_widget_render_frame, widget);
     }
     PROFILE_END_VAR(_pt, "flapi:fl_widget_attach_window");
