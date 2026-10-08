@@ -14,6 +14,9 @@ typedef struct {
 
 bool Platform_ShellExecuteWithVerb(const char* path, const char* verb, bool async);
 bool Platform_IsCtrlPressed(void);
+bool Platform_IsShiftPressed(void);
+bool Platform_IsAltPressed(void);
+bool Platform_IsSuperPressed(void);
 bool Platform_ExpandPath(const char* template_path, char* out, size_t out_size);
 bool Platform_StringContainsCaseInsensitive(const char* haystack, const char* needle);
 bool Platform_StringStartsWithCaseInsensitive(const char* str, const char* prefix);

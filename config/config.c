@@ -23,7 +23,7 @@ void ConfigApply(void) {
     AllowOtherFeatureTogglesInFeature = false;
     ModePersistsThroughFeatures = false;
     TimeOutForMessages = 1;
-    DoTimeDebugs = false;
+    DoTimeDebugs = true;
     DebugMode = false;
     RoundedCorners = false;
     CornerRadius = 14;
@@ -32,7 +32,7 @@ void ConfigApply(void) {
     ShaderIntensity = 0.5f;
     ShaderBrightness = 0.55f;
     TimeBetweenHotReload = 2;
-    WindowOpacity = 205.0f;
+    WindowOpacity = 235.0f;
     EditPopUpPos = "middle";
     EditPopUpWidthMin = 400;
     PageUpDownLen = 6;
