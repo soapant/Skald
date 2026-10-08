@@ -6,6 +6,203 @@
 #include "core/vim.h"
 #include <ctype.h>
 
+static bool vim_is_space(char c) {
+    return c == ' ' || c == '\t' || c == '\n' || c == '\r';
+}
+
+static bool vim_is_word(char c) {
+    return isalnum((unsigned char)c) || c == '_';
+}
+
+static bool vim_in_class(char c, bool bigword) {
+    return bigword ? !vim_is_space(c) : vim_is_word(c);
+}
+
+int Vim_FirstNonBlank(const char* text, int len) {
+    for (int i = 0; i < len; i++) {
+        if (!vim_is_space(text[i])) return i;
+    }
+    return 0;
+}
+
+int Vim_WordStep(const char* text, int len, int pos, bool bigword, bool to_end, bool forward) {
+    if (len <= 0) return 0;
+    if (pos < 0) pos = 0;
+    if (pos > len) pos = len;
+
+    if (forward) {
+        int i = pos;
+        if (!to_end) {
+            bool in_class = false;
+            if (i < len) in_class = bigword ? !vim_is_space(text[i]) : vim_is_word(text[i]);
+            while (i < len) {
+                bool c = bigword ? !vim_is_space(text[i]) : vim_is_word(text[i]);
+                if (c != in_class) break;
+                i++;
+            }
+            while (i < len && vim_is_space(text[i])) i++;
+        } else {
+            if (i >= len) return len - 1 > 0 ? len - 1 : 0;
+            if (vim_in_class(text[i], bigword)) {
+                bool at_word_end = (i + 1 >= len) || !vim_in_class(text[i + 1], bigword);
+                if (!at_word_end) {
+                    while (i + 1 < len && vim_in_class(text[i + 1], bigword)) i++;
+                    return i;
+                }
+                i++;
+            }
+            while (i < len && !vim_in_class(text[i], bigword)) i++;
+            if (i >= len) return len - 1 > 0 ? len - 1 : 0;
+            while (i + 1 < len && vim_in_class(text[i + 1], bigword)) i++;
+            return i;
+        }
+        if (i >= len) return len - 1 > 0 ? len - 1 : 0;
+        return i;
+    }
+
+    int i = pos;
+    if (!to_end) {
+        while (i > 0 && vim_is_space(text[i - 1])) i--;
+        bool in_class = false;
+        if (i > 0) in_class = bigword ? !vim_is_space(text[i - 1]) : vim_is_word(text[i - 1]);
+        while (i > 0) {
+            char c = text[i - 1];
+            bool cls = bigword ? !vim_is_space(c) : vim_is_word(c);
+            if (cls != in_class) break;
+            i--;
+        }
+    } else {
+        while (i > 0 && i < len && vim_in_class(text[i - 1], bigword)) i--;
+        i--;
+        while (i >= 0 && !vim_in_class(text[i], bigword)) i--;
+        if (i < 0) return 0;
+        while (i + 1 < len && vim_in_class(text[i + 1], bigword)) i++;
+    }
+    if (i < 0) i = 0;
+    return i;
+}
+
+int Vim_FindChar(const char* text, int len, int pos, char target, bool till, bool backward) {
+    if (len <= 0) return -1;
+    if (!backward) {
+        for (int i = pos + 1; i < len; i++) {
+            if (text[i] != target) continue;
+            return till ? (i - 1 > pos ? i - 1 : pos) : i;
+        }
+        return -1;
+    }
+    for (int i = pos - 1; i >= 0; i--) {
+        if (text[i] != target) continue;
+        return till ? (i + 1 < pos ? i + 1 : pos) : i;
+    }
+    return -1;
+}
+
+int Vim_FindPatternPos(const char* text, int len, int pos, const char* pattern, bool backward) {
+    int plen = (int)strlen(pattern);
+    if (plen <= 0 || len <= 0) return -1;
+    int limit = backward ? 0 : len - plen;
+    if (backward) {
+        for (int i = pos - 1; i >= limit; i--)
+            if (strncasecmp(text + i, pattern, plen) == 0) return i;
+        for (int i = len - plen; i >= limit; i--)
+            if (i < pos && strncasecmp(text + i, pattern, plen) == 0) return i;
+        return -1;
+    }
+    for (int i = pos + 1; i + plen <= len; i++)
+        if (strncasecmp(text + i, pattern, plen) == 0) return i;
+    for (int i = 0; i + plen <= len; i++)
+        if (i <= pos && strncasecmp(text + i, pattern, plen) == 0) return i;
+    return -1;
+}
+
+int Vim_BracketMatch(const char* text, int len, int pos) {
+    static const char* pairs = "(){}[]<>";
+    if (len <= 0) return -1;
+    if (pos < 0) pos = 0;
+    if (pos >= len) pos = len - 1;
+
+    char open = 0, close = 0;
+    for (int i = 0; i < 6; i++) {
+        char o = pairs[i * 2];
+        char c = pairs[i * 2 + 1];
+        if (text[pos] == o) { open = o; close = c; break; }
+        if (text[pos] == c) { open = o; close = c; break; }
+    }
+
+    if (open && text[pos] == open) {
+        int depth = 0;
+        for (int i = pos; i < len; i++) {
+            if (text[i] == open) depth++;
+            else if (text[i] == close) { depth--; if (depth == 0) return i; }
+        }
+        return -1;
+    }
+    if (open && text[pos] == close) {
+        int depth = 0;
+        for (int i = pos; i >= 0; i--) {
+            if (text[i] == close) depth++;
+            else if (text[i] == open) { depth--; if (depth == 0) return i; }
+        }
+        return -1;
+    }
+
+    int start = -1, end = -1;
+    for (int i = pos + 1; i < len; i++) {
+        char o = 0, c = 0;
+        for (int p = 0; p < 6; p++) {
+            if (text[i] == pairs[p * 2] || text[i] == pairs[p * 2 + 1]) { o = pairs[p * 2]; c = pairs[p * 2 + 1]; break; }
+        }
+        if (o) { start = i; end = -1; break; }
+    }
+    if (start < 0) return -1;
+    for (int i = start; i < len; i++) {
+        for (int p = 0; p < 6; p++) {
+            if (pairs[p * 2] == text[start] && text[i] == pairs[p * 2 + 1]) { end = i; break; }
+        }
+        if (end >= 0) break;
+    }
+    if (end < 0) return -1;
+    return end;
+}
+
+bool Vim_WordUnder(const char* text, int len, int pos, char* out, int cap) {
+    if (!out || cap <= 0) return false;
+    out[0] = '\0';
+    if (len <= 0) return false;
+    if (pos < 0 || pos >= len) return false;
+    if (vim_is_space(text[pos])) return false;
+    int start = pos;
+    while (start > 0 && !vim_is_space(text[start - 1])) start--;
+    int end = pos;
+    while (end < len && !vim_is_space(text[end])) end++;
+    int n = end - start;
+    if (n >= cap) n = cap - 1;
+    memcpy(out, text + start, n);
+    out[n] = '\0';
+    return n > 0;
+}
+
+void Vim_TransformCase(FlintContext* ctx, int mode) {
+    if (!ctx) return;
+    char text[512];
+    Vim_GetText(ctx, text, sizeof(text));
+    int len = (int)strlen(text);
+    int pos = Vim_GetCursor(ctx);
+    if (len <= 0 || pos < 0 || pos >= len) return;
+    int start = pos, end = pos;
+    while (start > 0 && !vim_is_space(text[start - 1])) start--;
+    while (end < len && !vim_is_space(text[end])) end++;
+    for (int i = start; i < end; i++) {
+        unsigned char c = (unsigned char)text[i];
+        if (mode == 0) text[i] = (char)tolower(c);
+        else if (mode == 1) text[i] = (char)toupper(c);
+        else text[i] = (char)(isupper(c) ? tolower(c) : toupper(c));
+    }
+    Vim_SetText(ctx, text);
+    Vim_SetCursor(ctx, pos);
+}
+
 void DeleteCharUnderCursor(FlintContext* ctx) {
     if (!ctx) return;
     char text[512];

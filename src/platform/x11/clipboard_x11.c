@@ -440,42 +440,31 @@ static char *ClipReadTarget(Atom target) {
     char tbuf[64] = {0};
     if (tname) { strncpy(tbuf, tname, sizeof(tbuf) - 1); XFree(tname); tname = NULL; }
     XSelectInput(dpy, win, PropertyChangeMask);
-    cl_trace("READ", "ConvertSelection target=%s sel_owner=%lu (our_win=%lu same=%d) win=%lu prop=%lu",
-        tbuf, (unsigned long)sel_owner, (unsigned long)g_clip_win,
-        sel_owner == g_clip_win ? 1 : 0, (unsigned long)win, (unsigned long)prop);
     XConvertSelection(dpy, g_clip_clipboard, target, prop, win, CurrentTime);
     XFlush(dpy);
     ClipReadWait w = { win, g_clip_clipboard, prop };
     XEvent ev;
     if (!ClipReadWaitEvent(dpy, &ev, ClipReadNotifyPred, &w, CLIP_READ_TRIES)) {
-        cl_trace("READ", "TIMEOUT waiting SelectionNotify after %d*5ms target=%s sel_owner=%lu",
-            CLIP_READ_TRIES, tbuf, (unsigned long)sel_owner);
         return NULL;
     }
     if (ev.xselection.property == None) {
-        cl_trace("READ", "REFUSED property=None target=%lu sel_owner=%lu time=%lu",
-            (unsigned long)target, (unsigned long)sel_owner, (unsigned long)ev.xselection.time);
         return NULL;
     }
-    cl_trace("READ", "got SelectionNotify property=%lu waiting for data", (unsigned long)ev.xselection.property);
     Atom actual = None;
     int format = 0;
     unsigned long nitems = 0;
     unsigned long after = 0;
     unsigned char *data = NULL;
     if (XGetWindowProperty(dpy, win, prop, 0, 1, False, AnyPropertyType, &actual, &format, &nitems, &after, &data) != Success) {
-        cl_trace("READ", "XGetWindowProperty FAILED");
         return NULL;
     }
     if (data) XFree(data);
     if (actual == g_clip_incr) {
-        cl_trace("READ", "INCR detected, draining");
         XDeleteProperty(dpy, win, prop);
         XFlush(dpy);
         return ClipReadIncr(dpy, win, prop, &w);
     }
     char *res = ClipReadProperty(dpy, win, prop, NULL);
-    cl_trace("READ", "result target=%lu len=%d", (unsigned long)target, res ? (int)strlen(res) : -1);
     return res;
 }
 
@@ -485,7 +474,6 @@ char *x11_clipboard_get_text(void) {
     Display *dpy = get_display();
     if (!dpy || g_clip_win == None) { cl_trace("GETTEXT", "no display, read#%ld", g_cl_reads); return NULL; }
     if (XGetSelectionOwner(dpy, g_clip_clipboard) == g_clip_win && g_clip_text) {
-        cl_trace("GETTEXT", "read#%ld served from own memory len=%d", g_cl_reads, (int)strlen(g_clip_text));
         return strdup(g_clip_text);
     }
     char *out = ClipReadTarget(g_clip_utf8);
@@ -493,7 +481,6 @@ char *x11_clipboard_get_text(void) {
         out = ClipReadTarget(XA_STRING);
     }
     if (!out) g_cl_read_fail++;
-    cl_trace("GETTEXT", "read#%ld fail_total=%ld len=%d", g_cl_reads, g_cl_read_fail, out ? (int)strlen(out) : -1);
     return out;
 }
 

@@ -1,5 +1,6 @@
 #include "platform/draw.h"
 #include "platform/platform.h"
+#include "platform/ui.h"
 #include "config.h"
 #include "core/prompt_geometry.h"
 #include "helpers/helpers_ui.h"
@@ -517,6 +518,7 @@ void Platform_DrawListBox(PromptState *state, Display *dpy, XftDraw *xd, Visual 
     int visible = (state->height - y0 - yOffset) / itemH;
     if (visible < 1) visible = 1;
     if (visible > lb->populated_count) visible = lb->populated_count;
+    UI_LB_SetVisibleCount(visible);
 
     if (lb->selected_index >= 0) {
         if (lb->selected_index < lb->view_offset + PaddingForScrolling)

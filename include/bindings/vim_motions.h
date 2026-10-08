@@ -68,6 +68,45 @@ typedef enum {
     MOTION_DELETE_SQUARE_BRACKETS_NORMAL,
     MOTION_DELETE_WORD_NORMAL,
     MOTION_DELETE_WORD_INSERT,
+    MOTION_WORD_END_FORWARD,
+    MOTION_WORD_END_BACKWARD,
+    MOTION_WORD_END_FORWARD_BIG,
+    MOTION_WORD_END_BACKWARD_BIG,
+    MOTION_WORD_FORWARD_BIG,
+    MOTION_WORD_BACKWARD_BIG,
+    MOTION_FIRST_NON_BLANK,
+    MOTION_GOTO_LINE_START,
+    MOTION_GOTO_LINE_END,
+    MOTION_BRACKET_MATCH,
+    MOTION_STAR_SEARCH,
+    MOTION_HASH_SEARCH,
+    MOTION_GOTO_LAST_INSERT,
+    MOTION_FIND_TILL_FORWARD,
+    MOTION_FIND_TILL_BACKWARD,
+    MOTION_REPEAT_FIND_SAME,
+    MOTION_REPEAT_FIND_OPP,
+    MOTION_FIND_NEXT,
+    MOTION_FIND_PREV,
+    MOTION_CASE_LOWER,
+    MOTION_CASE_UPPER,
+    MOTION_CASE_TOGGLE,
+    MOTION_SCROLL_TOP,
+    MOTION_SCROLL_CENTER,
+    MOTION_SCROLL_BOTTOM,
+    MOTION_SCREEN_TOP,
+    MOTION_SCREEN_MIDDLE,
+    MOTION_SCREEN_BOTTOM,
+    MOTION_HALF_PAGE_DOWN,
+    MOTION_HALF_PAGE_UP,
+    MOTION_SCROLL_LINE_DOWN,
+    MOTION_SCROLL_LINE_UP,
+    MOTION_SET_MARK,
+    MOTION_JUMP_TO_MARK,
+    MOTION_JUMP_PREV_CONTEXT,
+    MOTION_JUMP_BACK,
+    MOTION_JUMP_FORWARD,
+    MOTION_SEARCH_FORWARD_KEY,
+    MOTION_SEARCH_BACKWARD_KEY,
 } MotionAction;
 
 typedef enum {
@@ -145,5 +184,49 @@ void HandleDeleteTillEnd(FlintContext* ctx);
 void HandlePageUp(FlintContext* ctx);
 void HandlePageDown(FlintContext* ctx);
 void HandleNormalEdit(FlintContext* ctx);
+
+void HandleWordEndForward(FlintContext* ctx);
+void HandleWordEndBackward(FlintContext* ctx);
+void HandleWordEndForwardBig(FlintContext* ctx);
+void HandleWordEndBackwardBig(FlintContext* ctx);
+void HandleWordForwardBig(FlintContext* ctx);
+void HandleWordBackwardBig(FlintContext* ctx);
+void HandleFirstNonBlank(FlintContext* ctx);
+void HandleGotoLineStart(FlintContext* ctx);
+void HandleGotoLineEnd(FlintContext* ctx);
+void HandleBracketMatchPercent(FlintContext* ctx);
+void HandleStarSearch(FlintContext* ctx);
+void HandleHashSearch(FlintContext* ctx);
+void HandleGotoLastInsert(FlintContext* ctx);
+void HandleFindTillForward(FlintContext* ctx);
+void HandleFindTillBackward(FlintContext* ctx);
+void HandleRepeatFindSame(FlintContext* ctx);
+void HandleRepeatFindOpp(FlintContext* ctx);
+void HandleFindNext(FlintContext* ctx);
+void HandleFindPrev(FlintContext* ctx);
+void HandleCaseLower(FlintContext* ctx);
+void HandleCaseUpper(FlintContext* ctx);
+void HandleCaseToggle(FlintContext* ctx);
+void HandleScrollTop(FlintContext* ctx);
+void HandleScrollCenter(FlintContext* ctx);
+void HandleScrollBottom(FlintContext* ctx);
+void HandleScreenTop(FlintContext* ctx);
+void HandleScreenMiddle(FlintContext* ctx);
+void HandleScreenBottom(FlintContext* ctx);
+void HandleHalfPageDown(FlintContext* ctx);
+void HandleHalfPageUp(FlintContext* ctx);
+void HandleScrollLineDown(FlintContext* ctx);
+void HandleScrollLineUp(FlintContext* ctx);
+void HandleSetMark(FlintContext* ctx);
+void HandleJumpToMark(FlintContext* ctx);
+void HandleJumpPrevContext(FlintContext* ctx);
+void HandleJumpBack(FlintContext* ctx);
+void HandleJumpForward(FlintContext* ctx);
+void HandleSearchForward(FlintContext* ctx);
+void HandleSearchBackward(FlintContext* ctx);
+void Vim_SearchCollect(int key);
+void Vim_SearchCommitForward(int key);
+void Vim_SearchCommitBackward(int key);
+void Vim_SearchCancel(int key);
 
 #endif

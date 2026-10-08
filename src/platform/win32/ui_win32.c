@@ -71,6 +71,33 @@ int UI_LB_GetTopIndex(WindowHandle hList) {
     return (int)SendMessageA(WH_TO_HWND(hList), LB_GETTOPINDEX, 0, 0);
 }
 
+int UI_LB_GetVisibleCount(void) {
+    WindowHandle hList = FlintContext_Get()->window.hListBox;
+    if (!WH_TO_HWND(hList)) return 16;
+    int itemHeight = UI_LB_GetItemHeight(hList);
+    if (itemHeight <= 0) return 16;
+    RECT rect;
+    GetClientRect(WH_TO_HWND(hList), &rect);
+    int visible = rect.bottom / itemHeight;
+    if (visible < 1) visible = 1;
+    return visible;
+}
+
+void UI_LB_SetVisibleCount(int count) {
+    (void)count;
+}
+
+void UI_LB_ScrollToTop(ListBoxInfo* lb, int top_index) {
+    if (!lb) return;
+    WindowHandle hList = FlintContext_Get()->window.hListBox;
+    int visible = UI_LB_GetVisibleCount();
+    if (top_index < 0) top_index = 0;
+    if (top_index + visible > lb->populated_count) top_index = lb->populated_count - visible;
+    if (top_index < 0) top_index = 0;
+    lb->view_offset = top_index;
+    SendMessageA(WH_TO_HWND(hList), LB_SETTOPINDEX, top_index, 0);
+}
+
 void UI_LB_SetFont(WindowHandle hList, void* hFont) {
     SendMessageA(WH_TO_HWND(hList), WM_SETFONT, (WPARAM)hFont, FALSE);
 }
