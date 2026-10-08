@@ -243,6 +243,17 @@ void Platform_Widget_SetNoBg(PlatformWidget *widget, bool no_bg) {
     Platform_RenderThread_Wake();
 }
 
+void Platform_Widget_SetFps(PlatformWidget *widget, int fps) {
+    if (!widget || widget->dead) return;
+    if (fps <= 0) fps = 1;
+    if (widget->fps == fps) return;
+    widget->fps = fps;
+    widget->last_draw_ms = 0;
+    Platform_RenderThread_EnsureStarted(fps);
+    widget->dirty = true;
+    Platform_RenderThread_Wake();
+}
+
 void Platform_Widget_SetBgColor(PlatformWidget *widget, unsigned long hex) {
     if (!widget || widget->dead) return;
     widget->has_bg = hex != 0;
