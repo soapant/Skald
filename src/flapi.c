@@ -1317,8 +1317,17 @@ bool fl_is_key_pressed(int vk){
 bool fl_is_key_released(int vk){
   return Platform_WasKeyReleased(vk); 
 }
-bool fl_is_key_held(int vk){
-  return Platform_IsKeyDown(vk); 
+bool fl_ctrl_pressed(void){
+  return Platform_IsCtrlPressed();
+}
+bool fl_shift_pressed(void){
+  return Platform_IsShiftPressed();
+}
+bool fl_alt_pressed(void){
+  return Platform_IsAltPressed();
+}
+bool fl_super_pressed(void){
+  return Platform_IsSuperPressed();
 }
 void fl_on_key(void (*cb)(int vk, bool down, int mods, void *ud), void *ud){
   Platform_SetKeyCallback(cb,ud);
