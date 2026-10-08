@@ -140,14 +140,13 @@ static int find_or_add_pk_proc(const char* name) {
 static void pk_collect_running_processes(void) {
     g_pk_count = 0;
 
-    // Structure arrays to hold values over our delta-time measurement sample 
     typedef struct { DWORD pid; ULONGLONG cpu_start; } CpuSample;
     static CpuSample samples[PK_MAX];
     int sample_count = 0;
 
     SYSTEM_INFO sysInfo;
     GetSystemInfo(&sysInfo);
-    DWORD num_cores = sysInfo.dwNumberOfProcessors; // Used to divide total thread weights perfectly
+    DWORD num_cores = sysInfo.dwNumberOfProcessors; 
 
     HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if (hSnapshot == INVALID_HANDLE_VALUE) return;
@@ -160,7 +159,7 @@ static void pk_collect_running_processes(void) {
         return;
     }
 
-    // 1. First Sample Collection: Capture the baseline starting CPU cycles
+    
     do {
         HANDLE hProcess = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pe32.th32ProcessID);
         if (hProcess) {
@@ -184,12 +183,12 @@ static void pk_collect_running_processes(void) {
     do {
         HANDLE hProcess = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pe32.th32ProcessID);
         if (hProcess) {
-            PROCESS_MEMORY_COUNTERS_EX pmc; // Using EX variant to isolate clean private footprint
+            PROCESS_MEMORY_COUNTERS_EX pmc; 
             if (GetProcessMemoryInfo(hProcess, (PROCESS_MEMORY_COUNTERS*)&pmc, sizeof(pmc))) {
                 
                 int index = find_or_add_pk_proc(pe32.szExeFile);
                 if (index != -1) {
-                    // Fix: Map exact physical RSS Private Working Set in KB to prevent truncation or half-scale drops
+                    
                     g_pk[index].rss_kb += (unsigned long long)(pmc.PrivateUsage / 1024);
 
                     FILETIME ftCreation, ftExit, ftKernel, ftUser;
@@ -197,12 +196,12 @@ static void pk_collect_running_processes(void) {
                         ULONGLONG cpu_end = (((ULONGLONG)ftKernel.dwHighDateTime << 32) | ftKernel.dwLowDateTime) +
                                             (((ULONGLONG)ftUser.dwHighDateTime << 32) | ftUser.dwLowDateTime);
                         
-                        // Look up the baseline sample for this matching process PID
+                        
                         for (int s = 0; s < sample_count; s++) {
                             if (samples[s].pid == pe32.th32ProcessID) {
                                 ULONGLONG delta_ticks = (cpu_end > samples[s].cpu_start) ? (cpu_end - samples[s].cpu_start) : 0;
                                 
-                                // 100ms sleep equates to exactly 1,000,000 FILETIME scale ticks
+                                
                                 double process_pct = ((double)delta_ticks / 1000000.0) * 100.0;
                                 g_pk[index].cpu += (process_pct / num_cores);
                                 break;
@@ -217,7 +216,7 @@ static void pk_collect_running_processes(void) {
 
     CloseHandle(hSnapshot);
 
-    // Dynamic capping bounds
+    
     for (int i = 0; i < g_pk_count; i++) {
         if (g_pk[i].cpu > 100.0) g_pk[i].cpu = 100.0;
     }
