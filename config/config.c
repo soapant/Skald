@@ -52,6 +52,7 @@ void ConfigApply(void) {
     ControlHotkey = "Alt+Space";
     FullTextNeedsKeyPress = true;
     MessagesEnabled = true;
+    EnableAutoPairing = true;
     RainbowText = false;
     AlternatingText = false;
     VimModeText = false;

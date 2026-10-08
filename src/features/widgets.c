@@ -243,7 +243,7 @@ static void widgets_volume_render(FlWidgetState *state) {
     int fontsize = FONTSIZE;
     int y = 7;
     fl_draw_text(.text = emoji, .x = 10, .y = y - 1, .fontsize = fontsize + 3, .align = "LEFT");
-    fl_draw_text(.text = pct, .x = 36, .y = y + 3, .fontsize = fontsize, .align = "LEFT");
+    fl_draw_text(.text = pct, .x = FONTSIZE + 20, .y = y + 3, .fontsize = fontsize, .align = "LEFT");
 }
 
 static FlWidget* g_disk = NULL;
@@ -464,3 +464,4 @@ FLINT_FEATURE_INIT {
 
     fl_register_hotkey("Alt+Shift+S", FlipWidgets);
 }
+
