@@ -148,7 +148,7 @@ PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps, bool
     widget->last_draw_h = 0;
 
     Platform_SetTransparentWindow(no_bg);
-    widget->win = x11_create_display_message_window(dpy, x, y, w, h, on_click != NULL,NULL);
+    widget->win = x11_create_display_message_window(dpy, x, y, w, h, on_click != NULL);
     Platform_SetTransparentWindow(false);
     if (!widget->win) {
         free(widget);
