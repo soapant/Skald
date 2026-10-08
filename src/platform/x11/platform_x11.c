@@ -1540,11 +1540,11 @@ bool Platform_BuildFeature(const char* src, const char* out) {
     return true;
 }
 
-FlWindowList Platform_GetWindowTitles() {
+PlWindowList Platform_GetWindowTitles() {
  return Wm_GetWindowTitles();
 }
 
-FlWindowList Platform_GetWindowNames() {
+PlWindowList Platform_GetWindowNames() {
   return Wm_GetWindowNames();
 }
 
@@ -1660,9 +1660,9 @@ void Platform_InitUI(void) {
 }
 void Platform_ShutdownUI(void) {
 }
-FlPos Platform_GetCursorPos(void) {
+PlPos Platform_GetCursorPos(void) {
     PROFILE_START(timer);
-    FlPos p = Wm_GetCursorPosition();
+    PlPos p = Wm_GetCursorPosition();
     PROFILE_END_VAR(timer, "platform_x11:Platform_GetCursorPos");
     return p;
 }
@@ -1679,9 +1679,9 @@ static unsigned char x11_mask_extract(unsigned long pixel, unsigned long mask) {
     return (unsigned char)((v * 255ul) / ((1ul << bits) - 1ul));
 }
 
-FlColor Platform_GetPixelColor(int x, int y) {
+PlColor Platform_GetPixelColor(int x, int y) {
     PROFILE_START(timer);
-    FlColor out = {0, 0, 0};
+    PlColor out = {0, 0, 0};
     Display* dpy = get_display();
     if (!dpy) { PROFILE_END_VAR(timer, "platform_x11:Platform_GetPixelColor"); return out; }
     Window root = DefaultRootWindow(dpy);

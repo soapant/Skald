@@ -96,9 +96,9 @@ char* Wm_Paste(char* content) {
     return NULL;
 }
 
-FlWindowList Wm_GetWindowTitles() {
-    FlWindowList result;
-    FlWindowList empty = { .windows = NULL, .count = 0 };
+PlWindowList Wm_GetWindowTitles() {
+    PlWindowList result;
+    PlWindowList empty = { .windows = NULL, .count = 0 };
     if (getenv("WAYLAND_DISPLAY")) {
         result = get_window_titles_kwin();
         if (result.windows != NULL) return result;
@@ -114,9 +114,9 @@ FlWindowList Wm_GetWindowTitles() {
     log_error("GetWindowTitles Didnt Work");
     return empty;
 }
-FlWindowList Wm_GetWindowNames() {
-    FlWindowList result;
-    FlWindowList empty = { .windows = NULL, .count = 0 };
+PlWindowList Wm_GetWindowNames() {
+    PlWindowList result;
+    PlWindowList empty = { .windows = NULL, .count = 0 };
     if (getenv("WAYLAND_DISPLAY")) {
         result = get_window_names_kwin();
         if (result.windows != NULL) return result;
@@ -133,9 +133,9 @@ FlWindowList Wm_GetWindowNames() {
     return empty;
 }
 
-FlPos Wm_GetCursorPosition() {
-    FlPos result;
-    FlPos empty = { .x = 0, .y = 0 };
+PlPos Wm_GetCursorPosition() {
+    PlPos result;
+    PlPos empty = { .x = 0, .y = 0 };
     if (getenv("WAYLAND_DISPLAY")) {
         result = get_cursor_position_kwin();
         if (result.x != 0) return result;

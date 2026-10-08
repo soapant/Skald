@@ -263,10 +263,10 @@ static bool sway_app_for_pid(const char *pid_pos, const char *next_pid, char *ou
     return false;
 }
 
-FlWindowList get_window_names_sway() {
+PlWindowList get_window_names_sway() {
     sway_ensure_sock();
     char *json = Platform_RunTerminalCommand("swaymsg -t get_tree", false);
-    FlWindowList list = {0};
+    PlWindowList list = {0};
     if (!json || !*json) { log_error("output is NULL or empty"); free(json); return list; }
     for (char *p = json; (p = strstr(p, "\"pid\":")); p += 6) {
         char *next = strstr(p + 6, "\"pid\":");
@@ -284,10 +284,10 @@ FlWindowList get_window_names_sway() {
     return list;
 }
 
-FlWindowList get_window_titles_sway() {
+PlWindowList get_window_titles_sway() {
     sway_ensure_sock();
     char *json = Platform_RunTerminalCommand("swaymsg -t get_tree", false);
-    FlWindowList list = {0};
+    PlWindowList list = {0};
     if (!json || !*json) { log_error("output is NULL or empty"); free(json); return list; }
     for (char *p = json; (p = strstr(p, "\"pid\":")); p += 6) {
         char *next = strstr(p + 6, "\"pid\":");
@@ -303,7 +303,7 @@ FlWindowList get_window_titles_sway() {
     free(json);
     return list;
 }
-FlPos get_cursor_position_sway(void) { 
+PlPos get_cursor_position_sway(void) { 
   char cmd[512];
   char* wd = Platform_GetWorkingDir();
   snprintf(cmd, sizeof(cmd), "LD_LIBRARY_PATH=%s/build/bundle:${LD_LIBRARY_PATH:-} %s/external/slurp -p -d ", wd ? wd : ".", wd ? wd : ".");
@@ -317,7 +317,7 @@ FlPos get_cursor_position_sway(void) {
   
   free(output);
   
-  return (FlPos){x, y}; 
+  return (PlPos){x, y}; 
 }
 
 static int sway_json_depth(const char* base, const char* pos) {

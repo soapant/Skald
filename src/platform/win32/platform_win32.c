@@ -1149,7 +1149,7 @@ bool Platform_BuildFeature(const char* src, const char* out) {
     return true;
 }
 
-typedef struct { FlWindowList *titles; FlWindowList *names; } WinPair;
+typedef struct { PlWindowList *titles; PlWindowList *names; } WinPair;
 
 static BOOL CALLBACK EnumWindowsProcPair(HWND hwnd, LPARAM lParam) {
     WinPair *pair = (WinPair*)lParam;
@@ -1217,21 +1217,21 @@ static BOOL CALLBACK EnumWindowsProcPair(HWND hwnd, LPARAM lParam) {
     return TRUE;
 }
 
-static void win32_collect_pair(FlWindowList *out_titles, FlWindowList *out_names) {
+static void win32_collect_pair(PlWindowList *out_titles, PlWindowList *out_names) {
     WinPair p = { out_titles, out_names };
     EnumWindows(EnumWindowsProcPair, (LPARAM)&p);
 }
 
-FlWindowList Platform_GetWindowTitles() {
-    FlWindowList titles={0}, names={0};
+PlWindowList Platform_GetWindowTitles() {
+    PlWindowList titles={0}, names={0};
     win32_collect_pair(&titles, &names);
     for(int i=0;i<names.count;i++) free(names.windows[i]);
     free(names.windows);
     log_info("Platform_GetWindowTitles count=%d", titles.count);
     return titles;
 }
-FlWindowList Platform_GetWindowNames() {
-    FlWindowList titles={0}, names={0};
+PlWindowList Platform_GetWindowNames() {
+    PlWindowList titles={0}, names={0};
     win32_collect_pair(&titles, &names);
     for(int i=0;i<titles.count;i++) free(titles.windows[i]);
     free(titles.windows);
@@ -1318,22 +1318,22 @@ void Platform_CleanupPlatformResources(void) {
     }
 }
 
-FlPos Platform_GetCursorPos(void) {
+PlPos Platform_GetCursorPos(void) {
     PROFILE_START(timer);
     POINT point;
-    FlPos r = (FlPos){0, 0};
+    PlPos r = (PlPos){0, 0};
     
     if (GetCursorPos(&point)) {
-        r = (FlPos){(int)point.x, (int)point.y};
+        r = (PlPos){(int)point.x, (int)point.y};
     }
     
     PROFILE_END_VAR(timer, "platform_win32:Platform_GetCursorPos");
     return r;
 }
 
-FlColor Platform_GetPixelColor(int x, int y) {
+PlColor Platform_GetPixelColor(int x, int y) {
     PROFILE_START(timer);
-    FlColor out = {0, 0, 0};
+    PlColor out = {0, 0, 0};
     HDC screen = GetDC(NULL);
     if (!screen) { PROFILE_END_VAR(timer, "platform_win32:Platform_GetPixelColor"); return out; }
     COLORREF c = GetPixel(screen, x, y);
