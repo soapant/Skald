@@ -691,8 +691,7 @@ case WM_CHAR: {
                 Platform_SetDrawContextWin32(paintDC);
                 FlintContext_Get()->prompt_callbacks.render(state);
             }
-        }
-        {
+        } else {
             extern PromptState* Platform_GetWin32PromptState(void);
             PromptState *estate = Platform_GetWin32PromptState();
             if (estate) {
