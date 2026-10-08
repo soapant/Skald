@@ -74,21 +74,20 @@ typedef struct {
 
 typedef struct {
     size_t r, g, b;
-} FlColor;
+} PlColor;
 
 typedef struct {
     int x, y, w, h;
-} FlRect;
+} PlRect;
 
 typedef struct {
     int x,y;
-} FlPos;
-
+} PlPos;
 
 typedef struct {
     char** windows;
     int count;
-} FlWindowList;
+} PlWindowList;
 
 typedef struct {
 #if defined(_WIN32)

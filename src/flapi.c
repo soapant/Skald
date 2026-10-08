@@ -227,7 +227,7 @@ void fl_free_file_list(FlStringList* list) {
     }
     list->count = 0;
 }
-bool fl_free_window_list(FlWindowList *list) {
+bool fl_free_window_list(PlWindowList *list) {
     if (!list) return false;
     if (list->windows) {
         for (int i = 0; i < list->count; i++) free(list->windows[i]);
@@ -1195,15 +1195,15 @@ bool fl_place_listbox_impl(const FlListSpec *spec) {
     return true;
 }
 
-FlWindowList fl_get_all_window_titles() {
+PlWindowList fl_get_all_window_titles() {
    PROFILE_START(_pt);
-   FlWindowList l = Platform_GetWindowTitles();
+   PlWindowList l = Platform_GetWindowTitles();
    PROFILE_END_VAR(_pt, "api:fl_get_all_window_titles");
    return l;
 }
-FlWindowList fl_get_all_window_names() {
+PlWindowList fl_get_all_window_names() {
   PROFILE_START(_pt);
-  FlWindowList l = Platform_GetWindowNames();
+  PlWindowList l = Platform_GetWindowNames();
   PROFILE_END_VAR(_pt, "api:fl_get_all_window_names");
   return l;
 }
@@ -1213,25 +1213,25 @@ void fl_toggle_play_pause(void) {
   return;
 }
 
-FlPos fl_get_cursor_pos(void) {
+PlPos fl_get_cursor_pos(void) {
   PROFILE_START(_pt);
-  FlPos p = Platform_GetCursorPos();
+  PlPos p = Platform_GetCursorPos();
   PROFILE_END_VAR(_pt, "flapi:fl_get_cursor_pos");
   return p;
 }
-FlColor fl_get_pixel_color(FlPos pos) {
+PlColor fl_get_pixel_color(PlPos pos) {
   PROFILE_START(_pt);
-  FlColor c = Platform_GetPixelColor(pos.x, pos.y);
+  PlColor c = Platform_GetPixelColor(pos.x, pos.y);
   PROFILE_END_VAR(_pt, "flapi:fl_get_pixel_color");
   return c;
 }
-bool fl_move_to_pos(FlPos pos) {
+bool fl_move_to_pos(PlPos pos) {
   PROFILE_START(_pt);
   bool ok = Platform_MoveToPos(pos.x, pos.y);
   PROFILE_END_VAR(_pt, "flapi:fl_move_to_pos");
   return ok;
 }
-bool fl_click_at_pos(FlPos pos) {
+bool fl_click_at_pos(PlPos pos) {
   PROFILE_START(_pt);
   bool ok = fl_move_to_pos(pos) && fl_click();
   PROFILE_END_VAR(_pt, "flapi:fl_click_at_pos");
@@ -1515,7 +1515,7 @@ char* fl_get_active_window_app_id(void) {
 
 bool fl_is_window_active(char* title) {
   PROFILE_START(_pt);
-  FlWindowList l = Platform_GetWindowTitles();
+  PlWindowList l = Platform_GetWindowTitles();
   for (int i = 0; i < l.count;i++) {
       if (Platform_StringContainsCaseInsensitive(l.windows[i],title)) {
         PROFILE_END_VAR(_pt, "api:fl_is_window_active");
@@ -1626,7 +1626,7 @@ static FlWidget *fl_widget_find_by_name(const char *name) {
 
 static void fl_widget_relayout(void);
 
-static FlPos g_fl_hover_pos = {0, 0};
+static PlPos g_fl_hover_pos = {0, 0};
 static FlTimer g_fl_hover_at = {0};
 static bool g_fl_hover_valid = false;
 
@@ -1955,9 +1955,9 @@ bool fl_widget_is_valid(FlWidget *widget) {
     return widget != NULL;
 }
 
-FlPos fl_get_widget_pos(const char *name) {
+PlPos fl_get_widget_pos(const char *name) {
     PROFILE_START(_pt);
-    FlPos r = {0, 0};
+    PlPos r = {0, 0};
     FlWidget *w = fl_widget_find_by_name(name);
     if (w && w->x < 0x7fffffff) {
         r.x = w->x + w->w / 2;
@@ -2048,10 +2048,9 @@ unsigned long long fl_net_rx_bytes_over(double seconds) {
     if (after < before) return 0;
     return after - before;
 }
-FlRect fl_get_monitor_geometry() {
+PlRect fl_get_monitor_geometry() {
     int x, y, w, h;
     WindowManager_GetMainMonitorGeometry(&x,&y,&w,&h);
-    return (FlRect){x,y,w,h};
+    return (PlRect){x,y,w,h};
 }
-
 

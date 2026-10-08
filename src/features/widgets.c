@@ -398,7 +398,7 @@ static void internet_hover_render() {
 }
 
 void on_internet_hover(void) {
-    FlPos pos = fl_get_widget_pos("internet");
+    PlPos pos = fl_get_widget_pos("internet");
 
     fl_message(.x = pos.x,
                .y = pos.y - 70,
