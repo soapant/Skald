@@ -67,13 +67,6 @@ LRESULT CALLBACK win32_handle_global_key(int nCode, WPARAM wParam, LPARAM lParam
       (GetAsyncKeyState(VK_LSHIFT) & 0x8000) ||
       (GetAsyncKeyState(VK_RSHIFT) & 0x8000);
 
-    double seconds = Platform_GetUniversalTimeSeconds();
-    if (seconds >= 300) {
-      Platform_ResetUniversalTimer();
-      log_info("SUPPOSED TO CLEAR FILE");
-    }
-
-
     int pressed_vk = (int)pKeyInfo->vkCode;
     int modifiers = HOTKEY_MOD_NONE;
     if (alt_down) modifiers |= HOTKEY_MOD_ALT;

@@ -356,8 +356,6 @@ bool x11_handle_global_key(int key_code, int value) {
     PROFILE_START(timer);
     remap_update_phys(ConvertLinuxKeyToWindowsVK(key_code), value);
     x11_sync_held_from_phys();
-    double seconds = Platform_GetUniversalTimeSeconds();
-    if (seconds >= 300) { Platform_ResetUniversalTimer(); log_info("SUPPOSED TO CLEAR FILE"); }
     if (value != 1) { PROFILE_END_VAR(timer, "input:x11_handle_global_key"); return false; }
     int pressed_vk = ConvertLinuxKeyToWindowsVK(key_code);
     int modifiers = remap_current_mods();
