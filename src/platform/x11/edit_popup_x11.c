@@ -7,6 +7,7 @@
 #include "core/prompt_geometry.h"
 #include "platform/draw.h"
 #include "platform/wm_platform.h"
+#include "platform/input.h"
 #include "platform/x11/input_x11.h"
 #include "core/prompt_controller.h"
 #include "platform/x11/window_factory_x11.h"
@@ -207,9 +208,13 @@ bool Platform_EditPopupOnKey(Popup* self, const PopupKeyEvent* key) {
             ed->text[0] = '\0';
             ed->cursor = 0;
         } else if (ed->cursor > 0) {
-            size_t del = (size_t)ed->cursor - 1;
-            memmove(ed->text + del, ed->text + del + 1, n - del);
-            ed->cursor--;
+            size_t ecur = (size_t)ed->cursor;
+            if (!EditBufferBackspacePair(ed->text, &ecur)) {
+                size_t del = ecur - 1;
+                memmove(ed->text + del, ed->text + del + 1, n - del);
+                ecur--;
+            }
+            ed->cursor = (int)ecur;
         }
         PROFILE_END_VAR(timer, "edit_popup_x11:Platform_EditPopupOnKey");
         return true;
@@ -301,14 +306,9 @@ bool Platform_EditPopupOnKey(Popup* self, const PopupKeyEvent* key) {
             for (int i = 0; i < key->text_len; i++) { unsigned char c = (unsigned char)key->text[i]; if (c < 0x20 || c == 0x7F) { is_printable = false; break; } }
             if (is_printable) {
                 size_t cap2 = ed->text_capacity > 0 ? (size_t)ed->text_capacity : 1024;
-                size_t m = strlen(ed->text);
-                if (ed->cursor < 0) ed->cursor = 0;
-                if ((size_t)ed->cursor > m) ed->cursor = (int)m;
-                if (m + (size_t)key->text_len < cap2 - 1) {
-                    memmove(ed->text + ed->cursor + key->text_len, ed->text + ed->cursor, m - (size_t)ed->cursor + 1);
-                    memcpy(ed->text + ed->cursor, key->text, key->text_len);
-                    ed->cursor += key->text_len;
-                }
+                size_t ecur = (size_t)(ed->cursor < 0 ? 0 : ed->cursor);
+                EditBufferInsertText(ed->text, cap2, &ecur, key->text, (size_t)key->text_len);
+                ed->cursor = (int)ecur;
                 PROFILE_END_VAR(timer, "edit_popup_x11:Platform_EditPopupOnKey");
                 return true;
             }

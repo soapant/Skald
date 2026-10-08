@@ -52,6 +52,7 @@ unsigned int PATH_VAR_COUNT = ARRAY_LEN(default_path_vars);
 
 bool FullTextNeedsKeyPress = true;
 bool MessagesEnabled = true;
+bool EnableAutoPairing = false;
 bool RainbowText = false;
 bool AlternatingText = false;
 bool VimModeText = false;

@@ -48,6 +48,7 @@ extern const char* IconPath;
 extern const char* ControlHotkey;
 extern bool FullTextNeedsKeyPress;
 extern bool MessagesEnabled;
+extern bool EnableAutoPairing;
 extern bool RainbowText;
 extern bool ColoredVimModeText;
 extern bool WindowTitleText;
