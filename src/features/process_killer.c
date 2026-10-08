@@ -325,12 +325,9 @@ static void pk_render_callback(PromptState* state) {
         }
     }
 
-    FlKeyEvent ev;
-    while (fl_poll_key(&ev)) {
-        if (ev.down && !ev.repeat && ev.vk == 'L' && (ev.mods & 0x4)) {
-            pk_cycle_sort();
-            fl_populate_listbox(&state->listbox, NULL, g_pk_items, g_pk_count);
-        }
+    if (fl_ctrl_pressed() && fl_is_key_pressed('L')) {
+        pk_cycle_sort();
+        fl_populate_listbox(&state->listbox, NULL, g_pk_items, g_pk_count);
     }
 
     fl_draw_text(.text = "memory", .x = PK_COL_MEM, .y = 8, .fontsize = 13,

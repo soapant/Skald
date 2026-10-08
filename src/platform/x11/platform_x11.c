@@ -556,6 +556,63 @@ bool Platform_IsCtrlPressed(void) {
     return (mask & ControlMask) != 0;
 }
 
+bool Platform_IsShiftPressed(void) {
+    PROFILE_START(timer);
+    Display *display = get_display();
+    if (!display) {
+        PROFILE_END_VAR(timer, "platform_x11:Platform_IsShiftPressed");
+        return false;
+    }
+
+    Window root, child;
+    int root_x, root_y, win_x, win_y;
+    unsigned int mask = 0;
+
+    XQueryPointer(display, DefaultRootWindow(display),
+                  &root, &child, &root_x, &root_y, &win_x, &win_y, &mask);
+
+    PROFILE_END_VAR(timer, "platform_x11:Platform_IsShiftPressed");
+    return (mask & ShiftMask) != 0;
+}
+
+bool Platform_IsAltPressed(void) {
+    PROFILE_START(timer);
+    Display *display = get_display();
+    if (!display) {
+        PROFILE_END_VAR(timer, "platform_x11:Platform_IsAltPressed");
+        return false;
+    }
+
+    Window root, child;
+    int root_x, root_y, win_x, win_y;
+    unsigned int mask = 0;
+
+    XQueryPointer(display, DefaultRootWindow(display),
+                  &root, &child, &root_x, &root_y, &win_x, &win_y, &mask);
+
+    PROFILE_END_VAR(timer, "platform_x11:Platform_IsAltPressed");
+    return (mask & Mod1Mask) != 0;
+}
+
+bool Platform_IsSuperPressed(void) {
+    PROFILE_START(timer);
+    Display *display = get_display();
+    if (!display) {
+        PROFILE_END_VAR(timer, "platform_x11:Platform_IsSuperPressed");
+        return false;
+    }
+
+    Window root, child;
+    int root_x, root_y, win_x, win_y;
+    unsigned int mask = 0;
+
+    XQueryPointer(display, DefaultRootWindow(display),
+                  &root, &child, &root_x, &root_y, &win_x, &win_y, &mask);
+
+    PROFILE_END_VAR(timer, "platform_x11:Platform_IsSuperPressed");
+    return (mask & Mod4Mask) != 0;
+}
+
 char* Platform_QueryZoxidePath(const char* query) {
     PROFILE_START(timer);
     if (!query) {
