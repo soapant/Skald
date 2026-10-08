@@ -31,23 +31,29 @@ bool CheckVimMotion(int pressed_vk, int modifiers, MotionAction* out_action, con
         SequenceStartTimer();
         for (int i = 0; i < VIM_SEQUENCE_BINDING_COUNT; i++) {
             const SequenceBinding* b = &G_VIM_SEQUENCE_BINDINGS[i];
-            if (b->mode == MODE_INSERT && SequenceMatches(b->sequence)) {
-                log_info("CheckVimMotion insert match seq='%s'", b->sequence);
-                *out_action = b->action_id;
-                *out_sequence = b->sequence;
-                *out_typed_count = SequenceTypedCount();
-                SequenceReset();
-                return true;
+            if (b->sequence == NULL || b->handler == NULL) continue;
+            if (b->mode == MODE_INSERT) {
+                if (SequenceMatches(b->sequence)) {
+                    log_info("CheckVimMotion insert match seq='%s'", b->sequence);
+                    *out_action = b->action_id;
+                    *out_sequence = b->sequence;
+                    *out_typed_count = SequenceTypedCount();
+                    SequenceReset();
+                    return true;
+                }
             }
         }
         
         for (int i = 0; i < VIM_SEQUENCE_BINDING_COUNT; i++) {
             const SequenceBinding* b = &G_VIM_SEQUENCE_BINDINGS[i];
-            if (b->mode == MODE_INSERT && SequenceStartsWith(b->sequence)) {
-                *out_action = MOTION_NONE;
-                *out_sequence = NULL;
-                *out_typed_count = 0;
-                return true;
+            if (b->sequence == NULL || b->handler == NULL) continue;
+            if (b->mode == MODE_INSERT) {
+                if (SequenceStartsWith(b->sequence)) {
+                    *out_action = MOTION_NONE;
+                    *out_sequence = NULL;
+                    *out_typed_count = 0;
+                    return true;
+                }
             }
         }
         
@@ -64,6 +70,7 @@ bool CheckVimMotion(int pressed_vk, int modifiers, MotionAction* out_action, con
         bool is_prefix = false;
         for (int i = 0; i < VIM_SEQUENCE_BINDING_COUNT; i++) {
             const SequenceBinding* b = &G_VIM_SEQUENCE_BINDINGS[i];
+            if (b->sequence == NULL || b->handler == NULL) continue;
             if (b->mode == MODE_INSERT && tolower(b->sequence[0]) == seq_char) {
                 is_prefix = true;
                 break;
@@ -100,6 +107,7 @@ bool CheckVimMotion(int pressed_vk, int modifiers, MotionAction* out_action, con
             
             for (int i = 0; i < VIM_SEQUENCE_BINDING_COUNT; i++) {
                 const SequenceBinding* b = &G_VIM_SEQUENCE_BINDINGS[i];
+                if (b->sequence == NULL || b->handler == NULL) continue;
                 if (b->mode == MODE_NORMAL) {
                     if (SequenceMatches(b->sequence)) {
                         *out_action = b->action_id;

@@ -43,6 +43,25 @@ int UI_LB_GetTopIndex(WindowHandle hList) {
     return 0;
 }
 
+static int g_x11_lb_visible;
+
+int UI_LB_GetVisibleCount(void) {
+    return g_x11_lb_visible;
+}
+
+void UI_LB_SetVisibleCount(int count) {
+    g_x11_lb_visible = count;
+}
+
+void UI_LB_ScrollToTop(ListBoxInfo* lb, int top_index) {
+    if (!lb) return;
+    if (top_index < 0) top_index = 0;
+    if (g_x11_lb_visible > 0 && top_index + g_x11_lb_visible > lb->populated_count)
+        top_index = lb->populated_count - g_x11_lb_visible;
+    if (top_index < 0) top_index = 0;
+    lb->view_offset = top_index;
+}
+
 void UI_LB_SetFont(WindowHandle hList, void* hFont) {
     (void)hList; (void)hFont;
 }
@@ -187,21 +206,80 @@ void UI_Redraw(ListBoxInfo* lb, WindowHandle hListBox) {
 }
 
 void UI_SyncFilterFromEdit(FlintContext* ctx) {
-    (void)ctx;
+    if (!ctx) return;
+    WindowManager* wm = WindowManager_Get();
+    Popup* top = wm ? WindowManager_GetTopPopup(wm) : NULL;
+    if (!top) return;
+    if (top->type == POPUP_PROMPT && top->user_data) {
+        PromptState* prompt = (PromptState*)top->user_data;
+        strncpy(ctx->window.filter, prompt->filter, sizeof(ctx->window.filter) - 1);
+        ctx->window.filter[sizeof(ctx->window.filter) - 1] = '\0';
+        ctx->window.filter_cursor = prompt->cursor;
+        return;
+    }
+    if (top->type == POPUP_EDIT) {
+        WMEditPopupData* ed = (WMEditPopupData*)top;
+        if (ed && ed->text) {
+            strncpy(ctx->window.filter, ed->text, sizeof(ctx->window.filter) - 1);
+            ctx->window.filter[sizeof(ctx->window.filter) - 1] = '\0';
+            ctx->window.filter_cursor = ed->cursor;
+        }
+    }
 }
 
 void UI_ApplyFilterToEdit(FlintContext* ctx) {
-    (void)ctx;
+    if (!ctx) return;
+    WindowManager* wm = WindowManager_Get();
+    Popup* top = wm ? WindowManager_GetTopPopup(wm) : NULL;
+    if (!top) return;
+    if (top->type == POPUP_PROMPT && top->user_data) {
+        PromptState* prompt = (PromptState*)top->user_data;
+        strncpy(prompt->filter, ctx->window.filter, sizeof(prompt->filter) - 1);
+        prompt->filter[sizeof(prompt->filter) - 1] = '\0';
+        return;
+    }
+    if (top->type == POPUP_EDIT) {
+        WMEditPopupData* ed = (WMEditPopupData*)top;
+        if (ed && ed->text && ed->text_capacity > 1) {
+            strncpy(ed->text, ctx->window.filter, ed->text_capacity - 1);
+            ed->text[ed->text_capacity - 1] = '\0';
+        }
+    }
 }
 
 ListBoxInfo* UI_GetPopupListBox(FlintContext* ctx) {
-    (void)ctx;
+    if (!ctx) return NULL;
+    WindowManager* wm = WindowManager_Get();
+    Popup* top = wm ? WindowManager_GetTopPopup(wm) : NULL;
+    if (!top) return NULL;
+    if (top->type == POPUP_PROMPT && top->user_data) {
+        PromptState* prompt = (PromptState*)top->user_data;
+        return prompt->has_listbox ? &prompt->listbox : NULL;
+    }
     return NULL;
 }
 
 void UI_SyncEditCursor(FlintContext* ctx, int pos) {
-    (void)ctx;
-    (void)pos;
+    if (!ctx) return;
+    WindowManager* wm = WindowManager_Get();
+    Popup* top = wm ? WindowManager_GetTopPopup(wm) : NULL;
+    if (!top) return;
+    if (top->type == POPUP_PROMPT && top->user_data) {
+        PromptState* prompt = (PromptState*)top->user_data;
+        int len = (int)strlen(prompt->filter);
+        if (pos < 0) pos = 0;
+        if (pos > len) pos = len;
+        prompt->cursor = pos;
+    }
+    else if (top->type == POPUP_EDIT) {
+        WMEditPopupData* ed = (WMEditPopupData*)top;
+        if (!ed || !ed->text) return;
+        int len = (int)strlen(ed->text);
+        if (pos < 0) pos = 0;
+        if (pos > len) pos = len;
+        ed->cursor = pos;
+    }
+    UI_SetCursorPosition(pos);
 }
 
 bool UI_ApplyBackspaceToPopup(FlintContext* ctx) {
