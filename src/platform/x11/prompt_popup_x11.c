@@ -131,7 +131,11 @@ bool Platform_PromptPopupOnKey(Popup* self, const PopupKeyEvent* key) {
             state->filter[0] = '\0';
             state->cursor = 0;
         } else {
-            EditBufferBackspace(state->filter, &state->cursor);
+            size_t fcur = (size_t)state->cursor;
+            if (!EditBufferBackspacePair(state->filter, &fcur)) {
+                EditBufferBackspace(state->filter, &fcur);
+            }
+            state->cursor = (int)fcur;
         }
         History_ResetCursor(FlintContext_Get()->window.current_feature);
         if (FlintContext_Get()->prompt_callbacks.refresh) FlintContext_Get()->prompt_callbacks.refresh(state->filter, state->has_listbox ? &state->listbox : NULL);
@@ -345,16 +349,12 @@ bool Platform_PromptPopupOnKey(Popup* self, const PopupKeyEvent* key) {
             bool is_printable = true;
             for (int i = 0; i < key->text_len; i++) { unsigned char c = (unsigned char)key->text[i]; if (c < 0x20 || c == 0x7F) { is_printable = false; break; } }
             if (is_printable) {
-                size_t n = strlen(state->filter);
-                if (n + (size_t)key->text_len < sizeof(state->filter) - 1) {
-                    if ((size_t)state->cursor > n) state->cursor = (int)n;
-                    memmove(state->filter + state->cursor + key->text_len, state->filter + state->cursor, n - state->cursor + 1);
-                    memcpy(state->filter + state->cursor, key->text, key->text_len);
-                    state->cursor += key->text_len;
-                    History_ResetCursor(FlintContext_Get()->window.current_feature);
-                    FlintContext* _c = FlintContext_Get();
-                    if (_c->prompt_callbacks.refresh) _c->prompt_callbacks.refresh(state->filter, state->has_listbox ? &state->listbox : NULL);
-                }
+                size_t fcur = (size_t)state->cursor;
+                EditBufferInsertText(state->filter, sizeof(state->filter), &fcur, key->text, (size_t)key->text_len);
+                state->cursor = (int)fcur;
+                History_ResetCursor(FlintContext_Get()->window.current_feature);
+                FlintContext* _c = FlintContext_Get();
+                if (_c->prompt_callbacks.refresh) _c->prompt_callbacks.refresh(state->filter, state->has_listbox ? &state->listbox : NULL);
                 PROFILE_END_VAR(timer, "prompt_popup_x11:Platform_PromptPopupOnKey");
                 return true;
             }
