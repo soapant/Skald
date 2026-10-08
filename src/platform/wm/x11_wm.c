@@ -328,8 +328,8 @@ bool focus_window_title_x11(char* title) {
     return found;
 }
 
-FlWindowList get_window_names_x11() {
-    FlWindowList list = { .windows = NULL, .count = 0 };
+PlWindowList get_window_names_x11() {
+    PlWindowList list = { .windows = NULL, .count = 0 };
     Display* display = get_display();
     if (!display) { log_error("no display"); return list; }
     int nclients = 0;
@@ -359,8 +359,8 @@ FlWindowList get_window_names_x11() {
     return list;
 }
 
-FlWindowList get_window_titles_x11() {
-    FlWindowList list = { .windows = NULL, .count = 0 };
+PlWindowList get_window_titles_x11() {
+    PlWindowList list = { .windows = NULL, .count = 0 };
     Display* display = get_display();
     if (!display) { log_error("no display"); return list; }
     int nclients = 0;
@@ -403,7 +403,7 @@ void x11_wm_cleanup_cursor_display(void) {
     }
 }
 
-FlPos get_cursor_position_x11(void) { 
+PlPos get_cursor_position_x11(void) { 
     Display *display;
     Window root_window;
     Window window_returned;
@@ -413,7 +413,7 @@ FlPos get_cursor_position_x11(void) {
 
     display = _x11_cursor_display();
     if (display == NULL) {
-        return (FlPos){0, 0};
+        return (PlPos){0, 0};
     }
 
     root_window = DefaultRootWindow(display);
@@ -421,7 +421,7 @@ FlPos get_cursor_position_x11(void) {
     XQueryPointer(display, root_window, &window_returned, &window_returned,
                   &root_x, &root_y, &win_x, &win_y, &mask_return);
 
-    return (FlPos){root_x, root_y};
+    return (PlPos){root_x, root_y};
 }
 
 static Window x11_focused_window(Display* display) {

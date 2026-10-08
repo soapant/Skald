@@ -25,10 +25,14 @@
 typedef struct { uint64_t ticks; } FlTimer;
 typedef struct PlatformWidget PlatformWidget;
 
+typedef PlColor FlColor;
+typedef PlRect FlRect;
+typedef PlPos FlPos;
+typedef PlWindowList FlWindowList;
+
 // =============================================================================
 // CLIPBOARD
 // =============================================================================
-
 
 bool fl_copy_to_clipboard(const char* text);
 bool fl_copy_file_path(const char* path);
@@ -97,19 +101,6 @@ char* fl_run_argv(const char* const argv[], const char* stdin_data, int* out_sta
 bool fl_launch_detached(char* command);
 bool fl_terminate_process_by_name(const char* exe_name);
 
-#include "core/cap_registry.h"
-#define fl_cap_register(key, fn)  fl_cap_register_abi((key), FL_CAP_ABI_V1, (fn))
-#define fl_cap_resolve(key)       fl_cap_resolve_abi((key), FL_CAP_ABI_V1)
-
-#define FL_CAP_BIND(var, key, type)                                   \
-    static type var##_fn;                                             \
-    static unsigned var##_gen;                                        \
-    type var = NULL;                                                  \
-    if (var##_gen != fl_cap_generation()) {                           \
-        var##_fn = (type)fl_cap_resolve(key);                         \
-        var##_gen = fl_cap_generation();                              \
-    }                                                                 \
-    var = var##_fn
 
 int fl_get_icon_size(const char* icon_path);
 
@@ -149,11 +140,6 @@ bool fl_focus_window_left(void);
 bool fl_focus_window_right(void);
 bool fl_toggle_minimized_active(void);
 FlRect fl_get_monitor_geometry();
-
-// =============================================================================
-// ADB
-// =============================================================================
-
 
 // =============================================================================
 // STRING UTILITIES (all returned char* are heap-allocated, caller must free())
@@ -243,26 +229,6 @@ typedef struct {
 void fl_message_impl(const FlMessageSpec* spec);
 #define fl_message(...) fl_message_impl(&(FlMessageSpec){__VA_ARGS__})
 
-// =============================================================================
-// RAW WINDOW ACCESS (hardcore)
-// =============================================================================
-// Hardcore dev gets the real handle and does whatever. Flint just hosts popup.
-
-void* fl_get_display(void);
-void* fl_get_window(void);
-void* fl_get_xftdraw(void);
-void* fl_get_visual(void);
-unsigned long fl_get_colormap(void);
-void* fl_get_hdc(void);
-void* fl_get_hwnd(void);
-int fl_get_popup_width(void);
-int fl_get_popup_height(void);
-
-// =============================================================================
-// ANCHOR PRESETS
-// =============================================================================
-// Used by anchored placement. Raw still exists for pixel control.
-
 typedef enum {
     FLANCHOR_TOP_LEFT,
     FLANCHOR_TOP_CENTER,
@@ -276,10 +242,6 @@ typedef enum {
     FLANCHOR_FILL_WIDTH,
     FLANCHOR_FILL_HEIGHT
 } FlAnchor;
-
-// =============================================================================
-// RAW PLACEMENT (pixel-perfect)
-// =============================================================================
 
 typedef struct {
     const char *text;
@@ -378,7 +340,7 @@ bool fl_place_listbox_auto(int w, int h, const char **items, int count);
 bool fl_draw_image_auto(int w, int h, const char *path);
 
 // =============================================================================
-// WIDGETS (persistent windows, drawn on their own render thread)
+// WIDGETS 
 // =============================================================================
 
 typedef struct FlWidget FlWidget;
@@ -477,7 +439,7 @@ void* fl_load_image(const char *path);
 void fl_free_image(void *image);
 
 // =============================================================================
-// BASIC UI DRAWING (stubs for now, platform does logic later)
+// BASIC UI DRAWING 
 // =============================================================================
 
 typedef struct {
@@ -498,7 +460,6 @@ bool fl_draw_rounded_rect(int x, int y, int w, int h, int radius, unsigned long 
 
 int fl_get_text_width(const char *text);
 int fl_get_text_height(const char *text);
-bool fl_is_visible(void *widget);
 
 typedef struct {
     char name[64];
@@ -561,7 +522,7 @@ void fl_mutex_lock(FlMutex mutex);
 void fl_mutex_unlock(FlMutex mutex);
 
 // =============================================================================
-// HASHMAP (string -> long, backed by stb_ds; keys are copied)
+// HASHMAP 
 // =============================================================================
 
 typedef struct {
@@ -756,5 +717,19 @@ bool fl_register_snippet_impl(const char* trigger, const char* text, FlSnippetFu
 #endif
 
 #define FLINT_FEATURE_INIT FLINT_FEATURE_EXPORT __attribute__((constructor)) void FlintFeatureInit(void)
+
+#include "core/cap_registry.h"
+#define fl_cap_register(key, fn)  fl_cap_register_abi((key), FL_CAP_ABI_V1, (fn))
+#define fl_cap_resolve(key)       fl_cap_resolve_abi((key), FL_CAP_ABI_V1)
+
+#define FL_CAP_BIND(var, key, type)                                   \
+    static type var##_fn;                                             \
+    static unsigned var##_gen;                                        \
+    type var = NULL;                                                  \
+    if (var##_gen != fl_cap_generation()) {                           \
+        var##_fn = (type)fl_cap_resolve(key);                         \
+        var##_gen = fl_cap_generation();                              \
+    }                                                                 \
+    var = var##_fn
 
 #endif

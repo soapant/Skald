@@ -145,8 +145,8 @@ bool focus_window_title_niri(char* title) {
     return ok;
 }
 
-FlWindowList get_window_titles_niri() {
-    FlWindowList list = {0};
+PlWindowList get_window_titles_niri() {
+    PlWindowList list = {0};
     if (!niri_is_active()) return list;
     char* json = Platform_RunTerminalCommand("niri msg --json windows", false);
     if (!json || !json[0]) { free(json); return list; }
@@ -168,8 +168,8 @@ FlWindowList get_window_titles_niri() {
     return list;
 }
 
-FlWindowList get_window_names_niri() {
-    FlWindowList list = {0};
+PlWindowList get_window_names_niri() {
+    PlWindowList list = {0};
     if (!niri_is_active()) return list;
     char* json = Platform_RunTerminalCommand("niri msg --json windows", false);
     if (!json || !json[0]) { free(json); return list; }
@@ -192,7 +192,7 @@ FlWindowList get_window_names_niri() {
     return list;
 }
 
-FlPos get_cursor_position_niri(void) {
+PlPos get_cursor_position_niri(void) {
     char cmd[512];
     char* wd = Platform_GetWorkingDir();
     snprintf(cmd, sizeof(cmd), "LD_LIBRARY_PATH=%s/build/bundle:${LD_LIBRARY_PATH:-} %s/external/slurp -p -d ", wd ? wd : ".", wd ? wd : ".");
@@ -206,7 +206,7 @@ FlPos get_cursor_position_niri(void) {
     
     free(output);
     
-    return (FlPos){x, y}; 
+    return (PlPos){x, y}; 
 }
 
 bool close_active_window_niri(void) {

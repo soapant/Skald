@@ -10,11 +10,11 @@
 #include "core/remap_manager.h"
 
 // TEST(terminal_open) {
-//     FlWindowList before = Platform_GetWindowTitles();
+//     PlWindowList before = Platform_GetWindowTitles();
 //     Config_Load();
 //     Config_ResolveDefaultApps();
 //     Platform_RunTerminalCommand("echo Hello, World!", true);
-//     FlWindowList after = {0};
+//     PlWindowList after = {0};
 //     for (int i = 0; i < 50; i++) {
 //         fl_free_window_list(&after);
 //         after = Platform_GetWindowTitles();
@@ -30,11 +30,11 @@
 // }
 
 // TEST(browser_open) {
-//     FlWindowList before = Platform_GetWindowTitles();
+//     PlWindowList before = Platform_GetWindowTitles();
 //     Config_Load();
 //     Config_ResolveDefaultApps();
 //     Platform_LaunchBrowserAtUrl("things",false);
-//     FlWindowList after = {0};
+//     PlWindowList after = {0};
 //     for (int i = 0; i < 50; i++) {
 //         fl_free_window_list(&after);
 //         after = Platform_GetWindowTitles();
