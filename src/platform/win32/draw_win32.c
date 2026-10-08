@@ -15,8 +15,9 @@
 #include <gdiplus/gdiplus.h>
 #include <shlwapi.h>
 
-static __thread HFONT g_sizeFont = NULL;
-static __thread int g_sizeFontSize = 0;
+#define WIN32_SIZE_FONT_SLOTS 8
+static __thread HFONT g_sizeFonts[WIN32_SIZE_FONT_SLOTS] = {NULL};
+static __thread int g_sizeFontSizes[WIN32_SIZE_FONT_SLOTS] = {0};
 
 static wchar_t* win32_widen(const char* in, int in_len, int* out_len) {
     if (out_len) *out_len = 0;
@@ -160,12 +161,23 @@ static HFONT win32_font_for_text(const wchar_t* wide, int len, int fontsize, HFO
 
 static HFONT win32_sized_font(int size) {
   if (size <= 0) size = FontSize;
-  if (!g_sizeFont || g_sizeFontSize != size) {
-    if (g_sizeFont) { DeleteObject(g_sizeFont); g_sizeFont = NULL; g_sizeFontSize = 0; }
-    g_sizeFont = FH_TO_HFONT(Platform_CreateFont(size, UsedFont));
-    g_sizeFontSize = size;
+  for (int i = 0; i < WIN32_SIZE_FONT_SLOTS; i++) {
+    if (g_sizeFonts[i] && g_sizeFontSizes[i] == size) return g_sizeFonts[i];
   }
-  return g_sizeFont;
+  int slot = -1;
+  for (int i = 0; i < WIN32_SIZE_FONT_SLOTS; i++) {
+    if (!g_sizeFonts[i]) { slot = i; break; }
+  }
+  if (slot < 0) {
+    slot = 0;
+    for (int i = 1; i < WIN32_SIZE_FONT_SLOTS; i++) {
+      if (g_sizeFontSizes[i] < g_sizeFontSizes[slot]) slot = i;
+    }
+  }
+  if (g_sizeFonts[slot]) DeleteObject(g_sizeFonts[slot]);
+  g_sizeFonts[slot] = FH_TO_HFONT(Platform_CreateFont(size, UsedFont));
+  g_sizeFontSizes[slot] = size;
+  return g_sizeFonts[slot];
 }
 
 static __thread const char *g_prerender_text = NULL;
