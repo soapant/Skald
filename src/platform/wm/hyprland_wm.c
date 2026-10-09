@@ -207,22 +207,6 @@ PlWindowList get_window_titles_hyprland() {
    return list;
 }
 
-PlPos get_cursor_position_hyprland(void) {
-  hypr_ensure_sig();
-  
-  char* output = Platform_RunTerminalCommand("hyprctl cursorpos", false);
-
-  int x_val = 0;
-  int y_val = 0;
-
-  if (sscanf(output, "%d, %d", &x_val, &y_val) != 2) {
-      x_val = 0;
-      y_val = 0;
-  }
-
-  free(output);
-  return (PlPos){x_val, y_val};
-}
 
 bool close_active_window_hyprland(void) {
   hypr_ensure_sig();

@@ -8,7 +8,6 @@ void testing_render() {
 
 void Testing() {
     FlTimer p = fl_profile_start();
-    fl_message(.render=testing_render,.no_bg=false,.w=1920,.h=1080,.x=960,.y=540);
     fl_profile_end(p);
 }
 

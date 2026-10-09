@@ -10,7 +10,6 @@ char* paste_kwin(char* content);
 bool focus_window_title_kwin(char* title);
 PlWindowList get_window_titles_kwin();
 PlWindowList get_window_names_kwin();
-PlPos get_cursor_position_kwin(void);
 bool close_active_window_kwin(void);
 bool toggle_fullscreen_active_kwin(void);
 bool move_active_window_to_monitor_kwin(bool right);

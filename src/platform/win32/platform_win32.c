@@ -1333,19 +1333,6 @@ void Platform_CleanupPlatformResources(void) {
     }
 }
 
-PlPos Platform_GetCursorPos(void) {
-    PROFILE_START(timer);
-    POINT point;
-    PlPos r = (PlPos){0, 0};
-    
-    if (GetCursorPos(&point)) {
-        r = (PlPos){(int)point.x, (int)point.y};
-    }
-    
-    PROFILE_END_VAR(timer, "platform_win32:Platform_GetCursorPos");
-    return r;
-}
-
 PlColor Platform_GetPixelColor(int x, int y) {
     PROFILE_START(timer);
     PlColor out = {0, 0, 0};
@@ -1655,6 +1642,10 @@ void Platform_ShutdownUI() {
   if (g_win32_hKeyboardHook) {
     UnhookWindowsHookEx(g_win32_hKeyboardHook);
     g_win32_hKeyboardHook = NULL;
+  }
+  if (g_win32_hMouseHook) {
+    UnhookWindowsHookEx(g_win32_hMouseHook);
+    g_win32_hMouseHook = NULL;
   }
   if (g_gdiplusToken != 0) {
     GdiplusShutdown(g_gdiplusToken);

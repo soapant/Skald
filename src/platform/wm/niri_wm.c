@@ -192,22 +192,6 @@ PlWindowList get_window_names_niri() {
     return list;
 }
 
-PlPos get_cursor_position_niri(void) {
-    char cmd[512];
-    char* wd = Platform_GetWorkingDir();
-    snprintf(cmd, sizeof(cmd), "LD_LIBRARY_PATH=%s/build/bundle:${LD_LIBRARY_PATH:-} %s/external/slurp -p -d ", wd ? wd : ".", wd ? wd : ".");
-    
-    char* output = Platform_RunCommandAndGetOutput(cmd);
-
-    char* comma = strchr(output, ',');
-    
-    int x = atoi(output);     
-    int y = atoi(comma + 1); 
-    
-    free(output);
-    
-    return (PlPos){x, y}; 
-}
 
 bool close_active_window_niri(void) {
     if (!niri_is_active()) return false;
