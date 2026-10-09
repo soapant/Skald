@@ -1,5 +1,6 @@
 #include "core/context.h"
 #include "core/modal.h"
+#include "bindings/vim_state.h"
 #include "core/window_manager.h"
 #include "wm/wm.h"
 #include "platform/platform.h"
@@ -148,12 +149,40 @@ void Platform_EditPopupRender(Popup* self) {
     }
 
     if (!IsInsertMode() && data->cursor >= 0) {
-        int tint_x = cursor_draw_x;
-        if (tint_x < PROMPT_CARET_LO_CLAMP) tint_x = PROMPT_CARET_LO_CLAMP;
-        if (tint_x > data->w - PROMPT_CARET_HI_CLAMP) tint_x = data->w - PROMPT_CARET_HI_CLAMP;
         int tint_y = x11_font_cursor_y_of(font, draw_y);
         unsigned long tint = Color_Lerp(rgb_to_hex(COLOR_BG), rgb_to_hex(Modal_CursorColor()), 0.72f);
-        Platform_DrawRectRawOpaque(tint_x, tint_y, PROMPT_EDITPOPUP_CARET_W_NORMAL, FontSize, tint);
+        int sel_start = 0, sel_end = 0;
+        bool has_sel = VimState_GetSelection(&sel_start, &sel_end) && text_len > 0;
+        if (has_sel) {
+            if (sel_start < 0) sel_start = 0;
+            if (sel_end >= text_len) sel_end = text_len - 1;
+            if (sel_start <= sel_end && xf) {
+                int sx0 = 0, sx1 = 0;
+                sx0 = draw_x;
+                if (sel_start > 0) {
+                    XGlyphInfo e0;
+                    XftTextExtentsUtf8(dpy, xf, (FcChar8*)data->text, sel_start, &e0);
+                    sx0 = draw_x + e0.xOff;
+                }
+                if (sel_end + 1 <= text_len) {
+                    XGlyphInfo e1;
+                    XftTextExtentsUtf8(dpy, xf, (FcChar8*)data->text, sel_end + 1, &e1);
+                    sx1 = draw_x + e1.xOff;
+                }
+                int cx = cursor_draw_x;
+                if (sx0 < PROMPT_CARET_LO_CLAMP) sx0 = PROMPT_CARET_LO_CLAMP;
+                if (sx1 > data->w - PROMPT_CARET_HI_CLAMP) sx1 = data->w - PROMPT_CARET_HI_CLAMP;
+                if (cx < sx0) cx = sx0;
+                if (cx > sx1) cx = sx1;
+                int w = sx1 - sx0;
+                if (w > 0) Platform_DrawRectRawOpaque(sx0, tint_y, w, FontSize, tint);
+            }
+        } else {
+            int tint_x = cursor_draw_x;
+            if (tint_x < PROMPT_CARET_LO_CLAMP) tint_x = PROMPT_CARET_LO_CLAMP;
+            if (tint_x > data->w - PROMPT_CARET_HI_CLAMP) tint_x = data->w - PROMPT_CARET_HI_CLAMP;
+            Platform_DrawRectRawOpaque(tint_x, tint_y, PROMPT_EDITPOPUP_CARET_W_NORMAL, FontSize, tint);
+        }
     }
 
     if (text_len > 0) {

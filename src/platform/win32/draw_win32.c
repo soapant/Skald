@@ -1,6 +1,7 @@
 #include "platform/draw.h"
 #include "core/prompt_geometry.h"
 #include "core/modal.h"
+#include "bindings/vim_state.h"
 #include "platform/platform.h"
 #include "platform/win32/win32_state.h"
 #include "config.h"
@@ -676,6 +677,13 @@ static int win32_update_edit_scroll_offset(HDC hdc, const char* text, int text_l
     return scroll;
 }
 
+static int win32_char_x(HDC hdc, const char* text, int index, int scroll) {
+    int x = 0;
+    if (text && index > 0) x = Platform_MeasureTextWidth(text, index, FontSize);
+    (void)hdc;
+    return x - scroll;
+}
+
 void Platform_DrawPromptEditText(PromptState* state) {
     PROFILE_START(timer);
     if (!state || !g_draw_hdc) { PROFILE_END_VAR(timer, "draw_win32:Platform_DrawPromptEditText"); return; }
@@ -684,9 +692,6 @@ void Platform_DrawPromptEditText(PromptState* state) {
     int scroll = win32_update_edit_scroll_offset(g_draw_hdc, state->filter, text_len, (int)state->cursor, state->width, state->scroll_offset, &cursor_x);
     state->scroll_offset = scroll;
     if (!IsInsertMode() && state->cursor >= 0) {
-        int tint_x = PROMPT_EDIT_INSET + cursor_x - scroll;
-        if (tint_x < PROMPT_CARET_LO_CLAMP) tint_x = PROMPT_CARET_LO_CLAMP;
-        if (tint_x > state->width - PROMPT_CARET_HI_CLAMP) tint_x = state->width - PROMPT_CARET_HI_CLAMP;
         FontHandle tfont = Platform_CreateFont(FontSize, UsedFont);
         HFONT told = NULL;
         TEXTMETRIC ttm;
@@ -697,7 +702,29 @@ void Platform_DrawPromptEditText(PromptState* state) {
         int tint_y = (tlh <= 0 || FontSize <= 0) ? PROMPT_EDIT_INSET : PROMPT_EDIT_INSET + (tlh - FontSize) / 2;
         if (told) SelectObject(g_draw_hdc, told);
         Platform_DestroyFont(tfont);
-        Platform_DrawRectRawOpaque(tint_x, tint_y, PromptNormalCaretWidth(), FontSize, Modal_CursorColor());
+
+        int sel_start = 0, sel_end = 0;
+        bool has_sel = VimState_GetSelection(&sel_start, &sel_end) && text_len > 0;
+        if (has_sel) {
+            if (sel_start < 0) sel_start = 0;
+            if (sel_end >= text_len) sel_end = text_len - 1;
+            if (sel_start <= sel_end) {
+                int x0 = PROMPT_EDIT_INSET + win32_char_x(g_draw_hdc, state->filter, sel_start, scroll);
+                int x1 = PROMPT_EDIT_INSET + win32_char_x(g_draw_hdc, state->filter, sel_end, scroll);
+                int cx = PROMPT_EDIT_INSET + win32_char_x(g_draw_hdc, state->filter, (int)state->cursor, scroll);
+                if (x0 < PROMPT_CARET_LO_CLAMP) x0 = PROMPT_CARET_LO_CLAMP;
+                if (x1 > state->width - PROMPT_CARET_HI_CLAMP) x1 = state->width - PROMPT_CARET_HI_CLAMP;
+                if (cx < x0) cx = x0;
+                if (cx > x1) cx = x1;
+                int w = x1 - x0 + PromptNormalCaretWidth();
+                if (w > 0) Platform_DrawRectRawOpaque(x0, tint_y, w, FontSize, Modal_CursorColor());
+            }
+        } else {
+            int tint_x = PROMPT_EDIT_INSET + cursor_x - scroll;
+            if (tint_x < PROMPT_CARET_LO_CLAMP) tint_x = PROMPT_CARET_LO_CLAMP;
+            if (tint_x > state->width - PROMPT_CARET_HI_CLAMP) tint_x = state->width - PROMPT_CARET_HI_CLAMP;
+            Platform_DrawRectRawOpaque(tint_x, tint_y, PromptNormalCaretWidth(), FontSize, Modal_CursorColor());
+        }
     }
     if (text_len > 0) {
         FontHandle font = Platform_CreateFont(FontSize, UsedFont);
