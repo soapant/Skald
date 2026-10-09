@@ -137,23 +137,68 @@ TEST(edit_buffer_delete_char) {
     ASSERT_EQ_STR(buf, "bc");
 }
 
-TEST(cursor_preserved_on_enter_normal) {
+TEST(enter_normal_clamps_cursor_onto_last_char) {
     vreset_insert("hello", 5);
     HandleEnterNormal(vctx());
     ASSERT_TRUE(IsNormalMode());
+    ASSERT_EQ_INT(Vim_GetCursor(vctx()), 4);
+}
+
+TEST(enter_normal_preserves_cursor_mid_text) {
+    vreset_insert("hello", 2);
+    HandleEnterNormal(vctx());
+    ASSERT_TRUE(IsNormalMode());
+    ASSERT_EQ_INT(Vim_GetCursor(vctx()), 2);
+}
+
+TEST(enter_normal_on_empty_text_stays_zero) {
+    vreset_insert("", 0);
+    HandleEnterNormal(vctx());
+    ASSERT_TRUE(IsNormalMode());
+    ASSERT_EQ_INT(Vim_GetCursor(vctx()), 0);
+}
+
+TEST(enter_insert_does_not_clamp) {
+    vreset_insert("hello", 5);
+    SetMode(MODE_NORMAL);
+    Vim_SetCursor(vctx(), 5);
+    SetMode(MODE_INSERT);
     ASSERT_EQ_INT(Vim_GetCursor(vctx()), 5);
 }
 
 TEST(cursor_at_end_stays) {
     vreset("hello", 5);
-    ASSERT_EQ_INT(Vim_GetCursor(vctx()), 5);
-    HandleMoveLeft(vctx());
-    ASSERT_EQ_INT(Vim_GetCursor(vctx()), 4);
     HandleMoveRight(vctx());
-    ASSERT_EQ_INT(Vim_GetCursor(vctx()), 5);
-    HandleMoveLeft(vctx());
+    ASSERT_EQ_INT(Vim_GetCursor(vctx()), 4);
     HandleMoveLeft(vctx());
     ASSERT_EQ_INT(Vim_GetCursor(vctx()), 3);
+    HandleMoveRight(vctx());
+    ASSERT_EQ_INT(Vim_GetCursor(vctx()), 4);
+    HandleMoveLeft(vctx());
+    HandleMoveLeft(vctx());
+    ASSERT_EQ_INT(Vim_GetCursor(vctx()), 2);
+}
+
+TEST(normal_mode_right_clamps_to_last_char) {
+    vreset("hello", 3);
+    HandleMoveRight(vctx());
+    HandleMoveRight(vctx());
+    HandleMoveRight(vctx());
+    HandleMoveRight(vctx());
+    HandleMoveRight(vctx());
+    ASSERT_EQ_INT(Vim_GetCursor(vctx()), 4);
+}
+
+TEST(normal_mode_right_on_empty_text_stays_zero) {
+    vreset("", 0);
+    HandleMoveRight(vctx());
+    ASSERT_EQ_INT(Vim_GetCursor(vctx()), 0);
+}
+
+TEST(normal_mode_left_clamps_to_zero) {
+    vreset("hello", 0);
+    HandleMoveLeft(vctx());
+    ASSERT_EQ_INT(Vim_GetCursor(vctx()), 0);
 }
 
 TEST(normal_mode_does_not_insert) {
@@ -216,7 +261,7 @@ TEST(jk_enters_normal_without_typing) {
     char after[64];
     vgettext(after, sizeof(after));
     ASSERT_EQ_STR(after, "hello");
-    ASSERT_EQ_INT(Vim_GetCursor(vctx()), 5);
+    ASSERT_EQ_INT(Vim_GetCursor(vctx()), 4);
 }
 
 TEST(word_end_forward) {
@@ -1050,8 +1095,14 @@ int main(void) {
     RUN(delete_word_normal);
     RUN(edit_buffer_backspace);
     RUN(edit_buffer_delete_char);
-    RUN(cursor_preserved_on_enter_normal);
+    RUN(enter_normal_clamps_cursor_onto_last_char);
+    RUN(enter_normal_preserves_cursor_mid_text);
+    RUN(enter_normal_on_empty_text_stays_zero);
+    RUN(enter_insert_does_not_clamp);
     RUN(cursor_at_end_stays);
+    RUN(normal_mode_right_clamps_to_last_char);
+    RUN(normal_mode_right_on_empty_text_stays_zero);
+    RUN(normal_mode_left_clamps_to_zero);
     RUN(normal_mode_does_not_insert);
     RUN(cw_deletes_and_enters_insert);
     RUN(dd_deletes_line);

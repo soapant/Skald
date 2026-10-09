@@ -142,7 +142,9 @@ void HandleMoveRight(FlintContext* ctx) {
     char text[VIM_TEXT_BUF];
     Vim_GetText(ctx, text, sizeof(text));
     int len = (int)strlen(text);
-    if (pos < len) Vim_SetCursor(ctx, pos + 1);
+    int last = len > 0 ? len - 1 : 0;
+    if (pos < last) Vim_SetCursor(ctx, pos + 1);
+    else Vim_SetCursor(ctx, last);
 }
 
 void HandleMoveDown(FlintContext* ctx) {

@@ -379,7 +379,7 @@ void Platform_GetItemColors(int idx, int count, unsigned long *num_color, unsign
     if (plain_color) *plain_color = p;
 }
 
-bool Platform_DrawRectRaw(int x, int y, int w, int h, unsigned long color) {
+bool Platform_DrawRectRaw(int x, int y, int w, int h, unsigned long color, unsigned char alpha) {
     measure_track(x, y, w, h);
 RECT rect;
   rect.left = x;
@@ -387,13 +387,54 @@ RECT rect;
   rect.right = x + w;
   rect.bottom = y + h;
 
-  HBRUSH hBrush = CreateSolidBrush(color);
-
+  if (alpha >= 255) {
+    HBRUSH hBrush = CreateSolidBrush(color);
     FillRect(g_draw_hdc, &rect, hBrush);
-
     DeleteObject(hBrush);
-
     return true;
+  }
+
+  int rw = rect.right - rect.left;
+  int rh = rect.bottom - rect.top;
+  if (rw <= 0 || rh <= 0) return true;
+
+  HDC screen = GetDC(NULL);
+  HDC mem = CreateCompatibleDC(screen);
+  HBITMAP bmp = CreateCompatibleBitmap(screen, rw, rh);
+  HGDIOBJ old = SelectObject(mem, bmp);
+
+  RECT all = {0, 0, rw, rh};
+  HBRUSH clear = CreateSolidBrush(0);
+  FillRect(mem, &all, clear);
+  DeleteObject(clear);
+
+  HBRUSH hBrush = CreateSolidBrush(color);
+  FillRect(mem, &all, hBrush);
+  DeleteObject(hBrush);
+
+  BYTE* px = (BYTE*)GetDIBits(mem, bmp, 0, rh, NULL, NULL, DIB_RGB_COLORS);
+  if (px) {
+    for (int i = 0; i < rw * rh; i++) {
+      px[i * 4 + 3] = alpha;
+    }
+  }
+
+  BLENDFUNCTION blend;
+  blend.BlendOp = AC_SRC_OVER;
+  blend.BlendFlags = 0;
+  blend.SourceConstantAlpha = 255;
+  blend.AlphaFormat = AC_SRC_ALPHA;
+  BOOL ok = AlphaBlend(g_draw_hdc, rect.left, rect.top, rw, rh, mem, 0, 0, rw, rh, blend);
+
+  SelectObject(mem, old);
+  DeleteObject(bmp);
+  DeleteDC(mem);
+  ReleaseDC(NULL, screen);
+  return ok != 0;
+}
+
+bool Platform_DrawRectRawOpaque(int x, int y, int w, int h, unsigned long color) {
+    return Platform_DrawRectRaw(x, y, w, h, color, 255);
 }
 
 #define WIN32_IMG_CACHE_SLOTS 16
@@ -642,6 +683,22 @@ void Platform_DrawPromptEditText(PromptState* state) {
     int text_len = (int)strlen(state->filter);
     int scroll = win32_update_edit_scroll_offset(g_draw_hdc, state->filter, text_len, (int)state->cursor, state->width, state->scroll_offset, &cursor_x);
     state->scroll_offset = scroll;
+    if (!IsInsertMode() && state->cursor >= 0) {
+        int tint_x = PROMPT_EDIT_INSET + cursor_x - scroll;
+        if (tint_x < PROMPT_CARET_LO_CLAMP) tint_x = PROMPT_CARET_LO_CLAMP;
+        if (tint_x > state->width - PROMPT_CARET_HI_CLAMP) tint_x = state->width - PROMPT_CARET_HI_CLAMP;
+        FontHandle tfont = Platform_CreateFont(FontSize, UsedFont);
+        HFONT told = NULL;
+        TEXTMETRIC ttm;
+        memset(&ttm, 0, sizeof(ttm));
+        if (tfont.hfont) told = (HFONT)SelectObject(g_draw_hdc, tfont.hfont);
+        GetTextMetrics(g_draw_hdc, &ttm);
+        int tlh = ttm.tmAscent + ttm.tmDescent;
+        int tint_y = (tlh <= 0 || FontSize <= 0) ? PROMPT_EDIT_INSET : PROMPT_EDIT_INSET + (tlh - FontSize) / 2;
+        if (told) SelectObject(g_draw_hdc, told);
+        Platform_DestroyFont(tfont);
+        Platform_DrawRectRawOpaque(tint_x, tint_y, PromptNormalCaretWidth(), FontSize, Modal_CursorColor());
+    }
     if (text_len > 0) {
         FontHandle font = Platform_CreateFont(FontSize, UsedFont);
         Platform_DrawTextRaw(PROMPT_EDIT_INSET - scroll, PROMPT_EDIT_INSET, state->filter, rgb_to_hex(COLOR_TEXT), font, "", 0, 0);
@@ -668,10 +725,7 @@ void Platform_DrawPromptEditCursor(PromptState* state) {
     int cursor_y = (line_h <= 0 || FontSize <= 0) ? PROMPT_EDIT_INSET : PROMPT_EDIT_INSET + (line_h - FontSize) / 2;
     if (oldFont) SelectObject(g_draw_hdc, oldFont);
     Platform_DestroyFont(font);
-    if (IsInsertMode()) {
-        Platform_DrawRectRaw(cursor_draw_x, cursor_y, PROMPT_CARET_W_INSERT, FontSize, Modal_CursorColor());
-    } else {
-        Platform_DrawRectRaw(cursor_draw_x, cursor_y, PromptNormalCaretWidth(), FontSize, Modal_CursorColor());
-    }
+    if (!IsInsertMode()) { PROFILE_END_VAR(timer, "draw_win32:Platform_DrawPromptEditCursor"); return; }
+    Platform_DrawRectRawOpaque(cursor_draw_x, cursor_y, PROMPT_CARET_W_INSERT, FontSize, Modal_CursorColor());
     PROFILE_END_VAR(timer, "draw_win32:Platform_DrawPromptEditCursor");
 }

@@ -147,22 +147,26 @@ void Platform_EditPopupRender(Popup* self) {
         }
     }
 
+    if (!IsInsertMode() && data->cursor >= 0) {
+        int tint_x = cursor_draw_x;
+        if (tint_x < PROMPT_CARET_LO_CLAMP) tint_x = PROMPT_CARET_LO_CLAMP;
+        if (tint_x > data->w - PROMPT_CARET_HI_CLAMP) tint_x = data->w - PROMPT_CARET_HI_CLAMP;
+        int tint_y = x11_font_cursor_y_of(font, draw_y);
+        unsigned long tint = Color_Lerp(rgb_to_hex(COLOR_BG), rgb_to_hex(Modal_CursorColor()), 0.72f);
+        Platform_DrawRectRawOpaque(tint_x, tint_y, PROMPT_EDITPOPUP_CARET_W_NORMAL, FontSize, tint);
+    }
+
     if (text_len > 0) {
         Platform_DrawTextRaw(draw_x, draw_y, data->text, rgb_to_hex(COLOR_TEXT), font, "", 0, 0);
     } else if (data->placeholder && data->placeholder[0]) {
         unsigned long ph = Color_Lerp(rgb_to_hex(COLOR_BG), rgb_to_hex(COLOR_TEXT), 0.45f);
         Platform_DrawTextRaw(draw_x, draw_y, data->placeholder, ph, font, "", 0, 0);
     }
-    {
+    if (IsInsertMode()) {
         if (cursor_draw_x < PROMPT_CARET_LO_CLAMP) cursor_draw_x = PROMPT_CARET_LO_CLAMP;
         if (cursor_draw_x > data->w - PROMPT_CARET_HI_CLAMP) cursor_draw_x = data->w - PROMPT_CARET_HI_CLAMP;
-        int textH = FontSize;
         int cursor_y = x11_font_cursor_y_of(font, draw_y);
-        if (IsInsertMode()) {
-            Platform_DrawRectRaw(cursor_draw_x, cursor_y, PROMPT_CARET_W_INSERT, textH, rgb_to_hex(Modal_CursorColor()));
-        } else {
-            Platform_DrawRectRaw(cursor_draw_x, cursor_y, PROMPT_EDITPOPUP_CARET_W_NORMAL, textH, rgb_to_hex(Modal_CursorColor()));
-        }
+        Platform_DrawRectRawOpaque(cursor_draw_x, cursor_y, PROMPT_CARET_W_INSERT, FontSize, rgb_to_hex(Modal_CursorColor()));
     }
     Platform_SetDrawContext(NULL, NULL, NULL, 0);
     if (buffered) {

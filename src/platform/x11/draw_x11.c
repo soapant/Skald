@@ -266,7 +266,7 @@ static bool RawLine_Push(int x, int y, char ch, unsigned long color, FontHandle 
     g_raw_count++;
     return true;
 }
-static bool RawRect_Map(int x, int y, int w, int h, unsigned long color) {
+static bool RawRect_Map(int x, int y, int w, int h, unsigned long color, unsigned char alpha) {
     RawLine_Flush();
     if (g_raw_map_count <= 0 || g_raw_map_pitch <= 0) return false;
     if (y != g_raw_map_y || g_raw_map_xd != g_draw_xd || !g_draw_xd) return false;
@@ -275,7 +275,8 @@ static bool RawRect_Map(int x, int y, int w, int h, unsigned long color) {
     if (idx < 0) idx = 0;
     if (idx >= g_raw_map_count) idx = g_raw_map_count - 1;
     XftColor rc;
-    x11_xft_alloc_color(g_draw_dpy, g_draw_vis, g_draw_cmap, color, 0xFFFF, &rc);
+    unsigned short a16 = (unsigned short)(((unsigned int)alpha * 0xFFFFu) / 255u);
+    x11_xft_alloc_color(g_draw_dpy, g_draw_vis, g_draw_cmap, color, a16, &rc);
     XftDrawRect(g_draw_xd, &rc, g_raw_map_x[idx] + (x - (g_raw_map_x0 + idx * g_raw_map_pitch)), g_raw_map_top[idx] + (y - g_raw_map_y), w, h);
     XftColorFree(g_draw_dpy, g_draw_vis, g_draw_cmap, &rc);
     return true;
@@ -447,11 +448,29 @@ void Platform_DrawEditText(PromptState *state, Display *dpy, XftDraw *xd, Visual
     int scroll = x11_update_edit_scroll_offset(dpy, xf, state->filter, text_len, state->cursor, state->width, state->scroll_offset, &cursor_x);
     state->scroll_offset = scroll;
     int draw_x = PROMPT_EDIT_INSET - scroll;
+    Platform_DrawEditTint(state, dpy, xd, vis, cmap, font);
     if (text_len > 0) {
         Platform_SetDrawContext(dpy, xd, vis, cmap);
         Platform_DrawTextRaw(draw_x, PROMPT_EDIT_INSET, state->filter, rgb_to_hex(COLOR_TEXT), font, "", 0, 0);
     }
 }
+void Platform_DrawEditTint(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap, FontHandle font) {
+    if (!state) return;
+    if (IsInsertMode()) return;
+    XftFont *xf = FH_TO_XFT(font);
+    int text_len = (int)strlen(state->filter);
+    if (state->cursor < 0) return;
+    int cursor_x = 0;
+    x11_update_edit_scroll_offset(dpy, xf, state->filter, text_len, state->cursor, state->width, state->scroll_offset, &cursor_x);
+    Platform_SetDrawContext(dpy, xd, vis, cmap);
+    int tint_x = PROMPT_EDIT_INSET + cursor_x - state->scroll_offset;
+    if (tint_x < PROMPT_CARET_LO_CLAMP) tint_x = PROMPT_CARET_LO_CLAMP;
+    if (tint_x > state->width - PROMPT_CARET_HI_CLAMP) tint_x = state->width - PROMPT_CARET_HI_CLAMP;
+    int tint_y = x11_font_cursor_y_of(font, PROMPT_EDIT_INSET);
+    unsigned long tint = Color_Lerp(rgb_to_hex(COLOR_BG), rgb_to_hex(Modal_CursorColor()), 0.72f);
+    Platform_DrawRectRawOpaque(tint_x, tint_y, PromptNormalCaretWidth(), FontSize, tint);
+}
+
 void Platform_DrawEditCursor(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap, FontHandle font) {
     XftFont *xf = FH_TO_XFT(font);
     int cursor_x = 0;
@@ -461,22 +480,29 @@ void Platform_DrawEditCursor(PromptState *state, Display *dpy, XftDraw *xd, Visu
     if (cursor_draw_x < PROMPT_CARET_LO_CLAMP) cursor_draw_x = PROMPT_CARET_LO_CLAMP;
     if (cursor_draw_x > state->width - PROMPT_CARET_HI_CLAMP) cursor_draw_x = state->width - PROMPT_CARET_HI_CLAMP;
     int cursor_y = x11_font_cursor_y_of(font, PROMPT_EDIT_INSET);
-    if (IsInsertMode()) {
-        Platform_DrawRectRaw(cursor_draw_x, cursor_y, PROMPT_CARET_W_INSERT, FontSize, rgb_to_hex(Modal_CursorColor()));
-    } else {
-        Platform_DrawRectRaw(cursor_draw_x, cursor_y, PromptNormalCaretWidth(), FontSize, rgb_to_hex(Modal_CursorColor()));
-    }
+    if (!IsInsertMode()) return;
+    Platform_DrawRectRawOpaque(cursor_draw_x, cursor_y, PROMPT_CARET_W_INSERT, FontSize, rgb_to_hex(Modal_CursorColor()));
 }
-bool Platform_DrawRectRaw(int x, int y, int w, int h, unsigned long color) {
+bool Platform_DrawRectRaw(int x, int y, int w, int h, unsigned long color, unsigned char alpha) {
     x += g_draw_off_x;
     y += g_draw_off_y;
     measure_track(x, y, w, h);
-    if (RawRect_Map(x, y, w, h, color)) return true;
+    if (RawRect_Map(x, y, w, h, color, alpha)) return true;
     XftColor col;
-    x11_xft_alloc_color(g_draw_dpy, g_draw_vis, g_draw_cmap, color, OpacityAlpha16(), &col);
+    unsigned short a16;
+    if (alpha == 255) {
+        a16 = OpacityAlpha16();
+    } else {
+        a16 = (unsigned short)(((unsigned int)alpha * 0xFFFFu) / 255u);
+    }
+    x11_xft_alloc_color(g_draw_dpy, g_draw_vis, g_draw_cmap, color, a16, &col);
     XftDrawRect(g_draw_xd, &col, x, y, w, h);
     XftColorFree(g_draw_dpy, g_draw_vis, g_draw_cmap, &col);
     return true;
+}
+
+bool Platform_DrawRectRawOpaque(int x, int y, int w, int h, unsigned long color) {
+    return Platform_DrawRectRaw(x, y, w, h, color, 255);
 }
 
 void Platform_DrawEditBox(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap) {
