@@ -35,6 +35,10 @@ typedef enum {
     MOTION_ENTER_INSERT_IN_START,
     MOTION_ENTER_VISUAL,
     MOTION_EXIT_VISUAL,
+    MOTION_VISUAL_LEFT,
+    MOTION_VISUAL_RIGHT,
+    MOTION_VISUAL_DELETE,
+    MOTION_VISUAL_CHANGE,
     MOTION_ENTER_VISUAL_LINE,
     MOTION_MOVE_LEFT,
     MOTION_MOVE_RIGHT,
@@ -141,6 +145,11 @@ void HandleEnterInsertOut(FlintContext* ctx);
 void HandleEnterInsertIn(FlintContext* ctx);
 void HandleEnterVisual(FlintContext* ctx);
 void HandleExitVisual(FlintContext* ctx);
+void HandleVisualLeft(FlintContext* ctx);
+void HandleVisualRight(FlintContext* ctx);
+void HandleVisualDeleteSelection(FlintContext* ctx);
+void HandleVisualChangeSelection(FlintContext* ctx);
+void vim_delete_selection(FlintContext* ctx, bool enter_insert);
 void HandleMoveLeft(FlintContext* ctx);
 void HandleEnter(FlintContext* ctx);
 void HandleMoveUp(FlintContext* ctx);

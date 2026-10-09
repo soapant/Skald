@@ -11,6 +11,7 @@ static char            g_search_pattern[VIM_SEARCH_PATTERN];
 static int             g_search_len;
 static bool            g_search_pending;
 static char            g_last_pattern[VIM_SEARCH_PATTERN];
+static VimSelection    g_sel;
 
 static int MarkIndex(char name) {
     if (name >= 'a' && name <= 'z') return name - 'a';
@@ -29,6 +30,40 @@ void VimState_Reset(void) {
     g_search_pending = false;
     g_search_pattern[0] = '\0';
     g_last_pattern[0] = '\0';
+    g_sel.active = false;
+    g_sel.anchor = 0;
+    g_sel.head = 0;
+}
+
+void VimState_BeginSelection(int cursor) {
+    g_sel.active = true;
+    g_sel.anchor = cursor;
+    g_sel.head = cursor;
+}
+
+void VimState_UpdateSelection(int cursor) {
+    if (!g_sel.active) return;
+    g_sel.head = cursor;
+}
+
+void VimState_EndSelection(void) {
+    g_sel.active = false;
+    g_sel.anchor = 0;
+    g_sel.head = 0;
+}
+
+bool VimState_GetSelection(int* out_start, int* out_end) {
+    if (!g_sel.active) return false;
+    if (g_sel.anchor == g_sel.head) return false;
+    int a = g_sel.anchor < g_sel.head ? g_sel.anchor : g_sel.head;
+    int b = g_sel.anchor < g_sel.head ? g_sel.head : g_sel.anchor;
+    if (out_start) *out_start = a;
+    if (out_end) *out_end = b;
+    return true;
+}
+
+bool VimState_HasSelection(void) {
+    return g_sel.active;
 }
 
 void VimState_SetFind(char target, VimFindDir dir) {
