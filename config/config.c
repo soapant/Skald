@@ -61,7 +61,7 @@ void ConfigApply(void) {
     GradientItems = 30;
     GradientBrightness = 1.0f;
     CloseOnLossOfFocus = false;
-    Theme = "github-dark";
+    Theme = "onedark";
     COLOR_BG = RGB(13, 17, 23);
     COLOR_TEXT = RGB(201, 209, 217);
     COLOR_ALTERNATE = RGB(63, 185, 80);
