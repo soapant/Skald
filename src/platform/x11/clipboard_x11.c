@@ -58,6 +58,10 @@ static Atom g_clip_jpeg_atom = None;
 static Atom g_clip_gif_atom = None;
 static Atom g_clip_bmp_atom = None;
 static Atom g_clip_img_atom = None;
+static Atom g_clip_urilist = None;
+static Atom g_clip_gnome_files = None;
+static char *g_clip_file_uri = NULL;
+static char *g_clip_gnome_payload = NULL;
 static Atom g_clip_incr = None;
 
 static bool g_incr_active = false;
@@ -88,6 +92,8 @@ void x11_clipboard_ensure_started(void) {
     g_clip_jpeg_atom = XInternAtom(dpy, "image/jpeg", False);
     g_clip_gif_atom = XInternAtom(dpy, "image/gif", False);
     g_clip_bmp_atom = XInternAtom(dpy, "image/bmp", False);
+    g_clip_urilist = XInternAtom(dpy, "text/uri-list", False);
+    g_clip_gnome_files = XInternAtom(dpy, "x-special/gnome-copied-files", False);
     g_clip_incr = XInternAtom(dpy, "INCR", False);
     XMapWindow(dpy, win);
     XFlush(dpy);
@@ -129,7 +135,7 @@ static void x11_clipboard_serve_request(Display *dpy, XSelectionRequestEvent *re
         (unsigned long)req->time, g_clip_text ? "yes" : "no", (int)g_clip_png_len);
     if (tname) XFree(tname);
     if (req->target == g_clip_targets) {
-        Atom list[8];
+        Atom list[10];
         int n = 0;
         list[n++] = g_clip_targets;
         list[n++] = g_clip_timestamp;
@@ -138,6 +144,10 @@ static void x11_clipboard_serve_request(Display *dpy, XSelectionRequestEvent *re
             list[n++] = XA_STRING;
         }
         if (g_clip_png) list[n++] = g_clip_img_atom;
+        if (g_clip_file_uri) {
+            list[n++] = g_clip_urilist;
+            list[n++] = g_clip_gnome_files;
+        }
         XChangeProperty(dpy, req->requestor, prop, XA_ATOM, 32, PropModeReplace, (unsigned char*)list, n);
         resp.xselection.property = prop;
     } else if ((req->target == g_clip_utf8 || req->target == XA_STRING) && g_clip_text) {
@@ -169,6 +179,15 @@ static void x11_clipboard_serve_request(Display *dpy, XSelectionRequestEvent *re
             XChangeProperty(dpy, req->requestor, prop, g_clip_img_atom, 8, PropModeReplace, g_clip_png, (int)g_clip_png_len);
             resp.xselection.property = prop;
         }
+    } else if (req->target == g_clip_urilist && g_clip_file_uri) {
+        size_t n = strlen(g_clip_file_uri);
+        XChangeProperty(dpy, req->requestor, prop, g_clip_urilist, 8, PropModeReplace,
+                        (unsigned char*)g_clip_file_uri, (int)n);
+        resp.xselection.property = prop;
+    } else if (req->target == g_clip_gnome_files && g_clip_gnome_payload) {
+        XChangeProperty(dpy, req->requestor, prop, g_clip_gnome_files, 8, PropModeReplace,
+                        (unsigned char*)g_clip_gnome_payload, (int)strlen(g_clip_gnome_payload));
+        resp.xselection.property = prop;
     } else if (req->target == g_clip_timestamp) {
         unsigned long tm = (unsigned long)req->time;
         XChangeProperty(dpy, req->requestor, prop, XA_INTEGER, 32, PropModeReplace, (unsigned char*)&tm, 1);
@@ -239,6 +258,10 @@ bool x11_clipboard_handle_event(Display *dpy, XEvent *ev) {
             free(g_clip_png);
             g_clip_png = NULL;
             g_clip_png_len = 0;
+            free(g_clip_file_uri);
+            g_clip_file_uri = NULL;
+            free(g_clip_gnome_payload);
+            g_clip_gnome_payload = NULL;
             return true;
         }
     }
@@ -270,11 +293,39 @@ int x11_clipboard_set_text(const char *text) {
     free(g_clip_png);
     g_clip_png = NULL;
     g_clip_png_len = 0;
+    free(g_clip_file_uri);
+    g_clip_file_uri = NULL;
+    free(g_clip_gnome_payload);
+    g_clip_gnome_payload = NULL;
     XStoreBytes(dpy, text, (int)strlen(text));
     XFlush(dpy);
     int r = x11_clipboard_take_ownership(dpy);
     cl_trace("SETTEXT", "end ret=%d", r);
     return r;
+}
+
+int x11_clipboard_set_file(const char *path) {
+    if (!path || !path[0]) return 0;
+    x11_clipboard_ensure_started();
+    Display *dpy = get_display();
+    if (!dpy || g_clip_win == None) return 0;
+    x11_clipboard_abort_incr();
+    char *uri = clipboard_path_to_uri_list(path);
+    if (!uri) return 0;
+    size_t n = strlen(uri) + 8;
+    char *gnome = (char*)malloc(n);
+    if (!gnome) { free(uri); return 0; }
+    snprintf(gnome, n, "copy\n%s", uri);
+    free(g_clip_file_uri);
+    g_clip_file_uri = uri;
+    free(g_clip_gnome_payload);
+    g_clip_gnome_payload = gnome;
+    free(g_clip_text);
+    g_clip_text = NULL;
+    free(g_clip_png);
+    g_clip_png = NULL;
+    g_clip_png_len = 0;
+    return x11_clipboard_take_ownership(dpy);
 }
 
 int x11_clipboard_set_image(const unsigned char *png, size_t len) {
@@ -294,6 +345,10 @@ int x11_clipboard_set_image(const unsigned char *png, size_t len) {
     g_clip_png_len = len;
     free(g_clip_text);
     g_clip_text = NULL;
+    free(g_clip_file_uri);
+    g_clip_file_uri = NULL;
+    free(g_clip_gnome_payload);
+    g_clip_gnome_payload = NULL;
     return x11_clipboard_take_ownership(dpy);
 }
 
@@ -313,6 +368,10 @@ void x11_clipboard_shutdown(void) {
     free(g_clip_png);
     g_clip_png = NULL;
     g_clip_png_len = 0;
+    free(g_clip_file_uri);
+    g_clip_file_uri = NULL;
+    free(g_clip_gnome_payload);
+    g_clip_gnome_payload = NULL;
     
 }
 
@@ -505,6 +564,11 @@ int Platform_ClipboardSetText(const char *text) {
 
 int Platform_ClipboardSetImage(const unsigned char *png, size_t len) {
     return x11_clipboard_set_image(png, len);
+}
+
+int Platform_ClipboardSetFile(const char *path) {
+    (void)path;
+    return 0;
 }
 
 char* Platform_ClipboardGetText(void) {

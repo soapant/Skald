@@ -249,6 +249,57 @@ TEST(image_dims_tolerates_null_outputs) {
     free(b);
 }
 
+
+TEST(uri_list_basic_path) {
+    char* u = clipboard_path_to_uri_list("/home/dog/main.c");
+    ASSERT_EQ_STR(u, "file:///home/dog/main.c\r\n");
+    free(u);
+}
+
+TEST(uri_list_escapes_spaces) {
+    char* u = clipboard_path_to_uri_list("/tmp/my file.txt");
+    ASSERT_EQ_STR(u, "file:///tmp/my%20file.txt\r\n");
+    free(u);
+}
+
+TEST(uri_list_escapes_reserved_characters) {
+    char* u = clipboard_path_to_uri_list("/tmp/a#b?c&d");
+    ASSERT_EQ_STR(u, "file:///tmp/a%23b%3Fc%26d\r\n");
+    free(u);
+}
+
+TEST(uri_list_escapes_percent_and_hash) {
+    char* u = clipboard_path_to_uri_list("/tmp/100%.c");
+    ASSERT_EQ_STR(u, "file:///tmp/100%25.c\r\n");
+    free(u);
+}
+
+TEST(uri_list_keeps_unreserved_and_slash) {
+    char* u = clipboard_path_to_uri_list("/tmp/a-b_c.d~e/f0");
+    ASSERT_EQ_STR(u, "file:///tmp/a-b_c.d~e/f0\r\n");
+    free(u);
+}
+
+TEST(uri_list_encodes_utf8_bytes) {
+    char* u = clipboard_path_to_uri_list("/tmp/\xc3\xa9.c");
+    ASSERT_EQ_STR(u, "file:///tmp/%C3%A9.c\r\n");
+    free(u);
+}
+
+TEST(uri_list_rejects_bad_input) {
+    ASSERT_TRUE(clipboard_path_to_uri_list(NULL) == NULL);
+    ASSERT_TRUE(clipboard_path_to_uri_list("") == NULL);
+}
+
+TEST(uri_list_single_entry_newline_terminated) {
+    char* u = clipboard_path_to_uri_list("/x");
+    ASSERT_EQ_INT(strlen(u), strlen("file:///x\r\n"));
+    ASSERT_EQ_INT(u[strlen(u) - 2], '\r');
+    ASSERT_EQ_INT(u[strlen(u) - 1], '\n');
+    ASSERT_EQ_INT(strchr(u, '\r') - u, (long)strlen("file:///x"));
+    free(u);
+}
+
 int main(void) {
     RUN(detects_png);
     RUN(detects_jpeg);
@@ -269,5 +320,13 @@ int main(void) {
     RUN(truncated_files_yield_zero_dims_without_crash);
     RUN(image_dims_zeroes_outputs_for_unknown);
     RUN(image_dims_tolerates_null_outputs);
+    RUN(uri_list_single_entry_newline_terminated);
+    RUN(uri_list_rejects_bad_input);
+    RUN(uri_list_encodes_utf8_bytes);
+    RUN(uri_list_keeps_unreserved_and_slash);
+    RUN(uri_list_escapes_percent_and_hash);
+    RUN(uri_list_escapes_reserved_characters);
+    RUN(uri_list_escapes_spaces);
+    RUN(uri_list_basic_path);
     return TEST_SUMMARY();
 }

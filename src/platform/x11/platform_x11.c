@@ -1499,6 +1499,19 @@ int Platform_CopyImageToClipboard(const unsigned char *png, size_t len) {
     return (wr || xr);
 }
 
+int Platform_SetFileToClipboard(const char* path) {
+    if (!path || path[0] == 0) return 0;
+    int wr = 0;
+    int xr = 0;
+    if (Platform_ClipboardAvailable()) {
+        wr = Platform_ClipboardSetFile(path);
+        log_info("Platform_SetFileToClipboard wayland=%d", wr);
+    }
+    xr = x11_clipboard_set_file(path);
+    log_info("Platform_SetFileToClipboard x11=%d", xr);
+    return (wr || xr);
+}
+
 
 char* Platform_RunArgvCapture(const char* const argv[], const char* stdin_data, int* out_status) {
     if (out_status) *out_status = -1;

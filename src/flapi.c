@@ -58,7 +58,7 @@ bool fl_copy_to_clipboard(const char* text) {
 
 bool fl_copy_file_path(const char* path) {
     if (!path) return false;
-    return clipboard_set_png_path_platform(path);
+    return clipboard_set_path_platform(path);
 }
 
 bool fl_get_all_files_from_dir(const char* dir_path, char** list_of_allowed_extensions, ListOfFiles* list_of_files,char** list_of_names_to_ignore, bool strip_extension) {
