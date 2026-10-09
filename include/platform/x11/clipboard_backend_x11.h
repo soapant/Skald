@@ -7,6 +7,7 @@
 bool Platform_ClipboardAvailable(void);
 int Platform_ClipboardSetText(const char *text);
 int Platform_ClipboardSetImage(const unsigned char *png, size_t len);
+int Platform_ClipboardSetFile(const char *path);
 char* Platform_ClipboardGetText(void);
 void Platform_ClipboardShutdown(void);
 

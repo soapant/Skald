@@ -36,13 +36,14 @@ typedef enum {
 
 ClipboardImageFormat clipboard_image_format(const unsigned char* buf, size_t len);
 const char* clipboard_image_mime(ClipboardImageFormat fmt);
+char* clipboard_path_to_uri_list(const char* path);
 
 void clipboard_png_dims(const unsigned char* png, size_t len, uint32_t* out_w, uint32_t* out_h);
 void clipboard_image_dims(const unsigned char* buf, size_t len, uint32_t* out_w, uint32_t* out_h);
 
 bool clipboard_history_push_text_platform(const char* text);
 bool clipboard_history_push_image_platform(const char* path, unsigned int w, unsigned int h);
-bool clipboard_set_png_path_platform(const char* path);
+bool clipboard_set_path_platform(const char* path);
 size_t clipboard_history_count_platform(void);
 const ClipboardEntry* clipboard_history_get_platform(size_t index);
 void clipboard_clear_history_platform(void);

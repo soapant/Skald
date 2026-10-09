@@ -130,6 +130,34 @@ void clipboard_image_dims(const unsigned char* buf, size_t len, uint32_t* out_w,
     }
 }
 
+char* clipboard_path_to_uri_list(const char* path) {
+    if (!path || path[0] == 0) return NULL;
+    static const char hex[] = "0123456789ABCDEF";
+    size_t n = strlen(path);
+    char* out = (char*)malloc(n * 3 + 16);
+    if (!out) return NULL;
+    size_t o = 0;
+    memcpy(out, "file://", 7);
+    o = 7;
+    for (size_t i = 0; i < n; i++) {
+        unsigned char c = (unsigned char)path[i];
+        int unreserved = (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') ||
+                         (c >= '0' && c <= '9') ||
+                         c == '-' || c == '.' || c == '_' || c == '~' || c == '/';
+        if (unreserved) {
+            out[o++] = (char)c;
+        } else {
+            out[o++] = '%';
+            out[o++] = hex[c >> 4];
+            out[o++] = hex[c & 0xF];
+        }
+    }
+    out[o++] = '\r';
+    out[o++] = '\n';
+    out[o] = '\0';
+    return out;
+}
+
 bool clipboard_history_push_text_platform(const char* text) {
     ClipboardEntry e = {0};
     e.type = CLIPBOARD_TEXT;
@@ -170,15 +198,19 @@ void clipboard_clear_history_platform(void) {
     g_clipboard_history.capacity = 0;
 }
 
-bool clipboard_set_png_path_platform(const char* path) {
+bool clipboard_set_path_platform(const char* path) {
     FILE* f = fopen(path, "rb");
     if (!f) return 0;
     fseek(f, 0, SEEK_END);
     long n = ftell(f);
     fseek(f, 0, SEEK_SET);
-    if (n <= 0 || n > (32 * 1024 * 1024)) {
+    if (n <= 0) {
         fclose(f);
         return 0;
+    }
+    if (n > (32 * 1024 * 1024)) {
+        fclose(f);
+        return Platform_SetFileToClipboard(path);
     }
     unsigned char* buf = malloc((size_t)n);
     if (!buf) {
@@ -187,13 +219,18 @@ bool clipboard_set_png_path_platform(const char* path) {
     }
     size_t got = fread(buf, 1, (size_t)n, f);
     fclose(f);
-    bool ok = 0;
-    if (got == (size_t)n && clipboard_image_format(buf, (size_t)n) != CLIPBOARD_FMT_UNKNOWN) {
-        uint32_t w = 0, h = 0;
-        clipboard_image_dims(buf, (size_t)n, &w, &h);
-        ok = Platform_CopyImageToClipboard(buf, (size_t)n);
-        if (ok) clipboard_history_push_image_platform(path, w, h);
+    if (got != (size_t)n) {
+        free(buf);
+        return 0;
     }
+    if (clipboard_image_format(buf, (size_t)n) == CLIPBOARD_FMT_UNKNOWN) {
+        free(buf);
+        return Platform_SetFileToClipboard(path);
+    }
+    uint32_t w = 0, h = 0;
+    clipboard_image_dims(buf, (size_t)n, &w, &h);
+    bool ok = Platform_CopyImageToClipboard(buf, (size_t)n);
     free(buf);
+    if (ok) clipboard_history_push_image_platform(path, w, h);
     return ok;
 }
