@@ -798,7 +798,7 @@ TEST(binding_tables_are_queryable) {
     ASSERT_TRUE(g_vs != NULL);
     ASSERT_TRUE(g_vb_count > 0);
     ASSERT_TRUE(g_vs_count > 0);
-    ASSERT_EQ_INT(g_vb_count, 57);
+    ASSERT_EQ_INT(g_vb_count, 58);
     ASSERT_EQ_INT(g_vs_count, 29);
 }
 
@@ -826,6 +826,31 @@ TEST(last_binding_is_not_truncated) {
     ASSERT_TRUE(last->handler != NULL);
     ASSERT_TRUE(last->action_id != MOTION_NONE);
     ASSERT_EQ_INT(last->action_id, MOTION_SEARCH_BACKWARD_KEY);
+}
+
+TEST(exit_visual_binding_is_escape) {
+    vtables();
+    bool found = false;
+    for (int i = 0; i < g_vb_count; i++) {
+        const MotionBinding* b = &g_vb[i];
+        if (b->action_id != MOTION_EXIT_VISUAL) continue;
+        ASSERT_EQ_INT(b->vk_code, VK_ESCAPE);
+        ASSERT_EQ_INT(b->modifiers, HOTKEY_MOD_NONE);
+        ASSERT_EQ_INT(b->mode, MODE_VISUAL);
+        found = true;
+    }
+    ASSERT_TRUE(found);
+}
+
+TEST(enter_visual_binding_is_v_in_normal) {
+    const MotionBinding* b = vbinding(MOTION_ENTER_VISUAL);
+    ASSERT_TRUE(b != NULL);
+    ASSERT_EQ_INT(b->vk_code, 'V');
+    ASSERT_EQ_INT(b->mode, MODE_NORMAL);
+}
+
+TEST(visual_cursor_differs_from_cursor_color) {
+    ASSERT_TRUE(COLOR_VISUAL_CURSOR != COLOR_CURSOR);
 }
 
 TEST(last_sequence_is_not_truncated) {
@@ -947,6 +972,9 @@ int main(void) {
     RUN(no_null_sequence_in_table);
     RUN(no_null_binding_in_table);
     RUN(last_binding_is_not_truncated);
+    RUN(exit_visual_binding_is_escape);
+    RUN(enter_visual_binding_is_v_in_normal);
+    RUN(visual_cursor_differs_from_cursor_color);
     RUN(last_sequence_is_not_truncated);
     RUN(every_sequence_has_distinct_handler);
     return TEST_SUMMARY() != 0 ? 1 : 0;

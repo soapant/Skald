@@ -462,9 +462,9 @@ void Platform_DrawEditCursor(PromptState *state, Display *dpy, XftDraw *xd, Visu
     if (cursor_draw_x > state->width - PROMPT_CARET_HI_CLAMP) cursor_draw_x = state->width - PROMPT_CARET_HI_CLAMP;
     int cursor_y = x11_font_cursor_y_of(font, PROMPT_EDIT_INSET);
     if (IsInsertMode()) {
-        Platform_DrawRectRaw(cursor_draw_x, cursor_y, PROMPT_CARET_W_INSERT, FontSize, rgb_to_hex(COLOR_CURSOR));
+        Platform_DrawRectRaw(cursor_draw_x, cursor_y, PROMPT_CARET_W_INSERT, FontSize, rgb_to_hex(Modal_CursorColor()));
     } else {
-        Platform_DrawRectRaw(cursor_draw_x, cursor_y, PromptNormalCaretWidth(), FontSize, rgb_to_hex(COLOR_CURSOR));
+        Platform_DrawRectRaw(cursor_draw_x, cursor_y, PromptNormalCaretWidth(), FontSize, rgb_to_hex(Modal_CursorColor()));
     }
 }
 bool Platform_DrawRectRaw(int x, int y, int w, int h, unsigned long color) {

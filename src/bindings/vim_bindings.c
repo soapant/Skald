@@ -9,6 +9,7 @@ const MotionBinding G_VIM_BINDINGS[] = {
     { 'I',                HOTKEY_MOD_SHIFT, MOTION_ENTER_INSERT_IN_START,  HandleEnterInsertInStart, MODE_NORMAL, VIM_SCOPE_ALL },
     { 'A',                HOTKEY_MOD_SHIFT, MOTION_ENTER_INSERT_OUT_END,   HandleEnterInsertOutEnd,  MODE_NORMAL, VIM_SCOPE_ALL },
     { 'V',                HOTKEY_MOD_NONE,  MOTION_ENTER_VISUAL,           HandleEnterVisual,        MODE_NORMAL, VIM_SCOPE_ALL },
+    { VK_ESCAPE,          HOTKEY_MOD_NONE,  MOTION_EXIT_VISUAL,            HandleExitVisual,         MODE_VISUAL, VIM_SCOPE_ALL },
     { 'J',                HOTKEY_MOD_NONE,  MOTION_MOVE_DOWN,              HandleMoveDown,           MODE_NORMAL, VIM_SCOPE_MODAL },
     { 'K',                HOTKEY_MOD_NONE,  MOTION_MOVE_UP,                HandleMoveUp,             MODE_NORMAL, VIM_SCOPE_MODAL },
     { 'X',                HOTKEY_MOD_NONE,  MOTION_DELETE_CHAR,            HandleDeleteCharNormal,   MODE_NORMAL, VIM_SCOPE_ALL }, { 'S',                HOTKEY_MOD_NONE,  MOTION_DELETE_CHAR_INSERT,     HandleDeleteCharInsert,   MODE_NORMAL, VIM_SCOPE_ALL },

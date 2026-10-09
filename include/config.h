@@ -69,6 +69,7 @@ extern ColorRef COLOR_NORMAL;
 extern ColorRef COLOR_TIP;
 extern ColorRef COLOR_INSERT_MODE;
 extern ColorRef COLOR_NORMAL_MODE;
+extern ColorRef COLOR_VISUAL_CURSOR;
 extern ColorRef COLOR_VISUAL_MODE;
 #define COLOR_INSERT_MODE_TEXT (ColoredVimModeText ? COLOR_INSERT_MODE : COLOR_TEXT)
 #define COLOR_NORMAL_MODE_TEXT (ColoredVimModeText ? COLOR_NORMAL_MODE : COLOR_TEXT)
