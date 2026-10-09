@@ -407,8 +407,7 @@ bool Platform_LaunchBrowserAtUrl(char* url, bool new_window) {
             HINSTANCE r2 = ShellExecuteA(NULL, "open", UsedBrowser, NULL, NULL, SW_SHOWNORMAL);
             if ((intptr_t)r2 > 32) { log_info("Platform_LaunchBrowserAtUrl via UsedBrowser (no url)"); return true; }
         }
-        HINSTANCE r3 = ShellExecuteA(NULL, "open", "https://www.google.com", NULL, NULL, SW_SHOWNORMAL);
-        if ((intptr_t)r3 > 32) return true;
+        log_info("Platform_LaunchBrowserAtUrl no url and no browser, refusing to launch");
         return false;
     }
     if (new_window && UsedBrowser && UsedBrowser[0]) {

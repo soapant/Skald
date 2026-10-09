@@ -123,6 +123,43 @@ bool CheckVimMotion(int pressed_vk, int modifiers, VimMotion* out) {
         }
 
         if (IsVisualMode()) {
+            if (SequenceIsWaiting() && !SequenceTimedOut()) {
+                SequenceAddKey(seq_char, false);
+                for (int i = 0; i < g_sequence_count; i++) {
+                    const SequenceBinding* b = &g_sequences[i];
+                    if (!sequence_in_scope(b, MODE_VISUAL)) continue;
+                    if (SequenceMatches(b->sequence)) {
+                        out->handler = b->handler;
+                        out->sequence = b->sequence;
+                        out->typed_count = SequenceTypedCount();
+                        SequenceReset();
+                        return true;
+                    }
+                }
+                for (int i = 0; i < g_sequence_count; i++) {
+                    const SequenceBinding* b = &g_sequences[i];
+if (!sequence_in_scope(b, MODE_VISUAL)) continue;
+                    if (SequenceStartsWith(b->sequence)) return true;
+                }
+                SequenceReset();
+            } else {
+                SequenceReset();
+            }
+
+            if (!shift_held && !ctrl_held) {
+                bool starts_seq = false;
+                for (int i = 0; i < g_sequence_count; i++) {
+                    const SequenceBinding* b = &g_sequences[i];
+                    if (!sequence_in_scope(b, MODE_VISUAL)) continue;
+                    if (tolower((unsigned char)b->sequence[0]) == seq_char) { starts_seq = true; break; }
+                }
+                if (starts_seq) {
+                    SequenceAddKey(seq_char, false);
+                    SequenceStartTimer();
+                    return false;
+                }
+            }
+
             for (int i = 0; i < g_binding_count; i++) {
                 const MotionBinding* b = &g_bindings[i];
                 if (!binding_in_scope(b, MODE_VISUAL)) continue;
@@ -148,7 +185,17 @@ bool CheckVimMotion(int pressed_vk, int modifiers, VimMotion* out) {
                     SequenceReset();
                     return true;
                 }
-                if (SequenceStartsWith(b->sequence)) return true;
+                if (SequenceStartsWith(b->sequence)) {
+                    for (int j = 0; j < g_binding_count; j++) {
+                        const MotionBinding* mb = &g_bindings[j];
+                        if (!binding_in_scope(mb, MODE_NORMAL)) continue;
+                        if (mb->vk_code == pressed_vk && mb->modifiers == modifiers) {
+                            out->handler = mb->handler;
+                            break;
+                        }
+                    }
+                    return true;
+                }
             }
             SequenceReset();
         }
