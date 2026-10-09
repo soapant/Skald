@@ -669,9 +669,9 @@ void Platform_DrawPromptEditCursor(PromptState* state) {
     if (oldFont) SelectObject(g_draw_hdc, oldFont);
     Platform_DestroyFont(font);
     if (IsInsertMode()) {
-        Platform_DrawRectRaw(cursor_draw_x, cursor_y, PROMPT_CARET_W_INSERT, FontSize, COLOR_CURSOR);
+        Platform_DrawRectRaw(cursor_draw_x, cursor_y, PROMPT_CARET_W_INSERT, FontSize, Modal_CursorColor());
     } else {
-        Platform_DrawRectRaw(cursor_draw_x, cursor_y, PromptNormalCaretWidth(), FontSize, COLOR_CURSOR);
+        Platform_DrawRectRaw(cursor_draw_x, cursor_y, PromptNormalCaretWidth(), FontSize, Modal_CursorColor());
     }
     PROFILE_END_VAR(timer, "draw_win32:Platform_DrawPromptEditCursor");
 }

@@ -51,9 +51,16 @@ void HandleEnterInsertIn(FlintContext* ctx) {
     SetMode(MODE_INSERT); 
 }
 
-void HandleEnterVisual(FlintContext* ctx) { 
+void HandleEnterVisual(FlintContext* ctx) {
     (void)ctx;
-    SetMode(MODE_VISUAL); 
+    ListBoxInfo* lb = Vim_GetListBox(ctx);
+    if (lb && UI_IsListBoxSelected(lb)) return;
+    SetMode(MODE_VISUAL);
+}
+
+void HandleExitVisual(FlintContext* ctx) {
+    (void)ctx;
+    SetMode(MODE_NORMAL);
 }
 
 void HandleMoveLeft(FlintContext* ctx) {

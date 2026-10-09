@@ -11,6 +11,7 @@ extern int last_index;
 extern char* selection_feature;
 
 void SetMode(EditorMode mode);
+ColorRef Modal_CursorColor(void);
 void SetModeWithListBox(EditorMode mode, ListBoxInfo* lb);
 bool IsNormalMode(void);
 bool IsInsertMode(void);
