@@ -26,7 +26,19 @@ typedef struct {
 
 extern const unsigned char PNG_MAGIC[8];
 
+typedef enum {
+    CLIPBOARD_FMT_UNKNOWN = 0,
+    CLIPBOARD_FMT_PNG,
+    CLIPBOARD_FMT_JPEG,
+    CLIPBOARD_FMT_GIF,
+    CLIPBOARD_FMT_BMP,
+} ClipboardImageFormat;
+
+ClipboardImageFormat clipboard_image_format(const unsigned char* buf, size_t len);
+const char* clipboard_image_mime(ClipboardImageFormat fmt);
+
 void clipboard_png_dims(const unsigned char* png, size_t len, uint32_t* out_w, uint32_t* out_h);
+void clipboard_image_dims(const unsigned char* buf, size_t len, uint32_t* out_w, uint32_t* out_h);
 
 bool clipboard_history_push_text_platform(const char* text);
 bool clipboard_history_push_image_platform(const char* path, unsigned int w, unsigned int h);

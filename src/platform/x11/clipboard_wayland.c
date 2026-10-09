@@ -1,6 +1,7 @@
 #if defined(FLINT_WAYLAND_SESSION)
 #include "platform/x11/clipboard_backend_x11.h"
 #include "deps/log.h"
+#include "core/clipboard_history.h"
 #include <wayland-client-core.h>
 #include <dlfcn.h>
 #include <pthread.h>
@@ -343,6 +344,7 @@ static int g_mgr_bind_ver = 0;
 static char *g_wl_text = NULL;
 static unsigned char *g_wl_png = NULL;
 static size_t g_wl_png_len = 0;
+static char g_wl_png_mime[32] = "image/png";
 static struct wl_proxy *g_wl_offer = NULL;
 static bool g_wl_has_selection = false;
 static char g_wl_offer_mimes[8][64];
@@ -483,7 +485,7 @@ static void src_send(void *data, struct wl_proxy *src, const char *mime, int fd)
     pthread_mutex_unlock(&g_wl_text_lock);
     const unsigned char *buf = NULL;
     size_t n = 0;
-    if (mime && strcmp(mime, "image/png") == 0) {
+    if (mime && strcmp(mime, g_wl_png_mime) == 0) {
         buf = png;
         n = png_len;
     } else {
@@ -738,7 +740,7 @@ static struct wl_proxy *wl_make_source(void) {
             g_wl_req_count++;
         }
     }
-    if (has_png) { wl.proxy_marshal_flags(src, 0, NULL, 0, 0, "image/png"); g_wl_req_count++; }
+    if (has_png) { wl.proxy_marshal_flags(src, 0, NULL, 0, 0, g_wl_png_mime); g_wl_req_count++; }
     wl.proxy_add_listener(src, (void (**)(void))g_src_listener, NULL);
     return src;
 }
@@ -820,10 +822,12 @@ int Platform_ClipboardSetImage(const unsigned char *png, size_t len) {
     unsigned char* np = malloc(len);
     if (np) memcpy(np, png, len);
     if (!np) return 0;
+    const char* mime = clipboard_image_mime(clipboard_image_format(png, len));
     pthread_mutex_lock(&g_wl_text_lock);
     free(g_wl_png);
     g_wl_png = np;
     g_wl_png_len = len;
+    snprintf(g_wl_png_mime, sizeof(g_wl_png_mime), "%s", mime ? mime : "image/png");
     free(g_wl_text);
     g_wl_text = NULL;
     pthread_mutex_unlock(&g_wl_text_lock);
