@@ -345,6 +345,7 @@ static char *g_wl_text = NULL;
 static unsigned char *g_wl_png = NULL;
 static size_t g_wl_png_len = 0;
 static char g_wl_png_mime[32] = "image/png";
+static char *g_wl_uri_list = NULL;
 static struct wl_proxy *g_wl_offer = NULL;
 static bool g_wl_has_selection = false;
 static char g_wl_offer_mimes[8][64];
@@ -473,6 +474,7 @@ static void src_send(void *data, struct wl_proxy *src, const char *mime, int fd)
         fd, g_wl_text ? (int)strlen(g_wl_text) : -1, (int)g_wl_png_len);
     pthread_mutex_lock(&g_wl_text_lock);
     char *text = g_wl_text ? strdup(g_wl_text) : NULL;
+    char *uri = g_wl_uri_list ? strdup(g_wl_uri_list) : NULL;
     unsigned char *png = NULL;
     size_t png_len = 0;
     if (g_wl_png && g_wl_png_len > 0) {
@@ -485,7 +487,10 @@ static void src_send(void *data, struct wl_proxy *src, const char *mime, int fd)
     pthread_mutex_unlock(&g_wl_text_lock);
     const unsigned char *buf = NULL;
     size_t n = 0;
-    if (mime && strcmp(mime, g_wl_png_mime) == 0) {
+    if (mime && strcmp(mime, "text/uri-list") == 0) {
+        buf = (const unsigned char *)uri;
+        n = uri ? strlen(uri) : 0;
+    } else if (mime && strcmp(mime, g_wl_png_mime) == 0) {
         buf = png;
         n = png_len;
     } else {
@@ -513,6 +518,7 @@ static void src_send(void *data, struct wl_proxy *src, const char *mime, int fd)
     wl_trace("EV source.send", "done mime=%s bytes=%d writes=%d close_ret=%d abandoned=%d", mime ? mime : "?", (int)off, writes, cerr, gaveup);
     free(text);
     free(png);
+    free(uri);
 }
 
 static void src_cancelled(void *data, struct wl_proxy *src) {
@@ -731,6 +737,7 @@ static struct wl_proxy *wl_make_source(void) {
     pthread_mutex_lock(&g_wl_text_lock);
     bool has_text = g_wl_text != NULL;
     bool has_png = g_wl_png != NULL && g_wl_png_len > 0;
+    bool has_uri = g_wl_uri_list != NULL;
     pthread_mutex_unlock(&g_wl_text_lock);
     wl_trace("REQ manager.create_data_source", "src=%p has_text=%d has_png=%d", (void*)src, has_text ? 1 : 0, has_png ? 1 : 0);
     if (has_text) {
@@ -740,6 +747,7 @@ static struct wl_proxy *wl_make_source(void) {
             g_wl_req_count++;
         }
     }
+    if (has_uri) { wl.proxy_marshal_flags(src, 0, NULL, 0, 0, "text/uri-list"); g_wl_req_count++; }
     if (has_png) { wl.proxy_marshal_flags(src, 0, NULL, 0, 0, g_wl_png_mime); g_wl_req_count++; }
     wl.proxy_add_listener(src, (void (**)(void))g_src_listener, NULL);
     return src;
@@ -801,6 +809,8 @@ int Platform_ClipboardSetText(const char *text) {
         free(g_wl_png);
         g_wl_png = NULL;
         g_wl_png_len = 0;
+        free(g_wl_uri_list);
+        g_wl_uri_list = NULL;
     }
     pthread_mutex_unlock(&g_wl_text_lock);
     if (!nt) return 0;
@@ -830,6 +840,28 @@ int Platform_ClipboardSetImage(const unsigned char *png, size_t len) {
     snprintf(g_wl_png_mime, sizeof(g_wl_png_mime), "%s", mime ? mime : "image/png");
     free(g_wl_text);
     g_wl_text = NULL;
+    free(g_wl_uri_list);
+    g_wl_uri_list = NULL;
+    pthread_mutex_unlock(&g_wl_text_lock);
+    pthread_mutex_lock(&g_wl_lock);
+    wl_publish_locked();
+    pthread_mutex_unlock(&g_wl_lock);
+    return 1;
+}
+
+int Platform_ClipboardSetFile(const char *path) {
+    if (!path || path[0] == 0) return 0;
+    char *uri = clipboard_path_to_uri_list(path);
+    if (!uri) return 0;
+    if (!wl_setup()) { free(uri); return 0; }
+    pthread_mutex_lock(&g_wl_text_lock);
+    free(g_wl_text);
+    g_wl_text = NULL;
+    free(g_wl_png);
+    g_wl_png = NULL;
+    g_wl_png_len = 0;
+    free(g_wl_uri_list);
+    g_wl_uri_list = uri;
     pthread_mutex_unlock(&g_wl_text_lock);
     pthread_mutex_lock(&g_wl_lock);
     wl_publish_locked();
