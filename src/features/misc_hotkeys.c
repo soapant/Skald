@@ -1,7 +1,9 @@
 #include "core/flapi.h"
 #include "config.h"
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
+#include <time.h>
 
 static char current_keyword[256] = "";
 static int current_image_id = 0;
@@ -23,10 +25,10 @@ void GoogleMeaning(void) {
 }
 
 void next_image(void) {
-  char cmd[400];
-  snprintf(cmd,sizeof(cmd),"~/Programming/RandomShit/shit/run.sh get_ids.py %s --random",current_keyword);
-  char* output = fl_run_terminal_command(cmd);
-  if (output) {
+  if (strlen(current_keyword) > 0) {
+      char cmd1[400];
+      snprintf(cmd1,sizeof(cmd1),"~/Programming/RandomShit/shit/run.sh get_ids.py %s --random",current_keyword);
+      char* output = fl_run_terminal_command(cmd1);
       char* title = fl_get_active_window_title();
       if (!title) title = "";
       if (fl_string_contains("feh",title)) {
@@ -38,6 +40,22 @@ void next_image(void) {
       fl_run_terminal_command(cmd);
       previous_image_id = current_image_id;
       current_image_id = atoi(list.items[0]);
+      free(output);
+  } else {
+     char cmd[400];
+     char* output = fl_run_terminal_command("ls /home/dog/Programming/RandomShit/shit/images");
+     FlStringList list = fl_string_split(output,"\n");
+     int idx = rand() % list.count;
+     char* title = fl_get_active_window_title();
+     if (!title) title = "";
+     if (fl_string_contains("feh",title)) {
+         fl_close_active_window();
+     }
+     snprintf(cmd,sizeof(cmd),"feh /home/dog/Programming/RandomShit/shit/images/%s --zoom 65",list.items[idx]);
+     fl_run_terminal_command(cmd);
+     previous_image_id = current_image_id;
+     current_image_id = atoi(list.items[0]);
+     free(output);
   }
 }
 
@@ -114,6 +132,8 @@ void fuckme(void) {
 }
 
 FLINT_FEATURE_INIT {
+
+    srand((unsigned)time(NULL));
     fl_register_hotkey("Alt+Shift+G", GoogleMeaning);
     fl_register_hotkey("Alt+Shift+F", next_image);
     fl_register_hotkey("E", next_image,WHITELIST,"feh");

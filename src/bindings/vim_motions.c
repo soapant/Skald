@@ -76,7 +76,7 @@ void HandleEnter(FlintContext* ctx) {
         return;
     }
     int pos = Vim_GetCursor(ctx);
-    char text[512];
+    char text[VIM_TEXT_BUF];
     Vim_GetText(ctx, text, sizeof(text));
     int len = (int)strlen(text);
     if (pos < len) Vim_SetCursor(ctx, pos + 1);
@@ -89,7 +89,7 @@ void HandleMoveUp(FlintContext* ctx) {
 void HandleMoveRight(FlintContext* ctx) {
     if (!ctx) return;
     int pos = Vim_GetCursor(ctx);
-    char text[512];
+    char text[VIM_TEXT_BUF];
     Vim_GetText(ctx, text, sizeof(text));
     int len = (int)strlen(text);
     if (pos < len) Vim_SetCursor(ctx, pos + 1);
@@ -168,7 +168,7 @@ void HandleExitWindow(FlintContext* ctx) {
 }
 void HandleYankLine(FlintContext* ctx) {
     if (!ctx) return;
-    char textBuffer[512] = {0};
+    char textBuffer[VIM_TEXT_BUF] = {0};
     Vim_GetText(ctx, textBuffer, sizeof(textBuffer));
     textBuffer[strcspn(textBuffer, "\r\n")] = '\0';
     if (strlen(textBuffer) > 0) {
@@ -195,7 +195,7 @@ void HandleInsertControlEnter(FlintContext* ctx) {
 
 void HandleMoveWordForward(FlintContext* ctx) {
     if (!ctx) return;
-    char text[512];
+    char text[VIM_TEXT_BUF];
     Vim_GetText(ctx, text, sizeof(text));
     int start = Vim_GetCursor(ctx);
     int len = strlen(text);
@@ -213,7 +213,7 @@ void HandleMoveWordForward(FlintContext* ctx) {
 
 void HandleMoveWordBackward(FlintContext* ctx) {
     if (!ctx) return;
-    char text[512];
+    char text[VIM_TEXT_BUF];
     Vim_GetText(ctx, text, sizeof(text));
     int pos = Vim_GetCursor(ctx);
     for (int i = pos - 1; i >= -1; i--) {
@@ -262,10 +262,16 @@ void HandleDeleteSquareBracketsNormal(FlintContext* ctx) {
   DeleteInsideDelimiter(ctx, '[', ']', false); 
 }
 void HandleDeleteWordInsert(FlintContext* ctx) {
-  DeleteInnerWord(ctx, true); 
+  DeleteInnerWord(ctx, true);
 }
 void HandleDeleteWordNormal(FlintContext* ctx) {
-  DeleteInnerWord(ctx, false); 
+  DeleteInnerWord(ctx, false);
+}
+void HandleDeleteWordForward(FlintContext* ctx) {
+  DeleteWordForward(ctx, false);
+}
+void HandleChangeWordForward(FlintContext* ctx) {
+  DeleteWordForward(ctx, true);
 }
 void HandleSendEdit(FlintContext* ctx) {
     //temporary no idea if this works on windows 
@@ -323,7 +329,7 @@ void HandleShowFullText(FlintContext* ctx) {
 void SearchTextForward(int key) {
   FlintContext* ctx = FlintContext_Get();
   if (!ctx) return;
-  char text[512];
+  char text[VIM_TEXT_BUF];
   vim_get_text(ctx, text, sizeof(text));
   int len = (int)strlen(text);
   int cursor = Vim_GetCursor(ctx);
@@ -345,7 +351,7 @@ void SearchTextForward(int key) {
 void SearchTextBackward(int key) {
   FlintContext* ctx = FlintContext_Get();
   if (!ctx) return;
-  char text[512];
+  char text[VIM_TEXT_BUF];
   vim_get_text(ctx, text, sizeof(text));
   int len = (int)strlen(text);
   int cursor = Vim_GetCursor(ctx);
@@ -381,7 +387,7 @@ void HandleDeleteTillEnd(FlintContext* ctx) {
   if (!ctx) return;
   ListBoxInfo* lb = Vim_GetListBox(ctx);
   if (lb && UI_IsListBoxSelected(lb)) return;
-  char text[512];
+  char text[VIM_TEXT_BUF];
   Vim_GetText(ctx, text, sizeof(text));
   int cursor = Vim_GetCursor(ctx);
   for (int i = cursor; i < (int)strlen(text); ++i){
@@ -421,7 +427,7 @@ static void vim_get_text(FlintContext* ctx, char* buf, int cap) {
 
 static void vim_clamp_cursor(FlintContext* ctx, int pos) {
     if (!ctx) return;
-    char text[512];
+    char text[VIM_TEXT_BUF];
     vim_get_text(ctx, text, sizeof(text));
     int len = (int)strlen(text);
     if (len == 0) { Vim_SetCursor(ctx, 0); return; }
@@ -453,7 +459,7 @@ void HandleWordEndForward(FlintContext* ctx) {
     if (!ctx) return;
     ListBoxInfo* lb = Vim_GetListBox(ctx);
     if (lb && UI_IsListBoxSelected(lb)) return;
-    char text[512];
+    char text[VIM_TEXT_BUF];
     vim_get_text(ctx, text, sizeof(text));
     int pos = Vim_WordStep(text, (int)strlen(text), Vim_GetCursor(ctx), false, true, true);
     vim_clamp_cursor(ctx, pos);
@@ -463,7 +469,7 @@ void HandleWordEndBackward(FlintContext* ctx) {
     if (!ctx) return;
     ListBoxInfo* lb = Vim_GetListBox(ctx);
     if (lb && UI_IsListBoxSelected(lb)) return;
-    char text[512];
+    char text[VIM_TEXT_BUF];
     vim_get_text(ctx, text, sizeof(text));
     int pos = Vim_WordStep(text, (int)strlen(text), Vim_GetCursor(ctx), false, true, false);
     vim_clamp_cursor(ctx, pos);
@@ -471,7 +477,7 @@ void HandleWordEndBackward(FlintContext* ctx) {
 
 void HandleWordEndForwardBig(FlintContext* ctx) {
     if (!ctx) return;
-    char text[512];
+    char text[VIM_TEXT_BUF];
     vim_get_text(ctx, text, sizeof(text));
     int pos = Vim_WordStep(text, (int)strlen(text), Vim_GetCursor(ctx), true, true, true);
     vim_clamp_cursor(ctx, pos);
@@ -479,7 +485,7 @@ void HandleWordEndForwardBig(FlintContext* ctx) {
 
 void HandleWordEndBackwardBig(FlintContext* ctx) {
     if (!ctx) return;
-    char text[512];
+    char text[VIM_TEXT_BUF];
     vim_get_text(ctx, text, sizeof(text));
     int pos = Vim_WordStep(text, (int)strlen(text), Vim_GetCursor(ctx), true, true, false);
     vim_clamp_cursor(ctx, pos);
@@ -487,7 +493,7 @@ void HandleWordEndBackwardBig(FlintContext* ctx) {
 
 void HandleWordForwardBig(FlintContext* ctx) {
     if (!ctx) return;
-    char text[512];
+    char text[VIM_TEXT_BUF];
     vim_get_text(ctx, text, sizeof(text));
     int pos = Vim_WordStep(text, (int)strlen(text), Vim_GetCursor(ctx), true, false, true);
     vim_clamp_cursor(ctx, pos);
@@ -495,7 +501,7 @@ void HandleWordForwardBig(FlintContext* ctx) {
 
 void HandleWordBackwardBig(FlintContext* ctx) {
     if (!ctx) return;
-    char text[512];
+    char text[VIM_TEXT_BUF];
     vim_get_text(ctx, text, sizeof(text));
     int pos = Vim_WordStep(text, (int)strlen(text), Vim_GetCursor(ctx), true, false, false);
     vim_clamp_cursor(ctx, pos);
@@ -503,7 +509,7 @@ void HandleWordBackwardBig(FlintContext* ctx) {
 
 void HandleFirstNonBlank(FlintContext* ctx) {
     if (!ctx) return;
-    char text[512];
+    char text[VIM_TEXT_BUF];
     vim_get_text(ctx, text, sizeof(text));
     vim_clamp_cursor(ctx, Vim_FirstNonBlank(text, (int)strlen(text)));
 }
@@ -516,7 +522,7 @@ void HandleGotoLineStart(FlintContext* ctx) {
 void HandleGotoLineEnd(FlintContext* ctx) {
     SetCursorToEndOfText(ctx);
     if (!ctx) return;
-    char text[512];
+    char text[VIM_TEXT_BUF];
     vim_get_text(ctx, text, sizeof(text));
     int len = (int)strlen(text);
     vim_clamp_cursor(ctx, len);
@@ -526,7 +532,7 @@ void HandleBracketMatchPercent(FlintContext* ctx) {
     if (!ctx) return;
     ListBoxInfo* lb = Vim_GetListBox(ctx);
     if (lb && UI_IsListBoxSelected(lb)) return;
-    char text[512];
+    char text[VIM_TEXT_BUF];
     vim_get_text(ctx, text, sizeof(text));
     int match = Vim_BracketMatch(text, (int)strlen(text), Vim_GetCursor(ctx));
     if (match < 0) return;
@@ -534,7 +540,7 @@ void HandleBracketMatchPercent(FlintContext* ctx) {
 }
 
 static void vim_do_word_search(FlintContext* ctx, bool backward) {
-    char text[512];
+    char text[VIM_TEXT_BUF];
     vim_get_text(ctx, text, sizeof(text));
     int len = (int)strlen(text);
     int cursor = Vim_GetCursor(ctx);
@@ -574,7 +580,7 @@ void vim_find_record(char target, bool till, bool backward) {
 
 static void vim_find_with(FlintContext* ctx, char target, bool till, bool backward) {
     if (!ctx) return;
-    char text[512];
+    char text[VIM_TEXT_BUF];
     vim_get_text(ctx, text, sizeof(text));
     int pos = Vim_FindChar(text, (int)strlen(text), Vim_GetCursor(ctx), target, till, backward);
     if (pos < 0) return;
@@ -582,11 +588,23 @@ static void vim_find_with(FlintContext* ctx, char target, bool till, bool backwa
     VimState_SetFind(target, backward ? VIM_FIND_BACKWARD : (till ? VIM_FIND_T : VIM_FIND_F));
 }
 
+static void vim_show_pending(const char* prefix) {
+    char buf[64];
+    snprintf(buf, sizeof(buf), "%s--", prefix);
+    DisplayMessageSlot(buf, TOP_CENTER_RELATIVE, 0, 0, 0, 1200, COLOR_TIP);
+}
+
+static void vim_clear_pending(void) {
+    DisplayMessageSlot("", TOP_CENTER_RELATIVE, 0, 0, 0, 0, COLOR_TIP);
+}
+
 static void vim_till_forward_cb(int key) {
+    vim_clear_pending();
     vim_find_with(FlintContext_Get(), (char)key, true, false);
 }
 
 static void vim_till_backward_cb(int key) {
+    vim_clear_pending();
     vim_find_with(FlintContext_Get(), (char)key, true, true);
 }
 
@@ -594,6 +612,7 @@ void HandleFindTillForward(FlintContext* ctx) {
     if (!ctx) return;
     ListBoxInfo* lb = Vim_GetListBox(ctx);
     if (lb && UI_IsListBoxSelected(lb)) return;
+    vim_show_pending("t");
     Platform_WaitForKeypressAsync(vim_till_forward_cb);
 }
 
@@ -601,6 +620,7 @@ void HandleFindTillBackward(FlintContext* ctx) {
     if (!ctx) return;
     ListBoxInfo* lb = Vim_GetListBox(ctx);
     if (lb && UI_IsListBoxSelected(lb)) return;
+    vim_show_pending("T");
     Platform_WaitForKeypressAsync(vim_till_backward_cb);
 }
 
@@ -622,7 +642,21 @@ void HandleRepeatFindOpp(FlintContext* ctx) {
     vim_repeat_find(true);
 }
 
+static bool vim_repeat_pattern(bool backward) {
+    char pattern[VIM_TEXT_BUF];
+    if (!VimState_GetLastPattern(pattern, sizeof(pattern))) return false;
+    FlintContext* ctx = FlintContext_Get();
+    if (!ctx) return false;
+    char text[VIM_TEXT_BUF];
+    vim_get_text(ctx, text, sizeof(text));
+    int pos = Vim_FindPatternPos(text, (int)strlen(text), Vim_GetCursor(ctx), pattern, backward);
+    if (pos < 0) return false;
+    vim_clamp_cursor(ctx, pos);
+    return true;
+}
+
 static void vim_search_next(bool backward) {
+    if (vim_repeat_pattern(backward)) return;
     vim_do_word_search(FlintContext_Get(), backward);
 }
 
@@ -737,16 +771,27 @@ static void vim_mark_position(bool set) {
     vim_clamp_cursor(ctx, mcursor);
 }
 
-static void vim_mark_set_cb(int key) { vim_pending_mark = (char)key; vim_mark_position(true); }
-static void vim_mark_jump_cb(int key) { vim_pending_mark = (char)key; vim_mark_position(false); }
+static void vim_mark_set_cb(int key) {
+    vim_clear_pending();
+    vim_pending_mark = (char)key;
+    vim_mark_position(true);
+}
+
+static void vim_mark_jump_cb(int key) {
+    vim_clear_pending();
+    vim_pending_mark = (char)key;
+    vim_mark_position(false);
+}
 
 void HandleSetMark(FlintContext* ctx) {
     (void)ctx;
+    vim_show_pending("m");
     Platform_WaitForKeypressAsync(vim_mark_set_cb);
 }
 
 void HandleJumpToMark(FlintContext* ctx) {
     (void)ctx;
+    vim_show_pending("`");
     Platform_WaitForKeypressAsync(vim_mark_jump_cb);
 }
 
@@ -787,11 +832,12 @@ static void vim_run_search(bool backward) {
     const char* pattern = NULL;
     VimState_EndSearchPattern(&pattern);
     if (!ctx || !pattern || pattern[0] == '\0') return;
-    char text[512];
+    char text[VIM_TEXT_BUF];
     vim_get_text(ctx, text, sizeof(text));
     int pos = Vim_FindPatternPos(text, (int)strlen(text), Vim_GetCursor(ctx), pattern, backward);
     if (pos < 0) return;
     vim_clamp_cursor(ctx, pos);
+    VimState_SetLastPattern(pattern);
 }
 
 static void vim_collect_cb(int key);

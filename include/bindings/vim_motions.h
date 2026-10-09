@@ -68,6 +68,8 @@ typedef enum {
     MOTION_DELETE_SQUARE_BRACKETS_NORMAL,
     MOTION_DELETE_WORD_NORMAL,
     MOTION_DELETE_WORD_INSERT,
+    MOTION_DELETE_WORD_FWD,
+    MOTION_CHANGE_WORD_FWD,
     MOTION_WORD_END_FORWARD,
     MOTION_WORD_END_BACKWARD,
     MOTION_WORD_END_FORWARD_BIG,
@@ -170,6 +172,8 @@ void HandleDeleteSquareBracketsInsert(FlintContext* ctx);
 void HandleDeleteSquareBracketsNormal(FlintContext* ctx);
 void HandleDeleteWordInsert(FlintContext* ctx);
 void HandleDeleteWordNormal(FlintContext* ctx);
+void HandleDeleteWordForward(FlintContext* ctx);
+void HandleChangeWordForward(FlintContext* ctx);
 void HandleSendEdit(FlintContext* ctx);
 void HandleSendCopyShift(FlintContext* ctx);
 void HandleSendCopyControl(FlintContext* ctx);
