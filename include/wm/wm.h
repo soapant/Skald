@@ -11,7 +11,6 @@ bool Wm_FocusByTitle(const char *title);
 char* Wm_Paste(char* content);
 PlWindowList Wm_GetWindowTitles(void);
 PlWindowList Wm_GetWindowNames(void);
-PlPos Wm_GetCursorPosition(void);
 bool Wm_CloseActiveWindow(void);
 bool Wm_ToggleFullscreenActive(void);
 bool Wm_MoveActiveWindowToMonitor(bool right);
