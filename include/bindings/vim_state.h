@@ -32,11 +32,23 @@ typedef struct {
     int selection;
 } VimJumpEntry;
 
+typedef struct {
+    bool active;
+    int  anchor;
+    int  head;
+} VimSelection;
+
 void VimState_Reset(void);
 
 void VimState_SetFind(char target, VimFindDir dir);
 bool VimState_GetFind(VimFindState* out);
 VimFindDir VimState_InvertDir(VimFindDir dir);
+
+void VimState_BeginSelection(int cursor);
+void VimState_UpdateSelection(int cursor);
+void VimState_EndSelection(void);
+bool VimState_GetSelection(int* out_start, int* out_end);
+bool VimState_HasSelection(void);
 
 void VimState_SetLastPattern(const char* pattern);
 bool VimState_GetLastPattern(char* out, int cap);

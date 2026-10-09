@@ -300,6 +300,21 @@ void DeleteInsideDelimiter(FlintContext* ctx, char open_char, char close_char, b
     if (keep_mode) SetMode(MODE_INSERT); else SetMode(MODE_NORMAL);
 }
 
+void DeleteSelectionRange(FlintContext* ctx, int start, int end) {
+    if (!ctx) return;
+    char text[VIM_TEXT_BUF];
+    Vim_GetText(ctx, text, sizeof(text));
+    int len = (int)strlen(text);
+    if (start < 0) start = 0;
+    if (end >= len) end = len - 1;
+    if (start > end) { int t = start; start = end; end = t; }
+    if (start < 0 || start >= len) return;
+    if (end < start) return;
+    memmove(&text[start], &text[end + 1], (size_t)(len - end));
+    Vim_SetText(ctx, text);
+    Vim_SetCursor(ctx, start);
+}
+
 void DeleteWordForward(FlintContext* ctx, bool keep_mode) {
     if (!ctx) return;
     char text[VIM_TEXT_BUF];
