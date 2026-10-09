@@ -1800,6 +1800,57 @@ bool Platform_Click(void) {
 #endif
 }
 
+static int x11_x11_button(int button) {
+    switch (button) {
+        case 1: return 1;
+        case 2: return 3;
+        case 3: return 2;
+        case 4: return 8;
+        case 5: return 9;
+        case 6: return 8;
+        case 7: return 9;
+        default: return 0;
+    }
+}
+
+bool Platform_MouseButtonDown(int button, bool down) {
+    PROFILE_START(timer);
+    Display* dpy = get_display();
+    if (!dpy) { PROFILE_END_VAR(timer, "platform_x11:Platform_MouseButtonDown"); return false; }
+    int xb = x11_x11_button(button);
+    if (xb == 0) { PROFILE_END_VAR(timer, "platform_x11:Platform_MouseButtonDown"); return false; }
+#if __has_include(<X11/extensions/XTest.h>)
+    XTestFakeButtonEvent(dpy, (unsigned int)xb, down, CurrentTime);
+    XSync(dpy, False);
+    PROFILE_END_VAR(timer, "platform_x11:Platform_MouseButtonDown");
+    return true;
+#else
+    PROFILE_END_VAR(timer, "platform_x11:Platform_MouseButtonDown");
+    return false;
+#endif
+}
+
+bool Platform_MouseScroll(int notches) {
+    PROFILE_START(timer);
+    if (notches == 0) { PROFILE_END_VAR(timer, "platform_x11:Platform_MouseScroll"); return true; }
+    Display* dpy = get_display();
+    if (!dpy) { PROFILE_END_VAR(timer, "platform_x11:Platform_MouseScroll"); return false; }
+#if __has_include(<X11/extensions/XTest.h>)
+    for (int i = 0; i < (notches > 0 ? notches : -notches); i++) {
+        XTestFakeButtonEvent(dpy, 4, True, CurrentTime);
+        XTestFakeButtonEvent(dpy, 4, False, CurrentTime);
+        XTestFakeButtonEvent(dpy, 5, True, CurrentTime);
+        XTestFakeButtonEvent(dpy, 5, False, CurrentTime);
+        XSync(dpy, False);
+    }
+    PROFILE_END_VAR(timer, "platform_x11:Platform_MouseScroll");
+    return true;
+#else
+    PROFILE_END_VAR(timer, "platform_x11:Platform_MouseScroll");
+    return false;
+#endif
+}
+
 char* Platform_GetWorkingDir(void) {
     char* raw = Platform_RunTerminalCommand("pwd", false);
     if (!raw) return NULL;

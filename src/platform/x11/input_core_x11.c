@@ -57,7 +57,7 @@ static void x11_queue_mouse_event(struct input_event* ev) {
     if (btn == 0) return;
     bool down = (ev->value != 0);
     bool repeat = (ev->value == 2);
-    Platform_SetMouseButton(btn, down);
+    Platform_UpdateMouseButton(btn, down);
     int mx = 0, my = 0;
     Platform_GetMousePos(&mx, &my);
     PlatformMouseEvent mev;

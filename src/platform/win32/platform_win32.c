@@ -1385,6 +1385,41 @@ bool Platform_Click(void) {
     return ok;
 }
 
+static DWORD win32_button_flag(int button, bool down) {
+    switch (button) {
+        case 1: return down ? MOUSEEVENTF_LEFTDOWN : MOUSEEVENTF_LEFTUP;
+        case 2: return down ? MOUSEEVENTF_RIGHTDOWN : MOUSEEVENTF_RIGHTUP;
+        case 3: return down ? MOUSEEVENTF_MIDDLEDOWN : MOUSEEVENTF_MIDDLEUP;
+        case 4: return down ? MOUSEEVENTF_XDOWN : MOUSEEVENTF_XUP;
+        default: return 0;
+    }
+}
+
+bool Platform_MouseButtonDown(int button, bool down) {
+    PROFILE_START(timer);
+    DWORD flag = win32_button_flag(button, down);
+    if (flag == 0) { PROFILE_END_VAR(timer, "platform_win32:Platform_MouseButtonDown"); return false; }
+    INPUT in = {0};
+    in.type = INPUT_MOUSE;
+    in.mi.dwFlags = flag;
+    in.mi.mouseData = (button == 5) ? XBUTTON2 : XBUTTON1;
+    bool ok = SendInput(1, &in, sizeof(INPUT)) == 1;
+    PROFILE_END_VAR(timer, "platform_win32:Platform_MouseButtonDown");
+    return ok;
+}
+
+bool Platform_MouseScroll(int notches) {
+    PROFILE_START(timer);
+    if (notches == 0) { PROFILE_END_VAR(timer, "platform_win32:Platform_MouseScroll"); return true; }
+    INPUT in = {0};
+    in.type = INPUT_MOUSE;
+    in.mi.dwFlags = MOUSEEVENTF_WHEEL;
+    in.mi.mouseData = (DWORD)((notches > 0 ? notches : -notches) * WHEEL_DELTA);
+    bool ok = SendInput(1, &in, sizeof(INPUT)) == 1;
+    PROFILE_END_VAR(timer, "platform_win32:Platform_MouseScroll");
+    return ok;
+}
+
 char* Platform_GetWorkingDir() {
   return Platform_RunTerminalCommand("cd",false);
 }
