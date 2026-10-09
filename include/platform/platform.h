@@ -84,6 +84,8 @@ int ConvertLinuxKeyToWindowsVK(int key_code);
 PlColor Platform_GetPixelColor(int x, int y);
 bool Platform_MoveToPos(int x, int y);
 bool Platform_Click(void);
+bool Platform_MouseButtonDown(int button, bool down);
+bool Platform_MouseScroll(int notches);
 void Platform_ApplyUIScale(void);
 float Platform_GetUIScale(void);
 int Platform_GetUnscaledFontSize(void);

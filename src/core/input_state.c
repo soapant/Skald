@@ -250,14 +250,14 @@ unsigned long Platform_GlobalMouse_Dropped(void){
   return d;
 }
 
-void Platform_SetMouseButton(int button, bool down){
+void Platform_UpdateMouseButton(int button, bool down){
   if(button < 0 || button >= (int)(sizeof(g_mbtn_down)/sizeof(g_mbtn_down[0]))) return;
   GMOUSE_LOCK();
   g_mbtn_down[button] = down;
   GMOUSE_UNLOCK();
 }
 
-bool Platform_MouseButtonDown(int button){
+bool Platform_MouseStateDown(int button){
   if(button < 0 || button >= (int)(sizeof(g_mbtn_down)/sizeof(g_mbtn_down[0]))) return false;
   GMOUSE_LOCK();
   bool d = g_mbtn_down[button];
