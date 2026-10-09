@@ -4,6 +4,7 @@
 #include "bindings/vim_bindings.h"
 #include "core/vim.h"
 #include "core/window_manager.h"
+#include "platform/ui.h"
 #include "config.h"
 #include "deps/log.h"
 #include <ctype.h>
@@ -18,6 +19,7 @@ static bool vim_scope_allows(VimScope scope) {
     Popup* top = wm ? WindowManager_GetTopPopup(wm) : NULL;
     bool in_prompt = top && top->type == POPUP_PROMPT;
     bool in_edit = top && top->type == POPUP_EDIT;
+    if (!in_prompt && !in_edit && IsPopupActive(WH_NULL)) in_prompt = true;
     switch (scope) {
         case VIM_SCOPE_ALL: return true;
         case VIM_SCOPE_MODAL: return in_prompt;
