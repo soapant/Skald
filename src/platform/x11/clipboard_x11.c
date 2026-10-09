@@ -2,6 +2,7 @@
 #include "platform/x11/display_x11.h"
 #include "deps/log.h"
 #include "config.h"
+#include "core/clipboard_history.h"
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 #include <stdio.h>
@@ -53,7 +54,10 @@ static Atom g_clip_primary = None;
 static Atom g_clip_targets = None;
 static Atom g_clip_utf8 = None;
 static Atom g_clip_timestamp = None;
-static Atom g_clip_png_atom = None;
+static Atom g_clip_jpeg_atom = None;
+static Atom g_clip_gif_atom = None;
+static Atom g_clip_bmp_atom = None;
+static Atom g_clip_img_atom = None;
 static Atom g_clip_incr = None;
 
 static bool g_incr_active = false;
@@ -81,7 +85,9 @@ void x11_clipboard_ensure_started(void) {
     g_clip_targets = XInternAtom(dpy, "TARGETS", False);
     g_clip_utf8 = XInternAtom(dpy, "UTF8_STRING", False);
     g_clip_timestamp = XInternAtom(dpy, "TIMESTAMP", False);
-    g_clip_png_atom = XInternAtom(dpy, "image/png", False);
+    g_clip_jpeg_atom = XInternAtom(dpy, "image/jpeg", False);
+    g_clip_gif_atom = XInternAtom(dpy, "image/gif", False);
+    g_clip_bmp_atom = XInternAtom(dpy, "image/bmp", False);
     g_clip_incr = XInternAtom(dpy, "INCR", False);
     XMapWindow(dpy, win);
     XFlush(dpy);
@@ -131,14 +137,14 @@ static void x11_clipboard_serve_request(Display *dpy, XSelectionRequestEvent *re
             list[n++] = g_clip_utf8;
             list[n++] = XA_STRING;
         }
-        if (g_clip_png) list[n++] = g_clip_png_atom;
+        if (g_clip_png) list[n++] = g_clip_img_atom;
         XChangeProperty(dpy, req->requestor, prop, XA_ATOM, 32, PropModeReplace, (unsigned char*)list, n);
         resp.xselection.property = prop;
     } else if ((req->target == g_clip_utf8 || req->target == XA_STRING) && g_clip_text) {
         Atom type = (req->target == g_clip_utf8) ? g_clip_utf8 : XA_STRING;
         XChangeProperty(dpy, req->requestor, prop, type, 8, PropModeReplace, (unsigned char*)g_clip_text, strlen(g_clip_text));
         resp.xselection.property = prop;
-    } else if (req->target == g_clip_png_atom && g_clip_png) {
+    } else if (req->target == g_clip_img_atom && g_clip_png) {
         if (g_clip_png_len > CLIP_INCR_THRESHOLD) {
             x11_clipboard_abort_incr();
             XWindowAttributes wa;
@@ -160,7 +166,7 @@ static void x11_clipboard_serve_request(Display *dpy, XSelectionRequestEvent *re
 
             resp.xselection.property = prop;
         } else {
-            XChangeProperty(dpy, req->requestor, prop, g_clip_png_atom, 8, PropModeReplace, g_clip_png, (int)g_clip_png_len);
+            XChangeProperty(dpy, req->requestor, prop, g_clip_img_atom, 8, PropModeReplace, g_clip_png, (int)g_clip_png_len);
             resp.xselection.property = prop;
         }
     } else if (req->target == g_clip_timestamp) {
@@ -188,11 +194,11 @@ static void x11_clipboard_serve_incr(Display *dpy, XPropertyEvent *pev) {
     size_t remaining = g_clip_png_len - g_incr_off;
     if (remaining > 0) {
         size_t n = remaining > CLIP_INCR_CHUNK ? CLIP_INCR_CHUNK : remaining;
-        XChangeProperty(dpy, g_incr_req, g_incr_prop, g_clip_png_atom, 8, PropModeReplace, g_clip_png + g_incr_off, (int)n);
+        XChangeProperty(dpy, g_incr_req, g_incr_prop, g_clip_img_atom, 8, PropModeReplace, g_clip_png + g_incr_off, (int)n);
         g_incr_off += n;
         cl_trace("INCR", "sent chunk n=%zu off=%zu remaining=%zu", n, g_incr_off, remaining);
     } else {
-        XChangeProperty(dpy, g_incr_req, g_incr_prop, g_clip_png_atom, 8, PropModeReplace, NULL, 0);
+        XChangeProperty(dpy, g_incr_req, g_incr_prop, g_clip_img_atom, 8, PropModeReplace, NULL, 0);
         cl_trace("INCR", "END off=%zu len=%zu terminator sent", g_incr_off, g_clip_png_len);
         x11_clipboard_abort_incr();
     }
@@ -278,6 +284,8 @@ int x11_clipboard_set_image(const unsigned char *png, size_t len) {
     Display *dpy = get_display();
     if (!dpy || g_clip_win == None) return 0;
     x11_clipboard_abort_incr();
+    const char* mime = clipboard_image_mime(clipboard_image_format(png, len));
+    g_clip_img_atom = XInternAtom(dpy, mime ? mime : "image/png", False);
     unsigned char* np = malloc(len);
     if (!np) return 0;
     memcpy(np, png, len);
