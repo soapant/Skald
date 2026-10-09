@@ -50,7 +50,7 @@ bool Platform_GlobalMouse_Pop(PlatformMouseEvent* out);
 void Platform_GlobalMouse_Clear(void);
 int Platform_GlobalMouse_Pending(void);
 unsigned long Platform_GlobalMouse_Dropped(void);
-bool Platform_MouseButtonDown(int button);
-void Platform_SetMouseButton(int button, bool down);
+bool Platform_MouseStateDown(int button);
+void Platform_UpdateMouseButton(int button, bool down);
 bool Platform_GetMousePos(int* out_x, int* out_y);
 #endif

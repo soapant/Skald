@@ -72,7 +72,7 @@ LRESULT CALLBACK win32_handle_global_mouse(int nCode, WPARAM wParam, LPARAM lPar
   if (_isUp && wParam == WM_XBUTTONUP) {
       _btn = (_rm->mouseData == XBUTTON2) ? MOUSE_BTN_SIDE2 : MOUSE_BTN_SIDE1;
   }
-  Platform_SetMouseButton(_btn, _isDown);
+  Platform_UpdateMouseButton(_btn, _isDown);
 
   PlatformMouseEvent _mev;
   memset(&_mev, 0, sizeof(_mev));

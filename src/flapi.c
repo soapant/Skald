@@ -1250,6 +1250,35 @@ bool fl_click(void) {
   PROFILE_END_VAR(_pt, "flapi:fl_click");
   return ok;
 }
+bool fl_mouse_button_down(int button, bool down) {
+  PROFILE_START(_pt);
+  bool ok = Platform_MouseButtonDown(button, down);
+  PROFILE_END_VAR(_pt, "flapi:fl_mouse_button_down");
+  return ok;
+}
+bool fl_mouse_press_at(PlPos pos, int button, bool down) {
+  PROFILE_START(_pt);
+  bool moved = fl_move_to_pos(pos);
+  bool ok = moved && Platform_MouseButtonDown(button, down);
+  PROFILE_END_VAR(_pt, "flapi:fl_mouse_press_at");
+  return ok;
+}
+bool fl_mouse_click_button_at(PlPos pos, int button) {
+  PROFILE_START(_pt);
+  bool moved = fl_move_to_pos(pos);
+  bool down = moved && Platform_MouseButtonDown(button, true);
+  if (!down) { PROFILE_END_VAR(_pt, "flapi:fl_mouse_click_button_at"); return false; }
+  fl_sleep(0.02);
+  bool up = Platform_MouseButtonDown(button, false);
+  PROFILE_END_VAR(_pt, "flapi:fl_mouse_click_button_at");
+  return up;
+}
+bool fl_mouse_scroll(int notches) {
+  PROFILE_START(_pt);
+  bool ok = Platform_MouseScroll(notches);
+  PROFILE_END_VAR(_pt, "flapi:fl_mouse_scroll");
+  return ok;
+}
 int fl_get_current_volume(void) {
   return fl_get_current_volume_platform();
 }
@@ -1384,6 +1413,7 @@ unsigned long fl_mouse_queue_dropped(void) {
 void fl_clear_mouse_queue(void) {
   Platform_GlobalMouse_Clear();
 }
+
 FlPos fl_get_cursor_pos() {
   int x, y;
   Platform_GetMousePos(&x, &y);
@@ -1391,7 +1421,7 @@ FlPos fl_get_cursor_pos() {
 }
 
 bool fl_mouse_is_pressed(int button) {
-  return Platform_MouseButtonDown(button);
+  return Platform_MouseStateDown(button);
 }
 
 int fl_key_queue_len(void) {
