@@ -38,16 +38,30 @@ static void vpress(int vk, bool ctrl, bool shift) {
     PromptController_TryVimMotion(vk, ctrl, shift, false);
 }
 
+static const MotionBinding* g_vb;
+static int g_vb_count;
+static const SequenceBinding* g_vs;
+static int g_vs_count;
+
+static void vtables(void) {
+    if (!g_vb) {
+        g_vb_count = VimBindings_Get(&g_vb);
+        g_vs_count = VimSequenceBindings_Get(&g_vs);
+    }
+}
+
 static const MotionBinding* vbinding(MotionAction action) {
-    for (int i = 0; i < VIM_BINDING_COUNT; i++) {
-        if (G_VIM_BINDINGS[i].action_id == action) return &G_VIM_BINDINGS[i];
+    vtables();
+    for (int i = 0; i < g_vb_count; i++) {
+        if (g_vb[i].action_id == action) return &g_vb[i];
     }
     return NULL;
 }
 
 static const SequenceBinding* vseqbinding(const char* seq) {
-    for (int i = 0; i < VIM_SEQUENCE_BINDING_COUNT; i++) {
-        const SequenceBinding* b = &G_VIM_SEQUENCE_BINDINGS[i];
+    vtables();
+    for (int i = 0; i < g_vs_count; i++) {
+        const SequenceBinding* b = &g_vs[i];
         if (b->sequence && strcmp(b->sequence, seq) == 0) return b;
     }
     return NULL;
@@ -666,13 +680,13 @@ TEST(search_backward_binding_is_shift_oem2) {
 TEST(dw_sequence_is_registered) {
     const SequenceBinding* b = vseqbinding("DW");
     ASSERT_TRUE(b != NULL);
-    ASSERT_EQ_INT((long)b->handler, (long)HandleDeleteWordNormal);
+    ASSERT_EQ_INT((long)b->handler, (long)HandleDeleteWordForward);
 }
 
 TEST(cw_sequence_is_registered) {
     const SequenceBinding* b = vseqbinding("CW");
     ASSERT_TRUE(b != NULL);
-    ASSERT_EQ_INT((long)b->handler, (long)HandleDeleteWordInsert);
+    ASSERT_EQ_INT((long)b->handler, (long)HandleChangeWordForward);
 }
 
 TEST(dw_deletes_word_through_keypath) {
@@ -681,7 +695,7 @@ TEST(dw_deletes_word_through_keypath) {
     vpress('D', false, false);
     vpress('W', false, false);
     vgettext(buf, sizeof(buf));
-    ASSERT_EQ_STR(buf, " world");
+    ASSERT_EQ_STR(buf, "world");
 }
 
 TEST(cw_deletes_word_and_enters_insert_through_keypath) {
@@ -690,8 +704,36 @@ TEST(cw_deletes_word_and_enters_insert_through_keypath) {
     vpress('C', false, false);
     vpress('W', false, false);
     vgettext(buf, sizeof(buf));
-    ASSERT_EQ_STR(buf, " world");
+    ASSERT_EQ_STR(buf, "world");
     ASSERT_TRUE(IsInsertMode());
+}
+
+TEST(dw_midword_deletes_to_word_end_not_whole_word) {
+    char buf[64];
+    vreset("hello world", 2);
+    vpress('D', false, false);
+    vpress('W', false, false);
+    vgettext(buf, sizeof(buf));
+    ASSERT_EQ_STR(buf, "heworld");
+}
+
+TEST(dw_on_trailing_space_does_nothing) {
+    char buf[64];
+    vreset("hello world", 5);
+    vpress('D', false, false);
+    vpress('W', false, false);
+    vgettext(buf, sizeof(buf));
+    ASSERT_EQ_STR(buf, "helloworld");
+}
+
+TEST(diw_still_deletes_whole_word) {
+    char buf[64];
+    vreset("hello world", 2);
+    vpress('D', false, false);
+    vpress('I', false, false);
+    vpress('W', false, false);
+    vgettext(buf, sizeof(buf));
+    ASSERT_EQ_STR(buf, " world");
 }
 
 TEST(dd_still_deletes_line_through_keypath) {
@@ -750,46 +792,56 @@ TEST(noop_natural_keys) {
 }
 
 
-TEST(binding_table_sizes_match_declared) {
-    ASSERT_EQ_INT(VIM_BINDING_COUNT, 57);
-    ASSERT_EQ_INT(VIM_SEQUENCE_BINDING_COUNT, 29);
+TEST(binding_tables_are_queryable) {
+    vtables();
+    ASSERT_TRUE(g_vb != NULL);
+    ASSERT_TRUE(g_vs != NULL);
+    ASSERT_TRUE(g_vb_count > 0);
+    ASSERT_TRUE(g_vs_count > 0);
+    ASSERT_EQ_INT(g_vb_count, 57);
+    ASSERT_EQ_INT(g_vs_count, 29);
 }
 
 TEST(no_null_sequence_in_table) {
-    for (int i = 0; i < VIM_SEQUENCE_BINDING_COUNT; i++) {
-        const SequenceBinding* b = &G_VIM_SEQUENCE_BINDINGS[i];
+    vtables();
+    for (int i = 0; i < g_vs_count; i++) {
+        const SequenceBinding* b = &g_vs[i];
         ASSERT_TRUE(b->sequence != NULL);
         ASSERT_TRUE(b->handler != NULL);
     }
 }
 
 TEST(no_null_binding_in_table) {
-    for (int i = 0; i < VIM_BINDING_COUNT; i++) {
-        const MotionBinding* b = &G_VIM_BINDINGS[i];
+    vtables();
+    for (int i = 0; i < g_vb_count; i++) {
+        const MotionBinding* b = &g_vb[i];
         ASSERT_TRUE(b->handler != NULL);
         ASSERT_TRUE(b->action_id != MOTION_NONE);
     }
 }
 
 TEST(last_binding_is_not_truncated) {
-    const MotionBinding* last = &G_VIM_BINDINGS[VIM_BINDING_COUNT - 1];
+    vtables();
+    const MotionBinding* last = &g_vb[g_vb_count - 1];
     ASSERT_TRUE(last->handler != NULL);
     ASSERT_TRUE(last->action_id != MOTION_NONE);
     ASSERT_EQ_INT(last->action_id, MOTION_SEARCH_BACKWARD_KEY);
 }
 
 TEST(last_sequence_is_not_truncated) {
-    const SequenceBinding* last = &G_VIM_SEQUENCE_BINDINGS[VIM_SEQUENCE_BINDING_COUNT - 1];
+    vtables();
+    const SequenceBinding* last = &g_vs[g_vs_count - 1];
     ASSERT_TRUE(last->handler != NULL);
     ASSERT_TRUE(last->sequence != NULL);
     ASSERT_EQ_STR(last->sequence, "G~");
 }
 
 TEST(every_sequence_has_distinct_handler) {
-    for (int i = 0; i < VIM_SEQUENCE_BINDING_COUNT; i++) {
-        for (int j = i + 1; j < VIM_SEQUENCE_BINDING_COUNT; j++) {
-            if (strcmp(G_VIM_SEQUENCE_BINDINGS[i].sequence, G_VIM_SEQUENCE_BINDINGS[j].sequence) == 0) {
-                printf("  FAIL duplicate sequence '%s'\n", G_VIM_SEQUENCE_BINDINGS[i].sequence);
+    vtables();
+    for (int i = 0; i < g_vs_count; i++) {
+        for (int j = i + 1; j < g_vs_count; j++) {
+            if (strcmp(g_vs[i].sequence, g_vs[j].sequence) == 0) {
+                printf("  FAIL duplicate sequence '%s'\n", g_vs[i].sequence);
                 flint_test_fails++;
                 break;
             }
@@ -879,6 +931,9 @@ int main(void) {
     RUN(search_backward_binding_is_shift_oem2);
     RUN(dw_sequence_is_registered);
     RUN(cw_sequence_is_registered);
+    RUN(dw_midword_deletes_to_word_end_not_whole_word);
+    RUN(dw_on_trailing_space_does_nothing);
+    RUN(diw_still_deletes_whole_word);
     RUN(dw_deletes_word_through_keypath);
     RUN(cw_deletes_word_and_enters_insert_through_keypath);
     RUN(dd_still_deletes_line_through_keypath);
@@ -888,7 +943,7 @@ int main(void) {
     RUN(failed_g_sequence_does_not_swallow_next_key);
     RUN(jump_prev_context_binding_is_shift_oem3);
     RUN(noop_natural_keys);
-    RUN(binding_table_sizes_match_declared);
+    RUN(binding_tables_are_queryable);
     RUN(no_null_sequence_in_table);
     RUN(no_null_binding_in_table);
     RUN(last_binding_is_not_truncated);
