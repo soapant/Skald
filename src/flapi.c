@@ -406,7 +406,7 @@ static void fl_snippet_fire(int idx, int del) {
 bool fl_register_snippet_impl(const char* trigger, const char* text, FlSnippetFunc fn, bool whitelist, const char** windows) {
     if (!trigger || (!text && !fn)) return false;
     snippet_set_fire_fn(fl_snippet_fire);
-    return snippet_register_internal(trigger, text, fn, whitelist, windows);
+    return snippet_register_internal(trigger, text, fn, whitelist, windows, (void*)__builtin_return_address(0));
 }
 
 typedef struct { char *key; void *value; } FlintMapEnt;
