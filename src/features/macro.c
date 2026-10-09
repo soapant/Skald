@@ -6,11 +6,17 @@
 static bool g_recording = false;
 static FlThread g_thread = NULL;
 
+#define WIDTH fl_get_screen_width()
+#define HEIGHT fl_get_screen_height()
+
 static void recording_render() {
-    fl_draw_line(.x1 = 0,    .y1 = 0,    .x2 = 1919, .y2 = 0,    .color = RGB(180, 0, 0));
-    fl_draw_line(.x1 = 1919, .y1 = 0,    .x2 = 1919, .y2 = 1079, .color = RGB(180, 0, 0));
-    fl_draw_line(.x1 = 1919, .y1 = 1079, .x2 = 0,    .y2 = 1079, .color = RGB(180, 0, 0));
-    fl_draw_line(.x1 = 0,    .y1 = 1079, .x2 = 0,    .y2 = 0,    .color = RGB(180, 0, 0));
+    int max_x = WIDTH - 1;
+    int max_y = HEIGHT - 1;
+
+    fl_draw_line(.x1 = 0,     .y1 = 0,     .x2 = max_x, .y2 = 0,     .color = RGB(180, 0, 0));
+    fl_draw_line(.x1 = max_x, .y1 = 0,     .x2 = max_x, .y2 = max_y, .color = RGB(180, 0, 0));
+    fl_draw_line(.x1 = max_x, .y1 = max_y, .x2 = 0,     .y2 = max_y, .color = RGB(180, 0, 0));
+    fl_draw_line(.x1 = 0,     .y1 = max_y, .x2 = 0,     .y2 = 0,     .color = RGB(180, 0, 0));
 }
 
 static void* recorder_loop(void* arg) {
