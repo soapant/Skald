@@ -27,11 +27,23 @@ static EditorMode ActiveMode(void) {
     return FlintContext_Get()->vim_mode;
 }
 
+static void clamp_cursor_for_mode(EditorMode mode) {
+    if (mode != MODE_NORMAL) return;
+    FlintContext* ctx = FlintContext_Get();
+    if (!ctx) return;
+    char text[1024];
+    Vim_GetText(ctx, text, sizeof(text));
+    int len = (int)strlen(text);
+    if (len <= 0) return;
+    if (Vim_GetCursor(ctx) > len - 1) Vim_SetCursor(ctx, len - 1);
+}
+
 void SetModeWithListBox(EditorMode mode, ListBoxInfo* lb) {
     g_current_mode = mode;
     g_vim_mode = g_mode_names[mode];
     FlintContext* ctx = FlintContext_Get();
     if (ctx) { ctx->vim_mode = mode; ctx->vim_mode_str = g_vim_mode; }
+    clamp_cursor_for_mode(mode);
     WindowManager* wm = WindowManager_Get();
     bool in_main = !wm || wm->popup_count <= 1;
 
@@ -66,6 +78,7 @@ void SetMode(EditorMode mode) {
         WMEditPopupData* e = (WMEditPopupData*)top;
         if (e) {
             e->mode = mode;
+            clamp_cursor_for_mode(mode);
             UpdateTextCaret();
             return;
         }
