@@ -1,4 +1,5 @@
 #include "core/flapi.h"
+#include <stdio.h>
 
 FLINT_FEATURE_INIT {
     fl_register_remapping("LeftShift+RightAlt", "Enter");
@@ -14,6 +15,5 @@ FLINT_FEATURE_INIT {
 
     fl_register_remapping("A", "Left",WHITELIST,"feh");
     fl_register_remapping("D", "Right",WHITELIST,"feh");
-
 }
 
