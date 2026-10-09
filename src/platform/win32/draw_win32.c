@@ -4,6 +4,7 @@
 #include "bindings/vim_state.h"
 #include "platform/platform.h"
 #include "platform/win32/win32_state.h"
+#include "platform/win32/common_ui_win32.h"
 #include "config.h"
 #include "platform/ui.h"
 #include "core/context.h"
@@ -704,6 +705,7 @@ void Platform_DrawPromptEditText(PromptState* state) {
         Platform_DestroyFont(tfont);
 
         int sel_start = 0, sel_end = 0;
+        unsigned long tint = LerpColor(COLOR_BG, Modal_CursorColor(), 0.72f);
         bool has_sel = VimState_GetSelection(&sel_start, &sel_end) && text_len > 0;
         if (has_sel) {
             if (sel_start < 0) sel_start = 0;
@@ -717,13 +719,13 @@ void Platform_DrawPromptEditText(PromptState* state) {
                 if (cx < x0) cx = x0;
                 if (cx > x1) cx = x1;
                 int w = x1 - x0 + PromptNormalCaretWidth();
-                if (w > 0) Platform_DrawRectRawOpaque(x0, tint_y, w, FontSize, Modal_CursorColor());
+                if (w > 0) Platform_DrawRectRawOpaque(x0, tint_y, w, FontSize, tint);
             }
         } else {
             int tint_x = PROMPT_EDIT_INSET + cursor_x - scroll;
             if (tint_x < PROMPT_CARET_LO_CLAMP) tint_x = PROMPT_CARET_LO_CLAMP;
             if (tint_x > state->width - PROMPT_CARET_HI_CLAMP) tint_x = state->width - PROMPT_CARET_HI_CLAMP;
-            Platform_DrawRectRawOpaque(tint_x, tint_y, PromptNormalCaretWidth(), FontSize, Modal_CursorColor());
+            Platform_DrawRectRawOpaque(tint_x, tint_y, PromptNormalCaretWidth(), FontSize, tint);
         }
     }
     if (text_len > 0) {

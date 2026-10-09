@@ -52,9 +52,6 @@ void HandleEnterInsertIn(FlintContext* ctx) {
 }
 
 void HandleEnterVisual(FlintContext* ctx) {
-    (void)ctx;
-    ListBoxInfo* lb = Vim_GetListBox(ctx);
-    if (lb && UI_IsListBoxSelected(lb)) return;
     VimState_BeginSelection(Vim_GetCursor(ctx));
     SetMode(MODE_VISUAL);
 }
@@ -113,6 +110,47 @@ void HandleVisualFirstNonBlank(FlintContext* ctx) { (void)ctx; vim_visual_run(Ha
 void HandleVisualBracketMatch(FlintContext* ctx) { (void)ctx; vim_visual_run(HandleBracketMatchPercent); }
 void HandleVisualStarSearch(FlintContext* ctx) { (void)ctx; vim_visual_run(HandleStarSearch); }
 void HandleVisualHashSearch(FlintContext* ctx) { (void)ctx; vim_visual_run(HandleHashSearch); }
+
+static void vim_visual_select(int start, int end) {
+    if (start > end) { int t = start; start = end; end = t; }
+    VimState_BeginSelection(start);
+    VimState_UpdateSelection(end);
+    SetMode(MODE_VISUAL);
+    Vim_SetCursor(FlintContext_Get(), end);
+}
+
+static bool vim_visual_word(bool bigword, bool around) {
+    int start = 0, end = 0;
+    if (!Vim_WordRange(FlintContext_Get(), bigword, around, &start, &end)) return false;
+    if (end <= start) return false;
+    vim_visual_select(start, end - 1);
+    return true;
+}
+
+static bool vim_visual_delim(char open_ch, char close_ch, bool around) {
+    int start = 0, end = 0;
+    if (!Vim_DelimRange(FlintContext_Get(), open_ch, close_ch, &start, &end)) return false;
+    if (around) {
+        vim_visual_select(start, end);
+        return true;
+    }
+    if (end - start < 2) return false;
+    vim_visual_select(start + 1, end - 1);
+    return true;
+}
+
+void HandleVisualInnerWord(FlintContext* ctx) { (void)ctx; vim_visual_word(false, false); }
+void HandleVisualAroundWord(FlintContext* ctx) { (void)ctx; vim_visual_word(false, true); }
+void HandleVisualInnerQuotes(FlintContext* ctx) { (void)ctx; vim_visual_delim('\"', '\"', false); }
+void HandleVisualAroundQuotes(FlintContext* ctx) { (void)ctx; vim_visual_delim('\"', '\"', true); }
+void HandleVisualInnerSingleQuotes(FlintContext* ctx) { (void)ctx; vim_visual_delim('\'', '\'', false); }
+void HandleVisualAroundSingleQuotes(FlintContext* ctx) { (void)ctx; vim_visual_delim('\'', '\'', true); }
+void HandleVisualInnerBrackets(FlintContext* ctx) { (void)ctx; vim_visual_delim('(', ')', false); }
+void HandleVisualAroundBrackets(FlintContext* ctx) { (void)ctx; vim_visual_delim('(', ')', true); }
+void HandleVisualInnerCurlyBrackets(FlintContext* ctx) { (void)ctx; vim_visual_delim('{', '}', false); }
+void HandleVisualAroundCurlyBrackets(FlintContext* ctx) { (void)ctx; vim_visual_delim('{', '}', true); }
+void HandleVisualInnerSquareBrackets(FlintContext* ctx) { (void)ctx; vim_visual_delim('[', ']', false); }
+void HandleVisualAroundSquareBrackets(FlintContext* ctx) { (void)ctx; vim_visual_delim('[', ']', true); }
 
 void HandleVisualDeleteSelection(FlintContext* ctx) {
     (void)ctx;
