@@ -145,6 +145,33 @@ static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent* key) {
         return true;
     }
 
+    if (wParam == 'V' && ctrl_pressed) {
+        char *clip = Platform_GetClipboardEntry();
+        if (!clip) return true;
+        clip[strcspn(clip, "\r\n")] = '\0';
+        if (clip[0] == '\0') { free(clip); return true; }
+
+        PromptState *ps = g_win32_prompt_state;
+        if (!ps) { free(clip); return true; }
+        size_t cur_len = strlen(ps->filter);
+        size_t clip_len = strlen(clip);
+        size_t avail = sizeof(ps->filter) - cur_len - 1;
+        if (clip_len > avail) clip_len = avail;
+        if (clip_len > 0) {
+            memmove(ps->filter + ps->cursor + clip_len,
+                    ps->filter + ps->cursor,
+                    cur_len - ps->cursor + 1);
+            memcpy(ps->filter + ps->cursor, clip, clip_len);
+            ps->cursor += (int)clip_len;
+        }
+        free(clip);
+
+        if (FlintContext_Get()->prompt_callbacks.refresh) {
+            FlintContext_Get()->prompt_callbacks.refresh(ps->filter, ps->has_listbox ? &ps->listbox : NULL);
+        }
+        return true;
+    }
+
     if (wParam == VK_BACK) {
         if (ctrl_pressed) {
             UI_SetText("");
