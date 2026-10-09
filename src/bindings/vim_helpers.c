@@ -185,7 +185,7 @@ bool Vim_WordUnder(const char* text, int len, int pos, char* out, int cap) {
 
 void Vim_TransformCase(FlintContext* ctx, int mode) {
     if (!ctx) return;
-    char text[512];
+    char text[VIM_TEXT_BUF];
     Vim_GetText(ctx, text, sizeof(text));
     int len = (int)strlen(text);
     int pos = Vim_GetCursor(ctx);
@@ -205,7 +205,7 @@ void Vim_TransformCase(FlintContext* ctx, int mode) {
 
 void DeleteCharUnderCursor(FlintContext* ctx) {
     if (!ctx) return;
-    char text[512];
+    char text[VIM_TEXT_BUF];
     Vim_GetText(ctx, text, sizeof(text));
     int pos = Vim_GetCursor(ctx);
     int len = (int)strlen(text);
@@ -238,14 +238,14 @@ void SetCursorToStartOfText(FlintContext* ctx) {
 
 void SetCursorToEndOfText(FlintContext* ctx) {
     if (!ctx) return;
-    char text[512];
+    char text[VIM_TEXT_BUF];
     Vim_GetText(ctx, text, sizeof(text));
     Vim_SetCursor(ctx, (int)strlen(text));
 }
 
 void DeleteInsideDelimiter(FlintContext* ctx, char open_char, char close_char, bool keep_mode) {
     if (!ctx) return;
-    char text[512];
+    char text[VIM_TEXT_BUF];
     Vim_GetText(ctx, text, sizeof(text));
     int len = (int)strlen(text);
     int cursor = Vim_GetCursor(ctx);
@@ -300,9 +300,35 @@ void DeleteInsideDelimiter(FlintContext* ctx, char open_char, char close_char, b
     if (keep_mode) SetMode(MODE_INSERT); else SetMode(MODE_NORMAL);
 }
 
+void DeleteWordForward(FlintContext* ctx, bool keep_mode) {
+    if (!ctx) return;
+    char text[VIM_TEXT_BUF];
+    Vim_GetText(ctx, text, sizeof(text));
+    int len = (int)strlen(text);
+    int cursor = Vim_GetCursor(ctx);
+    if (len == 0 || cursor >= len) {
+        if (keep_mode) SetMode(MODE_INSERT); else SetMode(MODE_NORMAL);
+        return;
+    }
+
+    int start = cursor;
+    int end = cursor;
+    while (end < len && !vim_is_space(text[end])) end++;
+    while (end < len && vim_is_space(text[end])) end++;
+
+    if (end == start) {
+        while (start > 0 && vim_is_space(text[start - 1])) start--;
+    }
+
+    memmove(&text[start], &text[end], (size_t)(len - end + 1));
+    Vim_SetText(ctx, text);
+    Vim_SetCursor(ctx, start);
+    if (keep_mode) SetMode(MODE_INSERT); else SetMode(MODE_NORMAL);
+}
+
 void DeleteInnerWord(FlintContext* ctx, bool keep_mode) {
     if (!ctx) return;
-    char text[512];
+    char text[VIM_TEXT_BUF];
     Vim_GetText(ctx, text, sizeof(text));
     int len = (int)strlen(text);
     int cursor = Vim_GetCursor(ctx);

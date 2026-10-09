@@ -38,6 +38,9 @@ void VimState_SetFind(char target, VimFindDir dir);
 bool VimState_GetFind(VimFindState* out);
 VimFindDir VimState_InvertDir(VimFindDir dir);
 
+void VimState_SetLastPattern(const char* pattern);
+bool VimState_GetLastPattern(char* out, int cap);
+
 void VimState_SetMark(char name, int cursor, int selection);
 bool VimState_GetMark(char name, int* out_cursor, int* out_selection);
 bool VimState_MarkIsSet(char name);

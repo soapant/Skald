@@ -208,7 +208,11 @@ static void widgets_date_and_time_render(FlWidgetState *state) {
                  .color = RGB(220, 220, 220), .align = "LEFT");
 }
 
+static void net_usage_tick(void);
+
 static void widgets_internet_render(FlWidgetState *state) {
+    net_usage_tick();
+
     FlNetStatus status = fl_net_status();
     int x = 40;
     int y = 7;
@@ -328,6 +332,8 @@ static void net_usage_sample(void) {
 }
 
 static void net_usage_tick(void) {
+    net_usage_load();
+
     time_t now = time(NULL);
     struct tm tm_now;
     net_localtime(now, &tm_now);
@@ -348,9 +354,6 @@ static void net_row(int y, const char *label, const char *value, unsigned long c
 }
 
 static void internet_hover_render() {
-    net_usage_load();
-    net_usage_tick();
-
     fl_draw_line(NET_PAD, NET_PAD + 30, NET_POPUP_W - NET_PAD, NET_PAD + 30, RGB(60, 60, 80));
 
     char today[32], month[32], rate[32];

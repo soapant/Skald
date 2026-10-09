@@ -10,6 +10,7 @@ static int             g_last_insert = -1;
 static char            g_search_pattern[VIM_SEARCH_PATTERN];
 static int             g_search_len;
 static bool            g_search_pending;
+static char            g_last_pattern[VIM_SEARCH_PATTERN];
 
 static int MarkIndex(char name) {
     if (name >= 'a' && name <= 'z') return name - 'a';
@@ -27,6 +28,7 @@ void VimState_Reset(void) {
     g_search_len = 0;
     g_search_pending = false;
     g_search_pattern[0] = '\0';
+    g_last_pattern[0] = '\0';
 }
 
 void VimState_SetFind(char target, VimFindDir dir) {
@@ -38,6 +40,20 @@ void VimState_SetFind(char target, VimFindDir dir) {
 bool VimState_GetFind(VimFindState* out) {
     if (!g_find.valid || !out) return false;
     *out = g_find;
+    return true;
+}
+
+void VimState_SetLastPattern(const char* pattern) {
+    if (!pattern) { g_last_pattern[0] = '\0'; return; }
+    strncpy(g_last_pattern, pattern, sizeof(g_last_pattern) - 1);
+    g_last_pattern[sizeof(g_last_pattern) - 1] = '\0';
+}
+
+bool VimState_GetLastPattern(char* out, int cap) {
+    if (!out || cap <= 0) return false;
+    if (g_last_pattern[0] == '\0') return false;
+    strncpy(out, g_last_pattern, cap - 1);
+    out[cap - 1] = '\0';
     return true;
 }
 

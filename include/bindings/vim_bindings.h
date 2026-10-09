@@ -5,12 +5,12 @@
 #include "bindings/vim_motions.h"
 #include "config.h"
 
-extern const MotionBinding G_VIM_BINDINGS[57];
+typedef void (*VimMotionHandler)(FlintContext*);
 
-#define VIM_BINDING_COUNT ARRAY_LEN(G_VIM_BINDINGS)
+extern const MotionBinding G_VIM_BINDINGS[];
+extern const SequenceBinding G_VIM_SEQUENCE_BINDINGS[];
 
-extern const SequenceBinding G_VIM_SEQUENCE_BINDINGS[29];
-
-#define VIM_SEQUENCE_BINDING_COUNT ARRAY_LEN(G_VIM_SEQUENCE_BINDINGS)
+int VimBindings_Get(const MotionBinding** out);
+int VimSequenceBindings_Get(const SequenceBinding** out);
 
 #endif
