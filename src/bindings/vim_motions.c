@@ -55,12 +55,55 @@ void HandleEnterVisual(FlintContext* ctx) {
     (void)ctx;
     ListBoxInfo* lb = Vim_GetListBox(ctx);
     if (lb && UI_IsListBoxSelected(lb)) return;
+    VimState_BeginSelection(Vim_GetCursor(ctx));
     SetMode(MODE_VISUAL);
 }
 
 void HandleExitVisual(FlintContext* ctx) {
     (void)ctx;
+    VimState_EndSelection();
     SetMode(MODE_NORMAL);
+}
+
+static void vim_visual_step(int delta) {
+    FlintContext* ctx = FlintContext_Get();
+    if (!ctx) return;
+    int pos = Vim_GetCursor(ctx) + delta;
+    if (pos < 0) pos = 0;
+    vim_clamp_cursor(ctx, pos);
+    VimState_UpdateSelection(Vim_GetCursor(ctx));
+}
+
+void vim_delete_selection(FlintContext* ctx, bool enter_insert) {
+    (void)enter_insert;
+    if (!ctx) return;
+    int start = 0, end = 0;
+    if (VimState_GetSelection(&start, &end)) {
+        DeleteSelectionRange(ctx, start, end);
+    }
+    VimState_EndSelection();
+}
+
+void HandleVisualLeft(FlintContext* ctx) {
+    (void)ctx;
+    vim_visual_step(-1);
+}
+
+void HandleVisualRight(FlintContext* ctx) {
+    (void)ctx;
+    vim_visual_step(1);
+}
+
+void HandleVisualDeleteSelection(FlintContext* ctx) {
+    (void)ctx;
+    vim_delete_selection(ctx, false);
+    SetMode(MODE_NORMAL);
+}
+
+void HandleVisualChangeSelection(FlintContext* ctx) {
+    (void)ctx;
+    vim_delete_selection(ctx, true);
+    SetMode(MODE_INSERT);
 }
 
 void HandleMoveLeft(FlintContext* ctx) {

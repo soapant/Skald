@@ -15,6 +15,7 @@ void SetCursorToEndOfText(FlintContext* ctx);
 void DeleteInsideDelimiter(FlintContext* ctx, char open_char, char close_char, bool keep_mode);
 void DeleteInnerWord(FlintContext* ctx, bool keep_mode);
 void DeleteWordForward(FlintContext* ctx, bool keep_mode);
+void DeleteSelectionRange(FlintContext* ctx, int start, int end);
 
 int Vim_FirstNonBlank(const char* text, int len);
 int Vim_WordStep(const char* text, int len, int pos, bool bigword, bool to_end, bool forward);

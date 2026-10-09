@@ -30,6 +30,14 @@ static void vreset_insert(const char* text, int cursor) {
     Vim_SetCursor(vctx(), cursor);
 }
 
+static void vreset_visual(const char* text, int cursor) {
+    SetMode(MODE_VISUAL);
+    VimState_BeginSelection(cursor);
+    Vim_SetText(vctx(), text);
+    Vim_SetCursor(vctx(), cursor);
+    VimState_BeginSelection(cursor);
+}
+
 static void vgettext(char* buf, size_t cap) {
     Vim_GetText(vctx(), buf, cap);
 }
@@ -798,7 +806,7 @@ TEST(binding_tables_are_queryable) {
     ASSERT_TRUE(g_vs != NULL);
     ASSERT_TRUE(g_vb_count > 0);
     ASSERT_TRUE(g_vs_count > 0);
-    ASSERT_EQ_INT(g_vb_count, 58);
+    ASSERT_EQ_INT(g_vb_count, 62);
     ASSERT_EQ_INT(g_vs_count, 29);
 }
 
@@ -872,6 +880,166 @@ TEST(every_sequence_has_distinct_handler) {
             }
         }
     }
+}
+
+
+TEST(visual_left_moves_cursor_and_extends) {
+    VimState_Reset();
+    vreset_visual("hello world", 3);
+    HandleVisualLeft(vctx());
+    ASSERT_EQ_INT(Vim_GetCursor(vctx()), 2);
+    HandleVisualLeft(vctx());
+    ASSERT_EQ_INT(Vim_GetCursor(vctx()), 1);
+    int a = -1, b = -1;
+    ASSERT_TRUE(VimState_GetSelection(&a, &b));
+    ASSERT_EQ_INT(a, 1);
+    ASSERT_EQ_INT(b, 3);
+}
+
+TEST(visual_right_moves_cursor_and_extends) {
+    VimState_Reset();
+    vreset_visual("hello world", 3);
+    HandleVisualRight(vctx());
+    ASSERT_EQ_INT(Vim_GetCursor(vctx()), 4);
+    HandleVisualRight(vctx());
+    ASSERT_EQ_INT(Vim_GetCursor(vctx()), 5);
+    int a = -1, b = -1;
+    ASSERT_TRUE(VimState_GetSelection(&a, &b));
+    ASSERT_EQ_INT(a, 3);
+    ASSERT_EQ_INT(b, 5);
+}
+
+TEST(visual_selection_is_inclusive_of_both_ends) {
+    VimState_Reset();
+    vreset_visual("abcdef", 0);
+    HandleVisualRight(vctx());
+    HandleVisualRight(vctx());
+    int a = -1, b = -1;
+    ASSERT_TRUE(VimState_GetSelection(&a, &b));
+    ASSERT_EQ_INT(a, 0);
+    ASSERT_EQ_INT(b, 2);
+}
+
+TEST(visual_selection_backwards_is_normalised) {
+    VimState_Reset();
+    vreset_visual("abcdef", 3);
+    HandleVisualLeft(vctx());
+    int a = -1, b = -1;
+    ASSERT_TRUE(VimState_GetSelection(&a, &b));
+    ASSERT_EQ_INT(a, 2);
+    ASSERT_EQ_INT(b, 3);
+}
+
+TEST(visual_no_selection_when_anchor_equals_head) {
+    VimState_Reset();
+    vreset_visual("abcdef", 2);
+    int a = -1, b = -1;
+    ASSERT_FALSE(VimState_GetSelection(&a, &b));
+}
+
+TEST(visual_caret_cannot_move_past_start) {
+    VimState_Reset();
+    vreset_visual("abc", 0);
+    HandleVisualLeft(vctx());
+    ASSERT_EQ_INT(Vim_GetCursor(vctx()), 0);
+}
+
+TEST(visual_caret_cannot_move_past_end) {
+    VimState_Reset();
+    vreset_visual("abc", 2);
+    HandleVisualRight(vctx());
+    ASSERT_EQ_INT(Vim_GetCursor(vctx()), 2);
+}
+
+TEST(visual_delete_removes_selection_and_goes_normal) {
+    char buf[64];
+    VimState_Reset();
+    vreset_visual("hello world", 0);
+    HandleVisualRight(vctx());
+    HandleVisualRight(vctx());
+    HandleVisualDeleteSelection(vctx());
+    vgettext(buf, sizeof(buf));
+    ASSERT_EQ_STR(buf, "lo world");
+    ASSERT_TRUE(IsNormalMode());
+    ASSERT_FALSE(VimState_HasSelection());
+}
+
+TEST(visual_change_removes_selection_and_goes_insert) {
+    char buf[64];
+    VimState_Reset();
+    vreset_visual("hello world", 0);
+    HandleVisualRight(vctx());
+    HandleVisualChangeSelection(vctx());
+    vgettext(buf, sizeof(buf));
+    ASSERT_EQ_STR(buf, "llo world");
+    ASSERT_TRUE(IsInsertMode());
+    ASSERT_FALSE(VimState_HasSelection());
+}
+
+TEST(visual_delete_backwards_removes_correct_range) {
+    char buf[64];
+    VimState_Reset();
+    vreset_visual("abcdef", 4);
+    HandleVisualLeft(vctx());
+    HandleVisualDeleteSelection(vctx());
+    vgettext(buf, sizeof(buf));
+    ASSERT_EQ_STR(buf, "abcf");
+}
+
+TEST(visual_escape_clears_selection_but_keeps_text) {
+    char buf[64];
+    VimState_Reset();
+    vreset_visual("hello", 0);
+    HandleVisualRight(vctx());
+    HandleVisualRight(vctx());
+    ASSERT_TRUE(VimState_HasSelection());
+    HandleExitVisual(vctx());
+    vgettext(buf, sizeof(buf));
+    ASSERT_EQ_STR(buf, "hello");
+    ASSERT_TRUE(IsNormalMode());
+    ASSERT_FALSE(VimState_HasSelection());
+}
+
+TEST(visual_single_char_selection_deletes_one_char) {
+    char buf[64];
+    VimState_Reset();
+    vreset_visual("abc", 1);
+    HandleVisualRight(vctx());
+    HandleVisualDeleteSelection(vctx());
+    vgettext(buf, sizeof(buf));
+    ASSERT_EQ_STR(buf, "a");
+}
+
+TEST(visual_selection_deleting_to_end_of_text) {
+    char buf[64];
+    VimState_Reset();
+    vreset_visual("abc", 1);
+    HandleVisualRight(vctx());
+    HandleVisualRight(vctx());
+    HandleVisualDeleteSelection(vctx());
+    vgettext(buf, sizeof(buf));
+    ASSERT_EQ_STR(buf, "a");
+}
+
+TEST(visual_bindings_exist) {
+    ASSERT_TRUE(vbinding(MOTION_VISUAL_LEFT) != NULL);
+    ASSERT_TRUE(vbinding(MOTION_VISUAL_RIGHT) != NULL);
+    ASSERT_TRUE(vbinding(MOTION_VISUAL_DELETE) != NULL);
+    ASSERT_TRUE(vbinding(MOTION_VISUAL_CHANGE) != NULL);
+}
+
+TEST(visual_bindings_are_visual_mode) {
+    ASSERT_EQ_INT(vbinding(MOTION_VISUAL_LEFT)->mode, MODE_VISUAL);
+    ASSERT_EQ_INT(vbinding(MOTION_VISUAL_RIGHT)->mode, MODE_VISUAL);
+    ASSERT_EQ_INT(vbinding(MOTION_VISUAL_DELETE)->mode, MODE_VISUAL);
+    ASSERT_EQ_INT(vbinding(MOTION_VISUAL_CHANGE)->mode, MODE_VISUAL);
+}
+
+TEST(visual_keys_are_h_l_x_s) {
+    ASSERT_EQ_INT(vbinding(MOTION_VISUAL_LEFT)->vk_code, 'H');
+    ASSERT_EQ_INT(vbinding(MOTION_VISUAL_RIGHT)->vk_code, 'L');
+    ASSERT_EQ_INT(vbinding(MOTION_VISUAL_DELETE)->vk_code, 'X');
+    ASSERT_EQ_INT(vbinding(MOTION_VISUAL_CHANGE)->vk_code, 'S');
 }
 
 int main(void) {
@@ -968,6 +1136,22 @@ int main(void) {
     RUN(failed_g_sequence_does_not_swallow_next_key);
     RUN(jump_prev_context_binding_is_shift_oem3);
     RUN(noop_natural_keys);
+    RUN(visual_left_moves_cursor_and_extends);
+    RUN(visual_right_moves_cursor_and_extends);
+    RUN(visual_selection_is_inclusive_of_both_ends);
+    RUN(visual_selection_backwards_is_normalised);
+    RUN(visual_no_selection_when_anchor_equals_head);
+    RUN(visual_caret_cannot_move_past_start);
+    RUN(visual_caret_cannot_move_past_end);
+    RUN(visual_delete_removes_selection_and_goes_normal);
+    RUN(visual_change_removes_selection_and_goes_insert);
+    RUN(visual_delete_backwards_removes_correct_range);
+    RUN(visual_escape_clears_selection_but_keeps_text);
+    RUN(visual_single_char_selection_deletes_one_char);
+    RUN(visual_selection_deleting_to_end_of_text);
+    RUN(visual_bindings_exist);
+    RUN(visual_bindings_are_visual_mode);
+    RUN(visual_keys_are_h_l_x_s);
     RUN(binding_tables_are_queryable);
     RUN(no_null_sequence_in_table);
     RUN(no_null_binding_in_table);
