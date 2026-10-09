@@ -1,4 +1,5 @@
 #include <windows.h>
+#include <shlobj.h>
 #include <gdiplus.h>
 #include <stdio.h>
 #include <string.h>
@@ -66,6 +67,34 @@ int Platform_CopyToClipboard(const char* text) {
     }
     CloseClipboard();
     
+    return 1;
+}
+
+int Platform_SetFileToClipboard(const char* path) {
+    if (path == NULL || path[0] == 0) return 0;
+    wchar_t wpath[MAX_PATH * 2];
+    int wlen = MultiByteToWideChar(CP_UTF8, 0, path, -1, wpath, (int)(sizeof(wpath) / sizeof(wpath[0])));
+    if (wlen <= 1) {
+        wlen = MultiByteToWideChar(CP_ACP, 0, path, -1, wpath, (int)(sizeof(wpath) / sizeof(wpath[0])));
+        if (wlen <= 1) return 0;
+    }
+    size_t bytes = (size_t)(wlen - 1) * sizeof(wchar_t) + sizeof(wchar_t);
+    HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, sizeof(DROPFILES) + bytes);
+    if (hMem == NULL) return 0;
+    DROPFILES* df = (DROPFILES*)GlobalLock(hMem);
+    if (df == NULL) { GlobalFree(hMem); return 0; }
+    memset(df, 0, sizeof(DROPFILES));
+    df->pFiles = sizeof(DROPFILES);
+    df->pt.x = 0;
+    df->pt.y = 0;
+    df->fNC = FALSE;
+    df->fWide = TRUE;
+    memcpy((char*)df + sizeof(DROPFILES), wpath, bytes);
+    GlobalUnlock(hMem);
+    if (!OpenClipboard(NULL)) { GlobalFree(hMem); return 0; }
+    if (!EmptyClipboard()) { GlobalFree(hMem); CloseClipboard(); return 0; }
+    if (SetClipboardData(CF_HDROP, hMem) == NULL) { GlobalFree(hMem); CloseClipboard(); return 0; }
+    CloseClipboard();
     return 1;
 }
 
