@@ -6,6 +6,8 @@
 #include "helpers/helpers_ui.h"
 #include "core/timer.h"
 #include <X11/Xft/Xft.h>
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
 #include "platform/x11/drawing_x11.h"
 #include <stdlib.h>
 #include "core/modal.h"
@@ -531,6 +533,128 @@ bool Platform_DrawRectRaw(int x, int y, int w, int h, unsigned long color, unsig
 
 bool Platform_DrawRectRawOpaque(int x, int y, int w, int h, unsigned long color) {
     return Platform_DrawRectRaw(x, y, w, h, color, 255);
+}
+
+static int raw_thickness_px(float thickness) {
+    if (thickness <= 0.0f) return 0;
+    int px = (int)(thickness + 0.5f);
+    if (px < 1) px = 1;
+    if (px > 255) px = 255;
+    return px;
+}
+
+static bool raw_can_draw(void) {
+    return g_draw_dpy != NULL && g_draw_xd != NULL;
+}
+
+static GC raw_gc_for(Display* dpy, Drawable d) {
+    static GC gc = NULL;
+    static Drawable gc_owner = 0;
+    if (gc != NULL && gc_owner == (Drawable)(uintptr_t)d) return gc;
+    if (gc != NULL) XFreeGC(dpy, gc);
+    gc = XCreateGC(dpy, d, 0, NULL);
+    if (!gc) return NULL;
+    gc_owner = (Drawable)(uintptr_t)d;
+    return gc;
+}
+
+static GC raw_prepare(unsigned long color, int thickness) {
+    if (!raw_can_draw()) return NULL;
+    Drawable d = XftDrawDrawable(g_draw_xd);
+    GC gc = raw_gc_for(g_draw_dpy, d);
+    if (!gc) return NULL;
+    XftColor col;
+    x11_xft_alloc_color(g_draw_dpy, g_draw_vis, g_draw_cmap, color, OpacityAlpha16(), &col);
+    XSetForeground(g_draw_dpy, gc, col.pixel);
+    XftColorFree(g_draw_dpy, g_draw_vis, g_draw_cmap, &col);
+    XSetLineAttributes(g_draw_dpy, gc, thickness > 0 ? thickness : 1, LineSolid, CapButt, JoinMiter);
+    return gc;
+}
+
+bool Platform_DrawRectBorder(int x, int y, int w, int h, unsigned long color, float thickness) {
+    if (!raw_can_draw()) return false;
+    int t = raw_thickness_px(thickness);
+    if (t <= 0) return Platform_DrawRectRawOpaque(x, y, w, h, color);
+    if (w <= 0 || h <= 0) return false;
+    x += g_draw_off_x;
+    y += g_draw_off_y;
+    measure_track(x - t, y - t, w + 2 * t, h + 2 * t);
+    GC gc = raw_prepare(color, t);
+    if (!gc) return false;
+    Drawable d = XftDrawDrawable(g_draw_xd);
+    XDrawRectangle(g_draw_dpy, d, gc, x, y, (unsigned)w, (unsigned)h);
+    return true;
+}
+
+bool Platform_DrawLineRaw(int x1, int y1, int x2, int y2, unsigned long color, float thickness) {
+    if (!raw_can_draw()) return false;
+    int t = raw_thickness_px(thickness);
+    if (t < 1) t = 1;
+    x1 += g_draw_off_x;
+    y1 += g_draw_off_y;
+    x2 += g_draw_off_x;
+    y2 += g_draw_off_y;
+    int bx = x1 < x2 ? x1 : x2;
+    int by = y1 < y2 ? y1 : y2;
+    int bw = (x1 > x2 ? x1 - x2 : x2 - x1) + t;
+    int bh = (y1 > y2 ? y1 - y2 : y2 - y1) + t;
+    measure_track(bx - t / 2, by - t / 2, bw, bh);
+    GC gc = raw_prepare(color, t);
+    if (!gc) return false;
+    Drawable d = XftDrawDrawable(g_draw_xd);
+    XDrawLine(g_draw_dpy, d, gc, x1, y1, x2, y2);
+    return true;
+}
+
+bool Platform_DrawCircleRaw(int cx, int cy, int radius, unsigned long color, float thickness) {
+    if (!raw_can_draw() || radius <= 0) return false;
+    int t = raw_thickness_px(thickness);
+    cx += g_draw_off_x;
+    cy += g_draw_off_y;
+    measure_track(cx - radius, cy - radius, radius * 2, radius * 2);
+    GC gc = raw_prepare(color, t);
+    if (!gc) return false;
+    Drawable d = XftDrawDrawable(g_draw_xd);
+    unsigned dd = (unsigned)(radius * 2);
+    if (t > 0) XDrawArc(g_draw_dpy, d, gc, cx - radius, cy - radius, dd, dd, 0, 360 * 64);
+    else XFillArc(g_draw_dpy, d, gc, cx - radius, cy - radius, dd, dd, 0, 360 * 64);
+    return true;
+}
+
+bool Platform_DrawRoundedRectRaw(int x, int y, int w, int h, int radius, unsigned long color, float thickness) {
+    if (!raw_can_draw() || w <= 0 || h <= 0) return false;
+    int t = raw_thickness_px(thickness);
+    if (radius < 0) radius = 0;
+    int maxr = (w < h ? w : h) / 2;
+    if (radius > maxr) radius = maxr;
+    x += g_draw_off_x;
+    y += g_draw_off_y;
+    measure_track(x - t, y - t, w + 2 * t, h + 2 * t);
+    GC gc = raw_prepare(color, t);
+    if (!gc) return false;
+    Drawable d = XftDrawDrawable(g_draw_xd);
+    Display* dpy = g_draw_dpy;
+    unsigned rw = (unsigned)(w - radius * 2);
+    unsigned rh = (unsigned)(h - radius * 2);
+    unsigned rd = (unsigned)(radius * 2);
+    if (t > 0) {
+        XDrawLine(dpy, d, gc, x + radius, y, x + w - radius, y);
+        XDrawLine(dpy, d, gc, x + radius, y + h, x + w - radius, y + h);
+        XDrawLine(dpy, d, gc, x, y + radius, x, y + h - radius);
+        XDrawLine(dpy, d, gc, x + w, y + radius, x + w, y + h - radius);
+        XDrawArc(dpy, d, gc, x, y, rd, rd, 180 * 64, 180 * 64);
+        XDrawArc(dpy, d, gc, x + w - rd, y, rd, rd, 270 * 64, 180 * 64);
+        XDrawArc(dpy, d, gc, x + w - rd, y + h - rd, rd, rd, 0, 180 * 64);
+        XDrawArc(dpy, d, gc, x, y + h - rd, rd, rd, 90 * 64, 180 * 64);
+    } else {
+        XFillRectangle(dpy, d, gc, radius, 0, rw, (unsigned)h);
+        XFillRectangle(dpy, d, gc, 0, radius, (unsigned)w, rh);
+        XFillArc(dpy, d, gc, x, y, rd, rd, 0, 360 * 64);
+        XFillArc(dpy, d, gc, x + w - rd, y, rd, rd, 0, 360 * 64);
+        XFillArc(dpy, d, gc, x + w - rd, y + h - rd, rd, rd, 0, 360 * 64);
+        XFillArc(dpy, d, gc, x, y + h - rd, rd, rd, 0, 360 * 64);
+    }
+    return true;
 }
 
 void Platform_DrawEditBox(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap) {

@@ -439,6 +439,108 @@ bool Platform_DrawRectRawOpaque(int x, int y, int w, int h, unsigned long color)
     return Platform_DrawRectRaw(x, y, w, h, color, 255);
 }
 
+static COLORREF win32_colorref(unsigned long hex) {
+    unsigned long r = hex & 0xFF;
+    unsigned long g = (hex >> 8) & 0xFF;
+    unsigned long b = (hex >> 16) & 0xFF;
+    return (COLORREF)((b << 16) | (g << 8) | r);
+}
+
+static int win32_thickness_px(float thickness) {
+    if (thickness <= 0.0f) return 0;
+    int px = (int)(thickness + 0.5f);
+    if (px < 1) px = 1;
+    if (px > 255) px = 255;
+    return px;
+}
+
+bool Platform_DrawRectBorder(int x, int y, int w, int h, unsigned long color, float thickness) {
+    int t = win32_thickness_px(thickness);
+    if (t <= 0) return Platform_DrawRectRawOpaque(x, y, w, h, color);
+    if (w <= 0 || h <= 0) return false;
+    measure_track(x - t, y - t, w + 2 * t, h + 2 * t);
+    RECT r = { x, y, x + w, y + h };
+    HPEN pen = CreatePen(PS_SOLID, t, win32_colorref(color));
+    HGDIOBJ old_pen = SelectObject(g_draw_hdc, pen);
+    HGDIOBJ old_br = SelectObject(g_draw_hdc, GetStockObject(NULL_BRUSH));
+    Rectangle(g_draw_hdc, r.left, r.top, r.right, r.bottom);
+    SelectObject(g_draw_hdc, old_br);
+    SelectObject(g_draw_hdc, old_pen);
+    DeleteObject(pen);
+    return true;
+}
+
+bool Platform_DrawLineRaw(int x1, int y1, int x2, int y2, unsigned long color, float thickness) {
+    int t = win32_thickness_px(thickness);
+    if (t < 1) t = 1;
+    int bx = x1 < x2 ? x1 : x2;
+    int by = y1 < y2 ? y1 : y2;
+    int bw = (x1 > x2 ? x1 - x2 : x2 - x1) + t;
+    int bh = (y1 > y2 ? y1 - y2 : y2 - y1) + t;
+    measure_track(bx - t / 2, by - t / 2, bw, bh);
+    HPEN pen = CreatePen(PS_SOLID, t, win32_colorref(color));
+    HGDIOBJ old = SelectObject(g_draw_hdc, pen);
+    MoveToEx(g_draw_hdc, x1, y1, NULL);
+    LineTo(g_draw_hdc, x2, y2);
+    SelectObject(g_draw_hdc, old);
+    DeleteObject(pen);
+    return true;
+}
+
+bool Platform_DrawCircleRaw(int cx, int cy, int radius, unsigned long color, float thickness) {
+    if (radius <= 0) return false;
+    int t = win32_thickness_px(thickness);
+    measure_track(cx - radius, cy - radius, radius * 2, radius * 2);
+    int left = cx - radius, top = cy - radius;
+    int right = cx + radius, bottom = cy + radius;
+    if (t > 0) {
+        HPEN pen = CreatePen(PS_SOLID, t, win32_colorref(color));
+        HGDIOBJ old = SelectObject(g_draw_hdc, pen);
+        HGDIOBJ old_br = SelectObject(g_draw_hdc, GetStockObject(NULL_BRUSH));
+        Ellipse(g_draw_hdc, left, top, right, bottom);
+        SelectObject(g_draw_hdc, old_br);
+        SelectObject(g_draw_hdc, old);
+        DeleteObject(pen);
+    } else {
+        HBRUSH br = CreateSolidBrush(win32_colorref(color));
+        HGDIOBJ old = SelectObject(g_draw_hdc, br);
+        HGDIOBJ old_pen = SelectObject(g_draw_hdc, GetStockObject(NULL_PEN));
+        Ellipse(g_draw_hdc, left, top, right, bottom);
+        SelectObject(g_draw_hdc, old_pen);
+        SelectObject(g_draw_hdc, old);
+        DeleteObject(br);
+    }
+    return true;
+}
+
+bool Platform_DrawRoundedRectRaw(int x, int y, int w, int h, int radius, unsigned long color, float thickness) {
+    if (w <= 0 || h <= 0) return false;
+    int t = win32_thickness_px(thickness);
+    if (radius < 0) radius = 0;
+    int maxr = (w < h ? w : h) / 2;
+    if (radius > maxr) radius = maxr;
+    measure_track(x - t, y - t, w + 2 * t, h + 2 * t);
+    int right = x + w, bottom = y + h;
+    if (t > 0) {
+        HPEN pen = CreatePen(PS_SOLID, t, win32_colorref(color));
+        HGDIOBJ old = SelectObject(g_draw_hdc, pen);
+        HGDIOBJ old_br = SelectObject(g_draw_hdc, GetStockObject(NULL_BRUSH));
+        RoundRect(g_draw_hdc, x, y, right, bottom, radius * 2, radius * 2);
+        SelectObject(g_draw_hdc, old_br);
+        SelectObject(g_draw_hdc, old);
+        DeleteObject(pen);
+    } else {
+        HBRUSH br = CreateSolidBrush(win32_colorref(color));
+        HGDIOBJ old = SelectObject(g_draw_hdc, br);
+        HGDIOBJ old_pen = SelectObject(g_draw_hdc, GetStockObject(NULL_PEN));
+        RoundRect(g_draw_hdc, x, y, right, bottom, radius * 2, radius * 2);
+        SelectObject(g_draw_hdc, old_pen);
+        SelectObject(g_draw_hdc, old);
+        DeleteObject(br);
+    }
+    return true;
+}
+
 #define WIN32_IMG_CACHE_SLOTS 16
 
 typedef struct {

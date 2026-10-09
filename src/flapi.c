@@ -1130,7 +1130,8 @@ bool fl_draw_rect_impl(const FlRectSpec *spec) {
   if (!spec) { PROFILE_END_VAR(_pt, "api:fl_draw_rect"); return false; }
   unsigned long col = spec->color;
   if (col == 0) col = COLOR_TEXT;
-  bool r = Platform_DrawRectRawOpaque(spec->x, spec->y, spec->w, spec->h, col);
+  col = rgb_to_hex(col);
+  bool r = Platform_DrawRectBorder(spec->x, spec->y, spec->w, spec->h, col, spec->thickness);
   PROFILE_END_VAR(_pt, "api:fl_draw_rect");
   return r;
 }
@@ -1145,23 +1146,35 @@ int fl_get_text_height(const char *text) {
   return r;
 }
 
-bool fl_draw_line(int x1, int y1, int x2, int y2, unsigned long color) {
+bool fl_draw_line_impl(const FlLineSpec *spec) {
   PROFILE_START(_pt);
-  (void)x1; (void)y1; (void)x2; (void)y2; (void)color;
+  if (!spec) { PROFILE_END_VAR(_pt, "api:fl_draw_line"); return false; }
+  unsigned long col = spec->color;
+  if (col == 0) col = COLOR_TEXT;
+  col = rgb_to_hex(col);
+  bool r = Platform_DrawLineRaw(spec->x1, spec->y1, spec->x2, spec->y2, col, spec->thickness);
   PROFILE_END_VAR(_pt, "api:fl_draw_line");
-  return false;
+  return r;
 }
-bool fl_draw_circle(int x, int y, int radius, unsigned long color) {
+bool fl_draw_circle_impl(const FlCircleSpec *spec) {
   PROFILE_START(_pt);
-  (void)x; (void)y; (void)radius; (void)color;
+  if (!spec) { PROFILE_END_VAR(_pt, "api:fl_draw_circle"); return false; }
+  unsigned long col = spec->color;
+  if (col == 0) col = COLOR_TEXT;
+  col = rgb_to_hex(col);
+  bool r = Platform_DrawCircleRaw(spec->x, spec->y, spec->radius, col, spec->thickness);
   PROFILE_END_VAR(_pt, "api:fl_draw_circle");
-  return false;
+  return r;
 }
-bool fl_draw_rounded_rect(int x, int y, int w, int h, int radius, unsigned long color) {
+bool fl_draw_rounded_rect_impl(const FlRoundedRectSpec *spec) {
   PROFILE_START(_pt);
-  (void)x; (void)y; (void)w; (void)h; (void)radius; (void)color;
+  if (!spec) { PROFILE_END_VAR(_pt, "api:fl_draw_rounded_rect"); return false; }
+  unsigned long col = spec->color;
+  if (col == 0) col = COLOR_TEXT;
+  col = rgb_to_hex(col);
+  bool r = Platform_DrawRoundedRectRaw(spec->x, spec->y, spec->w, spec->h, spec->radius, col, spec->thickness);
   PROFILE_END_VAR(_pt, "api:fl_draw_rounded_rect");
-  return false;
+  return r;
 }
 
 bool fl_listbox_begin(const FlListSpec *spec) {

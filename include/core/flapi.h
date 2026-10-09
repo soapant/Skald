@@ -445,14 +445,36 @@ void fl_free_image(void *image);
 typedef struct {
     int x; int y; int w; int h;
     unsigned long color;
+    float thickness;
 } FlRectSpec;
 
+typedef struct {
+    int x1; int y1; int x2; int y2;
+    unsigned long color;
+    float thickness;
+} FlLineSpec;
+
+typedef struct {
+    int x; int y; int radius;
+    unsigned long color;
+    float thickness;
+} FlCircleSpec;
+
+typedef struct {
+    int x; int y; int w; int h; int radius;
+    unsigned long color;
+    float thickness;
+} FlRoundedRectSpec;
+
 bool fl_draw_rect_impl(const FlRectSpec *spec);
-bool fl_draw_line(int x1, int y1, int x2, int y2, unsigned long color);
-bool fl_draw_circle(int x, int y, int radius, unsigned long color);
-bool fl_draw_rounded_rect(int x, int y, int w, int h, int radius, unsigned long color);
+bool fl_draw_line_impl(const FlLineSpec *spec);
+bool fl_draw_circle_impl(const FlCircleSpec *spec);
+bool fl_draw_rounded_rect_impl(const FlRoundedRectSpec *spec);
 
 #define fl_draw_rect(...) fl_draw_rect_impl(&(FlRectSpec){__VA_ARGS__})
+#define fl_draw_line(...) fl_draw_line_impl(&(FlLineSpec){__VA_ARGS__})
+#define fl_draw_circle(...) fl_draw_circle_impl(&(FlCircleSpec){__VA_ARGS__})
+#define fl_draw_rounded_rect(...) fl_draw_rounded_rect_impl(&(FlRoundedRectSpec){__VA_ARGS__})
 
 // =============================================================================
 // HELPERS
