@@ -851,7 +851,7 @@ TEST(binding_tables_are_queryable) {
     ASSERT_TRUE(g_vs != NULL);
     ASSERT_TRUE(g_vb_count > 0);
     ASSERT_TRUE(g_vs_count > 0);
-    ASSERT_EQ_INT(g_vb_count, 62);
+    ASSERT_EQ_INT(g_vb_count, 73);
     ASSERT_EQ_INT(g_vs_count, 29);
 }
 
@@ -1087,6 +1087,104 @@ TEST(visual_keys_are_h_l_x_s) {
     ASSERT_EQ_INT(vbinding(MOTION_VISUAL_CHANGE)->vk_code, 'S');
 }
 
+
+static int vsel_start(void) { int a = -1, e = -1; return VimState_GetSelection(&a, &e) ? a : -1; }
+static int vsel_end(void) { int a = -1, e = -1; return VimState_GetSelection(&a, &e) ? e : -1; }
+
+TEST(visual_w_extends_selection) {
+    VimState_Reset();
+    vreset_visual("hello big world", 0);
+    HandleVisualWordForward(vctx());
+    ASSERT_EQ_INT(Vim_GetCursor(vctx()), 6);
+    ASSERT_EQ_INT(vsel_start(), 0);
+    ASSERT_EQ_INT(vsel_end(), 6);
+}
+
+TEST(visual_b_shrinks_selection_backwards) {
+    VimState_Reset();
+    vreset_visual("hello big world", 0);
+    HandleVisualWordForward(vctx());
+    HandleVisualWordForward(vctx());
+    ASSERT_EQ_INT(Vim_GetCursor(vctx()), 10);
+    HandleVisualWordBackward(vctx());
+    ASSERT_EQ_INT(Vim_GetCursor(vctx()), 9);
+    ASSERT_EQ_INT(vsel_start(), 0);
+    ASSERT_EQ_INT(vsel_end(), 9);
+}
+
+TEST(visual_e_extends_to_word_end) {
+    VimState_Reset();
+    vreset_visual("hello big world", 0);
+    HandleVisualWordEndForward(vctx());
+    ASSERT_EQ_INT(Vim_GetCursor(vctx()), 4);
+    ASSERT_EQ_INT(vsel_end(), 4);
+}
+
+TEST(visual_line_start_clears_to_anchor) {
+    VimState_Reset();
+    vreset_visual("hello big world", 0);
+    HandleVisualWordForward(vctx());
+    HandleVisualLineStart(vctx());
+    ASSERT_EQ_INT(Vim_GetCursor(vctx()), 0);
+}
+
+TEST(visual_line_end_extends_to_end) {
+    VimState_Reset();
+    vreset_visual("hello big world", 0);
+    HandleVisualLineEnd(vctx());
+    ASSERT_EQ_INT(Vim_GetCursor(vctx()), 15);
+    ASSERT_EQ_INT(vsel_end(), 15);
+}
+
+TEST(visual_bracket_match_extends) {
+    VimState_Reset();
+    vreset_visual("abc (def) ghi", 4);
+    HandleVisualBracketMatch(vctx());
+    ASSERT_EQ_INT(Vim_GetCursor(vctx()), 8);
+    ASSERT_EQ_INT(vsel_start(), 4);
+    ASSERT_EQ_INT(vsel_end(), 8);
+}
+
+TEST(visual_word_forward_big_keeps_punctuation) {
+    VimState_Reset();
+    vreset_visual("foo.bar baz", 0);
+    HandleVisualWordForwardBig(vctx());
+    ASSERT_EQ_INT(Vim_GetCursor(vctx()), 8);
+}
+
+TEST(visual_motion_stays_in_visual_mode) {
+    VimState_Reset();
+    vreset_visual("hello big world", 0);
+    HandleVisualWordForward(vctx());
+    HandleVisualWordForward(vctx());
+    HandleVisualWordBackward(vctx());
+    ASSERT_TRUE(IsVisualMode());
+}
+
+TEST(visual_motions_keep_selection_active) {
+    VimState_Reset();
+    vreset_visual("hello big world", 0);
+    HandleVisualWordForward(vctx());
+    ASSERT_TRUE(VimState_HasSelection());
+}
+
+TEST(visual_word_keys_are_bound_in_visual_mode) {
+    ASSERT_EQ_INT(vbinding(MOTION_VISUAL_WORD_FORWARD)->mode, MODE_VISUAL);
+    ASSERT_EQ_INT(vbinding(MOTION_VISUAL_WORD_BACKWARD)->mode, MODE_VISUAL);
+    ASSERT_EQ_INT(vbinding(MOTION_VISUAL_WORD_END_FORWARD)->mode, MODE_VISUAL);
+    ASSERT_EQ_INT(vbinding(MOTION_VISUAL_LINE_START)->mode, MODE_VISUAL);
+    ASSERT_EQ_INT(vbinding(MOTION_VISUAL_LINE_END)->mode, MODE_VISUAL);
+    ASSERT_EQ_INT(vbinding(MOTION_VISUAL_BRACKET_MATCH)->mode, MODE_VISUAL);
+}
+
+TEST(visual_word_keys_use_same_vk_as_normal) {
+    ASSERT_EQ_INT(vbinding(MOTION_VISUAL_WORD_FORWARD)->vk_code, vbinding(MOTION_MOVE_WORD_FORWARD)->vk_code);
+    ASSERT_EQ_INT(vbinding(MOTION_VISUAL_WORD_BACKWARD)->vk_code, vbinding(MOTION_MOVE_WORD_BACKWARD)->vk_code);
+    ASSERT_EQ_INT(vbinding(MOTION_VISUAL_LINE_START)->vk_code, vbinding(MOTION_MOVE_LINE_START)->vk_code);
+    ASSERT_EQ_INT(vbinding(MOTION_VISUAL_LINE_END)->vk_code, vbinding(MOTION_MOVE_LINE_END)->vk_code);
+    ASSERT_EQ_INT(vbinding(MOTION_VISUAL_BRACKET_MATCH)->vk_code, vbinding(MOTION_BRACKET_MATCH)->vk_code);
+}
+
 int main(void) {
     RUN(word_forward);
     RUN(word_backward);
@@ -1203,6 +1301,17 @@ int main(void) {
     RUN(visual_bindings_exist);
     RUN(visual_bindings_are_visual_mode);
     RUN(visual_keys_are_h_l_x_s);
+    RUN(visual_w_extends_selection);
+    RUN(visual_b_shrinks_selection_backwards);
+    RUN(visual_e_extends_to_word_end);
+    RUN(visual_line_start_clears_to_anchor);
+    RUN(visual_line_end_extends_to_end);
+    RUN(visual_bracket_match_extends);
+    RUN(visual_word_forward_big_keeps_punctuation);
+    RUN(visual_motion_stays_in_visual_mode);
+    RUN(visual_motions_keep_selection_active);
+    RUN(visual_word_keys_are_bound_in_visual_mode);
+    RUN(visual_word_keys_use_same_vk_as_normal);
     RUN(binding_tables_are_queryable);
     RUN(no_null_sequence_in_table);
     RUN(no_null_binding_in_table);

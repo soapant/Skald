@@ -94,6 +94,26 @@ void HandleVisualRight(FlintContext* ctx) {
     vim_visual_step(1);
 }
 
+static void vim_visual_run(void (*fn)(FlintContext*)) {
+    FlintContext* ctx = FlintContext_Get();
+    if (!ctx) return;
+    fn(ctx);
+    VimState_UpdateSelection(Vim_GetCursor(ctx));
+}
+
+void HandleVisualWordForward(FlintContext* ctx) { (void)ctx; vim_visual_run(HandleMoveWordForward); }
+void HandleVisualWordBackward(FlintContext* ctx) { (void)ctx; vim_visual_run(HandleMoveWordBackward); }
+void HandleVisualWordForwardBig(FlintContext* ctx) { (void)ctx; vim_visual_run(HandleWordForwardBig); }
+void HandleVisualWordBackwardBig(FlintContext* ctx) { (void)ctx; vim_visual_run(HandleWordBackwardBig); }
+void HandleVisualWordEndForward(FlintContext* ctx) { (void)ctx; vim_visual_run(HandleWordEndForward); }
+void HandleVisualWordEndBackward(FlintContext* ctx) { (void)ctx; vim_visual_run(HandleWordEndBackward); }
+void HandleVisualLineStart(FlintContext* ctx) { (void)ctx; vim_visual_run(HandleMoveLineStart); }
+void HandleVisualLineEnd(FlintContext* ctx) { (void)ctx; vim_visual_run(HandleMoveLineEnd); }
+void HandleVisualFirstNonBlank(FlintContext* ctx) { (void)ctx; vim_visual_run(HandleFirstNonBlank); }
+void HandleVisualBracketMatch(FlintContext* ctx) { (void)ctx; vim_visual_run(HandleBracketMatchPercent); }
+void HandleVisualStarSearch(FlintContext* ctx) { (void)ctx; vim_visual_run(HandleStarSearch); }
+void HandleVisualHashSearch(FlintContext* ctx) { (void)ctx; vim_visual_run(HandleHashSearch); }
+
 void HandleVisualDeleteSelection(FlintContext* ctx) {
     (void)ctx;
     vim_delete_selection(ctx, false);
