@@ -378,44 +378,6 @@ PlWindowList get_window_names_kwin() {
     return list;
 }
 
-PlPos get_cursor_position_kwin(void) {
-    if (!kwin_is_active()) return (PlPos){0, 0};
-
-    char* dbus_cmd = "qdbus org.kde.KWin /Scripting org.kde.KWin.Scripting.loadScript "
-                     "\"\" \"print('CURSOR_POS: ' + workspace.cursorPos.x + ',' + workspace.cursorPos.y);\"";
-    
-    char* script_id_str = Platform_RunTerminalCommand(dbus_cmd, false);
-    if (script_id_str == NULL) return (PlPos){0, 0};
-    
-    int script_id = atoi(script_id_str);
-    free(script_id_str);
-
-    if (script_id <= 0) return (PlPos){0, 0};
-
-    char run_cmd[128];
-    snprintf(run_cmd, sizeof(run_cmd), "qdbus org.kde.KWin /Scripting/Script%d org.kde.KWin.Script.run", script_id);
-    Platform_RunTerminalCommand(run_cmd, false);
-
-    char unload_cmd[128];
-    snprintf(unload_cmd, sizeof(unload_cmd), "qdbus org.kde.KWin /Scripting/Script%d org.kde.KWin.Script.stop", script_id);
-    Platform_RunTerminalCommand(unload_cmd, false);
-
-    char* journal_output = Platform_RunTerminalCommand("journalctl --user -b 0 -u plasma-kwin_wayland --grep='CURSOR_POS:' -n 1 -q --no-pager", false);
-    
-    int x_val = 0;
-    int y_val = 0;
-
-    if (journal_output != NULL) {
-        char* match = strstr(journal_output, "CURSOR_POS: ");
-        if (match != NULL) {
-            sscanf(match, "CURSOR_POS: %d,%d", &x_val, &y_val);
-        }
-        free(journal_output);
-    }
-    free(unload_cmd);
-
-    return (PlPos){x_val, y_val};
-}
 
 bool close_active_window_kwin(void) {
     if (!kwin_is_active()) return false;

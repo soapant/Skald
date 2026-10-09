@@ -133,26 +133,6 @@ PlWindowList Wm_GetWindowNames() {
     return empty;
 }
 
-PlPos Wm_GetCursorPosition() {
-    PlPos result;
-    PlPos empty = { .x = 0, .y = 0 };
-    if (getenv("WAYLAND_DISPLAY")) {
-        result = get_cursor_position_kwin();
-        if (result.x != 0) return result;
-        result = get_cursor_position_niri();
-        if (result.x != 0) return result;
-        result = get_cursor_position_hyprland();
-        if (result.x != 0) return result;
-        result = get_cursor_position_sway();
-        if (result.x != 0) return result;
-    } else {
-        result = get_cursor_position_x11();
-        if (result.x != 0) return result;
-    }
-    log_error("GetWindowNames Didnt Work");
-    return empty;
-}
-
 bool Wm_CloseActiveWindow(void) {
     if (getenv("WAYLAND_DISPLAY")) {
         if (close_active_window_kwin()) return true;

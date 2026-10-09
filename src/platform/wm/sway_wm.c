@@ -303,22 +303,6 @@ PlWindowList get_window_titles_sway() {
     free(json);
     return list;
 }
-PlPos get_cursor_position_sway(void) { 
-  char cmd[512];
-  char* wd = Platform_GetWorkingDir();
-  snprintf(cmd, sizeof(cmd), "LD_LIBRARY_PATH=%s/build/bundle:${LD_LIBRARY_PATH:-} %s/external/slurp -p -d ", wd ? wd : ".", wd ? wd : ".");
-  
-  char* output = Platform_RunCommandAndGetOutput(cmd);
-
-  char* comma = strchr(output, ',');
-  
-  int x = atoi(output);     
-  int y = atoi(comma + 1); 
-  
-  free(output);
-  
-  return (PlPos){x, y}; 
-}
 
 static int sway_json_depth(const char* base, const char* pos) {
     int depth = 0;

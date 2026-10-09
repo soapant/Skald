@@ -574,7 +574,6 @@ char* fl_get_active_window_title(void);
 char* fl_get_active_window_app_id(void);
 bool fl_is_window_active(char* title);
 
-FlPos fl_get_cursor_pos(void);
 FlColor fl_get_pixel_color(FlPos pos);
 bool fl_move_to_pos(FlPos pos);
 bool fl_click_at_pos(FlPos pos);
@@ -598,7 +597,34 @@ typedef struct {
     int mods;
     bool down;
     bool repeat;
+    unsigned long long t_us;
 } FlKeyEvent;
+
+#define FL_MOUSE_LEFT    1
+#define FL_MOUSE_RIGHT   2
+#define FL_MOUSE_MIDDLE  3
+#define FL_MOUSE_SIDE1   4
+#define FL_MOUSE_SIDE2   5
+#define FL_MOUSE_BACK    6
+#define FL_MOUSE_FORWARD 7
+#define FL_MOUSE_WHEEL   8
+
+typedef struct {
+    int button;
+    int x;
+    int y;
+    int mods;
+    bool down;
+    bool repeat;
+    unsigned long long t_us;
+} FlMouseEvent;
+
+bool fl_poll_mouse(FlMouseEvent *out);
+int fl_mouse_queue_len(void);
+unsigned long fl_mouse_queue_dropped(void);
+void fl_clear_mouse_queue(void);
+FlPos fl_get_cursor_pos();
+bool fl_mouse_is_pressed(int button);
 
 bool fl_poll_key(FlKeyEvent *out);
 int fl_key_queue_len(void);

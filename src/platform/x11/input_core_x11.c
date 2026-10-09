@@ -27,6 +27,8 @@
 
 X11Keyboard g_x11_keyboards[X11_MAX_KEYBOARDS];
 int g_x11_keyboard_count = 0;
+X11Keyboard g_x11_mice[X11_MAX_MICE];
+int g_x11_mouse_count = 0;
 int g_x11_uinput_fd = -1;
 bool g_x11_suppress_release[KEY_MAX + 1] = {0};
 static long g_x11_suppress_ms[KEY_MAX + 1] = {0};
@@ -35,6 +37,60 @@ bool g_x11_device_grabbed[X11_MAX_KEYBOARDS] = {0};
 #define X11_REJECTED_MAX 128
 static int g_x11_rejected_fds[X11_REJECTED_MAX];
 static int g_x11_rejected_count = 0;
+
+static int x11_linux_button_to_mouse(int code) {
+    switch (code) {
+        case BTN_LEFT:    return MOUSE_BTN_LEFT;
+        case BTN_RIGHT:   return MOUSE_BTN_RIGHT;
+        case BTN_MIDDLE:  return MOUSE_BTN_MIDDLE;
+        case BTN_SIDE:    return MOUSE_BTN_SIDE1;
+        case BTN_EXTRA:   return MOUSE_BTN_SIDE2;
+        case BTN_BACK:    return MOUSE_BTN_BACK;
+        case BTN_FORWARD: return MOUSE_BTN_FORWARD;
+        default:          return 0;
+    }
+}
+
+static void x11_queue_mouse_event(struct input_event* ev) {
+    if (!ev || ev->type != EV_KEY) return;
+    int btn = x11_linux_button_to_mouse(ev->code);
+    if (btn == 0) return;
+    bool down = (ev->value != 0);
+    bool repeat = (ev->value == 2);
+    Platform_SetMouseButton(btn, down);
+    int mx = 0, my = 0;
+    Platform_GetMousePos(&mx, &my);
+    PlatformMouseEvent mev;
+    mev.button = btn;
+    mev.x = mx;
+    mev.y = my;
+    mev.mods = remap_current_mods();
+    mev.down = down;
+    mev.repeat = repeat;
+    mev.t_us = 0;
+    Platform_GlobalMouse_Push(&mev);
+}
+
+bool x11_handle_evdev_mouse(struct input_event *ev) {
+    PROFILE_START(timer);
+    if (!ev) { PROFILE_END_VAR(timer, "input:x11_handle_evdev_mouse"); return false; }
+    x11_queue_mouse_event(ev);
+    PROFILE_END_VAR(timer, "input:x11_handle_evdev_mouse");
+    return true;
+}
+
+bool Platform_GetMousePos(int* out_x, int* out_y) {
+    Display* dpy = get_display();
+    if (!dpy) return false;
+    Window root = DefaultRootWindow(dpy);
+    Window rw = 0, cw = 0;
+    int rx = 0, ry = 0, wx = 0, wy = 0;
+    int mask = 0;
+    if (!XQueryPointer(dpy, root, &rw, &cw, &rx, &ry, &wx, &wy, &mask)) return false;
+    if (out_x) *out_x = rx;
+    if (out_y) *out_y = ry;
+    return true;
+}
 
 static void x11_release_rejected_devices(void) {
     for (int i = 0; i < g_x11_rejected_count; i++) {
@@ -116,6 +172,13 @@ static void x11_force_cleanup(void) {
             g_x11_keyboards[i].fd = -1;
         }
     }
+    for (int i=0;i<g_x11_mouse_count;i++) {
+        if (g_x11_mice[i].fd >= 0) {
+            close(g_x11_mice[i].fd);
+            g_x11_mice[i].fd = -1;
+        }
+    }
+    g_x11_mouse_count = 0;
     x11_release_rejected_devices();
 }
 
@@ -202,7 +265,7 @@ void x11_scan_keyboards(void) {
     DIR *dir = opendir("/dev/input");
     if (!dir) { PROFILE_END_VAR(timer, "input:x11_scan_keyboards"); return; }
     struct dirent *entry;
-    while ((entry = readdir(dir)) != NULL && g_x11_keyboard_count < X11_MAX_KEYBOARDS) {
+    while ((entry = readdir(dir)) != NULL) {
         if (strncmp(entry->d_name, "event", 5) == 0) {
             char full_path[256]; snprintf(full_path, sizeof(full_path), "/dev/input/%s", entry->d_name);
             int fd = open(full_path, O_RDONLY | O_NONBLOCK | O_CLOEXEC);
@@ -211,24 +274,38 @@ void x11_scan_keyboards(void) {
             unsigned long keybits[(KEY_MAX/8+sizeof(unsigned long)-1)/sizeof(unsigned long)+1] = {0};
             struct input_id id;
             bool is_kb = false;
+            bool is_mouse = false;
             if (ioctl(fd, EVIOCGBIT(0, sizeof(ev_bits)), ev_bits) >= 0 &&
                 (ev_bits[0] & (1UL << EV_KEY)) &&
                 ioctl(fd, EVIOCGBIT(EV_KEY, sizeof(keybits)), keybits) >= 0 &&
                 ioctl(fd, EVIOCGID, &id) >= 0) {
-                bool exclude = (id.vendor == 0x1234 && id.product == 0x5678) ||
-                               (ev_bits[0] & (1UL << EV_REL)) ||
-                               (ev_bits[0] & (1UL << EV_ABS));
-                if (!exclude) {
+                bool self = (id.vendor == 0x1234 && id.product == 0x5678);
+                bool has_rel = (ev_bits[0] & (1UL << EV_REL)) != 0;
+                bool has_abs = (ev_bits[0] & (1UL << EV_ABS)) != 0;
+                bool has_btn = false;
+                for (int b = BTN_MISC; b <= BTN_TASK; b++) {
+                    int w = b / (8 * (int)sizeof(unsigned long));
+                    int k = b % (8 * (int)sizeof(unsigned long));
+                    if (w < (int)(sizeof(keybits)/sizeof(keybits[0])) && (keybits[w] & (1UL << k))) { has_btn = true; break; }
+                }
+                if (!self && !has_rel && !has_abs) {
                     keybits[0] &= ~1UL;
                     int nwords = (0xFF + 1 + (int)(sizeof(unsigned long)*8)-1)/(int)(sizeof(unsigned long)*8);
                     for (int i=0;i<nwords;i++) if (keybits[i]) { is_kb = true; break; }
+                } else if (!self && has_btn && (has_rel || has_abs)) {
+                    is_mouse = true;
                 }
             }
-            if (is_kb) {
+            if (is_kb && g_x11_keyboard_count < X11_MAX_KEYBOARDS) {
                 g_x11_keyboards[g_x11_keyboard_count].fd = fd;
                 strncpy(g_x11_keyboards[g_x11_keyboard_count].path, full_path, 255);
                 g_x11_keyboard_count++;
                 log_warn("x11_scan_keyboards grabbed keyboard %s fd=%d", full_path, fd);
+            } else if (is_mouse && g_x11_mouse_count < X11_MAX_MICE) {
+                g_x11_mice[g_x11_mouse_count].fd = fd;
+                strncpy(g_x11_mice[g_x11_mouse_count].path, full_path, 255);
+                g_x11_mouse_count++;
+                log_warn("x11_scan_keyboards opened mouse %s fd=%d (not grabbed)", full_path, fd);
             } else if (g_x11_rejected_count < X11_REJECTED_MAX) {
                 g_x11_rejected_fds[g_x11_rejected_count++] = fd;
             } else {
@@ -237,7 +314,7 @@ void x11_scan_keyboards(void) {
         }
     }
     closedir(dir);
-    log_warn("x11_scan_keyboards found %d keyboards held=%d", g_x11_keyboard_count, g_x11_rejected_count);
+    log_warn("x11_scan_keyboards found %d keyboards %d mice held=%d", g_x11_keyboard_count, g_x11_mouse_count, g_x11_rejected_count);
     PROFILE_END_VAR(timer, "input:x11_scan_keyboards");
 }
 

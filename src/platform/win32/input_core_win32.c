@@ -17,6 +17,79 @@
 #include "platform/win32/input_core_win32.h"
 #include "config.h"
 
+static int win32_mouse_button_from_vk(WPARAM wParam) {
+    switch (wParam) {
+        case WM_LBUTTONDOWN:
+        case WM_LBUTTONUP:    return MOUSE_BTN_LEFT;
+        case WM_RBUTTONDOWN:
+        case WM_RBUTTONUP:    return MOUSE_BTN_RIGHT;
+        case WM_MBUTTONDOWN:
+        case WM_MBUTTONUP:    return MOUSE_BTN_MIDDLE;
+        case WM_XBUTTONDOWN:
+        case WM_XBUTTONUP:    return MOUSE_BTN_SIDE1;
+        default:              return 0;
+    }
+}
+
+bool Platform_GetMousePos(int* out_x, int* out_y) {
+    POINT pt;
+    if (!GetCursorPos(&pt)) return false;
+    if (out_x) *out_x = (int)pt.x;
+    if (out_y) *out_y = (int)pt.y;
+    return true;
+}
+
+LRESULT CALLBACK win32_handle_global_mouse(int nCode, WPARAM wParam, LPARAM lParam) {
+  if (nCode < 0) return CallNextHookEx(NULL, nCode, wParam, lParam);
+  if (nCode != HC_ACTION) return CallNextHookEx(NULL, nCode, wParam, lParam);
+
+  MSLLHOOKSTRUCT* _rm = (MSLLHOOKSTRUCT*)lParam;
+  if (!_rm) return CallNextHookEx(NULL, nCode, wParam, lParam);
+  if (_rm->flags & LLMHF_INJECTED) return CallNextHookEx(NULL, nCode, wParam, lParam);
+
+  if (wParam == WM_MOUSEMOVE || wParam == WM_MOUSEWHEEL || wParam == WM_MOUSEHWHEEL) {
+      PlatformMouseEvent _mev;
+      memset(&_mev, 0, sizeof(_mev));
+      _mev.button = 0;
+      _mev.x = (int)_rm->pt.x;
+      _mev.y = (int)_rm->pt.y;
+      _mev.mods = 0;
+      if (GetKeyState(VK_CONTROL) & 0x8000) _mev.mods |= HOTKEY_MOD_CTRL;
+      if (GetKeyState(VK_MENU) & 0x8000) _mev.mods |= HOTKEY_MOD_ALT;
+      if (GetKeyState(VK_SHIFT) & 0x8000) _mev.mods |= HOTKEY_MOD_SHIFT;
+      _mev.down = false;
+      _mev.repeat = false;
+      Platform_GlobalMouse_Push(&_mev);
+      return CallNextHookEx(NULL, nCode, wParam, lParam);
+  }
+
+  int _btn = win32_mouse_button_from_vk(wParam);
+  if (_btn == 0) return CallNextHookEx(NULL, nCode, wParam, lParam);
+
+  bool _isDown = (wParam == WM_LBUTTONDOWN || wParam == WM_RBUTTONDOWN ||
+                  wParam == WM_MBUTTONDOWN || wParam == WM_XBUTTONDOWN);
+  bool _isUp = !_isDown;
+  if (_isUp && wParam == WM_XBUTTONUP) {
+      _btn = (_rm->mouseData == XBUTTON2) ? MOUSE_BTN_SIDE2 : MOUSE_BTN_SIDE1;
+  }
+  Platform_SetMouseButton(_btn, _isDown);
+
+  PlatformMouseEvent _mev;
+  memset(&_mev, 0, sizeof(_mev));
+  _mev.button = _btn;
+  _mev.x = (int)_rm->pt.x;
+  _mev.y = (int)_rm->pt.y;
+  _mev.mods = 0;
+  if (GetKeyState(VK_CONTROL) & 0x8000) _mev.mods |= HOTKEY_MOD_CTRL;
+  if (GetKeyState(VK_MENU) & 0x8000) _mev.mods |= HOTKEY_MOD_ALT;
+  if (GetKeyState(VK_SHIFT) & 0x8000) _mev.mods |= HOTKEY_MOD_SHIFT;
+  _mev.down = _isDown;
+  _mev.repeat = false;
+  Platform_GlobalMouse_Push(&_mev);
+
+  return CallNextHookEx(NULL, nCode, wParam, lParam);
+}
+
 LRESULT CALLBACK win32_handle_global_key(int nCode, WPARAM wParam, LPARAM lParam) {
   if (nCode < 0) {
     return CallNextHookEx(NULL, nCode, wParam, lParam);

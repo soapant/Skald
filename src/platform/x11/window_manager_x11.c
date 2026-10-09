@@ -58,18 +58,25 @@ static int XKeysymToVK(KeySym ks) {
 
 static void* input_thread_func(void* arg) {
     WindowManager* wm = (WindowManager*)arg;
-    if (g_x11_keyboard_count == 0) return NULL;
-    struct pollfd *fds = calloc(g_x11_keyboard_count, sizeof(struct pollfd));
+    if (g_x11_keyboard_count == 0 && g_x11_mouse_count == 0) return NULL;
+    int nfds = g_x11_keyboard_count + g_x11_mouse_count;
+    struct pollfd *fds = calloc((size_t)nfds, sizeof(struct pollfd));
     for (int i=0;i<g_x11_keyboard_count;i++) { fds[i].fd = g_x11_keyboards[i].fd; fds[i].events = POLLIN; }
+    for (int i=0;i<g_x11_mouse_count;i++) { fds[g_x11_keyboard_count+i].fd = g_x11_mice[i].fd; fds[g_x11_keyboard_count+i].events = POLLIN; }
     struct input_event ev;
     while (wm->running) {
-        int r = poll(fds, g_x11_keyboard_count, 100);
+        int r = poll(fds, nfds, 100);
         if (r > 0) {
             for (int i=0;i<g_x11_keyboard_count;i++) if (fds[i].revents & POLLIN) {
                 bool grabbed = g_x11_device_grabbed[i];
                 while (read(fds[i].fd, &ev, sizeof(ev)) > 0) {
                     bool has_popup = WindowManager_GetTopPopup(wm) != NULL;
                     x11_handle_evdev(&ev, has_popup, grabbed);
+                }
+            }
+            for (int i=0;i<g_x11_mouse_count;i++) if (fds[g_x11_keyboard_count+i].revents & POLLIN) {
+                while (read(g_x11_mice[i].fd, &ev, sizeof(ev)) > 0) {
+                    x11_handle_evdev_mouse(&ev);
                 }
             }
         }

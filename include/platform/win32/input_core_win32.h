@@ -3,5 +3,6 @@
 #include <windows.h>
 
 LRESULT CALLBACK win32_handle_global_key(int nCode, WPARAM wParam, LPARAM lParam);
+LRESULT CALLBACK win32_handle_global_mouse(int nCode, WPARAM wParam, LPARAM lParam);
 
 #endif

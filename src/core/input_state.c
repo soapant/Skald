@@ -6,6 +6,7 @@
 #else
 #include <pthread.h>
 #endif
+#include <time.h>
 
 static bool g_down[256] = {0};
 static bool g_pressed[256] = {0};
@@ -126,10 +127,21 @@ void Platform_GlobalKey_Clear(void){
 
 void Platform_GlobalKey_Push(const PlatformKeyEvent* ev){
   if(!ev) return;
+  PlatformKeyEvent stamped = *ev;
+#if defined(_WIN32)
+  LARGE_INTEGER q, f;
+  QueryPerformanceFrequency(&f);
+  QueryPerformanceCounter(&q);
+  stamped.t_us = (unsigned long long)((q.QuadPart * 1000000ULL) / (unsigned long long)f.QuadPart);
+#else
+  struct timespec ts;
+  clock_gettime(CLOCK_MONOTONIC, &ts);
+  stamped.t_us = (unsigned long long)ts.tv_sec * 1000000ULL + (unsigned long long)(ts.tv_nsec / 1000);
+#endif
   GKEY_LOCK();
   int nxt = (g_gkey_tail + 1) % GLOBAL_KEY_RING;
   if(nxt == g_gkey_head){ g_gkey_dropped++; GKEY_UNLOCK(); return; }
-  g_gkeys[g_gkey_tail] = *ev;
+  g_gkeys[g_gkey_tail] = stamped;
   g_gkey_tail = nxt;
   GKEY_UNLOCK();
 }
@@ -159,5 +171,96 @@ unsigned long Platform_GlobalKey_Dropped(void){
   GKEY_LOCK();
   unsigned long d = g_gkey_dropped;
   GKEY_UNLOCK();
+  return d;
+}
+
+#define GLOBAL_MOUSE_RING 256
+
+static PlatformMouseEvent g_gmice[GLOBAL_MOUSE_RING];
+static int g_gmouse_head = 0, g_gmouse_tail = 0;
+static unsigned long g_gmouse_dropped = 0;
+static bool g_mbtn_down[16] = {0};
+#if !defined(_WIN32)
+static pthread_mutex_t g_gmouse_mtx = PTHREAD_MUTEX_INITIALIZER;
+#define GMOUSE_LOCK() pthread_mutex_lock(&g_gmouse_mtx)
+#define GMOUSE_UNLOCK() pthread_mutex_unlock(&g_gmouse_mtx)
+#else
+static CRITICAL_SECTION g_gmouse_cs;
+static LONG g_gmouse_cs_ready = 0;
+static void gmouse_lock_init(void) {
+    if (InterlockedCompareExchange(&g_gmouse_cs_ready, 1, 0) == 0) InitializeCriticalSection(&g_gmouse_cs);
+}
+#define GMOUSE_LOCK() do { gmouse_lock_init(); EnterCriticalSection(&g_gmouse_cs); } while (0)
+#define GMOUSE_UNLOCK() do { gmouse_lock_init(); LeaveCriticalSection(&g_gmouse_cs); } while (0)
+#endif
+
+void Platform_GlobalMouse_Push(const PlatformMouseEvent* ev){
+  if(!ev) return;
+  PlatformMouseEvent stamped = *ev;
+#if defined(_WIN32)
+  LARGE_INTEGER q, f;
+  QueryPerformanceFrequency(&f);
+  QueryPerformanceCounter(&q);
+  stamped.t_us = (unsigned long long)((q.QuadPart * 1000000ULL) / (unsigned long long)f.QuadPart);
+#else
+  struct timespec ts;
+  clock_gettime(CLOCK_MONOTONIC, &ts);
+  stamped.t_us = (unsigned long long)ts.tv_sec * 1000000ULL + (unsigned long long)(ts.tv_nsec / 1000);
+#endif
+  GMOUSE_LOCK();
+  int nxt = (g_gmouse_tail + 1) % GLOBAL_MOUSE_RING;
+  if(nxt == g_gmouse_head){ g_gmouse_dropped++; GMOUSE_UNLOCK(); return; }
+  g_gmice[g_gmouse_tail] = stamped;
+  g_gmouse_tail = nxt;
+  GMOUSE_UNLOCK();
+}
+
+bool Platform_GlobalMouse_Pop(PlatformMouseEvent* out){
+  if(!out) return false;
+  bool got = false;
+  GMOUSE_LOCK();
+  if(g_gmouse_head != g_gmouse_tail){
+    *out = g_gmice[g_gmouse_head];
+    g_gmouse_head = (g_gmouse_head + 1) % GLOBAL_MOUSE_RING;
+    got = true;
+  }
+  GMOUSE_UNLOCK();
+  return got;
+}
+
+void Platform_GlobalMouse_Clear(void){
+  GMOUSE_LOCK();
+  g_gmouse_head = g_gmouse_tail = 0;
+  g_gmouse_dropped = 0;
+  GMOUSE_UNLOCK();
+}
+
+int Platform_GlobalMouse_Pending(void){
+  GMOUSE_LOCK();
+  int n = g_gmouse_tail - g_gmouse_head;
+  if(n < 0) n += GLOBAL_MOUSE_RING;
+  GMOUSE_UNLOCK();
+  return n;
+}
+
+unsigned long Platform_GlobalMouse_Dropped(void){
+  GMOUSE_LOCK();
+  unsigned long d = g_gmouse_dropped;
+  GMOUSE_UNLOCK();
+  return d;
+}
+
+void Platform_SetMouseButton(int button, bool down){
+  if(button < 0 || button >= (int)(sizeof(g_mbtn_down)/sizeof(g_mbtn_down[0]))) return;
+  GMOUSE_LOCK();
+  g_mbtn_down[button] = down;
+  GMOUSE_UNLOCK();
+}
+
+bool Platform_MouseButtonDown(int button){
+  if(button < 0 || button >= (int)(sizeof(g_mbtn_down)/sizeof(g_mbtn_down[0]))) return false;
+  GMOUSE_LOCK();
+  bool d = g_mbtn_down[button];
+  GMOUSE_UNLOCK();
   return d;
 }

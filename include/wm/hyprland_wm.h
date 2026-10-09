@@ -9,7 +9,6 @@ char* paste_hyprland(char* content);
 bool focus_window_title_hyprland(char* title);
 PlWindowList get_window_titles_hyprland();
 PlWindowList get_window_names_hyprland();
-PlPos get_cursor_position_hyprland(void);
 bool close_active_window_hyprland(void);
 bool toggle_fullscreen_active_hyprland(void);
 bool move_active_window_to_monitor_hyprland(bool right);
