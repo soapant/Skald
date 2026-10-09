@@ -1130,7 +1130,7 @@ bool fl_draw_rect_impl(const FlRectSpec *spec) {
   if (!spec) { PROFILE_END_VAR(_pt, "api:fl_draw_rect"); return false; }
   unsigned long col = spec->color;
   if (col == 0) col = COLOR_TEXT;
-  bool r = Platform_DrawRectRaw(spec->x, spec->y, spec->w, spec->h, col);
+  bool r = Platform_DrawRectRawOpaque(spec->x, spec->y, spec->w, spec->h, col);
   PROFILE_END_VAR(_pt, "api:fl_draw_rect");
   return r;
 }
