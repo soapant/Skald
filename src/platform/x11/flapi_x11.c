@@ -762,9 +762,9 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
     if (cursor_draw_x < x + PROMPT_CARET_LO_CLAMP) cursor_draw_x = x + PROMPT_CARET_LO_CLAMP;
     if (cursor_draw_x > x + w - PROMPT_CARET_HI_CLAMP) cursor_draw_x = x + w - PROMPT_CARET_HI_CLAMP;
     if (IsInsertMode()) {
-        Platform_DrawRectRaw(cursor_draw_x,cursor_y,PROMPT_CARET_W_INSERT,textH,rgb_to_hex(COLOR_CURSOR));
+        Platform_DrawRectRaw(cursor_draw_x,cursor_y,PROMPT_CARET_W_INSERT,textH,rgb_to_hex(Modal_CursorColor()));
     } else {
-        Platform_DrawRectRaw(cursor_draw_x,cursor_y,PROMPT_EDITPOPUP_CARET_W_NORMAL,textH,rgb_to_hex(COLOR_CURSOR));
+        Platform_DrawRectRaw(cursor_draw_x,cursor_y,PROMPT_EDITPOPUP_CARET_W_NORMAL,textH,rgb_to_hex(Modal_CursorColor()));
     }
     if (state) {
         if (WindowTitleText && state->window_title) {

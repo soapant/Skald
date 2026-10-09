@@ -84,3 +84,7 @@ bool IsInsertMode(void) {
 bool IsVisualMode(void) {
     return ActiveMode() == MODE_VISUAL;
 }
+
+ColorRef Modal_CursorColor(void) {
+    return ActiveMode() == MODE_VISUAL ? COLOR_VISUAL_CURSOR : COLOR_CURSOR;
+}

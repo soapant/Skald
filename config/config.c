@@ -73,6 +73,7 @@ void ConfigApply(void) {
     COLOR_INSERT_MODE = RGB(63, 185, 80);
     COLOR_NORMAL_MODE = RGB(88, 166, 255);
     COLOR_VISUAL_MODE = RGB(188, 140, 255);
+    COLOR_VISUAL_CURSOR = RGB(255, 165, 0);
     COLOR_CURSOR = RGB(201, 209, 217);
     G_PATH_VARS = user_path_vars;
     PATH_VAR_COUNT = 6;

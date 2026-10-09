@@ -508,7 +508,7 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
         if (cursor_y < y_raw) cursor_y = y_raw;
         RECT textRc = {x + PROMPT_EDIT_INSET - scroll, y_raw, x + w, y_raw + textH};
         DrawTextA(hdc, buf, -1, &textRc, DT_SINGLELINE | DT_TOP | DT_LEFT);
-        HBRUSH cbr = CreateSolidBrush(COLOR_CURSOR);
+        HBRUSH cbr = CreateSolidBrush(Modal_CursorColor());
         RECT cRc;
         if (IsInsertMode()) cRc = (RECT){cursor_draw_x, cursor_y, cursor_draw_x+PROMPT_CARET_W_INSERT, cursor_y+cursorH};
         else cRc = (RECT){cursor_draw_x, cursor_y, cursor_draw_x+PromptNormalCaretWidth(), cursor_y+cursorH};

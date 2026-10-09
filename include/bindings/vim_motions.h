@@ -34,6 +34,7 @@ typedef enum {
     MOTION_ENTER_INSERT_OUT_END,
     MOTION_ENTER_INSERT_IN_START,
     MOTION_ENTER_VISUAL,
+    MOTION_EXIT_VISUAL,
     MOTION_ENTER_VISUAL_LINE,
     MOTION_MOVE_LEFT,
     MOTION_MOVE_RIGHT,
@@ -139,6 +140,7 @@ void HandleEnterNormal(FlintContext* ctx);
 void HandleEnterInsertOut(FlintContext* ctx);
 void HandleEnterInsertIn(FlintContext* ctx);
 void HandleEnterVisual(FlintContext* ctx);
+void HandleExitVisual(FlintContext* ctx);
 void HandleMoveLeft(FlintContext* ctx);
 void HandleEnter(FlintContext* ctx);
 void HandleMoveUp(FlintContext* ctx);

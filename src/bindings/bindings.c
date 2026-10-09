@@ -112,11 +112,23 @@ bool CheckVimMotion(int pressed_vk, int modifiers, VimMotion* out) {
         return false;
     }
 
-    if (in_normal) {
+    if (in_normal || IsVisualMode()) {
         if (SequenceTimedOut()) SequenceReset();
 
         if (pressed_vk == VK_RETURN || pressed_vk == 160) {
             SequenceReset();
+            return false;
+        }
+
+        if (IsVisualMode()) {
+            for (int i = 0; i < g_binding_count; i++) {
+                const MotionBinding* b = &g_bindings[i];
+                if (!binding_in_scope(b, MODE_VISUAL)) continue;
+                if (b->vk_code == pressed_vk && b->modifiers == modifiers) {
+                    out->handler = b->handler;
+                    return true;
+                }
+            }
             return false;
         }
 
