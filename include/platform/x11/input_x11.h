@@ -9,6 +9,7 @@
 #include <X11/Xlib.h>  
 
 #define X11_MAX_KEYBOARDS 16
+#define X11_MAX_MICE 8
 
 typedef struct {
     int fd;
@@ -18,6 +19,8 @@ typedef struct {
 
 extern X11Keyboard g_x11_keyboards[X11_MAX_KEYBOARDS];
 extern int g_x11_keyboard_count;
+extern X11Keyboard g_x11_mice[X11_MAX_MICE];
+extern int g_x11_mouse_count;
 extern int g_x11_uinput_fd;
 extern bool g_x11_suppress_release[KEY_MAX + 1];
 extern bool g_x11_device_grabbed[X11_MAX_KEYBOARDS];
@@ -31,6 +34,7 @@ void x11_clear_suppress(void);
 bool x11_is_suppressed(int linux_code);
 void x11_set_suppress(int linux_code, bool v);
 bool x11_handle_evdev(struct input_event *ev, bool has_popup, bool grabbed);
+bool x11_handle_evdev_mouse(struct input_event *ev);
 struct WindowManager;
 void x11_set_window_manager(struct WindowManager *wm);
 

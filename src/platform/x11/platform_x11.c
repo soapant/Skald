@@ -1730,13 +1730,6 @@ void Platform_InitUI(void) {
 }
 void Platform_ShutdownUI(void) {
 }
-PlPos Platform_GetCursorPos(void) {
-    PROFILE_START(timer);
-    PlPos p = Wm_GetCursorPosition();
-    PROFILE_END_VAR(timer, "platform_x11:Platform_GetCursorPos");
-    return p;
-}
-
 static unsigned char x11_mask_extract(unsigned long pixel, unsigned long mask) {
     if (!mask) return 0;
     int shift = 0;

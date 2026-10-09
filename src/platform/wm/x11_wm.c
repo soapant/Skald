@@ -403,26 +403,6 @@ void x11_wm_cleanup_cursor_display(void) {
     }
 }
 
-PlPos get_cursor_position_x11(void) { 
-    Display *display;
-    Window root_window;
-    Window window_returned;
-    int root_x = 0, root_y = 0;
-    int win_x, win_y;
-    unsigned int mask_return;
-
-    display = _x11_cursor_display();
-    if (display == NULL) {
-        return (PlPos){0, 0};
-    }
-
-    root_window = DefaultRootWindow(display);
-
-    XQueryPointer(display, root_window, &window_returned, &window_returned,
-                  &root_x, &root_y, &win_x, &win_y, &mask_return);
-
-    return (PlPos){root_x, root_y};
-}
 
 static Window x11_focused_window(Display* display) {
     Window focus = None;

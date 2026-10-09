@@ -1226,12 +1226,6 @@ void fl_toggle_play_pause(void) {
   return;
 }
 
-PlPos fl_get_cursor_pos(void) {
-  PROFILE_START(_pt);
-  PlPos p = Platform_GetCursorPos();
-  PROFILE_END_VAR(_pt, "flapi:fl_get_cursor_pos");
-  return p;
-}
 PlColor fl_get_pixel_color(PlPos pos) {
   PROFILE_START(_pt);
   PlColor c = Platform_GetPixelColor(pos.x, pos.y);
@@ -1361,7 +1355,43 @@ bool fl_poll_key(FlKeyEvent *out) {
   out->mods = ev.mods;
   out->down = ev.down;
   out->repeat = ev.repeat;
+  out->t_us = ev.t_us;
   return true;
+}
+
+bool fl_poll_mouse(FlMouseEvent *out) {
+  if (!out) return false;
+  PlatformMouseEvent ev;
+  if (!Platform_GlobalMouse_Pop(&ev)) return false;
+  out->button = ev.button;
+  out->x = ev.x;
+  out->y = ev.y;
+  out->mods = ev.mods;
+  out->down = ev.down;
+  out->repeat = ev.repeat;
+  out->t_us = ev.t_us;
+  return true;
+}
+
+int fl_mouse_queue_len(void) {
+  return Platform_GlobalMouse_Pending();
+}
+
+unsigned long fl_mouse_queue_dropped(void) {
+  return Platform_GlobalMouse_Dropped();
+}
+
+void fl_clear_mouse_queue(void) {
+  Platform_GlobalMouse_Clear();
+}
+FlPos fl_get_cursor_pos() {
+  int x, y;
+  Platform_GetMousePos(&x, &y);
+  return (FlPos){x, y};
+}
+
+bool fl_mouse_is_pressed(int button) {
+  return Platform_MouseButtonDown(button);
 }
 
 int fl_key_queue_len(void) {
