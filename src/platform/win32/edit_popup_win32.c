@@ -1,5 +1,6 @@
 #include "core/context.h"
 #include "core/modal.h"
+#include "bindings/vim_state.h"
 #include "core/window_manager.h"
 #include "core/timer.h"
 #include "platform/wm_platform.h"
@@ -165,11 +166,29 @@ void Platform_EditPopupRender(Popup* self) {
     }
 
     if (!IsInsertMode() && data->cursor >= 0) {
-        int tint_x = cursor_draw_x;
-        if (tint_x < PROMPT_CARET_LO_CLAMP) tint_x = PROMPT_CARET_LO_CLAMP;
-        if (tint_x > w - PROMPT_CARET_HI_CLAMP) tint_x = w - PROMPT_CARET_HI_CLAMP;
         int tint_y = edit_popup_cursor_y(paint, draw_y);
-        Platform_DrawRectRawOpaque(tint_x, tint_y, PROMPT_EDITPOPUP_CARET_W_NORMAL, FontSize, Modal_CursorColor());
+        int sel_start = 0, sel_end = 0;
+        bool has_sel = VimState_GetSelection(&sel_start, &sel_end) && text_len > 0;
+        if (has_sel) {
+            if (sel_start < 0) sel_start = 0;
+            if (sel_end >= text_len) sel_end = text_len - 1;
+            if (sel_start <= sel_end) {
+                int sx0 = draw_x + Platform_MeasureTextWidth(data->text, sel_start, FontSize);
+                int sx1 = draw_x + Platform_MeasureTextWidth(data->text, sel_end + 1, FontSize);
+                int cx = cursor_draw_x;
+                if (sx0 < PROMPT_CARET_LO_CLAMP) sx0 = PROMPT_CARET_LO_CLAMP;
+                if (sx1 > w - PROMPT_CARET_HI_CLAMP) sx1 = w - PROMPT_CARET_HI_CLAMP;
+                if (cx < sx0) cx = sx0;
+                if (cx > sx1) cx = sx1;
+                int selw = sx1 - sx0;
+                if (selw > 0) Platform_DrawRectRawOpaque(sx0, tint_y, selw, FontSize, Modal_CursorColor());
+            }
+        } else {
+            int tint_x = cursor_draw_x;
+            if (tint_x < PROMPT_CARET_LO_CLAMP) tint_x = PROMPT_CARET_LO_CLAMP;
+            if (tint_x > w - PROMPT_CARET_HI_CLAMP) tint_x = w - PROMPT_CARET_HI_CLAMP;
+            Platform_DrawRectRawOpaque(tint_x, tint_y, PROMPT_EDITPOPUP_CARET_W_NORMAL, FontSize, Modal_CursorColor());
+        }
     }
 
     if (text_len > 0) {

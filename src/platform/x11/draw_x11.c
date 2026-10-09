@@ -9,6 +9,7 @@
 #include "platform/x11/drawing_x11.h"
 #include <stdlib.h>
 #include "core/modal.h"
+#include "bindings/vim_state.h"
 
 static __thread PromptState *g_prerender_state = NULL;
 
@@ -454,20 +455,47 @@ void Platform_DrawEditText(PromptState *state, Display *dpy, XftDraw *xd, Visual
         Platform_DrawTextRaw(draw_x, PROMPT_EDIT_INSET, state->filter, rgb_to_hex(COLOR_TEXT), font, "", 0, 0);
     }
 }
+static int x11_char_x(Display *dpy, XftFont *xf, PromptState *state, int index, int *out_scroll) {
+    int text_len = (int)strlen(state->filter);
+    int cursor_x = 0;
+    int scroll = x11_update_edit_scroll_offset(dpy, xf, state->filter, text_len, index, state->width, state->scroll_offset, &cursor_x);
+    if (out_scroll) *out_scroll = scroll;
+    return PROMPT_EDIT_INSET + cursor_x - scroll;
+}
+
 void Platform_DrawEditTint(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap, FontHandle font) {
     if (!state) return;
     if (IsInsertMode()) return;
     XftFont *xf = FH_TO_XFT(font);
     int text_len = (int)strlen(state->filter);
-    if (state->cursor < 0) return;
-    int cursor_x = 0;
-    x11_update_edit_scroll_offset(dpy, xf, state->filter, text_len, state->cursor, state->width, state->scroll_offset, &cursor_x);
+    int sel_start = 0, sel_end = 0;
+    bool has_sel = VimState_GetSelection(&sel_start, &sel_end) && text_len > 0;
+    if (!has_sel && state->cursor < 0) return;
+
     Platform_SetDrawContext(dpy, xd, vis, cmap);
-    int tint_x = PROMPT_EDIT_INSET + cursor_x - state->scroll_offset;
-    if (tint_x < PROMPT_CARET_LO_CLAMP) tint_x = PROMPT_CARET_LO_CLAMP;
-    if (tint_x > state->width - PROMPT_CARET_HI_CLAMP) tint_x = state->width - PROMPT_CARET_HI_CLAMP;
     int tint_y = x11_font_cursor_y_of(font, PROMPT_EDIT_INSET);
     unsigned long tint = Color_Lerp(rgb_to_hex(COLOR_BG), rgb_to_hex(Modal_CursorColor()), 0.72f);
+
+    if (has_sel) {
+        if (sel_start < 0) sel_start = 0;
+        if (sel_end >= text_len) sel_end = text_len - 1;
+        if (sel_start > sel_end) return;
+        int x0 = x11_char_x(dpy, xf, state, sel_start, NULL);
+        int x1 = x11_char_x(dpy, xf, state, sel_end, NULL);
+        int caret_x = x11_char_x(dpy, xf, state, state->cursor, NULL);
+        if (x0 < PROMPT_CARET_LO_CLAMP) x0 = PROMPT_CARET_LO_CLAMP;
+        if (x1 > state->width - PROMPT_CARET_HI_CLAMP) x1 = state->width - PROMPT_CARET_HI_CLAMP;
+        if (caret_x < x0) caret_x = x0;
+        if (caret_x > x1) caret_x = x1;
+        int w = x1 - x0 + PromptNormalCaretWidth();
+        if (w <= 0) return;
+        Platform_DrawRectRawOpaque(x0, tint_y, w, FontSize, tint);
+        return;
+    }
+
+    int tint_x = x11_char_x(dpy, xf, state, state->cursor, NULL);
+    if (tint_x < PROMPT_CARET_LO_CLAMP) tint_x = PROMPT_CARET_LO_CLAMP;
+    if (tint_x > state->width - PROMPT_CARET_HI_CLAMP) tint_x = state->width - PROMPT_CARET_HI_CLAMP;
     Platform_DrawRectRawOpaque(tint_x, tint_y, PromptNormalCaretWidth(), FontSize, tint);
 }
 
