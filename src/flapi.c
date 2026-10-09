@@ -1279,6 +1279,11 @@ bool fl_mouse_scroll(int notches) {
   PROFILE_END_VAR(_pt, "flapi:fl_mouse_scroll");
   return ok;
 }
+void fl_emit_key(int vk, bool down) {
+  PROFILE_START(_pt);
+  Platform_EmitKey(vk, down ? 1 : 0);
+  PROFILE_END_VAR(_pt, "flapi:fl_emit_key");
+}
 int fl_get_current_volume(void) {
   return fl_get_current_volume_platform();
 }

@@ -582,6 +582,7 @@ bool fl_mouse_button_down(int button, bool down);
 bool fl_mouse_press_at(FlPos pos, int button, bool down);
 bool fl_mouse_click_button_at(FlPos pos, int button);
 bool fl_mouse_scroll(int notches);
+void fl_emit_key(int vk, bool down);
 bool fl_type_text(const char *s);
 void fl_sleep(double seconds);
 bool fl_is_key_down(int vk);
