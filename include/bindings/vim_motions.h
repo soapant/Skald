@@ -39,6 +39,18 @@ typedef enum {
     MOTION_VISUAL_RIGHT,
     MOTION_VISUAL_DELETE,
     MOTION_VISUAL_CHANGE,
+    MOTION_VISUAL_WORD_FORWARD,
+    MOTION_VISUAL_WORD_BACKWARD,
+    MOTION_VISUAL_WORD_FORWARD_BIG,
+    MOTION_VISUAL_WORD_BACKWARD_BIG,
+    MOTION_VISUAL_WORD_END_FORWARD,
+    MOTION_VISUAL_WORD_END_BACKWARD,
+    MOTION_VISUAL_LINE_START,
+    MOTION_VISUAL_LINE_END,
+    MOTION_VISUAL_FIRST_NON_BLANK,
+    MOTION_VISUAL_BRACKET_MATCH,
+    MOTION_VISUAL_STAR_SEARCH,
+    MOTION_VISUAL_HASH_SEARCH,
     MOTION_ENTER_VISUAL_LINE,
     MOTION_MOVE_LEFT,
     MOTION_MOVE_RIGHT,
@@ -149,6 +161,18 @@ void HandleVisualLeft(FlintContext* ctx);
 void HandleVisualRight(FlintContext* ctx);
 void HandleVisualDeleteSelection(FlintContext* ctx);
 void HandleVisualChangeSelection(FlintContext* ctx);
+void HandleVisualWordForward(FlintContext* ctx);
+void HandleVisualWordBackward(FlintContext* ctx);
+void HandleVisualWordForwardBig(FlintContext* ctx);
+void HandleVisualWordBackwardBig(FlintContext* ctx);
+void HandleVisualWordEndForward(FlintContext* ctx);
+void HandleVisualWordEndBackward(FlintContext* ctx);
+void HandleVisualLineStart(FlintContext* ctx);
+void HandleVisualLineEnd(FlintContext* ctx);
+void HandleVisualFirstNonBlank(FlintContext* ctx);
+void HandleVisualBracketMatch(FlintContext* ctx);
+void HandleVisualStarSearch(FlintContext* ctx);
+void HandleVisualHashSearch(FlintContext* ctx);
 void vim_delete_selection(FlintContext* ctx, bool enter_insert);
 void HandleMoveLeft(FlintContext* ctx);
 void HandleEnter(FlintContext* ctx);
