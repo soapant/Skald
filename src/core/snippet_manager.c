@@ -48,16 +48,21 @@ static void snippet_free_binding(SnippetBinding* b) {
     b->window_count = 0;
 }
 
-bool snippet_register_internal(const char* trigger, const char* text, void (*func)(void), bool whitelist, const char** windows) {
+bool snippet_register_internal(const char* trigger, const char* text, void (*func)(void), bool whitelist, const char** windows, void* caller) {
     if (!trigger || !trigger[0]) return false;
     if (!text && !func) return false;
 
     char owner[OWNER_PATH_MAX];
-    Owner_ResolveForFunc((void*)(uintptr_t)func, owner, sizeof(owner));
+    owner[0] = '\0';
+    if (func) Owner_ResolveForFunc((void*)(uintptr_t)func, owner, sizeof(owner));
+    if (!owner[0] && caller) Owner_ResolveForFunc(caller, owner, sizeof(owner));
 
     for (int i = 0; i < g_snippet_count; i++) {
-        if (strcmp(g_snippets[i].trigger, trigger) == 0) {
+        if (g_snippets[i].trigger && strcmp(g_snippets[i].trigger, trigger) == 0) {
+            char* nt = strdup(trigger);
+            if (!nt) return false;
             snippet_free_binding(&g_snippets[i]);
+            g_snippets[i].trigger = nt;
             g_snippets[i].text = text ? strdup(text) : NULL;
             g_snippets[i].func = func;
             g_snippets[i].whitelist = whitelist;
@@ -198,6 +203,7 @@ static void snippet_push_char(char c) {
 
 static int snippet_match(void) {
     for (int i = 0; i < g_snippet_count; i++) {
+        if (!g_snippets[i].trigger || !g_snippets[i].trigger[0]) continue;
         size_t tlen = strlen(g_snippets[i].trigger);
         if ((int)tlen > g_buf_len) continue;
         if (memcmp(g_buf + g_buf_len - (int)tlen, g_snippets[i].trigger, tlen) == 0) return i;
