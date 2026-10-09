@@ -16,10 +16,10 @@
 #endif
 
 #if defined(_WIN32)
-     #define CC_FLAGS "-std=gnu17", "-DCOBJMACROS", "-I", "include", "-MMD", "-MP","-O3","-Wall","-Wextra","-Wno-unused-parameter","-Wno-sign-compare","-Wno-discarded-qualifiers","-Wno-stringop-truncation","-Wno-sign-compare","-Wno-unused-parameter","-Wno-misleading-indentation"
+     #define CC_FLAGS "-std=gnu17", "-DCOBJMACROS", "-I", "include", "-MMD", "-MP","-O3","-Wall","-Wextra","-Wno-unused-parameter","-Wno-sign-compare","-Wno-discarded-qualifiers","-Wno-stringop-truncation","-Wno-sign-compare","-Wno-unused-parameter","-Wno-misleading-indentation","-Wpedantic"
      #define LINK_FLAGS "-lcomctl32", "-lgdiplus", "-lgdi32", "-lshlwapi", "-lshell32", "-lwinmm", "-lole32", "-luuid", "-lmsimg32", "-ldwmapi", "-lpsapi", "-lcrypt32", "-lcomdlg32", "-ladvapi32", "-ldxva2", "-luser32", "-lwinhttp", "-Lbuild/winlibs","-liphlpapi"
 #else
-     #define CC_FLAGS "-I", "include","-MMD", "-MP","-O4","-Wall","-Wextra","-Wno-unused-parameter","-Wno-sign-compare","-Wno-discarded-qualifiers","-Wno-stringop-truncation","-Wno-sign-compare","-Wno-unused-parameter","-Wno-misleading-indentation"
+     #define CC_FLAGS "-I", "include","-MMD", "-MP","-O4","-Wall","-Wextra","-Wno-unused-parameter","-Wno-sign-compare","-Wno-discarded-qualifiers","-Wno-stringop-truncation","-Wno-sign-compare","-Wno-unused-parameter","-Wno-misleading-indentation","-Wpedantic"
      #define LINK_FLAGS "-lm", "-ldl", "-Wl,--export-dynamic"
      #define PKG_CFLAGS_PKGS_STR "x11 xft fontconfig freetype2 glib-2.0 gio-unix-2.0 libpng xext xrandr xrender xtst xi libpulse"
      #define PKG_LIBS_PKGS_STR   "x11 xft fontconfig libpng xext xrandr xrender xtst xi gio-2.0 gobject-2.0 glib-2.0 libpulse"
@@ -183,7 +183,6 @@ static void augment_pkg_config_path(void) {
     if (cur && cur[0]) snprintf(full, sizeof(full), "%s:%s", path, cur);
     else snprintf(full, sizeof(full), "%s", path);
     setenv("PKG_CONFIG_PATH", full, 1);
-    nob_log(NOB_INFO, "pkg-config search dirs: %zu", found_n);
 }
 
 static void discover_dep_flags(void) {
@@ -193,7 +192,6 @@ static void discover_dep_flags(void) {
     const char* cflags = run_capture(cmdline);
     if (cflags && cflags[0]) {
         append_ws_split(&dep_cflags, cflags);
-        nob_log(NOB_INFO, "pkg-config cflags: %zu flag(s)", dep_cflags.count);
     } else {
         const char* fb[] = {
             "-I/usr/include/freetype2", "-I/usr/include/glib-2.0",
@@ -201,7 +199,6 @@ static void discover_dep_flags(void) {
             "-I/usr/include/X11", "-I/usr/include/freetype2",
         };
         for (size_t i = 0; i < sizeof(fb)/sizeof(fb[0]); i++) nob_da_append(&dep_cflags, nob_temp_strdup(fb[i]));
-        nob_log(NOB_INFO, "pkg-config unavailable, using default include paths");
     }
     snprintf(cmdline, sizeof(cmdline), "pkg-config --libs %s 2>/dev/null", PKG_LIBS_PKGS_STR);
     const char* ldflags = run_capture(cmdline);
@@ -215,7 +212,6 @@ static void discover_dep_flags(void) {
                 nob_da_append(&dep_ldflags, nob_temp_strdup(rpath));
             }
         }
-        nob_log(NOB_INFO, "pkg-config libs: %zu flag(s)", dep_ldflags.count);
     } else {
         const char* fb[] = {
             "-lX11", "-lXft", "-lfontconfig", "-lXrender", "-lXrandr",
@@ -223,7 +219,6 @@ static void discover_dep_flags(void) {
             "-lgobject-2.0",
         };
         for (size_t i = 0; i < sizeof(fb)/sizeof(fb[0]); i++)         nob_da_append(&dep_ldflags, nob_temp_strdup(fb[i]));
-        nob_log(NOB_INFO, "pkg-config unavailable, using default link libs");
     }
 }
 
@@ -274,7 +269,6 @@ static bool write_compile_commands(void) {
 
     FILE* f = fopen("compile_commands.json", "w");
     if (!f) {
-        nob_log(NOB_ERROR, "Failed to write compile_commands.json");
         return false;
     }
 
@@ -308,7 +302,6 @@ static bool write_compile_commands(void) {
     fprintf(f, "\n]\n");
     fclose(f);
 
-    nob_log(NOB_INFO, "Wrote compile_commands.json (%zu files)", sources.count);
     return true;
 }
 
@@ -345,7 +338,7 @@ static bool stale_with_dep(const char* src, const char* obj, const char* dep_fil
         if (tok.data[tok.count - 1] == ':') continue; 
 
         char* dep_file = nob_temp_sprintf("%.*s", (int)tok.count, tok.data);
-        if (nob_needs_rebuild1(obj, dep_file) != 0) { nob_log(NOB_INFO, "stale %s due to %s", obj, dep_file); return true; }
+        if (nob_needs_rebuild1(obj, dep_file) != 0) { return true; }
     }
     return false;
 }
@@ -401,7 +394,6 @@ static bool print_failures(void) {
             nob_da_append(&printed_sigs, sig);
             Nob_String_Builder block = {0};
             if (nob_read_entire_file(err_paths.items[i], &block)) {
-                nob_log(NOB_ERROR, "%s:", to_build.items[i]);
                 fwrite(block.items, 1, block.count, stdout);
                 printf("\n");
             }
@@ -412,8 +404,6 @@ static bool print_failures(void) {
 
     if (failed_count > 0) {
         nob_sb_append_null(&failed_names);
-        nob_log(NOB_ERROR, "Compilation failed (%zu file%s): %s",
-                failed_count, failed_count == 1 ? "" : "s", failed_names.items);
         return false;
     }
     return true;
@@ -428,7 +418,6 @@ static bool compile_all(bool* any_compiled) {
     size_t _nprocs = (size_t)nob_nprocs();
     if (_nprocs == 0) _nprocs = 6;
     size_t max_procs = _nprocs + 1;
-    nob_log(NOB_INFO, "Compiling %zu files with %zu parallel jobs (nprocs=%zu)", to_build.count, max_procs, _nprocs);
 
     for (size_t i = 0; i < to_build.count; ++i) {
         Nob_Cmd cmd = {0};
@@ -489,7 +478,6 @@ static void stop_running_instance(void) {
 static bool run_tests(void) {
     if (!nob_mkdir_if_not_exists("build/tests")) return false;
     if (test_sources.count == 0) {
-        nob_log(NOB_INFO, "No tests found in tests/");
         return true;
     }
     const char* support_obj = NULL;
@@ -498,9 +486,7 @@ static bool run_tests(void) {
         Nob_Cmd scmd = {0};
         nob_cc(&scmd);
         nob_cmd_append(&scmd, "-I", "include", "-I", "tests", "-O2", "-c", "tests/support.c", "-o", support_obj);
-        nob_log(NOB_INFO, "Building test support %s", support_obj);
         if (!nob_cmd_run(&scmd)) {
-            nob_log(NOB_ERROR, "Failed to build test support");
             return false;
         }
     }
@@ -533,10 +519,8 @@ static bool run_tests(void) {
         }
         append_dep_ldflags(&cmd);
         nob_cmd_append(&cmd, LINK_FLAGS, "-o", out);
-        nob_log(NOB_INFO, "Building test %s", out);
         snprintf(suite_names[t], sizeof(suite_names[t]), "%s", name);
         if (!nob_cmd_run(&cmd)) {
-            nob_log(NOB_ERROR, "Failed to build test %s", src);
             snprintf(suite_names[t], sizeof(suite_names[t]), "%s (BUILD FAILED)", name);
             suite_ok[t] = false;
             failed++;
@@ -544,7 +528,6 @@ static bool run_tests(void) {
         }
         Nob_Cmd run = {0};
         nob_cmd_append(&run, out);
-        nob_log(NOB_INFO, "Running test %s", out);
         suite_ok[t] = nob_cmd_run(&run);
         if (!suite_ok[t]) failed++;
     }
@@ -584,11 +567,9 @@ int main(int argc, char** argv) {
     if (!nob_mkdir_if_not_exists(BUILD_FOLDER)) return 1;
     if (!nob_mkdir_if_not_exists(OBJ_FOLDER)) return 1;
     if (!nob_walk_dir(SRC_FOLDER, collect_source)) {
-        nob_log(NOB_ERROR, "Failed to walk " SRC_FOLDER);
         return 1;
     }
     if (!nob_walk_dir("tests", collect_source)) {
-        nob_log(NOB_ERROR, "Failed to walk tests");
         return 1;
     }
 
@@ -658,7 +639,6 @@ int main(int argc, char** argv) {
                 append_dep_cflags(&fcmd);
 #endif
                 if (!nob_cmd_run(&fcmd, .async = &fprocs, .max_procs = _fmax)) {
-                    nob_log(NOB_ERROR, "Failed to start feature %s", so);
                     fok = false;
                 }
             }
@@ -672,7 +652,6 @@ int main(int argc, char** argv) {
             stop_running_instance();
             Nob_Cmd cmd = {0};
             nob_cmd_append(&cmd, output);
-            nob_log(NOB_INFO, "Started %s", output);
             if (!nob_cmd_run_async_and_reset(&cmd)) return 1;
         }
         if (do_test && !run_tests()) return 1;
@@ -697,7 +676,6 @@ int main(int argc, char** argv) {
     append_dep_ldflags(&cmd);
     nob_cmd_append(&cmd, LINK_FLAGS);
     if (!nob_cmd_run(&cmd)) {
-        nob_log(NOB_ERROR, "Failed to link %s", output);
         return 1;
     }
     {
@@ -721,7 +699,6 @@ int main(int argc, char** argv) {
             append_dep_cflags(&fcmd);
 #endif
             if (!nob_cmd_run(&fcmd, .async = &fprocs, .max_procs = _fmax2)) {
-                nob_log(NOB_ERROR, "Failed to start feature %s", so);
                 fok = false;
             }
         }
@@ -729,7 +706,6 @@ int main(int argc, char** argv) {
         if (!fok) return 1;
         for (size_t i = 0; i < feature_sources.count; ++i) {
             const char* so = feature_so_path(feature_sources.items[i]);
-            if (nob_file_exists(so)) nob_log(NOB_INFO, "Built feature %s", so);
         }
     }
 
@@ -743,12 +719,12 @@ int main(int argc, char** argv) {
     stop_running_instance();
 #if !defined(_WIN32)
     {
-        nob_log(NOB_INFO, "Bundling runtime deps (ship build/flint + build/bundle/)");
         Nob_Cmd bundle = {0};
-        nob_cmd_append(&bundle, "sh", "-c", "mkdir -p build/bundle && ldd build/flint | grep -o '/[^ ]*\\.so[^ ]*' | xargs -I{} cp -v {} build/bundle/ 2>/dev/null; echo \"Bundled $(ls build/bundle/*.so* 2>/dev/null | wc -l) libs to build/bundle/ (ship with LD_LIBRARY_PATH=./build/bundle)\"");
+        nob_cmd_append(&bundle, "sh", "-c",
+            "mkdir -p build/bundle && "
+            "ldd build/flint | grep -o '/[^ ]*\\.so[^ ]*' | xargs -I{} cp {} build/bundle/ 2>/dev/null");
         nob_cmd_run(&bundle);
 
-        nob_log(NOB_INFO, "Bundling external/ helper deps into build/bundle/");
         Nob_Cmd extdeps = {0};
         nob_cmd_append(&extdeps, "sh", "-c",
             "mkdir -p build/bundle; "
@@ -771,10 +747,9 @@ int main(int argc, char** argv) {
             "      if [ -e \"$d/$so\" ]; then src=\"$d/$so\"; break; fi; "
             "    done; "
             "  fi; "
-            "  if [ -n \"$src\" ] && [ -e \"$src\" ]; then cp -v \"$src\" build/bundle/ 2>/dev/null; "
-            "  else echo \"  unresolved: $so\"; fi; "
-            "done < /tmp/flint_ext_sonames.txt; "
-            "echo \"External helper deps now in build/bundle/ ($(ls build/bundle/*.so* 2>/dev/null | wc -l) total)\"");
+            "  if [ -n \"$src\" ] && [ -e \"$src\" ]; then cp \"$src\" build/bundle/ 2>/dev/null; "
+            "  fi; "
+            "done < /tmp/flint_ext_sonames.txt > /dev/null 2>&1");
         nob_cmd_run(&extdeps);
 
         Nob_Cmd extrpath = {0};
@@ -784,9 +759,6 @@ int main(int argc, char** argv) {
             "    [ -x \"$b\" ] || continue; "
             "    patchelf --set-rpath '$ORIGIN/../build/bundle' \"$b\" 2>/dev/null; "
             "  done; "
-            "  echo \"Patched external/ rpath to \\$ORIGIN/../build/bundle\"; "
-            "else "
-            "  echo \"patchelf missing; externals will rely on LD_LIBRARY_PATH\"; "
             "fi");
         nob_cmd_run(&extrpath);
     }
@@ -795,7 +767,6 @@ int main(int argc, char** argv) {
         Nob_Cmd run = {0};
         nob_cmd_append(&run, output);
         if (nob_cmd_run_async_and_reset(&run) == NOB_INVALID_PROC) return 1;
-        nob_log(NOB_INFO, "Started %s", output);
     }
     nob_log(NOB_INFO,"Built Successfully");
     if (do_test && !run_tests()) return 1;

@@ -25,7 +25,7 @@ static void shot_clip_path(char* buf, size_t n) {
 static void pk_screenshot_copy_area(void) {
     char env[SHOT_BUF];
     char path[SHOT_BUF];
-    char cmd[SHOT_BUF * 2];
+    char cmd[SHOT_BUF * 3];
     shot_env(env, sizeof(env));
     shot_clip_path(path, sizeof(path));
 
