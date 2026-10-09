@@ -1,5 +1,4 @@
-#include <stdint.h>
-#include <stdlib.h>
+#include <stdint.h> #include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
 #include <string.h>
@@ -2068,9 +2067,21 @@ unsigned long long fl_net_rx_bytes_over(double seconds) {
     if (after < before) return 0;
     return after - before;
 }
-PlRect fl_get_monitor_geometry() {
+FlRect fl_get_monitor_geometry() {
     int x, y, w, h;
     WindowManager_GetMainMonitorGeometry(&x,&y,&w,&h);
     return (PlRect){x,y,w,h};
+}
+
+int fl_get_screen_width() {
+    int x, y, w, h;
+    WindowManager_GetMainMonitorGeometry(&x,&y,&w,&h);
+    return w;
+}
+
+int fl_get_screen_height() {
+    int x, y, w, h;
+    WindowManager_GetMainMonitorGeometry(&x,&y,&w,&h);
+    return h;
 }
 

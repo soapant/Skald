@@ -140,6 +140,8 @@ bool fl_focus_window_left(void);
 bool fl_focus_window_right(void);
 bool fl_toggle_minimized_active(void);
 FlRect fl_get_monitor_geometry();
+int fl_get_screen_width();
+int fl_get_screen_height();
 
 // =============================================================================
 // STRING UTILITIES (all returned char* are heap-allocated, caller must free())
