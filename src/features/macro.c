@@ -9,7 +9,7 @@ static FlThread g_thread = NULL;
 #define WIDTH fl_get_screen_width()
 #define HEIGHT fl_get_screen_height()
 
-#define MACRO_MAX_EVENTS 32768
+#define MACRO_MAX_EVENTS 32768 * 2
 
 #define EVT_KEY   1
 #define EVT_MOUSE 2
@@ -17,8 +17,8 @@ static FlThread g_thread = NULL;
 
 typedef struct {
     int type;
-    int a; /* vk for key, button for mouse */
-    int b; /* scancode for key, unused for mouse */
+    int a; 
+    int b;
     int x;
     int y;
     int mods;
@@ -132,44 +132,73 @@ static void* recorder_loop(void* arg) {
   return NULL;
 }
 
-static const char* mouse_button_name(int b) {
-    switch (b) {
-        case FL_MOUSE_LEFT:    return "L";
-        case FL_MOUSE_RIGHT:   return "R";
-        case FL_MOUSE_MIDDLE:  return "M";
-        case FL_MOUSE_SIDE1:   return "S1";
-        case FL_MOUSE_SIDE2:   return "S2";
-        case FL_MOUSE_BACK:    return "BK";
-        case FL_MOUSE_FORWARD: return "FW";
-        default:               return "?";
-    }
-}
-
-static void print_recording(void) {
-  sort_events();
-  unsigned long long t0 = (g_event_count > 0) ? g_events[0].t_us : 0ULL;
-  printf("--- %d events%s ---\n", g_event_count, g_overflow ? " (OVERFLOW, truncated)" : "");
-  for (int i = 0; i < g_event_count; i++) {
-    const MacroEvent* m = &g_events[i];
-    unsigned long long dt = (i + 1 < g_event_count) ? (g_events[i + 1].t_us - m->t_us) : 0ULL;
-    if (m->type == EVT_KEY) {
-      printf("KEY  %-4s vk=%-4d sc=%-3d mods=0x%02x%s  +%6lluus  dt_next=%lluus\n",
-             m->down ? "DOWN" : "UP", m->a, m->b, (unsigned)m->mods,
-             m->repeat ? " rep" : "", m->t_us - t0, dt);
-    } else if (m->type == EVT_MOUSE) {
-      printf("MOUSE %-3s btn=%-2s mods=0x%02x pos=%d,%d  +%6lluus  dt_next=%lluus\n",
-             m->down ? "DOWN" : "UP", mouse_button_name(m->a), (unsigned)m->mods,
-             m->x, m->y, m->t_us - t0, dt);
-    } else {
-      printf("MOVE       pos=%d,%-6d +%6lluus  dt_next=%lluus\n",
-             m->x, m->y, m->t_us - t0, dt);
-    }
-  }
-}
-
 static void reset_recording(void) {
   g_event_count = 0;
   g_overflow = false;
+}
+
+static bool g_playing = false;
+static FlThread g_play_thread = NULL;
+
+#define MACRO_MAX_HELD 64
+static int g_held_keys[MACRO_MAX_HELD];
+static int g_held_count = 0;
+
+static void held_add(int vk) {
+    if (vk == 0) return;
+    for (int i = 0; i < g_held_count; i++) if (g_held_keys[i] == vk) return;
+    if (g_held_count < MACRO_MAX_HELD) g_held_keys[g_held_count++] = vk;
+}
+
+static void held_remove(int vk) {
+    for (int i = 0; i < g_held_count; i++) {
+        if (g_held_keys[i] == vk) { g_held_keys[i] = g_held_keys[--g_held_count]; return; }
+    }
+}
+
+static void release_everything(void) {
+    for (int i = 0; i < g_held_count; i++) fl_emit_key(g_held_keys[i], false);
+    g_held_count = 0;
+    fl_emit_key(VK_SHIFT, false);
+    fl_emit_key(VK_CONTROL, false);
+    fl_emit_key(VK_MENU, false);
+    fl_emit_key(VK_LWIN, false);
+    fl_emit_key(VK_RWIN, false);
+    for (int b = 1; b <= 5; b++) fl_mouse_button_down(b, false);
+}
+
+static void* playback_loop(void* arg) {
+  (void)arg;
+  if (g_event_count == 0) {
+    g_playing = false;
+    g_play_thread = NULL;
+    return NULL;
+  }
+  sort_events();
+  unsigned long long t0 = g_events[0].t_us;
+  unsigned long long start = now_us();
+  g_held_count = 0;
+  for (int i = 0; i < g_event_count && g_playing; i++) {
+    const MacroEvent* m = &g_events[i];
+    long long target_us = (long long)(m->t_us - t0);
+    long long cur_us = (long long)(now_us() - start);
+    long long wait = target_us - cur_us;
+    if (wait > 0) fl_sleep((double)wait / 1000000.0);
+    if (m->type == EVT_KEY) {
+      if (m->repeat) continue;
+      fl_emit_key(m->a, m->down);
+      if (m->down) held_add(m->a); else held_remove(m->a);
+    } else if (m->type == EVT_MOUSE) {
+      if (m->a != 0) fl_mouse_button_down(m->a, m->down);
+    } else {
+      FlPos p = { m->x, m->y };
+      fl_move_to_pos(p);
+    }
+  }
+  release_everything();
+  g_playing = false;
+  g_play_thread = NULL;
+  return NULL;
 }
 
 void RecordToggle(void) {
@@ -182,9 +211,22 @@ void RecordToggle(void) {
     return;
   }
   g_recording = false;
-  print_recording();
+}
+
+void PlayToggle(void) {
+  if (!g_playing) {
+    if (g_event_count == 0) return;
+    fl_clear_key_queue();
+    fl_clear_mouse_queue();
+    g_playing = true;
+    if (!g_play_thread) g_play_thread = fl_thread_create(playback_loop, NULL);
+    return;
+  }
+  g_playing = false;
+  release_everything();
 }
 
 FLINT_FEATURE_INIT {
   fl_register_hotkey("Ctrl+Alt+R", RecordToggle);
+  fl_register_hotkey("Ctrl+Alt+P", PlayToggle);
 }
