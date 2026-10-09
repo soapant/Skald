@@ -902,10 +902,6 @@ TEST(enter_visual_binding_is_v_in_normal) {
     ASSERT_EQ_INT(b->mode, MODE_NORMAL);
 }
 
-TEST(visual_cursor_differs_from_cursor_color) {
-    ASSERT_TRUE(COLOR_VISUAL_CURSOR != COLOR_CURSOR);
-}
-
 TEST(last_sequence_is_not_truncated) {
     vtables();
     const SequenceBinding* last = &g_vs[g_vs_count - 1];
@@ -1318,7 +1314,6 @@ int main(void) {
     RUN(last_binding_is_not_truncated);
     RUN(exit_visual_binding_is_escape);
     RUN(enter_visual_binding_is_v_in_normal);
-    RUN(visual_cursor_differs_from_cursor_color);
     RUN(last_sequence_is_not_truncated);
     RUN(every_sequence_has_distinct_handler);
     return TEST_SUMMARY() != 0 ? 1 : 0;

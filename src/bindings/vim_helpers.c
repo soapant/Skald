@@ -243,12 +243,15 @@ void SetCursorToEndOfText(FlintContext* ctx) {
     Vim_SetCursor(ctx, (int)strlen(text));
 }
 
-void DeleteInsideDelimiter(FlintContext* ctx, char open_char, char close_char, bool keep_mode) {
-    if (!ctx) return;
+bool Vim_DelimRange(FlintContext* ctx, char open_char, char close_char, int* out_start, int* out_end) {
+    if (!ctx) return false;
     char text[VIM_TEXT_BUF];
     Vim_GetText(ctx, text, sizeof(text));
     int len = (int)strlen(text);
     int cursor = Vim_GetCursor(ctx);
+    if (cursor < 0) cursor = 0;
+    if (cursor > len) cursor = len;
+
     int start = -1, end = -1;
     int open_pos = -1;
     for (int i = cursor - 1; i >= 0; i--) {
@@ -288,7 +291,19 @@ void DeleteInsideDelimiter(FlintContext* ctx, char open_char, char close_char, b
             }
         }
     }
-    if (start == -1 || end == -1 || start >= end - 1) {
+    if (start == -1 || end == -1 || start >= end) return false;
+    if (out_start) *out_start = start;
+    if (out_end) *out_end = end;
+    return true;
+}
+
+void DeleteInsideDelimiter(FlintContext* ctx, char open_char, char close_char, bool keep_mode) {
+    if (!ctx) return;
+    char text[VIM_TEXT_BUF];
+    Vim_GetText(ctx, text, sizeof(text));
+    int len = (int)strlen(text);
+    int start = 0, end = 0;
+    if (!Vim_DelimRange(ctx, open_char, close_char, &start, &end) || start >= end - 1) {
         log_info("No valid delimiters found!");
         return;
     }
@@ -341,32 +356,57 @@ void DeleteWordForward(FlintContext* ctx, bool keep_mode) {
     if (keep_mode) SetMode(MODE_INSERT); else SetMode(MODE_NORMAL);
 }
 
+static bool vim_word_boundary(char c, bool bigword) {
+    if (bigword) return (c == ' ' || c == '\t' || c == '\n' || c == '\r') ? true : false;
+    return (isalnum((unsigned char)c) || c == '_') ? false : true;
+}
+
+bool Vim_WordRange(FlintContext* ctx, bool bigword, bool around, int* out_start, int* out_end) {
+    if (!ctx) return false;
+    char text[VIM_TEXT_BUF];
+    Vim_GetText(ctx, text, sizeof(text));
+    int len = (int)strlen(text);
+    int cursor = Vim_GetCursor(ctx);
+    if (cursor < 0) cursor = 0;
+    if (cursor > len) cursor = len;
+
+    int word_start = cursor;
+    while (word_start > 0 && !vim_word_boundary(text[word_start - 1], bigword)) word_start--;
+    int word_end = cursor;
+    while (word_end < len && !vim_word_boundary(text[word_end], bigword)) word_end++;
+
+    if (word_start == cursor && word_end == cursor) {
+        word_end = cursor;
+        while (word_end < len && vim_word_boundary(text[word_end], bigword)) word_end++;
+        if (word_end >= len) return false;
+        word_start = word_end;
+        while (word_start < len && !vim_word_boundary(text[word_start], bigword)) word_start++;
+        int temp = word_start; word_start = cursor; word_end = temp;
+    }
+    if (word_start == cursor && word_end == cursor) {
+        word_start = cursor;
+        while (word_start > 0 && !vim_word_boundary(text[word_start - 1], bigword)) word_start--;
+        word_end = cursor;
+        while (word_end < len && !vim_word_boundary(text[word_end], bigword)) word_end++;
+    }
+    if (word_start == cursor && word_end == cursor) return false;
+    if (word_start > word_end) { int temp = word_start; word_start = word_end; word_end = temp; }
+    if (around) {
+        while (word_start > 0 && vim_word_boundary(text[word_start - 1], bigword)) word_start--;
+        while (word_end < len && vim_word_boundary(text[word_end], bigword)) word_end++;
+    }
+    if (out_start) *out_start = word_start;
+    if (out_end) *out_end = word_end;
+    return true;
+}
+
 void DeleteInnerWord(FlintContext* ctx, bool keep_mode) {
     if (!ctx) return;
     char text[VIM_TEXT_BUF];
     Vim_GetText(ctx, text, sizeof(text));
     int len = (int)strlen(text);
-    int cursor = Vim_GetCursor(ctx);
-    int word_start = cursor;
-    while (word_start > 0) { char c = text[word_start - 1]; if (!isalnum((unsigned char)c) && c != '_') break; word_start--; }
-    int word_end = cursor;
-    while (word_end < len) { char c = text[word_end]; if (!isalnum((unsigned char)c) && c != '_') break; word_end++; }
-    if (word_start == cursor && word_end == cursor) {
-        word_end = cursor;
-        while (word_end < len) { char c = text[word_end]; if (isalnum((unsigned char)c) || c == '_') break; word_end++; }
-        if (word_end >= len) return;
-        word_start = word_end;
-        while (word_start < len) { char c = text[word_start]; if (!isalnum((unsigned char)c) && c != '_') break; word_start++; }
-        int temp = word_start; word_start = cursor; word_end = temp;
-    }
-    if (word_start == cursor && word_end == cursor) {
-        word_start = cursor;
-        while (word_start > 0) { char c = text[word_start - 1]; if (!isalnum((unsigned char)c) && c != '_') break; word_start--; }
-        word_end = cursor;
-        while (word_end < len) { char c = text[word_end]; if (!isalnum((unsigned char)c) && c != '_') break; word_end++; }
-    }
-    if (word_start == cursor && word_end == cursor) return;
-    if (word_start > word_end) { int temp = word_start; word_start = word_end; word_end = temp; }
+    int word_start = 0, word_end = 0;
+    if (!Vim_WordRange(ctx, false, false, &word_start, &word_end)) return;
     if (word_start > 0 && word_end < len && text[word_start - 1] == ' ' && text[word_end] == ' ') {
         word_end++;
         if (word_end > len) word_end = len;

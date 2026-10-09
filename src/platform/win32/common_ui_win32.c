@@ -61,7 +61,7 @@ void win32_apply_rounded_corners(HWND hwnd, int w, int h) {
 static inline unsigned int win32_to_rgb(COLORREF c) {
   return ((unsigned int)GetRValue(c) << 16) | ((unsigned int)GetGValue(c) << 8) | (unsigned int)GetBValue(c);
 }
-static COLORREF LerpColor(COLORREF a, COLORREF b, float t) {
+COLORREF LerpColor(COLORREF a, COLORREF b, float t) {
   unsigned int mixed = Color_Lerp(win32_to_rgb(a), win32_to_rgb(b), t);
   return RGB((mixed >> 16) & 0xFF, (mixed >> 8) & 0xFF, mixed & 0xFF);
 }

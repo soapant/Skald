@@ -126,6 +126,18 @@ typedef enum {
     MOTION_JUMP_FORWARD,
     MOTION_SEARCH_FORWARD_KEY,
     MOTION_SEARCH_BACKWARD_KEY,
+    MOTION_VISUAL_INNER_WORD,
+    MOTION_VISUAL_AROUND_WORD,
+    MOTION_VISUAL_INNER_QUOTES,
+    MOTION_VISUAL_AROUND_QUOTES,
+    MOTION_VISUAL_INNER_SQUOTES,
+    MOTION_VISUAL_AROUND_SQUOTES,
+    MOTION_VISUAL_INNER_BRACKETS,
+    MOTION_VISUAL_AROUND_BRACKETS,
+    MOTION_VISUAL_INNER_CURLY,
+    MOTION_VISUAL_AROUND_CURLY,
+    MOTION_VISUAL_INNER_SQUARE,
+    MOTION_VISUAL_AROUND_SQUARE,
 } MotionAction;
 
 typedef enum {
@@ -161,6 +173,18 @@ void HandleVisualLeft(FlintContext* ctx);
 void HandleVisualRight(FlintContext* ctx);
 void HandleVisualDeleteSelection(FlintContext* ctx);
 void HandleVisualChangeSelection(FlintContext* ctx);
+void HandleVisualInnerWord(FlintContext* ctx);
+void HandleVisualAroundWord(FlintContext* ctx);
+void HandleVisualInnerQuotes(FlintContext* ctx);
+void HandleVisualAroundQuotes(FlintContext* ctx);
+void HandleVisualInnerSingleQuotes(FlintContext* ctx);
+void HandleVisualAroundSingleQuotes(FlintContext* ctx);
+void HandleVisualInnerBrackets(FlintContext* ctx);
+void HandleVisualAroundBrackets(FlintContext* ctx);
+void HandleVisualInnerCurlyBrackets(FlintContext* ctx);
+void HandleVisualAroundCurlyBrackets(FlintContext* ctx);
+void HandleVisualInnerSquareBrackets(FlintContext* ctx);
+void HandleVisualAroundSquareBrackets(FlintContext* ctx);
 void HandleVisualWordForward(FlintContext* ctx);
 void HandleVisualWordBackward(FlintContext* ctx);
 void HandleVisualWordForwardBig(FlintContext* ctx);

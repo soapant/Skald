@@ -167,6 +167,7 @@ void Platform_EditPopupRender(Popup* self) {
 
     if (!IsInsertMode() && data->cursor >= 0) {
         int tint_y = edit_popup_cursor_y(paint, draw_y);
+        unsigned long tint = LerpColor(COLOR_BG, Modal_CursorColor(), 0.72f);
         int sel_start = 0, sel_end = 0;
         bool has_sel = VimState_GetSelection(&sel_start, &sel_end) && text_len > 0;
         if (has_sel) {
@@ -181,13 +182,13 @@ void Platform_EditPopupRender(Popup* self) {
                 if (cx < sx0) cx = sx0;
                 if (cx > sx1) cx = sx1;
                 int selw = sx1 - sx0;
-                if (selw > 0) Platform_DrawRectRawOpaque(sx0, tint_y, selw, FontSize, Modal_CursorColor());
+                if (selw > 0) Platform_DrawRectRawOpaque(sx0, tint_y, selw, FontSize, tint);
             }
         } else {
             int tint_x = cursor_draw_x;
             if (tint_x < PROMPT_CARET_LO_CLAMP) tint_x = PROMPT_CARET_LO_CLAMP;
             if (tint_x > w - PROMPT_CARET_HI_CLAMP) tint_x = w - PROMPT_CARET_HI_CLAMP;
-            Platform_DrawRectRawOpaque(tint_x, tint_y, PROMPT_EDITPOPUP_CARET_W_NORMAL, FontSize, Modal_CursorColor());
+            Platform_DrawRectRawOpaque(tint_x, tint_y, PROMPT_EDITPOPUP_CARET_W_NORMAL, FontSize, tint);
         }
     }
 

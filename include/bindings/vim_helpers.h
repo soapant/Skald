@@ -14,6 +14,8 @@ void SetCursorToStartOfText(FlintContext* ctx);
 void SetCursorToEndOfText(FlintContext* ctx);
 void DeleteInsideDelimiter(FlintContext* ctx, char open_char, char close_char, bool keep_mode);
 void DeleteInnerWord(FlintContext* ctx, bool keep_mode);
+bool Vim_DelimRange(FlintContext* ctx, char open_char, char close_char, int* out_start, int* out_end);
+bool Vim_WordRange(FlintContext* ctx, bool bigword, bool around, int* out_start, int* out_end);
 void DeleteWordForward(FlintContext* ctx, bool keep_mode);
 void DeleteSelectionRange(FlintContext* ctx, int start, int end);
 
