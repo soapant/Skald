@@ -29,8 +29,9 @@ static DWORD WINAPI feature_watcher_thread_win(LPVOID arg) {
             if (base) base++; else base = buf;
             char* dot = strrchr(base, '.');
             if (dot) *dot = '\0';
+            if (!FeaturePath || !FeaturePath[0]) continue;
             char src[512], dll[512];
-            snprintf(src, sizeof(src), "src/features/%s.c", base);
+            snprintf(src, sizeof(src), "%s\\%s.c", FeaturePath, base);
             snprintf(dll, sizeof(dll), "build/features/%s%s", base, Platform_LibExtension());
             log_info("recompiling %s -> %s", src, dll); fflush(stdout);
             FeatureLoader_Unload(base);
