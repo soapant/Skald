@@ -73,7 +73,6 @@ char *allowed_audio_formats[] = {"mp3","ogg","flac", NULL};
 ListOfFiles s_music_files = {0};
 
 void music_refresh_callback(const char* filter, ListBoxInfo* lb) {
-    
     const char** items = (const char**)malloc(s_music_files.count * sizeof(char*));
     if (!items) return;
     for (size_t i = 0; i < s_music_files.count; i++) {
