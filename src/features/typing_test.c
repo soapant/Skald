@@ -202,6 +202,12 @@ void typing_test_render(PromptState *state) {
         typing_test_measure_lines(positions, text_len, text, text_y,
                                  W - margin * 2, line_height, body);
 
+        if (draw_cursor && typing_test_position < text_len) {
+            fl_draw_rect(.x = positions[typing_test_position].x + margin + 2,
+                         .y = positions[typing_test_position].y + base / 4,
+                         .w = body / 2, .h = body,.transparent=true);
+        }
+
         for (int i = 0; i < text_len; i++) {
             unsigned long col;
             if (typing_test_states[i] == CHAR_CORRECT) {
@@ -214,12 +220,6 @@ void typing_test_render(PromptState *state) {
             char single[2] = { text[i], '\0' };
             fl_draw_text(.x = positions[i].x + margin, .y = positions[i].y, .fontsize = body,
                           .align = "Left", .text = single, .color = col);
-        }
-
-        if (draw_cursor && typing_test_position < text_len) {
-            fl_draw_rect(.x = positions[typing_test_position].x + margin,
-                         .y = positions[typing_test_position].y + base / 4,
-                         .w = 1, .h = body);
         }
     }
 

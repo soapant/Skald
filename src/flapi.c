@@ -1,4 +1,5 @@
-#include <stdint.h> #include <stdlib.h>
+#include <stdint.h> 
+#include <stdlib.h>
 #include <stdio.h>
 #include <time.h>
 #include <string.h>
@@ -644,7 +645,7 @@ static void fl_hover_popup_frame(void *ud) {
     FlHoverPopupCtx *p = (FlHoverPopupCtx *)ud;
     if (!p || !p->render) return;
     p->frame++;
-    FlWidgetState st;
+    FlWidgetState st = {0};
     st.width = p->w;
     st.height = p->h;
     st.frame = p->frame;
@@ -1133,6 +1134,12 @@ bool fl_draw_rect_impl(const FlRectSpec *spec) {
   unsigned long col = spec->color;
   if (col == 0) col = COLOR_TEXT;
   col = rgb_to_hex(col);
+  if (spec->transparent) {
+    col = Color_Lerp(rgb_to_hex(COLOR_BG), col, (float)FL_DRAW_ALPHA_TRANSPARENT / 255.0f);
+    bool rr = Platform_DrawRectBorder(spec->x, spec->y, spec->w, spec->h, col, spec->thickness);
+    PROFILE_END_VAR(_pt, "api:fl_draw_rect");
+    return rr;
+  }
   bool r = Platform_DrawRectBorder(spec->x, spec->y, spec->w, spec->h, col, spec->thickness);
   PROFILE_END_VAR(_pt, "api:fl_draw_rect");
   return r;
