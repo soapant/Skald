@@ -13,7 +13,7 @@ void google_edit_callback(const char* selection, ListBoxInfo* lb) {
     int idx = -1;
     char* edited = fl_edit_text_popup(.initial_text = selection,.lb = lb, .out_index = &idx);
     if (!edited) return;
-    if (idx >= 0) fl_replace_line_in_file(GoogleHistoryFile, idx, edited);
+    fl_replace_line_in_file(GoogleHistoryFile, idx, edited);
     free(edited);
     google_refresh_callback("", lb);
 }

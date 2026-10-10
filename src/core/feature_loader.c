@@ -230,6 +230,117 @@ static void manifest_write_baseline(const char *name) {
     log_info("manifest created for feature '%s'", name);
 }
 
+void FeatureLoader_ManifestAddProvides(const char *owner_path, const char *key) {
+    if (!owner_path || !owner_path[0] || !key || !key[0]) return;
+    const char *dir = flint_manifest_dir();
+    if (!dir) return;
+
+    const char *base = strrchr(owner_path, '/');
+    const char *bslash = strrchr(owner_path, '\\');
+    if (bslash > base) base = bslash;
+    base = base ? base + 1 : owner_path;
+
+    char name[64];
+    snprintf(name, sizeof(name), "%s", base);
+    char *dot = strchr(name, '.');
+    if (dot) *dot = '\0';
+    if (!name[0]) return;
+
+    char path[512];
+    if (!manifest_path(name, path, sizeof(path))) return;
+    nob_mkdir_if_not_exists(dir);
+
+    char buf[16384];
+    size_t len = 0;
+    FILE *f = fopen(path, "rb");
+    bool had_file = false;
+    if (f) {
+        had_file = true;
+        len = fread(buf, 1, sizeof(buf) - 1, f);
+        fclose(f);
+    }
+    buf[len] = '\0';
+
+    if (!had_file) {
+        manifest_write_baseline(name);
+        f = fopen(path, "rb");
+        if (!f) return;
+        len = fread(buf, 1, sizeof(buf) - 1, f);
+        fclose(f);
+        buf[len] = '\0';
+    }
+
+    bool have_section = false;
+    bool have_key = false;
+    size_t insert_at = 0;
+    size_t section_end = 0;
+
+    size_t off = 0;
+    while (off < len) {
+        char *nl = memchr(buf + off, '\n', len - off);
+        size_t line_len = nl ? (size_t)(nl - (buf + off)) : (len - off);
+        char line[512];
+        size_t cl = line_len < sizeof(line) - 1 ? line_len : sizeof(line) - 1;
+        memcpy(line, buf + off, cl);
+        line[cl] = '\0';
+
+        char work[512];
+        snprintf(work, sizeof(work), "%s", line);
+        manifest_trim(work);
+
+        if (work[0] == '[') {
+            if (strstr(work, "provides")) {
+                have_section = true;
+                section_end = off + line_len + (nl ? 1 : 0);
+                insert_at = section_end;
+            }
+            off += line_len + (nl ? 1 : 0);
+            continue;
+        }
+
+        if (have_section && section_end == off + line_len + (nl ? 1 : 0)) {
+            if (work[0] != '\0') insert_at = off + line_len + (nl ? 1 : 0);
+        }
+
+        if (have_section && work[0] != '\0' && work[0] != '#') {
+            char entry[512];
+            snprintf(entry, sizeof(entry), "%s", work);
+            manifest_unquote(entry);
+            if (strcmp(entry, key) == 0) have_key = true;
+        }
+
+        off += line_len + (nl ? 1 : 0);
+    }
+
+    if (have_key) return;
+
+    char entry[128];
+    snprintf(entry, sizeof(entry), "%s\n", key);
+
+    if (!have_section) {
+        size_t n = len;
+        if (n + strlen(entry) + 16 >= sizeof(buf)) return;
+        memcpy(buf + n, "\n[provides]\n", 13);
+        n += 13;
+        memcpy(buf + n, entry, strlen(entry));
+        n += strlen(entry);
+        len = n;
+        insert_at = len - strlen(entry);
+    } else if (insert_at + strlen(entry) > sizeof(buf)) {
+        return;
+    } else {
+        memmove(buf + insert_at + strlen(entry), buf + insert_at, len - insert_at);
+        memcpy(buf + insert_at, entry, strlen(entry));
+        len += strlen(entry);
+    }
+
+    f = fopen(path, "wb");
+    if (!f) return;
+    fwrite(buf, 1, len, f);
+    fclose(f);
+    log_info("manifest '%s' provides += %s", name, key);
+}
+
 static void manifest_parse(const char *name, FeatureManifest *m) {
     memset(m, 0, sizeof(*m));
     snprintf(m->name, sizeof(m->name), "%s", name);

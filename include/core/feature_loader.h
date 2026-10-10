@@ -5,6 +5,7 @@
 
 bool FeatureLoader_Init(void);
 void FeatureLoader_Shutdown(void);
+void FeatureLoader_ManifestAddProvides(const char* owner_path, const char* key);
 void FeatureLoader_Reload(const char* name);
 void FeatureLoader_ReloadAll(void);
 bool FeatureLoader_LoadAllFromDir(const char* dir);
