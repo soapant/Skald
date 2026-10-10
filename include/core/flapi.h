@@ -418,7 +418,7 @@ struct FlWidget {
 
 FlWidget *fl_widget_create(const FlWidgetSpec *spec);
 #define fl_widget(...) fl_widget_create(&(FlWidgetSpec){__VA_ARGS__})
-bool fl_widget_is_valid(FlWidget *widget);
+bool fl_widget_valid(FlWidget *widget);
 FlPos fl_get_widget_pos(const char *name);
 void fl_widget_show(FlWidget *widget);
 void fl_widget_hide(FlWidget *widget);
@@ -577,12 +577,20 @@ bool fl_is_window_active(char* title);
 FlColor fl_get_pixel_color(FlPos pos);
 bool fl_move_to_pos(FlPos pos);
 bool fl_click_at_pos(FlPos pos);
-bool fl_click(void);
-bool fl_mouse_button_down(int button, bool down);
-bool fl_mouse_press_at(FlPos pos, int button, bool down);
-bool fl_mouse_click_button_at(FlPos pos, int button);
+bool fl_left_click(void);
+bool fl_right_click(void);
+bool fl_emit_mouse_button(int button, bool down);
+bool fl_emit_mouse_button_at(FlPos pos, int button, bool down);
+bool fl_click_button_at(FlPos pos, int button);
 bool fl_mouse_scroll(int notches);
 void fl_emit_key(int vk, bool down);
+#define fl_move_mouse fl_move_to_pos
+#define fl_click() fl_left_click()
+
+bool fl_move_to_pos_rel(int rx, int ry);
+bool fl_click_at_pos_rel(int rx, int ry);
+bool fl_emit_mouse_button_at_rel(int rx, int ry, int button, bool down);
+bool fl_click_button_at_rel(int rx, int ry, int button);
 bool fl_type_text(const char *s);
 void fl_sleep(double seconds);
 bool fl_is_key_down(int vk);
@@ -629,7 +637,7 @@ int fl_mouse_queue_len(void);
 unsigned long fl_mouse_queue_dropped(void);
 void fl_clear_mouse_queue(void);
 FlPos fl_get_cursor_pos();
-bool fl_mouse_is_pressed(int button);
+bool fl_mouse_pressed(int button);
 
 bool fl_poll_key(FlKeyEvent *out);
 int fl_key_queue_len(void);

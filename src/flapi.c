@@ -1247,33 +1247,39 @@ bool fl_click_at_pos(PlPos pos) {
   PROFILE_END_VAR(_pt, "flapi:fl_click_at_pos");
   return ok;
 }
-bool fl_click(void) {
+bool fl_left_click(void) {
   PROFILE_START(_pt);
-  bool ok = Platform_Click();
-  PROFILE_END_VAR(_pt, "flapi:fl_click");
+  bool ok = Platform_ClickButton(1);
+  PROFILE_END_VAR(_pt, "flapi:fl_left_click");
   return ok;
 }
-bool fl_mouse_button_down(int button, bool down) {
+bool fl_right_click(void) {
+  PROFILE_START(_pt);
+  bool ok = Platform_ClickButton(2);
+  PROFILE_END_VAR(_pt, "flapi:fl_right_click");
+  return ok;
+}
+bool fl_emit_mouse_button(int button, bool down) {
   PROFILE_START(_pt);
   bool ok = Platform_MouseButtonDown(button, down);
-  PROFILE_END_VAR(_pt, "flapi:fl_mouse_button_down");
+  PROFILE_END_VAR(_pt, "flapi:fl_emit_mouse_button");
   return ok;
 }
-bool fl_mouse_press_at(PlPos pos, int button, bool down) {
+bool fl_emit_mouse_button_at(PlPos pos, int button, bool down) {
   PROFILE_START(_pt);
   bool moved = fl_move_to_pos(pos);
   bool ok = moved && Platform_MouseButtonDown(button, down);
-  PROFILE_END_VAR(_pt, "flapi:fl_mouse_press_at");
+  PROFILE_END_VAR(_pt, "flapi:fl_emit_mouse_button_at");
   return ok;
 }
-bool fl_mouse_click_button_at(PlPos pos, int button) {
+bool fl_click_button_at(PlPos pos, int button) {
   PROFILE_START(_pt);
   bool moved = fl_move_to_pos(pos);
   bool down = moved && Platform_MouseButtonDown(button, true);
-  if (!down) { PROFILE_END_VAR(_pt, "flapi:fl_mouse_click_button_at"); return false; }
+  if (!down) { PROFILE_END_VAR(_pt, "flapi:fl_click_button_at"); return false; }
   fl_sleep(0.02);
   bool up = Platform_MouseButtonDown(button, false);
-  PROFILE_END_VAR(_pt, "flapi:fl_mouse_click_button_at");
+  PROFILE_END_VAR(_pt, "flapi:fl_click_button_at");
   return up;
 }
 bool fl_mouse_scroll(int notches) {
@@ -1282,6 +1288,60 @@ bool fl_mouse_scroll(int notches) {
   PROFILE_END_VAR(_pt, "flapi:fl_mouse_scroll");
   return ok;
 }
+static bool fl_get_virtual_bounds(int *out_x, int *out_y, int *out_w, int *out_h) {
+  PROFILE_START(_pt);
+  bool ok = Platform_GetVirtualBounds(out_x, out_y, out_w, out_h);
+  PROFILE_END_VAR(_pt, "flapi:fl_get_virtual_bounds");
+  return ok;
+}
+
+static bool fl_rel_to_abs(int rx, int ry, FlPos *out) {
+  PROFILE_START(_pt);
+  if (!out) { PROFILE_END_VAR(_pt, "flapi:fl_rel_to_abs"); return false; }
+  int vx = 0, vy = 0, vw = 0, vh = 0;
+  if (!Platform_GetVirtualBounds(&vx, &vy, &vw, &vh)) { PROFILE_END_VAR(_pt, "flapi:fl_rel_to_abs"); return false; }
+  out->x = vx + rx;
+  out->y = vy + ry;
+  PROFILE_END_VAR(_pt, "flapi:fl_rel_to_abs");
+  return true;
+}
+
+bool fl_move_to_pos_rel(int rx, int ry) {
+  PROFILE_START(_pt);
+  FlPos abs;
+  if (!fl_rel_to_abs(rx, ry, &abs)) { PROFILE_END_VAR(_pt, "flapi:fl_move_to_pos_rel"); return false; }
+  bool ok = fl_move_to_pos(abs);
+  PROFILE_END_VAR(_pt, "flapi:fl_move_to_pos_rel");
+  return ok;
+}
+
+bool fl_click_at_pos_rel(int rx, int ry) {
+  PROFILE_START(_pt);
+  FlPos abs;
+  if (!fl_rel_to_abs(rx, ry, &abs)) { PROFILE_END_VAR(_pt, "flapi:fl_click_at_pos_rel"); return false; }
+  bool ok = fl_click_at_pos(abs);
+  PROFILE_END_VAR(_pt, "flapi:fl_click_at_pos_rel");
+  return ok;
+}
+
+bool fl_emit_mouse_button_at_rel(int rx, int ry, int button, bool down) {
+  PROFILE_START(_pt);
+  FlPos abs;
+  if (!fl_rel_to_abs(rx, ry, &abs)) { PROFILE_END_VAR(_pt, "flapi:fl_emit_mouse_button_at_rel"); return false; }
+  bool ok = fl_emit_mouse_button_at(abs, button, down);
+  PROFILE_END_VAR(_pt, "flapi:fl_emit_mouse_button_at_rel");
+  return ok;
+}
+
+bool fl_click_button_at_rel(int rx, int ry, int button) {
+  PROFILE_START(_pt);
+  FlPos abs;
+  if (!fl_rel_to_abs(rx, ry, &abs)) { PROFILE_END_VAR(_pt, "flapi:fl_click_button_at_rel"); return false; }
+  bool ok = fl_click_button_at(abs, button);
+  PROFILE_END_VAR(_pt, "flapi:fl_click_button_at_rel");
+  return ok;
+}
+
 void fl_emit_key(int vk, bool down) {
   PROFILE_START(_pt);
   Platform_EmitKey(vk, down ? 1 : 0);
@@ -1428,7 +1488,7 @@ FlPos fl_get_cursor_pos() {
   return (FlPos){x, y};
 }
 
-bool fl_mouse_is_pressed(int button) {
+bool fl_mouse_pressed(int button) {
   return Platform_MouseStateDown(button);
 }
 
@@ -1481,7 +1541,7 @@ bool fl_extract_value(char **pp, char *out, size_t cap) {
     *pp = p;
     return len > 0;
 }
-bool fl_next_is_flag(char *p) {
+bool fl_next_flag(char *p) {
     while (*p && isspace((unsigned char)*p)) p++;
     return *p == '-' || *p == '/';
 }
@@ -1510,7 +1570,7 @@ Fl_FlagList fl_parse_flags(const char* input) {
             while (*p && isspace((unsigned char)*p)) p++;
             if (*p && !fl_is_flag_prefix(*p)) {
                 has_val = fl_extract_value(&p, valbuf, sizeof(valbuf));
-                if (has_val && fl_next_is_flag(p)) { has_val = false; p = save; while (*p && isspace((unsigned char)*p)) p++; }
+                if (has_val && fl_next_flag(p)) { has_val = false; p = save; while (*p && isspace((unsigned char)*p)) p++; }
             }
         }
         if (out.count >= cap) {
@@ -2038,7 +2098,7 @@ FlWidget *fl_widget_create(const FlWidgetSpec *spec) {
     return widget;
 }
 
-bool fl_widget_is_valid(FlWidget *widget) {
+bool fl_widget_valid(FlWidget *widget) {
     return widget != NULL;
 }
 
@@ -2070,7 +2130,7 @@ static void fl_widget_apply_hide(void *ud) {
 
 void fl_widget_show(FlWidget *widget) {
     PROFILE_START(_pt);
-    if (!fl_widget_is_valid(widget)) { PROFILE_END_VAR(_pt, "api:fl_widget_show"); return; }
+    if (!fl_widget_valid(widget)) { PROFILE_END_VAR(_pt, "api:fl_widget_show"); return; }
     if (widget->mapped) { PROFILE_END_VAR(_pt, "api:fl_widget_show"); return; }
     widget->mapped = true;
     Platform_RenderThread_Post(fl_widget_apply_show, widget);
@@ -2079,7 +2139,7 @@ void fl_widget_show(FlWidget *widget) {
 
 void fl_widget_hide(FlWidget *widget) {
     PROFILE_START(_pt);
-    if (!fl_widget_is_valid(widget)) { PROFILE_END_VAR(_pt, "api:fl_widget_hide"); return; }
+    if (!fl_widget_valid(widget)) { PROFILE_END_VAR(_pt, "api:fl_widget_hide"); return; }
     if (!widget->mapped) { PROFILE_END_VAR(_pt, "api:fl_widget_hide"); return; }
     widget->mapped = false;
     Platform_RenderThread_Post(fl_widget_apply_hide, widget);
@@ -2088,7 +2148,7 @@ void fl_widget_hide(FlWidget *widget) {
 
 void fl_widget_set_render(FlWidget *widget, FlWidgetRenderFn render) {
     PROFILE_START(_pt);
-    if (!fl_widget_is_valid(widget)) { PROFILE_END_VAR(_pt, "api:fl_widget_set_render"); return; }
+    if (!fl_widget_valid(widget)) { PROFILE_END_VAR(_pt, "api:fl_widget_set_render"); return; }
     widget->render = render;
     if (Platform_Widget_IsValid(widget->win)) {
         Platform_Widget_Invalidate(widget->win);

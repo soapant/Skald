@@ -2,6 +2,16 @@ name = "adb"
 description = ""
 
 [provides]
+adb.reboot
+adb.put_file
+adb.get_file
+adb.clear_app_data
+adb.force_close
+adb.uninstall
+adb.install
+adb.get_devices
+adb.type_text
+adb.tap
 
 [depends]
 
