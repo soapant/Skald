@@ -782,9 +782,9 @@ TEST(dw_on_trailing_space_does_nothing) {
 TEST(diw_still_deletes_whole_word) {
     char buf[64];
     vreset("hello world", 2);
-    vpress('D', false, false);
-    vpress('I', false, false);
-    vpress('W', false, false);
+    vpress('d', false, false);
+    vpress('i', false, false);
+    vpress('w', false, false);
     vgettext(buf, sizeof(buf));
     ASSERT_EQ_STR(buf, " world");
 }
@@ -801,9 +801,9 @@ TEST(dd_still_deletes_line_through_keypath) {
 TEST(diw_still_works_through_keypath) {
     char buf[64];
     vreset("hello world", 0);
-    vpress('D', false, false);
-    vpress('I', false, false);
-    vpress('W', false, false);
+    vpress('d', false, false);
+    vpress('i', false, false);
+    vpress('w', false, false);
     vgettext(buf, sizeof(buf));
     ASSERT_EQ_STR(buf, " world");
 }
@@ -852,7 +852,7 @@ TEST(binding_tables_are_queryable) {
     ASSERT_TRUE(g_vb_count > 0);
     ASSERT_TRUE(g_vs_count > 0);
     ASSERT_EQ_INT(g_vb_count, 73);
-    ASSERT_EQ_INT(g_vs_count, 29);
+    ASSERT_EQ_INT(g_vs_count, 53);
 }
 
 TEST(no_null_sequence_in_table) {
@@ -910,15 +910,34 @@ TEST(last_sequence_is_not_truncated) {
     ASSERT_EQ_STR(last->sequence, "G~");
 }
 
-TEST(every_sequence_has_distinct_handler) {
+TEST(every_sequence_is_unique_within_its_mode) {
     vtables();
     for (int i = 0; i < g_vs_count; i++) {
         for (int j = i + 1; j < g_vs_count; j++) {
+            if (g_vs[i].mode != g_vs[j].mode) continue;
             if (strcmp(g_vs[i].sequence, g_vs[j].sequence) == 0) {
-                printf("  FAIL duplicate sequence '%s'\n", g_vs[i].sequence);
+                printf("  FAIL duplicate sequence '%s' in mode %d\n", g_vs[i].sequence, g_vs[i].mode);
                 flint_test_fails++;
                 break;
             }
+        }
+    }
+}
+
+TEST(visual_sequences_are_also_registered_in_normal_mode) {
+    vtables();
+    for (int i = 0; i < g_vs_count; i++) {
+        if (g_vs[i].mode != MODE_VISUAL) continue;
+        bool has_normal = false;
+        for (int j = 0; j < g_vs_count; j++) {
+            if (g_vs[j].mode != MODE_NORMAL) continue;
+            if (strcmp(g_vs[i].sequence, g_vs[j].sequence) == 0) { has_normal = true; break; }
+        }
+        if (!has_normal) {
+            printf("  FAIL visual sequence '%s' has no MODE_NORMAL counterpart\n", g_vs[i].sequence);
+            flint_test_fails++;
+        } else {
+            flint_test_passes++;
         }
     }
 }
@@ -1315,6 +1334,7 @@ int main(void) {
     RUN(exit_visual_binding_is_escape);
     RUN(enter_visual_binding_is_v_in_normal);
     RUN(last_sequence_is_not_truncated);
-    RUN(every_sequence_has_distinct_handler);
+    RUN(every_sequence_is_unique_within_its_mode);
+    RUN(visual_sequences_are_also_registered_in_normal_mode);
     return TEST_SUMMARY() != 0 ? 1 : 0;
 }
