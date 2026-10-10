@@ -354,9 +354,6 @@ static void net_row(int y, const char *label, const char *value, unsigned long c
 }
 
 static void internet_hover_render() {
-    fl_draw_line(.x1 = NET_PAD, .y1 = NET_PAD + 30, .x2 = NET_POPUP_W - NET_PAD,
-                 .y2 = NET_PAD + 30, .color = RGB(60, 60, 80));
-
     char today[32], month[32], rate[32];
     fl_format_bytes(g_net.today_bytes, today, sizeof(today));
     fl_format_bytes(g_net.month_bytes, month, sizeof(month));

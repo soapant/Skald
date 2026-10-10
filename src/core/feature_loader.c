@@ -167,10 +167,14 @@ static double g_feature_init_us = 0.0;
 static int g_feature_init_count = 0;
 
 
-//temporary: manifest dir is hardcoded for now; moves under the feature
-//          marketplace install system later.
-#define FLINT_MANIFEST_DIR "src/features/manifests"
 #define FLINT_MANIFEST_LIST_MAX 32
+
+static const char* flint_manifest_dir(void) {
+    if (!FeaturePath || !FeaturePath[0]) return NULL;
+    static char buf[512];
+    snprintf(buf, sizeof(buf), "%s/manifests", FeaturePath);
+    return buf;
+}
 
 typedef struct {
     char name[64];
@@ -201,17 +205,21 @@ static void manifest_unquote(char *s) {
 }
 
 static bool manifest_path(const char *name, char *out, size_t n) {
-    snprintf(out, n, "%s/%s.toml", FLINT_MANIFEST_DIR, name);
+    const char *dir = flint_manifest_dir();
+    if (!dir) return false;
+    snprintf(out, n, "%s/%s.toml", dir, name);
     return true;
 }
 
 static void manifest_write_baseline(const char *name) {
     char path[512];
-    manifest_path(name, path, sizeof(path));
+    if (!manifest_path(name, path, sizeof(path))) return;
+    const char *dir = flint_manifest_dir();
+    if (!dir) return;
     FILE *f = fopen(path, "rb");
     if (f) { fclose(f); return; }
 
-    nob_mkdir_if_not_exists(FLINT_MANIFEST_DIR);
+    nob_mkdir_if_not_exists(dir);
     f = fopen(path, "wb");
     if (!f) return;
     fprintf(f, "name = \"%s\"\n", name);
