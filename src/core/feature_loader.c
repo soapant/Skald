@@ -296,6 +296,7 @@ static bool load_single(const char* dir, const char* filename) {
 
     WinTimer t_dlopen = TimerStart();
     LibHandle h = Platform_LoadLibrary(full);
+    double init_us = TimerElapsedUs(t_dlopen);
     {
         char label[96];
         snprintf(label, sizeof(label), "feature_dlopen: %s", name);
@@ -305,16 +306,11 @@ static bool load_single(const char* dir, const char* filename) {
         log_error("dlopen %s failed: %s", full, Platform_GetLoadError());
         return false;
     }
-    WinTimer t_load = TimerStart();
     typedef void (*InitFn)(void);
     InitFn init = (InitFn)Platform_GetSymbol(h, "FlintFeatureInit");
     if (!init) init = (InitFn)Platform_GetSymbol(h, "FlintFeatureReload");
     if (init) {
-        init();
-        char label[96];
-        snprintf(label, sizeof(label), "feature_init: %s", name);
-        TimerEnd(t_load, label);
-        g_feature_init_us += TimerElapsedUs(t_load);
+        g_feature_init_us += init_us;
         g_feature_init_count++;
     } else {
         log_warn("feature %s has no FlintFeatureInit/Reload symbol", name);
@@ -518,12 +514,7 @@ void FeatureLoader_Reload(const char* name) {
             }
 #endif
             fl_widget_bump_generation();
-            WinTimer t_reload = TimerStart();
-            init();
-            {
-                char label[96];
-                snprintf(label, sizeof(label), "feature_reload: %s", name);
-            }
+            log_info("feature_reload: %s (constructor ran at dlopen)", name);
             g_features[i].handle = h;
             strncpy(g_features[i].path, path_copy, sizeof(g_features[i].path)-1);
             g_features[i].path[sizeof(g_features[i].path)-1] = '\0';
