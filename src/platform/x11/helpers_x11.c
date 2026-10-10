@@ -1008,7 +1008,7 @@ Window x11_create_window_ex_or(Display* dpy, int x, int y, int w, int h, unsigne
         XFree(sh);
     }
     XSelectInput(dpy, win, event_mask);
-    if (RoundedCorners && !override_redirect && CornerRadius > 0) {
+    if (RoundedCorners && !override_redirect && CornerRadius > 0 && !use_argb) {
         x11_apply_shape_rounded(dpy, win, w, h, CornerRadius);
     }
     PROFILE_END_VAR(timer, "helpers_x11:x11_create_window_ex_or");
@@ -1037,7 +1037,9 @@ static void x11_apply_shape_rounded(Display* dpy, Window win, int w, int h, int 
     PROFILE_END_VAR(timer, "helpers_x11:x11_apply_shape_rounded");
 }
 
-void x11_fill_rounded_rect(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap, unsigned long hex, unsigned short alpha16, int x, int y, int w, int h, int radius) {
+static unsigned long x11_background_color_at(int x, int y, int w, int h);
+
+void x11_fill_rounded_rect(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap, unsigned long hex, unsigned short alpha16, int x, int y, int w, int h, int radius, int win_w, int win_h) {
     PROFILE_START(timer);
     if (!RoundedCorners || radius <= 0 || w <= 0 || h <= 0) {
         XftColor c;
@@ -1085,8 +1087,15 @@ void x11_fill_rounded_rect(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap
                     a = (unsigned short)((float)alpha16 * cov + 0.5f);
                 }
                 if (a == 0) continue;
+                float cov = (float)a / (float)(alpha16 ? alpha16 : 1);
+                if (cov > 1.0f) cov = 1.0f;
+                unsigned long backdrop = x11_background_color_at(ox0 + dx, oy0 + dy, win_w, win_h);
+                unsigned long mixed = Color_Lerp(backdrop, hex, cov);
                 XftColor px_c = solid;
-                px_c.color.alpha = a;
+                px_c.color.red      = (unsigned short)(((mixed >> 16) & 0xFF) * 257);
+                px_c.color.green    = (unsigned short)(((mixed >> 8) & 0xFF) * 257);
+                px_c.color.blue     = (unsigned short)((mixed & 0xFF) * 257);
+                px_c.color.alpha    = 0xFFFF;
                 XftDrawRect(xd, &px_c, ox0 + dx, oy0 + dy, 1, 1);
             }
         }
@@ -1105,6 +1114,70 @@ static unsigned long DeriveLighter(unsigned long base, float intensity) {
 static unsigned int HashNoise(int x, int y) {
     return Color_HashNoise(x, y);
 }
+
+static unsigned int x11_bg_channel_at(float c, int x, int y) {
+    float d = (float)(Color_BayerDither(x, y)) * 2.5f;
+    int v = (int)(c + d);
+    if (v < 0) v = 0;
+    if (v > 255) v = 255;
+    return (unsigned int)v;
+}
+
+static unsigned long x11_background_color_at(int x, int y, int w, int h) {
+    unsigned long base = Platform_GetDrawBgColor();
+    if (!base) base = rgb_to_hex(COLOR_BG);
+    unsigned int r = (base >> 16) & 0xFF, g = (base >> 8) & 0xFF, b = base & 0xFF;
+    if (!EnableShaders || ShaderPreset == 0) return (r << 16) | (g << 8) | b;
+    unsigned long light = DeriveLighter(base, 1.0f);
+    float gamma = Color_ShaderGamma(X11_SHADER_SMOOTHNESS);
+    float t = 0.0f;
+    unsigned long col = base;
+    int dithered = 0;
+    if (ShaderPreset == 1) {
+        t = h > 1 ? (float)y / (float)(h - 1) : 0;
+        t = powf(t, gamma);
+        col = LerpHex(base, light, t * 0.9f * ShaderBrightness);
+        dithered = 1;
+    } else if (ShaderPreset == 2) {
+        int denom = w + h; if (denom < 1) denom = 1;
+        t = (float)(x + y) / (float)denom;
+        t = powf(t, gamma);
+        col = LerpHex(base, light, t * 0.9f);
+        dithered = 1;
+    } else if (ShaderPreset == 3) {
+        float cx = w * 0.5f, cy = h * 0.35f;
+        float maxDist = sqrtf(cx*cx + cy*cy); if (maxDist < 1) maxDist = 1;
+        float dx = (float)x - cx, dy = (float)y - cy;
+        t = sqrtf(dx*dx + dy*dy) / maxDist; if (t > 1) t = 1;
+        t = powf(t, gamma);
+        col = LerpHex(light, base, t * 0.85f);
+        dithered = 1;
+    } else if (ShaderPreset == 4) {
+        t = h > 1 ? (float)y / (float)(h - 1) : 0;
+        t = powf(t, gamma);
+        col = LerpHex(base, light, t * 0.9f);
+        unsigned int n = HashNoise(x, y);
+        int delta = (int)(n & 0x1F) - 16;
+        delta = (int)(delta * ShaderIntensity * 0.5f);
+        unsigned int cr = ((col >> 16) & 0xFF) + (unsigned int)(delta < 0 ? 0 : delta);
+        unsigned int cg = ((col >> 8) & 0xFF) + (unsigned int)(delta < 0 ? 0 : delta);
+        unsigned int cb = (col & 0xFF) + (unsigned int)(delta < 0 ? 0 : delta);
+        if (cr > 255) cr = 255; if (cg > 255) cg = 255; if (cb > 255) cb = 255;
+        return ((unsigned long)x11_bg_channel_at((float)cr, x, y) << 16) |
+               ((unsigned long)x11_bg_channel_at((float)cg, x, y) << 8) |
+                (unsigned long)x11_bg_channel_at((float)cb, x, y);
+    } else {
+        return (r << 16) | (g << 8) | b;
+    }
+    if (dithered) {
+        unsigned int cr = x11_bg_channel_at((float)((col >> 16) & 0xFF), x, y);
+        unsigned int cg = x11_bg_channel_at((float)((col >> 8) & 0xFF), x, y);
+        unsigned int cb = x11_bg_channel_at((float)(col & 0xFF), x, y);
+        return ((unsigned long)cr << 16) | ((unsigned long)cg << 8) | (unsigned long)cb;
+    }
+    return ((col >> 16) & 0xFF) << 16 | ((col >> 8) & 0xFF) << 8 | (col & 0xFF);
+}
+
 static unsigned int CornerAlpha(int x, int y, int w, int h, int R, unsigned int baseAlpha8) {
     float cx, cy;
     if (x < R && y < R) { cx = (float)R; cy = (float)R; }
@@ -1113,7 +1186,7 @@ static unsigned int CornerAlpha(int x, int y, int w, int h, int R, unsigned int 
     else if (x >= w - R && y >= h - R) { cx = (float)(w - R - 1); cy = (float)(h - R - 1); }
     else return baseAlpha8;
 
-    const int SS = 4;
+    const int SS = 16;
     int inside = 0;
     for (int sy = 0; sy < SS; sy++) {
         for (int sx = 0; sx < SS; sx++) {
@@ -1148,6 +1221,8 @@ static void x11_generate_background_pixels(uint32_t* img_data, int bytes_per_lin
     uint32_t *row;
     unsigned int r = (base >> 16) & 0xFF, g = (base >> 8) & 0xFF, b = base & 0xFF;
     float _gamma = Color_ShaderGamma(X11_SHADER_SMOOTHNESS);
+    #define _PM(a, c) ((unsigned int)(((unsigned long)(c) * (unsigned long)(a) + 127UL) / 255UL))
+    #define _PIX(a, cr, cg, cb) ((unsigned int)((a) << 24) | (unsigned int)(_PM(a, cr) << 16) | (unsigned int)(_PM(a, cg) << 8) | (unsigned int)_PM(a, cb))
     #define _DITHER(x,y) (Color_BayerDither((x),(y)) * 2.5f)
     #define _APPLY_DITHER(cr,cg,cb,xx,yy) do { float _d = _DITHER(xx,yy); int _nr = (int)(cr + _d); int _ng = (int)(cg + _d); int _nb = (int)(cb + _d); if (_nr < 0) _nr = 0; if (_nr > 255) _nr = 255; if (_ng < 0) _ng = 0; if (_ng > 255) _ng = 255; if (_nb < 0) _nb = 0; if (_nb > 255) _nb = 255; cr = (unsigned int)_nr; cg = (unsigned int)_ng; cb = (unsigned int)_nb; } while(0)
 
@@ -1155,7 +1230,7 @@ static void x11_generate_background_pixels(uint32_t* img_data, int bytes_per_lin
         if (R <= 0) {
             row = (uint32_t*)img_data;
             for (int y = 0; y < h; y++) {
-                for (int x = 0; x < w; x++) row[x] = fill;
+                for (int x = 0; x < w; x++) row[x] = _PIX(baseAlpha8, r, g, b);
                 row = (uint32_t*)((char*)row + bytes_per_line);
             }
         } else {
@@ -1163,7 +1238,7 @@ static void x11_generate_background_pixels(uint32_t* img_data, int bytes_per_lin
                 row = (uint32_t*)((char*)img_data + y * bytes_per_line);
                 for (int x = 0; x < w; x++) {
                     unsigned int a = CornerAlpha(x, y, w, h, R, baseAlpha8);
-                    row[x] = a ? (a << 24) | (r << 16) | (g << 8) | b : 0;
+                    row[x] = a ? _PIX(a, r, g, b) : 0;
                 }
             }
         }
@@ -1180,7 +1255,7 @@ static void x11_generate_background_pixels(uint32_t* img_data, int bytes_per_lin
                 unsigned int cr = cr0, cg = cg0, cb = cb0;
                 _APPLY_DITHER(cr,cg,cb,x,y);
                 unsigned int a = CornerAlpha(x, y, w, h, R, baseAlpha8);
-                row[x] = a ? (a << 24) | (cr << 16) | (cg << 8) | cb : 0;
+                row[x] = a ? _PIX(a, cr, cg, cb) : 0;
             }
         }
     } else if (ShaderPreset == 2) {
@@ -1195,7 +1270,7 @@ static void x11_generate_background_pixels(uint32_t* img_data, int bytes_per_lin
                 unsigned int cr = (col >> 16) & 0xFF, cg = (col >> 8) & 0xFF, cb = col & 0xFF;
                 _APPLY_DITHER(cr,cg,cb,x,y);
                 unsigned int a = CornerAlpha(x, y, w, h, R, baseAlpha8);
-                row[x] = a ? (a << 24) | (cr << 16) | (cg << 8) | cb : 0;
+                row[x] = a ? _PIX(a, cr, cg, cb) : 0;
             }
         }
     } else if (ShaderPreset == 3) {
@@ -1212,7 +1287,7 @@ static void x11_generate_background_pixels(uint32_t* img_data, int bytes_per_lin
                 unsigned int cr = (col >> 16) & 0xFF, cg = (col >> 8) & 0xFF, cb = col & 0xFF;
                 _APPLY_DITHER(cr,cg,cb,x,y);
                 unsigned int a = CornerAlpha(x, y, w, h, R, baseAlpha8);
-                row[x] = a ? (a << 24) | (cr << 16) | (cg << 8) | cb : 0;
+                row[x] = a ? _PIX(a, cr, cg, cb) : 0;
             }
         }
     } else if (ShaderPreset == 4) {
@@ -1236,7 +1311,7 @@ static void x11_generate_background_pixels(uint32_t* img_data, int bytes_per_lin
                 if (ng < 0) ng = 0; if (ng > 255) ng = 255;
                 if (nb < 0) nb = 0; if (nb > 255) nb = 255;
                 unsigned int a = CornerAlpha(x, y, w, h, R, baseAlpha8);
-                row[x] = a ? ((a << 24) | ((unsigned int)nr << 16) | ((unsigned int)ng << 8) | (unsigned int)nb) : 0;
+                row[x] = a ? _PIX(a, nr, ng, nb) : 0;
             }
         }
     } else {
@@ -1249,6 +1324,8 @@ static void x11_generate_background_pixels(uint32_t* img_data, int bytes_per_lin
         }
     }
 
+    #undef _PM
+    #undef _PIX
     #undef _DITHER
     #undef _APPLY_DITHER
 }
