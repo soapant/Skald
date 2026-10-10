@@ -25,7 +25,7 @@ void GoogleMeaning(void) {
 }
 
 void next_image(void) {
-  if (strlen(current_keyword) > 0) {
+  if (current_keyword) {
       char cmd1[400];
       snprintf(cmd1,sizeof(cmd1),"~/Programming/RandomShit/shit/run.sh get_ids.py %s --random",current_keyword);
       char* output = fl_run_terminal_command(cmd1);

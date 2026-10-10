@@ -311,7 +311,6 @@ static void pk_refresh_callback(const char* filter, ListBoxInfo* lb) {
 
 static void pk_render_callback(PromptState* state) {
     if (!state) return;
-
     double since = g_pk_collect_started ? fl_end_timer(g_pk_last_collect) : 1e9;
     if (since >= 1000.0) {
         g_pk_last_collect = fl_start_timer();
@@ -341,7 +340,7 @@ static void pk_render_callback(PromptState* state) {
     ListBoxInfo* lb = &state->listbox;
     FlListSpec spec = {
         .lb = lb,
-        .item_height = fl_get_text_height(NULL) + 10,
+        .item_height = fl_get_text_height(NULL) + 20,
     };
     fl_place_editbox();
     if (!fl_listbox_begin(&spec)) return;

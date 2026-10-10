@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #if !defined(_WIN32)
 #include <X11/Xlib.h>
@@ -72,8 +73,6 @@ char *allowed_audio_formats[] = {"mp3","ogg","flac", NULL};
 ListOfFiles s_music_files = {0};
 
 void music_refresh_callback(const char* filter, ListBoxInfo* lb) {
-    s_music_files.count = 0;
-    fl_get_all_files_from_dir(MusicPath, allowed_audio_formats, &s_music_files, NULL, true);
     
     const char** items = (const char**)malloc(s_music_files.count * sizeof(char*));
     if (!items) return;
@@ -92,25 +91,6 @@ bool music_enter_callback(const char* selection, ListBoxInfo* lb) {
             break;
         }
     }
-    if (!result) {
-        ListOfFiles tmp = {0};
-        fl_get_all_files_from_dir(MusicPath, allowed_audio_formats, &tmp, NULL, true);
-        for (size_t i = 0; i < tmp.count; i++) {
-            if (strcmp(tmp.files[i].name, selection) == 0) {
-                result = tmp.files[i].path;
-                break;
-            }
-        }
-        if (result) {
-            char found_path[MAX_PATH];
-            strncpy(found_path, result, sizeof(found_path)-1);
-            found_path[sizeof(found_path)-1] = '\0';
-            result = found_path;
-        }
-        free(tmp.files);
-    }
-    
-    if (!result) return true;
     
 #if defined(_WIN32)
     HWND playerHwnd = FindWindow(NULL, "Music Player");
@@ -172,6 +152,12 @@ void music_cmd_2(void) {
     music_send_command("Music Player", "_MP_PLAYER_CMD", 2);
 #endif
 }
+
+void random_music(void) {
+    int idx = rand() % s_music_files.count;
+    music_enter_callback(s_music_files.files[idx].name,NULL);
+
+}
 void music_prompt(void) {
     PROMPT(.title = "🎵 Player",
            .refresh = music_refresh_callback,
@@ -179,11 +165,14 @@ void music_prompt(void) {
 }
 
 FLINT_FEATURE_INIT {
-fl_register_hotkey("Alt+,", music_cmd_1);
+    fl_get_all_files_from_dir(MusicPath, allowed_audio_formats, &s_music_files, NULL, true);
+    srand((unsigned)time(NULL));
+    fl_register_hotkey("Alt+,", music_cmd_1);
     fl_register_hotkey("Alt+/", music_cmd_5);
     fl_register_hotkey("Alt+;", music_cmd_6);
     fl_register_hotkey("Alt+'", music_cmd_2);
     fl_register_hotkey("Alt+P", music_prompt);
+    fl_register_hotkey("Alt+Shift+P",random_music);
 
     fl_register_feature("Music Player", music_prompt);
 }
