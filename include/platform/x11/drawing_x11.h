@@ -21,7 +21,7 @@ void DrawListBoxItemText(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap, 
                          ListBoxInfo* lb,char* icon_path,int idx, int y, int text_x);
 bool CursorBack(size_t* cursor, size_t text_len);
 bool CursorForward(size_t* cursor, size_t text_len);
-void x11_fill_rounded_rect(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap, unsigned long hex, unsigned short alpha16, int x, int y, int w, int h, int radius);
+void x11_fill_rounded_rect(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap, unsigned long hex, unsigned short alpha16, int x, int y, int w, int h, int radius, int win_w, int win_h);
 void x11_draw_background(Display* dpy, Window win, int w, int h);
 void x11_draw_background_to_drawable(Display* dpy, Drawable d, int w, int h);
 Pixmap x11_get_cached_background(Display* dpy, Window win, int w, int h);
