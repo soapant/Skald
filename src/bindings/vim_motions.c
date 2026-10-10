@@ -384,7 +384,6 @@ void HandleChangeWordForward(FlintContext* ctx) {
   DeleteWordForward(ctx, true);
 }
 void HandleSendEdit(FlintContext* ctx) {
-    //temporary no idea if this works on windows 
     FlintContext* _c = FlintContext_Get();
     ListBoxInfo* lb = Vim_GetListBox(_c);
     if (_c->prompt_callbacks.edit && lb && UI_IsListBoxSelected(lb)) {

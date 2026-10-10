@@ -8,7 +8,6 @@ static void control_refresh(const char* filter, ListBoxInfo* lb) {
     fl_populate_listbox(lb, filter, names, n);
 }
 static bool control_enter(const char* selection, ListBoxInfo* lb) {
-    (void)lb;
     if (selection) strncpy(g_sel, selection, sizeof(g_sel)-1);
     else g_sel[0]=0;
     return true;
@@ -24,7 +23,6 @@ static void TriggerControl(void) {
 }
 
 FLINT_FEATURE_INIT {
-    // temporary
-    // fl_register_hotkey((char*)ControlHotkey, TriggerControl);
+    fl_register_hotkey((char*)ControlHotkey, TriggerControl);
     // fl_register_feature("Control Center", TriggerControl);
 }

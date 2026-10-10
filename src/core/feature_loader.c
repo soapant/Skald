@@ -480,8 +480,6 @@ bool FeatureLoader_LoadAllFromDir(const char* dir) {
             if (!found) missing = mans[i].deps[k];
         }
         if (missing) {
-            //temporary: hard printf, replaced by a proper install prompt when
-            //          the feature marketplace exists.
             printf("flint: skipping feature '%s' - missing dependency '%s'\n", names[i], missing);
             log_warn("feature '%s' skipped, dep '%s' not found", names[i], missing);
             continue;
