@@ -444,10 +444,14 @@ void fl_free_image(void *image);
 // BASIC UI DRAWING 
 // =============================================================================
 
+#define FL_DRAW_ALPHA_OPAQUE 255
+#define FL_DRAW_ALPHA_TRANSPARENT 128
+
 typedef struct {
     int x; int y; int w; int h;
     unsigned long color;
     float thickness;
+    bool transparent;
 } FlRectSpec;
 
 typedef struct {
