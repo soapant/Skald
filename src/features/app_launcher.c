@@ -332,20 +332,13 @@ bool applauncher_ctrlenter_callback(const char* selection, ListBoxInfo* lb) {
     return true;
 }
 
+static const char* names[MAX_VISIBLE_ITEMS];
+
 void applauncher_refresh_callback(const char* filter, ListBoxInfo* lb) {
     ensure_app_cache();
     size_t cnt = s_apps.count;
-    
-    if (cnt > 2048) {
-        const char** names = (const char**)malloc(cnt * sizeof(char*));
-        if (!names) return;
-        for (size_t i = 0; i < cnt && i < s_apps.count; i++) names[i] = s_apps.files[i].name;
-        fl_populate_listbox(lb, filter, names, (int)cnt);
-        free(names);
-        return;
-    }
-    const char* names[2048];
-    for (size_t i = 0; i < cnt && i < s_apps.count; i++) names[i] = s_apps.files[i].name;
+    if (cnt > MAX_VISIBLE_ITEMS) cnt = MAX_VISIBLE_ITEMS;
+    for (size_t i = 0; i < cnt; i++) names[i] = s_apps.files[i].name;
     fl_populate_listbox(lb, filter, names, (int)cnt);
 }
 

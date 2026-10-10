@@ -81,18 +81,18 @@ const char* VideosPath = "{VIDEOS}";
 char *allowed_video_formats[] = {"webm","mp4"};
 
 ListOfFiles video_files = {0};
+static const char* s_video_items[MAX_VISIBLE_ITEMS];
 
 void video_refresh_callback(const char* filter, ListBoxInfo* lb) {
     video_files.count = 0;
     fl_get_all_files_from_dir(VideosPath, allowed_video_formats, &video_files, NULL, true);
     
-    const char** items = (const char**)malloc(video_files.count * sizeof(char*));
-    if (!items) return;
-    for (size_t i = 0; i < video_files.count; i++) {
-        items[i] = video_files.files[i].name;
+    size_t n = video_files.count;
+    if (n > MAX_VISIBLE_ITEMS) n = MAX_VISIBLE_ITEMS;
+    for (size_t i = 0; i < n; i++) {
+        s_video_items[i] = video_files.files[i].name;
     }
-    fl_populate_listbox(lb, filter, items, (int)video_files.count);
-    free(items);
+    fl_populate_listbox(lb, filter, s_video_items, (int)n);
 }
 
 bool video_enter_callback(const char* selection, ListBoxInfo* lb) {
