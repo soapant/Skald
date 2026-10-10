@@ -221,21 +221,15 @@ bool file_search_ctrlenter_callback(const char* selection, ListBoxInfo* lb) {
     return true;
 }
 
+static const char* names[MAX_VISIBLE_ITEMS];
+
 void file_search_refresh_callback(const char* filter, ListBoxInfo* lb) {
     ensure_file_cache();
     size_t cnt = s_files.count;
     if (cnt == 0) { fflush(stdout); return; }
 
-    if (cnt > 2048) {
-        const char** names = (const char**)malloc(cnt * sizeof(char*));
-        if (!names) return;
-        for (size_t i = 0; i < cnt && i < s_files.count; i++) names[i] = s_files.files[i].name;
-        fl_populate_listbox(lb, filter, names, (int)cnt);
-        free(names);
-        return;
-    }
-    const char* names[2048];
-    for (size_t i = 0; i < cnt && i < s_files.count; i++) names[i] = s_files.files[i].name;
+    if (cnt > MAX_VISIBLE_ITEMS) cnt = MAX_VISIBLE_ITEMS;
+    for (size_t i = 0; i < cnt; i++) names[i] = s_files.files[i].name;
     fl_populate_listbox(lb, filter, names, (int)cnt);
 }
 
