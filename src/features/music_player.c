@@ -71,15 +71,15 @@ const char* MusicPath = "{MUSIC}";
 char *allowed_audio_formats[] = {"mp3","ogg","flac", NULL};
 
 ListOfFiles s_music_files = {0};
+static const char* s_music_items[MAX_VISIBLE_ITEMS];
 
 void music_refresh_callback(const char* filter, ListBoxInfo* lb) {
-    const char** items = (const char**)malloc(s_music_files.count * sizeof(char*));
-    if (!items) return;
-    for (size_t i = 0; i < s_music_files.count; i++) {
-        items[i] = s_music_files.files[i].name;
+    size_t n = s_music_files.count;
+    if (n > MAX_VISIBLE_ITEMS) n = MAX_VISIBLE_ITEMS;
+    for (size_t i = 0; i < n; i++) {
+        s_music_items[i] = s_music_files.files[i].name;
     }
-    fl_populate_listbox(lb, filter, items, (int)s_music_files.count);
-    free(items);
+    fl_populate_listbox(lb, filter, s_music_items, (int)n);
 }
 
 bool music_enter_callback(const char* selection, ListBoxInfo* lb) {
