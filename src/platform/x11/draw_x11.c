@@ -717,7 +717,7 @@ void Platform_DrawListBox(PromptState *state, Display *dpy, XftDraw *xd, Visual 
             int R=PROMPT_SEL_RADIUS; int t=PROMPT_SEL_INSET;
             int bx=PROMPT_SEL_X, bw=state->width-PROMPT_SEL_W_SHRINK;
             if (sel) {
-                x11_fill_rounded_rect(dpy, xd, vis, cmap, rgb_to_hex(COLOR_SELECTED_TEXT), 0xFFFF, bx+t, y+PROMPT_SEL_TOP_INSET+t, bw-2*t, itemH-2-2*t, R-1);
+                x11_fill_rounded_rect(dpy, xd, vis, cmap, rgb_to_hex(COLOR_SELECTED_TEXT), 0xFFFF, bx+t, y+PROMPT_SEL_TOP_INSET+t, bw-2*t, itemH-2-2*t, R-1, state->width, state->height);
             }
         } else {
             Platform_DrawListBackground(state, dpy, xd, vis, cmap, y, itemH, sel);

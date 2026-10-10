@@ -393,7 +393,7 @@ bool fl_launch_with_args_as_admin_platform(const char* path, const char* args) {
 static __thread FlListSpec g_fl_list_spec;
 static __thread ListBoxInfo *g_fl_list_lb;
 static __thread int g_fl_list_y0, g_fl_list_itemH, g_fl_list_visible, g_fl_list_cur;
-static __thread int g_fl_list_bx, g_fl_list_bw, g_fl_list_fw;
+static __thread int g_fl_list_bx, g_fl_list_bw, g_fl_list_fw, g_fl_list_fh;
 static __thread Display *g_fl_list_dpy;
 static __thread XftDraw *g_fl_list_xd;
 static __thread Visual *g_fl_list_vis;
@@ -432,10 +432,12 @@ bool fl_listbox_begin_platform(const FlListSpec *spec) {
         g_fl_list_bx = PROMPT_SEL_X;
         g_fl_list_bw = (st ? st->width : PROMPT_CUSTOM_FALLBACK_W) - PROMPT_SEL_W_SHRINK;
         g_fl_list_fw = st ? st->width : PROMPT_W;
+        g_fl_list_fh = st ? st->height : PROMPT_H;
     } else {
         g_fl_list_bx = spec->x + PROMPT_SEL_INSET;
         g_fl_list_bw = (spec->w ? spec->w : PROMPT_CUSTOM_FALLBACK_LIST_W) - 2;
         g_fl_list_fw = spec->w ? spec->w : PROMPT_W;
+        g_fl_list_fh = spec->h ? spec->h : PROMPT_H;
     }
     int visible = list_h / g_fl_list_itemH;
     if (visible < 1) visible = 1;
@@ -468,7 +470,7 @@ bool fl_listbox_next_platform(FlListItemCtx *out) {
         int R=PROMPT_SEL_RADIUS; int t=PROMPT_SEL_INSET;
         int bx = g_fl_list_bx, bw = g_fl_list_bw;
         if (sel) {
-            x11_fill_rounded_rect(g_fl_list_dpy, g_fl_list_xd, g_fl_list_vis, g_fl_list_cmap, rgb_to_hex(COLOR_SELECTED_TEXT), 0xFFFF, bx+t, y+PROMPT_SEL_TOP_INSET+t, bw-2*t, g_fl_list_itemH-2-2*t, R-1);
+            x11_fill_rounded_rect(g_fl_list_dpy, g_fl_list_xd, g_fl_list_vis, g_fl_list_cmap, rgb_to_hex(COLOR_SELECTED_TEXT), 0xFFFF, bx+t, y+PROMPT_SEL_TOP_INSET+t, bw-2*t, g_fl_list_itemH-2-2*t, R-1, g_fl_list_fw, g_fl_list_fh);
         }
     } else {
         PromptState tmp = {0};

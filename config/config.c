@@ -25,7 +25,7 @@ void ConfigApply(void) {
     TimeOutForMessages = 1;
     DoTimeDebugs = true;
     DebugMode = false;
-    RoundedCorners = false;
+    RoundedCorners = true;
     CornerRadius = 14;
     EnableShaders = false;
     ShaderPreset = 1;
