@@ -23,13 +23,13 @@ void ConfigApply(void) {
     AllowOtherFeatureTogglesInFeature = false;
     ModePersistsThroughFeatures = false;
     TimeOutForMessages = 1;
-    DoTimeDebugs = true;
+    DoTimeDebugs = false;
     DebugMode = false;
-    RoundedCorners = true;
+    RoundedCorners = false;
     CornerRadius = 14;
-    EnableShaders = false;
+    EnableShaders = true;
     ShaderPreset = 1;
-    ShaderIntensity = 0.5f;
+    ShaderIntensity = 0.3f;
     ShaderBrightness = 0.55f;
     TimeBetweenHotReload = 2;
     WindowOpacity = 235.0f;
@@ -60,7 +60,7 @@ void ConfigApply(void) {
     GradientItems = 30;
     GradientBrightness = 1.0f;
     CloseOnLossOfFocus = false;
-    Theme = "onedark-pro";
+    Theme = "github-dark";
     COLOR_BG = RGB(40, 44, 52);
     COLOR_TEXT = RGB(171, 178, 191);
     COLOR_ALTERNATE = RGB(152, 195, 121);
