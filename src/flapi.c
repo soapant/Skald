@@ -16,6 +16,7 @@
 #include "core/window_manager.h"
 #include "core/clipboard_history.h"
 #include "core/flapi.h"
+#include "core/feature_loader.h"
 #include "core/cap_registry.h"
 #include "helpers/helpers_owner.h"
 #include "platform/flapi_platform.h"
@@ -127,6 +128,7 @@ void fl_cap_register_abi(const char *key, unsigned abi, void *fn) {
         g_caps[i].abi = abi;
         g_caps[i].fn = fn;
         g_cap_generation++;
+        if (owner[0]) FeatureLoader_ManifestAddProvides(owner, key);
         return;
     }
 
@@ -141,6 +143,7 @@ void fl_cap_register_abi(const char *key, unsigned abi, void *fn) {
     c->fn = fn;
     g_cap_generation++;
     log_info("fl_cap '%s' registered abi=%u owner='%s'", key, abi, owner[0] ? owner : "?");
+    if (owner[0]) FeatureLoader_ManifestAddProvides(owner, key);
 }
 
 void *fl_cap_resolve_abi(const char *key, unsigned abi) {

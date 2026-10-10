@@ -17,7 +17,7 @@ static const AliasEntry user_aliases[] = {
 void ConfigApply(void) {
     Tray = true;
     EnableVimMode = true;
-    RememberLastIndex = false;
+    RememberLastIndex = true;
     KeepSelectionAfterClose = false;
     MessageAfterEachHotkey = false;
     AllowOtherFeatureTogglesInFeature = false;
@@ -25,7 +25,7 @@ void ConfigApply(void) {
     TimeOutForMessages = 1;
     DoTimeDebugs = true;
     DebugMode = false;
-    RoundedCorners = true;
+    RoundedCorners = false;
     CornerRadius = 14;
     EnableShaders = false;
     ShaderPreset = 1;
