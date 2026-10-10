@@ -5,6 +5,9 @@
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 #include <X11/Xft/Xft.h>
+#if __has_include(<X11/extensions/Xrandr.h>)
+#include <X11/extensions/Xrandr.h>
+#endif
 #include "platform/x11/display_x11.h"
 
 #include <sys/stat.h> 
@@ -1781,6 +1784,29 @@ bool Platform_MoveToPos(int x, int y) {
 #endif
 }
 
+static int x11_x11_button(int button);
+
+bool Platform_ClickButton(int button) {
+    PROFILE_START(timer);
+    Display* dpy = get_display();
+    if (!dpy) { PROFILE_END_VAR(timer, "platform_x11:Platform_ClickButton"); return false; }
+    int xb = x11_x11_button(button);
+    if (xb == 0) { PROFILE_END_VAR(timer, "platform_x11:Platform_ClickButton"); return false; }
+#if __has_include(<X11/extensions/XTest.h>)
+    usleep(60000);
+    XTestFakeButtonEvent(dpy, (unsigned int)xb, True, CurrentTime);
+    XSync(dpy, False);
+    usleep(30000);
+    XTestFakeButtonEvent(dpy, (unsigned int)xb, False, CurrentTime);
+    XSync(dpy, False);
+    PROFILE_END_VAR(timer, "platform_x11:Platform_ClickButton");
+    return true;
+#else
+    PROFILE_END_VAR(timer, "platform_x11:Platform_ClickButton");
+    return false;
+#endif
+}
+
 bool Platform_Click(void) {
     PROFILE_START(timer);
     Display* dpy = get_display();
@@ -1811,6 +1837,50 @@ static int x11_x11_button(int button) {
         case 7: return 9;
         default: return 0;
     }
+}
+
+bool Platform_GetVirtualBounds(int* out_x, int* out_y, int* out_w, int* out_h) {
+    PROFILE_START(timer);
+    if (out_x) *out_x = 0;
+    if (out_y) *out_y = 0;
+    if (out_w) *out_w = 0;
+    if (out_h) *out_h = 0;
+    Display* dpy = get_display();
+    if (!dpy) { PROFILE_END_VAR(timer, "platform_x11:Platform_GetVirtualBounds"); return false; }
+    Window root = DefaultRootWindow(dpy);
+    int min_x = 0, min_y = 0, max_x = 0, max_y = 0;
+    bool any = false;
+#if __has_include(<X11/extensions/Xrandr.h>)
+    XRRScreenResources* res = XRRGetScreenResourcesCurrent(dpy, root);
+    if (res) {
+        for (int c = 0; c < res->ncrtc; c++) {
+            XRRCrtcInfo* ci = XRRGetCrtcInfo(dpy, res, res->crtcs[c]);
+            if (!ci) continue;
+            if (ci->noutput > 0 && ci->width > 0 && ci->height > 0) {
+                if (!any) { min_x = ci->x; min_y = ci->y; max_x = ci->x + ci->width; max_y = ci->y + ci->height; any = true; }
+                else {
+                    if (ci->x < min_x) min_x = ci->x;
+                    if (ci->y < min_y) min_y = ci->y;
+                    if (ci->x + ci->width > max_x) max_x = ci->x + ci->width;
+                    if (ci->y + ci->height > max_y) max_y = ci->y + ci->height;
+                }
+            }
+            XRRFreeCrtcInfo(ci);
+        }
+        XRRFreeScreenResources(res);
+    }
+#endif
+    if (!any) {
+        min_x = 0; min_y = 0;
+        max_x = DisplayWidth(dpy, DefaultScreen(dpy));
+        max_y = DisplayHeight(dpy, DefaultScreen(dpy));
+    }
+    if (out_x) *out_x = min_x;
+    if (out_y) *out_y = min_y;
+    if (out_w) *out_w = max_x - min_x;
+    if (out_h) *out_h = max_y - min_y;
+    PROFILE_END_VAR(timer, "platform_x11:Platform_GetVirtualBounds");
+    return true;
 }
 
 bool Platform_MouseButtonDown(int button, bool down) {

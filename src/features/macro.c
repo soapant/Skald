@@ -164,7 +164,7 @@ static void release_everything(void) {
     fl_emit_key(VK_MENU, false);
     fl_emit_key(VK_LWIN, false);
     fl_emit_key(VK_RWIN, false);
-    for (int b = 1; b <= 5; b++) fl_mouse_button_down(b, false);
+    for (int b = 1; b <= 5; b++) fl_emit_mouse_button(b, false);
 }
 
 static void* playback_loop(void* arg) {
@@ -189,7 +189,7 @@ static void* playback_loop(void* arg) {
       fl_emit_key(m->a, m->down);
       if (m->down) held_add(m->a); else held_remove(m->a);
     } else if (m->type == EVT_MOUSE) {
-      if (m->a != 0) fl_mouse_button_down(m->a, m->down);
+      if (m->a != 0) fl_emit_mouse_button(m->a, m->down);
     } else {
       FlPos p = { m->x, m->y };
       fl_move_to_pos(p);

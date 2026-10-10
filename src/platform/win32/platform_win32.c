@@ -1350,21 +1350,46 @@ PlColor Platform_GetPixelColor(int x, int y) {
 
 bool Platform_MoveToPos(int x, int y) {
     PROFILE_START(timer);
-    int screenWidth = GetSystemMetrics(SM_CXSCREEN);
-    int screenHeight = GetSystemMetrics(SM_CYSCREEN);
+    int vx = GetSystemMetrics(SM_XVIRTUALSCREEN);
+    int vy = GetSystemMetrics(SM_YVIRTUALSCREEN);
+    int screenWidth = GetSystemMetrics(SM_CXVIRTUALSCREEN);
+    int screenHeight = GetSystemMetrics(SM_CYVIRTUALSCREEN);
 
     if (screenWidth <= 0 || screenHeight <= 0) { PROFILE_END_VAR(timer, "platform_win32:Platform_MoveToPos"); return false; }
 
+    long rx = (long)x - vx;
+    long ry = (long)y - vy;
+    if (rx < 0) rx = 0;
+    if (ry < 0) ry = 0;
+    if (rx > screenWidth) rx = screenWidth;
+    if (ry > screenHeight) ry = screenHeight;
+
     INPUT input = {0};
     input.type = INPUT_MOUSE;
-    input.mi.dx = (x * 65535) / screenWidth;
-    input.mi.dy = (y * 65535) / screenHeight;
-    input.mi.dwFlags = MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE;
+    input.mi.dx = (DWORD)((rx * 65535) / screenWidth);
+    input.mi.dy = (DWORD)((ry * 65535) / screenHeight);
+    input.mi.dwFlags = MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_VIRTUALDESK | MOUSEEVENTF_MOVE;
 
     bool ok = (SendInput(1, &input, sizeof(INPUT)) == 1);
 
     log_info("Platform_MoveToPos x=%d y=%d", x, y);
     PROFILE_END_VAR(timer, "platform_win32:Platform_MoveToPos");
+    return ok;
+}
+
+bool Platform_ClickButton(int button) {
+    PROFILE_START(timer);
+    DWORD down_flag, up_flag;
+    if (button == 1) { down_flag = MOUSEEVENTF_LEFTDOWN; up_flag = MOUSEEVENTF_LEFTUP; }
+    else if (button == 2) { down_flag = MOUSEEVENTF_RIGHTDOWN; up_flag = MOUSEEVENTF_RIGHTUP; }
+    else { PROFILE_END_VAR(timer, "platform_win32:Platform_ClickButton"); return false; }
+    INPUT inputs[2] = {0};
+    inputs[0].type = INPUT_MOUSE;
+    inputs[0].mi.dwFlags = down_flag;
+    inputs[1].type = INPUT_MOUSE;
+    inputs[1].mi.dwFlags = up_flag;
+    bool ok = (SendInput(2, inputs, sizeof(INPUT)) == 2);
+    PROFILE_END_VAR(timer, "platform_win32:Platform_ClickButton");
     return ok;
 }
 
@@ -1393,6 +1418,25 @@ static DWORD win32_button_flag(int button, bool down) {
         case 4: return down ? MOUSEEVENTF_XDOWN : MOUSEEVENTF_XUP;
         default: return 0;
     }
+}
+
+bool Platform_GetVirtualBounds(int* out_x, int* out_y, int* out_w, int* out_h) {
+    PROFILE_START(timer);
+    if (out_x) *out_x = 0;
+    if (out_y) *out_y = 0;
+    if (out_w) *out_w = 0;
+    if (out_h) *out_h = 0;
+    int vx = GetSystemMetrics(SM_XVIRTUALSCREEN);
+    int vy = GetSystemMetrics(SM_YVIRTUALSCREEN);
+    int vw = GetSystemMetrics(SM_CXVIRTUALSCREEN);
+    int vh = GetSystemMetrics(SM_CYVIRTUALSCREEN);
+    if (vw <= 0 || vh <= 0) { PROFILE_END_VAR(timer, "platform_win32:Platform_GetVirtualBounds"); return false; }
+    if (out_x) *out_x = vx;
+    if (out_y) *out_y = vy;
+    if (out_w) *out_w = vw;
+    if (out_h) *out_h = vh;
+    PROFILE_END_VAR(timer, "platform_win32:Platform_GetVirtualBounds");
+    return true;
 }
 
 bool Platform_MouseButtonDown(int button, bool down) {
