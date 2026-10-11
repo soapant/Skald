@@ -535,6 +535,13 @@ static char *ClipReadTarget(Atom target) {
     return res;
 }
 
+unsigned long x11_clipboard_owner(void) {
+    x11_clipboard_ensure_started();
+    Display *dpy = get_display();
+    if (!dpy || g_clip_clipboard == None) return 0;
+    return (unsigned long)XGetSelectionOwner(dpy, g_clip_clipboard);
+}
+
 char *x11_clipboard_get_text(void) {
     g_cl_reads++;
     x11_clipboard_ensure_started();

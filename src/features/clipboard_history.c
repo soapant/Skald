@@ -117,19 +117,24 @@ static void ch_load(void) {
     fl_free_file_list(&lines);
 }
 
+static bool ch_sample_once(void) {
+    char* cur = fl_get_last_clipboard_entry();
+    bool changed = false;
+    fl_mutex_lock(ch_lock);
+    if (cur && cur[0] && (ch_count == 0 || strcmp(ch_items[ch_count - 1], cur) != 0)) {
+        ch_remember_locked(cur);
+        changed = true;
+    }
+    fl_mutex_unlock(ch_lock);
+    if (cur) free(cur);
+    if (changed) ch_save();
+    return changed;
+}
+
 static void* ch_sampler(void* arg) {
     (void)arg;
     while (ch_running) {
-        char* cur = fl_get_last_clipboard_entry();
-        int changed = 0;
-        fl_mutex_lock(ch_lock);
-        if (cur && cur[0] && (ch_count == 0 || strcmp(ch_items[ch_count - 1], cur) != 0)) {
-            ch_remember_locked(cur);
-            changed = 1;
-        }
-        fl_mutex_unlock(ch_lock);
-        if (cur) free(cur);
-        if (changed) ch_save();
+        ch_sample_once();
         fl_sleep(1);
     }
     return NULL;
