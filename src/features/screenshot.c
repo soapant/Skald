@@ -8,14 +8,52 @@
 #if !defined(_WIN32)
 
 #include <unistd.h>
+#include <glob.h>
 
 static const char* shot_working_dir(void) {
     char* wd = fl_get_working_dir();
     return (wd && wd[0]) ? wd : ".";
 }
 
+// scrot encodes through Imlib2, which dlopens its format codecs from a
+// loaders directory. The bundled libImlib2.so.1 carries a hardcoded store
+// path from the machine it was copied from, which no longer exists, so Imlib2
+// finds no loaders and PNG saves fail with "giblib error". Point it at a real
+// one. ldconfig is no help: NixOS has no ld cache.
+static void shot_imlib_env(char* buf, size_t n) {
+    buf[0] = '\0';
+    const char* existing = getenv("IMLIB2_LOADER_PATH");
+    if (existing && existing[0]) {
+        snprintf(buf, n, "IMLIB2_LOADER_PATH=%s ", existing);
+        return;
+    }
+    static const char* patterns[] = {
+        "/nix/store/*imlib2*/lib/imlib2/loaders",
+        "/usr/lib/*/imlib2/loaders",
+        "/usr/lib/Imlib2/loaders",
+        NULL
+    };
+    for (int p = 0; patterns[p]; p++) {
+        glob_t g;
+        memset(&g, 0, sizeof(g));
+        if (glob(patterns[p], 0, NULL, &g) != 0) continue;
+        for (size_t i = 0; i < g.gl_pathc; i++) {
+            char probe[SHOT_BUF * 2];
+            snprintf(probe, sizeof(probe), "%s/png.so", g.gl_pathv[i]);
+            if (access(probe, R_OK) != 0) continue;
+            snprintf(buf, n, "IMLIB2_LOADER_PATH=%s ", g.gl_pathv[i]);
+            break;
+        }
+        globfree(&g);
+        if (buf[0]) return;
+    }
+}
+
 static void shot_env(char* buf, size_t n) {
-    snprintf(buf, n, "LD_LIBRARY_PATH=%s/build/bundle:${LD_LIBRARY_PATH:-} ", shot_working_dir());
+    char imlib[SHOT_BUF];
+    shot_imlib_env(imlib, sizeof(imlib));
+    snprintf(buf, n, "LD_LIBRARY_PATH=%s/build/bundle:${LD_LIBRARY_PATH:-} %s",
+             shot_working_dir(), imlib);
 }
 
 static void shot_clip_path(char* buf, size_t n) {
