@@ -4,36 +4,6 @@ C11 + X11/Wayland/Win32 launcher ("Flint"). Core is platform-agnostic; backends 
 
 ---
 
-## 1. Codebase Map
-
-| Path | Contents |
-|---|---|
-| `src/main.c` | Entry point. Order: `Platform_TryAcquireSingleInstance` → `InitDataFolder/MainThreadContext/FixWorkingDirectory/InitDisplaySafe` → `Config_Load` + `Config_ResolveDefaultApps` → services (`StartUniversalTimer`, `InitializeTrayIcon`, `InitFeatureDataSystem`, `History_Init`, `Platform_InitUI`) → `FeatureLoader_Init` (dlopens every feature) → `WindowManager_Create` → `WindowManager_Run` → teardown. |
-| `src/flapi.c` (2009 L) | **All** `fl_*` implementations + the widget registry. The single biggest file; platform files only supply `_platform` shims. |
-| `src/core/` | Platform-agnostic: `window_manager.c` (facade, 174 L), `common_ui.c`, `config_loader.c` (compiles `config/config.c` to a `.dll`/`.so` at runtime and `dlopen`s it), `feature_loader.c`, `history.c`, `remap_manager.c`, `snippet_manager.c`, `hotkey_manager.c`, `vim.c`, `theme.c`, `timer.c`, `prompt_controller.c`, `clipboard_history.c`, `popup/{prompt,edit,settings,search}_popup.c`. |
-| `src/platform/x11/` | Linux backend: Xlib + Xft + freetype/fontconfig rendering, evdev/uinput raw key grabbing, `XTest` fallback, inotify watcher, mmap file editing, own-`Display` render thread, raw `wayland-client` clipboard. |
-| `src/platform/win32/` | Windows backend: Win32 windows + `commctrl` listboxes + GDI/GDI+ drawing, `SendInput`, `WH_KEYBOARD_LL` hook, tray via `Shell_NotifyIcon`, `LoadLibrary` for features. |
-| `src/platform/wm/` | Compositor abstraction. `wm.c` probes i3 → (kwin/niri/hyprland/sway if `WAYLAND_DISPLAY`) → raw X11. Screenshot/OCR is **kwin-only**; every other backend returns `false`. |
-| `src/features/` | 26 hot-loadable plugins, one `.c` each, entry via `FLINT_FEATURE_INIT` constructor. |
-| `include/core/flapi.h` | The **only** header a feature may include. 210 declared `fl_*` symbols. |
-| `include/core/prompt_geometry.h` | **Single source of truth for popup pixel geometry.** Both backends must use these constants. See §5. |
-| `include/platform/*.h` | The `Platform_` contract for core files. |
-| `include/deps/` | Vendored `log.h`, `stb_ds.h`, `nanosvg.h`, `nanosvgrast.h`. |
-| `config/config.c` | The single user-editable config; compiled at runtime. `create_feature.py` scaffolds a new feature. `tests/` are standalone binaries linked against every core `.o` except `main.c`. |
-
-### 30 `fl_` functions are declared in `flapi.h` but have **no definition**
-A feature calling one of these gets an undefined symbol at `dlopen` time.
-
-- Raw window access — `flapi.h:217-227`: `fl_get_display`, `fl_get_window`, `fl_get_xftdraw`, `fl_get_visual`, `fl_get_colormap`, `fl_get_hdc`, `fl_get_hwnd`, `fl_get_popup_width`, `fl_get_popup_height`
-- Anchored placement — `flapi.h:328-331`: `fl_draw_text_anchored`, `fl_place_editbox_anchored`, `fl_place_listbox_anchored`, `fl_draw_image_anchored`
-- Auto layout — `flapi.h:337-346`: `fl_layout_begin/end_{column,row}[_anchored]`, `fl_draw_text_auto`, `fl_place_editbox_auto`, `fl_place_listbox_auto`, `fl_draw_image_auto`
-- Images — `flapi.h:448-450`: `fl_load_image`, `fl_free_image`, `fl_draw_image`
-- Misc — `flapi.h:112` `fl_init_all_hotkeys`, `flapi.h:121` `fl_launch_browser_in_a_new_window`, `flapi.h:472` `fl_get_text_width`, `flapi.h:474` `fl_is_visible`
-
-Before adding a `fl_` symbol, check it is not already in this list.
-
----
-
 ## 2. Platform Split (strict)
 
 - **`fl_` API** (for features) lives **only** in `include/core/flapi.h` → `src/flapi.c` → `src/platform/x11/flapi_x11.c` / `src/platform/win32/flapi_win32.c`. Do **not** include `flapi.h` or the platform `flapi_*.c` from any file that is not a feature.
@@ -43,10 +13,8 @@ Before adding a `fl_` symbol, check it is not already in this list.
 
 ### Known layering violations (do not extend these)
 1. `include/core/flapi.h:436,439,441` declares `Platform_PreRender`, `Platform_SetPreRenderState`, `Platform_SetPreRenderStateWin32` — all also in `include/platform/draw.h:48,34,15`.
-2. `include/platform/draw.h:49` declares `fl_prerender` (weak-defined in `draw_x11.c` / `draw_win32.c`).
-3. `include/core/clipboard_history.h:4` includes `core/flapi.h`, while `src/flapi.c:18` includes `core/clipboard_history.h` — inverted dependency.
-4. `src/platform/x11/platform_x11.c:47` and `src/platform/win32/platform_win32.c:25` include `../../../nob.h` for `nob_mkdir_if_not_exists`.
-5. `Platform_SettingsPopUp` — header `include/platform/platform.h:58` takes `WindowManager*`, but the Win32 definition `wm_platform_win32.c:273` takes none. Links only because `-std=gnu17`.
+2. `src/platform/x11/platform_x11.c:47` and `src/platform/win32/platform_win32.c:25` include `../../../nob.h` for `nob_mkdir_if_not_exists`.
+3. `Platform_SettingsPopUp` — header `include/platform/platform.h:58` takes `WindowManager*`, but the Win32 definition `wm_platform_win32.c:273` takes none. Links only because `-std=gnu17`.
 
 ---
 
@@ -110,17 +78,9 @@ Before adding a `fl_` symbol, check it is not already in this list.
 - `src/flapi.c:1042` — `fl_draw_text_impl` treats `text` as an integer char code when `(uintptr_t)real_text < 256`. Any small/invalid pointer takes the wrong branch. Pass a real string.
 - `src/core/window_manager.c:13` — `SavePerFeatureState` is an empty stub, yet still called from `src/core/popup/prompt_popup.c:109`. `ModePersistsThroughFeatures` + `RememberLastIndex` silently do nothing per-feature.
 - `src/core/popup/search_popup.c:10` — `SearchPopup_Create` returns NULL (all params `(void)`). The whole X11 `Platform_SettingsPopup*` family is a no-op (`src/platform/x11/settings_popup_x11.c:5-38`).
-- `src/features/windows_control.c:32` — `TriggerBlueToothToggle` calls `IsWifiEnabled()`; its log messages are inverted too.
 - `src/features/todo.c:42` — `#define TODO_TAG_FORMAT TODO_TAG_FORMAT` is self-referential.
-- `src/features/control_center.c:7` — `const char* names[MaxFeatures]` with runtime `MaxFeatures` (1000) → ~8 KB stack VLA.
 - `src/features/zoxide.c:35-64` — `TriggerYaziZoxide`/`yazi_refresh`/`yazi_enter`/`yazi_edit` defined, never registered.
-- 5 feature files are 100 % commented out and compile to empty `.so`s: `adb.c`, `macros.c`, `mute_microphone.c`, `notification_getter.c`, `window_monitor.c`. 2 more register nothing (`control_center.c:26-30`, `windows_control.c:42-46`). `src/features/reminder.c` is a hollow stub (all callbacks empty).
 - `include/core/types/file.h:41` — `WinPromptState` defined, never used.
-- `include/core/timer.h:32-37` — `PROFILE_SCOPE` unused and would not compile (calls `_profile_timer_cleanup` at `:35` before declaring it at `:33`).
-- `include/config.h:10-11` — `COMMAND_MODE_KEY` / `SEARCH_PROGRAM_KEY` have no users.
-- No `TODO:` / `FIXME:` / `XXX:` comments exist in first-party code. `// temporary` markers are at `src/bindings/vim_motions.c:253`, `src/bindings/vim_bindings.c:51`, `src/features/control_center.c:27`, `src/features/windows_control.c:43`, `src/platform/x11/default_apps_x11.c:208`, `src/platform/x11/platform_x11.c:141`, `src/platform/x11/draw_x11.c:525`, `src/platform/win32/popup/popup_main_win32.c:875`.
-- Explicit "not implemented yet" stubs: `src/platform/x11/platform_x11.c:617,623,630,643,650`; `src/platform/win32/flapi_win32.c:573,590`.
-- Hard-coded personal paths/credentials are committed throughout: `src/features/misc_hotkeys.c:48,58,73,76`, `src/features/app_launcher.c:28-31`, `src/features/file_search.c:11-12`, `src/config_defaults.c:43-48`, `config/config.c:4-11`, `flint.service:10-11`. Do not add more.
 - Duplicate declarations across headers (harmless, `include/core/types/misc.h:51-54` vs `include/platform/win32/common_ui_win32.h`; `include/platform/ui.h:51-53` vs `common_ui_win32.h`; `flapi.h:436-441` vs `draw.h`; `drawing_x11.h:24,25,30,31`).
 - Remaining Win32↔X11 divergences **not** fixed in the parity pass — ask before touching:
   - `src/platform/win32/popup/popup_edit_win32.c` never renders `WMEditPopupData.placeholder`; X11 does (`edit_popup_x11.c:149-151`).
