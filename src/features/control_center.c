@@ -575,5 +575,5 @@ static void TriggerControl(void) {
 FLINT_FEATURE_INIT {
     cc_register_type("Application", cc_fill_applications);
     cc_register_type("Feature", cc_fill_features);
-    fl_register_hotkey((char *)ControlHotkey, TriggerControl);
+    fl_register_hotkey((char *)ControlHotkey, TriggerControl,"Fortnite");
 }
