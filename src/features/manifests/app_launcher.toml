@@ -1,0 +1,7 @@
+name = "app_launcher"
+description = ""
+
+[provides]
+
+[depends]
+
