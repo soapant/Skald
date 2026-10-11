@@ -660,6 +660,7 @@ bool Platform_DrawRoundedRectRaw(int x, int y, int w, int h, int radius, unsigne
 void Platform_DrawEditBox(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap) {
     PROFILE_START(timer);
     if (!state) { PROFILE_END_VAR(timer, "draw_x11:Platform_DrawEditBox"); return; }
+    FlintContext_Get()->window.editbox_placed = true;
     FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
     Platform_DrawEditBackground(state, dpy, xd, vis, cmap, font);
     Platform_DrawEditText(state, dpy, xd, vis, cmap, font);

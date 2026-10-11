@@ -1115,6 +1115,7 @@ int fl_draw_text_wrapped_ex(int x, int y, int max_width, int line_height, const 
 bool fl_place_editbox_impl(const FlEditSpec *spec) {
   PROFILE_START(_pt);
   if (!spec) { PROFILE_END_VAR(_pt, "api:fl_place_editbox"); return false; }
+  FlintContext_Get()->window.editbox_placed = true;
   bool r = fl_place_editbox_platform(spec);
   PROFILE_END_VAR(_pt, "api:fl_place_editbox");
   return r;
