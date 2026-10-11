@@ -4,4 +4,3 @@ description = ""
 [provides]
 
 [depends]
-pixel_helpers

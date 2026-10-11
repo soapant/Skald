@@ -14,6 +14,7 @@ void *fl_cap_resolve_abi(const char *key, unsigned abi);
 
 void  fl_cap_register(const char *key, void *fn);
 void *fl_cap_resolve(const char *key);
+void  fl_cap_bind_declare(const char *key, void *consumer);
 void  fl_cap_purge_owner(const char *path_a, const char *path_b);
 void  fl_cap_dump(void);
 
