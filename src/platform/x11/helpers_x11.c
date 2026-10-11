@@ -905,6 +905,7 @@ Window x11_create_window_ex(Display* dpy, int x, int y, int w, int h, unsigned l
 }
 
 static void x11_apply_shape_rounded(Display* dpy, Window win, int w, int h, int radius);
+static unsigned int CornerAlpha(int x, int y, int w, int h, int R, unsigned int baseAlpha8);
 
 static bool x11_has_compositor(Display* dpy, int screen) {
     char sel[32];
@@ -1008,7 +1009,7 @@ Window x11_create_window_ex_or(Display* dpy, int x, int y, int w, int h, unsigne
         XFree(sh);
     }
     XSelectInput(dpy, win, event_mask);
-    if (RoundedCorners && !override_redirect && CornerRadius > 0 && !use_argb) {
+    if (RoundedCorners && !override_redirect && CornerRadius > 0) {
         x11_apply_shape_rounded(dpy, win, w, h, CornerRadius);
     }
     PROFILE_END_VAR(timer, "helpers_x11:x11_create_window_ex_or");
@@ -1027,10 +1028,16 @@ static void x11_apply_shape_rounded(Display* dpy, Window win, int w, int h, int 
     XFillRectangle(dpy, mask, gc, radius, 0, w - 2*radius, h);
     XFillRectangle(dpy, mask, gc, 0, radius, w, h - 2*radius);
 
-    XFillArc(dpy, mask, gc, 0, 0, radius*2, radius*2, 0, 360*64);
-    XFillArc(dpy, mask, gc, w - radius*2 -1, 0, radius*2, radius*2, 0, 360*64);
-    XFillArc(dpy, mask, gc, 0, h - radius*2 -1, radius*2, radius*2, 0, 360*64);
-    XFillArc(dpy, mask, gc, w - radius*2 -1, h - radius*2 -1, radius*2, radius*2, 0, 360*64);
+    if (radius > w/2) radius = w/2;
+    if (radius > h/2) radius = h/2;
+    for (int y = 0; y < h; y++) {
+        for (int x = 0; x < w; x++) {
+            if (x >= radius && x < w - radius) continue;
+            if (y >= radius && y < h - radius) continue;
+            if (CornerAlpha(x, y, w, h, radius, 255) == 0) continue;
+            XFillRectangle(dpy, mask, gc, x, y, 1, 1);
+        }
+    }
     XShapeCombineMask(dpy, win, ShapeBounding, 0, 0, mask, ShapeSet);
     XFreePixmap(dpy, mask);
     XFreeGC(dpy, gc);

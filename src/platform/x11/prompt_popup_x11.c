@@ -26,6 +26,7 @@
 #include <X11/Xft/Xft.h>
 #include <unistd.h>
 #include <sys/time.h>
+#include <time.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -37,8 +38,20 @@ bool Platform_PromptPopupShowWindow(Popup* self, int x, int y, int w, int h) {
     WindowManager* wm = (WindowManager*)self->manager;
     Display* dpy = wm ? wm->display : NULL;
     if (!dpy) { PROFILE_END_VAR(timer, "window_manager:Platform_PromptPopupShowWindow"); return false; }
+    struct timespec _t0, _t1, _t2, _t3;
+    clock_gettime(CLOCK_MONOTONIC, &_t0);
     self->handle.xid = x11_create_prompt_window(dpy, x, y, w, h);
     XSelectInput(dpy, self->handle.xid, KeyPressMask | ExposureMask | FocusChangeMask);
+    clock_gettime(CLOCK_MONOTONIC, &_t1);
+    x11_draw_background(dpy, self->handle.xid, w, h);
+    clock_gettime(CLOCK_MONOTONIC, &_t2);
+    if (self->vtable && self->vtable->on_render) self->vtable->on_render(self);
+    clock_gettime(CLOCK_MONOTONIC, &_t3);
+    log_info("prompt show: create=%.2fms bg=%.2fms first_render=%.2fms rounded=%d radius=%d opacity=%d",
+             (_t1.tv_sec-_t0.tv_sec)*1000.0+(_t1.tv_nsec-_t0.tv_nsec)/1e6,
+             (_t2.tv_sec-_t1.tv_sec)*1000.0+(_t2.tv_nsec-_t1.tv_nsec)/1e6,
+             (_t3.tv_sec-_t2.tv_sec)*1000.0+(_t3.tv_nsec-_t2.tv_nsec)/1e6,
+             (int)RoundedCorners, CornerRadius, (int)WindowOpacity);
     XMapWindow(dpy, self->handle.xid);
     XSync(dpy, False);
     {
@@ -143,7 +156,7 @@ bool Platform_PromptPopupOnKey(Popup* self, const PopupKeyEvent* key) {
         return true;
     }
 
-    if (FlintContext_Get()->prompt_callbacks.refresh) {
+    if (FlintContext_Get()->window.editbox_placed) {
         if (wParam == VK_ESCAPE) {
             if (IsInsertMode()) {
                 SetMode(MODE_NORMAL);
