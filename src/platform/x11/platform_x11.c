@@ -1379,10 +1379,11 @@ char* Platform_GetIconPath(char* app_path) {
             while(fgets(line,sizeof(line),f)){
                 char* p = line;
                 while(*p==' ' || *p=='\t') p++;
-                if (Platform_StringContainsCaseInsensitive(p, "Icon=")){
-                    p += 5;
-                    while(*p==' ' || *p=='\t') p++;
-                    p[strcspn(p,"\r\n")]='\0';
+                if (Platform_StringContainsCaseInsensitive(p, "Icon=")) {
+                    p = strchr(p, '=');
+                    if (p) { p++; while(*p==' ' || *p=='\t') p++; }
+                    char* end = strpbrk(p, " \r\n#");
+                    if (end) *end = '\0';
                     strncpy(icon_name, p, sizeof(icon_name)-1);
                     break;
                 }
@@ -1424,6 +1425,31 @@ char* Platform_GetIconPath(char* app_path) {
             if(access(path,F_OK)==0) { strncpy(found,path,sizeof(found)-1); icon_cache_set(bare, found); return strdup(found); }
             snprintf(path,sizeof(path),"%s/.local/share/icons/hicolor/%s/apps/%s.svg",home,sz,bare);
             if(access(path,F_OK)==0) { strncpy(found,path,sizeof(found)-1); icon_cache_set(bare, found); return strdup(found); }
+        }
+    }
+    {
+        const char* xdg = getenv("XDG_DATA_DIRS");
+        char xdg_dirs[1024] = {0};
+        if (xdg && xdg[0]) { strncpy(xdg_dirs, xdg, sizeof(xdg_dirs)-1); }
+        else { snprintf(xdg_dirs, sizeof(xdg_dirs), "/usr/local/share:/usr/share"); }
+        for (char* dir = strtok(xdg_dirs, ":"); dir; dir = strtok(NULL, ":")) {
+            for(int s=0;sizes[s];s++){
+                char path[1024];
+                const char* sz=sizes[s];
+                while(*sz==' ') sz++;
+                snprintf(path,sizeof(path),"%s/icons/hicolor/%s/apps/%s.png",dir,sz,bare);
+                if(access(path,F_OK)==0) { strncpy(found,path,sizeof(found)-1); icon_cache_set(bare, found); return strdup(found); }
+                snprintf(path,sizeof(path),"%s/icons/hicolor/%s/apps/%s.svg",dir,sz,bare);
+                if(access(path,F_OK)==0) { strncpy(found,path,sizeof(found)-1); icon_cache_set(bare, found); return strdup(found); }
+                snprintf(path,sizeof(path),"%s/icons/hicolor/%s.svg",dir,bare);
+                if(access(path,F_OK)==0) { strncpy(found,path,sizeof(found)-1); icon_cache_set(bare, found); return strdup(found); }
+                snprintf(path,sizeof(path),"%s/icons/hicolor/%s.png",dir,bare);
+                if(access(path,F_OK)==0) { strncpy(found,path,sizeof(found)-1); icon_cache_set(bare, found); return strdup(found); }
+                snprintf(path,sizeof(path),"%s/pixmaps/%s.png",dir,bare);
+                if(access(path,F_OK)==0) { strncpy(found,path,sizeof(found)-1); icon_cache_set(bare, found); return strdup(found); }
+                snprintf(path,sizeof(path),"%s/pixmaps/%s.svg",dir,bare);
+                if(access(path,F_OK)==0) { strncpy(found,path,sizeof(found)-1); icon_cache_set(bare, found); return strdup(found); }
+            }
         }
     }
     for(int b=0;bases[b];b++){
