@@ -798,6 +798,7 @@ bool fl_register_snippet_impl(const char* trigger, const char* text, FlSnippetFu
     static unsigned var##_gen;                                        \
     type var = NULL;                                                  \
     if (var##_gen != fl_cap_generation()) {                           \
+        fl_cap_bind_declare(key, (void*)&var##_fn);                   \
         var##_fn = (type)fl_cap_resolve(key);                         \
         var##_gen = fl_cap_generation();                              \
     }                                                                 \
