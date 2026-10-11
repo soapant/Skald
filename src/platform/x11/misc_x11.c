@@ -887,7 +887,17 @@ bool Platform_QueryBrowser(char* query) {
 char* Platform_GetClipboardEntry() {
     static long long next_in_ms = 0;
     static int fail_streak = 0;
+    static unsigned long last_owner = 0;
+    static bool owner_seen = false;
     long long now = Platform_GetWallClockMs();
+    unsigned long owner = x11_clipboard_owner();
+    if (!owner_seen || owner != last_owner) {
+        owner_seen = true;
+        last_owner = owner;
+        fail_streak = 0;
+        next_in_ms = 0;
+    }
+    if (owner == 0) return NULL;
     if (fail_streak > 0 && now < next_in_ms) {
         return NULL;
     }
