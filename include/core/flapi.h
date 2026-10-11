@@ -486,6 +486,7 @@ bool fl_draw_rounded_rect_impl(const FlRoundedRectSpec *spec);
 // HELPERS
 // =============================================================================
 
+int fl_rand_num_between(int min, int max);
 int fl_get_text_width(const char *text);
 int fl_get_text_height(const char *text);
 

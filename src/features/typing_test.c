@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include <time.h>
 
 
 #define CHAR_UNTYPED 0
@@ -68,7 +67,7 @@ char* typing_test_get_random_text(int word_count) {
     int indices[target_count];
     size_t total_len = 1;
     for (int i = 0; i < target_count; i++) {
-        indices[i] = rand() % num_words;
+        indices[i] = fl_rand_num_between(0, num_words - 1);
         total_len += strlen(words[indices[i]]);
         if (i < target_count - 1) total_len += 1;
     }
@@ -270,7 +269,6 @@ void TriggerTypingTest(void) {
 }
 
 FLINT_FEATURE_INIT {
-    srand((unsigned)time(NULL));
     text = typing_test_get_random_text(typing_test_word_count);
     fl_register_hotkey("Alt+B", TriggerTypingTest);
     fl_register_feature("Typing Test", TriggerTypingTest);
