@@ -12,7 +12,7 @@
 #endif
 
 
-#define COLOR RGB(1, 1, 111)
+#define COLOR RGB(1, 1, 1)
 #define FPS 1
 #define NO_BG true
 #define FONTSIZE 14

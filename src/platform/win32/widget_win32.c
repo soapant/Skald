@@ -134,6 +134,13 @@ static void widget_push_layered(PlatformWidget *widget, unsigned long bg, unsign
         } else {
             for (size_t i = 0; i < n; i++) px[i] |= 0xFF000000u;
         }
+
+        if (widget->no_bg) {
+            for (size_t i = 0; i < n; i++) {
+                if ((px[i] & 0x00FFFFFFu) != 0) px[i] = (px[i] & 0x00FFFFFFu) | 0xFF000000u;
+                else px[i] = 0u;
+            }
+        }
     }
 
     HDC screen = GetDC(NULL);
