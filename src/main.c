@@ -1,5 +1,7 @@
 #define STB_DS_IMPLEMENTATION
 #include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 #include "core/context.h"
 #include "deps/log.h"
 #include "config.h"
@@ -19,6 +21,7 @@ static void free_history_list(void* v) {
 
 int main() {
   PROFILE_START(t_start);
+  srand((unsigned)time(NULL));
   if (!Platform_TryAcquireSingleInstance()) {
       fprintf(stderr, "Flint is already running, exiting.\n");
       return 1;
