@@ -417,7 +417,7 @@ void flip_last_operation(char* out_result, size_t max_len) {
 static char g_calc_last_result[256] = {0};
 
 void calculator_render_callback(PromptState *state) {
-    if (fl_is_key_pressed(FL_KEY_F) && calc_ctrl_down()) {
+    if (fl_is_key_pressed('F') && calc_ctrl_down()) {
         if (!g_calc_has_toggled || fl_end_timer(g_calc_last_toggle) > 300.0) {
             g_calc_show_fraction = !g_calc_show_fraction;
             g_calc_last_toggle = fl_start_timer();
@@ -467,7 +467,6 @@ bool calculator_ctrlenter_callback(const char* selection, ListBoxInfo* lb) {
 void TriggerCalculator(void) {
     g_calc_show_fraction = false;
     g_calc_has_toggled = false;
-    (void)fl_is_key_pressed(FL_KEY_F);
     PROMPT(.title = "🧮 Calculator",
            .render = calculator_render_callback,
            .enter = calculator_enter_callback,
