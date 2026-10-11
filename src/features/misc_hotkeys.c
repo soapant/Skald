@@ -108,33 +108,18 @@ void toggle_minimized(void) {
     fl_toggle_minimized_active();
 }
 
-typedef bool *(*pixel_color_matches_fn)(FlPos pos, FlColor color);
-
-bool anki_check_for_state() {
-  FL_CAP_BIND(pixel_color_matches_dummy, "pixel.pixel_color_matches", pixel_color_matches_fn);
-  if (pixel_color_matches_dummy((FlPos){4864,1054},(FlColor){247,247,247})) return true;
-  return false;
-}
-void handle_anki_state(void) {
-  if (anki_check_for_state()) fl_send_hotkey("Space"); fl_sleep(0.1);
-}
-
 void easy(void) {
-  handle_anki_state();
-  fl_send_hotkey("1");
+  fl_send_hotkey("Space"); fl_sleep(0.1); fl_send_hotkey("1");
 }
 
 void medium(void) {
-  handle_anki_state();
-  fl_send_hotkey("2");
+  fl_send_hotkey("Space"); fl_sleep(0.1); fl_send_hotkey("2");
 }
 void hard(void) {
-  handle_anki_state();
-  fl_send_hotkey("3");
+  fl_send_hotkey("Space"); fl_sleep(0.1); fl_send_hotkey("3");
 }
 void fuckme(void) {
-  handle_anki_state();
-  fl_send_hotkey("4");
+  fl_send_hotkey("Space"); fl_sleep(0.1); fl_send_hotkey("4");
 }
 
 FLINT_FEATURE_INIT {

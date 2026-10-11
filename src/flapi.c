@@ -160,6 +160,25 @@ void *fl_cap_resolve_abi(const char *key, unsigned abi) {
     return NULL;
 }
 
+void fl_cap_bind_declare(const char *key, void *consumer) {
+    if (!key || !key[0] || !consumer) return;
+
+    char consumer_path[OWNER_PATH_MAX];
+    Owner_ResolveForFunc(consumer, consumer_path, sizeof(consumer_path));
+    if (!consumer_path[0]) return;
+
+    for (int i = 0; i < g_cap_count; i++) {
+        if (strcmp(g_caps[i].key, key) != 0) continue;
+        if (g_caps[i].abi != FL_CAP_ABI_V1) return;
+        if (!g_caps[i].owner[0]) return;
+        char provider[64];
+        FeatureLoader_OwnerFeatureName(g_caps[i].owner, provider, sizeof(provider));
+        if (!provider[0]) return;
+        FeatureLoader_ManifestAddDepends(consumer_path, provider);
+        return;
+    }
+}
+
 void fl_cap_purge_owner(const char *path_a, const char *path_b) {
     if ((!path_a || !path_a[0]) && (!path_b || !path_b[0])) return;
 

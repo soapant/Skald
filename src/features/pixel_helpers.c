@@ -4,7 +4,6 @@
 static bool pixel_color_matches(FlPos pos, FlColor color) {
   FlColor c = fl_get_pixel_color(pos);
   bool ok = c.r == color.r && c.g == color.g && c.b == color.b;
-  if (!ok) printf("incorrect color at %i,%i color is actually %i,%i,%i\n",pos.x,pos.y,c.r,c.g,c.b);
   return ok;
 }
 
