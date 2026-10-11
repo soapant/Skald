@@ -110,7 +110,7 @@ static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent* key) {
     }
 
     if (wParam == VK_ESCAPE) {
-        if (FlintContext_Get()->prompt_callbacks.refresh) {
+        if (FlintContext_Get()->window.editbox_placed) {
             if (IsInsertMode()) {
                 SetModeWithListBox(MODE_NORMAL, lb);
             } else {

@@ -151,6 +151,7 @@ void WindowManager_GetPromptBounds(int *out_x, int *out_y, int *out_w, int *out_
 
 char* WindowManager_ShowPrompt(WindowManager* wm, const PromptSpec* spec) {
     if (!wm || !spec) { return NULL; }
+    FlintContext_Get()->window.editbox_placed = false;
     CloseCallback on_close = spec->on_close;
     if (FlintContext_Get()->item_index_map) {
         shfree(FlintContext_Get()->item_index_map);

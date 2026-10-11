@@ -110,6 +110,7 @@ char* Platform_PromptUser(WindowManager* wm, const PromptSpec* spec) {
   if (g_win32_prompt_state) { ListBoxInfo_Free(&g_win32_prompt_state->listbox); free(g_win32_prompt_state); g_win32_prompt_state = NULL; }
   PromptState *win_state = NULL;
   ListBoxInfo* lb_ptr = NULL;
+  FlintContext_Get()->window.editbox_placed = true;
   bool has_listbox = (window_list || spec->refresh || spec->render);
   if (has_listbox) {
     win_state = (PromptState*)calloc(1, sizeof(PromptState));

@@ -38,6 +38,7 @@ bool Platform_EditPopupCreateWindow(Popup* self, int x, int y, int w, int h) {
 void Platform_EditPopupShowWindow(Popup* self) {
     PROFILE_START(timer);
     Display* dpy = ((WindowManager*)self->manager)->display;
+    x11_draw_background(dpy, self->handle.xid, ((WMEditPopupData*)self)->w, ((WMEditPopupData*)self)->h);
     XMapWindow(dpy, self->handle.xid);
     XFlush(dpy);
     XSync(dpy, False);
