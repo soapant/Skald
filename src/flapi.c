@@ -1145,6 +1145,18 @@ bool fl_draw_rect_impl(const FlRectSpec *spec) {
   return r;
 }
 
+int fl_rand_num_between(int min, int max) {
+  if (max < min) { int t = min; min = max; max = t; }
+  unsigned long span = (unsigned long)((long)max - (long)min) + 1UL;
+  if (span == 0UL) return min;
+  unsigned long limit = (unsigned long)RAND_MAX + 1UL;
+  unsigned long r = (unsigned long)rand();
+  if (span > limit) {
+    r = (r << 31) | (unsigned long)rand();
+  }
+  return min + (int)(r % span);
+}
+
 int fl_get_text_height(const char *text) {
   PROFILE_START(_pt);
   (void)text;

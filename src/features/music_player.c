@@ -4,7 +4,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <time.h>
 
 #if !defined(_WIN32)
 #include <X11/Xlib.h>
@@ -153,7 +152,7 @@ void music_cmd_2(void) {
 }
 
 void random_music(void) {
-    int idx = rand() % s_music_files.count;
+    int idx = fl_rand_num_between(0, s_music_files.count - 1);
     music_enter_callback(s_music_files.files[idx].name,NULL);
 
 }
@@ -165,7 +164,6 @@ void music_prompt(void) {
 
 FLINT_FEATURE_INIT {
     fl_get_all_files_from_dir(MusicPath, allowed_audio_formats, &s_music_files, NULL, true);
-    srand((unsigned)time(NULL));
     fl_register_hotkey("Alt+,", music_cmd_1);
     fl_register_hotkey("Alt+/", music_cmd_5);
     fl_register_hotkey("Alt+;", music_cmd_6);

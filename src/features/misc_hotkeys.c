@@ -3,7 +3,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-#include <time.h>
 
 static char current_keyword[256] = "";
 static int current_image_id = 0;
@@ -45,7 +44,7 @@ void next_image(void) {
      char cmd[400];
      char* output = fl_run_terminal_command("ls /home/dog/Programming/RandomShit/shit/images");
      FlStringList list = fl_string_split(output,"\n");
-     int idx = rand() % list.count;
+     int idx = fl_rand_num_between(0, list.count - 1);
      char* title = fl_get_active_window_title();
      if (!title) title = "";
      if (fl_string_contains("feh",title)) {
@@ -139,7 +138,6 @@ void fuckme(void) {
 }
 
 FLINT_FEATURE_INIT {
-    srand((unsigned)time(NULL));
     fl_register_hotkey("Alt+Shift+G", GoogleMeaning);
     fl_register_hotkey("Alt+Shift+F", next_image);
     fl_register_hotkey("E", next_image,WHITELIST,"feh");
