@@ -642,6 +642,7 @@ int fl_mouse_queue_len(void);
 unsigned long fl_mouse_queue_dropped(void);
 void fl_clear_mouse_queue(void);
 FlPos fl_get_cursor_pos();
+#define fl_get_mouse_pos() fl_get_cursor_pos()
 bool fl_mouse_pressed(int button);
 
 bool fl_poll_key(FlKeyEvent *out);
