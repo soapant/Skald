@@ -19,6 +19,7 @@ typedef struct {
 
 #define CC_MAX_TYPES 16
 #define CC_MAX_ACTIONS 64
+#define CC_FEATURE_MAX 130
 #define CC_MAYBE_UNUSED __attribute__((unused))
 
 #define CC_ITEM_TEXT_X 10
@@ -65,6 +66,12 @@ static CcEntry *cc_entry_add(const char *label, const char *type, const char *pa
     return e;
 }
 
+static CcEntry *cc_entry_add_fn(const char *label, const char *type, void (*fn)(void)) {
+    CcEntry *e = cc_entry_add(label, type, "");
+    if (e) e->on_action = fn;
+    return e;
+}
+
 static bool cc_register_type(const char *name, CcFill fill) {
     if (!name || !fill || g_type_count >= CC_MAX_TYPES) return false;
     g_type_names[g_type_count] = name;
@@ -99,13 +106,44 @@ static const CcEntry *cc_find(const char *label) {
     return NULL;
 }
 
-static void cc_run_enter(const CcEntry *e) {
-    if (e->on_action) e->on_action();
-    else if (e->on_enter) e->on_enter(e->payload);
+// Actions are staged on Enter and dispatched from on_close, so the control
+// center is already off the popup stack before a feature opens its prompt.
+// Otherwise the stack is [control_center, feature] and JQ sees popup_count 2,
+// which vim_motions.c treats as "nested" and enters normal mode instead of closing.
+static void (*g_pending_action)(void);
+static void (*g_pending_fn)(const char *payload);
+static char g_pending_payload[MAX_PATH];
+
+static void cc_stage(const CcEntry *e, bool ctrl) {
+    g_pending_action = NULL;
+    g_pending_fn = NULL;
+    g_pending_payload[0] = '\0';
+    if (!e) return;
+    if (ctrl) {
+        if (e->on_ctrl_enter) {
+            g_pending_fn = e->on_ctrl_enter;
+            snprintf(g_pending_payload, sizeof(g_pending_payload), "%s", e->payload);
+        }
+        return;
+    }
+    if (e->on_action) {
+        g_pending_action = e->on_action;
+    } else if (e->on_enter) {
+        g_pending_fn = e->on_enter;
+        snprintf(g_pending_payload, sizeof(g_pending_payload), "%s", e->payload);
+    }
 }
 
-static void cc_run_ctrl_enter(const CcEntry *e) {
-    if (e->on_ctrl_enter) e->on_ctrl_enter(e->payload);
+static void cc_run_pending(void) {
+    void (*act)(void) = g_pending_action;
+    void (*pfn)(const char *) = g_pending_fn;
+    char payload[MAX_PATH];
+    snprintf(payload, sizeof(payload), "%s", g_pending_payload);
+    g_pending_action = NULL;
+    g_pending_fn = NULL;
+    g_pending_payload[0] = '\0';
+    if (act) act();
+    else if (pfn) pfn(payload);
 }
 
 static const char *ListOfShitToIgnore[] = {
@@ -347,6 +385,16 @@ static void cc_fill_applications(void) {
     }
 }
 
+static const char *cc_feature_names[CC_FEATURE_MAX];
+static void (*cc_feature_cbs[CC_FEATURE_MAX])(void);
+
+static void cc_fill_features(void) {
+    int n = fl_get_feature_list(cc_feature_names, cc_feature_cbs, CC_FEATURE_MAX);
+    for (int i = 0; i < n; i++) {
+        if (!cc_entry_add_fn(cc_feature_names[i], "Feature", cc_feature_cbs[i])) break;
+    }
+}
+
 static const char **g_names = NULL;
 
 static void cc_refresh(const char *filter, ListBoxInfo *lb) {
@@ -386,16 +434,18 @@ static void cc_render(PromptState *state) {
 
 static bool cc_enter(const char *selection, ListBoxInfo *lb) {
     (void)lb;
-    const CcEntry *e = cc_find(selection);
-    if (e) cc_run_enter(e);
+    cc_stage(cc_find(selection), false);
     return true;
 }
 
 static bool cc_ctrl_enter(const char *selection, ListBoxInfo *lb) {
     (void)lb;
-    const CcEntry *e = cc_find(selection);
-    if (e) cc_run_ctrl_enter(e);
+    cc_stage(cc_find(selection), true);
     return true;
+}
+
+static void cc_on_close(void) {
+    cc_run_pending();
 }
 
 static void cc_tab(ListBoxInfo *lb) {
@@ -414,11 +464,12 @@ static void TriggerControl(void) {
            .enter = cc_enter,
            .ctrl_enter = cc_ctrl_enter,
            .tab = cc_tab,
-           .render = cc_render);
+           .render = cc_render,
+           .on_close = cc_on_close);
 }
 
 FLINT_FEATURE_INIT {
     cc_register_type("Application", cc_fill_applications);
+    cc_register_type("Feature", cc_fill_features);
     fl_register_hotkey((char *)ControlHotkey, TriggerControl);
-    fl_register_hotkey("Alt+Space", TriggerControl, "Fortnite");
 }
