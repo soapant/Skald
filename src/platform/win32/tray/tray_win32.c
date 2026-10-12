@@ -39,8 +39,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         
         HMENU hMenu = CreatePopupMenu();
         
-        AppendMenu(hMenu, MF_STRING, ID_SETTINGS, "Settings");
-        
         AppendMenu(hMenu, MF_STRING, ID_EXIT, "Exit");
         
         SetForegroundWindow(hwnd);
@@ -53,10 +51,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     if (LOWORD(wParam) == ID_EXIT) {
       PostQuitMessage(0);
     }
-    if (LOWORD(wParam) == ID_SETTINGS) {
-      Platform_SettingsPopUp(WindowManager_Get());
-    }
-    
+      
       break;
   }
       
