@@ -9,6 +9,7 @@
 #include "deps/log.h"
 #include "config.h"
 
+#include "core/timer.h"
 #define FLINT_WIDGET_CLASS "FlintWidgetClass"
 
 struct PlatformWidget {
@@ -36,7 +37,8 @@ struct PlatformWidget {
 };
 
 static void layer_fill(PlatformWidget *widget, unsigned int argb) {
-    unsigned int *px = (unsigned int *)widget->layer_bits;
+        PROFILE_START(_pt);
+unsigned int *px = (unsigned int *)widget->layer_bits;
     size_t n = (size_t)widget->layer_w * (size_t)widget->layer_h;
     for (size_t i = 0; i < n; i++) px[i] = argb;
 }
@@ -45,8 +47,9 @@ static LRESULT CALLBACK FlintWidgetProc(HWND hwnd, UINT msg, WPARAM wParam, LPAR
 static void widget_queue_click(void (*fn)(void));
 
 static void widget_register_class(void) {
-    static LONG registered = 0;
-    if (InterlockedCompareExchange(&registered, 1, 0) != 0) return;
+        PROFILE_START(_pt);
+static LONG registered = 0;
+    if (InterlockedCompareExchange(&registered, 1, 0) != 0) { PROFILE_END_VAR(_pt, "widget_register_class"); return ; }
     WNDCLASSA wc = {0};
     wc.lpfnWndProc = FlintWidgetProc;
     wc.hInstance = GetModuleHandle(NULL);
@@ -59,7 +62,8 @@ static void widget_register_class(void) {
 }
 
 static void layer_release(PlatformWidget *widget) {
-    if (widget->layer_dc) {
+        PROFILE_START(_pt);
+if (widget->layer_dc) {
         if (widget->layer_old) SelectObject(widget->layer_dc, widget->layer_old);
         if (widget->layer_bmp) DeleteObject(widget->layer_bmp);
         DeleteDC(widget->layer_dc);
@@ -73,7 +77,8 @@ static void layer_release(PlatformWidget *widget) {
 }
 
 static bool layer_acquire(PlatformWidget *widget) {
-    if (widget->layer_bits && widget->layer_w == widget->w && widget->layer_h == widget->h) return true;
+        PROFILE_START(_pt);
+if (widget->layer_bits && widget->layer_w == widget->w && widget->layer_h == widget->h) { PROFILE_END_VAR(_pt, "layer_acquire"); return true; }
     layer_release(widget);
     memset(&widget->layer_bi, 0, sizeof(widget->layer_bi));
     widget->layer_bi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
@@ -83,10 +88,10 @@ static bool layer_acquire(PlatformWidget *widget) {
     widget->layer_bi.bmiHeader.biBitCount = 32;
     widget->layer_bi.bmiHeader.biCompression = BI_RGB;
     HDC screen = GetDC(NULL);
-    if (!screen) return false;
+    if (!screen) { PROFILE_END_VAR(_pt, "layer_acquire"); return false; }
     HDC dc = CreateCompatibleDC(screen);
     ReleaseDC(NULL, screen);
-    if (!dc) return false;
+    if (!dc) { PROFILE_END_VAR(_pt, "layer_acquire"); return false; }
     void *bits = NULL;
     HBITMAP bmp = CreateDIBSection(dc, &widget->layer_bi, DIB_RGB_COLORS, &bits, NULL, 0);
     if (!bmp) {
@@ -99,7 +104,7 @@ static bool layer_acquire(PlatformWidget *widget) {
     widget->layer_bits = bits;
     widget->layer_w = widget->w;
     widget->layer_h = widget->h;
-    return true;
+    { PROFILE_END_VAR(_pt, "layer_acquire"); return true; }
 }
 
 /* GDI antialiasing blends toward the destination fill and never writes the alpha
@@ -109,7 +114,8 @@ static bool layer_acquire(PlatformWidget *widget) {
    direct coverage readout. Rendering once per frame keeps feature render
    callbacks (and their per-frame state) intact. */
 static void widget_push_layered(PlatformWidget *widget, unsigned long bg, unsigned char alpha) {
-    if (!layer_acquire(widget)) return;
+        PROFILE_START(_pt);
+if (!layer_acquire(widget)) { PROFILE_END_VAR(_pt, "widget_push_layered"); return ; }
 
     layer_fill(widget, bg);
     Platform_SetDrawBgColor(0);
@@ -144,7 +150,7 @@ static void widget_push_layered(PlatformWidget *widget, unsigned long bg, unsign
     }
 
     HDC screen = GetDC(NULL);
-    if (!screen) return;
+    if (!screen) { PROFILE_END_VAR(_pt, "widget_push_layered"); return ; }
     POINT dst;
     dst.x = widget->x;
     dst.y = widget->y;
@@ -164,17 +170,20 @@ static void widget_push_layered(PlatformWidget *widget, unsigned long bg, unsign
 }
 
 static void widget_paint_layered(PlatformWidget *widget) {
-    widget_push_layered(widget, 0xFF000000u, 255);
+        PROFILE_START(_pt);
+widget_push_layered(widget, 0xFF000000u, 255);
 }
 
 static void widget_paint(PlatformWidget *widget, HDC hdc, RECT *rect) {
-    (void)hdc;
+        PROFILE_START(_pt);
+(void)hdc;
     (void)rect;
     widget_push_layered(widget, 0xFF000000u | (widget->has_bg ? widget->bg_hex : 0u), (unsigned char)WindowOpacity);
 }
 
 static LRESULT CALLBACK FlintWidgetProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-    PlatformWidget *widget = (PlatformWidget *)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
+        PROFILE_START(_pt);
+PlatformWidget *widget = (PlatformWidget *)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
 
     switch (msg) {
     case WM_NCCREATE: {
@@ -210,14 +219,15 @@ static LRESULT CALLBACK FlintWidgetProc(HWND hwnd, UINT msg, WPARAM wParam, LPAR
         break;
     }
     }
-    return DefWindowProcA(hwnd, msg, wParam, lParam);
+    { PROFILE_END_VAR(_pt, "FlintWidgetProc"); return DefWindowProcA(hwnd, msg, wParam, lParam); }
 }
 
 static void widget_frame(void *ud) {
-    PlatformWidget *widget = (PlatformWidget *)ud;
-    if (!widget || widget->dead) return;
+        PROFILE_START(_pt);
+PlatformWidget *widget = (PlatformWidget *)ud;
+    if (!widget || widget->dead) { PROFILE_END_VAR(_pt, "widget_frame"); return ; }
     HWND hwnd = widget->hwnd;
-    if (!hwnd || !IsWindow(hwnd)) return;
+    if (!hwnd || !IsWindow(hwnd)) { PROFILE_END_VAR(_pt, "widget_frame"); return ; }
     DWORD now = GetTickCount();
     if (!widget->dirty) {
         DWORD interval = widget->fps > 0 ? (DWORD)(1000 / widget->fps) : 1000;
@@ -242,20 +252,23 @@ static CRITICAL_SECTION g_wclick_cs;
 static LONG g_wclick_cs_ready = 0;
 
 static void wclick_lock(void) {
-    if (InterlockedCompareExchange(&g_wclick_cs_ready, 1, 0) == 0) {
+        PROFILE_START(_pt);
+if (InterlockedCompareExchange(&g_wclick_cs_ready, 1, 0) == 0) {
         InitializeCriticalSection(&g_wclick_cs);
     }
     EnterCriticalSection(&g_wclick_cs);
 }
 static void wclick_unlock(void) {
-    if (InterlockedCompareExchange(&g_wclick_cs_ready, 1, 0) == 0) {
+        PROFILE_START(_pt);
+if (InterlockedCompareExchange(&g_wclick_cs_ready, 1, 0) == 0) {
         InitializeCriticalSection(&g_wclick_cs);
     }
     LeaveCriticalSection(&g_wclick_cs);
 }
 
 static void widget_queue_click(void (*fn)(void)) {
-    if (!fn) return;
+        PROFILE_START(_pt);
+if (!fn) { PROFILE_END_VAR(_pt, "widget_queue_click"); return ; }
     wclick_lock();
     int next = (g_wclick_tail + 1) % WCLICK_MAX;
     if (next != g_wclick_head) {
@@ -266,7 +279,8 @@ static void widget_queue_click(void (*fn)(void)) {
 }
 
 void Platform_Widget_DrainClicks(void) {
-    for (;;) {
+        PROFILE_START(_pt);
+for (;;) {
         void (*fn)(void) = NULL;
         wclick_lock();
         if (g_wclick_head != g_wclick_tail) {
@@ -281,18 +295,20 @@ void Platform_Widget_DrainClicks(void) {
 }
 
 void Platform_Widget_Invalidate(PlatformWidget *widget) {
-    if (!widget || widget->dead) return;
+        PROFILE_START(_pt);
+if (!widget || widget->dead) { PROFILE_END_VAR(_pt, "Platform_Widget_Invalidate"); return ; }
     widget->dirty = true;
     Platform_RenderThread_Wake();
 }
 
 PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps, bool no_bg, void (*on_click)(void), const char *name) {
-    if (w <= 0 || h <= 0) return NULL;
-    if (!Platform_RenderThread_EnsureStarted(fps)) return NULL;
+        PROFILE_START(_pt);
+if (w <= 0 || h <= 0) { PROFILE_END_VAR(_pt, "Platform_Widget_Create"); return NULL; }
+    if (!Platform_RenderThread_EnsureStarted(fps)) { PROFILE_END_VAR(_pt, "Platform_Widget_Create"); return NULL; }
     widget_register_class();
 
     PlatformWidget *widget = (PlatformWidget *)calloc(1, sizeof(*widget));
-    if (!widget) return NULL;
+    if (!widget) { PROFILE_END_VAR(_pt, "Platform_Widget_Create"); return NULL; }
     widget->x = x;
     widget->y = y;
     widget->w = w;
@@ -341,12 +357,13 @@ widget->hwnd = CreateWindowExA(
     ShowWindow(widget->hwnd, SW_SHOWNOACTIVATE);
     SetWindowPos(widget->hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
     widget->mapped = true;
-    return widget;
+    { PROFILE_END_VAR(_pt, "Platform_Widget_Create"); return widget; }
 }
 
 static void widget_destroy_on_owner_thread(void* ud) {
-    PlatformWidget *widget = (PlatformWidget *)ud;
-    if (!widget || widget->dead) return;
+        PROFILE_START(_pt);
+PlatformWidget *widget = (PlatformWidget *)ud;
+    if (!widget || widget->dead) { PROFILE_END_VAR(_pt, "widget_destroy_on_owner_thread"); return ; }
     widget->dead = true;
     Platform_RenderThread_RemoveFrameCallback(widget_frame, widget);
     if (widget->hwnd && IsWindow(widget->hwnd)) {
@@ -357,7 +374,8 @@ static void widget_destroy_on_owner_thread(void* ud) {
 }
 
 void Platform_Widget_Destroy(PlatformWidget *widget) {
-    if (!widget || widget->dead) return;
+        PROFILE_START(_pt);
+if (!widget || widget->dead) { PROFILE_END_VAR(_pt, "Platform_Widget_Destroy"); return ; }
     if (widget->owner_tid != GetCurrentThreadId()) {
         PlatformWidget *copy = (PlatformWidget *)malloc(sizeof(*copy));
         if (copy) {
@@ -372,66 +390,75 @@ void Platform_Widget_Destroy(PlatformWidget *widget) {
 }
 
 bool Platform_Widget_IsValid(const PlatformWidget *widget) {
-    return widget && !widget->dead;
+        PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "Platform_Widget_IsValid"); return widget && !widget->dead; }
 }
 
 void Platform_Widget_SetFrameCallback(PlatformWidget *widget, Platform_RenderFrameFn fn, void *ud) {
-    if (!widget || widget->dead) return;
+        PROFILE_START(_pt);
+if (!widget || widget->dead) { PROFILE_END_VAR(_pt, "Platform_Widget_SetFrameCallback"); return ; }
     widget->fn = fn;
     widget->ud = ud;
 }
 
 void Platform_Widget_Show(PlatformWidget *widget) {
-    if (!widget || widget->dead || widget->mapped) return;
-    if (!widget->hwnd || !IsWindow(widget->hwnd)) return;
+        PROFILE_START(_pt);
+if (!widget || widget->dead || widget->mapped) { PROFILE_END_VAR(_pt, "Platform_Widget_Show"); return ; }
+    if (!widget->hwnd || !IsWindow(widget->hwnd)) { PROFILE_END_VAR(_pt, "Platform_Widget_Show"); return ; }
     ShowWindow(widget->hwnd, SW_SHOWNOACTIVATE);
     SetWindowPos(widget->hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
     widget->mapped = true;
 }
 
 void Platform_Widget_Hide(PlatformWidget *widget) {
-    if (!widget || widget->dead || !widget->mapped) return;
-    if (!widget->hwnd || !IsWindow(widget->hwnd)) return;
+        PROFILE_START(_pt);
+if (!widget || widget->dead || !widget->mapped) { PROFILE_END_VAR(_pt, "Platform_Widget_Hide"); return ; }
+    if (!widget->hwnd || !IsWindow(widget->hwnd)) { PROFILE_END_VAR(_pt, "Platform_Widget_Hide"); return ; }
     ShowWindow(widget->hwnd, SW_HIDE);
     widget->mapped = false;
 }
 
 void Platform_Widget_Move(PlatformWidget *widget, int x, int y) {
-    if (!widget || widget->dead) return;
-    if (!widget->hwnd || !IsWindow(widget->hwnd)) return;
-    if (widget->x == x && widget->y == y) return;
+        PROFILE_START(_pt);
+if (!widget || widget->dead) { PROFILE_END_VAR(_pt, "Platform_Widget_Move"); return ; }
+    if (!widget->hwnd || !IsWindow(widget->hwnd)) { PROFILE_END_VAR(_pt, "Platform_Widget_Move"); return ; }
+    if (widget->x == x && widget->y == y) { PROFILE_END_VAR(_pt, "Platform_Widget_Move"); return ; }
     widget->x = x;
     widget->y = y;
     SetWindowPos(widget->hwnd, HWND_TOPMOST, x, y, 0, 0, SWP_NOSIZE | SWP_NOACTIVATE);
 }
 
 void Platform_Widget_SetNoBg(PlatformWidget *widget, bool no_bg) {
-    if (!widget || widget->dead) return;
+        PROFILE_START(_pt);
+if (!widget || widget->dead) { PROFILE_END_VAR(_pt, "Platform_Widget_SetNoBg"); return ; }
     widget->no_bg = no_bg;
     Platform_Widget_Invalidate(widget);
 }
 
 void Platform_Widget_SetFps(PlatformWidget *widget, int fps) {
-    if (!widget || widget->dead) return;
+        PROFILE_START(_pt);
+if (!widget || widget->dead) { PROFILE_END_VAR(_pt, "Platform_Widget_SetFps"); return ; }
     if (fps <= 0) fps = 1;
-    if (widget->fps == fps) return;
+    if (widget->fps == fps) { PROFILE_END_VAR(_pt, "Platform_Widget_SetFps"); return ; }
     widget->fps = fps;
     Platform_RenderThread_EnsureStarted(fps);
     Platform_Widget_Invalidate(widget);
 }
 
 void Platform_Widget_SetBgColor(PlatformWidget *widget, unsigned long hex) {
-    if (!widget || widget->dead) return;
+        PROFILE_START(_pt);
+if (!widget || widget->dead) { PROFILE_END_VAR(_pt, "Platform_Widget_SetBgColor"); return ; }
     widget->has_bg = hex != 0;
     widget->bg_hex = hex;
     Platform_Widget_Invalidate(widget);
 }
 
 void Platform_Widget_Resize(PlatformWidget *widget, int w, int h) {
-    if (!widget || widget->dead) return;
-    if (w <= 0 || h <= 0) return;
-    if (!widget->hwnd || !IsWindow(widget->hwnd)) return;
-    if (widget->w == w && widget->h == h) return;
+        PROFILE_START(_pt);
+if (!widget || widget->dead) { PROFILE_END_VAR(_pt, "Platform_Widget_Resize"); return ; }
+    if (w <= 0 || h <= 0) { PROFILE_END_VAR(_pt, "Platform_Widget_Resize"); return ; }
+    if (!widget->hwnd || !IsWindow(widget->hwnd)) { PROFILE_END_VAR(_pt, "Platform_Widget_Resize"); return ; }
+    if (widget->w == w && widget->h == h) { PROFILE_END_VAR(_pt, "Platform_Widget_Resize"); return ; }
     widget->w = w;
     widget->h = h;
     SetWindowPos(widget->hwnd, HWND_TOPMOST, widget->x, widget->y, w, h, SWP_NOACTIVATE);
@@ -440,9 +467,11 @@ void Platform_Widget_Resize(PlatformWidget *widget, int w, int h) {
 
 
 int Platform_Widget_Width(const PlatformWidget *widget) {
-    return widget ? widget->w : 0;
+        PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "Platform_Widget_Width"); return widget ? widget->w : 0; }
 }
 
 int Platform_Widget_Height(const PlatformWidget *widget) {
-    return widget ? widget->h : 0;
+        PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "Platform_Widget_Height"); return widget ? widget->h : 0; }
 }

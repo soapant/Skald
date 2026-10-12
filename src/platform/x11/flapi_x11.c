@@ -38,7 +38,8 @@
 bool Platform_GetAllFilesFromDir(const char* dir_path, char** list_of_allowed_extensions,
                                         ListOfFiles* list_of_files, char** list_of_names_to_ignore,
                                         bool strip_extension) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
 
     if (!dir_path || !list_of_files) {
         PROFILE_END_VAR(timer, "flapi_x11:Platform_GetAllFilesFromDir");
@@ -148,13 +149,14 @@ bool Platform_GetAllFilesFromDir(const char* dir_path, char** list_of_allowed_ex
 
     closedir(dir);
     PROFILE_END_VAR(timer, "flapi_x11:Platform_GetAllFilesFromDir");
-    return true;
+    { PROFILE_END_VAR(_pt, "Platform_GetAllFilesFromDir"); return true; }
 }
 
 static bool platform_exe_in_path(const char* name) {
-    if (!name || !name[0]) return false;
+        PROFILE_START(_pt);
+if (!name || !name[0]) { PROFILE_END_VAR(_pt, "platform_exe_in_path"); return false; }
     const char* path = getenv("PATH");
-    if (!path || !path[0]) return false;
+    if (!path || !path[0]) { PROFILE_END_VAR(_pt, "platform_exe_in_path"); return false; }
     const char* p = path;
     while (*p) {
         const char* sep = strchr(p, ':');
@@ -166,12 +168,13 @@ static bool platform_exe_in_path(const char* name) {
         if (!sep) break;
         p = sep + 1;
     }
-    return false;
+    { PROFILE_END_VAR(_pt, "platform_exe_in_path"); return false; }
 }
 
 static bool platform_resolve_desktop_exec(const char* exec_line, const char* desktop_dir,
                                           const char* workdir, char* out, size_t out_size) {
-    if (!exec_line || !out || out_size == 0) return false;
+        PROFILE_START(_pt);
+if (!exec_line || !out || out_size == 0) { PROFILE_END_VAR(_pt, "platform_resolve_desktop_exec"); return false; }
     const char* p = exec_line;
     while (*p == ' ' || *p == '\t') p++;
 
@@ -193,7 +196,7 @@ static bool platform_resolve_desktop_exec(const char* exec_line, const char* des
     }
     token[t] = '\0';
     while (*p == ' ' || *p == '\t') p++;
-    if (!token[0]) return false;
+    if (!token[0]) { PROFILE_END_VAR(_pt, "platform_resolve_desktop_exec"); return false; }
 
     const char* base = (workdir && workdir[0]) ? workdir : desktop_dir;
     char prog[1024];
@@ -226,25 +229,27 @@ static bool platform_resolve_desktop_exec(const char* exec_line, const char* des
     q[n] = '\0';
 
     snprintf(out, out_size, "%s%s%s", q, p[0] ? " " : "", p);
-    return true;
+    { PROFILE_END_VAR(_pt, "platform_resolve_desktop_exec"); return true; }
 }
 
 static int platform_run_status(char* const argv[], const X11SessionEnv* env, bool apply_env) {
-    pid_t pid = fork();
-    if (pid < 0) return -1;
+        PROFILE_START(_pt);
+pid_t pid = fork();
+    if (pid < 0) { PROFILE_END_VAR(_pt, "platform_run_status"); return -1; }
     if (pid == 0) {
         if (apply_env && env) Env_ApplyToCurrentProcess(env);
         execvp(argv[0], argv);
         _exit(127);
     }
     int st = 0;
-    if (waitpid(pid, &st, 0) < 0) return -1;
-    if (!WIFEXITED(st)) return -1;
-    return WEXITSTATUS(st);
+    if (waitpid(pid, &st, 0) < 0) { PROFILE_END_VAR(_pt, "platform_run_status"); return -1; }
+    if (!WIFEXITED(st)) { PROFILE_END_VAR(_pt, "platform_run_status"); return -1; }
+    { PROFILE_END_VAR(_pt, "platform_run_status"); return WEXITSTATUS(st); }
 }
 
 bool fl_launch_with_args_platform(const char* path, const char* args) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     log_info("fl_launch path='%s' args='%s'", path ? path : "null", args ? args : "null");
     if (!path) { PROFILE_END_VAR(timer, "flapi_x11:fl_launch_with_args_platform"); return false; }
     char expanded[1024];
@@ -370,7 +375,8 @@ bool fl_launch_with_args_platform(const char* path, const char* args) {
 }
 
 bool fl_launch_with_args_as_admin_platform(const char* path, const char* args) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     if (!path) { PROFILE_END_VAR(timer, "flapi_x11:fl_launch_with_args_as_admin_platform"); return false; }
     char expanded[MAX_PATH];
     if (!Platform_ExpandPath(path, expanded, sizeof(expanded))) { PROFILE_END_VAR(timer, "flapi_x11:fl_launch_with_args_as_admin_platform"); return false; }
@@ -387,7 +393,7 @@ bool fl_launch_with_args_as_admin_platform(const char* path, const char* args) {
         _exit(1);
     }
     PROFILE_END_VAR(timer, "flapi_x11:fl_launch_with_args_as_admin_platform");
-    return true;
+    { PROFILE_END_VAR(_pt, "fl_launch_with_args_as_admin_platform"); return true; }
 }
 
 static __thread FlListSpec g_fl_list_spec;
@@ -402,15 +408,16 @@ static __thread FontHandle g_fl_list_font;
 static __thread bool g_fl_list_font_owned;
 
 bool fl_listbox_begin_platform(const FlListSpec *spec) {
-    if (!spec) return false;
+        PROFILE_START(_pt);
+if (!spec) { PROFILE_END_VAR(_pt, "fl_listbox_begin_platform"); return false; }
     ListBoxInfo *lb = spec->lb;
     if (!lb) {
         if (!spec->items || spec->count <= 0) return false;
         return false;
     }
-    if (!lb->populated_count) return false;
+    if (!lb->populated_count) { PROFILE_END_VAR(_pt, "fl_listbox_begin_platform"); return false; }
     Platform_GetDrawContext(&g_fl_list_dpy, &g_fl_list_xd, &g_fl_list_vis, &g_fl_list_cmap);
-    if (!g_fl_list_dpy || !g_fl_list_xd) return false;
+    if (!g_fl_list_dpy || !g_fl_list_xd) { PROFILE_END_VAR(_pt, "fl_listbox_begin_platform"); return false; }
     g_fl_list_spec = *spec;
     g_fl_list_lb = lb;
     g_fl_list_font = Platform_CreateFontOnDisplay(g_fl_list_dpy, FontSize, UsedFont);
@@ -456,14 +463,15 @@ bool fl_listbox_begin_platform(const FlListSpec *spec) {
     g_fl_list_cur = 0;
     g_fl_list_font = Platform_CreateFontOnDisplay(g_fl_list_dpy, FontSize, UsedFont);
     g_fl_list_font_owned = true;
-    return true;
+    { PROFILE_END_VAR(_pt, "fl_listbox_begin_platform"); return true; }
 }
 
 bool fl_listbox_next_platform(FlListItemCtx *out) {
-    if (!out || !g_fl_list_lb) return false;
-    if (g_fl_list_cur >= g_fl_list_visible) return false;
+        PROFILE_START(_pt);
+if (!out || !g_fl_list_lb) { PROFILE_END_VAR(_pt, "fl_listbox_next_platform"); return false; }
+    if (g_fl_list_cur >= g_fl_list_visible) { PROFILE_END_VAR(_pt, "fl_listbox_next_platform"); return false; }
     int idx = g_fl_list_lb->view_offset + g_fl_list_cur;
-    if (idx < 0 || idx >= g_fl_list_lb->populated_count) return false;
+    if (idx < 0 || idx >= g_fl_list_lb->populated_count) { PROFILE_END_VAR(_pt, "fl_listbox_next_platform"); return false; }
     int y = g_fl_list_y0 + g_fl_list_cur * g_fl_list_itemH;
     bool sel = (idx == g_fl_list_lb->selected_index);
     if (RoundedCorners && CornerRadius>0) {
@@ -486,33 +494,37 @@ bool fl_listbox_next_platform(FlListItemCtx *out) {
     out->h = g_fl_list_itemH;
     out->text = g_fl_list_lb->populated_cache[idx];
     g_fl_list_cur++;
-    return true;
+    { PROFILE_END_VAR(_pt, "fl_listbox_next_platform"); return true; }
 }
 
 void fl_listbox_end_platform(void) {
-    if (g_fl_list_font_owned) { Platform_DestroyFont(g_fl_list_font); g_fl_list_font_owned = false; }
+        PROFILE_START(_pt);
+if (g_fl_list_font_owned) { Platform_DestroyFont(g_fl_list_font); g_fl_list_font_owned = false; }
     g_fl_list_lb = NULL;
     g_fl_list_visible = 0;
     g_fl_list_cur = 0;
 }
 
 int fl_listbox_get_count(void) {
-    return g_fl_list_lb ? g_fl_list_lb->populated_count : 0;
+        PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "fl_listbox_get_count"); return g_fl_list_lb ? g_fl_list_lb->populated_count : 0; }
 }
 
 unsigned long fl_listbox_get_current_standard_color(void) {
-    if (!g_fl_list_lb || g_fl_list_cur == 0) return 0;
+        PROFILE_START(_pt);
+if (!g_fl_list_lb || g_fl_list_cur == 0) { PROFILE_END_VAR(_pt, "fl_listbox_get_current_standard_color"); return 0; }
     int idx = g_fl_list_lb->view_offset + g_fl_list_cur - 1;
-    if (idx < 0 || idx >= g_fl_list_lb->populated_count) return 0;
+    if (idx < 0 || idx >= g_fl_list_lb->populated_count) { PROFILE_END_VAR(_pt, "fl_listbox_get_current_standard_color"); return 0; }
     bool sel = (idx == g_fl_list_lb->selected_index);
-    if (sel) return rgb_to_hex(COLOR_TEXT);
+    if (sel) { PROFILE_END_VAR(_pt, "fl_listbox_get_current_standard_color"); return rgb_to_hex(COLOR_TEXT); }
     unsigned long ncol, bcol, pcol;
     Platform_GetItemColors(idx, g_fl_list_lb->populated_count, &ncol, &bcol, &pcol);
-    return pcol;
+    { PROFILE_END_VAR(_pt, "fl_listbox_get_current_standard_color"); return pcol; }
 }
 
 char* fl_search_file_in_dir_platform(const char* directory, const char* search_string,char* output_path) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     if (!directory || !search_string || strlen(search_string) == 0) { PROFILE_END_VAR(timer, "flapi_x11:fl_search_file_in_dir_platform"); return NULL; }
     DIR* dir = opendir(directory);
     if (!dir) { PROFILE_END_VAR(timer, "flapi_x11:fl_search_file_in_dir_platform"); return NULL; }
@@ -534,10 +546,11 @@ char* fl_search_file_in_dir_platform(const char* directory, const char* search_s
     }
     closedir(dir);
     PROFILE_END_VAR(timer, "flapi_x11:fl_search_file_in_dir_platform");
-    return NULL;
+    { PROFILE_END_VAR(_pt, "fl_search_file_in_dir_platform"); return NULL; }
 }
 void fl_toggle_play_pause_platform(void) {
-    GError *error = NULL;
+        PROFILE_START(_pt);
+GError *error = NULL;
     GDBusConnection *conn = g_bus_get_sync(G_BUS_TYPE_SESSION, NULL, &error);
     if (!conn) { g_error_free(error); return; }
 
@@ -568,14 +581,16 @@ typedef struct {
 } FlVolumeState;
 
 static void fl_volume_set_success_cb(pa_context *c, int success, void *userdata) {
-    (void)c;
+        PROFILE_START(_pt);
+(void)c;
     FlVolumeState *state = (FlVolumeState *)userdata;
     state->set_ok = success;
     pa_mainloop_quit(state->mainloop, success ? 0 : 1);
 }
 
 static void fl_volume_sink_cb(pa_context *c, const pa_sink_info *i, int eol, void *userdata) {
-    FlVolumeState *state = (FlVolumeState *)userdata;
+        PROFILE_START(_pt);
+FlVolumeState *state = (FlVolumeState *)userdata;
     if (eol > 0 || !i) {
         if (state->setting) {
             if (!state->set_issued) pa_mainloop_quit(state->mainloop, 1);
@@ -605,7 +620,8 @@ static void fl_volume_sink_cb(pa_context *c, const pa_sink_info *i, int eol, voi
 }
 
 static void fl_volume_server_cb(pa_context *c, const pa_server_info *i, void *userdata) {
-    FlVolumeState *state = (FlVolumeState *)userdata;
+        PROFILE_START(_pt);
+FlVolumeState *state = (FlVolumeState *)userdata;
     if (!i || !i->default_sink_name) {
         pa_mainloop_quit(state->mainloop, 1);
         return;
@@ -617,7 +633,8 @@ static void fl_volume_server_cb(pa_context *c, const pa_server_info *i, void *us
 }
 
 static void fl_volume_state_cb(pa_context *c, void *userdata) {
-    FlVolumeState *state = (FlVolumeState *)userdata;
+        PROFILE_START(_pt);
+FlVolumeState *state = (FlVolumeState *)userdata;
     switch (pa_context_get_state(c)) {
         case PA_CONTEXT_READY: {
             pa_operation *op = pa_context_get_server_info(c, fl_volume_server_cb, state);
@@ -634,9 +651,10 @@ static void fl_volume_state_cb(pa_context *c, void *userdata) {
 }
 
 int fl_get_current_volume_platform(void) {
-    FlVolumeState state = {0};
+        PROFILE_START(_pt);
+FlVolumeState state = {0};
     state.mainloop = pa_mainloop_new();
-    if (!state.mainloop) return 0;
+    if (!state.mainloop) { PROFILE_END_VAR(_pt, "fl_get_current_volume_platform"); return 0; }
 
     pa_mainloop_api *api = pa_mainloop_get_api(state.mainloop);
     pa_context *context = pa_context_new(api, "Flint");
@@ -661,19 +679,20 @@ int fl_get_current_volume_platform(void) {
     pa_context_unref(context);
     pa_mainloop_free(state.mainloop);
 
-    if (retval != 0) return 0;
-    return result;
+    if (retval != 0) { PROFILE_END_VAR(_pt, "fl_get_current_volume_platform"); return 0; }
+    { PROFILE_END_VAR(_pt, "fl_get_current_volume_platform"); return result; }
 }
 
 bool fl_set_volume_platform(int volume) {
-    if (volume < 0) volume = 0;
+        PROFILE_START(_pt);
+if (volume < 0) volume = 0;
     if (volume > 100) volume = 100;
 
     FlVolumeState state = {0};
     state.set_volume = volume;
     state.setting = 1;
     state.mainloop = pa_mainloop_new();
-    if (!state.mainloop) return false;
+    if (!state.mainloop) { PROFILE_END_VAR(_pt, "fl_set_volume_platform"); return false; }
 
     pa_mainloop_api *api = pa_mainloop_get_api(state.mainloop);
     pa_context *context = pa_context_new(api, "Flint");
@@ -699,18 +718,21 @@ bool fl_set_volume_platform(int volume) {
     pa_context_unref(context);
     pa_mainloop_free(state.mainloop);
 
-    return ok;
+    { PROFILE_END_VAR(_pt, "fl_set_volume_platform"); return ok; }
 }
 
 static bool g_edit_placed = false;
-void fl_editbox_reset_placed(void) { g_edit_placed = false; }
-bool fl_editbox_was_placed(void) { return g_edit_placed; }
+void fl_editbox_reset_placed(void) {     PROFILE_START(_pt);
+g_edit_placed = false; }
+bool fl_editbox_was_placed(void) {     PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "fl_editbox_was_placed"); return g_edit_placed; } }
 bool fl_place_editbox_platform(const FlEditSpec *spec) {
-    if (!spec) return false;
+        PROFILE_START(_pt);
+if (!spec) { PROFILE_END_VAR(_pt, "fl_place_editbox_platform"); return false; }
     g_edit_placed = true;
     Display *dpy; XftDraw *xd; Visual *vis; Colormap cmap;
     Platform_GetDrawContext(&dpy,&xd,&vis,&cmap);
-    if (!dpy || !xd) return false;
+    if (!dpy || !xd) { PROFILE_END_VAR(_pt, "fl_place_editbox_platform"); return false; }
     PromptState *state = Platform_GetPreRenderStatePtr();
     if (!state) {
         WindowManager* wm = WindowManager_Get();
@@ -781,11 +803,12 @@ bool fl_place_editbox_platform(const FlEditSpec *spec) {
         }
     }
     if (needDestroy) Platform_DestroyFont(fh);
-    return true;
+    { PROFILE_END_VAR(_pt, "fl_place_editbox_platform"); return true; }
 }
 
 bool fl_type_text_platform(const char *s){
- if(!s) return false;
+  PROFILE_START(_pt);
+if(!s) { PROFILE_END_VAR(_pt, "fl_type_text_platform"); return false; }
  remap_reset();
  Platform_EmitKey(VK_LCONTROL,0); Platform_EmitKey(VK_RCONTROL,0);
  Platform_EmitKey(VK_LSHIFT,0); Platform_EmitKey(VK_RSHIFT,0);
@@ -841,7 +864,7 @@ bool fl_type_text_platform(const char *s){
   Platform_EmitKey(vk,1); Platform_EmitKey(vk,0);
   if(shift) Platform_EmitKey(VK_LSHIFT,0);
  }
- return true;
+ { PROFILE_END_VAR(_pt, "fl_type_text_platform"); return true; }
 }
 
 typedef struct {
@@ -850,8 +873,9 @@ typedef struct {
 } TimerPayload;
 
 static void* TimerThread(void* arg) {
-    TimerPayload* payload = (TimerPayload*)arg;
-    if (!payload) return NULL;
+        PROFILE_START(_pt);
+TimerPayload* payload = (TimerPayload*)arg;
+    if (!payload) { PROFILE_END_VAR(_pt, "TimerThread"); return NULL; }
 
     useconds_t micros = (useconds_t)(payload->seconds * 1000000.0);
     usleep(micros);
@@ -861,14 +885,15 @@ static void* TimerThread(void* arg) {
     }
 
     free(payload);
-    return NULL;
+    { PROFILE_END_VAR(_pt, "TimerThread"); return NULL; }
 }
 
 void fl_run_after_time_platform(double seconds, void (*callback)(void)) {
-    if (!callback || seconds < 0) return;
+        PROFILE_START(_pt);
+if (!callback || seconds < 0) { PROFILE_END_VAR(_pt, "fl_run_after_time_platform"); return ; }
 
     TimerPayload* payload = (TimerPayload*)malloc(sizeof(TimerPayload));
-    if (!payload) return;
+    if (!payload) { PROFILE_END_VAR(_pt, "fl_run_after_time_platform"); return ; }
     payload->seconds = seconds;
     payload->callback = callback;
 
@@ -882,23 +907,26 @@ void fl_run_after_time_platform(double seconds, void (*callback)(void)) {
 }
 
 FlTimer fl_start_timer_platform(void) {
-    FlTimer t = {0};
+        PROFILE_START(_pt);
+FlTimer t = {0};
     struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts);
     t.ticks = (uint64_t)ts.tv_sec * 1000000000ULL + (uint64_t)ts.tv_nsec;
-    return t;
+    { PROFILE_END_VAR(_pt, "fl_start_timer_platform"); return t; }
 }
 
 double fl_end_timer_platform(FlTimer t) {
-    struct timespec ts;
+        PROFILE_START(_pt);
+struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts);
     uint64_t now = (uint64_t)ts.tv_sec * 1000000000ULL + (uint64_t)ts.tv_nsec;
-    if (now < t.ticks) return 0.0;
-    return (double)(now - t.ticks) / 1000000.0;
+    if (now < t.ticks) { PROFILE_END_VAR(_pt, "fl_end_timer_platform"); return 0.0; }
+    { PROFILE_END_VAR(_pt, "fl_end_timer_platform"); return (double)(now - t.ticks) / 1000000.0; }
 }
 
 void fl_sleep_platform(double seconds) {
-    if (seconds <= 0) return;
+        PROFILE_START(_pt);
+if (seconds <= 0) { PROFILE_END_VAR(_pt, "fl_sleep_platform"); return ; }
     struct timespec req;
     req.tv_sec = (time_t)seconds;
     req.tv_nsec = (long)((seconds - (double)req.tv_sec) * 1000000000.0);
@@ -911,47 +939,54 @@ struct MemoryStruct {
 };
 
 void* fl_thread_create_platform(void* (*fn)(void*), void* arg) {
-    if (!fn) return NULL;
+        PROFILE_START(_pt);
+if (!fn) { PROFILE_END_VAR(_pt, "fl_thread_create_platform"); return NULL; }
     pthread_t* t = malloc(sizeof(*t));
-    if (!t) return NULL;
+    if (!t) { PROFILE_END_VAR(_pt, "fl_thread_create_platform"); return NULL; }
     if (pthread_create(t, NULL, fn, arg) != 0) { free(t); return NULL; }
-    return t;
+    { PROFILE_END_VAR(_pt, "fl_thread_create_platform"); return t; }
 }
 
 void fl_thread_join_platform(void* thread) {
-    if (!thread) return;
+        PROFILE_START(_pt);
+if (!thread) { PROFILE_END_VAR(_pt, "fl_thread_join_platform"); return ; }
     pthread_t* t = (pthread_t*)thread;
     pthread_join(*t, NULL);
     free(t);
 }
 
 void* fl_mutex_create_platform(void) {
-    pthread_mutex_t* m = malloc(sizeof(*m));
-    if (!m) return NULL;
+        PROFILE_START(_pt);
+pthread_mutex_t* m = malloc(sizeof(*m));
+    if (!m) { PROFILE_END_VAR(_pt, "fl_mutex_create_platform"); return NULL; }
     if (pthread_mutex_init(m, NULL) != 0) { free(m); return NULL; }
-    return m;
+    { PROFILE_END_VAR(_pt, "fl_mutex_create_platform"); return m; }
 }
 
 void fl_mutex_destroy_platform(void* mutex) {
-    if (!mutex) return;
+        PROFILE_START(_pt);
+if (!mutex) { PROFILE_END_VAR(_pt, "fl_mutex_destroy_platform"); return ; }
     pthread_mutex_t* m = (pthread_mutex_t*)mutex;
     pthread_mutex_destroy(m);
     free(m);
 }
 
 void fl_mutex_lock_platform(void* mutex) {
-    if (!mutex) return;
+        PROFILE_START(_pt);
+if (!mutex) { PROFILE_END_VAR(_pt, "fl_mutex_lock_platform"); return ; }
     pthread_mutex_lock((pthread_mutex_t*)mutex);
 }
 
 void fl_mutex_unlock_platform(void* mutex) {
-    if (!mutex) return;
+        PROFILE_START(_pt);
+if (!mutex) { PROFILE_END_VAR(_pt, "fl_mutex_unlock_platform"); return ; }
     pthread_mutex_unlock((pthread_mutex_t*)mutex);
 }
 
 int fl_get_active_interface_platform(char out[], size_t max_len) {
-    static char content[16384];
-    if (File_ReadAll("/proc/net/route", content, (long)sizeof(content)) <= 0) return 0;
+        PROFILE_START(_pt);
+static char content[16384];
+    if (File_ReadAll("/proc/net/route", content, (long)sizeof(content)) <= 0) { PROFILE_END_VAR(_pt, "fl_get_active_interface_platform"); return 0; }
     int found = 0;
     char* cur = content;
     if (*cur) {
@@ -975,13 +1010,14 @@ int fl_get_active_interface_platform(char out[], size_t max_len) {
             }
         }
     }
-    return found;
+    { PROFILE_END_VAR(_pt, "fl_get_active_interface_platform"); return found; }
 }
 unsigned long long fl_net_rx_bytes_platform() {
-    char want[64];
-    if (!fl_get_active_interface_platform(want, sizeof(want)) || !want[0]) return 0;
+        PROFILE_START(_pt);
+char want[64];
+    if (!fl_get_active_interface_platform(want, sizeof(want)) || !want[0]) { PROFILE_END_VAR(_pt, "fl_net_rx_bytes_platform"); return 0; }
     FILE *f = fopen("/proc/net/dev", "r");
-    if (!f) return 0;
+    if (!f) { PROFILE_END_VAR(_pt, "fl_net_rx_bytes_platform"); return 0; }
     char buf[512];
     unsigned long long rx_bytes = 0;
 
@@ -1002,24 +1038,25 @@ unsigned long long fl_net_rx_bytes_platform() {
         }
     }
     fclose(f);
-    return rx_bytes;
+    { PROFILE_END_VAR(_pt, "fl_net_rx_bytes_platform"); return rx_bytes; }
 }
 
 FlNetStatus fl_net_status_platform(void) {
-    char iface[32] = {0};
+        PROFILE_START(_pt);
+char iface[32] = {0};
     int found = fl_get_active_interface_platform(iface, sizeof(iface));
 
-    if (!found) return FL_NET_OFFLINE;
+    if (!found) { PROFILE_END_VAR(_pt, "fl_net_status_platform"); return FL_NET_OFFLINE; }
     char sysfs_path[128];
     snprintf(sysfs_path, sizeof(sysfs_path), "/sys/class/net/%s/carrier", iface);
 
     FILE* f = fopen(sysfs_path, "r");
-    if (!f) return FL_NET_OFFLINE;
+    if (!f) { PROFILE_END_VAR(_pt, "fl_net_status_platform"); return FL_NET_OFFLINE; }
 
     char carrier = (char)fgetc(f);
     fclose(f);
 
-    if (carrier != '1') return FL_NET_OFFLINE;
+    if (carrier != '1') { PROFILE_END_VAR(_pt, "fl_net_status_platform"); return FL_NET_OFFLINE; }
 
     if (strncmp(iface, "en", 2) == 0 || strncmp(iface, "eth", 3) == 0) {
         return FL_NET_ETHERNET;
@@ -1027,5 +1064,5 @@ FlNetStatus fl_net_status_platform(void) {
     if (strncmp(iface, "wl", 2) == 0) {
         return FL_NET_WIFI;
     }
-    return FL_NET_OFFLINE;
+    { PROFILE_END_VAR(_pt, "fl_net_status_platform"); return FL_NET_OFFLINE; }
 }

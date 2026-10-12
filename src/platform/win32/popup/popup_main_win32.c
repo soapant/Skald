@@ -22,14 +22,16 @@
 #include "platform/flapi_platform.h"
 #include "core/prompt_controller.h"
 
+#include "core/timer.h"
 static bool s_swallow_next_char = false;
 
 static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent* key) {
-    int wParam = key->vk;
+        PROFILE_START(_pt);
+int wParam = key->vk;
     bool ctrl_pressed = key->ctrl;
     bool shift_pressed = key->shift;
 
-    if (wParam == VK_CONTROL || wParam == VK_SHIFT || wParam == VK_MENU) return false;
+    if (wParam == VK_CONTROL || wParam == VK_SHIFT || wParam == VK_MENU) { PROFILE_END_VAR(_pt, "PromptWindow_OnKey"); return false; }
 
     ListBoxInfo* lb = GetLBFromChild(hwnd);
 
@@ -281,11 +283,12 @@ static bool PromptWindow_OnKey(HWND hwnd, const PopupKeyEvent* key) {
         }
     }
 
-    return false;
+    { PROFILE_END_VAR(_pt, "PromptWindow_OnKey"); return false; }
 }
 
 LRESULT CALLBACK ListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uIdSubclass, DWORD_PTR dwRefData){
-  static HBRUSH s_bg_brush = NULL;
+    PROFILE_START(_pt);
+static HBRUSH s_bg_brush = NULL;
     switch (uMsg) {
     case WM_NCDESTROY:
                       RemoveWindowSubclass(hWnd, ListBoxSubclassProc, uIdSubclass);
@@ -362,11 +365,12 @@ LRESULT CALLBACK ListBoxSubclassProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM
     default:
             return DefSubclassProc(hWnd, uMsg, wParam, lParam);
     }
-  return 0;
+  { PROFILE_END_VAR(_pt, "ListBoxSubclassProc"); return 0; }
 }
 
 LRESULT CALLBACK PopupWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-  if(msg==WM_KEYDOWN){ int mods=0; if(GetKeyState(VK_CONTROL)&0x8000) mods|=HOTKEY_MOD_CTRL; if(GetKeyState(VK_MENU)&0x8000) mods|=HOTKEY_MOD_ALT; if(GetKeyState(VK_SHIFT)&0x8000) mods|=HOTKEY_MOD_SHIFT; if(GetKeyState(VK_LWIN)&0x8000||GetKeyState(VK_RWIN)&0x8000) mods|=HOTKEY_MOD_SUPER; Platform_InputState_Update((int)wParam,true,mods); }
+    PROFILE_START(_pt);
+if(msg==WM_KEYDOWN){ int mods=0; if(GetKeyState(VK_CONTROL)&0x8000) mods|=HOTKEY_MOD_CTRL; if(GetKeyState(VK_MENU)&0x8000) mods|=HOTKEY_MOD_ALT; if(GetKeyState(VK_SHIFT)&0x8000) mods|=HOTKEY_MOD_SHIFT; if(GetKeyState(VK_LWIN)&0x8000||GetKeyState(VK_RWIN)&0x8000) mods|=HOTKEY_MOD_SUPER; Platform_InputState_Update((int)wParam,true,mods); }
   if(msg==WM_KEYUP){ int mods=0; if(GetKeyState(VK_CONTROL)&0x8000) mods|=HOTKEY_MOD_CTRL; if(GetKeyState(VK_MENU)&0x8000) mods|=HOTKEY_MOD_ALT; if(GetKeyState(VK_SHIFT)&0x8000) mods|=HOTKEY_MOD_SHIFT; if(GetKeyState(VK_LWIN)&0x8000||GetKeyState(VK_RWIN)&0x8000) mods|=HOTKEY_MOD_SUPER; Platform_InputState_Update((int)wParam,false,mods); }
   ListBoxInfo* lb = GetLBForPopupWindow(hwnd);
   static HBRUSH s_bg_brush = NULL;
@@ -831,5 +835,5 @@ case WM_CHAR: {
             return DefWindowProcA(hwnd, msg, wParam, lParam);
               
     }
-  return 0;
+  { PROFILE_END_VAR(_pt, "PopupWndProc"); return 0; }
 }

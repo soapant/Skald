@@ -12,6 +12,7 @@
 #include <sys/syscall.h>
 #include <time.h>
 
+#include "core/timer.h"
 #define CLIP_INCR_THRESHOLD (256u * 1024u)
 #define CLIP_INCR_CHUNK (64u * 1024u)
 #define CLIP_READ_TRIES 40
@@ -24,15 +25,17 @@ static long g_cl_selclear = 0;
 long g_cl_selreq = 0;
 
 static long cl_ms_since(void) {
-    struct timespec ts;
+        PROFILE_START(_pt);
+struct timespec ts;
     clock_gettime(CLOCK_MONOTONIC, &ts);
-    return (long)ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
+    { PROFILE_END_VAR(_pt, "cl_ms_since"); return (long)ts.tv_sec * 1000 + ts.tv_nsec / 1000000; }
 }
 
 static long g_cl_t0 = 0;
 
 static void cl_trace(const char *what, const char *fmt, ...) {
-    if (!DebugMode) return;
+        PROFILE_START(_pt);
+if (!DebugMode) { PROFILE_END_VAR(_pt, "cl_trace"); return ; }
     va_list ap;
     long n = ++g_cl_seq;
     char buf[512];
@@ -71,12 +74,13 @@ static size_t g_incr_off = 0;
 static long g_incr_old_mask = 0;
 
 void x11_clipboard_ensure_started(void) {
-    if (g_cl_t0 == 0) g_cl_t0 = cl_ms_since();
+        PROFILE_START(_pt);
+if (g_cl_t0 == 0) g_cl_t0 = cl_ms_since();
     Display *dpy = get_display();
     if (!dpy) {
         return;
     }
-    if (g_clip_win != None) return;
+    if (g_clip_win != None) { PROFILE_END_VAR(_pt, "x11_clipboard_ensure_started"); return ; }
     Window root = DefaultRootWindow(dpy);
     XSetWindowAttributes attrs = {0};
     attrs.override_redirect = True;
@@ -101,7 +105,8 @@ void x11_clipboard_ensure_started(void) {
 }
 
 static void x11_clipboard_abort_incr(void) {
-    if (g_incr_active && g_incr_req != None && g_incr_old_mask) {
+        PROFILE_START(_pt);
+if (g_incr_active && g_incr_req != None && g_incr_old_mask) {
         Display *adpy = get_display();
         if (adpy) XSelectInput(adpy, g_incr_req, g_incr_old_mask);
     }
@@ -113,7 +118,8 @@ static void x11_clipboard_abort_incr(void) {
 }
 
 static void x11_clipboard_serve_request(Display *dpy, XSelectionRequestEvent *req) {
-    XEvent resp = {0};
+        PROFILE_START(_pt);
+XEvent resp = {0};
     resp.xselection.type = SelectionNotify;
     resp.xselection.display = req->display;
     resp.xselection.requestor = req->requestor;
@@ -205,11 +211,12 @@ static void x11_clipboard_serve_request(Display *dpy, XSelectionRequestEvent *re
 }
 
 static void x11_clipboard_serve_incr(Display *dpy, XPropertyEvent *pev) {
-    if (!g_incr_active || !g_clip_png) {
+        PROFILE_START(_pt);
+if (!g_incr_active || !g_clip_png) {
         x11_clipboard_abort_incr();
         return;
     }
-    if (pev->window != g_incr_req || pev->atom != g_incr_prop || pev->state != PropertyDelete) return;
+    if (pev->window != g_incr_req || pev->atom != g_incr_prop || pev->state != PropertyDelete) { PROFILE_END_VAR(_pt, "x11_clipboard_serve_incr"); return ; }
     size_t remaining = g_clip_png_len - g_incr_off;
     if (remaining > 0) {
         size_t n = remaining > CLIP_INCR_CHUNK ? CLIP_INCR_CHUNK : remaining;
@@ -225,7 +232,8 @@ static void x11_clipboard_serve_incr(Display *dpy, XPropertyEvent *pev) {
 }
 
 bool x11_clipboard_handle_event(Display *dpy, XEvent *ev) {
-    if (!dpy || !ev) return false;
+        PROFILE_START(_pt);
+if (!dpy || !ev) { PROFILE_END_VAR(_pt, "x11_clipboard_handle_event"); return false; }
     if (ev->type == SelectionRequest) {
         g_cl_selreq++;
         cl_trace("EVENT", "SelectionRequest n=%ld requestor=%lu sel=%lu target=%lu prop=%lu time=%lu",
@@ -265,11 +273,12 @@ bool x11_clipboard_handle_event(Display *dpy, XEvent *ev) {
             return true;
         }
     }
-    return false;
+    { PROFILE_END_VAR(_pt, "x11_clipboard_handle_event"); return false; }
 }
 
 static int x11_clipboard_take_ownership(Display *dpy) {
-    Window prev = XGetSelectionOwner(dpy, g_clip_clipboard);
+        PROFILE_START(_pt);
+Window prev = XGetSelectionOwner(dpy, g_clip_clipboard);
     cl_trace("OWN", "before prev_clipboard_owner=%lu our_win=%lu", (unsigned long)prev, (unsigned long)g_clip_win);
     XSetSelectionOwner(dpy, g_clip_clipboard, g_clip_win, CurrentTime);
     XSetSelectionOwner(dpy, g_clip_primary, g_clip_win, CurrentTime);
@@ -277,17 +286,18 @@ static int x11_clipboard_take_ownership(Display *dpy) {
     Window owner = XGetSelectionOwner(dpy, g_clip_clipboard);
     cl_trace("OWN", "after owner=%lu we_own=%d", (unsigned long)owner, owner == g_clip_win ? 1 : 0);
     
-    return owner == g_clip_win;
+    { PROFILE_END_VAR(_pt, "x11_clipboard_take_ownership"); return owner == g_clip_win; }
 }
 
 int x11_clipboard_set_text(const char *text) {
-    if (!text) return 0;
+        PROFILE_START(_pt);
+if (!text) { PROFILE_END_VAR(_pt, "x11_clipboard_set_text"); return 0; }
     cl_trace("SETTEXT", "begin len=%d text='%s'", (int)strlen(text), text);
     x11_clipboard_ensure_started();
     Display *dpy = get_display();
     if (!dpy || g_clip_win == None) { cl_trace("SETTEXT", "no display/win"); return 0; }
     char* nt = strdup(text);
-    if (!nt) return 0;
+    if (!nt) { PROFILE_END_VAR(_pt, "x11_clipboard_set_text"); return 0; }
     free(g_clip_text);
     g_clip_text = nt;
     free(g_clip_png);
@@ -301,17 +311,18 @@ int x11_clipboard_set_text(const char *text) {
     XFlush(dpy);
     int r = x11_clipboard_take_ownership(dpy);
     cl_trace("SETTEXT", "end ret=%d", r);
-    return r;
+    { PROFILE_END_VAR(_pt, "x11_clipboard_set_text"); return r; }
 }
 
 int x11_clipboard_set_file(const char *path) {
-    if (!path || !path[0]) return 0;
+        PROFILE_START(_pt);
+if (!path || !path[0]) { PROFILE_END_VAR(_pt, "x11_clipboard_set_file"); return 0; }
     x11_clipboard_ensure_started();
     Display *dpy = get_display();
-    if (!dpy || g_clip_win == None) return 0;
+    if (!dpy || g_clip_win == None) { PROFILE_END_VAR(_pt, "x11_clipboard_set_file"); return 0; }
     x11_clipboard_abort_incr();
     char *uri = clipboard_path_to_uri_list(path);
-    if (!uri) return 0;
+    if (!uri) { PROFILE_END_VAR(_pt, "x11_clipboard_set_file"); return 0; }
     size_t n = strlen(uri) + 8;
     char *gnome = (char*)malloc(n);
     if (!gnome) { free(uri); return 0; }
@@ -325,20 +336,21 @@ int x11_clipboard_set_file(const char *path) {
     free(g_clip_png);
     g_clip_png = NULL;
     g_clip_png_len = 0;
-    return x11_clipboard_take_ownership(dpy);
+    { PROFILE_END_VAR(_pt, "x11_clipboard_set_file"); return x11_clipboard_take_ownership(dpy); }
 }
 
 int x11_clipboard_set_image(const unsigned char *png, size_t len) {
-    if (!png || len == 0) return 0;
+        PROFILE_START(_pt);
+if (!png || len == 0) { PROFILE_END_VAR(_pt, "x11_clipboard_set_image"); return 0; }
     
     x11_clipboard_ensure_started();
     Display *dpy = get_display();
-    if (!dpy || g_clip_win == None) return 0;
+    if (!dpy || g_clip_win == None) { PROFILE_END_VAR(_pt, "x11_clipboard_set_image"); return 0; }
     x11_clipboard_abort_incr();
     const char* mime = clipboard_image_mime(clipboard_image_format(png, len));
     g_clip_img_atom = XInternAtom(dpy, mime ? mime : "image/png", False);
     unsigned char* np = malloc(len);
-    if (!np) return 0;
+    if (!np) { PROFILE_END_VAR(_pt, "x11_clipboard_set_image"); return 0; }
     memcpy(np, png, len);
     free(g_clip_png);
     g_clip_png = np;
@@ -349,11 +361,12 @@ int x11_clipboard_set_image(const unsigned char *png, size_t len) {
     g_clip_file_uri = NULL;
     free(g_clip_gnome_payload);
     g_clip_gnome_payload = NULL;
-    return x11_clipboard_take_ownership(dpy);
+    { PROFILE_END_VAR(_pt, "x11_clipboard_set_image"); return x11_clipboard_take_ownership(dpy); }
 }
 
 void x11_clipboard_shutdown(void) {
-    Display *dpy = get_display();
+        PROFILE_START(_pt);
+Display *dpy = get_display();
     if (dpy && g_clip_win != None) XDestroyWindow(dpy, g_clip_win);
     g_clip_win = None;
     if (g_clip_rd_dpy) {
@@ -382,42 +395,46 @@ typedef struct {
 } ClipReadWait;
 
 static Bool ClipReadNotifyPred(Display *dpy, XEvent *ev, XPointer arg) {
-    (void)dpy;
+        PROFILE_START(_pt);
+(void)dpy;
     ClipReadWait *w = (ClipReadWait *)arg;
     if (ev->type == SelectionNotify)
-        return ev->xselection.requestor == w->win && ev->xselection.selection == w->selection;
-    return False;
+        { PROFILE_END_VAR(_pt, "ClipReadNotifyPred"); return ev->xselection.requestor == w->win && ev->xselection.selection == w->selection; }
+    { PROFILE_END_VAR(_pt, "ClipReadNotifyPred"); return False; }
 }
 
 static Bool ClipReadPropPred(Display *dpy, XEvent *ev, XPointer arg) {
-    (void)dpy;
+        PROFILE_START(_pt);
+(void)dpy;
     ClipReadWait *w = (ClipReadWait *)arg;
     if (ev->type == PropertyNotify)
-        return ev->xproperty.window == w->win && ev->xproperty.atom == w->property && ev->xproperty.state == PropertyNewValue;
-    return False;
+        { PROFILE_END_VAR(_pt, "ClipReadPropPred"); return ev->xproperty.window == w->win && ev->xproperty.atom == w->property && ev->xproperty.state == PropertyNewValue; }
+    { PROFILE_END_VAR(_pt, "ClipReadPropPred"); return False; }
 }
 
 static int ClipReadWaitEvent(Display *dpy, XEvent *ev, Bool (*pred)(Display *, XEvent *, XPointer), ClipReadWait *w, int tries) {
-    for (int i = 0; i < tries; i++) {
+        PROFILE_START(_pt);
+for (int i = 0; i < tries; i++) {
         if (XCheckIfEvent(dpy, ev, pred, (XPointer)w)) return 1;
         usleep(5000);
     }
-    return 0;
+    { PROFILE_END_VAR(_pt, "ClipReadWaitEvent"); return 0; }
 }
 
 static char *ClipReadProperty(Display *dpy, Window win, Atom prop, size_t *out_len) {
-    Atom actual = None;
+        PROFILE_START(_pt);
+Atom actual = None;
     int format = 0;
     unsigned long nitems = 0;
     unsigned long after = 0;
     unsigned char *data = NULL;
     if (XGetWindowProperty(dpy, win, prop, 0, (~0L), True, AnyPropertyType, &actual, &format, &nitems, &after, &data) != Success)
-        return NULL;
+        { PROFILE_END_VAR(_pt, "ClipReadProperty"); return NULL; }
     if (actual == g_clip_incr) {
         if (data) XFree(data);
         return NULL;
     }
-    if (!data) return NULL;
+    if (!data) { PROFILE_END_VAR(_pt, "ClipReadProperty"); return NULL; }
     char *out = malloc(nitems + 1);
     if (!out) {
         XFree(data);
@@ -427,14 +444,15 @@ static char *ClipReadProperty(Display *dpy, Window win, Atom prop, size_t *out_l
     out[nitems] = '\0';
     if (out_len) *out_len = (size_t)nitems;
     XFree(data);
-    return out;
+    { PROFILE_END_VAR(_pt, "ClipReadProperty"); return out; }
 }
 
 static char *ClipReadIncr(Display *dpy, Window win, Atom prop, ClipReadWait *w) {
-    size_t cap = 65536;
+        PROFILE_START(_pt);
+size_t cap = 65536;
     size_t len = 0;
     char *out = malloc(cap);
-    if (!out) return NULL;
+    if (!out) { PROFILE_END_VAR(_pt, "ClipReadIncr"); return NULL; }
     XEvent ev;
     for (;;) {
         if (!ClipReadWaitEvent(dpy, &ev, ClipReadPropPred, w, 400)) break;
@@ -465,11 +483,12 @@ static char *ClipReadIncr(Display *dpy, Window win, Atom prop, ClipReadWait *w) 
         XFree(data);
     }
     out[len] = '\0';
-    return out;
+    { PROFILE_END_VAR(_pt, "ClipReadIncr"); return out; }
 }
 
 static Display *x11_clipboard_read_display(void) {
-    if (g_clip_rd_dpy) return g_clip_rd_dpy;
+        PROFILE_START(_pt);
+if (g_clip_rd_dpy) { PROFILE_END_VAR(_pt, "x11_clipboard_read_display"); return g_clip_rd_dpy; }
     Display *d = XOpenDisplay(NULL);
     if (!d) {
         Display *main_dpy = get_display();
@@ -494,11 +513,12 @@ static Display *x11_clipboard_read_display(void) {
     XFlush(d);
     g_clip_rd_dpy = d;
     
-    return g_clip_rd_dpy;
+    { PROFILE_END_VAR(_pt, "x11_clipboard_read_display"); return g_clip_rd_dpy; }
 }
 
 static char *ClipReadTarget(Atom target) {
-    Display *dpy = x11_clipboard_read_display();
+        PROFILE_START(_pt);
+Display *dpy = x11_clipboard_read_display();
     if (!dpy || g_clip_rd_win == None) { cl_trace("READ", "no read display/win"); return NULL; }
     Window win = g_clip_rd_win;
     Atom prop = g_clip_rd_prop;
@@ -532,18 +552,20 @@ static char *ClipReadTarget(Atom target) {
         return ClipReadIncr(dpy, win, prop, &w);
     }
     char *res = ClipReadProperty(dpy, win, prop, NULL);
-    return res;
+    { PROFILE_END_VAR(_pt, "ClipReadTarget"); return res; }
 }
 
 unsigned long x11_clipboard_owner(void) {
-    x11_clipboard_ensure_started();
+        PROFILE_START(_pt);
+x11_clipboard_ensure_started();
     Display *dpy = get_display();
-    if (!dpy || g_clip_clipboard == None) return 0;
-    return (unsigned long)XGetSelectionOwner(dpy, g_clip_clipboard);
+    if (!dpy || g_clip_clipboard == None) { PROFILE_END_VAR(_pt, "x11_clipboard_owner"); return 0; }
+    { PROFILE_END_VAR(_pt, "x11_clipboard_owner"); return (unsigned long)XGetSelectionOwner(dpy, g_clip_clipboard); }
 }
 
 char *x11_clipboard_get_text(void) {
-    g_cl_reads++;
+        PROFILE_START(_pt);
+g_cl_reads++;
     x11_clipboard_ensure_started();
     Display *dpy = get_display();
     if (!dpy || g_clip_win == None) { cl_trace("GETTEXT", "no display, read#%ld", g_cl_reads); return NULL; }
@@ -555,34 +577,40 @@ char *x11_clipboard_get_text(void) {
         out = ClipReadTarget(XA_STRING);
     }
     if (!out) g_cl_read_fail++;
-    return out;
+    { PROFILE_END_VAR(_pt, "x11_clipboard_get_text"); return out; }
 }
 
 #if !defined(FLINT_WAYLAND_SESSION)
 #include "platform/x11/clipboard_backend_x11.h"
 
 bool Platform_ClipboardAvailable(void) {
-    return true;
+        PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "Platform_ClipboardAvailable"); return true; }
 }
 
 int Platform_ClipboardSetText(const char *text) {
-    return x11_clipboard_set_text(text);
+        PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "Platform_ClipboardSetText"); return x11_clipboard_set_text(text); }
 }
 
 int Platform_ClipboardSetImage(const unsigned char *png, size_t len) {
-    return x11_clipboard_set_image(png, len);
+        PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "Platform_ClipboardSetImage"); return x11_clipboard_set_image(png, len); }
 }
 
 int Platform_ClipboardSetFile(const char *path) {
-    (void)path;
-    return 0;
+        PROFILE_START(_pt);
+(void)path;
+    { PROFILE_END_VAR(_pt, "Platform_ClipboardSetFile"); return 0; }
 }
 
 char* Platform_ClipboardGetText(void) {
-    return x11_clipboard_get_text();
+        PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "Platform_ClipboardGetText"); return x11_clipboard_get_text(); }
 }
 
 void Platform_ClipboardShutdown(void) {
-    x11_clipboard_shutdown();
+        PROFILE_START(_pt);
+x11_clipboard_shutdown();
 }
 #endif

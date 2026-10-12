@@ -19,6 +19,7 @@
 #include <sys/stat.h>
 #include "platform/x11/display_x11.h"
 
+#include "core/timer.h"
 static int _x11_err = 0;
 static Window _x11_last_min = None;
 static int g_ewmh_move_works = -1;
@@ -27,7 +28,8 @@ static int g_i3_probe = 0;
 static char g_i3_sock[512];
 
 static bool i3_ensure_sock(void) {
-    if (g_i3_probe != 0) return g_i3_probe == 1;
+        PROFILE_START(_pt);
+if (g_i3_probe != 0) { PROFILE_END_VAR(_pt, "i3_ensure_sock"); return g_i3_probe == 1; }
     g_i3_probe = -1;
     const char* cur = getenv("I3SOCK");
     if (cur && cur[0]) {
@@ -39,7 +41,7 @@ static bool i3_ensure_sock(void) {
         }
     }
     const char* rtd = getenv("XDG_RUNTIME_DIR");
-    if (!rtd || !rtd[0]) return false;
+    if (!rtd || !rtd[0]) { PROFILE_END_VAR(_pt, "i3_ensure_sock"); return false; }
     char pat[512];
     snprintf(pat, sizeof(pat), "%s/i3/ipc-socket.*", rtd);
     glob_t g;
@@ -53,29 +55,33 @@ static bool i3_ensure_sock(void) {
         }
     }
     globfree(&g);
-    return g_i3_probe == 1;
+    { PROFILE_END_VAR(_pt, "i3_ensure_sock"); return g_i3_probe == 1; }
 }
 
 static bool i3_exec(const char* command) {
-    if (!i3_ensure_sock()) return false;
+        PROFILE_START(_pt);
+if (!i3_ensure_sock()) { PROFILE_END_VAR(_pt, "i3_exec"); return false; }
     char* out = Platform_RunTerminalCommand((char*)command, false);
     if (!out || out[0] == '\0') { if (out) free(out); return false; }
     bool ok = !(strstr(out, "\"success\":false") || strstr(out, "\"error\""));
     free(out);
-    return ok;
+    { PROFILE_END_VAR(_pt, "i3_exec"); return ok; }
 }
 
 static bool i3_move_to_output(bool right) {
-    char cmd[128];
+        PROFILE_START(_pt);
+char cmd[128];
     snprintf(cmd, sizeof(cmd), "i3-msg move container to output %s", right ? "right" : "left");
-    return i3_exec(cmd);
+    { PROFILE_END_VAR(_pt, "i3_move_to_output"); return i3_exec(cmd); }
 }
 static int _x11_err_handler(Display *dpy, XErrorEvent *ev) {
-  (void)dpy; (void)ev; _x11_err = 1; return 0; 
+    PROFILE_START(_pt);
+(void)dpy; (void)ev; _x11_err = 1; { PROFILE_END_VAR(_pt, "_x11_err_handler"); return 0; } 
 }
 
 static char* x11_get_text_prop(Display* dpy, Window w) {
-    if (!dpy || w == None) return NULL;
+        PROFILE_START(_pt);
+if (!dpy || w == None) { PROFILE_END_VAR(_pt, "x11_get_text_prop"); return NULL; }
     Atom utf8 = XInternAtom(dpy, "UTF8_STRING", False);
     Atom net_name = XInternAtom(dpy, "_NET_WM_NAME", False);
     Atom wm_name = XInternAtom(dpy, "WM_NAME", False);
@@ -95,13 +101,14 @@ static char* x11_get_text_prop(Display* dpy, Window w) {
             XFree(data);
         }
     }
-    return out;
+    { PROFILE_END_VAR(_pt, "x11_get_text_prop"); return out; }
 }
 
 static char* x11_get_res_class(Display* dpy, Window w) {
-    if (!dpy || w == None) return NULL;
+        PROFILE_START(_pt);
+if (!dpy || w == None) { PROFILE_END_VAR(_pt, "x11_get_res_class"); return NULL; }
     XClassHint* ch = XAllocClassHint();
-    if (!ch) return NULL;
+    if (!ch) { PROFILE_END_VAR(_pt, "x11_get_res_class"); return NULL; }
     char* out = NULL;
     _x11_err = 0;
     XErrorHandler old = XSetErrorHandler(_x11_err_handler);
@@ -112,17 +119,18 @@ static char* x11_get_res_class(Display* dpy, Window w) {
     if (ch->res_name) XFree(ch->res_name);
     if (ch->res_class) XFree(ch->res_class);
     XFree(ch);
-    return out;
+    { PROFILE_END_VAR(_pt, "x11_get_res_class"); return out; }
 }
 
 static Window* x11_client_list(Display* dpy, int* out_n) {
-    if (out_n) *out_n = 0;
-    if (!dpy) return NULL;
+        PROFILE_START(_pt);
+if (out_n) *out_n = 0;
+    if (!dpy) { PROFILE_END_VAR(_pt, "x11_client_list"); return NULL; }
     Atom a = XInternAtom(dpy, "_NET_CLIENT_LIST", False);
     Atom type = None; int fmt = 0;
     unsigned long nitems = 0, after = 0; unsigned char* data = NULL;
     if (XGetWindowProperty(dpy, DefaultRootWindow(dpy), a, 0, 65536, False, XA_WINDOW,
-                           &type, &fmt, &nitems, &after, &data) != Success) return NULL;
+                           &type, &fmt, &nitems, &after, &data) != Success) { PROFILE_END_VAR(_pt, "x11_client_list"); return NULL; }
     Window* out = NULL;
     if (data) {
         if (type == XA_WINDOW && nitems > 0) {
@@ -131,11 +139,12 @@ static Window* x11_client_list(Display* dpy, int* out_n) {
         }
         XFree(data);
     }
-    return out;
+    { PROFILE_END_VAR(_pt, "x11_client_list"); return out; }
 }
 
 static bool x11_window_geom(Display* dpy, Window w, int* out_x, int* out_y, int* out_w, int* out_h) {
-    if (!dpy || w == None) return false;
+        PROFILE_START(_pt);
+if (!dpy || w == None) { PROFILE_END_VAR(_pt, "x11_window_geom"); return false; }
     int gx = 0, gy = 0, abs_x = 0, abs_y = 0;
     unsigned int gw = 0, gh = 0, border = 0, depth = 0;
     Window child = None;
@@ -145,16 +154,17 @@ static bool x11_window_geom(Display* dpy, Window w, int* out_x, int* out_y, int*
     if (ok) ok = XTranslateCoordinates(dpy, w, DefaultRootWindow(dpy), 0, 0, &abs_x, &abs_y, &child);
     XSync(dpy, False);
     XSetErrorHandler(old);
-    if (_x11_err || !ok || gw == 0 || gh == 0) return false;
+    if (_x11_err || !ok || gw == 0 || gh == 0) { PROFILE_END_VAR(_pt, "x11_window_geom"); return false; }
     if (out_x) *out_x = abs_x;
     if (out_y) *out_y = abs_y;
     if (out_w) *out_w = (int)gw;
     if (out_h) *out_h = (int)gh;
-    return true;
+    { PROFILE_END_VAR(_pt, "x11_window_geom"); return true; }
 }
 
 static bool x11_moveresize_window(Display* dpy, Window w, int x, int y, int cw, int ch) {
-    if (!dpy || w == None) return false;
+        PROFILE_START(_pt);
+if (!dpy || w == None) { PROFILE_END_VAR(_pt, "x11_moveresize_window"); return false; }
     _x11_err = 0;
     XErrorHandler old = XSetErrorHandler(_x11_err_handler);
     Atom mrs = XInternAtom(dpy, "_NET_MOVERESIZE_WINDOW", False);
@@ -172,14 +182,15 @@ static bool x11_moveresize_window(Display* dpy, Window w, int x, int y, int cw, 
     XSendEvent(dpy, DefaultRootWindow(dpy), False, SubstructureRedirectMask | SubstructureNotifyMask, &ev);
     XSync(dpy, False);
     XSetErrorHandler(old);
-    if (!_x11_err) return true;
+    if (!_x11_err) { PROFILE_END_VAR(_pt, "x11_moveresize_window"); return true; }
     XMoveResizeWindow(dpy, w, x, y, cw > 0 ? (unsigned)cw : 1, ch > 0 ? (unsigned)ch : 1);
     XSync(dpy, False);
-    return _x11_err == 0;
+    { PROFILE_END_VAR(_pt, "x11_moveresize_window"); return _x11_err == 0; }
 }
 
 static bool x11_activate_window(Display* dpy, Window w) {
-    if (!dpy || w == None) return false;
+        PROFILE_START(_pt);
+if (!dpy || w == None) { PROFILE_END_VAR(_pt, "x11_activate_window"); return false; }
     _x11_err = 0;
     XErrorHandler old = XSetErrorHandler(_x11_err_handler);
     Atom active = XInternAtom(dpy, "_NET_ACTIVE_WINDOW", False);
@@ -194,11 +205,12 @@ static bool x11_activate_window(Display* dpy, Window w) {
     XSendEvent(dpy, DefaultRootWindow(dpy), False, SubstructureRedirectMask | SubstructureNotifyMask, &ev);
     XSync(dpy, False);
     XSetErrorHandler(old);
-    return _x11_err == 0;
+    { PROFILE_END_VAR(_pt, "x11_activate_window"); return _x11_err == 0; }
 }
 
 static int x11_keycode_for(Display* dpy, KeySym ks, int* need_shift) {
-    if (need_shift) *need_shift = 0;
+        PROFILE_START(_pt);
+if (need_shift) *need_shift = 0;
     for (int kc = 8; kc < 256; kc++) {
         if (XkbKeycodeToKeysym(dpy, (KeyCode)kc, 0, 0) == ks) return kc;
     }
@@ -208,11 +220,12 @@ static int x11_keycode_for(Display* dpy, KeySym ks, int* need_shift) {
             return kc;
         }
     }
-    return 0;
+    { PROFILE_END_VAR(_pt, "x11_keycode_for"); return 0; }
 }
 
 bool get_title_x11(char *buffer, int buffer_size) {
-    if (!buffer || buffer_size <= 0) { log_error("buffer='%s' buffer_size=%d", buffer ? buffer : "null", buffer_size); return false; }
+    PROFILE_START(_pt);
+if (!buffer || buffer_size <= 0) { log_error("buffer='%s' buffer_size=%d", buffer ? buffer : "null", buffer_size); return false; }
     buffer[0] = '\0';
     Display *display = get_display();
     if (!display) { log_error("display is NULL buffer='%s' buffer_size=%d", buffer ? buffer : "null", buffer_size); return false; }
@@ -237,14 +250,15 @@ bool get_title_x11(char *buffer, int buffer_size) {
     strncpy(buffer, name, buffer_size - 1);
     buffer[buffer_size - 1] = '\0';
     free(name);
-    return buffer[0] != '\0';
+    { PROFILE_END_VAR(_pt, "get_title_x11"); return buffer[0] != '\0'; }
 }
 
 bool get_app_id_x11(char *buffer, int buffer_size) {
-    if (!buffer || buffer_size <= 0) return false;
+        PROFILE_START(_pt);
+if (!buffer || buffer_size <= 0) { PROFILE_END_VAR(_pt, "get_app_id_x11"); return false; }
     buffer[0] = '\0';
     Display *display = get_display();
-    if (!display) return false;
+    if (!display) { PROFILE_END_VAR(_pt, "get_app_id_x11"); return false; }
     Window focus = None;
     int revert_to = 0;
     _x11_err = 0;
@@ -269,11 +283,12 @@ bool get_app_id_x11(char *buffer, int buffer_size) {
     if (ch->res_name) XFree(ch->res_name);
     if (ch->res_class) XFree(ch->res_class);
     XFree(ch);
-    return buffer[0] != '\0';
+    { PROFILE_END_VAR(_pt, "get_app_id_x11"); return buffer[0] != '\0'; }
 }
 
 char* paste_x11(char* content) {
-  if (!content) { log_error("content is NULL"); return NULL; }
+    PROFILE_START(_pt);
+if (!content) { log_error("content is NULL"); return NULL; }
   Display* dpy = get_display();
   if (!dpy) { log_error("no display"); return NULL; }
   int ev_q = 0, er_q = 0, maj = 0, min = 0;
@@ -300,13 +315,14 @@ char* paste_x11(char* content) {
     XFlush(dpy);
   }
   XSync(dpy, False);
-  return strdup("");
+  { PROFILE_END_VAR(_pt, "paste_x11"); return strdup(""); }
 }
 
 bool focus_window_title_x11(char* title) {
-    if (!title || !title[0]) { log_error("title='%s'", title ? title : "null"); return false; }
+        PROFILE_START(_pt);
+if (!title || !title[0]) { log_error("title='%s'", title ? title : "null"); return false; }
     Display* display = get_display();
-    if (!display) return false;
+    if (!display) { PROFILE_END_VAR(_pt, "focus_window_title_x11"); return false; }
     int nclients = 0;
     Window* clients = x11_client_list(display, &nclients);
     if (!clients || nclients <= 0) {
@@ -325,11 +341,12 @@ bool focus_window_title_x11(char* title) {
     }
     free(clients);
     if (!found) log_error("focus_window_title_x11: no match for title='%s'", title);
-    return found;
+    { PROFILE_END_VAR(_pt, "focus_window_title_x11"); return found; }
 }
 
 PlWindowList get_window_names_x11() {
-    PlWindowList list = { .windows = NULL, .count = 0 };
+        PROFILE_START(_pt);
+PlWindowList list = { .windows = NULL, .count = 0 };
     Display* display = get_display();
     if (!display) { log_error("no display"); return list; }
     int nclients = 0;
@@ -356,11 +373,12 @@ PlWindowList get_window_names_x11() {
         list.windows[list.count++] = cls;
     }
     free(clients);
-    return list;
+    { PROFILE_END_VAR(_pt, "get_window_names_x11"); return list; }
 }
 
 PlWindowList get_window_titles_x11() {
-    PlWindowList list = { .windows = NULL, .count = 0 };
+        PROFILE_START(_pt);
+PlWindowList list = { .windows = NULL, .count = 0 };
     Display* display = get_display();
     if (!display) { log_error("no display"); return list; }
     int nclients = 0;
@@ -384,20 +402,22 @@ PlWindowList get_window_titles_x11() {
         list.windows[list.count++] = wt;
     }
     free(clients);
-    return list;
+    { PROFILE_END_VAR(_pt, "get_window_titles_x11"); return list; }
 }
 
 static Display *_x11_cursor_dpy = NULL;
 
 static Display *_x11_cursor_display(void) {
-    if (_x11_cursor_dpy == NULL) {
+        PROFILE_START(_pt);
+if (_x11_cursor_dpy == NULL) {
         _x11_cursor_dpy = XOpenDisplay(NULL);
     }
-    return _x11_cursor_dpy;
+    { PROFILE_END_VAR(_pt, "_x11_cursor_display"); return _x11_cursor_dpy; }
 }
 
 void x11_wm_cleanup_cursor_display(void) {
-    if (_x11_cursor_dpy != NULL) {
+        PROFILE_START(_pt);
+if (_x11_cursor_dpy != NULL) {
         XCloseDisplay(_x11_cursor_dpy);
         _x11_cursor_dpy = NULL;
     }
@@ -405,22 +425,24 @@ void x11_wm_cleanup_cursor_display(void) {
 
 
 static Window x11_focused_window(Display* display) {
-    Window focus = None;
+        PROFILE_START(_pt);
+Window focus = None;
     int revert_to = 0;
     _x11_err = 0;
     XErrorHandler old = XSetErrorHandler(_x11_err_handler);
     XGetInputFocus(display, &focus, &revert_to);
     XSync(display, False);
     XSetErrorHandler(old);
-    if (_x11_err || focus == None || focus == PointerRoot) return None;
-    return focus;
+    if (_x11_err || focus == None || focus == PointerRoot) { PROFILE_END_VAR(_pt, "x11_focused_window"); return None; }
+    { PROFILE_END_VAR(_pt, "x11_focused_window"); return focus; }
 }
 
 bool close_active_window_x11(void) {
-    Display* display = get_display();
-    if (!display) return false;
+        PROFILE_START(_pt);
+Display* display = get_display();
+    if (!display) { PROFILE_END_VAR(_pt, "close_active_window_x11"); return false; }
     Window focus = x11_focused_window(display);
-    if (focus == None) return false;
+    if (focus == None) { PROFILE_END_VAR(_pt, "close_active_window_x11"); return false; }
     Atom close_atom = XInternAtom(display, "_NET_CLOSE_WINDOW", False);
     XEvent ev;
     memset(&ev, 0, sizeof(ev));
@@ -439,14 +461,15 @@ bool close_active_window_x11(void) {
         XKillClient(display, focus);
         XSync(display, False);
     }
-    return true;
+    { PROFILE_END_VAR(_pt, "close_active_window_x11"); return true; }
 }
 
 bool toggle_fullscreen_active_x11(void) {
-    Display* display = get_display();
-    if (!display) return false;
+        PROFILE_START(_pt);
+Display* display = get_display();
+    if (!display) { PROFILE_END_VAR(_pt, "toggle_fullscreen_active_x11"); return false; }
     Window focus = x11_focused_window(display);
-    if (focus == None) return false;
+    if (focus == None) { PROFILE_END_VAR(_pt, "toggle_fullscreen_active_x11"); return false; }
     Atom state_atom = XInternAtom(display, "_NET_WM_STATE", False);
     Atom fs_atom = XInternAtom(display, "_NET_WM_STATE_FULLSCREEN", False);
     XEvent ev;
@@ -464,16 +487,17 @@ bool toggle_fullscreen_active_x11(void) {
     XSendEvent(display, DefaultRootWindow(display), False, SubstructureRedirectMask | SubstructureNotifyMask, &ev);
     XSync(display, False);
     XSetErrorHandler(old);
-    return _x11_err == 0;
+    { PROFILE_END_VAR(_pt, "toggle_fullscreen_active_x11"); return _x11_err == 0; }
 }
 
 static bool x11_activate_neighbor(bool right) {
-    Display* display = get_display();
-    if (!display) return false;
+        PROFILE_START(_pt);
+Display* display = get_display();
+    if (!display) { PROFILE_END_VAR(_pt, "x11_activate_neighbor"); return false; }
     Window focus = x11_focused_window(display);
-    if (focus == None) return false;
+    if (focus == None) { PROFILE_END_VAR(_pt, "x11_activate_neighbor"); return false; }
     int fcx = 0, fcy = 0, fw = 0, fh = 0;
-    if (!x11_window_geom(display, focus, &fcx, &fcy, &fw, &fh)) return false;
+    if (!x11_window_geom(display, focus, &fcx, &fcy, &fw, &fh)) { PROFILE_END_VAR(_pt, "x11_activate_neighbor"); return false; }
     fcx += fw / 2;
     fcy += fh / 2;
     int nclients = 0;
@@ -504,18 +528,19 @@ static bool x11_activate_neighbor(bool right) {
         }
     }
     free(clients);
-    if (best == None) return false;
-    return x11_activate_window(display, best);
+    if (best == None) { PROFILE_END_VAR(_pt, "x11_activate_neighbor"); return false; }
+    { PROFILE_END_VAR(_pt, "x11_activate_neighbor"); return x11_activate_window(display, best); }
 }
 
 bool move_active_window_to_monitor_x11(bool right) {
-    Display* display = get_display();
-    if (!display) return false;
+        PROFILE_START(_pt);
+Display* display = get_display();
+    if (!display) { PROFILE_END_VAR(_pt, "move_active_window_to_monitor_x11"); return false; }
     Window focus = x11_focused_window(display);
-    if (focus == None) return false;
+    if (focus == None) { PROFILE_END_VAR(_pt, "move_active_window_to_monitor_x11"); return false; }
     Window root = DefaultRootWindow(display);
     XRRScreenResources* res = XRRGetScreenResourcesCurrent(display, root);
-    if (!res) return false;
+    if (!res) { PROFILE_END_VAR(_pt, "move_active_window_to_monitor_x11"); return false; }
     int n = 0;
     int ox[64], oy[64], ow[64], oh[64];
     for (int c = 0; c < res->ncrtc && n < 64; c++) {
@@ -532,7 +557,7 @@ bool move_active_window_to_monitor_x11(bool right) {
         ox[n] = cx; oy[n] = cy; ow[n] = cw; oh[n] = chh; n++;
     }
     XRRFreeScreenResources(res);
-    if (n < 2) return false;
+    if (n < 2) { PROFILE_END_VAR(_pt, "move_active_window_to_monitor_x11"); return false; }
     for (int i = 0; i < n - 1; i++) {
         for (int j = i + 1; j < n; j++) {
             if (ox[j] < ox[i]) {
@@ -544,7 +569,7 @@ bool move_active_window_to_monitor_x11(bool right) {
         }
     }
     int wx = 0, wy = 0, ww = 0, wh = 0;
-    if (!x11_window_geom(display, focus, &wx, &wy, &ww, &wh)) return false;
+    if (!x11_window_geom(display, focus, &wx, &wy, &ww, &wh)) { PROFILE_END_VAR(_pt, "move_active_window_to_monitor_x11"); return false; }
     int cx = wx + ww / 2;
     int cur = 0;
     for (int i = 0; i < n; i++) {
@@ -552,7 +577,7 @@ bool move_active_window_to_monitor_x11(bool right) {
         if (ox[i] <= cx) cur = i;
     }
     int dst = right ? cur + 1 : cur - 1;
-    if (dst < 0 || dst >= n) return false;
+    if (dst < 0 || dst >= n) { PROFILE_END_VAR(_pt, "move_active_window_to_monitor_x11"); return false; }
     int nx = ox[dst] + (wx - ox[cur]);
     int ny = oy[dst] + (wy - oy[cur]);
     if (nx < ox[dst]) nx = ox[dst];
@@ -562,8 +587,8 @@ bool move_active_window_to_monitor_x11(bool right) {
     if (nx < ox[dst]) nx = ox[dst];
     if (ny < oy[dst]) ny = oy[dst];
     bool sent = x11_moveresize_window(display, focus, nx, ny, ww, wh);
-    if (g_ewmh_move_works == 1) return sent;
-    if (g_ewmh_move_works == 0) return false;
+    if (g_ewmh_move_works == 1) { PROFILE_END_VAR(_pt, "move_active_window_to_monitor_x11"); return sent; }
+    if (g_ewmh_move_works == 0) { PROFILE_END_VAR(_pt, "move_active_window_to_monitor_x11"); return false; }
     XSync(display, False);
     usleep(12000);
     int vx = 0, vy = 0, vw = 0, vh = 0;
@@ -572,51 +597,58 @@ bool move_active_window_to_monitor_x11(bool right) {
         return true;
     }
     g_ewmh_move_works = 0;
-    return false;
+    { PROFILE_END_VAR(_pt, "move_active_window_to_monitor_x11"); return false; }
 }
 
 static bool x11_move_dir(bool right) {
-    Display* display = get_display();
-    if (!display) return false;
+        PROFILE_START(_pt);
+Display* display = get_display();
+    if (!display) { PROFILE_END_VAR(_pt, "x11_move_dir"); return false; }
     Window before = x11_focused_window(display);
     bool moved = false;
     if (g_ewmh_move_works != 0 && move_active_window_to_monitor_x11(right)) moved = true;
     else if (i3_move_to_output(right)) moved = true;
-    else return x11_activate_neighbor(right);
+    else { PROFILE_END_VAR(_pt, "x11_move_dir"); return x11_activate_neighbor(right); }
     if (before != None) x11_activate_window(display, before);
-    return true;
+    { PROFILE_END_VAR(_pt, "x11_move_dir"); return true; }
 }
 
 bool move_active_window_left_x11(void) {
-    return x11_move_dir(false);
+        PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "move_active_window_left_x11"); return x11_move_dir(false); }
 }
 
 bool move_active_window_right_x11(void) {
-    return x11_move_dir(true);
+        PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "move_active_window_right_x11"); return x11_move_dir(true); }
 }
 
 bool focus_window_left_x11(void) {
-    return x11_activate_neighbor(false);
+        PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "focus_window_left_x11"); return x11_activate_neighbor(false); }
 }
 
 bool focus_window_right_x11(void) {
-    return x11_activate_neighbor(true);
+        PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "focus_window_right_x11"); return x11_activate_neighbor(true); }
 }
 
 static bool x11_is_hidden(Display* dpy, Window w) {
-    XWindowAttributes at;
+        PROFILE_START(_pt);
+XWindowAttributes at;
     _x11_err = 0;
     XErrorHandler old = XSetErrorHandler(_x11_err_handler);
     int ok = XGetWindowAttributes(dpy, w, &at);
     XSync(dpy, False);
     XSetErrorHandler(old);
-    if (_x11_err || !ok) return false;
-    return at.map_state == IsUnmapped;
+    if (_x11_err || !ok) { PROFILE_END_VAR(_pt, "x11_is_hidden"); return false; }
+    { PROFILE_END_VAR(_pt, "x11_is_hidden"); return at.map_state == IsUnmapped; }
 }
 
 bool minimize_active_window_x11(void) {
-    Display* display = get_display();
-    if (!display) return false;
+        PROFILE_START(_pt);
+Display* display = get_display();
+    if (!display) { PROFILE_END_VAR(_pt, "minimize_active_window_x11"); return false; }
     if (_x11_last_min != None) {
         Window target = _x11_last_min;
         _x11_last_min = None;
@@ -631,7 +663,7 @@ bool minimize_active_window_x11(void) {
         }
     }
     Window focus = x11_focused_window(display);
-    if (focus == None) return false;
+    if (focus == None) { PROFILE_END_VAR(_pt, "minimize_active_window_x11"); return false; }
     _x11_err = 0;
     XErrorHandler old = XSetErrorHandler(_x11_err_handler);
     XIconifyWindow(display, focus, DefaultScreen(display));
@@ -650,5 +682,5 @@ bool minimize_active_window_x11(void) {
         _x11_last_min = focus;
         return true;
     }
-    return false;
+    { PROFILE_END_VAR(_pt, "minimize_active_window_x11"); return false; }
 }

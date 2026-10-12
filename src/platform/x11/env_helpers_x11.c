@@ -8,13 +8,16 @@
 #include <fcntl.h>
 #include <stdlib.h>
 
+#include "core/timer.h"
 static bool env_sock_live(const char* path) {
-    struct stat st;
-    return path && path[0] && stat(path, &st) == 0;
+        PROFILE_START(_pt);
+struct stat st;
+    { PROFILE_END_VAR(_pt, "env_sock_live"); return path && path[0] && stat(path, &st) == 0; }
 }
 
 void Env_GetSessionEnv(X11SessionEnv* out) {
-    if (!out) return;
+        PROFILE_START(_pt);
+if (!out) { PROFILE_END_VAR(_pt, "Env_GetSessionEnv"); return ; }
     out->real_user = Platform_GetRealUser();
     out->real_home = Platform_GetRealHome();
     out->display = Platform_GetSessionDisplay();
@@ -35,14 +38,16 @@ void Env_GetSessionEnv(X11SessionEnv* out) {
 }
 
 void Env_BuildEnvStrings(const X11SessionEnv* env, char disp_env[256], char xauth_env[512], char runtime_env[512], char wayland_env[512]) {
-    if (disp_env) snprintf(disp_env, 256, "DISPLAY=%s", env && env->display ? env->display : "");
+        PROFILE_START(_pt);
+if (disp_env) snprintf(disp_env, 256, "DISPLAY=%s", env && env->display ? env->display : "");
     if (xauth_env) snprintf(xauth_env, 512, "XAUTHORITY=%s", env && env->xauthority ? env->xauthority : "");
     if (runtime_env) snprintf(runtime_env, 512, "XDG_RUNTIME_DIR=%s", env && env->runtime_dir ? env->runtime_dir : "");
     if (wayland_env) snprintf(wayland_env, 512, "WAYLAND_DISPLAY=%s", env && env->wayland_display ? env->wayland_display : "");
 }
 
 void Env_ApplyToCurrentProcess(const X11SessionEnv* env) {
-    if (!env) return;
+        PROFILE_START(_pt);
+if (!env) { PROFILE_END_VAR(_pt, "Env_ApplyToCurrentProcess"); return ; }
     if (env->display) setenv("DISPLAY", env->display, 1);
     if (env->xauthority) setenv("XAUTHORITY", env->xauthority, 1);
     if (env->runtime_dir) setenv("XDG_RUNTIME_DIR", env->runtime_dir, 1);
@@ -62,12 +67,14 @@ void Env_ApplyToCurrentProcess(const X11SessionEnv* env) {
 }
 
 bool Env_IsRunningAsRoot(void) {
-    return Platform_IsRunningAsRoot();
+        PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "Env_IsRunningAsRoot"); return Platform_IsRunningAsRoot(); }
 }
 
 bool Env_DaemonExec(char* const argv[]) {
-    pid_t pid = fork();
-    if (pid < 0) return false;
+        PROFILE_START(_pt);
+pid_t pid = fork();
+    if (pid < 0) { PROFILE_END_VAR(_pt, "Env_DaemonExec"); return false; }
     if (pid == 0) {
         setsid();
         pid_t pid2 = fork();
@@ -85,12 +92,13 @@ bool Env_DaemonExec(char* const argv[]) {
     }
     int st = 0;
     waitpid(pid, &st, 0);
-    return true;
+    { PROFILE_END_VAR(_pt, "Env_DaemonExec"); return true; }
 }
 
 bool Env_DaemonExecWithEnv(char* const argv[], const X11SessionEnv* env) {
-    pid_t pid = fork();
-    if (pid < 0) return false;
+        PROFILE_START(_pt);
+pid_t pid = fork();
+    if (pid < 0) { PROFILE_END_VAR(_pt, "Env_DaemonExecWithEnv"); return false; }
     if (pid == 0) {
         setsid();
         pid_t pid2 = fork();
@@ -109,7 +117,7 @@ bool Env_DaemonExecWithEnv(char* const argv[], const X11SessionEnv* env) {
     }
     int st = 0;
     waitpid(pid, &st, 0);
-    return true;
+    { PROFILE_END_VAR(_pt, "Env_DaemonExecWithEnv"); return true; }
 }
 
 

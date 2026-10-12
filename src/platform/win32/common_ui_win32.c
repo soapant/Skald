@@ -16,11 +16,13 @@
 #define WIN32_SHADER_SMOOTHNESS 10
 
 HFONT CreateCustomNerdFont(int height, const char* face_name) {
-  return FH_TO_HFONT(Platform_CreateFont(height, face_name));
+    PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "CreateCustomNerdFont"); return FH_TO_HFONT(Platform_CreateFont(height, face_name)); }
 }
 
 void win32_apply_rounded_corners(HWND hwnd, int w, int h) {
-  if (!hwnd || !IsWindow(hwnd)) return;
+    PROFILE_START(_pt);
+if (!hwnd || !IsWindow(hwnd)) { PROFILE_END_VAR(_pt, "win32_apply_rounded_corners"); return ; }
   if (w <= 0 || h <= 0) {
     RECT rc; GetWindowRect(hwnd, &rc);
     w = rc.right - rc.left;
@@ -49,7 +51,7 @@ void win32_apply_rounded_corners(HWND hwnd, int w, int h) {
     }
     FreeLibrary(dwm);
   }
-  if (!RoundedCorners) return;
+  if (!RoundedCorners) { PROFILE_END_VAR(_pt, "win32_apply_rounded_corners"); return ; }
 
   int radius = CornerRadius;
   if (radius < 0) radius = 0;
@@ -59,25 +61,31 @@ void win32_apply_rounded_corners(HWND hwnd, int w, int h) {
 }
 
 static inline unsigned int win32_to_rgb(COLORREF c) {
-  return ((unsigned int)GetRValue(c) << 16) | ((unsigned int)GetGValue(c) << 8) | (unsigned int)GetBValue(c);
+    PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "win32_to_rgb"); return ((unsigned int)GetRValue(c) << 16) | ((unsigned int)GetGValue(c) << 8) | (unsigned int)GetBValue(c); }
 }
 COLORREF LerpColor(COLORREF a, COLORREF b, float t) {
-  unsigned int mixed = Color_Lerp(win32_to_rgb(a), win32_to_rgb(b), t);
-  return RGB((mixed >> 16) & 0xFF, (mixed >> 8) & 0xFF, mixed & 0xFF);
+    PROFILE_START(_pt);
+unsigned int mixed = Color_Lerp(win32_to_rgb(a), win32_to_rgb(b), t);
+  { PROFILE_END_VAR(_pt, "LerpColor"); return RGB((mixed >> 16) & 0xFF, (mixed >> 8) & 0xFF, mixed & 0xFF); }
 }
 static COLORREF DeriveLighterWin(COLORREF base, float intensity) {
-  unsigned char r, g, b;
+    PROFILE_START(_pt);
+unsigned char r, g, b;
   Color_DeriveLighter(win32_to_rgb(base), intensity, &r, &g, &b);
-  return RGB(r, g, b);
+  { PROFILE_END_VAR(_pt, "DeriveLighterWin"); return RGB(r, g, b); }
 }
 static unsigned int HashNoiseWin(int x, int y) {
-  return Color_HashNoise(x, y);
+    PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "HashNoiseWin"); return Color_HashNoise(x, y); }
 }
 static float win32_compute_gamma(void) {
-  return Color_ShaderGamma(WIN32_SHADER_SMOOTHNESS);
+    PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "win32_compute_gamma"); return Color_ShaderGamma(WIN32_SHADER_SMOOTHNESS); }
 }
 static inline float win32_dither(int x, int y) {
-  return Color_BayerDither(x, y);
+    PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "win32_dither"); return Color_BayerDither(x, y); }
 }
 
 typedef struct { HBITMAP bmp; HDC dc; int w; int h; COLORREF base; int preset; float gamma; float intensity; } win32_gradient_cache;
@@ -85,7 +93,8 @@ static win32_gradient_cache g_bgCache = {0};
 static win32_gradient_cache g_selCache = {0};
 
 static void win32_free_gradient_cache(win32_gradient_cache* c) {
-  if (!c) return;
+    PROFILE_START(_pt);
+if (!c) { PROFILE_END_VAR(_pt, "win32_free_gradient_cache"); return ; }
   if (c->dc) { DeleteDC(c->dc); c->dc = NULL; }
   if (c->bmp) { DeleteObject(c->bmp); c->bmp = NULL; }
   c->w = c->h = 0;
@@ -93,18 +102,20 @@ static void win32_free_gradient_cache(win32_gradient_cache* c) {
 }
 
 void win32_free_bg_cache(void) {
-  win32_free_gradient_cache(&g_bgCache);
+    PROFILE_START(_pt);
+win32_free_gradient_cache(&g_bgCache);
   win32_free_gradient_cache(&g_selCache);
 }
 
 static void win32_ensure_gradient_cache(win32_gradient_cache* c, HDC refDC, int containerW, int containerH, COLORREF base, int preset) {
-  float gamma = win32_compute_gamma();
+    PROFILE_START(_pt);
+float gamma = win32_compute_gamma();
   float intensity = ShaderIntensity;
   if (c->bmp && c->dc && c->w == containerW && c->h == containerH && c->base == base && c->preset == preset && fabsf(c->gamma - gamma) < 0.001f && fabsf(c->intensity - intensity) < 0.001f) {
     return;
   }
   win32_free_gradient_cache(c);
-  if (containerW <= 0 || containerH <= 0) return;
+  if (containerW <= 0 || containerH <= 0) { PROFILE_END_VAR(_pt, "win32_ensure_gradient_cache"); return ; }
   BITMAPINFO bmi = {0};
   bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
   bmi.bmiHeader.biWidth = containerW;
@@ -114,7 +125,7 @@ static void win32_ensure_gradient_cache(win32_gradient_cache* c, HDC refDC, int 
   bmi.bmiHeader.biCompression = BI_RGB;
   void* bits = NULL;
   HBITMAP hBmp = CreateDIBSection(refDC, &bmi, DIB_RGB_COLORS, &bits, NULL, 0);
-  if (!hBmp || !bits) return;
+  if (!hBmp || !bits) { PROFILE_END_VAR(_pt, "win32_ensure_gradient_cache"); return ; }
   uint32_t* pixels = (uint32_t*)bits;
   COLORREF light = DeriveLighterWin(base, 1.0f);
   if (preset == 1) {
@@ -194,9 +205,10 @@ static void win32_ensure_gradient_cache(win32_gradient_cache* c, HDC refDC, int 
 }
 
 static void win32_draw_gradient_dib(HDC hdc, RECT* rc, COLORREF base, int preset, int containerW, int containerH, int offsetX, int offsetY) {
-  int w = rc->right - rc->left;
+    PROFILE_START(_pt);
+int w = rc->right - rc->left;
   int h = rc->bottom - rc->top;
-  if (w <= 0 || h <= 0) return;
+  if (w <= 0 || h <= 0) { PROFILE_END_VAR(_pt, "win32_draw_gradient_dib"); return ; }
   if (preset == 1 || preset == 2 || preset == 3 || preset == 4) {
     if (containerW > 0 && containerH > 0 && (containerW != w || containerH != h || offsetX != 0 || offsetY != 0)) {
       win32_ensure_gradient_cache(&g_bgCache, hdc, containerW, containerH, base, preset);
@@ -329,7 +341,8 @@ static void win32_draw_gradient_dib(HDC hdc, RECT* rc, COLORREF base, int preset
 }
 
 void win32_draw_selection_background(HDC hdc, RECT* rc, COLORREF base) {
-  PROFILE_START(timer);
+    PROFILE_START(_pt);
+PROFILE_START(timer);
   int w = rc->right - rc->left;
   int h = rc->bottom - rc->top;
   if (w <= 0 || h <= 0) { PROFILE_END_VAR(timer, "WinSel solid"); return; }
@@ -337,11 +350,12 @@ void win32_draw_selection_background(HDC hdc, RECT* rc, COLORREF base) {
   FillRect(hdc, rc, br);
   DeleteObject(br);
   PROFILE_END_VAR(timer, "sel-solid");
-  return;
+  { PROFILE_END_VAR(_pt, "win32_draw_selection_background"); return ; }
 }
 
 void win32_draw_background_slice(HDC hdc, RECT* rc, COLORREF base, int containerW, int containerH, int offsetX, int offsetY) {
-  int preset = ShaderPreset;
+    PROFILE_START(_pt);
+int preset = ShaderPreset;
   if (!EnableShaders || preset == 0) {
     HBRUSH br = CreateSolidBrush(base);
     FillRect(hdc, rc, br);
@@ -349,12 +363,13 @@ void win32_draw_background_slice(HDC hdc, RECT* rc, COLORREF base, int container
     return;
   }
   win32_draw_gradient_dib(hdc, rc, base, preset, containerW, containerH, offsetX, offsetY);
-  return;
+  { PROFILE_END_VAR(_pt, "win32_draw_background_slice"); return ; }
 
 }
 
 void win32_fill_rounded_rect(HDC hdc, RECT* rc, COLORREF col, int radius) {
-  if (!RoundedCorners || radius <= 0) {
+    PROFILE_START(_pt);
+if (!RoundedCorners || radius <= 0) {
     HBRUSH br = CreateSolidBrush(col);
     FillRect(hdc, rc, br);
     DeleteObject(br);
@@ -374,7 +389,8 @@ void win32_fill_rounded_rect(HDC hdc, RECT* rc, COLORREF col, int radius) {
 }
 
 void win32_fill_rounded_rect_slice(HDC hdc, RECT* rc, COLORREF base, int containerW, int containerH, int offsetX, int offsetY, int radius) {
-  if (!RoundedCorners || radius <= 0) {
+    PROFILE_START(_pt);
+if (!RoundedCorners || radius <= 0) {
     win32_draw_background_slice(hdc, rc, base, containerW, containerH, offsetX, offsetY);
     return;
   }
@@ -390,7 +406,8 @@ void win32_fill_rounded_rect_slice(HDC hdc, RECT* rc, COLORREF base, int contain
 }
 
 void win32_draw_rounded_selection(HDC hdc, RECT* rc, COLORREF base, int radius) {
-  if (!RoundedCorners || radius <= 0) {
+    PROFILE_START(_pt);
+if (!RoundedCorners || radius <= 0) {
     win32_draw_selection_background(hdc, rc, base);
     return;
   }
@@ -406,7 +423,8 @@ void win32_draw_rounded_selection(HDC hdc, RECT* rc, COLORREF base, int radius) 
 }
 
 void win32_draw_background(HDC hdc, RECT* rc) {
-  PROFILE_START(timer);
+    PROFILE_START(_pt);
+PROFILE_START(timer);
   const char* name = "solid";
   int w = rc->right - rc->left;
   int h = rc->bottom - rc->top;
@@ -433,19 +451,21 @@ void win32_draw_background(HDC hdc, RECT* rc) {
   }
   win32_draw_gradient_dib(hdc, rc, base, preset, 0, 0, 0, 0);
   PROFILE_END_VAR(timer, name);
-  return;
+  { PROFILE_END_VAR(_pt, "win32_draw_background"); return ; }
 
   PROFILE_END_VAR(timer, name);
 }
 
 void UpdateTextCaret(void)
 {
-  HWND popup = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
+    PROFILE_START(_pt);
+HWND popup = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
   if (popup && IsWindow(popup)) InvalidateRect(popup, NULL, FALSE);
 }
 
 void CalculateWindowMetrics(WindowLayout* layout,int height , int width,int item_height) {
-  POINT pt = { 0, 0 };
+    PROFILE_START(_pt);
+POINT pt = { 0, 0 };
   GetCursorPos(&pt);
   HMONITOR hMonitor = MonitorFromPoint(pt, MONITOR_DEFAULTTONEAREST);
 
@@ -473,7 +493,8 @@ void CalculateWindowMetrics(WindowLayout* layout,int height , int width,int item
       layout->x, layout->y, layout->w, layout->h);
 }
 void ForceWindowFocus(WindowHandle hwndTarget, WindowHandle hwndInput) {
-  ShowWindow(WH_TO_HWND(hwndTarget), SW_SHOW);
+    PROFILE_START(_pt);
+ShowWindow(WH_TO_HWND(hwndTarget), SW_SHOW);
 
   SetWindowPos(WH_TO_HWND(hwndTarget), HWND_TOPMOST, 0, 0, 0, 0,
       SWP_NOSIZE | SWP_NOMOVE | SWP_SHOWWINDOW | SWP_ASYNCWINDOWPOS);
@@ -505,6 +526,7 @@ void ForceWindowFocus(WindowHandle hwndTarget, WindowHandle hwndInput) {
 }
 
 void CreateChildControls(WindowHandle hwndParent, HFONT hFont, const char* list[], int count, const WindowLayout* layout, ListBoxInfo* lb) {
+  PROFILE_START(_pt);
 
   HINSTANCE hInstance = (HINSTANCE)GetWindowLongPtrA(WH_TO_HWND(hwndParent), GWLP_HINSTANCE);
 

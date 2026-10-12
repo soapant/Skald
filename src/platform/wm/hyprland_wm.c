@@ -12,19 +12,22 @@
 #include <time.h>
 #include <sys/stat.h>
 
+#include "core/timer.h"
 static bool hypr_sock_live(const char* sig) {
-    if (!sig || !sig[0]) return false;
+        PROFILE_START(_pt);
+if (!sig || !sig[0]) { PROFILE_END_VAR(_pt, "hypr_sock_live"); return false; }
     const char* rtd = getenv("XDG_RUNTIME_DIR");
-    if (!rtd || !rtd[0]) return false;
+    if (!rtd || !rtd[0]) { PROFILE_END_VAR(_pt, "hypr_sock_live"); return false; }
     char path[512];
     snprintf(path, sizeof(path), "%s/hypr/%s/.socket.sock", rtd, sig);
     struct stat st;
-    return stat(path, &st) == 0;
+    { PROFILE_END_VAR(_pt, "hypr_sock_live"); return stat(path, &st) == 0; }
 }
 
 static void hypr_ensure_sig(void) {
-    const char* cur = getenv("HYPRLAND_INSTANCE_SIGNATURE");
-    if (hypr_sock_live(cur)) return;
+        PROFILE_START(_pt);
+const char* cur = getenv("HYPRLAND_INSTANCE_SIGNATURE");
+    if (hypr_sock_live(cur)) { PROFILE_END_VAR(_pt, "hypr_ensure_sig"); return ; }
     if (cur && cur[0]) unsetenv("HYPRLAND_INSTANCE_SIGNATURE");
     const char* rtd = getenv("XDG_RUNTIME_DIR");
     if (!rtd || !rtd[0]) {
@@ -73,27 +76,31 @@ static void hypr_ensure_sig(void) {
     globfree(&g);
 }
 bool get_title_hyprland(char *buffer, int buffer_size) {
-    return false;
+        PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "get_title_hyprland"); return false; }
 }
 
 bool get_app_id_hyprland(char *buffer, int buffer_size) {
-    (void)buffer;
+        PROFILE_START(_pt);
+(void)buffer;
     (void)buffer_size;
-    return false;
+    { PROFILE_END_VAR(_pt, "get_app_id_hyprland"); return false; }
 }
 
 char* paste_hyprland(char* content) {
-  if (!content) { log_error("content is NULL"); return NULL; }
+    PROFILE_START(_pt);
+if (!content) { log_error("content is NULL"); return NULL; }
   char buffer[100];
   snprintf(buffer,sizeof(buffer),"wtype %s",content);
   char* out = Platform_RunTerminalCommand(buffer,false);
   if (!out) log_error("content='%s'", content ? content : "null");
-  return out;
+  { PROFILE_END_VAR(_pt, "paste_hyprland"); return out; }
 }
 
 
 bool succeded_hypr(char* output) {
-    if (!output) { log_error("output is NULL"); return false; }
+        PROFILE_START(_pt);
+if (!output) { log_error("output is NULL"); return false; }
     if (!output[0]) { log_error("hyprctl empty output"); return false; }
     StringList lines = String_Split(output, "\n");
     for (size_t i = 0; i < lines.count; i++) {
@@ -106,11 +113,12 @@ bool succeded_hypr(char* output) {
         log_error("hyprctl no ok output='%s'", output);
         return false;
     }
-    return true;
+    { PROFILE_END_VAR(_pt, "succeded_hypr"); return true; }
 }
 
 static bool hypr_focus_lua_cmd(const char* title, char* out, size_t cap) {
-    char esc[1024];
+        PROFILE_START(_pt);
+char esc[1024];
     size_t o = 0;
     for (const char* s = title; *s && o + 4 < sizeof(esc); s++) {
         if (*s == '\\' || *s == '"') {
@@ -129,11 +137,12 @@ static bool hypr_focus_lua_cmd(const char* title, char* out, size_t cap) {
     }
     esc[o] = '\0';
     snprintf(out, cap, "hyprctl dispatch 'hl.dsp.focus({ window = \"title:%s\" })'", esc);
-    return esc[0] != '\0';
+    { PROFILE_END_VAR(_pt, "hypr_focus_lua_cmd"); return esc[0] != '\0'; }
 }
 
 bool focus_window_title_hyprland(char* title) {
-  if (!title) { log_error("title is NULL"); return false; }
+    PROFILE_START(_pt);
+if (!title) { log_error("title is NULL"); return false; }
   hypr_ensure_sig();
   char cmd[1280];
   if (!hypr_focus_lua_cmd(title, cmd, sizeof(cmd))) { log_error("title='%s'", title ? title : "null"); return false; }
@@ -152,11 +161,12 @@ bool focus_window_title_hyprland(char* title) {
       }
   }
   log_error("title='%s'", title ? title : "null");
-  return false;
+  { PROFILE_END_VAR(_pt, "focus_window_title_hyprland"); return false; }
 }
 
 PlWindowList get_window_names_hyprland() {
-   hypr_ensure_sig();
+      PROFILE_START(_pt);
+hypr_ensure_sig();
    char* output = Platform_RunTerminalCommand("hyprctl clients -j", false);
    PlWindowList list = { .windows = NULL, .count = 0 };
    char buffer[512];
@@ -179,10 +189,11 @@ PlWindowList get_window_names_hyprland() {
    }
    StringList_Free(&lines);
    free(output);
-   return list;
+   { PROFILE_END_VAR(_pt, "get_window_names_hyprland"); return list; }
 }
 PlWindowList get_window_titles_hyprland() {
-   hypr_ensure_sig();
+      PROFILE_START(_pt);
+hypr_ensure_sig();
    char* output = Platform_RunTerminalCommand("hyprctl clients -j", false);
    PlWindowList list = { .windows = NULL, .count = 0 };
    char buffer[512];
@@ -204,80 +215,88 @@ PlWindowList get_window_titles_hyprland() {
    }
    StringList_Free(&lines);
    free(output);
-   return list;
+   { PROFILE_END_VAR(_pt, "get_window_titles_hyprland"); return list; }
 }
 
 
 bool close_active_window_hyprland(void) {
-  hypr_ensure_sig();
+    PROFILE_START(_pt);
+hypr_ensure_sig();
   const char* sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");
-  if (!sig || !sig[0]) return false;
+  if (!sig || !sig[0]) { PROFILE_END_VAR(_pt, "close_active_window_hyprland"); return false; }
   char* out = Platform_RunTerminalCommand("hyprctl dispatch 'hl.dsp.window.close()'", false);
   bool ok = succeded_hypr(out);
   free(out);
-  return ok;
+  { PROFILE_END_VAR(_pt, "close_active_window_hyprland"); return ok; }
 }
 
 bool toggle_fullscreen_active_hyprland(void) {
-  hypr_ensure_sig();
+    PROFILE_START(_pt);
+hypr_ensure_sig();
   const char* sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");
-  if (!sig || !sig[0]) return false;
+  if (!sig || !sig[0]) { PROFILE_END_VAR(_pt, "toggle_fullscreen_active_hyprland"); return false; }
   char* out = Platform_RunTerminalCommand("hyprctl dispatch 'hl.dsp.window.fullscreen({ mode = \"fullscreen\", action = \"toggle\" })'", false);
   bool ok = succeded_hypr(out);
   free(out);
-  return ok;
+  { PROFILE_END_VAR(_pt, "toggle_fullscreen_active_hyprland"); return ok; }
 }
 
 bool move_active_window_to_monitor_hyprland(bool right) {
-  hypr_ensure_sig();
+    PROFILE_START(_pt);
+hypr_ensure_sig();
   const char* sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");
-  if (!sig || !sig[0]) return false;
+  if (!sig || !sig[0]) { PROFILE_END_VAR(_pt, "move_active_window_to_monitor_hyprland"); return false; }
   char cmd[96];
   snprintf(cmd, sizeof(cmd), "hyprctl dispatch 'hl.dsp.window.move({ monitor = \"%c\" })'", right ? 'r' : 'l');
   char* out = Platform_RunTerminalCommand(cmd, false);
   bool ok = succeded_hypr(out);
   free(out);
-  return ok;
+  { PROFILE_END_VAR(_pt, "move_active_window_to_monitor_hyprland"); return ok; }
 }
 
 bool minimize_active_window_hyprland(void) {
-  hypr_ensure_sig();
+    PROFILE_START(_pt);
+hypr_ensure_sig();
   const char* sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");
-  if (!sig || !sig[0]) return false;
+  if (!sig || !sig[0]) { PROFILE_END_VAR(_pt, "minimize_active_window_hyprland"); return false; }
   char* out = Platform_RunTerminalCommand("hyprctl dispatch 'hl.dsp.window.move({ workspace = \"special\", follow = false })'", false);
   bool ok = succeded_hypr(out);
   free(out);
-  if (ok) return true;
+  if (ok) { PROFILE_END_VAR(_pt, "minimize_active_window_hyprland"); return true; }
   out = Platform_RunTerminalCommand("hyprctl dispatch 'hl.dsp.workspace.toggle_special()'", false);
   ok = succeded_hypr(out);
   free(out);
-  return ok;
+  { PROFILE_END_VAR(_pt, "minimize_active_window_hyprland"); return ok; }
 }
 
 bool focus_window_left_hyprland(void) {
-  hypr_ensure_sig();
+    PROFILE_START(_pt);
+hypr_ensure_sig();
   const char* sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");
-  if (!sig || !sig[0]) return false;
+  if (!sig || !sig[0]) { PROFILE_END_VAR(_pt, "focus_window_left_hyprland"); return false; }
   char* out = Platform_RunTerminalCommand("hyprctl dispatch 'hl.dsp.focus({ direction = \"l\" })'", false);
   bool ok = succeded_hypr(out);
   free(out);
-  return ok;
+  { PROFILE_END_VAR(_pt, "focus_window_left_hyprland"); return ok; }
 }
 
 bool focus_window_right_hyprland(void) {
-  hypr_ensure_sig();
+    PROFILE_START(_pt);
+hypr_ensure_sig();
   const char* sig = getenv("HYPRLAND_INSTANCE_SIGNATURE");
-  if (!sig || !sig[0]) return false;
+  if (!sig || !sig[0]) { PROFILE_END_VAR(_pt, "focus_window_right_hyprland"); return false; }
   char* out = Platform_RunTerminalCommand("hyprctl dispatch 'hl.dsp.focus({ direction = \"r\" })'", false);
   bool ok = succeded_hypr(out);
   free(out);
-  return ok;
+  { PROFILE_END_VAR(_pt, "focus_window_right_hyprland"); return ok; }
 }
 
 bool move_active_window_left_hyprland(void) {
-  return move_active_window_to_monitor_hyprland(false);
+    PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "move_active_window_left_hyprland"); return move_active_window_to_monitor_hyprland(false); }
 }
 
 bool move_active_window_right_hyprland(void) {
-  return move_active_window_to_monitor_hyprland(true);
+    PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "move_active_window_right_hyprland"); return move_active_window_to_monitor_hyprland(true); }
 }

@@ -17,9 +17,11 @@
 #include "core/prompt_controller.h"
 #include "platform/wm_platform.h"
 
+#include "core/timer.h"
 static void EditPopup_Close(bool confirmed) {
-    WindowManager* wm = WindowManager_Get();
-    if (!wm) return;
+        PROFILE_START(_pt);
+WindowManager* wm = WindowManager_Get();
+    if (!wm) { PROFILE_END_VAR(_pt, "EditPopup_Close"); return ; }
     Popup* top = WindowManager_GetTopPopup(wm);
     if (top && top->type == POPUP_EDIT) {
         WMEditPopupData* ed = (WMEditPopupData*)top;
@@ -33,12 +35,14 @@ static void EditPopup_Close(bool confirmed) {
 }
 
 static bool EditPopupWindow_OnKey(HWND hWnd, WMEditPopupData* data, const PopupKeyEvent* key) {
-    if (data->base.vtable && data->base.vtable->on_key && data->base.vtable->on_key(&data->base, key)) return true;
-    return false;
+        PROFILE_START(_pt);
+if (data->base.vtable && data->base.vtable->on_key && data->base.vtable->on_key(&data->base, key)) { PROFILE_END_VAR(_pt, "EditPopupWindow_OnKey"); return true; }
+    { PROFILE_END_VAR(_pt, "EditPopupWindow_OnKey"); return false; }
 }
 
 LRESULT CALLBACK EditPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-  ListBoxInfo* lb = NULL;
+    PROFILE_START(_pt);
+ListBoxInfo* lb = NULL;
   if (WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) && IsWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd))) lb = GetLBFromPopup(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd));
   WMEditPopupData* data = (WMEditPopupData*)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
 
@@ -133,5 +137,5 @@ LRESULT CALLBACK EditPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam
         break;
     }
     }
-  return DefWindowProcA(hwnd, msg, wParam, lParam);
+  { PROFILE_END_VAR(_pt, "EditPopupProc"); return DefWindowProcA(hwnd, msg, wParam, lParam); }
 }

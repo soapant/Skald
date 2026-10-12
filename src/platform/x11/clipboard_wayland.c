@@ -1,3 +1,4 @@
+#include "core/timer.h"
 #if defined(FLINT_WAYLAND_SESSION)
 #include "platform/x11/clipboard_backend_x11.h"
 #include "deps/log.h"
@@ -33,7 +34,8 @@ static char g_wl_read_block_reason[128] = {0};
 extern long g_cl_selreq;
 
 static void wl_trace(const char *what, const char *fmt, ...) {
-    va_list ap;
+        PROFILE_START(_pt);
+va_list ap;
     long n = ++g_wl_seq;
     char buf[512];
     va_start(ap, fmt);
@@ -42,10 +44,11 @@ static void wl_trace(const char *what, const char *fmt, ...) {
 }
 
 static int wl_dir_fd_count(const char *pid, const char *want) {
-    char p[64];
+        PROFILE_START(_pt);
+char p[64];
     snprintf(p, sizeof(p), "/proc/%s/fd", pid);
     DIR *d = opendir(p);
-    if (!d) return -1;
+    if (!d) { PROFILE_END_VAR(_pt, "wl_dir_fd_count"); return -1; }
     int total = 0, pipes = 0;
     struct dirent *e;
     while ((e = readdir(d))) {
@@ -61,24 +64,26 @@ static int wl_dir_fd_count(const char *pid, const char *want) {
         }
     }
     closedir(d);
-    if (want && strcmp(want, "pipes") == 0) return pipes;
-    return total;
+    if (want && strcmp(want, "pipes") == 0) { PROFILE_END_VAR(_pt, "wl_dir_fd_count"); return pipes; }
+    { PROFILE_END_VAR(_pt, "wl_dir_fd_count"); return total; }
 }
 
 static long wl_dir_rss_mb(const char *pid) {
-    char p[64];
+        PROFILE_START(_pt);
+char p[64];
     snprintf(p, sizeof(p), "/proc/%s/statm", pid);
     FILE *f = fopen(p, "r");
-    if (!f) return -1;
+    if (!f) { PROFILE_END_VAR(_pt, "wl_dir_rss_mb"); return -1; }
     long total = 0, res = 0;
     if (fscanf(f, "%ld %ld", &total, &res) != 2) { fclose(f); return -1; }
     fclose(f);
-    return (res * 4) / 1024;
+    { PROFILE_END_VAR(_pt, "wl_dir_rss_mb"); return (res * 4) / 1024; }
 }
 
 static int wl_find_pid(const char *name) {
-    DIR *d = opendir("/proc");
-    if (!d) return -1;
+        PROFILE_START(_pt);
+DIR *d = opendir("/proc");
+    if (!d) { PROFILE_END_VAR(_pt, "wl_find_pid"); return -1; }
     int found = -1;
     struct dirent *e;
     while ((e = readdir(d))) {
@@ -96,11 +101,12 @@ static int wl_find_pid(const char *name) {
         fclose(f);
     }
     closedir(d);
-    return found;
+    { PROFILE_END_VAR(_pt, "wl_find_pid"); return found; }
 }
 
 static void *wl_sampler_func(void *arg) {
-    (void)arg;
+        PROFILE_START(_pt);
+(void)arg;
     int hypr = -1, xway = -1, self = (int)getpid();
     int base_self = -1, base_hypr = -1;
     int prev_hypr_fd = -1;
@@ -139,12 +145,13 @@ static void *wl_sampler_func(void *arg) {
             g_wl_ev_count, g_wl_req_count, g_wl_send_count, g_wl_recv_count, g_wl_prepare_fail, g_cl_selreq,
             g_wl_receive_calls, g_wl_receive_blocked, g_wl_read_disabled ? 1 : 0);
     }
-    return NULL;
+    { PROFILE_END_VAR(_pt, "wl_sampler_func"); return NULL; }
 }
 
 static void wl_sampler_start(void) {
-    static bool started = false;
-    if (started) return;
+        PROFILE_START(_pt);
+static bool started = false;
+    if (started) { PROFILE_END_VAR(_pt, "wl_sampler_start"); return ; }
     started = true;
     pthread_t t;
     if (pthread_create(&t, NULL, wl_sampler_func, NULL) != 0);
@@ -152,7 +159,8 @@ static void wl_sampler_start(void) {
 }
 
 static void wl_hypr_refresh(void) {
-    g_wl_hypr_pid = wl_find_pid("Hyprland");
+        PROFILE_START(_pt);
+g_wl_hypr_pid = wl_find_pid("Hyprland");
     if (g_wl_hypr_pid <= 0) { g_wl_hypr_fd = -1; return; }
     char hp[32];
     snprintf(hp, sizeof(hp), "%ld", g_wl_hypr_pid);
@@ -160,8 +168,9 @@ static void wl_hypr_refresh(void) {
 }
 
 static const char *wl_read_guard(const void *offer) {
-    if (g_wl_read_disabled) return g_wl_read_block_reason[0] ? g_wl_read_block_reason : "read path disabled";
-    if (!offer) return "no offer";
+        PROFILE_START(_pt);
+if (g_wl_read_disabled) { PROFILE_END_VAR(_pt, "wl_read_guard"); return g_wl_read_block_reason[0] ? g_wl_read_block_reason : "read path disabled"; }
+    if (!offer) { PROFILE_END_VAR(_pt, "wl_read_guard"); return "no offer"; }
     if (g_wl_hypr_pid <= 0) wl_hypr_refresh();
     if (g_wl_hypr_pid > 0) {
         snprintf(g_wl_read_block_reason, sizeof(g_wl_read_block_reason),
@@ -169,10 +178,10 @@ static const char *wl_read_guard(const void *offer) {
         g_wl_read_disabled = true;
         return g_wl_read_block_reason;
     }
-    if (offer == g_wl_dead_offer) return "offer already produced no data";
-    if (g_wl_receive_calls >= WL_MAX_RECEIVE_CALLS) return "session receive cap reached";
-    if (g_wl_hypr_fd > WL_HYPR_FD_ALARM) return "compositor fd count already elevated";
-    return NULL;
+    if (offer == g_wl_dead_offer) { PROFILE_END_VAR(_pt, "wl_read_guard"); return "offer already produced no data"; }
+    if (g_wl_receive_calls >= WL_MAX_RECEIVE_CALLS) { PROFILE_END_VAR(_pt, "wl_read_guard"); return "session receive cap reached"; }
+    if (g_wl_hypr_fd > WL_HYPR_FD_ALARM) { PROFILE_END_VAR(_pt, "wl_read_guard"); return "compositor fd count already elevated"; }
+    { PROFILE_END_VAR(_pt, "wl_read_guard"); return NULL; }
 }
 
 struct WlFns {
@@ -359,7 +368,8 @@ static pthread_mutex_t g_wl_lock = PTHREAD_MUTEX_INITIALIZER;
 static pthread_mutex_t g_wl_text_lock = PTHREAD_MUTEX_INITIALIZER;
 
 static void reg_global(void *data, struct wl_proxy *reg, uint32_t name, const char *iface, uint32_t version) {
-    (void)data;
+        PROFILE_START(_pt);
+(void)data;
     (void)reg;
     g_wl_ev_count++;
     wl_trace("EV registry.global", "name=%u iface='%s' version=%u (mgr=%u proto=%s ext=%d)", name, iface ? iface : "?", version, g_mgr_name, g_mgr_proto, g_mgr_ext ? 1 : 0);
@@ -380,7 +390,8 @@ static void reg_global(void *data, struct wl_proxy *reg, uint32_t name, const ch
 }
 
 static void reg_global_remove(void *data, struct wl_proxy *reg, uint32_t name) {
-    (void)data;
+        PROFILE_START(_pt);
+(void)data;
     (void)reg;
     (void)name;
     g_wl_ev_count++;
@@ -393,9 +404,10 @@ static void (*g_reg_listener[])(void) = {
 };
 
 static void offer_mime(void *data, struct wl_proxy *offer, const char *mime) {
-    (void)data;
+        PROFILE_START(_pt);
+(void)data;
     (void)offer;
-    if (!mime) return;
+    if (!mime) { PROFILE_END_VAR(_pt, "offer_mime"); return ; }
     g_wl_ev_count++;
     wl_trace("EV offer.mime", "offer=%p mime='%s' idx_before=%d", (void*)offer, mime, g_wl_offer_mime_count);
     pthread_mutex_lock(&g_wl_text_lock);
@@ -413,7 +425,8 @@ static void (*g_offer_listener[])(void) = {
 };
 
 static void dev_data_offer(void *data, struct wl_proxy *dev, struct wl_proxy *offer) {
-    (void)data;
+        PROFILE_START(_pt);
+(void)data;
     (void)dev;
     g_wl_ev_count++;
     g_wl_recv_count++;
@@ -433,7 +446,8 @@ static void dev_data_offer(void *data, struct wl_proxy *dev, struct wl_proxy *of
 }
 
 static void dev_selection(void *data, struct wl_proxy *dev, struct wl_proxy *offer) {
-    (void)data;
+        PROFILE_START(_pt);
+(void)data;
     (void)dev;
     g_wl_ev_count++;
     g_wl_recv_count++;
@@ -443,14 +457,16 @@ static void dev_selection(void *data, struct wl_proxy *dev, struct wl_proxy *off
 }
 
 static void dev_finished(void *data, struct wl_proxy *dev) {
-    (void)data;
+        PROFILE_START(_pt);
+(void)data;
     g_wl_ev_count++;
     wl_trace("EV device.finished", "dev=%p display_err=%d", (void*)dev,
         (g_wl_dpy && wl.display_get_error) ? wl.display_get_error(g_wl_dpy) : -1);
 }
 
 static void dev_primary(void *data, struct wl_proxy *dev, struct wl_proxy *offer) {
-    (void)data;
+        PROFILE_START(_pt);
+(void)data;
     (void)dev;
     (void)offer;
     g_wl_ev_count++;
@@ -466,7 +482,8 @@ static void (*g_dev_listener[])(void) = {
 };
 
 static void src_send(void *data, struct wl_proxy *src, const char *mime, int fd) {
-    (void)data;
+        PROFILE_START(_pt);
+(void)data;
     g_wl_ev_count++;
     g_wl_send_count++;
     wl_trace("EV source.send", "src=%p is_source=%d is_psource=%d mime='%s' fd=%d text=%d png_len=%d",
@@ -522,7 +539,8 @@ static void src_send(void *data, struct wl_proxy *src, const char *mime, int fd)
 }
 
 static void src_cancelled(void *data, struct wl_proxy *src) {
-    (void)data;
+        PROFILE_START(_pt);
+(void)data;
     g_wl_ev_count++;
     wl_trace("EV source.cancelled", "src=%p is_source=%d is_psource=%d", (void*)src,
         src == g_wl_source ? 1 : 0, src == g_wl_psource ? 1 : 0);
@@ -538,7 +556,8 @@ static void (*g_src_listener[])(void) = {
 };
 
 static bool wl_load(void) {
-    if (g_wl_handle) return true;
+        PROFILE_START(_pt);
+if (g_wl_handle) { PROFILE_END_VAR(_pt, "wl_load"); return true; }
     dlerror();
     void *h = dlopen("libwayland-client.so.0", RTLD_NOW);
     if (!h) {
@@ -578,11 +597,12 @@ static bool wl_load(void) {
     }
     wl = t;
     g_wl_handle = h;
-    return true;
+    { PROFILE_END_VAR(_pt, "wl_load"); return true; }
 }
 
 static void *wl_thread_func(void *arg) {
-    (void)arg;
+        PROFILE_START(_pt);
+(void)arg;
     int iter = 0;
     while (g_wl_running) {
         iter++;
@@ -628,11 +648,12 @@ static void *wl_thread_func(void *arg) {
                 iter, dpyfd, r, pfd.revents, re, dp, spin, wl.display_get_error(g_wl_dpy), g_wl_ev_count);
         }
     }
-    return NULL;
+    { PROFILE_END_VAR(_pt, "wl_thread_func"); return NULL; }
 }
 
 static bool wl_setup(void) {
-    if (g_wl_ready) return true;
+        PROFILE_START(_pt);
+if (g_wl_ready) { PROFILE_END_VAR(_pt, "wl_setup"); return true; }
     if (g_wl_dead) { wl_trace("SETUP", "already dead, refusing"); return false; }
     if (!wl_load()) {
         g_wl_dead = true;
@@ -728,11 +749,12 @@ static bool wl_setup(void) {
         snprintf(g_wl_read_block_reason, sizeof(g_wl_read_block_reason),
             "hyprland pid %ld present (data-control receive crashes it)", g_wl_hypr_pid);
     }
-    return true;
+    { PROFILE_END_VAR(_pt, "wl_setup"); return true; }
 }
 
 static struct wl_proxy *wl_make_source(void) {
-    struct wl_proxy *src = wl.proxy_marshal_constructor(g_wl_manager, 0, g_use_source, NULL);
+        PROFILE_START(_pt);
+struct wl_proxy *src = wl.proxy_marshal_constructor(g_wl_manager, 0, g_use_source, NULL);
     g_wl_req_count++;
     pthread_mutex_lock(&g_wl_text_lock);
     bool has_text = g_wl_text != NULL;
@@ -750,11 +772,12 @@ static struct wl_proxy *wl_make_source(void) {
     if (has_uri) { wl.proxy_marshal_flags(src, 0, NULL, 0, 0, "text/uri-list"); g_wl_req_count++; }
     if (has_png) { wl.proxy_marshal_flags(src, 0, NULL, 0, 0, g_wl_png_mime); g_wl_req_count++; }
     wl.proxy_add_listener(src, (void (**)(void))g_src_listener, NULL);
-    return src;
+    { PROFILE_END_VAR(_pt, "wl_make_source"); return src; }
 }
 
 static void wl_drop_source(struct wl_proxy **slot) {
-    if (slot && *slot) {
+        PROFILE_START(_pt);
+if (slot && *slot) {
         g_wl_req_count++;
         wl_trace("REQ source.destroy", "proxy=%p", (void*)*slot);
         wl.proxy_marshal_flags(*slot, 1, NULL, 0, 0);
@@ -764,11 +787,13 @@ static void wl_drop_source(struct wl_proxy **slot) {
 }
 
 bool Platform_ClipboardAvailable(void) {
-    return getenv("WAYLAND_DISPLAY") != NULL;
+        PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "Platform_ClipboardAvailable"); return getenv("WAYLAND_DISPLAY") != NULL; }
 }
 
 static void wl_publish_locked(void) {
-    g_wl_req_count += 2;
+        PROFILE_START(_pt);
+g_wl_req_count += 2;
     wl_trace("REQ publish.begin", "old_source=%p old_psource=%p", (void*)g_wl_source, (void*)g_wl_psource);
     wl_drop_source(&g_wl_source);
     wl_drop_source(&g_wl_psource);
@@ -791,7 +816,8 @@ static void wl_publish_locked(void) {
 }
 
 int Platform_ClipboardSetText(const char *text) {
-    if (!text) return 0;
+        PROFILE_START(_pt);
+if (!text) { PROFILE_END_VAR(_pt, "Platform_ClipboardSetText"); return 0; }
     wl_trace("API SetText", "len=%d text='%s'", (int)strlen(text), text);
     pthread_mutex_lock(&g_wl_text_lock);
     bool same = g_wl_text != NULL && strcmp(g_wl_text, text) == 0 && g_wl_png == NULL;
@@ -813,7 +839,7 @@ int Platform_ClipboardSetText(const char *text) {
         g_wl_uri_list = NULL;
     }
     pthread_mutex_unlock(&g_wl_text_lock);
-    if (!nt) return 0;
+    if (!nt) { PROFILE_END_VAR(_pt, "Platform_ClipboardSetText"); return 0; }
     long long t0 = 0;
     struct timespec ts0, ts1;
     clock_gettime(CLOCK_MONOTONIC, &ts0);
@@ -823,15 +849,16 @@ int Platform_ClipboardSetText(const char *text) {
     clock_gettime(CLOCK_MONOTONIC, &ts1);
     t0 = (ts1.tv_sec - ts0.tv_sec) * 1000 + (ts1.tv_nsec - ts0.tv_nsec) / 1000000;
     wl_trace("API SetText", "DONE lock+publish took %lldms", t0);
-    return 1;
+    { PROFILE_END_VAR(_pt, "Platform_ClipboardSetText"); return 1; }
 }
 
 int Platform_ClipboardSetImage(const unsigned char *png, size_t len) {
-    if (!png || len == 0) return 0;
-    if (!wl_setup()) return 0;
+        PROFILE_START(_pt);
+if (!png || len == 0) { PROFILE_END_VAR(_pt, "Platform_ClipboardSetImage"); return 0; }
+    if (!wl_setup()) { PROFILE_END_VAR(_pt, "Platform_ClipboardSetImage"); return 0; }
     unsigned char* np = malloc(len);
     if (np) memcpy(np, png, len);
-    if (!np) return 0;
+    if (!np) { PROFILE_END_VAR(_pt, "Platform_ClipboardSetImage"); return 0; }
     const char* mime = clipboard_image_mime(clipboard_image_format(png, len));
     pthread_mutex_lock(&g_wl_text_lock);
     free(g_wl_png);
@@ -846,13 +873,14 @@ int Platform_ClipboardSetImage(const unsigned char *png, size_t len) {
     pthread_mutex_lock(&g_wl_lock);
     wl_publish_locked();
     pthread_mutex_unlock(&g_wl_lock);
-    return 1;
+    { PROFILE_END_VAR(_pt, "Platform_ClipboardSetImage"); return 1; }
 }
 
 int Platform_ClipboardSetFile(const char *path) {
-    if (!path || path[0] == 0) return 0;
+        PROFILE_START(_pt);
+if (!path || path[0] == 0) { PROFILE_END_VAR(_pt, "Platform_ClipboardSetFile"); return 0; }
     char *uri = clipboard_path_to_uri_list(path);
-    if (!uri) return 0;
+    if (!uri) { PROFILE_END_VAR(_pt, "Platform_ClipboardSetFile"); return 0; }
     if (!wl_setup()) { free(uri); return 0; }
     pthread_mutex_lock(&g_wl_text_lock);
     free(g_wl_text);
@@ -866,21 +894,23 @@ int Platform_ClipboardSetFile(const char *path) {
     pthread_mutex_lock(&g_wl_lock);
     wl_publish_locked();
     pthread_mutex_unlock(&g_wl_lock);
-    return 1;
+    { PROFILE_END_VAR(_pt, "Platform_ClipboardSetFile"); return 1; }
 }
 
 static const char *wl_pick_mime_locked(void) {
-    static const char *prefs[] = { "text/plain;charset=utf-8", "text/plain", "UTF8_STRING", "STRING", "TEXT" };
+        PROFILE_START(_pt);
+static const char *prefs[] = { "text/plain;charset=utf-8", "text/plain", "UTF8_STRING", "STRING", "TEXT" };
     for (size_t p = 0; p < sizeof(prefs) / sizeof(prefs[0]); p++) {
         for (int i = 0; i < g_wl_offer_mime_count; i++) {
             if (strcmp(g_wl_offer_mimes[i], prefs[p]) == 0) return prefs[p];
         }
     }
-    return NULL;
+    { PROFILE_END_VAR(_pt, "wl_pick_mime_locked"); return NULL; }
 }
 
 char *Platform_ClipboardGetText(void) {
-    wl_trace("API GetText", "enter offer=%p has_selection=%d mime_count=%d",
+        PROFILE_START(_pt);
+wl_trace("API GetText", "enter offer=%p has_selection=%d mime_count=%d",
         (void*)g_wl_offer, g_wl_has_selection ? 1 : 0, g_wl_offer_mime_count);
     if (!wl_setup()) { wl_trace("API GetText", "setup failed"); return NULL; }
     pthread_mutex_lock(&g_wl_lock);
@@ -957,11 +987,12 @@ char *Platform_ClipboardGetText(void) {
         return NULL;
     }
     out[len] = '\0';
-    return out;
+    { PROFILE_END_VAR(_pt, "Platform_ClipboardGetText"); return out; }
 }
 
 void Platform_ClipboardShutdown(void) {
-    if (!g_wl_ready && !g_wl_handle) return;
+        PROFILE_START(_pt);
+if (!g_wl_ready && !g_wl_handle) { PROFILE_END_VAR(_pt, "Platform_ClipboardShutdown"); return ; }
     g_wl_running = false;
     if (g_wl_thread_started) {
         pthread_join(g_wl_thread, NULL);

@@ -9,14 +9,16 @@
 #include "platform/platform.h"
 #include "helpers/helpers_hotkey.h"
 
+#include "core/timer.h"
 int Platform_CopyToClipboard(const char* text) {
-    if (text == NULL) return 0;
+        PROFILE_START(_pt);
+if (text == NULL) { PROFILE_END_VAR(_pt, "Platform_CopyToClipboard"); return 0; }
 
     size_t len = strlen(text);
-    if (len == 0) return 0;
+    if (len == 0) { PROFILE_END_VAR(_pt, "Platform_CopyToClipboard"); return 0; }
 
     char* clean_text = (char*)malloc(len + 1);
-    if (clean_text == NULL) return 0;
+    if (clean_text == NULL) { PROFILE_END_VAR(_pt, "Platform_CopyToClipboard"); return 0; }
 
     size_t write_idx = 0;
     for (size_t i = 0; i < len; i++) {
@@ -67,11 +69,12 @@ int Platform_CopyToClipboard(const char* text) {
     }
     CloseClipboard();
     
-    return 1;
+    { PROFILE_END_VAR(_pt, "Platform_CopyToClipboard"); return 1; }
 }
 
 int Platform_SetFileToClipboard(const char* path) {
-    if (path == NULL || path[0] == 0) return 0;
+        PROFILE_START(_pt);
+if (path == NULL || path[0] == 0) { PROFILE_END_VAR(_pt, "Platform_SetFileToClipboard"); return 0; }
     wchar_t wpath[MAX_PATH * 2];
     int wlen = MultiByteToWideChar(CP_UTF8, 0, path, -1, wpath, (int)(sizeof(wpath) / sizeof(wpath[0])));
     if (wlen <= 1) {
@@ -80,7 +83,7 @@ int Platform_SetFileToClipboard(const char* path) {
     }
     size_t bytes = (size_t)(wlen - 1) * sizeof(wchar_t) + sizeof(wchar_t);
     HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, sizeof(DROPFILES) + bytes);
-    if (hMem == NULL) return 0;
+    if (hMem == NULL) { PROFILE_END_VAR(_pt, "Platform_SetFileToClipboard"); return 0; }
     DROPFILES* df = (DROPFILES*)GlobalLock(hMem);
     if (df == NULL) { GlobalFree(hMem); return 0; }
     memset(df, 0, sizeof(DROPFILES));
@@ -95,16 +98,17 @@ int Platform_SetFileToClipboard(const char* path) {
     if (!EmptyClipboard()) { GlobalFree(hMem); CloseClipboard(); return 0; }
     if (SetClipboardData(CF_HDROP, hMem) == NULL) { GlobalFree(hMem); CloseClipboard(); return 0; }
     CloseClipboard();
-    return 1;
+    { PROFILE_END_VAR(_pt, "Platform_SetFileToClipboard"); return 1; }
 }
 
 int Platform_CopyImageToClipboard(const unsigned char* png, size_t len) {
-    if (!png || len == 0) return 0;
+        PROFILE_START(_pt);
+if (!png || len == 0) { PROFILE_END_VAR(_pt, "Platform_CopyImageToClipboard"); return 0; }
     char tmp[MAX_PATH];
     GetTempPathA(MAX_PATH, tmp);
     strcat(tmp, "flint_clip_up.png");
     FILE* f = fopen(tmp, "wb");
-    if (!f) return 0;
+    if (!f) { PROFILE_END_VAR(_pt, "Platform_CopyImageToClipboard"); return 0; }
     size_t w = fwrite(png, 1, len, f);
     fclose(f);
     if (w != len) { remove(tmp); return 0; }
@@ -147,5 +151,5 @@ int Platform_CopyImageToClipboard(const unsigned char* png, size_t len) {
     if (!SetClipboardData(CF_DIB, hDib)) { CloseClipboard(); GlobalFree(hDib); return 0; }
     CloseClipboard();
     log_info("Platform_CopyImageToClipboard ok %dx%d", width, height);
-    return 1;
+    { PROFILE_END_VAR(_pt, "Platform_CopyImageToClipboard"); return 1; }
 }

@@ -18,23 +18,25 @@
 #include <stdio.h>
 
 void win32_fill_popup_key_text(PopupKeyEvent* key) {
-    if (!key) return;
+        PROFILE_START(_pt);
+if (!key) { PROFILE_END_VAR(_pt, "win32_fill_popup_key_text"); return ; }
     BYTE state[256];
     memset(state, 0, sizeof(state));
     UINT sc = MapVirtualKeyA((UINT)key->vk, MAPVK_VK_TO_VSC);
     wchar_t wbuf[8];
     int wlen = ToUnicodeEx((UINT)key->vk, sc, state, wbuf, 8, 0, GetKeyboardLayout(0));
-    if (wlen <= 0) return;
+    if (wlen <= 0) { PROFILE_END_VAR(_pt, "win32_fill_popup_key_text"); return ; }
     char out[32];
     int olen = WideCharToMultiByte(CP_UTF8, 0, wbuf, wlen, out, (int)sizeof(out) - 1, NULL, NULL);
-    if (olen <= 0) return;
+    if (olen <= 0) { PROFILE_END_VAR(_pt, "win32_fill_popup_key_text"); return ; }
     out[olen] = '\0';
     key->text_len = olen < (int)sizeof(key->text) ? olen : (int)sizeof(key->text) - 1;
     memcpy(key->text, out, (size_t)key->text_len);
 }
 
 static int edit_popup_scroll_offset(HDC hdc, const char* text, int text_len, int cursor, int width, int prev_scroll, int* out_cursor_x) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     int visible_w = width - PROMPT_EDIT_SCROLL_PAD;
     int cursor_x = 0;
     int text_w = 0;
@@ -55,20 +57,22 @@ static int edit_popup_scroll_offset(HDC hdc, const char* text, int text_len, int
     if (cursor_x - scroll > visible_w) scroll = cursor_x - visible_w;
     if (out_cursor_x) *out_cursor_x = cursor_x;
     PROFILE_END_VAR(timer, "edit_popup_win32:edit_popup_scroll_offset");
-    return scroll;
+    { PROFILE_END_VAR(_pt, "edit_popup_scroll_offset"); return scroll; }
 }
 
 static int edit_popup_cursor_y(HDC hdc, int box_top) {
-    TEXTMETRIC tm;
+        PROFILE_START(_pt);
+TEXTMETRIC tm;
     memset(&tm, 0, sizeof(tm));
     GetTextMetrics(hdc, &tm);
     int line_h = tm.tmAscent + tm.tmDescent;
-    if (line_h <= 0 || FontSize <= 0) return box_top;
-    return box_top + (line_h - FontSize) / 2;
+    if (line_h <= 0 || FontSize <= 0) { PROFILE_END_VAR(_pt, "edit_popup_cursor_y"); return box_top; }
+    { PROFILE_END_VAR(_pt, "edit_popup_cursor_y"); return box_top + (line_h - FontSize) / 2; }
 }
 
 bool Platform_EditPopupCreateWindow(Popup* self, int x, int y, int w, int h) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     WMEditPopupData* data = (WMEditPopupData*)self;
     HINSTANCE hInst = GetModuleHandle(NULL);
     HWND hwnd = CreateWindowExA(WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED, "EditPopupClass","", WS_POPUP | WS_CLIPCHILDREN, x, y, w, h, NULL, NULL, hInst, data);
@@ -77,11 +81,12 @@ bool Platform_EditPopupCreateWindow(Popup* self, int x, int y, int w, int h) {
     SetLayeredWindowAttributes(hwnd, 0, (BYTE)WindowOpacity, LWA_ALPHA);
     data->base.handle = WH_FROM_HWND(hwnd);
     PROFILE_END_VAR(timer, "window_manager:Platform_EditPopupCreateWindow");
-    return true;
+    { PROFILE_END_VAR(_pt, "Platform_EditPopupCreateWindow"); return true; }
 }
 
 void Platform_EditPopupShowWindow(Popup* self) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     HWND hwnd = WH_TO_HWND(self->handle);
     if (hwnd && IsWindow(hwnd)) {
         SetForegroundWindow(hwnd);
@@ -91,7 +96,8 @@ void Platform_EditPopupShowWindow(Popup* self) {
 }
 
 void Platform_EditPopupHideWindow(Popup* self) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     HWND hwnd = WH_TO_HWND(self->handle);
     if (hwnd && IsWindow(hwnd)) ShowWindow(hwnd, SW_HIDE);
     WindowManager* wm = WindowManager_Get();
@@ -107,7 +113,8 @@ void Platform_EditPopupHideWindow(Popup* self) {
 }
 
 void Platform_EditPopupRender(Popup* self) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     WMEditPopupData* data = (WMEditPopupData*)self;
     HWND hwnd = WH_TO_HWND(self->handle);
     if (!data || !hwnd || !IsWindow(hwnd)) { PROFILE_END_VAR(timer, "edit_popup_win32:Platform_EditPopupRender"); return; }
@@ -220,14 +227,16 @@ void Platform_EditPopupRender(Popup* self) {
 }
 
 void Platform_EditPopupDestroyWindow(Popup* self) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     HWND hwnd = WH_TO_HWND(self->handle);
     if (hwnd && IsWindow(hwnd)) DestroyWindow(hwnd);
     PROFILE_END_VAR(timer, "window_manager:Platform_EditPopupDestroyWindow");
 }
 
 bool Platform_EditPopupOnKey(Popup* self, const PopupKeyEvent* key) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     WMEditPopupData* ed = (WMEditPopupData*)self;
     if (!ed || !ed->text) { PROFILE_END_VAR(timer, "edit_popup_win32:Platform_EditPopupOnKey"); return true; }
 
@@ -344,5 +353,5 @@ bool Platform_EditPopupOnKey(Popup* self, const PopupKeyEvent* key) {
     }
 
     PROFILE_END_VAR(timer, "edit_popup_win32:Platform_EditPopupOnKey");
-    return false;
+    { PROFILE_END_VAR(_pt, "Platform_EditPopupOnKey"); return false; }
 }

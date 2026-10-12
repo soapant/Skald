@@ -10,17 +10,19 @@ static bool g_display_initialized = false;
 
 
 int x11_error_handler(Display *d, XErrorEvent *e) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     char error_text[256];
     XGetErrorText(d, e->error_code, error_text, sizeof(error_text));
     log_error("Request Code: %d, Error Code: %d (%s), Resource ID: %lu, Serial: %lu", e->request_code, e->error_code, error_text, e->resourceid, e->serial);
     PROFILE_END_VAR(timer, "display_x11:x11_error_handler");
-    return 0; 
+    { PROFILE_END_VAR(_pt, "x11_error_handler"); return 0; } 
 }
 
 
 static Display* OpenBestDisplay(void) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     Display* d = XOpenDisplay(NULL);
     if (d) { PROFILE_END_VAR(timer, "display_x11:OpenBestDisplay"); return d; }
 
@@ -38,11 +40,12 @@ static Display* OpenBestDisplay(void) {
     }
     closedir(dir);
     PROFILE_END_VAR(timer, "display_x11:OpenBestDisplay");
-    return d;
+    { PROFILE_END_VAR(_pt, "OpenBestDisplay"); return d; }
 }
 
 bool init_display(void) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     if (g_display_initialized) {
         PROFILE_END_VAR(timer, "display_x11:init_display");
         return true; 
@@ -61,11 +64,12 @@ bool init_display(void) {
 
     g_display_initialized = true;
     PROFILE_END_VAR(timer, "display_x11:init_display");
-    return true;
+    { PROFILE_END_VAR(_pt, "init_display"); return true; }
 }
 
 Display* get_display(void) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     if (!g_display_initialized) {
         if (!init_display()) {
             PROFILE_END_VAR(timer, "display_x11:get_display");
@@ -73,11 +77,12 @@ Display* get_display(void) {
         }
     }
     PROFILE_END_VAR(timer, "display_x11:get_display");
-    return g_display;
+    { PROFILE_END_VAR(_pt, "get_display"); return g_display; }
 }
 
 void cleanup_display(void) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     if (g_display_initialized && g_display != NULL) {
         XCloseDisplay(g_display);
         g_display = NULL;

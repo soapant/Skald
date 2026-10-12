@@ -10,18 +10,21 @@
 #include <time.h>
 #include <sys/stat.h>
 
+#include "core/timer.h"
 static bool niri_sock_live(const char* sock) {
-    if (!sock || !sock[0]) return false;
+        PROFILE_START(_pt);
+if (!sock || !sock[0]) { PROFILE_END_VAR(_pt, "niri_sock_live"); return false; }
     struct stat st;
-    return stat(sock, &st) == 0;
+    { PROFILE_END_VAR(_pt, "niri_sock_live"); return stat(sock, &st) == 0; }
 }
 
 bool niri_is_active(void) {
-    const char* cur = getenv("NIRI_SOCKET");
-    if (niri_sock_live(cur)) return true;
+        PROFILE_START(_pt);
+const char* cur = getenv("NIRI_SOCKET");
+    if (niri_sock_live(cur)) { PROFILE_END_VAR(_pt, "niri_is_active"); return true; }
     if (cur && cur[0]) unsetenv("NIRI_SOCKET");
     const char* rtd = getenv("XDG_RUNTIME_DIR");
-    if (!rtd || !rtd[0]) return false;
+    if (!rtd || !rtd[0]) { PROFILE_END_VAR(_pt, "niri_is_active"); return false; }
     char pat[512];
     snprintf(pat, sizeof(pat), "%s/niri*.sock", rtd);
     glob_t g;
@@ -47,33 +50,36 @@ bool niri_is_active(void) {
         return true;
     }
     globfree(&g);
-    return false;
+    { PROFILE_END_VAR(_pt, "niri_is_active"); return false; }
 }
 
 static bool niri_succeded(char* output) {
-    if (!output) { log_error("output is NULL"); return false; }
+        PROFILE_START(_pt);
+if (!output) { log_error("output is NULL"); return false; }
     if (Platform_StringContainsCaseInsensitive(output, "error")) {
         log_error("niri output='%s'", output);
         return false;
     }
-    return true;
+    { PROFILE_END_VAR(_pt, "niri_succeded"); return true; }
 }
 
 static size_t niri_copy_json_string(const char* s, char* out, size_t cap) {
-    size_t o = 0;
+        PROFILE_START(_pt);
+size_t o = 0;
     for (const char* p = s; *p && o + 1 < cap; p++) {
         if (*p == '\\' && *(p+1)) { p++; out[o++] = *p; continue; }
         if (*p == '"') break;
         out[o++] = *p;
     }
     out[o] = '\0';
-    return o;
+    { PROFILE_END_VAR(_pt, "niri_copy_json_string"); return o; }
 }
 
 bool get_title_niri(char *buffer, int buffer_size) {
-    if (!buffer || buffer_size <= 0) return false;
+        PROFILE_START(_pt);
+if (!buffer || buffer_size <= 0) { PROFILE_END_VAR(_pt, "get_title_niri"); return false; }
     buffer[0] = '\0';
-    if (!niri_is_active()) return false;
+    if (!niri_is_active()) { PROFILE_END_VAR(_pt, "get_title_niri"); return false; }
     char* json = Platform_RunTerminalCommand("niri msg --json focused-window", false);
     if (!json || !json[0]) { free(json); return false; }
     const char* tp = strstr(json, "\"title\":\"");
@@ -83,13 +89,14 @@ bool get_title_niri(char *buffer, int buffer_size) {
         ok = buffer[0] != '\0';
     }
     free(json);
-    return ok;
+    { PROFILE_END_VAR(_pt, "get_title_niri"); return ok; }
 }
 
 bool get_app_id_niri(char *buffer, int buffer_size) {
-    if (!buffer || buffer_size <= 0) return false;
+        PROFILE_START(_pt);
+if (!buffer || buffer_size <= 0) { PROFILE_END_VAR(_pt, "get_app_id_niri"); return false; }
     buffer[0] = '\0';
-    if (!niri_is_active()) return false;
+    if (!niri_is_active()) { PROFILE_END_VAR(_pt, "get_app_id_niri"); return false; }
     char* json = Platform_RunTerminalCommand("niri msg --json focused-window", false);
     if (!json || !json[0]) { free(json); return false; }
     const char* tp = strstr(json, "\"app_id\":\"");
@@ -99,26 +106,28 @@ bool get_app_id_niri(char *buffer, int buffer_size) {
         ok = buffer[0] != '\0';
     }
     free(json);
-    return ok;
+    { PROFILE_END_VAR(_pt, "get_app_id_niri"); return ok; }
 }
 
 char* paste_niri(char* content) {
-    if (!content) { log_error("content is NULL"); return NULL; }
-    if (!niri_is_active()) return NULL;
+        PROFILE_START(_pt);
+if (!content) { log_error("content is NULL"); return NULL; }
+    if (!niri_is_active()) { PROFILE_END_VAR(_pt, "paste_niri"); return NULL; }
     char buffer[100];
     snprintf(buffer, sizeof(buffer), "wtype %s", content);
     char* out = Platform_RunTerminalCommand(buffer, false);
     if (!out) log_error("content='%s'", content ? content : "null");
-    return out;
+    { PROFILE_END_VAR(_pt, "paste_niri"); return out; }
 }
 
 bool focus_window_title_niri(char* title) {
-    if (!title || !*title) return false;
-    if (!niri_is_active()) return false;
+        PROFILE_START(_pt);
+if (!title || !*title) { PROFILE_END_VAR(_pt, "focus_window_title_niri"); return false; }
+    if (!niri_is_active()) { PROFILE_END_VAR(_pt, "focus_window_title_niri"); return false; }
     while (*title && (iscntrl((unsigned char)*title) || isspace((unsigned char)*title))) title++;
     char *end = title + strlen(title);
     while (end > title && (iscntrl((unsigned char)end[-1]) || isspace((unsigned char)end[-1]))) *--end = '\0';
-    if (!*title) return false;
+    if (!*title) { PROFILE_END_VAR(_pt, "focus_window_title_niri"); return false; }
     char* json = Platform_RunTerminalCommand("niri msg --json windows", false);
     if (!json || !json[0]) { free(json); return false; }
     int target = -1;
@@ -136,18 +145,19 @@ bool focus_window_title_niri(char* title) {
         p = tpos + 9;
     }
     free(json);
-    if (target < 0) return false;
+    if (target < 0) { PROFILE_END_VAR(_pt, "focus_window_title_niri"); return false; }
     char cmd[64];
     snprintf(cmd, sizeof(cmd), "niri msg action focus-window --id %d", target);
     char* out = Platform_RunTerminalCommand(cmd, false);
     bool ok = niri_succeded(out);
     free(out);
-    return ok;
+    { PROFILE_END_VAR(_pt, "focus_window_title_niri"); return ok; }
 }
 
 PlWindowList get_window_titles_niri() {
-    PlWindowList list = {0};
-    if (!niri_is_active()) return list;
+        PROFILE_START(_pt);
+PlWindowList list = {0};
+    if (!niri_is_active()) { PROFILE_END_VAR(_pt, "get_window_titles_niri"); return list; }
     char* json = Platform_RunTerminalCommand("niri msg --json windows", false);
     if (!json || !json[0]) { free(json); return list; }
     const char* p = json;
@@ -165,12 +175,13 @@ PlWindowList get_window_titles_niri() {
         list.windows[list.count++] = strdup(buf);
     }
     free(json);
-    return list;
+    { PROFILE_END_VAR(_pt, "get_window_titles_niri"); return list; }
 }
 
 PlWindowList get_window_names_niri() {
-    PlWindowList list = {0};
-    if (!niri_is_active()) return list;
+        PROFILE_START(_pt);
+PlWindowList list = {0};
+    if (!niri_is_active()) { PROFILE_END_VAR(_pt, "get_window_names_niri"); return list; }
     char* json = Platform_RunTerminalCommand("niri msg --json windows", false);
     if (!json || !json[0]) { free(json); return list; }
     const char* p = json;
@@ -189,69 +200,77 @@ PlWindowList get_window_names_niri() {
         list.windows[list.count++] = strdup(buf);
     }
     free(json);
-    return list;
+    { PROFILE_END_VAR(_pt, "get_window_names_niri"); return list; }
 }
 
 
 bool close_active_window_niri(void) {
-    if (!niri_is_active()) return false;
+        PROFILE_START(_pt);
+if (!niri_is_active()) { PROFILE_END_VAR(_pt, "close_active_window_niri"); return false; }
     char* out = Platform_RunTerminalCommand("niri msg action close-window", false);
     bool ok = niri_succeded(out);
     free(out);
-    return ok;
+    { PROFILE_END_VAR(_pt, "close_active_window_niri"); return ok; }
 }
 
 bool toggle_fullscreen_active_niri(void) {
-    if (!niri_is_active()) return false;
+        PROFILE_START(_pt);
+if (!niri_is_active()) { PROFILE_END_VAR(_pt, "toggle_fullscreen_active_niri"); return false; }
     char* out = Platform_RunTerminalCommand("niri msg action fullscreen-window", false);
     bool ok = niri_succeded(out);
     free(out);
-    return ok;
+    { PROFILE_END_VAR(_pt, "toggle_fullscreen_active_niri"); return ok; }
 }
 
 bool move_active_window_to_monitor_niri(bool right) {
-    if (!niri_is_active()) return false;
+        PROFILE_START(_pt);
+if (!niri_is_active()) { PROFILE_END_VAR(_pt, "move_active_window_to_monitor_niri"); return false; }
     char cmd[64];
     snprintf(cmd, sizeof(cmd), "niri msg action move-window-to-monitor-%s", right ? "right" : "left");
     char* out = Platform_RunTerminalCommand(cmd, false);
     bool ok = niri_succeded(out);
     free(out);
-    return ok;
+    { PROFILE_END_VAR(_pt, "move_active_window_to_monitor_niri"); return ok; }
 }
 
 bool move_active_window_left_niri(void) {
-    if (!niri_is_active()) return false;
+        PROFILE_START(_pt);
+if (!niri_is_active()) { PROFILE_END_VAR(_pt, "move_active_window_left_niri"); return false; }
     char* out = Platform_RunTerminalCommand("niri msg action move-window-to-monitor-left", false);
     bool ok = niri_succeded(out);
     free(out);
-    return ok;
+    { PROFILE_END_VAR(_pt, "move_active_window_left_niri"); return ok; }
 }
 
 bool move_active_window_right_niri(void) {
-    if (!niri_is_active()) return false;
+        PROFILE_START(_pt);
+if (!niri_is_active()) { PROFILE_END_VAR(_pt, "move_active_window_right_niri"); return false; }
     char* out = Platform_RunTerminalCommand("niri msg action move-window-to-monitor-right", false);
     bool ok = niri_succeded(out);
     free(out);
-    return ok;
+    { PROFILE_END_VAR(_pt, "move_active_window_right_niri"); return ok; }
 }
 
 bool focus_window_left_niri(void) {
-    if (!niri_is_active()) return false;
+        PROFILE_START(_pt);
+if (!niri_is_active()) { PROFILE_END_VAR(_pt, "focus_window_left_niri"); return false; }
     char* out = Platform_RunTerminalCommand("niri msg action focus-column-or-monitor-left", false);
     bool ok = niri_succeded(out);
     free(out);
-    return ok;
+    { PROFILE_END_VAR(_pt, "focus_window_left_niri"); return ok; }
 }
 
 bool focus_window_right_niri(void) {
-    if (!niri_is_active()) return false;
+        PROFILE_START(_pt);
+if (!niri_is_active()) { PROFILE_END_VAR(_pt, "focus_window_right_niri"); return false; }
     char* out = Platform_RunTerminalCommand("niri msg action focus-column-or-monitor-right", false);
     bool ok = niri_succeded(out);
     free(out);
-    return ok;
+    { PROFILE_END_VAR(_pt, "focus_window_right_niri"); return ok; }
 }
 
 bool minimize_active_window_niri(void) {
-    if (!niri_is_active()) return false;
-    return false;
+        PROFILE_START(_pt);
+if (!niri_is_active()) { PROFILE_END_VAR(_pt, "minimize_active_window_niri"); return false; }
+    { PROFILE_END_VAR(_pt, "minimize_active_window_niri"); return false; }
 }

@@ -13,7 +13,8 @@ static BOOL g_track_saved = FALSE;
 static HWND g_pending_restore = NULL;
 
 static void CALLBACK Flint_ReenableTrackProc(HWND hwnd, UINT msg, UINT_PTR id, DWORD time) {
-    (void)hwnd; (void)msg; (void)time;
+        PROFILE_START(_pt);
+(void)hwnd; (void)msg; (void)time;
     KillTimer(NULL, id);
     if (g_track_saved) {
         SystemParametersInfoA(SPI_SETACTIVEWINDOWTRACKING, 0, (PVOID)(uintptr_t)g_old_track, 0);
@@ -23,7 +24,8 @@ static void CALLBACK Flint_ReenableTrackProc(HWND hwnd, UINT msg, UINT_PTR id, D
 }
 
 static void CALLBACK Flint_RestoreFocusProc(HWND hwnd, UINT msg, UINT_PTR id, DWORD time) {
-    (void)hwnd; (void)msg; (void)time;
+        PROFILE_START(_pt);
+(void)hwnd; (void)msg; (void)time;
     KillTimer(NULL, id);
     if (g_pending_restore && IsWindow(g_pending_restore)) {
         HWND cur = GetForegroundWindow();
@@ -48,23 +50,27 @@ static void CALLBACK Flint_RestoreFocusProc(HWND hwnd, UINT msg, UINT_PTR id, DW
 }
 
 static bool is_flint_popup_class(HWND hwnd) {
-    if (!hwnd || !IsWindow(hwnd)) return false;
+        PROFILE_START(_pt);
+if (!hwnd || !IsWindow(hwnd)) { PROFILE_END_VAR(_pt, "is_flint_popup_class"); return false; }
     char cls[64] = {0};
     GetClassNameA(hwnd, cls, sizeof(cls));
-    return strcmp(cls, "QuickSwitcherModalClass")==0 || strcmp(cls, "DisplayMessageModalClass")==0
-        || strcmp(cls, "EditPopupClass")==0 || strcmp(cls, "SearchPopupClass")==0;
+    { PROFILE_END_VAR(_pt, "is_flint_popup_class"); return strcmp(cls, "QuickSwitcherModalClass")==0 || strcmp(cls, "DisplayMessageModalClass")==0
+        || strcmp(cls, "EditPopupClass")==0 || strcmp(cls, "SearchPopupClass")==0; }
 }
 
 HWND Platform_GetFlintPrevFg(void) {
-    if (g_prev_fg && IsWindow(g_prev_fg)) return g_prev_fg;
-    return NULL;
+        PROFILE_START(_pt);
+if (g_prev_fg && IsWindow(g_prev_fg)) { PROFILE_END_VAR(_pt, "Platform_GetFlintPrevFg"); return g_prev_fg; }
+    { PROFILE_END_VAR(_pt, "Platform_GetFlintPrevFg"); return NULL; }
 }
 void Platform_SetFlintPrevFg(HWND h) {
-    if (h && IsWindow(h)) g_prev_fg = h;
+        PROFILE_START(_pt);
+if (h && IsWindow(h)) g_prev_fg = h;
 }
 
 bool Platform_PromptPopupShowWindow(Popup* self, int x, int y, int w, int h) {
-    (void)self;
+        PROFILE_START(_pt);
+(void)self;
     PROFILE_START(timer);
     HWND fg = GetForegroundWindow();
     if (fg && IsWindow(fg) && !is_flint_popup_class(fg)) g_prev_fg = fg;
@@ -96,11 +102,12 @@ bool Platform_PromptPopupShowWindow(Popup* self, int x, int y, int w, int h) {
     }
     win32_apply_rounded_corners(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), w, h);
     PROFILE_END_VAR(timer, "window_manager:Platform_PromptPopupShowWindow");
-    return true;
+    { PROFILE_END_VAR(_pt, "Platform_PromptPopupShowWindow"); return true; }
 }
 
 void Platform_PromptPopupHideWindow(Popup* self) {
-    (void)self;
+        PROFILE_START(_pt);
+(void)self;
     PROFILE_START(timer);
     if (WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) != NULL && IsWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd))) {
         KillTimer(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), 999);
@@ -139,21 +146,25 @@ void Platform_PromptPopupHideWindow(Popup* self) {
 }
 
 void Platform_PromptPopupRender(Popup* self) {
-    (void)self;
+        PROFILE_START(_pt);
+(void)self;
 }
 
 void Platform_PromptPopupDestroyWindow(Popup* self) {
-    Platform_PromptPopupHideWindow(self);
+        PROFILE_START(_pt);
+Platform_PromptPopupHideWindow(self);
 }
 
 bool Platform_PromptPopupOnKey(Popup* self, const PopupKeyEvent* key) {
-    (void)self;
+        PROFILE_START(_pt);
+(void)self;
     (void)key;
-    return false;
+    { PROFILE_END_VAR(_pt, "Platform_PromptPopupOnKey"); return false; }
 }
 
 void HandleCommandExecution(ListBoxInfo* lb, char* string) {
-    if (!lb) return;
+        PROFILE_START(_pt);
+if (!lb) { PROFILE_END_VAR(_pt, "HandleCommandExecution"); return ; }
     int num = atoi(string);
     UI_SetSelection(lb, FlintContext_Get()->window.hListBox, num - 1);
     UI_LB_SetCaretIndex(FlintContext_Get()->window.hListBox, num, TRUE);

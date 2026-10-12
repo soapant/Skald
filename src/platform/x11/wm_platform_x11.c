@@ -12,30 +12,36 @@
 #include <X11/Xatom.h>
 #include <X11/extensions/Xrandr.h>
 
+#include "core/timer.h"
 extern int WindowManager_RunLinux(WindowManager* wm);
 extern void WindowManager_QuitLinux(WindowManager* wm);
 extern void WindowManager_ProcessEventsLinux(WindowManager* wm);
 
 bool Platform_WM_InitDisplay(WindowManager* wm) {
-    if (!wm) return false;
+        PROFILE_START(_pt);
+if (!wm) { PROFILE_END_VAR(_pt, "Platform_WM_InitDisplay"); return false; }
     wm->display = get_display();
-    return wm->display != NULL;
+    { PROFILE_END_VAR(_pt, "Platform_WM_InitDisplay"); return wm->display != NULL; }
 }
 
 int Platform_WM_Run(WindowManager* wm) {
-    return WindowManager_RunLinux(wm);
+        PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "Platform_WM_Run"); return WindowManager_RunLinux(wm); }
 }
 
 void Platform_WM_Quit(WindowManager* wm) {
-    WindowManager_QuitLinux(wm);
+        PROFILE_START(_pt);
+WindowManager_QuitLinux(wm);
 }
 
 void Platform_WM_ProcessEvents(WindowManager* wm) {
-    WindowManager_ProcessEventsLinux(wm);
+        PROFILE_START(_pt);
+WindowManager_ProcessEventsLinux(wm);
 }
 
 void Platform_WM_OnPopEmpty(WindowManager* wm) {
-    (void)wm;
+        PROFILE_START(_pt);
+(void)wm;
     x11_clear_suppress();
     remap_reset();
     x11_sync_held_from_phys();
@@ -43,7 +49,8 @@ void Platform_WM_OnPopEmpty(WindowManager* wm) {
 }
 
 void Platform_WM_GetMonitorGeometry(int *ox, int *oy, int *ow, int *oh) {
-    int x = 0, y = 0, w = 1920, h = 1080;
+        PROFILE_START(_pt);
+int x = 0, y = 0, w = 1920, h = 1080;
     Display *dpy = NULL;
     WindowManager *wm = WindowManager_Get();
     if (wm) dpy = wm->display;
@@ -108,9 +115,10 @@ void Platform_WM_GetMonitorGeometry(int *ox, int *oy, int *ow, int *oh) {
 }
 
 char* Platform_PromptUser(WindowManager* wm, const PromptSpec* spec) {
-    if (!wm || !spec) return NULL;
+        PROFILE_START(_pt);
+if (!wm || !spec) { PROFILE_END_VAR(_pt, "Platform_PromptUser"); return NULL; }
     Popup* popup = PromptPopup_Create(wm, spec);
-    if (!popup) return NULL;
+    if (!popup) { PROFILE_END_VAR(_pt, "Platform_PromptUser"); return NULL; }
     Display* dpy = wm->display;
     long long last_tick = 0;
     while (wm->running && popup->manager) {
@@ -136,6 +144,6 @@ char* Platform_PromptUser(WindowManager* wm, const PromptSpec* spec) {
     }
     if (dpy) { XFlush(dpy); XSync(dpy, False); }
     FlintContext* _c = FlintContext_Get();
-    return _c->window.output_buffer[0] ? _c->window.output_buffer : NULL;
+    { PROFILE_END_VAR(_pt, "Platform_PromptUser"); return _c->window.output_buffer[0] ? _c->window.output_buffer : NULL; }
 }
 

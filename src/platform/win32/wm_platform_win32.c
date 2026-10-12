@@ -23,30 +23,36 @@ extern void WindowManager_ProcessEventsWin32(WindowManager* wm);
 #include "platform/win32/win32_state.h"
 
 bool Platform_WM_InitDisplay(WindowManager* wm) {
-    (void)wm;
-    return true;
+        PROFILE_START(_pt);
+(void)wm;
+    { PROFILE_END_VAR(_pt, "Platform_WM_InitDisplay"); return true; }
 }
 
 int Platform_WM_Run(WindowManager* wm) {
-    return WindowManager_RunWin32(wm);
+        PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "Platform_WM_Run"); return WindowManager_RunWin32(wm); }
 }
 
 void Platform_WM_Quit(WindowManager* wm) {
-    WindowManager_QuitWin32(wm);
+        PROFILE_START(_pt);
+WindowManager_QuitWin32(wm);
 }
 
 void Platform_WM_ProcessEvents(WindowManager* wm) {
-    WindowManager_ProcessEventsWin32(wm);
+        PROFILE_START(_pt);
+WindowManager_ProcessEventsWin32(wm);
 }
 
 void Platform_WM_OnPopEmpty(WindowManager* wm) {
-    (void)wm;
+        PROFILE_START(_pt);
+(void)wm;
     remap_reset();
     Platform_InputState_Clear();
 }
 
 void Platform_WM_GetMonitorGeometry(int *ox, int *oy, int *ow, int *oh) {
-    int x = 0, y = 0, w = GetSystemMetrics(SM_CXSCREEN), h = GetSystemMetrics(SM_CYSCREEN);
+        PROFILE_START(_pt);
+int x = 0, y = 0, w = GetSystemMetrics(SM_CXSCREEN), h = GetSystemMetrics(SM_CYSCREEN);
     if (!w) w = 1920;
     if (!h) h = 1080;
     POINT pt = { 0, 0 };
@@ -74,7 +80,8 @@ void Platform_WM_GetMonitorGeometry(int *ox, int *oy, int *ow, int *oh) {
 
 
 void Platform_GetTextLayoutMetrics(int* line_h, int* row_h, int* list_top) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     int lh = FontSize;
     int rh = PromptRowHeight();
     if (line_h) *line_h = lh;
@@ -84,7 +91,8 @@ void Platform_GetTextLayoutMetrics(int* line_h, int* row_h, int* list_top) {
 }
 
 char* Platform_PromptUser(WindowManager* wm, const PromptSpec* spec) {
-  (void)wm;
+    PROFILE_START(_pt);
+(void)wm;
   if (!spec) { log_error("Platform_PromptUser null spec"); return NULL; }
   const char** window_list = spec->items;
   const char* window_title = spec->title ? spec->title : "Flint";
@@ -264,5 +272,5 @@ PROFILE_END_VAR(timer3, "Focus");
   }
 
   log_info("Returning from Platform_PromptUser. Buffer Length: %zu", strlen(FlintContext_Get()->window.output_buffer));
-  return (strlen(FlintContext_Get()->window.output_buffer) > 0) ? FlintContext_Get()->window.output_buffer : NULL;
+  { PROFILE_END_VAR(_pt, "Platform_PromptUser"); return (strlen(FlintContext_Get()->window.output_buffer) > 0) ? FlintContext_Get()->window.output_buffer : NULL; }
 }
