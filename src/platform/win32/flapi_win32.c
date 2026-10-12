@@ -766,3 +766,12 @@ FlNetStatus fl_net_status_platform(void) {
     net_unlock();
     return st;
 }
+bool fl_dismiss_message_platform() {
+  HWND hMsg = WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage);
+  if (hMsg != NULL && IsWindow(hMsg)) {
+    KillTimer(hMsg, 999);
+    DestroyWindow(hMsg);
+    FlintContext_Get()->window.hDisplayMessage = WH_NULL;
+    return true;
+  }
+}
