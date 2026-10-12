@@ -1095,6 +1095,26 @@ char* Platform_GetActiveWindowAppId(void) {
     CloseHandle(h);
     return appId;
 }
+static bool win32_placeholder_icon(char* out, size_t out_len) {
+    char cand[MAX_PATH];
+    snprintf(cand, sizeof(cand), "resources\\Placeholder.png");
+    if (GetFileAttributesA(cand) != INVALID_FILE_ATTRIBUTES) { snprintf(out, out_len, "%s", cand); return true; }
+    char exe[MAX_PATH];
+    DWORD n = GetModuleFileNameA(NULL, exe, sizeof(exe));
+    if (n == 0 || n >= sizeof(exe)) return false;
+    char* slash = strrchr(exe, '\\');
+    if (!slash) return false;
+    *slash = '\0';
+    for (int depth = 0; depth < 4; depth++) {
+        snprintf(cand, sizeof(cand), "%s\\resources\\Placeholder.png", exe);
+        if (GetFileAttributesA(cand) != INVALID_FILE_ATTRIBUTES) { snprintf(out, out_len, "%s", cand); return true; }
+        slash = strrchr(exe, '\\');
+        if (!slash) break;
+        *slash = '\0';
+    }
+    return false;
+}
+
 char* Platform_GetIconPath(char* app_path) {
   if (!app_path || !app_path[0]) { log_error("operation failed, returning error app_path='%s'", app_path ? app_path : "null"); return NULL; }
   char expanded[MAX_PATH];
@@ -1103,6 +1123,10 @@ char* Platform_GetIconPath(char* app_path) {
       if (expanded[0]) src = expanded;
   }
   if (strncmp(src, "shell:", 6)==0) return NULL;
+  char native[MAX_PATH];
+  snprintf(native, sizeof(native), "%s", src);
+  for (char* p = native; *p; p++) if (*p == '/') *p = '\\';
+  src = native;
   if (GetFileAttributesA(src) != INVALID_FILE_ATTRIBUTES) {
       return _strdup(src);
   }
@@ -1117,6 +1141,8 @@ char* Platform_GetIconPath(char* app_path) {
       }
   }
   log_info("Platform_GetIconPath app_path='%s'", app_path ? app_path : "");;
+  char ph[MAX_PATH];
+  if (win32_placeholder_icon(ph, sizeof(ph))) return _strdup(ph);
   return NULL;
 }
 int Platform_GetIconSize(char* icon_path) {
