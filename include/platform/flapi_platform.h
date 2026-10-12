@@ -30,5 +30,6 @@ void fl_mutex_unlock_platform(void* mutex);
 FlNetStatus fl_net_status_platform();
 int fl_get_active_interface_platform(char out[], size_t max_len);
 unsigned long long fl_net_rx_bytes_platform();
+bool  fl_dismiss_message_platform();
 
 #endif
