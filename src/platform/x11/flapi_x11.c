@@ -1029,16 +1029,3 @@ FlNetStatus fl_net_status_platform(void) {
     }
     return FL_NET_OFFLINE;
 }
-
-bool fl_dismiss_message_platform() {
-    Display *dpy = NULL;
-    WindowHandle *hMsg = &FlintContext_Get()->window.hDisplayMessage;
-    dpy = XOpenDisplay(NULL);
-    if (!dpy) return false;
-    if (hMsg->xid != WH_NULL.xid) {
-        XDestroyWindow(dpy, (Window)hMsg->xid);
-        XCloseDisplay(dpy);
-        hMsg->xid = WH_NULL.xid;
-    }
-    return true;
-}

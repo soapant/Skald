@@ -858,7 +858,7 @@ bool fl_close_active_window(void) {
 }
 
 bool fl_dismiss_message(void) {
-  return fl_dismiss_message_platform;
+  Platform_DismissMessage();
 }
 
 bool fl_toggle_fullscreen_active(void) {
@@ -1329,12 +1329,6 @@ bool fl_mouse_scroll(int notches) {
   PROFILE_START(_pt);
   bool ok = Platform_MouseScroll(notches);
   PROFILE_END_VAR(_pt, "flapi:fl_mouse_scroll");
-  return ok;
-}
-static bool fl_get_virtual_bounds(int *out_x, int *out_y, int *out_w, int *out_h) {
-  PROFILE_START(_pt);
-  bool ok = Platform_GetVirtualBounds(out_x, out_y, out_w, out_h);
-  PROFILE_END_VAR(_pt, "flapi:fl_get_virtual_bounds");
   return ok;
 }
 
