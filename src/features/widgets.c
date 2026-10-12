@@ -12,7 +12,6 @@
 #endif
 
 
-#define COLOR RGB(1, 1, 1)
 #define FPS 1
 #define NO_BG true
 #define FONTSIZE 14
@@ -385,7 +384,6 @@ void on_internet_hover(void) {
                .y = pos.y - 70,
                .w = NET_POPUP_W,
                .h = NET_POPUP_H,
-               .color_bg = RGB(1, 1, 1),
                .render = internet_hover_render,
                .hover_key = "internet");
 }
@@ -401,35 +399,30 @@ void FlipWidgets(void) {
 
 FLINT_FEATURE_INIT {
     g_disk = fl_widget(.name = "disk_usage",
-              .color = COLOR,
               .fps = FPS,
               .no_bg = NO_BG,
               .slot = FL_WIDGET_SLOT_BOTTOM_LEFT,
               .render = widgets_disk_usage_render);
 
     g_mem = fl_widget(.name = "memory_usage",
-              .color = COLOR,
               .fps = FPS,
               .no_bg = NO_BG,
               .slot = FL_WIDGET_SLOT_BOTTOM_LEFT,
               .render = widgets_memory_usage_render);
 
     g_cpu = fl_widget(.name = "cpu_usage",
-              .color = COLOR,
               .fps = FPS,
               .no_bg = NO_BG,
               .slot = FL_WIDGET_SLOT_BOTTOM_LEFT,
               .render = widgets_cpu_usage_render);
 
     fl_widget(.name = "date_and_time",
-              .color = COLOR,
               .fps = FPS,
               .no_bg = NO_BG,
               .slot = FL_WIDGET_SLOT_BOTTOM_RIGHT,
               .render = widgets_date_and_time_render);
 
     g_internet = fl_widget(.name = "internet",
-              .color = COLOR,
               .fps = FPS,
               .no_bg = NO_BG,
               .on_hover = on_internet_hover,
