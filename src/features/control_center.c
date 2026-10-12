@@ -1,4 +1,5 @@
 #include "core/flapi.h"
+#include <ctype.h>
 #include <stdio.h>
 #include <string.h>
 #include <strings.h>
@@ -109,15 +110,13 @@ static void cc_build(void) {
 static const CcEntry *cc_find(const char *label) {
     if (!label || !label[0]) return NULL;
     for (int i = 0; i < g_entry_count; i++) {
-        if (strcmp(g_entries[i].label, label) == 0) return &g_entries[i];
+        if (strcmp(g_entries[i].label, label) == 0)  {
+            return &g_entries[i];
+        }
     }
     return NULL;
 }
 
-// Actions are staged on Enter and dispatched from on_close, so the control
-// center is already off the popup stack before a feature opens its prompt.
-// Otherwise the stack is [control_center, feature] and JQ sees popup_count 2,
-// which vim_motions.c treats as "nested" and enters normal mode instead of closing.
 static void (*g_pending_action)(void);
 static void (*g_pending_fn)(const char *payload);
 static char g_pending_payload[MAX_PATH];
@@ -492,16 +491,37 @@ static void cc_fill_features(void) {
 }
 
 static const char **g_names = NULL;
+static const char **g_no_results = NULL;
 
 static void cc_refresh(const char *filter, ListBoxInfo *lb) {
     cc_build();
-    if (!g_names) {
+    if (!g_names || !g_no_results) {
         g_names = (const char **)malloc(sizeof(char *) * MAX_VISIBLE_ITEMS);
+        g_no_results = (const char **)malloc(sizeof(char *) * MAX_VISIBLE_ITEMS);
         if (!g_names) return;
+        if (!g_no_results) return;
     }
     int n = g_entry_count;
     for (int i = 0; i < n; i++) g_names[i] = g_entries[i].label;
     fl_populate_listbox(lb, filter, g_names, n);
+    if (lb->total_matches == 0) {
+       CcEntry *fallback = cc_entry_new();
+       if (fallback) {
+           char buffer[256];
+           snprintf(buffer, sizeof(buffer), "%s Search", UsedSearchEngine);
+           buffer[0] = toupper((unsigned char)buffer[0]);
+           
+           char icon_path[MAX_PATH];
+           snprintf(icon_path, sizeof(icon_path), "resources/%s.png", UsedSearchEngine);
+
+           snprintf(fallback->label, sizeof(fallback->label), "%s", buffer);
+           snprintf(fallback->icon, sizeof(fallback->icon), "%s", icon_path);
+           
+           g_names[n] = fallback->label;
+           
+           fl_populate_listbox(lb, "", &g_names[n], 1);
+       }
+    }
 }
 
 static unsigned long cc_type_color(void) {
@@ -537,13 +557,17 @@ static void cc_render(PromptState *state) {
 }
 
 static bool cc_enter(const char *selection, ListBoxInfo *lb) {
-    (void)lb;
+    if (!fl_is_selected(lb)) {
+        fl_query_browser(selection);
+    }
     cc_stage(cc_find(selection), false);
     return true;
 }
 
 static bool cc_ctrl_enter(const char *selection, ListBoxInfo *lb) {
-    (void)lb;
+    if (!fl_is_selected(lb)) {
+        fl_query_browser(selection);
+    }
     cc_stage(cc_find(selection), true);
     return true;
 }
