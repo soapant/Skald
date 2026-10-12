@@ -266,27 +266,3 @@ PROFILE_END_VAR(timer3, "Focus");
   log_info("Returning from Platform_PromptUser. Buffer Length: %zu", strlen(FlintContext_Get()->window.output_buffer));
   return (strlen(FlintContext_Get()->window.output_buffer) > 0) ? FlintContext_Get()->window.output_buffer : NULL;
 }
-
-void Platform_SettingsPopUp() {
-  WindowManager* wm = WindowManager_Get();
-  Popup* popup = SettingsPopup_Create(wm);
-  if (!popup) return;
-  MSG msg;
-  UI_PreparePopupPump();
-  while (!FlintContext_Get()->window.selection_complete) {
-    if (GetMessage(&msg, NULL, 0, 0)) {
-      if (UI_ShouldSkipPopupKey(&msg)) continue;
-      TranslateMessage(&msg);
-      DispatchMessage(&msg);
-    } else {
-      break;
-    }
-  }
-  WindowManager_PopPopup(wm);
-  if (popup->vtable && popup->vtable->destroy) popup->vtable->destroy(popup);
-  while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
-    TranslateMessage(&msg);
-    DispatchMessage(&msg);
-  }
-log_info("Platform_SettingsPopUp completed");
-}

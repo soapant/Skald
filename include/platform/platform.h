@@ -59,7 +59,6 @@ FontHandle Platform_CreateFont(int size, const char* face_name);
 
 void Platform_DestroyFont(FontHandle font);
 void Platform_GetTextExtents(FontHandle font, const char* text, int maxWidth, int* outWidth, int* outHeight);
-void Platform_SettingsPopUp(WindowManager* wm);
 int Platform_InitializeTrayIcon(void);
 void Platform_InitUI(void);
 void Platform_InitDataFolder(void);

@@ -800,7 +800,6 @@ static HWND win32_foreground_target(void) {
     if (strcmp(cls, "DisplayMessageModalClass") == 0) return NULL;
     if (strcmp(cls, "EditPopupClass") == 0) return NULL;
     if (strcmp(cls, "SearchPopupClass") == 0) return NULL;
-    if (strcmp(cls, "SettingsPopupClass") == 0) return NULL;
     return hwnd;
 }
 
@@ -873,7 +872,7 @@ static BOOL CALLBACK win32_focus_enum_left(HWND hwnd, LPARAM lp) {
     if (hwnd == GetForegroundWindow()) return TRUE;
     if (!IsWindowVisible(hwnd)) return TRUE;
     if (IsIconic(hwnd)) return TRUE;
-    char cls[64]; if (GetClassNameA(hwnd, cls, sizeof(cls))>0) if (strcmp(cls,"QuickSwitcherModalClass")==0||strcmp(cls,"DisplayMessageModalClass")==0||strcmp(cls,"EditPopupClass")==0||strcmp(cls,"SearchPopupClass")==0||strcmp(cls,"SettingsPopupClass")==0||strcmp(cls,"FlintWidgetClass")==0) return TRUE;
+    char cls[64]; if (GetClassNameA(hwnd, cls, sizeof(cls))>0) if (strcmp(cls,"QuickSwitcherModalClass")==0||strcmp(cls,"DisplayMessageModalClass")==0||strcmp(cls,"EditPopupClass")==0||strcmp(cls,"SearchPopupClass")==0||strcmp(cls,"FlintWidgetClass")==0) return TRUE;
     { int cloaked=0; HMODULE dwm=GetModuleHandleA("dwmapi.dll"); if(dwm){ HRESULT (WINAPI *p)(HWND,DWORD,PVOID,DWORD)=(void*)GetProcAddress(dwm,"DwmGetWindowAttribute"); if(p && SUCCEEDED(p(hwnd,14,&cloaked,sizeof(cloaked))) && cloaked) return TRUE; } }
     LONG ex=GetWindowLongA(hwnd,GWL_EXSTYLE); if((ex & WS_EX_TOOLWINDOW) && !(ex & WS_EX_APPWINDOW)) { HWND o=GetWindow(hwnd,GW_OWNER); if(o) return TRUE; }
     char title[256];
@@ -903,7 +902,7 @@ static BOOL CALLBACK win32_focus_enum_right(HWND hwnd, LPARAM lp) {
     if (hwnd == GetForegroundWindow()) return TRUE;
     if (!IsWindowVisible(hwnd)) return TRUE;
     if (IsIconic(hwnd)) return TRUE;
-    char cls[64]; if (GetClassNameA(hwnd, cls, sizeof(cls))>0) if (strcmp(cls,"QuickSwitcherModalClass")==0||strcmp(cls,"DisplayMessageModalClass")==0||strcmp(cls,"EditPopupClass")==0||strcmp(cls,"SearchPopupClass")==0||strcmp(cls,"SettingsPopupClass")==0||strcmp(cls,"FlintWidgetClass")==0) return TRUE;
+    char cls[64]; if (GetClassNameA(hwnd, cls, sizeof(cls))>0) if (strcmp(cls,"QuickSwitcherModalClass")==0||strcmp(cls,"DisplayMessageModalClass")==0||strcmp(cls,"EditPopupClass")==0||strcmp(cls,"SearchPopupClass")==0||strcmp(cls,"FlintWidgetClass")==0) return TRUE;
     { int cloaked=0; HMODULE dwm=GetModuleHandleA("dwmapi.dll"); if(dwm){ HRESULT (WINAPI *p)(HWND,DWORD,PVOID,DWORD)=(void*)GetProcAddress(dwm,"DwmGetWindowAttribute"); if(p && SUCCEEDED(p(hwnd,14,&cloaked,sizeof(cloaked))) && cloaked) return TRUE; } }
     LONG ex=GetWindowLongA(hwnd,GWL_EXSTYLE); if((ex & WS_EX_TOOLWINDOW) && !(ex & WS_EX_APPWINDOW)) { HWND o=GetWindow(hwnd,GW_OWNER); if(o) return TRUE; }
     char title[256];
@@ -1002,7 +1001,7 @@ bool Platform_FocusWindowLeft(void) {
     HWND fg = win32_foreground_target();
     if (!fg) fg = GetForegroundWindow();
     char cls[64]={0}; if(fg) GetClassNameA(fg,cls,sizeof(cls));
-    if (fg && (strcmp(cls,"QuickSwitcherModalClass")==0||strcmp(cls,"DisplayMessageModalClass")==0||strcmp(cls,"EditPopupClass")==0||strcmp(cls,"SearchPopupClass")==0||strcmp(cls,"SettingsPopupClass")==0||strcmp(cls,"FlintWidgetClass")==0)) {
+    if (fg && (strcmp(cls,"QuickSwitcherModalClass")==0||strcmp(cls,"DisplayMessageModalClass")==0||strcmp(cls,"EditPopupClass")==0||strcmp(cls,"SearchPopupClass")==0||strcmp(cls,"FlintWidgetClass")==0)) {
     }
     if (!fg) return false;
     RECT fr;
@@ -1022,7 +1021,7 @@ bool Platform_FocusWindowRight(void) {
     HWND fg = win32_foreground_target();
     if (!fg) fg = GetForegroundWindow();
     char cls[64]={0}; if(fg) GetClassNameA(fg,cls,sizeof(cls));
-    if (fg && (strcmp(cls,"QuickSwitcherModalClass")==0||strcmp(cls,"DisplayMessageModalClass")==0||strcmp(cls,"EditPopupClass")==0||strcmp(cls,"SearchPopupClass")==0||strcmp(cls,"SettingsPopupClass")==0||strcmp(cls,"FlintWidgetClass")==0)) {
+    if (fg && (strcmp(cls,"QuickSwitcherModalClass")==0||strcmp(cls,"DisplayMessageModalClass")==0||strcmp(cls,"EditPopupClass")==0||strcmp(cls,"SearchPopupClass")==0||strcmp(cls,"FlintWidgetClass")==0)) {
     }
     if (!fg) return false;
     RECT fr;
@@ -1172,7 +1171,7 @@ static BOOL CALLBACK EnumWindowsProcPair(HWND hwnd, LPARAM lParam) {
     char cls[256];
     if (GetClassNameA(hwnd, cls, sizeof(cls)) > 0) {
         if (strcmp(cls, "Progman") == 0 || strcmp(cls, "WorkerW") == 0) return TRUE;
-        if (strcmp(cls, "QuickSwitcherModalClass")==0 || strcmp(cls, "DisplayMessageModalClass")==0 || strcmp(cls, "EditPopupClass")==0 || strcmp(cls, "SearchPopupClass")==0 || strcmp(cls, "SettingsPopupClass")==0 || strcmp(cls, "FlintWidgetClass")==0) return TRUE;
+        if (strcmp(cls, "QuickSwitcherModalClass")==0 || strcmp(cls, "DisplayMessageModalClass")==0 || strcmp(cls, "EditPopupClass")==0 || strcmp(cls, "SearchPopupClass")==0 || strcmp(cls, "FlintWidgetClass")==0) return TRUE;
         if (strcmp(cls, "ApplicationFrameWindow")==0) {
             int cloaked = 0;
             HMODULE dwm = GetModuleHandleA("dwmapi.dll");
@@ -1689,14 +1688,6 @@ void Platform_InitUI() {
   searchPopupWc.hbrBackground = CreateSolidBrush(COLOR_BG);
   searchPopupWc.lpszClassName = "SearchPopupClass";
   RegisterClassA(&searchPopupWc);
-
-   WNDCLASSA settingsPopupWc = {0};
-   settingsPopupWc.lpfnWndProc = SettingsPopupProc;
-   settingsPopupWc.hInstance = GetModuleHandle(NULL);
-   settingsPopupWc.hCursor = LoadCursor(NULL, IDC_ARROW);
-   settingsPopupWc.hbrBackground = CreateSolidBrush(COLOR_BG);
-   settingsPopupWc.lpszClassName = "SettingsPopupClass";
-   RegisterClassA(&settingsPopupWc);
 
    g_win32_hKeyboardHook = SetWindowsHookExA(WH_KEYBOARD_LL, win32_handle_global_key, NULL, 0);
    if (!g_win32_hKeyboardHook) {

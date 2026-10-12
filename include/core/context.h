@@ -29,7 +29,6 @@ typedef struct {
     WindowHandle hPopupWnd;
     WindowHandle hListBox;
     WindowHandle hDisplayMessage;
-    WindowHandle hSettings;
     WindowHandle g_hEditPopup;
     EditPopupData* g_EditData;
     bool selection_complete;
