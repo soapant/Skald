@@ -858,14 +858,7 @@ bool fl_close_active_window(void) {
 }
 
 bool fl_dismiss_message(void) {
-  HWND hMsg = WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage);
-  if (hMsg != NULL && IsWindow(hMsg)) {
-    KillTimer(hMsg, 999);
-    DestroyWindow(hMsg);
-    FlintContext_Get()->window.hDisplayMessage = WH_NULL;
-    return true;
-  }
-  return false;
+  return fl_dismiss_message_platform;
 }
 
 bool fl_toggle_fullscreen_active(void) {
@@ -1202,6 +1195,7 @@ bool fl_draw_line_impl(const FlLineSpec *spec) {
   PROFILE_START(_pt);
   if (!spec) { PROFILE_END_VAR(_pt, "api:fl_draw_line"); return false; }
   unsigned long col = spec->color;
+  col = rgb_to_hex(col);
   if (col == 0) col = COLOR_TEXT;
   bool r = Platform_DrawLineRaw(spec->x1, spec->y1, spec->x2, spec->y2, col, spec->thickness);
   PROFILE_END_VAR(_pt, "api:fl_draw_line");
@@ -1211,6 +1205,7 @@ bool fl_draw_circle_impl(const FlCircleSpec *spec) {
   PROFILE_START(_pt);
   if (!spec) { PROFILE_END_VAR(_pt, "api:fl_draw_circle"); return false; }
   unsigned long col = spec->color;
+  col = rgb_to_hex(col);
   if (col == 0) col = COLOR_TEXT;
   bool r = Platform_DrawCircleRaw(spec->x, spec->y, spec->radius, col, spec->thickness);
   PROFILE_END_VAR(_pt, "api:fl_draw_circle");
@@ -1220,6 +1215,7 @@ bool fl_draw_rounded_rect_impl(const FlRoundedRectSpec *spec) {
   PROFILE_START(_pt);
   if (!spec) { PROFILE_END_VAR(_pt, "api:fl_draw_rounded_rect"); return false; }
   unsigned long col = spec->color;
+  col = rgb_to_hex(col);
   if (col == 0) col = COLOR_TEXT;
   bool r = Platform_DrawRoundedRectRaw(spec->x, spec->y, spec->w, spec->h, spec->radius, col, spec->thickness);
   PROFILE_END_VAR(_pt, "api:fl_draw_rounded_rect");
