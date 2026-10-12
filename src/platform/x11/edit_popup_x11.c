@@ -27,16 +27,18 @@
 #include <stdio.h>
 
 bool Platform_EditPopupCreateWindow(Popup* self, int x, int y, int w, int h) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     WindowManager* wm = (WindowManager*)self->manager;
     Display* dpy = wm ? wm->display : NULL;
     ((WMEditPopupData*)self)->base.handle.xid = x11_create_edit_popup_window(dpy, x, y, w, h);
     PROFILE_END_VAR(timer, "window_manager:Platform_EditPopupCreateWindow");
-    return true;
+    { PROFILE_END_VAR(_pt, "Platform_EditPopupCreateWindow"); return true; }
 }
 
 void Platform_EditPopupShowWindow(Popup* self) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     Display* dpy = ((WindowManager*)self->manager)->display;
     x11_draw_background(dpy, self->handle.xid, ((WMEditPopupData*)self)->w, ((WMEditPopupData*)self)->h);
     XMapWindow(dpy, self->handle.xid);
@@ -70,7 +72,8 @@ void Platform_EditPopupShowWindow(Popup* self) {
 }
 
 void Platform_EditPopupHideWindow(Popup* self) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     Display* dpy = get_display();
     if (dpy) { XUnmapWindow(dpy, self->handle.xid); XFlush(dpy); }
     WindowManager* wm = WindowManager_Get();
@@ -90,7 +93,8 @@ void Platform_EditPopupHideWindow(Popup* self) {
 }
 
 void Platform_EditPopupRender(Popup* self) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     WMEditPopupData* data = (WMEditPopupData*)self;
     Display* dpy = get_display();
     if (!dpy) { PROFILE_END_VAR(timer, "window_manager:Platform_EditPopupRender"); return; }
@@ -213,14 +217,16 @@ void Platform_EditPopupRender(Popup* self) {
 }
 
 void Platform_EditPopupDestroyWindow(Popup* self) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     Display* dpy = get_display();
     if (dpy) XDestroyWindow(dpy, self->handle.xid);
     PROFILE_END_VAR(timer, "window_manager:Platform_EditPopupDestroyWindow");
 }
 
 bool Platform_EditPopupOnKey(Popup* self, const PopupKeyEvent* key) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     WMEditPopupData* ed = (WMEditPopupData*)self;
     if (!ed || !ed->text) { PROFILE_END_VAR(timer, "edit_popup_x11:Platform_EditPopupOnKey"); return true; }
 
@@ -350,5 +356,5 @@ bool Platform_EditPopupOnKey(Popup* self, const PopupKeyEvent* key) {
     }
 
     PROFILE_END_VAR(timer, "edit_popup_x11:Platform_EditPopupOnKey");
-    return false;
+    { PROFILE_END_VAR(_pt, "Platform_EditPopupOnKey"); return false; }
 }

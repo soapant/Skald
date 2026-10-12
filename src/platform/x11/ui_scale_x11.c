@@ -5,12 +5,14 @@
 #include <X11/Xresource.h>
 #include <stdlib.h>
 
+#include "core/timer.h"
 static float ui_scale = 0.0f;
 static int ui_scale_applied = 0;
 static int base_font_size = 0;
 
 static float ui_scale_detect(void) {
-    const char* ov = getenv("FLINT_SCALE");
+        PROFILE_START(_pt);
+const char* ov = getenv("FLINT_SCALE");
     if (!ov || !ov[0]) ov = getenv("FLINT_UISCALE");
     if (ov && ov[0]) {
         float v = (float)atof(ov);
@@ -60,33 +62,38 @@ static float ui_scale_detect(void) {
     }
     if (best < 1.0f) best = 1.0f;
     if (best > 3.0f) best = 3.0f;
-    return best;
+    { PROFILE_END_VAR(_pt, "ui_scale_detect"); return best; }
 }
 
 float Platform_GetUIScale(void) {
-    if (ui_scale <= 0.0f) ui_scale = ui_scale_detect();
-    return ui_scale;
+        PROFILE_START(_pt);
+if (ui_scale <= 0.0f) ui_scale = ui_scale_detect();
+    { PROFILE_END_VAR(_pt, "Platform_GetUIScale"); return ui_scale; }
 }
 
 static void ui_scale_apply_locked(void) {
-    float s = Platform_GetUIScale();
+        PROFILE_START(_pt);
+float s = Platform_GetUIScale();
     if (s > 1.0f) FontSize = (int)(base_font_size * s + 0.5f);
     else FontSize = base_font_size;
 }
 
 void Platform_ApplyUIScale(void) {
-    if (ui_scale_applied) return;
+        PROFILE_START(_pt);
+if (ui_scale_applied) { PROFILE_END_VAR(_pt, "Platform_ApplyUIScale"); return ; }
     ui_scale_applied = 1;
     base_font_size = FontSize;
     ui_scale_apply_locked();
 }
 
 int Platform_GetUnscaledFontSize(void) {
-    return base_font_size > 0 ? base_font_size : FontSize;
+        PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "Platform_GetUnscaledFontSize"); return base_font_size > 0 ? base_font_size : FontSize; }
 }
 
 void Platform_AdjustFontSize(int delta) {
-    if (base_font_size <= 0) base_font_size = FontSize;
+        PROFILE_START(_pt);
+if (base_font_size <= 0) base_font_size = FontSize;
     base_font_size += delta;
     if (base_font_size < 8) base_font_size = 8;
     if (base_font_size > 48) base_font_size = 48;
@@ -94,6 +101,7 @@ void Platform_AdjustFontSize(int delta) {
 }
 
 void Platform_ResetUIScale(void) {
-    base_font_size = FontSize;
+        PROFILE_START(_pt);
+base_font_size = FontSize;
     ui_scale_apply_locked();
 }

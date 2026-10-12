@@ -13,8 +13,10 @@
 #include "platform/draw.h"
 #include "platform/win32/popup_helpers_win32.h"
 
+#include "core/timer.h"
 LRESULT CALLBACK SearchPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-  ListBoxInfo* lb = NULL;
+    PROFILE_START(_pt);
+ListBoxInfo* lb = NULL;
   if (WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) && IsWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd))) lb = GetLBFromPopup(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd));
   HFONT hFont = CreateCustomNerdFont(FontSize, UsedFont);
     switch (msg) {
@@ -152,5 +154,5 @@ LRESULT CALLBACK SearchPopupProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPar
         break;
     }
     }
-  return DefWindowProcA(hwnd, msg, wParam, lParam);
+  { PROFILE_END_VAR(_pt, "SearchPopupProc"); return DefWindowProcA(hwnd, msg, wParam, lParam); }
 }

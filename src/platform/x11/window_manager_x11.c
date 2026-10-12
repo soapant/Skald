@@ -39,26 +39,32 @@ int pending_hotkey_mod = 0;
 long pending_hotkey_timeMs = 0;
 
 static bool should_use_grab(void) {
-  return x11_should_use_grab(); 
+    PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "should_use_grab"); return x11_should_use_grab(); } 
 }
 
 static int init_uinput(void) {
-  return x11_init_uinput(); 
+    PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "init_uinput"); return x11_init_uinput(); } 
 }
 static void destroy_uinput(void) {
-  x11_destroy_uinput(); 
+    PROFILE_START(_pt);
+x11_destroy_uinput(); 
 }
 static void ScanAndHookKeyboards(void) {
-  x11_scan_keyboards(); 
+    PROFILE_START(_pt);
+x11_scan_keyboards(); 
 }
 
 static int XKeysymToVK(KeySym ks) {
-  return x11_keysym_to_vk(ks); 
+    PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "XKeysymToVK"); return x11_keysym_to_vk(ks); } 
 }
 
 static void* input_thread_func(void* arg) {
-    WindowManager* wm = (WindowManager*)arg;
-    if (g_x11_keyboard_count == 0 && g_x11_mouse_count == 0) return NULL;
+        PROFILE_START(_pt);
+WindowManager* wm = (WindowManager*)arg;
+    if (g_x11_keyboard_count == 0 && g_x11_mouse_count == 0) { PROFILE_END_VAR(_pt, "input_thread_func"); return NULL; }
     int nfds = g_x11_keyboard_count + g_x11_mouse_count;
     struct pollfd *fds = calloc((size_t)nfds, sizeof(struct pollfd));
     for (int i=0;i<g_x11_keyboard_count;i++) { fds[i].fd = g_x11_keyboards[i].fd; fds[i].events = POLLIN; }
@@ -82,11 +88,12 @@ static void* input_thread_func(void* arg) {
         }
     }
     free(fds);
-    return NULL;
+    { PROFILE_END_VAR(_pt, "input_thread_func"); return NULL; }
 }
 
 static void x11_handle_key_press(Display* dpy, XKeyEvent* ev, WindowManager* wm) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     int mods = remap_current_mods();
     if (ev->state & ControlMask) mods |= HOTKEY_MOD_CTRL;
     if (ev->state & Mod1Mask) mods |= HOTKEY_MOD_ALT;
@@ -138,7 +145,8 @@ static void x11_handle_key_press(Display* dpy, XKeyEvent* ev, WindowManager* wm)
 }
 
 static void x11_handle_key_release(Display* dpy, XKeyEvent* ev) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     KeySym ks; char buf[32]; int len=XLookupString(ev, buf, sizeof(buf), &ks, NULL);
     int vk=0; if(len==1 && (unsigned char)buf[0]>=32 && (unsigned char)buf[0]<=126) vk=(unsigned char)buf[0]; else vk=XKeysymToVK(ks);
     int mods=remap_current_mods();
@@ -147,12 +155,13 @@ static void x11_handle_key_release(Display* dpy, XKeyEvent* ev) {
 }
 
 void Linux_ProcessXEvent(Display* dpy, XEvent* ev, WindowManager* wm) {
-    if (x11_clipboard_handle_event(dpy, ev)) return; 
+        PROFILE_START(_pt);
+if (x11_clipboard_handle_event(dpy, ev)) { PROFILE_END_VAR(_pt, "Linux_ProcessXEvent"); return ; } 
     if (ev->type == ButtonPress && ev->xbutton.button == Button1) {
         if (Platform_Widget_DispatchClick((long)ev->xbutton.window)) return;
     }
     Popup* top = WindowManager_GetTopPopup(wm);
-    if (!top) return;
+    if (!top) { PROFILE_END_VAR(_pt, "Linux_ProcessXEvent"); return ; }
     switch (ev->type) {
         case KeyPress:
             x11_handle_key_press(dpy, &ev->xkey, wm);
@@ -176,7 +185,8 @@ void Linux_ProcessXEvent(Display* dpy, XEvent* ev, WindowManager* wm) {
 }
 
 int WindowManager_RunLinux(WindowManager* wm) {
-    XEvent xev;
+        PROFILE_START(_pt);
+XEvent xev;
     PROFILE_START(timer);
     if (!wm) { PROFILE_END_VAR(timer, "window_manager_x11:WindowManager_RunLinux"); return -1; }
     wm->running = true;
@@ -323,11 +333,12 @@ int WindowManager_RunLinux(WindowManager* wm) {
     x11_set_window_manager(NULL);
 
     PROFILE_END_VAR(timer, "window_manager_x11:WindowManager_RunLinux");
-    return 0;
+    { PROFILE_END_VAR(_pt, "WindowManager_RunLinux"); return 0; }
 }
 
 void WindowManager_ProcessEventsLinux(WindowManager* wm) {
-    if (!wm || !wm->display) return;
+        PROFILE_START(_pt);
+if (!wm || !wm->display) { PROFILE_END_VAR(_pt, "WindowManager_ProcessEventsLinux"); return ; }
 
     Display* dpy = wm->display;
 
@@ -355,5 +366,6 @@ void WindowManager_ProcessEventsLinux(WindowManager* wm) {
 }
 
 void WindowManager_QuitLinux(WindowManager* wm) {
-    if (wm) wm->running = false;
+        PROFILE_START(_pt);
+if (wm) wm->running = false;
 }

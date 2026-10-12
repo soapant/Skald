@@ -17,7 +17,8 @@ extern long pending_hotkey_timeMs;
 extern bool g_x11_ctrl_held, g_x11_alt_held, g_x11_shift_held;
 
 bool should_swallow_pending(int wParam, int mods) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     if (pending_hotkey_vk == 0) { PROFILE_END_VAR(timer, "subclasses_x11:should_swallow_pending"); return false; }
     struct timeval tv; gettimeofday(&tv,NULL);
     long now = tv.tv_sec*1000 + tv.tv_usec/1000;
@@ -30,11 +31,12 @@ bool should_swallow_pending(int wParam, int mods) {
         return true;
     }
     PROFILE_END_VAR(timer, "subclasses_x11:should_swallow_pending");
-    return false;
+    { PROFILE_END_VAR(_pt, "should_swallow_pending"); return false; }
 }
 
 int x11_keysym_to_windows_vk(KeySym keysym) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     if (keysym >= XK_a && keysym <= XK_z) { PROFILE_END_VAR(timer, "subclasses_x11:x11_keysym_to_windows_vk"); return 'A' + (keysym - XK_a); }
     if (keysym >= XK_A && keysym <= XK_Z) { PROFILE_END_VAR(timer, "subclasses_x11:x11_keysym_to_windows_vk"); return 'A' + (keysym - XK_A); }
     if (keysym >= XK_0 && keysym <= XK_9) { PROFILE_END_VAR(timer, "subclasses_x11:x11_keysym_to_windows_vk"); return '0' + (keysym - XK_0); }
@@ -100,7 +102,8 @@ int x11_keysym_to_windows_vk(KeySym keysym) {
 }
 
 void ReadModifiers(const XEvent* ev, bool* ctrl_pressed, bool* shift_pressed, bool* alt_pressed) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     int m = remap_current_mods();
     *ctrl_pressed = ((ev->xkey.state & ControlMask) != 0) || (m & HOTKEY_MOD_CTRL);
     *shift_pressed = ((ev->xkey.state & ShiftMask) != 0) || (m & HOTKEY_MOD_SHIFT);

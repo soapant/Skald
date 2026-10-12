@@ -19,7 +19,8 @@
 #include "config.h"
 
 static int win32_mouse_button_from_vk(WPARAM wParam) {
-    switch (wParam) {
+        PROFILE_START(_pt);
+switch (wParam) {
         case WM_LBUTTONDOWN:
         case WM_LBUTTONUP:    return MOUSE_BTN_LEFT;
         case WM_RBUTTONDOWN:
@@ -33,20 +34,22 @@ static int win32_mouse_button_from_vk(WPARAM wParam) {
 }
 
 bool Platform_GetMousePos(int* out_x, int* out_y) {
-    POINT pt;
-    if (!GetCursorPos(&pt)) return false;
+        PROFILE_START(_pt);
+POINT pt;
+    if (!GetCursorPos(&pt)) { PROFILE_END_VAR(_pt, "Platform_GetMousePos"); return false; }
     if (out_x) *out_x = (int)pt.x;
     if (out_y) *out_y = (int)pt.y;
-    return true;
+    { PROFILE_END_VAR(_pt, "Platform_GetMousePos"); return true; }
 }
 
 LRESULT CALLBACK win32_handle_global_mouse(int nCode, WPARAM wParam, LPARAM lParam) {
-  if (nCode < 0) return CallNextHookEx(NULL, nCode, wParam, lParam);
-  if (nCode != HC_ACTION) return CallNextHookEx(NULL, nCode, wParam, lParam);
+    PROFILE_START(_pt);
+if (nCode < 0) { PROFILE_END_VAR(_pt, "win32_handle_global_mouse"); return CallNextHookEx(NULL, nCode, wParam, lParam); }
+  if (nCode != HC_ACTION) { PROFILE_END_VAR(_pt, "win32_handle_global_mouse"); return CallNextHookEx(NULL, nCode, wParam, lParam); }
 
   MSLLHOOKSTRUCT* _rm = (MSLLHOOKSTRUCT*)lParam;
-  if (!_rm) return CallNextHookEx(NULL, nCode, wParam, lParam);
-  if (_rm->flags & LLMHF_INJECTED) return CallNextHookEx(NULL, nCode, wParam, lParam);
+  if (!_rm) { PROFILE_END_VAR(_pt, "win32_handle_global_mouse"); return CallNextHookEx(NULL, nCode, wParam, lParam); }
+  if (_rm->flags & LLMHF_INJECTED) { PROFILE_END_VAR(_pt, "win32_handle_global_mouse"); return CallNextHookEx(NULL, nCode, wParam, lParam); }
 
   if (wParam == WM_MOUSEMOVE || wParam == WM_MOUSEWHEEL || wParam == WM_MOUSEHWHEEL) {
       PlatformMouseEvent _mev;
@@ -65,7 +68,7 @@ LRESULT CALLBACK win32_handle_global_mouse(int nCode, WPARAM wParam, LPARAM lPar
   }
 
   int _btn = win32_mouse_button_from_vk(wParam);
-  if (_btn == 0) return CallNextHookEx(NULL, nCode, wParam, lParam);
+  if (_btn == 0) { PROFILE_END_VAR(_pt, "win32_handle_global_mouse"); return CallNextHookEx(NULL, nCode, wParam, lParam); }
 
   bool _isDown = (wParam == WM_LBUTTONDOWN || wParam == WM_RBUTTONDOWN ||
                   wParam == WM_MBUTTONDOWN || wParam == WM_XBUTTONDOWN);
@@ -88,11 +91,12 @@ LRESULT CALLBACK win32_handle_global_mouse(int nCode, WPARAM wParam, LPARAM lPar
   _mev.repeat = false;
   Platform_GlobalMouse_Push(&_mev);
 
-  return CallNextHookEx(NULL, nCode, wParam, lParam);
+  { PROFILE_END_VAR(_pt, "win32_handle_global_mouse"); return CallNextHookEx(NULL, nCode, wParam, lParam); }
 }
 
 LRESULT CALLBACK win32_handle_global_key(int nCode, WPARAM wParam, LPARAM lParam) {
-  if (nCode < 0) {
+    PROFILE_START(_pt);
+if (nCode < 0) {
     return CallNextHookEx(NULL, nCode, wParam, lParam);
   }
 
@@ -188,11 +192,12 @@ LRESULT CALLBACK win32_handle_global_key(int nCode, WPARAM wParam, LPARAM lParam
       }
     }
   }
-  return CallNextHookEx(NULL, nCode, wParam, lParam);
+  { PROFILE_END_VAR(_pt, "win32_handle_global_key"); return CallNextHookEx(NULL, nCode, wParam, lParam); }
 }
 
 int Platform_CharForKey(int vk, int scancode, int mods) {
-  BYTE state[256];
+    PROFILE_START(_pt);
+BYTE state[256];
   memset(state, 0, sizeof(state));
   if (mods & HOTKEY_MOD_SHIFT) state[VK_SHIFT] = 0x80;
   if (mods & HOTKEY_MOD_CTRL) state[VK_CONTROL] = 0x80;
@@ -200,10 +205,10 @@ int Platform_CharForKey(int vk, int scancode, int mods) {
   HKL layout = GetKeyboardLayout(0);
   wchar_t buf[8];
   int n = ToUnicodeEx((UINT)vk, (UINT)scancode, state, buf, 8, 0, layout);
-  if (n <= 0) return 0;
-  if (n == 1) return (int)buf[0];
+  if (n <= 0) { PROFILE_END_VAR(_pt, "Platform_CharForKey"); return 0; }
+  if (n == 1) { PROFILE_END_VAR(_pt, "Platform_CharForKey"); return (int)buf[0]; }
   char mb[16];
   int m = WideCharToMultiByte(CP_UTF8, 0, buf, 1, mb, sizeof(mb), NULL, NULL);
-  if (m <= 0) return 0;
-  return (int)(unsigned char)mb[0];
+  if (m <= 0) { PROFILE_END_VAR(_pt, "Platform_CharForKey"); return 0; }
+  { PROFILE_END_VAR(_pt, "Platform_CharForKey"); return (int)(unsigned char)mb[0]; }
 }

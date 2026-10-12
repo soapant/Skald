@@ -9,8 +9,10 @@
 #include <strings.h>
 #include <stdlib.h>
 
+#include "core/timer.h"
 char* Wm_GetActiveWindowTitle(void) {
-    static char buffer[1024];
+        PROFILE_START(_pt);
+static char buffer[1024];
     
     buffer[0] = '\0'; 
     
@@ -32,11 +34,12 @@ char* Wm_GetActiveWindowTitle(void) {
     if (buffer[0] != '\0' && strcasecmp(buffer, "colored") != 0) return buffer;
     }
     log_error("Coulnt Get Active Window Title");
-    return NULL;
+    { PROFILE_END_VAR(_pt, "Wm_GetActiveWindowTitle"); return NULL; }
 }
 
 char* Wm_GetActiveWindowAppId(void) {
-    static char buffer[1024];
+        PROFILE_START(_pt);
+static char buffer[1024];
 
     buffer[0] = '\0';
 
@@ -57,11 +60,12 @@ char* Wm_GetActiveWindowAppId(void) {
     if (get_app_id_x11(buffer, sizeof(buffer))) {
     if (buffer[0] != '\0' && strcasecmp(buffer, "colored") != 0) return buffer;
     }
-    return NULL;
+    { PROFILE_END_VAR(_pt, "Wm_GetActiveWindowAppId"); return NULL; }
 }
 
 bool Wm_FocusByTitle(const char *title) {
-    if (getenv("WAYLAND_DISPLAY")) {
+        PROFILE_START(_pt);
+if (getenv("WAYLAND_DISPLAY")) {
         if (focus_window_title_kwin((char*)title)) {
             return true;
         }
@@ -80,24 +84,26 @@ bool Wm_FocusByTitle(const char *title) {
     }
     log_error("Coulnt Focus By TItle %s",title);
     
-    return NULL;
+    { PROFILE_END_VAR(_pt, "Wm_FocusByTitle"); return NULL; }
 }
 
 char* Wm_Paste(char* content) {
-    char* result;
+        PROFILE_START(_pt);
+char* result;
     if (getenv("WAYLAND_DISPLAY")) {
         if ((result = paste_kwin(content))) return result;
         if ((result = paste_niri(content))) return result;
         if ((result = paste_hyprland(content))) return result;
         if ((result = paste_sway(content))) return result;
     }
-    if ((result = paste_x11(content))) return result;
+    if ((result = paste_x11(content))) { PROFILE_END_VAR(_pt, "Wm_Paste"); return result; }
     log_error("content='%s'", content ? content : "null");
-    return NULL;
+    { PROFILE_END_VAR(_pt, "Wm_Paste"); return NULL; }
 }
 
 PlWindowList Wm_GetWindowTitles() {
-    PlWindowList result;
+        PROFILE_START(_pt);
+PlWindowList result;
     PlWindowList empty = { .windows = NULL, .count = 0 };
     if (getenv("WAYLAND_DISPLAY")) {
         result = get_window_titles_kwin();
@@ -110,12 +116,13 @@ PlWindowList Wm_GetWindowTitles() {
         if (result.windows != NULL) return result;
     }
     result = get_window_titles_x11();
-    if (result.windows != NULL) return result;
+    if (result.windows != NULL) { PROFILE_END_VAR(_pt, "Wm_GetWindowTitles"); return result; }
     log_error("GetWindowTitles Didnt Work");
-    return empty;
+    { PROFILE_END_VAR(_pt, "Wm_GetWindowTitles"); return empty; }
 }
 PlWindowList Wm_GetWindowNames() {
-    PlWindowList result;
+        PROFILE_START(_pt);
+PlWindowList result;
     PlWindowList empty = { .windows = NULL, .count = 0 };
     if (getenv("WAYLAND_DISPLAY")) {
         result = get_window_names_kwin();
@@ -128,139 +135,152 @@ PlWindowList Wm_GetWindowNames() {
         if (result.windows != NULL) return result;
     }
     result = get_window_names_x11();
-    if (result.windows != NULL) return result;
+    if (result.windows != NULL) { PROFILE_END_VAR(_pt, "Wm_GetWindowNames"); return result; }
     log_error("GetWindowNames Didnt Work");
-    return empty;
+    { PROFILE_END_VAR(_pt, "Wm_GetWindowNames"); return empty; }
 }
 
 bool Wm_CloseActiveWindow(void) {
-    if (getenv("WAYLAND_DISPLAY")) {
+        PROFILE_START(_pt);
+if (getenv("WAYLAND_DISPLAY")) {
         if (close_active_window_kwin()) return true;
         if (close_active_window_niri()) return true;
         if (close_active_window_hyprland()) return true;
         if (close_active_window_sway()) return true;
     }
-    if (close_active_window_x11()) return true;
+    if (close_active_window_x11()) { PROFILE_END_VAR(_pt, "Wm_CloseActiveWindow"); return true; }
     log_error("CloseActiveWindow Didnt Work");
-    return false;
+    { PROFILE_END_VAR(_pt, "Wm_CloseActiveWindow"); return false; }
 }
 
 bool Wm_ToggleFullscreenActive(void) {
-    if (getenv("WAYLAND_DISPLAY")) {
+        PROFILE_START(_pt);
+if (getenv("WAYLAND_DISPLAY")) {
         if (toggle_fullscreen_active_kwin()) return true;
         if (toggle_fullscreen_active_niri()) return true;
         if (toggle_fullscreen_active_hyprland()) return true;
         if (toggle_fullscreen_active_sway()) return true;
     }
-    if (toggle_fullscreen_active_x11()) return true;
+    if (toggle_fullscreen_active_x11()) { PROFILE_END_VAR(_pt, "Wm_ToggleFullscreenActive"); return true; }
     log_error("ToggleFullscreenActive Didnt Work");
-    return false;
+    { PROFILE_END_VAR(_pt, "Wm_ToggleFullscreenActive"); return false; }
 }
 
 bool Wm_MoveActiveWindowToMonitor(bool right) {
-    if (getenv("WAYLAND_DISPLAY")) {
+        PROFILE_START(_pt);
+if (getenv("WAYLAND_DISPLAY")) {
         if (move_active_window_to_monitor_kwin(right)) return true;
         if (move_active_window_to_monitor_niri(right)) return true;
         if (move_active_window_to_monitor_hyprland(right)) return true;
         if (move_active_window_to_monitor_sway(right)) return true;
     }
-    if (move_active_window_to_monitor_x11(right)) return true;
+    if (move_active_window_to_monitor_x11(right)) { PROFILE_END_VAR(_pt, "Wm_MoveActiveWindowToMonitor"); return true; }
     log_error("MoveActiveWindowToMonitor Didnt Work");
-    return false;
+    { PROFILE_END_VAR(_pt, "Wm_MoveActiveWindowToMonitor"); return false; }
 }
 
 bool Wm_MoveActiveWindowLeft(void) {
-    if (getenv("WAYLAND_DISPLAY")) {
+        PROFILE_START(_pt);
+if (getenv("WAYLAND_DISPLAY")) {
         if (move_active_window_left_kwin()) return true;
         if (move_active_window_left_niri()) return true;
         if (move_active_window_left_hyprland()) return true;
         if (move_active_window_left_sway()) return true;
     }
-    if (move_active_window_left_x11()) return true;
+    if (move_active_window_left_x11()) { PROFILE_END_VAR(_pt, "Wm_MoveActiveWindowLeft"); return true; }
     log_error("MoveActiveWindowLeft Didnt Work");
-    return false;
+    { PROFILE_END_VAR(_pt, "Wm_MoveActiveWindowLeft"); return false; }
 }
 
 bool Wm_MoveActiveWindowRight(void) {
-    if (getenv("WAYLAND_DISPLAY")) {
+        PROFILE_START(_pt);
+if (getenv("WAYLAND_DISPLAY")) {
         if (move_active_window_right_kwin()) return true;
         if (move_active_window_right_niri()) return true;
         if (move_active_window_right_hyprland()) return true;
         if (move_active_window_right_sway()) return true;
     }
-    if (move_active_window_right_x11()) return true;
+    if (move_active_window_right_x11()) { PROFILE_END_VAR(_pt, "Wm_MoveActiveWindowRight"); return true; }
     log_error("MoveActiveWindowRight Didnt Work");
-    return false;
+    { PROFILE_END_VAR(_pt, "Wm_MoveActiveWindowRight"); return false; }
 }
 
 bool Wm_FocusWindowLeft(void) {
-    if (getenv("WAYLAND_DISPLAY")) {
+        PROFILE_START(_pt);
+if (getenv("WAYLAND_DISPLAY")) {
         if (focus_window_left_kwin()) return true;
         if (focus_window_left_niri()) return true;
         if (focus_window_left_hyprland()) return true;
         if (focus_window_left_sway()) return true;
     }
-    if (focus_window_left_x11()) return true;
+    if (focus_window_left_x11()) { PROFILE_END_VAR(_pt, "Wm_FocusWindowLeft"); return true; }
     log_error("FocusWindowLeft Didnt Work");
-    return false;
+    { PROFILE_END_VAR(_pt, "Wm_FocusWindowLeft"); return false; }
 }
 
 bool Wm_FocusWindowRight(void) {
-    if (getenv("WAYLAND_DISPLAY")) {
+        PROFILE_START(_pt);
+if (getenv("WAYLAND_DISPLAY")) {
         if (focus_window_right_kwin()) return true;
         if (focus_window_right_niri()) return true;
         if (focus_window_right_hyprland()) return true;
         if (focus_window_right_sway()) return true;
     }
-    if (focus_window_right_x11()) return true;
+    if (focus_window_right_x11()) { PROFILE_END_VAR(_pt, "Wm_FocusWindowRight"); return true; }
     log_error("FocusWindowRight Didnt Work");
-    return false;
+    { PROFILE_END_VAR(_pt, "Wm_FocusWindowRight"); return false; }
 }
 
 bool Wm_MinimizeActiveWindow(void) {
-    if (getenv("WAYLAND_DISPLAY")) {
+        PROFILE_START(_pt);
+if (getenv("WAYLAND_DISPLAY")) {
         if (minimize_active_window_kwin()) return true;
         if (minimize_active_window_niri()) return true;
         if (minimize_active_window_hyprland()) return true;
         if (minimize_active_window_sway()) return true;
     }
-    if (minimize_active_window_x11()) return true;
+    if (minimize_active_window_x11()) { PROFILE_END_VAR(_pt, "Wm_MinimizeActiveWindow"); return true; }
     log_error("MinimizeActiveWindow Didnt Work");
-    return false;
+    { PROFILE_END_VAR(_pt, "Wm_MinimizeActiveWindow"); return false; }
 }
 
 bool Wm_ScreenshotCopyArea(void) {
-    if (getenv("WAYLAND_DISPLAY")) {
+        PROFILE_START(_pt);
+if (getenv("WAYLAND_DISPLAY")) {
         if (screenshot_copy_area_kwin()) return true;
     }
-    return false;
+    { PROFILE_END_VAR(_pt, "Wm_ScreenshotCopyArea"); return false; }
 }
 
 bool Wm_ScreenshotCopy(void) {
-    if (getenv("WAYLAND_DISPLAY")) {
+        PROFILE_START(_pt);
+if (getenv("WAYLAND_DISPLAY")) {
         if (screenshot_copy_kwin()) return true;
     }
-    return false;
+    { PROFILE_END_VAR(_pt, "Wm_ScreenshotCopy"); return false; }
 }
 
 bool Wm_ScreenshotSaveArea(char* save_path) {
-    if (getenv("WAYLAND_DISPLAY")) {
+        PROFILE_START(_pt);
+if (getenv("WAYLAND_DISPLAY")) {
         if (screenshot_save_area_kwin(save_path)) return true;
     }
-    return false;
+    { PROFILE_END_VAR(_pt, "Wm_ScreenshotSaveArea"); return false; }
 }
 
 bool Wm_ScreenshotSave(char* save_path) {
-    if (getenv("WAYLAND_DISPLAY")) {
+        PROFILE_START(_pt);
+if (getenv("WAYLAND_DISPLAY")) {
         if (screenshot_save_kwin(save_path)) return true;
     }
-    return false;
+    { PROFILE_END_VAR(_pt, "Wm_ScreenshotSave"); return false; }
 }
 
 char* Wm_OcrArea(void) {
-    if (getenv("WAYLAND_DISPLAY")) {
+        PROFILE_START(_pt);
+if (getenv("WAYLAND_DISPLAY")) {
         char* out = ocr_area_kwin();
         if (out) return out;
     }
-    return NULL;
+    { PROFILE_END_VAR(_pt, "Wm_OcrArea"); return NULL; }
 }

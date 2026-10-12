@@ -10,18 +10,21 @@
 #include <strings.h>
 #include <sys/stat.h>
 
+#include "core/timer.h"
 static bool sway_sock_live(const char* path) {
-    struct stat st;
-    return path && path[0] && stat(path, &st) == 0;
+        PROFILE_START(_pt);
+struct stat st;
+    { PROFILE_END_VAR(_pt, "sway_sock_live"); return path && path[0] && stat(path, &st) == 0; }
 }
 
 static void sway_ensure_sock(void) {
-    const char* cur = getenv("SWAYSOCK");
+        PROFILE_START(_pt);
+const char* cur = getenv("SWAYSOCK");
     if (!cur || !cur[0]) cur = getenv("I3SOCK");
-    if (sway_sock_live(cur)) return;
+    if (sway_sock_live(cur)) { PROFILE_END_VAR(_pt, "sway_ensure_sock"); return ; }
     if (cur) unsetenv(getenv("SWAYSOCK") && getenv("SWAYSOCK")[0] ? "SWAYSOCK" : "I3SOCK");
     const char* rtd = getenv("XDG_RUNTIME_DIR");
-    if (!rtd || !rtd[0]) return;
+    if (!rtd || !rtd[0]) { PROFILE_END_VAR(_pt, "sway_ensure_sock"); return ; }
     char pat[512];
     snprintf(pat, sizeof(pat), "%s/sway-ipc.*.sock", rtd);
     glob_t g;
@@ -34,7 +37,8 @@ static void sway_ensure_sock(void) {
 }
 
 bool get_title_sway(char *buffer, int buffer_size) {
-    if (!buffer || buffer_size <= 0) { log_error("buffer='%s' buffer_size=%d", buffer ? buffer : "null", buffer_size); return false; }
+        PROFILE_START(_pt);
+if (!buffer || buffer_size <= 0) { log_error("buffer='%s' buffer_size=%d", buffer ? buffer : "null", buffer_size); return false; }
     buffer[0] = '\0';
     sway_ensure_sock();
     if (!getenv("SWAYSOCK") && !getenv("I3SOCK")) { log_error("SWAYSOCK and I3SOCK not set buffer='%s' buffer_size=%d", buffer ? buffer : "null", buffer_size); return false; }
@@ -71,14 +75,15 @@ bool get_title_sway(char *buffer, int buffer_size) {
     free(output_name);
     StringList_Free(&lines);
     free(command_output);
-    return buffer[0] != '\0';
+    { PROFILE_END_VAR(_pt, "get_title_sway"); return buffer[0] != '\0'; }
 }
 
 bool get_app_id_sway(char *buffer, int buffer_size) {
-    if (!buffer || buffer_size <= 0) return false;
+        PROFILE_START(_pt);
+if (!buffer || buffer_size <= 0) { PROFILE_END_VAR(_pt, "get_app_id_sway"); return false; }
     buffer[0] = '\0';
     sway_ensure_sock();
-    if (!getenv("SWAYSOCK") && !getenv("I3SOCK")) return false;
+    if (!getenv("SWAYSOCK") && !getenv("I3SOCK")) { PROFILE_END_VAR(_pt, "get_app_id_sway"); return false; }
     char *command_output = Platform_RunTerminalCommand(
         "swaymsg -t get_tree --raw | grep -A 40 '\"focused\": true'",
         false
@@ -104,19 +109,21 @@ bool get_app_id_sway(char *buffer, int buffer_size) {
     }
     StringList_Free(&lines);
     free(command_output);
-    return ok;
+    { PROFILE_END_VAR(_pt, "get_app_id_sway"); return ok; }
 }
 
 char* paste_sway(char* content) {
-  if (!content) { log_error("content is NULL"); return NULL; }
+    PROFILE_START(_pt);
+if (!content) { log_error("content is NULL"); return NULL; }
   char buffer[100];
   snprintf(buffer,sizeof(buffer),"wtype %s",content);
   char* out = Platform_RunTerminalCommand(buffer,false);
   if (!out) log_error("content='%s'", content ? content : "null");
-  return out;
+  { PROFILE_END_VAR(_pt, "paste_sway"); return out; }
 }
 bool succeded_sway(char* output) {
-    if (!output) { log_error("output is NULL"); return false; }
+        PROFILE_START(_pt);
+if (!output) { log_error("output is NULL"); return false; }
     StringList lines = String_Split(output, "\n");
     for (size_t i = 0; i < lines.count; i++) {
       if (Platform_StringContainsCaseInsensitive(lines.items[i],"\"error\"")) {
@@ -124,22 +131,24 @@ bool succeded_sway(char* output) {
         return false;
       }
     }
-    return true;
+    { PROFILE_END_VAR(_pt, "succeded_sway"); return true; }
 }
 
 static bool sway_focus_by_con_id(int con_id) {
-    char cmd[128];
+        PROFILE_START(_pt);
+char cmd[128];
     snprintf(cmd, sizeof(cmd), "swaymsg [con_id=%d] focus", con_id);
     char *out = Platform_RunTerminalCommand(cmd, false);
     bool ok = succeded_sway(out);
     free(out);
-    return ok;
+    { PROFILE_END_VAR(_pt, "sway_focus_by_con_id"); return ok; }
 }
 static bool sway_json_string(const char *at, char *out, size_t cap, const char *limit);
 static bool sway_name_for_pid(const char *json, const char *pid_pos, const char *next_pid, char *out, size_t cap);
 
 bool focus_window_title_sway(char* title) {
-    if (!title || !*title) { log_error("title is NULL"); return false; }
+        PROFILE_START(_pt);
+if (!title || !*title) { log_error("title is NULL"); return false; }
     sway_ensure_sock();
     while (*title && (iscntrl((unsigned char)*title) || isspace((unsigned char)*title))) title++;
     char *end = title + strlen(title);
@@ -185,11 +194,11 @@ bool focus_window_title_sway(char* title) {
     *d = '\0';
     char cmd[1200];
     snprintf(cmd, sizeof(cmd), "swaymsg '[title=\"%s\"] focus'", escaped);
-    if (succeded_sway(Platform_RunTerminalCommand(cmd, false))) return true;
+    if (succeded_sway(Platform_RunTerminalCommand(cmd, false))) { PROFILE_END_VAR(_pt, "focus_window_title_sway"); return true; }
     char low[1024]; strncpy(low, escaped, sizeof(low)-1); low[sizeof(low)-1]='\0';
     if (low[0]) low[0] = tolower((unsigned char)low[0]);
     snprintf(cmd, sizeof(cmd), "swaymsg '[title=\"%s\"] focus'", low);
-    if (succeded_sway(Platform_RunTerminalCommand(cmd, false))) return true;
+    if (succeded_sway(Platform_RunTerminalCommand(cmd, false))) { PROFILE_END_VAR(_pt, "focus_window_title_sway"); return true; }
     if (escaped[0]) {
         char up[1024]; strncpy(up, escaped, sizeof(up)-1); up[sizeof(up)-1]='\0';
         up[0] = toupper((unsigned char)up[0]);
@@ -197,20 +206,21 @@ bool focus_window_title_sway(char* title) {
         if (succeded_sway(Platform_RunTerminalCommand(cmd, false))) return true;
     }
     log_error("title='%s'", title ? title : "null");
-    return false;
+    { PROFILE_END_VAR(_pt, "focus_window_title_sway"); return false; }
 }
 
 static bool sway_json_string(const char *at, char *out, size_t cap, const char *limit) {
-    if (!at || !out || cap == 0) return false;
+        PROFILE_START(_pt);
+if (!at || !out || cap == 0) { PROFILE_END_VAR(_pt, "sway_json_string"); return false; }
     const char *s = strchr(at, '"');
-    if (!s || (limit && s >= limit)) return false;
+    if (!s || (limit && s >= limit)) { PROFILE_END_VAR(_pt, "sway_json_string"); return false; }
     s++;
     const char *e = s;
     while (*e && *e != '"' && (!limit || e < limit)) {
         if (*e == '\\' && *(e+1)) e += 2;
         else e++;
     }
-    if (!*e || (limit && e >= limit)) return false;
+    if (!*e || (limit && e >= limit)) { PROFILE_END_VAR(_pt, "sway_json_string"); return false; }
     size_t len = e - s;
     if (len >= cap) len = cap - 1;
     size_t o = 0;
@@ -221,11 +231,12 @@ static bool sway_json_string(const char *at, char *out, size_t cap, const char *
         } else out[o++] = s[i];
     }
     out[o] = '\0';
-    return o > 0;
+    { PROFILE_END_VAR(_pt, "sway_json_string"); return o > 0; }
 }
 
 static bool sway_name_for_pid(const char *json, const char *pid_pos, const char *next_pid, char *out, size_t cap) {
-    const char *search = pid_pos - 3000;
+        PROFILE_START(_pt);
+const char *search = pid_pos - 3000;
     if (search < json) search = json;
     const char *last = NULL;
     const char *cur = search;
@@ -233,14 +244,15 @@ static bool sway_name_for_pid(const char *json, const char *pid_pos, const char 
         last = cur;
         cur += 7;
     }
-    if (!last) return false;
+    if (!last) { PROFILE_END_VAR(_pt, "sway_name_for_pid"); return false; }
     const char *colon = strchr(last, ':');
-    if (!colon || (next_pid && colon > next_pid)) return false;
-    return sway_json_string(colon, out, cap, next_pid);
+    if (!colon || (next_pid && colon > next_pid)) { PROFILE_END_VAR(_pt, "sway_name_for_pid"); return false; }
+    { PROFILE_END_VAR(_pt, "sway_name_for_pid"); return sway_json_string(colon, out, cap, next_pid); }
 }
 
 static bool sway_app_for_pid(const char *pid_pos, const char *next_pid, char *out, size_t cap) {
-    const char *app = strstr(pid_pos, "\"app_id\":");
+        PROFILE_START(_pt);
+const char *app = strstr(pid_pos, "\"app_id\":");
     if (app && (!next_pid || app < next_pid)) {
         if (strncmp(app, "\"app_id\": \"", 11) == 0) {
             const char *colon = strchr(app, ':');
@@ -260,11 +272,12 @@ static bool sway_app_for_pid(const char *pid_pos, const char *next_pid, char *ou
         const char *c2 = strchr(cls, ':');
         return c2 ? sway_json_string(c2, out, cap, next_pid) : false;
     }
-    return false;
+    { PROFILE_END_VAR(_pt, "sway_app_for_pid"); return false; }
 }
 
 PlWindowList get_window_names_sway() {
-    sway_ensure_sock();
+        PROFILE_START(_pt);
+sway_ensure_sock();
     char *json = Platform_RunTerminalCommand("swaymsg -t get_tree", false);
     PlWindowList list = {0};
     if (!json || !*json) { log_error("output is NULL or empty"); free(json); return list; }
@@ -281,11 +294,12 @@ PlWindowList get_window_names_sway() {
         list.windows[list.count++] = strdup(buf);
     }
     free(json);
-    return list;
+    { PROFILE_END_VAR(_pt, "get_window_names_sway"); return list; }
 }
 
 PlWindowList get_window_titles_sway() {
-    sway_ensure_sock();
+        PROFILE_START(_pt);
+sway_ensure_sock();
     char *json = Platform_RunTerminalCommand("swaymsg -t get_tree", false);
     PlWindowList list = {0};
     if (!json || !*json) { log_error("output is NULL or empty"); free(json); return list; }
@@ -301,11 +315,12 @@ PlWindowList get_window_titles_sway() {
         list.windows[list.count++] = strdup(buf);
     }
     free(json);
-    return list;
+    { PROFILE_END_VAR(_pt, "get_window_titles_sway"); return list; }
 }
 
 static int sway_json_depth(const char* base, const char* pos) {
-    int depth = 0;
+        PROFILE_START(_pt);
+int depth = 0;
     int in_str = 0;
     int esc = 0;
     for (const char* s = base; s < pos; s++) {
@@ -316,83 +331,90 @@ static int sway_json_depth(const char* base, const char* pos) {
         if (*s == '{' || *s == '[') depth++;
         else if (*s == '}' || *s == ']') depth--;
     }
-    return depth;
+    { PROFILE_END_VAR(_pt, "sway_json_depth"); return depth; }
 }
 
 static char* sway_find_key(const char* base, const char* from, const char* end, const char* key, int want_depth) {
-    size_t kl = strlen(key);
+        PROFILE_START(_pt);
+size_t kl = strlen(key);
     char* q = (char*)from;
     while (q && (q = strstr(q, key)) != NULL && q < end) {
         if (sway_json_depth(base, q) == want_depth) return q;
         q += kl;
     }
-    return NULL;
+    { PROFILE_END_VAR(_pt, "sway_find_key"); return NULL; }
 }
 
 static int sway_key_bool3(const char* base, const char* from, const char* end, const char* key, int depth) {
-    char* k = sway_find_key(base, from, end, key, depth);
-    if (!k) return -1;
+        PROFILE_START(_pt);
+char* k = sway_find_key(base, from, end, key, depth);
+    if (!k) { PROFILE_END_VAR(_pt, "sway_key_bool3"); return -1; }
     char* c = strchr(k + strlen(key), ':');
-    if (!c || c >= end) return -1;
+    if (!c || c >= end) { PROFILE_END_VAR(_pt, "sway_key_bool3"); return -1; }
     char* v = c + 1;
     while (v < end && (*v == ' ' || *v == '\t')) v++;
-    if (v + 4 <= end && strncmp(v, "true", 4) == 0) return 1;
-    if (v + 5 <= end && strncmp(v, "false", 5) == 0) return 0;
-    return -1;
+    if (v + 4 <= end && strncmp(v, "true", 4) == 0) { PROFILE_END_VAR(_pt, "sway_key_bool3"); return 1; }
+    if (v + 5 <= end && strncmp(v, "false", 5) == 0) { PROFILE_END_VAR(_pt, "sway_key_bool3"); return 0; }
+    { PROFILE_END_VAR(_pt, "sway_key_bool3"); return -1; }
 }
 
 static int sway_key_int(const char* base, const char* from, const char* end, const char* key, int depth) {
-    char* k = sway_find_key(base, from, end, key, depth);
-    if (!k) return 0;
+        PROFILE_START(_pt);
+char* k = sway_find_key(base, from, end, key, depth);
+    if (!k) { PROFILE_END_VAR(_pt, "sway_key_int"); return 0; }
     char* c = strchr(k + strlen(key), ':');
-    if (!c || c >= end) return 0;
-    return atoi(c + 1);
+    if (!c || c >= end) { PROFILE_END_VAR(_pt, "sway_key_int"); return 0; }
+    { PROFILE_END_VAR(_pt, "sway_key_int"); return atoi(c + 1); }
 }
 
 static int sway_key_str(const char* base, const char* from, const char* end, const char* key, int depth, char* out, size_t cap) {
-    char* k = sway_find_key(base, from, end, key, depth);
-    if (!k) return 0;
+        PROFILE_START(_pt);
+char* k = sway_find_key(base, from, end, key, depth);
+    if (!k) { PROFILE_END_VAR(_pt, "sway_key_str"); return 0; }
     char* c = strchr(k + strlen(key), ':');
-    if (!c || c >= end) return 0;
+    if (!c || c >= end) { PROFILE_END_VAR(_pt, "sway_key_str"); return 0; }
     char* q = c + 1;
     while (q < end && (*q == ' ' || *q == '\t')) q++;
-    if (q >= end || *q != '"') return 0;
+    if (q >= end || *q != '"') { PROFILE_END_VAR(_pt, "sway_key_str"); return 0; }
     char* e = strchr(q + 1, '"');
-    if (!e || e >= end) return 0;
+    if (!e || e >= end) { PROFILE_END_VAR(_pt, "sway_key_str"); return 0; }
     size_t len = (size_t)(e - (q + 1));
-    if (len == 0 || len >= cap) return 0;
+    if (len == 0 || len >= cap) { PROFILE_END_VAR(_pt, "sway_key_str"); return 0; }
     memcpy(out, q + 1, len);
     out[len] = '\0';
-    return 1;
+    { PROFILE_END_VAR(_pt, "sway_key_str"); return 1; }
 }
 
 bool close_active_window_sway(void) {
-    sway_ensure_sock();
+        PROFILE_START(_pt);
+sway_ensure_sock();
     const char* sock = getenv("SWAYSOCK");
     if (!sock || !sock[0]) sock = getenv("I3SOCK");
-    if (!sway_sock_live(sock)) return false;
+    if (!sway_sock_live(sock)) { PROFILE_END_VAR(_pt, "close_active_window_sway"); return false; }
     char* out = Platform_RunTerminalCommand("swaymsg kill", false);
     bool ok = succeded_sway(out);
     free(out);
-    return ok;
+    { PROFILE_END_VAR(_pt, "close_active_window_sway"); return ok; }
 }
 
 bool toggle_fullscreen_active_sway(void) {
-    sway_ensure_sock();
+        PROFILE_START(_pt);
+sway_ensure_sock();
     const char* sock = getenv("SWAYSOCK");
     if (!sock || !sock[0]) sock = getenv("I3SOCK");
-    if (!sway_sock_live(sock)) return false;
+    if (!sway_sock_live(sock)) { PROFILE_END_VAR(_pt, "toggle_fullscreen_active_sway"); return false; }
     char* out = Platform_RunTerminalCommand("swaymsg fullscreen toggle", false);
     bool ok = succeded_sway(out);
     free(out);
-    return ok;
+    { PROFILE_END_VAR(_pt, "toggle_fullscreen_active_sway"); return ok; }
 }
 
 bool move_active_window_to_monitor_sway(bool right) {
-    sway_ensure_sock();
+        PROFILE_START(_pt);
+sway_ensure_sock();
     const char* sock = getenv("SWAYSOCK");
     if (!sock || !sock[0]) sock = getenv("I3SOCK");
-    if (!sway_sock_live(sock)) return false;
+    if (!sway_sock_live(sock)) { PROFILE_END_VAR(_pt, "move_active_window_to_monitor_sway"); return false; }
     char* outs = Platform_RunTerminalCommand("swaymsg -t get_outputs", false);
     if (outs && outs[0]) {
         char* doc_end = outs + strlen(outs);
@@ -499,18 +521,19 @@ bool move_active_window_to_monitor_sway(bool right) {
     char* out = Platform_RunTerminalCommand(cmd, false);
     bool ok = succeded_sway(out);
     free(out);
-    return ok;
+    { PROFILE_END_VAR(_pt, "move_active_window_to_monitor_sway"); return ok; }
 }
 
 bool minimize_active_window_sway(void) {
-    sway_ensure_sock();
+        PROFILE_START(_pt);
+sway_ensure_sock();
     const char* sock = getenv("SWAYSOCK");
     if (!sock || !sock[0]) sock = getenv("I3SOCK");
-    if (!sway_sock_live(sock)) return false;
+    if (!sway_sock_live(sock)) { PROFILE_END_VAR(_pt, "minimize_active_window_sway"); return false; }
     char* out = Platform_RunTerminalCommand("swaymsg move scratchpad", false);
     bool ok = succeded_sway(out);
     free(out);
-    if (ok) return true;
+    if (ok) { PROFILE_END_VAR(_pt, "minimize_active_window_sway"); return true; }
     out = Platform_RunTerminalCommand("swaymsg scratchpad show", false);
     ok = succeded_sway(out);
     free(out);
@@ -518,35 +541,39 @@ bool minimize_active_window_sway(void) {
         out = Platform_RunTerminalCommand("swaymsg floating disable", false);
         free(out);
     }
-    return ok;
+    { PROFILE_END_VAR(_pt, "minimize_active_window_sway"); return ok; }
 }
 
 bool focus_window_left_sway(void) {
-    sway_ensure_sock();
+        PROFILE_START(_pt);
+sway_ensure_sock();
     const char* sock = getenv("SWAYSOCK");
     if (!sock || !sock[0]) sock = getenv("I3SOCK");
-    if (!sway_sock_live(sock)) return false;
+    if (!sway_sock_live(sock)) { PROFILE_END_VAR(_pt, "focus_window_left_sway"); return false; }
     char* out = Platform_RunTerminalCommand("swaymsg focus left", false);
     bool ok = succeded_sway(out);
     free(out);
-    return ok;
+    { PROFILE_END_VAR(_pt, "focus_window_left_sway"); return ok; }
 }
 
 bool focus_window_right_sway(void) {
-    sway_ensure_sock();
+        PROFILE_START(_pt);
+sway_ensure_sock();
     const char* sock = getenv("SWAYSOCK");
     if (!sock || !sock[0]) sock = getenv("I3SOCK");
-    if (!sway_sock_live(sock)) return false;
+    if (!sway_sock_live(sock)) { PROFILE_END_VAR(_pt, "focus_window_right_sway"); return false; }
     char* out = Platform_RunTerminalCommand("swaymsg focus right", false);
     bool ok = succeded_sway(out);
     free(out);
-    return ok;
+    { PROFILE_END_VAR(_pt, "focus_window_right_sway"); return ok; }
 }
 
 bool move_active_window_left_sway(void) {
-    return move_active_window_to_monitor_sway(false);
+        PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "move_active_window_left_sway"); return move_active_window_to_monitor_sway(false); }
 }
 
 bool move_active_window_right_sway(void) {
-    return move_active_window_to_monitor_sway(true);
+        PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "move_active_window_right_sway"); return move_active_window_to_monitor_sway(true); }
 }

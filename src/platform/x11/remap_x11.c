@@ -5,12 +5,14 @@
 #include <linux/input.h>
 #include <sys/time.h>
 #include <string.h>
+#include "core/timer.h"
 #if __has_include(<X11/extensions/XTest.h>)
 #include <X11/extensions/XTest.h>
 #endif
 
 void Platform_EmitKey(int vk_code, int down) {
-    int linux_code = x11_vk_to_linux_key(vk_code);
+        PROFILE_START(_pt);
+int linux_code = x11_vk_to_linux_key(vk_code);
     if (!linux_code) {
         if (vk_code == VK_LCONTROL) linux_code = KEY_LEFTCTRL;
         else if (vk_code == VK_RCONTROL) linux_code = KEY_RIGHTCTRL;

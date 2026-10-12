@@ -10,10 +10,12 @@
 #include <stdio.h>
 #include <sys/stat.h>
 
+#include "core/timer.h"
 static volatile LONG g_watcher_stop_win = 0;
 
 static DWORD WINAPI feature_watcher_thread_win(LPVOID arg) {
-    WindowManager* wm = (WindowManager*)arg;
+        PROFILE_START(_pt);
+WindowManager* wm = (WindowManager*)arg;
     while (InterlockedCompareExchange(&g_watcher_stop_win, 0, 0)==0 && !(wm && wm->watcher_stop)) {
         char* filename = Platform_WatchForCFileChanges(FeaturePath);
         if (filename) {
@@ -50,27 +52,30 @@ static DWORD WINAPI feature_watcher_thread_win(LPVOID arg) {
             }
         }
     }
-    return 0;
+    { PROFILE_END_VAR(_pt, "feature_watcher_thread_win"); return 0; }
 }
 
 void* Platform_FeatureWatcherThread(void* arg) {
-    feature_watcher_thread_win(arg);
-    return NULL;
+        PROFILE_START(_pt);
+feature_watcher_thread_win(arg);
+    { PROFILE_END_VAR(_pt, "Platform_FeatureWatcherThread"); return NULL; }
 }
 
 bool Platform_WatcherStart(WindowManager* wm) {
-    if (!wm) return false;
+        PROFILE_START(_pt);
+if (!wm) { PROFILE_END_VAR(_pt, "Platform_WatcherStart"); return false; }
     InterlockedExchange(&g_watcher_stop_win, 0);
     wm->watcher_stop = false;
     wm->watcher_running = false;
     HANDLE h = CreateThread(NULL, 0, feature_watcher_thread_win, wm, 0, NULL);
     wm->watcher_thread = (void*)h;
     wm->watcher_running = (h != NULL);
-    return h != NULL;
+    { PROFILE_END_VAR(_pt, "Platform_WatcherStart"); return h != NULL; }
 }
 
 void Platform_WatcherStop(WindowManager* wm) {
-    if (!wm) return;
+        PROFILE_START(_pt);
+if (!wm) { PROFILE_END_VAR(_pt, "Platform_WatcherStop"); return ; }
     wm->watcher_stop = true;
     InterlockedExchange(&g_watcher_stop_win, 1);
     if (wm->watcher_thread) {

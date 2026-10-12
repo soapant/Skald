@@ -36,27 +36,31 @@ static MsgSlot g_msg_slots[MSG_MAX_ACTIVE];
 static int g_msg_slot_count = 0;
 
 static void MsgRemoveSlotLocked(Display *dpy, int idx) {
-    XDestroyWindow(dpy, g_msg_slots[idx].win);
+        PROFILE_START(_pt);
+XDestroyWindow(dpy, g_msg_slots[idx].win);
     for (int i = idx; i < g_msg_slot_count - 1; i++) g_msg_slots[i] = g_msg_slots[i + 1];
     g_msg_slot_count--;
 }
 
 static void MsgRemoveWindowLocked(Display *dpy, Window win) {
-    for (int i = 0; i < g_msg_slot_count; i++) {
+        PROFILE_START(_pt);
+for (int i = 0; i < g_msg_slot_count; i++) {
         if (g_msg_slots[i].win == win) { MsgRemoveSlotLocked(dpy, i); return; }
     }
 }
 
 static int MsgFindKeyLocked(const char *key) {
-    if (!key || !key[0]) return -1;
+        PROFILE_START(_pt);
+if (!key || !key[0]) { PROFILE_END_VAR(_pt, "MsgFindKeyLocked"); return -1; }
     for (int i = 0; i < g_msg_slot_count; i++) {
         if (strcmp(g_msg_slots[i].key, key) == 0) return i;
     }
-    return -1;
+    { PROFILE_END_VAR(_pt, "MsgFindKeyLocked"); return -1; }
 }
 
 static void MsgRemoveIndefiniteLocked(Display *dpy) {
-    for (int i = 0; i < g_msg_slot_count; ) {
+        PROFILE_START(_pt);
+for (int i = 0; i < g_msg_slot_count; ) {
         if (g_msg_slots[i].indefinite) MsgRemoveSlotLocked(dpy, i);
         else i++;
     }
@@ -69,8 +73,9 @@ typedef struct {
 } MsgDismissPayload;
 
 static void *MsgDismissThread(void *arg) {
-    MsgDismissPayload *p = (MsgDismissPayload *)arg;
-    if (!p) return NULL;
+        PROFILE_START(_pt);
+MsgDismissPayload *p = (MsgDismissPayload *)arg;
+    if (!p) { PROFILE_END_VAR(_pt, "MsgDismissThread"); return NULL; }
     if (p->timeout > 0) {
         struct timespec ts;
         ts.tv_sec = (time_t)p->timeout;
@@ -88,7 +93,7 @@ static void *MsgDismissThread(void *arg) {
         pthread_mutex_unlock(&g_msg_lock);
         XFlush(dpy);
     }
-    return NULL;
+    { PROFILE_END_VAR(_pt, "MsgDismissThread"); return NULL; }
 }
 
 #define MSG_MAX_LINES 64
@@ -103,22 +108,25 @@ typedef struct {
 } MsgLine;
 
 static int MsgUtf8CharLen(unsigned char c) {
-    if ((c & 0x80) == 0) return 1;
-    if ((c & 0xE0) == 0xC0) return 2;
-    if ((c & 0xF0) == 0xE0) return 3;
-    if ((c & 0xF8) == 0xF0) return 4;
-    return 1;
+        PROFILE_START(_pt);
+if ((c & 0x80) == 0) { PROFILE_END_VAR(_pt, "MsgUtf8CharLen"); return 1; }
+    if ((c & 0xE0) == 0xC0) { PROFILE_END_VAR(_pt, "MsgUtf8CharLen"); return 2; }
+    if ((c & 0xF0) == 0xE0) { PROFILE_END_VAR(_pt, "MsgUtf8CharLen"); return 3; }
+    if ((c & 0xF8) == 0xF0) { PROFILE_END_VAR(_pt, "MsgUtf8CharLen"); return 4; }
+    { PROFILE_END_VAR(_pt, "MsgUtf8CharLen"); return 1; }
 }
 
 static int MsgTextWidth(Display *dpy, XftFont *xf, const char *s, int n) {
-    if (!s || n <= 0) return 0;
+        PROFILE_START(_pt);
+if (!s || n <= 0) { PROFILE_END_VAR(_pt, "MsgTextWidth"); return 0; }
     XGlyphInfo ext;
     XftTextExtentsUtf8(dpy, xf, (FcChar8 *)s, n, &ext);
-    return ext.xOff;
+    { PROFILE_END_VAR(_pt, "MsgTextWidth"); return ext.xOff; }
 }
 
 static int MsgWrapText(Display *dpy, XftFont *xf, const char *text, int maxW, MsgLine *lines, int max_lines) {
-    int count = 0;
+        PROFILE_START(_pt);
+int count = 0;
     int spaceW = MsgTextWidth(dpy, xf, " ", 1);
     const char *p = text;
     while (*p && count < max_lines) {
@@ -202,12 +210,13 @@ static int MsgWrapText(Display *dpy, XftFont *xf, const char *text, int maxW, Ms
         }
         p = nl ? nl + 1 : pend;
     }
-    return count;
+    { PROFILE_END_VAR(_pt, "MsgWrapText"); return count; }
 }
 
 static void x11_display_message_draw(Display *dpy, Window win, const char *message, unsigned long color, int w, int h, bool no_bg,void (*render)(void)) {
-    XWindowAttributes attrs;
-    if (!XGetWindowAttributes(dpy, win, &attrs)) return;
+        PROFILE_START(_pt);
+XWindowAttributes attrs;
+    if (!XGetWindowAttributes(dpy, win, &attrs)) { PROFILE_END_VAR(_pt, "x11_display_message_draw"); return ; }
 
     if (!no_bg) {
         Pixmap bg = x11_get_cached_background(dpy, win, w, h);
@@ -223,7 +232,7 @@ static void x11_display_message_draw(Display *dpy, Window win, const char *messa
     }
 
     XftDraw *xd = XftDrawCreate(dpy, win, attrs.visual, attrs.colormap);
-    if (!xd) return;
+    if (!xd) { PROFILE_END_VAR(_pt, "x11_display_message_draw"); return ; }
 
 
     if (render != NULL) {
@@ -259,12 +268,13 @@ static void x11_display_message_draw(Display *dpy, Window win, const char *messa
 }
 
 static void MsgPresent(Display *dpy, const char *message, int x, int y, int winW, int winH,double timeout, ColorRef color,bool no_bg,void (*render)(void)) {
-    int ax,ay,aw,ah;
+        PROFILE_START(_pt);
+int ax,ay,aw,ah;
     WindowManager_GetMainMonitorGeometry(&ax,&ay,&aw,&ah);
     Platform_SetTransparentWindow(no_bg);
     Window win = x11_create_display_message_window(dpy, x + ax, y + ay, winW, winH, false);
     Platform_SetTransparentWindow(false);
-    if (!win) return;
+    if (!win) { PROFILE_END_VAR(_pt, "MsgPresent"); return ; }
     XMapWindow(dpy, win);
     XFlush(dpy);
     x11_display_message_draw(dpy, win, message, (unsigned long)color, winW, winH,no_bg,render);
@@ -315,27 +325,31 @@ static HoverWidgetSlot g_hover_widgets[HOVER_WIDGET_MAX];
 static pthread_mutex_t g_hover_widget_lock = PTHREAD_MUTEX_INITIALIZER;
 
 static int HoverWidgetFindLocked(const char *key) {
-    for (int i = 0; i < HOVER_WIDGET_MAX; i++) {
+        PROFILE_START(_pt);
+for (int i = 0; i < HOVER_WIDGET_MAX; i++) {
         if (g_hover_widgets[i].w && !g_hover_widgets[i].dead && strcmp(g_hover_widgets[i].key, key) == 0) return i;
     }
-    return -1;
+    { PROFILE_END_VAR(_pt, "HoverWidgetFindLocked"); return -1; }
 }
 
 static int HoverWidgetAllocLocked(const char *key) {
-    for (int i = 0; i < HOVER_WIDGET_MAX; i++) {
+        PROFILE_START(_pt);
+for (int i = 0; i < HOVER_WIDGET_MAX; i++) {
         if (!g_hover_widgets[i].w) return i;
     }
-    return -1;
+    { PROFILE_END_VAR(_pt, "HoverWidgetAllocLocked"); return -1; }
 }
 
 static void HoverWidgetFrame(void *ud) {
-    HoverWidgetSlot *s = (HoverWidgetSlot *)ud;
-    if (!s || !s->w || s->dead) return;
+        PROFILE_START(_pt);
+HoverWidgetSlot *s = (HoverWidgetSlot *)ud;
+    if (!s || !s->w || s->dead) { PROFILE_END_VAR(_pt, "HoverWidgetFrame"); return ; }
     if (s->render) s->render(s->ud);
 }
 
 void Platform_HoverWidgetHide(const char *key) {
-    if (!key || !key[0]) return;
+        PROFILE_START(_pt);
+if (!key || !key[0]) { PROFILE_END_VAR(_pt, "Platform_HoverWidgetHide"); return ; }
     pthread_mutex_lock(&g_hover_widget_lock);
     int idx = HoverWidgetFindLocked(key);
     if (idx < 0) { pthread_mutex_unlock(&g_hover_widget_lock); return; }
@@ -354,7 +368,8 @@ void Platform_HoverWidgetHide(const char *key) {
 
 void Platform_HoverWidgetShow(const char *key, void (*render)(void* ud), void* ud, int x, int y,
                               int w, int h, int fps, bool no_bg, unsigned long bg_hex,
-                              void (*release)(void *ud), void *release_ud) {    if (!key || !key[0] || w <= 0 || h <= 0) return;
+                              void (*release)(void *ud), void *release_ud) {        PROFILE_START(_pt);
+if (!key || !key[0] || w <= 0 || h <= 0) { PROFILE_END_VAR(_pt, "Platform_HoverWidgetShow"); return ; }
 
     pthread_mutex_lock(&g_hover_widget_lock);
     int idx = HoverWidgetFindLocked(key);
@@ -420,8 +435,9 @@ void Platform_HoverWidgetShow(const char *key, void (*render)(void* ud), void* u
 
 static void MsgHoverPresent(Display *dpy, const char *key, const char *message,
                             int centerX, int centerY, int winW, int winH, ColorRef color,bool no_bg) {
-    if (!dpy || !key || !key[0] || !message || !message[0]) return;
-    if (winW <= 0 || winH <= 0) return;
+        PROFILE_START(_pt);
+if (!dpy || !key || !key[0] || !message || !message[0]) { PROFILE_END_VAR(_pt, "MsgHoverPresent"); return ; }
+    if (winW <= 0 || winH <= 0) { PROFILE_END_VAR(_pt, "MsgHoverPresent"); return ; }
     pthread_mutex_lock(&g_msg_lock);
     int idx = MsgFindKeyLocked(key);
     if (idx >= 0) {
@@ -439,7 +455,7 @@ static void MsgHoverPresent(Display *dpy, const char *key, const char *message,
 
     Window win = x11_create_display_message_window(dpy, centerX - winW / 2, centerY - winH / 2,
                                                     winW, winH, false);
-    if (win == None) return;
+    if (win == None) { PROFILE_END_VAR(_pt, "MsgHoverPresent"); return ; }
     XMapRaised(dpy, win);
     XFlush(dpy);
     x11_display_message_draw(dpy, win, message, (unsigned long)color, winW, winH,no_bg,NULL);
@@ -459,8 +475,9 @@ static void MsgHoverPresent(Display *dpy, const char *key, const char *message,
 }
 
 void Platform_HoverMessageRelease(const char *key) {
-    Display *dpy = get_display();
-    if (!dpy || !key || !key[0]) return;
+        PROFILE_START(_pt);
+Display *dpy = get_display();
+    if (!dpy || !key || !key[0]) { PROFILE_END_VAR(_pt, "Platform_HoverMessageRelease"); return ; }
     pthread_mutex_lock(&g_msg_lock);
     int idx = MsgFindKeyLocked(key);
     if (idx >= 0) MsgRemoveSlotLocked(dpy, idx);
@@ -469,8 +486,9 @@ void Platform_HoverMessageRelease(const char *key) {
 }
 
 void Platform_DisplayMessage(const char* message, int centerX, int centerY, bool no_bg, int w, int h, int maxWidth, int maxHeight, double timeout, ColorRef color, void (*render)(void)) {
-    Display *dpy = get_display();
-    if (!dpy) return;
+        PROFILE_START(_pt);
+Display *dpy = get_display();
+    if (!dpy) { PROFILE_END_VAR(_pt, "Platform_DisplayMessage"); return ; }
 
     int winW = 0;
     int winH = 0;
@@ -513,7 +531,8 @@ void Platform_DisplayMessage(const char* message, int centerX, int centerY, bool
 
 static void MsgMeasure(Display *dpy, const char *message, int maxWidth, int maxHeight,
                        int *outW, int *outH) {
-    *outW = 0;
+        PROFILE_START(_pt);
+*outW = 0;
     *outH = 0;
     FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
     XftFont *xf = FH_TO_XFT(font);
@@ -538,8 +557,9 @@ static void MsgMeasure(Display *dpy, const char *message, int maxWidth, int maxH
 
 void Platform_HoverMessage(const char* key, const char* message, int centerX, int centerY,
                            int w, int h, int maxWidth, int maxHeight, ColorRef color,bool no_bg) {
-    Display *dpy = get_display();
-    if (!dpy) return;
+        PROFILE_START(_pt);
+Display *dpy = get_display();
+    if (!dpy) { PROFILE_END_VAR(_pt, "Platform_HoverMessage"); return ; }
     if (maxWidth <= 0) maxWidth = MSG_HOVER_DEFAULT_W;
     if (maxHeight <= 0) maxHeight = MSG_HOVER_DEFAULT_H;
     int winW = 0, winH = 0;
@@ -553,9 +573,10 @@ void Platform_HoverMessage(const char* key, const char* message, int centerX, in
 }
 
 void Platform_DisplayMessageAnchored(const char* message, int rect_x, int rect_y, int rect_w, int rect_h, int h_slot, int v_slot, int gap, int outward, int maxWidth, int maxHeight, double timeout, ColorRef color,bool no_bg) {
-    if (!message || !message[0]) return;
+        PROFILE_START(_pt);
+if (!message || !message[0]) { PROFILE_END_VAR(_pt, "Platform_DisplayMessageAnchored"); return ; }
     Display *dpy = get_display();
-    if (!dpy) return;
+    if (!dpy) { PROFILE_END_VAR(_pt, "Platform_DisplayMessageAnchored"); return ; }
     if (maxWidth <= 0) maxWidth = MSG_AUTO_WRAP_MAX_W;
     if (maxHeight <= 0) maxHeight = MSG_AUTO_WRAP_MAX_H;
     FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
@@ -592,8 +613,9 @@ void Platform_DisplayMessageAnchored(const char* message, int rect_x, int rect_y
 }
 
 void Platform_DismissMessage(void) {
-    Display *dpy = get_display();
-    if (!dpy) return;
+        PROFILE_START(_pt);
+Display *dpy = get_display();
+    if (!dpy) { PROFILE_END_VAR(_pt, "Platform_DismissMessage"); return ; }
     pthread_mutex_lock(&g_msg_lock);
     while (g_msg_slot_count > 0) MsgRemoveSlotLocked(dpy, 0);
     pthread_mutex_unlock(&g_msg_lock);
@@ -601,8 +623,9 @@ void Platform_DismissMessage(void) {
 }
 
 void Platform_DismissIndefiniteMessage(void) {
-    Display *dpy = get_display();
-    if (!dpy) return;
+        PROFILE_START(_pt);
+Display *dpy = get_display();
+    if (!dpy) { PROFILE_END_VAR(_pt, "Platform_DismissIndefiniteMessage"); return ; }
     pthread_mutex_lock(&g_msg_lock);
     MsgRemoveIndefiniteLocked(dpy);
     pthread_mutex_unlock(&g_msg_lock);
@@ -610,36 +633,41 @@ void Platform_DismissIndefiniteMessage(void) {
 }
 
 bool Platform_MessagePopupShowWindow(Popup* self, int x, int y, int w, int h) {
-    (void)self;
+        PROFILE_START(_pt);
+(void)self;
     (void)x;
     (void)y;
     (void)w;
     (void)h;
     PROFILE_START(timer);
     PROFILE_END_VAR(timer, "window_manager:Platform_MessagePopupShowWindow");
-    return true;
+    { PROFILE_END_VAR(_pt, "Platform_MessagePopupShowWindow"); return true; }
 }
 
 void Platform_MessagePopupHideWindow(Popup* self) {
-    (void)self;
+        PROFILE_START(_pt);
+(void)self;
     PROFILE_START(timer);
     PROFILE_END_VAR(timer, "window_manager:Platform_MessagePopupHideWindow");
 }
 
 void Platform_MessagePopupRender(Popup* self) {
-    (void)self;
+        PROFILE_START(_pt);
+(void)self;
     PROFILE_START(timer);
     PROFILE_END_VAR(timer, "window_manager:Platform_MessagePopupRender");
 }
 
 void Platform_MessagePopupDestroyWindow(Popup* self) {
-    (void)self;
+        PROFILE_START(_pt);
+(void)self;
     PROFILE_START(timer);
     PROFILE_END_VAR(timer, "window_manager:Platform_MessagePopupDestroyWindow");
 }
 
 bool Platform_MessagePopupOnKey(Popup* self, const PopupKeyEvent* key) {
-    (void)self;
+        PROFILE_START(_pt);
+(void)self;
     (void)key;
-    return false;
+    { PROFILE_END_VAR(_pt, "Platform_MessagePopupOnKey"); return false; }
 }
