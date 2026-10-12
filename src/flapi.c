@@ -857,6 +857,17 @@ bool fl_close_active_window(void) {
   return r;
 }
 
+bool fl_dismiss_message(void) {
+  HWND hMsg = WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage);
+  if (hMsg != NULL && IsWindow(hMsg)) {
+    KillTimer(hMsg, 999);
+    DestroyWindow(hMsg);
+    FlintContext_Get()->window.hDisplayMessage = WH_NULL;
+    return true;
+  }
+  return false;
+}
+
 bool fl_toggle_fullscreen_active(void) {
   PROFILE_START(_pt);
   bool r = Platform_ToggleFullscreenActive();

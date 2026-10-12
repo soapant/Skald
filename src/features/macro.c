@@ -110,7 +110,6 @@ static void* recorder_loop(void* arg) {
   (void)arg;
   int last_x = -1, last_y = -1;
   while (g_recording) {
-    fl_message(.render=recording_render,.no_bg=true,.w=1920,.h=1080,.x=960,.y=540,.timeout=0.1);
 
     FlKeyEvent ke;
     while (fl_poll_key(&ke)) record_push_key(&ke);
@@ -203,6 +202,7 @@ static void* playback_loop(void* arg) {
 
 void RecordToggle(void) {
   if (!g_recording) {
+    fl_message(.render=recording_render,.no_bg=true,.w=1920,.h=1080,.x=960,.y=540,.timeout=1000.0);
     fl_clear_key_queue();
     fl_clear_mouse_queue();
     reset_recording();
@@ -210,6 +210,7 @@ void RecordToggle(void) {
     if (!g_thread) g_thread = fl_thread_create(recorder_loop, NULL);
     return;
   }
+  fl_dismiss_message();
   g_recording = false;
 }
 
