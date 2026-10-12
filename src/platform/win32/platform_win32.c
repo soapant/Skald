@@ -446,12 +446,26 @@ void Platform_GetTextExtents(FontHandle font, const char* text, int maxWidth, in
     }
     HDC hdc = CreateCompatibleDC(NULL);
     HFONT hOldFont = (HFONT)SelectObject(hdc, FH_TO_HFONT(font));
-    RECT rect = { 0, 0, maxWidth, 0x7FFFFFFF };
-    DrawTextA(hdc, text, -1, &rect, DT_CALCRECT | DT_WORDBREAK);
+    int width = 0;
+    int height = 0;
+    if (maxWidth > 0) {
+        RECT measure = { 0, 0, 0, 0 };
+        DrawTextA(hdc, text, -1, &measure, DT_CALCRECT);
+        RECT wrapped = { 0, 0, maxWidth, 0x7FFFFFFF };
+        DrawTextA(hdc, text, -1, &wrapped, DT_CALCRECT | DT_WORDBREAK);
+        height = wrapped.bottom - wrapped.top;
+        width = measure.right - measure.left;
+        if (width > maxWidth) width = maxWidth;
+    } else {
+        RECT measure = { 0, 0, 0, 0 };
+        DrawTextA(hdc, text, -1, &measure, DT_CALCRECT);
+        width = measure.right - measure.left;
+        height = measure.bottom - measure.top;
+    }
     SelectObject(hdc, hOldFont);
     DeleteDC(hdc);
-    *outWidth = rect.right;
-    *outHeight = rect.bottom;
+    *outWidth = width;
+    *outHeight = height;
 }
 
 long Platform_GetFileSize(char *filepath) {
