@@ -998,3 +998,42 @@ void Vim_SearchCancel(int key) {
     VimState_EndSearchPattern(&ignored);
 }
 
+void HandlePasteAtCursor(FlintContext* ctx) {
+    char *clip = Platform_GetClipboardEntry();
+    if (!clip) return; 
+
+    clip[strcspn(clip, "\r\n")] = '\0';
+    if (clip[0] == '\0') { 
+        free(clip); 
+        return; 
+    }
+
+    char* text = ctx->window.filter;
+    int cursor = ctx->window.filter_cursor;
+    
+    size_t current_len = strlen(text);
+    size_t clip_len = strlen(clip);
+    
+    const size_t MAX_CAPACITY = 1024; 
+
+    if (current_len + 1 >= MAX_CAPACITY) {
+        free(clip);
+        return; 
+    }
+    size_t avail = MAX_CAPACITY - current_len - 1;
+
+    if (clip_len > avail) {
+        clip_len = avail;
+    }
+
+    if (clip_len > 0) {
+        memmove(text + cursor + clip_len, text + cursor, current_len - (size_t)cursor + 1);
+        
+        memcpy(text + cursor, clip, clip_len);
+        
+        ctx->window.filter_cursor = cursor + (int)clip_len;
+    }
+    Vim_SetText(ctx, text);
+
+    free(clip);
+}
