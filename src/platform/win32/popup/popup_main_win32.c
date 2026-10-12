@@ -615,9 +615,13 @@ case WM_CHAR: {
                     }
                   } else {
                     if (WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage) != NULL) {
-                      KillTimer(WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage), 999);
-                        DestroyWindow(WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage));
-                        FlintContext_Get()->window.hDisplayMessage = WH_NULL;
+                      FadeWindowData* msgData = (FadeWindowData*)GetWindowLongPtrA(WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage), GWLP_USERDATA);
+                      bool isIndefinite = msgData && msgData->timeout == 6969.0;
+                      if (!isIndefinite) {
+                        KillTimer(WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage), 999);
+                          DestroyWindow(WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage));
+                          FlintContext_Get()->window.hDisplayMessage = WH_NULL;
+                      }
                     }
                   } 
                 } 

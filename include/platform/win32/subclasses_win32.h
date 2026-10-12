@@ -12,6 +12,10 @@ typedef struct {
   FontHandle hFont;
   int alpha;
   ColorRef color;
+  bool no_bg;
+  void (*render)(void);
+  double timeout;
+  ULONGLONG deadline_ms;
 } FadeWindowData;
 
 typedef struct {
@@ -20,8 +24,10 @@ typedef struct {
   int centerY;
   int maxWidth;
   int maxHeight;
-  int timeout;
+  double timeout;
   ColorRef color;
+  bool no_bg;
+  void (*render)(void);
 } DisplayMessageParams;
 
 

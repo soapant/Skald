@@ -14,6 +14,7 @@
 #include "platform/input_state.h"
 #include "bindings/bindings.h"
 #include "platform/win32/win32_state.h"
+#include "platform/win32/subclasses_win32.h"
 #include "platform/win32/input_core_win32.h"
 #include "config.h"
 
@@ -127,10 +128,14 @@ LRESULT CALLBACK win32_handle_global_key(int nCode, WPARAM wParam, LPARAM lParam
         }
     }
     if (nCode == HC_ACTION && (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN)) {
-    if (g_win32_timeout == 6969.0 && WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage) && IsWindow(WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage))) {
-      KillTimer(WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage), 999);
-      DestroyWindow(WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage));
-      FlintContext_Get()->window.hDisplayMessage = WH_NULL;
+    HWND hMsgWnd = WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage);
+    if (hMsgWnd && IsWindow(hMsgWnd)) {
+      FadeWindowData* fd = (FadeWindowData*)GetWindowLongPtrA(hMsgWnd, GWLP_USERDATA);
+      if (fd && fd->timeout == 6969.0) {
+        KillTimer(hMsgWnd, 999);
+          DestroyWindow(hMsgWnd);
+          FlintContext_Get()->window.hDisplayMessage = WH_NULL;
+      }
     }
     KBDLLHOOKSTRUCT* pKeyInfo = (KBDLLHOOKSTRUCT*)lParam;
 
