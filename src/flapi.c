@@ -1203,7 +1203,6 @@ bool fl_draw_line_impl(const FlLineSpec *spec) {
   if (!spec) { PROFILE_END_VAR(_pt, "api:fl_draw_line"); return false; }
   unsigned long col = spec->color;
   if (col == 0) col = COLOR_TEXT;
-  col = rgb_to_hex(col);
   bool r = Platform_DrawLineRaw(spec->x1, spec->y1, spec->x2, spec->y2, col, spec->thickness);
   PROFILE_END_VAR(_pt, "api:fl_draw_line");
   return r;
@@ -1213,7 +1212,6 @@ bool fl_draw_circle_impl(const FlCircleSpec *spec) {
   if (!spec) { PROFILE_END_VAR(_pt, "api:fl_draw_circle"); return false; }
   unsigned long col = spec->color;
   if (col == 0) col = COLOR_TEXT;
-  col = rgb_to_hex(col);
   bool r = Platform_DrawCircleRaw(spec->x, spec->y, spec->radius, col, spec->thickness);
   PROFILE_END_VAR(_pt, "api:fl_draw_circle");
   return r;
@@ -1223,7 +1221,6 @@ bool fl_draw_rounded_rect_impl(const FlRoundedRectSpec *spec) {
   if (!spec) { PROFILE_END_VAR(_pt, "api:fl_draw_rounded_rect"); return false; }
   unsigned long col = spec->color;
   if (col == 0) col = COLOR_TEXT;
-  col = rgb_to_hex(col);
   bool r = Platform_DrawRoundedRectRaw(spec->x, spec->y, spec->w, spec->h, spec->radius, col, spec->thickness);
   PROFILE_END_VAR(_pt, "api:fl_draw_rounded_rect");
   return r;
