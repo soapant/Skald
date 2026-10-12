@@ -32,7 +32,8 @@
 #include <stdio.h>
 
 bool Platform_PromptPopupShowWindow(Popup* self, int x, int y, int w, int h) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     (void)x;
     (void)y;
     WindowManager* wm = (WindowManager*)self->manager;
@@ -88,11 +89,12 @@ bool Platform_PromptPopupShowWindow(Popup* self, int x, int y, int w, int h) {
     }
     XFlush(dpy);
     PROFILE_END_VAR(timer, "window_manager:Platform_PromptPopupShowWindow");
-    return true;
+    { PROFILE_END_VAR(_pt, "Platform_PromptPopupShowWindow"); return true; }
 }
 
 void Platform_PromptPopupHideWindow(Popup* self) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     Display* dpy = get_display();
     if (dpy) {
         XUnmapWindow(dpy, self->handle.xid);
@@ -102,13 +104,15 @@ void Platform_PromptPopupHideWindow(Popup* self) {
 }
 
 void Platform_PromptPopupRender(Popup* self) {
-    WindowManager* wm = (WindowManager*)self->manager;
+        PROFILE_START(_pt);
+WindowManager* wm = (WindowManager*)self->manager;
     Display* dpy = wm ? wm->display : NULL;
     if (dpy) x11_render_prompt_user(dpy, &self->handle.xid, (PromptState*)self->user_data);
 }
 
 void Platform_PromptPopupDestroyWindow(Popup* self) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     Display* dpy = get_display();
     if (dpy) {
         x11_release_prompt_buffer(dpy, self->handle.xid);
@@ -118,19 +122,22 @@ void Platform_PromptPopupDestroyWindow(Popup* self) {
 }
 
 void HandleCommandExecution(ListBoxInfo* lb, char* string) {
-    if (!lb) return;
+        PROFILE_START(_pt);
+if (!lb) { PROFILE_END_VAR(_pt, "HandleCommandExecution"); return ; }
     int num = atoi(string);
     UI_SetSelection(lb, FlintContext_Get()->window.hListBox, num - 1);
     UI_LB_SetCaretIndex(FlintContext_Get()->window.hListBox, num, TRUE);
 }
 
 static void command_confirm(const char* new_text, void* user_data) {
-    PromptState* state = (PromptState*)user_data;
+        PROFILE_START(_pt);
+PromptState* state = (PromptState*)user_data;
     HandleCommandExecution(&state->listbox, (char*)new_text);
 }
 
 bool Platform_PromptPopupOnKey(Popup* self, const PopupKeyEvent* key) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     PromptState* state = self ? (PromptState*)self->user_data : NULL;
     if (!state) { PROFILE_END_VAR(timer, "prompt_popup_x11:Platform_PromptPopupOnKey"); return true; }
 
@@ -375,6 +382,6 @@ bool Platform_PromptPopupOnKey(Popup* self, const PopupKeyEvent* key) {
     }
 
     PROFILE_END_VAR(timer, "prompt_popup_x11:Platform_PromptPopupOnKey");
-    return false;
+    { PROFILE_END_VAR(_pt, "Platform_PromptPopupOnKey"); return false; }
 }
 

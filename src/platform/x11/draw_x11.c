@@ -19,17 +19,21 @@ static __thread unsigned long g_draw_bg_override = 0;
 static __thread bool g_transparent_window = false;
 
 void Platform_SetTransparentWindow(bool on) {
-    g_transparent_window = on;
+        PROFILE_START(_pt);
+g_transparent_window = on;
 }
 bool Platform_GetTransparentWindow(void) {
-    return g_transparent_window;
+        PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "Platform_GetTransparentWindow"); return g_transparent_window; }
 }
 
 void Platform_SetDrawBgColor(unsigned long hex) {
-    g_draw_bg_override = hex;
+        PROFILE_START(_pt);
+g_draw_bg_override = hex;
 }
 unsigned long Platform_GetDrawBgColor(void) {
-    return g_draw_bg_override;
+        PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "Platform_GetDrawBgColor"); return g_draw_bg_override; }
 }
 
 static __thread bool g_measuring = false;
@@ -37,16 +41,19 @@ static __thread int g_meas_x0 = 0, g_meas_y0 = 0, g_meas_x1 = 0, g_meas_y1 = 0;
 static __thread int g_meas_origin_x = 0, g_meas_origin_y = 0;
 
 static void measure_reset(void) {
-    g_measuring = false;
+        PROFILE_START(_pt);
+g_measuring = false;
     g_meas_x0 = 0; g_meas_y0 = 0; g_meas_x1 = 0; g_meas_y1 = 0;
 }
 void Platform_BeginMeasure(void) {
-    g_measuring = true;
+        PROFILE_START(_pt);
+g_measuring = true;
     g_meas_x0 = 1 << 30; g_meas_y0 = 1 << 30;
     g_meas_x1 = -(1 << 30); g_meas_y1 = -(1 << 30);
 }
 void Platform_EndMeasure(int *out_w, int *out_h) {
-    int rw = 0, rh = 0;
+        PROFILE_START(_pt);
+int rw = 0, rh = 0;
     if (g_meas_x1 > g_meas_x0) rw = g_meas_x1 - g_meas_x0;
     if (g_meas_y1 > g_meas_y0) rh = g_meas_y1 - g_meas_y0;
     if (out_w) *out_w = rw;
@@ -56,16 +63,19 @@ void Platform_EndMeasure(int *out_w, int *out_h) {
     measure_reset();
 }
 void Platform_GetLastMeasureOrigin(int *out_x, int *out_y) {
-    if (out_x) *out_x = g_meas_origin_x;
+        PROFILE_START(_pt);
+if (out_x) *out_x = g_meas_origin_x;
     if (out_y) *out_y = g_meas_origin_y;
 }
 static __thread int g_draw_off_x = 0, g_draw_off_y = 0;
 void Platform_SetDrawOffset(int dx, int dy) {
-    g_draw_off_x = dx;
+        PROFILE_START(_pt);
+g_draw_off_x = dx;
     g_draw_off_y = dy;
 }
 static void measure_track(int x, int y, int w, int h) {
-    if (!g_measuring) return;
+        PROFILE_START(_pt);
+if (!g_measuring) { PROFILE_END_VAR(_pt, "measure_track"); return ; }
     if (x < g_meas_x0) g_meas_x0 = x;
     if (y < g_meas_y0) g_meas_y0 = y;
     if (x + w > g_meas_x1) g_meas_x1 = x + w;
@@ -73,16 +83,19 @@ static void measure_track(int x, int y, int w, int h) {
 }
 
 void Platform_SetPreRenderState(PromptState *state) {
-  g_prerender_state = state; 
+    PROFILE_START(_pt);
+g_prerender_state = state; 
 }
 
 bool Platform_PreRender(void) {
-    PromptState *state = g_prerender_state;
-    if (!state) return false;
-    return true;
+        PROFILE_START(_pt);
+PromptState *state = g_prerender_state;
+    if (!state) { PROFILE_END_VAR(_pt, "Platform_PreRender"); return false; }
+    { PROFILE_END_VAR(_pt, "Platform_PreRender"); return true; }
 }
 PromptState* Platform_GetPreRenderStatePtr(void) {
-    return g_prerender_state;
+        PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "Platform_GetPreRenderStatePtr"); return g_prerender_state; }
 }
 
 __attribute__((weak)) bool fl_prerender(void) {
@@ -116,10 +129,12 @@ static __thread int g_raw_map_x0 = 0;
 static __thread int g_raw_map_pitch = 0;
 static __thread XftDraw* g_raw_map_xd = NULL;
 static int RawMeasure(Display* dpy, XftFont* xf, const char* s, int n) {
-    return x11_measure_utf8_fallback(dpy, xf, s, n, 0);
+        PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "RawMeasure"); return x11_measure_utf8_fallback(dpy, xf, s, n, 0); }
 }
 static void RawEmitLine(Display* dpy, XftDraw* xd, XftFont* xf, XftColor* xcols, unsigned long* ucols, int nu, int ls, int le, int drawX, int baseline, int rowTop) {
-    int cx = drawX;
+        PROFILE_START(_pt);
+int cx = drawX;
     int i = ls;
     while (i < le) {
         int j = i + 1;
@@ -135,9 +150,10 @@ static void RawEmitLine(Display* dpy, XftDraw* xd, XftFont* xf, XftColor* xcols,
     }
 }
 static void RawLine_Flush(void) {
-    int count = g_raw_count;
+        PROFILE_START(_pt);
+int count = g_raw_count;
     g_raw_count = 0;
-    if (count <= 0) return;
+    if (count <= 0) { PROFILE_END_VAR(_pt, "RawLine_Flush"); return ; }
     Display* dpy = g_raw_dpy;
     XftDraw* xd = g_raw_xd;
     Visual* vis = g_raw_vis;
@@ -243,7 +259,8 @@ static void RawLine_Flush(void) {
     if (owned) Platform_DestroyFont(g_raw_font);
 }
 static bool RawLine_Push(int x, int y, char ch, unsigned long color, FontHandle fh, bool owned, int fontsize) {
-    if (g_raw_count > 0) {
+        PROFILE_START(_pt);
+if (g_raw_count > 0) {
         bool same = (y == g_raw_y) && (fontsize == g_raw_fontsize) && (g_raw_xd == g_draw_xd);
         if (same && g_raw_count >= 2) same = (x == g_raw_x0 + g_raw_count * g_raw_pitch);
         if (same && g_raw_count == 1) {
@@ -255,7 +272,7 @@ static bool RawLine_Push(int x, int y, char ch, unsigned long color, FontHandle 
         if (same && !owned) same = (FH_TO_XFT(fh) == FH_TO_XFT(g_raw_font));
         if (!same) RawLine_Flush();
     }
-    if (g_raw_count >= RAW_LINE_CAP) return false;
+    if (g_raw_count >= RAW_LINE_CAP) { PROFILE_END_VAR(_pt, "RawLine_Push"); return false; }
     if (g_raw_count == 0) {
         g_raw_x0 = x; g_raw_y = y; g_raw_pitch = 0; g_raw_fontsize = fontsize;
         g_raw_font = fh; g_raw_font_owned = owned;
@@ -267,13 +284,14 @@ static bool RawLine_Push(int x, int y, char ch, unsigned long color, FontHandle 
     g_raw_cells[g_raw_count].ch = ch;
     g_raw_cells[g_raw_count].color = color;
     g_raw_count++;
-    return true;
+    { PROFILE_END_VAR(_pt, "RawLine_Push"); return true; }
 }
 static bool RawRect_Map(int x, int y, int w, int h, unsigned long color, unsigned char alpha) {
-    RawLine_Flush();
-    if (g_raw_map_count <= 0 || g_raw_map_pitch <= 0) return false;
-    if (y != g_raw_map_y || g_raw_map_xd != g_draw_xd || !g_draw_xd) return false;
-    if (x < g_raw_map_x0 || x >= g_raw_map_x0 + g_raw_map_count * g_raw_map_pitch) return false;
+        PROFILE_START(_pt);
+RawLine_Flush();
+    if (g_raw_map_count <= 0 || g_raw_map_pitch <= 0) { PROFILE_END_VAR(_pt, "RawRect_Map"); return false; }
+    if (y != g_raw_map_y || g_raw_map_xd != g_draw_xd || !g_draw_xd) { PROFILE_END_VAR(_pt, "RawRect_Map"); return false; }
+    if (x < g_raw_map_x0 || x >= g_raw_map_x0 + g_raw_map_count * g_raw_map_pitch) { PROFILE_END_VAR(_pt, "RawRect_Map"); return false; }
     int idx = (x - g_raw_map_x0 + g_raw_map_pitch / 2) / g_raw_map_pitch;
     if (idx < 0) idx = 0;
     if (idx >= g_raw_map_count) idx = g_raw_map_count - 1;
@@ -282,32 +300,37 @@ static bool RawRect_Map(int x, int y, int w, int h, unsigned long color, unsigne
     x11_xft_alloc_color(g_draw_dpy, g_draw_vis, g_draw_cmap, color, a16, &rc);
     XftDrawRect(g_draw_xd, &rc, g_raw_map_x[idx] + (x - (g_raw_map_x0 + idx * g_raw_map_pitch)), g_raw_map_top[idx] + (y - g_raw_map_y), w, h);
     XftColorFree(g_draw_dpy, g_draw_vis, g_draw_cmap, &rc);
-    return true;
+    { PROFILE_END_VAR(_pt, "RawRect_Map"); return true; }
 }
 void Platform_SetDrawContext(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap) {
-    RawLine_Flush();
+        PROFILE_START(_pt);
+RawLine_Flush();
     g_draw_dpy = dpy; g_draw_xd = xd; g_draw_vis = vis; g_draw_cmap = cmap;
 }
 void Platform_FlushDraw(void) {
-    RawLine_Flush();
+        PROFILE_START(_pt);
+RawLine_Flush();
 }
 bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
-    if (!path || !path[0] || !g_draw_dpy || !g_draw_xd) return false;
+        PROFILE_START(_pt);
+if (!path || !path[0] || !g_draw_dpy || !g_draw_xd) { PROFILE_END_VAR(_pt, "Platform_DrawImageAt"); return false; }
     x += g_draw_off_x;
     y += g_draw_off_y;
     if (w <= 0) w = IconSize;
     if (h <= 0) h = IconSize;
     measure_track(x, y, w, h);
-    return Platform_DrawImageScaled(g_draw_dpy, g_draw_xd, g_draw_vis, path, x, y, w, h);
+    { PROFILE_END_VAR(_pt, "Platform_DrawImageAt"); return Platform_DrawImageScaled(g_draw_dpy, g_draw_xd, g_draw_vis, path, x, y, w, h); }
 }
 void Platform_GetDrawContext(Display** dpy, XftDraw** xd, Visual** vis, Colormap* cmap) {
-    if (dpy) *dpy = g_draw_dpy;
+        PROFILE_START(_pt);
+if (dpy) *dpy = g_draw_dpy;
     if (xd) *xd = g_draw_xd;
     if (vis) *vis = g_draw_vis;
     if (cmap) *cmap = g_draw_cmap;
 }
 bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, FontHandle font, const char *align, int pad,int fontsize) {
-    if (!text || !g_draw_dpy || !g_draw_xd) return false;
+        PROFILE_START(_pt);
+if (!text || !g_draw_dpy || !g_draw_xd) { PROFILE_END_VAR(_pt, "Platform_DrawTextRaw"); return false; }
     x += g_draw_off_x;
     y += g_draw_off_y;
     FontHandle fh = font;
@@ -352,14 +375,15 @@ bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, F
     }
     XftColorFree(g_draw_dpy, g_draw_vis, g_draw_cmap, &col);
     if (needDestroy) Platform_DestroyFont(fh);
-    return true;
+    { PROFILE_END_VAR(_pt, "Platform_DrawTextRaw"); return true; }
 }
 
 static Display* g_line_dpy = NULL;
 static int g_line_size = 0;
 static XftFont* g_line_font = NULL;
 static XftFont* LineFont(Display* dpy, int size) {
-    if (size <= 0) size = FontSize;
+        PROFILE_START(_pt);
+if (size <= 0) size = FontSize;
     if (!g_line_font || g_line_dpy != dpy || g_line_size != size) {
         if (g_line_font && g_line_dpy) XftFontClose(g_line_dpy, g_line_font);
         g_line_font = NULL;
@@ -375,39 +399,43 @@ static XftFont* LineFont(Display* dpy, int size) {
         g_line_dpy = dpy;
         g_line_size = size;
     }
-    return g_line_font;
+    { PROFILE_END_VAR(_pt, "LineFont"); return g_line_font; }
 }
 
 int Platform_MeasureTextWidth(const char* text, int len, int fontsize) {
-    if (!text || len <= 0) return 0;
-    if (!g_draw_dpy) return len * (fontsize > 0 ? fontsize : FontSize) / 2;
+        PROFILE_START(_pt);
+if (!text || len <= 0) { PROFILE_END_VAR(_pt, "Platform_MeasureTextWidth"); return 0; }
+    if (!g_draw_dpy) { PROFILE_END_VAR(_pt, "Platform_MeasureTextWidth"); return len * (fontsize > 0 ? fontsize : FontSize) / 2; }
     XftFont* xf = LineFont(g_draw_dpy, fontsize);
-    if (!xf) return len * (fontsize > 0 ? fontsize : FontSize) / 2;
-    return x11_measure_utf8_fallback(g_draw_dpy, xf, text, len, fontsize > 0 ? fontsize : FontSize);
+    if (!xf) { PROFILE_END_VAR(_pt, "Platform_MeasureTextWidth"); return len * (fontsize > 0 ? fontsize : FontSize) / 2; }
+    { PROFILE_END_VAR(_pt, "Platform_MeasureTextWidth"); return x11_measure_utf8_fallback(g_draw_dpy, xf, text, len, fontsize > 0 ? fontsize : FontSize); }
 }
 
 bool Platform_DrawTextLine(int x, int y, const char* text, int len, unsigned long color, int fontsize) {
-    if (!text || len <= 0 || !g_draw_dpy || !g_draw_xd) return false;
+        PROFILE_START(_pt);
+if (!text || len <= 0 || !g_draw_dpy || !g_draw_xd) { PROFILE_END_VAR(_pt, "Platform_DrawTextLine"); return false; }
     x += g_draw_off_x;
     y += g_draw_off_y;
     XftFont* xf = LineFont(g_draw_dpy, fontsize);
-    if (!xf) return false;
+    if (!xf) { PROFILE_END_VAR(_pt, "Platform_DrawTextLine"); return false; }
     if (color == 0) color = rgb_to_hex(COLOR_TEXT);
     XftColor col;
     x11_xft_alloc_color(g_draw_dpy, g_draw_vis, g_draw_cmap, color, 0xFFFF, &col);
     x11_draw_utf8_fallback(g_draw_dpy, g_draw_xd, &col, x, y + xf->ascent, xf, text, len, fontsize > 0 ? fontsize : FontSize);
     XftColorFree(g_draw_dpy, g_draw_vis, g_draw_cmap, &col);
-    return true;
+    { PROFILE_END_VAR(_pt, "Platform_DrawTextLine"); return true; }
 }
 
 void Platform_DrawListBackground(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap, int y, int h, bool selected) {
-    if (selected) {
+        PROFILE_START(_pt);
+if (selected) {
         x11_draw_selection_background(dpy, xd, vis, cmap, 0, y, state->width, h, rgb_to_hex(COLOR_SELECTED_TEXT));
     }
 }
 
 void Platform_GetItemColors(int idx, int count, unsigned long *num_color, unsigned long *body_color, unsigned long *plain_color) {
-    unsigned long col_text = rgb_to_hex(COLOR_TEXT);
+        PROFILE_START(_pt);
+unsigned long col_text = rgb_to_hex(COLOR_TEXT);
     unsigned long col_alt = rgb_to_hex(COLOR_ALTERNATE);
     float t = (count > 1) ? (float)idx / (float)(count - 1) : (float)idx / (float)GradientItems;
     unsigned long col_rainbow = rgb_to_hex(GetRainbowColor(t, 0.55f, GradientBrightness));
@@ -423,8 +451,9 @@ void Platform_GetItemColors(int idx, int count, unsigned long *num_color, unsign
 }
 
 void Platform_DrawListItem(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap, FontHandle font, ListBoxInfo *lb, int idx, int y, int text_x, const char *icon_path) {
-    (void)state;
-    if (!lb) return;
+        PROFILE_START(_pt);
+(void)state;
+    if (!lb) { PROFILE_END_VAR(_pt, "Platform_DrawListItem"); return ; }
     unsigned long ncol, bcol, pcol;
     Platform_GetItemColors(idx, lb->populated_count, &ncol, &bcol, &pcol);
     XftColor ncolor, bcolor, pcolor;
@@ -438,14 +467,16 @@ void Platform_DrawListItem(PromptState *state, Display *dpy, XftDraw *xd, Visual
 }
 
 void Platform_DrawEditBackground(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap, FontHandle font) {
-    unsigned long window_title_text_color_map;
+        PROFILE_START(_pt);
+unsigned long window_title_text_color_map;
     eval_window_title_color(state,&window_title_text_color_map);
     Platform_SetDrawContext(dpy, xd, vis, cmap);
     if (WindowTitleText) Platform_DrawTextRaw(PROMPT_FOOTER_X, state->height - PROMPT_FOOTER_Y_FROM_BOTTOM, state->window_title, window_title_text_color_map, font, "LEFT", PROMPT_FOOTER_PAD, FontSize);
     if (VimModeText) Platform_DrawTextRaw(PROMPT_FOOTER_X, state->height - PROMPT_FOOTER_Y_FROM_BOTTOM, g_vim_mode, VimModeTextColor(), font, "RIGHT", PROMPT_FOOTER_PAD, FontSize);
 }
 void Platform_DrawEditText(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap, FontHandle font) {
-    XftFont *xf = FH_TO_XFT(font);
+        PROFILE_START(_pt);
+XftFont *xf = FH_TO_XFT(font);
     int cursor_x = 0;
     int text_len = strlen(state->filter);
     int scroll = x11_update_edit_scroll_offset(dpy, xf, state->filter, text_len, state->cursor, state->width, state->scroll_offset, &cursor_x);
@@ -458,21 +489,23 @@ void Platform_DrawEditText(PromptState *state, Display *dpy, XftDraw *xd, Visual
     }
 }
 static int x11_char_x(Display *dpy, XftFont *xf, PromptState *state, int index, int *out_scroll) {
-    int text_len = (int)strlen(state->filter);
+        PROFILE_START(_pt);
+int text_len = (int)strlen(state->filter);
     int cursor_x = 0;
     int scroll = x11_update_edit_scroll_offset(dpy, xf, state->filter, text_len, index, state->width, state->scroll_offset, &cursor_x);
     if (out_scroll) *out_scroll = scroll;
-    return PROMPT_EDIT_INSET + cursor_x - scroll;
+    { PROFILE_END_VAR(_pt, "x11_char_x"); return PROMPT_EDIT_INSET + cursor_x - scroll; }
 }
 
 void Platform_DrawEditTint(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap, FontHandle font) {
-    if (!state) return;
-    if (IsInsertMode()) return;
+        PROFILE_START(_pt);
+if (!state) { PROFILE_END_VAR(_pt, "Platform_DrawEditTint"); return ; }
+    if (IsInsertMode()) { PROFILE_END_VAR(_pt, "Platform_DrawEditTint"); return ; }
     XftFont *xf = FH_TO_XFT(font);
     int text_len = (int)strlen(state->filter);
     int sel_start = 0, sel_end = 0;
     bool has_sel = VimState_GetSelection(&sel_start, &sel_end) && text_len > 0;
-    if (!has_sel && state->cursor < 0) return;
+    if (!has_sel && state->cursor < 0) { PROFILE_END_VAR(_pt, "Platform_DrawEditTint"); return ; }
 
     Platform_SetDrawContext(dpy, xd, vis, cmap);
     int tint_y = x11_font_cursor_y_of(font, PROMPT_EDIT_INSET);
@@ -502,7 +535,8 @@ void Platform_DrawEditTint(PromptState *state, Display *dpy, XftDraw *xd, Visual
 }
 
 void Platform_DrawEditCursor(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap, FontHandle font) {
-    XftFont *xf = FH_TO_XFT(font);
+        PROFILE_START(_pt);
+XftFont *xf = FH_TO_XFT(font);
     int cursor_x = 0;
     x11_update_edit_scroll_offset(dpy, xf, state->filter, strlen(state->filter), state->cursor, state->width, state->scroll_offset, &cursor_x);
     Platform_SetDrawContext(dpy, xd, vis, cmap);
@@ -510,14 +544,15 @@ void Platform_DrawEditCursor(PromptState *state, Display *dpy, XftDraw *xd, Visu
     if (cursor_draw_x < PROMPT_CARET_LO_CLAMP) cursor_draw_x = PROMPT_CARET_LO_CLAMP;
     if (cursor_draw_x > state->width - PROMPT_CARET_HI_CLAMP) cursor_draw_x = state->width - PROMPT_CARET_HI_CLAMP;
     int cursor_y = x11_font_cursor_y_of(font, PROMPT_EDIT_INSET);
-    if (!IsInsertMode()) return;
+    if (!IsInsertMode()) { PROFILE_END_VAR(_pt, "Platform_DrawEditCursor"); return ; }
     Platform_DrawRectRawOpaque(cursor_draw_x, cursor_y, PROMPT_CARET_W_INSERT, FontSize, rgb_to_hex(Modal_CursorColor()));
 }
 bool Platform_DrawRectRaw(int x, int y, int w, int h, unsigned long color, unsigned char alpha) {
-    x += g_draw_off_x;
+        PROFILE_START(_pt);
+x += g_draw_off_x;
     y += g_draw_off_y;
     measure_track(x, y, w, h);
-    if (RawRect_Map(x, y, w, h, color, alpha)) return true;
+    if (RawRect_Map(x, y, w, h, color, alpha)) { PROFILE_END_VAR(_pt, "Platform_DrawRectRaw"); return true; }
     XftColor col;
     unsigned short a16;
     if (alpha == 255) {
@@ -528,66 +563,73 @@ bool Platform_DrawRectRaw(int x, int y, int w, int h, unsigned long color, unsig
     x11_xft_alloc_color(g_draw_dpy, g_draw_vis, g_draw_cmap, color, a16, &col);
     XftDrawRect(g_draw_xd, &col, x, y, w, h);
     XftColorFree(g_draw_dpy, g_draw_vis, g_draw_cmap, &col);
-    return true;
+    { PROFILE_END_VAR(_pt, "Platform_DrawRectRaw"); return true; }
 }
 
 bool Platform_DrawRectRawOpaque(int x, int y, int w, int h, unsigned long color) {
-    return Platform_DrawRectRaw(x, y, w, h, color, 255);
+        PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "Platform_DrawRectRawOpaque"); return Platform_DrawRectRaw(x, y, w, h, color, 255); }
 }
 
 static int raw_thickness_px(float thickness) {
-    if (thickness <= 0.0f) return 0;
+        PROFILE_START(_pt);
+if (thickness <= 0.0f) { PROFILE_END_VAR(_pt, "raw_thickness_px"); return 0; }
     int px = (int)(thickness + 0.5f);
     if (px < 1) px = 1;
     if (px > 255) px = 255;
-    return px;
+    { PROFILE_END_VAR(_pt, "raw_thickness_px"); return px; }
 }
 
 static bool raw_can_draw(void) {
-    return g_draw_dpy != NULL && g_draw_xd != NULL;
+        PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "raw_can_draw"); return g_draw_dpy != NULL && g_draw_xd != NULL; }
 }
 
 static GC raw_gc_for(Display* dpy, Drawable d) {
-    static GC gc = NULL;
+        PROFILE_START(_pt);
+static GC gc = NULL;
     static Drawable gc_owner = 0;
-    if (gc != NULL && gc_owner == (Drawable)(uintptr_t)d) return gc;
+    if (gc != NULL && gc_owner == (Drawable)(uintptr_t)d) { PROFILE_END_VAR(_pt, "raw_gc_for"); return gc; }
     if (gc != NULL) XFreeGC(dpy, gc);
     gc = XCreateGC(dpy, d, 0, NULL);
-    if (!gc) return NULL;
+    if (!gc) { PROFILE_END_VAR(_pt, "raw_gc_for"); return NULL; }
     gc_owner = (Drawable)(uintptr_t)d;
-    return gc;
+    { PROFILE_END_VAR(_pt, "raw_gc_for"); return gc; }
 }
 
 static GC raw_prepare(unsigned long color, int thickness) {
-    if (!raw_can_draw()) return NULL;
+        PROFILE_START(_pt);
+if (!raw_can_draw()) { PROFILE_END_VAR(_pt, "raw_prepare"); return NULL; }
     Drawable d = XftDrawDrawable(g_draw_xd);
     GC gc = raw_gc_for(g_draw_dpy, d);
-    if (!gc) return NULL;
+    if (!gc) { PROFILE_END_VAR(_pt, "raw_prepare"); return NULL; }
     XftColor col;
     x11_xft_alloc_color(g_draw_dpy, g_draw_vis, g_draw_cmap, color, OpacityAlpha16(), &col);
     XSetForeground(g_draw_dpy, gc, col.pixel);
     XftColorFree(g_draw_dpy, g_draw_vis, g_draw_cmap, &col);
     XSetLineAttributes(g_draw_dpy, gc, thickness > 0 ? thickness : 1, LineSolid, CapButt, JoinMiter);
-    return gc;
+    { PROFILE_END_VAR(_pt, "raw_prepare"); return gc; }
 }
 
 bool Platform_DrawRectBorder(int x, int y, int w, int h, unsigned long color, float thickness) {
-    if (!raw_can_draw()) return false;
+        PROFILE_START(_pt);
+if (!raw_can_draw()) { PROFILE_END_VAR(_pt, "Platform_DrawRectBorder"); return false; }
     int t = raw_thickness_px(thickness);
-    if (t <= 0) return Platform_DrawRectRawOpaque(x, y, w, h, color);
-    if (w <= 0 || h <= 0) return false;
+    if (t <= 0) { PROFILE_END_VAR(_pt, "Platform_DrawRectBorder"); return Platform_DrawRectRawOpaque(x, y, w, h, color); }
+    if (w <= 0 || h <= 0) { PROFILE_END_VAR(_pt, "Platform_DrawRectBorder"); return false; }
     x += g_draw_off_x;
     y += g_draw_off_y;
     measure_track(x - t, y - t, w + 2 * t, h + 2 * t);
     GC gc = raw_prepare(color, t);
-    if (!gc) return false;
+    if (!gc) { PROFILE_END_VAR(_pt, "Platform_DrawRectBorder"); return false; }
     Drawable d = XftDrawDrawable(g_draw_xd);
     XDrawRectangle(g_draw_dpy, d, gc, x, y, (unsigned)w, (unsigned)h);
-    return true;
+    { PROFILE_END_VAR(_pt, "Platform_DrawRectBorder"); return true; }
 }
 
 bool Platform_DrawLineRaw(int x1, int y1, int x2, int y2, unsigned long color, float thickness) {
-    if (!raw_can_draw()) return false;
+        PROFILE_START(_pt);
+if (!raw_can_draw()) { PROFILE_END_VAR(_pt, "Platform_DrawLineRaw"); return false; }
     int t = raw_thickness_px(thickness);
     if (t < 1) t = 1;
     x1 += g_draw_off_x;
@@ -600,29 +642,31 @@ bool Platform_DrawLineRaw(int x1, int y1, int x2, int y2, unsigned long color, f
     int bh = (y1 > y2 ? y1 - y2 : y2 - y1) + t;
     measure_track(bx - t / 2, by - t / 2, bw, bh);
     GC gc = raw_prepare(color, t);
-    if (!gc) return false;
+    if (!gc) { PROFILE_END_VAR(_pt, "Platform_DrawLineRaw"); return false; }
     Drawable d = XftDrawDrawable(g_draw_xd);
     XDrawLine(g_draw_dpy, d, gc, x1, y1, x2, y2);
-    return true;
+    { PROFILE_END_VAR(_pt, "Platform_DrawLineRaw"); return true; }
 }
 
 bool Platform_DrawCircleRaw(int cx, int cy, int radius, unsigned long color, float thickness) {
-    if (!raw_can_draw() || radius <= 0) return false;
+        PROFILE_START(_pt);
+if (!raw_can_draw() || radius <= 0) { PROFILE_END_VAR(_pt, "Platform_DrawCircleRaw"); return false; }
     int t = raw_thickness_px(thickness);
     cx += g_draw_off_x;
     cy += g_draw_off_y;
     measure_track(cx - radius, cy - radius, radius * 2, radius * 2);
     GC gc = raw_prepare(color, t);
-    if (!gc) return false;
+    if (!gc) { PROFILE_END_VAR(_pt, "Platform_DrawCircleRaw"); return false; }
     Drawable d = XftDrawDrawable(g_draw_xd);
     unsigned dd = (unsigned)(radius * 2);
     if (t > 0) XDrawArc(g_draw_dpy, d, gc, cx - radius, cy - radius, dd, dd, 0, 360 * 64);
     else XFillArc(g_draw_dpy, d, gc, cx - radius, cy - radius, dd, dd, 0, 360 * 64);
-    return true;
+    { PROFILE_END_VAR(_pt, "Platform_DrawCircleRaw"); return true; }
 }
 
 bool Platform_DrawRoundedRectRaw(int x, int y, int w, int h, int radius, unsigned long color, float thickness) {
-    if (!raw_can_draw() || w <= 0 || h <= 0) return false;
+        PROFILE_START(_pt);
+if (!raw_can_draw() || w <= 0 || h <= 0) { PROFILE_END_VAR(_pt, "Platform_DrawRoundedRectRaw"); return false; }
     int t = raw_thickness_px(thickness);
     if (radius < 0) radius = 0;
     int maxr = (w < h ? w : h) / 2;
@@ -631,7 +675,7 @@ bool Platform_DrawRoundedRectRaw(int x, int y, int w, int h, int radius, unsigne
     y += g_draw_off_y;
     measure_track(x - t, y - t, w + 2 * t, h + 2 * t);
     GC gc = raw_prepare(color, t);
-    if (!gc) return false;
+    if (!gc) { PROFILE_END_VAR(_pt, "Platform_DrawRoundedRectRaw"); return false; }
     Drawable d = XftDrawDrawable(g_draw_xd);
     Display* dpy = g_draw_dpy;
     unsigned rw = (unsigned)(w - radius * 2);
@@ -654,11 +698,12 @@ bool Platform_DrawRoundedRectRaw(int x, int y, int w, int h, int radius, unsigne
         XFillArc(dpy, d, gc, x + w - rd, y + h - rd, rd, rd, 0, 360 * 64);
         XFillArc(dpy, d, gc, x, y + h - rd, rd, rd, 0, 360 * 64);
     }
-    return true;
+    { PROFILE_END_VAR(_pt, "Platform_DrawRoundedRectRaw"); return true; }
 }
 
 void Platform_DrawEditBox(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     if (!state) { PROFILE_END_VAR(timer, "draw_x11:Platform_DrawEditBox"); return; }
     FlintContext_Get()->window.editbox_placed = true;
     FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
@@ -670,7 +715,8 @@ void Platform_DrawEditBox(PromptState *state, Display *dpy, XftDraw *xd, Visual 
 }
 
 void Platform_GetTextLayoutMetrics(int* line_h, int* row_h, int* list_top) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     Display* dpy = get_display();
     FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
     int lh = FontSize;
@@ -684,7 +730,8 @@ void Platform_GetTextLayoutMetrics(int* line_h, int* row_h, int* list_top) {
 }
 
 void Platform_DrawListBox(PromptState *state, Display *dpy, XftDraw *xd, Visual *vis, Colormap cmap) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     if (!state || !state->has_listbox) { PROFILE_END_VAR(timer, "draw_x11:Platform_DrawListBox"); return; }
     FontHandle font = Platform_CreateFontOnDisplay(dpy, FontSize, UsedFont);
     ListBoxInfo *lb = &state->listbox;

@@ -14,19 +14,22 @@
 #include "config.h"
 #include <time.h>
 
+#include "core/timer.h"
 static bool FolderToPath(int csidl, const char* subdir, char* out, size_t out_size) {
-    char folder[MAX_PATH];
-    if (SHGetFolderPathA(NULL, csidl, NULL, SHGFP_TYPE_CURRENT, folder) != S_OK) return false;
+        PROFILE_START(_pt);
+char folder[MAX_PATH];
+    if (SHGetFolderPathA(NULL, csidl, NULL, SHGFP_TYPE_CURRENT, folder) != S_OK) { PROFILE_END_VAR(_pt, "FolderToPath"); return false; }
     if (subdir != NULL) {
         snprintf(out, out_size, "%s\\%s", folder, subdir);
     } else {
         snprintf(out, out_size, "%s", folder);
     }
-    return true;
+    { PROFILE_END_VAR(_pt, "FolderToPath"); return true; }
 }
 
 static bool ResolvePathToken(const char* token, char* out, size_t out_size) {
-    for (unsigned int i = 0; i < PATH_VAR_COUNT; i++) {
+        PROFILE_START(_pt);
+for (unsigned int i = 0; i < PATH_VAR_COUNT; i++) {
         if (strcmp(G_PATH_VARS[i].name, token) == 0) {
             const char* value = G_PATH_VARS[i].win32_value;
             if (value == NULL || value[0] == '\0') return false;
@@ -35,18 +38,19 @@ static bool ResolvePathToken(const char* token, char* out, size_t out_size) {
         }
     }
 
-    if (strcmp(token, "HOME") == 0) return FolderToPath(CSIDL_PROFILE, NULL, out, out_size);
-    if (strcmp(token, "APPDATA") == 0) return FolderToPath(CSIDL_APPDATA, NULL, out, out_size);
-    if (strcmp(token, "PICTURES") == 0) return FolderToPath(CSIDL_MYPICTURES, NULL, out, out_size);
-    if (strcmp(token, "DESKTOP") == 0) return FolderToPath(CSIDL_DESKTOPDIRECTORY, NULL, out, out_size);
-    if (strcmp(token, "DOCUMENTS") == 0) return FolderToPath(CSIDL_MYDOCUMENTS, NULL, out, out_size);
-    if (strcmp(token, "DOWNLOADS") == 0) return FolderToPath(CSIDL_PROFILE, "Downloads", out, out_size);
-    if (strcmp(token, "PROGRAM_FILES") == 0) return FolderToPath(CSIDL_PROGRAM_FILES, NULL, out, out_size);
-    return false;
+    if (strcmp(token, "HOME") == 0) { PROFILE_END_VAR(_pt, "ResolvePathToken"); return FolderToPath(CSIDL_PROFILE, NULL, out, out_size); }
+    if (strcmp(token, "APPDATA") == 0) { PROFILE_END_VAR(_pt, "ResolvePathToken"); return FolderToPath(CSIDL_APPDATA, NULL, out, out_size); }
+    if (strcmp(token, "PICTURES") == 0) { PROFILE_END_VAR(_pt, "ResolvePathToken"); return FolderToPath(CSIDL_MYPICTURES, NULL, out, out_size); }
+    if (strcmp(token, "DESKTOP") == 0) { PROFILE_END_VAR(_pt, "ResolvePathToken"); return FolderToPath(CSIDL_DESKTOPDIRECTORY, NULL, out, out_size); }
+    if (strcmp(token, "DOCUMENTS") == 0) { PROFILE_END_VAR(_pt, "ResolvePathToken"); return FolderToPath(CSIDL_MYDOCUMENTS, NULL, out, out_size); }
+    if (strcmp(token, "DOWNLOADS") == 0) { PROFILE_END_VAR(_pt, "ResolvePathToken"); return FolderToPath(CSIDL_PROFILE, "Downloads", out, out_size); }
+    if (strcmp(token, "PROGRAM_FILES") == 0) { PROFILE_END_VAR(_pt, "ResolvePathToken"); return FolderToPath(CSIDL_PROGRAM_FILES, NULL, out, out_size); }
+    { PROFILE_END_VAR(_pt, "ResolvePathToken"); return false; }
 }
 
 bool Platform_ExpandPath(const char* template_path, char* out, size_t out_size) {
-    if (template_path == NULL || out_size == 0) { log_error("operation failed, returning error template_path='%s' out='%s' out_size=%d", template_path ? template_path : "null", out ? out : "null", out_size); return false; }
+        PROFILE_START(_pt);
+if (template_path == NULL || out_size == 0) { log_error("operation failed, returning error template_path='%s' out='%s' out_size=%d", template_path ? template_path : "null", out ? out : "null", out_size); return false; }
 
     size_t o = 0;
     const char* p = template_path;
@@ -78,15 +82,16 @@ bool Platform_ExpandPath(const char* template_path, char* out, size_t out_size) 
     }
     out[o] = '\0';
 log_info("Platform_ExpandPath template_path='%s' out='%s' out_size=%d", template_path ? template_path : "", out ? out : "", out_size);;
-    return true;
+    { PROFILE_END_VAR(_pt, "Platform_ExpandPath"); return true; }
 }
 
 
 int Platform_FileAppend(MappedFile *mf, const char *text) {
-    if (!mf || !text) return 0;
+        PROFILE_START(_pt);
+if (!mf || !text) { PROFILE_END_VAR(_pt, "Platform_FileAppend"); return 0; }
 
     size_t len = strlen(text);
-    if (len == 0) return 0;
+    if (len == 0) { PROFILE_END_VAR(_pt, "Platform_FileAppend"); return 0; }
 
     if (mf->fileSize + len + 1 > mf->capacity) {
         if (mf->pBuffer) {
@@ -131,11 +136,12 @@ int Platform_FileAppend(MappedFile *mf, const char *text) {
     SetEndOfFile(mf->hFile);
 
 log_info("Platform_FileAppend mf=%p text=%p", mf, text);;
-    return 1;
+    { PROFILE_END_VAR(_pt, "Platform_FileAppend"); return 1; }
 }
 
 void Platform_FileClose(MappedFile *mf) {
-    if (!mf) return;
+        PROFILE_START(_pt);
+if (!mf) { PROFILE_END_VAR(_pt, "Platform_FileClose"); return ; }
 
     if (mf->pBuffer) {
         FlushViewOfFile(mf->pBuffer, mf->fileSize);
@@ -160,11 +166,12 @@ log_info("Platform_FileClose mf=%p", mf);;
 }
 
 Line* Platform_FileGetLines(MappedFile *mf, size_t *outLineCount) {
-    DWORD start = GetTickCount();
+        PROFILE_START(_pt);
+DWORD start = GetTickCount();
     size_t maxLines = 1000;
     size_t count = 0;
     Line *list = (Line *)malloc(maxLines * sizeof(Line));
-    if (list == NULL) return NULL;
+    if (list == NULL) { PROFILE_END_VAR(_pt, "Platform_FileGetLines"); return NULL; }
 
     char *lineStart = mf->pBuffer;
     size_t totalBytes = mf->fileSize;
@@ -188,16 +195,17 @@ Line* Platform_FileGetLines(MappedFile *mf, size_t *outLineCount) {
     }
     *outLineCount = count;
 log_info("Platform_FileGetLines mf=%p outLineCount=%d", mf, outLineCount);;
-    return list;
+    { PROFILE_END_VAR(_pt, "Platform_FileGetLines"); return list; }
 }
 
 char** Platform_FileGetStrings(MappedFile *mf, size_t *outLineCount, NewlineInfo **outNewlines, size_t *outNewlineCount) {
-    DWORD start = GetTickCount();
+        PROFILE_START(_pt);
+DWORD start = GetTickCount();
     size_t maxLines = 1000;
     size_t count = 0;
 
     char **stringList = (char **)malloc(maxLines * sizeof(char*));
-    if (stringList == NULL) return NULL;
+    if (stringList == NULL) { PROFILE_END_VAR(_pt, "Platform_FileGetStrings"); return NULL; }
 
     size_t maxNewlines = 2000;
     size_t newlineCount = 0;
@@ -254,11 +262,12 @@ char** Platform_FileGetStrings(MappedFile *mf, size_t *outLineCount, NewlineInfo
     *outNewlines = newlines;
     *outNewlineCount = newlineCount;
 log_info("Platform_FileGetStrings mf=%p outLineCount=%d outNewlines=%p outNewlineCount=%d", mf, outLineCount, outNewlines, outNewlineCount);;
-    return stringList;
+    { PROFILE_END_VAR(_pt, "Platform_FileGetStrings"); return stringList; }
 }
 
 void Platform_CleanUpFile(MappedFile *mf, NewlineInfo *newlines, size_t newlineCount) {
-    if (!newlines) return;
+        PROFILE_START(_pt);
+if (!newlines) { PROFILE_END_VAR(_pt, "Platform_CleanUpFile"); return ; }
     for (size_t i = 0; i < newlineCount; i++) {
         mf->pBuffer[newlines[i].index] = newlines[i].original;
     }
@@ -267,27 +276,31 @@ log_info("Platform_CleanUpFile mf=%p newlines=%p newlineCount=%d", mf, newlines,
 }
 
 bool Platform_StringContainsCaseInsensitive(const char* haystack, const char* needle) {
-    if (!haystack || !needle) { log_error("operation failed, returning error haystack='%s' needle='%s'", haystack ? haystack : "null", needle ? needle : "null"); return false; }
-    return StrStrIA(haystack, needle) != NULL;
+        PROFILE_START(_pt);
+if (!haystack || !needle) { log_error("operation failed, returning error haystack='%s' needle='%s'", haystack ? haystack : "null", needle ? needle : "null"); return false; }
+    { PROFILE_END_VAR(_pt, "Platform_StringContainsCaseInsensitive"); return StrStrIA(haystack, needle) != NULL; }
 }
 
 bool Platform_StringStartsWithCaseInsensitive(const char* str, const char* prefix) {
-    if (!str || !prefix) { log_error("operation failed, returning error str='%s' prefix='%s'", str ? str : "null", prefix ? prefix : "null"); return false; }
-    return StrStrIA(str, prefix) == str;
+        PROFILE_START(_pt);
+if (!str || !prefix) { log_error("operation failed, returning error str='%s' prefix='%s'", str ? str : "null", prefix ? prefix : "null"); return false; }
+    { PROFILE_END_VAR(_pt, "Platform_StringStartsWithCaseInsensitive"); return StrStrIA(str, prefix) == str; }
 }
 
 long long Platform_GetWallClockMs(void) {
-    FILETIME ft;
+        PROFILE_START(_pt);
+FILETIME ft;
     GetSystemTimeAsFileTime(&ft);
     ULARGE_INTEGER t;
     t.LowPart = ft.dwLowDateTime;
     t.HighPart = ft.dwHighDateTime;
-    return (long long)((t.QuadPart - 116444736000000000ULL) / 10000ULL);
+    { PROFILE_END_VAR(_pt, "Platform_GetWallClockMs"); return (long long)((t.QuadPart - 116444736000000000ULL) / 10000ULL); }
 }
 
 
 bool Platform_TerminateProcessByName(const char* exe_name) {
-    if (!exe_name || !*exe_name) {
+        PROFILE_START(_pt);
+if (!exe_name || !*exe_name) {
         log_error("operation failed, returning error exe_name='%s'", exe_name ? exe_name : "null");
         return false;
     }
@@ -304,15 +317,16 @@ bool Platform_TerminateProcessByName(const char* exe_name) {
     Platform_RunTerminalCommand(cmd, false);
     log_info("Platform_TerminateProcessByName exe_name='%s'", exe_name);
     
-    return true;
+    { PROFILE_END_VAR(_pt, "Platform_TerminateProcessByName"); return true; }
 }
 
 int Platform_ReplaceLineInMappedFile(MappedFile* mf, int line_index, const char* new_text) {
-    if (!mf || !mf->pBuffer || !new_text || line_index < 0) return 0;
+        PROFILE_START(_pt);
+if (!mf || !mf->pBuffer || !new_text || line_index < 0) { PROFILE_END_VAR(_pt, "Platform_ReplaceLineInMappedFile"); return 0; }
 
     size_t lineCount = 0;
     Line* lines = Platform_FileGetLines(mf, &lineCount);
-    if (!lines) return 0;
+    if (!lines) { PROFILE_END_VAR(_pt, "Platform_ReplaceLineInMappedFile"); return 0; }
 
     if (line_index >= lineCount) {
         free(lines);
@@ -391,30 +405,31 @@ int Platform_ReplaceLineInMappedFile(MappedFile* mf, int line_index, const char*
     free(lines);
     free(new_buffer);
 log_info("Platform_ReplaceLineInMappedFile mf=%p line_index=%d new_text='%s'", mf, line_index, new_text ? new_text : "");;
-    return 1;
+    { PROFILE_END_VAR(_pt, "Platform_ReplaceLineInMappedFile"); return 1; }
 }
 
 static bool win32_default_browser_exe(char* out, size_t cap) {
-    HKEY key = NULL;
+        PROFILE_START(_pt);
+HKEY key = NULL;
     if (RegOpenKeyExA(HKEY_CURRENT_USER,
             "Software\\Microsoft\\Windows\\Shell\\Associations\\UrlAssociations\\http\\UserChoice",
-            0, KEY_READ, &key) != ERROR_SUCCESS) return false;
+            0, KEY_READ, &key) != ERROR_SUCCESS) { PROFILE_END_VAR(_pt, "win32_default_browser_exe"); return false; }
 
     char prog[128] = {0};
     DWORD sz = sizeof(prog) - 1;
     LONG r = RegQueryValueExA(key, "ProgId", NULL, NULL, (LPBYTE)prog, &sz);
     RegCloseKey(key);
-    if (r != ERROR_SUCCESS || !prog[0]) return false;
+    if (r != ERROR_SUCCESS || !prog[0]) { PROFILE_END_VAR(_pt, "win32_default_browser_exe"); return false; }
 
     char sub[256];
     snprintf(sub, sizeof(sub), "%s\\shell\\open\\command", prog);
-    if (RegOpenKeyExA(HKEY_CLASSES_ROOT, sub, 0, KEY_READ, &key) != ERROR_SUCCESS) return false;
+    if (RegOpenKeyExA(HKEY_CLASSES_ROOT, sub, 0, KEY_READ, &key) != ERROR_SUCCESS) { PROFILE_END_VAR(_pt, "win32_default_browser_exe"); return false; }
 
     char cmd[1024] = {0};
     sz = sizeof(cmd) - 1;
     r = RegQueryValueExA(key, NULL, NULL, NULL, (LPBYTE)cmd, &sz);
     RegCloseKey(key);
-    if (r != ERROR_SUCCESS || !cmd[0]) return false;
+    if (r != ERROR_SUCCESS || !cmd[0]) { PROFILE_END_VAR(_pt, "win32_default_browser_exe"); return false; }
 
     const char* p = cmd;
     size_t len = 0;
@@ -424,14 +439,15 @@ static bool win32_default_browser_exe(char* out, size_t cap) {
     } else {
         while (p[len] && !isspace((unsigned char)p[len]) && len < cap - 1) len++;
     }
-    if (len == 0) return false;
+    if (len == 0) { PROFILE_END_VAR(_pt, "win32_default_browser_exe"); return false; }
     memcpy(out, p, len);
     out[len] = '\0';
-    return out[0] != '\0';
+    { PROFILE_END_VAR(_pt, "win32_default_browser_exe"); return out[0] != '\0'; }
 }
 
 static bool win32_launch_default_browser_blank(void) {
-    char exe[512];
+        PROFILE_START(_pt);
+char exe[512];
     if (!win32_default_browser_exe(exe, sizeof(exe))) {
         log_info("Platform_LaunchBrowserAtUrl could not resolve default browser");
         return false;
@@ -442,11 +458,12 @@ static bool win32_launch_default_browser_blank(void) {
         log_info("Platform_LaunchBrowserAtUrl ShellExecute failed for '%s'", exe);
         return false;
     }
-    return true;
+    { PROFILE_END_VAR(_pt, "win32_launch_default_browser_blank"); return true; }
 }
 
 bool Platform_LaunchBrowserAtUrl(char* url, bool new_window) {
-    char full_url[2048] = {0};
+        PROFILE_START(_pt);
+char full_url[2048] = {0};
     if (!url || !url[0]) full_url[0] = '\0';
     else if (strstr(url, "://")) snprintf(full_url, sizeof(full_url), "%s", url);
     else snprintf(full_url, sizeof(full_url), "https://%s", url);
@@ -485,11 +502,12 @@ bool Platform_LaunchBrowserAtUrl(char* url, bool new_window) {
     char command[2048];
     snprintf(command, sizeof(command), "start \"\" \"%s\"", full_url);
     log_info("Platform_LaunchBrowserAtUrl fallback url='%s' new_window=%d", full_url, new_window);
-    return Platform_RunTerminalCommand(command,false);
+    { PROFILE_END_VAR(_pt, "Platform_LaunchBrowserAtUrl"); return Platform_RunTerminalCommand(command,false); }
 }
 
 bool Platform_QueryBrowser(char* query) {
-    if (!query || !query[0]) { log_error("operation failed, returning error query='%s'", query ? query : "null"); return false; }
+        PROFILE_START(_pt);
+if (!query || !query[0]) { log_error("operation failed, returning error query='%s'", query ? query : "null"); return false; }
     
     char encoded_query[2048] = {0};
     char* src = query;
@@ -539,11 +557,12 @@ bool Platform_QueryBrowser(char* query) {
     char command[4096];
     snprintf(command, sizeof(command), "start \"\" \"%s\"", url);
 log_info("Platform_QueryBrowser query='%s'", query ? query : "");;
-    return Platform_RunTerminalCommand(command,false);
+    { PROFILE_END_VAR(_pt, "Platform_QueryBrowser"); return Platform_RunTerminalCommand(command,false); }
 }
 
 char* Platform_GetClipboardEntry(void) {
-    char* result = NULL;
+        PROFILE_START(_pt);
+char* result = NULL;
 
     if (!OpenClipboard(NULL)) { log_error("operation failed, returning error"); return NULL; }
 
@@ -573,15 +592,16 @@ char* Platform_GetClipboardEntry(void) {
     GlobalUnlock(hClipData);
     CloseClipboard();
 
-    return result;
+    { PROFILE_END_VAR(_pt, "Platform_GetClipboardEntry"); return result; }
 }
 
 bool Platform_PasteContent(char* content) {
-    if (!content || !content[0]) { log_error("operation failed, returning error content='%s'", content ? content : "null"); return false; }
+        PROFILE_START(_pt);
+if (!content || !content[0]) { log_error("operation failed, returning error content='%s'", content ? content : "null"); return false; }
 
     size_t len = strlen(content);
     INPUT* inputs = (INPUT*)calloc(len, sizeof(INPUT));
-    if (!inputs) return false;
+    if (!inputs) { PROFILE_END_VAR(_pt, "Platform_PasteContent"); return false; }
 
     for (size_t i = 0; i < len; i++) {
         char c = content[i];
@@ -615,10 +635,11 @@ bool Platform_PasteContent(char* content) {
 
     free(inputs);
 log_info("Platform_PasteContent content='%s'", content ? content : "");;
-    return success;
+    { PROFILE_END_VAR(_pt, "Platform_PasteContent"); return success; }
 }
 const char* Platform_GetRealHome(void) {
-    static char buf[512] = {0};
+        PROFILE_START(_pt);
+static char buf[512] = {0};
 
     const char* profile = getenv("USERPROFILE");
     if (profile && profile[0]) {
@@ -641,5 +662,5 @@ const char* Platform_GetRealHome(void) {
         return buf;
     }
 
-    return buf;
+    { PROFILE_END_VAR(_pt, "Platform_GetRealHome"); return buf; }
 }
