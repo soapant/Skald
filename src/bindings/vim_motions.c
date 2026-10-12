@@ -393,7 +393,6 @@ void HandleSendEdit(FlintContext* ctx) {
 }
 
 void HandleSendCopyShift(FlintContext* ctx) {
-    //same with this 
     ListBoxInfo* lb = Vim_GetListBox(ctx);
     if (!lb) return;
     const char* sel = UI_IsListBoxSelected(lb) ? lb_selected_text(lb) : "";
@@ -401,7 +400,6 @@ void HandleSendCopyShift(FlintContext* ctx) {
     else Platform_CopyToClipboard(sel);
 }
 void HandleSendCopyControl(FlintContext* ctx) {
-    // same
     ListBoxInfo* lb = Vim_GetListBox(ctx);
     if (!lb) return;
     const char* sel = UI_IsListBoxSelected(lb) ? lb_selected_text(lb) : "";

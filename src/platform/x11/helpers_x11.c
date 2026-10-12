@@ -443,15 +443,15 @@ XftFont* xf = FH_TO_XFT(font);
 }
 
 int x11_font_cursor_y(int ascent, int descent, int font_size, int box_top) {
-        PROFILE_START(_pt);
-int line_h = ascent + descent;
+    PROFILE_START(_pt);
+    int line_h = ascent + descent;
     if (line_h <= 0 || font_size <= 0) { PROFILE_END_VAR(_pt, "x11_font_cursor_y"); return box_top; }
     { PROFILE_END_VAR(_pt, "x11_font_cursor_y"); return box_top + (line_h - font_size) / 2; }
 }
 
 int x11_font_cursor_y_of(FontHandle font, int box_top) {
         PROFILE_START(_pt);
-XftFont* xf = FH_TO_XFT(font);
+      XftFont* xf = FH_TO_XFT(font);
     { PROFILE_END_VAR(_pt, "x11_font_cursor_y_of"); return x11_font_cursor_y(xf ? xf->ascent : 0, xf ? xf->descent : 0, FontSize, box_top); }
 }
 
