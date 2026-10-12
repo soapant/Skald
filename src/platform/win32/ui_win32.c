@@ -13,15 +13,18 @@
 #include "platform/ui.h"
 #include "platform/win32/common_ui_win32.h"
 
+#include "core/timer.h"
 bool IsPopupActive(WindowHandle hPopupWnd) {
-    (void)hPopupWnd;
-    return WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) != NULL && IsWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd));
+        PROFILE_START(_pt);
+(void)hPopupWnd;
+    { PROFILE_END_VAR(_pt, "IsPopupActive"); return WH_TO_HWND(FlintContext_Get()->window.hPopupWnd) != NULL && IsWindow(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd)); }
 }
 
 void UI_SetSelection(ListBoxInfo* lb, WindowHandle hList, int index) {
-    if (!lb) return;
+        PROFILE_START(_pt);
+if (!lb) { PROFILE_END_VAR(_pt, "UI_SetSelection"); return ; }
     int old_sel = lb->selected_index;
-    if (old_sel == index) return;
+    if (old_sel == index) { PROFILE_END_VAR(_pt, "UI_SetSelection"); return ; }
     lb->selected_index = index;
     RECT invalidRect = {0};
     bool hasInvalid = false;
@@ -47,48 +50,57 @@ void UI_SetSelection(ListBoxInfo* lb, WindowHandle hList, int index) {
 }
 
 void UI_SetHorizontalExtent(WindowHandle hList, int width) {
-    SendMessageA(WH_TO_HWND(hList), LB_SETHORIZONTALEXTENT, width, 0);
+        PROFILE_START(_pt);
+SendMessageA(WH_TO_HWND(hList), LB_SETHORIZONTALEXTENT, width, 0);
 }
 
 void UI_LB_SetCount(ListBoxInfo* lb, WindowHandle hList, int count) {
-    if (lb) lb->populated_count = count;
+        PROFILE_START(_pt);
+if (lb) lb->populated_count = count;
     SendMessageA(WH_TO_HWND(hList), LB_SETCOUNT, count, 0);
 }
 
 void UI_LB_SetItemHeight(WindowHandle hList, int height) {
-    SendMessageA(WH_TO_HWND(hList), LB_SETITEMHEIGHT, 0, height);
+        PROFILE_START(_pt);
+SendMessageA(WH_TO_HWND(hList), LB_SETITEMHEIGHT, 0, height);
 }
 
 void UI_LB_SetCaretIndex(WindowHandle hList, int index, bool scroll) {
-    SendMessageA(WH_TO_HWND(hList), LB_SETCARETINDEX, index, scroll);
+        PROFILE_START(_pt);
+SendMessageA(WH_TO_HWND(hList), LB_SETCARETINDEX, index, scroll);
 }
 
 void UI_LB_SetTopIndex(WindowHandle hList, int index) {
-    SendMessageA(WH_TO_HWND(hList), LB_SETTOPINDEX, index, 0);
+        PROFILE_START(_pt);
+SendMessageA(WH_TO_HWND(hList), LB_SETTOPINDEX, index, 0);
 }
 
 int UI_LB_GetTopIndex(WindowHandle hList) {
-    return (int)SendMessageA(WH_TO_HWND(hList), LB_GETTOPINDEX, 0, 0);
+        PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "UI_LB_GetTopIndex"); return (int)SendMessageA(WH_TO_HWND(hList), LB_GETTOPINDEX, 0, 0); }
 }
 
 int UI_LB_GetVisibleCount(void) {
-    WindowHandle hList = FlintContext_Get()->window.hListBox;
-    if (!WH_TO_HWND(hList)) return 16;
+        PROFILE_START(_pt);
+WindowHandle hList = FlintContext_Get()->window.hListBox;
+    if (!WH_TO_HWND(hList)) { PROFILE_END_VAR(_pt, "UI_LB_GetVisibleCount"); return 16; }
     int itemHeight = UI_LB_GetItemHeight(hList);
-    if (itemHeight <= 0) return 16;
+    if (itemHeight <= 0) { PROFILE_END_VAR(_pt, "UI_LB_GetVisibleCount"); return 16; }
     RECT rect;
     GetClientRect(WH_TO_HWND(hList), &rect);
     int visible = rect.bottom / itemHeight;
     if (visible < 1) visible = 1;
-    return visible;
+    { PROFILE_END_VAR(_pt, "UI_LB_GetVisibleCount"); return visible; }
 }
 
 void UI_LB_SetVisibleCount(int count) {
-    (void)count;
+        PROFILE_START(_pt);
+(void)count;
 }
 
 void UI_LB_ScrollToTop(ListBoxInfo* lb, int top_index) {
-    if (!lb) return;
+        PROFILE_START(_pt);
+if (!lb) { PROFILE_END_VAR(_pt, "UI_LB_ScrollToTop"); return ; }
     WindowHandle hList = FlintContext_Get()->window.hListBox;
     int visible = UI_LB_GetVisibleCount();
     if (top_index < 0) top_index = 0;
@@ -99,15 +111,18 @@ void UI_LB_ScrollToTop(ListBoxInfo* lb, int top_index) {
 }
 
 void UI_LB_SetFont(WindowHandle hList, void* hFont) {
-    SendMessageA(WH_TO_HWND(hList), WM_SETFONT, (WPARAM)hFont, FALSE);
+        PROFILE_START(_pt);
+SendMessageA(WH_TO_HWND(hList), WM_SETFONT, (WPARAM)hFont, FALSE);
 }
 
 int UI_LB_GetItemHeight(WindowHandle hList) {
-    return (int)SendMessageA(WH_TO_HWND(hList), LB_GETITEMHEIGHT, 0, 0);
+        PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "UI_LB_GetItemHeight"); return (int)SendMessageA(WH_TO_HWND(hList), LB_GETITEMHEIGHT, 0, 0); }
 }
 
 void UI_NavigateTo(ListBoxInfo* lb, WindowHandle hListBox, int index) {
-    if (!lb) return;
+        PROFILE_START(_pt);
+if (!lb) { PROFILE_END_VAR(_pt, "UI_NavigateTo"); return ; }
     int count = lb->populated_count;
     if (count <= 0) {
         lb->selected_index = -1;
@@ -129,7 +144,7 @@ void UI_NavigateTo(ListBoxInfo* lb, WindowHandle hListBox, int index) {
         return;
     }
     int old_sel = lb->selected_index;
-    if (old_sel == index) return;
+    if (old_sel == index) { PROFILE_END_VAR(_pt, "UI_NavigateTo"); return ; }
     int oldTop = UI_LB_GetTopIndex(hListBox);
     lb->selected_index = index;
     UI_LB_SetCaretIndex(hListBox, index, false);
@@ -176,35 +191,40 @@ void UI_NavigateTo(ListBoxInfo* lb, WindowHandle hListBox, int index) {
 }
 
 void UI_NavigateUp(ListBoxInfo* lb, WindowHandle hListBox) {
-    if (!lb) return;
+        PROFILE_START(_pt);
+if (!lb) { PROFILE_END_VAR(_pt, "UI_NavigateUp"); return ; }
     int sel = lb->selected_index;
     if (sel >= 0) sel--;
-    if (sel == lb->selected_index) return;
+    if (sel == lb->selected_index) { PROFILE_END_VAR(_pt, "UI_NavigateUp"); return ; }
     UI_NavigateTo(lb, hListBox, sel);
 }
 
 void UI_NavigateDown(ListBoxInfo* lb, WindowHandle hListBox) {
-    if (!lb) return;
+        PROFILE_START(_pt);
+if (!lb) { PROFILE_END_VAR(_pt, "UI_NavigateDown"); return ; }
     int count = lb->populated_count;
-    if (count <= 0) return;
+    if (count <= 0) { PROFILE_END_VAR(_pt, "UI_NavigateDown"); return ; }
     int sel = lb->selected_index;
     if (sel < 0) sel = -1;
     if (sel >= count - 1) sel = count - 1;
     else sel++;
-    if (sel == lb->selected_index) return;
+    if (sel == lb->selected_index) { PROFILE_END_VAR(_pt, "UI_NavigateDown"); return ; }
     UI_NavigateTo(lb, hListBox, sel);
 }
 
 int UI_LB_GetTextLen(WindowHandle hList) {
-    return (int)SendMessageA(WH_TO_HWND(hList), LB_GETTEXTLEN, 0, 0);
+        PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "UI_LB_GetTextLen"); return (int)SendMessageA(WH_TO_HWND(hList), LB_GETTEXTLEN, 0, 0); }
 }
 
 int UI_LB_GetText(WindowHandle hList, int index, char* buffer) {
-    return (int)SendMessageA(WH_TO_HWND(hList), LB_GETTEXT, index, (LPARAM)buffer);
+        PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "UI_LB_GetText"); return (int)SendMessageA(WH_TO_HWND(hList), LB_GETTEXT, index, (LPARAM)buffer); }
 }
 
 void UI_Edit_SetFont(HFONT hFont) {
-    (void)hFont;
+        PROFILE_START(_pt);
+(void)hFont;
 }
 
 typedef struct {
@@ -215,20 +235,23 @@ typedef struct {
 } Win32TextTarget;
 
 static int win32_target_cursor(const Win32TextTarget* t) {
-    if (t->cursor_i) return *t->cursor_i;
-    if (t->cursor_z) return (int)*t->cursor_z;
-    return 0;
+        PROFILE_START(_pt);
+if (t->cursor_i) { PROFILE_END_VAR(_pt, "win32_target_cursor"); return *t->cursor_i; }
+    if (t->cursor_z) { PROFILE_END_VAR(_pt, "win32_target_cursor"); return (int)*t->cursor_z; }
+    { PROFILE_END_VAR(_pt, "win32_target_cursor"); return 0; }
 }
 
 static void win32_target_set_cursor(const Win32TextTarget* t, int value) {
-    if (t->cursor_i) { *t->cursor_i = value; return; }
+        PROFILE_START(_pt);
+if (t->cursor_i) { *t->cursor_i = value; return; }
     if (t->cursor_z) { *t->cursor_z = (size_t)value; return; }
 }
 
 static wchar_t s_pending_high_surrogate = 0;
 
 static bool win32_resolve_text_target(Win32TextTarget* out) {
-    out->text = NULL;
+        PROFILE_START(_pt);
+out->text = NULL;
     out->capacity = 0;
     out->cursor_i = NULL;
     out->cursor_z = NULL;
@@ -256,16 +279,18 @@ static bool win32_resolve_text_target(Win32TextTarget* out) {
         out->cursor_z = &g_win32_prompt_state->cursor;
         return true;
     }
-    return false;
+    { PROFILE_END_VAR(_pt, "win32_resolve_text_target"); return false; }
 }
 
 void UI_Edit_SetSel(uint32_t start, uint32_t end) {
-    (void)end;
+        PROFILE_START(_pt);
+(void)end;
     UI_SetCursorPosition((int)start);
 }
 
 void UI_Edit_GetSel(uint32_t* start, uint32_t* end) {
-    Win32TextTarget t;
+        PROFILE_START(_pt);
+Win32TextTarget t;
     uint32_t cursor = 0;
     if (win32_resolve_text_target(&t)) cursor = (uint32_t)win32_target_cursor(&t);
     if (start) *start = cursor;
@@ -273,18 +298,20 @@ void UI_Edit_GetSel(uint32_t* start, uint32_t* end) {
 }
 
 void UI_GetCurrentTextEdit(char* buffer, size_t cap) {
-    if (!buffer || cap == 0) return;
+        PROFILE_START(_pt);
+if (!buffer || cap == 0) { PROFILE_END_VAR(_pt, "UI_GetCurrentTextEdit"); return ; }
     buffer[0] = '\0';
     Win32TextTarget t;
-    if (!win32_resolve_text_target(&t) || !t.text) return;
+    if (!win32_resolve_text_target(&t) || !t.text) { PROFILE_END_VAR(_pt, "UI_GetCurrentTextEdit"); return ; }
     snprintf(buffer, cap, "%s", t.text);
     buffer[cap-1] = '\0';
 }
 
 void UI_SetText(const char* text) {
-    if (!text) text = "";
+        PROFILE_START(_pt);
+if (!text) text = "";
     Win32TextTarget t;
-    if (!win32_resolve_text_target(&t) || !t.text || t.capacity == 0) return;
+    if (!win32_resolve_text_target(&t) || !t.text || t.capacity == 0) { PROFILE_END_VAR(_pt, "UI_SetText"); return ; }
     strncpy(t.text, text, t.capacity - 1);
     t.text[t.capacity-1] = '\0';
     UI_SetCursorPosition((int)strlen(t.text));
@@ -296,9 +323,10 @@ void UI_SetText(const char* text) {
 }
 
 void UI_SetCursorPosition(int position) {
-    s_pending_high_surrogate = 0;
+        PROFILE_START(_pt);
+s_pending_high_surrogate = 0;
     Win32TextTarget t;
-    if (!win32_resolve_text_target(&t) || !t.text) return;
+    if (!win32_resolve_text_target(&t) || !t.text) { PROFILE_END_VAR(_pt, "UI_SetCursorPosition"); return ; }
     int len = (int)strlen(t.text);
     if (position < 0) position = 0;
     if (position > len) position = len;
@@ -306,60 +334,66 @@ void UI_SetCursorPosition(int position) {
 }
 
 int UI_InsertText(const char* utf8, int len) {
-    Win32TextTarget t;
-    if (!utf8 || len <= 0) return 0;
-    if (!win32_resolve_text_target(&t) || !t.text || t.capacity == 0) return 0;
+        PROFILE_START(_pt);
+Win32TextTarget t;
+    if (!utf8 || len <= 0) { PROFILE_END_VAR(_pt, "UI_InsertText"); return 0; }
+    if (!win32_resolve_text_target(&t) || !t.text || t.capacity == 0) { PROFILE_END_VAR(_pt, "UI_InsertText"); return 0; }
     size_t cur = (size_t)win32_target_cursor(&t);
     size_t have = strlen(t.text);
     if (cur > have) cur = have;
-    if (have + (size_t)len + 1 > t.capacity) return 0;
+    if (have + (size_t)len + 1 > t.capacity) { PROFILE_END_VAR(_pt, "UI_InsertText"); return 0; }
     memmove(t.text + cur + len, t.text + cur, have - cur + 1);
     memcpy(t.text + cur, utf8, (size_t)len);
     win32_target_set_cursor(&t, (int)(cur + len));
-    return len;
+    { PROFILE_END_VAR(_pt, "UI_InsertText"); return len; }
 }
 
 static int win32_prev_char_len(const char* text, size_t cur) {
-    if (cur == 0) return 0;
+        PROFILE_START(_pt);
+if (cur == 0) { PROFILE_END_VAR(_pt, "win32_prev_char_len"); return 0; }
     size_t i = cur - 1;
     while (i > 0 && ((unsigned char)text[i] & 0xC0) == 0x80) i--;
-    return (int)(cur - i);
+    { PROFILE_END_VAR(_pt, "win32_prev_char_len"); return (int)(cur - i); }
 }
 
 static int win32_next_char_len(const char* text, size_t len, size_t cur) {
-    if (cur >= len) return 0;
+        PROFILE_START(_pt);
+if (cur >= len) { PROFILE_END_VAR(_pt, "win32_next_char_len"); return 0; }
     size_t i = cur + 1;
     while (i < len && ((unsigned char)text[i] & 0xC0) == 0x80) i++;
-    return (int)(i - cur);
+    { PROFILE_END_VAR(_pt, "win32_next_char_len"); return (int)(i - cur); }
 }
 
 void UI_Backspace(void) {
-    s_pending_high_surrogate = 0;
+        PROFILE_START(_pt);
+s_pending_high_surrogate = 0;
     Win32TextTarget t;
-    if (!win32_resolve_text_target(&t) || !t.text) return;
+    if (!win32_resolve_text_target(&t) || !t.text) { PROFILE_END_VAR(_pt, "UI_Backspace"); return ; }
     size_t have = strlen(t.text);
     size_t cur = (size_t)win32_target_cursor(&t);
     if (cur > have) cur = have;
     int n = win32_prev_char_len(t.text, cur);
-    if (n <= 0) return;
+    if (n <= 0) { PROFILE_END_VAR(_pt, "UI_Backspace"); return ; }
     memmove(t.text + cur - n, t.text + cur, have - cur + 1);
     win32_target_set_cursor(&t, (int)(cur - n));
 }
 
 void UI_DeleteForward(void) {
-    s_pending_high_surrogate = 0;
+        PROFILE_START(_pt);
+s_pending_high_surrogate = 0;
     Win32TextTarget t;
-    if (!win32_resolve_text_target(&t) || !t.text) return;
+    if (!win32_resolve_text_target(&t) || !t.text) { PROFILE_END_VAR(_pt, "UI_DeleteForward"); return ; }
     size_t have = strlen(t.text);
     size_t cur = (size_t)win32_target_cursor(&t);
     if (cur > have) cur = have;
     int n = win32_next_char_len(t.text, have, cur);
-    if (n <= 0) return;
+    if (n <= 0) { PROFILE_END_VAR(_pt, "UI_DeleteForward"); return ; }
     memmove(t.text + cur, t.text + cur + n, have - cur - n + 1);
 }
 
 int UI_InsertChar(wchar_t wc) {
-    wchar_t pair[2];
+        PROFILE_START(_pt);
+wchar_t pair[2];
     int pairlen = 0;
     if (s_pending_high_surrogate) {
         if (wc >= 0xDC00 && wc <= 0xDFFF) {
@@ -380,21 +414,24 @@ int UI_InsertChar(wchar_t wc) {
     }
     char utf8[8];
     int n = WideCharToMultiByte(CP_UTF8, 0, pair, pairlen, utf8, (int)sizeof(utf8), NULL, NULL);
-    if (n <= 0) return 0;
-    return UI_InsertText(utf8, n);
+    if (n <= 0) { PROFILE_END_VAR(_pt, "UI_InsertChar"); return 0; }
+    { PROFILE_END_VAR(_pt, "UI_InsertChar"); return UI_InsertText(utf8, n); }
 }
 
 HFONT UI_GetFont(WindowHandle hWnd) {
-    return (HFONT)SendMessageA(WH_TO_HWND(hWnd), WM_GETFONT, 0, 0);
+        PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "UI_GetFont"); return (HFONT)SendMessageA(WH_TO_HWND(hWnd), WM_GETFONT, 0, 0); }
 }
 
 void UI_Edit_UpdateUIState(WindowHandle hEdit, unsigned int action, unsigned int uiFlags) {
-    SendMessageA(WH_TO_HWND(hEdit), WM_UPDATEUISTATE, MAKEWPARAM(action, uiFlags), 0);
+        PROFILE_START(_pt);
+SendMessageA(WH_TO_HWND(hEdit), WM_UPDATEUISTATE, MAKEWPARAM(action, uiFlags), 0);
 }
 
 PromptState *g_win32_prompt_state = NULL;
 void UI_RedrawNow(ListBoxInfo* lb, WindowHandle hListBox) {
-    FlintContext* _c = FlintContext_Get();
+        PROFILE_START(_pt);
+FlintContext* _c = FlintContext_Get();
     if (_c->prompt_callbacks.refresh != NULL) {
         char buffer[MaxFeatures];
         UI_GetCurrentTextEdit(buffer, sizeof(buffer));
@@ -405,55 +442,63 @@ void UI_RedrawNow(ListBoxInfo* lb, WindowHandle hListBox) {
 static bool g_toggle_key_pending = false;
 
 void UI_FlushPendingInput(void) {
-    MSG msg;
+        PROFILE_START(_pt);
+MSG msg;
     while (PeekMessageA(&msg, NULL, WM_KEYFIRST, WM_KEYLAST, PM_REMOVE)) {
         if (msg.message == WM_KEYDOWN || msg.message == WM_SYSKEYDOWN) g_toggle_key_pending = false;
     }
 }
 
 void UI_PreparePopupPump(void) {
-    g_toggle_key_pending = true;
+        PROFILE_START(_pt);
+g_toggle_key_pending = true;
     UI_FlushPendingInput();
 }
 
 bool UI_ShouldSkipPopupKey(const void* msg) {
-    const MSG* m = (const MSG*)msg;
-    if (!g_toggle_key_pending) return false;
+        PROFILE_START(_pt);
+const MSG* m = (const MSG*)msg;
+    if (!g_toggle_key_pending) { PROFILE_END_VAR(_pt, "UI_ShouldSkipPopupKey"); return false; }
     if (m->message == WM_KEYDOWN || m->message == WM_SYSKEYDOWN || m->message == WM_KEYUP || m->message == WM_SYSKEYUP || m->message == WM_CHAR || m->message == WM_SYSCHAR) {
         g_toggle_key_pending = false;
         return true;
     }
-    return false;
+    { PROFILE_END_VAR(_pt, "UI_ShouldSkipPopupKey"); return false; }
 }
 
 void UI_Redraw(ListBoxInfo* lb, WindowHandle hListBox) {
-    if (IsPopupActive(FlintContext_Get()->window.hPopupWnd)) {
+        PROFILE_START(_pt);
+if (IsPopupActive(FlintContext_Get()->window.hPopupWnd)) {
         SetTimer(WH_TO_HWND(FlintContext_Get()->window.hPopupWnd), UI_DEBOUNCE_TIMER_ID, UI_DEBOUNCE_MS, NULL);
         return;
     }
     UI_RedrawNow(lb, hListBox);
 }
 
-char* Platform_SearchPopup(void) { log_error("operation failed, returning error"); return NULL; log_info("Platform_SearchPopup completed");
+char* Platform_SearchPopup(void) {     PROFILE_START(_pt);
+log_error("operation failed, returning error"); { PROFILE_END_VAR(_pt, "Platform_SearchPopup"); return NULL; } log_info("Platform_SearchPopup completed");
 }
 
 #include <gdiplus.h>
 
-PromptState* Platform_GetWin32PromptState(void) { return g_win32_prompt_state; }
+PromptState* Platform_GetWin32PromptState(void) {     PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "Platform_GetWin32PromptState"); return g_win32_prompt_state; } }
 
 static void win_command_confirm(const char* text, void* user_data) {
-  extern void HandleCommandExecution(ListBoxInfo* lb, char* string);
+    PROFILE_START(_pt);
+extern void HandleCommandExecution(ListBoxInfo* lb, char* string);
   ListBoxInfo* lb = (ListBoxInfo*)user_data;
-  if (!text) return;
+  if (!text) { PROFILE_END_VAR(_pt, "win_command_confirm"); return ; }
   char* dup = _strdup(text);
-  if (!dup) return;
+  if (!dup) { PROFILE_END_VAR(_pt, "win_command_confirm"); return ; }
   HandleCommandExecution(lb, dup);
   free(dup);
 }
 
 
 void UI_SyncFilterFromEdit(FlintContext* ctx) {
-    if (!ctx) return;
+        PROFILE_START(_pt);
+if (!ctx) { PROFILE_END_VAR(_pt, "UI_SyncFilterFromEdit"); return ; }
     if (ctx->prompt_callbacks.render != NULL) {
         PromptState* ws = g_win32_prompt_state;
         if (ws) {
@@ -464,14 +509,15 @@ void UI_SyncFilterFromEdit(FlintContext* ctx) {
         }
     }
     Win32TextTarget t;
-    if (!win32_resolve_text_target(&t) || !t.text) return;
+    if (!win32_resolve_text_target(&t) || !t.text) { PROFILE_END_VAR(_pt, "UI_SyncFilterFromEdit"); return ; }
     strncpy(ctx->window.filter, t.text, sizeof(ctx->window.filter) - 1);
     ctx->window.filter[sizeof(ctx->window.filter) - 1] = '\0';
     ctx->window.filter_cursor = win32_target_cursor(&t);
 }
 
 void UI_ApplyFilterToEdit(FlintContext* ctx) {
-    if (!ctx) return;
+        PROFILE_START(_pt);
+if (!ctx) { PROFILE_END_VAR(_pt, "UI_ApplyFilterToEdit"); return ; }
     PromptState* ws = g_win32_prompt_state;
     if (ws) {
         strncpy(ws->filter, ctx->window.filter, sizeof(ws->filter)-1);
@@ -491,19 +537,21 @@ void UI_ApplyFilterToEdit(FlintContext* ctx) {
 }
 
 ListBoxInfo* UI_GetPopupListBox(FlintContext* ctx) {
-    (void)ctx;
+        PROFILE_START(_pt);
+(void)ctx;
     PromptState* ws = g_win32_prompt_state;
-    if (ws && ws->has_listbox) return &ws->listbox;
+    if (ws && ws->has_listbox) { PROFILE_END_VAR(_pt, "UI_GetPopupListBox"); return &ws->listbox; }
     HWND hPopup = WH_TO_HWND(FlintContext_Get()->window.hPopupWnd);
     if (hPopup && IsWindow(hPopup)) {
         ListBoxInfo* lb = (ListBoxInfo*)GetWindowLongPtrA(hPopup, GWLP_USERDATA);
         if (lb) return lb;
     }
-    return NULL;
+    { PROFILE_END_VAR(_pt, "UI_GetPopupListBox"); return NULL; }
 }
 
 void UI_SyncEditCursor(FlintContext* ctx, int pos) {
-   if (!ctx) return;
+      PROFILE_START(_pt);
+if (!ctx) { PROFILE_END_VAR(_pt, "UI_SyncEditCursor"); return ; }
    PromptState* ws = g_win32_prompt_state;
    if (ws) {
        strncpy(ws->filter, ctx->window.filter, sizeof(ws->filter)-1);
@@ -521,12 +569,13 @@ void UI_SyncEditCursor(FlintContext* ctx, int pos) {
 }
 
 bool UI_ApplyBackspaceToPopup(FlintContext* ctx) {
-    if (!ctx) return false;
+        PROFILE_START(_pt);
+if (!ctx) { PROFILE_END_VAR(_pt, "UI_ApplyBackspaceToPopup"); return false; }
     PromptState* ws = g_win32_prompt_state;
-    if (!ws) return false;
+    if (!ws) { PROFILE_END_VAR(_pt, "UI_ApplyBackspaceToPopup"); return false; }
     int len = (int)strlen(ctx->window.filter);
     int cur = ctx->window.filter_cursor;
-    if (cur <= 0 || len <= 0) return false;
+    if (cur <= 0 || len <= 0) { PROFILE_END_VAR(_pt, "UI_ApplyBackspaceToPopup"); return false; }
     int del = cur - 1;
     memmove(ctx->window.filter + del, ctx->window.filter + del + 1, len - del);
     ctx->window.filter_cursor = del;
@@ -538,5 +587,5 @@ bool UI_ApplyBackspaceToPopup(FlintContext* ctx) {
         ctx->prompt_callbacks.refresh(ctx->window.filter, lb);
     }
     UI_ApplyFilterToEdit(ctx);
-    return true;
+    { PROFILE_END_VAR(_pt, "UI_ApplyBackspaceToPopup"); return true; }
 }

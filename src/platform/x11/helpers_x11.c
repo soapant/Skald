@@ -53,7 +53,8 @@ static __thread int g_dblDepth = 0;
 static __thread Display* g_dblDpy = NULL;
 
 void x11_set_dbl_visual(Display* dpy, Visual* vis, Colormap cmap, int depth) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     g_dblVisual = vis;
     g_dblColormap = cmap;
     g_dblDepth = depth;
@@ -61,7 +62,8 @@ void x11_set_dbl_visual(Display* dpy, Visual* vis, Colormap cmap, int depth) {
     PROFILE_END_VAR(timer, "helpers_x11:x11_set_dbl_visual");
 }
 void x11_clear_dbl_visual(void) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     g_dblVisual = NULL;
     g_dblColormap = None;
     g_dblDepth = 0;
@@ -70,11 +72,13 @@ void x11_clear_dbl_visual(void) {
 }
 
 bool x11_is_own_window_name(const char* name) {
-    if (!name) return false;
-    return strncmp(name, "flint-", 6) == 0;
+        PROFILE_START(_pt);
+if (!name) { PROFILE_END_VAR(_pt, "x11_is_own_window_name"); return false; }
+    { PROFILE_END_VAR(_pt, "x11_is_own_window_name"); return strncmp(name, "flint-", 6) == 0; }
 }
 bool x11_get_drawable_visual(Display* dpy, Drawable d, Visual** visOut, Colormap* cmapOut, int* depthOut) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     XWindowAttributes attrs;
     if (XGetWindowAttributes(dpy, d, &attrs)) {
         if (visOut) *visOut = attrs.visual;
@@ -91,15 +95,16 @@ bool x11_get_drawable_visual(Display* dpy, Drawable d, Visual** visOut, Colormap
         return true;
     }
     PROFILE_END_VAR(timer, "helpers_x11:x11_get_drawable_visual");
-    return false;
+    { PROFILE_END_VAR(_pt, "x11_get_drawable_visual"); return false; }
 }
 
 static int xft_width(Display* dpy, XftFont* xf, const char* text, int len) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     XGlyphInfo ext;
     XftTextExtentsUtf8(dpy, xf, (FcChar8*)text, len, &ext);
     PROFILE_END_VAR(timer, "helpers_x11:xft_width");
-    return ext.xOff;
+    { PROFILE_END_VAR(_pt, "xft_width"); return ext.xOff; }
 }
 
 #define X11_FB_CACHE 24
@@ -110,7 +115,8 @@ static FcConfig* g_fb_config = NULL;
 static pthread_mutex_t g_fb_mtx = PTHREAD_MUTEX_INITIALIZER;
 
 static int x11_utf8_cp(const unsigned char* s, const unsigned char* end, int* clen) {
-    unsigned char c = *s;
+        PROFILE_START(_pt);
+unsigned char c = *s;
     int n;
     FcChar32 cp;
     if (c < 0x80) { n = 1; cp = c; }
@@ -124,34 +130,37 @@ static int x11_utf8_cp(const unsigned char* s, const unsigned char* end, int* cl
         cp = (cp << 6) | (FcChar32)(s[i] & 0x3F);
     }
     *clen = n;
-    return cp;
+    { PROFILE_END_VAR(_pt, "x11_utf8_cp"); return cp; }
 }
 
 static bool x11_font_has(XftFont* f, FcChar32 cp) {
-    if (!f || !f->pattern) return false;
-    if (cp < 0x21 || cp == 0x7F) return true;
+        PROFILE_START(_pt);
+if (!f || !f->pattern) { PROFILE_END_VAR(_pt, "x11_font_has"); return false; }
+    if (cp < 0x21 || cp == 0x7F) { PROFILE_END_VAR(_pt, "x11_font_has"); return true; }
     FcCharSet* cs = NULL;
-    if (FcPatternGetCharSet(f->pattern, FC_CHARSET, 0, &cs) != FcResultMatch || !cs) return true;
-    if (!FcCharSetHasChar(cs, cp)) return false;
+    if (FcPatternGetCharSet(f->pattern, FC_CHARSET, 0, &cs) != FcResultMatch || !cs) { PROFILE_END_VAR(_pt, "x11_font_has"); return true; }
+    if (!FcCharSetHasChar(cs, cp)) { PROFILE_END_VAR(_pt, "x11_font_has"); return false; }
     FT_Face face = XftLockFace(f);
     if (face) {
         bool ft = FcFreeTypeCharIndex(face, cp) != 0;
         XftUnlockFace(f);
         return ft;
     }
-    return true;
+    { PROFILE_END_VAR(_pt, "x11_font_has"); return true; }
 }
 
 static int x11_font_px(XftFont* xf, int px) {
-    if (px > 0) return px;
+        PROFILE_START(_pt);
+if (px > 0) { PROFILE_END_VAR(_pt, "x11_font_px"); return px; }
     double d = 0;
     if (xf && xf->pattern && FcPatternGetDouble(xf->pattern, FC_PIXEL_SIZE, 0, &d) == FcResultMatch && d > 0)
-        return (int)(d + 0.5);
-    return FontSize;
+        { PROFILE_END_VAR(_pt, "x11_font_px"); return (int)(d + 0.5); }
+    { PROFILE_END_VAR(_pt, "x11_font_px"); return FontSize; }
 }
 
 static XftFont* x11_open_fallback_at_locked(Display* dpy, FcChar32 cp, int px) {
-    XftFont* fb = NULL;
+        PROFILE_START(_pt);
+XftFont* fb = NULL;
     FcCharSet* cs = FcCharSetCreate();
     FcPattern* pat = FcPatternCreate();
     if (cs && pat) {
@@ -172,20 +181,21 @@ static XftFont* x11_open_fallback_at_locked(Display* dpy, FcChar32 cp, int px) {
     }
     if (pat) FcPatternDestroy(pat);
     if (cs) FcCharSetDestroy(cs);
-    return fb;
+    { PROFILE_END_VAR(_pt, "x11_open_fallback_at_locked"); return fb; }
 }
 
 static XftFont* x11_open_fallback_at_locked(Display* dpy, FcChar32 cp, int px);
 
 static XftFont* x11_fallback_for_locked(Display* dpy, FcChar32 cp, int px) {
-    if (!g_fb_config) g_fb_config = FcInitLoadConfigAndFonts();
-    if (!g_fb_config) return NULL;
+        PROFILE_START(_pt);
+if (!g_fb_config) g_fb_config = FcInitLoadConfigAndFonts();
+    if (!g_fb_config) { PROFILE_END_VAR(_pt, "x11_fallback_for_locked"); return NULL; }
     for (int i = 0; i < X11_FB_CACHE; i++) {
         if (g_fb_cache[i].f && g_fb_cache[i].dpy == dpy && g_fb_cache[i].cp == cp && g_fb_cache[i].px == px)
             return g_fb_cache[i].f;
     }
     XftFont* fb = x11_open_fallback_at_locked(dpy, cp, px > 0 ? px : FontSize);
-    if (!fb) return NULL;
+    if (!fb) { PROFILE_END_VAR(_pt, "x11_fallback_for_locked"); return NULL; }
     if (g_fb_cache[g_fb_next].f) {
         Display* odpy = g_fb_cache[g_fb_next].dpy;
         XLockDisplay(odpy);
@@ -197,25 +207,27 @@ static XftFont* x11_fallback_for_locked(Display* dpy, FcChar32 cp, int px) {
     g_fb_cache[g_fb_next].px = px;
     g_fb_cache[g_fb_next].f = fb;
     g_fb_next = (g_fb_next + 1) % X11_FB_CACHE;
-    return fb;
+    { PROFILE_END_VAR(_pt, "x11_fallback_for_locked"); return fb; }
 }
 
 static XftFont* x11_fallback_for(Display* dpy, FcChar32 cp, int px) {
-    pthread_mutex_lock(&g_fb_mtx);
+        PROFILE_START(_pt);
+pthread_mutex_lock(&g_fb_mtx);
     XftFont* f = x11_fallback_for_locked(dpy, cp, px);
     pthread_mutex_unlock(&g_fb_mtx);
-    return f;
+    { PROFILE_END_VAR(_pt, "x11_fallback_for"); return f; }
 }
 
 int x11_measure_utf8_fallback(Display* dpy, XftFont* xf, const char* s, int n, int px) {
-    if (!xf || !s || n <= 0) return 0;
+        PROFILE_START(_pt);
+if (!xf || !s || n <= 0) { PROFILE_END_VAR(_pt, "x11_measure_utf8_fallback"); return 0; }
     px = x11_font_px(xf, px);
     const unsigned char* b = (const unsigned char*)s;
     const unsigned char* end = b + n;
     bool all = true;
     const unsigned char* p = b;
     while (p < end) { int cl = 1; FcChar32 cp = x11_utf8_cp(p, end, &cl); if (!x11_font_has(xf, cp)) { all = false; break; } p += cl; }
-    if (all) return xft_width(dpy, xf, s, n);
+    if (all) { PROFILE_END_VAR(_pt, "x11_measure_utf8_fallback"); return xft_width(dpy, xf, s, n); }
     int total = 0;
     p = b;
     while (p < end) {
@@ -242,17 +254,19 @@ int x11_measure_utf8_fallback(Display* dpy, XftFont* xf, const char* s, int n, i
             p += cl;
         }
     }
-    return total;
+    { PROFILE_END_VAR(_pt, "x11_measure_utf8_fallback"); return total; }
 }
 
 static double x11_ink_center(Display* dpy, XftFont* f, const char* t, int n) {
-    XGlyphInfo e;
+        PROFILE_START(_pt);
+XGlyphInfo e;
     XftTextExtentsUtf8(dpy, f, (FcChar8*)t, n, &e);
-    return (double)e.yOff + (double)e.height / 2.0;
+    { PROFILE_END_VAR(_pt, "x11_ink_center"); return (double)e.yOff + (double)e.height / 2.0; }
 }
 
 int x11_draw_utf8_fallback(Display* dpy, XftDraw* xd, XftColor* color, int x, int y, XftFont* xf, const char* s, int n, int px) {
-    if (!xf || !xd || !s || n <= 0) return 0;
+        PROFILE_START(_pt);
+if (!xf || !xd || !s || n <= 0) { PROFILE_END_VAR(_pt, "x11_draw_utf8_fallback"); return 0; }
     px = x11_font_px(xf, px);
     const unsigned char* b = (const unsigned char*)s;
     const unsigned char* end = b + n;
@@ -290,11 +304,12 @@ int x11_draw_utf8_fallback(Display* dpy, XftDraw* xd, XftColor* color, int x, in
             p += cl;
         }
     }
-    return cx - x;
+    { PROFILE_END_VAR(_pt, "x11_draw_utf8_fallback"); return cx - x; }
 }
 
 void draw_wrapped_text(Display* dpy, XftDraw* xd, XftColor* color, FontHandle font, const char* text, int startY, char* centered_to, int xOffset, int boxWidth) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     if (!text) { PROFILE_END_VAR(timer, "helpers_x11:draw_wrapped_text"); return; }
     XftFont* xf = FH_TO_XFT(font);
     if (!xf) { PROFILE_END_VAR(timer, "helpers_x11:draw_wrapped_text"); return; }
@@ -363,7 +378,8 @@ void draw_wrapped_text(Display* dpy, XftDraw* xd, XftColor* color, FontHandle fo
 }
 
 void x11_xft_alloc_color(Display* dpy, Visual* vis, Colormap cmap, unsigned long hex, unsigned short alpha, XftColor* out) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     XRenderColor rc = {
         ((hex >> 16) & 0xFF) * 0x101,
         ((hex >> 8) & 0xFF) * 0x101,
@@ -375,7 +391,8 @@ void x11_xft_alloc_color(Display* dpy, Visual* vis, Colormap cmap, unsigned long
 }
 
 int x11_update_edit_scroll_offset(Display* dpy, XftFont* xf, const char* text, int text_len, int cursor, int width, int prev_scroll, int* out_cursor_x) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     int visible_w = width - PROMPT_EDIT_SCROLL_PAD;
     int cursor_x = 0;
     int text_w = 0;
@@ -400,40 +417,47 @@ int x11_update_edit_scroll_offset(Display* dpy, XftFont* xf, const char* text, i
     if (cursor_x - scroll > visible_w) scroll = cursor_x - visible_w;
     *out_cursor_x = cursor_x;
     PROFILE_END_VAR(timer, "helpers_x11:x11_update_edit_scroll_offset");
-    return scroll;
+    { PROFILE_END_VAR(_pt, "x11_update_edit_scroll_offset"); return scroll; }
 }
 
 int x11_font_row_height(int font_size) {
-    return font_size + PROMPT_ROW_H_BONUS;
+        PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "x11_font_row_height"); return font_size + PROMPT_ROW_H_BONUS; }
 }
 
 int x11_font_list_top(int ascent, int descent, int font_size) {
-    return font_size + PROMPT_LIST_TOP_BONUS;
+        PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "x11_font_list_top"); return font_size + PROMPT_LIST_TOP_BONUS; }
 }
 
 int x11_font_row_height_of(FontHandle font) {
-    XftFont* xf = FH_TO_XFT(font);
-    return x11_font_row_height(FontSize);
+        PROFILE_START(_pt);
+XftFont* xf = FH_TO_XFT(font);
+    { PROFILE_END_VAR(_pt, "x11_font_row_height_of"); return x11_font_row_height(FontSize); }
 }
 
 int x11_font_list_top_of(FontHandle font) {
-    XftFont* xf = FH_TO_XFT(font);
-    return x11_font_list_top(xf ? xf->ascent : 0, xf ? xf->descent : 0, FontSize);
+        PROFILE_START(_pt);
+XftFont* xf = FH_TO_XFT(font);
+    { PROFILE_END_VAR(_pt, "x11_font_list_top_of"); return x11_font_list_top(xf ? xf->ascent : 0, xf ? xf->descent : 0, FontSize); }
 }
 
 int x11_font_cursor_y(int ascent, int descent, int font_size, int box_top) {
-    int line_h = ascent + descent;
-    if (line_h <= 0 || font_size <= 0) return box_top;
-    return box_top + (line_h - font_size) / 2;
+        PROFILE_START(_pt);
+int line_h = ascent + descent;
+    if (line_h <= 0 || font_size <= 0) { PROFILE_END_VAR(_pt, "x11_font_cursor_y"); return box_top; }
+    { PROFILE_END_VAR(_pt, "x11_font_cursor_y"); return box_top + (line_h - font_size) / 2; }
 }
 
 int x11_font_cursor_y_of(FontHandle font, int box_top) {
-    XftFont* xf = FH_TO_XFT(font);
-    return x11_font_cursor_y(xf ? xf->ascent : 0, xf ? xf->descent : 0, FontSize, box_top);
+        PROFILE_START(_pt);
+XftFont* xf = FH_TO_XFT(font);
+    { PROFILE_END_VAR(_pt, "x11_font_cursor_y_of"); return x11_font_cursor_y(xf ? xf->ascent : 0, xf ? xf->descent : 0, FontSize, box_top); }
 }
 
 void x11_draw_edit_cursor(XftDraw* xd, XftColor* color, int cursor_x, int scroll, int width) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     int cursor_draw_x = PROMPT_EDIT_INSET + cursor_x - scroll;
     if (cursor_draw_x > width - PROMPT_X11_DEADCURSOR_CLAMP) cursor_draw_x = width - PROMPT_X11_DEADCURSOR_CLAMP;
     int cursor_y = PROMPT_X11_DEADCURSOR_Y;
@@ -446,7 +470,8 @@ void x11_draw_edit_cursor(XftDraw* xd, XftColor* color, int cursor_x, int scroll
 }
 
 const char* ListBoxItemDisplayText(ListBoxInfo* lb, int idx, char* trunc, size_t trunc_size) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     int raw = (idx >= 0 && lb && idx < lb->populated_count) ? lb->matching_indices[idx] : -1;
     const char* baseText = lb ? ListBoxInfo_Row(lb, idx) : NULL;
     if (lb && lb->alias_suffix_active && raw >= 0 && raw < lb->alias_suffix_count && lb->alias_suffix[raw]) {
@@ -455,7 +480,7 @@ const char* ListBoxItemDisplayText(ListBoxInfo* lb, int idx, char* trunc, size_t
         snprintf(trunc, trunc_size, "%.80s", baseText ? baseText : "");
     }
     PROFILE_END_VAR(timer, "helpers_x11:ListBoxItemDisplayText");
-    return trunc;
+    { PROFILE_END_VAR(_pt, "ListBoxItemDisplayText"); return trunc; }
 }
 
 #define IMG_CACHE_SLOTS 16
@@ -477,7 +502,8 @@ static unsigned long g_img_cache_tick = 0;
 static pthread_mutex_t g_img_cache_mtx = PTHREAD_MUTEX_INITIALIZER;
 
 void x11_img_cache_free_all(void) {
-    pthread_mutex_lock(&g_img_cache_mtx);
+        PROFILE_START(_pt);
+pthread_mutex_lock(&g_img_cache_mtx);
     for (int i = 0; i < IMG_CACHE_SLOTS; i++) {
         if (g_img_cache[i].argb) free(g_img_cache[i].argb);
         memset(&g_img_cache[i], 0, sizeof(g_img_cache[i]));
@@ -486,7 +512,8 @@ void x11_img_cache_free_all(void) {
 }
 
 static unsigned char* x11_img_cache_get(const char* key, int w, int h, long long mtime, long long size) {
-    for (int i = 0; i < IMG_CACHE_SLOTS; i++) {
+        PROFILE_START(_pt);
+for (int i = 0; i < IMG_CACHE_SLOTS; i++) {
         ImgCacheSlot* s = &g_img_cache[i];
         if (!s->argb) continue;
         if (s->w == w && s->h == h && s->mtime == mtime && s->size == size && strcmp(s->key, key) == 0) {
@@ -494,11 +521,12 @@ static unsigned char* x11_img_cache_get(const char* key, int w, int h, long long
             return s->argb;
         }
     }
-    return NULL;
+    { PROFILE_END_VAR(_pt, "x11_img_cache_get"); return NULL; }
 }
 
 static void x11_img_cache_put(const char* key, int w, int h, long long mtime, long long size, unsigned char* argb) {
-    if (!argb) return;
+        PROFILE_START(_pt);
+if (!argb) { PROFILE_END_VAR(_pt, "x11_img_cache_put"); return ; }
     int slot = -1;
     unsigned long oldest = ~0UL;
     for (int i = 0; i < IMG_CACHE_SLOTS; i++) {
@@ -519,7 +547,8 @@ static void x11_img_cache_put(const char* key, int w, int h, long long mtime, lo
 }
 
 bool Platform_DrawImageScaled(Display* dpy, XftDraw* xd, Visual* vis, const char* path, int x, int y, int tw, int th) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     if (!dpy || !xd || !path || !path[0]) { PROFILE_END_VAR(timer, "helpers_x11:Platform_DrawImageScaled"); return false; }
     struct stat st;
     if (stat(path, &st) != 0) { PROFILE_END_VAR(timer, "helpers_x11:Platform_DrawImageScaled"); return false; }
@@ -546,11 +575,12 @@ bool Platform_DrawImageScaled(Display* dpy, XftDraw* xd, Visual* vis, const char
     Drawable drw = XftDrawDrawable(xd);
     bool ok = x11_blit_argb(dpy, drw, vis, argb, cw, ch, x, y);
     PROFILE_END_VAR(timer, "helpers_x11:Platform_DrawImageScaled");
-    return ok;
+    { PROFILE_END_VAR(_pt, "Platform_DrawImageScaled"); return ok; }
 }
 
 static bool x11_blit_argb(Display* dpy, Drawable drw, Visual* vis, unsigned char* argb, int w, int h, int x, int y) {
-    if (!dpy || !argb || w <= 0 || h <= 0) return false;
+        PROFILE_START(_pt);
+if (!dpy || !argb || w <= 0 || h <= 0) { PROFILE_END_VAR(_pt, "x11_blit_argb"); return false; }
     if (!vis) vis = DefaultVisualOfScreen(DefaultScreenOfDisplay(dpy));
     XImage img;
     memset(&img, 0, sizeof(img));
@@ -570,9 +600,9 @@ static bool x11_blit_argb(Display* dpy, Drawable drw, Visual* vis, unsigned char
     img.green_mask = vis->green_mask;
     img.blue_mask = vis->blue_mask;
     img.obdata = NULL;
-    if (!XInitImage(&img)) return false;
+    if (!XInitImage(&img)) { PROFILE_END_VAR(_pt, "x11_blit_argb"); return false; }
     Pixmap pix = XCreatePixmap(dpy, drw, w, h, 32);
-    if (!pix) return false;
+    if (!pix) { PROFILE_END_VAR(_pt, "x11_blit_argb"); return false; }
     GC gc = XCreateGC(dpy, pix, 0, NULL);
     XPutImage(dpy, pix, gc, &img, 0, 0, 0, 0, w, h);
     XFreeGC(dpy, gc);
@@ -590,11 +620,12 @@ static bool x11_blit_argb(Display* dpy, Drawable drw, Visual* vis, unsigned char
         if (dst) XRenderFreePicture(dpy, dst);
     }
     XFreePixmap(dpy, pix);
-    return ok;
+    { PROFILE_END_VAR(_pt, "x11_blit_argb"); return ok; }
 }
 
 static unsigned char* x11_decode_image_argb(const char* path, int* out_w, int* out_h) {
-    if (!path || !path[0]) return NULL;
+        PROFILE_START(_pt);
+if (!path || !path[0]) { PROFILE_END_VAR(_pt, "x11_decode_image_argb"); return NULL; }
     int dst_w = *out_w;
     int dst_h = *out_h;
     if (dst_w <= 0) dst_w = 16;
@@ -637,7 +668,7 @@ static unsigned char* x11_decode_image_argb(const char* path, int* out_w, int* o
     }
 
     FILE* fp = fopen(path, "rb");
-    if (!fp) return false;
+    if (!fp) { PROFILE_END_VAR(_pt, "x11_decode_image_argb"); return false; }
 
     unsigned char sig[8];
     if (fread(sig, 1, 8, fp) != 8 || png_sig_cmp(sig, 0, 8) != 0) {
@@ -760,13 +791,14 @@ static unsigned char* x11_decode_image_argb(const char* path, int* out_w, int* o
 
     *out_w = dst_w;
     *out_h = dst_h;
-    return argb;
+    { PROFILE_END_VAR(_pt, "x11_decode_image_argb"); return argb; }
 }
 
 void DrawListBoxItemText(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap, FontHandle font,
                          XftColor* num_color, XftColor* body_color, XftColor* plain_color,
                          ListBoxInfo* lb,char* icon_path,int idx, int y, int text_x) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     XftFont* xf = FH_TO_XFT(font);
     if (!xf) { PROFILE_END_VAR(timer, "helpers_x11:DrawListBoxItemText"); return; }
     int XOffset = PROMPT_ITEM_TEXT_X;
@@ -806,36 +838,40 @@ void DrawListBoxItemText(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap, 
 }
 
 bool CursorBack(size_t* cursor, size_t text_len) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     if (*cursor == 0) { PROFILE_END_VAR(timer, "helpers_x11:CursorBack"); return false;  }
     (*cursor)--;
     PROFILE_END_VAR(timer, "helpers_x11:CursorBack");
-    return true;
+    { PROFILE_END_VAR(_pt, "CursorBack"); return true; }
 }
 
 bool CursorForward(size_t* cursor, size_t text_len) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     if (*cursor >= text_len) { PROFILE_END_VAR(timer, "helpers_x11:CursorForward"); return false; }
     (*cursor)++;
     PROFILE_END_VAR(timer, "helpers_x11:CursorForward");
-    return true;
+    { PROFILE_END_VAR(_pt, "CursorForward"); return true; }
 }
 
 static int x11_error_occurred = 0;
 
 static int dummy_x_error_handler(Display *dpy, XErrorEvent *error) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     if (error->error_code == BadWindow) {
         x11_error_occurred = 1;
         PROFILE_END_VAR(timer, "helpers_x11:dummy_x_error_handler");
         return 0;
     }
     PROFILE_END_VAR(timer, "helpers_x11:dummy_x_error_handler");
-    return 0;
+    { PROFILE_END_VAR(_pt, "dummy_x_error_handler"); return 0; }
 }
 
 pid_t GetWindowPid(Display* dpy, Window w) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     if (w == 0) { PROFILE_END_VAR(timer, "helpers_x11:GetWindowPid"); return -1; }
 
     Atom prop = XInternAtom(dpy, "_NET_WM_PID", True);
@@ -869,11 +905,12 @@ pid_t GetWindowPid(Display* dpy, Window w) {
     }
 
     PROFILE_END_VAR(timer, "helpers_x11:GetWindowPid");
-    return pid;
+    { PROFILE_END_VAR(_pt, "GetWindowPid"); return pid; }
 }
 
 void GetExeNameFromPid(pid_t pid, char* outExe, size_t maxLen) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     if (pid <= 0) {
         strncpy(outExe, "unknown", maxLen);
         PROFILE_END_VAR(timer, "helpers_x11:GetExeNameFromPid");
@@ -899,23 +936,26 @@ void GetExeNameFromPid(pid_t pid, char* outExe, size_t maxLen) {
 Window x11_create_window_ex_or(Display* dpy, int x, int y, int w, int h, unsigned long bg_color, const char* res_name, const char* res_class, long event_mask, bool override_redirect);
 
 Window x11_create_window_ex(Display* dpy, int x, int y, int w, int h, unsigned long bg_color, const char* res_name, const char* res_class, long event_mask) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     PROFILE_END_VAR(timer, "helpers_x11:x11_create_window_ex");
-    return x11_create_window_ex_or(dpy, x, y, w, h, bg_color, res_name, res_class, event_mask, false);
+    { PROFILE_END_VAR(_pt, "x11_create_window_ex"); return x11_create_window_ex_or(dpy, x, y, w, h, bg_color, res_name, res_class, event_mask, false); }
 }
 
 static void x11_apply_shape_rounded(Display* dpy, Window win, int w, int h, int radius);
 static unsigned int CornerAlpha(int x, int y, int w, int h, int R, unsigned int baseAlpha8);
 
 static bool x11_has_compositor(Display* dpy, int screen) {
-    char sel[32];
+        PROFILE_START(_pt);
+char sel[32];
     snprintf(sel, sizeof(sel), "_NET_WM_CM_S%d", screen);
     Atom a = XInternAtom(dpy, sel, False);
-    return XGetSelectionOwner(dpy, a) != None;
+    { PROFILE_END_VAR(_pt, "x11_has_compositor"); return XGetSelectionOwner(dpy, a) != None; }
 }
 
 Window x11_create_window_ex_or(Display* dpy, int x, int y, int w, int h, unsigned long bg_color, const char* res_name, const char* res_class, long event_mask, bool override_redirect) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     int screen = DefaultScreen(dpy);
     XVisualInfo vinfo;
     Visual* visual = NULL;
@@ -1013,11 +1053,12 @@ Window x11_create_window_ex_or(Display* dpy, int x, int y, int w, int h, unsigne
         x11_apply_shape_rounded(dpy, win, w, h, CornerRadius);
     }
     PROFILE_END_VAR(timer, "helpers_x11:x11_create_window_ex_or");
-    return win;
+    { PROFILE_END_VAR(_pt, "x11_create_window_ex_or"); return win; }
 }
 
 static void x11_apply_shape_rounded(Display* dpy, Window win, int w, int h, int radius) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     if (radius <= 0 || w <= 0 || h <= 0) { PROFILE_END_VAR(timer, "helpers_x11:x11_apply_shape_rounded"); return; }
     Pixmap mask = XCreatePixmap(dpy, win, w, h, 1);
     GC gc = XCreateGC(dpy, mask, 0, NULL);
@@ -1047,7 +1088,8 @@ static void x11_apply_shape_rounded(Display* dpy, Window win, int w, int h, int 
 static unsigned long x11_background_color_at(int x, int y, int w, int h);
 
 void x11_fill_rounded_rect(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap, unsigned long hex, unsigned short alpha16, int x, int y, int w, int h, int radius, int win_w, int win_h) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     if (!RoundedCorners || radius <= 0 || w <= 0 || h <= 0) {
         XftColor c;
         x11_xft_alloc_color(dpy, vis, cmap, hex, alpha16, &c);
@@ -1111,30 +1153,35 @@ void x11_fill_rounded_rect(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap
     PROFILE_END_VAR(timer, "helpers_x11:x11_fill_rounded_rect");
 }
 static unsigned long LerpHex(unsigned long a, unsigned long b, float t) {
-    return Color_Lerp(a, b, t);
+        PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "LerpHex"); return Color_Lerp(a, b, t); }
 }
 static unsigned long DeriveLighter(unsigned long base, float intensity) {
-    unsigned char r, g, b;
+        PROFILE_START(_pt);
+unsigned char r, g, b;
     Color_DeriveLighter((unsigned int)base, intensity, &r, &g, &b);
-    return ((unsigned long)r << 16) | ((unsigned long)g << 8) | (unsigned long)b;
+    { PROFILE_END_VAR(_pt, "DeriveLighter"); return ((unsigned long)r << 16) | ((unsigned long)g << 8) | (unsigned long)b; }
 }
 static unsigned int HashNoise(int x, int y) {
-    return Color_HashNoise(x, y);
+        PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "HashNoise"); return Color_HashNoise(x, y); }
 }
 
 static unsigned int x11_bg_channel_at(float c, int x, int y) {
-    float d = (float)(Color_BayerDither(x, y)) * 2.5f;
+        PROFILE_START(_pt);
+float d = (float)(Color_BayerDither(x, y)) * 2.5f;
     int v = (int)(c + d);
     if (v < 0) v = 0;
     if (v > 255) v = 255;
-    return (unsigned int)v;
+    { PROFILE_END_VAR(_pt, "x11_bg_channel_at"); return (unsigned int)v; }
 }
 
 static unsigned long x11_background_color_at(int x, int y, int w, int h) {
-    unsigned long base = Platform_GetDrawBgColor();
+        PROFILE_START(_pt);
+unsigned long base = Platform_GetDrawBgColor();
     if (!base) base = rgb_to_hex(COLOR_BG);
     unsigned int r = (base >> 16) & 0xFF, g = (base >> 8) & 0xFF, b = base & 0xFF;
-    if (!EnableShaders || ShaderPreset == 0) return (r << 16) | (g << 8) | b;
+    if (!EnableShaders || ShaderPreset == 0) { PROFILE_END_VAR(_pt, "x11_background_color_at"); return (r << 16) | (g << 8) | b; }
     unsigned long light = DeriveLighter(base, 1.0f);
     float gamma = Color_ShaderGamma(X11_SHADER_SMOOTHNESS);
     float t = 0.0f;
@@ -1182,16 +1229,17 @@ static unsigned long x11_background_color_at(int x, int y, int w, int h) {
         unsigned int cb = x11_bg_channel_at((float)(col & 0xFF), x, y);
         return ((unsigned long)cr << 16) | ((unsigned long)cg << 8) | (unsigned long)cb;
     }
-    return ((col >> 16) & 0xFF) << 16 | ((col >> 8) & 0xFF) << 8 | (col & 0xFF);
+    { PROFILE_END_VAR(_pt, "x11_background_color_at"); return ((col >> 16) & 0xFF) << 16 | ((col >> 8) & 0xFF) << 8 | (col & 0xFF); }
 }
 
 static unsigned int CornerAlpha(int x, int y, int w, int h, int R, unsigned int baseAlpha8) {
-    float cx, cy;
+        PROFILE_START(_pt);
+float cx, cy;
     if (x < R && y < R) { cx = (float)R; cy = (float)R; }
     else if (x >= w - R && y < R) { cx = (float)(w - R - 1); cy = (float)R; }
     else if (x < R && y >= h - R) { cx = (float)R; cy = (float)(h - R - 1); }
     else if (x >= w - R && y >= h - R) { cx = (float)(w - R - 1); cy = (float)(h - R - 1); }
-    else return baseAlpha8;
+    else { PROFILE_END_VAR(_pt, "CornerAlpha"); return baseAlpha8; }
 
     const int SS = 16;
     int inside = 0;
@@ -1205,13 +1253,14 @@ static unsigned int CornerAlpha(int x, int y, int w, int h, int R, unsigned int 
         }
     }
     const int total = SS * SS;
-    if (inside <= 0) return 0;
-    if (inside >= total) return baseAlpha8;
-    return (unsigned int)((float)baseAlpha8 * ((float)inside / (float)total) + 0.5f);
+    if (inside <= 0) { PROFILE_END_VAR(_pt, "CornerAlpha"); return 0; }
+    if (inside >= total) { PROFILE_END_VAR(_pt, "CornerAlpha"); return baseAlpha8; }
+    { PROFILE_END_VAR(_pt, "CornerAlpha"); return (unsigned int)((float)baseAlpha8 * ((float)inside / (float)total) + 0.5f); }
 }
 
 void x11_free_cached_background(void) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     for (int i = 0; i < BG_SLOT_COUNT; i++) {
         if (g_bg_slots[i].used && g_bg_slots[i].pm != None && g_bg_slots[i].dpy) {
             XFreePixmap(g_bg_slots[i].dpy, g_bg_slots[i].pm);
@@ -1225,7 +1274,8 @@ void x11_free_cached_background(void) {
 }
 
 static void x11_generate_background_pixels(uint32_t* img_data, int bytes_per_line, int w, int h, int R, unsigned int baseAlpha8, unsigned long base, unsigned long fill) {
-    uint32_t *row;
+        PROFILE_START(_pt);
+uint32_t *row;
     unsigned int r = (base >> 16) & 0xFF, g = (base >> 8) & 0xFF, b = base & 0xFF;
     float _gamma = Color_ShaderGamma(X11_SHADER_SMOOTHNESS);
     #define _PM(a, c) ((unsigned int)(((unsigned long)(c) * (unsigned long)(a) + 127UL) / 255UL))
@@ -1346,22 +1396,25 @@ typedef struct {
 } BgKey;
 
 static bool bg_slot_matches(const BgSlot* slot, const BgKey* k) {
-    return slot->used && slot->dpy != NULL && slot->base == k->base
+        PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "bg_slot_matches"); return slot->used && slot->dpy != NULL && slot->base == k->base
         && slot->preset == k->preset && slot->shaders == k->shaders && slot->radius == k->radius
         && slot->rounded == k->rounded && slot->intensity == k->intensity
         && slot->brightness == k->brightness && slot->smoothness == k->smoothness
-        && slot->w == k->w && slot->h == k->h;
+        && slot->w == k->w && slot->h == k->h; }
 }
 
 static Pixmap bg_cache_find(Display* dpy, const BgKey* k) {
-    for (int i = 0; i < BG_SLOT_COUNT; i++) {
+        PROFILE_START(_pt);
+for (int i = 0; i < BG_SLOT_COUNT; i++) {
         if (g_bg_slots[i].dpy == dpy && bg_slot_matches(&g_bg_slots[i], k)) return g_bg_slots[i].pm;
     }
-    return None;
+    { PROFILE_END_VAR(_pt, "bg_cache_find"); return None; }
 }
 
 static void bg_cache_store(Display* dpy, Pixmap pm, const BgKey* k) {
-    BgSlot* slot = &g_bg_slots[g_bg_slot_next];
+        PROFILE_START(_pt);
+BgSlot* slot = &g_bg_slots[g_bg_slot_next];
     g_bg_slot_next = (g_bg_slot_next + 1) % BG_SLOT_COUNT;
     if (slot->used && slot->pm != None) XFreePixmap(slot->dpy, slot->pm);
     slot->used = true;
@@ -1373,15 +1426,16 @@ static void bg_cache_store(Display* dpy, Pixmap pm, const BgKey* k) {
 }
 
 static Pixmap x11_create_background_pixmap(Display* dpy, Window win, int w, int h, XWindowAttributes* attrs, unsigned long base, unsigned int baseAlpha8) {
-    Visual* vis = attrs->visual;
+        PROFILE_START(_pt);
+Visual* vis = attrs->visual;
     int depth = attrs->depth;
-    if (depth != 32) return None;
+    if (depth != 32) { PROFILE_END_VAR(_pt, "x11_create_background_pixmap"); return None; }
     bool hasAlpha = true;
     bool rounded = RoundedCorners && CornerRadius > 0 && hasAlpha;
     int R = rounded ? CornerRadius : 0;
     if (R > w/2) R = w/2; if (R > h/2) R = h/2;
     Pixmap pm = XCreatePixmap(dpy, win, w, h, depth);
-    if (!pm) return None;
+    if (!pm) { PROFILE_END_VAR(_pt, "x11_create_background_pixmap"); return None; }
     size_t bpl = (((size_t)w * (size_t)depth + 7u) / 8u + 3u) & ~(size_t)3u;
     char* pixbuf = (char*)calloc(1, bpl * (size_t)h);
     if (!pixbuf) { XFreePixmap(dpy, pm); return None; }
@@ -1396,11 +1450,12 @@ static Pixmap x11_create_background_pixmap(Display* dpy, Window win, int w, int 
     XPutImage(dpy, pm, gc, img, 0, 0, 0, 0, w, h);
     XFreeGC(dpy, gc);
     XDestroyImage(img);
-    return pm;
+    { PROFILE_END_VAR(_pt, "x11_create_background_pixmap"); return pm; }
 }
 
 Pixmap x11_get_cached_background(Display* dpy, Window win, int w, int h) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     if (!dpy || w <= 0 || h <= 0) { PROFILE_END_VAR(timer, "helpers_x11:x11_get_cached_background"); return None; }
     unsigned long base = Platform_GetDrawBgColor();
     if (!base) base = rgb_to_hex(COLOR_BG);
@@ -1432,11 +1487,12 @@ Pixmap x11_get_cached_background(Display* dpy, Window win, int w, int h) {
     if (!pm) { PROFILE_END_VAR(timer, "helpers_x11:x11_get_cached_background"); return None; }
     bg_cache_store(dpy, pm, &k);
     PROFILE_END_VAR(timer, "helpers_x11:x11_get_cached_background");
-    return pm;
+    { PROFILE_END_VAR(_pt, "x11_get_cached_background"); return pm; }
 }
 
 void x11_draw_background_to_drawable(Display* dpy, Drawable drw, int w, int h) {
-    if (!dpy || w <= 0 || h <= 0) return;
+        PROFILE_START(_pt);
+if (!dpy || w <= 0 || h <= 0) { PROFILE_END_VAR(_pt, "x11_draw_background_to_drawable"); return ; }
     unsigned long base = Platform_GetDrawBgColor();
     if (!base) base = rgb_to_hex(COLOR_BG);
     int preset = ShaderPreset;
@@ -1482,7 +1538,7 @@ bool hasAlpha = (depth == 32);
     }
     size_t bpl = (((size_t)w * (size_t)depth + 7u) / 8u + 3u) & ~(size_t)3u;
     char* pixbuf = (char*)calloc(1, bpl * (size_t)h);
-    if (!pixbuf) return;
+    if (!pixbuf) { PROFILE_END_VAR(_pt, "x11_draw_background_to_drawable"); return ; }
     XImage* img = XCreateImage(dpy, vis, depth, ZPixmap, 0, pixbuf, w, h, 32, (int)bpl);
     if (!img) { free(pixbuf); return; }
     unsigned int r = cr0, g = cg0, b = cb0;
@@ -1495,7 +1551,8 @@ bool hasAlpha = (depth == 32);
 }
 
 void x11_draw_background(Display* dpy, Window win, int w, int h) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     const char* presetName = "solid";
     if (!EnableShaders || ShaderPreset == 0) presetName = "solid";
     else if (ShaderPreset == 1) presetName = "vertical";
@@ -1516,14 +1573,16 @@ void x11_draw_background(Display* dpy, Window win, int w, int h) {
 }
 
 void x11_draw_selection_background(Display* dpy, XftDraw* xd, Visual* vis, Colormap cmap, int x, int y, int w, int h, unsigned long baseHex) {
-    if (w <= 0 || h <= 0) return;
+        PROFILE_START(_pt);
+if (w <= 0 || h <= 0) { PROFILE_END_VAR(_pt, "x11_draw_selection_background"); return ; }
     XftColor c; x11_xft_alloc_color(dpy, vis, cmap, baseHex, OpacityAlpha16(), &c);
     XftDrawRect(xd, &c, x, y, w, h);
     XftColorFree(dpy, vis, cmap, &c);
 }
 
 Window x11_create_prompt_window(Display* dpy, int x, int y, int w, int h) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     unsigned long bg = rgb_to_hex(COLOR_BG);
     PROFILE_END_VAR(timer, "helpers_x11:x11_create_prompt_window");
     if (niri_is_active()) {
@@ -1546,10 +1605,11 @@ Window x11_create_prompt_window(Display* dpy, int x, int y, int w, int h) {
     sh->max_height = h;
     XSetWMNormalHints(dpy, win, sh);
     XFree(sh);
-    return win;
+    { PROFILE_END_VAR(_pt, "x11_create_prompt_window"); return win; }
 }
 Window x11_create_edit_popup_window(Display* dpy, int x, int y, int w, int h) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     unsigned long bg = rgb_to_hex(COLOR_BG);
     PROFILE_END_VAR(timer, "helpers_x11:x11_create_edit_popup_window");
     if (niri_is_active()) {
@@ -1572,17 +1632,19 @@ Window x11_create_edit_popup_window(Display* dpy, int x, int y, int w, int h) {
     sh->max_height = h;
     XSetWMNormalHints(dpy, win, sh);
     XFree(sh);
-    return win;
+    { PROFILE_END_VAR(_pt, "x11_create_edit_popup_window"); return win; }
 }
 void x11_apply_click_through(Display* dpy, Window win) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     if (!dpy || win == None) { PROFILE_END_VAR(timer, "helpers_x11:x11_apply_click_through"); return; }
     XShapeCombineRectangles(dpy, win, ShapeInput, 0, 0, NULL, 0, ShapeSet, Unsorted);
     PROFILE_END_VAR(timer, "helpers_x11:x11_apply_click_through");
 }
 
 Window x11_create_display_message_window(Display* dpy, int x, int y, int w, int h, bool clickable) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     unsigned long bg = 0;
     if (!Platform_GetTransparentWindow()) {
         bg = Platform_GetDrawBgColor();
@@ -1594,11 +1656,12 @@ Window x11_create_display_message_window(Display* dpy, int x, int y, int w, int 
     if (win != None && !clickable) x11_apply_click_through(dpy, win);
     PROFILE_END_VAR(timer, "helpers_x11:x11_create_display_message_window");
     Platform_SetDrawContext(NULL,NULL,NULL,0);
-    return win;
+    { PROFILE_END_VAR(_pt, "x11_create_display_message_window"); return win; }
 }
 
 XftDraw* x11_create_xft_draw(Display* dpy, Window win) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     Visual* vis = NULL; Colormap cmap = 0; int depth = 0;
     if (x11_get_drawable_visual(dpy, win, &vis, &cmap, &depth)) {
         PROFILE_END_VAR(timer, "helpers_x11:x11_create_xft_draw");
@@ -1606,11 +1669,12 @@ XftDraw* x11_create_xft_draw(Display* dpy, Window win) {
     }
     int screen = DefaultScreen(dpy);
     PROFILE_END_VAR(timer, "helpers_x11:x11_create_xft_draw");
-    return XftDrawCreate(dpy, win, DefaultVisual(dpy, screen), DefaultColormap(dpy, screen));
+    { PROFILE_END_VAR(_pt, "x11_create_xft_draw"); return XftDrawCreate(dpy, win, DefaultVisual(dpy, screen), DefaultColormap(dpy, screen)); }
 }
 
 gchar* FindPlayerBusName(GDBusConnection *conn) {
-    GVariant *reply = g_dbus_connection_call_sync(conn,
+        PROFILE_START(_pt);
+GVariant *reply = g_dbus_connection_call_sync(conn,
         "org.freedesktop.DBus", "/org/freedesktop/DBus", "org.freedesktop.DBus",
         "ListNames", NULL, G_VARIANT_TYPE("(as)"), G_DBUS_CALL_FLAGS_NONE, -1, NULL, NULL);
     
@@ -1628,11 +1692,12 @@ gchar* FindPlayerBusName(GDBusConnection *conn) {
         g_variant_iter_free(iter);
         g_variant_unref(reply);
     }
-    return player_name;
+    { PROFILE_END_VAR(_pt, "FindPlayerBusName"); return player_name; }
 }
 
 void UpdateTextCaret(void) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     WindowManager* wm = WindowManager_Get();
     Popup* top = wm ? WindowManager_GetTopPopup(wm) : NULL;
     if (top && top->vtable && top->vtable->on_render) top->vtable->on_render(top);

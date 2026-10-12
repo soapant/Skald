@@ -16,6 +16,7 @@
 #include "platform/widget.h"
 #include "platform/render_thread.h"
 
+#include "core/timer.h"
 #define MSG_AUTO_WRAP_MAX_W 900
 #define MSG_AUTO_WRAP_MAX_H 600
 
@@ -27,19 +28,21 @@ static int g_win32_msg_w = 0;
 static int g_win32_msg_h = 0;
 
 static wchar_t* msg_widen(const char* in, int* out_len) {
-    if (out_len) *out_len = 0;
-    if (!in || !in[0]) return NULL;
+        PROFILE_START(_pt);
+if (out_len) *out_len = 0;
+    if (!in || !in[0]) { PROFILE_END_VAR(_pt, "msg_widen"); return NULL; }
     int need = MultiByteToWideChar(CP_UTF8, 0, in, -1, NULL, 0);
-    if (need <= 0) return NULL;
+    if (need <= 0) { PROFILE_END_VAR(_pt, "msg_widen"); return NULL; }
     wchar_t* w = (wchar_t*)malloc((size_t)need * sizeof(wchar_t));
-    if (!w) return NULL;
+    if (!w) { PROFILE_END_VAR(_pt, "msg_widen"); return NULL; }
     if (MultiByteToWideChar(CP_UTF8, 0, in, -1, w, need) <= 0) { free(w); return NULL; }
     if (out_len) *out_len = need - 1;
-    return w;
+    { PROFILE_END_VAR(_pt, "msg_widen"); return w; }
 }
 
 LRESULT CALLBACK DisplayMessageProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-  FadeWindowData* data = (FadeWindowData*)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
+    PROFILE_START(_pt);
+FadeWindowData* data = (FadeWindowData*)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
     FlintContext_Get()->window.hDisplayMessage = WH_FROM_HWND(hwnd);
 
     switch (msg) {
@@ -152,14 +155,15 @@ LRESULT CALLBACK DisplayMessageProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM l
       return 0;
     }
     }
-  return DefWindowProcA(hwnd, msg, wParam, lParam);
+  { PROFILE_END_VAR(_pt, "DisplayMessageProc"); return DefWindowProcA(hwnd, msg, wParam, lParam); }
 }
 
 static FadeWindowData* s_msg_show_data = NULL;
 static bool s_msg_show_no_bg = false;
 
 bool Platform_MessagePopupShowWindow(Popup* self, int x, int y, int w, int h) {
-  (void)self;
+    PROFILE_START(_pt);
+(void)self;
   if (!s_msg_show_data) { log_error("MSG Platform_MessagePopupShowWindow null payload"); return false; }
   HINSTANCE hInstance = GetModuleHandle(NULL);
   DWORD exStyle = WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED | WS_EX_NOACTIVATE;
@@ -189,11 +193,12 @@ if (!s_msg_show_no_bg) {
              vr.left, vr.top, vr.right, vr.bottom,
              (unsigned long)GetWindowLongA(hPopupWnd, GWL_EXSTYLE));
   }
-  return true;
+  { PROFILE_END_VAR(_pt, "Platform_MessagePopupShowWindow"); return true; }
 }
 
 void Platform_MessagePopupHideWindow(Popup* self) {
-  (void)self;
+    PROFILE_START(_pt);
+(void)self;
   HWND hMsg = WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage);
   if (hMsg != NULL && IsWindow(hMsg)) {
     DestroyWindow(hMsg);
@@ -202,21 +207,25 @@ void Platform_MessagePopupHideWindow(Popup* self) {
 }
 
 void Platform_MessagePopupRender(Popup* self) {
-  (void)self;
+    PROFILE_START(_pt);
+(void)self;
 }
 
 void Platform_MessagePopupDestroyWindow(Popup* self) {
-  Platform_MessagePopupHideWindow(self);
+    PROFILE_START(_pt);
+Platform_MessagePopupHideWindow(self);
 }
 
 bool Platform_MessagePopupOnKey(Popup* self, const PopupKeyEvent* key) {
-  (void)self;
+    PROFILE_START(_pt);
+(void)self;
   (void)key;
-  return false;
+  { PROFILE_END_VAR(_pt, "Platform_MessagePopupOnKey"); return false; }
 }
 
 void Platform_DisplayMessage(const char* message, int centerX, int centerY, bool no_bg, int w, int h, int maxWidth, int maxHeight, double timeout, ColorRef color, void (*render)(void)) {
-  int useMaxW = maxWidth;
+    PROFILE_START(_pt);
+int useMaxW = maxWidth;
   int useMaxH = maxHeight;
   if (w > 0 && h > 0) {
     if (useMaxW <= 0 || w > useMaxW) useMaxW = w;
@@ -260,15 +269,17 @@ typedef struct {
 static HoverWidgetSlot g_hover_widgets[HOVER_WIDGET_MAX];
 
 static int HoverWidgetFindLocked(const char* key) {
-  for (int i = 0; i < HOVER_WIDGET_MAX; i++) {
+    PROFILE_START(_pt);
+for (int i = 0; i < HOVER_WIDGET_MAX; i++) {
     if (g_hover_widgets[i].w && !g_hover_widgets[i].dead && strcmp(g_hover_widgets[i].key, key) == 0) return i;
   }
-  return -1;
+  { PROFILE_END_VAR(_pt, "HoverWidgetFindLocked"); return -1; }
 }
 
 static void HoverWidgetFrame(void* ud) {
-  HoverWidgetSlot* s = (HoverWidgetSlot*)ud;
-  if (!s || !s->w || s->dead) return;
+    PROFILE_START(_pt);
+HoverWidgetSlot* s = (HoverWidgetSlot*)ud;
+  if (!s || !s->w || s->dead) { PROFILE_END_VAR(_pt, "HoverWidgetFrame"); return ; }
   if (s->render) s->render(s->ud);
 }
 
@@ -290,7 +301,8 @@ typedef struct {
 static void hover_widget_apply(const char* key, void (*render)(void* ud), void* ud,
                                int x, int y, int w, int h, int fps, bool no_bg,
                                unsigned long bg_hex, void (*release)(void* ud), void* release_ud) {
-  int idx = HoverWidgetFindLocked(key);
+    PROFILE_START(_pt);
+int idx = HoverWidgetFindLocked(key);
   if (idx >= 0) {
     HoverWidgetSlot* s = &g_hover_widgets[idx];
     void (*old_release)(void*) = s->release;
@@ -345,8 +357,9 @@ static void hover_widget_apply(const char* key, void (*render)(void* ud), void* 
 }
 
 static void hover_widget_hide_apply(const char* key) {
-  int idx = HoverWidgetFindLocked(key);
-  if (idx < 0) return;
+    PROFILE_START(_pt);
+int idx = HoverWidgetFindLocked(key);
+  if (idx < 0) { PROFILE_END_VAR(_pt, "hover_widget_hide_apply"); return ; }
   PlatformWidget* w = g_hover_widgets[idx].w;
   void (*release)(void*) = g_hover_widgets[idx].release;
   void* release_ud = g_hover_widgets[idx].release_ud;
@@ -359,8 +372,9 @@ static void hover_widget_hide_apply(const char* key) {
 }
 
 static void hover_widget_dispatch(void* ud) {
-  HoverWidgetRequest* r = (HoverWidgetRequest*)ud;
-  if (!r) return;
+    PROFILE_START(_pt);
+HoverWidgetRequest* r = (HoverWidgetRequest*)ud;
+  if (!r) { PROFILE_END_VAR(_pt, "hover_widget_dispatch"); return ; }
   if (r->op == HOVER_OP_HIDE) {
     hover_widget_hide_apply(r->key);
   } else {
@@ -373,14 +387,15 @@ static void hover_widget_dispatch(void* ud) {
 static bool hover_widget_post(int op, const char* key, void (*render)(void* ud), void* ud,
                               int x, int y, int w, int h, int fps, bool no_bg,
                               unsigned long bg_hex, void (*release)(void* ud), void* release_ud) {
-  if (Platform_RenderThread_IsCurrentThread()) {
+    PROFILE_START(_pt);
+if (Platform_RenderThread_IsCurrentThread()) {
     if (op == HOVER_OP_HIDE) hover_widget_hide_apply(key);
     else hover_widget_apply(key, render, ud, x, y, w, h, fps, no_bg, bg_hex, release, release_ud);
     return true;
   }
-  if (!Platform_RenderThread_IsRunning()) return false;
+  if (!Platform_RenderThread_IsRunning()) { PROFILE_END_VAR(_pt, "hover_widget_post"); return false; }
   HoverWidgetRequest* r = (HoverWidgetRequest*)calloc(1, sizeof(*r));
-  if (!r) return false;
+  if (!r) { PROFILE_END_VAR(_pt, "hover_widget_post"); return false; }
   snprintf(r->key, sizeof(r->key), "%s", key);
   r->op = op;
   r->render = render;
@@ -390,14 +405,15 @@ static bool hover_widget_post(int op, const char* key, void (*render)(void* ud),
   r->bg_hex = bg_hex;
   r->release = release;
   r->release_ud = release_ud;
-  if (Platform_RenderThread_Post(hover_widget_dispatch, r)) return true;
+  if (Platform_RenderThread_Post(hover_widget_dispatch, r)) { PROFILE_END_VAR(_pt, "hover_widget_post"); return true; }
   free(r);
-  return false;
+  { PROFILE_END_VAR(_pt, "hover_widget_post"); return false; }
 }
 
 void Platform_HoverWidgetHide(const char* key) {
-  if (!key || !key[0]) return;
-  if (HoverWidgetFindLocked(key) < 0) return;
+    PROFILE_START(_pt);
+if (!key || !key[0]) { PROFILE_END_VAR(_pt, "Platform_HoverWidgetHide"); return ; }
+  if (HoverWidgetFindLocked(key) < 0) { PROFILE_END_VAR(_pt, "Platform_HoverWidgetHide"); return ; }
   if (!hover_widget_post(HOVER_OP_HIDE, key, NULL, NULL, 0, 0, 0, 0, 0, false, 0, NULL, NULL)) {
     hover_widget_hide_apply(key);
   }
@@ -406,15 +422,17 @@ void Platform_HoverWidgetHide(const char* key) {
 void Platform_HoverWidgetShow(const char* key, void (*render)(void* ud), void* ud, int x, int y,
                               int w, int h, int fps, bool no_bg, unsigned long bg_hex,
                               void (*release)(void* ud), void* release_ud) {
-  if (!key || !key[0] || w <= 0 || h <= 0) return;
+    PROFILE_START(_pt);
+if (!key || !key[0] || w <= 0 || h <= 0) { PROFILE_END_VAR(_pt, "Platform_HoverWidgetShow"); return ; }
   if (!hover_widget_post(HOVER_OP_SHOW, key, render, ud, x, y, w, h, fps, no_bg, bg_hex, release, release_ud)) {
     if (release) release(release_ud);
   }
 }
 
 void Platform_HoverMessageRelease(const char* key) {
-  if (!key || !key[0]) return;
-  if (strcmp(g_hover_key, key) != 0) return;
+    PROFILE_START(_pt);
+if (!key || !key[0]) { PROFILE_END_VAR(_pt, "Platform_HoverMessageRelease"); return ; }
+  if (strcmp(g_hover_key, key) != 0) { PROFILE_END_VAR(_pt, "Platform_HoverMessageRelease"); return ; }
   HWND hw = WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage);
   if (hw && IsWindow(hw)) {
     KillTimer(hw, 999);
@@ -425,7 +443,8 @@ void Platform_HoverMessageRelease(const char* key) {
 }
 
 void Platform_HoverMessage(const char* key, const char* message, int centerX, int centerY, int w, int h, int maxWidth, int maxHeight, ColorRef color,bool no_bg) {
-  HWND existing = WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage);
+    PROFILE_START(_pt);
+HWND existing = WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage);
   if (g_hover_key[0] && strcmp(g_hover_key, key) == 0 && existing && IsWindow(existing)) {
     SetWindowPos(existing, HWND_TOPMOST, centerX - g_win32_msg_w / 2, centerY - g_win32_msg_h / 2,
                  g_win32_msg_w, g_win32_msg_h, SWP_NOACTIVATE | SWP_SHOWWINDOW);
@@ -470,7 +489,8 @@ if (maxWidth > 0 && winWidth > maxWidth) winWidth = maxWidth;
 }
 
 void Platform_DisplayMessageAnchored(const char* message, int rect_x, int rect_y, int rect_w, int rect_h, int h_slot, int v_slot, int gap, int outward, int maxWidth, int maxHeight, double timeout, ColorRef color,bool no_bg) {
-  if (!message || !message[0]) return;
+    PROFILE_START(_pt);
+if (!message || !message[0]) { PROFILE_END_VAR(_pt, "Platform_DisplayMessageAnchored"); return ; }
   if (maxWidth <= 0) maxWidth = MSG_AUTO_WRAP_MAX_W;
   if (maxHeight <= 0) maxHeight = MSG_AUTO_WRAP_MAX_H;
 
@@ -500,7 +520,8 @@ void Platform_DisplayMessageAnchored(const char* message, int rect_x, int rect_y
 }
 
 void Platform_CreateDisplayMessageWindow(const char* message, int centerX, int centerY, int maxWidth, int maxHeight, double timeout, ColorRef color, bool no_bg, void (*render)(void)) {
-  log_info("MSG create enter msg='%s' center=(%d,%d) max=(%d,%d) timeout=%g no_bg=%d render=%p",
+    PROFILE_START(_pt);
+log_info("MSG create enter msg='%s' center=(%d,%d) max=(%d,%d) timeout=%g no_bg=%d render=%p",
            message ? message : "(null)", centerX, centerY, maxWidth, maxHeight, timeout, no_bg ? 1 : 0, (void*)render);
   DestroyWindow(WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage));
   KillTimer(WH_TO_HWND(FlintContext_Get()->window.hDisplayMessage),999);
@@ -561,5 +582,5 @@ void Platform_CreateDisplayMessageWindow(const char* message, int centerX, int c
     return;
   }
   log_info("MSG show ok text=(%d,%d) win=(%d,%d) at (%d,%d)", textWidth, textHeight, winWidth, winHeight, topLeftX, topLeftY);
-  return;
+  { PROFILE_END_VAR(_pt, "Platform_CreateDisplayMessageWindow"); return ; }
 }

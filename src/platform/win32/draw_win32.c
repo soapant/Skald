@@ -23,16 +23,17 @@ static __thread HFONT g_sizeFonts[WIN32_SIZE_FONT_SLOTS] = {NULL};
 static __thread int g_sizeFontSizes[WIN32_SIZE_FONT_SLOTS] = {0};
 
 static wchar_t* win32_widen(const char* in, int in_len, int* out_len) {
-    if (out_len) *out_len = 0;
-    if (!in || in_len <= 0) return NULL;
+        PROFILE_START(_pt);
+if (out_len) *out_len = 0;
+    if (!in || in_len <= 0) { PROFILE_END_VAR(_pt, "win32_widen"); return NULL; }
     int n = MultiByteToWideChar(CP_UTF8, 0, in, in_len, NULL, 0);
-    if (n <= 0) return NULL;
+    if (n <= 0) { PROFILE_END_VAR(_pt, "win32_widen"); return NULL; }
     wchar_t* w = (wchar_t*)malloc((size_t)n * sizeof(wchar_t) + sizeof(wchar_t));
-    if (!w) return NULL;
+    if (!w) { PROFILE_END_VAR(_pt, "win32_widen"); return NULL; }
     if (MultiByteToWideChar(CP_UTF8, 0, in, in_len, w, n) <= 0) { free(w); return NULL; }
     w[n] = 0;
     if (out_len) *out_len = n;
-    return w;
+    { PROFILE_END_VAR(_pt, "win32_widen"); return w; }
 }
 
 static __thread HDC g_draw_hdc = NULL;
@@ -40,16 +41,18 @@ static __thread HDC g_draw_hdc = NULL;
 static HFONT win32_sized_font(int size);
 
 static bool win32_text_is_symbolic(const wchar_t* wide, int len) {
-    for (int i = 0; i < len; i++) {
+        PROFILE_START(_pt);
+for (int i = 0; i < len; i++) {
         unsigned int c = (unsigned int)wide[i];
         if (c == 0xFE0F || c == 0xFE0E) continue;
         if (c > 0x7F) return true;
     }
-    return false;
+    { PROFILE_END_VAR(_pt, "win32_text_is_symbolic"); return false; }
 }
 
 static bool win32_font_covers(HFONT f, const wchar_t* wide, int len) {
-    if (!f || !wide || len <= 0) return false;
+        PROFILE_START(_pt);
+if (!f || !wide || len <= 0) { PROFILE_END_VAR(_pt, "win32_font_covers"); return false; }
     HFONT old = (HFONT)SelectObject(g_draw_hdc, f);
     bool ok = true;
     for (int i = 0; i < len; i++) {
@@ -62,7 +65,7 @@ static bool win32_font_covers(HFONT f, const wchar_t* wide, int len) {
         if (r == GDI_ERROR || gi == 0xFFFF || gi == 0) { ok = false; break; }
     }
     SelectObject(g_draw_hdc, old);
-    return ok;
+    { PROFILE_END_VAR(_pt, "win32_font_covers"); return ok; }
 }
 
 #define WIN32_SYM_SLOTS 4
@@ -73,7 +76,8 @@ static int g_sym_len[WIN32_SYM_SLOTS] = {0};
 static ULONGLONG g_sym_tick = 0;
 
 static HFONT win32_symbol_font(int size, const wchar_t* wide, int len) {
-    if (len > 8) len = 8;
+        PROFILE_START(_pt);
+if (len > 8) len = 8;
     for (int i = 0; i < WIN32_SYM_SLOTS; i++) {
         if (g_sym_fonts[i] && g_sym_sizes[i] == size && g_sym_len[i] == len &&
             memcmp(g_sym_cp[i], wide, (size_t)len * sizeof(wchar_t)) == 0)
@@ -89,7 +93,7 @@ static HFONT win32_symbol_font(int size, const wchar_t* wide, int len) {
         if (win32_font_covers(f, wide, len)) { found = f; break; }
         DeleteObject(f);
     }
-    if (!found) return NULL;
+    if (!found) { PROFILE_END_VAR(_pt, "win32_symbol_font"); return NULL; }
 
     int slot = -1;
     ULONGLONG oldest = ~(ULONGLONG)0;
@@ -113,25 +117,27 @@ static HFONT win32_symbol_font(int size, const wchar_t* wide, int len) {
     g_sym_len[slot] = len;
     for (int k = 0; k < len; k++) g_sym_cp[slot][k] = wide[k];
     g_sym_tick++;
-    return found;
+    { PROFILE_END_VAR(_pt, "win32_symbol_font"); return found; }
 }
 
 #define WIN32_SYMBOL_SIZE_NUM 5
 #define WIN32_SYMBOL_SIZE_DEN 4
 
 static bool win32_text_needs_boost(const wchar_t* wide, int len) {
-    for (int i = 0; i < len; i++) {
+        PROFILE_START(_pt);
+for (int i = 0; i < len; i++) {
         unsigned int c = (unsigned int)wide[i];
         if (c == 0xFE0F || c == 0xFE0E) continue;
         if (c >= 0x1F000) return true;
         if (c >= 0xD800 && c <= 0xDFFF) return true;
         if (c >= 0xE000 && c <= 0xF8FF) return true;
     }
-    return false;
+    { PROFILE_END_VAR(_pt, "win32_text_needs_boost"); return false; }
 }
 
 static HFONT win32_font_for_text(const wchar_t* wide, int len, int fontsize, HFONT* out_prev, int* out_dy) {
-    HFONT prev = NULL;
+        PROFILE_START(_pt);
+HFONT prev = NULL;
     if (out_dy) *out_dy = 0;
     if (win32_text_is_symbolic(wide, len)) {
         bool boost = win32_text_needs_boost(wide, len);
@@ -159,11 +165,12 @@ static HFONT win32_font_for_text(const wchar_t* wide, int len, int fontsize, HFO
     if (!hfont) hfont = g_win32_hMainFont;
     if (hfont) prev = (HFONT)SelectObject(g_draw_hdc, hfont);
     if (out_prev) *out_prev = prev;
-    return hfont;
+    { PROFILE_END_VAR(_pt, "win32_font_for_text"); return hfont; }
 }
 
 static HFONT win32_sized_font(int size) {
-  if (size <= 0) size = FontSize;
+    PROFILE_START(_pt);
+if (size <= 0) size = FontSize;
   for (int i = 0; i < WIN32_SIZE_FONT_SLOTS; i++) {
     if (g_sizeFonts[i] && g_sizeFontSizes[i] == size) return g_sizeFonts[i];
   }
@@ -180,18 +187,20 @@ static HFONT win32_sized_font(int size) {
   if (g_sizeFonts[slot]) DeleteObject(g_sizeFonts[slot]);
   g_sizeFonts[slot] = FH_TO_HFONT(Platform_CreateFont(size, UsedFont));
   g_sizeFontSizes[slot] = size;
-  return g_sizeFonts[slot];
+  { PROFILE_END_VAR(_pt, "win32_sized_font"); return g_sizeFonts[slot]; }
 }
 
 static __thread const char *g_prerender_text = NULL;
 static __thread void *g_prerender_rect = NULL;
 void Platform_SetPreRenderStateWin32(const char *text, void *rect) {
-  g_prerender_text = text; g_prerender_rect = rect; 
+    PROFILE_START(_pt);
+g_prerender_text = text; g_prerender_rect = rect; 
 }
 
 bool Platform_PreRender(void) {
-    if (!g_prerender_text || !g_prerender_rect) return false;
-    return true;
+        PROFILE_START(_pt);
+if (!g_prerender_text || !g_prerender_rect) { PROFILE_END_VAR(_pt, "Platform_PreRender"); return false; }
+    { PROFILE_END_VAR(_pt, "Platform_PreRender"); return true; }
 }
 
 __attribute__((weak)) bool fl_prerender(void) {
@@ -202,17 +211,21 @@ static __thread unsigned long g_draw_bg_override = 0;
 static __thread bool g_transparent_window = false;
 
 void Platform_SetTransparentWindow(bool on) {
-    g_transparent_window = on;
+        PROFILE_START(_pt);
+g_transparent_window = on;
 }
 bool Platform_GetTransparentWindow(void) {
-    return g_transparent_window;
+        PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "Platform_GetTransparentWindow"); return g_transparent_window; }
 }
 
 void Platform_SetDrawBgColor(unsigned long hex) {
-    g_draw_bg_override = hex;
+        PROFILE_START(_pt);
+g_draw_bg_override = hex;
 }
 unsigned long Platform_GetDrawBgColor(void) {
-    return g_draw_bg_override;
+        PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "Platform_GetDrawBgColor"); return g_draw_bg_override; }
 }
 
 static __thread bool g_measuring = false;
@@ -221,18 +234,21 @@ static __thread int g_meas_origin_x = 0, g_meas_origin_y = 0;
 static __thread int g_meas_x0 = 0, g_meas_y0 = 0, g_meas_x1 = 0, g_meas_y1 = 0;
 
 static void measure_reset(void) {
-    g_measuring = false;
+        PROFILE_START(_pt);
+g_measuring = false;
     g_meas_any = false;
     g_meas_x0 = 0; g_meas_y0 = 0; g_meas_x1 = 0; g_meas_y1 = 0;
 }
 void Platform_BeginMeasure(void) {
-    g_measuring = true;
+        PROFILE_START(_pt);
+g_measuring = true;
     g_meas_x0 = 1 << 30; g_meas_y0 = 1 << 30;
     g_meas_x1 = -(1 << 30); g_meas_y1 = -(1 << 30);
     g_meas_any = false;
 }
 void Platform_EndMeasure(int *out_w, int *out_h) {
-    int rw = 0, rh = 0;
+        PROFILE_START(_pt);
+int rw = 0, rh = 0;
     if (g_meas_any) {
         rw = (g_meas_x1 > g_meas_x0) ? (g_meas_x1 - g_meas_x0) : 0;
         rh = (g_meas_y1 > g_meas_y0) ? (g_meas_y1 - g_meas_y0) : 0;
@@ -244,16 +260,19 @@ void Platform_EndMeasure(int *out_w, int *out_h) {
     measure_reset();
 }
 void Platform_GetLastMeasureOrigin(int *out_x, int *out_y) {
-    if (out_x) *out_x = g_meas_origin_x;
+        PROFILE_START(_pt);
+if (out_x) *out_x = g_meas_origin_x;
     if (out_y) *out_y = g_meas_origin_y;
 }
 static __thread int g_draw_off_x = 0, g_draw_off_y = 0;
 void Platform_SetDrawOffset(int dx, int dy) {
-    g_draw_off_x = dx;
+        PROFILE_START(_pt);
+g_draw_off_x = dx;
     g_draw_off_y = dy;
 }
 static void measure_track(int x, int y, int w, int h) {
-    if (!g_measuring) return;
+        PROFILE_START(_pt);
+if (!g_measuring) { PROFILE_END_VAR(_pt, "measure_track"); return ; }
     if (x < g_meas_x0) g_meas_x0 = x;
     if (y < g_meas_y0) g_meas_y0 = y;
     if (x + w > g_meas_x1) g_meas_x1 = x + w;
@@ -261,13 +280,16 @@ static void measure_track(int x, int y, int w, int h) {
     g_meas_any = true;
 }
 void Platform_SetDrawContextWin32(HDC hdc) {
-  g_draw_hdc = hdc; 
+    PROFILE_START(_pt);
+g_draw_hdc = hdc; 
 }
 void Platform_GetDrawContextWin32(HDC *out) {
-  if (out) *out = g_draw_hdc; 
+    PROFILE_START(_pt);
+if (out) *out = g_draw_hdc; 
 }
 bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, FontHandle font, const char *align, int pad,int fontsize) {
-    if (!text || !g_draw_hdc) return false;
+        PROFILE_START(_pt);
+if (!text || !g_draw_hdc) { PROFILE_END_VAR(_pt, "Platform_DrawTextRaw"); return false; }
     x += g_draw_off_x;
     y += g_draw_off_y;
     if (color != 0) color = rgb_to_hex(color);
@@ -277,7 +299,7 @@ bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, F
     int tlen = (int)strlen(text);
     int wlen = 0;
     wchar_t* wide = win32_widen(text, tlen, &wlen);
-    if (!wide) return false;
+    if (!wide) { PROFILE_END_VAR(_pt, "Platform_DrawTextRaw"); return false; }
     int dy = 0;
     HFONT hfont = font.hfont ? font.hfont : win32_font_for_text(wide, wlen, fontsize, &old, &dy);
     if (!hfont) hfont = win32_sized_font(fontsize);
@@ -328,15 +350,16 @@ bool Platform_DrawTextRaw(int x, int y, const char *text, unsigned long color, F
     TextOutW(g_draw_hdc, x0, y_draw, wide, wlen);
     free(wide);
     if (old) SelectObject(g_draw_hdc, old);
-    return true;
+    { PROFILE_END_VAR(_pt, "Platform_DrawTextRaw"); return true; }
 }
 
 int Platform_MeasureTextWidth(const char* text, int len, int fontsize) {
-    if (!text || len <= 0) return 0;
-    if (!g_draw_hdc) return len * (fontsize > 0 ? fontsize : 16) / 2;
+        PROFILE_START(_pt);
+if (!text || len <= 0) { PROFILE_END_VAR(_pt, "Platform_MeasureTextWidth"); return 0; }
+    if (!g_draw_hdc) { PROFILE_END_VAR(_pt, "Platform_MeasureTextWidth"); return len * (fontsize > 0 ? fontsize : 16) / 2; }
     int wlen = 0;
     wchar_t* wide = win32_widen(text, len, &wlen);
-    if (!wide) return 0;
+    if (!wide) { PROFILE_END_VAR(_pt, "Platform_MeasureTextWidth"); return 0; }
     HFONT old = NULL;
     HFONT hfont = win32_font_for_text(wide, wlen, fontsize, &old, NULL);
     if (!hfont) hfont = win32_sized_font(fontsize);
@@ -345,16 +368,17 @@ int Platform_MeasureTextWidth(const char* text, int len, int fontsize) {
     GetTextExtentPoint32W(g_draw_hdc, wide, wlen, &sz);
     if (old) SelectObject(g_draw_hdc, old);
     free(wide);
-    return sz.cx;
+    { PROFILE_END_VAR(_pt, "Platform_MeasureTextWidth"); return sz.cx; }
 }
 
 bool Platform_DrawTextLine(int x, int y, const char* text, int len, unsigned long color, int fontsize) {
-    if (!text || len <= 0 || !g_draw_hdc) return false;
+        PROFILE_START(_pt);
+if (!text || len <= 0 || !g_draw_hdc) { PROFILE_END_VAR(_pt, "Platform_DrawTextLine"); return false; }
     if (color != 0) color = rgb_to_hex(color);
     if (color == 0) color = COLOR_TEXT;
     int wlen = 0;
     wchar_t* wide = win32_widen(text, len, &wlen);
-    if (!wide) return false;
+    if (!wide) { PROFILE_END_VAR(_pt, "Platform_DrawTextLine"); return false; }
     HFONT hfont = win32_sized_font(fontsize);
     HFONT old = hfont ? (HFONT)SelectObject(g_draw_hdc, hfont) : NULL;
     SetBkMode(g_draw_hdc, TRANSPARENT);
@@ -362,11 +386,12 @@ bool Platform_DrawTextLine(int x, int y, const char* text, int len, unsigned lon
     TextOutW(g_draw_hdc, x, y, wide, wlen);
     if (old) SelectObject(g_draw_hdc, old);
     free(wide);
-    return true;
+    { PROFILE_END_VAR(_pt, "Platform_DrawTextLine"); return true; }
 }
 
 void Platform_GetItemColors(int idx, int count, unsigned long *num_color, unsigned long *body_color, unsigned long *plain_color) {
-    (void)count;
+        PROFILE_START(_pt);
+(void)count;
     unsigned long col_text = COLOR_TEXT;
     unsigned long col_alt = COLOR_ALTERNATE;
     float t = (GradientItems > 1) ? (float)(idx % GradientItems) / (float)(GradientItems - 1) : 0;
@@ -383,7 +408,8 @@ void Platform_GetItemColors(int idx, int count, unsigned long *num_color, unsign
 }
 
 bool Platform_DrawRectRaw(int x, int y, int w, int h, unsigned long color, unsigned char alpha) {
-    measure_track(x, y, w, h);
+        PROFILE_START(_pt);
+measure_track(x, y, w, h);
 RECT rect;
   rect.left = x;
   rect.top = y;
@@ -399,7 +425,7 @@ RECT rect;
 
   int rw = rect.right - rect.left;
   int rh = rect.bottom - rect.top;
-  if (rw <= 0 || rh <= 0) return true;
+  if (rw <= 0 || rh <= 0) { PROFILE_END_VAR(_pt, "Platform_DrawRectRaw"); return true; }
 
   HDC screen = GetDC(NULL);
   HDC mem = CreateCompatibleDC(screen);
@@ -433,32 +459,36 @@ RECT rect;
   DeleteObject(bmp);
   DeleteDC(mem);
   ReleaseDC(NULL, screen);
-  return ok != 0;
+  { PROFILE_END_VAR(_pt, "Platform_DrawRectRaw"); return ok != 0; }
 }
 
 bool Platform_DrawRectRawOpaque(int x, int y, int w, int h, unsigned long color) {
-    return Platform_DrawRectRaw(x, y, w, h, color, 255);
+        PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "Platform_DrawRectRawOpaque"); return Platform_DrawRectRaw(x, y, w, h, color, 255); }
 }
 
 static COLORREF win32_colorref(unsigned long hex) {
-    unsigned long r = hex & 0xFF;
+        PROFILE_START(_pt);
+unsigned long r = hex & 0xFF;
     unsigned long g = (hex >> 8) & 0xFF;
     unsigned long b = (hex >> 16) & 0xFF;
-    return (COLORREF)((b << 16) | (g << 8) | r);
+    { PROFILE_END_VAR(_pt, "win32_colorref"); return (COLORREF)((b << 16) | (g << 8) | r); }
 }
 
 static int win32_thickness_px(float thickness) {
-    if (thickness <= 0.0f) return 0;
+        PROFILE_START(_pt);
+if (thickness <= 0.0f) { PROFILE_END_VAR(_pt, "win32_thickness_px"); return 0; }
     int px = (int)(thickness + 0.5f);
     if (px < 1) px = 1;
     if (px > 255) px = 255;
-    return px;
+    { PROFILE_END_VAR(_pt, "win32_thickness_px"); return px; }
 }
 
 bool Platform_DrawRectBorder(int x, int y, int w, int h, unsigned long color, float thickness) {
-    int t = win32_thickness_px(thickness);
-    if (t <= 0) return Platform_DrawRectRawOpaque(x, y, w, h, color);
-    if (w <= 0 || h <= 0) return false;
+        PROFILE_START(_pt);
+int t = win32_thickness_px(thickness);
+    if (t <= 0) { PROFILE_END_VAR(_pt, "Platform_DrawRectBorder"); return Platform_DrawRectRawOpaque(x, y, w, h, color); }
+    if (w <= 0 || h <= 0) { PROFILE_END_VAR(_pt, "Platform_DrawRectBorder"); return false; }
     measure_track(x - t, y - t, w + 2 * t, h + 2 * t);
     RECT r = { x, y, x + w, y + h };
     HPEN pen = CreatePen(PS_SOLID, t, win32_colorref(color));
@@ -468,11 +498,12 @@ bool Platform_DrawRectBorder(int x, int y, int w, int h, unsigned long color, fl
     SelectObject(g_draw_hdc, old_br);
     SelectObject(g_draw_hdc, old_pen);
     DeleteObject(pen);
-    return true;
+    { PROFILE_END_VAR(_pt, "Platform_DrawRectBorder"); return true; }
 }
 
 bool Platform_DrawLineRaw(int x1, int y1, int x2, int y2, unsigned long color, float thickness) {
-    int t = win32_thickness_px(thickness);
+        PROFILE_START(_pt);
+int t = win32_thickness_px(thickness);
     if (t < 1) t = 1;
     int bx = x1 < x2 ? x1 : x2;
     int by = y1 < y2 ? y1 : y2;
@@ -485,11 +516,12 @@ bool Platform_DrawLineRaw(int x1, int y1, int x2, int y2, unsigned long color, f
     LineTo(g_draw_hdc, x2, y2);
     SelectObject(g_draw_hdc, old);
     DeleteObject(pen);
-    return true;
+    { PROFILE_END_VAR(_pt, "Platform_DrawLineRaw"); return true; }
 }
 
 bool Platform_DrawCircleRaw(int cx, int cy, int radius, unsigned long color, float thickness) {
-    if (radius <= 0) return false;
+        PROFILE_START(_pt);
+if (radius <= 0) { PROFILE_END_VAR(_pt, "Platform_DrawCircleRaw"); return false; }
     int t = win32_thickness_px(thickness);
     measure_track(cx - radius, cy - radius, radius * 2, radius * 2);
     int left = cx - radius, top = cy - radius;
@@ -511,11 +543,12 @@ bool Platform_DrawCircleRaw(int cx, int cy, int radius, unsigned long color, flo
         SelectObject(g_draw_hdc, old);
         DeleteObject(br);
     }
-    return true;
+    { PROFILE_END_VAR(_pt, "Platform_DrawCircleRaw"); return true; }
 }
 
 bool Platform_DrawRoundedRectRaw(int x, int y, int w, int h, int radius, unsigned long color, float thickness) {
-    if (w <= 0 || h <= 0) return false;
+        PROFILE_START(_pt);
+if (w <= 0 || h <= 0) { PROFILE_END_VAR(_pt, "Platform_DrawRoundedRectRaw"); return false; }
     int t = win32_thickness_px(thickness);
     if (radius < 0) radius = 0;
     int maxr = (w < h ? w : h) / 2;
@@ -539,7 +572,7 @@ bool Platform_DrawRoundedRectRaw(int x, int y, int w, int h, int radius, unsigne
         SelectObject(g_draw_hdc, old);
         DeleteObject(br);
     }
-    return true;
+    { PROFILE_END_VAR(_pt, "Platform_DrawRoundedRectRaw"); return true; }
 }
 
 #define WIN32_IMG_CACHE_SLOTS 128
@@ -562,7 +595,8 @@ static BOOL g_img_cache_cs_ready = FALSE;
 static ULONG_PTR g_gdip_token = 0;
 
 static void win32_gdip_ensure(void) {
-    if (g_gdip_token != 0) return;
+        PROFILE_START(_pt);
+if (g_gdip_token != 0) { PROFILE_END_VAR(_pt, "win32_gdip_ensure"); return ; }
     GdiplusStartupInput gsi;
     gsi.GdiplusVersion = 1;
     gsi.DebugEventCallback = NULL;
@@ -572,17 +606,20 @@ static void win32_gdip_ensure(void) {
 }
 
 static void win32_gdip_dispose(void *img) {
-    if (img) GdipDisposeImage((GpImage *)img);
+        PROFILE_START(_pt);
+if (img) GdipDisposeImage((GpImage *)img);
 }
 
 static HDC win32_screen_dc(void) {
-    static HDC dc = NULL;
+        PROFILE_START(_pt);
+static HDC dc = NULL;
     if (!dc) dc = GetDC(NULL);
-    return dc;
+    { PROFILE_END_VAR(_pt, "win32_screen_dc"); return dc; }
 }
 
 static void win32_img_cache_lock(void) {
-    if (!g_img_cache_cs_ready) {
+        PROFILE_START(_pt);
+if (!g_img_cache_cs_ready) {
         InitializeCriticalSection(&g_img_cache_cs);
         g_img_cache_cs_ready = TRUE;
     }
@@ -590,24 +627,27 @@ static void win32_img_cache_lock(void) {
 }
 
 static void win32_img_cache_unlock(void) {
-    if (g_img_cache_cs_ready) LeaveCriticalSection(&g_img_cache_cs);
+        PROFILE_START(_pt);
+if (g_img_cache_cs_ready) LeaveCriticalSection(&g_img_cache_cs);
 }
 
 static void win32_img_stat(const char *path, FILETIME *ft, DWORD *size) {
-    ft->dwLowDateTime = 0;
+        PROFILE_START(_pt);
+ft->dwLowDateTime = 0;
     ft->dwHighDateTime = 0;
     *size = 0;
     char native[MAX_PATH * 2];
     snprintf(native, sizeof(native), "%s", path);
     for (char *p = native; *p; p++) if (*p == '/') *p = '\\';
     WIN32_FILE_ATTRIBUTE_DATA fad;
-    if (!GetFileAttributesExA(native, GetFileExInfoStandard, &fad)) return;
+    if (!GetFileAttributesExA(native, GetFileExInfoStandard, &fad)) { PROFILE_END_VAR(_pt, "win32_img_stat"); return ; }
     *ft = fad.ftLastWriteTime;
     *size = (fad.nFileSizeHigh << 16) | fad.nFileSizeLow;
 }
 
 static void* win32_img_cache_get(const char *path, HDC screen, int w, int h) {
-    FILETIME ft;
+        PROFILE_START(_pt);
+FILETIME ft;
     DWORD size;
     win32_img_stat(path, &ft, &size);
     HBITMAP found = NULL;
@@ -623,11 +663,12 @@ static void* win32_img_cache_get(const char *path, HDC screen, int w, int h) {
         break;
     }
     win32_img_cache_unlock();
-    return found;
+    { PROFILE_END_VAR(_pt, "win32_img_cache_get"); return found; }
 }
 
 static void win32_img_cache_put(const char *path, HDC screen, int w, int h, void* bmp) {
-    if (!bmp) return;
+        PROFILE_START(_pt);
+if (!bmp) { PROFILE_END_VAR(_pt, "win32_img_cache_put"); return ; }
     FILETIME ft;
     DWORD size;
     win32_img_stat(path, &ft, &size);
@@ -655,7 +696,8 @@ static void win32_img_cache_put(const char *path, HDC screen, int w, int h, void
 }
 
 void win32_img_cache_free_all(void) {
-    win32_img_cache_lock();
+        PROFILE_START(_pt);
+win32_img_cache_lock();
     for (int i = 0; i < WIN32_IMG_CACHE_SLOTS; i++) {
         if (g_img_cache[i].bmp) { win32_gdip_dispose(g_img_cache[i].bmp); }
         memset(&g_img_cache[i], 0, sizeof(g_img_cache[i]));
@@ -664,27 +706,30 @@ void win32_img_cache_free_all(void) {
 }
 
 static void win32_utf8_to_wide(const char *in, wchar_t *out, int out_max) {
-    if (!in || !out || out_max <= 0) return;
+        PROFILE_START(_pt);
+if (!in || !out || out_max <= 0) { PROFILE_END_VAR(_pt, "win32_utf8_to_wide"); return ; }
     int n = MultiByteToWideChar(CP_UTF8, 0, in, -1, out, out_max);
     if (n <= 0) { out[0] = 0; return; }
 }
 
 static GpBitmap* win32_load_shell_icon_bitmap(const char *path) {
-    SHFILEINFOA sfi;
+        PROFILE_START(_pt);
+SHFILEINFOA sfi;
     ZeroMemory(&sfi, sizeof(sfi));
-    if (!SHGetFileInfoA(path, 0, &sfi, sizeof(sfi), SHGFI_ICON | SHGFI_LARGEICON)) return NULL;
-    if (!sfi.hIcon) return NULL;
+    if (!SHGetFileInfoA(path, 0, &sfi, sizeof(sfi), SHGFI_ICON | SHGFI_LARGEICON)) { PROFILE_END_VAR(_pt, "win32_load_shell_icon_bitmap"); return NULL; }
+    if (!sfi.hIcon) { PROFILE_END_VAR(_pt, "win32_load_shell_icon_bitmap"); return NULL; }
     GpBitmap* bmp = NULL;
     GpStatus st = GdipCreateBitmapFromHICON(sfi.hIcon, &bmp);
     DestroyIcon(sfi.hIcon);
-    if (st != Ok || !bmp) return NULL;
-    return bmp;
+    if (st != Ok || !bmp) { PROFILE_END_VAR(_pt, "win32_load_shell_icon_bitmap"); return NULL; }
+    { PROFILE_END_VAR(_pt, "win32_load_shell_icon_bitmap"); return bmp; }
 }
 
 static void* win32_load_scaled_bitmap(const char *path, int w, int h) {
-    win32_gdip_ensure();
+        PROFILE_START(_pt);
+win32_gdip_ensure();
     if (g_gdip_token == 0) { log_error("img: GdiplusStartup failed"); return NULL; }
-    if (w <= 0 || h <= 0) return NULL;
+    if (w <= 0 || h <= 0) { PROFILE_END_VAR(_pt, "win32_load_scaled_bitmap"); return NULL; }
 
     char native[MAX_PATH * 2];
     snprintf(native, sizeof(native), "%s", path);
@@ -721,11 +766,12 @@ static void* win32_load_scaled_bitmap(const char *path, int w, int h) {
         log_error("img: ctx st=%d", (int)_gs);
     }
     GdipDisposeImage(src);
-    return out;
+    { PROFILE_END_VAR(_pt, "win32_load_scaled_bitmap"); return out; }
 }
 
 bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     if (!path || !path[0]) { PROFILE_END_VAR(timer, "win32:Platform_DrawImageAt"); return false; }
     if (w <= 0) w = IconSize;
     if (h <= 0) h = IconSize;
@@ -761,11 +807,12 @@ bool Platform_DrawImageAt(const char *path, int x, int y, int w, int h) {
         }
     }
     PROFILE_END_VAR(timer, "win32:Platform_DrawImageAt");
-    return ok;
+    { PROFILE_END_VAR(_pt, "Platform_DrawImageAt"); return ok; }
 }
 
 static int win32_update_edit_scroll_offset(HDC hdc, const char* text, int text_len, int cursor, int width, int prev_scroll, int* out_cursor_x) {
-    int visible_w = width - PROMPT_EDIT_SCROLL_PAD;
+        PROFILE_START(_pt);
+int visible_w = width - PROMPT_EDIT_SCROLL_PAD;
     int cursor_x = 0;
     int text_w = 0;
     if (text) {
@@ -785,18 +832,20 @@ static int win32_update_edit_scroll_offset(HDC hdc, const char* text, int text_l
     if (cursor_x - scroll < 0) scroll = cursor_x;
     if (cursor_x - scroll > visible_w) scroll = cursor_x - visible_w;
     if (out_cursor_x) *out_cursor_x = cursor_x;
-    return scroll;
+    { PROFILE_END_VAR(_pt, "win32_update_edit_scroll_offset"); return scroll; }
 }
 
 static int win32_char_x(HDC hdc, const char* text, int index, int scroll) {
-    int x = 0;
+        PROFILE_START(_pt);
+int x = 0;
     if (text && index > 0) x = Platform_MeasureTextWidth(text, index, FontSize);
     (void)hdc;
-    return x - scroll;
+    { PROFILE_END_VAR(_pt, "win32_char_x"); return x - scroll; }
 }
 
 void Platform_DrawPromptEditText(PromptState* state) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     if (!state || !g_draw_hdc) { PROFILE_END_VAR(timer, "draw_win32:Platform_DrawPromptEditText"); return; }
     int cursor_x = 0;
     int text_len = (int)strlen(state->filter);
@@ -847,7 +896,8 @@ void Platform_DrawPromptEditText(PromptState* state) {
 }
 
 void Platform_DrawPromptEditCursor(PromptState* state) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     if (!state || !g_draw_hdc) { PROFILE_END_VAR(timer, "draw_win32:Platform_DrawPromptEditCursor"); return; }
     int cursor_x = 0;
     win32_update_edit_scroll_offset(g_draw_hdc, state->filter, (int)strlen(state->filter), (int)state->cursor, state->width, state->scroll_offset, &cursor_x);

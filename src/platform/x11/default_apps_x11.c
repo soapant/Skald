@@ -8,24 +8,27 @@
 #include <sys/stat.h>
 #include <ctype.h>
 
+#include "core/timer.h"
 const char* x11_get_login_shell(void) {
-    struct passwd* pw = getpwuid(getuid());
+        PROFILE_START(_pt);
+struct passwd* pw = getpwuid(getuid());
     if (!pw || !pw->pw_shell || !pw->pw_shell[0]) {
         return NULL;
     }
-    return pw->pw_shell; 
+    { PROFILE_END_VAR(_pt, "x11_get_login_shell"); return pw->pw_shell; } 
 }
 
 char default_apps_x11[DEFAULT_APP_COUNT][256];
 
 const char* x11_default_apps_run(const char* command, int slot) {
-    char* out = Platform_RunTerminalCommand((char*)command, false);
+        PROFILE_START(_pt);
+char* out = Platform_RunTerminalCommand((char*)command, false);
     default_apps_x11[slot][0] = '\0';
     if (out) {
         sscanf(out, "%255s", default_apps_x11[slot]);
         free(out);
     }
-    return default_apps_x11[slot];
+    { PROFILE_END_VAR(_pt, "x11_default_apps_run"); return default_apps_x11[slot]; }
 }
 
 #define APPDIR_CACHE_SLOTS 8
@@ -34,12 +37,13 @@ static char g_ad_path[APPDIR_CACHE_SLOTS][1024];
 static bool g_ad_valid[APPDIR_CACHE_SLOTS];
 
 static ListOfFiles* x11_applications_dir_files(const char* dir) {
-    static int next_slot = 0;
+        PROFILE_START(_pt);
+static int next_slot = 0;
     for (int i = 0; i < APPDIR_CACHE_SLOTS; i++) {
         if (g_ad_valid[i] && strcmp(g_ad_path[i], dir) == 0) return &g_ad_cache[i];
     }
     struct stat st;
-    if (stat(dir, &st) != 0 || !S_ISDIR(st.st_mode)) return NULL;
+    if (stat(dir, &st) != 0 || !S_ISDIR(st.st_mode)) { PROFILE_END_VAR(_pt, "x11_applications_dir_files"); return NULL; }
     int slot = next_slot;
     next_slot = (next_slot + 1) % APPDIR_CACHE_SLOTS;
     if (g_ad_valid[slot]) {
@@ -51,12 +55,13 @@ static ListOfFiles* x11_applications_dir_files(const char* dir) {
     Platform_GetAllFilesFromDir(dir, NULL, &g_ad_cache[slot], NULL, true);
     snprintf(g_ad_path[slot], sizeof(g_ad_path[slot]), "%s", dir);
     g_ad_valid[slot] = true;
-    return &g_ad_cache[slot];
+    { PROFILE_END_VAR(_pt, "x11_applications_dir_files"); return &g_ad_cache[slot]; }
 }
 
 static const char* match_in_applications_dir(const char* dir, const char* const* names, size_t count) {
-    ListOfFiles* files = x11_applications_dir_files(dir);
-    if (!files) return NULL;
+        PROFILE_START(_pt);
+ListOfFiles* files = x11_applications_dir_files(dir);
+    if (!files) { PROFILE_END_VAR(_pt, "match_in_applications_dir"); return NULL; }
     const char* found = NULL;
     for (size_t i = 0; i < files->count && !found; i++) {
         for (size_t j = 0; j < count; j++) {
@@ -66,11 +71,12 @@ static const char* match_in_applications_dir(const char* dir, const char* const*
             }
         }
     }
-    return found;
+    { PROFILE_END_VAR(_pt, "match_in_applications_dir"); return found; }
 }
 
 void x11_default_apps_free_cache(void) {
-    for (int i = 0; i < APPDIR_CACHE_SLOTS; i++) {
+        PROFILE_START(_pt);
+for (int i = 0; i < APPDIR_CACHE_SLOTS; i++) {
         if (!g_ad_valid[i]) continue;
         free(g_ad_cache[i].files);
         g_ad_cache[i].files = NULL;
@@ -82,7 +88,8 @@ void x11_default_apps_free_cache(void) {
 }
 
 const char* x11_find_terminal_in_desktop_files(const char* const* names, size_t count) {
-    char dir[1024];
+        PROFILE_START(_pt);
+char dir[1024];
     const char* home = getenv("HOME");
     if (home && home[0]) {
         snprintf(dir, sizeof(dir), "%s/.local/share/applications", home);
@@ -99,12 +106,13 @@ const char* x11_find_terminal_in_desktop_files(const char* const* names, size_t 
         const char* hit = match_in_applications_dir(dir, names, count);
         if (hit) return hit;
     }
-    return match_in_applications_dir("/usr/share/applications", names, count);
+    { PROFILE_END_VAR(_pt, "x11_find_terminal_in_desktop_files"); return match_in_applications_dir("/usr/share/applications", names, count); }
 }
 
 
 const char* x11_get_default_terminal_wayland(void) {
-    const char* const candidates[] = {
+        PROFILE_START(_pt);
+const char* const candidates[] = {
         "ptyxis",
         "gnome-console",
         "foot",
@@ -124,12 +132,13 @@ const char* x11_get_default_terminal_wayland(void) {
     if (!out) {
       out = x11_find_terminal_in_desktop_files(candidates, n);
     }
-    return out ? out : NULL;
+    { PROFILE_END_VAR(_pt, "x11_get_default_terminal_wayland"); return out ? out : NULL; }
 }
 
 
 const char* x11_get_default_terminal_x11(void) {
-    const char* const candidates[] = {
+        PROFILE_START(_pt);
+const char* const candidates[] = {
         "gnome-terminal",
         "konsole",
         "foot",
@@ -171,13 +180,14 @@ const char* x11_get_default_terminal_x11(void) {
             if (!isprint((unsigned char)trimmed[i])) trimmed[0] = '\0';
         }
     }
-    if (trimmed[0]) return trimmed;
-    return x11_find_terminal_in_desktop_files(candidates, n);
+    if (trimmed[0]) { PROFILE_END_VAR(_pt, "x11_get_default_terminal_x11"); return trimmed; }
+    { PROFILE_END_VAR(_pt, "x11_get_default_terminal_x11"); return x11_find_terminal_in_desktop_files(candidates, n); }
 }
 
 
 const char* get_default_terminal(int slot) {
-    default_apps_x11[slot][0] = '\0';
+        PROFILE_START(_pt);
+default_apps_x11[slot][0] = '\0';
 
     const char* term = NULL;
 
@@ -202,10 +212,11 @@ const char* get_default_terminal(int slot) {
     }
 
     snprintf(default_apps_x11[slot], sizeof(default_apps_x11[slot]), "%s", term);
-    return default_apps_x11[slot];
+    { PROFILE_END_VAR(_pt, "get_default_terminal"); return default_apps_x11[slot]; }
 }
 const char* get_default_browser(int slot) {
-    default_apps_x11[slot][0] = '\0';
+        PROFILE_START(_pt);
+default_apps_x11[slot][0] = '\0';
 
     const char *env = getenv("BROWSER");
     if (env && env[0]) {
@@ -236,29 +247,32 @@ const char* get_default_browser(int slot) {
     }
     StringList_Free(&l);
 
-    return default_apps_x11[slot];
+    { PROFILE_END_VAR(_pt, "get_default_browser"); return default_apps_x11[slot]; }
 }
 
 const char* get_default_shell(int slot) {
-    //temporary maybe in future just use the terminal config or somethign idk
+        PROFILE_START(_pt);
+//temporary maybe in future just use the terminal config or somethign idk
     default_apps_x11[slot][0] = '\0';
     const char* shell = getenv("SHELL");
     const char* name = strrchr(shell, '/') ? strrchr(shell, '/') + 1 : shell;
     snprintf(default_apps_x11[slot], sizeof(default_apps_x11[slot]), "%s", name);
-    return default_apps_x11[slot];
+    { PROFILE_END_VAR(_pt, "get_default_shell"); return default_apps_x11[slot]; }
 }
 
 const char* Platform_GetDefaultApp(DefaultAppKind kind) {
-    if (kind < 0 || kind >= DEFAULT_APP_COUNT) return "";
-    if (kind == DEFAULT_BROWSER) return get_default_browser(DEFAULT_BROWSER);
-    if (kind == DEFAULT_TERMINAL )    return get_default_terminal(DEFAULT_TERMINAL);
-    if (kind == DEFAULT_SHELL )       return get_default_shell(DEFAULT_SHELL);
+        PROFILE_START(_pt);
+if (kind < 0 || kind >= DEFAULT_APP_COUNT) { PROFILE_END_VAR(_pt, "Platform_GetDefaultApp"); return ""; }
+    if (kind == DEFAULT_BROWSER) { PROFILE_END_VAR(_pt, "Platform_GetDefaultApp"); return get_default_browser(DEFAULT_BROWSER); }
+    if (kind == DEFAULT_TERMINAL )    { PROFILE_END_VAR(_pt, "Platform_GetDefaultApp"); return get_default_terminal(DEFAULT_TERMINAL); }
+    if (kind == DEFAULT_SHELL )       { PROFILE_END_VAR(_pt, "Platform_GetDefaultApp"); return get_default_shell(DEFAULT_SHELL); }
     default_apps_x11[kind][0] = '\0';
-    return default_apps_x11[kind];
+    { PROFILE_END_VAR(_pt, "Platform_GetDefaultApp"); return default_apps_x11[kind]; }
 }
 
 int x11_default_apps_exec_token(const char* line, char* out, size_t cap) {
-    const char* p = line + 5;
+        PROFILE_START(_pt);
+const char* p = line + 5;
     while (*p == ' ' || *p == '\t') p++;
     int quoted = (*p == '"');
     if (quoted) p++;
@@ -269,12 +283,13 @@ int x11_default_apps_exec_token(const char* line, char* out, size_t cap) {
         out[n++] = *p++;
     }
     out[n] = '\0';
-    return n > 0;
+    { PROFILE_END_VAR(_pt, "x11_default_apps_exec_token"); return n > 0; }
 }
 
 bool Platform_ResolveDesktopExec(const char* desktop_id, char* out, size_t out_size) {
-    if (!desktop_id || !desktop_id[0] || !out || out_size == 0) return false;
-    if (strchr(desktop_id, '/')) return false;
+        PROFILE_START(_pt);
+if (!desktop_id || !desktop_id[0] || !out || out_size == 0) { PROFILE_END_VAR(_pt, "Platform_ResolveDesktopExec"); return false; }
+    if (strchr(desktop_id, '/')) { PROFILE_END_VAR(_pt, "Platform_ResolveDesktopExec"); return false; }
     out[0] = '\0';
     char dirs[1024];
     const char* data_home = getenv("XDG_DATA_HOME");
@@ -303,5 +318,5 @@ bool Platform_ResolveDesktopExec(const char* desktop_id, char* out, size_t out_s
         if (found) return true;
         out[0] = '\0';
     }
-    return false;
+    { PROFILE_END_VAR(_pt, "Platform_ResolveDesktopExec"); return false; }
 }

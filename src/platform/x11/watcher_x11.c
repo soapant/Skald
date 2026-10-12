@@ -11,10 +11,12 @@
 #include <stdio.h>
 #include <sys/stat.h>
 
+#include "core/timer.h"
 static _Atomic bool g_watcher_stop = false;
 
 static void* feature_watcher_thread(void* arg) {
-    WindowManager* wm = (WindowManager*)arg;
+        PROFILE_START(_pt);
+WindowManager* wm = (WindowManager*)arg;
     while (!atomic_load(&g_watcher_stop) && !(wm && wm->watcher_stop)) {
         char* filename = Platform_WatchForCFileChanges(FeaturePath);
         if (filename) {
@@ -48,15 +50,17 @@ static void* feature_watcher_thread(void* arg) {
             Config_PollWatcher();
         }
     }
-    return NULL;
+    { PROFILE_END_VAR(_pt, "feature_watcher_thread"); return NULL; }
 }
 
 void* Platform_FeatureWatcherThread(void* arg) {
-    return feature_watcher_thread(arg);
+        PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "Platform_FeatureWatcherThread"); return feature_watcher_thread(arg); }
 }
 
 bool Platform_WatcherStart(WindowManager* wm) {
-    if (!wm) return false;
+        PROFILE_START(_pt);
+if (!wm) { PROFILE_END_VAR(_pt, "Platform_WatcherStart"); return false; }
     atomic_store(&g_watcher_stop, false);
     wm->watcher_stop = false;
     wm->watcher_running = false;
@@ -66,11 +70,12 @@ bool Platform_WatcherStart(WindowManager* wm) {
         wm->watcher_running = true;
         return true;
     }
-    return false;
+    { PROFILE_END_VAR(_pt, "Platform_WatcherStart"); return false; }
 }
 
 void Platform_WatcherStop(WindowManager* wm) {
-    if (!wm) return;
+        PROFILE_START(_pt);
+if (!wm) { PROFILE_END_VAR(_pt, "Platform_WatcherStop"); return ; }
     wm->watcher_stop = true;
     atomic_store(&g_watcher_stop, true);
     if (wm->watcher_running) {

@@ -53,8 +53,9 @@
 
 
 static bool x11_daemon_exec(char* const argv[]) {
-    pid_t pid = fork();
-    if (pid < 0) return false;
+        PROFILE_START(_pt);
+pid_t pid = fork();
+    if (pid < 0) { PROFILE_END_VAR(_pt, "x11_daemon_exec"); return false; }
     if (pid == 0) {
         setsid();
         pid_t pid2 = fork();
@@ -72,12 +73,13 @@ static bool x11_daemon_exec(char* const argv[]) {
     }
     int st = 0;
     waitpid(pid, &st, 0);
-    return true;
+    { PROFILE_END_VAR(_pt, "x11_daemon_exec"); return true; }
 }
 
 static bool x11_daemon_exec_with_x11_env(char* const argv[], const char* display, const char* xauth, const char* runtime_dir) {
-    pid_t pid = fork();
-    if (pid < 0) return false;
+        PROFILE_START(_pt);
+pid_t pid = fork();
+    if (pid < 0) { PROFILE_END_VAR(_pt, "x11_daemon_exec_with_x11_env"); return false; }
     if (pid == 0) {
         setsid();
         pid_t pid2 = fork();
@@ -98,11 +100,12 @@ static bool x11_daemon_exec_with_x11_env(char* const argv[], const char* display
     }
     int st = 0;
     waitpid(pid, &st, 0);
-    return true;
+    { PROFILE_END_VAR(_pt, "x11_daemon_exec_with_x11_env"); return true; }
 }
 
 bool Platform_LaunchTerminalAtPath(const char* working_dir, const char* extra_args){
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     if(!working_dir) { log_error("working_dir is NULL extra_args='%s'", extra_args ? extra_args : "null"); PROFILE_END_VAR(timer, "platform_x11:Platform_LaunchTerminalAtPath"); return false; }
     if (!UsedTerminal || !UsedTerminal[0]) { log_error("UsedTerminal not configured working_dir='%s' extra_args='%s'", working_dir ? working_dir : "null", extra_args ? extra_args : "null"); PROFILE_END_VAR(timer, "platform_x11:Platform_LaunchTerminalAtPath"); return false; }
 
@@ -165,19 +168,21 @@ bool Platform_LaunchTerminalAtPath(const char* working_dir, const char* extra_ar
     log_info("Platform_LaunchTerminalAtPath At Path %s",working_dir);
 
     PROFILE_END_VAR(timer, "platform_x11:Platform_LaunchTerminalAtPath");
-    return true;
+    { PROFILE_END_VAR(_pt, "Platform_LaunchTerminalAtPath"); return true; }
 }
 
 static bool daemon_spawn_sudo_env(const char* real_user, const char* display, const char* xauthority, const char* runtime_dir, char* const argv[]) {
-    (void)real_user; (void)display; (void)xauthority; (void)runtime_dir;
+        PROFILE_START(_pt);
+(void)real_user; (void)display; (void)xauthority; (void)runtime_dir;
     PROFILE_START(timer);
     bool ok = x11_daemon_exec(argv);
     PROFILE_END_VAR(timer, "platform_x11:daemon_spawn_sudo_env");
-    return ok;
+    { PROFILE_END_VAR(_pt, "daemon_spawn_sudo_env"); return ok; }
 }
 
 bool Platform_ShellExecuteWithVerb(const char* path, const char* verb, bool async) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     if (!path) { log_error("path is NULL verb='%s' async=%d", verb ? verb : "null", async); PROFILE_END_VAR(timer, "platform_x11:Platform_ShellExecuteWithVerb"); return false; }
     (void)verb;
     const char* real_user = Platform_GetRealUser();
@@ -231,7 +236,8 @@ bool Platform_ShellExecuteWithVerb(const char* path, const char* verb, bool asyn
 
 
 static Window FindWindowByTitleRecursive(Display* dpy, Window w, const char* title) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     char* name = NULL;
     if (XFetchName(dpy, w, &name) && name != NULL) {
         bool match = (strcmp(name, title) == 0);
@@ -253,17 +259,19 @@ static Window FindWindowByTitleRecursive(Display* dpy, Window w, const char* tit
         if (children) XFree(children);
     }
     PROFILE_END_VAR(timer, "platform_x11:FindWindowByTitleRecursive");
-    return None;
+    { PROFILE_END_VAR(_pt, "FindWindowByTitleRecursive"); return None; }
 }
 
 static Window FindWindowByTitle(Display* dpy, const char* title) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     PROFILE_END_VAR(timer, "platform_x11:FindWindowByTitle");
-    return FindWindowByTitleRecursive(dpy, DefaultRootWindow(dpy), title);
+    { PROFILE_END_VAR(_pt, "FindWindowByTitle"); return FindWindowByTitleRecursive(dpy, DefaultRootWindow(dpy), title); }
 }
 
 bool Platform_SendX11Command(const char* window_title, const char* atom_name, long command) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     Display* dpy = get_display();
     if (!dpy) { log_error("no X11 display window_title='%s' atom_name='%s' command=%ld", window_title ? window_title : "null", atom_name ? atom_name : "null", command); PROFILE_END_VAR(timer, "platform_x11:Platform_SendX11Command"); return false; }
 
@@ -284,11 +292,12 @@ bool Platform_SendX11Command(const char* window_title, const char* atom_name, lo
     log_info("Platform_SendX11Command Title %s Command %s ",window_title,command);
 
     PROFILE_END_VAR(timer, "platform_x11:Platform_SendX11Command");
-    return ok;
+    { PROFILE_END_VAR(_pt, "Platform_SendX11Command"); return ok; }
 }
 
 bool Platform_SetX11Property(const char* window_title, const char* atom_name, long value) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     Display* dpy = get_display();
     if (!dpy) { log_error("no X11 display window_title='%s' atom_name='%s' value=%ld", window_title ? window_title : "null", atom_name ? atom_name : "null", value); PROFILE_END_VAR(timer, "platform_x11:Platform_SetX11Property"); return false; }
 
@@ -303,11 +312,12 @@ bool Platform_SetX11Property(const char* window_title, const char* atom_name, lo
     log_info("Platform_SetX11Property Title %s value %i ",window_title,value);
 
     PROFILE_END_VAR(timer, "platform_x11:Platform_SetX11Property");
-    return ok;
+    { PROFILE_END_VAR(_pt, "Platform_SetX11Property"); return ok; }
 }
 
 bool Platform_SetX11StringProperty(const char* window_title, const char* atom_name, const char* value) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     Display* dpy = get_display();
     if (!dpy) { log_error("no X11 display window_title='%s' atom_name='%s' value='%s'", window_title ? window_title : "null", atom_name ? atom_name : "null", value ? value : "null"); PROFILE_END_VAR(timer, "platform_x11:Platform_SetX11StringProperty"); return false; }
 
@@ -322,11 +332,12 @@ bool Platform_SetX11StringProperty(const char* window_title, const char* atom_na
     log_info("Platform_SetX11StringProperty Title %s value %i",window_title,value);
 
     PROFILE_END_VAR(timer, "platform_x11:Platform_SetX11StringProperty");
-    return ok;
+    { PROFILE_END_VAR(_pt, "Platform_SetX11StringProperty"); return ok; }
 }
 
 char* Platform_RunCommandAndGetOutput(char* command) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     FILE* fp;
     char buffer[8192];
     size_t cap = 8192;
@@ -373,11 +384,12 @@ char* Platform_RunCommandAndGetOutput(char* command) {
     log_info("Platform_RunCommandAndGetOutput command='%s'", command ? command : "");;
 
     PROFILE_END_VAR(timer, "platform_x11:Platform_RunCommandAndGetOutput");
-    return output;
+    { PROFILE_END_VAR(_pt, "Platform_RunCommandAndGetOutput"); return output; }
 }
 
 static char* Platform_RunCommandDetachedCapture(char* command) {
-    int pfd[2];
+        PROFILE_START(_pt);
+int pfd[2];
     if (pipe(pfd) != 0) { log_error("pipe failed cmd='%s' err=%d", command ? command : "null", errno); return strdup(""); }
     pid_t pid = fork();
     if (pid < 0) { log_error("fork failed cmd='%s' err=%d", command ? command : "null", errno); close(pfd[0]); close(pfd[1]); return strdup(""); }
@@ -456,13 +468,14 @@ static char* Platform_RunCommandDetachedCapture(char* command) {
     }
     out[total] = '\0';
     if (total == 0) log_error("capture empty cmd='%s' eof=%d", command ? command : "null", eof);
-    return out;
+    { PROFILE_END_VAR(_pt, "Platform_RunCommandDetachedCapture"); return out; }
 }
 
 bool Platform_LaunchDetached(char* command) {
-    if (!command || !command[0]) return false;
+        PROFILE_START(_pt);
+if (!command || !command[0]) { PROFILE_END_VAR(_pt, "Platform_LaunchDetached"); return false; }
     pid_t pid = fork();
-    if (pid < 0) return false;
+    if (pid < 0) { PROFILE_END_VAR(_pt, "Platform_LaunchDetached"); return false; }
     if (pid == 0) {
         setsid();
         pid_t pid2 = fork();
@@ -480,11 +493,12 @@ bool Platform_LaunchDetached(char* command) {
     }
     int st = 0;
     waitpid(pid, &st, 0);
-    return true;
+    { PROFILE_END_VAR(_pt, "Platform_LaunchDetached"); return true; }
 }
 
 char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     char timer_text[300];
     snprintf(timer_text,sizeof(timer_text),"platform_x11:Platform_RunTerminalCommand Command:%s",command);
 
@@ -527,20 +541,22 @@ char* Platform_RunTerminalCommand(char* command,bool open_terminal) {
     Platform_LaunchTerminalAtPath(real_home, extra);
     log_info("ran terminal command '%s' open_terminal=%d", command, open_terminal);
     PROFILE_END_VAR(timer, timer_text);
-    return strdup("");
+    { PROFILE_END_VAR(_pt, "Platform_RunTerminalCommand"); return strdup(""); }
 }
 
 bool Platform_LaunchFileManagerAtPath(char* path,char* args) {
-     PROFILE_START(timer);
+          PROFILE_START(_pt);
+PROFILE_START(timer);
      bool ret = Platform_ShellExecuteWithVerb(path, "open", true);
      log_info("Platform_LaunchFileManagerAtPath path='%s' args='%s'", path ? path : "", args ? args : "");;
 
      PROFILE_END_VAR(timer, "platform_x11:Platform_LaunchFileManagerAtPath");
-     return ret;
+     { PROFILE_END_VAR(_pt, "Platform_LaunchFileManagerAtPath"); return ret; }
 }
 
 bool Platform_IsCtrlPressed(void) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     Display *display = get_display();
     if (!display) {
  PROFILE_END_VAR(timer, "platform_x11:Platform_IsCtrlPressed");
@@ -556,11 +572,12 @@ bool Platform_IsCtrlPressed(void) {
 
 
     PROFILE_END_VAR(timer, "platform_x11:Platform_IsCtrlPressed");
-    return (mask & ControlMask) != 0;
+    { PROFILE_END_VAR(_pt, "Platform_IsCtrlPressed"); return (mask & ControlMask) != 0; }
 }
 
 bool Platform_IsShiftPressed(void) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     Display *display = get_display();
     if (!display) {
         PROFILE_END_VAR(timer, "platform_x11:Platform_IsShiftPressed");
@@ -575,11 +592,12 @@ bool Platform_IsShiftPressed(void) {
                   &root, &child, &root_x, &root_y, &win_x, &win_y, &mask);
 
     PROFILE_END_VAR(timer, "platform_x11:Platform_IsShiftPressed");
-    return (mask & ShiftMask) != 0;
+    { PROFILE_END_VAR(_pt, "Platform_IsShiftPressed"); return (mask & ShiftMask) != 0; }
 }
 
 bool Platform_IsAltPressed(void) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     Display *display = get_display();
     if (!display) {
         PROFILE_END_VAR(timer, "platform_x11:Platform_IsAltPressed");
@@ -594,11 +612,12 @@ bool Platform_IsAltPressed(void) {
                   &root, &child, &root_x, &root_y, &win_x, &win_y, &mask);
 
     PROFILE_END_VAR(timer, "platform_x11:Platform_IsAltPressed");
-    return (mask & Mod1Mask) != 0;
+    { PROFILE_END_VAR(_pt, "Platform_IsAltPressed"); return (mask & Mod1Mask) != 0; }
 }
 
 bool Platform_IsSuperPressed(void) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     Display *display = get_display();
     if (!display) {
         PROFILE_END_VAR(timer, "platform_x11:Platform_IsSuperPressed");
@@ -613,11 +632,12 @@ bool Platform_IsSuperPressed(void) {
                   &root, &child, &root_x, &root_y, &win_x, &win_y, &mask);
 
     PROFILE_END_VAR(timer, "platform_x11:Platform_IsSuperPressed");
-    return (mask & Mod4Mask) != 0;
+    { PROFILE_END_VAR(_pt, "Platform_IsSuperPressed"); return (mask & Mod4Mask) != 0; }
 }
 
 char* Platform_QueryZoxidePath(const char* query) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     if (!query) {
         log_error("query is NULL");
 
@@ -670,36 +690,41 @@ char* Platform_QueryZoxidePath(const char* query) {
 
 
     PROFILE_END_VAR(timer, "platform_x11:Platform_QueryZoxidePath");
-    return out;
+    { PROFILE_END_VAR(_pt, "Platform_QueryZoxidePath"); return out; }
 }
 
 void Platform_StartUniversalTimer(void) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     log_warn("not implemented yet");
     PROFILE_END_VAR(timer, "platform_x11:Platform_StartUniversalTimer");
 }
 
 void Platform_ResetUniversalTimer(void) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     log_warn("not implemented yet");
     PROFILE_END_VAR(timer, "platform_x11:Platform_ResetUniversalTimer");
 }
 
 void Platform_ModifyUniversalTimer(double seconds_to_add) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     (void)seconds_to_add;
     log_warn("not implemented yet");
     PROFILE_END_VAR(timer, "platform_x11:Platform_ModifyUniversalTimer");
 }
 
 double Platform_GetUniversalTimeSeconds(void) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     PROFILE_END_VAR(timer, "platform_x11:Platform_GetUniversalTimeSeconds");
-    return 0.0;
+    { PROFILE_END_VAR(_pt, "Platform_GetUniversalTimeSeconds"); return 0.0; }
 }
 
 void Platform_WaitForKeypressAsync(KeyCallback callback) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     (void)callback;
     log_warn("not implemented yet");
     PROFILE_END_VAR(timer, "platform_x11:Platform_WaitForKeypressAsync");
@@ -727,26 +752,30 @@ static XftFont* g_font_retired_xft[X11_FONT_RETIRED];
 static int g_font_retired_next = 0;
 
 static void x11_font_retire(Display* dpy, XftFont* xft) {
-    g_font_retired_dpy[g_font_retired_next] = dpy;
+        PROFILE_START(_pt);
+g_font_retired_dpy[g_font_retired_next] = dpy;
     g_font_retired_xft[g_font_retired_next] = xft;
     g_font_retired_next = (g_font_retired_next + 1) % X11_FONT_RETIRED;
 }
 
 static bool x11_font_was_retired(Display* dpy, XftFont* xft) {
-    for (int i = 0; i < X11_FONT_RETIRED; i++) {
+        PROFILE_START(_pt);
+for (int i = 0; i < X11_FONT_RETIRED; i++) {
         if (g_font_retired_xft[i] == xft && g_font_retired_dpy[i] == dpy) return true;
     }
-    return false;
+    { PROFILE_END_VAR(_pt, "x11_font_was_retired"); return false; }
 }
 
 static bool x11_font_slot_matches(const X11FontSlot* s, Display* dpy, int size, const char* face_name) {
-    if (!s->xft || s->dpy != dpy || s->size != size) return false;
-    if (!s->name || !face_name) return s->name == face_name;
-    return strcmp(s->name, face_name) == 0;
+        PROFILE_START(_pt);
+if (!s->xft || s->dpy != dpy || s->size != size) { PROFILE_END_VAR(_pt, "x11_font_slot_matches"); return false; }
+    if (!s->name || !face_name) { PROFILE_END_VAR(_pt, "x11_font_slot_matches"); return s->name == face_name; }
+    { PROFILE_END_VAR(_pt, "x11_font_slot_matches"); return strcmp(s->name, face_name) == 0; }
 }
 
 static void x11_font_slot_clear(X11FontSlot* s) {
-    if (s->xft) {
+        PROFILE_START(_pt);
+if (s->xft) {
         XftFontClose(s->dpy, s->xft);
         x11_font_retire(s->dpy, s->xft);
     }
@@ -759,14 +788,16 @@ static void x11_font_slot_clear(X11FontSlot* s) {
 }
 
 static bool x11_font_is_cached(Display* dpy, XftFont* xft) {
-    for (int i = 0; i < X11_FONT_CACHE_SLOTS; i++) {
+        PROFILE_START(_pt);
+for (int i = 0; i < X11_FONT_CACHE_SLOTS; i++) {
         if (g_font_slots[i].xft == xft && g_font_slots[i].dpy == dpy) return true;
     }
-    return false;
+    { PROFILE_END_VAR(_pt, "x11_font_is_cached"); return false; }
 }
 
 FontHandle Platform_CreateFontOnDisplay(Display* dpy, int size, const char* face_name) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     if (!dpy) { PROFILE_END_VAR(timer, "platform_x11:Platform_CreateFontOnDisplay"); return FH_NULL; }
 
     pthread_mutex_lock(&g_font_cache_mtx);
@@ -829,13 +860,14 @@ FontHandle Platform_CreateFontOnDisplay(Display* dpy, int size, const char* face
     FontHandle made = { .xfont = xf, .dpy = dpy };
     pthread_mutex_unlock(&g_font_cache_mtx);
     PROFILE_END_VAR(timer, "platform_x11:Platform_CreateFontOnDisplay");
-    return made;
+    { PROFILE_END_VAR(_pt, "Platform_CreateFontOnDisplay"); return made; }
 }
 
 pthread_mutex_t g_font_mtx = PTHREAD_MUTEX_INITIALIZER;
 
 FontHandle Platform_CreateFont(int size, const char* face_name) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     pthread_mutex_lock(&g_font_mtx); 
 
     Display* dpy = get_display();
@@ -852,30 +884,33 @@ FontHandle Platform_CreateFont(int size, const char* face_name) {
     log_info("Platform_CreateFont size=%d face_name='%s'", size, face_name ? face_name : "");;
  
     PROFILE_END_VAR(timer, "platform_x11:Platform_CreateFont");
-    return fh;
+    { PROFILE_END_VAR(_pt, "Platform_CreateFont"); return fh; }
 }
 
 void Platform_DestroyFont(FontHandle font) {
-    XftFont* xf = FH_TO_XFT(font);
-    if (!xf) return;
+        PROFILE_START(_pt);
+XftFont* xf = FH_TO_XFT(font);
+    if (!xf) { PROFILE_END_VAR(_pt, "Platform_DestroyFont"); return ; }
     pthread_mutex_lock(&g_font_cache_mtx);
     bool cached = x11_font_is_cached(FH_TO_DPY(font), xf);
     bool retired = cached ? false : x11_font_was_retired(FH_TO_DPY(font), xf);
     pthread_mutex_unlock(&g_font_cache_mtx);
-    if (cached || retired) return;
+    if (cached || retired) { PROFILE_END_VAR(_pt, "Platform_DestroyFont"); return ; }
     XftFontClose(FH_TO_DPY(font), xf);
 }
 
 static int xft_text_width(Display* dpy, XftFont* xf, const char* text, int len) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     XGlyphInfo ext;
     XftTextExtentsUtf8(dpy, xf, (FcChar8*)text, len, &ext);
     PROFILE_END_VAR(timer, "platform_x11:xft_text_width");
-    return ext.xOff;
+    { PROFILE_END_VAR(_pt, "xft_text_width"); return ext.xOff; }
 }
 
 void Platform_GetTextExtents(FontHandle font, const char* text, int maxWidth, int* outWidth, int* outHeight) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     if (!FH_TO_XFT(font) || !text) {
         *outWidth = 0;
         *outHeight = 0;
@@ -911,7 +946,8 @@ void Platform_GetTextExtents(FontHandle font, const char* text, int maxWidth, in
 }
 
 long Platform_GetFileSize(char *filepath) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     FILE *fp = fopen(filepath, "rb"); 
     if (fp == NULL) {
  PROFILE_END_VAR(timer, "platform_x11:Platform_GetFileSize");
@@ -928,7 +964,7 @@ long Platform_GetFileSize(char *filepath) {
     log_info("Platform_GetFileSize filepath=%p", filepath);;
 
     PROFILE_END_VAR(timer, "platform_x11:Platform_GetFileSize");
-    return size;
+    { PROFILE_END_VAR(_pt, "Platform_GetFileSize"); return size; }
 }
 
 #define MAX_WATCH_ROOTS 32
@@ -967,14 +1003,15 @@ static int g_cfile_fd = -1;
 static char g_cfile_root[256] = {0};
 
 static void watch_record_path(int wd, int root_index, const char* abs_path) {
-    for (int i = 0; i < g_watch_path_count; i++) {
+        PROFILE_START(_pt);
+for (int i = 0; i < g_watch_path_count; i++) {
         if (g_watch_paths[i].wd == wd) {
             snprintf(g_watch_paths[i].path, sizeof(g_watch_paths[i].path), "%s", abs_path);
             g_watch_paths[i].root_index = root_index;
             return;
         }
     }
-    if (g_watch_path_count >= MAX_WATCH_PATHS) return;
+    if (g_watch_path_count >= MAX_WATCH_PATHS) { PROFILE_END_VAR(_pt, "watch_record_path"); return ; }
     g_watch_paths[g_watch_path_count].wd = wd;
     g_watch_paths[g_watch_path_count].root_index = root_index;
     snprintf(g_watch_paths[g_watch_path_count].path, sizeof(g_watch_paths[g_watch_path_count].path), "%s", abs_path);
@@ -982,14 +1019,16 @@ static void watch_record_path(int wd, int root_index, const char* abs_path) {
 }
 
 static const WatchPathEntry* watch_find_path(int wd) {
-    for (int i = 0; i < g_watch_path_count; i++) {
+        PROFILE_START(_pt);
+for (int i = 0; i < g_watch_path_count; i++) {
         if (g_watch_paths[i].wd == wd) return &g_watch_paths[i];
     }
-    return NULL;
+    { PROFILE_END_VAR(_pt, "watch_find_path"); return NULL; }
 }
 
 static void watch_forget_path(int wd) {
-    for (int i = 0; i < g_watch_path_count; i++) {
+        PROFILE_START(_pt);
+for (int i = 0; i < g_watch_path_count; i++) {
         if (g_watch_paths[i].wd == wd) {
             g_watch_paths[i] = g_watch_paths[g_watch_path_count - 1];
             g_watch_path_count--;
@@ -999,8 +1038,9 @@ static void watch_forget_path(int wd) {
 }
 
 static int watch_add_tree(int root_index, int fd, const char* abs_path, int depth) {
-    if (g_watch_quit) return 0;
-    if (depth > WATCH_MAX_DEPTH) return 0;
+        PROFILE_START(_pt);
+if (g_watch_quit) { PROFILE_END_VAR(_pt, "watch_add_tree"); return 0; }
+    if (depth > WATCH_MAX_DEPTH) { PROFILE_END_VAR(_pt, "watch_add_tree"); return 0; }
     int added = 0;
     int wd = inotify_add_watch(fd, abs_path,
         IN_CREATE | IN_DELETE | IN_CLOSE_WRITE | IN_MOVED_TO | IN_MOVED_FROM | IN_DELETE_SELF | IN_IGNORED);
@@ -1009,7 +1049,7 @@ static int watch_add_tree(int root_index, int fd, const char* abs_path, int dept
         added++;
     }
     DIR* d = opendir(abs_path);
-    if (!d) return added;
+    if (!d) { PROFILE_END_VAR(_pt, "watch_add_tree"); return added; }
     struct dirent* e;
     while ((e = readdir(d)) != NULL) {
         if (g_watch_quit) break;
@@ -1022,18 +1062,20 @@ static int watch_add_tree(int root_index, int fd, const char* abs_path, int dept
         added += watch_add_tree(root_index, fd, child, depth + 1);
     }
     closedir(d);
-    return added;
+    { PROFILE_END_VAR(_pt, "watch_add_tree"); return added; }
 }
 
 static int watch_root_index_for(const char* dir_path) {
-    for (int i = 0; i < g_watch_root_count; i++) {
+        PROFILE_START(_pt);
+for (int i = 0; i < g_watch_root_count; i++) {
         if (strcmp(g_watch_roots[i].root_path, dir_path) == 0) return i;
     }
-    return -1;
+    { PROFILE_END_VAR(_pt, "watch_root_index_for"); return -1; }
 }
 
 static void* watch_register_worker(void* arg) {
-    WatchRoot* root = (WatchRoot*)arg;
+        PROFILE_START(_pt);
+WatchRoot* root = (WatchRoot*)arg;
     pthread_mutex_lock(&g_watch_paths_mtx);
     if (!g_watch_quit && root->fd >= 0) {
         int n = watch_add_tree(root->index, root->fd, root->root_path, 0);
@@ -1047,11 +1089,12 @@ static void* watch_register_worker(void* arg) {
     root->walking = false;
     root->ready = true;
     pthread_mutex_unlock(&g_watch_mtx);
-    return NULL;
+    { PROFILE_END_VAR(_pt, "watch_register_worker"); return NULL; }
 }
 
 char* Platform_RegisterDirWatcher(const char* dir_path, DirChangeCallback callback) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     if (!dir_path) { log_error("returned NULL dir_path='%s'", dir_path ? dir_path : "null"); PROFILE_END_VAR(timer, "platform_x11:Platform_RegisterDirWatcher"); return NULL; }
 
     pthread_mutex_lock(&g_watch_mtx);
@@ -1152,11 +1195,12 @@ char* Platform_RegisterDirWatcher(const char* dir_path, DirChangeCallback callba
     }
     pthread_mutex_unlock(&g_watch_paths_mtx);
     PROFILE_END_VAR(timer, "platform_x11:Platform_RegisterDirWatcher");
-    return last_name;
+    { PROFILE_END_VAR(_pt, "Platform_RegisterDirWatcher"); return last_name; }
 }
 
 void Platform_CleanupDirWatchers(void) {
-    pthread_mutex_lock(&g_watch_mtx);
+        PROFILE_START(_pt);
+pthread_mutex_lock(&g_watch_mtx);
     g_watch_quit = true;
     pthread_mutex_unlock(&g_watch_mtx);
 
@@ -1191,7 +1235,8 @@ void Platform_CleanupDirWatchers(void) {
 }
 
 char* Platform_WatchForCFileChanges(const char* dir_path) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     if (!dir_path) { log_error("returned NULL dir_path='%s'", dir_path ? dir_path : "null"); PROFILE_END_VAR(timer, "platform_x11:Platform_WatchForCFileChanges"); return NULL; }
 
     if (g_cfile_fd < 0 || strcmp(g_cfile_root, dir_path) != 0) {
@@ -1236,51 +1281,62 @@ char* Platform_WatchForCFileChanges(const char* dir_path) {
         }
     }
     PROFILE_END_VAR(timer, "platform_x11:Platform_WatchForCFileChanges");
-    return NULL;
+    { PROFILE_END_VAR(_pt, "Platform_WatchForCFileChanges"); return NULL; }
 }
 
 bool Platform_FocusWindow(const char* title) {
-  return Wm_FocusByTitle(title);
+    PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "Platform_FocusWindow"); return Wm_FocusByTitle(title); }
 }
 
 bool Platform_CloseActiveWindow(void) {
-  return Wm_CloseActiveWindow();
+    PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "Platform_CloseActiveWindow"); return Wm_CloseActiveWindow(); }
 }
 
 bool Platform_ToggleFullscreenActive(void) {
-  return Wm_ToggleFullscreenActive();
+    PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "Platform_ToggleFullscreenActive"); return Wm_ToggleFullscreenActive(); }
 }
 
 bool Platform_MoveActiveWindowToMonitor(bool right) {
-  return Wm_MoveActiveWindowToMonitor(right);
+    PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "Platform_MoveActiveWindowToMonitor"); return Wm_MoveActiveWindowToMonitor(right); }
 }
 
 bool Platform_MoveActiveWindowLeft(void) {
-  return Wm_MoveActiveWindowLeft();
+    PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "Platform_MoveActiveWindowLeft"); return Wm_MoveActiveWindowLeft(); }
 }
 
 bool Platform_MoveActiveWindowRight(void) {
-  return Wm_MoveActiveWindowRight();
+    PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "Platform_MoveActiveWindowRight"); return Wm_MoveActiveWindowRight(); }
 }
 
 bool Platform_FocusWindowLeft(void) {
-  return Wm_FocusWindowLeft();
+    PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "Platform_FocusWindowLeft"); return Wm_FocusWindowLeft(); }
 }
 
 bool Platform_FocusWindowRight(void) {
-  return Wm_FocusWindowRight();
+    PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "Platform_FocusWindowRight"); return Wm_FocusWindowRight(); }
 }
 
 bool Platform_MinimizeActiveWindow(void) {
-  return Wm_MinimizeActiveWindow();
+    PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "Platform_MinimizeActiveWindow"); return Wm_MinimizeActiveWindow(); }
 }
 
 char* Platform_GetActiveWindowTitle() {
-  return Wm_GetActiveWindowTitle();
+    PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "Platform_GetActiveWindowTitle"); return Wm_GetActiveWindowTitle(); }
 }
 
 int Platform_GetIconSize(char* icon_path) {
-    if (strstr(icon_path, "32x32")){
+        PROFILE_START(_pt);
+if (strstr(icon_path, "32x32")){
       return 32;
     }
     if (strstr(icon_path, "48x48")) {
@@ -1295,7 +1351,7 @@ int Platform_GetIconSize(char* icon_path) {
     if (strstr(icon_path, "256x256")) {
       return 256;
     }
-    return 32;
+    { PROFILE_END_VAR(_pt, "Platform_GetIconSize"); return 32; }
 }
 typedef struct {
   char* name;
@@ -1313,14 +1369,16 @@ static struct { char key[512]; char value[1024]; } g_icon_cache[MAX_ICON_CACHE];
 static int g_icon_cache_count=0;
 static bool g_icon_cache_loaded=false;
 static bool icon_cache_path(char* out, size_t n) {
-    return Platform_GetFeaturePath("core", "icon_cache.txt", out, n);
+        PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "icon_cache_path"); return Platform_GetFeaturePath("core", "icon_cache.txt", out, n); }
 }
 static void icon_cache_load(void){
-    if(g_icon_cache_loaded) return; g_icon_cache_loaded=true;
+        PROFILE_START(_pt);
+if(g_icon_cache_loaded) { PROFILE_END_VAR(_pt, "icon_cache_load"); return ; } g_icon_cache_loaded=true;
     char cf[1024];
     static char content[MAX_ICON_CACHE * 1600];
-    if (!icon_cache_path(cf, sizeof(cf))) return;
-    if (File_ReadAll(cf, content, (long)sizeof(content)) <= 0) return;
+    if (!icon_cache_path(cf, sizeof(cf))) { PROFILE_END_VAR(_pt, "icon_cache_load"); return ; }
+    if (File_ReadAll(cf, content, (long)sizeof(content)) <= 0) { PROFILE_END_VAR(_pt, "icon_cache_load"); return ; }
     char* cur = content;
     while (*cur && g_icon_cache_count < MAX_ICON_CACHE) {
         char* nl = strchr(cur, '\n');
@@ -1337,32 +1395,36 @@ static void icon_cache_load(void){
     }
 }
 static const char* icon_cache_get(const char* key){
-    icon_cache_load();
-    for(int i=0;i<g_icon_cache_count;i++) if(strcmp(g_icon_cache[i].key,key)==0) return g_icon_cache[i].value;
-    return NULL;
+        PROFILE_START(_pt);
+icon_cache_load();
+    for(int i=0;i<g_icon_cache_count;i++) if(strcmp(g_icon_cache[i].key,key)==0) { PROFILE_END_VAR(_pt, "icon_cache_get"); return g_icon_cache[i].value; }
+    { PROFILE_END_VAR(_pt, "icon_cache_get"); return NULL; }
 }
 static void icon_cache_set(const char* key, const char* value){
-    icon_cache_load();
-    for(int i=0;i<g_icon_cache_count;i++) if(strcmp(g_icon_cache[i].key,key)==0) return;
-    if(g_icon_cache_count>=MAX_ICON_CACHE) return;
+        PROFILE_START(_pt);
+icon_cache_load();
+    for(int i=0;i<g_icon_cache_count;i++) if(strcmp(g_icon_cache[i].key,key)==0) { PROFILE_END_VAR(_pt, "icon_cache_set"); return ; }
+    if(g_icon_cache_count>=MAX_ICON_CACHE) { PROFILE_END_VAR(_pt, "icon_cache_set"); return ; }
     strncpy(g_icon_cache[g_icon_cache_count].key, key, sizeof(g_icon_cache[0].key)-1);
     strncpy(g_icon_cache[g_icon_cache_count].value, value, sizeof(g_icon_cache[0].value)-1);
     g_icon_cache_count++;
     char cf[1024];
     FILE* f=NULL;
     if (icon_cache_path(cf, sizeof(cf))) f=fopen(cf,"a");
-    if(!f) return;
+    if(!f) { PROFILE_END_VAR(_pt, "icon_cache_set"); return ; }
     fprintf(f,"%s=%s\n",key,value);
     fclose(f);
 }
 
 
 char* Platform_GetActiveWindowAppId(void) {
-  return Wm_GetActiveWindowAppId();
+    PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "Platform_GetActiveWindowAppId"); return Wm_GetActiveWindowAppId(); }
 }
 
 char* Platform_GetIconPath(char* app_path) {
-    if (!app_path) { log_error("operation failed, returning error app_path='%s'", app_path ? app_path : "null"); return NULL; }
+        PROFILE_START(_pt);
+if (!app_path) { log_error("operation failed, returning error app_path='%s'", app_path ? app_path : "null"); return NULL; }
     for (int i = 0; i < (int)ARRAY_LEN(supported_names_to_paths); i++) {
         if (Platform_StringContainsCaseInsensitive(app_path, supported_names_to_paths[i].name)) {
             if (access(supported_names_to_paths[i].path, F_OK)==0) return strdup(supported_names_to_paths[i].path);
@@ -1482,16 +1544,17 @@ char* Platform_GetIconPath(char* app_path) {
         if(access(pix,F_OK)==0) return strdup(pix);
     }
     snprintf(pix,sizeof(pix),"resources/Placeholder.png");
-    if(access(pix,F_OK)==0) return strdup(pix);
+    if(access(pix,F_OK)==0) { PROFILE_END_VAR(_pt, "Platform_GetIconPath"); return strdup(pix); }
     log_info("Platform_GetIconPath app_path='%s'", app_path ? app_path : "");;
-    return strdup(bare[0] ? bare : "placeholder");
+    { PROFILE_END_VAR(_pt, "Platform_GetIconPath"); return strdup(bare[0] ? bare : "placeholder"); }
 }
 
 #include "platform/x11/clipboard_x11.h"
 #include "platform/x11/clipboard_backend_x11.h"
 
 int Platform_CopyToClipboard(const char *text) {
-    if (!text) return 0;
+        PROFILE_START(_pt);
+if (!text) { PROFILE_END_VAR(_pt, "Platform_CopyToClipboard"); return 0; }
     long long t0 = Platform_GetWallClockMs();
     int wr = 0;
     int xr = 0;
@@ -1511,11 +1574,12 @@ int Platform_CopyToClipboard(const char *text) {
     log_info("COPY step2 x11 ret=%d ms=%lld", xr, Platform_GetWallClockMs() - tx);
     if (!wr && !xr) log_warn("Platform_CopyToClipboard failed both backends");
     log_info("COPY END total_ms=%lld len=%d wr=%d xr=%d", Platform_GetWallClockMs() - t0, (int)strlen(text), wr, xr);
-    return (wr || xr);
+    { PROFILE_END_VAR(_pt, "Platform_CopyToClipboard"); return (wr || xr); }
 }
 
 int Platform_CopyImageToClipboard(const unsigned char *png, size_t len) {
-    if (!png || len == 0) return 0;
+        PROFILE_START(_pt);
+if (!png || len == 0) { PROFILE_END_VAR(_pt, "Platform_CopyImageToClipboard"); return 0; }
     int wr = 0;
     int xr = 0;
     if (Platform_ClipboardAvailable()) {
@@ -1525,11 +1589,12 @@ int Platform_CopyImageToClipboard(const unsigned char *png, size_t len) {
     xr = x11_clipboard_set_image(png, len);
     log_info("Platform_CopyImageToClipboard x11=%d", xr);
     if (!wr && !xr) log_warn("Platform_CopyImageToClipboard failed both backends");
-    return (wr || xr);
+    { PROFILE_END_VAR(_pt, "Platform_CopyImageToClipboard"); return (wr || xr); }
 }
 
 int Platform_SetFileToClipboard(const char* path) {
-    if (!path || path[0] == 0) return 0;
+        PROFILE_START(_pt);
+if (!path || path[0] == 0) { PROFILE_END_VAR(_pt, "Platform_SetFileToClipboard"); return 0; }
     int wr = 0;
     int xr = 0;
     if (Platform_ClipboardAvailable()) {
@@ -1538,13 +1603,14 @@ int Platform_SetFileToClipboard(const char* path) {
     }
     xr = x11_clipboard_set_file(path);
     log_info("Platform_SetFileToClipboard x11=%d", xr);
-    return (wr || xr);
+    { PROFILE_END_VAR(_pt, "Platform_SetFileToClipboard"); return (wr || xr); }
 }
 
 
 char* Platform_RunArgvCapture(const char* const argv[], const char* stdin_data, int* out_status) {
-    if (out_status) *out_status = -1;
-    if (!argv || !argv[0]) return NULL;
+        PROFILE_START(_pt);
+if (out_status) *out_status = -1;
+    if (!argv || !argv[0]) { PROFILE_END_VAR(_pt, "Platform_RunArgvCapture"); return NULL; }
     int pin[2] = {-1, -1};
     if (stdin_data && stdin_data[0]) {
         if (pipe(pin) != 0) { log_error("Platform_RunArgvCapture pipe failed: %s", strerror(errno)); return NULL; }
@@ -1615,11 +1681,12 @@ char* Platform_RunArgvCapture(const char* const argv[], const char* stdin_data, 
     int st = 0;
     while (waitpid(pid, &st, 0) < 0 && errno == EINTR) {}
     if (out_status) *out_status = WIFEXITED(st) ? WEXITSTATUS(st) : -1;
-    return out;
+    { PROFILE_END_VAR(_pt, "Platform_RunArgvCapture"); return out; }
 }
 
 bool Platform_BuildFeature(const char* src, const char* out) {
-    if (!src || !out) { log_error("operation failed, returning error src='%s' out='%s'", src ? src : "null", out ? out : "null"); return false; }
+        PROFILE_START(_pt);
+if (!src || !out) { log_error("operation failed, returning error src='%s' out='%s'", src ? src : "null", out ? out : "null"); return false; }
     char tmp[1024];
     snprintf(tmp, sizeof(tmp), "%s.tmp.%d", out, (int)getpid());
     char cmd[1024];
@@ -1636,21 +1703,24 @@ bool Platform_BuildFeature(const char* src, const char* out) {
     if (!ok) { unlink(tmp); return false; }
     if (rename(tmp, out) != 0) { unlink(tmp); log_error("rename %s -> %s failed: %s", tmp, out, strerror(errno)); return false; }
     log_info("Platform_BuildFeature src='%s' out='%s'", src ? src : "", out ? out : "");;
-    return true;
+    { PROFILE_END_VAR(_pt, "Platform_BuildFeature"); return true; }
 }
 
 PlWindowList Platform_GetWindowTitles() {
- return Wm_GetWindowTitles();
+  PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "Platform_GetWindowTitles"); return Wm_GetWindowTitles(); }
 }
 
 PlWindowList Platform_GetWindowNames() {
-  return Wm_GetWindowNames();
+    PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "Platform_GetWindowNames"); return Wm_GetWindowNames(); }
 }
 
 static int g_singleton_lock_fd = -1;
 
 bool Platform_TryAcquireSingleInstance(void) {
-    g_singleton_lock_fd = open("/tmp/flint.lock", O_RDWR | O_CREAT, 0666);
+        PROFILE_START(_pt);
+g_singleton_lock_fd = open("/tmp/flint.lock", O_RDWR | O_CREAT, 0666);
     if (g_singleton_lock_fd < 0) {
         log_error("Cannot open singleton lock /tmp/flint.lock (%s). If it is owned by another user, remove it: sudo rm /tmp/flint.lock", strerror(errno));
         return false;
@@ -1662,11 +1732,12 @@ bool Platform_TryAcquireSingleInstance(void) {
         return false;
     }
     fcntl(g_singleton_lock_fd, F_SETFD, FD_CLOEXEC);
-    return true;
+    { PROFILE_END_VAR(_pt, "Platform_TryAcquireSingleInstance"); return true; }
 }
 
 bool Platform_InitDisplaySafe(void) {
-    const char* dd = getenv("DISPLAY");
+        PROFILE_START(_pt);
+const char* dd = getenv("DISPLAY");
     if (!dd || !dd[0]) {
         const char* live = Platform_GetSessionDisplay();
         if (live && live[0]) setenv("DISPLAY", live, 1);
@@ -1714,25 +1785,30 @@ bool Platform_InitDisplaySafe(void) {
         log_info("Continuing without X11 display (headless mode)");
         return false;
     }
-    return true;
+    { PROFILE_END_VAR(_pt, "Platform_InitDisplaySafe"); return true; }
 }
 
 void Platform_CleanupDisplaySafe(void) {
-    Platform_ClipboardShutdown();
+        PROFILE_START(_pt);
+Platform_ClipboardShutdown();
     x11_clipboard_shutdown();
     cleanup_display();
 }
 
 void Platform_InitMainThreadContext(void) {
+    PROFILE_START(_pt);
 }
 
 void Platform_FixWorkingDirectory(void) {
+    PROFILE_START(_pt);
 }
 void CleanupPerFeatureVimMap(void) {
+    PROFILE_START(_pt);
 }
 
 void Platform_CleanupPlatformResources(void) {
-    CleanupPerFeatureVimMap();
+        PROFILE_START(_pt);
+CleanupPerFeatureVimMap();
     {
         extern void x11_default_apps_free_cache(void);
         x11_default_apps_free_cache();
@@ -1750,29 +1826,35 @@ void Platform_CleanupPlatformResources(void) {
 }
 
 void Platform_StartNotificationDaemon(void) {
+    PROFILE_START(_pt);
 }
 
 int Platform_InitializeTrayIcon(void) {
-  return 0; 
+    PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "Platform_InitializeTrayIcon"); return 0; } 
 }
 void Platform_InitUI(void) {
+    PROFILE_START(_pt);
 }
 void Platform_ShutdownUI(void) {
+    PROFILE_START(_pt);
 }
 static unsigned char x11_mask_extract(unsigned long pixel, unsigned long mask) {
-    if (!mask) return 0;
+        PROFILE_START(_pt);
+if (!mask) { PROFILE_END_VAR(_pt, "x11_mask_extract"); return 0; }
     int shift = 0;
     while (!(mask & 1ul)) { mask >>= 1; shift++; }
     unsigned long bits = 0;
     for (unsigned long m = mask; m; m >>= 1) bits++;
     unsigned long v = (pixel >> shift) & ((1ul << bits) - 1ul);
-    if (bits == 0) return 0;
-    if (bits >= 8) return (unsigned char)(v >> (bits - 8));
-    return (unsigned char)((v * 255ul) / ((1ul << bits) - 1ul));
+    if (bits == 0) { PROFILE_END_VAR(_pt, "x11_mask_extract"); return 0; }
+    if (bits >= 8) { PROFILE_END_VAR(_pt, "x11_mask_extract"); return (unsigned char)(v >> (bits - 8)); }
+    { PROFILE_END_VAR(_pt, "x11_mask_extract"); return (unsigned char)((v * 255ul) / ((1ul << bits) - 1ul)); }
 }
 
 PlColor Platform_GetPixelColor(int x, int y) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     PlColor out = {0, 0, 0};
     Display* dpy = get_display();
     if (!dpy) { PROFILE_END_VAR(timer, "platform_x11:Platform_GetPixelColor"); return out; }
@@ -1790,30 +1872,32 @@ PlColor Platform_GetPixelColor(int x, int y) {
     out.b = x11_mask_extract(pixel, attr.visual->blue_mask);
     XDestroyImage(img);
     PROFILE_END_VAR(timer, "platform_x11:Platform_GetPixelColor");
-    return out;
+    { PROFILE_END_VAR(_pt, "Platform_GetPixelColor"); return out; }
 }
 
 bool Platform_MoveToPos(int x, int y) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     Display* dpy = get_display();
     if (!dpy) { PROFILE_END_VAR(timer, "platform_x11:Platform_MoveToPos"); return false; }
 #if __has_include(<X11/extensions/XTest.h>)
     XTestFakeMotionEvent(dpy, -1, x, y, CurrentTime);
     XSync(dpy, False);
     PROFILE_END_VAR(timer, "platform_x11:Platform_MoveToPos");
-    return true;
+    { PROFILE_END_VAR(_pt, "Platform_MoveToPos"); return true; }
 #else
     XWarpPointer(dpy, None, DefaultRootWindow(dpy), 0, 0, 0, 0, x, y);
     XSync(dpy, False);
     PROFILE_END_VAR(timer, "platform_x11:Platform_MoveToPos");
-    return true;
+    { PROFILE_END_VAR(_pt, "Platform_MoveToPos"); return true; }
 #endif
 }
 
 static int x11_x11_button(int button);
 
 bool Platform_ClickButton(int button) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     Display* dpy = get_display();
     if (!dpy) { PROFILE_END_VAR(timer, "platform_x11:Platform_ClickButton"); return false; }
     int xb = x11_x11_button(button);
@@ -1826,15 +1910,16 @@ bool Platform_ClickButton(int button) {
     XTestFakeButtonEvent(dpy, (unsigned int)xb, False, CurrentTime);
     XSync(dpy, False);
     PROFILE_END_VAR(timer, "platform_x11:Platform_ClickButton");
-    return true;
+    { PROFILE_END_VAR(_pt, "Platform_ClickButton"); return true; }
 #else
     PROFILE_END_VAR(timer, "platform_x11:Platform_ClickButton");
-    return false;
+    { PROFILE_END_VAR(_pt, "Platform_ClickButton"); return false; }
 #endif
 }
 
 bool Platform_Click(void) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     Display* dpy = get_display();
     if (!dpy) { PROFILE_END_VAR(timer, "platform_x11:Platform_Click"); return false; }
 #if __has_include(<X11/extensions/XTest.h>)
@@ -1845,15 +1930,16 @@ bool Platform_Click(void) {
     XTestFakeButtonEvent(dpy, 1, False, CurrentTime);
     XSync(dpy, False);
     PROFILE_END_VAR(timer, "platform_x11:Platform_Click");
-    return true;
+    { PROFILE_END_VAR(_pt, "Platform_Click"); return true; }
 #else
     PROFILE_END_VAR(timer, "platform_x11:Platform_Click");
-    return false;
+    { PROFILE_END_VAR(_pt, "Platform_Click"); return false; }
 #endif
 }
 
 static int x11_x11_button(int button) {
-    switch (button) {
+        PROFILE_START(_pt);
+switch (button) {
         case 1: return 1;
         case 2: return 3;
         case 3: return 2;
@@ -1866,7 +1952,8 @@ static int x11_x11_button(int button) {
 }
 
 bool Platform_GetVirtualBounds(int* out_x, int* out_y, int* out_w, int* out_h) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     if (out_x) *out_x = 0;
     if (out_y) *out_y = 0;
     if (out_w) *out_w = 0;
@@ -1906,11 +1993,12 @@ bool Platform_GetVirtualBounds(int* out_x, int* out_y, int* out_w, int* out_h) {
     if (out_w) *out_w = max_x - min_x;
     if (out_h) *out_h = max_y - min_y;
     PROFILE_END_VAR(timer, "platform_x11:Platform_GetVirtualBounds");
-    return true;
+    { PROFILE_END_VAR(_pt, "Platform_GetVirtualBounds"); return true; }
 }
 
 bool Platform_MouseButtonDown(int button, bool down) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     Display* dpy = get_display();
     if (!dpy) { PROFILE_END_VAR(timer, "platform_x11:Platform_MouseButtonDown"); return false; }
     int xb = x11_x11_button(button);
@@ -1919,15 +2007,16 @@ bool Platform_MouseButtonDown(int button, bool down) {
     XTestFakeButtonEvent(dpy, (unsigned int)xb, down, CurrentTime);
     XSync(dpy, False);
     PROFILE_END_VAR(timer, "platform_x11:Platform_MouseButtonDown");
-    return true;
+    { PROFILE_END_VAR(_pt, "Platform_MouseButtonDown"); return true; }
 #else
     PROFILE_END_VAR(timer, "platform_x11:Platform_MouseButtonDown");
-    return false;
+    { PROFILE_END_VAR(_pt, "Platform_MouseButtonDown"); return false; }
 #endif
 }
 
 bool Platform_MouseScroll(int notches) {
-    PROFILE_START(timer);
+        PROFILE_START(_pt);
+PROFILE_START(timer);
     if (notches == 0) { PROFILE_END_VAR(timer, "platform_x11:Platform_MouseScroll"); return true; }
     Display* dpy = get_display();
     if (!dpy) { PROFILE_END_VAR(timer, "platform_x11:Platform_MouseScroll"); return false; }
@@ -1940,33 +2029,36 @@ bool Platform_MouseScroll(int notches) {
         XSync(dpy, False);
     }
     PROFILE_END_VAR(timer, "platform_x11:Platform_MouseScroll");
-    return true;
+    { PROFILE_END_VAR(_pt, "Platform_MouseScroll"); return true; }
 #else
     PROFILE_END_VAR(timer, "platform_x11:Platform_MouseScroll");
-    return false;
+    { PROFILE_END_VAR(_pt, "Platform_MouseScroll"); return false; }
 #endif
 }
 
 char* Platform_GetWorkingDir(void) {
-    char* raw = Platform_RunTerminalCommand("pwd", false);
-    if (!raw) return NULL;
+        PROFILE_START(_pt);
+char* raw = Platform_RunTerminalCommand("pwd", false);
+    if (!raw) { PROFILE_END_VAR(_pt, "Platform_GetWorkingDir"); return NULL; }
     
     size_t len = strlen(raw);
     while (len > 0 && (raw[len - 1] == '\n' || raw[len - 1] == '\r')) {
         raw[--len] = '\0';
     }
     
-    return raw;
+    { PROFILE_END_VAR(_pt, "Platform_GetWorkingDir"); return raw; }
 }
 
 void Platform_InitDataFolder() {
-    char dir_path[300];
+        PROFILE_START(_pt);
+char dir_path[300];
     snprintf(dir_path,sizeof(dir_path),"%s/.local/share/flint",Platform_GetRealHome());
     nob_mkdir_if_not_exists(dir_path);
 }
 
 bool Platform_GetFeaturePath(const char* feature, const char* name, char* out, size_t out_len) {
-    if (!feature || !feature[0] || !name || !name[0] || !out || out_len == 0) return false;
+        PROFILE_START(_pt);
+if (!feature || !feature[0] || !name || !name[0] || !out || out_len == 0) { PROFILE_END_VAR(_pt, "Platform_GetFeaturePath"); return false; }
     char dir_path[512];
     snprintf(dir_path,sizeof(dir_path),"%s/.local/share/flint",Platform_GetRealHome());
     nob_mkdir_if_not_exists(dir_path);
@@ -1974,11 +2066,12 @@ bool Platform_GetFeaturePath(const char* feature, const char* name, char* out, s
     snprintf(feat_path,sizeof(feat_path),"%s/%s",dir_path,feature);
     nob_mkdir_if_not_exists(feat_path);
     snprintf(out,out_len,"%s/%s",feat_path,name);
-    return true;
+    { PROFILE_END_VAR(_pt, "Platform_GetFeaturePath"); return true; }
 }
 
 static void sanitize_feature_stem(const char *src, char *out, size_t out_len) {
-    if (!out || out_len == 0) return;
+        PROFILE_START(_pt);
+if (!out || out_len == 0) { PROFILE_END_VAR(_pt, "sanitize_feature_stem"); return ; }
     out[0] = '\0';
     size_t w = 0;
     for (const char *p = src; *p && w + 1 < out_len; p++) {
@@ -1992,9 +2085,10 @@ static void sanitize_feature_stem(const char *src, char *out, size_t out_len) {
 }
 
 static bool lib_basename_stem(const char *base, char *out, size_t out_len) {
-    char work[256];
+        PROFILE_START(_pt);
+char work[256];
     size_t len = strlen(base);
-    if (len == 0 || len >= sizeof(work)) return false;
+    if (len == 0 || len >= sizeof(work)) { PROFILE_END_VAR(_pt, "lib_basename_stem"); return false; }
     memcpy(work, base, len + 1);
     for (;;) {
         if (len < 4) break;
@@ -2016,32 +2110,34 @@ static bool lib_basename_stem(const char *base, char *out, size_t out_len) {
     if (len >= 3 && strcmp(work + len - 3, ".so") == 0) len -= 3;
     else if (len >= 4 && strcmp(work + len - 4, ".dll") == 0) len -= 4;
     else if (len >= 5 && strcmp(work + len - 5, ".dylib") == 0) len -= 5;
-    else return false;
-    if (len == 0 || len >= out_len) return false;
+    else { PROFILE_END_VAR(_pt, "lib_basename_stem"); return false; }
+    if (len == 0 || len >= out_len) { PROFILE_END_VAR(_pt, "lib_basename_stem"); return false; }
     memcpy(out, work, len);
     out[len] = '\0';
-    return true;
+    { PROFILE_END_VAR(_pt, "lib_basename_stem"); return true; }
 }
 
 static bool feature_stem_from_caller(void *caller, char *out, size_t out_len) {
-    if (!caller || !out || out_len == 0) return false;
+        PROFILE_START(_pt);
+if (!caller || !out || out_len == 0) { PROFILE_END_VAR(_pt, "feature_stem_from_caller"); return false; }
     out[0] = '\0';
     char mod_path[512];
-    if (!Platform_GetModuleOwnerPath(caller, mod_path, sizeof(mod_path))) return false;
+    if (!Platform_GetModuleOwnerPath(caller, mod_path, sizeof(mod_path))) { PROFILE_END_VAR(_pt, "feature_stem_from_caller"); return false; }
     const char *base = strrchr(mod_path, '/');
     base = base ? base + 1 : mod_path;
     char stem[128];
-    if (!lib_basename_stem(base, stem, sizeof(stem))) return false;
+    if (!lib_basename_stem(base, stem, sizeof(stem))) { PROFILE_END_VAR(_pt, "feature_stem_from_caller"); return false; }
     sanitize_feature_stem(stem, out, out_len);
-    return out[0] != '\0';
+    { PROFILE_END_VAR(_pt, "feature_stem_from_caller"); return out[0] != '\0'; }
 }
 
 bool Platform_ResolveDataPath(void *caller, const char* name, char* out, size_t out_len) {
-    if (!name || !name[0] || !out || out_len == 0) return false;
+        PROFILE_START(_pt);
+if (!name || !name[0] || !out || out_len == 0) { PROFILE_END_VAR(_pt, "Platform_ResolveDataPath"); return false; }
     for (const char* p = name; *p; p++) {
         if (*p == '/' || *p == '\\') return false;
     }
-    if (strstr(name, "..")) return false;
+    if (strstr(name, "..")) { PROFILE_END_VAR(_pt, "Platform_ResolveDataPath"); return false; }
     const char* dot = strrchr(name, '.');
     size_t stemlen = dot ? (size_t)(dot - name) : strlen(name);
     if (stemlen > 0 && stemlen < 64) {
@@ -2073,30 +2169,31 @@ bool Platform_ResolveDataPath(void *caller, const char* name, char* out, size_t 
         return Platform_GetFeaturePath(from_caller, name, out, out_len);
     }
     const char* feat = FlintContext_Get()->window.current_feature;
-    if (!feat || !feat[0]) return false;
+    if (!feat || !feat[0]) { PROFILE_END_VAR(_pt, "Platform_ResolveDataPath"); return false; }
     char safe[128];
     sanitize_feature_stem(feat, safe, sizeof(safe));
-    if (safe[0] == '\0') return false;
-    return Platform_GetFeaturePath(safe, name, out, out_len);
+    if (safe[0] == '\0') { PROFILE_END_VAR(_pt, "Platform_ResolveDataPath"); return false; }
+    { PROFILE_END_VAR(_pt, "Platform_ResolveDataPath"); return Platform_GetFeaturePath(safe, name, out, out_len); }
 }
 
 bool Platform_WriteTempFile(const char* name, const void* data, size_t len, char* out_path, size_t out_len) {
-    if (!name || !name[0] || !out_path || out_len == 0) return false;
-    if (!data && len > 0) return false;
+        PROFILE_START(_pt);
+if (!name || !name[0] || !out_path || out_len == 0) { PROFILE_END_VAR(_pt, "Platform_WriteTempFile"); return false; }
+    if (!data && len > 0) { PROFILE_END_VAR(_pt, "Platform_WriteTempFile"); return false; }
     for (const char* p = name; *p; p++) {
         if (*p == '/' || *p == '\\') return false;
     }
-    if (strstr(name, "..")) return false;
+    if (strstr(name, "..")) { PROFILE_END_VAR(_pt, "Platform_WriteTempFile"); return false; }
     const char* dir = getenv("TMPDIR");
     if (!dir || !dir[0]) dir = "/tmp";
     snprintf(out_path, out_len, "%s/%s", dir, name);
     out_path[out_len - 1] = '\0';
     FILE* f = fopen(out_path, "wb");
-    if (!f) return false;
+    if (!f) { PROFILE_END_VAR(_pt, "Platform_WriteTempFile"); return false; }
     bool ok = true;
     if (len > 0 && fwrite(data, 1, len, f) != len) ok = false;
     if (fclose(f) != 0) ok = false;
     if (!ok) remove(out_path);
-    return ok;
+    { PROFILE_END_VAR(_pt, "Platform_WriteTempFile"); return ok; }
 }
 

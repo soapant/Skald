@@ -3,12 +3,14 @@
 #include "platform/widget.h"
 #include <windows.h>
 
+#include "core/timer.h"
 int pending_hotkey_vk = 0;
 int pending_hotkey_mod = 0;
 long pending_hotkey_timeMs = 0;
 
 int WindowManager_RunWin32(WindowManager* wm) {
-    if (!wm) return -1;
+        PROFILE_START(_pt);
+if (!wm) { PROFILE_END_VAR(_pt, "WindowManager_RunWin32"); return -1; }
     wm->running = true;
 
     MSG msg;
@@ -25,11 +27,12 @@ int WindowManager_RunWin32(WindowManager* wm) {
         if (!got) Sleep(10);
     }
 
-    return 0;
+    { PROFILE_END_VAR(_pt, "WindowManager_RunWin32"); return 0; }
 }
 
 void WindowManager_ProcessEventsWin32(WindowManager* wm) {
-    if (!wm) return;
+        PROFILE_START(_pt);
+if (!wm) { PROFILE_END_VAR(_pt, "WindowManager_ProcessEventsWin32"); return ; }
 
     MSG msg;
     bool got = false;
@@ -43,6 +46,7 @@ void WindowManager_ProcessEventsWin32(WindowManager* wm) {
 }
 
 void WindowManager_QuitWin32(WindowManager* wm) {
-    if (wm) wm->running = false;
+        PROFILE_START(_pt);
+if (wm) wm->running = false;
     PostQuitMessage(0);
 }

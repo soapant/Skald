@@ -10,10 +10,7 @@
 #include "core/timer.h"
 #include "config.h"
 #include "core/window_manager.h"
-/* Declarations only: platform_x11.c / platform_win32.c already emit the nob
-   implementation, so including it here too would collide at link time. */
 #include "../../nob.h"
-/* nob.h ships legacy aliases that collide with this file's own helpers. */
 #undef copy_file
 #undef mkdir_if_not_exists
 #undef read_entire_dir
@@ -427,7 +424,7 @@ static bool load_single(const char* dir, const char* filename) {
     {
         char label[96];
         snprintf(label, sizeof(label), "feature_dlopen: %s", name);
-        TimerEnd(t_dlopen, label);
+        TimerEnd(t_dlopen, label, __FILE__, __LINE__);
     }
     if (!h) {
         log_error("dlopen %s failed: %s", full, Platform_GetLoadError());
@@ -547,7 +544,7 @@ bool FeatureLoader_Init(void) {
     if (DoTimeDebugs) {
         char label[96];
         snprintf(label, sizeof(label), "feature_init: TOTAL (%d features)", g_feature_init_count);
-        TimerPrintRaw(g_feature_init_us, label);
+        TimerPrintRaw(g_feature_init_us, label, __FILE__, __LINE__);
     }
     return true;
 }

@@ -8,8 +8,10 @@
 #include "platform/platform.h"
 #include "platform/win32/win32_state.h"
 
+#include "core/timer.h"
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-  switch (msg) {
+    PROFILE_START(_pt);
+switch (msg) {
   case WM_CREATE: {
     NOTIFYICONDATA nid = {0};
       nid.cbSize = sizeof(NOTIFYICONDATA);
@@ -84,5 +86,5 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
   default:
           return DefWindowProc(hwnd, msg, wParam, lParam);
   }
-  return 0;
+  { PROFILE_END_VAR(_pt, "WndProc"); return 0; }
 }

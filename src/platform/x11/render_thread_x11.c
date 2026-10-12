@@ -6,6 +6,7 @@
 #include "platform/render_thread.h"
 #include "deps/log.h"
 
+#include "core/timer.h"
 #define RT_MAX_CALLBACKS 16
 #define RT_MAX_PENDING 16
 #define RT_IDLE_SLEEP_US 20000
@@ -30,7 +31,8 @@ static int g_rt_fps = RT_DEFAULT_FPS;
 static Display *g_rt_dpy = NULL;
 
 static void rt_run_pending(void) {
-    RtCallback pend[RT_MAX_PENDING];
+        PROFILE_START(_pt);
+RtCallback pend[RT_MAX_PENDING];
     int pn = 0;
     pthread_mutex_lock(&g_rt_lock);
     pn = g_rt_pending_count;
@@ -45,7 +47,8 @@ static void rt_run_pending(void) {
 }
 
 bool Platform_RenderThread_Post(Platform_RenderFrameFn fn, void *ud) {
-    if (!fn || !g_rt_running) return false;
+        PROFILE_START(_pt);
+if (!fn || !g_rt_running) { PROFILE_END_VAR(_pt, "Platform_RenderThread_Post"); return false; }
     pthread_mutex_lock(&g_rt_lock);
     if (g_rt_pending_count >= RT_MAX_PENDING) {
         pthread_mutex_unlock(&g_rt_lock);
@@ -56,37 +59,43 @@ bool Platform_RenderThread_Post(Platform_RenderFrameFn fn, void *ud) {
     g_rt_pending_count++;
     pthread_cond_signal(&g_rt_cond);
     pthread_mutex_unlock(&g_rt_lock);
-    return true;
+    { PROFILE_END_VAR(_pt, "Platform_RenderThread_Post"); return true; }
 }
 
 void Platform_RenderThread_Wake(void) {
-    if (!g_rt_running) return;
+        PROFILE_START(_pt);
+if (!g_rt_running) { PROFILE_END_VAR(_pt, "Platform_RenderThread_Wake"); return ; }
     pthread_mutex_lock(&g_rt_lock);
     pthread_cond_signal(&g_rt_cond);
     pthread_mutex_unlock(&g_rt_lock);
 }
 
 void *Platform_RenderThread_Display(void) {
-    return (void *)g_rt_dpy;
+        PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "Platform_RenderThread_Display"); return (void *)g_rt_dpy; }
 }
 
 bool Platform_RenderThread_IsRunning(void) {
-    return g_rt_running;
+        PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "Platform_RenderThread_IsRunning"); return g_rt_running; }
 }
 
 int Platform_RenderThread_CallbackCount(void) {
-    pthread_mutex_lock(&g_rt_lock);
+        PROFILE_START(_pt);
+pthread_mutex_lock(&g_rt_lock);
     int n = g_rt_count;
     pthread_mutex_unlock(&g_rt_lock);
-    return n;
+    { PROFILE_END_VAR(_pt, "Platform_RenderThread_CallbackCount"); return n; }
 }
 
 bool Platform_RenderThread_IsCurrentThread(void) {
-    return g_rt_is_thread;
+        PROFILE_START(_pt);
+{ PROFILE_END_VAR(_pt, "Platform_RenderThread_IsCurrentThread"); return g_rt_is_thread; }
 }
 
 static void *rt_thread_func(void *arg) {
-    (void)arg;
+        PROFILE_START(_pt);
+(void)arg;
     g_rt_is_thread = true;
     while (!g_rt_quit) {
         RtCallback snap[RT_MAX_CALLBACKS];
@@ -116,22 +125,24 @@ static void *rt_thread_func(void *arg) {
         }
         pthread_mutex_unlock(&g_rt_lock);
     }
-    return NULL;
+    { PROFILE_END_VAR(_pt, "rt_thread_func"); return NULL; }
 }
 
 typedef struct { volatile int done; } RtSync;
 
 static void rt_sync_mark(void *ud) {
-    RtSync *s = (RtSync *)ud;
+        PROFILE_START(_pt);
+RtSync *s = (RtSync *)ud;
     if (s) s->done = 1;
 }
 
 void Platform_RenderThread_Sync(void) {
-    if (!g_rt_running) return;
-    if (Platform_RenderThread_IsCurrentThread()) return;
+        PROFILE_START(_pt);
+if (!g_rt_running) { PROFILE_END_VAR(_pt, "Platform_RenderThread_Sync"); return ; }
+    if (Platform_RenderThread_IsCurrentThread()) { PROFILE_END_VAR(_pt, "Platform_RenderThread_Sync"); return ; }
     RtSync s;
     s.done = 0;
-    if (!Platform_RenderThread_Post(rt_sync_mark, &s)) return;
+    if (!Platform_RenderThread_Post(rt_sync_mark, &s)) { PROFILE_END_VAR(_pt, "Platform_RenderThread_Sync"); return ; }
     struct timespec deadline;
     clock_gettime(CLOCK_REALTIME, &deadline);
     deadline.tv_sec += 5;
@@ -149,8 +160,9 @@ void Platform_RenderThread_Sync(void) {
 }
 
 bool Platform_RenderThread_EnsureStarted(int fps) {
-    if (fps > g_rt_fps) g_rt_fps = fps;
-    if (g_rt_running) return true;
+        PROFILE_START(_pt);
+if (fps > g_rt_fps) g_rt_fps = fps;
+    if (g_rt_running) { PROFILE_END_VAR(_pt, "Platform_RenderThread_EnsureStarted"); return true; }
     Display *dpy = XOpenDisplay(NULL);
     if (!dpy) {
         log_warn("render thread: XOpenDisplay failed, widget frames disabled");
@@ -165,11 +177,12 @@ bool Platform_RenderThread_EnsureStarted(int fps) {
         return false;
     }
     g_rt_running = true;
-    return true;
+    { PROFILE_END_VAR(_pt, "Platform_RenderThread_EnsureStarted"); return true; }
 }
 
 void Platform_RenderThread_Stop(void) {
-    if (!g_rt_running) return;
+        PROFILE_START(_pt);
+if (!g_rt_running) { PROFILE_END_VAR(_pt, "Platform_RenderThread_Stop"); return ; }
     g_rt_quit = true;
     pthread_mutex_lock(&g_rt_lock);
     pthread_cond_broadcast(&g_rt_cond);
@@ -187,8 +200,9 @@ void Platform_RenderThread_Stop(void) {
 }
 
 bool Platform_RenderThread_AddFrameCallback(Platform_RenderFrameFn fn, void *ud) {
-    if (!fn) return false;
-    if (!Platform_RenderThread_EnsureStarted(0)) return false;
+        PROFILE_START(_pt);
+if (!fn) { PROFILE_END_VAR(_pt, "Platform_RenderThread_AddFrameCallback"); return false; }
+    if (!Platform_RenderThread_EnsureStarted(0)) { PROFILE_END_VAR(_pt, "Platform_RenderThread_AddFrameCallback"); return false; }
     pthread_mutex_lock(&g_rt_lock);
     if (g_rt_count >= RT_MAX_CALLBACKS) {
         pthread_mutex_unlock(&g_rt_lock);
@@ -199,11 +213,12 @@ bool Platform_RenderThread_AddFrameCallback(Platform_RenderFrameFn fn, void *ud)
     g_rt_callbacks[g_rt_count].ud = ud;
     g_rt_count++;
     pthread_mutex_unlock(&g_rt_lock);
-    return true;
+    { PROFILE_END_VAR(_pt, "Platform_RenderThread_AddFrameCallback"); return true; }
 }
 
 bool Platform_RenderThread_RemoveFrameCallback(Platform_RenderFrameFn fn, void *ud) {
-    bool removed = false;
+        PROFILE_START(_pt);
+bool removed = false;
     pthread_mutex_lock(&g_rt_lock);
     for (int i = 0; i < g_rt_count; i++) {
         if (g_rt_callbacks[i].fn == fn && g_rt_callbacks[i].ud == ud) {
@@ -214,5 +229,5 @@ bool Platform_RenderThread_RemoveFrameCallback(Platform_RenderFrameFn fn, void *
         }
     }
     pthread_mutex_unlock(&g_rt_lock);
-    return removed;
+    { PROFILE_END_VAR(_pt, "Platform_RenderThread_RemoveFrameCallback"); return removed; }
 }
