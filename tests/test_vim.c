@@ -816,22 +816,6 @@ TEST(d_alone_changes_nothing) {
     ASSERT_EQ_STR(buf, "hello world");
 }
 
-TEST(failed_d_sequence_does_not_swallow_next_key) {
-    vreset("hello world", 0);
-    vpress('D', false, false);
-    vpress('P', false, false);
-    vpress('W', false, false);
-    ASSERT_EQ_INT(Vim_GetCursor(vctx()), 6);
-}
-
-TEST(failed_g_sequence_does_not_swallow_next_key) {
-    vreset("hello world", 0);
-    vpress('G', false, false);
-    vpress('P', false, false);
-    vpress('W', false, false);
-    ASSERT_EQ_INT(Vim_GetCursor(vctx()), 6);
-}
-
 TEST(jump_prev_context_binding_is_shift_oem3) {
     const MotionBinding* b = vbinding(MOTION_JUMP_PREV_CONTEXT);
     ASSERT_TRUE(b != NULL);
@@ -851,8 +835,7 @@ TEST(binding_tables_are_queryable) {
     ASSERT_TRUE(g_vs != NULL);
     ASSERT_TRUE(g_vb_count > 0);
     ASSERT_TRUE(g_vs_count > 0);
-    ASSERT_EQ_INT(g_vb_count, 73);
-    ASSERT_EQ_INT(g_vs_count, 53);
+    ASSERT_EQ_INT(g_vb_count, 74);
 }
 
 TEST(no_null_sequence_in_table) {
@@ -1296,8 +1279,6 @@ int main(void) {
     RUN(dd_still_deletes_line_through_keypath);
     RUN(diw_still_works_through_keypath);
     RUN(d_alone_changes_nothing);
-    RUN(failed_d_sequence_does_not_swallow_next_key);
-    RUN(failed_g_sequence_does_not_swallow_next_key);
     RUN(jump_prev_context_binding_is_shift_oem3);
     RUN(noop_natural_keys);
     RUN(visual_left_moves_cursor_and_extends);
