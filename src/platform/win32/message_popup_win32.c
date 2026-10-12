@@ -173,12 +173,12 @@ bool Platform_MessagePopupShowWindow(Popup* self, int x, int y, int w, int h) {
     return false;
   }
   s_msg_show_data = NULL;
-  if (!s_msg_show_no_bg) {
+if (!s_msg_show_no_bg) {
     win32_apply_rounded_corners(hPopupWnd, w, h);
     SetLayeredWindowAttributes(hPopupWnd, 0, (BYTE)WindowOpacity, LWA_ALPHA);
-  } else {
-    SetLayeredWindowAttributes(hPopupWnd, 0, 255, LWA_ALPHA);
-  }
+} else {
+    SetLayeredWindowAttributes(hPopupWnd, 0, 0, LWA_COLORKEY);
+}
   ShowWindow(hPopupWnd, SW_SHOWNOACTIVATE);
   UpdateWindow(hPopupWnd);
   SetTimer(hPopupWnd, 999, 16, NULL);
@@ -448,8 +448,10 @@ void Platform_HoverMessage(const char* key, const char* message, int centerX, in
     Platform_DestroyFont(msgFont);
     winWidth = textWidth + 30;
     winHeight = textHeight + 30;
-    if (winWidth > maxWidth) winWidth = maxWidth;
-    if (winHeight > maxHeight) winHeight = maxHeight;
+if (maxWidth > 0 && winWidth > maxWidth) winWidth = maxWidth;
+  if (maxWidth > 0 && winWidth < maxWidth) winWidth = maxWidth;
+  if (maxHeight > 0 && winHeight > maxHeight) winHeight = maxHeight;
+  if (maxHeight > 0 && winHeight < maxHeight) winHeight = maxHeight;
   }
 
   Platform_HoverMessageRelease(g_hover_key);
@@ -511,8 +513,10 @@ void Platform_CreateDisplayMessageWindow(const char* message, int centerX, int c
   int winWidth = textWidth + padding;
   int winHeight = textHeight + padding;
 
-  if (winWidth > maxWidth) winWidth = maxWidth;
-  if (winHeight > maxHeight) winHeight = maxHeight;
+  if (maxWidth > 0 && winWidth > maxWidth) winWidth = maxWidth;
+  if (maxWidth > 0 && winWidth < maxWidth) winWidth = maxWidth;
+  if (maxHeight > 0 && winHeight > maxHeight) winHeight = maxHeight;
+  if (maxHeight > 0 && winHeight < maxHeight) winHeight = maxHeight;
 
   FadeWindowData* pWndData = (FadeWindowData*)malloc(sizeof(FadeWindowData));
   if (!pWndData) {
