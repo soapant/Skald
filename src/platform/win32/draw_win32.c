@@ -16,6 +16,7 @@
 #include <objidl.h>
 #include <gdiplus/gdiplus.h>
 #include <shlwapi.h>
+#include <shellapi.h>
 
 #define WIN32_SIZE_FONT_SLOTS 8
 static __thread HFONT g_sizeFonts[WIN32_SIZE_FONT_SLOTS] = {NULL};
@@ -541,7 +542,7 @@ bool Platform_DrawRoundedRectRaw(int x, int y, int w, int h, int radius, unsigne
     return true;
 }
 
-#define WIN32_IMG_CACHE_SLOTS 16
+#define WIN32_IMG_CACHE_SLOTS 128
 
 typedef struct {
     char key[512];
@@ -596,8 +597,11 @@ static void win32_img_stat(const char *path, FILETIME *ft, DWORD *size) {
     ft->dwLowDateTime = 0;
     ft->dwHighDateTime = 0;
     *size = 0;
+    char native[MAX_PATH * 2];
+    snprintf(native, sizeof(native), "%s", path);
+    for (char *p = native; *p; p++) if (*p == '/') *p = '\\';
     WIN32_FILE_ATTRIBUTE_DATA fad;
-    if (!GetFileAttributesExA(path, GetFileExInfoStandard, &fad)) return;
+    if (!GetFileAttributesExA(native, GetFileExInfoStandard, &fad)) return;
     *ft = fad.ftLastWriteTime;
     *size = (fad.nFileSizeHigh << 16) | fad.nFileSizeLow;
 }
@@ -665,39 +669,43 @@ static void win32_utf8_to_wide(const char *in, wchar_t *out, int out_max) {
     if (n <= 0) { out[0] = 0; return; }
 }
 
+static GpBitmap* win32_load_shell_icon_bitmap(const char *path) {
+    SHFILEINFOA sfi;
+    ZeroMemory(&sfi, sizeof(sfi));
+    if (!SHGetFileInfoA(path, 0, &sfi, sizeof(sfi), SHGFI_ICON | SHGFI_LARGEICON)) return NULL;
+    if (!sfi.hIcon) return NULL;
+    GpBitmap* bmp = NULL;
+    GpStatus st = GdipCreateBitmapFromHICON(sfi.hIcon, &bmp);
+    DestroyIcon(sfi.hIcon);
+    if (st != Ok || !bmp) return NULL;
+    return bmp;
+}
+
 static void* win32_load_scaled_bitmap(const char *path, int w, int h) {
     win32_gdip_ensure();
     if (g_gdip_token == 0) { log_error("img: GdiplusStartup failed"); return NULL; }
+    if (w <= 0 || h <= 0) return NULL;
+
+    char native[MAX_PATH * 2];
+    snprintf(native, sizeof(native), "%s", path);
+    for (char *p = native; *p; p++) if (*p == '/') *p = '\\';
 
     wchar_t wpath[MAX_PATH * 2];
-    win32_utf8_to_wide(path, wpath, (int)(sizeof(wpath) / sizeof(wchar_t)));
+    win32_utf8_to_wide(native, wpath, (int)(sizeof(wpath) / sizeof(wchar_t)));
 
-    GpBitmap *out = NULL;
     GpBitmap *src = NULL;
     GpStatus _fs = GdipCreateBitmapFromFile(wpath, &src);
     if (_fs != Ok || !src) {
-        log_error("img: FromFile st=%d path=%s", (int)_fs, path);
         if (src) GdipDisposeImage(src);
-        return NULL;
+        src = win32_load_shell_icon_bitmap(native);
+        if (!src) {
+            log_error("img: cannot decode '%s' st=%d and no shell icon", path, (int)_fs);
+            return NULL;
+        }
     }
-    HDC sc = win32_screen_dc();
-    void *raw = NULL;
-    HDC mdc = sc ? CreateCompatibleDC(sc) : NULL;
-    if (mdc) {
-        BITMAPINFOHEADER bi;
-        memset(&bi, 0, sizeof(bi));
-        bi.biSize = sizeof(bi);
-        bi.biWidth = w;
-        bi.biHeight = -h;
-        bi.biPlanes = 1;
-        bi.biBitCount = 32;
-        bi.biCompression = BI_RGB;
-        HBITMAP d = CreateDIBSection(mdc, (BITMAPINFO *)&bi, DIB_RGB_COLORS, &raw, NULL, 0);
-        GdipCreateBitmapFromHBITMAP(d, NULL, &out);
-        if (d) DeleteObject(d);
-        DeleteDC(mdc);
-    }
-    if (!out) {
+
+    GpBitmap *out = NULL;
+    if (GdipCreateBitmapFromScan0(w, h, w * 4, PixelFormat32bppPARGB, NULL, &out) != Ok || !out) {
         GdipDisposeImage(src);
         return NULL;
     }
@@ -705,7 +713,7 @@ static void* win32_load_scaled_bitmap(const char *path, int w, int h) {
     GpStatus _gs = GdipGetImageGraphicsContext(out, &g);
     if (_gs == Ok && g) {
         GdipSetInterpolationMode(g, InterpolationModeHighQualityBicubic);
-        GdipSetCompositingMode(g, CompositingModeSourceOver);
+        GdipSetCompositingMode(g, CompositingModeSourceCopy);
         GdipSetSmoothingMode(g, SmoothingModeHighQuality);
         GdipDrawImageRectI(g, src, 0, 0, w, h);
         GdipDeleteGraphics(g);
