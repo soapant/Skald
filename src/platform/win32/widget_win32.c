@@ -308,7 +308,7 @@ PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps, bool
     HINSTANCE hInstance = GetModuleHandle(NULL);
     DWORD exstyle = WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED | WS_EX_NOACTIVATE;
     if (!on_click) exstyle |= WS_EX_TRANSPARENT;
-    widget->hwnd = CreateWindowExA(
+widget->hwnd = CreateWindowExA(
         exstyle,
         FLINT_WIDGET_CLASS, NULL, WS_POPUP,
         x, y, w, h, NULL, NULL, hInstance, widget
@@ -319,7 +319,9 @@ PlatformWidget *Platform_Widget_Create(int x, int y, int w, int h, int fps, bool
         return NULL;
     }
 
-    win32_apply_rounded_corners(widget->hwnd, w, h);
+    if (!widget->no_bg) {
+        win32_apply_rounded_corners(widget->hwnd, w, h);
+    }
     SetWindowPos(widget->hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
 
     if (!Platform_RenderThread_AddFrameCallback(widget_frame, widget)) {
